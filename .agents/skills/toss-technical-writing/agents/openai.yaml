@@ -1,0 +1,4 @@
+interface:
+  display_name: "Toss Technical Writing"
+  short_description: "토스 스타일로 한국어 개발자 문서를 작성하고 교정"
+  default_prompt: "Use $toss-technical-writing to draft or revise Korean developer documentation in a clear Toss technical-writing style."
