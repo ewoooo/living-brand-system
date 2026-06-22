@@ -36,7 +36,7 @@
 | 30 | 의존성 취약점 | npm package와 lockfile의 취약점을 정기적으로 점검하고 업데이트합니다. |  |
 | 31 | 보안 헤더 | CSP, HSTS, X-Frame-Options, Referrer-Policy 같은 보안 헤더를 적용합니다. |  |
 | 32 | Agent 컨텍스트 제한 | Agent는 published content와 허용된 작업 맥락만 조회하고, draft/private content를 답변 근거로 사용하지 않습니다. |  |
-| 33 | Agent 응답 검증 | Agent 응답은 최종 거버넌스 결정으로 사용하지 않고, 근거 기준과 신뢰도, 사람 검토 필요 여부를 함께 기록합니다. |  |
+| 33 | Agent 응답 검증 | Agent 응답은 최종 정책 결정으로 사용하지 않고, 근거 기준과 신뢰도, 사람 검토 필요 여부를 함께 기록합니다. |  |
 | 34 | Server Action 보호 | Server Action은 클라이언트에서 호출되더라도 서버에서 인증, 권한, 입력 스키마를 다시 검증합니다. |  |
 | 35 | 업로드 저장소 격리 | 업로드 파일은 실행 가능한 public path에 직접 저장하지 않고, object storage 또는 Payload upload collection의 권한 검사를 거쳐 제공합니다. |  |
 
@@ -86,7 +86,7 @@
 - Agent 검색은 published content만 대상으로 합니다.
 - Agent는 draft, archived, private 기준을 답변 근거로 사용하지 않습니다.
 - Agent 답변에는 근거 기준, 기준 버전, 신뢰도, 사람 검토 필요 여부를 함께 남깁니다.
-- Agent 실패는 사용자 작업 실패나 거버넌스 변경 실패와 분리해서 처리합니다.
+- Agent 실패는 사용자 작업 실패나 정책 변경 실패와 분리해서 처리합니다.
 - Agent 질의에는 rate limit을 적용합니다.
 
 ### 운영 보안

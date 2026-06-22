@@ -125,7 +125,7 @@ src/agents/
 ```
 
 - Agent는 published content와 허용된 작업 맥락만 사용합니다.
-- Agent는 거버넌스를 직접 변경하지 않습니다.
+- Agent는 정책을 직접 변경하지 않습니다.
 - Agent 결과는 Service에서 검증하거나 상태로 기록한 뒤 사용자에게 보여줍니다.
 
 ## 3. 구현 위치
@@ -247,4 +247,4 @@ const sessionTtlMinutes = 10 // 관리자 세션 만료 기준
 - Service는 업무상 실패를 도메인 오류나 메시지 코드로 변환합니다.
 - Route Handler와 Server Action은 오류를 HTTP status와 안전한 응답 형식으로 변환합니다.
 - Payload hook에서 예외가 발생하면 저장 흐름을 중단할지, 후속 작업만 실패 처리할지 명확히 나눕니다.
-- Agent 실패는 거버넌스 변경 실패로 처리하지 않습니다. 답변 생성 실패와 기준 데이터 변경은 분리합니다.
+- Agent 실패는 정책 변경 실패로 처리하지 않습니다. 답변 생성 실패와 기준 데이터 변경은 분리합니다.

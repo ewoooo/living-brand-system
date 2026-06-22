@@ -18,7 +18,7 @@ Manager -> System -> Agent -> Consumer -> System -> Agent -> Manager
 - 누가 어떤 입력을 만듭니다.
 - System과 Agent가 무엇을 처리합니다.
 - Consumer와 Manager가 어떤 결과를 받습니다.
-- 어떤 사용 기록이 남고, 그 기록이 어떻게 거버넌스 개선으로 돌아갑니다.
+- 어떤 사용 기록이 남고, 그 기록이 어떻게 정책 개선으로 돌아갑니다.
 
 ## 2. 01번 제품 문서와의 연결
 
@@ -61,16 +61,16 @@ L1~L5는 제품 이름이나 성숙도 설명이 아니라 기능 범위를 구�
 
 | Segment | Main Flow | Meaning | 남는 기록 |
 | --- | --- | --- | --- |
-| Governance Segment | Manager -> System | 거버넌스, 규칙, 에셋, 템플릿, 버전, 승인 상태를 만듭니다. | 기준 버전, 변경 사유, 적용일 |
+| Policy Segment | Manager -> System | 정책, 규칙, 에셋, 템플릿, 버전, 승인 상태를 만듭니다. | 기준 버전, 변경 사유, 적용일 |
 | Guidance Segment | System -> Agent -> Consumer | 발행된 기준을 Consumer가 실행할 수 있는 안내로 바꿉니다. | 노출된 기준, 실행 가이드, 조회 기록 |
 | Consumer Work Segment | Consumer -> System | 작업 세션, 입력값, 작업물, 제출물을 남깁니다. | 작업 목적, 선택 템플릿, 입력값, 제출 상태 |
 | Agent Interaction Segment | Consumer <-> Agent -> System | 질문, 답변, 점검, 수정 지시를 남깁니다. | 질문 의도, 인용 기준, 점검 결과, 수정 지시 |
 | Evaluation Segment | Manager <-> System | 제출물 검토와 사람 판단을 기록합니다. | 승인, 반려, 수정 요청, 규칙 연결 코멘트 |
 | Insight Segment | System -> Agent -> Manager | 반복 질문, 실패, 반려 사유, 사용 행동을 개선 후보로 묶습니다. | 반복 패턴, 인사이트 후보, 우선순위 |
-| Governance Update Segment | Manager -> System | 채택된 개선 후보를 기준 개선으로 반영합니다. | 개정 초안, 승인 이력, 개선 효과 |
+| Policy Update Segment | Manager -> System | 채택된 개선 후보를 기준 개선으로 반영합니다. | 개정 초안, 승인 이력, 개선 효과 |
 
 Agent는 제안하고, Manager가 결정하며, System이 기록합니다.
-Agent는 거버넌스를 직접 변경하지 않습니다.
+Agent는 정책을 직접 변경하지 않습니다.
 
 ## 5. 전체 흐름
 
@@ -83,7 +83,7 @@ flowchart LR
   S2["System<br/>사용 기록 저장"]
   A2["Agent<br/>개선 후보 정리"]
 
-  M -->|"거버넌스·규칙·에셋·템플릿 등록"| S1
+  M -->|"정책·규칙·에셋·템플릿 등록"| S1
   S1 -->|"구조화된 기준·버전·작업 맥락"| A1
   A1 -->|"실행 가이드·점검·수정 지시"| C
   C -->|"작업 세션·입력값·제출물·사용 행동"| S2
@@ -99,16 +99,16 @@ flowchart LR
 
 | ID | 기능 단위 | Segment | Use Case | 01 연결 | Output |
 | --- | --- | --- | --- | --- | --- |
-| L1-UC-01 | 기준 문서 관리 | Governance | Manager가 가이드라인 문서를 작성합니다 | 기준 존재 | 정적 가이드라인 문서 |
-| L1-UC-02 | 기준 문서 관리 | Governance | Manager가 가이드라인 문서를 배포합니다 | 기준 전달 | 배포 안내 |
+| L1-UC-01 | 기준 문서 관리 | Policy | Manager가 가이드라인 문서를 작성합니다 | 기준 존재 | 정적 가이드라인 문서 |
+| L1-UC-02 | 기준 문서 관리 | Policy | Manager가 가이드라인 문서를 배포합니다 | 기준 전달 | 배포 안내 |
 | L1-UC-03 | 기준 문서 관리 | Guidance | Consumer가 가이드라인 문서를 열람합니다 | 필요한 기준 탐색의 어려움 | 직접 해석한 기준 |
-| L1-UC-04 | 기준 문서 관리 | Governance | Manager가 새 버전 문서를 재배포합니다 | 최신본 확인 어려움 | 새 문서와 혼선 위험 |
-| L2-UC-01 | 기준 데이터 관리 | Governance | Manager가 가이드라인 섹션을 등록합니다 | 구조화되지 않은 기준 | 구조화된 섹션과 규칙 |
-| L2-UC-02 | 기준 데이터 관리 | Governance | Manager가 공식 에셋을 등록합니다 | 임의 에셋 사용 위험 | 공식 에셋 |
+| L1-UC-04 | 기준 문서 관리 | Policy | Manager가 새 버전 문서를 재배포합니다 | 최신본 확인 어려움 | 새 문서와 혼선 위험 |
+| L2-UC-01 | 기준 데이터 관리 | Policy | Manager가 가이드라인 섹션을 등록합니다 | 구조화되지 않은 기준 | 구조화된 섹션과 규칙 |
+| L2-UC-02 | 기준 데이터 관리 | Policy | Manager가 공식 에셋을 등록합니다 | 임의 에셋 사용 위험 | 공식 에셋 |
 | L2-UC-03 | 기준 데이터 관리 | Guidance | Consumer가 기준을 검색합니다 | 필요한 기준 탐색의 어려움 | 검색 결과와 최신 기준 |
 | L2-UC-04 | 기준 데이터 관리 | Guidance | Consumer가 공식 에셋을 다운로드합니다 | 선택 부담 | 다운로드된 공식 에셋 |
-| L2-UC-05 | 기준 데이터 관리 | Governance | Manager가 변경 이력을 관리합니다 | 변경 추적 어려움 | 버전 이력 |
-| L3-UC-01 | 작업 맥락 구성 | Governance | Manager가 어플리케이션 타입별 기준을 구성합니다 | 선택지 축소 | 타입별 기준 묶음 |
+| L2-UC-05 | 기준 데이터 관리 | Policy | Manager가 변경 이력을 관리합니다 | 변경 추적 어려움 | 버전 이력 |
+| L3-UC-01 | 작업 맥락 구성 | Policy | Manager가 어플리케이션 타입별 기준을 구성합니다 | 선택지 축소 | 타입별 기준 묶음 |
 | L3-UC-02 | 작업 맥락 구성 | Guidance | Manager가 어플리케이션 타입별 실행 가이드를 발행합니다 | 구체적인 작업 지시 | Guidance Report |
 | L3-UC-03 | 작업 맥락 구성 | Consumer Work | Consumer가 어플리케이션 타입과 템플릿을 선택합니다 | 필요한 기준 탐색, 선택 부담 | 작업 세션과 기준 스냅샷 |
 | L3-UC-04 | 작업 맥락 구성 | Consumer Work | Consumer가 작업물을 작성합니다 | 제한된 입력 폼 | 작업물 초안과 미리보기 |
@@ -120,7 +120,7 @@ flowchart LR
 | L4-UC-05 | 작업 점검과 피드백 | Agent Interaction | System이 수정 지시를 제공합니다 | 쉬운 수정 지시 | 다음 행동 |
 | L5-UC-01 | 개선 루프 | Insight | System이 반복 질문과 반려 사유를 집계합니다 | 반복 오류 개선 | 반복 패턴 |
 | L5-UC-02 | 개선 루프 | Insight | Manager가 Insight Report를 확인합니다 | 개선 우선순위 판단 | 채택/제외된 인사이트 |
-| L5-UC-03 | 개선 루프 | Governance Update | Manager가 인사이트를 기준 개선으로 전환합니다 | 기준 개선 루프 | Governance Draft |
+| L5-UC-03 | 개선 루프 | Policy Update | Manager가 인사이트를 기준 개선으로 전환합니다 | 기준 개선 루프 | Policy Draft |
 | L5-UC-04 | 개선 루프 | Guidance | 변경된 기준이 다음 실행 가이드에 반영됩니다 | 개선된 기준 재사용 | 갱신된 Guidance Report |
 | L5-UC-05 | 개선 루프 | Insight | System이 개선 효과를 추적합니다 | 개선 효과 검증 | Impact Report |
 
@@ -286,7 +286,7 @@ L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩�
 | --- | --- |
 | 01 연결 | 선택지 축소와 오류 감소 |
 | Actors | Manager, System |
-| Input | Published Governance, 어플리케이션 타입, 템플릿, 체크리스트, 필수 문구, 금지 표현 |
+| Input | Published Policy, 어플리케이션 타입, 템플릿, 체크리스트, 필수 문구, 금지 표현 |
 | Process | Manager가 어플리케이션 타입을 정의하고, 관련 규칙, 템플릿, 예시, 체크리스트, 쉬운 말 안내, 적용 기준 버전을 연결합니다. |
 | Output | Application Type Guideline, Template Set, Checklist Set |
 | Generated Data | 어플리케이션 타입, 규칙 연결 정보, 템플릿 연결 정보, 체크리스트 연결 정보 |
@@ -301,7 +301,7 @@ L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩�
 | --- | --- |
 | 01 연결 | 구체적인 작업 지시와 수행률 |
 | Actors | Manager, System, Consumer |
-| Input | Published Governance, 어플리케이션 타입, 허용 템플릿, 체크리스트, 쉬운 말 안내, 예시 |
+| Input | Published Policy, 어플리케이션 타입, 허용 템플릿, 체크리스트, 쉬운 말 안내, 예시 |
 | Process | System이 어플리케이션 타입에 연결된 발행 기준을 불러오고, Consumer에게 필요한 항목만 묶어 published 상태로 노출합니다. |
 | Output | Guidance Report, Worker Checklist, Template Recommendation, Required Copy List, Forbidden Copy List |
 | Generated Data | 실행 가이드 버전, 어플리케이션 타입별 노출 기준, 조회 이력 |
@@ -376,7 +376,7 @@ L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩�
 | --- | --- |
 | 01 연결 | 기준 적용의 어려움 |
 | Actors | Consumer, Agent, System |
-| Input | 질문 원문, 작업 맥락, Published Governance |
+| Input | 질문 원문, 작업 맥락, Published Policy |
 | Process | Agent가 질문 의도를 분류하고, System이 관련 기준을 검색하며, Agent가 근거와 버전을 연결한 쉬운 말 답변을 생성합니다. |
 | Output | Answer, Cited Rules, Suggested Next Action, Low Confidence, Escalation |
 | Generated Data | 질문 의도, 검색된 기준, 인용 규칙, 답변 신뢰도, 사용자 피드백 |
@@ -441,7 +441,7 @@ L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩�
 | Output | Repeated Question Group, Repeated Rejection Reason, Template Issue Pattern, Application Type Risk, Insight Candidate |
 | Generated Data | 반복 패턴 그룹, 통계 집계, 인사이트 후보 상태, 사용 행동 요약 |
 | 검증 신호 | 반복 질문 수, 반복 반려율, 오래 체류한 항목, 자주 찾는 에셋 |
-| Next Maturity Condition | Governance Update로 플라이휠을 계속 돌려야 합니다. |
+| Next Maturity Condition | Policy Update로 플라이휠을 계속 돌려야 합니다. |
 
 ### L5-UC-02. Manager가 Insight Report를 확인합니다
 
@@ -460,7 +460,7 @@ L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩�
 
 ### L5-UC-03. Manager가 인사이트를 기준 개선으로 전환합니다
 
-목적: Insight Report를 실제 Governance Update로 연결합니다.
+목적: Insight Report를 실제 Policy Update로 연결합니다.
 
 | Field | Content |
 | --- | --- |
@@ -468,7 +468,7 @@ L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩�
 | Actors | Manager, System |
 | Input | Accepted Insight, Related Rule, Related Template, Related Checklist, 반복 사례 |
 | Process | Manager가 개선 유형을 선택하고, 기준 문구, OK/NG 예시, 체크리스트, 템플릿 제한을 수정한 뒤 draft 상태로 만듭니다. |
-| Output | Governance Draft, Updated Rule, Updated Template, Updated Checklist, New FAQ |
+| Output | Policy Draft, Updated Rule, Updated Template, Updated Checklist, New FAQ |
 | Generated Data | Manager 데이터 새 버전, 변경 사유, 인사이트 연결 정보, 개정 초안 상태, 승인 이력 |
 | 검증 신호 | 인사이트에서 생성된 개정 초안 수, 개선안 승인율 |
 | Next Maturity Condition | 발행된 개선안이 다음 실행 가이드와 작업 세션에 반영되어야 합니다. |
@@ -481,7 +481,7 @@ L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩�
 | --- | --- |
 | 01 연결 | 가이드라인이 운영 과정에서 발전하는 시스템 |
 | Actors | Manager, System, Consumer |
-| Input | Published Governance Update, 적용 시작일, 관련 어플리케이션 타입, 관련 템플릿 |
+| Input | Published Policy Update, 적용 시작일, 관련 어플리케이션 타입, 관련 템플릿 |
 | Process | System이 새 기준의 적용일을 확인하고 관련 Guidance Report를 갱신하며, 새 작업 세션에는 새 기준 버전을 적용합니다. |
 | Output | Updated Guidance Report, Updated Worker Checklist, Change Notice, New Rule Snapshot |
 | Generated Data | 실행 가이드 새 버전, 변경 안내 이력, 새 기준 적용 이벤트, 이전 기준과 새 기준의 연결 |
@@ -499,9 +499,9 @@ L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩�
 | Input | Previous Rule Version, New Rule Version, Usage Record, 기간 조건 |
 | Process | System이 변경 전후 데이터를 분리하고, 반복 질문 수, 반려율, 수정 요청 수를 비교해 성공 신호나 후속 인사이트를 만듭니다. |
 | Output | Impact Report, Success Signal, Follow-up Insight |
-| Generated Data | 변경 전후 비교 데이터, 개선 효과 지표, 후속 인사이트 후보, Governance 개선 이력의 성과 메타데이터 |
+| Generated Data | 변경 전후 비교 데이터, 개선 효과 지표, 후속 인사이트 후보, 정책 개선 이력의 성과 메타데이터 |
 | 검증 신호 | 같은 오류 재발률, 반려율 변화, 질문 수 변화, 검토 소요 시간 변화 |
-| Next Maturity Condition | 측정 결과가 다음 Governance Update 판단에 사용되어야 합니다. |
+| Next Maturity Condition | 측정 결과가 다음 Policy Update 판단에 사용되어야 합니다. |
 
 ## 9. 유즈케이스 항목 구조
 
