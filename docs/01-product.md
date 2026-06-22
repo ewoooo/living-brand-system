@@ -61,7 +61,7 @@
 ### 참여자 흐름
 
 플라이휠은 네 참여자의 흐름으로 봅니다.
-Manager, System, Agent, Consumer가 각각 하나의 축이 되고, 시간은 위에서 아래로 흐릅니다.
+Manager, System, Agent, Worker가 각각 하나의 축이 되고, 시간은 위에서 아래로 흐릅니다.
 
 S1과 S2는 같은 System의 서로 다른 역할입니다.
 S1은 발행된 기준을 사용자에게 제공하기 위한 역할이고, S2는 사용자가 남긴 기록을 다시 개선 근거로 모으는 역할입니다.
@@ -72,7 +72,7 @@ sequenceDiagram
   participant M as Manager
   participant S as System
   participant A as Agent
-  participant C as Consumer
+  participant C as Worker
 
   M->>S: 정책·규칙·에셋·템플릿 등록
   Note over S: S1. 기준 구조화·버전 관리
@@ -95,7 +95,7 @@ flowchart LR
   M["Manager<br/>브랜드 관리자"]
   S1["System<br/>S1. 기준 구조화·버전 관리"]
   A1["Agent<br/>사용자 지원"]
-  C["Consumer<br/>작업·질문·제출"]
+  C["Worker<br/>작업·질문·제출"]
   S2["System<br/>S2. 사용 기록 저장"]
   A2["Agent<br/>개선 후보 정리"]
 
@@ -114,7 +114,7 @@ flowchart LR
 | Manager | 정책, 규칙, 에셋, 템플릿을 관리하고 최종 의사결정을 담당합니다. |
 | System | 기준을 구조화하고, 버전과 사용 기록을 관리합니다. |
 | Agent | 작업 상황에 맞는 가이드를 제공하고, 반복 문제를 개선 후보로 정리합니다. |
-| Consumer | 가이드를 활용해 작업하고, 질문과 제출 결과를 남깁니다. |
+| Worker | 가이드를 활용해 작업하고, 질문과 제출 결과를 남깁니다. |
 
 ### 흐름별 기록
 
@@ -122,8 +122,8 @@ flowchart LR
 | --- | --- | --- | --- |
 | Manager -> System | Manager | 정책, 규칙, 에셋, 템플릿, 버전 | System은 기준을 구조화하고 적용 범위를 연결합니다. |
 | System -> Agent | System | 구조화된 기준, 어플리케이션 타입, 기준 스냅샷 | Agent는 작업 맥락에 맞는 안내와 점검 기준을 만듭니다. |
-| Agent -> Consumer | Agent | 실행 가이드, 점검 결과, 수정 지시 | Consumer는 안내를 보고 작업하고 제출합니다. |
-| Consumer -> System | Consumer | 작업 결과 기록, 사용 행동 기록 | System은 사용자가 무엇을 했고 어디서 막혔는지 기록합니다. |
+| Agent -> Worker | Agent | 실행 가이드, 점검 결과, 수정 지시 | Worker는 안내를 보고 작업하고 제출합니다. |
+| Worker -> System | Worker | 작업 결과 기록, 사용 행동 기록 | System은 사용자가 무엇을 했고 어디서 막혔는지 기록합니다. |
 | System -> Agent | System | 정책/규칙 위반 사항, 반려 사유, 자주 본 항목 | Agent는 반복 문제와 개선 후보를 정리합니다. |
 | Agent -> Manager | Agent | 반복 질문, 반복 위반, 템플릿 문제, 개선 후보 | Manager는 채택 여부를 결정하고 기준을 개정합니다. |
 
@@ -259,7 +259,7 @@ Agent는 사용 기록을 분석해 반복 질문, 반복 위반, 예외 사례,
 
 ## 7. 제공되는 가치
 
-### Consumer 가치
+### Worker 가치
 
 - 어떤 템플릿을 사용해야 할지 빠르게 판단할 수 있습니다.
 - 제출 전에 문제를 확인하고 수정할 수 있습니다.
@@ -287,7 +287,7 @@ Agent는 사용 기록을 분석해 반복 질문, 반복 위반, 예외 사례,
 
 | 문서 | 이어서 정의할 내용 |
 | --- | --- |
-| 유즈케이스 | Manager, System, Agent, Consumer가 어떤 입력을 만들고 어떤 결과를 받는지 정의합니다. |
+| 유즈케이스 | Manager, System, Agent, Worker가 어떤 입력을 만들고 어떤 결과를 받는지 정의합니다. |
 | 데이터 생명주기 | 정책, 규칙, 작업물, 점검 결과, 사용 기록, 개선 후보가 어떤 상태로 변하는지 정의합니다. |
 | 도메인 모델 | 정책, 규칙, 템플릿, 작업, 점검, 피드백, 개선 후보의 개념과 관계를 정의합니다. |
 | 아키텍처 | System, Agent, Payload, 사용 기록 저장 구조를 정의합니다. |

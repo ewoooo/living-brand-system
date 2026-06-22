@@ -2,228 +2,202 @@
 
 ## 1. 목적
 
-이 문서는 시스템 안에 어떤 개념이 존재하는지 정의합니다.
+이 문서는 브랜드 운영 시스템의 도메인, 서브도메인, 바운디드 컨텍스트, 도메인 모델을 정의합니다.
+목표는 개발자가 Payload collection과 관계를 설계하기 전에 모델 경계를 먼저 합의할 수 있게 만드는 것입니다.
 
-지금은 도메인 모델 1단계입니다. 아직 DB 구조나 Payload collection을 정하지 않습니다.
+## 2. 용어
+
+| Term | Meaning |
+| --- | --- |
+| 도메인 | 제품이 해결하려는 가장 큰 업무 영역 |
+| 서브도메인 | 도메인을 책임과 문제 기준으로 나눈 하위 영역 |
+| 바운디드 컨텍스트 | 같은 용어와 규칙이 일관되게 쓰이는 경계 |
+| 애그리거트(관리 단위) | 함께 생성, 수정, 삭제되어야 하는 도메인 객체 묶음 |
+| 엔티티 | 고유한 식별자와 생명주기를 갖는 객체 |
+| 값 객체 | 식별자보다 값 자체가 중요한 객체 |
+| 도메인 서비스 | 특정 객체 하나에 넣기 어려운 도메인 규칙 |
+| 도메인 이벤트 | 도메인에서 이미 일어난 중요한 사건 |
+
+## 3. 도메인 구성
 
 ```text
-1단계: 개념 정의
-2단계: 개념 간 관계 정의
-3단계: 데이터 모델과 컬렉션 결정
+[도메인] 브랜드 운영 시스템
+ ├── [서브도메인] 가이드라인 관리
+ ├── [서브도메인] 제작 관리
+ ├── [서브도메인] 품질 검수
+ └── [서브도메인] 운영 인사이트
 ```
 
-## 2. 범위
+브랜드 운영 시스템은 가이드라인을 문서로 보관하는 시스템이 아니라, 기준을 구조화하고, 산출물 제작과 품질 검수를 거쳐, 사용 기록을 다시 개선 근거로 연결하는 시스템입니다.
 
-이 문서에서 정하는 것:
+## 4. 가이드라인 관리
 
-- 제품에서 반복해서 쓰는 개념
-- Manager, Consumer, Agent, System이 공유할 용어
-- 유즈케이스를 설명할 때 필요한 명사
-
-아직 정하지 않는 것:
-
-- Payload collection 이름
-- DB 필드
-- 검증 구조
-- 리포트 구조
-- API 또는 화면 구조
-
-## 3. 핵심 흐름
-
-이 제품의 핵심 흐름은 다음과 같습니다.
+가이드라인 관리는 기준과 공식 에셋을 구조화하고 발행하는 서브도메인입니다.
+GuidelineRule은 Guideline 내부 엔티티가 아니라 독립 애그리거트(관리 단위)입니다.
 
 ```text
-정책 Policy
--> 규칙 Rule
--> 점검 Check
--> 피드백 Feedback
+[도메인] 브랜드 운영 시스템
+ └── [서브도메인] 가이드라인 관리
+      ├── [바운디드 컨텍스트] 기준 편집/발행
+      │    └── [도메인 모델]
+      │         ├── 애그리거트(관리 단위): Guideline
+      │         │    ├── 엔티티: Guideline, GuidelineSection, GuidelinePage
+      │         │    └── 값 객체: GuidelineVersion, PublishStatus, DisplayOrder
+      │         ├── 애그리거트(관리 단위): GuidelineRule
+      │         │    ├── 엔티티: GuidelineRule
+      │         │    └── 값 객체: RuleType, Severity, RuleCondition
+      │         ├── 도메인 서비스: GuidelinePublishService
+      │         └── 도메인 이벤트: GuidelinePublished, GuidelineRuleChanged
+      ├── [바운디드 컨텍스트] 에셋 편집/발행
+      │    └── [도메인 모델]
+      │         ├── 애그리거트(관리 단위): BrandAsset
+      │         │    ├── 엔티티: BrandAsset, AssetFile
+      │         │    └── 값 객체: AssetType, AssetVersion, PublishStatus
+      │         ├── 도메인 서비스: AssetPublishService
+      │         └── 도메인 이벤트: AssetPublished, AssetChanged
+      └── [바운디드 컨텍스트] 기준 변경 이력
+           └── [도메인 모델]
+                ├── 애그리거트(관리 단위): GuidelineChange
+                ├── 값 객체: ChangeReason, ChangedField
+                └── 도메인 이벤트: GuidelineChangeRecorded
 ```
 
-| Concept | Meaning |
-| --- | --- |
-| 기준 Standard | 정책과 규칙을 함께 가리키는 말 |
-| 정책 Policy | 브랜드가 지향하거나 지켜야 하는 상위 기준 |
-| 규칙 Rule | 정책을 실제 작업에 적용할 수 있게 낮춘 판단 단위 |
-| 점검 Check | 규칙을 작업물이나 입력값에 적용해 확인하는 행위 |
-| 피드백 Feedback | 점검 결과를 사용자가 고칠 수 있게 설명한 것 |
+Guideline은 사용자가 읽는 가이드라인 구조를 관리합니다.
+GuidelineSection은 Guideline의 상위 장이고, GuidelinePage는 실제 화면이나 문서에서 읽는 단위입니다.
 
-기준은 별도 모델이라기보다 정책과 규칙을 함께 부르는 상위 표현입니다.
-System과 Agent가 실제로 참조해야 하는 단위는 가능한 한 정책과 규칙으로 나누어 저장합니다.
+GuidelineRule은 점검, 검토 코멘트, Agent 답변, 운영 인사이트에서 직접 참조하는 판단 기준입니다.
+따라서 GuidelinePage 안의 하위 엔티티로 묶지 않고 독립 애그리거트(관리 단위)로 관리합니다.
 
-예시는 다음과 같습니다.
+BrandAsset은 로고, 이미지, 템플릿 파일처럼 공식으로 배포되는 브랜드 자산입니다.
+GuidelinePage와 GuidelineRule은 BrandAsset을 참조할 수 있지만, 에셋의 파일 교체와 발행 상태는 BrandAsset이 관리합니다.
 
-| Policy | Rule |
-| --- | --- |
-| 브랜드 로고는 명확하게 보여야 합니다. | 로고 최소 너비는 120px 이상이어야 합니다. |
-| 로고 주변은 충분히 비워야 합니다. | 로고 주변 여백은 로고 높이의 1배 이상이어야 합니다. |
-| 브랜드 컬러를 일관되게 사용해야 합니다. | 배경색은 승인된 컬러 토큰 중 하나여야 합니다. |
-| 안내 문구는 빠지면 안 됩니다. | 행사형 POP에는 필수 고지 문구가 포함되어야 합니다. |
-| 가독성이 확보되어야 합니다. | 본문 텍스트 크기는 14px 이상이어야 합니다. |
-| 사진은 브랜드 톤을 해치지 않아야 합니다. | 저해상도, 과도한 필터, 금지 소재가 포함되면 사람 검토가 필요합니다. |
+## 5. 제작 관리
 
-규칙은 항상 수치화될 필요는 없습니다. 다만 정책보다 실제적이어야 합니다.
+제작 관리는 Worker가 산출물을 만들고 제출 가능한 형태로 구성하는 서브도메인입니다.
 
-| Rule Type | Meaning | Example |
-| --- | --- | --- |
-| Measurable | 기계적으로 측정 가능 | 최소 크기, 색상 토큰, 글자 수, 필수 입력 |
-| Conditional | 조건으로 판단 가능 | 특정 어플리케이션 타입이면 필수 문구 포함 |
-| Judgmental | 사람 판단 필요 | 사진 톤, 브랜드 인상, 맥락 적합성 |
+```text
+[도메인] 브랜드 운영 시스템
+ └── [서브도메인] 제작 관리
+      └── [바운디드 컨텍스트] 산출물 제작
+           └── [도메인 모델]
+                ├── 애그리거트(관리 단위): Work
+                │    ├── 엔티티: Work, WorkInput, WorkAsset
+                │    └── 값 객체: ApplicationType, TemplateRef, WorkStatus
+                ├── 애그리거트(관리 단위): WorkSubmission
+                │    ├── 엔티티: WorkSubmission
+                │    └── 값 객체: SubmittedContent, GuidelineSnapshot, SubmissionStatus
+                └── 도메인 이벤트: WorkStarted, WorkSubmitted
+```
 
-## 4. 개념 그룹
+Work는 Worker가 산출물을 만들기 시작한 작업 단위입니다.
+WorkSubmission은 제출 당시 GuidelineSnapshot을 보존합니다.
 
-| Group | Question | Concepts |
-| --- | --- | --- |
-| Policy | 무엇이 공식 정책인가? | 정책, 규칙, 카테고리, 에셋, 템플릿, 버전, 예외 |
-| Work | 사용자가 무엇을 만들고 있는가? | 작업, 입력값, 업로드 자산, 작업물, 제출물, 제출 상태 |
-| Usage | 사용자가 무엇을 자주 보고 어디서 머물렀는가? | 사용 기록, 조회 항목, 체류 시간, 다운로드, 클릭 |
-| Interaction | 사용자가 무엇을 물었고 어떤 답을 받았는가? | 질문, 답변, 근거, 신뢰도, 후속 행동 |
-| Evaluation | 작업물이 정책과 규칙에 맞는지 어떻게 판단하는가? | 점검, 위반 항목, 주의 항목, 수정 지시, 피드백, 승인, 반려 |
-| Insight | 반복 문제를 어떻게 개선으로 연결하는가? | 반복 패턴, 인사이트, 개선 후보, 정책/규칙 변경, 개선 효과 |
+## 6. 품질 검수
 
-## 5. 정책 개념
+품질 검수는 WorkSubmission이 기준에 맞는지 점검하고, 질문과 검토 피드백을 기준에 연결하는 서브도메인입니다.
 
-| Concept | Meaning |
-| --- | --- |
-| 정책 | 브랜드가 지향하거나 지켜야 하는 상위 기준 |
-| 규칙 | 정책을 실제 작업에 적용할 수 있게 낮춘 판단 단위 |
-| 카테고리 | 정책과 규칙을 찾고 이해하기 쉽게 나누는 분류 |
-| 에셋 | 정책과 규칙을 적용할 때 사용하는 파일 또는 참고 자료 |
-| 템플릿 | Consumer가 작업을 시작할 때 사용하는 제한된 형식 |
-| 버전 | 특정 시점에 공식으로 적용되는 정책과 규칙의 상태 |
-| 예외 | 일반 정책이나 규칙을 그대로 적용하기 어려울 때 허용되는 별도 판단 |
+```text
+[도메인] 브랜드 운영 시스템
+ └── [서브도메인] 품질 검수
+      ├── [바운디드 컨텍스트] 질의응답
+      │    └── [도메인 모델]
+      │         ├── 애그리거트(관리 단위): QASession
+      │         │    ├── 엔티티: Question, Answer
+      │         │    └── 값 객체: AnswerCitation, AnswerConfidence
+      │         └── 도메인 이벤트: QuestionAsked, AnswerProvided
+      └── [바운디드 컨텍스트] 제출물 검수
+           └── [도메인 모델]
+                ├── 애그리거트(관리 단위): CheckRun
+                │    ├── 엔티티: CheckRun, CheckResult
+                │    └── 값 객체: CheckOutcome, Violation, Recommendation
+                ├── 애그리거트(관리 단위): Review
+                │    ├── 엔티티: Review, ReviewComment
+                │    └── 값 객체: ReviewDecision, RejectionReason
+                └── 도메인 이벤트: CheckCompleted, ReviewCompleted
+```
 
-에셋은 규칙이 아닙니다. 에셋은 사용하거나 참조하는 대상입니다.
+Question과 Answer는 각각 독립 애그리거트(관리 단위)로 보지 않습니다.
+질문 삭제, 질문 수정, 질문 종료는 Answer와 함께 움직일 가능성이 높으므로 QASession 애그리거트(관리 단위) 안에서 관리합니다.
 
-규칙은 에셋, 템플릿, 입력값, 작업물의 사용 가능 여부를 판단하는 근거입니다.
+CheckResult와 ReviewComment는 가능하면 GuidelineRule을 참조합니다.
+Agent와 System은 점검과 설명을 보조할 수 있지만, 승인, 반려, 수정 요청의 최종 결정은 Manager가 합니다.
 
-## 6. 작업 개념
+## 7. 운영 인사이트
 
-| Concept | Meaning |
-| --- | --- |
-| 작업 | Consumer가 특정 목적의 산출물을 만들기 시작한 상태 |
-| 입력값 | Consumer가 템플릿이나 작업 화면에 넣은 텍스트, 이미지, 선택값 |
-| 업로드 자산 | Consumer가 작업에 사용하기 위해 올린 이미지, 문서, 디자인 파일 |
-| 작업물 | 입력값과 템플릿을 바탕으로 만들어진 초안 또는 미리보기 |
-| 제출물 | Consumer가 검토 또는 사용 승인을 받기 위해 제출한 작업물 |
-| 제출 상태 | 제출물이 검토 중인지, 승인되었는지, 반려되었는지 나타내는 상태 |
+운영 인사이트는 품질 검수에서 생긴 질문, 점검 실패, 반려 사유, 사용 행동을 분석해 개선 근거를 만드는 서브도메인입니다.
 
-공식 에셋과 업로드 자산은 다릅니다.
+```text
+[도메인] 브랜드 운영 시스템
+ └── [서브도메인] 운영 인사이트
+      └── [바운디드 컨텍스트] 인사이트 도출
+           └── [도메인 모델]
+                ├── 애그리거트(관리 단위): Insight
+                │    ├── 엔티티: Insight, Evidence, Pattern, Proposal
+                │    └── 값 객체: InsightStatus, PatternType, ExpectedImpact
+                ├── 도메인 서비스: InsightDiscoveryService
+                └── 도메인 이벤트: InsightDiscovered, ProposalAccepted
+```
 
-공식 에셋은 정책 쪽 데이터입니다. 업로드 자산은 Work 쪽 데이터입니다.
+Insight는 반복 패턴, 근거, 개선 제안을 하나의 흐름으로 묶은 분석 결과물입니다.
+Proposal은 채택되어야 가이드라인 관리에서 실제 Guideline 또는 GuidelineRule 변경으로 반영됩니다.
 
-## 7. 사용 기록 개념
+## 8. 핵심 관계
 
-| Concept | Meaning |
-| --- | --- |
-| 사용 기록 | Consumer가 가이드라인을 탐색하고 작업하는 과정에서 남긴 기록 |
-| 조회 항목 | Consumer가 열람한 정책, 규칙, 예시, FAQ, 템플릿 |
-| 체류 시간 | 특정 항목이나 페이지에 머문 시간 |
-| 다운로드 | Consumer가 공식 에셋이나 템플릿을 내려받은 행위 |
-| 클릭 | Consumer가 특정 기준, 에셋, 버튼, 안내를 선택한 행위 |
+```mermaid
+flowchart LR
+  Guideline["Guideline"]
+  Section["GuidelineSection"]
+  Page["GuidelinePage"]
+  Rule["GuidelineRule"]
+  Asset["BrandAsset"]
+  Work["Work"]
+  QASession["QASession"]
+  Question["Question"]
+  Answer["Answer"]
+  Submission["WorkSubmission"]
+  CheckRun["CheckRun"]
+  CheckResult["CheckResult"]
+  Review["Review"]
+  Comment["ReviewComment"]
+  Insight["Insight"]
+  Evidence["Evidence"]
+  Pattern["Pattern"]
+  Proposal["Proposal"]
 
-사용 기록은 그 자체로 판단 근거가 아닙니다.
-반복 질문, 점검 실패, 반려 사유와 함께 해석될 때 개선 후보의 근거가 됩니다.
+  Guideline --> Section
+  Section --> Page
+  Page -->|"관련 규칙"| Rule
+  Page -->|"참조"| Asset
+  Rule -->|"참조"| Asset
+  Work --> QASession
+  QASession --> Question
+  QASession --> Answer
+  Question --> Answer
+  Answer -->|"근거"| Rule
+  Work --> Submission
+  Submission -->|"스냅샷 보존"| Guideline
+  CheckRun --> CheckResult
+  CheckResult --> Submission
+  CheckResult --> Rule
+  Review --> Submission
+  Review --> Comment
+  Comment --> Rule
+  CheckResult --> Evidence
+  Comment --> Evidence
+  Evidence --> Insight
+  Insight --> Pattern
+  Insight --> Proposal
+  Proposal -->|"채택 시 변경"| Rule
+```
 
-## 8. 상호작용 개념
+## 9. 설계 원칙
 
-| Concept | Meaning |
-| --- | --- |
-| 질문 | Consumer가 작업 상황에서 정책이나 규칙 적용을 묻는 자연어 입력 |
-| 답변 | Agent 또는 System이 질문에 대해 제공하는 안내 |
-| 근거 | 답변, 점검, 피드백이 참조한 정책, 규칙, 자료 |
-| 신뢰도 | 답변이나 점검 결과를 얼마나 믿을 수 있는지 나타내는 정도 |
-| 후속 행동 | 사용자가 다음에 해야 할 행동 |
-
-질문은 단순 검색어가 아닙니다. 작업 맥락과 함께 해석되어야 합니다.
-
-근거가 약하면 확정 답변을 주지 않습니다. 사람 확인 대상으로 넘깁니다.
-
-## 9. 평가 개념
-
-| Concept | Meaning |
-| --- | --- |
-| 점검 | 작업물이나 입력값이 규칙에 맞는지 확인하는 행위 |
-| 위반 항목 | 작업물 또는 입력값이 규칙을 충족하지 못한 부분 |
-| 주의 항목 | 명확한 위반은 아니지만 실패 가능성이 있거나 사람 판단이 필요한 부분 |
-| 수정 지시 | 사용자가 무엇을 어떻게 고쳐야 하는지 알려주는 안내 |
-| 피드백 | System, Agent, Manager가 작업물에 대해 남기는 설명 또는 코멘트 |
-| 승인 | 제출물이 정책과 규칙 기준상 사용할 수 있다고 판단된 상태 |
-| 반려 | 제출물이 정책과 규칙 기준상 사용할 수 없다고 판단된 상태 |
-
-피드백은 단순 의견이 아닙니다.
-
-피드백은 규칙, 위반 항목, 수정 지시와 연결되어야 합니다.
-
-## 10. 인사이트 개념
-
-| Concept | Meaning |
-| --- | --- |
-| 리포트 | 질문, 점검, 제출, 반복 패턴을 사람이 판단할 수 있게 정리한 결과물 |
-| 반복 패턴 | 여러 작업, 질문, 제출, 반려에서 반복해서 나타나는 문제 |
-| 인사이트 | 반복 패턴을 정책 또는 규칙 개선 후보로 해석한 결과 |
-| 개선 후보 | Manager가 채택하거나 제외해야 하는 변경 제안 |
-| 정책/규칙 변경 | 채택된 인사이트를 바탕으로 공식 정책, 규칙, 템플릿, 안내, 예시를 수정하는 행위 |
-| 개선 효과 | 변경 이후 질문 수, 반려율, 수정 요청 수, 반복 오류가 줄었는지 확인한 결과 |
-
-인사이트는 자동으로 정책이나 규칙을 바꾸지 않습니다.
-
-Agent는 제안하고, Manager가 결정하며, System이 기록합니다.
-
-## 11. 가이드라인 카테고리
-
-브랜드 가이드라인 카테고리는 같은 레벨이 아닙니다.
-
-| Group | Meaning | Role |
-| --- | --- | --- |
-| Core Policy | 브랜드의 최상위 정책 | 다른 판단의 기준 |
-| System Rules | 시각/언어 시스템 규칙 | 정책을 디자인 요소로 낮춥니다. |
-| Applied Context | 실제 산출물 적용 기준 | 정책과 규칙을 작업 상황에 적용합니다. |
-
-### Core Policy
-
-| Category | Meaning |
-| --- | --- |
-| Brand Foundation | 브랜드 목적, 가치, 성격, 원칙 |
-| Brand Voice | 말투, 태도, 표현 방향 |
-| Brand Personality | 브랜드가 보여야 하는 성격 |
-| Brand Principles | 판단 기준이 되는 상위 원칙 |
-| Legal or Compliance Notes | 반드시 지켜야 하는 법무/준법 기준 |
-
-### System Rules
-
-| Category | Meaning |
-| --- | --- |
-| Logo | 로고 사용, 최소 크기, 여백, 배경 조건 |
-| Color | 주색, 보조색, 금지 색상, 대비 기준 |
-| Typography | 폰트, 크기, 위계, 줄간격 |
-| Layout | 여백, 정렬, 그리드, 구성 원칙 |
-| Iconography | 아이콘 스타일과 사용 기준 |
-| Photography | 사진 톤, 구도, 소재, 금지 이미지 |
-| Illustration | 일러스트 스타일과 사용 기준 |
-| Motion | 모션 톤, 속도, 전환 기준 |
-| Voice and Tone | 문장 톤, 금지 표현, 권장 표현 |
-
-### Applied Context
-
-| Category | Meaning |
-| --- | --- |
-| Application Type Guidelines | POP, 배너, 공지문 등 어플리케이션 타입별 기준 |
-| Campaign Examples | 캠페인별 적용 예시 |
-| Do and Don't | 실제 사용 가능/불가 사례 |
-| Template Rules | 허용 템플릿과 제한 조건 |
-| Worker Checklist | 제출 전 사용자가 확인해야 하는 항목의 표현 |
-| Review Guidance | Manager 검토 시 참고하는 판단 표현 |
-| FAQ | 반복 질문에 대한 답변 |
-
-## 12. 우선순위 규칙
-
-규칙이 충돌하거나 해석이 필요한 경우 다음 순서로 판단합니다.
-
-1. Legal or Compliance Notes
-2. Brand Foundation, Brand Principles
-3. Brand Voice, Brand Personality
-4. System Rules
-5. Applied Context
-6. 개별 예시 또는 FAQ
-
-단, Applied Context가 특정 어플리케이션 타입에 대해 더 엄격한 제한을 명시하면 해당 작업에서는 Applied Context를 따릅니다.
+- GuidelinePage는 읽기 단위이고, GuidelineRule은 판단 단위입니다.
+- GuidelineRule은 독립 애그리거트(관리 단위)로 관리합니다.
+- QASession은 Question과 Answer를 함께 관리하는 애그리거트(관리 단위)입니다.
+- Answer, CheckResult, ReviewComment는 GuidelineRule을 근거로 참조할 수 있어야 합니다.
+- WorkSubmission은 제출 당시 GuidelineSnapshot을 보존합니다.
+- Review는 Manager의 최종 판단 기록입니다.
+- Insight는 Evidence, Pattern, Proposal을 함께 관리하는 분석 결과물입니다.
+- Proposal은 자동으로 기준을 바꾸지 않습니다.
+- Published 상태가 아닌 기준은 Worker 화면과 점검 기준에서 제외합니다.

@@ -26,7 +26,7 @@
 | 20 | 취약한 패스워드 복구 | 비밀번호 재설정 token은 1회성, 짧은 만료 시간, 서버 저장 검증을 적용합니다. |  |
 | 21 | 쿠키 변조 | 권한 판단에 클라이언트 쿠키 값을 직접 사용하지 않고 서버 세션과 Payload user를 기준으로 판단합니다. |  |
 | 22 | 환경 변수 및 Secret 관리 | `PAYLOAD_SECRET`, DB URL, API key가 코드, 로그, 클라이언트 번들에 노출되지 않도록 관리합니다. |  |
-| 23 | 관리자 권한 분리 | Admin, Manager, Consumer 역할별 권한을 분리하고, 관리자 기능 접근을 최소 권한으로 제한합니다. |  |
+| 23 | 관리자 권한 분리 | Admin, Manager, Worker 역할별 권한을 분리하고, 관리자 기능 접근을 최소 권한으로 제한합니다. |  |
 | 24 | API 접근 제어 | Payload REST, GraphQL, Local API에서 collection별 access control 누락이 없는지 확인합니다. Local API는 기본적으로 `user`와 `overrideAccess: false`를 사용합니다. |  |
 | 25 | GraphQL 노출 관리 | 운영 환경에서 GraphQL Playground, introspection, 과도한 query depth 노출을 제한합니다. |  |
 | 26 | 파일 MIME 검증 | 업로드 파일은 확장자뿐 아니라 MIME type과 실제 파일 내용을 함께 검증합니다. |  |

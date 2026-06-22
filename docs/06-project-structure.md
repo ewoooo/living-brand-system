@@ -6,7 +6,7 @@
 
 ### 패키지 구조
 
-이 프로젝트는 Next.js 애플리케이션 안에 Payload CMS와 Consumer UI를 함께 둡니다.
+이 프로젝트는 Next.js 애플리케이션 안에 Payload CMS와 Worker UI를 함께 둡니다.
 패키지는 도메인보다 실행 위치와 책임을 기준으로 나눕니다.
 
 | 영역 | 위치 | 역할 |
@@ -15,10 +15,10 @@
 | Payload config | `src/payload.config.ts` | Payload 전역 설정, collection, plugin, db adapter를 연결합니다. |
 | Collections | `src/collections` | Payload collection schema, access, hook 진입점을 둡니다. |
 | UI components | `src/components` | ShadCN 기반 공통 컴포넌트와 화면 조합 컴포넌트를 둡니다. |
-| Feature modules | `src/features` | Consumer 작업 흐름처럼 화면과 상태가 묶인 기능을 둡니다. |
+| Feature modules | `src/features` | Worker 작업 흐름처럼 화면과 상태가 묶인 기능을 둡니다. |
 | Services | `src/services` | 유즈케이스 단위 업무 규칙을 둡니다. |
 | Repositories | `src/repositories` | Payload Local API, 검색 인덱스, 외부 저장소 접근을 감쌉니다. |
-| Agent modules | `src/agents` | RAG 검색, 프롬프트, 답변 생성, 인사이트 후보 생성을 둡니다. |
+| Agent modules | `src/agents` | RAG 검색, 프롬프트, Answer, Recommendation, Pattern 요약을 둡니다. |
 | Shared utilities | `src/lib` | 공통 util, error, logger, auth helper를 둡니다. |
 | Hooks | `src/hooks` | React custom hook을 둡니다. |
 | Types | `src/types` | Payload 타입 외에 공통 타입을 둡니다. |
@@ -36,12 +36,12 @@
 
 ### 프론트엔드 폴더 구조
 
-프론트엔드는 Payload Admin과 Consumer UI를 분리합니다.
+프론트엔드는 Payload Admin과 Worker UI를 분리합니다.
 
 | 영역 | 위치 | 규칙 |
 | --- | --- | --- |
 | Payload Admin | `src/app/(payload)` | Payload가 요구하는 admin route와 API route를 둡니다. |
-| Consumer UI | `src/app/(frontend)` | 내부 현장 작업자가 사용하는 화면을 둡니다. |
+| Worker UI | `src/app/(frontend)` | 내부 현장 작업자가 사용하는 화면을 둡니다. |
 | Route Handler | `src/app/**/route.ts` | HTTP 요청 검증과 Service 호출만 담당합니다. |
 | ShadCN UI | `src/components/ui` | registry 기반 컴포넌트 원형을 둡니다. |
 | 화면 컴포넌트 | `src/features/*/components` | 특정 기능에만 쓰는 컴포넌트를 둡니다. |
@@ -114,7 +114,7 @@ src/repositories/
 ### Agent 모듈
 
 Agent는 별도 사용자 역할이 아니라 서비스 모듈입니다.
-초기에는 Payload/Next.js 애플리케이션 안에서 시작하고, RAG 검색, 답변 생성, 수정 지시, 인사이트 후보 생성이 커질 때 별도 모듈이나 worker로 분리합니다.
+초기에는 Payload/Next.js 애플리케이션 안에서 시작하고, RAG 검색, Answer 생성, Recommendation 생성, Pattern 요약이 커질 때 별도 모듈이나 worker로 분리합니다.
 
 ```text
 src/agents/
@@ -133,12 +133,12 @@ src/agents/
 | 구현 대상 | 위치 | 기준 |
 | --- | --- | --- |
 | Payload collection | `src/collections` | 데이터 구조, access, hook 진입점 |
-| Consumer 화면 | `src/app/(frontend)`, `src/features` | 사용자 작업 흐름 |
+| Worker 화면 | `src/app/(frontend)`, `src/features` | 사용자 작업 흐름 |
 | Admin 화면 | Payload Admin 기본 UI | Manager의 CMS 작업 |
 | Route Handler | `src/app/**/route.ts` | 외부 HTTP 요청 처리 |
 | Service | `src/services` | 유즈케이스 업무 규칙 |
 | Repository | `src/repositories` | Payload Local API, 검색, 외부 저장소 접근 |
-| Agent | `src/agents` | 검색, 답변, 수정 지시, 인사이트 후보 |
+| Agent | `src/agents` | 검색, Answer, Recommendation, Pattern 요약 |
 | 공통 유틸 | `src/lib` | 에러, 로그, 메시지, 인증 helper |
 
 ## 4. 파일 명칭 규칙
@@ -204,7 +204,7 @@ Facade는 기본 구조로 두지 않습니다.
 ```ts
 /**
  * 발행된 기준만 조회한다.
- * Agent 답변과 Consumer UI는 draft 기준을 사용하면 안 된다.
+ * Agent 답변과 Worker UI는 draft 기준을 사용하면 안 된다.
  */
 ```
 
