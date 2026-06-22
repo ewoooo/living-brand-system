@@ -1,3 +1,4 @@
+import { s3Storage } from '@payloadcms/storage-s3'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
@@ -28,7 +29,14 @@ export default buildConfig({
 	collections: [
 		Users,
 		Media,
-		{ slug: 'cars', admin: { useAsTitle: 'title' }, fields: [{ name: 'title', type: "text" }, { name: 'featuredImage', type: 'upload', relationTo: 'media' }] }
+		{
+			slug: 'cars',
+			admin: { useAsTitle: 'title' },
+			fields: [
+				{ name: 'title', type: 'text' },
+				{ name: 'featuredImage', type: 'upload', relationTo: 'media' },
+			],
+		},
 	],
 	editor: lexicalEditor(),
 	secret: process.env.PAYLOAD_SECRET || '',
@@ -41,5 +49,20 @@ export default buildConfig({
 		},
 	}),
 	sharp,
-	plugins: [],
+	plugins: [
+		// s3Storage({
+		// 	enabled: Boolean(process.env.S3_BUCKET),
+		// 	collections: {
+		// 		media: true,
+		// 	},
+		// 	bucket: process.env.S3_BUCKET || '',
+		// 	config: {
+		// 		credentials: {
+		// 			accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+		// 			secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+		// 		},
+		// 	},
+		// 	region: process.env.S3_REGION,
+		// }),
+	],
 })
