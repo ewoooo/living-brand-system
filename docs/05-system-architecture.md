@@ -79,23 +79,42 @@ flowchart LR
 
 ## 3. 시스템 구조
 
+PDF의 Spring 구조는 `UI -> Controller -> Service -> DAO -> DB` 흐름을 기준으로 합니다.
+이 프로젝트에서는 같은 책임 경계를 Next.js와 Payload CMS 구조로 바꿔 적용합니다.
+
+| Spring 기준 | 이 프로젝트 기준 | 적용 방식 |
+| --- | --- | --- |
+| JSP/UI | Next.js App Router, ShadCN UI | 화면 표시와 사용자 입력 수집만 담당합니다. |
+| Controller | Route Handler, Server Action, Payload hook | 요청 검증, 인증 확인, Service 호출만 담당합니다. |
+| Service | 유즈케이스 service | 업무 규칙과 여러 데이터 접근 흐름을 조합합니다. |
+| DAO | Repository | Payload Local API, 검색 인덱스, 외부 저장소 접근을 감쌉니다. |
+| SqlMap | Payload query, PostgreSQL query, vector search | 별도 SQL map 파일은 두지 않습니다. |
+
 ### Presentation Layer
 
 - Payload Admin은 Manager의 CMS 작업 화면을 담당합니다.
 - Guideline UI는 Consumer의 작업 선택, 템플릿 선택, 체크리스트 확인, 제출 흐름을 담당합니다.
 - Agent 답변과 점검 결과는 Guideline UI에서 사용자에게 보여줍니다.
+- UI는 Service, Repository, Payload Local API를 직접 호출하지 않습니다.
+- UI validation은 사용자 편의를 위한 1차 검증으로만 사용하고, 서버에서 같은 조건을 다시 검증합니다.
 
 ### Business Layer
 
 - Context Engine은 룰 조회, 검색, 체크리스트 생성, 결정적 점검을 담당합니다.
 - Agent는 질문 이해, 답변 작성, 수정 지시, 인사이트 후보 요약을 담당합니다.
 - Governance 결정인 승인, 반려, 예외 처리, 기준 변경은 Manager가 수행합니다.
+- Route Handler, Server Action, Payload hook은 얇게 유지하고 업무 규칙을 Service로 위임합니다.
+- 하나의 Service는 하나의 유즈케이스를 기준으로 작성합니다.
+- 여러 저장소 접근, 트랜잭션, Agent 호출, 후속 작업 예약은 Service에서 조합합니다.
 
 ### Data Access Layer
 
 - 내부 읽기와 쓰기는 Payload Local API를 우선 사용합니다.
 - 검색 인덱스 접근은 권한, 발행 상태, 버전 필터를 통과한 데이터만 대상으로 합니다.
 - 분석 도구 연동은 adapter 뒤에 두고, 제품 핵심 기록과 분리합니다.
+- Repository는 Payload query 조건, `depth`, `select`, access control 옵션을 숨깁니다.
+- Repository는 기본적으로 현재 사용자와 권한 컨텍스트를 받아 조회합니다.
+- `overrideAccess: true`는 관리성 작업이나 migration처럼 명확한 예외에서만 사용합니다.
 
 ### Data
 
@@ -110,30 +129,38 @@ flowchart LR
 - 화면은 사용자의 작업 흐름 단위로 구성합니다.
 - Consumer UI는 Payload Admin과 분리합니다.
 - Consumer에게 보여주는 용어와 Manager 내부 용어를 구분합니다.
+- ShadCN 컴포넌트는 화면 조합에 사용하고, 도메인 판단을 컴포넌트 안에 넣지 않습니다.
+- React Server Component는 읽기 중심으로 사용하고, 상태 변경은 Server Action이나 Route Handler로 분리합니다.
 
 ### Hooks (Controller)
 
 - Payload hook은 collection 생명주기에 붙는 얇은 진입점으로 사용합니다.
 - hook 안에서는 검증, 상태 전이, 후속 작업 호출만 처리합니다.
 - 반복 호출이나 hook loop가 생길 수 있는 작업은 `req.context`로 제어합니다.
+- hook에서 다른 collection을 변경할 때는 같은 `req`를 넘겨 트랜잭션과 권한 컨텍스트를 유지합니다.
 
 ### Service (Usecase)
 
 - Service는 유즈케이스 단위의 업무 규칙을 담습니다.
 - 제출 전 점검, 체크리스트 생성, 인사이트 후보 생성처럼 여러 데이터 접근이 필요한 흐름을 조합합니다.
 - 프롬프트 추론만으로 최종 준수 여부를 결정하지 않습니다.
+- Service는 UI 응답 형식에 의존하지 않습니다.
+- Service에서 업무상 실패를 감지하면 사용자에게 보여줄 안전한 메시지 코드나 오류 타입으로 변환합니다.
 
 ### Repository (DAO)
 
 - Repository는 Payload Local API 호출과 검색 인덱스 접근을 감쌉니다.
 - 권한, 발행 상태, 버전 조건을 누락하지 않도록 조회 경계를 명확히 둡니다.
 - 화면이나 Service가 Payload query 세부사항에 직접 의존하지 않게 합니다.
+- Repository는 원칙적으로 하나의 도메인 데이터 묶음을 담당합니다.
+- 여러 Repository를 조합하는 로직은 Repository가 아니라 Service에 둡니다.
 
 ### ORM
 
 - 기본 데이터 접근은 Payload adapter와 Local API를 사용합니다.
 - DB 직접 접근은 Payload로 표현하기 어려운 집계나 운영성 작업에 한정합니다.
 - 직접 접근한 데이터도 제품 핵심 기록과 감사 가능성을 해치지 않아야 합니다.
+- 직접 SQL을 사용해야 하는 경우에도 외부 입력을 문자열로 이어 붙이지 않습니다.
 
 ## 5. 아키텍처 원칙
 
