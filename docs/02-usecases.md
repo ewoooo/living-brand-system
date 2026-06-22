@@ -18,7 +18,7 @@ Manager -> System -> Agent -> Consumer -> System -> Agent -> Manager
 - 누가 어떤 입력을 만듭니다.
 - System과 Agent가 무엇을 처리합니다.
 - Consumer와 Manager가 어떤 결과를 받습니다.
-- 어떤 사용 기록이 남고, 그 기록이 어떻게 Governance 개선으로 돌아갑니다.
+- 어떤 사용 기록이 남고, 그 기록이 어떻게 거버넌스 개선으로 돌아갑니다.
 
 ## 2. 01번 제품 문서와의 연결
 
@@ -30,7 +30,7 @@ Manager -> System -> Agent -> Consumer -> System -> Agent -> Manager
 | 필요한 기준 탐색의 어려움 | 어플리케이션 타입 선택, 기준 검색, 관련 에셋 노출 |
 | 선택 부담 | 허용 템플릿, 제한된 입력 폼, 필수/금지 조건 |
 | 제출 전 불확실성 | 자가 점검, pass/warning/fail/human review |
-| 피드백 적용의 어려움 | 룰 연결 피드백, 수정 지시, 재점검 |
+| 피드백 적용의 어려움 | 규칙 연결 피드백, 수정 지시, 재점검 |
 | 반복 오류 개선 | 반복 질문, 반복 위반, 반려 사유, 사용 행동 분석 |
 
 01번 문서의 핵심 가설은 다음 유즈케이스로 검증합니다.
@@ -38,7 +38,7 @@ Manager -> System -> Agent -> Consumer -> System -> Agent -> Manager
 | 핵심 가설 | 관련 유즈케이스 | 검증 신호 |
 | --- | --- | --- |
 | 구체적인 작업 지시가 수행률을 높입니다. | L3-UC-02, L3-UC-05, L4-UC-05 | 자가 수행 가능성 응답, 재질문 수, 작업 완료율 |
-| 선택지가 줄어들수록 오류가 줄어듭니다. | L3-UC-01, L3-UC-03, L3-UC-04 | 템플릿 이탈률, 룰 위반 항목 수 |
+| 선택지가 줄어들수록 오류가 줄어듭니다. | L3-UC-01, L3-UC-03, L3-UC-04 | 템플릿 이탈률, 규칙 위반 항목 수 |
 | 제출 전 점검이 검토 비용을 줄입니다. | L4-UC-01, L4-UC-03, L4-UC-04 | 제출 전 수정 완료율, 재제출 성공률, Manager 개입 감소율 |
 | 피드백과 수정 방법을 함께 주면 반복 오류가 줄어듭니다. | L4-UC-04, L4-UC-05, L5-UC-01, L5-UC-02 | 같은 오류 재발률, 반복 코멘트 수, 검토 소요 시간 |
 
@@ -50,9 +50,9 @@ L1~L5는 제품 이름이나 성숙도 설명이 아니라 기능 범위를 구�
 | 범위 | 기능 | 남기는 데이터 |
 | --- | --- | --- |
 | L1 | 가이드라인 문서 작성, 배포, 열람, 재배포 | 문서 파일, 배포 이력, 수동 버전명, 문서 열람 기록 |
-| L2 | 가이드라인 섹션 등록, 공식 에셋 등록, 기준 검색, 에셋 다운로드, 변경 이력 관리 | 섹션, 룰, 에셋, 버전, 적용일, 조회/다운로드 기록 |
+| L2 | 가이드라인 섹션 등록, 공식 에셋 등록, 기준 검색, 에셋 다운로드, 변경 이력 관리 | 섹션, 규칙, 에셋, 버전, 적용일, 조회/다운로드 기록 |
 | L3 | 어플리케이션 타입별 기준 구성, 실행 가이드 발행, 템플릿 선택, 작업물 작성, 실행 가이드 노출 | 어플리케이션 타입, 템플릿 선택, 입력값, 작업물 초안, 기준 스냅샷 |
-| L4 | 제출 전 자가 점검, 상황형 질문, 작업물 제출, Manager 검토, 수정 지시 제공 | 질문, 답변, 점검 결과, 제출 상태, 룰 연결 피드백, 수정 지시 |
+| L4 | 제출 전 자가 점검, 상황형 질문, 작업물 제출, Manager 검토, 수정 지시 제공 | 질문, 답변, 점검 결과, 제출 상태, 규칙 연결 피드백, 수정 지시 |
 | L5 | 반복 질문과 반려 사유 집계, Insight Report 확인, 기준 개선 전환, 실행 가이드 반영, 개선 효과 추적 | 반복 패턴, 인사이트 후보, 개선안, 새 기준 스냅샷, Impact Report |
 
 ## 4. 유즈케이스 세그먼트
@@ -61,16 +61,16 @@ L1~L5는 제품 이름이나 성숙도 설명이 아니라 기능 범위를 구�
 
 | Segment | Main Flow | Meaning | 남는 기록 |
 | --- | --- | --- | --- |
-| Governance Segment | Manager -> System | 정책, 룰, 에셋, 템플릿, 버전, 승인 상태를 만듭니다. | 기준 버전, 변경 사유, 적용일 |
+| Governance Segment | Manager -> System | 거버넌스, 규칙, 에셋, 템플릿, 버전, 승인 상태를 만듭니다. | 기준 버전, 변경 사유, 적용일 |
 | Guidance Segment | System -> Agent -> Consumer | 발행된 기준을 Consumer가 실행할 수 있는 안내로 바꿉니다. | 노출된 기준, 실행 가이드, 조회 기록 |
 | Consumer Work Segment | Consumer -> System | 작업 세션, 입력값, 작업물, 제출물을 남깁니다. | 작업 목적, 선택 템플릿, 입력값, 제출 상태 |
 | Agent Interaction Segment | Consumer <-> Agent -> System | 질문, 답변, 점검, 수정 지시를 남깁니다. | 질문 의도, 인용 기준, 점검 결과, 수정 지시 |
-| Evaluation Segment | Manager <-> System | 제출물 검토와 사람 판단을 기록합니다. | 승인, 반려, 수정 요청, 룰 연결 코멘트 |
+| Evaluation Segment | Manager <-> System | 제출물 검토와 사람 판단을 기록합니다. | 승인, 반려, 수정 요청, 규칙 연결 코멘트 |
 | Insight Segment | System -> Agent -> Manager | 반복 질문, 실패, 반려 사유, 사용 행동을 개선 후보로 묶습니다. | 반복 패턴, 인사이트 후보, 우선순위 |
 | Governance Update Segment | Manager -> System | 채택된 개선 후보를 기준 개선으로 반영합니다. | 개정 초안, 승인 이력, 개선 효과 |
 
 Agent는 제안하고, Manager가 결정하며, System이 기록합니다.
-Agent는 Governance를 직접 변경하지 않습니다.
+Agent는 거버넌스를 직접 변경하지 않습니다.
 
 ## 5. 전체 흐름
 
@@ -83,7 +83,7 @@ flowchart LR
   S2["System<br/>사용 기록 저장"]
   A2["Agent<br/>개선 후보 정리"]
 
-  M -->|"정책·룰·에셋·템플릿 등록"| S1
+  M -->|"거버넌스·규칙·에셋·템플릿 등록"| S1
   S1 -->|"구조화된 기준·버전·작업 맥락"| A1
   A1 -->|"실행 가이드·점검·수정 지시"| C
   C -->|"작업 세션·입력값·제출물·사용 행동"| S2
@@ -103,7 +103,7 @@ flowchart LR
 | L1-UC-02 | 기준 문서 관리 | Governance | Manager가 가이드라인 문서를 배포합니다 | 기준 전달 | 배포 안내 |
 | L1-UC-03 | 기준 문서 관리 | Guidance | Consumer가 가이드라인 문서를 열람합니다 | 필요한 기준 탐색의 어려움 | 직접 해석한 기준 |
 | L1-UC-04 | 기준 문서 관리 | Governance | Manager가 새 버전 문서를 재배포합니다 | 최신본 확인 어려움 | 새 문서와 혼선 위험 |
-| L2-UC-01 | 기준 데이터 관리 | Governance | Manager가 가이드라인 섹션을 등록합니다 | 구조화되지 않은 기준 | 구조화된 섹션과 룰 |
+| L2-UC-01 | 기준 데이터 관리 | Governance | Manager가 가이드라인 섹션을 등록합니다 | 구조화되지 않은 기준 | 구조화된 섹션과 규칙 |
 | L2-UC-02 | 기준 데이터 관리 | Governance | Manager가 공식 에셋을 등록합니다 | 임의 에셋 사용 위험 | 공식 에셋 |
 | L2-UC-03 | 기준 데이터 관리 | Guidance | Consumer가 기준을 검색합니다 | 필요한 기준 탐색의 어려움 | 검색 결과와 최신 기준 |
 | L2-UC-04 | 기준 데이터 관리 | Guidance | Consumer가 공식 에셋을 다운로드합니다 | 선택 부담 | 다운로드된 공식 에셋 |
@@ -116,7 +116,7 @@ flowchart LR
 | L4-UC-01 | 작업 점검과 피드백 | Agent Interaction | Consumer가 제출 전 자가 점검을 실행합니다 | 제출 전 불확실성 | 점검 결과와 수정 지시 |
 | L4-UC-02 | 작업 점검과 피드백 | Agent Interaction | Consumer가 Agent에게 상황형 질문을 합니다 | 기준 적용의 어려움 | 근거 있는 쉬운 답변 |
 | L4-UC-03 | 작업 점검과 피드백 | Consumer Work | Consumer가 작업물을 제출합니다 | 검토 흐름 연결 | 공식 제출물 |
-| L4-UC-04 | 작업 점검과 피드백 | Evaluation | Manager가 제출물을 검토하고 피드백합니다 | 피드백 적용의 어려움 | 룰 연결 피드백 |
+| L4-UC-04 | 작업 점검과 피드백 | Evaluation | Manager가 제출물을 검토하고 피드백합니다 | 피드백 적용의 어려움 | 규칙 연결 피드백 |
 | L4-UC-05 | 작업 점검과 피드백 | Agent Interaction | System이 수정 지시를 제공합니다 | 쉬운 수정 지시 | 다음 행동 |
 | L5-UC-01 | 개선 루프 | Insight | System이 반복 질문과 반려 사유를 집계합니다 | 반복 오류 개선 | 반복 패턴 |
 | L5-UC-02 | 개선 루프 | Insight | Manager가 Insight Report를 확인합니다 | 개선 우선순위 판단 | 채택/제외된 인사이트 |
@@ -131,7 +131,7 @@ MVP는 모든 유즈케이스를 구현하지 않습니다.
 
 | Priority | Use Case | 선택 이유 | 검증 신호 |
 | --- | --- | --- | --- |
-| 1 | L3-UC-01. Manager가 어플리케이션 타입별 기준을 구성합니다. | Consumer에게 필요한 기준만 제공하려면 먼저 기준을 작업 맥락에 연결해야 합니다. | 타입별 연결된 룰 수, 템플릿 이탈률 |
+| 1 | L3-UC-01. Manager가 어플리케이션 타입별 기준을 구성합니다. | Consumer에게 필요한 기준만 제공하려면 먼저 기준을 작업 맥락에 연결해야 합니다. | 타입별 연결된 규칙 수, 템플릿 이탈률 |
 | 2 | L3-UC-02. Manager가 어플리케이션 타입별 실행 가이드를 발행합니다. | 정적 문서를 실행 가능한 작업 지시로 바꿔야 합니다. | 실행 가이드 조회율, 자가 수행 가능성 응답 |
 | 3 | L4-UC-01. Consumer가 제출 전 자가 점검을 실행합니다. | 제출 전 불확실성을 줄이는 직접 가치입니다. | 제출 전 수정 완료율, 점검 후 반려율 |
 | 4 | L4-UC-04. Manager가 제출물을 검토하고 피드백합니다. | 실제 반려 사유와 Manager 판단 기록이 생깁니다. | 반복 코멘트 수, 검토 소요 시간 |
@@ -151,12 +151,12 @@ L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩�
 | --- | --- |
 | 01 연결 | 기준 존재 |
 | Actors | Manager |
-| Input | 브랜드 원칙, 시각 룰, 콘텐츠 룰, 예시 자료, 에셋 파일 |
+| Input | 브랜드 원칙, 시각 규칙, 콘텐츠 규칙, 예시 자료, 에셋 파일 |
 | Process | Manager가 기준 내용을 문서로 정리하고, 이미지와 에셋 링크를 포함한 뒤, 배포 가능한 파일로 내보냅니다. |
 | Output | Guideline Document, Asset Package |
 | Generated Data | 문서 파일, 작성일, 작성자, 수동 버전명 |
 | 검증 신호 | 기준 문서 완성 여부, 배포 가능한 에셋 포함 여부 |
-| Next Maturity Condition | 문서를 섹션, 룰, 에셋 단위로 쪼개서 관리해야 합니다. |
+| Next Maturity Condition | 문서를 섹션, 규칙, 에셋 단위로 쪼개서 관리해야 합니다. |
 
 ### L1-UC-02. Manager가 가이드라인 문서를 배포합니다
 
@@ -205,17 +205,17 @@ L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩�
 
 ### L2-UC-01. Manager가 가이드라인 섹션을 등록합니다
 
-목적: 정적 문서의 내용을 섹션과 룰 단위로 나눠 System에서 관리합니다.
+목적: 정적 문서의 내용을 섹션과 규칙 단위로 나눠 System에서 관리합니다.
 
 | Field | Content |
 | --- | --- |
 | 01 연결 | 구조화되지 않은 가이드라인 자산 관리 |
 | Actors | Manager |
-| Input | 브랜드 룰, 카테고리, 설명 콘텐츠, OK/NG 예시, 적용일 |
+| Input | 브랜드 규칙, 카테고리, 설명 콘텐츠, OK/NG 예시, 적용일 |
 | Process | Manager가 가이드라인 섹션을 draft 상태로 등록하고, 카테고리와 태그, 예시, 에셋을 연결한 뒤 published 또는 scheduled 상태로 변경합니다. |
 | Output | Guideline Section, Published Rule, Versioned Content |
 | Generated Data | 섹션 상태, 카테고리, 태그, 기준 버전, 적용 시작일 |
-| 검증 신호 | 구조화된 룰 수, 발행된 섹션 수, 적용일 누락 건수 |
+| 검증 신호 | 구조화된 규칙 수, 발행된 섹션 수, 적용일 누락 건수 |
 | Next Maturity Condition | 섹션을 어플리케이션 타입과 연결하고, 사용자가 자기 작업에 맞는 기준을 받아야 합니다. |
 
 ### L2-UC-02. Manager가 공식 에셋을 등록합니다
@@ -287,10 +287,10 @@ L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩�
 | 01 연결 | 선택지 축소와 오류 감소 |
 | Actors | Manager, System |
 | Input | Published Governance, 어플리케이션 타입, 템플릿, 체크리스트, 필수 문구, 금지 표현 |
-| Process | Manager가 어플리케이션 타입을 정의하고, 관련 룰, 템플릿, 예시, 체크리스트, 쉬운 말 안내, 적용 기준 버전을 연결합니다. |
+| Process | Manager가 어플리케이션 타입을 정의하고, 관련 규칙, 템플릿, 예시, 체크리스트, 쉬운 말 안내, 적용 기준 버전을 연결합니다. |
 | Output | Application Type Guideline, Template Set, Checklist Set |
-| Generated Data | 어플리케이션 타입, 룰 연결 정보, 템플릿 연결 정보, 체크리스트 연결 정보 |
-| 검증 신호 | 타입별 연결 룰 수, 허용 템플릿 사용률, 템플릿 이탈률 |
+| Generated Data | 어플리케이션 타입, 규칙 연결 정보, 템플릿 연결 정보, 체크리스트 연결 정보 |
+| 검증 신호 | 타입별 연결 규칙 수, 허용 템플릿 사용률, 템플릿 이탈률 |
 | Next Maturity Condition | Consumer 입력값과 작업물 상태를 기준 점검에 사용할 수 있어야 합니다. |
 
 ### L3-UC-02. Manager가 어플리케이션 타입별 실행 가이드를 발행합니다
@@ -379,7 +379,7 @@ L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩�
 | Input | 질문 원문, 작업 맥락, Published Governance |
 | Process | Agent가 질문 의도를 분류하고, System이 관련 기준을 검색하며, Agent가 근거와 버전을 연결한 쉬운 말 답변을 생성합니다. |
 | Output | Answer, Cited Rules, Suggested Next Action, Low Confidence, Escalation |
-| Generated Data | 질문 의도, 검색된 기준, 인용 룰, 답변 신뢰도, 사용자 피드백 |
+| Generated Data | 질문 의도, 검색된 기준, 인용 규칙, 답변 신뢰도, 사용자 피드백 |
 | 검증 신호 | 답변 후 후속 질문 수, 낮은 신뢰도 질문 수, Manager 확인 필요 건수 |
 | Next Maturity Condition | 반복 질문과 낮은 신뢰도 질문이 인사이트 후보로 묶여야 합니다. |
 
@@ -407,10 +407,10 @@ L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩�
 | 01 연결 | 피드백과 반복 오류 감소 |
 | Actors | Manager, Consumer, System |
 | Input | Submission, Rule Snapshot, Self Check Result, Review Criteria, Comment Templates |
-| Process | Manager가 제출물을 확인하고 기준 위반 여부를 판단한 뒤, 필요한 경우 룰 기반 코멘트와 수정 지시를 남깁니다. |
+| Process | Manager가 제출물을 확인하고 기준 위반 여부를 판단한 뒤, 필요한 경우 규칙 기반 코멘트와 수정 지시를 남깁니다. |
 | Output | Approved Submission, Needs Changes, Rejected Submission, Rule-linked Feedback, Suggested Fix |
-| Generated Data | 검수 결과, 반려 사유, 룰 연결 코멘트, 수정 요청 이력, Manager 판단 이력 |
-| 검증 신호 | 반복 코멘트 수, 검토 소요 시간, 룰 연결 없는 피드백 수 |
+| Generated Data | 검수 결과, 반려 사유, 규칙 연결 코멘트, 수정 요청 이력, Manager 판단 이력 |
+| 검증 신호 | 반복 코멘트 수, 검토 소요 시간, 규칙 연결 없는 피드백 수 |
 | Next Maturity Condition | 검수 코멘트와 반려 사유가 반복 이슈로 분석되어야 합니다. |
 
 ### L4-UC-05. System이 수정 지시를 제공합니다

@@ -18,7 +18,7 @@ Manager, Consumer, Agent 데이터의 상태와 전이를 정리합니다.
 
 | Domain | Core Question | Representative Data |
 | --- | --- | --- |
-| Manager Data | 무엇이 공식 기준인가? | 브랜드 가이드라인, 정책, 룰, 템플릿, 승인 상태, 버전 |
+| Manager Data | 무엇이 공식 기준인가? | 브랜드 가이드라인, 거버넌스, 규칙, 템플릿, 승인 상태, 버전 |
 | Consumer Data | 사용자가 무엇을 만들고 있는가? | 작업물, 입력값, 선택한 템플릿, 업로드 이미지, 제출 상태 |
 | Agent Data | 무엇을 물었고 어떤 근거로 답했는가? | 질문, 답변, 검색 근거, 체크 결과, 피드백, 인사이트 |
 | Usage Data | 사용자가 무엇을 자주 참고하고 어디서 머물렀는가? | 조회 항목, 체류 시간, 다운로드한 에셋, 클릭한 기준 |
@@ -135,7 +135,7 @@ stateDiagram-v2
 | State | Meaning |
 | --- | --- |
 | Captured | 조회, 클릭, 다운로드, 체류 시간이 기록됨 |
-| Linked | 어플리케이션 타입, 기준, 룰, 에셋, 작업 세션과 연결됨 |
+| Linked | 어플리케이션 타입, 기준, 규칙, 에셋, 작업 세션과 연결됨 |
 | Aggregated | 자주 본 항목, 오래 머문 항목, 자주 다운로드한 에셋으로 집계됨 |
 | Interpreted | Agent가 이해하기 어려운 기준이나 보강이 필요한 에셋으로 해석함 |
 | Reported | Manager가 볼 수 있는 개선 후보 리포트에 포함됨 |
@@ -145,7 +145,7 @@ stateDiagram-v2
 - 사용자 또는 익명 세션
 - 작업 세션
 - 어플리케이션 타입
-- 조회한 기준 또는 룰
+- 조회한 기준 또는 규칙
 - 조회한 에셋
 - 체류 시간
 - 다운로드 횟수
@@ -174,8 +174,8 @@ Agent 데이터는 기준 데이터, 작업 데이터, 사용 행동 데이터�
 | State | Meaning |
 | --- | --- |
 | Requested | 작업물 점검 요청 |
-| Context Attached | 작업물, 템플릿, 룰 버전 연결 |
-| Rules Evaluated | 적용 가능한 룰 평가 |
+| Context Attached | 작업물, 템플릿, 규칙 버전 연결 |
+| Rules Evaluated | 적용 가능한 규칙 평가 |
 | Passed | 문제 없음 |
 | Warning | 주의 필요 |
 | Failed | 수정 필요 |
@@ -193,7 +193,7 @@ Agent 데이터는 기준 데이터, 작업 데이터, 사용 행동 데이터�
 | Reviewed | Manager 검토 완료 |
 | Accepted | 개선 과제로 채택 |
 | Dismissed | 의미 없는 패턴으로 제외 |
-| Converted | FAQ, 룰 개정, 템플릿 개선으로 전환 |
+| Converted | FAQ, 규칙 개정, 템플릿 개선으로 전환 |
 
 ### 흐름
 
@@ -224,6 +224,6 @@ stateDiagram-v2
 | Manager -> Consumer | 공식 기준이 작업에 적용됨 | 특정 템플릿과 체크리스트가 어플리케이션 타입에 노출됨 |
 | Consumer -> Agent | 실제 작업 맥락이 질문과 점검에 연결됨 | 작업물이 어떤 기준을 위반했는지 점검 |
 | Agent -> Consumer | 쉬운 답변 또는 수정 지시 제공 | "로고를 오른쪽으로 옮기세요" |
-| Agent -> Manager | 반복 문제를 운영 인사이트로 전환 | 같은 반려 사유가 많아 룰 설명을 개선 |
+| Agent -> Manager | 반복 문제를 운영 인사이트로 전환 | 같은 반려 사유가 많아 규칙 설명을 개선 |
 | Consumer -> Manager | 작업 결과가 기준 개선 근거가 됨 | 특정 템플릿에서 반복 오류가 발생 |
-| Consumer -> System | 사용 행동이 개선 근거로 저장됨 | 특정 룰 페이지 체류 시간이 길고 같은 질문이 반복됨 |
+| Consumer -> System | 사용 행동이 개선 근거로 저장됨 | 특정 규칙 페이지 체류 시간이 길고 같은 질문이 반복됨 |

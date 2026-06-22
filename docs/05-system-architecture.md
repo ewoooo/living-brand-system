@@ -22,12 +22,12 @@
 | 영역 | 방향 | 역할 |
 | --- | --- | --- |
 | App Framework | Next.js | Admin, API, Consumer UI를 같은 런타임에서 제공합니다. |
-| CMS | Payload CMS | 정책, 룰, 에셋, 버전, 발행 상태를 관리합니다. |
+| CMS | Payload CMS | 거버넌스, 규칙, 에셋, 버전, 발행 상태를 관리합니다. |
 | Admin UI | Payload Admin | Manager의 작성, 검토, 발행, 승인 워크플로우를 담당합니다. |
 | Guideline UI | Next.js routes | Consumer 작업 흐름을 Payload Admin과 분리합니다. |
 | Database | PostgreSQL | Payload의 핵심 도메인 데이터를 저장합니다. |
 | File Storage | Object storage | 공식 에셋과 사용자 업로드 자산을 저장합니다. |
-| Search / Retrieval | Vector index + structured filters | 발행된 정책과 룰을 Agent 답변과 점검에 사용합니다. |
+| Search / Retrieval | Vector index + structured filters | 발행된 거버넌스와 규칙을 Agent 답변과 점검에 사용합니다. |
 | Background Jobs | Payload Jobs or external worker | 인덱싱, 리포트 생성, 반복 패턴 집계를 비동기로 처리합니다. |
 | AI / Agent | Agent service over retrieved context | 설명, 수정 지시, 인사이트 후보 생성을 담당합니다. |
 | Product Analytics | Optional adapter | 클릭, 체류, 다운로드 같은 사용 행동을 필요 시 수집합니다. |
@@ -47,7 +47,7 @@
 | System | 기준 구조화, 버전 관리, 작업 기록 저장을 담당합니다. | 발행 기준 조회, 작업 세션 기록, 사용 이벤트 저장 |
 | Agent | 발행된 기준과 작업 맥락을 바탕으로 답변, 점검 결과 설명, 수정 지시, 인사이트 후보를 생성합니다. | Published content 조회, 검색 컨텍스트 사용, 답변과 요약 생성 |
 
-Agent는 인증 사용자 역할이 아니며, Governance를 직접 변경하지 않습니다.
+Agent는 인증 사용자 역할이 아니며, 거버넌스를 직접 변경하지 않습니다.
 Agent는 published content와 허용된 작업 맥락만 사용할 수 있습니다.
 
 접근 규칙:
@@ -69,7 +69,7 @@ flowchart LR
   UI["Guideline UI"]
 
   Manager -->|"Authoring, approval, exception decisions"| CMS
-  CMS -->|"Published guideline, rules, tokens, assets, permissions"| CE
+  CMS -->|"Published governance, rules, tokens, assets, permissions"| CE
   CE -->|"Retrieved context, measurements, scores, citations"| Agent
   CE -->|"Guidance, checks, official assets"| UI
   UI -->|"Questions, work sessions, submissions"| CE
@@ -100,9 +100,9 @@ PDF의 Spring 구조는 `UI -> Controller -> Service -> Data Access -> DB` 흐�
 
 ### Business Layer
 
-- Context Engine은 룰 조회, 검색, 체크리스트 생성, 결정적 점검을 담당합니다.
+- Context Engine은 규칙 조회, 검색, 체크리스트 생성, 결정적 점검을 담당합니다.
 - Agent는 질문 이해, 답변 작성, 수정 지시, 인사이트 후보 요약을 담당합니다.
-- Governance 결정인 승인, 반려, 예외 처리, 기준 변경은 Manager가 수행합니다.
+- 거버넌스 결정인 승인, 반려, 예외 처리, 기준 변경은 Manager가 수행합니다.
 - Route Handler, Server Action, Payload hook은 얇게 유지하고 업무 규칙을 Service로 위임합니다.
 - 하나의 Service는 하나의 유즈케이스를 기준으로 작성합니다.
 - 여러 저장소 접근, 트랜잭션, Agent 호출, 후속 작업 예약은 Service에서 조합합니다.
@@ -118,8 +118,8 @@ PDF의 Spring 구조는 `UI -> Controller -> Service -> Data Access -> DB` 흐�
 
 ### Data
 
-- 정책, 룰, 템플릿, 작업 세션, 제출물, 점검 결과, 반려 사유, 개선 후보는 Payload에 저장합니다.
-- 제출물에는 적용된 거버넌스 버전과 룰 메타데이터를 보존합니다.
+- 거버넌스, 규칙, 템플릿, 작업 세션, 제출물, 점검 결과, 반려 사유, 개선 후보는 Payload에 저장합니다.
+- 제출물에는 적용된 거버넌스 버전과 규칙 메타데이터를 보존합니다.
 - 사용 이벤트는 자체 이벤트 테이블을 기본값으로 두고, 필요하면 Umami 또는 PostHog self-host로 확장합니다.
 
 ## 4. 개발 패턴
@@ -167,10 +167,10 @@ PDF의 Spring 구조는 `UI -> Controller -> Service -> Data Access -> DB` 흐�
 - CMS가 기준 데이터의 원천입니다.
 - Consumer 작업 UI는 Payload Admin과 분리합니다.
 - 가능한 점검은 결정적으로 수행하고 감사 가능하게 기록합니다.
-- Agent는 설명, 요약, 추천을 할 수 있지만 Governance를 직접 변경하지 않습니다.
-- 초안 상태의 룰은 기본 작업 흐름과 Agent 답변에서 제외합니다.
+- Agent는 설명, 요약, 추천을 할 수 있지만 거버넌스를 직접 변경하지 않습니다.
+- 초안 상태의 규칙은 기본 작업 흐름과 Agent 답변에서 제외합니다.
 - Agent 답변은 CMS에서 검색된 발행 기준에 근거해야 합니다.
-- 제출물에 영향을 준 룰의 버전 메타데이터를 보존합니다.
+- 제출물에 영향을 준 규칙의 버전 메타데이터를 보존합니다.
 - 외부 분석 도구를 연결하더라도 제품 핵심 기록은 Payload 또는 제품 DB에 남깁니다.
 - 분석 도구 연동은 adapter를 통해 교체 가능하게 둡니다.
 - MVP는 같은 애플리케이션 안에서 시작하되, 책임 경계는 모듈 단위로 분리합니다.
