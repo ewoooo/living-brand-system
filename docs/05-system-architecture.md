@@ -79,7 +79,7 @@ flowchart LR
 
 ## 3. 시스템 구조
 
-PDF의 Spring 구조는 `UI -> Controller -> Service -> DAO -> DB` 흐름을 기준으로 합니다.
+PDF의 Spring 구조는 `UI -> Controller -> Service -> Data Access -> DB` 흐름을 기준으로 합니다.
 이 프로젝트에서는 같은 책임 경계를 Next.js와 Payload CMS 구조로 바꿔 적용합니다.
 
 | Spring 기준 | 이 프로젝트 기준 | 적용 방식 |
@@ -87,7 +87,7 @@ PDF의 Spring 구조는 `UI -> Controller -> Service -> DAO -> DB` 흐름을 기
 | JSP/UI | Next.js App Router, ShadCN UI | 화면 표시와 사용자 입력 수집만 담당합니다. |
 | Controller | Route Handler, Server Action, Payload hook | 요청 검증, 인증 확인, Service 호출만 담당합니다. |
 | Service | 유즈케이스 service | 업무 규칙과 여러 데이터 접근 흐름을 조합합니다. |
-| DAO | Repository | Payload Local API, 검색 인덱스, 외부 저장소 접근을 감쌉니다. |
+| Data Access | Repository | Payload Local API, 검색 인덱스, 외부 저장소 접근을 감쌉니다. |
 | SqlMap | Payload query, PostgreSQL query, vector search | 별도 SQL map 파일은 두지 않습니다. |
 
 ### Presentation Layer
@@ -147,7 +147,7 @@ PDF의 Spring 구조는 `UI -> Controller -> Service -> DAO -> DB` 흐름을 기
 - Service는 UI 응답 형식에 의존하지 않습니다.
 - Service에서 업무상 실패를 감지하면 사용자에게 보여줄 안전한 메시지 코드나 오류 타입으로 변환합니다.
 
-### Repository (DAO)
+### Repository
 
 - Repository는 Payload Local API 호출과 검색 인덱스 접근을 감쌉니다.
 - 권한, 발행 상태, 버전 조건을 누락하지 않도록 조회 경계를 명확히 둡니다.
