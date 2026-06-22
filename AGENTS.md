@@ -6,8 +6,13 @@ Start with `.agents/skills/payload/SKILL.md` for a quick reference, then see `.a
 ## Branch Strategy
 
 - Use `main` as the stable base branch.
-- Create task branches with the `codex/` prefix.
-- Use short, purpose-based branch names, for example `codex/docs-update` or `codex/fix-auth-access`.
+- Create task branches with a work-type prefix.
+- Use `docs/` for documentation-only work.
+- Use `feature/` for new product behavior.
+- Use `fix/` for bug fixes.
+- Use `refactor/` for behavior-preserving code changes.
+- Use `chore/` for tooling, dependency, or maintenance changes.
+- Use short, purpose-based branch names, for example `docs/update-guidelines` or `fix/auth-access`.
 - Keep documentation-only changes separate from source code changes when practical.
 
 ## Commit Rules
