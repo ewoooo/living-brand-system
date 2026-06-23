@@ -2,60 +2,76 @@
 
 ## 1. 목적
 
-이 문서는 제품에서 다루는 데이터를 3가지 생명주기로 나눕니다.
+이 문서는 브랜드 운영 시스템에서 데이터가 생성되고, 기록되고, 인사이트와 공식 버전 발행으로 이어지는 흐름을 정리합니다.
+기준은 [02. 유즈케이스](02-usecases.md), [04. 도메인 모델](04-domain-model.md), [05. 시스템 아키텍처](05-system-architecture.md)의 최신 구조입니다.
+
+핵심은 원천 기준, 실행 기록, 파생 인사이트를 섞지 않는 것입니다.
 
 ```text
-Guideline Data -> Usage Data -> Insight -> Guideline Data
+가이드라인 기준
+  -> 제작과 품질 검수 기록
+  -> 사용 기록과 도메인 이벤트
+  -> Evidence와 Insight
+  -> InsightReport
+  -> Version(stage/live/archived)
+  -> 가이드라인 기준
 ```
-
-핵심은 원천 데이터와 파생 데이터를 섞지 않는 것입니다.
-
-- Guideline Data는 Manager가 관리하는 공식 기준입니다.
-- Usage Data는 Worker와 Agent가 남기는 원천 기록입니다.
-- Insight는 Usage Data를 해석해서 만든 개선 후보입니다.
-
-Insight는 Usage Data 그 자체가 아닙니다.
-Usage Data를 묶고 해석한 결과입니다.
 
 ## 2. 데이터 영역
 
-| Domain | Core Question | Representative Data |
-| --- | --- | --- |
-| Guideline Data | 무엇이 공식 기준인가? | 정책, 규칙, 어플리케이션 타입, 템플릿, 에셋, 버전, 발행 상태 |
-| Usage Data | 사용자가 무엇을 했고 어디서 막혔는가? | 질문, 검색, 조회, 클릭, 다운로드, 작업 세션, 제출, 점검, 피드백 |
-| Insight | 어떤 반복 문제를 기준 개선으로 바꿀 것인가? | 반복 패턴, 개선 후보, Manager 검토, 채택/제외, 반영 결과, 효과 측정 |
+| 영역 | 핵심 질문 | 대표 데이터 | 소유 도메인 |
+| --- | --- | --- | --- |
+| 가이드라인 기준 | 무엇이 공식 기준인가? | BrandGuideline, GuidelinePage, PagePolicy, Rule, RuleException, Payload revision records | 가이드라인 관리 |
+| 브랜드 자원 | 어떤 공식 자원을 사용할 수 있는가? | BrandAsset, Template, Plugin, 각 Version | 가이드라인 관리 |
+| 제작 기록 | Worker가 무엇을 만들었는가? | WorkSession, WorkInput, WorkOutput, GuidelineVersionRef | 제작 관리 |
+| 품질 검수 기록 | 산출물이 기준에 맞는가? | QASession, Answer, CheckSession, CheckRun, CheckResult, CheckDecision | 품질 검수 |
+| 사용 기록 | 사용자가 무엇을 했고 어디서 막혔는가? | SessionEventLog, SessionEvent, BehaviorEventLog, PageViewEvent, ClickEvent, AssetDownloadEvent, SectionDwellEvent | 사용 기록 |
+| 운영 인사이트 | 어떤 반복 문제를 기준 개선으로 바꿀 것인가? | Evidence, Pattern, Insight, InsightReport | 운영 인사이트 |
+| 공식 버전 | 어떤 기준과 자원이 stage/live/archived 상태인가? | BrandGuidelineVersion, RuleVersion, BrandAssetVersion, TemplateVersion, PluginVersion | 가이드라인 관리 |
 
-## 3. Guideline Data
+사용 기록은 세션 이벤트와 화면 행동 기록을 저장하는 지원 서브도메인입니다.
+운영 인사이트는 사용 기록과 도메인 이벤트를 Evidence로 참조합니다.
 
-Guideline Data는 제품의 원천 데이터입니다.
-Worker와 Agent는 발행된 Guideline Data만 기준으로 사용합니다.
+## 3. 가이드라인 기준 생명주기
 
-### 포함 데이터
+가이드라인 기준은 Manager가 관리하는 공식 기준입니다.
+Worker와 Agent는 발행된 기준만 사용합니다.
 
-| Data | Meaning |
+### 3.1 포함 데이터
+
+| 데이터 | 의미 |
 | --- | --- |
-| Policy | 브랜드가 지향하거나 지켜야 하는 상위 기준 |
-| Rule | Policy를 실제 작업에 적용할 수 있게 낮춘 판단 단위 |
-| Application Type | Worker가 만들 산출물의 유형 |
-| Template | Worker가 작업을 시작할 때 사용하는 제한된 형식 |
-| Asset | 정책과 규칙을 적용할 때 사용하는 공식 파일 또는 참고 자료 |
-| Version | 특정 시점에 공식으로 적용되는 기준 묶음 |
-| Guideline Update | 정책, 규칙, 템플릿, 에셋의 변경 이력 |
-| Exception | 일반 정책이나 규칙을 그대로 적용하기 어려울 때 허용되는 별도 판단 |
+| BrandGuideline | 브랜드 가이드라인 전체 구조 |
+| GuidelineSection | 가이드라인의 상위 장 |
+| GuidelinePage | Worker와 Manager가 읽는 페이지 단위 |
+| PagePolicy | GuidelinePage가 1:1로 소유하는 정책 설명 |
+| Rule | 여러 페이지, 답변, 검수, 인사이트에서 재사용되는 판단 기준 |
+| RuleException | Rule 아래에서 관리하는 예외 조건 |
+| BrandAsset | 공식 이미지, 로고, 아이콘, 참고 파일 |
+| Template | Worker가 산출물을 만들 때 사용하는 공식 형식 |
+| Plugin | Worker가 산출물을 만들 때 사용하는 공식 제작 기능 |
+| BrandGuidelineVersion | Worker와 Agent가 참조하는 공식 가이드라인 버전 |
+| RuleVersion | 판단 기준으로 사용하는 공식 규칙 버전 |
+| BrandAssetVersion | 공식으로 사용할 수 있는 브랜드 자원 버전 |
+| TemplateVersion | 제작에 사용할 수 있는 공식 템플릿 버전 |
+| PluginVersion | 제작에 사용할 수 있는 공식 플러그인 버전 |
+| Payload revision record | Payload가 기록한 CMS 내부 수정 이력 |
 
-### 상태
+### 3.2 상태
 
-| State | Meaning | Exposure |
+| 상태 | 의미 | 노출 대상 |
 | --- | --- | --- |
-| Draft | 작성 중인 기준 | Manager |
-| In Review | 검토 중인 기준 | Manager |
-| Approved | 승인되었지만 아직 적용 전인 기준 | Manager |
-| Published | 현장에 적용 중인 공식 기준 | Worker, Agent |
-| Scheduled | 특정 일자부터 적용될 기준 | Manager, 필요 시 Worker |
-| Deprecated | 더 이상 권장하지 않는 기준 | Manager |
-| Archived | 운영 종료된 기준 | Manager |
+| Draft | 작성 중인 기준 또는 자원 | Manager |
+| In Review | 검토 중인 기준 또는 자원 | Manager |
+| Approved | 승인되었지만 아직 공식 버전이 되지 않은 기준 또는 자원 | Manager |
+| stage | 발행 후보 또는 예약된 공식 Version | Manager |
+| live | 현장에 적용 중인 공식 Version | Worker, Agent |
+| archived | 운영 종료된 공식 Version | Manager |
 
-### 흐름
+Version은 `stage`, `live`, `archived` 상태를 가집니다.
+Payload revision은 CMS 내부 저장 이력이고, Version은 Worker와 Agent가 사용하는 공식 단위입니다.
+
+### 3.3 흐름
 
 ```mermaid
 stateDiagram-v2
@@ -63,193 +79,235 @@ stateDiagram-v2
   Draft --> InReview: 검토 요청
   InReview --> Draft: 수정 요청
   InReview --> Approved: 승인
-  Approved --> Published: 즉시 발행
-  Approved --> Scheduled: 적용일 예약
-  Scheduled --> Published: 적용일 도래
-  Published --> Deprecated: 대체 기준 발행
-  Deprecated --> Archived: 보관
-  Published --> Draft: 개정 초안 생성
+  Approved --> Stage: 버전 후보 생성
+  Stage --> Live: 발행 또는 적용일 도래
+  Stage --> Draft: 반려 또는 수정
+  Live --> Archived: 대체 버전 live 전환
+  Live --> Draft: 개정 초안 생성
 ```
 
-### 저장해야 하는 메타데이터
+### 3.4 저장해야 하는 메타데이터
 
 - 작성자
 - 검토자
 - 승인자
+- 편집 상태
 - 적용 시작일
 - 적용 종료일
 - 버전
-- 변경 사유
+- 버전 사유
 - 대체 기준
-- 관련 어플리케이션 타입
-- 관련 템플릿
+- 관련 TemplateVersionRef
+- 관련 PluginVersionRef
+- 관련 Insight 또는 InsightReport
 
-## 4. Usage Data
+## 4. 제작과 품질 검수 기록 생명주기
 
-Usage Data는 사용자가 제품 안에서 남기는 원천 기록입니다.
-질문 데이터만 의미하지 않습니다.
+제작 관리는 WorkSession과 WorkOutput을 만들고, 품질 검수는 검수 시점의 WorkOutputSnapshot을 참조합니다.
+품질 검수는 CheckSession 단위로 요청, 실행, 결과, 최종 판정을 관리합니다.
 
-Usage Data에는 검색, 조회, 작업 세션, 산출물 스냅샷, 자가 점검, Manager 피드백까지 포함됩니다.
-이 데이터는 Insight의 재료가 되지만, 그 자체가 Insight는 아닙니다.
+### 4.1 포함 데이터
 
-### 포함 데이터
-
-| Data | Meaning |
+| 데이터 | 의미 |
 | --- | --- |
-| Query | Worker가 입력한 질문, 검색어, 상황 설명 |
-| View Event | 기준, 규칙, 에셋, 템플릿, FAQ를 본 기록 |
-| Click Event | 버튼, 기준 링크, 추천 항목, 필터를 선택한 기록 |
-| Download Event | 공식 에셋이나 템플릿을 내려받은 기록 |
-| Work Session | 어플리케이션 타입, 템플릿, 입력값, 업로드 자산이 연결된 작업 단위 |
-| Work Output Snapshot | 검수나 분석에 사용할 수 있도록 특정 시점의 산출물을 고정한 기록 |
-| Guideline Snapshot | 작업이나 검수에 적용된 정책, 규칙, 버전 묶음 |
-| Check Result | 제출 전 점검 결과와 위반 항목 |
-| Review Comment | 승인, 반려, 수정 요청, 규칙 연결 코멘트 |
-| Answer | Agent가 제공한 답변과 신뢰도 |
-| Recommendation | Agent나 System이 제공한 다음 행동 제안 |
-| Citation | 답변, 추천, 점검 설명이 참조한 근거 |
+| WorkSession | Worker가 산출물을 만들기 시작한 작업 단위 |
+| WorkInput | 템플릿 또는 플러그인 실행에 사용한 입력값 |
+| WorkOutput | 제작 결과물 |
+| WorkOutputSnapshot | 검수나 분석에 사용할 수 있도록 특정 시점의 산출물을 고정한 기록 |
+| GuidelineVersionRef | 작업이나 검수에 적용된 BrandGuideline 버전 참조 |
+| TemplateVersionRef | 작업에 사용한 Template 버전 참조 |
+| PluginVersionRef | 작업에 사용한 Plugin 버전 참조 |
+| QASession | WorkSession 맥락에서 발생한 질문과 답변 묶음 |
+| CheckSession | 특정 WorkOutputSnapshot에 대한 검수 흐름 |
+| CheckTarget | CheckSession이 소유하는 검수 대상 값 |
+| CheckRun | CheckSession 안에서 실행된 점검 1회 |
+| CheckResult | Rule 기준으로 확인한 위반, 결과, 추천 |
+| CheckDecision | System 또는 Agent가 내린 최종 검수 판정 |
+| AgentRunRef | Agent 실행 이력 참조 |
 
-### UsageEventLog
+### 4.2 흐름
 
-UsageEventLog는 사용자가 제품 안에서 남긴 행동과 각 도메인에서 발생한 이벤트를 조회 가능한 형태로 저장합니다.
-운영자는 UsageEventLog로 작업 흐름, Agent 실행, 점검과 검토 이력을 확인할 수 있습니다.
-하지만 UsageEventLog는 운영 인사이트의 애그리거트(관리 단위)가 아닙니다.
-운영 인사이트는 필요한 기록만 Evidence로 참조합니다.
+```mermaid
+flowchart LR
+  WorkSession["WorkSession"]
+  Input["WorkInput"]
+  Output["WorkOutput"]
+  Snapshot["WorkOutputSnapshot"]
+  QA["QASession / Answer"]
+  CheckSession["CheckSession"]
+  Check["CheckRun / CheckResult"]
+  Decision["CheckDecision"]
+  Log["사용 기록"]
+  Insight["Evidence / Insight"]
 
-| Event | Meaning |
+  WorkSession --> Input
+  Input --> Output
+  Output --> Snapshot
+  WorkSession --> QA
+  Snapshot --> CheckSession
+  CheckSession --> Check
+  Check --> Decision
+  QA --> Log
+  Check --> Log
+  Decision --> Log
+  Log --> Insight
+```
+
+### 4.3 저장해야 하는 메타데이터
+
+- 사용자 또는 익명 세션
+- WorkSession
+- ApplicationTypeRef
+- GuidelineVersionRef
+- TemplateVersionRef
+- PluginVersionRef
+- WorkOutputSnapshot
+- 관련 Rule
+- Answer, Recommendation, AnswerCitation
+- CheckOutcome, Violation
+- CheckDecision
+- AgentRunRef
+- 이벤트 발생 시각
+
+## 5. 사용 기록 생명주기
+
+사용 기록은 사용자가 제품 안에서 남긴 행동과 각 도메인에서 발생한 이벤트를 조회 가능한 형태로 저장합니다.
+WorkSession, QASession, CheckSession에서 발생한 이벤트는 SessionEventLog에 저장합니다.
+페이지 조회와 클릭 같은 화면 행동은 BehaviorEventLog에 저장합니다.
+운영자는 사용 기록으로 작업 흐름, Agent 실행, 검수 세션과 점검 실행 이력을 확인할 수 있습니다.
+
+### 5.1 이벤트 유형
+
+| 이벤트 | 의미 |
 | --- | --- |
-| ViewEvent | 기준, 규칙, 에셋, 템플릿, Plugin, FAQ를 본 기록 |
-| SearchEvent | 검색어, 필터, 검색 결과를 남긴 기록 |
-| ClickEvent | 버튼, 기준 링크, 추천 항목을 선택한 기록 |
-| DownloadEvent | 공식 에셋이나 템플릿을 내려받은 기록 |
-| WorkEvent | 작업 시작, 입력 변경, 미리보기 생성, 산출물 생성 기록 |
-| CheckEvent | 자가 점검 실행, 점검 결과, 위반 항목 기록 |
-| ReviewEvent | Manager 검토, 코멘트, 승인, 반려, 수정 요청 기록 |
-| AgentRunEvent | Agent 답변, 점검, 추천 생성 실행 기록 |
+| SessionEvent | WorkSession, QASession, CheckSession에서 발생한 세션 이벤트 |
+| WorkEvent | 작업 시작, 입력 변경, 미리보기 생성, 산출물 생성, 작업 완료 기록 |
+| QAEvent | 질문, 답변, 답변 근거 생성 기록 |
+| CheckEvent | 검수 세션 시작, 점검 실행, 점검 결과, 최종 판정 기록 |
+| AgentRunEvent | Agent 답변, 점검, 추천, 요약 생성 실행 기록 |
+| PageViewEvent | 페이지 조회 기록 |
+| ClickEvent | 가이드라인 화면 클릭 기록 |
+| AssetDownloadEvent | 가이드라인 화면에서 에셋을 다운로드한 기록 |
+| SectionDwellEvent | 가이드라인 화면의 특정 구간 체류 기록 |
+| CustomEvent | 화면별 추가 분석 이벤트 |
+| SessionData | 사용자, 조직, 플랜 같은 공통 이벤트 속성 |
 
-운영 화면은 UsageEventLog를 읽어 다음 조회 기능을 제공합니다.
+BehaviorEventLog는 화면 행동 기록 조회와 인사이트 근거 수집에 사용합니다.
+구현은 Umami `track`, `identify`를 사용합니다.
+WorkSession, QASession, CheckSession처럼 감사 추적이 필요한 도메인 이벤트는 제품 DB의 SessionEventLog에 남깁니다.
 
-| View | Purpose |
+### 5.2 운영 조회 화면
+
+| 화면 | 목적 |
 | --- | --- |
-| Usage Log Explorer | 사용자 행동과 작업 흐름을 시간순으로 확인합니다. |
+| 세션 이벤트 탐색 | 사용자 행동과 작업 흐름을 시간순으로 확인합니다. |
+| 화면 행동 기록 보기 | 가이드라인 화면 조회, 클릭, 에셋 다운로드, 특정 구간 체류 흐름을 확인합니다. |
+| WorkSession Event Log | WorkSession의 시작, 입력 변경, 산출물 생성, 완료 기록을 확인합니다. |
 | Agent Run Log | Agent 실행 결과, 신뢰도, 참조 근거를 확인합니다. |
-| Check/Review History | 산출물 스냅샷별 점검과 Manager 검토 이력을 확인합니다. |
+| Check History | WorkOutputSnapshot별 CheckSession과 CheckRun 이력을 확인합니다. |
 
-### 상태
+### 5.3 상태
 
-| State | Meaning |
+| 상태 | 의미 |
 | --- | --- |
-| Captured | 사용자의 행동이나 작업 결과가 기록됨 |
-| Linked | 사용자, 세션, 어플리케이션 타입, Guideline Snapshot과 연결됨 |
-| Enriched | Agent 근거, 점검 결과, 피드백 같은 해석 정보가 추가됨 |
-| Stored | 분석 가능한 형태로 저장됨 |
+| Captured | 세션 이벤트와 화면 행동 기록이 기록됨 |
+| Linked | 사용자, 세션, WorkSession, GuidelineVersionRef와 연결됨 |
+| Enriched | Agent 근거, 점검 결과, 추천 같은 해석 정보가 추가됨 |
+| Stored | 조회와 분석이 가능한 형태로 저장됨 |
 | Aggregated | 반복 질문, 반복 위반, 자주 본 기준처럼 집계됨 |
-| Used for Insight | Insight 후보 생성에 사용됨 |
+| UsedForInsight | Evidence로 묶여 인사이트 생성에 사용됨 |
 
-### 흐름
+### 5.4 흐름
 
 ```mermaid
 stateDiagram-v2
   [*] --> Captured
-  Captured --> Linked: 세션과 기준 버전 연결
+  Captured --> Linked: 세션과 기준 참조 연결
   Linked --> Enriched: 점검 결과와 근거 추가
   Enriched --> Stored: 기록 저장
   Stored --> Aggregated: 반복 패턴 집계
-  Aggregated --> UsedForInsight: 개선 후보 생성에 사용
+  Aggregated --> UsedForInsight: Evidence로 참조
 ```
 
-### 저장해야 하는 메타데이터
+저장 위치는 초기에는 Payload collection과 Umami를 함께 사용할 수 있습니다.
+로그가 많아져 Admin 목록 성능, 보관 기간, 검색 조건이 문제가 될 때 별도 사용 기록 저장소로 분리합니다.
 
-- 사용자 또는 익명 세션
-- 작업 세션
-- 어플리케이션 타입
-- Guideline Snapshot
-- Work Output Snapshot
-- 관련 정책 또는 규칙
-- 관련 템플릿 또는 에셋
-- 질문 원문
-- Answer, Recommendation, Citation
-- 점검 결과
-- Review Comment
-- 이벤트 발생 시각
+## 6. 운영 인사이트 생명주기
 
-## 5. Insight
+운영 인사이트는 사용 기록과 도메인 이벤트를 해석해서 만든 파생 데이터입니다.
+Insight는 자동으로 기준을 바꾸지 않습니다.
+Manager는 InsightReport에서 Insight와 개선 방향을 검토하고 채택 여부를 기록합니다.
 
-Insight는 Usage Data를 해석해서 만든 파생 데이터입니다.
-반복 질문, 반복 위반, 반려 사유, 조회 행동을 묶어 Manager가 판단할 수 있는 개선 후보로 만듭니다.
+### 6.1 포함 데이터
 
-Insight는 자동으로 정책이나 규칙을 바꾸지 않습니다.
-Agent와 System은 후보를 만들고, Manager가 채택 여부를 결정합니다.
-
-### 포함 데이터
-
-| Data | Meaning |
+| 데이터 | 의미 |
 | --- | --- |
-| Pattern | 여러 기록에서 반복되는 질문, 위반, 반려, 탐색 행동 |
-| Improvement | 기준 개선으로 검토할 수 있는 후보 |
-| Evidence | 후보를 뒷받침하는 질문, 점검 결과, 산출물 스냅샷, 피드백, 조회 기록 |
-| Decision | Manager의 채택, 보류, 제외 판단 |
-| Guideline Update | 정책, 규칙, 템플릿, FAQ, 실행 가이드에 반영된 변경 |
-| Impact | 변경 이후 질문 수, 반려율, 재작업 횟수 같은 효과 측정 |
+| Evidence | 질문, 점검 결과, 산출물 스냅샷, 추천, 조회 기록 같은 근거 |
+| Pattern | 여러 기록에서 반복되는 질문, 위반, 검수 실패, 탐색 행동 |
+| Insight | Manager가 판단할 수 있게 정리된 반복 문제 |
+| ReportSection | Insight를 반복 질문, 반복 위반, 자원 사용 같은 관점으로 묶은 보고서 섹션 |
+| InsightReport | 여러 ReportSection과 개선 방향을 기간과 독자 기준으로 묶은 보고서 |
 
-### 상태
+### 6.2 상태
 
-| State | Meaning |
+| 상태 | 의미 |
 | --- | --- |
 | Detected | 반복 패턴이 감지됨 |
-| Grouped | 유사 기록이 하나의 이슈로 묶임 |
-| Improvement | 개선 후보로 생성됨 |
-| Reviewed | Manager가 검토함 |
-| Accepted | 개선 대상으로 채택됨 |
+| Grouped | 유사 기록이 하나의 문제 단위로 묶임 |
+| Analyzed | Pattern이 Manager가 판단할 수 있는 Insight로 전환됨 |
+| Reported | ReportSection과 개선 방향이 InsightReport로 제공됨 |
+| Reviewed | Manager가 InsightReport에서 Insight와 개선 방향을 검토함 |
+| Accepted | InsightReport에서 Insight가 유효한 개선 근거로 채택됨 |
 | Dismissed | 의미 없는 패턴으로 제외됨 |
-| Converted | Guideline Update로 전환됨 |
-| Measured | 변경 이후 효과가 측정됨 |
 
-### 흐름
+### 6.3 흐름
 
 ```mermaid
 stateDiagram-v2
   [*] --> Detected
-  Detected --> Grouped: 유사 기록 묶음
-  Grouped --> Improvement: 개선 후보 생성
-  Improvement --> Reviewed: Manager 검토
+  Detected --> Grouped: Evidence 묶기
+  Grouped --> Analyzed: Insight 생성
+  Analyzed --> Reported: ReportSection 구성 및 InsightReport 생성
+  Reported --> Reviewed: Manager 검토
   Reviewed --> Accepted: 채택
   Reviewed --> Dismissed: 제외
-  Accepted --> Converted: 기준 또는 안내 변경
-  Converted --> Measured: 효과 측정
-  Measured --> Improvement: 후속 개선 후보
+  Accepted --> Detected: 후속 패턴 탐지
 ```
 
-### 저장해야 하는 메타데이터
+### 6.4 저장해야 하는 메타데이터
 
-- 관련 Usage Data
+- Evidence 참조
 - 반복 횟수
-- 영향을 받은 어플리케이션 타입
-- 영향을 받은 정책 또는 규칙
-- 대표 질문 또는 대표 반려 사유
-- Agent 요약
+- 영향을 받은 ApplicationTypeRef
+- 영향을 받은 Rule
+- 영향을 받은 TemplateVersionRef 또는 PluginVersionRef
+- 대표 질문 또는 대표 검수 실패 사유
+- Agent 요약과 AgentRunRef
+- ExpectedImpact
+- ReportSection 참조
+- InsightReport 참조
 - Manager 결정
-- 반영된 변경 ID
-- 변경 전후 지표
-- 후속 개선 필요 여부
+- 후속 관찰 지표
 
-## 6. 데이터 연결 규칙
+## 7. 데이터 연결 규칙
 
-3가지 데이터는 다음 규칙으로 연결합니다.
-
-| Link | Rule |
+| 연결 | 규칙 |
 | --- | --- |
-| Guideline -> Usage | Usage Data에는 당시 적용된 Guideline Snapshot을 남깁니다. |
-| Work -> Usage | 검수나 분석에 쓰는 산출물은 Work Output Snapshot으로 고정합니다. |
-| Usage -> Insight | Insight는 단일 이벤트가 아니라 반복되거나 의미 있는 기록 묶음에서 만듭니다. |
-| Insight -> Guideline | 채택된 Insight만 Guideline Update로 전환합니다. |
-| Guideline -> Insight | 가이드라인 변경 후에는 이전 Usage와 비교해 효과를 측정합니다. |
+| BrandGuideline Version -> WorkSession | WorkSession에는 당시 적용된 GuidelineVersionRef를 남깁니다. |
+| Template / Plugin -> WorkSession | WorkSession에는 사용한 TemplateVersionRef와 PluginVersionRef를 남깁니다. |
+| WorkSession -> Quality Check | 품질 검수는 WorkOutputSnapshot을 CheckTarget으로 참조하고 CheckSession에서 관리합니다. |
+| Quality Check -> Rule | CheckResult와 Recommendation은 가능한 경우 Rule을 참조합니다. |
+| 도메인 이벤트 -> 사용 기록 | 주요 행동과 도메인 이벤트는 사용 기록에 조회 가능한 형태로 저장합니다. |
+| 사용 기록 -> Insight | Insight는 단일 이벤트가 아니라 반복되거나 의미 있는 Evidence 묶음에서 만듭니다. |
+| Insight -> ReportSection | Insight는 보고서 섹션에 배치됩니다. |
+| ReportSection -> InsightReport | ReportSection은 보고서로 묶인 뒤 Manager에게 제공됩니다. |
 
-## 7. 설계 원칙
+## 8. 설계 원칙
 
+- live Version이 아닌 기준은 Worker 화면과 Agent 답변 근거에서 제외합니다.
 - Agent는 정책과 규칙을 직접 변경하지 않습니다.
-- Usage Data는 Insight 생성을 위해 저장하지만, 불필요한 개인정보는 남기지 않습니다.
-- UsageEventLog는 별도 도메인이 아니며, 운영 인사이트는 필요한 기록을 Evidence로 참조합니다.
-- Insight는 근거 기록 없이 생성하지 않습니다.
-- Work Output Snapshot과 점검 결과에는 당시 적용된 Guideline Snapshot을 보존합니다.
-- Published 상태가 아닌 Guideline Data는 Worker 화면과 Agent 답변 근거에서 제외합니다.
+- 사용 기록은 지원 서브도메인이며, 운영 인사이트는 필요한 기록을 Evidence로 참조합니다.
+- Insight는 Evidence 없이 생성하지 않습니다.
+- CheckSession에는 당시 적용된 GuidelineVersionRef를 보존합니다.
+- Insight는 ReportSection과 InsightReport를 거쳐 Manager가 검토할 수 있는 개선 근거로 제공됩니다.
+- 불필요한 개인정보는 사용 기록에 남기지 않습니다.
