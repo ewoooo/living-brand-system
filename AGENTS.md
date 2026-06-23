@@ -3,6 +3,9 @@
 This project uses the Payload CMS skill at `.agents/skills/payload/`.
 Start with `.agents/skills/payload/SKILL.md` for a quick reference, then see `.agents/skills/payload/reference/` for detailed docs.
 
+Before changing product behavior, architecture, domain models, security, accessibility, i18n, or development rules, read `docs/README.md` and the relevant document under `docs/`.
+For implementation work, use the Ponytail skill and choose the smallest working change: reuse existing code, prefer platform and standard-library features, and avoid new abstractions or dependencies unless they are necessary.
+
 ## Branch Rules
 
 - Base: use `main` as the stable base branch.

@@ -85,7 +85,7 @@ UI
 ```
 
 Agent는 도메인 애그리거트가 아닙니다.
-Agent는 DB에 직접 쓰지 않고, Service가 Agent 결과를 검증한 뒤 Answer, CheckResult, Recommendation, Insight 근거로 저장합니다.
+Agent는 DB에 직접 쓰지 않고, Service가 Agent 결과를 검증한 뒤 Answer, CheckResult, CheckRecommendation, Insight 근거로 저장합니다.
 
 ### 2.5 Payload revision과 공식 Version 분리
 
@@ -236,7 +236,7 @@ Worker UI
 | GuidelineVersionRef | PostgreSQL | 제작 시점의 BrandGuideline 버전을 참조합니다. |
 
 제작 관리는 검수 요청을 소유하지 않습니다.
-품질 검수는 필요한 시점의 WorkOutputSnapshot을 검수 대상으로 참조합니다.
+품질 검수는 필요한 시점의 검수 입력을 CheckInputSnapshot으로 고정합니다.
 
 ### 5.3 품질 검수
 
@@ -250,13 +250,13 @@ Worker UI / 검수 UI
 | 데이터 | 저장 위치 | 비고 |
 | --- | --- | --- |
 | QASession, Question, Answer | PostgreSQL | 질문과 답변은 QASession 안에서 관리합니다. |
-| CheckSession, CheckRun, CheckResult | PostgreSQL | WorkOutputSnapshot과 GuidelineVersionRef를 참조합니다. |
-| CheckDecision, Recommendation | PostgreSQL | Agent/System의 최종 판정과 수정 권장 사항입니다. |
+| CheckSession, CheckRun, CheckBasis | PostgreSQL | CheckSession은 CheckInputSnapshot을 고정하고, CheckRun은 검수 시점의 기준 묶음을 소유합니다. |
+| CheckDecision, CheckResult, CheckRecommendation | PostgreSQL | CheckDecision은 최종 판정이며, 여러 CheckResult와 필요한 수정 권장 사항을 소유합니다. |
 | AgentRunRef | PostgreSQL | Agent 실행 결과 원문이 아니라 실행 참조를 남깁니다. |
-| Rule citation | PostgreSQL / Search Index | Answer, CheckResult, Recommendation의 근거로 사용합니다. |
+| Rule citation | PostgreSQL / Search Index | Answer의 답변 근거와 CheckBasis의 검수 기준으로 사용합니다. |
 
-검수 결과와 추천은 가능하면 Rule을 참조합니다.
-최종 판정은 CheckSession 안에 CheckDecision으로 저장합니다.
+검수 실행은 CheckBasis로 가이드라인, 규칙, 에셋 버전 참조를 묶습니다.
+최종 판정은 CheckRun 안에 CheckDecision으로 저장하고, CheckDecision은 여러 CheckResult를 소유합니다.
 
 ### 5.4 운영 인사이트
 
@@ -297,8 +297,9 @@ Payload Admin
 | 제작이 가이드라인을 참조 | GuidelineVersionRef | 제작 시점의 기준을 보존합니다. |
 | 제작이 템플릿을 참조 | TemplateVersionRef | 템플릿 변경 이후에도 당시 제작 근거를 유지합니다. |
 | 제작이 플러그인을 참조 | PluginVersionRef | 실행한 제작 기능의 버전을 남깁니다. |
-| 검수가 산출물을 참조 | WorkOutputSnapshot | 검수 시점의 결과물을 고정합니다. |
-| 검수가 규칙을 참조 | Rule ID / Rule version | 위반과 코멘트의 근거를 추적합니다. |
+| 검수가 입력을 고정 | CheckInputSnapshot | 검수 시점의 WorkOutput을 고정합니다. |
+| 검수가 기준 묶음을 사용 | CheckBasis | CheckRun이 GuidelineVersionRef, RuleVersionRef, BrandAssetVersionRef를 한 묶음으로 보존합니다. |
+| 검수가 최종 판정을 남김 | CheckDecision -> CheckResult | 하나의 판정 아래 여러 점검 결과를 저장합니다. |
 | 인사이트가 로그를 참조 | Evidence | 로그 원본을 복제하지 않고 근거로 연결합니다. |
 
 도메인은 다른 도메인의 DB 테이블을 직접 수정하지 않습니다.
@@ -312,7 +313,7 @@ Payload Admin
 - Agent는 live Version과 허용된 작업 맥락만 사용할 수 있습니다.
 - Agent는 정책을 직접 변경하지 않습니다.
 - Agent 결과는 Service가 검증한 뒤 저장합니다.
-- Answer, CheckResult, Recommendation에는 AgentRunRef를 남깁니다.
+- Answer, CheckResult, CheckRecommendation에는 AgentRunRef를 남깁니다.
 
 ### 7.2 Search Index
 
