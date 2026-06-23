@@ -102,7 +102,7 @@ PDF의 Spring 구조는 `UI -> Controller -> Service -> Data Access -> DB` 흐�
 
 - Context Engine은 규칙 조회, 검색, Worker Checklist 생성, 결정적 점검을 담당합니다.
 - Agent는 질문 이해, Answer 작성, Recommendation 생성, Pattern 요약을 담당합니다.
-- 정책 결정인 승인, 반려, 예외 처리, 기준 변경은 Manager가 수행합니다.
+- 정책 결정인 승인, 반려, 예외 처리, 가이드라인 변경은 Manager가 수행합니다.
 - Route Handler, Server Action, Payload hook은 얇게 유지하고 업무 규칙을 Service로 위임합니다.
 - 하나의 Service는 하나의 유즈케이스를 기준으로 작성합니다.
 - 여러 저장소 접근, 트랜잭션, Agent 호출, 후속 작업 예약은 Service에서 조합합니다.

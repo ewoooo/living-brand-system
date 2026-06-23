@@ -216,7 +216,7 @@ stateDiagram-v2
 | Guideline -> Usage | Usage Data에는 당시 적용된 Guideline Snapshot을 남깁니다. |
 | Usage -> Insight | Insight는 단일 이벤트가 아니라 반복되거나 의미 있는 기록 묶음에서 만듭니다. |
 | Insight -> Guideline | 채택된 Insight만 Guideline Update로 전환합니다. |
-| Guideline -> Insight | 기준 변경 후에는 이전 Usage와 비교해 효과를 측정합니다. |
+| Guideline -> Insight | 가이드라인 변경 후에는 이전 Usage와 비교해 효과를 측정합니다. |
 
 ## 7. 설계 원칙
 

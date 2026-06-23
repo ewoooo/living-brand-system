@@ -32,44 +32,70 @@
 
 ## 4. 가이드라인 관리
 
-가이드라인 관리는 기준과 공식 에셋을 구조화하고 발행하는 서브도메인입니다.
-GuidelineRule은 Guideline 내부 엔티티가 아니라 독립 애그리거트(관리 단위)입니다.
+가이드라인 관리는 브랜드 가이드라인, 공식 자원, 변경 이력을 관리하는 서브도메인입니다.
+GuidelinePage는 단순 텍스트 묶음이 아니라 PagePolicy, Rule 참조, BrandAsset 참조, Template 참조, 화면 구성을 묶은 발행 단위입니다.
+Rule은 여러 페이지에서 재사용될 수 있으므로 GuidelinePage 내부 엔티티가 아니라 독립 애그리거트(관리 단위)입니다.
 
 ```text
 [도메인] 브랜드 운영 시스템
  └── [서브도메인] 가이드라인 관리
-      ├── [바운디드 컨텍스트] 기준 편집/발행
+      ├── [바운디드 컨텍스트] 브랜드 가이드라인 편집 및 발행
       │    └── [도메인 모델]
-      │         ├── 애그리거트(관리 단위): Guideline
-      │         │    ├── 엔티티: Guideline, GuidelineSection, GuidelinePage
-      │         │    └── 값 객체: GuidelineVersion, PublishStatus, DisplayOrder
-      │         ├── 애그리거트(관리 단위): GuidelineRule
-      │         │    ├── 엔티티: GuidelineRule
-      │         │    └── 값 객체: RuleType, Severity, RuleCondition
-      │         ├── 도메인 서비스: GuidelinePublishService
-      │         └── 도메인 이벤트: GuidelinePublished, GuidelineRuleChanged
-      ├── [바운디드 컨텍스트] 에셋 편집/발행
+      │         ├── 애그리거트(관리 단위): BrandGuideline
+      │         │    ├── 엔티티: GuidelineSection
+      │         │    ├── 엔티티: GuidelinePage
+      │         │    │    ├── 엔티티: PagePolicy
+      │         │    │    ├── 엔티티: PageRuleRef
+      │         │    │    ├── 엔티티: PageAssetRef
+      │         │    │    ├── 엔티티: PageExample
+      │         │    │    └── 값 객체: PageComposition, DisplayOrder
+      │         │    └── 값 객체: GuidelineVersion, PublishStatus, EffectivePeriod
+      │         ├── 애그리거트(관리 단위): Rule
+      │         │    ├── 엔티티: RuleException
+      │         │    └── 값 객체: RuleType, Severity, RuleScope, RuleCondition, RequiredCopy, ForbiddenCopy, ExceptionReason
+      │         ├── 도메인 서비스: GuidelinePublishService, RuleConflictCheckService
+      │         └── 도메인 이벤트
+      │              ├── GuidelineDraftCreated, GuidelineSubmittedForReview, GuidelineApproved
+      │              ├── GuidelinePublished, GuidelineScheduled, GuidelineDeprecated
+      │              ├── GuidelinePageUpdated, PagePolicyUpdated, PageRuleLinked, PageAssetLinked
+      │              └── RuleChanged, RuleExceptionAdded
+      ├── [바운디드 컨텍스트] 브랜드 자원 관리
       │    └── [도메인 모델]
       │         ├── 애그리거트(관리 단위): BrandAsset
-      │         │    ├── 엔티티: BrandAsset, AssetFile
-      │         │    └── 값 객체: AssetType, AssetVersion, PublishStatus
-      │         ├── 도메인 서비스: AssetPublishService
-      │         └── 도메인 이벤트: AssetPublished, AssetChanged
-      └── [바운디드 컨텍스트] 기준 변경 이력
+      │         │    ├── 엔티티: AssetFile
+      │         │    └── 값 객체: AssetType, AssetVersion, UsageCondition, DownloadStatus
+      │         ├── 애그리거트(관리 단위): Template
+      │         │    ├── 엔티티: TemplateFile, TemplateField
+      │         │    └── 값 객체: TemplateVersion, TemplateUsageCondition
+      │         ├── 도메인 서비스: AssetPublishService, TemplatePublishService
+      │         └── 도메인 이벤트
+      │              ├── BrandAssetRegistered, BrandAssetPublished, BrandAssetDeprecated
+      │              ├── TemplateRegistered, TemplatePublished, TemplateDeprecated
+      │              └── ResourceLinkedToGuideline
+      └── [바운디드 컨텍스트] 변경 이력 추적
            └── [도메인 모델]
                 ├── 애그리거트(관리 단위): GuidelineChange
-                ├── 값 객체: ChangeReason, ChangedField
-                └── 도메인 이벤트: GuidelineChangeRecorded
+                │    └── 값 객체: ChangeReason, ChangedField, ChangeSource, ChangeSummary, PreviousReference, NextReference, RelatedInsight
+                ├── 도메인 서비스: GuidelineChangeRecordService, GuidelineVersionDiffService
+                └── 도메인 이벤트
+                     ├── GuidelineChangeRecorded, GuidelineVersionLinked
+                     └── GuidelineChangeApplied, GuidelineChangeImpactRequested
 ```
 
-Guideline은 사용자가 읽는 가이드라인 구조를 관리합니다.
-GuidelineSection은 Guideline의 상위 장이고, GuidelinePage는 실제 화면이나 문서에서 읽는 단위입니다.
+BrandGuideline은 사용자가 읽는 가이드라인 구조를 관리합니다.
+GuidelineSection은 BrandGuideline의 상위 장이고, GuidelinePage는 실제 화면이나 문서에서 읽는 단위입니다.
 
-GuidelineRule은 점검, 검토 코멘트, Agent 답변, 운영 인사이트에서 직접 참조하는 판단 기준입니다.
-따라서 GuidelinePage 안의 하위 엔티티로 묶지 않고 독립 애그리거트(관리 단위)로 관리합니다.
+GuidelinePage는 PagePolicy를 1:1로 소유하고, Rule, BrandAssetVersion, TemplateVersion은 참조합니다.
+PageRuleRef와 PageAssetRef는 페이지 안에서의 표시 순서, 강조, 캡션, 예시 역할을 함께 기록합니다.
 
-BrandAsset은 로고, 이미지, 템플릿 파일처럼 공식으로 배포되는 브랜드 자산입니다.
-GuidelinePage와 GuidelineRule은 BrandAsset을 참조할 수 있지만, 에셋의 파일 교체와 발행 상태는 BrandAsset이 관리합니다.
+Rule은 점검, 검토 코멘트, Agent 답변, 운영 인사이트에서 직접 참조하는 판단 기준입니다.
+RuleException은 Rule 안에서 관리하고, 예외가 여러 규칙에 재사용되거나 별도 승인 워크플로우를 가질 때만 독립 애그리거트(관리 단위)로 분리합니다.
+
+브랜드 가이드라인 편집 및 발행은 현재 가이드라인 내용과 발행 상태를 관리하고, 변경 이력 추적은 변경 사유, 적용일, 이전 버전과의 연결을 기록합니다.
+
+BrandAsset은 로고, 이미지, 아이콘처럼 공식으로 배포되는 브랜드 자산입니다.
+Template은 Worker가 작업을 시작할 때 사용하는 공식 형식입니다.
+GuidelinePage와 Rule은 BrandAsset과 Template을 참조할 수 있지만, 파일 교체와 배포 상태는 브랜드 자원 관리가 담당합니다.
 
 ## 5. 제작 관리
 
@@ -119,7 +145,7 @@ WorkSubmission은 제출 당시 GuidelineSnapshot을 보존합니다.
 Question과 Answer는 각각 독립 애그리거트(관리 단위)로 보지 않습니다.
 질문 삭제, 질문 수정, 질문 종료는 Answer와 함께 움직일 가능성이 높으므로 QASession 애그리거트(관리 단위) 안에서 관리합니다.
 
-CheckResult와 ReviewComment는 가능하면 GuidelineRule을 참조합니다.
+CheckResult와 ReviewComment는 가능하면 Rule을 참조합니다.
 Agent와 System은 점검과 설명을 보조할 수 있지만, 승인, 반려, 수정 요청의 최종 결정은 Manager가 합니다.
 
 ## 7. 운영 인사이트
@@ -139,17 +165,22 @@ Agent와 System은 점검과 설명을 보조할 수 있지만, 승인, 반려, 
 ```
 
 Insight는 반복 패턴, 근거, 개선 제안을 하나의 흐름으로 묶은 분석 결과물입니다.
-Proposal은 채택되어야 가이드라인 관리에서 실제 Guideline 또는 GuidelineRule 변경으로 반영됩니다.
+Proposal은 채택되어야 가이드라인 관리에서 실제 BrandGuideline 또는 Rule 변경으로 반영됩니다.
 
 ## 8. 핵심 관계
 
 ```mermaid
 flowchart LR
-  Guideline["Guideline"]
+  Guideline["BrandGuideline"]
   Section["GuidelineSection"]
   Page["GuidelinePage"]
-  Rule["GuidelineRule"]
+  Policy["PagePolicy"]
+  RuleRef["PageRuleRef"]
+  AssetRef["PageAssetRef"]
+  Example["PageExample"]
+  Rule["Rule"]
   Asset["BrandAsset"]
+  Template["Template"]
   Work["Work"]
   QASession["QASession"]
   Question["Question"]
@@ -166,8 +197,14 @@ flowchart LR
 
   Guideline --> Section
   Section --> Page
-  Page -->|"관련 규칙"| Rule
-  Page -->|"참조"| Asset
+  Page --> Policy
+  Page --> RuleRef
+  RuleRef -->|"버전 참조"| Rule
+  Page --> AssetRef
+  AssetRef -->|"버전 참조"| Asset
+  Page --> Example
+  Example -->|"참조"| Asset
+  Page -->|"버전 참조"| Template
   Rule -->|"참조"| Asset
   Work --> QASession
   QASession --> Question
@@ -192,10 +229,10 @@ flowchart LR
 
 ## 9. 설계 원칙
 
-- GuidelinePage는 읽기 단위이고, GuidelineRule은 판단 단위입니다.
-- GuidelineRule은 독립 애그리거트(관리 단위)로 관리합니다.
+- GuidelinePage는 PagePolicy를 소유하고, Rule, BrandAssetVersion, TemplateVersion을 참조하는 읽기 단위입니다.
+- Rule은 여러 GuidelinePage에서 재사용할 수 있는 독립 애그리거트(관리 단위)입니다.
 - QASession은 Question과 Answer를 함께 관리하는 애그리거트(관리 단위)입니다.
-- Answer, CheckResult, ReviewComment는 GuidelineRule을 근거로 참조할 수 있어야 합니다.
+- Answer, CheckResult, ReviewComment는 Rule을 근거로 참조할 수 있어야 합니다.
 - WorkSubmission은 제출 당시 GuidelineSnapshot을 보존합니다.
 - Review는 Manager의 최종 판단 기록입니다.
 - Insight는 Evidence, Pattern, Proposal을 함께 관리하는 분석 결과물입니다.
