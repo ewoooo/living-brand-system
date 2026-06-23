@@ -40,22 +40,22 @@ flowchart LR
   Guideline["가이드라인 관리"]
   Production["제작 관리"]
   Quality["품질 검수"]
-  SessionEventLog["SessionEventLog"]
+  UsageRecord["사용 기록"]
   Insight["운영 인사이트"]
 
   Guideline -->|"발행 기준 / 제작 자원"| Production
   Guideline -->|"검수 기준"| Quality
-  Guideline -->|"사용 기록 생성"| SessionEventLog
-  Production -->|"사용 기록 생성"| SessionEventLog
-  Quality -->|"사용 기록 생성"| SessionEventLog
-  SessionEventLog -->|"근거 참조"| Insight
+  Guideline -->|"사용 기록 생성"| UsageRecord
+  Production -->|"사용 기록 생성"| UsageRecord
+  Quality -->|"사용 기록 생성"| UsageRecord
+  UsageRecord -->|"근거 참조"| Insight
   Insight -->|"개선 근거 제공"| Guideline
 ```
 
 | 관계 | 엣지 의미 | 대표 데이터 |
 | --- | --- | --- |
-| 가이드라인 관리 -> 제작 관리 | 제작이 발행된 기준과 자원을 참조합니다. | GuidelineVersionRef, TemplateVersionRef, PluginVersionRef |
-| 가이드라인 관리 -> 품질 검수 | 검수가 live 기준과 규칙 버전을 참조합니다. | GuidelineVersionRef, RuleVersionRef |
+| 가이드라인 관리 -> 제작 관리 | 제작이 발행된 기준과 자원을 참조합니다. | GuidelineVersionRef, BrandAssetVersionRef, TemplateVersionRef, PluginVersionRef |
+| 가이드라인 관리 -> 품질 검수 | 검수가 live 기준, 규칙, 에셋 버전을 참조합니다. | GuidelineVersionRef, RuleVersionRef, BrandAssetVersionRef |
 | 가이드라인 관리 -> 사용 기록 | 가이드라인 화면 행동과 공식 버전 발행 결과를 기록합니다. | BehaviorEventLog, Version Record |
 | 제작 관리 -> 사용 기록 | 제작 과정에서 감사 가능한 세션 이벤트를 남깁니다. | SessionEventLog |
 | 품질 검수 -> 사용 기록 | 질의, 검수 세션, 점검 결과를 세션 이벤트로 남깁니다. | SessionEventLog |
@@ -66,9 +66,9 @@ flowchart LR
 
 이 관계도는 바운디드 컨텍스트와 핵심 객체의 참조 방향을 함께 보여줍니다.
 제작 관리는 산출물을 만들고 사용 기록을 남깁니다.
-품질 검수는 별도 실행될 때 발행된 Guideline과 Rule을 기준으로 검수 대상을 참조합니다.
+품질 검수는 CheckTarget에 검수 입력을 고정하고, CheckRun의 CheckBasis에서 발행된 Guideline, Rule, BrandAsset 버전을 참조합니다.
 하위 관계도의 엣지는 소유, 참조, 포함, 근거, 기록, 채택 같은 관계 동사로 표현합니다.
-`GuidelineVersionRef`, `TemplateVersionRef`, `PluginVersionRef`, `AgentRunRef`처럼 별도 생명주기가 없는 참조 값은 객체 노드로 표현하지 않습니다.
+`GuidelineVersionRef`, `BrandAssetVersionRef`, `TemplateVersionRef`, `PluginVersionRef`, `AgentRunRef`처럼 별도 생명주기가 없는 참조 값은 객체 노드로 표현하지 않습니다.
 단, `PageRuleRef`와 `PageAssetRef`는 페이지 안 표시 순서, 강조, 캡션, 예시 역할을 함께 담으므로 객체로 표현합니다.
 세부 도메인 이벤트명은 각 도메인 모델 목록에만 둡니다.
 
@@ -107,10 +107,11 @@ flowchart LR
   subgraph QualityCheck["산출물 검수"]
     CheckSession["CheckSession"]
     CheckTarget["CheckTarget"]
-    WorkOutputSnapshot["WorkOutputSnapshot"]
+    CheckInputSnapshot["CheckInputSnapshot"]
     CheckRun["CheckRun"]
+    CheckBasis["CheckBasis"]
     CheckResult["CheckResult"]
-    Recommendation["Recommendation"]
+    CheckRecommendation["CheckRecommendation"]
     CheckDecision["CheckDecision"]
   end
 
@@ -148,9 +149,10 @@ flowchart LR
 
   WorkSession -->|"소유"| WorkInput
   WorkSession -->|"소유"| WorkOutput
-  WorkSession -->|"기준 참조"| BrandGuideline
-  WorkSession -->|"템플릿 사용"| Template
-  WorkSession -->|"플러그인 사용"| Plugin
+  WorkSession -->|"참조"| BrandGuideline
+  WorkSession -->|"사용"| BrandAsset
+  WorkSession -->|"사용"| Template
+  WorkSession -->|"사용"| Plugin
   WorkSession -->|"기록"| SessionEventLog
   WorkOutput -->|"기록"| SessionEventLog
 
@@ -161,14 +163,15 @@ flowchart LR
   QASession -->|"기록"| SessionEventLog
 
   CheckSession -->|"소유"| CheckTarget
-  CheckTarget -->|"고정"| WorkOutputSnapshot
-  CheckTarget -->|"기준 참조"| BrandGuideline
+  CheckTarget -->|"고정"| CheckInputSnapshot
   CheckSession -->|"소유"| CheckRun
-  CheckRun -->|"소유"| CheckResult
-  CheckResult -->|"근거"| Rule
-  CheckRun -->|"소유"| Recommendation
-  Recommendation -->|"근거"| Rule
-  CheckSession -->|"소유"| CheckDecision
+  CheckRun -->|"소유"| CheckBasis
+  CheckBasis -->|"참조"| BrandGuideline
+  CheckBasis -->|"참조"| Rule
+  CheckBasis -->|"참조"| BrandAsset
+  CheckRun -->|"소유"| CheckDecision
+  CheckDecision -->|"소유"| CheckResult
+  CheckResult -->|"소유"| CheckRecommendation
   CheckSession -->|"기록"| SessionEventLog
 
   GuidelinePage -->|"조회 행동"| BehaviorEventLog
@@ -190,22 +193,24 @@ flowchart LR
   classDef record fill:#F1F3F5,stroke:#868E96,stroke-width:1.5px,color:#1F1F1F;
 
   class BrandGuideline,Rule,BrandAsset,Template,Plugin,WorkSession,QASession,CheckSession,SessionEventLog,BehaviorEventLog,Insight,InsightReport aggregate;
-  class GuidelineSection,GuidelinePage,RuleException,WorkInput,WorkOutput,Question,Answer,CheckTarget,WorkOutputSnapshot,CheckRun,CheckResult,Evidence,Pattern,ReportSection entity;
-  class PagePolicy,PageRuleRef,PageAssetRef,AnswerCitation,Recommendation,CheckDecision,PageViewEvent,ClickEvent,AssetDownloadEvent,SectionDwellEvent,CustomEvent childEntity;
+  class GuidelineSection,GuidelinePage,RuleException,WorkInput,WorkOutput,Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult,Evidence,Pattern,ReportSection entity;
+  class PagePolicy,PageRuleRef,PageAssetRef,AnswerCitation,CheckRecommendation,PageViewEvent,ClickEvent,AssetDownloadEvent,SectionDwellEvent,CustomEvent childEntity;
 ```
 
 | 관계 | 의미 |
 | --- | --- |
 | GuidelinePage -> PagePolicy | 페이지는 정책 설명을 1:1로 소유합니다. |
 | GuidelinePage -> Rule / BrandAsset / Template / Plugin | 페이지는 재사용 가능한 규칙과 자원을 버전으로 참조합니다. |
-| WorkSession -> BrandGuideline / Template / Plugin | 제작은 발행 기준, 템플릿, 플러그인을 사용하고 해당 버전을 고정합니다. |
+| WorkSession -> BrandGuideline / BrandAsset / Template / Plugin | 제작은 발행 기준, 에셋, 템플릿, 플러그인을 사용하고 해당 버전을 고정합니다. |
 | WorkSession -> SessionEventLog | 제작 활동과 산출물 생성 결과는 사용 기록으로 남습니다. |
 | QASession / CheckSession -> SessionEventLog | 질문, 답변, 검수 결과는 사용 기록으로 남습니다. |
 | GuidelinePage -> BehaviorEventLog | 가이드라인 화면 조회, 클릭, 에셋 다운로드, 특정 구간 체류 같은 화면 행동은 화면 행동 기록으로 남깁니다. |
 | BehaviorEventLog -> Evidence | 운영 인사이트는 화면 행동 기록을 근거로 참조합니다. |
 | CheckSession -> CheckTarget | 품질 검수는 별도 실행될 때 검수 대상 값을 소유합니다. |
-| CheckTarget -> BrandGuideline | 검수 대상은 검수 시점의 가이드라인 버전을 기준으로 참조합니다. |
-| CheckResult / Recommendation -> Rule | 위반과 추천은 가능한 경우 Rule을 근거로 연결합니다. |
+| CheckRun -> CheckBasis | 점검 실행은 검수 시점의 기준 묶음을 소유합니다. |
+| CheckBasis -> BrandGuideline / Rule / BrandAsset | 기준 묶음은 검수 시점의 가이드라인, 규칙, 에셋 버전을 참조합니다. |
+| CheckDecision -> CheckResult | 최종 판정은 여러 점검 결과를 소유합니다. |
+| CheckResult -> CheckRecommendation | 점검 결과는 필요한 수정 권장 사항을 소유합니다. |
 | SessionEventLog -> Evidence | 운영 인사이트는 원천 객체를 직접 소유하지 않고 사용 기록을 근거로 참조합니다. |
 | Insight -> ReportSection -> InsightReport | Insight는 보고서에 포함된 뒤 Manager에게 개선 검토 근거로 제공됩니다. |
 | BrandGuideline / Rule / BrandAsset / Template / Plugin -> Version | 발행 대상은 공식 Version을 만들고, Version은 이전 버전과 Payload revision 참조를 보존합니다. |
@@ -275,8 +280,8 @@ flowchart LR
     Section["GuidelineSection"]
     Page["GuidelinePage"]
     Policy["PagePolicy"]
-    RuleRef["PageRuleRef"]
-    AssetRef["PageAssetRef"]
+    PageRuleRefNode["PageRuleRef"]
+    PageAssetRefNode["PageAssetRef"]
     Rule["Rule"]
     RuleException["RuleException"]
   end
@@ -290,11 +295,11 @@ flowchart LR
   BrandGuideline -->|"소유"| Section
   Section -->|"소유"| Page
   Page -->|"소유"| Policy
-  Page -->|"소유"| RuleRef
-  RuleRef -->|"규칙 사용"| Rule
+  Page -->|"소유"| PageRuleRefNode
+  PageRuleRefNode -->|"규칙 사용"| Rule
   Rule -->|"소유"| RuleException
-  Page -->|"소유"| AssetRef
-  AssetRef -->|"자원 사용"| BrandAsset
+  Page -->|"소유"| PageAssetRefNode
+  PageAssetRefNode -->|"자원 사용"| BrandAsset
   Page -->|"템플릿 사용"| Template
   Page -->|"플러그인 사용"| Plugin
   Rule -->|"참조"| BrandAsset
@@ -305,17 +310,17 @@ flowchart LR
 
   class BrandGuideline,Rule,BrandAsset,Template,Plugin aggregate;
   class Section,Page,RuleException entity;
-  class Policy,RuleRef,AssetRef childEntity;
+  class Policy,PageRuleRefNode,PageAssetRefNode childEntity;
 ```
 
 BrandGuideline은 사용자가 읽는 가이드라인 구조를 관리합니다.
 GuidelineSection은 BrandGuideline의 상위 장이고, GuidelinePage는 실제 화면이나 문서에서 읽는 단위입니다.
-GuidelineVersionRef는 BrandGuideline이 소유한 공식 Version을 WorkSession, QASession, CheckSession이 참조하기 위해 저장하는 값 객체입니다.
+GuidelineVersionRef는 BrandGuideline이 소유한 공식 Version을 WorkSession과 CheckBasis가 참조하기 위해 저장하는 값 객체입니다.
 
 GuidelinePage는 PagePolicy를 1:1로 소유하고, Rule, BrandAssetVersion, TemplateVersion, PluginVersion은 참조합니다.
 PageRuleRef와 PageAssetRef는 페이지 안에서의 표시 순서, 강조, 캡션, 예시 역할을 함께 기록합니다.
 
-Rule은 점검, 추천, Agent 답변, 운영 인사이트에서 직접 참조하는 판단 기준입니다.
+Rule은 CheckBasis, Agent 답변, 운영 인사이트에서 참조하는 판단 기준입니다.
 RuleException은 Rule 안에서 관리하고, 예외가 여러 규칙에 재사용되거나 별도 승인 워크플로우를 가질 때만 독립 애그리거트(관리 단위)로 분리합니다.
 
 공식 버전 전환은 별도 애그리거트를 만들지 않고, 각 원본 애그리거트가 소유한 Version 엔티티의 stage/live/archived 상태를 바꾸는 서비스 흐름으로 둡니다.
@@ -338,7 +343,7 @@ GuidelinePage와 Rule은 BrandAsset, Template, Plugin을 참조할 수 있지만
            └── [도메인 모델]
                 ├── 애그리거트(관리 단위): WorkSession
                 │    ├── 엔티티: WorkSession, WorkInput, WorkOutput
-                │    └── 값 객체: WorkPurpose, ApplicationTypeRef, TemplateVersionRef, PluginVersionRef, GuidelineVersionRef, WorkSessionStatus
+                │    └── 값 객체: WorkPurpose, ApplicationTypeRef, GuidelineVersionRef, BrandAssetVersionRef, TemplateVersionRef, PluginVersionRef, WorkSessionStatus
                 ├── 도메인 서비스: WorkSessionStartService, WorkSessionRenderService
                 └── 도메인 이벤트: WorkSessionStarted, WorkInputChanged, WorkPreviewGenerated, WorkOutputCreated, WorkSessionCompleted
 ```
@@ -356,12 +361,14 @@ flowchart LR
 
   SessionEventLog["SessionEventLog"]
   BrandGuideline["BrandGuideline"]
+  BrandAsset["BrandAsset"]
   Template["Template"]
   Plugin["Plugin"]
 
-  WorkSession -->|"기준 참조"| BrandGuideline
-  WorkSession -->|"템플릿 사용"| Template
-  WorkSession -->|"플러그인 사용"| Plugin
+  WorkSession -->|"참조"| BrandGuideline
+  WorkSession -->|"사용"| BrandAsset
+  WorkSession -->|"사용"| Template
+  WorkSession -->|"사용"| Plugin
   WorkSession -->|"소유"| WorkInput
   WorkSession -->|"소유"| WorkOutput
   WorkSession -->|"상태"| WorkSessionStatus
@@ -372,18 +379,18 @@ flowchart LR
   classDef entity fill:#E7F5FF,stroke:#1C7ED6,stroke-width:1.5px,color:#1F1F1F;
   classDef record fill:#F1F3F5,stroke:#868E96,stroke-width:1.5px,color:#1F1F1F;
 
-  class WorkSession,BrandGuideline,Template,Plugin aggregate;
+  class WorkSession,BrandGuideline,BrandAsset,Template,Plugin aggregate;
   class WorkInput,WorkOutput entity;
   class WorkSessionStatus,SessionEventLog record;
 ```
 
 WorkSession은 Worker가 산출물을 만들기 시작한 작업 단위입니다.
-WorkOutput은 제작 결과물이고, 품질 검수는 필요한 시점의 WorkOutputSnapshot을 검수 대상으로 참조합니다.
+WorkOutput은 제작 결과물이고, 품질 검수는 필요한 시점의 검수 입력을 CheckInputSnapshot으로 고정합니다.
 가이드라인 화면의 조회, 클릭, 에셋 다운로드, 구간 체류는 제작 관리가 아니라 화면 행동 기록으로 수집합니다.
 
 ## 6. 품질 검수
 
-품질 검수는 WorkOutputSnapshot이 기준에 맞는지 점검하고, 질문과 검수 결과를 기준에 연결하는 서브도메인입니다.
+품질 검수는 CheckInputSnapshot에 고정된 입력이 기준에 맞는지 점검하고, 질문과 검수 결과를 기준에 연결하는 서브도메인입니다.
 
 ```text
 [도메인] 브랜드 운영 시스템
@@ -398,8 +405,12 @@ WorkOutput은 제작 결과물이고, 품질 검수는 필요한 시점의 WorkO
       └── [바운디드 컨텍스트] 산출물 검수
            └── [도메인 모델]
                 ├── 애그리거트(관리 단위): CheckSession
-                │    ├── 엔티티: CheckRun, CheckResult
-                │    └── 값 객체: CheckTarget, GuidelineVersionRef, CheckDecision, CheckOutcome, Violation, Recommendation, AgentRunRef
+                │    ├── 엔티티: CheckRun
+                │    │    ├── 엔티티: CheckBasis
+                │    │    │    └── 값 객체: GuidelineVersionRef, RuleVersionRef, BrandAssetVersionRef
+                │    │    └── 엔티티: CheckDecision
+                │    │         └── 엔티티: CheckResult
+                │    └── 값 객체: CheckTarget, CheckInputSnapshot, CheckOutcome, Violation, CheckRecommendation, AgentRunRef
                 ├── 도메인 서비스: QualityCheckService
                 └── 도메인 이벤트: CheckSessionStarted, CheckRunCompleted, CheckCompleted
 ```
@@ -408,7 +419,7 @@ WorkOutput은 제작 결과물이고, 품질 검수는 필요한 시점의 WorkO
 
 ```mermaid
 flowchart LR
-  LiveRuleVersion["Live RuleVersion"]
+  Rule["Rule"]
 
   subgraph QA["질의응답"]
     QASession["QASession"]
@@ -421,34 +432,37 @@ flowchart LR
   subgraph Check["산출물 검수"]
     CheckSession["CheckSession"]
     CheckTarget["CheckTarget"]
-    WorkOutputSnapshot["WorkOutputSnapshot"]
+    CheckInputSnapshot["CheckInputSnapshot"]
     CheckRun["CheckRun"]
+    CheckBasis["CheckBasis"]
     CheckResult["CheckResult"]
-    Recommendation["Recommendation"]
+    CheckRecommendation["CheckRecommendation"]
     CheckDecision["CheckDecision"]
   end
 
   AgentRun["AgentRun"]
   BrandGuideline["BrandGuideline"]
+  BrandAsset["BrandAsset"]
   SessionEventLog["SessionEventLog"]
 
   QASession -->|"소유"| Question
   QASession -->|"소유"| Answer
   Answer -->|"소유"| AnswerCitation
   Answer -->|"소유"| AnswerConfidence
-  AnswerCitation -->|"근거"| LiveRuleVersion
+  AnswerCitation -->|"근거"| Rule
   Answer -->|"실행 참조"| AgentRun
 
   CheckSession -->|"소유"| CheckTarget
-  CheckTarget -->|"고정"| WorkOutputSnapshot
-  CheckTarget -->|"기준 참조"| BrandGuideline
+  CheckTarget -->|"고정"| CheckInputSnapshot
   CheckSession -->|"소유"| CheckRun
-  CheckRun -->|"소유"| CheckResult
-  CheckResult -->|"근거"| LiveRuleVersion
-  CheckResult -->|"실행 참조"| AgentRun
-  CheckRun -->|"소유"| Recommendation
-  Recommendation -->|"근거"| LiveRuleVersion
-  CheckSession -->|"소유"| CheckDecision
+  CheckRun -->|"소유"| CheckBasis
+  CheckBasis -->|"참조"| BrandGuideline
+  CheckBasis -->|"참조"| Rule
+  CheckBasis -->|"참조"| BrandAsset
+  CheckRun -->|"소유"| CheckDecision
+  CheckDecision -->|"소유"| CheckResult
+  CheckResult -->|"소유"| CheckRecommendation
+  CheckRun -->|"실행 참조"| AgentRun
 
   QASession -->|"기록"| SessionEventLog
   CheckSession -->|"기록"| SessionEventLog
@@ -458,9 +472,9 @@ flowchart LR
   classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
   classDef record fill:#F1F3F5,stroke:#868E96,stroke-width:1.5px,color:#1F1F1F;
 
-  class QASession,CheckSession,BrandGuideline aggregate;
-  class LiveRuleVersion,Question,Answer,CheckTarget,WorkOutputSnapshot,CheckRun,CheckResult entity;
-  class AnswerCitation,AnswerConfidence,Recommendation,CheckDecision childEntity;
+  class QASession,CheckSession,BrandGuideline,BrandAsset aggregate;
+  class Rule,Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult entity;
+  class AnswerCitation,AnswerConfidence,CheckRecommendation childEntity;
   class AgentRun,SessionEventLog record;
 ```
 
@@ -469,9 +483,10 @@ Question과 Answer는 각각 독립 애그리거트(관리 단위)로 보지 않
 품질 검수 화면에서 발생한 질문, 답변, 검수 세션, 점검 실행은 사용 기록으로 남깁니다.
 가이드라인 화면의 조회, 클릭, 에셋 다운로드, 구간 체류는 품질 검수가 아니라 화면 행동 기록으로 수집합니다.
 
-CheckResult와 Recommendation은 가능하면 Rule을 참조합니다.
+CheckRun은 CheckBasis를 소유하고, CheckBasis는 검수 시점의 Guideline, Rule, BrandAsset 버전을 참조합니다.
+CheckDecision은 CheckRun 안에서 최종 판정을 표현하고, 여러 CheckResult를 소유합니다.
 Agent와 System은 점검, 설명, 최종 검수 판정을 수행합니다.
-Agent 자체는 도메인 애그리거트(관리 단위)로 두지 않고, Answer, CheckResult, Recommendation에 AgentRunRef를 남겨 실행 이력만 추적합니다.
+Agent 자체는 도메인 애그리거트(관리 단위)로 두지 않고, Answer, CheckResult, CheckRecommendation에 AgentRunRef를 남겨 실행 이력만 추적합니다.
 
 ## 7. 사용 기록
 
@@ -521,7 +536,7 @@ Agent 자체는 도메인 애그리거트(관리 단위)로 두지 않고, Answe
       └── [바운디드 컨텍스트] 인사이트 제공
            └── [도메인 모델]
                 ├── 애그리거트(관리 단위): InsightReport
-                │    ├── 엔티티: ReportSection, InsightSummary
+                │    ├── 엔티티: ReportSection
                 │    └── 값 객체: ReportPeriod, ReportAudience
                 ├── 도메인 서비스: InsightReportService
                 └── 도메인 이벤트: InsightReportPublished, InsightReviewed
@@ -547,10 +562,10 @@ flowchart LR
 
   SessionEventLog -->|"근거"| Evidence
   BehaviorEventLog -->|"근거"| Evidence
-  Evidence -->|"묶음"| Pattern
+  Evidence -->|"참조"| Pattern
   Pattern -->|"분석"| Insight
-  Insight -->|"섹션에 포함"| ReportSection
-  ReportSection -->|"보고서에 포함"| InsightReport
+  Insight -->|"포함"| ReportSection
+  ReportSection -->|"포함"| InsightReport
 
   classDef aggregate fill:#FFE8CC,stroke:#F08C00,stroke-width:2px,color:#1F1F1F;
   classDef entity fill:#E7F5FF,stroke:#1C7ED6,stroke-width:1.5px,color:#1F1F1F;
