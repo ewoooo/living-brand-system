@@ -22,10 +22,11 @@
 
 ```text
 [도메인] 브랜드 운영 시스템
- ├── [서브도메인] 가이드라인 관리
- ├── [서브도메인] 제작 관리
- ├── [서브도메인] 품질 검수
- └── [서브도메인] 운영 인사이트
+ ├── [핵심 서브도메인] 가이드라인 관리
+ ├── [핵심 서브도메인] 제작 관리
+ ├── [핵심 서브도메인] 품질 검수
+ ├── [핵심 서브도메인] 운영 인사이트
+ └── [지원 서브도메인] 사용 기록
 ```
 
 브랜드 운영 시스템은 가이드라인을 문서로 보관하는 시스템이 아니라, 기준을 구조화하고, 산출물 제작과 품질 검수를 거쳐, 사용 기록을 다시 개선 근거로 연결하는 시스템입니다.
@@ -122,6 +123,8 @@ flowchart LR
     ClickEvent["ClickEvent"]
     AssetDownloadEvent["AssetDownloadEvent"]
     SectionDwellEvent["SectionDwellEvent"]
+    SearchEvent["SearchEvent"]
+    OutboundLinkEvent["OutboundLinkEvent"]
     CustomEvent["CustomEvent"]
   end
 
@@ -179,6 +182,8 @@ flowchart LR
   BehaviorEventLog -->|"분류"| ClickEvent
   BehaviorEventLog -->|"분류"| AssetDownloadEvent
   BehaviorEventLog -->|"분류"| SectionDwellEvent
+  BehaviorEventLog -->|"분류"| SearchEvent
+  BehaviorEventLog -->|"분류"| OutboundLinkEvent
   BehaviorEventLog -->|"분류"| CustomEvent
   SessionEventLog -->|"근거"| Evidence
   BehaviorEventLog -->|"근거"| Evidence
@@ -194,7 +199,7 @@ flowchart LR
 
   class BrandGuideline,Rule,BrandAsset,Template,Plugin,WorkSession,QASession,CheckSession,SessionEventLog,BehaviorEventLog,Insight,InsightReport aggregate;
   class GuidelineSection,GuidelinePage,RuleException,WorkInput,WorkOutput,Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult,Evidence,Pattern,ReportSection entity;
-  class PagePolicy,PageRuleRef,PageAssetRef,AnswerCitation,CheckRecommendation,PageViewEvent,ClickEvent,AssetDownloadEvent,SectionDwellEvent,CustomEvent childEntity;
+  class PagePolicy,PageRuleRef,PageAssetRef,AnswerCitation,CheckRecommendation,PageViewEvent,ClickEvent,AssetDownloadEvent,SectionDwellEvent,SearchEvent,OutboundLinkEvent,CustomEvent childEntity;
 ```
 
 | 관계 | 의미 |
@@ -204,7 +209,7 @@ flowchart LR
 | WorkSession -> BrandGuideline / BrandAsset / Template / Plugin | 제작은 발행 기준, 에셋, 템플릿, 플러그인을 사용하고 해당 버전을 고정합니다. |
 | WorkSession -> SessionEventLog | 제작 활동과 산출물 생성 결과는 사용 기록으로 남습니다. |
 | QASession / CheckSession -> SessionEventLog | 질문, 답변, 검수 결과는 사용 기록으로 남습니다. |
-| GuidelinePage -> BehaviorEventLog | 가이드라인 화면 조회, 클릭, 에셋 다운로드, 특정 구간 체류 같은 화면 행동은 화면 행동 기록으로 남깁니다. |
+| GuidelinePage -> BehaviorEventLog | 가이드라인 화면 조회, 클릭, 검색, 에셋 다운로드, 특정 구간 체류, 외부 링크 클릭 같은 화면 행동은 화면 행동 기록으로 남깁니다. |
 | BehaviorEventLog -> Evidence | 운영 인사이트는 화면 행동 기록을 근거로 참조합니다. |
 | CheckSession -> CheckTarget | 품질 검수는 별도 실행될 때 검수 대상 값을 소유합니다. |
 | CheckRun -> CheckBasis | 점검 실행은 검수 시점의 기준 묶음을 소유합니다. |
@@ -246,7 +251,7 @@ Rule은 여러 페이지에서 재사용될 수 있으므로 GuidelinePage 내�
       │              ├── GuidelinePublished, GuidelineScheduled, GuidelineDeprecated
       │              ├── GuidelinePageUpdated, PagePolicyUpdated, PageRuleLinked, PageAssetLinked
       │              ├── RuleUpdated, RuleExceptionAdded
-      │              └── VersionStaged, VersionPublished, VersionArchived, VersionCompared
+      │              └── GuidelineVersionStaged, GuidelineVersionPublished, GuidelineVersionArchived, GuidelineVersionCompared
       ├── [바운디드 컨텍스트] 브랜드 자원 관리
       │    └── [도메인 모델]
       │         ├── 애그리거트(관리 단위): BrandAsset
@@ -265,10 +270,12 @@ Rule은 여러 페이지에서 재사용될 수 있으므로 GuidelinePage 내�
       │              ├── TemplateRegistered, TemplatePublished, TemplateDeprecated
       │              ├── PluginRegistered, PluginPublished, PluginDeprecated
       │              ├── ResourceLinkedToGuideline
-      │              └── VersionStaged, VersionPublished, VersionArchived, VersionCompared
+      │              ├── BrandAssetVersionStaged, BrandAssetVersionPublished, BrandAssetVersionArchived, BrandAssetVersionCompared
+      │              ├── TemplateVersionStaged, TemplateVersionPublished, TemplateVersionArchived, TemplateVersionCompared
+      │              └── PluginVersionStaged, PluginVersionPublished, PluginVersionArchived, PluginVersionCompared
       └── [공통 값 객체]
            ├── VersionNumber, VersionStatus(stage/live/archived), PayloadRevisionRef
-           └── PreviousVersionRef, VersionSummary, VersionReason
+           └── PreviousVersionRef, VersionSummary, VersionReason, VersionResourceType
 ```
 
 ### 가이드라인 관리 하위 도메인 관계도
@@ -324,6 +331,8 @@ Rule은 CheckBasis, Agent 답변, 운영 인사이트에서 참조하는 판단 
 RuleException은 Rule 안에서 관리하고, 예외가 여러 규칙에 재사용되거나 별도 승인 워크플로우를 가질 때만 독립 애그리거트(관리 단위)로 분리합니다.
 
 공식 버전 전환은 별도 애그리거트를 만들지 않고, 각 원본 애그리거트가 소유한 Version 엔티티의 stage/live/archived 상태를 바꾸는 서비스 흐름으로 둡니다.
+Version 이벤트는 공통 이름만 쓰지 않고, producer 또는 resource type을 식별할 수 있게 기록합니다.
+예를 들어 가이드라인은 GuidelineVersionPublished, 브랜드 에셋은 BrandAssetVersionPublished처럼 구분합니다.
 
 BrandAsset은 로고, 이미지, 아이콘처럼 공식으로 배포되는 브랜드 자산입니다.
 Template은 Worker가 작업을 시작할 때 사용하는 공식 형식입니다.
@@ -386,7 +395,7 @@ flowchart LR
 
 WorkSession은 Worker가 산출물을 만들기 시작한 작업 단위입니다.
 WorkOutput은 제작 결과물이고, 품질 검수는 필요한 시점의 검수 입력을 CheckInputSnapshot으로 고정합니다.
-가이드라인 화면의 조회, 클릭, 에셋 다운로드, 구간 체류는 제작 관리가 아니라 화면 행동 기록으로 수집합니다.
+가이드라인 화면의 조회, 클릭, 검색, 에셋 다운로드, 구간 체류, 외부 링크 클릭은 제작 관리가 아니라 화면 행동 기록으로 수집합니다.
 
 ## 6. 품질 검수
 
@@ -402,17 +411,22 @@ WorkOutput은 제작 결과물이고, 품질 검수는 필요한 시점의 검�
       │         │    └── 값 객체: AnswerCitation, AnswerConfidence, AgentRunRef
       │         ├── 도메인 서비스: AnswerGenerationService
       │         └── 도메인 이벤트: QuestionAsked, AnswerProvided
-      └── [바운디드 컨텍스트] 산출물 검수
-           └── [도메인 모델]
-                ├── 애그리거트(관리 단위): CheckSession
-                │    ├── 엔티티: CheckRun
-                │    │    ├── 엔티티: CheckBasis
-                │    │    │    └── 값 객체: GuidelineVersionRef, RuleVersionRef, BrandAssetVersionRef
-                │    │    └── 엔티티: CheckDecision
-                │    │         └── 엔티티: CheckResult
-                │    └── 값 객체: CheckTarget, CheckInputSnapshot, CheckOutcome, Violation, CheckRecommendation, AgentRunRef
-                ├── 도메인 서비스: QualityCheckService
-                └── 도메인 이벤트: CheckSessionStarted, CheckRunCompleted, CheckCompleted
+      ├── [바운디드 컨텍스트] 산출물 검수
+      │    └── [도메인 모델]
+      │         ├── 애그리거트(관리 단위): CheckSession
+      │         │    ├── 엔티티: CheckTarget
+      │         │    ├── 엔티티: CheckInputSnapshot
+      │         │    ├── 엔티티: CheckRun
+      │         │    │    ├── 엔티티: CheckBasis
+      │         │    │    │    └── 값 객체: GuidelineVersionRef, RuleVersionRef, BrandAssetVersionRef
+      │         │    │    └── 엔티티: CheckDecision
+      │         │    │         └── 엔티티: CheckResult
+      │         │    │              └── 엔티티: CheckRecommendation
+      │         │    └── 값 객체: CheckOutcome, Violation, AgentRunRef
+      │         ├── 도메인 서비스: QualityCheckService
+      │         └── 도메인 이벤트: CheckSessionStarted, CheckRunCompleted, CheckCompleted
+      └── [실행 기록 카탈로그]
+           └── AgentRunStarted, AgentRunCompleted, AgentRunFailed
 ```
 
 ### 품질 검수 하위 도메인 관계도
@@ -481,12 +495,14 @@ flowchart LR
 Question과 Answer는 각각 독립 애그리거트(관리 단위)로 보지 않습니다.
 질문 삭제, 질문 수정, 질문 종료는 Answer와 함께 움직일 가능성이 높으므로 QASession 애그리거트(관리 단위) 안에서 관리합니다.
 품질 검수 화면에서 발생한 질문, 답변, 검수 세션, 점검 실행은 사용 기록으로 남깁니다.
-가이드라인 화면의 조회, 클릭, 에셋 다운로드, 구간 체류는 품질 검수가 아니라 화면 행동 기록으로 수집합니다.
+가이드라인 화면의 조회, 클릭, 검색, 에셋 다운로드, 구간 체류, 외부 링크 클릭은 품질 검수가 아니라 화면 행동 기록으로 수집합니다.
 
 CheckRun은 CheckBasis를 소유하고, CheckBasis는 검수 시점의 Guideline, Rule, BrandAsset 버전을 참조합니다.
+CheckInputSnapshot은 검수 입력을 재현하기 위한 ID를 가진 불변 엔티티입니다.
 CheckDecision은 CheckRun 안에서 최종 판정을 표현하고, 여러 CheckResult를 소유합니다.
 Agent와 System은 점검, 설명, 최종 검수 판정을 수행합니다.
 Agent 자체는 도메인 애그리거트(관리 단위)로 두지 않고, Answer, CheckResult, CheckRecommendation에 AgentRunRef를 남겨 실행 이력만 추적합니다.
+AgentRunStarted, AgentRunCompleted, AgentRunFailed는 업무 도메인 이벤트가 아니라 Agent 실행 기록 이벤트입니다.
 
 ## 7. 사용 기록
 
@@ -506,7 +522,7 @@ Agent 자체는 도메인 애그리거트(관리 단위)로 두지 않고, Answe
       └── [바운디드 컨텍스트] 화면 행동 기록
            └── [도메인 모델]
                 ├── 애그리거트(관리 단위): BehaviorEventLog
-                │    ├── 엔티티: PageViewEvent, ClickEvent, AssetDownloadEvent, SectionDwellEvent, CustomEvent
+                │    ├── 엔티티: PageViewEvent, ClickEvent, SearchEvent, AssetDownloadEvent, SectionDwellEvent, OutboundLinkEvent, CustomEvent
                 │    └── 값 객체: PageRef, ElementRef, Duration, SessionData
                 ├── 도메인 서비스: BehaviorEventIngestService, BehaviorEventQueryService
                 └── 도메인 이벤트: BehaviorEventCaptured
@@ -515,7 +531,7 @@ Agent 자체는 도메인 애그리거트(관리 단위)로 두지 않고, Answe
 | 기록 | 적용 도메인 | 역할 |
 | --- | --- | --- |
 | SessionEventLog | 제작 관리, 품질 검수 | 감사 가능한 세션 이벤트를 저장합니다. |
-| BehaviorEventLog | 가이드라인 관리 | 화면 조회, 클릭, 에셋 다운로드, 구간 체류를 저장합니다. |
+| BehaviorEventLog | 가이드라인 관리 | 화면 조회, 클릭, 검색, 에셋 다운로드, 구간 체류, 외부 링크 클릭을 저장합니다. |
 
 ## 8. 운영 인사이트
 

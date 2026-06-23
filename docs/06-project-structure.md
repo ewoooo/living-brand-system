@@ -248,3 +248,48 @@ const sessionTtlMinutes = 10 // 관리자 세션 만료 기준
 - Route Handler와 Server Action은 오류를 HTTP status와 안전한 응답 형식으로 변환합니다.
 - Payload hook에서 예외가 발생하면 저장 흐름을 중단할지, 후속 작업만 실패 처리할지 명확히 나눕니다.
 - Agent 실패는 정책 변경 실패로 처리하지 않습니다. 답변 생성 실패와 기준 데이터 변경은 분리합니다.
+
+## 9. 코딩 스타일
+
+- 구현은 Ponytail 기준으로 최소 변경을 우선합니다.
+- 입력 모델은 Route Handler, Server Action, Payload hook, Service처럼 외부 입력이나 유즈케이스 경계에 둡니다.
+- 인터페이스는 Repository, Agent Adapter, Storage Adapter처럼 외부 시스템 경계나 구현체가 둘 이상 필요한 곳에만 둡니다.
+- 한 파일 안에서만 쓰는 helper, formatter, component handler에는 별도 입력 모델이나 인터페이스를 만들지 않습니다.
+- 새 추상화나 의존성은 기존 코드, 표준 기능, 플랫폼 기능으로 해결할 수 없을 때만 추가합니다.
+
+### 입력 모델을 두는 경우
+
+```ts
+type CreateWorkSessionInput = {
+  userId: string
+  templateId: string
+}
+
+export async function createWorkSession(input: CreateWorkSessionInput) {
+  // 권한 확인, 상태 검증, 저장을 이 유즈케이스 안에서 처리합니다.
+}
+```
+
+### 인터페이스를 두는 경우
+
+```ts
+type RuleRepository = {
+  findPublished(ruleId: string): Promise<Rule | null>
+}
+
+export async function createAnswer(
+  input: CreateAnswerInput,
+  ruleRepository: RuleRepository,
+) {
+  const rule = await ruleRepository.findPublished(input.ruleId)
+  // Service는 Payload query 세부사항을 알지 않습니다.
+}
+```
+
+### 별도 모델을 만들지 않는 경우
+
+```ts
+function formatTitle(title: string) {
+  return title.trim()
+}
+```

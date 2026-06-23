@@ -1,340 +1,239 @@
 # 05. 시스템 아키텍처
 
-이 문서는 [04. 도메인 모델](04-domain-model.md)을 실제 시스템 레이어에 배치하는 기준을 정리합니다.
-도메인 간 통신 패턴은 이 문서에서 확정하지 않고, 레이어 경계와 데이터 연결 흐름까지만 정의합니다.
+이 문서는 [04. 도메인 모델](04-domain-model.md)의 바운디드 컨텍스트, 엔티티, 이벤트를 실제 시스템 구조에 배치하는 기준을 정리합니다.
+초기 구조는 모듈러 모놀리스로 시작하고, 현재 상태, 공식 Version, Snapshot, Event, Log의 책임을 분리합니다.
 프로젝트의 실제 폴더 구조와 개발 규칙은 [06. 프로젝트 구조와 개발 규칙](06-project-structure.md), 보안 기준은 [07. 보안](07-security.md)을 기준으로 봅니다.
 
-## 1. 시스템 구성
+## 1. 아키텍처 원칙
 
-### 1.1 기술 구성
+- 바운디드 컨텍스트마다 마이크로서비스를 만들지 않고 모듈러 모놀리스를 적용합니다.
+- 바운디드 컨텍스트는 코드 경계와 데이터 소유권으로 분리합니다.
+- 초기에는 하나의 애플리케이션과 하나의 PostgreSQL 인스턴스로 배포합니다.
+- 현재 업무 상태와 과거 기준 재현 데이터를 분리합니다.
+- 전체 Event Sourcing은 채택하지 않습니다.
+- 이벤트는 반응, 전달, 감사, 분석, 운영 목적에 맞을 때만 기록합니다.
 
-| 영역 | 기술 | 역할 |
-| --- | --- | --- |
-| App Framework | Next.js | Admin, API, 작업 UI, 검수 UI를 같은 런타임에서 제공합니다. |
-| CMS | Payload CMS | 가이드라인, 규칙, 자원, 작업, 검수, 인사이트 데이터를 관리합니다. |
-| Admin UI | Payload Admin | Manager의 가이드라인 관리, 자원 관리, 공식 버전 전환, 운영 인사이트, 로그 조회 화면을 제공합니다. |
-| Worker UI | Next.js routes | Worker의 산출물 제작, 질의응답, 검수 결과 확인 흐름을 제공합니다. |
-| Guideline Viewer UI | Next.js routes | 가이드라인 화면 조회, 클릭, 에셋 다운로드, 특정 구간 체류를 수집합니다. |
-| Database | PostgreSQL | Payload collection의 핵심 도메인 데이터를 저장합니다. |
-| File Storage | Object storage | BrandAsset, TemplateFile, WorkOutput 파일을 저장합니다. |
-| Search Index | Vector index + structured filters | 발행된 가이드라인과 규칙을 Agent 답변, 검수, 검색에 사용합니다. |
-| Agent | Agent SDK / Agent Provider | 답변 생성, 검수 보조, 추천, 패턴 요약을 수행합니다. |
-| Background Jobs | Payload Jobs or worker | 색인, 대량 검수, 인사이트 집계, 보고서 생성을 비동기로 처리합니다. |
-| 사용 기록 | Payload collection or log store, Umami | 세션 이벤트와 화면 행동 기록을 저장합니다. |
+## 2. 전체 구조
 
-### 1.2 사용자와 화면
-
-| 사용자 | 기본 화면 | 주요 작업 |
-| --- | --- | --- |
-| Admin | Payload Admin | 사용자, 권한, 시스템 설정, 전체 데이터 관리 |
-| Manager | Payload Admin | 가이드라인 편집/발행, 자원 관리, 공식 버전 확인, 인사이트 검토 |
-| Worker | Worker UI | 산출물 제작, 가이드라인 조회, 질문, 검수 결과 확인 |
-
-Payload Admin은 관리성 화면의 기본값입니다.
-작업 제작과 검수 확인처럼 Worker의 흐름이 중요한 화면만 별도 UI로 분리합니다.
-
-## 2. 레이어 구조
-
-### 2.1 레이어 정의
-
-| 레이어 | 책임 | 예시 |
-| --- | --- | --- |
-| Presentation | 화면 표시, 사용자 입력 수집, 조회 결과 표시 | Payload Admin, Worker UI, 검수 UI |
-| Service | 유즈케이스 실행, 도메인 규칙 조합, 트랜잭션 경계 관리 | GuidelinePublishService, WorkSessionRenderService, QualityCheckService |
-| Repository / DTO | 저장소 접근, 외부 SDK 접근, 데이터 변환 | Payload repository, Agent adapter, 사용 기록 repository |
-| DB / External | 영속 저장소와 외부 시스템 | PostgreSQL, File Storage, Search Index, Agent Provider, Umami, 사용 기록 저장소 |
-
-### 2.2 기본 호출 흐름
+초기 요청 흐름은 다음 구조를 기준으로 합니다.
 
 ```text
-Presentation
-  -> Service
-  -> Repository / Adapter
-  -> Payload Local API or External SDK
-  -> DB / External System
+Frontend
+  -> BFF / Route Handler
+  -> Application Service
+  -> Repository / Payload Collection
+  -> PostgreSQL / Object Storage / External System
 ```
 
-Route Handler, Server Action, Payload hook은 진입점입니다.
-진입점은 인증, 요청 검증, Service 호출만 담당하고, 도메인 판단은 Service에 둡니다.
-
-### 2.3 Payload 기반 저장 흐름
+비동기 실행과 외부 전달은 다음 구조를 기준으로 합니다.
 
 ```text
-UI
-  -> Service
-  -> Payload Repository
-  -> Payload Local API
-  -> PostgreSQL / File Storage
+Application Service
+  -> Domain Event / Integration Event
+  -> Outbox
+  -> Worker / Queue / External Consumer
 ```
 
-Payload collection에 저장하는 데이터는 Payload Local API를 기본 접근 방식으로 사용합니다.
-DB 직접 접근은 Payload로 표현하기 어려운 집계나 운영성 조회에만 사용합니다.
+## 3. 모듈러 모놀리스와 바운디드 컨텍스트
 
-### 2.4 Agent 기반 실행 흐름
+초기 구조는 단일 애플리케이션으로 배포합니다.
+마이크로서비스 분리는 배포 독립성, 장애 격리, 확장 요구가 실제로 생긴 뒤 검토합니다.
+
+바운디드 컨텍스트는 다음 기준으로 나눕니다.
+
+- 코드 소유 경계
+- 데이터 소유 경계
+- Application Service 경계
+- 도메인 용어와 규칙 경계
+
+컨텍스트 간 데이터 접근은 소유 모듈의 Application Service 또는 명시된 읽기 모델을 통해 수행합니다.
+다른 컨텍스트의 테이블을 직접 수정하지 않습니다.
+
+## 4. 요청 처리 흐름
+
+Frontend 요청은 같은 애플리케이션 내부의 BFF / Route Handler가 받습니다.
+BFF는 화면 단위 요청을 Application Service 호출로 조합하고, 프론트엔드에 필요한 응답 형태로 변환합니다.
+도메인 규칙과 상태 변경 판단은 BFF가 아니라 Application Service에 둡니다.
+여기서 도메인은 별도 구현 레이어가 아니라 업무 개념과 규칙을 뜻합니다.
 
 ```text
-UI
-  -> Service
-  -> Agent Adapter
-  -> Agent SDK
-  -> Agent Provider
-  -> Result DTO
-  -> Service
+Frontend
+  -> Request DTO
+  -> BFF / Route Handler
+  -> Command / Query DTO
+  -> Application Service
   -> Repository
-  -> DB
+  -> Result DTO
+  -> Response DTO
 ```
 
-Agent는 도메인 애그리거트가 아닙니다.
-Agent는 DB에 직접 쓰지 않고, Service가 Agent 결과를 검증한 뒤 Answer, CheckResult, CheckRecommendation, Insight 근거로 저장합니다.
+API Gateway는 초기 구조에 두지 않습니다.
+여러 배포 단위, 외부 클라이언트, 공통 트래픽 정책이 필요해지는 시점에 도입합니다.
 
-### 2.5 Payload revision과 공식 Version 분리
-
-가이드라인, 규칙, 자원처럼 수정 이력이 필요한 collection은 Payload `versions`를 사용합니다.
-초안, 예약 발행, 자동 저장이 필요한 collection은 `drafts` 옵션을 함께 사용합니다.
-
-```ts
-versions: {
-  drafts: {
-    autosave: true,
-    schedulePublish: true,
-  },
-  maxPerDoc: 100,
-}
-```
-
-Payload는 버전 기능을 켜면 CMS 내부 수정 이력인 revision을 저장하고, Admin UI에서 revision 목록, diff, restore 흐름을 제공합니다.
-도메인 모델의 Version은 Payload revision이 아니라 Worker와 Agent가 사용하는 공식 발행 단위입니다.
-공식 Version은 `stage`, `live`, `archived` 상태를 가집니다.
-공개 화면과 Agent 검색은 live Version만 대상으로 합니다.
-
-`GuidelineVersionRef`는 최소한 공식 Version ID, 대상 document ID, Payload revision ID, 발행 시각을 저장합니다.
-Payload revision 목록 조회와 복원은 Payload의 versions API와 `restoreVersion` Local API를 사용합니다.
-
-## 3. 도메인별 레이어 매핑
-
-| 도메인 | Presentation | Service | Repository / DTO | DB / External |
-| --- | --- | --- | --- | --- |
-| 가이드라인 관리 | Payload Admin | GuidelinePublishService, RuleConflictCheckService, AssetPublishService, TemplatePublishService, PluginPublishService, VersionPublishService | BrandGuidelineRepository, RuleRepository, BrandAssetRepository, TemplateRepository, PluginRepository | PostgreSQL, File Storage |
-| 제작 관리 | Worker UI | WorkSessionStartService, WorkSessionRenderService | WorkSessionRepository, TemplateReadRepository, PluginReadRepository, BrandGuidelineRepository | PostgreSQL, File Storage |
-| 품질 검수 | Worker UI, 검수 UI | AnswerGenerationService, QualityCheckService | QASessionRepository, CheckSessionRepository, RuleReadRepository, AgentAdapter | PostgreSQL, Search Index, Agent Provider |
-| 사용 기록 | Payload Admin | SessionEventIngestService, BehaviorEventIngestService, LogQueryService | SessionEventLogRepository, BehaviorEventLogRepository, BehaviorEventAdapter | Payload PostgreSQL, Umami, 사용 기록 저장소 |
-| 운영 인사이트 | Payload Admin | InsightDiscoveryService, InsightReportService | InsightRepository, InsightReportRepository, SessionEventLogReadRepository, BehaviorEventLogReadRepository | PostgreSQL, Umami, 사용 기록 저장소 |
-
-DTO는 모든 collection마다 만들지 않습니다.
-외부 SDK 응답, 화면 전용 조회 모델, 도메인 경계를 넘는 읽기 모델처럼 변환 경계가 있는 곳에만 둡니다.
-
-## 4. 데이터 흐름 플로우맵
-
-### 4.1 전체 흐름
+### 4.1 가이드라인 관리 컨텍스트
 
 ```mermaid
 flowchart LR
-  Admin["Admin / Manager"]
-  Worker["Worker"]
-  PayloadAdmin["Payload Admin"]
-  WorkerUI["Worker UI"]
-  GuidelineViewerUI["Guideline Viewer UI"]
-  GuidelineSvc["Guideline / Resource / Version Services"]
-  WorkSvc["WorkSession Services"]
-  QualitySvc["QA / Quality Services"]
-  InsightSvc["Insight Services"]
-  LogSvc["Usage Record Services"]
-  EventLogWriter["사용 기록 저장"]
-  BehaviorTracker["화면 행동 Tracker"]
-  Repo["Payload Repositories"]
-  AgentAdapter["Agent Adapter"]
-  PayloadDB["PostgreSQL"]
-  FileStorage["File Storage"]
-  SearchIndex["Search Index"]
-  AgentProvider["Agent Provider"]
-  LogStore["사용 기록 저장소"]
-  Umami["Umami"]
+  Viewer["Guideline Viewer"]
+  Admin["Payload Admin"]
+  BFF["BFF / Route Handler"]
+  Service["Guideline Application Service"]
+  Repo["Repository / DTO"]
+  Payload["Payload CMS<br/>Local API, Collections, Hooks"]
+  DB["PostgreSQL / File Storage"]
+  Async["Search Index / Outbox / Usage Log"]
 
-  Admin --> PayloadAdmin
-  Worker --> WorkerUI
-  PayloadAdmin --> GuidelineSvc
-  PayloadAdmin --> InsightSvc
-  PayloadAdmin --> LogSvc
-  WorkerUI --> WorkSvc
-  WorkerUI --> QualitySvc
-  WorkerUI --> GuidelineViewerUI
-  PayloadAdmin --> GuidelineViewerUI
-  GuidelineViewerUI --> BehaviorTracker
-  GuidelineSvc --> Repo
-  WorkSvc --> Repo
-  QualitySvc --> Repo
-  InsightSvc --> Repo
-  LogSvc --> LogStore
-  QualitySvc --> AgentAdapter
-  InsightSvc --> LogStore
-  GuidelineSvc --> EventLogWriter
-  WorkSvc --> EventLogWriter
-  QualitySvc --> EventLogWriter
-  EventLogWriter --> LogStore
-  BehaviorTracker --> Umami
-  Umami --> LogStore
-  Repo --> PayloadDB
-  Repo --> FileStorage
-  Repo --> SearchIndex
-  AgentAdapter --> AgentProvider
+  Viewer --> BFF
+  BFF --> Service
+  Admin --> Payload
+  Payload --> Service
+  Service --> Repo
+  Repo --> Payload
+  Payload --> DB
+  Service --> Async
+  Viewer --> Async
 ```
 
-### 4.2 도메인별 데이터 흐름 표
+Guideline Viewer는 BFF를 통해 Application Service를 호출합니다.
+Manager는 Payload Admin에서 가이드라인을 수정합니다.
+Payload hook과 custom endpoint는 필요한 업무 처리를 Application Service로 위임합니다.
+Application Service는 Repository / DTO를 통해 Payload에 접근합니다.
+Payload는 collection schema를 기준으로 PostgreSQL과 File Storage에 저장합니다.
+Search Index, Outbox, Usage Log는 후처리와 외부 연결입니다.
 
-| 흐름 | 시작 | Service | Repository / Adapter | 저장 또는 호출 대상 | 생성 데이터 |
-| --- | --- | --- | --- | --- | --- |
-| 가이드라인 발행 | Payload Admin | GuidelinePublishService, VersionPublishService | BrandGuidelineRepository, RuleRepository | PostgreSQL, Search Index | GuidelinePublished, BrandGuidelineVersion |
-| 규칙 버전 생성 | Payload Admin | RuleConflictCheckService, VersionPublishService | RuleRepository | PostgreSQL | RuleUpdated, RuleVersion |
-| 자원 발행 | Payload Admin | AssetPublishService, TemplatePublishService, PluginPublishService | BrandAssetRepository, TemplateRepository, PluginRepository | PostgreSQL, File Storage | BrandAssetPublished, TemplatePublished, PluginPublished |
-| 산출물 제작 | Worker UI | WorkSessionStartService, WorkSessionRenderService | WorkSessionRepository, TemplateReadRepository, PluginReadRepository | PostgreSQL, File Storage | WorkSessionStarted, WorkOutputCreated |
-| 질의응답 | Worker UI | AnswerGenerationService | QASessionRepository, RuleReadRepository, AgentAdapter | PostgreSQL, Search Index, Agent Provider | QuestionAsked, AnswerProvided |
-| 산출물 검수 | Worker UI | QualityCheckService | CheckSessionRepository, RuleReadRepository, AgentAdapter | PostgreSQL, Search Index, Agent Provider | CheckCompleted, CheckResult, CheckDecision |
-| 인사이트 도출 | Payload Admin or Job | InsightDiscoveryService | SessionEventLogReadRepository, BehaviorEventLogReadRepository, InsightRepository | 사용 기록 저장소, PostgreSQL | InsightDiscovered |
-| 가이드라인 화면 행동 기록 | Guideline Viewer UI | BehaviorEventIngestService | BehaviorEventAdapter, BehaviorEventLogRepository | Umami, 사용 기록 저장소 | BehaviorEventLog, PageViewEvent, ClickEvent, AssetDownloadEvent, SectionDwellEvent, CustomEvent |
-| 인사이트 제공 | Payload Admin or Job | InsightReportService | InsightRepository, InsightReportRepository | PostgreSQL | InsightReportPublished |
-| 로그 조회 | Payload Admin | LogQueryService | SessionEventLogRepository, BehaviorEventLogRepository | Payload PostgreSQL, Umami, 사용 기록 저장소 | 조회 결과 |
-| 세션 이벤트 기록 | Service | SessionEventIngestService | SessionEventLogRepository | Payload PostgreSQL or 사용 기록 저장소 | SessionEventLog |
+## 5. 기록 아키텍처
 
-## 5. 도메인별 DB 연결 흐름
+이 시스템은 상태 저장 + 불변 Version / Snapshot + 선택적 append-only 이벤트 로그 구조를 사용합니다.
 
-### 5.1 가이드라인 관리
+| 기록 종류 | 목적 | 저장 위치 | 전달/보존 성격 |
+| --- | --- | --- | --- |
+| 도메인 상태 | 현재 업무 상태 | Payload / PostgreSQL | 트랜잭션 보장 |
+| Payload revision | CMS 편집 이력, diff, restore | Payload versions / PostgreSQL | CMS 내부 이력 |
+| 공식 Version | 발행 기준 고정, Worker / Agent 재현 | PostgreSQL | 불변 발행 단위 |
+| Snapshot | 특정 시점의 입력과 판단 재현 | PostgreSQL / Object Storage | 불변 저장 |
+| Domain Event | 같은 컨텍스트 내부 반응 | Memory + 필요 시 Outbox | 중요 이벤트만 보존 |
+| Integration Event | 다른 컨텍스트나 외부 시스템에 사실 전달 | Outbox + Queue | durable, 재시도 |
+| Session Event | 작업, 질문, 검수 감사 | SessionEventLog | 유실 방지 |
+| Behavior Event | 조회, 클릭, 체류 분석 | BehaviorEventLog / Umami | 일부 유실 허용 |
+| Agent Run | 모델 실행 재현, 품질 추적 | Agent Run 저장소 | AgentRunRef로 연결 |
+| 운영 로그 | 장애 분석, 성능 측정 | Log / Trace / Metric 시스템 | 단기 보관 |
 
-```text
-Payload Admin
-  -> Guideline / Resource / Version Service
-  -> Payload Repository
-  -> Payload Local API
-  -> PostgreSQL / File Storage
-```
+Domain Event는 전체 감사 로그가 아닙니다.
+Behavior Event는 업무 사실의 원장이 아닙니다.
+운영 로그는 도메인 데이터가 아닙니다.
 
-| 데이터 | 저장 위치 | 비고 |
-| --- | --- | --- |
-| BrandGuideline, GuidelineSection, GuidelinePage, PagePolicy | PostgreSQL | Payload collection으로 관리합니다. |
-| Rule, RuleException | PostgreSQL | 여러 GuidelinePage에서 재사용합니다. |
-| Payload revision records | PostgreSQL | Payload `versions`가 CMS 내부 수정 이력을 저장합니다. |
-| BrandAsset, Template, Plugin | PostgreSQL + File Storage | 메타데이터는 DB, 파일은 Object storage에 둡니다. |
-| BrandGuidelineVersion, RuleVersion | PostgreSQL | BrandGuideline과 Rule이 소유하는 Version 엔티티입니다. stage/live/archived 상태와 발행 사유, 이전 버전, Payload revision 참조를 기록합니다. |
-| BrandAssetVersion, TemplateVersion, PluginVersion | PostgreSQL | BrandAsset, Template, Plugin이 소유하는 공식 자원 Version 엔티티입니다. |
-| Search document | Search Index | live 상태의 BrandGuidelineVersion과 RuleVersion을 기준으로 색인합니다. |
+## 6. Version / Snapshot 전략
 
-### 5.2 제작 관리
+Payload revision과 공식 Version은 분리합니다.
 
-```text
-Worker UI
-  -> WorkSessionStartService / WorkSessionRenderService
-  -> WorkSessionRepository
-  -> Payload Local API
-  -> PostgreSQL / File Storage
-```
+Payload revision은 CMS 편집 이력입니다.
+Admin UI의 diff, restore, draft, autosave, scheduled publish를 위해 사용합니다.
 
-| 데이터 | 저장 위치 | 비고 |
-| --- | --- | --- |
-| WorkSession, WorkInput | PostgreSQL | 산출물 제작 작업 단위입니다. |
-| WorkOutput | PostgreSQL + File Storage | 결과 메타데이터는 DB, 파일은 Object storage에 둡니다. |
-| TemplateVersionRef | PostgreSQL | 사용한 Template 버전을 참조합니다. |
-| PluginVersionRef | PostgreSQL | 사용한 Plugin 버전을 참조합니다. |
-| GuidelineVersionRef | PostgreSQL | 제작 시점의 BrandGuideline 버전을 참조합니다. |
+공식 Version은 Worker, Agent, 공개 화면, 검색이 참조하는 발행 단위입니다.
+공식 Version은 `stage`, `live`, `archived` 상태를 가집니다.
+공개 화면과 Agent 검색은 `live` Version만 대상으로 합니다.
 
-제작 관리는 검수 요청을 소유하지 않습니다.
-품질 검수는 필요한 시점의 검수 입력을 CheckInputSnapshot으로 고정합니다.
+공식 Version은 생성 시점의 대상 document ID, Payload revision ID, 발행 시각을 참조합니다.
+CMS 편집 이력 복원은 Payload revision으로 처리하고, 업무 기준 재현과 Agent 실행 기준 고정은 공식 Version으로 처리합니다.
 
-### 5.3 품질 검수
+Snapshot은 실행 당시 입력, 기준, 판단을 다시 재현해야 할 때 생성합니다.
+Snapshot으로 충분히 재현되는 데이터는 런타임 이벤트로 중복 기록하지 않습니다.
 
-```text
-Worker UI / 검수 UI
-  -> QA / Quality Service
-  -> Agent Adapter or Payload Repository
-  -> Agent Provider / PostgreSQL
-```
+## 7. 이벤트 전략
 
-| 데이터 | 저장 위치 | 비고 |
-| --- | --- | --- |
-| QASession, Question, Answer | PostgreSQL | 질문과 답변은 QASession 안에서 관리합니다. |
-| CheckSession, CheckRun, CheckBasis | PostgreSQL | CheckSession은 CheckInputSnapshot을 고정하고, CheckRun은 검수 시점의 기준 묶음을 소유합니다. |
-| CheckDecision, CheckResult, CheckRecommendation | PostgreSQL | CheckDecision은 최종 판정이며, 여러 CheckResult와 필요한 수정 권장 사항을 소유합니다. |
-| AgentRunRef | PostgreSQL | Agent 실행 결과 원문이 아니라 실행 참조를 남깁니다. |
-| Rule citation | PostgreSQL / Search Index | Answer의 답변 근거와 CheckBasis의 검수 기준으로 사용합니다. |
+전체 Event Sourcing은 사용하지 않습니다.
+모든 도메인 변화를 이벤트로 복제하지 않고, 필요한 이벤트만 기록합니다.
 
-검수 실행은 CheckBasis로 가이드라인, 규칙, 에셋 버전 참조를 묶습니다.
-최종 판정은 CheckRun 안에 CheckDecision으로 저장하고, CheckDecision은 여러 CheckResult를 소유합니다.
+emit해야 하는 이벤트는 다음 기준 중 하나를 만족해야 합니다.
 
-### 5.4 운영 인사이트
+- 다른 컨텍스트가 알아야 하는 확정 사실
+- 비동기 후속 작업을 시작하는 트리거
+- 감사가 필요한 작업 단위
 
-```text
-Payload Admin / Background Job
-  -> InsightDiscoveryService / InsightReportService
-  -> SessionEventLogReadRepository / BehaviorEventLogReadRepository / InsightRepository
-  -> 사용 기록 저장소 / PostgreSQL
-```
+emit하지 않는 데이터는 다음과 같습니다.
 
-| 데이터 | 저장 위치 | 비고 |
-| --- | --- | --- |
-| SessionEventLog | Payload PostgreSQL or 사용 기록 저장소 | WorkSession, QASession, CheckSession에서 발생한 세션 이벤트를 저장합니다. |
-| BehaviorEventLog | Umami or 사용 기록 저장소 | 가이드라인 화면 조회, 클릭, 에셋 다운로드, 특정 구간 체류를 수집합니다. |
-| Insight, Evidence, Pattern | PostgreSQL | 반복 패턴과 인사이트를 저장합니다. |
-| InsightReport, ReportSection, InsightSummary | PostgreSQL | Manager가 보는 인사이트 보고서와 개선 방향입니다. |
+- 단순 필드 변경
+- 내부 계산 중간값
+- Snapshot으로 충분히 재현되는 데이터
+- 운영 로그로 충분한 장애 정보
 
-저/중간 볼륨 도메인 이벤트는 Payload collection으로 시작할 수 있습니다.
-가이드라인 화면 조회, 클릭, 에셋 다운로드, 특정 구간 체류 같은 화면 행동은 BehaviorEventLog로 저장하고, 구현은 Umami로 시작합니다.
-로그가 많아져 Admin 목록 성능, 보관 기간, 검색 조건이 문제가 될 때 별도 사용 기록 저장소로 분리합니다.
+도메인 내부 반응은 애플리케이션 내부 이벤트로 처리합니다.
+다른 컨텍스트나 외부 시스템에 전달해야 하는 Integration Event만 Outbox에 저장합니다.
+이후 메시지 브로커가 필요해지면 Outbox publisher를 교체합니다.
 
-### 5.5 로그 조회
+## 8. Agent / Worker 실행 아키텍처
 
-```text
-Payload Admin
-  -> LogQueryService
-  -> SessionEventLogRepository / BehaviorEventLogRepository
-  -> Payload PostgreSQL / Umami / 사용 기록 저장소
-```
+Agent와 Worker는 도메인 상태를 직접 변경하지 않습니다.
+Application Service가 실행 입력을 고정하고, Agent / Worker 결과를 검증한 뒤 저장합니다.
 
-로그 조회는 운영 인사이트와 분리된 읽기 흐름입니다.
-로그 자체는 도메인 판단의 결과물이 아니라 운영 관찰을 위한 원천 기록입니다.
+Agent 실행은 다음 기준을 따릅니다.
 
-## 6. 도메인 간 참조 원칙
+- 입력으로 사용한 공식 Version을 고정합니다.
+- 실행 결과에는 AgentRunRef를 연결합니다.
+- 모델 입력, 출력, 주요 설정은 Agent Run 저장소에 남깁니다.
+- 공개 화면과 Agent 검색은 `live` Version만 사용합니다.
 
-| 상황 | 방식 | 이유 |
-| --- | --- | --- |
-| 제작이 가이드라인을 참조 | GuidelineVersionRef | 제작 시점의 기준을 보존합니다. |
-| 제작이 템플릿을 참조 | TemplateVersionRef | 템플릿 변경 이후에도 당시 제작 근거를 유지합니다. |
-| 제작이 플러그인을 참조 | PluginVersionRef | 실행한 제작 기능의 버전을 남깁니다. |
-| 검수가 입력을 고정 | CheckInputSnapshot | 검수 시점의 WorkOutput을 고정합니다. |
-| 검수가 기준 묶음을 사용 | CheckBasis | CheckRun이 GuidelineVersionRef, RuleVersionRef, BrandAssetVersionRef를 한 묶음으로 보존합니다. |
-| 검수가 최종 판정을 남김 | CheckDecision -> CheckResult | 하나의 판정 아래 여러 점검 결과를 저장합니다. |
-| 인사이트가 로그를 참조 | Evidence | 로그 원본을 복제하지 않고 근거로 연결합니다. |
+Worker 실행은 다음 기준을 따릅니다.
 
-도메인은 다른 도메인의 DB 테이블을 직접 수정하지 않습니다.
-다른 도메인 데이터는 Service가 Read Repository를 통해 조회하고, 장기 보존이 필요한 기준과 자원은 VersionRef로 저장합니다.
+- 작업 시작 시점의 VersionRef를 저장합니다.
+- 산출물과 검수 입력은 필요한 경우 Snapshot으로 고정합니다.
+- 상태 변경은 Application Service를 통해 수행합니다.
 
-## 7. 외부 시스템 경계
+## 9. 감사와 분석 로그
 
-### 7.1 Agent
+감사와 분석은 같은 로그로 처리하지 않습니다.
 
-- Agent SDK는 Agent Adapter 뒤에 둡니다.
-- Agent는 live Version과 허용된 작업 맥락만 사용할 수 있습니다.
-- Agent는 정책을 직접 변경하지 않습니다.
-- Agent 결과는 Service가 검증한 뒤 저장합니다.
-- Answer, CheckResult, CheckRecommendation에는 AgentRunRef를 남깁니다.
+SessionEventLog는 작업, 질문, 검수 같은 감사 가능한 업무 활동을 기록합니다.
+BehaviorEventLog는 조회, 클릭, 체류, 다운로드 같은 화면 행동 분석을 기록합니다.
+운영 로그, trace, metric은 장애 분석과 성능 측정을 위해 단기 보관합니다.
 
-### 7.2 Search Index
+유실 허용 기준은 다음과 같습니다.
 
-- live 상태의 BrandGuidelineVersion에 포함된 GuidelinePage와 RuleVersion만 색인합니다.
-- 초안 상태의 기준은 기본 작업 흐름과 Agent 답변에서 제외합니다.
-- 검색 결과는 답변과 검수의 근거로 사용하고, 원천 데이터는 Payload에 둡니다.
+| 기록 | 유실 허용 |
+| --- | --- |
+| SessionEventLog | 허용하지 않음 |
+| BehaviorEventLog | 일부 허용 |
+| Agent Run | 허용하지 않음 |
+| 운영 로그 | 보관 기간 이후 삭제 가능 |
 
-### 7.3 사용 기록 저장소
+## 10. 데이터 접근 규칙
 
-- 사용 기록 저장소는 SessionEventLog와 BehaviorEventLog의 저장 계층입니다.
-- 운영 인사이트는 사용 기록을 소유하지 않고 읽기 모델로 참조합니다.
-- Payload collection으로 시작하고, 대량 로그 요구가 생기면 별도 저장소로 분리합니다.
+Payload collection에 저장하는 데이터는 Payload Local API를 기본 접근 방식으로 사용합니다.
+Repository는 Payload query, `depth`, `select`, access control 옵션을 숨깁니다.
 
-## 8. 아키텍처 원칙
+DB 직접 접근은 다음 경우에만 검토합니다.
 
-- Payload Admin은 관리성 UI의 기본값입니다.
-- Worker의 제작과 검수 흐름은 Payload Admin과 분리합니다.
-- Service가 유즈케이스 흐름을 소유합니다.
-- Repository는 Payload query, `depth`, `select`, access control 옵션을 숨깁니다.
-- Payload Local API를 기본 DB 접근 방식으로 사용합니다.
-- Payload hook은 얇은 진입점으로 유지합니다.
-- 다른 도메인의 데이터는 직접 수정하지 않고 참조 또는 스냅샷으로 연결합니다.
-- Agent는 설명, 추천, 요약을 수행하지만 정책을 변경하지 않습니다.
-- 외부 분석 도구를 연결하더라도 제품 핵심 기록은 Payload 또는 제품 DB에 남깁니다.
+- Payload로 표현하기 어려운 집계
+- 운영성 조회
+- 대량 로그 조회
+- 성능 문제가 확인된 읽기 모델
+
+트랜잭션 경계는 Application Service가 관리합니다.
+Payload hook은 얇은 진입점으로 유지합니다.
+
+## 11. 배포와 확장 기준
+
+초기 배포 단위는 하나의 애플리케이션입니다.
+다음 조건이 생기면 분리를 검토합니다.
+
+| 대상 | 도입 기준 |
+| --- | --- |
+| Worker 분리 | 장시간 작업, 대량 처리, 실패 재시도가 웹 요청과 분리되어야 할 때 |
+| Queue 도입 | Outbox polling만으로 처리량이나 재시도 요구를 감당하기 어려울 때 |
+| API Gateway 도입 | 여러 배포 단위, 외부 클라이언트, 공통 트래픽 정책이 필요할 때 |
+| 마이크로서비스 분리 | 컨텍스트별 배포 독립성과 장애 격리가 운영상 필요할 때 |
+| 별도 로그 저장소 도입 | Payload Admin 목록 성능, 보관 기간, 검색 조건이 문제가 될 때 |
+
+## 12. 설계 카탈로그와의 관계
+
+[04. 도메인 모델](04-domain-model.md)의 엔티티와 이벤트는 설계 카탈로그에 포함합니다.
+단, 카탈로그에 있다는 이유만으로 런타임 emit 대상이 되지는 않습니다.
+
+설계상 이벤트와 실제 저장/전달 이벤트를 구분합니다.
+구현 대상은 다음 기준으로 선정합니다.
+
+- 현재 업무 상태를 바꾸는가
+- 공식 Version 또는 Snapshot으로 재현해야 하는가
+- 다른 컨텍스트가 알아야 하는 사실인가
+- 감사 로그로 남겨야 하는 작업인가
+- 분석 로그로 충분한 행동 기록인가
