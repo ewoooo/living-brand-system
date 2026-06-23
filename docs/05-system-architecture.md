@@ -28,7 +28,7 @@
 | Database | PostgreSQL | Payload의 핵심 도메인 데이터를 저장합니다. |
 | File Storage | Object storage | 공식 에셋과 사용자 업로드 자산을 저장합니다. |
 | Search / Retrieval | Vector index + structured filters | 발행된 정책과 규칙을 Agent 답변과 점검에 사용합니다. |
-| Background Jobs | Payload Jobs or external worker | 인덱싱, 리포트 생성, 반복 패턴 집계를 비동기로 처리합니다. |
+| Background Jobs | Payload Jobs or external worker | 인덱싱, 보고서 생성, 반복 패턴 집계를 비동기로 처리합니다. |
 | AI / Agent | Agent service over retrieved context | Answer, Recommendation, Pattern 요약을 담당합니다. |
 | Product Analytics | Optional adapter | 클릭, 체류, 다운로드 같은 Usage Data를 필요 시 수집합니다. |
 

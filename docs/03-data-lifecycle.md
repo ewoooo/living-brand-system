@@ -89,7 +89,7 @@ stateDiagram-v2
 Usage Data는 사용자가 제품 안에서 남기는 원천 기록입니다.
 질문 데이터만 의미하지 않습니다.
 
-Usage Data에는 검색, 조회, 작업 세션, 제출, 자가 점검, Manager 피드백까지 포함됩니다.
+Usage Data에는 검색, 조회, 작업 세션, 산출물 스냅샷, 자가 점검, Manager 피드백까지 포함됩니다.
 이 데이터는 Insight의 재료가 되지만, 그 자체가 Insight는 아닙니다.
 
 ### 포함 데이터
@@ -101,13 +101,39 @@ Usage Data에는 검색, 조회, 작업 세션, 제출, 자가 점검, Manager �
 | Click Event | 버튼, 기준 링크, 추천 항목, 필터를 선택한 기록 |
 | Download Event | 공식 에셋이나 템플릿을 내려받은 기록 |
 | Work Session | 어플리케이션 타입, 템플릿, 입력값, 업로드 자산이 연결된 작업 단위 |
-| Guideline Snapshot | 작업이나 제출에 적용된 정책, 규칙, 버전 묶음 |
+| Work Output Snapshot | 검수나 분석에 사용할 수 있도록 특정 시점의 산출물을 고정한 기록 |
+| Guideline Snapshot | 작업이나 검수에 적용된 정책, 규칙, 버전 묶음 |
 | Check Result | 제출 전 점검 결과와 위반 항목 |
-| Submission | Manager 검토를 위해 제출된 작업물 |
 | Review Comment | 승인, 반려, 수정 요청, 규칙 연결 코멘트 |
 | Answer | Agent가 제공한 답변과 신뢰도 |
 | Recommendation | Agent나 System이 제공한 다음 행동 제안 |
 | Citation | 답변, 추천, 점검 설명이 참조한 근거 |
+
+### UsageEventLog
+
+UsageEventLog는 사용자가 제품 안에서 남긴 행동과 각 도메인에서 발생한 이벤트를 조회 가능한 형태로 저장합니다.
+운영자는 UsageEventLog로 작업 흐름, Agent 실행, 점검과 검토 이력을 확인할 수 있습니다.
+하지만 UsageEventLog는 운영 인사이트의 애그리거트(관리 단위)가 아닙니다.
+운영 인사이트는 필요한 기록만 Evidence로 참조합니다.
+
+| Event | Meaning |
+| --- | --- |
+| ViewEvent | 기준, 규칙, 에셋, 템플릿, Plugin, FAQ를 본 기록 |
+| SearchEvent | 검색어, 필터, 검색 결과를 남긴 기록 |
+| ClickEvent | 버튼, 기준 링크, 추천 항목을 선택한 기록 |
+| DownloadEvent | 공식 에셋이나 템플릿을 내려받은 기록 |
+| WorkEvent | 작업 시작, 입력 변경, 미리보기 생성, 산출물 생성 기록 |
+| CheckEvent | 자가 점검 실행, 점검 결과, 위반 항목 기록 |
+| ReviewEvent | Manager 검토, 코멘트, 승인, 반려, 수정 요청 기록 |
+| AgentRunEvent | Agent 답변, 점검, 추천 생성 실행 기록 |
+
+운영 화면은 UsageEventLog를 읽어 다음 조회 기능을 제공합니다.
+
+| View | Purpose |
+| --- | --- |
+| Usage Log Explorer | 사용자 행동과 작업 흐름을 시간순으로 확인합니다. |
+| Agent Run Log | Agent 실행 결과, 신뢰도, 참조 근거를 확인합니다. |
+| Check/Review History | 산출물 스냅샷별 점검과 Manager 검토 이력을 확인합니다. |
 
 ### 상태
 
@@ -138,12 +164,12 @@ stateDiagram-v2
 - 작업 세션
 - 어플리케이션 타입
 - Guideline Snapshot
+- Work Output Snapshot
 - 관련 정책 또는 규칙
 - 관련 템플릿 또는 에셋
 - 질문 원문
 - Answer, Recommendation, Citation
 - 점검 결과
-- 제출 상태
 - Review Comment
 - 이벤트 발생 시각
 
@@ -161,7 +187,7 @@ Agent와 System은 후보를 만들고, Manager가 채택 여부를 결정합니
 | --- | --- |
 | Pattern | 여러 기록에서 반복되는 질문, 위반, 반려, 탐색 행동 |
 | Improvement | 기준 개선으로 검토할 수 있는 후보 |
-| Evidence | 후보를 뒷받침하는 질문, 점검 결과, 제출, 피드백, 조회 기록 |
+| Evidence | 후보를 뒷받침하는 질문, 점검 결과, 산출물 스냅샷, 피드백, 조회 기록 |
 | Decision | Manager의 채택, 보류, 제외 판단 |
 | Guideline Update | 정책, 규칙, 템플릿, FAQ, 실행 가이드에 반영된 변경 |
 | Impact | 변경 이후 질문 수, 반려율, 재작업 횟수 같은 효과 측정 |
@@ -214,6 +240,7 @@ stateDiagram-v2
 | Link | Rule |
 | --- | --- |
 | Guideline -> Usage | Usage Data에는 당시 적용된 Guideline Snapshot을 남깁니다. |
+| Work -> Usage | 검수나 분석에 쓰는 산출물은 Work Output Snapshot으로 고정합니다. |
 | Usage -> Insight | Insight는 단일 이벤트가 아니라 반복되거나 의미 있는 기록 묶음에서 만듭니다. |
 | Insight -> Guideline | 채택된 Insight만 Guideline Update로 전환합니다. |
 | Guideline -> Insight | 가이드라인 변경 후에는 이전 Usage와 비교해 효과를 측정합니다. |
@@ -222,6 +249,7 @@ stateDiagram-v2
 
 - Agent는 정책과 규칙을 직접 변경하지 않습니다.
 - Usage Data는 Insight 생성을 위해 저장하지만, 불필요한 개인정보는 남기지 않습니다.
+- UsageEventLog는 별도 도메인이 아니며, 운영 인사이트는 필요한 기록을 Evidence로 참조합니다.
 - Insight는 근거 기록 없이 생성하지 않습니다.
-- 제출물과 점검 결과에는 당시 적용된 Guideline Snapshot을 보존합니다.
+- Work Output Snapshot과 점검 결과에는 당시 적용된 Guideline Snapshot을 보존합니다.
 - Published 상태가 아닌 Guideline Data는 Worker 화면과 Agent 답변 근거에서 제외합니다.

@@ -2,517 +2,210 @@
 
 ## 1. 목적
 
-이 문서는 01번 제품 문서에서 정의한 제품 방향을 실행 단위로 바꿉니다.
+이 문서는 `04. 도메인 모델`을 기준으로 유즈케이스를 프로세스 중심으로 정리합니다.
+목표는 각 유즈케이스에서 누가 무엇을 입력하고, System이 어떤 순서로 처리하며, 어떤 결과와 기록이 남는지 합의하는 것입니다.
 
-유즈케이스는 기능 목록이 아닙니다.
-각 유즈케이스는 현장 작업자가 기준을 찾고, 적용하고, 점검받고, 피드백을 다시 기준 개선으로 돌려보내는 실행 시나리오입니다.
+데이터 생명주기는 이 유즈케이스 목록을 기준으로 다시 개선합니다.
+따라서 이 문서에서는 `03. 데이터 생명주기`보다 `04. 도메인 모델`의 최신 구조를 우선합니다.
 
-01번 제품 문서의 핵심 흐름은 다음과 같습니다.
+## 2. 목차
 
-```text
-Manager -> System -> Agent -> Worker -> System -> Agent -> Manager
-```
+1. 목적
+2. 목차
+3. 유즈케이스 작성 기준
+4. 유즈케이스 상세 스키마
+5. 도메인별 유즈케이스 목록
 
-이 문서는 각 흐름에서 다음을 정의합니다.
+## 3. 유즈케이스 작성 기준
 
-- 누가 어떤 입력을 만듭니다.
-- System과 Agent가 무엇을 처리합니다.
-- Worker와 Manager가 어떤 결과를 받습니다.
-- 어떤 사용 기록이 남고, 그 기록이 어떻게 정책 개선으로 돌아갑니다.
+유즈케이스는 화면 메뉴나 단순 CRUD 목록이 아닙니다.
+각 항목은 Manager, Worker, System, Agent가 실제로 수행하는 업무 흐름입니다.
 
-## 2. 01번 제품 문서와의 연결
-
-02번 문서의 유즈케이스는 01번 문서의 문제, 가설, 제공 서비스를 기준으로 정렬합니다.
-
-| 01번 제품 문서의 기준 | 02번 유즈케이스에서 다루는 실행 단위 |
+| 기준 | 설명 |
 | --- | --- |
-| 기준 적용의 어려움 | 실행 가이드, 쉬운 말 안내, 상황형 질문, 수정 지시 |
-| 필요한 기준 탐색의 어려움 | 어플리케이션 타입 선택, 기준 검색, 관련 에셋 노출 |
-| 선택 부담 | 허용 템플릿, 제한된 입력 폼, 필수/금지 조건 |
-| 제출 전 불확실성 | 자가 점검, pass/warning/fail/human review |
-| 피드백 적용의 어려움 | 규칙 연결 피드백, 수정 지시, 재점검 |
-| 반복 오류 개선 | 반복 질문, 반복 위반, 반려 사유, 사용 행동 분석 |
-
-01번 문서의 핵심 가설은 다음 유즈케이스로 검증합니다.
-
-| 핵심 가설 | 관련 유즈케이스 | 검증 신호 |
-| --- | --- | --- |
-| 구체적인 작업 지시가 수행률을 높입니다. | L3-UC-02, L3-UC-05, L4-UC-05 | 자가 수행 가능성 응답, 재질문 수, 작업 완료율 |
-| 선택지가 줄어들수록 오류가 줄어듭니다. | L3-UC-01, L3-UC-03, L3-UC-04 | 템플릿 이탈률, 규칙 위반 항목 수 |
-| 제출 전 점검이 검토 비용을 줄입니다. | L4-UC-01, L4-UC-03, L4-UC-04 | 제출 전 수정 완료율, 재제출 성공률, Manager 개입 감소율 |
-| 피드백과 수정 방법을 함께 주면 반복 오류가 줄어듭니다. | L4-UC-04, L4-UC-05, L5-UC-01, L5-UC-02 | 같은 오류 재발률, 반복 코멘트 수, 검토 소요 시간 |
-
-## 3. 기능 단위
-
-L1~L5는 제품 이름이나 성숙도 설명이 아니라 기능 범위를 구분하는 식별자로 사용합니다.
-각 행은 해당 범위에서 필요한 기능과 그 기능이 남기는 데이터를 정리합니다.
-
-| 범위 | 기능 | 남기는 데이터 |
-| --- | --- | --- |
-| L1 | 가이드라인 문서 작성, 배포, 열람, 재배포 | 문서 파일, 배포 이력, 수동 버전명, 문서 열람 기록 |
-| L2 | 가이드라인 섹션 등록, 공식 에셋 등록, 기준 검색, 에셋 다운로드, 변경 이력 관리 | 섹션, 규칙, 에셋, 버전, 적용일, 조회/다운로드 기록 |
-| L3 | 어플리케이션 타입별 기준 구성, 실행 가이드 발행, 템플릿 선택, 작업물 작성, 실행 가이드 노출 | 어플리케이션 타입, 템플릿 선택, 입력값, 작업물 초안, 기준 스냅샷 |
-| L4 | 제출 전 자가 점검, 상황형 질문, 작업물 제출, Manager 검토, 수정 지시 제공 | 질문, 답변, 점검 결과, 제출 상태, 규칙 연결 피드백, 수정 지시 |
-| L5 | 반복 질문과 반려 사유 집계, Insight Report 확인, 기준 개선 전환, 실행 가이드 반영, 개선 효과 추적 | 반복 패턴, 인사이트 후보, 개선안, 새 기준 스냅샷, Impact Report |
-
-## 4. 유즈케이스 세그먼트
-
-유즈케이스는 01번 제품 문서의 플라이휠을 따라 세그먼트로 묶습니다.
-
-| Segment | Main Flow | Meaning | 남는 기록 |
-| --- | --- | --- | --- |
-| Guideline Segment | Manager -> System | 정책, 규칙, 어플리케이션 타입, 템플릿, 에셋, 버전, 승인 상태를 만듭니다. | 기준 버전, 변경 사유, 적용일 |
-| Knowledge Segment | System -> Agent -> Worker | 발행된 기준을 Worker가 실행할 수 있는 Guidance, Answer, Recommendation으로 바꿉니다. | Guidance, Worker Checklist, Citation, Answer, Recommendation |
-| Work Segment | Worker -> System | 작업 세션, 입력값, 작업물, 제출물을 남깁니다. | 작업 목적, 선택 템플릿, 입력값, 제출 상태 |
-| Review Segment | Manager <-> System | 제출물 검토와 사람 판단을 기록합니다. | Review, Review Comment, 승인, 반려, 수정 요청 |
-| Insight Segment | System -> Agent -> Manager | 반복 질문, 실패, 반려 사유, 사용 행동을 Improvement 후보로 묶습니다. | Pattern, Improvement, Impact |
-| Guideline Update Segment | Manager -> System | 채택된 개선 후보를 기준 개선으로 반영합니다. | 개정 초안, 승인 이력, 개선 효과 |
-
-Agent는 제안하고, Manager가 결정하며, System이 기록합니다.
-Agent는 정책을 직접 변경하지 않습니다.
-
-## 5. 전체 흐름
-
-```mermaid
-flowchart LR
-  M["Manager"]
-  S1["System<br/>기준 구조화"]
-  A1["Agent<br/>사용자 지원"]
-  C["Worker"]
-  S2["System<br/>사용 기록 저장"]
-  A2["Agent<br/>개선 후보 정리"]
-
-  M -->|"정책·규칙·에셋·템플릿 등록"| S1
-  S1 -->|"구조화된 기준·버전·작업 맥락"| A1
-  A1 -->|"실행 가이드·점검·수정 지시"| C
-  C -->|"작업 세션·입력값·제출물·사용 행동"| S2
-  S2 -->|"질문·점검·반려·조회 기록"| A2
-  A2 -->|"반복 패턴·개선 후보 리포트"| M
-  M -->|"채택·보류·예외 승인"| S1
-```
-
-## 6. 유즈케이스 목록
-
-기준 문서 관리와 기준 데이터 관리는 운영 가능한 기준을 만들기 위한 기반입니다.
-제품의 직접 가치는 작업 맥락 구성, 작업 점검과 피드백, 개선 루프가 연결될 때 발생합니다.
-
-| ID | 기능 단위 | Segment | Use Case | 01 연결 | Output |
-| --- | --- | --- | --- | --- | --- |
-| L1-UC-01 | 기준 문서 관리 | Guideline | Manager가 가이드라인 문서를 작성합니다 | 기준 존재 | 정적 가이드라인 문서 |
-| L1-UC-02 | 기준 문서 관리 | Guideline | Manager가 가이드라인 문서를 배포합니다 | 기준 전달 | 배포 안내 |
-| L1-UC-03 | 기준 문서 관리 | Knowledge | Worker가 가이드라인 문서를 열람합니다 | 필요한 기준 탐색의 어려움 | 직접 해석한 기준 |
-| L1-UC-04 | 기준 문서 관리 | Guideline | Manager가 새 버전 문서를 재배포합니다 | 최신본 확인 어려움 | 새 문서와 혼선 위험 |
-| L2-UC-01 | 기준 데이터 관리 | Guideline | Manager가 가이드라인 섹션을 등록합니다 | 구조화되지 않은 기준 | 구조화된 섹션과 규칙 |
-| L2-UC-02 | 기준 데이터 관리 | Guideline | Manager가 공식 에셋을 등록합니다 | 임의 에셋 사용 위험 | 공식 에셋 |
-| L2-UC-03 | 기준 데이터 관리 | Knowledge | Worker가 기준을 검색합니다 | 필요한 기준 탐색의 어려움 | 검색 결과와 최신 기준 |
-| L2-UC-04 | 기준 데이터 관리 | Knowledge | Worker가 공식 에셋을 다운로드합니다 | 선택 부담 | 다운로드된 공식 에셋 |
-| L2-UC-05 | 기준 데이터 관리 | Guideline | Manager가 변경 이력을 관리합니다 | 변경 추적 어려움 | 버전 이력 |
-| L3-UC-01 | 작업 맥락 구성 | Guideline | Manager가 어플리케이션 타입별 기준을 구성합니다 | 선택지 축소 | 타입별 기준 묶음 |
-| L3-UC-02 | 작업 맥락 구성 | Knowledge | Manager가 어플리케이션 타입별 실행 가이드를 발행합니다 | 구체적인 작업 지시 | Guidance |
-| L3-UC-03 | 작업 맥락 구성 | Work | Worker가 어플리케이션 타입과 템플릿을 선택합니다 | 필요한 기준 탐색, 선택 부담 | 작업 세션과 기준 스냅샷 |
-| L3-UC-04 | 작업 맥락 구성 | Work | Worker가 작업물을 작성합니다 | 제한된 입력 폼 | 작업물 초안과 미리보기 |
-| L3-UC-05 | 작업 맥락 구성 | Knowledge | System이 어플리케이션 타입별 실행 가이드를 보여줍니다 | 현재 작업에 맞는 기준 | 제한된 선택지와 작업 지시 |
-| L4-UC-01 | 작업 점검과 피드백 | Knowledge | Worker가 제출 전 자가 점검을 실행합니다 | 제출 전 불확실성 | 점검 결과와 수정 지시 |
-| L4-UC-02 | 작업 점검과 피드백 | Knowledge | Worker가 Agent에게 상황형 질문을 합니다 | 기준 적용의 어려움 | 근거 있는 쉬운 답변 |
-| L4-UC-03 | 작업 점검과 피드백 | Work | Worker가 작업물을 제출합니다 | 검토 흐름 연결 | 공식 제출물 |
-| L4-UC-04 | 작업 점검과 피드백 | Review | Manager가 제출물을 검토하고 피드백합니다 | 피드백 적용의 어려움 | 규칙 연결 피드백 |
-| L4-UC-05 | 작업 점검과 피드백 | Knowledge | System이 수정 지시를 제공합니다 | 쉬운 수정 지시 | 다음 행동 |
-| L5-UC-01 | 개선 루프 | Insight | System이 반복 질문과 반려 사유를 집계합니다 | 반복 오류 개선 | 반복 패턴 |
-| L5-UC-02 | 개선 루프 | Insight | Manager가 Insight Report를 확인합니다 | 개선 우선순위 판단 | 채택/제외된 인사이트 |
-| L5-UC-03 | 개선 루프 | Guideline Update | Manager가 인사이트를 기준 개선으로 전환합니다 | 기준 개선 루프 | Guideline Update Draft |
-| L5-UC-04 | 개선 루프 | Knowledge | 변경된 기준이 다음 실행 가이드에 반영됩니다 | 개선된 기준 재사용 | 갱신된 Guidance |
-| L5-UC-05 | 개선 루프 | Insight | System이 개선 효과를 추적합니다 | 개선 효과 검증 | Impact Report |
-
-## 7. MVP 유즈케이스
-
-MVP는 모든 유즈케이스를 구현하지 않습니다.
-01번 제품 문서의 핵심 가설을 가장 적은 흐름으로 검증하는 유즈케이스만 우선합니다.
-
-| Priority | Use Case | 선택 이유 | 검증 신호 |
-| --- | --- | --- | --- |
-| 1 | L3-UC-01. Manager가 어플리케이션 타입별 기준을 구성합니다. | Worker에게 필요한 기준만 제공하려면 먼저 기준을 작업 맥락에 연결해야 합니다. | 타입별 연결된 규칙 수, 템플릿 이탈률 |
-| 2 | L3-UC-02. Manager가 어플리케이션 타입별 실행 가이드를 발행합니다. | 정적 문서를 실행 가능한 작업 지시로 바꿔야 합니다. | 실행 가이드 조회율, 자가 수행 가능성 응답 |
-| 3 | L4-UC-01. Worker가 제출 전 자가 점검을 실행합니다. | 제출 전 불확실성을 줄이는 직접 가치입니다. | 제출 전 수정 완료율, 점검 후 반려율 |
-| 4 | L4-UC-04. Manager가 제출물을 검토하고 피드백합니다. | 실제 반려 사유와 Manager 판단 기록이 생깁니다. | 반복 코멘트 수, 검토 소요 시간 |
-| 5 | L5-UC-02. Manager가 Insight Report를 확인합니다. | 사용 기록이 기준 개선으로 돌아가는지 확인합니다. | 채택된 인사이트 수, 같은 오류 재발률 |
-
-MVP에서 L1/L2를 별도 우선순위로 두지 않는 이유는 간단합니다.
-L1/L2는 기반이고, 제품 가설은 L3~L5의 작업 흐름에서 검증됩니다.
-다만 구현 시에는 L3~L5를 만들기 위해 필요한 L2 수준의 구조화 데이터가 함께 필요합니다.
-
-## 8. 상세 유즈케이스
-
-### L1-UC-01. Manager가 가이드라인 문서를 작성합니다
-
-목적: 브랜드 기준을 PDF, 문서, 브랜드북 같은 정적 파일로 만듭니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 기준 존재 |
-| Actors | Manager |
-| Input | 브랜드 원칙, 시각 규칙, 콘텐츠 규칙, 예시 자료, 에셋 파일 |
-| Process | Manager가 기준 내용을 문서로 정리하고, 이미지와 에셋 링크를 포함한 뒤, 배포 가능한 파일로 내보냅니다. |
-| Output | Guideline Document, Asset Package |
-| Generated Data | 문서 파일, 작성일, 작성자, 수동 버전명 |
-| 검증 신호 | 기준 문서 완성 여부, 배포 가능한 에셋 포함 여부 |
-| Next Maturity Condition | 문서를 섹션, 규칙, 에셋 단위로 쪼개서 관리해야 합니다. |
-
-### L1-UC-02. Manager가 가이드라인 문서를 배포합니다
-
-목적: 완성된 가이드라인 문서를 Worker에게 전달합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 기준 전달 |
-| Actors | Manager, Worker |
-| Input | Guideline Document, 배포 채널, 대상자 목록 |
-| Process | Manager가 배포 채널에 문서를 업로드하고, 대상자에게 문서 위치와 에셋 파일을 안내합니다. |
-| Output | Distributed Guideline, Distribution Notice |
-| Generated Data | 배포 일시, 배포 대상, 배포 채널 |
-| 검증 신호 | 배포 대상 도달 여부, 최신 문서 위치 안내 여부 |
-| Next Maturity Condition | 누가 최신본을 봤는지 확인하고, System에서 항상 최신 기준을 보여줘야 합니다. |
-
-### L1-UC-03. Worker가 가이드라인 문서를 열람합니다
-
-목적: Worker가 필요한 기준을 문서 안에서 직접 찾아봅니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 필요한 기준 탐색의 어려움 |
-| Actors | Worker |
-| Input | 작업 목적, Guideline Document, 검색 키워드 |
-| Process | Worker가 문서를 열고, 목차나 검색 기능으로 필요한 기준을 찾은 뒤, 내용을 직접 해석해 작업에 적용합니다. |
-| Output | Manual Interpretation, Work Attempt |
-| Generated Data | 대부분 남지 않습니다. 문서 플랫폼에 따라 조회 로그만 남을 수 있습니다. |
-| 검증 신호 | 기준 탐색 시간, 검색 실패율, 작업자 재질문 수 |
-| Next Maturity Condition | 사용자가 어떤 기준을 찾았는지 알고, 어플리케이션 타입별로 필요한 기준만 보여줘야 합니다. |
-
-### L1-UC-04. Manager가 새 버전 문서를 재배포합니다
-
-목적: 변경된 기준을 새 문서로 다시 배포합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 최신본 확인 어려움 |
-| Actors | Manager, Worker |
-| Input | 기존 문서, 변경 기준, 변경 사유 |
-| Process | Manager가 기존 문서를 수정하고, 새 버전명을 붙이고, 이전 배포 채널에 다시 업로드합니다. |
-| Output | Replaced Guideline, Outdated Guideline Risk |
-| Generated Data | 새 문서 파일, 수동 변경 이력, 배포 안내 |
-| 검증 신호 | 이전본 사용 건수, 최신본 확인 실패 건수 |
-| Next Maturity Condition | 이전본과 최신본을 System에서 구분하고, 변경 이력과 적용 시작일을 데이터로 관리해야 합니다. |
-
-### L2-UC-01. Manager가 가이드라인 섹션을 등록합니다
-
-목적: 정적 문서의 내용을 섹션과 규칙 단위로 나눠 System에서 관리합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 구조화되지 않은 가이드라인 자산 관리 |
-| Actors | Manager |
-| Input | 브랜드 규칙, 카테고리, 설명 콘텐츠, OK/NG 예시, 적용일 |
-| Process | Manager가 가이드라인 섹션을 draft 상태로 등록하고, 카테고리와 태그, 예시, 에셋을 연결한 뒤 published 또는 scheduled 상태로 변경합니다. |
-| Output | Guideline Section, Published Rule, Versioned Content |
-| Generated Data | 섹션 상태, 카테고리, 태그, 기준 버전, 적용 시작일 |
-| 검증 신호 | 구조화된 규칙 수, 발행된 섹션 수, 적용일 누락 건수 |
-| Next Maturity Condition | 섹션을 어플리케이션 타입과 연결하고, 사용자가 자기 작업에 맞는 기준을 받아야 합니다. |
-
-### L2-UC-02. Manager가 공식 에셋을 등록합니다
-
-목적: Worker가 임의 파일이 아니라 공식 에셋을 사용하게 합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 선택 부담, 임의 에셋 사용 위험 |
-| Actors | Manager, Worker |
-| Input | 에셋 파일, 에셋 메타데이터, 관련 기준, 사용 가능 상태 |
-| Process | Manager가 공식 에셋을 업로드하고, 사용 조건과 관련 기준을 연결한 뒤 사용할 수 있는 에셋만 published 상태로 발행합니다. |
-| Output | Official Asset, Asset Metadata, Downloadable File |
-| Generated Data | 에셋 상태, 다운로드 가능 여부, 관련 기준 참조 |
-| 검증 신호 | 공식 에셋 다운로드율, 임의 에셋 사용으로 인한 반려율 |
-| Next Maturity Condition | 어플리케이션 타입별로 사용할 수 있는 에셋만 노출하고, 템플릿과 에셋 사용 조건을 연결해야 합니다. |
-
-### L2-UC-03. Worker가 기준을 검색합니다
-
-목적: Worker가 필요한 기준을 빠르게 찾고 최신본을 확인합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 필요한 기준 탐색의 어려움 |
-| Actors | Worker, System |
-| Input | 검색어, 카테고리, 필터 |
-| Process | Worker가 검색어를 입력하면 System이 발행된 기준만 검색하고, 관련 섹션, 예시, 에셋, 버전, 적용일을 보여줍니다. |
-| Output | Search Results, Latest Guideline, Related Assets |
-| Generated Data | 검색 로그, 조회한 기준, 클릭한 결과, 체류 시간 |
-| 검증 신호 | 검색 성공률, 검색 후 질문 발생률, 오래 체류한 기준 |
-| Next Maturity Condition | 검색어에만 의존하지 않고, 어플리케이션 타입을 먼저 선택하게 해야 합니다. |
-
-### L2-UC-04. Worker가 공식 에셋을 다운로드합니다
-
-목적: Worker가 최신 공식 에셋을 사용하게 합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 선택 부담 |
-| Actors | Worker, System |
-| Input | 에셋 검색 결과, 에셋 사용 조건 |
-| Process | Worker가 에셋을 선택하면 System이 사용 조건을 보여주고 다운로드를 제공합니다. |
-| Output | Downloaded Asset, Usage Notice |
-| Generated Data | 다운로드 이력, 다운로드한 에셋, 사용자 또는 현장 정보 |
-| 검증 신호 | 자주 다운로드한 에셋, 다운로드 후 작업물 사용 여부 |
-| Next Maturity Condition | 다운로드 이후 실제 작업물에서 어떻게 사용됐는지 추적해야 합니다. |
-
-### L2-UC-05. Manager가 변경 이력을 관리합니다
-
-목적: 가이드라인 변경 사항과 적용 시점을 명확히 관리합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 변경 이력과 의사결정 추적 어려움 |
-| Actors | Manager, System |
-| Input | 기존 기준, 변경 내용, 변경 사유, 적용 시작일 |
-| Process | Manager가 기존 기준을 수정하고, 변경 사유와 적용일을 입력한 뒤 새 버전을 발행하거나 예약합니다. |
-| Output | Version History, Scheduled Update, Deprecated Rule |
-| Generated Data | 버전 이력, 변경 사유, 적용 시작일, 이전 기준과 새 기준의 연결 |
-| 검증 신호 | 변경 사유 누락 건수, 이전 기준 참조 건수 |
-| Next Maturity Condition | 변경된 기준이 어플리케이션 타입별 실행 가이드에 반영되어야 합니다. |
-
-### L3-UC-01. Manager가 어플리케이션 타입별 기준을 구성합니다
-
-목적: 발행된 기준을 어플리케이션 타입별로 묶어 Worker가 바로 사용할 수 있는 구조를 만듭니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 선택지 축소와 오류 감소 |
-| Actors | Manager, System |
-| Input | Published Guideline, 어플리케이션 타입, 템플릿, 체크리스트, 필수 문구, 금지 표현 |
-| Process | Manager가 어플리케이션 타입을 정의하고, 관련 규칙, 템플릿, 예시, 체크리스트, 쉬운 말 안내, 적용 기준 버전을 연결합니다. |
-| Output | Application Type Guideline, Template Set, Checklist Set |
-| Generated Data | 어플리케이션 타입, 규칙 연결 정보, 템플릿 연결 정보, 체크리스트 연결 정보 |
-| 검증 신호 | 타입별 연결 규칙 수, 허용 템플릿 사용률, 템플릿 이탈률 |
-| Next Maturity Condition | Worker 입력값과 작업물 상태를 기준 점검에 사용할 수 있어야 합니다. |
-
-### L3-UC-02. Manager가 어플리케이션 타입별 실행 가이드를 발행합니다
-
-목적: 공식 기준을 Worker가 실제 작업에서 따라 할 수 있는 실행형 가이드로 바꿉니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 구체적인 작업 지시와 수행률 |
-| Actors | Manager, System, Worker |
-| Input | Published Guideline, 어플리케이션 타입, 허용 템플릿, 체크리스트, 쉬운 말 안내, 예시 |
-| Process | System이 어플리케이션 타입에 연결된 발행 기준을 불러오고, Worker에게 필요한 항목만 묶어 published 상태로 노출합니다. |
-| Output | Guidance, Worker Checklist, Template Recommendation, Required Copy List, Forbidden Copy List |
-| Generated Data | 실행 가이드 버전, 어플리케이션 타입별 노출 기준, 조회 이력 |
-| 검증 신호 | 실행 가이드 조회율, 자가 수행 가능성 응답, 실행 가이드 조회 후 질문 수 |
-| Next Maturity Condition | 실행 가이드를 읽는 데서 끝나지 않고, 입력값을 받아 점검해야 합니다. |
-
-### L3-UC-03. Worker가 어플리케이션 타입과 템플릿을 선택합니다
-
-목적: Worker가 전체 가이드라인을 읽지 않고도 올바른 작업 출발점을 고릅니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 필요한 기준 탐색의 어려움, 선택 부담 |
-| Actors | Worker, System |
-| Input | 작업 목적, 사용 위치, 어플리케이션 타입 목록, 허용 템플릿 목록 |
-| Process | Worker가 어플리케이션 타입을 선택하면 System이 허용 템플릿만 보여주고, 선택된 기준 버전을 작업 세션에 고정합니다. |
-| Output | Work Session, Selected Application Type, Selected Template, Guideline Snapshot |
-| Generated Data | 작업 시작 이벤트, 템플릿 선택 이벤트, 적용 기준 버전 스냅샷 |
-| 검증 신호 | 타입 선택 완료율, 템플릿 선택 시간, 템플릿 이탈률 |
-| Next Maturity Condition | 선택된 템플릿과 입력값을 기준으로 제출 전 점검을 실행해야 합니다. |
-
-### L3-UC-04. Worker가 작업물을 작성합니다
-
-목적: Worker가 정해진 템플릿 안에서 필요한 텍스트와 이미지를 입력합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 제한된 입력 폼, 선택지 축소 |
-| Actors | Worker, System |
-| Input | 선택된 템플릿, 텍스트 입력값, 이미지 입력값, 필수 입력 조건 |
-| Process | System이 템플릿 입력 필드를 보여주고, Worker 입력을 받아 필수 누락 여부를 확인하며 미리보기를 생성합니다. |
-| Output | Draft Output, Preview, Missing Input Warning |
-| Generated Data | Worker 입력값, 업로드 자산, 작업물 초안 상태, 미리보기 생성 이력 |
-| 검증 신호 | 필수 입력 누락률, 작업 완료 시간, 미리보기 후 수정 횟수 |
-| Next Maturity Condition | 작성된 작업물에 대해 자동 또는 반자동 점검을 제공해야 합니다. |
-
-### L3-UC-05. System이 어플리케이션 타입별 실행 가이드를 보여줍니다
-
-목적: Worker가 선택한 어플리케이션 타입에 맞는 기준만 확인하게 합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 현재 작업에 맞는 기준 |
-| Actors | Worker, System |
-| Input | Selected Application Type, Guideline Snapshot, Guidance |
-| Process | System이 선택된 어플리케이션 타입의 실행 가이드를 조회하고, 허용 템플릿, 필수 문구, 금지 표현, OK/NG 예시를 보여줍니다. |
-| Output | Presented Guidance, Reduced Choice Set, Worker Instruction |
-| Generated Data | 가이드 조회 이력, 노출된 기준 버전, 사용자가 본 어플리케이션 타입, 체류 시간 |
-| 검증 신호 | 오래 체류한 항목, 같은 항목 관련 질문 수, 작업자 재질문 수 |
-| Next Maturity Condition | 사용자가 질문하거나 작업물 상태를 점검받을 수 있어야 합니다. |
-
-### L4-UC-01. Worker가 제출 전 자가 점검을 실행합니다
-
-목적: 제출 전에 단순 오류와 명확한 가이드 위반을 줄입니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 제출 전 점검과 검토 비용 |
-| Actors | Worker, Agent, System |
-| Input | Draft Output, Worker Checklist, Guideline Snapshot, 텍스트/이미지/템플릿 선택 정보 |
-| Process | Worker가 자가 점검을 실행하면 System이 필수 입력, 필수 문구, 금지 표현, 템플릿 조건을 확인하고 Agent 또는 rule check가 쉬운 말 결과를 생성합니다. |
-| Output | Passed, Warning, Failed, Human Review Required, Recommendation |
-| Generated Data | 체크 실행 이력, 체크 결과, 실패 항목, 수정 지시, 사람 검토 필요 여부 |
-| 검증 신호 | 제출 전 수정 완료율, 점검 후 반려율, Manager 개입 감소율 |
-| Next Maturity Condition | 실패 항목과 수정 지시가 반복 패턴으로 집계되어야 합니다. |
-
-### L4-UC-02. Worker가 Agent에게 상황형 질문을 합니다
-
-목적: Worker가 디자인 용어를 몰라도 자신의 상황에 맞는 답을 받습니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 기준 적용의 어려움 |
-| Actors | Worker, Agent, System |
-| Input | 질문 원문, 작업 맥락, Published Guideline |
-| Process | Agent가 질문 의도를 분류하고, System이 관련 기준을 검색하며, Agent가 근거와 버전을 연결한 쉬운 말 답변을 생성합니다. |
-| Output | Answer, Citation, Recommendation, Low Confidence, Escalation |
-| Generated Data | 질문 의도, 검색된 기준, 인용 규칙, 답변 신뢰도, 사용자 피드백 |
-| 검증 신호 | 답변 후 후속 질문 수, 낮은 신뢰도 질문 수, Manager 확인 필요 건수 |
-| Next Maturity Condition | 반복 질문과 낮은 신뢰도 질문이 인사이트 후보로 묶여야 합니다. |
-
-### L4-UC-03. Worker가 작업물을 제출합니다
-
-목적: 자가 점검을 통과했거나 사람 검토가 필요한 작업물을 공식 검수 대상으로 전환합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 제출 전 불확실성 해소 이후 검토 연결 |
-| Actors | Worker, System, Manager |
-| Input | Draft Output, Check Result, 작업 세션 정보, 제출자 정보 |
-| Process | System이 제출 가능 상태를 확인하고, 제출 데이터와 기준 버전 스냅샷을 고정한 뒤 제출 상태를 submitted로 변경합니다. |
-| Output | Submission, Submitted Status, Review Request, Guideline Snapshot |
-| Generated Data | 제출 데이터, 제출 상태, 제출 시점 기준 버전, 검수 요청 이벤트 |
-| 검증 신호 | 자가 점검 후 제출률, 재제출 성공률, 기준 버전 누락 건수 |
-| Next Maturity Condition | 제출 결과와 검수 결과가 어플리케이션 타입, 템플릿, 기준 버전별로 집계되어야 합니다. |
-
-### L4-UC-04. Manager가 제출물을 검토하고 피드백합니다
-
-목적: 제출물을 공식 기준에 따라 승인하거나 수정 요청합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 피드백과 반복 오류 감소 |
-| Actors | Manager, Worker, System |
-| Input | Submission, Guideline Snapshot, Check Result, Review Criteria, Comment Templates |
-| Process | Manager가 제출물을 확인하고 기준 위반 여부를 판단한 뒤, 필요한 경우 규칙 기반 코멘트와 수정 지시를 남깁니다. |
-| Output | Approved Submission, Needs Changes, Rejected Submission, Review Comment, Recommendation |
-| Generated Data | 검수 결과, 반려 사유, 규칙 연결 코멘트, 수정 요청 이력, Manager 판단 이력 |
-| 검증 신호 | 반복 코멘트 수, 검토 소요 시간, 규칙 연결 없는 피드백 수 |
-| Next Maturity Condition | 검수 코멘트와 반려 사유가 반복 이슈로 분석되어야 합니다. |
-
-### L4-UC-05. System이 수정 지시를 제공합니다
-
-목적: Worker가 피드백을 보고 혼자 수정할 수 있게 합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 피드백 적용의 어려움 |
-| Actors | Worker, Agent, System, Manager |
-| Input | Check Result, Review Comment, Related Rule, Draft Output |
-| Process | System이 문제 항목과 관련 기준을 연결하고, Agent가 쉬운 말 수정 지시를 생성해 Worker에게 다음 행동을 보여줍니다. |
-| Output | Recommendation, Citation, Next Action |
-| Generated Data | 수정 지시, 관련 기준 참조, 사용자 반응, 재점검 여부 |
-| 검증 신호 | 수정 지시 후 재점검 성공률, 같은 오류 재발률, 작업자 재질문 수 |
-| Next Maturity Condition | 같은 수정 지시가 반복되는지 집계하고 기준 개선 후보로 전환해야 합니다. |
-
-### L5-UC-01. System이 반복 질문과 반려 사유를 집계합니다
-
-목적: 개별 질문, 체크 실패, 반려 사유, 사용 행동을 운영 인사이트 후보로 만듭니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 반복 오류 개선, 사용 기록 분석 |
-| Actors | System, Agent, Manager |
-| Input | Questions, Check Results, Review Comments, Submission Statuses, Usage Data, Application Type Data |
-| Process | System이 유사 질문, 반복 체크 실패, 반복 반려 사유, 오래 체류한 기준, 자주 다운로드한 에셋을 묶고 어플리케이션 타입별 문제 비율을 계산합니다. |
-| Output | Pattern, Improvement |
-| Generated Data | 반복 패턴 그룹, 통계 집계, 인사이트 후보 상태, 사용 행동 요약 |
-| 검증 신호 | 반복 질문 수, 반복 반려율, 오래 체류한 항목, 자주 찾는 에셋 |
-| Next Maturity Condition | Guideline Update로 플라이휠을 계속 돌려야 합니다. |
-
-### L5-UC-02. Manager가 Insight Report를 확인합니다
-
-목적: Manager가 현장에서 반복되는 문제를 보고 기준 개선 여부를 판단합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | Manager 가치, 개선 우선순위 판단 |
-| Actors | Manager, System, Agent |
-| Input | Improvements, Aggregated Metrics, Review Comments, Rule References, Usage Data |
-| Process | Manager가 반복 문제의 심각도와 빈도를 보고, 기준 문제인지 템플릿 문제인지 교육 문제인지 분류한 뒤 개선 후보를 채택하거나 제외합니다. |
-| Output | Accepted Improvement, Dismissed Improvement, Improvement Decision, Priority |
-| Generated Data | Manager 검토 이력, 인사이트 상태 변경, 개선 우선순위, 개선 유형 분류 |
-| 검증 신호 | 채택된 인사이트 수, 제외 사유, 우선순위가 높은 반복 문제 |
-| Next Maturity Condition | 채택된 인사이트가 기준 개선 초안으로 전환되어야 합니다. |
-
-### L5-UC-03. Manager가 인사이트를 기준 개선으로 전환합니다
-
-목적: Insight Report를 실제 Guideline Update로 연결합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 실제 사용 데이터를 바탕으로 한 기준 개선 |
-| Actors | Manager, System |
-| Input | Accepted Improvement, Related Rule, Related Template, Worker Checklist, 반복 사례 |
-| Process | Manager가 개선 유형을 선택하고, 기준 문구, OK/NG 예시, 체크리스트, 템플릿 제한을 수정한 뒤 draft 상태로 만듭니다. |
-| Output | Guideline Update Draft, Updated Rule, Updated Template, Updated Worker Checklist, New FAQ |
-| Generated Data | Guideline Update, 변경 사유, Improvement 연결 정보, 개정 초안 상태, 승인 이력 |
-| 검증 신호 | Improvement에서 생성된 개정 초안 수, 개선안 승인율 |
-| Next Maturity Condition | 발행된 개선안이 다음 실행 가이드와 작업 세션에 반영되어야 합니다. |
-
-### L5-UC-04. 변경된 기준이 다음 실행 가이드에 반영됩니다
-
-목적: 개선된 기준을 다음 Worker 작업에 적용해 플라이휠을 완성합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 가이드라인이 운영 과정에서 발전하는 시스템 |
-| Actors | Manager, System, Worker |
-| Input | Published Guideline Update, 적용 시작일, 관련 어플리케이션 타입, 관련 템플릿 |
-| Process | System이 새 기준의 적용일을 확인하고 관련 Guidance를 갱신하며, 새 작업 세션에는 새 기준 버전을 적용합니다. |
-| Output | Updated Guidance, Updated Worker Checklist, Change Notice, New Guideline Snapshot |
-| Generated Data | 실행 가이드 새 버전, 변경 안내 이력, 새 기준 적용 이벤트, 이전 기준과 새 기준의 연결 |
-| 검증 신호 | 새 기준 적용 세션 수, 이전 기준 참조 건수, 변경 안내 확인율 |
-| Next Maturity Condition | 변경 전후 반려율, 질문 수, 체크 실패율을 비교해야 합니다. |
-
-### L5-UC-05. System이 개선 효과를 추적합니다
-
-목적: 기준 개선이 실제로 Worker 실패와 Manager 반복 비용을 줄였는지 확인합니다.
-
-| Field | Content |
-| --- | --- |
-| 01 연결 | 제품 가치 검증 |
-| Actors | System, Manager |
-| Input | Previous Version, New Version, Usage Data, 기간 조건 |
-| Process | System이 변경 전후 데이터를 분리하고, 반복 질문 수, 반려율, 수정 요청 수를 비교해 성공 신호나 후속 인사이트를 만듭니다. |
-| Output | Impact Report, Success Signal, Follow-up Insight |
-| Generated Data | 변경 전후 비교 데이터, 개선 효과 지표, 후속 Improvement, Guideline Update 성과 메타데이터 |
-| 검증 신호 | 같은 오류 재발률, 반려율 변화, 질문 수 변화, 검토 소요 시간 변화 |
-| Next Maturity Condition | 측정 결과가 다음 Guideline Update 판단에 사용되어야 합니다. |
-
-## 9. 유즈케이스 항목 구조
-
-단일 유즈케이스 항목은 다음 구조를 따릅니다.
-
-| Field | Meaning |
-| --- | --- |
-| 01 연결 | 01번 제품 문서의 문제, 가설, 제공 서비스 중 어떤 항목과 연결되는지 |
-| Actors | 참여 주체 |
-| Input | 유즈케이스를 시작하는 입력 |
-| Process | System, Agent, Worker, Manager가 수행하는 주요 처리 |
-| Output | 사용자 또는 System이 받는 결과 |
-| Generated Data | 이후 리포트, 추적, 개선에 사용되는 데이터 |
-| 검증 신호 | 01번 제품 문서의 핵심 가설을 검증할 수 있는 관찰 지표 |
-| Next Maturity Condition | 다음 기능 단위로 이어지기 위해 필요한 조건 |
+| 도메인 기준 | 가이드라인 관리, 제작 관리, 품질 검수, 운영 인사이트로 나눕니다. |
+| 프로세스 기준 | 각 유즈케이스는 한 문장으로 핵심 처리 흐름을 설명합니다. |
+| 결과 기준 | 아웃풋은 사용자나 System이 바로 받는 결과입니다. |
+| 기록 기준 | 생성 데이터는 이후 검수, 로그, 인사이트, 변경 이력에 쓰이는 데이터입니다. |
+| 연결 기준 | 다음 연결은 이어지는 유즈케이스나 개선 루프를 가리킵니다. |
+
+## 4. 유즈케이스 상세 스키마
+
+유즈케이스 목록은 다음 스키마를 사용합니다.
+
+| ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| GL-05 | 규칙 등록 | Manager, System | 규칙 이름, 조건, 심각도, 적용 범위 | Manager가 규칙을 입력하면 System이 충돌을 확인하고 draft 상태로 저장합니다. | Draft Rule | Rule, RuleCondition, RuleScope, RuleChanged | 규칙을 페이지에 연결 |
+
+## 5. 도메인별 유즈케이스 목록
+
+### 5.1 가이드라인 관리
+
+가이드라인 관리는 브랜드 가이드라인, 공식 자원, 변경 이력을 관리합니다.
+Worker가 사용하는 기준과 자원은 이 도메인에서 발행된 것만 사용합니다.
+
+#### 브랜드 가이드라인 편집 및 발행
+
+| ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| GL-01 | 가이드라인 초안 생성 | Manager, System | 가이드라인 이름, 목적, 대상 브랜드 | Manager가 새 가이드라인 생성을 요청하면 System이 BrandGuideline을 draft 상태로 만듭니다. | Draft BrandGuideline | BrandGuideline, GuidelineDraftCreated | 가이드라인 섹션 등록 |
+| GL-02 | 가이드라인 섹션 등록 | Manager, System | 섹션 이름, 설명, 표시 순서 | Manager가 섹션을 입력하면 System이 GuidelineSection을 가이드라인에 추가합니다. | GuidelineSection | GuidelineSection, DisplayOrder, GuidelinePageUpdated | 가이드라인 페이지 구성 |
+| GL-03 | 가이드라인 페이지 구성 | Manager, System | 섹션, 페이지 제목, 배치 정보 | Manager가 페이지 구성을 입력하면 System이 GuidelinePage와 PageComposition을 저장합니다. | GuidelinePage | GuidelinePage, PageComposition, GuidelinePageUpdated | 페이지 정책 작성 |
+| GL-04 | 페이지 정책 작성 | Manager, System | 정책 문구, 설명, 적용 맥락 | Manager가 페이지 정책을 작성하면 System이 PagePolicy를 GuidelinePage에 1:1로 연결합니다. | PagePolicy | PagePolicy, PagePolicyUpdated | 규칙을 페이지에 연결 |
+| GL-05 | 규칙 등록 | Manager, System | 규칙 이름, 조건, 심각도, 적용 범위 | Manager가 규칙을 입력하면 System이 충돌을 확인하고 draft 상태로 저장합니다. | Draft Rule | Rule, RuleCondition, RuleScope, RuleChanged | 규칙을 페이지에 연결 |
+| GL-06 | 규칙 수정 | Manager, System | 기존 규칙, 변경 내용, 변경 사유 | Manager가 규칙을 수정하면 System이 충돌을 확인하고 새 RuleVersion 후보를 저장합니다. | Updated Rule | Rule, RuleCondition, ChangeReason, RuleChanged | 규칙 변경 기록 |
+| GL-07 | 규칙 예외 등록 | Manager, System | 대상 규칙, 예외 조건, 예외 사유, 적용 기간 | Manager가 예외를 입력하면 System이 RuleException을 Rule 아래에 추가합니다. | RuleException | RuleException, ExceptionReason, RuleExceptionAdded | 규칙 충돌 확인 |
+| GL-08 | 규칙 충돌 확인 | Manager, System | 신규 또는 수정 규칙, 적용 범위 | System이 같은 범위의 기존 Rule과 조건을 비교해 충돌 여부를 판단합니다. | Conflict Result | RuleConflict, RuleCondition, RuleScope | 규칙 등록 또는 규칙 수정 |
+| GL-09 | 규칙을 페이지에 연결 | Manager, System | GuidelinePage, Rule, 표시 순서, 강조 여부 | Manager가 페이지에 규칙을 연결하면 System이 PageRuleRef를 생성합니다. | PageRuleRef | PageRuleRef, RuleVersionRef, PageRuleLinked | 가이드라인 검토 요청 |
+| GL-10 | 에셋을 페이지에 연결 | Manager, System | GuidelinePage, BrandAssetVersion, 캡션, 예시 역할 | Manager가 페이지에 에셋을 연결하면 System이 PageAssetRef 또는 PageExample을 생성합니다. | PageAssetRef | PageAssetRef, PageExample, PageAssetLinked | 가이드라인 검토 요청 |
+| GL-11 | 템플릿을 페이지에 연결 | Manager, System | GuidelinePage, TemplateVersion, 사용 조건 | Manager가 페이지에 템플릿을 연결하면 System이 페이지의 TemplateVersion 참조를 저장합니다. | TemplateVersionRef | TemplateVersionRef, GuidelinePageUpdated | 가이드라인 검토 요청 |
+| GL-12 | 플러그인을 페이지에 연결 | Manager, System | GuidelinePage, PluginVersion, 사용 조건 | Manager가 페이지에 플러그인을 연결하면 System이 페이지의 PluginVersion 참조를 저장합니다. | PluginVersionRef | PluginVersionRef, GuidelinePageUpdated | 가이드라인 검토 요청 |
+| GL-13 | 가이드라인 검토 요청 | Manager, System | Draft BrandGuideline | Manager가 검토를 요청하면 System이 가이드라인 상태를 in review로 변경합니다. | Review Requested Guideline | BrandGuideline, PublishStatus, GuidelineSubmittedForReview | 가이드라인 승인 |
+| GL-14 | 가이드라인 승인 | Manager, System | 검토 중인 가이드라인, 승인자 | Manager가 승인하면 System이 가이드라인을 approved 상태로 변경합니다. | Approved Guideline | BrandGuideline, PublishStatus, GuidelineApproved | 가이드라인 발행 |
+| GL-15 | 가이드라인 발행 | Manager, System | Approved BrandGuideline, 적용 시작일 | Manager가 발행하면 System이 GuidelineVersion을 만들고 published 상태로 전환합니다. | Published Guideline | GuidelineVersion, EffectivePeriod, GuidelinePublished | 변경 이력 추적 |
+| GL-16 | 가이드라인 예약 발행 | Manager, System | Approved BrandGuideline, 예약 적용일 | Manager가 적용일을 예약하면 System이 scheduled 상태와 EffectivePeriod를 저장합니다. | Scheduled Guideline | GuidelineVersion, EffectivePeriod, GuidelineScheduled | 가이드라인 발행 |
+| GL-17 | 가이드라인 폐기 | Manager, System | Published Guideline, 폐기 사유, 대체 기준 | Manager가 폐기하면 System이 deprecated 상태로 변경하고 대체 기준을 연결합니다. | Deprecated Guideline | PublishStatus, ChangeReason, GuidelineDeprecated | 변경 이력 추적 |
+
+#### 브랜드 자원 관리
+
+| ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| RES-01 | 브랜드 에셋 등록 | Manager, System | 에셋 파일, 에셋 유형, 메타데이터 | Manager가 파일과 메타데이터를 입력하면 System이 BrandAsset과 AssetFile을 저장합니다. | Draft BrandAsset | BrandAsset, AssetFile, AssetType, BrandAssetRegistered | 브랜드 에셋 발행 |
+| RES-02 | 브랜드 에셋 발행 | Manager, System | Draft BrandAsset, 사용 조건 | Manager가 발행하면 System이 AssetVersion을 만들고 다운로드 가능 상태로 전환합니다. | Published BrandAsset | AssetVersion, UsageCondition, DownloadStatus, BrandAssetPublished | 에셋을 페이지에 연결 |
+| RES-03 | 브랜드 에셋 폐기 | Manager, System | Published BrandAsset, 폐기 사유, 대체 에셋 | Manager가 폐기하면 System이 에셋 상태를 deprecated로 변경하고 대체 에셋을 연결합니다. | Deprecated BrandAsset | AssetVersion, ChangeReason, BrandAssetDeprecated | 자원 변경 기록 |
+| RES-04 | 템플릿 등록 | Manager, System | 템플릿 이름, 템플릿 파일, 설명 | Manager가 템플릿 정보를 입력하면 System이 Template과 TemplateFile을 draft 상태로 저장합니다. | Draft Template | Template, TemplateFile, TemplateRegistered | 템플릿 필드 정의 |
+| RES-05 | 템플릿 필드 정의 | Manager, System | 템플릿, 입력 필드, 필수 여부, 기본값 | Manager가 입력 필드를 정의하면 System이 TemplateField를 Template에 추가합니다. | Template Fields | TemplateField, TemplateRegistered | 템플릿 사용 조건 정의 |
+| RES-06 | 템플릿 사용 조건 정의 | Manager, System | 템플릿, 어플리케이션 타입, 허용 조건, 제한 조건 | Manager가 사용 조건을 입력하면 System이 TemplateUsageCondition을 저장합니다. | Template Usage Condition | TemplateUsageCondition, TemplateRegistered | 템플릿과 규칙 연결 |
+| RES-07 | 템플릿과 어플리케이션 타입 연결 | Manager, System | Template, ApplicationType | Manager가 사용 가능한 산출물 유형을 선택하면 System이 Template의 적용 범위를 저장합니다. | Application Template Link | TemplateUsageCondition, ResourceLinkedToGuideline | 템플릿 발행 |
+| RES-08 | 템플릿과 규칙 연결 | Manager, System | Template, Rule | Manager가 템플릿에 적용할 규칙을 선택하면 System이 Template과 Rule 참조를 저장합니다. | Template Rule Link | TemplateVersionRef, RuleRef, ResourceLinkedToGuideline | 템플릿 발행 |
+| RES-09 | 템플릿과 에셋 연결 | Manager, System | Template, BrandAssetVersion | Manager가 템플릿에 필요한 공식 에셋을 선택하면 System이 Template과 BrandAsset 참조를 저장합니다. | Template Asset Link | TemplateVersionRef, AssetVersionRef, ResourceLinkedToGuideline | 템플릿 미리보기 확인 |
+| RES-10 | 템플릿 미리보기 확인 | Manager, System | Template, 샘플 입력값 | System이 TemplateField와 샘플 입력값으로 미리보기를 생성하고 Manager가 결과를 확인합니다. | Template Preview | ViewEvent, TemplatePreview | 템플릿 발행 |
+| RES-11 | 템플릿 발행 | Manager, System | Draft Template, 적용 시작일 | Manager가 발행하면 System이 TemplateVersion을 만들고 published 상태로 전환합니다. | Published Template | TemplateVersion, TemplateUsageCondition, TemplatePublished | 템플릿 선택 |
+| RES-12 | 템플릿 예약 발행 | Manager, System | Draft Template, 예약 적용일 | Manager가 적용일을 예약하면 System이 TemplateVersion과 예약 상태를 저장합니다. | Scheduled Template | TemplateVersion, EffectivePeriod, TemplatePublished | 템플릿 발행 |
+| RES-13 | 템플릿 폐기 | Manager, System | Published Template, 폐기 사유, 대체 템플릿 | Manager가 폐기하면 System이 TemplateVersion을 deprecated 상태로 변경합니다. | Deprecated Template | TemplateVersion, ChangeReason, TemplateDeprecated | 자원 변경 기록 |
+| RES-14 | 플러그인 등록 | Manager, System | 플러그인 이름, 설명, 유형 | Manager가 플러그인 정보를 입력하면 System이 Plugin을 draft 상태로 저장합니다. | Draft Plugin | Plugin, PluginType, PluginRegistered | 플러그인 기능 정의 |
+| RES-15 | 플러그인 실행 단위 정의 | Manager, System | Plugin, 실행 엔트리, 호출 방식 | Manager가 실행 단위를 입력하면 System이 PluginEntry를 Plugin에 추가합니다. | PluginEntry | PluginEntry, PluginRegistered | 플러그인 기능 정의 |
+| RES-16 | 플러그인 기능 정의 | Manager, System | Plugin, 기능 이름, 기능 설명 | Manager가 제공 기능을 정의하면 System이 PluginCapability를 Plugin에 추가합니다. | PluginCapability | PluginCapability, PluginRegistered | 플러그인 입력 스키마 정의 |
+| RES-17 | 플러그인 입력 스키마 정의 | Manager, System | PluginCapability, 입력 필드, 필수 여부 | Manager가 입력 스키마를 정의하면 System이 Plugin 실행 입력 조건을 저장합니다. | Plugin Input Schema | PluginCapability, PluginUsageCondition, PluginRegistered | 플러그인 출력 형식 정의 |
+| RES-18 | 플러그인 출력 형식 정의 | Manager, System | PluginCapability, 출력 타입, 결과 형식 | Manager가 출력 형식을 정의하면 System이 WorkOutput에 반영 가능한 결과 타입을 저장합니다. | Plugin Output Schema | PluginCapability, PluginUsageCondition, PluginRegistered | 플러그인 사용 조건 정의 |
+| RES-19 | 플러그인 사용 조건 정의 | Manager, System | Plugin, 어플리케이션 타입, 허용 조건, 제한 조건 | Manager가 사용 조건을 입력하면 System이 PluginUsageCondition을 저장합니다. | Plugin Usage Condition | PluginUsageCondition, PluginRegistered | 플러그인과 규칙 연결 |
+| RES-20 | 플러그인과 어플리케이션 타입 연결 | Manager, System | Plugin, ApplicationType | Manager가 사용 가능한 산출물 유형을 선택하면 System이 Plugin의 적용 범위를 저장합니다. | Application Plugin Link | PluginUsageCondition, ResourceLinkedToGuideline | 플러그인 발행 |
+| RES-21 | 플러그인과 규칙 연결 | Manager, System | Plugin, Rule | Manager가 플러그인 사용에 필요한 규칙을 선택하면 System이 Plugin과 Rule 참조를 저장합니다. | Plugin Rule Link | PluginVersionRef, RuleRef, ResourceLinkedToGuideline | 플러그인 테스트 실행 |
+| RES-22 | 플러그인과 템플릿 연결 | Manager, System | Plugin, Template | Manager가 함께 사용할 템플릿을 선택하면 System이 Plugin과 Template 참조를 저장합니다. | Plugin Template Link | PluginVersionRef, TemplateVersionRef, ResourceLinkedToGuideline | 플러그인 테스트 실행 |
+| RES-23 | 플러그인 테스트 실행 | Manager, System, Agent | Plugin, 샘플 입력값 | System이 샘플 입력으로 Plugin을 실행하고 AgentRunRef와 테스트 결과를 기록합니다. | Plugin Test Result | AgentRunEvent, PluginCapability, PluginVersion | 플러그인 발행 |
+| RES-24 | 플러그인 발행 | Manager, System | Draft Plugin, 적용 시작일 | Manager가 발행하면 System이 PluginVersion을 만들고 published 상태로 전환합니다. | Published Plugin | PluginVersion, PluginUsageCondition, PluginPublished | 플러그인 선택 |
+| RES-25 | 플러그인 예약 발행 | Manager, System | Draft Plugin, 예약 적용일 | Manager가 적용일을 예약하면 System이 PluginVersion과 예약 상태를 저장합니다. | Scheduled Plugin | PluginVersion, EffectivePeriod, PluginPublished | 플러그인 발행 |
+| RES-26 | 플러그인 폐기 | Manager, System | Published Plugin, 폐기 사유, 대체 플러그인 | Manager가 폐기하면 System이 PluginVersion을 deprecated 상태로 변경합니다. | Deprecated Plugin | PluginVersion, ChangeReason, PluginDeprecated | 자원 변경 기록 |
+
+#### 변경 이력 추적
+
+| ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| CHG-01 | 가이드라인 변경 기록 | System | 변경된 BrandGuideline, 변경 사유, 변경자 | System이 가이드라인 발행 또는 수정 결과를 GuidelineChange로 기록합니다. | GuidelineChange | GuidelineChange, ChangeReason, GuidelineChangeRecorded | 이전 버전과 새 버전 연결 |
+| CHG-02 | 규칙 변경 기록 | System | 변경된 Rule, 변경 사유, 변경자 | System이 규칙 변경 내용을 GuidelineChange로 기록합니다. | GuidelineChange | ChangedField, PreviousReference, NextReference, GuidelineChangeRecorded | 변경 영향 확인 요청 |
+| CHG-03 | 자원 변경 기록 | System | 변경된 BrandAsset, Template 또는 Plugin | System이 공식 자원의 변경 내용을 GuidelineChange로 기록합니다. | GuidelineChange | ChangeSource, PreviousReference, NextReference, GuidelineChangeRecorded | 변경 영향 확인 요청 |
+| CHG-04 | 이전 버전과 새 버전 연결 | System | 이전 참조, 새 참조, 변경 대상 | System이 변경 전후 버전을 연결하고 비교 가능한 상태로 저장합니다. | Version Link | PreviousReference, NextReference, GuidelineVersionLinked | 변경 영향 확인 요청 |
+| CHG-05 | 변경 사유 기록 | Manager, System | 변경 대상, 변경 사유, 관련 인사이트 | Manager가 변경 사유를 입력하면 System이 GuidelineChange에 ChangeReason과 RelatedInsight를 저장합니다. | Change Reason | ChangeReason, RelatedInsight, GuidelineChangeRecorded | 변경 영향 확인 요청 |
+| CHG-06 | 변경 영향 확인 요청 | Manager, System | GuidelineChange, 비교 기간, 대상 지표 | Manager가 영향 확인을 요청하면 System이 변경 전후 UsageEventLog 비교 작업을 예약합니다. | Impact Request | GuidelineChange, GuidelineChangeImpactRequested | 개선 효과 추적 |
+
+### 5.2 제작 관리
+
+제작 관리는 Worker가 발행된 Template과 Plugin을 사용해 Work를 만들고 WorkOutput을 생성하는 흐름입니다.
+검수 요청, 승인, 반려는 품질 검수가 담당합니다.
+
+#### 산출물 제작
+
+| ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| WORK-01 | 작업 시작 | Worker, System | 작업 목적, 사용자, 브랜드 | Worker가 작업을 시작하면 System이 Work를 만들고 사용할 GuidelineSnapshotRef를 고정합니다. | Work Session | Work, WorkPurpose, GuidelineSnapshotRef, WorkStarted, WorkEvent | 어플리케이션 타입 선택 |
+| WORK-02 | 어플리케이션 타입 선택 | Worker, System | Work, ApplicationType | Worker가 산출물 유형을 선택하면 System이 Work에 ApplicationTypeRef를 저장합니다. | Selected ApplicationType | ApplicationTypeRef, WorkInputChanged, ClickEvent, WorkEvent | 템플릿 선택 |
+| WORK-03 | 템플릿 선택 | Worker, System | Work, Published TemplateVersion | Worker가 템플릿을 선택하면 System이 TemplateVersionRef를 Work에 저장합니다. | Selected Template | TemplateVersionRef, WorkInputChanged, ClickEvent, WorkEvent | 플러그인 선택 |
+| WORK-04 | 플러그인 선택 | Worker, System | Work, Published PluginVersion | Worker가 플러그인을 선택하면 System이 PluginVersionRef를 Work에 저장합니다. | Selected Plugin | PluginVersionRef, WorkInputChanged, ClickEvent, WorkEvent | 작업 입력값 작성 |
+| WORK-05 | 작업 입력값 작성 | Worker, System | Work, 텍스트, 이미지, 선택값 | Worker가 템플릿이나 플러그인 입력값을 작성하면 System이 WorkInput을 저장합니다. | WorkInput | WorkInput, WorkInputChanged, WorkEvent | 미리보기 생성 |
+| WORK-06 | 작업 입력값 수정 | Worker, System | Work, 변경 입력값 | Worker가 입력값을 수정하면 System이 WorkInput을 갱신하고 변경 이벤트를 남깁니다. | Updated WorkInput | WorkInput, WorkInputChanged, WorkEvent | 미리보기 생성 |
+| WORK-07 | 미리보기 생성 | Worker, System | WorkInput, TemplateVersionRef, PluginVersionRef | System이 입력값과 선택한 자원을 조합해 산출물 미리보기를 생성합니다. | Preview | WorkPreviewGenerated, WorkEvent | 산출물 생성 |
+| WORK-08 | 산출물 생성 | Worker, System | Work, 확정 입력값, 미리보기 | Worker가 생성을 요청하면 System이 WorkOutput을 생성합니다. | WorkOutput | WorkOutput, WorkOutputCreated, WorkEvent | 산출물 저장 |
+| WORK-09 | 산출물 저장 | Worker, System | WorkOutput, 저장 위치 | System이 WorkOutput을 저장하고 이후 검수에서 참조할 수 있게 보존합니다. | Saved WorkOutput | WorkOutput, WorkOutputCreated, WorkEvent | 작업 완료 |
+| WORK-10 | 작업 완료 | Worker, System | Work, WorkOutput | Worker가 작업 완료를 선택하면 System이 WorkStatus를 completed로 변경합니다. | Completed Work | WorkStatus, WorkCompleted, WorkEvent | 검수 대상 스냅샷 생성 |
+
+### 5.3 품질 검수
+
+품질 검수는 WorkOutputSnapshot을 대상으로 질문, Agent 점검, Manager 검토를 수행합니다.
+Agent 자체는 도메인 애그리거트가 아니며 결과에 `AgentRunRef`만 남깁니다.
+
+#### 질의응답
+
+| ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| QA-01 | 질의 세션 시작 | Worker, System | Work, 질문 맥락 | Worker가 질문을 시작하면 System이 Work와 연결된 QASession을 만듭니다. | QASession | QASession, WorkEvent | 질문 등록 |
+| QA-02 | 질문 등록 | Worker, System | 질문 원문, Work 맥락 | Worker가 질문을 입력하면 System이 Question을 QASession에 추가합니다. | Question | Question, QuestionAsked, SearchEvent | 관련 기준 검색 |
+| QA-03 | 관련 기준 검색 | System | 질문 원문, GuidelineSnapshotRef | System이 발행된 BrandGuideline과 Rule에서 질문과 관련된 기준을 검색합니다. | Related Rules | Rule, BrandGuideline, SearchEvent | Agent 답변 생성 |
+| QA-04 | Agent 답변 생성 | Agent, System | Question, Related Rules, Work 맥락 | Agent가 관련 기준을 바탕으로 답변을 생성하고 System이 Answer를 저장합니다. | Answer | Answer, AgentRunRef, AnswerProvided, AgentRunEvent | 답변 근거 연결 |
+| QA-05 | 답변 근거 연결 | Agent, System | Answer, Related Rules | System이 답변에 사용한 Rule과 PagePolicy를 AnswerCitation으로 연결합니다. | Answer Citation | AnswerCitation, RuleRef, AnswerProvided | 답변 신뢰도 기록 |
+| QA-06 | 답변 신뢰도 기록 | Agent, System | Answer, 근거 수, 모델 판단 | System이 답변의 신뢰도를 AnswerConfidence로 저장합니다. | Answer Confidence | AnswerConfidence, AgentRunRef, AgentRunEvent | 질의 세션 종료 |
+| QA-07 | 질의 세션 종료 | Worker, System | QASession | Worker가 질의를 종료하면 System이 세션을 닫고 이후 인사이트 분석 대상이 되도록 보존합니다. | Closed QASession | QASession, WorkEvent | 반복 질문 탐지 |
+
+#### 산출물 검수
+
+| ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| QC-01 | 검수 대상 스냅샷 생성 | Worker, System | WorkOutput, GuidelineSnapshotRef | Worker가 검수를 요청하면 System이 WorkOutputSnapshot을 만들고 ReviewTarget으로 고정합니다. | ReviewTarget | WorkOutputSnapshot, ReviewTarget, GuidelineSnapshotRef, CheckEvent | 자가 점검 실행 |
+| QC-02 | 자가 점검 실행 | Worker, System, Agent | ReviewTarget, GuidelineSnapshotRef | Worker가 점검을 실행하면 System과 Agent가 Rule 기준으로 산출물을 검사합니다. | CheckRun | CheckRun, AgentRunRef, CheckEvent, AgentRunEvent | 규칙 위반 확인 |
+| QC-03 | 규칙 위반 확인 | System, Agent | CheckRun, Rule, ReviewTarget | System이 위반 항목을 Rule과 연결하고 Agent가 설명 가능한 위반 내용을 보강합니다. | Violation List | CheckResult, Violation, RuleRef, CheckCompleted | Agent 추천 생성 |
+| QC-04 | Agent 추천 생성 | Agent, System | CheckResult, Violation, ReviewTarget | Agent가 위반 항목별 수정 방향을 생성하고 System이 Recommendation으로 저장합니다. | Recommendation | Recommendation, AgentRunRef, AgentRunEvent | 검수 결과 기록 |
+| QC-05 | 검수 결과 기록 | System | CheckRun, CheckResult, Recommendation | System이 점검 결과와 추천을 저장하고 CheckCompleted 이벤트를 남깁니다. | Check Result | CheckResult, CheckOutcome, CheckCompleted, CheckEvent | Manager 검토 시작 |
+| QC-06 | Manager 검토 시작 | Manager, System | ReviewTarget, CheckResult | Manager가 검토를 시작하면 System이 Review를 만들고 검토 대상을 연결합니다. | Review | Review, ReviewTarget, ReviewEvent | 검토 코멘트 작성 |
+| QC-07 | 검토 코멘트 작성 | Manager, System | Review, 코멘트, 관련 Rule | Manager가 코멘트를 작성하면 System이 ReviewComment와 Rule 참조를 저장합니다. | ReviewComment | ReviewComment, RuleRef, ReviewEvent | 승인 또는 수정 요청 또는 반려 |
+| QC-08 | 승인 | Manager, System | Review, 승인 판단 | Manager가 승인하면 System이 ReviewDecision을 approved로 저장합니다. | Approved Review | ReviewDecision, ReviewCompleted, ReviewEvent | 인사이트 도출 |
+| QC-09 | 수정 요청 | Manager, System | Review, 수정 사유, 관련 Rule | Manager가 수정 요청을 남기면 System이 ReviewDecision과 Recommendation을 연결합니다. | Needs Changes Review | ReviewDecision, RejectionReason, ReviewCompleted, ReviewEvent | 작업 입력값 수정 |
+| QC-10 | 반려 | Manager, System | Review, 반려 사유, 관련 Rule | Manager가 반려하면 System이 ReviewDecision을 rejected로 저장하고 사유를 남깁니다. | Rejected Review | ReviewDecision, RejectionReason, ReviewCompleted, ReviewEvent | 반복 반려 사유 탐지 |
+| QC-11 | 검토 완료 | Manager, System | Review | Manager가 검토를 마치면 System이 Review를 완료 상태로 고정합니다. | Completed Review | Review, ReviewCompleted, ReviewEvent | 운영 인사이트 |
+
+### 5.4 운영 인사이트
+
+운영 인사이트는 UsageEventLog와 도메인 이벤트를 소유하지 않습니다.
+필요한 기록을 Evidence로 참조해 Pattern, Insight, Proposal, 인사이트 보고서(InsightReport)를 만듭니다.
+
+#### 인사이트 도출
+
+| ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| INS-01 | UsageEventLog 조회 | System | 조회 기간, 이벤트 유형, 어플리케이션 타입 | System이 UsageEventLog와 도메인 이벤트에서 분석 대상 기록을 조회합니다. | Usage Evidence Set | UsageEventLog, DomainEventRef | Evidence 묶기 |
+| INS-02 | 반복 질문 탐지 | System, Agent | Question, Answer, AgentRunEvent | System이 유사 질문을 묶고 Agent가 반복되는 질문 의도를 요약합니다. | Repeated Question Candidate | Evidence, PatternType, AgentRunRef | Pattern 생성 |
+| INS-03 | 반복 위반 탐지 | System, Agent | CheckResult, Violation, RuleRef | System이 반복되는 Rule 위반을 집계하고 Agent가 대표 패턴을 요약합니다. | Repeated Violation Candidate | Evidence, PatternType, AgentRunRef | Pattern 생성 |
+| INS-04 | 반복 반려 사유 탐지 | System, Agent | ReviewComment, RejectionReason | System이 반복 반려 사유를 묶고 Agent가 개선 가능성을 요약합니다. | Repeated Rejection Candidate | Evidence, PatternType, AgentRunRef | Pattern 생성 |
+| INS-05 | 자주 조회된 기준 탐지 | System | ViewEvent, SearchEvent, GuidelinePage | System이 자주 조회되거나 오래 체류한 기준을 집계합니다. | Frequent Guideline Candidate | Evidence, ViewEvent, SearchEvent | Pattern 생성 |
+| INS-06 | 자주 사용된 템플릿/플러그인 탐지 | System | WorkEvent, TemplateVersionRef, PluginVersionRef | System이 작업에서 자주 선택된 Template과 Plugin을 집계합니다. | Frequent Resource Candidate | Evidence, WorkEvent, TemplateVersionRef, PluginVersionRef | Pattern 생성 |
+| INS-07 | Evidence 묶기 | System | Usage Evidence Set, 후보 유형 | System이 질문, 점검, 검토, 조회 기록을 같은 문제 단위로 묶습니다. | Evidence Group | Evidence, DomainEventRef | Pattern 생성 |
+| INS-08 | Pattern 생성 | System, Agent | Evidence Group, 반복 기준 | System이 반복 조건을 만족한 Evidence를 Pattern으로 만들고 Agent가 대표 설명을 붙입니다. | Pattern | Pattern, PatternType, AgentRunRef | Insight 생성 |
+| INS-09 | Insight 생성 | System, Agent | Pattern, 영향 범위, 빈도 | System이 Pattern을 Manager가 판단할 수 있는 Insight로 전환합니다. | Insight | Insight, InsightStatus, ExpectedImpact, InsightDiscovered | Proposal 생성 |
+| INS-10 | Proposal 생성 | System, Agent | Insight, 관련 Rule, 관련 Template 또는 Plugin | Agent가 개선 방향을 제안하고 System이 Proposal을 Insight 안에 저장합니다. | Proposal | Proposal, ExpectedImpact, InsightDiscovered | 인사이트 보고서 생성 |
+
+#### 인사이트 제공
+
+| ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| RPT-01 | 인사이트 보고서 생성 | System | Insight 목록, 기간, 대상 독자 | System이 선택된 Insight를 묶어 인사이트 보고서(InsightReport)를 생성합니다. | InsightReport | InsightReport, ReportPeriod, InsightReportPublished | 보고서 섹션 구성 |
+| RPT-02 | 보고서 섹션 구성 | System | InsightReport, 섹션 기준 | System이 반복 질문, 반복 위반, 자원 사용 같은 섹션으로 보고서 섹션(ReportSection)을 구성합니다. | ReportSection | ReportSection, InsightReportPublished | 인사이트 요약 작성 |
+| RPT-03 | 인사이트 요약 작성 | System, Agent | ReportSection, Insight, Evidence | Agent가 섹션별 요약을 작성하고 System이 인사이트 요약(InsightSummary)으로 저장합니다. | InsightSummary | InsightSummary, AgentRunRef, AgentRunEvent | Manager에게 보고서 제공 |
+| RPT-04 | Manager에게 보고서 제공 | Manager, System | InsightReport | System이 Manager 화면에 인사이트 보고서(InsightReport)를 노출하고 조회 기록을 남깁니다. | Presented InsightReport | InsightReport, ViewEvent, InsightReportPublished | 인사이트 검토 |
+| RPT-05 | 인사이트 검토 | Manager, System | InsightReport, Insight | Manager가 Insight의 근거와 제안을 확인하면 System이 검토 기록을 남깁니다. | Reviewed Insight | InsightReviewed, ClickEvent | 인사이트 채택 또는 인사이트 제외 |
+| RPT-06 | 인사이트 채택 | Manager, System | Insight, Proposal | Manager가 제안을 채택하면 System이 ProposalAccepted 이벤트를 남깁니다. | Accepted Proposal | Proposal, ProposalAccepted, ClickEvent | 개선 제안 전환 |
+| RPT-07 | 인사이트 제외 | Manager, System | Insight, 제외 사유 | Manager가 인사이트를 제외하면 System이 Insight 상태와 제외 사유를 저장합니다. | Dismissed Insight | InsightStatus, InsightReviewed, ClickEvent | 후속 인사이트 탐지 |
+| RPT-08 | 개선 제안 전환 | Manager, System | Accepted Proposal, 관련 Rule 또는 자원 | System이 채택된 Proposal을 GuidelineChange 초안으로 전환합니다. | GuidelineChange Draft | GuidelineChange, RelatedInsight, GuidelineChangeRecorded | 가이드라인 변경 기록 |
+
+### 5.5 공통 기록과 로그 조회
+
+UsageEventLog는 별도 도메인 애그리거트가 아닙니다.
+운영자가 제품 사용 기록을 확인하고, 운영 인사이트가 Evidence를 찾기 위해 읽는 저장 계층입니다.
+
+#### UsageEventLog
+
+| ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| LOG-01 | 사용자 행동 로그 조회 | Manager, System | 사용자 또는 익명 세션, 기간, 이벤트 유형 | Manager가 조건을 입력하면 System이 ViewEvent, ClickEvent, SearchEvent를 시간순으로 보여줍니다. | Usage Log | ViewEvent, ClickEvent, SearchEvent | 인사이트 도출 |
+| LOG-02 | 작업 흐름 로그 조회 | Manager, System | Work, 기간 | Manager가 Work를 선택하면 System이 작업 시작부터 완료까지의 WorkEvent를 보여줍니다. | Work Event Log | WorkEvent, WorkStarted, WorkCompleted | 작업 병목 확인 |
+| LOG-03 | Agent 실행 로그 조회 | Manager, System | AgentRunRef, 기간, 실행 유형 | Manager가 Agent 실행 조건을 입력하면 System이 답변, 점검, 요약 실행 기록을 보여줍니다. | Agent Run Log | AgentRunEvent, AgentRunRef | Agent 품질 확인 |
+| LOG-04 | 점검 이력 조회 | Manager, System | WorkOutputSnapshot, 기간 | Manager가 산출물 스냅샷을 선택하면 System이 CheckRun과 CheckResult 이력을 보여줍니다. | Check History | CheckEvent, CheckRun, CheckResult | 반복 위반 탐지 |
+| LOG-05 | 검토 이력 조회 | Manager, System | ReviewTarget, 기간 | Manager가 검토 대상을 선택하면 System이 Review와 ReviewComment 이력을 보여줍니다. | Review History | ReviewEvent, Review, ReviewComment | 반복 반려 사유 탐지 |
+| LOG-06 | 산출물 스냅샷 이력 조회 | Manager, System | Work, 기간 | Manager가 Work를 선택하면 System이 생성된 WorkOutputSnapshot 이력을 보여줍니다. | WorkOutputSnapshot History | WorkOutputSnapshot, GuidelineSnapshotRef | 점검 이력 조회 |
