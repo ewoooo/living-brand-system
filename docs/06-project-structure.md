@@ -141,7 +141,29 @@ src/agents/
 | Agent | `src/agents` | 검색, Answer, Recommendation, Pattern 요약 |
 | 공통 유틸 | `src/lib` | 에러, 로그, 메시지, 인증 helper |
 
-## 4. 파일 명칭 규칙
+## 4. BFF API 문서 작성 전략
+
+BFF API 문서는 프론트엔드와 Route Handler 사이의 계약을 기록합니다.
+Payload collection, Payload REST / GraphQL API, Service 내부 함수, Repository 내부 query는 BFF API 문서 범위에 포함하지 않습니다.
+
+문서 자동화는 다음 순서로 적용합니다.
+
+1. BFF Route Handler마다 request / response schema를 작성합니다.
+2. schema에서 OpenAPI spec을 생성합니다.
+3. OpenAPI spec에서 프론트엔드 API client를 생성합니다.
+4. CI에서 생성된 OpenAPI spec 변경 diff를 검사합니다.
+5. 필요하면 생성된 OpenAPI spec을 `/api/docs` 같은 내부 문서 경로에 노출합니다.
+
+schema는 `src/app/**/route.ts`의 request / response DTO를 기준으로 작성합니다.
+Route Handler는 HTTP 요청 검증, Service 호출, 안전한 응답 변환만 담당하고, 문서용 schema에 도메인 규칙을 중복 작성하지 않습니다.
+
+OpenAPI spec은 사람이 직접 수정하지 않습니다.
+spec을 바꿔야 할 때는 해당 BFF schema를 수정한 뒤 생성 스크립트로 다시 만듭니다.
+
+프론트엔드 API client는 생성된 OpenAPI spec을 기준으로 만들고, 손으로 작성한 fetch wrapper가 BFF 계약과 따로 진화하지 않게 합니다.
+문서 UI는 계약 관리의 원천이 아니므로 OpenAPI spec과 client 생성이 안정된 뒤 연결합니다.
+
+## 5. 파일 명칭 규칙
 
 | 개발 소스 | 설명 |
 | --- | --- |
@@ -156,7 +178,7 @@ src/agents/
 | `*.test.ts` | 단위 테스트 파일입니다. |
 | `*.spec.ts` | e2e 또는 통합 테스트 파일입니다. |
 
-## 5. 명명 규칙
+## 6. 명명 규칙
 
 ### 클래스 명칭
 
@@ -193,7 +215,7 @@ Facade는 기본 구조로 두지 않습니다.
 | 권한 확인 | `can` + 동작 | `canPublishGuideline` |
 | 상태 확인 | `is` + 상태 | `isPublished` |
 
-## 6. 주석 처리 규칙
+## 7. 주석 처리 규칙
 
 ### 문서화 주석
 
@@ -223,7 +245,7 @@ Facade는 기본 구조로 두지 않습니다.
 const sessionTtlMinutes = 10 // 관리자 세션 만료 기준
 ```
 
-## 7. Log 정책
+## 8. Log 정책
 
 - `console.log`는 임시 디버깅에만 사용하고 커밋하지 않습니다.
 - 서버 로그는 공통 logger를 통해 남깁니다.
@@ -239,7 +261,7 @@ const sessionTtlMinutes = 10 // 관리자 세션 만료 기준
 | `warn` | 실패는 아니지만 조치가 필요한 상태 |
 | `error` | 요청 실패, 작업 실패, 복구가 필요한 오류 |
 
-## 8. Exception 처리
+## 9. Exception 처리
 
 - 사용자에게는 일반화된 오류 메시지를 보여줍니다.
 - 상세 오류, stack trace, 내부 경로는 서버 로그에만 남깁니다.
@@ -249,7 +271,7 @@ const sessionTtlMinutes = 10 // 관리자 세션 만료 기준
 - Payload hook에서 예외가 발생하면 저장 흐름을 중단할지, 후속 작업만 실패 처리할지 명확히 나눕니다.
 - Agent 실패는 정책 변경 실패로 처리하지 않습니다. 답변 생성 실패와 기준 데이터 변경은 분리합니다.
 
-## 9. 코딩 스타일
+## 10. 코딩 스타일
 
 - 구현은 Ponytail 기준으로 최소 변경을 우선합니다.
 - 입력 모델은 Route Handler, Server Action, Payload hook, Service처럼 외부 입력이나 유즈케이스 경계에 둡니다.
