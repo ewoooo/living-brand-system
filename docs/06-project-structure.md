@@ -18,7 +18,7 @@
 | Feature modules | `src/features` | Worker 작업 흐름처럼 화면과 상태가 묶인 기능을 둡니다. |
 | Services | `src/services` | 유즈케이스 단위 업무 규칙을 둡니다. |
 | Repositories | `src/repositories` | Payload Local API, 검색 인덱스, 외부 저장소 접근을 감쌉니다. |
-| Agent modules | `src/agents` | RAG 검색, 프롬프트, Answer, Recommendation, Pattern 요약을 둡니다. |
+| Agent modules | `src/agents` | RAG 검색, 프롬프트, Answer, Recommendation 생성을 둡니다. |
 | Shared utilities | `src/lib` | 공통 util, error, logger, auth helper를 둡니다. |
 | Hooks | `src/hooks` | React custom hook을 둡니다. |
 | Types | `src/types` | Payload 타입 외에 공통 타입을 둡니다. |
@@ -114,14 +114,13 @@ src/repositories/
 ### Agent 모듈
 
 Agent는 별도 사용자 역할이 아니라 서비스 모듈입니다.
-초기에는 Payload/Next.js 애플리케이션 안에서 시작하고, RAG 검색, Answer 생성, Recommendation 생성, Pattern 요약이 커질 때 별도 모듈이나 worker로 분리합니다.
+초기에는 Payload/Next.js 애플리케이션 안에서 시작하고, RAG 검색, Answer 생성, Recommendation 생성이 커질 때 별도 모듈이나 worker로 분리합니다.
 
 ```text
 src/agents/
   retrieval.ts
   guideline-agent.ts
   prompts.ts
-  insight-agent.ts
 ```
 
 - Agent는 published content와 허용된 작업 맥락만 사용합니다.
@@ -138,7 +137,7 @@ src/agents/
 | Route Handler | `src/app/**/route.ts` | 외부 HTTP 요청 처리 |
 | Service | `src/services` | 유즈케이스 업무 규칙 |
 | Repository | `src/repositories` | Payload Local API, 검색, 외부 저장소 접근 |
-| Agent | `src/agents` | 검색, Answer, Recommendation, Pattern 요약 |
+| Agent | `src/agents` | 검색, Answer, Recommendation |
 | 공통 유틸 | `src/lib` | 에러, 로그, 메시지, 인증 helper |
 
 ## 4. BFF API 문서 작성 전략

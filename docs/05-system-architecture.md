@@ -11,7 +11,7 @@
 - 초기에는 하나의 애플리케이션과 하나의 PostgreSQL 인스턴스로 배포합니다.
 - 현재 업무 상태와 과거 기준 재현 데이터를 분리합니다.
 - 전체 Event Sourcing은 채택하지 않습니다.
-- 이벤트는 반응, 전달, 감사, 분석, 운영 목적에 맞을 때만 기록합니다.
+- 이벤트는 반응, 전달, 감사, 운영 목적에 맞을 때만 기록합니다.
 
 ## 2. 구조
 
@@ -61,97 +61,129 @@ flowchart LR
   subgraph Client["Client"]
     AdminUI["Admin view"]
     GuidelineUI["Guideline view"]
-    QueryUI["Worker query view"]
+    QualityCheckUI["Worker quality check view"]
+    AgentQueryUI["Worker agent query view"]
+    PluginControlUI["Plugin control view"]
+    TemplateControlUI["Template control view"]
   end
 
-  RouteHandler["Route handler"]
-  PayloadHook["Payload hook"]
+  subgraph Request["Request"]
+    ServerRenderRouteHandler["Server render route handler"]
+    ClientFetchRouteHandler["Client fetch route handler"]
+  end
 
   subgraph Services["Domain services"]
-    GuidelineModule["Guideline service"]
-    ProductionModule["Production service"]
-    QualityModule["Quality check service"]
-    UsageModule["Usage record service"]
-    InsightModule["Insight service"]
+    subgraph PayloadSupported["Payload CMS supported"]
+      GuidelineContentModule["Guideline records service"]
+      BrandResourceModule["Brand resource records service"]
+      SessionEventModule["Session event service"]
+      BehaviorEventModule["Behavior event service"]
+    end
+
+    subgraph ExternalServices["External services"]
+      BrandAssetGenerationModule["Brand asset generation service"]
+      AnswerGenerationModule["Answer generation service"]
+      QualityModule["Quality check service"]
+    end
   end
 
   subgraph Repositories["Repositories"]
-    GuidelineRepository["Guideline aggregate repository"]
-    ProductionRepository["Production aggregate repository"]
-    QualityRepository["Quality check aggregate repository"]
-    UsageRepository["Usage record repository"]
-    InsightRepository["Insight aggregate repository"]
-    ProductionResourceRepository["Production resource repository"]
-    StorageRepository["Storage repository"]
-    AgentRepository["Agent repository"]
+    subgraph PayloadRepositories["Payload CMS supported"]
+      GuidelineRepository["Guideline records repository"]
+      BrandResourceRepository["Brand resource records repository"]
+      ProductionRepository["Work records repository"]
+      QualityRepository["Quality session records repository"]
+      SessionEventRepository["Session event logs repository"]
+      BehaviorEventRepository["Behavior event logs repository"]
+    end
+
+    subgraph PayloadStorageAdapter["Payload storage adapter"]
+      StorageRepository["Storage repository"]
+    end
+
+    subgraph ExternalAdapters["External adapters"]
+      ProductionResourceRepository["Production resource lookup adapter"]
+      AgentRepository["Agent repository"]
+    end
   end
 
   AgentPackage["Agent package"]
 
-  subgraph Storage["Storage"]
-    GuidelineStore["Guideline store<br/>(BrandGuideline / Rule / Asset / Template / Plugin)"]
-    ProductionStore["Production store<br/>(WorkSession / WorkOutput)"]
-    QualityStore["Quality check store<br/>(QASession / CheckSession)"]
-    UsageStore["Usage log store<br/>(SessionEventLog / BehaviorEventLog)"]
-    InsightStore["Insight store<br/>(Insight / InsightReport)"]
-    FileStorage["File storage<br/>(AWS S3)"]
+  subgraph Storage["Records and files"]
+    GuidelineStore["Guideline records<br/>(BrandGuideline / GuidelineSection / GuidelinePage)"]
+    BrandResourceStore["Brand resource records<br/>(Rule / Asset metadata / Template metadata / Plugin ref)"]
+    ProductionStore["Work records<br/>(WorkSession / WorkOutput)"]
+    QualityStore["Quality session records<br/>(QASession / CheckSession)"]
+    SessionEventStore["Session event logs<br/>(SessionEventLog)"]
+    BehaviorEventStore["Behavior event logs<br/>(BehaviorEventLog)"]
+    FileStorage["Uploaded file storage<br/>(AWS S3)"]
   end
 
   subgraph External["External dependencies"]
     FigmaSDK["Figma SDK<br/>(template source)"]
     AgentSDK["Claude Agent SDK"]
-    PluginStorage["Plugins"]
+    PluginStorage["Plugin runtime"]
+    UmamiAnalytics["Umami analytics"]
   end
 
-  GuidelineUI -->|"HTTP"| RouteHandler
-  QueryUI -->|"HTTP"| RouteHandler
-  AdminUI -->|"Payload Admin request"| PayloadHook
+  AdminUI -->|"Payload Admin request"| GuidelineContentModule
+  AdminUI -->|"Payload Admin request"| BrandResourceModule
 
-  RouteHandler -->|"request"| GuidelineModule
-  RouteHandler -->|"request"| ProductionModule
-  RouteHandler -->|"request"| QualityModule
-  PayloadHook -->|"hook trigger"| GuidelineModule
-
-  GuidelineModule -->|"read / write"| GuidelineRepository
-  ProductionModule -->|"read / write"| ProductionRepository
-  ProductionModule -->|"resource refs"| ProductionResourceRepository
-  QualityModule -->|"read / write"| QualityRepository
-  UsageModule -->|"read / write"| UsageRepository
-  ProductionModule -->|"session event"| UsageModule
-  QualityModule -->|"session event"| UsageModule
-  InsightModule -->|"request evidence"| UsageModule
-  InsightModule -->|"write reports"| InsightRepository
-  GuidelineModule -->|"file operation"| StorageRepository
-  ProductionModule -->|"file operation"| StorageRepository
-
+  GuidelineUI -->|"initial render"| ServerRenderRouteHandler
+  QualityCheckUI -->|"initial render"| ServerRenderRouteHandler
+  AgentQueryUI -->|"initial render"| ServerRenderRouteHandler
+  PluginControlUI -->|"initial render"| ServerRenderRouteHandler
+  TemplateControlUI -->|"initial render"| ServerRenderRouteHandler
+  QualityCheckUI -->|"result fetch"| ClientFetchRouteHandler
+  AgentQueryUI -->|"answer fetch"| ClientFetchRouteHandler
+  PluginControlUI -->|"result fetch"| ClientFetchRouteHandler
+  TemplateControlUI -->|"result fetch"| ClientFetchRouteHandler
+  ServerRenderRouteHandler -->|"guideline content"| PayloadSupported
+  ServerRenderRouteHandler -->|"asset tool state"| BrandAssetGenerationModule
+  ServerRenderRouteHandler -->|"answer tool state"| AnswerGenerationModule
+  ServerRenderRouteHandler -->|"quality tool state"| QualityModule
+  ClientFetchRouteHandler -->|"request"| BrandAssetGenerationModule
+  ClientFetchRouteHandler -->|"request"| AnswerGenerationModule
+  ClientFetchRouteHandler -->|"request"| QualityModule
+  GuidelineContentModule -->|"read / write"| GuidelineRepository
+  BrandResourceModule -->|"read / write"| BrandResourceRepository
+  BrandAssetGenerationModule -->|"write session/output"| ProductionRepository
+  BrandAssetGenerationModule -->|"read resources"| ProductionResourceRepository
+  AnswerGenerationModule -->|"write QA session"| QualityRepository
+  AnswerGenerationModule -->|"agent request"| AgentRepository
+  QualityModule -->|"write check session"| QualityRepository
   QualityModule -->|"agent request"| AgentRepository
-  InsightModule -->|"agent request"| AgentRepository
+  SessionEventModule -->|"read / write"| SessionEventRepository
+  BehaviorEventModule -->|"read / write"| BehaviorEventRepository
+  BrandAssetGenerationModule -->|"session event"| SessionEventModule
+  AnswerGenerationModule -->|"session event"| SessionEventModule
+  QualityModule -->|"session event"| SessionEventModule
+  ClientFetchRouteHandler -->|"behavior event"| BehaviorEventModule
+  BehaviorEventModule -->|"track / identify"| UmamiAnalytics
+  GuidelineContentModule -->|"file operation"| StorageRepository
+  BrandResourceModule -->|"file operation"| StorageRepository
+  BrandAssetGenerationModule -->|"file operation"| StorageRepository
+
   AgentRepository -->|"POST / GET"| AgentPackage
   AgentPackage -->|"API call"| AgentSDK
 
   ProductionResourceRepository --> GuidelineStore
+  ProductionResourceRepository --> BrandResourceStore
   ProductionResourceRepository --> FigmaSDK
   ProductionResourceRepository --> PluginStorage
   GuidelineRepository --> GuidelineStore
+  BrandResourceRepository --> BrandResourceStore
   ProductionRepository --> ProductionStore
   QualityRepository --> QualityStore
-  UsageRepository --> UsageStore
-  InsightRepository --> InsightStore
+  SessionEventRepository --> SessionEventStore
+  BehaviorEventRepository --> BehaviorEventStore
   StorageRepository --> FileStorage
 ```
 
-Frontend / Worker UI는 Route Handler를 통해 업무 흐름을 요청합니다.
-Payload Admin에서 발생한 저장, 발행, 검증 요청은 Payload hook을 통해 필요한 Domain Service Layer 흐름으로 위임합니다.
-Production service는 Payload에 저장된 템플릿과 플러그인 참조를 사용해 에셋을 제작합니다.
-Production resource repository는 제작에 필요한 템플릿, 플러그인, 에셋 참조 조회만 감쌉니다.
-Production service와 Quality check service는 감사 가능한 활동을 Usage record service에 세션 이벤트로 전달합니다.
-운영 인사이트 생성은 외부 화면 요청으로 직접 실행하지 않습니다.
-Domain Service Layer는 애그리거트 저장소, Agent package, 외부 의존성에 직접 접근하지 않고 Repository를 통해 접근합니다.
-Domain Service Layer는 [02. 유즈케이스](02-usecases.md)의 업무 흐름을 구현 단위로 삼습니다.
-서브도메인 사이의 업무 관계는 [04. 도메인 모델](04-domain-model.md)의 하위 도메인 관계도를 기준으로 따로 작성합니다.
-Infrastructure Layer는 내부 저장 경계와 외부 의존성을 함께 둡니다.
-초기 Storage는 애그리거트 저장소와 파일 스토리지만 구분합니다.
-Figma SDK, Claude Agent SDK, AWS S3, Plugins는 애플리케이션 밖의 의존성입니다.
+Domain Service Layer는 records, event logs, Agent package, 외부 의존성에 직접 접근하지 않고 Repository 또는 adapter를 통해 접근합니다.
+Payload CMS supported 영역은 collection, hook, access control, version, upload로 처리 가능한 흐름입니다.
+External services 영역은 렌더링, 스냅샷 고정, Agent 실행처럼 별도 업무 로직이 필요한 흐름입니다.
+Brand resource records는 메타데이터와 참조만 보관하고, 실제 파일과 실행물은 외부 저장소 또는 런타임에 둡니다.
 
 #### 서브도메인 구조
 
@@ -164,7 +196,7 @@ flowchart TB
   Flow["주요 흐름"]
   Version["발행 Version"]
   Resource["에셋 / 템플릿 / 플러그인 표시"]
-  Storage["Aggregate stores / File storage"]
+  Storage["Guideline records / Uploaded file storage"]
 
   Flow --> Version
   Flow --> Resource
@@ -213,22 +245,6 @@ flowchart TB
   Flow --> Behavior
 ```
 
-##### 운영 인사이트
-
-```mermaid
-flowchart TB
-  Flow["주요 흐름"]
-  LogQuery["세션 및 활동 로그 조회"]
-  Evidence["사용 기록 근거"]
-  AgentAnalysis["Agent 분석 요청"]
-  Report["인사이트 리포트 제작"]
-
-  Flow --> LogQuery
-  LogQuery --> Evidence
-  Evidence --> AgentAnalysis
-  AgentAnalysis --> Report
-```
-
 ## 3. 기준
 
 ### 데이터 기록 기준
@@ -244,7 +260,7 @@ flowchart TB
 | 발행 버전 | 가이드라인, 규칙, 에셋, 템플릿, 플러그인이 발행된 기준과 자원을 고정합니다. | 각 원본 데이터의 Version |
 | 실행 스냅샷 | 검수 입력처럼 나중에 같은 조건으로 다시 봐야 하는 값을 고정합니다. | 제품 DB / 파일 저장소 |
 | 업무 활동 기록 | 작업, 질문, 검수처럼 감사가 필요한 업무 활동을 남깁니다. | SessionEventLog |
-| 화면 행동 기록 | 조회, 클릭, 체류처럼 개선 근거가 되는 화면 행동을 남깁니다. | BehaviorEventLog |
+| 화면 행동 기록 | 조회, 클릭, 체류처럼 운영자가 확인할 화면 행동을 남깁니다. | BehaviorEventLog |
 | Agent 실행 참조 | Agent가 만든 답변, 점검, 요약 결과를 실행 기록과 연결합니다. | AgentRunRef |
 
 ### Payload 컬렉션 목록
@@ -277,7 +293,7 @@ Snapshot은 검수 입력처럼 나중에 같은 조건으로 다시 봐야 하�
 - 공식 Version 또는 Snapshot으로 재현해야 하는가
 - 다른 컨텍스트가 알아야 하는 사실인가
 - 감사 로그로 남겨야 하는 작업인가
-- 분석 로그로 충분한 행동 기록인가
+- 운영 로그로 충분한 행동 기록인가
 
 ## 4. 전략
 
@@ -311,7 +327,7 @@ emit하지 않는 데이터는 다음과 같습니다.
 
 Agent와 Worker는 도메인 상태를 직접 변경하지 않습니다.
 Domain Service Layer가 실행 입력을 고정하고, Agent / Worker 결과를 검증한 뒤 저장합니다.
-Quality check service와 Insight service는 모델 SDK나 Agent package API를 직접 호출하지 않고 Agent repository를 통해 실행을 요청합니다.
+Answer generation service와 Quality check service는 모델 SDK나 Agent package API를 직접 호출하지 않고 Agent repository를 통해 실행을 요청합니다.
 
 Agent 실행은 다음 기준을 따릅니다.
 

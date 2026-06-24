@@ -25,11 +25,10 @@
  ├── [핵심 서브도메인] 가이드라인 관리
  ├── [핵심 서브도메인] 제작 관리
  ├── [핵심 서브도메인] 품질 검수
- ├── [핵심 서브도메인] 운영 인사이트
  └── [지원 서브도메인] 사용 기록
 ```
 
-브랜드 운영 시스템은 가이드라인을 문서로 보관하는 시스템이 아니라, 기준을 구조화하고, 산출물 제작과 품질 검수를 거쳐, 사용 기록을 다시 개선 근거로 연결하는 시스템입니다.
+브랜드 운영 시스템은 가이드라인을 문서로 보관하는 시스템이 아니라, 기준을 구조화하고, 산출물 제작과 품질 검수를 거쳐, 사용 기록을 남기는 시스템입니다.
 
 ### 상위 도메인 관계도
 
@@ -42,15 +41,12 @@ flowchart LR
   Production["제작 관리"]
   Quality["품질 검수"]
   UsageRecord["사용 기록"]
-  Insight["운영 인사이트"]
 
   Guideline -->|"발행 기준 / 제작 자원"| Production
   Guideline -->|"검수 기준"| Quality
   Guideline -->|"사용 기록 생성"| UsageRecord
   Production -->|"사용 기록 생성"| UsageRecord
   Quality -->|"사용 기록 생성"| UsageRecord
-  UsageRecord -->|"근거 참조"| Insight
-  Insight -->|"개선 근거 제공"| Guideline
 ```
 
 | 관계 | 엣지 의미 | 대표 데이터 |
@@ -60,15 +56,13 @@ flowchart LR
 | 가이드라인 관리 -> 사용 기록 | 가이드라인 화면 행동과 공식 버전 발행 결과를 기록합니다. | BehaviorEventLog, Version Record |
 | 제작 관리 -> 사용 기록 | 제작 과정에서 감사 가능한 세션 이벤트를 남깁니다. | SessionEventLog |
 | 품질 검수 -> 사용 기록 | 질의, 검수 세션, 점검 결과를 세션 이벤트로 남깁니다. | SessionEventLog |
-| 사용 기록 -> 운영 인사이트 | 운영 인사이트가 세션 이벤트와 화면 행동 기록을 근거로 참조합니다. | Evidence |
-| 운영 인사이트 -> 가이드라인 관리 | 보고서가 Manager의 개선 검토 근거로 제공됩니다. | InsightReport |
 
 ### 하위 도메인 관계도
 
 이 관계도는 바운디드 컨텍스트와 핵심 객체의 참조 방향을 함께 보여줍니다.
 제작 관리는 산출물을 만들고 사용 기록을 남깁니다.
 품질 검수는 CheckTarget에 검수 입력을 고정하고, CheckRun의 CheckBasis에서 발행된 Guideline, Rule, BrandAsset 버전을 참조합니다.
-하위 관계도의 엣지는 소유, 참조, 포함, 근거, 기록, 채택 같은 관계 동사로 표현합니다.
+하위 관계도의 엣지는 소유, 참조, 포함, 기록 같은 관계 동사로 표현합니다.
 `GuidelineVersionRef`, `BrandAssetVersionRef`, `TemplateVersionRef`, `PluginVersionRef`, `AgentRunRef`처럼 별도 생명주기가 없는 참조 값은 객체 노드로 표현하지 않습니다.
 단, `PageRuleRef`와 `PageAssetRef`는 페이지 안 표시 순서, 강조, 캡션, 예시 역할을 함께 담으므로 객체로 표현합니다.
 세부 도메인 이벤트명은 각 도메인 모델 목록에만 둡니다.
@@ -128,17 +122,6 @@ flowchart LR
     CustomEvent["CustomEvent"]
   end
 
-  subgraph InsightDiscovery["인사이트 도출"]
-    Evidence["Evidence"]
-    Pattern["Pattern"]
-    Insight["Insight"]
-  end
-
-  subgraph InsightDelivery["인사이트 제공"]
-    InsightReport["InsightReport"]
-    ReportSection["ReportSection"]
-  end
-
   BrandGuideline -->|"소유"| GuidelineSection
   GuidelineSection -->|"소유"| GuidelinePage
   GuidelinePage -->|"소유"| PagePolicy
@@ -185,20 +168,13 @@ flowchart LR
   BehaviorEventLog -->|"분류"| SearchEvent
   BehaviorEventLog -->|"분류"| OutboundLinkEvent
   BehaviorEventLog -->|"분류"| CustomEvent
-  SessionEventLog -->|"근거"| Evidence
-  BehaviorEventLog -->|"근거"| Evidence
-  Evidence -->|"묶음"| Pattern
-  Pattern -->|"분석"| Insight
-  Insight -->|"섹션에 포함"| ReportSection
-  ReportSection -->|"보고서에 포함"| InsightReport
-
   classDef aggregate fill:#FFE8CC,stroke:#F08C00,stroke-width:2px,color:#1F1F1F;
   classDef entity fill:#E7F5FF,stroke:#1C7ED6,stroke-width:1.5px,color:#1F1F1F;
   classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
   classDef record fill:#F1F3F5,stroke:#868E96,stroke-width:1.5px,color:#1F1F1F;
 
-  class BrandGuideline,Rule,BrandAsset,Template,Plugin,WorkSession,QASession,CheckSession,SessionEventLog,BehaviorEventLog,Insight,InsightReport aggregate;
-  class GuidelineSection,GuidelinePage,RuleException,WorkInput,WorkOutput,Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult,Evidence,Pattern,ReportSection entity;
+  class BrandGuideline,Rule,BrandAsset,Template,Plugin,WorkSession,QASession,CheckSession,SessionEventLog,BehaviorEventLog aggregate;
+  class GuidelineSection,GuidelinePage,RuleException,WorkInput,WorkOutput,Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult entity;
   class PagePolicy,PageRuleRef,PageAssetRef,AnswerCitation,CheckRecommendation,PageViewEvent,ClickEvent,AssetDownloadEvent,SectionDwellEvent,SearchEvent,OutboundLinkEvent,CustomEvent childEntity;
 ```
 
@@ -210,14 +186,11 @@ flowchart LR
 | WorkSession -> SessionEventLog | 제작 활동과 산출물 생성 결과는 사용 기록으로 남습니다. |
 | QASession / CheckSession -> SessionEventLog | 질문, 답변, 검수 결과는 사용 기록으로 남습니다. |
 | GuidelinePage -> BehaviorEventLog | 가이드라인 화면 조회, 클릭, 검색, 에셋 다운로드, 특정 구간 체류, 외부 링크 클릭 같은 화면 행동은 화면 행동 기록으로 남깁니다. |
-| BehaviorEventLog -> Evidence | 운영 인사이트는 화면 행동 기록을 근거로 참조합니다. |
 | CheckSession -> CheckTarget | 품질 검수는 별도 실행될 때 검수 대상 값을 소유합니다. |
 | CheckRun -> CheckBasis | 점검 실행은 검수 시점의 기준 묶음을 소유합니다. |
 | CheckBasis -> BrandGuideline / Rule / BrandAsset | 기준 묶음은 검수 시점의 가이드라인, 규칙, 에셋 버전을 참조합니다. |
 | CheckDecision -> CheckResult | 최종 판정은 여러 점검 결과를 소유합니다. |
 | CheckResult -> CheckRecommendation | 점검 결과는 필요한 수정 권장 사항을 소유합니다. |
-| SessionEventLog -> Evidence | 운영 인사이트는 원천 객체를 직접 소유하지 않고 사용 기록을 근거로 참조합니다. |
-| Insight -> ReportSection -> InsightReport | Insight는 보고서에 포함된 뒤 Manager에게 개선 검토 근거로 제공됩니다. |
 | BrandGuideline / Rule / BrandAsset / Template / Plugin -> Version | 발행 대상은 공식 Version을 만들고, Version은 이전 버전과 Payload revision 참조를 보존합니다. |
 
 ## 4. 가이드라인 관리
@@ -327,7 +300,7 @@ GuidelineVersionRef는 BrandGuideline이 소유한 공식 Version을 WorkSession
 GuidelinePage는 PagePolicy를 1:1로 소유하고, Rule, BrandAssetVersion, TemplateVersion, PluginVersion은 참조합니다.
 PageRuleRef와 PageAssetRef는 페이지 안에서의 표시 순서, 강조, 캡션, 예시 역할을 함께 기록합니다.
 
-Rule은 CheckBasis, Agent 답변, 운영 인사이트에서 참조하는 판단 기준입니다.
+Rule은 CheckBasis와 Agent 답변에서 참조하는 판단 기준입니다.
 RuleException은 Rule 안에서 관리하고, 예외가 여러 규칙에 재사용되거나 별도 승인 워크플로우를 가질 때만 독립 애그리거트(관리 단위)로 분리합니다.
 
 공식 버전 전환은 별도 애그리거트를 만들지 않고, 각 원본 애그리거트가 소유한 Version 엔티티의 stage/live/archived 상태를 바꾸는 서비스 흐름으로 둡니다.
@@ -342,8 +315,9 @@ GuidelinePage와 Rule은 BrandAsset, Template, Plugin을 참조할 수 있지만
 
 ## 5. 제작 관리
 
-제작 관리는 Worker가 내장 기능, Plugin, Template을 활용해 산출물을 만드는 서브도메인입니다.
+제작 관리는 Worker가 내장 기능, Plugin, Template을 활용해 브랜드 에셋 산출물을 만들고 Work records를 남기는 서브도메인입니다.
 검수 요청과 Agent/System 판정은 품질 검수에서 관리합니다.
+제작 관리는 WorkSession, WorkInput, WorkOutput을 소유하고, 가이드라인과 브랜드 자원은 Production resource lookup을 통해 참조합니다.
 
 ```text
 [도메인] 브랜드 운영 시스템
@@ -353,7 +327,7 @@ GuidelinePage와 Rule은 BrandAsset, Template, Plugin을 참조할 수 있지만
                 ├── 애그리거트(관리 단위): WorkSession
                 │    ├── 엔티티: WorkSession, WorkInput, WorkOutput
                 │    └── 값 객체: WorkPurpose, ApplicationTypeRef, GuidelineVersionRef, BrandAssetVersionRef, TemplateVersionRef, PluginVersionRef, WorkSessionStatus
-                ├── 도메인 서비스: WorkSessionStartService, WorkSessionRenderService
+                ├── 도메인 서비스: BrandAssetGenerationService
                 └── 도메인 이벤트: WorkSessionStarted, WorkInputChanged, WorkPreviewGenerated, WorkOutputCreated, WorkSessionCompleted
 ```
 
@@ -395,6 +369,7 @@ flowchart LR
 
 WorkSession은 Worker가 산출물을 만들기 시작한 작업 단위입니다.
 WorkOutput은 제작 결과물이고, 품질 검수는 필요한 시점의 검수 입력을 CheckInputSnapshot으로 고정합니다.
+WorkSession, WorkInput, WorkOutput은 Work records로 저장하고, BrandGuideline, BrandAsset, Template, Plugin은 제작에 필요한 참조 자원으로 조회합니다.
 가이드라인 화면의 조회, 클릭, 검색, 에셋 다운로드, 구간 체류, 외부 링크 클릭은 제작 관리가 아니라 화면 행동 기록으로 수집합니다.
 
 ## 6. 품질 검수
@@ -507,7 +482,6 @@ AgentRunStarted, AgentRunCompleted, AgentRunFailed는 업무 도메인 이벤트
 ## 7. 사용 기록
 
 사용 기록은 WorkSession, QASession, CheckSession이 발행한 세션 이벤트와 가이드라인 화면 행동을 저장하는 지원 서브도메인입니다.
-운영 인사이트는 사용 기록을 소유하지 않고 Evidence로 참조합니다.
 
 ```text
 [도메인] 브랜드 운영 시스템
@@ -532,67 +506,3 @@ AgentRunStarted, AgentRunCompleted, AgentRunFailed는 업무 도메인 이벤트
 | --- | --- | --- |
 | SessionEventLog | 제작 관리, 품질 검수 | 감사 가능한 세션 이벤트를 저장합니다. |
 | BehaviorEventLog | 가이드라인 관리 | 화면 조회, 클릭, 검색, 에셋 다운로드, 구간 체류, 외부 링크 클릭을 저장합니다. |
-
-## 8. 운영 인사이트
-
-운영 인사이트는 질문, 점검 실패, 검수 실패 사유, 사용 행동을 분석해 개선 근거를 만들고 Manager에게 제공하는 서브도메인입니다.
-
-> 사용 행동과 로그 이벤트는 운영 인사이트가 소유하지 않고, 사용 기록과 각 도메인 이벤트를 Evidence로 참조합니다.
-
-```text
-[도메인] 브랜드 운영 시스템
- └── [서브도메인] 운영 인사이트
-      ├── [바운디드 컨텍스트] 인사이트 도출
-      │    └── [도메인 모델]
-      │         ├── 애그리거트(관리 단위): Insight
-      │         │    ├── 엔티티: Insight, Evidence, Pattern
-      │         │    └── 값 객체: InsightStatus, PatternType, ExpectedImpact
-      │         ├── 도메인 서비스: InsightDiscoveryService
-      │         └── 도메인 이벤트: InsightDiscovered, InsightAccepted
-      └── [바운디드 컨텍스트] 인사이트 제공
-           └── [도메인 모델]
-                ├── 애그리거트(관리 단위): InsightReport
-                │    ├── 엔티티: ReportSection
-                │    └── 값 객체: ReportPeriod, ReportAudience
-                ├── 도메인 서비스: InsightReportService
-                └── 도메인 이벤트: InsightReportPublished, InsightReviewed
-```
-
-### 운영 인사이트 하위 도메인 관계도
-
-```mermaid
-flowchart LR
-  SessionEventLog["SessionEventLog"]
-  BehaviorEventLog["BehaviorEventLog"]
-
-  subgraph Discovery["인사이트 도출"]
-    Evidence["Evidence"]
-    Pattern["Pattern"]
-    Insight["Insight"]
-  end
-
-  subgraph Delivery["인사이트 제공"]
-    InsightReport["InsightReport"]
-    ReportSection["ReportSection"]
-  end
-
-  SessionEventLog -->|"근거"| Evidence
-  BehaviorEventLog -->|"근거"| Evidence
-  Evidence -->|"참조"| Pattern
-  Pattern -->|"분석"| Insight
-  Insight -->|"포함"| ReportSection
-  ReportSection -->|"포함"| InsightReport
-
-  classDef aggregate fill:#FFE8CC,stroke:#F08C00,stroke-width:2px,color:#1F1F1F;
-  classDef entity fill:#E7F5FF,stroke:#1C7ED6,stroke-width:1.5px,color:#1F1F1F;
-  classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
-  classDef record fill:#F1F3F5,stroke:#868E96,stroke-width:1.5px,color:#1F1F1F;
-
-  class Insight,InsightReport aggregate;
-  class Evidence,Pattern,ReportSection entity;
-  class SessionEventLog,BehaviorEventLog record;
-```
-
-Insight는 반복 패턴, 근거, 예상 영향을 하나의 흐름으로 묶은 분석 결과물입니다.
-인사이트 보고서(InsightReport)는 Manager가 인사이트와 개선 방향을 검토하고 우선순위를 판단할 수 있게 제공하는 읽기 단위입니다.
-Insight는 ReportSection과 InsightReport를 거쳐 Manager가 검토할 수 있는 개선 근거로 제공됩니다.

@@ -5,9 +5,8 @@
 이 문서는 브랜드 운영 시스템에서 주요 데이터가 생성되고, 사용되고, 보관되고, 파기되는 흐름을 정리합니다.
 기준은 [02. 유즈케이스](02-usecases.md)와 [04. 도메인 모델](04-domain-model.md)의 최신 구조입니다.
 
-핵심은 원천 기준, 실행 기록, 사용 기록, 운영 인사이트를 섞지 않는 것입니다.
+핵심은 원천 기준, 실행 기록, 사용 기록을 섞지 않는 것입니다.
 원천 기준은 가이드라인 관리가 소유하고, 제작과 품질 검수는 공식 버전 참조를 남깁니다.
-운영 인사이트는 사용 기록과 도메인 이벤트를 소유하지 않고 Evidence로 참조합니다.
 
 ## 2. 작성 기준
 
@@ -19,7 +18,7 @@
 | 전송 | UI, Service, Agent, 외부 도구 사이에서 이동하는 방식 |
 | 저장 | 주 저장소와 저장 시 보호 기준 |
 | 처리 | 상태 변경, 연결, 검증, 파생 데이터 생성 방식 |
-| 활용 | 화면, Agent, 검수, 인사이트에서 쓰이는 방식 |
+| 활용 | 화면, Agent, 검수, 운영 조회에서 쓰이는 방식 |
 | 공유·제공 | 다른 도메인, Agent, 외부 서비스에 제공되는 범위 |
 | 보관 | 운영 중 유지 기준과 이력 관리 방식 |
 | 파기 | 삭제, 비활성화, 익명화, 보관 종료 기준 |
@@ -101,7 +100,7 @@
 | 전송 | 규칙 등록과 수정 요청은 Payload API를 통해 RuleConflictCheckService로 전달한다. |
 | 저장 | Rule 애그리거트로 저장하고 RuleCondition, RuleScope, Severity를 함께 보관한다. |
 | 처리 | 충돌 확인을 거쳐 RuleVersion 후보를 만들고, RuleException을 하위로 관리한다. |
-| 활용 | PageRuleRef, AnswerCitation, CheckBasis, Evidence에서 판단 기준으로 참조한다. |
+| 활용 | PageRuleRef, AnswerCitation, CheckBasis에서 판단 기준으로 참조한다. |
 | 공유·제공 | Worker와 Agent에는 live RuleVersion만 제공한다. |
 | 보관 | RuleVersion과 Payload revision을 함께 보관한다. |
 | 파기 | draft 규칙은 삭제할 수 있다. 발행된 규칙은 archived Version으로 전환하고 원본은 보관한다. |
@@ -199,7 +198,7 @@
 | 전송 | 템플릿 메타데이터는 Payload API로 전달하고, 원본은 Figma node 또는 파일 업로드 흐름으로 참조한다. |
 | 저장 | TemplateSourceRef, LayoutSpec, TextStyleSpec, EditableBlockSpec, TemplateUsageCondition, TemplateVersion을 함께 저장한다. |
 | 처리 | 지정된 레이아웃, 텍스트 스타일, 텍스트 블록, 에셋 슬롯, 컬러 토큰과 연결된 RuleVersionRef, BrandAssetVersionRef를 검증한다. |
-| 활용 | WorkSession에서 산출물 제작 형식으로 사용하고, Production service가 React 또는 HTML 편집 노드로 변환한다. |
+| 활용 | WorkSession에서 산출물 제작 형식으로 사용하고, Brand asset generation service가 React 또는 HTML 편집 노드로 변환한다. |
 | 공유·제공 | Worker에게 live TemplateVersion만 제공한다. |
 | 보관 | TemplateVersion과 사용 조건 변경 이력을 보관한다. |
 | 파기 | draft 템플릿은 삭제할 수 있다. 발행된 템플릿은 archived 처리하고 기존 WorkSession 참조는 보존한다. |
@@ -249,7 +248,7 @@
 | 전송 | 버전 생성 요청은 VersionPublishService로 전달한다. |
 | 저장 | VersionNumber, VersionStatus, RuleCondition, RuleScope, Severity, PayloadRevisionRef를 저장한다. |
 | 처리 | live 전환 시 기존 live RuleVersion은 archived 상태로 바꾼다. |
-| 활용 | PageRuleRef, AnswerCitation, CheckBasis, Evidence에서 RuleVersionRef로 참조한다. |
+| 활용 | PageRuleRef, AnswerCitation, CheckBasis에서 RuleVersionRef로 참조한다. |
 | 공유·제공 | Worker와 Agent에는 live RuleVersion만 제공한다. |
 | 보관 | 모든 발행 Version과 변경 사유를 보관한다. |
 | 파기 | 발행된 Version은 삭제하지 않고 archived로 보관한다. 잘못 생성된 stage Version만 삭제할 수 있다. |
@@ -317,7 +316,7 @@
 | 처리 | 입력 변경, 미리보기 생성, 산출물 생성, 완료 이벤트를 WorkSession 단위로 묶는다. |
 | 활용 | 제작 화면 복원, 질의 맥락, 검수 입력 생성, 사용 기록 조회에 사용한다. |
 | 공유·제공 | 품질 검수에는 WorkOutput과 CheckInputSnapshot 생성에 필요한 범위만 제공한다. |
-| 보관 | 작업 완료 후에도 검수와 인사이트 근거로 필요한 기간 보관한다. |
+| 보관 | 작업 완료 후에도 검수와 운영 조회에 필요한 기간 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제하거나 사용자 식별 정보를 익명화한다. 연결된 검수 기록은 참조 무결성을 확인한 뒤 처리한다. |
 
 ### 6.2 WorkInput
@@ -365,8 +364,8 @@
 | 전송 | 질문 시작 요청은 Worker UI에서 AnswerGenerationService로 전달한다. |
 | 저장 | QASession은 Question, Answer를 하위 엔티티로 보관한다. |
 | 처리 | 질문 등록, 관련 기준 검색, 답변 생성, 답변 근거 연결을 같은 세션 안에서 처리한다. |
-| 활용 | Worker 질문 이력, 반복 질문 탐지, Agent 품질 확인에 사용한다. |
-| 공유·제공 | 운영 인사이트에는 Evidence 참조로 제공한다. |
+| 활용 | Worker 질문 이력과 Agent 품질 확인에 사용한다. |
+| 공유·제공 | 운영 조회에는 필요한 식별자와 상태만 제공한다. |
 | 보관 | WorkSession과 함께 감사 가능한 기간 동안 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제하거나 사용자 식별 정보를 제거한다. |
 
@@ -381,7 +380,7 @@
 | 전송 | 질문 원문과 WorkSession 맥락은 AnswerGenerationService로 전달한다. |
 | 저장 | QASession 하위 엔티티로 저장하고 QuestionAsked 이벤트를 남긴다. |
 | 처리 | 관련 RuleVersion, PagePolicy, GuidelinePage를 검색하는 입력으로 사용한다. |
-| 활용 | Agent 답변 생성, 반복 질문 탐지, 인사이트 Evidence 생성에 사용한다. |
+| 활용 | Agent 답변 생성과 질문 이력 조회에 사용한다. |
 | 공유·제공 | Agent에는 답변 생성에 필요한 질문 원문과 최소 맥락만 제공한다. |
 | 보관 | QASession 보관 기간에 맞춰 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제하거나 질문 원문에서 식별 가능한 내용을 마스킹한다. |
@@ -397,8 +396,8 @@
 | 전송 | Agent 응답은 Agent repository에서 Service로 전달되고, Service가 저장 가능 형태로 변환한다. |
 | 저장 | QASession 하위 엔티티로 저장하고 AgentRunRef를 남긴다. |
 | 처리 | AnswerCitation과 AnswerConfidence를 연결한다. |
-| 활용 | Worker 답변 조회, 반복 질문 분석, Agent 품질 확인에 사용한다. |
-| 공유·제공 | 운영 인사이트에는 Evidence 참조로 제공한다. |
+| 활용 | Worker 답변 조회와 Agent 품질 확인에 사용한다. |
+| 공유·제공 | 운영 조회에는 필요한 식별자와 상태만 제공한다. |
 | 보관 | QASession 보관 기간에 맞춰 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제하거나 사용자 식별 맥락을 제거한다. |
 
@@ -413,7 +412,7 @@
 | 전송 | 검색 결과와 Agent 응답 근거가 AnswerGenerationService로 전달된다. |
 | 저장 | Answer 하위 값 객체 또는 하위 기록으로 저장한다. |
 | 처리 | RuleVersionRef, PagePolicy 참조, 근거 유형을 연결한다. |
-| 활용 | 답변 신뢰도 표시와 반복 질문 분석에 사용한다. |
+| 활용 | 답변 신뢰도 표시와 Agent 품질 확인에 사용한다. |
 | 공유·제공 | Worker 화면에는 필요한 근거 링크만 제공한다. |
 | 보관 | Answer와 같은 기간 보관한다. |
 | 파기 | Answer 파기 시 함께 삭제한다. |
@@ -429,8 +428,8 @@
 | 전송 | Agent 응답과 검증 결과가 AnswerGenerationService로 전달된다. |
 | 저장 | Answer 하위 값 객체 또는 하위 기록으로 저장하고 AgentRunRef를 연결한다. |
 | 처리 | 답변 신뢰도 점수, 근거 충분성, 사람 확인 필요 여부를 계산한다. |
-| 활용 | Worker에게 답변 신뢰도를 표시하고, Agent 품질 분석에 사용한다. |
-| 공유·제공 | 운영 인사이트에는 Agent 답변 품질 Evidence로 제공할 수 있다. |
+| 활용 | Worker에게 답변 신뢰도를 표시하고, Agent 품질 확인에 사용한다. |
+| 공유·제공 | 운영 조회에는 집계 가능한 신뢰도 값만 제공할 수 있다. |
 | 보관 | Answer와 같은 기간 보관한다. |
 | 파기 | Answer 파기 시 함께 삭제한다. |
 
@@ -463,9 +462,9 @@
 | 전송 | 검수 시작 요청은 QualityCheckService로 전달한다. |
 | 저장 | CheckTarget, CheckRun을 하위로 관리하고 상태와 이벤트를 저장한다. |
 | 처리 | 점검 실행, 판정, 완료 상태를 같은 세션 안에서 묶는다. |
-| 활용 | Worker 검수 결과 조회, 운영자의 점검 이력 조회, 반복 위반 탐지에 사용한다. |
+| 활용 | Worker 검수 결과 조회와 운영자의 점검 이력 조회에 사용한다. |
 | 공유·제공 | 사용 기록에는 SessionEventLog로 감사 가능한 이벤트를 남긴다. |
-| 보관 | 검수 감사와 인사이트 분석에 필요한 기간 보관한다. |
+| 보관 | 검수 감사와 운영 조회에 필요한 기간 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제하거나 사용자 식별 정보를 제거한다. |
 
 ### 8.3 CheckTarget
@@ -495,7 +494,7 @@
 | 전송 | 점검 요청과 Agent 실행 결과는 QualityCheckService로 전달된다. |
 | 저장 | CheckBasis, CheckDecision, AgentRunRef를 연결해 저장한다. |
 | 처리 | 점검 기준을 CheckBasis로 고정하고, 점검 결과를 CheckDecision 아래에 만든다. |
-| 활용 | 검수 이력 조회, Agent 품질 확인, 반복 위반 탐지에 사용한다. |
+| 활용 | 검수 이력 조회와 Agent 품질 확인에 사용한다. |
 | 공유·제공 | 사용 기록에는 CheckRunCompleted 같은 세션 이벤트를 남긴다. |
 | 보관 | CheckSession 보관 기간에 맞춰 보관한다. |
 | 파기 | CheckSession 파기 시 함께 삭제하거나 AgentRunRef만 남긴다. |
@@ -511,10 +510,10 @@
 | 전송 | 기준 참조는 QualityCheckService에서 Agent repository로 전달된다. |
 | 저장 | CheckRun 하위 엔티티로 저장하고 각 VersionRef를 값 객체로 보관한다. |
 | 처리 | Agent와 System이 같은 기준으로 판단하도록 기준 묶음을 잠근다. |
-| 활용 | CheckResult 해석, 반복 위반 탐지, 검수 재현에 사용한다. |
+| 활용 | CheckResult 해석과 검수 재현에 사용한다. |
 | 공유·제공 | Agent에는 점검에 필요한 live 기준 내용만 제공한다. |
 | 보관 | CheckRun과 같은 기간 보관한다. |
-| 파기 | CheckRun 파기 시 함께 삭제한다. 단, 인사이트 Evidence가 참조 중이면 참조 가능 범위를 보존한다. |
+| 파기 | CheckRun 파기 시 함께 삭제한다. |
 
 ### 8.6 CheckDecision
 
@@ -527,8 +526,8 @@
 | 전송 | Agent 또는 System 판정 결과는 QualityCheckService로 전달된다. |
 | 저장 | CheckRun 하위 엔티티로 저장하고 CheckOutcome을 보관한다. |
 | 처리 | 여러 CheckResult를 소유하고 통과, 주의, 실패 같은 최종 상태를 계산한다. |
-| 활용 | Worker 검수 결과 화면과 반복 검수 실패 사유 탐지에 사용한다. |
-| 공유·제공 | 운영 인사이트에는 Evidence 참조로 제공한다. |
+| 활용 | Worker 검수 결과 화면과 점검 이력 조회에 사용한다. |
+| 공유·제공 | 운영 조회에는 필요한 판정 결과만 제공한다. |
 | 보관 | CheckRun과 같은 기간 보관한다. |
 | 파기 | CheckRun 파기 시 함께 삭제하거나 식별 정보를 제거한 판정 통계만 남긴다. |
 
@@ -543,7 +542,7 @@
 | 전송 | 점검 결과는 Agent repository 또는 System 점검 로직에서 QualityCheckService로 전달된다. |
 | 저장 | CheckDecision 하위 엔티티로 저장하고 Violation과 CheckRecommendation을 연결한다. |
 | 처리 | CheckBasis의 기준 참조와 연결해 위반 원인과 심각도를 해석한다. |
-| 활용 | Worker 수정 안내, 반복 위반 탐지, 운영 인사이트 Evidence에 사용한다. |
+| 활용 | Worker 수정 안내와 점검 이력 조회에 사용한다. |
 | 공유·제공 | Manager와 Worker에게 필요한 결과와 근거만 제공한다. |
 | 보관 | CheckDecision과 같은 기간 보관한다. |
 | 파기 | CheckDecision 파기 시 함께 삭제하거나 통계용 익명 집계만 남긴다. |
@@ -559,8 +558,8 @@
 | 전송 | Agent 응답은 Agent repository에서 QualityCheckService로 전달된다. |
 | 저장 | CheckResult 하위 값 객체 또는 하위 기록으로 저장하고 AgentRunRef를 연결한다. |
 | 처리 | 위반 내용, 권장 수정, 우선순위, 설명을 CheckResult에 연결한다. |
-| 활용 | Worker 수정 안내와 반복 검수 실패 사유 분석에 사용한다. |
-| 공유·제공 | Worker에게 수정 지시로 제공하고, 운영 인사이트에는 Evidence 참조로 제공한다. |
+| 활용 | Worker 수정 안내에 사용한다. |
+| 공유·제공 | Worker에게 수정 지시로 제공한다. |
 | 보관 | CheckResult와 같은 기간 보관한다. |
 | 파기 | CheckResult 파기 시 함께 삭제한다. |
 
@@ -577,9 +576,9 @@
 | 전송 | 서비스 내부 이벤트는 SessionEventIngestService로 전달한다. |
 | 저장 | 제품 DB에 SessionEvent와 EventPayload를 저장한다. |
 | 처리 | EventType, ActorRef, SourceRef, OccurredAt 기준으로 조회 가능하게 정리한다. |
-| 활용 | 운영 조회, 작업 흐름 추적, 인사이트 Evidence 생성에 사용한다. |
-| 공유·제공 | 운영 인사이트에는 원본을 복제하지 않고 Evidence 참조로 제공한다. |
-| 보관 | 감사와 분석에 필요한 기간 보관한다. |
+| 활용 | 운영 조회와 작업 흐름 추적에 사용한다. |
+| 공유·제공 | 운영 조회에는 필요한 범위만 제공한다. |
+| 보관 | 감사와 운영 조회에 필요한 기간 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제하거나 ActorRef를 익명화한다. |
 
 ### 9.2 SessionEvent
@@ -594,7 +593,7 @@
 | 저장 | SessionEventLog 하위 엔티티로 저장한다. |
 | 처리 | 이벤트 유형, 발생 시각, 출처, payload를 표준 구조로 정규화한다. |
 | 활용 | 세션 이벤트 탐색, Agent 실행 로그, Check History 조회에 사용한다. |
-| 공유·제공 | 운영 인사이트에는 Evidence 참조로 제공한다. |
+| 공유·제공 | 운영 조회에는 필요한 범위만 제공한다. |
 | 보관 | SessionEventLog 보관 기간에 맞춰 보관한다. |
 | 파기 | SessionEventLog 파기 시 함께 삭제한다. |
 
@@ -609,9 +608,9 @@
 | 전송 | 화면 이벤트는 Umami `track`, `identify` 또는 BehaviorEventIngestService로 전달한다. |
 | 저장 | 초기에는 Umami와 Payload collection을 함께 사용할 수 있다. 필요 시 별도 사용 기록 저장소로 분리한다. |
 | 처리 | PageRef, ElementRef, Duration, SessionData를 공통 속성으로 연결한다. |
-| 활용 | 화면 행동 기록 조회, 자주 본 기준 탐지, 자주 다운로드한 에셋 탐지에 사용한다. |
-| 공유·제공 | 운영 인사이트에는 Evidence 참조로 제공한다. |
-| 보관 | 분석 기간과 운영 조회 요구에 맞춰 보관한다. |
+| 활용 | 화면 행동 기록 조회와 에셋 다운로드 이력 확인에 사용한다. |
+| 공유·제공 | 운영 조회에는 필요한 범위만 제공한다. |
+| 보관 | 운영 조회 요구에 맞춰 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제하거나 SessionData에서 식별 가능한 값을 제거한다. |
 
 ### 9.4 PageViewEvent
@@ -625,8 +624,8 @@
 | 전송 | 클라이언트에서 Umami 또는 BehaviorEventIngestService로 전송한다. |
 | 저장 | BehaviorEventLog 하위 이벤트로 저장한다. |
 | 처리 | PageRef, SessionData, OccurredAt을 연결한다. |
-| 활용 | 자주 조회된 기준과 탐색 흐름 분석에 사용한다. |
-| 공유·제공 | 운영 인사이트에는 Evidence 참조로 제공한다. |
+| 활용 | 페이지 조회 이력 확인에 사용한다. |
+| 공유·제공 | 운영 조회에는 필요한 범위만 제공한다. |
 | 보관 | BehaviorEventLog 보관 기간에 맞춰 보관한다. |
 | 파기 | BehaviorEventLog 파기 시 함께 삭제한다. |
 
@@ -641,8 +640,8 @@
 | 전송 | 클라이언트에서 Umami 또는 BehaviorEventIngestService로 전송한다. |
 | 저장 | BehaviorEventLog 하위 이벤트로 저장한다. |
 | 처리 | ElementRef, PageRef, SessionData를 연결한다. |
-| 활용 | 탐색 병목과 자주 찾는 기준 분석에 사용한다. |
-| 공유·제공 | 운영 인사이트에는 Evidence 참조로 제공한다. |
+| 활용 | 화면 요소 클릭 이력 확인에 사용한다. |
+| 공유·제공 | 운영 조회에는 필요한 범위만 제공한다. |
 | 보관 | BehaviorEventLog 보관 기간에 맞춰 보관한다. |
 | 파기 | BehaviorEventLog 파기 시 함께 삭제한다. |
 
@@ -657,8 +656,8 @@
 | 전송 | 다운로드 요청 처리 후 BehaviorEventIngestService 또는 Umami로 전송한다. |
 | 저장 | BehaviorEventLog 하위 이벤트로 저장하고 BrandAssetVersionRef를 연결한다. |
 | 처리 | PageRef, AssetRef, SessionData를 연결한다. |
-| 활용 | 자주 사용하는 에셋과 보강이 필요한 에셋 안내를 찾는 데 사용한다. |
-| 공유·제공 | 운영 인사이트에는 Evidence 참조로 제공한다. |
+| 활용 | 에셋 다운로드 이력 확인에 사용한다. |
+| 공유·제공 | 운영 조회에는 필요한 범위만 제공한다. |
 | 보관 | BehaviorEventLog 보관 기간에 맞춰 보관한다. |
 | 파기 | BehaviorEventLog 파기 시 함께 삭제한다. |
 
@@ -673,114 +672,31 @@
 | 전송 | 클라이언트에서 Umami 또는 BehaviorEventIngestService로 전송한다. |
 | 저장 | BehaviorEventLog 하위 이벤트로 저장하고 Duration을 보관한다. |
 | 처리 | PageRef, SectionRef, Duration, SessionData를 연결한다. |
-| 활용 | 이해하기 어려운 기준이나 오래 읽는 구간을 찾는 데 사용한다. |
-| 공유·제공 | 운영 인사이트에는 Evidence 참조로 제공한다. |
+| 활용 | 구간 체류 이력 확인에 사용한다. |
+| 공유·제공 | 운영 조회에는 필요한 범위만 제공한다. |
 | 보관 | BehaviorEventLog 보관 기간에 맞춰 보관한다. |
 | 파기 | BehaviorEventLog 파기 시 함께 삭제한다. |
 
 ### 9.8 CustomEvent
 
 데이터명: CustomEvent
-수집 목적: 기본 이벤트로 표현하기 어려운 화면별 분석 이벤트를 기록한다.
+수집 목적: 기본 이벤트로 표현하기 어려운 화면별 운영 이벤트를 기록한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | 특정 화면에서 별도 분석이 필요한 행동이 발생하면 생성한다. |
+| 생성·수집 | 특정 화면에서 별도 기록이 필요한 행동이 발생하면 생성한다. |
 | 전송 | 클라이언트 또는 서버에서 BehaviorEventIngestService로 전송한다. |
 | 저장 | BehaviorEventLog 하위 이벤트로 저장하고 EventPayload를 보관한다. |
 | 처리 | 이벤트 이름, PageRef, SessionData, payload 스키마를 검증한다. |
-| 활용 | 실험적 분석이나 화면별 운영 지표에 사용한다. |
-| 공유·제공 | 운영 인사이트에는 검증된 이벤트만 Evidence 참조로 제공한다. |
+| 활용 | 화면별 운영 지표에 사용한다. |
+| 공유·제공 | 운영 조회에는 검증된 이벤트만 제공한다. |
 | 보관 | BehaviorEventLog 보관 기간에 맞춰 보관한다. |
 | 파기 | BehaviorEventLog 파기 시 함께 삭제한다. |
 
-## 10. 운영 인사이트
-
-### 10.1 Evidence
-
-데이터명: Evidence
-수집 목적: 질문, 점검 결과, 사용 기록, 도메인 이벤트를 인사이트 근거로 참조한다.
-
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | InsightDiscoveryService가 분석 대상 기록을 찾으면 Evidence를 생성한다. |
-| 전송 | 사용 기록 조회 결과와 도메인 이벤트 참조가 인사이트 도출 서비스로 전달된다. |
-| 저장 | 원본 데이터를 복제하지 않고 SourceRef와 Evidence 유형을 저장한다. |
-| 처리 | 질문, 위반, 검수 실패, 조회 행동 같은 근거를 같은 문제 단위로 묶는다. |
-| 활용 | Pattern 생성과 Insight 설명 근거에 사용한다. |
-| 공유·제공 | Manager 화면에는 원본으로 이동할 수 있는 범위의 근거만 제공한다. |
-| 보관 | 관련 Insight와 InsightReport가 유효한 동안 보관한다. |
-| 파기 | 원본 기록이 파기되면 Evidence의 원본 참조도 제거하거나 익명화한다. |
-
-### 10.2 Pattern
-
-데이터명: Pattern
-수집 목적: 여러 Evidence에서 반복되는 질문, 위반, 탐색 행동을 묶는다.
-
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | 반복 기준을 만족한 Evidence 묶음이 발견되면 Pattern을 생성한다. |
-| 전송 | Evidence 묶음과 반복 기준은 InsightDiscoveryService로 전달된다. |
-| 저장 | PatternType, 반복 횟수, 관련 Evidence 참조를 저장한다. |
-| 처리 | Agent가 대표 설명을 붙이고 System이 영향 범위를 계산한다. |
-| 활용 | Insight 생성의 입력으로 사용한다. |
-| 공유·제공 | Manager에게는 Insight 안에서 요약된 형태로 제공한다. |
-| 보관 | 관련 Insight가 유지되는 동안 보관한다. |
-| 파기 | 관련 Insight가 dismissed되고 보관 기간이 끝나면 삭제한다. |
-
-### 10.3 Insight
-
-데이터명: Insight
-수집 목적: Manager가 판단할 수 있는 개선 근거를 만든다.
-
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | Pattern이 분석되면 System이 Insight를 생성한다. |
-| 전송 | Pattern, Evidence, Agent 요약은 InsightDiscoveryService로 전달된다. |
-| 저장 | InsightStatus, ExpectedImpact, Pattern 참조, AgentRunRef를 저장한다. |
-| 처리 | detected, analyzed, reviewed, accepted, dismissed 같은 상태를 관리한다. |
-| 활용 | Manager가 기준, 규칙, 에셋, 템플릿, 플러그인 개선 여부를 판단하는 데 사용한다. |
-| 공유·제공 | InsightReport의 ReportSection에 포함해 제공한다. |
-| 보관 | 후속 관찰과 개선 효과 비교에 필요한 기간 보관한다. |
-| 파기 | dismissed 상태로 보관 기간이 끝나면 삭제하거나 통계만 남긴다. |
-
-### 10.4 ReportSection
-
-데이터명: ReportSection
-수집 목적: Insight를 반복 질문, 반복 위반, 자원 사용 같은 관점으로 묶는다.
-
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | System이 Insight 목록을 보고 섹션 기준에 맞게 ReportSection을 생성한다. |
-| 전송 | Insight 목록과 섹션 기준은 InsightReportService로 전달된다. |
-| 저장 | InsightReport 하위 엔티티로 저장하고 포함된 Insight 참조를 보관한다. |
-| 처리 | 섹션 제목, 정렬 순서, 요약 설명을 관리한다. |
-| 활용 | Manager가 보고서에서 문제 유형별로 Insight를 탐색하는 데 사용한다. |
-| 공유·제공 | Manager 화면에 InsightReport의 일부로 제공한다. |
-| 보관 | InsightReport와 같은 기간 보관한다. |
-| 파기 | InsightReport 파기 시 함께 삭제한다. |
-
-### 10.5 InsightReport
-
-데이터명: InsightReport
-수집 목적: 여러 ReportSection과 개선 방향을 기간과 독자 기준으로 묶어 제공한다.
-
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | System이 기간, 대상 독자, ReportSection 목록을 기준으로 InsightReport를 생성한다. |
-| 전송 | 보고서 생성 요청은 InsightReportService로 전달된다. |
-| 저장 | ReportPeriod, ReportAudience, ReportSection 목록, 발행 상태를 저장한다. |
-| 처리 | 보고서 발행, Manager 검토, Insight 채택 또는 제외 이벤트를 연결한다. |
-| 활용 | Manager가 개선 후보를 검토하고 후속 작업을 결정하는 데 사용한다. |
-| 공유·제공 | Manager 화면에 제공하고 조회 기록은 BehaviorEventLog로 남긴다. |
-| 보관 | 개선 효과 추적 기간 동안 보관한다. |
-| 파기 | 보관 기간 종료 후 삭제한다. 채택된 Insight의 후속 추적 데이터는 별도 정책에 따라 보관한다. |
-
-## 11. 설계 원칙
+## 10. 설계 원칙
 
 - live Version이 아닌 기준은 Worker 화면과 Agent 답변 근거에서 제외합니다.
 - Agent는 정책과 규칙을 직접 변경하지 않습니다.
-- 사용 기록은 지원 서브도메인이며, 운영 인사이트는 필요한 기록을 Evidence로 참조합니다.
 - CheckInputSnapshot은 검수 입력을 고정하고, CheckBasis는 검수 기준 버전을 고정합니다.
 - CheckDecision은 하나의 최종 판정이고, 여러 CheckResult를 소유합니다.
 - CheckResult는 필요한 경우 CheckRecommendation을 소유합니다.
