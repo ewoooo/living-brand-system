@@ -12,7 +12,7 @@ Start with `.agents/skills/payload/SKILL.md` for a quick reference, then see `.a
 
 ## Project Context
 
-This product turns brand guidelines into structured standards that can be used during work, checked against outputs, and improved from usage evidence.
+This product turns brand guidelines into structured standards that can be used during work, checked against outputs, and reviewed through operational records.
 
 Core actors:
 
@@ -29,7 +29,7 @@ Do not promote evolving domain details into this file unless they are stable rul
 
 Always start from `docs/README.md`, then read the smallest relevant document before changing behavior, data, architecture, security, accessibility, i18n, or development rules:
 
-- Product direction, users, flywheel, and success assumptions: `docs/01-product.md`
+- Product direction, users, service flow, and success assumptions: `docs/01-product.md`
 - Workflow, actors, inputs, outputs, generated records, and next links: `docs/02-usecases.md`
 - Data ownership, lifecycle, storage, retention, deletion, and immutable references: `docs/03-data-lifecycle.md`
 - Domain boundaries, aggregates, entities, events, and cross-context references: `docs/04-domain-model.md`
