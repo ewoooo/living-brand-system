@@ -37,7 +37,12 @@ When docs conflict, prefer the newer or more specific document. If a code change
 
 ## Branch Rules
 
-- Base: use `main` as the stable base branch.
+- Layers: use `develop` for active work, `stage` for release validation, and `main` for stable production-ready state.
+- Flow: merge feature and fix branches into `develop`, promote `develop` to `stage`, then promote verified `stage` to `main`.
+- Base: branch from `develop` for normal product work. Branch from `main` only for urgent production fixes or docs that must bypass the development line.
+- Requirement: create or switch to a purpose branch before changing source code, product behavior, refactors, tests, tooling, dependencies, or non-trivial docs.
+- Protected branches: do not commit directly to `main`, `stage`, or `develop`; use them only as merge targets or promotion branches.
+- Exception: trivial local-only edits may stay unbranched only when the user explicitly asks not to create a branch.
 - Format: use `<type>/<short-purpose>`.
 - Types:
   - `docs/` for documentation-only work.
