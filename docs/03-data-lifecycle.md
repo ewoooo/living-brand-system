@@ -195,11 +195,11 @@
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Manager가 템플릿 이름, 설명, 템플릿 파일을 입력하면 Template을 생성한다. |
-| 전송 | 템플릿 파일과 메타데이터는 Payload API와 파일 업로드 흐름으로 전송한다. |
-| 저장 | TemplateFile, TemplateField, TemplateUsageCondition, TemplateVersion을 함께 저장한다. |
-| 처리 | 입력 필드, 사용 조건, 연결된 RuleVersionRef와 BrandAssetVersionRef를 검증한다. |
-| 활용 | WorkSession에서 산출물 제작 형식으로 사용한다. |
+| 생성·수집 | Manager가 템플릿 이름, 설명, Figma 노드 또는 템플릿 파일 참조를 입력하면 Template을 생성한다. |
+| 전송 | 템플릿 메타데이터는 Payload API로 전달하고, 원본은 Figma node 또는 파일 업로드 흐름으로 참조한다. |
+| 저장 | TemplateSourceRef, LayoutSpec, TextStyleSpec, EditableBlockSpec, TemplateUsageCondition, TemplateVersion을 함께 저장한다. |
+| 처리 | 지정된 레이아웃, 텍스트 스타일, 텍스트 블록, 에셋 슬롯, 컬러 토큰과 연결된 RuleVersionRef, BrandAssetVersionRef를 검증한다. |
+| 활용 | WorkSession에서 산출물 제작 형식으로 사용하고, Production service가 React 또는 HTML 편집 노드로 변환한다. |
 | 공유·제공 | Worker에게 live TemplateVersion만 제공한다. |
 | 보관 | TemplateVersion과 사용 조건 변경 이력을 보관한다. |
 | 파기 | draft 템플릿은 삭제할 수 있다. 발행된 템플릿은 archived 처리하고 기존 WorkSession 참조는 보존한다. |
@@ -212,7 +212,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 플러그인 이름, 설명, 유형, 실행 단위를 입력하면 Plugin을 생성한다. |
-| 전송 | 플러그인 설정은 Payload API를 통해 저장하고, 테스트 실행은 Agent 또는 실행 어댑터로 전달한다. |
+| 전송 | 플러그인 설정은 Payload API를 통해 저장하고, 테스트 실행은 Agent repository로 전달한다. |
 | 저장 | PluginEntry, PluginCapability, PluginUsageCondition, PluginVersion을 함께 저장한다. |
 | 처리 | 입력 스키마, 출력 형식, 사용 조건, 연결된 TemplateVersionRef와 RuleVersionRef를 검증한다. |
 | 활용 | WorkSession에서 제작 기능으로 사용하고, AgentRunRef로 실행 이력을 남긴다. |
@@ -279,11 +279,11 @@
 | --- | --- |
 | 생성·수집 | Template이 승인되면 System이 TemplateVersion을 생성한다. |
 | 전송 | 발행 요청은 TemplatePublishService로 전달한다. |
-| 저장 | TemplateFile, TemplateField, TemplateUsageCondition, VersionStatus를 저장한다. |
-| 처리 | live 전환 시 기존 live TemplateVersion을 archived 상태로 바꾼다. |
+| 저장 | TemplateSourceRef, LayoutSpec, TextStyleSpec, EditableBlockSpec, TemplateUsageCondition, VersionStatus를 저장한다. |
+| 처리 | live 전환 시 기존 live TemplateVersion을 archived 상태로 바꾸고, Figma node 또는 파일 원본을 재해석해 제작 가능한 구조를 고정한다. |
 | 활용 | WorkSession에서 TemplateVersionRef로 참조한다. |
 | 공유·제공 | Worker에게 live TemplateVersion만 제공한다. |
-| 보관 | 발행된 입력 필드와 사용 조건을 보관한다. |
+| 보관 | 발행된 편집 가능 영역과 사용 조건을 보관한다. |
 | 파기 | 발행된 Version은 삭제하지 않고 archived로 보관한다. 잘못 만든 stage Version만 삭제할 수 있다. |
 
 ### 5.5 PluginVersion
@@ -330,7 +330,7 @@
 | 생성·수집 | Worker가 텍스트, 이미지, 선택값을 입력하면 WorkSession 아래에 저장한다. |
 | 전송 | 입력값은 Worker UI에서 제작 관리 서비스로 전달한다. 파일 입력은 설정된 업로드 흐름을 따른다. |
 | 저장 | WorkSession 하위 엔티티로 저장하고 입력 변경 이벤트를 남긴다. |
-| 처리 | TemplateField와 PluginCapability의 입력 조건으로 검증한다. |
+| 처리 | EditableBlockSpec과 PluginCapability의 입력 조건으로 검증한다. |
 | 활용 | 미리보기 생성, WorkOutput 생성, 작업 재개에 사용한다. |
 | 공유·제공 | Agent에는 답변이나 점검에 필요한 최소 입력 맥락만 제공한다. |
 | 보관 | WorkSession 보관 기간에 맞춰 보관한다. |
@@ -394,7 +394,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Agent가 답변을 생성하면 System이 검증한 뒤 Answer로 저장한다. |
-| 전송 | Agent 응답은 AgentAdapter에서 Service로 전달되고, Service가 저장 가능 형태로 변환한다. |
+| 전송 | Agent 응답은 Agent repository에서 Service로 전달되고, Service가 저장 가능 형태로 변환한다. |
 | 저장 | QASession 하위 엔티티로 저장하고 AgentRunRef를 남긴다. |
 | 처리 | AnswerCitation과 AnswerConfidence를 연결한다. |
 | 활용 | Worker 답변 조회, 반복 질문 분석, Agent 품질 확인에 사용한다. |
@@ -508,7 +508,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | CheckRun 시작 시 System이 GuidelineVersionRef, RuleVersionRef, BrandAssetVersionRef를 수집한다. |
-| 전송 | 기준 참조는 QualityCheckService에서 AgentAdapter로 전달된다. |
+| 전송 | 기준 참조는 QualityCheckService에서 Agent repository로 전달된다. |
 | 저장 | CheckRun 하위 엔티티로 저장하고 각 VersionRef를 값 객체로 보관한다. |
 | 처리 | Agent와 System이 같은 기준으로 판단하도록 기준 묶음을 잠근다. |
 | 활용 | CheckResult 해석, 반복 위반 탐지, 검수 재현에 사용한다. |
@@ -540,7 +540,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | System 또는 Agent가 기준별 점검 결과를 만들면 CheckDecision 아래에 생성한다. |
-| 전송 | 점검 결과는 AgentAdapter 또는 System 점검 로직에서 QualityCheckService로 전달된다. |
+| 전송 | 점검 결과는 Agent repository 또는 System 점검 로직에서 QualityCheckService로 전달된다. |
 | 저장 | CheckDecision 하위 엔티티로 저장하고 Violation과 CheckRecommendation을 연결한다. |
 | 처리 | CheckBasis의 기준 참조와 연결해 위반 원인과 심각도를 해석한다. |
 | 활용 | Worker 수정 안내, 반복 위반 탐지, 운영 인사이트 Evidence에 사용한다. |
@@ -556,7 +556,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Agent가 위반 항목별 수정 방향을 생성하면 System이 CheckResult 아래에 저장한다. |
-| 전송 | Agent 응답은 AgentAdapter에서 QualityCheckService로 전달된다. |
+| 전송 | Agent 응답은 Agent repository에서 QualityCheckService로 전달된다. |
 | 저장 | CheckResult 하위 값 객체 또는 하위 기록으로 저장하고 AgentRunRef를 연결한다. |
 | 처리 | 위반 내용, 권장 수정, 우선순위, 설명을 CheckResult에 연결한다. |
 | 활용 | Worker 수정 안내와 반복 검수 실패 사유 분석에 사용한다. |

@@ -57,72 +57,101 @@ Request Layer는 화면 단위 요청을 Domain Service Layer 호출로 조합�
 
 
 ```mermaid
-flowchart TB
-  subgraph PresentationLayer["Presentation Layer<br/>(Client)"]
-    AdminUI["Admin View"]
-    GuidelineUI["Guideline View"]
-    QueryUI["Worker Query View"]
+flowchart LR
+  subgraph Client["Client"]
+    AdminUI["Admin view"]
+    GuidelineUI["Guideline view"]
+    QueryUI["Worker query view"]
   end
 
-  subgraph RequestLayer["Request Gateway"]
-    RouteHandler["Route Handler"]
-    PayloadHook["Payload hook / endpoint"]
-  end
+  RouteHandler["Route handler"]
+  PayloadHook["Payload hook"]
 
-  subgraph DomainServiceLayer["Service Layer<br/>(Business Logic)"]
+  subgraph Services["Domain services"]
     GuidelineModule["Guideline service"]
     ProductionModule["Production service"]
-    QualityModule["Quality service"]
+    QualityModule["Quality check service"]
     UsageModule["Usage record service"]
     InsightModule["Insight service"]
   end
 
-  subgraph DataTransferLayer["Data Transfer"]
-    PayloadAPI["Payload Local API"]
-    StorageAdapter["Storage adapter"]
+  subgraph Repositories["Repositories"]
+    GuidelineRepository["Guideline aggregate repository"]
+    ProductionRepository["Production aggregate repository"]
+    QualityRepository["Quality check aggregate repository"]
+    UsageRepository["Usage record repository"]
+    InsightRepository["Insight aggregate repository"]
+    ProductionResourceRepository["Production resource repository"]
+    StorageRepository["Storage repository"]
+    AgentRepository["Agent repository"]
   end
 
-  subgraph InfrastructureLayer["Infrastructure Layer"]
-    subgraph InternalStorageLayer["Internal Storage Layer"]
-      PayloadStorage["Payload storage"]
-      FileStorage["File storage"]
-    end
+  AgentPackage["Agent package"]
 
-    subgraph ExternalLayer["External Layer"]
-      FigmaSDK["Figma SDK"]
-      AgentSDK["Claude Agent SDK"]
-      ExternalStorage["External Storage"]
-    end
+  subgraph Storage["Storage"]
+    GuidelineStore["Guideline store<br/>(BrandGuideline / Rule / Asset / Template / Plugin)"]
+    ProductionStore["Production store<br/>(WorkSession / WorkOutput)"]
+    QualityStore["Quality check store<br/>(QASession / CheckSession)"]
+    UsageStore["Usage log store<br/>(SessionEventLog / BehaviorEventLog)"]
+    InsightStore["Insight store<br/>(Insight / InsightReport)"]
+    FileStorage["File storage<br/>(AWS S3)"]
+  end
+
+  subgraph External["External dependencies"]
+    FigmaSDK["Figma SDK<br/>(template source)"]
+    AgentSDK["Claude Agent SDK"]
+    PluginStorage["Plugins"]
   end
 
   GuidelineUI -->|"HTTP"| RouteHandler
   QueryUI -->|"HTTP"| RouteHandler
   AdminUI -->|"Payload Admin request"| PayloadHook
-  RouteHandler -->|"function call"| GuidelineModule
-  RouteHandler -->|"function call"| ProductionModule
-  RouteHandler -->|"function call"| QualityModule
-  RouteHandler -->|"function call"| InsightModule
-  PayloadHook -->|"function call"| GuidelineModule
-  GuidelineModule -->|"read / write"| PayloadAPI
-  ProductionModule -->|"read / write"| PayloadAPI
-  QualityModule -->|"read / write"| PayloadAPI
-  UsageModule -->|"read / write"| PayloadAPI
-  InsightModule -->|"read / write"| PayloadAPI
-  GuidelineModule -->|"file operation"| StorageAdapter
-  ProductionModule -->|"file operation"| StorageAdapter
-  QualityModule -->|"model call"| AgentSDK
-  InsightModule -->|"model call"| AgentSDK
-  PayloadAPI --> PayloadStorage
-  StorageAdapter --> FileStorage
+
+  RouteHandler -->|"request"| GuidelineModule
+  RouteHandler -->|"request"| ProductionModule
+  RouteHandler -->|"request"| QualityModule
+  PayloadHook -->|"hook trigger"| GuidelineModule
+
+  GuidelineModule -->|"read / write"| GuidelineRepository
+  ProductionModule -->|"read / write"| ProductionRepository
+  ProductionModule -->|"resource refs"| ProductionResourceRepository
+  QualityModule -->|"read / write"| QualityRepository
+  UsageModule -->|"read / write"| UsageRepository
+  ProductionModule -->|"session event"| UsageModule
+  QualityModule -->|"session event"| UsageModule
+  InsightModule -->|"request evidence"| UsageModule
+  InsightModule -->|"write reports"| InsightRepository
+  GuidelineModule -->|"file operation"| StorageRepository
+  ProductionModule -->|"file operation"| StorageRepository
+
+  QualityModule -->|"agent request"| AgentRepository
+  InsightModule -->|"agent request"| AgentRepository
+  AgentRepository -->|"POST / GET"| AgentPackage
+  AgentPackage -->|"API call"| AgentSDK
+
+  ProductionResourceRepository --> GuidelineStore
+  ProductionResourceRepository --> FigmaSDK
+  ProductionResourceRepository --> PluginStorage
+  GuidelineRepository --> GuidelineStore
+  ProductionRepository --> ProductionStore
+  QualityRepository --> QualityStore
+  UsageRepository --> UsageStore
+  InsightRepository --> InsightStore
+  StorageRepository --> FileStorage
 ```
 
 Frontend / Worker UI는 Route Handler를 통해 업무 흐름을 요청합니다.
-Payload Admin에서 발생한 저장, 발행, 검증 요청은 Payload hook이나 endpoint를 통해 같은 Domain Service Layer 흐름으로 위임합니다.
+Payload Admin에서 발생한 저장, 발행, 검증 요청은 Payload hook을 통해 필요한 Domain Service Layer 흐름으로 위임합니다.
+Production service는 Payload에 저장된 템플릿과 플러그인 참조를 사용해 에셋을 제작합니다.
+Production resource repository는 제작에 필요한 템플릿, 플러그인, 에셋 참조 조회만 감쌉니다.
+Production service와 Quality check service는 감사 가능한 활동을 Usage record service에 세션 이벤트로 전달합니다.
+운영 인사이트 생성은 외부 화면 요청으로 직접 실행하지 않습니다.
+Domain Service Layer는 애그리거트 저장소, Agent package, 외부 의존성에 직접 접근하지 않고 Repository를 통해 접근합니다.
 Domain Service Layer는 [02. 유즈케이스](02-usecases.md)의 업무 흐름을 구현 단위로 삼습니다.
 서브도메인 사이의 업무 관계는 [04. 도메인 모델](04-domain-model.md)의 하위 도메인 관계도를 기준으로 따로 작성합니다.
 Infrastructure Layer는 내부 저장 경계와 외부 의존성을 함께 둡니다.
-초기 내부 Storage는 Payload storage와 File storage만 구분합니다.
-Figma SDK, Claude Agent SDK, External Storage는 애플리케이션 밖의 의존성입니다.
+초기 Storage는 애그리거트 저장소와 파일 스토리지만 구분합니다.
+Figma SDK, Claude Agent SDK, AWS S3, Plugins는 애플리케이션 밖의 의존성입니다.
 
 #### 서브도메인 구조
 
@@ -135,7 +164,7 @@ flowchart TB
   Flow["주요 흐름"]
   Version["발행 Version"]
   Resource["에셋 / 템플릿 / 플러그인 표시"]
-  Storage["Payload storage / File storage"]
+  Storage["Aggregate stores / File storage"]
 
   Flow --> Version
   Flow --> Resource
@@ -189,13 +218,15 @@ flowchart TB
 ```mermaid
 flowchart TB
   Flow["주요 흐름"]
+  LogQuery["세션 및 활동 로그 조회"]
   Evidence["사용 기록 근거"]
-  AgentSummary["Agent 요약"]
-  Insight["인사이트 저장"]
+  AgentAnalysis["Agent 분석 요청"]
+  Report["인사이트 리포트 제작"]
 
-  Flow --> Evidence
-  Evidence --> AgentSummary
-  AgentSummary --> Insight
+  Flow --> LogQuery
+  LogQuery --> Evidence
+  Evidence --> AgentAnalysis
+  AgentAnalysis --> Report
 ```
 
 ## 3. 기준
@@ -215,6 +246,16 @@ flowchart TB
 | 업무 활동 기록 | 작업, 질문, 검수처럼 감사가 필요한 업무 활동을 남깁니다. | SessionEventLog |
 | 화면 행동 기록 | 조회, 클릭, 체류처럼 개선 근거가 되는 화면 행동을 남깁니다. | BehaviorEventLog |
 | Agent 실행 참조 | Agent가 만든 답변, 점검, 요약 결과를 실행 기록과 연결합니다. | AgentRunRef |
+
+### Payload 컬렉션 목록
+
+초기 Payload collection은 실제 업무 관리 단위부터 만듭니다.
+품질 검수 내부 객체는 별도 collection으로 먼저 나누지 않고 세션 collection 아래에서 관리합니다.
+
+| Collection | 관리 단위 | 포함 대상 |
+| --- | --- | --- |
+| `qa-sessions` | QASession | Question, Answer, AnswerCitation, AnswerConfidence, AgentRunRef |
+| `check-sessions` | CheckSession | CheckTarget, CheckInputSnapshot, CheckRun, CheckBasis, CheckDecision, CheckResult, CheckRecommendation, AgentRunRef |
 
 ### 버전 기준
 
@@ -270,6 +311,7 @@ emit하지 않는 데이터는 다음과 같습니다.
 
 Agent와 Worker는 도메인 상태를 직접 변경하지 않습니다.
 Domain Service Layer가 실행 입력을 고정하고, Agent / Worker 결과를 검증한 뒤 저장합니다.
+Quality check service와 Insight service는 모델 SDK나 Agent package API를 직접 호출하지 않고 Agent repository를 통해 실행을 요청합니다.
 
 Agent 실행은 다음 기준을 따릅니다.
 
