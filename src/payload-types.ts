@@ -69,7 +69,7 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
-    cars: Car;
+    rules: Rule;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -79,7 +79,7 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
-    cars: CarsSelect<false> | CarsSelect<true>;
+    rules: RulesSelect<false> | RulesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -165,12 +165,47 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "cars".
+ * via the `definition` "rules".
  */
-export interface Car {
+export interface Rule {
   id: number;
-  title?: string | null;
-  featuredImage?: (number | null) | Media;
+  /**
+   * category.attribute 점 표기. 예: logo.min-size
+   */
+  key: string;
+  title: string;
+  category:
+    | 'logo'
+    | 'color'
+    | 'typography'
+    | 'grid'
+    | 'spacing'
+    | 'layout'
+    | 'imagery'
+    | 'illustration'
+    | 'iconography'
+    | 'motion'
+    | 'voice'
+    | 'messaging'
+    | 'accessibility'
+    | 'application'
+    | 'misc';
+  tier?: ('A' | 'B' | 'C') | null;
+  executor?: ('deterministic' | 'heuristic' | 'advisory' | 'human') | null;
+  scope?: ('all' | 'print' | 'screen')[] | null;
+  /**
+   * 값을 채운 브랜드 수 (0 = domain-default 빈 슬롯)
+   */
+  frequency?: number | null;
+  domainDefault?: boolean | null;
+  /**
+   * 브랜드 값이 채워야 할 구조(요약 표기)
+   */
+  paramSchema?: string | null;
+  scoring?: string | null;
+  input?: string | null;
+  notes?: string | null;
+  status?: ('draft' | 'live' | 'archived') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -207,8 +242,8 @@ export interface PayloadLockedDocument {
         value: number | Media;
       } | null)
     | ({
-        relationTo: 'cars';
-        value: number | Car;
+        relationTo: 'rules';
+        value: number | Rule;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -294,11 +329,22 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "cars_select".
+ * via the `definition` "rules_select".
  */
-export interface CarsSelect<T extends boolean = true> {
+export interface RulesSelect<T extends boolean = true> {
+  key?: T;
   title?: T;
-  featuredImage?: T;
+  category?: T;
+  tier?: T;
+  executor?: T;
+  scope?: T;
+  frequency?: T;
+  domainDefault?: T;
+  paramSchema?: T;
+  scoring?: T;
+  input?: T;
+  notes?: T;
+  status?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -5,6 +5,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
 import { Media } from './collections/Media'
+import { Rules } from './collections/Rules'
 import { Users } from './collections/Users'
 
 const filename = fileURLToPath(import.meta.url)
@@ -24,18 +25,7 @@ export default buildConfig({
 			baseDir: path.resolve(dirname),
 		},
 	},
-	collections: [
-		Users,
-		Media,
-		{
-			slug: 'cars',
-			admin: { useAsTitle: 'title' },
-			fields: [
-				{ name: 'title', type: 'text' },
-				{ name: 'featuredImage', type: 'upload', relationTo: 'media' },
-			],
-		},
-	],
+	collections: [Users, Media, Rules],
 	editor: lexicalEditor(),
 	secret: process.env.PAYLOAD_SECRET || '',
 	typescript: {
