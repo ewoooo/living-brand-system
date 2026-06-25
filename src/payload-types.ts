@@ -125,6 +125,10 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  /**
+   * admin(전체)·manager(기준 관리)·worker(사용)
+   */
+  role: 'admin' | 'manager' | 'worker';
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -292,6 +296,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  role?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

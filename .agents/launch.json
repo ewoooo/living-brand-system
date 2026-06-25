@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "hd-guideline",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "source ~/.nvm/nvm.sh && nvm use 22 >/dev/null && corepack enable >/dev/null 2>&1 && exec pnpm dev"
+      ],
+      "port": 3000
+    }
+  ]
+}
