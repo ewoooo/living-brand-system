@@ -2,26 +2,49 @@
 
 이 문서는 런타임 구성, 소스 디렉터리, 구현 위치, 개발 규칙을 정리합니다.
 
-## 1. 폴더 및 패키지 구조
+## 1. 프로젝트 구성 원칙
 
-### 패키지 구조
+이 프로젝트는 Presentation, Service, Repository 계층을 명확히 분리합니다.
+Route Handler는 HTTP 요청을 Service 호출로 연결하는 adapter 역할만 수행합니다.
+Service는 하나의 Use Case를 담당하며 Input과 Output을 명시합니다.
+Repository는 저장소 접근을 추상화하며 Payload CMS 또는 ORM 구현체를 감춥니다.
 
-이 프로젝트는 Next.js 애플리케이션 안에 Payload CMS와 Worker UI를 함께 둡니다.
-패키지는 도메인보다 실행 위치와 책임을 기준으로 나눕니다.
+새 Use Case는 스캐폴딩 규칙의 최소 파일부터 시작합니다.
+새 추상화와 의존성은 기존 코드, 표준 기능, 플랫폼 기능으로 해결할 수 없을 때만 추가합니다.
 
-| 영역 | 위치 | 역할 |
+예시:
+
+```text
+Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository -> Payload Local API
+```
+
+이 흐름에서 Creator UI와 Route Handler는 `Payload Local API`를 직접 알면 안 됩니다.
+
+## 2. 폴더 및 패키지 구조
+
+이 프로젝트는 현재 하나의 Next.js 애플리케이션 안에 Payload CMS와 Creator UI를 함께 둡니다.
+`apps`와 `packages`는 배포 단위나 공유 패키지가 실제로 생길 때만 추가합니다.
+
+| 단위 | 현재 위치 | 역할 |
 | --- | --- | --- |
-| App Router | `src/app` | Next.js route, layout, page, route handler를 둡니다. |
-| Payload config | `src/payload.config.ts` | Payload 전역 설정, collection, plugin, db adapter를 연결합니다. |
+| App | `src` | Next.js, Payload CMS, Creator UI를 포함하는 현재 실행 단위입니다. |
+| App Router | `src/app` | page, layout, route handler를 둡니다. |
 | Collections | `src/collections` | Payload collection schema, access, hook 진입점을 둡니다. |
-| UI components | `src/components` | ShadCN 기반 공통 컴포넌트와 화면 조합 컴포넌트를 둡니다. |
-| Feature modules | `src/features` | Worker 작업 흐름처럼 화면과 상태가 묶인 기능을 둡니다. |
-| Services | `src/services` | 유즈케이스 단위 업무 규칙을 둡니다. |
-| Repositories | `src/repositories` | Payload Local API, 검색 인덱스, 외부 저장소 접근을 감쌉니다. |
-| Agent modules | `src/agents` | RAG 검색, 프롬프트, Answer, Recommendation 생성을 둡니다. |
-| Shared utilities | `src/lib` | 공통 util, error, logger, auth helper를 둡니다. |
-| Hooks | `src/hooks` | React custom hook을 둡니다. |
-| Types | `src/types` | Payload 타입 외에 공통 타입을 둡니다. |
+| Services | `src/services` | Use Case Service를 둡니다. |
+| Repositories | `src/repositories` | Repository Interface와 Implementation을 둡니다. |
+| Tests | `tests` | e2e, integration, helper를 둡니다. |
+| Docs | `docs` | 제품, 도메인, 아키텍처, 개발 규칙 문서를 둡니다. |
+| Future apps | `apps/*` | 배포 단위가 둘 이상으로 나뉠 때만 추가합니다. |
+| Future packages | `packages/*` | 여러 app이 공유하는 코드가 생길 때만 추가합니다. |
+
+예시:
+
+```text
+현재: src/app, src/services, src/repositories
+나중: apps/web, apps/admin, packages/domain
+```
+
+`apps`와 `packages`는 분리할 배포 단위나 공유 코드가 생길 때까지 만들지 않습니다.
 
 ### 리소스 폴더 구조
 
@@ -36,111 +59,259 @@
 
 ### 프론트엔드 폴더 구조
 
-프론트엔드는 Payload Admin과 Worker UI를 분리합니다.
+프론트엔드는 Payload Admin과 Creator UI를 분리합니다.
 
 | 영역 | 위치 | 규칙 |
 | --- | --- | --- |
 | Payload Admin | `src/app/(payload)` | Payload가 요구하는 admin route와 API route를 둡니다. |
-| Worker UI | `src/app/(frontend)` | 내부 현장 작업자가 사용하는 화면을 둡니다. |
+| Creator UI | `src/app/(frontend)` | 내부 현장 작업자가 사용하는 화면을 둡니다. |
 | Route Handler | `src/app/**/route.ts` | HTTP 요청 검증과 Service 호출만 담당합니다. |
 | ShadCN UI | `src/components/ui` | registry 기반 컴포넌트 원형을 둡니다. |
 | 화면 컴포넌트 | `src/features/*/components` | 특정 기능에만 쓰는 컴포넌트를 둡니다. |
 | 화면 상태 | `src/features/*` | 폼 상태, client hook, view model을 기능 안에 둡니다. |
 
-## 2. 전체 소스코드 폴더 구조
+## 3. 전체 소스코드 폴더 구조
 
-### 프론트엔드 (클라이언트)
+현재 저장소에는 `src/app`, `src/collections`와 구조 확인용 `my-*` 목 파일이 들어간 주요 계층 폴더가 존재합니다.
+아래 구조는 실제 기능을 구현할 때 `my-*` 목 파일을 도메인 이름으로 교체해 맞출 목표 구조입니다.
 
 ```text
-src/app/(frontend)/
-  layout.tsx
-  page.tsx
-  styles.css
-
-src/components/
-  ui/
-
-src/features/
-  guideline/
-    components/
-    hooks/
-    types.ts
+src/
+  app/
+    (frontend)/
+      layout.tsx
+      page.tsx
+    (payload)/
+      admin/
+      api/
+    api/
+      <resource>/
+        route.ts
+  collections/
+    *.ts
+  services/
+    *.service.ts
+  repositories/
+    *.repository.ts
+    *.payload.repository.ts
+    *.drizzle.repository.ts
+  agents/
+    *.agent.ts
+  components/
+    ui/
+  features/
+    <feature>/
+      components/
+      hooks/
+      types.ts
+  lib/
+    auth.ts
+    errors.ts
+    logger.ts
+    messages.ts
+  hooks/
+    use-*.ts
+  types/
+    *.ts
+tests/
+  e2e/
+  int/
+  helpers/
+docs/
 ```
 
 - `page.tsx`와 `layout.tsx`는 라우팅과 화면 조합만 담당합니다.
-- ShadCN 컴포넌트에는 도메인 규칙을 넣지 않습니다.
-- 기능별 UI는 `src/features/<feature>` 아래에 모읍니다.
+- `route.ts`는 HTTP adapter로만 동작합니다.
+- Collection hook은 Service를 호출하고, 업무 규칙을 직접 길게 작성하지 않습니다.
+- Service는 ORM, Payload Local API, CMS SDK를 직접 import하지 않습니다.
+- Agent는 별도 사용자 역할이 아니라 서비스 모듈입니다.
+- 실제 폴더 구조를 개선할 때는 `src/services`, `src/repositories`, `src/agents`, `src/components`, `src/features`, `src/lib`, `src/types`를 이 순서로 추가합니다.
 
-### 공통 유틸리티
-
-```text
-src/lib/
-  auth.ts
-  errors.ts
-  logger.ts
-  messages.ts
-  result.ts
-
-src/hooks/
-  use-*.ts
-
-src/types/
-  *.ts
-```
-
-- 공통 유틸리티는 특정 collection이나 화면에 의존하지 않아야 합니다.
-- 에러, 메시지, 로그는 공통 모듈에서 형식을 통일합니다.
-- custom hook은 React 상태나 브라우저 API를 다룰 때만 둡니다.
-
-### 서비스 모듈 (Payload)
+예시:
 
 ```text
-src/collections/
-  Users.ts
-  Media.ts
-
-src/services/
-  *.service.ts
-
-src/repositories/
-  *.repository.ts
+src/app/api/guidelines/[id]/publish/route.ts
+src/services/publish-guideline.service.ts
+src/repositories/guideline.repository.ts
+src/repositories/guideline.payload.repository.ts
 ```
 
-- Collection은 schema, access, hook 진입점을 정의합니다.
-- hook 안에서는 Service를 호출하고, 업무 규칙을 직접 길게 작성하지 않습니다.
-- Service는 유즈케이스 단위로 작성합니다.
-- Repository는 Payload Local API와 검색 인덱스 접근을 감쌉니다.
+## 4. 구현 위치
 
-### Agent 모듈
-
-Agent는 별도 사용자 역할이 아니라 서비스 모듈입니다.
-초기에는 Payload/Next.js 애플리케이션 안에서 시작하고, RAG 검색, Answer 생성, Recommendation 생성이 커질 때 별도 모듈이나 worker로 분리합니다.
-
-```text
-src/agents/
-  retrieval.ts
-  guideline-agent.ts
-  prompts.ts
-```
-
-- Agent는 published content와 허용된 작업 맥락만 사용합니다.
-- Agent는 정책을 직접 변경하지 않습니다.
-- Agent 결과는 Service에서 검증하거나 상태로 기록한 뒤 사용자에게 보여줍니다.
-
-## 3. 구현 위치
-
-| 구현 대상 | 위치 | 기준 |
+| 구현 대상 | 위치 | 규칙 |
 | --- | --- | --- |
 | Payload collection | `src/collections` | 데이터 구조, access, hook 진입점 |
-| Worker 화면 | `src/app/(frontend)`, `src/features` | 사용자 작업 흐름 |
-| Admin 화면 | Payload Admin 기본 UI | Manager의 CMS 작업 |
-| Route Handler | `src/app/**/route.ts` | 외부 HTTP 요청 처리 |
-| Service | `src/services` | 유즈케이스 업무 규칙 |
-| Repository | `src/repositories` | Payload Local API, 검색, 외부 저장소 접근 |
-| Agent | `src/agents` | 검색, Answer, Recommendation |
+| Creator 화면 | `src/app/(frontend)`, `src/features` | 화면 이동, URL 상태, view model |
+| Admin 화면 | `src/app/(payload)`, Payload Admin 기본 UI | Manager의 CMS 작업 |
+| Route Handler | `src/app/**/route.ts` | request parsing, 권한 확인, Service 호출, response 변환 |
+| Service | `src/services` | Use Case 실행, Input / Output 계약, 상태 전이 판단 |
+| Repository Interface | `src/repositories/*.repository.ts` | Service가 필요한 저장소 계약 |
+| Repository Implementation | `src/repositories/*.payload.repository.ts`, `src/repositories/*.drizzle.repository.ts` | Payload Local API, Drizzle ORM, CMS SDK 호출 |
+| Agent | `src/agents` | 검색, Answer, Recommendation 생성 |
 | 공통 유틸 | `src/lib` | 에러, 로그, 메시지, 인증 helper |
 
-## 4. BFF API 문서 작성 전략
+예시:
+
+| 해야 할 일 | 위치 |
+| --- | --- |
+| 발행 요청을 HTTP로 받기 | `src/app/api/guidelines/[id]/publish/route.ts` |
+| 발행 상태 전이 판단 | `src/services/publish-guideline.service.ts` |
+| Payload에 published 상태 저장 | `src/repositories/guideline.payload.repository.ts` |
+| Creator 화면 상태 관리 | `src/features/guideline/*` |
+
+## 5. 스캐폴딩 규칙
+
+스캐폴딩은 새 Use Case를 만들 때 필요한 최소 파일만 생성합니다.
+생성된 파일은 바로 비즈니스 로직을 작성할 수 있는 상태여야 합니다.
+
+### Use Case 스캐폴딩
+
+| 파일 | 역할 |
+| --- | --- |
+| `src/services/publish-guideline.service.ts` | Use Case Service, Input, Output |
+| `src/repositories/guideline.repository.ts` | Service가 참조하는 Repository Interface |
+| `src/repositories/guideline.payload.repository.ts` | Payload 기반 Repository Implementation |
+| `src/app/api/guidelines/[id]/publish/route.ts` | HTTP 요청을 Service로 연결하는 Route Handler |
+| `src/services/publish-guideline.service.test.ts` | Service 단위 검증 |
+
+### 생성하지 않는 것
+
+- Facade
+- DTO mapper
+- DI container
+- factory
+- barrel export
+- `index.ts`
+- 아직 쓰지 않는 interface
+
+예시:
+
+```text
+Use Case: PublishGuideline
+Service: src/services/publish-guideline.service.ts
+Route: src/app/api/guidelines/[id]/publish/route.ts
+Repository Interface: src/repositories/guideline.repository.ts
+Repository Implementation: src/repositories/guideline.payload.repository.ts
+```
+
+## 6. Route 구현 규칙
+
+Client Route는 화면 이동과 URL 상태만 관리합니다.
+
+- 화면 이동, URL 파라미터, navigation, redirect, 화면 진입 제어만 담당합니다.
+- 비즈니스 로직, 데이터 저장, Payload CMS 접근, Repository 호출을 하지 않습니다.
+- Service를 직접 호출하지 않습니다.
+
+Server Route Handler는 HTTP 요청을 Service 호출로 연결하는 adapter입니다.
+
+- request를 parsing하고 Service Input model을 만듭니다.
+- 인증과 권한을 확인합니다.
+- Service의 `execute(input)`을 호출합니다.
+- Service Output을 HTTP response로 변환합니다.
+- 비즈니스 로직, Repository 직접 호출, Payload CMS 직접 호출, Entity 생성과 수정을 하지 않습니다.
+
+```ts
+export async function POST(req: Request) {
+  const input: PublishGuidelineInput = await req.json()
+  const output = await publishGuidelineService.execute(input)
+
+  return Response.json(output)
+}
+```
+
+하지 않는 예시:
+
+```ts
+export async function POST(req: Request) {
+  const payload = await getPayload()
+  await payload.update({ collection: 'guidelines', id: '1', data: { status: 'published' } })
+
+  return Response.json({ ok: true })
+}
+```
+
+Route Handler에서 Payload CMS를 직접 호출하면 Service와 Repository 경계가 깨집니다.
+
+## 7. Service 구현 규칙
+
+Use Case Service는 하나의 Use Case만 담당합니다.
+외부에서 호출하는 Use Case Service는 Input과 Output 모델을 정의하고, `execute(input)` 하나만 공개 진입점으로 둡니다.
+
+- Input과 Output은 Service 계약입니다.
+- Service는 Route Handler, UI, Payload collection schema에 의존하지 않습니다.
+- Service는 Repository Interface를 통해 저장소를 사용합니다.
+- Service는 ORM query builder, Payload query shape, CMS SDK 호출 방식을 알면 안 됩니다.
+
+```ts
+export interface PublishGuidelineInput {
+  guidelineId: string
+}
+
+export interface PublishGuidelineOutput {
+  guidelineId: string
+  version: number
+}
+
+export class PublishGuidelineService {
+  constructor(private readonly guidelineRepository: GuidelineRepository) {}
+
+  async execute(input: PublishGuidelineInput): Promise<PublishGuidelineOutput> {
+    const version = await this.guidelineRepository.publish(input.guidelineId)
+
+    return {
+      guidelineId: input.guidelineId,
+      version,
+    }
+  }
+}
+```
+
+하지 않는 예시:
+
+```ts
+export class PublishGuidelineService {
+  async execute(input: PublishGuidelineInput): Promise<PublishGuidelineOutput> {
+    const payload = await getPayload()
+    // Service는 Payload query shape을 알면 안 됩니다.
+  }
+}
+```
+
+## 8. Repository 구현 규칙
+
+Repository는 저장소 접근만 담당합니다.
+비즈니스 로직과 상태 전이 판단은 Service에 둡니다.
+
+- Repository Interface는 Service가 필요한 데이터 접근 계약만 정의합니다.
+- Repository Implementation만 Drizzle ORM, Payload Local API, CMS SDK를 import할 수 있습니다.
+- Repository는 데이터 접근 오류를 그대로 화면까지 전달하지 않습니다.
+- Repository method 이름은 저장소 기술이 아니라 도메인 동작 기준으로 정합니다.
+
+```ts
+export interface GuidelineRepository {
+  publish(guidelineId: string): Promise<number>
+}
+
+export class PayloadGuidelineRepository implements GuidelineRepository {
+  async publish(guidelineId: string): Promise<number> {
+    // Payload Local API 호출은 구현체 안에 둡니다.
+    return 1
+  }
+}
+```
+
+Drizzle 기반 구현 예시:
+
+```ts
+export class DrizzleGuidelineRepository implements GuidelineRepository {
+  async publish(guidelineId: string): Promise<number> {
+    // Drizzle query는 구현체 안에 둡니다.
+    return 1
+  }
+}
+```
+
+## 9. BFF API 문서 작성 전략
 
 BFF API 문서는 프론트엔드와 Route Handler 사이의 계약을 기록합니다.
 Payload collection, Payload REST / GraphQL API, Service 내부 함수, Repository 내부 query는 BFF API 문서 범위에 포함하지 않습니다.
@@ -162,7 +333,22 @@ spec을 바꿔야 할 때는 해당 BFF schema를 수정한 뒤 생성 스크립
 프론트엔드 API client는 생성된 OpenAPI spec을 기준으로 만들고, 손으로 작성한 fetch wrapper가 BFF 계약과 따로 진화하지 않게 합니다.
 문서 UI는 계약 관리의 원천이 아니므로 OpenAPI spec과 client 생성이 안정된 뒤 연결합니다.
 
-## 5. 파일 명칭 규칙
+예시:
+
+```ts
+export interface PublishGuidelineRequest {
+  guidelineId: string
+}
+
+export interface PublishGuidelineResponse {
+  guidelineId: string
+  version: number
+}
+```
+
+이 request / response 모델은 Route Handler의 HTTP 계약이고, Repository query 모델이 아닙니다.
+
+## 10. 파일 명칭 규칙
 
 | 개발 소스 | 설명 |
 | --- | --- |
@@ -171,22 +357,34 @@ spec을 바꿔야 할 때는 해당 BFF schema를 수정한 뒤 생성 스크립
 | `route.ts` | Next.js Route Handler 파일입니다. |
 | `*.tsx` | React component 파일입니다. |
 | `use-*.ts` | React custom hook 파일입니다. |
-| `*.service.ts` | 유즈케이스 service 파일입니다. |
-| `*.repository.ts` | 데이터 접근 repository 파일입니다. |
+| `*.service.ts` | Use Case service class 파일입니다. |
+| `*.repository.ts` | Service가 참조하는 repository interface 파일입니다. |
+| `*.payload.repository.ts` | Payload Local API 또는 CMS SDK 기반 repository 구현 파일입니다. |
+| `*.drizzle.repository.ts` | Drizzle ORM 기반 repository 구현 파일입니다. |
 | `*.agent.ts` | Agent 실행 단위 파일입니다. |
 | `*.test.ts` | 단위 테스트 파일입니다. |
 | `*.spec.ts` | e2e 또는 통합 테스트 파일입니다. |
 
-## 6. 명명 규칙
+예시:
+
+```text
+publish-guideline.service.ts
+guideline.repository.ts
+guideline.payload.repository.ts
+guideline.drizzle.repository.ts
+guideline-publish.spec.ts
+```
+
+## 11. 명명 규칙
 
 ### 클래스 명칭
 
 | 대상 | 규칙 | 예 |
 | --- | --- | --- |
 | React Component | `PascalCase` | `GuidelineCard` |
-| custom hook | `use` + 동작 또는 상태 | `useWorkSession` |
+| custom hook | `use` + 동작 또는 상태 | `useAssetGenerationSession` |
 | Facade | 필요한 경우에만 `PascalCase` + `Facade` | `GuidelineFacade` |
-| Service (Usecase) | 도메인 + `Service` 또는 동사형 함수 | `guidelineService`, `createWorkSession` |
+| Service (Use Case) | Use Case 이름 + `Service` | `PublishGuidelineService` |
 | Repository | 도메인 + `Repository` | `guidelineRepository` |
 | Util | 기능 이름 중심 | `formatDate`, `normalizeSlug` |
 | Error | 도메인 + `Error` | `AccessDeniedError` |
@@ -198,6 +396,7 @@ Facade는 기본 구조로 두지 않습니다.
 
 - 함수는 `camelCase`로 작성합니다.
 - 함수 이름은 동사로 시작합니다.
+- Use Case Service의 외부 진입점은 함수 명명 규칙을 따르지 않고 `execute`로 통일합니다.
 - 조회는 `get`, `find`, `list`를 구분해서 사용합니다.
 - 생성, 수정, 삭제는 `create`, `update`, `delete`를 사용합니다.
 - boolean 반환 함수는 `is`, `has`, `can`, `should`로 시작합니다.
@@ -208,13 +407,55 @@ Facade는 기본 구조로 두지 않습니다.
 | 단건 조회 | `get` + 대상 | `getGuideline` |
 | 조건 조회 | `find` + 대상 | `findPublishedRule` |
 | 목록 조회 | `list` + 대상 | `listApplicationTypes` |
-| 생성 | `create` + 대상 | `createWorkSession` |
+| 생성 | `create` + 대상 | `createAssetGenerationSession` |
 | 수정 | `update` + 대상 | `updateGuidelineSection` |
 | 삭제 | `delete` + 대상 | `deleteDraftRule` |
 | 권한 확인 | `can` + 동작 | `canPublishGuideline` |
 | 상태 확인 | `is` + 상태 | `isPublished` |
 
-## 7. 주석 처리 규칙
+좋은 예시:
+
+```ts
+const publishedGuideline = await guidelineRepository.findPublishedGuideline(guidelineId)
+const canPublish = await permissionService.canPublishGuideline(userId, guidelineId)
+```
+
+피하는 예시:
+
+```ts
+const data = await guidelineRepository.getData(id)
+const flag = await permissionService.check(userId, id)
+```
+
+이름만 보고 대상, 조건, 반환 의미를 알 수 있어야 합니다.
+
+## 12. 코딩 스타일
+
+- 구현은 Ponytail 기준으로 최소 변경을 우선합니다.
+- 입력 모델은 Route Handler, Server Action, Payload hook, Service처럼 외부 입력이나 유즈케이스 경계에 둡니다.
+- 인터페이스는 Repository, Agent Adapter, Storage Adapter처럼 외부 시스템 경계나 구현체가 둘 이상 필요한 곳에만 둡니다.
+- 한 파일 안에서만 쓰는 helper, formatter, component handler에는 별도 입력 모델이나 인터페이스를 만들지 않습니다.
+- 새 추상화나 의존성은 기존 코드, 표준 기능, 플랫폼 기능으로 해결할 수 없을 때만 추가합니다.
+
+### 별도 모델을 만들지 않는 경우
+
+```ts
+function formatTitle(title: string) {
+  return title.trim()
+}
+```
+
+작게 유지하는 예시:
+
+```ts
+function normalizeSlug(value: string) {
+  return value.trim().toLowerCase().replaceAll(' ', '-')
+}
+```
+
+한 파일 안에서만 쓰는 변환에는 별도 class나 interface를 만들지 않습니다.
+
+## 13. 주석 처리 규칙
 
 ### 문서화 주석
 
@@ -225,8 +466,22 @@ Facade는 기본 구조로 두지 않습니다.
 ```ts
 /**
  * 발행된 기준만 조회한다.
- * Agent 답변과 Worker UI는 draft 기준을 사용하면 안 된다.
+ * Agent 답변과 Creator UI는 draft 기준을 사용하면 안 된다.
  */
+```
+
+문서화 주석 예시:
+
+```ts
+/**
+ * live 상태의 Official Version만 조회한다.
+ * draft나 archived 기준은 Creator와 Agent에게 제공하지 않는다.
+ */
+export class FindLiveGuidelineVersionService {
+  async execute(input: FindLiveGuidelineVersionInput): Promise<FindLiveGuidelineVersionOutput> {
+    // ...
+  }
+}
 ```
 
 ### 함수 주석
@@ -234,6 +489,17 @@ Facade는 기본 구조로 두지 않습니다.
 - 함수 이름과 타입으로 설명되는 내용은 주석으로 반복하지 않습니다.
 - 여러 단계의 검증이나 상태 전이가 있는 경우에만 짧게 설명합니다.
 - 주석은 구현 방법보다 이유를 설명합니다.
+
+함수 주석 예시:
+
+```ts
+function assertPublishable(status: VersionStatus) {
+  // archived는 감사 대상이므로 다시 live로 되돌리지 않는다.
+  if (status === 'archived') {
+    throw new InvalidVersionStatusError()
+  }
+}
+```
 
 ### 변수 주석
 
@@ -244,7 +510,13 @@ Facade는 기본 구조로 두지 않습니다.
 const sessionTtlMinutes = 10 // 관리자 세션 만료 기준
 ```
 
-## 8. Log 정책
+변수 주석 예시:
+
+```ts
+const checkSnapshotRetentionDays = 90 // 검수 재현을 위해 보관하는 기간
+```
+
+## 14. Log 정책
 
 - `console.log`는 임시 디버깅에만 사용하고 커밋하지 않습니다.
 - 서버 로그는 공통 logger를 통해 남깁니다.
@@ -260,7 +532,22 @@ const sessionTtlMinutes = 10 // 관리자 세션 만료 기준
 | `warn` | 실패는 아니지만 조치가 필요한 상태 |
 | `error` | 요청 실패, 작업 실패, 복구가 필요한 오류 |
 
-## 9. Exception 처리
+예시:
+
+```ts
+logger.info('guideline.publish.completed', {
+  guidelineId,
+  version,
+})
+```
+
+피하는 예시:
+
+```ts
+console.log(user.email, accessToken, rawUploadPath)
+```
+
+## 15. Exception 처리
 
 - 사용자에게는 일반화된 오류 메시지를 보여줍니다.
 - 상세 오류, stack trace, 내부 경로는 서버 로그에만 남깁니다.
@@ -270,47 +557,19 @@ const sessionTtlMinutes = 10 // 관리자 세션 만료 기준
 - Payload hook에서 예외가 발생하면 저장 흐름을 중단할지, 후속 작업만 실패 처리할지 명확히 나눕니다.
 - Agent 실패는 정책 변경 실패로 처리하지 않습니다. 답변 생성 실패와 기준 데이터 변경은 분리합니다.
 
-## 10. 코딩 스타일
-
-- 구현은 Ponytail 기준으로 최소 변경을 우선합니다.
-- 입력 모델은 Route Handler, Server Action, Payload hook, Service처럼 외부 입력이나 유즈케이스 경계에 둡니다.
-- 인터페이스는 Repository, Agent Adapter, Storage Adapter처럼 외부 시스템 경계나 구현체가 둘 이상 필요한 곳에만 둡니다.
-- 한 파일 안에서만 쓰는 helper, formatter, component handler에는 별도 입력 모델이나 인터페이스를 만들지 않습니다.
-- 새 추상화나 의존성은 기존 코드, 표준 기능, 플랫폼 기능으로 해결할 수 없을 때만 추가합니다.
-
-### 입력 모델을 두는 경우
+예시:
 
 ```ts
-type CreateWorkSessionInput = {
-  userId: string
-  templateId: string
-}
+export async function POST(req: Request) {
+  try {
+    const input: PublishGuidelineInput = await req.json()
+    const output = await publishGuidelineService.execute(input)
 
-export async function createWorkSession(input: CreateWorkSessionInput) {
-  // 권한 확인, 상태 검증, 저장을 이 유즈케이스 안에서 처리합니다.
+    return Response.json(output)
+  } catch (error) {
+    return toErrorResponse(error)
+  }
 }
 ```
 
-### 인터페이스를 두는 경우
-
-```ts
-type BrandResourceRepository = {
-  findPublishedRule(ruleId: string): Promise<Rule | null>
-}
-
-export async function createAnswer(
-  input: CreateAnswerInput,
-  brandResourceRepository: BrandResourceRepository,
-) {
-  const rule = await brandResourceRepository.findPublishedRule(input.ruleId)
-  // Service는 Payload query 세부사항을 알지 않습니다.
-}
-```
-
-### 별도 모델을 만들지 않는 경우
-
-```ts
-function formatTitle(title: string) {
-  return title.trim()
-}
-```
+Service는 업무상 실패를 명확한 오류로 던지고, Route Handler가 HTTP 응답으로 바꿉니다.

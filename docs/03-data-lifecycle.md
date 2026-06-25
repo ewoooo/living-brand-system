@@ -6,7 +6,8 @@
 기준은 [02. 유즈케이스](02-usecases.md)와 [04. 도메인 모델](04-domain-model.md)의 최신 구조입니다.
 
 핵심은 원천 기준, 실행 기록, 사용 기록을 섞지 않는 것입니다.
-원천 기준은 가이드라인 관리가 소유하고, 제작과 품질 검수는 공식 버전 참조를 남깁니다.
+원천 기준은 가이드라인 관리가 소유합니다.
+제작은 사용할 기준과 자원을 ResourceRef로 남기고, 품질 검수는 검수 기준을 CheckBasis의 VersionRef로 고정합니다.
 
 ## 2. 작성 기준
 
@@ -36,10 +37,10 @@
 | 전송 | Manager UI에서 입력한 값은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | Payload collection과 PostgreSQL에 저장한다. Payload revision은 CMS 내부 수정 이력으로 남긴다. |
 | 처리 | GuidelineSection, GuidelinePage, BrandGuidelineVersion을 소유하고, 검토와 승인 상태를 관리한다. |
-| 활용 | Manager는 편집과 발행에 사용하고, Worker와 Agent는 live Version만 참조한다. |
+| 활용 | Manager는 편집과 발행에 사용하고, Creator와 Agent는 live 상태의 Official Version만 참조한다. |
 | 공유·제공 | 제작 관리와 품질 검수에는 BrandGuideline 원본이 아니라 GuidelineVersionRef로 제공한다. |
-| 보관 | draft, in review, approved, live, archived 상태와 revision 이력을 보관한다. |
-| 파기 | 잘못 만든 draft는 삭제할 수 있다. live 또는 archived 버전이 있는 데이터는 참조 무결성을 위해 비활성화한다. |
+| 보관 | draft, in review, approved 상태와 Payload revision 이력을 보관한다. |
+| 파기 | 잘못 만든 draft는 삭제할 수 있다. live 또는 archived 상태의 Official Version이 있는 데이터는 참조 무결성을 위해 비활성화한다. |
 
 ### 3.2 GuidelineSection
 
@@ -52,15 +53,15 @@
 | 전송 | 섹션 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | BrandGuideline 하위 엔티티로 저장하고 표시 순서를 함께 보관한다. |
 | 처리 | GuidelinePage를 소유하고, 순서 변경 시 페이지 표시 순서를 다시 계산한다. |
-| 활용 | Manager 편집 화면과 Worker 가이드라인 탐색 구조에 사용한다. |
+| 활용 | Manager 편집 화면과 Creator 가이드라인 탐색 구조에 사용한다. |
 | 공유·제공 | 다른 도메인에는 직접 제공하지 않고 GuidelineVersion에 포함된 구조로 제공한다. |
-| 보관 | BrandGuideline revision과 공식 Version에 포함해 보관한다. |
-| 파기 | 연결된 페이지가 없을 때 삭제한다. 이미 발행된 섹션은 이후 Version에서 제외하는 방식으로 처리한다. |
+| 보관 | BrandGuideline revision과 Official Version에 포함해 보관한다. |
+| 파기 | 연결된 페이지가 없을 때 삭제한다. 이미 발행된 섹션은 이후 Official Version에서 제외하는 방식으로 처리한다. |
 
 ### 3.3 GuidelinePage
 
 데이터명: GuidelinePage
-수집 목적: Policy, Rule, Asset, Template, Plugin 참조를 묶어 Worker가 읽는 페이지 단위를 만든다.
+수집 목적: Policy, Rule, Asset, Template, Plugin 참조를 묶어 Creator가 읽는 페이지 단위를 만든다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
@@ -68,10 +69,10 @@
 | 전송 | 페이지 구성 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | PagePolicy, PageRuleRef, PageAssetRef, PageExample, PageComposition과 함께 저장한다. |
 | 처리 | 페이지 안에서 정책 설명, 규칙 참조, 에셋 참조, 템플릿 참조, 플러그인 참조를 연결한다. |
-| 활용 | Worker 가이드라인 화면, Agent 답변 근거, 품질 검수 기준 탐색에 사용한다. |
+| 활용 | Creator 가이드라인 화면, Agent 답변 근거, 품질 검수 기준 탐색에 사용한다. |
 | 공유·제공 | BehaviorEventLog에는 페이지 조회와 클릭 대상인 PageRef만 제공한다. |
-| 보관 | 공식 Version에 포함된 페이지 구조를 유지한다. |
-| 파기 | 발행 전 페이지는 삭제할 수 있다. 발행 후에는 다음 Version에서 제외하고 기존 Version은 보관한다. |
+| 보관 | Official Version에 포함된 페이지 구조를 유지한다. |
+| 파기 | 발행 전 페이지는 삭제할 수 있다. 발행 후에는 다음 Official Version에서 제외하고 기존 Official Version은 보관한다. |
 
 ### 3.4 PagePolicy
 
@@ -84,10 +85,10 @@
 | 전송 | 정책 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | GuidelinePage 하위 엔티티로 저장하고 revision에 포함한다. |
 | 처리 | 관련 Rule, PageAssetRef, PageExample과 함께 페이지 기준을 구성한다. |
-| 활용 | Worker가 정책 의도를 이해하는 데 사용하고, Agent 답변의 설명 근거로 사용한다. |
+| 활용 | Creator가 정책 의도를 이해하는 데 사용하고, Agent 답변의 설명 근거로 사용한다. |
 | 공유·제공 | QASession에는 AnswerCitation 근거로 필요한 범위만 제공한다. |
-| 보관 | 공식 Version에 포함된 정책 문구를 보관한다. |
-| 파기 | 페이지가 삭제되거나 다음 Version에서 제외될 때 함께 제외한다. 이미 발행된 Version의 정책은 보존한다. |
+| 보관 | Official Version에 포함된 정책 문구를 보관한다. |
+| 파기 | 페이지가 삭제되거나 다음 Official Version에서 제외될 때 함께 제외한다. 이미 발행된 Official Version의 정책은 보존한다. |
 
 ### 3.5 PageRuleRef
 
@@ -100,10 +101,10 @@
 | 전송 | 연결 요청은 Payload API를 통해 GuidelinePage 갱신 요청으로 전달한다. |
 | 저장 | GuidelinePage 하위 엔티티로 저장하고 RuleVersionRef를 보관한다. |
 | 처리 | 페이지 표시 순서, 강조, 캡션 같은 페이지 맥락을 Rule 참조와 함께 관리한다. |
-| 활용 | Worker 화면의 규칙 표시와 Agent 답변 근거 탐색에 사용한다. |
+| 활용 | Creator 화면의 규칙 표시와 Agent 답변 근거 탐색에 사용한다. |
 | 공유·제공 | 다른 도메인에는 페이지 구성의 일부로만 제공한다. |
 | 보관 | GuidelineVersion에 포함해 발행 시점의 연결 상태를 보관한다. |
-| 파기 | 페이지에서 규칙 연결을 제거하면 다음 Version부터 제외한다. 기존 Version의 연결은 유지한다. |
+| 파기 | 페이지에서 규칙 연결을 제거하면 다음 Official Version부터 제외한다. 기존 Official Version의 연결은 유지한다. |
 
 ### 3.6 PageAssetRef
 
@@ -116,10 +117,10 @@
 | 전송 | 연결 요청은 Payload API를 통해 GuidelinePage 갱신 요청으로 전달한다. |
 | 저장 | GuidelinePage 하위 엔티티로 저장하고 BrandAssetVersionRef를 보관한다. |
 | 처리 | 페이지 화면 구성과 에셋 참조를 함께 관리한다. |
-| 활용 | Worker 가이드라인 화면과 에셋 다운로드 동선에 사용한다. |
+| 활용 | Creator 가이드라인 화면과 에셋 다운로드 동선에 사용한다. |
 | 공유·제공 | BehaviorEventLog에는 다운로드 대상 BrandAssetVersionRef로 연결된다. |
 | 보관 | GuidelineVersion에 포함해 발행 시점의 에셋 연결을 보관한다. |
-| 파기 | 페이지에서 에셋 연결을 제거하면 다음 Version부터 제외한다. 기존 Version의 연결은 유지한다. |
+| 파기 | 페이지에서 에셋 연결을 제거하면 다음 Official Version부터 제외한다. 기존 Official Version의 연결은 유지한다. |
 
 ### 3.7 PageExample
 
@@ -132,10 +133,10 @@
 | 전송 | 예시 등록 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | GuidelinePage 하위 엔티티로 저장하고 관련 PageAssetRef나 RuleVersionRef를 함께 보관한다. |
 | 처리 | 페이지 안에서 Policy, Rule, Asset과 함께 예시 맥락을 구성한다. |
-| 활용 | Worker가 기준을 해석하는 데 사용하고, Agent가 설명을 보강할 때 참조한다. |
+| 활용 | Creator가 기준을 해석하는 데 사용하고, Agent가 설명을 보강할 때 참조한다. |
 | 공유·제공 | 다른 도메인에는 GuidelineVersion에 포함된 읽기 모델로 제공한다. |
-| 보관 | 공식 Version에 포함된 예시를 보관한다. |
-| 파기 | 발행 전 예시는 삭제할 수 있다. 발행 후에는 다음 Version에서 제외한다. |
+| 보관 | Official Version에 포함된 예시를 보관한다. |
+| 파기 | 발행 전 예시는 삭제할 수 있다. 발행 후에는 다음 Official Version에서 제외한다. |
 
 ## 4. 브랜드 자원
 
@@ -151,9 +152,9 @@
 | 저장 | Rule 애그리거트로 저장하고 RuleCondition, RuleScope, Severity를 함께 보관한다. |
 | 처리 | 충돌 확인을 거쳐 RuleVersion 후보를 만들고, RuleException을 하위로 관리한다. |
 | 활용 | PageRuleRef, AnswerCitation, CheckBasis에서 판단 기준으로 참조한다. |
-| 공유·제공 | Worker와 Agent에는 live RuleVersion만 제공한다. |
+| 공유·제공 | Creator와 Agent에는 live 상태의 RuleVersion만 제공한다. |
 | 보관 | RuleVersion과 Payload revision을 함께 보관한다. |
-| 파기 | draft 규칙은 삭제할 수 있다. 발행된 규칙은 archived Version으로 전환하고 원본은 보관한다. |
+| 파기 | draft 규칙은 삭제할 수 있다. 발행된 규칙은 archived 상태의 RuleVersion으로 전환하고 원본은 보관한다. |
 
 ### 4.2 RuleException
 
@@ -167,7 +168,7 @@
 | 저장 | Rule 하위 엔티티로 저장하고 ExceptionReason과 적용 기간을 보관한다. |
 | 처리 | RuleCondition과 함께 평가되어 예외 적용 여부를 판단한다. |
 | 활용 | Agent 답변과 품질 검수에서 위반 여부를 해석할 때 사용한다. |
-| 공유·제공 | RuleVersion에 포함된 예외 조건으로 Worker와 Agent에 제공한다. |
+| 공유·제공 | RuleVersion에 포함된 예외 조건으로 Creator와 Agent에 제공한다. |
 | 보관 | 예외 적용 기간과 변경 사유를 보관한다. |
 | 파기 | 적용 종료 후에는 archived 상태로 남기고, 잘못 만든 draft 예외만 삭제한다. |
 
@@ -182,15 +183,15 @@
 | 전송 | 파일과 메타데이터는 Payload upload 흐름을 통해 전송한다. |
 | 저장 | 파일은 Uploaded file storage에 저장하고, 메타데이터는 Payload collection과 PostgreSQL에 저장한다. |
 | 처리 | AssetFile, BrandAssetVersion, UsageCondition, DownloadStatus를 함께 관리한다. |
-| 활용 | GuidelinePage, Rule, WorkSession, CheckBasis에서 공식 자원으로 참조한다. |
-| 공유·제공 | Worker에게 다운로드 가능한 live BrandAssetVersion만 제공한다. |
-| 보관 | 파일 원본, 버전, 사용 조건, 폐기 사유를 보관한다. |
+| 활용 | GuidelinePage, Rule, AssetGenerationSession, CheckBasis에서 공식 자원으로 참조한다. |
+| 공유·제공 | Creator에게 다운로드 가능한 live 상태의 BrandAssetVersion만 제공한다. |
+| 보관 | 파일 원본, Official Version, 사용 조건, 폐기 사유를 보관한다. |
 | 파기 | draft 파일은 삭제할 수 있다. 발행된 에셋은 archived 처리하고 실제 파일 삭제는 참조 종료 후 수행한다. |
 
 ### 4.4 Template
 
 데이터명: Template
-수집 목적: Worker가 산출물을 만들 때 사용할 공식 형식을 관리한다.
+수집 목적: Creator가 산출물을 만들 때 사용할 공식 형식을 관리한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
@@ -198,15 +199,15 @@
 | 전송 | 템플릿 메타데이터는 Payload API로 전달하고, 원본은 Figma node 또는 파일 업로드 흐름으로 참조한다. |
 | 저장 | TemplateSourceRef, LayoutSpec, TextStyleSpec, EditableBlockSpec, TemplateUsageCondition, TemplateVersion을 함께 저장한다. |
 | 처리 | 지정된 레이아웃, 텍스트 스타일, 텍스트 블록, 에셋 슬롯, 컬러 토큰과 연결된 RuleVersionRef, BrandAssetVersionRef를 검증한다. |
-| 활용 | WorkSession에서 산출물 제작 형식으로 사용하고, Brand asset generation service가 React 또는 HTML 편집 노드로 변환한다. |
-| 공유·제공 | Worker에게 live TemplateVersion만 제공한다. |
+| 활용 | AssetGenerationSession에서 산출물 제작 형식으로 사용하고, Brand asset generation service가 React 또는 HTML 편집 노드로 변환한다. |
+| 공유·제공 | Creator에게 live 상태의 TemplateVersion만 제공한다. |
 | 보관 | TemplateVersion과 사용 조건 변경 이력을 보관한다. |
-| 파기 | draft 템플릿은 삭제할 수 있다. 발행된 템플릿은 archived 처리하고 기존 WorkSession 참조는 보존한다. |
+| 파기 | draft 템플릿은 삭제할 수 있다. 발행된 템플릿은 archived 처리하고 기존 AssetGenerationSession 참조는 보존한다. |
 
 ### 4.5 Plugin
 
 데이터명: Plugin
-수집 목적: Worker가 산출물을 만들 때 사용할 공식 제작 기능을 관리한다.
+수집 목적: Creator가 산출물을 만들 때 사용할 공식 제작 기능을 관리한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
@@ -214,28 +215,28 @@
 | 전송 | 플러그인 설정은 Payload API를 통해 저장하고, 테스트 실행은 Agent repository로 전달한다. |
 | 저장 | PluginEntry, PluginCapability, PluginUsageCondition, PluginVersion과 Plugin runtime 참조를 함께 저장한다. |
 | 처리 | 입력 스키마, 출력 형식, 사용 조건, 연결된 TemplateVersionRef와 RuleVersionRef를 검증한다. |
-| 활용 | WorkSession에서 제작 기능으로 사용하고, AgentRunRef로 실행 이력을 남긴다. |
-| 공유·제공 | Worker에게 live PluginVersion만 제공한다. |
+| 활용 | AssetGenerationSession에서 제작 기능으로 사용하고, AgentRunRef로 실행 이력을 남긴다. |
+| 공유·제공 | Creator에게 live 상태의 PluginVersion만 제공한다. |
 | 보관 | PluginVersion, 테스트 결과 참조, 사용 조건 변경 이력을 보관한다. |
 | 파기 | draft 플러그인은 삭제할 수 있다. 발행된 플러그인은 archived 처리하고 기존 실행 이력은 보존한다. |
 
-## 5. 공식 버전
+## 5. Official Version
 
 ### 5.1 BrandGuidelineVersion
 
 데이터명: BrandGuidelineVersion
-수집 목적: Worker와 Agent가 참조할 공식 가이드라인 버전을 고정한다.
+수집 목적: Creator와 Agent가 참조할 Official Version을 만든다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Manager가 승인된 BrandGuideline을 발행하면 System이 stage 또는 live Version을 생성한다. |
+| 생성·수집 | Manager가 승인된 BrandGuideline을 발행하면 System이 stage 또는 live 상태의 BrandGuidelineVersion을 생성한다. |
 | 전송 | 발행 요청은 Guideline publishing service로 전달한다. |
 | 저장 | VersionNumber, VersionStatus, EffectivePeriod, PayloadRevisionRef, PreviousVersionRef를 저장한다. |
-| 처리 | live 전환 시 기존 live Version은 archived 상태로 바꾼다. |
-| 활용 | WorkSession과 CheckBasis가 GuidelineVersionRef로 참조한다. |
-| 공유·제공 | Worker 화면과 Agent에는 live Version만 제공한다. |
-| 보관 | stage, live, archived 상태와 버전 사유를 보관한다. |
-| 파기 | 발행된 Version은 삭제하지 않고 archived로 보관한다. 잘못 생성된 stage Version만 삭제할 수 있다. |
+| 처리 | live 전환 시 기존 live 상태의 BrandGuidelineVersion은 archived 상태로 바꾼다. |
+| 활용 | AssetGenerationSession은 ResourceRef로 참조하고, CheckBasis는 필요한 VersionRef로 참조한다. |
+| 공유·제공 | Creator 화면과 Agent에는 live 상태의 BrandGuidelineVersion만 제공한다. |
+| 보관 | stage, live, archived 상태와 VersionReason을 보관한다. |
+| 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 잘못 생성된 stage 상태의 BrandGuidelineVersion만 삭제할 수 있다. |
 
 ### 5.2 RuleVersion
 
@@ -245,13 +246,13 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Rule이 승인되거나 수정되면 System이 RuleVersion 후보를 만든다. |
-| 전송 | 버전 생성 요청은 Brand resource publishing service로 전달한다. |
+| 전송 | Official Version 생성 요청은 Brand resource publishing service로 전달한다. |
 | 저장 | VersionNumber, VersionStatus, RuleCondition, RuleScope, Severity, PayloadRevisionRef를 저장한다. |
-| 처리 | live 전환 시 기존 live RuleVersion은 archived 상태로 바꾼다. |
+| 처리 | live 전환 시 기존 live 상태의 RuleVersion은 archived 상태로 바꾼다. |
 | 활용 | PageRuleRef, AnswerCitation, CheckBasis에서 RuleVersionRef로 참조한다. |
-| 공유·제공 | Worker와 Agent에는 live RuleVersion만 제공한다. |
-| 보관 | 모든 발행 Version과 변경 사유를 보관한다. |
-| 파기 | 발행된 Version은 삭제하지 않고 archived로 보관한다. 잘못 생성된 stage Version만 삭제할 수 있다. |
+| 공유·제공 | Creator와 Agent에는 live 상태의 RuleVersion만 제공한다. |
+| 보관 | 모든 Official Version과 변경 사유를 보관한다. |
+| 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 잘못 생성된 stage 상태의 RuleVersion만 삭제할 수 있다. |
 
 ### 5.3 BrandAssetVersion
 
@@ -263,11 +264,11 @@
 | 생성·수집 | BrandAsset이 발행되면 System이 BrandAssetVersion을 생성한다. |
 | 전송 | 발행 요청과 파일 참조는 Brand resource publishing service로 전달한다. |
 | 저장 | VersionStatus, AssetFile 참조, UsageCondition, DownloadStatus를 저장한다. |
-| 처리 | 대체 에셋이 발행되면 이전 Version을 archived 상태로 바꾼다. |
-| 활용 | PageAssetRef, WorkSession, CheckBasis에서 BrandAssetVersionRef로 참조한다. |
-| 공유·제공 | Worker에게 다운로드 가능한 live Version만 제공한다. |
+| 처리 | 대체 에셋이 발행되면 이전 BrandAssetVersion을 archived 상태로 바꾼다. |
+| 활용 | PageAssetRef와 CheckBasis에서는 BrandAssetVersionRef로 참조하고, AssetGenerationSession에서는 ResourceRef로 참조한다. |
+| 공유·제공 | Creator에게 다운로드 가능한 live 상태의 BrandAssetVersion만 제공한다. |
 | 보관 | 파일 참조, 다운로드 상태, 폐기 사유를 보관한다. |
-| 파기 | 발행된 Version은 삭제하지 않고 archived로 보관한다. 파일은 참조 종료 후 보관 정책에 따라 삭제한다. |
+| 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 파일은 참조 종료 후 보관 정책에 따라 삭제한다. |
 
 ### 5.4 TemplateVersion
 
@@ -279,11 +280,11 @@
 | 생성·수집 | Template이 승인되면 System이 TemplateVersion을 생성한다. |
 | 전송 | 발행 요청은 Brand resource publishing service로 전달한다. |
 | 저장 | TemplateSourceRef, LayoutSpec, TextStyleSpec, EditableBlockSpec, TemplateUsageCondition, VersionStatus를 저장한다. |
-| 처리 | live 전환 시 기존 live TemplateVersion을 archived 상태로 바꾸고, Figma node 또는 파일 원본을 재해석해 제작 가능한 구조를 고정한다. |
-| 활용 | WorkSession에서 TemplateVersionRef로 참조한다. |
-| 공유·제공 | Worker에게 live TemplateVersion만 제공한다. |
+| 처리 | live 전환 시 기존 live 상태의 TemplateVersion을 archived 상태로 바꾸고, Figma node 또는 파일 원본을 재해석해 제작 가능한 구조를 고정한다. |
+| 활용 | AssetGenerationSession에서는 ResourceRef로 참조한다. |
+| 공유·제공 | Creator에게 live 상태의 TemplateVersion만 제공한다. |
 | 보관 | 발행된 편집 가능 영역과 사용 조건을 보관한다. |
-| 파기 | 발행된 Version은 삭제하지 않고 archived로 보관한다. 잘못 만든 stage Version만 삭제할 수 있다. |
+| 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 잘못 만든 stage 상태의 TemplateVersion만 삭제할 수 있다. |
 
 ### 5.5 PluginVersion
 
@@ -295,62 +296,62 @@
 | 생성·수집 | Plugin이 승인되면 System이 PluginVersion을 생성한다. |
 | 전송 | 발행 요청은 Brand resource publishing service로 전달한다. |
 | 저장 | PluginEntry, PluginCapability, PluginUsageCondition, VersionStatus를 저장한다. |
-| 처리 | live 전환 시 기존 live PluginVersion을 archived 상태로 바꾼다. |
-| 활용 | WorkSession에서 PluginVersionRef로 참조한다. |
-| 공유·제공 | Worker에게 live PluginVersion만 제공한다. |
+| 처리 | live 전환 시 기존 live 상태의 PluginVersion을 archived 상태로 바꾼다. |
+| 활용 | AssetGenerationSession에서는 ResourceRef로 참조한다. |
+| 공유·제공 | Creator에게 live 상태의 PluginVersion만 제공한다. |
 | 보관 | 발행된 실행 조건과 기능 정의를 보관한다. |
-| 파기 | 발행된 Version은 삭제하지 않고 archived로 보관한다. 잘못 만든 stage Version만 삭제할 수 있다. |
+| 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 잘못 만든 stage 상태의 PluginVersion만 삭제할 수 있다. |
 
-## 6. 제작 기록
+## 6. 에셋 제너레이션 기록
 
-WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한다.
+AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 아키텍처의 Brand asset generation records에 해당한다.
 
-### 6.1 WorkSession
+### 6.1 AssetGenerationSession
 
-데이터명: WorkSession
-수집 목적: Worker가 산출물을 만드는 작업 단위와 사용한 공식 자원 버전을 기록한다.
+데이터명: AssetGenerationSession
+수집 목적: Creator가 산출물을 만드는 에셋 제너레이션 단위와 사용한 ResourceRef를 기록한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Worker가 작업을 시작하면 System이 WorkSession을 생성하고 WorkPurpose와 ApplicationTypeRef를 수집한다. |
-| 전송 | Worker UI의 작업 시작 요청은 Client fetch route handler를 거쳐 Brand asset generation service로 전달한다. |
-| 저장 | WorkPurpose, ApplicationTypeRef, GuidelineVersionRef, BrandAssetVersionRef, TemplateVersionRef, PluginVersionRef, WorkSessionStatus를 저장한다. |
-| 처리 | 입력 변경, 미리보기 생성, 산출물 생성, 완료 이벤트를 WorkSession 단위로 묶는다. |
+| 생성·수집 | Creator가 에셋 제너레이션을 시작하면 System이 AssetGenerationSession을 생성하고 AssetGenerationPurpose와 ApplicationTypeRef를 수집한다. |
+| 전송 | Creator UI의 에셋 제너레이션 시작 요청은 Client fetch route handler를 거쳐 Brand asset generation service로 전달한다. |
+| 저장 | AssetGenerationPurpose, ApplicationTypeRef, ResourceRef, AssetGenerationStatus를 저장한다. |
+| 처리 | 입력 변경, 미리보기 생성, 산출물 생성, 완료 상태를 AssetGenerationSession 단위로 묶는다. |
 | 활용 | 제작 화면 복원, 질의 맥락, 검수 입력 생성, 사용 기록 조회에 사용한다. |
-| 공유·제공 | 품질 검수에는 WorkOutput과 CheckInputSnapshot 생성에 필요한 범위만 제공한다. |
-| 보관 | 작업 완료 후에도 검수와 운영 조회에 필요한 기간 보관한다. |
+| 공유·제공 | 품질 검수에는 AssetGenerationOutput과 CheckInputSnapshot 생성에 필요한 범위만 제공한다. |
+| 보관 | 에셋 제너레이션 완료 후에도 검수와 운영 조회에 필요한 기간 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제하거나 사용자 식별 정보를 익명화한다. 연결된 검수 기록은 참조 무결성을 확인한 뒤 처리한다. |
 
-### 6.2 WorkInput
+### 6.2 AssetGenerationInput
 
-데이터명: WorkInput
+데이터명: AssetGenerationInput
 수집 목적: Template 또는 Plugin 실행에 필요한 입력값을 기록한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Worker가 텍스트, 이미지, 선택값을 입력하면 WorkSession 아래에 저장한다. |
-| 전송 | 입력값은 Worker UI에서 Client fetch route handler를 거쳐 Brand asset generation service로 전달한다. 파일 입력은 설정된 업로드 흐름을 따른다. |
-| 저장 | WorkSession 하위 엔티티로 저장하고 입력 변경 이벤트를 남긴다. |
+| 생성·수집 | Creator가 텍스트, 이미지, 선택값을 입력하면 AssetGenerationSession 아래에 저장한다. |
+| 전송 | 입력값은 Creator UI에서 Client fetch route handler를 거쳐 Brand asset generation service로 전달한다. 파일 입력은 설정된 업로드 흐름을 따른다. |
+| 저장 | AssetGenerationSession 하위 엔티티로 저장한다. |
 | 처리 | EditableBlockSpec과 PluginCapability의 입력 조건으로 검증한다. |
-| 활용 | 미리보기 생성, WorkOutput 생성, 작업 재개에 사용한다. |
+| 활용 | 미리보기 생성, AssetGenerationOutput 생성, 작업 재개에 사용한다. |
 | 공유·제공 | Agent에는 답변이나 점검에 필요한 최소 입력 맥락만 제공한다. |
-| 보관 | WorkSession 보관 기간에 맞춰 보관한다. |
-| 파기 | WorkSession 파기 시 함께 삭제하거나 민감 입력은 먼저 마스킹한다. |
+| 보관 | AssetGenerationSession 보관 기간에 맞춰 보관한다. |
+| 파기 | AssetGenerationSession 파기 시 함께 삭제하거나 민감 입력은 먼저 마스킹한다. |
 
-### 6.3 WorkOutput
+### 6.3 AssetGenerationOutput
 
-데이터명: WorkOutput
-수집 목적: Worker가 만든 최종 산출물을 보존하고 검수 입력의 원천으로 사용한다.
+데이터명: AssetGenerationOutput
+수집 목적: Creator가 만든 최종 산출물을 보존하고 검수 입력의 원천으로 사용한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Worker가 산출물 생성을 요청하면 System이 WorkInput과 선택 자원을 조합해 WorkOutput을 생성한다. |
+| 생성·수집 | Creator가 산출물 생성을 요청하면 System이 AssetGenerationInput과 선택 자원을 조합해 AssetGenerationOutput을 생성한다. |
 | 전송 | 생성 요청은 Client fetch route handler를 거쳐 Brand asset generation service로 전달하고, 서비스가 필요한 렌더링 또는 Plugin 실행 어댑터를 호출한다. |
-| 저장 | WorkSession 하위 엔티티로 저장하고 파일 또는 렌더링 결과 위치를 보관한다. |
-| 처리 | 저장 위치, 생성 시각, 사용한 VersionRef를 연결한다. |
-| 활용 | Worker가 결과물을 확인하고, 품질 검수는 이를 CheckInputSnapshot으로 고정한다. |
+| 저장 | AssetGenerationSession 하위 엔티티로 저장하고 파일 또는 렌더링 결과 위치를 보관한다. |
+| 처리 | 저장 위치, 생성 시각, 사용한 ResourceRef를 연결한다. |
+| 활용 | Creator가 결과물을 확인하고, 품질 검수는 이를 CheckInputSnapshot으로 고정한다. |
 | 공유·제공 | 품질 검수에는 검수에 필요한 산출물 내용과 참조만 제공한다. |
-| 보관 | WorkSession과 CheckInputSnapshot 참조가 유지되는 동안 보관한다. |
+| 보관 | AssetGenerationSession과 CheckInputSnapshot 참조가 유지되는 동안 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제한다. CheckInputSnapshot이 참조하는 경우 먼저 검수 기록 보관 정책을 확인한다. |
 
 ## 7. 질의응답 기록
@@ -358,28 +359,28 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 ### 7.1 QASession
 
 데이터명: QASession
-수집 목적: WorkSession 맥락에서 발생한 질문과 답변을 하나의 흐름으로 묶는다.
+수집 목적: AssetGenerationSession 맥락에서 발생한 질문과 답변을 하나의 흐름으로 묶는다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Worker가 질문을 시작하면 System이 WorkSession과 연결된 QASession을 생성한다. |
-| 전송 | 질문 시작 요청은 Worker UI에서 Client fetch route handler를 거쳐 Answer generation service로 전달한다. |
+| 생성·수집 | Creator가 질문을 시작하면 System이 AssetGenerationSession과 연결된 QASession을 생성한다. |
+| 전송 | 질문 시작 요청은 Creator UI에서 Client fetch route handler를 거쳐 Answer generation service로 전달한다. |
 | 저장 | QASession은 Question, Answer를 하위 엔티티로 보관한다. |
 | 처리 | 질문 등록, 관련 기준 검색, 답변 생성, 답변 근거 연결을 같은 세션 안에서 처리한다. |
-| 활용 | Worker 질문 이력과 Agent 품질 확인에 사용한다. |
+| 활용 | Creator 질문 이력과 Agent 품질 확인에 사용한다. |
 | 공유·제공 | 운영 조회에는 필요한 식별자와 상태만 제공한다. |
-| 보관 | WorkSession과 함께 감사 가능한 기간 동안 보관한다. |
+| 보관 | AssetGenerationSession과 함께 감사 가능한 기간 동안 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제하거나 사용자 식별 정보를 제거한다. |
 
 ### 7.2 Question
 
 데이터명: Question
-수집 목적: Worker가 작업 중 궁금한 기준과 적용 방법을 기록한다.
+수집 목적: Creator가 제작 중 궁금한 기준과 적용 방법을 기록한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Worker가 질문 원문을 입력하면 QASession 아래에 생성한다. |
-| 전송 | 질문 원문과 WorkSession 맥락은 Answer generation service로 전달한다. |
+| 생성·수집 | Creator가 질문 원문을 입력하면 QASession 아래에 생성한다. |
+| 전송 | 질문 원문과 AssetGenerationSession 맥락은 Answer generation service로 전달한다. |
 | 저장 | QASession 하위 엔티티로 저장하고 QuestionAsked 이벤트를 남긴다. |
 | 처리 | 관련 RuleVersion, PagePolicy, GuidelinePage를 검색하는 입력으로 사용한다. |
 | 활용 | Agent 답변 생성과 질문 이력 조회에 사용한다. |
@@ -390,7 +391,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 ### 7.3 Answer
 
 데이터명: Answer
-수집 목적: Agent 또는 System이 Worker 질문에 제공한 답변과 실행 참조를 기록한다.
+수집 목적: Agent 또는 System이 Creator 질문에 제공한 답변과 실행 참조를 기록한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
@@ -398,7 +399,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 전송 | Agent 응답은 Agent repository에서 Answer generation service로 전달되고, 서비스가 저장 가능 형태로 변환한다. |
 | 저장 | QASession 하위 엔티티로 저장하고 AgentRunRef를 남긴다. |
 | 처리 | AnswerCitation과 AnswerConfidence를 연결한다. |
-| 활용 | Worker 답변 조회와 Agent 품질 확인에 사용한다. |
+| 활용 | Creator 답변 조회와 Agent 품질 확인에 사용한다. |
 | 공유·제공 | 운영 조회에는 필요한 식별자와 상태만 제공한다. |
 | 보관 | QASession 보관 기간에 맞춰 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제하거나 사용자 식별 맥락을 제거한다. |
@@ -415,7 +416,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 저장 | Answer 하위 값 객체 또는 하위 기록으로 저장한다. |
 | 처리 | RuleVersionRef, PagePolicy 참조, 근거 유형을 연결한다. |
 | 활용 | 답변 신뢰도 표시와 Agent 품질 확인에 사용한다. |
-| 공유·제공 | Worker 화면에는 필요한 근거 링크만 제공한다. |
+| 공유·제공 | Creator 화면에는 필요한 근거 링크만 제공한다. |
 | 보관 | Answer와 같은 기간 보관한다. |
 | 파기 | Answer 파기 시 함께 삭제한다. |
 
@@ -430,7 +431,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 전송 | Agent 응답과 검증 결과가 Answer generation service로 전달된다. |
 | 저장 | Answer 하위 값 객체 또는 하위 기록으로 저장하고 AgentRunRef를 연결한다. |
 | 처리 | 답변 신뢰도 점수, 근거 충분성, 사람 확인 필요 여부를 계산한다. |
-| 활용 | Worker에게 답변 신뢰도를 표시하고, Agent 품질 확인에 사용한다. |
+| 활용 | Creator에게 답변 신뢰도를 표시하고, Agent 품질 확인에 사용한다. |
 | 공유·제공 | 운영 조회에는 집계 가능한 신뢰도 값만 제공할 수 있다. |
 | 보관 | Answer와 같은 기간 보관한다. |
 | 파기 | Answer 파기 시 함께 삭제한다. |
@@ -440,14 +441,14 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 ### 8.1 CheckInputSnapshot
 
 데이터명: CheckInputSnapshot
-수집 목적: 검수 시점의 WorkOutput을 변경되지 않는 입력으로 고정한다.
+수집 목적: 검수 시점의 AssetGenerationOutput을 변경되지 않는 입력으로 고정한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Worker가 검수를 요청하면 System이 현재 WorkOutput을 복제하거나 참조 고정해 생성한다. |
-| 전송 | 검수 요청은 Worker UI에서 Client fetch route handler를 거쳐 Quality check service로 전달한다. |
-| 저장 | CheckSession과 연결해 저장하고 원본 WorkOutput 참조를 보관한다. |
-| 처리 | 검수 중 WorkOutput이 바뀌어도 CheckInputSnapshot은 변경하지 않는다. |
+| 생성·수집 | Creator가 검수를 요청하면 System이 현재 AssetGenerationOutput을 복제하거나 참조 고정해 생성한다. |
+| 전송 | 검수 요청은 Creator UI에서 Client fetch route handler를 거쳐 Quality check service로 전달한다. |
+| 저장 | CheckSession과 연결해 저장하고 원본 AssetGenerationOutput 참조를 보관한다. |
+| 처리 | 검수 중 AssetGenerationOutput이 바뀌어도 CheckInputSnapshot은 변경하지 않는다. |
 | 활용 | CheckTarget, CheckRun, Check History 조회의 기준 입력으로 사용한다. |
 | 공유·제공 | Agent에는 점검에 필요한 산출물 내용만 제공한다. |
 | 보관 | CheckSession과 CheckResult가 참조하는 동안 보관한다. |
@@ -464,8 +465,8 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 전송 | 검수 시작 요청은 Quality check service로 전달한다. |
 | 저장 | CheckTarget, CheckRun을 하위로 관리하고 상태와 이벤트를 저장한다. |
 | 처리 | 점검 실행, 판정, 완료 상태를 같은 세션 안에서 묶는다. |
-| 활용 | Worker 검수 결과 조회와 운영자의 점검 이력 조회에 사용한다. |
-| 공유·제공 | 사용 기록에는 SessionEventLog로 감사 가능한 이벤트를 남긴다. |
+| 활용 | Creator 검수 결과 조회와 운영자의 점검 이력 조회에 사용한다. |
+| 공유·제공 | 운영 조회에는 필요한 식별자와 상태만 제공한다. |
 | 보관 | 검수 감사와 운영 조회에 필요한 기간 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제하거나 사용자 식별 정보를 제거한다. |
 
@@ -479,7 +480,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 생성·수집 | CheckSession 시작 시 CheckInputSnapshot을 대상으로 생성한다. |
 | 전송 | CheckSession 생성 요청 안에 포함되어 Quality check service로 전달된다. |
 | 저장 | CheckSession 하위 값 객체 또는 하위 엔티티로 저장한다. |
-| 처리 | 검수 대상 유형, 원본 WorkOutput 참조, CheckInputSnapshot 참조를 연결한다. |
+| 처리 | 검수 대상 유형, 원본 AssetGenerationOutput 참조, CheckInputSnapshot 참조를 연결한다. |
 | 활용 | CheckRun이 어떤 입력을 점검했는지 식별하는 데 사용한다. |
 | 공유·제공 | Agent에는 필요한 입력 식별자와 내용 참조만 제공한다. |
 | 보관 | CheckSession과 같은 기간 보관한다. |
@@ -497,14 +498,14 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 저장 | CheckBasis, CheckDecision, AgentRunRef를 연결해 저장한다. |
 | 처리 | 점검 기준을 CheckBasis로 고정하고, 점검 결과를 CheckDecision 아래에 만든다. |
 | 활용 | 검수 이력 조회와 Agent 품질 확인에 사용한다. |
-| 공유·제공 | 사용 기록에는 CheckRunCompleted 같은 세션 이벤트를 남긴다. |
+| 공유·제공 | 운영 조회에는 필요한 점검 상태와 결과만 제공한다. |
 | 보관 | CheckSession 보관 기간에 맞춰 보관한다. |
 | 파기 | CheckSession 파기 시 함께 삭제하거나 AgentRunRef만 남긴다. |
 
 ### 8.5 CheckBasis
 
 데이터명: CheckBasis
-수집 목적: 점검 실행 시점의 Guideline, Rule, BrandAsset 버전 참조를 한 묶음으로 고정한다.
+수집 목적: 점검 실행 시점의 GuidelineVersionRef, RuleVersionRef, BrandAssetVersionRef를 한 묶음으로 저장한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
@@ -513,7 +514,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 저장 | CheckRun 하위 엔티티로 저장하고 각 VersionRef를 값 객체로 보관한다. |
 | 처리 | Agent와 System이 같은 기준으로 판단하도록 기준 묶음을 잠근다. |
 | 활용 | CheckResult 해석과 검수 재현에 사용한다. |
-| 공유·제공 | Agent에는 점검에 필요한 live 기준 내용만 제공한다. |
+| 공유·제공 | Agent에는 점검에 필요한 live 상태의 Official Version 내용만 제공한다. |
 | 보관 | CheckRun과 같은 기간 보관한다. |
 | 파기 | CheckRun 파기 시 함께 삭제한다. |
 
@@ -528,7 +529,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 전송 | Agent 또는 System 판정 결과는 Quality check service로 전달된다. |
 | 저장 | CheckRun 하위 엔티티로 저장하고 CheckOutcome을 보관한다. |
 | 처리 | 여러 CheckResult를 소유하고 통과, 주의, 실패 같은 최종 상태를 계산한다. |
-| 활용 | Worker 검수 결과 화면과 점검 이력 조회에 사용한다. |
+| 활용 | Creator 검수 결과 화면과 점검 이력 조회에 사용한다. |
 | 공유·제공 | 운영 조회에는 필요한 판정 결과만 제공한다. |
 | 보관 | CheckRun과 같은 기간 보관한다. |
 | 파기 | CheckRun 파기 시 함께 삭제하거나 식별 정보를 제거한 판정 통계만 남긴다. |
@@ -544,8 +545,8 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 전송 | 점검 결과는 Agent repository 또는 System 점검 로직에서 Quality check service로 전달된다. |
 | 저장 | CheckDecision 하위 엔티티로 저장하고 Violation과 CheckRecommendation을 연결한다. |
 | 처리 | CheckBasis의 기준 참조와 연결해 위반 원인과 심각도를 해석한다. |
-| 활용 | Worker 수정 안내와 점검 이력 조회에 사용한다. |
-| 공유·제공 | Manager와 Worker에게 필요한 결과와 근거만 제공한다. |
+| 활용 | Creator 수정 안내와 점검 이력 조회에 사용한다. |
+| 공유·제공 | Manager와 Creator에게 필요한 결과와 근거만 제공한다. |
 | 보관 | CheckDecision과 같은 기간 보관한다. |
 | 파기 | CheckDecision 파기 시 함께 삭제하거나 통계용 익명 집계만 남긴다. |
 
@@ -560,53 +561,21 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 전송 | Agent 응답은 Agent repository에서 Quality check service로 전달된다. |
 | 저장 | CheckResult 하위 값 객체 또는 하위 기록으로 저장하고 AgentRunRef를 연결한다. |
 | 처리 | 위반 내용, 권장 수정, 우선순위, 설명을 CheckResult에 연결한다. |
-| 활용 | Worker 수정 안내에 사용한다. |
-| 공유·제공 | Worker에게 수정 지시로 제공한다. |
+| 활용 | Creator 수정 안내에 사용한다. |
+| 공유·제공 | Creator에게 수정 지시로 제공한다. |
 | 보관 | CheckResult와 같은 기간 보관한다. |
 | 파기 | CheckResult 파기 시 함께 삭제한다. |
 
 ## 9. 사용 기록
 
-### 9.1 SessionEventLog
-
-데이터명: SessionEventLog
-수집 목적: WorkSession, QASession, CheckSession에서 발생한 감사 가능한 이벤트를 저장한다.
-
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | 각 도메인 서비스가 작업 시작, 질문, 답변, 점검 완료 같은 이벤트를 발행하면 수집한다. |
-| 전송 | 서비스 내부 이벤트는 Session event service로 전달한다. |
-| 저장 | 제품 DB에 SessionEvent와 EventPayload를 저장한다. |
-| 처리 | EventType, ActorRef, SourceRef, OccurredAt 기준으로 조회 가능하게 정리한다. |
-| 활용 | 운영 조회와 작업 흐름 추적에 사용한다. |
-| 공유·제공 | 운영 조회에는 필요한 범위만 제공한다. |
-| 보관 | 감사와 운영 조회에 필요한 기간 보관한다. |
-| 파기 | 보관 기간 종료 후 삭제하거나 ActorRef를 익명화한다. |
-
-### 9.2 SessionEvent
-
-데이터명: SessionEvent
-수집 목적: 세션 안에서 발생한 개별 도메인 이벤트를 시간순으로 기록한다.
-
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | WorkEvent, QAEvent, CheckEvent, AgentRunEvent가 발생하면 SessionEvent로 기록한다. |
-| 전송 | 각 서비스에서 Session event service로 전달한다. |
-| 저장 | SessionEventLog 하위 엔티티로 저장한다. |
-| 처리 | 이벤트 유형, 발생 시각, 출처, payload를 표준 구조로 정규화한다. |
-| 활용 | 세션 이벤트 탐색, Agent 실행 로그, Check History 조회에 사용한다. |
-| 공유·제공 | 운영 조회에는 필요한 범위만 제공한다. |
-| 보관 | SessionEventLog 보관 기간에 맞춰 보관한다. |
-| 파기 | SessionEventLog 파기 시 함께 삭제한다. |
-
-### 9.3 BehaviorEventLog
+### 9.1 BehaviorEventLog
 
 데이터명: BehaviorEventLog
 수집 목적: 가이드라인 화면의 조회, 클릭, 에셋 다운로드, 구간 체류를 저장한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Worker 또는 Manager가 가이드라인 화면을 탐색하면 PageViewEvent, ClickEvent, AssetDownloadEvent, SectionDwellEvent, SearchEvent, OutboundLinkEvent, CustomEvent를 수집한다. |
+| 생성·수집 | Creator 또는 Manager가 가이드라인 화면을 탐색하면 PageViewEvent, ClickEvent, AssetDownloadEvent, SectionDwellEvent, SearchEvent, OutboundLinkEvent, CustomEvent를 수집한다. |
 | 전송 | 화면 이벤트는 Client fetch route handler를 거쳐 Behavior event service로 전달한다. |
 | 저장 | Behavior event service가 BehaviorEventLog를 저장하고 필요한 이벤트를 Umami analytics로 전달한다. |
 | 처리 | PageRef, ElementRef, Duration, SessionData를 공통 속성으로 연결한다. |
@@ -615,7 +584,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 보관 | 운영 조회 요구에 맞춰 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제하거나 SessionData에서 식별 가능한 값을 제거한다. |
 
-### 9.4 PageViewEvent
+### 9.2 PageViewEvent
 
 데이터명: PageViewEvent
 수집 목적: 가이드라인 페이지 조회 여부와 조회 시점을 기록한다.
@@ -631,7 +600,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 보관 | BehaviorEventLog 보관 기간에 맞춰 보관한다. |
 | 파기 | BehaviorEventLog 파기 시 함께 삭제한다. |
 
-### 9.5 ClickEvent
+### 9.3 ClickEvent
 
 데이터명: ClickEvent
 수집 목적: 가이드라인 화면에서 사용자가 누른 요소를 기록한다.
@@ -647,7 +616,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 보관 | BehaviorEventLog 보관 기간에 맞춰 보관한다. |
 | 파기 | BehaviorEventLog 파기 시 함께 삭제한다. |
 
-### 9.6 AssetDownloadEvent
+### 9.4 AssetDownloadEvent
 
 데이터명: AssetDownloadEvent
 수집 목적: 공식 에셋 다운로드 횟수와 사용 맥락을 기록한다.
@@ -663,7 +632,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 보관 | BehaviorEventLog 보관 기간에 맞춰 보관한다. |
 | 파기 | BehaviorEventLog 파기 시 함께 삭제한다. |
 
-### 9.7 SectionDwellEvent
+### 9.5 SectionDwellEvent
 
 데이터명: SectionDwellEvent
 수집 목적: 가이드라인 화면의 특정 구간 체류 시간을 기록한다.
@@ -679,7 +648,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 보관 | BehaviorEventLog 보관 기간에 맞춰 보관한다. |
 | 파기 | BehaviorEventLog 파기 시 함께 삭제한다. |
 
-### 9.8 SearchEvent
+### 9.6 SearchEvent
 
 데이터명: SearchEvent
 수집 목적: 가이드라인 화면에서 사용자가 검색한 기준과 결과 선택 맥락을 기록한다.
@@ -695,7 +664,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 보관 | BehaviorEventLog 보관 기간에 맞춰 보관한다. |
 | 파기 | BehaviorEventLog 파기 시 함께 삭제하거나 검색어에서 식별 가능한 내용을 제거한다. |
 
-### 9.9 OutboundLinkEvent
+### 9.7 OutboundLinkEvent
 
 데이터명: OutboundLinkEvent
 수집 목적: 가이드라인 화면에서 외부 자료로 이동한 행동을 기록한다.
@@ -711,7 +680,7 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 | 보관 | BehaviorEventLog 보관 기간에 맞춰 보관한다. |
 | 파기 | BehaviorEventLog 파기 시 함께 삭제한다. |
 
-### 9.10 CustomEvent
+### 9.8 CustomEvent
 
 데이터명: CustomEvent
 수집 목적: 기본 이벤트로 표현하기 어려운 화면별 운영 이벤트를 기록한다.
@@ -730,6 +699,6 @@ WorkSession, WorkInput, WorkOutput은 아키텍처의 Work records에 해당한�
 ## 10. 설계 원칙
 
 - Agent는 정책과 규칙을 직접 변경하지 않습니다.
-- CheckInputSnapshot은 검수 입력을 고정하고, CheckBasis는 검수 기준 버전을 고정합니다.
+- CheckInputSnapshot은 검수 입력을 고정하고, CheckBasis는 검수 기준 VersionRef를 저장합니다.
 - CheckDecision은 하나의 최종 판정이고, 여러 CheckResult를 소유합니다.
 - CheckResult는 필요한 경우 CheckRecommendation을 소유합니다.

@@ -26,7 +26,7 @@
 | 20 | 취약한 패스워드 복구 | 비밀번호 재설정 token은 1회성, 짧은 만료 시간, 서버 저장 검증을 적용합니다. |  |
 | 21 | 쿠키 변조 | 권한 판단에 클라이언트 쿠키 값을 직접 사용하지 않고 서버 세션과 Payload user를 기준으로 판단합니다. |  |
 | 22 | 환경 변수 및 Secret 관리 | `PAYLOAD_SECRET`, DB URL, API key가 코드, 로그, 클라이언트 번들에 노출되지 않도록 관리합니다. |  |
-| 23 | 관리자 권한 분리 | Admin, Manager, Worker 역할별 권한을 분리하고, 관리자 기능 접근을 최소 권한으로 제한합니다. |  |
+| 23 | 관리자 권한 분리 | Admin, Manager, Creator 역할별 권한을 분리하고, 관리자 기능 접근을 최소 권한으로 제한합니다. |  |
 | 24 | API 접근 제어 | Payload REST, GraphQL, Local API에서 collection별 access control 누락이 없는지 확인합니다. Local API는 기본적으로 `user`와 `overrideAccess: false`를 사용합니다. |  |
 | 25 | GraphQL 노출 관리 | 운영 환경에서 GraphQL Playground, introspection, 과도한 query depth 노출을 제한합니다. |  |
 | 26 | 파일 MIME 검증 | 업로드 파일은 확장자뿐 아니라 MIME type과 실제 파일 내용을 함께 검증합니다. |  |
@@ -35,7 +35,7 @@
 | 29 | 감사 로그 | 관리자 작업, 권한 변경, 발행, 반려, 예외 처리를 추적 가능하게 기록합니다. |  |
 | 30 | 의존성 취약점 | npm package와 lockfile의 취약점을 정기적으로 점검하고 업데이트합니다. |  |
 | 31 | 보안 헤더 | CSP, HSTS, X-Frame-Options, Referrer-Policy 같은 보안 헤더를 적용합니다. |  |
-| 32 | Agent 컨텍스트 제한 | Agent는 published content와 허용된 작업 맥락만 조회하고, draft/private content를 답변 근거로 사용하지 않습니다. |  |
+| 32 | Agent 컨텍스트 제한 | Agent는 live 상태의 Official Version과 허용된 제작 맥락만 조회하고, draft/private 기준을 답변 근거로 사용하지 않습니다. |  |
 | 33 | Agent 응답 검증 | Agent 응답은 최종 정책 결정으로 사용하지 않고, 근거 기준과 신뢰도, 사람 검토 필요 여부를 함께 기록합니다. |  |
 | 34 | Server Action 보호 | Server Action은 클라이언트에서 호출되더라도 서버에서 인증, 권한, 입력 스키마를 다시 검증합니다. |  |
 | 35 | 업로드 저장소 격리 | 업로드 파일은 실행 가능한 public path에 직접 저장하지 않고, object storage 또는 Payload upload collection의 권한 검사를 거쳐 제공합니다. |  |
@@ -83,9 +83,9 @@
 
 ### Agent 보안
 
-- Agent 검색은 published content만 대상으로 합니다.
+- Agent 검색은 live 상태의 Official Version만 대상으로 합니다.
 - Agent는 draft, archived, private 기준을 답변 근거로 사용하지 않습니다.
-- Agent 답변에는 근거 기준, 기준 버전, 신뢰도, 사람 검토 필요 여부를 함께 남깁니다.
+- Agent 답변에는 근거 기준, VersionRef, 신뢰도, 사람 검토 필요 여부를 함께 남깁니다.
 - Agent 실패는 사용자 작업 실패나 정책 변경 실패와 분리해서 처리합니다.
 - Agent 질의에는 rate limit을 적용합니다.
 
