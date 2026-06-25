@@ -49,5 +49,5 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 
-# Graphfify
-.graphify-out
+# Graphify
+/graphify-out/
