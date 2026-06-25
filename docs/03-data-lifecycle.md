@@ -33,7 +33,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 가이드라인 이름, 목적, 대상 브랜드를 입력하면 System이 draft 상태로 생성한다. |
-| 전송 | Manager UI에서 입력한 값은 Payload API를 통해 Guideline records service로 전달한다. |
+| 전송 | Manager UI에서 입력한 값은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | Payload collection과 PostgreSQL에 저장한다. Payload revision은 CMS 내부 수정 이력으로 남긴다. |
 | 처리 | GuidelineSection, GuidelinePage, BrandGuidelineVersion을 소유하고, 검토와 승인 상태를 관리한다. |
 | 활용 | Manager는 편집과 발행에 사용하고, Worker와 Agent는 live Version만 참조한다. |
@@ -49,7 +49,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 섹션 이름, 설명, 표시 순서를 입력하면 BrandGuideline 아래에 생성한다. |
-| 전송 | 섹션 편집 요청은 Payload API를 통해 Guideline records service로 전달한다. |
+| 전송 | 섹션 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | BrandGuideline 하위 엔티티로 저장하고 표시 순서를 함께 보관한다. |
 | 처리 | GuidelinePage를 소유하고, 순서 변경 시 페이지 표시 순서를 다시 계산한다. |
 | 활용 | Manager 편집 화면과 Worker 가이드라인 탐색 구조에 사용한다. |
@@ -65,7 +65,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 페이지 제목, 배치 정보, 소속 섹션을 입력하면 GuidelineSection 아래에 생성한다. |
-| 전송 | 페이지 구성 요청은 Payload API를 통해 Guideline records service로 전달한다. |
+| 전송 | 페이지 구성 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | PagePolicy, PageRuleRef, PageAssetRef, PageExample, PageComposition과 함께 저장한다. |
 | 처리 | 페이지 안에서 정책 설명, 규칙 참조, 에셋 참조, 템플릿 참조, 플러그인 참조를 연결한다. |
 | 활용 | Worker 가이드라인 화면, Agent 답변 근거, 품질 검수 기준 탐색에 사용한다. |
@@ -81,7 +81,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 정책 문구, 설명, 적용 맥락을 작성하면 GuidelinePage에 1:1로 연결한다. |
-| 전송 | 정책 편집 요청은 Payload API를 통해 Guideline records service로 전달한다. |
+| 전송 | 정책 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | GuidelinePage 하위 엔티티로 저장하고 revision에 포함한다. |
 | 처리 | 관련 Rule, PageAssetRef, PageExample과 함께 페이지 기준을 구성한다. |
 | 활용 | Worker가 정책 의도를 이해하는 데 사용하고, Agent 답변의 설명 근거로 사용한다. |
@@ -129,7 +129,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 예시 이미지, 설명, 예시 유형을 입력하면 GuidelinePage 아래에 생성한다. |
-| 전송 | 예시 등록 요청은 Payload API를 통해 Guideline records service로 전달한다. |
+| 전송 | 예시 등록 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | GuidelinePage 하위 엔티티로 저장하고 관련 PageAssetRef나 RuleVersionRef를 함께 보관한다. |
 | 처리 | 페이지 안에서 Policy, Rule, Asset과 함께 예시 맥락을 구성한다. |
 | 활용 | Worker가 기준을 해석하는 데 사용하고, Agent가 설명을 보강할 때 참조한다. |
@@ -147,7 +147,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 규칙 이름, 조건, 심각도, 적용 범위를 입력하면 draft 상태로 생성한다. |
-| 전송 | 규칙 등록과 수정 요청은 Payload API를 통해 Brand resource records service로 전달한다. |
+| 전송 | 규칙 등록과 수정 요청은 Payload API를 통해 Brand resource publishing service로 전달한다. |
 | 저장 | Rule 애그리거트로 저장하고 RuleCondition, RuleScope, Severity를 함께 보관한다. |
 | 처리 | 충돌 확인을 거쳐 RuleVersion 후보를 만들고, RuleException을 하위로 관리한다. |
 | 활용 | PageRuleRef, AnswerCitation, CheckBasis에서 판단 기준으로 참조한다. |
@@ -163,7 +163,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 예외 조건, 예외 사유, 적용 기간을 입력하면 Rule 아래에 생성한다. |
-| 전송 | 예외 등록 요청은 Payload API를 통해 Brand resource records service로 전달한다. |
+| 전송 | 예외 등록 요청은 Payload API를 통해 Brand resource publishing service로 전달한다. |
 | 저장 | Rule 하위 엔티티로 저장하고 ExceptionReason과 적용 기간을 보관한다. |
 | 처리 | RuleCondition과 함께 평가되어 예외 적용 여부를 판단한다. |
 | 활용 | Agent 답변과 품질 검수에서 위반 여부를 해석할 때 사용한다. |
@@ -229,7 +229,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 승인된 BrandGuideline을 발행하면 System이 stage 또는 live Version을 생성한다. |
-| 전송 | 발행 요청은 Guideline records service로 전달한다. |
+| 전송 | 발행 요청은 Guideline publishing service로 전달한다. |
 | 저장 | VersionNumber, VersionStatus, EffectivePeriod, PayloadRevisionRef, PreviousVersionRef를 저장한다. |
 | 처리 | live 전환 시 기존 live Version은 archived 상태로 바꾼다. |
 | 활용 | WorkSession과 CheckBasis가 GuidelineVersionRef로 참조한다. |
@@ -245,7 +245,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Rule이 승인되거나 수정되면 System이 RuleVersion 후보를 만든다. |
-| 전송 | 버전 생성 요청은 Brand resource records service로 전달한다. |
+| 전송 | 버전 생성 요청은 Brand resource publishing service로 전달한다. |
 | 저장 | VersionNumber, VersionStatus, RuleCondition, RuleScope, Severity, PayloadRevisionRef를 저장한다. |
 | 처리 | live 전환 시 기존 live RuleVersion은 archived 상태로 바꾼다. |
 | 활용 | PageRuleRef, AnswerCitation, CheckBasis에서 RuleVersionRef로 참조한다. |
@@ -261,7 +261,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | BrandAsset이 발행되면 System이 BrandAssetVersion을 생성한다. |
-| 전송 | 발행 요청과 파일 참조는 Brand resource records service로 전달한다. |
+| 전송 | 발행 요청과 파일 참조는 Brand resource publishing service로 전달한다. |
 | 저장 | VersionStatus, AssetFile 참조, UsageCondition, DownloadStatus를 저장한다. |
 | 처리 | 대체 에셋이 발행되면 이전 Version을 archived 상태로 바꾼다. |
 | 활용 | PageAssetRef, WorkSession, CheckBasis에서 BrandAssetVersionRef로 참조한다. |
@@ -277,7 +277,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Template이 승인되면 System이 TemplateVersion을 생성한다. |
-| 전송 | 발행 요청은 Brand resource records service로 전달한다. |
+| 전송 | 발행 요청은 Brand resource publishing service로 전달한다. |
 | 저장 | TemplateSourceRef, LayoutSpec, TextStyleSpec, EditableBlockSpec, TemplateUsageCondition, VersionStatus를 저장한다. |
 | 처리 | live 전환 시 기존 live TemplateVersion을 archived 상태로 바꾸고, Figma node 또는 파일 원본을 재해석해 제작 가능한 구조를 고정한다. |
 | 활용 | WorkSession에서 TemplateVersionRef로 참조한다. |
@@ -293,7 +293,7 @@
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Plugin이 승인되면 System이 PluginVersion을 생성한다. |
-| 전송 | 발행 요청은 Brand resource records service로 전달한다. |
+| 전송 | 발행 요청은 Brand resource publishing service로 전달한다. |
 | 저장 | PluginEntry, PluginCapability, PluginUsageCondition, VersionStatus를 저장한다. |
 | 처리 | live 전환 시 기존 live PluginVersion을 archived 상태로 바꾼다. |
 | 활용 | WorkSession에서 PluginVersionRef로 참조한다. |

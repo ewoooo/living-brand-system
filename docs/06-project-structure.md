@@ -294,15 +294,15 @@ export async function createWorkSession(input: CreateWorkSessionInput) {
 ### 인터페이스를 두는 경우
 
 ```ts
-type RuleRepository = {
-  findPublished(ruleId: string): Promise<Rule | null>
+type BrandResourceRepository = {
+  findPublishedRule(ruleId: string): Promise<Rule | null>
 }
 
 export async function createAnswer(
   input: CreateAnswerInput,
-  ruleRepository: RuleRepository,
+  brandResourceRepository: BrandResourceRepository,
 ) {
-  const rule = await ruleRepository.findPublished(input.ruleId)
+  const rule = await brandResourceRepository.findPublishedRule(input.ruleId)
   // Service는 Payload query 세부사항을 알지 않습니다.
 }
 ```
