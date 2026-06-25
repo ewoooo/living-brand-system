@@ -10,16 +10,58 @@ Start with `.agents/skills/payload/SKILL.md` for a quick reference, then see `.a
 - If Ponytail or Context7 is unavailable, tell the user what is missing and guide them to install or enable it before continuing with work that requires it.
 - Do not use Context7 for business logic debugging, code review, refactoring that does not require external docs, or project-specific docs under `docs/`.
 
+## Operating Principles
+
+### 1. Think Before Coding
+
+Do not assume or hide confusion. Surface tradeoffs before acting.
+
+- State assumptions explicitly. If uncertain, ask rather than guess.
+- Present multiple interpretations when ambiguity exists.
+- Push back when a simpler approach exists.
+- Stop when confused. Name what is unclear and ask for clarification.
+
+### 2. Simplicity First
+
+Write the minimum code that solves the problem. Add nothing speculative.
+
+- Do not add features beyond what was asked.
+- Do not add abstractions for single-use code.
+- Do not add flexibility or configurability that was not requested.
+- Do not add error handling for impossible scenarios.
+- If 200 lines could be 50, rewrite it.
+
+The test: would a senior engineer say this is overcomplicated? If yes, simplify.
+
+### 3. Surgical Changes
+
+Touch only what is required. Clean up only your own mess.
+
+- Do not improve adjacent code, comments, or formatting.
+- Do not refactor things that are not broken.
+- Match existing style, even if you would do it differently.
+- If unrelated dead code appears, mention it instead of deleting it.
+- Remove imports, variables, and functions that your change made unused.
+- Do not remove pre-existing dead code unless asked.
+
+The test: every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+
+Define success criteria and loop until verified.
+
+- Turn imperative tasks into verifiable goals.
+- For bug fixes, write or identify a check that reproduces the bug, then make it pass.
+- For validation work, check invalid inputs and make the expected behavior pass.
+- For refactors, verify behavior before and after.
+- For multi-step tasks, state a brief plan with a verification step for each item.
+
+Strong success criteria let agents work independently. Weak criteria like "make it work" require clarification.
+
 ## Project Context
 
-This product turns brand guidelines into structured standards that can be used during work, checked against outputs, and reviewed through operational records.
-
-Core actors:
-
-- Manager: owns standards and final decisions.
-- Worker: uses standards while creating outputs.
-- System: stores workflow state, records, and references.
-- Agent: assists with answers, checks, recommendations, and summaries.
+This product turns brand guidelines into structured operational standards.
+It manages guideline content, rules, brand resources, templates, plugins, work records, quality sessions, and usage event logs so brand standards can be used during production work and checked against outputs.
 
 Keep implementation aligned with the docs instead of duplicating domain rules here. Before changing a flow, model, record, permission, or user-facing behavior, read the relevant doc and preserve the documented ownership boundaries.
 
