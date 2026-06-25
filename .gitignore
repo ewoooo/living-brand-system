@@ -51,3 +51,7 @@ node_modules/
 
 # Graphify
 /graphify-out/
+
+# Local agent state (shared .agents skills/settings stay tracked)
+.agents/settings.local.json
+.codex/
