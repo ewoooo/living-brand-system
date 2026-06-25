@@ -53,7 +53,7 @@ flowchart LR
 | --- | --- | --- |
 | 가이드라인 관리 -> 제작 관리 | 제작이 발행된 기준과 자원을 참조합니다. | GuidelineVersionRef, BrandAssetVersionRef, TemplateVersionRef, PluginVersionRef |
 | 가이드라인 관리 -> 품질 검수 | 검수가 live 기준, 규칙, 에셋 버전을 참조합니다. | GuidelineVersionRef, RuleVersionRef, BrandAssetVersionRef |
-| 가이드라인 관리 -> 사용 기록 | 가이드라인 화면 행동과 공식 버전 발행 결과를 기록합니다. | BehaviorEventLog, Version Record |
+| 가이드라인 관리 -> 사용 기록 | 가이드라인 화면 행동과 공식 버전 발행 결과를 기록합니다. | BehaviorEventLog, 발행 Version |
 | 제작 관리 -> 사용 기록 | 제작 과정에서 감사 가능한 세션 이벤트를 남깁니다. | SessionEventLog |
 | 품질 검수 -> 사용 기록 | 질의, 검수 세션, 점검 결과를 세션 이벤트로 남깁니다. | SessionEventLog |
 
@@ -63,7 +63,7 @@ flowchart LR
 제작 관리는 산출물을 만들고 사용 기록을 남깁니다.
 품질 검수는 CheckTarget에 검수 입력을 고정하고, CheckRun의 CheckBasis에서 발행된 Guideline, Rule, BrandAsset 버전을 참조합니다.
 하위 관계도의 엣지는 소유, 참조, 포함, 기록 같은 관계 동사로 표현합니다.
-`GuidelineVersionRef`, `BrandAssetVersionRef`, `TemplateVersionRef`, `PluginVersionRef`, `AgentRunRef`처럼 별도 생명주기가 없는 참조 값은 객체 노드로 표현하지 않습니다.
+`GuidelineVersionRef`, `RuleVersionRef`, `BrandAssetVersionRef`, `TemplateVersionRef`, `PluginVersionRef`, `AgentRunRef`처럼 별도 생명주기가 없는 참조 값은 객체 노드로 표현하지 않습니다.
 단, `PageRuleRef`와 `PageAssetRef`는 페이지 안 표시 순서, 강조, 캡션, 예시 역할을 함께 담으므로 객체로 표현합니다.
 세부 도메인 이벤트명은 각 도메인 모델 목록에만 둡니다.
 
@@ -76,11 +76,11 @@ flowchart LR
     PagePolicy["PagePolicy"]
     PageRuleRef["PageRuleRef"]
     PageAssetRef["PageAssetRef"]
-    Rule["Rule"]
-    RuleException["RuleException"]
   end
 
   subgraph Resource["브랜드 자원 관리"]
+    Rule["Rule"]
+    RuleException["RuleException"]
     BrandAsset["BrandAsset"]
     Template["Template"]
     Plugin["Plugin"]
@@ -181,14 +181,14 @@ flowchart LR
 | 관계 | 의미 |
 | --- | --- |
 | GuidelinePage -> PagePolicy | 페이지는 정책 설명을 1:1로 소유합니다. |
-| GuidelinePage -> Rule / BrandAsset / Template / Plugin | 페이지는 재사용 가능한 규칙과 자원을 버전으로 참조합니다. |
+| GuidelinePage -> RuleVersion / BrandAssetVersion / TemplateVersion / PluginVersion | 페이지는 재사용 가능한 규칙과 자원을 버전으로 참조합니다. |
 | WorkSession -> BrandGuideline / BrandAsset / Template / Plugin | 제작은 발행 기준, 에셋, 템플릿, 플러그인을 사용하고 해당 버전을 고정합니다. |
 | WorkSession -> SessionEventLog | 제작 활동과 산출물 생성 결과는 사용 기록으로 남습니다. |
 | QASession / CheckSession -> SessionEventLog | 질문, 답변, 검수 결과는 사용 기록으로 남습니다. |
 | GuidelinePage -> BehaviorEventLog | 가이드라인 화면 조회, 클릭, 검색, 에셋 다운로드, 특정 구간 체류, 외부 링크 클릭 같은 화면 행동은 화면 행동 기록으로 남깁니다. |
 | CheckSession -> CheckTarget | 품질 검수는 별도 실행될 때 검수 대상 값을 소유합니다. |
 | CheckRun -> CheckBasis | 점검 실행은 검수 시점의 기준 묶음을 소유합니다. |
-| CheckBasis -> BrandGuideline / Rule / BrandAsset | 기준 묶음은 검수 시점의 가이드라인, 규칙, 에셋 버전을 참조합니다. |
+| CheckBasis -> BrandGuideline / RuleVersion / BrandAssetVersion | 기준 묶음은 검수 시점의 가이드라인, 규칙, 에셋 버전을 참조합니다. |
 | CheckDecision -> CheckResult | 최종 판정은 여러 점검 결과를 소유합니다. |
 | CheckResult -> CheckRecommendation | 점검 결과는 필요한 수정 권장 사항을 소유합니다. |
 | BrandGuideline / Rule / BrandAsset / Template / Plugin -> Version | 발행 대상은 공식 Version을 만들고, Version은 이전 버전과 Payload revision 참조를 보존합니다. |
@@ -196,8 +196,8 @@ flowchart LR
 ## 4. 가이드라인 관리
 
 가이드라인 관리는 브랜드 가이드라인, 공식 자원, 공식 버전을 관리하는 서브도메인입니다.
-GuidelinePage는 단순 텍스트 묶음이 아니라 PagePolicy, Rule 참조, BrandAsset 참조, Template 참조, Plugin 참조, 화면 구성을 묶은 발행 단위입니다.
-Rule은 여러 페이지에서 재사용될 수 있으므로 GuidelinePage 내부 엔티티가 아니라 독립 애그리거트(관리 단위)입니다.
+GuidelinePage는 단순 텍스트 묶음이 아니라 PagePolicy, RuleVersion 참조, BrandAsset 참조, Template 참조, Plugin 참조, 화면 구성을 묶은 발행 단위입니다.
+Rule은 여러 페이지, 템플릿, 플러그인, 검수에서 재사용되는 브랜드 자원 관리의 독립 애그리거트(관리 단위)입니다.
 
 ```text
 [도메인] 브랜드 운영 시스템
@@ -214,41 +214,42 @@ Rule은 여러 페이지에서 재사용될 수 있으므로 GuidelinePage 내�
       │         │    │    ├── 엔티티: PageExample
       │         │    │    └── 값 객체: PageComposition, DisplayOrder
       │         │    └── 값 객체: GuidelineStatus, EffectivePeriod
-      │         ├── 애그리거트(관리 단위): Rule
-      │         │    ├── 엔티티: RuleVersion
-      │         │    ├── 엔티티: RuleException
-      │         │    └── 값 객체: RuleType, Severity, RuleScope, RuleCondition, RequiredCopy, ForbiddenCopy, ExceptionReason
-      │         ├── 도메인 서비스: GuidelinePublishService, RuleConflictCheckService, VersionPublishService, VersionCompareService
+      │         ├── 도메인 서비스: GuidelinePublishService, VersionPublishService, VersionCompareService
       │         └── 도메인 이벤트
       │              ├── GuidelineDraftCreated, GuidelineSubmittedForReview, GuidelineApproved
       │              ├── GuidelinePublished, GuidelineScheduled, GuidelineDeprecated
       │              ├── GuidelinePageUpdated, PagePolicyUpdated, PageRuleLinked, PageAssetLinked
-      │              ├── RuleUpdated, RuleExceptionAdded
-      │              └── GuidelineVersionStaged, GuidelineVersionPublished, GuidelineVersionArchived, GuidelineVersionCompared
+      │              └── GuidelineVersionStaged, GuidelineVersionPublished, GuidelineVersionArchived
       ├── [바운디드 컨텍스트] 브랜드 자원 관리
       │    └── [도메인 모델]
+      │         ├── 애그리거트(관리 단위): Rule
+      │         │    ├── 엔티티: RuleVersion
+      │         │    ├── 엔티티: RuleException
+      │         │    └── 값 객체: RuleType, Severity, RuleScope, RuleCondition, RequiredCopy, ForbiddenCopy, ExceptionReason
       │         ├── 애그리거트(관리 단위): BrandAsset
       │         │    ├── 엔티티: AssetFile
       │         │    ├── 엔티티: BrandAssetVersion
       │         │    └── 값 객체: AssetType, UsageCondition, DownloadStatus
       │         ├── 애그리거트(관리 단위): Template
-      │         │    ├── 엔티티: TemplateFile, TemplateField, TemplateVersion
-      │         │    └── 값 객체: TemplateUsageCondition
+      │         │    ├── 엔티티: TemplateVersion
+      │         │    └── 값 객체: TemplateSourceRef, LayoutSpec, TextStyleSpec, EditableBlockSpec, TemplateUsageCondition
       │         ├── 애그리거트(관리 단위): Plugin
       │         │    ├── 엔티티: PluginEntry, PluginCapability, PluginVersion
       │         │    └── 값 객체: PluginType, PluginUsageCondition
-      │         ├── 도메인 서비스: AssetPublishService, TemplatePublishService, PluginPublishService, VersionPublishService, VersionCompareService
+      │         ├── 도메인 서비스: RuleConflictCheckService, AssetPublishService, TemplatePublishService, PluginPublishService, VersionPublishService, VersionCompareService
       │         └── 도메인 이벤트
+      │              ├── RuleUpdated, RuleExceptionAdded
       │              ├── BrandAssetRegistered, BrandAssetPublished, BrandAssetDeprecated
       │              ├── TemplateRegistered, TemplatePublished, TemplateDeprecated
       │              ├── PluginRegistered, PluginPublished, PluginDeprecated
       │              ├── ResourceLinkedToGuideline
-      │              ├── BrandAssetVersionStaged, BrandAssetVersionPublished, BrandAssetVersionArchived, BrandAssetVersionCompared
-      │              ├── TemplateVersionStaged, TemplateVersionPublished, TemplateVersionArchived, TemplateVersionCompared
-      │              └── PluginVersionStaged, PluginVersionPublished, PluginVersionArchived, PluginVersionCompared
+      │              ├── RuleVersionStaged, RuleVersionPublished, RuleVersionArchived
+      │              ├── BrandAssetVersionStaged, BrandAssetVersionPublished, BrandAssetVersionArchived
+      │              ├── TemplateVersionStaged, TemplateVersionPublished, TemplateVersionArchived
+      │              └── PluginVersionStaged, PluginVersionPublished, PluginVersionArchived
       └── [공통 값 객체]
            ├── VersionNumber, VersionStatus(stage/live/archived), PayloadRevisionRef
-           └── PreviousVersionRef, VersionSummary, VersionReason, VersionResourceType
+           └── PreviousVersionRef, VersionReason, VersionResourceType
 ```
 
 ### 가이드라인 관리 하위 도메인 관계도
@@ -262,11 +263,11 @@ flowchart LR
     Policy["PagePolicy"]
     PageRuleRefNode["PageRuleRef"]
     PageAssetRefNode["PageAssetRef"]
-    Rule["Rule"]
-    RuleException["RuleException"]
   end
 
   subgraph Resource["브랜드 자원 관리"]
+    Rule["Rule"]
+    RuleException["RuleException"]
     BrandAsset["BrandAsset"]
     Template["Template"]
     Plugin["Plugin"]
@@ -297,7 +298,7 @@ BrandGuideline은 사용자가 읽는 가이드라인 구조를 관리합니다.
 GuidelineSection은 BrandGuideline의 상위 장이고, GuidelinePage는 실제 화면이나 문서에서 읽는 단위입니다.
 GuidelineVersionRef는 BrandGuideline이 소유한 공식 Version을 WorkSession과 CheckBasis가 참조하기 위해 저장하는 값 객체입니다.
 
-GuidelinePage는 PagePolicy를 1:1로 소유하고, Rule, BrandAssetVersion, TemplateVersion, PluginVersion은 참조합니다.
+GuidelinePage는 PagePolicy를 1:1로 소유하고, RuleVersion, BrandAssetVersion, TemplateVersion, PluginVersion은 참조합니다.
 PageRuleRef와 PageAssetRef는 페이지 안에서의 표시 순서, 강조, 캡션, 예시 역할을 함께 기록합니다.
 
 Rule은 CheckBasis와 Agent 답변에서 참조하는 판단 기준입니다.
@@ -309,6 +310,7 @@ Version 이벤트는 공통 이름만 쓰지 않고, producer 또는 resource ty
 
 BrandAsset은 로고, 이미지, 아이콘처럼 공식으로 배포되는 브랜드 자산입니다.
 Template은 Worker가 작업을 시작할 때 사용하는 공식 형식입니다.
+TemplateSourceRef는 Figma node 또는 업로드 파일 원본을 가리키고, LayoutSpec, TextStyleSpec, EditableBlockSpec은 제작 가능한 편집 구조를 정의합니다.
 Plugin은 Worker가 산출물을 만들 때 사용할 수 있는 공식 제작 기능입니다.
 PluginEntry는 제품에서 호출할 수 있는 Plugin 실행 단위이고, PluginCapability는 Plugin이 제공하는 제작 기능입니다.
 GuidelinePage와 Rule은 BrandAsset, Template, Plugin을 참조할 수 있지만, 파일 또는 버전 교체와 배포 상태는 브랜드 자원 관리가 담당합니다.
@@ -327,7 +329,7 @@ GuidelinePage와 Rule은 BrandAsset, Template, Plugin을 참조할 수 있지만
                 ├── 애그리거트(관리 단위): WorkSession
                 │    ├── 엔티티: WorkSession, WorkInput, WorkOutput
                 │    └── 값 객체: WorkPurpose, ApplicationTypeRef, GuidelineVersionRef, BrandAssetVersionRef, TemplateVersionRef, PluginVersionRef, WorkSessionStatus
-                ├── 도메인 서비스: BrandAssetGenerationService
+                ├── 도메인 서비스: Brand asset generation service
                 └── 도메인 이벤트: WorkSessionStarted, WorkInputChanged, WorkPreviewGenerated, WorkOutputCreated, WorkSessionCompleted
 ```
 
@@ -384,7 +386,7 @@ WorkSession, WorkInput, WorkOutput은 Work records로 저장하고, BrandGuideli
       │         ├── 애그리거트(관리 단위): QASession
       │         │    ├── 엔티티: Question, Answer
       │         │    └── 값 객체: AnswerCitation, AnswerConfidence, AgentRunRef
-      │         ├── 도메인 서비스: AnswerGenerationService
+      │         ├── 도메인 서비스: Answer generation service
       │         └── 도메인 이벤트: QuestionAsked, AnswerProvided
       ├── [바운디드 컨텍스트] 산출물 검수
       │    └── [도메인 모델]
@@ -398,7 +400,7 @@ WorkSession, WorkInput, WorkOutput은 Work records로 저장하고, BrandGuideli
       │         │    │         └── 엔티티: CheckResult
       │         │    │              └── 엔티티: CheckRecommendation
       │         │    └── 값 객체: CheckOutcome, Violation, AgentRunRef
-      │         ├── 도메인 서비스: QualityCheckService
+      │         ├── 도메인 서비스: Quality check service
       │         └── 도메인 이벤트: CheckSessionStarted, CheckRunCompleted, CheckCompleted
       └── [실행 기록 카탈로그]
            └── AgentRunStarted, AgentRunCompleted, AgentRunFailed
@@ -461,8 +463,8 @@ flowchart LR
   classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
   classDef record fill:#F1F3F5,stroke:#868E96,stroke-width:1.5px,color:#1F1F1F;
 
-  class QASession,CheckSession,BrandGuideline,BrandAsset aggregate;
-  class Rule,Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult entity;
+  class QASession,CheckSession,BrandGuideline,Rule,BrandAsset aggregate;
+  class Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult entity;
   class AnswerCitation,AnswerConfidence,CheckRecommendation childEntity;
   class AgentRun,SessionEventLog record;
 ```
@@ -491,14 +493,14 @@ AgentRunStarted, AgentRunCompleted, AgentRunFailed는 업무 도메인 이벤트
       │         ├── 애그리거트(관리 단위): SessionEventLog
       │         │    ├── 엔티티: SessionEvent
       │         │    └── 값 객체: EventType, ActorRef, SourceRef, OccurredAt, EventPayload
-      │         ├── 도메인 서비스: SessionEventIngestService, SessionEventQueryService
+      │         ├── 도메인 서비스: Session event service
       │         └── 도메인 이벤트: SessionEventCaptured
       └── [바운디드 컨텍스트] 화면 행동 기록
            └── [도메인 모델]
                 ├── 애그리거트(관리 단위): BehaviorEventLog
                 │    ├── 엔티티: PageViewEvent, ClickEvent, SearchEvent, AssetDownloadEvent, SectionDwellEvent, OutboundLinkEvent, CustomEvent
                 │    └── 값 객체: PageRef, ElementRef, Duration, SessionData
-                ├── 도메인 서비스: BehaviorEventIngestService, BehaviorEventQueryService
+                ├── 도메인 서비스: Behavior event service
                 └── 도메인 이벤트: BehaviorEventCaptured
 ```
 
