@@ -74,8 +74,8 @@ flowchart LR
 
   subgraph Services["Domain services"]
     subgraph PayloadSupported["Payload CMS supported"]
-      GuidelineContentModule["Guideline records service"]
-      BrandResourceModule["Brand resource records service"]
+      GuidelinePublishingModule["Guideline publishing service"]
+      BrandResourcePublishingModule["Brand resource publishing service"]
       SessionEventModule["Session event service"]
       BehaviorEventModule["Behavior event service"]
     end
@@ -126,8 +126,8 @@ flowchart LR
     UmamiAnalytics["Umami analytics"]
   end
 
-  AdminUI -->|"Payload Admin request"| GuidelineContentModule
-  AdminUI -->|"Payload Admin request"| BrandResourceModule
+  AdminUI -->|"Payload Admin request"| GuidelinePublishingModule
+  AdminUI -->|"Payload Admin request"| BrandResourcePublishingModule
 
   GuidelineUI -->|"initial render"| ServerRenderRouteHandler
   QualityCheckUI -->|"initial render"| ServerRenderRouteHandler
@@ -145,8 +145,8 @@ flowchart LR
   ClientFetchRouteHandler -->|"request"| BrandAssetGenerationModule
   ClientFetchRouteHandler -->|"request"| AnswerGenerationModule
   ClientFetchRouteHandler -->|"request"| QualityModule
-  GuidelineContentModule -->|"read / write"| GuidelineRepository
-  BrandResourceModule -->|"read / write"| BrandResourceRepository
+  GuidelinePublishingModule -->|"read / write"| GuidelineRepository
+  BrandResourcePublishingModule -->|"read / write"| BrandResourceRepository
   BrandAssetGenerationModule -->|"write session/output"| ProductionRepository
   BrandAssetGenerationModule -->|"read resources"| ProductionResourceRepository
   AnswerGenerationModule -->|"write QA session"| QualityRepository
@@ -160,8 +160,8 @@ flowchart LR
   QualityModule -->|"session event"| SessionEventModule
   ClientFetchRouteHandler -->|"behavior event"| BehaviorEventModule
   BehaviorEventModule -->|"track / identify"| UmamiAnalytics
-  GuidelineContentModule -->|"file operation"| StorageRepository
-  BrandResourceModule -->|"file operation"| StorageRepository
+  GuidelinePublishingModule -->|"file operation"| StorageRepository
+  BrandResourcePublishingModule -->|"file operation"| StorageRepository
   BrandAssetGenerationModule -->|"file operation"| StorageRepository
 
   AgentRepository -->|"POST / GET"| AgentPackage
@@ -182,8 +182,59 @@ flowchart LR
 
 Domain Service Layer는 records, event logs, Agent package, 외부 의존성에 직접 접근하지 않고 Repository 또는 adapter를 통해 접근합니다.
 Payload CMS supported 영역은 collection, hook, access control, version, upload로 처리 가능한 흐름입니다.
+Guideline publishing service와 Brand resource publishing service는 Payload CMS 기능을 우선 사용하되, 발행, 충돌 검사, 공식 Version 전환 판단의 도메인 책임을 가집니다.
 External services 영역은 렌더링, 스냅샷 고정, Agent 실행처럼 별도 업무 로직이 필요한 흐름입니다.
 Brand resource records는 메타데이터와 참조만 보관하고, 실제 파일과 실행물은 외부 저장소 또는 런타임에 둡니다.
+
+#### 서비스 책임 매핑
+
+이 표는 Domain Service Layer의 서비스가 어떤 유즈케이스 흐름을 묶고, 어떤 내부 도메인 서비스와 이벤트를 책임지는지 보여줍니다.
+상세 유즈케이스 절차는 [02. 유즈케이스](02-usecases.md), 전체 도메인 이벤트 목록은 [04. 도메인 모델](04-domain-model.md)을 기준으로 합니다.
+
+| 서비스 | 담당 유즈케이스 | 내부 도메인 서비스 | 주요 이벤트 |
+| --- | --- | --- | --- |
+| Guideline publishing service | GL-01~13, VER-01~04(BrandGuideline) | GuidelinePublishService, VersionPublishService, VersionCompareService | GuidelinePublished, GuidelineScheduled, GuidelineDeprecated, GuidelineVersion* |
+| Brand resource publishing service | RULE-01~04, RES-01~26, VER-01~04(Rule / BrandAsset / Template / Plugin) | RuleConflictCheckService, AssetPublishService, TemplatePublishService, PluginPublishService, VersionPublishService, VersionCompareService | Rule*, BrandAsset*, Template*, Plugin*, ResourceLinkedToGuideline, RuleVersion*, BrandAssetVersion*, TemplateVersion*, PluginVersion* |
+| Session event service | LOG-01~05 | SessionEventIngestService, SessionEventQueryService | SessionEventCaptured |
+| Behavior event service | LOG-06 | BehaviorEventIngestService, BehaviorEventQueryService | BehaviorEventCaptured |
+| Brand asset generation service | WORK-01~11 | BrandAssetGenerationService | WorkSessionStarted, WorkInputChanged, WorkPreviewGenerated, WorkOutputCreated, WorkSessionCompleted |
+| Answer generation service | QA-01~07 | AnswerGenerationService | QuestionAsked, AnswerProvided |
+| Quality check service | QC-01~05 | QualityCheckService | CheckSessionStarted, CheckRunCompleted, CheckCompleted |
+
+#### 발행 서비스 흐름
+
+가이드라인과 브랜드 자원 발행은 같은 Version 전환 흐름을 공유합니다.
+Rule 충돌 검사는 Rule 발행 대상에서만 수행합니다.
+
+```mermaid
+flowchart TB
+  Request["Admin request"]
+  Service["Publishing service"]
+  Validate["Validate draft"]
+  Conflict["Check conflicts"]
+  Stage["Create stage Version"]
+  Compare["Compare with previous live"]
+  Publish["Promote stage to live"]
+  Archive["Archive previous live"]
+  Event["Record domain event"]
+  Repository["Payload repository"]
+
+  Request --> Service
+  Service --> Validate
+  Validate --> Conflict
+  Conflict --> Stage
+  Stage --> Compare
+  Compare --> Publish
+  Publish --> Archive
+  Archive --> Event
+
+  Validate --> Repository
+  Conflict --> Repository
+  Stage --> Repository
+  Compare --> Repository
+  Publish --> Repository
+  Archive --> Repository
+```
 
 #### 서브도메인 구조
 
@@ -260,8 +311,8 @@ flowchart TB
 | 발행 버전 | 가이드라인, 규칙, 에셋, 템플릿, 플러그인이 발행된 기준과 자원을 고정합니다. | 각 원본 데이터의 Version |
 | 실행 스냅샷 | 검수 입력처럼 나중에 같은 조건으로 다시 봐야 하는 값을 고정합니다. | 제품 DB / 파일 저장소 |
 | 업무 활동 기록 | 작업, 질문, 검수처럼 감사가 필요한 업무 활동을 남깁니다. | SessionEventLog |
-| 화면 행동 기록 | 조회, 클릭, 체류처럼 운영자가 확인할 화면 행동을 남깁니다. | BehaviorEventLog |
-| Agent 실행 참조 | Agent가 만든 답변, 점검, 요약 결과를 실행 기록과 연결합니다. | AgentRunRef |
+| 화면 행동 기록 | 조회, 클릭, 검색, 다운로드, 체류, 외부 링크 이동처럼 운영자가 확인할 화면 행동을 남깁니다. | BehaviorEventLog |
+| Agent 실행 참조 | Agent가 만든 답변과 점검 결과를 실행 기록과 연결합니다. | AgentRunRef |
 
 ### Payload 컬렉션 목록
 
