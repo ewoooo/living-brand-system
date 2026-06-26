@@ -8,8 +8,8 @@ function applyTheme() {
 	document.documentElement.classList.toggle(
 		'dark',
 		localStorage.theme === 'dark' ||
-			(!('theme' in localStorage) &&
-				window.matchMedia('(prefers-color-scheme: dark)').matches),
+		(!('theme' in localStorage) &&
+			window.matchMedia('(prefers-color-scheme: dark)').matches),
 	)
 }
 
@@ -43,7 +43,6 @@ export function ThemeToggle() {
 
 	return (
 		<label className="inline-flex items-center gap-2 text-sm">
-			Theme
 			<select
 				className="rounded border border-neutral-300 bg-white px-2 py-1 text-black dark:border-neutral-700 dark:bg-black dark:text-white"
 				value={theme}

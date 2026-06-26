@@ -1,4 +1,6 @@
 import type React from 'react'
+import { GuidelineHeader } from '@/features/guideline/components/global-header'
+
 import './styles.css'
 
 const themeScript = `
@@ -32,7 +34,8 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
 				/>
 			</head>
 			<body>
-				<main>{children}</main>
+				<GuidelineHeader />
+				{children}
 			</body>
 		</html>
 	)
