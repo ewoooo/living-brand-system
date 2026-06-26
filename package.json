@@ -22,7 +22,8 @@
 		"test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts",
 		"test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
 		"typecheck": "tsc --noEmit",
-		"doctor": "npx react-doctor@latest"
+		"doctor": "pnpm run generate:types && pnpm run check:write && pnpm run check && pnpm run typecheck",
+		"doctor:react": "npx react-doctor@latest"
 	},
 	"dependencies": {
 		"@payloadcms/db-postgres": "3.85.1",
