@@ -1,3 +1,6 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
 @font-face {
 	font-family: "Pretendard";
 	src: url("/fonts/pretendard/PretendardVariable.woff2") format("woff2");
