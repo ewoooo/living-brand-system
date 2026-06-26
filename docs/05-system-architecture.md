@@ -267,7 +267,7 @@ flowchart TB
   GuidelineRequest["Guideline page request"]
 
   subgraph PayloadSupported["Payload CMS supported"]
-    Collections["Collections: guideline / page / policy / resource"]
+    Collections["Collections: guideline / composition / page / resource"]
     Access["Access control"]
     Hooks["Hooks"]
     Draft["Guideline / resource draft"]
@@ -482,28 +482,27 @@ flowchart TB
 
 ## 3. 객체 및 정의
 
-### Payload collection 후보
+### Payload collection / global 후보
 
 초기 Payload collection은 Manager가 직접 관리하는 기준 데이터부터 둡니다.
 루트 애그리거트 단위로만 고정하지 않고, 독립적으로 편집, 검색, 재사용, 권한 관리, 발행해야 하는 객체는 별도 collection 후보로 둡니다.
 브랜드 자산은 BrandAsset을 단일 collection으로 고정하지 않고, 브랜드 코어 자산과 어플리케이션 자산으로 나누어 검토합니다.
 사용 과정에서 자동 생성되는 작업, 질의, 검수, 로그 기록은 여기서 collection으로 확정하지 않습니다.
+가이드라인 자체는 제품 안에서 하나만 운영하므로 Payload global로 둡니다.
 
-| Collection 후보 | 관리 단위 | 주요 관계 |
+| 후보 | 관리 단위 | 주요 관계 |
 | --- | --- | --- |
-| `guidelines` | BrandGuideline | sections를 소유 |
-| `guideline-sections` | GuidelineSection | guideline에 속하고 pages를 소유 |
-| `guideline-pages` | GuidelinePage | section에 속하고 policy, rule refs, asset refs, template refs, plugin refs를 소유 |
-| `page-policies` | PagePolicy | page에 1:1로 연결 |
+| `guideline` global | BrandGuideline | 단일 가이드라인 설정 |
+| `compositions` | PageComposition | 실제 프론트엔드 레이아웃 타입을 관리 |
+| `sections` | GuidelineSection | pages를 소유 |
+| `guideline-pages` | GuidelinePage | section에 속하고 composition, policy, rule refs, asset refs, template refs, plugin refs를 소유 |
 | `rules` | Rule | page, template, plugin, check basis에서 참조 |
 | `brand-logos` | BrandLogo | page, rule, asset generation session, check basis에서 참조 |
 | `brand-colors` | BrandColor | page, rule, template, plugin에서 참조 |
 | `brand-typefaces` | BrandTypeface | page, rule, template에서 참조 |
 | `application-images` | ApplicationImage | page, asset generation session, check basis에서 참조 |
-| `application-videos` | ApplicationVideo | page, asset generation session, check basis에서 참조 |
 | `templates` | Template | page, plugin, asset generation session에서 참조 |
 | `plugins` | Plugin | page, template, asset generation session에서 참조 |
-| `media` | uploaded file | logo file, image file, video file, page example, template source에서 참조 |
 
 ### 런타임 객체
 

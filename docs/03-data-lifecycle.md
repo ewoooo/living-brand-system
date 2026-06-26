@@ -77,11 +77,11 @@
 ### 3.4 PagePolicy
 
 데이터명: PagePolicy
-수집 목적: GuidelinePage의 상위 정책 설명과 적용 맥락을 관리한다.
+수집 목적: GuidelinePage의 상위 정책 설명을 관리한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Manager가 정책 문구, 설명, 적용 맥락을 작성하면 GuidelinePage에 1:1로 연결한다. |
+| 생성·수집 | Manager가 정책 문구와 설명을 작성하면 GuidelinePage에 1:1로 연결한다. |
 | 전송 | 정책 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | GuidelinePage 하위 엔티티로 저장하고 revision에 포함한다. |
 | 처리 | 관련 Rule, PageAssetRef, PageExample과 함께 페이지 기준을 구성한다. |

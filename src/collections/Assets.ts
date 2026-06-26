@@ -5,6 +5,9 @@ export const Assets: CollectionConfig = {
 	access: {
 		read: () => true,
 	},
+	admin: {
+		group: 'Assets',
+	},
 	fields: [
 		{
 			name: 'alt',
