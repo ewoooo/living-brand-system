@@ -66,7 +66,7 @@ export default buildConfig({
 		}),
 	],
 	i18n: {
-		supportedLanguages: { ko, en },
+		supportedLanguages: { ko },
 		fallbackLanguage: 'ko',
 	},
 	localization: {
