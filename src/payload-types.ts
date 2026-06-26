@@ -68,8 +68,9 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
-    media: Media;
+    assets: Asset;
     rules: Rule;
+    cars: Car;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,8 +79,9 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
+    assets: AssetsSelect<false> | AssetsSelect<true>;
     rules: RulesSelect<false> | RulesSelect<true>;
+    cars: CarsSelect<false> | CarsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -88,10 +90,10 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
-  fallbackLocale: null;
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ko' | 'en') | ('ko' | 'en')[];
   globals: {};
   globalsSelect: {};
-  locale: null;
+  locale: 'ko' | 'en';
   widgets: {
     collections: CollectionsWidget;
   };
@@ -150,9 +152,9 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
+ * via the `definition` "assets".
  */
-export interface Media {
+export interface Asset {
   id: number;
   alt: string;
   updatedAt: string;
@@ -215,6 +217,17 @@ export interface Rule {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cars".
+ */
+export interface Car {
+  id: number;
+  title?: string | null;
+  featuredImage?: (number | null) | Asset;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -242,12 +255,16 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
-        relationTo: 'media';
-        value: number | Media;
+        relationTo: 'assets';
+        value: number | Asset;
       } | null)
     | ({
         relationTo: 'rules';
         value: number | Rule;
+      } | null)
+    | ({
+        relationTo: 'cars';
+        value: number | Car;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -316,9 +333,9 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
+ * via the `definition` "assets_select".
  */
-export interface MediaSelect<T extends boolean = true> {
+export interface AssetsSelect<T extends boolean = true> {
   alt?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -350,6 +367,16 @@ export interface RulesSelect<T extends boolean = true> {
   input?: T;
   notes?: T;
   status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cars_select".
+ */
+export interface CarsSelect<T extends boolean = true> {
+  title?: T;
+  featuredImage?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -2,9 +2,12 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { s3Storage } from '@payloadcms/storage-s3'
+import { en } from '@payloadcms/translations/languages/en'
+import { ko } from '@payloadcms/translations/languages/ko'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
-import { Media } from './collections/Media'
+import { Assets } from './collections/Assets'
 import { Rules } from './collections/Rules'
 import { Users } from './collections/Users'
 
@@ -25,7 +28,19 @@ export default buildConfig({
 			baseDir: path.resolve(dirname),
 		},
 	},
-	collections: [Users, Media, Rules],
+	collections: [
+		Users,
+		Assets,
+		Rules,
+		{
+			slug: 'cars',
+			admin: { useAsTitle: 'title' },
+			fields: [
+				{ name: 'title', type: 'text' },
+				{ name: 'featuredImage', type: 'upload', relationTo: 'assets' },
+			],
+		},
+	],
 	editor: lexicalEditor(),
 	secret: process.env.PAYLOAD_SECRET || '',
 	typescript: {
@@ -37,5 +52,29 @@ export default buildConfig({
 		},
 	}),
 	sharp,
-	plugins: [],
+	plugins: [
+		s3Storage({
+			collections: {
+				assets: true,
+			},
+			bucket: process.env.S3_BUCKET || '',
+			config: {
+				region: process.env.S3_REGION || '',
+				credentials: {
+					accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+					secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+				},
+			},
+		}),
+	],
+	i18n: {
+		// 관리자 UI 언어는 언어 쿠키, 브라우저 언어, fallbackLanguage 순서로 결정된다.
+		supportedLanguages: { ko }, // { ko, en }
+		// 지원되는 쿠키나 브라우저 언어가 없을 때만 사용된다.
+		fallbackLanguage: 'ko',
+	},
+	localization: {
+		locales: ['ko', 'en'],
+		defaultLocale: 'ko',
+	},
 })

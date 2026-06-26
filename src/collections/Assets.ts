@@ -1,8 +1,8 @@
 import type { CollectionConfig } from 'payload'
 import { authenticated, managerOrAdmin } from '@/lib/auth'
 
-export const Media: CollectionConfig = {
-	slug: 'media',
+export const Assets: CollectionConfig = {
+	slug: 'assets',
 	access: {
 		read: authenticated,
 		create: managerOrAdmin,

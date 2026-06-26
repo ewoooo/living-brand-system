@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import config from '@payload-config'
 import { getPayload } from 'payload'
+import type { Rule } from '@/payload-types'
 
 /**
  * Rule TYPE 프리셋 카탈로그(121, 브랜드 무관)를 rules 컬렉션에 시드한다.
@@ -16,10 +17,10 @@ import { getPayload } from 'payload'
 type CatalogEntry = {
 	key: string
 	title: string
-	category: string
-	tier?: string
-	executor?: string
-	scopeOptions?: string[]
+	category: Rule['category']
+	tier?: Rule['tier']
+	executor?: Rule['executor']
+	scopeOptions?: Rule['scope']
 	frequency?: number
 	domainDefault?: boolean
 	paramSchema?: string
@@ -50,7 +51,7 @@ for (const entry of entries) {
 		scoring: entry.scoring,
 		input: entry.input,
 		notes: entry.note,
-		status: 'live',
+		status: 'live' as const,
 	}
 
 	const existing = await payload.find({
