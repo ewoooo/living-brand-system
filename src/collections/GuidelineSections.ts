@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import { type CollectionConfig, slugField } from 'payload'
 
 export const GuidelineSections: CollectionConfig = {
 	slug: 'sections',
@@ -26,6 +26,11 @@ export const GuidelineSections: CollectionConfig = {
 			required: true,
 			localized: true,
 		},
+		slugField({
+			useAsSlug: 'title',
+			localized: true,
+			required: true,
+		}),
 		{
 			name: 'description',
 			type: 'textarea',

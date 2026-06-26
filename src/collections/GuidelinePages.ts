@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import { type CollectionConfig, slugField } from 'payload'
 
 export const GuidelinePages: CollectionConfig = {
 	slug: 'guideline-pages',
@@ -25,6 +25,11 @@ export const GuidelinePages: CollectionConfig = {
 			required: true,
 			localized: true,
 		},
+		slugField({
+			useAsSlug: 'title',
+			localized: true,
+			required: true,
+		}),
 		{
 			name: 'section',
 			type: 'relationship',
