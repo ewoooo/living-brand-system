@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import type { GetGuidelineSectionOutput } from '@/services/get-guideline-section.service'
 import { getGuidelineSection } from '@/services/get-guideline-section.service'
 
 interface GuidelineSectionPageProps {
@@ -10,7 +9,7 @@ interface GuidelineSectionPageProps {
 
 export default async function GuidelineSectionPage({ params }: GuidelineSectionPageProps) {
 	const { sectionSlug } = await params
-	const sectionView: GetGuidelineSectionOutput | null = await getGuidelineSection({
+	const sectionView = await getGuidelineSection({
 		sectionSlug,
 	})
 
