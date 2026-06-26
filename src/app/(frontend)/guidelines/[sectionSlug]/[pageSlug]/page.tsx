@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import type { GetGuidelinePageOutput } from '@/services/get-guideline-page.service'
 import { getGuidelinePage } from '@/services/get-guideline-page.service'
 
 interface GuidelinePageProps {
@@ -11,7 +10,7 @@ interface GuidelinePageProps {
 
 export default async function GuidelinePage({ params }: GuidelinePageProps) {
 	const { sectionSlug, pageSlug } = await params
-	const pageView: GetGuidelinePageOutput | null = await getGuidelinePage({
+	const pageView = await getGuidelinePage({
 		sectionSlug,
 		pageSlug,
 	})
