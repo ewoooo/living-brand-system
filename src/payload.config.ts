@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
+import { en } from '@payloadcms/translations/languages/en'
+import { ko } from '@payloadcms/translations/languages/ko'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
 import { Assets } from './collections/Assets'
@@ -63,4 +65,12 @@ export default buildConfig({
 			},
 		}),
 	],
+	i18n: {
+		supportedLanguages: { ko, en },
+		fallbackLanguage: 'ko',
+	},
+	localization: {
+		locales: ['ko', 'en'],
+		defaultLocale: 'ko',
+	},
 })
