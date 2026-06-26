@@ -20,9 +20,7 @@ export const metadata = {
 	title: 'Digital Guideline',
 }
 
-export default async function RootLayout(props: { children: React.ReactNode }) {
-	const { children } = props
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<head>
@@ -33,7 +31,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
 					}}
 				/>
 			</head>
-			<body>
+			<body className="grid min-h-svh grid-rows-[auto_1fr] bg-white text-black dark:bg-black dark:text-white">
 				<GuidelineHeader />
 				{children}
 			</body>

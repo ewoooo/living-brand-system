@@ -1,6 +1,6 @@
 export default function HomePage() {
 	return (
-		<article className="space-y-4 bg-white text-black dark:bg-black dark:text-white">
+		<article className="min-h-full grid place-items-center">
 			<h1>Digital Guideline</h1>
 		</article>
 	)

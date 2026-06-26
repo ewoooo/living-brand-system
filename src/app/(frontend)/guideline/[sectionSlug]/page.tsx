@@ -1,13 +1,11 @@
 import { notFound } from 'next/navigation'
 import { getGuidelineSection } from '@/services/get-guideline-section.service'
 
-interface GuidelineSectionPageProps {
-	params: Promise<{
-		sectionSlug: string
-	}>
-}
-
-export default async function GuidelineSectionPage({ params }: GuidelineSectionPageProps) {
+export default async function GuidelineSectionPage({
+	params,
+}: {
+	params: Promise<{ sectionSlug: string }>
+}) {
 	const { sectionSlug } = await params
 	const sectionView = await getGuidelineSection({
 		sectionSlug,
