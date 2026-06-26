@@ -6,13 +6,10 @@ export interface GetGuidelineSectionInput {
 }
 
 export interface GetGuidelineSectionOutput {
-	id: number
-	slug: string
 	title: string
 	description: string | null
 	pages: {
 		id: number
-		slug: string
 		title: string
 		displayOrder: number
 		policyTitle: string | null
@@ -46,7 +43,6 @@ export async function getGuidelineSection({
 			draft: false,
 			select: {
 				title: true,
-				slug: true,
 				description: true,
 			},
 		})
@@ -70,7 +66,6 @@ export async function getGuidelineSection({
 			draft: false,
 			select: {
 				title: true,
-				slug: true,
 				displayOrder: true,
 				policy: {
 					title: true,
@@ -79,13 +74,10 @@ export async function getGuidelineSection({
 		})
 
 		return {
-			id: section.id,
-			slug: section.slug,
 			title: section.title,
 			description: section.description || null,
 			pages: pages.docs.map((page) => ({
 				id: page.id,
-				slug: page.slug,
 				title: page.title,
 				displayOrder: page.displayOrder,
 				policyTitle: page.policy?.title || null,
