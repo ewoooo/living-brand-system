@@ -68,7 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
-    media: Media;
+    assets: Asset;
     cars: Car;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -78,7 +78,7 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
+    assets: AssetsSelect<false> | AssetsSelect<true>;
     cars: CarsSelect<false> | CarsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -146,9 +146,9 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
+ * via the `definition` "assets".
  */
-export interface Media {
+export interface Asset {
   id: number;
   alt: string;
   updatedAt: string;
@@ -170,7 +170,7 @@ export interface Media {
 export interface Car {
   id: number;
   title?: string | null;
-  featuredImage?: (number | null) | Media;
+  featuredImage?: (number | null) | Asset;
   updatedAt: string;
   createdAt: string;
 }
@@ -203,8 +203,8 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
-        relationTo: 'media';
-        value: number | Media;
+        relationTo: 'assets';
+        value: number | Asset;
       } | null)
     | ({
         relationTo: 'cars';
@@ -276,9 +276,9 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
+ * via the `definition` "assets_select".
  */
-export interface MediaSelect<T extends boolean = true> {
+export interface AssetsSelect<T extends boolean = true> {
   alt?: T;
   updatedAt?: T;
   createdAt?: T;

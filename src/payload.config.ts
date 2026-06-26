@@ -2,9 +2,10 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { s3Storage } from '@payloadcms/storage-s3'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
-import { Media } from './collections/Media'
+import { Assets } from './collections/Assets'
 import { Users } from './collections/Users'
 
 const filename = fileURLToPath(import.meta.url)
@@ -26,13 +27,13 @@ export default buildConfig({
 	},
 	collections: [
 		Users,
-		Media,
+		Assets,
 		{
 			slug: 'cars',
 			admin: { useAsTitle: 'title' },
 			fields: [
 				{ name: 'title', type: 'text' },
-				{ name: 'featuredImage', type: 'upload', relationTo: 'media' },
+				{ name: 'featuredImage', type: 'upload', relationTo: 'assets' },
 			],
 		},
 	],
@@ -47,5 +48,19 @@ export default buildConfig({
 		},
 	}),
 	sharp,
-	plugins: [],
+	plugins: [
+		s3Storage({
+			collections: {
+				assets: true,
+			},
+			bucket: process.env.S3_BUCKET || '',
+			config: {
+				region: process.env.S3_REGION || '',
+				credentials: {
+					accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+					secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+				},
+			},
+		}),
+	],
 })
