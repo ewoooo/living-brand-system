@@ -4,14 +4,14 @@ import { getGuidelineSection } from '@/services/get-guideline-section.service'
 
 interface GuidelineSectionPageProps {
 	params: Promise<{
-		sectionId: string
+		sectionSlug: string
 	}>
 }
 
 export default async function GuidelineSectionPage({ params }: GuidelineSectionPageProps) {
-	const { sectionId } = await params
+	const { sectionSlug } = await params
 	const sectionView: GetGuidelineSectionOutput | null = await getGuidelineSection({
-		sectionId,
+		sectionSlug,
 	})
 
 	if (!sectionView) {

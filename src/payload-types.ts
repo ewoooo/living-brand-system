@@ -306,6 +306,11 @@ export interface Composition {
 export interface Section {
   id: number;
   title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
   description?: string | null;
   pages?: {
     docs?: (number | GuidelinePage)[];
@@ -324,6 +329,11 @@ export interface Section {
 export interface GuidelinePage {
   id: number;
   title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
   section: number | Section;
   displayOrder: number;
   composition: number | Composition;
@@ -701,6 +711,8 @@ export interface CompositionsSelect<T extends boolean = true> {
  */
 export interface SectionsSelect<T extends boolean = true> {
   title?: T;
+  generateSlug?: T;
+  slug?: T;
   description?: T;
   pages?: T;
   displayOrder?: T;
@@ -714,6 +726,8 @@ export interface SectionsSelect<T extends boolean = true> {
  */
 export interface GuidelinePagesSelect<T extends boolean = true> {
   title?: T;
+  generateSlug?: T;
+  slug?: T;
   section?: T;
   displayOrder?: T;
   composition?: T;

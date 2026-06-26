@@ -4,13 +4,17 @@ import { getGuidelinePage } from '@/services/get-guideline-page.service'
 
 interface GuidelinePageProps {
 	params: Promise<{
-		pageId: string
+		sectionSlug: string
+		pageSlug: string
 	}>
 }
 
 export default async function GuidelinePage({ params }: GuidelinePageProps) {
-	const { pageId } = await params
-	const pageView: GetGuidelinePageOutput | null = await getGuidelinePage({ pageId })
+	const { sectionSlug, pageSlug } = await params
+	const pageView: GetGuidelinePageOutput | null = await getGuidelinePage({
+		sectionSlug,
+		pageSlug,
+	})
 
 	if (!pageView) {
 		notFound()
