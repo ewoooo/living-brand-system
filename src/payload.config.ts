@@ -66,7 +66,9 @@ export default buildConfig({
 		}),
 	],
 	i18n: {
-		supportedLanguages: { ko },
+		// 관리자 UI 언어는 언어 쿠키, 브라우저 언어, fallbackLanguage 순서로 결정된다.
+		supportedLanguages: { ko }, // { ko, en }
+		// 지원되는 쿠키나 브라우저 언어가 없을 때만 사용된다.
 		fallbackLanguage: 'ko',
 	},
 	localization: {
