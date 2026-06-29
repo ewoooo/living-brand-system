@@ -6,6 +6,8 @@ export interface GetGuidelineNavigationOutput {
 	sections: {
 		id: number
 		title: string
+		description: string | null
+		href: string
 		pages: {
 			id: number
 			title: string
@@ -42,6 +44,7 @@ export async function getGuidelineNavigation(): Promise<GetGuidelineNavigationOu
 				select: {
 					title: true,
 					slug: true,
+					description: true,
 				},
 			}),
 			payload.find({
@@ -66,6 +69,8 @@ export async function getGuidelineNavigation(): Promise<GetGuidelineNavigationOu
 			sections: sections.docs.map((section) => ({
 				id: section.id,
 				title: section.title,
+				description: section.description || null,
+				href: `/guideline/${section.slug}`,
 				pages: pages.docs
 					.filter((page) => page.section === section.id)
 					.map((page) => ({

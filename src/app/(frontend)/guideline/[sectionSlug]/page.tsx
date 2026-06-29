@@ -17,12 +17,12 @@ export default async function GuidelineSectionPage({
 	}
 
 	return (
-		<article className="w-full grid grid-rows-[auto_1fr]">
+		<article className="grid w-full grid-rows-[auto_1fr]">
 			<header className="mb-10">
 				<h1 className="text-5xl">{sectionView.title}</h1>
 				{sectionView.description && <p>{sectionView.description}</p>}
 			</header>
-			<section className="max-w-prose flex flex-col gap-5">
+			<section className="flex max-w-prose flex-col gap-5">
 				{sectionView.pages.map((page) => (
 					<article key={page.id} id={page.slug} className="scroll-mt-6">
 						{/*<p>{page.displayOrder}</p>*/}

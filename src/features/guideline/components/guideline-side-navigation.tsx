@@ -29,7 +29,11 @@ function GuidelineSection({ title, pages }: GuidelineSectionProps) {
 	)
 }
 
-export function GuidelineNavigation({ navigation }: { navigation: GetGuidelineNavigationOutput }) {
+export function GuidelineSideNavigation({
+	navigation,
+}: {
+	navigation: GetGuidelineNavigationOutput
+}) {
 	const navigationContent =
 		navigation.sections.length > 0 ? (
 			navigation.sections.map((section) => <GuidelineSection key={section.id} {...section} />)
@@ -40,7 +44,10 @@ export function GuidelineNavigation({ navigation }: { navigation: GetGuidelineNa
 		)
 
 	return (
-		<Sidebar collapsible="none" className="pl-6">
+		<Sidebar
+			collapsible="none"
+			className="sticky top-14 h-[calc(100svh-3.5rem)] overflow-y-auto pl-6"
+		>
 			<SidebarContent className="pt-12">{navigationContent}</SidebarContent>
 		</Sidebar>
 	)

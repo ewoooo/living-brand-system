@@ -1,5 +1,5 @@
 import type React from 'react'
-import { GuidelineHeader } from '@/features/guideline/components/global-header'
+import { GlobalHeader } from '@/components/global-header'
 
 import './styles.css'
 
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 				/>
 			</head>
 			<body className="grid min-h-svh grid-rows-[auto_1fr] bg-white text-black dark:bg-black dark:text-white">
-				<GuidelineHeader />
+				<GlobalHeader />
 				{children}
 			</body>
 		</html>
