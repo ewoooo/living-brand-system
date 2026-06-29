@@ -5,23 +5,30 @@ import {
 	SidebarGroup,
 	SidebarGroupLabel,
 	SidebarMenu,
-	SidebarMenuButton,
 	SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import type { GetGuidelineNavigationOutput } from '@/services/get-guideline-navigation.service'
 
 type GuidelineSectionProps = GetGuidelineNavigationOutput['sections'][number]
 
-function GuidelineSection({ title, pages }: GuidelineSectionProps) {
+function GuidelineSection({ title, href, pages }: GuidelineSectionProps) {
 	return (
 		<SidebarGroup>
-			<SidebarGroupLabel className="text-neutral-400">{title}</SidebarGroupLabel>
+			<SidebarGroupLabel
+				asChild
+				className="font-medium text-foreground hover:text-foreground"
+			>
+				<Link href={href}>{title}</Link>
+			</SidebarGroupLabel>
 			<SidebarMenu>
 				{pages.map((page) => (
 					<SidebarMenuItem key={page.id}>
-						<SidebarMenuButton asChild>
-							<Link href={page.href}>{page.title}</Link>
-						</SidebarMenuButton>
+						<Link
+							href={page.href}
+							className="block rounded-md px-2 py-2 text-neutral-500 text-xs hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+						>
+							{page.title}
+						</Link>
 					</SidebarMenuItem>
 				))}
 			</SidebarMenu>

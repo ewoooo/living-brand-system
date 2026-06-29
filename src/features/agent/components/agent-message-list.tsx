@@ -2,7 +2,6 @@
 
 import type { UIMessage } from 'ai'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
-import { Message, MessageContent } from '@/components/ui/message'
 import {
 	MessageScroller,
 	MessageScrollerButton,
@@ -28,6 +27,7 @@ export function AgentMessageList({ messages, error }: { messages: UIMessage[]; e
 							messages.map((message) => (
 								<MessageScrollerItem
 									key={message.id}
+									className="flex flex-col"
 									messageId={message.id}
 									scrollAnchor={message.role === 'user'}
 								>
@@ -64,15 +64,15 @@ function AgentMessageBubble({ message }: { message: UIMessage }) {
 	const isUser = message.role === 'user'
 
 	return (
-		<Message align={isUser ? 'start' : 'end'}>
-			<MessageContent>
-				<Bubble variant={isUser ? 'default' : 'muted'}>
-					<BubbleContent className="whitespace-pre-wrap">
-						<AgentMessageText message={message} />
-					</BubbleContent>
-				</Bubble>
-			</MessageContent>
-		</Message>
+		<Bubble
+			align={isUser ? 'end' : 'start'}
+			variant={isUser ? 'default' : 'muted'}
+			className="rounded-full"
+		>
+			<BubbleContent className="whitespace-pre-wrap">
+				<AgentMessageText message={message} />
+			</BubbleContent>
+		</Bubble>
 	)
 }
 
