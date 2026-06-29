@@ -1,6 +1,6 @@
 import type { ModelMessage } from 'ai'
-
 import type { AgentAnswerStream, AgentRepository } from '@/repositories/agent.repository'
+import { AnthropicAiRepository } from '@/repositories/anthropic-ai.repository'
 
 export interface GenerateAnswerInput {
 	messages: ModelMessage[]
@@ -21,3 +21,5 @@ export class GenerateAnswerService {
 		})
 	}
 }
+
+export const generateAnswerService = new GenerateAnswerService(new AnthropicAiRepository())

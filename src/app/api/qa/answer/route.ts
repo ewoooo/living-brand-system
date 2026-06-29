@@ -1,11 +1,16 @@
 import config from '@payload-config'
-import { convertToModelMessages, createUIMessageStreamResponse, type UIMessage } from 'ai'
+import {
+	convertToModelMessages,
+	createUIMessageStreamResponse,
+	toUIMessageStream,
+	type UIMessage,
+} from 'ai'
 import { headers as getHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import { z } from 'zod'
 
-import { AnthropicAiRepository } from '@/repositories/anthropic-ai.repository'
-import { GenerateAnswerService } from '@/services/generate-answer.service'
+import { AgentConfigurationError } from '@/lib/errors'
+import { generateAnswerService } from '@/services/generate-answer.service'
 
 export const maxDuration = 30
 
@@ -16,16 +21,11 @@ const qaAnswerRequestSchema = z.object({
 	pagePath: z.string().max(300).optional(),
 })
 
-const generateAnswerService = new GenerateAnswerService(new AnthropicAiRepository())
-
 export async function POST(req: Request) {
-	if (!process.env.ANTHROPIC_API_KEY) {
-		return Response.json({ message: 'ANTHROPIC_API_KEY is not configured.' }, { status: 503 })
-	}
-
 	const payload = await getPayload({ config })
 	const { user } = await payload.auth({ headers: await getHeaders() })
 
+	// Agent 질의도 내부 사용자 요청만 허용한다.
 	if (!user) {
 		return Response.json({ message: 'Unauthorized' }, { status: 401 })
 	}
@@ -36,12 +36,24 @@ export async function POST(req: Request) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
 	}
 
-	const result = generateAnswerService.execute({
-		messages: await convertToModelMessages(parsed.data.messages),
-		pagePath: parsed.data.pagePath,
-	})
+	try {
+		const result = generateAnswerService.execute({
+			messages: await convertToModelMessages(parsed.data.messages),
+			pagePath: parsed.data.pagePath,
+		})
 
-	return createUIMessageStreamResponse({
-		stream: result.toUIMessageStream(),
-	})
+		return createUIMessageStreamResponse({
+			stream: toUIMessageStream({
+				stream: result.stream,
+				onError: () => 'Agent response failed.',
+			}),
+		})
+	} catch (error) {
+		if (error instanceof AgentConfigurationError) {
+			// Route는 provider 환경변수 이름을 알지 않고 서비스 설정 실패만 변환한다.
+			return Response.json({ message: error.message }, { status: 503 })
+		}
+
+		throw error
+	}
 }

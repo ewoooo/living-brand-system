@@ -2,5 +2,13 @@ packages:
   - .
 
 minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  - ai
+  - '@ai-sdk/anthropic'
+  - '@ai-sdk/gateway'
+  - '@ai-sdk/mcp'
+  - '@ai-sdk/provider'
+  - '@ai-sdk/provider-utils'
+  - '@ai-sdk/react'
 trustPolicy: no-downgrade
 blockExoticSubdeps: true
