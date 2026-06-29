@@ -37,9 +37,10 @@ export async function POST(req: Request) {
 	}
 
 	try {
-		const result = generateAnswerService.execute({
+		const result = await generateAnswerService.execute({
 			messages: await convertToModelMessages(parsed.data.messages),
 			pagePath: parsed.data.pagePath,
+			user,
 		})
 
 		return createUIMessageStreamResponse({

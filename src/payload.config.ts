@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { searchPlugin } from '@payloadcms/plugin-search'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { ko } from '@payloadcms/translations/languages/ko'
@@ -59,6 +60,18 @@ export default buildConfig({
 	}),
 	sharp,
 	plugins: [
+		searchPlugin({
+			collections: ['guideline-pages', 'sections'],
+			defaultPriorities: {
+				'guideline-pages': 20,
+				sections: 10,
+			},
+			searchOverrides: {
+				access: {
+					read: ({ req }) => Boolean(req.user),
+				},
+			},
+		}),
 		s3Storage({
 			collections: {
 				'brand-logos': true,
