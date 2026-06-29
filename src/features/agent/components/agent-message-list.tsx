@@ -64,10 +64,10 @@ function AgentAssistantMessageBubble({ message }: { message: UIMessage }) {
 function AgentMessageText({ message }: { message: UIMessage }) {
 	return (
 		<p className="text-sm">
-			{message.parts
-				.filter((part) => part.type === 'text')
-				.map((part) => part.text)
-				.join('')}
+			{message.parts.reduce(
+				(text, part) => (part.type === 'text' ? text + part.text : text),
+				'',
+			)}
 		</p>
 	)
 }

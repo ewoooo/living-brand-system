@@ -15,9 +15,7 @@ export function AgentChatInput({
 	return (
 		<form
 			className="p-3"
-			onSubmit={(event) => {
-				event.preventDefault()
-
+			action={() => {
 				if (!value.trim()) {
 					return
 				}
