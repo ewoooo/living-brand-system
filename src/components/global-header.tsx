@@ -12,10 +12,6 @@ const mainNavigationItems = [
 	{ href: '/admin', label: 'Login' },
 ] as const
 
-type HeaderProps = {
-	className?: string
-}
-
 function HeaderLinkBlock({
 	href,
 	isActive,
@@ -39,7 +35,7 @@ function HeaderLinkBlock({
 	)
 }
 
-function HeaderHead({ className }: HeaderProps) {
+function HeaderHead({ className }: { className?: string }) {
 	const pathname = usePathname()
 
 	return (
@@ -62,19 +58,13 @@ function HeaderHead({ className }: HeaderProps) {
 	)
 }
 
-function HeaderTail({ className }: HeaderProps) {
-	return (
-		<section className={className}>
-			<ThemeToggle />
-		</section>
-	)
-}
-
 export function GlobalHeader() {
 	return (
 		<header className="sticky top-0 z-10 flex bg-white dark:bg-black">
 			<HeaderHead className="flex-1" />
-			<HeaderTail className="ml-auto p-4" />
+			<section className="ml-auto p-4">
+				<ThemeToggle />
+			</section>
 		</header>
 	)
 }

@@ -1,9 +1,7 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import type { ComponentProps } from 'react'
 import type { GuidelinePage } from '@/payload-types'
 
 type GuidelineBlock = NonNullable<GuidelinePage['blocks']>[number]
-type RichTextData = ComponentProps<typeof RichText>['data']
 type ImageValue = {
 	url?: string | null
 	alt?: string | null
@@ -31,19 +29,18 @@ function GuidelineBlockView({ block }: { block: GuidelineBlock }) {
 	}
 }
 
-function RichTextView({ data }: { data: RichTextData }) {
-	return <RichText data={data} className="space-y-4 leading-7 tracking-normal" />
-}
-
 function ColumnUnitBlock({
 	block,
 }: {
 	block: Extract<GuidelineBlock, { blockType: 'columnUnit' }>
 }) {
+	const gridClassName =
+		block.columns && block.columns.length > 1 ? 'grid gap-8 md:grid-cols-2' : 'grid gap-8'
+
 	return (
 		<section>
 			{block.title && <h2 className="mb-6 font-semibold text-xl">{block.title}</h2>}
-			<div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+			<div className={gridClassName}>
 				{block.columns?.map((column) => {
 					const image = getImage(column.image)
 
@@ -54,12 +51,17 @@ function ColumnUnitBlock({
 								alt={column.heading || ''}
 								backgroundColor={column.imageBackgroundColor}
 								scale={column.imageScale}
-								className="mb-4 aspect-[4/3] p-6"
+								className="mb-4 aspect-4/3 p-6"
 							/>
 							{column.heading && (
 								<h3 className="mb-4 font-semibold">{column.heading}</h3>
 							)}
-							{column.body && <RichTextView data={column.body} />}
+							{column.body && (
+								<RichText
+									data={column.body}
+									className="space-y-4 leading-7 tracking-normal"
+								/>
+							)}
 						</div>
 					)
 				})}
@@ -127,10 +129,6 @@ function getImage(value: unknown): ImageValue | null {
 }
 
 function getColorHex(value: unknown): string | null {
-	if (typeof value === 'string') {
-		return value
-	}
-
 	if (!value || typeof value !== 'object' || !('hex' in value)) {
 		return null
 	}
