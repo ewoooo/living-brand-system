@@ -14,7 +14,7 @@ export interface GetGuidelineSectionOutput {
 		title: string
 		slug: string
 		displayOrder: number
-		policyBody: NonNullable<GuidelinePage['policy']>['body'] | null
+		blocks: GuidelinePage['blocks']
 	}[]
 }
 
@@ -70,9 +70,7 @@ export async function getGuidelineSection({
 				title: true,
 				slug: true,
 				displayOrder: true,
-				policy: {
-					body: true,
-				},
+				blocks: true,
 			},
 		})
 
@@ -84,7 +82,7 @@ export async function getGuidelineSection({
 				title: page.title,
 				slug: page.slug,
 				displayOrder: page.displayOrder,
-				policyBody: page.policy?.body || null,
+				blocks: page.blocks || [],
 			})),
 		}
 	} catch {

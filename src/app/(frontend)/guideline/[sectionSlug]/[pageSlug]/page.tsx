@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
-import { getGuidelinePage } from '@/services/get-guideline-page.service'
+import { getGuidelinePage } from '@/features/guideline/services/get-guideline-page.service'
 
 export default async function GuidelinePage({
 	params,

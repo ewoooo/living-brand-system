@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getGuidelineNavigation } from '@/services/get-guideline-navigation.service'
+import { getGuidelineNavigation } from '@/features/guideline/services/get-guideline-navigation.service'
 
 export default async function GuidelineIndexPage() {
 	const { title, sections } = await getGuidelineNavigation()

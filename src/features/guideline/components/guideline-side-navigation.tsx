@@ -7,7 +7,7 @@ import {
 	SidebarMenu,
 	SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import type { GetGuidelineNavigationOutput } from '@/services/get-guideline-navigation.service'
+import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
 
 type GuidelineSectionProps = GetGuidelineNavigationOutput['sections'][number]
 

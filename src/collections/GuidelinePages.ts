@@ -1,4 +1,5 @@
 import { type CollectionConfig, slugField } from 'payload'
+import { guidelineBlocks } from '@/blocks/guideline'
 
 export const GuidelinePages: CollectionConfig = {
 	slug: 'guideline-pages',
@@ -9,8 +10,8 @@ export const GuidelinePages: CollectionConfig = {
 	admin: {
 		group: 'Guideline',
 		useAsTitle: 'title',
-		defaultColumns: ['title', 'section', 'composition', 'displayOrder', 'updatedAt'],
-		description: '정책 본문과 레이아웃 구성을 가진 가이드라인 페이지입니다.',
+		defaultColumns: ['title', 'section', 'displayOrder', 'updatedAt'],
+		description: '블록으로 구성하는 가이드라인 페이지입니다.',
 		listSearchableFields: ['title', 'slug'],
 	},
 	versions: {
@@ -58,31 +59,9 @@ export const GuidelinePages: CollectionConfig = {
 			},
 		},
 		{
-			name: 'composition',
-			type: 'relationship',
-			relationTo: 'compositions',
-			required: true,
-			admin: {
-				position: 'sidebar',
-				description: '이 페이지를 렌더링할 프론트엔드 레이아웃입니다.',
-			},
-		},
-		{
-			name: 'policy',
-			type: 'group',
-			admin: {
-				description: '이 가이드라인 페이지가 소유하는 본문 정책입니다.',
-			},
-			fields: [
-				{
-					name: 'body',
-					type: 'richText',
-					localized: true,
-					admin: {
-						description: '이 페이지의 정책 본문을 붙여넣거나 작성합니다.',
-					},
-				},
-			],
+			name: 'blocks',
+			type: 'blocks',
+			blocks: guidelineBlocks,
 		},
 	],
 }
