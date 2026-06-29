@@ -29,8 +29,6 @@ export function AgentChat() {
 	)
 }
 
-
-
 function AgentChatHeader() {
 	return (
 		<header className="px-3 py-2">

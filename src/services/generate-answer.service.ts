@@ -5,12 +5,13 @@ import { AnthropicAiRepository } from '@/repositories/anthropic-ai.repository'
 export interface GenerateAnswerInput {
 	messages: ModelMessage[]
 	pagePath?: string
+	user?: unknown
 }
 
 export class GenerateAnswerService {
 	constructor(private readonly agentRepository: AgentRepository) {}
 
-	execute(input: GenerateAnswerInput): AgentAnswerStream {
+	async execute(input: GenerateAnswerInput): Promise<AgentAnswerStream> {
 		if (input.messages.length === 0) {
 			throw new Error('At least one message is required.')
 		}
@@ -18,6 +19,7 @@ export class GenerateAnswerService {
 		return this.agentRepository.streamAnswer({
 			messages: input.messages,
 			context: input.pagePath ? `Current guideline page: ${input.pagePath}` : undefined,
+			user: input.user,
 		})
 	}
 }
