@@ -408,6 +408,10 @@ export interface GuidelinePage {
     [k: string]: unknown;
   } | null;
   /**
+   * 이 페이지에서 설명하거나 적용하는 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  /**
    * 사이드바 내비게이션과 URL에 사용할 상위 섹션입니다.
    */
   section: number | Section;
@@ -453,15 +457,6 @@ export interface ColumnUnitBlock {
         id?: string | null;
       }[]
     | null;
-  /**
-   * 검색과 Agent가 정책 단위로 읽을 때 사용하는 선택 메타입니다.
-   */
-  policy?: {
-    enabled?: boolean | null;
-    key?: string | null;
-    summary?: string | null;
-    rules?: (number | Rule)[] | null;
-  };
   id?: string | null;
   blockName?: string | null;
   blockType: 'columnUnit';
@@ -477,15 +472,6 @@ export interface MediaShowcaseBlock {
    */
   imageBackgroundColor?: (number | null) | BrandColor;
   imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
-  /**
-   * 검색과 Agent가 정책 단위로 읽을 때 사용하는 선택 메타입니다.
-   */
-  policy?: {
-    enabled?: boolean | null;
-    key?: string | null;
-    summary?: string | null;
-    rules?: (number | Rule)[] | null;
-  };
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaShowcase';
@@ -896,6 +882,7 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
   generateSlug?: T;
   slug?: T;
   description?: T;
+  rules?: T;
   section?: T;
   displayOrder?: T;
   blocks?:
@@ -924,14 +911,6 @@ export interface ColumnUnitBlockSelect<T extends boolean = true> {
         imageScale?: T;
         id?: T;
       };
-  policy?:
-    | T
-    | {
-        enabled?: T;
-        key?: T;
-        summary?: T;
-        rules?: T;
-      };
   id?: T;
   blockName?: T;
 }
@@ -943,14 +922,6 @@ export interface MediaShowcaseBlockSelect<T extends boolean = true> {
   image?: T;
   imageBackgroundColor?: T;
   imageScale?: T;
-  policy?:
-    | T
-    | {
-        enabled?: T;
-        key?: T;
-        summary?: T;
-        rules?: T;
-      };
   id?: T;
   blockName?: T;
 }

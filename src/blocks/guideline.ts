@@ -1,26 +1,5 @@
 import type { Block, Field } from 'payload'
 
-function policyField(): Field {
-	return {
-		name: 'policy',
-		type: 'group',
-		admin: {
-			description: '검색과 Agent가 정책 단위로 읽을 때 사용하는 선택 메타입니다.',
-		},
-		fields: [
-			{ name: 'enabled', type: 'checkbox', defaultValue: false },
-			{ name: 'key', type: 'text' },
-			{ name: 'summary', type: 'textarea', localized: true },
-			{
-				name: 'rules',
-				type: 'relationship',
-				relationTo: 'rules',
-				hasMany: true,
-			},
-		],
-	}
-}
-
 function imageBackgroundColorField(): Field {
 	return {
 		name: 'imageBackgroundColor',
@@ -63,7 +42,6 @@ export const ColumnUnitBlock: Block = {
 				imageScaleField(),
 			],
 		},
-		policyField(),
 	],
 }
 
@@ -78,7 +56,6 @@ export const MediaShowcaseBlock: Block = {
 		},
 		imageBackgroundColorField(),
 		imageScaleField(),
-		policyField(),
 	],
 }
 

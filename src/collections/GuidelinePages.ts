@@ -45,6 +45,15 @@ export const GuidelinePages: CollectionConfig = {
 			},
 		},
 		{
+			name: 'rules',
+			type: 'relationship',
+			relationTo: 'rules',
+			hasMany: true,
+			admin: {
+				description: '이 페이지에서 설명하거나 적용하는 규칙입니다.',
+			},
+		},
+		{
 			name: 'section',
 			type: 'relationship',
 			relationTo: 'sections',
