@@ -28,8 +28,7 @@
 	"dependencies": {
 		"@ai-sdk/anthropic": "^4.0.0",
 		"@ai-sdk/react": "^4.0.0",
-		"@hugeicons/core-free-icons": "^4.2.1",
-		"@hugeicons/react": "^1.1.7",
+		"@carbon/icons-react": "^11.82.0",
 		"@payloadcms/db-postgres": "3.85.1",
 		"@payloadcms/next": "3.85.1",
 		"@payloadcms/plugin-search": "3.85.1",
@@ -40,6 +39,7 @@
 		"ai": "^7.0.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
+		"cmdk": "^1.1.1",
 		"cross-env": "^7.0.3",
 		"dotenv": "16.4.7",
 		"graphql": "^16.8.1",

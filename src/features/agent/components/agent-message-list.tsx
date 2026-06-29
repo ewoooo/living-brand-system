@@ -27,8 +27,8 @@ function AgentEmptyMessage() {
 
 function AgentErrorBubble({ error }: { error: Error }) {
 	return (
-		<div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive text-sm">
-			{error.message}
+		<div className="rounded-md bg-neutral-500/10 px-3 py-2 text-destructive text-sm">
+			<p className="text-neutral-500">{error.message}</p>
 		</div>
 	)
 }

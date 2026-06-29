@@ -32,7 +32,7 @@ export function AgentChat() {
 function AgentChatHeader() {
 	return (
 		<header className="px-3 py-2">
-			<h2 className="font-medium text-sm">Ask</h2>
+			<h2 className="font-medium text-sm">Chat</h2>
 		</header>
 	)
 }
