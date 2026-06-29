@@ -2,7 +2,7 @@ import type { GlobalConfig } from 'payload'
 
 export const Guideline: GlobalConfig = {
 	slug: 'guideline',
-	label: 'Guideline',
+	label: 'Metadata',
 	admin: {
 		group: 'Guideline',
 	},
@@ -35,6 +35,14 @@ export const Guideline: GlobalConfig = {
 			localized: true,
 			admin: {
 				description: '발행 시점 표시 문구입니다. 예: Issued in February, 2026',
+			},
+		},
+		{
+			name: 'favicon',
+			type: 'upload',
+			relationTo: 'application-images',
+			admin: {
+				description: '브라우저 탭과 메타데이터에 사용할 파비콘 이미지입니다.',
 			},
 		},
 	],

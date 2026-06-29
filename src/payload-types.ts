@@ -390,6 +390,24 @@ export interface GuidelinePage {
   generateSlug?: boolean | null;
   slug: string;
   /**
+   * 페이지 제목 아래에 표시할 선택 설명입니다.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
    * 사이드바 내비게이션과 URL에 사용할 상위 섹션입니다.
    */
   section: number | Section;
@@ -397,7 +415,7 @@ export interface GuidelinePage {
    * 숫자가 낮을수록 선택한 섹션 안에서 먼저 표시됩니다.
    */
   displayOrder: number;
-  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ExampleGridBlock)[] | null;
+  blocks?: (ColumnUnitBlock | MediaShowcaseBlock)[] | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -427,6 +445,11 @@ export interface ColumnUnitBlock {
           [k: string]: unknown;
         } | null;
         image?: (number | null) | ApplicationImage;
+        /**
+         * 이미지 영역 뒤에 적용할 브랜드 컬러입니다.
+         */
+        imageBackgroundColor?: (number | null) | BrandColor;
+        imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
         id?: string | null;
       }[]
     | null;
@@ -448,23 +471,12 @@ export interface ColumnUnitBlock {
  * via the `definition` "MediaShowcaseBlock".
  */
 export interface MediaShowcaseBlock {
-  title?: string | null;
-  body?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
   image?: (number | null) | ApplicationImage;
+  /**
+   * 이미지 영역 뒤에 적용할 브랜드 컬러입니다.
+   */
+  imageBackgroundColor?: (number | null) | BrandColor;
+  imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
   /**
    * 검색과 Agent가 정책 단위로 읽을 때 사용하는 선택 메타입니다.
    */
@@ -477,34 +489,6 @@ export interface MediaShowcaseBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaShowcase';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ExampleGridBlock".
- */
-export interface ExampleGridBlock {
-  title?: string | null;
-  columns?: ('2' | '3' | '4') | null;
-  items?:
-    | {
-        title?: string | null;
-        image?: (number | null) | ApplicationImage;
-        caption?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * 검색과 Agent가 정책 단위로 읽을 때 사용하는 선택 메타입니다.
-   */
-  policy?: {
-    enabled?: boolean | null;
-    key?: string | null;
-    summary?: string | null;
-    rules?: (number | Rule)[] | null;
-  };
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'exampleGrid';
 }
 /**
  * This is a collection of automatically created search results. These results are used by the global site search and will be updated automatically as documents in the CMS are created or updated.
@@ -911,6 +895,7 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
   title?: T;
   generateSlug?: T;
   slug?: T;
+  description?: T;
   section?: T;
   displayOrder?: T;
   blocks?:
@@ -918,7 +903,6 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
     | {
         columnUnit?: T | ColumnUnitBlockSelect<T>;
         mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
-        exampleGrid?: T | ExampleGridBlockSelect<T>;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -936,6 +920,8 @@ export interface ColumnUnitBlockSelect<T extends boolean = true> {
         heading?: T;
         body?: T;
         image?: T;
+        imageBackgroundColor?: T;
+        imageScale?: T;
         id?: T;
       };
   policy?:
@@ -954,35 +940,9 @@ export interface ColumnUnitBlockSelect<T extends boolean = true> {
  * via the `definition` "MediaShowcaseBlock_select".
  */
 export interface MediaShowcaseBlockSelect<T extends boolean = true> {
-  title?: T;
-  body?: T;
   image?: T;
-  policy?:
-    | T
-    | {
-        enabled?: T;
-        key?: T;
-        summary?: T;
-        rules?: T;
-      };
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ExampleGridBlock_select".
- */
-export interface ExampleGridBlockSelect<T extends boolean = true> {
-  title?: T;
-  columns?: T;
-  items?:
-    | T
-    | {
-        title?: T;
-        image?: T;
-        caption?: T;
-        id?: T;
-      };
+  imageBackgroundColor?: T;
+  imageScale?: T;
   policy?:
     | T
     | {
@@ -1091,6 +1051,10 @@ export interface Guideline {
    * 발행 시점 표시 문구입니다. 예: Issued in February, 2026
    */
   issuedLabel?: string | null;
+  /**
+   * 브라우저 탭과 메타데이터에 사용할 파비콘 이미지입니다.
+   */
+  favicon?: (number | null) | ApplicationImage;
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -1103,6 +1067,7 @@ export interface GuidelineSelect<T extends boolean = true> {
   companyName?: T;
   documentTitle?: T;
   issuedLabel?: T;
+  favicon?: T;
   _status?: T;
   updatedAt?: T;
   createdAt?: T;

@@ -82,6 +82,7 @@ export async function getGuidelineNavigation(): Promise<GetGuidelineNavigationOu
 			metadata: {
 				companyName: 'Unconfigured Company',
 				documentTitle: 'Untitled Guideline',
+				faviconHref: null,
 				issuedLabel: null,
 			},
 			title: 'Untitled Guideline',

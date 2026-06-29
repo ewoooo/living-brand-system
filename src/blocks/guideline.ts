@@ -21,6 +21,26 @@ function policyField(): Field {
 	}
 }
 
+function imageBackgroundColorField(): Field {
+	return {
+		name: 'imageBackgroundColor',
+		type: 'relationship',
+		relationTo: 'brand-colors',
+		admin: {
+			description: '이미지 영역 뒤에 적용할 브랜드 컬러입니다.',
+		},
+	}
+}
+
+function imageScaleField(): Field {
+	return {
+		name: 'imageScale',
+		type: 'select',
+		defaultValue: '100',
+		options: Array.from({ length: 10 }, (_, index) => String((index + 1) * 10)),
+	}
+}
+
 export const ColumnUnitBlock: Block = {
 	slug: 'columnUnit',
 	interfaceName: 'ColumnUnitBlock',
@@ -39,6 +59,8 @@ export const ColumnUnitBlock: Block = {
 					type: 'upload',
 					relationTo: 'application-images',
 				},
+				imageBackgroundColorField(),
+				imageScaleField(),
 			],
 		},
 		policyField(),
@@ -49,44 +71,15 @@ export const MediaShowcaseBlock: Block = {
 	slug: 'mediaShowcase',
 	interfaceName: 'MediaShowcaseBlock',
 	fields: [
-		{ name: 'title', type: 'text', localized: true },
-		{ name: 'body', type: 'richText', localized: true },
 		{
 			name: 'image',
 			type: 'upload',
 			relationTo: 'application-images',
 		},
+		imageBackgroundColorField(),
+		imageScaleField(),
 		policyField(),
 	],
 }
 
-export const ExampleGridBlock: Block = {
-	slug: 'exampleGrid',
-	interfaceName: 'ExampleGridBlock',
-	fields: [
-		{ name: 'title', type: 'text', localized: true },
-		{
-			name: 'columns',
-			type: 'select',
-			defaultValue: '2',
-			options: ['2', '3', '4'],
-		},
-		{
-			name: 'items',
-			type: 'array',
-			minRows: 1,
-			fields: [
-				{ name: 'title', type: 'text', localized: true },
-				{
-					name: 'image',
-					type: 'upload',
-					relationTo: 'application-images',
-				},
-				{ name: 'caption', type: 'textarea', localized: true },
-			],
-		},
-		policyField(),
-	],
-}
-
-export const guidelineBlocks = [ColumnUnitBlock, MediaShowcaseBlock, ExampleGridBlock]
+export const guidelineBlocks = [ColumnUnitBlock, MediaShowcaseBlock]

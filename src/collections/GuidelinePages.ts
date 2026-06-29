@@ -37,6 +37,14 @@ export const GuidelinePages: CollectionConfig = {
 			required: true,
 		}),
 		{
+			name: 'description',
+			type: 'richText',
+			localized: true,
+			admin: {
+				description: '페이지 제목 아래에 표시할 선택 설명입니다.',
+			},
+		},
+		{
 			name: 'section',
 			type: 'relationship',
 			relationTo: 'sections',

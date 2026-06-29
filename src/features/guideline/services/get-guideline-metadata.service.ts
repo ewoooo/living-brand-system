@@ -4,6 +4,7 @@ import { getPayload } from 'payload'
 export interface GetGuidelineMetadataOutput {
 	companyName: string
 	documentTitle: string
+	faviconHref: string | null
 	issuedLabel: string | null
 }
 
@@ -16,13 +17,14 @@ export async function getGuidelineMetadata(): Promise<GetGuidelineMetadataOutput
 		const payload = await getPayload({ config })
 		const guideline = await payload.findGlobal({
 			slug: 'guideline',
-			depth: 0,
+			depth: 1,
 			locale: 'ko',
 			fallbackLocale: 'en',
 			draft: false,
 			select: {
 				companyName: true,
 				documentTitle: true,
+				favicon: true,
 				issuedLabel: true,
 			},
 		})
@@ -30,13 +32,23 @@ export async function getGuidelineMetadata(): Promise<GetGuidelineMetadataOutput
 		return {
 			companyName: guideline.companyName,
 			documentTitle: guideline.documentTitle,
+			faviconHref: getUploadUrl(guideline.favicon),
 			issuedLabel: guideline.issuedLabel || null,
 		}
 	} catch {
 		return {
 			companyName: 'Unconfigured Company',
 			documentTitle: 'Untitled Guideline',
+			faviconHref: null,
 			issuedLabel: null,
 		}
 	}
+}
+
+function getUploadUrl(value: unknown): string | null {
+	if (!value || typeof value !== 'object' || !('url' in value)) {
+		return null
+	}
+
+	return typeof value.url === 'string' ? value.url : null
 }

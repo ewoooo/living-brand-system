@@ -1,3 +1,4 @@
+import { RichText } from '@payloadcms/richtext-lexical/react'
 import { notFound } from 'next/navigation'
 import { GuidelineBlocks } from '@/features/guideline/components/guideline-blocks'
 import { getGuidelineSection } from '@/features/guideline/services/get-guideline-section.service'
@@ -27,6 +28,12 @@ export default async function GuidelineSectionPage({
 					<article key={page.id} id={page.slug} className="scroll-mt-6">
 						{/*<p>{page.displayOrder}</p>*/}
 						<h2 className="font-semibold">{page.title}</h2>
+						{page.description && (
+							<RichText
+								data={page.description}
+								className="mt-4 space-y-4 leading-7 tracking-normal"
+							/>
+						)}
 						<GuidelineBlocks blocks={page.blocks} />
 					</article>
 				))}

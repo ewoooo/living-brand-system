@@ -26,8 +26,6 @@ function GuidelineBlockView({ block }: { block: GuidelineBlock }) {
 			return <ColumnUnitBlock block={block} />
 		case 'mediaShowcase':
 			return <MediaShowcaseBlock block={block} />
-		case 'exampleGrid':
-			return <ExampleGridBlock block={block} />
 		default:
 			return null
 	}
@@ -54,6 +52,8 @@ function ColumnUnitBlock({
 							<GuidelineImage
 								image={image}
 								alt={column.heading || ''}
+								backgroundColor={column.imageBackgroundColor}
+								scale={column.imageScale}
 								className="mb-4 aspect-[4/3] p-6"
 							/>
 							{column.heading && (
@@ -76,52 +76,13 @@ function MediaShowcaseBlock({
 	const image = getImage(block.image)
 
 	return (
-		<section className="grid gap-8 md:grid-cols-[minmax(0,20rem)_1fr]">
-			<div>
-				{block.title && <h2 className="mb-4 font-semibold text-xl">{block.title}</h2>}
-				{block.body && <RichTextView data={block.body} />}
-			</div>
-			<GuidelineImage image={image} className="min-h-80 p-8" />
-		</section>
-	)
-}
-
-function ExampleGridBlock({
-	block,
-}: {
-	block: Extract<GuidelineBlock, { blockType: 'exampleGrid' }>
-}) {
-	const columnClass =
-		{
-			'2': 'xl:grid-cols-2',
-			'3': 'xl:grid-cols-3',
-			'4': 'xl:grid-cols-4',
-		}[block.columns || '2'] || 'xl:grid-cols-2'
-
-	return (
-		<section>
-			{block.title && <h2 className="mb-6 font-semibold text-xl">{block.title}</h2>}
-			<div className={`grid gap-5 md:grid-cols-2 ${columnClass}`}>
-				{block.items?.map((item) => {
-					const image = getImage(item.image)
-
-					return (
-						<figure key={item.id}>
-							{item.title && (
-								<figcaption className="mb-3 font-medium">{item.title}</figcaption>
-							)}
-							<GuidelineImage
-								image={image}
-								alt={item.title || ''}
-								className="aspect-[4/3] p-6"
-							/>
-							{item.caption && (
-								<p className="mt-3 text-muted-foreground text-sm">{item.caption}</p>
-							)}
-						</figure>
-					)
-				})}
-			</div>
+		<section className="grid aspect-video place-items-center">
+			<GuidelineImage
+				image={image}
+				backgroundColor={block.imageBackgroundColor}
+				scale={block.imageScale}
+				className="min-h-80 p-8 w-full"
+			/>
 		</section>
 	)
 }
@@ -129,23 +90,33 @@ function ExampleGridBlock({
 function GuidelineImage({
 	image,
 	alt = '',
+	backgroundColor,
+	scale = '100',
 	className,
 }: {
 	image: ImageValue | null
 	alt?: string
+	backgroundColor?: unknown
+	scale?: string | null
 	className?: string
 }) {
 	if (!image?.url) {
 		return null
 	}
 
+	const backgroundColorHex = getColorHex(backgroundColor)
+
 	return (
-		<div className={`flex items-center justify-center bg-muted/40 ${className || ''}`}>
+		<div
+			className={`flex items-center justify-center ${className || ''}`}
+			style={backgroundColorHex ? { backgroundColor: backgroundColorHex } : undefined}
+		>
 			{/* biome-ignore lint/performance/noImgElement: Payload upload URLs may be local or S3. */}
 			<img
 				src={image.url}
 				alt={image.alt || image.name || alt}
 				className="max-h-full max-w-full"
+				style={{ width: `${scale || '100'}%` }}
 			/>
 		</div>
 	)
@@ -153,4 +124,16 @@ function GuidelineImage({
 
 function getImage(value: unknown): ImageValue | null {
 	return value && typeof value === 'object' ? (value as ImageValue) : null
+}
+
+function getColorHex(value: unknown): string | null {
+	if (typeof value === 'string') {
+		return value
+	}
+
+	if (!value || typeof value !== 'object' || !('hex' in value)) {
+		return null
+	}
+
+	return typeof value.hex === 'string' ? value.hex : null
 }

@@ -22,6 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 	return {
 		description: metadata.issuedLabel || metadata.companyName,
+		icons: metadata.faviconHref ? { icon: metadata.faviconHref } : undefined,
 		title: metadata.documentTitle,
 	}
 }

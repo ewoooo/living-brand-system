@@ -13,6 +13,7 @@ export interface GetGuidelineSectionOutput {
 		id: number
 		title: string
 		slug: string
+		description: GuidelinePage['description']
 		displayOrder: number
 		blocks: GuidelinePage['blocks']
 	}[]
@@ -69,6 +70,7 @@ export async function getGuidelineSection({
 			select: {
 				title: true,
 				slug: true,
+				description: true,
 				displayOrder: true,
 				blocks: true,
 			},
@@ -81,6 +83,7 @@ export async function getGuidelineSection({
 				id: page.id,
 				title: page.title,
 				slug: page.slug,
+				description: page.description || null,
 				displayOrder: page.displayOrder,
 				blocks: page.blocks || [],
 			})),
