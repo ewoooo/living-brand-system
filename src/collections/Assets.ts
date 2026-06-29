@@ -1,9 +1,13 @@
 import type { CollectionConfig } from 'payload'
+import { authenticated, managerOrAdmin } from '@/lib/auth'
 
 export const Assets: CollectionConfig = {
 	slug: 'assets',
 	access: {
-		read: () => true,
+		read: authenticated,
+		create: managerOrAdmin,
+		update: managerOrAdmin,
+		delete: managerOrAdmin,
 	},
 	admin: {
 		group: 'Assets',

@@ -68,6 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
+    rules: Rule;
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
     'brand-typefaces': BrandTypeface;
@@ -90,6 +91,7 @@ export interface Config {
   };
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    rules: RulesSelect<false> | RulesSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
@@ -155,6 +157,10 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  /**
+   * admin(전체)·manager(기준 관리)·worker(사용)
+   */
+  role: 'admin' | 'manager' | 'worker';
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -173,6 +179,52 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rules".
+ */
+export interface Rule {
+  id: number;
+  /**
+   * category.attribute 점 표기. 예: logo.min-size
+   */
+  key: string;
+  title: string;
+  category:
+    | 'logo'
+    | 'color'
+    | 'typography'
+    | 'grid'
+    | 'spacing'
+    | 'layout'
+    | 'imagery'
+    | 'illustration'
+    | 'iconography'
+    | 'motion'
+    | 'voice'
+    | 'messaging'
+    | 'accessibility'
+    | 'application'
+    | 'misc';
+  tier?: ('A' | 'B' | 'C') | null;
+  executor?: ('deterministic' | 'heuristic' | 'advisory' | 'human') | null;
+  scope?: ('all' | 'print' | 'screen')[] | null;
+  /**
+   * 값을 채운 브랜드 수 (0 = domain-default 빈 슬롯)
+   */
+  frequency?: number | null;
+  domainDefault?: boolean | null;
+  /**
+   * 브랜드 값이 채워야 할 구조(요약 표기)
+   */
+  paramSchema?: string | null;
+  scoring?: string | null;
+  input?: string | null;
+  notes?: string | null;
+  status?: ('draft' | 'live' | 'archived') | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -480,6 +532,10 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
+        relationTo: 'rules';
+        value: number | Rule;
+      } | null)
+    | ({
         relationTo: 'brand-logos';
         value: number | BrandLogo;
       } | null)
@@ -562,6 +618,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  role?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -578,6 +635,27 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rules_select".
+ */
+export interface RulesSelect<T extends boolean = true> {
+  key?: T;
+  title?: T;
+  category?: T;
+  tier?: T;
+  executor?: T;
+  scope?: T;
+  frequency?: T;
+  domainDefault?: T;
+  paramSchema?: T;
+  scoring?: T;
+  input?: T;
+  notes?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

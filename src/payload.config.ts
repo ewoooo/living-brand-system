@@ -14,6 +14,7 @@ import { Compositions } from './collections/Compositions'
 import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
+import { Rules } from './collections/Rules'
 import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
 import { Guideline } from './globals/Guideline'
@@ -37,6 +38,7 @@ export default buildConfig({
 	},
 	collections: [
 		Users,
+		Rules,
 		BrandLogos,
 		BrandColors,
 		BrandTypefaces,
