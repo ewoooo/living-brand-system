@@ -11,7 +11,6 @@ import { ApplicationImages } from './collections/ApplicationImages'
 import { BrandColors } from './collections/BrandColors'
 import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
-import { Compositions } from './collections/Compositions'
 import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
@@ -46,7 +45,6 @@ export default buildConfig({
 		ApplicationImages,
 		Templates,
 		Plugins,
-		Compositions,
 		GuidelineSections,
 		GuidelinePages,
 	],

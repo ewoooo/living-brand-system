@@ -267,7 +267,7 @@ flowchart TB
   GuidelineRequest["Guideline page request"]
 
   subgraph PayloadSupported["Payload CMS supported"]
-    Collections["Collections: guideline / composition / page / resource"]
+    Collections["Collections: guideline / page block / resource"]
     Access["Access control"]
     Hooks["Hooks"]
     Draft["Guideline / resource draft"]
@@ -493,9 +493,8 @@ flowchart TB
 | 후보 | 관리 단위 | 주요 관계 |
 | --- | --- | --- |
 | `guideline` global | BrandGuideline | 단일 가이드라인 설정 |
-| `compositions` | PageComposition | 실제 프론트엔드 레이아웃 타입을 관리 |
 | `sections` | GuidelineSection | pages를 소유 |
-| `guideline-pages` | GuidelinePage | section에 속하고 composition, policy, rule refs, asset refs, template refs, plugin refs를 소유 |
+| `guideline-pages` | GuidelinePage | section에 속하고 blocks, rule refs, asset refs, template refs, plugin refs를 소유 |
 | `rules` | Rule | page, template, plugin, check basis에서 참조 |
 | `brand-logos` | BrandLogo | page, rule, asset generation session, check basis에서 참조 |
 | `brand-colors` | BrandColor | page, rule, template, plugin에서 참조 |

@@ -1,6 +1,7 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { notFound } from 'next/navigation'
-import { getGuidelineSection } from '@/services/get-guideline-section.service'
+import { GuidelineBlocks } from '@/features/guideline/components/guideline-blocks'
+import { getGuidelineSection } from '@/features/guideline/services/get-guideline-section.service'
 
 export default async function GuidelineSectionPage({
 	params,
@@ -22,17 +23,18 @@ export default async function GuidelineSectionPage({
 				<h1 className="text-5xl">{sectionView.title}</h1>
 				{sectionView.description && <p>{sectionView.description}</p>}
 			</header>
-			<section className="flex max-w-prose flex-col gap-5">
+			<section className="flex flex-col gap-16">
 				{sectionView.pages.map((page) => (
 					<article key={page.id} id={page.slug} className="scroll-mt-6">
 						{/*<p>{page.displayOrder}</p>*/}
 						<h2 className="font-semibold">{page.title}</h2>
-						{page.policyBody && (
+						{page.description && (
 							<RichText
-								data={page.policyBody}
-								className="space-y-4 leading-7 tracking-normal"
+								data={page.description}
+								className="mt-4 space-y-4 leading-7 tracking-normal"
 							/>
 						)}
+						<GuidelineBlocks blocks={page.blocks} />
 					</article>
 				))}
 			</section>

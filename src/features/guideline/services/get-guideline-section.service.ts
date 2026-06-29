@@ -13,8 +13,9 @@ export interface GetGuidelineSectionOutput {
 		id: number
 		title: string
 		slug: string
+		description: GuidelinePage['description']
 		displayOrder: number
-		policyBody: NonNullable<GuidelinePage['policy']>['body'] | null
+		blocks: GuidelinePage['blocks']
 	}[]
 }
 
@@ -69,10 +70,9 @@ export async function getGuidelineSection({
 			select: {
 				title: true,
 				slug: true,
+				description: true,
 				displayOrder: true,
-				policy: {
-					body: true,
-				},
+				blocks: true,
 			},
 		})
 
@@ -83,8 +83,9 @@ export async function getGuidelineSection({
 				id: page.id,
 				title: page.title,
 				slug: page.slug,
+				description: page.description || null,
 				displayOrder: page.displayOrder,
-				policyBody: page.policy?.body || null,
+				blocks: page.blocks || [],
 			})),
 		}
 	} catch {

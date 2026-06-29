@@ -8,6 +8,10 @@ export interface GenerateAnswerInput {
 	user?: unknown
 }
 
+/**
+ * Chat route는 입력 검증만 맡고, 답변 스트림 생성은 이 서비스로 위임한다.
+ * 실제 모델 호출과 guideline 검색은 AgentRepository 구현체가 담당한다.
+ */
 export class GenerateAnswerService {
 	constructor(private readonly agentRepository: AgentRepository) {}
 
