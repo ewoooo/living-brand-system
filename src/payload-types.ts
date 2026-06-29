@@ -341,58 +341,99 @@ export interface Plugin {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * 가이드라인 페이지에서 재사용하는 레이아웃 구성입니다.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "compositions".
  */
 export interface Composition {
   id: number;
+  /**
+   * 관리자가 구분할 수 있는 레이아웃 이름입니다.
+   */
   name: string;
+  /**
+   * 프론트엔드 렌더러가 사용하는 고정 레이아웃 키입니다.
+   */
   layoutType: 'type-a' | 'type-b' | 'type-c' | 'type-d' | 'type-e';
+  /**
+   * 이 구성을 언제 쓰는지 남기는 선택 메모입니다.
+   */
   description?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * 가이드라인 상위 내비게이션 섹션입니다.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sections".
  */
 export interface Section {
   id: number;
+  /**
+   * 사이드바 상위 섹션 제목으로 표시됩니다.
+   */
   title: string;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
   slug: string;
+  /**
+   * 섹션 랜딩 페이지에 표시할 선택 요약입니다.
+   */
   description?: string | null;
   pages?: {
     docs?: (number | GuidelinePage)[];
     hasNextPage?: boolean;
     totalDocs?: number;
   };
+  /**
+   * 숫자가 낮을수록 가이드라인 내비게이션에서 먼저 표시됩니다.
+   */
   displayOrder: number;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * 정책 본문과 레이아웃 구성을 가진 가이드라인 페이지입니다.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline-pages".
  */
 export interface GuidelinePage {
   id: number;
+  /**
+   * 가이드라인 화면의 페이지 제목으로 표시됩니다.
+   */
   title: string;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
   slug: string;
+  /**
+   * 사이드바 내비게이션과 URL에 사용할 상위 섹션입니다.
+   */
   section: number | Section;
+  /**
+   * 숫자가 낮을수록 선택한 섹션 안에서 먼저 표시됩니다.
+   */
   displayOrder: number;
+  /**
+   * 이 페이지를 렌더링할 프론트엔드 레이아웃입니다.
+   */
   composition: number | Composition;
+  /**
+   * 이 가이드라인 페이지가 소유하는 본문 정책입니다.
+   */
   policy?: {
-    title?: string | null;
+    /**
+     * 이 페이지의 정책 본문을 붙여넣거나 작성합니다.
+     */
     body?: {
       root: {
         type: string;
@@ -840,7 +881,6 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
   policy?:
     | T
     | {
-        title?: T;
         body?: T;
       };
   updatedAt?: T;

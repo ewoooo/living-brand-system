@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getGuidelinePage } from '@/services/get-guideline-page.service'
 
 export default async function GuidelinePage({
@@ -16,11 +16,5 @@ export default async function GuidelinePage({
 		notFound()
 	}
 
-	return (
-		<article>
-			<p>{pageView.sectionTitle}</p>
-			<h1>{pageView.title}</h1>
-			{pageView.policyTitle && <h2>{pageView.policyTitle}</h2>}
-		</article>
-	)
+	redirect(`/guideline/${sectionSlug}#${pageSlug}`)
 }
