@@ -8,8 +8,9 @@ import { cn } from '@/lib/utils'
 const mainNavigationItems = [
 	{ href: '/', label: 'Main' },
 	{ href: '/guideline', label: 'Guideline' },
+	{ href: '/review', label: 'Review' },
 	{ href: '/create', label: 'Create' },
-	{ href: '/admin', label: 'Login' },
+	{ href: '/login', label: 'Login' },
 ] as const
 
 function HeaderLinkBlock({

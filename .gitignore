@@ -55,3 +55,7 @@ node_modules/
 # Local agent state (shared .agents skills/settings stay tracked)
 .agents/settings.local.json
 .codex/
+
+# Local database operations
+.db-backups/
+scripts/create-admin.ts

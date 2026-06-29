@@ -1,6 +1,5 @@
 import type React from 'react'
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { GuidelineAgentChat } from '@/features/guideline/components/guideline-agent-chat'
 import { GuidelineFooter } from '@/features/guideline/components/guideline-footer'
 import { GuidelineSideNavigation } from '@/features/guideline/components/guideline-side-navigation'
 import { getGuidelineNavigation } from '@/features/guideline/services/get-guideline-navigation.service'
@@ -17,7 +16,6 @@ export default async function GuidelineLayout({ children }: { children: React.Re
 				</main>
 				<GuidelineFooter companyName={navigation.metadata.companyName} />
 			</div>
-			<GuidelineAgentChat />
 		</SidebarProvider>
 	)
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import type React from 'react'
+import { GlobalAgentChat } from '@/components/global-agent-chat'
 import { GlobalHeader } from '@/components/global-header'
 import { getGuidelineMetadata } from '@/features/guideline/services/get-guideline-metadata.service'
 
@@ -40,7 +41,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 			</head>
 			<body className="grid min-h-svh grid-rows-[auto_1fr] bg-white text-black dark:bg-black dark:text-white">
 				<GlobalHeader />
-				{children}
+				<div className="min-w-0 lg:pr-80">{children}</div>
+				<GlobalAgentChat />
 			</body>
 		</html>
 	)

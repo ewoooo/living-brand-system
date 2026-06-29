@@ -27,16 +27,15 @@ export async function getAgentChatErrorMessage(response: Response) {
 	return message
 }
 
-export function useAgentChat(pagePath: string) {
+export function useAgentChat() {
 	const transport = useMemo(
 		() =>
 			new DefaultChatTransport({
 				api: '/api/qa/answer',
-				body: { pagePath },
 				credentials: 'same-origin',
 				fetch: fetchAgentChat,
 			}),
-		[pagePath],
+		[],
 	)
 
 	return useChat({ transport })
