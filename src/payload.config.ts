@@ -3,13 +3,21 @@ import { fileURLToPath } from 'node:url'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
-import { en } from '@payloadcms/translations/languages/en'
 import { ko } from '@payloadcms/translations/languages/ko'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
-import { Assets } from './collections/Assets'
+import { ApplicationImages } from './collections/ApplicationImages'
+import { BrandColors } from './collections/BrandColors'
+import { BrandLogos } from './collections/BrandLogos'
+import { BrandTypefaces } from './collections/BrandTypefaces'
+import { Compositions } from './collections/Compositions'
+import { GuidelinePages } from './collections/GuidelinePages'
+import { GuidelineSections } from './collections/GuidelineSections'
+import { Plugins } from './collections/Plugins'
 import { Rules } from './collections/Rules'
+import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
+import { Guideline } from './globals/Guideline'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -30,16 +38,16 @@ export default buildConfig({
 	},
 	collections: [
 		Users,
-		Assets,
 		Rules,
-		{
-			slug: 'cars',
-			admin: { useAsTitle: 'title' },
-			fields: [
-				{ name: 'title', type: 'text' },
-				{ name: 'featuredImage', type: 'upload', relationTo: 'assets' },
-			],
-		},
+		BrandLogos,
+		BrandColors,
+		BrandTypefaces,
+		ApplicationImages,
+		Templates,
+		Plugins,
+		Compositions,
+		GuidelineSections,
+		GuidelinePages,
 	],
 	editor: lexicalEditor(),
 	secret: process.env.PAYLOAD_SECRET || '',
@@ -55,7 +63,8 @@ export default buildConfig({
 	plugins: [
 		s3Storage({
 			collections: {
-				assets: true,
+				'brand-logos': true,
+				'application-images': true,
 			},
 			bucket: process.env.S3_BUCKET || '',
 			config: {
@@ -77,4 +86,5 @@ export default buildConfig({
 		locales: ['ko', 'en'],
 		defaultLocale: 'ko',
 	},
+	globals: [Guideline],
 })

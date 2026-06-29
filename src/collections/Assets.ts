@@ -9,6 +9,9 @@ export const Assets: CollectionConfig = {
 		update: managerOrAdmin,
 		delete: managerOrAdmin,
 	},
+	admin: {
+		group: 'Assets',
+	},
 	fields: [
 		{
 			name: 'alt',

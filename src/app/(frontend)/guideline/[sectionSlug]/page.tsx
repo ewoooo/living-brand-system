@@ -1,0 +1,33 @@
+import { notFound } from 'next/navigation'
+import { getGuidelineSection } from '@/services/get-guideline-section.service'
+
+export default async function GuidelineSectionPage({
+	params,
+}: {
+	params: Promise<{ sectionSlug: string }>
+}) {
+	const { sectionSlug } = await params
+	const sectionView = await getGuidelineSection({
+		sectionSlug,
+	})
+
+	if (!sectionView) {
+		notFound()
+	}
+
+	return (
+		<article>
+			<header>
+				<h1>{sectionView.title}</h1>
+				{sectionView.description && <p>{sectionView.description}</p>}
+			</header>
+			{sectionView.pages.map((page) => (
+				<section key={page.id}>
+					<p>{page.displayOrder}</p>
+					<h2>{page.title}</h2>
+					{page.policyTitle && <h3>{page.policyTitle}</h3>}
+				</section>
+			))}
+		</article>
+	)
+}

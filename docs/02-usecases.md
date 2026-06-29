@@ -51,7 +51,7 @@ Creator가 사용하는 기준과 자원은 이 도메인에서 발행된 것만
 | GL-01 | 가이드라인 초안 생성 | Manager, System | 가이드라인 이름, 목적, 대상 브랜드 | Manager가 새 가이드라인 생성을 요청하면 System이 BrandGuideline을 draft 상태로 만듭니다. | Draft BrandGuideline | BrandGuideline, GuidelineDraftCreated | 가이드라인 섹션 등록 |
 | GL-02 | 가이드라인 섹션 등록 | Manager, System | 섹션 이름, 설명, 표시 순서 | Manager가 섹션을 입력하면 System이 GuidelineSection을 가이드라인에 추가합니다. | GuidelineSection | GuidelineSection, DisplayOrder, GuidelinePageUpdated | 가이드라인 페이지 구성 |
 | GL-03 | 가이드라인 페이지 구성 | Manager, System | 섹션, 페이지 제목, 배치 정보 | Manager가 페이지 구성을 입력하면 System이 GuidelinePage와 PageComposition을 저장합니다. | GuidelinePage | GuidelinePage, PageComposition, GuidelinePageUpdated | 페이지 정책 작성 |
-| GL-04 | 페이지 정책 작성 | Manager, System | 정책 문구, 설명, 적용 맥락 | Manager가 페이지 정책을 작성하면 System이 PagePolicy를 GuidelinePage에 1:1로 연결합니다. | PagePolicy | PagePolicy, PagePolicyUpdated | 규칙을 페이지에 연결 |
+| GL-04 | 페이지 정책 작성 | Manager, System | 정책 문구, 설명 | Manager가 페이지 정책을 작성하면 System이 PagePolicy를 GuidelinePage에 1:1로 연결합니다. | PagePolicy | PagePolicy, PagePolicyUpdated | 규칙을 페이지에 연결 |
 | GL-05 | 규칙을 페이지에 연결 | Manager, System | GuidelinePage, RuleVersion, 표시 순서, 강조 여부 | Manager가 페이지에 발행 규칙을 연결하면 System이 PageRuleRef를 생성합니다. | PageRuleRef | PageRuleRef, RuleVersionRef, PageRuleLinked | 가이드라인 검토 요청 |
 | GL-06 | 에셋을 페이지에 연결 | Manager, System | GuidelinePage, BrandAssetVersion, 캡션, 예시 역할 | Manager가 페이지에 에셋을 연결하면 System이 PageAssetRef 또는 PageExample을 생성합니다. | PageAssetRef | PageAssetRef, PageExample, PageAssetLinked | 가이드라인 검토 요청 |
 | GL-07 | 템플릿을 페이지에 연결 | Manager, System | GuidelinePage, TemplateVersion, 사용 조건 | Manager가 페이지에 템플릿을 연결하면 System이 페이지의 TemplateVersion 참조를 저장합니다. | TemplateVersionRef | TemplateVersionRef, GuidelinePageUpdated | 가이드라인 검토 요청 |
