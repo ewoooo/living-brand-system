@@ -71,7 +71,7 @@ export async function getGuidelineNavigation(): Promise<GetGuidelineNavigationOu
 					.map((page) => ({
 						id: page.id,
 						title: page.title,
-						href: `/guideline/${section.slug}/${page.slug}`,
+						href: `/guideline/${section.slug}#${page.slug}`,
 					})),
 			})),
 		}

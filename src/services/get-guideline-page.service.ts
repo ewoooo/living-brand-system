@@ -9,7 +9,6 @@ export interface GetGuidelinePageInput {
 export interface GetGuidelinePageOutput {
 	title: string
 	sectionTitle: string
-	policyTitle: string | null
 }
 
 /**
@@ -70,9 +69,6 @@ export async function getGuidelinePage({
 			draft: false,
 			select: {
 				title: true,
-				policy: {
-					title: true,
-				},
 			},
 		})
 		const page = pages.docs[0]
@@ -84,7 +80,6 @@ export async function getGuidelinePage({
 		return {
 			title: page.title,
 			sectionTitle: section.title,
-			policyTitle: page.policy?.title || null,
 		}
 	} catch {
 		return null
