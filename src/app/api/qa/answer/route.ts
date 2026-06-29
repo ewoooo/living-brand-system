@@ -2,6 +2,7 @@ import config from '@payload-config'
 import {
 	convertToModelMessages,
 	createUIMessageStreamResponse,
+	type ModelMessage,
 	toUIMessageStream,
 	type UIMessage,
 } from 'ai'
@@ -14,12 +15,24 @@ import { generateAnswerService } from '@/services/generate-answer.service'
 
 export const maxDuration = 30
 
+const uiMessageSchema = z
+	.object({
+		id: z.string().min(1),
+		role: z.enum(['system', 'user', 'assistant']),
+		parts: z.array(z.object({ type: z.string() }).passthrough()).min(1),
+	})
+	.passthrough()
+
 const qaAnswerRequestSchema = z.object({
-	messages: z
-		.array(z.custom<UIMessage>((value) => typeof value === 'object' && value !== null))
-		.min(1),
+	messages: z.array(uiMessageSchema).min(1),
 	pagePath: z.string().max(300).optional(),
 })
+
+export async function parseQaAnswerRequest(req: Request) {
+	const body = await req.json().catch(() => null)
+
+	return qaAnswerRequestSchema.safeParse(body)
+}
 
 export async function POST(req: Request) {
 	const payload = await getPayload({ config })
@@ -30,15 +43,23 @@ export async function POST(req: Request) {
 		return Response.json({ message: 'Unauthorized' }, { status: 401 })
 	}
 
-	const parsed = qaAnswerRequestSchema.safeParse(await req.json())
+	const parsed = await parseQaAnswerRequest(req)
 
 	if (!parsed.success) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
 	}
 
+	let messages: ModelMessage[]
+
+	try {
+		messages = await convertToModelMessages(parsed.data.messages as UIMessage[])
+	} catch {
+		return Response.json({ message: 'Invalid request.' }, { status: 400 })
+	}
+
 	try {
 		const result = await generateAnswerService.execute({
-			messages: await convertToModelMessages(parsed.data.messages),
+			messages,
 			pagePath: parsed.data.pagePath,
 			user,
 		})

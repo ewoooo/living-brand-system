@@ -1,4 +1,5 @@
 import { type CollectionConfig, slugField } from 'payload'
+import { guidelineBlocks } from '@/blocks/guideline'
 
 export const GuidelinePages: CollectionConfig = {
 	slug: 'guideline-pages',
@@ -9,7 +10,9 @@ export const GuidelinePages: CollectionConfig = {
 	admin: {
 		group: 'Guideline',
 		useAsTitle: 'title',
-		defaultColumns: ['title', 'section', 'composition', 'displayOrder', 'updatedAt'],
+		defaultColumns: ['title', 'section', 'displayOrder', 'updatedAt'],
+		description: '블록으로 구성하는 가이드라인 페이지입니다.',
+		listSearchableFields: ['title', 'slug'],
 	},
 	versions: {
 		drafts: {
@@ -24,6 +27,9 @@ export const GuidelinePages: CollectionConfig = {
 			type: 'text',
 			required: true,
 			localized: true,
+			admin: {
+				description: '가이드라인 화면의 페이지 제목으로 표시됩니다.',
+			},
 		},
 		slugField({
 			useAsSlug: 'title',
@@ -36,6 +42,10 @@ export const GuidelinePages: CollectionConfig = {
 			relationTo: 'sections',
 			required: true,
 			index: true,
+			admin: {
+				position: 'sidebar',
+				description: '사이드바 내비게이션과 URL에 사용할 상위 섹션입니다.',
+			},
 		},
 		{
 			name: 'displayOrder',
@@ -45,32 +55,13 @@ export const GuidelinePages: CollectionConfig = {
 			min: 0,
 			admin: {
 				position: 'sidebar',
+				description: '숫자가 낮을수록 선택한 섹션 안에서 먼저 표시됩니다.',
 			},
 		},
 		{
-			name: 'composition',
-			type: 'relationship',
-			relationTo: 'compositions',
-			required: true,
-			admin: {
-				position: 'sidebar',
-			},
-		},
-		{
-			name: 'policy',
-			type: 'group',
-			fields: [
-				{
-					name: 'title',
-					type: 'text',
-					localized: true,
-				},
-				{
-					name: 'body',
-					type: 'richText',
-					localized: true,
-				},
-			],
+			name: 'blocks',
+			type: 'blocks',
+			blocks: guidelineBlocks,
 		},
 	],
 }

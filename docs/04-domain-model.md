@@ -52,7 +52,7 @@ flowchart LR
 | 관계 | 엣지 의미 | 대표 데이터 |
 | --- | --- | --- |
 | 가이드라인 관리 -> 제작 관리 | 제작이 발행된 기준과 자원을 참조합니다. | ResourceRef |
-| 가이드라인 관리 -> 품질 검수 | 검수가 live 상태의 Official Version을 참조합니다. | GuidelineVersionRef, RuleVersionRef, BrandAssetVersionRef |
+| 가이드라인 관리 -> 품질 검수 | 검수가 live 상태의 Official Version을 참조합니다. | GuidelineVersionRef, BrandRuleVersionRef, BrandAssetVersionRef |
 | 가이드라인 관리 -> 사용 기록 | 가이드라인 화면 행동을 기록합니다. | BehaviorEventLog |
 | 제작 관리 -> 사용 기록 | 운영 조회에서 에셋 제너레이션 기록을 읽습니다. | AssetGenerationSession, AssetGenerationOutput |
 | 품질 검수 -> 사용 기록 | 운영 조회에서 질의와 검수 기록을 읽습니다. | QASession, CheckSession, CheckResult |
@@ -61,9 +61,9 @@ flowchart LR
 
 이 관계도는 바운디드 컨텍스트와 핵심 객체의 참조 방향을 함께 보여줍니다.
 제작 관리는 산출물을 만들고 Brand asset generation records를 남깁니다.
-품질 검수는 CheckTarget에 검수 입력을 고정하고, CheckRun의 CheckBasis에서 Guideline, Rule, BrandAsset의 VersionRef를 참조합니다.
+품질 검수는 CheckTarget에 검수 입력을 고정하고, CheckRun의 CheckBasis에서 Guideline, BrandRule, BrandAsset의 VersionRef를 참조합니다.
 하위 관계도의 엣지는 소유, 참조, 포함, 기록 같은 관계 동사로 표현합니다.
-`GuidelineVersionRef`, `RuleVersionRef`, `BrandAssetVersionRef`, `TemplateVersionRef`, `PluginVersionRef`, `AgentRunRef`처럼 별도 생명주기가 없는 참조 값은 객체 노드로 표현하지 않습니다.
+`GuidelineVersionRef`, `BrandRuleVersionRef`, `BrandAssetVersionRef`, `TemplateVersionRef`, `PluginVersionRef`, `AgentRunRef`처럼 별도 생명주기가 없는 참조 값은 객체 노드로 표현하지 않습니다.
 단, `PageRuleRef`와 `PageAssetRef`는 페이지 안 표시 순서, 강조, 캡션, 예시 역할을 함께 담으므로 객체로 표현합니다.
 세부 도메인 이벤트명은 각 도메인 모델 목록에만 둡니다.
 
@@ -79,8 +79,8 @@ flowchart LR
   end
 
   subgraph Resource["브랜드 자원 관리"]
-    Rule["Rule"]
-    RuleException["RuleException"]
+    RuleSpec["RuleSpec"]
+    BrandRule["BrandRule"]
     BrandAsset["BrandAsset"]
     Template["Template"]
     Plugin["Plugin"]
@@ -125,8 +125,8 @@ flowchart LR
   GuidelineSection -->|"소유"| GuidelinePage
   GuidelinePage -->|"소유"| PagePolicy
   GuidelinePage -->|"소유"| PageRuleRef
-  PageRuleRef -->|"규칙 사용"| Rule
-  Rule -->|"소유"| RuleException
+  PageRuleRef -->|"규칙 사용"| BrandRule
+  BrandRule -->|"명세 참조"| RuleSpec
   GuidelinePage -->|"소유"| PageAssetRef
   PageAssetRef -->|"자원 사용"| BrandAsset
   GuidelinePage -->|"템플릿 사용"| Template
@@ -142,13 +142,13 @@ flowchart LR
   QASession -->|"소유"| Question
   QASession -->|"소유"| Answer
   Answer -->|"소유"| AnswerCitation
-  AnswerCitation -->|"근거"| Rule
+  AnswerCitation -->|"근거"| BrandRule
   CheckSession -->|"소유"| CheckTarget
   CheckTarget -->|"고정"| CheckInputSnapshot
   CheckSession -->|"소유"| CheckRun
   CheckRun -->|"소유"| CheckBasis
   CheckBasis -->|"참조"| BrandGuideline
-  CheckBasis -->|"참조"| Rule
+  CheckBasis -->|"참조"| BrandRule
   CheckBasis -->|"참조"| BrandAsset
   CheckRun -->|"소유"| CheckDecision
   CheckDecision -->|"소유"| CheckResult
@@ -166,30 +166,36 @@ flowchart LR
   classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
   classDef record fill:#F1F3F5,stroke:#868E96,stroke-width:1.5px,color:#1F1F1F;
 
-  class BrandGuideline,Rule,BrandAsset,Template,Plugin,AssetGenerationSession,QASession,CheckSession,BehaviorEventLog aggregate;
-  class GuidelineSection,GuidelinePage,RuleException,AssetGenerationInput,AssetGenerationOutput,Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult entity;
+  class BrandGuideline,RuleSpec,BrandRule,BrandAsset,Template,Plugin,AssetGenerationSession,QASession,CheckSession,BehaviorEventLog aggregate;
+  class GuidelineSection,GuidelinePage,AssetGenerationInput,AssetGenerationOutput,Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult entity;
   class PagePolicy,PageRuleRef,PageAssetRef,AnswerCitation,CheckRecommendation,PageViewEvent,ClickEvent,AssetDownloadEvent,SectionDwellEvent,SearchEvent,OutboundLinkEvent,CustomEvent childEntity;
 ```
 
 | 관계 | 의미 |
 | --- | --- |
 | GuidelinePage -> PagePolicy | 페이지는 정책 설명을 1:1로 소유합니다. |
-| GuidelinePage -> RuleVersion / BrandAssetVersion / TemplateVersion / PluginVersion | 페이지는 재사용 가능한 규칙과 자원을 Official Version으로 참조합니다. |
+| GuidelinePage -> BrandRule / BrandAssetVersion / TemplateVersion / PluginVersion | 페이지는 브랜드가 채택한 규칙과 자원을 Official Version으로 참조합니다. |
 | AssetGenerationSession -> BrandGuideline / BrandAsset / Template / Plugin | 제작은 발행 기준, 에셋, 템플릿, 플러그인을 사용하고 ResourceRef를 저장합니다. |
 | 사용 기록 -> AssetGenerationSession / QASession / CheckSession | 운영 조회는 기본 레코드를 읽어 사용 이력을 구성합니다. |
 | GuidelinePage -> BehaviorEventLog | 가이드라인 화면 조회, 클릭, 검색, 에셋 다운로드, 특정 구간 체류, 외부 링크 클릭 같은 화면 행동은 화면 행동 기록으로 남깁니다. |
 | CheckSession -> CheckTarget | 품질 검수는 별도 실행될 때 검수 대상 값을 소유합니다. |
 | CheckRun -> CheckBasis | 점검 실행은 검수 시점의 기준 묶음을 소유합니다. |
-| CheckBasis -> BrandGuideline / RuleVersion / BrandAssetVersion | 기준 묶음은 검수 시점의 VersionRef를 참조합니다. |
+| CheckBasis -> BrandGuideline / BrandRule / BrandAsset | 기준 묶음은 검수 시점의 GuidelineVersionRef, BrandRuleVersionRef, BrandAssetVersionRef를 참조합니다. |
 | CheckDecision -> CheckResult | 최종 판정은 여러 점검 결과를 소유합니다. |
 | CheckResult -> CheckRecommendation | 점검 결과는 필요한 수정 권장 사항을 소유합니다. |
-| BrandGuideline / Rule / BrandAsset / Template / Plugin -> Version | 발행 대상은 Official Version을 만들고, Version은 PreviousVersionRef와 PayloadRevisionRef를 보존합니다. |
+| BrandGuideline / RuleSpec / BrandRule / BrandAsset / Template / Plugin -> Version | 발행 대상은 Official Version을 만들고, Version은 PreviousVersionRef와 PayloadRevisionRef를 보존합니다. |
+| BrandGuideline -> BrandRule | 브랜드가 채택한 규칙과 기준값을 보유합니다. |
+| BrandRule -> RuleSpec | 채택한 규칙 명세를 참조하고 기준값(RuleValue)을 더합니다. |
 
 ## 4. 가이드라인 관리
 
 가이드라인 관리는 브랜드 가이드라인, 공식 자원, Official Version을 관리하는 서브도메인입니다.
-GuidelinePage는 단순 텍스트 묶음이 아니라 PagePolicy, RuleVersion 참조, BrandAsset 참조, Template 참조, Plugin 참조, 화면 구성을 묶은 발행 단위입니다.
-Rule은 여러 페이지, 템플릿, 플러그인, 검수에서 재사용되는 브랜드 자원 관리의 독립 애그리거트(관리 단위)입니다.
+GuidelinePage는 단순 텍스트 묶음이 아니라 PagePolicy, BrandRule 참조, BrandAsset 참조, Template 참조, Plugin 참조, 화면 구성을 묶은 발행 단위입니다.
+
+규칙은 두 계층으로 나눕니다.
+RuleSpec은 브랜드와 무관한 규칙 명세입니다. 규칙의 의미, 기준값의 단위, 검출 방법, 채점 기준을 정의하며 구체적인 기준값은 갖지 않습니다. 모든 브랜드는 이 명세 카탈로그 안에서 규칙을 고릅니다.
+BrandRule은 한 브랜드가 채택한 RuleSpec에 그 브랜드의 기준값을 더한 적용 단위입니다. RuleSpec을 참조하고 RuleValue를 함께 담아, "이 브랜드가 어떤 규칙을 쓰는가"와 "그 기준값은 무엇인가"를 표현합니다.
+RuleSpec과 BrandRule은 각각 Official Version을 가집니다. 검수는 그 시점의 BrandRule Version을 고정해, 과거 기준으로 통과한 산출물을 기준 개정 뒤에 통과로 오판하지 않습니다.
 
 ```text
 [도메인] 브랜드 운영 시스템
@@ -214,10 +220,12 @@ Rule은 여러 페이지, 템플릿, 플러그인, 검수에서 재사용되는 
       │              └── GuidelineVersionStaged, GuidelineVersionPublished, GuidelineVersionArchived
       ├── [바운디드 컨텍스트] 브랜드 자원 관리
       │    └── [도메인 모델]
-      │         ├── 애그리거트(관리 단위): Rule
-      │         │    ├── 엔티티: RuleVersion
-      │         │    ├── 엔티티: RuleException
-      │         │    └── 값 객체: RuleType, Severity, RuleScope, RuleCondition, RequiredCopy, ForbiddenCopy, ExceptionReason
+      │         ├── 애그리거트(관리 단위): RuleSpec
+      │         │    ├── 엔티티: RuleSpecVersion
+      │         │    └── 값 객체: RuleType, RuleScope, Severity(기본), MeasurementUnit, DetectionMethod, ParamSchema, ScoringSpec
+      │         ├── 애그리거트(관리 단위): BrandRule
+      │         │    ├── 엔티티: BrandRuleVersion
+      │         │    └── 값 객체: RuleValue, SeverityOverride, Presence, SourceRef, Confidence
       │         ├── 애그리거트(관리 단위): BrandAsset
       │         │    ├── 엔티티: AssetFile
       │         │    ├── 엔티티: BrandAssetVersion
@@ -230,12 +238,13 @@ Rule은 여러 페이지, 템플릿, 플러그인, 검수에서 재사용되는 
       │         │    └── 값 객체: PluginType, PluginUsageCondition
       │         ├── 도메인 서비스: RuleConflictCheckService, AssetPublishService, TemplatePublishService, PluginPublishService, VersionPublishService, VersionCompareService
       │         └── 도메인 이벤트
-      │              ├── RuleUpdated, RuleExceptionAdded
+      │              ├── BrandRuleAdopted, BrandRuleValueUpdated
       │              ├── BrandAssetRegistered, BrandAssetPublished, BrandAssetDeprecated
       │              ├── TemplateRegistered, TemplatePublished, TemplateDeprecated
       │              ├── PluginRegistered, PluginPublished, PluginDeprecated
       │              ├── ResourceLinkedToGuideline
-      │              ├── RuleVersionStaged, RuleVersionPublished, RuleVersionArchived
+      │              ├── RuleSpecVersionStaged, RuleSpecVersionPublished, RuleSpecVersionArchived
+      │              ├── BrandRuleVersionStaged, BrandRuleVersionPublished, BrandRuleVersionArchived
       │              ├── BrandAssetVersionStaged, BrandAssetVersionPublished, BrandAssetVersionArchived
       │              ├── TemplateVersionStaged, TemplateVersionPublished, TemplateVersionArchived
       │              └── PluginVersionStaged, PluginVersionPublished, PluginVersionArchived
@@ -258,8 +267,8 @@ flowchart LR
   end
 
   subgraph Resource["브랜드 자원 관리"]
-    Rule["Rule"]
-    RuleException["RuleException"]
+    RuleSpec["RuleSpec"]
+    BrandRule["BrandRule"]
     BrandAsset["BrandAsset"]
     Template["Template"]
     Plugin["Plugin"]
@@ -269,20 +278,20 @@ flowchart LR
   Section -->|"소유"| Page
   Page -->|"소유"| Policy
   Page -->|"소유"| PageRuleRefNode
-  PageRuleRefNode -->|"규칙 사용"| Rule
-  Rule -->|"소유"| RuleException
+  PageRuleRefNode -->|"규칙 사용"| BrandRule
+  BrandRule -->|"명세 참조"| RuleSpec
   Page -->|"소유"| PageAssetRefNode
   PageAssetRefNode -->|"자원 사용"| BrandAsset
   Page -->|"템플릿 사용"| Template
   Page -->|"플러그인 사용"| Plugin
-  Rule -->|"참조"| BrandAsset
+  BrandRule -->|"참조"| BrandAsset
 
   classDef aggregate fill:#FFE8CC,stroke:#F08C00,stroke-width:2px,color:#1F1F1F;
   classDef entity fill:#E7F5FF,stroke:#1C7ED6,stroke-width:1.5px,color:#1F1F1F;
   classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
 
-  class BrandGuideline,Rule,BrandAsset,Template,Plugin aggregate;
-  class Section,Page,RuleException entity;
+  class BrandGuideline,RuleSpec,BrandRule,BrandAsset,Template,Plugin aggregate;
+  class Section,Page entity;
   class Policy,PageRuleRefNode,PageAssetRefNode childEntity;
 ```
 
@@ -290,11 +299,11 @@ BrandGuideline은 사용자가 읽는 가이드라인 구조를 관리합니다.
 GuidelineSection은 BrandGuideline의 상위 장이고, GuidelinePage는 실제 화면이나 문서에서 읽는 단위입니다.
 GuidelineVersionRef는 BrandGuideline이 소유한 Official Version을 CheckBasis가 참조하기 위해 저장하는 값 객체입니다.
 
-GuidelinePage는 PagePolicy를 1:1로 소유하고, RuleVersion, BrandAssetVersion, TemplateVersion, PluginVersion은 참조합니다.
+GuidelinePage는 PagePolicy를 1:1로 소유하고, BrandRule, BrandAssetVersion, TemplateVersion, PluginVersion은 참조합니다.
 PageRuleRef와 PageAssetRef는 페이지 안에서의 표시 순서, 강조, 캡션, 예시 역할을 함께 기록합니다.
 
-Rule은 CheckBasis와 Agent 답변에서 참조하는 판단 기준입니다.
-RuleException은 Rule 안에서 관리하고, 예외가 여러 규칙에 재사용되거나 별도 승인 워크플로우를 가질 때만 독립 애그리거트(관리 단위)로 분리합니다.
+RuleSpec은 브랜드와 무관한 규칙 명세이고, 검수와 Agent 답변이 실제로 참조하는 판단 기준은 브랜드 기준값을 담은 BrandRule입니다. BrandRule은 RuleSpec을 참조하면서 RuleValue를 더하고, 자체 Official Version으로 기준값 변경 이력을 관리합니다.
+RuleException(규칙별 예외)과 RuleValue의 세부 값 분해는 현재 범위에서 제외하고 추후 고도화합니다.
 
 Official Version 전환은 별도 애그리거트를 만들지 않고, 각 원본 애그리거트가 소유한 Version 엔티티의 stage/live/archived 상태를 바꾸는 서비스 흐름으로 둡니다.
 Version 이벤트는 공통 이름만 쓰지 않고, producer 또는 resource type을 식별할 수 있게 기록합니다.
@@ -305,7 +314,7 @@ Template은 Creator가 제작을 시작할 때 사용하는 공식 형식입니�
 TemplateSourceRef는 Figma node 또는 업로드 파일 원본을 가리키고, LayoutSpec, TextStyleSpec, EditableBlockSpec은 제작 가능한 편집 구조를 정의합니다.
 Plugin은 Creator가 산출물을 만들 때 사용할 수 있는 공식 제작 기능입니다.
 PluginEntry는 제품에서 호출할 수 있는 Plugin 실행 단위이고, PluginCapability는 Plugin이 제공하는 제작 기능입니다.
-GuidelinePage와 Rule은 BrandAsset, Template, Plugin을 참조할 수 있지만, 파일 또는 Official Version 교체와 배포 상태는 브랜드 자원 관리가 담당합니다.
+GuidelinePage와 BrandRule은 BrandAsset, Template, Plugin을 참조할 수 있지만, 파일 또는 Official Version 교체와 배포 상태는 브랜드 자원 관리가 담당합니다.
 
 ## 5. 제작 관리
 
@@ -384,7 +393,7 @@ AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 Brand ass
       │         │    ├── 엔티티: CheckInputSnapshot
       │         │    ├── 엔티티: CheckRun
       │         │    │    ├── 엔티티: CheckBasis
-      │         │    │    │    └── 값 객체: GuidelineVersionRef, RuleVersionRef, BrandAssetVersionRef
+      │         │    │    │    └── 값 객체: GuidelineVersionRef, BrandRuleVersionRef, BrandAssetVersionRef
       │         │    │    └── 엔티티: CheckDecision
       │         │    │         └── 엔티티: CheckResult
       │         │    │              └── 엔티티: CheckRecommendation
@@ -399,7 +408,7 @@ AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 Brand ass
 
 ```mermaid
 flowchart LR
-  Rule["Rule"]
+  BrandRule["BrandRule"]
 
   subgraph QA["질의응답"]
     QASession["QASession"]
@@ -428,7 +437,7 @@ flowchart LR
   QASession -->|"소유"| Answer
   Answer -->|"소유"| AnswerCitation
   Answer -->|"소유"| AnswerConfidence
-  AnswerCitation -->|"근거"| Rule
+  AnswerCitation -->|"근거"| BrandRule
   Answer -->|"실행 참조"| AgentRun
 
   CheckSession -->|"소유"| CheckTarget
@@ -436,7 +445,7 @@ flowchart LR
   CheckSession -->|"소유"| CheckRun
   CheckRun -->|"소유"| CheckBasis
   CheckBasis -->|"참조"| BrandGuideline
-  CheckBasis -->|"참조"| Rule
+  CheckBasis -->|"참조"| BrandRule
   CheckBasis -->|"참조"| BrandAsset
   CheckRun -->|"소유"| CheckDecision
   CheckDecision -->|"소유"| CheckResult
@@ -448,7 +457,7 @@ flowchart LR
   classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
   classDef record fill:#F1F3F5,stroke:#868E96,stroke-width:1.5px,color:#1F1F1F;
 
-  class QASession,CheckSession,BrandGuideline,Rule,BrandAsset aggregate;
+  class QASession,CheckSession,BrandGuideline,BrandRule,BrandAsset aggregate;
   class Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult entity;
   class AnswerCitation,AnswerConfidence,CheckRecommendation childEntity;
   class AgentRun record;
@@ -459,7 +468,7 @@ Question과 Answer는 각각 독립 애그리거트(관리 단위)로 보지 않
 품질 검수 화면에서 발생한 질문, 답변, 검수 세션, 점검 실행은 Quality session records로 남깁니다.
 가이드라인 화면의 조회, 클릭, 검색, 에셋 다운로드, 구간 체류, 외부 링크 클릭은 품질 검수가 아니라 화면 행동 기록으로 수집합니다.
 
-CheckRun은 CheckBasis를 소유하고, CheckBasis는 검수 시점의 GuidelineVersionRef, RuleVersionRef, BrandAssetVersionRef를 참조합니다.
+CheckRun은 CheckBasis를 소유하고, CheckBasis는 검수 시점의 GuidelineVersionRef, BrandRuleVersionRef, BrandAssetVersionRef를 참조합니다.
 CheckInputSnapshot은 검수 입력을 재현하기 위한 ID를 가진 불변 엔티티입니다.
 CheckDecision은 CheckRun 안에서 최종 판정을 표현하고, 여러 CheckResult를 소유합니다.
 Agent와 System은 점검, 설명, 최종 검수 판정을 수행합니다.

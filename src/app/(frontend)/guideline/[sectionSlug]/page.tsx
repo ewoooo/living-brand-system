@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
-import { getGuidelineSection } from '@/services/get-guideline-section.service'
+import { GuidelineBlocks } from '@/features/guideline/components/guideline-blocks'
+import { getGuidelineSection } from '@/features/guideline/services/get-guideline-section.service'
 
 export default async function GuidelineSectionPage({
 	params,
@@ -16,18 +17,20 @@ export default async function GuidelineSectionPage({
 	}
 
 	return (
-		<article>
-			<header>
-				<h1>{sectionView.title}</h1>
+		<article className="grid w-full grid-rows-[auto_1fr]">
+			<header className="mb-10">
+				<h1 className="text-5xl">{sectionView.title}</h1>
 				{sectionView.description && <p>{sectionView.description}</p>}
 			</header>
-			{sectionView.pages.map((page) => (
-				<section key={page.id}>
-					<p>{page.displayOrder}</p>
-					<h2>{page.title}</h2>
-					{page.policyTitle && <h3>{page.policyTitle}</h3>}
-				</section>
-			))}
+			<section className="flex flex-col gap-16">
+				{sectionView.pages.map((page) => (
+					<article key={page.id} id={page.slug} className="scroll-mt-6">
+						{/*<p>{page.displayOrder}</p>*/}
+						<h2 className="font-semibold">{page.title}</h2>
+						<GuidelineBlocks blocks={page.blocks} />
+					</article>
+				))}
+			</section>
 		</article>
 	)
 }

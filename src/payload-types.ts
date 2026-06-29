@@ -68,13 +68,13 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
+    rules: Rule;
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
     'brand-typefaces': BrandTypeface;
     'application-images': ApplicationImage;
     templates: Template;
     plugins: Plugin;
-    compositions: Composition;
     sections: Section;
     'guideline-pages': GuidelinePage;
     search: Search;
@@ -91,13 +91,13 @@ export interface Config {
   };
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    rules: RulesSelect<false> | RulesSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
     plugins: PluginsSelect<false> | PluginsSelect<true>;
-    compositions: CompositionsSelect<false> | CompositionsSelect<true>;
     sections: SectionsSelect<false> | SectionsSelect<true>;
     'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
@@ -157,6 +157,10 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  /**
+   * admin(전체)·manager(기준 관리)·worker(사용)
+   */
+  role: 'admin' | 'manager' | 'worker';
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -175,6 +179,52 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rules".
+ */
+export interface Rule {
+  id: number;
+  /**
+   * category.attribute 점 표기. 예: logo.min-size
+   */
+  key: string;
+  title: string;
+  category:
+    | 'logo'
+    | 'color'
+    | 'typography'
+    | 'grid'
+    | 'spacing'
+    | 'layout'
+    | 'imagery'
+    | 'illustration'
+    | 'iconography'
+    | 'motion'
+    | 'voice'
+    | 'messaging'
+    | 'accessibility'
+    | 'application'
+    | 'misc';
+  tier?: ('A' | 'B' | 'C') | null;
+  executor?: ('deterministic' | 'heuristic' | 'advisory' | 'human') | null;
+  scope?: ('all' | 'print' | 'screen')[] | null;
+  /**
+   * 값을 채운 브랜드 수 (0 = domain-default 빈 슬롯)
+   */
+  frequency?: number | null;
+  domainDefault?: boolean | null;
+  /**
+   * 브랜드 값이 채워야 할 구조(요약 표기)
+   */
+  paramSchema?: string | null;
+  scoring?: string | null;
+  input?: string | null;
+  notes?: string | null;
+  status?: ('draft' | 'live' | 'archived') | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -289,77 +339,172 @@ export interface Plugin {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "compositions".
- */
-export interface Composition {
-  id: number;
-  name: string;
-  layoutType: 'type-a' | 'type-b' | 'type-c' | 'type-d' | 'type-e';
-  description?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
+ * 가이드라인 상위 내비게이션 섹션입니다.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sections".
  */
 export interface Section {
   id: number;
+  /**
+   * 사이드바 상위 섹션 제목으로 표시됩니다.
+   */
   title: string;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
   slug: string;
+  /**
+   * 섹션 랜딩 페이지에 표시할 선택 요약입니다.
+   */
   description?: string | null;
   pages?: {
     docs?: (number | GuidelinePage)[];
     hasNextPage?: boolean;
     totalDocs?: number;
   };
+  /**
+   * 숫자가 낮을수록 가이드라인 내비게이션에서 먼저 표시됩니다.
+   */
   displayOrder: number;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * 블록으로 구성하는 가이드라인 페이지입니다.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline-pages".
  */
 export interface GuidelinePage {
   id: number;
+  /**
+   * 가이드라인 화면의 페이지 제목으로 표시됩니다.
+   */
   title: string;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
   slug: string;
+  /**
+   * 사이드바 내비게이션과 URL에 사용할 상위 섹션입니다.
+   */
   section: number | Section;
+  /**
+   * 숫자가 낮을수록 선택한 섹션 안에서 먼저 표시됩니다.
+   */
   displayOrder: number;
-  composition: number | Composition;
-  policy?: {
-    title?: string | null;
-    body?: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    } | null;
-  };
+  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ExampleGridBlock)[] | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColumnUnitBlock".
+ */
+export interface ColumnUnitBlock {
+  title?: string | null;
+  columns?:
+    | {
+        heading?: string | null;
+        body?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        image?: (number | null) | ApplicationImage;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 검색과 Agent가 정책 단위로 읽을 때 사용하는 선택 메타입니다.
+   */
+  policy?: {
+    enabled?: boolean | null;
+    key?: string | null;
+    summary?: string | null;
+    rules?: (number | Rule)[] | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'columnUnit';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaShowcaseBlock".
+ */
+export interface MediaShowcaseBlock {
+  title?: string | null;
+  body?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  image?: (number | null) | ApplicationImage;
+  /**
+   * 검색과 Agent가 정책 단위로 읽을 때 사용하는 선택 메타입니다.
+   */
+  policy?: {
+    enabled?: boolean | null;
+    key?: string | null;
+    summary?: string | null;
+    rules?: (number | Rule)[] | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'mediaShowcase';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ExampleGridBlock".
+ */
+export interface ExampleGridBlock {
+  title?: string | null;
+  columns?: ('2' | '3' | '4') | null;
+  items?:
+    | {
+        title?: string | null;
+        image?: (number | null) | ApplicationImage;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 검색과 Agent가 정책 단위로 읽을 때 사용하는 선택 메타입니다.
+   */
+  policy?: {
+    enabled?: boolean | null;
+    key?: string | null;
+    summary?: string | null;
+    rules?: (number | Rule)[] | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'exampleGrid';
 }
 /**
  * This is a collection of automatically created search results. These results are used by the global site search and will be updated automatically as documents in the CMS are created or updated.
@@ -504,6 +649,10 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
+        relationTo: 'rules';
+        value: number | Rule;
+      } | null)
+    | ({
         relationTo: 'brand-logos';
         value: number | BrandLogo;
       } | null)
@@ -526,10 +675,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'plugins';
         value: number | Plugin;
-      } | null)
-    | ({
-        relationTo: 'compositions';
-        value: number | Composition;
       } | null)
     | ({
         relationTo: 'sections';
@@ -590,6 +735,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  role?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -606,6 +752,27 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rules_select".
+ */
+export interface RulesSelect<T extends boolean = true> {
+  key?: T;
+  title?: T;
+  category?: T;
+  tier?: T;
+  executor?: T;
+  scope?: T;
+  frequency?: T;
+  domainDefault?: T;
+  paramSchema?: T;
+  scoring?: T;
+  input?: T;
+  notes?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -723,18 +890,6 @@ export interface PluginsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "compositions_select".
- */
-export interface CompositionsSelect<T extends boolean = true> {
-  name?: T;
-  layoutType?: T;
-  description?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sections_select".
  */
 export interface SectionsSelect<T extends boolean = true> {
@@ -758,16 +913,86 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
   slug?: T;
   section?: T;
   displayOrder?: T;
-  composition?: T;
-  policy?:
+  blocks?:
     | T
     | {
-        title?: T;
-        body?: T;
+        columnUnit?: T | ColumnUnitBlockSelect<T>;
+        mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
+        exampleGrid?: T | ExampleGridBlockSelect<T>;
       };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColumnUnitBlock_select".
+ */
+export interface ColumnUnitBlockSelect<T extends boolean = true> {
+  title?: T;
+  columns?:
+    | T
+    | {
+        heading?: T;
+        body?: T;
+        image?: T;
+        id?: T;
+      };
+  policy?:
+    | T
+    | {
+        enabled?: T;
+        key?: T;
+        summary?: T;
+        rules?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaShowcaseBlock_select".
+ */
+export interface MediaShowcaseBlockSelect<T extends boolean = true> {
+  title?: T;
+  body?: T;
+  image?: T;
+  policy?:
+    | T
+    | {
+        enabled?: T;
+        key?: T;
+        summary?: T;
+        rules?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ExampleGridBlock_select".
+ */
+export interface ExampleGridBlockSelect<T extends boolean = true> {
+  title?: T;
+  columns?: T;
+  items?:
+    | T
+    | {
+        title?: T;
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
+  policy?:
+    | T
+    | {
+        enabled?: T;
+        key?: T;
+        summary?: T;
+        rules?: T;
+      };
+  id?: T;
+  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -857,9 +1082,15 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface Guideline {
   id: number;
-  name: string;
-  purpose?: string | null;
-  brandName: string;
+  companyName: string;
+  /**
+   * 표지와 푸터에 표시할 문서명입니다. 예: Essenherb Brand Design Guidelines 1.0
+   */
+  documentTitle: string;
+  /**
+   * 발행 시점 표시 문구입니다. 예: Issued in February, 2026
+   */
+  issuedLabel?: string | null;
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -869,9 +1100,9 @@ export interface Guideline {
  * via the `definition` "guideline_select".
  */
 export interface GuidelineSelect<T extends boolean = true> {
-  name?: T;
-  purpose?: T;
-  brandName?: T;
+  companyName?: T;
+  documentTitle?: T;
+  issuedLabel?: T;
   _status?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -919,10 +1150,6 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'plugins';
           value: number | Plugin;
-        } | null)
-      | ({
-          relationTo: 'compositions';
-          value: number | Composition;
         } | null)
       | ({
           relationTo: 'sections';

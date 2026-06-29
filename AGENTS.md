@@ -9,6 +9,7 @@ Start with `.agents/skills/payload/SKILL.md` for a quick reference, then see `.a
 - Library, framework, SDK, API, CLI, or cloud-service documentation: always use Context7 MCP before answering or implementing from docs. Start with `resolve-library-id`, then call `query-docs` with the selected library ID and the full question.
 - If Ponytail or Context7 is unavailable, tell the user what is missing and guide them to install or enable it before continuing with work that requires it.
 - Do not use Context7 for business logic debugging, code review, refactoring that does not require external docs, or project-specific docs under `docs/`.
+- Service files must include a short comment above the exported service function or class explaining the use case boundary and what lower layer owns external I/O.
 
 ## Operating Principles
 

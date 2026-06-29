@@ -1,5 +1,7 @@
+import type { Metadata } from 'next'
 import type React from 'react'
-import { GuidelineHeader } from '@/features/guideline/components/global-header'
+import { GlobalHeader } from '@/components/global-header'
+import { getGuidelineMetadata } from '@/features/guideline/services/get-guideline-metadata.service'
 
 import './styles.css'
 
@@ -15,9 +17,13 @@ const themeScript = `
 })();
 `
 
-export const metadata = {
-	description: 'A blank page',
-	title: 'Digital Guideline',
+export async function generateMetadata(): Promise<Metadata> {
+	const metadata = await getGuidelineMetadata()
+
+	return {
+		description: metadata.issuedLabel || metadata.companyName,
+		title: metadata.documentTitle,
+	}
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -32,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 				/>
 			</head>
 			<body className="grid min-h-svh grid-rows-[auto_1fr] bg-white text-black dark:bg-black dark:text-white">
-				<GuidelineHeader />
+				<GlobalHeader />
 				{children}
 			</body>
 		</html>

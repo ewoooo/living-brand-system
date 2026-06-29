@@ -1,23 +1,50 @@
+'use client'
+
 import type { UIMessage } from 'ai'
+import { Bubble, BubbleContent } from '@/components/ui/bubble'
+import {
+	MessageScroller,
+	MessageScrollerButton,
+	MessageScrollerContent,
+	MessageScrollerItem,
+	MessageScrollerProvider,
+	MessageScrollerViewport,
+} from '@/components/ui/message-scroller'
 
 export function AgentMessageList({ messages, error }: { messages: UIMessage[]; error?: Error }) {
 	const isEmpty = messages.length === 0 && !error
 
-	if (isEmpty) {
-		return (
-			<div className="min-h-0 flex-1 overflow-y-auto p-3">
-				<AgentEmptyMessage />
-			</div>
-		)
-	}
-
 	return (
-		<div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
-			{messages.map((message) => (
-				<AgentMessageBubble key={message.id} message={message} />
-			))}
-			{error && <AgentErrorBubble error={error} />}
-		</div>
+		<MessageScrollerProvider>
+			<MessageScroller className="min-h-0 flex-1">
+				<MessageScrollerViewport>
+					<MessageScrollerContent className="gap-3 p-3">
+						{isEmpty ? (
+							<MessageScrollerItem>
+								<AgentEmptyMessage />
+							</MessageScrollerItem>
+						) : (
+							messages.map((message) => (
+								<MessageScrollerItem
+									key={message.id}
+									className="flex flex-col"
+									messageId={message.id}
+									scrollAnchor={message.role === 'user'}
+								>
+									<AgentMessageBubble message={message} />
+								</MessageScrollerItem>
+							))
+						)}
+						{error && (
+							<MessageScrollerItem>
+								<AgentErrorBubble error={error} />
+							</MessageScrollerItem>
+						)}
+					</MessageScrollerContent>
+				</MessageScrollerViewport>
+				<MessageScrollerButton />
+			</MessageScroller>
+		</MessageScrollerProvider>
 	)
 }
 
@@ -27,47 +54,35 @@ function AgentEmptyMessage() {
 
 function AgentErrorBubble({ error }: { error: Error }) {
 	return (
-		<div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive text-sm">
-			{error.message}
-		</div>
+		<Bubble variant="destructive">
+			<BubbleContent>{error.message}</BubbleContent>
+		</Bubble>
 	)
 }
 
 function AgentMessageBubble({ message }: { message: UIMessage }) {
-	return message.role === 'user' ? (
-		<AgentUserMessageBubble message={message} />
-	) : (
-		<AgentAssistantMessageBubble message={message} />
-	)
-}
+	const isUser = message.role === 'user'
 
-function AgentUserMessageBubble({ message }: { message: UIMessage }) {
 	return (
-		<div className="flex justify-start">
-			<div className="max-w-[85%] rounded-md bg-primary px-3 py-2 text-primary-foreground">
+		<Bubble
+			align={isUser ? 'end' : 'start'}
+			variant={isUser ? 'default' : 'muted'}
+			className="rounded-full"
+		>
+			<BubbleContent className="whitespace-pre-wrap">
 				<AgentMessageText message={message} />
-			</div>
-		</div>
-	)
-}
-
-function AgentAssistantMessageBubble({ message }: { message: UIMessage }) {
-	return (
-		<div className="flex justify-end">
-			<div className="max-w-[85%] rounded-md bg-muted px-3 py-2">
-				<AgentMessageText message={message} />
-			</div>
-		</div>
+			</BubbleContent>
+		</Bubble>
 	)
 }
 
 function AgentMessageText({ message }: { message: UIMessage }) {
 	return (
 		<p className="text-sm">
-			{message.parts
-				.filter((part) => part.type === 'text')
-				.map((part) => part.text)
-				.join('')}
+			{message.parts.reduce(
+				(text, part) => (part.type === 'text' ? text + part.text : text),
+				'',
+			)}
 		</p>
 	)
 }

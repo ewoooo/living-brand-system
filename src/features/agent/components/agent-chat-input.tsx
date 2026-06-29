@@ -15,9 +15,7 @@ export function AgentChatInput({
 	return (
 		<form
 			className="p-3"
-			onSubmit={(event) => {
-				event.preventDefault()
-
+			action={() => {
 				if (!value.trim()) {
 					return
 				}
@@ -27,13 +25,13 @@ export function AgentChatInput({
 		>
 			<div className="flex gap-2">
 				<Input
-					className="h-8 flex-1"
+					className="h-9 pl-3 flex-1 border-none bg-neutral-500/10"
 					value={value}
-					placeholder="Ask"
+					placeholder="Ask Anything"
 					disabled={isBusy}
 					onChange={(event) => onChange(event.currentTarget.value)}
 				/>
-				<Button type="submit" size="lg" disabled={isBusy || !value.trim()}>
+				<Button type="submit" variant="ghost" size="lg" disabled={isBusy || !value.trim()}>
 					Send
 				</Button>
 			</div>

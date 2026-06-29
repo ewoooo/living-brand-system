@@ -11,10 +11,10 @@ import { ApplicationImages } from './collections/ApplicationImages'
 import { BrandColors } from './collections/BrandColors'
 import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
-import { Compositions } from './collections/Compositions'
 import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
+import { Rules } from './collections/Rules'
 import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
 import { Guideline } from './globals/Guideline'
@@ -38,13 +38,13 @@ export default buildConfig({
 	},
 	collections: [
 		Users,
+		Rules,
 		BrandLogos,
 		BrandColors,
 		BrandTypefaces,
 		ApplicationImages,
 		Templates,
 		Plugins,
-		Compositions,
 		GuidelineSections,
 		GuidelinePages,
 	],

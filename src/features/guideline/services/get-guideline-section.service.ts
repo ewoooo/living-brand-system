@@ -1,5 +1,6 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
+import type { GuidelinePage } from '@/payload-types'
 
 export interface GetGuidelineSectionInput {
 	sectionSlug: string
@@ -11,8 +12,9 @@ export interface GetGuidelineSectionOutput {
 	pages: {
 		id: number
 		title: string
+		slug: string
 		displayOrder: number
-		policyTitle: string | null
+		blocks: GuidelinePage['blocks']
 	}[]
 }
 
@@ -66,10 +68,9 @@ export async function getGuidelineSection({
 			draft: false,
 			select: {
 				title: true,
+				slug: true,
 				displayOrder: true,
-				policy: {
-					title: true,
-				},
+				blocks: true,
 			},
 		})
 
@@ -79,8 +80,9 @@ export async function getGuidelineSection({
 			pages: pages.docs.map((page) => ({
 				id: page.id,
 				title: page.title,
+				slug: page.slug,
 				displayOrder: page.displayOrder,
-				policyTitle: page.policy?.title || null,
+				blocks: page.blocks || [],
 			})),
 		}
 	} catch {
