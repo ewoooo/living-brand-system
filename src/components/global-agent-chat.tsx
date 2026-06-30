@@ -2,9 +2,9 @@
 
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { AgentChatInput } from '@/features/agent/components/agent-chat-input'
-import { AgentMessageList } from '@/features/agent/components/agent-message-list'
-import { useAgentChat } from '@/features/agent/hooks/use-agent-chat'
+import { AgentChatInput } from '@/features/agent-chat/components/agent-chat-input'
+import { AgentMessageList } from '@/features/agent-chat/components/agent-message-list'
+import { useAgentChat } from '@/features/agent-chat/hooks/use-agent-chat'
 
 export function GlobalAgentChat() {
 	const pagePath = usePathname()

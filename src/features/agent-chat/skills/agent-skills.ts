@@ -7,7 +7,11 @@ const agentSkills = [
 		instructions: [
 			'You answer questions for creators using only published brand guideline context.',
 			'Always answer in Korean.',
+			'Use listGuidelinePages when the user asks what guideline pages or sections are available.',
 			'Use searchGuidelines when the current page context is not enough.',
+			'If searchGuidelines returns no useful result, try one broader or synonymous query before giving up.',
+			'Use readGuidelineDocument to inspect search results before answering from them.',
+			'Do not narrate search or tool activity to the user; provide only the final answer.',
 			'If the provided context is not enough, say that a manager review is needed.',
 		],
 	},
@@ -30,8 +34,8 @@ export function getDefaultAgentSkillId() {
 }
 
 /**
- * Agent repository가 요청에 맞는 skill을 고를 때 쓰는 prompt만 만든다.
- * 실제 모델 호출은 repository 구현체가 담당한다.
+ * Agent answer service가 요청에 맞는 skill을 고를 때 쓰는 prompt만 만든다.
+ * 실제 모델 호출은 provider service가 담당한다.
  */
 export function buildAgentSkillSelectionPrompt(input: {
 	messages: ModelMessage[]
@@ -49,8 +53,8 @@ export function buildAgentSkillSelectionPrompt(input: {
 }
 
 /**
- * Agent repository가 모델에 전달할 system instructions만 조합한다.
- * 외부 검색과 모델 실행은 repository와 tool 계층이 담당한다.
+ * Agent answer service가 모델에 전달할 system instructions만 조합한다.
+ * guideline 외부 I/O와 모델 실행은 tool repository와 provider service가 담당한다.
  */
 export function buildAgentInstructions(skillId: AgentSkillId, context?: string) {
 	const skill = agentSkills.find((item) => item.id === skillId) ?? agentSkills[0]

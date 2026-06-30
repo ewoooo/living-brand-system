@@ -1,7 +1,11 @@
 'use client'
 
+import { Search } from '@carbon/icons-react'
 import type { UIMessage } from 'ai'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
+import { Marker, MarkerContent, MarkerIcon } from '@/components/ui/marker'
 import {
 	MessageScroller,
 	MessageScrollerButton,
@@ -10,6 +14,7 @@ import {
 	MessageScrollerProvider,
 	MessageScrollerViewport,
 } from '@/components/ui/message-scroller'
+import { type AgentToolMarker, getAgentToolMarker } from '@/features/agent-chat/agent-tool-marker'
 
 export function AgentMessageList({ messages, error }: { messages: UIMessage[]; error?: Error }) {
 	const isEmpty = messages.length === 0 && !error
@@ -62,6 +67,40 @@ function AgentErrorBubble({ error }: { error: Error }) {
 
 function AgentMessageBubble({ message }: { message: UIMessage }) {
 	const isUser = message.role === 'user'
+	const marker = isUser ? null : getAgentToolMarker(message)
+	const messageText = getAgentMessageText(message)
+
+	return (
+		<div
+			className={isUser ? 'flex flex-col items-end gap-2' : 'flex flex-col items-start gap-2'}
+		>
+			<AgentToolMarkerView marker={marker} />
+			<AgentTextBubble isUser={isUser} text={messageText} />
+		</div>
+	)
+}
+
+function AgentToolMarkerView({ marker }: { marker: AgentToolMarker | null }) {
+	if (!marker) {
+		return null
+	}
+
+	return (
+		<Marker>
+			<MarkerIcon>
+				<Search />
+			</MarkerIcon>
+			<MarkerContent className={marker.isPending ? 'shimmer' : undefined}>
+				{marker.text}
+			</MarkerContent>
+		</Marker>
+	)
+}
+
+function AgentTextBubble({ isUser, text }: { isUser: boolean; text: string }) {
+	if (!text) {
+		return null
+	}
 
 	return (
 		<Bubble
@@ -69,20 +108,22 @@ function AgentMessageBubble({ message }: { message: UIMessage }) {
 			variant={isUser ? 'default' : 'muted'}
 			className="rounded-full"
 		>
-			<BubbleContent className="whitespace-pre-wrap">
-				<AgentMessageText message={message} />
+			<BubbleContent className={isUser ? 'whitespace-pre-wrap' : undefined}>
+				{isUser ? (
+					<p className="text-sm">{text}</p>
+				) : (
+					<div className="space-y-2 text-sm [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4">
+						<Markdown remarkPlugins={[remarkGfm]}>{text}</Markdown>
+					</div>
+				)}
 			</BubbleContent>
 		</Bubble>
 	)
 }
 
-function AgentMessageText({ message }: { message: UIMessage }) {
-	return (
-		<p className="text-sm">
-			{message.parts.reduce(
-				(text, part) => (part.type === 'text' ? text + part.text : text),
-				'',
-			)}
-		</p>
+function getAgentMessageText(message: UIMessage) {
+	return message.parts.reduce(
+		(text, part) => (part.type === 'text' ? text + part.text : text),
+		'',
 	)
 }

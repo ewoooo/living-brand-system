@@ -3,16 +3,20 @@ import {
 	buildAgentInstructions,
 	buildAgentSkillSelectionPrompt,
 	getDefaultAgentSkillId,
-} from '@/agents/agent-skills'
+} from '@/features/agent-chat/skills/agent-skills'
 
 describe('agent skills', () => {
 	it('adds request context to base instructions', () => {
-		expect(
-			buildAgentInstructions(
-				getDefaultAgentSkillId(),
-				'Current guideline page: /guideline/logo',
-			),
-		).toContain('Published context:\nCurrent guideline page: /guideline/logo')
+		const instructions = buildAgentInstructions(
+			getDefaultAgentSkillId(),
+			'Current guideline page: /guideline/logo',
+		)
+
+		expect(instructions).toContain(
+			'Published context:\nCurrent guideline page: /guideline/logo',
+		)
+		expect(instructions).toContain('Use listGuidelinePages')
+		expect(instructions).toContain('try one broader or synonymous query')
 	})
 
 	it('builds a skill selection prompt', () => {

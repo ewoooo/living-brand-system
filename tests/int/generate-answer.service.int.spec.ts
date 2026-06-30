@@ -2,12 +2,12 @@ import type { ModelMessage } from 'ai'
 import { describe, expect, it } from 'vitest'
 import type {
 	AgentAnswerInput,
+	AgentAnswerService,
 	AgentAnswerStream,
-	AgentRepository,
-} from '@/repositories/agent.repository'
-import { GenerateAnswerService } from '@/services/generate-answer.service'
+} from '@/features/agent-chat/services/generate-answer.service'
+import { GenerateAnswerService } from '@/features/agent-chat/services/generate-answer.service'
 
-class FakeAgentRepository implements AgentRepository {
+class FakeAgentAnswerService implements AgentAnswerService {
 	input?: AgentAnswerInput
 
 	async streamAnswer(input: AgentAnswerInput): Promise<AgentAnswerStream> {
@@ -19,39 +19,41 @@ class FakeAgentRepository implements AgentRepository {
 
 describe('GenerateAnswerService', () => {
 	it('rejects empty messages', async () => {
-		const service = new GenerateAnswerService(new FakeAgentRepository())
+		const service = new GenerateAnswerService(new FakeAgentAnswerService())
 
 		await expect(service.execute({ messages: [] })).rejects.toThrow(
 			'At least one message is required.',
 		)
 	})
 
-	it('passes page context to the agent repository', async () => {
-		const repository = new FakeAgentRepository()
-		const service = new GenerateAnswerService(repository)
+	it('passes page context to the answer service', async () => {
+		const answerService = new FakeAgentAnswerService()
+		const service = new GenerateAnswerService(answerService)
 		const messages = [{ role: 'user', content: 'How do I use this?' }] as ModelMessage[]
 
 		await service.execute({ messages, pagePath: '/guideline/logo' })
 
-		expect(repository.input).toEqual({
+		expect(answerService.input).toMatchObject({
 			messages,
 			context: 'Current guideline page: /guideline/logo',
-			user: undefined,
 		})
+		expect(answerService.input).not.toHaveProperty('user')
+		expect(answerService.input?.tools).toHaveProperty('searchGuidelines')
 	})
 
-	it('passes user context to the agent repository', async () => {
-		const repository = new FakeAgentRepository()
-		const service = new GenerateAnswerService(repository)
+	it('passes user context to the answer service', async () => {
+		const answerService = new FakeAgentAnswerService()
+		const service = new GenerateAnswerService(answerService)
 		const messages = [{ role: 'user', content: 'Find logo rules.' }] as ModelMessage[]
 		const user = { id: 1, collection: 'users' }
 
 		await service.execute({ messages, user })
 
-		expect(repository.input).toEqual({
+		expect(answerService.input).toMatchObject({
 			messages,
 			context: undefined,
-			user,
 		})
+		expect(answerService.input).not.toHaveProperty('user')
+		expect(answerService.input?.tools).toHaveProperty('readGuidelineDocument')
 	})
 })
