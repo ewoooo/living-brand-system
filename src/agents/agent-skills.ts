@@ -29,6 +29,10 @@ export function getDefaultAgentSkillId() {
 	return defaultAgentSkillId
 }
 
+/**
+ * Agent repository가 요청에 맞는 skill을 고를 때 쓰는 prompt만 만든다.
+ * 실제 모델 호출은 repository 구현체가 담당한다.
+ */
 export function buildAgentSkillSelectionPrompt(input: {
 	messages: ModelMessage[]
 	context?: string
@@ -44,6 +48,10 @@ export function buildAgentSkillSelectionPrompt(input: {
 		.join('\n\n')
 }
 
+/**
+ * Agent repository가 모델에 전달할 system instructions만 조합한다.
+ * 외부 검색과 모델 실행은 repository와 tool 계층이 담당한다.
+ */
 export function buildAgentInstructions(skillId: AgentSkillId, context?: string) {
 	const skill = agentSkills.find((item) => item.id === skillId) ?? agentSkills[0]
 

@@ -15,6 +15,10 @@ type SearchDoc = {
 	} | null
 }
 
+/**
+ * Agent tool의 published guideline 검색을 Payload search collection으로 수행한다.
+ * 접근 제어는 Payload Local API가 user와 overrideAccess 설정으로 강제한다.
+ */
 export class PayloadGuidelineSearchRepository implements GuidelineSearchRepository {
 	constructor(private readonly user: unknown) {}
 
