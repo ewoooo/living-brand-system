@@ -151,11 +151,11 @@ flowchart LR
     end
   end
 
-  AgentPackage["Agent package"]
+  AgentAdapter["Agent adapter / tool set"]
 
   subgraph Storage["Records and files"]
     GuidelineStore["Guideline records<br/>(BrandGuideline / GuidelineSection / GuidelinePage)"]
-    BrandResourceStore["Brand resource records<br/>(Rule / Asset metadata / Template metadata / Plugin ref)"]
+    BrandResourceStore["Brand resource records<br/>(RuleSpec / BrandRule / Asset metadata / Template metadata / Plugin ref)"]
     BrandAssetGenerationStore["Brand asset generation records<br/>(AssetGenerationSession / AssetGenerationInput / AssetGenerationOutput)"]
     QualityStore["Quality session records<br/>(QASession / CheckSession)"]
     BehaviorEventStore["Behavior event logs<br/>(BehaviorEventLog)"]
@@ -164,7 +164,7 @@ flowchart LR
 
   subgraph External["External dependencies"]
     FigmaSDK["Figma SDK<br/>(template source)"]
-    AgentSDK["Claude Agent SDK"]
+    AgentSDK["Vercel AI SDK<br/>(Anthropic provider)"]
     PluginStorage["Plugin runtime"]
     UmamiAnalytics["Umami analytics"]
   end
@@ -209,8 +209,8 @@ flowchart LR
   BrandResourcePublishingModule -->|"file operation"| StorageRepository
   BrandAssetGenerationModule -->|"file operation"| StorageRepository
 
-  AgentRepository -->|"POST / GET"| AgentPackage
-  AgentPackage -->|"API call"| AgentSDK
+  AgentRepository -->|"stream / tool call"| AgentAdapter
+  AgentAdapter -->|"model call"| AgentSDK
 
   ProductionResourceRepository --> GuidelineStore
   ProductionResourceRepository --> BrandResourceStore
@@ -224,7 +224,7 @@ flowchart LR
   StorageRepository --> FileStorage
 ```
 
-Domain Service Layer는 records, event logs, Agent package, 외부 의존성에 직접 접근하지 않고 Repository Interface 또는 adapter를 통해 접근합니다.
+Domain Service Layer는 records, event logs, Agent adapter, 외부 의존성에 직접 접근하지 않고 Repository Interface 또는 adapter를 통해 접근합니다.
 Payload CMS supported 영역은 collection, hook, access control, version, upload로 처리 가능한 흐름입니다.
 Guideline publishing service와 Brand resource publishing service는 Payload publish 결과를 기준으로 충돌 확인과 resource link 정리를 처리합니다.
 External services 영역은 렌더링, 스냅샷 고정, Agent 실행처럼 별도 업무 로직이 필요한 흐름입니다.
@@ -495,7 +495,7 @@ flowchart TB
 | `guideline` global | BrandGuideline | 단일 가이드라인 설정 |
 | `sections` | GuidelineSection | pages를 소유 |
 | `guideline-pages` | GuidelinePage | section에 속하고 blocks, rule refs, asset refs, template refs, plugin refs를 소유 |
-| `rules` | Rule | page, template, plugin, check basis에서 참조 |
+| `rules` | RuleSpec preset catalog | page, template, plugin, BrandRule 후보에서 참조하는 브랜드 무관 규칙 명세 |
 | `brand-logos` | BrandLogo | page, rule, asset generation session, check basis에서 참조 |
 | `brand-colors` | BrandColor | page, rule, template, plugin에서 참조 |
 | `brand-typefaces` | BrandTypeface | page, rule, template에서 참조 |
@@ -523,10 +523,10 @@ flowchart TB
 | 표준 용어 | 의미 |
 | --- | --- |
 | Payload revision | Payload CMS가 남기는 편집 이력입니다. Admin diff와 restore에 사용합니다. |
-| Official Version | Creator와 Agent가 참조하는 발행 기준입니다. GuidelineVersion, RuleVersion, BrandAssetVersion, TemplateVersion, PluginVersion이 여기에 속합니다. |
+| Official Version | Creator와 Agent가 참조하는 발행 기준입니다. GuidelineVersion, RuleSpecVersion, BrandRuleVersion, BrandAssetVersion, TemplateVersion, PluginVersion이 여기에 속합니다. |
 | VersionStatus | Official Version의 상태입니다. `stage`, `live`, `archived`를 사용합니다. |
 | VersionRef | 실행 기록이 특정 Official Version을 가리키는 참조값입니다. |
-| ResourceRef | 에셋 제너레이션이 사용하는 published guideline, rule, asset, template, plugin 참조 묶음입니다. 품질 검수는 요청 입력의 ResourceRef에서 필요한 VersionRef만 CheckBasis로 고정합니다. |
+| ResourceRef | 에셋 제너레이션이 사용하는 published guideline, BrandRule, asset, template, plugin 참조 묶음입니다. 품질 검수는 요청 입력의 ResourceRef에서 필요한 VersionRef만 CheckBasis로 고정합니다. |
 | Snapshot | 실행 당시 입력값 자체를 재현해야 할 때만 복사해 고정한 값입니다. |
 
 Payload revision은 CMS 편집 이력과 draft/publish 흐름에 사용합니다.
@@ -549,7 +549,7 @@ Payload revision, Official Version, Snapshot으로 재현할 수 있는 변경�
 - 다른 도메인이 알아야 하는 확정된 결과
 - 비동기 후속 작업을 시작해야 하는 결과
 
-예를 들어 `GuidelinePublished`, `RuleVersionPublished`, `AssetGenerationSessionCompleted`, `CheckCompleted`는 저장할 수 있습니다.
+예를 들어 `GuidelinePublished`, `BrandRuleVersionPublished`, `AssetGenerationSessionCompleted`, `CheckCompleted`는 저장할 수 있습니다.
 반면 단순 문구 수정, 내부 계산값, 장애 로그는 도메인 이벤트로 저장하지 않습니다.
 
 #### 저장하는 이벤트 예시
@@ -590,8 +590,8 @@ Agent 실행 결과는 Domain Service Layer가 검증한 뒤 Answer, CheckResult
 
 #### 호출 경로
 
-Answer generation service와 Quality check service는 모델 SDK나 Agent package API를 직접 호출하지 않습니다.
-두 서비스는 Agent repository를 통해 Agent package 실행을 요청합니다.
+Answer generation service와 Quality check service는 모델 SDK나 Agent tool을 직접 호출하지 않습니다.
+두 서비스는 Agent repository를 통해 AI SDK 기반 adapter 실행을 요청합니다.
 
 ```mermaid
 flowchart TD
@@ -601,7 +601,7 @@ flowchart TD
   D["Resolve live Official Version"]
   E["Store VersionRef and input"]
   F["Agent repository"]
-  G["Agent package"]
+  G["Agent adapter / tool set"]
   H["AgentRunRef"]
   I["Answer / CheckResult"]
 
