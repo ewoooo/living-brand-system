@@ -7,6 +7,7 @@ import { s3Storage } from '@payloadcms/storage-s3'
 import { ko } from '@payloadcms/translations/languages/ko'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
+import { AgentSkills } from './collections/AgentSkills'
 import { ApplicationImages } from './collections/ApplicationImages'
 import { BrandColors } from './collections/BrandColors'
 import { BrandLogos } from './collections/BrandLogos'
@@ -45,6 +46,7 @@ export default buildConfig({
 		ApplicationImages,
 		Templates,
 		Plugins,
+		AgentSkills,
 		GuidelineSections,
 		GuidelinePages,
 	],
@@ -54,6 +56,7 @@ export default buildConfig({
 		outputFile: path.resolve(dirname, 'payload-types.ts'),
 	},
 	db: postgresAdapter({
+		migrationDir: './migrations',
 		pool: {
 			connectionString: databaseURL,
 		},

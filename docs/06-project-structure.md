@@ -30,7 +30,7 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 | App | `src` | Next.js, Payload CMS, Creator UI를 포함하는 현재 실행 단위입니다. |
 | App Router | `src/app` | page, layout, route handler를 둡니다. |
 | Collections | `src/collections` | Payload collection schema, access, hook 진입점을 둡니다. |
-| Services | `src/services` | Use Case Service를 둡니다. |
+| Services | `src/services`, `src/features/*/services` | Use Case Service와 기능 전용 조회 서비스를 둡니다. |
 | Repositories | `src/repositories` | Repository Interface와 Implementation을 둡니다. |
 | Tests | `tests` | e2e, integration, helper를 둡니다. |
 | Docs | `docs` | 제품, 도메인, 아키텍처, 개발 규칙 문서를 둡니다. |
@@ -40,7 +40,7 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 예시:
 
 ```text
-현재: src/app, src/services, src/repositories
+현재: src/app, src/services, src/features/*/services, src/repositories
 나중: apps/web, apps/admin, packages/domain
 ```
 
@@ -68,7 +68,7 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 | Route Handler | `src/app/**/route.ts` | HTTP 요청 검증과 Service 호출만 담당합니다. |
 | ShadCN UI | `src/components/ui` | registry 기반 컴포넌트 원형을 둡니다. |
 | 화면 컴포넌트 | `src/features/*/components` | 특정 기능에만 쓰는 컴포넌트를 둡니다. |
-| 화면 상태 | `src/features/*` | 폼 상태, client hook, view model을 기능 안에 둡니다. |
+| 화면 상태와 조회 서비스 | `src/features/*` | 폼 상태, client hook, view model, 기능 전용 read service를 기능 안에 둡니다. |
 
 ## 3. 전체 소스코드 폴더 구조
 
@@ -103,6 +103,7 @@ src/
     <feature>/
       components/
       hooks/
+      services/
       types.ts
   lib/
     auth.ts
@@ -123,7 +124,8 @@ docs/
 - `page.tsx`와 `layout.tsx`는 라우팅과 화면 조합만 담당합니다.
 - `route.ts`는 HTTP adapter로만 동작합니다.
 - Collection hook은 Service를 호출하고, 업무 규칙을 직접 길게 작성하지 않습니다.
-- Service는 ORM, Payload Local API, CMS SDK를 직접 import하지 않습니다.
+- 공용 Use Case Service는 ORM, Payload Local API, CMS SDK를 직접 import하지 않습니다.
+- 기능 전용 read service는 화면 렌더링에 필요한 published 데이터 조회만 담당할 때 `src/features/*/services`에 둘 수 있습니다.
 - Agent는 별도 사용자 역할이 아니라 서비스 모듈입니다.
 - 실제 폴더 구조를 개선할 때는 `src/services`, `src/repositories`, `src/agents`, `src/components`, `src/features`, `src/lib`, `src/types`를 이 순서로 추가합니다.
 
@@ -144,7 +146,7 @@ src/repositories/guideline.payload.repository.ts
 | Creator 화면 | `src/app/(frontend)`, `src/features` | 화면 이동, URL 상태, view model |
 | Admin 화면 | `src/app/(payload)`, Payload Admin 기본 UI | Manager의 CMS 작업 |
 | Route Handler | `src/app/**/route.ts` | request parsing, 권한 확인, Service 호출, response 변환 |
-| Service | `src/services` | Use Case 실행, Input / Output 계약, 상태 전이 판단 |
+| Service | `src/services`, `src/features/*/services` | Use Case 실행, Input / Output 계약, 상태 전이 판단, 기능 전용 published 조회 |
 | Repository Interface | `src/repositories/*.repository.ts` | Service가 필요한 저장소 계약 |
 | Repository Implementation | `src/repositories/*.payload.repository.ts`, `src/repositories/*.drizzle.repository.ts` | Payload Local API, Drizzle ORM, CMS SDK 호출 |
 | Agent | `src/agents` | 검색, Answer, Recommendation 생성 |
@@ -459,7 +461,8 @@ function normalizeSlug(value: string) {
 
 ### 문서화 주석
 
-- 공개 Service, Repository, Agent 함수 중 입력과 결과만으로 의도를 알기 어려운 함수에만 문서화 주석을 작성합니다.
+- exported service 함수나 class에는 호출 경계와 외부 I/O 소유 계층을 설명하는 짧은 주석을 작성합니다.
+- Repository, Agent 함수는 입력과 결과만으로 의도를 알기 어려운 경우에만 문서화 주석을 작성합니다.
 - 모든 파일과 모든 함수에 주석을 강제하지 않습니다.
 - 보안, 권한, 데이터 보존처럼 실수 비용이 큰 규칙은 주석으로 의도를 남깁니다.
 

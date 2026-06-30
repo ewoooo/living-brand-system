@@ -75,6 +75,7 @@ export interface Config {
     'application-images': ApplicationImage;
     templates: Template;
     plugins: Plugin;
+    'agent-skills': AgentSkill;
     sections: Section;
     'guideline-pages': GuidelinePage;
     search: Search;
@@ -98,6 +99,7 @@ export interface Config {
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
     plugins: PluginsSelect<false> | PluginsSelect<true>;
+    'agent-skills': AgentSkillsSelect<false> | AgentSkillsSelect<true>;
     sections: SectionsSelect<false> | SectionsSelect<true>;
     'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
@@ -337,6 +339,78 @@ export interface Plugin {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * Agent가 선택해 실행할 SKILL.md 형태의 지시문입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-skills".
+ */
+export interface AgentSkill {
+  id: number;
+  /**
+   * SKILL.md frontmatter의 name입니다. 예: guideline-qa
+   */
+  name: string;
+  /**
+   * 언제 이 skill을 써야 하는지 설명합니다.
+   */
+  description: string;
+  /**
+   * SKILL.md markdown 본문입니다. 실제 agent instruction으로 사용합니다.
+   */
+  body: string;
+  /**
+   * skill 선택 뒤 필요할 때 함께 읽을 reference 문서입니다.
+   */
+  references?:
+    | {
+        title: string;
+        /**
+         * provider skill bundle의 references/*.md에 해당하는 markdown 본문입니다.
+         */
+        body: string;
+        /**
+         * reference가 설명하거나 예시로 드는 내부 브랜드/제작 자원입니다.
+         */
+        assets?:
+          | (
+              | {
+                  relationTo: 'brand-logos';
+                  value: number | BrandLogo;
+                }
+              | {
+                  relationTo: 'brand-colors';
+                  value: number | BrandColor;
+                }
+              | {
+                  relationTo: 'brand-typefaces';
+                  value: number | BrandTypeface;
+                }
+              | {
+                  relationTo: 'application-images';
+                  value: number | ApplicationImage;
+                }
+              | {
+                  relationTo: 'templates';
+                  value: number | Template;
+                }
+              | {
+                  relationTo: 'plugins';
+                  value: number | Plugin;
+                }
+            )[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  enabled?: boolean | null;
+  /**
+   * agent-chat의 기본 skill 후보입니다. 하나만 true로 유지하세요.
+   */
+  isDefault?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * 가이드라인 상위 내비게이션 섹션입니다.
@@ -647,6 +721,10 @@ export interface PayloadLockedDocument {
         value: number | Plugin;
       } | null)
     | ({
+        relationTo: 'agent-skills';
+        value: number | AgentSkill;
+      } | null)
+    | ({
         relationTo: 'sections';
         value: number | Section;
       } | null)
@@ -860,6 +938,27 @@ export interface PluginsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-skills_select".
+ */
+export interface AgentSkillsSelect<T extends boolean = true> {
+  name?: T;
+  description?: T;
+  body?: T;
+  references?:
+    | T
+    | {
+        title?: T;
+        body?: T;
+        assets?: T;
+        id?: T;
+      };
+  enabled?: T;
+  isDefault?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sections_select".
  */
 export interface SectionsSelect<T extends boolean = true> {
@@ -1023,7 +1122,7 @@ export interface Guideline {
    */
   issuedLabel?: string | null;
   /**
-   * 브라우저 탭과 메타데이터에 사용할 파비콘 이미지입니다.
+   * 브라우저 탭과 메타데이터에 사용할 파비콘 이미지입니다. 최대 사이즈는 1024px x 1024px 입니다.
    */
   favicon?: (number | null) | ApplicationImage;
   _status?: ('draft' | 'published') | null;

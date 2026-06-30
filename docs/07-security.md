@@ -88,6 +88,8 @@
 - Agent 답변에는 근거 기준, VersionRef, 신뢰도, 사람 검토 필요 여부를 함께 남깁니다.
 - Agent 실패는 사용자 작업 실패나 정책 변경 실패와 분리해서 처리합니다.
 - Agent 질의에는 rate limit을 적용합니다.
+- Agent 질의 Route Handler는 인증된 내부 사용자만 허용하고, 요청 본문은 서버에서 schema로 다시 검증합니다.
+- Agent guideline 검색은 Payload access control을 우회하지 않도록 `user`와 `overrideAccess: false`를 함께 사용합니다.
 
 ### 운영 보안
 

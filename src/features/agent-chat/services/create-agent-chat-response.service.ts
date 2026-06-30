@@ -1,0 +1,112 @@
+import { anthropic } from '@ai-sdk/anthropic'
+import {
+	createAgentUIStreamResponse,
+	type InferAgentUIMessage,
+	isStepCount,
+	safeValidateUIMessages,
+	ToolLoopAgent,
+} from 'ai'
+import { z } from 'zod'
+import { getAgentTools } from './get-agent-tools.service'
+import { resolveAgentSkill } from './resolve-agent-skill.service'
+
+const DEFAULT_MODEL = 'claude-sonnet-4-5'
+const DEFAULT_LOCALE = 'ko'
+
+const agentChatCallOptionsSchema = z.object({
+	locale: z.enum(['ko', 'en']).optional(),
+	pagePath: z.string().max(300).optional(),
+	requestId: z.string().min(1).optional(),
+	skillId: z.string().min(1).optional(),
+	user: z.unknown(),
+})
+
+type AgentChatCallOptions = z.infer<typeof agentChatCallOptionsSchema>
+type AgentChatRuntimeContext = {
+	locale: 'ko' | 'en'
+	pagePath?: string
+	requestId: string
+	skillId: string
+}
+
+const agentChatAgent = new ToolLoopAgent<
+	AgentChatCallOptions,
+	ReturnType<typeof getAgentTools>,
+	AgentChatRuntimeContext
+>({
+	model: anthropic(process.env.ANTHROPIC_MODEL || DEFAULT_MODEL),
+	tools: getAgentTools(),
+	// ponytail: AI SDK requires constructor toolsContext; prepareCall replaces it per request.
+	toolsContext: {
+		listGuidelinePages: { user: null },
+		searchGuidelines: { user: null },
+		readGuidelineDocument: { user: null },
+	},
+	callOptionsSchema: agentChatCallOptionsSchema,
+	stopWhen: isStepCount(5),
+	prepareCall: async ({ options = { user: null }, ...settings }) => {
+		const skill = await resolveAgentSkill({
+			requestedSkillId: options.skillId,
+			user: options.user,
+		})
+		const pageContext = options.pagePath
+			? `Current guideline page: ${options.pagePath}`
+			: undefined
+
+		return {
+			...settings,
+			instructions: [skill.body, pageContext ? `Published context:\n${pageContext}` : null]
+				.filter(Boolean)
+				.join('\n\n'),
+			runtimeContext: {
+				locale: options.locale ?? DEFAULT_LOCALE,
+				pagePath: options.pagePath,
+				requestId: options.requestId ?? crypto.randomUUID(),
+				skillId: skill.name,
+			},
+			toolsContext: {
+				listGuidelinePages: { user: options.user },
+				searchGuidelines: { user: options.user },
+				readGuidelineDocument: { user: options.user },
+			},
+		}
+	},
+})
+
+export type AgentChatMessage = InferAgentUIMessage<typeof agentChatAgent>
+
+/**
+ * Route Handler가 받은 UI message가 현재 agent tool schema와 맞는지 검증한다.
+ * 실제 tool 실행 I/O는 포함하지 않는다.
+ */
+export function validateAgentChatMessages(messages: unknown) {
+	return safeValidateUIMessages<AgentChatMessage>({
+		messages,
+		// ponytail: UI messages never carry tool context; this mirrors AI SDK's harness cast.
+		tools: agentChatAgent.tools as never,
+	})
+}
+
+/**
+ * Route Handler가 검증한 메시지를 AI SDK agent stream으로 변환한다.
+ * Payload와 provider I/O는 agent tool과 skill resolver가 실행 시점에 맡는다.
+ */
+export function createAgentChatResponse(input: {
+	locale?: AgentChatRuntimeContext['locale']
+	messages: AgentChatMessage[]
+	pagePath?: string
+	requestId: string
+	user: unknown
+}) {
+	return createAgentUIStreamResponse({
+		agent: agentChatAgent,
+		uiMessages: input.messages,
+		options: {
+			locale: input.locale,
+			pagePath: input.pagePath,
+			requestId: input.requestId,
+			user: input.user,
+		},
+		onError: () => 'Agent response failed.',
+	})
+}

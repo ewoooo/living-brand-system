@@ -11,5 +11,8 @@ minimumReleaseAgeExclude:
   - '@ai-sdk/provider-utils'
   - '@ai-sdk/react'
   - '@shadcn/react'
+  - shadcn@4.12.0
 trustPolicy: no-downgrade
+trustPolicyExclude:
+  - semver@6.3.1
 blockExoticSubdeps: true

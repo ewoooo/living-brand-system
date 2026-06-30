@@ -5,13 +5,16 @@ import { usePathname } from 'next/navigation'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { cn } from '@/lib/utils'
 
-const mainNavigationItems = [
+const NAVIGATION_ITEMS = [
 	{ href: '/', label: 'Main' },
 	{ href: '/guideline', label: 'Guideline' },
 	{ href: '/review', label: 'Review' },
 	{ href: '/create', label: 'Create' },
 	{ href: '/login', label: 'Login' },
 ] as const
+
+const LINKS = NAVIGATION_ITEMS.slice(0, -1)
+const LOGIN = NAVIGATION_ITEMS.at(-1)
 
 function HeaderLinkBlock({
 	href,
@@ -42,7 +45,7 @@ function HeaderHead({ className }: { className?: string }) {
 	return (
 		<section className={className}>
 			<nav className="flex gap-1 py-4 pl-5 font-[450] text-sm tracking-[0.02em]">
-				{mainNavigationItems.map((item) => (
+				{LINKS.map((item) => (
 					<HeaderLinkBlock
 						key={item.href}
 						href={item.href}
@@ -63,7 +66,10 @@ export function GlobalHeader() {
 	return (
 		<header className="sticky top-0 z-10 flex bg-white dark:bg-black">
 			<HeaderHead className="flex-1" />
-			<section className="ml-auto p-4">
+			<section className="ml-auto p-4 flex gap-4">
+				{LOGIN && (
+					<HeaderLinkBlock href={LOGIN.href} isActive={false} label={LOGIN.label} />
+				)}
 				<ThemeToggle />
 			</section>
 		</header>
