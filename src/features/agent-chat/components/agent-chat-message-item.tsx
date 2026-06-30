@@ -1,4 +1,4 @@
-import type { UIMessage } from 'ai'
+import type { AgentChatMessage } from '@/features/agent-chat/agent-chat-agent'
 import { getAgentToolMarker } from '@/features/agent-chat/get-agent-tool-marker'
 import { AgentChatAgentBubble, AgentChatUserBubble } from './agent-chat-bubbles'
 import { AgentChatToolMarker } from './agent-chat-tool-marker'
@@ -7,7 +7,7 @@ export function AgentChatMessageItem({
 	message,
 	isActive,
 }: {
-	message: UIMessage
+	message: AgentChatMessage
 	isActive: boolean
 }) {
 	const isUser = message.role === 'user'
@@ -28,7 +28,7 @@ export function AgentChatMessageItem({
 	)
 }
 
-function getAgentMessageText(message: UIMessage) {
+function getAgentMessageText(message: AgentChatMessage) {
 	return message.parts.reduce(
 		(text, part) => (part.type === 'text' ? text + part.text : text),
 		'',

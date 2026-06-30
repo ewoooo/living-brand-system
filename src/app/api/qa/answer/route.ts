@@ -1,16 +1,12 @@
 import config from '@payload-config'
-import {
-	convertToModelMessages,
-	createUIMessageStreamResponse,
-	type ModelMessage,
-	toUIMessageStream,
-	type UIMessage,
-} from 'ai'
 import { headers as getHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import { z } from 'zod'
 
-import { runAgentChatService } from '@/features/agent-chat/services/run-agent-chat.service'
+import {
+	createAgentChatResponse,
+	validateAgentChatMessages,
+} from '@/features/agent-chat/agent-chat-agent'
 import { AgentConfigurationError } from '@/lib/errors'
 
 export const maxDuration = 30
@@ -24,6 +20,7 @@ const uiMessageSchema = z
 	.passthrough()
 
 const qaAnswerRequestSchema = z.object({
+	locale: z.enum(['ko', 'en']).optional(),
 	messages: z.array(uiMessageSchema).min(1),
 	pagePath: z.string().max(300).optional(),
 })
@@ -49,26 +46,23 @@ export async function POST(req: Request) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
 	}
 
-	let messages: ModelMessage[]
+	const validatedMessages = await validateAgentChatMessages(parsed.data.messages)
 
-	try {
-		messages = await convertToModelMessages(parsed.data.messages as UIMessage[])
-	} catch {
+	if (!validatedMessages.success) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
 	}
 
 	try {
-		const result = await runAgentChatService.execute({
-			messages,
-			pagePath: parsed.data.pagePath,
-			user,
-		})
+		if (!process.env.ANTHROPIC_API_KEY) {
+			throw new AgentConfigurationError()
+		}
 
-		return createUIMessageStreamResponse({
-			stream: toUIMessageStream({
-				stream: result.stream,
-				onError: () => 'Agent response failed.',
-			}),
+		return await createAgentChatResponse({
+			locale: parsed.data.locale,
+			messages: validatedMessages.data,
+			pagePath: parsed.data.pagePath,
+			requestId: crypto.randomUUID(),
+			user,
 		})
 	} catch (error) {
 		if (error instanceof AgentConfigurationError) {

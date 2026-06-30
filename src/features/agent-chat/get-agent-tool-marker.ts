@@ -1,15 +1,15 @@
-import type { UIMessage } from 'ai'
+import type { AgentChatMessage } from './agent-chat-agent'
 
 export interface AgentToolMarker {
 	isPending: boolean
 	text: string
 }
 
-export function getAgentToolMarkerText(message: UIMessage) {
+export function getAgentToolMarkerText(message: AgentChatMessage) {
 	return getAgentToolMarker(message)?.text ?? null
 }
 
-export function getAgentToolMarker(message: UIMessage): AgentToolMarker | null {
+export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker | null {
 	let hasToolPart = false
 	let hasPendingToolPart = false
 	let listCount = 0
@@ -17,36 +17,35 @@ export function getAgentToolMarker(message: UIMessage): AgentToolMarker | null {
 	let searchResultCount = 0
 
 	for (const part of message.parts) {
-		if (!part.type.startsWith('tool-')) {
+		if (!isAgentToolPart(part)) {
 			continue
 		}
 
-		const toolPart = part as AgentToolPart
 		hasToolPart = true
-		hasPendingToolPart ||= !['output-available', 'output-error'].includes(toolPart.state ?? '')
+		hasPendingToolPart ||= !isFinishedToolPart(part)
 
 		if (
-			toolPart.type === 'tool-listGuidelinePages' &&
-			toolPart.state === 'output-available' &&
-			Array.isArray(toolPart.output)
+			part.type === 'tool-listGuidelinePages' &&
+			part.state === 'output-available' &&
+			Array.isArray(part.output)
 		) {
-			listCount += toolPart.output.length
+			listCount += part.output.length
 		}
 
 		if (
-			toolPart.type === 'tool-readGuidelineDocument' &&
-			toolPart.state === 'output-available' &&
-			toolPart.output
+			part.type === 'tool-readGuidelineDocument' &&
+			part.state === 'output-available' &&
+			part.output
 		) {
 			readCount += 1
 		}
 
 		if (
-			toolPart.type === 'tool-searchGuidelines' &&
-			toolPart.state === 'output-available' &&
-			Array.isArray(toolPart.output)
+			part.type === 'tool-searchGuidelines' &&
+			part.state === 'output-available' &&
+			Array.isArray(part.output)
 		) {
-			searchResultCount += toolPart.output.length
+			searchResultCount += part.output.length
 		}
 	}
 
@@ -81,8 +80,16 @@ export function getAgentToolMarker(message: UIMessage): AgentToolMarker | null {
 	}
 }
 
-type AgentToolPart = UIMessage['parts'][number] & {
-	output?: unknown
-	state?: string
-	type: string
+type AgentToolPart = Extract<AgentChatMessage['parts'][number], { type: `tool-${string}` }>
+
+function isAgentToolPart(part: AgentChatMessage['parts'][number]): part is AgentToolPart {
+	return part.type.startsWith('tool-')
+}
+
+function isFinishedToolPart(part: AgentToolPart) {
+	return (
+		part.state === 'output-available' ||
+		part.state === 'output-error' ||
+		part.state === 'output-denied'
+	)
 }

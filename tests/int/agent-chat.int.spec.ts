@@ -1,5 +1,5 @@
-import type { UIMessage } from 'ai'
 import { describe, expect, it } from 'vitest'
+import type { AgentChatMessage } from '@/features/agent-chat/agent-chat-agent'
 import {
 	getAgentToolMarker,
 	getAgentToolMarkerText,
@@ -35,7 +35,7 @@ describe('agent chat errors', () => {
 					],
 				},
 			],
-		} as UIMessage
+		} as AgentChatMessage
 
 		expect(getAgentToolMarkerText(message)).toBe('가이드라인 결과 2개를 찾았습니다')
 	})
@@ -56,7 +56,7 @@ describe('agent chat errors', () => {
 					],
 				},
 			],
-		} as UIMessage
+		} as AgentChatMessage
 
 		expect(getAgentToolMarkerText(message)).toBe('가이드라인 섹션 2개를 확인했습니다')
 	})
@@ -73,7 +73,7 @@ describe('agent chat errors', () => {
 					input: { query: 'brand core' },
 				},
 			],
-		} as UIMessage
+		} as AgentChatMessage
 
 		expect(getAgentToolMarker(message)).toEqual({
 			isPending: true,
@@ -94,7 +94,7 @@ describe('agent chat errors', () => {
 					output: [],
 				},
 			],
-		} as UIMessage
+		} as AgentChatMessage
 
 		expect(getAgentToolMarker(message)).toEqual({
 			isPending: false,

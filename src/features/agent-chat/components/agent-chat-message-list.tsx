@@ -1,4 +1,3 @@
-import type { UIMessage } from 'ai'
 import {
 	MessageScroller,
 	MessageScrollerButton,
@@ -7,6 +6,7 @@ import {
 	MessageScrollerProvider,
 	MessageScrollerViewport,
 } from '@/components/ui/message-scroller'
+import type { AgentChatMessage } from '@/features/agent-chat/agent-chat-agent'
 import { AgentChatErrorBubble } from './agent-chat-bubbles'
 import { AgentChatMessageItem } from './agent-chat-message-item'
 
@@ -15,7 +15,7 @@ export function AgentChatMessageList({
 	error,
 	isBusy = false,
 }: {
-	messages: UIMessage[]
+	messages: AgentChatMessage[]
 	error?: Error
 	isBusy?: boolean
 }) {
