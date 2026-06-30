@@ -1,7 +1,9 @@
 'use client'
 
+import { Search } from '@carbon/icons-react'
 import type { UIMessage } from 'ai'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
+import { Marker, MarkerContent, MarkerIcon } from '@/components/ui/marker'
 import {
 	MessageScroller,
 	MessageScrollerButton,
@@ -10,6 +12,7 @@ import {
 	MessageScrollerProvider,
 	MessageScrollerViewport,
 } from '@/components/ui/message-scroller'
+import { getAgentToolMarkerText } from '@/features/agent-chat/agent-tool-marker'
 
 export function AgentMessageList({ messages, error }: { messages: UIMessage[]; error?: Error }) {
 	const isEmpty = messages.length === 0 && !error
@@ -62,27 +65,39 @@ function AgentErrorBubble({ error }: { error: Error }) {
 
 function AgentMessageBubble({ message }: { message: UIMessage }) {
 	const isUser = message.role === 'user'
+	const markerText = isUser ? null : getAgentToolMarkerText(message)
+	const messageText = getAgentMessageText(message)
 
 	return (
-		<Bubble
-			align={isUser ? 'end' : 'start'}
-			variant={isUser ? 'default' : 'muted'}
-			className="rounded-full"
+		<div
+			className={isUser ? 'flex flex-col items-end gap-2' : 'flex flex-col items-start gap-2'}
 		>
-			<BubbleContent className="whitespace-pre-wrap">
-				<AgentMessageText message={message} />
-			</BubbleContent>
-		</Bubble>
+			{markerText && (
+				<Marker>
+					<MarkerIcon>
+						<Search />
+					</MarkerIcon>
+					<MarkerContent>{markerText}</MarkerContent>
+				</Marker>
+			)}
+			{messageText && (
+				<Bubble
+					align={isUser ? 'end' : 'start'}
+					variant={isUser ? 'default' : 'muted'}
+					className="rounded-full"
+				>
+					<BubbleContent className="whitespace-pre-wrap">
+						<p className="text-sm">{messageText}</p>
+					</BubbleContent>
+				</Bubble>
+			)}
+		</div>
 	)
 }
 
-function AgentMessageText({ message }: { message: UIMessage }) {
-	return (
-		<p className="text-sm">
-			{message.parts.reduce(
-				(text, part) => (part.type === 'text' ? text + part.text : text),
-				'',
-			)}
-		</p>
+function getAgentMessageText(message: UIMessage) {
+	return message.parts.reduce(
+		(text, part) => (part.type === 'text' ? text + part.text : text),
+		'',
 	)
 }

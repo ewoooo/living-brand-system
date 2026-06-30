@@ -32,7 +32,7 @@ export class AnthropicAiRepository implements AgentRepository {
 			model: anthropic(process.env.ANTHROPIC_MODEL || DEFAULT_MODEL),
 			instructions: buildAgentInstructions(skillId, input.context),
 			messages: input.messages,
-			stopWhen: isStepCount(3),
+			stopWhen: isStepCount(5),
 			tools: createAgentTools({
 				guidelineSearchRepository: new PayloadGuidelineSearchRepository(input.user),
 			}),
