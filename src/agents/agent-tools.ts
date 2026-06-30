@@ -16,5 +16,14 @@ export function createAgentTools(input: { guidelineSearchRepository: GuidelineSe
 			}),
 			execute: ({ query }) => input.guidelineSearchRepository.search({ query }),
 		}),
+		readGuidelineDocument: tool({
+			description: 'Read a published guideline page or section returned by searchGuidelines.',
+			inputSchema: z.object({
+				collection: z.enum(['guideline-pages', 'sections']),
+				id: z.string().min(1),
+			}),
+			execute: ({ collection, id }) =>
+				input.guidelineSearchRepository.readDocument({ collection, id }),
+		}),
 	} satisfies ToolSet
 }

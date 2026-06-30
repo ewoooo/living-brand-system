@@ -7,12 +7,15 @@ import {
 
 describe('agent skills', () => {
 	it('adds request context to base instructions', () => {
-		expect(
-			buildAgentInstructions(
-				getDefaultAgentSkillId(),
-				'Current guideline page: /guideline/logo',
-			),
-		).toContain('Published context:\nCurrent guideline page: /guideline/logo')
+		const instructions = buildAgentInstructions(
+			getDefaultAgentSkillId(),
+			'Current guideline page: /guideline/logo',
+		)
+
+		expect(instructions).toContain(
+			'Published context:\nCurrent guideline page: /guideline/logo',
+		)
+		expect(instructions).toContain('try one broader or synonymous query')
 	})
 
 	it('builds a skill selection prompt', () => {

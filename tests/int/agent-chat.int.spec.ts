@@ -1,5 +1,7 @@
+import type { UIMessage } from 'ai'
 import { describe, expect, it } from 'vitest'
-import { getAgentChatErrorMessage } from '@/features/agent/hooks/use-agent-chat'
+import { getAgentToolMarkerText } from '@/features/agent-chat/agent-tool-marker'
+import { getAgentChatErrorMessage } from '@/features/agent-chat/hooks/use-agent-chat'
 
 describe('agent chat errors', () => {
 	it('uses JSON response messages', async () => {
@@ -12,5 +14,26 @@ describe('agent chat errors', () => {
 		const response = new Response('nope', { status: 500, statusText: 'Internal Server Error' })
 
 		await expect(getAgentChatErrorMessage(response)).resolves.toBe('Internal Server Error')
+	})
+
+	it('summarizes guideline search tool results as marker text', () => {
+		const message = {
+			id: '1',
+			role: 'assistant',
+			parts: [
+				{
+					type: 'tool-searchGuidelines',
+					toolCallId: 'tool-1',
+					state: 'output-available',
+					input: { query: 'brand core' },
+					output: [
+						{ title: 'Brand Core', collection: 'guideline-pages', id: '1' },
+						{ title: 'Identity', collection: 'guideline-pages', id: '2' },
+					],
+				},
+			],
+		} as UIMessage
+
+		expect(getAgentToolMarkerText(message)).toBe('Explored 2 guideline records')
 	})
 })
