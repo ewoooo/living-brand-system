@@ -12,7 +12,7 @@ import {
 	MessageScrollerProvider,
 	MessageScrollerViewport,
 } from '@/components/ui/message-scroller'
-import { getAgentToolMarkerText } from '@/features/agent-chat/agent-tool-marker'
+import { type AgentToolMarker, getAgentToolMarker } from '@/features/agent-chat/agent-tool-marker'
 
 export function AgentMessageList({ messages, error }: { messages: UIMessage[]; error?: Error }) {
 	const isEmpty = messages.length === 0 && !error
@@ -65,33 +65,51 @@ function AgentErrorBubble({ error }: { error: Error }) {
 
 function AgentMessageBubble({ message }: { message: UIMessage }) {
 	const isUser = message.role === 'user'
-	const markerText = isUser ? null : getAgentToolMarkerText(message)
+	const marker = isUser ? null : getAgentToolMarker(message)
 	const messageText = getAgentMessageText(message)
 
 	return (
 		<div
 			className={isUser ? 'flex flex-col items-end gap-2' : 'flex flex-col items-start gap-2'}
 		>
-			{markerText && (
-				<Marker>
-					<MarkerIcon>
-						<Search />
-					</MarkerIcon>
-					<MarkerContent>{markerText}</MarkerContent>
-				</Marker>
-			)}
-			{messageText && (
-				<Bubble
-					align={isUser ? 'end' : 'start'}
-					variant={isUser ? 'default' : 'muted'}
-					className="rounded-full"
-				>
-					<BubbleContent className="whitespace-pre-wrap">
-						<p className="text-sm">{messageText}</p>
-					</BubbleContent>
-				</Bubble>
-			)}
+			<AgentToolMarkerView marker={marker} />
+			<AgentTextBubble isUser={isUser} text={messageText} />
 		</div>
+	)
+}
+
+function AgentToolMarkerView({ marker }: { marker: AgentToolMarker | null }) {
+	if (!marker) {
+		return null
+	}
+
+	return (
+		<Marker>
+			<MarkerIcon>
+				<Search />
+			</MarkerIcon>
+			<MarkerContent className={marker.isPending ? 'shimmer' : undefined}>
+				{marker.text}
+			</MarkerContent>
+		</Marker>
+	)
+}
+
+function AgentTextBubble({ isUser, text }: { isUser: boolean; text: string }) {
+	if (!text) {
+		return null
+	}
+
+	return (
+		<Bubble
+			align={isUser ? 'end' : 'start'}
+			variant={isUser ? 'default' : 'muted'}
+			className="rounded-full"
+		>
+			<BubbleContent className="whitespace-pre-wrap">
+				<p className="text-sm">{text}</p>
+			</BubbleContent>
+		</Bubble>
 	)
 }
 

@@ -1,6 +1,6 @@
 import type { UIMessage } from 'ai'
 import { describe, expect, it } from 'vitest'
-import { getAgentToolMarkerText } from '@/features/agent-chat/agent-tool-marker'
+import { getAgentToolMarker, getAgentToolMarkerText } from '@/features/agent-chat/agent-tool-marker'
 import { getAgentChatErrorMessage } from '@/features/agent-chat/hooks/use-agent-chat'
 
 describe('agent chat errors', () => {
@@ -56,5 +56,46 @@ describe('agent chat errors', () => {
 		} as UIMessage
 
 		expect(getAgentToolMarkerText(message)).toBe('Listed 2 guideline sections')
+	})
+
+	it('shimmers tool markers until output is available', () => {
+		const message = {
+			id: '1',
+			role: 'assistant',
+			parts: [
+				{
+					type: 'tool-searchGuidelines',
+					toolCallId: 'tool-1',
+					state: 'input-available',
+					input: { query: 'brand core' },
+				},
+			],
+		} as UIMessage
+
+		expect(getAgentToolMarker(message)).toEqual({
+			isPending: true,
+			text: 'Searching guidelines',
+		})
+	})
+
+	it('stops shimmering when tool output is available', () => {
+		const message = {
+			id: '1',
+			role: 'assistant',
+			parts: [
+				{
+					type: 'tool-searchGuidelines',
+					toolCallId: 'tool-1',
+					state: 'output-available',
+					input: { query: 'brand core' },
+					output: [],
+				},
+			],
+		} as UIMessage
+
+		expect(getAgentToolMarker(message)).toEqual({
+			isPending: false,
+			text: 'Searched guidelines',
+		})
 	})
 })

@@ -1,7 +1,17 @@
 import type { UIMessage } from 'ai'
 
+export interface AgentToolMarker {
+	isPending: boolean
+	text: string
+}
+
 export function getAgentToolMarkerText(message: UIMessage) {
+	return getAgentToolMarker(message)?.text ?? null
+}
+
+export function getAgentToolMarker(message: UIMessage): AgentToolMarker | null {
 	let hasToolPart = false
+	let hasPendingToolPart = false
 	let listCount = 0
 	let readCount = 0
 	let searchResultCount = 0
@@ -13,6 +23,7 @@ export function getAgentToolMarkerText(message: UIMessage) {
 
 		const toolPart = part as AgentToolPart
 		hasToolPart = true
+		hasPendingToolPart ||= !['output-available', 'output-error'].includes(toolPart.state ?? '')
 
 		if (
 			toolPart.type === 'tool-listGuidelinePages' &&
@@ -44,20 +55,32 @@ export function getAgentToolMarkerText(message: UIMessage) {
 	}
 
 	if (listCount > 0) {
-		return `Listed ${listCount} guideline ${listCount === 1 ? 'section' : 'sections'}`
+		return {
+			isPending: hasPendingToolPart,
+			text: `Listed ${listCount} guideline ${listCount === 1 ? 'section' : 'sections'}`,
+		}
 	}
 
 	if (readCount > 0) {
-		return `Read ${readCount} guideline ${readCount === 1 ? 'document' : 'documents'}`
+		return {
+			isPending: hasPendingToolPart,
+			text: `Read ${readCount} guideline ${readCount === 1 ? 'document' : 'documents'}`,
+		}
 	}
 
 	if (searchResultCount > 0) {
-		return `Explored ${searchResultCount} guideline ${
-			searchResultCount === 1 ? 'record' : 'records'
-		}`
+		return {
+			isPending: hasPendingToolPart,
+			text: `Explored ${searchResultCount} guideline ${
+				searchResultCount === 1 ? 'record' : 'records'
+			}`,
+		}
 	}
 
-	return 'Searched guidelines'
+	return {
+		isPending: hasPendingToolPart,
+		text: hasPendingToolPart ? 'Searching guidelines' : 'Searched guidelines',
+	}
 }
 
 type AgentToolPart = UIMessage['parts'][number] & {
