@@ -2,12 +2,7 @@
 
 import { MagicWand, Ruler, User } from '@carbon/icons-react'
 import { type ComponentType, useState } from 'react'
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useReviewImages } from '@/features/review/image-context'
 
 interface Rule {
@@ -25,7 +20,10 @@ interface ReviewPage {
 	rules: Rule[]
 }
 
-const TIER: Record<string, { label: string; Icon: ComponentType<{ size?: number }>; desc: string }> = {
+const TIER: Record<
+	string,
+	{ label: string; Icon: ComponentType<{ size?: number }>; desc: string }
+> = {
 	automated: { label: 'automated', Icon: Ruler, desc: '자로 잰 듯 확정된 값 — 믿어도 됨' },
 	assisted: { label: 'assisted', Icon: MagicWand, desc: 'AI가 추론한 값 — 100% 신뢰는 아님' },
 	manual: { label: 'manual', Icon: User, desc: '사람이 직접 판단해야 하는 값' },
@@ -61,7 +59,9 @@ function RuleRow({ rule }: { rule: Rule }) {
 						</TooltipTrigger>
 						<TooltipContent>
 							<span className="font-medium">{tier.label}</span>
-							{tier.desc && <span className="block text-xs opacity-80">{tier.desc}</span>}
+							{tier.desc && (
+								<span className="block text-xs opacity-80">{tier.desc}</span>
+							)}
 						</TooltipContent>
 					</Tooltip>
 				</td>
@@ -110,10 +110,14 @@ function RuleRow({ rule }: { rule: Rule }) {
 					<td />
 					<td colSpan={3} className="py-3 pr-3">
 						{outcome?.detail && (
-							<p className="mb-2 text-foreground text-xs leading-5">검수: {outcome.detail}</p>
+							<p className="mb-2 text-foreground text-xs leading-5">
+								검수: {outcome.detail}
+							</p>
 						)}
 						{rule.evidence && (
-							<p className="text-muted-foreground text-xs leading-5">{rule.evidence}</p>
+							<p className="text-muted-foreground text-xs leading-5">
+								{rule.evidence}
+							</p>
 						)}
 						{rule.value && (
 							<p className="mt-2 font-mono text-[11px] text-muted-foreground/80 leading-5">
@@ -145,8 +149,12 @@ export function RuleTables({ pages }: { pages: ReviewPage[] }) {
 				{selected ? (
 					<>
 						<span className="font-medium">{selected.name}</span>
-						<span className="text-emerald-600 dark:text-emerald-400">통과 {counts.pass}</span>
-						<span className="text-rose-600 dark:text-rose-400">미통과 {counts.fail}</span>
+						<span className="text-emerald-600 dark:text-emerald-400">
+							통과 {counts.pass}
+						</span>
+						<span className="text-rose-600 dark:text-rose-400">
+							미통과 {counts.fail}
+						</span>
 						<span className="text-muted-foreground">미개발 {counts.pending}</span>
 					</>
 				) : (
@@ -158,11 +166,13 @@ export function RuleTables({ pages }: { pages: ReviewPage[] }) {
 			<div className="flex flex-col gap-10">
 				{pages.map((page) => (
 					<section key={page.page}>
-						<div className="mb-1.5 text-muted-foreground/70 text-xs tabular-nums">p{page.page}</div>
+						<div className="mb-1.5 text-muted-foreground/70 text-xs tabular-nums">
+							p{page.page}
+						</div>
 						<table className="w-full border-collapse">
 							<tbody>
-								{page.rules.map((rule, index) => (
-									<RuleRow key={`${rule.key}-${index}`} rule={rule} />
+								{page.rules.map((rule) => (
+									<RuleRow key={`${page.page}-${rule.key}`} rule={rule} />
 								))}
 							</tbody>
 						</table>

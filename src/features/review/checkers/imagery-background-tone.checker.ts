@@ -12,7 +12,9 @@ export const imageryBackgroundToneChecker: RuleChecker = {
 		const avgL = pixels.reduce((sum, p) => sum + lightness(p), 0) / pixels.length
 		const avgS = pixels.reduce((sum, p) => sum + saturation(p), 0) / pixels.length
 		const pass = avgL >= MIN_LIGHTNESS && avgS <= MAX_SATURATION
-		const score = Math.min(avgL / MIN_LIGHTNESS, 1) * 0.5 + Math.min((1 - avgS) / (1 - MAX_SATURATION), 1) * 0.5
+		const score =
+			Math.min(avgL / MIN_LIGHTNESS, 1) * 0.5 +
+			Math.min((1 - avgS) / (1 - MAX_SATURATION), 1) * 0.5
 		return {
 			status: pass ? 'pass' : 'fail',
 			fulfillment: Math.round(score * 100),
