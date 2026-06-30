@@ -1,7 +1,9 @@
-export default function ReviewPage() {
-	return (
-		<article className="grid min-h-full place-items-center">
-			<h1>Review</h1>
-		</article>
-	)
+import { redirect } from 'next/navigation'
+import { getReviewNavigation } from '@/features/review/navigation'
+
+export default function ReviewIndexPage() {
+	const { chapters } = getReviewNavigation()
+	const firstSection = chapters[0]?.sections[0]
+
+	redirect(firstSection ? firstSection.href : '/')
 }
