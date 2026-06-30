@@ -2,6 +2,7 @@ import type { UIMessage } from 'ai'
 
 export function getAgentToolMarkerText(message: UIMessage) {
 	let hasToolPart = false
+	let listCount = 0
 	let readCount = 0
 	let searchResultCount = 0
 
@@ -12,6 +13,14 @@ export function getAgentToolMarkerText(message: UIMessage) {
 
 		const toolPart = part as AgentToolPart
 		hasToolPart = true
+
+		if (
+			toolPart.type === 'tool-listGuidelinePages' &&
+			toolPart.state === 'output-available' &&
+			Array.isArray(toolPart.output)
+		) {
+			listCount += toolPart.output.length
+		}
 
 		if (
 			toolPart.type === 'tool-readGuidelineDocument' &&
@@ -32,6 +41,10 @@ export function getAgentToolMarkerText(message: UIMessage) {
 
 	if (!hasToolPart) {
 		return null
+	}
+
+	if (listCount > 0) {
+		return `Listed ${listCount} guideline ${listCount === 1 ? 'section' : 'sections'}`
 	}
 
 	if (readCount > 0) {

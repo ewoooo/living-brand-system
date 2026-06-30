@@ -9,6 +9,11 @@ import type { GuidelineSearchRepository } from '@/repositories/guideline-search.
  */
 export function createAgentTools(input: { guidelineSearchRepository: GuidelineSearchRepository }) {
 	return {
+		listGuidelinePages: tool({
+			description: 'List published brand guideline sections and pages available to read.',
+			inputSchema: z.object({}),
+			execute: () => input.guidelineSearchRepository.listPages(),
+		}),
 		searchGuidelines: tool({
 			description: 'Search published brand guideline pages and sections.',
 			inputSchema: z.object({

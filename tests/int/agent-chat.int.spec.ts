@@ -36,4 +36,25 @@ describe('agent chat errors', () => {
 
 		expect(getAgentToolMarkerText(message)).toBe('Explored 2 guideline records')
 	})
+
+	it('summarizes guideline page list tool results as marker text', () => {
+		const message = {
+			id: '1',
+			role: 'assistant',
+			parts: [
+				{
+					type: 'tool-listGuidelinePages',
+					toolCallId: 'tool-1',
+					state: 'output-available',
+					input: {},
+					output: [
+						{ title: 'Core', pages: [{ id: '1', title: 'Narrative' }] },
+						{ title: 'Name', pages: [] },
+					],
+				},
+			],
+		} as UIMessage
+
+		expect(getAgentToolMarkerText(message)).toBe('Listed 2 guideline sections')
+	})
 })

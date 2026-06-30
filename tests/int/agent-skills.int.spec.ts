@@ -15,6 +15,7 @@ describe('agent skills', () => {
 		expect(instructions).toContain(
 			'Published context:\nCurrent guideline page: /guideline/logo',
 		)
+		expect(instructions).toContain('Use listGuidelinePages')
 		expect(instructions).toContain('try one broader or synonymous query')
 	})
 
