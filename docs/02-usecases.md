@@ -35,7 +35,7 @@
 
 | ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| RULE-01 | 규칙 등록 | Manager, System | 규칙 이름, 조건, 심각도, 적용 범위 | Manager가 규칙을 입력하면 System이 충돌을 확인하고 draft 상태로 저장합니다. | Draft Rule | Rule, RuleCondition, RuleScope, RuleUpdated | 규칙을 페이지에 연결 |
+| RULE-01 | 규칙 명세 등록 | Manager, System | 규칙 이름, 범위, 기본 심각도, 측정 단위 | Manager가 브랜드 공통 규칙 명세를 입력하면 System이 RuleSpec을 draft 상태로 저장합니다. | Draft RuleSpec | RuleSpec, RuleScope, RuleSpecUpdated | 브랜드 규칙 채택 |
 
 ## 5. 도메인별 유즈케이스 목록
 
@@ -50,9 +50,9 @@ Creator가 사용하는 기준과 자원은 이 도메인에서 발행된 것만
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | GL-01 | 가이드라인 초안 생성 | Manager, System | 가이드라인 이름, 목적, 대상 브랜드 | Manager가 새 가이드라인 생성을 요청하면 System이 BrandGuideline을 draft 상태로 만듭니다. | Draft BrandGuideline | BrandGuideline, GuidelineDraftCreated | 가이드라인 섹션 등록 |
 | GL-02 | 가이드라인 섹션 등록 | Manager, System | 섹션 이름, 설명, 표시 순서 | Manager가 섹션을 입력하면 System이 GuidelineSection을 가이드라인에 추가합니다. | GuidelineSection | GuidelineSection, DisplayOrder, GuidelinePageUpdated | 가이드라인 페이지 구성 |
-| GL-03 | 가이드라인 페이지 구성 | Manager, System | 섹션, 페이지 제목, 배치 정보 | Manager가 페이지 구성을 입력하면 System이 GuidelinePage와 PageComposition을 저장합니다. | GuidelinePage | GuidelinePage, PageComposition, GuidelinePageUpdated | 페이지 정책 작성 |
-| GL-04 | 페이지 정책 작성 | Manager, System | 정책 문구, 설명 | Manager가 페이지 정책을 작성하면 System이 PagePolicy를 GuidelinePage에 1:1로 연결합니다. | PagePolicy | PagePolicy, PagePolicyUpdated | 규칙을 페이지에 연결 |
-| GL-05 | 규칙을 페이지에 연결 | Manager, System | GuidelinePage, RuleVersion, 표시 순서, 강조 여부 | Manager가 페이지에 발행 규칙을 연결하면 System이 PageRuleRef를 생성합니다. | PageRuleRef | PageRuleRef, RuleVersionRef, PageRuleLinked | 가이드라인 검토 요청 |
+| GL-03 | 가이드라인 페이지 구성 | Manager, System | 섹션, 페이지 제목, 설명 | Manager가 페이지 기본 정보를 입력하면 System이 GuidelinePage를 저장합니다. | GuidelinePage | GuidelinePage, GuidelinePageUpdated | 페이지 블록 작성 |
+| GL-04 | 페이지 블록 작성 | Manager, System | GuidelinePage, 블록 유형, 이미지, 본문, 표시 순서 | Manager가 페이지 본문 블록을 작성하면 System이 PageContentBlock 목록을 저장합니다. | PageContentBlock | PageContentBlock, PageBlockUpdated | 규칙을 페이지에 연결 |
+| GL-05 | 규칙을 페이지에 연결 | Manager, System | GuidelinePage, BrandRuleVersion, 표시 순서, 강조 여부 | Manager가 페이지에 발행 규칙을 연결하면 System이 PageRuleRef를 생성합니다. | PageRuleRef | PageRuleRef, BrandRuleVersionRef, PageRuleLinked | 가이드라인 검토 요청 |
 | GL-06 | 에셋을 페이지에 연결 | Manager, System | GuidelinePage, BrandAssetVersion, 캡션, 예시 역할 | Manager가 페이지에 에셋을 연결하면 System이 PageAssetRef 또는 PageExample을 생성합니다. | PageAssetRef | PageAssetRef, PageExample, PageAssetLinked | 가이드라인 검토 요청 |
 | GL-07 | 템플릿을 페이지에 연결 | Manager, System | GuidelinePage, TemplateVersion, 사용 조건 | Manager가 페이지에 템플릿을 연결하면 System이 페이지의 TemplateVersion 참조를 저장합니다. | TemplateVersionRef | TemplateVersionRef, GuidelinePageUpdated | 가이드라인 검토 요청 |
 | GL-08 | 플러그인을 페이지에 연결 | Manager, System | GuidelinePage, PluginVersion, 사용 조건 | Manager가 페이지에 플러그인을 연결하면 System이 페이지의 PluginVersion 참조를 저장합니다. | PluginVersionRef | PluginVersionRef, GuidelinePageUpdated | 가이드라인 검토 요청 |
@@ -66,10 +66,10 @@ Creator가 사용하는 기준과 자원은 이 도메인에서 발행된 것만
 
 | ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| RULE-01 | 규칙 등록 | Manager, System | 규칙 이름, 조건, 심각도, 적용 범위 | Manager가 규칙을 입력하면 System이 충돌을 확인하고 draft 상태로 저장합니다. | Draft Rule | Rule, RuleCondition, RuleScope, RuleUpdated | 규칙 예외 등록 또는 stage 상태의 Official Version 생성 |
-| RULE-02 | 규칙 수정 | Manager, System | 기존 규칙, 수정 내용, VersionReason | Manager가 규칙을 수정하면 System이 충돌을 확인하고 새 RuleVersion 후보를 저장합니다. | Updated Rule | Rule, RuleCondition, VersionReason, RuleUpdated | stage 상태의 Official Version 생성 |
-| RULE-03 | 규칙 예외 등록 | Manager, System | 대상 규칙, 예외 조건, 예외 사유, 적용 기간 | Manager가 예외를 입력하면 System이 RuleException을 Rule 아래에 추가합니다. | RuleException | RuleException, ExceptionReason, RuleExceptionAdded | 규칙 충돌 확인 |
-| RULE-04 | 규칙 충돌 확인 | Manager, System | 신규 또는 수정 규칙, 적용 범위 | System이 같은 범위의 기존 Rule과 조건을 비교해 충돌 여부를 판단합니다. | Conflict Result | - | 규칙 등록 또는 규칙 수정 |
+| RULE-01 | 규칙 명세 등록 | Manager, System | 규칙 이름, 범위, 기본 심각도, 측정 단위, 검출 방법 | Manager가 브랜드 공통 규칙 명세를 입력하면 System이 RuleSpec을 draft 상태로 저장합니다. | Draft RuleSpec | RuleSpec, RuleScope, RuleSpecUpdated | 브랜드 규칙 채택 |
+| RULE-02 | 브랜드 규칙 채택 | Manager, System | RuleSpec, 브랜드 기준값, 출처 | Manager가 브랜드가 사용할 규칙 명세와 기준값을 입력하면 System이 BrandRule을 저장합니다. | Draft BrandRule | BrandRule, RuleValue, SourceRef, BrandRuleAdopted | stage 상태의 Official Version 생성 |
+| RULE-03 | 브랜드 규칙 수정 | Manager, System | 기존 BrandRule, 수정 기준값, VersionReason | Manager가 브랜드 기준값을 수정하면 System이 충돌을 확인하고 새 BrandRuleVersion 후보를 저장합니다. | Updated BrandRule | BrandRule, RuleValue, VersionReason, BrandRuleValueUpdated | stage 상태의 Official Version 생성 |
+| RULE-04 | 규칙 충돌 확인 | Manager, System | 신규 또는 수정 BrandRule, 적용 범위 | System이 같은 범위의 기존 BrandRule과 조건을 비교해 충돌 여부를 판단합니다. | Conflict Result | - | 브랜드 규칙 채택 또는 브랜드 규칙 수정 |
 | RES-01 | 브랜드 에셋 등록 | Manager, System | 에셋 파일, 에셋 유형, 메타데이터 | Manager가 파일과 메타데이터를 입력하면 System이 BrandAsset과 AssetFile을 저장합니다. | Draft BrandAsset | BrandAsset, AssetFile, AssetType, BrandAssetRegistered | 브랜드 에셋 발행 |
 | RES-02 | 브랜드 에셋 발행 | Manager, System | Draft BrandAsset, 사용 조건 | Manager가 발행하면 System이 BrandAssetVersion을 live 상태로 전환하고 다운로드 가능 상태로 바꿉니다. | Live BrandAsset | BrandAssetVersion, UsageCondition, DownloadStatus, BrandAssetPublished | 에셋을 페이지에 연결 |
 | RES-03 | 브랜드 에셋 폐기 | Manager, System | live 상태의 BrandAssetVersion, 폐기 사유, 대체 에셋 | Manager가 폐기하면 System이 BrandAssetVersion을 archived 상태로 변경하고 대체 에셋을 연결합니다. | Archived BrandAsset | BrandAssetVersion, VersionReason, BrandAssetDeprecated | Official Version 전환 |
@@ -77,7 +77,7 @@ Creator가 사용하는 기준과 자원은 이 도메인에서 발행된 것만
 | RES-05 | 템플릿 편집 구조 정의 | Manager, System | 템플릿, 레이아웃, 텍스트 스타일, 편집 가능 블록 | Manager가 제작 가능한 구조를 정의하면 System이 LayoutSpec, TextStyleSpec, EditableBlockSpec을 Template에 저장합니다. | Template Editable Structure | LayoutSpec, TextStyleSpec, EditableBlockSpec, TemplateRegistered | 템플릿 사용 조건 정의 |
 | RES-06 | 템플릿 사용 조건 정의 | Manager, System | 템플릿, 어플리케이션 타입, 허용 조건, 제한 조건 | Manager가 사용 조건을 입력하면 System이 TemplateUsageCondition을 저장합니다. | Template Usage Condition | TemplateUsageCondition, TemplateRegistered | 템플릿과 규칙 연결 |
 | RES-07 | 템플릿과 어플리케이션 타입 연결 | Manager, System | Template, ApplicationType | Manager가 사용 가능한 산출물 유형을 선택하면 System이 Template의 적용 범위를 저장합니다. | Application Template Link | TemplateUsageCondition, ResourceLinkedToGuideline | 템플릿 발행 |
-| RES-08 | 템플릿과 규칙 연결 | Manager, System | Template, Rule | Manager가 템플릿에 적용할 규칙을 선택하면 System이 TemplateVersionRef와 RuleVersionRef를 저장합니다. | Template Rule Link | TemplateVersionRef, RuleVersionRef, ResourceLinkedToGuideline | 템플릿 발행 |
+| RES-08 | 템플릿과 규칙 연결 | Manager, System | Template, BrandRule | Manager가 템플릿에 적용할 규칙을 선택하면 System이 TemplateVersionRef와 BrandRuleVersionRef를 저장합니다. | Template Rule Link | TemplateVersionRef, BrandRuleVersionRef, ResourceLinkedToGuideline | 템플릿 발행 |
 | RES-09 | 템플릿과 에셋 연결 | Manager, System | Template, BrandAssetVersion | Manager가 템플릿에 필요한 공식 에셋을 선택하면 System이 TemplateVersionRef와 BrandAssetVersionRef를 저장합니다. | Template Asset Link | TemplateVersionRef, BrandAssetVersionRef, ResourceLinkedToGuideline | 템플릿 미리보기 확인 |
 | RES-10 | 템플릿 구조 확인 | Manager, System | Template, 샘플 입력값 | System이 EditableBlockSpec과 샘플 입력값으로 제작 구조를 확인하고 Manager가 결과를 확인합니다. | Template Structure Check | - | 템플릿 발행 |
 | RES-11 | 템플릿 발행 | Manager, System | Draft Template, 적용 시작일 | Manager가 발행하면 System이 TemplateVersion을 live 상태로 전환합니다. | Live Template | TemplateVersion, TemplateUsageCondition, TemplatePublished | 템플릿 선택 |
@@ -90,7 +90,7 @@ Creator가 사용하는 기준과 자원은 이 도메인에서 발행된 것만
 | RES-18 | 플러그인 출력 형식 정의 | Manager, System | PluginCapability, 출력 타입, 결과 형식 | Manager가 출력 형식을 정의하면 System이 AssetGenerationOutput에 반영 가능한 결과 타입을 저장합니다. | Plugin Output Schema | PluginCapability, PluginUsageCondition, PluginRegistered | 플러그인 사용 조건 정의 |
 | RES-19 | 플러그인 사용 조건 정의 | Manager, System | Plugin, 어플리케이션 타입, 허용 조건, 제한 조건 | Manager가 사용 조건을 입력하면 System이 PluginUsageCondition을 저장합니다. | Plugin Usage Condition | PluginUsageCondition, PluginRegistered | 플러그인과 규칙 연결 |
 | RES-20 | 플러그인과 어플리케이션 타입 연결 | Manager, System | Plugin, ApplicationType | Manager가 사용 가능한 산출물 유형을 선택하면 System이 Plugin의 적용 범위를 저장합니다. | Application Plugin Link | PluginUsageCondition, ResourceLinkedToGuideline | 플러그인 발행 |
-| RES-21 | 플러그인과 규칙 연결 | Manager, System | Plugin, Rule | Manager가 플러그인 사용에 필요한 규칙을 선택하면 System이 PluginVersionRef와 RuleVersionRef를 저장합니다. | Plugin Rule Link | PluginVersionRef, RuleVersionRef, ResourceLinkedToGuideline | 플러그인 테스트 실행 |
+| RES-21 | 플러그인과 규칙 연결 | Manager, System | Plugin, BrandRule | Manager가 플러그인 사용에 필요한 규칙을 선택하면 System이 PluginVersionRef와 BrandRuleVersionRef를 저장합니다. | Plugin Rule Link | PluginVersionRef, BrandRuleVersionRef, ResourceLinkedToGuideline | 플러그인 테스트 실행 |
 | RES-22 | 플러그인과 템플릿 연결 | Manager, System | Plugin, Template | Manager가 함께 사용할 템플릿을 선택하면 System이 Plugin과 Template 참조를 저장합니다. | Plugin Template Link | PluginVersionRef, TemplateVersionRef, ResourceLinkedToGuideline | 플러그인 테스트 실행 |
 | RES-23 | 플러그인 테스트 실행 | Manager, System, Agent | Plugin, 샘플 입력값 | System이 샘플 입력으로 Plugin을 실행하고 AgentRunRef와 테스트 결과를 기록합니다. | Plugin Test Result | AgentRunRef, PluginCapability, PluginVersion | 플러그인 발행 |
 | RES-24 | 플러그인 발행 | Manager, System | Draft Plugin, 적용 시작일 | Manager가 발행하면 System이 PluginVersion을 live 상태로 전환합니다. | Live Plugin | PluginVersion, PluginUsageCondition, PluginPublished | 플러그인 선택 |
@@ -101,10 +101,10 @@ Creator가 사용하는 기준과 자원은 이 도메인에서 발행된 것만
 
 | ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| VER-01 | stage 상태의 Official Version 생성 | Manager, System | 발행 대상, Payload revision, VersionReason | System이 대상에 맞는 Official Version을 stage 상태로 생성합니다. | Stage Official Version | BrandGuidelineVersion, RuleVersion, BrandAssetVersion, TemplateVersion, PluginVersion, PayloadRevisionRef, VersionReason, GuidelineVersionStaged, RuleVersionStaged, BrandAssetVersionStaged, TemplateVersionStaged, PluginVersionStaged | Official Version 차이 확인 |
+| VER-01 | stage 상태의 Official Version 생성 | Manager, System | 발행 대상, Payload revision, VersionReason | System이 대상에 맞는 Official Version을 stage 상태로 생성합니다. | Stage Official Version | BrandGuidelineVersion, RuleSpecVersion, BrandRuleVersion, BrandAssetVersion, TemplateVersion, PluginVersion, PayloadRevisionRef, VersionReason, GuidelineVersionStaged, RuleSpecVersionStaged, BrandRuleVersionStaged, BrandAssetVersionStaged, TemplateVersionStaged, PluginVersionStaged | Official Version 차이 확인 |
 | VER-02 | Official Version 차이 확인 | Manager, System | stage 상태의 Official Version, 이전 live 상태의 Official Version | Manager가 Payload revision 기반 diff로 이전 live 상태와 차이를 확인합니다. | Version Diff | - | live 전환 |
-| VER-03 | live 전환 | Manager, System | stage 상태의 Official Version, 적용 시작일 | Manager가 발행하면 System이 Official Version을 live 상태로 전환하고 기존 live 상태의 Official Version을 archived 상태로 바꿉니다. | Live Official Version | VersionStatus, EffectivePeriod, GuidelineVersionPublished, RuleVersionPublished, BrandAssetVersionPublished, TemplateVersionPublished, PluginVersionPublished | Official Version 보관 |
-| VER-04 | Official Version 보관 | System | 기존 live 상태의 Official Version, 대체 Official Version | System이 대체된 Official Version을 archived 상태로 전환합니다. | Archived Official Version | VersionStatus, GuidelineVersionArchived, RuleVersionArchived, BrandAssetVersionArchived, TemplateVersionArchived, PluginVersionArchived | - |
+| VER-03 | live 전환 | Manager, System | stage 상태의 Official Version, 적용 시작일 | Manager가 발행하면 System이 Official Version을 live 상태로 전환하고 기존 live 상태의 Official Version을 archived 상태로 바꿉니다. | Live Official Version | VersionStatus, EffectivePeriod, GuidelineVersionPublished, RuleSpecVersionPublished, BrandRuleVersionPublished, BrandAssetVersionPublished, TemplateVersionPublished, PluginVersionPublished | Official Version 보관 |
+| VER-04 | Official Version 보관 | System | 기존 live 상태의 Official Version, 대체 Official Version | System이 대체된 Official Version을 archived 상태로 전환합니다. | Archived Official Version | VersionStatus, GuidelineVersionArchived, RuleSpecVersionArchived, BrandRuleVersionArchived, BrandAssetVersionArchived, TemplateVersionArchived, PluginVersionArchived | - |
 
 ### 5.2 제작 관리
 
@@ -138,9 +138,9 @@ Agent 자체는 도메인 애그리거트가 아니며 결과에 `AgentRunRef`�
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | QA-01 | 질의 세션 시작 | Creator, System | AssetGenerationSession, 질문 맥락 | Creator가 질문을 시작하면 System이 AssetGenerationSession과 연결된 QASession을 만듭니다. | QASession | QASession | 질문 등록 |
 | QA-02 | 질문 등록 | Creator, System | 질문 원문, AssetGenerationSession 맥락 | Creator가 질문을 입력하면 System이 Question을 QASession에 추가합니다. | Question | Question, QuestionAsked | 관련 기준 검색 |
-| QA-03 | 관련 기준 검색 | System | 질문 원문, GuidelineVersionRef | System이 GuidelineVersionRef가 가리키는 Official Version에서 질문과 관련된 기준을 검색합니다. | Related Rules | RuleVersionRef, GuidelineVersionRef | Agent 답변 생성 |
-| QA-04 | Agent 답변 생성 | Agent, System | Question, Related Rules, AssetGenerationSession 맥락 | Agent가 관련 기준을 바탕으로 답변을 생성하고 System이 Answer를 저장합니다. | Answer | Answer, AgentRunRef, AnswerProvided | 답변 근거 연결 |
-| QA-05 | 답변 근거 연결 | Agent, System | Answer, Related Rules | System이 답변에 사용한 RuleVersion과 PagePolicy를 AnswerCitation으로 연결합니다. | Answer Citation | AnswerCitation, RuleVersionRef, AnswerProvided | 답변 신뢰도 기록 |
+| QA-03 | 관련 기준 검색 | System | 질문 원문, GuidelineVersionRef | System이 GuidelineVersionRef가 가리키는 Official Version에서 질문과 관련된 기준을 검색합니다. | Related BrandRules | BrandRuleVersionRef, GuidelineVersionRef | Agent 답변 생성 |
+| QA-04 | Agent 답변 생성 | Agent, System | Question, Related BrandRules, AssetGenerationSession 맥락 | Agent가 관련 기준을 바탕으로 답변을 생성하고 System이 Answer를 저장합니다. | Answer | Answer, AgentRunRef, AnswerProvided | 답변 근거 연결 |
+| QA-05 | 답변 근거 연결 | Agent, System | Answer, Related BrandRules | System이 답변에 사용한 BrandRuleVersion과 PageContentBlock을 AnswerCitation으로 연결합니다. | Answer Citation | AnswerCitation, BrandRuleVersionRef, AnswerProvided | 답변 신뢰도 기록 |
 | QA-06 | 답변 신뢰도 기록 | Agent, System | Answer, 근거 수, 모델 판단 | System이 답변의 신뢰도를 AnswerConfidence로 저장합니다. | Answer Confidence | AnswerConfidence, AgentRunRef | 질의 세션 종료 |
 | QA-07 | 질의 세션 종료 | Creator, System | QASession | Creator가 질의를 종료하면 System이 세션을 닫고 필요한 기간 동안 보존합니다. | Closed QASession | QASession | 사용 이력 조회 |
 
@@ -149,7 +149,7 @@ Agent 자체는 도메인 애그리거트가 아니며 결과에 `AgentRunRef`�
 | ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | QC-01 | 검수 세션 시작 | Creator, System | AssetGenerationOutput | Creator가 검수를 요청하면 System이 CheckInputSnapshot을 만들고 CheckTarget으로 고정한 뒤 CheckSession을 시작합니다. | CheckSession | CheckInputSnapshot, CheckTarget, CheckSession, CheckSessionStarted | 점검 실행 |
-| QC-02 | 점검 실행 | System, Agent | CheckSession, CheckTarget, ResourceRef | System이 ResourceRef에서 검수에 필요한 VersionRef를 추출해 CheckBasis로 묶고 Agent가 해당 기준으로 산출물을 검사합니다. | CheckRun | CheckRun, CheckBasis, GuidelineVersionRef, RuleVersionRef, BrandAssetVersionRef, AgentRunRef | 규칙 위반 확인 |
+| QC-02 | 점검 실행 | System, Agent | CheckSession, CheckTarget, ResourceRef | System이 ResourceRef에서 검수에 필요한 VersionRef를 추출해 CheckBasis로 묶고 Agent가 해당 기준으로 산출물을 검사합니다. | CheckRun | CheckRun, CheckBasis, GuidelineVersionRef, BrandRuleVersionRef, BrandAssetVersionRef, AgentRunRef | 규칙 위반 확인 |
 | QC-03 | 규칙 위반 확인 | System, Agent | CheckRun, CheckBasis, CheckTarget | System이 CheckBasis 기준으로 위반 항목을 정리하고 Agent가 설명 가능한 위반 내용을 보강합니다. | Violation List | CheckDecision, CheckResult, Violation, CheckRunCompleted | Agent 추천 생성 |
 | QC-04 | Agent 추천 생성 | Agent, System | CheckResult, Violation, CheckTarget | Agent가 위반 항목별 수정 방향을 생성하고 System이 CheckResult 아래에 CheckRecommendation으로 저장합니다. | CheckRecommendation | CheckRecommendation, AgentRunRef | 검수 판정 기록 |
 | QC-05 | 검수 판정 기록 | System, Agent | CheckSession, CheckRun, CheckDecision, CheckResult, CheckRecommendation | System이 CheckDecision 아래의 점검 결과와 추천을 종합해 CheckOutcome을 저장하고 CheckSession을 완료합니다. | Completed CheckSession | CheckOutcome, CheckCompleted | 점검 이력 조회 |
