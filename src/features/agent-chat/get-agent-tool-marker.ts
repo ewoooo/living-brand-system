@@ -5,10 +5,6 @@ export interface AgentToolMarker {
 	text: string
 }
 
-export function getAgentToolMarkerText(message: AgentChatMessage) {
-	return getAgentToolMarker(message)?.text ?? null
-}
-
 export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker | null {
 	let hasToolPart = false
 	let hasPendingToolPart = false

@@ -2,27 +2,22 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import type { GuidelinePage, Section } from '@/payload-types'
 
-export type AgentGuidelinePage = Pick<
+type AgentGuidelinePage = Pick<
 	GuidelinePage,
 	'id' | 'title' | 'slug' | 'description' | 'blocks' | 'rules' | 'section'
 >
 
-export type AgentGuidelineSection = Pick<Section, 'id' | 'title' | 'slug' | 'description'>
+type AgentGuidelineSection = Pick<Section, 'id' | 'title' | 'slug' | 'description'>
 
 export type AgentGuidelineSectionListItem = Pick<Section, 'id' | 'title'>
 
 export type AgentGuidelinePageListItem = Pick<GuidelinePage, 'id' | 'title' | 'section'>
 
-export type AgentGuidelinePageSummary = Pick<GuidelinePage, 'id' | 'title' | 'slug' | 'description'>
+type AgentGuidelinePageSummary = Pick<GuidelinePage, 'id' | 'title' | 'slug' | 'description'>
 
 export type AgentGuidelineSearchResult = {
 	title: string
 	collection: string
-	id: string
-}
-
-export type AgentGuidelineDocumentInput = {
-	collection: 'guideline-pages' | 'sections'
 	id: string
 }
 
@@ -120,7 +115,7 @@ export async function searchGuidelineDocuments(
 
 export async function findAgentGuidelineDocument(
 	user: unknown,
-	input: AgentGuidelineDocumentInput,
+	input: { collection: 'guideline-pages' | 'sections'; id: string },
 ): Promise<AgentGuidelineDocument | null> {
 	if (input.collection === 'sections') {
 		const section = await findGuidelineSection(user, input.id)

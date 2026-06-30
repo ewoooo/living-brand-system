@@ -1,9 +1,7 @@
 import type { ApplicationImage, GuidelinePage, Rule, Section } from '@/payload-types'
 import {
-	type AgentGuidelinePage,
-	type AgentGuidelinePageSummary,
+	type AgentGuidelineDocument,
 	type AgentGuidelineSearchResult,
-	type AgentGuidelineSection,
 	findAgentGuidelineDocument,
 	listGuidelinePageListItems,
 	listGuidelineSections,
@@ -38,81 +36,66 @@ export interface GuidelineDocumentResult {
 	collection: GuidelineDocumentCollection
 	id: string
 	content: string
-	relatedPages?: {
-		id: string
-		title: string
-	}[]
-}
-
-export interface GetAgentGuidelineContext {
-	listPages(): Promise<GuidelinePageListResult[]>
-	search(input: GuidelineSearchInput): Promise<GuidelineSearchResult[]>
-	readDocument(input: GuidelineDocumentInput): Promise<GuidelineDocumentResult | null>
+	relatedPages?: GuidelineDocumentRelatedPage[]
 }
 
 /**
- * Agent tool은 published guideline을 목록, 검색 결과, LLM용 본문으로 조립한다.
+ * Agent tool에 제공할 published guideline 페이지 목록을 조립한다.
  * Payload Local API 호출과 접근 제어는 agent guideline context repository가 담당한다.
  */
-export class GetAgentGuidelineContextService implements GetAgentGuidelineContext {
-	constructor(private readonly user: unknown) {}
+export async function listAgentGuidelinePages(user: unknown): Promise<GuidelinePageListResult[]> {
+	const [sections, pages] = await Promise.all([
+		listGuidelineSections(user),
+		listGuidelinePageListItems(user),
+	])
 
-	async listPages(): Promise<GuidelinePageListResult[]> {
-		const [sections, pages] = await Promise.all([
-			listGuidelineSections(this.user),
-			listGuidelinePageListItems(this.user),
-		])
-
-		return sections.map((section) => ({
-			title: section.title,
-			// ponytail: guideline page lists are small; index by section if this grows.
-			pages: pages
-				.filter((page) => page.section === section.id)
-				.map((page) => ({
-					id: String(page.id),
-					title: page.title,
-				})),
-		}))
-	}
-
-	search(input: GuidelineSearchInput): Promise<GuidelineSearchResult[]> {
-		const query = input.query.trim()
-
-		return query ? searchGuidelineDocuments(this.user, query) : Promise.resolve([])
-	}
-
-	async readDocument(input: GuidelineDocumentInput): Promise<GuidelineDocumentResult | null> {
-		const document = await findAgentGuidelineDocument(this.user, input)
-
-		if (!document) {
-			return null
-		}
-
-		if (document.collection === 'guideline-pages') {
-			return {
-				title: document.page.title,
-				collection: 'guideline-pages',
-				id: String(document.page.id),
-				content: limitContent(formatGuidelinePage(document.page)),
-			}
-		}
-
-		return {
-			title: document.section.title,
-			collection: 'sections',
-			id: String(document.section.id),
-			content: limitContent(formatGuidelineSection(document.section, document.pages)),
-			relatedPages: document.pages.map((page) => ({
+	return sections.map((section) => ({
+		title: section.title,
+		// ponytail: guideline page lists are small; index by section if this grows.
+		pages: pages
+			.filter((page) => page.section === section.id)
+			.map((page) => ({
 				id: String(page.id),
 				title: page.title,
 			})),
-		}
+	}))
+}
+
+/**
+ * Agent tool의 guideline 검색 요청을 정리해 repository 검색으로 넘긴다.
+ * Payload 검색 I/O는 agent guideline context repository가 담당한다.
+ */
+export function searchAgentGuidelines(
+	user: unknown,
+	input: GuidelineSearchInput,
+): Promise<GuidelineSearchResult[]> {
+	const query = input.query.trim()
+
+	return query ? searchGuidelineDocuments(user, query) : Promise.resolve([])
+}
+
+/**
+ * Agent tool이 읽은 guideline 문서를 LLM용 본문으로 변환한다.
+ * Payload 문서 조회는 agent guideline context repository가 담당한다.
+ */
+export async function readAgentGuidelineDocument(
+	user: unknown,
+	input: GuidelineDocumentInput,
+): Promise<GuidelineDocumentResult | null> {
+	const document = await findAgentGuidelineDocument(user, input)
+
+	if (!document) {
+		return null
 	}
+
+	return document.collection === 'guideline-pages'
+		? formatGuidelinePageResult(document)
+		: formatGuidelineSectionResult(document)
 }
 
 function formatGuidelineSection(
-	section: AgentGuidelineSection,
-	pages: AgentGuidelinePageSummary[],
+	section: Extract<AgentGuidelineDocument, { collection: 'sections' }>['section'],
+	pages: Extract<AgentGuidelineDocument, { collection: 'sections' }>['pages'],
 ): string {
 	const pageSummaries = pages.map((page) =>
 		compact([page.title, extractTextFromLexical(page.description)]).join('\n'),
@@ -121,7 +104,35 @@ function formatGuidelineSection(
 	return compact([section.title, section.description, ...pageSummaries]).join('\n\n')
 }
 
-function formatGuidelinePage(page: AgentGuidelinePage): string {
+function formatGuidelinePageResult(
+	document: Extract<AgentGuidelineDocument, { collection: 'guideline-pages' }>,
+): GuidelineDocumentResult {
+	return {
+		title: document.page.title,
+		collection: 'guideline-pages',
+		id: String(document.page.id),
+		content: limitContent(formatGuidelinePage(document.page)),
+	}
+}
+
+function formatGuidelineSectionResult(
+	document: Extract<AgentGuidelineDocument, { collection: 'sections' }>,
+): GuidelineDocumentResult {
+	return {
+		title: document.section.title,
+		collection: 'sections',
+		id: String(document.section.id),
+		content: limitContent(formatGuidelineSection(document.section, document.pages)),
+		relatedPages: document.pages.map((page) => ({
+			id: String(page.id),
+			title: page.title,
+		})),
+	}
+}
+
+function formatGuidelinePage(
+	page: Extract<AgentGuidelineDocument, { collection: 'guideline-pages' }>['page'],
+): string {
 	const sectionTitle = getTitle(page.section)
 	const rules = page.rules?.map(formatRule).filter(Boolean) ?? []
 
@@ -132,6 +143,11 @@ function formatGuidelinePage(page: AgentGuidelinePage): string {
 		...(page.blocks?.map(formatBlock).filter(Boolean) ?? []),
 		rules.length ? `Rules:\n${rules.join('\n')}` : null,
 	]).join('\n\n')
+}
+
+type GuidelineDocumentRelatedPage = {
+	id: string
+	title: string
 }
 
 function formatBlock(block: NonNullable<GuidelinePage['blocks']>[number]): string {

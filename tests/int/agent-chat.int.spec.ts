@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-	getAgentToolMarker,
-	getAgentToolMarkerText,
-} from '@/features/agent-chat/get-agent-tool-marker'
+import { getAgentToolMarker } from '@/features/agent-chat/get-agent-tool-marker'
 import { getAgentChatErrorMessage } from '@/features/agent-chat/hooks/use-agent-chat'
 import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 
@@ -37,7 +34,7 @@ describe('agent chat errors', () => {
 			],
 		} as AgentChatMessage
 
-		expect(getAgentToolMarkerText(message)).toBe('가이드라인 결과 2개를 찾았습니다')
+		expect(getAgentToolMarker(message)?.text).toBe('가이드라인 결과 2개를 찾았습니다')
 	})
 
 	it('summarizes guideline page list tool results as marker text', () => {
@@ -58,7 +55,7 @@ describe('agent chat errors', () => {
 			],
 		} as AgentChatMessage
 
-		expect(getAgentToolMarkerText(message)).toBe('가이드라인 섹션 2개를 확인했습니다')
+		expect(getAgentToolMarker(message)?.text).toBe('가이드라인 섹션 2개를 확인했습니다')
 	})
 
 	it('shimmers tool markers until output is available', () => {

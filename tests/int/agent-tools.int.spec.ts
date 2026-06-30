@@ -1,9 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { validateAgentChatMessages } from '@/features/agent-chat/services/create-agent-chat-response.service'
-import {
-	extractTextFromLexical,
-	GetAgentGuidelineContextService,
-} from '@/features/agent-chat/services/get-agent-guideline-context.service'
+import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
+import { extractTextFromLexical } from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { getAgentTools } from '@/features/agent-chat/services/get-agent-tools.service'
 
 describe('agent tools', () => {
@@ -13,7 +11,7 @@ describe('agent tools', () => {
 
 	it('lists guideline pages through the tool service', async () => {
 		const listPages = vi
-			.spyOn(GetAgentGuidelineContextService.prototype, 'listPages')
+			.spyOn(agentGuidelineContext, 'listAgentGuidelinePages')
 			.mockResolvedValue([{ title: 'Core', pages: [{ id: '7', title: 'Narrative' }] }])
 		const tools = getAgentTools()
 
@@ -27,7 +25,7 @@ describe('agent tools', () => {
 
 	it('reads guideline document details through the tool service', async () => {
 		const readDocument = vi
-			.spyOn(GetAgentGuidelineContextService.prototype, 'readDocument')
+			.spyOn(agentGuidelineContext, 'readAgentGuidelineDocument')
 			.mockResolvedValue(null)
 		const tools = getAgentTools()
 
@@ -39,10 +37,13 @@ describe('agent tools', () => {
 			{ context: { user: { id: 1 } } } as never,
 		)
 
-		expect(readDocument).toHaveBeenCalledWith({
-			collection: 'guideline-pages',
-			id: '7',
-		})
+		expect(readDocument).toHaveBeenCalledWith(
+			{ id: 1 },
+			{
+				collection: 'guideline-pages',
+				id: '7',
+			},
+		)
 	})
 
 	it('rejects invalid tool message input before streaming', async () => {

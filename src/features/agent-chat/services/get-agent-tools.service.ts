@@ -1,7 +1,11 @@
 import { type ToolSet, tool } from 'ai'
 import { z } from 'zod'
 
-import { GetAgentGuidelineContextService } from './get-agent-guideline-context.service'
+import {
+	listAgentGuidelinePages,
+	readAgentGuidelineDocument,
+	searchAgentGuidelines,
+} from './get-agent-guideline-context.service'
 
 const guidelineToolContextSchema = z.object({
 	user: z.unknown(),
@@ -17,8 +21,7 @@ export function getAgentTools() {
 			description: 'List published brand guideline sections and pages available to read.',
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
-			execute: (_input, { context }) =>
-				new GetAgentGuidelineContextService(context.user).listPages(),
+			execute: (_input, { context }) => listAgentGuidelinePages(context.user),
 		}),
 		searchGuidelines: tool({
 			description: 'Search published brand guideline pages and sections.',
@@ -26,8 +29,7 @@ export function getAgentTools() {
 				query: z.string().min(1).max(120),
 			}),
 			contextSchema: guidelineToolContextSchema,
-			execute: ({ query }, { context }) =>
-				new GetAgentGuidelineContextService(context.user).search({ query }),
+			execute: ({ query }, { context }) => searchAgentGuidelines(context.user, { query }),
 		}),
 		readGuidelineDocument: tool({
 			description: 'Read a published guideline page or section returned by searchGuidelines.',
@@ -37,7 +39,7 @@ export function getAgentTools() {
 			}),
 			contextSchema: guidelineToolContextSchema,
 			execute: ({ collection, id }, { context }) =>
-				new GetAgentGuidelineContextService(context.user).readDocument({ collection, id }),
+				readAgentGuidelineDocument(context.user, { collection, id }),
 		}),
 	} satisfies ToolSet
 }
