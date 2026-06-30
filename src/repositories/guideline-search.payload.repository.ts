@@ -5,6 +5,7 @@ import type { ApplicationImage, GuidelinePage, Rule, Section } from '@/payload-t
 import type {
 	GuidelineDocumentInput,
 	GuidelineDocumentResult,
+	GuidelinePageListResult,
 	GuidelineSearchInput,
 	GuidelineSearchRepository,
 	GuidelineSearchResult,
@@ -30,6 +31,52 @@ type GuidelinePageForAgent = Pick<
  */
 export class PayloadGuidelineSearchRepository implements GuidelineSearchRepository {
 	constructor(private readonly user: unknown) {}
+
+	async listPages(): Promise<GuidelinePageListResult[]> {
+		const payload = await getPayload({ config })
+		const [sections, pages] = await Promise.all([
+			payload.find({
+				collection: 'sections',
+				depth: 0,
+				draft: false,
+				fallbackLocale: 'en',
+				limit: 100,
+				locale: 'ko',
+				overrideAccess: false,
+				sort: 'displayOrder',
+				user: this.user as never,
+				select: {
+					title: true,
+				},
+			}),
+			payload.find({
+				collection: 'guideline-pages',
+				depth: 0,
+				draft: false,
+				fallbackLocale: 'en',
+				limit: 500,
+				locale: 'ko',
+				overrideAccess: false,
+				sort: 'displayOrder',
+				user: this.user as never,
+				select: {
+					title: true,
+					section: true,
+				},
+			}),
+		])
+
+		return sections.docs.map((section) => ({
+			title: section.title,
+			// ponytail: guideline page lists are small; index by section if this grows.
+			pages: pages.docs
+				.filter((page) => page.section === section.id)
+				.map((page) => ({
+					id: String(page.id),
+					title: page.title,
+				})),
+		}))
+	}
 
 	async search(input: GuidelineSearchInput): Promise<GuidelineSearchResult[]> {
 		const query = input.query.trim()

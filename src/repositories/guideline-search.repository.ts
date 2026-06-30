@@ -10,6 +10,14 @@ export interface GuidelineSearchResult {
 	id: string
 }
 
+export interface GuidelinePageListResult {
+	title: string
+	pages: {
+		id: string
+		title: string
+	}[]
+}
+
 export interface GuidelineDocumentInput {
 	collection: GuidelineDocumentCollection
 	id: string
@@ -27,6 +35,7 @@ export interface GuidelineDocumentResult {
 }
 
 export interface GuidelineSearchRepository {
+	listPages(): Promise<GuidelinePageListResult[]>
 	search(input: GuidelineSearchInput): Promise<GuidelineSearchResult[]>
 	readDocument(input: GuidelineDocumentInput): Promise<GuidelineDocumentResult | null>
 }

@@ -8,11 +8,22 @@ import type {
 } from '@/repositories/guideline-search.repository'
 
 class FakeGuidelineSearchRepository implements GuidelineSearchRepository {
+	listPages = vi.fn(async () => [{ title: 'Core', pages: [{ id: '7', title: 'Narrative' }] }])
 	search = vi.fn(async (_input: GuidelineSearchInput) => [])
 	readDocument = vi.fn(async (_input: GuidelineDocumentInput) => null)
 }
 
 describe('agent tools', () => {
+	it('lists guideline pages through the repository', async () => {
+		const repository = new FakeGuidelineSearchRepository()
+		const tools = createAgentTools({ guidelineSearchRepository: repository })
+
+		const result = await tools.listGuidelinePages.execute?.({}, {} as never)
+
+		expect(repository.listPages).toHaveBeenCalled()
+		expect(result).toEqual([{ title: 'Core', pages: [{ id: '7', title: 'Narrative' }] }])
+	})
+
 	it('reads guideline document details through the repository', async () => {
 		const repository = new FakeGuidelineSearchRepository()
 		const tools = createAgentTools({ guidelineSearchRepository: repository })
