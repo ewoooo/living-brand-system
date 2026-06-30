@@ -10,15 +10,16 @@ import {
 	shouldSelectAgentSkill,
 } from '@/agents/agent-skills'
 import { createAgentTools } from '@/agents/agent-tools'
+import { GetAgentGuidelineContextService } from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { AgentConfigurationError } from '@/lib/errors'
-import { PayloadGuidelineSearchRepository } from '@/repositories/guideline-search.payload.repository'
+import { PayloadAgentGuidelineContextRepository } from '@/repositories/agent-guideline-context.payload.repository'
 import type { AgentAnswerInput, AgentAnswerStream, AgentRepository } from './agent.repository'
 
 const DEFAULT_MODEL = 'claude-sonnet-4-5'
 
 /**
  * Agent 답변 스트림 생성을 AI SDK로 위임하는 adapter다.
- * 모델 호출은 이 구현체가 맡고, guideline 검색 I/O는 tool의 repository가 담당한다.
+ * 모델 호출은 이 구현체가 맡고, guideline tool I/O는 agent tool service가 담당한다.
  */
 export class AnthropicAiRepository implements AgentRepository {
 	async streamAnswer(input: AgentAnswerInput): Promise<AgentAnswerStream> {
@@ -34,7 +35,9 @@ export class AnthropicAiRepository implements AgentRepository {
 			messages: input.messages,
 			stopWhen: isStepCount(5),
 			tools: createAgentTools({
-				guidelineSearchRepository: new PayloadGuidelineSearchRepository(input.user),
+				getAgentGuidelineContextService: new GetAgentGuidelineContextService(
+					new PayloadAgentGuidelineContextRepository(input.user),
+				),
 			}),
 		})
 	}
