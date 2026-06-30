@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import ruleset from '@/features/review/data/essenherb-ruleset.json'
 import { loadPixelsFromUrl } from '@/features/review/extract-pixels.client'
-import { runCheckersProgressive, type RuleOutcome } from '@/features/review/run-checkers'
+import { type RuleOutcome, runCheckersProgressive } from '@/features/review/run-checkers'
 
 const ALL_RULE_KEYS = Array.from(
 	new Set(
@@ -62,20 +62,27 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 				.then(async (pixels) => {
 					setImages((prev) =>
 						prev.map((image) =>
-							image.id === item.id ? { ...image, checking: true, results: {} } : image,
+							image.id === item.id
+								? { ...image, checking: true, results: {} }
+								: image,
 						),
 					)
 					await runCheckersProgressive(pixels, ALL_RULE_KEYS, (ruleKey, outcome) => {
 						setImages((prev) =>
 							prev.map((image) =>
 								image.id === item.id
-									? { ...image, results: { ...image.results, [ruleKey]: outcome } }
+									? {
+											...image,
+											results: { ...image.results, [ruleKey]: outcome },
+										}
 									: image,
 							),
 						)
 					})
 					setImages((prev) =>
-						prev.map((image) => (image.id === item.id ? { ...image, checking: false } : image)),
+						prev.map((image) =>
+							image.id === item.id ? { ...image, checking: false } : image,
+						),
 					)
 				})
 				.catch(() => {})

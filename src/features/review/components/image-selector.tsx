@@ -50,7 +50,11 @@ export function ImageSelector() {
 								}`}
 							>
 								{/* biome-ignore lint/performance/noImgElement: 브라우저 object URL 미리보기 */}
-								<img src={image.url} alt={image.name} className="size-full object-cover" />
+								<img
+									src={image.url}
+									alt={image.name}
+									className="size-full object-cover"
+								/>
 							</button>
 						)
 					})

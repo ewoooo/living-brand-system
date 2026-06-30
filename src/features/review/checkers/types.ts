@@ -18,7 +18,5 @@ export interface CheckerContext {
 /** 한 RuleSpec의 검수 실행기. registry에 key로 등록한다. */
 export interface RuleChecker {
 	ruleKey: string
-	check: (
-		ctx: CheckerContext,
-	) => Pick<RuleCheckResult, 'status' | 'fulfillment' | 'detail'>
+	check: (ctx: CheckerContext) => Pick<RuleCheckResult, 'status' | 'fulfillment' | 'detail'>
 }
