@@ -1,5 +1,5 @@
-import type { AgentChatMessage } from '@/features/agent-chat/agent-chat-agent'
 import { getAgentToolMarker } from '@/features/agent-chat/get-agent-tool-marker'
+import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import { AgentChatAgentBubble, AgentChatUserBubble } from './agent-chat-bubbles'
 import { AgentChatToolMarker } from './agent-chat-tool-marker'
 

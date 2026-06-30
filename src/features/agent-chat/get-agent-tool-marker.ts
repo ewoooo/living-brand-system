@@ -1,4 +1,4 @@
-import type { AgentChatMessage } from './agent-chat-agent'
+import type { AgentChatMessage } from './services/create-agent-chat-response.service'
 
 export interface AgentToolMarker {
 	isPending: boolean

@@ -1,0 +1,65 @@
+import config from '@payload-config'
+import { getPayload } from 'payload'
+
+import type { AgentSkill } from '@/payload-types'
+
+export type AgentSkillSummary = Pick<AgentSkill, 'isDefault' | 'name'>
+export type AgentSkillDetail = Pick<AgentSkill, 'body' | 'description' | 'name'>
+
+export async function findEnabledAgentSkillSummaries(user: unknown): Promise<AgentSkillSummary[]> {
+	const payload = await getPayload({ config })
+	const result = await payload.find({
+		collection: 'agent-skills',
+		depth: 0,
+		limit: 100,
+		overrideAccess: false,
+		sort: '-isDefault',
+		user: user as never,
+		where: {
+			enabled: {
+				equals: true,
+			},
+		},
+		select: {
+			name: true,
+			isDefault: true,
+		},
+	})
+
+	return result.docs
+}
+
+export async function findEnabledAgentSkillByName(
+	user: unknown,
+	name: string,
+): Promise<AgentSkillDetail | null> {
+	const payload = await getPayload({ config })
+	const result = await payload.find({
+		collection: 'agent-skills',
+		depth: 0,
+		limit: 1,
+		overrideAccess: false,
+		user: user as never,
+		where: {
+			and: [
+				{
+					name: {
+						equals: name,
+					},
+				},
+				{
+					enabled: {
+						equals: true,
+					},
+				},
+			],
+		},
+		select: {
+			name: true,
+			description: true,
+			body: true,
+		},
+	})
+
+	return (result.docs[0] as AgentSkillDetail | undefined) ?? null
+}

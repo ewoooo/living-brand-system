@@ -1,6 +1,14 @@
-import config from '@payload-config'
-import { getPayload } from 'payload'
 import type { ApplicationImage, GuidelinePage, Rule, Section } from '@/payload-types'
+import {
+	type AgentGuidelinePage,
+	type AgentGuidelinePageSummary,
+	type AgentGuidelineSearchResult,
+	type AgentGuidelineSection,
+	findAgentGuidelineDocument,
+	listGuidelinePageListItems,
+	listGuidelineSections,
+	searchGuidelineDocuments,
+} from '../repositories/agent-guideline-context.payload.repository'
 
 const MAX_DOCUMENT_CONTENT_LENGTH = 6000
 
@@ -10,11 +18,7 @@ export interface GuidelineSearchInput {
 
 export type GuidelineDocumentCollection = 'guideline-pages' | 'sections'
 
-export interface GuidelineSearchResult {
-	title: string
-	collection: string
-	id: string
-}
+export type GuidelineSearchResult = AgentGuidelineSearchResult
 
 export interface GuidelinePageListResult {
 	title: string
@@ -48,234 +52,62 @@ export interface GetAgentGuidelineContext {
 
 /**
  * Agent tool은 published guideline을 목록, 검색 결과, LLM용 본문으로 조립한다.
- * Payload Local API 호출과 접근 제어는 이 파일 하단의 Payload helper가 담당한다.
+ * Payload Local API 호출과 접근 제어는 agent guideline context repository가 담당한다.
  */
 export class GetAgentGuidelineContextService implements GetAgentGuidelineContext {
 	constructor(private readonly user: unknown) {}
 
-	listPages(): Promise<GuidelinePageListResult[]> {
-		return listPages(this.user)
+	async listPages(): Promise<GuidelinePageListResult[]> {
+		const [sections, pages] = await Promise.all([
+			listGuidelineSections(this.user),
+			listGuidelinePageListItems(this.user),
+		])
+
+		return sections.map((section) => ({
+			title: section.title,
+			// ponytail: guideline page lists are small; index by section if this grows.
+			pages: pages
+				.filter((page) => page.section === section.id)
+				.map((page) => ({
+					id: String(page.id),
+					title: page.title,
+				})),
+		}))
 	}
 
 	search(input: GuidelineSearchInput): Promise<GuidelineSearchResult[]> {
-		return searchGuidelines(this.user, input)
+		const query = input.query.trim()
+
+		return query ? searchGuidelineDocuments(this.user, query) : Promise.resolve([])
 	}
 
 	async readDocument(input: GuidelineDocumentInput): Promise<GuidelineDocumentResult | null> {
-		if (input.collection === 'sections') {
-			return this.readSection(input.id)
-		}
+		const document = await findAgentGuidelineDocument(this.user, input)
 
-		return this.readPage(input.id)
-	}
-
-	private async readPage(id: string): Promise<GuidelineDocumentResult | null> {
-		const page = await findPage(this.user, id)
-
-		if (!page) {
+		if (!document) {
 			return null
 		}
 
-		return {
-			title: page.title,
-			collection: 'guideline-pages',
-			id: String(page.id),
-			content: limitContent(formatGuidelinePage(page)),
-		}
-	}
-
-	private async readSection(id: string): Promise<GuidelineDocumentResult | null> {
-		const section = await findSection(this.user, id)
-
-		if (!section) {
-			return null
+		if (document.collection === 'guideline-pages') {
+			return {
+				title: document.page.title,
+				collection: 'guideline-pages',
+				id: String(document.page.id),
+				content: limitContent(formatGuidelinePage(document.page)),
+			}
 		}
 
-		const pages = await listSectionPages(this.user, section.id)
-
 		return {
-			title: section.title,
+			title: document.section.title,
 			collection: 'sections',
-			id: String(section.id),
-			content: limitContent(formatGuidelineSection(section, pages)),
-			relatedPages: pages.map((page) => ({
+			id: String(document.section.id),
+			content: limitContent(formatGuidelineSection(document.section, document.pages)),
+			relatedPages: document.pages.map((page) => ({
 				id: String(page.id),
 				title: page.title,
 			})),
 		}
 	}
-}
-
-type AgentGuidelinePage = Pick<
-	GuidelinePage,
-	'id' | 'title' | 'slug' | 'description' | 'blocks' | 'rules' | 'section'
->
-
-type AgentGuidelineSection = Pick<Section, 'id' | 'title' | 'slug' | 'description'>
-
-type AgentGuidelinePageSummary = Pick<GuidelinePage, 'id' | 'title' | 'slug' | 'description'>
-
-type SearchDoc = {
-	title?: string | null
-	doc?: {
-		relationTo?: string | null
-		value?: string | number | null
-	} | null
-}
-
-async function listPages(user: unknown): Promise<GuidelinePageListResult[]> {
-	const payload = await getPayload({ config })
-	const [sections, pages] = await Promise.all([
-		payload.find({
-			collection: 'sections',
-			depth: 0,
-			draft: false,
-			fallbackLocale: 'en',
-			limit: 100,
-			locale: 'ko',
-			overrideAccess: false,
-			sort: 'displayOrder',
-			user: user as never,
-			select: {
-				title: true,
-			},
-		}),
-		payload.find({
-			collection: 'guideline-pages',
-			depth: 0,
-			draft: false,
-			fallbackLocale: 'en',
-			limit: 500,
-			locale: 'ko',
-			overrideAccess: false,
-			sort: 'displayOrder',
-			user: user as never,
-			select: {
-				title: true,
-				section: true,
-			},
-		}),
-	])
-
-	return sections.docs.map((section) => ({
-		title: section.title,
-		// ponytail: guideline page lists are small; index by section if this grows.
-		pages: pages.docs
-			.filter((page) => page.section === section.id)
-			.map((page) => ({
-				id: String(page.id),
-				title: page.title,
-			})),
-	}))
-}
-
-async function searchGuidelines(
-	user: unknown,
-	input: GuidelineSearchInput,
-): Promise<GuidelineSearchResult[]> {
-	const query = input.query.trim()
-
-	if (!query) {
-		return []
-	}
-
-	const payload = await getPayload({ config })
-	const results = await payload.find({
-		collection: 'search',
-		depth: 0,
-		limit: 5,
-		overrideAccess: false,
-		sort: '-priority',
-		user: user as never,
-		where: {
-			title: {
-				like: query,
-			},
-		},
-	})
-
-	return (results.docs as SearchDoc[])
-		.map((result) => ({
-			title: result.title || '',
-			collection: result.doc?.relationTo || '',
-			id: String(result.doc?.value || ''),
-		}))
-		.filter((result) => result.title && result.collection && result.id)
-}
-
-async function findPage(user: unknown, id: string): Promise<AgentGuidelinePage | null> {
-	const payload = await getPayload({ config })
-
-	return payload.findByID({
-		collection: 'guideline-pages',
-		id,
-		disableErrors: true,
-		depth: 1,
-		draft: false,
-		fallbackLocale: 'en',
-		locale: 'ko',
-		overrideAccess: false,
-		user: user as never,
-		select: {
-			title: true,
-			slug: true,
-			description: true,
-			blocks: true,
-			rules: true,
-			section: true,
-		},
-	})
-}
-
-async function findSection(user: unknown, id: string): Promise<AgentGuidelineSection | null> {
-	const payload = await getPayload({ config })
-
-	return payload.findByID({
-		collection: 'sections',
-		id,
-		disableErrors: true,
-		depth: 0,
-		draft: false,
-		fallbackLocale: 'en',
-		locale: 'ko',
-		overrideAccess: false,
-		user: user as never,
-		select: {
-			title: true,
-			slug: true,
-			description: true,
-		},
-	})
-}
-
-async function listSectionPages(
-	user: unknown,
-	sectionId: number,
-): Promise<AgentGuidelinePageSummary[]> {
-	const payload = await getPayload({ config })
-	const pages = await payload.find({
-		collection: 'guideline-pages',
-		depth: 0,
-		draft: false,
-		fallbackLocale: 'en',
-		limit: 20,
-		locale: 'ko',
-		overrideAccess: false,
-		sort: 'displayOrder',
-		user: user as never,
-		where: {
-			section: {
-				equals: sectionId,
-			},
-		},
-		select: {
-			title: true,
-			slug: true,
-			description: true,
-		},
-	})
-
-	return pages.docs
 }
 
 function formatGuidelineSection(

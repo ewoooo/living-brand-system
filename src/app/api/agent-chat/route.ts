@@ -6,7 +6,7 @@ import { z } from 'zod'
 import {
 	createAgentChatResponse,
 	validateAgentChatMessages,
-} from '@/features/agent-chat/agent-chat-agent'
+} from '@/features/agent-chat/services/create-agent-chat-response.service'
 import { AgentConfigurationError } from '@/lib/errors'
 
 export const maxDuration = 30
@@ -19,16 +19,16 @@ const uiMessageSchema = z
 	})
 	.passthrough()
 
-const qaAnswerRequestSchema = z.object({
+const agentChatRequestSchema = z.object({
 	locale: z.enum(['ko', 'en']).optional(),
 	messages: z.array(uiMessageSchema).min(1),
 	pagePath: z.string().max(300).optional(),
 })
 
-export async function parseQaAnswerRequest(req: Request) {
+export async function parseAgentChatRequest(req: Request) {
 	const body = await req.json().catch(() => null)
 
-	return qaAnswerRequestSchema.safeParse(body)
+	return agentChatRequestSchema.safeParse(body)
 }
 
 export async function POST(req: Request) {
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 		return Response.json({ message: 'Unauthorized' }, { status: 401 })
 	}
 
-	const parsed = await parseQaAnswerRequest(req)
+	const parsed = await parseAgentChatRequest(req)
 
 	if (!parsed.success) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })

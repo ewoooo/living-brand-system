@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { validateAgentChatMessages } from '@/features/agent-chat/agent-chat-agent'
+import { validateAgentChatMessages } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import {
 	extractTextFromLexical,
 	GetAgentGuidelineContextService,

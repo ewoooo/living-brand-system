@@ -401,7 +401,6 @@ export interface AgentSkill {
                 }
             )[]
           | null;
-        enabled?: boolean | null;
         id?: string | null;
       }[]
     | null;
@@ -412,7 +411,6 @@ export interface AgentSkill {
   isDefault?: boolean | null;
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * 가이드라인 상위 내비게이션 섹션입니다.
@@ -952,14 +950,12 @@ export interface AgentSkillsSelect<T extends boolean = true> {
         title?: T;
         body?: T;
         assets?: T;
-        enabled?: T;
         id?: T;
       };
   enabled?: T;
   isDefault?: T;
   updatedAt?: T;
   createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1189,10 +1185,6 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'plugins';
           value: number | Plugin;
-        } | null)
-      | ({
-          relationTo: 'agent-skills';
-          value: number | AgentSkill;
         } | null)
       | ({
           relationTo: 'sections';

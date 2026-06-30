@@ -20,12 +20,6 @@ export const AgentSkills: CollectionConfig = {
 		description: 'Agent가 선택해 실행할 SKILL.md 형태의 지시문입니다.',
 		listSearchableFields: ['name', 'description', 'body'],
 	},
-	versions: {
-		drafts: {
-			schedulePublish: true,
-		},
-		maxPerDoc: 50,
-	},
 	fields: [
 		{
 			name: 'name',
@@ -87,11 +81,6 @@ export const AgentSkills: CollectionConfig = {
 						description:
 							'reference가 설명하거나 예시로 드는 내부 브랜드/제작 자원입니다.',
 					},
-				},
-				{
-					name: 'enabled',
-					type: 'checkbox',
-					defaultValue: true,
 				},
 			],
 			admin: {

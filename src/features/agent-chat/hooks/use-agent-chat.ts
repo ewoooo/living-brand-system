@@ -3,7 +3,7 @@
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { useMemo } from 'react'
-import type { AgentChatMessage } from '@/features/agent-chat/agent-chat-agent'
+import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 
 async function fetchAgentChat(input: RequestInfo | URL, init?: RequestInit) {
 	const response = await fetch(input, init)
@@ -32,7 +32,7 @@ export function useAgentChat() {
 	const transport = useMemo(
 		() =>
 			new DefaultChatTransport({
-				api: '/api/qa/answer',
+				api: '/api/agent-chat',
 				credentials: 'same-origin',
 				fetch: fetchAgentChat,
 			}),
