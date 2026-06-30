@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getAgentChatErrorMessage } from '@/features/agent/hooks/use-agent-chat'
+import { getAgentChatErrorMessage } from '@/features/agent-chat/hooks/use-agent-chat'
 
 describe('agent chat errors', () => {
 	it('uses JSON response messages', async () => {

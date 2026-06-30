@@ -8,6 +8,7 @@ const agentSkills = [
 			'You answer questions for creators using only published brand guideline context.',
 			'Always answer in Korean.',
 			'Use searchGuidelines when the current page context is not enough.',
+			'Use readGuidelineDocument to inspect search results before answering from them.',
 			'If the provided context is not enough, say that a manager review is needed.',
 		],
 	},
