@@ -472,6 +472,7 @@ CheckInputSnapshot은 검수 입력을 재현하기 위한 ID를 가진 불변 �
 CheckDecision은 CheckRun 안에서 최종 판정을 표현하고, 여러 CheckResult를 소유합니다.
 Agent와 System은 점검, 설명, 최종 검수 판정을 수행합니다.
 Agent 자체는 도메인 애그리거트(관리 단위)로 두지 않고, Answer, CheckResult, CheckRecommendation에 AgentRunRef를 남겨 실행 이력만 추적합니다.
+AgentSkill은 Agent 실행 지시 설정으로 관리하며, 답변이나 검수 결과의 도메인 기록으로 보지 않습니다.
 AgentRunStarted, AgentRunCompleted, AgentRunFailed는 업무 도메인 이벤트가 아니라 Agent 실행 기록 이벤트입니다.
 
 ## 7. 사용 기록

@@ -586,6 +586,7 @@ flowchart TD
 
 Agent와 Creator는 도메인 상태를 직접 변경하지 않습니다.
 외부 요청은 Request Layer로 들어오고, Domain Service Layer가 기준 VersionRef와 실행 입력을 정한 뒤 Agent 실행을 요청합니다.
+Agent adapter는 실행 전에 enabled/default AgentSkill을 조회해 지시문을 구성할 수 있습니다.
 Agent 실행 결과는 Domain Service Layer가 검증한 뒤 Answer, CheckResult, CheckRecommendation 같은 도메인 객체에 저장합니다.
 
 #### 호출 경로
