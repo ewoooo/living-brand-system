@@ -10,8 +10,8 @@ import { headers as getHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import { z } from 'zod'
 
+import { generateAnswerService } from '@/features/agent-chat/services/generate-answer.service'
 import { AgentConfigurationError } from '@/lib/errors'
-import { generateAnswerService } from '@/services/generate-answer.service'
 
 export const maxDuration = 30
 

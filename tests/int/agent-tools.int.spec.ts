@@ -1,32 +1,34 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createAgentTools } from '@/agents/agent-tools'
-import { extractTextFromLexical } from '@/repositories/guideline-search.payload.repository'
 import type {
+	GetAgentGuidelineContext,
 	GuidelineDocumentInput,
 	GuidelineSearchInput,
-	GuidelineSearchRepository,
-} from '@/repositories/guideline-search.repository'
+} from '@/features/agent-chat/services/get-agent-guideline-context.service'
+import { extractTextFromLexical } from '@/features/agent-chat/services/get-agent-guideline-context.service'
+import { createAgentTools } from '@/features/agent-chat/tools/agent-tools'
 
-class FakeGuidelineSearchRepository implements GuidelineSearchRepository {
-	listPages = vi.fn(async () => [{ title: 'Core', pages: [{ id: '7', title: 'Narrative' }] }])
-	search = vi.fn(async (_input: GuidelineSearchInput) => [])
-	readDocument = vi.fn(async (_input: GuidelineDocumentInput) => null)
+function createFakeGetAgentGuidelineContext(): GetAgentGuidelineContext {
+	return {
+		listPages: vi.fn(async () => [{ title: 'Core', pages: [{ id: '7', title: 'Narrative' }] }]),
+		search: vi.fn(async (_input: GuidelineSearchInput) => []),
+		readDocument: vi.fn(async (_input: GuidelineDocumentInput) => null),
+	}
 }
 
 describe('agent tools', () => {
-	it('lists guideline pages through the repository', async () => {
-		const repository = new FakeGuidelineSearchRepository()
-		const tools = createAgentTools({ guidelineSearchRepository: repository })
+	it('lists guideline pages through the tool service', async () => {
+		const service = createFakeGetAgentGuidelineContext()
+		const tools = createAgentTools({ getAgentGuidelineContextService: service })
 
 		const result = await tools.listGuidelinePages.execute?.({}, {} as never)
 
-		expect(repository.listPages).toHaveBeenCalled()
+		expect(service.listPages).toHaveBeenCalled()
 		expect(result).toEqual([{ title: 'Core', pages: [{ id: '7', title: 'Narrative' }] }])
 	})
 
-	it('reads guideline document details through the repository', async () => {
-		const repository = new FakeGuidelineSearchRepository()
-		const tools = createAgentTools({ guidelineSearchRepository: repository })
+	it('reads guideline document details through the tool service', async () => {
+		const service = createFakeGetAgentGuidelineContext()
+		const tools = createAgentTools({ getAgentGuidelineContextService: service })
 
 		await tools.readGuidelineDocument.execute?.(
 			{
@@ -36,7 +38,7 @@ describe('agent tools', () => {
 			{} as never,
 		)
 
-		expect(repository.readDocument).toHaveBeenCalledWith({
+		expect(service.readDocument).toHaveBeenCalledWith({
 			collection: 'guideline-pages',
 			id: '7',
 		})
