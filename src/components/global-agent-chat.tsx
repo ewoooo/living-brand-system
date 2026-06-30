@@ -2,8 +2,8 @@
 
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { AgentChatInput } from '@/features/agent-chat/components/agent-chat-input'
-import { AgentMessageList } from '@/features/agent-chat/components/agent-message-list'
+import { AgentChatMessageList } from '@/features/agent-chat/components/agent-chat-message-list'
+import { AgentChatUserInput } from '@/features/agent-chat/components/agent-chat-user-input'
 import { useAgentChat } from '@/features/agent-chat/hooks/use-agent-chat'
 
 export function GlobalAgentChat() {
@@ -15,8 +15,8 @@ export function GlobalAgentChat() {
 	return (
 		<aside className="fixed top-14 right-0 bottom-0 hidden w-80 shrink-0 flex-col overflow-y-auto bg-background lg:flex">
 			<GlobalAgentChatHeader />
-			<AgentMessageList messages={messages} error={error} />
-			<AgentChatInput
+			<AgentChatMessageList messages={messages} error={error} isBusy={isBusy} />
+			<AgentChatUserInput
 				value={input}
 				isBusy={isBusy}
 				onChange={setInput}

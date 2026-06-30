@@ -3,7 +3,7 @@ import {
 	buildAgentInstructions,
 	buildAgentSkillSelectionPrompt,
 	getDefaultAgentSkillId,
-} from '@/features/agent-chat/skills/agent-skills'
+} from '@/features/agent-chat/agent-skills'
 
 describe('agent skills', () => {
 	it('adds request context to base instructions', () => {

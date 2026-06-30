@@ -7,13 +7,13 @@ import {
 	getAgentSkillIds,
 	getDefaultAgentSkillId,
 	shouldSelectAgentSkill,
-} from '@/features/agent-chat/skills/agent-skills'
+} from '@/features/agent-chat/agent-skills'
 import { AgentConfigurationError } from '@/lib/errors'
 import type {
 	AgentAnswerInput,
 	AgentAnswerService,
 	AgentAnswerStream,
-} from './generate-answer.service'
+} from './run-agent-chat.service'
 
 const DEFAULT_MODEL = 'claude-sonnet-4-5'
 
@@ -21,7 +21,7 @@ const DEFAULT_MODEL = 'claude-sonnet-4-5'
  * Agent 답변 스트림 생성을 AI SDK로 위임하는 adapter다.
  * 모델 호출은 이 구현체가 맡고, tool 구성과 guideline I/O는 answer service가 넘긴다.
  */
-export class AnthropicAiService implements AgentAnswerService {
+export class StreamAgentAnswerService implements AgentAnswerService {
 	async streamAnswer(input: AgentAnswerInput): Promise<AgentAnswerStream> {
 		if (!process.env.ANTHROPIC_API_KEY) {
 			throw new AgentConfigurationError()

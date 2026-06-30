@@ -10,7 +10,7 @@ import { headers as getHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import { z } from 'zod'
 
-import { generateAnswerService } from '@/features/agent-chat/services/generate-answer.service'
+import { runAgentChatService } from '@/features/agent-chat/services/run-agent-chat.service'
 import { AgentConfigurationError } from '@/lib/errors'
 
 export const maxDuration = 30
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 	}
 
 	try {
-		const result = await generateAnswerService.execute({
+		const result = await runAgentChatService.execute({
 			messages,
 			pagePath: parsed.data.pagePath,
 			user,

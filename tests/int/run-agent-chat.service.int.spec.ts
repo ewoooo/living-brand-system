@@ -4,8 +4,8 @@ import type {
 	AgentAnswerInput,
 	AgentAnswerService,
 	AgentAnswerStream,
-} from '@/features/agent-chat/services/generate-answer.service'
-import { GenerateAnswerService } from '@/features/agent-chat/services/generate-answer.service'
+} from '@/features/agent-chat/services/run-agent-chat.service'
+import { RunAgentChatService } from '@/features/agent-chat/services/run-agent-chat.service'
 
 class FakeAgentAnswerService implements AgentAnswerService {
 	input?: AgentAnswerInput
@@ -17,9 +17,9 @@ class FakeAgentAnswerService implements AgentAnswerService {
 	}
 }
 
-describe('GenerateAnswerService', () => {
+describe('RunAgentChatService', () => {
 	it('rejects empty messages', async () => {
-		const service = new GenerateAnswerService(new FakeAgentAnswerService())
+		const service = new RunAgentChatService(new FakeAgentAnswerService())
 
 		await expect(service.execute({ messages: [] })).rejects.toThrow(
 			'At least one message is required.',
@@ -28,7 +28,7 @@ describe('GenerateAnswerService', () => {
 
 	it('passes page context to the answer service', async () => {
 		const answerService = new FakeAgentAnswerService()
-		const service = new GenerateAnswerService(answerService)
+		const service = new RunAgentChatService(answerService)
 		const messages = [{ role: 'user', content: 'How do I use this?' }] as ModelMessage[]
 
 		await service.execute({ messages, pagePath: '/guideline/logo' })
@@ -43,7 +43,7 @@ describe('GenerateAnswerService', () => {
 
 	it('passes user context to the answer service', async () => {
 		const answerService = new FakeAgentAnswerService()
-		const service = new GenerateAnswerService(answerService)
+		const service = new RunAgentChatService(answerService)
 		const messages = [{ role: 'user', content: 'Find logo rules.' }] as ModelMessage[]
 		const user = { id: 1, collection: 'users' }
 

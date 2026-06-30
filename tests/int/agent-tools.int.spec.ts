@@ -5,7 +5,7 @@ import type {
 	GuidelineSearchInput,
 } from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { extractTextFromLexical } from '@/features/agent-chat/services/get-agent-guideline-context.service'
-import { createAgentTools } from '@/features/agent-chat/tools/agent-tools'
+import { getAgentTools } from '@/features/agent-chat/services/get-agent-tools.service'
 
 function createFakeGetAgentGuidelineContext(): GetAgentGuidelineContext {
 	return {
@@ -18,7 +18,7 @@ function createFakeGetAgentGuidelineContext(): GetAgentGuidelineContext {
 describe('agent tools', () => {
 	it('lists guideline pages through the tool service', async () => {
 		const service = createFakeGetAgentGuidelineContext()
-		const tools = createAgentTools({ getAgentGuidelineContextService: service })
+		const tools = getAgentTools({ getAgentGuidelineContextService: service })
 
 		const result = await tools.listGuidelinePages.execute?.({}, {} as never)
 
@@ -28,7 +28,7 @@ describe('agent tools', () => {
 
 	it('reads guideline document details through the tool service', async () => {
 		const service = createFakeGetAgentGuidelineContext()
-		const tools = createAgentTools({ getAgentGuidelineContextService: service })
+		const tools = getAgentTools({ getAgentGuidelineContextService: service })
 
 		await tools.readGuidelineDocument.execute?.(
 			{

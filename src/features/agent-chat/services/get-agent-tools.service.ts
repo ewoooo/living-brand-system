@@ -1,13 +1,13 @@
 import { type ToolSet, tool } from 'ai'
 import { z } from 'zod'
 
-import type { GetAgentGuidelineContext } from '@/features/agent-chat/services/get-agent-guideline-context.service'
+import type { GetAgentGuidelineContext } from './get-agent-guideline-context.service'
 
 /**
- * Agent가 사용할 tool 계약만 만든다.
- * 실제 guideline I/O와 tool 출력 조립은 주입된 GetAgentGuidelineContext service가 담당한다.
+ * Agent answer stream에 전달할 AI SDK tool set을 만든다.
+ * 실제 guideline I/O는 주입된 guideline context service가 담당한다.
  */
-export function createAgentTools(input: {
+export function getAgentTools(input: {
 	getAgentGuidelineContextService: GetAgentGuidelineContext
 }) {
 	return {

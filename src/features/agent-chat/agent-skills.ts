@@ -1,21 +1,7 @@
 import type { ModelMessage } from 'ai'
+import guidelineQaSkill from './skills/guideline-qa.json'
 
-const agentSkills = [
-	{
-		id: 'guideline-qa',
-		description: 'Answer questions for creators using published brand guideline context.',
-		instructions: [
-			'You answer questions for creators using only published brand guideline context.',
-			'Always answer in Korean.',
-			'Use listGuidelinePages when the user asks what guideline pages or sections are available.',
-			'Use searchGuidelines when the current page context is not enough.',
-			'If searchGuidelines returns no useful result, try one broader or synonymous query before giving up.',
-			'Use readGuidelineDocument to inspect search results before answering from them.',
-			'Do not narrate search or tool activity to the user; provide only the final answer.',
-			'If the provided context is not enough, say that a manager review is needed.',
-		],
-	},
-] as const
+const agentSkills = [guidelineQaSkill] as const
 
 export type AgentSkillId = (typeof agentSkills)[number]['id']
 
@@ -54,7 +40,7 @@ export function buildAgentSkillSelectionPrompt(input: {
 
 /**
  * Agent answer service가 모델에 전달할 system instructions만 조합한다.
- * guideline 외부 I/O와 모델 실행은 tool repository와 provider service가 담당한다.
+ * guideline 외부 I/O와 모델 실행은 context service와 provider service가 담당한다.
  */
 export function buildAgentInstructions(skillId: AgentSkillId, context?: string) {
 	const skill = agentSkills.find((item) => item.id === skillId) ?? agentSkills[0]

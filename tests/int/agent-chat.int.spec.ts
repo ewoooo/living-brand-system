@@ -1,6 +1,9 @@
 import type { UIMessage } from 'ai'
 import { describe, expect, it } from 'vitest'
-import { getAgentToolMarker, getAgentToolMarkerText } from '@/features/agent-chat/agent-tool-marker'
+import {
+	getAgentToolMarker,
+	getAgentToolMarkerText,
+} from '@/features/agent-chat/get-agent-tool-marker'
 import { getAgentChatErrorMessage } from '@/features/agent-chat/hooks/use-agent-chat'
 
 describe('agent chat errors', () => {
@@ -34,7 +37,7 @@ describe('agent chat errors', () => {
 			],
 		} as UIMessage
 
-		expect(getAgentToolMarkerText(message)).toBe('Explored 2 guideline records')
+		expect(getAgentToolMarkerText(message)).toBe('가이드라인 결과 2개를 찾았습니다')
 	})
 
 	it('summarizes guideline page list tool results as marker text', () => {
@@ -55,7 +58,7 @@ describe('agent chat errors', () => {
 			],
 		} as UIMessage
 
-		expect(getAgentToolMarkerText(message)).toBe('Listed 2 guideline sections')
+		expect(getAgentToolMarkerText(message)).toBe('가이드라인 섹션 2개를 확인했습니다')
 	})
 
 	it('shimmers tool markers until output is available', () => {
@@ -74,7 +77,7 @@ describe('agent chat errors', () => {
 
 		expect(getAgentToolMarker(message)).toEqual({
 			isPending: true,
-			text: 'Searching guidelines',
+			text: '가이드라인을 찾고 있습니다',
 		})
 	})
 
@@ -95,7 +98,7 @@ describe('agent chat errors', () => {
 
 		expect(getAgentToolMarker(message)).toEqual({
 			isPending: false,
-			text: 'Searched guidelines',
+			text: '가이드라인 검색을 완료했습니다',
 		})
 	})
 })

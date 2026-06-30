@@ -57,29 +57,27 @@ export function getAgentToolMarker(message: UIMessage): AgentToolMarker | null {
 	if (listCount > 0) {
 		return {
 			isPending: hasPendingToolPart,
-			text: `Listed ${listCount} guideline ${listCount === 1 ? 'section' : 'sections'}`,
+			text: `가이드라인 섹션 ${listCount}개를 확인했습니다`,
 		}
 	}
 
 	if (readCount > 0) {
 		return {
 			isPending: hasPendingToolPart,
-			text: `Read ${readCount} guideline ${readCount === 1 ? 'document' : 'documents'}`,
+			text: `가이드라인 문서 ${readCount}개를 읽었습니다`,
 		}
 	}
 
 	if (searchResultCount > 0) {
 		return {
 			isPending: hasPendingToolPart,
-			text: `Explored ${searchResultCount} guideline ${
-				searchResultCount === 1 ? 'record' : 'records'
-			}`,
+			text: `가이드라인 결과 ${searchResultCount}개를 찾았습니다`,
 		}
 	}
 
 	return {
 		isPending: hasPendingToolPart,
-		text: hasPendingToolPart ? 'Searching guidelines' : 'Searched guidelines',
+		text: hasPendingToolPart ? '가이드라인을 찾고 있습니다' : '가이드라인 검색을 완료했습니다',
 	}
 }
 
