@@ -1,0 +1,2385 @@
+{
+  "brand": "essenherb",
+  "source": "Essenherb Brand Identity Guidelines (Ami Cosmetic) — 110p PDF",
+  "tierLegend": {
+    "automated": "정적·결정론적 계산으로 자동 검수 (코드가 충족률 산출, 신뢰)",
+    "assisted": "AI가 값을 내지만 신뢰 불가 → 사람 확인 게이트",
+    "manual": "산출물만으론 계산 불가 → 사람 판단/주관/외부 프로세스"
+  },
+  "chapters": [
+    {
+      "code": "A",
+      "name": "Brand Strategy",
+      "sections": [
+        {
+          "code": "A.1",
+          "name": "The Name",
+          "slug": "the-name",
+          "chapter": "A",
+          "chapterName": "Brand Strategy",
+          "startPage": 5,
+          "endPage": 5,
+          "pages": [
+            {
+              "page": 5,
+              "section": "A.1",
+              "rules": [
+                {
+                  "key": "voice.naming-grammar",
+                  "title": "Canonical brand name & meaning (Essenherb = Essence + Herb)",
+                  "category": "voice",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "A.1 The Name: 'Essenherb는 피부의 본질Essence에 집중하는 식물성Herb 비건 스킨케어 브랜드'. 브랜드명 Essenherb는 Essence+Herb 합성어로 표기·의미가 고정됨. 자산의 브랜드명 표기(철자/대소문자) 검증 가능.",
+                  "value": "brandName: Essenherb (Essence + Herb)",
+                  "page": 5,
+                  "section": "A.1",
+                  "sectionName": "The Name",
+                  "chapter": "A",
+                  "chapterName": "Brand Strategy",
+                  "titleKo": "브랜드명 표기 규칙"
+                },
+                {
+                  "key": "messaging.statement",
+                  "title": "Brand essence / name philosophy statement",
+                  "category": "messaging",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "A.1 The Name: '피부의 본질에 집중하여 피부에 꼭 필요한 제품을 만듭니다 / 깨끗하고 강인한 자연의 힘으로 건강하고 아름다운 피부를 만듭니다'. 브랜드 철학·가치를 함축한 핵심 메시지(에센스/허브 정의).",
+                  "value": "",
+                  "page": 5,
+                  "section": "A.1",
+                  "sectionName": "The Name",
+                  "chapter": "A",
+                  "chapterName": "Brand Strategy",
+                  "titleKo": "브랜드 본질·철학 문구"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "A.2",
+          "name": "The Core",
+          "slug": "the-core",
+          "chapter": "A",
+          "chapterName": "Brand Strategy",
+          "startPage": 6,
+          "endPage": 6,
+          "pages": [
+            {
+              "page": 6,
+              "section": "A.2",
+              "rules": [
+                {
+                  "key": "messaging.key-message",
+                  "title": "Brand core keyword / concept (Energy)",
+                  "category": "messaging",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "A.2 The Core: '에너지Energy는 순수하고 강인한 자연의 에너지를 통해 피부를 보호하고 회복하는 에너지를 만드는 Essenherb의 브랜드 핵심 키워드'. 원료/제품/효능/가치를 잇는 핵심 개념 = Energy.",
+                  "value": "coreKeyword: Energy (Pure & Resilient, Botanical Energy, Protect & Recover, Daily Skin Energy)",
+                  "page": 6,
+                  "section": "A.2",
+                  "sectionName": "The Core",
+                  "chapter": "A",
+                  "chapterName": "Brand Strategy",
+                  "titleKo": "핵심 키워드 (Energy)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "A.3",
+          "name": "The Narrative",
+          "slug": "the-narrative",
+          "chapter": "A",
+          "chapterName": "Brand Strategy",
+          "startPage": 7,
+          "endPage": 8,
+          "pages": [
+            {
+              "page": 7,
+              "section": "A.3",
+              "rules": [
+                {
+                  "key": "messaging.statement",
+                  "title": "Canonical English brand narrative",
+                  "category": "messaging",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "A.3 The Narrative (English Version): 'Essenherb is a vegan skincare brand designed and made in Korea...' 브랜드 존재 이유와 가치를 하나의 흐름으로 연결한 영문 내러티브 전문.",
+                  "value": "",
+                  "page": 7,
+                  "section": "A.3",
+                  "sectionName": "The Narrative",
+                  "chapter": "A",
+                  "chapterName": "Brand Strategy",
+                  "titleKo": "브랜드 본질·철학 문구"
+                },
+                {
+                  "key": "messaging.statement",
+                  "title": "Brand origin/identity (designed & made in Korea)",
+                  "category": "messaging",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "A.3: '한국에서 탄생한 브랜드로서의 정체성과 가치를 강조' / 'designed and made in Korea'. 영문 내러티브가 한국 태생 정체성을 강조해야 한다는 메시지 요건.",
+                  "value": "identity: designed and made in Korea",
+                  "page": 7,
+                  "section": "A.3",
+                  "sectionName": "The Narrative",
+                  "chapter": "A",
+                  "chapterName": "Brand Strategy",
+                  "titleKo": "브랜드 본질·철학 문구"
+                }
+              ]
+            },
+            {
+              "page": 8,
+              "section": "A.3",
+              "rules": [
+                {
+                  "key": "messaging.statement",
+                  "title": "Canonical Korean brand narrative",
+                  "category": "messaging",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "A.3 The Narrative (Korean Version): '에센허브는 피부의 본질Essence에 집중하는 식물성Herb 비건 스킨케어 브랜드입니다...피부 본연의 활력을 깨우는 스킨케어를 만듭니다.' 영문과 일관성을 유지하는 국문 내러티브 전문.",
+                  "value": "",
+                  "page": 8,
+                  "section": "A.3",
+                  "sectionName": "The Narrative",
+                  "chapter": "A",
+                  "chapterName": "Brand Strategy",
+                  "titleKo": "브랜드 본질·철학 문구"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "A.4",
+          "name": "The Signature",
+          "slug": "the-signature",
+          "chapter": "A",
+          "chapterName": "Brand Strategy",
+          "startPage": 9,
+          "endPage": 9,
+          "pages": [
+            {
+              "page": 9,
+              "section": "A.4",
+              "rules": [
+                {
+                  "key": "messaging.tagline",
+                  "title": "Brand type signatures (three approved phrases)",
+                  "category": "messaging",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "A.4 The Signature: 세 가지 타입 시그니처 '1 Essence for Energy / 2 Daily Skin Energy / 3 Essen-tial Skincare'. 브랜드 철학·태도를 압축한 서명 문구로 정확한 워딩/표기 검증 가능.",
+                  "value": "signatures: 'Essence for Energy', 'Daily Skin Energy', 'Essen-tial Skincare'",
+                  "page": 9,
+                  "section": "A.4",
+                  "sectionName": "The Signature",
+                  "chapter": "A",
+                  "chapterName": "Brand Strategy",
+                  "titleKo": "브랜드 시그니처 문구"
+                },
+                {
+                  "key": "messaging.signature-combination",
+                  "title": "Brand signature single-use rule (no combining 2+)",
+                  "category": "messaging",
+                  "tier": "assisted",
+                  "inCatalog": false,
+                  "evidence": "A.4 The Signature: '브랜드 시그니처는 2개 이상의 중복/조합 사용을 금합니다.' 한 자산에 둘 이상의 시그니처를 함께/중복 사용 금지. 텍스트 검출로 2개 이상 시그니처 동시 사용 여부 판정 가능.",
+                  "value": "max 1 signature per asset; no duplicate/combined use",
+                  "page": 9,
+                  "section": "A.4",
+                  "sectionName": "The Signature",
+                  "chapter": "A",
+                  "chapterName": "Brand Strategy",
+                  "titleKo": "시그니처 단독 사용 규칙"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "B",
+      "name": "Brand Design Elements",
+      "sections": [
+        {
+          "code": "B.1",
+          "name": "Brand Logo",
+          "slug": "brand-logo",
+          "chapter": "B",
+          "chapterName": "Brand Design Elements",
+          "startPage": 12,
+          "endPage": 22,
+          "pages": [
+            {
+              "page": 12,
+              "section": "B.1",
+              "rules": [
+                {
+                  "key": "logo.symbol-concept",
+                  "title": "Primary logo design concept (formal origin)",
+                  "category": "logo",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "Primary Logo Design Concept: 자연의 본질에 집중하는 브랜드 태도와 전문적 제품성을 유려한 곡선과 단단한 직선의 조화로 표현, 좁은 자폭 기반 정밀 조형, 상단 정렬된 듯한 자유로운 배치",
+                  "value": "",
+                  "page": 12,
+                  "section": "B.1",
+                  "sectionName": "Brand Logo",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "로고 디자인 컨셉"
+                }
+              ]
+            },
+            {
+              "page": 13,
+              "section": "B.1",
+              "rules": [
+                {
+                  "key": "logo.min-size",
+                  "title": "Logo minimum size (primary/secondary/service per variant)",
+                  "category": "logo",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "프라이머리 로고 최소 사이즈는 높이 기준 20px(screen)/4mm(print); 세로형 35px/8mm(p16); 서비스 로고 Horizontal 20px/4mm, Vertical A 45px/9mm, Vertical B 60px/13mm(p19). 더 작아지면 안 됨",
+                  "value": "primary: 20px/4mm; secondary vertical: 35px/8mm; service horizontal: 20px/4mm; service vertical A: 45px/9mm; service vertical B: 60px/13mm (height, screen/print)",
+                  "page": 13,
+                  "section": "B.1",
+                  "sectionName": "Brand Logo",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "로고 최소 크기"
+                },
+                {
+                  "key": "misc.governance",
+                  "title": "Logo no-modification / escalation policy",
+                  "category": "misc",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "로고의 비율과 간격을 반드시 지켜야 하며 임의로 변형할 수 없다; 추가 규정이 필요하면 관련 부서에 의뢰하여 정의해야 한다 (모든 로고 페이지 반복)",
+                  "value": "",
+                  "page": 13,
+                  "section": "B.1",
+                  "sectionName": "Brand Logo",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "로고 변형 금지·문의 정책"
+                }
+              ]
+            },
+            {
+              "page": 14,
+              "section": "B.1",
+              "rules": [
+                {
+                  "key": "logo.clear-space",
+                  "title": "Logo clear space / exclusion zone (stem width x3 module)",
+                  "category": "logo",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "로고 세로획(stem) 너비 기준 3배 규격의 정사각형 박스를 최소 영역의 모듈로 설정; 동일 규정이 세로형(p17), 서비스 로고(p20)에도 적용",
+                  "value": "module = 3 x stem width (square box); applies to primary, secondary vertical, and service logos",
+                  "page": 14,
+                  "section": "B.1",
+                  "sectionName": "Brand Logo",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "로고 여백 (이격 공간)"
+                },
+                {
+                  "key": "logo.clear-space.construction",
+                  "title": "Clear-space / construction module diagram (3A / A grid)",
+                  "category": "logo",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "Grids & Clear Space 다이어그램에 3A / A 모듈 표기; stem 너비 3배 정사각형 박스를 최소 영역 모듈로 도식화 (p14, p17, p20)",
+                  "value": "corner module 3A, edge-mid module A; box derived from stem width x3",
+                  "page": 14,
+                  "section": "B.1",
+                  "sectionName": "Brand Logo",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "로고 여백 구성 모듈"
+                }
+              ]
+            },
+            {
+              "page": 15,
+              "section": "B.1",
+              "rules": [
+                {
+                  "key": "logo.trademark",
+                  "title": "Registered-trademark (R) usage & per-variant size threshold",
+                  "category": "logo",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "R Mark는 등록 완료 상표에만 사용; 일정 높이 이하에서는 R Mark 제거 — 프라이머리 45px/15mm 이하(p15), 세로형 85px/30mm 이하(p18), 서비스 Horizontal 45px/15mm·Vertical A 95px/30mm·Vertical B 135px/45mm 이하(p21)",
+                  "value": "R-mark removed below: primary 45px/15mm; secondary vertical 85px/30mm; service horizontal 45px/15mm; service vertical A 95px/30mm; service vertical B 135px/45mm (height)",
+                  "page": 15,
+                  "section": "B.1",
+                  "sectionName": "Brand Logo",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "등록상표(®) 사용·크기 기준"
+                },
+                {
+                  "key": "logo.size-steps",
+                  "title": "Discrete logo size-step chart (min size + R-removal step)",
+                  "category": "logo",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "각 변형별로 최소사이즈(예: 20px/4mm)와 R Mark 제거 높이(예: 45px/15mm 이하)를 단계 차트로 규정 (p15, p18, p21)",
+                  "value": "primary: min 20px/4mm, R-remove 45px/15mm; etc. per variant",
+                  "page": 15,
+                  "section": "B.1",
+                  "sectionName": "Brand Logo",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "로고 크기 단계표"
+                }
+              ]
+            },
+            {
+              "page": 19,
+              "section": "B.1",
+              "rules": [
+                {
+                  "key": "logo.variants",
+                  "title": "Approved logo variants / lockup set",
+                  "category": "logo",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "승인 로고 세트: Primary Logo, Secondary Logo (Vertical Type), Service Logo (Essenherb Coffee) — Horizontal / Vertical Type A / Vertical Type B",
+                  "value": "primary; secondary vertical; service: horizontal, vertical A, vertical B",
+                  "page": 19,
+                  "section": "B.1",
+                  "sectionName": "Brand Logo",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "승인된 로고 변형"
+                }
+              ]
+            },
+            {
+              "page": 22,
+              "section": "B.1",
+              "rules": [
+                {
+                  "key": "logo.misuse",
+                  "title": "Logo incorrect-usage prohibitions",
+                  "category": "logo",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "Incorrect Usage (Proportion/Space/Shape/Color/Effect/BG): 기울기·간격·비례·두께·형태 임의 변형 불가, 윤곽선만 사용 불가, 일부 요소 컬러 변형 불가, 규정 외 컬러 변형 불가, 그라디언트 적용 불가, 가시성 해치는 배경 컬러/이미지와 사용 불가",
+                  "value": "prohibits: slant change, spacing change, proportion change, partial shape change, thickness change, shape change, outline-only, partial recolor, off-spec color, gradient effect, low-visibility bg color, low-visibility bg image",
+                  "page": 22,
+                  "section": "B.1",
+                  "sectionName": "Brand Logo",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "로고 오용 금지"
+                },
+                {
+                  "key": "logo.misuse.examples",
+                  "title": "Logo misuse visual prohibited-example tiles",
+                  "category": "logo",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "잘못 사용하기 쉬운 예를 카테고리별(Proportion/Space, Shape, Color, Effect/Background)로 시각 타일로 수록",
+                  "value": "4 example tile groups: Proportion/Space; Shape; Color; Effect/Background",
+                  "page": 22,
+                  "section": "B.1",
+                  "sectionName": "Brand Logo",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "로고 오용 예시"
+                },
+                {
+                  "key": "color.misuse",
+                  "title": "Logo color misuse: gradient / off-palette prohibition",
+                  "category": "color",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "로고에 그라디언트 효과를 적용할 수 없다; 규정 외 컬러로 변형 불가; 일부 요소 컬러 변형 불가 (로고 컬러 변형/그라디언트 금지)",
+                  "value": "no gradient on logo; no off-spec color",
+                  "page": 22,
+                  "section": "B.1",
+                  "sectionName": "Brand Logo",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "로고 색상 오용 (그라디언트·규정 외)"
+                },
+                {
+                  "key": "color.contrast.photo-bg",
+                  "title": "Logo legibility on background color / image",
+                  "category": "color",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "가시성을 해치는 배경 컬러와 함께 사용할 수 없다; 가시성을 해치는 배경 이미지와 함께 사용할 수 없다",
+                  "value": "",
+                  "page": 22,
+                  "section": "B.1",
+                  "sectionName": "Brand Logo",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "배경 위 로고 가독성"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "B.2",
+          "name": "Color System",
+          "slug": "color-system",
+          "chapter": "B",
+          "chapterName": "Brand Design Elements",
+          "startPage": 24,
+          "endPage": 31,
+          "pages": [
+            {
+              "page": 24,
+              "section": "B.2",
+              "rules": [
+                {
+                  "key": "color.palette",
+                  "title": "Brand color palette (swatch values)",
+                  "category": "color",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "메인 컬러 Essenherb Red(HEX EA5343), White(FFFFFF), Black(000000)와 멀티 컬러(Red/Yellow/Green/Blue/Purple 5계열 × 5톤 + Gray)로 구성. 지정 컬러를 우선적으로 사용하며 임의 변형 불가.",
+                  "value": "Essenherb Red EA5343(Pantone Warm Red C); White FFFFFF; Black 000000; Red1 FFF0EB,Red2 FFB4AA,Red4 871400,Red5 460500; Yellow1 FFFAC2,Y2 FFF095,Y3 FFE65F,Y4 A07D0F,Y5 503200; Green1 E6FFE6,G2 A7F5AE,G3 50AE5F,G4 195F30,G5 002B1E; Blue1 E1F0FF,B2 A5CDFF,B3 3C87CD,B4 1E508C,B5 001941; Purple1 FAEBFF,P2 EBC8E9,P3 A546BE,P4 692373,P5 3C0046; Gray1 FAFAFA,Gray2 EBEBEB,Gray3 ACACAC,Gray4 464646,Gray5 151515",
+                  "page": 24,
+                  "section": "B.2",
+                  "sectionName": "Color System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "브랜드 컬러 팔레트"
+                },
+                {
+                  "key": "color.swatch-grid",
+                  "title": "Visual swatch grid (hex per tonal step)",
+                  "category": "color",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "멀티 컬러는 5개 Core Color Tone과 그레이 컬러 기반, Light Tone~Dark Tone 명도 스펙트럼으로 확장된 톤별 스와치 격자 형태로 제시됨.",
+                  "value": "families: Red/Yellow/Green/Blue/Purple (5 steps each: Tone1~Tone5) + Gray (Gray1~Gray5); 각 셀 HEX/RGB/Pantone 표기",
+                  "page": 24,
+                  "section": "B.2",
+                  "sectionName": "Color System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "컬러 스와치 그리드 (HEX)"
+                },
+                {
+                  "key": "color.scale",
+                  "title": "Color tonal/brightness scale",
+                  "category": "color",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "멀티 컬러는 Light Tone~Dark Tone의 명도 스펙트럼으로 확장된 5개 Core Color Tone(+Gray)으로 구성되어 명도 단계가 정의됨.",
+                  "value": "stepsPerFamily: 5 (Tone1=Light ~ Tone5=Dark); chromatic families: 5; gray: 5 steps; axis: Light Tone→Dark Tone",
+                  "page": 24,
+                  "section": "B.2",
+                  "sectionName": "Color System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "컬러 명도 단계"
+                },
+                {
+                  "key": "color.roles",
+                  "title": "Color role assignment",
+                  "category": "color",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "Essenherb Red는 핵심(메인) 컬러, White/Black은 메인 컬러 사용을 보조하는 보조 컬러로 역할이 구분됨. 멀티 컬러는 변주/확장 역할.",
+                  "value": "main: Essenherb Red(EA5343); supporting: White(FFFFFF)/Black(000000); multi: 5 families + Gray",
+                  "page": 24,
+                  "section": "B.2",
+                  "sectionName": "Color System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "컬러 역할 지정"
+                },
+                {
+                  "key": "color.print-fidelity",
+                  "title": "Print color fidelity / Pantone matching",
+                  "category": "color",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "오프라인 구현 시 Pantone 색상 견본과 대조해 시각적 동일 여부를 판단, 인쇄 방법/잉크 농도/종이 재질에 따라 발색이 달라지므로 감리 과정을 통해 컬러 구현율을 검토해야 함.",
+                  "value": "referenceSystem: Pantone; pantoneRefs: Warm Red C, 705C, 169C, 7620C, 188C, 600C, 602C, 7404C, 118C, 7575C, 2253C, 2255C, 2257C, 555C, 567C, 657C, 2717C, 279C, 2161C, 2768C, 531C, 529C, 258C, 260C, 7449C; requireProofReview: true (감리)",
+                  "page": 24,
+                  "section": "B.2",
+                  "sectionName": "Color System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "인쇄 색 재현 (Pantone)"
+                },
+                {
+                  "key": "color.misuse",
+                  "title": "Color incorrect-usage prohibitions",
+                  "category": "color",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "본 가이드에 규정된 지정 컬러를 우선 사용하며, 규정을 엄격히 준수하고 임의의 형태로 변형할 수 없음. 추가 규정 필요 시 관련 부서에 의뢰.",
+                  "value": "off-palette 금지, 임의 변형 금지(arbitrary modification prohibited)",
+                  "page": 24,
+                  "section": "B.2",
+                  "sectionName": "Color System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "로고 색상 오용 (그라디언트·규정 외)"
+                },
+                {
+                  "key": "misc.governance",
+                  "title": "Asset governance / no-modification / escalation policy",
+                  "category": "misc",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "다음의 규정을 엄격히 준수하며 임의의 형태로 변형할 수 없고, 추가 규정이 필요한 경우 관련된 부서에 의뢰하여 정의해야 함(컬러/페어링 모두 동일 정책).",
+                  "value": "strictAdherence: true; modificationAllowed: false; escalationPath: 관련 부서 의뢰",
+                  "page": 24,
+                  "section": "B.2",
+                  "sectionName": "Color System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "로고 변형 금지·문의 정책"
+                }
+              ]
+            },
+            {
+              "page": 26,
+              "section": "B.2",
+              "rules": [
+                {
+                  "key": "color.pairing",
+                  "title": "Approved color pairing / background combinations",
+                  "category": "color",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "Tone in Tone 명도 조합 규정: 배경색(BG) 톤별 허용 전경색(FG) 톤이 명시됨. 세 가지 페어링 방식(Tone in Tone/Tone on Tone/Mono Tone) 중 선택.",
+                  "value": "BG Tone1+FG Tone3/4/5; BG Tone2+FG Tone4/5; BG Tone3+FG Tone1/3/5; BG Tone4+FG Tone1/2/3; BG Tone5+FG Tone1/2/3; methods: Tone in Tone(cross-family), Tone on Tone(same-family), Mono Tone(Black/White+chromatic)",
+                  "page": 26,
+                  "section": "B.2",
+                  "sectionName": "Color System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "승인된 색 조합"
+                }
+              ]
+            },
+            {
+              "page": 27,
+              "section": "B.2",
+              "rules": [
+                {
+                  "key": "color.pairing.example-matrix",
+                  "title": "Color pairing example matrix (dot-marked)",
+                  "category": "color",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "Pairing Recommendation(Light) 40종, (Dark) 40종의 선별된 Tone in Tone 컬러 조합을 매트릭스로 수록, 우선 사용 권장.",
+                  "value": "Tone in Tone (Light): 40 combos; Tone in Tone (Dark): 40 combos",
+                  "page": 27,
+                  "section": "B.2",
+                  "sectionName": "Color System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "색 조합 예시"
+                }
+              ]
+            },
+            {
+              "page": 29,
+              "section": "B.2",
+              "rules": [
+                {
+                  "key": "color.contrast",
+                  "title": "Color/legibility contrast minimum",
+                  "category": "color",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "Tone on Tone에서 컬러 간 명도 차이를 확보(Low Contrast~High Contrast, Contrast Level 1~4) 확인. Tone in Tone에서도 최소한의 가시성을 위한 명도 대비 체크 필요.",
+                  "value": "Contrast Level 1~4 (Low Contrast↔High Contrast); 고대비=높은 가독성, 저대비=시각적 안정감",
+                  "page": 29,
+                  "section": "B.2",
+                  "sectionName": "Color System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "색 대비 (가독성)"
+                }
+              ]
+            },
+            {
+              "page": 31,
+              "section": "B.2",
+              "rules": [
+                {
+                  "key": "color.usage",
+                  "title": "Color usage contexts & emotional mapping",
+                  "category": "color",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "컬러를 제작물 특성/타깃/맥락/정보량에 따라 3단계 적용 수위(Level)로 운영. Level1=메인+모노톤(즉각 인지), Level2=전체+톤온톤(안정적 정보 전달), Level3=전체+톤인톤(생동감 있는 에너지).",
+                  "value": "Level1: Main Color+Mono Tone (e.g. 명함/공식 서식/대표 콘텐츠); Level2: Main/Multi+Tone on Tone (e.g. 제품 설명서/온라인 배너); Level3: Main/Multi+Tone in Tone (e.g. 프로모션 KV/이벤트 패키지/시즌 굿즈)",
+                  "page": 31,
+                  "section": "B.2",
+                  "sectionName": "Color System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "컬러 사용 맥락·감성"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "B.3",
+          "name": "Typography",
+          "slug": "typography",
+          "chapter": "B",
+          "chapterName": "Brand Design Elements",
+          "startPage": 33,
+          "endPage": 40,
+          "pages": [
+            {
+              "page": 33,
+              "section": "B.3",
+              "rules": [
+                {
+                  "key": "typography.families",
+                  "title": "Designated typeface families by role/script",
+                  "category": "typography",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "영문 지정 서체는 AgfaRotis Semi Serif, 국문 지정 서체는 Pretendard. '일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다.'",
+                  "value": "English: AgfaRotis Semi Serif; Korean: Pretendard; Signature/display (EN only): Essen Flux",
+                  "page": 33,
+                  "section": "B.3",
+                  "sectionName": "Typography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "지정 서체 (역할·언어별)"
+                },
+                {
+                  "key": "messaging.legal-footer",
+                  "title": "Legal / copyright / distribution footer",
+                  "category": "messaging",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "모든 페이지 하단에 '© Ami Cosmetic Co., Ltd. All rights reserved.' 저작권 표기.",
+                  "value": "© Ami Cosmetic Co., Ltd. All rights reserved.",
+                  "page": 33,
+                  "section": "B.3",
+                  "sectionName": "Typography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "저작권·배포 푸터"
+                },
+                {
+                  "key": "misc.governance",
+                  "title": "Asset governance / no-modification / escalation policy",
+                  "category": "misc",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "'다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다.' (전 페이지 반복)",
+                  "value": "Strict adherence, no arbitrary modification, additional rules defined via responsible department",
+                  "page": 33,
+                  "section": "B.3",
+                  "sectionName": "Typography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "로고 변형 금지·문의 정책"
+                }
+              ]
+            },
+            {
+              "page": 34,
+              "section": "B.3",
+              "rules": [
+                {
+                  "key": "typography.weights",
+                  "title": "Permitted type weights & role hierarchy",
+                  "category": "typography",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "AgfaRotis Semi Serif의 Weight Family는 Regular, Bold 활용 권장(p34). Pretendard의 Weight Family는 영문과 병용을 위해 Regular, Medium 활용 권장(p35).",
+                  "value": "AgfaRotis Semi Serif: Regular, Bold; Pretendard: Regular, Medium",
+                  "page": 34,
+                  "section": "B.3",
+                  "sectionName": "Typography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "서체 굵기·위계"
+                },
+                {
+                  "key": "typography.spacing",
+                  "title": "Letter spacing / tracking & kerning spec",
+                  "category": "typography",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "AgfaRotis Semi Serif: Kerning Metric, -10 to 0 / Word Spacing 55% 70% 95% (p34). Pretendard: Kerning Metric, 0 (p35).",
+                  "value": "AgfaRotis: Kerning Metric -10 to 0, Word Spacing 55%/70%/95%; Pretendard: Kerning Metric 0",
+                  "page": 34,
+                  "section": "B.3",
+                  "sectionName": "Typography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "자간·커닝"
+                }
+              ]
+            },
+            {
+              "page": 36,
+              "section": "B.3",
+              "rules": [
+                {
+                  "key": "typography.pairing",
+                  "title": "Multilingual type pairing (KR+EN)",
+                  "category": "typography",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "국·영문 병용 마이크로 타이포그래피 규정: 'Kor-Medium & Eng-Bold' 및 'Kor-Regular & Eng-Regular' 조합. 균일한 회색도를 위해 정해진 세팅 값 준수.",
+                  "value": "Combo1: Kor=Pretendard Medium / Eng=AgfaRotis Bold; Combo2: Kor=Pretendard Regular / Eng=AgfaRotis Regular. EN Scale 105% (Kerning -5 Bold / -5 Regular), KR Scale 100% (Kerning 0)",
+                  "page": 36,
+                  "section": "B.3",
+                  "sectionName": "Typography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "다국어 서체 조합 (국문+영문)"
+                }
+              ]
+            },
+            {
+              "page": 37,
+              "section": "B.3",
+              "rules": [
+                {
+                  "key": "typography.misuse",
+                  "title": "Typography incorrect-usage prohibitions",
+                  "category": "typography",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "글자 사이 간격을 지나치게 좁히거나 넓힐 수 없음, 한 문장에 다른 굵기/다른 글자 크기 적용 금지, 글자 형태 변형 금지, 지정 서체 외 다른 서체 사용 금지(Spacing / Size & Thickness / Shape & Font).",
+                  "value": "Prohibitions: too-tight spacing, too-loose spacing, mixed weights in one sentence, mixed sizes in one sentence, glyph distortion, non-designated font",
+                  "page": 37,
+                  "section": "B.3",
+                  "sectionName": "Typography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "타이포그래피 오용 금지"
+                }
+              ]
+            },
+            {
+              "page": 40,
+              "section": "B.3",
+              "rules": [
+                {
+                  "key": "typography.usage",
+                  "title": "Type usage policy & context restrictions",
+                  "category": "typography",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "Essen Flux는 디스플레이형 서체로 캠페인 타이틀, 키 비주얼, 슬로건, 그래픽 모티프 등 제한적·전략적 영역에만 활용. 장문 단락 등 정보 전달 텍스트에는 가독 효율이 낮아 부적합.",
+                  "value": "Essen Flux restricted to display contexts (campaign titles, key visuals, slogans, graphic motifs); not for body/long-form text",
+                  "page": 40,
+                  "section": "B.3",
+                  "sectionName": "Typography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "서체 사용 정책·맥락"
+                },
+                {
+                  "key": "typography.case-policy",
+                  "title": "Essen Flux casing policy (Mixed Case or Lowercase only; no All Caps)",
+                  "category": "typography",
+                  "tier": "automated",
+                  "inCatalog": false,
+                  "evidence": "타이포그래피는 대·소문자 조합(Mixed Case) 또는 소문자 조합(Lowercase Only) 방식으로만 운영 가능. 전체 대문자(All Caps) 구성은 서체 고유의 리듬감과 조형 균형을 확보하기 어려우므로 사용 금지.",
+                  "value": "Allowed: Mixed Case, Lowercase Only. Prohibited: All Caps (Essen Flux)",
+                  "page": 40,
+                  "section": "B.3",
+                  "sectionName": "Typography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "대소문자 정책 (All Caps 금지)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "B.4",
+          "name": "Illustration",
+          "slug": "illustration",
+          "chapter": "B",
+          "chapterName": "Brand Design Elements",
+          "startPage": 43,
+          "endPage": 45,
+          "pages": [
+            {
+              "page": 43,
+              "section": "B.4",
+              "rules": [
+                {
+                  "key": "illustration.style",
+                  "title": "Illustration visual-impression style consistency",
+                  "category": "illustration",
+                  "tier": "manual",
+                  "inCatalog": false,
+                  "evidence": "추가 개발 시 우측 에셋의 시각 인상(둥근 윤곽 처리, 단순화된 표현의 수위)을 참고하여 일관된 브랜드 아이덴티티를 유지해야 한다. 일관된 그래픽 스타일로 표현.",
+                  "value": "",
+                  "page": 43,
+                  "section": "B.4",
+                  "sectionName": "Illustration",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "일러스트 스타일 일관성"
+                },
+                {
+                  "key": "illustration.subject-taxonomy",
+                  "title": "Illustration subject/theme taxonomy",
+                  "category": "illustration",
+                  "tier": "assisted",
+                  "inCatalog": false,
+                  "evidence": "1~16: 자연 원료 / 17~24: 한국 전통 문화 속 자연 / 25~28: 생동감 있는 감정 / 29~32: Essenherb 제품 제형 / 33~40: Essenherb 제품 라인업으로 주제를 분류.",
+                  "value": "1-16 natural ingredients; 17-24 nature in Korean tradition; 25-28 vivid emotion; 29-32 product texture; 33-40 product lineup; 40 total assets",
+                  "page": 43,
+                  "section": "B.4",
+                  "sectionName": "Illustration",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "일러스트 주제 분류"
+                }
+              ]
+            },
+            {
+              "page": 44,
+              "section": "B.4",
+              "rules": [
+                {
+                  "key": "color.usage",
+                  "title": "Color usage contexts & emotional mapping",
+                  "category": "color",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "Essenherb 컬러 팔레트를 일러스트레이션에 적용하여 생동감 있는 브랜드 메시지를 전달하고 에너제틱한 브랜드 인상을 구축. 가이드의 Color System을 참고하여 컬러를 적용해야 한다.",
+                  "value": "",
+                  "page": 44,
+                  "section": "B.4",
+                  "sectionName": "Illustration",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "컬러 사용 맥락·감성"
+                },
+                {
+                  "key": "color.palette",
+                  "title": "Brand color palette (swatch values)",
+                  "category": "color",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "일러스트레이션에 Essenherb 컬러 팔레트를 적용해야 하며, 가이드에 수록된 Color System을 참고하여 컬러를 적용해야 한다.",
+                  "value": "",
+                  "page": 44,
+                  "section": "B.4",
+                  "sectionName": "Illustration",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "브랜드 컬러 팔레트"
+                },
+                {
+                  "key": "color.pairing",
+                  "title": "Approved color pairing / background combinations",
+                  "category": "color",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "표현의 의도 및 맥락에 맞는 Color Pairing 전략을 활용하여 일관된 브랜드 아이덴티티를 유지해야 한다.",
+                  "value": "",
+                  "page": 44,
+                  "section": "B.4",
+                  "sectionName": "Illustration",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "승인된 색 조합"
+                }
+              ]
+            },
+            {
+              "page": 45,
+              "section": "B.4",
+              "rules": [
+                {
+                  "key": "illustration.symbol-usage",
+                  "title": "Illustration application touchpoints & usage modes",
+                  "category": "illustration",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "사용 예시: 1.단독 사용 2.레이아웃 포인트 요소 3.텍스트와 혼합 4.배경 그래픽 5.레이어링 6.후가공 요소. 다양한 브랜드 경험 접점에서 생동감 있는 브랜드 메시지를 전달하는 시각 요소로 활용.",
+                  "value": "6 usage modes: standalone, point element, mixed with text, background graphic, layering, post-processing",
+                  "page": 45,
+                  "section": "B.4",
+                  "sectionName": "Illustration",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "일러스트 적용 범위·방식"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "B.5",
+          "name": "Photography",
+          "slug": "photography",
+          "chapter": "B",
+          "chapterName": "Brand Design Elements",
+          "startPage": 47,
+          "endPage": 52,
+          "pages": [
+            {
+              "page": 47,
+              "section": "B.5",
+              "rules": [
+                {
+                  "key": "imagery.classification",
+                  "title": "Photography taxonomy & mood criteria",
+                  "category": "imagery",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "포토그래피를 재료/제형 이미지(Ingredients & Texture), 제품 소개 연출 이미지(Brand Product), 브랜드 무드 대표 모델 이미지(Brand Model) 세 가지로 분류하고 각 무드를 정의함.",
+                  "value": "subtypes: Ingredients & Texture, Brand Product, Brand Model",
+                  "page": 47,
+                  "section": "B.5",
+                  "sectionName": "Photography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "사진 분류·무드 기준"
+                }
+              ]
+            },
+            {
+              "page": 48,
+              "section": "B.5",
+              "rules": [
+                {
+                  "key": "imagery.treatment-spec",
+                  "title": "Image color treatment / lighting & background tone",
+                  "category": "imagery",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "High-Contrast Lighting: 피사체 고유의 질감과 입체감을 강조하기 위해 선명한 대비감의 조명 사용을 권장. 전 서브타입(재료/제형, 제품, 모델)에 공통 적용.",
+                  "value": "high-contrast lighting (선명한 대비감의 조명)",
+                  "page": 48,
+                  "section": "B.5",
+                  "sectionName": "Photography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "이미지 색보정·조명·배경톤"
+                },
+                {
+                  "key": "imagery.background-tone",
+                  "title": "Photography background tone (bright achromatic)",
+                  "category": "imagery",
+                  "tier": "automated",
+                  "inCatalog": false,
+                  "evidence": "Background Color: 백색~연회색 계열의 밝은 무채색 배경톤 활용을 권장. Ingredients&Texture, Brand Product, Brand Model 모두 동일 규정.",
+                  "value": "background: white ~ light gray, bright achromatic (백색~연회색 무채색)",
+                  "page": 48,
+                  "section": "B.5",
+                  "sectionName": "Photography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "사진 배경톤 (밝은 무채색)"
+                },
+                {
+                  "key": "imagery.composition",
+                  "title": "Bold photographic composition (vertical/horizontal angle, weighty framing)",
+                  "category": "imagery",
+                  "tier": "manual",
+                  "inCatalog": false,
+                  "evidence": "Bold Composition: 피사체 고유의 질감/형태/입체감을 강조하는 수직·수평 앵글 기반의 무게감 있는 화면 구성을 권장. 재료/제형 및 제품 포토그래피에 적용.",
+                  "value": "vertical/horizontal angle, weighty composition (수직·수평 앵글, 무게감 있는 구성)",
+                  "page": 48,
+                  "section": "B.5",
+                  "sectionName": "Photography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "사진 구도 (대담한 프레이밍)"
+                }
+              ]
+            },
+            {
+              "page": 51,
+              "section": "B.5",
+              "rules": [
+                {
+                  "key": "imagery.model-expression",
+                  "title": "Brand model expression & gesture restraint",
+                  "category": "imagery",
+                  "tier": "manual",
+                  "inCatalog": false,
+                  "evidence": "Bold Expression: 에센허브만의 차별화된 자신감을 위해 절제된 표정 및 제스처 연출을 권장. 자연스러운 피부 질감 연출 강조.",
+                  "value": "restrained expression & gesture, natural skin texture",
+                  "page": 51,
+                  "section": "B.5",
+                  "sectionName": "Photography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "모델 표정·제스처 절제"
+                },
+                {
+                  "key": "imagery.model-diversity",
+                  "title": "Brand model diversity (race/age/gender)",
+                  "category": "imagery",
+                  "tier": "manual",
+                  "inCatalog": false,
+                  "evidence": "다양한 인종·연령·성별의 모델 포토그래피를 통해 글로벌 뷰티 브랜드로서의 면모를 강화.",
+                  "value": "diverse race/age/gender models",
+                  "page": 51,
+                  "section": "B.5",
+                  "sectionName": "Photography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "모델 다양성 (인종·연령·성별)"
+                },
+                {
+                  "key": "imagery.misuse",
+                  "title": "Photography / imagery incorrect-usage prohibitions",
+                  "category": "imagery",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "Incorrect Example A~F: 지나친 보정(피부 질감 소실), 과도한 액세서리·소품·복장 연출, 스킨케어답지 않은 과도한 후보정, 과도한 색조 화장 연출 금지.",
+                  "value": "prohibit: over-retouching, excessive accessories/props/wardrobe, heavy post-processing, heavy color makeup",
+                  "page": 51,
+                  "section": "B.5",
+                  "sectionName": "Photography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "사진·이미지 오용 금지"
+                }
+              ]
+            },
+            {
+              "page": 52,
+              "section": "B.5",
+              "rules": [
+                {
+                  "key": "imagery.ai-consistency",
+                  "title": "AI-generated photography quality & brand consistency",
+                  "category": "imagery",
+                  "tier": "manual",
+                  "inCatalog": false,
+                  "evidence": "AI 생성 이미지는 비현실적인 피부 질감 표현 금지, 실사 이미지와의 톤·대비·연출 단절 금지. Do: 자연스럽고 현실적인 피부 표현, 이미지간 일관된 톤·대비·연출.",
+                  "value": "Do: realistic skin, consistent tone/contrast across images; Don't: unrealistic skin, tone/contrast disconnect",
+                  "page": 52,
+                  "section": "B.5",
+                  "sectionName": "Photography",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "AI 생성 사진 품질·일관성"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "B.6",
+          "name": "Visual System",
+          "slug": "visual-system",
+          "chapter": "B",
+          "chapterName": "Brand Design Elements",
+          "startPage": 54,
+          "endPage": 55,
+          "pages": [
+            {
+              "page": 54,
+              "section": "B.6",
+              "rules": [
+                {
+                  "key": "imagery.style",
+                  "title": "Visual system usage types (Type A Message / Type B Contents)",
+                  "category": "imagery",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "비주얼 시스템은 두 타입으로 운영: 로고·타이포그래피로 메시지 중심 비주얼을 전개하는 Type A(Message), 그래픽·포토그래피 등 비주얼 콘텐츠 중심으로 전개하는 Type B(Contents).",
+                  "value": "Type A (Message), Type B (Contents)",
+                  "page": 54,
+                  "section": "B.6",
+                  "sectionName": "Visual System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "비주얼 시스템 유형 (Type A·B)"
+                },
+                {
+                  "key": "imagery.treatment",
+                  "title": "Top-align arrangement principle",
+                  "category": "imagery",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "Essenherb 비주얼 시스템은 상단 정렬(Top Align) 용법을 기반으로 운영된다. Usage Type Overview 페이지에 'Top Align'이 명시적 배치 원칙으로 표기됨.",
+                  "value": "Top Align",
+                  "page": 54,
+                  "section": "B.6",
+                  "sectionName": "Visual System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "상단 정렬 원칙"
+                },
+                {
+                  "key": "voice.design-principle",
+                  "title": "Consistent Essenherb-ness across touchpoints",
+                  "category": "voice",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "다양한 브랜드 경험 접점에서 Essenherb다움을 일관되게 표현한다는 원칙이 Type A/Type B 설명 전반에 반복됨.",
+                  "value": "",
+                  "page": 54,
+                  "section": "B.6",
+                  "sectionName": "Visual System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "터치포인트 간 브랜드 일관성"
+                },
+                {
+                  "key": "messaging.boilerplate",
+                  "title": "Recurring descriptor / boilerplate copy",
+                  "category": "messaging",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "비주얼 예시 전반에 반복 등장하는 승인 카피: 'Vegan skincare brand designed and made in Korea', 'Discover more at essenherb.global', 'Essence for Energy', 브랜드 스토리 'Essence of Herb, where nature holds the essential answers to skin health...'.",
+                  "value": "Vegan skincare brand designed and made in Korea; Discover more at essenherb.global; Essence for Energy",
+                  "page": 54,
+                  "section": "B.6",
+                  "sectionName": "Visual System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "반복 서술·보일러플레이트"
+                },
+                {
+                  "key": "messaging.tagline",
+                  "title": "Brand slogan / signature line",
+                  "category": "messaging",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "비주얼 예시에 반복되는 시그니처 라인 'Essence for Energy'와 디스크립터 'Vegan skincare brand designed and made in Korea'가 키비주얼 메시지로 사용됨.",
+                  "value": "Essence for Energy",
+                  "page": 54,
+                  "section": "B.6",
+                  "sectionName": "Visual System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "브랜드 시그니처 문구"
+                }
+              ]
+            },
+            {
+              "page": 55,
+              "section": "B.6",
+              "rules": [
+                {
+                  "key": "layout.template",
+                  "title": "Template canvas size / aspect-ratio variations",
+                  "category": "layout",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "모듈형 그리드를 바탕으로 다양한 종횡비의 판형에 유연하게 대응. 명시된 판형: 1:1(1080x1080px), 3:5/SNS(1080x1440px), A4(210x297mm), 3:1/Horizontal AD(1920x640px), 16:9/Horizontal AD,Web(1920x1080px). Type A와 Type B 모두 동일한 판형 세트를 사용.",
+                  "value": "1:1=1080x1080px; 3:5(SNS)=1080x1440px; A4=210x297mm; 3:1(Horizontal AD)=1920x640px; 16:9(Horizontal AD/Web)=1920x1080px",
+                  "page": 55,
+                  "section": "B.6",
+                  "sectionName": "Visual System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "템플릿 크기·비율"
+                },
+                {
+                  "key": "grid.system",
+                  "title": "Modular grid system for visual layouts",
+                  "category": "grid",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "모듈형 그리드를 바탕으로 다양한 종횡비의 판형에 유연하게 대응하여 비주얼을 전개한다. Type A, Type B 모두 모듈형 그리드 기반(grids & size variation). 단, 모듈 단위·컬럼 수치는 명시되지 않음.",
+                  "value": "",
+                  "page": 55,
+                  "section": "B.6",
+                  "sectionName": "Visual System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "모듈러 그리드 시스템"
+                },
+                {
+                  "key": "application.sns",
+                  "title": "SNS content canvas format",
+                  "category": "application",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "판형 세트에 3:5 Ratio가 'SNS' 용도로 라벨링됨 (W:1080px H:1440px). 단 프로필 필드/세이프마진 등 SNS 세부 스펙은 이 섹션에 없음.",
+                  "value": "3:5 (SNS) = 1080x1440px",
+                  "page": 55,
+                  "section": "B.6",
+                  "sectionName": "Visual System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "SNS 콘텐츠 규격"
+                },
+                {
+                  "key": "application.web",
+                  "title": "Web / horizontal-ad canvas format",
+                  "category": "application",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "판형 세트에 16:9 Ratio가 'Horizontal AD, Web' 용도로, 3:1 Ratio가 'Horizontal AD' 용도로 라벨링됨. 단 nav/footer/responsive 등 웹 세부 스펙은 이 섹션에 없음.",
+                  "value": "16:9 (Web/Horizontal AD) = 1920x1080px; 3:1 (Horizontal AD) = 1920x640px",
+                  "page": 55,
+                  "section": "B.6",
+                  "sectionName": "Visual System",
+                  "chapter": "B",
+                  "chapterName": "Brand Design Elements",
+                  "titleKo": "웹·가로 광고 규격"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "C",
+      "name": "Applications",
+      "sections": [
+        {
+          "code": "C.1",
+          "name": "SNS",
+          "slug": "sns",
+          "chapter": "C",
+          "chapterName": "Applications",
+          "startPage": 61,
+          "endPage": 69,
+          "pages": [
+            {
+              "page": 61,
+              "section": "C.1",
+              "rules": [
+                {
+                  "key": "messaging.legal-footer",
+                  "title": "Copyright footer on SNS guideline pages",
+                  "category": "messaging",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "모든 페이지 하단에 '© Ami Cosmetic Co., Ltd. All rights reserved.' 저작권 표기.",
+                  "value": "© Ami Cosmetic Co., Ltd. All rights reserved.",
+                  "page": 61,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "저작권·배포 푸터"
+                },
+                {
+                  "key": "misc.governance",
+                  "title": "No arbitrary modification / escalate to responsible dept",
+                  "category": "misc",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "'일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다.'",
+                  "value": "",
+                  "page": 61,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "로고 변형 금지·문의 정책"
+                }
+              ]
+            },
+            {
+              "page": 62,
+              "section": "C.1",
+              "rules": [
+                {
+                  "key": "color.palette",
+                  "title": "Consistent brand color application across SNS",
+                  "category": "color",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "'SNS Contents는 로고, 컬러, 서체, 포토그래피 등의 브랜드 디자인 요소에 일관된 레이아웃을 적용하여 제작'되어야 한다.",
+                  "value": "",
+                  "page": 62,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "브랜드 컬러 팔레트"
+                },
+                {
+                  "key": "typography.families",
+                  "title": "Consistent brand typeface application across SNS",
+                  "category": "typography",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "'로고, 컬러, 서체, 포토그래피 등의 브랜드 디자인 요소에 일관된 레이아웃을 적용'하여 SNS Contents 제작.",
+                  "value": "",
+                  "page": 62,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "지정 서체 (역할·언어별)"
+                },
+                {
+                  "key": "imagery.classification",
+                  "title": "Brand photography usage in SNS content (model/ingredient/product images)",
+                  "category": "imagery",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "Brand Contents는 모델 이미지, 브랜드 디자인 어플리케이션 이미지, 자연 재료(ingredient) 이미지 등 시각 자산을 활용; Product Contents는 제품 이미지(Product Photography, +Background, +Information) 활용.",
+                  "value": "",
+                  "page": 62,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "사진 분류·무드 기준"
+                },
+                {
+                  "key": "messaging.application-copy",
+                  "title": "Approved brand story / verbal identity copy in content",
+                  "category": "messaging",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "Brand Contents는 브랜드 언어 자산(브랜드 스토리, 시그니처 등)을 콘텐츠로 활용; Brand Story 예시 'Essenherb is a vegan skincare brand designed and made in Korea...'.",
+                  "value": "Brand Story: 'Essenherb is a vegan skincare brand designed and made in Korea. We started with a simple belief: nature holds the essential answers to skin health.'",
+                  "page": 62,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "콘텐츠 브랜드 스토리 카피"
+                }
+              ]
+            },
+            {
+              "page": 65,
+              "section": "C.1",
+              "rules": [
+                {
+                  "key": "layout.zones",
+                  "title": "Content zone designation (person front, text fixed top)",
+                  "category": "layout",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "Influencer Gifting: '인물 이미지를 전면에 배치하여... 텍스트를 상단에 고정하여 시청자의 시선을 유도'. Events: 로고/행사 제목/장소/시간 등 가변 정보에 일관된 레이아웃 적용.",
+                  "value": "Influencer Gifting: person image front, text fixed at top",
+                  "page": 65,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "콘텐츠 영역 지정 (인물·텍스트)"
+                },
+                {
+                  "key": "color.contrast.photo-bg",
+                  "title": "Legibility on photographic background (bottom gradient for captions)",
+                  "category": "color",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "Interview: '하단에 그라디언트를 적용하여 자막 및 텍스트의 가독성을 확보할 수 있습니다.'",
+                  "value": "bottom gradient overlay for caption/text legibility",
+                  "page": 65,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "배경 위 로고 가독성"
+                }
+              ]
+            },
+            {
+              "page": 66,
+              "section": "C.1",
+              "rules": [
+                {
+                  "key": "logo.placement",
+                  "title": "Brand & partnership logo placement in content",
+                  "category": "logo",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "Events 콘텐츠: '브랜드 로고 및 파트너십 로고, 행사 제목, 장소, 시간 등... 일관된 레이아웃을 적용'. SNS Contents는 로고를 브랜드 디자인 요소로 일관 적용.",
+                  "value": "",
+                  "page": 66,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "콘텐츠 내 로고 배치"
+                }
+              ]
+            },
+            {
+              "page": 67,
+              "section": "C.1",
+              "rules": [
+                {
+                  "key": "application.sns",
+                  "title": "SNS content spec (format/profile/look-and-feel)",
+                  "category": "application",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "Feed Layout System Format '1080 × 1440 px (W/H)' with 80px 사방 여백; Reels는 '1080 × 1920 px'. 브랜드 디자인 요소에 일관된 레이아웃을 적용하고 콘텐츠 모드(Brand/Product/Communication Contents)로 구분 운영.",
+                  "value": "Feed 1080×1440px, Reels 1080×1920px, margin 80px; Feed thumbnail 1080×1440px, Reels thumbnail 1080×1920px",
+                  "page": 67,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "SNS 콘텐츠 규격"
+                }
+              ]
+            },
+            {
+              "page": 68,
+              "section": "C.1",
+              "rules": [
+                {
+                  "key": "layout.template",
+                  "title": "Template canvas size, padding & proportional zones",
+                  "category": "layout",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "Layout System: Feed 1080×1440px, Reels 1080×1920px, 80px 패딩. Reels Thumbnail은 상·하 320px, 중앙 1280px 영역으로 분할(상하 80px 여백).",
+                  "value": "Feed canvas 1080×1440px; Reels canvas 1080×1920px; padding 80px; Reels thumbnail zones top/bottom 320px, middle 1280px, outer margin 80px",
+                  "page": 68,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "템플릿 크기·비율"
+                }
+              ]
+            },
+            {
+              "page": 69,
+              "section": "C.1",
+              "rules": [
+                {
+                  "key": "application.content-mix-ratio",
+                  "title": "SNS feed content-type mix ratio (Communication ≤30%)",
+                  "category": "application",
+                  "tier": "manual",
+                  "inCatalog": false,
+                  "evidence": "'Communication Contents는 SNS 피드 전체 콘텐츠 비율의 30%를 초과하지 않는 것을 권장' 하며, 콘텐츠가 특정 유형에 편중되지 않고 적절한 비율로 번갈아 업로드되어야 함.",
+                  "value": "Communication Contents ≤ 30% of total feed",
+                  "page": 69,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "SNS 콘텐츠 유형 비율"
+                },
+                {
+                  "key": "application.reels-profile-grid",
+                  "title": "Reels content removed from profile grid",
+                  "category": "application",
+                  "tier": "manual",
+                  "inCatalog": false,
+                  "evidence": "'릴스(Reels) 콘텐츠의 경우 프로필 그리드에서 제거(remove from profile grid) 기능을 활용하여 콘텐츠의 피드 노출 비율을 조정할 수 있습니다. (릴스 탭에만 콘텐츠 표시)'",
+                  "value": "",
+                  "page": 69,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "릴스 프로필 그리드 제외"
+                },
+                {
+                  "key": "layout.tone",
+                  "title": "Layout tone-and-manner (consistent feed look & feel)",
+                  "category": "layout",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "'일관된 피드 룩앤필과 브랜드 통일감이 유지되고 있는지'에 유의하여 콘텐츠를 제작·운영해야 한다. 가이드 디자인 예시를 참고해 일관된 피드 룩앤필 및 브랜드 통일감 유지.",
+                  "value": "",
+                  "page": 69,
+                  "section": "C.1",
+                  "sectionName": "SNS",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "레이아웃 톤앤매너 (피드 일관성)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "C.2",
+          "name": "AD",
+          "slug": "ad",
+          "chapter": "C",
+          "chapterName": "Applications",
+          "startPage": 71,
+          "endPage": 77,
+          "pages": [
+            {
+              "page": 71,
+              "section": "C.2",
+              "rules": [
+                {
+                  "key": "application.format",
+                  "title": "AD application format / size & aspect ratios per item",
+                  "category": "application",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "온라인 광고는 16:9, 3:4, 3:1, 1:1, 1:2 비율로 제공; 오프라인 포스터는 1440×2100, 2400×1600, 8600×2100mm 규격.",
+                  "value": "Online ratios: 16:9, 3:4, 3:1, 1:1, 1:2; Offline mm: 1440×2100 / 2400×1600 / 8600×2100",
+                  "page": 71,
+                  "section": "C.2",
+                  "sectionName": "AD",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "광고 적용 규격·비율"
+                },
+                {
+                  "key": "application.touchpoint-catalog",
+                  "title": "AD touchpoint types (Online / Offline; CTA vs Information)",
+                  "category": "application",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "광고를 Online AD / Offline AD(Vertical/Horizontal)로, 콘텐츠 의도를 1.CTA Type(즉각 행동 유도) 2.Information Type(정보 전달/탐색 유도)으로 분류.",
+                  "value": "Online AD, Offline AD (Vertical/Horizontal); CTA Type, Information Type",
+                  "page": 71,
+                  "section": "C.2",
+                  "sectionName": "AD",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "광고 터치포인트 유형"
+                },
+                {
+                  "key": "application.design-concept",
+                  "title": "AD consistent brand design elements & tone-and-manner",
+                  "category": "application",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "광고는 로고·서체·컬러·포토그래피·일러스트레이션 등 브랜드 디자인 요소를 일관된 레이아웃에 적용하여 다양한 접점에서 일관된 톤앤매너를 유지해야 함.",
+                  "value": "",
+                  "page": 71,
+                  "section": "C.2",
+                  "sectionName": "AD",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "광고 디자인 요소·톤앤매너"
+                },
+                {
+                  "key": "messaging.application-copy",
+                  "title": "AD CTA / promotional copy set",
+                  "category": "messaging",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "광고 예시 카피: 'Shop Now', 'Best Selling', 'Curator's Pick', 'Weekly Best', 'Discover more at essenherb.global' 등 승인 카피.",
+                  "value": "Shop Now; Best Selling; Curator's Pick; Discover more at essenherb.global",
+                  "page": 71,
+                  "section": "C.2",
+                  "sectionName": "AD",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "콘텐츠 브랜드 스토리 카피"
+                },
+                {
+                  "key": "application.poster-motion",
+                  "title": "AD motion/countdown timer element",
+                  "category": "application",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "온라인 광고 예시에 카운트다운 타이머 '00:13:46:02' 표기 — 시간 기반 모션/프로모션 광고 요소.",
+                  "value": "00:13:46:02 (timecode)",
+                  "page": 71,
+                  "section": "C.2",
+                  "sectionName": "AD",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "광고 모션·카운트다운 요소"
+                }
+              ]
+            },
+            {
+              "page": 73,
+              "section": "C.2",
+              "rules": [
+                {
+                  "key": "layout.template",
+                  "title": "AD template canvas size / format & proportional zones",
+                  "category": "layout",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "오프라인 광고 포맷이 명시됨: 세로형 1440×2100mm, 가로형 2400×1600mm 및 8600×2100mm (W/H). '일관된 레이아웃을 적용'.",
+                  "value": "Offline Vertical: 1440×2100mm; Offline Horizontal: 2400×1600mm; Offline Horizontal (long): 8600×2100mm (W/H)",
+                  "page": 73,
+                  "section": "C.2",
+                  "sectionName": "AD",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "템플릿 크기·비율"
+                },
+                {
+                  "key": "messaging.tagline",
+                  "title": "AD verbal identity / tagline copy",
+                  "category": "messaging",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "광고 카피 'Where nature holds essential answers to your skin.', 'Essence for Energy', 'Essence of Herb', 'Nature's essential answers to skin health' 등 Verbal Identity로 명시.",
+                  "value": "Where nature holds essential answers to your skin.; Essence for Energy; Essence of Herb",
+                  "page": 73,
+                  "section": "C.2",
+                  "sectionName": "AD",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "브랜드 시그니처 문구"
+                },
+                {
+                  "key": "messaging.legal-footer",
+                  "title": "AD copyright footer",
+                  "category": "messaging",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "모든 페이지에 저작권 푸터 표기: '© Ami Cosmetic Co., Ltd. All rights reserved.'",
+                  "value": "© Ami Cosmetic Co., Ltd. All rights reserved.",
+                  "page": 73,
+                  "section": "C.2",
+                  "sectionName": "AD",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "저작권·배포 푸터"
+                },
+                {
+                  "key": "imagery.classification",
+                  "title": "AD photography usage (model / product / ingredient & texture)",
+                  "category": "imagery",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "세로형 광고 레이아웃 다이어그램에 사용 포토그래피 유형 표기: Photography (model), Photography (product), Photography (ingredient & texture).",
+                  "value": "Photography (model), Photography (product), Photography (ingredient & texture)",
+                  "page": 73,
+                  "section": "C.2",
+                  "sectionName": "AD",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "사진 분류·무드 기준"
+                }
+              ]
+            },
+            {
+              "page": 75,
+              "section": "C.2",
+              "rules": [
+                {
+                  "key": "layout.zones",
+                  "title": "AD layout content zones (Image/Text/Logo/Content area)",
+                  "category": "layout",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "가로형 광고 레이아웃이 Image Area, Text Area, Logo Area, Content Area(Image, Text), Content Area(Equal Columns) 등 명명된 영역으로 분할됨.",
+                  "value": "Image Area, Text Area, Logo Area, Content Area (Image, Text), Content Area (Equal Columns)",
+                  "page": 75,
+                  "section": "C.2",
+                  "sectionName": "AD",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "콘텐츠 영역 지정 (인물·텍스트)"
+                },
+                {
+                  "key": "messaging.boilerplate",
+                  "title": "AD brand descriptor / boilerplate copy",
+                  "category": "messaging",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "광고 본문에 승인된 브랜드 디스크립터가 등장: 'Essenherb is a vegan skincare brand designed and made in Korea... Essence of Herb, where nature holds the essential answers to skin health...'",
+                  "value": "Essenherb is a vegan skincare brand designed and made in Korea...",
+                  "page": 75,
+                  "section": "C.2",
+                  "sectionName": "AD",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "반복 서술·보일러플레이트"
+                }
+              ]
+            },
+            {
+              "page": 77,
+              "section": "C.2",
+              "rules": [
+                {
+                  "key": "layout.zone.size",
+                  "title": "AD layout zone proportions (A-unit / 6A spacing reference)",
+                  "category": "layout",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "가로형(8600×2100mm) 레이아웃 다이어그램에 'A', '6A' 모듈 측정 표기와 Logo Area / Content Area (Equal Columns) 구획이 표시됨.",
+                  "value": "module marks A, 6A on 8600×2100mm horizontal layout",
+                  "page": 77,
+                  "section": "C.2",
+                  "sectionName": "AD",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "광고 레이아웃 영역 비율"
+                },
+                {
+                  "key": "spacing.scale",
+                  "title": "AD modular A-unit spacing system",
+                  "category": "spacing",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "가로형 레이아웃 다이어그램에 'A', '6A' 모듈 단위 표기 — A 단위 기반 모듈러 스페이싱.",
+                  "value": "base unit A; multiple 6A",
+                  "page": 77,
+                  "section": "C.2",
+                  "sectionName": "AD",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "광고 A-unit 간격 체계"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "C.3",
+          "name": "Stationery",
+          "slug": "stationery",
+          "chapter": "C",
+          "chapterName": "Applications",
+          "startPage": 80,
+          "endPage": 84,
+          "pages": [
+            {
+              "page": 80,
+              "section": "C.3",
+              "rules": [
+                {
+                  "key": "application.format",
+                  "title": "Application format / trim size (per item)",
+                  "category": "application",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "명함 Format 90×50(W/H), 리플렛 A4/210×297mm, 제품 정보 카드 A5/148×210mm 으로 항목별 트림 사이즈가 명시됨.",
+                  "value": "Business Card 90×50mm; Brand Leaflet A4 210×297mm; Product Information Card A5 148×210mm",
+                  "page": 80,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "광고 적용 규격·비율"
+                },
+                {
+                  "key": "application.print-spec",
+                  "title": "Print method / spot color / ink spec (per item)",
+                  "category": "application",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "명함 2. Print: 옵셋 인쇄 / 별색 1도 (Pantone Warm Red C).",
+                  "value": "Business Card: offset print, spot color 1, Pantone Warm Red C",
+                  "page": 80,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "인쇄 방식·별색·잉크 사양"
+                },
+                {
+                  "key": "color.print-fidelity",
+                  "title": "Print color fidelity / Pantone matching",
+                  "category": "color",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "별색 1도 (Pantone Warm Red C) 지정 — 인쇄 시 Pantone 색 일치 여부는 실물 교정 단계에서만 확인 가능.",
+                  "value": "Pantone Warm Red C",
+                  "page": 80,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "인쇄 색 재현 (Pantone)"
+                },
+                {
+                  "key": "color.mode",
+                  "title": "Color mode / spot-color by medium",
+                  "category": "color",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "옵셋 인쇄 / 별색 1도 — 인쇄 매체에 별색(Spot/PMS) 색 모드 사용 명시.",
+                  "value": "Offset print = spot color (Pantone Warm Red C)",
+                  "page": 80,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "매체별 컬러 모드·별색"
+                },
+                {
+                  "key": "application.spec-scale",
+                  "title": "Specification display-scale convention",
+                  "category": "application",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "명함/리플렛은 'Specification (Scale 100%)', 제품 정보 카드는 'Specification (Scale 80%)'로 도면 표시 스케일을 명기.",
+                  "value": "Business Card/Leaflet: 100%; Product Information Card: 80%",
+                  "page": 80,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "사양 표기 축척 규칙"
+                },
+                {
+                  "key": "messaging.contact-block",
+                  "title": "Standard contact / company-info block",
+                  "category": "messaging",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "명함에 이름/팀·직책/이메일/전화/인스타그램 핸들/주소 및 저작권(© Ami Cosmetic Co., Ltd.) 정보 블록이 구성됨.",
+                  "value": "Name: Seonha Lee 이선하; Brand Design Team | Designer; mail s***@***.co.kr; phone +82 10 ****-5678; Instagram @essenherb_global; 3F, SR63-1 B/D, 17, Eonju-ro 149-gil, Gangnam-gu, Seoul",
+                  "page": 80,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "연락처·회사 정보 블록"
+                },
+                {
+                  "key": "messaging.content-fields",
+                  "title": "Required content fields on collateral/forms",
+                  "category": "messaging",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "명함에 필수 정보 필드(성명, 부서/직책, 이메일, 전화, SNS 핸들, 주소)가 채워져야 함.",
+                  "value": "",
+                  "page": 80,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "인쇄물 필수 기재 항목"
+                },
+                {
+                  "key": "messaging.legal-footer",
+                  "title": "Legal / copyright / distribution footer",
+                  "category": "messaging",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "모든 페이지 하단에 © Ami Cosmetic Co., Ltd. All rights reserved. 저작권 표기.",
+                  "value": "© Ami Cosmetic Co., Ltd. All rights reserved.",
+                  "page": 80,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "저작권·배포 푸터"
+                },
+                {
+                  "key": "layout.tone",
+                  "title": "Layout tone-and-manner (restraint/boldness)",
+                  "category": "layout",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "명함은 절제된 톤앤매너의 레이아웃으로 전문적 브랜드 인상을 각인력 높게 전달; 제품 카드는 정제된 레이아웃으로 신뢰감 있게 전달.",
+                  "value": "",
+                  "page": 80,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "레이아웃 톤앤매너 (피드 일관성)"
+                },
+                {
+                  "key": "color.roles",
+                  "title": "Color role assignment",
+                  "category": "color",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "명함에 브랜드 메인 컬러를 적용; 제품 정보 카드는 로고, 컬러 등 브랜드 디자인 요소를 적용.",
+                  "value": "brand main color (Pantone Warm Red C)",
+                  "page": 80,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "컬러 역할 지정"
+                },
+                {
+                  "key": "typography.families",
+                  "title": "Designated typeface families by role/script",
+                  "category": "typography",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "명함은 브랜드 메인 컬러와 '지정 서체'를 적용하도록 규정.",
+                  "value": "",
+                  "page": 80,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "지정 서체 (역할·언어별)"
+                },
+                {
+                  "key": "application.material",
+                  "title": "Substrate / paper stock / material (per item)",
+                  "category": "application",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "옵셋 인쇄가 명시되어 종이 스톡/지질이 전제되나 본문에 구체 용지 사양은 미기재 — 실물/사양서 확인 필요.",
+                  "value": "",
+                  "page": 80,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "재질·용지 (항목별)"
+                }
+              ]
+            },
+            {
+              "page": 81,
+              "section": "C.3",
+              "rules": [
+                {
+                  "key": "grid.system",
+                  "title": "Layout grid / module system",
+                  "category": "grid",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "리플렛 Specification에 외곽 여백 5mm와 내부 영역 치수(200mm, 287mm)가 표시되어 레이아웃 모듈/여백을 규정.",
+                  "value": "Leaflet: margins 5mm, inner 200×287mm; Product card margins 8mm",
+                  "page": 81,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "모듈러 그리드 시스템"
+                },
+                {
+                  "key": "imagery.classification",
+                  "title": "Photography taxonomy & mood criteria",
+                  "category": "imagery",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "리플렛은 일관된 톤앤매너의 포토그래피 및 일러스트를 활용하여 제품 정보·특징·효능을 직관적으로 전달.",
+                  "value": "",
+                  "page": 81,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "사진 분류·무드 기준"
+                },
+                {
+                  "key": "messaging.application-copy",
+                  "title": "Application / merch printed copy",
+                  "category": "messaging",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "리플렛/제품 카드에 브랜드 스토리, 슬로건('Essence for Energy'), 사인오프 카피, 제품 효능 설명 등이 인쇄됨.",
+                  "value": "Essence for Energy; Nature's Wisdom Through K-Wild Herb Formulas; essenherb.global",
+                  "page": 81,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "콘텐츠 브랜드 스토리 카피"
+                },
+                {
+                  "key": "messaging.boilerplate",
+                  "title": "Approved descriptor / boilerplate copy",
+                  "category": "messaging",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "리플렛 본문에 브랜드 설명(boilerplate) 'Essenherb is a skincare brand inspired by the powerful vitality of wild herbs...' 및 비건 인증 문구가 인쇄됨.",
+                  "value": "",
+                  "page": 81,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "반복 서술·보일러플레이트"
+                }
+              ]
+            },
+            {
+              "page": 82,
+              "section": "C.3",
+              "rules": [
+                {
+                  "key": "layout.zones",
+                  "title": "Content zone / area designation",
+                  "category": "layout",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "리플렛은 'Outside [Containing Cover] - Brand Identity Section', 'Inside - Product Introduction Section'으로 영역을 지정하고 상단 정렬 기반으로 정보 위계를 정돈.",
+                  "value": "Outside = Brand Identity Section; Inside = Product Introduction Section",
+                  "page": 82,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "콘텐츠 영역 지정 (인물·텍스트)"
+                }
+              ]
+            },
+            {
+              "page": 84,
+              "section": "C.3",
+              "rules": [
+                {
+                  "key": "application.merch-spec",
+                  "title": "Merchandise / collateral design spec",
+                  "category": "application",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "제품 정보 카드는 로고/컬러 등 핵심 브랜드 디자인 요소에 정제된 레이아웃을 적용해 제품 정보·특징·효능을 명확·신뢰감 있게 전달.",
+                  "value": "",
+                  "page": 84,
+                  "section": "C.3",
+                  "sectionName": "Stationery",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "굿즈·인쇄물 디자인 사양"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "C.4",
+          "name": "Package",
+          "slug": "package",
+          "chapter": "C",
+          "chapterName": "Applications",
+          "startPage": 86,
+          "endPage": 99,
+          "pages": [
+            {
+              "page": 86,
+              "section": "C.4",
+              "rules": [
+                {
+                  "key": "misc.governance",
+                  "title": "Strict adherence / no arbitrary modification / dept escalation",
+                  "category": "misc",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다.",
+                  "value": "",
+                  "page": 86,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "로고 변형 금지·문의 정책"
+                },
+                {
+                  "key": "layout.tone",
+                  "title": "Restrained tone-and-manner of package layout",
+                  "category": "layout",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "브랜드 컬러, 지정 서체 및 전용 서체를 절제된 톤앤매너로 적용하여 정제된 브랜드 인상을 전달. 일관된 레이아웃으로 완성도 높고 신뢰감 있는 브랜드 경험 전달.",
+                  "value": "",
+                  "page": 86,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "레이아웃 톤앤매너 (피드 일관성)"
+                },
+                {
+                  "key": "color.palette",
+                  "title": "Brand color applied to package",
+                  "category": "color",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "브랜드 컬러... 를 절제된 톤앤매너로 적용 — 패키지에 브랜드 지정 컬러를 사용해야 함(구체 hex는 본 섹션에 없음, 컬러 섹션 참조).",
+                  "value": "",
+                  "page": 86,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "브랜드 컬러 팔레트"
+                },
+                {
+                  "key": "typography.families",
+                  "title": "Designated & exclusive typefaces on package",
+                  "category": "typography",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "지정 서체 및 전용 서체를 절제된 톤앤매너로 적용 — 패키지 카피에 브랜드 지정/전용 서체만 사용.",
+                  "value": "",
+                  "page": 86,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "지정 서체 (역할·언어별)"
+                }
+              ]
+            },
+            {
+              "page": 87,
+              "section": "C.4",
+              "rules": [
+                {
+                  "key": "spacing.scale",
+                  "title": "Package standard ratio / A-unit modular system (20A wide face)",
+                  "category": "spacing",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "패키지 디자인은 넓은 면의 비율을 20A로 설정하는 것을 원칙으로 하며, 레이아웃을 마진/거터 모두 A 단위 배수(0.8A, 1.5A, 2A 등)로 구성한다.",
+                  "value": "wide-face=20A; layout units in A multiples (0.8A, 0.75A, A, 1.5A, 2A, 2.5A, 3.5A, 7A)",
+                  "page": 87,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "광고 A-unit 간격 체계"
+                },
+                {
+                  "key": "grid.system",
+                  "title": "Package front/side layout grid (margin + gutter module)",
+                  "category": "grid",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "Standard Ratio·Margin·Gutter로 구성된 레이아웃 그리드를 Vertical/Horizontal/Square 판형별로 정의하고, 각 면의 마진을 A 단위 배수로 표기.",
+                  "value": "Vertical: margins 0.8A; Horizontal: 2A/1.5A/0.75A; Square: 2A; layouts=Vertical/Horizontal/Square",
+                  "page": 87,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "모듈러 그리드 시스템"
+                },
+                {
+                  "key": "layout.zones",
+                  "title": "Package gutter between product name and logo (50%-100% of margin)",
+                  "category": "layout",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "제품명과 로고 사이의 권장 거터값은 마진값의 50% - 100%입니다.",
+                  "value": "gutter = 50%-100% of margin; margin is variable by format",
+                  "page": 87,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "콘텐츠 영역 지정 (인물·텍스트)"
+                },
+                {
+                  "key": "logo.variants",
+                  "title": "Primary / Secondary Logo Type per package layout",
+                  "category": "logo",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "Primary Logo Type 및 Secondary Logo Type으로 구분하여 일관된 브랜드 아이덴티티를 구축. 각 판형(Vertical/Horizontal/Square)별로 Primary/Secondary 로고 타입 적용 예시를 규정.",
+                  "value": "Primary Logo Type, Secondary Logo Type",
+                  "page": 87,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "승인된 로고 변형"
+                }
+              ]
+            },
+            {
+              "page": 89,
+              "section": "C.4",
+              "rules": [
+                {
+                  "key": "logo.placement",
+                  "title": "Logo placement on package faces (front/side view layout)",
+                  "category": "logo",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "Package Box Front View Layout / Side View 에서 브랜드 로고를 다양한 판형에 적극적으로 활용하여 지정된 위치에 배치하도록 설계.",
+                  "value": "surfaces: Front View, Side View; layouts: Vertical/Horizontal/Square",
+                  "page": 89,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "콘텐츠 내 로고 배치"
+                }
+              ]
+            },
+            {
+              "page": 93,
+              "section": "C.4",
+              "rules": [
+                {
+                  "key": "application.format",
+                  "title": "Package trim/format dimensions per product (W/D/H mm)",
+                  "category": "application",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "Format 60×40.5×176mm (W/D/H) 등 제품별 패키지 실측 치수와 H=20A 환산을 명시.",
+                  "value": "Deep Core Hydra Cream 60×40.5×176mm (H=176mm=20A); Tea Tree Cotton Mask 142×25×182mm (H=182mm=20A); Black Snail Cream 61×61×62mm (H=62mm=20A); DCHC product 63×146mm (20A=136mm); Cotton Mask product 141×180mm (180mm=20A); Black Snail product 188.5×37mm (37mm=20A)",
+                  "page": 93,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "광고 적용 규격·비율"
+                },
+                {
+                  "key": "application.spec-scale",
+                  "title": "Specification display-scale convention (1:1, 1:1.2, 1:0.8)",
+                  "category": "application",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "Usage Example 도면에 (1:1 Scale), (1:1.2 Scale), (1:0.8 Scale) 등 표기 축척을 명시.",
+                  "value": "1:1 Scale; 1:1.2 Scale; 1:0.8 Scale",
+                  "page": 93,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "사양 표기 축척 규칙"
+                },
+                {
+                  "key": "application.finishing",
+                  "title": "Emboss post-processing (양각 후가공) area & print position",
+                  "category": "application",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "도면에 '2A / 양각 후가공 영역', '1A / 양각 후가공 영역', '7A / 양각 후가공 영역' 등 양각(emboss) 후가공 영역을 지정. p101 '인쇄위치 바닥부터 6mm 높이'.",
+                  "value": "emboss areas: 2A (p93), 1A (p95), 7A (p97); print position 6mm from bottom (p101)",
+                  "page": 93,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "양각 후가공 영역·인쇄 위치"
+                },
+                {
+                  "key": "color.print-fidelity",
+                  "title": "Prototyping data — manufacturer must adjust valid color before production",
+                  "category": "color",
+                  "tier": "manual",
+                  "inCatalog": true,
+                  "evidence": "해당 디자인 데이터는 Prototyping이므로 반드시 제작업체에서 유효한 컬러 및 크기로 조정 후 적용해야 합니다.",
+                  "value": "",
+                  "page": 93,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "인쇄 색 재현 (Pantone)"
+                }
+              ]
+            },
+            {
+              "page": 99,
+              "section": "C.4",
+              "rules": [
+                {
+                  "key": "messaging.contact-block",
+                  "title": "Standard company / responsible-seller info block (back panel)",
+                  "category": "messaging",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "화장품책임판매업자:(주)아미코스메틱, 화장품제조업자:주식회사 정코스, 소비자상담실:010-****-3885, Manufactured for AMI Cosmetics Co.,LTD, US RP: DIST.BY CDRI USA INC #221 3003 North First Street San JOSE CA 95134, Email: c***@***.pro 정보를 후면에 표기.",
+                  "value": "consumer line 080.***.**85; US addr #221, 3003 North First Street, San Jose, CA 95134; email c***@***.pro (masked)",
+                  "page": 99,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "연락처·회사 정보 블록"
+                },
+                {
+                  "key": "messaging.legal-footer",
+                  "title": "Copyright / made-in / distributor footer on package",
+                  "category": "messaging",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "© Ami Cosmetic Co., Ltd. All rights reserved. / Made in Korea, Discover more at essenherb.co.kr / essenherb.us / LOT & EXP: On the product 등 법적·저작권 표기.",
+                  "value": "© Ami Cosmetic Co., Ltd. All rights reserved.; Made in Korea; essenherb.co.kr / essenherb.us; LOT & EXP: On the product",
+                  "page": 99,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "저작권·배포 푸터"
+                },
+                {
+                  "key": "messaging.content-fields",
+                  "title": "Required product content fields (net weight/volume, ingredients, usage, caution)",
+                  "category": "messaging",
+                  "tier": "assisted",
+                  "inCatalog": true,
+                  "evidence": "제품명, 용량(100 ml 3.38 fl. oz., Net Wt. 23g x 5 sheets), Key Ingredients, How To Use, Caution In Use, 기능성 표시(미백·주름개선 2중 기능성), Dermatologically Tested 등 필수 표기 필드.",
+                  "value": "fields: product name, net wt/volume, key ingredients, how to use, caution in use, functional-cosmetic notice, dermatologically tested",
+                  "page": 99,
+                  "section": "C.4",
+                  "sectionName": "Package",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "인쇄물 필수 기재 항목"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "C.5",
+          "name": "Etc.",
+          "slug": "etc",
+          "chapter": "C",
+          "chapterName": "Applications",
+          "startPage": 102,
+          "endPage": 102,
+          "pages": [
+            {
+              "page": 102,
+              "section": "C.5",
+              "rules": [
+                {
+                  "key": "messaging.legal-footer",
+                  "title": "Legal / copyright / distribution footer",
+                  "category": "messaging",
+                  "tier": "automated",
+                  "inCatalog": true,
+                  "evidence": "페이지 하단 저작권 표기 '© Ami Cosmetic Co., Ltd. All rights reserved.' 만 존재. 본문 규칙은 없고 섹션 표지(반복되는 'Applications / Etc. / C.5' 헤더)뿐임.",
+                  "value": "© Ami Cosmetic Co., Ltd. All rights reserved.",
+                  "page": 102,
+                  "section": "C.5",
+                  "sectionName": "Etc.",
+                  "chapter": "C",
+                  "chapterName": "Applications",
+                  "titleKo": "저작권·배포 푸터"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "totalRules": 125,
+    "chapterCount": 3,
+    "sectionCount": 15,
+    "byTier": {
+      "assisted": 30,
+      "manual": 48,
+      "automated": 47
+    }
+  }
+}
