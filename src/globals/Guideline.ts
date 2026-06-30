@@ -42,7 +42,7 @@ export const Guideline: GlobalConfig = {
 			type: 'upload',
 			relationTo: 'application-images',
 			admin: {
-				description: '브라우저 탭과 메타데이터에 사용할 파비콘 이미지입니다.',
+				description: '브라우저 탭과 메타데이터에 사용할 파비콘 이미지입니다. 최대 사이즈는 1024px x 1024px 입니다.',
 			},
 		},
 	],

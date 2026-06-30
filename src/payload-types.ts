@@ -1122,7 +1122,7 @@ export interface Guideline {
    */
   issuedLabel?: string | null;
   /**
-   * 브라우저 탭과 메타데이터에 사용할 파비콘 이미지입니다.
+   * 브라우저 탭과 메타데이터에 사용할 파비콘 이미지입니다. 최대 사이즈는 1024px x 1024px 입니다.
    */
   favicon?: (number | null) | ApplicationImage;
   _status?: ('draft' | 'published') | null;
