@@ -16,6 +16,10 @@ import type { AgentAnswerInput, AgentAnswerStream, AgentRepository } from './age
 
 const DEFAULT_MODEL = 'claude-sonnet-4-5'
 
+/**
+ * Agent 답변 스트림 생성을 AI SDK로 위임하는 adapter다.
+ * 모델 호출은 이 구현체가 맡고, guideline 검색 I/O는 tool의 repository가 담당한다.
+ */
 export class AnthropicAiRepository implements AgentRepository {
 	async streamAnswer(input: AgentAnswerInput): Promise<AgentAnswerStream> {
 		if (!process.env.ANTHROPIC_API_KEY) {
