@@ -25,6 +25,7 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgresql://payload:payload@127.0.0.1:5432/hd_cms_prototype
+      PAYLOAD_DB_PUSH: 'true'
       PAYLOAD_SECRET: ci-local-secret
     steps:
       - uses: actions/checkout@v6
