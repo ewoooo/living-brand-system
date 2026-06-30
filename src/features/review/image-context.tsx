@@ -1,15 +1,28 @@
 'use client'
 
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import ruleset from '@/features/review/data/essenherb-ruleset.json'
 import { loadPixelsFromUrl } from '@/features/review/extract-pixels.client'
-import { runCheckers, type RuleOutcome } from '@/features/review/run-checkers'
+import { runCheckersProgressive, type RuleOutcome } from '@/features/review/run-checkers'
+
+const ALL_RULE_KEYS = Array.from(
+	new Set(
+		ruleset.chapters.flatMap((chapter) =>
+			chapter.sections.flatMap((section) =>
+				section.pages.flatMap((page) => page.rules.map((rule) => rule.key)),
+			),
+		),
+	),
+)
 
 export interface ReviewImage {
 	id: string
 	url: string
 	name: string
-	/** ruleKey → 검수 결과 (checker 있는 룰만; 없으면 화면에서 "미개발") */
+	/** ruleKey → 검수 결과 (검수된 룰만; 진행 중엔 일부만 채워짐) */
 	results?: Record<string, RuleOutcome>
+	/** 검수 진행 중 여부 */
+	checking?: boolean
 }
 
 interface ReviewImageContextValue {
@@ -43,13 +56,26 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 		// 최신이 좌측으로 오도록 앞에 쌓는다
 		setImages((prev) => [...added, ...prev])
 		setSelectedId(added[0].id)
-		// 업로드 즉시 클라이언트 검수 → 이미지별 결과 매핑 (API 없이 review에서 바로)
+		// 업로드 즉시 클라이언트 검수 → rule별 순차 진행하며 결과 점진 매핑
 		for (const item of added) {
 			loadPixelsFromUrl(item.url)
-				.then((pixels) => {
-					const results = runCheckers(pixels)
+				.then(async (pixels) => {
 					setImages((prev) =>
-						prev.map((image) => (image.id === item.id ? { ...image, results } : image)),
+						prev.map((image) =>
+							image.id === item.id ? { ...image, checking: true, results: {} } : image,
+						),
+					)
+					await runCheckersProgressive(pixels, ALL_RULE_KEYS, (ruleKey, outcome) => {
+						setImages((prev) =>
+							prev.map((image) =>
+								image.id === item.id
+									? { ...image, results: { ...image.results, [ruleKey]: outcome } }
+									: image,
+							),
+						)
+					})
+					setImages((prev) =>
+						prev.map((image) => (image.id === item.id ? { ...image, checking: false } : image)),
 					)
 				})
 				.catch(() => {})
