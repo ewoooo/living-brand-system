@@ -1,21 +1,23 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createAgentTools } from '@/agents/agent-tools'
 import type {
 	GetAgentGuidelineContext,
 	GuidelineDocumentInput,
 	GuidelineSearchInput,
 } from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { extractTextFromLexical } from '@/features/agent-chat/services/get-agent-guideline-context.service'
+import { createAgentTools } from '@/features/agent-chat/tools/agent-tools'
 
-class FakeGetAgentGuidelineContextService implements GetAgentGuidelineContext {
-	listPages = vi.fn(async () => [{ title: 'Core', pages: [{ id: '7', title: 'Narrative' }] }])
-	search = vi.fn(async (_input: GuidelineSearchInput) => [])
-	readDocument = vi.fn(async (_input: GuidelineDocumentInput) => null)
+function createFakeGetAgentGuidelineContext(): GetAgentGuidelineContext {
+	return {
+		listPages: vi.fn(async () => [{ title: 'Core', pages: [{ id: '7', title: 'Narrative' }] }]),
+		search: vi.fn(async (_input: GuidelineSearchInput) => []),
+		readDocument: vi.fn(async (_input: GuidelineDocumentInput) => null),
+	}
 }
 
 describe('agent tools', () => {
 	it('lists guideline pages through the tool service', async () => {
-		const service = new FakeGetAgentGuidelineContextService()
+		const service = createFakeGetAgentGuidelineContext()
 		const tools = createAgentTools({ getAgentGuidelineContextService: service })
 
 		const result = await tools.listGuidelinePages.execute?.({}, {} as never)
@@ -25,7 +27,7 @@ describe('agent tools', () => {
 	})
 
 	it('reads guideline document details through the tool service', async () => {
-		const service = new FakeGetAgentGuidelineContextService()
+		const service = createFakeGetAgentGuidelineContext()
 		const tools = createAgentTools({ getAgentGuidelineContextService: service })
 
 		await tools.readGuidelineDocument.execute?.(

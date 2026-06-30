@@ -5,7 +5,7 @@ import type { GetAgentGuidelineContext } from '@/features/agent-chat/services/ge
 
 /**
  * Agent가 사용할 tool 계약만 만든다.
- * 실제 guideline I/O와 tool 출력 조립은 주입된 GetAgentGuidelineContextService가 담당한다.
+ * 실제 guideline I/O와 tool 출력 조립은 주입된 GetAgentGuidelineContext service가 담당한다.
  */
 export function createAgentTools(input: {
 	getAgentGuidelineContextService: GetAgentGuidelineContext
