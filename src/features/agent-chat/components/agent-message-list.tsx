@@ -2,6 +2,8 @@
 
 import { Search } from '@carbon/icons-react'
 import type { UIMessage } from 'ai'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
 import { Marker, MarkerContent, MarkerIcon } from '@/components/ui/marker'
 import {
@@ -106,8 +108,14 @@ function AgentTextBubble({ isUser, text }: { isUser: boolean; text: string }) {
 			variant={isUser ? 'default' : 'muted'}
 			className="rounded-full"
 		>
-			<BubbleContent className="whitespace-pre-wrap">
-				<p className="text-sm">{text}</p>
+			<BubbleContent className={isUser ? 'whitespace-pre-wrap' : undefined}>
+				{isUser ? (
+					<p className="text-sm">{text}</p>
+				) : (
+					<div className="space-y-2 text-sm [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4">
+						<Markdown remarkPlugins={[remarkGfm]}>{text}</Markdown>
+					</div>
+				)}
 			</BubbleContent>
 		</Bubble>
 	)
