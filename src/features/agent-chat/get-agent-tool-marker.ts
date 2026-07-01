@@ -5,6 +5,40 @@ export interface AgentToolMarker {
 	text: string
 }
 
+export interface AgentSkillMarker {
+	isPending: boolean
+	text: string
+}
+
+export function getAgentSkillMarker(message: AgentChatMessage): AgentSkillMarker | null {
+	for (const part of message.parts) {
+		if (part.type !== 'tool-loadSkill') {
+			continue
+		}
+
+		if (part.state === 'output-available' && hasSkillName(part.output)) {
+			return {
+				isPending: false,
+				text: part.output.name,
+			}
+		}
+
+		if (hasSkillName(part.input)) {
+			return {
+				isPending: !isFinishedToolPart(part),
+				text: part.input.name,
+			}
+		}
+
+		return {
+			isPending: !isFinishedToolPart(part),
+			text: 'Loading Skill',
+		}
+	}
+
+	return null
+}
+
 export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker | null {
 	let hasToolPart = false
 	let hasPendingToolPart = false
@@ -14,6 +48,10 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 
 	for (const part of message.parts) {
 		if (!isAgentToolPart(part)) {
+			continue
+		}
+
+		if (part.type === 'tool-loadSkill') {
 			continue
 		}
 
@@ -87,5 +125,14 @@ function isFinishedToolPart(part: AgentToolPart) {
 		part.state === 'output-available' ||
 		part.state === 'output-error' ||
 		part.state === 'output-denied'
+	)
+}
+
+function hasSkillName(output: unknown): output is { name: string } {
+	return (
+		typeof output === 'object' &&
+		output !== null &&
+		'name' in output &&
+		typeof output.name === 'string'
 	)
 }

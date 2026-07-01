@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { getAgentToolMarker } from '@/features/agent-chat/get-agent-tool-marker'
+import {
+	getAgentSkillMarker,
+	getAgentToolMarker,
+} from '@/features/agent-chat/get-agent-tool-marker'
 import { getAgentChatErrorMessage } from '@/features/agent-chat/hooks/use-agent-chat'
 import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 
@@ -35,6 +38,49 @@ describe('agent chat errors', () => {
 		} as AgentChatMessage
 
 		expect(getAgentToolMarker(message)?.text).toBe('가이드라인 결과 2개를 찾았습니다')
+	})
+
+	it('uses loadSkill tool results as skill marker text', () => {
+		const message = {
+			id: '1',
+			role: 'assistant',
+			parts: [
+				{
+					type: 'tool-loadSkill',
+					toolCallId: 'tool-1',
+					state: 'output-available',
+					input: { name: 'copywriter-test' },
+					output: {
+						name: 'copywriter-test',
+						description: 'Rewrite copy.',
+						instructions: 'Rewrite the sentence.',
+					},
+				},
+			],
+		} as AgentChatMessage
+
+		expect(getAgentSkillMarker(message)?.text).toBe('copywriter-test')
+		expect(getAgentToolMarker(message)).toBeNull()
+	})
+
+	it('uses loadSkill input as skill marker fallback while loading', () => {
+		const message = {
+			id: '1',
+			role: 'assistant',
+			parts: [
+				{
+					type: 'tool-loadSkill',
+					toolCallId: 'tool-1',
+					state: 'input-available',
+					input: { name: 'guideline-qa' },
+				},
+			],
+		} as AgentChatMessage
+
+		expect(getAgentSkillMarker(message)).toEqual({
+			isPending: true,
+			text: 'guideline-qa',
+		})
 	})
 
 	it('summarizes guideline page list tool results as marker text', () => {

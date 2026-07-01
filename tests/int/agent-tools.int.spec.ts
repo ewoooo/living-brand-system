@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { getAgentMessageText } from '@/features/agent-chat/get-agent-message-text'
+import * as agentSkillRepository from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import { validateAgentChatMessages } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
@@ -23,6 +24,29 @@ describe('agent tools', () => {
 
 		expect(listPages).toHaveBeenCalled()
 		expect(result).toEqual([{ title: 'Core', pages: [{ id: '7', title: 'Narrative' }] }])
+	})
+
+	it('loads agent skill instructions through the tool service', async () => {
+		const findSkill = vi
+			.spyOn(agentSkillRepository, 'findEnabledAgentSkillByName')
+			.mockResolvedValue({
+				body: 'Rewrite campaign copy.',
+				description: 'Copywriting test skill.',
+				name: 'copywriter-test',
+				references: [],
+			})
+		const tools = getAgentTools()
+
+		const result = await tools.loadSkill.execute?.({ name: 'copywriter-test' }, {
+			context: { user: { id: 1 } },
+		} as never)
+
+		expect(findSkill).toHaveBeenCalledWith({ id: 1 }, 'copywriter-test')
+		expect(result).toEqual({
+			description: 'Copywriting test skill.',
+			instructions: 'Rewrite campaign copy.',
+			name: 'copywriter-test',
+		})
 	})
 
 	it('reads guideline document details through the tool service', async () => {

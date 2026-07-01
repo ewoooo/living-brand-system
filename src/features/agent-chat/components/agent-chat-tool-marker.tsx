@@ -1,6 +1,6 @@
-import { Search } from '@carbon/icons-react'
+import { Catalog, Search } from '@carbon/icons-react'
 import { Marker, MarkerContent, MarkerIcon } from '@/components/ui/marker'
-import type { AgentToolMarker } from '@/features/agent-chat/get-agent-tool-marker'
+import type { AgentSkillMarker, AgentToolMarker } from '@/features/agent-chat/get-agent-tool-marker'
 
 export function AgentChatToolMarker({
 	marker,
@@ -19,6 +19,23 @@ export function AgentChatToolMarker({
 				<Search />
 			</MarkerIcon>
 			<MarkerContent className={isPending ? 'shimmer' : undefined}>
+				{marker.text}
+			</MarkerContent>
+		</Marker>
+	)
+}
+
+export function AgentChatSkillMarker({ marker }: { marker: AgentSkillMarker | null }) {
+	if (!marker) {
+		return null
+	}
+
+	return (
+		<Marker>
+			<MarkerIcon>
+				<Catalog />
+			</MarkerIcon>
+			<MarkerContent className={marker.isPending ? 'shimmer' : undefined}>
 				{marker.text}
 			</MarkerContent>
 		</Marker>

@@ -8,9 +8,9 @@ import {
 	ToolLoopAgent,
 } from 'ai'
 import { z } from 'zod'
-import { formatAgentSkillInstructions } from './format-agent-skill-instructions.service'
+import { findEnabledAgentSkillSummaries } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
+import { AgentConfigurationError } from '@/lib/errors'
 import { getAgentTools } from './get-agent-tools.service'
-import { resolveAgentSkill } from './resolve-agent-skill.service'
 
 const DEFAULT_MODEL = 'claude-sonnet-4-5'
 const DEFAULT_LOCALE = 'ko'
@@ -19,7 +19,6 @@ const agentChatCallOptionsSchema = z.object({
 	locale: z.enum(['ko', 'en']).optional(),
 	pagePath: z.string().max(300).optional(),
 	requestId: z.string().min(1).optional(),
-	skillId: z.string().min(1).optional(),
 	user: z.unknown(),
 })
 
@@ -43,7 +42,6 @@ type AgentChatRuntimeContext = {
 	locale: 'ko' | 'en'
 	pagePath?: string
 	requestId: string
-	skillId: string
 }
 
 const agentChatAgent = new ToolLoopAgent<
@@ -57,17 +55,27 @@ const agentChatAgent = new ToolLoopAgent<
 	output: agentChatOutput,
 	// ponytail: AI SDK requires constructor toolsContext; prepareCall replaces it per request.
 	toolsContext: {
+		loadSkill: { user: null },
 		listGuidelinePages: { user: null },
 		searchGuidelines: { user: null },
 		readGuidelineDocument: { user: null },
 	},
 	callOptionsSchema: agentChatCallOptionsSchema,
 	stopWhen: isStepCount(5),
+	prepareStep: ({ stepNumber }) =>
+		stepNumber === 0
+			? {
+					activeTools: ['loadSkill'],
+					toolChoice: { type: 'tool', toolName: 'loadSkill' },
+				}
+			: undefined,
 	prepareCall: async ({ options = { user: null }, ...settings }) => {
-		const skill = await resolveAgentSkill({
-			requestedSkillId: options.skillId,
-			user: options.user,
-		})
+		const skills = await findEnabledAgentSkillSummaries(options.user)
+
+		if (skills.length === 0) {
+			throw new AgentConfigurationError('Agent skill is not configured.')
+		}
+
 		const pageContext = options.pagePath
 			? `Current guideline page: ${options.pagePath}`
 			: undefined
@@ -75,7 +83,7 @@ const agentChatAgent = new ToolLoopAgent<
 		return {
 			...settings,
 			instructions: [
-				formatAgentSkillInstructions(skill),
+				formatAgentSkillSelectionInstructions(skills),
 				pageContext ? `Published context:\n${pageContext}` : null,
 			]
 				.filter(Boolean)
@@ -84,9 +92,9 @@ const agentChatAgent = new ToolLoopAgent<
 				locale: options.locale ?? DEFAULT_LOCALE,
 				pagePath: options.pagePath,
 				requestId: options.requestId ?? crypto.randomUUID(),
-				skillId: skill.name,
 			},
 			toolsContext: {
+				loadSkill: { user: options.user },
 				listGuidelinePages: { user: options.user },
 				searchGuidelines: { user: options.user },
 				readGuidelineDocument: { user: options.user },
@@ -109,9 +117,25 @@ export function validateAgentChatMessages(messages: unknown) {
 	})
 }
 
+function formatAgentSkillSelectionInstructions(
+	skills: Awaited<ReturnType<typeof findEnabledAgentSkillSummaries>>,
+) {
+	const lines = skills.map((skill) => {
+		const defaultLabel = skill.isDefault ? ' (default)' : ''
+		return `- ${skill.name}${defaultLabel}: ${skill.description}`
+	})
+
+	return [
+		'Before answering, call loadSkill with the single best skill name from the list below.',
+		'After loadSkill returns, follow its instructions field as the active skill instructions.',
+		'Available skills:',
+		...lines,
+	].join('\n')
+}
+
 /**
  * Route Handler가 검증한 메시지를 AI SDK agent stream으로 변환한다.
- * Payload와 provider I/O는 agent tool과 skill resolver가 실행 시점에 맡는다.
+ * Payload와 provider I/O는 prepareCall과 agent tool 실행 시점에 맡는다.
  */
 export function createAgentChatResponse(input: {
 	locale?: AgentChatRuntimeContext['locale']
