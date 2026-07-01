@@ -27,8 +27,8 @@ interface ReviewImageContextValue {
 	selected: ReviewImage | null
 	select: (id: string) => void
 	addFiles: (files: FileList | File[]) => void
-	/** 이미지의 사진 포함 여부를 토글하고, 활성 섹션 기준으로 재검수한다. */
-	setPhoto: (id: string, photo: boolean) => void
+	/** 이미지의 콘텐츠 요소 포함 여부를 토글하고, 활성 섹션 기준으로 재검수한다. */
+	setContentFlag: (id: string, key: keyof ImageContentFlags, value: boolean) => void
 }
 
 const ReviewImageContext = createContext<ReviewImageContextValue | null>(null)
@@ -92,11 +92,11 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 
 	const select = useCallback((id: string) => setSelectedId(id), [])
 
-	const setPhoto = useCallback(
-		(id: string, photo: boolean) => {
+	const setContentFlag = useCallback(
+		(id: string, key: keyof ImageContentFlags, value: boolean) => {
 			const target = images.find((image) => image.id === id)
 			if (!target) return
-			const nextFlags = { ...target.contentFlags, photo }
+			const nextFlags = { ...target.contentFlags, [key]: value }
 			setImages((prev) =>
 				prev.map((image) =>
 					image.id === id ? { ...image, contentFlags: nextFlags } : image,
@@ -115,9 +115,9 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 			selected: images.find((image) => image.id === selectedId) ?? null,
 			select,
 			addFiles,
-			setPhoto,
+			setContentFlag,
 		}),
-		[images, selectedId, select, addFiles, setPhoto],
+		[images, selectedId, select, addFiles, setContentFlag],
 	)
 
 	return <ReviewImageContext.Provider value={value}>{children}</ReviewImageContext.Provider>

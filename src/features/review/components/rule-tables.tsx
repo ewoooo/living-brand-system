@@ -3,7 +3,11 @@
 import { MagicWand, Ruler, User } from '@carbon/icons-react'
 import { type ComponentType, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { DEFAULT_CONTENT_FLAGS, isSectionActive } from '@/features/review/content-gate'
+import {
+	DEFAULT_CONTENT_FLAGS,
+	isSectionActive,
+	sectionRequiredLabel,
+} from '@/features/review/content-gate'
 import { useReviewImages } from '@/features/review/image-context'
 
 interface Rule {
@@ -135,8 +139,9 @@ function RuleRow({ rule }: { rule: Rule }) {
 export function RuleTables({ pages, sectionSlug }: { pages: ReviewPage[]; sectionSlug: string }) {
 	const { selected } = useReviewImages()
 	const flags = selected?.contentFlags ?? DEFAULT_CONTENT_FLAGS
-	// 콘텐츠 게이트: 이 섹션이 요구하는 콘텐츠(예: 사진)가 없으면 검수 대상이 아니다.
+	// 콘텐츠 게이트: 이 섹션이 요구하는 요소(예: Photography)를 체크하지 않으면 검수 대상이 아니다.
 	const sectionActive = isSectionActive(sectionSlug, flags)
+	const requiredLabel = sectionRequiredLabel(sectionSlug)
 
 	const allRules = pages.flatMap((page) => page.rules)
 	const counts = { pass: 0, fail: 0, pending: 0 }
@@ -152,8 +157,8 @@ export function RuleTables({ pages, sectionSlug }: { pages: ReviewPage[]; sectio
 		<TooltipProvider delayDuration={150}>
 			{!sectionActive && (
 				<div className="mb-6 rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-amber-700 text-sm leading-6 dark:text-amber-400">
-					이 섹션은 <b>사진이 포함된 이미지</b>에만 적용됩니다. 상단에서 이미지의{' '}
-					<b>'사진 포함'</b>을 선택하면 검수가 활성화됩니다.
+					이 섹션은 이미지에 <b>{requiredLabel}</b> 요소가 있을 때만 검수합니다. 상단에서{' '}
+					<b>{requiredLabel}</b> 항목을 체크하면 활성화됩니다.
 				</div>
 			)}
 			<div className={sectionActive ? undefined : 'pointer-events-none opacity-40'}>
