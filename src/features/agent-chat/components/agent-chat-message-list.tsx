@@ -25,7 +25,7 @@ export function AgentChatMessageList({
 	return (
 		<MessageScrollerProvider>
 			<MessageScroller className="min-h-0 flex-1">
-				<MessageScrollerViewport>
+				<MessageScrollerViewport className="scrollbar-none">
 					<MessageScrollerContent className="gap-3 p-3">
 						{isEmpty ? (
 							<MessageScrollerItem>
