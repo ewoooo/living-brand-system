@@ -4,7 +4,7 @@ import type { Rgb } from '@/features/review/color-check'
  * 브라우저에서 이미지 URL을 canvas로 다운샘플해 픽셀 배열을 뽑는다 (클라이언트 전용).
  * 서버 sharp 추출의 클라이언트 대응 — API 없이 review 페이지에서 바로 검수하기 위함.
  */
-export function loadPixelsFromUrl(url: string, maxDim = 64): Promise<Rgb[]> {
+export function loadPixelsFromUrl(url: string, maxDim = 128): Promise<Rgb[]> {
 	return new Promise((resolve, reject) => {
 		const img = new Image()
 		img.onload = () => {
@@ -19,6 +19,8 @@ export function loadPixelsFromUrl(url: string, maxDim = 64): Promise<Rgb[]> {
 				reject(new Error('canvas context unavailable'))
 				return
 			}
+			// flat 디자인 색 검수용 — 보간 끄고 nearest로 원본 색 보존(경계 블렌드로 인한 가짜 off-palette 방지)
+			ctx.imageSmoothingEnabled = false
 			ctx.drawImage(img, 0, 0, w, h)
 			const { data } = ctx.getImageData(0, 0, w, h)
 			const pixels: Rgb[] = []

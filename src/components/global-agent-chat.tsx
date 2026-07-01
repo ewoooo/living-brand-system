@@ -24,7 +24,11 @@ export function GlobalAgentChat() {
 	}
 
 	return (
-		<Sidebar side="right" collapsible="offcanvas">
+		<Sidebar
+			side="right"
+			collapsible="offcanvas"
+			className="border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900"
+		>
 			<SidebarHeader>
 				<GlobalAgentChatHeader />
 			</SidebarHeader>

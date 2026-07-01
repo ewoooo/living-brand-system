@@ -16,7 +16,7 @@ export default async function ReviewSectionPage({
 
 	return (
 		<div className="w-full px-8 py-8">
-			<RuleTables pages={section.pages} />
+			<RuleTables pages={section.pages} sectionSlug={sectionSlug} />
 		</div>
 	)
 }
