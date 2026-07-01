@@ -35,8 +35,21 @@ export interface GuidelineDocumentResult {
 	title: string
 	collection: GuidelineDocumentCollection
 	id: string
+	source: GuidelineDocumentSource
+	rules: GuidelineDocumentRule[]
 	content: string
 	relatedPages?: GuidelineDocumentRelatedPage[]
+}
+
+export interface GuidelineDocumentSource {
+	collection: GuidelineDocumentCollection
+	id: string
+	title: string
+}
+
+export interface GuidelineDocumentRule {
+	key: string
+	title: string
 }
 
 /**
@@ -107,10 +120,18 @@ function formatGuidelineSection(
 function formatGuidelinePageResult(
 	document: Extract<AgentGuidelineDocument, { collection: 'guideline-pages' }>,
 ): GuidelineDocumentResult {
+	const id = String(document.page.id)
+
 	return {
 		title: document.page.title,
 		collection: 'guideline-pages',
-		id: String(document.page.id),
+		id,
+		source: {
+			collection: 'guideline-pages',
+			id,
+			title: document.page.title,
+		},
+		rules: getLiveRules(document.page.rules),
 		content: limitContent(formatGuidelinePage(document.page)),
 	}
 }
@@ -118,10 +139,18 @@ function formatGuidelinePageResult(
 function formatGuidelineSectionResult(
 	document: Extract<AgentGuidelineDocument, { collection: 'sections' }>,
 ): GuidelineDocumentResult {
+	const id = String(document.section.id)
+
 	return {
 		title: document.section.title,
 		collection: 'sections',
-		id: String(document.section.id),
+		id,
+		source: {
+			collection: 'sections',
+			id,
+			title: document.section.title,
+		},
+		rules: [],
 		content: limitContent(formatGuidelineSection(document.section, document.pages)),
 		relatedPages: document.pages.map((page) => ({
 			id: String(page.id),
@@ -134,7 +163,7 @@ function formatGuidelinePage(
 	page: Extract<AgentGuidelineDocument, { collection: 'guideline-pages' }>['page'],
 ): string {
 	const sectionTitle = getTitle(page.section)
-	const rules = page.rules?.map(formatRule).filter(Boolean) ?? []
+	const rules = getLiveRules(page.rules).map(formatRule)
 
 	return compact([
 		sectionTitle ? `Section: ${sectionTitle}` : null,
@@ -167,8 +196,19 @@ function formatBlock(block: NonNullable<GuidelinePage['blocks']>[number]): strin
 	]).join('\n\n')
 }
 
-function formatRule(value: number | Rule): string {
-	return typeof value === 'object' ? `- ${value.key}: ${value.title}` : ''
+function formatRule(value: GuidelineDocumentRule): string {
+	return `- ${value.key}: ${value.title}`
+}
+
+function getLiveRules(values: (number | Rule)[] | null | undefined): GuidelineDocumentRule[] {
+	return (
+		values
+			?.filter((value): value is Rule => typeof value === 'object' && value.status === 'live')
+			.map((rule) => ({
+				key: rule.key,
+				title: rule.title,
+			})) ?? []
+	)
 }
 
 function formatImage(value: unknown): string {

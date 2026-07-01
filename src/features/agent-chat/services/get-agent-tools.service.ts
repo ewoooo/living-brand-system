@@ -2,6 +2,12 @@ import { type ToolSet, tool } from 'ai'
 import { z } from 'zod'
 
 import {
+	type AgentSkillDetail,
+	findEnabledAgentSkillByName,
+} from '@/features/agent-chat/repositories/agent-skill.payload.repository'
+import { AgentConfigurationError } from '@/lib/errors'
+import { formatAgentSkillInstructions } from './format-agent-skill-instructions.service'
+import {
 	listAgentGuidelinePages,
 	readAgentGuidelineDocument,
 	searchAgentGuidelines,
@@ -13,10 +19,26 @@ const guidelineToolContextSchema = z.object({
 
 /**
  * Agent answer stream에 전달할 AI SDK tool set을 만든다.
- * 실제 guideline I/O는 tool 실행 시 주입되는 user context로 수행한다.
+ * 실제 skill/guideline I/O는 tool 실행 시 주입되는 user context로 수행한다.
  */
 export function getAgentTools() {
 	return {
+		loadSkill: tool({
+			description: 'Load the full instructions for an enabled agent skill by name.',
+			inputSchema: z.object({
+				name: z.string().min(1).max(80),
+			}),
+			contextSchema: guidelineToolContextSchema,
+			execute: async ({ name }, { context }) => {
+				const skill = await findEnabledAgentSkillByName(context.user, name)
+
+				if (!skill) {
+					throw new AgentConfigurationError('Agent skill is not configured.')
+				}
+
+				return formatLoadedSkill(skill)
+			},
+		}),
 		listGuidelinePages: tool({
 			description: 'List published brand guideline sections and pages available to read.',
 			inputSchema: z.object({}),
@@ -42,4 +64,12 @@ export function getAgentTools() {
 				readAgentGuidelineDocument(context.user, { collection, id }),
 		}),
 	} satisfies ToolSet
+}
+
+function formatLoadedSkill(skill: AgentSkillDetail) {
+	return {
+		name: skill.name,
+		description: skill.description,
+		instructions: formatAgentSkillInstructions(skill),
+	}
 }
