@@ -22,7 +22,7 @@ export function AgentChatMessageItem({
 			{isUser ? (
 				<AgentChatUserBubble text={messageText} />
 			) : (
-				<AgentChatAgentBubble text={messageText} />
+				<AgentChatAgentBubble text={messageText} isStreaming={isActive} />
 			)}
 		</div>
 	)

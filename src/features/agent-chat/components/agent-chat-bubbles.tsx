@@ -1,5 +1,4 @@
-import Markdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { Streamdown } from 'streamdown'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
 
 export function AgentChatErrorBubble({ error }: { error: Error }) {
@@ -24,7 +23,13 @@ export function AgentChatUserBubble({ text }: { text: string }) {
 	)
 }
 
-export function AgentChatAgentBubble({ text }: { text: string }) {
+export function AgentChatAgentBubble({
+	text,
+	isStreaming = false,
+}: {
+	text: string
+	isStreaming?: boolean
+}) {
 	if (!text) {
 		return null
 	}
@@ -32,9 +37,14 @@ export function AgentChatAgentBubble({ text }: { text: string }) {
 	return (
 		<Bubble align="start" variant="muted" className="rounded-full">
 			<BubbleContent>
-				<div className="space-y-2 text-sm [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4">
-					<Markdown remarkPlugins={[remarkGfm]}>{text}</Markdown>
-				</div>
+				<Streamdown
+					animated
+					controls={false}
+					isAnimating={isStreaming}
+					className="space-y-2 text-sm [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4"
+				>
+					{text}
+				</Streamdown>
 			</BubbleContent>
 		</Bubble>
 	)
