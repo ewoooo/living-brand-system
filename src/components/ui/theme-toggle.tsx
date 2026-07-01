@@ -1,23 +1,10 @@
 'use client'
 
+import { Moon, Screen, Sun } from '@carbon/icons-react'
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuLabel,
-	DropdownMenuRadioGroup,
-	DropdownMenuRadioItem,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 type Theme = 'light' | 'dark' | 'system'
-
-const THEME_LABELS: Record<Theme, string> = {
-	light: 'Light',
-	dark: 'Dark',
-	system: 'System',
-}
 
 function applyTheme() {
 	document.documentElement.classList.toggle(
@@ -57,28 +44,42 @@ export function ThemeToggle() {
 	}, [])
 
 	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button variant="outline" size="sm">
-					Theme: {THEME_LABELS[theme]}
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end">
-				<DropdownMenuLabel>Theme</DropdownMenuLabel>
-				<DropdownMenuRadioGroup
-					value={theme}
-					onValueChange={(value) => {
-						const nextTheme = value as Theme
+		<ToggleGroup
+			type="single"
+			value={theme}
+			aria-label="Theme"
+			className="rounded-full bg-muted p-1"
+			spacing={1}
+			onValueChange={(value) => {
+				if (!value) return
 
-						setTheme(nextTheme)
-						setThemePreference(nextTheme)
-					}}
-				>
-					<DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
-					<DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
-					<DropdownMenuRadioItem value="system">System</DropdownMenuRadioItem>
-				</DropdownMenuRadioGroup>
-			</DropdownMenuContent>
-		</DropdownMenu>
+				const nextTheme = value as Theme
+
+				setTheme(nextTheme)
+				setThemePreference(nextTheme)
+			}}
+		>
+			<ToggleGroupItem
+				value="system"
+				aria-label="Use system theme"
+				className="size-8 rounded-full p-0! data-[state=on]:bg-background data-[state=on]:shadow-xs"
+			>
+				<Screen data-icon="inline-start" />
+			</ToggleGroupItem>
+			<ToggleGroupItem
+				value="light"
+				aria-label="Use light theme"
+				className="size-8 rounded-full p-0! data-[state=on]:bg-background data-[state=on]:shadow-xs"
+			>
+				<Sun data-icon="inline-start" />
+			</ToggleGroupItem>
+			<ToggleGroupItem
+				value="dark"
+				aria-label="Use dark theme"
+				className="size-8 rounded-full p-0! data-[state=on]:bg-background data-[state=on]:shadow-xs"
+			>
+				<Moon data-icon="inline-start" />
+			</ToggleGroupItem>
+		</ToggleGroup>
 	)
 }

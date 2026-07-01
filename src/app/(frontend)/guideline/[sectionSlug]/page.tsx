@@ -21,7 +21,6 @@ export default async function GuidelineSectionPage({
 		<article className="grid w-full grid-rows-[auto_1fr]">
 			<header className="mb-10">
 				<h1 className="text-5xl">{sectionView.title}</h1>
-				{sectionView.description && <p>{sectionView.description}</p>}
 			</header>
 			<section className="flex flex-col gap-16">
 				{sectionView.pages.map((page) => (

@@ -1,6 +1,5 @@
 'use client'
 
-import { SidePanelOpen } from '@carbon/icons-react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Slot } from 'radix-ui'
 import * as React from 'react'
@@ -19,8 +18,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 
-const SIDEBAR_COOKIE_NAME = 'sidebar_state'
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = '16rem'
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
@@ -75,9 +72,6 @@ function SidebarProvider({
 			} else {
 				_setOpen(openState)
 			}
-
-			// This sets the cookie to keep the sidebar state.
-			document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
 		},
 		[setOpenProp, open],
 	)
@@ -221,11 +215,11 @@ function Sidebar({
 				data-slot="sidebar-container"
 				data-side={side}
 				className={cn(
-					'fixed inset-y-0 z-10 hidden h-full w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex',
+					'bg-neutral-100 border-neutral-200 dark:bg-neutral-900 dark:border-neutral-700 border-l fixed inset-y-0 z-10 hidden h-full w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex',
 					// Adjust the padding for floating and inset variants.
 					variant === 'floating' || variant === 'inset'
 						? 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]'
-						: 'group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l',
+						: 'group-data-[collapsible=icon]:w-(--sidebar-width-icon)',
 					className,
 				)}
 				{...props}
@@ -242,7 +236,12 @@ function Sidebar({
 	)
 }
 
-function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
+function SidebarTrigger({
+	className,
+	onClick,
+	children,
+	...props
+}: React.ComponentProps<typeof Button>) {
 	const { toggleSidebar } = useSidebar()
 
 	return (
@@ -258,7 +257,8 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
 			}}
 			{...props}
 		>
-			<SidePanelOpen size={16} />
+			{children}
+			{/*<SidePanelOpen size={} />*/}
 			<span className="sr-only">Toggle Sidebar</span>
 		</Button>
 	)

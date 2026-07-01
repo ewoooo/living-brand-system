@@ -12,6 +12,7 @@ import {
 	CommandItem,
 	CommandList,
 } from '@/components/ui/command'
+import { SidebarTrigger } from '@/components/ui/sidebar'
 import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
@@ -146,8 +147,9 @@ export function GlobalHeader({
 				{LOGIN && (
 					<HeaderLinkBlock href={LOGIN.href} isActive={false} label={LOGIN.label} />
 				)}
-				{/*<ThemeToggle />*/}
-				<Button>Ask AI</Button>
+				<SidebarTrigger variant="default" size="default">
+					Ask AI
+				</SidebarTrigger>
 			</section>
 		</header>
 	)

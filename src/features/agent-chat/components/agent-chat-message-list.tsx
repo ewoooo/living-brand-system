@@ -60,5 +60,5 @@ export function AgentChatMessageList({
 }
 
 function AgentEmptyMessage() {
-	return <p className="text-muted-foreground text-sm">Ask about this guideline.</p>
+	return <p className="text-muted-foreground text-sm px-3">Ask about this guideline.</p>
 }
