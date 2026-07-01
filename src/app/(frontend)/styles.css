@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
@@ -69,6 +70,14 @@
 	--sidebar-accent-foreground: oklch(0.985 0 0);
 	--sidebar-border: transparent;
 	--sidebar-ring: oklch(0.556 0 0);
+}
+
+@utility scrollbar-none {
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar {
+		display: none;
+	}
 }
 
 @font-face {

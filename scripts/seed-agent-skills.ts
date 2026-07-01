@@ -16,6 +16,24 @@ const guidelineQaSkill = {
 		'Do not narrate search or tool activity to the user; provide only the final answer.',
 		'If the provided context is not enough, say that a manager review is needed.',
 	].join('\n'),
+	references: [
+		{
+			title: 'Evidence boundary',
+			body: [
+				'Use only published guideline pages, sections, and rules returned by the tools.',
+				'Do not invent brand standards, undocumented exceptions, or asset usage rules.',
+				'When evidence is incomplete, state what is missing and ask for manager review.',
+			].join('\n'),
+		},
+		{
+			title: 'Answer shape',
+			body: [
+				'Start with the direct answer.',
+				'Add the guideline basis as short bullets when useful.',
+				'Do not expose tool names, search attempts, or internal reasoning.',
+			].join('\n'),
+		},
+	],
 	enabled: true,
 	isDefault: true,
 }

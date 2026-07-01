@@ -7,6 +7,7 @@ import { s3Storage } from '@payloadcms/storage-s3'
 import { ko } from '@payloadcms/translations/languages/ko'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
+import { migrations } from '../migrations'
 import { AgentSkills } from './collections/AgentSkills'
 import { ApplicationImages } from './collections/ApplicationImages'
 import { BrandColors } from './collections/BrandColors'
@@ -23,6 +24,10 @@ import { Guideline } from './globals/Guideline'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const databaseURL = process.env.DATABASE_URL
+const shouldRunProdMigrations =
+	process.env.PAYLOAD_RUN_MIGRATIONS_ON_STARTUP === 'true' &&
+	process.env.NODE_ENV === 'production' &&
+	process.env.NEXT_PHASE !== 'phase-production-build'
 
 if (!databaseURL) {
 	throw new Error(
@@ -60,6 +65,7 @@ export default buildConfig({
 		pool: {
 			connectionString: databaseURL,
 		},
+		prodMigrations: shouldRunProdMigrations ? migrations : undefined,
 		push: process.env.PAYLOAD_DB_PUSH === 'true',
 	}),
 	sharp,
