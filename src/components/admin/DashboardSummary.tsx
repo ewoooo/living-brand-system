@@ -10,7 +10,7 @@ export default async function DashboardSummary({ payload }: { payload: Payload }
 	return (
 		<section className="dashboard-summary">
 			<h2>Dashboard Summary</h2>
-			<ul className="list">
+			<ul>
 				<li>Rules: {rules.totalDocs}</li>
 				<li>Sections: {sections.totalDocs}</li>
 				<li>Pages: {pages.totalDocs}</li>
