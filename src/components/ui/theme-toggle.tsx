@@ -1,8 +1,23 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuLabel,
+	DropdownMenuRadioGroup,
+	DropdownMenuRadioItem,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 type Theme = 'light' | 'dark' | 'system'
+
+const THEME_LABELS: Record<Theme, string> = {
+	light: 'Light',
+	dark: 'Dark',
+	system: 'System',
+}
 
 function applyTheme() {
 	document.documentElement.classList.toggle(
@@ -42,21 +57,28 @@ export function ThemeToggle() {
 	}, [])
 
 	return (
-		<label className="inline-flex items-center gap-2 text-sm">
-			<select
-				className="rounded border border-neutral-300 bg-white px-2 py-1 text-black dark:border-neutral-700 dark:bg-black dark:text-white"
-				value={theme}
-				onChange={(event) => {
-					const nextTheme = event.target.value as Theme
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<Button variant="outline" size="sm">
+					Theme: {THEME_LABELS[theme]}
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end">
+				<DropdownMenuLabel>Theme</DropdownMenuLabel>
+				<DropdownMenuRadioGroup
+					value={theme}
+					onValueChange={(value) => {
+						const nextTheme = value as Theme
 
-					setTheme(nextTheme)
-					setThemePreference(nextTheme)
-				}}
-			>
-				<option value="light">Light</option>
-				<option value="dark">Dark</option>
-				<option value="system">System</option>
-			</select>
-		</label>
+						setTheme(nextTheme)
+						setThemePreference(nextTheme)
+					}}
+				>
+					<DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
+					<DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
+					<DropdownMenuRadioItem value="system">System</DropdownMenuRadioItem>
+				</DropdownMenuRadioGroup>
+			</DropdownMenuContent>
+		</DropdownMenu>
 	)
 }
