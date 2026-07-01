@@ -86,6 +86,21 @@ export function nearestSwatchDistance(rgb: Rgb, paletteLab: Lab[]): number {
 	return min
 }
 
+/** 한 색에 가장 가까운 swatch와 그 deltaE. 역할/그룹 판정(color.roles 등)에 쓴다. */
+export function nearestSwatch(rgb: Rgb, swatches: Swatch[]): { swatch: Swatch; distance: number } {
+	const lab = rgbToLab(rgb)
+	let best = swatches[0]
+	let min = Number.POSITIVE_INFINITY
+	for (const swatch of swatches) {
+		const d = deltaE(lab, rgbToLab(hexToRgb(swatch.hex)))
+		if (d < min) {
+			min = d
+			best = swatch
+		}
+	}
+	return { swatch: best, distance: min }
+}
+
 /**
  * 픽셀들을 팔레트에 비춰 충족률을 판정한다.
  * 팔레트 밖 픽셀은 6비트로 양자화해 대표 색을 빈도순으로 추린다.

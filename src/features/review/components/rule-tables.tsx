@@ -3,6 +3,11 @@
 import { MagicWand, Ruler, User } from '@carbon/icons-react'
 import { type ComponentType, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+	DEFAULT_CONTENT_FLAGS,
+	isSectionActive,
+	sectionRequiredLabel,
+} from '@/features/review/content-gate'
 import { useReviewImages } from '@/features/review/image-context'
 
 interface Rule {
@@ -131,11 +136,16 @@ function RuleRow({ rule }: { rule: Rule }) {
 	)
 }
 
-export function RuleTables({ pages }: { pages: ReviewPage[] }) {
+export function RuleTables({ pages, sectionSlug }: { pages: ReviewPage[]; sectionSlug: string }) {
 	const { selected } = useReviewImages()
+	const flags = selected?.contentFlags ?? DEFAULT_CONTENT_FLAGS
+	// 콘텐츠 게이트: 이 섹션이 요구하는 요소(예: Photography)를 체크하지 않으면 검수 대상이 아니다.
+	const sectionActive = isSectionActive(sectionSlug, flags)
+	const requiredLabel = sectionRequiredLabel(sectionSlug)
+
 	const allRules = pages.flatMap((page) => page.rules)
 	const counts = { pass: 0, fail: 0, pending: 0 }
-	if (selected) {
+	if (selected && sectionActive) {
 		for (const rule of allRules) {
 			const outcome = selected.results?.[rule.key]
 			if (outcome) counts[outcome.status] += 1
@@ -145,39 +155,47 @@ export function RuleTables({ pages }: { pages: ReviewPage[] }) {
 
 	return (
 		<TooltipProvider delayDuration={150}>
-			<div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-				{selected ? (
-					<>
-						<span className="font-medium">{selected.name}</span>
-						<span className="text-emerald-600 dark:text-emerald-400">
-							통과 {counts.pass}
+			{!sectionActive && (
+				<div className="mb-6 rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-amber-700 text-sm leading-6 dark:text-amber-400">
+					이 섹션은 이미지에 <b>{requiredLabel}</b> 요소가 있을 때만 검수합니다. 상단에서{' '}
+					<b>{requiredLabel}</b> 항목을 체크하면 활성화됩니다.
+				</div>
+			)}
+			<div className={sectionActive ? undefined : 'pointer-events-none opacity-40'}>
+				<div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+					{selected && sectionActive ? (
+						<>
+							<span className="font-medium">{selected.name}</span>
+							<span className="text-emerald-600 dark:text-emerald-400">
+								통과 {counts.pass}
+							</span>
+							<span className="text-rose-600 dark:text-rose-400">
+								미통과 {counts.fail}
+							</span>
+							<span className="text-muted-foreground">미개발 {counts.pending}</span>
+						</>
+					) : (
+						<span className="text-muted-foreground">
+							이미지를 올리면 이 섹션 검수가 시작됩니다.
 						</span>
-						<span className="text-rose-600 dark:text-rose-400">
-							미통과 {counts.fail}
-						</span>
-						<span className="text-muted-foreground">미개발 {counts.pending}</span>
-					</>
-				) : (
-					<span className="text-muted-foreground">
-						이미지를 올리면 이 섹션 검수가 시작됩니다.
-					</span>
-				)}
-			</div>
-			<div className="flex flex-col gap-10">
-				{pages.map((page) => (
-					<section key={page.page}>
-						<div className="mb-1.5 text-muted-foreground/70 text-xs tabular-nums">
-							p{page.page}
-						</div>
-						<table className="w-full border-collapse">
-							<tbody>
-								{page.rules.map((rule) => (
-									<RuleRow key={`${page.page}-${rule.key}`} rule={rule} />
-								))}
-							</tbody>
-						</table>
-					</section>
-				))}
+					)}
+				</div>
+				<div className="flex flex-col gap-10">
+					{pages.map((page) => (
+						<section key={page.page}>
+							<div className="mb-1.5 text-muted-foreground/70 text-xs tabular-nums">
+								p{page.page}
+							</div>
+							<table className="w-full border-collapse">
+								<tbody>
+									{page.rules.map((rule) => (
+										<RuleRow key={`${page.page}-${rule.key}`} rule={rule} />
+									))}
+								</tbody>
+							</table>
+						</section>
+					))}
+				</div>
 			</div>
 		</TooltipProvider>
 	)

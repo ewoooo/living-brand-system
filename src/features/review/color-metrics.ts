@@ -37,3 +37,43 @@ export function saturation({ r, g, b }: Rgb): number {
 	const d = mx - mn
 	return l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn)
 }
+
+export interface DominantColor {
+	rgb: Rgb
+	/** 전체 픽셀 대비 점유율 (0~1) */
+	share: number
+}
+
+/**
+ * 픽셀을 6비트로 양자화해 점유율 상위 대표색을 뽑는다 (점유율 share 포함).
+ * 팔레트 매칭이 아니라 "함께 쓰인 주요 색"을 근사한다 — 여러 checker가 공유한다.
+ */
+export function dominantColors(pixels: Rgb[], topN = 8, minShare = 0.03): DominantColor[] {
+	if (pixels.length === 0) return []
+	const buckets = new Map<string, { r: number; g: number; b: number; count: number }>()
+	for (const p of pixels) {
+		const key = `${p.r >> 2}-${p.g >> 2}-${p.b >> 2}`
+		const bucket = buckets.get(key)
+		if (bucket) {
+			bucket.r += p.r
+			bucket.g += p.g
+			bucket.b += p.b
+			bucket.count += 1
+		} else {
+			buckets.set(key, { r: p.r, g: p.g, b: p.b, count: 1 })
+		}
+	}
+	const total = pixels.length
+	return [...buckets.values()]
+		.filter((bucket) => bucket.count / total >= minShare)
+		.sort((a, b) => b.count - a.count)
+		.slice(0, topN)
+		.map((bucket) => ({
+			rgb: {
+				r: Math.round(bucket.r / bucket.count),
+				g: Math.round(bucket.g / bucket.count),
+				b: Math.round(bucket.b / bucket.count),
+			},
+			share: bucket.count / total,
+		}))
+}

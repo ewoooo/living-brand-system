@@ -467,51 +467,6 @@
 									"titleKo": "브랜드 컬러 팔레트"
 								},
 								{
-									"key": "color.swatch-grid",
-									"title": "Visual swatch grid (hex per tonal step)",
-									"category": "color",
-									"tier": "automated",
-									"inCatalog": true,
-									"evidence": "멀티 컬러는 5개 Core Color Tone과 그레이 컬러 기반, Light Tone~Dark Tone 명도 스펙트럼으로 확장된 톤별 스와치 격자 형태로 제시됨.",
-									"value": "families: Red/Yellow/Green/Blue/Purple (5 steps each: Tone1~Tone5) + Gray (Gray1~Gray5); 각 셀 HEX/RGB/Pantone 표기",
-									"page": 24,
-									"section": "B.2",
-									"sectionName": "Color System",
-									"chapter": "B",
-									"chapterName": "Brand Design Elements",
-									"titleKo": "컬러 스와치 그리드 (HEX)"
-								},
-								{
-									"key": "color.scale",
-									"title": "Color tonal/brightness scale",
-									"category": "color",
-									"tier": "automated",
-									"inCatalog": true,
-									"evidence": "멀티 컬러는 Light Tone~Dark Tone의 명도 스펙트럼으로 확장된 5개 Core Color Tone(+Gray)으로 구성되어 명도 단계가 정의됨.",
-									"value": "stepsPerFamily: 5 (Tone1=Light ~ Tone5=Dark); chromatic families: 5; gray: 5 steps; axis: Light Tone→Dark Tone",
-									"page": 24,
-									"section": "B.2",
-									"sectionName": "Color System",
-									"chapter": "B",
-									"chapterName": "Brand Design Elements",
-									"titleKo": "컬러 명도 단계"
-								},
-								{
-									"key": "color.roles",
-									"title": "Color role assignment",
-									"category": "color",
-									"tier": "automated",
-									"inCatalog": true,
-									"evidence": "Essenherb Red는 핵심(메인) 컬러, White/Black은 메인 컬러 사용을 보조하는 보조 컬러로 역할이 구분됨. 멀티 컬러는 변주/확장 역할.",
-									"value": "main: Essenherb Red(EA5343); supporting: White(FFFFFF)/Black(000000); multi: 5 families + Gray",
-									"page": 24,
-									"section": "B.2",
-									"sectionName": "Color System",
-									"chapter": "B",
-									"chapterName": "Brand Design Elements",
-									"titleKo": "컬러 역할 지정"
-								},
-								{
 									"key": "color.print-fidelity",
 									"title": "Print color fidelity / Pantone matching",
 									"category": "color",
@@ -597,27 +552,6 @@
 									"chapter": "B",
 									"chapterName": "Brand Design Elements",
 									"titleKo": "색 조합 예시"
-								}
-							]
-						},
-						{
-							"page": 29,
-							"section": "B.2",
-							"rules": [
-								{
-									"key": "color.contrast",
-									"title": "Color/legibility contrast minimum",
-									"category": "color",
-									"tier": "automated",
-									"inCatalog": true,
-									"evidence": "Tone on Tone에서 컬러 간 명도 차이를 확보(Low Contrast~High Contrast, Contrast Level 1~4) 확인. Tone in Tone에서도 최소한의 가시성을 위한 명도 대비 체크 필요.",
-									"value": "Contrast Level 1~4 (Low Contrast↔High Contrast); 고대비=높은 가독성, 저대비=시각적 안정감",
-									"page": 29,
-									"section": "B.2",
-									"sectionName": "Color System",
-									"chapter": "B",
-									"chapterName": "Brand Design Elements",
-									"titleKo": "색 대비 (가독성)"
 								}
 							]
 						},
@@ -993,7 +927,7 @@
 									"title": "Photography background tone (bright achromatic)",
 									"category": "imagery",
 									"tier": "automated",
-									"inCatalog": false,
+									"inCatalog": true,
 									"evidence": "Background Color: 백색~연회색 계열의 밝은 무채색 배경톤 활용을 권장. Ingredients&Texture, Brand Product, Brand Model 모두 동일 규정.",
 									"value": "background: white ~ light gray, bright achromatic (백색~연회색 무채색)",
 									"page": 48,
@@ -1900,21 +1834,6 @@
 									"titleKo": "레이아웃 톤앤매너 (피드 일관성)"
 								},
 								{
-									"key": "color.roles",
-									"title": "Color role assignment",
-									"category": "color",
-									"tier": "automated",
-									"inCatalog": true,
-									"evidence": "명함에 브랜드 메인 컬러를 적용; 제품 정보 카드는 로고, 컬러 등 브랜드 디자인 요소를 적용.",
-									"value": "brand main color (Pantone Warm Red C)",
-									"page": 80,
-									"section": "C.3",
-									"sectionName": "Stationery",
-									"chapter": "C",
-									"chapterName": "Applications",
-									"titleKo": "컬러 역할 지정"
-								},
-								{
 									"key": "typography.families",
 									"title": "Designated typeface families by role/script",
 									"category": "typography",
@@ -2373,13 +2292,13 @@
 		}
 	],
 	"stats": {
-		"totalRules": 125,
+		"totalRules": 120,
 		"chapterCount": 3,
 		"sectionCount": 15,
 		"byTier": {
 			"assisted": 30,
 			"manual": 48,
-			"automated": 47
+			"automated": 42
 		}
 	}
 }
