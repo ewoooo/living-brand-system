@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { resendAdapter } from '@payloadcms/email-resend'
 import { searchPlugin } from '@payloadcms/plugin-search'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -24,6 +25,7 @@ import { Guideline } from './globals/Guideline'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const databaseURL = process.env.DATABASE_URL
+const resendAPIKey = process.env.RESEND_API_KEY
 const shouldRunProdMigrations =
 	process.env.PAYLOAD_RUN_MIGRATIONS_ON_STARTUP === 'true' &&
 	process.env.NODE_ENV === 'production' &&
@@ -56,6 +58,13 @@ export default buildConfig({
 		GuidelinePages,
 	],
 	editor: lexicalEditor(),
+	email: resendAPIKey
+		? resendAdapter({
+				apiKey: resendAPIKey,
+				defaultFromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@plus-ex.com',
+				defaultFromName: process.env.EMAIL_FROM_NAME || 'PROTO',
+			})
+		: undefined,
 	secret: process.env.PAYLOAD_SECRET || '',
 	typescript: {
 		outputFile: path.resolve(dirname, 'payload-types.ts'),

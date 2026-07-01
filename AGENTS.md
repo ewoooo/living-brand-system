@@ -115,3 +115,11 @@ When docs conflict, prefer the newer or more specific document. If a code change
 - Scope: keep each commit focused on one purpose.
 - Hygiene: do not include unrelated dirty worktree changes in a commit.
 - Language: write commit messages in English.
+
+## Pull Request Description Rules
+
+- Language: write pull request descriptions in Korean unless the user asks otherwise.
+- Detail level: include enough detail for reviewers to understand what changed, why it changed, and how it was verified without reading the full diff first.
+- Required sections: `요약`, `주요 변경사항`, `확인한 동작`, `검증`, and `참고` when relevant.
+- Verification: list the exact commands run, not generic labels.
+- Caveats: mention known warnings, intentionally skipped cleanup, or remaining review points briefly.
