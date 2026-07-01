@@ -3,6 +3,7 @@ import {
 	createAgentUIStreamResponse,
 	type InferAgentUIMessage,
 	isStepCount,
+	Output,
 	safeValidateUIMessages,
 	ToolLoopAgent,
 } from 'ai'
@@ -22,6 +23,21 @@ const agentChatCallOptionsSchema = z.object({
 	user: z.unknown(),
 })
 
+const agentChatOutput = Output.object({
+	schema: z.object({
+		answer: z.string(),
+		citations: z.array(
+			z.object({
+				collection: z.enum(['guideline-pages', 'sections']),
+				id: z.string(),
+				title: z.string(),
+				ruleKeys: z.array(z.string()),
+			}),
+		),
+		needsHumanReview: z.boolean(),
+	}),
+})
+
 type AgentChatCallOptions = z.infer<typeof agentChatCallOptionsSchema>
 type AgentChatRuntimeContext = {
 	locale: 'ko' | 'en'
@@ -33,10 +49,12 @@ type AgentChatRuntimeContext = {
 const agentChatAgent = new ToolLoopAgent<
 	AgentChatCallOptions,
 	ReturnType<typeof getAgentTools>,
-	AgentChatRuntimeContext
+	AgentChatRuntimeContext,
+	typeof agentChatOutput
 >({
 	model: anthropic(process.env.ANTHROPIC_MODEL || DEFAULT_MODEL),
 	tools: getAgentTools(),
+	output: agentChatOutput,
 	// ponytail: AI SDK requires constructor toolsContext; prepareCall replaces it per request.
 	toolsContext: {
 		listGuidelinePages: { user: null },

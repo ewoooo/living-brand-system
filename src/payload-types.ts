@@ -482,7 +482,7 @@ export interface GuidelinePage {
     [k: string]: unknown;
   } | null;
   /**
-   * 이 페이지에서 설명하거나 적용하는 규칙입니다.
+   * 이 페이지에서 설명하거나 적용하는 live 규칙입니다.
    */
   rules?: (number | Rule)[] | null;
   /**

@@ -49,8 +49,11 @@ export const GuidelinePages: CollectionConfig = {
 			type: 'relationship',
 			relationTo: 'rules',
 			hasMany: true,
+			filterOptions: {
+				status: { equals: 'live' },
+			},
 			admin: {
-				description: '이 페이지에서 설명하거나 적용하는 규칙입니다.',
+				description: '이 페이지에서 설명하거나 적용하는 live 규칙입니다.',
 			},
 		},
 		{

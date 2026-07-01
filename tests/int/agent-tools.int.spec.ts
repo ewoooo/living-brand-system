@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { getAgentMessageText } from '@/features/agent-chat/get-agent-message-text'
+import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import { validateAgentChatMessages } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { extractTextFromLexical } from '@/features/agent-chat/services/get-agent-guideline-context.service'
@@ -73,5 +75,32 @@ describe('agent tools', () => {
 		})
 
 		expect(text).toBe('Logo minimum size')
+	})
+
+	it('renders structured agent output as answer text', () => {
+		const text = getAgentMessageText({
+			role: 'assistant',
+			parts: [
+				{
+					type: 'text',
+					text: JSON.stringify({
+						answer: '안녕하세요.',
+						citations: [],
+						needsHumanReview: false,
+					}),
+				},
+			],
+		} as AgentChatMessage)
+
+		expect(text).toBe('안녕하세요.')
+	})
+
+	it('renders partial structured agent output while streaming', () => {
+		const text = getAgentMessageText({
+			role: 'assistant',
+			parts: [{ type: 'text', text: '{"answer":"안녕하세요!\\n브랜드' }],
+		} as AgentChatMessage)
+
+		expect(text).toBe('안녕하세요!\n브랜드')
 	})
 })
