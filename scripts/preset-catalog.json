@@ -500,6 +500,34 @@
 		"visionGap": true
 	},
 	{
+		"key": "color.combo-tonal-balance",
+		"title": "Color combination tonal balance (inter-color lightness relationship)",
+		"category": "color",
+		"tier": "B",
+		"executor": "heuristic",
+		"scopeOptions": ["all"],
+		"frequency": 3,
+		"brands": ["ChannelA", "SLL", "essenherb"],
+		"paramSchema": "{minLightnessDelta:number,forbiddenCombos:['both-dark'|'both-light'|'equal-tone'],darkThreshold:number,lightThreshold:number,equalToneTolerance:number,contrastLevels:[{level:number,minDelta:number,maxDelta:number,intent:'stability|legibility'}],sameHueOnly:boolean}",
+		"scoring": "Per co-present brand-color pair compute lightness delta; fail if pair is a forbidden combo (both-dark/both-light/equal-tone within tolerance) or delta<minLightnessDelta; map delta to contrastLevels intent (low=stability, high=legibility). Symmetric harmony check, distinct from color.contrast (directional fg-vs-bg legibility).",
+		"input": "Detect brand colors used together in a composition; measure pairwise inter-color lightness delta and dark/light classification; verify tonal separation and stability-vs-legibility intent, independent of fg-vs-bg legibility.",
+		"note": "From ChannelA p74 misuse 5/6/7, SLL p36 Brightness-Variation, essenherb p29 Tone-on-Tone Contrast Level 1-4."
+	},
+	{
+		"key": "color.area-containment",
+		"title": "Spatial color-area containment & offset-step mapping (motion)",
+		"category": "color",
+		"tier": "A",
+		"executor": "deterministic",
+		"scopeOptions": ["screen"],
+		"frequency": 1,
+		"brands": ["SLL"],
+		"paramSchema": "{colorAreas:[{name:string,regionShape:'rect|circle|polygon',boundsNorm:[number],centerExcluded:boolean}],offsetRules:[{offsetCount:number,allowedBrightnessSteps:[string],oddStepsOnly:boolean,layout:'free|concentric'}]}",
+		"scoring": "Deterministic: detect brand-color pixels, verify they fall inside a designated Color Area region (none in an excluded center); map observed offset-repeat count to its offsetRule and check used brightness steps are in the allowed set (odd-step where set). Out-of-region color or off-mapping step fails.",
+		"input": "Segment brand-color regions in the frame; test each against the designated Color Area bounds and center-exclusion; count concentric offset repeats and verify colors/brightness steps match the allowed mapping for that offset count.",
+		"note": "From SLL p53 Motion Graphics/Color Usage (offset x1 free within Color Area; x4 Red 01/03/05 concentric, center excluded)."
+	},
+	{
 		"key": "typography.families",
 		"title": "Designated typeface families by role/script",
 		"category": "typography",
@@ -829,6 +857,20 @@
 		"scoring": "Overlay opacity/color/duotone/crop deterministic; grading/focal heuristic; composite.",
 		"input": "Verify image treatments (duotone/overlay/grading) and crop ratios match spec.",
 		"underRepresented": true
+	},
+	{
+		"key": "imagery.background-tone",
+		"title": "Photography background tone (bright achromatic)",
+		"category": "imagery",
+		"tier": "A",
+		"executor": "deterministic",
+		"scopeOptions": ["all"],
+		"frequency": 1,
+		"brands": ["essenherb"],
+		"paramSchema": "{targets:[{surface:string,maxSaturation:number,minLightness:number}],toneRange:{fromHex:string,toHex:string}}",
+		"scoring": "Segment photo background region; measure mean saturation and lightness; pass if saturation<=maxSaturation AND lightness>=minLightness (white-to-light-gray achromatic band); off-band fail.",
+		"input": "Isolate the product/scene photography background region and measure its saturation/lightness; verify it is a bright achromatic tone (white to light gray).",
+		"note": "From essenherb p48 Photography/Background Color (백색~연회색 밝은 무채색). Checker already implemented in imagery-background-tone.checker.ts (lightness>=0.7, saturation<=0.25)."
 	},
 	{
 		"key": "illustration.ai-symbol",

@@ -610,14 +610,29 @@
 									"category": "color",
 									"tier": "automated",
 									"inCatalog": true,
-									"evidence": "Tone on Tone에서 컬러 간 명도 차이를 확보(Low Contrast~High Contrast, Contrast Level 1~4) 확인. Tone in Tone에서도 최소한의 가시성을 위한 명도 대비 체크 필요.",
-									"value": "Contrast Level 1~4 (Low Contrast↔High Contrast); 고대비=높은 가독성, 저대비=시각적 안정감",
+									"evidence": "Tone in Tone/Tone on Tone 조합에서 최소한의 가시성(가독성) 확보를 위한 전경/배경 명도 대비 체크 필요. (톤온톤 대비 단계 자체는 color.combo-tonal-balance가 담당)",
+									"value": "전경/배경 최소 명도 대비 확보 (가독성, WCAG AA 근사)",
 									"page": 29,
 									"section": "B.2",
 									"sectionName": "Color System",
 									"chapter": "B",
 									"chapterName": "Brand Design Elements",
 									"titleKo": "색 대비 (가독성)"
+								},
+								{
+									"key": "color.combo-tonal-balance",
+									"title": "Color combination tonal balance (inter-color lightness relationship)",
+									"category": "color",
+									"tier": "assisted",
+									"inCatalog": true,
+									"evidence": "Tone on Tone Pairing System — 동일 색상 계열 내 서로 다른 명도의 컬러 조합, Contrast Level 1~4 (Low→High). 저대비=시각적 안정감·배경요소, 고대비=높은 가독성. 함께 쓰인 컬러 간 명도 관계 규정.",
+									"value": "same-hue tonal balance; Contrast Level 1~4; low delta=stability, high delta=legibility; equal-tone/both-dark/both-light 지양",
+									"page": 29,
+									"section": "B.2",
+									"sectionName": "Color System",
+									"chapter": "B",
+									"chapterName": "Brand Design Elements",
+									"titleKo": "색 조합 명도 밸런스 (톤온톤 대비 단계)"
 								}
 							]
 						},
@@ -993,7 +1008,7 @@
 									"title": "Photography background tone (bright achromatic)",
 									"category": "imagery",
 									"tier": "automated",
-									"inCatalog": false,
+									"inCatalog": true,
 									"evidence": "Background Color: 백색~연회색 계열의 밝은 무채색 배경톤 활용을 권장. Ingredients&Texture, Brand Product, Brand Model 모두 동일 규정.",
 									"value": "background: white ~ light gray, bright achromatic (백색~연회색 무채색)",
 									"page": 48,
@@ -2373,11 +2388,11 @@
 		}
 	],
 	"stats": {
-		"totalRules": 125,
+		"totalRules": 126,
 		"chapterCount": 3,
 		"sectionCount": 15,
 		"byTier": {
-			"assisted": 30,
+			"assisted": 31,
 			"manual": 48,
 			"automated": 47
 		}
