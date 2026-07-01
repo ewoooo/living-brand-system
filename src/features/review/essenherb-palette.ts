@@ -55,6 +55,15 @@ export const ESSENHERB_SWATCHES: Swatch[] = [
 	{ name: 'Gray 5', hex: '151515' },
 ]
 
+/**
+ * 컬러 역할 기준값 (color.roles). B.2 Color System Overview:
+ * Essenherb Red = 메인(핵심) 컬러, White/Black = 메인을 보조하는 보조 컬러,
+ * 그 외 멀티 컬러(5계열 + Gray)는 변주/확장 역할.
+ * ※ 원래 brand-colors 컬렉션이 소유할 값 — POC라 여기 하드코딩(기술부채).
+ */
+export const ESSENHERB_MAIN_HEX = 'EA5343'
+export const ESSENHERB_SUPPORTING_HEXES = ['FFFFFF', '000000']
+
 /** 팔레트 통과선(충족률 %). passThreshold 이상이면 통과. */
 export const ESSENHERB_PASS_THRESHOLD = 90
 

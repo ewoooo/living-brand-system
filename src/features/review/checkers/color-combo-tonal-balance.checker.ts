@@ -1,5 +1,4 @@
-import type { Rgb } from '@/features/review/color-check'
-import { lightness } from '@/features/review/color-metrics'
+import { dominantColors, lightness } from '@/features/review/color-metrics'
 import type { RuleChecker } from './types'
 
 // essenherb Tone-on-Tone Contrast Level 근사 기준값 (명도 축 0~1)
@@ -12,36 +11,6 @@ const MIN_SHARE = 0.05 // 지배색으로 인정할 최소 점유율
 const PASS_THRESHOLD = 70
 
 /**
- * 픽셀을 6비트로 양자화해 점유율 상위 지배색을 뽑는다.
- * 팔레트 매칭(color.palette가 담당)이 아니라 "함께 쓰인 주요 색"의 명도 관계만 본다.
- */
-function dominantColors(pixels: Rgb[]): Rgb[] {
-	const buckets = new Map<string, { r: number; g: number; b: number; count: number }>()
-	for (const p of pixels) {
-		const key = `${p.r >> 2}-${p.g >> 2}-${p.b >> 2}`
-		const bucket = buckets.get(key)
-		if (bucket) {
-			bucket.r += p.r
-			bucket.g += p.g
-			bucket.b += p.b
-			bucket.count += 1
-		} else {
-			buckets.set(key, { r: p.r, g: p.g, b: p.b, count: 1 })
-		}
-	}
-	const total = pixels.length
-	return [...buckets.values()]
-		.filter((b) => b.count / total >= MIN_SHARE)
-		.sort((a, b) => b.count - a.count)
-		.slice(0, TOP_COLORS)
-		.map((b) => ({
-			r: Math.round(b.r / b.count),
-			g: Math.round(b.g / b.count),
-			b: Math.round(b.b / b.count),
-		}))
-}
-
-/**
  * color.combo-tonal-balance: 함께 쓰인 지배색 간 명도 밸런스.
  * both-dark / both-light / equal-tone 조합을 지양하고 최소 명도차를 확보하는지 본다.
  * color.contrast(전경-배경 가독성)와 달리 색 간 대칭적 톤 관계를 판정한다.
@@ -50,11 +19,11 @@ export const colorComboTonalBalanceChecker: RuleChecker = {
 	ruleKey: 'color.combo-tonal-balance',
 	check: ({ pixels }) => {
 		if (pixels.length === 0) return { status: 'fail', fulfillment: 0, detail: '픽셀 없음' }
-		const colors = dominantColors(pixels)
+		const colors = dominantColors(pixels, TOP_COLORS, MIN_SHARE)
 		if (colors.length < 2) {
 			return { status: 'pass', fulfillment: 100, detail: '지배색 1개 — 조합 판정 대상 아님' }
 		}
-		const ls = colors.map(lightness)
+		const ls = colors.map((color) => lightness(color.rgb))
 		let good = 0
 		let total = 0
 		const problems = new Set<string>()
