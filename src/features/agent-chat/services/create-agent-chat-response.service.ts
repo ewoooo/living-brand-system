@@ -7,6 +7,7 @@ import {
 	ToolLoopAgent,
 } from 'ai'
 import { z } from 'zod'
+import { formatAgentSkillInstructions } from './format-agent-skill-instructions.service'
 import { getAgentTools } from './get-agent-tools.service'
 import { resolveAgentSkill } from './resolve-agent-skill.service'
 
@@ -55,7 +56,10 @@ const agentChatAgent = new ToolLoopAgent<
 
 		return {
 			...settings,
-			instructions: [skill.body, pageContext ? `Published context:\n${pageContext}` : null]
+			instructions: [
+				formatAgentSkillInstructions(skill),
+				pageContext ? `Published context:\n${pageContext}` : null,
+			]
 				.filter(Boolean)
 				.join('\n\n'),
 			runtimeContext: {
