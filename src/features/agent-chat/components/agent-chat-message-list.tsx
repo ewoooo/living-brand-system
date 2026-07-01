@@ -25,7 +25,7 @@ export function AgentChatMessageList({
 	return (
 		<MessageScrollerProvider>
 			<MessageScroller className="min-h-0 flex-1">
-				<MessageScrollerViewport>
+				<MessageScrollerViewport className="scrollbar-none">
 					<MessageScrollerContent className="gap-3 p-3">
 						{isEmpty ? (
 							<MessageScrollerItem>
@@ -60,5 +60,5 @@ export function AgentChatMessageList({
 }
 
 function AgentEmptyMessage() {
-	return <p className="text-muted-foreground text-sm">Ask about this guideline.</p>
+	return <p className="text-muted-foreground text-sm px-3">Ask about this guideline.</p>
 }

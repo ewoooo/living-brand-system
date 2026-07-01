@@ -4,6 +4,7 @@ import {
 	findEnabledAgentSkillByName,
 	findEnabledAgentSkillSummaries,
 } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
+import { formatAgentSkillInstructions } from '@/features/agent-chat/services/format-agent-skill-instructions.service'
 import { resolveAgentSkill } from '@/features/agent-chat/services/resolve-agent-skill.service'
 import { AgentConfigurationError } from '@/lib/errors'
 
@@ -34,6 +35,21 @@ describe('agent skills', () => {
 		).resolves.toEqual(skill)
 
 		expect(findEnabledAgentSkillByName).toHaveBeenCalledWith({ id: 1 }, skill.name)
+	})
+
+	it('adds reference headings to skill instructions', () => {
+		expect(
+			formatAgentSkillInstructions({
+				...skill,
+				references: [{ title: 'Answer shape', body: 'Start with the direct answer.' }],
+			}),
+		).toBe(
+			[
+				skill.body,
+				'# Skill references',
+				'## Answer shape\nStart with the direct answer.',
+			].join('\n\n'),
+		)
 	})
 
 	it('fails when no enabled skill can be selected', async () => {

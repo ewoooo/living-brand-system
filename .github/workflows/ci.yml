@@ -25,7 +25,6 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgresql://payload:payload@127.0.0.1:5432/hd_cms_prototype
-      PAYLOAD_DB_PUSH: 'true'
       PAYLOAD_SECRET: ci-local-secret
       # 빈 CI postgres에 부팅 시 스키마를 생성하도록 dev-push 활성 (테스트 전용)
       PAYLOAD_DB_PUSH: 'true'

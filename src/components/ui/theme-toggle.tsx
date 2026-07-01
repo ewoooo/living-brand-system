@@ -1,6 +1,8 @@
 'use client'
 
+import { Moon, Screen, Sun } from '@carbon/icons-react'
 import { useEffect, useState } from 'react'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -42,21 +44,42 @@ export function ThemeToggle() {
 	}, [])
 
 	return (
-		<label className="inline-flex items-center gap-2 text-sm">
-			<select
-				className="rounded border border-neutral-300 bg-white px-2 py-1 text-black dark:border-neutral-700 dark:bg-black dark:text-white"
-				value={theme}
-				onChange={(event) => {
-					const nextTheme = event.target.value as Theme
+		<ToggleGroup
+			type="single"
+			value={theme}
+			aria-label="Theme"
+			className="rounded-full bg-muted p-1"
+			spacing={1}
+			onValueChange={(value) => {
+				if (!value) return
 
-					setTheme(nextTheme)
-					setThemePreference(nextTheme)
-				}}
+				const nextTheme = value as Theme
+
+				setTheme(nextTheme)
+				setThemePreference(nextTheme)
+			}}
+		>
+			<ToggleGroupItem
+				value="system"
+				aria-label="Use system theme"
+				className="size-8 rounded-full p-0! data-[state=on]:bg-background data-[state=on]:shadow-xs"
 			>
-				<option value="light">Light</option>
-				<option value="dark">Dark</option>
-				<option value="system">System</option>
-			</select>
-		</label>
+				<Screen data-icon="inline-start" />
+			</ToggleGroupItem>
+			<ToggleGroupItem
+				value="light"
+				aria-label="Use light theme"
+				className="size-8 rounded-full p-0! data-[state=on]:bg-background data-[state=on]:shadow-xs"
+			>
+				<Sun data-icon="inline-start" />
+			</ToggleGroupItem>
+			<ToggleGroupItem
+				value="dark"
+				aria-label="Use dark theme"
+				className="size-8 rounded-full p-0! data-[state=on]:bg-background data-[state=on]:shadow-xs"
+			>
+				<Moon data-icon="inline-start" />
+			</ToggleGroupItem>
+		</ToggleGroup>
 	)
 }

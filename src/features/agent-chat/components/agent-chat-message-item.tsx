@@ -13,6 +13,7 @@ export function AgentChatMessageItem({
 	const isUser = message.role === 'user'
 	const marker = isUser ? null : getAgentToolMarker(message)
 	const messageText = getAgentMessageText(message)
+	const files = message.parts.filter((part) => part.type === 'file')
 
 	return (
 		<div
@@ -20,9 +21,9 @@ export function AgentChatMessageItem({
 		>
 			<AgentChatToolMarker marker={marker} isPending={marker?.isPending || isActive} />
 			{isUser ? (
-				<AgentChatUserBubble text={messageText} />
+				<AgentChatUserBubble text={messageText} files={files} />
 			) : (
-				<AgentChatAgentBubble text={messageText} />
+				<AgentChatAgentBubble text={messageText} isStreaming={isActive} />
 			)}
 		</div>
 	)
