@@ -1,3 +1,4 @@
+import { colorComboTonalBalanceChecker } from './color-combo-tonal-balance.checker'
 import { colorContrastChecker } from './color-contrast.checker'
 import { colorPaletteChecker } from './color-palette.checker'
 import { colorScaleChecker } from './color-scale.checker'
@@ -13,6 +14,7 @@ const checkers: Record<string, RuleChecker> = {
 	[colorPaletteChecker.ruleKey]: colorPaletteChecker,
 	[colorScaleChecker.ruleKey]: colorScaleChecker,
 	[colorContrastChecker.ruleKey]: colorContrastChecker,
+	[colorComboTonalBalanceChecker.ruleKey]: colorComboTonalBalanceChecker,
 	[imageryBackgroundToneChecker.ruleKey]: imageryBackgroundToneChecker,
 }
 
