@@ -1,5 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
-import { getGuidelinePage } from '@/features/guideline/services/get-guideline-page.service'
+import { redirect } from 'next/navigation'
 
 export default async function GuidelinePage({
 	params,
@@ -7,14 +6,6 @@ export default async function GuidelinePage({
 	params: Promise<{ sectionSlug: string; pageSlug: string }>
 }) {
 	const { sectionSlug, pageSlug } = await params
-	const pageView = await getGuidelinePage({
-		sectionSlug,
-		pageSlug,
-	})
-
-	if (!pageView) {
-		notFound()
-	}
 
 	redirect(`/guideline/${sectionSlug}#${pageSlug}`)
 }
