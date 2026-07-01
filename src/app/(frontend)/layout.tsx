@@ -4,6 +4,7 @@ import { GlobalAgentChat } from '@/components/global-agent-chat'
 import { GlobalHeader } from '@/components/global-header'
 import { getGuidelineMetadata } from '@/features/guideline/services/get-guideline-metadata.service'
 
+import 'streamdown/styles.css'
 import './styles.css'
 
 const themeScript = `
