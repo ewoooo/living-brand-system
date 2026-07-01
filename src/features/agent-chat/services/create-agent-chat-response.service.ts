@@ -12,7 +12,7 @@ import { findEnabledAgentSkillSummaries } from '@/features/agent-chat/repositori
 import { AgentConfigurationError } from '@/lib/errors'
 import { getAgentTools } from './get-agent-tools.service'
 
-const DEFAULT_MODEL = 'claude-sonnet-4-5'
+const DEFAULT_MODEL = 'claude-sonnet-4-6'
 const DEFAULT_LOCALE = 'ko'
 
 const agentChatCallOptionsSchema = z.object({
@@ -51,6 +51,13 @@ const agentChatAgent = new ToolLoopAgent<
 	typeof agentChatOutput
 >({
 	model: anthropic(process.env.ANTHROPIC_MODEL || DEFAULT_MODEL),
+	providerOptions: {
+		anthropic: {
+			effort: 'medium',
+			thinking: { type: 'adaptive', display: 'summarized' },
+		},
+	},
+	reasoning: 'medium',
 	tools: getAgentTools(),
 	output: agentChatOutput,
 	// ponytail: AI SDK requires constructor toolsContext; prepareCall replaces it per request.
