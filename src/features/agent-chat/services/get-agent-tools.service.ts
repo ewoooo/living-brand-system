@@ -6,6 +6,7 @@ import {
 	findEnabledAgentSkillByName,
 } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import { AgentConfigurationError } from '@/lib/errors'
+import { findAgentRules } from '../repositories/agent-guideline-context.payload.repository'
 import { formatAgentSkillInstructions } from './format-agent-skill-instructions.service'
 import {
 	listAgentGuidelinePages,
@@ -62,6 +63,12 @@ export function getAgentTools() {
 			contextSchema: guidelineToolContextSchema,
 			execute: ({ collection, id }, { context }) =>
 				readAgentGuidelineDocument(context.user, { collection, id }),
+		}),
+		getRuleCatalog: tool({
+			description: 'Get the live built-in rule preset catalog registered in Payload.',
+			inputSchema: z.object({}),
+			contextSchema: guidelineToolContextSchema,
+			execute: (_input, { context }) => findAgentRules(context.user),
 		}),
 	} satisfies ToolSet
 }

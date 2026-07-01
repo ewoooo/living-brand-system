@@ -11,7 +11,7 @@ export default async function GuidelineLayout({ children }: { children: React.Re
 		<SidebarProvider className="min-h-full">
 			<GuidelineSideNavigation navigation={navigation} />
 			<div className="flex min-w-0 flex-1 flex-col items-center">
-				<main className="flex min-h-svh w-full max-w-[1600px] flex-1 justify-center">
+				<main className="flex min-h-svh w-full flex-1 justify-center px-12">
 					{children}
 				</main>
 				<GuidelineFooter companyName={navigation.metadata.companyName} />

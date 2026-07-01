@@ -1,0 +1,18 @@
+.dashboard-summary {
+	width: 100%;
+	aspect-ratio: 7 / 1;
+	border-radius: 24px;
+	border: solid 1px #FFFFFF20;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+
+	ul {
+		display: flex;
+		gap: 16px;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+}
