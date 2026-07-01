@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { getAgentToolMarker } from '@/features/agent-chat/get-agent-tool-marker'
+import {
+	getAgentReasoningMarker,
+	getAgentSkillMarker,
+	getAgentToolMarker,
+} from '@/features/agent-chat/get-agent-tool-marker'
 import { getAgentChatErrorMessage } from '@/features/agent-chat/hooks/use-agent-chat'
 import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 
@@ -35,6 +39,105 @@ describe('agent chat errors', () => {
 		} as AgentChatMessage
 
 		expect(getAgentToolMarker(message)?.text).toBe('가이드라인 결과 2개를 찾았습니다')
+	})
+
+	it('uses loadSkill tool results as skill marker text', () => {
+		const message = {
+			id: '1',
+			role: 'assistant',
+			parts: [
+				{
+					type: 'tool-loadSkill',
+					toolCallId: 'tool-1',
+					state: 'output-available',
+					input: { name: 'copywriter-test' },
+					output: {
+						name: 'copywriter-test',
+						description: 'Rewrite copy.',
+						instructions: 'Rewrite the sentence.',
+					},
+				},
+			],
+		} as AgentChatMessage
+
+		expect(getAgentSkillMarker(message)?.text).toBe('copywriter-test')
+		expect(getAgentToolMarker(message)).toBeNull()
+	})
+
+	it('uses loadSkill input as skill marker fallback while loading', () => {
+		const message = {
+			id: '1',
+			role: 'assistant',
+			parts: [
+				{
+					type: 'tool-loadSkill',
+					toolCallId: 'tool-1',
+					state: 'input-available',
+					input: { name: 'guideline-qa' },
+				},
+			],
+		} as AgentChatMessage
+
+		expect(getAgentSkillMarker(message)).toEqual({
+			isPending: true,
+			text: 'guideline-qa',
+		})
+	})
+
+	it('shows reasoning marker while reasoning streams', () => {
+		const message = {
+			id: '1',
+			role: 'assistant',
+			parts: [{ type: 'reasoning', text: 'Thinking...', state: 'streaming' }],
+		} as AgentChatMessage
+
+		expect(getAgentReasoningMarker(message)).toEqual({
+			isPending: true,
+			text: 'Reasoning',
+		})
+	})
+
+	it('shows reasoning marker while an assistant message is active before reasoning parts arrive', () => {
+		const message = {
+			id: '1',
+			role: 'assistant',
+			parts: [{ type: 'text', text: '' }],
+		} as AgentChatMessage
+
+		expect(getAgentReasoningMarker(message, true)).toEqual({
+			isPending: true,
+			text: 'Reasoning',
+		})
+		expect(getAgentReasoningMarker(message, false)).toBeNull()
+	})
+
+	it('shows reasoning marker when reasoning is done', () => {
+		const message = {
+			id: '1',
+			role: 'assistant',
+			parts: [{ type: 'reasoning', text: 'Done.', state: 'done' }],
+		} as AgentChatMessage
+
+		expect(getAgentReasoningMarker(message)).toEqual({
+			isPending: false,
+			text: 'Reasoning complete',
+		})
+	})
+
+	it('keeps reasoning marker pending when a later reasoning part streams', () => {
+		const message = {
+			id: '1',
+			role: 'assistant',
+			parts: [
+				{ type: 'reasoning', text: 'Done.', state: 'done' },
+				{ type: 'reasoning', text: 'Still thinking...', state: 'streaming' },
+			],
+		} as AgentChatMessage
+
+		expect(getAgentReasoningMarker(message)).toEqual({
+			isPending: true,
+			text: 'Reasoning',
+		})
 	})
 
 	it('summarizes guideline page list tool results as marker text', () => {

@@ -26,7 +26,7 @@ describe('agent skills', () => {
 
 	it('loads the requested enabled skill body', async () => {
 		vi.mocked(findEnabledAgentSkillSummaries).mockResolvedValue([
-			{ name: skill.name, isDefault: true },
+			{ name: skill.name, description: skill.description, isDefault: true },
 		])
 		vi.mocked(findEnabledAgentSkillByName).mockResolvedValue(skill)
 
@@ -54,8 +54,8 @@ describe('agent skills', () => {
 
 	it('fails when no enabled skill can be selected', async () => {
 		vi.mocked(findEnabledAgentSkillSummaries).mockResolvedValue([
-			{ name: 'first', isDefault: false },
-			{ name: 'second', isDefault: false },
+			{ name: 'first', description: 'First skill.', isDefault: false },
+			{ name: 'second', description: 'Second skill.', isDefault: false },
 		])
 
 		await expect(resolveAgentSkill({ user: { id: 1 } })).rejects.toBeInstanceOf(
@@ -67,8 +67,8 @@ describe('agent skills', () => {
 
 	it('fails when multiple enabled skills are default', async () => {
 		vi.mocked(findEnabledAgentSkillSummaries).mockResolvedValue([
-			{ name: 'first', isDefault: true },
-			{ name: 'second', isDefault: true },
+			{ name: 'first', description: 'First skill.', isDefault: true },
+			{ name: 'second', description: 'Second skill.', isDefault: true },
 		])
 
 		await expect(resolveAgentSkill({ user: { id: 1 } })).rejects.toBeInstanceOf(

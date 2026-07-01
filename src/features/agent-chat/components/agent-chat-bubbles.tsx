@@ -24,12 +24,15 @@ export function AgentChatUserBubble({ files, text }: { files: FileUIPart[]; text
 	}
 
 	return (
-		<div className="flex max-w-full flex-col items-end gap-2">
+		<div className="flex w-full max-w-full flex-col items-end gap-2">
 			<AgentChatFileAttachments files={files} />
 			{text && (
 				<Bubble align="end" variant="default" className="rounded-full">
-					<BubbleContent className="whitespace-pre-wrap">
-						<p className="text-sm">{text}</p>
+					<BubbleContent
+						asChild
+						className="whitespace-pre-wrap text-sm [overflow-wrap:normal] [word-break:keep-all]"
+					>
+						<p>{text}</p>
 					</BubbleContent>
 				</Bubble>
 			)}
@@ -55,8 +58,8 @@ function AgentChatFileAttachment({ file }: { file: FileUIPart }) {
 	const isImage = file.mediaType.startsWith('image')
 
 	return (
-		<Attachment size="sm">
-			<AttachmentMedia variant={isImage ? 'image' : 'icon'}>
+		<Attachment size="default" orientation="vertical" className="w-36 rounded-3xl p-2">
+			<AttachmentMedia variant={isImage ? 'image' : 'icon'} className="rounded-2xl">
 				{isImage ? (
 					// biome-ignore lint/performance/noImgElement: AI SDK file parts can be data URLs.
 					<img src={file.url} alt={file.filename || 'Attachment'} />
@@ -85,12 +88,12 @@ export function AgentChatAgentBubble({
 
 	return (
 		<Bubble align="start" variant="muted" className="rounded-full">
-			<BubbleContent>
+			<BubbleContent className="px-4 py-4">
 				<Streamdown
 					animated
 					controls={false}
 					isAnimating={isStreaming}
-					className="space-y-2 text-sm [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4"
+					className="space-y-2 text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4"
 				>
 					{text}
 				</Streamdown>
