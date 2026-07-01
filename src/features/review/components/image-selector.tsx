@@ -4,7 +4,7 @@ import { useRef } from 'react'
 import { useReviewImages } from '@/features/review/image-context'
 
 export function ImageSelector() {
-	const { images, selectedId, selected, select, addFiles } = useReviewImages()
+	const { images, selectedId, selected, select, addFiles, setPhoto } = useReviewImages()
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	return (
@@ -61,11 +61,25 @@ export function ImageSelector() {
 				)}
 			</div>
 
-			{/* 선택 이미지 요약 */}
+			{/* 선택 이미지 요약 + 사진 포함 선택 (Photography 섹션 활성화 게이트) */}
 			{selected && (
-				<p className="mt-3 truncate text-muted-foreground text-xs">
-					선택됨: {selected.name} · 검수 결과는 곧 여기 연동됩니다
-				</p>
+				<div className="mt-3 flex items-center gap-4">
+					<label className="flex shrink-0 items-center gap-1.5 text-foreground text-xs">
+						<input
+							type="checkbox"
+							checked={selected.contentFlags.photo}
+							onChange={(event) => setPhoto(selected.id, event.target.checked)}
+							className="size-3.5 accent-foreground"
+						/>
+						사진 포함
+						<span className="text-muted-foreground">
+							(체크 시 Photography 섹션 검수 활성화)
+						</span>
+					</label>
+					<p className="truncate text-muted-foreground text-xs">
+						선택됨: {selected.name}
+					</p>
+				</div>
 			)}
 		</div>
 	)
