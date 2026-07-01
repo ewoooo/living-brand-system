@@ -11,8 +11,16 @@ import type { Rgb } from '@/features/review/color-check'
  */
 
 const SETS = [
-	{ label: 'PASS 세트 (정상 — 전부 통과해야)', dir: 'tests/fixtures/review/pass', expect: 'pass' as const },
-	{ label: 'FAIL 세트 (위반 — 잡아야)', dir: 'tests/fixtures/review/fail', expect: 'fail' as const },
+	{
+		label: 'PASS 세트 (정상 — 전부 통과해야)',
+		dir: 'tests/fixtures/review/pass',
+		expect: 'pass' as const,
+	},
+	{
+		label: 'FAIL 세트 (위반 — 잡아야)',
+		dir: 'tests/fixtures/review/fail',
+		expect: 'fail' as const,
+	},
 ]
 const MAX_DIM = 128
 
@@ -59,7 +67,8 @@ for (const set of SETS) {
 	}
 
 	console.log(`-- "기대(${set.expect})대로 판정" 비율 --`)
-	for (const [name] of checkers) console.log(`  ${name.padEnd(10)} ${correct[name]}/${files.length}`)
+	for (const [name] of checkers)
+		console.log(`  ${name.padEnd(10)} ${correct[name]}/${files.length}`)
 }
 
 process.exit(0)
