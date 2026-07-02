@@ -66,6 +66,11 @@ function TemplateElement({
 		zIndex: element.zIndex,
 	}
 
+	if (element.type === 'stack') {
+		// 스택 flow 렌더는 아직 미구현 — 변환기가 stack을 내보내기 전까지 도달하지 않는 경로다.
+		return null
+	}
+
 	if (element.type === 'text') {
 		return (
 			<div

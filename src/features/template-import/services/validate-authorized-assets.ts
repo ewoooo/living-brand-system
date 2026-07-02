@@ -1,7 +1,12 @@
-import { jsonTemplateSchema } from '@/types/json-template'
+import {
+	type JsonFlowElement,
+	type JsonTemplateElement,
+	jsonTemplateSchema,
+} from '@/types/json-template'
 
 /**
  * 저장하려는 jsonTemplate에서 인가되지 않은 이미지 요소를 찾는다.
+ * 스택 자식까지 재귀 탐색한다 — 중첩 이미지가 인가 검증을 우회하면 안 된다.
  * 임포트 조각(template-assets)을 그대로 쓰는 요소가 하나라도 있으면 Templates 저장을 막는 근거가 된다.
  * 반환값은 사용자에게 보여줄 요소 라벨 목록이다.
  */
@@ -13,9 +18,21 @@ export function findUnauthorizedTemplateImages(jsonTemplate: unknown): string[] 
 		return []
 	}
 
-	return parsed.data.elements
-		.filter(
-			(element) => element.type === 'image' && element.assetCollection === 'template-assets',
-		)
-		.map((element) => element.slotLabel || element.id)
+	return collectUnauthorizedImageLabels(parsed.data.elements)
+}
+
+function collectUnauthorizedImageLabels(
+	elements: readonly (JsonFlowElement | JsonTemplateElement)[],
+): string[] {
+	return elements.flatMap((element) => {
+		if (element.type === 'stack') {
+			return collectUnauthorizedImageLabels(element.children)
+		}
+
+		if (element.type === 'image' && element.assetCollection === 'template-assets') {
+			return [element.slotLabel || element.id]
+		}
+
+		return []
+	})
 }
