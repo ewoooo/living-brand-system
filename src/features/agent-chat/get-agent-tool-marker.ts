@@ -67,6 +67,7 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 	let hasPendingToolPart = false
 	let listCount = 0
 	let readCount = 0
+	let ruleCount = 0
 	let searchResultCount = 0
 
 	for (const part of message.parts) {
@@ -104,6 +105,14 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 		) {
 			searchResultCount += part.output.length
 		}
+
+		if (
+			part.type === 'tool-getRuleCatalog' &&
+			part.state === 'output-available' &&
+			Array.isArray(part.output)
+		) {
+			ruleCount += part.output.length
+		}
 	}
 
 	if (!hasToolPart) {
@@ -128,6 +137,13 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 		return {
 			isPending: hasPendingToolPart,
 			text: `가이드라인 결과 ${searchResultCount}개를 찾았습니다`,
+		}
+	}
+
+	if (ruleCount > 0) {
+		return {
+			isPending: hasPendingToolPart,
+			text: `룰 카탈로그 ${ruleCount}개를 확인했습니다`,
 		}
 	}
 

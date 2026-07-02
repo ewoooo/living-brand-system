@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { getAgentMessageText } from '@/features/agent-chat/get-agent-message-text'
+import * as agentGuidelineRepository from '@/features/agent-chat/repositories/agent-guideline-context.payload.repository'
 import * as agentSkillRepository from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import { validateAgentChatMessages } from '@/features/agent-chat/services/create-agent-chat-response.service'
@@ -70,6 +71,38 @@ describe('agent tools', () => {
 				id: '7',
 			},
 		)
+	})
+
+	it('gets rule catalog through the tool service', async () => {
+		const getRules = vi.spyOn(agentGuidelineRepository, 'findAgentRules').mockResolvedValue([
+			{
+				category: 'color',
+				domainDefault: true,
+				executor: 'deterministic',
+				frequency: 4,
+				input: null,
+				key: 'color.palette',
+				notes: null,
+				paramSchema: null,
+				scope: ['screen'],
+				scoring: null,
+				tier: 'A',
+				title: 'Color palette',
+			},
+		])
+		const tools = getAgentTools()
+
+		const result = await tools.getRuleCatalog.execute?.({}, {
+			context: { user: { id: 1 } },
+		} as never)
+
+		expect(getRules).toHaveBeenCalledWith({ id: 1 })
+		expect(result).toEqual([
+			expect.objectContaining({
+				key: 'color.palette',
+				title: 'Color palette',
+			}),
+		])
 	})
 
 	it('rejects invalid tool message input before streaming', async () => {

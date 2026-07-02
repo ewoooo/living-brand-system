@@ -63,6 +63,7 @@ const agentChatAgent = new ToolLoopAgent<
 	// ponytail: AI SDK requires constructor toolsContext; prepareCall replaces it per request.
 	toolsContext: {
 		loadSkill: { user: null },
+		getRuleCatalog: { user: null },
 		listGuidelinePages: { user: null },
 		searchGuidelines: { user: null },
 		readGuidelineDocument: { user: null },
@@ -102,6 +103,7 @@ const agentChatAgent = new ToolLoopAgent<
 			},
 			toolsContext: {
 				loadSkill: { user: options.user },
+				getRuleCatalog: { user: options.user },
 				listGuidelinePages: { user: options.user },
 				searchGuidelines: { user: options.user },
 				readGuidelineDocument: { user: options.user },
