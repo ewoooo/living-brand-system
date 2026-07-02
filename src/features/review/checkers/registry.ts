@@ -17,7 +17,3 @@ const checkers: Record<string, RuleChecker> = {
 export function getChecker(ruleKey: string): RuleChecker | null {
 	return checkers[ruleKey] ?? null
 }
-
-export function getAllCheckers(): RuleChecker[] {
-	return Object.values(checkers)
-}

@@ -10,15 +10,15 @@ import {
 
 const MAX_DOCUMENT_CONTENT_LENGTH = 6000
 
-export interface GuidelineSearchInput {
+interface GuidelineSearchInput {
 	query: string
 }
 
-export type GuidelineDocumentCollection = 'guideline-pages' | 'sections'
+type GuidelineDocumentCollection = 'guideline-pages' | 'sections'
 
-export type GuidelineSearchResult = AgentGuidelineSearchResult
+type GuidelineSearchResult = AgentGuidelineSearchResult
 
-export interface GuidelinePageListResult {
+interface GuidelinePageListResult {
 	title: string
 	pages: {
 		id: string
@@ -26,12 +26,12 @@ export interface GuidelinePageListResult {
 	}[]
 }
 
-export interface GuidelineDocumentInput {
+interface GuidelineDocumentInput {
 	collection: GuidelineDocumentCollection
 	id: string
 }
 
-export interface GuidelineDocumentResult {
+interface GuidelineDocumentResult {
 	title: string
 	collection: GuidelineDocumentCollection
 	id: string
@@ -41,13 +41,13 @@ export interface GuidelineDocumentResult {
 	relatedPages?: GuidelineDocumentRelatedPage[]
 }
 
-export interface GuidelineDocumentSource {
+interface GuidelineDocumentSource {
 	collection: GuidelineDocumentCollection
 	id: string
 	title: string
 }
 
-export interface GuidelineDocumentRule {
+interface GuidelineDocumentRule {
 	key: string
 	title: string
 }
