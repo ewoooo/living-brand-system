@@ -84,8 +84,11 @@ function buildFixture(): FigmaNode {
 }
 
 describe('collectRenderableNodeIds', () => {
-	it('IMAGE fill 노드와 벡터 계열 노드만 모으고 숨김 노드는 건너뛴다', () => {
-		expect(collectRenderableNodeIds(buildFixture())).toEqual(['1:3', '1:4'])
+	it('IMAGE fill과 벡터 계열 노드를 포맷별로 모으고 숨김 노드는 건너뛴다', () => {
+		expect(collectRenderableNodeIds(buildFixture())).toEqual({
+			imageFillNodeIds: ['1:3'],
+			vectorNodeIds: ['1:4'],
+		})
 	})
 })
 

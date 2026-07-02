@@ -412,6 +412,10 @@ export interface Template {
  */
 export interface TemplateAsset {
   id: number;
+  /**
+   * 파일 내용 해시입니다. 임포트가 같은 조각을 다시 만들지 않도록 재사용 기준으로 씁니다.
+   */
+  checksum?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1109,6 +1113,7 @@ export interface TemplatesSelect<T extends boolean = true> {
  * via the `definition` "template-assets_select".
  */
 export interface TemplateAssetsSelect<T extends boolean = true> {
+  checksum?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

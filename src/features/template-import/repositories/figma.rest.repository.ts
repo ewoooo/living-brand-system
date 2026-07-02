@@ -79,17 +79,22 @@ export async function findFigmaNodeTree(fileKey: string, nodeId: string): Promis
 	return rootNode
 }
 
-/** 노드들을 PNG(scale=2)로 렌더한 임시 URL 맵을 돌려준다. 렌더 실패 노드는 맵에서 빠진다. */
+/**
+ * 노드들을 렌더한 임시 URL 맵을 돌려준다. 렌더 실패 노드는 맵에서 빠진다.
+ * png는 scale=2(hiDPI), svg는 벡터 보존용으로 벡터 계열 노드에 쓴다.
+ */
 export async function findFigmaImageUrls(
 	fileKey: string,
 	nodeIds: string[],
+	format: 'png' | 'svg',
 ): Promise<Record<string, string>> {
 	const token = getFigmaToken()
 	const imageUrls: Record<string, string> = {}
+	const formatQuery = format === 'svg' ? 'format=svg' : 'format=png&scale=2'
 
 	for (let i = 0; i < nodeIds.length; i += IMAGE_BATCH_SIZE) {
 		const batch = nodeIds.slice(i, i + IMAGE_BATCH_SIZE)
-		const url = `${FIGMA_API_BASE}/images/${fileKey}?ids=${encodeURIComponent(batch.join(','))}&format=png&scale=2`
+		const url = `${FIGMA_API_BASE}/images/${fileKey}?ids=${encodeURIComponent(batch.join(','))}&${formatQuery}`
 		const response = await fetch(url, { headers: { 'X-Figma-Token': token } })
 
 		if (!response.ok) {

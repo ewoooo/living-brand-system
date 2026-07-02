@@ -27,20 +27,28 @@ export interface ImportedAsset {
 	src: string
 }
 
-/** PNG로 렌더해 영속화할 노드(IMAGE fill + 벡터 계열)의 id를 모은다. */
-export function collectRenderableNodeIds(root: FigmaNode): string[] {
-	const nodeIds: string[] = []
+export interface RenderableNodeIds {
+	/** 사진 등 IMAGE fill 노드 — PNG(scale=2)로 렌더한다. */
+	imageFillNodeIds: string[]
+	/** 벡터 계열 노드 — SVG로 렌더해 벡터를 보존한다. */
+	vectorNodeIds: string[]
+}
+
+/** 렌더해서 영속화할 노드의 id를 포맷별로 모은다. */
+export function collectRenderableNodeIds(root: FigmaNode): RenderableNodeIds {
+	const imageFillNodeIds: string[] = []
+	const vectorNodeIds: string[] = []
 
 	const walk = (node: FigmaNode) => {
 		if (node.visible === false) {
 			return
 		}
 		if (node.fills?.some((fill) => fill.type === 'IMAGE' && fill.visible !== false)) {
-			nodeIds.push(node.id)
+			imageFillNodeIds.push(node.id)
 			return
 		}
 		if (RENDER_AS_IMAGE_TYPES.has(node.type)) {
-			nodeIds.push(node.id)
+			vectorNodeIds.push(node.id)
 			return
 		}
 		for (const child of node.children ?? []) {
@@ -52,7 +60,7 @@ export function collectRenderableNodeIds(root: FigmaNode): string[] {
 		walk(child)
 	}
 
-	return nodeIds
+	return { imageFillNodeIds, vectorNodeIds }
 }
 
 export function convertFigmaNodeTree(

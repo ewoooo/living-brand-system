@@ -22,7 +22,18 @@ export const TemplateAssets: CollectionConfig = {
 		group: 'Production Resources',
 		description: '템플릿 임포트 시 저장되는 이미지 조각입니다. 직접 편집하지 않습니다.',
 	},
-	fields: [],
+	fields: [
+		{
+			name: 'checksum',
+			type: 'text',
+			index: true,
+			admin: {
+				readOnly: true,
+				description:
+					'파일 내용 해시입니다. 임포트가 같은 조각을 다시 만들지 않도록 재사용 기준으로 씁니다.',
+			},
+		},
+	],
 	upload: {
 		mimeTypes: ['image/*'],
 	},
