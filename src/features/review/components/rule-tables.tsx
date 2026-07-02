@@ -23,6 +23,7 @@ type ReviewContentChapter = ReturnType<typeof getReviewContent>[number]
 /** 한 행 = 한 룰. 섹션 첫 룰에만 sectionLabel·anchorId가 실린다. */
 interface RuleRowData {
 	rule: Rule
+	sectionSlug: string
 	sectionLabel: string | null
 	anchorId: string | null
 }
@@ -42,7 +43,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 	pending: { label: '미개발', cls: 'bg-neutral-500/10 text-muted-foreground' },
 }
 
-function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
+function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlug'>) {
 	const [open, setOpen] = useState(false)
 	const { selected } = useReviewImages()
 	const implemented = getChecker(rule.key) !== null
@@ -173,6 +174,7 @@ export function ReviewSections({ chapters }: { chapters: ReviewContentChapter[] 
 			visibleRules.forEach((rule, index) => {
 				rows.push({
 					rule,
+					sectionSlug: section.slug,
 					sectionLabel: index === 0 ? `${chapter.code}. ${section.name}` : null,
 					anchorId: index === 0 ? section.slug : null,
 				})
@@ -185,9 +187,9 @@ export function ReviewSections({ chapters }: { chapters: ReviewContentChapter[] 
 			<div className="px-8 py-8">
 				<table className="w-full border-collapse">
 					<tbody>
-						{rows.map((row, index) => (
+						{rows.map((row) => (
 							<RuleRow
-								key={`${row.rule.key}-${index}`}
+								key={`${row.sectionSlug}-${row.rule.key}`}
 								rule={row.rule}
 								sectionLabel={row.sectionLabel}
 								anchorId={row.anchorId}
