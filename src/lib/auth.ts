@@ -25,6 +25,9 @@ const isManager = (user: unknown): boolean => {
 
 const isAuthenticated = (user: unknown): boolean => Boolean(user)
 
+/** 컬렉션 access 밖(커스텀 라우트 핸들러)에서 쓰는 사용자 단위 역할 검사. */
+export const hasManagerRole = (user: unknown): boolean => isManager(user)
+
 // --- 컬렉션 access ---
 export const authenticated: Access = ({ req }) => isAuthenticated(req.user)
 export const managerOrAdmin: Access = ({ req }) => isManager(req.user)

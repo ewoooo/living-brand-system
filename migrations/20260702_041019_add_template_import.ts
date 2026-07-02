@@ -48,8 +48,9 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
   
   ALTER TABLE "payload_mcp_api_keys" DROP CONSTRAINT "payload_mcp_api_keys_user_id_users_id_fk";
   
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_template_assets_fk";
-  
+  -- 위의 DROP TABLE ... CASCADE가 이 FK를 이미 제거하므로 IF EXISTS가 없으면 롤백이 중단된다.
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_template_assets_fk";
+
   DROP INDEX "payload_locked_documents_rels_template_assets_id_idx";
   ALTER TABLE "_brand_logos_v" ADD CONSTRAINT "_brand_logos_v_parent_id_brand_logos_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."brand_logos"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "_brand_colors_v" ADD CONSTRAINT "_brand_colors_v_parent_id_brand_colors_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."brand_colors"("id") ON DELETE cascade ON UPDATE no action;

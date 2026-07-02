@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { managerOrAdmin } from '@/lib/auth'
+import { authenticated, managerOrAdmin } from '@/lib/auth'
 
 /**
  * 템플릿 임포트가 영속화한 이미지 조각 (배경, 아이콘 등).
@@ -12,8 +12,9 @@ export const TemplateAssets: CollectionConfig = {
 		plural: 'Template Assets',
 	},
 	access: {
-		// 렌더 시 img 태그로 로드하므로 공개 읽기 (BrandLogos와 동일 패턴)
-		read: () => true,
+		// 비인가 스테이징 컬렉션 — 미승인 추출물이므로 공개하지 않는다.
+		// Admin 미리보기(인증된 manager)의 img 로드는 쿠키 인증으로 통과한다.
+		read: authenticated,
 		create: managerOrAdmin,
 		update: managerOrAdmin,
 		delete: managerOrAdmin,

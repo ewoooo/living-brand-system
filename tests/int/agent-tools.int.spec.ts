@@ -198,6 +198,136 @@ describe('agent tools', () => {
 		})
 	})
 
+	it('lists slots nested inside stack elements', async () => {
+		vi.spyOn(agentTemplateRepository, 'listAgentTemplates').mockResolvedValue([
+			{
+				id: 5,
+				name: 'Stacked card',
+				description: null,
+				jsonTemplate: {
+					width: 900,
+					height: 500,
+					background: '#ffffff',
+					elements: [
+						{
+							id: 'stack_1',
+							type: 'stack',
+							x: 0,
+							y: 0,
+							width: 900,
+							height: 500,
+							zIndex: 1,
+							locked: true,
+							direction: 'vertical',
+							gap: 0,
+							padding: { top: 0, right: 0, bottom: 0, left: 0 },
+							children: [
+								{
+									id: 'nested_name',
+									type: 'text',
+									locked: false,
+									slotLabel: '이름',
+									width: 200,
+									height: 40,
+									text: 'Name',
+									fontSize: 20,
+									fontFamily: 'Pretendard',
+									fontWeight: '700',
+									color: '#000000',
+									lineHeight: 1.2,
+									letterSpacing: 0,
+									textAlign: 'left',
+								},
+							],
+						},
+					],
+				},
+			},
+		] as never)
+		const tools = getAgentTools()
+
+		const result = await tools.findTemplatesForRequest.execute?.({}, {
+			context: { user: { id: 1 } },
+		} as never)
+
+		expect(result).toEqual([
+			expect.objectContaining({
+				id: 5,
+				slots: [expect.objectContaining({ id: 'nested_name', label: '이름' })],
+			}),
+		])
+	})
+
+	it('drops image slot values whose src is not an authorized asset path', async () => {
+		vi.spyOn(agentTemplateRepository, 'findAgentTemplate').mockResolvedValue({
+			id: 6,
+			name: 'Poster',
+			description: null,
+			jsonTemplate: {
+				width: 900,
+				height: 500,
+				background: '#ffffff',
+				elements: [
+					{
+						id: 'photo',
+						type: 'image',
+						x: 0,
+						y: 0,
+						width: 300,
+						height: 200,
+						zIndex: 1,
+						locked: false,
+						slotLabel: '사진',
+						assetCollection: 'application-images',
+						assetId: 11,
+						src: '/api/application-images/file/photo.png',
+						objectFit: 'cover',
+						borderRadius: 0,
+					},
+				],
+			},
+		} as never)
+		const tools = getAgentTools()
+
+		const result = await tools.prepareTemplateImage.execute?.(
+			{
+				templateId: 6,
+				values: {
+					photo: { src: 'https://attacker.example/x.png' },
+				},
+			},
+			{ context: { user: { id: 1 } } } as never,
+		)
+
+		// 외부 URL은 버려지고, 인가 경로만 통과한다.
+		expect(result).toMatchObject({ values: {} })
+
+		const allowed = await tools.prepareTemplateImage.execute?.(
+			{
+				templateId: 6,
+				values: {
+					photo: { src: '/api/brand-logos/file/logo.svg' },
+				},
+			},
+			{ context: { user: { id: 1 } } } as never,
+		)
+
+		expect(allowed).toMatchObject({
+			values: { photo: { src: '/api/brand-logos/file/logo.svg' } },
+		})
+	})
+
+	it('throws when the template is missing or has a broken jsonTemplate', async () => {
+		vi.spyOn(agentTemplateRepository, 'findAgentTemplate').mockResolvedValue(null as never)
+		const tools = getAgentTools()
+
+		await expect(
+			tools.prepareTemplateImage.execute?.({ templateId: 99, values: {} }, {
+				context: { user: { id: 1 } },
+			} as never),
+		).rejects.toThrow('Template is not available.')
+	})
+
 	it('rejects invalid tool message input before streaming', async () => {
 		const result = await validateAgentChatMessages([
 			{

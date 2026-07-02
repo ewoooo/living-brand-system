@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { Forbidden } from 'payload'
 import { type JsonTemplate, jsonTemplateSchema } from '@/types/json-template'
 import {
 	downloadFigmaImage,
@@ -14,6 +15,8 @@ import {
 	convertFigmaNodeTree,
 	type ImportedAsset,
 } from './convert-figma-node-tree'
+
+const PERSIST_CONCURRENCY = 5
 
 export interface ConvertFigmaFrameInput {
 	fileKey: string
@@ -49,35 +52,61 @@ export async function convertFigmaFrame(
 	const assets: Record<string, ImportedAsset> = {}
 	const skippedImageNodeIds: string[] = []
 
+	// 같은 URL(같은 렌더 결과)을 공유하는 노드는 한 번만 다운로드·영속화한다.
+	const assetByUrl = new Map<string, Promise<ImportedAsset | null>>()
+
+	const persistUrl = (imageUrl: string, nodeId: string, extension: string) => {
+		const existing = assetByUrl.get(imageUrl)
+
+		if (existing) {
+			return existing
+		}
+
+		const persisted = (async (): Promise<ImportedAsset | null> => {
+			try {
+				const image = await downloadFigmaImage(imageUrl)
+				const checksum = createHash('sha256').update(image.data).digest('hex')
+				const asset =
+					(await findTemplateAssetByChecksum(user, checksum)) ??
+					(await createTemplateAsset(user, {
+						data: image.data,
+						filename: `figma-${input.fileKey}-${nodeId.replace(/[^a-zA-Z0-9]/g, '-')}.${extension}`,
+						mimeType: image.mimeType,
+						checksum,
+					}))
+				return { assetId: asset.id, src: asset.url }
+			} catch (error) {
+				// 권한 거부는 접근 제어 결과이므로 삼키지 않는다 — 라우트가 403으로 변환한다.
+				if (error instanceof Forbidden) {
+					throw error
+				}
+				// 그 외 실패는 조각 하나가 변환 전체를 막지 않게 한다. 빠진 노드는 결과로 보고한다.
+				return null
+			}
+		})()
+
+		assetByUrl.set(imageUrl, persisted)
+		return persisted
+	}
+
 	const persistNode = async (nodeId: string, imageUrl: string | undefined, extension: string) => {
-		if (!imageUrl) {
-			skippedImageNodeIds.push(nodeId)
-			return
-		}
+		const asset = imageUrl ? await persistUrl(imageUrl, nodeId, extension) : null
 
-		try {
-			const image = await downloadFigmaImage(imageUrl)
-			const checksum = createHash('sha256').update(image.data).digest('hex')
-			const asset =
-				(await findTemplateAssetByChecksum(user, checksum)) ??
-				(await createTemplateAsset(user, {
-					data: image.data,
-					filename: `figma-${input.fileKey}-${nodeId.replace(/[^a-zA-Z0-9]/g, '-')}.${extension}`,
-					mimeType: image.mimeType,
-					checksum,
-				}))
-			assets[nodeId] = { assetId: asset.id, src: asset.url }
-		} catch {
-			// 조각 하나가 변환 전체를 막지 않게 한다. 빠진 노드는 결과로 보고한다.
+		if (asset) {
+			assets[nodeId] = asset
+		} else {
 			skippedImageNodeIds.push(nodeId)
 		}
 	}
 
-	for (const nodeId of imageFillNodeIds) {
-		await persistNode(nodeId, pngUrls[nodeId], 'png')
-	}
-	for (const nodeId of vectorNodeIds) {
-		await persistNode(nodeId, svgUrls[nodeId], 'svg')
+	// maxDuration(60s) 안에서 끝나도록 병렬 처리하되 동시성은 제한한다.
+	const jobs = [
+		...imageFillNodeIds.map((nodeId) => () => persistNode(nodeId, pngUrls[nodeId], 'png')),
+		...vectorNodeIds.map((nodeId) => () => persistNode(nodeId, svgUrls[nodeId], 'svg')),
+	]
+
+	for (let start = 0; start < jobs.length; start += PERSIST_CONCURRENCY) {
+		await Promise.all(jobs.slice(start, start + PERSIST_CONCURRENCY).map((job) => job()))
 	}
 
 	// 쓰기 계약: 반환 전에 스키마를 강제해 깨진 템플릿이 폼으로 흘러가지 않게 한다.

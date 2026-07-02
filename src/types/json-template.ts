@@ -182,3 +182,21 @@ export type JsonTemplateElement = JsonTemplate['elements'][number]
 export type JsonRectElement = z.infer<typeof rectElementSchema>
 export type JsonStackElement = StackElementOutput
 export type JsonFlowElement = FlowElementOutput
+
+export type JsonSlotElement = Exclude<JsonFlowElement | JsonTemplateElement, { type: 'stack' }>
+
+/**
+ * 열린 슬롯(locked=false) 요소를 스택 자식까지 재귀로 모은다. 스택 자체는 슬롯이 아니다.
+ * 슬롯을 소비하는 모든 곳(/create, 에이전트 툴)이 이 하나를 쓴다 — 순회 규칙이 갈라지면 안 된다.
+ */
+export function collectOpenSlotElements(
+	elements: readonly (JsonFlowElement | JsonTemplateElement)[],
+): JsonSlotElement[] {
+	return elements.flatMap((element) => {
+		if (element.type === 'stack') {
+			return collectOpenSlotElements(element.children)
+		}
+
+		return element.locked ? [] : [element]
+	})
+}

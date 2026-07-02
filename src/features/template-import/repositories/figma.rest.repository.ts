@@ -126,6 +126,9 @@ export async function findFigmaImageUrls(
 	return imageUrls
 }
 
+/** 이미지 조각 하나의 최대 크기 — 폭주한 렌더 결과가 메모리·S3를 잠식하지 않게 막는다. */
+const MAX_IMAGE_BYTES = 15 * 1024 * 1024
+
 /** Figma가 준 임시 S3 URL에서 이미지 바이트를 내려받는다. URL은 곧 만료되므로 임포트 중에만 쓴다. */
 export async function downloadFigmaImage(url: string): Promise<{ data: Buffer; mimeType: string }> {
 	const response = await fetch(url)
@@ -134,8 +137,14 @@ export async function downloadFigmaImage(url: string): Promise<{ data: Buffer; m
 		throw new Error(`Figma image download failed (${response.status})`)
 	}
 
+	const data = Buffer.from(await response.arrayBuffer())
+
+	if (data.byteLength > MAX_IMAGE_BYTES) {
+		throw new Error(`Figma image exceeds size limit (${data.byteLength} bytes)`)
+	}
+
 	return {
-		data: Buffer.from(await response.arrayBuffer()),
+		data,
 		mimeType: response.headers.get('content-type') || 'image/png',
 	}
 }

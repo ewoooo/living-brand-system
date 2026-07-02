@@ -377,4 +377,9 @@ describe('parseFigmaUrl', () => {
 		expect(parseFigmaUrl('https://www.figma.com/design/AbC123xyz/name')).toBeNull()
 		expect(parseFigmaUrl('not a url')).toBeNull()
 	})
+
+	it('figma.com으로 끝나기만 하는 유사 도메인은 거부한다', () => {
+		expect(parseFigmaUrl('https://evilfigma.com/design/AbC123xyz/name?node-id=1-2')).toBeNull()
+		expect(parseFigmaUrl('https://figma.com/design/AbC123xyz/name?node-id=1-2')).not.toBeNull()
+	})
 })

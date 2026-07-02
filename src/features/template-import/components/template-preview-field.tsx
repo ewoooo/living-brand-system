@@ -23,7 +23,8 @@ import {
 
 const PREVIEW_MAX_WIDTH = 640
 
-const ASSET_COLLECTION_LABELS: Record<string, string> = {
+// 인가 컬렉션 상수와 타입으로 연결 — 컬렉션이 늘면 라벨 누락이 컴파일 에러로 잡힌다.
+const ASSET_COLLECTION_LABELS: Record<(typeof AUTHORIZED_ASSET_COLLECTIONS)[number], string> = {
 	'brand-logos': '브랜드 로고',
 	'application-images': '어플리케이션 이미지',
 }

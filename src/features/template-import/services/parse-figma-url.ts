@@ -11,7 +11,8 @@ export function parseFigmaUrl(url: string): { fileKey: string; nodeId: string } 
 		return null
 	}
 
-	if (!parsed.hostname.endsWith('figma.com')) {
+	// endsWith('figma.com')는 evilfigma.com 같은 유사 도메인도 통과시키므로 경계를 명시한다.
+	if (parsed.hostname !== 'figma.com' && !parsed.hostname.endsWith('.figma.com')) {
 		return null
 	}
 

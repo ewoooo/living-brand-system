@@ -31,7 +31,21 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_template_categories_fk" FOREIGN KEY ("template_categories_id") REFERENCES "public"."template_categories"("id") ON DELETE cascade ON UPDATE no action;
   CREATE INDEX "templates_category_idx" ON "templates" USING btree ("category_id");
   CREATE INDEX "_templates_v_version_version_category_idx" ON "_templates_v" USING btree ("version_category_id");
-  CREATE INDEX "payload_locked_documents_rels_template_categories_id_idx" ON "payload_locked_documents_rels" USING btree ("template_categories_id");`)
+  CREATE INDEX "payload_locked_documents_rels_template_categories_id_idx" ON "payload_locked_documents_rels" USING btree ("template_categories_id");
+  -- 백필: category는 앱 레벨에서 required라 기존 템플릿이 NULL이면 이후 저장이 전부 막힌다.
+  -- 기존 템플릿이 있을 때만 기본 카테고리를 만들어 연결한다.
+  DO $$
+  DECLARE default_category_id integer;
+  BEGIN
+    IF EXISTS (SELECT 1 FROM "templates") THEN
+      INSERT INTO "template_categories" ("display_order") VALUES (0) RETURNING "id" INTO default_category_id;
+      INSERT INTO "template_categories_locales" ("title", "generate_slug", "slug", "_locale", "_parent_id")
+        SELECT '기본', true, 'general', locale, default_category_id
+        FROM unnest(enum_range(NULL::"_locales")) AS locale;
+      UPDATE "templates" SET "category_id" = default_category_id WHERE "category_id" IS NULL;
+      UPDATE "_templates_v" SET "version_category_id" = default_category_id WHERE "version_category_id" IS NULL;
+    END IF;
+  END $$;`)
 }
 
 export async function down({ db }: MigrateDownArgs): Promise<void> {
@@ -40,11 +54,12 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
   ALTER TABLE "template_categories_locales" DISABLE ROW LEVEL SECURITY;
   DROP TABLE "template_categories" CASCADE;
   DROP TABLE "template_categories_locales" CASCADE;
-  ALTER TABLE "templates" DROP CONSTRAINT "templates_category_id_template_categories_id_fk";
-  
-  ALTER TABLE "_templates_v" DROP CONSTRAINT "_templates_v_version_category_id_template_categories_id_fk";
-  
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_template_categories_fk";
+  -- 위의 DROP TABLE ... CASCADE가 이 FK들을 이미 제거하므로 IF EXISTS가 없으면 롤백이 중단된다.
+  ALTER TABLE "templates" DROP CONSTRAINT IF EXISTS "templates_category_id_template_categories_id_fk";
+
+  ALTER TABLE "_templates_v" DROP CONSTRAINT IF EXISTS "_templates_v_version_category_id_template_categories_id_fk";
+
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_template_categories_fk";
   
   DROP INDEX "templates_category_idx";
   DROP INDEX "_templates_v_version_version_category_idx";
