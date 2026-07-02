@@ -57,6 +57,15 @@ export const Templates: CollectionConfig = {
 			},
 		},
 		{
+			name: 'templatePreview',
+			type: 'ui',
+			admin: {
+				components: {
+					Field: '/features/template-import/components/template-preview-field',
+				},
+			},
+		},
+		{
 			name: 'jsonTemplate',
 			type: 'json',
 			admin: {
