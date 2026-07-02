@@ -1,6 +1,8 @@
-import config from '@payload-config'
-import { getPayload } from 'payload'
 import type { GuidelinePage } from '@/payload-types'
+import {
+	findPublishedSectionBySlug,
+	listPublishedPagesBySection,
+} from '../repositories/guideline-view.payload.repository'
 
 export interface GetGuidelineSectionInput {
 	sectionSlug: string
@@ -30,56 +32,19 @@ export async function getGuidelineSection({
 		return null
 	}
 
-	const payload = await getPayload({ config })
-
 	try {
-		const sections = await payload.find({
-			collection: 'sections',
-			where: {
-				slug: {
-					equals: sectionSlug,
-				},
-			},
-			limit: 1,
-			locale: 'ko',
-			fallbackLocale: 'en',
-			draft: false,
-			select: {
-				title: true,
-				description: true,
-			},
-		})
-		const section = sections.docs[0]
+		const section = await findPublishedSectionBySlug(sectionSlug)
 
 		if (!section) {
 			return null
 		}
 
-		const pages = await payload.find({
-			collection: 'guideline-pages',
-			where: {
-				section: {
-					equals: section.id,
-				},
-			},
-			sort: 'displayOrder',
-			limit: 100,
-			locale: 'ko',
-			fallbackLocale: 'en',
-			draft: false,
-			select: {
-				title: true,
-				slug: true,
-				description: true,
-				displayOrder: true,
-				blocks: true,
-			},
-		})
+		const pages = await listPublishedPagesBySection(section.id)
 
 		return {
 			title: section.title,
 			description: section.description || null,
-			pages: pages.docs.map((page) => ({
+			pages: pages.map((page) => ({
 				id: page.id,
 				title: page.title,
 				slug: page.slug,

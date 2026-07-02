@@ -4,3 +4,10 @@ export class AgentConfigurationError extends Error {
 		this.name = 'AgentConfigurationError'
 	}
 }
+
+export class FigmaConfigurationError extends Error {
+	constructor(message = 'Figma integration is not configured.') {
+		super(message)
+		this.name = 'FigmaConfigurationError'
+	}
+}

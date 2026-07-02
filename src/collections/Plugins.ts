@@ -1,7 +1,15 @@
 import type { CollectionConfig } from 'payload'
+import { authenticated, managerOrAdmin } from '@/lib/auth'
 
 export const Plugins: CollectionConfig = {
 	slug: 'plugins',
+	access: {
+		// 누구나 읽되(인증), 자원 변경은 manager/admin만 (Worker는 사용만)
+		read: authenticated,
+		create: managerOrAdmin,
+		update: managerOrAdmin,
+		delete: managerOrAdmin,
+	},
 	labels: {
 		singular: 'Plugin',
 		plural: 'Plugins',

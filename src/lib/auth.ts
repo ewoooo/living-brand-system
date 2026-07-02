@@ -16,14 +16,17 @@ const roleOf = (user: unknown): Role | null => {
 	return null
 }
 
-export const isAdmin = (user: unknown): boolean => roleOf(user) === 'admin'
+const isAdmin = (user: unknown): boolean => roleOf(user) === 'admin'
 
-export const isManager = (user: unknown): boolean => {
+const isManager = (user: unknown): boolean => {
 	const r = roleOf(user)
 	return r === 'admin' || r === 'manager'
 }
 
-export const isAuthenticated = (user: unknown): boolean => Boolean(user)
+const isAuthenticated = (user: unknown): boolean => Boolean(user)
+
+/** 컬렉션 access 밖(커스텀 라우트 핸들러)에서 쓰는 사용자 단위 역할 검사. */
+export const hasManagerRole = (user: unknown): boolean => isManager(user)
 
 // --- 컬렉션 access ---
 export const authenticated: Access = ({ req }) => isAuthenticated(req.user)

@@ -20,8 +20,11 @@ import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
 import { Rules } from './collections/Rules'
+import { TemplateAssets } from './collections/TemplateAssets'
+import { TemplateCategories } from './collections/TemplateCategories'
 import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
+import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
 import { adminOnly } from './lib/auth'
 
@@ -67,7 +70,9 @@ export default buildConfig({
 		BrandColors,
 		BrandTypefaces,
 		ApplicationImages,
+		TemplateCategories,
 		Templates,
+		TemplateAssets,
 		Plugins,
 		AgentSkills,
 		GuidelineSections,
@@ -240,6 +245,7 @@ export default buildConfig({
 			collections: {
 				'brand-logos': true,
 				'application-images': true,
+				'template-assets': true,
 			},
 			bucket: process.env.S3_BUCKET || '',
 			config: {
@@ -261,5 +267,5 @@ export default buildConfig({
 		locales: ['ko', 'en'],
 		defaultLocale: 'ko',
 	},
-	globals: [Guideline],
+	globals: [Guideline, AgentSettings],
 })

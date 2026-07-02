@@ -52,6 +52,8 @@ export async function POST(req: Request) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
 	}
 
+	const requestId = crypto.randomUUID()
+
 	try {
 		if (!process.env.ANTHROPIC_API_KEY) {
 			throw new AgentConfigurationError()
@@ -61,10 +63,12 @@ export async function POST(req: Request) {
 			locale: parsed.data.locale,
 			messages: validatedMessages.data,
 			pagePath: parsed.data.pagePath,
-			requestId: crypto.randomUUID(),
+			requestId,
 			user,
 		})
 	} catch (error) {
+		payload.logger.error({ err: error, requestId }, 'agent-chat.request.failed')
+
 		if (error instanceof AgentConfigurationError) {
 			// Route는 provider 환경변수 이름을 알지 않고 서비스 설정 실패만 변환한다.
 			return Response.json({ message: error.message }, { status: 503 })
