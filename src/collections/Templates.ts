@@ -46,5 +46,22 @@ export const Templates: CollectionConfig = {
 				{ label: 'File', value: 'file' },
 			],
 		},
+		{
+			name: 'jsonTemplate',
+			type: 'json',
+			admin: {
+				description:
+					'렌더 계약(JsonTemplate). 임포트가 생성하며, 수정 시 src/types/json-template.ts 스키마를 지켜야 합니다.',
+			},
+		},
+		{
+			name: 'sourceUrl',
+			type: 'text',
+			admin: {
+				position: 'sidebar',
+				description:
+					'임포트에 사용한 Figma URL 원문입니다. 출처 기록용이며 재동기화하지 않습니다.',
+			},
+		},
 	],
 }

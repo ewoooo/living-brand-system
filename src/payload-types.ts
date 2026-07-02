@@ -75,6 +75,7 @@ export interface Config {
     'brand-typefaces': BrandTypeface;
     'application-images': ApplicationImage;
     templates: Template;
+    'template-assets': TemplateAsset;
     plugins: Plugin;
     'agent-skills': AgentSkill;
     sections: Section;
@@ -100,6 +101,7 @@ export interface Config {
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
+    'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
     plugins: PluginsSelect<false> | PluginsSelect<true>;
     'agent-skills': AgentSkillsSelect<false> | AgentSkillsSelect<true>;
     sections: SectionsSelect<false> | SectionsSelect<true>;
@@ -344,9 +346,45 @@ export interface Template {
   name: string;
   description?: string | null;
   sourceType: 'figma' | 'file';
+  /**
+   * 렌더 계약(JsonTemplate). 임포트가 생성하며, 수정 시 src/types/json-template.ts 스키마를 지켜야 합니다.
+   */
+  jsonTemplate?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * 임포트에 사용한 Figma URL 원문입니다. 출처 기록용이며 재동기화하지 않습니다.
+   */
+  sourceUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * 템플릿 임포트 시 저장되는 이미지 조각입니다. 직접 편집하지 않습니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-assets".
+ */
+export interface TemplateAsset {
+  id: number;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -783,6 +821,10 @@ export interface PayloadLockedDocument {
         value: number | Template;
       } | null)
     | ({
+        relationTo: 'template-assets';
+        value: number | TemplateAsset;
+      } | null)
+    | ({
         relationTo: 'plugins';
         value: number | Plugin;
       } | null)
@@ -1000,9 +1042,28 @@ export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
   sourceType?: T;
+  jsonTemplate?: T;
+  sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-assets_select".
+ */
+export interface TemplateAssetsSelect<T extends boolean = true> {
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
