@@ -1,4 +1,4 @@
-import { jsonTemplateSchema } from '@/types/json-template'
+import { type JsonTemplate, jsonTemplateSchema } from '@/types/json-template'
 import {
 	downloadFigmaImage,
 	findFigmaImageUrls,
@@ -23,6 +23,8 @@ export interface ImportFigmaTemplateInput {
 
 export interface ImportFigmaTemplateOutput {
 	templateId: number
+	/** 저장된 렌더 계약. 임포트 직후 미리보기에 쓴다. */
+	jsonTemplate: JsonTemplate
 	/** 렌더 URL을 못 받았거나 다운로드에 실패해 요소에서 빠진 Figma 노드 id */
 	skippedImageNodeIds: string[]
 }
@@ -79,5 +81,5 @@ export async function importFigmaTemplate(
 		jsonTemplate,
 	})
 
-	return { templateId: template.id, skippedImageNodeIds }
+	return { templateId: template.id, jsonTemplate, skippedImageNodeIds }
 }
