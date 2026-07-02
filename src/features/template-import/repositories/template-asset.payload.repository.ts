@@ -1,12 +1,10 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type { JsonTemplate } from '@/types/json-template'
 
 /**
- * 템플릿 임포트의 Payload 저장 경계.
+ * 변환된 이미지 조각의 Payload 저장 경계.
  * user + overrideAccess: false로 호출해 컬렉션 access(manager/admin 쓰기)를 그대로 강제한다.
  */
-
 export async function createTemplateAsset(
 	user: unknown,
 	input: { data: Buffer; filename: string; mimeType: string },
@@ -30,26 +28,4 @@ export async function createTemplateAsset(
 	}
 
 	return { id: asset.id, url: asset.url }
-}
-
-export async function createDraftTemplate(
-	user: unknown,
-	input: { name: string; sourceUrl: string; jsonTemplate: JsonTemplate },
-): Promise<{ id: number }> {
-	const payload = await getPayload({ config })
-	const template = await payload.create({
-		collection: 'templates',
-		data: {
-			name: input.name,
-			sourceType: 'figma',
-			sourceUrl: input.sourceUrl,
-			jsonTemplate: input.jsonTemplate,
-			_status: 'draft',
-		},
-		draft: true,
-		overrideAccess: false,
-		user: user as never,
-	})
-
-	return { id: template.id }
 }

@@ -47,6 +47,16 @@ export const Templates: CollectionConfig = {
 			],
 		},
 		{
+			name: 'figmaImport',
+			type: 'ui',
+			admin: {
+				condition: (data) => data?.sourceType === 'figma',
+				components: {
+					Field: '/features/template-import/components/figma-import-field',
+				},
+			},
+		},
+		{
 			name: 'jsonTemplate',
 			type: 'json',
 			admin: {
