@@ -18,7 +18,8 @@
 			"!blob-report",
 			"!src/payload-types.ts",
 			"!src/payload-generated-schema.ts",
-			"!src/app/(payload)/admin"
+			"!src/app/(payload)/admin",
+			"!migrations"
 		]
 	},
 	"formatter": {
