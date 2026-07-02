@@ -1,8 +1,16 @@
 import { type CollectionConfig, slugField } from 'payload'
+import { authenticated, managerOrAdmin } from '@/lib/auth'
 
 export const GuidelineSections: CollectionConfig = {
 	slug: 'sections',
 	dbName: 'guideline_sections',
+	access: {
+		// 누구나 읽되(인증), 가이드라인 편집은 manager/admin만 (Worker는 열람만)
+		read: authenticated,
+		create: managerOrAdmin,
+		update: managerOrAdmin,
+		delete: managerOrAdmin,
+	},
 	labels: {
 		singular: 'Section',
 		plural: 'Sections',
