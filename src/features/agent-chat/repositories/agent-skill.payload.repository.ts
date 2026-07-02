@@ -3,8 +3,8 @@ import { getPayload } from 'payload'
 
 import type { AgentSkill } from '@/payload-types'
 
-export type AgentSkillSummary = Pick<AgentSkill, 'isDefault' | 'name'>
-export type AgentSkillDetail = Pick<AgentSkill, 'body' | 'description' | 'name'>
+export type AgentSkillSummary = Pick<AgentSkill, 'description' | 'isDefault' | 'name'>
+export type AgentSkillDetail = Pick<AgentSkill, 'body' | 'description' | 'name' | 'references'>
 
 export async function findEnabledAgentSkillSummaries(user: unknown): Promise<AgentSkillSummary[]> {
 	const payload = await getPayload({ config })
@@ -22,6 +22,7 @@ export async function findEnabledAgentSkillSummaries(user: unknown): Promise<Age
 		},
 		select: {
 			name: true,
+			description: true,
 			isDefault: true,
 		},
 	})
@@ -58,6 +59,7 @@ export async function findEnabledAgentSkillByName(
 			name: true,
 			description: true,
 			body: true,
+			references: true,
 		},
 	})
 

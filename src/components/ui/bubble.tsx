@@ -5,7 +5,7 @@ import type * as React from 'react'
 import { cn } from '@/lib/utils'
 
 const bubbleVariants = cva(
-	'group/bubble relative flex w-fit max-w-[80%] min-w-0 flex-col gap-1 data-[align=end]:self-end',
+	'group/bubble relative flex w-max max-w-[80%] min-w-0 flex-col gap-1 data-[align=end]:self-end',
 	{
 		variants: {
 			variant: {
@@ -55,7 +55,7 @@ function BubbleContent({
 		<Comp
 			data-slot="bubble-content"
 			className={cn(
-				'w-fit max-w-full min-w-0 overflow-hidden rounded-4xl border border-transparent px-3.5 py-1.5 text-xs/relaxed wrap-break-word group-data-[align=end]/bubble:self-end [button]:text-left [button,a]:transition-colors [button,a]:outline-none [button,a]:focus-visible:border-ring [button,a]:focus-visible:ring-2 [button,a]:focus-visible:ring-ring/30',
+				'w-full max-w-full min-w-0 overflow-hidden rounded-3xl border border-transparent px-3.5 py-1.5 text-xs/relaxed wrap-break-word group-data-[align=end]/bubble:self-end [button]:text-left [button,a]:transition-colors [button,a]:outline-none [button,a]:focus-visible:border-ring [button,a]:focus-visible:ring-2 [button,a]:focus-visible:ring-ring/30',
 				className,
 			)}
 			{...props}

@@ -519,6 +519,8 @@ flowchart TB
 ### 버전 컨트롤
 
 이 문서에서 Version은 Payload revision이 아니라 Official Version을 뜻합니다.
+현재 구현의 `live` 기준은 Payload CMS에서 publish된 문서를 `draft: false`로 읽은 결과입니다.
+별도 Official Version 엔티티는 CheckBasis, ResourceRef, Agent 실행 기록에서 독립 VersionRef가 필요해질 때 도입합니다.
 
 | 표준 용어 | 의미 |
 | --- | --- |

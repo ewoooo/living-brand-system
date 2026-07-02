@@ -1,6 +1,6 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type { GuidelinePage, Section } from '@/payload-types'
+import type { GuidelinePage, Rule, Section } from '@/payload-types'
 
 type AgentGuidelinePage = Pick<
 	GuidelinePage,
@@ -14,6 +14,22 @@ export type AgentGuidelineSectionListItem = Pick<Section, 'id' | 'title'>
 export type AgentGuidelinePageListItem = Pick<GuidelinePage, 'id' | 'title' | 'section'>
 
 type AgentGuidelinePageSummary = Pick<GuidelinePage, 'id' | 'title' | 'slug' | 'description'>
+
+export type AgentRuleCatalogItem = Pick<
+	Rule,
+	| 'category'
+	| 'domainDefault'
+	| 'executor'
+	| 'frequency'
+	| 'input'
+	| 'key'
+	| 'notes'
+	| 'paramSchema'
+	| 'scope'
+	| 'scoring'
+	| 'tier'
+	| 'title'
+>
 
 export type AgentGuidelineSearchResult = {
 	title: string
@@ -111,6 +127,39 @@ export async function searchGuidelineDocuments(
 			id: String(result.doc?.value || ''),
 		}))
 		.filter((result) => result.title && result.collection && result.id)
+}
+
+export async function findAgentRules(user: unknown): Promise<AgentRuleCatalogItem[]> {
+	const payload = await getPayload({ config })
+	const rules = await payload.find({
+		collection: 'rules',
+		depth: 0,
+		limit: 200,
+		overrideAccess: false,
+		sort: 'key',
+		user: user as never,
+		where: {
+			status: {
+				equals: 'live',
+			},
+		},
+		select: {
+			category: true,
+			domainDefault: true,
+			executor: true,
+			frequency: true,
+			input: true,
+			key: true,
+			notes: true,
+			paramSchema: true,
+			scope: true,
+			scoring: true,
+			tier: true,
+			title: true,
+		},
+	})
+
+	return rules.docs
 }
 
 export async function findAgentGuidelineDocument(

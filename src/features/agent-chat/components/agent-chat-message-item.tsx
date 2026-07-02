@@ -1,7 +1,16 @@
-import { getAgentToolMarker } from '@/features/agent-chat/get-agent-tool-marker'
+import {
+	getAgentReasoningMarker,
+	getAgentSkillMarker,
+	getAgentToolMarker,
+} from '@/features/agent-chat/get-agent-tool-marker'
 import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
+import { getAgentMessageText } from '../get-agent-message-text'
 import { AgentChatAgentBubble, AgentChatUserBubble } from './agent-chat-bubbles'
-import { AgentChatToolMarker } from './agent-chat-tool-marker'
+import {
+	AgentChatReasoningMarker,
+	AgentChatSkillMarker,
+	AgentChatToolMarker,
+} from './agent-chat-tool-marker'
 
 export function AgentChatMessageItem({
 	message,
@@ -11,26 +20,28 @@ export function AgentChatMessageItem({
 	isActive: boolean
 }) {
 	const isUser = message.role === 'user'
+	const reasoningMarker = isUser ? null : getAgentReasoningMarker(message, isActive)
+	const skillMarker = isUser ? null : getAgentSkillMarker(message)
 	const marker = isUser ? null : getAgentToolMarker(message)
 	const messageText = getAgentMessageText(message)
+	const files = message.parts.filter((part) => part.type === 'file')
 
 	return (
 		<div
-			className={isUser ? 'flex flex-col items-end gap-2' : 'flex flex-col items-start gap-2'}
+			className={
+				isUser
+					? 'flex w-full flex-col items-end gap-2'
+					: 'flex w-full flex-col items-start gap-2'
+			}
 		>
+			<AgentChatReasoningMarker marker={reasoningMarker} />
+			<AgentChatSkillMarker marker={skillMarker} />
 			<AgentChatToolMarker marker={marker} isPending={marker?.isPending || isActive} />
 			{isUser ? (
-				<AgentChatUserBubble text={messageText} />
+				<AgentChatUserBubble text={messageText} files={files} />
 			) : (
-				<AgentChatAgentBubble text={messageText} />
+				<AgentChatAgentBubble text={messageText} isStreaming={isActive} />
 			)}
 		</div>
-	)
-}
-
-function getAgentMessageText(message: AgentChatMessage) {
-	return message.parts.reduce(
-		(text, part) => (part.type === 'text' ? text + part.text : text),
-		'',
 	)
 }

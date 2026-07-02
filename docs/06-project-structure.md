@@ -54,7 +54,7 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 | 공식 에셋 | Payload upload collection | 권한, 상태, 메타데이터가 필요한 파일은 Payload에서 관리합니다. |
 | 사용자 업로드 | Payload upload collection 또는 object storage | 파일 검증과 권한 확인을 거친 뒤 저장합니다. |
 | 환경 변수 | `.env` | secret은 코드와 클라이언트 번들에 넣지 않습니다. |
-| 메시지 | `src/lib/messages` 또는 i18n 모듈 | 사용자 노출 메시지와 내부 로그 메시지를 분리합니다. |
+| 메시지 | 기능별 컴포넌트/서비스 또는 i18n 모듈 | 사용자 노출 메시지와 내부 로그 메시지를 분리합니다. |
 | 테스트 리소스 | `tests` | 테스트 fixture와 helper를 테스트 디렉터리 안에 둡니다. |
 
 ### 프론트엔드 폴더 구조
@@ -108,8 +108,6 @@ src/
   lib/
     auth.ts
     errors.ts
-    logger.ts
-    messages.ts
   hooks/
     use-*.ts
   types/
@@ -150,7 +148,7 @@ src/repositories/guideline.payload.repository.ts
 | Repository Interface | `src/repositories/*.repository.ts` | Service가 필요한 저장소 계약 |
 | Repository Implementation | `src/repositories/*.payload.repository.ts`, `src/repositories/*.drizzle.repository.ts` | Payload Local API, Drizzle ORM, CMS SDK 호출 |
 | Agent | `src/agents` | 검색, Answer, Recommendation 생성 |
-| 공통 유틸 | `src/lib` | 에러, 로그, 메시지, 인증 helper |
+| 공통 유틸 | `src/lib` | 에러, 인증 helper처럼 실제 공유되는 코드 |
 
 예시:
 
@@ -522,7 +520,7 @@ const checkSnapshotRetentionDays = 90 // 검수 재현을 위해 보관하는 �
 ## 14. Log 정책
 
 - `console.log`는 임시 디버깅에만 사용하고 커밋하지 않습니다.
-- 서버 로그는 공통 logger를 통해 남깁니다.
+- 서버 로그는 런타임 logger 또는 검증된 공통 logger를 통해 남깁니다.
 - 로그 레벨은 `debug`, `info`, `warn`, `error`로 구분합니다.
 - 운영 환경에서는 `debug` 로그를 기본 비활성화합니다.
 - 로그 한 줄에는 발생 위치, 작업 식별자, 안전한 메시지를 포함합니다.
@@ -538,7 +536,7 @@ const checkSnapshotRetentionDays = 90 // 검수 재현을 위해 보관하는 �
 예시:
 
 ```ts
-logger.info('guideline.publish.completed', {
+payload.logger.info('guideline.publish.completed', {
   guidelineId,
   version,
 })
