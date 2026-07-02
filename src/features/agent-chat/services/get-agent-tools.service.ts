@@ -7,7 +7,6 @@ import {
 } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import { AgentConfigurationError } from '@/lib/errors'
 import { findAgentRules } from '../repositories/agent-guideline-context.payload.repository'
-import { formatAgentSkillInstructions } from './format-agent-skill-instructions.service'
 import {
 	listAgentGuidelinePages,
 	readAgentGuidelineDocument,
@@ -79,4 +78,18 @@ function formatLoadedSkill(skill: AgentSkillDetail) {
 		description: skill.description,
 		instructions: formatAgentSkillInstructions(skill),
 	}
+}
+
+function formatAgentSkillInstructions(skill: {
+	body: string
+	references?: { body: string; title: string }[] | null
+}) {
+	const references =
+		skill.references
+			?.map((reference) => `## ${reference.title}\n${reference.body}`)
+			.join('\n\n') || ''
+
+	return [skill.body, references ? `# Skill references\n\n${references}` : null]
+		.filter(Boolean)
+		.join('\n\n')
 }

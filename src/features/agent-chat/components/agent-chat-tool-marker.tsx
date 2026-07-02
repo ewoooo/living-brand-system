@@ -5,7 +5,7 @@ import type {
 	AgentReasoningMarker,
 	AgentSkillMarker,
 	AgentToolMarker,
-} from '@/features/agent-chat/get-agent-tool-marker'
+} from '@/features/agent-chat/utils/get-agent-tool-marker'
 
 export function AgentChatToolMarker({
 	marker,
