@@ -9,7 +9,9 @@ import {
 	useFormFields,
 	useListDrawer,
 } from '@payloadcms/ui'
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { flushSync } from 'react-dom'
+import Moveable from 'react-moveable'
 import { TemplateRenderer } from '@/components/template-renderer'
 import {
 	AUTHORIZED_ASSET_COLLECTIONS,
@@ -37,18 +39,8 @@ export default function TemplatePreviewField() {
 	const [AssetListDrawer, , { closeDrawer, openDrawer }] = useListDrawer({
 		collectionSlugs: [...AUTHORIZED_ASSET_COLLECTIONS],
 	})
-	// 드래그 원점 스냅샷 — 이동/리사이즈는 여기 기준 delta로 계산한다.
-	const [dragState, setDragState] = useState<{
-		mode: 'move' | 'resize'
-		pointerX: number
-		pointerY: number
-		originX: number
-		originY: number
-		originWidth: number
-		originHeight: number
-	} | null>(null)
-	// 드래그 직후의 click이 선택 해제로 이어지지 않도록 막는 플래그.
-	const didDragRef = useRef(false)
+	// 선택된 오버레이 버튼 DOM — Moveable(드래그·리사이즈)의 타깃이 된다.
+	const [moveableTarget, setMoveableTarget] = useState<HTMLElement | null>(null)
 
 	const parsed = useMemo(() => jsonTemplateSchema.safeParse(jsonValue), [jsonValue])
 
@@ -168,66 +160,8 @@ export default function TemplatePreviewField() {
 							<button
 								type="button"
 								key={element.id}
-								onClick={() => {
-									// 드래그 직후의 click은 선택 해제로 처리하지 않는다.
-									if (didDragRef.current) {
-										didDragRef.current = false
-										return
-									}
-									setSelectedId(isSelected ? null : element.id)
-								}}
-								onPointerDown={(event) => {
-									if (!isSelected) {
-										return
-									}
-									const box = event.currentTarget.getBoundingClientRect()
-									// 우하단 12px 영역에서 시작하면 리사이즈, 그 외는 이동.
-									const nearCorner =
-										box.right - event.clientX < 12 &&
-										box.bottom - event.clientY < 12
-									event.currentTarget.setPointerCapture(event.pointerId)
-									didDragRef.current = false
-									setDragState({
-										mode: nearCorner ? 'resize' : 'move',
-										pointerX: event.clientX,
-										pointerY: event.clientY,
-										originX: element.x,
-										originY: element.y,
-										originWidth: element.width,
-										originHeight: element.height,
-									})
-								}}
-								onPointerMove={(event) => {
-									if (!dragState || !isSelected) {
-										return
-									}
-									const dx = event.clientX - dragState.pointerX
-									const dy = event.clientY - dragState.pointerY
-
-									if (!didDragRef.current && Math.abs(dx) + Math.abs(dy) < 3) {
-										return
-									}
-									didDragRef.current = true
-
-									if (dragState.mode === 'move') {
-										updateSelected({
-											x: Math.round(dragState.originX + dx / scale),
-											y: Math.round(dragState.originY + dy / scale),
-										})
-									} else {
-										updateSelected({
-											width: Math.max(
-												1,
-												Math.round(dragState.originWidth + dx / scale),
-											),
-											height: Math.max(
-												1,
-												Math.round(dragState.originHeight + dy / scale),
-											),
-										})
-									}
-								}}
-								onPointerUp={() => setDragState(null)}
+								ref={isSelected ? setMoveableTarget : undefined}
+								onClick={() => setSelectedId(isSelected ? null : element.id)}
 								aria-label={element.slotLabel || element.id}
 								title={`${element.slotLabel || element.id}${isUnauthorized ? ' (비인가 — 교체 필요)' : element.locked ? ' (고정)' : ' (슬롯)'}`}
 								style={{
@@ -242,31 +176,40 @@ export default function TemplatePreviewField() {
 									cursor: isSelected ? 'move' : 'pointer',
 									touchAction: 'none',
 									border: isSelected
-										? '2px solid var(--theme-success-400, #22c55e)'
+										? 'none'
 										: isUnauthorized
 											? '2px dashed var(--theme-error-500, #ef4444)'
 											: element.locked
 												? '1px dashed color-mix(in srgb, currentColor 25%, transparent)'
 												: '1px dashed var(--theme-success-400, #22c55e)',
 								}}
-							>
-								{isSelected && (
-									// 리사이즈 핸들 표시용 — 포인터 판정은 버튼의 우하단 영역이 담당한다.
-									<span
-										style={{
-											position: 'absolute',
-											right: -2,
-											bottom: -2,
-											width: 10,
-											height: 10,
-											background: 'var(--theme-success-400, #22c55e)',
-											pointerEvents: 'none',
-										}}
-									/>
-								)}
-							</button>
+							/>
 						)
 					})}
+					{/* 선택 요소의 이동·리사이즈 제스처는 Moveable이 담당한다. 좌표는 scale 역산 후 원본 px로 저장. */}
+					{selected && moveableTarget && (
+						<Moveable
+							flushSync={flushSync}
+							target={moveableTarget}
+							draggable
+							resizable
+							keepRatio={false}
+							origin={false}
+							renderDirections={['se']}
+							onDrag={(event) => {
+								updateSelected({
+									x: Math.round(event.left / scale),
+									y: Math.round(event.top / scale),
+								})
+							}}
+							onResize={(event) => {
+								updateSelected({
+									width: Math.max(1, Math.round(event.width / scale)),
+									height: Math.max(1, Math.round(event.height / scale)),
+								})
+							}}
+						/>
+					)}
 				</div>
 
 				{selected && (
