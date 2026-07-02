@@ -28,6 +28,15 @@ const textElementSchema = baseElementSchema.extend({
 	lineHeight: z.number(),
 	letterSpacing: z.number(),
 	textAlign: z.enum(['left', 'center', 'right']),
+	// 슬롯 텍스트가 원본과 길이가 다를 때의 상자 동작.
+	// fixed는 폭 고정(줄바꿈), auto-width는 줄바꿈 없이 폭이 텍스트를 따라간다.
+	textFit: z.enum(['fixed', 'auto-width']).default('fixed'),
+	// 줄바꿈으로 늘어날 때 상자 안에서 쌓이는 기준. bottom은 아래 변 고정 — 넘치면 위로 자란다.
+	verticalAlign: z.enum(['top', 'middle', 'bottom']).default('top'),
+	// /create 슬롯 입력 제약 — 제작자가 admin에서 요소별로 설정한다.
+	maxLength: z.number().int().positive().optional(),
+	maxLines: z.number().int().positive().optional(),
+	inputFormat: z.enum(['free', 'number', 'email', 'date']).default('free'),
 	filter: z.string().optional(),
 })
 

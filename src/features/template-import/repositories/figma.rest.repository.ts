@@ -23,6 +23,8 @@ export interface FigmaNode {
 		lineHeightPx?: number
 		letterSpacing?: number
 		textAlignHorizontal?: string
+		textAlignVertical?: string
+		textAutoResize?: string
 	}
 	cornerRadius?: number
 	opacity?: number

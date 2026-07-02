@@ -116,6 +116,10 @@ export function convertFigmaNodeTree(
 						: DEFAULT_LINE_HEIGHT,
 					letterSpacing: style.letterSpacing || 0,
 					textAlign: toTextAlign(style.textAlignHorizontal),
+					// Figma에서 auto-width로 그린 텍스트는 줄바꿈 없는 상자로 승계한다.
+					textFit: style.textAutoResize === 'WIDTH_AND_HEIGHT' ? 'auto-width' : 'fixed',
+					verticalAlign: toVerticalAlign(style.textAlignVertical),
+					inputFormat: 'free',
 					// 슬롯 기본값: 텍스트는 교체 대상으로 연다.
 					locked: false,
 					slotLabel: text.trim().slice(0, TEXT_SLOT_LABEL_LENGTH) || '텍스트',
@@ -194,6 +198,12 @@ function toTextAlign(value: string | undefined): 'left' | 'center' | 'right' {
 	if (value === 'CENTER') return 'center'
 	if (value === 'RIGHT') return 'right'
 	return 'left'
+}
+
+function toVerticalAlign(value: string | undefined): 'top' | 'middle' | 'bottom' {
+	if (value === 'CENTER') return 'middle'
+	if (value === 'BOTTOM') return 'bottom'
+	return 'top'
 }
 
 function colorToCss(

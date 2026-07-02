@@ -71,6 +71,15 @@ function TemplateElement({
 			<div
 				style={{
 					...frame,
+					// 세로 정렬 기준으로 쌓는다 — 상자보다 커지면 정렬 반대 방향으로 넘친다 (bottom이면 위로).
+					display: 'flex',
+					flexDirection: 'column',
+					justifyContent:
+						element.verticalAlign === 'bottom'
+							? 'flex-end'
+							: element.verticalAlign === 'middle'
+								? 'center'
+								: 'flex-start',
 					fontSize: element.fontSize,
 					fontFamily: `${element.fontFamily}, Pretendard, sans-serif`,
 					fontWeight: element.fontWeight,
@@ -78,11 +87,26 @@ function TemplateElement({
 					lineHeight: element.lineHeight,
 					letterSpacing: element.letterSpacing,
 					textAlign: element.textAlign,
-					whiteSpace: 'pre-wrap',
+					whiteSpace: element.textFit === 'auto-width' ? 'nowrap' : 'pre-wrap',
+					// auto-width는 상자 폭이 텍스트를 따라간다 (x/y 앵커는 유지).
+					...(element.textFit === 'auto-width' ? { width: 'max-content' } : {}),
 					filter: element.filter,
 				}}
 			>
-				{value?.text ?? element.text}
+				<div
+					style={
+						element.maxLines
+							? {
+									display: '-webkit-box',
+									WebkitBoxOrient: 'vertical',
+									WebkitLineClamp: element.maxLines,
+									overflow: 'hidden',
+								}
+							: undefined
+					}
+				>
+					{value?.text ?? element.text}
+				</div>
 			</div>
 		)
 	}
