@@ -4,6 +4,7 @@ import * as migration_20260702_041019_add_template_import from './20260702_04101
 import * as migration_20260702_051113_add_template_categories from './20260702_051113_add_template_categories'
 import * as migration_20260702_052502_add_template_asset_checksum from './20260702_052502_add_template_asset_checksum'
 import * as migration_20260702_081141_add_agent_settings_global from './20260702_081141_add_agent_settings_global'
+import * as migration_20260702_082845_remove_template_source_type from './20260702_082845_remove_template_source_type'
 
 export const migrations = [
 	{
@@ -35,5 +36,10 @@ export const migrations = [
 		up: migration_20260702_081141_add_agent_settings_global.up,
 		down: migration_20260702_081141_add_agent_settings_global.down,
 		name: '20260702_081141_add_agent_settings_global',
+	},
+	{
+		up: migration_20260702_082845_remove_template_source_type.up,
+		down: migration_20260702_082845_remove_template_source_type.down,
+		name: '20260702_082845_remove_template_source_type',
 	},
 ]

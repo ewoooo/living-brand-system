@@ -381,7 +381,6 @@ export interface Template {
   id: number;
   name: string;
   description?: string | null;
-  sourceType: 'figma' | 'file';
   /**
    * 렌더 계약(JsonTemplate). 임포트가 생성하며, 수정 시 src/types/json-template.ts 스키마를 지켜야 합니다.
    */
@@ -1102,7 +1101,6 @@ export interface TemplateCategoriesSelect<T extends boolean = true> {
 export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
-  sourceType?: T;
   jsonTemplate?: T;
   category?: T;
   sourceUrl?: T;

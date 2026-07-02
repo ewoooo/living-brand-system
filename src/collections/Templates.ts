@@ -60,7 +60,7 @@ export const Templates: CollectionConfig = {
 	admin: {
 		group: 'Production Resources',
 		useAsTitle: 'name',
-		defaultColumns: ['name', 'sourceType', 'updatedAt'],
+		defaultColumns: ['name', 'updatedAt'],
 	},
 	versions: {
 		drafts: {
@@ -81,19 +81,9 @@ export const Templates: CollectionConfig = {
 			localized: true,
 		},
 		{
-			name: 'sourceType',
-			type: 'select',
-			required: true,
-			options: [
-				{ label: 'Figma', value: 'figma' },
-				{ label: 'File', value: 'file' },
-			],
-		},
-		{
 			name: 'figmaImport',
 			type: 'ui',
 			admin: {
-				condition: (data) => data?.sourceType === 'figma',
 				components: {
 					Field: '/features/template-import/components/figma-import-field',
 				},

@@ -49,19 +49,20 @@ export default function FigmaImportField() {
 	}
 
 	return (
-		<div style={{ marginBottom: 'var(--base)' }}>
+		<div style={{ marginBottom: 'var(--base)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
 			<TextInput
 				path="figmaImportUrl"
 				label="Figma에서 가져오기"
-				description="프레임 링크(node-id 포함)를 붙여넣고 가져오기를 누르면 jsonTemplate이 채워집니다."
+				description="프레임 링크를 붙여넣으세요"
 				placeholder="https://www.figma.com/design/...?node-id=..."
 				value={sourceUrl}
+				style={{ flex: 1 }}
 				onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
 					setSourceUrl(event.target.value)
 				}
 			/>
-			<Button onClick={handleImport} disabled={isLoading}>
-				{isLoading ? '변환 중...' : 'Figma에서 가져오기'}
+			<Button onClick={handleImport} disabled={isLoading} buttonStyle="secondary">
+				{isLoading ? '변환 중...' : '변환'}
 			</Button>
 		</div>
 	)
