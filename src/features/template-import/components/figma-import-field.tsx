@@ -49,7 +49,14 @@ export default function FigmaImportField() {
 	}
 
 	return (
-		<div style={{ marginBottom: 'var(--base)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+		<div
+			style={{
+				marginBottom: 'var(--base)',
+				display: 'flex',
+				gap: 8,
+				alignItems: 'flex-start',
+			}}
+		>
 			<TextInput
 				path="figmaImportUrl"
 				label="Figma에서 가져오기"
