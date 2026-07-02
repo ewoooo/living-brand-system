@@ -74,6 +74,17 @@ export const Templates: CollectionConfig = {
 			},
 		},
 		{
+			name: 'category',
+			type: 'relationship',
+			relationTo: 'template-categories',
+			required: true,
+			index: true,
+			admin: {
+				position: 'sidebar',
+				description: 'Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.',
+			},
+		},
+		{
 			name: 'sourceUrl',
 			type: 'text',
 			admin: {

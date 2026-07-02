@@ -74,6 +74,7 @@ export interface Config {
     'brand-colors': BrandColor;
     'brand-typefaces': BrandTypeface;
     'application-images': ApplicationImage;
+    'template-categories': TemplateCategory;
     templates: Template;
     'template-assets': TemplateAsset;
     plugins: Plugin;
@@ -89,6 +90,9 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
+    'template-categories': {
+      templates: 'templates';
+    };
     sections: {
       pages: 'guideline-pages';
     };
@@ -100,6 +104,7 @@ export interface Config {
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
+    'template-categories': TemplateCategoriesSelect<false> | TemplateCategoriesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
     plugins: PluginsSelect<false> | PluginsSelect<true>;
@@ -338,6 +343,35 @@ export interface ApplicationImage {
   };
 }
 /**
+ * Create 화면 사이드바에 표시할 템플릿 카테고리입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-categories".
+ */
+export interface TemplateCategory {
+  id: number;
+  /**
+   * 사이드바 카테고리 제목으로 표시됩니다.
+   */
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  templates?: {
+    docs?: (number | Template)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * 숫자가 낮을수록 사이드바에서 먼저 표시됩니다.
+   */
+  displayOrder: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "templates".
  */
@@ -358,6 +392,10 @@ export interface Template {
     | number
     | boolean
     | null;
+  /**
+   * Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.
+   */
+  category: number | TemplateCategory;
   /**
    * 임포트에 사용한 Figma URL 원문입니다. 출처 기록용이며 재동기화하지 않습니다.
    */
@@ -817,6 +855,10 @@ export interface PayloadLockedDocument {
         value: number | ApplicationImage;
       } | null)
     | ({
+        relationTo: 'template-categories';
+        value: number | TemplateCategory;
+      } | null)
+    | ({
         relationTo: 'templates';
         value: number | Template;
       } | null)
@@ -1036,6 +1078,19 @@ export interface ApplicationImagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-categories_select".
+ */
+export interface TemplateCategoriesSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  templates?: T;
+  displayOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "templates_select".
  */
 export interface TemplatesSelect<T extends boolean = true> {
@@ -1043,6 +1098,7 @@ export interface TemplatesSelect<T extends boolean = true> {
   description?: T;
   sourceType?: T;
   jsonTemplate?: T;
+  category?: T;
   sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;

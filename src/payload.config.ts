@@ -21,6 +21,7 @@ import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
 import { Rules } from './collections/Rules'
 import { TemplateAssets } from './collections/TemplateAssets'
+import { TemplateCategories } from './collections/TemplateCategories'
 import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
 import { Guideline } from './globals/Guideline'
@@ -68,6 +69,7 @@ export default buildConfig({
 		BrandColors,
 		BrandTypefaces,
 		ApplicationImages,
+		TemplateCategories,
 		Templates,
 		TemplateAssets,
 		Plugins,
