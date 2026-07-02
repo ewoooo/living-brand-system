@@ -1,5 +1,6 @@
 import { colorPaletteChecker } from './color-palette.checker'
 import { imageryBackgroundToneChecker } from './imagery-background-tone.checker'
+import { logoClearSpaceChecker } from './logo-clear-space.checker'
 import type { RuleChecker } from './types'
 
 /**
@@ -12,6 +13,7 @@ import type { RuleChecker } from './types'
 const checkers: Record<string, RuleChecker> = {
 	[colorPaletteChecker.ruleKey]: colorPaletteChecker,
 	[imageryBackgroundToneChecker.ruleKey]: imageryBackgroundToneChecker,
+	[logoClearSpaceChecker.ruleKey]: logoClearSpaceChecker,
 }
 
 export function getChecker(ruleKey: string): RuleChecker | null {

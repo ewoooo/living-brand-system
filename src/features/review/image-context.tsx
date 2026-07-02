@@ -6,7 +6,7 @@ import {
 	DEFAULT_CONTENT_FLAGS,
 	type ImageContentFlags,
 } from '@/features/review/content-gate'
-import { loadPixelsFromUrl } from '@/features/review/extract-pixels.client'
+import { loadPixelGridFromUrl, opaquePixels } from '@/features/review/extract-pixels.client'
 import { type RuleOutcome, runCheckersProgressive } from '@/features/review/run-checkers'
 
 export interface ReviewImage {
@@ -45,14 +45,15 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 	// 활성 섹션(콘텐츠 플래그 기준)에 속한 룰만 순차 검수하고 결과를 점진 매핑한다.
 	const runCheck = useCallback((id: string, url: string, flags: ImageContentFlags) => {
 		const ruleKeys = activeRuleKeys(flags)
-		loadPixelsFromUrl(url)
-			.then(async (pixels) => {
+		loadPixelGridFromUrl(url)
+			.then(async (grid) => {
+				const pixels = opaquePixels(grid)
 				setImages((prev) =>
 					prev.map((image) =>
 						image.id === id ? { ...image, checking: true, results: {} } : image,
 					),
 				)
-				await runCheckersProgressive(pixels, ruleKeys, (ruleKey, outcome) => {
+				await runCheckersProgressive(pixels, grid, ruleKeys, (ruleKey, outcome) => {
 					setImages((prev) =>
 						prev.map((image) =>
 							image.id === id

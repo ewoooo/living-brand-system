@@ -13,12 +13,12 @@ import type { Rgb } from '@/features/review/color-check'
 const SETS = [
 	{
 		label: 'PASS 세트 (정상 — 전부 통과해야)',
-		dir: 'tests/fixtures/review/pass',
+		dir: 'tests/fixtures/review/color/pass',
 		expect: 'pass' as const,
 	},
 	{
 		label: 'FAIL 세트 (위반 — 잡아야)',
-		dir: 'tests/fixtures/review/fail',
+		dir: 'tests/fixtures/review/color/fail',
 		expect: 'fail' as const,
 	},
 ]

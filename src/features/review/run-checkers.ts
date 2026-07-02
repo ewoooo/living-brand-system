@@ -1,4 +1,5 @@
 import { getChecker } from '@/features/review/checkers/registry'
+import type { PixelGrid } from '@/features/review/checkers/types'
 import type { Rgb } from '@/features/review/color-check'
 
 export interface RuleOutcome {
@@ -16,6 +17,7 @@ const PENDING: RuleOutcome = { status: 'pending', fulfillment: null, detail: '' 
  */
 export async function runCheckersProgressive(
 	pixels: Rgb[],
+	grid: PixelGrid | undefined,
 	ruleKeys: string[],
 	onResult: (ruleKey: string, outcome: RuleOutcome) => void,
 	staggerMs = 35,
@@ -23,7 +25,7 @@ export async function runCheckersProgressive(
 	for (const ruleKey of ruleKeys) {
 		const checker = getChecker(ruleKey)
 		if (checker) {
-			const result = checker.check({ pixels })
+			const result = checker.check({ pixels, grid })
 			onResult(ruleKey, {
 				status: result.status === 'pass' ? 'pass' : 'fail',
 				fulfillment: result.fulfillment,
