@@ -1,12 +1,49 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as agentGuidelineRepository from '@/features/agent-chat/repositories/agent-guideline-context.payload.repository'
 import * as agentSkillRepository from '@/features/agent-chat/repositories/agent-skill.payload.repository'
+import * as agentTemplateRepository from '@/features/agent-chat/repositories/agent-template.payload.repository'
 import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import { validateAgentChatMessages } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { extractTextFromLexical } from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { getAgentTools } from '@/features/agent-chat/services/get-agent-tools.service'
 import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-text'
+
+const textElement = (
+	overrides: Partial<{
+		id: string
+		locked: boolean
+		maxLength: number
+		slotLabel: string
+		text: string
+	}> = {},
+) => ({
+	id: overrides.id ?? 'name',
+	type: 'text' as const,
+	x: 0,
+	y: 0,
+	width: 200,
+	height: 40,
+	zIndex: 1,
+	locked: overrides.locked ?? false,
+	text: overrides.text ?? 'Name',
+	fontSize: 20,
+	fontFamily: 'Pretendard',
+	fontWeight: '700',
+	color: '#000000',
+	lineHeight: 1.2,
+	letterSpacing: 0,
+	textAlign: 'left' as const,
+	...(overrides.maxLength ? { maxLength: overrides.maxLength } : {}),
+	...(overrides.slotLabel ? { slotLabel: overrides.slotLabel } : {}),
+})
+
+const template = (...elements: ReturnType<typeof textElement>[]) => ({
+	width: 900,
+	height: 500,
+	background: '#ffffff',
+	elements,
+})
 
 describe('agent tools', () => {
 	afterEach(() => {
@@ -103,6 +140,62 @@ describe('agent tools', () => {
 				title: 'Color palette',
 			}),
 		])
+	})
+
+	it('lists published templates with open slots', async () => {
+		vi.spyOn(agentTemplateRepository, 'listAgentTemplates').mockResolvedValue([
+			{
+				id: 3,
+				name: 'Business card',
+				description: 'Name card template',
+				jsonTemplate: template(textElement({ slotLabel: '이름' })),
+			},
+		] as never)
+		const tools = getAgentTools()
+
+		const result = await tools.findTemplatesForRequest.execute?.({ query: 'card' }, {
+			context: { user: { id: 1 } },
+		} as never)
+
+		expect(result).toEqual([
+			expect.objectContaining({
+				id: 3,
+				slots: [expect.objectContaining({ id: 'name', label: '이름' })],
+			}),
+		])
+	})
+
+	it('prepares template image attachments from open slot values only', async () => {
+		vi.spyOn(agentTemplateRepository, 'findAgentTemplate').mockResolvedValue({
+			id: 4,
+			name: 'Business card',
+			description: null,
+			jsonTemplate: template(
+				textElement({ maxLength: 5 }),
+				textElement({ id: 'fixed', locked: true, text: 'Fixed' }),
+			),
+		} as never)
+		const tools = getAgentTools()
+
+		const result = await tools.prepareTemplateImage.execute?.(
+			{
+				templateId: 4,
+				values: {
+					name: { text: '홍길동입니다' },
+					fixed: { text: 'changed' },
+				},
+			},
+			{ context: { user: { id: 1 } } } as never,
+		)
+
+		expect(result).toMatchObject({
+			name: 'Business card',
+			templateId: 4,
+			type: 'template-image',
+			values: {
+				name: { text: '홍길동입니' },
+			},
+		})
 	})
 
 	it('rejects invalid tool message input before streaming', async () => {
