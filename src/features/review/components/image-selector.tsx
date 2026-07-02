@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
+import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { CONTENT_FLAG_LABELS, type ImageContentFlags } from '@/features/review/content-gate'
 import { useReviewImages } from '@/features/review/image-context'
@@ -9,7 +10,17 @@ import { cn } from '@/lib/utils'
 const CONTENT_FLAG_KEYS = Object.keys(CONTENT_FLAG_LABELS) as (keyof ImageContentFlags)[]
 
 export function ImageSelector() {
-	const { images, selectedId, selected, select, addFiles, setContentFlag } = useReviewImages()
+	const {
+		images,
+		selectedId,
+		selected,
+		select,
+		addFiles,
+		contentFlags,
+		flagsLocked,
+		setContentFlag,
+		runReview,
+	} = useReviewImages()
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	return (
@@ -66,28 +77,39 @@ export function ImageSelector() {
 				)}
 			</div>
 
-			{/* 선택 이미지의 포함 요소 — 체크한 요소의 섹션만 검수 (Color는 항상 기본) */}
-			{selected && (
-				<div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-					<span className="text-muted-foreground text-xs">포함 요소</span>
-					{CONTENT_FLAG_KEYS.map((key) => (
-						<label
-							key={key}
-							htmlFor={`content-flag-${key}`}
-							className="flex cursor-pointer items-center gap-2 text-foreground text-sm"
-						>
-							<Checkbox
-								id={`content-flag-${key}`}
-								checked={selected.contentFlags[key]}
-								onCheckedChange={(checked) =>
-									setContentFlag(selected.id, key, checked === true)
-								}
-							/>
-							{CONTENT_FLAG_LABELS[key]}
-						</label>
-					))}
-				</div>
-			)}
+			{/* 포함 요소 (항상 표시, 검수 제출 시 잠금) + 검수 버튼 */}
+			<div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+				<span className="text-muted-foreground text-xs">포함 요소</span>
+				{CONTENT_FLAG_KEYS.map((key) => (
+					<label
+						key={key}
+						htmlFor={`content-flag-${key}`}
+						className={cn(
+							'flex items-center gap-2 text-sm',
+							flagsLocked
+								? 'cursor-not-allowed text-muted-foreground'
+								: 'cursor-pointer text-foreground',
+						)}
+					>
+						<Checkbox
+							id={`content-flag-${key}`}
+							checked={contentFlags[key]}
+							disabled={flagsLocked}
+							onCheckedChange={(checked) => setContentFlag(key, checked === true)}
+						/>
+						{CONTENT_FLAG_LABELS[key]}
+					</label>
+				))}
+				<Button
+					type="button"
+					size="sm"
+					className="ml-auto"
+					disabled={!selectedId || Boolean(selected?.checking)}
+					onClick={runReview}
+				>
+					{selected?.checking ? '검수 중…' : '검수'}
+				</Button>
+			</div>
 		</div>
 	)
 }

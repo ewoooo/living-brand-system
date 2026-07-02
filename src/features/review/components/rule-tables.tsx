@@ -3,11 +3,7 @@
 import { MagicWand, Ruler, User } from '@carbon/icons-react'
 import { type ComponentType, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import {
-	DEFAULT_CONTENT_FLAGS,
-	isSectionActive,
-	sectionRequiredLabel,
-} from '@/features/review/content-gate'
+import { isSectionActive, sectionRequiredLabel } from '@/features/review/content-gate'
 import { useReviewImages } from '@/features/review/image-context'
 
 interface Rule {
@@ -137,8 +133,8 @@ function RuleRow({ rule }: { rule: Rule }) {
 }
 
 export function RuleTables({ pages, sectionSlug }: { pages: ReviewPage[]; sectionSlug: string }) {
-	const { selected } = useReviewImages()
-	const flags = selected?.contentFlags ?? DEFAULT_CONTENT_FLAGS
+	const { selected, contentFlags } = useReviewImages()
+	const flags = contentFlags
 	// 콘텐츠 게이트: 이 섹션이 요구하는 요소(예: Photography)를 체크하지 않으면 검수 대상이 아니다.
 	const sectionActive = isSectionActive(sectionSlug, flags)
 	const requiredLabel = sectionRequiredLabel(sectionSlug)
