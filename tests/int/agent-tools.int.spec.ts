@@ -186,6 +186,31 @@ describe('agent tools', () => {
 		])
 	})
 
+	it('matches templates from natural-language request tokens', async () => {
+		vi.spyOn(agentTemplateRepository, 'listAgentTemplates').mockResolvedValue([
+			{
+				id: 7,
+				name: '환영 카드',
+				description: '신규 입사자에게 온라인으로 배부되는 카드',
+				templateRules: [],
+				jsonTemplate: template(textElement({ slotLabel: '이름 (한글)' })),
+			},
+		] as never)
+		const tools = getAgentTools()
+
+		const result = await tools.findTemplatesForRequest.execute?.(
+			{ query: '신규 입사자가 생겼는데 만들어야하는 것들' },
+			{ context: { user: { id: 1 } } } as never,
+		)
+
+		expect(result).toEqual([
+			expect.objectContaining({
+				id: 7,
+				name: '환영 카드',
+			}),
+		])
+	})
+
 	it('prepares template image attachments from open slot values only', async () => {
 		vi.spyOn(agentTemplateRepository, 'findAgentTemplate').mockResolvedValue({
 			id: 4,

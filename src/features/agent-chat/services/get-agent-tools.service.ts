@@ -163,17 +163,29 @@ async function findTemplatesForRequest(user: unknown, query?: string) {
 				return true
 			}
 
-			return [
-				template.name,
-				template.description,
-				...template.rules.flatMap((rule) => [rule.title, rule.description, rule.body]),
-				...template.slots.map((slot) => slot.label),
-			]
-				.join(' ')
-				.toLowerCase()
-				.includes(normalizedQuery)
+			return matchesTemplateQuery(
+				[
+					template.name,
+					template.description,
+					...template.rules.flatMap((rule) => [rule.title, rule.description, rule.body]),
+					...template.slots.map((slot) => slot.label),
+				].join(' '),
+				normalizedQuery,
+			)
 		})
 		.slice(0, 10)
+}
+
+function matchesTemplateQuery(searchText: string, normalizedQuery: string) {
+	const haystack = searchText.toLowerCase()
+
+	return (
+		haystack.includes(normalizedQuery) ||
+		normalizedQuery
+			.split(/[^\p{Letter}\p{Number}]+/u)
+			.filter((token) => token.length >= 2)
+			.some((token) => haystack.includes(token))
+	)
 }
 
 function getTemplateRules(templateRules: AgentTemplateDocument['templateRules']) {
