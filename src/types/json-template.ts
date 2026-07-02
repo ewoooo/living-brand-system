@@ -31,9 +31,20 @@ const textElementSchema = baseElementSchema.extend({
 	filter: z.string().optional(),
 })
 
+/** 이미지 요소가 참조할 수 있는 인가된 내부 에셋 컬렉션. */
+export const AUTHORIZED_ASSET_COLLECTIONS = ['brand-logos', 'application-images'] as const
+
+/**
+ * 이미지 출처 컬렉션. 'template-assets'는 임포트 직후의 비인가 스테이징 상태이며,
+ * 인가 컬렉션으로 교체하기 전에는 Templates 문서를 저장할 수 없다.
+ */
+const assetCollectionSchema = z.enum(['template-assets', ...AUTHORIZED_ASSET_COLLECTIONS])
+
 const imageElementSchema = baseElementSchema.extend({
 	type: z.literal('image'),
-	// template-assets 문서 ID. 수명주기 관리용이며 렌더는 src를 그대로 쓴다.
+	// 참조 에셋의 컬렉션과 문서 ID. 렌더는 src를 그대로 쓴다.
+	// 기존 데이터 호환: assetCollection이 없으면 비인가 스테이징으로 간주한다.
+	assetCollection: assetCollectionSchema.default('template-assets'),
 	assetId: z.number(),
 	src: z.string().min(1),
 	objectFit: z.enum(['cover', 'contain', 'fill']),

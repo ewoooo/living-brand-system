@@ -138,6 +138,8 @@ export function convertFigmaNodeTree(
 						type: 'image',
 						zIndex: nextZ(),
 						...frame,
+						// 임포트 조각은 비인가 스테이징 — 저장 전에 인가 에셋으로 교체해야 한다.
+						assetCollection: 'template-assets',
 						assetId: asset.assetId,
 						src: asset.src,
 						objectFit: 'cover',
