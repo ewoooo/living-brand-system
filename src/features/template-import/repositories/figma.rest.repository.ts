@@ -28,6 +28,17 @@ export interface FigmaNode {
 	}
 	cornerRadius?: number
 	opacity?: number
+	// auto-layout(스택 승격) 판단·매핑용 필드.
+	layoutMode?: string
+	itemSpacing?: number
+	paddingTop?: number
+	paddingRight?: number
+	paddingBottom?: number
+	paddingLeft?: number
+	primaryAxisAlignItems?: string
+	counterAxisAlignItems?: string
+	layoutSizingHorizontal?: string
+	layoutSizingVertical?: string
 }
 
 export interface FigmaPaint {

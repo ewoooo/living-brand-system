@@ -190,6 +190,152 @@ describe('convertFigmaNodeTree', () => {
 	})
 })
 
+describe('convertFigmaNodeTree (stack 승격)', () => {
+	/** Living Design System 예시(node 110-54) 축약: 루트 세로 스택 > 가로 space-between 행 > 로고+텍스트. */
+	function buildAutoLayoutFixture(): FigmaNode {
+		return {
+			id: '2:1',
+			type: 'FRAME',
+			absoluteBoundingBox: { x: 0, y: 0, width: 1115, height: 1000 },
+			fills: [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }],
+			layoutMode: 'VERTICAL',
+			primaryAxisAlignItems: 'MAX',
+			counterAxisAlignItems: 'CENTER',
+			paddingTop: 50,
+			paddingRight: 50,
+			paddingBottom: 50,
+			paddingLeft: 50,
+			itemSpacing: 10,
+			children: [
+				{
+					id: '2:2',
+					type: 'FRAME',
+					absoluteBoundingBox: { x: 50, y: 236, width: 1015, height: 714 },
+					layoutMode: 'HORIZONTAL',
+					primaryAxisAlignItems: 'SPACE_BETWEEN',
+					itemSpacing: 99,
+					layoutSizingHorizontal: 'FILL',
+					children: [
+						{
+							id: '2:3',
+							type: 'VECTOR',
+							absoluteBoundingBox: { x: 100, y: 286, width: 238, height: 141 },
+						},
+						{
+							id: '2:4',
+							type: 'TEXT',
+							absoluteBoundingBox: { x: 700, y: 286, width: 279, height: 61 },
+							characters: 'Placeholder',
+							fills: [{ type: 'SOLID', color: { r: 0.917, g: 0.325, b: 0.262 } }],
+							style: { fontSize: 50, textAutoResize: 'WIDTH_AND_HEIGHT' },
+							layoutSizingHorizontal: 'HUG',
+						},
+					],
+				},
+			],
+		}
+	}
+
+	const stackAssets = { '2:3': { assetId: 21, src: '/api/template-assets/file/logo.svg' } }
+
+	it('루트 auto-layout은 캔버스 크기의 단일 스택으로 승격된다', () => {
+		const template = convertFigmaNodeTree(buildAutoLayoutFixture(), stackAssets)
+
+		expect(() => jsonTemplateSchema.parse(template)).not.toThrow()
+		expect(template.elements).toHaveLength(1)
+		expect(template.elements[0]).toMatchObject({
+			type: 'stack',
+			x: 0,
+			y: 0,
+			width: 1115,
+			height: 1000,
+			direction: 'vertical',
+			justify: 'end',
+			align: 'center',
+			gap: 10,
+			padding: { top: 50, right: 50, bottom: 50, left: 50 },
+			locked: true,
+		})
+	})
+
+	it('중첩 스택은 크기 모드를 승계하고 space-between은 gap을 버린다', () => {
+		const template = convertFigmaNodeTree(buildAutoLayoutFixture(), stackAssets)
+		const root = template.elements[0]
+
+		if (root?.type !== 'stack') throw new Error('unreachable')
+		const row = root.children[0]
+
+		if (row?.type !== 'stack') throw new Error('unreachable')
+		expect(row).toMatchObject({
+			direction: 'horizontal',
+			justify: 'space-between',
+			gap: 0,
+			widthMode: 'fill',
+		})
+		expect(row.children).toMatchObject([
+			{ type: 'image', assetId: 21, widthMode: 'fixed', locked: false },
+			{
+				type: 'text',
+				text: 'Placeholder',
+				widthMode: 'hug',
+				textFit: 'auto-width',
+				locked: false,
+			},
+		])
+	})
+
+	it('슬롯이 없는 auto-layout 프레임은 기존처럼 평탄화된다', () => {
+		const fixture: FigmaNode = {
+			id: '3:1',
+			type: 'FRAME',
+			absoluteBoundingBox: { x: 0, y: 0, width: 100, height: 100 },
+			layoutMode: 'VERTICAL',
+			children: [
+				{
+					id: '3:2',
+					type: 'RECTANGLE',
+					absoluteBoundingBox: { x: 0, y: 0, width: 100, height: 50 },
+					fills: [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 } }],
+				},
+			],
+		}
+		const template = convertFigmaNodeTree(fixture, {})
+
+		expect(template.elements).toMatchObject([{ type: 'rect' }])
+	})
+
+	it('auto-layout이 아닌 컨테이너가 섞이면 승격하지 않고 평탄화한다', () => {
+		const fixture: FigmaNode = {
+			id: '4:1',
+			type: 'FRAME',
+			absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 200 },
+			layoutMode: 'VERTICAL',
+			children: [
+				{
+					id: '4:2',
+					type: 'FRAME',
+					absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 100 },
+					children: [
+						{
+							id: '4:3',
+							type: 'TEXT',
+							absoluteBoundingBox: { x: 10, y: 10, width: 100, height: 20 },
+							characters: '텍스트',
+						},
+					],
+				},
+			],
+		}
+		const template = convertFigmaNodeTree(fixture, {})
+
+		expect(template.elements.some((element) => element.type === 'stack')).toBe(false)
+		expect(template.elements.find((element) => element.type === 'text')).toMatchObject({
+			x: 10,
+			y: 10,
+		})
+	})
+})
+
 describe('parseFigmaUrl', () => {
 	it('design URL에서 fileKey와 API 형식 nodeId를 뽑는다', () => {
 		expect(
