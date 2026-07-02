@@ -16,14 +16,14 @@ const roleOf = (user: unknown): Role | null => {
 	return null
 }
 
-export const isAdmin = (user: unknown): boolean => roleOf(user) === 'admin'
+const isAdmin = (user: unknown): boolean => roleOf(user) === 'admin'
 
-export const isManager = (user: unknown): boolean => {
+const isManager = (user: unknown): boolean => {
 	const r = roleOf(user)
 	return r === 'admin' || r === 'manager'
 }
 
-export const isAuthenticated = (user: unknown): boolean => Boolean(user)
+const isAuthenticated = (user: unknown): boolean => Boolean(user)
 
 // --- 컬렉션 access ---
 export const authenticated: Access = ({ req }) => isAuthenticated(req.user)
