@@ -7,6 +7,10 @@ import {
 import { getAgentMessageText } from '../utils/get-agent-message-text'
 import { AgentChatAgentBubble, AgentChatUserBubble } from './agent-chat-bubbles'
 import {
+	AgentChatTemplateAttachment,
+	type AgentTemplateAttachment,
+} from './agent-chat-template-attachment'
+import {
 	AgentChatReasoningMarker,
 	AgentChatSkillMarker,
 	AgentChatToolMarker,
@@ -25,6 +29,20 @@ export function AgentChatMessageItem({
 	const marker = isUser ? null : getAgentToolMarker(message)
 	const messageText = getAgentMessageText(message)
 	const files = message.parts.filter((part) => part.type === 'file')
+	const templateAttachments = isUser
+		? []
+		: message.parts.flatMap((part) => {
+				if (
+					part.type !== 'tool-prepareTemplateImage' ||
+					part.state !== 'output-available' ||
+					!('output' in part)
+				) {
+					return []
+				}
+
+				const output = (part as { output: AgentTemplateAttachment }).output
+				return output.type === 'template-image' ? [output] : []
+			})
 
 	return (
 		<div
@@ -40,7 +58,15 @@ export function AgentChatMessageItem({
 			{isUser ? (
 				<AgentChatUserBubble text={messageText} files={files} />
 			) : (
-				<AgentChatAgentBubble text={messageText} isStreaming={isActive} />
+				<>
+					{templateAttachments.map((attachment) => (
+						<AgentChatTemplateAttachment
+							key={`${attachment.templateId}-${attachment.name}`}
+							attachment={attachment}
+						/>
+					))}
+					<AgentChatAgentBubble text={messageText} isStreaming={isActive} />
+				</>
 			)}
 		</div>
 	)

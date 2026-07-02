@@ -64,6 +64,8 @@ export const agentChatAgent = new ToolLoopAgent<
 		listGuidelinePages: { user: null },
 		searchGuidelines: { user: null },
 		readGuidelineDocument: { user: null },
+		findTemplatesForRequest: { user: null },
+		prepareTemplateImage: { user: null },
 	},
 	callOptionsSchema: agentChatCallOptionsSchema,
 	stopWhen: isStepCount(5),
@@ -104,6 +106,8 @@ export const agentChatAgent = new ToolLoopAgent<
 				listGuidelinePages: { user: options.user },
 				searchGuidelines: { user: options.user },
 				readGuidelineDocument: { user: options.user },
+				findTemplatesForRequest: { user: options.user },
+				prepareTemplateImage: { user: options.user },
 			},
 		}
 	},
