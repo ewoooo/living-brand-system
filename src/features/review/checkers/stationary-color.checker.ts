@@ -23,7 +23,8 @@ export const stationaryColorChecker: RuleChecker = {
 
 		let off = 0
 		for (const c of dom) {
-			if (nearestSwatch(c.rgb, STATIONERY_ALLOWED).distance > PALETTE_DELTA_E_TOLERANCE) off += c.share
+			if (nearestSwatch(c.rgb, STATIONERY_ALLOWED).distance > PALETTE_DELTA_E_TOLERANCE)
+				off += c.share
 		}
 		const total = dom.reduce((sum, c) => sum + c.share, 0)
 		const ratio = total === 0 ? 0 : off / total

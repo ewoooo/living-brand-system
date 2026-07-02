@@ -92,7 +92,12 @@ export function matchLogo(
 	detectedAspect: number,
 	assets: LogoAsset[],
 ): ShapeMatch {
-	const best: ShapeMatch = { key: null, iou: 0, aspectDiff: Number.POSITIVE_INFINITY, pass: false }
+	const best: ShapeMatch = {
+		key: null,
+		iou: 0,
+		aspectDiff: Number.POSITIVE_INFINITY,
+		pass: false,
+	}
 	for (const asset of assets) {
 		const aspectDiff = Math.abs(detectedAspect - asset.aspect) / asset.aspect
 		if (aspectDiff > ASPECT_TOL) continue

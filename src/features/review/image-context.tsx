@@ -1,12 +1,9 @@
 'use client'
 
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
-import {
-	activeRuleKeys,
-	DEFAULT_CONTENT_FLAGS,
-	type ImageContentFlags,
-} from '@/features/review/content-gate'
+import { DEFAULT_CONTENT_FLAGS, type ImageContentFlags } from '@/features/review/content-gate'
 import { loadPixelGridFromUrl, opaquePixels } from '@/features/review/extract-pixels.client'
+import { getAllRuleKeys } from '@/features/review/navigation'
 import { type RuleOutcome, runCheckersProgressive } from '@/features/review/run-checkers'
 
 export interface ReviewImage {
@@ -25,21 +22,23 @@ interface ReviewImageContextValue {
 	selected: ReviewImage | null
 	select: (id: string) => void
 	addFiles: (files: FileList | File[]) => void
-	/** 포함 요소 플래그 (워크스페이스 수준). 검수 대상 섹션을 결정한다. */
+	/** 포함 요소 플래그 (현재 검수 로직엔 미반영 — 향후 사용 대비 유지). */
 	contentFlags: ImageContentFlags
 	/** 검수 제출 후 true — 플래그 잠금. 새 이미지 업로드 시 다시 false. */
 	flagsLocked: boolean
-	/** 포함 요소 토글 (재검수하지 않음 — 검수는 runReview로만). */
 	setContentFlag: (key: keyof ImageContentFlags, value: boolean) => void
-	/** 선택 이미지를 현재 플래그로 검수 실행하고 플래그를 잠근다. */
+	/** 선택 이미지를 검수 실행하고 플래그를 잠근다. */
 	runReview: () => void
+	/** 미구현(체커 없는) 룰 숨김 여부. 기본 숨김. */
+	hideUnimplemented: boolean
+	setHideUnimplemented: (value: boolean) => void
 }
 
 const ReviewImageContext = createContext<ReviewImageContextValue | null>(null)
 
 /**
  * 검수 대상 이미지 목록·선택 상태·포함 요소 플래그를 review 작업 영역 전체에 제공한다.
- * 검수는 업로드/토글 시 자동 실행하지 않고 runReview(검수 버튼)로만 트리거한다.
+ * 검수는 업로드/토글 시 자동 실행하지 않고 runReview(검수 버튼)로만 트리거하며, 전 룰을 대상으로 한다.
  * 미리보기는 브라우저 object URL만 쓰고(러프), 서버 업로드·검수는 별도 엔진이 담당한다.
  */
 export function ReviewImageProvider({ children }: { children: React.ReactNode }) {
@@ -47,10 +46,12 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 	const [selectedId, setSelectedId] = useState<string | null>(null)
 	const [contentFlags, setContentFlags] = useState<ImageContentFlags>(DEFAULT_CONTENT_FLAGS)
 	const [flagsLocked, setFlagsLocked] = useState(false)
+	// 미구현(체커 없는) 룰은 기본 숨김.
+	const [hideUnimplemented, setHideUnimplemented] = useState(true)
 
-	// 활성 섹션(플래그 기준)에 속한 룰만 순차 검수하고 결과를 점진 매핑한다.
-	const runCheck = useCallback((id: string, url: string, flags: ImageContentFlags) => {
-		const ruleKeys = activeRuleKeys(flags)
+	// 전 룰을 순차 검수하고 결과를 점진 매핑한다 (섹션 게이팅 없음).
+	const runCheck = useCallback((id: string, url: string) => {
+		const ruleKeys = getAllRuleKeys()
 		loadPixelGridFromUrl(url)
 			.then(async (grid) => {
 				const pixels = opaquePixels(grid)
@@ -94,7 +95,6 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 	const select = useCallback((id: string) => setSelectedId(id), [])
 
 	const setContentFlag = useCallback((key: keyof ImageContentFlags, value: boolean) => {
-		// 워크스페이스 플래그만 갱신 — 재검수 없음.
 		setContentFlags((prev) => ({ ...prev, [key]: value }))
 	}, [])
 
@@ -103,8 +103,8 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 		const target = images.find((image) => image.id === selectedId)
 		if (!target) return
 		setFlagsLocked(true)
-		runCheck(target.id, target.url, contentFlags)
-	}, [selectedId, images, contentFlags, runCheck])
+		runCheck(target.id, target.url)
+	}, [selectedId, images, runCheck])
 
 	const value = useMemo<ReviewImageContextValue>(
 		() => ({
@@ -117,6 +117,8 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 			flagsLocked,
 			setContentFlag,
 			runReview,
+			hideUnimplemented,
+			setHideUnimplemented,
 		}),
 		[
 			images,
@@ -127,6 +129,7 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 			flagsLocked,
 			setContentFlag,
 			runReview,
+			hideUnimplemented,
 		],
 	)
 

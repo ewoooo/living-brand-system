@@ -20,11 +20,26 @@ export function ImageSelector() {
 		flagsLocked,
 		setContentFlag,
 		runReview,
+		hideUnimplemented,
+		setHideUnimplemented,
 	} = useReviewImages()
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	return (
-		<div className="sticky top-14 z-10 flex h-56 flex-col justify-center gap-5 border-border border-b bg-background/95 px-8 backdrop-blur">
+		<div className="sticky top-14 z-10 flex h-56 flex-col justify-center gap-4 border-border border-b bg-background/95 px-8 backdrop-blur">
+			{/* 미구현(개발 중) 룰 숨김 토글 — 기본 숨김 */}
+			<label
+				htmlFor="hide-unimplemented"
+				className="flex cursor-pointer items-center gap-2 self-end text-muted-foreground text-xs"
+			>
+				<Checkbox
+					id="hide-unimplemented"
+					checked={hideUnimplemented}
+					onCheckedChange={(checked) => setHideUnimplemented(checked === true)}
+				/>
+				미구현 숨기기
+			</label>
+
 			{/* 업로드 + 검수 대상 썸네일 스트립 */}
 			<div className="flex items-center gap-3 overflow-x-auto">
 				<button

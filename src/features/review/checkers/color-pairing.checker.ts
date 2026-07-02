@@ -22,7 +22,11 @@ export const colorPairingChecker: RuleChecker = {
 		const snapped = dom.map((c) => ({ ...c, match: nearestSwatch(c.rgb, ESSENHERB_SWATCHES) }))
 		// palette 게이트: 하나라도 팔레트 밖이면 조합을 논할 수 없다.
 		if (snapped.some((s) => s.match.distance > PALETTE_DELTA_E_TOLERANCE)) {
-			return { status: 'unsupported', fulfillment: null, detail: '팔레트 외 색 존재 — 조합 평가 불가 (palette 선행)' }
+			return {
+				status: 'unsupported',
+				fulfillment: null,
+				detail: '팔레트 외 색 존재 — 조합 평가 불가 (palette 선행)',
+			}
 		}
 
 		const chromatic = snapped.filter(
@@ -34,7 +38,10 @@ export const colorPairingChecker: RuleChecker = {
 			return {
 				status: 'pass',
 				fulfillment: 100,
-				detail: families.size === 0 ? '무채/극단색만 — 유효' : `단일 계열(${[...families][0]}) 모노/톤온톤 — 유효`,
+				detail:
+					families.size === 0
+						? '무채/극단색만 — 유효'
+						: `단일 계열(${[...families][0]}) 모노/톤온톤 — 유효`,
 			}
 		}
 

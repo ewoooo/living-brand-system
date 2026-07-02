@@ -1,5 +1,5 @@
-import type { Rgb } from '@/features/review/color-check'
 import type { PixelGrid } from '@/features/review/checkers/types'
+import type { Rgb } from '@/features/review/color-check'
 
 /**
  * 브라우저에서 이미지 URL을 canvas로 다운샘플해 2D 픽셀 그리드를 뽑는다 (클라이언트 전용).
