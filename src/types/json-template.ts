@@ -73,6 +73,4 @@ export const jsonTemplateSchema = z.object({
 
 export type JsonTemplate = z.infer<typeof jsonTemplateSchema>
 export type JsonTemplateElement = JsonTemplate['elements'][number]
-export type JsonTextElement = z.infer<typeof textElementSchema>
-export type JsonImageElement = z.infer<typeof imageElementSchema>
 export type JsonRectElement = z.infer<typeof rectElementSchema>
