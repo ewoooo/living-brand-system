@@ -19,6 +19,7 @@ type TextLike = Pick<
 	| 'fontFamily'
 	| 'fontSize'
 	| 'fontWeight'
+	| 'height'
 	| 'letterSpacing'
 	| 'lineHeight'
 	| 'maxLines'
@@ -195,14 +196,24 @@ function FlowElementView({
 }
 
 function TextContent({ element, value }: { element: TextLike; value?: TemplateSlotValue }) {
+	// truncate는 상자 높이에 들어가는 줄 수를 계산해 말줄임한다. maxLines가 있으면 더 강한 제한이 이긴다.
+	const truncateLines =
+		element.textFit === 'truncate'
+			? Math.max(1, Math.floor(element.height / (element.fontSize * element.lineHeight)))
+			: undefined
+	const clampLines =
+		element.maxLines && truncateLines
+			? Math.min(element.maxLines, truncateLines)
+			: (element.maxLines ?? truncateLines)
+
 	return (
 		<div
 			style={
-				element.maxLines
+				clampLines
 					? {
 							display: '-webkit-box',
 							WebkitBoxOrient: 'vertical',
-							WebkitLineClamp: element.maxLines,
+							WebkitLineClamp: clampLines,
 							overflow: 'hidden',
 						}
 					: undefined

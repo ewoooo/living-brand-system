@@ -330,10 +330,8 @@ function textPropsFromNode(node: FigmaNode) {
 		lineHeight: style.lineHeightPx ? style.lineHeightPx / fontSize : DEFAULT_LINE_HEIGHT,
 		letterSpacing: style.letterSpacing || 0,
 		textAlign: toTextAlign(style.textAlignHorizontal),
-		// Figma에서 auto-width로 그린 텍스트는 줄바꿈 없는 상자로 승계한다.
-		textFit: (style.textAutoResize === 'WIDTH_AND_HEIGHT' ? 'auto-width' : 'fixed') as
-			| 'auto-width'
-			| 'fixed',
+		// Figma의 textAutoResize를 승계한다: auto-width는 줄바꿈 없음, TRUNCATE는 말줄임.
+		textFit: toTextFit(style.textAutoResize),
 		verticalAlign: toVerticalAlign(style.textAlignVertical),
 		inputFormat: 'free' as const,
 		// 슬롯 기본값: 텍스트는 교체 대상으로 연다.
@@ -407,6 +405,12 @@ function toTextAlign(value: string | undefined): 'left' | 'center' | 'right' {
 	if (value === 'CENTER') return 'center'
 	if (value === 'RIGHT') return 'right'
 	return 'left'
+}
+
+function toTextFit(value: string | undefined): 'fixed' | 'auto-width' | 'truncate' {
+	if (value === 'WIDTH_AND_HEIGHT') return 'auto-width'
+	if (value === 'TRUNCATE') return 'truncate'
+	return 'fixed'
 }
 
 function toVerticalAlign(value: string | undefined): 'top' | 'middle' | 'bottom' {

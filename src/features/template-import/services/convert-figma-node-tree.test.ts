@@ -183,6 +183,26 @@ describe('convertFigmaNodeTree', () => {
 		expect(frameRect).toMatchObject({ fill: 'rgba(255,255,255,0.50)' })
 	})
 
+	it('textAutoResize TRUNCATE는 말줄임 textFit으로 승계한다', () => {
+		const fixture: FigmaNode = {
+			id: '5:1',
+			type: 'FRAME',
+			absoluteBoundingBox: { x: 0, y: 0, width: 400, height: 200 },
+			children: [
+				{
+					id: '5:2',
+					type: 'TEXT',
+					absoluteBoundingBox: { x: 0, y: 0, width: 300, height: 60 },
+					characters: '말줄임 텍스트',
+					style: { fontSize: 24, textAutoResize: 'TRUNCATE' },
+				},
+			],
+		}
+		const template = convertFigmaNodeTree(fixture, {})
+
+		expect(template.elements[0]).toMatchObject({ type: 'text', textFit: 'truncate' })
+	})
+
 	it('zIndex는 순회 순서를 따른다', () => {
 		const template = convertFigmaNodeTree(buildFixture(), assets)
 

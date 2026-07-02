@@ -129,7 +129,7 @@ export default function TemplatePreviewField() {
 		locked?: boolean
 		slotLabel?: string
 		text?: string
-		textFit?: 'fixed' | 'auto-width'
+		textFit?: 'fixed' | 'auto-width' | 'truncate'
 		verticalAlign?: 'top' | 'middle' | 'bottom'
 		maxLength?: number
 		maxLines?: number
@@ -320,11 +320,16 @@ export default function TemplatePreviewField() {
 									options={[
 										{ label: '고정 폭 (넘치면 줄바꿈)', value: 'fixed' },
 										{ label: '자동 폭 (줄바꿈 없음)', value: 'auto-width' },
+										{ label: '말줄임 (상자를 넘치면 …)', value: 'truncate' },
 									]}
 									onChange={(option) => {
 										const value = (option as { value?: string } | null)?.value
 
-										if (value === 'fixed' || value === 'auto-width') {
+										if (
+											value === 'fixed' ||
+											value === 'auto-width' ||
+											value === 'truncate'
+										) {
 											updateSelected({ textFit: value })
 										}
 									}}
