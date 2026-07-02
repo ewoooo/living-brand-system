@@ -43,8 +43,7 @@ export const agentDefaultInstructionSections = [
 	},
 ] as const
 
-export type AgentDefaultInstructionField =
-	(typeof agentDefaultInstructionSections)[number]['field']
+export type AgentDefaultInstructionField = (typeof agentDefaultInstructionSections)[number]['field']
 
 export type AgentDefaultInstructionValues = Partial<
 	Record<AgentDefaultInstructionField, null | string>

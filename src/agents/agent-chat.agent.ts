@@ -2,6 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic'
 import { type InferAgentUIMessage, isStepCount, Output, ToolLoopAgent } from 'ai'
 import { z } from 'zod'
 import { findEnabledAgentSkillSummaries } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
+import { getAgentDefaultInstructions } from '@/features/agent-chat/services/get-agent-default-instructions.service'
 import { getAgentTools } from '@/features/agent-chat/services/get-agent-tools.service'
 import { AgentConfigurationError } from '@/lib/errors'
 
@@ -76,7 +77,10 @@ export const agentChatAgent = new ToolLoopAgent<
 				}
 			: undefined,
 	prepareCall: async ({ options = { user: null }, ...settings }) => {
-		const skills = await findEnabledAgentSkillSummaries(options.user)
+		const [skills, defaultInstructions] = await Promise.all([
+			findEnabledAgentSkillSummaries(options.user),
+			getAgentDefaultInstructions(options.user),
+		])
 
 		if (skills.length === 0) {
 			throw new AgentConfigurationError('Agent skill is not configured.')
@@ -89,7 +93,7 @@ export const agentChatAgent = new ToolLoopAgent<
 		return {
 			...settings,
 			instructions: [
-				formatProductionTemplateToolInstructions(),
+				defaultInstructions,
 				formatAgentSkillSelectionInstructions(skills),
 				pageContext ? `Published context:\n${pageContext}` : null,
 			]
@@ -106,13 +110,6 @@ export const agentChatAgent = new ToolLoopAgent<
 })
 
 export type AgentChatMessage = InferAgentUIMessage<typeof agentChatAgent>
-
-function formatProductionTemplateToolInstructions() {
-	return [
-		'For asset creation requests, including business cards/name cards, banners, posters, or requests to fill template values such as name/title/email/phone, use findTemplatesForRequest and then prepareTemplateImage.',
-		'Do not answer template image creation requests with guideline search failure text.',
-	].join('\n')
-}
 
 function formatAgentSkillSelectionInstructions(
 	skills: Awaited<ReturnType<typeof findEnabledAgentSkillSummaries>>,

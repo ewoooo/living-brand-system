@@ -3,6 +3,7 @@ import * as migration_20260701_100619_add_mcp_api_keys from './20260701_100619_a
 import * as migration_20260702_041019_add_template_import from './20260702_041019_add_template_import'
 import * as migration_20260702_051113_add_template_categories from './20260702_051113_add_template_categories'
 import * as migration_20260702_052502_add_template_asset_checksum from './20260702_052502_add_template_asset_checksum'
+import * as migration_20260702_081141_add_agent_settings_global from './20260702_081141_add_agent_settings_global'
 
 export const migrations = [
 	{
@@ -29,5 +30,10 @@ export const migrations = [
 		up: migration_20260702_052502_add_template_asset_checksum.up,
 		down: migration_20260702_052502_add_template_asset_checksum.down,
 		name: '20260702_052502_add_template_asset_checksum',
+	},
+	{
+		up: migration_20260702_081141_add_agent_settings_global.up,
+		down: migration_20260702_081141_add_agent_settings_global.down,
+		name: '20260702_081141_add_agent_settings_global',
 	},
 ]
