@@ -60,3 +60,4 @@ node_modules/
 # Local database operations
 .db-backups/
 scripts/create-admin.ts
+.agents/worktrees/
