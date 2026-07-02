@@ -1,10 +1,10 @@
+import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import {
 	getAgentReasoningMarker,
 	getAgentSkillMarker,
 	getAgentToolMarker,
-} from '@/features/agent-chat/get-agent-tool-marker'
-import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
-import { getAgentMessageText } from '../get-agent-message-text'
+} from '@/features/agent-chat/utils/get-agent-tool-marker'
+import { getAgentMessageText } from '../utils/get-agent-message-text'
 import { AgentChatAgentBubble, AgentChatUserBubble } from './agent-chat-bubbles'
 import {
 	AgentChatReasoningMarker,

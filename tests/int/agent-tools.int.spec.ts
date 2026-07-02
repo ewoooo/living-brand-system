@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { getAgentMessageText } from '@/features/agent-chat/get-agent-message-text'
 import * as agentGuidelineRepository from '@/features/agent-chat/repositories/agent-guideline-context.payload.repository'
 import * as agentSkillRepository from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
@@ -7,6 +6,7 @@ import { validateAgentChatMessages } from '@/features/agent-chat/services/create
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { extractTextFromLexical } from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { getAgentTools } from '@/features/agent-chat/services/get-agent-tools.service'
+import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-text'
 
 describe('agent tools', () => {
 	afterEach(() => {
