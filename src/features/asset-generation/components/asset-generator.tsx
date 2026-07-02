@@ -6,12 +6,24 @@ import { TemplateRenderer, type TemplateSlotValue } from '@/components/template-
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import type { JsonTemplate } from '@/types/json-template'
+import type { JsonFlowElement, JsonTemplateElement } from '@/types/json-template'
 import type { PublishedTemplate } from '../services/get-published-template.service'
 
 const PREVIEW_WIDTH = 480
 
-type TextElement = Extract<JsonTemplate['elements'][number], { type: 'text' }>
+type SlotElement = JsonFlowElement | JsonTemplateElement
+type TextElement = Extract<SlotElement, { type: 'text' }>
+
+/** 열린 슬롯(locked=false)을 스택 자식까지 재귀로 모은다. 스택 자체는 슬롯이 아니다. */
+function collectSlots(elements: readonly SlotElement[]): SlotElement[] {
+	return elements.flatMap((element) => {
+		if (element.type === 'stack') {
+			return collectSlots(element.children)
+		}
+
+		return element.locked ? [] : [element]
+	})
+}
 
 /** 제작자가 요소에 설정한 입력 제약(형식·글자수·줄수)을 적용한 텍스트 슬롯 입력. */
 function TextSlotInput({
@@ -95,7 +107,7 @@ export function AssetGenerator({ template }: { template: PublishedTemplate }) {
 		}
 	}
 
-	const slots = template.jsonTemplate.elements.filter((element) => !element.locked)
+	const slots = collectSlots(template.jsonTemplate.elements)
 
 	return (
 		<section className="flex w-full flex-col gap-6 md:flex-row">

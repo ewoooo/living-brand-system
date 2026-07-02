@@ -15,15 +15,68 @@ import Moveable from 'react-moveable'
 import { TemplateRenderer } from '@/components/template-renderer'
 import {
 	AUTHORIZED_ASSET_COLLECTIONS,
+	type JsonFlowElement,
 	type JsonTemplate,
+	type JsonTemplateElement,
 	jsonTemplateSchema,
 } from '@/types/json-template'
+import { findUnauthorizedTemplateImages } from '../services/validate-authorized-assets'
 
 const PREVIEW_MAX_WIDTH = 640
 
 const ASSET_COLLECTION_LABELS: Record<string, string> = {
 	'brand-logos': '브랜드 로고',
 	'application-images': '어플리케이션 이미지',
+}
+
+type AnyElement = JsonFlowElement | JsonTemplateElement
+
+/** 스택 자식까지 포함해 id로 요소를 찾는다. */
+function findElementById(elements: readonly AnyElement[], id: string): AnyElement | undefined {
+	for (const element of elements) {
+		if (element.id === id) {
+			return element
+		}
+		if (element.type === 'stack') {
+			const found = findElementById(element.children, id)
+
+			if (found) {
+				return found
+			}
+		}
+	}
+
+	return undefined
+}
+
+/** 스택 자식까지 포함해 id가 일치하는 요소에 patch를 적용한 새 트리를 만든다. */
+function patchElementById<T extends AnyElement>(
+	elements: readonly T[],
+	id: string,
+	patch: Record<string, unknown>,
+): T[] {
+	return elements.map((element) => {
+		if (element.id === id) {
+			return { ...element, ...patch } as T
+		}
+		if (element.type === 'stack') {
+			return { ...element, children: patchElementById(element.children, id, patch) } as T
+		}
+
+		return element
+	})
+}
+
+/** 요소(스택이면 하위 전체)에 비인가 이미지가 있는지 — 오버레이 경고 표시용. */
+function hasUnauthorizedImage(element: AnyElement): boolean {
+	if (element.type === 'image') {
+		return element.assetCollection === 'template-assets'
+	}
+	if (element.type === 'stack') {
+		return element.children.some(hasUnauthorizedImage)
+	}
+
+	return false
 }
 
 /**
@@ -63,10 +116,8 @@ export default function TemplatePreviewField() {
 
 	const template = parsed.data
 	const scale = Math.min(1, PREVIEW_MAX_WIDTH / template.width)
-	const selected = template.elements.find((element) => element.id === selectedId)
-	const unauthorizedCount = template.elements.filter(
-		(element) => element.type === 'image' && element.assetCollection === 'template-assets',
-	).length
+	const selected = selectedId ? findElementById(template.elements, selectedId) : undefined
+	const unauthorizedCount = findUnauthorizedTemplateImages(template).length
 
 	function updateTemplate(next: JsonTemplate) {
 		dispatchFields({ type: 'UPDATE', path: 'jsonTemplate', value: next })
@@ -97,11 +148,7 @@ export default function TemplatePreviewField() {
 
 		updateTemplate({
 			...template,
-			elements: template.elements.map((element) =>
-				element.id === selected.id
-					? ({ ...element, ...patch } as JsonTemplate['elements'][number])
-					: element,
-			),
+			elements: patchElementById(template.elements, selected.id, patch),
 		})
 	}
 
@@ -152,9 +199,8 @@ export default function TemplatePreviewField() {
 					{/* 요소 선택 오버레이 — 렌더 위에 클릭 영역만 얹는다. */}
 					{template.elements.map((element) => {
 						const isSelected = element.id === selectedId
-						const isUnauthorized =
-							element.type === 'image' &&
-							element.assetCollection === 'template-assets'
+						// 스택이면 하위 전체 검사 — 비인가 이미지를 품은 스택도 빨간 표시.
+						const isUnauthorized = hasUnauthorizedImage(element)
 
 						return (
 							<button
@@ -217,20 +263,43 @@ export default function TemplatePreviewField() {
 						<strong style={{ fontSize: 13 }}>
 							{selected.type} · {selected.slotLabel || selected.id}
 						</strong>
-						<CheckboxInput
-							id="template-preview-locked"
-							label="슬롯으로 열기 (Create에서 편집 허용)"
-							checked={!selected.locked}
-							onToggle={(event) => updateSelected({ locked: !event.target.checked })}
-						/>
-						<TextInput
-							path="templatePreviewSlotLabel"
-							label="슬롯 이름"
-							value={selected.slotLabel ?? ''}
-							onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-								updateSelected({ slotLabel: event.target.value })
-							}
-						/>
+						{selected.type === 'stack' ? (
+							<div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+								<span style={{ fontSize: 13, color: 'var(--theme-elevation-500)' }}>
+									{selected.direction === 'horizontal' ? '가로' : '세로'} 스택 —
+									자식을 선택해 편집하세요.
+								</span>
+								{selected.children.map((child) => (
+									<Button
+										key={child.id}
+										buttonStyle="secondary"
+										size="small"
+										onClick={() => setSelectedId(child.id)}
+									>
+										{child.type} · {child.slotLabel || child.id}
+									</Button>
+								))}
+							</div>
+						) : (
+							<>
+								<CheckboxInput
+									id="template-preview-locked"
+									label="슬롯으로 열기 (Create에서 편집 허용)"
+									checked={!selected.locked}
+									onToggle={(event) =>
+										updateSelected({ locked: !event.target.checked })
+									}
+								/>
+								<TextInput
+									path="templatePreviewSlotLabel"
+									label="슬롯 이름"
+									value={selected.slotLabel ?? ''}
+									onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+										updateSelected({ slotLabel: event.target.value })
+									}
+								/>
+							</>
+						)}
 						{selected.type === 'text' && (
 							<>
 								<TextInput
