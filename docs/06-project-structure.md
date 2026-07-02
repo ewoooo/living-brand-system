@@ -30,8 +30,10 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 | App | `src` | Next.js, Payload CMS, Creator UI를 포함하는 현재 실행 단위입니다. |
 | App Router | `src/app` | page, layout, route handler를 둡니다. |
 | Collections | `src/collections` | Payload collection schema, access, hook 진입점을 둡니다. |
+| Blocks | `src/blocks` | Payload block schema를 둡니다. |
+| Globals | `src/globals` | Payload global schema를 둡니다. |
 | Services | `src/services`, `src/features/*/services` | Use Case Service와 기능 전용 조회 서비스를 둡니다. |
-| Repositories | `src/repositories` | Repository Interface와 Implementation을 둡니다. |
+| Repositories | `src/repositories`, `src/features/*/repositories` | 공용 Repository와 기능 전용 Repository를 둡니다. |
 | Tests | `tests` | e2e, integration, helper를 둡니다. |
 | Docs | `docs` | 제품, 도메인, 아키텍처, 개발 규칙 문서를 둡니다. |
 | Future apps | `apps/*` | 배포 단위가 둘 이상으로 나뉠 때만 추가합니다. |
@@ -67,6 +69,7 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 | Creator UI | `src/app/(frontend)` | 내부 현장 작업자가 사용하는 화면을 둡니다. |
 | Route Handler | `src/app/**/route.ts` | HTTP 요청 검증과 Service 호출만 담당합니다. |
 | ShadCN UI | `src/components/ui` | registry 기반 컴포넌트 원형을 둡니다. |
+| 전역 공유 컴포넌트 | `src/components` | 여러 기능이 공유하는 헤더, 전역 채팅, Admin 커스텀 컴포넌트를 둡니다. |
 | 화면 컴포넌트 | `src/features/*/components` | 특정 기능에만 쓰는 컴포넌트를 둡니다. |
 | 화면 상태와 조회 서비스 | `src/features/*` | 폼 상태, client hook, view model, 기능 전용 read service를 기능 안에 둡니다. |
 
@@ -89,6 +92,10 @@ src/
         route.ts
   collections/
     *.ts
+  blocks/
+    *.ts
+  globals/
+    *.ts
   services/
     *.service.ts
   repositories/
@@ -99,11 +106,14 @@ src/
     *.agent.ts
   components/
     ui/
+    *.tsx
   features/
     <feature>/
       components/
       hooks/
+      repositories/
       services/
+      utils/
       types.ts
   lib/
     auth.ts
@@ -122,8 +132,9 @@ docs/
 - `page.tsx`와 `layout.tsx`는 라우팅과 화면 조합만 담당합니다.
 - `route.ts`는 HTTP adapter로만 동작합니다.
 - Collection hook은 Service를 호출하고, 업무 규칙을 직접 길게 작성하지 않습니다.
-- 공용 Use Case Service는 ORM, Payload Local API, CMS SDK를 직접 import하지 않습니다.
-- 기능 전용 read service는 화면 렌더링에 필요한 published 데이터 조회만 담당할 때 `src/features/*/services`에 둘 수 있습니다.
+- Payload Local API, ORM, CMS SDK import는 `*.payload.repository.ts`, `*.drizzle.repository.ts` 구현 파일에만 허용합니다. Service는 기능 전용 read 조회라도 이 규칙을 따릅니다.
+- Repository Interface 파일(`*.repository.ts`)은 구현체가 2개 이상 필요해지는 시점에 만듭니다. 단일 구현 단계에서는 Service가 구현 파일을 직접 import합니다.
+- 기능 전용 read service는 화면 렌더링에 필요한 published 데이터 조회만 담당할 때 `src/features/*/services`에 두고, 그 Payload 접근은 `src/features/*/repositories`에 둡니다.
 - Agent는 별도 사용자 역할이 아니라 서비스 모듈입니다.
 - 실제 폴더 구조를 개선할 때는 `src/services`, `src/repositories`, `src/agents`, `src/components`, `src/features`, `src/lib`, `src/types`를 이 순서로 추가합니다.
 
@@ -169,10 +180,11 @@ src/repositories/guideline.payload.repository.ts
 | 파일 | 역할 |
 | --- | --- |
 | `src/services/publish-guideline.service.ts` | Use Case Service, Input, Output |
-| `src/repositories/guideline.repository.ts` | Service가 참조하는 Repository Interface |
 | `src/repositories/guideline.payload.repository.ts` | Payload 기반 Repository Implementation |
 | `src/app/api/guidelines/[id]/publish/route.ts` | HTTP 요청을 Service로 연결하는 Route Handler |
 | `src/services/publish-guideline.service.test.ts` | Service 단위 검증 |
+
+Repository Interface(`src/repositories/guideline.repository.ts`)는 두 번째 구현체가 필요해질 때 추가합니다.
 
 ### 생성하지 않는 것
 
@@ -190,7 +202,6 @@ src/repositories/guideline.payload.repository.ts
 Use Case: PublishGuideline
 Service: src/services/publish-guideline.service.ts
 Route: src/app/api/guidelines/[id]/publish/route.ts
-Repository Interface: src/repositories/guideline.repository.ts
 Repository Implementation: src/repositories/guideline.payload.repository.ts
 ```
 
@@ -282,7 +293,7 @@ export class PublishGuidelineService {
 Repository는 저장소 접근만 담당합니다.
 비즈니스 로직과 상태 전이 판단은 Service에 둡니다.
 
-- Repository Interface는 Service가 필요한 데이터 접근 계약만 정의합니다.
+- Repository Interface는 Service가 필요한 데이터 접근 계약만 정의하고, 구현체가 2개 이상 필요해질 때 도입합니다. 단일 구현 단계에서는 Service가 구현 파일을 직접 import합니다.
 - Repository Implementation만 Drizzle ORM, Payload Local API, CMS SDK를 import할 수 있습니다.
 - Repository는 데이터 접근 오류를 그대로 화면까지 전달하지 않습니다.
 - Repository method 이름은 저장소 기술이 아니라 도메인 동작 기준으로 정합니다.
