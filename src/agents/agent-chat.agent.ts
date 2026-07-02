@@ -68,7 +68,7 @@ export const agentChatAgent = new ToolLoopAgent<
 	// ponytail: AI SDK requires constructor toolsContext; prepareCall replaces it per request.
 	toolsContext: toolsContextFor(null),
 	callOptionsSchema: agentChatCallOptionsSchema,
-	stopWhen: isStepCount(5),
+	stopWhen: isStepCount(10),
 	prepareStep: ({ stepNumber }) =>
 		stepNumber === 0
 			? {
@@ -114,13 +114,12 @@ export type AgentChatMessage = InferAgentUIMessage<typeof agentChatAgent>
 function formatAgentSkillSelectionInstructions(
 	skills: Awaited<ReturnType<typeof findEnabledAgentSkillSummaries>>,
 ) {
-	const lines = skills.map((skill) => {
-		const defaultLabel = skill.isDefault ? ' (default)' : ''
-		return `- ${skill.name}${defaultLabel}: ${skill.description}`
-	})
+	const lines = skills.map((skill) => `- ${skill.name}: ${skill.description}`)
 
 	return [
-		'Before answering, call loadSkill with the single best skill name from the list below.',
+		'Before answering, choose exactly one skill from the list below and call loadSkill with its name.',
+		'Choose by matching the user request to the skill description. Prefer template or asset skills for requests about what can be made, what should be made, creating assets, filling template slots, exporting images, or downloading results.',
+		'Prefer guideline skills only for questions about published brand rules, guideline pages, sections, or usage standards.',
 		'After loadSkill returns, follow its instructions field as the active skill instructions.',
 		'Available skills:',
 		...lines,

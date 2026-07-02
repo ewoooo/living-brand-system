@@ -63,6 +63,7 @@ const imagePropsShape = {
 	objectFit: z.enum(['cover', 'contain', 'fill']),
 	borderRadius: z.number(),
 	boxShadow: z.string().optional(),
+	color: z.string().optional(),
 	filter: z.string().optional(),
 }
 

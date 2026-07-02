@@ -3,13 +3,25 @@ import { getPayload } from 'payload'
 import { DEFAULT_LOCALE, FALLBACK_LOCALE } from '@/lib/locale'
 import type { Template } from '@/payload-types'
 
-export type AgentTemplateDocument = Pick<Template, 'description' | 'id' | 'jsonTemplate' | 'name'>
+type AgentTemplateRuleDocument = {
+	body?: null | string
+	description?: null | string
+	status?: null | string
+	title?: null | string
+}
+
+export type AgentTemplateDocument = Pick<
+	Template,
+	'description' | 'id' | 'jsonTemplate' | 'name'
+> & {
+	templateRules?: (number | AgentTemplateRuleDocument)[] | null
+}
 
 /** 두 조회가 공유하는 published 템플릿 질의 기본값 — user 컨텍스트로 access를 강제한다. */
 function publishedTemplateQuery(user: unknown) {
 	return {
 		collection: 'templates' as const,
-		depth: 0,
+		depth: 1,
 		draft: false,
 		fallbackLocale: FALLBACK_LOCALE,
 		locale: DEFAULT_LOCALE,
@@ -19,6 +31,7 @@ function publishedTemplateQuery(user: unknown) {
 			name: true,
 			description: true,
 			jsonTemplate: true,
+			templateRules: true,
 		},
 	} as const
 }

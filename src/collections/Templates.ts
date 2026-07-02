@@ -2,7 +2,7 @@ import { APIError, type CollectionConfig, type Payload } from 'payload'
 import {
 	type AuthorizedImageRef,
 	validateTemplateImages,
-} from '@/features/template-import/services/validate-authorized-assets'
+} from '@/features/template-import/utils/validate-authorized-assets'
 import { authenticated, managerOrAdmin } from '@/lib/auth'
 import { AUTHORIZED_ASSET_COLLECTIONS } from '@/types/json-template'
 
@@ -115,6 +115,19 @@ export const Templates: CollectionConfig = {
 			admin: {
 				position: 'sidebar',
 				description: 'Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.',
+			},
+		},
+		{
+			name: 'templateRules',
+			type: 'relationship',
+			relationTo: 'template-rules',
+			hasMany: true,
+			filterOptions: {
+				status: { equals: 'live' },
+			},
+			admin: {
+				position: 'sidebar',
+				description: 'Agent가 이 템플릿으로 이미지를 만들 때 함께 참고할 룰입니다.',
 			},
 		},
 		{

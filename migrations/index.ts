@@ -5,6 +5,8 @@ import * as migration_20260702_051113_add_template_categories from './20260702_0
 import * as migration_20260702_052502_add_template_asset_checksum from './20260702_052502_add_template_asset_checksum'
 import * as migration_20260702_081141_add_agent_settings_global from './20260702_081141_add_agent_settings_global'
 import * as migration_20260702_082845_remove_template_source_type from './20260702_082845_remove_template_source_type'
+import * as migration_20260702_090914_add_template_rules from './20260702_090914_add_template_rules'
+import * as migration_20260702_094833_remove_agent_skill_default from './20260702_094833_remove_agent_skill_default'
 
 export const migrations = [
 	{
@@ -41,5 +43,15 @@ export const migrations = [
 		up: migration_20260702_082845_remove_template_source_type.up,
 		down: migration_20260702_082845_remove_template_source_type.down,
 		name: '20260702_082845_remove_template_source_type',
+	},
+	{
+		up: migration_20260702_090914_add_template_rules.up,
+		down: migration_20260702_090914_add_template_rules.down,
+		name: '20260702_090914_add_template_rules',
+	},
+	{
+		up: migration_20260702_094833_remove_agent_skill_default.up,
+		down: migration_20260702_094833_remove_agent_skill_default.down,
+		name: '20260702_094833_remove_agent_skill_default',
 	},
 ]

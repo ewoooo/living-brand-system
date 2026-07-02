@@ -142,24 +142,45 @@ describe('agent tools', () => {
 		])
 	})
 
-	it('lists published templates with open slots', async () => {
+	it('lists published templates with open slots and template rules', async () => {
 		vi.spyOn(agentTemplateRepository, 'listAgentTemplates').mockResolvedValue([
 			{
 				id: 3,
 				name: 'Business card',
 				description: 'Name card template',
+				templateRules: [
+					{
+						title: 'Name input',
+						description: 'Use the legal name.',
+						body: 'Ask only for slots returned by the template.',
+						status: 'live',
+					},
+					{
+						title: 'Draft rule',
+						description: null,
+						body: 'Hidden draft.',
+						status: 'draft',
+					},
+				],
 				jsonTemplate: template(textElement({ slotLabel: '이름' })),
 			},
 		] as never)
 		const tools = getAgentTools()
 
-		const result = await tools.findTemplatesForRequest.execute?.({ query: 'card' }, {
+		const result = await tools.findTemplatesForRequest.execute?.({ query: 'legal' }, {
 			context: { user: { id: 1 } },
 		} as never)
 
 		expect(result).toEqual([
 			expect.objectContaining({
 				id: 3,
+				rules: [
+					{
+						title: 'Name input',
+						description: 'Use the legal name.',
+						body: 'Ask only for slots returned by the template.',
+					},
+				],
 				slots: [expect.objectContaining({ id: 'name', label: '이름' })],
 			}),
 		])

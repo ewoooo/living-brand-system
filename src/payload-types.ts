@@ -75,6 +75,7 @@ export interface Config {
     'brand-typefaces': BrandTypeface;
     'application-images': ApplicationImage;
     'template-categories': TemplateCategory;
+    'template-rules': TemplateRule;
     templates: Template;
     'template-assets': TemplateAsset;
     plugins: Plugin;
@@ -105,6 +106,7 @@ export interface Config {
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
     'template-categories': TemplateCategoriesSelect<false> | TemplateCategoriesSelect<true>;
+    'template-rules': TemplateRulesSelect<false> | TemplateRulesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
     plugins: PluginsSelect<false> | PluginsSelect<true>;
@@ -398,12 +400,34 @@ export interface Template {
    */
   category: number | TemplateCategory;
   /**
+   * Agent가 이 템플릿으로 이미지를 만들 때 함께 참고할 룰입니다.
+   */
+  templateRules?: (number | TemplateRule)[] | null;
+  /**
    * 임포트에 사용한 Figma URL 원문입니다. 출처 기록용이며 재동기화하지 않습니다.
    */
   sourceUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * Agent가 템플릿으로 산출물을 만들 때 참고하는 생성 지침입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-rules".
+ */
+export interface TemplateRule {
+  id: number;
+  title: string;
+  description?: string | null;
+  /**
+   * 템플릿 선택, 슬롯 채우기, 생성 응답 시 따라야 할 지침입니다.
+   */
+  body: string;
+  status?: ('draft' | 'live' | 'archived') | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * 템플릿 임포트 시 저장되는 이미지 조각입니다. 직접 편집하지 않습니다.
@@ -507,10 +531,6 @@ export interface AgentSkill {
       }[]
     | null;
   enabled?: boolean | null;
-  /**
-   * agent-chat의 기본 skill 후보입니다. 하나만 true로 유지하세요.
-   */
-  isDefault?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -864,6 +884,10 @@ export interface PayloadLockedDocument {
         value: number | TemplateCategory;
       } | null)
     | ({
+        relationTo: 'template-rules';
+        value: number | TemplateRule;
+      } | null)
+    | ({
         relationTo: 'templates';
         value: number | Template;
       } | null)
@@ -1096,6 +1120,18 @@ export interface TemplateCategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-rules_select".
+ */
+export interface TemplateRulesSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  body?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "templates_select".
  */
 export interface TemplatesSelect<T extends boolean = true> {
@@ -1103,6 +1139,7 @@ export interface TemplatesSelect<T extends boolean = true> {
   description?: T;
   jsonTemplate?: T;
   category?: T;
+  templateRules?: T;
   sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1155,7 +1192,6 @@ export interface AgentSkillsSelect<T extends boolean = true> {
         id?: T;
       };
   enabled?: T;
-  isDefault?: T;
   updatedAt?: T;
   createdAt?: T;
 }

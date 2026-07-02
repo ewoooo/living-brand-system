@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseConvertFigmaRequest } from '@/features/template-import/services/parse-convert-figma-request'
+import { parseConvertFigmaRequest } from '@/features/template-import/utils/parse-convert-figma-request'
 
 describe('template convert-figma route request parsing', () => {
 	it('rejects malformed JSON', async () => {

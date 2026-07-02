@@ -16,7 +16,7 @@ export const AgentSkills: CollectionConfig = {
 	admin: {
 		group: 'Agent',
 		useAsTitle: 'name',
-		defaultColumns: ['name', 'enabled', 'isDefault', 'updatedAt'],
+		defaultColumns: ['name', 'enabled', 'updatedAt'],
 		description: 'Agent가 선택해 실행할 SKILL.md 형태의 지시문입니다.',
 		listSearchableFields: ['name', 'description', 'body'],
 	},
@@ -93,15 +93,6 @@ export const AgentSkills: CollectionConfig = {
 			defaultValue: true,
 			admin: {
 				position: 'sidebar',
-			},
-		},
-		{
-			name: 'isDefault',
-			type: 'checkbox',
-			defaultValue: false,
-			admin: {
-				position: 'sidebar',
-				description: 'agent-chat의 기본 skill 후보입니다. 하나만 true로 유지하세요.',
 			},
 		},
 	],

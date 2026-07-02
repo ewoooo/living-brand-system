@@ -132,6 +132,9 @@ export default function TemplatePreviewField() {
 		text?: string
 		textFit?: 'fixed' | 'auto-width' | 'truncate'
 		verticalAlign?: 'top' | 'middle' | 'bottom'
+		color?: string
+		fill?: string
+		filter?: string
 		maxLength?: number
 		maxLines?: number
 		inputFormat?: 'free' | 'number' | 'email' | 'date'
@@ -304,6 +307,12 @@ export default function TemplatePreviewField() {
 						)}
 						{selected.type === 'text' && (
 							<>
+								<ColorInput
+									id="template-preview-text-color"
+									label="텍스트 색상"
+									value={selected.color}
+									onChange={(color) => updateSelected({ color })}
+								/>
 								<TextInput
 									path="templatePreviewText"
 									label="텍스트 내용"
@@ -470,6 +479,46 @@ export default function TemplatePreviewField() {
 										}
 									}}
 								/>
+								<ColorInput
+									id="template-preview-image-color"
+									label="로고 색상"
+									value={selected.color ?? '#000000'}
+									onChange={(color) =>
+										updateSelected({ color, filter: undefined })
+									}
+								/>
+								<Button
+									buttonStyle="secondary"
+									size="small"
+									onClick={() =>
+										updateSelected({ color: undefined, filter: undefined })
+									}
+								>
+									원본 색상
+								</Button>
+								<SelectInput
+									name="templatePreviewImageFilter"
+									path="templatePreviewImageFilter"
+									label="이미지 색상 보정"
+									isClearable={false}
+									value={imageFilterPreset(selected.filter)}
+									options={[
+										{ label: '원본', value: 'none' },
+										{ label: '흰색', value: 'white' },
+										{ label: '검정', value: 'black' },
+									]}
+									onChange={(option) => {
+										const value = (option as { value?: string } | null)?.value
+
+										if (value === 'none') {
+											updateSelected({ filter: undefined })
+										} else if (value === 'white') {
+											updateSelected({ filter: 'brightness(0) invert(1)' })
+										} else if (value === 'black') {
+											updateSelected({ filter: 'brightness(0)' })
+										}
+									}}
+								/>
 								<span style={{ fontSize: 13 }}>
 									이미지 출처:{' '}
 									{selected.assetCollection === 'template-assets' ? (
@@ -487,9 +536,59 @@ export default function TemplatePreviewField() {
 								</Button>
 							</>
 						)}
+						{selected.type === 'rect' && (
+							<ColorInput
+								id="template-preview-rect-fill"
+								label="채우기 색상"
+								value={selected.fill}
+								onChange={(fill) => updateSelected({ fill })}
+							/>
+						)}
 					</div>
 				)}
 			</div>
 		</div>
 	)
+}
+
+function ColorInput({
+	id,
+	label,
+	value,
+	onChange,
+}: {
+	id: string
+	label: string
+	value: string
+	onChange: (value: string) => void
+}) {
+	return (
+		<label
+			htmlFor={id}
+			style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13 }}
+		>
+			{label}
+			<input
+				id={id}
+				type="color"
+				value={normalizeColor(value)}
+				onChange={(event) => onChange(event.currentTarget.value)}
+				style={{ width: '100%', height: 40 }}
+			/>
+		</label>
+	)
+}
+
+function normalizeColor(value: string) {
+	return /^#[0-9a-f]{6}$/i.test(value) ? value : '#000000'
+}
+
+function imageFilterPreset(filter?: string) {
+	if (filter === 'brightness(0) invert(1)') {
+		return 'white'
+	}
+	if (filter === 'brightness(0)') {
+		return 'black'
+	}
+	return 'none'
 }

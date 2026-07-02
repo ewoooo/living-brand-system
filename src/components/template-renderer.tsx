@@ -30,7 +30,7 @@ type TextLike = Pick<
 >
 type ImageLike = Pick<
 	Extract<JsonFlowElement, { type: 'image' }>,
-	'borderRadius' | 'boxShadow' | 'filter' | 'objectFit'
+	'borderRadius' | 'boxShadow' | 'color' | 'filter' | 'objectFit'
 >
 type RectLike = Pick<
 	Extract<JsonFlowElement, { type: 'rect' }>,
@@ -131,14 +131,7 @@ function TemplateElement({
 	}
 
 	if (element.type === 'image') {
-		return (
-			// biome-ignore lint/performance/noImgElement: 템플릿 원본 픽셀 그대로 그려야 하므로 next/image 최적화를 쓰지 않는다.
-			<img
-				alt=""
-				src={value?.src ?? element.src}
-				style={{ ...frame, ...imageCss(element) }}
-			/>
-		)
+		return <ImageView element={element} src={value?.src ?? element.src} style={frame} />
 	}
 
 	return <div style={{ ...frame, ...rectCss(element) }} />
@@ -182,14 +175,7 @@ function FlowElementView({
 	}
 
 	if (element.type === 'image') {
-		return (
-			// biome-ignore lint/performance/noImgElement: 템플릿 원본 픽셀 그대로 그려야 하므로 next/image 최적화를 쓰지 않는다.
-			<img
-				alt=""
-				src={value?.src ?? element.src}
-				style={{ ...flowFrame, ...imageCss(element) }}
-			/>
-		)
+		return <ImageView element={element} src={value?.src ?? element.src} style={flowFrame} />
 	}
 
 	return <div style={{ ...flowFrame, ...rectCss(element) }} />
@@ -317,6 +303,45 @@ function imageCss(element: ImageLike): CSSProperties {
 		boxShadow: element.boxShadow,
 		filter: element.filter,
 	}
+}
+
+function ImageView({
+	element,
+	src,
+	style,
+}: {
+	element: ImageLike
+	src: string
+	style: CSSProperties
+}) {
+	if (element.color) {
+		const maskSize = element.objectFit === 'fill' ? '100% 100%' : element.objectFit
+
+		return (
+			<div
+				style={{
+					...style,
+					borderRadius: element.borderRadius,
+					boxShadow: element.boxShadow,
+					backgroundColor: element.color,
+					filter: element.filter,
+					WebkitMaskImage: `url("${src}")`,
+					maskImage: `url("${src}")`,
+					WebkitMaskPosition: 'center',
+					maskPosition: 'center',
+					WebkitMaskRepeat: 'no-repeat',
+					maskRepeat: 'no-repeat',
+					WebkitMaskSize: maskSize,
+					maskSize,
+				}}
+			/>
+		)
+	}
+
+	return (
+		// biome-ignore lint/performance/noImgElement: 템플릿 원본 픽셀 그대로 그려야 하므로 next/image 최적화를 쓰지 않는다.
+		<img alt="" src={src} style={{ ...style, ...imageCss(element) }} />
+	)
 }
 
 function rectCss(element: RectLike): CSSProperties {

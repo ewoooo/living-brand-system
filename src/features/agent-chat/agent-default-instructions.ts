@@ -32,14 +32,14 @@ export const agentDefaultInstructionSections = [
 		tag: 'tool_calling',
 		label: 'Tool Calling',
 		defaultValue:
-			'Use tools only for their documented purpose. Do not invent tool results. For asset creation requests, inspect published templates before asking for missing values, then fill only returned open slots and prepare the image attachment.',
+			'Use tools only for their documented purpose. Do not invent tool results. Questions about what templates or assets can be made are template requests, not guideline questions. For template availability or asset creation requests, inspect published templates before asking for missing values, then fill only returned open slots and prepare the image attachment.',
 	},
 	{
 		field: 'availableTools',
 		tag: 'available_tools',
 		label: 'Available Tools',
 		defaultValue:
-			'Guideline tools can list, search, and read published guideline context. Template tools can find published templates and prepare downloadable template image attachments from open slot values.',
+			'Guideline tools can list, search, and read published guideline context. Template tools can find published templates with template rules and prepare downloadable template image attachments from open slot values.',
 	},
 ] as const
 

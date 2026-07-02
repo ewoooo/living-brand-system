@@ -2959,6 +2959,160 @@
 			"checkConstraints": {},
 			"isRLSEnabled": false
 		},
+		"public.template_rules": {
+			"name": "template_rules",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "serial",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"status": {
+					"name": "status",
+					"type": "enum_template_rules_status",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "'live'"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp(3) with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp(3) with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"template_rules_updated_at_idx": {
+					"name": "template_rules_updated_at_idx",
+					"columns": [
+						{
+							"expression": "updated_at",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"template_rules_created_at_idx": {
+					"name": "template_rules_created_at_idx",
+					"columns": [
+						{
+							"expression": "created_at",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.template_rules_locales": {
+			"name": "template_rules_locales",
+			"schema": "",
+			"columns": {
+				"title": {
+					"name": "title",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"description": {
+					"name": "description",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"body": {
+					"name": "body",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"id": {
+					"name": "id",
+					"type": "serial",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"_locale": {
+					"name": "_locale",
+					"type": "_locales",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"_parent_id": {
+					"name": "_parent_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				}
+			},
+			"indexes": {
+				"template_rules_locales_locale_parent_id_unique": {
+					"name": "template_rules_locales_locale_parent_id_unique",
+					"columns": [
+						{
+							"expression": "_locale",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "_parent_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": true,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"template_rules_locales_parent_id_fk": {
+					"name": "template_rules_locales_parent_id_fk",
+					"tableFrom": "template_rules_locales",
+					"tableTo": "template_rules",
+					"columnsFrom": ["_parent_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
 		"public.templates": {
 			"name": "templates",
 			"schema": "",
@@ -2968,13 +3122,6 @@
 					"type": "serial",
 					"primaryKey": true,
 					"notNull": true
-				},
-				"source_type": {
-					"name": "source_type",
-					"type": "enum_templates_source_type",
-					"typeSchema": "public",
-					"primaryKey": false,
-					"notNull": false
 				},
 				"json_template": {
 					"name": "json_template",
@@ -3172,6 +3319,129 @@
 			"checkConstraints": {},
 			"isRLSEnabled": false
 		},
+		"public.templates_rels": {
+			"name": "templates_rels",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "serial",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"order": {
+					"name": "order",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"parent_id": {
+					"name": "parent_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"path": {
+					"name": "path",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"template_rules_id": {
+					"name": "template_rules_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {
+				"templates_rels_order_idx": {
+					"name": "templates_rels_order_idx",
+					"columns": [
+						{
+							"expression": "order",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"templates_rels_parent_idx": {
+					"name": "templates_rels_parent_idx",
+					"columns": [
+						{
+							"expression": "parent_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"templates_rels_path_idx": {
+					"name": "templates_rels_path_idx",
+					"columns": [
+						{
+							"expression": "path",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"templates_rels_template_rules_id_idx": {
+					"name": "templates_rels_template_rules_id_idx",
+					"columns": [
+						{
+							"expression": "template_rules_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"templates_rels_parent_fk": {
+					"name": "templates_rels_parent_fk",
+					"tableFrom": "templates_rels",
+					"tableTo": "templates",
+					"columnsFrom": ["parent_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"templates_rels_template_rules_fk": {
+					"name": "templates_rels_template_rules_fk",
+					"tableFrom": "templates_rels",
+					"tableTo": "template_rules",
+					"columnsFrom": ["template_rules_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
 		"public._templates_v": {
 			"name": "_templates_v",
 			"schema": "",
@@ -3185,13 +3455,6 @@
 				"parent_id": {
 					"name": "parent_id",
 					"type": "integer",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"version_source_type": {
-					"name": "version_source_type",
-					"type": "enum__templates_v_version_source_type",
-					"typeSchema": "public",
 					"primaryKey": false,
 					"notNull": false
 				},
@@ -3510,6 +3773,129 @@
 					"tableFrom": "_templates_v_locales",
 					"tableTo": "_templates_v",
 					"columnsFrom": ["_parent_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public._templates_v_rels": {
+			"name": "_templates_v_rels",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "serial",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"order": {
+					"name": "order",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"parent_id": {
+					"name": "parent_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"path": {
+					"name": "path",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"template_rules_id": {
+					"name": "template_rules_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {
+				"_templates_v_rels_order_idx": {
+					"name": "_templates_v_rels_order_idx",
+					"columns": [
+						{
+							"expression": "order",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"_templates_v_rels_parent_idx": {
+					"name": "_templates_v_rels_parent_idx",
+					"columns": [
+						{
+							"expression": "parent_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"_templates_v_rels_path_idx": {
+					"name": "_templates_v_rels_path_idx",
+					"columns": [
+						{
+							"expression": "path",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"_templates_v_rels_template_rules_id_idx": {
+					"name": "_templates_v_rels_template_rules_id_idx",
+					"columns": [
+						{
+							"expression": "template_rules_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"_templates_v_rels_parent_fk": {
+					"name": "_templates_v_rels_parent_fk",
+					"tableFrom": "_templates_v_rels",
+					"tableTo": "_templates_v",
+					"columnsFrom": ["parent_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"_templates_v_rels_template_rules_fk": {
+					"name": "_templates_v_rels_template_rules_fk",
+					"tableFrom": "_templates_v_rels",
+					"tableTo": "template_rules",
+					"columnsFrom": ["template_rules_id"],
 					"columnsTo": ["id"],
 					"onDelete": "cascade",
 					"onUpdate": "no action"
@@ -4270,13 +4656,6 @@
 					"primaryKey": false,
 					"notNull": false,
 					"default": true
-				},
-				"is_default": {
-					"name": "is_default",
-					"type": "boolean",
-					"primaryKey": false,
-					"notNull": false,
-					"default": false
 				},
 				"updated_at": {
 					"name": "updated_at",
@@ -8137,6 +8516,12 @@
 					"primaryKey": false,
 					"notNull": false
 				},
+				"template_rules_id": {
+					"name": "template_rules_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
 				"templates_id": {
 					"name": "templates_id",
 					"type": "integer",
@@ -8337,6 +8722,21 @@
 					"method": "btree",
 					"with": {}
 				},
+				"payload_locked_documents_rels_template_rules_id_idx": {
+					"name": "payload_locked_documents_rels_template_rules_id_idx",
+					"columns": [
+						{
+							"expression": "template_rules_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
 				"payload_locked_documents_rels_templates_id_idx": {
 					"name": "payload_locked_documents_rels_templates_id_idx",
 					"columns": [
@@ -8527,6 +8927,15 @@
 					"tableFrom": "payload_locked_documents_rels",
 					"tableTo": "template_categories",
 					"columnsFrom": ["template_categories_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"payload_locked_documents_rels_template_rules_fk": {
+					"name": "payload_locked_documents_rels_template_rules_fk",
+					"tableFrom": "payload_locked_documents_rels",
+					"tableTo": "template_rules",
+					"columnsFrom": ["template_rules_id"],
 					"columnsTo": ["id"],
 					"onDelete": "cascade",
 					"onUpdate": "no action"
@@ -9447,14 +9856,14 @@
 					"type": "varchar",
 					"primaryKey": false,
 					"notNull": true,
-					"default": "'Use tools only for their documented purpose. Do not invent tool results. For asset creation requests, inspect published templates before asking for missing values, then fill only returned open slots and prepare the image attachment.'"
+					"default": "'Use tools only for their documented purpose. Do not invent tool results. Questions about what templates or assets can be made are template requests, not guideline questions. For template availability or asset creation requests, inspect published templates before asking for missing values, then fill only returned open slots and prepare the image attachment.'"
 				},
 				"available_tools": {
 					"name": "available_tools",
 					"type": "varchar",
 					"primaryKey": false,
 					"notNull": true,
-					"default": "'Guideline tools can list, search, and read published guideline context. Template tools can find published templates and prepare downloadable template image attachments from open slot values.'"
+					"default": "'Guideline tools can list, search, and read published guideline context. Template tools can find published templates with template rules and prepare downloadable template image attachments from open slot values.'"
 				},
 				"updated_at": {
 					"name": "updated_at",
@@ -9590,20 +9999,15 @@
 			"schema": "public",
 			"values": ["ko", "en"]
 		},
-		"public.enum_templates_source_type": {
-			"name": "enum_templates_source_type",
+		"public.enum_template_rules_status": {
+			"name": "enum_template_rules_status",
 			"schema": "public",
-			"values": ["figma", "file"]
+			"values": ["draft", "live", "archived"]
 		},
 		"public.enum_templates_status": {
 			"name": "enum_templates_status",
 			"schema": "public",
 			"values": ["draft", "published"]
-		},
-		"public.enum__templates_v_version_source_type": {
-			"name": "enum__templates_v_version_source_type",
-			"schema": "public",
-			"values": ["figma", "file"]
 		},
 		"public.enum__templates_v_version_status": {
 			"name": "enum__templates_v_version_status",
@@ -9731,6 +10135,6 @@
 		"tables": {},
 		"columns": {}
 	},
-	"id": "abbad5aa-2b3e-4806-b8ab-ae8c792dc604",
+	"id": "353335cf-8fcc-4cd8-b5b4-ddd8d7a5aa17",
 	"prevId": "00000000-0000-0000-0000-000000000000"
 }

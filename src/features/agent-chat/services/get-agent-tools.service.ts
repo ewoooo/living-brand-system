@@ -15,6 +15,7 @@ import {
 } from '@/types/json-template'
 import { findAgentRules } from '../repositories/agent-guideline-context.payload.repository'
 import {
+	type AgentTemplateDocument,
 	findAgentTemplate,
 	listAgentTemplates,
 } from '../repositories/agent-template.payload.repository'
@@ -96,7 +97,7 @@ export function getAgentTools() {
 		}),
 		findTemplatesForRequest: tool({
 			description:
-				'Find published production templates and their open slots for a user asset request.',
+				'Find or list published production templates, their template rules, and their open slots for asset creation requests or questions about what templates/assets can be made.',
 			inputSchema: z.object({
 				query: z.string().min(1).max(120).optional(),
 			}),
@@ -151,6 +152,7 @@ async function findTemplatesForRequest(user: unknown, query?: string) {
 						id: template.id,
 						name: template.name,
 						description: template.description || '',
+						rules: getTemplateRules(template.templateRules),
 						slots: getOpenSlots(parsed.data),
 					}
 				: null
@@ -164,6 +166,7 @@ async function findTemplatesForRequest(user: unknown, query?: string) {
 			return [
 				template.name,
 				template.description,
+				...template.rules.flatMap((rule) => [rule.title, rule.description, rule.body]),
 				...template.slots.map((slot) => slot.label),
 			]
 				.join(' ')
@@ -171,6 +174,24 @@ async function findTemplatesForRequest(user: unknown, query?: string) {
 				.includes(normalizedQuery)
 		})
 		.slice(0, 10)
+}
+
+function getTemplateRules(templateRules: AgentTemplateDocument['templateRules']) {
+	return (templateRules ?? [])
+		.flatMap((rule) => {
+			if (typeof rule === 'number' || rule.status !== 'live') {
+				return []
+			}
+
+			return [
+				{
+					title: rule.title || '',
+					description: rule.description || '',
+					body: rule.body || '',
+				},
+			]
+		})
+		.filter((rule) => rule.title || rule.description || rule.body)
 }
 
 async function prepareTemplateImage(

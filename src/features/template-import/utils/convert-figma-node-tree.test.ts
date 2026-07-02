@@ -15,6 +15,7 @@ function buildFixture(): FigmaNode {
 		children: [
 			{
 				id: '1:2',
+				name: 'Main Copy',
 				type: 'TEXT',
 				absoluteBoundingBox: { x: 150, y: 300, width: 500, height: 60 },
 				characters: '여기에 문구를 입력하세요 — 메인 카피 자리입니다',
@@ -29,6 +30,7 @@ function buildFixture(): FigmaNode {
 			},
 			{
 				id: '1:3',
+				name: 'Hero Photo',
 				type: 'RECTANGLE',
 				absoluteBoundingBox: { x: 100, y: 900, width: 1080, height: 450 },
 				fills: [{ type: 'IMAGE' }],
@@ -36,6 +38,7 @@ function buildFixture(): FigmaNode {
 			},
 			{
 				id: '1:4',
+				name: 'Brand Icon',
 				type: 'VECTOR',
 				absoluteBoundingBox: { x: 120, y: 220, width: 40, height: 40 },
 			},
@@ -123,7 +126,7 @@ describe('convertFigmaNodeTree', () => {
 			color: '#ffffff',
 			textAlign: 'center',
 			locked: false,
-			slotLabel: '여기에 문구를 입력하세요 — 메인 카',
+			slotLabel: 'Main Copy',
 		})
 
 		if (text.type !== 'text') throw new Error('unreachable')
@@ -140,14 +143,14 @@ describe('convertFigmaNodeTree', () => {
 				src: '/api/template-assets/file/photo.png',
 				borderRadius: 16,
 				locked: false,
-				slotLabel: '이미지 1',
+				slotLabel: 'Hero Photo',
 			},
 			{
 				assetId: 12,
 				src: '/api/template-assets/file/icon.png',
 				borderRadius: 0,
 				locked: false,
-				slotLabel: '이미지 2',
+				slotLabel: 'Brand Icon',
 			},
 		])
 	})

@@ -114,7 +114,11 @@ export function convertFigmaNodeTree(
 							{
 								id: nextId('image'),
 								...size,
-								...imagePropsFromNode(child, asset, `이미지 ${++imageCounter}`),
+								...imagePropsFromNode(
+									child,
+									asset,
+									slotLabelFromNode(child, `이미지 ${++imageCounter}`),
+								),
 							},
 						]
 					: []
@@ -191,7 +195,11 @@ export function convertFigmaNodeTree(
 						id: nextId('image'),
 						zIndex: nextZ(),
 						...frame,
-						...imagePropsFromNode(child, asset, `이미지 ${++imageCounter}`),
+						...imagePropsFromNode(
+							child,
+							asset,
+							slotLabelFromNode(child, `이미지 ${++imageCounter}`),
+						),
 					})
 				}
 				continue
@@ -336,9 +344,16 @@ function textPropsFromNode(node: FigmaNode) {
 		inputFormat: 'free' as const,
 		// 슬롯 기본값: 텍스트는 교체 대상으로 연다.
 		locked: false,
-		slotLabel: text.trim().slice(0, TEXT_SLOT_LABEL_LENGTH) || '텍스트',
+		slotLabel: slotLabelFromNode(
+			node,
+			text.trim().slice(0, TEXT_SLOT_LABEL_LENGTH) || '텍스트',
+		),
 		...(effects.filter ? { filter: effects.filter } : {}),
 	}
+}
+
+function slotLabelFromNode(node: FigmaNode, fallback: string) {
+	return node.name?.trim() || fallback
 }
 
 function imagePropsFromNode(node: FigmaNode, asset: ImportedAsset, slotLabel: string) {

@@ -14,7 +14,7 @@ import {
 	collectRenderableNodeIds,
 	convertFigmaNodeTree,
 	type ImportedAsset,
-} from './convert-figma-node-tree'
+} from '../utils/convert-figma-node-tree'
 
 const PERSIST_CONCURRENCY = 5
 
