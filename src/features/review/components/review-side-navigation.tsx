@@ -1,33 +1,41 @@
+'use client'
+
 import Link from 'next/link'
-import {
-	Sidebar,
-	SidebarContent,
-	SidebarGroup,
-	SidebarGroupLabel,
-	SidebarMenu,
-	SidebarMenuItem,
-} from '@/components/ui/sidebar'
+import { usePathname } from 'next/navigation'
+import { Sidebar, SidebarContent } from '@/components/ui/sidebar'
 import type { ReviewNavChapter } from '@/features/review/navigation'
 
 function ReviewChapter({ code, name, sections }: ReviewNavChapter) {
+	const pathname = usePathname()
+
 	return (
-		<SidebarGroup>
-			<SidebarGroupLabel className="font-medium text-foreground">
+		<div className="px-2 py-2">
+			{/* 챕터명은 클릭 불가 — 인덱스/구분 라벨 (접기 없음) */}
+			<div className="px-2 pb-1 font-medium text-muted-foreground text-xs">
 				{code}. {name}
-			</SidebarGroupLabel>
-			<SidebarMenu>
-				{sections.map((section) => (
-					<SidebarMenuItem key={section.slug}>
-						<Link
-							href={section.href}
-							className="block rounded-md px-2 py-2 text-neutral-500 text-xs hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
-						>
-							{section.name}
-						</Link>
-					</SidebarMenuItem>
-				))}
-			</SidebarMenu>
-		</SidebarGroup>
+			</div>
+			{/* 섹션 그룹 왼쪽의 하나의 긴 세로 line */}
+			<ul className="ml-2 flex flex-col border-neutral-200 border-l dark:border-neutral-800">
+				{sections.map((section) => {
+					const active = pathname === section.href
+					return (
+						<li key={section.slug}>
+							<Link
+								href={section.href}
+								aria-current={active ? 'page' : undefined}
+								className={`-ml-px block border-l-2 py-1.5 pl-4 text-sm transition-colors ${
+									active
+										? 'border-foreground bg-neutral-500/15 font-medium text-foreground'
+										: 'border-transparent text-neutral-500 hover:bg-neutral-500/5 hover:text-foreground'
+								}`}
+							>
+								{section.name}
+							</Link>
+						</li>
+					)
+				})}
+			</ul>
+		</div>
 	)
 }
 
