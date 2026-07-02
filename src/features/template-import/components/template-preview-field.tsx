@@ -1,7 +1,15 @@
 'use client'
 
-import { TextInput, useForm, useFormFields } from '@payloadcms/ui'
-import { useEffect, useMemo, useState } from 'react'
+import {
+	Button,
+	CheckboxInput,
+	SelectInput,
+	TextInput,
+	useForm,
+	useFormFields,
+	useListDrawer,
+} from '@payloadcms/ui'
+import { useMemo, useRef, useState } from 'react'
 import { TemplateRenderer } from '@/components/template-renderer'
 import {
 	AUTHORIZED_ASSET_COLLECTIONS,
@@ -16,55 +24,6 @@ const ASSET_COLLECTION_LABELS: Record<string, string> = {
 	'application-images': '어플리케이션 이미지',
 }
 
-interface AuthorizedAssetOption {
-	collection: (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
-	id: number
-	name: string
-	url: string
-}
-
-/** 인가 에셋 컬렉션 목록을 REST로 읽는다. 교체 선택지로만 쓰므로 이름과 URL만 남긴다. */
-function useAuthorizedAssets(): AuthorizedAssetOption[] {
-	const [assets, setAssets] = useState<AuthorizedAssetOption[]>([])
-
-	useEffect(() => {
-		let cancelled = false
-
-		Promise.all(
-			AUTHORIZED_ASSET_COLLECTIONS.map(async (collection) => {
-				const response = await fetch(`/api/${collection}?limit=100&depth=0`, {
-					credentials: 'same-origin',
-				})
-
-				if (!response.ok) {
-					return []
-				}
-
-				const body = await response.json().catch(() => null)
-
-				return (body?.docs ?? [])
-					.filter((doc: { id?: number; url?: string }) => doc.id && doc.url)
-					.map((doc: { id: number; url: string; name?: string; alt?: string }) => ({
-						collection,
-						id: doc.id,
-						name: doc.name || doc.alt || `#${doc.id}`,
-						url: doc.url,
-					}))
-			}),
-		).then((groups) => {
-			if (!cancelled) {
-				setAssets(groups.flat())
-			}
-		})
-
-		return () => {
-			cancelled = true
-		}
-	}, [])
-
-	return assets
-}
-
 /**
  * Templates 편집 폼(Admin)의 jsonTemplate 시각 미리보기 + 요소 편집 UI 필드.
  * 폼의 jsonTemplate 값을 그대로 구독하므로 가져오기·JSON 수동 편집과 항상 동기화된다.
@@ -74,7 +33,22 @@ export default function TemplatePreviewField() {
 	const { dispatchFields, setModified } = useForm()
 	const jsonValue = useFormFields(([fields]) => fields.jsonTemplate?.value)
 	const [selectedId, setSelectedId] = useState<string | null>(null)
-	const authorizedAssets = useAuthorizedAssets()
+	// 인가 에셋 선택은 Payload 네이티브 컬렉션 목록 drawer로 연다.
+	const [AssetListDrawer, , { closeDrawer, openDrawer }] = useListDrawer({
+		collectionSlugs: [...AUTHORIZED_ASSET_COLLECTIONS],
+	})
+	// 드래그 원점 스냅샷 — 이동/리사이즈는 여기 기준 delta로 계산한다.
+	const [dragState, setDragState] = useState<{
+		mode: 'move' | 'resize'
+		pointerX: number
+		pointerY: number
+		originX: number
+		originY: number
+		originWidth: number
+		originHeight: number
+	} | null>(null)
+	// 드래그 직후의 click이 선택 해제로 이어지지 않도록 막는 플래그.
+	const didDragRef = useRef(false)
 
 	const parsed = useMemo(() => jsonTemplateSchema.safeParse(jsonValue), [jsonValue])
 
@@ -111,7 +85,17 @@ export default function TemplatePreviewField() {
 		locked?: boolean
 		slotLabel?: string
 		text?: string
-		assetCollection?: AuthorizedAssetOption['collection']
+		textFit?: 'fixed' | 'auto-width'
+		verticalAlign?: 'top' | 'middle' | 'bottom'
+		maxLength?: number
+		maxLines?: number
+		inputFormat?: 'free' | 'number' | 'email' | 'date'
+		objectFit?: 'cover' | 'contain' | 'fill'
+		x?: number
+		y?: number
+		width?: number
+		height?: number
+		assetCollection?: (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
 		assetId?: number
 		src?: string
 	}) {
@@ -131,6 +115,30 @@ export default function TemplatePreviewField() {
 
 	return (
 		<div style={{ marginBottom: 'var(--base)' }}>
+			<AssetListDrawer
+				onSelect={({ collectionSlug, doc }) => {
+					closeDrawer()
+					const assetId = Number(doc?.id)
+					const src = typeof doc?.url === 'string' ? doc.url : null
+
+					if (
+						!src ||
+						!Number.isFinite(assetId) ||
+						!(AUTHORIZED_ASSET_COLLECTIONS as readonly string[]).includes(
+							collectionSlug,
+						)
+					) {
+						return
+					}
+
+					updateSelected({
+						assetCollection:
+							collectionSlug as (typeof AUTHORIZED_ASSET_COLLECTIONS)[number],
+						assetId,
+						src,
+					})
+				}}
+			/>
 			{unauthorizedCount > 0 && (
 				<p style={{ color: 'var(--theme-error-500)', marginBottom: 8, fontSize: 13 }}>
 					인가되지 않은 이미지 {unauthorizedCount}개 (빨간 표시) — 브랜드 에셋으로
@@ -160,7 +168,66 @@ export default function TemplatePreviewField() {
 							<button
 								type="button"
 								key={element.id}
-								onClick={() => setSelectedId(isSelected ? null : element.id)}
+								onClick={() => {
+									// 드래그 직후의 click은 선택 해제로 처리하지 않는다.
+									if (didDragRef.current) {
+										didDragRef.current = false
+										return
+									}
+									setSelectedId(isSelected ? null : element.id)
+								}}
+								onPointerDown={(event) => {
+									if (!isSelected) {
+										return
+									}
+									const box = event.currentTarget.getBoundingClientRect()
+									// 우하단 12px 영역에서 시작하면 리사이즈, 그 외는 이동.
+									const nearCorner =
+										box.right - event.clientX < 12 &&
+										box.bottom - event.clientY < 12
+									event.currentTarget.setPointerCapture(event.pointerId)
+									didDragRef.current = false
+									setDragState({
+										mode: nearCorner ? 'resize' : 'move',
+										pointerX: event.clientX,
+										pointerY: event.clientY,
+										originX: element.x,
+										originY: element.y,
+										originWidth: element.width,
+										originHeight: element.height,
+									})
+								}}
+								onPointerMove={(event) => {
+									if (!dragState || !isSelected) {
+										return
+									}
+									const dx = event.clientX - dragState.pointerX
+									const dy = event.clientY - dragState.pointerY
+
+									if (!didDragRef.current && Math.abs(dx) + Math.abs(dy) < 3) {
+										return
+									}
+									didDragRef.current = true
+
+									if (dragState.mode === 'move') {
+										updateSelected({
+											x: Math.round(dragState.originX + dx / scale),
+											y: Math.round(dragState.originY + dy / scale),
+										})
+									} else {
+										updateSelected({
+											width: Math.max(
+												1,
+												Math.round(dragState.originWidth + dx / scale),
+											),
+											height: Math.max(
+												1,
+												Math.round(dragState.originHeight + dy / scale),
+											),
+										})
+									}
+								}}
+								onPointerUp={() => setDragState(null)}
 								aria-label={element.slotLabel || element.id}
 								title={`${element.slotLabel || element.id}${isUnauthorized ? ' (비인가 — 교체 필요)' : element.locked ? ' (고정)' : ' (슬롯)'}`}
 								style={{
@@ -172,7 +239,8 @@ export default function TemplatePreviewField() {
 									zIndex: element.zIndex + 1,
 									padding: 0,
 									background: 'transparent',
-									cursor: 'pointer',
+									cursor: isSelected ? 'move' : 'pointer',
+									touchAction: 'none',
 									border: isSelected
 										? '2px solid var(--theme-success-400, #22c55e)'
 										: isUnauthorized
@@ -181,7 +249,22 @@ export default function TemplatePreviewField() {
 												? '1px dashed color-mix(in srgb, currentColor 25%, transparent)'
 												: '1px dashed var(--theme-success-400, #22c55e)',
 								}}
-							/>
+							>
+								{isSelected && (
+									// 리사이즈 핸들 표시용 — 포인터 판정은 버튼의 우하단 영역이 담당한다.
+									<span
+										style={{
+											position: 'absolute',
+											right: -2,
+											bottom: -2,
+											width: 10,
+											height: 10,
+											background: 'var(--theme-success-400, #22c55e)',
+											pointerEvents: 'none',
+										}}
+									/>
+								)}
+							</button>
 						)
 					})}
 				</div>
@@ -191,18 +274,12 @@ export default function TemplatePreviewField() {
 						<strong style={{ fontSize: 13 }}>
 							{selected.type} · {selected.slotLabel || selected.id}
 						</strong>
-						<label
-							style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}
-						>
-							<input
-								type="checkbox"
-								checked={!selected.locked}
-								onChange={(event) =>
-									updateSelected({ locked: !event.target.checked })
-								}
-							/>
-							슬롯으로 열기 (Create에서 편집 허용)
-						</label>
+						<CheckboxInput
+							id="template-preview-locked"
+							label="슬롯으로 열기 (Create에서 편집 허용)"
+							checked={!selected.locked}
+							onToggle={(event) => updateSelected({ locked: !event.target.checked })}
+						/>
 						<TextInput
 							path="templatePreviewSlotLabel"
 							label="슬롯 이름"
@@ -212,17 +289,168 @@ export default function TemplatePreviewField() {
 							}
 						/>
 						{selected.type === 'text' && (
-							<TextInput
-								path="templatePreviewText"
-								label="텍스트 내용"
-								value={selected.text}
-								onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-									updateSelected({ text: event.target.value })
-								}
-							/>
+							<>
+								<TextInput
+									path="templatePreviewText"
+									label="텍스트 내용"
+									value={selected.text}
+									onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+										updateSelected({ text: event.target.value })
+									}
+								/>
+								<SelectInput
+									name="templatePreviewTextFit"
+									path="templatePreviewTextFit"
+									label="텍스트 상자"
+									isClearable={false}
+									value={selected.textFit}
+									options={[
+										{ label: '고정 폭 (넘치면 줄바꿈)', value: 'fixed' },
+										{ label: '자동 폭 (줄바꿈 없음)', value: 'auto-width' },
+									]}
+									onChange={(option) => {
+										const value = (option as { value?: string } | null)?.value
+
+										if (value === 'fixed' || value === 'auto-width') {
+											updateSelected({ textFit: value })
+										}
+									}}
+								/>
+								<SelectInput
+									name="templatePreviewVerticalAlign"
+									path="templatePreviewVerticalAlign"
+									label="세로 정렬 (줄바꿈 시 쌓임 기준)"
+									isClearable={false}
+									value={selected.verticalAlign}
+									options={[
+										{ label: '위 (아래로 쌓임)', value: 'top' },
+										{ label: '중앙 (양쪽으로 쌓임)', value: 'middle' },
+										{ label: '아래 (위로 쌓임)', value: 'bottom' },
+									]}
+									onChange={(option) => {
+										const value = (option as { value?: string } | null)?.value
+
+										if (
+											value === 'top' ||
+											value === 'middle' ||
+											value === 'bottom'
+										) {
+											updateSelected({ verticalAlign: value })
+										}
+									}}
+								/>
+								<SelectInput
+									name="templatePreviewInputFormat"
+									path="templatePreviewInputFormat"
+									label="입력 형식"
+									isClearable={false}
+									value={selected.inputFormat}
+									options={[
+										{ label: '자유 입력', value: 'free' },
+										{ label: '숫자', value: 'number' },
+										{ label: '이메일', value: 'email' },
+										{ label: '날짜', value: 'date' },
+									]}
+									onChange={(option) => {
+										const value = (option as { value?: string } | null)?.value
+
+										if (
+											value === 'free' ||
+											value === 'number' ||
+											value === 'email' ||
+											value === 'date'
+										) {
+											updateSelected({ inputFormat: value })
+										}
+									}}
+								/>
+								<div style={{ display: 'flex', gap: 8 }}>
+									{(['maxLength', 'maxLines'] as const).map((constraint) => (
+										<div key={constraint} style={{ flex: 1 }}>
+											<TextInput
+												path={`templatePreview-${constraint}`}
+												label={
+													constraint === 'maxLength'
+														? '최대 글자수'
+														: '최대 줄수'
+												}
+												placeholder="제한 없음"
+												value={
+													selected[constraint] != null
+														? String(selected[constraint])
+														: ''
+												}
+												onChange={(
+													event: React.ChangeEvent<HTMLInputElement>,
+												) => {
+													const raw = event.target.value.trim()
+
+													if (raw === '') {
+														updateSelected({ [constraint]: undefined })
+														return
+													}
+
+													const value = Number(raw)
+
+													if (Number.isInteger(value) && value > 0) {
+														updateSelected({ [constraint]: value })
+													}
+												}}
+											/>
+										</div>
+									))}
+								</div>
+							</>
 						)}
 						{selected.type === 'image' && (
-							<div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+							<>
+								<div style={{ display: 'flex', gap: 8 }}>
+									{(['width', 'height'] as const).map((dimension) => (
+										<div key={dimension} style={{ flex: 1 }}>
+											<TextInput
+												path={`templatePreview-${dimension}`}
+												label={
+													dimension === 'width'
+														? '너비 (px)'
+														: '높이 (px)'
+												}
+												value={String(selected[dimension])}
+												onChange={(
+													event: React.ChangeEvent<HTMLInputElement>,
+												) => {
+													const value = Number(event.target.value)
+
+													if (Number.isFinite(value) && value > 0) {
+														updateSelected({ [dimension]: value })
+													}
+												}}
+											/>
+										</div>
+									))}
+								</div>
+								<SelectInput
+									name="templatePreviewObjectFit"
+									path="templatePreviewObjectFit"
+									label="이미지 맞춤"
+									isClearable={false}
+									value={selected.objectFit}
+									options={[
+										{ label: '채우기 (프레임을 채우고 잘림)', value: 'cover' },
+										{ label: '전체 보기 (잘림 없이 여백)', value: 'contain' },
+										{ label: '늘리기 (비율 무시)', value: 'fill' },
+									]}
+									onChange={(option) => {
+										const value = (option as { value?: string } | null)?.value
+
+										if (
+											value === 'cover' ||
+											value === 'contain' ||
+											value === 'fill'
+										) {
+											updateSelected({ objectFit: value })
+										}
+									}}
+								/>
 								<span style={{ fontSize: 13 }}>
 									이미지 출처:{' '}
 									{selected.assetCollection === 'template-assets' ? (
@@ -235,59 +463,10 @@ export default function TemplatePreviewField() {
 										</strong>
 									)}
 								</span>
-								<label
-									htmlFor="template-preview-asset-select"
-									style={{ fontSize: 13 }}
-								>
-									인가 에셋으로 교체
-								</label>
-								<select
-									id="template-preview-asset-select"
-									value={
-										selected.assetCollection === 'template-assets'
-											? ''
-											: `${selected.assetCollection}:${selected.assetId}`
-									}
-									onChange={(event) => {
-										const [collection, id] = event.target.value.split(':')
-										const asset = authorizedAssets.find(
-											(item) =>
-												item.collection === collection &&
-												item.id === Number(id),
-										)
-
-										if (asset) {
-											updateSelected({
-												assetCollection: asset.collection,
-												assetId: asset.id,
-												src: asset.url,
-											})
-										}
-									}}
-									style={{ padding: 6 }}
-								>
-									<option value="" disabled>
-										에셋 선택...
-									</option>
-									{AUTHORIZED_ASSET_COLLECTIONS.map((collection) => (
-										<optgroup
-											key={collection}
-											label={ASSET_COLLECTION_LABELS[collection]}
-										>
-											{authorizedAssets
-												.filter((asset) => asset.collection === collection)
-												.map((asset) => (
-													<option
-														key={asset.id}
-														value={`${asset.collection}:${asset.id}`}
-													>
-														{asset.name}
-													</option>
-												))}
-										</optgroup>
-									))}
-								</select>
-							</div>
+								<Button buttonStyle="secondary" onClick={openDrawer}>
+									인가 에셋에서 선택
+								</Button>
+							</>
 						)}
 					</div>
 				)}

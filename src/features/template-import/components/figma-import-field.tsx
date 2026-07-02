@@ -60,7 +60,7 @@ export default function FigmaImportField() {
 					setSourceUrl(event.target.value)
 				}
 			/>
-			<Button onClick={handleImport} disabled={isLoading} size="small">
+			<Button onClick={handleImport} disabled={isLoading}>
 				{isLoading ? '변환 중...' : 'Figma에서 가져오기'}
 			</Button>
 		</div>
