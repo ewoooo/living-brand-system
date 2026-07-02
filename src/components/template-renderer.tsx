@@ -35,7 +35,10 @@ type RectLike = Pick<
 	Extract<JsonFlowElement, { type: 'rect' }>,
 	'borderRadius' | 'boxShadow' | 'fill' | 'filter' | 'opacity'
 >
-type StackLike = Pick<JsonStackElement, 'align' | 'direction' | 'gap' | 'justify' | 'padding'>
+type StackLike = Pick<
+	JsonStackElement,
+	'align' | 'direction' | 'fill' | 'gap' | 'justify' | 'padding'
+>
 
 /**
  * jsonTemplate을 DOM으로 그리는 순수 렌더러.
@@ -214,6 +217,7 @@ function stackFlexCss(stack: StackLike): CSSProperties {
 	return {
 		display: 'flex',
 		flexDirection: stack.direction === 'horizontal' ? 'row' : 'column',
+		background: stack.fill,
 		gap: stack.gap,
 		padding: `${stack.padding.top}px ${stack.padding.right}px ${stack.padding.bottom}px ${stack.padding.left}px`,
 		boxSizing: 'border-box',

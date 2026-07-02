@@ -363,8 +363,10 @@ function imagePropsFromNode(node: FigmaNode, asset: ImportedAsset, slotLabel: st
 
 function stackPropsFromNode(node: FigmaNode) {
 	const justify = toJustify(node.primaryAxisAlignItems)
+	const fill = extractFillCss(node.fills ?? [])
 
 	return {
+		...(fill ? { fill } : {}),
 		type: 'stack' as const,
 		direction: (node.layoutMode === 'HORIZONTAL' ? 'horizontal' : 'vertical') as
 			| 'horizontal'

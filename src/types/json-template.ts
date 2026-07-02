@@ -108,6 +108,8 @@ const stackLayoutShape = {
 	}),
 	justify: z.enum(['start', 'center', 'end', 'space-between']).default('start'),
 	align: z.enum(['start', 'center', 'end']).default('start'),
+	// 원본 프레임의 배경 — 평탄화 경로의 rect 보존과 동일한 역할.
+	fill: z.string().optional(),
 }
 
 const flowTextSchema = z.object({ ...flowBaseSchema.shape, ...textPropsShape })

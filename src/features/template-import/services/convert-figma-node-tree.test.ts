@@ -254,6 +254,8 @@ describe('convertFigmaNodeTree (stack 승격)', () => {
 			align: 'center',
 			gap: 10,
 			padding: { top: 50, right: 50, bottom: 50, left: 50 },
+			// 원본 프레임 배경 보존 — 평탄화 경로의 rect와 동일한 역할.
+			fill: '#ffffff',
 			locked: true,
 		})
 	})

@@ -20,7 +20,6 @@ import {
 	type JsonTemplateElement,
 	jsonTemplateSchema,
 } from '@/types/json-template'
-import { findUnauthorizedTemplateImages } from '../services/validate-authorized-assets'
 
 const PREVIEW_MAX_WIDTH = 640
 
@@ -67,16 +66,18 @@ function patchElementById<T extends AnyElement>(
 	})
 }
 
-/** 요소(스택이면 하위 전체)에 비인가 이미지가 있는지 — 오버레이 경고 표시용. */
-function hasUnauthorizedImage(element: AnyElement): boolean {
-	if (element.type === 'image') {
-		return element.assetCollection === 'template-assets'
-	}
-	if (element.type === 'stack') {
-		return element.children.some(hasUnauthorizedImage)
-	}
+/** 스택 하위까지 포함한 비인가 이미지 수 — 경고 배너와 오버레이 표시가 함께 쓴다. */
+function countUnauthorizedImages(elements: readonly AnyElement[]): number {
+	return elements.reduce((total, element) => {
+		if (element.type === 'stack') {
+			return total + countUnauthorizedImages(element.children)
+		}
+		if (element.type === 'image' && element.assetCollection === 'template-assets') {
+			return total + 1
+		}
 
-	return false
+		return total
+	}, 0)
 }
 
 /**
@@ -117,7 +118,7 @@ export default function TemplatePreviewField() {
 	const template = parsed.data
 	const scale = Math.min(1, PREVIEW_MAX_WIDTH / template.width)
 	const selected = selectedId ? findElementById(template.elements, selectedId) : undefined
-	const unauthorizedCount = findUnauthorizedTemplateImages(template).length
+	const unauthorizedCount = countUnauthorizedImages(template.elements)
 
 	function updateTemplate(next: JsonTemplate) {
 		dispatchFields({ type: 'UPDATE', path: 'jsonTemplate', value: next })
@@ -200,7 +201,7 @@ export default function TemplatePreviewField() {
 					{template.elements.map((element) => {
 						const isSelected = element.id === selectedId
 						// 스택이면 하위 전체 검사 — 비인가 이미지를 품은 스택도 빨간 표시.
-						const isUnauthorized = hasUnauthorizedImage(element)
+						const isUnauthorized = countUnauthorizedImages([element]) > 0
 
 						return (
 							<button
