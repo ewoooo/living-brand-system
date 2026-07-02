@@ -125,9 +125,11 @@ export interface Config {
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ko' | 'en') | ('ko' | 'en')[];
   globals: {
     guideline: Guideline;
+    'agent-settings': AgentSetting;
   };
   globalsSelect: {
     guideline: GuidelineSelect<false> | GuidelineSelect<true>;
+    'agent-settings': AgentSettingsSelect<false> | AgentSettingsSelect<true>;
   };
   locale: 'ko' | 'en';
   widgets: {
@@ -1355,6 +1357,39 @@ export interface Guideline {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-settings".
+ */
+export interface AgentSetting {
+  id: number;
+  /**
+   * Default system prompt section rendered as <product_information>.
+   */
+  productInformation: string;
+  /**
+   * Default system prompt section rendered as <default_stance>.
+   */
+  defaultStance: string;
+  /**
+   * Default system prompt section rendered as <tone_and_style>.
+   */
+  toneAndStyle: string;
+  /**
+   * Default system prompt section rendered as <refusal_handling>.
+   */
+  refusalHandling: string;
+  /**
+   * Default system prompt section rendered as <tool_calling>.
+   */
+  toolCalling: string;
+  /**
+   * Default system prompt section rendered as <available_tools>.
+   */
+  availableTools: string;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline_select".
  */
 export interface GuidelineSelect<T extends boolean = true> {
@@ -1363,6 +1398,21 @@ export interface GuidelineSelect<T extends boolean = true> {
   issuedLabel?: T;
   favicon?: T;
   _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-settings_select".
+ */
+export interface AgentSettingsSelect<T extends boolean = true> {
+  productInformation?: T;
+  defaultStance?: T;
+  toneAndStyle?: T;
+  refusalHandling?: T;
+  toolCalling?: T;
+  availableTools?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

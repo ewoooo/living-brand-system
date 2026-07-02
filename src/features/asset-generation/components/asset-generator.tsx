@@ -1,29 +1,17 @@
 'use client'
 
-import { toPng } from 'html-to-image'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { TemplateRenderer, type TemplateSlotValue } from '@/components/template-renderer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import type { JsonFlowElement, JsonTemplateElement } from '@/types/json-template'
+import { useTemplatePngExport } from '@/components/use-template-png-export'
+import { collectOpenSlotElements, type JsonSlotElement } from '@/types/json-template'
 import type { PublishedTemplate } from '../services/get-published-template.service'
 
 const PREVIEW_WIDTH = 480
 
-type SlotElement = JsonFlowElement | JsonTemplateElement
-type TextElement = Extract<SlotElement, { type: 'text' }>
-
-/** 열린 슬롯(locked=false)을 스택 자식까지 재귀로 모은다. 스택 자체는 슬롯이 아니다. */
-function collectSlots(elements: readonly SlotElement[]): SlotElement[] {
-	return elements.flatMap((element) => {
-		if (element.type === 'stack') {
-			return collectSlots(element.children)
-		}
-
-		return element.locked ? [] : [element]
-	})
-}
+type TextElement = Extract<JsonSlotElement, { type: 'text' }>
 
 /** 제작자가 요소에 설정한 입력 제약(형식·글자수·줄수)을 적용한 텍스트 슬롯 입력. */
 function TextSlotInput({
@@ -82,32 +70,27 @@ function TextSlotInput({
  */
 export function AssetGenerator({ template }: { template: PublishedTemplate }) {
 	const [values, setValues] = useState<Record<string, TemplateSlotValue>>({})
-	const [isExporting, setIsExporting] = useState(false)
-	const exportRef = useRef<HTMLDivElement>(null)
+	const { exportPng, isExporting, exportError, exportNode } = useTemplatePngExport({
+		template: template.jsonTemplate,
+		values,
+		fileName: template.name,
+	})
 
 	function setSlotValue(elementId: string, value: TemplateSlotValue) {
 		setValues((current) => ({ ...current, [elementId]: { ...current[elementId], ...value } }))
 	}
 
-	async function handleExport() {
-		if (!exportRef.current) {
-			return
-		}
+	function setSlotImage(elementId: string, file: File) {
+		// 교체된 blob URL은 즉시 해제해 세션 동안의 메모리 누수를 막는다.
+		const previousSrc = values[elementId]?.src
 
-		setIsExporting(true)
-
-		try {
-			const dataUrl = await toPng(exportRef.current, { cacheBust: true })
-			const link = document.createElement('a')
-			link.href = dataUrl
-			link.download = `${template.name}.png`
-			link.click()
-		} finally {
-			setIsExporting(false)
+		if (previousSrc?.startsWith('blob:')) {
+			URL.revokeObjectURL(previousSrc)
 		}
+		setSlotValue(elementId, { src: URL.createObjectURL(file) })
 	}
 
-	const slots = collectSlots(template.jsonTemplate.elements)
+	const slots = collectOpenSlotElements(template.jsonTemplate.elements)
 
 	return (
 		<section className="flex w-full flex-col gap-6 md:flex-row">
@@ -135,9 +118,7 @@ export function AssetGenerator({ template }: { template: PublishedTemplate }) {
 								onChange={(event) => {
 									const file = event.target.files?.[0]
 									if (file) {
-										setSlotValue(element.id, {
-											src: URL.createObjectURL(file),
-										})
+										setSlotImage(element.id, file)
 									}
 								}}
 							/>
@@ -149,26 +130,21 @@ export function AssetGenerator({ template }: { template: PublishedTemplate }) {
 						이 템플릿에는 편집 가능한 슬롯이 없습니다.
 					</p>
 				)}
-				<Button onClick={handleExport} disabled={isExporting}>
+				<Button onClick={exportPng} disabled={isExporting}>
 					{isExporting ? '내보내는 중...' : 'PNG로 내보내기'}
 				</Button>
+				{exportError && <p className="text-destructive text-xs">{exportError}</p>}
 			</div>
 
 			<div className="min-w-0">
-				<div className="inline-block rounded-md border border-border">
+				<div className="inline-block max-w-full overflow-x-auto rounded-md border border-border">
 					<TemplateRenderer
 						template={template.jsonTemplate}
 						values={values}
 						scale={Math.min(1, PREVIEW_WIDTH / template.jsonTemplate.width)}
 					/>
 				</div>
-
-				{/* 내보내기용 원본 크기 렌더 — 화면 밖에 두고 캡처만 한다. */}
-				<div style={{ position: 'fixed', left: -99999, top: 0 }} aria-hidden>
-					<div ref={exportRef}>
-						<TemplateRenderer template={template.jsonTemplate} values={values} />
-					</div>
-				</div>
+				{exportNode}
 			</div>
 		</section>
 	)

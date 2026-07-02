@@ -4,12 +4,10 @@ import {
 	getAgentSkillMarker,
 	getAgentToolMarker,
 } from '@/features/agent-chat/utils/get-agent-tool-marker'
+import type { AgentTemplateImageAttachment } from '../services/get-agent-tools.service'
 import { getAgentMessageText } from '../utils/get-agent-message-text'
 import { AgentChatAgentBubble, AgentChatUserBubble } from './agent-chat-bubbles'
-import {
-	AgentChatTemplateAttachment,
-	type AgentTemplateAttachment,
-} from './agent-chat-template-attachment'
+import { AgentChatTemplateAttachment } from './agent-chat-template-attachment'
 import {
 	AgentChatReasoningMarker,
 	AgentChatSkillMarker,
@@ -40,7 +38,7 @@ export function AgentChatMessageItem({
 					return []
 				}
 
-				const output = (part as { output: AgentTemplateAttachment }).output
+				const output = (part as { output: AgentTemplateImageAttachment }).output
 				return output.type === 'template-image' ? [output] : []
 			})
 

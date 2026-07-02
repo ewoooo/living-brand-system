@@ -1,13 +1,13 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
+import { FALLBACK_LOCALE, DEFAULT_LOCALE as LOCALE } from '@/lib/locale'
 
 /**
  * 산출물 제작용 published Template·카테고리 조회 repository.
  * Worker 화면은 발행된 템플릿만 보므로 draft는 조회하지 않는다.
+ * guideline 공개 SSR과 같은 패턴으로 인증 없이 조회한다(overrideAccess 기본값) —
+ * published 산출물 표면은 의도적으로 공개이며, draft·비발행본은 여기서 노출되지 않는다.
  */
-
-const LOCALE = 'ko' as const
-const FALLBACK_LOCALE = 'en' as const
 
 export async function listTemplateCategories() {
 	const payload = await getPayload({ config })

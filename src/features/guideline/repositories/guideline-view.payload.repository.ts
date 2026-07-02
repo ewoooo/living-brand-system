@@ -1,13 +1,11 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
+import { FALLBACK_LOCALE, DEFAULT_LOCALE as LOCALE } from '@/lib/locale'
 
 /**
  * Creator UI 렌더링용 published guideline 조회 repository.
  * guideline read service가 쓰는 Payload Local API 호출은 모두 이 파일이 소유한다.
  */
-
-const LOCALE = 'ko' as const
-const FALLBACK_LOCALE = 'en' as const
 
 export async function findGuidelineMetadataGlobal() {
 	const payload = await getPayload({ config })

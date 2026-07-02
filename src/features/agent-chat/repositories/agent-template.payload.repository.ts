@@ -1,30 +1,38 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
+import { DEFAULT_LOCALE, FALLBACK_LOCALE } from '@/lib/locale'
 import type { Template } from '@/payload-types'
 
 export type AgentTemplateDocument = Pick<Template, 'description' | 'id' | 'jsonTemplate' | 'name'>
 
-export async function listAgentTemplates(user: unknown): Promise<AgentTemplateDocument[]> {
-	const payload = await getPayload({ config })
-	const templates = await payload.find({
-		collection: 'templates',
+/** 두 조회가 공유하는 published 템플릿 질의 기본값 — user 컨텍스트로 access를 강제한다. */
+function publishedTemplateQuery(user: unknown) {
+	return {
+		collection: 'templates' as const,
 		depth: 0,
 		draft: false,
-		fallbackLocale: 'en',
-		limit: 50,
-		locale: 'ko',
+		fallbackLocale: FALLBACK_LOCALE,
+		locale: DEFAULT_LOCALE,
 		overrideAccess: false,
-		sort: '-updatedAt',
 		user: user as never,
-		where: {
-			_status: {
-				equals: 'published',
-			},
-		},
 		select: {
 			name: true,
 			description: true,
 			jsonTemplate: true,
+		},
+	} as const
+}
+
+export async function listAgentTemplates(user: unknown): Promise<AgentTemplateDocument[]> {
+	const payload = await getPayload({ config })
+	const templates = await payload.find({
+		...publishedTemplateQuery(user),
+		limit: 50,
+		sort: '-updatedAt',
+		where: {
+			_status: {
+				equals: 'published',
+			},
 		},
 	})
 
@@ -37,14 +45,8 @@ export async function findAgentTemplate(
 ): Promise<AgentTemplateDocument | null> {
 	const payload = await getPayload({ config })
 	const templates = await payload.find({
-		collection: 'templates',
-		depth: 0,
-		draft: false,
-		fallbackLocale: 'en',
+		...publishedTemplateQuery(user),
 		limit: 1,
-		locale: 'ko',
-		overrideAccess: false,
-		user: user as never,
 		where: {
 			id: {
 				equals: templateId,
@@ -52,11 +54,6 @@ export async function findAgentTemplate(
 			_status: {
 				equals: 'published',
 			},
-		},
-		select: {
-			name: true,
-			description: true,
-			jsonTemplate: true,
 		},
 	})
 

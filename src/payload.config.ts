@@ -24,6 +24,7 @@ import { TemplateAssets } from './collections/TemplateAssets'
 import { TemplateCategories } from './collections/TemplateCategories'
 import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
+import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
 import { adminOnly } from './lib/auth'
 
@@ -266,5 +267,5 @@ export default buildConfig({
 		locales: ['ko', 'en'],
 		defaultLocale: 'ko',
 	},
-	globals: [Guideline],
+	globals: [Guideline, AgentSettings],
 })

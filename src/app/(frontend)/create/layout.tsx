@@ -13,7 +13,7 @@ export default async function CreateLayout({ children }: { children: React.React
 		<SidebarProvider className="min-h-full">
 			<CreateSideNavigation navigation={navigation} />
 			<div className="flex min-w-0 flex-1 flex-col items-center">
-				<main className="flex min-h-svh w-full flex-1 justify-center px-12">
+				<main className="flex min-h-svh w-full flex-1 justify-center px-4 md:px-12">
 					{children}
 				</main>
 			</div>

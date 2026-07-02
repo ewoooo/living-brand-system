@@ -197,9 +197,11 @@ function FlowElementView({
 
 function TextContent({ element, value }: { element: TextLike; value?: TemplateSlotValue }) {
 	// truncate는 상자 높이에 들어가는 줄 수를 계산해 말줄임한다. maxLines가 있으면 더 강한 제한이 이긴다.
+	// 수동 편집된 fontSize/lineHeight 0은 Infinity를 만들므로 유한값일 때만 적용한다.
+	const lineHeightPx = element.fontSize * element.lineHeight
 	const truncateLines =
-		element.textFit === 'truncate'
-			? Math.max(1, Math.floor(element.height / (element.fontSize * element.lineHeight)))
+		element.textFit === 'truncate' && Number.isFinite(element.height / lineHeightPx)
+			? Math.max(1, Math.floor(element.height / lineHeightPx))
 			: undefined
 	const clampLines =
 		element.maxLines && truncateLines

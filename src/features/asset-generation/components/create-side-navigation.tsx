@@ -14,10 +14,7 @@ type CreateCategoryProps = GetCreateNavigationOutput['categories'][number]
 function CreateCategory({ title, href, templates }: CreateCategoryProps) {
 	return (
 		<SidebarGroup>
-			<SidebarGroupLabel
-				asChild
-				className="font-medium text-foreground hover:text-foreground"
-			>
+			<SidebarGroupLabel asChild className="font-medium text-foreground hover:underline">
 				<Link href={href}>{title}</Link>
 			</SidebarGroupLabel>
 			<SidebarMenu>
@@ -25,7 +22,7 @@ function CreateCategory({ title, href, templates }: CreateCategoryProps) {
 					<SidebarMenuItem key={template.id}>
 						<Link
 							href={template.href}
-							className="block rounded-md px-2 py-2 text-neutral-500 text-xs hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+							className="block rounded-md px-2 py-2 text-muted-foreground text-xs hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
 						>
 							{template.name}
 						</Link>
@@ -44,7 +41,9 @@ export function CreateSideNavigation({ navigation }: { navigation: GetCreateNavi
 			))
 		) : (
 			<SidebarGroup>
-				<SidebarGroupLabel className="text-neutral-400">No templates</SidebarGroupLabel>
+				<SidebarGroupLabel className="text-muted-foreground">
+					발행된 템플릿이 없습니다
+				</SidebarGroupLabel>
 			</SidebarGroup>
 		)
 

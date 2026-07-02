@@ -37,6 +37,13 @@ type AgentChatRuntimeContext = {
 	requestId: string
 }
 
+/** 모든 tool은 동일한 user 컨텍스트를 받는다 — tool 추가 시 여기 한 곳만 따라간다. */
+function toolsContextFor(user: unknown) {
+	return Object.fromEntries(
+		Object.keys(getAgentTools()).map((toolName) => [toolName, { user }]),
+	) as Record<keyof ReturnType<typeof getAgentTools>, { user: unknown }>
+}
+
 /**
  * Guideline 질의응답 agent 실행 단위 (모델·tool·skill 지시문 구성).
  * Payload skill/guideline I/O는 agent-chat repository가, provider 호출은 AI SDK가 소유한다.
@@ -58,15 +65,7 @@ export const agentChatAgent = new ToolLoopAgent<
 	tools: getAgentTools(),
 	output: agentChatOutput,
 	// ponytail: AI SDK requires constructor toolsContext; prepareCall replaces it per request.
-	toolsContext: {
-		loadSkill: { user: null },
-		getRuleCatalog: { user: null },
-		listGuidelinePages: { user: null },
-		searchGuidelines: { user: null },
-		readGuidelineDocument: { user: null },
-		findTemplatesForRequest: { user: null },
-		prepareTemplateImage: { user: null },
-	},
+	toolsContext: toolsContextFor(null),
 	callOptionsSchema: agentChatCallOptionsSchema,
 	stopWhen: isStepCount(5),
 	prepareStep: ({ stepNumber }) =>
@@ -90,6 +89,7 @@ export const agentChatAgent = new ToolLoopAgent<
 		return {
 			...settings,
 			instructions: [
+				formatProductionTemplateToolInstructions(),
 				formatAgentSkillSelectionInstructions(skills),
 				pageContext ? `Published context:\n${pageContext}` : null,
 			]
@@ -100,20 +100,19 @@ export const agentChatAgent = new ToolLoopAgent<
 				pagePath: options.pagePath,
 				requestId: options.requestId ?? crypto.randomUUID(),
 			},
-			toolsContext: {
-				loadSkill: { user: options.user },
-				getRuleCatalog: { user: options.user },
-				listGuidelinePages: { user: options.user },
-				searchGuidelines: { user: options.user },
-				readGuidelineDocument: { user: options.user },
-				findTemplatesForRequest: { user: options.user },
-				prepareTemplateImage: { user: options.user },
-			},
+			toolsContext: toolsContextFor(options.user),
 		}
 	},
 })
 
 export type AgentChatMessage = InferAgentUIMessage<typeof agentChatAgent>
+
+function formatProductionTemplateToolInstructions() {
+	return [
+		'For asset creation requests, including business cards/name cards, banners, posters, or requests to fill template values such as name/title/email/phone, use findTemplatesForRequest and then prepareTemplateImage.',
+		'Do not answer template image creation requests with guideline search failure text.',
+	].join('\n')
+}
 
 function formatAgentSkillSelectionInstructions(
 	skills: Awaited<ReturnType<typeof findEnabledAgentSkillSummaries>>,
