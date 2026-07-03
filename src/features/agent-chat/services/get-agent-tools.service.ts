@@ -34,6 +34,18 @@ const templateSlotValueSchema = z.object({
 	text: z.string().max(1000).optional(),
 })
 
+const TEMPLATE_QUERY_STOP_WORDS = new Set([
+	'관련',
+	'관련해서',
+	'발행된',
+	'사용',
+	'사용할',
+	'있는',
+	'템플릿',
+	'template',
+	'templates',
+])
+
 /** prepareTemplateImage 툴 출력 계약 — 챗 첨부 UI가 이 타입을 그대로 소비한다 (이중 정의 금지). */
 export interface AgentTemplateImageAttachment {
 	type: 'template-image'
@@ -143,6 +155,9 @@ function formatAgentSkillInstructions(skill: {
 async function findTemplatesForRequest(user: unknown, query?: string) {
 	const templates = await listAgentTemplates(user)
 	const normalizedQuery = query?.trim().toLowerCase()
+	const queryTokens = normalizedQuery
+		?.split(/[^\p{L}\p{N}]+/u)
+		.filter((token) => token.length > 1 && !TEMPLATE_QUERY_STOP_WORDS.has(token))
 
 	return templates
 		.map((template) => {
@@ -163,7 +178,7 @@ async function findTemplatesForRequest(user: unknown, query?: string) {
 				return true
 			}
 
-			return [
+			const searchText = [
 				template.name,
 				template.description,
 				...template.rules.flatMap((rule) => [rule.title, rule.description, rule.body]),
@@ -171,7 +186,10 @@ async function findTemplatesForRequest(user: unknown, query?: string) {
 			]
 				.join(' ')
 				.toLowerCase()
-				.includes(normalizedQuery)
+			return (
+				searchText.includes(normalizedQuery) ||
+				Boolean(queryTokens?.some((token) => searchText.includes(token)))
+			)
 		})
 		.slice(0, 10)
 }
