@@ -24,7 +24,7 @@ export async function getGuidelineMetadata(): Promise<GetGuidelineMetadataOutput
 	} catch {
 		return {
 			companyName: 'Unconfigured Company',
-			documentTitle: 'Living Design System',
+			documentTitle: 'Living Brand System',
 			faviconHref: null,
 			issuedLabel: null,
 		}

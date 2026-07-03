@@ -1,7 +1,7 @@
 {
-	"name": "living-design-system",
+	"name": "living-brand-system",
 	"version": "1.0.0",
-	"description": "Living Design System (LDS) - digital brand guideline operations system",
+	"description": "Living Brand System (LBS) - digital brand guideline operations system",
 	"license": "MIT",
 	"type": "module",
 	"scripts": {

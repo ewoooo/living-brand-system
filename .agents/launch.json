@@ -2,7 +2,7 @@
 	"version": "0.0.1",
 	"configurations": [
 		{
-			"name": "living-design-system",
+			"name": "living-brand-system",
 			"runtimeExecutable": "bash",
 			"runtimeArgs": [
 				"-lc",
