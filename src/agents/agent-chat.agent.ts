@@ -5,9 +5,9 @@ import { findEnabledAgentSkillSummaries } from '@/features/agent-chat/repositori
 import { getAgentDefaultInstructions } from '@/features/agent-chat/services/get-agent-default-instructions.service'
 import { getAgentTools } from '@/features/agent-chat/services/get-agent-tools.service'
 import { AgentConfigurationError } from '@/lib/errors'
+import { DEFAULT_LOCALE } from '@/lib/locale'
 
 const DEFAULT_MODEL = 'claude-sonnet-4-6'
-const DEFAULT_LOCALE = 'ko'
 
 const agentChatCallOptionsSchema = z.object({
 	locale: z.enum(['ko', 'en']).optional(),
