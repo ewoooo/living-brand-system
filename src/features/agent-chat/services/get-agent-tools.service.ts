@@ -155,9 +155,6 @@ function formatAgentSkillInstructions(skill: {
 async function findTemplatesForRequest(user: unknown, query?: string) {
 	const templates = await listAgentTemplates(user)
 	const normalizedQuery = query?.trim().toLowerCase()
-	const queryTokens = normalizedQuery
-		?.split(/[^\p{L}\p{N}]+/u)
-		.filter((token) => token.length > 1 && !TEMPLATE_QUERY_STOP_WORDS.has(token))
 
 	return templates
 		.map((template) => {
@@ -178,20 +175,29 @@ async function findTemplatesForRequest(user: unknown, query?: string) {
 				return true
 			}
 
-			const searchText = [
-				template.name,
-				template.description,
-				...template.rules.flatMap((rule) => [rule.title, rule.description, rule.body]),
-				...template.slots.map((slot) => slot.label),
-			]
-				.join(' ')
-				.toLowerCase()
-			return (
-				searchText.includes(normalizedQuery) ||
-				Boolean(queryTokens?.some((token) => searchText.includes(token)))
+			return matchesTemplateQuery(
+				[
+					template.name,
+					template.description,
+					...template.rules.flatMap((rule) => [rule.title, rule.description, rule.body]),
+					...template.slots.map((slot) => slot.label),
+				].join(' '),
+				normalizedQuery,
 			)
 		})
 		.slice(0, 10)
+}
+
+function matchesTemplateQuery(searchText: string, normalizedQuery: string) {
+	const haystack = searchText.toLowerCase()
+
+	return (
+		haystack.includes(normalizedQuery) ||
+		normalizedQuery
+			.split(/[^\p{Letter}\p{Number}]+/u)
+			.filter((token) => token.length >= 2 && !TEMPLATE_QUERY_STOP_WORDS.has(token))
+			.some((token) => haystack.includes(token))
+	)
 }
 
 function getTemplateRules(templateRules: AgentTemplateDocument['templateRules']) {

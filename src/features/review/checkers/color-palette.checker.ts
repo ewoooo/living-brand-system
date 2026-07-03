@@ -30,6 +30,11 @@ export const colorPaletteChecker: RuleChecker = {
 			status: offRatio <= MAX_OFF_SHARE ? 'pass' : 'fail',
 			fulfillment: Math.round((1 - offRatio) * 1000) / 10,
 			detail: `지배색 중 규정 외 색 ${Math.round(offRatio * 100)}% (허용 ${MAX_OFF_SHARE * 100}%)`,
+			metric: {
+				label: '규정 외 색 비중',
+				expected: `${MAX_OFF_SHARE * 100}% 이내`,
+				actual: `${Math.round(offRatio * 100)}%`,
+			},
 		}
 	},
 }

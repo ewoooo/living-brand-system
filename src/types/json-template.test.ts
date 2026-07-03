@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { jsonTemplateSchema } from './json-template'
 
-/** Living Design System 예시(Wl9p2kQENUqapg6iOVHVOF, node 110-54)의 축약 구조. */
+/** Living Brand System 예시(Wl9p2kQENUqapg6iOVHVOF, node 110-54)의 축약 구조. */
 function buildStackedTemplate() {
 	return {
 		width: 1115,

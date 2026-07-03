@@ -1,10 +1,13 @@
 import { getChecker } from '@/features/review/checkers/registry'
+import type { PixelGrid, RuleMetric } from '@/features/review/checkers/types'
 import type { Rgb } from '@/features/review/color-check'
 
 export interface RuleOutcome {
 	status: 'pass' | 'fail' | 'pending'
 	fulfillment: number | null
 	detail: string
+	/** 코멘터리 주입용 기준/현재값 (계산된 룰만) */
+	metric?: RuleMetric
 }
 
 const PENDING: RuleOutcome = { status: 'pending', fulfillment: null, detail: '' }
@@ -16,6 +19,7 @@ const PENDING: RuleOutcome = { status: 'pending', fulfillment: null, detail: '' 
  */
 export async function runCheckersProgressive(
 	pixels: Rgb[],
+	grid: PixelGrid | undefined,
 	ruleKeys: string[],
 	onResult: (ruleKey: string, outcome: RuleOutcome) => void,
 	staggerMs = 35,
@@ -23,11 +27,12 @@ export async function runCheckersProgressive(
 	for (const ruleKey of ruleKeys) {
 		const checker = getChecker(ruleKey)
 		if (checker) {
-			const result = checker.check({ pixels })
+			const result = checker.check({ pixels, grid })
 			onResult(ruleKey, {
 				status: result.status === 'pass' ? 'pass' : 'fail',
 				fulfillment: result.fulfillment,
 				detail: result.detail,
+				metric: result.metric,
 			})
 		} else {
 			onResult(ruleKey, PENDING)

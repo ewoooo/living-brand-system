@@ -57,6 +57,10 @@ if (!databaseURL) {
 export default buildConfig({
 	admin: {
 		user: Users.slug,
+		meta: {
+			title: 'Living Brand System',
+			titleSuffix: '- Living Brand System',
+		},
 		importMap: {
 			baseDir: path.resolve(dirname),
 		},
