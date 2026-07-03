@@ -631,7 +631,7 @@ export interface GuidelinePage {
    * 숫자가 낮을수록 선택한 섹션 안에서 먼저 표시됩니다.
    */
   displayOrder: number;
-  blocks?: (ColumnUnitBlock | MediaShowcaseBlock)[] | null;
+  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock)[] | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -687,6 +687,20 @@ export interface MediaShowcaseBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaShowcase';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPaletteBlock".
+ */
+export interface ColorPaletteBlock {
+  title?: string | null;
+  /**
+   * 선택한 순서대로 스와치 카드가 표시됩니다.
+   */
+  colors: (number | BrandColor)[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPalette';
 }
 /**
  * This is a collection of automatically created search results. These results are used by the global site search and will be updated automatically as documents in the CMS are created or updated.
@@ -1247,6 +1261,7 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
     | {
         columnUnit?: T | ColumnUnitBlockSelect<T>;
         mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
+        colorPalette?: T | ColorPaletteBlockSelect<T>;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -1279,6 +1294,16 @@ export interface MediaShowcaseBlockSelect<T extends boolean = true> {
   image?: T;
   imageBackgroundColor?: T;
   imageScale?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPaletteBlock_select".
+ */
+export interface ColorPaletteBlockSelect<T extends boolean = true> {
+  title?: T;
+  colors?: T;
   id?: T;
   blockName?: T;
 }
