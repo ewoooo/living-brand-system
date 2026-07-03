@@ -1,3 +1,5 @@
+import { Ai, Catalog, Search } from '@carbon/icons-react'
+import { Spinner } from '@/components/ui/spinner'
 import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import {
 	getAgentReasoningMarker,
@@ -8,11 +10,7 @@ import type { AgentTemplateImageAttachment } from '../services/get-agent-tools.s
 import { getAgentMessageText } from '../utils/get-agent-message-text'
 import { AgentChatAgentBubble, AgentChatUserBubble } from './agent-chat-bubbles'
 import { AgentChatTemplateAttachment } from './agent-chat-template-attachment'
-import {
-	AgentChatReasoningMarker,
-	AgentChatSkillMarker,
-	AgentChatToolMarker,
-} from './agent-chat-tool-marker'
+import { AgentChatMarker } from './agent-chat-tool-marker'
 
 export function AgentChatMessageItem({
 	message,
@@ -50,9 +48,16 @@ export function AgentChatMessageItem({
 					: 'flex w-full flex-col items-start gap-2'
 			}
 		>
-			<AgentChatReasoningMarker marker={reasoningMarker} />
-			<AgentChatSkillMarker marker={skillMarker} />
-			<AgentChatToolMarker marker={marker} isPending={marker?.isPending || isActive} />
+			<AgentChatMarker
+				marker={reasoningMarker}
+				icon={reasoningMarker?.isPending ? <Spinner /> : <Ai />}
+			/>
+			<AgentChatMarker marker={skillMarker} icon={<Catalog />} />
+			<AgentChatMarker
+				marker={marker}
+				icon={<Search />}
+				isPending={marker?.isPending || isActive}
+			/>
 			{isUser ? (
 				<AgentChatUserBubble text={messageText} files={files} />
 			) : (

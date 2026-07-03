@@ -5,20 +5,10 @@ export interface AgentToolMarker {
 	text: string
 }
 
-export interface AgentSkillMarker {
-	isPending: boolean
-	text: string
-}
-
-export interface AgentReasoningMarker {
-	isPending: boolean
-	text: string
-}
-
 export function getAgentReasoningMarker(
 	message: AgentChatMessage,
 	isActive = false,
-): AgentReasoningMarker | null {
+): AgentToolMarker | null {
 	const reasoningParts = message.parts.filter((part) => part.type === 'reasoning')
 
 	if (reasoningParts.length === 0) {
@@ -33,7 +23,7 @@ export function getAgentReasoningMarker(
 	}
 }
 
-export function getAgentSkillMarker(message: AgentChatMessage): AgentSkillMarker | null {
+export function getAgentSkillMarker(message: AgentChatMessage): AgentToolMarker | null {
 	for (const part of message.parts) {
 		if (part.type !== 'tool-loadSkill') {
 			continue

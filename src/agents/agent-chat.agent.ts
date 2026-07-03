@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic'
-import { type InferAgentUIMessage, isStepCount, Output, ToolLoopAgent } from 'ai'
+import { type InferAgentUIMessage, isStepCount, ToolLoopAgent } from 'ai'
 import { z } from 'zod'
 import { findEnabledAgentSkillSummaries } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import { getAgentDefaultInstructions } from '@/features/agent-chat/services/get-agent-default-instructions.service'
@@ -14,21 +14,6 @@ const agentChatCallOptionsSchema = z.object({
 	pagePath: z.string().max(300).optional(),
 	requestId: z.string().min(1).optional(),
 	user: z.unknown(),
-})
-
-const agentChatOutput = Output.object({
-	schema: z.object({
-		answer: z.string(),
-		citations: z.array(
-			z.object({
-				collection: z.enum(['guideline-pages', 'sections']),
-				id: z.string(),
-				title: z.string(),
-				ruleKeys: z.array(z.string()),
-			}),
-		),
-		needsHumanReview: z.boolean(),
-	}),
 })
 
 type AgentChatCallOptions = z.infer<typeof agentChatCallOptionsSchema>
@@ -52,8 +37,7 @@ function toolsContextFor(user: unknown) {
 export const agentChatAgent = new ToolLoopAgent<
 	AgentChatCallOptions,
 	ReturnType<typeof getAgentTools>,
-	AgentChatRuntimeContext,
-	typeof agentChatOutput
+	AgentChatRuntimeContext
 >({
 	model: anthropic(process.env.ANTHROPIC_MODEL || DEFAULT_MODEL),
 	providerOptions: {
@@ -64,7 +48,6 @@ export const agentChatAgent = new ToolLoopAgent<
 	},
 	reasoning: 'medium',
 	tools: getAgentTools(),
-	output: agentChatOutput,
 	// ponytail: AI SDK requires constructor toolsContext; prepareCall replaces it per request.
 	toolsContext: toolsContextFor(null),
 	callOptionsSchema: agentChatCallOptionsSchema,
