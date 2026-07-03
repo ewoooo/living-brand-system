@@ -2,8 +2,8 @@
 
 import { toPng } from 'html-to-image'
 import { useEffect, useRef, useState } from 'react'
+import { TemplateRenderer, type TemplateSlotValue } from '@/components/template-renderer'
 import type { JsonTemplate } from '@/types/json-template'
-import { TemplateRenderer, type TemplateSlotValue } from './template-renderer'
 
 /**
  * 템플릿을 원본 크기 PNG로 내려받는 공유 훅 (/create·챗 첨부가 함께 쓴다).

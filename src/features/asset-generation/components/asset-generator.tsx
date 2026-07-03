@@ -5,7 +5,7 @@ import { TemplateRenderer, type TemplateSlotValue } from '@/components/template-
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { useTemplatePngExport } from '@/components/use-template-png-export'
+import { useTemplatePngExport } from '@/hooks/use-template-png-export'
 import { collectOpenSlotElements, type JsonSlotElement } from '@/types/json-template'
 import type { PublishedTemplate } from '../services/get-published-template.service'
 
