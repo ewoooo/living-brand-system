@@ -61,21 +61,23 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 			: null
 	const hasDetail = Boolean(rule.evidence || rule.value || outcome?.detail)
 
+	// 섹션 첫 룰이면 섹션명 칸까지 전체폭 구분선(border-top), 아니면 룰 칸만 구분선.
+	const ruleBorder = 'border-neutral-200 border-t dark:border-neutral-800'
+
 	return (
 		<>
 			<tr
 				id={anchorId ?? undefined}
 				className={cn(
-					'scroll-mt-72 border-neutral-200 border-b transition-colors hover:bg-neutral-500/5 dark:border-neutral-800',
-					isSectionStart && '[&>td]:pt-5',
+					'h-12 scroll-mt-72 transition-colors hover:bg-neutral-500/5',
 					!implemented && 'opacity-45',
 				)}
 			>
-				{/* 섹션명 (섹션 첫 행에만) */}
-				<td className="w-44 py-2 pr-4 align-top">
+				{/* 섹션명 (섹션 첫 행에만) — 섹션 경계에서만 border-top */}
+				<td className={cn('w-44 py-2.5 pr-4 align-middle', isSectionStart && ruleBorder)}>
 					{sectionLabel && <span className="font-medium text-sm">{sectionLabel}</span>}
 				</td>
-				<td className="w-0 py-2 pr-3 align-top">
+				<td className={cn('w-0 py-2.5 pr-3 align-middle', ruleBorder)}>
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<span className="inline-flex text-muted-foreground">
@@ -90,7 +92,7 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 						</TooltipContent>
 					</Tooltip>
 				</td>
-				<td className="py-2 pr-3 align-top text-sm">
+				<td className={cn('py-2.5 pr-3 align-middle text-sm', ruleBorder)}>
 					<span className="inline-flex flex-wrap items-baseline gap-x-2 gap-y-1">
 						{rule.titleKo}
 						<code className="inline-block whitespace-nowrap rounded bg-neutral-500/10 px-2 py-0.5 font-mono text-muted-foreground text-xs">
@@ -104,7 +106,7 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 					</span>
 				</td>
 				{/* 상태: PASS / FAIL / 미개발 / 검수 중 / 검수 전(빈칸) */}
-				<td className="w-0 py-2 pr-3 align-top">
+				<td className={cn('w-0 py-2.5 pr-3 align-middle', ruleBorder)}>
 					{!implemented ? (
 						<span className="inline-block whitespace-nowrap rounded bg-neutral-500/10 px-1.5 py-0.5 text-[11px] text-muted-foreground">
 							개발 중
@@ -123,7 +125,7 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 						</span>
 					) : null}
 				</td>
-				<td className="w-0 py-2 text-right align-top">
+				<td className={cn('w-0 py-2.5 text-right align-middle', ruleBorder)}>
 					{hasDetail && (
 						<button
 							type="button"
@@ -136,7 +138,7 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 				</td>
 			</tr>
 			{open && hasDetail && (
-				<tr className="border-neutral-200 border-b bg-neutral-500/[0.03] dark:border-neutral-800">
+				<tr className="bg-neutral-500/[0.03]">
 					<td />
 					<td />
 					<td colSpan={3} className="py-3 pr-3">
@@ -251,18 +253,21 @@ export function ReviewSections({ chapters }: { chapters: ReviewContentChapter[] 
 						onToggleFailOnly={() => setShowFailOnly((value) => !value)}
 					/>
 				)}
-				<table className="w-full border-collapse">
-					<tbody>
-						{rows.map((row) => (
-							<RuleRow
-								key={`${row.sectionSlug}-${row.rule.key}`}
-								rule={row.rule}
-								sectionLabel={row.sectionLabel}
-								anchorId={row.anchorId}
-							/>
-						))}
-					</tbody>
-				</table>
+				{/* 맨 아래 전체폭 divider (맨 위는 첫 섹션 행의 border-top이 담당) */}
+				<div className="border-neutral-200 border-b dark:border-neutral-800">
+					<table className="w-full border-collapse">
+						<tbody>
+							{rows.map((row) => (
+								<RuleRow
+									key={`${row.sectionSlug}-${row.rule.key}`}
+									rule={row.rule}
+									sectionLabel={row.sectionLabel}
+									anchorId={row.anchorId}
+								/>
+							))}
+						</tbody>
+					</table>
+				</div>
 				{showFailOnly && rows.length === 0 && (
 					<p className="py-8 text-center text-muted-foreground text-sm">
 						미통과 항목이 없습니다.
