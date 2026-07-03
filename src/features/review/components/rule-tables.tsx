@@ -1,6 +1,6 @@
 'use client'
 
-import { MagicWand, Ruler, User } from '@carbon/icons-react'
+import { ChevronDown, MagicWand, Ruler, User } from '@carbon/icons-react'
 import { type ComponentType, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { getChecker } from '@/features/review/checkers/registry'
@@ -59,17 +59,31 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 		outcome && outcome.status !== 'pending'
 			? getCommentary(rule.key, outcome.metric, outcome.status)
 			: null
-	const hasDetail = Boolean(rule.evidence || rule.value || outcome?.detail)
+	const hasDetail = Boolean(rule.evidence || outcome?.detail)
 
 	// 섹션 첫 룰이면 섹션명 칸까지 전체폭 구분선(border-top), 아니면 룰 칸만 구분선.
 	const ruleBorder = 'border-neutral-200 border-t dark:border-neutral-800'
 
 	return (
 		<>
+			{/* 행 전체 클릭으로 상세 토글 (섹션 칸 포함 무방). 상세 없는 룰은 클릭 비활성. */}
 			<tr
 				id={anchorId ?? undefined}
+				onClick={hasDetail ? () => setOpen((value) => !value) : undefined}
+				onKeyDown={
+					hasDetail
+						? (event) => {
+								if (event.key === 'Enter' || event.key === ' ') {
+									event.preventDefault()
+									setOpen((value) => !value)
+								}
+							}
+						: undefined
+				}
+				tabIndex={hasDetail ? 0 : undefined}
 				className={cn(
-					'h-12 scroll-mt-72 transition-colors hover:bg-neutral-500/5',
+					'h-12 scroll-mt-72 transition-colors',
+					hasDetail && 'cursor-pointer hover:bg-neutral-500/5 active:bg-neutral-500/10',
 					!implemented && 'opacity-45',
 				)}
 			>
@@ -95,7 +109,7 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 				<td className={cn('py-2.5 pr-3 align-middle text-sm', ruleBorder)}>
 					<span className="inline-flex flex-wrap items-baseline gap-x-2 gap-y-1">
 						{rule.titleKo}
-						<code className="inline-block whitespace-nowrap rounded bg-neutral-500/10 px-2 py-0.5 font-mono text-muted-foreground text-xs">
+						<code className="inline-flex items-center whitespace-nowrap rounded-md bg-secondary px-2 py-0.5 font-mono text-[11px] text-secondary-foreground">
 							{rule.key}
 						</code>
 						{!rule.inCatalog && (
@@ -125,23 +139,23 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 						</span>
 					) : null}
 				</td>
-				<td className={cn('w-0 py-2.5 text-right align-middle', ruleBorder)}>
+				<td className={cn('w-0 py-2.5 pr-1 text-right align-middle', ruleBorder)}>
 					{hasDetail && (
-						<button
-							type="button"
-							onClick={() => setOpen((value) => !value)}
-							className="whitespace-nowrap text-muted-foreground text-xs hover:text-foreground"
-						>
-							{open ? '닫기' : '상세'}
-						</button>
+						<ChevronDown
+							size={16}
+							className={cn(
+								'inline-block text-muted-foreground transition-transform',
+								open && 'rotate-180',
+							)}
+						/>
 					)}
 				</td>
 			</tr>
 			{open && hasDetail && (
-				<tr className="bg-neutral-500/[0.03]">
+				<tr>
 					<td />
 					<td />
-					<td colSpan={3} className="py-3 pr-3">
+					<td colSpan={3} className="pt-1 pb-2 pr-3">
 						{commentary ? (
 							<p className="mb-2 text-foreground text-sm leading-6">{commentary}</p>
 						) : (
@@ -156,15 +170,11 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 								{outcome.detail}
 							</p>
 						)}
+						{/* 가이드라인 원문 근거 — 인용(callout) 스타일. 구체 수치(rule.value)는 렌더하지 않는다. */}
 						{rule.evidence && (
-							<p className="text-muted-foreground text-xs leading-5">
+							<blockquote className="rounded-md bg-white/5 px-3 py-2 text-muted-foreground text-xs leading-5">
 								{rule.evidence}
-							</p>
-						)}
-						{rule.value && (
-							<p className="mt-2 font-mono text-[11px] text-muted-foreground/80 leading-5">
-								{rule.value}
-							</p>
+							</blockquote>
 						)}
 					</td>
 				</tr>
@@ -196,7 +206,7 @@ function withSectionLabels(
 }
 
 export function ReviewSections({ chapters }: { chapters: ReviewContentChapter[] }) {
-	const { hideUnimplemented, selected } = useReviewImages()
+	const { showUnimplemented, selected } = useReviewImages()
 	const [showFailOnly, setShowFailOnly] = useState(false)
 
 	const entries: { rule: Rule; sectionSlug: string; label: string }[] = []
@@ -204,12 +214,12 @@ export function ReviewSections({ chapters }: { chapters: ReviewContentChapter[] 
 		for (const section of chapter.sections) {
 			const visibleRules = section.pages
 				.flatMap((page) => page.rules)
-				.filter((rule) => getChecker(rule.key) !== null || !hideUnimplemented)
+				.filter((rule) => getChecker(rule.key) !== null || showUnimplemented)
 			for (const rule of visibleRules) {
 				entries.push({
 					rule,
 					sectionSlug: section.slug,
-					label: `${chapter.code}. ${section.name}`,
+					label: section.name,
 				})
 			}
 		}
@@ -258,8 +268,9 @@ export function ReviewSections({ chapters }: { chapters: ReviewContentChapter[] 
 					<table className="w-full border-collapse">
 						<tbody>
 							{rows.map((row) => (
+								// 같은 섹션에 rule.key가 겹치는 별개 룰이 있어(예: messaging.statement 3개) title까지 넣어 유니크하게.
 								<RuleRow
-									key={`${row.sectionSlug}-${row.rule.key}`}
+									key={`${row.sectionSlug}-${row.rule.key}-${row.rule.title}`}
 									rule={row.rule}
 									sectionLabel={row.sectionLabel}
 									anchorId={row.anchorId}
