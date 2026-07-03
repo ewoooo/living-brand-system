@@ -1,4 +1,4 @@
-import type { ApplicationImage, GuidelinePage, Rule, Section } from '@/payload-types'
+import type { ApplicationImage, BrandColor, GuidelinePage, Rule, Section } from '@/payload-types'
 import {
 	type AgentGuidelineDocument,
 	type AgentGuidelineSearchResult,
@@ -190,6 +190,19 @@ type GuidelineDocumentRelatedPage = {
 function formatBlock(block: NonNullable<GuidelinePage['blocks']>[number]): string {
 	if (block.blockType === 'mediaShowcase') {
 		return compact(['Media showcase', formatImage(block.image)]).join('\n')
+	}
+
+	if (block.blockType === 'colorPalette') {
+		const colors = block.colors.filter(
+			(color): color is BrandColor => typeof color === 'object' && color !== null,
+		)
+		return compact([
+			block.title ?? 'Color palette',
+			...colors.map(
+				(color) =>
+					`- ${color.name}: HEX ${color.hex}${color.pantone ? `, PMS ${color.pantone}` : ''}`,
+			),
+		]).join('\n')
 	}
 
 	return compact([
