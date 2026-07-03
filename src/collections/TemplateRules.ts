@@ -1,14 +1,9 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, managerOrAdmin } from '@/lib/auth'
+import { managerManagedAccess } from '@/lib/auth'
 
 export const TemplateRules: CollectionConfig = {
 	slug: 'template-rules',
-	access: {
-		read: authenticated,
-		create: managerOrAdmin,
-		update: managerOrAdmin,
-		delete: managerOrAdmin,
-	},
+	access: managerManagedAccess,
 	labels: {
 		singular: 'Template Rule',
 		plural: 'Template Rules',

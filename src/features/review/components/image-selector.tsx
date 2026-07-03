@@ -27,7 +27,7 @@ export function ImageSelector() {
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	return (
-		<div className="sticky top-14 z-10 bg-background/95 px-8 pt-6 pb-4 backdrop-blur">
+		<div className="sticky top-0 z-10 bg-background/95 px-8 pt-6 pb-4 backdrop-blur">
 			<div className="rounded-lg border bg-card p-5 shadow-sm">
 				{/* 업로드 + 검수 대상 썸네일 스트립 + 미구현 토글 */}
 				<div className="flex items-start justify-between gap-4">

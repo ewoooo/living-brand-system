@@ -19,6 +19,11 @@ export const stationaryFormatChecker: RuleChecker = {
 			status: diff <= TOLERANCE ? 'pass' : 'fail',
 			fulfillment: Math.round(Math.max(0, 1 - diff) * 1000) / 10,
 			detail: `비율 ${aspect.toFixed(2)} (명함 목표 ${TARGET_RATIO.toFixed(1)} ±${TOLERANCE * 100}%)`,
+			metric: {
+				label: '가로세로 비율',
+				expected: `${TARGET_RATIO.toFixed(1)} (±${TOLERANCE * 100}%)`,
+				actual: aspect.toFixed(2),
+			},
 		}
 	},
 }

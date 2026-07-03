@@ -44,14 +44,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 					}}
 				/>
 			</head>
-			<body className="bg-white text-black dark:bg-black dark:text-white">
+			<body className="h-svh overflow-hidden bg-white text-black dark:bg-black dark:text-white">
 				<SidebarProvider
-					className="min-h-svh"
+					className="h-svh"
 					style={{ '--sidebar-width': '25rem' } as React.CSSProperties}
 				>
-					<main className="grid min-h-svh min-w-0 flex-1 grid-rows-[auto_1fr]">
+					<main className="grid min-h-0 min-w-0 flex-1 grid-rows-[auto_1fr]">
 						<GlobalHeader guidelineSections={guidelineNavigation.sections} />
-						<div className="min-w-0">{children}</div>
+						{/* 남은 높이를 채우고 내부에서만 스크롤한다 (문서 전체 스크롤 아님). */}
+						<div className="min-h-0 min-w-0 overflow-hidden">{children}</div>
 					</main>
 					<GlobalAgentChat />
 				</SidebarProvider>

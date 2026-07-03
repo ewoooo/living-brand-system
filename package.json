@@ -1,7 +1,7 @@
 {
-	"name": "hd-cms-prototype",
+	"name": "living-brand-system",
 	"version": "1.0.0",
-	"description": "A blank template to get started with Payload 3.0",
+	"description": "Living Brand System (LBS) - digital brand guideline operations system",
 	"license": "MIT",
 	"type": "module",
 	"scripts": {
@@ -21,6 +21,7 @@
 		"migrate:status": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:status",
 		"payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
 		"seed:agent-skills": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed-agent-skills.ts",
+		"seed:brand-colors": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed-brand-colors.ts",
 		"seed:guideline-pages": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed-guideline-pages.ts",
 		"seed:rules": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed-rules.ts",
 		"start": "cross-env NODE_OPTIONS=--no-deprecation next start",
@@ -46,7 +47,6 @@
 		"@payloadcms/ui": "3.85.1",
 		"@shadcn/react": "0.1.0",
 		"@tailwindcss/postcss": "^4.3.1",
-		"@tailwindcss/typography": "^0.5.20",
 		"ai": "^7.0.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
@@ -71,7 +71,6 @@
 	"devDependencies": {
 		"@biomejs/biome": "2.5.0",
 		"@playwright/test": "1.61.1",
-		"@testing-library/react": "16.3.2",
 		"@types/node": "22.19.9",
 		"@types/react": "19.2.17",
 		"@types/react-dom": "19.2.3",

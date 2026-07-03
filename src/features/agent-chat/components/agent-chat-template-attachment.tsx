@@ -12,7 +12,7 @@ import {
 	AttachmentMedia,
 	AttachmentTitle,
 } from '@/components/ui/attachment'
-import { useTemplatePngExport } from '@/components/use-template-png-export'
+import { useTemplatePngExport } from '@/hooks/use-template-png-export'
 import type { AgentTemplateImageAttachment } from '../services/get-agent-tools.service'
 
 const PREVIEW_WIDTH = 280

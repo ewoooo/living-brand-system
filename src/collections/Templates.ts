@@ -3,18 +3,13 @@ import {
 	type AuthorizedImageRef,
 	validateTemplateImages,
 } from '@/features/template-import/utils/validate-authorized-assets'
-import { authenticated, managerOrAdmin } from '@/lib/auth'
+import { managerManagedAccess } from '@/lib/auth'
 import { AUTHORIZED_ASSET_COLLECTIONS } from '@/types/json-template'
+import { draftVersions } from './shared'
 
 export const Templates: CollectionConfig = {
 	slug: 'templates',
-	access: {
-		// 누구나 읽되(인증), 자원 변경은 manager/admin만 (Worker는 사용만)
-		read: authenticated,
-		create: managerOrAdmin,
-		update: managerOrAdmin,
-		delete: managerOrAdmin,
-	},
+	access: managerManagedAccess,
 	hooks: {
 		// 보안/브랜드 통제: 이미지·벡터는 인가된 내부 에셋만 허용한다.
 		// 임포트 조각(template-assets)이 남아 있으면 draft를 포함해 어떤 저장도 거부한다 (docs/07).
@@ -62,12 +57,7 @@ export const Templates: CollectionConfig = {
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'updatedAt'],
 	},
-	versions: {
-		drafts: {
-			schedulePublish: true,
-		},
-		maxPerDoc: 50,
-	},
+	versions: draftVersions,
 	fields: [
 		{
 			name: 'name',

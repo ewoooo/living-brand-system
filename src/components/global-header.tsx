@@ -18,16 +18,14 @@ import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
 import { Kbd, KbdGroup } from './ui/kbd'
 
-const NAVIGATION_ITEMS = [
+const LINKS = [
 	{ href: '/', label: 'Main' },
 	{ href: '/guideline', label: 'Guideline' },
 	{ href: '/review', label: 'Review' },
 	{ href: '/create', label: 'Create' },
-	{ href: '/login', label: 'Admin Login (Temp)' },
 ] as const
 
-const LINKS = NAVIGATION_ITEMS.slice(0, -1)
-const LOGIN = NAVIGATION_ITEMS.at(-1)
+const LOGIN = { href: '/login', label: 'Admin Login (Temp)' } as const
 
 type GuidelineSearchSection = GetGuidelineNavigationOutput['sections'][number]
 
@@ -141,7 +139,7 @@ export function GlobalHeader({
 	guidelineSections: GuidelineSearchSection[]
 }) {
 	return (
-		<header className="sticky top-0 z-10 flex bg-white dark:bg-black">
+		<header className="z-10 flex shrink-0 bg-white dark:bg-black">
 			<HeaderHead className="flex-1" />
 			<section className="ml-auto p-4 flex gap-2 items-center">
 				{LOGIN && (

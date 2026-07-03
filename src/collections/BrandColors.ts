@@ -1,15 +1,10 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, managerOrAdmin } from '@/lib/auth'
+import { managerManagedAccess } from '@/lib/auth'
+import { draftVersions } from './shared'
 
 export const BrandColors: CollectionConfig = {
 	slug: 'brand-colors',
-	access: {
-		// 누구나 읽되(인증), 자원 변경은 manager/admin만 (Worker는 사용만)
-		read: authenticated,
-		create: managerOrAdmin,
-		update: managerOrAdmin,
-		delete: managerOrAdmin,
-	},
+	access: managerManagedAccess,
 	labels: {
 		singular: 'Color',
 		plural: 'Colors',
@@ -17,14 +12,9 @@ export const BrandColors: CollectionConfig = {
 	admin: {
 		group: 'Brand Resources',
 		useAsTitle: 'name',
-		defaultColumns: ['name', 'hex', 'updatedAt'],
+		defaultColumns: ['name', 'hex', 'colorGroup', 'tone', 'updatedAt'],
 	},
-	versions: {
-		drafts: {
-			schedulePublish: true,
-		},
-		maxPerDoc: 50,
-	},
+	versions: draftVersions,
 	fields: [
 		{
 			name: 'name',
@@ -36,6 +26,44 @@ export const BrandColors: CollectionConfig = {
 			name: 'hex',
 			type: 'text',
 			required: true,
+			admin: {
+				components: {
+					Cell: '/components/admin/ColorSwatchCell',
+				},
+			},
+		},
+		{
+			name: 'pantone',
+			type: 'text',
+			admin: {
+				description: 'PMS 표기입니다. 예: 705C, Warm Red C',
+			},
+		},
+		{
+			name: 'colorGroup',
+			type: 'select',
+			options: ['red', 'yellow', 'green', 'blue', 'purple', 'gray', 'neutral'],
+			admin: {
+				description: '팔레트 색상군입니다. White/Black은 neutral을 사용합니다.',
+			},
+		},
+		{
+			name: 'tone',
+			type: 'number',
+			min: 1,
+			max: 5,
+			admin: {
+				description:
+					'Light(1)~Dark(5) 명도 단계입니다. 톤 스펙트럼이 없는 컬러는 비워둡니다.',
+			},
+		},
+		{
+			name: 'isMain',
+			type: 'checkbox',
+			defaultValue: false,
+			admin: {
+				description: 'Main Color 팔레트에 포함되는 컬러인지 여부입니다.',
+			},
 		},
 	],
 }

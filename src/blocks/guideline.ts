@@ -59,4 +59,22 @@ export const MediaShowcaseBlock: Block = {
 	],
 }
 
-export const guidelineBlocks = [ColumnUnitBlock, MediaShowcaseBlock]
+export const ColorPaletteBlock: Block = {
+	slug: 'colorPalette',
+	interfaceName: 'ColorPaletteBlock',
+	fields: [
+		{ name: 'title', type: 'text', localized: true },
+		{
+			name: 'colors',
+			type: 'relationship',
+			relationTo: 'brand-colors',
+			hasMany: true,
+			required: true,
+			admin: {
+				description: '선택한 순서대로 스와치 카드가 표시됩니다.',
+			},
+		},
+	],
+}
+
+export const guidelineBlocks = [ColumnUnitBlock, MediaShowcaseBlock, ColorPaletteBlock]

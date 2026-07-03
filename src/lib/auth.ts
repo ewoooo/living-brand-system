@@ -1,4 +1,4 @@
-import type { Access, FieldAccess } from 'payload'
+import type { Access, CollectionConfig, FieldAccess } from 'payload'
 
 /**
  * 역할 기반 접근 제어 헬퍼.
@@ -18,20 +18,26 @@ const roleOf = (user: unknown): Role | null => {
 
 const isAdmin = (user: unknown): boolean => roleOf(user) === 'admin'
 
-const isManager = (user: unknown): boolean => {
+/** 컬렉션 access 밖(커스텀 라우트 핸들러)에서도 쓰는 사용자 단위 역할 검사. */
+export const isManager = (user: unknown): boolean => {
 	const r = roleOf(user)
 	return r === 'admin' || r === 'manager'
 }
 
 const isAuthenticated = (user: unknown): boolean => Boolean(user)
 
-/** 컬렉션 access 밖(커스텀 라우트 핸들러)에서 쓰는 사용자 단위 역할 검사. */
-export const hasManagerRole = (user: unknown): boolean => isManager(user)
-
 // --- 컬렉션 access ---
 export const authenticated: Access = ({ req }) => isAuthenticated(req.user)
 export const managerOrAdmin: Access = ({ req }) => isManager(req.user)
 export const adminOnly: Access = ({ req }) => isAdmin(req.user)
+
+/** 공용 access 프리셋 — 누구나 읽되(인증), 변경은 manager/admin만 (Worker는 사용만). */
+export const managerManagedAccess: CollectionConfig['access'] = {
+	read: authenticated,
+	create: managerOrAdmin,
+	update: managerOrAdmin,
+	delete: managerOrAdmin,
+}
 
 /** 본인 문서이거나 admin일 때 허용 (Users 읽기/수정용) */
 export const selfOrAdmin: Access = ({ req, id }) => {
