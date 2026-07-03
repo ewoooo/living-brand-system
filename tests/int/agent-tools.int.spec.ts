@@ -7,6 +7,7 @@ import { validateAgentChatMessages } from '@/features/agent-chat/services/create
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { extractTextFromLexical } from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { getAgentTools } from '@/features/agent-chat/services/get-agent-tools.service'
+import { getAgentCitations } from '@/features/agent-chat/utils/get-agent-citations'
 import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-text'
 
 const textElement = (
@@ -433,5 +434,46 @@ describe('agent tools', () => {
 		} as AgentChatMessage)
 
 		expect(text).toBe('안녕하세요. 브랜드 가이드입니다.')
+	})
+
+	it('collects citations from read guideline documents without duplicates', () => {
+		const readPart = (id: string, title: string, href: string | null) => ({
+			type: 'tool-readGuidelineDocument',
+			toolCallId: `tool-call-${id}-${title}`,
+			state: 'output-available',
+			input: { collection: 'guideline-pages', id },
+			output: {
+				title,
+				collection: 'guideline-pages',
+				id,
+				source: { collection: 'guideline-pages', id, title, href },
+				rules: [],
+				content: title,
+			},
+		})
+
+		const citations = getAgentCitations({
+			role: 'assistant',
+			parts: [
+				readPart('1', '로고 사용 규정', '/guideline/logo#usage'),
+				readPart('1', '로고 사용 규정', '/guideline/logo#usage'),
+				readPart('2', '크기 기준', null),
+				{
+					type: 'tool-readGuidelineDocument',
+					toolCallId: 'tool-call-pending',
+					state: 'input-available',
+					input: { collection: 'sections', id: '9' },
+				},
+			],
+		} as AgentChatMessage)
+
+		expect(citations).toEqual([
+			{
+				key: 'guideline-pages:1',
+				title: '로고 사용 규정',
+				href: '/guideline/logo#usage',
+			},
+			{ key: 'guideline-pages:2', title: '크기 기준', href: null },
+		])
 	})
 })
