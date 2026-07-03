@@ -4,7 +4,7 @@ import { postgresAdapter } from '@payloadcms/db-postgres'
 import { resendAdapter } from '@payloadcms/email-resend'
 import { type MCPAccessSettings, mcpPlugin } from '@payloadcms/plugin-mcp'
 import { searchPlugin } from '@payloadcms/plugin-search'
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { EXPERIMENTAL_TableFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { ko } from '@payloadcms/translations/languages/ko'
 import { buildConfig, type CollectionConfig, type PayloadRequest } from 'payload'
@@ -99,7 +99,10 @@ export default buildConfig({
 		GuidelineSections,
 		GuidelinePages,
 	],
-	editor: lexicalEditor(),
+	editor: lexicalEditor({
+		// 가이드라인 수치 규정 표(최소 사이즈, 자간 등) 입력용. EXPERIMENTAL: 업그레이드 시 변경 가능성 있음.
+		features: ({ defaultFeatures }) => [...defaultFeatures, EXPERIMENTAL_TableFeature()],
+	}),
 	email: resendAPIKey
 		? resendAdapter({
 				apiKey: resendAPIKey,

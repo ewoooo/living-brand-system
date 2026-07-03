@@ -299,6 +299,22 @@ export interface BrandColor {
   id: number;
   name: string;
   hex: string;
+  /**
+   * PMS 표기입니다. 예: 705C, Warm Red C
+   */
+  pantone?: string | null;
+  /**
+   * 팔레트 색상군입니다. White/Black은 neutral을 사용합니다.
+   */
+  colorGroup?: ('red' | 'yellow' | 'green' | 'blue' | 'purple' | 'gray' | 'neutral') | null;
+  /**
+   * Light(1)~Dark(5) 명도 단계입니다. 톤 스펙트럼이 없는 컬러는 비워둡니다.
+   */
+  tone?: number | null;
+  /**
+   * Main Color 팔레트에 포함되는 컬러인지 여부입니다.
+   */
+  isMain?: boolean | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1056,6 +1072,10 @@ export interface BrandLogosSelect<T extends boolean = true> {
 export interface BrandColorsSelect<T extends boolean = true> {
   name?: T;
   hex?: T;
+  pantone?: T;
+  colorGroup?: T;
+  tone?: T;
+  isMain?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
