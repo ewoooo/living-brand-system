@@ -1,4 +1,4 @@
-# hd-cms-prototype
+# Living Design System (LDS)
 
 디지털 브랜드 가이드라인 운영 시스템 프로토타입입니다.
 

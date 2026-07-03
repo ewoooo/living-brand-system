@@ -1,7 +1,7 @@
 {
-	"name": "hd-cms-prototype",
+	"name": "living-design-system",
 	"version": "1.0.0",
-	"description": "A blank template to get started with Payload 3.0",
+	"description": "Living Design System (LDS) - digital brand guideline operations system",
 	"license": "MIT",
 	"type": "module",
 	"scripts": {
