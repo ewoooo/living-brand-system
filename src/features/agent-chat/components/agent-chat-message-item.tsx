@@ -1,4 +1,5 @@
 import { Ai, Catalog, Search } from '@carbon/icons-react'
+import Link from 'next/link'
 import { Spinner } from '@/components/ui/spinner'
 import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import {
@@ -7,6 +8,7 @@ import {
 	getAgentToolMarker,
 } from '@/features/agent-chat/utils/get-agent-tool-marker'
 import type { AgentTemplateImageAttachment } from '../services/get-agent-tools.service'
+import { getAgentCitations } from '../utils/get-agent-citations'
 import { getAgentMessageText } from '../utils/get-agent-message-text'
 import { AgentChatAgentBubble, AgentChatUserBubble } from './agent-chat-bubbles'
 import { AgentChatTemplateAttachment } from './agent-chat-template-attachment'
@@ -23,6 +25,7 @@ export function AgentChatMessageItem({
 	const reasoningMarker = isUser ? null : getAgentReasoningMarker(message, isActive)
 	const skillMarker = isUser ? null : getAgentSkillMarker(message)
 	const marker = isUser ? null : getAgentToolMarker(message)
+	const citations = isUser ? [] : getAgentCitations(message)
 	const messageText = getAgentMessageText(message)
 	const files = message.parts.filter((part) => part.type === 'file')
 	const templateAttachments = isUser
@@ -69,6 +72,24 @@ export function AgentChatMessageItem({
 						/>
 					))}
 					<AgentChatAgentBubble text={messageText} isStreaming={isActive} />
+					{citations.length > 0 && (
+						<div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-neutral-500 text-xs">
+							<span>출처</span>
+							{citations.map((citation) =>
+								citation.href ? (
+									<Link
+										key={citation.key}
+										href={citation.href}
+										className="underline underline-offset-2 hover:text-neutral-700"
+									>
+										{citation.title}
+									</Link>
+								) : (
+									<span key={citation.key}>{citation.title}</span>
+								),
+							)}
+						</div>
+					)}
 				</>
 			)}
 		</div>
