@@ -67,6 +67,17 @@ function patchElementById<T extends AnyElement>(
 	})
 }
 
+/** SelectInput onChange 공통 가드 — 허용값일 때만 apply를 호출한다. */
+function selectOneOf<T extends string>(allowed: readonly T[], apply: (value: T) => void) {
+	return (option: unknown) => {
+		const value = (option as { value?: string } | null)?.value
+
+		if (value && (allowed as readonly string[]).includes(value)) {
+			apply(value as T)
+		}
+	}
+}
+
 /** 스택 하위까지 포함한 비인가 이미지 수 — 경고 배너와 오버레이 표시가 함께 쓴다. */
 function countUnauthorizedImages(elements: readonly AnyElement[]): number {
 	return elements.reduce((total, element) => {
@@ -332,17 +343,10 @@ export default function TemplatePreviewField() {
 										{ label: '자동 폭 (줄바꿈 없음)', value: 'auto-width' },
 										{ label: '말줄임 (상자를 넘치면 …)', value: 'truncate' },
 									]}
-									onChange={(option) => {
-										const value = (option as { value?: string } | null)?.value
-
-										if (
-											value === 'fixed' ||
-											value === 'auto-width' ||
-											value === 'truncate'
-										) {
-											updateSelected({ textFit: value })
-										}
-									}}
+									onChange={selectOneOf(
+										['fixed', 'auto-width', 'truncate'],
+										(textFit) => updateSelected({ textFit }),
+									)}
 								/>
 								<SelectInput
 									name="templatePreviewVerticalAlign"
@@ -355,17 +359,10 @@ export default function TemplatePreviewField() {
 										{ label: '중앙 (양쪽으로 쌓임)', value: 'middle' },
 										{ label: '아래 (위로 쌓임)', value: 'bottom' },
 									]}
-									onChange={(option) => {
-										const value = (option as { value?: string } | null)?.value
-
-										if (
-											value === 'top' ||
-											value === 'middle' ||
-											value === 'bottom'
-										) {
-											updateSelected({ verticalAlign: value })
-										}
-									}}
+									onChange={selectOneOf(
+										['top', 'middle', 'bottom'],
+										(verticalAlign) => updateSelected({ verticalAlign }),
+									)}
 								/>
 								<SelectInput
 									name="templatePreviewInputFormat"
@@ -379,18 +376,10 @@ export default function TemplatePreviewField() {
 										{ label: '이메일', value: 'email' },
 										{ label: '날짜', value: 'date' },
 									]}
-									onChange={(option) => {
-										const value = (option as { value?: string } | null)?.value
-
-										if (
-											value === 'free' ||
-											value === 'number' ||
-											value === 'email' ||
-											value === 'date'
-										) {
-											updateSelected({ inputFormat: value })
-										}
-									}}
+									onChange={selectOneOf(
+										['free', 'number', 'email', 'date'],
+										(inputFormat) => updateSelected({ inputFormat }),
+									)}
 								/>
 								<div style={{ display: 'flex', gap: 8 }}>
 									{(['maxLength', 'maxLines'] as const).map((constraint) => (
@@ -467,17 +456,10 @@ export default function TemplatePreviewField() {
 										{ label: '전체 보기 (잘림 없이 여백)', value: 'contain' },
 										{ label: '늘리기 (비율 무시)', value: 'fill' },
 									]}
-									onChange={(option) => {
-										const value = (option as { value?: string } | null)?.value
-
-										if (
-											value === 'cover' ||
-											value === 'contain' ||
-											value === 'fill'
-										) {
-											updateSelected({ objectFit: value })
-										}
-									}}
+									onChange={selectOneOf(
+										['cover', 'contain', 'fill'],
+										(objectFit) => updateSelected({ objectFit }),
+									)}
 								/>
 								<ColorInput
 									id="template-preview-image-color"
