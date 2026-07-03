@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { draftVersions } from './shared'
 
 export const BrandLogos: CollectionConfig = {
 	slug: 'brand-logos',
@@ -14,12 +15,7 @@ export const BrandLogos: CollectionConfig = {
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'alt', 'updatedAt'],
 	},
-	versions: {
-		drafts: {
-			schedulePublish: true,
-		},
-		maxPerDoc: 50,
-	},
+	versions: draftVersions,
 	fields: [
 		{
 			name: 'name',

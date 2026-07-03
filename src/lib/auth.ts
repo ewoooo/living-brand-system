@@ -1,4 +1,4 @@
-import type { Access, FieldAccess } from 'payload'
+import type { Access, CollectionConfig, FieldAccess } from 'payload'
 
 /**
  * 역할 기반 접근 제어 헬퍼.
@@ -32,6 +32,14 @@ export const hasManagerRole = (user: unknown): boolean => isManager(user)
 export const authenticated: Access = ({ req }) => isAuthenticated(req.user)
 export const managerOrAdmin: Access = ({ req }) => isManager(req.user)
 export const adminOnly: Access = ({ req }) => isAdmin(req.user)
+
+/** 공용 access 프리셋 — 누구나 읽되(인증), 변경은 manager/admin만 (Worker는 사용만). */
+export const managerManagedAccess: CollectionConfig['access'] = {
+	read: authenticated,
+	create: managerOrAdmin,
+	update: managerOrAdmin,
+	delete: managerOrAdmin,
+}
 
 /** 본인 문서이거나 admin일 때 허용 (Users 읽기/수정용) */
 export const selfOrAdmin: Access = ({ req, id }) => {

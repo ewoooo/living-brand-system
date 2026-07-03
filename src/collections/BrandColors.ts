@@ -1,15 +1,10 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, managerOrAdmin } from '@/lib/auth'
+import { managerManagedAccess } from '@/lib/auth'
+import { draftVersions } from './shared'
 
 export const BrandColors: CollectionConfig = {
 	slug: 'brand-colors',
-	access: {
-		// 누구나 읽되(인증), 자원 변경은 manager/admin만 (Worker는 사용만)
-		read: authenticated,
-		create: managerOrAdmin,
-		update: managerOrAdmin,
-		delete: managerOrAdmin,
-	},
+	access: managerManagedAccess,
 	labels: {
 		singular: 'Color',
 		plural: 'Colors',
@@ -19,12 +14,7 @@ export const BrandColors: CollectionConfig = {
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'hex', 'updatedAt'],
 	},
-	versions: {
-		drafts: {
-			schedulePublish: true,
-		},
-		maxPerDoc: 50,
-	},
+	versions: draftVersions,
 	fields: [
 		{
 			name: 'name',
