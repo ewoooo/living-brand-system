@@ -1,6 +1,3 @@
-import config from '@payload-config'
-import { headers as getHeaders } from 'next/headers'
-import { getPayload } from 'payload'
 import { z } from 'zod'
 
 import {
@@ -8,6 +5,7 @@ import {
 	validateAgentChatMessages,
 } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import { AgentConfigurationError } from '@/lib/errors'
+import { authenticateRequest } from '@/lib/request-auth'
 
 export const maxDuration = 30
 
@@ -32,8 +30,7 @@ export async function parseAgentChatRequest(req: Request) {
 }
 
 export async function POST(req: Request) {
-	const payload = await getPayload({ config })
-	const { user } = await payload.auth({ headers: await getHeaders() })
+	const { payload, user } = await authenticateRequest()
 
 	// Agent 질의도 내부 사용자 요청만 허용한다.
 	if (!user) {

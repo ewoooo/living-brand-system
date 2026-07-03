@@ -1,11 +1,10 @@
-import config from '@payload-config'
-import { headers as getHeaders } from 'next/headers'
-import { Forbidden, getPayload } from 'payload'
+import { Forbidden } from 'payload'
 import { convertFigmaFrame } from '@/features/template-import/services/convert-figma-frame.service'
 import { parseConvertFigmaRequest } from '@/features/template-import/utils/parse-convert-figma-request'
 import { parseFigmaUrl } from '@/features/template-import/utils/parse-figma-url'
 import { isManager } from '@/lib/auth'
 import { FigmaConfigurationError } from '@/lib/errors'
+import { authenticateRequest } from '@/lib/request-auth'
 
 // 이미지 조각 다운로드·업로드가 이어지므로 기본 시간보다 길게 잡는다.
 export const maxDuration = 60
@@ -23,8 +22,7 @@ export async function POST(req: Request) {
 		return Response.json({ message: 'Invalid origin.' }, { status: 403 })
 	}
 
-	const payload = await getPayload({ config })
-	const { user } = await payload.auth({ headers: await getHeaders() })
+	const { payload, user } = await authenticateRequest()
 
 	if (!user) {
 		return Response.json({ message: 'Unauthorized' }, { status: 401 })
