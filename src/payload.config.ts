@@ -19,6 +19,7 @@ import { BrandTypefaces } from './collections/BrandTypefaces'
 import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
+import { RuleBindings } from './collections/RuleBindings'
 import { Rules } from './collections/Rules'
 import { TemplateAssets } from './collections/TemplateAssets'
 import { TemplateCategories } from './collections/TemplateCategories'
@@ -79,6 +80,7 @@ export default buildConfig({
 		AgentSkills,
 		GuidelineSections,
 		GuidelinePages,
+		RuleBindings,
 	],
 	editor: lexicalEditor(),
 	email: resendAPIKey

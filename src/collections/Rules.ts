@@ -35,6 +35,11 @@ export const Rules: CollectionConfig = {
 		},
 		{ name: 'title', type: 'text', required: true },
 		{
+			name: 'titleKo',
+			type: 'text',
+			admin: { description: '룰의 한글 표기 (브랜드 무관, key당 1:1). 예: 로고 최소 크기' },
+		},
+		{
 			name: 'category',
 			type: 'select',
 			required: true,
