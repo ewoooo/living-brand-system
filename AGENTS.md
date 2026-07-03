@@ -61,7 +61,7 @@ Strong success criteria let agents work independently. Weak criteria like "make 
 
 ## Project Context
 
-This product, Living Design System (LDS), turns brand guidelines into structured operational standards.
+This product, Living Brand System (LBS), turns brand guidelines into structured operational standards.
 It manages guideline content, rules, brand resources, templates, plugins, work records, quality sessions, and usage event logs so brand standards can be used during production work and checked against outputs.
 
 Keep implementation aligned with the docs instead of duplicating domain rules here. Before changing a flow, model, record, permission, or user-facing behavior, read the relevant doc and preserve the documented ownership boundaries.

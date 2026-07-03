@@ -214,7 +214,7 @@ describe('convertFigmaNodeTree', () => {
 })
 
 describe('convertFigmaNodeTree (stack 승격)', () => {
-	/** Living Design System 예시(node 110-54) 축약: 루트 세로 스택 > 가로 space-between 행 > 로고+텍스트. */
+	/** Living Brand System 예시(node 110-54) 축약: 루트 세로 스택 > 가로 space-between 행 > 로고+텍스트. */
 	function buildAutoLayoutFixture(): FigmaNode {
 		return {
 			id: '2:1',
