@@ -305,6 +305,22 @@ export interface BrandColor {
   id: number;
   name: string;
   hex: string;
+  /**
+   * PMS 표기입니다. 예: 705C, Warm Red C
+   */
+  pantone?: string | null;
+  /**
+   * 팔레트 색상군입니다. White/Black은 neutral을 사용합니다.
+   */
+  colorGroup?: ('red' | 'yellow' | 'green' | 'blue' | 'purple' | 'gray' | 'neutral') | null;
+  /**
+   * Light(1)~Dark(5) 명도 단계입니다. 톤 스펙트럼이 없는 컬러는 비워둡니다.
+   */
+  tone?: number | null;
+  /**
+   * Main Color 팔레트에 포함되는 컬러인지 여부입니다.
+   */
+  isMain?: boolean | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -621,7 +637,7 @@ export interface GuidelinePage {
    * 숫자가 낮을수록 선택한 섹션 안에서 먼저 표시됩니다.
    */
   displayOrder: number;
-  blocks?: (ColumnUnitBlock | MediaShowcaseBlock)[] | null;
+  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock)[] | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -677,6 +693,20 @@ export interface MediaShowcaseBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaShowcase';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPaletteBlock".
+ */
+export interface ColorPaletteBlock {
+  title?: string | null;
+  /**
+   * 선택한 순서대로 스와치 카드가 표시됩니다.
+   */
+  colors: (number | BrandColor)[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPalette';
 }
 /**
  * 가이드라인 페이지의 룰 배치에 할당된 브랜드 구체 값(value)과 근거(evidence)입니다.
@@ -1094,6 +1124,10 @@ export interface BrandLogosSelect<T extends boolean = true> {
 export interface BrandColorsSelect<T extends boolean = true> {
   name?: T;
   hex?: T;
+  pantone?: T;
+  colorGroup?: T;
+  tone?: T;
+  isMain?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1265,6 +1299,7 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
     | {
         columnUnit?: T | ColumnUnitBlockSelect<T>;
         mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
+        colorPalette?: T | ColorPaletteBlockSelect<T>;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -1297,6 +1332,16 @@ export interface MediaShowcaseBlockSelect<T extends boolean = true> {
   image?: T;
   imageBackgroundColor?: T;
   imageScale?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPaletteBlock_select".
+ */
+export interface ColorPaletteBlockSelect<T extends boolean = true> {
+  title?: T;
+  colors?: T;
   id?: T;
   blockName?: T;
 }

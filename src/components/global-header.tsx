@@ -18,16 +18,14 @@ import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
 import { Kbd, KbdGroup } from './ui/kbd'
 
-const NAVIGATION_ITEMS = [
+const LINKS = [
 	{ href: '/', label: 'Main' },
 	{ href: '/guideline', label: 'Guideline' },
 	{ href: '/review', label: 'Review' },
 	{ href: '/create', label: 'Create' },
-	{ href: '/login', label: 'Admin Login (Temp)' },
 ] as const
 
-const LINKS = NAVIGATION_ITEMS.slice(0, -1)
-const LOGIN = NAVIGATION_ITEMS.at(-1)
+const LOGIN = { href: '/login', label: 'Admin Login (Temp)' } as const
 
 type GuidelineSearchSection = GetGuidelineNavigationOutput['sections'][number]
 

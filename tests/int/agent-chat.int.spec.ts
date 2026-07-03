@@ -222,4 +222,25 @@ describe('agent chat errors', () => {
 			text: '가이드라인 검색을 완료했습니다',
 		})
 	})
+
+	it('uses template marker text for empty template search results', () => {
+		const message = {
+			id: '1',
+			role: 'assistant',
+			parts: [
+				{
+					type: 'tool-findTemplatesForRequest',
+					toolCallId: 'tool-1',
+					state: 'output-available',
+					input: { query: '신규 입사자' },
+					output: [],
+				},
+			],
+		} as AgentChatMessage
+
+		expect(getAgentToolMarker(message)).toEqual({
+			isPending: false,
+			text: '템플릿 검색을 완료했습니다',
+		})
+	})
 })

@@ -7,6 +7,8 @@ import * as migration_20260702_081141_add_agent_settings_global from './20260702
 import * as migration_20260702_082845_remove_template_source_type from './20260702_082845_remove_template_source_type';
 import * as migration_20260702_090914_add_template_rules from './20260702_090914_add_template_rules';
 import * as migration_20260702_094833_remove_agent_skill_default from './20260702_094833_remove_agent_skill_default';
+import * as migration_20260703_043507_add_brand_color_palette_fields from './20260703_043507_add_brand_color_palette_fields';
+import * as migration_20260703_050030_add_color_palette_block from './20260703_050030_add_color_palette_block';
 import * as migration_20260703_053851_add_rule_bindings_and_title_ko from './20260703_053851_add_rule_bindings_and_title_ko';
 import * as migration_20260703_053900_seed_essenherb_ruleset from './20260703_053900_seed_essenherb_ruleset';
 
@@ -57,13 +59,23 @@ export const migrations = [
     name: '20260702_094833_remove_agent_skill_default',
   },
   {
+    up: migration_20260703_043507_add_brand_color_palette_fields.up,
+    down: migration_20260703_043507_add_brand_color_palette_fields.down,
+    name: '20260703_043507_add_brand_color_palette_fields',
+  },
+  {
+    up: migration_20260703_050030_add_color_palette_block.up,
+    down: migration_20260703_050030_add_color_palette_block.down,
+    name: '20260703_050030_add_color_palette_block',
+  },
+  {
     up: migration_20260703_053851_add_rule_bindings_and_title_ko.up,
     down: migration_20260703_053851_add_rule_bindings_and_title_ko.down,
-    name: '20260703_053851_add_rule_bindings_and_title_ko'
+    name: '20260703_053851_add_rule_bindings_and_title_ko',
   },
   {
     up: migration_20260703_053900_seed_essenherb_ruleset.up,
     down: migration_20260703_053900_seed_essenherb_ruleset.down,
-    name: '20260703_053900_seed_essenherb_ruleset'
+    name: '20260703_053900_seed_essenherb_ruleset',
   },
 ];

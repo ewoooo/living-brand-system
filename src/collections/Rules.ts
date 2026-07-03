@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, managerOrAdmin } from '@/lib/auth'
+import { managerManagedAccess } from '@/lib/auth'
 
 /**
  * Rule TYPE 프리셋 카탈로그 (브랜드 무관).
@@ -8,13 +8,7 @@ import { authenticated, managerOrAdmin } from '@/lib/auth'
  */
 export const Rules: CollectionConfig = {
 	slug: 'rules',
-	access: {
-		// 누구나 읽되(인증), 기준 변경은 manager/admin만 (Worker는 사용만)
-		read: authenticated,
-		create: managerOrAdmin,
-		update: managerOrAdmin,
-		delete: managerOrAdmin,
-	},
+	access: managerManagedAccess,
 	labels: {
 		singular: 'Rule',
 		plural: 'Rules (Preset)',

@@ -1,15 +1,10 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, managerOrAdmin } from '@/lib/auth'
+import { managerManagedAccess } from '@/lib/auth'
+import { draftVersions } from './shared'
 
 export const Plugins: CollectionConfig = {
 	slug: 'plugins',
-	access: {
-		// 누구나 읽되(인증), 자원 변경은 manager/admin만 (Worker는 사용만)
-		read: authenticated,
-		create: managerOrAdmin,
-		update: managerOrAdmin,
-		delete: managerOrAdmin,
-	},
+	access: managerManagedAccess,
 	labels: {
 		singular: 'Plugin',
 		plural: 'Plugins',
@@ -19,12 +14,7 @@ export const Plugins: CollectionConfig = {
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'pluginType', 'updatedAt'],
 	},
-	versions: {
-		drafts: {
-			schedulePublish: true,
-		},
-		maxPerDoc: 50,
-	},
+	versions: draftVersions,
 	fields: [
 		{
 			name: 'name',

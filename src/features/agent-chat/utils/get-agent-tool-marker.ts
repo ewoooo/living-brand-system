@@ -5,20 +5,10 @@ export interface AgentToolMarker {
 	text: string
 }
 
-export interface AgentSkillMarker {
-	isPending: boolean
-	text: string
-}
-
-export interface AgentReasoningMarker {
-	isPending: boolean
-	text: string
-}
-
 export function getAgentReasoningMarker(
 	message: AgentChatMessage,
 	isActive = false,
-): AgentReasoningMarker | null {
+): AgentToolMarker | null {
 	const reasoningParts = message.parts.filter((part) => part.type === 'reasoning')
 
 	if (reasoningParts.length === 0) {
@@ -33,7 +23,7 @@ export function getAgentReasoningMarker(
 	}
 }
 
-export function getAgentSkillMarker(message: AgentChatMessage): AgentSkillMarker | null {
+export function getAgentSkillMarker(message: AgentChatMessage): AgentToolMarker | null {
 	for (const part of message.parts) {
 		if (part.type !== 'tool-loadSkill') {
 			continue
@@ -70,6 +60,7 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 	let ruleCount = 0
 	let searchResultCount = 0
 	let templateCount = 0
+	let templateSearchCount = 0
 	let templateImageCount = 0
 
 	for (const part of message.parts) {
@@ -121,6 +112,7 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 			part.state === 'output-available' &&
 			Array.isArray(part.output)
 		) {
+			templateSearchCount += 1
 			templateCount += part.output.length
 		}
 
@@ -181,7 +173,14 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 
 	return {
 		isPending: hasPendingToolPart,
-		text: hasPendingToolPart ? '가이드라인을 찾고 있습니다' : '가이드라인 검색을 완료했습니다',
+		text:
+			templateSearchCount > 0
+				? hasPendingToolPart
+					? '템플릿을 찾고 있습니다'
+					: '템플릿 검색을 완료했습니다'
+				: hasPendingToolPart
+					? '가이드라인을 찾고 있습니다'
+					: '가이드라인 검색을 완료했습니다',
 	}
 }
 

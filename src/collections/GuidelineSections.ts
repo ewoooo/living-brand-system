@@ -1,16 +1,11 @@
 import { type CollectionConfig, slugField } from 'payload'
-import { authenticated, managerOrAdmin } from '@/lib/auth'
+import { managerManagedAccess } from '@/lib/auth'
+import { draftVersions } from './shared'
 
 export const GuidelineSections: CollectionConfig = {
 	slug: 'sections',
 	dbName: 'guideline_sections',
-	access: {
-		// 누구나 읽되(인증), 가이드라인 편집은 manager/admin만 (Worker는 열람만)
-		read: authenticated,
-		create: managerOrAdmin,
-		update: managerOrAdmin,
-		delete: managerOrAdmin,
-	},
+	access: managerManagedAccess,
 	labels: {
 		singular: 'Section',
 		plural: 'Sections',
@@ -22,12 +17,7 @@ export const GuidelineSections: CollectionConfig = {
 		description: '가이드라인 상위 내비게이션 섹션입니다.',
 		listSearchableFields: ['title', 'slug'],
 	},
-	versions: {
-		drafts: {
-			schedulePublish: true,
-		},
-		maxPerDoc: 50,
-	},
+	versions: draftVersions,
 	defaultSort: 'displayOrder',
 	fields: [
 		{

@@ -34,6 +34,18 @@ const templateSlotValueSchema = z.object({
 	text: z.string().max(1000).optional(),
 })
 
+const TEMPLATE_QUERY_STOP_WORDS = new Set([
+	'관련',
+	'관련해서',
+	'발행된',
+	'사용',
+	'사용할',
+	'있는',
+	'템플릿',
+	'template',
+	'templates',
+])
+
 /** prepareTemplateImage 툴 출력 계약 — 챗 첨부 UI가 이 타입을 그대로 소비한다 (이중 정의 금지). */
 export interface AgentTemplateImageAttachment {
 	type: 'template-image'
@@ -183,7 +195,7 @@ function matchesTemplateQuery(searchText: string, normalizedQuery: string) {
 		haystack.includes(normalizedQuery) ||
 		normalizedQuery
 			.split(/[^\p{Letter}\p{Number}]+/u)
-			.filter((token) => token.length >= 2)
+			.filter((token) => token.length >= 2 && !TEMPLATE_QUERY_STOP_WORDS.has(token))
 			.some((token) => haystack.includes(token))
 	)
 }
