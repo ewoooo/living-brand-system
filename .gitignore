@@ -65,3 +65,4 @@ scripts/create-admin.ts
 # Local review calibration (검수기 회귀용 샘플·진단 스크립트 — 로컬 전용)
 tests/fixtures/review/
 scripts/diagnose-*.ts
+.gstack/
