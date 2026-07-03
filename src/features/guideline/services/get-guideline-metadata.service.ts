@@ -1,5 +1,4 @@
-import config from '@payload-config'
-import { getPayload } from 'payload'
+import { findGuidelineMetadataGlobal } from '../repositories/guideline-view.payload.repository'
 
 export interface GetGuidelineMetadataOutput {
 	companyName: string
@@ -14,20 +13,7 @@ export interface GetGuidelineMetadataOutput {
  */
 export async function getGuidelineMetadata(): Promise<GetGuidelineMetadataOutput> {
 	try {
-		const payload = await getPayload({ config })
-		const guideline = await payload.findGlobal({
-			slug: 'guideline',
-			depth: 1,
-			locale: 'ko',
-			fallbackLocale: 'en',
-			draft: false,
-			select: {
-				companyName: true,
-				documentTitle: true,
-				favicon: true,
-				issuedLabel: true,
-			},
-		})
+		const guideline = await findGuidelineMetadataGlobal()
 
 		return {
 			companyName: guideline.companyName,

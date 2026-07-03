@@ -1,5 +1,10 @@
+import { colorPairingChecker } from './color-pairing.checker'
 import { colorPaletteChecker } from './color-palette.checker'
 import { imageryBackgroundToneChecker } from './imagery-background-tone.checker'
+import { logoClearSpaceChecker } from './logo-clear-space.checker'
+import { logoMinSizeChecker } from './logo-min-size.checker'
+import { stationaryColorChecker } from './stationary-color.checker'
+import { stationaryFormatChecker } from './stationary-format.checker'
 import type { RuleChecker } from './types'
 
 /**
@@ -11,13 +16,14 @@ import type { RuleChecker } from './types'
  */
 const checkers: Record<string, RuleChecker> = {
 	[colorPaletteChecker.ruleKey]: colorPaletteChecker,
+	[colorPairingChecker.ruleKey]: colorPairingChecker,
 	[imageryBackgroundToneChecker.ruleKey]: imageryBackgroundToneChecker,
+	[logoClearSpaceChecker.ruleKey]: logoClearSpaceChecker,
+	[logoMinSizeChecker.ruleKey]: logoMinSizeChecker,
+	[stationaryFormatChecker.ruleKey]: stationaryFormatChecker,
+	[stationaryColorChecker.ruleKey]: stationaryColorChecker,
 }
 
 export function getChecker(ruleKey: string): RuleChecker | null {
 	return checkers[ruleKey] ?? null
-}
-
-export function getAllCheckers(): RuleChecker[] {
-	return Object.values(checkers)
 }

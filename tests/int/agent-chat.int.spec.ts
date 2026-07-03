@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import { getAgentChatErrorMessage } from '@/features/agent-chat/hooks/use-agent-chat'
+import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import {
 	getAgentReasoningMarker,
 	getAgentSkillMarker,
 	getAgentToolMarker,
-} from '@/features/agent-chat/get-agent-tool-marker'
-import { getAgentChatErrorMessage } from '@/features/agent-chat/hooks/use-agent-chat'
-import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
+} from '@/features/agent-chat/utils/get-agent-tool-marker'
 
 describe('agent chat errors', () => {
 	it('uses JSON response messages', async () => {

@@ -35,7 +35,6 @@ const guidelineQaSkill = {
 		},
 	],
 	enabled: true,
-	isDefault: true,
 }
 
 const existing = await payload.find({

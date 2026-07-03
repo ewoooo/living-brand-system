@@ -1,4 +1,4 @@
-import type { AgentChatMessage } from './services/create-agent-chat-response.service'
+import type { AgentChatMessage } from '../services/create-agent-chat-response.service'
 
 export interface AgentToolMarker {
 	isPending: boolean
@@ -69,6 +69,8 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 	let readCount = 0
 	let ruleCount = 0
 	let searchResultCount = 0
+	let templateCount = 0
+	let templateImageCount = 0
 
 	for (const part of message.parts) {
 		if (!isAgentToolPart(part)) {
@@ -113,6 +115,22 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 		) {
 			ruleCount += part.output.length
 		}
+
+		if (
+			part.type === 'tool-findTemplatesForRequest' &&
+			part.state === 'output-available' &&
+			Array.isArray(part.output)
+		) {
+			templateCount += part.output.length
+		}
+
+		if (
+			part.type === 'tool-prepareTemplateImage' &&
+			part.state === 'output-available' &&
+			part.output
+		) {
+			templateImageCount += 1
+		}
 	}
 
 	if (!hasToolPart) {
@@ -144,6 +162,20 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 		return {
 			isPending: hasPendingToolPart,
 			text: `룰 카탈로그 ${ruleCount}개를 확인했습니다`,
+		}
+	}
+
+	if (templateImageCount > 0) {
+		return {
+			isPending: hasPendingToolPart,
+			text: `템플릿 이미지 ${templateImageCount}개를 준비했습니다`,
+		}
+	}
+
+	if (templateCount > 0) {
+		return {
+			isPending: hasPendingToolPart,
+			text: `템플릿 ${templateCount}개를 확인했습니다`,
 		}
 	}
 

@@ -1,9 +1,6 @@
-import { redirect } from 'next/navigation'
-import { getReviewNavigation } from '@/features/review/navigation'
+import { ReviewSections } from '@/features/review/components/rule-tables'
+import { getReviewContent } from '@/features/review/navigation'
 
-export default function ReviewIndexPage() {
-	const { chapters } = getReviewNavigation()
-	const firstSection = chapters[0]?.sections[0]
-
-	redirect(firstSection ? firstSection.href : '/')
+export default function ReviewPage() {
+	return <ReviewSections chapters={getReviewContent()} />
 }

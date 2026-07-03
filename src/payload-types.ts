@@ -74,7 +74,10 @@ export interface Config {
     'brand-colors': BrandColor;
     'brand-typefaces': BrandTypeface;
     'application-images': ApplicationImage;
+    'template-categories': TemplateCategory;
+    'template-rules': TemplateRule;
     templates: Template;
+    'template-assets': TemplateAsset;
     plugins: Plugin;
     'agent-skills': AgentSkill;
     sections: Section;
@@ -88,6 +91,9 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
+    'template-categories': {
+      templates: 'templates';
+    };
     sections: {
       pages: 'guideline-pages';
     };
@@ -99,7 +105,10 @@ export interface Config {
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
+    'template-categories': TemplateCategoriesSelect<false> | TemplateCategoriesSelect<true>;
+    'template-rules': TemplateRulesSelect<false> | TemplateRulesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
+    'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
     plugins: PluginsSelect<false> | PluginsSelect<true>;
     'agent-skills': AgentSkillsSelect<false> | AgentSkillsSelect<true>;
     sections: SectionsSelect<false> | SectionsSelect<true>;
@@ -118,9 +127,11 @@ export interface Config {
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ko' | 'en') | ('ko' | 'en')[];
   globals: {
     guideline: Guideline;
+    'agent-settings': AgentSetting;
   };
   globalsSelect: {
     guideline: GuidelineSelect<false> | GuidelineSelect<true>;
+    'agent-settings': AgentSettingsSelect<false> | AgentSettingsSelect<true>;
   };
   locale: 'ko' | 'en';
   widgets: {
@@ -336,6 +347,35 @@ export interface ApplicationImage {
   };
 }
 /**
+ * Create 화면 사이드바에 표시할 템플릿 카테고리입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-categories".
+ */
+export interface TemplateCategory {
+  id: number;
+  /**
+   * 사이드바 카테고리 제목으로 표시됩니다.
+   */
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  templates?: {
+    docs?: (number | Template)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * 숫자가 낮을수록 사이드바에서 먼저 표시됩니다.
+   */
+  displayOrder: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "templates".
  */
@@ -343,10 +383,75 @@ export interface Template {
   id: number;
   name: string;
   description?: string | null;
-  sourceType: 'figma' | 'file';
+  /**
+   * 렌더 계약(JsonTemplate). 임포트가 생성하며, 수정 시 src/types/json-template.ts 스키마를 지켜야 합니다.
+   */
+  jsonTemplate?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.
+   */
+  category: number | TemplateCategory;
+  /**
+   * Agent가 이 템플릿으로 이미지를 만들 때 함께 참고할 룰입니다.
+   */
+  templateRules?: (number | TemplateRule)[] | null;
+  /**
+   * 임포트에 사용한 Figma URL 원문입니다. 출처 기록용이며 재동기화하지 않습니다.
+   */
+  sourceUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * Agent가 템플릿으로 산출물을 만들 때 참고하는 생성 지침입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-rules".
+ */
+export interface TemplateRule {
+  id: number;
+  title: string;
+  description?: string | null;
+  /**
+   * 템플릿 선택, 슬롯 채우기, 생성 응답 시 따라야 할 지침입니다.
+   */
+  body: string;
+  status?: ('draft' | 'live' | 'archived') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * 템플릿 임포트 시 저장되는 이미지 조각입니다. 직접 편집하지 않습니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-assets".
+ */
+export interface TemplateAsset {
+  id: number;
+  /**
+   * 파일 내용 해시입니다. 임포트가 같은 조각을 다시 만들지 않도록 재사용 기준으로 씁니다.
+   */
+  checksum?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -426,10 +531,6 @@ export interface AgentSkill {
       }[]
     | null;
   enabled?: boolean | null;
-  /**
-   * agent-chat의 기본 skill 후보입니다. 하나만 true로 유지하세요.
-   */
-  isDefault?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -779,8 +880,20 @@ export interface PayloadLockedDocument {
         value: number | ApplicationImage;
       } | null)
     | ({
+        relationTo: 'template-categories';
+        value: number | TemplateCategory;
+      } | null)
+    | ({
+        relationTo: 'template-rules';
+        value: number | TemplateRule;
+      } | null)
+    | ({
         relationTo: 'templates';
         value: number | Template;
+      } | null)
+    | ({
+        relationTo: 'template-assets';
+        value: number | TemplateAsset;
       } | null)
     | ({
         relationTo: 'plugins';
@@ -994,15 +1107,61 @@ export interface ApplicationImagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-categories_select".
+ */
+export interface TemplateCategoriesSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  templates?: T;
+  displayOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-rules_select".
+ */
+export interface TemplateRulesSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  body?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "templates_select".
  */
 export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
-  sourceType?: T;
+  jsonTemplate?: T;
+  category?: T;
+  templateRules?: T;
+  sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-assets_select".
+ */
+export interface TemplateAssetsSelect<T extends boolean = true> {
+  checksum?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1033,7 +1192,6 @@ export interface AgentSkillsSelect<T extends boolean = true> {
         id?: T;
       };
   enabled?: T;
-  isDefault?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1233,6 +1391,39 @@ export interface Guideline {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-settings".
+ */
+export interface AgentSetting {
+  id: number;
+  /**
+   * Default system prompt section rendered as <product_information>.
+   */
+  productInformation: string;
+  /**
+   * Default system prompt section rendered as <default_stance>.
+   */
+  defaultStance: string;
+  /**
+   * Default system prompt section rendered as <tone_and_style>.
+   */
+  toneAndStyle: string;
+  /**
+   * Default system prompt section rendered as <refusal_handling>.
+   */
+  refusalHandling: string;
+  /**
+   * Default system prompt section rendered as <tool_calling>.
+   */
+  toolCalling: string;
+  /**
+   * Default system prompt section rendered as <available_tools>.
+   */
+  availableTools: string;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline_select".
  */
 export interface GuidelineSelect<T extends boolean = true> {
@@ -1241,6 +1432,21 @@ export interface GuidelineSelect<T extends boolean = true> {
   issuedLabel?: T;
   favicon?: T;
   _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-settings_select".
+ */
+export interface AgentSettingsSelect<T extends boolean = true> {
+  productInformation?: T;
+  defaultStance?: T;
+  toneAndStyle?: T;
+  refusalHandling?: T;
+  toolCalling?: T;
+  availableTools?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

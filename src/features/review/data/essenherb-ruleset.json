@@ -1206,21 +1206,6 @@
 							"section": "C.1",
 							"rules": [
 								{
-									"key": "messaging.legal-footer",
-									"title": "Copyright footer on SNS guideline pages",
-									"category": "messaging",
-									"tier": "automated",
-									"inCatalog": true,
-									"evidence": "모든 페이지 하단에 '© Ami Cosmetic Co., Ltd. All rights reserved.' 저작권 표기.",
-									"value": "© Ami Cosmetic Co., Ltd. All rights reserved.",
-									"page": 61,
-									"section": "C.1",
-									"sectionName": "SNS",
-									"chapter": "C",
-									"chapterName": "Applications",
-									"titleKo": "저작권·배포 푸터"
-								},
-								{
 									"key": "misc.governance",
 									"title": "No arbitrary modification / escalate to responsible dept",
 									"category": "misc",
@@ -1580,21 +1565,6 @@
 									"titleKo": "브랜드 시그니처 문구"
 								},
 								{
-									"key": "messaging.legal-footer",
-									"title": "AD copyright footer",
-									"category": "messaging",
-									"tier": "automated",
-									"inCatalog": true,
-									"evidence": "모든 페이지에 저작권 푸터 표기: '© Ami Cosmetic Co., Ltd. All rights reserved.'",
-									"value": "© Ami Cosmetic Co., Ltd. All rights reserved.",
-									"page": 73,
-									"section": "C.2",
-									"sectionName": "AD",
-									"chapter": "C",
-									"chapterName": "Applications",
-									"titleKo": "저작권·배포 푸터"
-								},
-								{
 									"key": "imagery.classification",
 									"title": "AD photography usage (model / product / ingredient & texture)",
 									"category": "imagery",
@@ -1802,21 +1772,6 @@
 									"chapter": "C",
 									"chapterName": "Applications",
 									"titleKo": "인쇄물 필수 기재 항목"
-								},
-								{
-									"key": "messaging.legal-footer",
-									"title": "Legal / copyright / distribution footer",
-									"category": "messaging",
-									"tier": "automated",
-									"inCatalog": true,
-									"evidence": "모든 페이지 하단에 © Ami Cosmetic Co., Ltd. All rights reserved. 저작권 표기.",
-									"value": "© Ami Cosmetic Co., Ltd. All rights reserved.",
-									"page": 80,
-									"section": "C.3",
-									"sectionName": "Stationery",
-									"chapter": "C",
-									"chapterName": "Applications",
-									"titleKo": "저작권·배포 푸터"
 								},
 								{
 									"key": "layout.tone",
@@ -2223,21 +2178,6 @@
 									"titleKo": "연락처·회사 정보 블록"
 								},
 								{
-									"key": "messaging.legal-footer",
-									"title": "Copyright / made-in / distributor footer on package",
-									"category": "messaging",
-									"tier": "automated",
-									"inCatalog": true,
-									"evidence": "© Ami Cosmetic Co., Ltd. All rights reserved. / Made in Korea, Discover more at essenherb.co.kr / essenherb.us / LOT & EXP: On the product 등 법적·저작권 표기.",
-									"value": "© Ami Cosmetic Co., Ltd. All rights reserved.; Made in Korea; essenherb.co.kr / essenherb.us; LOT & EXP: On the product",
-									"page": 99,
-									"section": "C.4",
-									"sectionName": "Package",
-									"chapter": "C",
-									"chapterName": "Applications",
-									"titleKo": "저작권·배포 푸터"
-								},
-								{
 									"key": "messaging.content-fields",
 									"title": "Required product content fields (net weight/volume, ingredients, usage, caution)",
 									"category": "messaging",
@@ -2251,38 +2191,6 @@
 									"chapter": "C",
 									"chapterName": "Applications",
 									"titleKo": "인쇄물 필수 기재 항목"
-								}
-							]
-						}
-					]
-				},
-				{
-					"code": "C.5",
-					"name": "Etc.",
-					"slug": "etc",
-					"chapter": "C",
-					"chapterName": "Applications",
-					"startPage": 102,
-					"endPage": 102,
-					"pages": [
-						{
-							"page": 102,
-							"section": "C.5",
-							"rules": [
-								{
-									"key": "messaging.legal-footer",
-									"title": "Legal / copyright / distribution footer",
-									"category": "messaging",
-									"tier": "automated",
-									"inCatalog": true,
-									"evidence": "페이지 하단 저작권 표기 '© Ami Cosmetic Co., Ltd. All rights reserved.' 만 존재. 본문 규칙은 없고 섹션 표지(반복되는 'Applications / Etc. / C.5' 헤더)뿐임.",
-									"value": "© Ami Cosmetic Co., Ltd. All rights reserved.",
-									"page": 102,
-									"section": "C.5",
-									"sectionName": "Etc.",
-									"chapter": "C",
-									"chapterName": "Applications",
-									"titleKo": "저작권·배포 푸터"
 								}
 							]
 						}
