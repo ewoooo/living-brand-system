@@ -26,6 +26,11 @@ export const BrandColors: CollectionConfig = {
 			name: 'hex',
 			type: 'text',
 			required: true,
+			admin: {
+				components: {
+					Cell: '/components/admin/ColorSwatchCell',
+				},
+			},
 		},
 		{
 			name: 'pantone',
