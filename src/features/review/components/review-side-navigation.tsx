@@ -31,10 +31,7 @@ function ReviewChapter({ code, name, sections }: ReviewNavChapter) {
 
 export function ReviewSideNavigation({ chapters }: { chapters: ReviewNavChapter[] }) {
 	return (
-		<Sidebar
-			collapsible="none"
-			className="sticky top-14 h-[calc(100svh-3.5rem)] overflow-y-auto pl-6"
-		>
+		<Sidebar collapsible="none" className="h-full overflow-y-auto pl-6">
 			<SidebarContent className="pt-12">
 				{chapters.map((chapter) => (
 					<ReviewChapter key={chapter.code} {...chapter} />

@@ -27,6 +27,7 @@ export const logoClearSpaceChecker: RuleChecker = {
 			status: minMargin >= moduleReq ? 'pass' : 'fail',
 			fulfillment: Math.round(Math.min(ratio, 1) * 1000) / 10,
 			detail: `여백 최소 ${minMargin}px / 요구 ${moduleReq}px (모듈 = stem ${stem}px × ${MODULE_STEMS})`,
+			metric: { label: '여백', expected: `${moduleReq}px`, actual: `${minMargin}px` },
 		}
 	},
 }
