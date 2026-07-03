@@ -66,3 +66,4 @@ scripts/create-admin.ts
 tests/fixtures/review/
 scripts/diagnose-*.ts
 .gstack/
+backups/
