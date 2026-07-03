@@ -82,6 +82,7 @@ export interface Config {
     'agent-skills': AgentSkill;
     sections: Section;
     'guideline-pages': GuidelinePage;
+    'rule-bindings': RuleBinding;
     search: Search;
     'payload-mcp-api-keys': PayloadMcpApiKey;
     'payload-kv': PayloadKv;
@@ -113,6 +114,7 @@ export interface Config {
     'agent-skills': AgentSkillsSelect<false> | AgentSkillsSelect<true>;
     sections: SectionsSelect<false> | SectionsSelect<true>;
     'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
+    'rule-bindings': RuleBindingsSelect<false> | RuleBindingsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
     'payload-mcp-api-keys': PayloadMcpApiKeysSelect<false> | PayloadMcpApiKeysSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -225,6 +227,10 @@ export interface Rule {
    */
   key: string;
   title: string;
+  /**
+   * 룰의 한글 표기 (브랜드 무관, key당 1:1). 예: 로고 최소 크기
+   */
+  titleKo?: string | null;
   category:
     | 'logo'
     | 'color'
@@ -703,6 +709,33 @@ export interface ColorPaletteBlock {
   blockType: 'colorPalette';
 }
 /**
+ * 가이드라인 페이지의 룰 배치에 할당된 브랜드 구체 값(value)과 근거(evidence)입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rule-bindings".
+ */
+export interface RuleBinding {
+  id: number;
+  /**
+   * 이 값이 할당된 가이드라인 페이지입니다.
+   */
+  page: number | GuidelinePage;
+  /**
+   * 값이 채워지는 룰(ruleSpec)입니다.
+   */
+  rule: number | Rule;
+  /**
+   * 이 배치에서의 브랜드 구체 값. 비어 있을 수 있습니다.
+   */
+  value?: string | null;
+  /**
+   * 가이드라인 원문 근거(출처).
+   */
+  evidence?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This is a collection of automatically created search results. These results are used by the global site search and will be updated automatically as documents in the CMS are created or updated.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -942,6 +975,10 @@ export interface PayloadLockedDocument {
         value: number | GuidelinePage;
       } | null)
     | ({
+        relationTo: 'rule-bindings';
+        value: number | RuleBinding;
+      } | null)
+    | ({
         relationTo: 'search';
         value: number | Search;
       } | null)
@@ -1031,6 +1068,7 @@ export interface UsersSelect<T extends boolean = true> {
 export interface RulesSelect<T extends boolean = true> {
   key?: T;
   title?: T;
+  titleKo?: T;
   category?: T;
   tier?: T;
   executor?: T;
@@ -1306,6 +1344,18 @@ export interface ColorPaletteBlockSelect<T extends boolean = true> {
   colors?: T;
   id?: T;
   blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rule-bindings_select".
+ */
+export interface RuleBindingsSelect<T extends boolean = true> {
+  page?: T;
+  rule?: T;
+  value?: T;
+  evidence?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

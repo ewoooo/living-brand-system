@@ -1,6 +1,6 @@
 'use client'
 
-import { MagicWand, Ruler, User } from '@carbon/icons-react'
+import { ChevronDown, MagicWand, Ruler, User } from '@carbon/icons-react'
 import { type ComponentType, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { getChecker } from '@/features/review/checkers/registry'
@@ -55,27 +55,36 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 
 	const outcome = selected?.results?.[rule.key]
 	const inProgress = Boolean(selected?.checking) && !outcome
-	const commentary =
-		outcome && outcome.status !== 'pending'
-			? getCommentary(rule.key, outcome.metric, outcome.status)
-			: null
-	const hasDetail = Boolean(rule.evidence || rule.value || outcome?.detail)
+	// AI 코멘터리(불합 이유)는 미통과(fail) 룰에만.
+	const commentary = outcome?.status === 'fail' ? getCommentary(rule.key, outcome.metric) : null
+
+	// 섹션 첫 룰이면 섹션명 칸까지 전체폭 구분선(border-top), 아니면 룰 칸만 구분선.
+	const ruleBorder = 'border-neutral-200 border-t dark:border-neutral-800'
 
 	return (
 		<>
+			{/* 1행(항상): icon | 국문 룰명 | 불합 이유. 행 클릭으로 2행(변수명·가이드라인) 토글. */}
 			<tr
 				id={anchorId ?? undefined}
+				onClick={() => setOpen((value) => !value)}
+				onKeyDown={(event) => {
+					if (event.key === 'Enter' || event.key === ' ') {
+						event.preventDefault()
+						setOpen((value) => !value)
+					}
+				}}
+				tabIndex={0}
 				className={cn(
-					'scroll-mt-72 border-neutral-200 border-b transition-colors hover:bg-neutral-500/5 dark:border-neutral-800',
-					isSectionStart && '[&>td]:pt-5',
+					'scroll-mt-72 cursor-pointer transition-colors hover:bg-neutral-500/5 active:bg-neutral-500/10',
 					!implemented && 'opacity-45',
 				)}
 			>
-				{/* 섹션명 (섹션 첫 행에만) */}
-				<td className="w-44 py-2 pr-4 align-top">
+				{/* 섹션명 (섹션 첫 행에만) — 섹션 경계에서만 border-top */}
+				<td className={cn('w-44 py-2.5 pr-4 align-top', isSectionStart && ruleBorder)}>
 					{sectionLabel && <span className="font-medium text-sm">{sectionLabel}</span>}
 				</td>
-				<td className="w-0 py-2 pr-3 align-top">
+				{/* icon */}
+				<td className={cn('w-0 py-2.5 pr-3 align-top', ruleBorder)}>
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<span className="inline-flex text-muted-foreground">
@@ -90,12 +99,10 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 						</TooltipContent>
 					</Tooltip>
 				</td>
-				<td className="py-2 pr-3 align-top text-sm">
+				{/* 국문 룰명 */}
+				<td className={cn('w-56 py-2.5 pr-4 align-top text-sm', ruleBorder)}>
 					<span className="inline-flex flex-wrap items-baseline gap-x-2 gap-y-1">
 						{rule.titleKo}
-						<code className="inline-block whitespace-nowrap rounded bg-neutral-500/10 px-2 py-0.5 font-mono text-muted-foreground text-xs">
-							{rule.key}
-						</code>
 						{!rule.inCatalog && (
 							<span className="rounded bg-violet-500/10 px-1 text-[10px] text-violet-600 dark:text-violet-400">
 								신규
@@ -103,8 +110,16 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 						)}
 					</span>
 				</td>
-				{/* 상태: PASS / FAIL / 미개발 / 검수 중 / 검수 전(빈칸) */}
-				<td className="w-0 py-2 pr-3 align-top">
+				{/* 불합 이유 (fail 코멘터리) */}
+				<td className={cn('py-2.5 pr-3 align-top text-sm', ruleBorder)}>
+					{commentary && (
+						<span className="text-rose-600 text-xs leading-5 dark:text-rose-400">
+							{commentary}
+						</span>
+					)}
+				</td>
+				{/* 상태: PASS / FAIL / 개발 중 / 검수 중 */}
+				<td className={cn('w-0 py-2.5 pr-3 align-top', ruleBorder)}>
 					{!implemented ? (
 						<span className="inline-block whitespace-nowrap rounded bg-neutral-500/10 px-1.5 py-0.5 text-[11px] text-muted-foreground">
 							개발 중
@@ -123,46 +138,36 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 						</span>
 					) : null}
 				</td>
-				<td className="w-0 py-2 text-right align-top">
-					{hasDetail && (
-						<button
-							type="button"
-							onClick={() => setOpen((value) => !value)}
-							className="whitespace-nowrap text-muted-foreground text-xs hover:text-foreground"
-						>
-							{open ? '닫기' : '상세'}
-						</button>
-					)}
+				{/* chevron */}
+				<td className={cn('w-0 py-2.5 pr-1 text-right align-top', ruleBorder)}>
+					<ChevronDown
+						size={16}
+						className={cn(
+							'inline-block text-muted-foreground transition-transform',
+							open && 'rotate-180',
+						)}
+					/>
 				</td>
 			</tr>
-			{open && hasDetail && (
-				<tr className="border-neutral-200 border-b bg-neutral-500/[0.03] dark:border-neutral-800">
+			{/* 2행(토글 시): (빈칸) | 변수명 badge | 관련 가이드라인. 1행 열과 정렬. */}
+			{open && (
+				<tr>
 					<td />
 					<td />
-					<td colSpan={3} className="py-3 pr-3">
-						{commentary ? (
-							<p className="mb-2 text-foreground text-sm leading-6">{commentary}</p>
-						) : (
-							outcome?.detail && (
-								<p className="mb-2 text-foreground text-xs leading-5">
-									검수: {outcome.detail}
-								</p>
-							)
-						)}
-						{commentary && outcome?.detail && (
-							<p className="mb-2 font-mono text-[11px] text-muted-foreground/80 leading-5">
-								{outcome.detail}
-							</p>
-						)}
-						{rule.evidence && (
-							<p className="text-muted-foreground text-xs leading-5">
+					<td className="w-56 pt-0 pb-3 pr-4 align-top">
+						<code className="inline-flex items-center whitespace-nowrap rounded-md bg-secondary px-2 py-0.5 font-mono text-[11px] text-secondary-foreground">
+							{rule.key}
+						</code>
+					</td>
+					<td className="pt-0 pb-3 pr-3 align-top" colSpan={3}>
+						{rule.evidence ? (
+							<blockquote className="rounded-md bg-white/5 px-3 py-2 text-muted-foreground text-xs leading-5">
 								{rule.evidence}
-							</p>
-						)}
-						{rule.value && (
-							<p className="mt-2 font-mono text-[11px] text-muted-foreground/80 leading-5">
-								{rule.value}
-							</p>
+							</blockquote>
+						) : (
+							<span className="text-muted-foreground text-xs">
+								관련 가이드라인 없음
+							</span>
 						)}
 					</td>
 				</tr>
@@ -194,7 +199,7 @@ function withSectionLabels(
 }
 
 export function ReviewSections({ chapters }: { chapters: ReviewContentChapter[] }) {
-	const { hideUnimplemented, selected } = useReviewImages()
+	const { showUnimplemented, selected } = useReviewImages()
 	const [showFailOnly, setShowFailOnly] = useState(false)
 
 	const entries: { rule: Rule; sectionSlug: string; label: string }[] = []
@@ -202,12 +207,12 @@ export function ReviewSections({ chapters }: { chapters: ReviewContentChapter[] 
 		for (const section of chapter.sections) {
 			const visibleRules = section.pages
 				.flatMap((page) => page.rules)
-				.filter((rule) => getChecker(rule.key) !== null || !hideUnimplemented)
+				.filter((rule) => getChecker(rule.key) !== null || showUnimplemented)
 			for (const rule of visibleRules) {
 				entries.push({
 					rule,
 					sectionSlug: section.slug,
-					label: `${chapter.code}. ${section.name}`,
+					label: section.name,
 				})
 			}
 		}
@@ -251,18 +256,22 @@ export function ReviewSections({ chapters }: { chapters: ReviewContentChapter[] 
 						onToggleFailOnly={() => setShowFailOnly((value) => !value)}
 					/>
 				)}
-				<table className="w-full border-collapse">
-					<tbody>
-						{rows.map((row) => (
-							<RuleRow
-								key={`${row.sectionSlug}-${row.rule.key}`}
-								rule={row.rule}
-								sectionLabel={row.sectionLabel}
-								anchorId={row.anchorId}
-							/>
-						))}
-					</tbody>
-				</table>
+				{/* 맨 아래 전체폭 divider (맨 위는 첫 섹션 행의 border-top이 담당) */}
+				<div className="border-neutral-200 border-b dark:border-neutral-800">
+					<table className="w-full border-collapse">
+						<tbody>
+							{rows.map((row) => (
+								// 같은 섹션에 rule.key가 겹치는 별개 룰이 있어(예: messaging.statement 3개) title까지 넣어 유니크하게.
+								<RuleRow
+									key={`${row.sectionSlug}-${row.rule.key}-${row.rule.title}`}
+									rule={row.rule}
+									sectionLabel={row.sectionLabel}
+									anchorId={row.anchorId}
+								/>
+							))}
+						</tbody>
+					</table>
+				</div>
 				{showFailOnly && rows.length === 0 && (
 					<p className="py-8 text-center text-muted-foreground text-sm">
 						미통과 항목이 없습니다.

@@ -21,8 +21,8 @@ export function ImageSelector() {
 		flagsLocked,
 		setContentFlag,
 		runReview,
-		hideUnimplemented,
-		setHideUnimplemented,
+		showUnimplemented,
+		setShowUnimplemented,
 	} = useReviewImages()
 	const inputRef = useRef<HTMLInputElement>(null)
 
@@ -85,15 +85,15 @@ export function ImageSelector() {
 					</div>
 
 					<label
-						htmlFor="hide-unimplemented"
+						htmlFor="show-unimplemented"
 						className="flex shrink-0 cursor-pointer items-center gap-2 text-muted-foreground text-xs"
 					>
 						<Checkbox
-							id="hide-unimplemented"
-							checked={hideUnimplemented}
-							onCheckedChange={(checked) => setHideUnimplemented(checked === true)}
+							id="show-unimplemented"
+							checked={showUnimplemented}
+							onCheckedChange={(checked) => setShowUnimplemented(checked === true)}
 						/>
-						미구현 숨기기
+						개발 중인 항목 표시
 					</label>
 				</div>
 

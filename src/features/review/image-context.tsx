@@ -29,9 +29,9 @@ interface ReviewImageContextValue {
 	setContentFlag: (key: keyof ImageContentFlags, value: boolean) => void
 	/** 선택 이미지를 검수 실행하고 플래그를 잠근다. */
 	runReview: () => void
-	/** 미구현(체커 없는) 룰 숨김 여부. 기본 숨김. */
-	hideUnimplemented: boolean
-	setHideUnimplemented: (value: boolean) => void
+	/** 개발 중(체커 없는) 룰 표시 여부. 기본 숨김(false). */
+	showUnimplemented: boolean
+	setShowUnimplemented: (value: boolean) => void
 }
 
 const ReviewImageContext = createContext<ReviewImageContextValue | null>(null)
@@ -46,8 +46,8 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 	const [selectedId, setSelectedId] = useState<string | null>(null)
 	const [contentFlags, setContentFlags] = useState<ImageContentFlags>(DEFAULT_CONTENT_FLAGS)
 	const [flagsLocked, setFlagsLocked] = useState(false)
-	// 미구현(체커 없는) 룰은 기본 숨김.
-	const [hideUnimplemented, setHideUnimplemented] = useState(true)
+	// 개발 중(체커 없는) 룰은 기본 숨김.
+	const [showUnimplemented, setShowUnimplemented] = useState(false)
 
 	// 전 룰을 순차 검수하고 결과를 점진 매핑한다 (섹션 게이팅 없음).
 	const runCheck = useCallback((id: string, url: string) => {
@@ -117,8 +117,8 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 			flagsLocked,
 			setContentFlag,
 			runReview,
-			hideUnimplemented,
-			setHideUnimplemented,
+			showUnimplemented,
+			setShowUnimplemented,
 		}),
 		[
 			images,
@@ -129,7 +129,7 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 			flagsLocked,
 			setContentFlag,
 			runReview,
-			hideUnimplemented,
+			showUnimplemented,
 		],
 	)
 

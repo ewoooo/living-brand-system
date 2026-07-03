@@ -105,49 +105,13 @@
 							"rules": [
 								{
 									"key": "messaging.statement",
-									"title": "Canonical English brand narrative",
+									"title": "Brand narrative & philosophy statement",
 									"category": "messaging",
 									"tier": "manual",
 									"inCatalog": true,
-									"evidence": "A.3 The Narrative (English Version): 'Essenherb is a vegan skincare brand designed and made in Korea...' 브랜드 존재 이유와 가치를 하나의 흐름으로 연결한 영문 내러티브 전문.",
-									"value": "",
-									"page": 7,
-									"section": "A.3",
-									"sectionName": "The Narrative",
-									"chapter": "A",
-									"chapterName": "Brand Strategy",
-									"titleKo": "브랜드 본질·철학 문구"
-								},
-								{
-									"key": "messaging.statement",
-									"title": "Brand origin/identity (designed & made in Korea)",
-									"category": "messaging",
-									"tier": "manual",
-									"inCatalog": true,
-									"evidence": "A.3: '한국에서 탄생한 브랜드로서의 정체성과 가치를 강조' / 'designed and made in Korea'. 영문 내러티브가 한국 태생 정체성을 강조해야 한다는 메시지 요건.",
+									"evidence": "A.3 The Narrative — 브랜드 존재 이유·가치를 담은 본질·철학 내러티브(영문·국문 전문). 영문: 'Essenherb is a vegan skincare brand designed and made in Korea...' / 국문: '에센허브는 피부의 본질Essence에 집중하는 식물성Herb 비건 스킨케어 브랜드입니다...' 한국에서 탄생한 브랜드('designed and made in Korea') 정체성을 강조하며 영문·국문이 일관성을 유지해야 한다.",
 									"value": "identity: designed and made in Korea",
 									"page": 7,
-									"section": "A.3",
-									"sectionName": "The Narrative",
-									"chapter": "A",
-									"chapterName": "Brand Strategy",
-									"titleKo": "브랜드 본질·철학 문구"
-								}
-							]
-						},
-						{
-							"page": 8,
-							"section": "A.3",
-							"rules": [
-								{
-									"key": "messaging.statement",
-									"title": "Canonical Korean brand narrative",
-									"category": "messaging",
-									"tier": "manual",
-									"inCatalog": true,
-									"evidence": "A.3 The Narrative (Korean Version): '에센허브는 피부의 본질Essence에 집중하는 식물성Herb 비건 스킨케어 브랜드입니다...피부 본연의 활력을 깨우는 스킨케어를 만듭니다.' 영문과 일관성을 유지하는 국문 내러티브 전문.",
-									"value": "",
-									"page": 8,
 									"section": "A.3",
 									"sectionName": "The Narrative",
 									"chapter": "A",

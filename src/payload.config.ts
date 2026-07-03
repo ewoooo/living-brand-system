@@ -19,6 +19,7 @@ import { BrandTypefaces } from './collections/BrandTypefaces'
 import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
+import { RuleBindings } from './collections/RuleBindings'
 import { Rules } from './collections/Rules'
 import { TemplateAssets } from './collections/TemplateAssets'
 import { TemplateCategories } from './collections/TemplateCategories'
@@ -98,6 +99,7 @@ export default buildConfig({
 		AgentSkills,
 		GuidelineSections,
 		GuidelinePages,
+		RuleBindings,
 	],
 	editor: lexicalEditor({
 		// 가이드라인 수치 규정 표(최소 사이즈, 자간 등) 입력용. EXPERIMENTAL: 업그레이드 시 변경 가능성 있음.
