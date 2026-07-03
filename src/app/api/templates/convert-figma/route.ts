@@ -4,7 +4,7 @@ import { Forbidden, getPayload } from 'payload'
 import { convertFigmaFrame } from '@/features/template-import/services/convert-figma-frame.service'
 import { parseConvertFigmaRequest } from '@/features/template-import/utils/parse-convert-figma-request'
 import { parseFigmaUrl } from '@/features/template-import/utils/parse-figma-url'
-import { hasManagerRole } from '@/lib/auth'
+import { isManager } from '@/lib/auth'
 import { FigmaConfigurationError } from '@/lib/errors'
 
 // 이미지 조각 다운로드·업로드가 이어지므로 기본 시간보다 길게 잡는다.
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 	if (!user) {
 		return Response.json({ message: 'Unauthorized' }, { status: 401 })
 	}
-	if (!hasManagerRole(user)) {
+	if (!isManager(user)) {
 		return Response.json({ message: 'Forbidden' }, { status: 403 })
 	}
 

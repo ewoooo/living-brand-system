@@ -423,30 +423,15 @@ describe('agent tools', () => {
 		expect(text).toBe('Logo minimum size')
 	})
 
-	it('renders structured agent output as answer text', () => {
+	it('concatenates assistant text parts', () => {
 		const text = getAgentMessageText({
 			role: 'assistant',
 			parts: [
-				{
-					type: 'text',
-					text: JSON.stringify({
-						answer: '안녕하세요.',
-						citations: [],
-						needsHumanReview: false,
-					}),
-				},
+				{ type: 'text', text: '안녕하세요. ' },
+				{ type: 'text', text: '브랜드 가이드입니다.' },
 			],
 		} as AgentChatMessage)
 
-		expect(text).toBe('안녕하세요.')
-	})
-
-	it('renders partial structured agent output while streaming', () => {
-		const text = getAgentMessageText({
-			role: 'assistant',
-			parts: [{ type: 'text', text: '{"answer":"안녕하세요!\\n브랜드' }],
-		} as AgentChatMessage)
-
-		expect(text).toBe('안녕하세요!\n브랜드')
+		expect(text).toBe('안녕하세요. 브랜드 가이드입니다.')
 	})
 })

@@ -1,5 +1,5 @@
 import { type CollectionConfig, slugField } from 'payload'
-import { authenticated, managerOrAdmin } from '@/lib/auth'
+import { managerManagedAccess } from '@/lib/auth'
 
 /**
  * Create 화면 사이드바의 템플릿 분류 단위.
@@ -12,13 +12,7 @@ export const TemplateCategories: CollectionConfig = {
 		singular: 'Template Category',
 		plural: 'Template Categories',
 	},
-	access: {
-		// 누구나 읽되(인증), 분류 변경은 manager/admin만 (Worker는 사용만)
-		read: authenticated,
-		create: managerOrAdmin,
-		update: managerOrAdmin,
-		delete: managerOrAdmin,
-	},
+	access: managerManagedAccess,
 	admin: {
 		group: 'Production Resources',
 		useAsTitle: 'title',
