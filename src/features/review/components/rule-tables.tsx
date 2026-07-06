@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronDown, MagicWand, Ruler, User } from '@carbon/icons-react'
+import { AiGenerate, ChevronDown, Ruler, User } from '@carbon/icons-react'
 import { type ComponentType, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { getChecker } from '@/features/review/checkers/registry'
@@ -26,7 +26,7 @@ const TIER: Record<
 	{ label: string; Icon: ComponentType<{ size?: number }>; desc: string }
 > = {
 	A: { label: 'A · deterministic', Icon: Ruler, desc: '체커가 직접 판정하는 기준' },
-	B: { label: 'B · heuristic', Icon: MagicWand, desc: 'AI 평가를 경유하는 기준' },
+	B: { label: 'B · heuristic', Icon: AiGenerate, desc: 'AI 평가를 경유하는 기준' },
 	C: { label: 'C · advisory', Icon: User, desc: '브랜드 담당자 확인이 필요한 기준' },
 }
 
@@ -178,6 +178,7 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 	const { scenarioKey, showUnimplemented, selected } = useReviewImages()
 	const [showFailOnly, setShowFailOnly] = useState(false)
 	const results = selected?.results
+	const checking = Boolean(selected?.checking)
 	const visibleSections = filterRulesetByScenario(sections, getReviewScenario(scenarioKey))
 
 	let pass = 0
@@ -219,6 +220,7 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 						pass={pass}
 						fail={fail}
 						pendingReview={pendingReview}
+						checking={checking}
 						showFailOnly={showFailOnly}
 						onToggleFailOnly={() => setShowFailOnly((value) => !value)}
 					/>
@@ -247,12 +249,14 @@ function ResultSummary({
 	pass,
 	fail,
 	pendingReview,
+	checking,
 	showFailOnly,
 	onToggleFailOnly,
 }: {
 	pass: number
 	fail: number
 	pendingReview: number
+	checking: boolean
 	showFailOnly: boolean
 	onToggleFailOnly: () => void
 }) {
@@ -270,6 +274,12 @@ function ResultSummary({
 				<span className="inline-block size-2 rounded-full bg-neutral-400" />
 				대기 <span className="font-semibold tabular-nums">{pendingReview}</span>
 			</span>
+			{checking && (
+				<span className="flex items-center gap-2 text-sky-700 text-xs dark:text-sky-400">
+					<span className="inline-block size-2 animate-pulse rounded-full bg-sky-500" />
+					AI 검수 중
+				</span>
+			)}
 			<button
 				type="button"
 				onClick={onToggleFailOnly}

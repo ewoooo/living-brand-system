@@ -28,7 +28,10 @@
 			"application.format",
 			"application.print-spec",
 			"color.palette",
-			"typography.usage"
+			"typography.usage",
+			"typography.families",
+			"typography.weights",
+			"typography.misuse"
 		],
 		"flags": {
 			"logo": true,
