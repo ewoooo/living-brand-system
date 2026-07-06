@@ -417,7 +417,10 @@ describe('agent tools', () => {
 	it('extracts text from lexical rich text nodes', () => {
 		const text = extractTextFromLexical({
 			root: {
-				children: [{ text: 'Logo' }, { children: [{ text: 'minimum size' }] }],
+				children: [
+					{ text: 'Logo' },
+					{ type: 'paragraph', children: [{ text: 'minimum size' }] },
+				],
 			},
 		})
 

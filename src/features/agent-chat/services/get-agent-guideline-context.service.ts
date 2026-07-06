@@ -1,3 +1,5 @@
+import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical'
+import { convertLexicalToPlaintext } from '@payloadcms/richtext-lexical/plaintext'
 import type { ApplicationImage, BrandColor, GuidelinePage, Rule, Section } from '@/payload-types'
 import {
 	type AgentGuidelineDocument,
@@ -250,25 +252,10 @@ function getSectionSlug(value: number | Section): string | null {
 }
 
 export function extractTextFromLexical(value: unknown): string {
-	return collectText(value).join(' ').replace(/\s+/g, ' ').trim()
-}
-
-function collectText(value: unknown): string[] {
-	if (!value || typeof value !== 'object') {
-		return []
-	}
-
-	if (Array.isArray(value)) {
-		return value.flatMap(collectText)
-	}
-
-	const node = value as { children?: unknown; root?: unknown; text?: unknown }
-
-	return [
-		typeof node.text === 'string' ? node.text : null,
-		...(node.root ? collectText(node.root) : []),
-		...(Array.isArray(node.children) ? collectText(node.children) : []),
-	].filter((item): item is string => Boolean(item))
+	// agent 컨텍스트용 한 줄 텍스트 — 블록 구분 개행은 공백으로 접는다.
+	return convertLexicalToPlaintext({ data: value as SerializedEditorState })
+		.replace(/\s+/g, ' ')
+		.trim()
 }
 
 function compact(values: (string | null | undefined)[]): string[] {

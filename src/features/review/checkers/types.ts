@@ -10,9 +10,9 @@ export interface RuleMetric {
 	label?: string
 }
 
-/** checker 하나의 판정 결과. unsupported는 입력 특성상 평가 불가한 경우다. */
+/** checker 하나의 판정 결과. */
 export interface CheckResult {
-	status: 'pass' | 'fail' | 'unsupported'
+	status: 'pass' | 'fail'
 	/** 충족률 % (계산 가능한 룰만, 아니면 null) */
 	fulfillment: number | null
 	detail: string

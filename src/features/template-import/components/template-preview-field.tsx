@@ -13,6 +13,7 @@ import { useMemo, useState } from 'react'
 import { flushSync } from 'react-dom'
 import Moveable from 'react-moveable'
 import { TemplateRenderer } from '@/components/template-renderer'
+import { isUnauthorizedAssetCollection } from '@/features/template-import/utils/validate-authorized-assets'
 import {
 	AUTHORIZED_ASSET_COLLECTIONS,
 	type JsonFlowElement,
@@ -84,7 +85,7 @@ function countUnauthorizedImages(elements: readonly AnyElement[]): number {
 		if (element.type === 'stack') {
 			return total + countUnauthorizedImages(element.children)
 		}
-		if (element.type === 'image' && element.assetCollection === 'template-assets') {
+		if (element.type === 'image' && isUnauthorizedAssetCollection(element.assetCollection)) {
 			return total + 1
 		}
 
@@ -503,7 +504,7 @@ export default function TemplatePreviewField() {
 								/>
 								<span style={{ fontSize: 13 }}>
 									이미지 출처:{' '}
-									{selected.assetCollection === 'template-assets' ? (
+									{isUnauthorizedAssetCollection(selected.assetCollection) ? (
 										<strong style={{ color: 'var(--theme-error-500)' }}>
 											비인가 (임포트 조각)
 										</strong>
