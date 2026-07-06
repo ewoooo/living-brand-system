@@ -8,7 +8,7 @@ const TONE_IN_TONE_MIN_CONTRAST = 1.5
 
 /**
  * color.pairing: 색 "조합"이 허용되는지 판정한다.
- * palette(개별 색이 팔레트 안인가)를 전제로만 성립 — 팔레트 밖 색이 있으면 조합은 무의미(unsupported).
+ * palette(개별 색이 팔레트 안인가)를 전제로만 성립 — 팔레트 밖 색이 있으면 조합 평가 불가로 fail.
  * 모든 색이 팔레트 안일 때: 단일 유채계열(+극단색)=모노/톤온톤으로 유효, 다계열=톤인톤 근사(명도 대비).
  * 방향성(배경톤→전경톤) 풀 테이블은 fg/bg 추정이 필요해 후속 정교화로 남긴다.
  */
@@ -23,7 +23,7 @@ export const colorPairingChecker: RuleChecker = {
 		// palette 게이트: 하나라도 팔레트 밖이면 조합을 논할 수 없다.
 		if (snapped.some((s) => s.match.distance > PALETTE_DELTA_E_TOLERANCE)) {
 			return {
-				status: 'unsupported',
+				status: 'fail',
 				fulfillment: null,
 				detail: '팔레트 외 색 존재 — 조합 평가 불가 (palette 선행)',
 			}

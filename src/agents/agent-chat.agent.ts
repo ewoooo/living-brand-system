@@ -23,6 +23,13 @@ type AgentChatRuntimeContext = {
 	requestId: string
 }
 
+/** provider 자격 증명은 agent가 소유한다 — route는 던져진 설정 오류를 HTTP 응답으로 매핑만 한다. */
+export function assertAgentChatProviderConfigured() {
+	if (!process.env.ANTHROPIC_API_KEY) {
+		throw new AgentConfigurationError()
+	}
+}
+
 /** 모든 tool은 동일한 user 컨텍스트를 받는다 — tool 추가 시 여기 한 곳만 따라간다. */
 function toolsContextFor(user: unknown) {
 	return Object.fromEntries(

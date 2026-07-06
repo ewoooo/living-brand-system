@@ -1,5 +1,9 @@
 import { createAgentUIStreamResponse, safeValidateUIMessages } from 'ai'
-import { type AgentChatMessage, agentChatAgent } from '@/agents/agent-chat.agent'
+import {
+	type AgentChatMessage,
+	agentChatAgent,
+	assertAgentChatProviderConfigured,
+} from '@/agents/agent-chat.agent'
 
 export type { AgentChatMessage }
 
@@ -26,6 +30,9 @@ export function createAgentChatResponse(input: {
 	requestId: string
 	user: unknown
 }) {
+	// stream 시작 전에 동기로 검증해야 route가 설정 오류를 HTTP 상태로 매핑할 수 있다.
+	assertAgentChatProviderConfigured()
+
 	return createAgentUIStreamResponse({
 		agent: agentChatAgent,
 		uiMessages: input.messages,

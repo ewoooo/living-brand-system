@@ -52,10 +52,6 @@ export async function POST(req: Request) {
 	const requestId = crypto.randomUUID()
 
 	try {
-		if (!process.env.ANTHROPIC_API_KEY) {
-			throw new AgentConfigurationError()
-		}
-
 		return await createAgentChatResponse({
 			locale: parsed.data.locale,
 			messages: validatedMessages.data,

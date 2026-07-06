@@ -1,13 +1,22 @@
-import { Forbidden } from 'payload'
+import { z } from 'zod'
 import { convertFigmaFrame } from '@/features/template-import/services/convert-figma-frame.service'
-import { parseConvertFigmaRequest } from '@/features/template-import/utils/parse-convert-figma-request'
 import { parseFigmaUrl } from '@/features/template-import/utils/parse-figma-url'
 import { isManager } from '@/lib/auth'
-import { FigmaConfigurationError } from '@/lib/errors'
+import { AssetAccessDeniedError, FigmaConfigurationError } from '@/lib/errors'
 import { authenticateRequest } from '@/lib/request-auth'
 
 // 이미지 조각 다운로드·업로드가 이어지므로 기본 시간보다 길게 잡는다.
 export const maxDuration = 60
+
+const convertFigmaRequestSchema = z.object({
+	sourceUrl: z.string().min(1).max(500),
+})
+
+async function parseRequestBody(req: Request) {
+	const body = await req.json().catch(() => null)
+
+	return convertFigmaRequestSchema.safeParse(body)
+}
 
 /**
  * Figma URL을 JsonTemplate으로 변환해 돌려주는 adapter. Admin의 Templates 폼 UI 필드가 호출한다.
@@ -31,7 +40,7 @@ export async function POST(req: Request) {
 		return Response.json({ message: 'Forbidden' }, { status: 403 })
 	}
 
-	const parsed = await parseConvertFigmaRequest(req)
+	const parsed = await parseRequestBody(req)
 
 	if (!parsed.success) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
@@ -56,7 +65,7 @@ export async function POST(req: Request) {
 		if (error instanceof FigmaConfigurationError) {
 			return Response.json({ message: error.message }, { status: 503 })
 		}
-		if (error instanceof Forbidden) {
+		if (error instanceof AssetAccessDeniedError) {
 			return Response.json({ message: 'Forbidden' }, { status: 403 })
 		}
 

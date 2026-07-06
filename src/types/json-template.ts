@@ -117,52 +117,37 @@ const flowTextSchema = z.object({ ...flowBaseSchema.shape, ...textPropsShape })
 const flowImageSchema = z.object({ ...flowBaseSchema.shape, ...imagePropsShape })
 const flowRectSchema = z.object({ ...flowBaseSchema.shape, ...rectPropsShape })
 
-// 재귀(스택 안의 스택)는 TS가 추론하지 못하므로 입출력 타입을 명시하고 z.lazy로 묶는다.
-const stackLayoutSchema = z.object(stackLayoutShape)
+// 재귀(스택 안의 스택)는 Zod 4 getter로 표현한다 — 스키마가 ZodObject로 남고 타입이 추론된다.
+// getter 반환 타입은 순환 참조라 추론이 안 되고(TS7022), 명시하려면 interface로
+// 지연 해석해야 한다 — type alias나 인라인 주석은 TS2502로 다시 순환에 걸린다.
+interface FlowChildrenSchema
+	extends z.ZodArray<
+		z.ZodUnion<
+			readonly [
+				typeof flowTextSchema,
+				typeof flowImageSchema,
+				typeof flowRectSchema,
+				typeof flowStackSchema,
+			]
+		>
+	> {}
 
-type FlowLeafOutput =
-	| z.output<typeof flowTextSchema>
-	| z.output<typeof flowImageSchema>
-	| z.output<typeof flowRectSchema>
-type FlowLeafInput =
-	| z.input<typeof flowTextSchema>
-	| z.input<typeof flowImageSchema>
-	| z.input<typeof flowRectSchema>
-
-interface FlowStackOutput
-	extends z.output<typeof flowBaseSchema>,
-		z.output<typeof stackLayoutSchema> {
-	children: FlowElementOutput[]
-}
-interface FlowStackInput extends z.input<typeof flowBaseSchema>, z.input<typeof stackLayoutSchema> {
-	children: FlowElementInput[]
-}
-
-type FlowElementOutput = FlowLeafOutput | FlowStackOutput
-type FlowElementInput = FlowLeafInput | FlowStackInput
-
-const flowElementSchema: z.ZodType<FlowElementOutput, FlowElementInput> = z.lazy(() =>
-	z.union([flowTextSchema, flowImageSchema, flowRectSchema, flowStackSchema]),
-)
-
-const flowStackSchema: z.ZodType<FlowStackOutput, FlowStackInput> = z.object({
+const flowStackSchema = z.object({
 	...flowBaseSchema.shape,
 	...stackLayoutShape,
-	children: z.array(flowElementSchema),
+	get children(): FlowChildrenSchema {
+		return z.array(flowElementSchema)
+	},
 })
 
-interface StackElementOutput
-	extends z.output<typeof baseElementSchema>,
-		z.output<typeof stackLayoutSchema> {
-	children: FlowElementOutput[]
-}
-interface StackElementInput
-	extends z.input<typeof baseElementSchema>,
-		z.input<typeof stackLayoutSchema> {
-	children: FlowElementInput[]
-}
+const flowElementSchema = z.union([
+	flowTextSchema,
+	flowImageSchema,
+	flowRectSchema,
+	flowStackSchema,
+])
 
-const stackElementSchema: z.ZodType<StackElementOutput, StackElementInput> = z.object({
+const stackElementSchema = z.object({
 	...baseElementSchema.shape,
 	...stackLayoutShape,
 	children: z.array(flowElementSchema),
@@ -172,17 +157,21 @@ export const jsonTemplateSchema = z.object({
 	width: z.number().positive(),
 	height: z.number().positive(),
 	background: z.string(),
-	// stackElementSchema가 타입 주석 탓에 ZodObject가 아니어서 discriminatedUnion 대신 union을 쓴다.
 	elements: z.array(
-		z.union([textElementSchema, imageElementSchema, rectElementSchema, stackElementSchema]),
+		z.discriminatedUnion('type', [
+			textElementSchema,
+			imageElementSchema,
+			rectElementSchema,
+			stackElementSchema,
+		]),
 	),
 })
 
 export type JsonTemplate = z.infer<typeof jsonTemplateSchema>
 export type JsonTemplateElement = JsonTemplate['elements'][number]
 export type JsonRectElement = z.infer<typeof rectElementSchema>
-export type JsonStackElement = StackElementOutput
-export type JsonFlowElement = FlowElementOutput
+export type JsonStackElement = z.infer<typeof stackElementSchema>
+export type JsonFlowElement = z.infer<typeof flowElementSchema>
 
 export type JsonSlotElement = Exclude<JsonFlowElement | JsonTemplateElement, { type: 'stack' }>
 

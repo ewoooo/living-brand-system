@@ -38,7 +38,7 @@ export async function runReviewService(buffer: Buffer): Promise<Record<string, R
 			if (!checker) continue
 			const result = checker.check({ pixels, grid })
 			results[rule.key] = {
-				status: result.status === 'pass' ? 'pass' : 'fail',
+				status: result.status,
 				fulfillment: result.fulfillment,
 				detail: result.detail,
 				metric: result.metric,
