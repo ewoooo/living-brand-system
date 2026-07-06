@@ -6,25 +6,24 @@ import { extractPixelGrid } from '@/features/review/repositories/image-decoder.s
 import { runAiReview } from '@/features/review/services/ai-review.service'
 import { getReviewPalette } from '@/features/review/services/get-review-palette.service'
 import {
-	getReviewRuleset,
+	getReviewRules,
 	type ReviewRule,
-	type ReviewSection,
 } from '@/features/review/services/get-review-ruleset.service'
 import type { ImageContentFlags } from '@/features/review/types/content-flags'
 
 /**
  * 검수 대상 이미지를 룰셋에 비춰 checker가 있는 룰만 판정한다 (서버 확정 판정의 단일 소스).
  * 요소 종속 룰(logo 등)은 포함 요소 플래그가 켜진 것만 검수한다 (content-gate 소유).
- * 이미지 디코딩은 image-pixels repository가, 기준 조회는 review service/repository가 소유한다.
+ * 이미지 디코딩은 image-decoder repository가, 기준 조회는 review service/repository가 소유한다.
  */
 export async function runReviewService(
 	buffer: Buffer,
 	flags: ImageContentFlags,
-	inputSections?: ReviewSection[],
+	inputRules?: ReviewRule[],
 ): Promise<Record<string, CheckResult>> {
-	const [grid, sections, palette] = await Promise.all([
+	const [grid, rules, palette] = await Promise.all([
 		extractPixelGrid(buffer),
-		inputSections ?? getReviewRuleset(),
+		inputRules ?? getReviewRules(),
 		getReviewPalette(),
 	])
 	const pixels = opaquePixels(grid)
@@ -33,16 +32,14 @@ export async function runReviewService(
 	const results: Record<string, CheckResult> = {}
 	const heuristicRules: ReviewRule[] = []
 	const ctx = { pixels, palette, grid, image }
-	for (const section of sections) {
-		for (const rule of section.rules) {
-			if (results[rule.key] || !shouldCheckRule(rule.key, flags)) continue
-			if (rule.executor === 'heuristic') {
-				heuristicRules.push(rule)
-				continue
-			}
-			const result = runRuleByExecutor(rule, ctx)
-			if (result) results[rule.key] = result
+	for (const rule of rules) {
+		if (results[rule.key] || !shouldCheckRule(rule.key, flags)) continue
+		if (rule.executor === 'heuristic') {
+			heuristicRules.push(rule)
+			continue
 		}
+		const result = runRuleByExecutor(rule, ctx)
+		if (result) results[rule.key] = result
 	}
 	if (heuristicRules.length > 0) {
 		Object.assign(results, await runAiReview(heuristicRules, ctx))

@@ -255,23 +255,11 @@ export interface GuidelinePage {
     [k: string]: unknown;
   } | null;
   /**
-   * 이 페이지에서 설명하거나 적용하는 룰과 브랜드 구체 값입니다.
+   * 이 페이지에서 설명하거나 적용하는 룰입니다.
    */
   rules?:
     | {
         rule: number | Rule;
-        /**
-         * 이 페이지에서의 브랜드 구체 값. 비어 있을 수 있습니다.
-         */
-        value?: string | null;
-        /**
-         * 가이드라인 원문 근거(출처).
-         */
-        evidence?: string | null;
-        /**
-         * 비전 검수나 운영 판단에 참고할 기준 이미지입니다.
-         */
-        referenceAssets?: (number | ApplicationImage)[] | null;
         id?: string | null;
       }[]
     | null;
@@ -295,7 +283,7 @@ export interface GuidelinePage {
 export interface Rule {
   id: number;
   /**
-   * category.attribute 점 표기. 예: logo.min-size
+   * domain.subject.property 점 표기. 예: logo.size.minimum
    */
   key: string;
   title: string;
@@ -325,6 +313,18 @@ export interface Rule {
    * 브랜드 값이 채워야 할 구조(요약 표기)
    */
   paramSchema?: string | null;
+  /**
+   * 이 rule의 검수 기준값입니다.
+   */
+  value?: string | null;
+  /**
+   * 이 rule의 가이드라인 근거 문장입니다.
+   */
+  evidence?: string | null;
+  /**
+   * 비전 검수나 운영 판단에 참고할 기준 이미지입니다.
+   */
+  referenceAssets?: (number | ApplicationImage)[] | null;
   scoring?: string | null;
   input?: string | null;
   notes?: string | null;
@@ -1080,9 +1080,6 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
     | T
     | {
         rule?: T;
-        value?: T;
-        evidence?: T;
-        referenceAssets?: T;
         id?: T;
       };
   section?: T;
@@ -1150,6 +1147,9 @@ export interface RulesSelect<T extends boolean = true> {
   tier?: T;
   executor?: T;
   paramSchema?: T;
+  value?: T;
+  evidence?: T;
+  referenceAssets?: T;
   scoring?: T;
   input?: T;
   notes?: T;

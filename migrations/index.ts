@@ -18,6 +18,7 @@ import * as migration_20260706_031500_add_mcp_call_check_session_source from './
 import * as migration_20260706_033000_normalize_rule_executor from './20260706_033000_normalize_rule_executor';
 import * as migration_20260706_052000_add_rule_reference_assets from './20260706_052000_add_rule_reference_assets';
 import * as migration_20260706_053000_make_color_group_editable from './20260706_053000_make_color_group_editable';
+import * as migration_20260706_061000_split_review_rules from './20260706_061000_split_review_rules';
 
 export const migrations = [
   {
@@ -119,5 +120,10 @@ export const migrations = [
     up: migration_20260706_053000_make_color_group_editable.up,
     down: migration_20260706_053000_make_color_group_editable.down,
     name: '20260706_053000_make_color_group_editable'
+  },
+  {
+    up: migration_20260706_061000_split_review_rules.up,
+    down: migration_20260706_061000_split_review_rules.down,
+    name: '20260706_061000_split_review_rules'
   },
 ];

@@ -1,7 +1,7 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import type { CheckResult } from '@/features/review/checkers/types'
-import type { ReviewSection } from '@/features/review/services/get-review-ruleset.service'
+import type { ReviewRule } from '@/features/review/services/get-review-ruleset.service'
 import type { CheckSession, User } from '@/payload-types'
 
 export type CheckSessionSource = CheckSession['source']
@@ -10,7 +10,7 @@ interface CreateCheckSessionInput {
 	source: CheckSessionSource
 	status: CheckSession['status']
 	imageName?: string
-	rulesetSnapshot?: ReviewSection[]
+	rulesetSnapshot?: ReviewRule[]
 	results?: Record<string, CheckResult>
 	errorMessage?: string
 	user: User

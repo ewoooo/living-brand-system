@@ -2,7 +2,6 @@ import path from 'node:path'
 import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 import type { ColumnUnitBlock, GuidelinePage } from '../src/payload-types'
 
-type PageRule = NonNullable<GuidelinePage['rules']>[number]
 type RichText = NonNullable<NonNullable<ColumnUnitBlock['columns']>[number]['body']>
 
 const ASSETS = [
@@ -99,14 +98,15 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 	const rules = (page.rules ?? []).map((placement) => {
 		const rule = placement.rule
 		const key = typeof rule === 'number' ? null : rule.key
+		const legacyPlacement = placement as { value?: string | null; evidence?: string | null }
 		const referenceAssets = key
 			? (RULE_ASSETS[key] ?? []).map((assetKey) => assetIds[assetKey])
-			: toIds(placement.referenceAssets)
+			: toIds((placement as { referenceAssets?: unknown[] }).referenceAssets)
 		return {
 			id: placement.id,
 			rule: typeof rule === 'number' ? rule : rule.id,
-			value: placement.value,
-			evidence: placement.evidence,
+			value: legacyPlacement.value,
+			evidence: legacyPlacement.evidence,
 			referenceAssets,
 		}
 	})
@@ -135,11 +135,12 @@ export async function down({ payload, req }: MigrateDownArgs): Promise<void> {
 			),
 			rules: (page.rules ?? []).map((placement) => {
 				const rule = placement.rule
+				const legacyPlacement = placement as { value?: string | null; evidence?: string | null }
 				return {
 					id: placement.id,
 					rule: typeof rule === 'number' ? rule : rule.id,
-					value: placement.value,
-					evidence: placement.evidence,
+					value: legacyPlacement.value,
+					evidence: legacyPlacement.evidence,
 					referenceAssets: [],
 				}
 			}),
@@ -248,6 +249,12 @@ function isTypographyBlock(
 	return block.blockType === 'columnUnit' && block.title === title
 }
 
-function toIds(values: PageRule['referenceAssets']) {
-	return (values ?? []).map((value) => (typeof value === 'number' ? value : value.id))
+function toIds(values: unknown[] | undefined) {
+	return (values ?? []).flatMap((value) => {
+		if (typeof value === 'number') return [value]
+		if (value && typeof value === 'object' && 'id' in value && typeof value.id === 'number') {
+			return [value.id]
+		}
+		return []
+	})
 }

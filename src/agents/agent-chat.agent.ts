@@ -53,9 +53,9 @@ export const agentChatAgent = new ToolLoopAgent<
 	prepareStep: ({ stepNumber }) =>
 		stepNumber === 0
 			? {
-				activeTools: ['loadSkill'],
-				toolChoice: { type: 'tool', toolName: 'loadSkill' },
-			}
+					activeTools: ['loadSkill'],
+					toolChoice: { type: 'tool', toolName: 'loadSkill' },
+				}
 			: undefined,
 	prepareCall: async ({ options = { user: null }, ...settings }) => {
 		const [skills, defaultInstructions] = await Promise.all([

@@ -3,11 +3,8 @@ import {
 	createCheckSessionRecord,
 	updateCheckSessionRecord,
 } from '@/features/review/repositories/check-session.payload.repository'
-import {
-	filterRulesetByScenario,
-	getReviewScenario,
-} from '@/features/review/scenarios/review-scenarios'
-import { getReviewRuleset } from '@/features/review/services/get-review-ruleset.service'
+import { getReviewScenario } from '@/features/review/scenarios/review-scenarios'
+import { getReviewRules } from '@/features/review/services/get-review-ruleset.service'
 import { runReviewService } from '@/features/review/services/run-review.service'
 import type { ImageContentFlags } from '@/features/review/types/content-flags'
 import type { User } from '@/payload-types'
@@ -26,7 +23,7 @@ interface StartCheckSessionInput {
  */
 export async function startCheckSessionService(input: StartCheckSessionInput) {
 	const scenario = getReviewScenario(input.scenarioKey)
-	const rulesetSnapshot = filterRulesetByScenario(await getReviewRuleset(), scenario)
+	const rulesetSnapshot = await getReviewRules(scenario.ruleKeys)
 	const session = await createCheckSessionRecord({
 		source: input.source,
 		status: 'running',

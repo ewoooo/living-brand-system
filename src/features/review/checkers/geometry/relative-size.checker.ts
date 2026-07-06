@@ -1,6 +1,6 @@
 /**
  * Checker: 검출된 로고가 프레임 대비 충분히 큰지 본다.
- * ruleKey는 `logo.min-size`, 파일명은 상대 크기 측정 기능을 따른다.
+ * ruleKey는 `logo.size.minimum`, 파일명은 상대 크기 측정 기능을 따른다.
  */
 
 import { detectLogoRegion } from '../logo/logo-geometry'
@@ -10,12 +10,12 @@ import type { RuleChecker } from '../types'
 const MIN_FRACTION = 0.08
 
 /**
- * logo.min-size: 로고가 너무 작아 깨지지 않는지 검수한다.
+ * logo.size.minimum: 로고가 너무 작아 깨지지 않는지 검수한다.
  * (가) 로고 위주 입력 전제 — 검출된 로고 bbox 최대변을 프레임 최대변 대비 비율로 본다.
  * 절대 px "깨짐" 판정은 원본 해상도가 필요해 후속 정교화로 남기고, 지금은 프레임 상대 비율로 근사.
  */
 export const relativeSizeChecker: RuleChecker = {
-	ruleKey: 'logo.min-size',
+	ruleKey: 'logo.size.minimum',
 	check: ({ grid }) => {
 		if (!grid) return { status: 'fail', fulfillment: null, detail: 'grid 없음' }
 		const region = detectLogoRegion(grid)

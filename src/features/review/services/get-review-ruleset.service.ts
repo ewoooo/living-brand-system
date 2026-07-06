@@ -1,5 +1,8 @@
 import { cache } from 'react'
-import { getReviewRulesetPages } from '@/features/review/repositories/review-ruleset.payload.repository'
+import {
+	getReviewRuleDocs,
+	getReviewRulesetPages,
+} from '@/features/review/repositories/review-ruleset.payload.repository'
 import type { ApplicationImage, Rule } from '@/payload-types'
 
 export interface ReviewReferenceAsset {
@@ -10,12 +13,11 @@ export interface ReviewReferenceAsset {
 }
 
 export interface ReviewRule {
-	/** 배치(배열 행) id — 같은 rule key가 한 페이지에 여러 배치로 등장할 수 있어 행 식별에 쓴다 */
-	placementId: string
 	key: string
 	titleKo: string
 	tier: string
 	executor: NonNullable<Rule['executor']>
+	value: string
 	scoring: string
 	input: string
 	evidence: string
@@ -52,22 +54,43 @@ export const getReviewRuleset = cache(async (): Promise<ReviewSection[]> => {
 				if (typeof rule === 'number') return []
 				return [
 					{
-						placementId: placement.id ?? rule.key,
 						key: rule.key,
 						titleKo: rule.titleKo ?? rule.title,
 						tier: rule.tier ?? '',
 						executor: rule.executor ?? 'deterministic',
+						value: rule.value ?? '',
 						scoring: rule.scoring ?? '',
 						input: rule.input ?? '',
-						evidence: placement.evidence ?? '',
-						referenceAssets: (placement.referenceAssets ?? []).flatMap(
-							toReferenceAsset,
-						),
+						evidence: rule.evidence ?? '',
+						referenceAssets: (rule.referenceAssets ?? []).flatMap(toReferenceAsset),
 					},
 				]
 			}),
 		}))
 })
+
+export async function getReviewRules(ruleKeys?: string[]): Promise<ReviewRule[]> {
+	const rules = (await getReviewRuleDocs()).map(toReviewRule)
+	if (!ruleKeys) return rules
+	const order = new Map(ruleKeys.map((key, index) => [key, index]))
+	return rules
+		.filter((rule) => order.has(rule.key))
+		.sort((a, b) => (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0))
+}
+
+function toReviewRule(rule: Rule): ReviewRule {
+	return {
+		key: rule.key,
+		titleKo: rule.titleKo ?? rule.title,
+		tier: rule.tier ?? '',
+		executor: rule.executor ?? 'deterministic',
+		value: rule.value ?? '',
+		scoring: rule.scoring ?? '',
+		input: rule.input ?? '',
+		evidence: rule.evidence ?? '',
+		referenceAssets: (rule.referenceAssets ?? []).flatMap(toReferenceAsset),
+	}
+}
 
 function toReferenceAsset(asset: number | ApplicationImage): ReviewReferenceAsset[] {
 	if (typeof asset === 'number' || !asset.url || !asset.mimeType) return []

@@ -96,6 +96,7 @@ function formatRule(rule: ReviewRule): string {
 	return [
 		`- key: ${rule.key}`,
 		`  title: ${rule.titleKo}`,
+		`  value: ${rule.value || 'Not provided'}`,
 		`  scoring: ${rule.scoring || 'Not provided'}`,
 		`  input: ${rule.input || 'Not provided'}`,
 		`  evidence: ${rule.evidence || 'Not provided'}`,

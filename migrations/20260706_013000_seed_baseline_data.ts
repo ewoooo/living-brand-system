@@ -1,4 +1,4 @@
-import type { MigrateDownArgs, MigrateUpArgs } from '@payloadcms/db-postgres'
+import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 import type { Rule } from '../src/payload-types'
 import presetCatalog from './data/preset-catalog.json'
 
@@ -141,7 +141,42 @@ type CatalogEntry = {
 	note?: string
 }
 
-export async function up({ payload, req }: MigrateUpArgs): Promise<void> {
+async function ensureCurrentConfigTables(db: MigrateUpArgs['db']) {
+	await db.execute(sql`
+		ALTER TABLE rules ADD COLUMN IF NOT EXISTS value varchar;
+		ALTER TABLE rules ADD COLUMN IF NOT EXISTS evidence varchar;
+		CREATE TABLE IF NOT EXISTS guideline_pages_rules (
+			"_order" integer NOT NULL,
+			"_parent_id" integer NOT NULL,
+			"id" varchar PRIMARY KEY NOT NULL,
+			"rule_id" integer,
+			"value" varchar,
+			"evidence" varchar,
+			"source_page" numeric
+		);
+		CREATE TABLE IF NOT EXISTS _guideline_pages_v_version_rules (
+			"_order" integer NOT NULL,
+			"_parent_id" integer NOT NULL,
+			"id" serial PRIMARY KEY NOT NULL,
+			"rule_id" integer,
+			"value" varchar,
+			"evidence" varchar,
+			"source_page" numeric,
+			"_uuid" varchar
+		);
+		CREATE TABLE IF NOT EXISTS rules_rels (
+			id serial PRIMARY KEY,
+			"order" integer,
+			parent_id integer NOT NULL,
+			path varchar NOT NULL,
+			application_images_id integer
+		);
+	`)
+}
+
+export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
+	await ensureCurrentConfigTables(db)
+
 	// 1) guideline sections/pages 골격 (slug + alias 자연키, create-only)
 	for (const section of GUIDELINE_SECTIONS) {
 		const aliases = 'aliases' in section ? section.aliases : []

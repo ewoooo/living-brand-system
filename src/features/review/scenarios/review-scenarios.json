@@ -2,7 +2,7 @@
 	{
 		"key": "quick",
 		"title": "빠른 기본 검수",
-		"ruleKeys": ["color.palette", "color.pairing", "logo.min-size", "logo.clear-space"],
+		"ruleKeys": ["color.palette", "color.combination", "logo.size.minimum", "logo.space.clear"],
 		"flags": {
 			"logo": true,
 			"typography": false,
@@ -13,7 +13,7 @@
 	{
 		"key": "image-mood",
 		"title": "이미지 무드 검수",
-		"ruleKeys": ["imagery.style", "imagery.classification", "color.usage"],
+		"ruleKeys": ["imagery.style", "imagery.photography.classification", "color.usage"],
 		"flags": {
 			"logo": false,
 			"typography": false,
@@ -25,12 +25,12 @@
 		"key": "stationery",
 		"title": "명함/스테이셔너리 검수",
 		"ruleKeys": [
-			"application.format",
+			"application.stationery.format",
 			"application.print-spec",
 			"color.palette",
 			"typography.usage",
-			"typography.families",
-			"typography.weights",
+			"typography.family",
+			"typography.weight",
 			"typography.misuse"
 		],
 		"flags": {

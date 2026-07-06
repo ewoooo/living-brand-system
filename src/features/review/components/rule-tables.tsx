@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 
 interface RuleRowData {
 	rule: Rule
+	rowId: string
 	sectionLabel: string | null
 	anchorId: string | null
 }
@@ -229,6 +230,7 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 			seenSections.add(section.slug)
 			rows.push({
 				rule,
+				rowId: `${section.slug}:${rule.key}`,
 				sectionLabel: first ? section.title : null,
 				anchorId: first ? section.slug : null,
 			})
@@ -253,7 +255,7 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 					<table className="w-full border-collapse">
 						<tbody>
 							{rows.map((row) => (
-								<RuleRow key={row.rule.placementId} {...row} />
+								<RuleRow key={row.rowId} {...row} />
 							))}
 						</tbody>
 					</table>

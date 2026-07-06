@@ -1,6 +1,6 @@
 /**
  * Checker: 검출된 로고 bbox 주변 clear-space가 충분한지 본다.
- * ruleKey는 `logo.clear-space`, 파일명은 여백 측정 기능을 따른다.
+ * ruleKey는 `logo.space.clear`, 파일명은 여백 측정 기능을 따른다.
  */
 
 import { detectLogoRegion, estimateStemWidth } from '../logo/logo-geometry'
@@ -10,12 +10,12 @@ import type { RuleChecker } from '../types'
 const MODULE_STEMS = 3
 
 /**
- * logo.clear-space: 로고 주변 여백이 규정 배제구역(=stem×3)을 확보하는지 검수한다.
+ * logo.space.clear: 로고 주변 여백이 규정 배제구역(=stem×3)을 확보하는지 검수한다.
  * (가) flat·로고 위주 입력 전제 — 로고 bbox에서 이미지 가장자리까지의 최소 여백을
  * 로고 자체에서 추정한 모듈과 비교한다(스케일 불변, 로고 크기 대비 여백).
  */
 export const clearSpaceChecker: RuleChecker = {
-	ruleKey: 'logo.clear-space',
+	ruleKey: 'logo.space.clear',
 	check: ({ grid }) => {
 		if (!grid) return { status: 'fail', fulfillment: null, detail: 'grid 없음' }
 		const region = detectLogoRegion(grid)
