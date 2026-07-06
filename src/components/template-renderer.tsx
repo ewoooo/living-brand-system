@@ -247,7 +247,8 @@ function textBoxCss(element: TextLike): CSSProperties {
 		lineHeight: element.lineHeight,
 		letterSpacing: element.letterSpacing,
 		textAlign: element.textAlign,
-		whiteSpace: element.textFit === 'auto-width' ? 'nowrap' : 'pre-wrap',
+		// auto-width는 자동 줄바꿈은 없지만(pre) 수동 개행(\n)은 살린다. 나머지는 자동 줄바꿈+개행 유지(pre-wrap).
+		whiteSpace: element.textFit === 'auto-width' ? 'pre' : 'pre-wrap',
 		filter: element.filter,
 	}
 }

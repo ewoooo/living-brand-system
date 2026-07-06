@@ -1,5 +1,5 @@
 import type React from 'react'
-import { SidebarProvider } from '@/components/ui/sidebar'
+import { SectionLayout } from '@/components/section-layout'
 import { ImageSelector } from '@/features/review/components/image-selector'
 import { ReviewSideNavigation } from '@/features/review/components/review-side-navigation'
 import { ReviewImageProvider } from '@/features/review/providers/review-image-provider'
@@ -12,16 +12,17 @@ export default async function ReviewLayout({ children }: { children: React.React
 	const sections = await getReviewRuleset()
 
 	return (
-		<SidebarProvider className="h-full min-h-0">
-			<ReviewSideNavigation sections={sections.map(({ title, slug }) => ({ title, slug }))} />
+		<SectionLayout
+			nav={
+				<ReviewSideNavigation
+					sections={sections.map(({ title, slug }) => ({ title, slug }))}
+				/>
+			}
+		>
 			<ReviewImageProvider>
-				<div className="flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-y-auto">
-					<main className="flex w-full flex-1 justify-center px-4 md:px-12">
-						<ReviewWorkspace>{children}</ReviewWorkspace>
-					</main>
-				</div>
+				<ReviewWorkspace>{children}</ReviewWorkspace>
 			</ReviewImageProvider>
-		</SidebarProvider>
+		</SectionLayout>
 	)
 }
 

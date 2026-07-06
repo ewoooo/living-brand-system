@@ -16,7 +16,7 @@ export default async function CreateCategoryPage({
 	}
 
 	return (
-		<article className="w-full max-w-4xl py-12">
+		<article className="w-full max-w-[1250px] px-8 py-10">
 			<h1>{category.title}</h1>
 			{category.templates.length > 0 ? (
 				<ul className="mt-6 flex flex-col gap-2">

@@ -1,0 +1,27 @@
+import type React from 'react'
+import { SidebarProvider } from '@/components/ui/sidebar'
+
+/**
+ * 섹션(가이드라인·검수·제작) 공통 레이아웃 셸 — 사이드 nav + 가운데 정렬 스크롤 main.
+ * nav를 쓰는 섹션은 이 하나를 재사용한다. 레이아웃을 섹션마다 손으로 복붙해 미묘하게
+ * 달라지는 것을 막고, main 영역(패딩·스크롤·정렬)을 사이트 기본으로 통일한다.
+ */
+export function SectionLayout({
+	nav,
+	children,
+	footer,
+}: {
+	nav: React.ReactNode
+	children: React.ReactNode
+	footer?: React.ReactNode
+}) {
+	return (
+		<SidebarProvider className="h-full min-h-0">
+			{nav}
+			<div className="flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-y-auto">
+				<main className="flex w-full flex-1 justify-center px-4 md:px-12">{children}</main>
+				{footer}
+			</div>
+		</SidebarProvider>
+	)
+}
