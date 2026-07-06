@@ -1,14 +1,16 @@
 'use client'
 
+import { ChevronLeft, ChevronRight } from '@carbon/icons-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import Moveable from 'react-moveable'
 import { TemplateRenderer } from '@/components/template-renderer'
 import { Button } from '@/components/ui/button'
+import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
-import { Toggle } from '@/components/ui/toggle'
 import type { JsonTemplate } from '@/types/json-template'
 
 /**
@@ -47,13 +49,19 @@ function trackAt(sizes: number[], pos: number) {
 	return sizes.length - 1
 }
 
-interface ComposerElement {
-	id: string
-	kind: 'text' | 'image'
-	row: number
-	col: number
-	text: string
-	src: string
+/** 셀 하나에 텍스트 1·이미지 1이 들어갈 수 있다(z-index는 나중). null이면 비어 있음. */
+interface Cell {
+	text: string | null
+	image: string | null
+}
+type ItemKind = 'text' | 'image'
+
+const emptyCell = (): Cell => ({ text: null, image: null })
+
+/** 셀 리스트에서 아이템 식별자 "<index>:<kind>" 파싱. */
+function parseItemId(id: string): { index: number; kind: ItemKind } {
+	const [i, kind] = id.split(':')
+	return { index: Number(i), kind: kind as ItemKind }
 }
 
 /** 템플릿(source)에서 캔버스·그리드·요소 초기 상태를 복원한다. grid 없으면 기본값. */
@@ -64,25 +72,22 @@ function deriveInitial(source?: JsonTemplate) {
 	const padY = source?.padding?.y ?? 0
 	const rows = source?.grid?.rows ?? [1, 2, 1]
 	const cols = source?.grid?.columns ?? [2, 1, 1]
-	const elements: ComposerElement[] = []
+	const cells: Cell[] = Array.from({ length: rows.length * cols.length }, emptyCell)
 
 	if (source?.grid) {
 		const colSizes = trackSizes(cols, Math.max(1, canvasW - padX * 2))
 		const rowSizes = trackSizes(rows, Math.max(1, canvasH - padY * 2))
 		for (const el of source.elements) {
 			if (el.type !== 'text' && el.type !== 'image') continue
-			elements.push({
-				id: el.id,
-				kind: el.type,
-				row: trackAt(rowSizes, el.y - padY),
-				col: trackAt(colSizes, el.x - padX),
-				text: el.type === 'text' ? el.text : '',
-				src: el.type === 'image' ? el.src : GRAY,
-			})
+			const row = trackAt(rowSizes, el.y - padY)
+			const col = trackAt(colSizes, el.x - padX)
+			const cell = cells[row * cols.length + col]
+			if (el.type === 'text') cell.text = el.text
+			else cell.image = el.src
 		}
 	}
 
-	return { canvasW, canvasH, padX, padY, rows, cols, elements }
+	return { canvasW, canvasH, padX, padY, rows, cols, cells }
 }
 
 export function GridComposer({ source }: { source?: JsonTemplate }) {
@@ -96,15 +101,14 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 	const [padY, setPadY] = useState(initial.padY)
 	const [rows, setRows] = useState<number[]>(initial.rows)
 	const [cols, setCols] = useState<number[]>(initial.cols)
-	const [elements, setElements] = useState<ComposerElement[]>(initial.elements)
+	const [cells, setCells] = useState<Cell[]>(initial.cells)
 	const [selectedId, setSelectedId] = useState<string | null>(null)
 	const [dragFree, setDragFree] = useState<{ id: string; x: number; y: number } | null>(null)
 	const [dropCell, setDropCell] = useState<{ row: number; col: number } | null>(null)
 	const [moveableTarget, setMoveableTarget] = useState<HTMLElement | null>(null)
 	const [resizing, setResizing] = useState<Edge | null>(null)
-	const [showGrid, setShowGrid] = useState(true)
+	const [hideGuides, setHideGuides] = useState(true)
 	const canvasRef = useRef<HTMLDivElement>(null)
-	const idRef = useRef(0)
 	const rafRef = useRef<number | null>(null)
 	const pendingRef = useRef<{ w: number; h: number } | null>(null)
 
@@ -125,31 +129,35 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 		}
 	}
 
-	function nextCell(): { row: number; col: number } {
-		for (let i = 0; i < rows.length * cols.length; i++) {
-			const row = Math.floor(i / cols.length)
-			const col = i % cols.length
-			if (!elements.some((el) => el.row === row && el.col === col)) return { row, col }
-		}
-		return { row: 0, col: 0 }
+	/** 해당 kind가 비어 있는 첫 셀에 아이템을 넣고 선택한다. */
+	function addItem(kind: ItemKind) {
+		const index = cells.findIndex((cell) => cell[kind] == null)
+		const target = index === -1 ? 0 : index
+		const value = kind === 'text' ? '텍스트' : GRAY
+		setCells((prev) =>
+			prev.map((cell, i) => (i === target ? { ...cell, [kind]: value } : cell)),
+		)
+		setSelectedId(`${target}:${kind}`)
 	}
 
-	function addElement(kind: 'text' | 'image') {
-		const id = `e${idRef.current++}`
-		const { row, col } = nextCell()
-		setElements((prev) => [
-			...prev,
-			{ id, kind, row, col, text: kind === 'text' ? '텍스트' : '', src: GRAY },
-		])
-		setSelectedId(id)
+	function setItem(index: number, kind: ItemKind, value: string | null) {
+		setCells((prev) => prev.map((cell, i) => (i === index ? { ...cell, [kind]: value } : cell)))
 	}
-
-	function patch(id: string, next: Partial<ComposerElement>) {
-		setElements((prev) => prev.map((el) => (el.id === id ? { ...el, ...next } : el)))
-	}
-	function remove(id: string) {
-		setElements((prev) => prev.filter((el) => el.id !== id))
+	function removeItem(index: number, kind: ItemKind) {
+		setItem(index, kind, null)
 		setSelectedId(null)
+	}
+	/** 아이템을 다른 셀로 이동 — 대상 셀의 같은 kind를 덮어쓰고 원본을 비운다. */
+	function moveItem(index: number, kind: ItemKind, targetIndex: number) {
+		if (targetIndex === index) return
+		setCells((prev) => {
+			const value = prev[index][kind]
+			return prev.map((cell, i) => {
+				if (i === index) return { ...cell, [kind]: null }
+				if (i === targetIndex) return { ...cell, [kind]: value }
+				return cell
+			})
+		})
 	}
 
 	function setWeight(axis: 'row' | 'col', index: number, value: number) {
@@ -158,13 +166,35 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 			prev.map((w, i) => (i === index ? clamped : w)),
 		)
 	}
+	// 행/열 추가·삭제 시 cells(w*h flat)를 리맵해 기존 셀 내용을 (row,col) 기준으로 보존한다.
+	const w = cols.length
+	const h = rows.length
 	function addTrack(axis: 'row' | 'col') {
-		;(axis === 'row' ? setRows : setCols)((prev) => [...prev, 1])
+		if (axis === 'row') {
+			setRows((prev) => [...prev, 1])
+			setCells((prev) => [...prev, ...Array.from({ length: w }, emptyCell)])
+		} else {
+			setCols((prev) => [...prev, 1])
+			setCells((prev) => {
+				const next: Cell[] = []
+				for (let r = 0; r < h; r++) {
+					for (let c = 0; c < w; c++) next.push(prev[r * w + c])
+					next.push(emptyCell())
+				}
+				return next
+			})
+		}
 	}
 	function removeTrack(axis: 'row' | 'col', index: number) {
-		const list = axis === 'row' ? rows : cols
-		if (list.length <= 1) return
-		;(axis === 'row' ? setRows : setCols)((prev) => prev.filter((_, i) => i !== index))
+		if (axis === 'row') {
+			if (h <= 1) return
+			setRows((prev) => prev.filter((_, i) => i !== index))
+			setCells((prev) => prev.filter((_, i) => Math.floor(i / w) !== index))
+		} else {
+			if (w <= 1) return
+			setCols((prev) => prev.filter((_, i) => i !== index))
+			setCells((prev) => prev.filter((_, i) => i % w !== index))
+		}
 	}
 
 	// 테두리 드래그로 캔버스 크기 조절 — 가운데 정렬은 컨테이너가 유지한다.
@@ -219,53 +249,70 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 	}
 
 	const template = useMemo<JsonTemplate>(() => {
-		const els = elements.map((el) => {
-			const r = Math.min(el.row, rowSizes.length - 1)
-			const c = Math.min(el.col, colSizes.length - 1)
-			const cell = {
+		const width = cols.length
+		const els = cells.flatMap((cell, index) => {
+			// cellBox 인라인 — memo가 rowSizes·colSizes·padX·padY를 직접 의존하게 한다.
+			const r = Math.min(Math.floor(index / width), rowSizes.length - 1)
+			const c = Math.min(index % width, colSizes.length - 1)
+			const base = {
 				x: padX + offsetAt(colSizes, c),
 				y: padY + offsetAt(rowSizes, r),
 				width: colSizes[c],
 				height: rowSizes[r],
 			}
-			const box = dragFree?.id === el.id ? { ...cell, x: dragFree.x, y: dragFree.y } : cell
-			if (el.kind === 'text') {
-				return {
-					id: el.id,
-					type: 'text' as const,
+			const boxOf = (kind: ItemKind) =>
+				dragFree?.id === `${index}:${kind}`
+					? { ...base, x: dragFree.x, y: dragFree.y }
+					: base
+			const out: JsonTemplate['elements'] = []
+			// 이미지가 아래(z 1), 텍스트가 위(z 2) — z-index 정교화는 나중.
+			if (cell.image != null) {
+				const box = boxOf('image')
+				out.push({
+					id: `${index}:image`,
+					type: 'image',
+					...box,
+					zIndex: 1,
+					locked: false,
+					assetCollection: 'template-assets',
+					assetId: 0,
+					src: cell.image,
+					objectFit: 'cover',
+					borderRadius: 0,
+				})
+			}
+			if (cell.text != null) {
+				const box = boxOf('text')
+				out.push({
+					id: `${index}:text`,
+					type: 'text',
 					...box,
 					zIndex: 2,
 					locked: false,
-					text: el.text,
+					text: cell.text,
 					fontSize: 40,
 					fontFamily: 'Pretendard, sans-serif',
 					fontWeight: '400',
 					color: '#1f2a24',
 					lineHeight: 1.4,
 					letterSpacing: 0,
-					textAlign: 'left' as const,
-					textFit: 'fixed' as const,
-					verticalAlign: 'top' as const,
-					inputFormat: 'free' as const,
-				}
+					textAlign: 'left',
+					textFit: 'fixed',
+					verticalAlign: 'top',
+					inputFormat: 'free',
+				})
 			}
-			return {
-				id: el.id,
-				type: 'image' as const,
-				...box,
-				zIndex: 2,
-				locked: false,
-				assetCollection: 'template-assets' as const,
-				assetId: 0,
-				src: el.src,
-				objectFit: 'cover' as const,
-				borderRadius: 0,
-			}
+			return out
 		})
 		return { width: canvasW, height: canvasH, background: '#f5f2e9', elements: els }
-	}, [elements, dragFree, rowSizes, colSizes, canvasW, canvasH, padX, padY])
+	}, [cells, dragFree, rowSizes, colSizes, canvasW, canvasH, padX, padY, cols.length])
 
-	const selected = elements.find((el) => el.id === selectedId) ?? null
+	const selected = (() => {
+		if (!selectedId) return null
+		const { index, kind } = parseItemId(selectedId)
+		const value = cells[index]?.[kind]
+		return value != null ? { id: selectedId, index, kind, value } : null
+	})()
 
 	return (
 		<section className="flex w-full gap-8">
@@ -286,8 +333,8 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 					>
 						<TemplateRenderer template={template} scale={scale} />
 
-						{/* 그리드 라인 — n개 트랙이면 내부 경계 n-1개(외곽선 제외). 가이드라 클릭 통과. */}
-						{showGrid && (
+						{/* 안내선 — n개 트랙이면 내부 경계 n-1개(외곽선 제외). 가이드라 클릭 통과. */}
+						{!hideGuides && (
 							<>
 								{rowSizes.slice(1).map((_, i) => (
 									<div
@@ -338,32 +385,40 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 								)
 							})()}
 
-						{elements.map((el) => {
-							const cell = cellBox(el.row, el.col)
-							const box =
-								dragFree?.id === el.id
-									? { ...cell, x: dragFree.x, y: dragFree.y }
-									: cell
-							const isSelected = el.id === selectedId
-							return (
-								<button
-									type="button"
-									key={el.id}
-									ref={isSelected ? setMoveableTarget : undefined}
-									onClick={() => setSelectedId(isSelected ? null : el.id)}
-									className={`absolute cursor-move p-0 ${isSelected ? 'ring-2 ring-primary' : ''}`}
-									style={{
-										left: box.x * scale,
-										top: box.y * scale,
-										width: box.width * scale,
-										height: box.height * scale,
-										background: 'transparent',
-										touchAction: 'none',
-										zIndex: 3,
-									}}
-									aria-label={`${el.kind} 요소`}
-								/>
+						{cells.flatMap((cell, index) => {
+							const base = cellBox(
+								Math.floor(index / cols.length),
+								index % cols.length,
 							)
+							return (['image', 'text'] as const).flatMap((kind) => {
+								if (cell[kind] == null) return []
+								const id = `${index}:${kind}`
+								const isSelected = id === selectedId
+								const box =
+									dragFree?.id === id
+										? { ...base, x: dragFree.x, y: dragFree.y }
+										: base
+								return [
+									<button
+										type="button"
+										key={id}
+										ref={isSelected ? setMoveableTarget : undefined}
+										onClick={() => setSelectedId(isSelected ? null : id)}
+										className={`absolute cursor-move p-0 ${isSelected ? 'ring-2 ring-primary' : ''}`}
+										style={{
+											left: box.x * scale,
+											top: box.y * scale,
+											width: box.width * scale,
+											height: box.height * scale,
+											background: 'transparent',
+											touchAction: 'none',
+											// 텍스트 클릭 타깃이 이미지보다 위 — z-index 정교화는 나중.
+											zIndex: kind === 'text' ? 4 : 3,
+										}}
+										aria-label={`${kind} 요소`}
+									/>,
+								]
+							})
 						})}
 
 						{selected && moveableTarget && (
@@ -390,8 +445,11 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 									}
 								}}
 								onDragEnd={() => {
-									if (dropCell)
-										patch(selected.id, { row: dropCell.row, col: dropCell.col })
+									if (dropCell) {
+										const targetIndex =
+											dropCell.row * cols.length + dropCell.col
+										moveItem(selected.index, selected.kind, targetIndex)
+									}
 									setDragFree(null)
 									setDropCell(null)
 								}}
@@ -440,14 +498,14 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 				<Separator />
 
 				<div className="flex gap-2">
-					<Button size="sm" className="flex-1" onClick={() => addElement('text')}>
+					<Button size="sm" className="flex-1" onClick={() => addItem('text')}>
 						+ 텍스트
 					</Button>
 					<Button
 						size="sm"
 						variant="secondary"
 						className="flex-1"
-						onClick={() => addElement('image')}
+						onClick={() => addItem('image')}
 					>
 						+ 이미지
 					</Button>
@@ -455,14 +513,17 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 
 				<Separator />
 
-				<Toggle
-					size="sm"
-					pressed={showGrid}
-					onPressedChange={setShowGrid}
-					className="justify-start"
+				<label
+					htmlFor="hide-guides"
+					className="flex cursor-pointer items-center gap-2 text-sm"
 				>
-					{showGrid ? '그리드 숨기기' : '그리드 보기'}
-				</Toggle>
+					<Checkbox
+						id="hide-guides"
+						checked={hideGuides}
+						onCheckedChange={(v) => setHideGuides(v === true)}
+					/>
+					안내선 숨기기
+				</label>
 
 				<TrackList
 					title="행 (Rows)"
@@ -486,8 +547,10 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 							{selected.kind === 'text' ? (
 								<Textarea
 									rows={3}
-									value={selected.text}
-									onChange={(e) => patch(selected.id, { text: e.target.value })}
+									value={selected.value}
+									onChange={(e) =>
+										setItem(selected.index, 'text', e.target.value)
+									}
 								/>
 							) : (
 								<Input
@@ -496,7 +559,11 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 									onChange={(e) => {
 										const file = e.target.files?.[0]
 										if (file)
-											patch(selected.id, { src: URL.createObjectURL(file) })
+											setItem(
+												selected.index,
+												'image',
+												URL.createObjectURL(file),
+											)
 									}}
 								/>
 							)}
@@ -505,7 +572,7 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 									size="sm"
 									variant="ghost"
 									className="text-destructive"
-									onClick={() => remove(selected.id)}
+									onClick={() => removeItem(selected.index, selected.kind)}
 								>
 									삭제
 								</Button>
@@ -623,7 +690,7 @@ function SizeInput({
 	)
 }
 
-/** 행/열 리스트 — 정수 가중치(fill), 추가·삭제. Enter/blur 커밋 → 실시간 반영. */
+/** 행/열 리스트 — 각 트랙은 정수 가중치 스테퍼. 추가는 마지막에 같은 위계로 존재. */
 function TrackList({
 	title,
 	weights,
@@ -637,27 +704,17 @@ function TrackList({
 	onAdd: () => void
 	onRemove: (index: number) => void
 }) {
-	const sum = weights.reduce((a, b) => a + b, 0)
 	return (
 		<div className="flex flex-col gap-1.5">
-			<div className="flex items-center justify-between">
-				<span className="font-medium text-muted-foreground text-xs">{title}</span>
-				<Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={onAdd}>
-					+ 추가
-				</Button>
-			</div>
+			<span className="font-medium text-muted-foreground text-xs">{title}</span>
 			{weights.map((w, i) => (
 				// biome-ignore lint/suspicious/noArrayIndexKey: 트랙은 위치가 곧 정체성
 				<div key={i} className="flex items-center gap-2">
-					<span className="w-4 text-muted-foreground text-xs">{i + 1}</span>
-					<WeightInput value={w} onCommit={(v) => onCommit(i, v)} />
-					<span className="w-9 text-muted-foreground text-xs">
-						{Math.round((w / sum) * 100)}%
-					</span>
+					<Stepper value={w} min={1} onChange={(v) => onCommit(i, v)} />
 					<Button
 						size="icon"
 						variant="ghost"
-						className="size-6 text-muted-foreground hover:text-destructive"
+						className="size-7 text-muted-foreground hover:text-destructive"
 						onClick={() => onRemove(i)}
 						aria-label="트랙 삭제"
 					>
@@ -665,33 +722,46 @@ function TrackList({
 					</Button>
 				</div>
 			))}
+			{/* 추가 — 기존 트랙과 같은 위계로 맨 마지막에 */}
+			<Button variant="outline" size="sm" onClick={onAdd}>
+				+ 추가
+			</Button>
 		</div>
 	)
 }
 
-/** 정수만, Enter 또는 blur에 커밋 → 실시간 반영. */
-function WeightInput({ value, onCommit }: { value: number; onCommit: (value: number) => void }) {
-	const [draft, setDraft] = useState(String(value))
-	useEffect(() => setDraft(String(value)), [value])
-	const commit = () => {
-		const n = Number.parseInt(draft, 10)
-		if (Number.isFinite(n) && n > 0) onCommit(n)
-		else setDraft(String(value))
-	}
+/** 이산 정수 스테퍼 — [<][값][>]. 좌우 버튼이 값을 1씩 바꾸고 가운데는 표시 전용. */
+function Stepper({
+	value,
+	onChange,
+	min = 1,
+}: {
+	value: number
+	onChange: (value: number) => void
+	min?: number
+}) {
 	return (
-		<Input
-			type="number"
-			min={1}
-			value={draft}
-			onChange={(e) => setDraft(e.target.value)}
-			onKeyDown={(e) => {
-				if (e.key === 'Enter') {
-					e.preventDefault()
-					commit()
-				}
-			}}
-			onBlur={commit}
-			className="h-8 w-16"
-		/>
+		<ButtonGroup>
+			<Button
+				variant="outline"
+				size="icon"
+				disabled={value <= min}
+				onClick={() => onChange(Math.max(min, value - 1))}
+				aria-label="감소"
+			>
+				<ChevronLeft />
+			</Button>
+			<ButtonGroupText className="min-w-9 justify-center tabular-nums">
+				{value}
+			</ButtonGroupText>
+			<Button
+				variant="outline"
+				size="icon"
+				onClick={() => onChange(value + 1)}
+				aria-label="증가"
+			>
+				<ChevronRight />
+			</Button>
+		</ButtonGroup>
 	)
 }
