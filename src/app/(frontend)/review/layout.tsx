@@ -19,7 +19,7 @@ export default async function ReviewLayout({ children }: { children: React.React
 					sections={sections.map(({ title, slug }) => ({ title, slug }))}
 				/>
 				<div className="flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-y-auto">
-					<main className="flex w-full flex-1 justify-center px-12">
+					<main className="flex w-full flex-1 justify-center px-4 md:px-12">
 						<ReviewWorkspace>{children}</ReviewWorkspace>
 					</main>
 				</div>
