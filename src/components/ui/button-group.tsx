@@ -26,6 +26,7 @@ function ButtonGroup({
 	...props
 }: React.ComponentProps<'div'> & VariantProps<typeof buttonGroupVariants>) {
 	return (
+		// biome-ignore lint/a11y/useSemanticElements: shadcn ButtonGroup 원본 — fieldset 기본 스타일을 피하려 div role=group을 쓴다
 		<div
 			role="group"
 			data-slot="button-group"
