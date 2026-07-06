@@ -1,5 +1,5 @@
 import type React from 'react'
-import { SidebarProvider } from '@/components/ui/sidebar'
+import { SectionLayout } from '@/components/section-layout'
 import { ReviewSideNavigation } from '@/features/review/components/review-side-navigation'
 import { ReviewWorkspace } from '@/features/review/components/review-workspace'
 import { ReviewImageProvider } from '@/features/review/image-context'
@@ -9,16 +9,11 @@ export default function ReviewLayout({ children }: { children: React.ReactNode }
 	const navigation = getReviewNavigation()
 
 	return (
-		<SidebarProvider className="h-full min-h-0">
-			{/* 사이드 nav도 검수 결과(섹션 상태 표시)를 읽어야 해 provider로 함께 감싼다. */}
-			<ReviewImageProvider>
-				<ReviewSideNavigation chapters={navigation.chapters} />
-				<div className="flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-y-auto">
-					<main className="flex w-full flex-1 justify-center px-12">
-						<ReviewWorkspace>{children}</ReviewWorkspace>
-					</main>
-				</div>
-			</ReviewImageProvider>
-		</SidebarProvider>
+		// 사이드 nav도 검수 결과(섹션 상태 표시)를 읽어야 해 provider로 함께 감싼다.
+		<ReviewImageProvider>
+			<SectionLayout nav={<ReviewSideNavigation chapters={navigation.chapters} />}>
+				<ReviewWorkspace>{children}</ReviewWorkspace>
+			</SectionLayout>
+		</ReviewImageProvider>
 	)
 }
