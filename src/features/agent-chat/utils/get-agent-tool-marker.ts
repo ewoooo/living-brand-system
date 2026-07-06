@@ -52,135 +52,97 @@ export function getAgentSkillMarker(message: AgentChatMessage): AgentToolMarker 
 	return null
 }
 
+const countArrayLength = (output: unknown) => (Array.isArray(output) ? output.length : 0)
+const countPresence = (output: unknown) => (output ? 1 : 0)
+
+/** 우선순위 순서 — 첫 번째로 count > 0인 행의 문구를 쓴다. */
+const TOOL_MARKER_RULES: {
+	type: string
+	count: (output: unknown) => number
+	text: (count: number) => string
+}[] = [
+	{
+		type: 'tool-listGuidelinePages',
+		count: countArrayLength,
+		text: (count) => `가이드라인 섹션 ${count}개를 확인했습니다`,
+	},
+	{
+		type: 'tool-readGuidelineDocument',
+		count: countPresence,
+		text: (count) => `가이드라인 문서 ${count}개를 읽었습니다`,
+	},
+	{
+		type: 'tool-searchGuidelines',
+		count: countArrayLength,
+		text: (count) => `가이드라인 결과 ${count}개를 찾았습니다`,
+	},
+	{
+		type: 'tool-getRuleCatalog',
+		count: countArrayLength,
+		text: (count) => `룰 카탈로그 ${count}개를 확인했습니다`,
+	},
+	{
+		type: 'tool-prepareTemplateImage',
+		count: countPresence,
+		text: (count) => `템플릿 이미지 ${count}개를 준비했습니다`,
+	},
+	{
+		type: 'tool-findTemplatesForRequest',
+		count: countArrayLength,
+		text: (count) => `템플릿 ${count}개를 확인했습니다`,
+	},
+]
+
 export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker | null {
 	let hasToolPart = false
 	let hasPendingToolPart = false
-	let listCount = 0
-	let readCount = 0
-	let ruleCount = 0
-	let searchResultCount = 0
-	let templateCount = 0
-	let templateSearchCount = 0
-	let templateImageCount = 0
+	let hasTemplateSearch = false
+	const markers = TOOL_MARKER_RULES.map((rule) => ({ rule, count: 0 }))
 
 	for (const part of message.parts) {
-		if (!isAgentToolPart(part)) {
-			continue
-		}
-
-		if (part.type === 'tool-loadSkill') {
+		if (!isAgentToolPart(part) || part.type === 'tool-loadSkill') {
 			continue
 		}
 
 		hasToolPart = true
 		hasPendingToolPart ||= !isFinishedToolPart(part)
 
-		if (
-			part.type === 'tool-listGuidelinePages' &&
-			part.state === 'output-available' &&
-			Array.isArray(part.output)
-		) {
-			listCount += part.output.length
+		if (part.state !== 'output-available') {
+			continue
 		}
 
-		if (
-			part.type === 'tool-readGuidelineDocument' &&
-			part.state === 'output-available' &&
-			part.output
-		) {
-			readCount += 1
+		for (const marker of markers) {
+			if (part.type === marker.rule.type) {
+				marker.count += marker.rule.count(part.output)
+			}
 		}
 
-		if (
-			part.type === 'tool-searchGuidelines' &&
-			part.state === 'output-available' &&
-			Array.isArray(part.output)
-		) {
-			searchResultCount += part.output.length
-		}
-
-		if (
-			part.type === 'tool-getRuleCatalog' &&
-			part.state === 'output-available' &&
-			Array.isArray(part.output)
-		) {
-			ruleCount += part.output.length
-		}
-
-		if (
-			part.type === 'tool-findTemplatesForRequest' &&
-			part.state === 'output-available' &&
-			Array.isArray(part.output)
-		) {
-			templateSearchCount += 1
-			templateCount += part.output.length
-		}
-
-		if (
-			part.type === 'tool-prepareTemplateImage' &&
-			part.state === 'output-available' &&
-			part.output
-		) {
-			templateImageCount += 1
-		}
+		hasTemplateSearch ||=
+			part.type === 'tool-findTemplatesForRequest' && Array.isArray(part.output)
 	}
 
 	if (!hasToolPart) {
 		return null
 	}
 
-	if (listCount > 0) {
-		return {
-			isPending: hasPendingToolPart,
-			text: `가이드라인 섹션 ${listCount}개를 확인했습니다`,
-		}
-	}
+	const matched = markers.find((marker) => marker.count > 0)
 
-	if (readCount > 0) {
+	if (matched) {
 		return {
 			isPending: hasPendingToolPart,
-			text: `가이드라인 문서 ${readCount}개를 읽었습니다`,
-		}
-	}
-
-	if (searchResultCount > 0) {
-		return {
-			isPending: hasPendingToolPart,
-			text: `가이드라인 결과 ${searchResultCount}개를 찾았습니다`,
-		}
-	}
-
-	if (ruleCount > 0) {
-		return {
-			isPending: hasPendingToolPart,
-			text: `룰 카탈로그 ${ruleCount}개를 확인했습니다`,
-		}
-	}
-
-	if (templateImageCount > 0) {
-		return {
-			isPending: hasPendingToolPart,
-			text: `템플릿 이미지 ${templateImageCount}개를 준비했습니다`,
-		}
-	}
-
-	if (templateCount > 0) {
-		return {
-			isPending: hasPendingToolPart,
-			text: `템플릿 ${templateCount}개를 확인했습니다`,
+			text: matched.rule.text(matched.count),
 		}
 	}
 
 	return {
 		isPending: hasPendingToolPart,
-		text:
-			templateSearchCount > 0
-				? hasPendingToolPart
-					? '템플릿을 찾고 있습니다'
-					: '템플릿 검색을 완료했습니다'
-				: hasPendingToolPart
-					? '가이드라인을 찾고 있습니다'
-					: '가이드라인 검색을 완료했습니다',
+		text: hasTemplateSearch
+			? hasPendingToolPart
+				? '템플릿을 찾고 있습니다'
+				: '템플릿 검색을 완료했습니다'
+			: hasPendingToolPart
+				? '가이드라인을 찾고 있습니다'
+				: '가이드라인 검색을 완료했습니다',
 	}
 }
 

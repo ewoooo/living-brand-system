@@ -9,10 +9,11 @@ import {
 	useFormFields,
 	useListDrawer,
 } from '@payloadcms/ui'
-import { useMemo, useState } from 'react'
+import { type CSSProperties, useMemo, useState } from 'react'
 import { flushSync } from 'react-dom'
 import Moveable from 'react-moveable'
 import { TemplateRenderer } from '@/components/template-renderer'
+import { isUnauthorizedAssetCollection } from '@/features/template-import/utils/validate-authorized-assets'
 import {
 	AUTHORIZED_ASSET_COLLECTIONS,
 	type JsonFlowElement,
@@ -84,12 +85,39 @@ function countUnauthorizedImages(elements: readonly AnyElement[]): number {
 		if (element.type === 'stack') {
 			return total + countUnauthorizedImages(element.children)
 		}
-		if (element.type === 'image' && element.assetCollection === 'template-assets') {
+		if (element.type === 'image' && isUnauthorizedAssetCollection(element.assetCollection)) {
 			return total + 1
 		}
 
 		return total
 	}, 0)
+}
+
+function overlayButtonStyle(
+	element: JsonTemplateElement,
+	scale: number,
+	isSelected: boolean,
+	isUnauthorized: boolean,
+): CSSProperties {
+	return {
+		position: 'absolute',
+		left: element.x * scale,
+		top: element.y * scale,
+		width: element.width * scale,
+		height: element.height * scale,
+		zIndex: element.zIndex + 1,
+		padding: 0,
+		background: 'transparent',
+		cursor: isSelected ? 'move' : 'pointer',
+		touchAction: 'none',
+		border: isSelected
+			? 'none'
+			: isUnauthorized
+				? '2px dashed var(--theme-error-500, #ef4444)'
+				: element.locked
+					? '1px dashed color-mix(in srgb, currentColor 25%, transparent)'
+					: '1px dashed var(--theme-success-400, #22c55e)',
+	}
 }
 
 /**
@@ -226,25 +254,12 @@ export default function TemplatePreviewField() {
 								onClick={() => setSelectedId(isSelected ? null : element.id)}
 								aria-label={element.slotLabel || element.id}
 								title={`${element.slotLabel || element.id}${isUnauthorized ? ' (비인가 — 교체 필요)' : element.locked ? ' (고정)' : ' (슬롯)'}`}
-								style={{
-									position: 'absolute',
-									left: element.x * scale,
-									top: element.y * scale,
-									width: element.width * scale,
-									height: element.height * scale,
-									zIndex: element.zIndex + 1,
-									padding: 0,
-									background: 'transparent',
-									cursor: isSelected ? 'move' : 'pointer',
-									touchAction: 'none',
-									border: isSelected
-										? 'none'
-										: isUnauthorized
-											? '2px dashed var(--theme-error-500, #ef4444)'
-											: element.locked
-												? '1px dashed color-mix(in srgb, currentColor 25%, transparent)'
-												: '1px dashed var(--theme-success-400, #22c55e)',
-								}}
+								style={overlayButtonStyle(
+									element,
+									scale,
+									isSelected,
+									isUnauthorized,
+								)}
 							/>
 						)
 					})}
@@ -503,7 +518,7 @@ export default function TemplatePreviewField() {
 								/>
 								<span style={{ fontSize: 13 }}>
 									이미지 출처:{' '}
-									{selected.assetCollection === 'template-assets' ? (
+									{isUnauthorizedAssetCollection(selected.assetCollection) ? (
 										<strong style={{ color: 'var(--theme-error-500)' }}>
 											비인가 (임포트 조각)
 										</strong>

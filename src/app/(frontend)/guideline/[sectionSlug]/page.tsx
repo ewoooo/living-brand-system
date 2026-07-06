@@ -13,9 +13,7 @@ export default async function GuidelineSectionPage({
 	params: Promise<{ sectionSlug: string }>
 }) {
 	const { sectionSlug } = await params
-	const sectionView = await getGuidelineSection({
-		sectionSlug,
-	})
+	const sectionView = await getGuidelineSection(sectionSlug)
 
 	if (!sectionView) {
 		notFound()

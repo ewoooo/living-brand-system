@@ -16,14 +16,13 @@ import { ApplicationImages } from './collections/ApplicationImages'
 import { BrandColors } from './collections/BrandColors'
 import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
+import { CheckSessions } from './collections/CheckSessions'
 import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
-import { RuleBindings } from './collections/RuleBindings'
 import { Rules } from './collections/Rules'
 import { TemplateAssets } from './collections/TemplateAssets'
 import { TemplateCategories } from './collections/TemplateCategories'
-import { TemplateRules } from './collections/TemplateRules'
 import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
 import { AgentSettings } from './globals/AgentSettings'
@@ -92,14 +91,13 @@ export default buildConfig({
 		BrandTypefaces,
 		ApplicationImages,
 		TemplateCategories,
-		TemplateRules,
 		Templates,
 		TemplateAssets,
 		Plugins,
 		AgentSkills,
+		CheckSessions,
 		GuidelineSections,
 		GuidelinePages,
-		RuleBindings,
 	],
 	editor: lexicalEditor({
 		// 가이드라인 수치 규정 표(최소 사이즈, 자간 등) 입력용. EXPERIMENTAL: 업그레이드 시 변경 가능성 있음.

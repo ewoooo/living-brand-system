@@ -18,7 +18,6 @@ const uiMessageSchema = z
 	.passthrough()
 
 const agentChatRequestSchema = z.object({
-	locale: z.enum(['ko', 'en']).optional(),
 	messages: z.array(uiMessageSchema).min(1),
 	pagePath: z.string().max(300).optional(),
 })
@@ -52,15 +51,9 @@ export async function POST(req: Request) {
 	const requestId = crypto.randomUUID()
 
 	try {
-		if (!process.env.ANTHROPIC_API_KEY) {
-			throw new AgentConfigurationError()
-		}
-
 		return await createAgentChatResponse({
-			locale: parsed.data.locale,
 			messages: validatedMessages.data,
 			pagePath: parsed.data.pagePath,
-			requestId,
 			user,
 		})
 	} catch (error) {

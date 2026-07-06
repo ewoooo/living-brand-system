@@ -5,22 +5,21 @@ import { findEnabledAgentSkillSummaries } from '@/features/agent-chat/repositori
 import { getAgentDefaultInstructions } from '@/features/agent-chat/services/get-agent-default-instructions.service'
 import { getAgentTools } from '@/features/agent-chat/services/get-agent-tools.service'
 import { AgentConfigurationError } from '@/lib/errors'
-import { DEFAULT_LOCALE } from '@/lib/locale'
 
 const DEFAULT_MODEL = 'claude-sonnet-4-6'
 
 const agentChatCallOptionsSchema = z.object({
-	locale: z.enum(['ko', 'en']).optional(),
 	pagePath: z.string().max(300).optional(),
-	requestId: z.string().min(1).optional(),
 	user: z.unknown(),
 })
 
 type AgentChatCallOptions = z.infer<typeof agentChatCallOptionsSchema>
-type AgentChatRuntimeContext = {
-	locale: 'ko' | 'en'
-	pagePath?: string
-	requestId: string
+
+/** provider 자격 증명은 agent가 소유한다 — route는 던져진 설정 오류를 HTTP 응답으로 매핑만 한다. */
+export function assertAgentChatProviderConfigured() {
+	if (!process.env.ANTHROPIC_API_KEY) {
+		throw new AgentConfigurationError()
+	}
 }
 
 /** 모든 tool은 동일한 user 컨텍스트를 받는다 — tool 추가 시 여기 한 곳만 따라간다. */
@@ -36,8 +35,7 @@ function toolsContextFor(user: unknown) {
  */
 export const agentChatAgent = new ToolLoopAgent<
 	AgentChatCallOptions,
-	ReturnType<typeof getAgentTools>,
-	AgentChatRuntimeContext
+	ReturnType<typeof getAgentTools>
 >({
 	model: anthropic(process.env.ANTHROPIC_MODEL || DEFAULT_MODEL),
 	providerOptions: {
@@ -82,11 +80,6 @@ export const agentChatAgent = new ToolLoopAgent<
 			]
 				.filter(Boolean)
 				.join('\n\n'),
-			runtimeContext: {
-				locale: options.locale ?? DEFAULT_LOCALE,
-				pagePath: options.pagePath,
-				requestId: options.requestId ?? crypto.randomUUID(),
-			},
 			toolsContext: toolsContextFor(options.user),
 		}
 	},

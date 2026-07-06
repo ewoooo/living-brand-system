@@ -11,6 +11,10 @@ import * as migration_20260703_043507_add_brand_color_palette_fields from './202
 import * as migration_20260703_050030_add_color_palette_block from './20260703_050030_add_color_palette_block';
 import * as migration_20260703_053851_add_rule_bindings_and_title_ko from './20260703_053851_add_rule_bindings_and_title_ko';
 import * as migration_20260703_053900_seed_essenherb_ruleset from './20260703_053900_seed_essenherb_ruleset';
+import * as migration_20260706_013000_seed_baseline_data from './20260706_013000_seed_baseline_data';
+import * as migration_20260706_014821_page_owned_rule_placements from './20260706_014821_page_owned_rule_placements';
+import * as migration_20260706_030057_remove_template_rules from './20260706_030057_remove_template_rules';
+import * as migration_20260706_031500_add_mcp_call_check_session_source from './20260706_031500_add_mcp_call_check_session_source';
 
 export const migrations = [
   {
@@ -77,5 +81,25 @@ export const migrations = [
     up: migration_20260703_053900_seed_essenherb_ruleset.up,
     down: migration_20260703_053900_seed_essenherb_ruleset.down,
     name: '20260703_053900_seed_essenherb_ruleset',
+  },
+  {
+    up: migration_20260706_013000_seed_baseline_data.up,
+    down: migration_20260706_013000_seed_baseline_data.down,
+    name: '20260706_013000_seed_baseline_data',
+  },
+  {
+    up: migration_20260706_014821_page_owned_rule_placements.up,
+    down: migration_20260706_014821_page_owned_rule_placements.down,
+    name: '20260706_014821_page_owned_rule_placements',
+  },
+  {
+    up: migration_20260706_030057_remove_template_rules.up,
+    down: migration_20260706_030057_remove_template_rules.down,
+    name: '20260706_030057_remove_template_rules'
+  },
+  {
+    up: migration_20260706_031500_add_mcp_call_check_session_source.up,
+    down: migration_20260706_031500_add_mcp_call_check_session_source.down,
+    name: '20260706_031500_add_mcp_call_check_session_source'
   },
 ];

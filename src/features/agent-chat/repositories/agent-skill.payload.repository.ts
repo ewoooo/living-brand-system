@@ -3,7 +3,7 @@ import { getPayload } from 'payload'
 
 import type { AgentSkill } from '@/payload-types'
 
-export type AgentSkillSummary = Pick<AgentSkill, 'description' | 'name'>
+type AgentSkillSummary = Pick<AgentSkill, 'description' | 'name'>
 export type AgentSkillDetail = Pick<AgentSkill, 'body' | 'description' | 'name' | 'references'>
 
 export async function findEnabledAgentSkillSummaries(user: unknown): Promise<AgentSkillSummary[]> {

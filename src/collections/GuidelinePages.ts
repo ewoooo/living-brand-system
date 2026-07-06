@@ -42,17 +42,36 @@ export const GuidelinePages: CollectionConfig = {
 				description: '페이지 제목 아래에 표시할 선택 설명입니다.',
 			},
 		},
+		// 룰 배치 — 이 페이지에 적용되는 룰과 그 브랜드 구체 값. 페이지가 배치의 수명을 소유한다.
 		{
 			name: 'rules',
-			type: 'relationship',
-			relationTo: 'rules',
-			hasMany: true,
-			filterOptions: {
-				status: { equals: 'live' },
-			},
+			type: 'array',
 			admin: {
-				description: '이 페이지에서 설명하거나 적용하는 live 규칙입니다.',
+				description: '이 페이지에서 설명하거나 적용하는 룰과 브랜드 구체 값입니다.',
 			},
+			fields: [
+				{
+					name: 'rule',
+					type: 'relationship',
+					relationTo: 'rules',
+					required: true,
+					filterOptions: {
+						status: { equals: 'live' },
+					},
+				},
+				{
+					name: 'value',
+					type: 'textarea',
+					admin: {
+						description: '이 페이지에서의 브랜드 구체 값. 비어 있을 수 있습니다.',
+					},
+				},
+				{
+					name: 'evidence',
+					type: 'textarea',
+					admin: { description: '가이드라인 원문 근거(출처).' },
+				},
+			],
 		},
 		{
 			name: 'section',

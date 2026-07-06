@@ -115,14 +115,11 @@ describe('agent tools', () => {
 		const getRules = vi.spyOn(agentGuidelineRepository, 'findAgentRules').mockResolvedValue([
 			{
 				category: 'color',
-				domainDefault: true,
 				executor: 'deterministic',
-				frequency: 4,
 				input: null,
 				key: 'color.palette',
 				notes: null,
 				paramSchema: null,
-				scope: ['screen'],
 				scoring: null,
 				tier: 'A',
 				title: 'Color palette',
@@ -151,16 +148,20 @@ describe('agent tools', () => {
 				description: 'Name card template',
 				templateRules: [
 					{
-						title: 'Name input',
-						description: 'Use the legal name.',
 						body: 'Ask only for slots returned by the template.',
-						status: 'live',
+						rule: {
+							title: 'Name input',
+							notes: 'Use the legal name.',
+							status: 'live',
+						},
 					},
 					{
-						title: 'Draft rule',
-						description: null,
 						body: 'Hidden draft.',
-						status: 'draft',
+						rule: {
+							title: 'Draft rule',
+							notes: null,
+							status: 'draft',
+						},
 					},
 				],
 				jsonTemplate: template(textElement({ slotLabel: '이름' })),
@@ -417,7 +418,10 @@ describe('agent tools', () => {
 	it('extracts text from lexical rich text nodes', () => {
 		const text = extractTextFromLexical({
 			root: {
-				children: [{ text: 'Logo' }, { children: [{ text: 'minimum size' }] }],
+				children: [
+					{ text: 'Logo' },
+					{ type: 'paragraph', children: [{ text: 'minimum size' }] },
+				],
 			},
 		})
 
