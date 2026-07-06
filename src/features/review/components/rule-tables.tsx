@@ -1,7 +1,7 @@
 'use client'
 
 import { AiGenerate, ChevronDown, Ruler, User } from '@carbon/icons-react'
-import { type ComponentType, useState } from 'react'
+import { type ComponentType, Fragment, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { getChecker } from '@/features/review/checkers/registry'
 import { useReviewImages } from '@/features/review/hooks/use-review-images'
@@ -47,7 +47,7 @@ const STATUS = {
 	},
 } as const
 
-function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
+function RuleRow({ rule, rowId, sectionLabel, anchorId }: RuleRowData) {
 	const [open, setOpen] = useState(false)
 	const { selected } = useReviewImages()
 	const implemented = rule.executor !== 'deterministic' || getChecker(rule.key) !== null
@@ -63,7 +63,7 @@ function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
 	const ruleBorder = 'border-neutral-200 border-t dark:border-neutral-800'
 
 	return (
-		<>
+		<Fragment key={rowId}>
 			<tr
 				id={anchorId ?? undefined}
 				aria-expanded={open}
@@ -174,7 +174,7 @@ function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
 					</td>
 				</tr>
 			)}
-		</>
+		</Fragment>
 	)
 }
 
