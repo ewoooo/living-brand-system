@@ -5,6 +5,9 @@ import { ReviewWorkspace } from '@/features/review/components/review-workspace'
 import { ReviewImageProvider } from '@/features/review/image-context'
 import { getReviewRuleset } from '@/features/review/services/get-review-ruleset.service'
 
+// Review reads Payload collections, so CI builds without migrated tables must not prerender it.
+export const dynamic = 'force-dynamic'
+
 export default async function ReviewLayout({ children }: { children: React.ReactNode }) {
 	const sections = await getReviewRuleset()
 
