@@ -2,14 +2,14 @@
 
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { DEFAULT_CONTENT_FLAGS, type ImageContentFlags } from '@/features/review/content-gate'
-import { loadPixelGridFromUrl, opaquePixels } from '@/features/review/extract-pixels.client'
-import { getAllRuleKeys } from '@/features/review/navigation'
-import { type RuleOutcome, runCheckersProgressive } from '@/features/review/run-checkers'
+import type { RuleOutcome } from '@/features/review/services/run-review.service'
 
 export interface ReviewImage {
 	id: string
 	url: string
 	name: string
+	/** 서버 검수 요청에 보낼 원본 파일 */
+	file: File
 	/** ruleKey → 검수 결과 (검수된 룰만; 진행 중엔 일부만 채워짐) */
 	results?: Record<string, RuleOutcome>
 	/** 검수 진행 중 여부 */
@@ -39,7 +39,7 @@ const ReviewImageContext = createContext<ReviewImageContextValue | null>(null)
 /**
  * 검수 대상 이미지 목록·선택 상태·포함 요소 플래그를 review 작업 영역 전체에 제공한다.
  * 검수는 업로드/토글 시 자동 실행하지 않고 runReview(검수 버튼)로만 트리거하며, 전 룰을 대상으로 한다.
- * 미리보기는 브라우저 object URL만 쓰고(러프), 서버 업로드·검수는 별도 엔진이 담당한다.
+ * 판정은 서버(/api/review/check)가 소유하고, 클라이언트는 미리보기(object URL)와 진행 표시만 담당한다.
  */
 export function ReviewImageProvider({ children }: { children: React.ReactNode }) {
 	const [images, setImages] = useState<ReviewImage[]>([])
@@ -49,31 +49,36 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 	// 개발 중(체커 없는) 룰은 기본 숨김.
 	const [showUnimplemented, setShowUnimplemented] = useState(false)
 
-	// 전 룰을 순차 검수하고 결과를 점진 매핑한다 (섹션 게이팅 없음).
-	const runCheck = useCallback((id: string, url: string) => {
-		const ruleKeys = getAllRuleKeys()
-		loadPixelGridFromUrl(url)
-			.then(async (grid) => {
-				const pixels = opaquePixels(grid)
+	// 서버 확정 판정을 한 번에 받아, 진행이 눈에 보이도록 룰별로 순차 반영한다.
+	const runCheck = useCallback(async (id: string, file: File) => {
+		setImages((prev) =>
+			prev.map((image) =>
+				image.id === id ? { ...image, checking: true, results: {} } : image,
+			),
+		)
+		try {
+			const form = new FormData()
+			form.append('image', file)
+			const response = await fetch('/api/review/check', { method: 'POST', body: form })
+			if (!response.ok) throw new Error(`review check failed: ${response.status}`)
+			const { results } = (await response.json()) as { results: Record<string, RuleOutcome> }
+			for (const [ruleKey, outcome] of Object.entries(results)) {
 				setImages((prev) =>
 					prev.map((image) =>
-						image.id === id ? { ...image, checking: true, results: {} } : image,
+						image.id === id
+							? { ...image, results: { ...image.results, [ruleKey]: outcome } }
+							: image,
 					),
 				)
-				await runCheckersProgressive(pixels, grid, ruleKeys, (ruleKey, outcome) => {
-					setImages((prev) =>
-						prev.map((image) =>
-							image.id === id
-								? { ...image, results: { ...image.results, [ruleKey]: outcome } }
-								: image,
-						),
-					)
-				})
-				setImages((prev) =>
-					prev.map((image) => (image.id === id ? { ...image, checking: false } : image)),
-				)
-			})
-			.catch(() => {})
+				await new Promise((resolve) => setTimeout(resolve, 35)) // 진행 표시용 stagger
+			}
+		} catch {
+			// 실패 시 결과 없이 종료 — 재검수는 검수 버튼으로 다시 트리거한다.
+		} finally {
+			setImages((prev) =>
+				prev.map((image) => (image.id === id ? { ...image, checking: false } : image)),
+			)
+		}
 	}, [])
 
 	const addFiles = useCallback((files: FileList | File[]) => {
@@ -83,6 +88,7 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 				id: crypto.randomUUID(),
 				url: URL.createObjectURL(file),
 				name: file.name,
+				file,
 			}))
 		if (added.length === 0) return
 		// 최신이 좌측으로 오도록 앞에 쌓는다
@@ -103,7 +109,7 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 		const target = images.find((image) => image.id === selectedId)
 		if (!target) return
 		setFlagsLocked(true)
-		runCheck(target.id, target.url)
+		void runCheck(target.id, target.file)
 	}, [selectedId, images, runCheck])
 
 	const value = useMemo<ReviewImageContextValue>(

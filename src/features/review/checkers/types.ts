@@ -1,7 +1,5 @@
 import type { Rgb } from '@/features/review/color-check'
 
-export type CheckStatus = 'pass' | 'fail' | 'unsupported' | 'manual'
-
 /**
  * 기준(expected) 대비 측정값(actual)을 분리해 실은 구조화 필드.
  * 사람 친화 코멘터리(commentary.ts)가 문자열 파싱 없이 그대로 주입해 쓴다.
@@ -12,10 +10,9 @@ export interface RuleMetric {
 	label?: string
 }
 
-export interface RuleCheckResult {
-	ruleKey: string
-	tier: string
-	status: CheckStatus
+/** checker 하나의 판정 결과. unsupported는 입력 특성상 평가 불가한 경우다. */
+export interface CheckResult {
+	status: 'pass' | 'fail' | 'unsupported'
 	/** 충족률 % (계산 가능한 룰만, 아니면 null) */
 	fulfillment: number | null
 	detail: string
@@ -43,7 +40,5 @@ export interface CheckerContext {
 /** 한 RuleSpec의 검수 실행기. registry에 key로 등록한다. */
 export interface RuleChecker {
 	ruleKey: string
-	check: (
-		ctx: CheckerContext,
-	) => Pick<RuleCheckResult, 'status' | 'fulfillment' | 'detail' | 'metric'>
+	check: (ctx: CheckerContext) => CheckResult
 }
