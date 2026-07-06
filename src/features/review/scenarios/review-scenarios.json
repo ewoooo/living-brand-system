@@ -1,0 +1,40 @@
+[
+	{
+		"key": "quick",
+		"title": "빠른 기본 검수",
+		"ruleKeys": ["color.palette", "color.pairing", "logo.min-size", "logo.clear-space"],
+		"flags": {
+			"logo": true,
+			"typography": false,
+			"illustration": false,
+			"photography": false
+		}
+	},
+	{
+		"key": "image-mood",
+		"title": "이미지 무드 검수",
+		"ruleKeys": ["imagery.style", "imagery.classification", "color.usage"],
+		"flags": {
+			"logo": false,
+			"typography": false,
+			"illustration": false,
+			"photography": true
+		}
+	},
+	{
+		"key": "stationery",
+		"title": "명함/스테이셔너리 검수",
+		"ruleKeys": [
+			"application.format",
+			"application.print-spec",
+			"color.palette",
+			"typography.usage"
+		],
+		"flags": {
+			"logo": true,
+			"typography": true,
+			"illustration": false,
+			"photography": false
+		}
+	}
+]

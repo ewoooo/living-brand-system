@@ -26,6 +26,8 @@ export interface ReviewImageContextValue {
 	/** 검수 제출 후 true — 플래그 잠금. 새 이미지 업로드 시 다시 false. */
 	flagsLocked: boolean
 	setContentFlag: (key: keyof ImageContentFlags, value: boolean) => void
+	scenarioKey: string
+	setScenarioKey: (key: string) => void
 	/** 선택 이미지를 검수 실행하고 플래그를 잠근다. */
 	runReview: () => void
 	/** 개발 중(체커 없는) 룰 표시 여부. 기본 숨김(false). */

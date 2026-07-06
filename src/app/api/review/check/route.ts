@@ -38,6 +38,10 @@ function parseSource(value: FormDataEntryValue | null | undefined): CheckSession
 	return value === 'chat' ? 'chat' : 'review-page'
 }
 
+function parseScenarioKey(value: FormDataEntryValue | null | undefined): string | undefined {
+	return typeof value === 'string' && value ? value : undefined
+}
+
 function isUser(value: unknown): value is User {
 	return Boolean(value && typeof value === 'object' && 'email' in value && 'role' in value)
 }
@@ -64,6 +68,7 @@ export async function POST(req: Request) {
 			buffer,
 			flags: parseContentFlags(form?.get('flags')),
 			imageName: file.name,
+			scenarioKey: parseScenarioKey(form?.get('scenarioKey')),
 			source: parseSource(form?.get('source')),
 			user,
 		})

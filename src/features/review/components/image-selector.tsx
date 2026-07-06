@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
 import { useReviewImages } from '@/features/review/hooks/use-review-images'
+import { REVIEW_SCENARIOS } from '@/features/review/scenarios/review-scenarios'
 import { CONTENT_FLAG_LABELS, type ImageContentFlags } from '@/features/review/types/content-flags'
 import { cn } from '@/lib/utils'
 
@@ -20,6 +21,8 @@ export function ImageSelector() {
 		contentFlags,
 		flagsLocked,
 		setContentFlag,
+		scenarioKey,
+		setScenarioKey,
 		runReview,
 		showUnimplemented,
 		setShowUnimplemented,
@@ -99,6 +102,21 @@ export function ImageSelector() {
 				<Separator className="my-4" />
 
 				<div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+					<label className="flex items-center gap-2 text-sm">
+						<span className="text-muted-foreground text-xs">시나리오</span>
+						<select
+							value={scenarioKey}
+							disabled={flagsLocked}
+							onChange={(event) => setScenarioKey(event.target.value)}
+							className="h-8 rounded-md border bg-background px-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+						>
+							{REVIEW_SCENARIOS.map((scenario) => (
+								<option key={scenario.key} value={scenario.key}>
+									{scenario.title}
+								</option>
+							))}
+						</select>
+					</label>
 					<span className="text-muted-foreground text-xs">포함 요소</span>
 					{CONTENT_FLAG_KEYS.map((key) => (
 						<label

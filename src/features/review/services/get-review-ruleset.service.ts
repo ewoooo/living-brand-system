@@ -1,5 +1,6 @@
 import { cache } from 'react'
-import { listPublishedPagesWithRules } from '@/features/review/repositories/review-ruleset.payload.repository'
+import { getReviewRulesetPages } from '@/features/review/repositories/review-ruleset.payload.repository'
+import type { Rule } from '@/payload-types'
 
 export interface ReviewRule {
 	/** 배치(배열 행) id — 같은 rule key가 한 페이지에 여러 배치로 등장할 수 있어 행 식별에 쓴다 */
@@ -7,6 +8,9 @@ export interface ReviewRule {
 	key: string
 	titleKo: string
 	tier: string
+	executor: NonNullable<Rule['executor']>
+	scoring: string
+	input: string
 	evidence: string
 }
 
@@ -23,7 +27,7 @@ export interface ReviewSection {
  * layout과 page가 같은 요청에서 함께 부르므로 React cache로 요청당 1회만 조회한다.
  */
 export const getReviewRuleset = cache(async (): Promise<ReviewSection[]> => {
-	const pages = await listPublishedPagesWithRules()
+	const pages = await getReviewRulesetPages()
 
 	return pages
 		.filter((page) => (page.rules?.length ?? 0) > 0)
@@ -44,6 +48,9 @@ export const getReviewRuleset = cache(async (): Promise<ReviewSection[]> => {
 						key: rule.key,
 						titleKo: rule.titleKo ?? rule.title,
 						tier: rule.tier ?? '',
+						executor: rule.executor ?? 'deterministic',
+						scoring: rule.scoring ?? '',
+						input: rule.input ?? '',
 						evidence: placement.evidence ?? '',
 					},
 				]

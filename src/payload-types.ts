@@ -246,7 +246,7 @@ export interface Rule {
     | 'application'
     | 'misc';
   tier?: ('A' | 'B' | 'C') | null;
-  executor?: ('deterministic' | 'heuristic' | 'advisory' | 'human') | null;
+  executor?: ('deterministic' | 'heuristic' | 'advisory') | null;
   /**
    * 브랜드 값이 채워야 할 구조(요약 표기)
    */

@@ -61,13 +61,13 @@ export const Rules: CollectionConfig = {
 			options: [
 				{ label: 'A · deterministic', value: 'A' },
 				{ label: 'B · heuristic', value: 'B' },
-				{ label: 'C · advisory/human', value: 'C' },
+				{ label: 'C · advisory', value: 'C' },
 			],
 		},
 		{
 			name: 'executor',
 			type: 'select',
-			options: ['deterministic', 'heuristic', 'advisory', 'human'],
+			options: ['deterministic', 'heuristic', 'advisory'],
 		},
 		{
 			name: 'paramSchema',

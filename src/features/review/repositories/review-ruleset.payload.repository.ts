@@ -6,7 +6,7 @@ import { FALLBACK_LOCALE, DEFAULT_LOCALE as LOCALE } from '@/lib/locale'
  * 검수 룰셋 조회 repository — 룰 배치(rules 배열)를 가진 published 가이드라인 페이지를 읽는다.
  * review 기능의 Payload Local API 호출은 모두 이 파일이 소유한다.
  */
-export async function listPublishedPagesWithRules() {
+export async function getReviewRulesetPages() {
 	const payload = await getPayload({ config })
 	const pages = await payload.find({
 		collection: 'guideline-pages',

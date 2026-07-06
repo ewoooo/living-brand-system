@@ -5,6 +5,10 @@ import { type ComponentType, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { getChecker } from '@/features/review/checkers/registry'
 import { useReviewImages } from '@/features/review/hooks/use-review-images'
+import {
+	filterRulesetByScenario,
+	getReviewScenario,
+} from '@/features/review/scenarios/review-scenarios'
 import type {
 	ReviewSection,
 	ReviewRule as Rule,
@@ -21,15 +25,31 @@ const TIER: Record<
 	string,
 	{ label: string; Icon: ComponentType<{ size?: number }>; desc: string }
 > = {
-	A: { label: 'A · deterministic', Icon: Ruler, desc: '자로 잰 듯 확정된 값 — 믿어도 됨' },
-	B: { label: 'B · heuristic', Icon: MagicWand, desc: 'AI가 추론한 값 — 100% 신뢰는 아님' },
-	C: { label: 'C · advisory/human', Icon: User, desc: '사람이 직접 판단해야 하는 값' },
+	A: { label: 'A · deterministic', Icon: Ruler, desc: '체커가 직접 판정하는 기준' },
+	B: { label: 'B · heuristic', Icon: MagicWand, desc: 'AI 평가를 경유하는 기준' },
+	C: { label: 'C · advisory', Icon: User, desc: '브랜드 담당자 확인이 필요한 기준' },
 }
+
+const STATUS = {
+	pass: {
+		label: 'PASS',
+		className: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+	},
+	fail: { label: 'FAIL', className: 'bg-rose-500/15 text-rose-700 dark:text-rose-400' },
+	needs_ai: {
+		label: 'AI 대기',
+		className: 'bg-sky-500/15 text-sky-700 dark:text-sky-400',
+	},
+	needs_review: {
+		label: '검토 필요',
+		className: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+	},
+} as const
 
 function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
 	const [open, setOpen] = useState(false)
 	const { selected } = useReviewImages()
-	const implemented = getChecker(rule.key) !== null
+	const implemented = rule.executor !== 'deterministic' || getChecker(rule.key) !== null
 	const isSectionStart = sectionLabel !== null
 
 	const tier = TIER[rule.tier] ?? { label: rule.tier, Icon: User, desc: '' }
@@ -37,7 +57,7 @@ function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
 
 	const outcome = selected?.results?.[rule.key]
 	const inProgress = Boolean(selected?.checking) && !outcome
-	const failDetail = outcome?.status === 'fail' ? outcome.detail : null
+	const detail = outcome?.status !== 'pass' ? outcome?.detail : null
 
 	const ruleBorder = 'border-neutral-200 border-t dark:border-neutral-800'
 
@@ -82,9 +102,16 @@ function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
 					{rule.titleKo}
 				</td>
 				<td className={cn('py-2.5 pr-3 align-top text-sm', ruleBorder)}>
-					{failDetail && (
-						<span className="text-rose-600 text-xs leading-5 dark:text-rose-400">
-							{failDetail}
+					{detail && (
+						<span
+							className={cn(
+								'text-xs leading-5',
+								outcome?.status === 'fail'
+									? 'text-rose-600 dark:text-rose-400'
+									: 'text-muted-foreground',
+							)}
+						>
+							{detail}
 						</span>
 					)}
 				</td>
@@ -97,12 +124,10 @@ function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
 						<span
 							className={cn(
 								'inline-block whitespace-nowrap rounded px-1.5 py-0.5 font-medium text-[11px]',
-								outcome.status === 'pass'
-									? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
-									: 'bg-rose-500/15 text-rose-700 dark:text-rose-400',
+								STATUS[outcome.status].className,
 							)}
 						>
-							{outcome.status === 'pass' ? 'PASS' : 'FAIL'}
+							{STATUS[outcome.status].label}
 						</span>
 					) : inProgress ? (
 						<span className="inline-flex w-14 items-center" title="검수 중">
@@ -150,9 +175,10 @@ function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
 }
 
 export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
-	const { showUnimplemented, selected } = useReviewImages()
+	const { scenarioKey, showUnimplemented, selected } = useReviewImages()
 	const [showFailOnly, setShowFailOnly] = useState(false)
 	const results = selected?.results
+	const visibleSections = filterRulesetByScenario(sections, getReviewScenario(scenarioKey))
 
 	let pass = 0
 	let fail = 0
@@ -160,9 +186,9 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 	const rows: RuleRowData[] = []
 	const seenSections = new Set<string>()
 
-	for (const section of sections) {
+	for (const section of visibleSections) {
 		for (const rule of section.rules) {
-			const implemented = getChecker(rule.key) !== null
+			const implemented = rule.executor !== 'deterministic' || getChecker(rule.key) !== null
 			const status = results?.[rule.key]?.status
 
 			if (implemented) {
@@ -183,7 +209,7 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 			})
 		}
 	}
-	const reviewed = pass + fail > 0
+	const reviewed = Boolean(results)
 
 	return (
 		<TooltipProvider delayDuration={150}>
@@ -242,7 +268,7 @@ function ResultSummary({
 			</span>
 			<span className="flex items-center gap-2 text-muted-foreground">
 				<span className="inline-block size-2 rounded-full bg-neutral-400" />
-				검수 전 <span className="font-semibold tabular-nums">{pendingReview}</span>
+				대기 <span className="font-semibold tabular-nums">{pendingReview}</span>
 			</span>
 			<button
 				type="button"

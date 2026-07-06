@@ -10,9 +10,9 @@ export interface RuleMetric {
 	actual: string
 }
 
-/** checker 하나의 판정 결과. detail이 UI에 보이는 불합 이유다. */
+/** 검수 결과. 자동 판정 외 executor 분기도 같은 shape로 저장한다. */
 export interface CheckResult {
-	status: 'pass' | 'fail'
+	status: 'pass' | 'fail' | 'needs_ai' | 'needs_review'
 	/** 충족률 % (계산 가능한 룰만, 아니면 null) */
 	fulfillment: number | null
 	detail: string
@@ -34,6 +34,10 @@ export interface PixelGrid {
 export interface CheckerContext {
 	pixels: Rgb[]
 	palette: Swatch[]
+	image?: {
+		data: Buffer
+		mediaType: 'image/jpeg' | 'image/png' | 'image/webp'
+	}
 	/** 기하가 필요한 checker(로고 등)만 사용. color checker는 무시. */
 	grid?: PixelGrid
 }

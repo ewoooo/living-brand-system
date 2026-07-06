@@ -15,6 +15,7 @@ import * as migration_20260706_013000_seed_baseline_data from './20260706_013000
 import * as migration_20260706_014821_page_owned_rule_placements from './20260706_014821_page_owned_rule_placements';
 import * as migration_20260706_030057_remove_template_rules from './20260706_030057_remove_template_rules';
 import * as migration_20260706_031500_add_mcp_call_check_session_source from './20260706_031500_add_mcp_call_check_session_source';
+import * as migration_20260706_033000_normalize_rule_executor from './20260706_033000_normalize_rule_executor';
 
 export const migrations = [
   {
@@ -101,5 +102,10 @@ export const migrations = [
     up: migration_20260706_031500_add_mcp_call_check_session_source.up,
     down: migration_20260706_031500_add_mcp_call_check_session_source.down,
     name: '20260706_031500_add_mcp_call_check_session_source'
+  },
+  {
+    up: migration_20260706_033000_normalize_rule_executor.up,
+    down: migration_20260706_033000_normalize_rule_executor.down,
+    name: '20260706_033000_normalize_rule_executor'
   },
 ];
