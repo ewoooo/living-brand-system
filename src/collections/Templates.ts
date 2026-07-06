@@ -106,16 +106,31 @@ export const Templates: CollectionConfig = {
 		},
 		{
 			name: 'templateRules',
-			type: 'relationship',
-			relationTo: 'template-rules',
-			hasMany: true,
-			filterOptions: {
-				status: { equals: 'live' },
-			},
+			type: 'array',
 			admin: {
 				position: 'sidebar',
 				description: 'Agent가 이 템플릿으로 이미지를 만들 때 함께 참고할 룰입니다.',
 			},
+			fields: [
+				{
+					name: 'rule',
+					type: 'relationship',
+					relationTo: 'rules',
+					required: true,
+					filterOptions: {
+						status: { equals: 'live' },
+					},
+				},
+				{
+					name: 'body',
+					type: 'textarea',
+					required: true,
+					localized: true,
+					admin: {
+						description: '이 템플릿에서 해당 룰을 Agent가 적용할 때 참고할 지침입니다.',
+					},
+				},
+			],
 		},
 		{
 			name: 'sourceUrl',
