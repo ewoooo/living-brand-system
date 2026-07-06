@@ -27,6 +27,7 @@ const PREVIEW_WIDTH = 480
 const MIN_CANVAS = 200
 const MAX_CANVAS = 4000
 const GUTTER = 12 // 캔버스 바깥 리사이즈 프레임 두께(px)
+const DEFAULT_BG = '#f5f2e9' // 캔버스 배경 기본 단색
 
 type Edge = 'left' | 'right' | 'top' | 'bottom' | 'nw' | 'ne' | 'sw' | 'se'
 
@@ -57,19 +58,28 @@ type VAlign = 'top' | 'middle' | 'bottom'
 // 텍스트 수평 흐름: fixed(폭고정·줄바꿈), auto-width(줄바꿈없이 폭따라감), truncate(넘치면 …).
 type TextFlow = 'fixed' | 'auto-width' | 'truncate'
 
-/** 셀 안 텍스트 아이템 — 내용 + 정렬(수평/수직) + 흐름. */
+/** 셀 안 텍스트 아이템 — 내용 + 정렬(수평/수직) + 흐름 + 폰트(크기·굵기·줄간격·색). */
 interface TextItem {
 	content: string
 	hAlign: HAlign
 	vAlign: VAlign
 	flow: TextFlow
+	fontSize: number
+	fontWeight: string
+	lineHeight: number
+	color: string
 }
 
-/** 셀 안 이미지 아이템 — 셀 좌상단에 놓이되 크기는 셀과 무관한 자체 width/height(px). */
+/**
+ * 셀 안 이미지 아이템 — 크기는 셀과 무관한 자체 width/height(px).
+ * offsetX/offsetY는 셀 좌상단 기준 위치 보정(px) — 8방향 리사이즈로 좌/상단을 당길 때 앵커가 이동한다.
+ */
 interface ImageItem {
 	src: string
 	width: number
 	height: number
+	offsetX: number
+	offsetY: number
 }
 
 /** 셀 하나에 텍스트 1·이미지 1이 들어갈 수 있다(z-index는 나중). null이면 비어 있음. */
@@ -85,7 +95,18 @@ const defaultText = (content: string): TextItem => ({
 	hAlign: 'left',
 	vAlign: 'top',
 	flow: 'fixed',
+	fontSize: 40,
+	fontWeight: '400',
+	lineHeight: 1.4,
+	color: '#1f2a24',
 })
+
+/** 폰트 굵기 프리셋 — 임시 UI(Figma 확정 후 교체). value는 CSS font-weight 문자열. */
+const FONT_WEIGHT: { value: string; label: string }[] = [
+	{ value: '400', label: '보통' },
+	{ value: '500', label: '중간' },
+	{ value: '700', label: '굵게' },
+]
 
 const H_ALIGN: { value: HAlign; label: string }[] = [
 	{ value: 'left', label: '왼쪽' },
@@ -113,6 +134,7 @@ function parseItemId(id: string): { index: number; kind: ItemKind } {
 function deriveInitial(source?: JsonTemplate) {
 	const canvasW = source?.width ?? DEFAULT_CANVAS
 	const canvasH = source?.height ?? DEFAULT_CANVAS
+	const bgColor = source?.background ?? DEFAULT_BG
 	const padX = source?.padding?.x ?? 0
 	const padY = source?.padding?.y ?? 0
 	const rows = source?.grid?.rows ?? [1, 2, 1]
@@ -134,14 +156,26 @@ function deriveInitial(source?: JsonTemplate) {
 					hAlign: el.textAlign,
 					vAlign: el.verticalAlign,
 					flow: el.textFit,
+					fontSize: el.fontSize,
+					fontWeight: el.fontWeight,
+					lineHeight: el.lineHeight,
+					color: el.color,
 				}
 			} else {
-				cell.image = { src: el.src, width: el.width, height: el.height }
+				// 로드 시 이미지는 셀 좌상단으로 스냅(offset 0) — 저장된 x/y가 셀 기준값이라 무보정.
+				cell.image = {
+					src: el.src,
+					width: el.width,
+					height: el.height,
+					offsetX: 0,
+					offsetY: 0,
+				}
 			}
 		}
 	}
 
-	return { canvasW, canvasH, padX, padY, gap, rows, cols, cells }
+	// 배경 이미지는 로드 시 구분하지 않는다(POC) — 저장된 이미지는 셀로 라우팅된다.
+	return { canvasW, canvasH, bgColor, bgImage: null, padX, padY, gap, rows, cols, cells }
 }
 
 export function GridComposer({ source }: { source?: JsonTemplate }) {
@@ -154,6 +188,9 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 	const [padX, setPadX] = useState(initial.padX)
 	const [padY, setPadY] = useState(initial.padY)
 	const [gap, setGap] = useState(initial.gap)
+	// 배경 = 캔버스 전체 크기(gap·여백 무시)의 별도 레이어. 단색 fill + 선택적 이미지(z 0).
+	const [bgColor, setBgColor] = useState(initial.bgColor)
+	const [bgImage, setBgImage] = useState<string | null>(initial.bgImage)
 	const [rows, setRows] = useState<number[]>(initial.rows)
 	const [cols, setCols] = useState<number[]>(initial.cols)
 	const [cells, setCells] = useState<Cell[]>(initial.cells)
@@ -162,7 +199,7 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 	const [dropCell, setDropCell] = useState<{ row: number; col: number } | null>(null)
 	const [moveableTarget, setMoveableTarget] = useState<HTMLElement | null>(null)
 	const [resizing, setResizing] = useState<Edge | null>(null)
-	const [hideGuides, setHideGuides] = useState(true)
+	const [hideGuides, setHideGuides] = useState(false)
 	const canvasRef = useRef<HTMLDivElement>(null)
 	const rafRef = useRef<number | null>(null)
 	const pendingRef = useRef<{ w: number; h: number } | null>(null)
@@ -192,7 +229,13 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 		const value =
 			kind === 'text'
 				? defaultText('텍스트')
-				: ({ src: GRAY, width: box.width, height: box.height } satisfies ImageItem)
+				: ({
+						src: GRAY,
+						width: box.width,
+						height: box.height,
+						offsetX: 0,
+						offsetY: 0,
+					} satisfies ImageItem)
 		setCells((prev) =>
 			prev.map((cell, i) => (i === target ? { ...cell, [kind]: value } : cell)),
 		)
@@ -322,7 +365,7 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 
 	const template = useMemo<JsonTemplate>(() => {
 		const width = cols.length
-		const els = cells.flatMap((cell, index) => {
+		const cellEls = cells.flatMap((cell, index) => {
 			// cellBox 인라인 — memo가 rowSizes·colSizes·padX·padY를 직접 의존하게 한다.
 			const r = Math.min(Math.floor(index / width), rowSizes.length - 1)
 			const c = Math.min(index % width, colSizes.length - 1)
@@ -339,13 +382,15 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 			const out: JsonTemplate['elements'] = []
 			// 이미지가 아래(z 1), 텍스트가 위(z 2) — z-index 정교화는 나중.
 			if (cell.image != null) {
-				// 이미지는 셀 좌상단에 놓이되 크기는 자체 width/height(셀과 무관).
+				// 이미지는 셀 좌상단 + offset에 놓이되 크기는 자체 width/height(셀과 무관).
+				// 자유 드래그 중(boxOf가 절대좌표 반환)에는 offset을 더하지 않는다.
 				const anchor = boxOf('image')
+				const free = dragFree?.id === `${index}:image`
 				out.push({
 					id: `${index}:image`,
 					type: 'image',
-					x: anchor.x,
-					y: anchor.y,
+					x: free ? anchor.x : anchor.x + cell.image.offsetX,
+					y: free ? anchor.y : anchor.y + cell.image.offsetY,
 					width: cell.image.width,
 					height: cell.image.height,
 					zIndex: 1,
@@ -366,11 +411,11 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 					zIndex: 2,
 					locked: false,
 					text: cell.text.content,
-					fontSize: 40,
+					fontSize: cell.text.fontSize,
 					fontFamily: 'Pretendard, sans-serif',
-					fontWeight: '400',
-					color: '#1f2a24',
-					lineHeight: 1.4,
+					fontWeight: cell.text.fontWeight,
+					color: cell.text.color,
+					lineHeight: cell.text.lineHeight,
 					letterSpacing: 0,
 					textAlign: cell.text.hAlign,
 					textFit: cell.text.flow,
@@ -380,8 +425,46 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 			}
 			return out
 		})
-		return { width: canvasW, height: canvasH, background: '#f5f2e9', elements: els }
-	}, [cells, dragFree, rowSizes, colSizes, canvasW, canvasH, padX, padY, gap, cols.length])
+		// 배경 이미지는 캔버스 전체(x0/y0, gap·여백 무시)를 채우고 가장 아래(z 0)에 깔린다.
+		const bgEls: JsonTemplate['elements'] = bgImage
+			? [
+					{
+						id: 'bg:image',
+						type: 'image',
+						x: 0,
+						y: 0,
+						width: canvasW,
+						height: canvasH,
+						zIndex: 0,
+						locked: false,
+						assetCollection: 'template-assets',
+						assetId: 0,
+						src: bgImage,
+						objectFit: 'cover',
+						borderRadius: 0,
+					},
+				]
+			: []
+		return {
+			width: canvasW,
+			height: canvasH,
+			background: bgColor,
+			elements: [...bgEls, ...cellEls],
+		}
+	}, [
+		cells,
+		dragFree,
+		rowSizes,
+		colSizes,
+		canvasW,
+		canvasH,
+		padX,
+		padY,
+		gap,
+		cols.length,
+		bgColor,
+		bgImage,
+	])
 
 	const selected = (() => {
 		if (!selectedId) return null
@@ -475,11 +558,12 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 								if (cell[kind] == null) return []
 								const id = `${index}:${kind}`
 								const isSelected = id === selectedId
-								// 이미지는 셀 크기와 무관한 자체 width/height를 hit-area로.
+								// 이미지는 셀 크기와 무관한 자체 width/height + offset을 hit-area로.
 								const sized =
 									kind === 'image' && cell.image
 										? {
-												...base,
+												x: base.x + cell.image.offsetX,
+												y: base.y + cell.image.offsetY,
 												width: cell.image.width,
 												height: cell.image.height,
 											}
@@ -519,13 +603,47 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 								resizable={selected.kind === 'image'}
 								keepRatio={false}
 								origin={false}
-								renderDirections={selected.kind === 'image' ? ['se'] : []}
+								renderDirections={
+									selected.kind === 'image'
+										? ['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se']
+										: []
+								}
 								onResize={(event) => {
 									if (selected.kind !== 'image') return
-									patchImage(selected.index, {
-										width: Math.max(8, Math.round(event.width / scale)),
-										height: Math.max(8, Math.round(event.height / scale)),
-									})
+									// 좌/상단 핸들(direction -1)은 크기 증가분만큼 앵커를 당긴다.
+									// offset을 width 변화와 같은 절대값에서 유도해 event.delta 의존을 없앤다.
+									const [dirX, dirY] = event.direction
+									setCells((prev) =>
+										prev.map((cell, i) => {
+											if (i !== selected.index || !cell.image) return cell
+											const newW = Math.max(
+												8,
+												Math.round(event.width / scale),
+											)
+											const newH = Math.max(
+												8,
+												Math.round(event.height / scale),
+											)
+											return {
+												...cell,
+												image: {
+													...cell.image,
+													width: newW,
+													height: newH,
+													offsetX:
+														dirX < 0
+															? cell.image.offsetX -
+																(newW - cell.image.width)
+															: cell.image.offsetX,
+													offsetY:
+														dirY < 0
+															? cell.image.offsetY -
+																(newH - cell.image.height)
+															: cell.image.offsetY,
+												},
+											}
+										}),
+									)
 								}}
 								onDrag={(event) => {
 									setDragFree({
@@ -596,6 +714,45 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 
 				<Field label="셀 간격 (Gap)">
 					<SizeInput label="px" value={gap} min={0} onCommit={setGap} />
+				</Field>
+
+				<Field label="배경 (캔버스 전체)">
+					<div className="flex flex-col gap-2">
+						<div className="flex items-center gap-2">
+							<input
+								type="color"
+								value={bgColor}
+								onChange={(e) => setBgColor(e.target.value)}
+								aria-label="배경 색"
+								className="h-9 w-9 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0"
+							/>
+							<Input
+								value={bgColor}
+								onChange={(e) => setBgColor(e.target.value)}
+								className="flex-1"
+								aria-label="배경 색 (hex)"
+							/>
+						</div>
+						<Input
+							type="file"
+							accept="image/*"
+							aria-label="배경 이미지"
+							onChange={(e) => {
+								const file = e.target.files?.[0]
+								if (file) setBgImage(URL.createObjectURL(file))
+							}}
+						/>
+						{bgImage && (
+							<Button
+								size="sm"
+								variant="ghost"
+								className="self-start text-destructive"
+								onClick={() => setBgImage(null)}
+							>
+								배경 이미지 제거
+							</Button>
+						)}
+					</div>
 				</Field>
 
 				<Separator />
@@ -674,6 +831,55 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 										options={TEXT_FLOW}
 										onChange={(flow) => patchText(selected.index, { flow })}
 									/>
+									<AlignPicker
+										label="굵기"
+										value={selected.text.fontWeight}
+										options={FONT_WEIGHT}
+										onChange={(fontWeight) =>
+											patchText(selected.index, { fontWeight })
+										}
+									/>
+									<div className="flex gap-2">
+										<SizeInput
+											label="크기 (px)"
+											value={selected.text.fontSize}
+											min={1}
+											onCommit={(v) =>
+												patchText(selected.index, { fontSize: v })
+											}
+										/>
+										<SizeInput
+											label="줄간격 (배수)"
+											value={selected.text.lineHeight}
+											min={0.1}
+											float
+											onCommit={(v) =>
+												patchText(selected.index, { lineHeight: v })
+											}
+										/>
+									</div>
+									<div className="flex items-center gap-2">
+										<span className="w-8 shrink-0 text-muted-foreground text-xs">
+											색상
+										</span>
+										<input
+											type="color"
+											value={selected.text.color}
+											onChange={(e) =>
+												patchText(selected.index, { color: e.target.value })
+											}
+											aria-label="텍스트 색"
+											className="h-9 w-9 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0"
+										/>
+										<Input
+											value={selected.text.color}
+											onChange={(e) =>
+												patchText(selected.index, { color: e.target.value })
+											}
+											className="flex-1"
+											aria-label="텍스트 색 (hex)"
+										/>
+									</div>
 								</div>
 							) : selected.image ? (
 								<div className="flex flex-col gap-2">
@@ -829,22 +1035,24 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 	)
 }
 
-/** 캔버스 크기·여백 정수 입력 — Enter/blur 커밋. */
+/** 숫자 입력 — Enter/blur 커밋. float=true면 소수 허용(줄간격 등). */
 function SizeInput({
 	label,
 	value,
 	onCommit,
 	min = MIN_CANVAS,
+	float = false,
 }: {
 	label: string
 	value: number
 	onCommit: (value: number) => void
 	min?: number
+	float?: boolean
 }) {
 	const [draft, setDraft] = useState(String(value))
 	useEffect(() => setDraft(String(value)), [value])
 	const commit = () => {
-		const n = Number.parseInt(draft, 10)
+		const n = float ? Number.parseFloat(draft) : Number.parseInt(draft, 10)
 		if (Number.isFinite(n) && n >= min) onCommit(n)
 		else setDraft(String(value))
 	}
@@ -853,6 +1061,7 @@ function SizeInput({
 			<span>{label}</span>
 			<Input
 				type="number"
+				step={float ? 0.1 : 1}
 				value={draft}
 				onChange={(e) => setDraft(e.target.value)}
 				onKeyDown={(e) => {
