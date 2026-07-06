@@ -4,7 +4,6 @@ import { ChevronDown, MagicWand, Ruler, User } from '@carbon/icons-react'
 import { type ComponentType, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { getChecker } from '@/features/review/checkers/registry'
-import { getCommentary } from '@/features/review/commentary'
 import { useReviewImages } from '@/features/review/image-context'
 import type {
 	ReviewSection,
@@ -45,8 +44,8 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 
 	const outcome = selected?.results?.[rule.key]
 	const inProgress = Boolean(selected?.checking) && !outcome
-	// AI 코멘터리(불합 이유)는 미통과(fail) 룰에만.
-	const commentary = outcome?.status === 'fail' ? getCommentary(rule.key, outcome.metric) : null
+	// 불합 이유는 checker가 측정 근거로 만든 detail을 그대로 보여준다 (fail 룰에만).
+	const failDetail = outcome?.status === 'fail' ? outcome.detail : null
 
 	// 섹션 첫 룰이면 섹션명 칸까지 전체폭 구분선(border-top), 아니면 룰 칸만 구분선.
 	const ruleBorder = 'border-neutral-200 border-t dark:border-neutral-800'
@@ -95,11 +94,11 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 				<td className={cn('w-56 py-2.5 pr-4 align-top text-sm', ruleBorder)}>
 					{rule.titleKo}
 				</td>
-				{/* 불합 이유 (fail 코멘터리) */}
+				{/* 불합 이유 (checker detail) */}
 				<td className={cn('py-2.5 pr-3 align-top text-sm', ruleBorder)}>
-					{commentary && (
+					{failDetail && (
 						<span className="text-rose-600 text-xs leading-5 dark:text-rose-400">
-							{commentary}
+							{failDetail}
 						</span>
 					)}
 				</td>

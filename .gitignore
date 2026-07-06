@@ -59,7 +59,6 @@ node_modules/
 
 # Local database operations
 .db-backups/
-scripts/create-admin.ts
 .agents/worktrees/
 
 # Local review calibration (검수기 회귀용 샘플·진단 스크립트 — 로컬 전용)
