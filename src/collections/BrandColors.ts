@@ -6,11 +6,11 @@ export const BrandColors: CollectionConfig = {
 	slug: 'brand-colors',
 	access: managerManagedAccess,
 	labels: {
-		singular: 'Color',
-		plural: 'Colors',
+		singular: 'Brand Color',
+		plural: 'Brand Colors',
 	},
 	admin: {
-		group: 'Brand Resources',
+		group: 'Brand Assets',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'hex', 'colorGroup', 'tone', 'updatedAt'],
 	},
@@ -41,10 +41,9 @@ export const BrandColors: CollectionConfig = {
 		},
 		{
 			name: 'colorGroup',
-			type: 'select',
-			options: ['red', 'yellow', 'green', 'blue', 'purple', 'gray', 'neutral'],
+			type: 'text',
 			admin: {
-				description: '팔레트 색상군입니다. White/Black은 neutral을 사용합니다.',
+				description: '팔레트 색상군입니다. 예: red, yellow, neutral',
 			},
 		},
 		{

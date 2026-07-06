@@ -1,10 +1,14 @@
 'use client'
 
-import { ChevronDown, MagicWand, Ruler, User } from '@carbon/icons-react'
-import { type ComponentType, useState } from 'react'
+import { AiGenerate, ChevronDown, Ruler, User } from '@carbon/icons-react'
+import { type ComponentType, Fragment, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { getChecker } from '@/features/review/checkers/registry'
 import { useReviewImages } from '@/features/review/hooks/use-review-images'
+import {
+	filterRulesetByScenario,
+	getReviewScenario,
+} from '@/features/review/scenarios/review-scenarios'
 import type {
 	ReviewSection,
 	ReviewRule as Rule,
@@ -13,6 +17,7 @@ import { cn } from '@/lib/utils'
 
 interface RuleRowData {
 	rule: Rule
+	rowId: string
 	sectionLabel: string | null
 	anchorId: string | null
 }
@@ -21,15 +26,31 @@ const TIER: Record<
 	string,
 	{ label: string; Icon: ComponentType<{ size?: number }>; desc: string }
 > = {
-	A: { label: 'A · deterministic', Icon: Ruler, desc: '자로 잰 듯 확정된 값 — 믿어도 됨' },
-	B: { label: 'B · heuristic', Icon: MagicWand, desc: 'AI가 추론한 값 — 100% 신뢰는 아님' },
-	C: { label: 'C · advisory/human', Icon: User, desc: '사람이 직접 판단해야 하는 값' },
+	A: { label: 'A · deterministic', Icon: Ruler, desc: '체커가 직접 판정하는 기준' },
+	B: { label: 'B · heuristic', Icon: AiGenerate, desc: 'AI 평가를 경유하는 기준' },
+	C: { label: 'C · advisory', Icon: User, desc: '브랜드 담당자 확인이 필요한 기준' },
 }
 
-function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
+const STATUS = {
+	pass: {
+		label: 'PASS',
+		className: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+	},
+	fail: { label: 'FAIL', className: 'bg-rose-500/15 text-rose-700 dark:text-rose-400' },
+	needs_ai: {
+		label: 'AI 대기',
+		className: 'bg-sky-500/15 text-sky-700 dark:text-sky-400',
+	},
+	needs_review: {
+		label: '담당자 검토',
+		className: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+	},
+} as const
+
+function RuleRow({ rule, rowId, sectionLabel, anchorId }: RuleRowData) {
 	const [open, setOpen] = useState(false)
 	const { selected } = useReviewImages()
-	const implemented = getChecker(rule.key) !== null
+	const implemented = rule.executor !== 'deterministic' || getChecker(rule.key) !== null
 	const isSectionStart = sectionLabel !== null
 
 	const tier = TIER[rule.tier] ?? { label: rule.tier, Icon: User, desc: '' }
@@ -37,12 +58,12 @@ function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
 
 	const outcome = selected?.results?.[rule.key]
 	const inProgress = Boolean(selected?.checking) && !outcome
-	const failDetail = outcome?.status === 'fail' ? outcome.detail : null
+	const detail = outcome?.status !== 'pass' ? outcome?.detail : null
 
 	const ruleBorder = 'border-neutral-200 border-t dark:border-neutral-800'
 
 	return (
-		<>
+		<Fragment key={rowId}>
 			<tr
 				id={anchorId ?? undefined}
 				aria-expanded={open}
@@ -82,9 +103,16 @@ function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
 					{rule.titleKo}
 				</td>
 				<td className={cn('py-2.5 pr-3 align-top text-sm', ruleBorder)}>
-					{failDetail && (
-						<span className="text-rose-600 text-xs leading-5 dark:text-rose-400">
-							{failDetail}
+					{detail && (
+						<span
+							className={cn(
+								'text-xs leading-5',
+								outcome?.status === 'fail'
+									? 'text-rose-600 dark:text-rose-400'
+									: 'text-muted-foreground',
+							)}
+						>
+							{detail}
 						</span>
 					)}
 				</td>
@@ -97,12 +125,10 @@ function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
 						<span
 							className={cn(
 								'inline-block whitespace-nowrap rounded px-1.5 py-0.5 font-medium text-[11px]',
-								outcome.status === 'pass'
-									? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
-									: 'bg-rose-500/15 text-rose-700 dark:text-rose-400',
+								STATUS[outcome.status].className,
 							)}
 						>
-							{outcome.status === 'pass' ? 'PASS' : 'FAIL'}
+							{STATUS[outcome.status].label}
 						</span>
 					) : inProgress ? (
 						<span className="inline-flex w-14 items-center" title="검수 중">
@@ -133,26 +159,52 @@ function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
 						</code>
 					</td>
 					<td className="pt-0 pb-3 pr-3 align-top" colSpan={3}>
-						{rule.evidence ? (
-							<blockquote className="rounded-md bg-white/5 px-3 py-2 text-muted-foreground text-xs leading-5">
-								{rule.evidence}
-							</blockquote>
-						) : (
-							<span className="text-muted-foreground text-xs">
-								관련 가이드라인 없음
-							</span>
-						)}
+						<div className="space-y-2">
+							{rule.evidence ? (
+								<blockquote className="rounded-md bg-white/5 px-3 py-2 text-muted-foreground text-xs leading-5">
+									{rule.evidence}
+								</blockquote>
+							) : (
+								<span className="text-muted-foreground text-xs">
+									관련 가이드라인 없음
+								</span>
+							)}
+							<ReferenceAssets assets={rule.referenceAssets} />
+						</div>
 					</td>
 				</tr>
 			)}
-		</>
+		</Fragment>
+	)
+}
+
+function ReferenceAssets({ assets }: { assets: Rule['referenceAssets'] }) {
+	if (assets.length === 0) return null
+
+	return (
+		<div className="flex flex-wrap items-center gap-1.5 text-xs">
+			<span className="text-muted-foreground">기준 이미지 {assets.length}개</span>
+			{assets.map((asset) => (
+				<a
+					key={`${asset.url}-${asset.name}`}
+					href={asset.url}
+					target="_blank"
+					rel="noreferrer"
+					className="rounded-md border px-2 py-1 text-foreground transition-colors hover:bg-accent"
+				>
+					{asset.name}
+				</a>
+			))}
+		</div>
 	)
 }
 
 export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
-	const { showUnimplemented, selected } = useReviewImages()
+	const { scenarioKey, showUnimplemented, selected } = useReviewImages()
 	const [showFailOnly, setShowFailOnly] = useState(false)
 	const results = selected?.results
+	const checking = Boolean(selected?.checking)
+	const visibleSections = filterRulesetByScenario(sections, getReviewScenario(scenarioKey))
 
 	let pass = 0
 	let fail = 0
@@ -160,9 +212,9 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 	const rows: RuleRowData[] = []
 	const seenSections = new Set<string>()
 
-	for (const section of sections) {
+	for (const section of visibleSections) {
 		for (const rule of section.rules) {
-			const implemented = getChecker(rule.key) !== null
+			const implemented = rule.executor !== 'deterministic' || getChecker(rule.key) !== null
 			const status = results?.[rule.key]?.status
 
 			if (implemented) {
@@ -178,12 +230,13 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 			seenSections.add(section.slug)
 			rows.push({
 				rule,
+				rowId: `${section.slug}:${rule.key}`,
 				sectionLabel: first ? section.title : null,
 				anchorId: first ? section.slug : null,
 			})
 		}
 	}
-	const reviewed = pass + fail > 0
+	const reviewed = Boolean(results)
 
 	return (
 		<TooltipProvider delayDuration={150}>
@@ -193,6 +246,7 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 						pass={pass}
 						fail={fail}
 						pendingReview={pendingReview}
+						checking={checking}
 						showFailOnly={showFailOnly}
 						onToggleFailOnly={() => setShowFailOnly((value) => !value)}
 					/>
@@ -201,7 +255,7 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 					<table className="w-full border-collapse">
 						<tbody>
 							{rows.map((row) => (
-								<RuleRow key={row.rule.placementId} {...row} />
+								<RuleRow key={row.rowId} {...row} />
 							))}
 						</tbody>
 					</table>
@@ -221,12 +275,14 @@ function ResultSummary({
 	pass,
 	fail,
 	pendingReview,
+	checking,
 	showFailOnly,
 	onToggleFailOnly,
 }: {
 	pass: number
 	fail: number
 	pendingReview: number
+	checking: boolean
 	showFailOnly: boolean
 	onToggleFailOnly: () => void
 }) {
@@ -242,8 +298,14 @@ function ResultSummary({
 			</span>
 			<span className="flex items-center gap-2 text-muted-foreground">
 				<span className="inline-block size-2 rounded-full bg-neutral-400" />
-				검수 전 <span className="font-semibold tabular-nums">{pendingReview}</span>
+				검토 필요 <span className="font-semibold tabular-nums">{pendingReview}</span>
 			</span>
+			{checking && (
+				<span className="flex items-center gap-2 text-sky-700 text-xs dark:text-sky-400">
+					<span className="inline-block size-2 animate-pulse rounded-full bg-sky-500" />
+					AI 검수 중
+				</span>
+			)}
 			<button
 				type="button"
 				onClick={onToggleFailOnly}

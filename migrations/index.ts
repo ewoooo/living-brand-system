@@ -15,6 +15,10 @@ import * as migration_20260706_013000_seed_baseline_data from './20260706_013000
 import * as migration_20260706_014821_page_owned_rule_placements from './20260706_014821_page_owned_rule_placements';
 import * as migration_20260706_030057_remove_template_rules from './20260706_030057_remove_template_rules';
 import * as migration_20260706_031500_add_mcp_call_check_session_source from './20260706_031500_add_mcp_call_check_session_source';
+import * as migration_20260706_033000_normalize_rule_executor from './20260706_033000_normalize_rule_executor';
+import * as migration_20260706_052000_add_rule_reference_assets from './20260706_052000_add_rule_reference_assets';
+import * as migration_20260706_053000_make_color_group_editable from './20260706_053000_make_color_group_editable';
+import * as migration_20260706_061000_split_review_rules from './20260706_061000_split_review_rules';
 
 export const migrations = [
   {
@@ -101,5 +105,25 @@ export const migrations = [
     up: migration_20260706_031500_add_mcp_call_check_session_source.up,
     down: migration_20260706_031500_add_mcp_call_check_session_source.down,
     name: '20260706_031500_add_mcp_call_check_session_source'
+  },
+  {
+    up: migration_20260706_033000_normalize_rule_executor.up,
+    down: migration_20260706_033000_normalize_rule_executor.down,
+    name: '20260706_033000_normalize_rule_executor'
+  },
+  {
+    up: migration_20260706_052000_add_rule_reference_assets.up,
+    down: migration_20260706_052000_add_rule_reference_assets.down,
+    name: '20260706_052000_add_rule_reference_assets'
+  },
+  {
+    up: migration_20260706_053000_make_color_group_editable.up,
+    down: migration_20260706_053000_make_color_group_editable.down,
+    name: '20260706_053000_make_color_group_editable'
+  },
+  {
+    up: migration_20260706_061000_split_review_rules.up,
+    down: migration_20260706_061000_split_review_rules.down,
+    name: '20260706_061000_split_review_rules'
   },
 ];

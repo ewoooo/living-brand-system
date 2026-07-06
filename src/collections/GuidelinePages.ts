@@ -7,11 +7,11 @@ export const GuidelinePages: CollectionConfig = {
 	slug: 'guideline-pages',
 	access: managerManagedAccess,
 	labels: {
-		singular: 'Page',
-		plural: 'Pages',
+		singular: 'Guideline Page',
+		plural: 'Guideline Pages',
 	},
 	admin: {
-		group: 'Guideline',
+		group: 'Guidelines',
 		useAsTitle: 'title',
 		defaultColumns: ['title', 'section', 'displayOrder', 'updatedAt'],
 		description: '블록으로 구성하는 가이드라인 페이지입니다.',
@@ -42,12 +42,12 @@ export const GuidelinePages: CollectionConfig = {
 				description: '페이지 제목 아래에 표시할 선택 설명입니다.',
 			},
 		},
-		// 룰 배치 — 이 페이지에 적용되는 룰과 그 브랜드 구체 값. 페이지가 배치의 수명을 소유한다.
+		// 룰 배치 — 페이지는 룰의 노출 순서만 소유하고, 기준값은 rules 컬렉션이 소유한다.
 		{
 			name: 'rules',
 			type: 'array',
 			admin: {
-				description: '이 페이지에서 설명하거나 적용하는 룰과 브랜드 구체 값입니다.',
+				description: '이 페이지에서 설명하거나 적용하는 룰입니다.',
 			},
 			fields: [
 				{
@@ -58,18 +58,6 @@ export const GuidelinePages: CollectionConfig = {
 					filterOptions: {
 						status: { equals: 'live' },
 					},
-				},
-				{
-					name: 'value',
-					type: 'textarea',
-					admin: {
-						description: '이 페이지에서의 브랜드 구체 값. 비어 있을 수 있습니다.',
-					},
-				},
-				{
-					name: 'evidence',
-					type: 'textarea',
-					admin: { description: '가이드라인 원문 근거(출처).' },
 				},
 			],
 		},

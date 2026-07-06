@@ -2,10 +2,8 @@
 
 import { createContext, type ReactNode, useState } from 'react'
 import type { CheckResult } from '@/features/review/checkers/types'
-import {
-	DEFAULT_CONTENT_FLAGS,
-	type ImageContentFlags,
-} from '@/features/review/types/content-flags'
+import { getReviewScenario, REVIEW_SCENARIOS } from '@/features/review/scenarios/review-scenarios'
+import type { ImageContentFlags } from '@/features/review/types/content-flags'
 import type { ReviewImage, ReviewImageContextValue } from '@/features/review/types/review-image'
 
 export const ReviewImageContext = createContext<ReviewImageContextValue | null>(null)
@@ -18,7 +16,10 @@ export const ReviewImageContext = createContext<ReviewImageContextValue | null>(
 export function ReviewImageProvider({ children }: { children: ReactNode }) {
 	const [images, setImages] = useState<ReviewImage[]>([])
 	const [selectedId, setSelectedId] = useState<string | null>(null)
-	const [contentFlags, setContentFlags] = useState<ImageContentFlags>(DEFAULT_CONTENT_FLAGS)
+	const [contentFlags, setContentFlags] = useState<ImageContentFlags>({
+		...REVIEW_SCENARIOS[0].flags,
+	})
+	const [scenarioKey, setScenarioKeyValue] = useState(REVIEW_SCENARIOS[0].key)
 	const [flagsLocked, setFlagsLocked] = useState(false)
 	// 개발 중(체커 없는) 룰은 기본 숨김.
 	const [showUnimplemented, setShowUnimplemented] = useState(false)
@@ -34,6 +35,7 @@ export function ReviewImageProvider({ children }: { children: ReactNode }) {
 			const form = new FormData()
 			form.append('image', file)
 			form.append('flags', JSON.stringify(flags))
+			form.append('scenarioKey', scenarioKey)
 			form.append('source', 'review-page')
 			const response = await fetch('/api/review/check', { method: 'POST', body: form })
 			if (!response.ok) throw new Error(`review check failed: ${response.status}`)
@@ -82,6 +84,12 @@ export function ReviewImageProvider({ children }: { children: ReactNode }) {
 		setContentFlags((prev) => ({ ...prev, [key]: value }))
 	}
 
+	function setScenarioKey(key: string) {
+		const scenario = getReviewScenario(key)
+		setScenarioKeyValue(scenario.key)
+		setContentFlags({ ...scenario.flags })
+	}
+
 	function runReview() {
 		if (!selectedId) return
 		const target = images.find((image) => image.id === selectedId)
@@ -99,6 +107,8 @@ export function ReviewImageProvider({ children }: { children: ReactNode }) {
 		contentFlags,
 		flagsLocked,
 		setContentFlag,
+		scenarioKey,
+		setScenarioKey,
 		runReview,
 		showUnimplemented,
 		setShowUnimplemented,

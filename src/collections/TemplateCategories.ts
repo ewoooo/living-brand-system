@@ -14,7 +14,7 @@ export const TemplateCategories: CollectionConfig = {
 	},
 	access: managerManagedAccess,
 	admin: {
-		group: 'Production Resources',
+		group: 'Production',
 		useAsTitle: 'title',
 		defaultColumns: ['title', 'slug', 'displayOrder', 'updatedAt'],
 		description: 'Create 화면 사이드바에 표시할 템플릿 카테고리입니다.',

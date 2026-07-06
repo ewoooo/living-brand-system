@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import type { Swatch, SwatchFamily } from '@/features/review/checkers/color/palette-match'
-import { listReviewPaletteColors } from '@/features/review/repositories/review-palette.payload.repository'
+import { getReviewPaletteColors } from '@/features/review/repositories/review-palette.payload.repository'
 
 function swatchFamily(colorGroup: unknown): SwatchFamily | null {
 	if (colorGroup === 'neutral') return 'extreme'
@@ -21,7 +21,7 @@ function swatchFamily(colorGroup: unknown): SwatchFamily | null {
  * 검수 checker가 쓰는 팔레트 스냅샷을 brand-colors 컬렉션에서 만든다.
  */
 export const getReviewPalette = cache(async (): Promise<Swatch[]> => {
-	const colors = await listReviewPaletteColors()
+	const colors = await getReviewPaletteColors()
 
 	return colors.flatMap((color) => {
 		const family = swatchFamily(color.colorGroup)

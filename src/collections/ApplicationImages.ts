@@ -11,7 +11,7 @@ export const ApplicationImages: CollectionConfig = {
 		read: () => true,
 	},
 	admin: {
-		group: 'Brand Resources',
+		group: 'Brand Assets',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'alt', 'updatedAt'],
 	},

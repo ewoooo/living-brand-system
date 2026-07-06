@@ -62,38 +62,109 @@ type Section = Chapter['sections'][number]
 type Page = Section['pages'][number]
 type Rule = Page['rules'][number]
 
-export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
+type Db = MigrateUpArgs['db']
+
+async function upsertSection(
+	db: Db,
+	section: Section,
+	displayOrder: number,
+): Promise<number> {
+	const found = await db.execute(sql`
+		SELECT gs.id
+		FROM guideline_sections gs
+		JOIN guideline_sections_locales gsl ON gsl._parent_id = gs.id AND gsl._locale = 'ko'
+		WHERE gsl.slug = ${section.slug}
+		LIMIT 1`)
+	const existing = found.rows[0] as { id: number } | undefined
+	if (existing) {
+		await db.execute(sql`
+			UPDATE guideline_sections
+			SET display_order = ${displayOrder}, _status = 'published'::enum_guideline_sections_status, updated_at = now()
+			WHERE id = ${existing.id}`)
+		await db.execute(sql`
+			UPDATE guideline_sections_locales
+			SET title = ${section.name}, generate_slug = false, slug = ${section.slug}
+			WHERE _parent_id = ${existing.id} AND _locale = 'ko'`)
+		return existing.id
+	}
+	const inserted = await db.execute(sql`
+		INSERT INTO guideline_sections (display_order, _status, updated_at, created_at)
+		VALUES (${displayOrder}, 'published'::enum_guideline_sections_status, now(), now())
+		RETURNING id`)
+	const id = (inserted.rows[0] as { id: number }).id
+	await db.execute(sql`
+		INSERT INTO guideline_sections_locales (title, generate_slug, slug, _locale, _parent_id)
+		VALUES (${section.name}, false, ${section.slug}, 'ko', ${id})`)
+	return id
+}
+
+async function upsertPage(
+	db: Db,
+	page: { sectionId: number; title: string; slug: string; displayOrder: number },
+): Promise<number> {
+	const found = await db.execute(sql`
+		SELECT gp.id
+		FROM guideline_pages gp
+		JOIN guideline_pages_locales gpl ON gpl._parent_id = gp.id AND gpl._locale = 'ko'
+		WHERE gpl.slug = ${page.slug}
+		LIMIT 1`)
+	const existing = found.rows[0] as { id: number } | undefined
+	if (existing) {
+		await db.execute(sql`
+			UPDATE guideline_pages
+			SET section_id = ${page.sectionId}, display_order = ${page.displayOrder},
+			    _status = 'published'::enum_guideline_pages_status, updated_at = now()
+			WHERE id = ${existing.id}`)
+		await db.execute(sql`
+			UPDATE guideline_pages_locales
+			SET title = ${page.title}, generate_slug = false, slug = ${page.slug}
+			WHERE _parent_id = ${existing.id} AND _locale = 'ko'`)
+		return existing.id
+	}
+	const inserted = await db.execute(sql`
+		INSERT INTO guideline_pages (section_id, display_order, _status, updated_at, created_at)
+		VALUES (${page.sectionId}, ${page.displayOrder}, 'published'::enum_guideline_pages_status, now(), now())
+		RETURNING id`)
+	const id = (inserted.rows[0] as { id: number }).id
+	await db.execute(sql`
+		INSERT INTO guideline_pages_locales (title, generate_slug, slug, _locale, _parent_id)
+		VALUES (${page.title}, false, ${page.slug}, 'ko', ${id})`)
+	return id
+}
+
+async function upsertRule(
+	db: Db,
+	rule: { key: string; title: string; titleKo: string; category: RuleCategory; tier: 'A' | 'B' | 'C' },
+): Promise<number> {
+	const inserted = await db.execute(sql`
+		INSERT INTO rules (key, title, title_ko, category, tier, status, updated_at, created_at)
+		VALUES (
+			${rule.key},
+			${rule.title},
+			${rule.titleKo},
+			${rule.category}::enum_rules_category,
+			${rule.tier}::enum_rules_tier,
+			'live'::enum_rules_status,
+			now(),
+			now()
+		)
+		ON CONFLICT (key) DO UPDATE SET
+			title = excluded.title,
+			title_ko = excluded.title_ko,
+			category = excluded.category,
+			tier = excluded.tier,
+			updated_at = now()
+		RETURNING id`)
+	return (inserted.rows[0] as { id: number }).id
+}
+
+export async function up({ db }: MigrateUpArgs): Promise<void> {
 	// 1) sections upsert (slug 자연키). slug → id 매핑 확보.
 	const sectionIdBySlug = new Map<string, number>()
 	let sectionOrder = 0
 	for (const chapter of ruleset.chapters) {
 		for (const section of chapter.sections) {
-			const found = await payload.find({
-				collection: 'sections',
-				where: { slug: { equals: section.slug } },
-				limit: 1,
-				depth: 0,
-				req,
-			})
-			const doc = found.docs[0]
-				? await payload.update({
-						collection: 'sections',
-						id: found.docs[0].id,
-						data: { title: section.name, displayOrder: sectionOrder++, _status: 'published' },
-						req,
-					})
-				: await payload.create({
-						collection: 'sections',
-						data: {
-							title: section.name,
-							slug: section.slug,
-							displayOrder: sectionOrder++,
-							generateSlug: false,
-							_status: 'published',
-						},
-						req,
-					})
-			sectionIdBySlug.set(section.slug, doc.id as number)
+			sectionIdBySlug.set(section.slug, await upsertSection(db, section, sectionOrder++))
 		}
 	}
 
@@ -107,33 +178,10 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 			for (const page of section.pages as Page[]) {
 				const slug = pageSlug(page.page)
 				const title = `${section.name} p.${page.page}`
-				const found = await payload.find({
-					collection: 'guideline-pages',
-					where: { slug: { equals: slug } },
-					limit: 1,
-					depth: 0,
-					req,
-				})
-				const doc = found.docs[0]
-					? await payload.update({
-							collection: 'guideline-pages',
-							id: found.docs[0].id,
-							data: { title, section: sectionId, displayOrder: pageOrder++, _status: 'published' },
-							req,
-						})
-					: await payload.create({
-							collection: 'guideline-pages',
-							data: {
-								title,
-								slug,
-								section: sectionId,
-								displayOrder: pageOrder++,
-								generateSlug: false,
-								_status: 'published',
-							},
-							req,
-						})
-				pageIdByNumber.set(page.page, doc.id as number)
+				pageIdByNumber.set(
+					page.page,
+					await upsertPage(db, { sectionId, title, slug, displayOrder: pageOrder++ }),
+				)
 			}
 		}
 	}
@@ -161,24 +209,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 	}
 	const ruleIdByKey = new Map<string, number>()
 	for (const [key, r] of ruleByKey) {
-		const found = await payload.find({
-			collection: 'rules',
-			where: { key: { equals: key } },
-			limit: 1,
-			depth: 0,
-			req,
-		})
-		const data = { key, title: r.title, titleKo: r.titleKo, category: r.category, tier: r.tier }
-		const doc = found.docs[0]
-			? await payload.update({
-					collection: 'rules',
-					id: found.docs[0].id,
-					// key/status 등 다른 필드는 건드리지 않고 seed 소유 필드만 갱신
-					data: { title: r.title, titleKo: r.titleKo, category: r.category, tier: r.tier },
-					req,
-				})
-			: await payload.create({ collection: 'rules', data: { ...data, status: 'live' }, req })
-		ruleIdByKey.set(key, doc.id as number)
+		ruleIdByKey.set(key, await upsertRule(db, { key, ...r }))
 	}
 
 	// 4) rule-bindings upsert ((page, rule) 자연키). 배치별 value/evidence.

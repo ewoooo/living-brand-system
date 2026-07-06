@@ -5,7 +5,10 @@ import {
 	type AgentSkillDetail,
 	findEnabledAgentSkillByName,
 } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
+import { getReviewScenario, REVIEW_SCENARIOS } from '@/features/review/scenarios/review-scenarios'
+import { startCheckSessionService } from '@/features/review/services/start-check-session.service'
 import { AgentConfigurationError } from '@/lib/errors'
+import type { User } from '@/payload-types'
 import { findAgentRules } from '../repositories/agent-guideline-context.payload.repository'
 import {
 	findTemplatesForRequest,
@@ -96,6 +99,37 @@ export function getAgentTools() {
 			execute: ({ templateId, values }, { context }) =>
 				prepareTemplateImage(context.user, templateId, values),
 		}),
+		runReview: tool({
+			description:
+				'Run a quality review on the latest image attached by the user in this chat. Use when the user asks to review, inspect, validate, or check an attached image.',
+			inputSchema: z.object({
+				scenarioKey: z.string().min(1).max(80).optional(),
+			}),
+			contextSchema: guidelineToolContextSchema,
+			execute: async ({ scenarioKey }, { context, messages }) => {
+				const scenario = getReviewScenario(scenarioKey)
+				const image = findLatestImage(messages)
+
+				if (!image) {
+					return {
+						status: 'missing-image',
+						message: '검수할 이미지 첨부가 없습니다.',
+						scenarios: REVIEW_SCENARIOS.map(({ key, title }) => ({ key, title })),
+					}
+				}
+
+				const result = await startCheckSessionService({
+					buffer: image.buffer,
+					flags: scenario.flags,
+					imageName: image.name,
+					scenarioKey: scenario.key,
+					source: 'chat',
+					user: context.user as User,
+				})
+
+				return formatReviewToolResult(result, scenario.title)
+			},
+		}),
 	} satisfies ToolSet
 }
 
@@ -119,4 +153,104 @@ function formatAgentSkillInstructions(skill: {
 	return [skill.body, references ? `# Skill references\n\n${references}` : null]
 		.filter(Boolean)
 		.join('\n\n')
+}
+
+function findLatestImage(messages: unknown) {
+	if (!Array.isArray(messages)) return null
+	for (let i = messages.length - 1; i >= 0; i--) {
+		const message = messages[i] as { content?: unknown; role?: unknown }
+		if (message.role !== 'user' || !Array.isArray(message.content)) continue
+		for (let j = message.content.length - 1; j >= 0; j--) {
+			const part = message.content[j] as {
+				data?: unknown
+				filename?: unknown
+				mediaType?: unknown
+				type?: unknown
+				url?: unknown
+			}
+			if (part.type !== 'file' || typeof part.mediaType !== 'string') continue
+			if (!isImageMediaType(part.mediaType)) continue
+			const buffer = dataToBuffer(part.data ?? part.url)
+			if (!buffer) continue
+			return {
+				buffer,
+				name: typeof part.filename === 'string' ? part.filename : 'chat-image',
+			}
+		}
+	}
+	return null
+}
+
+function isImageMediaType(mediaType: string) {
+	return mediaType === 'image' || mediaType.startsWith('image/')
+}
+
+function dataToBuffer(data: unknown): Buffer | null {
+	if (Buffer.isBuffer(data)) return data
+	if (data instanceof Uint8Array) return Buffer.from(data)
+	if (data instanceof ArrayBuffer) return Buffer.from(data)
+	if (data instanceof URL) return dataToBuffer(data.toString())
+	if (typeof data === 'object' && data !== null) {
+		const partData = data as { data?: unknown; url?: unknown }
+		return dataToBuffer(partData.data ?? partData.url)
+	}
+	if (typeof data !== 'string') return null
+	const base64 = data.startsWith('data:') ? data.split(',', 2)[1] : data
+	return base64 ? Buffer.from(base64, 'base64') : null
+}
+
+function formatReviewToolResult(
+	result: Awaited<ReturnType<typeof startCheckSessionService>>,
+	scenarioTitle: string,
+) {
+	const entries = Object.entries(result.results)
+	const counts = entries.reduce(
+		(acc, [, value]) => {
+			acc[value.status] += 1
+			return acc
+		},
+		{ fail: 0, needs_ai: 0, needs_review: 0, pass: 0 },
+	)
+	const outcome =
+		counts.fail > 0
+			? 'has_failed_items'
+			: counts.needs_review > 0
+				? 'needs_manager_review'
+				: 'passed'
+
+	return {
+		checkSessionId: result.checkSessionId,
+		scenario: scenarioTitle,
+		counts,
+		outcome,
+		summary:
+			outcome === 'passed'
+				? `검수 결과, ${counts.pass}개 항목이 통과했습니다.`
+				: `검수 결과, 통과 ${counts.pass}개 / 미통과 ${counts.fail}개 / 담당자 검토 ${counts.needs_review}개입니다.`,
+		statusLabels: {
+			fail: '미통과',
+			needs_ai: 'AI 검수 대기',
+			needs_review: '담당자 검토',
+			pass: '통과',
+		},
+		reviewGuidance: [
+			'needs_review는 확정 실패가 아니라 담당자 확인이 필요한 항목입니다.',
+			'타이포그래피 needs_review는 폰트 파일 판정이 아니라 비전 기준 담당자 검토로 설명합니다.',
+		],
+		results: entries.map(([key, value]) => ({
+			key,
+			isFailure: value.status === 'fail',
+			statusLabel:
+				key.startsWith('typography.') && value.status === 'needs_review'
+					? '비전 기준 담당자 검토'
+					: value.status === 'needs_review'
+						? '담당자 검토'
+						: value.status === 'needs_ai'
+							? 'AI 검수 대기'
+							: value.status === 'pass'
+								? '통과'
+								: '미통과',
+			...value,
+		})),
+	}
 }

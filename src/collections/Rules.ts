@@ -2,20 +2,19 @@ import type { CollectionConfig } from 'payload'
 import { managerManagedAccess } from '@/lib/auth'
 
 /**
- * Rule TYPE 프리셋 카탈로그 (브랜드 무관).
- * 모든 브랜드가 공유하는 판단 기준의 "형(型)"만 담는다.
- * 브랜드별 실제 값(hex, min-size 등)은 이 컬렉션이 아니라 별도 brand instance에서 참조한다.
+ * Rule catalog. 하나의 rule은 하나의 검수 컨텍스트와 기준값을 대표한다.
+ * 페이지는 rule을 배치/노출만 하고, 검수 런타임은 이 컬렉션을 기준 SSOT로 읽는다.
  */
 export const Rules: CollectionConfig = {
 	slug: 'rules',
 	access: managerManagedAccess,
 	labels: {
 		singular: 'Rule',
-		plural: 'Rules (Preset)',
+		plural: 'Rules',
 	},
 	admin: {
 		useAsTitle: 'key',
-		group: 'Guideline',
+		group: 'Guidelines',
 		defaultColumns: ['key', 'title', 'category', 'tier', 'executor'],
 	},
 	fields: [
@@ -25,7 +24,7 @@ export const Rules: CollectionConfig = {
 			required: true,
 			unique: true,
 			index: true,
-			admin: { description: 'category.attribute 점 표기. 예: logo.min-size' },
+			admin: { description: 'domain.subject.property 점 표기. 예: logo.size.minimum' },
 		},
 		{ name: 'title', type: 'text', required: true },
 		{
@@ -61,18 +60,35 @@ export const Rules: CollectionConfig = {
 			options: [
 				{ label: 'A · deterministic', value: 'A' },
 				{ label: 'B · heuristic', value: 'B' },
-				{ label: 'C · advisory/human', value: 'C' },
+				{ label: 'C · advisory', value: 'C' },
 			],
 		},
 		{
 			name: 'executor',
 			type: 'select',
-			options: ['deterministic', 'heuristic', 'advisory', 'human'],
+			options: ['deterministic', 'heuristic', 'advisory'],
 		},
 		{
 			name: 'paramSchema',
 			type: 'textarea',
 			admin: { description: '브랜드 값이 채워야 할 구조(요약 표기)' },
+		},
+		{
+			name: 'value',
+			type: 'textarea',
+			admin: { description: '이 rule의 검수 기준값입니다.' },
+		},
+		{
+			name: 'evidence',
+			type: 'textarea',
+			admin: { description: '이 rule의 가이드라인 근거 문장입니다.' },
+		},
+		{
+			name: 'referenceAssets',
+			type: 'relationship',
+			relationTo: 'application-images',
+			hasMany: true,
+			admin: { description: '비전 검수나 운영 판단에 참고할 기준 이미지입니다.' },
 		},
 		{ name: 'scoring', type: 'textarea' },
 		{ name: 'input', type: 'textarea' },
