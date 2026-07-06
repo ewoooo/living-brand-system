@@ -115,14 +115,11 @@ describe('agent tools', () => {
 		const getRules = vi.spyOn(agentGuidelineRepository, 'findAgentRules').mockResolvedValue([
 			{
 				category: 'color',
-				domainDefault: true,
 				executor: 'deterministic',
-				frequency: 4,
 				input: null,
 				key: 'color.palette',
 				notes: null,
 				paramSchema: null,
-				scope: ['screen'],
 				scoring: null,
 				tier: 'A',
 				title: 'Color palette',

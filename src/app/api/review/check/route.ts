@@ -1,15 +1,58 @@
-import { runReviewService } from '@/features/review/services/run-review.service'
+import type { CheckSessionSource } from '@/features/review/repositories/check-session.payload.repository'
+import { startCheckSessionService } from '@/features/review/services/start-check-session.service'
+import {
+	DEFAULT_CONTENT_FLAGS,
+	type ImageContentFlags,
+} from '@/features/review/types/content-flags'
 import { authenticateRequest } from '@/lib/request-auth'
+import type { User } from '@/payload-types'
 
 export const maxDuration = 30
 
+const LEGACY_CONTENT_FLAGS: ImageContentFlags = {
+	logo: true,
+	typography: true,
+	illustration: true,
+	photography: true,
+}
+
+/** FormData의 flags(JSON 문자열)를 복원한다. 없으면 구형 호출로 보고 전 룰을 검수한다. */
+function parseContentFlags(value: FormDataEntryValue | null | undefined): ImageContentFlags {
+	if (value == null) return LEGACY_CONTENT_FLAGS
+	if (typeof value !== 'string') return DEFAULT_CONTENT_FLAGS
+	try {
+		const raw = JSON.parse(value) as Partial<Record<keyof ImageContentFlags, unknown>>
+		return {
+			logo: raw.logo === true,
+			typography: raw.typography === true,
+			illustration: raw.illustration === true,
+			photography: raw.photography === true,
+		}
+	} catch {
+		return DEFAULT_CONTENT_FLAGS
+	}
+}
+
+function parseSource(value: FormDataEntryValue | null | undefined): CheckSessionSource {
+	if (value === 'mcp-call') return 'mcp-call'
+	return value === 'chat' ? 'chat' : 'review-page'
+}
+
+function parseScenarioKey(value: FormDataEntryValue | null | undefined): string | undefined {
+	return typeof value === 'string' && value ? value : undefined
+}
+
+function isUser(value: unknown): value is User {
+	return Boolean(value && typeof value === 'object' && 'email' in value && 'role' in value)
+}
+
 /**
- * 검수 대상 이미지(FormData)를 받아 룰별 서버 확정 판정을 돌려준다.
- * 브라우저 review 화면이 부르는 통로. 검수 계산은 service가 소유한다.
+ * 검수 대상 이미지(FormData)와 포함 요소 플래그를 받아 룰별 서버 확정 판정을 돌려준다.
+ * 브라우저 review 화면이 부르는 통로. 검수 세션 저장과 계산은 service가 소유한다.
  */
 export async function POST(req: Request) {
 	const { payload, user } = await authenticateRequest()
-	if (!user) {
+	if (!isUser(user)) {
 		return Response.json({ message: 'Unauthorized.' }, { status: 401 })
 	}
 
@@ -21,9 +64,16 @@ export async function POST(req: Request) {
 
 	try {
 		const buffer = Buffer.from(await file.arrayBuffer())
-		const results = await runReviewService(buffer)
+		const result = await startCheckSessionService({
+			buffer,
+			flags: parseContentFlags(form?.get('flags')),
+			imageName: file.name,
+			scenarioKey: parseScenarioKey(form?.get('scenarioKey')),
+			source: parseSource(form?.get('source')),
+			user,
+		})
 
-		return Response.json({ results })
+		return Response.json(result)
 	} catch (error) {
 		payload.logger.error({ err: error }, 'review.check.failed')
 

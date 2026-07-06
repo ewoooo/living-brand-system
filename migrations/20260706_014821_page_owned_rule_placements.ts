@@ -139,9 +139,11 @@ export async function movePlacementsAndDropAnchors({
 }
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
+	await ensureCheckSessionsSchema(db)
+
 	// 새 배치 테이블 생성 (이관이 먼저 필요하므로 rule_bindings drop은 마지막에)
 	await db.execute(sql`
-   CREATE TABLE "guideline_pages_rules" (
+   CREATE TABLE IF NOT EXISTS "guideline_pages_rules" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"id" varchar PRIMARY KEY NOT NULL,
@@ -151,7 +153,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"source_page" numeric
   );
 
-  CREATE TABLE "_guideline_pages_v_version_rules" (
+  CREATE TABLE IF NOT EXISTS "_guideline_pages_v_version_rules" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"id" serial PRIMARY KEY NOT NULL,
@@ -162,16 +164,26 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"_uuid" varchar
   );
 
-  ALTER TABLE "guideline_pages_rules" ADD CONSTRAINT "guideline_pages_rules_rule_id_rules_id_fk" FOREIGN KEY ("rule_id") REFERENCES "public"."rules"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "guideline_pages_rules" ADD CONSTRAINT "guideline_pages_rules_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_pages"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "_guideline_pages_v_version_rules" ADD CONSTRAINT "_guideline_pages_v_version_rules_rule_id_rules_id_fk" FOREIGN KEY ("rule_id") REFERENCES "public"."rules"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "_guideline_pages_v_version_rules" ADD CONSTRAINT "_guideline_pages_v_version_rules_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_pages_v"("id") ON DELETE cascade ON UPDATE no action;
-  CREATE INDEX "guideline_pages_rules_order_idx" ON "guideline_pages_rules" USING btree ("_order");
-  CREATE INDEX "guideline_pages_rules_parent_id_idx" ON "guideline_pages_rules" USING btree ("_parent_id");
-  CREATE INDEX "guideline_pages_rules_rule_idx" ON "guideline_pages_rules" USING btree ("rule_id");
-  CREATE INDEX "_guideline_pages_v_version_rules_order_idx" ON "_guideline_pages_v_version_rules" USING btree ("_order");
-  CREATE INDEX "_guideline_pages_v_version_rules_parent_id_idx" ON "_guideline_pages_v_version_rules" USING btree ("_parent_id");
-  CREATE INDEX "_guideline_pages_v_version_rules_rule_idx" ON "_guideline_pages_v_version_rules" USING btree ("rule_id");`)
+  DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'guideline_pages_rules_rule_id_rules_id_fk') THEN
+      ALTER TABLE "guideline_pages_rules" ADD CONSTRAINT "guideline_pages_rules_rule_id_rules_id_fk" FOREIGN KEY ("rule_id") REFERENCES "public"."rules"("id") ON DELETE set null ON UPDATE no action;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'guideline_pages_rules_parent_id_fk') THEN
+      ALTER TABLE "guideline_pages_rules" ADD CONSTRAINT "guideline_pages_rules_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_pages"("id") ON DELETE cascade ON UPDATE no action;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = '_guideline_pages_v_version_rules_rule_id_rules_id_fk') THEN
+      ALTER TABLE "_guideline_pages_v_version_rules" ADD CONSTRAINT "_guideline_pages_v_version_rules_rule_id_rules_id_fk" FOREIGN KEY ("rule_id") REFERENCES "public"."rules"("id") ON DELETE set null ON UPDATE no action;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = '_guideline_pages_v_version_rules_parent_id_fk') THEN
+      ALTER TABLE "_guideline_pages_v_version_rules" ADD CONSTRAINT "_guideline_pages_v_version_rules_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_pages_v"("id") ON DELETE cascade ON UPDATE no action;
+    END IF;
+  END $$;
+  CREATE INDEX IF NOT EXISTS "guideline_pages_rules_order_idx" ON "guideline_pages_rules" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "guideline_pages_rules_parent_id_idx" ON "guideline_pages_rules" USING btree ("_parent_id");
+  CREATE INDEX IF NOT EXISTS "guideline_pages_rules_rule_idx" ON "guideline_pages_rules" USING btree ("rule_id");
+  CREATE INDEX IF NOT EXISTS "_guideline_pages_v_version_rules_order_idx" ON "_guideline_pages_v_version_rules" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "_guideline_pages_v_version_rules_parent_id_idx" ON "_guideline_pages_v_version_rules" USING btree ("_parent_id");
+  CREATE INDEX IF NOT EXISTS "_guideline_pages_v_version_rules_rule_idx" ON "_guideline_pages_v_version_rules" USING btree ("rule_id");`)
 
 	// 데이터 이관 + 앵커 계층 삭제 (rule_bindings가 아직 살아 있는 시점)
 	await movePlacementsAndDropAnchors({ db, payload, req })
@@ -191,6 +203,51 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "guideline_pages_rels" DROP COLUMN IF EXISTS "rules_id";
   ALTER TABLE "_guideline_pages_v_rels" DROP COLUMN IF EXISTS "rules_id";
   ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "rule_bindings_id";`)
+}
+
+async function ensureCheckSessionsSchema(db: MigrateUpArgs['db']) {
+	await db.execute(sql`
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum_check_sessions_source" AS ENUM('mcp-call', 'review-page', 'chat');
+		EXCEPTION WHEN duplicate_object THEN null;
+		END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum_check_sessions_status" AS ENUM('running', 'completed', 'failed');
+		EXCEPTION WHEN duplicate_object THEN null;
+		END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum_check_sessions_target_type" AS ENUM('uploaded-image');
+		EXCEPTION WHEN duplicate_object THEN null;
+		END $$;
+
+		CREATE TABLE IF NOT EXISTS "check_sessions" (
+			"id" serial PRIMARY KEY NOT NULL,
+			"source" "enum_check_sessions_source" DEFAULT 'review-page' NOT NULL,
+			"status" "enum_check_sessions_status" DEFAULT 'running' NOT NULL,
+			"target_type" "enum_check_sessions_target_type" DEFAULT 'uploaded-image' NOT NULL,
+			"image_name" varchar,
+			"ruleset_snapshot" jsonb,
+			"results" jsonb,
+			"error_message" varchar,
+			"completed_at" timestamp(3) with time zone,
+			"created_by_id" integer,
+			"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+			"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
+		);
+		ALTER TABLE "payload_locked_documents_rels" ADD COLUMN IF NOT EXISTS "check_sessions_id" integer;
+		CREATE INDEX IF NOT EXISTS "check_sessions_created_by_idx" ON "check_sessions" USING btree ("created_by_id");
+		CREATE INDEX IF NOT EXISTS "check_sessions_updated_at_idx" ON "check_sessions" USING btree ("updated_at");
+		CREATE INDEX IF NOT EXISTS "check_sessions_created_at_idx" ON "check_sessions" USING btree ("created_at");
+		CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_check_sessions_id_idx" ON "payload_locked_documents_rels" USING btree ("check_sessions_id");
+		DO $$ BEGIN
+			IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'check_sessions_created_by_id_users_id_fk') THEN
+				ALTER TABLE "check_sessions" ADD CONSTRAINT "check_sessions_created_by_id_users_id_fk" FOREIGN KEY ("created_by_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+			END IF;
+			IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'payload_locked_documents_rels_check_sessions_fk') THEN
+				ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_check_sessions_fk" FOREIGN KEY ("check_sessions_id") REFERENCES "public"."check_sessions"("id") ON DELETE cascade ON UPDATE no action;
+			END IF;
+		END $$;
+	`)
 }
 
 export async function down({ db }: MigrateDownArgs): Promise<void> {

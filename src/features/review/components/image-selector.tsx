@@ -4,8 +4,9 @@ import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
-import { CONTENT_FLAG_LABELS, type ImageContentFlags } from '@/features/review/content-gate'
-import { useReviewImages } from '@/features/review/image-context'
+import { useReviewImages } from '@/features/review/hooks/use-review-images'
+import { REVIEW_SCENARIOS } from '@/features/review/scenarios/review-scenarios'
+import { CONTENT_FLAG_LABELS, type ImageContentFlags } from '@/features/review/types/content-flags'
 import { cn } from '@/lib/utils'
 
 const CONTENT_FLAG_KEYS = Object.keys(CONTENT_FLAG_LABELS) as (keyof ImageContentFlags)[]
@@ -20,6 +21,8 @@ export function ImageSelector() {
 		contentFlags,
 		flagsLocked,
 		setContentFlag,
+		scenarioKey,
+		setScenarioKey,
 		runReview,
 		showUnimplemented,
 		setShowUnimplemented,
@@ -29,7 +32,6 @@ export function ImageSelector() {
 	return (
 		<div className="sticky top-0 z-10 bg-background/95 px-8 pt-6 pb-4 backdrop-blur">
 			<div className="rounded-lg border bg-card p-5 shadow-sm">
-				{/* 업로드 + 검수 대상 썸네일 스트립 + 미구현 토글 */}
 				<div className="flex items-start justify-between gap-4">
 					<div className="flex items-center gap-3 overflow-x-auto">
 						<button
@@ -99,8 +101,22 @@ export function ImageSelector() {
 
 				<Separator className="my-4" />
 
-				{/* 포함 요소 (검수 제출 시 잠금) + 검수 버튼 */}
 				<div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+					<label className="flex items-center gap-2 text-sm">
+						<span className="text-muted-foreground text-xs">시나리오</span>
+						<select
+							value={scenarioKey}
+							disabled={flagsLocked}
+							onChange={(event) => setScenarioKey(event.target.value)}
+							className="h-8 rounded-md border bg-background px-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+						>
+							{REVIEW_SCENARIOS.map((scenario) => (
+								<option key={scenario.key} value={scenario.key}>
+									{scenario.title}
+								</option>
+							))}
+						</select>
+					</label>
 					<span className="text-muted-foreground text-xs">포함 요소</span>
 					{CONTENT_FLAG_KEYS.map((key) => (
 						<label

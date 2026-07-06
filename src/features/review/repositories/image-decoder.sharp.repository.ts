@@ -1,6 +1,6 @@
 import sharp from 'sharp'
+import type { Rgb } from '@/features/review/checkers/color/palette-match'
 import type { PixelGrid } from '@/features/review/checkers/types'
-import type { Rgb } from '@/features/review/color-check'
 
 /**
  * 이미지 버퍼에서 검수용 2D 픽셀 그리드를 추출한다 (외부 I/O = sharp 디코딩).

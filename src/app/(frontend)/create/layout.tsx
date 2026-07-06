@@ -1,5 +1,5 @@
 import type React from 'react'
-import { SidebarProvider } from '@/components/ui/sidebar'
+import { SectionLayout } from '@/components/section-layout'
 import { CreateSideNavigation } from '@/features/asset-generation/components/create-side-navigation'
 import { getCreateNavigation } from '@/features/asset-generation/services/get-create-navigation.service'
 
@@ -10,11 +10,8 @@ export default async function CreateLayout({ children }: { children: React.React
 	const navigation = await getCreateNavigation()
 
 	return (
-		<SidebarProvider className="h-full min-h-0">
-			<CreateSideNavigation navigation={navigation} />
-			<div className="flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-y-auto">
-				<main className="flex w-full flex-1 justify-center px-4 md:px-12">{children}</main>
-			</div>
-		</SidebarProvider>
+		<SectionLayout nav={<CreateSideNavigation navigation={navigation} />}>
+			{children}
+		</SectionLayout>
 	)
 }

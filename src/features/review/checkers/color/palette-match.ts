@@ -1,17 +1,27 @@
 /**
- * 색 비교 유틸 (순수 함수, I/O 없음).
- *
- * 색을 CIELAB으로 변환해 deltaE(CIE76)로 가장 가까운 swatch를 찾는다.
- * 픽셀 추출(canvas)·기준값(palette)은 상위 레이어가 소유하고 여기엔 넘기기만 한다.
+ * Palette match helper — 색을 CIELAB으로 변환해 deltaE(CIE76)로 가장 가까운 swatch를 찾는다.
+ * 픽셀 추출과 기준 팔레트 조회는 상위 레이어가 소유한다.
  */
-
-import type { Swatch } from './essenherb-palette'
 
 export interface Rgb {
 	r: number
 	g: number
 	b: number
 }
+
+export type SwatchFamily = 'red' | 'yellow' | 'green' | 'blue' | 'purple' | 'gray' | 'extreme'
+
+export interface Swatch {
+	name: string
+	hex: string
+	family: SwatchFamily
+}
+
+/**
+ * 한 픽셀 색이 "팔레트 안"으로 인정되는 deltaE(CIE76) 허용 오차.
+ * 사람 눈에 거의 같다고 보는 범위(≈10) 기준.
+ */
+export const PALETTE_DELTA_E_TOLERANCE = 12
 
 interface Lab {
 	l: number

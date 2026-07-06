@@ -7,11 +7,11 @@ export const GuidelineSections: CollectionConfig = {
 	dbName: 'guideline_sections',
 	access: managerManagedAccess,
 	labels: {
-		singular: 'Section',
-		plural: 'Sections',
+		singular: 'Guideline Section',
+		plural: 'Guideline Sections',
 	},
 	admin: {
-		group: 'Guideline',
+		group: 'Guidelines',
 		useAsTitle: 'title',
 		defaultColumns: ['title', 'slug', 'displayOrder', 'updatedAt'],
 		description: '가이드라인 상위 내비게이션 섹션입니다.',

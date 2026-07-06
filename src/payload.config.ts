@@ -16,6 +16,7 @@ import { ApplicationImages } from './collections/ApplicationImages'
 import { BrandColors } from './collections/BrandColors'
 import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
+import { CheckSessions } from './collections/CheckSessions'
 import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
@@ -83,7 +84,8 @@ export default buildConfig({
 		},
 	},
 	collections: [
-		Users,
+		GuidelineSections,
+		GuidelinePages,
 		Rules,
 		BrandLogos,
 		BrandColors,
@@ -93,9 +95,9 @@ export default buildConfig({
 		Templates,
 		TemplateAssets,
 		Plugins,
+		CheckSessions,
 		AgentSkills,
-		GuidelineSections,
-		GuidelinePages,
+		Users,
 	],
 	editor: lexicalEditor({
 		// 가이드라인 수치 규정 표(최소 사이즈, 자간 등) 입력용. EXPERIMENTAL: 업그레이드 시 변경 가능성 있음.

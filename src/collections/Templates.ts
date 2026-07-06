@@ -50,7 +50,7 @@ export const Templates: CollectionConfig = {
 		plural: 'Templates',
 	},
 	admin: {
-		group: 'Production Resources',
+		group: 'Production',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'updatedAt'],
 	},

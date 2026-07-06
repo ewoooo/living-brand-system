@@ -68,7 +68,8 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    users: User;
+    sections: Section;
+    'guideline-pages': GuidelinePage;
     rules: Rule;
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
@@ -78,9 +79,9 @@ export interface Config {
     templates: Template;
     'template-assets': TemplateAsset;
     plugins: Plugin;
+    'check-sessions': CheckSession;
     'agent-skills': AgentSkill;
-    sections: Section;
-    'guideline-pages': GuidelinePage;
+    users: User;
     search: Search;
     'payload-mcp-api-keys': PayloadMcpApiKey;
     'payload-kv': PayloadKv;
@@ -90,15 +91,16 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
-    'template-categories': {
-      templates: 'templates';
-    };
     sections: {
       pages: 'guideline-pages';
     };
+    'template-categories': {
+      templates: 'templates';
+    };
   };
   collectionsSelect: {
-    users: UsersSelect<false> | UsersSelect<true>;
+    sections: SectionsSelect<false> | SectionsSelect<true>;
+    'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
     rules: RulesSelect<false> | RulesSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
@@ -108,9 +110,9 @@ export interface Config {
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
     plugins: PluginsSelect<false> | PluginsSelect<true>;
+    'check-sessions': CheckSessionsSelect<false> | CheckSessionsSelect<true>;
     'agent-skills': AgentSkillsSelect<false> | AgentSkillsSelect<true>;
-    sections: SectionsSelect<false> | SectionsSelect<true>;
-    'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
     'payload-mcp-api-keys': PayloadMcpApiKeysSelect<false> | PayloadMcpApiKeysSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -184,33 +186,95 @@ export interface PayloadMcpApiKeyAuthOperations {
   };
 }
 /**
+ * 가이드라인 상위 내비게이션 섹션입니다.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
+ * via the `definition` "sections".
  */
-export interface User {
+export interface Section {
   id: number;
   /**
-   * admin(전체)·manager(기준 관리)·worker(사용)
+   * 사이드바 상위 섹션 제목으로 표시됩니다.
    */
-  role: 'admin' | 'manager' | 'worker';
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  /**
+   * 섹션 랜딩 페이지에 표시할 선택 요약입니다.
+   */
+  description?: string | null;
+  pages?: {
+    docs?: (number | GuidelinePage)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * 숫자가 낮을수록 가이드라인 내비게이션에서 먼저 표시됩니다.
+   */
+  displayOrder: number;
   updatedAt: string;
   createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * 블록으로 구성하는 가이드라인 페이지입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guideline-pages".
+ */
+export interface GuidelinePage {
+  id: number;
+  /**
+   * 가이드라인 화면의 페이지 제목으로 표시됩니다.
+   */
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  /**
+   * 페이지 제목 아래에 표시할 선택 설명입니다.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * 이 페이지에서 설명하거나 적용하는 룰입니다.
+   */
+  rules?:
     | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
+        rule: number | Rule;
+        id?: string | null;
       }[]
     | null;
-  password?: string | null;
-  collection: 'users';
+  /**
+   * 사이드바 내비게이션과 URL에 사용할 상위 섹션입니다.
+   */
+  section: number | Section;
+  /**
+   * 숫자가 낮을수록 선택한 섹션 안에서 먼저 표시됩니다.
+   */
+  displayOrder: number;
+  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock)[] | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -219,7 +283,7 @@ export interface User {
 export interface Rule {
   id: number;
   /**
-   * category.attribute 점 표기. 예: logo.min-size
+   * domain.subject.property 점 표기. 예: logo.size.minimum
    */
   key: string;
   title: string;
@@ -244,23 +308,154 @@ export interface Rule {
     | 'application'
     | 'misc';
   tier?: ('A' | 'B' | 'C') | null;
-  executor?: ('deterministic' | 'heuristic' | 'advisory' | 'human') | null;
-  scope?: ('all' | 'print' | 'screen')[] | null;
-  /**
-   * 값을 채운 브랜드 수 (0 = domain-default 빈 슬롯)
-   */
-  frequency?: number | null;
-  domainDefault?: boolean | null;
+  executor?: ('deterministic' | 'heuristic' | 'advisory') | null;
   /**
    * 브랜드 값이 채워야 할 구조(요약 표기)
    */
   paramSchema?: string | null;
+  /**
+   * 이 rule의 검수 기준값입니다.
+   */
+  value?: string | null;
+  /**
+   * 이 rule의 가이드라인 근거 문장입니다.
+   */
+  evidence?: string | null;
+  /**
+   * 비전 검수나 운영 판단에 참고할 기준 이미지입니다.
+   */
+  referenceAssets?: (number | ApplicationImage)[] | null;
   scoring?: string | null;
   input?: string | null;
   notes?: string | null;
   status?: ('draft' | 'live' | 'archived') | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "application-images".
+ */
+export interface ApplicationImage {
+  id: number;
+  name: string;
+  alt: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColumnUnitBlock".
+ */
+export interface ColumnUnitBlock {
+  title?: string | null;
+  columns?:
+    | {
+        heading?: string | null;
+        body?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        image?: (number | null) | ApplicationImage;
+        /**
+         * 이미지 영역 뒤에 적용할 브랜드 컬러입니다.
+         */
+        imageBackgroundColor?: (number | null) | BrandColor;
+        imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'columnUnit';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-colors".
+ */
+export interface BrandColor {
+  id: number;
+  name: string;
+  hex: string;
+  /**
+   * PMS 표기입니다. 예: 705C, Warm Red C
+   */
+  pantone?: string | null;
+  /**
+   * 팔레트 색상군입니다. 예: red, yellow, neutral
+   */
+  colorGroup?: string | null;
+  /**
+   * Light(1)~Dark(5) 명도 단계입니다. 톤 스펙트럼이 없는 컬러는 비워둡니다.
+   */
+  tone?: number | null;
+  /**
+   * Main Color 팔레트에 포함되는 컬러인지 여부입니다.
+   */
+  isMain?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaShowcaseBlock".
+ */
+export interface MediaShowcaseBlock {
+  image?: (number | null) | ApplicationImage;
+  /**
+   * 이미지 영역 뒤에 적용할 브랜드 컬러입니다.
+   */
+  imageBackgroundColor?: (number | null) | BrandColor;
+  imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'mediaShowcase';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPaletteBlock".
+ */
+export interface ColorPaletteBlock {
+  title?: string | null;
+  /**
+   * 선택한 순서대로 스와치 카드가 표시됩니다.
+   */
+  colors: (number | BrandColor)[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPalette';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -295,34 +490,6 @@ export interface BrandLogo {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brand-colors".
- */
-export interface BrandColor {
-  id: number;
-  name: string;
-  hex: string;
-  /**
-   * PMS 표기입니다. 예: 705C, Warm Red C
-   */
-  pantone?: string | null;
-  /**
-   * 팔레트 색상군입니다. White/Black은 neutral을 사용합니다.
-   */
-  colorGroup?: ('red' | 'yellow' | 'green' | 'blue' | 'purple' | 'gray' | 'neutral') | null;
-  /**
-   * Light(1)~Dark(5) 명도 단계입니다. 톤 스펙트럼이 없는 컬러는 비워둡니다.
-   */
-  tone?: number | null;
-  /**
-   * Main Color 팔레트에 포함되는 컬러인지 여부입니다.
-   */
-  isMain?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brand-typefaces".
  */
 export interface BrandTypeface {
@@ -332,37 +499,6 @@ export interface BrandTypeface {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "application-images".
- */
-export interface ApplicationImage {
-  id: number;
-  name: string;
-  alt: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-  sizes?: {
-    thumbnail?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-  };
 }
 /**
  * Create 화면 사이드바에 표시할 템플릿 카테고리입니다.
@@ -476,6 +612,80 @@ export interface Plugin {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * 검수 실행 1회 단위의 세션 기록입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "check-sessions".
+ */
+export interface CheckSession {
+  id: number;
+  /**
+   * 검수가 시작된 진입점입니다.
+   */
+  source: 'mcp-call' | 'review-page' | 'chat';
+  status: 'running' | 'completed' | 'failed';
+  targetType: 'uploaded-image';
+  imageName?: string | null;
+  /**
+   * 검수 실행 시점의 룰셋 스냅샷입니다.
+   */
+  rulesetSnapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * rule key별 검수 결과입니다.
+   */
+  results?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  errorMessage?: string | null;
+  completedAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  /**
+   * admin(전체)·manager(기준 관리)·worker(사용)
+   */
+  role: 'admin' | 'manager' | 'worker';
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
+}
+/**
  * Agent가 선택해 실행할 SKILL.md 형태의 지시문입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -542,175 +752,6 @@ export interface AgentSkill {
   enabled?: boolean | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * 가이드라인 상위 내비게이션 섹션입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sections".
- */
-export interface Section {
-  id: number;
-  /**
-   * 사이드바 상위 섹션 제목으로 표시됩니다.
-   */
-  title: string;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  /**
-   * 섹션 랜딩 페이지에 표시할 선택 요약입니다.
-   */
-  description?: string | null;
-  pages?: {
-    docs?: (number | GuidelinePage)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  /**
-   * 숫자가 낮을수록 가이드라인 내비게이션에서 먼저 표시됩니다.
-   */
-  displayOrder: number;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * 블록으로 구성하는 가이드라인 페이지입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guideline-pages".
- */
-export interface GuidelinePage {
-  id: number;
-  /**
-   * 가이드라인 화면의 페이지 제목으로 표시됩니다.
-   */
-  title: string;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  /**
-   * 페이지 제목 아래에 표시할 선택 설명입니다.
-   */
-  description?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * 이 페이지에서 설명하거나 적용하는 룰과 브랜드 구체 값입니다.
-   */
-  rules?:
-    | {
-        rule: number | Rule;
-        /**
-         * 이 페이지에서의 브랜드 구체 값. 비어 있을 수 있습니다.
-         */
-        value?: string | null;
-        /**
-         * 가이드라인 원문 근거(출처).
-         */
-        evidence?: string | null;
-        /**
-         * 가이드라인 원문 PDF 페이지 번호입니다.
-         */
-        sourcePage?: number | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * 사이드바 내비게이션과 URL에 사용할 상위 섹션입니다.
-   */
-  section: number | Section;
-  /**
-   * 숫자가 낮을수록 선택한 섹션 안에서 먼저 표시됩니다.
-   */
-  displayOrder: number;
-  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock)[] | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ColumnUnitBlock".
- */
-export interface ColumnUnitBlock {
-  title?: string | null;
-  columns?:
-    | {
-        heading?: string | null;
-        body?: {
-          root: {
-            type: string;
-            children: {
-              type: any;
-              version: number;
-              [k: string]: unknown;
-            }[];
-            direction: ('ltr' | 'rtl') | null;
-            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-            indent: number;
-            version: number;
-          };
-          [k: string]: unknown;
-        } | null;
-        image?: (number | null) | ApplicationImage;
-        /**
-         * 이미지 영역 뒤에 적용할 브랜드 컬러입니다.
-         */
-        imageBackgroundColor?: (number | null) | BrandColor;
-        imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
-        id?: string | null;
-      }[]
-    | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'columnUnit';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "MediaShowcaseBlock".
- */
-export interface MediaShowcaseBlock {
-  image?: (number | null) | ApplicationImage;
-  /**
-   * 이미지 영역 뒤에 적용할 브랜드 컬러입니다.
-   */
-  imageBackgroundColor?: (number | null) | BrandColor;
-  imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'mediaShowcase';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ColorPaletteBlock".
- */
-export interface ColorPaletteBlock {
-  title?: string | null;
-  /**
-   * 선택한 순서대로 스와치 카드가 표시됩니다.
-   */
-  colors: (number | BrandColor)[];
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'colorPalette';
 }
 /**
  * This is a collection of automatically created search results. These results are used by the global site search and will be updated automatically as documents in the CMS are created or updated.
@@ -896,8 +937,12 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'sections';
+        value: number | Section;
+      } | null)
+    | ({
+        relationTo: 'guideline-pages';
+        value: number | GuidelinePage;
       } | null)
     | ({
         relationTo: 'rules';
@@ -936,16 +981,16 @@ export interface PayloadLockedDocument {
         value: number | Plugin;
       } | null)
     | ({
+        relationTo: 'check-sessions';
+        value: number | CheckSession;
+      } | null)
+    | ({
         relationTo: 'agent-skills';
         value: number | AgentSkill;
       } | null)
     | ({
-        relationTo: 'sections';
-        value: number | Section;
-      } | null)
-    | ({
-        relationTo: 'guideline-pages';
-        value: number | GuidelinePage;
+        relationTo: 'users';
+        value: number | User;
       } | null)
     | ({
         relationTo: 'search';
@@ -1009,26 +1054,86 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users_select".
+ * via the `definition` "sections_select".
  */
-export interface UsersSelect<T extends boolean = true> {
-  role?: T;
+export interface SectionsSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  description?: T;
+  pages?: T;
+  displayOrder?: T;
   updatedAt?: T;
   createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
-  sessions?:
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guideline-pages_select".
+ */
+export interface GuidelinePagesSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  description?: T;
+  rules?:
     | T
     | {
+        rule?: T;
         id?: T;
-        createdAt?: T;
-        expiresAt?: T;
       };
+  section?: T;
+  displayOrder?: T;
+  blocks?:
+    | T
+    | {
+        columnUnit?: T | ColumnUnitBlockSelect<T>;
+        mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
+        colorPalette?: T | ColorPaletteBlockSelect<T>;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColumnUnitBlock_select".
+ */
+export interface ColumnUnitBlockSelect<T extends boolean = true> {
+  title?: T;
+  columns?:
+    | T
+    | {
+        heading?: T;
+        body?: T;
+        image?: T;
+        imageBackgroundColor?: T;
+        imageScale?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaShowcaseBlock_select".
+ */
+export interface MediaShowcaseBlockSelect<T extends boolean = true> {
+  image?: T;
+  imageBackgroundColor?: T;
+  imageScale?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPaletteBlock_select".
+ */
+export interface ColorPaletteBlockSelect<T extends boolean = true> {
+  title?: T;
+  colors?: T;
+  id?: T;
+  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1041,10 +1146,10 @@ export interface RulesSelect<T extends boolean = true> {
   category?: T;
   tier?: T;
   executor?: T;
-  scope?: T;
-  frequency?: T;
-  domainDefault?: T;
   paramSchema?: T;
+  value?: T;
+  evidence?: T;
+  referenceAssets?: T;
   scoring?: T;
   input?: T;
   notes?: T;
@@ -1212,6 +1317,23 @@ export interface PluginsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "check-sessions_select".
+ */
+export interface CheckSessionsSelect<T extends boolean = true> {
+  source?: T;
+  status?: T;
+  targetType?: T;
+  imageName?: T;
+  rulesetSnapshot?: T;
+  results?: T;
+  errorMessage?: T;
+  completedAt?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "agent-skills_select".
  */
 export interface AgentSkillsSelect<T extends boolean = true> {
@@ -1232,89 +1354,26 @@ export interface AgentSkillsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sections_select".
+ * via the `definition` "users_select".
  */
-export interface SectionsSelect<T extends boolean = true> {
-  title?: T;
-  generateSlug?: T;
-  slug?: T;
-  description?: T;
-  pages?: T;
-  displayOrder?: T;
+export interface UsersSelect<T extends boolean = true> {
+  role?: T;
   updatedAt?: T;
   createdAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guideline-pages_select".
- */
-export interface GuidelinePagesSelect<T extends boolean = true> {
-  title?: T;
-  generateSlug?: T;
-  slug?: T;
-  description?: T;
-  rules?:
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
     | T
     | {
-        rule?: T;
-        value?: T;
-        evidence?: T;
-        sourcePage?: T;
         id?: T;
+        createdAt?: T;
+        expiresAt?: T;
       };
-  section?: T;
-  displayOrder?: T;
-  blocks?:
-    | T
-    | {
-        columnUnit?: T | ColumnUnitBlockSelect<T>;
-        mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
-        colorPalette?: T | ColorPaletteBlockSelect<T>;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ColumnUnitBlock_select".
- */
-export interface ColumnUnitBlockSelect<T extends boolean = true> {
-  title?: T;
-  columns?:
-    | T
-    | {
-        heading?: T;
-        body?: T;
-        image?: T;
-        imageBackgroundColor?: T;
-        imageScale?: T;
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "MediaShowcaseBlock_select".
- */
-export interface MediaShowcaseBlockSelect<T extends boolean = true> {
-  image?: T;
-  imageBackgroundColor?: T;
-  imageScale?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ColorPaletteBlock_select".
- */
-export interface ColorPaletteBlockSelect<T extends boolean = true> {
-  title?: T;
-  colors?: T;
-  id?: T;
-  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1525,6 +1584,14 @@ export interface TaskSchedulePublish {
     locale?: string | null;
     doc?:
       | ({
+          relationTo: 'sections';
+          value: number | Section;
+        } | null)
+      | ({
+          relationTo: 'guideline-pages';
+          value: number | GuidelinePage;
+        } | null)
+      | ({
           relationTo: 'brand-logos';
           value: number | BrandLogo;
         } | null)
@@ -1547,14 +1614,6 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'plugins';
           value: number | Plugin;
-        } | null)
-      | ({
-          relationTo: 'sections';
-          value: number | Section;
-        } | null)
-      | ({
-          relationTo: 'guideline-pages';
-          value: number | GuidelinePage;
         } | null);
     global?: 'guideline' | null;
     user?: (number | null) | User;

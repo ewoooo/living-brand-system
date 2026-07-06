@@ -18,14 +18,11 @@ type AgentGuidelinePageSummary = Pick<GuidelinePage, 'id' | 'title' | 'slug' | '
 type AgentRuleCatalogItem = Pick<
 	Rule,
 	| 'category'
-	| 'domainDefault'
 	| 'executor'
-	| 'frequency'
 	| 'input'
 	| 'key'
 	| 'notes'
 	| 'paramSchema'
-	| 'scope'
 	| 'scoring'
 	| 'tier'
 	| 'title'
@@ -56,20 +53,25 @@ type SearchDoc = {
 	} | null
 }
 
+/** published+ko(en fallback)+접근제어 공통 조회 옵션 — 이 repo의 가이드라인 질의 전부가 쓴다. */
+const publishedKoQuery = (user: unknown) => ({
+	draft: false,
+	fallbackLocale: 'en' as const,
+	locale: 'ko' as const,
+	overrideAccess: false,
+	user: user as never,
+})
+
 export async function listGuidelineSections(
 	user: unknown,
 ): Promise<AgentGuidelineSectionListItem[]> {
 	const payload = await getPayload({ config })
 	const sections = await payload.find({
+		...publishedKoQuery(user),
 		collection: 'sections',
 		depth: 0,
-		draft: false,
-		fallbackLocale: 'en',
 		limit: 100,
-		locale: 'ko',
-		overrideAccess: false,
 		sort: 'displayOrder',
-		user: user as never,
 		select: {
 			title: true,
 		},
@@ -83,15 +85,11 @@ export async function listGuidelinePageListItems(
 ): Promise<AgentGuidelinePageListItem[]> {
 	const payload = await getPayload({ config })
 	const pages = await payload.find({
+		...publishedKoQuery(user),
 		collection: 'guideline-pages',
 		depth: 0,
-		draft: false,
-		fallbackLocale: 'en',
 		limit: 500,
-		locale: 'ko',
-		overrideAccess: false,
 		sort: 'displayOrder',
-		user: user as never,
 		select: {
 			title: true,
 			section: true,
@@ -145,14 +143,11 @@ export async function findAgentRules(user: unknown): Promise<AgentRuleCatalogIte
 		},
 		select: {
 			category: true,
-			domainDefault: true,
 			executor: true,
-			frequency: true,
 			input: true,
 			key: true,
 			notes: true,
 			paramSchema: true,
-			scope: true,
 			scoring: true,
 			tier: true,
 			title: true,
@@ -187,15 +182,11 @@ async function findGuidelinePage(user: unknown, id: string): Promise<AgentGuidel
 	const payload = await getPayload({ config })
 
 	return payload.findByID({
+		...publishedKoQuery(user),
 		collection: 'guideline-pages',
 		id,
 		disableErrors: true,
 		depth: 1,
-		draft: false,
-		fallbackLocale: 'en',
-		locale: 'ko',
-		overrideAccess: false,
-		user: user as never,
 		select: {
 			title: true,
 			slug: true,
@@ -214,15 +205,11 @@ async function findGuidelineSection(
 	const payload = await getPayload({ config })
 
 	return payload.findByID({
+		...publishedKoQuery(user),
 		collection: 'sections',
 		id,
 		disableErrors: true,
 		depth: 0,
-		draft: false,
-		fallbackLocale: 'en',
-		locale: 'ko',
-		overrideAccess: false,
-		user: user as never,
 		select: {
 			title: true,
 			slug: true,
@@ -237,15 +224,11 @@ async function listGuidelinePagesBySection(
 ): Promise<AgentGuidelinePageSummary[]> {
 	const payload = await getPayload({ config })
 	const pages = await payload.find({
+		...publishedKoQuery(user),
 		collection: 'guideline-pages',
 		depth: 0,
-		draft: false,
-		fallbackLocale: 'en',
 		limit: 20,
-		locale: 'ko',
-		overrideAccess: false,
 		sort: 'displayOrder',
-		user: user as never,
 		where: {
 			section: {
 				equals: sectionId,

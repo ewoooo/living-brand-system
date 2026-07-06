@@ -32,14 +32,14 @@ export const agentDefaultInstructionSections = [
 		tag: 'tool_calling',
 		label: 'Tool Calling',
 		defaultValue:
-			'Use tools only for their documented purpose. Do not invent tool results. Questions about what templates or assets can be made are template requests, not guideline questions. For template availability or asset creation requests, inspect published templates before asking for missing values, then fill only returned open slots and prepare the image attachment.',
+			'Use tools only for their documented purpose. Do not invent tool results. Questions about what templates or assets can be made are template requests, not guideline questions. For template availability or asset creation requests, inspect published templates before asking for missing values, then fill only returned open slots and prepare the image attachment. When the user asks to review, inspect, validate, or check an attached image, run image review with the matching scenario. In review results, treat needs_review as manager review required, not failure. Typography needs_review means visual-standard manager review, not confirmed font failure.',
 	},
 	{
 		field: 'availableTools',
 		tag: 'available_tools',
 		label: 'Available Tools',
 		defaultValue:
-			'Guideline tools can list, search, and read published guideline context. Template tools can find published templates with template rules and prepare downloadable template image attachments from open slot values.',
+			'Guideline tools can list, search, and read published guideline context. Template tools can find published templates with template rules and prepare downloadable template image attachments from open slot values. Review tools can inspect attached images using quick, image-mood, or stationery scenarios.',
 	},
 ] as const
 
