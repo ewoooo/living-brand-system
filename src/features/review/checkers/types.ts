@@ -7,7 +7,6 @@ import type { Rgb } from '@/features/review/color-check'
 export interface RuleMetric {
 	expected: string
 	actual: string
-	label?: string
 }
 
 /** checker 하나의 판정 결과. */

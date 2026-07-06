@@ -18,11 +18,6 @@ export interface LogoRegion {
 	/** 1=전경(로고), row-major */
 	mask: Uint8Array
 	bbox: { x0: number; y0: number; x1: number; y1: number }
-	/** 근사 배경색 (투명 배경이면 white 대체) */
-	bg: Rgb
-	fgCount: number
-	/** 전경이 이미지 가장자리에 닿는가 (잘림 신호) */
-	touchesEdge: boolean
 }
 
 function colorDist(a: Rgb, b: Rgb): number {
@@ -75,15 +70,7 @@ export function detectLogoRegion(grid: PixelGrid): LogoRegion | null {
 	}
 	if (fgCount < 8 || x1 < 0) return null
 
-	let touchesEdge = false
-	for (let x = 0; x < w && !touchesEdge; x++) {
-		if (mask[x] || mask[(h - 1) * w + x]) touchesEdge = true
-	}
-	for (let y = 0; y < h && !touchesEdge; y++) {
-		if (mask[y * w] || mask[y * w + (w - 1)]) touchesEdge = true
-	}
-
-	return { width: w, height: h, mask, bbox: { x0, y0, x1, y1 }, bg, fgCount, touchesEdge }
+	return { width: w, height: h, mask, bbox: { x0, y0, x1, y1 } }
 }
 
 /**

@@ -11,6 +11,7 @@ import * as migration_20260703_043507_add_brand_color_palette_fields from './202
 import * as migration_20260703_050030_add_color_palette_block from './20260703_050030_add_color_palette_block';
 import * as migration_20260703_053851_add_rule_bindings_and_title_ko from './20260703_053851_add_rule_bindings_and_title_ko';
 import * as migration_20260703_053900_seed_essenherb_ruleset from './20260703_053900_seed_essenherb_ruleset';
+import * as migration_20260706_013000_seed_baseline_data from './20260706_013000_seed_baseline_data';
 
 export const migrations = [
   {
@@ -77,5 +78,10 @@ export const migrations = [
     up: migration_20260703_053900_seed_essenherb_ruleset.up,
     down: migration_20260703_053900_seed_essenherb_ruleset.down,
     name: '20260703_053900_seed_essenherb_ruleset',
+  },
+  {
+    up: migration_20260706_013000_seed_baseline_data.up,
+    down: migration_20260706_013000_seed_baseline_data.down,
+    name: '20260706_013000_seed_baseline_data',
   },
 ];

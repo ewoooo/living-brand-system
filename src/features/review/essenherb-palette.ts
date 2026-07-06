@@ -10,7 +10,7 @@
  * 출처: Essenherb Brand Identity Guidelines B.2 Color System (p24) verbatim.
  * ※ 원래 brand-colors 컬렉션이 소유할 값 — POC라 여기 하드코딩(기술부채, brand-assets-hardcode-deferred).
  * Purple 2는 원본에서 RGB(225 200 233)와 HEX(EBC8E9)가 불일치(원본 오타) — checker가 쓰는 HEX 기준으로 둔다.
- * RGB/Pantone 원본 표기 전체는 scripts/seed-brand-colors.ts에 있다.
+ * RGB/Pantone 원본 표기 전체는 migrations/20260706_013000_seed_baseline_data.ts에 있다.
  */
 
 export type SwatchFamily = 'red' | 'yellow' | 'green' | 'blue' | 'purple' | 'gray' | 'extreme'
@@ -63,9 +63,6 @@ export const ESSENHERB_SWATCHES: Swatch[] = [
 	{ name: 'Gray 4', hex: '464646', family: 'gray' },
 	{ name: 'Gray 5', hex: '151515', family: 'gray' },
 ]
-
-/** 팔레트 통과선(충족률 %). checkColorPalette(테스트)용. */
-export const ESSENHERB_PASS_THRESHOLD = 90
 
 /**
  * 한 픽셀 색이 "팔레트 안"으로 인정되는 deltaE(CIE76) 허용 오차.
