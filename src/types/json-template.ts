@@ -180,6 +180,8 @@ export const jsonTemplateSchema = z.object({
 	background: z.string(),
 	// 그리드 기반 템플릿만 가진다(optional) — 절대좌표 임포트 템플릿은 없어도 유효.
 	grid: gridSchema.optional(),
+	// 캔버스 안쪽 여백(디자인 요소) — 그리드가 이 안쪽 영역에 배치된다. 가로(x)·세로(y) 각각.
+	padding: z.object({ x: z.number().min(0), y: z.number().min(0) }).optional(),
 	// stackElementSchema가 타입 주석 탓에 ZodObject가 아니어서 discriminatedUnion 대신 union을 쓴다.
 	elements: z.array(
 		z.union([textElementSchema, imageElementSchema, rectElementSchema, stackElementSchema]),
