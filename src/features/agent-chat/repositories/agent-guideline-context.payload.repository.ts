@@ -9,13 +9,13 @@ type AgentGuidelinePage = Pick<
 
 type AgentGuidelineSection = Pick<Section, 'id' | 'title' | 'slug' | 'description'>
 
-export type AgentGuidelineSectionListItem = Pick<Section, 'id' | 'title'>
+type AgentGuidelineSectionListItem = Pick<Section, 'id' | 'title'>
 
-export type AgentGuidelinePageListItem = Pick<GuidelinePage, 'id' | 'title' | 'section'>
+type AgentGuidelinePageListItem = Pick<GuidelinePage, 'id' | 'title' | 'section'>
 
 type AgentGuidelinePageSummary = Pick<GuidelinePage, 'id' | 'title' | 'slug' | 'description'>
 
-export type AgentRuleCatalogItem = Pick<
+type AgentRuleCatalogItem = Pick<
 	Rule,
 	| 'category'
 	| 'domainDefault'

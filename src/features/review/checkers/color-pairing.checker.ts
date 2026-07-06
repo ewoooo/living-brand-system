@@ -54,7 +54,6 @@ export const colorPairingChecker: RuleChecker = {
 			fulfillment: ok ? 100 : 0,
 			detail: `다계열 톤인톤 근사: 대비 ${cr.toFixed(2)} ${ok ? '충분' : '부족'} (러프)`,
 			metric: {
-				label: '색 대비',
 				expected: `${TONE_IN_TONE_MIN_CONTRAST.toFixed(1)} 이상`,
 				actual: cr.toFixed(2),
 			},

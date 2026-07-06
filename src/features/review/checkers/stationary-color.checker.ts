@@ -34,7 +34,6 @@ export const stationaryColorChecker: RuleChecker = {
 			fulfillment: Math.round((1 - ratio) * 1000) / 10,
 			detail: `Red+White 외 색 ${Math.round(ratio * 100)}% (별색 1도, 허용 ${MAX_OFF_SHARE * 100}%)`,
 			metric: {
-				label: 'Red+White 외 색 비중',
 				expected: `${MAX_OFF_SHARE * 100}% 이내`,
 				actual: `${Math.round(ratio * 100)}%`,
 			},

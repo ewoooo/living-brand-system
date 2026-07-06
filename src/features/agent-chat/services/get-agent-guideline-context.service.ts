@@ -18,8 +18,6 @@ interface GuidelineSearchInput {
 
 type GuidelineDocumentCollection = 'guideline-pages' | 'sections'
 
-type GuidelineSearchResult = AgentGuidelineSearchResult
-
 interface GuidelinePageListResult {
 	title: string
 	pages: {
@@ -85,7 +83,7 @@ export async function listAgentGuidelinePages(user: unknown): Promise<GuidelineP
 export function searchAgentGuidelines(
 	user: unknown,
 	input: GuidelineSearchInput,
-): Promise<GuidelineSearchResult[]> {
+): Promise<AgentGuidelineSearchResult[]> {
 	const query = input.query.trim()
 
 	return query ? searchGuidelineDocuments(user, query) : Promise.resolve([])
