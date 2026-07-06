@@ -16,6 +16,7 @@ import { ApplicationImages } from './collections/ApplicationImages'
 import { BrandColors } from './collections/BrandColors'
 import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
+import { CheckSessions } from './collections/CheckSessions'
 import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
@@ -94,6 +95,7 @@ export default buildConfig({
 		TemplateAssets,
 		Plugins,
 		AgentSkills,
+		CheckSessions,
 		GuidelineSections,
 		GuidelinePages,
 	],

@@ -79,6 +79,7 @@ export interface Config {
     'template-assets': TemplateAsset;
     plugins: Plugin;
     'agent-skills': AgentSkill;
+    'check-sessions': CheckSession;
     sections: Section;
     'guideline-pages': GuidelinePage;
     search: Search;
@@ -109,6 +110,7 @@ export interface Config {
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
     plugins: PluginsSelect<false> | PluginsSelect<true>;
     'agent-skills': AgentSkillsSelect<false> | AgentSkillsSelect<true>;
+    'check-sessions': CheckSessionsSelect<false> | CheckSessionsSelect<true>;
     sections: SectionsSelect<false> | SectionsSelect<true>;
     'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
@@ -544,6 +546,51 @@ export interface AgentSkill {
   createdAt: string;
 }
 /**
+ * 검수 실행 1회 단위의 세션 기록입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "check-sessions".
+ */
+export interface CheckSession {
+  id: number;
+  /**
+   * 검수가 시작된 진입점입니다.
+   */
+  source: 'review-page' | 'chat';
+  status: 'running' | 'completed' | 'failed';
+  targetType: 'uploaded-image';
+  imageName?: string | null;
+  /**
+   * 검수 실행 시점의 룰셋 스냅샷입니다.
+   */
+  rulesetSnapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * rule key별 검수 결과입니다.
+   */
+  results?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  errorMessage?: string | null;
+  completedAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * 가이드라인 상위 내비게이션 섹션입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -940,6 +987,10 @@ export interface PayloadLockedDocument {
         value: number | AgentSkill;
       } | null)
     | ({
+        relationTo: 'check-sessions';
+        value: number | CheckSession;
+      } | null)
+    | ({
         relationTo: 'sections';
         value: number | Section;
       } | null)
@@ -1227,6 +1278,23 @@ export interface AgentSkillsSelect<T extends boolean = true> {
         id?: T;
       };
   enabled?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "check-sessions_select".
+ */
+export interface CheckSessionsSelect<T extends boolean = true> {
+  source?: T;
+  status?: T;
+  targetType?: T;
+  imageName?: T;
+  rulesetSnapshot?: T;
+  results?: T;
+  errorMessage?: T;
+  completedAt?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
