@@ -1,5 +1,5 @@
 import type { MigrateDownArgs, MigrateUpArgs } from '@payloadcms/db-postgres'
-import ruleset from '../src/features/review/data/essenherb-ruleset.json'
+import ruleset from './data/essenherb-ruleset.json'
 
 /**
  * essenherb 룰셋 데이터 시드 (JSON → sections / guideline-pages / rules(+titleKo) / rule-bindings).
