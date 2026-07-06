@@ -1,15 +1,16 @@
 import { cache } from 'react'
-import { listRuleBindingPlacements } from '@/features/review/repositories/review-ruleset.payload.repository'
+import { listPublishedPagesWithRules } from '@/features/review/repositories/review-ruleset.payload.repository'
 
 export interface ReviewRule {
-	/** binding id — 같은 rule key가 한 섹션에 여러 배치로 등장할 수 있어 행 식별에 쓴다 */
-	bindingId: number
+	/** 배치(배열 행) id — 같은 rule key가 한 페이지에 여러 배치로 등장할 수 있어 행 식별에 쓴다 */
+	placementId: string
 	key: string
 	titleKo: string
 	tier: string
 	evidence: string
 }
 
+/** 검수 화면의 그룹 단위 = 룰 배치를 가진 가이드라인 페이지 (The Name, Brand Logo, …). */
 export interface ReviewSection {
 	title: string
 	slug: string
@@ -17,58 +18,35 @@ export interface ReviewSection {
 }
 
 /**
- * 검수 화면용 룰셋 뷰모델 — rule-bindings를 섹션 단위로 묶는다 (목차·본문·검수 대상의 단일 소스).
- * 정렬: 섹션·페이지 displayOrder → 배치 id. Payload 접근은 review-ruleset repository가 소유한다.
+ * 검수 화면용 룰셋 뷰모델 — 페이지의 rules 배치를 그대로 묶는다 (목차·본문·검수 대상의 단일 소스).
+ * 정렬: 섹션 displayOrder → 페이지 displayOrder → 배치 순서. Payload 접근은 repository가 소유한다.
  * layout과 page가 같은 요청에서 함께 부르므로 React cache로 요청당 1회만 조회한다.
  */
 export const getReviewRuleset = cache(async (): Promise<ReviewSection[]> => {
-	const bindings = await listRuleBindingPlacements()
+	const pages = await listPublishedPagesWithRules()
 
-	interface SectionDraft {
-		order: number
-		title: string
-		slug: string
-		pages: Map<number, { order: number; rules: ReviewRule[] }>
-	}
-	const sections = new Map<number, SectionDraft>()
-
-	for (const binding of bindings) {
-		const { page, rule } = binding
-		if (typeof page === 'number' || typeof rule === 'number') continue
-		const section = page.section
-		if (typeof section === 'number') continue
-
-		let sectionDraft = sections.get(section.id)
-		if (!sectionDraft) {
-			sectionDraft = {
-				order: section.displayOrder,
-				title: section.title,
-				slug: section.slug ?? String(section.id),
-				pages: new Map(),
-			}
-			sections.set(section.id, sectionDraft)
-		}
-		let pageDraft = sectionDraft.pages.get(page.id)
-		if (!pageDraft) {
-			pageDraft = { order: page.displayOrder, rules: [] }
-			sectionDraft.pages.set(page.id, pageDraft)
-		}
-		pageDraft.rules.push({
-			bindingId: binding.id,
-			key: rule.key,
-			titleKo: rule.titleKo ?? rule.title,
-			tier: rule.tier ?? '',
-			evidence: binding.evidence ?? '',
+	return pages
+		.filter((page) => (page.rules?.length ?? 0) > 0)
+		.sort((a, b) => {
+			const sectionOrder = (page: (typeof pages)[number]) =>
+				typeof page.section === 'number' ? 0 : page.section.displayOrder
+			return sectionOrder(a) - sectionOrder(b) || a.displayOrder - b.displayOrder
 		})
-	}
-
-	return [...sections.values()]
-		.sort((a, b) => a.order - b.order)
-		.map((section) => ({
-			title: section.title,
-			slug: section.slug,
-			rules: [...section.pages.values()]
-				.sort((a, b) => a.order - b.order)
-				.flatMap((page) => page.rules),
+		.map((page) => ({
+			title: page.title,
+			slug: page.slug ?? String(page.id),
+			rules: (page.rules ?? []).flatMap((placement) => {
+				const rule = placement.rule
+				if (typeof rule === 'number') return []
+				return [
+					{
+						placementId: placement.id ?? rule.key,
+						key: rule.key,
+						titleKo: rule.titleKo ?? rule.title,
+						tier: rule.tier ?? '',
+						evidence: placement.evidence ?? '',
+					},
+				]
+			}),
 		}))
 })

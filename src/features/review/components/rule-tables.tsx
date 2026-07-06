@@ -240,7 +240,7 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 							{rows.map((row) => (
 								// 같은 rule key가 여러 배치로 등장할 수 있어(예: messaging.statement) binding id로 유니크하게.
 								<RuleRow
-									key={row.rule.bindingId}
+									key={row.rule.placementId}
 									rule={row.rule}
 									sectionLabel={row.sectionLabel}
 									anchorId={row.anchorId}
