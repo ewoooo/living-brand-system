@@ -1,6 +1,10 @@
+/**
+ * Checker: 브랜드 팔레트 준수 여부를 본다.
+ * ruleKey는 `color.palette`, 파일명은 지배색이 허용 팔레트에 들어오는지 보는 기능을 따른다.
+ */
 import type { RuleChecker } from '../types'
-import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from './color-check'
 import { dominantColors } from './color-metrics'
+import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from './palette-match'
 
 // 규정 외 색이 지배색 점유율의 이 비율을 넘으면 미통과 (작은 로고 색 위반도 잡도록 지배색 기반).
 const MAX_OFF_SHARE = 0.05
@@ -10,7 +14,7 @@ const MAX_OFF_SHARE = 0.05
  * 픽셀 전수가 아니라 지배색(작은 요소 포함) 기반으로 규정 외 색(off-palette) 점유율을 본다 —
  * flat 디자인에서 작은 로고의 규정 외 색까지 잡기 위함.
  */
-export const colorPaletteChecker: RuleChecker = {
+export const paletteComplianceChecker: RuleChecker = {
 	ruleKey: 'color.palette',
 	check: ({ pixels, palette }) => {
 		if (pixels.length === 0) return { status: 'fail', fulfillment: 0, detail: '픽셀 없음' }

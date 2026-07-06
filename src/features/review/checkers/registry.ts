@@ -1,10 +1,14 @@
-import { colorPairingChecker } from './color/color-pairing.checker'
-import { colorPaletteChecker } from './color/color-palette.checker'
-import { imageryBackgroundToneChecker } from './imagery/imagery-background-tone.checker'
-import { logoClearSpaceChecker } from './logo/logo-clear-space.checker'
-import { logoMinSizeChecker } from './logo/logo-min-size.checker'
-import { stationaryColorChecker } from './stationary/stationary-color.checker'
-import { stationaryFormatChecker } from './stationary/stationary-format.checker'
+/**
+ * Checker registry — ruleKey와 기능별 checker 구현을 연결한다.
+ * 파일 경로는 검사 기능 기준이고, ruleKey는 Payload 룰 카탈로그의 도메인 이름을 유지한다.
+ */
+import { colorCombinationChecker } from './color/color-combination.checker'
+import { paletteComplianceChecker } from './color/palette-compliance.checker'
+import { spotColorChecker } from './color/spot-color.checker'
+import { aspectRatioChecker } from './geometry/aspect-ratio.checker'
+import { clearSpaceChecker } from './geometry/clear-space.checker'
+import { relativeSizeChecker } from './geometry/relative-size.checker'
+import { backgroundToneChecker } from './imagery/background-tone.checker'
 import type { RuleChecker } from './types'
 
 /**
@@ -15,13 +19,13 @@ import type { RuleChecker } from './types'
  * scale/roles/contrast/combo는 팔레트 정의·서사이거나 pairing에 흡수돼 제거했다.
  */
 const checkers: Record<string, RuleChecker> = {
-	[colorPaletteChecker.ruleKey]: colorPaletteChecker,
-	[colorPairingChecker.ruleKey]: colorPairingChecker,
-	[imageryBackgroundToneChecker.ruleKey]: imageryBackgroundToneChecker,
-	[logoClearSpaceChecker.ruleKey]: logoClearSpaceChecker,
-	[logoMinSizeChecker.ruleKey]: logoMinSizeChecker,
-	[stationaryFormatChecker.ruleKey]: stationaryFormatChecker,
-	[stationaryColorChecker.ruleKey]: stationaryColorChecker,
+	[paletteComplianceChecker.ruleKey]: paletteComplianceChecker,
+	[colorCombinationChecker.ruleKey]: colorCombinationChecker,
+	[backgroundToneChecker.ruleKey]: backgroundToneChecker,
+	[clearSpaceChecker.ruleKey]: clearSpaceChecker,
+	[relativeSizeChecker.ruleKey]: relativeSizeChecker,
+	[aspectRatioChecker.ruleKey]: aspectRatioChecker,
+	[spotColorChecker.ruleKey]: spotColorChecker,
 }
 
 export function getChecker(ruleKey: string): RuleChecker | null {

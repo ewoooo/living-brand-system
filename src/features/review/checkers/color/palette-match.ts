@@ -1,8 +1,6 @@
 /**
- * 색 비교 유틸 (순수 함수, I/O 없음).
- *
- * 색을 CIELAB으로 변환해 deltaE(CIE76)로 가장 가까운 swatch를 찾는다.
- * 픽셀 추출(canvas)·기준값(palette)은 상위 레이어가 소유하고 여기엔 넘기기만 한다.
+ * Palette match helper — 색을 CIELAB으로 변환해 deltaE(CIE76)로 가장 가까운 swatch를 찾는다.
+ * 픽셀 추출과 기준 팔레트 조회는 상위 레이어가 소유한다.
  */
 
 export interface Rgb {

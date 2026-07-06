@@ -1,3 +1,7 @@
+/**
+ * Checker: 산출물 프레임의 종횡비가 목표 비율에 맞는지 본다.
+ * ruleKey는 `application.format`, 파일명은 실제 측정 기능인 aspect-ratio를 따른다.
+ */
 import type { RuleChecker } from '../types'
 
 // 명함 규격 90:50 비율. 방향 무관(긴변/짧은변)으로 보고 허용오차 내면 통과. (러프 — target/tol은 knob)
@@ -9,7 +13,7 @@ const TOLERANCE = 0.05
  * mm/DPI 없이 판정 가능한 축 = 종횡비. 픽셀 grid의 긴변/짧은변 비율을 목표 비율과 비교한다.
  * (아이템별 target 파라미터화는 후속 — 지금은 명함 90:50 고정.)
  */
-export const stationaryFormatChecker: RuleChecker = {
+export const aspectRatioChecker: RuleChecker = {
 	ruleKey: 'application.format',
 	check: ({ grid }) => {
 		if (!grid) return { status: 'fail', fulfillment: null, detail: 'grid 없음' }

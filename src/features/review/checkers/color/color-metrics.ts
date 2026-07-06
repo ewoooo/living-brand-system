@@ -1,9 +1,9 @@
-import type { Rgb } from './color-check'
-
 /**
- * 픽셀 색 계산 공용 유틸 (순수). checker들이 가져다 조합한다.
- * 검수 method를 교체·추가할 때 이 계산 단위를 재사용한다.
+ * Color metric helper — 픽셀/색상에서 명도, 채도, 대비, 지배색 같은 측정값을 뽑는다.
+ * 룰 판정은 하지 않고 checker들이 공유하는 계산만 제공한다.
  */
+import type { PixelGrid } from '../types'
+import type { Rgb } from './palette-match'
 
 /** WCAG relative luminance (0~1) */
 export function relativeLuminance({ r, g, b }: Rgb): number {
@@ -76,4 +76,13 @@ export function dominantColors(pixels: Rgb[], topN = 8, minShare = 0.03): Domina
 			},
 			share: bucket.count / total,
 		}))
+}
+
+/** grid에서 color 검수용 flat 픽셀(불투명)을 파생한다. */
+export function opaquePixels(grid: PixelGrid): Rgb[] {
+	const out: Rgb[] = []
+	for (let i = 0; i < grid.pixels.length; i++) {
+		if (grid.alpha[i] > 0) out.push(grid.pixels[i])
+	}
+	return out
 }

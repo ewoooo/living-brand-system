@@ -1,6 +1,11 @@
-import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from '../color/color-check'
-import { dominantColors } from '../color/color-metrics'
+/**
+ * Checker: 제한된 별색/부분 팔레트 사용 여부를 본다.
+ * ruleKey는 `application.print-spec`, 파일명은 Red+White 별색 1도 근사 판정 기능을 따른다.
+ */
+
 import type { RuleChecker } from '../types'
+import { dominantColors } from './color-metrics'
+import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from './palette-match'
 
 // 명함은 별색 1도(Pantone Warm Red = Essenherb Red) 인쇄 → 실제 구성이 Essenherb Red + White 뿐이어야 한다.
 const STATIONERY_ALLOWED_HEX = new Set(['FFFFFF', 'EA5343'])
@@ -11,7 +16,7 @@ const MAX_OFF_SHARE = 0.05
  * 파일 색모드(별색) 메타 없이 렌더 이미지만으로 근사 — 지배색이 Essenherb Red + White로만 구성됐는지 본다.
  * 팔레트 안이어도(예: 다른 톤) 명함에선 이 2색 외는 위반. color.palette보다 엄격한 부분집합 검수.
  */
-export const stationaryColorChecker: RuleChecker = {
+export const spotColorChecker: RuleChecker = {
 	ruleKey: 'application.print-spec',
 	check: ({ pixels, palette }) => {
 		if (pixels.length === 0) return { status: 'fail', fulfillment: 0, detail: '픽셀 없음' }

@@ -1,12 +1,10 @@
-import type { PixelGrid } from '@/features/review/checkers/types'
-import type { Rgb } from '../color/color-check'
-import { dominantColors } from '../color/color-metrics'
-
 /**
- * 로고 기하 추출 (순수). grid → 전경(로고) 마스크·bbox·획 두께를 근사한다.
- * 픽셀 I/O(canvas/sharp)는 상위 레이어가 소유하고 여기엔 grid만 넘긴다.
- * 여러 로고 checker(clear-space·min-size·crop·legibility)가 공유하는 계산 단위.
+ * Logo geometry helper — 픽셀 grid에서 로고 전경 마스크, bbox, stem width를 추정한다.
+ * 로고 관련 geometry checker들이 공유하며 직접 rule 판정은 하지 않는다.
  */
+import type { PixelGrid } from '@/features/review/checkers/types'
+import { dominantColors } from '../color/color-metrics'
+import type { Rgb } from '../color/palette-match'
 
 const ALPHA_MIN = 8
 // flat 디자인에서 배경색과 이만큼(RGB 거리) 떨어지면 전경으로 본다.

@@ -1,5 +1,5 @@
 import sharp from 'sharp'
-import type { Rgb } from '@/features/review/checkers/color/color-check'
+import type { Rgb } from '@/features/review/checkers/color/palette-match'
 import type { PixelGrid } from '@/features/review/checkers/types'
 
 /**

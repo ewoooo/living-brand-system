@@ -1,23 +1,14 @@
-import type { Rgb } from '@/features/review/checkers/color/color-check'
+import { opaquePixels } from '@/features/review/checkers/color/color-metrics'
 import { shouldCheckRule } from '@/features/review/checkers/content-gate'
 import { getChecker } from '@/features/review/checkers/registry'
-import type { CheckResult, PixelGrid } from '@/features/review/checkers/types'
-import { extractPixelGrid } from '@/features/review/repositories/image-pixels.sharp.repository'
+import type { CheckResult } from '@/features/review/checkers/types'
+import { extractPixelGrid } from '@/features/review/repositories/image-decoder.sharp.repository'
 import { getReviewPalette } from '@/features/review/services/get-review-palette.service'
 import {
 	getReviewRuleset,
 	type ReviewSection,
 } from '@/features/review/services/get-review-ruleset.service'
 import type { ImageContentFlags } from '@/features/review/types/content-flags'
-
-/** grid에서 color 검수용 flat 픽셀(불투명)을 파생한다. */
-function opaquePixels(grid: PixelGrid): Rgb[] {
-	const out: Rgb[] = []
-	for (let i = 0; i < grid.pixels.length; i++) {
-		if (grid.alpha[i] > 0) out.push(grid.pixels[i])
-	}
-	return out
-}
 
 /**
  * 검수 대상 이미지를 룰셋에 비춰 checker가 있는 룰만 판정한다 (서버 확정 판정의 단일 소스).
