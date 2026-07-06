@@ -41,7 +41,7 @@ const STATUS = {
 		className: 'bg-sky-500/15 text-sky-700 dark:text-sky-400',
 	},
 	needs_review: {
-		label: '검토 필요',
+		label: '담당자 검토',
 		className: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
 	},
 } as const
@@ -158,19 +158,43 @@ function RuleRow({ rule, sectionLabel, anchorId }: RuleRowData) {
 						</code>
 					</td>
 					<td className="pt-0 pb-3 pr-3 align-top" colSpan={3}>
-						{rule.evidence ? (
-							<blockquote className="rounded-md bg-white/5 px-3 py-2 text-muted-foreground text-xs leading-5">
-								{rule.evidence}
-							</blockquote>
-						) : (
-							<span className="text-muted-foreground text-xs">
-								관련 가이드라인 없음
-							</span>
-						)}
+						<div className="space-y-2">
+							{rule.evidence ? (
+								<blockquote className="rounded-md bg-white/5 px-3 py-2 text-muted-foreground text-xs leading-5">
+									{rule.evidence}
+								</blockquote>
+							) : (
+								<span className="text-muted-foreground text-xs">
+									관련 가이드라인 없음
+								</span>
+							)}
+							<ReferenceAssets assets={rule.referenceAssets} />
+						</div>
 					</td>
 				</tr>
 			)}
 		</>
+	)
+}
+
+function ReferenceAssets({ assets }: { assets: Rule['referenceAssets'] }) {
+	if (assets.length === 0) return null
+
+	return (
+		<div className="flex flex-wrap items-center gap-1.5 text-xs">
+			<span className="text-muted-foreground">기준 이미지 {assets.length}개</span>
+			{assets.map((asset) => (
+				<a
+					key={`${asset.url}-${asset.name}`}
+					href={asset.url}
+					target="_blank"
+					rel="noreferrer"
+					className="rounded-md border px-2 py-1 text-foreground transition-colors hover:bg-accent"
+				>
+					{asset.name}
+				</a>
+			))}
+		</div>
 	)
 }
 
@@ -272,7 +296,7 @@ function ResultSummary({
 			</span>
 			<span className="flex items-center gap-2 text-muted-foreground">
 				<span className="inline-block size-2 rounded-full bg-neutral-400" />
-				대기 <span className="font-semibold tabular-nums">{pendingReview}</span>
+				검토 필요 <span className="font-semibold tabular-nums">{pendingReview}</span>
 			</span>
 			{checking && (
 				<span className="flex items-center gap-2 text-sky-700 text-xs dark:text-sky-400">

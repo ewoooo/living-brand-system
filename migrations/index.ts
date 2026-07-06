@@ -16,6 +16,8 @@ import * as migration_20260706_014821_page_owned_rule_placements from './2026070
 import * as migration_20260706_030057_remove_template_rules from './20260706_030057_remove_template_rules';
 import * as migration_20260706_031500_add_mcp_call_check_session_source from './20260706_031500_add_mcp_call_check_session_source';
 import * as migration_20260706_033000_normalize_rule_executor from './20260706_033000_normalize_rule_executor';
+import * as migration_20260706_052000_add_rule_reference_assets from './20260706_052000_add_rule_reference_assets';
+import * as migration_20260706_053000_make_color_group_editable from './20260706_053000_make_color_group_editable';
 
 export const migrations = [
   {
@@ -107,5 +109,15 @@ export const migrations = [
     up: migration_20260706_033000_normalize_rule_executor.up,
     down: migration_20260706_033000_normalize_rule_executor.down,
     name: '20260706_033000_normalize_rule_executor'
+  },
+  {
+    up: migration_20260706_052000_add_rule_reference_assets.up,
+    down: migration_20260706_052000_add_rule_reference_assets.down,
+    name: '20260706_052000_add_rule_reference_assets'
+  },
+  {
+    up: migration_20260706_053000_make_color_group_editable.up,
+    down: migration_20260706_053000_make_color_group_editable.down,
+    name: '20260706_053000_make_color_group_editable'
   },
 ];

@@ -3,9 +3,13 @@ import { adminFieldOnly, adminOnly, selfOrAdmin } from '@/lib/auth'
 
 export const Users: CollectionConfig = {
 	slug: 'users',
+	labels: {
+		singular: 'User',
+		plural: 'Users',
+	},
 	admin: {
 		useAsTitle: 'email',
-		group: 'Users',
+		group: 'System',
 	},
 	auth: true,
 	access: {

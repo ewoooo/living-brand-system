@@ -1,6 +1,7 @@
 import {
 	type CheckSessionSource,
 	createCheckSessionRecord,
+	updateCheckSessionRecord,
 } from '@/features/review/repositories/check-session.payload.repository'
 import {
 	filterRulesetByScenario,
@@ -26,25 +27,28 @@ interface StartCheckSessionInput {
 export async function startCheckSessionService(input: StartCheckSessionInput) {
 	const scenario = getReviewScenario(input.scenarioKey)
 	const rulesetSnapshot = filterRulesetByScenario(await getReviewRuleset(), scenario)
+	const session = await createCheckSessionRecord({
+		source: input.source,
+		status: 'running',
+		imageName: input.imageName,
+		rulesetSnapshot,
+		user: input.user,
+	})
 
 	try {
 		const results = await runReviewService(input.buffer, input.flags, rulesetSnapshot)
-		const session = await createCheckSessionRecord({
-			source: input.source,
+		await updateCheckSessionRecord({
+			id: session.id,
 			status: 'completed',
-			imageName: input.imageName,
-			rulesetSnapshot,
 			results,
 			user: input.user,
 		})
 
 		return { checkSessionId: session.id, results }
 	} catch (error) {
-		await createCheckSessionRecord({
-			source: input.source,
+		await updateCheckSessionRecord({
+			id: session.id,
 			status: 'failed',
-			imageName: input.imageName,
-			rulesetSnapshot,
 			errorMessage: error instanceof Error ? error.message : 'Review failed.',
 			user: input.user,
 		})

@@ -84,7 +84,8 @@ export default buildConfig({
 		},
 	},
 	collections: [
-		Users,
+		GuidelineSections,
+		GuidelinePages,
 		Rules,
 		BrandLogos,
 		BrandColors,
@@ -94,10 +95,9 @@ export default buildConfig({
 		Templates,
 		TemplateAssets,
 		Plugins,
-		AgentSkills,
 		CheckSessions,
-		GuidelineSections,
-		GuidelinePages,
+		AgentSkills,
+		Users,
 	],
 	editor: lexicalEditor({
 		// 가이드라인 수치 규정 표(최소 사이즈, 자간 등) 입력용. EXPERIMENTAL: 업그레이드 시 변경 가능성 있음.

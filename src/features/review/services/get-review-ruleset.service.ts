@@ -1,6 +1,13 @@
 import { cache } from 'react'
 import { getReviewRulesetPages } from '@/features/review/repositories/review-ruleset.payload.repository'
-import type { Rule } from '@/payload-types'
+import type { ApplicationImage, Rule } from '@/payload-types'
+
+export interface ReviewReferenceAsset {
+	filename?: string
+	name: string
+	url: string
+	mimeType: string
+}
 
 export interface ReviewRule {
 	/** 배치(배열 행) id — 같은 rule key가 한 페이지에 여러 배치로 등장할 수 있어 행 식별에 쓴다 */
@@ -12,6 +19,7 @@ export interface ReviewRule {
 	scoring: string
 	input: string
 	evidence: string
+	referenceAssets: ReviewReferenceAsset[]
 }
 
 /** 검수 화면의 그룹 단위 = 룰 배치를 가진 가이드라인 페이지 (The Name, Brand Logo, …). */
@@ -52,8 +60,23 @@ export const getReviewRuleset = cache(async (): Promise<ReviewSection[]> => {
 						scoring: rule.scoring ?? '',
 						input: rule.input ?? '',
 						evidence: placement.evidence ?? '',
+						referenceAssets: (placement.referenceAssets ?? []).flatMap(
+							toReferenceAsset,
+						),
 					},
 				]
 			}),
 		}))
 })
+
+function toReferenceAsset(asset: number | ApplicationImage): ReviewReferenceAsset[] {
+	if (typeof asset === 'number' || !asset.url || !asset.mimeType) return []
+	return [
+		{
+			filename: asset.filename ?? undefined,
+			name: asset.name,
+			url: asset.url,
+			mimeType: asset.mimeType,
+		},
+	]
+}

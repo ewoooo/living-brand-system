@@ -10,7 +10,7 @@ export const Plugins: CollectionConfig = {
 		plural: 'Plugins',
 	},
 	admin: {
-		group: 'Production Resources',
+		group: 'Production',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'pluginType', 'updatedAt'],
 	},

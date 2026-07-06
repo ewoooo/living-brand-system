@@ -26,6 +26,18 @@ export const clearSpaceChecker: RuleChecker = {
 		const { bbox, width, height } = region
 		const margins = [bbox.x0, bbox.y0, width - 1 - bbox.x1, height - 1 - bbox.y1]
 		const minMargin = Math.min(...margins)
+		const regionWidth = bbox.x1 - bbox.x0 + 1
+		const regionHeight = bbox.y1 - bbox.y0 + 1
+
+		if (minMargin === 0 && (regionWidth / width > 0.7 || regionHeight / height > 0.7)) {
+			return {
+				status: 'needs_review',
+				fulfillment: null,
+				detail: '복합 이미지의 전경이 프레임 가장자리까지 이어져 로고만 분리하지 못함',
+				metric: { expected: `${moduleReq}px`, actual: 'unresolved' },
+			}
+		}
+
 		const ratio = moduleReq === 0 ? 1 : minMargin / moduleReq
 
 		return {

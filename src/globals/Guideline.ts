@@ -2,9 +2,9 @@ import type { GlobalConfig } from 'payload'
 
 export const Guideline: GlobalConfig = {
 	slug: 'guideline',
-	label: 'Metadata',
+	label: 'Guideline Metadata',
 	admin: {
-		group: 'Guideline',
+		group: 'System',
 	},
 	versions: {
 		drafts: {

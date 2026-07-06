@@ -7,11 +7,11 @@ export const GuidelinePages: CollectionConfig = {
 	slug: 'guideline-pages',
 	access: managerManagedAccess,
 	labels: {
-		singular: 'Page',
-		plural: 'Pages',
+		singular: 'Guideline Page',
+		plural: 'Guideline Pages',
 	},
 	admin: {
-		group: 'Guideline',
+		group: 'Guidelines',
 		useAsTitle: 'title',
 		defaultColumns: ['title', 'section', 'displayOrder', 'updatedAt'],
 		description: '블록으로 구성하는 가이드라인 페이지입니다.',
@@ -70,6 +70,15 @@ export const GuidelinePages: CollectionConfig = {
 					name: 'evidence',
 					type: 'textarea',
 					admin: { description: '가이드라인 원문 근거(출처).' },
+				},
+				{
+					name: 'referenceAssets',
+					type: 'relationship',
+					relationTo: 'application-images',
+					hasMany: true,
+					admin: {
+						description: '비전 검수나 운영 판단에 참고할 기준 이미지입니다.',
+					},
 				},
 			],
 		},

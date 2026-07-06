@@ -10,19 +10,12 @@ export async function getReviewRulesetPages() {
 	const payload = await getPayload({ config })
 	const pages = await payload.find({
 		collection: 'guideline-pages',
-		depth: 1, // rules[].rule + section을 채운다
+		depth: 2, // rules[].rule, rules[].referenceAssets, section을 채운다
 		sort: 'displayOrder',
 		limit: 100,
 		locale: LOCALE,
 		fallbackLocale: FALLBACK_LOCALE,
 		draft: false,
-		select: {
-			title: true,
-			slug: true,
-			displayOrder: true,
-			section: true,
-			rules: true,
-		},
 	})
 
 	return pages.docs

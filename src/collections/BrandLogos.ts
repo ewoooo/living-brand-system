@@ -4,14 +4,14 @@ import { draftVersions } from './shared'
 export const BrandLogos: CollectionConfig = {
 	slug: 'brand-logos',
 	labels: {
-		singular: 'Logo',
-		plural: 'Logos',
+		singular: 'Brand Logo',
+		plural: 'Brand Logos',
 	},
 	access: {
 		read: () => true,
 	},
 	admin: {
-		group: 'Brand Resources',
+		group: 'Brand Assets',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'alt', 'updatedAt'],
 	},

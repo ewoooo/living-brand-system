@@ -10,12 +10,12 @@ export const Rules: CollectionConfig = {
 	slug: 'rules',
 	access: managerManagedAccess,
 	labels: {
-		singular: 'Rule',
-		plural: 'Rules (Preset)',
+		singular: 'Rule Preset',
+		plural: 'Rule Presets',
 	},
 	admin: {
 		useAsTitle: 'key',
-		group: 'Guideline',
+		group: 'Guidelines',
 		defaultColumns: ['key', 'title', 'category', 'tier', 'executor'],
 	},
 	fields: [
