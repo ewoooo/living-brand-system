@@ -135,9 +135,6 @@ type CatalogEntry = {
 	category: Rule['category']
 	tier?: Rule['tier']
 	executor?: Rule['executor']
-	scopeOptions?: Rule['scope']
-	frequency?: number
-	domainDefault?: boolean
 	paramSchema?: string
 	scoring?: string
 	input?: string
@@ -255,9 +252,6 @@ export async function up({ payload, req }: MigrateUpArgs): Promise<void> {
 				category: entry.category,
 				tier: entry.tier,
 				executor: entry.executor,
-				scope: entry.scopeOptions ?? [],
-				frequency: entry.frequency,
-				domainDefault: entry.domainDefault ?? false,
 				paramSchema: entry.paramSchema,
 				scoring: entry.scoring,
 				input: entry.input,

@@ -18,14 +18,11 @@ type AgentGuidelinePageSummary = Pick<GuidelinePage, 'id' | 'title' | 'slug' | '
 type AgentRuleCatalogItem = Pick<
 	Rule,
 	| 'category'
-	| 'domainDefault'
 	| 'executor'
-	| 'frequency'
 	| 'input'
 	| 'key'
 	| 'notes'
 	| 'paramSchema'
-	| 'scope'
 	| 'scoring'
 	| 'tier'
 	| 'title'
@@ -146,14 +143,11 @@ export async function findAgentRules(user: unknown): Promise<AgentRuleCatalogIte
 		},
 		select: {
 			category: true,
-			domainDefault: true,
 			executor: true,
-			frequency: true,
 			input: true,
 			key: true,
 			notes: true,
 			paramSchema: true,
-			scope: true,
 			scoring: true,
 			tier: true,
 			title: true,

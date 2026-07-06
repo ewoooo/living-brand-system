@@ -1,5 +1,5 @@
-import { detectLogoRegion, estimateStemWidth } from '@/features/review/logo-geometry'
-import type { RuleChecker } from './types'
+import type { RuleChecker } from '../types'
+import { detectLogoRegion, estimateStemWidth } from './logo-geometry'
 
 // essenherb 규정: clear space 모듈 = stem width × 3 (정사각 배제구역).
 const MODULE_STEMS = 3

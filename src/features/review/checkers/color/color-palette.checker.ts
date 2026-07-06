@@ -1,6 +1,6 @@
-import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from '@/features/review/color-check'
-import { dominantColors } from '@/features/review/color-metrics'
-import type { RuleChecker } from './types'
+import type { RuleChecker } from '../types'
+import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from './color-check'
+import { dominantColors } from './color-metrics'
 
 // 규정 외 색이 지배색 점유율의 이 비율을 넘으면 미통과 (작은 로고 색 위반도 잡도록 지배색 기반).
 const MAX_OFF_SHARE = 0.05

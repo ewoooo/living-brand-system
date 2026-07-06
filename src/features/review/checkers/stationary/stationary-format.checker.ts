@@ -1,4 +1,4 @@
-import type { RuleChecker } from './types'
+import type { RuleChecker } from '../types'
 
 // 명함 규격 90:50 비율. 방향 무관(긴변/짧은변)으로 보고 허용오차 내면 통과. (러프 — target/tol은 knob)
 const TARGET_RATIO = 90 / 50

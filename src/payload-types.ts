@@ -247,12 +247,6 @@ export interface Rule {
     | 'misc';
   tier?: ('A' | 'B' | 'C') | null;
   executor?: ('deterministic' | 'heuristic' | 'advisory' | 'human') | null;
-  scope?: ('all' | 'print' | 'screen')[] | null;
-  /**
-   * 값을 채운 브랜드 수 (0 = domain-default 빈 슬롯)
-   */
-  frequency?: number | null;
-  domainDefault?: boolean | null;
   /**
    * 브랜드 값이 채워야 할 구조(요약 표기)
    */
@@ -556,7 +550,7 @@ export interface CheckSession {
   /**
    * 검수가 시작된 진입점입니다.
    */
-  source: 'review-page' | 'chat';
+  source: 'mcp-call' | 'review-page' | 'chat';
   status: 'running' | 'completed' | 'failed';
   targetType: 'uploaded-image';
   imageName?: string | null;
@@ -673,10 +667,6 @@ export interface GuidelinePage {
          * 가이드라인 원문 근거(출처).
          */
         evidence?: string | null;
-        /**
-         * 가이드라인 원문 PDF 페이지 번호입니다.
-         */
-        sourcePage?: number | null;
         id?: string | null;
       }[]
     | null;
@@ -1092,9 +1082,6 @@ export interface RulesSelect<T extends boolean = true> {
   category?: T;
   tier?: T;
   executor?: T;
-  scope?: T;
-  frequency?: T;
-  domainDefault?: T;
   paramSchema?: T;
   scoring?: T;
   input?: T;
@@ -1328,7 +1315,6 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
         rule?: T;
         value?: T;
         evidence?: T;
-        sourcePage?: T;
         id?: T;
       };
   section?: T;

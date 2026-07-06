@@ -1,6 +1,6 @@
-import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from '@/features/review/color-check'
-import { dominantColors } from '@/features/review/color-metrics'
-import type { RuleChecker } from './types'
+import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from '../color/color-check'
+import { dominantColors } from '../color/color-metrics'
+import type { RuleChecker } from '../types'
 
 // 명함은 별색 1도(Pantone Warm Red = Essenherb Red) 인쇄 → 실제 구성이 Essenherb Red + White 뿐이어야 한다.
 const STATIONERY_ALLOWED_HEX = new Set(['FFFFFF', 'EA5343'])

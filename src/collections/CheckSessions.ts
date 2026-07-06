@@ -26,6 +26,7 @@ export const CheckSessions: CollectionConfig = {
 			required: true,
 			defaultValue: 'review-page',
 			options: [
+				{ label: 'MCP Call', value: 'mcp-call' },
 				{ label: 'Review Page', value: 'review-page' },
 				{ label: 'Chat', value: 'chat' },
 			],

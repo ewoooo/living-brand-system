@@ -1,6 +1,11 @@
-import { DEFAULT_CONTENT_FLAGS, type ImageContentFlags } from '@/features/review/content-gate'
-import { runReviewService } from '@/features/review/services/run-review.service'
+import type { CheckSessionSource } from '@/features/review/repositories/check-session.payload.repository'
+import { startCheckSessionService } from '@/features/review/services/start-check-session.service'
+import {
+	DEFAULT_CONTENT_FLAGS,
+	type ImageContentFlags,
+} from '@/features/review/types/content-flags'
 import { authenticateRequest } from '@/lib/request-auth'
+import type { User } from '@/payload-types'
 
 export const maxDuration = 30
 
@@ -28,13 +33,22 @@ function parseContentFlags(value: FormDataEntryValue | null | undefined): ImageC
 	}
 }
 
+function parseSource(value: FormDataEntryValue | null | undefined): CheckSessionSource {
+	if (value === 'mcp-call') return 'mcp-call'
+	return value === 'chat' ? 'chat' : 'review-page'
+}
+
+function isUser(value: unknown): value is User {
+	return Boolean(value && typeof value === 'object' && 'email' in value && 'role' in value)
+}
+
 /**
  * 검수 대상 이미지(FormData)와 포함 요소 플래그를 받아 룰별 서버 확정 판정을 돌려준다.
- * 브라우저 review 화면이 부르는 통로. 검수 계산은 service가 소유한다.
+ * 브라우저 review 화면이 부르는 통로. 검수 세션 저장과 계산은 service가 소유한다.
  */
 export async function POST(req: Request) {
 	const { payload, user } = await authenticateRequest()
-	if (!user) {
+	if (!isUser(user)) {
 		return Response.json({ message: 'Unauthorized.' }, { status: 401 })
 	}
 
@@ -46,9 +60,15 @@ export async function POST(req: Request) {
 
 	try {
 		const buffer = Buffer.from(await file.arrayBuffer())
-		const results = await runReviewService(buffer, parseContentFlags(form?.get('flags')))
+		const result = await startCheckSessionService({
+			buffer,
+			flags: parseContentFlags(form?.get('flags')),
+			imageName: file.name,
+			source: parseSource(form?.get('source')),
+			user,
+		})
 
-		return Response.json({ results })
+		return Response.json(result)
 	} catch (error) {
 		payload.logger.error({ err: error }, 'review.check.failed')
 

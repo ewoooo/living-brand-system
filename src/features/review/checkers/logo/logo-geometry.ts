@@ -1,6 +1,6 @@
 import type { PixelGrid } from '@/features/review/checkers/types'
-import type { Rgb } from '@/features/review/color-check'
-import { dominantColors } from '@/features/review/color-metrics'
+import type { Rgb } from '../color/color-check'
+import { dominantColors } from '../color/color-metrics'
 
 /**
  * 로고 기하 추출 (순수). grid → 전경(로고) 마스크·bbox·획 두께를 근사한다.

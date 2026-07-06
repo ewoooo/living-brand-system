@@ -71,11 +71,6 @@ export const GuidelinePages: CollectionConfig = {
 					type: 'textarea',
 					admin: { description: '가이드라인 원문 근거(출처).' },
 				},
-				{
-					name: 'sourcePage',
-					type: 'number',
-					admin: { description: '가이드라인 원문 PDF 페이지 번호입니다.' },
-				},
 			],
 		},
 		{

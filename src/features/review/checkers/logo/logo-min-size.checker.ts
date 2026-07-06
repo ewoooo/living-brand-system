@@ -1,5 +1,5 @@
-import { detectLogoRegion } from '@/features/review/logo-geometry'
-import type { RuleChecker } from './types'
+import type { RuleChecker } from '../types'
+import { detectLogoRegion } from './logo-geometry'
 
 // 로고 최대변이 프레임 대비 이 비율 미만이면 "너무 작음" (러프 knob — 나중 절대 px/규정값으로 정교화).
 const MIN_FRACTION = 0.08

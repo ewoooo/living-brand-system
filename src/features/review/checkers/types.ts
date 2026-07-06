@@ -1,4 +1,4 @@
-import type { Rgb, Swatch } from '@/features/review/color-check'
+import type { Rgb, Swatch } from '@/features/review/checkers/color/color-check'
 
 /** 기준(expected) 대비 측정값(actual)을 분리해 실은 구조화 필드. */
 export interface RuleMetric {

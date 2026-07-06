@@ -1,4 +1,4 @@
-import type { Rgb } from '@/features/review/color-check'
+import type { Rgb } from './color-check'
 
 /**
  * 픽셀 색 계산 공용 유틸 (순수). checker들이 가져다 조합한다.

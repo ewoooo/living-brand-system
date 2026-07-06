@@ -1,5 +1,5 @@
-import { lightness, saturation } from '@/features/review/color-metrics'
-import type { RuleChecker } from './types'
+import { lightness, saturation } from '../color/color-metrics'
+import type { RuleChecker } from '../types'
 
 const MIN_LIGHTNESS = 0.7 // 밝음
 const MAX_SATURATION = 0.25 // 무채색

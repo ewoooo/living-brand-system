@@ -1,5 +1,5 @@
 import { cache } from 'react'
-import type { Swatch, SwatchFamily } from '@/features/review/color-check'
+import type { Swatch, SwatchFamily } from '@/features/review/checkers/color/color-check'
 import { listReviewPaletteColors } from '@/features/review/repositories/review-palette.payload.repository'
 
 function swatchFamily(colorGroup: unknown): SwatchFamily | null {

@@ -1,10 +1,10 @@
-import { colorPairingChecker } from './color-pairing.checker'
-import { colorPaletteChecker } from './color-palette.checker'
-import { imageryBackgroundToneChecker } from './imagery-background-tone.checker'
-import { logoClearSpaceChecker } from './logo-clear-space.checker'
-import { logoMinSizeChecker } from './logo-min-size.checker'
-import { stationaryColorChecker } from './stationary-color.checker'
-import { stationaryFormatChecker } from './stationary-format.checker'
+import { colorPairingChecker } from './color/color-pairing.checker'
+import { colorPaletteChecker } from './color/color-palette.checker'
+import { imageryBackgroundToneChecker } from './imagery/imagery-background-tone.checker'
+import { logoClearSpaceChecker } from './logo/logo-clear-space.checker'
+import { logoMinSizeChecker } from './logo/logo-min-size.checker'
+import { stationaryColorChecker } from './stationary/stationary-color.checker'
+import { stationaryFormatChecker } from './stationary/stationary-format.checker'
 import type { RuleChecker } from './types'
 
 /**

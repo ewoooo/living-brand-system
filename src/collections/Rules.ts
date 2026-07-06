@@ -16,7 +16,7 @@ export const Rules: CollectionConfig = {
 	admin: {
 		useAsTitle: 'key',
 		group: 'Guideline',
-		defaultColumns: ['key', 'title', 'category', 'tier', 'frequency'],
+		defaultColumns: ['key', 'title', 'category', 'tier', 'executor'],
 	},
 	fields: [
 		{
@@ -69,20 +69,6 @@ export const Rules: CollectionConfig = {
 			type: 'select',
 			options: ['deterministic', 'heuristic', 'advisory', 'human'],
 		},
-		{
-			name: 'scope',
-			type: 'select',
-			hasMany: true,
-			options: ['all', 'print', 'screen'],
-		},
-		{
-			name: 'frequency',
-			type: 'number',
-			min: 0,
-			max: 4,
-			admin: { description: '값을 채운 브랜드 수 (0 = domain-default 빈 슬롯)' },
-		},
-		{ name: 'domainDefault', type: 'checkbox', defaultValue: false },
 		{
 			name: 'paramSchema',
 			type: 'textarea',

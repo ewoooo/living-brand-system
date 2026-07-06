@@ -1,6 +1,6 @@
-import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from '@/features/review/color-check'
-import { contrastRatio, dominantColors } from '@/features/review/color-metrics'
-import type { RuleChecker } from './types'
+import type { RuleChecker } from '../types'
+import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from './color-check'
+import { contrastRatio, dominantColors } from './color-metrics'
 
 // 다계열(톤인톤) 근사 시 요구하는 최소 명도 대비 (러프 knob — 방향성 테이블 정교화 전까지).
 const TONE_IN_TONE_MIN_CONTRAST = 1.5
