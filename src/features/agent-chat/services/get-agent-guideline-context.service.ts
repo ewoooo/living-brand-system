@@ -221,10 +221,11 @@ function formatRule(value: GuidelineDocumentRule): string {
 	return `- ${value.key}: ${value.title}`
 }
 
-function getLiveRules(values: (number | Rule)[] | null | undefined): GuidelineDocumentRule[] {
+function getLiveRules(values: GuidelinePage['rules']): GuidelineDocumentRule[] {
 	return (
 		values
-			?.filter((value): value is Rule => typeof value === 'object' && value.status === 'live')
+			?.map((placement) => placement.rule)
+			.filter((rule): rule is Rule => typeof rule === 'object' && rule.status === 'live')
 			.map((rule) => ({
 				key: rule.key,
 				title: rule.title,
