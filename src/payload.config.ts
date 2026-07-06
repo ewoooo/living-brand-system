@@ -22,7 +22,6 @@ import { Plugins } from './collections/Plugins'
 import { Rules } from './collections/Rules'
 import { TemplateAssets } from './collections/TemplateAssets'
 import { TemplateCategories } from './collections/TemplateCategories'
-import { TemplateRules } from './collections/TemplateRules'
 import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
 import { AgentSettings } from './globals/AgentSettings'
@@ -91,7 +90,6 @@ export default buildConfig({
 		BrandTypefaces,
 		ApplicationImages,
 		TemplateCategories,
-		TemplateRules,
 		Templates,
 		TemplateAssets,
 		Plugins,

@@ -96,16 +96,17 @@ export async function prepareTemplateImage(
 
 function getTemplateRules(templateRules: AgentTemplateDocument['templateRules']) {
 	return (templateRules ?? [])
-		.flatMap((rule) => {
-			if (typeof rule === 'number' || rule.status !== 'live') {
+		.flatMap((placement) => {
+			const rule = placement.rule
+			if (!rule || typeof rule === 'number' || rule.status !== 'live') {
 				return []
 			}
 
 			return [
 				{
-					title: rule.title || '',
-					description: rule.description || '',
-					body: rule.body || '',
+					title: rule.titleKo || rule.title || '',
+					description: rule.notes || '',
+					body: placement.body || '',
 				},
 			]
 		})
