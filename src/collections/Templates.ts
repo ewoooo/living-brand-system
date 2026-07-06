@@ -1,10 +1,7 @@
-import { APIError, type CollectionConfig, type Payload } from 'payload'
-import {
-	type AuthorizedImageRef,
-	validateTemplateImages,
-} from '@/features/template-import/utils/validate-authorized-assets'
+import { APIError, type CollectionConfig } from 'payload'
+import { findInvalidAuthorizedRefs } from '@/features/template-import/services/validate-authorized-refs.service'
+import { validateTemplateImages } from '@/features/template-import/utils/validate-authorized-assets'
 import { managerManagedAccess } from '@/lib/auth'
-import { AUTHORIZED_ASSET_COLLECTIONS } from '@/types/json-template'
 import { draftVersions } from './shared'
 
 export const Templates: CollectionConfig = {
@@ -130,43 +127,4 @@ export const Templates: CollectionConfig = {
 			},
 		},
 	],
-}
-
-/** 자기신고된 인가 참조가 실제 해당 컬렉션 문서를 가리키고 src도 그 문서의 URL인지 확인한다. */
-async function findInvalidAuthorizedRefs(
-	payload: Payload,
-	refs: AuthorizedImageRef[],
-): Promise<string[]> {
-	const invalidLabels: string[] = []
-
-	for (const collection of AUTHORIZED_ASSET_COLLECTIONS) {
-		const collectionRefs = refs.filter((ref) => ref.collection === collection)
-
-		if (collectionRefs.length === 0) {
-			continue
-		}
-
-		const found = await payload.find({
-			collection,
-			depth: 0,
-			limit: collectionRefs.length,
-			overrideAccess: true,
-			where: { id: { in: collectionRefs.map((ref) => ref.assetId) } },
-		})
-		const docsById = new Map<number, { url?: string | null }>(
-			(found.docs as { id: number; url?: string | null }[]).map((doc) => [doc.id, doc]),
-		)
-
-		for (const ref of collectionRefs) {
-			const doc = docsById.get(ref.assetId)
-			const srcMatches =
-				doc != null && (ref.src === doc.url || ref.src.startsWith(`/api/${collection}/`))
-
-			if (!srcMatches) {
-				invalidLabels.push(ref.label)
-			}
-		}
-	}
-
-	return invalidLabels
 }

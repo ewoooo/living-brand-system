@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { findGuidelineMetadataGlobal } from '../repositories/guideline-view.payload.repository'
 
 export interface GetGuidelineMetadataOutput {
@@ -11,7 +12,7 @@ export interface GetGuidelineMetadataOutput {
  * Creator UI는 발행된 가이드라인의 문서 메타데이터만 읽는다.
  * 표지, 내비게이션 제목, 푸터 문구는 이 값을 기준으로 조합한다.
  */
-export async function getGuidelineMetadata(): Promise<GetGuidelineMetadataOutput> {
+export const getGuidelineMetadata = cache(async (): Promise<GetGuidelineMetadataOutput> => {
 	try {
 		const guideline = await findGuidelineMetadataGlobal()
 
@@ -29,7 +30,7 @@ export async function getGuidelineMetadata(): Promise<GetGuidelineMetadataOutput
 			issuedLabel: null,
 		}
 	}
-}
+})
 
 function getUploadUrl(value: unknown): string | null {
 	if (!value || typeof value !== 'object' || !('url' in value)) {

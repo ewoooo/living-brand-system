@@ -4,13 +4,8 @@ import {
 	listPublishedPagesBySection,
 } from '../repositories/guideline-view.payload.repository'
 
-export interface GetGuidelineSectionInput {
-	sectionSlug: string
-}
-
 export interface GetGuidelineSectionOutput {
 	title: string
-	description: string | null
 	pages: {
 		id: number
 		title: string
@@ -25,13 +20,9 @@ export interface GetGuidelineSectionOutput {
  * Creator UI는 발행된 섹션과 하위 페이지만 읽는다.
  * 페이지는 섹션 화면에서 한 번에 렌더하므로 page service를 반복 호출하지 않는다.
  */
-export async function getGuidelineSection({
-	sectionSlug,
-}: GetGuidelineSectionInput): Promise<GetGuidelineSectionOutput | null> {
-	if (!sectionSlug) {
-		return null
-	}
-
+export async function getGuidelineSection(
+	sectionSlug: string,
+): Promise<GetGuidelineSectionOutput | null> {
 	try {
 		const section = await findPublishedSectionBySlug(sectionSlug)
 
@@ -43,7 +34,6 @@ export async function getGuidelineSection({
 
 		return {
 			title: section.title,
-			description: section.description || null,
 			pages: pages.map((page) => ({
 				id: page.id,
 				title: page.title,

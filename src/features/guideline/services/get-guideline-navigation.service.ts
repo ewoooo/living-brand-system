@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import {
 	listPublishedPageNavItems,
 	listPublishedSections,
@@ -27,7 +28,7 @@ export interface GetGuidelineNavigationOutput {
  * Creator UI 사이드바는 발행된 가이드라인의 목차 정보만 읽는다.
  * 본문 렌더링은 page/section service가 담당한다.
  */
-export async function getGuidelineNavigation(): Promise<GetGuidelineNavigationOutput> {
+export const getGuidelineNavigation = cache(async (): Promise<GetGuidelineNavigationOutput> => {
 	try {
 		const [metadata, sections, pages] = await Promise.all([
 			getGuidelineMetadata(),
@@ -65,4 +66,4 @@ export async function getGuidelineNavigation(): Promise<GetGuidelineNavigationOu
 			sections: [],
 		}
 	}
-}
+})

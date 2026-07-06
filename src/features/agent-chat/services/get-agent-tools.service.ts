@@ -6,54 +6,23 @@ import {
 	findEnabledAgentSkillByName,
 } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import { AgentConfigurationError } from '@/lib/errors'
-import {
-	AUTHORIZED_ASSET_COLLECTIONS,
-	collectOpenSlotElements,
-	type JsonSlotElement,
-	type JsonTemplate,
-	jsonTemplateSchema,
-} from '@/types/json-template'
 import { findAgentRules } from '../repositories/agent-guideline-context.payload.repository'
 import {
-	type AgentTemplateDocument,
-	findAgentTemplate,
-	listAgentTemplates,
-} from '../repositories/agent-template.payload.repository'
+	findTemplatesForRequest,
+	prepareTemplateImage,
+	templateSlotValueSchema,
+} from './agent-template-request.service'
 import {
 	listAgentGuidelinePages,
 	readAgentGuidelineDocument,
 	searchAgentGuidelines,
 } from './get-agent-guideline-context.service'
 
+export type { AgentTemplateImageAttachment } from './agent-template-request.service'
+
 const guidelineToolContextSchema = z.object({
 	user: z.unknown(),
 })
-
-const templateSlotValueSchema = z.object({
-	src: z.string().max(2000).optional(),
-	text: z.string().max(1000).optional(),
-})
-
-const TEMPLATE_QUERY_STOP_WORDS = new Set([
-	'관련',
-	'관련해서',
-	'발행된',
-	'사용',
-	'사용할',
-	'있는',
-	'템플릿',
-	'template',
-	'templates',
-])
-
-/** prepareTemplateImage 툴 출력 계약 — 챗 첨부 UI가 이 타입을 그대로 소비한다 (이중 정의 금지). */
-export interface AgentTemplateImageAttachment {
-	type: 'template-image'
-	templateId: number
-	name: string
-	template: JsonTemplate
-	values: Record<string, z.infer<typeof templateSlotValueSchema>>
-}
 
 /**
  * Agent answer stream에 전달할 AI SDK tool set을 만든다.
@@ -150,175 +119,4 @@ function formatAgentSkillInstructions(skill: {
 	return [skill.body, references ? `# Skill references\n\n${references}` : null]
 		.filter(Boolean)
 		.join('\n\n')
-}
-
-async function findTemplatesForRequest(user: unknown, query?: string) {
-	const templates = await listAgentTemplates(user)
-	const normalizedQuery = query?.trim().toLowerCase()
-
-	return templates
-		.map((template) => {
-			const parsed = jsonTemplateSchema.safeParse(template.jsonTemplate)
-			return parsed.success
-				? {
-						id: template.id,
-						name: template.name,
-						description: template.description || '',
-						rules: getTemplateRules(template.templateRules),
-						slots: getOpenSlots(parsed.data),
-					}
-				: null
-		})
-		.filter((template): template is NonNullable<typeof template> => Boolean(template))
-		.filter((template) => {
-			if (!normalizedQuery) {
-				return true
-			}
-
-			return matchesTemplateQuery(
-				[
-					template.name,
-					template.description,
-					...template.rules.flatMap((rule) => [rule.title, rule.description, rule.body]),
-					...template.slots.map((slot) => slot.label),
-				].join(' '),
-				normalizedQuery,
-			)
-		})
-		.slice(0, 10)
-}
-
-function matchesTemplateQuery(searchText: string, normalizedQuery: string) {
-	const haystack = searchText.toLowerCase()
-
-	return (
-		haystack.includes(normalizedQuery) ||
-		normalizedQuery
-			.split(/[^\p{Letter}\p{Number}]+/u)
-			.filter((token) => token.length >= 2 && !TEMPLATE_QUERY_STOP_WORDS.has(token))
-			.some((token) => haystack.includes(token))
-	)
-}
-
-function getTemplateRules(templateRules: AgentTemplateDocument['templateRules']) {
-	return (templateRules ?? [])
-		.flatMap((rule) => {
-			if (typeof rule === 'number' || rule.status !== 'live') {
-				return []
-			}
-
-			return [
-				{
-					title: rule.title || '',
-					description: rule.description || '',
-					body: rule.body || '',
-				},
-			]
-		})
-		.filter((rule) => rule.title || rule.description || rule.body)
-}
-
-async function prepareTemplateImage(
-	user: unknown,
-	templateId: number,
-	values: Record<string, z.infer<typeof templateSlotValueSchema>>,
-): Promise<AgentTemplateImageAttachment> {
-	const template = await findAgentTemplate(user, templateId)
-	const parsed = jsonTemplateSchema.safeParse(template?.jsonTemplate)
-
-	if (!template || !parsed.success) {
-		throw new AgentConfigurationError('Template is not available.')
-	}
-
-	return {
-		type: 'template-image' as const,
-		templateId: template.id,
-		name: template.name,
-		template: parsed.data,
-		values: filterSlotValues(parsed.data, values),
-	}
-}
-
-type AgentSlotSummary =
-	| {
-			id: string
-			label: string
-			type: 'text'
-			defaultText: string
-			inputFormat: 'free' | 'number' | 'email' | 'date'
-			maxLength: number | undefined
-			maxLines: number | undefined
-	  }
-	| { id: string; label: string; type: 'image' }
-
-function getOpenSlots(template: JsonTemplate): AgentSlotSummary[] {
-	// 스택 자식 슬롯까지 포함해야 하므로 반드시 공유 수집기를 쓴다 (순회 규칙 단일화).
-	return collectOpenSlotElements(template.elements).flatMap((element): AgentSlotSummary[] => {
-		if (element.type === 'text') {
-			return [
-				{
-					id: element.id,
-					label: element.slotLabel ?? element.id,
-					type: 'text' as const,
-					defaultText: element.text,
-					inputFormat: element.inputFormat,
-					maxLength: element.maxLength,
-					maxLines: element.maxLines,
-				},
-			]
-		}
-		if (element.type === 'image') {
-			return [
-				{
-					id: element.id,
-					label: element.slotLabel ?? element.id,
-					type: 'image' as const,
-				},
-			]
-		}
-
-		return []
-	})
-}
-
-/** LLM이 준 이미지 src는 인가 에셋 컬렉션의 same-origin 경로만 허용한다 — 외부 URL은 브랜드 통제 우회이자 유출 채널이다. */
-function isAuthorizedAssetSrc(src: string): boolean {
-	return AUTHORIZED_ASSET_COLLECTIONS.some((collection) => src.startsWith(`/api/${collection}/`))
-}
-
-function filterSlotValues(
-	template: JsonTemplate,
-	values: Record<string, z.infer<typeof templateSlotValueSchema>>,
-) {
-	const result: Record<string, z.infer<typeof templateSlotValueSchema>> = {}
-
-	for (const element of collectOpenSlotElements(template.elements)) {
-		if (!(element.id in values)) {
-			continue
-		}
-
-		const value = values[element.id]
-
-		if (element.type === 'text' && typeof value.text === 'string') {
-			result[element.id] = { text: fitTextValue(element, value.text) }
-			continue
-		}
-
-		if (
-			element.type === 'image' &&
-			typeof value.src === 'string' &&
-			isAuthorizedAssetSrc(value.src)
-		) {
-			result[element.id] = { src: value.src }
-		}
-	}
-
-	return result
-}
-
-function fitTextValue(element: Extract<JsonSlotElement, { type: 'text' }>, value: string) {
-	const maxLength = element.maxLength ?? value.length
-	const text = value.slice(0, maxLength)
-
-	return element.maxLines ? text.split('\n').slice(0, element.maxLines).join('\n') : text
 }

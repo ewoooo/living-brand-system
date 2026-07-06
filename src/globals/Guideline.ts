@@ -17,7 +17,6 @@ export const Guideline: GlobalConfig = {
 			name: 'companyName',
 			type: 'text',
 			required: true,
-			index: true,
 		},
 		{
 			name: 'documentTitle',

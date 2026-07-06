@@ -20,7 +20,6 @@ export const imageryBackgroundToneChecker: RuleChecker = {
 			fulfillment: Math.round(score * 100),
 			detail: `평균 밝기 ${(avgL * 100).toFixed(0)}% · 채도 ${(avgS * 100).toFixed(0)}% (밝은 무채색 기준)`,
 			metric: {
-				label: '배경 톤',
 				expected: `밝기 ${MIN_LIGHTNESS * 100}% 이상·채도 ${MAX_SATURATION * 100}% 이하`,
 				actual: `밝기 ${(avgL * 100).toFixed(0)}%·채도 ${(avgS * 100).toFixed(0)}%`,
 			},

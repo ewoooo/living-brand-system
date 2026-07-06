@@ -1,9 +1,4 @@
-import type {
-	JsonFlowElement,
-	JsonRectElement,
-	JsonTemplate,
-	JsonTemplateElement,
-} from '@/types/json-template'
+import type { JsonFlowElement, JsonTemplate, JsonTemplateElement } from '@/types/json-template'
 import type { FigmaEffect, FigmaNode, FigmaPaint } from '../repositories/figma.rest.repository'
 
 /**
@@ -137,24 +132,9 @@ export function convertFigmaNodeTree(
 			}
 
 			if (child.type === 'RECTANGLE') {
-				const fill = extractFillCss(child.fills ?? [])
-				const effects = extractEffectsCss(child.effects ?? [])
+				const rectProps = rectPropsFromNode(child)
 
-				return fill
-					? [
-							{
-								id: nextId('rect'),
-								type: 'rect',
-								locked: true,
-								...size,
-								fill,
-								opacity: child.opacity ?? 1,
-								borderRadius: child.cornerRadius ?? 0,
-								...(effects.boxShadow ? { boxShadow: effects.boxShadow } : {}),
-								...(effects.filter ? { filter: effects.filter } : {}),
-							},
-						]
-					: []
+				return rectProps ? [{ id: nextId('rect'), ...size, ...rectProps }] : []
 			}
 
 			return []
@@ -174,7 +154,6 @@ export function convertFigmaNodeTree(
 				width: Math.round(box.width),
 				height: Math.round(box.height),
 			}
-			const effects = extractEffectsCss(child.effects ?? [])
 
 			if (child.type === 'TEXT') {
 				elements.push({
@@ -219,23 +198,10 @@ export function convertFigmaNodeTree(
 			}
 
 			if (child.type === 'RECTANGLE' || CONTAINER_TYPES.has(child.type)) {
-				const fill = extractFillCss(child.fills ?? [])
+				const rectProps = rectPropsFromNode(child)
 
-				if (fill) {
-					const rect: JsonRectElement = {
-						id: nextId('rect'),
-						type: 'rect',
-						zIndex: nextZ(),
-						...frame,
-						fill,
-						opacity: child.opacity ?? 1,
-						borderRadius: child.cornerRadius ?? 0,
-						// 슬롯 기본값: 배경·장식은 고정한다.
-						locked: true,
-						...(effects.boxShadow ? { boxShadow: effects.boxShadow } : {}),
-						...(effects.filter ? { filter: effects.filter } : {}),
-					}
-					elements.push(rect)
+				if (rectProps) {
+					elements.push({ id: nextId('rect'), zIndex: nextZ(), ...frame, ...rectProps })
 				}
 
 				if (CONTAINER_TYPES.has(child.type)) {
@@ -369,6 +335,28 @@ function imagePropsFromNode(node: FigmaNode, asset: ImportedAsset, slotLabel: st
 		borderRadius: node.cornerRadius ?? 0,
 		locked: false,
 		slotLabel,
+		...(effects.boxShadow ? { boxShadow: effects.boxShadow } : {}),
+		...(effects.filter ? { filter: effects.filter } : {}),
+	}
+}
+
+/** fill이 없는 노드는 rect로 만들지 않는다 — null을 돌려주면 호출자가 요소 생성을 건너뛴다. */
+function rectPropsFromNode(node: FigmaNode) {
+	const fill = extractFillCss(node.fills ?? [])
+
+	if (!fill) {
+		return null
+	}
+
+	const effects = extractEffectsCss(node.effects ?? [])
+
+	return {
+		type: 'rect' as const,
+		fill,
+		opacity: node.opacity ?? 1,
+		borderRadius: node.cornerRadius ?? 0,
+		// 슬롯 기본값: 배경·장식은 고정한다.
+		locked: true,
 		...(effects.boxShadow ? { boxShadow: effects.boxShadow } : {}),
 		...(effects.filter ? { filter: effects.filter } : {}),
 	}

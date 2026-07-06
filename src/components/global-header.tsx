@@ -142,9 +142,7 @@ export function GlobalHeader({
 		<header className="z-10 flex shrink-0 bg-white dark:bg-black">
 			<HeaderHead className="flex-1" />
 			<section className="ml-auto p-4 flex gap-2 items-center">
-				{LOGIN && (
-					<HeaderLinkBlock href={LOGIN.href} isActive={false} label={LOGIN.label} />
-				)}
+				<HeaderLinkBlock href={LOGIN.href} isActive={false} label={LOGIN.label} />
 				<GuidelineSearch sections={guidelineSections} />
 				<SidebarTrigger variant="default" size="default">
 					Ask AI
