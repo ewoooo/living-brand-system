@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, use, useCallback, useMemo, useState } from 'react'
 import { DEFAULT_CONTENT_FLAGS, type ImageContentFlags } from '@/features/review/content-gate'
 import type { RuleOutcome } from '@/features/review/services/run-review.service'
 
@@ -75,14 +75,16 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 	}, [])
 
 	const addFiles = useCallback((files: FileList | File[]) => {
-		const added = Array.from(files)
-			.filter((file) => file.type.startsWith('image/'))
-			.map((file) => ({
+		const added: ReviewImage[] = []
+		for (const file of files) {
+			if (!file.type.startsWith('image/')) continue
+			added.push({
 				id: crypto.randomUUID(),
 				url: URL.createObjectURL(file),
 				name: file.name,
 				file,
-			}))
+			})
+		}
 		if (added.length === 0) return
 		// 최신이 좌측으로 오도록 앞에 쌓는다
 		setImages((prev) => [...added, ...prev])
@@ -136,7 +138,7 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 }
 
 export function useReviewImages() {
-	const context = useContext(ReviewImageContext)
+	const context = use(ReviewImageContext)
 	if (!context) {
 		throw new Error('useReviewImages must be used within ReviewImageProvider')
 	}

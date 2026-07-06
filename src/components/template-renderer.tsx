@@ -1,3 +1,4 @@
+import NextImage from 'next/image'
 import type { CSSProperties } from 'react'
 import type {
 	JsonFlowElement,
@@ -254,9 +255,40 @@ function textBoxCss(element: TextLike): CSSProperties {
 function imageCss(element: ImageLike): CSSProperties {
 	return {
 		objectFit: element.objectFit,
+	}
+}
+
+function imageFrameCss(style: CSSProperties, element: ImageLike): CSSProperties {
+	return {
+		...style,
+		position: style.position ?? 'relative',
+		overflow: 'hidden',
 		borderRadius: element.borderRadius,
 		boxShadow: element.boxShadow,
 		filter: element.filter,
+	}
+}
+
+function maskCss(
+	style: CSSProperties,
+	element: ImageLike,
+	src: string,
+	maskSize: CSSProperties['maskSize'],
+): CSSProperties {
+	return {
+		...style,
+		borderRadius: element.borderRadius,
+		boxShadow: element.boxShadow,
+		backgroundColor: element.color,
+		filter: element.filter,
+		WebkitMaskImage: `url("${src}")`,
+		maskImage: `url("${src}")`,
+		WebkitMaskPosition: 'center',
+		maskPosition: 'center',
+		WebkitMaskRepeat: 'no-repeat',
+		maskRepeat: 'no-repeat',
+		WebkitMaskSize: maskSize,
+		maskSize,
 	}
 }
 
@@ -272,30 +304,13 @@ function ImageView({
 	if (element.color) {
 		const maskSize = element.objectFit === 'fill' ? '100% 100%' : element.objectFit
 
-		return (
-			<div
-				style={{
-					...style,
-					borderRadius: element.borderRadius,
-					boxShadow: element.boxShadow,
-					backgroundColor: element.color,
-					filter: element.filter,
-					WebkitMaskImage: `url("${src}")`,
-					maskImage: `url("${src}")`,
-					WebkitMaskPosition: 'center',
-					maskPosition: 'center',
-					WebkitMaskRepeat: 'no-repeat',
-					maskRepeat: 'no-repeat',
-					WebkitMaskSize: maskSize,
-					maskSize,
-				}}
-			/>
-		)
+		return <div style={maskCss(style, element, src, maskSize)} />
 	}
 
 	return (
-		// biome-ignore lint/performance/noImgElement: 템플릿 원본 픽셀 그대로 그려야 하므로 next/image 최적화를 쓰지 않는다.
-		<img alt="" src={src} style={{ ...style, ...imageCss(element) }} />
+		<div style={imageFrameCss(style, element)}>
+			<NextImage alt="" fill sizes="100vw" src={src} style={imageCss(element)} unoptimized />
+		</div>
 	)
 }
 

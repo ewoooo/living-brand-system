@@ -56,6 +56,8 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 			{/* 1행(항상): icon | 국문 룰명 | 불합 이유. 행 클릭으로 2행(변수명·가이드라인) 토글. */}
 			<tr
 				id={anchorId ?? undefined}
+				aria-expanded={open}
+				aria-label={`${rule.titleKo} 상세 보기`}
 				onClick={() => setOpen((value) => !value)}
 				onKeyDown={(event) => {
 					if (event.key === 'Enter' || event.key === ' ') {
@@ -135,8 +137,9 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 			{/* 2행(토글 시): (빈칸) | 변수명 badge | 관련 가이드라인. 1행 열과 정렬. */}
 			{open && (
 				<tr>
-					<td />
-					<td />
+					<td colSpan={2}>
+						<span className="sr-only">상세 정보</span>
+					</td>
 					<td className="w-56 pt-0 pb-3 pr-4 align-top">
 						<code className="inline-flex items-center whitespace-nowrap rounded-md bg-secondary px-2 py-0.5 font-mono text-[11px] text-secondary-foreground">
 							{rule.key}

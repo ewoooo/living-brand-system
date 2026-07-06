@@ -40,7 +40,11 @@ export function GuidelineSideNavigation({
 }) {
 	const navigationContent =
 		navigation.sections.length > 0 ? (
-			navigation.sections.map((section) => <GuidelineSection key={section.id} {...section} />)
+			navigation.sections.map((section) => (
+				<div key={section.id}>
+					<GuidelineSection {...section} />
+				</div>
+			))
 		) : (
 			<div className="px-4 py-2 text-neutral-400 text-xs">No pages</div>
 		)
