@@ -1,6 +1,6 @@
 /**
  * 이미지에 어떤 디자인 요소가 포함됐는지 나타내는 플래그. 유저가 업로드 후 체크로 선택한다.
- * 현재 검수 로직엔 미반영(전 룰 검수) — 섹션 게이팅을 붙일 때 다시 소비한다.
+ * 서버 검수(run-review.service)가 이 플래그로 요소 종속 룰의 실행 여부를 정한다.
  */
 export interface ImageContentFlags {
 	logo: boolean
@@ -22,4 +22,18 @@ export const CONTENT_FLAG_LABELS: Record<keyof ImageContentFlags, string> = {
 	typography: 'Typography',
 	illustration: 'Illustration',
 	photography: 'Photography',
+}
+
+/** 플래그가 지배하는 룰 key 접두사. 여기 없는 접두사(color, application 등)는 항상 검수한다. */
+const FLAG_BY_RULE_PREFIX: [prefix: string, flag: keyof ImageContentFlags][] = [
+	['logo.', 'logo'],
+	['typography.', 'typography'],
+	['illustration.', 'illustration'],
+	['imagery.', 'photography'],
+]
+
+/** 룰이 요소 종속이면 해당 플래그가 켜져 있을 때만 검수한다. */
+export function shouldCheckRule(ruleKey: string, flags: ImageContentFlags): boolean {
+	const gate = FLAG_BY_RULE_PREFIX.find(([prefix]) => ruleKey.startsWith(prefix))
+	return gate ? flags[gate[1]] : true
 }
