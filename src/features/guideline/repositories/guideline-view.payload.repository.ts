@@ -79,7 +79,6 @@ export async function findPublishedSectionBySlug(sectionSlug: string) {
 		draft: false,
 		select: {
 			title: true,
-			description: true,
 		},
 	})
 

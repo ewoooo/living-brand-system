@@ -37,7 +37,9 @@ export function CreateSideNavigation({ navigation }: { navigation: GetCreateNavi
 	const navigationContent =
 		navigation.categories.length > 0 ? (
 			navigation.categories.map((category) => (
-				<CreateCategory key={category.id} {...category} />
+				<div key={category.id}>
+					<CreateCategory {...category} />
+				</div>
 			))
 		) : (
 			<SidebarGroup>

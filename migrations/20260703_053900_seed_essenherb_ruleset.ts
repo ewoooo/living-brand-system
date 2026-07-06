@@ -1,5 +1,5 @@
-import type { MigrateDownArgs, MigrateUpArgs } from '@payloadcms/db-postgres'
-import ruleset from '../src/features/review/data/essenherb-ruleset.json'
+import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-postgres'
+import ruleset from './data/essenherb-ruleset.json'
 
 /**
  * essenherb 룰셋 데이터 시드 (JSON → sections / guideline-pages / rules(+titleKo) / rule-bindings).
@@ -62,7 +62,7 @@ type Section = Chapter['sections'][number]
 type Page = Section['pages'][number]
 type Rule = Page['rules'][number]
 
-export async function up({ payload, req }: MigrateUpArgs): Promise<void> {
+export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 	// 1) sections upsert (slug 자연키). slug → id 매핑 확보.
 	const sectionIdBySlug = new Map<string, number>()
 	let sectionOrder = 0
@@ -182,6 +182,8 @@ export async function up({ payload, req }: MigrateUpArgs): Promise<void> {
 	}
 
 	// 4) rule-bindings upsert ((page, rule) 자연키). 배치별 value/evidence.
+	// rule-bindings 컬렉션은 20260706_014821에서 config에서 제거됐다 — fresh DB 재생이 깨지지 않도록
+	// raw SQL로 쓴다 (이 시점엔 053851이 만든 rule_bindings 테이블이 존재한다).
 	for (const chapter of ruleset.chapters) {
 		for (const section of chapter.sections) {
 			for (const page of section.pages as Page[]) {
@@ -190,39 +192,22 @@ export async function up({ payload, req }: MigrateUpArgs): Promise<void> {
 				for (const rule of page.rules as Rule[]) {
 					const ruleId = ruleIdByKey.get(rule.key)
 					if (ruleId === undefined) throw new Error(`rule id 없음: ${rule.key}`)
-					const data = {
-						page: pageId,
-						rule: ruleId,
-						value: rule.value || null,
-						evidence: rule.evidence || null,
-					}
-					const found = await payload.find({
-						collection: 'rule-bindings',
-						where: { and: [{ page: { equals: pageId } }, { rule: { equals: ruleId } }] },
-						limit: 1,
-						depth: 0,
-						req,
-					})
-					if (found.docs[0]) {
-						await payload.update({
-							collection: 'rule-bindings',
-							id: found.docs[0].id,
-							data: { value: data.value, evidence: data.evidence },
-							req,
-						})
-					} else {
-						await payload.create({ collection: 'rule-bindings', data, req })
-					}
+					await db.execute(sql`
+						INSERT INTO rule_bindings (page_id, rule_id, value, evidence)
+						SELECT ${pageId}, ${ruleId}, ${rule.value || null}, ${rule.evidence || null}
+						WHERE NOT EXISTS (
+							SELECT 1 FROM rule_bindings WHERE page_id = ${pageId} AND rule_id = ${ruleId}
+						)`)
 				}
 			}
 		}
 	}
 }
 
-export async function down({ payload, req }: MigrateDownArgs): Promise<void> {
+export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
 	// 비파괴 원칙: 명백히 seed가 만든 것만 제거. rules/sections는 사전 존재 가능 → 남긴다.
 	// rule-bindings 전체(이 마이그레이션 전용 테이블) + 'p-{n}' 페이지만 삭제.
-	await payload.delete({ collection: 'rule-bindings', where: {}, req })
+	await db.execute(sql`DELETE FROM rule_bindings`)
 	const pageSlugs = ruleset.chapters.flatMap((c) =>
 		c.sections.flatMap((s) => (s.pages as Page[]).map((p) => pageSlug(p.page))),
 	)

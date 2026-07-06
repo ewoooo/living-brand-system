@@ -1,6 +1,6 @@
 import { ReviewSections } from '@/features/review/components/rule-tables'
-import { getReviewContent } from '@/features/review/navigation'
+import { getReviewRuleset } from '@/features/review/services/get-review-ruleset.service'
 
-export default function ReviewPage() {
-	return <ReviewSections chapters={getReviewContent()} />
+export default async function ReviewPage() {
+	return <ReviewSections sections={await getReviewRuleset()} />
 }

@@ -26,7 +26,6 @@ export const logoMinSizeChecker: RuleChecker = {
 			fulfillment: Math.round(Math.min(frac / MIN_FRACTION, 1) * 1000) / 10,
 			detail: `로고 최대변 ${(frac * 100).toFixed(0)}% / 최소 ${MIN_FRACTION * 100}% (프레임 대비, 러프)`,
 			metric: {
-				label: '프레임 대비 크기',
 				expected: `${MIN_FRACTION * 100}%`,
 				actual: `${(frac * 100).toFixed(0)}%`,
 			},

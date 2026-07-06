@@ -1,3 +1,5 @@
+import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical'
+import { convertLexicalToPlaintext } from '@payloadcms/richtext-lexical/plaintext'
 import type { ApplicationImage, BrandColor, GuidelinePage, Rule, Section } from '@/payload-types'
 import {
 	type AgentGuidelineDocument,
@@ -15,8 +17,6 @@ interface GuidelineSearchInput {
 }
 
 type GuidelineDocumentCollection = 'guideline-pages' | 'sections'
-
-type GuidelineSearchResult = AgentGuidelineSearchResult
 
 interface GuidelinePageListResult {
 	title: string
@@ -83,7 +83,7 @@ export async function listAgentGuidelinePages(user: unknown): Promise<GuidelineP
 export function searchAgentGuidelines(
 	user: unknown,
 	input: GuidelineSearchInput,
-): Promise<GuidelineSearchResult[]> {
+): Promise<AgentGuidelineSearchResult[]> {
 	const query = input.query.trim()
 
 	return query ? searchGuidelineDocuments(user, query) : Promise.resolve([])
@@ -221,10 +221,11 @@ function formatRule(value: GuidelineDocumentRule): string {
 	return `- ${value.key}: ${value.title}`
 }
 
-function getLiveRules(values: (number | Rule)[] | null | undefined): GuidelineDocumentRule[] {
+function getLiveRules(values: GuidelinePage['rules']): GuidelineDocumentRule[] {
 	return (
 		values
-			?.filter((value): value is Rule => typeof value === 'object' && value.status === 'live')
+			?.map((placement) => placement.rule)
+			.filter((rule): rule is Rule => typeof rule === 'object' && rule.status === 'live')
 			.map((rule) => ({
 				key: rule.key,
 				title: rule.title,
@@ -250,25 +251,10 @@ function getSectionSlug(value: number | Section): string | null {
 }
 
 export function extractTextFromLexical(value: unknown): string {
-	return collectText(value).join(' ').replace(/\s+/g, ' ').trim()
-}
-
-function collectText(value: unknown): string[] {
-	if (!value || typeof value !== 'object') {
-		return []
-	}
-
-	if (Array.isArray(value)) {
-		return value.flatMap(collectText)
-	}
-
-	const node = value as { children?: unknown; root?: unknown; text?: unknown }
-
-	return [
-		typeof node.text === 'string' ? node.text : null,
-		...(node.root ? collectText(node.root) : []),
-		...(Array.isArray(node.children) ? collectText(node.children) : []),
-	].filter((item): item is string => Boolean(item))
+	// agent 컨텍스트용 한 줄 텍스트 — 블록 구분 개행은 공백으로 접는다.
+	return convertLexicalToPlaintext({ data: value as SerializedEditorState })
+		.replace(/\s+/g, ' ')
+		.trim()
 }
 
 function compact(values: (string | null | undefined)[]): string[] {

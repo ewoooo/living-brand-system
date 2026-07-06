@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { Forbidden } from 'payload'
+import { AssetAccessDeniedError } from '@/lib/errors'
 import { type JsonTemplate, jsonTemplateSchema } from '@/types/json-template'
 import {
 	downloadFigmaImage,
@@ -77,7 +77,7 @@ export async function convertFigmaFrame(
 				return { assetId: asset.id, src: asset.url }
 			} catch (error) {
 				// 권한 거부는 접근 제어 결과이므로 삼키지 않는다 — 라우트가 403으로 변환한다.
-				if (error instanceof Forbidden) {
+				if (error instanceof AssetAccessDeniedError) {
 					throw error
 				}
 				// 그 외 실패는 조각 하나가 변환 전체를 막지 않게 한다. 빠진 노드는 결과로 보고한다.

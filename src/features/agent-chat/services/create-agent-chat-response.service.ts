@@ -1,5 +1,9 @@
 import { createAgentUIStreamResponse, safeValidateUIMessages } from 'ai'
-import { type AgentChatMessage, agentChatAgent } from '@/agents/agent-chat.agent'
+import {
+	type AgentChatMessage,
+	agentChatAgent,
+	assertAgentChatProviderConfigured,
+} from '@/agents/agent-chat.agent'
 
 export type { AgentChatMessage }
 
@@ -20,19 +24,18 @@ export function validateAgentChatMessages(messages: unknown) {
  * Payload와 provider I/O는 agent-chat agent가 prepareCall과 tool 실행 시점에 맡는다.
  */
 export function createAgentChatResponse(input: {
-	locale?: 'ko' | 'en'
 	messages: AgentChatMessage[]
 	pagePath?: string
-	requestId: string
 	user: unknown
 }) {
+	// stream 시작 전에 동기로 검증해야 route가 설정 오류를 HTTP 상태로 매핑할 수 있다.
+	assertAgentChatProviderConfigured()
+
 	return createAgentUIStreamResponse({
 		agent: agentChatAgent,
 		uiMessages: input.messages,
 		options: {
-			locale: input.locale,
 			pagePath: input.pagePath,
-			requestId: input.requestId,
 			user: input.user,
 		},
 		onError: () => 'Agent response failed.',

@@ -4,17 +4,22 @@ import { DEFAULT_LOCALE, FALLBACK_LOCALE } from '@/lib/locale'
 import type { Template } from '@/payload-types'
 
 type AgentTemplateRuleDocument = {
-	body?: null | string
-	description?: null | string
 	status?: null | string
 	title?: null | string
+	titleKo?: null | string
+	notes?: null | string
+}
+
+type AgentTemplateRulePlacement = {
+	body?: null | string
+	rule?: null | number | AgentTemplateRuleDocument
 }
 
 export type AgentTemplateDocument = Pick<
 	Template,
 	'description' | 'id' | 'jsonTemplate' | 'name'
 > & {
-	templateRules?: (number | AgentTemplateRuleDocument)[] | null
+	templateRules?: AgentTemplateRulePlacement[] | null
 }
 
 /** 두 조회가 공유하는 published 템플릿 질의 기본값 — user 컨텍스트로 access를 강제한다. */

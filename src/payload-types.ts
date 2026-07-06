@@ -75,14 +75,12 @@ export interface Config {
     'brand-typefaces': BrandTypeface;
     'application-images': ApplicationImage;
     'template-categories': TemplateCategory;
-    'template-rules': TemplateRule;
     templates: Template;
     'template-assets': TemplateAsset;
     plugins: Plugin;
     'agent-skills': AgentSkill;
     sections: Section;
     'guideline-pages': GuidelinePage;
-    'rule-bindings': RuleBinding;
     search: Search;
     'payload-mcp-api-keys': PayloadMcpApiKey;
     'payload-kv': PayloadKv;
@@ -107,14 +105,12 @@ export interface Config {
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
     'template-categories': TemplateCategoriesSelect<false> | TemplateCategoriesSelect<true>;
-    'template-rules': TemplateRulesSelect<false> | TemplateRulesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
     plugins: PluginsSelect<false> | PluginsSelect<true>;
     'agent-skills': AgentSkillsSelect<false> | AgentSkillsSelect<true>;
     sections: SectionsSelect<false> | SectionsSelect<true>;
     'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
-    'rule-bindings': RuleBindingsSelect<false> | RuleBindingsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
     'payload-mcp-api-keys': PayloadMcpApiKeysSelect<false> | PayloadMcpApiKeysSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -424,7 +420,16 @@ export interface Template {
   /**
    * Agent가 이 템플릿으로 이미지를 만들 때 함께 참고할 룰입니다.
    */
-  templateRules?: (number | TemplateRule)[] | null;
+  templateRules?:
+    | {
+        rule: number | Rule;
+        /**
+         * 이 템플릿에서 해당 룰을 Agent가 적용할 때 참고할 지침입니다.
+         */
+        body: string;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * 임포트에 사용한 Figma URL 원문입니다. 출처 기록용이며 재동기화하지 않습니다.
    */
@@ -432,24 +437,6 @@ export interface Template {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
-}
-/**
- * Agent가 템플릿으로 산출물을 만들 때 참고하는 생성 지침입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "template-rules".
- */
-export interface TemplateRule {
-  id: number;
-  title: string;
-  description?: string | null;
-  /**
-   * 템플릿 선택, 슬롯 채우기, 생성 응답 시 따라야 할 지침입니다.
-   */
-  body: string;
-  status?: ('draft' | 'live' | 'archived') | null;
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * 템플릿 임포트 시 저장되는 이미지 조각입니다. 직접 편집하지 않습니다.
@@ -626,9 +613,26 @@ export interface GuidelinePage {
     [k: string]: unknown;
   } | null;
   /**
-   * 이 페이지에서 설명하거나 적용하는 live 규칙입니다.
+   * 이 페이지에서 설명하거나 적용하는 룰과 브랜드 구체 값입니다.
    */
-  rules?: (number | Rule)[] | null;
+  rules?:
+    | {
+        rule: number | Rule;
+        /**
+         * 이 페이지에서의 브랜드 구체 값. 비어 있을 수 있습니다.
+         */
+        value?: string | null;
+        /**
+         * 가이드라인 원문 근거(출처).
+         */
+        evidence?: string | null;
+        /**
+         * 가이드라인 원문 PDF 페이지 번호입니다.
+         */
+        sourcePage?: number | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * 사이드바 내비게이션과 URL에 사용할 상위 섹션입니다.
    */
@@ -707,33 +711,6 @@ export interface ColorPaletteBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'colorPalette';
-}
-/**
- * 가이드라인 페이지의 룰 배치에 할당된 브랜드 구체 값(value)과 근거(evidence)입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "rule-bindings".
- */
-export interface RuleBinding {
-  id: number;
-  /**
-   * 이 값이 할당된 가이드라인 페이지입니다.
-   */
-  page: number | GuidelinePage;
-  /**
-   * 값이 채워지는 룰(ruleSpec)입니다.
-   */
-  rule: number | Rule;
-  /**
-   * 이 배치에서의 브랜드 구체 값. 비어 있을 수 있습니다.
-   */
-  value?: string | null;
-  /**
-   * 가이드라인 원문 근거(출처).
-   */
-  evidence?: string | null;
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * This is a collection of automatically created search results. These results are used by the global site search and will be updated automatically as documents in the CMS are created or updated.
@@ -947,10 +924,6 @@ export interface PayloadLockedDocument {
         value: number | TemplateCategory;
       } | null)
     | ({
-        relationTo: 'template-rules';
-        value: number | TemplateRule;
-      } | null)
-    | ({
         relationTo: 'templates';
         value: number | Template;
       } | null)
@@ -973,10 +946,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'guideline-pages';
         value: number | GuidelinePage;
-      } | null)
-    | ({
-        relationTo: 'rule-bindings';
-        value: number | RuleBinding;
       } | null)
     | ({
         relationTo: 'search';
@@ -1192,18 +1161,6 @@ export interface TemplateCategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "template-rules_select".
- */
-export interface TemplateRulesSelect<T extends boolean = true> {
-  title?: T;
-  description?: T;
-  body?: T;
-  status?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "templates_select".
  */
 export interface TemplatesSelect<T extends boolean = true> {
@@ -1211,7 +1168,13 @@ export interface TemplatesSelect<T extends boolean = true> {
   description?: T;
   jsonTemplate?: T;
   category?: T;
-  templateRules?: T;
+  templateRules?:
+    | T
+    | {
+        rule?: T;
+        body?: T;
+        id?: T;
+      };
   sourceUrl?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1291,7 +1254,15 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
   generateSlug?: T;
   slug?: T;
   description?: T;
-  rules?: T;
+  rules?:
+    | T
+    | {
+        rule?: T;
+        value?: T;
+        evidence?: T;
+        sourcePage?: T;
+        id?: T;
+      };
   section?: T;
   displayOrder?: T;
   blocks?:
@@ -1344,18 +1315,6 @@ export interface ColorPaletteBlockSelect<T extends boolean = true> {
   colors?: T;
   id?: T;
   blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "rule-bindings_select".
- */
-export interface RuleBindingsSelect<T extends boolean = true> {
-  page?: T;
-  rule?: T;
-  value?: T;
-  evidence?: T;
-  updatedAt?: T;
-  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

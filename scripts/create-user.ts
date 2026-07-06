@@ -8,12 +8,14 @@ import { getPayload } from 'payload'
  *
  * 실행: SEED_EMAIL=you@x.com SEED_PASSWORD='...' pnpm payload run scripts/create-user.ts
  *       (역할 지정: SEED_ROLE=admin|manager|worker, 기본 admin)
+ *       (기존 계정 갱신: SEED_UPDATE_EXISTING=true)
  * 주의: payload run은 top-level await가 끝나야 하므로 함수로 감싸지 않는다.
  */
 
 const email = process.env.SEED_EMAIL
 const password = process.env.SEED_PASSWORD
 const role = (process.env.SEED_ROLE || 'admin') as 'admin' | 'manager' | 'worker'
+const shouldUpdateExisting = process.env.SEED_UPDATE_EXISTING === 'true'
 
 if (!email || !password) {
 	console.error('SEED_EMAIL, SEED_PASSWORD 환경변수가 필요합니다.')
@@ -26,10 +28,21 @@ const existing = await payload.find({
 	collection: 'users',
 	where: { email: { equals: email } },
 	limit: 1,
+	overrideAccess: true,
 })
 
 if (existing.docs.length > 0) {
-	console.log(`이미 존재하는 계정입니다: ${email}`)
+	if (!shouldUpdateExisting) {
+		console.log(`이미 존재하는 계정입니다: ${email}`)
+	} else {
+		await payload.update({
+			collection: 'users',
+			id: existing.docs[0].id,
+			data: { email, password, role },
+			overrideAccess: true,
+		})
+		console.log(`갱신 완료: ${email} (role: ${role})`)
+	}
 } else {
 	await payload.create({
 		collection: 'users',

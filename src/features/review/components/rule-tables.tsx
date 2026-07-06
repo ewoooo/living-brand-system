@@ -6,20 +6,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { getChecker } from '@/features/review/checkers/registry'
 import { getCommentary } from '@/features/review/commentary'
 import { useReviewImages } from '@/features/review/image-context'
-import type { getReviewContent } from '@/features/review/navigation'
+import type {
+	ReviewSection,
+	ReviewRule as Rule,
+} from '@/features/review/services/get-review-ruleset.service'
 import { cn } from '@/lib/utils'
-
-interface Rule {
-	key: string
-	title: string
-	titleKo: string
-	tier: string
-	inCatalog: boolean
-	evidence: string
-	value: string
-}
-
-type ReviewContentChapter = ReturnType<typeof getReviewContent>[number]
 
 /** 한 행 = 한 룰. 섹션 첫 룰에만 sectionLabel·anchorId가 실린다. */
 interface RuleRowData {
@@ -33,15 +24,14 @@ const TIER: Record<
 	string,
 	{ label: string; Icon: ComponentType<{ size?: number }>; desc: string }
 > = {
-	automated: { label: 'automated', Icon: Ruler, desc: '자로 잰 듯 확정된 값 — 믿어도 됨' },
-	assisted: { label: 'assisted', Icon: MagicWand, desc: 'AI가 추론한 값 — 100% 신뢰는 아님' },
-	manual: { label: 'manual', Icon: User, desc: '사람이 직접 판단해야 하는 값' },
+	A: { label: 'A · deterministic', Icon: Ruler, desc: '자로 잰 듯 확정된 값 — 믿어도 됨' },
+	B: { label: 'B · heuristic', Icon: MagicWand, desc: 'AI가 추론한 값 — 100% 신뢰는 아님' },
+	C: { label: 'C · advisory/human', Icon: User, desc: '사람이 직접 판단해야 하는 값' },
 }
 
 const STATUS: Record<string, { label: string; cls: string }> = {
 	pass: { label: 'PASS', cls: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' },
 	fail: { label: 'FAIL', cls: 'bg-rose-500/15 text-rose-700 dark:text-rose-400' },
-	pending: { label: '미개발', cls: 'bg-neutral-500/10 text-muted-foreground' },
 }
 
 function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlug'>) {
@@ -66,6 +56,8 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 			{/* 1행(항상): icon | 국문 룰명 | 불합 이유. 행 클릭으로 2행(변수명·가이드라인) 토글. */}
 			<tr
 				id={anchorId ?? undefined}
+				aria-expanded={open}
+				aria-label={`${rule.titleKo} 상세 보기`}
 				onClick={() => setOpen((value) => !value)}
 				onKeyDown={(event) => {
 					if (event.key === 'Enter' || event.key === ' ') {
@@ -101,14 +93,7 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 				</td>
 				{/* 국문 룰명 */}
 				<td className={cn('w-56 py-2.5 pr-4 align-top text-sm', ruleBorder)}>
-					<span className="inline-flex flex-wrap items-baseline gap-x-2 gap-y-1">
-						{rule.titleKo}
-						{!rule.inCatalog && (
-							<span className="rounded bg-violet-500/10 px-1 text-[10px] text-violet-600 dark:text-violet-400">
-								신규
-							</span>
-						)}
-					</span>
+					{rule.titleKo}
 				</td>
 				{/* 불합 이유 (fail 코멘터리) */}
 				<td className={cn('py-2.5 pr-3 align-top text-sm', ruleBorder)}>
@@ -152,8 +137,9 @@ function RuleRow({ rule, sectionLabel, anchorId }: Omit<RuleRowData, 'sectionSlu
 			{/* 2행(토글 시): (빈칸) | 변수명 badge | 관련 가이드라인. 1행 열과 정렬. */}
 			{open && (
 				<tr>
-					<td />
-					<td />
+					<td colSpan={2}>
+						<span className="sr-only">상세 정보</span>
+					</td>
 					<td className="w-56 pt-0 pb-3 pr-4 align-top">
 						<code className="inline-flex items-center whitespace-nowrap rounded-md bg-secondary px-2 py-0.5 font-mono text-[11px] text-secondary-foreground">
 							{rule.key}
@@ -198,23 +184,21 @@ function withSectionLabels(
 	})
 }
 
-export function ReviewSections({ chapters }: { chapters: ReviewContentChapter[] }) {
+export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 	const { showUnimplemented, selected } = useReviewImages()
 	const [showFailOnly, setShowFailOnly] = useState(false)
 
 	const entries: { rule: Rule; sectionSlug: string; label: string }[] = []
-	for (const chapter of chapters) {
-		for (const section of chapter.sections) {
-			const visibleRules = section.pages
-				.flatMap((page) => page.rules)
-				.filter((rule) => getChecker(rule.key) !== null || showUnimplemented)
-			for (const rule of visibleRules) {
-				entries.push({
-					rule,
-					sectionSlug: section.slug,
-					label: section.name,
-				})
-			}
+	for (const section of sections) {
+		const visibleRules = section.rules.filter(
+			(rule) => getChecker(rule.key) !== null || showUnimplemented,
+		)
+		for (const rule of visibleRules) {
+			entries.push({
+				rule,
+				sectionSlug: section.slug,
+				label: section.title,
+			})
 		}
 	}
 
@@ -223,17 +207,13 @@ export function ReviewSections({ chapters }: { chapters: ReviewContentChapter[] 
 	let pass = 0
 	let fail = 0
 	let pendingReview = 0
-	for (const chapter of chapters) {
-		for (const section of chapter.sections) {
-			for (const page of section.pages) {
-				for (const rule of page.rules) {
-					if (getChecker(rule.key) === null) continue
-					const status = results?.[rule.key]?.status
-					if (status === 'pass') pass++
-					else if (status === 'fail') fail++
-					else pendingReview++
-				}
-			}
+	for (const section of sections) {
+		for (const rule of section.rules) {
+			if (getChecker(rule.key) === null) continue
+			const status = results?.[rule.key]?.status
+			if (status === 'pass') pass++
+			else if (status === 'fail') fail++
+			else pendingReview++
 		}
 	}
 	const reviewed = pass + fail > 0
@@ -261,9 +241,9 @@ export function ReviewSections({ chapters }: { chapters: ReviewContentChapter[] 
 					<table className="w-full border-collapse">
 						<tbody>
 							{rows.map((row) => (
-								// 같은 섹션에 rule.key가 겹치는 별개 룰이 있어(예: messaging.statement 3개) title까지 넣어 유니크하게.
+								// 같은 rule key가 여러 배치로 등장할 수 있어(예: messaging.statement) binding id로 유니크하게.
 								<RuleRow
-									key={`${row.sectionSlug}-${row.rule.key}-${row.rule.title}`}
+									key={row.rule.placementId}
 									rule={row.rule}
 									sectionLabel={row.sectionLabel}
 									anchorId={row.anchorId}

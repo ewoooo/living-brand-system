@@ -1,3 +1,4 @@
+import NextImage from 'next/image'
 import type { CSSProperties } from 'react'
 import type {
 	JsonFlowElement,
@@ -75,38 +76,53 @@ export function TemplateRenderer({
 				}}
 			>
 				{template.elements.map((element) => (
-					<TemplateElement key={element.id} element={element} values={values} />
+					<ElementView
+						key={element.id}
+						element={element}
+						frame={absoluteFrameCss(element)}
+						values={values}
+					/>
 				))}
 			</div>
 		</div>
 	)
 }
 
-function TemplateElement({
-	element,
-	values,
-}: {
-	element: JsonTemplateElement
-	values?: Record<string, TemplateSlotValue>
-}) {
-	const frame: CSSProperties = {
+/** 최상위 요소의 절대좌표 프레임. 스택 자식은 flowFrameCss가 담당한다. */
+function absoluteFrameCss(element: JsonTemplateElement): CSSProperties {
+	return {
 		position: 'absolute',
 		left: element.x,
 		top: element.y,
-		width: element.width,
+		// auto-width는 상자 폭이 텍스트를 따라간다 (x/y 앵커는 유지).
+		width:
+			element.type === 'text' && element.textFit === 'auto-width'
+				? 'max-content'
+				: element.width,
 		height: element.height,
 		zIndex: element.zIndex,
 	}
+}
 
+/** 배치(frame)와 내용을 분리한 단일 뷰 — 절대좌표/flow 두 경로가 공유한다. */
+function ElementView({
+	element,
+	frame,
+	values,
+}: {
+	element: JsonTemplateElement | JsonFlowElement
+	frame: CSSProperties
+	values?: Record<string, TemplateSlotValue>
+}) {
 	if (element.type === 'stack') {
 		return (
 			<div style={{ ...frame, ...stackFlexCss(element) }}>
 				{element.children.map((child) => (
-					<FlowElementView
+					<ElementView
 						key={child.id}
 						element={child}
+						frame={flowFrameCss(child, element.direction)}
 						values={values}
-						parentDirection={element.direction}
 					/>
 				))}
 			</div>
@@ -117,14 +133,7 @@ function TemplateElement({
 
 	if (element.type === 'text') {
 		return (
-			<div
-				style={{
-					...frame,
-					...textBoxCss(element),
-					// auto-width는 상자 폭이 텍스트를 따라간다 (x/y 앵커는 유지).
-					...(element.textFit === 'auto-width' ? { width: 'max-content' } : {}),
-				}}
-			>
+			<div style={{ ...frame, ...textBoxCss(element) }}>
 				<TextContent element={element} value={value} />
 			</div>
 		)
@@ -135,50 +144,6 @@ function TemplateElement({
 	}
 
 	return <div style={{ ...frame, ...rectCss(element) }} />
-}
-
-/** 스택 자식 — 좌표 없이 flex 흐름이 배치하고, 크기는 fixed/hug/fill 모드가 정한다. */
-function FlowElementView({
-	element,
-	values,
-	parentDirection,
-}: {
-	element: JsonFlowElement
-	values?: Record<string, TemplateSlotValue>
-	parentDirection: 'horizontal' | 'vertical'
-}) {
-	const flowFrame = flowFrameCss(element, parentDirection)
-
-	if (element.type === 'stack') {
-		return (
-			<div style={{ ...flowFrame, ...stackFlexCss(element) }}>
-				{element.children.map((child) => (
-					<FlowElementView
-						key={child.id}
-						element={child}
-						values={values}
-						parentDirection={element.direction}
-					/>
-				))}
-			</div>
-		)
-	}
-
-	const value = element.locked ? undefined : values?.[element.id]
-
-	if (element.type === 'text') {
-		return (
-			<div style={{ ...flowFrame, ...textBoxCss(element) }}>
-				<TextContent element={element} value={value} />
-			</div>
-		)
-	}
-
-	if (element.type === 'image') {
-		return <ImageView element={element} src={value?.src ?? element.src} style={flowFrame} />
-	}
-
-	return <div style={{ ...flowFrame, ...rectCss(element) }} />
 }
 
 function TextContent({ element, value }: { element: TextLike; value?: TemplateSlotValue }) {
@@ -220,16 +185,10 @@ function stackFlexCss(stack: StackLike): CSSProperties {
 		gap: stack.gap,
 		padding: `${stack.padding.top}px ${stack.padding.right}px ${stack.padding.bottom}px ${stack.padding.left}px`,
 		boxSizing: 'border-box',
-		justifyContent:
-			stack.justify === 'space-between'
-				? 'space-between'
-				: stack.justify === 'center'
-					? 'center'
-					: stack.justify === 'end'
-						? 'flex-end'
-						: 'flex-start',
-		alignItems:
-			stack.align === 'center' ? 'center' : stack.align === 'end' ? 'flex-end' : 'flex-start',
+		// 스키마 값이 그대로 유효한 CSS Box Alignment 키워드다. direction은 row/column뿐이라
+		// (reverse 없음) 'start'/'end'는 'flex-start'/'flex-end'와 렌더가 같다.
+		justifyContent: stack.justify,
+		alignItems: stack.align,
 	}
 }
 
@@ -278,12 +237,9 @@ function textBoxCss(element: TextLike): CSSProperties {
 	return {
 		display: 'flex',
 		flexDirection: 'column',
-		justifyContent:
-			element.verticalAlign === 'bottom'
-				? 'flex-end'
-				: element.verticalAlign === 'middle'
-					? 'center'
-					: 'flex-start',
+		justifyContent: { top: 'flex-start', middle: 'center', bottom: 'flex-end' }[
+			element.verticalAlign
+		],
 		fontSize: element.fontSize,
 		fontFamily: `${element.fontFamily}, Pretendard, sans-serif`,
 		fontWeight: element.fontWeight,
@@ -299,9 +255,40 @@ function textBoxCss(element: TextLike): CSSProperties {
 function imageCss(element: ImageLike): CSSProperties {
 	return {
 		objectFit: element.objectFit,
+	}
+}
+
+function imageFrameCss(style: CSSProperties, element: ImageLike): CSSProperties {
+	return {
+		...style,
+		position: style.position ?? 'relative',
+		overflow: 'hidden',
 		borderRadius: element.borderRadius,
 		boxShadow: element.boxShadow,
 		filter: element.filter,
+	}
+}
+
+function maskCss(
+	style: CSSProperties,
+	element: ImageLike,
+	src: string,
+	maskSize: CSSProperties['maskSize'],
+): CSSProperties {
+	return {
+		...style,
+		borderRadius: element.borderRadius,
+		boxShadow: element.boxShadow,
+		backgroundColor: element.color,
+		filter: element.filter,
+		WebkitMaskImage: `url("${src}")`,
+		maskImage: `url("${src}")`,
+		WebkitMaskPosition: 'center',
+		maskPosition: 'center',
+		WebkitMaskRepeat: 'no-repeat',
+		maskRepeat: 'no-repeat',
+		WebkitMaskSize: maskSize,
+		maskSize,
 	}
 }
 
@@ -317,30 +304,13 @@ function ImageView({
 	if (element.color) {
 		const maskSize = element.objectFit === 'fill' ? '100% 100%' : element.objectFit
 
-		return (
-			<div
-				style={{
-					...style,
-					borderRadius: element.borderRadius,
-					boxShadow: element.boxShadow,
-					backgroundColor: element.color,
-					filter: element.filter,
-					WebkitMaskImage: `url("${src}")`,
-					maskImage: `url("${src}")`,
-					WebkitMaskPosition: 'center',
-					maskPosition: 'center',
-					WebkitMaskRepeat: 'no-repeat',
-					maskRepeat: 'no-repeat',
-					WebkitMaskSize: maskSize,
-					maskSize,
-				}}
-			/>
-		)
+		return <div style={maskCss(style, element, src, maskSize)} />
 	}
 
 	return (
-		// biome-ignore lint/performance/noImgElement: 템플릿 원본 픽셀 그대로 그려야 하므로 next/image 최적화를 쓰지 않는다.
-		<img alt="" src={src} style={{ ...style, ...imageCss(element) }} />
+		<div style={imageFrameCss(style, element)}>
+			<NextImage alt="" fill sizes="100vw" src={src} style={imageCss(element)} unoptimized />
+		</div>
 	)
 }
 

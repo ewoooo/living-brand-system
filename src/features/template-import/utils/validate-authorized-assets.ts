@@ -5,6 +5,13 @@ import {
 	jsonTemplateSchema,
 } from '@/types/json-template'
 
+/** "template-assets = 비인가(임포트 스테이징)" 판정 규칙 — 저장 게이트와 미리보기 표시가 함께 쓴다. */
+export function isUnauthorizedAssetCollection(
+	collection: (typeof AUTHORIZED_ASSET_COLLECTIONS)[number] | 'template-assets',
+): collection is 'template-assets' {
+	return collection === 'template-assets'
+}
+
 export interface AuthorizedImageRef {
 	collection: (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
 	assetId: number
@@ -50,7 +57,7 @@ export function validateTemplateImages(jsonTemplate: unknown): TemplateImageVali
 				continue
 			}
 
-			if (element.assetCollection === 'template-assets') {
+			if (isUnauthorizedAssetCollection(element.assetCollection)) {
 				unauthorizedLabels.push(element.slotLabel || element.id)
 			} else {
 				authorizedRefs.push({
