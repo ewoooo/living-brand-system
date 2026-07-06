@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import type React from 'react'
 import { GlobalAgentChat } from '@/components/global-agent-chat'
 import { GlobalHeader } from '@/components/global-header'
@@ -36,15 +37,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<head>
-				<script
-					// biome-ignore lint/security/noDangerouslySetInnerHtml: fixed theme bootstrap script, no user input.
-					dangerouslySetInnerHTML={{
-						__html: themeScript,
-					}}
-				/>
-			</head>
 			<body className="h-svh overflow-hidden bg-white text-black dark:bg-black dark:text-white">
+				{/* 테마 부트스트랩 — 하이드레이션 전에 실행해 FOUC 방지. next/script로 렌더해 React의 raw script 경고를 피한다. */}
+				<Script id="theme-bootstrap" strategy="beforeInteractive">
+					{themeScript}
+				</Script>
 				<SidebarProvider
 					className="h-svh"
 					style={{ '--sidebar-width': '25rem' } as React.CSSProperties}
