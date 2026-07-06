@@ -168,10 +168,18 @@ const stackElementSchema: z.ZodType<StackElementOutput, StackElementInput> = z.o
 	children: z.array(flowElementSchema),
 })
 
+/** 그리드 정의 — 행/열 정수 가중치. 트랙 크기 = 캔버스 * weight / sum. 요소 배치·리플로우의 기준. */
+const gridSchema = z.object({
+	rows: z.array(z.number().int().positive()).min(1),
+	columns: z.array(z.number().int().positive()).min(1),
+})
+
 export const jsonTemplateSchema = z.object({
 	width: z.number().positive(),
 	height: z.number().positive(),
 	background: z.string(),
+	// 그리드 기반 템플릿만 가진다(optional) — 절대좌표 임포트 템플릿은 없어도 유효.
+	grid: gridSchema.optional(),
 	// stackElementSchema가 타입 주석 탓에 ZodObject가 아니어서 discriminatedUnion 대신 union을 쓴다.
 	elements: z.array(
 		z.union([textElementSchema, imageElementSchema, rectElementSchema, stackElementSchema]),
@@ -179,6 +187,7 @@ export const jsonTemplateSchema = z.object({
 })
 
 export type JsonTemplate = z.infer<typeof jsonTemplateSchema>
+export type JsonGrid = z.infer<typeof gridSchema>
 export type JsonTemplateElement = JsonTemplate['elements'][number]
 export type JsonRectElement = z.infer<typeof rectElementSchema>
 export type JsonStackElement = StackElementOutput
