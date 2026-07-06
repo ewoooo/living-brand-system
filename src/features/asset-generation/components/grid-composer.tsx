@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { JsonTemplate } from '@/types/json-template'
 
 /**
@@ -33,30 +34,74 @@ const clamp = (n: number) => Math.max(MIN_CANVAS, Math.min(MAX_CANVAS, Math.roun
 const GRAY =
 	"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23cbcbcb'/></svg>"
 
-function trackSizes(weights: number[], total: number) {
+function trackSizes(weights: number[], total: number, gap = 0) {
 	const sum = weights.reduce((a, b) => a + b, 0) || 1
-	return weights.map((w) => (total * w) / sum)
+	const available = Math.max(0, total - gap * (weights.length - 1))
+	return weights.map((w) => (available * w) / sum)
 }
-function offsetAt(sizes: number[], i: number) {
-	return sizes.slice(0, i).reduce((a, b) => a + b, 0)
+function offsetAt(sizes: number[], i: number, gap = 0) {
+	return sizes.slice(0, i).reduce((a, b) => a + b, 0) + gap * i
 }
-function trackAt(sizes: number[], pos: number) {
+// 좌표가 속한 트랙 index. 각 셀 뒤의 gap은 앞 셀의 드롭 영역으로 친다.
+function trackAt(sizes: number[], pos: number, gap = 0) {
 	let acc = 0
 	for (let i = 0; i < sizes.length; i++) {
-		acc += sizes[i]
+		acc += sizes[i] + gap
 		if (pos < acc) return i
 	}
 	return sizes.length - 1
 }
 
+type HAlign = 'left' | 'center' | 'right'
+type VAlign = 'top' | 'middle' | 'bottom'
+// 텍스트 수평 흐름: fixed(폭고정·줄바꿈), auto-width(줄바꿈없이 폭따라감), truncate(넘치면 …).
+type TextFlow = 'fixed' | 'auto-width' | 'truncate'
+
+/** 셀 안 텍스트 아이템 — 내용 + 정렬(수평/수직) + 흐름. */
+interface TextItem {
+	content: string
+	hAlign: HAlign
+	vAlign: VAlign
+	flow: TextFlow
+}
+
+/** 셀 안 이미지 아이템 — 셀 좌상단에 놓이되 크기는 셀과 무관한 자체 width/height(px). */
+interface ImageItem {
+	src: string
+	width: number
+	height: number
+}
+
 /** 셀 하나에 텍스트 1·이미지 1이 들어갈 수 있다(z-index는 나중). null이면 비어 있음. */
 interface Cell {
-	text: string | null
-	image: string | null
+	text: TextItem | null
+	image: ImageItem | null
 }
 type ItemKind = 'text' | 'image'
 
 const emptyCell = (): Cell => ({ text: null, image: null })
+const defaultText = (content: string): TextItem => ({
+	content,
+	hAlign: 'left',
+	vAlign: 'top',
+	flow: 'fixed',
+})
+
+const H_ALIGN: { value: HAlign; label: string }[] = [
+	{ value: 'left', label: '왼쪽' },
+	{ value: 'center', label: '가운데' },
+	{ value: 'right', label: '오른쪽' },
+]
+const V_ALIGN: { value: VAlign; label: string }[] = [
+	{ value: 'top', label: '위' },
+	{ value: 'middle', label: '가운데' },
+	{ value: 'bottom', label: '아래' },
+]
+const TEXT_FLOW: { value: TextFlow; label: string }[] = [
+	{ value: 'fixed', label: '고정' },
+	{ value: 'auto-width', label: '흘리기' },
+	{ value: 'truncate', label: '자르기' },
+]
 
 /** 셀 리스트에서 아이템 식별자 "<index>:<kind>" 파싱. */
 function parseItemId(id: string): { index: number; kind: ItemKind } {
@@ -72,22 +117,31 @@ function deriveInitial(source?: JsonTemplate) {
 	const padY = source?.padding?.y ?? 0
 	const rows = source?.grid?.rows ?? [1, 2, 1]
 	const cols = source?.grid?.columns ?? [2, 1, 1]
+	const gap = source?.grid?.gap ?? 0
 	const cells: Cell[] = Array.from({ length: rows.length * cols.length }, emptyCell)
 
 	if (source?.grid) {
-		const colSizes = trackSizes(cols, Math.max(1, canvasW - padX * 2))
-		const rowSizes = trackSizes(rows, Math.max(1, canvasH - padY * 2))
+		const colSizes = trackSizes(cols, Math.max(1, canvasW - padX * 2), gap)
+		const rowSizes = trackSizes(rows, Math.max(1, canvasH - padY * 2), gap)
 		for (const el of source.elements) {
 			if (el.type !== 'text' && el.type !== 'image') continue
-			const row = trackAt(rowSizes, el.y - padY)
-			const col = trackAt(colSizes, el.x - padX)
+			const row = trackAt(rowSizes, el.y - padY, gap)
+			const col = trackAt(colSizes, el.x - padX, gap)
 			const cell = cells[row * cols.length + col]
-			if (el.type === 'text') cell.text = el.text
-			else cell.image = el.src
+			if (el.type === 'text') {
+				cell.text = {
+					content: el.text,
+					hAlign: el.textAlign,
+					vAlign: el.verticalAlign,
+					flow: el.textFit,
+				}
+			} else {
+				cell.image = { src: el.src, width: el.width, height: el.height }
+			}
 		}
 	}
 
-	return { canvasW, canvasH, padX, padY, rows, cols, cells }
+	return { canvasW, canvasH, padX, padY, gap, rows, cols, cells }
 }
 
 export function GridComposer({ source }: { source?: JsonTemplate }) {
@@ -99,6 +153,7 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 	const [canvasH, setCanvasH] = useState(initial.canvasH)
 	const [padX, setPadX] = useState(initial.padX)
 	const [padY, setPadY] = useState(initial.padY)
+	const [gap, setGap] = useState(initial.gap)
 	const [rows, setRows] = useState<number[]>(initial.rows)
 	const [cols, setCols] = useState<number[]>(initial.cols)
 	const [cells, setCells] = useState<Cell[]>(initial.cells)
@@ -115,36 +170,53 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 	// 그리드는 캔버스 안쪽 여백(padX·padY) 영역에 배치된다.
 	const innerW = Math.max(1, canvasW - padX * 2)
 	const innerH = Math.max(1, canvasH - padY * 2)
-	const rowSizes = useMemo(() => trackSizes(rows, innerH), [rows, innerH])
-	const colSizes = useMemo(() => trackSizes(cols, innerW), [cols, innerW])
+	const rowSizes = useMemo(() => trackSizes(rows, innerH, gap), [rows, innerH, gap])
+	const colSizes = useMemo(() => trackSizes(cols, innerW, gap), [cols, innerW, gap])
 
 	function cellBox(row: number, col: number) {
 		const r = Math.min(row, rowSizes.length - 1)
 		const c = Math.min(col, colSizes.length - 1)
 		return {
-			x: padX + offsetAt(colSizes, c),
-			y: padY + offsetAt(rowSizes, r),
+			x: padX + offsetAt(colSizes, c, gap),
+			y: padY + offsetAt(rowSizes, r, gap),
 			width: colSizes[c],
 			height: rowSizes[r],
 		}
 	}
 
-	/** 해당 kind가 비어 있는 첫 셀에 아이템을 넣고 선택한다. */
+	/** 해당 kind가 비어 있는 첫 셀에 아이템을 넣고 선택한다. 이미지 기본 크기 = 그 셀 크기. */
 	function addItem(kind: ItemKind) {
 		const index = cells.findIndex((cell) => cell[kind] == null)
 		const target = index === -1 ? 0 : index
-		const value = kind === 'text' ? '텍스트' : GRAY
+		const box = cellBox(Math.floor(target / cols.length), target % cols.length)
+		const value =
+			kind === 'text'
+				? defaultText('텍스트')
+				: ({ src: GRAY, width: box.width, height: box.height } satisfies ImageItem)
 		setCells((prev) =>
 			prev.map((cell, i) => (i === target ? { ...cell, [kind]: value } : cell)),
 		)
 		setSelectedId(`${target}:${kind}`)
 	}
 
-	function setItem(index: number, kind: ItemKind, value: string | null) {
-		setCells((prev) => prev.map((cell, i) => (i === index ? { ...cell, [kind]: value } : cell)))
+	/** 텍스트 아이템 부분 수정(내용·정렬·흐름). */
+	function patchText(index: number, patch: Partial<TextItem>) {
+		setCells((prev) =>
+			prev.map((cell, i) =>
+				i === index && cell.text ? { ...cell, text: { ...cell.text, ...patch } } : cell,
+			),
+		)
+	}
+	/** 이미지 아이템 부분 수정(src·크기). */
+	function patchImage(index: number, patch: Partial<ImageItem>) {
+		setCells((prev) =>
+			prev.map((cell, i) =>
+				i === index && cell.image ? { ...cell, image: { ...cell.image, ...patch } } : cell,
+			),
+		)
 	}
 	function removeItem(index: number, kind: ItemKind) {
-		setItem(index, kind, null)
+		setCells((prev) => prev.map((cell, i) => (i === index ? { ...cell, [kind]: null } : cell)))
 		setSelectedId(null)
 	}
 	/** 아이템을 다른 셀로 이동 — 대상 셀의 같은 kind를 덮어쓰고 원본을 비운다. */
@@ -255,8 +327,8 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 			const r = Math.min(Math.floor(index / width), rowSizes.length - 1)
 			const c = Math.min(index % width, colSizes.length - 1)
 			const base = {
-				x: padX + offsetAt(colSizes, c),
-				y: padY + offsetAt(rowSizes, r),
+				x: padX + offsetAt(colSizes, c, gap),
+				y: padY + offsetAt(rowSizes, r, gap),
 				width: colSizes[c],
 				height: rowSizes[r],
 			}
@@ -267,16 +339,20 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 			const out: JsonTemplate['elements'] = []
 			// 이미지가 아래(z 1), 텍스트가 위(z 2) — z-index 정교화는 나중.
 			if (cell.image != null) {
-				const box = boxOf('image')
+				// 이미지는 셀 좌상단에 놓이되 크기는 자체 width/height(셀과 무관).
+				const anchor = boxOf('image')
 				out.push({
 					id: `${index}:image`,
 					type: 'image',
-					...box,
+					x: anchor.x,
+					y: anchor.y,
+					width: cell.image.width,
+					height: cell.image.height,
 					zIndex: 1,
 					locked: false,
 					assetCollection: 'template-assets',
 					assetId: 0,
-					src: cell.image,
+					src: cell.image.src,
 					objectFit: 'cover',
 					borderRadius: 0,
 				})
@@ -289,29 +365,30 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 					...box,
 					zIndex: 2,
 					locked: false,
-					text: cell.text,
+					text: cell.text.content,
 					fontSize: 40,
 					fontFamily: 'Pretendard, sans-serif',
 					fontWeight: '400',
 					color: '#1f2a24',
 					lineHeight: 1.4,
 					letterSpacing: 0,
-					textAlign: 'left',
-					textFit: 'fixed',
-					verticalAlign: 'top',
+					textAlign: cell.text.hAlign,
+					textFit: cell.text.flow,
+					verticalAlign: cell.text.vAlign,
 					inputFormat: 'free',
 				})
 			}
 			return out
 		})
 		return { width: canvasW, height: canvasH, background: '#f5f2e9', elements: els }
-	}, [cells, dragFree, rowSizes, colSizes, canvasW, canvasH, padX, padY, cols.length])
+	}, [cells, dragFree, rowSizes, colSizes, canvasW, canvasH, padX, padY, gap, cols.length])
 
 	const selected = (() => {
 		if (!selectedId) return null
 		const { index, kind } = parseItemId(selectedId)
-		const value = cells[index]?.[kind]
-		return value != null ? { id: selectedId, index, kind, value } : null
+		const cell = cells[index]
+		if (!cell || cell[kind] == null) return null
+		return { id: selectedId, index, kind, text: cell.text, image: cell.image }
 	})()
 
 	return (
@@ -343,7 +420,9 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 										className="pointer-events-none absolute bg-neutral-500/30"
 										style={{
 											left: padX * scale,
-											top: (padY + offsetAt(rowSizes, i + 1)) * scale,
+											top:
+												(padY + offsetAt(rowSizes, i + 1, gap) - gap / 2) *
+												scale,
 											width: innerW * scale,
 											height: 1,
 											zIndex: 4,
@@ -356,7 +435,9 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 										key={`v-${j}`}
 										className="pointer-events-none absolute bg-neutral-500/30"
 										style={{
-											left: (padX + offsetAt(colSizes, j + 1)) * scale,
+											left:
+												(padX + offsetAt(colSizes, j + 1, gap) - gap / 2) *
+												scale,
 											top: padY * scale,
 											width: 1,
 											height: innerH * scale,
@@ -394,10 +475,19 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 								if (cell[kind] == null) return []
 								const id = `${index}:${kind}`
 								const isSelected = id === selectedId
+								// 이미지는 셀 크기와 무관한 자체 width/height를 hit-area로.
+								const sized =
+									kind === 'image' && cell.image
+										? {
+												...base,
+												width: cell.image.width,
+												height: cell.image.height,
+											}
+										: base
 								const box =
 									dragFree?.id === id
-										? { ...base, x: dragFree.x, y: dragFree.y }
-										: base
+										? { ...sized, x: dragFree.x, y: dragFree.y }
+										: sized
 								return [
 									<button
 										type="button"
@@ -426,8 +516,17 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 								flushSync={flushSync}
 								target={moveableTarget}
 								draggable
+								resizable={selected.kind === 'image'}
+								keepRatio={false}
 								origin={false}
-								renderDirections={[]}
+								renderDirections={selected.kind === 'image' ? ['se'] : []}
+								onResize={(event) => {
+									if (selected.kind !== 'image') return
+									patchImage(selected.index, {
+										width: Math.max(8, Math.round(event.width / scale)),
+										height: Math.max(8, Math.round(event.height / scale)),
+									})
+								}}
 								onDrag={(event) => {
 									setDragFree({
 										id: selected.id,
@@ -439,8 +538,8 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 										const px = (event.clientX - rect.left) / scale - padX
 										const py = (event.clientY - rect.top) / scale - padY
 										setDropCell({
-											row: trackAt(rowSizes, py),
-											col: trackAt(colSizes, px),
+											row: trackAt(rowSizes, py, gap),
+											col: trackAt(colSizes, px, gap),
 										})
 									}
 								}}
@@ -495,6 +594,10 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 					</div>
 				</Field>
 
+				<Field label="셀 간격 (Gap)">
+					<SizeInput label="px" value={gap} min={0} onCommit={setGap} />
+				</Field>
+
 				<Separator />
 
 				<div className="flex gap-2">
@@ -544,29 +647,68 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 					<>
 						<Separator />
 						<Field label={`선택한 ${selected.kind === 'text' ? '텍스트' : '이미지'}`}>
-							{selected.kind === 'text' ? (
-								<Textarea
-									rows={3}
-									value={selected.value}
-									onChange={(e) =>
-										setItem(selected.index, 'text', e.target.value)
-									}
-								/>
-							) : (
-								<Input
-									type="file"
-									accept="image/*"
-									onChange={(e) => {
-										const file = e.target.files?.[0]
-										if (file)
-											setItem(
-												selected.index,
-												'image',
-												URL.createObjectURL(file),
-											)
-									}}
-								/>
-							)}
+							{selected.kind === 'text' && selected.text ? (
+								<div className="flex flex-col gap-2">
+									<Textarea
+										rows={2}
+										value={selected.text.content}
+										onChange={(e) =>
+											patchText(selected.index, { content: e.target.value })
+										}
+									/>
+									<AlignPicker
+										label="수평"
+										value={selected.text.hAlign}
+										options={H_ALIGN}
+										onChange={(hAlign) => patchText(selected.index, { hAlign })}
+									/>
+									<AlignPicker
+										label="수직"
+										value={selected.text.vAlign}
+										options={V_ALIGN}
+										onChange={(vAlign) => patchText(selected.index, { vAlign })}
+									/>
+									<AlignPicker
+										label="흐름"
+										value={selected.text.flow}
+										options={TEXT_FLOW}
+										onChange={(flow) => patchText(selected.index, { flow })}
+									/>
+								</div>
+							) : selected.image ? (
+								<div className="flex flex-col gap-2">
+									<Input
+										type="file"
+										accept="image/*"
+										onChange={(e) => {
+											const file = e.target.files?.[0]
+											if (file)
+												patchImage(selected.index, {
+													src: URL.createObjectURL(file),
+												})
+										}}
+									/>
+									{/* 셀 크기와 무관한 임의 크기 — 입력 또는 캔버스의 se 핸들 드래그로 조절 */}
+									<div className="flex gap-2">
+										<SizeInput
+											label="너비"
+											value={selected.image.width}
+											min={8}
+											onCommit={(v) =>
+												patchImage(selected.index, { width: v })
+											}
+										/>
+										<SizeInput
+											label="높이"
+											value={selected.image.height}
+											min={8}
+											onCommit={(v) =>
+												patchImage(selected.index, { height: v })
+											}
+										/>
+									</div>
+								</div>
+							) : null}
 							<div className="mt-2 flex justify-between">
 								<Button
 									size="sm"
@@ -640,6 +782,41 @@ function ResizeHandle({
 				/>
 			)}
 		</button>
+	)
+}
+
+/** 라벨 + 3지선다 ToggleGroup(정렬·흐름). 임시 UI — Figma 반영 예정. */
+function AlignPicker<T extends string>({
+	label,
+	value,
+	options,
+	onChange,
+}: {
+	label: string
+	value: T
+	options: { value: T; label: string }[]
+	onChange: (value: T) => void
+}) {
+	return (
+		<div className="flex items-center gap-2">
+			<span className="w-8 shrink-0 text-muted-foreground text-xs">{label}</span>
+			<ToggleGroup
+				type="single"
+				size="sm"
+				variant="outline"
+				value={value}
+				onValueChange={(v) => {
+					if (v) onChange(v as T)
+				}}
+				className="flex-1"
+			>
+				{options.map((o) => (
+					<ToggleGroupItem key={o.value} value={o.value} className="flex-1 text-xs">
+						{o.label}
+					</ToggleGroupItem>
+				))}
+			</ToggleGroup>
+		</div>
 	)
 }
 

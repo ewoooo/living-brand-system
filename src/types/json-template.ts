@@ -172,6 +172,8 @@ const stackElementSchema: z.ZodType<StackElementOutput, StackElementInput> = z.o
 const gridSchema = z.object({
 	rows: z.array(z.number().int().positive()).min(1),
 	columns: z.array(z.number().int().positive()).min(1),
+	// 셀 사이 간격(px). 트랙 크기 = (캔버스 - gap*(n-1)) * weight / sum.
+	gap: z.number().min(0).default(0),
 })
 
 export const jsonTemplateSchema = z.object({
