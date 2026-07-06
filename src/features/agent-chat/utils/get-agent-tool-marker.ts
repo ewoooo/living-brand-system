@@ -97,7 +97,7 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 	let hasToolPart = false
 	let hasPendingToolPart = false
 	let hasTemplateSearch = false
-	const counts = TOOL_MARKER_RULES.map(() => 0)
+	const markers = TOOL_MARKER_RULES.map((rule) => ({ rule, count: 0 }))
 
 	for (const part of message.parts) {
 		if (!isAgentToolPart(part) || part.type === 'tool-loadSkill') {
@@ -111,11 +111,11 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 			continue
 		}
 
-		TOOL_MARKER_RULES.forEach((rule, index) => {
-			if (part.type === rule.type) {
-				counts[index] += rule.count(part.output)
+		for (const marker of markers) {
+			if (part.type === marker.rule.type) {
+				marker.count += marker.rule.count(part.output)
 			}
-		})
+		}
 
 		hasTemplateSearch ||=
 			part.type === 'tool-findTemplatesForRequest' && Array.isArray(part.output)
@@ -125,12 +125,12 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 		return null
 	}
 
-	const matched = TOOL_MARKER_RULES.findIndex((_, index) => counts[index] > 0)
+	const matched = markers.find((marker) => marker.count > 0)
 
-	if (matched >= 0) {
+	if (matched) {
 		return {
 			isPending: hasPendingToolPart,
-			text: TOOL_MARKER_RULES[matched].text(counts[matched]),
+			text: matched.rule.text(matched.count),
 		}
 	}
 

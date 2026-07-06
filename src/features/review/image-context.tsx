@@ -49,7 +49,7 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 	// 개발 중(체커 없는) 룰은 기본 숨김.
 	const [showUnimplemented, setShowUnimplemented] = useState(false)
 
-	// 서버 확정 판정을 한 번에 받아, 진행이 눈에 보이도록 룰별로 순차 반영한다.
+	// 서버 확정 판정을 한 번에 받아 반영한다.
 	const runCheck = useCallback(async (id: string, file: File) => {
 		setImages((prev) =>
 			prev.map((image) =>
@@ -62,16 +62,9 @@ export function ReviewImageProvider({ children }: { children: React.ReactNode })
 			const response = await fetch('/api/review/check', { method: 'POST', body: form })
 			if (!response.ok) throw new Error(`review check failed: ${response.status}`)
 			const { results } = (await response.json()) as { results: Record<string, RuleOutcome> }
-			for (const [ruleKey, outcome] of Object.entries(results)) {
-				setImages((prev) =>
-					prev.map((image) =>
-						image.id === id
-							? { ...image, results: { ...image.results, [ruleKey]: outcome } }
-							: image,
-					),
-				)
-				await new Promise((resolve) => setTimeout(resolve, 35)) // 진행 표시용 stagger
-			}
+			setImages((prev) =>
+				prev.map((image) => (image.id === id ? { ...image, results } : image)),
+			)
 		} catch {
 			// 실패 시 결과 없이 종료 — 재검수는 검수 버튼으로 다시 트리거한다.
 		} finally {

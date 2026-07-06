@@ -12,12 +12,6 @@ const convertFigmaRequestSchema = z.object({
 	sourceUrl: z.string().min(1).max(500),
 })
 
-async function parseRequestBody(req: Request) {
-	const body = await req.json().catch(() => null)
-
-	return convertFigmaRequestSchema.safeParse(body)
-}
-
 /**
  * Figma URL을 JsonTemplate으로 변환해 돌려주는 adapter. Admin의 Templates 폼 UI 필드가 호출한다.
  * Template 문서는 만들지 않는다. 서버 FIGMA_API_TOKEN을 구동하므로 manager 이상만 허용한다 (docs/07).
@@ -40,7 +34,7 @@ export async function POST(req: Request) {
 		return Response.json({ message: 'Forbidden' }, { status: 403 })
 	}
 
-	const parsed = await parseRequestBody(req)
+	const parsed = convertFigmaRequestSchema.safeParse(await req.json().catch(() => null))
 
 	if (!parsed.success) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
