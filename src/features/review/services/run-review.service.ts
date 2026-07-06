@@ -3,6 +3,7 @@ import type { CheckResult, PixelGrid } from '@/features/review/checkers/types'
 import type { Rgb } from '@/features/review/color-check'
 import { type ImageContentFlags, shouldCheckRule } from '@/features/review/content-gate'
 import { extractPixelGrid } from '@/features/review/repositories/image-pixels.sharp.repository'
+import { getReviewPalette } from '@/features/review/services/get-review-palette.service'
 import { getReviewRuleset } from '@/features/review/services/get-review-ruleset.service'
 
 /** 룰 하나의 서버 확정 판정 — route 응답이자 클라이언트 표시 계약. */
@@ -20,13 +21,17 @@ function opaquePixels(grid: PixelGrid): Rgb[] {
 /**
  * 검수 대상 이미지를 룰셋에 비춰 checker가 있는 룰만 판정한다 (서버 확정 판정의 단일 소스).
  * 요소 종속 룰(logo 등)은 포함 요소 플래그가 켜진 것만 검수한다 (content-gate 소유).
- * 이미지 디코딩은 image-pixels repository가, 룰셋 조회는 get-review-ruleset service가 소유한다.
+ * 이미지 디코딩은 image-pixels repository가, 기준 조회는 review service/repository가 소유한다.
  */
 export async function runReviewService(
 	buffer: Buffer,
 	flags: ImageContentFlags,
 ): Promise<Record<string, RuleOutcome>> {
-	const [grid, sections] = await Promise.all([extractPixelGrid(buffer), getReviewRuleset()])
+	const [grid, sections, palette] = await Promise.all([
+		extractPixelGrid(buffer),
+		getReviewRuleset(),
+		getReviewPalette(),
+	])
 	const pixels = opaquePixels(grid)
 
 	const results: Record<string, RuleOutcome> = {}
@@ -35,7 +40,7 @@ export async function runReviewService(
 			if (results[rule.key] || !shouldCheckRule(rule.key, flags)) continue
 			const checker = getChecker(rule.key)
 			if (!checker) continue
-			results[rule.key] = checker.check({ pixels, grid })
+			results[rule.key] = checker.check({ pixels, palette, grid })
 		}
 	}
 

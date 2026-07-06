@@ -1,12 +1,9 @@
-import { nearestSwatch } from '@/features/review/color-check'
+import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from '@/features/review/color-check'
 import { dominantColors } from '@/features/review/color-metrics'
-import { ESSENHERB_SWATCHES, PALETTE_DELTA_E_TOLERANCE } from '@/features/review/essenherb-palette'
 import type { RuleChecker } from './types'
 
 // 명함은 별색 1도(Pantone Warm Red = Essenherb Red) 인쇄 → 실제 구성이 Essenherb Red + White 뿐이어야 한다.
-const STATIONERY_ALLOWED = ESSENHERB_SWATCHES.filter(
-	(s) => s.name === 'White' || s.name === 'Essenherb Red',
-)
+const STATIONERY_ALLOWED_HEX = new Set(['FFFFFF', 'EA5343'])
 const MAX_OFF_SHARE = 0.05
 
 /**
@@ -16,15 +13,18 @@ const MAX_OFF_SHARE = 0.05
  */
 export const stationaryColorChecker: RuleChecker = {
 	ruleKey: 'application.print-spec',
-	check: ({ pixels }) => {
+	check: ({ pixels, palette }) => {
 		if (pixels.length === 0) return { status: 'fail', fulfillment: 0, detail: '픽셀 없음' }
+		const allowed = palette.filter((s) =>
+			STATIONERY_ALLOWED_HEX.has(s.hex.replace(/^#/, '').toUpperCase()),
+		)
+		if (allowed.length === 0) return { status: 'fail', fulfillment: 0, detail: '팔레트 없음' }
 		const dom = dominantColors(pixels, 12, 0.01)
 		if (dom.length === 0) return { status: 'fail', fulfillment: 0, detail: '지배색 없음' }
 
 		let off = 0
 		for (const c of dom) {
-			if (nearestSwatch(c.rgb, STATIONERY_ALLOWED).distance > PALETTE_DELTA_E_TOLERANCE)
-				off += c.share
+			if (nearestSwatch(c.rgb, allowed).distance > PALETTE_DELTA_E_TOLERANCE) off += c.share
 		}
 		const total = dom.reduce((sum, c) => sum + c.share, 0)
 		const ratio = total === 0 ? 0 : off / total

@@ -1,4 +1,4 @@
-import type { Rgb } from '@/features/review/color-check'
+import type { Rgb, Swatch } from '@/features/review/color-check'
 
 /** 기준(expected) 대비 측정값(actual)을 분리해 실은 구조화 필드. */
 export interface RuleMetric {
@@ -29,6 +29,7 @@ export interface PixelGrid {
 
 export interface CheckerContext {
 	pixels: Rgb[]
+	palette: Swatch[]
 	/** 기하가 필요한 checker(로고 등)만 사용. color checker는 무시. */
 	grid?: PixelGrid
 }
