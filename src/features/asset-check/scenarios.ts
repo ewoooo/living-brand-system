@@ -22,6 +22,48 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 		flags: { logo: false, typography: false, illustration: false, photography: true },
 	},
 	{
+		key: 'sns',
+		title: 'SNS 콘텐츠 검수',
+		ruleKeys: [
+			'application.sns.format',
+			'layout.sns.template',
+			'layout.sns.zones',
+			'application.sns.caption.legibility',
+			'logo.sns.placement',
+			'imagery.sns.classification',
+			'messaging.sns.copy',
+		],
+		flags: { logo: true, typography: false, illustration: false, photography: true },
+	},
+	{
+		key: 'web-visual',
+		title: '웹/비주얼 템플릿 검수',
+		ruleKeys: [
+			'layout.visual.template',
+			'application.web',
+			'color.palette',
+			'color.combination',
+			'typography.usage',
+		],
+		flags: { logo: false, typography: true, illustration: false, photography: false },
+	},
+	{
+		key: 'advertisement',
+		title: '광고 검수',
+		ruleKeys: [
+			'application.advertisement.format',
+			'layout.advertisement.template',
+			'layout.advertisement.zones',
+			'imagery.advertisement.classification',
+			'messaging.advertisement.tagline',
+			'messaging.advertisement.copy',
+			'messaging.advertisement.boilerplate',
+			'spacing.advertisement.scale',
+			'color.palette',
+		],
+		flags: { logo: false, typography: false, illustration: false, photography: true },
+	},
+	{
 		key: 'stationery',
 		title: '명함/스테이셔너리 검수',
 		ruleKeys: [
@@ -49,6 +91,10 @@ function normalizeCheckScenarioKey(key: string | null | undefined): string | und
 	if (normalized.includes('명함')) return 'stationery'
 	if (normalized.includes('business') && normalized.includes('card')) return 'stationery'
 	if (normalized.includes('name') && normalized.includes('card')) return 'stationery'
+	if (normalized.includes('sns') || normalized.includes('social')) return 'sns'
+	if (normalized.includes('web') || normalized.includes('visual')) return 'web-visual'
+	if (normalized.includes('ad') || normalized.includes('advert')) return 'advertisement'
+	if (normalized.includes('광고')) return 'advertisement'
 	return normalized
 }
 

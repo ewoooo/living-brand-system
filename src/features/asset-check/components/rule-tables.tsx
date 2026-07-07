@@ -3,6 +3,7 @@
 import { AiGenerate, ChevronDown, Ruler, User } from '@carbon/icons-react'
 import { type ComponentType, Fragment, useState } from 'react'
 import { Spinner } from '@/components/ui/spinner'
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { filterRulesetByScenario, getCheckScenario } from '@/features/asset-check/scenarios'
@@ -54,7 +55,7 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 
 	const outcome = selected?.results?.[rule.key]
 	const inProgress =
-		selected?.status === '진행' && selected.pendingRuleKeys?.includes(rule.key) === true
+		selected?.status === 'running' && selected.pendingRuleKeys?.includes(rule.key) === true
 	const detail = outcome?.rawResult.status !== 'pass' ? outcome?.message : null
 	const appliesToText = appliesTo.join(', ')
 
@@ -62,7 +63,7 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 
 	return (
 		<Fragment key={rowId}>
-			<tr
+			<TableRow
 				id={anchorId ?? undefined}
 				aria-expanded={open}
 				aria-label={`${rule.title} 상세 보기`}
@@ -75,14 +76,16 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 				}}
 				tabIndex={0}
 				className={cn(
-					'scroll-mt-72 cursor-pointer transition-colors hover:bg-neutral-500/5 active:bg-neutral-500/10',
+					'border-0 scroll-mt-72 cursor-pointer transition-colors hover:bg-neutral-500/5 active:bg-neutral-500/10',
 					!implemented && 'opacity-45',
 				)}
 			>
-				<td className={cn('w-44 py-2.5 pr-4 align-top', isSectionStart && ruleBorder)}>
+				<TableCell
+					className={cn('w-44 py-2.5 pr-4 align-top', isSectionStart && ruleBorder)}
+				>
 					{sectionLabel && <span className="font-medium text-sm">{sectionLabel}</span>}
-				</td>
-				<td className={cn('w-0 py-2.5 pr-3 align-top', ruleBorder)}>
+				</TableCell>
+				<TableCell className={cn('w-0 py-2.5 pr-3 align-top', ruleBorder)}>
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<span className="inline-flex text-muted-foreground">
@@ -96,11 +99,13 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 							)}
 						</TooltipContent>
 					</Tooltip>
-				</td>
-				<td className={cn('w-56 py-2.5 pr-4 align-top text-sm', ruleBorder)}>
+				</TableCell>
+				<TableCell className={cn('w-56 py-2.5 pr-4 align-top text-sm', ruleBorder)}>
 					{rule.title}
-				</td>
-				<td className={cn('py-2.5 pr-3 align-top text-sm', ruleBorder)}>
+				</TableCell>
+				<TableCell
+					className={cn('py-2.5 pr-3 align-top text-sm whitespace-normal', ruleBorder)}
+				>
 					{detail && (
 						<span
 							className={cn(
@@ -113,8 +118,8 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 							{detail}
 						</span>
 					)}
-				</td>
-				<td className={cn('w-0 py-2.5 pr-3 align-top', ruleBorder)}>
+				</TableCell>
+				<TableCell className={cn('w-0 py-2.5 pr-3 align-top', ruleBorder)}>
 					{!implemented ? (
 						<span className="inline-block whitespace-nowrap rounded bg-neutral-500/10 px-1.5 py-0.5 text-[11px] text-muted-foreground">
 							개발 중
@@ -133,8 +138,8 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 							<Spinner className="size-3.5 text-muted-foreground" />
 						</span>
 					) : null}
-				</td>
-				<td className={cn('w-0 py-2.5 pr-1 text-right align-top', ruleBorder)}>
+				</TableCell>
+				<TableCell className={cn('w-0 py-2.5 pr-1 text-right align-top', ruleBorder)}>
 					<ChevronDown
 						size={16}
 						className={cn(
@@ -142,19 +147,19 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 							open && 'rotate-180',
 						)}
 					/>
-				</td>
-			</tr>
+				</TableCell>
+			</TableRow>
 			{open && (
-				<tr>
-					<td colSpan={2}>
+				<TableRow className="border-0">
+					<TableCell colSpan={2}>
 						<span className="sr-only">상세 정보</span>
-					</td>
-					<td className="w-56 pt-0 pb-3 pr-4 align-top">
+					</TableCell>
+					<TableCell className="w-56 pt-0 pb-3 pr-4 align-top">
 						<code className="inline-flex items-center whitespace-nowrap rounded-md bg-secondary px-2 py-0.5 font-mono text-[11px] text-secondary-foreground">
 							{rule.key}
 						</code>
-					</td>
-					<td className="pt-0 pb-3 pr-3 align-top" colSpan={3}>
+					</TableCell>
+					<TableCell className="pt-0 pb-3 pr-3 align-top whitespace-normal" colSpan={3}>
 						<div className="space-y-2">
 							{appliesTo.length > 1 && (
 								<p className="text-muted-foreground text-xs">
@@ -172,8 +177,8 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 							)}
 							<ReferenceAssets assets={rule.referenceAssets} />
 						</div>
-					</td>
-				</tr>
+					</TableCell>
+				</TableRow>
 			)}
 		</Fragment>
 	)
@@ -201,15 +206,10 @@ function ReferenceAssets({ assets }: { assets: Rule['referenceAssets'] }) {
 }
 
 export function CheckSections({ sections }: { sections: CheckSection[] }) {
-	const { scenarioKey, selected } = useCheckImages()
-	const [showFailOnly, setShowFailOnly] = useState(false)
+	const { scenarioKey, selected, showFailOnly } = useCheckImages()
 	const results = selected?.results
 	const visibleSections = filterRulesetByScenario(sections, getCheckScenario(scenarioKey))
 
-	let pass = 0
-	let ok = 0
-	let fail = 0
-	let pendingManualCheck = 0
 	const rows: RuleRowData[] = []
 	const rowByRuleKey = new Map<string, RuleRowData>()
 	const seenSections = new Set<string>()
@@ -228,13 +228,6 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 			const implemented = rule.implemented
 			const status = results?.[rule.key]?.rawResult.status
 
-			if (implemented) {
-				if (status === 'pass') pass++
-				else if (status === 'ok') ok++
-				else if (status === 'fail') fail++
-				else pendingManualCheck++
-			}
-
 			if (!implemented) continue
 			if (showFailOnly && results && status !== 'fail') continue
 
@@ -252,29 +245,26 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 			rowByRuleKey.set(rule.key, row)
 		}
 	}
-	const checked = selected?.status === '완료' && Boolean(results)
 
 	return (
 		<TooltipProvider delayDuration={150}>
 			<div className="py-8">
-				{checked && (
-					<ResultSummary
-						pass={pass}
-						ok={ok}
-						fail={fail}
-						pendingManualCheck={pendingManualCheck}
-						showFailOnly={showFailOnly}
-						onToggleFailOnly={() => setShowFailOnly((value) => !value)}
-					/>
-				)}
 				<div className="border-neutral-200 border-b dark:border-neutral-800">
-					<table className="w-full border-collapse">
-						<tbody>
+					<Table className="table-fixed border-collapse">
+						<colgroup>
+							<col className="w-44" />
+							<col className="w-8" />
+							<col className="w-56" />
+							<col />
+							<col className="w-36" />
+							<col className="w-8" />
+						</colgroup>
+						<TableBody>
 							{rows.map((row) => (
 								<RuleRow {...row} key={row.rowId} />
 							))}
-						</tbody>
-					</table>
+						</TableBody>
+					</Table>
 				</div>
 				{showFailOnly && rows.length === 0 && (
 					<p className="py-8 text-center text-muted-foreground text-sm">
@@ -283,57 +273,5 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 				)}
 			</div>
 		</TooltipProvider>
-	)
-}
-
-/** 검수 결과 한눈 요약: 통과·미통과·검수 전 카운트 + 미통과만 보기 토글. */
-function ResultSummary({
-	pass,
-	ok,
-	fail,
-	pendingManualCheck,
-	showFailOnly,
-	onToggleFailOnly,
-}: {
-	pass: number
-	ok: number
-	fail: number
-	pendingManualCheck: number
-	showFailOnly: boolean
-	onToggleFailOnly: () => void
-}) {
-	return (
-		<div className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border bg-card px-5 py-3.5 text-sm shadow-sm">
-			<span className="flex items-center gap-2">
-				<span className="inline-block size-2 rounded-full bg-emerald-500" />
-				통과 <span className="font-semibold tabular-nums">{pass}</span>
-			</span>
-			<span className="flex items-center gap-2">
-				<span className="inline-block size-2 rounded-full bg-sky-500" />
-				적합 <span className="font-semibold tabular-nums">{ok}</span>
-			</span>
-			<span className="flex items-center gap-2">
-				<span className="inline-block size-2 rounded-full bg-rose-500" />
-				미통과 <span className="font-semibold tabular-nums">{fail}</span>
-			</span>
-			<span className="flex items-center gap-2 text-muted-foreground">
-				<span className="inline-block size-2 rounded-full bg-amber-500" />
-				담당자 검토 필요{' '}
-				<span className="font-semibold tabular-nums">{pendingManualCheck}</span>
-			</span>
-			<button
-				type="button"
-				onClick={onToggleFailOnly}
-				disabled={fail === 0}
-				className={cn(
-					'ml-auto rounded-md border px-3 py-1.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40',
-					showFailOnly
-						? 'border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-400'
-						: 'text-muted-foreground hover:bg-accent hover:text-foreground',
-				)}
-			>
-				{showFailOnly ? '전체 보기' : '미통과만 보기'}
-			</button>
-		</div>
 	)
 }

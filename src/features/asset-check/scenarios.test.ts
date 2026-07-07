@@ -8,4 +8,10 @@ describe('getCheckScenario', () => {
 			expect(getCheckScenario(key).key).toBe('stationery')
 		}
 	})
+
+	it('maps demo aliases to application scenarios', () => {
+		expect(getCheckScenario('social post').key).toBe('sns')
+		expect(getCheckScenario('web banner').key).toBe('web-visual')
+		expect(getCheckScenario('광고 소재').key).toBe('advertisement')
+	})
 })

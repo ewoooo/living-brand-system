@@ -1,4 +1,5 @@
 import type { CheckResult } from '@/features/asset-check/checkers/types'
+import type { CheckSession } from '@/payload-types'
 
 export interface ImageContentFlags {
 	logo: boolean
@@ -7,7 +8,7 @@ export interface ImageContentFlags {
 	photography: boolean
 }
 
-export type CheckImageStatus = '대기' | '진행' | '완료'
+export type CheckImageStatus = CheckSession['status'] | 'idle'
 
 export interface CheckImage {
 	id: string
@@ -30,6 +31,8 @@ export interface CheckImageContextValue {
 	addFiles: (files: FileList | File[]) => void
 	scenarioKey: string
 	setScenarioKey: (key: string) => void
+	showFailOnly: boolean
+	toggleFailOnly: () => void
 	/** 선택 이미지를 검수 실행한다. */
 	runCheck: () => void
 }

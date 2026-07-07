@@ -29,6 +29,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 	const [images, setImages] = useState<CheckImage[]>([])
 	const [selectedId, setSelectedId] = useState<string | null>(null)
 	const [scenarioKey, setScenarioKeyValue] = useState(CHECK_SCENARIOS[0].key)
+	const [showFailOnly, setShowFailOnly] = useState(false)
 
 	function patchImage(id: string, patch: (image: CheckImage) => Partial<CheckImage>) {
 		setImages((prev) =>
@@ -38,7 +39,11 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 
 	// 서버 즉시 판정을 먼저 받고, AI 룰만 후속 요청으로 이어 붙인다.
 	async function runServerCheck(id: string, file: File) {
-		patchImage(id, () => ({ status: '진행', results: undefined, pendingRuleKeys: undefined }))
+		patchImage(id, () => ({
+			status: 'running',
+			results: undefined,
+			pendingRuleKeys: undefined,
+		}))
 		try {
 			const { checkSessionId, results, pendingRuleKeys } = await submitCheck(
 				file,
@@ -48,14 +53,14 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 				checkSessionId,
 				results,
 				pendingRuleKeys,
-				status: pendingRuleKeys.length > 0 ? '진행' : '완료',
+				status: pendingRuleKeys.length > 0 ? 'running' : 'completed',
 			}))
 			if (pendingRuleKeys.length > 0) {
 				void finishAiCheck(id, file, checkSessionId, pendingRuleKeys)
 			}
 		} catch {
 			// 실패 시 결과 없이 종료 — 재검수는 검수 버튼으로 다시 트리거한다.
-			patchImage(id, () => ({ status: '대기', pendingRuleKeys: undefined }))
+			patchImage(id, () => ({ status: 'failed', pendingRuleKeys: undefined }))
 		}
 	}
 
@@ -71,7 +76,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 		patchImage(id, (image) => ({
 			results: { ...image.results, ...results },
 			pendingRuleKeys: undefined,
-			status: '완료',
+			status: 'completed',
 		}))
 	}
 
@@ -84,7 +89,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 				url: URL.createObjectURL(file),
 				name: file.name,
 				file,
-				status: '대기',
+				status: 'idle',
 			})
 		}
 		if (added.length === 0) return
@@ -113,6 +118,8 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 		addFiles,
 		scenarioKey,
 		setScenarioKey,
+		showFailOnly,
+		toggleFailOnly: () => setShowFailOnly((value) => !value),
 		runCheck,
 	}
 
