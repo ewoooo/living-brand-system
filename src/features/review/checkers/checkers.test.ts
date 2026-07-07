@@ -5,14 +5,18 @@
  */
 import { describe, expect, it } from 'vitest'
 import { colorCombinationChecker } from './color/color-combination.checker'
+import { colorModeChecker } from './color/color-mode.checker'
 import { paletteComplianceChecker } from './color/palette-compliance.checker'
 import { hexToRgb, type Rgb, type Swatch } from './color/palette-match'
 import { spotColorChecker } from './color/spot-color.checker'
 import { advertisementFormatChecker } from './geometry/advertisement-format.checker'
+import { advertisementTemplateFormatChecker } from './geometry/advertisement-template-format.checker'
 import { aspectRatioChecker } from './geometry/aspect-ratio.checker'
 import { clearSpaceChecker } from './geometry/clear-space.checker'
 import { relativeSizeChecker } from './geometry/relative-size.checker'
+import { snsCanvasFormatChecker } from './geometry/sns-canvas-format.checker'
 import { snsFormatChecker } from './geometry/sns-format.checker'
+import { snsTemplateFormatChecker } from './geometry/sns-template-format.checker'
 import { visualTemplateFormatChecker } from './geometry/visual-template-format.checker'
 import { webFormatChecker } from './geometry/web-format.checker'
 import { backgroundToneChecker } from './imagery/background-tone.checker'
@@ -270,6 +274,63 @@ describe('canvas-format checkers', () => {
 
 	it('grid가 없으면 fail', () => {
 		expect(snsFormatChecker.check({ pixels: [], palette: [] }).status).toBe('fail')
+	})
+
+	it('application.sns.canvas.format: 1080×1440만 pass (Reels 규격은 이 룰 밖)', () => {
+		expect(
+			snsCanvasFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1440) })
+				.status,
+		).toBe('pass')
+		expect(
+			snsCanvasFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1920) })
+				.status,
+		).toBe('fail')
+	})
+
+	it('layout.sns.template: Feed/Reels 캔버스 pass', () => {
+		expect(
+			snsTemplateFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1440) })
+				.status,
+		).toBe('pass')
+		expect(
+			snsTemplateFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1920) })
+				.status,
+		).toBe('pass')
+	})
+
+	it('layout.advertisement.template: 오프라인 mm 비율 pass, 그 외 fail', () => {
+		expect(
+			advertisementTemplateFormatChecker.check({
+				pixels: [],
+				palette: [],
+				grid: sizeGrid(1440, 2100),
+			}).status,
+		).toBe('pass')
+		expect(
+			advertisementTemplateFormatChecker.check({
+				pixels: [],
+				palette: [],
+				grid: sizeGrid(8600, 2100),
+			}).status,
+		).toBe('pass')
+		expect(
+			advertisementTemplateFormatChecker.check({
+				pixels: [],
+				palette: [],
+				grid: sizeGrid(1000, 1000),
+			}).status,
+		).toBe('fail')
+	})
+})
+
+describe('colorModeChecker (color.mode — spot-color 별칭)', () => {
+	it('ruleKey만 다르고 판정은 spot-color와 동일', () => {
+		expect(colorModeChecker.ruleKey).toBe('color.mode')
+		const result = colorModeChecker.check({
+			pixels: [...px('#EA5343', 50), ...px('#FFFFFF', 50)],
+			palette: PALETTE,
+		})
+		expect(result.status).toBe('pass')
 	})
 })
 

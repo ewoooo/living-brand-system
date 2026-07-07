@@ -3,13 +3,17 @@
  * 파일 경로는 검사 기능 기준이고, ruleKey는 Payload 룰 카탈로그의 도메인 이름을 유지한다.
  */
 import { colorCombinationChecker } from './color/color-combination.checker'
+import { colorModeChecker } from './color/color-mode.checker'
 import { paletteComplianceChecker } from './color/palette-compliance.checker'
 import { spotColorChecker } from './color/spot-color.checker'
 import { advertisementFormatChecker } from './geometry/advertisement-format.checker'
+import { advertisementTemplateFormatChecker } from './geometry/advertisement-template-format.checker'
 import { aspectRatioChecker } from './geometry/aspect-ratio.checker'
 import { clearSpaceChecker } from './geometry/clear-space.checker'
 import { relativeSizeChecker } from './geometry/relative-size.checker'
+import { snsCanvasFormatChecker } from './geometry/sns-canvas-format.checker'
 import { snsFormatChecker } from './geometry/sns-format.checker'
+import { snsTemplateFormatChecker } from './geometry/sns-template-format.checker'
 import { visualTemplateFormatChecker } from './geometry/visual-template-format.checker'
 import { webFormatChecker } from './geometry/web-format.checker'
 import { backgroundToneChecker } from './imagery/background-tone.checker'
@@ -34,6 +38,10 @@ const checkers: Record<string, RuleChecker> = {
 	[webFormatChecker.ruleKey]: webFormatChecker,
 	[advertisementFormatChecker.ruleKey]: advertisementFormatChecker,
 	[visualTemplateFormatChecker.ruleKey]: visualTemplateFormatChecker,
+	[snsCanvasFormatChecker.ruleKey]: snsCanvasFormatChecker,
+	[snsTemplateFormatChecker.ruleKey]: snsTemplateFormatChecker,
+	[advertisementTemplateFormatChecker.ruleKey]: advertisementTemplateFormatChecker,
+	[colorModeChecker.ruleKey]: colorModeChecker,
 }
 
 export function getChecker(ruleKey: string): RuleChecker | null {
