@@ -19,6 +19,7 @@ interface RuleRowData {
 	rowId: string
 	sectionLabel: string | null
 	appliesTo: string[]
+	appliesToSet: Set<string>
 	anchorId: string | null
 }
 
@@ -223,8 +224,10 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 		for (const rule of section.rules) {
 			const existing = rowByRuleKey.get(rule.key)
 			if (existing) {
-				if (!existing.appliesTo.includes(section.title))
+				if (!existing.appliesToSet.has(section.title)) {
+					existing.appliesToSet.add(section.title)
 					existing.appliesTo.push(section.title)
+				}
 				continue
 			}
 
@@ -247,6 +250,7 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 				rowId: `${section.slug}:${rule.key}`,
 				sectionLabel: first ? section.title : null,
 				appliesTo: [section.title],
+				appliesToSet: new Set([section.title]),
 				anchorId: first ? section.slug : null,
 			}
 			rows.push(row)
