@@ -84,7 +84,7 @@ export async function runHeuristicCheck(
 	)
 }
 
-/** 룰이 요소 종속이면 사용자가 표시한 포함 요소 플래그가 켜져 있을 때만 검수한다. */
+/** 룰이 요소 종속이면 시나리오 플래그가 켜져 있을 때만 검수한다. */
 function shouldCheckRule(ruleKey: string, flags: ImageContentFlags): boolean {
 	if (ruleKey.startsWith('logo.')) return flags.logo
 	if (ruleKey.startsWith('typography.')) return flags.typography

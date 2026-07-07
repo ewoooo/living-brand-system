@@ -27,7 +27,7 @@ export {
 interface StartCheckSessionInput {
 	buffer: Buffer
 	deferHeuristic?: boolean
-	flags: ImageContentFlags
+	flags?: ImageContentFlags
 	imageName?: string
 	scenarioKey?: string
 	source: CheckSessionSource
@@ -58,7 +58,11 @@ export async function startCheckSession(input: StartCheckSessionInput) {
 	})
 
 	try {
-		const immediate = await runImmediateCheck(input.buffer, input.flags, rulesetSnapshot)
+		const immediate = await runImmediateCheck(
+			input.buffer,
+			input.flags ?? scenario.flags,
+			rulesetSnapshot,
+		)
 		const aiResults = input.deferHeuristic
 			? {}
 			: await runHeuristicCheck(input.buffer, immediate.pendingRuleKeys, rulesetSnapshot)

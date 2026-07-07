@@ -2,14 +2,10 @@
 
 import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { CHECK_SCENARIOS } from '@/features/asset-check/scenarios'
-import { CONTENT_FLAG_LABELS, type ImageContentFlags } from '@/features/asset-check/types'
 import { cn } from '@/lib/utils'
-
-const CONTENT_FLAG_KEYS = Object.keys(CONTENT_FLAG_LABELS) as (keyof ImageContentFlags)[]
 
 export function ImageSelector() {
 	const {
@@ -18,9 +14,6 @@ export function ImageSelector() {
 		selected,
 		select,
 		addFiles,
-		contentFlags,
-		flagsLocked,
-		setContentFlag,
 		scenarioKey,
 		setScenarioKey,
 		runCheck,
@@ -93,7 +86,7 @@ export function ImageSelector() {
 						<span className="text-muted-foreground text-xs">시나리오</span>
 						<select
 							value={scenarioKey}
-							disabled={flagsLocked}
+							disabled={selected?.status === '진행'}
 							onChange={(event) => setScenarioKey(event.target.value)}
 							className="h-8 rounded-md border bg-background px-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
 						>
@@ -104,27 +97,6 @@ export function ImageSelector() {
 							))}
 						</select>
 					</label>
-					<span className="text-muted-foreground text-xs">포함 요소</span>
-					{CONTENT_FLAG_KEYS.map((key) => (
-						<label
-							key={key}
-							htmlFor={`content-flag-${key}`}
-							className={cn(
-								'flex items-center gap-2 text-sm',
-								flagsLocked
-									? 'cursor-not-allowed text-muted-foreground'
-									: 'cursor-pointer text-foreground',
-							)}
-						>
-							<Checkbox
-								id={`content-flag-${key}`}
-								checked={contentFlags[key]}
-								disabled={flagsLocked}
-								onCheckedChange={(checked) => setContentFlag(key, checked === true)}
-							/>
-							{CONTENT_FLAG_LABELS[key]}
-						</label>
-					))}
 					<Button
 						type="button"
 						size="sm"

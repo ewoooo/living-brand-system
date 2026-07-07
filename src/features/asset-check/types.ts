@@ -7,20 +7,6 @@ export interface ImageContentFlags {
 	photography: boolean
 }
 
-export const DEFAULT_CONTENT_FLAGS: ImageContentFlags = {
-	logo: false,
-	typography: false,
-	illustration: false,
-	photography: false,
-}
-
-export const CONTENT_FLAG_LABELS: Record<keyof ImageContentFlags, string> = {
-	logo: 'Logo',
-	typography: 'Typography',
-	illustration: 'Illustration',
-	photography: 'Photography',
-}
-
 export type CheckImageStatus = '대기' | '진행' | '완료'
 
 export interface CheckImage {
@@ -42,13 +28,8 @@ export interface CheckImageContextValue {
 	selected: CheckImage | null
 	select: (id: string) => void
 	addFiles: (files: FileList | File[]) => void
-	/** 포함 요소 플래그 — 검수 요청에 실려 서버가 요소 종속 룰 실행 여부를 정한다. */
-	contentFlags: ImageContentFlags
-	/** 검수 제출 후 true — 플래그 잠금. 새 이미지 업로드 시 다시 false. */
-	flagsLocked: boolean
-	setContentFlag: (key: keyof ImageContentFlags, value: boolean) => void
 	scenarioKey: string
 	setScenarioKey: (key: string) => void
-	/** 선택 이미지를 검수 실행하고 플래그를 잠근다. */
+	/** 선택 이미지를 검수 실행한다. */
 	runCheck: () => void
 }
