@@ -1,11 +1,11 @@
 import type { CheckSessionSource } from '@/features/review/repositories/check-session.payload.repository'
-import { startCheckSessionService } from '@/features/review/services/start-check-session.service'
 import {
 	DEFAULT_CONTENT_FLAGS,
 	type ImageContentFlags,
 } from '@/features/review/types/content-flags'
 import { authenticateRequest } from '@/lib/request-auth'
 import type { User } from '@/payload-types'
+import { startCheckSession } from '@/services/start-check-session.service'
 
 export const maxDuration = 30
 
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
 
 	try {
 		const buffer = Buffer.from(await file.arrayBuffer())
-		const result = await startCheckSessionService({
+		const result = await startCheckSession({
 			buffer,
 			flags: parseContentFlags(form?.get('flags')),
 			imageName: file.name,
