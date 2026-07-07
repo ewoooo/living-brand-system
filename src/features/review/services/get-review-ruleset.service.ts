@@ -6,7 +6,6 @@ import {
 import type { ApplicationImage, Rule } from '@/payload-types'
 
 export interface ReviewReferenceAsset {
-	filename?: string
 	name: string
 	url: string
 	mimeType: string
@@ -96,7 +95,6 @@ function toReferenceAsset(asset: number | ApplicationImage): ReviewReferenceAsse
 	if (typeof asset === 'number' || !asset.url || !asset.mimeType) return []
 	return [
 		{
-			filename: asset.filename ?? undefined,
 			name: asset.name,
 			url: asset.url,
 			mimeType: asset.mimeType,
