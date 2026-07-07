@@ -1,6 +1,6 @@
 import scenarios from '@/features/review/scenarios/review-scenarios.json'
 import type { ReviewSection } from '@/features/review/services/get-review-ruleset.service'
-import type { ImageContentFlags } from '@/features/review/types/content-flags'
+import type { ImageContentFlags } from '@/features/review/types'
 
 export interface ReviewScenario {
 	key: string

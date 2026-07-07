@@ -3,8 +3,11 @@
 import { createContext, type ReactNode, useState } from 'react'
 import type { CheckResult } from '@/features/review/checkers/types'
 import { getReviewScenario, REVIEW_SCENARIOS } from '@/features/review/scenarios/review-scenarios'
-import type { ImageContentFlags } from '@/features/review/types/content-flags'
-import type { ReviewImage, ReviewImageContextValue } from '@/features/review/types/review-image'
+import type {
+	ImageContentFlags,
+	ReviewImage,
+	ReviewImageContextValue,
+} from '@/features/review/types'
 
 export const ReviewImageContext = createContext<ReviewImageContextValue | null>(null)
 

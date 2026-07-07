@@ -4,6 +4,8 @@ import { authenticated, managerOrAdmin } from '@/lib/auth'
 export const CheckSessions: CollectionConfig = {
 	slug: 'check-sessions',
 	access: {
+		// Worker는 검수 실행(create)만 가능하고, 결과 이력의 조회·수정·삭제는 Manager 권한이다.
+		// 검수 기록은 품질 감사 대상이라 실행자가 자신의 기록을 지우거나 고칠 수 없어야 한다.
 		read: managerOrAdmin,
 		create: authenticated,
 		update: managerOrAdmin,

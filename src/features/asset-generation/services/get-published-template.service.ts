@@ -9,6 +9,7 @@ export interface PublishedTemplate {
 
 /**
  * Create 화면이 쓰는 published 템플릿 단건 read service.
+ * Payload 조회는 published-template repository가 소유한다.
  * 읽기 계약: Admin에서 json을 손으로 고칠 수 있으므로 스키마에 어긋나면 없는 것으로 처리한다.
  */
 export async function getPublishedTemplate(templateId: number): Promise<PublishedTemplate | null> {

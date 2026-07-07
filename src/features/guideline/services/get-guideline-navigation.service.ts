@@ -27,6 +27,7 @@ export interface GetGuidelineNavigationOutput {
 /**
  * Creator UI 사이드바는 발행된 가이드라인의 목차 정보만 읽는다.
  * 본문 렌더링은 page/section service가 담당한다.
+ * Payload 조회는 guideline-view repository가 소유한다.
  */
 export const getGuidelineNavigation = cache(async (): Promise<GetGuidelineNavigationOutput> => {
 	try {

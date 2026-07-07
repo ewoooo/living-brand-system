@@ -9,14 +9,14 @@ import {
 	getReviewRules,
 	type ReviewRule,
 } from '@/features/review/services/get-review-ruleset.service'
-import type { ImageContentFlags } from '@/features/review/types/content-flags'
+import type { ImageContentFlags } from '@/features/review/types'
 
 /**
  * 검수 대상 이미지를 룰셋에 비춰 checker가 있는 룰만 판정한다 (서버 확정 판정의 단일 소스).
  * 요소 종속 룰(logo 등)은 포함 요소 플래그가 켜진 것만 검수한다 (content-gate 소유).
  * 이미지 디코딩은 image-decoder repository가, 기준 조회는 review service/repository가 소유한다.
  */
-export async function runReviewService(
+export async function runReview(
 	buffer: Buffer,
 	flags: ImageContentFlags,
 	inputRules?: ReviewRule[],
@@ -48,21 +48,17 @@ export async function runReviewService(
 	return results
 }
 
+// heuristic 룰은 호출 전에 runAiReview로 분기되므로 여기 오지 않는다.
 function runRuleByExecutor(rule: ReviewRule, ctx: CheckerContext): CheckResult | null {
-	switch (rule.executor) {
-		case 'deterministic': {
-			const checker = getChecker(rule.key)
-			return checker ? checker.check(ctx) : null
+	if (rule.executor === 'advisory') {
+		return {
+			status: 'needs_review',
+			fulfillment: null,
+			detail: '브랜드 담당자 확인 필요',
 		}
-		case 'heuristic':
-			return null
-		case 'advisory':
-			return {
-				status: 'needs_review',
-				fulfillment: null,
-				detail: '브랜드 담당자 확인 필요',
-			}
 	}
+	const checker = getChecker(rule.key)
+	return checker ? checker.check(ctx) : null
 }
 
 function imageInputFrom(buffer: Buffer): CheckerContext['image'] {

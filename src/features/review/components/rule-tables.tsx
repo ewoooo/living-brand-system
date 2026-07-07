@@ -3,7 +3,6 @@
 import { AiGenerate, ChevronDown, Ruler, User } from '@carbon/icons-react'
 import { type ComponentType, Fragment, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { getChecker } from '@/features/review/checkers/registry'
 import { useReviewImages } from '@/features/review/hooks/use-review-images'
 import {
 	filterRulesetByScenario,
@@ -19,6 +18,7 @@ interface RuleRowData {
 	rule: Rule
 	rowId: string
 	sectionLabel: string | null
+	appliesTo: string[]
 	anchorId: string | null
 }
 
@@ -47,10 +47,10 @@ const STATUS = {
 	},
 } as const
 
-function RuleRow({ rule, rowId, sectionLabel, anchorId }: RuleRowData) {
+function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData) {
 	const [open, setOpen] = useState(false)
 	const { selected } = useReviewImages()
-	const implemented = rule.executor !== 'deterministic' || getChecker(rule.key) !== null
+	const implemented = rule.implemented
 	const isSectionStart = sectionLabel !== null
 
 	const tier = TIER[rule.tier] ?? { label: rule.tier, Icon: User, desc: '' }
@@ -59,6 +59,7 @@ function RuleRow({ rule, rowId, sectionLabel, anchorId }: RuleRowData) {
 	const outcome = selected?.results?.[rule.key]
 	const inProgress = Boolean(selected?.checking) && !outcome
 	const detail = outcome?.status !== 'pass' ? outcome?.detail : null
+	const appliesToText = appliesTo.join(', ')
 
 	const ruleBorder = 'border-neutral-200 border-t dark:border-neutral-800'
 
@@ -160,6 +161,11 @@ function RuleRow({ rule, rowId, sectionLabel, anchorId }: RuleRowData) {
 					</td>
 					<td className="pt-0 pb-3 pr-3 align-top" colSpan={3}>
 						<div className="space-y-2">
+							{appliesTo.length > 1 && (
+								<p className="text-muted-foreground text-xs">
+									적용 위치: {appliesToText}
+								</p>
+							)}
 							{rule.evidence ? (
 								<blockquote className="rounded-md bg-white/5 px-3 py-2 text-muted-foreground text-xs leading-5">
 									{rule.evidence}
@@ -210,11 +216,19 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 	let fail = 0
 	let pendingReview = 0
 	const rows: RuleRowData[] = []
+	const rowByRuleKey = new Map<string, RuleRowData>()
 	const seenSections = new Set<string>()
 
 	for (const section of visibleSections) {
 		for (const rule of section.rules) {
-			const implemented = rule.executor !== 'deterministic' || getChecker(rule.key) !== null
+			const existing = rowByRuleKey.get(rule.key)
+			if (existing) {
+				if (!existing.appliesTo.includes(section.title))
+					existing.appliesTo.push(section.title)
+				continue
+			}
+
+			const implemented = rule.implemented
 			const status = results?.[rule.key]?.status
 
 			if (implemented) {
@@ -228,12 +242,15 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 
 			const first = !seenSections.has(section.slug)
 			seenSections.add(section.slug)
-			rows.push({
+			const row = {
 				rule,
 				rowId: `${section.slug}:${rule.key}`,
 				sectionLabel: first ? section.title : null,
+				appliesTo: [section.title],
 				anchorId: first ? section.slug : null,
-			})
+			}
+			rows.push(row)
+			rowByRuleKey.set(rule.key, row)
 		}
 	}
 	const reviewed = Boolean(results)

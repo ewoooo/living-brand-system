@@ -6,7 +6,7 @@ import type React from 'react'
 import { Sidebar, SidebarContent } from '@/components/ui/sidebar'
 
 /**
- * 사이트 공통 사이드 nav — 그룹(섹션/카테고리/챕터)마다 제목 + 세로 라인 항목 리스트.
+ * 사이트 공통 사이드 nav — 그룹(섹션/카테고리/챕터)마다 제목 + 항목 리스트.
  * guideline·review·create가 모두 이 하나를 쓴다. nav를 쓰는 페이지는 이 형태를 따른다.
  * href가 '#'로 시작하면 앵커(<a>), 아니면 라우트(<Link>)로 렌더하고 현재 경로면 활성 표시한다.
  */
@@ -31,10 +31,8 @@ function isAnchor(href: string) {
 }
 
 function NavItem({ item, active }: { item: SideNavItem; active: boolean }) {
-	const className = `-ml-px block border-l-2 py-1.5 pl-4 text-sm transition-colors ${
-		active
-			? 'border-foreground bg-neutral-500/15 font-medium text-foreground'
-			: 'border-transparent text-neutral-500 hover:bg-neutral-500/5 hover:text-foreground'
+	const className = `block px-2 py-1.5 text-sm transition-colors ${
+		active ? 'font-medium text-foreground' : 'text-neutral-500 hover:text-foreground'
 	}`
 
 	if (isAnchor(item.href)) {
@@ -59,16 +57,16 @@ function NavGroup({ group, pathname }: { group: SideNavGroup; pathname: string }
 				(group.titleHref ? (
 					<Link
 						href={group.titleHref}
-						className="block px-2 pb-1 font-medium text-muted-foreground text-xs hover:text-foreground"
+						className="block px-2 pb-1 font-medium text-foreground text-xs hover:text-foreground"
 					>
 						{group.title}
 					</Link>
 				) : (
-					<div className="px-2 pb-1 font-medium text-muted-foreground text-xs">
+					<div className="px-2 pb-1 font-medium text-foreground text-xs">
 						{group.title}
 					</div>
 				))}
-			<ul className="ml-2 flex flex-col border-neutral-200 border-l dark:border-neutral-800">
+			<ul className="flex flex-col">
 				{group.items.map((item) => (
 					<li key={item.key}>
 						<NavItem item={item} active={pathname === item.href} />

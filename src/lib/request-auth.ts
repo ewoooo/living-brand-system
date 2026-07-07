@@ -14,3 +14,19 @@ export async function authenticateRequest() {
 
 	return { payload, user }
 }
+
+/**
+ * 쿠키 인증 라우트의 교차 출처 강제 실행(CSRF) 방지 (docs/07 #11).
+ * Origin 헤더가 있으면 host와 일치해야 한다. Origin이 없는 요청(same-origin GET,
+ * 일부 non-browser 클라이언트)은 통과시키고, 파싱 불가한 Origin은 교차 출처로 본다.
+ */
+export function isCrossOriginRequest(req: Request): boolean {
+	const origin = req.headers.get('origin')
+	const host = req.headers.get('host')
+	if (!origin || !host) return false
+	try {
+		return new URL(origin).host !== host
+	} catch {
+		return true
+	}
+}

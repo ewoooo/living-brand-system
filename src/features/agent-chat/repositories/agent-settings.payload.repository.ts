@@ -1,6 +1,6 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type { AgentDefaultInstructionValues } from '../agent-default-instructions'
+import type { AgentDefaultInstructionValues } from '../utils/agent-default-instructions'
 
 export async function findAgentSettingsGlobal(
 	user: unknown,

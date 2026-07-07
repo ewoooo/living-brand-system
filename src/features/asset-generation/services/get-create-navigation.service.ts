@@ -21,6 +21,7 @@ export interface GetCreateNavigationOutput {
 /**
  * Create 화면 사이드바용 카테고리 → published 템플릿 목차 read service.
  * guideline의 섹션 → 페이지 내비게이션과 같은 관계를 만든다.
+ * Payload 조회는 published-template repository가 소유한다.
  * layout과 페이지가 같은 요청에서 함께 호출하므로 cache()로 요청당 한 번만 조회한다.
  */
 export const getCreateNavigation = cache(async (): Promise<GetCreateNavigationOutput> => {

@@ -1,7 +1,7 @@
 'use client'
 
 import { use } from 'react'
-import { ReviewImageContext } from '@/features/review/providers/review-image-provider'
+import { ReviewImageContext } from '@/features/review/components/review-image-provider'
 
 export function useReviewImages() {
 	const context = use(ReviewImageContext)

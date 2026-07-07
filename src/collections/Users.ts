@@ -11,7 +11,9 @@ export const Users: CollectionConfig = {
 		useAsTitle: 'email',
 		group: 'System',
 	},
-	auth: true,
+	auth: {
+		tokenExpiration: 1800, // 세션 30분 제한 (docs/07 #4). Payload 기본 2시간을 줄인다.
+	},
 	access: {
 		// 본인 또는 admin만 조회/수정, 생성·삭제는 admin만
 		read: selfOrAdmin,

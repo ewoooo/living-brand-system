@@ -8,6 +8,8 @@ export const ApplicationImages: CollectionConfig = {
 		plural: 'Application Images',
 	},
 	access: {
+		// 발행 가이드라인 SSR과 템플릿 렌더링이 인증 없이 파일 URL을 참조하므로 의도적인 공개 읽기다.
+		// 쓰기는 Payload 기본(인증 사용자)을 따른다 — read 외 권한을 열지 않는다.
 		read: () => true,
 	},
 	admin: {

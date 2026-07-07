@@ -11,6 +11,7 @@ export interface GetGuidelineMetadataOutput {
 /**
  * Creator UI는 발행된 가이드라인의 문서 메타데이터만 읽는다.
  * 표지, 내비게이션 제목, 푸터 문구는 이 값을 기준으로 조합한다.
+ * Payload 조회는 guideline-view repository가 소유한다.
  */
 export const getGuidelineMetadata = cache(async (): Promise<GetGuidelineMetadataOutput> => {
 	try {

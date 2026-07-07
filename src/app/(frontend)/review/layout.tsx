@@ -1,8 +1,8 @@
 import type React from 'react'
 import { SectionLayout } from '@/components/section-layout'
 import { ImageSelector } from '@/features/review/components/image-selector'
+import { ReviewImageProvider } from '@/features/review/components/review-image-provider'
 import { ReviewSideNavigation } from '@/features/review/components/review-side-navigation'
-import { ReviewImageProvider } from '@/features/review/providers/review-image-provider'
 import { getReviewRuleset } from '@/features/review/services/get-review-ruleset.service'
 
 // Review reads Payload collections, so CI builds without migrated tables must not prerender it.

@@ -5,10 +5,13 @@ import {
 	type AgentSkillDetail,
 	findEnabledAgentSkillByName,
 } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
-import { getReviewScenario, REVIEW_SCENARIOS } from '@/features/review/scenarios/review-scenarios'
-import { startCheckSessionService } from '@/features/review/services/start-check-session.service'
 import { AgentConfigurationError } from '@/lib/errors'
 import type { User } from '@/payload-types'
+import {
+	getReviewScenario,
+	REVIEW_SCENARIOS,
+	startCheckSession,
+} from '@/services/start-check-session.service'
 import { findAgentRules } from '../repositories/agent-guideline-context.payload.repository'
 import {
 	findTemplatesForRequest,
@@ -118,7 +121,7 @@ export function getAgentTools() {
 					}
 				}
 
-				const result = await startCheckSessionService({
+				const result = await startCheckSession({
 					buffer: image.buffer,
 					flags: scenario.flags,
 					imageName: image.name,
@@ -200,7 +203,7 @@ function dataToBuffer(data: unknown): Buffer | null {
 }
 
 function formatReviewToolResult(
-	result: Awaited<ReturnType<typeof startCheckSessionService>>,
+	result: Awaited<ReturnType<typeof startCheckSession>>,
 	scenarioTitle: string,
 ) {
 	const entries = Object.entries(result.results)
