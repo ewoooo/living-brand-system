@@ -6,7 +6,7 @@ import type { PixelGrid } from '../types'
 import type { Rgb } from './palette-match'
 
 /** WCAG relative luminance (0~1) */
-export function relativeLuminance({ r, g, b }: Rgb): number {
+function relativeLuminance({ r, g, b }: Rgb): number {
 	const lin = (c: number) => {
 		const x = c / 255
 		return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4

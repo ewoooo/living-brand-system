@@ -48,21 +48,17 @@ export async function runReview(
 	return results
 }
 
+// heuristic 룰은 호출 전에 runAiReview로 분기되므로 여기 오지 않는다.
 function runRuleByExecutor(rule: ReviewRule, ctx: CheckerContext): CheckResult | null {
-	switch (rule.executor) {
-		case 'deterministic': {
-			const checker = getChecker(rule.key)
-			return checker ? checker.check(ctx) : null
+	if (rule.executor === 'advisory') {
+		return {
+			status: 'needs_review',
+			fulfillment: null,
+			detail: '브랜드 담당자 확인 필요',
 		}
-		case 'heuristic':
-			return null
-		case 'advisory':
-			return {
-				status: 'needs_review',
-				fulfillment: null,
-				detail: '브랜드 담당자 확인 필요',
-			}
 	}
+	const checker = getChecker(rule.key)
+	return checker ? checker.check(ctx) : null
 }
 
 function imageInputFrom(buffer: Buffer): CheckerContext['image'] {

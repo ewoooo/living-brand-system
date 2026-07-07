@@ -48,23 +48,9 @@ export const getReviewRuleset = cache(async (): Promise<ReviewSection[]> => {
 		.map((page) => ({
 			title: page.title,
 			slug: page.slug ?? String(page.id),
-			rules: (page.rules ?? []).flatMap((placement) => {
-				const rule = placement.rule
-				if (typeof rule === 'number') return []
-				return [
-					{
-						key: rule.key,
-						titleKo: rule.titleKo ?? rule.title,
-						tier: rule.tier ?? '',
-						executor: rule.executor ?? 'deterministic',
-						value: rule.value ?? '',
-						scoring: rule.scoring ?? '',
-						input: rule.input ?? '',
-						evidence: rule.evidence ?? '',
-						referenceAssets: (rule.referenceAssets ?? []).flatMap(toReferenceAsset),
-					},
-				]
-			}),
+			rules: (page.rules ?? []).flatMap((placement) =>
+				typeof placement.rule === 'number' ? [] : [toReviewRule(placement.rule)],
+			),
 		}))
 })
 
