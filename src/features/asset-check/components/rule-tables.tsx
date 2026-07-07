@@ -271,7 +271,7 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 					<table className="w-full border-collapse">
 						<tbody>
 							{rows.map((row) => (
-								<RuleRow key={row.rowId} {...row} />
+								<RuleRow {...row} key={row.rowId} />
 							))}
 						</tbody>
 					</table>
