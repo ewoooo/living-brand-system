@@ -6,9 +6,12 @@ import type { PixelGrid } from '@/features/review/checkers/types'
 import { dominantColors } from '../color/color-metrics'
 import type { Rgb } from '../color/palette-match'
 
+// 알파(0–255)가 이 값 미만이면 투명 픽셀로 본다 — 안티앨리어싱 가장자리 노이즈 컷.
 const ALPHA_MIN = 8
 // flat 디자인에서 배경색과 이만큼(RGB 거리) 떨어지면 전경으로 본다.
 const FG_TOL = 48
+// 전경 픽셀이 이보다 적으면 로고가 없는 것으로 본다 — 노이즈 오검출 방지.
+const MIN_FG_PIXELS = 8
 
 export interface LogoRegion {
 	width: number
@@ -66,7 +69,7 @@ export function detectLogoRegion(grid: PixelGrid): LogoRegion | null {
 			if (y > y1) y1 = y
 		}
 	}
-	if (fgCount < 8 || x1 < 0) return null
+	if (fgCount < MIN_FG_PIXELS || x1 < 0) return null
 
 	return { width: w, height: h, mask, bbox: { x0, y0, x1, y1 } }
 }

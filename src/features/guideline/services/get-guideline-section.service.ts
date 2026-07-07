@@ -19,6 +19,7 @@ export interface GetGuidelineSectionOutput {
 /**
  * Creator UI는 발행된 섹션과 하위 페이지만 읽는다.
  * 페이지는 섹션 화면에서 한 번에 렌더하므로 page service를 반복 호출하지 않는다.
+ * Payload 조회는 guideline-view repository가 소유한다.
  */
 export async function getGuidelineSection(
 	sectionSlug: string,

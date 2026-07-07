@@ -19,6 +19,7 @@ function swatchFamily(colorGroup: unknown): SwatchFamily | null {
 
 /**
  * 검수 checker가 쓰는 팔레트 스냅샷을 brand-colors 컬렉션에서 만든다.
+ * Payload 조회는 review-palette repository가 소유한다.
  */
 export const getReviewPalette = cache(async (): Promise<Swatch[]> => {
 	const colors = await getReviewPaletteColors()

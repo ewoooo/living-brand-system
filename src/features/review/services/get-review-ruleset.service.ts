@@ -68,6 +68,10 @@ export const getReviewRuleset = cache(async (): Promise<ReviewSection[]> => {
 		}))
 })
 
+/**
+ * 검수 실행용 룰 스냅샷 read service — ruleKeys가 있으면 그 순서대로 필터·정렬해 반환한다.
+ * Payload 조회는 review-ruleset repository가 소유한다.
+ */
 export async function getReviewRules(ruleKeys?: string[]): Promise<ReviewRule[]> {
 	const rules = (await getReviewRuleDocs()).map(toReviewRule)
 	if (!ruleKeys) return rules

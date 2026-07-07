@@ -27,6 +27,8 @@ interface StartCheckSessionInput {
 
 /**
  * 검수 세션 시작 유스케이스 — 입력 이미지 판정과 CheckSession 저장을 한 요청 경계로 묶는다.
+ * CheckSession 저장 I/O는 check-session repository가, 룰 판정은 review 기능의
+ * run-review/get-review-rules service가 소유한다.
  */
 export async function startCheckSession(input: StartCheckSessionInput) {
 	const scenario = getReviewScenario(input.scenarioKey)
