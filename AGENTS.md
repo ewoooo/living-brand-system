@@ -16,6 +16,7 @@ Start with `.agents/skills/payload/SKILL.md` for a quick reference, then see `.a
 When changing Payload collections, fields, indexes, relationships, or other database-backed model behavior:
 
 - Commit the matching migration files with the source change.
+- Commit the drizzle schema snapshot (`.json`) that `migrate:create` emits next to the `.ts`, and never delete snapshots; without them `migrate:create` regenerates the entire schema instead of an incremental diff.
 - Do not rely on local automatic schema changes as the team handoff mechanism.
 - After pulling schema-related changes, run pending migrations before debugging local database errors.
 - Do not manually patch a local database to match pulled code unless documenting a one-off recovery step.

@@ -60,6 +60,8 @@ pnpm dev
 | `pnpm doctor` | 타입 생성 + Biome 검사 + 타입체크 일괄 실행 |
 | `pnpm ci` | 검사 + 타입체크 + 통합 테스트 + 빌드 |
 
+> **스키마 변경 시:** collection·field·index를 바꾸면 `pnpm migrate:create <이름>`으로 마이그레이션을 만들고, 생성된 `.ts`·`.json`·`index.ts`와 재생성된 `payload-types.ts`를 수정한 소스와 **한 커밋**에 담습니다. `.json` 스냅샷은 삭제하지 않습니다(다음 `migrate:create`의 diff 기준). 자세한 절차는 [docs/06-project-structure.md](docs/06-project-structure.md)의 "스키마 변경과 마이그레이션 워크플로"를 참고하세요.
+
 ## 프로젝트 구조
 
 ```
