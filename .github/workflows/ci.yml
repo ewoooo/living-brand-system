@@ -98,19 +98,54 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
       - run: pnpm run build
 
+  # 마이그레이션 체인이 "빈 DB에서 처음부터" 끝까지 도는지 검증하는 가드레일.
+  # push 없이 실제 migrate만 돌려 order 0 no-op·코어 테이블 누락 같은 재현 불가 문제를 PR에서 잡는다.
+  # (기존 test/build는 push로 스키마를 세워 이 결함을 못 잡았음 — 이 잡이 그 사각을 메운다.)
+  migrate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: hd_cms_prototype
+          POSTGRES_PASSWORD: payload
+          POSTGRES_USER: payload
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U payload -d hd_cms_prototype"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://payload:payload@127.0.0.1:5432/hd_cms_prototype
+      PAYLOAD_SECRET: ci-local-secret
+      # push를 켜지 않는다 — 마이그레이션 체인만으로 빈 DB에 스키마가 서는지 보는 게 목적.
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run migrate
+      - run: pnpm run migrate:status
+
   # 브랜치 보호의 required status check 이름을 `checks`로 안정적으로 유지하기 위한 집계 게이트.
-  # 위 3개 잡을 병렬로 기다렸다가 하나라도 실패/취소면 실패한다. 잡을 더 쪼개도 이 이름만 required로 걸면 된다.
+  # 위 잡들을 병렬로 기다렸다가 하나라도 실패/취소면 실패한다. 잡을 더 쪼개도 이 이름만 required로 걸면 된다.
   checks:
     if: always()
-    needs: [static, test, build]
+    needs: [static, test, build, migrate]
     runs-on: ubuntu-latest
     steps:
       - name: Verify all CI jobs succeeded
         run: |
           if [ "${{ needs.static.result }}" != "success" ] \
             || [ "${{ needs.test.result }}" != "success" ] \
-            || [ "${{ needs.build.result }}" != "success" ]; then
-            echo "CI 잡 실패: static=${{ needs.static.result }} test=${{ needs.test.result }} build=${{ needs.build.result }}"
+            || [ "${{ needs.build.result }}" != "success" ] \
+            || [ "${{ needs.migrate.result }}" != "success" ]; then
+            echo "CI 잡 실패: static=${{ needs.static.result }} test=${{ needs.test.result }} build=${{ needs.build.result }} migrate=${{ needs.migrate.result }}"
             exit 1
           fi
           echo "모든 CI 잡 통과"
