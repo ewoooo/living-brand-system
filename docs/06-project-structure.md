@@ -581,3 +581,42 @@ export async function POST(req: Request) {
 ```
 
 Service는 업무상 실패를 명확한 오류로 던지고, Route Handler가 HTTP 응답으로 바꿉니다.
+
+## 16. 스키마 변경과 마이그레이션 워크플로
+
+Payload collection, field, index, relationship처럼 DB 스키마에 영향을 주는 변경은 소스 변경과 마이그레이션을 항상 함께 커밋합니다.
+로컬 `PAYLOAD_DB_PUSH`는 개발 편의용이며 팀 배포 기준이 아닙니다. 스키마 변경은 마이그레이션으로만 전파합니다.
+
+### 절차
+
+1. `src/collections`(또는 `globals`, `blocks`)에서 스키마를 수정합니다.
+2. `pnpm migrate:create <이름>`을 실행합니다. Postgres 어댑터는 현재 config와 최신 스냅샷을 비교해 증분 마이그레이션을 생성합니다.
+3. 아래 생성물과 소스 변경을 하나의 커밋에 담습니다.
+
+| 파일 | 내용 |
+| --- | --- |
+| `migrations/<timestamp>_<이름>.ts` | up / down SQL |
+| `migrations/<timestamp>_<이름>.json` | 스키마 스냅샷. 다음 `migrate:create`의 diff 기준입니다. |
+| `migrations/index.ts` | 자동 갱신되는 마이그레이션 목록 |
+| `src/payload-types.ts` | 자동 재생성되는 타입. `pnpm generate:types`로도 갱신합니다. |
+| 수정한 collection 소스 | 스키마 변경 원본 |
+
+4. 빈 DB에서 `pnpm migrate`가 baseline부터 끝까지 통과하는지 확인합니다. CI `migrate` 잡이 동일하게 검증합니다.
+
+### 규칙
+
+- 마이그레이션 없는 스키마 변경 PR은 불완전합니다. 소스와 마이그레이션을 분리 커밋하지 않습니다.
+- `.json` 스냅샷을 삭제하지 않습니다. 스냅샷이 없으면 `migrate:create`가 증분 대신 전체 스키마를 재생성합니다.
+- 깨는 변경(컬럼 삭제, 리네임, NOT NULL 추가)은 expand → migrate/backfill → contract 세 단계로 나눕니다. nullable 필드 추가는 expand 한 단계로 끝납니다.
+- 새 스키마가 요구하는 seed / fixture 변경은 같은 커밋에 포함합니다.
+- `migrate:down`은 롤백 수단으로 신뢰하지 않습니다. 운영 DB 롤백은 백업으로 합니다.
+
+### pull 이후
+
+스키마 관련 변경을 받은 뒤에는 로컬 DB 오류를 디버깅하기 전에 먼저 마이그레이션을 적용합니다.
+
+```sh
+pnpm install
+pnpm migrate
+pnpm dev
+```
