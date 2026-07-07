@@ -48,6 +48,7 @@ function SidebarProvider({
 	defaultOpen = true,
 	open: openProp,
 	onOpenChange: setOpenProp,
+	storageKey,
 	className,
 	style,
 	children,
@@ -56,6 +57,7 @@ function SidebarProvider({
 	defaultOpen?: boolean
 	open?: boolean
 	onOpenChange?: (open: boolean) => void
+	storageKey?: string
 }) {
 	const isMobile = useIsMobile()
 	const [openMobile, setOpenMobile] = React.useState(false)
@@ -67,14 +69,30 @@ function SidebarProvider({
 	const setOpen = React.useCallback(
 		(value: boolean | ((value: boolean) => boolean)) => {
 			const openState = typeof value === 'function' ? value(open) : value
+			if (storageKey) {
+				try {
+					localStorage.setItem(storageKey, String(openState))
+				} catch {}
+			}
 			if (setOpenProp) {
 				setOpenProp(openState)
 			} else {
 				_setOpen(openState)
 			}
 		},
-		[setOpenProp, open],
+		[setOpenProp, open, storageKey],
 	)
+
+	React.useEffect(() => {
+		if (!storageKey) return
+
+		try {
+			const savedOpen = localStorage.getItem(storageKey)
+			if (savedOpen !== null) {
+				setOpen(savedOpen === 'true')
+			}
+		} catch {}
+	}, [setOpen, storageKey])
 
 	// Helper to toggle the sidebar.
 	const toggleSidebar = React.useCallback(() => {

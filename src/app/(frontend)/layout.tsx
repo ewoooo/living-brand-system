@@ -44,6 +44,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 				</Script>
 				<SidebarProvider
 					className="h-svh"
+					storageKey="lbs.agentChatSidebarOpen"
 					style={{ '--sidebar-width': '25rem' } as React.CSSProperties}
 				>
 					<main className="grid min-h-0 min-w-0 flex-1 grid-rows-[auto_1fr]">
