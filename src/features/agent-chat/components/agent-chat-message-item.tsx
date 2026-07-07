@@ -1,7 +1,7 @@
 import { Ai, Catalog, Search } from '@carbon/icons-react'
 import Link from 'next/link'
+import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import { Spinner } from '@/components/ui/spinner'
-import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import {
 	getAgentReasoningMarker,
 	getAgentSkillMarker,

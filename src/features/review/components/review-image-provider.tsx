@@ -1,12 +1,14 @@
 'use client'
 
-import { createContext, type ReactNode, useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import type { CheckResult } from '@/features/review/checkers/types'
+import { ReviewImageContext } from '@/features/review/hooks/use-review-images'
 import { getReviewScenario, REVIEW_SCENARIOS } from '@/features/review/scenarios/review-scenarios'
-import type { ImageContentFlags } from '@/features/review/types/content-flags'
-import type { ReviewImage, ReviewImageContextValue } from '@/features/review/types/review-image'
-
-export const ReviewImageContext = createContext<ReviewImageContextValue | null>(null)
+import type {
+	ImageContentFlags,
+	ReviewImage,
+	ReviewImageContextValue,
+} from '@/features/review/types'
 
 /**
  * 검수 대상 이미지 목록·선택 상태·포함 요소 플래그를 review 작업 영역 전체에 제공한다.

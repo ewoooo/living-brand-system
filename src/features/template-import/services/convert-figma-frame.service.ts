@@ -31,6 +31,7 @@ export interface ConvertFigmaFrameOutput {
 
 /**
  * Figma 프레임을 JsonTemplate으로 변환하고 이미지 조각을 template-assets로 영속화하는 Use Case.
+ * Figma REST I/O는 figma.rest repository가, Payload 저장은 template-asset repository가 소유한다.
  * IMAGE fill은 PNG(hiDPI), 벡터 계열 노드는 SVG로 받아 벡터를 보존한다.
  * 같은 내용의 조각은 checksum으로 재사용하고 새로 만들지 않는다.
  * Template 문서 생성·저장은 하지 않는다 — Admin 폼이 결과를 jsonTemplate 필드에 받아 저장을 결정한다.

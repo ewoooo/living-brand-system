@@ -111,6 +111,11 @@ export default buildConfig({
 			})
 		: undefined,
 	secret: process.env.PAYLOAD_SECRET || '',
+	upload: {
+		limits: {
+			fileSize: 20_000_000, // 20MB — 고해상 브랜드 에셋 여유 상한, 무제한 업로드 방지 (docs/07 #27)
+		},
+	},
 	typescript: {
 		outputFile: path.resolve(dirname, 'payload-types.ts'),
 	},

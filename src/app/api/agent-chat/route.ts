@@ -1,13 +1,15 @@
+import { createAgentUIStreamResponse } from 'ai'
 import { z } from 'zod'
 
-import {
-	createAgentChatResponse,
-	validateAgentChatMessages,
-} from '@/features/agent-chat/services/create-agent-chat-response.service'
+import { agentChatAgent, assertAgentChatProviderConfigured } from '@/agents/agent-chat.agent'
+import { validateAgentChatMessages } from '@/features/agent-chat/services/validate-agent-chat-messages.service'
 import { AgentConfigurationError } from '@/lib/errors'
-import { authenticateRequest } from '@/lib/request-auth'
+import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
 export const maxDuration = 30
+
+// 25MB — base64 이미지 첨부(~33% 팽창) 여유. 무제한 JSON 적재 방지 (docs/07 #17).
+const MAX_BODY_BYTES = 25_000_000
 
 const uiMessageSchema = z
 	.object({
@@ -29,6 +31,15 @@ export async function parseAgentChatRequest(req: Request) {
 }
 
 export async function POST(req: Request) {
+	if (isCrossOriginRequest(req)) {
+		return Response.json({ message: 'Invalid origin.' }, { status: 403 })
+	}
+
+	// content-length 없는(chunked) 요청은 통과한다 — 브라우저 fetch는 항상 길이를 싣는다.
+	if (Number(req.headers.get('content-length')) > MAX_BODY_BYTES) {
+		return Response.json({ message: 'Request is too large.' }, { status: 413 })
+	}
+
 	const { payload, user } = await authenticateRequest()
 
 	// Agent 질의도 내부 사용자 요청만 허용한다.
@@ -51,10 +62,18 @@ export async function POST(req: Request) {
 	const requestId = crypto.randomUUID()
 
 	try {
-		return await createAgentChatResponse({
-			messages: validatedMessages.data,
-			pagePath: parsed.data.pagePath,
-			user,
+		// stream 시작 전에 동기로 검증해야 설정 오류를 HTTP 상태로 매핑할 수 있다.
+		assertAgentChatProviderConfigured()
+
+		// 스트리밍 Response 생성은 HTTP adapter인 route가 소유한다 (AI SDK 공식 패턴).
+		return await createAgentUIStreamResponse({
+			agent: agentChatAgent,
+			uiMessages: validatedMessages.data,
+			options: {
+				pagePath: parsed.data.pagePath,
+				user,
+			},
+			onError: () => 'Agent response failed.',
 		})
 	} catch (error) {
 		payload.logger.error({ err: error, requestId }, 'agent-chat.request.failed')
@@ -64,6 +83,7 @@ export async function POST(req: Request) {
 			return Response.json({ message: error.message }, { status: 503 })
 		}
 
-		throw error
+		// 상세 오류는 위 로그에만 남기고 사용자에게는 일반화된 메시지만 반환한다.
+		return Response.json({ message: 'Agent response failed.' }, { status: 500 })
 	}
 }

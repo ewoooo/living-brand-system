@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
 import { useReviewImages } from '@/features/review/hooks/use-review-images'
 import { REVIEW_SCENARIOS } from '@/features/review/scenarios/review-scenarios'
-import { CONTENT_FLAG_LABELS, type ImageContentFlags } from '@/features/review/types/content-flags'
+import { CONTENT_FLAG_LABELS, type ImageContentFlags } from '@/features/review/types'
 import { cn } from '@/lib/utils'
 
 const CONTENT_FLAG_KEYS = Object.keys(CONTENT_FLAG_LABELS) as (keyof ImageContentFlags)[]

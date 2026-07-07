@@ -15,6 +15,8 @@ export async function findAuthorizedAssetsByIds(
 		collection,
 		depth: 0,
 		limit: assetIds.length,
+		// 저장 게이트의 서버 내부 무결성 검증이다. 대상 컬렉션은 공개 read이고
+		// 반환도 id/url뿐이라 요청 사용자 기준 access 재평가를 생략해도 안전하다.
 		overrideAccess: true,
 		where: { id: { in: assetIds } },
 	})

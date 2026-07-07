@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { getChecker } from '@/features/review/checkers/registry'
 import {
 	getReviewRuleDocs,
 	getReviewRulesetPages,
@@ -6,7 +7,6 @@ import {
 import type { ApplicationImage, Rule } from '@/payload-types'
 
 export interface ReviewReferenceAsset {
-	filename?: string
 	name: string
 	url: string
 	mimeType: string
@@ -17,6 +17,8 @@ export interface ReviewRule {
 	titleKo: string
 	tier: string
 	executor: NonNullable<Rule['executor']>
+	/** 자동 검수 가능 여부 — deterministic인데 checker 미등록이면 false (UI 배지용). */
+	implemented: boolean
 	value: string
 	scoring: string
 	input: string
@@ -49,26 +51,16 @@ export const getReviewRuleset = cache(async (): Promise<ReviewSection[]> => {
 		.map((page) => ({
 			title: page.title,
 			slug: page.slug ?? String(page.id),
-			rules: (page.rules ?? []).flatMap((placement) => {
-				const rule = placement.rule
-				if (typeof rule === 'number') return []
-				return [
-					{
-						key: rule.key,
-						titleKo: rule.titleKo ?? rule.title,
-						tier: rule.tier ?? '',
-						executor: rule.executor ?? 'deterministic',
-						value: rule.value ?? '',
-						scoring: rule.scoring ?? '',
-						input: rule.input ?? '',
-						evidence: rule.evidence ?? '',
-						referenceAssets: (rule.referenceAssets ?? []).flatMap(toReferenceAsset),
-					},
-				]
-			}),
+			rules: (page.rules ?? []).flatMap((placement) =>
+				typeof placement.rule === 'number' ? [] : [toReviewRule(placement.rule)],
+			),
 		}))
 })
 
+/**
+ * 검수 실행용 룰 스냅샷 read service — ruleKeys가 있으면 그 순서대로 필터·정렬해 반환한다.
+ * Payload 조회는 review-ruleset repository가 소유한다.
+ */
 export async function getReviewRules(ruleKeys?: string[]): Promise<ReviewRule[]> {
 	const rules = (await getReviewRuleDocs()).map(toReviewRule)
 	if (!ruleKeys) return rules
@@ -79,11 +71,14 @@ export async function getReviewRules(ruleKeys?: string[]): Promise<ReviewRule[]>
 }
 
 function toReviewRule(rule: Rule): ReviewRule {
+	const executor = rule.executor ?? 'deterministic'
 	return {
 		key: rule.key,
 		titleKo: rule.titleKo ?? rule.title,
 		tier: rule.tier ?? '',
-		executor: rule.executor ?? 'deterministic',
+		executor,
+		// 서버에서 계산해 내려보낸다 — 클라이언트가 checker registry를 import하지 않게.
+		implemented: executor !== 'deterministic' || getChecker(rule.key) !== null,
 		value: rule.value ?? '',
 		scoring: rule.scoring ?? '',
 		input: rule.input ?? '',
@@ -96,7 +91,6 @@ function toReferenceAsset(asset: number | ApplicationImage): ReviewReferenceAsse
 	if (typeof asset === 'number' || !asset.url || !asset.mimeType) return []
 	return [
 		{
-			filename: asset.filename ?? undefined,
 			name: asset.name,
 			url: asset.url,
 			mimeType: asset.mimeType,

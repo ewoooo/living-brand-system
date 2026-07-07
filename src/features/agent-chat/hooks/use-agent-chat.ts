@@ -3,7 +3,7 @@
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { useMemo } from 'react'
-import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
+import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 
 async function fetchAgentChat(input: RequestInfo | URL, init?: RequestInit) {
 	const response = await fetch(input, init)

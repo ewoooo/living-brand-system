@@ -1,8 +1,8 @@
+import { findAgentSettingsGlobal } from '../repositories/agent-settings.payload.repository'
 import {
 	type AgentDefaultInstructionValues,
 	agentDefaultInstructionSections,
-} from '../agent-default-instructions'
-import { findAgentSettingsGlobal } from '../repositories/agent-settings.payload.repository'
+} from '../utils/agent-default-instructions'
 
 /**
  * Agent chat runtime에 공통 system prompt 섹션을 제공한다.

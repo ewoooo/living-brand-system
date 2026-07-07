@@ -3,7 +3,6 @@
 import { AiGenerate, ChevronDown, Ruler, User } from '@carbon/icons-react'
 import { type ComponentType, Fragment, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { getChecker } from '@/features/review/checkers/registry'
 import { useReviewImages } from '@/features/review/hooks/use-review-images'
 import {
 	filterRulesetByScenario,
@@ -20,6 +19,7 @@ interface RuleRowData {
 	rowId: string
 	sectionLabel: string | null
 	appliesTo: string[]
+	appliesToSet: Set<string>
 	anchorId: string | null
 }
 
@@ -51,7 +51,7 @@ const STATUS = {
 function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData) {
 	const [open, setOpen] = useState(false)
 	const { selected } = useReviewImages()
-	const implemented = rule.executor !== 'deterministic' || getChecker(rule.key) !== null
+	const implemented = rule.implemented
 	const isSectionStart = sectionLabel !== null
 
 	const tier = TIER[rule.tier] ?? { label: rule.tier, Icon: User, desc: '' }
@@ -224,12 +224,14 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 		for (const rule of section.rules) {
 			const existing = rowByRuleKey.get(rule.key)
 			if (existing) {
-				if (!existing.appliesTo.includes(section.title))
+				if (!existing.appliesToSet.has(section.title)) {
+					existing.appliesToSet.add(section.title)
 					existing.appliesTo.push(section.title)
+				}
 				continue
 			}
 
-			const implemented = rule.executor !== 'deterministic' || getChecker(rule.key) !== null
+			const implemented = rule.implemented
 			const status = results?.[rule.key]?.status
 
 			if (implemented) {
@@ -248,6 +250,7 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 				rowId: `${section.slug}:${rule.key}`,
 				sectionLabel: first ? section.title : null,
 				appliesTo: [section.title],
+				appliesToSet: new Set([section.title]),
 				anchorId: first ? section.slug : null,
 			}
 			rows.push(row)
