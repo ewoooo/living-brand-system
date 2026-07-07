@@ -3,7 +3,6 @@
 import { AiGenerate, ChevronDown, Ruler, User } from '@carbon/icons-react'
 import { type ComponentType, Fragment, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { getChecker } from '@/features/review/checkers/registry'
 import { useReviewImages } from '@/features/review/hooks/use-review-images'
 import {
 	filterRulesetByScenario,
@@ -51,7 +50,7 @@ const STATUS = {
 function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData) {
 	const [open, setOpen] = useState(false)
 	const { selected } = useReviewImages()
-	const implemented = rule.executor !== 'deterministic' || getChecker(rule.key) !== null
+	const implemented = rule.implemented
 	const isSectionStart = sectionLabel !== null
 
 	const tier = TIER[rule.tier] ?? { label: rule.tier, Icon: User, desc: '' }
@@ -229,7 +228,7 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 				continue
 			}
 
-			const implemented = rule.executor !== 'deterministic' || getChecker(rule.key) !== null
+			const implemented = rule.implemented
 			const status = results?.[rule.key]?.status
 
 			if (implemented) {

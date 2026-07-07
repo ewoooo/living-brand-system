@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { getChecker } from '@/features/review/checkers/registry'
 import {
 	getReviewRuleDocs,
 	getReviewRulesetPages,
@@ -16,6 +17,8 @@ export interface ReviewRule {
 	titleKo: string
 	tier: string
 	executor: NonNullable<Rule['executor']>
+	/** 자동 검수 가능 여부 — deterministic인데 checker 미등록이면 false (UI 배지용). */
+	implemented: boolean
 	value: string
 	scoring: string
 	input: string
@@ -68,11 +71,14 @@ export async function getReviewRules(ruleKeys?: string[]): Promise<ReviewRule[]>
 }
 
 function toReviewRule(rule: Rule): ReviewRule {
+	const executor = rule.executor ?? 'deterministic'
 	return {
 		key: rule.key,
 		titleKo: rule.titleKo ?? rule.title,
 		tier: rule.tier ?? '',
-		executor: rule.executor ?? 'deterministic',
+		executor,
+		// 서버에서 계산해 내려보낸다 — 클라이언트가 checker registry를 import하지 않게.
+		implemented: executor !== 'deterministic' || getChecker(rule.key) !== null,
 		value: rule.value ?? '',
 		scoring: rule.scoring ?? '',
 		input: rule.input ?? '',
