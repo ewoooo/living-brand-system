@@ -522,6 +522,10 @@ export interface TemplateCategory {
    */
   generateSlug?: boolean | null;
   slug: string;
+  /**
+   * Create 화면에서 카테고리를 설명하는 짧은 문구입니다. (선택)
+   */
+  description?: string | null;
   templates?: {
     docs?: (number | Template)[];
     hasNextPage?: boolean;
@@ -1259,6 +1263,7 @@ export interface TemplateCategoriesSelect<T extends boolean = true> {
   title?: T;
   generateSlug?: T;
   slug?: T;
+  description?: T;
   templates?: T;
   displayOrder?: T;
   updatedAt?: T;
