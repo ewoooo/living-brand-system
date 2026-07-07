@@ -14,4 +14,10 @@ describe('getCheckScenario', () => {
 		expect(getCheckScenario('web banner').key).toBe('web-visual')
 		expect(getCheckScenario('광고 소재').key).toBe('advertisement')
 	})
+
+	it('checks photography prohibitions in image mood scenarios', () => {
+		expect(getCheckScenario('image-mood').ruleKeys).toEqual(
+			expect.arrayContaining(['imagery.misuse', 'imagery.ai-consistency']),
+		)
+	})
 })

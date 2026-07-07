@@ -97,6 +97,7 @@ function RuleRow({
 						key={`${rowId}:detail`}
 						rule={rule}
 						appliesTo={appliesTo}
+						outcome={outcome}
 						shouldReduceMotion={shouldReduceMotion}
 					/>
 				)}
@@ -278,13 +279,16 @@ function RuleStatusBadge({
 function RuleDetailRow({
 	rule,
 	appliesTo,
+	outcome,
 	shouldReduceMotion,
 }: {
 	rule: Rule
 	appliesTo: string[]
+	outcome?: CheckResult
 	shouldReduceMotion: boolean | null
 }) {
 	const appliesToText = appliesTo.join(', ')
+	const facts = outcome?.rawResult.facts
 
 	return (
 		<motion.tr
@@ -321,11 +325,48 @@ function RuleDetailRow({
 								관련 가이드라인 없음
 							</span>
 						)}
+						<RuleFacts facts={facts} />
 						<ReferenceAssets assets={rule.referenceAssets} />
 					</div>
 				</RuleDetailCollapse>
 			</TableCell>
 		</motion.tr>
+	)
+}
+
+function RuleFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
+	if (!facts || Object.keys(facts).length === 0) return null
+
+	return (
+		<dl className="grid gap-1.5 rounded-md bg-white/5 px-3 py-2 text-xs">
+			{typeof facts.detectedCategory === 'string' && (
+				<RuleFact label="검출 분류" value={facts.detectedCategory} />
+			)}
+			{typeof facts.confidence === 'number' && (
+				<RuleFact label="신뢰도" value={`${facts.confidence}%`} />
+			)}
+			{Array.isArray(facts.prohibitedSignals) && facts.prohibitedSignals.length > 0 && (
+				<div className="grid gap-1">
+					<dt className="text-muted-foreground">금지 신호</dt>
+					<dd>
+						<ul className="list-disc space-y-0.5 pl-4">
+							{facts.prohibitedSignals.map((signal) => (
+								<li key={signal}>{signal}</li>
+							))}
+						</ul>
+					</dd>
+				</div>
+			)}
+		</dl>
+	)
+}
+
+function RuleFact({ label, value }: { label: string; value: string }) {
+	return (
+		<div className="grid grid-cols-[5rem_1fr] gap-2">
+			<dt className="text-muted-foreground">{label}</dt>
+			<dd>{value}</dd>
+		</div>
 	)
 }
 

@@ -12,14 +12,14 @@ export function getAgentReasoningMarker(
 	const reasoningParts = message.parts.filter((part) => part.type === 'reasoning')
 
 	if (reasoningParts.length === 0) {
-		return isActive ? { isPending: true, text: 'Reasoning' } : null
+		return isActive ? { isPending: true, text: '확인 중' } : null
 	}
 
 	const isPending = reasoningParts.some((part) => part.state === 'streaming')
 
 	return {
 		isPending,
-		text: isPending ? 'Reasoning' : 'Reasoning complete',
+		text: isPending ? '확인 중' : '확인 완료',
 	}
 }
 

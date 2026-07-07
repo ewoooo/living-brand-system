@@ -18,7 +18,13 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 	{
 		key: 'image-mood',
 		title: '이미지 무드 검수',
-		ruleKeys: ['imagery.style', 'imagery.photography.classification', 'color.usage'],
+		ruleKeys: [
+			'imagery.style',
+			'imagery.photography.classification',
+			'imagery.misuse',
+			'imagery.ai-consistency',
+			'color.usage',
+		],
 		flags: { logo: false, typography: false, illustration: false, photography: true },
 	},
 	{

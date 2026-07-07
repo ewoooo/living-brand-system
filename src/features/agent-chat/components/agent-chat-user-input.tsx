@@ -1,4 +1,4 @@
-import { Attachment as AttachmentIcon, Close } from '@carbon/icons-react'
+import { ArrowUp, Close, Upload } from '@carbon/icons-react'
 import { useRef } from 'react'
 import {
 	Attachment,
@@ -11,7 +11,8 @@ import {
 	AttachmentTitle,
 } from '@/components/ui/attachment'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
+import { Textarea } from '@/components/ui/textarea'
 
 export function AgentChatUserInput({
 	files,
@@ -63,7 +64,7 @@ export function AgentChatUserInput({
 					))}
 				</AttachmentGroup>
 			)}
-			<div className="flex items-center gap-2">
+			<div className="rounded-2xl border border-input bg-background p-2 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
 				<input
 					accept="image/*,text/*"
 					className="sr-only"
@@ -72,32 +73,46 @@ export function AgentChatUserInput({
 					type="file"
 					onChange={(event) => onFilesChange(event.currentTarget.files || undefined)}
 				/>
-				<Button
-					aria-label="Attach files"
-					type="button"
-					variant="outline"
-					size="icon-lg"
-					disabled={isBusy}
-					onClick={() => fileInputRef.current?.click()}
-				>
-					<AttachmentIcon data-icon="inline-start" />
-				</Button>
-				<Input
-					className="h-8 flex-1 px-3"
+				<Textarea
+					className="max-h-40 min-h-20 border-0 bg-transparent px-2 py-2 text-sm shadow-none focus-visible:border-transparent focus-visible:ring-0 md:text-sm"
 					value={value}
 					placeholder="Ask Anything"
 					disabled={isBusy}
 					onChange={(event) => onChange(event.currentTarget.value)}
+					onKeyDown={(event) => {
+						if (
+							event.key !== 'Enter' ||
+							event.shiftKey ||
+							event.nativeEvent.isComposing
+						) {
+							return
+						}
+						event.preventDefault()
+						event.currentTarget.form?.requestSubmit()
+					}}
 				/>
-				<Button
-					aria-label="Send message"
-					type="submit"
-					variant="default"
-					size="lg"
-					disabled={!canSubmit}
-				>
-					Send
-				</Button>
+				<div className="flex items-center justify-between">
+					<Button
+						aria-label="Attach files"
+						type="button"
+						variant="ghost"
+						size="icon-lg"
+						disabled={isBusy}
+						onClick={() => fileInputRef.current?.click()}
+					>
+						<Upload data-icon="inline-start" />
+					</Button>
+					<Button
+						aria-label="Send message"
+						type="submit"
+						variant="default"
+						size="icon-lg"
+						disabled={!canSubmit}
+						className="rounded-full"
+					>
+						{isBusy ? <Spinner /> : <ArrowUp data-icon="inline-start" />}
+					</Button>
+				</div>
 			</div>
 		</form>
 	)
