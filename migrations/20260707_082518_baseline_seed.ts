@@ -4,7 +4,9 @@ import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-po
  * 베이스라인 시드: 레퍼런스 데이터(guideline sections/pages, rules, brand colors 등).
  * 골든 DB에서 추출한 순수 SQL(멱등 ON CONFLICT DO NOTHING). Local API 미사용 → 체인 재현성 보장.
  * users/sessions 등 운영·PII 데이터는 제외됨. baseline 스키마 위에서 실행된다.
- * pg_dump의 search_path 리셋 라인은 제거함(세션 search_path 오염 → payload_migrations 조회 실패 방지).
+ * pg_dump 세션 프리앰블(SET·search_path·\restrict)은 제거함:
+ *  - transaction_timeout은 pg17 전용이라 pg16(CI)에서 에러 → 이식성 위해 SET 전부 제거.
+ *  - search_path 리셋은 세션 오염(payload_migrations 조회 실패) 방지 위해 제거.
  */
 const SEED = String.raw`
 --
@@ -15,16 +17,6 @@ const SEED = String.raw`
 -- Dumped from database version 17.10 (Homebrew)
 -- Dumped by pg_dump version 17.10 (Homebrew)
 
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
 
 --
 -- Data for Name: application_images; Type: TABLE DATA; Schema: public; Owner: -
