@@ -8,9 +8,13 @@ import { colorCombinationChecker } from './color/color-combination.checker'
 import { paletteComplianceChecker } from './color/palette-compliance.checker'
 import { hexToRgb, type Rgb, type Swatch } from './color/palette-match'
 import { spotColorChecker } from './color/spot-color.checker'
+import { advertisementFormatChecker } from './geometry/advertisement-format.checker'
 import { aspectRatioChecker } from './geometry/aspect-ratio.checker'
 import { clearSpaceChecker } from './geometry/clear-space.checker'
 import { relativeSizeChecker } from './geometry/relative-size.checker'
+import { snsFormatChecker } from './geometry/sns-format.checker'
+import { visualTemplateFormatChecker } from './geometry/visual-template-format.checker'
+import { webFormatChecker } from './geometry/web-format.checker'
 import { backgroundToneChecker } from './imagery/background-tone.checker'
 import type { PixelGrid } from './types'
 
@@ -173,6 +177,99 @@ describe('relativeSizeChecker (logo.size.minimum)', () => {
 		const grid = makeGrid(100, 100, '#FFFFFF', { x: 48, y: 48, w: 4, h: 4, hex: '#EA5343' })
 		const result = relativeSizeChecker.check({ pixels: [], palette: PALETTE, grid })
 		expect(result.status).toBe('fail')
+	})
+})
+
+describe('canvas-format checkers', () => {
+	/** 규격 판정은 width/height만 보므로 픽셀 없는 경량 grid를 쓴다. */
+	function sizeGrid(width: number, height: number): PixelGrid {
+		return { width, height, pixels: [], alpha: new Uint8Array(0) }
+	}
+
+	it('application.sns.format: Feed 1080×1440 pass, 정사각 fail, 가로 방향 fail', () => {
+		expect(
+			snsFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1440) }).status,
+		).toBe('pass')
+		expect(
+			snsFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1920) }).status,
+		).toBe('pass')
+		expect(
+			snsFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1080) }).status,
+		).toBe('fail')
+		expect(
+			snsFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1440, 1080) }).status,
+		).toBe('fail')
+	})
+
+	it('application.web: 16:9와 3:1 pass, 세로형 fail', () => {
+		expect(
+			webFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1920, 1080) }).status,
+		).toBe('pass')
+		expect(
+			webFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1920, 640) }).status,
+		).toBe('pass')
+		expect(
+			webFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1440) }).status,
+		).toBe('fail')
+	})
+
+	it('application.advertisement.format: 온라인 비율과 오프라인 mm 비율 pass', () => {
+		expect(
+			advertisementFormatChecker.check({
+				pixels: [],
+				palette: [],
+				grid: sizeGrid(1000, 2000),
+			}).status,
+		).toBe('pass')
+		expect(
+			advertisementFormatChecker.check({
+				pixels: [],
+				palette: [],
+				grid: sizeGrid(1440, 2100),
+			}).status,
+		).toBe('pass')
+		expect(
+			advertisementFormatChecker.check({
+				pixels: [],
+				palette: [],
+				grid: sizeGrid(8600, 2100),
+			}).status,
+		).toBe('pass')
+		expect(
+			advertisementFormatChecker.check({
+				pixels: [],
+				palette: [],
+				grid: sizeGrid(2100, 1000),
+			}).status,
+		).toBe('fail')
+	})
+
+	it('layout.visual.template: A4와 3:5(1080×1440)를 구분해 판정', () => {
+		expect(
+			visualTemplateFormatChecker.check({
+				pixels: [],
+				palette: [],
+				grid: sizeGrid(2100, 2970),
+			}).status,
+		).toBe('pass')
+		expect(
+			visualTemplateFormatChecker.check({
+				pixels: [],
+				palette: [],
+				grid: sizeGrid(1080, 1440),
+			}).status,
+		).toBe('pass')
+		expect(
+			visualTemplateFormatChecker.check({
+				pixels: [],
+				palette: [],
+				grid: sizeGrid(1080, 1300),
+			}).status,
+		).toBe('fail')
+	})
+
+	it('grid가 없으면 fail', () => {
+		expect(snsFormatChecker.check({ pixels: [], palette: [] }).status).toBe('fail')
 	})
 })
 

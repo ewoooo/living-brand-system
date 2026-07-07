@@ -5,9 +5,13 @@
 import { colorCombinationChecker } from './color/color-combination.checker'
 import { paletteComplianceChecker } from './color/palette-compliance.checker'
 import { spotColorChecker } from './color/spot-color.checker'
+import { advertisementFormatChecker } from './geometry/advertisement-format.checker'
 import { aspectRatioChecker } from './geometry/aspect-ratio.checker'
 import { clearSpaceChecker } from './geometry/clear-space.checker'
 import { relativeSizeChecker } from './geometry/relative-size.checker'
+import { snsFormatChecker } from './geometry/sns-format.checker'
+import { visualTemplateFormatChecker } from './geometry/visual-template-format.checker'
+import { webFormatChecker } from './geometry/web-format.checker'
 import { backgroundToneChecker } from './imagery/background-tone.checker'
 import type { RuleChecker } from './types'
 
@@ -26,6 +30,10 @@ const checkers: Record<string, RuleChecker> = {
 	[relativeSizeChecker.ruleKey]: relativeSizeChecker,
 	[aspectRatioChecker.ruleKey]: aspectRatioChecker,
 	[spotColorChecker.ruleKey]: spotColorChecker,
+	[snsFormatChecker.ruleKey]: snsFormatChecker,
+	[webFormatChecker.ruleKey]: webFormatChecker,
+	[advertisementFormatChecker.ruleKey]: advertisementFormatChecker,
+	[visualTemplateFormatChecker.ruleKey]: visualTemplateFormatChecker,
 }
 
 export function getChecker(ruleKey: string): RuleChecker | null {
