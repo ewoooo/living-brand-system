@@ -1,6 +1,7 @@
 import { cache } from 'react'
-import { getChecker } from '@/features/asset-check/checkers/registry'
+import { hasChecker } from '@/features/asset-check/checkers/registry'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
+import { CHECK_RULE_MESSAGES } from '@/features/asset-check/messages/check-rule-messages'
 import {
 	getCheckRuleDocs,
 	getCheckRulesetPages,
@@ -78,18 +79,11 @@ function toCheckRule(rule: Rule): CheckRule {
 		title: rule.title,
 		executor,
 		// 서버에서 계산해 내려보낸다 — 클라이언트가 checker registry를 import하지 않게.
-		implemented: executor !== 'deterministic' || getChecker(rule.key) !== null,
+		implemented: executor !== 'deterministic' || hasChecker(rule.key),
 		evidence: rule.evidence ?? '',
 		referenceAssets: (rule.referenceAssets ?? []).flatMap(toReferenceAsset),
-		messages: RULE_MESSAGES[rule.key],
+		messages: CHECK_RULE_MESSAGES[rule.key],
 	}
-}
-
-const RULE_MESSAGES: Record<string, CheckRule['messages']> = {
-	'application.stationery.format': {
-		pass: '{facts.closestFormat} 규격 비율에 맞습니다.',
-		fail: '캔버스가 스테이셔너리 규격과 다릅니다. {facts.allowedFormats} 중 선택한 산출물 규격에 맞춰 조정하세요.',
-	},
 }
 
 function toCheckGroup(

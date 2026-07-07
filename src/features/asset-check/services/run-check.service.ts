@@ -1,7 +1,14 @@
 import { opaquePixels } from '@/features/asset-check/checkers/color/color-metrics'
 import { shouldCheckRule } from '@/features/asset-check/checkers/content-gate'
 import { getChecker } from '@/features/asset-check/checkers/registry'
-import type { CheckerContext, CheckResult } from '@/features/asset-check/checkers/types'
+import type {
+	AlgorithmCheckResult,
+	CheckerContext,
+	CheckResult,
+	CheckResultChecker,
+	RawCheckResult,
+} from '@/features/asset-check/checkers/types'
+import { renderCheckMessage } from '@/features/asset-check/messages/render-check-message'
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { runAiCheck } from '@/features/asset-check/services/ai-check.service'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
@@ -43,7 +50,7 @@ export async function runImmediateCheck(
 			continue
 		}
 		const result = runRuleByExecutor(rule, ctx)
-		if (result) results[rule.key] = withRuleMessage(result, rule)
+		if (result) results[rule.key] = result
 	}
 
 	return { results, pendingRuleKeys }
@@ -70,9 +77,10 @@ export async function runHeuristicCheck(
 	return Object.fromEntries(
 		Object.entries(results).map(([key, result]) => [
 			key,
-			withRuleMessage(
+			toCheckResult(
 				result,
 				rules.find((rule) => rule.key === key),
+				{ key: 'ai', type: 'ai' },
 			),
 		]),
 	)
@@ -81,35 +89,41 @@ export async function runHeuristicCheck(
 // heuristic 룰은 호출 전에 runAiCheck로 분기되므로 여기 오지 않는다.
 function runRuleByExecutor(rule: CheckRule, ctx: CheckerContext): CheckResult | null {
 	if (rule.executor === 'advisory') {
-		return {
-			executor: 'advisory',
+		const rawResult: AlgorithmCheckResult = {
 			status: 'needs_review',
 			fulfillment: null,
 			detail: '브랜드 담당자 확인 필요',
 		}
+		return toCheckResult(rawResult, rule, { key: 'advisory', type: 'advisory' })
 	}
 	const checker = getChecker(rule.key)
-	const result = checker?.check(ctx)
-	return result ? { executor: 'deterministic', ...result } : null
+	if (!checker) return null
+	const result = checker(ctx)
+	return result ? toCheckResult(result, rule, { key: rule.key, type: 'algorithm' }) : null
 }
 
-function withRuleMessage(result: CheckResult, rule?: CheckRule): CheckResult {
-	const pattern = rule?.messages?.[result.status]
-	return pattern ? { ...result, detail: renderMessage(pattern, result) } : result
-}
-
-function renderMessage(pattern: string, result: CheckResult) {
-	return pattern.replace(/\{([^}]+)\}/g, (_match, path: string) =>
-		String(readPath(result, path.trim()) ?? ''),
-	)
-}
-
-function readPath(value: unknown, path: string): unknown {
-	return path.split('.').reduce<unknown>((current, key) => {
-		if (!current || typeof current !== 'object') return undefined
-		const next = (current as Record<string, unknown>)[key]
-		return Array.isArray(next) ? next.join(', ') : next
-	}, value)
+function toCheckResult(
+	rawResult: RawCheckResult,
+	rule: CheckRule | undefined,
+	checker: CheckResultChecker,
+): CheckResult {
+	const message = renderCheckMessage(rule?.messages?.[rawResult.status], rawResult)
+	return {
+		rule: {
+			key: rule?.key ?? checker.key,
+			title: rule?.title ?? checker.key,
+			executor: rule?.executor ?? (checker.type === 'ai' ? 'heuristic' : 'deterministic'),
+		},
+		checker,
+		rawResult,
+		message,
+		executor: rule?.executor ?? (checker.type === 'ai' ? 'heuristic' : 'deterministic'),
+		status: rawResult.status,
+		fulfillment: rawResult.fulfillment,
+		detail: message,
+		metric: rawResult.metric,
+		facts: rawResult.facts,
+	}
 }
 
 function imageInputFrom(buffer: Buffer): CheckerContext['image'] {

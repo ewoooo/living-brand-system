@@ -1,7 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { generateText, Output } from 'ai'
 import { z } from 'zod'
-import type { CheckerContext, CheckResult } from '@/features/asset-check/checkers/types'
+import type { AiCheckResult, CheckerContext } from '@/features/asset-check/checkers/types'
 import type {
 	CheckReferenceAsset,
 	CheckRule,
@@ -28,7 +28,7 @@ const aiCheckSchema = z.object({
 export async function runAiCheck(
 	rules: CheckRule[],
 	ctx: CheckerContext,
-): Promise<Record<string, CheckResult>> {
+): Promise<Record<string, AiCheckResult>> {
 	if (!process.env.ANTHROPIC_API_KEY) return fallbackResults(rules, 'AI 설정 없음')
 	if (!ctx.image) return fallbackResults(rules, 'AI 평가용 이미지 없음')
 
@@ -78,10 +78,9 @@ export async function runAiCheck(
 			],
 		})
 
-		const byKey: Record<string, CheckResult> = {}
+		const byKey: Record<string, AiCheckResult> = {}
 		for (const result of output.results) {
 			byKey[result.key] = {
-				executor: 'heuristic',
 				status: result.status,
 				fulfillment: result.fulfillment,
 				detail: result.detail,
@@ -140,10 +139,10 @@ function toAbsoluteUrl(url: string) {
 	return new URL(url, origin).toString()
 }
 
-function needsManualCheck(detail: string): CheckResult {
-	return { executor: 'heuristic', status: 'needs_review', fulfillment: null, detail }
+function needsManualCheck(detail: string): AiCheckResult {
+	return { status: 'needs_review', fulfillment: null, detail }
 }
 
-function fallbackResults(rules: CheckRule[], detail: string): Record<string, CheckResult> {
+function fallbackResults(rules: CheckRule[], detail: string): Record<string, AiCheckResult> {
 	return Object.fromEntries(rules.map((rule) => [rule.key, needsManualCheck(detail)]))
 }

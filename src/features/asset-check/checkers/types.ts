@@ -14,7 +14,7 @@ export type CheckExecutor = 'deterministic' | 'heuristic' | 'advisory'
 export type CheckStatus = 'pass' | 'ok' | 'needs_review' | 'fail'
 export type CheckFactValue = string | number | string[]
 
-interface CheckAlgorithmResultBase {
+interface CheckResultBase {
 	status: CheckStatus
 	/** 충족률 % (계산 가능한 룰만, 아니면 null) */
 	fulfillment: number | null
@@ -25,49 +25,34 @@ interface CheckAlgorithmResultBase {
 	facts?: Record<string, CheckFactValue>
 }
 
-export interface DeterministicAlgorithmResult extends CheckAlgorithmResultBase {
+export interface AlgorithmCheckResult extends CheckResultBase {
 	status: Exclude<CheckStatus, 'ok'>
 }
 
-export interface HeuristicAlgorithmResult extends CheckAlgorithmResultBase {}
-
-export interface AdvisoryAlgorithmResult extends CheckAlgorithmResultBase {
-	status: 'needs_review'
-	fulfillment: null
-}
-
-export type CheckAlgorithmResult =
-	| DeterministicAlgorithmResult
-	| HeuristicAlgorithmResult
-	| AdvisoryAlgorithmResult
-
-export interface DeterministicCheckResult extends DeterministicAlgorithmResult {
-	executor: 'deterministic'
-}
-
-export interface HeuristicCheckResult extends HeuristicAlgorithmResult {
-	executor: 'heuristic'
-}
-
-export interface AdvisoryCheckResult extends AdvisoryAlgorithmResult {
-	executor: 'advisory'
-}
-
-export type CheckRunResult = DeterministicCheckResult | HeuristicCheckResult | AdvisoryCheckResult
-
-/** 현재 API/UI 호환 이름. 점진적으로 CheckRunResult/CheckRuleResult로 좁힌다. */
-export type CheckResult = CheckRunResult
-
-export interface CheckRuleResult {
-	ruleKey: string
-	checkerKey?: string
-	executor: CheckExecutor
+export interface AiCheckResult extends CheckResultBase {
 	status: CheckStatus
-	fulfillment: number | null
-	detail: string
-	metric?: RuleMetric
-	facts?: Record<string, CheckFactValue>
-	run: CheckRunResult
+}
+
+export type RawCheckResult = AlgorithmCheckResult | AiCheckResult
+
+export interface CheckResultRule {
+	key: string
+	title: string
+	executor: CheckExecutor
+}
+
+export interface CheckResultChecker {
+	key: string
+	type: 'algorithm' | 'ai' | 'advisory'
+}
+
+export interface CheckResult extends CheckResultBase {
+	rule: CheckResultRule
+	checker: CheckResultChecker
+	rawResult: RawCheckResult
+	message: string
+	/** 기존 UI/API 호환 필드. rule.executor와 같은 값이다. */
+	executor: CheckExecutor
 }
 
 /**
@@ -92,8 +77,5 @@ export interface CheckerContext {
 	grid?: PixelGrid
 }
 
-/** 한 RuleSpec의 검수 실행기. registry에 key로 등록한다. */
-export interface RuleChecker {
-	ruleKey: string
-	check: (ctx: CheckerContext) => DeterministicAlgorithmResult
-}
+/** checker 파일이 export하는 순수 판정 함수. ruleKey/message는 registry/service가 붙인다. */
+export type AlgorithmChecker = (ctx: CheckerContext) => AlgorithmCheckResult

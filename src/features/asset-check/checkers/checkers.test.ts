@@ -64,7 +64,7 @@ function makeGrid(
 
 describe('paletteComplianceChecker (color.palette)', () => {
 	it('팔레트 색만 쓰면 pass', () => {
-		const result = paletteComplianceChecker.check({
+		const result = paletteComplianceChecker({
 			pixels: [...px('#EA5343', 60), ...px('#FFFFFF', 40)],
 			palette: PALETTE,
 		})
@@ -73,7 +73,7 @@ describe('paletteComplianceChecker (color.palette)', () => {
 	})
 
 	it('규정 외 색이 지배적이면 fail', () => {
-		const result = paletteComplianceChecker.check({
+		const result = paletteComplianceChecker({
 			pixels: [...px('#EA5343', 70), ...px('#00FF00', 30)],
 			palette: PALETTE,
 		})
@@ -82,7 +82,7 @@ describe('paletteComplianceChecker (color.palette)', () => {
 
 	it('팔레트 색에 가까운 변형(약간 다른 red)은 스냅되어 pass', () => {
 		// EA5343에서 소폭 이탈 — deltaE 허용 오차 안이어야 한다.
-		const result = paletteComplianceChecker.check({
+		const result = paletteComplianceChecker({
 			pixels: px('#E85140', 100),
 			palette: PALETTE,
 		})
@@ -92,7 +92,7 @@ describe('paletteComplianceChecker (color.palette)', () => {
 
 describe('colorCombinationChecker (color.combination)', () => {
 	it('단일 red 계열 + 극단색은 모노/톤온톤으로 pass', () => {
-		const result = colorCombinationChecker.check({
+		const result = colorCombinationChecker({
 			pixels: [...px('#EA5343', 50), ...px('#FFB4AA', 30), ...px('#FFFFFF', 20)],
 			palette: PALETTE,
 		})
@@ -100,7 +100,7 @@ describe('colorCombinationChecker (color.combination)', () => {
 	})
 
 	it('다계열이라도 명도 대비가 충분하면 톤인톤 근사로 pass', () => {
-		const result = colorCombinationChecker.check({
+		const result = colorCombinationChecker({
 			pixels: [...px('#EA5343', 60), ...px('#001941', 40)],
 			palette: PALETTE,
 		})
@@ -108,7 +108,7 @@ describe('colorCombinationChecker (color.combination)', () => {
 	})
 
 	it('다계열 + 명도 대비 부족이면 fail', () => {
-		const result = colorCombinationChecker.check({
+		const result = colorCombinationChecker({
 			pixels: [...px('#EA5343', 60), ...px('#3C87CD', 40)],
 			palette: PALETTE,
 		})
@@ -116,7 +116,7 @@ describe('colorCombinationChecker (color.combination)', () => {
 	})
 
 	it('팔레트 외 색이 있으면 조합 평가 불가로 fail', () => {
-		const result = colorCombinationChecker.check({
+		const result = colorCombinationChecker({
 			pixels: [...px('#EA5343', 60), ...px('#00FF00', 40)],
 			palette: PALETTE,
 		})
@@ -127,7 +127,7 @@ describe('colorCombinationChecker (color.combination)', () => {
 
 describe('spotColorChecker (application.print.spec)', () => {
 	it('Essenherb Red + White만 쓰면 pass', () => {
-		const result = spotColorChecker.check({
+		const result = spotColorChecker({
 			pixels: [...px('#EA5343', 50), ...px('#FFFFFF', 50)],
 			palette: PALETTE,
 		})
@@ -136,7 +136,7 @@ describe('spotColorChecker (application.print.spec)', () => {
 	})
 
 	it('팔레트 안이라도 Red+White 외 색(Gray 5)이 섞이면 fail', () => {
-		const result = spotColorChecker.check({
+		const result = spotColorChecker({
 			pixels: [...px('#EA5343', 40), ...px('#FFFFFF', 30), ...px('#151515', 30)],
 			palette: PALETTE,
 		})
@@ -146,12 +146,12 @@ describe('spotColorChecker (application.print.spec)', () => {
 
 describe('backgroundToneChecker (imagery.background.tone)', () => {
 	it('밝은 무채색 배경은 pass', () => {
-		const result = backgroundToneChecker.check({ pixels: px('#FAFAFA', 100), palette: PALETTE })
+		const result = backgroundToneChecker({ pixels: px('#FAFAFA', 100), palette: PALETTE })
 		expect(result.status).toBe('pass')
 	})
 
 	it('어둡고 채도 높은 배경은 fail', () => {
-		const result = backgroundToneChecker.check({ pixels: px('#EA5343', 100), palette: PALETTE })
+		const result = backgroundToneChecker({ pixels: px('#EA5343', 100), palette: PALETTE })
 		expect(result.status).toBe('fail')
 	})
 })
@@ -159,20 +159,20 @@ describe('backgroundToneChecker (imagery.background.tone)', () => {
 describe('aspectRatioChecker (application.stationery.format)', () => {
 	it('명함 비율(90:50)이면 pass (방향 무관)', () => {
 		const grid = makeGrid(900, 500, '#FFFFFF')
-		const result = aspectRatioChecker.check({ pixels: [], palette: PALETTE, grid })
+		const result = aspectRatioChecker({ pixels: [], palette: PALETTE, grid })
 		expect(result.status).toBe('pass')
 	})
 
 	it('A4/A5 비율이면 pass (방향 무관)', () => {
 		expect(
-			aspectRatioChecker.check({
+			aspectRatioChecker({
 				pixels: [],
 				palette: PALETTE,
 				grid: makeGrid(210, 297, '#FFFFFF'),
 			}).status,
 		).toBe('pass')
 		expect(
-			aspectRatioChecker.check({
+			aspectRatioChecker({
 				pixels: [],
 				palette: PALETTE,
 				grid: makeGrid(210, 148, '#FFFFFF'),
@@ -182,7 +182,7 @@ describe('aspectRatioChecker (application.stationery.format)', () => {
 
 	it('정사각형이면 fail', () => {
 		const grid = makeGrid(500, 500, '#FFFFFF')
-		const result = aspectRatioChecker.check({ pixels: [], palette: PALETTE, grid })
+		const result = aspectRatioChecker({ pixels: [], palette: PALETTE, grid })
 		expect(result.status).toBe('fail')
 		expect(result.detail).toBe('format ratio mismatched')
 		expect(result.facts?.allowedFormats).toContain('명함 90×50mm')
@@ -192,13 +192,13 @@ describe('aspectRatioChecker (application.stationery.format)', () => {
 describe('relativeSizeChecker (logo.size.minimum)', () => {
 	it('로고가 프레임 대비 충분히 크면 pass', () => {
 		const grid = makeGrid(100, 100, '#FFFFFF', { x: 40, y: 40, w: 20, h: 20, hex: '#EA5343' })
-		const result = relativeSizeChecker.check({ pixels: [], palette: PALETTE, grid })
+		const result = relativeSizeChecker({ pixels: [], palette: PALETTE, grid })
 		expect(result.status).toBe('pass')
 	})
 
 	it('로고가 너무 작으면 fail', () => {
 		const grid = makeGrid(100, 100, '#FFFFFF', { x: 48, y: 48, w: 4, h: 4, hex: '#EA5343' })
-		const result = relativeSizeChecker.check({ pixels: [], palette: PALETTE, grid })
+		const result = relativeSizeChecker({ pixels: [], palette: PALETTE, grid })
 		expect(result.status).toBe('fail')
 	})
 })
@@ -211,55 +211,55 @@ describe('canvas-format checkers', () => {
 
 	it('application.sns.format: Feed 1080×1440 pass, 정사각 fail, 가로 방향 fail', () => {
 		expect(
-			snsFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1440) }).status,
+			snsFormatChecker({ pixels: [], palette: [], grid: sizeGrid(1080, 1440) }).status,
 		).toBe('pass')
 		expect(
-			snsFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1920) }).status,
+			snsFormatChecker({ pixels: [], palette: [], grid: sizeGrid(1080, 1920) }).status,
 		).toBe('pass')
 		expect(
-			snsFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1080) }).status,
+			snsFormatChecker({ pixels: [], palette: [], grid: sizeGrid(1080, 1080) }).status,
 		).toBe('fail')
 		expect(
-			snsFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1440, 1080) }).status,
+			snsFormatChecker({ pixels: [], palette: [], grid: sizeGrid(1440, 1080) }).status,
 		).toBe('fail')
 	})
 
 	it('application.web: 16:9와 3:1 pass, 세로형 fail', () => {
 		expect(
-			webFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1920, 1080) }).status,
+			webFormatChecker({ pixels: [], palette: [], grid: sizeGrid(1920, 1080) }).status,
 		).toBe('pass')
 		expect(
-			webFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1920, 640) }).status,
+			webFormatChecker({ pixels: [], palette: [], grid: sizeGrid(1920, 640) }).status,
 		).toBe('pass')
 		expect(
-			webFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1440) }).status,
+			webFormatChecker({ pixels: [], palette: [], grid: sizeGrid(1080, 1440) }).status,
 		).toBe('fail')
 	})
 
 	it('application.advertisement.format: 온라인 비율과 오프라인 mm 비율 pass', () => {
 		expect(
-			advertisementFormatChecker.check({
+			advertisementFormatChecker({
 				pixels: [],
 				palette: [],
 				grid: sizeGrid(1000, 2000),
 			}).status,
 		).toBe('pass')
 		expect(
-			advertisementFormatChecker.check({
+			advertisementFormatChecker({
 				pixels: [],
 				palette: [],
 				grid: sizeGrid(1440, 2100),
 			}).status,
 		).toBe('pass')
 		expect(
-			advertisementFormatChecker.check({
+			advertisementFormatChecker({
 				pixels: [],
 				palette: [],
 				grid: sizeGrid(8600, 2100),
 			}).status,
 		).toBe('pass')
 		expect(
-			advertisementFormatChecker.check({
+			advertisementFormatChecker({
 				pixels: [],
 				palette: [],
 				grid: sizeGrid(2100, 1000),
@@ -269,21 +269,21 @@ describe('canvas-format checkers', () => {
 
 	it('layout.visual.template: A4와 3:5(1080×1440)를 구분해 판정', () => {
 		expect(
-			visualTemplateFormatChecker.check({
+			visualTemplateFormatChecker({
 				pixels: [],
 				palette: [],
 				grid: sizeGrid(2100, 2970),
 			}).status,
 		).toBe('pass')
 		expect(
-			visualTemplateFormatChecker.check({
+			visualTemplateFormatChecker({
 				pixels: [],
 				palette: [],
 				grid: sizeGrid(1080, 1440),
 			}).status,
 		).toBe('pass')
 		expect(
-			visualTemplateFormatChecker.check({
+			visualTemplateFormatChecker({
 				pixels: [],
 				palette: [],
 				grid: sizeGrid(1080, 1300),
@@ -292,48 +292,46 @@ describe('canvas-format checkers', () => {
 	})
 
 	it('grid가 없으면 fail', () => {
-		expect(snsFormatChecker.check({ pixels: [], palette: [] }).status).toBe('fail')
+		expect(snsFormatChecker({ pixels: [], palette: [] }).status).toBe('fail')
 	})
 
 	it('application.sns.canvas.format: 1080×1440만 pass (Reels 규격은 이 룰 밖)', () => {
 		expect(
-			snsCanvasFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1440) })
-				.status,
+			snsCanvasFormatChecker({ pixels: [], palette: [], grid: sizeGrid(1080, 1440) }).status,
 		).toBe('pass')
 		expect(
-			snsCanvasFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1920) })
-				.status,
+			snsCanvasFormatChecker({ pixels: [], palette: [], grid: sizeGrid(1080, 1920) }).status,
 		).toBe('fail')
 	})
 
 	it('layout.sns.template: Feed/Reels 캔버스 pass', () => {
 		expect(
-			snsTemplateFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1440) })
+			snsTemplateFormatChecker({ pixels: [], palette: [], grid: sizeGrid(1080, 1440) })
 				.status,
 		).toBe('pass')
 		expect(
-			snsTemplateFormatChecker.check({ pixels: [], palette: [], grid: sizeGrid(1080, 1920) })
+			snsTemplateFormatChecker({ pixels: [], palette: [], grid: sizeGrid(1080, 1920) })
 				.status,
 		).toBe('pass')
 	})
 
 	it('layout.advertisement.template: 오프라인 mm 비율 pass, 그 외 fail', () => {
 		expect(
-			advertisementTemplateFormatChecker.check({
+			advertisementTemplateFormatChecker({
 				pixels: [],
 				palette: [],
 				grid: sizeGrid(1440, 2100),
 			}).status,
 		).toBe('pass')
 		expect(
-			advertisementTemplateFormatChecker.check({
+			advertisementTemplateFormatChecker({
 				pixels: [],
 				palette: [],
 				grid: sizeGrid(8600, 2100),
 			}).status,
 		).toBe('pass')
 		expect(
-			advertisementTemplateFormatChecker.check({
+			advertisementTemplateFormatChecker({
 				pixels: [],
 				palette: [],
 				grid: sizeGrid(1000, 1000),
@@ -344,8 +342,8 @@ describe('canvas-format checkers', () => {
 
 describe('colorModeChecker (color.mode — spot-color 별칭)', () => {
 	it('ruleKey만 다르고 판정은 spot-color와 동일', () => {
-		expect(colorModeChecker.ruleKey).toBe('color.mode')
-		const result = colorModeChecker.check({
+		expect(colorModeChecker).toBe(spotColorChecker)
+		const result = colorModeChecker({
 			pixels: [...px('#EA5343', 50), ...px('#FFFFFF', 50)],
 			palette: PALETTE,
 		})
@@ -357,14 +355,14 @@ describe('clearSpaceChecker (logo.space.clear)', () => {
 	it('여백이 모듈(stem×3) 이상이면 pass', () => {
 		// stem=10 → 모듈 30px, 여백 40px
 		const grid = makeGrid(90, 90, '#FFFFFF', { x: 40, y: 40, w: 10, h: 10, hex: '#EA5343' })
-		const result = clearSpaceChecker.check({ pixels: [], palette: PALETTE, grid })
+		const result = clearSpaceChecker({ pixels: [], palette: PALETTE, grid })
 		expect(result.status).toBe('pass')
 	})
 
 	it('여백이 모듈보다 좁으면 fail', () => {
 		// stem=30 → 모듈 90px, 여백 30px
 		const grid = makeGrid(90, 90, '#FFFFFF', { x: 30, y: 30, w: 30, h: 30, hex: '#EA5343' })
-		const result = clearSpaceChecker.check({ pixels: [], palette: PALETTE, grid })
+		const result = clearSpaceChecker({ pixels: [], palette: PALETTE, grid })
 		expect(result.status).toBe('fail')
 	})
 })
