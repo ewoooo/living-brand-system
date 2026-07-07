@@ -46,6 +46,7 @@ export function ImageSelector() {
 							accept="image/*"
 							multiple
 							hidden
+							aria-label="검수할 이미지 업로드"
 							onChange={(event) => {
 								if (event.target.files) addFiles(event.target.files)
 								event.target.value = ''

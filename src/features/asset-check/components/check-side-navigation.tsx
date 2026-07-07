@@ -9,10 +9,12 @@ type CheckNavSection = Pick<CheckSection, 'title' | 'slug' | 'groupTitle' | 'gro
  */
 export function CheckSideNavigation({ sections }: { sections: CheckNavSection[] }) {
 	const groups: SideNavGroup[] = []
+	const byGroupSlug = new Map<string, SideNavGroup>()
 	for (const section of sections) {
-		let group = groups.find((item) => item.key === section.groupSlug)
+		let group = byGroupSlug.get(section.groupSlug)
 		if (!group) {
 			group = { key: section.groupSlug, title: section.groupTitle, items: [] }
+			byGroupSlug.set(section.groupSlug, group)
 			groups.push(group)
 		}
 		group.items.push({
