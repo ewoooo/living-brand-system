@@ -36,6 +36,14 @@ export const TemplateCategories: CollectionConfig = {
 			required: true,
 		}),
 		{
+			name: 'description',
+			type: 'textarea',
+			localized: true,
+			admin: {
+				description: 'Create 화면에서 카테고리를 설명하는 짧은 문구입니다. (선택)',
+			},
+		},
+		{
 			name: 'templates',
 			type: 'join',
 			collection: 'templates',
