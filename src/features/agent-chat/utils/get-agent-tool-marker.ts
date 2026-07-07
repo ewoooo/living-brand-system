@@ -54,7 +54,7 @@ export function getAgentSkillMarker(message: AgentChatMessage): AgentToolMarker 
 
 const countArrayLength = (output: unknown) => (Array.isArray(output) ? output.length : 0)
 const countPresence = (output: unknown) => (output ? 1 : 0)
-const countReviewResult = (output: unknown) =>
+const countCheckResult = (output: unknown) =>
 	typeof output === 'object' && output !== null && 'checkSessionId' in output ? 1 : 0
 
 /** 우선순위 순서 — 첫 번째로 count > 0인 행의 문구를 쓴다. */
@@ -89,8 +89,8 @@ const TOOL_MARKER_RULES: {
 		text: (count) => `템플릿 이미지 ${count}개를 준비했습니다`,
 	},
 	{
-		type: 'tool-runReview',
-		count: countReviewResult,
+		type: 'tool-runCheck',
+		count: countCheckResult,
 		text: (count) => `이미지 검수 ${count}건을 완료했습니다`,
 	},
 	{
@@ -103,7 +103,7 @@ const TOOL_MARKER_RULES: {
 export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker | null {
 	let hasToolPart = false
 	let hasPendingToolPart = false
-	let hasReview = false
+	let hasCheck = false
 	let hasTemplateSearch = false
 	const markers = TOOL_MARKER_RULES.map((rule) => ({ rule, count: 0 }))
 
@@ -114,7 +114,7 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 
 		hasToolPart = true
 		hasPendingToolPart ||= !isFinishedToolPart(part)
-		hasReview ||= part.type === 'tool-runReview'
+		hasCheck ||= part.type === 'tool-runCheck'
 
 		if (part.state !== 'output-available') {
 			continue
@@ -145,7 +145,7 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 
 	return {
 		isPending: hasPendingToolPart,
-		text: hasReview
+		text: hasCheck
 			? hasPendingToolPart
 				? '이미지를 검수하고 있습니다'
 				: '이미지 검수를 완료했습니다'

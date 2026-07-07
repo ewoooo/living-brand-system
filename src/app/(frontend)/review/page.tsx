@@ -1,6 +1,6 @@
-import { ReviewSections } from '@/features/review/components/rule-tables'
-import { getReviewRuleset } from '@/features/review/services/get-review-ruleset.service'
+import { CheckSections } from '@/features/asset-check/components/rule-tables'
+import { getCheckRuleset } from '@/features/asset-check/services/get-check-ruleset.service'
 
 export default async function ReviewPage() {
-	return <ReviewSections sections={await getReviewRuleset()} />
+	return <CheckSections sections={await getCheckRuleset()} />
 }
