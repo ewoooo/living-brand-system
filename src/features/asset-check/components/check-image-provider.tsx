@@ -1,19 +1,33 @@
 'use client'
 
-import { type ReactNode, useState } from 'react'
-import type { CheckResult } from '@/features/asset-check/checkers/types'
-import { CheckImageContext } from '@/features/asset-check/hooks/use-check-images'
+import { createContext, type ReactNode, use, useState } from 'react'
 import { CHECK_SCENARIOS, getCheckScenario } from '@/features/asset-check/scenarios'
+import {
+	aiFailureResults,
+	submitAiCheck,
+	submitCheck,
+} from '@/features/asset-check/services/submit-check.client'
 import type {
 	CheckImage,
 	CheckImageContextValue,
 	ImageContentFlags,
 } from '@/features/asset-check/types'
 
+const CheckImageContext = createContext<CheckImageContextValue | null>(null)
+
+export function useCheckImages() {
+	const context = use(CheckImageContext)
+	if (!context) {
+		throw new Error('useCheckImages must be used within CheckImageProvider')
+	}
+	return context
+}
+
 /**
  * 검수 대상 이미지 목록·선택 상태·포함 요소 플래그를 check 작업 영역 전체에 제공한다.
  * 검수는 업로드/토글 시 자동 실행하지 않고 runCheck(검수 버튼)로만 트리거한다.
- * 판정은 서버(/api/check)가 소유하고, 클라이언트는 미리보기(object URL)와 진행 표시만 담당한다.
+ * 판정은 서버(/api/check)가, 요청 계약은 submit-check.client가 소유하고,
+ * 이 프로바이더는 미리보기(object URL)와 진행 상태 반영만 담당한다.
  */
 export function CheckImageProvider({ children }: { children: ReactNode }) {
 	const [images, setImages] = useState<CheckImage[]>([])
@@ -24,107 +38,50 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 	const [scenarioKey, setScenarioKeyValue] = useState(CHECK_SCENARIOS[0].key)
 	const [flagsLocked, setFlagsLocked] = useState(false)
 
-	// 서버 즉시 판정을 먼저 받고, AI 룰만 후속 요청으로 이어 붙인다.
-	async function submitCheck(id: string, file: File, flags: ImageContentFlags) {
+	function patchImage(id: string, patch: (image: CheckImage) => Partial<CheckImage>) {
 		setImages((prev) =>
-			prev.map((image) =>
-				image.id === id
-					? { ...image, status: '진행', results: undefined, pendingRuleKeys: undefined }
-					: image,
-			),
+			prev.map((image) => (image.id === id ? { ...image, ...patch(image) } : image)),
 		)
+	}
+
+	// 서버 즉시 판정을 먼저 받고, AI 룰만 후속 요청으로 이어 붙인다.
+	async function runServerCheck(id: string, file: File, flags: ImageContentFlags) {
+		patchImage(id, () => ({ status: '진행', results: undefined, pendingRuleKeys: undefined }))
 		try {
-			const form = new FormData()
-			form.append('image', file)
-			form.append('flags', JSON.stringify(flags))
-			form.append('scenarioKey', scenarioKey)
-			form.append('source', 'review-page')
-			const response = await fetch('/api/check', { method: 'POST', body: form })
-			if (!response.ok) throw new Error(`check failed: ${response.status}`)
-			const { checkSessionId, results, pendingRuleKeys } = (await response.json()) as {
-				checkSessionId: number
-				results: Record<string, CheckResult>
-				pendingRuleKeys: string[]
-			}
-			setImages((prev) =>
-				prev.map((image) =>
-					image.id === id
-						? {
-								...image,
-								checkSessionId,
-								results,
-								pendingRuleKeys,
-								status: pendingRuleKeys.length > 0 ? '진행' : '완료',
-							}
-						: image,
-				),
+			const { checkSessionId, results, pendingRuleKeys } = await submitCheck(
+				file,
+				flags,
+				scenarioKey,
 			)
+			patchImage(id, () => ({
+				checkSessionId,
+				results,
+				pendingRuleKeys,
+				status: pendingRuleKeys.length > 0 ? '진행' : '완료',
+			}))
 			if (pendingRuleKeys.length > 0) {
-				void runAiCheck(id, file, checkSessionId, pendingRuleKeys)
+				void finishAiCheck(id, file, checkSessionId, pendingRuleKeys)
 			}
 		} catch {
 			// 실패 시 결과 없이 종료 — 재검수는 검수 버튼으로 다시 트리거한다.
-			setImages((prev) =>
-				prev.map((image) =>
-					image.id === id
-						? { ...image, status: '대기', pendingRuleKeys: undefined }
-						: image,
-				),
-			)
+			patchImage(id, () => ({ status: '대기', pendingRuleKeys: undefined }))
 		}
 	}
 
-	async function runAiCheck(
+	async function finishAiCheck(
 		id: string,
 		file: File,
 		checkSessionId: number,
 		pendingRuleKeys: string[],
 	) {
-		try {
-			const form = new FormData()
-			form.append('image', file)
-			form.append('checkSessionId', String(checkSessionId))
-			form.append('ruleKeys', JSON.stringify(pendingRuleKeys))
-			const response = await fetch('/api/check/ai', { method: 'POST', body: form })
-			if (!response.ok) throw new Error(`ai check failed: ${response.status}`)
-			const { results } = (await response.json()) as { results: Record<string, CheckResult> }
-			setImages((prev) =>
-				prev.map((image) =>
-					image.id === id
-						? {
-								...image,
-								results: { ...image.results, ...results },
-								pendingRuleKeys: undefined,
-								status: '완료',
-							}
-						: image,
-				),
-			)
-		} catch {
-			const results = Object.fromEntries(
-				pendingRuleKeys.map((key) => [
-					key,
-					{
-						executor: 'heuristic',
-						status: 'needs_review',
-						fulfillment: null,
-						detail: 'AI 평가 실패',
-					},
-				]),
-			) as Record<string, CheckResult>
-			setImages((prev) =>
-				prev.map((image) =>
-					image.id === id
-						? {
-								...image,
-								results: { ...image.results, ...results },
-								pendingRuleKeys: undefined,
-								status: '완료',
-							}
-						: image,
-				),
-			)
-		}
+		const results = await submitAiCheck(file, checkSessionId, pendingRuleKeys).catch(() =>
+			aiFailureResults(pendingRuleKeys),
+		)
+		patchImage(id, (image) => ({
+			results: { ...image.results, ...results },
+			pendingRuleKeys: undefined,
+			status: '완료',
+		}))
 	}
 
 	function addFiles(files: FileList | File[]) {
@@ -147,10 +104,6 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 		setFlagsLocked(false)
 	}
 
-	function select(id: string) {
-		setSelectedId(id)
-	}
-
 	function setContentFlag(key: keyof ImageContentFlags, value: boolean) {
 		setContentFlags((prev) => ({ ...prev, [key]: value }))
 	}
@@ -166,14 +119,14 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 		const target = images.find((image) => image.id === selectedId)
 		if (!target) return
 		setFlagsLocked(true)
-		void submitCheck(target.id, target.file, contentFlags)
+		void runServerCheck(target.id, target.file, contentFlags)
 	}
 
 	const value: CheckImageContextValue = {
 		images,
 		selectedId,
 		selected: images.find((image) => image.id === selectedId) ?? null,
-		select,
+		select: setSelectedId,
 		addFiles,
 		contentFlags,
 		flagsLocked,

@@ -4,11 +4,8 @@ import { AiGenerate, ChevronDown, Ruler, User } from '@carbon/icons-react'
 import { type ComponentType, Fragment, useState } from 'react'
 import { Spinner } from '@/components/ui/spinner'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
-import {
-	filterRulesetByScenario,
-	getCheckScenario,
-} from '@/features/asset-check/scenarios'
+import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
+import { filterRulesetByScenario, getCheckScenario } from '@/features/asset-check/scenarios'
 import type {
 	CheckSection,
 	CheckRule as Rule,

@@ -2,9 +2,10 @@
  * Checker: 팔레트 안 색들의 조합 가능성을 본다.
  * ruleKey는 `color.combination`, 파일명은 색상 조합 판정 기능을 따른다.
  */
-import type { AlgorithmChecker } from './types'
+
 import { contrastRatio, dominantColors } from './color-metrics'
 import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from './palette-match'
+import type { AlgorithmChecker } from './types'
 
 // 다계열(톤인톤) 근사 시 요구하는 최소 명도 대비 (러프 knob — 방향성 테이블 정교화 전까지).
 const TONE_IN_TONE_MIN_CONTRAST = 1.5

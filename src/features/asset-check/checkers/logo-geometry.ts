@@ -2,9 +2,10 @@
  * Logo geometry helper — 픽셀 grid에서 로고 전경 마스크, bbox, stem width를 추정한다.
  * 로고 관련 geometry checker들이 공유하며 직접 rule 판정은 하지 않는다.
  */
-import type { PixelGrid } from './types'
+
 import { dominantColors } from './color-metrics'
 import type { Rgb } from './palette-match'
+import type { PixelGrid } from './types'
 
 // 알파(0–255)가 이 값 미만이면 투명 픽셀로 본다 — 안티앨리어싱 가장자리 노이즈 컷.
 const ALPHA_MIN = 8

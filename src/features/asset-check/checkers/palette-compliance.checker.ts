@@ -2,9 +2,10 @@
  * Checker: 브랜드 팔레트 준수 여부를 본다.
  * ruleKey는 `color.palette`, 파일명은 지배색이 허용 팔레트에 들어오는지 보는 기능을 따른다.
  */
-import type { AlgorithmChecker } from './types'
+
 import { dominantColors } from './color-metrics'
 import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from './palette-match'
+import type { AlgorithmChecker } from './types'
 
 // 규정 외 색이 지배색 점유율의 이 비율을 넘으면 미통과 (작은 로고 색 위반도 잡도록 지배색 기반).
 const MAX_OFF_SHARE = 0.05
