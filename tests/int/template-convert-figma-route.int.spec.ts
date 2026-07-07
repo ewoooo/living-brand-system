@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from 'vitest'
 import { POST } from '@/app/api/templates/convert-figma/route'
 import { convertFigmaFrame } from '@/features/template-import/services/convert-figma-frame.service'
 
-vi.mock('@/lib/request-auth', () => ({
+vi.mock('@/lib/request-auth', async (importOriginal) => ({
+	// isCrossOriginRequest는 실제 구현을 쓴다 — 인증만 mock.
+	...(await importOriginal<typeof import('@/lib/request-auth')>()),
 	authenticateRequest: vi.fn().mockResolvedValue({
 		payload: { logger: { error: vi.fn() } },
 		user: { id: 1, role: 'manager' },

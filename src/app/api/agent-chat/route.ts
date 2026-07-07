@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { agentChatAgent, assertAgentChatProviderConfigured } from '@/agents/agent-chat.agent'
 import { validateAgentChatMessages } from '@/features/agent-chat/services/validate-agent-chat-messages.service'
 import { AgentConfigurationError } from '@/lib/errors'
-import { authenticateRequest } from '@/lib/request-auth'
+import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
 export const maxDuration = 30
 
@@ -31,6 +31,10 @@ export async function parseAgentChatRequest(req: Request) {
 }
 
 export async function POST(req: Request) {
+	if (isCrossOriginRequest(req)) {
+		return Response.json({ message: 'Invalid origin.' }, { status: 403 })
+	}
+
 	// content-length 없는(chunked) 요청은 통과한다 — 브라우저 fetch는 항상 길이를 싣는다.
 	if (Number(req.headers.get('content-length')) > MAX_BODY_BYTES) {
 		return Response.json({ message: 'Request is too large.' }, { status: 413 })

@@ -3,7 +3,7 @@ import { convertFigmaFrame } from '@/features/template-import/services/convert-f
 import { parseFigmaUrl } from '@/features/template-import/utils/parse-figma-url'
 import { isManager } from '@/lib/auth'
 import { AssetAccessDeniedError, FigmaConfigurationError } from '@/lib/errors'
-import { authenticateRequest } from '@/lib/request-auth'
+import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
 // 이미지 조각 다운로드·업로드가 이어지므로 기본 시간보다 길게 잡는다.
 export const maxDuration = 60
@@ -17,11 +17,7 @@ const convertFigmaRequestSchema = z.object({
  * Template 문서는 만들지 않는다. 서버 FIGMA_API_TOKEN을 구동하므로 manager 이상만 허용한다 (docs/07).
  */
 export async function POST(req: Request) {
-	// 쿠키 인증 라우트의 교차 출처 강제 실행 방지 (docs/07).
-	const origin = req.headers.get('origin')
-	const host = req.headers.get('host')
-
-	if (origin && host && new URL(origin).host !== host) {
+	if (isCrossOriginRequest(req)) {
 		return Response.json({ message: 'Invalid origin.' }, { status: 403 })
 	}
 
