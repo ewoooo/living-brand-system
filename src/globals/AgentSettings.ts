@@ -1,5 +1,5 @@
 import type { GlobalConfig } from 'payload'
-import { agentDefaultInstructionSections } from '@/features/agent-chat/agent-default-instructions'
+import { agentDefaultInstructionSections } from '@/features/agent-chat/utils/agent-default-instructions'
 import { authenticated, managerOrAdmin } from '@/lib/auth'
 
 export const AgentSettings: GlobalConfig = {

@@ -9,7 +9,7 @@ import {
 	getReviewRules,
 	type ReviewRule,
 } from '@/features/review/services/get-review-ruleset.service'
-import type { ImageContentFlags } from '@/features/review/types/content-flags'
+import type { ImageContentFlags } from '@/features/review/types'
 
 /**
  * 검수 대상 이미지를 룰셋에 비춰 checker가 있는 룰만 판정한다 (서버 확정 판정의 단일 소스).

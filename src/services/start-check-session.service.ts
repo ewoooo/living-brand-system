@@ -6,7 +6,7 @@ import {
 import { getReviewScenario } from '@/features/review/scenarios/review-scenarios'
 import { getReviewRules } from '@/features/review/services/get-review-ruleset.service'
 import { runReview } from '@/features/review/services/run-review.service'
-import type { ImageContentFlags } from '@/features/review/types/content-flags'
+import type { ImageContentFlags } from '@/features/review/types'
 import type { User } from '@/payload-types'
 
 // 시나리오 어휘는 scenarioKey 입력 계약의 일부다 — 다른 기능은 review 내부 대신 여기서 가져간다.

@@ -136,6 +136,7 @@ docs/
 - Service와 Repository는 그것을 소유하는 기능의 `src/features/<feature>` 안에 두는 것이 기본입니다. 두 번째 기능이 같은 Service나 Repository를 쓰는 시점에 `src/services`, `src/repositories`로 승격합니다.
 - Repository Interface 파일(`*.repository.ts`)은 구현체가 2개 이상 필요해지는 시점에 만듭니다. 단일 구현 단계에서는 Service가 구현 파일을 직접 import합니다.
 - 기능 전용 read service의 Payload 접근도 같은 기능의 `src/features/*/repositories`에 둡니다.
+- 기능 안의 순수 도메인 계산 계층(예: `review/checkers`)과 정적 시나리오 데이터(예: `review/scenarios`)는 승인된 기능 하위 폴더 확장입니다. 새 하위 폴더는 표준 폴더(`components`, `hooks`, `repositories`, `services`, `utils`)로 표현할 수 없을 때만 추가합니다.
 - Agent는 별도 사용자 역할이 아니라 서비스 모듈입니다.
 - 실제 폴더 구조를 개선할 때는 `src/features`, `src/agents`, `src/components`, `src/lib`, `src/services`, `src/repositories`, `src/types`를 이 순서로 추가합니다.
 
@@ -360,11 +361,12 @@ export interface PublishGuidelineResponse {
 | `layout.tsx` | Next.js route layout 파일입니다. |
 | `route.ts` | Next.js Route Handler 파일입니다. |
 | `*.tsx` | React component 파일입니다. |
-| `use-*.ts` | React custom hook 파일입니다. |
-| `*.service.ts` | Use Case service class 파일입니다. |
+| `use-*.ts` | React custom hook 파일입니다. JSX를 반환하면 `use-*.tsx`를 허용합니다. |
+| `*.service.ts` | Use Case service 함수 파일입니다. |
 | `*.repository.ts` | Service가 참조하는 repository interface 파일입니다. |
 | `*.payload.repository.ts` | Payload Local API 또는 CMS SDK 기반 repository 구현 파일입니다. |
 | `*.drizzle.repository.ts` | Drizzle ORM 기반 repository 구현 파일입니다. |
+| `*.<tech>.repository.ts` | 그 외 외부 시스템 기반 repository 구현 파일입니다. 예: `figma.rest.repository.ts`, `image-decoder.sharp.repository.ts` |
 | `*.agent.ts` | Agent 실행 단위 파일입니다. |
 | `*.test.ts` | 단위 테스트 파일입니다. |
 | `*.spec.ts` | e2e 또는 통합 테스트 파일입니다. |

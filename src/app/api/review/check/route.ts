@@ -1,8 +1,5 @@
 import type { CheckSessionSource } from '@/features/review/repositories/check-session.payload.repository'
-import {
-	DEFAULT_CONTENT_FLAGS,
-	type ImageContentFlags,
-} from '@/features/review/types/content-flags'
+import { DEFAULT_CONTENT_FLAGS, type ImageContentFlags } from '@/features/review/types'
 import { authenticateRequest } from '@/lib/request-auth'
 import type { User } from '@/payload-types'
 import { startCheckSession } from '@/services/start-check-session.service'
