@@ -38,7 +38,18 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 ]
 
 export function getCheckScenario(key: string | null | undefined): CheckScenario {
-	return CHECK_SCENARIOS.find((scenario) => scenario.key === key) ?? CHECK_SCENARIOS[0]
+	const normalizedKey = normalizeCheckScenarioKey(key)
+	return CHECK_SCENARIOS.find((scenario) => scenario.key === normalizedKey) ?? CHECK_SCENARIOS[0]
+}
+
+function normalizeCheckScenarioKey(key: string | null | undefined): string | undefined {
+	if (!key) return undefined
+	const normalized = key.trim().toLowerCase()
+	if (normalized === 'stationary') return 'stationery'
+	if (normalized.includes('명함')) return 'stationery'
+	if (normalized.includes('business') && normalized.includes('card')) return 'stationery'
+	if (normalized.includes('name') && normalized.includes('card')) return 'stationery'
+	return normalized
 }
 
 export function filterRulesetByScenario(

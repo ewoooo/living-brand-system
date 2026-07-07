@@ -104,7 +104,7 @@ export function getAgentTools() {
 		}),
 		runCheck: tool({
 			description:
-				'Run a quality check on the latest image attached by the user in this chat. Use when the user asks to inspect, validate, or check an attached image.',
+				'Run a quality check on the latest image attached by the user in this chat. Use when the user asks to inspect, validate, or check an attached image. Use scenarioKey "stationery" for business card or 명함 checks.',
 			inputSchema: z.object({
 				scenarioKey: z.string().min(1).max(80).optional(),
 			}),
