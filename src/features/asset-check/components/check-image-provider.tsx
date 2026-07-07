@@ -3,7 +3,7 @@
 import { type ReactNode, useState } from 'react'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { CheckImageContext } from '@/features/asset-check/hooks/use-check-images'
-import { CHECK_SCENARIOS, getCheckScenario } from '@/features/asset-check/scenarios/check-scenarios'
+import { CHECK_SCENARIOS, getCheckScenario } from '@/features/asset-check/scenarios'
 import type {
 	CheckImage,
 	CheckImageContextValue,

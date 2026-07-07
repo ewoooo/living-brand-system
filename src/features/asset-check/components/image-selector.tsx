@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
 import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
-import { CHECK_SCENARIOS } from '@/features/asset-check/scenarios/check-scenarios'
+import { CHECK_SCENARIOS } from '@/features/asset-check/scenarios'
 import { CONTENT_FLAG_LABELS, type ImageContentFlags } from '@/features/asset-check/types'
 import { cn } from '@/lib/utils'
 

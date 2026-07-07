@@ -8,7 +8,7 @@ import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
 import {
 	filterRulesetByScenario,
 	getCheckScenario,
-} from '@/features/asset-check/scenarios/check-scenarios'
+} from '@/features/asset-check/scenarios'
 import type {
 	CheckSection,
 	CheckRule as Rule,

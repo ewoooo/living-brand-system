@@ -1,5 +1,4 @@
 import { opaquePixels } from '@/features/asset-check/checkers/color-metrics'
-import { shouldCheckRule } from '@/features/asset-check/checkers/content-gate'
 import { getChecker } from '@/features/asset-check/checkers/registry'
 import type {
 	AlgorithmCheckResult,
@@ -8,7 +7,6 @@ import type {
 	CheckResultChecker,
 	RawCheckResult,
 } from '@/features/asset-check/checkers/types'
-import { renderCheckMessage } from '@/features/asset-check/messages/render-check-message'
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { runAiCheck } from '@/features/asset-check/services/ai-check.service'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
@@ -84,6 +82,31 @@ export async function runHeuristicCheck(
 			),
 		]),
 	)
+}
+
+/** 룰이 요소 종속이면 사용자가 표시한 포함 요소 플래그가 켜져 있을 때만 검수한다. */
+function shouldCheckRule(ruleKey: string, flags: ImageContentFlags): boolean {
+	if (ruleKey.startsWith('logo.')) return flags.logo
+	if (ruleKey.startsWith('typography.')) return flags.typography
+	if (ruleKey.startsWith('illustration.')) return flags.illustration
+	if (ruleKey.startsWith('imagery.')) return flags.photography
+	return true
+}
+
+/** 룰 메시지 패턴({facts.x} 치환)을 렌더한다. 패턴이 없으면 checker detail을 그대로 쓴다. */
+function renderCheckMessage(pattern: string | undefined, result: RawCheckResult): string {
+	if (!pattern) return result.detail
+	return pattern.replace(/\{([^}]+)\}/g, (_match, path: string) =>
+		String(readPath(result, path.trim()) ?? ''),
+	)
+}
+
+function readPath(value: unknown, path: string): unknown {
+	return path.split('.').reduce<unknown>((current, key) => {
+		if (!current || typeof current !== 'object') return undefined
+		const next = (current as Record<string, unknown>)[key]
+		return Array.isArray(next) ? next.join(', ') : next
+	}, value)
 }
 
 // heuristic 룰은 호출 전에 runAiCheck로 분기되므로 여기 오지 않는다.

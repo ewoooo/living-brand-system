@@ -5,7 +5,7 @@ import {
 	getCheckSessionRecord,
 	updateCheckSessionRecord,
 } from '@/features/asset-check/repositories/check-session.payload.repository'
-import { getCheckScenario } from '@/features/asset-check/scenarios/check-scenarios'
+import { getCheckScenario } from '@/features/asset-check/scenarios'
 import {
 	type CheckRule,
 	getCheckRules,
@@ -22,7 +22,7 @@ export {
 	CHECK_SCENARIOS,
 	type CheckScenario,
 	getCheckScenario,
-} from '@/features/asset-check/scenarios/check-scenarios'
+} from '@/features/asset-check/scenarios'
 
 interface StartCheckSessionInput {
 	buffer: Buffer
