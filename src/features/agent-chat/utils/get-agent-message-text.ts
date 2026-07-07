@@ -1,4 +1,4 @@
-import type { AgentChatMessage } from '../services/create-agent-chat-response.service'
+import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 
 export function getAgentMessageText(message: AgentChatMessage) {
 	return message.parts.reduce(

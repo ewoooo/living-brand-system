@@ -5,7 +5,7 @@ import {
 } from '@/features/review/repositories/check-session.payload.repository'
 import { getReviewScenario } from '@/features/review/scenarios/review-scenarios'
 import { getReviewRules } from '@/features/review/services/get-review-ruleset.service'
-import { runReviewService } from '@/features/review/services/run-review.service'
+import { runReview } from '@/features/review/services/run-review.service'
 import type { ImageContentFlags } from '@/features/review/types/content-flags'
 import type { User } from '@/payload-types'
 
@@ -33,7 +33,7 @@ export async function startCheckSessionService(input: StartCheckSessionInput) {
 	})
 
 	try {
-		const results = await runReviewService(input.buffer, input.flags, rulesetSnapshot)
+		const results = await runReview(input.buffer, input.flags, rulesetSnapshot)
 		await updateCheckSessionRecord({
 			id: session.id,
 			status: 'completed',

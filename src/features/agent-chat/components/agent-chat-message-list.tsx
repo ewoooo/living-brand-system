@@ -1,3 +1,4 @@
+import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import {
 	MessageScroller,
 	MessageScrollerButton,
@@ -6,7 +7,6 @@ import {
 	MessageScrollerProvider,
 	MessageScrollerViewport,
 } from '@/components/ui/message-scroller'
-import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import { AgentChatErrorBubble } from './agent-chat-bubbles'
 import { AgentChatMessageItem } from './agent-chat-message-item'
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import { getAgentChatErrorMessage } from '@/features/agent-chat/hooks/use-agent-chat'
-import type { AgentChatMessage } from '@/features/agent-chat/services/create-agent-chat-response.service'
 import {
 	getAgentReasoningMarker,
 	getAgentSkillMarker,

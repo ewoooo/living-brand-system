@@ -218,14 +218,14 @@ Server Route Handler는 HTTP 요청을 Service 호출로 연결하는 adapter입
 
 - request를 parsing하고 Service Input model을 만듭니다.
 - 인증과 권한을 확인합니다.
-- Service의 `execute(input)`을 호출합니다.
+- Service 함수를 호출합니다.
 - Service Output을 HTTP response로 변환합니다.
 - 비즈니스 로직, Repository 직접 호출, Payload CMS 직접 호출, Entity 생성과 수정을 하지 않습니다.
 
 ```ts
 export async function POST(req: Request) {
   const input: PublishGuidelineInput = await req.json()
-  const output = await publishGuidelineService.execute(input)
+  const output = await publishGuideline(input)
 
   return Response.json(output)
 }
@@ -247,12 +247,15 @@ Route Handler에서 Payload CMS를 직접 호출하면 Service와 Repository 경
 ## 7. Service 구현 규칙
 
 Use Case Service는 하나의 Use Case만 담당합니다.
-외부에서 호출하는 Use Case Service는 Input과 Output 모델을 정의하고, `execute(input)` 하나만 공개 진입점으로 둡니다.
+Service는 exported 함수로 작성하고, 함수 이름은 Use Case를 동사로 표현합니다.
+class와 `execute` 진입점은 만들지 않습니다. 함수 시그니처가 Input / Output 계약입니다.
 
-- Input과 Output은 Service 계약입니다.
-- Service는 Route Handler, UI, Payload collection schema에 의존하지 않습니다.
-- Service는 Repository Interface를 통해 저장소를 사용합니다.
+- 외부 입력 경계의 Use Case는 명시적 Input 타입을 정의합니다.
+- 하나의 Service 파일은 하나의 Use Case를 공개하는 것이 기본입니다. 같은 데이터 경계의 read 조회 함수나 같은 Use Case의 보조 진입점(검증, 포매팅)만 한 파일에 함께 둡니다.
+- Service는 Route Handler와 UI에 의존하지 않고, HTTP Response를 만들지 않습니다. 스트리밍 응답을 포함한 Response 생성은 Route Handler가 소유합니다.
+- Service는 Repository 구현 파일을 직접 import해 저장소를 사용합니다. Repository Interface는 구현체가 2개 이상일 때만 둡니다.
 - Service는 ORM query builder, Payload query shape, CMS SDK 호출 방식을 알면 안 됩니다.
+- 생성된 `@/payload-types` 타입은 read model로 type-only import할 수 있습니다. 런타임 Payload 접근은 repository에만 둡니다.
 
 ```ts
 export interface PublishGuidelineInput {
@@ -264,16 +267,12 @@ export interface PublishGuidelineOutput {
   version: number
 }
 
-export class PublishGuidelineService {
-  constructor(private readonly guidelineRepository: GuidelineRepository) {}
+export async function publishGuideline(input: PublishGuidelineInput): Promise<PublishGuidelineOutput> {
+  const version = await publishGuidelineVersion(input.guidelineId)
 
-  async execute(input: PublishGuidelineInput): Promise<PublishGuidelineOutput> {
-    const version = await this.guidelineRepository.publish(input.guidelineId)
-
-    return {
-      guidelineId: input.guidelineId,
-      version,
-    }
+  return {
+    guidelineId: input.guidelineId,
+    version,
   }
 }
 ```
@@ -281,11 +280,9 @@ export class PublishGuidelineService {
 하지 않는 예시:
 
 ```ts
-export class PublishGuidelineService {
-  async execute(input: PublishGuidelineInput): Promise<PublishGuidelineOutput> {
-    const payload = await getPayload()
-    // Service는 Payload query shape을 알면 안 됩니다.
-  }
+export async function publishGuideline(input: PublishGuidelineInput): Promise<PublishGuidelineOutput> {
+  const payload = await getPayload()
+  // Service는 Payload query shape을 알면 안 됩니다. Repository 함수를 호출합니다.
 }
 ```
 
@@ -295,31 +292,26 @@ Repository는 저장소 접근만 담당합니다.
 비즈니스 로직과 상태 전이 판단은 Service에 둡니다.
 
 - Repository Interface는 Service가 필요한 데이터 접근 계약만 정의하고, 구현체가 2개 이상 필요해질 때 도입합니다. 단일 구현 단계에서는 Service가 구현 파일을 직접 import합니다.
+- Repository도 exported 함수로 작성합니다. class는 만들지 않습니다.
 - Repository Implementation만 Drizzle ORM, Payload Local API, CMS SDK를 import할 수 있습니다.
 - Repository는 데이터 접근 오류를 그대로 화면까지 전달하지 않습니다.
-- Repository method 이름은 저장소 기술이 아니라 도메인 동작 기준으로 정합니다.
+- Repository 함수 이름은 저장소 기술이 아니라 도메인 동작 기준으로 정합니다.
 
 ```ts
-export interface GuidelineRepository {
-  publish(guidelineId: string): Promise<number>
-}
-
-export class PayloadGuidelineRepository implements GuidelineRepository {
-  async publish(guidelineId: string): Promise<number> {
-    // Payload Local API 호출은 구현체 안에 둡니다.
-    return 1
-  }
+// guideline.payload.repository.ts
+export async function publishGuidelineVersion(guidelineId: string): Promise<number> {
+  // Payload Local API 호출은 구현 파일 안에 둡니다.
+  return 1
 }
 ```
 
 Drizzle 기반 구현 예시:
 
 ```ts
-export class DrizzleGuidelineRepository implements GuidelineRepository {
-  async publish(guidelineId: string): Promise<number> {
-    // Drizzle query는 구현체 안에 둡니다.
-    return 1
-  }
+// guideline.drizzle.repository.ts
+export async function publishGuidelineVersion(guidelineId: string): Promise<number> {
+  // Drizzle query는 구현 파일 안에 둡니다.
+  return 1
 }
 ```
 
@@ -396,8 +388,8 @@ guideline-publish.spec.ts
 | React Component | `PascalCase` | `GuidelineCard` |
 | custom hook | `use` + 동작 또는 상태 | `useAssetGenerationSession` |
 | Facade | 필요한 경우에만 `PascalCase` + `Facade` | `GuidelineFacade` |
-| Service (Use Case) | Use Case 이름 + `Service` | `PublishGuidelineService` |
-| Repository | 도메인 + `Repository` | `guidelineRepository` |
+| Service (Use Case) | Use Case를 표현하는 동사 시작 함수 | `publishGuideline` |
+| Repository | 도메인 동작 기준 함수 | `findPublishedGuideline` |
 | Util | 기능 이름 중심 | `formatDate`, `normalizeSlug` |
 | Error | 도메인 + `Error` | `AccessDeniedError` |
 
@@ -408,7 +400,7 @@ Facade는 기본 구조로 두지 않습니다.
 
 - 함수는 `camelCase`로 작성합니다.
 - 함수 이름은 동사로 시작합니다.
-- Use Case Service의 외부 진입점은 함수 명명 규칙을 따르지 않고 `execute`로 통일합니다.
+- Use Case Service의 외부 진입점도 동사 시작 함수 명명 규칙을 따릅니다. `Service` 접미사는 붙이지 않습니다.
 - 조회는 `get`, `find`, `list`를 구분해서 사용합니다.
 - 생성, 수정, 삭제는 `create`, `update`, `delete`를 사용합니다.
 - boolean 반환 함수는 `is`, `has`, `can`, `should`로 시작합니다.
@@ -489,11 +481,12 @@ function normalizeSlug(value: string) {
 /**
  * live 상태의 Official Version만 조회한다.
  * draft나 archived 기준은 Creator와 Agent에게 제공하지 않는다.
+ * Payload 조회는 guideline-version repository가 소유한다.
  */
-export class FindLiveGuidelineVersionService {
-  async execute(input: FindLiveGuidelineVersionInput): Promise<FindLiveGuidelineVersionOutput> {
-    // ...
-  }
+export async function findLiveGuidelineVersion(
+  input: FindLiveGuidelineVersionInput,
+): Promise<FindLiveGuidelineVersionOutput> {
+  // ...
 }
 ```
 
@@ -576,7 +569,7 @@ console.log(user.email, accessToken, rawUploadPath)
 export async function POST(req: Request) {
   try {
     const input: PublishGuidelineInput = await req.json()
-    const output = await publishGuidelineService.execute(input)
+    const output = await publishGuideline(input)
 
     return Response.json(output)
   } catch (error) {

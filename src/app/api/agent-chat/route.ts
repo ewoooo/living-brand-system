@@ -1,9 +1,8 @@
+import { createAgentUIStreamResponse } from 'ai'
 import { z } from 'zod'
 
-import {
-	createAgentChatResponse,
-	validateAgentChatMessages,
-} from '@/features/agent-chat/services/create-agent-chat-response.service'
+import { agentChatAgent, assertAgentChatProviderConfigured } from '@/agents/agent-chat.agent'
+import { validateAgentChatMessages } from '@/features/agent-chat/services/validate-agent-chat-messages.service'
 import { AgentConfigurationError } from '@/lib/errors'
 import { authenticateRequest } from '@/lib/request-auth'
 
@@ -51,10 +50,18 @@ export async function POST(req: Request) {
 	const requestId = crypto.randomUUID()
 
 	try {
-		return await createAgentChatResponse({
-			messages: validatedMessages.data,
-			pagePath: parsed.data.pagePath,
-			user,
+		// stream 시작 전에 동기로 검증해야 설정 오류를 HTTP 상태로 매핑할 수 있다.
+		assertAgentChatProviderConfigured()
+
+		// 스트리밍 Response 생성은 HTTP adapter인 route가 소유한다 (AI SDK 공식 패턴).
+		return await createAgentUIStreamResponse({
+			agent: agentChatAgent,
+			uiMessages: validatedMessages.data,
+			options: {
+				pagePath: parsed.data.pagePath,
+				user,
+			},
+			onError: () => 'Agent response failed.',
 		})
 	} catch (error) {
 		payload.logger.error({ err: error, requestId }, 'agent-chat.request.failed')
@@ -64,6 +71,7 @@ export async function POST(req: Request) {
 			return Response.json({ message: error.message }, { status: 503 })
 		}
 
-		throw error
+		// 상세 오류는 위 로그에만 남기고 사용자에게는 일반화된 메시지만 반환한다.
+		return Response.json({ message: 'Agent response failed.' }, { status: 500 })
 	}
 }

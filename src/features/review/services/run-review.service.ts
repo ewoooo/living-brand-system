@@ -16,7 +16,7 @@ import type { ImageContentFlags } from '@/features/review/types/content-flags'
  * 요소 종속 룰(logo 등)은 포함 요소 플래그가 켜진 것만 검수한다 (content-gate 소유).
  * 이미지 디코딩은 image-decoder repository가, 기준 조회는 review service/repository가 소유한다.
  */
-export async function runReviewService(
+export async function runReview(
 	buffer: Buffer,
 	flags: ImageContentFlags,
 	inputRules?: ReviewRule[],
