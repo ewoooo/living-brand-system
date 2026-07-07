@@ -11,6 +11,28 @@ Start with `.agents/skills/payload/SKILL.md` for a quick reference, then see `.a
 - Do not use Context7 for business logic debugging, code review, refactoring that does not require external docs, or project-specific docs under `docs/`.
 - Service files must include a short comment above the exported service function or class explaining the use case boundary and what lower layer owns external I/O.
 
+## Database Schema Collaboration
+
+When changing Payload collections, fields, indexes, relationships, or other database-backed model behavior:
+
+- Commit the matching migration files with the source change.
+- Do not rely on local automatic schema changes as the team handoff mechanism.
+- After pulling schema-related changes, run pending migrations before debugging local database errors.
+- Do not manually patch a local database to match pulled code unless documenting a one-off recovery step.
+- Breaking schema changes must be split into safe steps: expand, migrate/backfill, then contract.
+- PRs that change schema without migrations are incomplete.
+- Seed or fixture changes required by the new schema must be committed with the same change.
+
+Recommended local pull flow:
+
+```bash
+pnpm install
+pnpm payload migrate
+pnpm dev
+```
+
+For Payload/Postgres projects, prefer explicit migrations over implicit schema push. If the adapter supports `push: false`, keep schema updates migration-driven so every teammate and environment applies the same changes in the same order.
+
 ## Operating Principles
 
 ### 1. Think Before Coding

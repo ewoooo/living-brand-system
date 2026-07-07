@@ -8,8 +8,8 @@ import {
 import { AgentConfigurationError } from '@/lib/errors'
 import type { User } from '@/payload-types'
 import {
-	getReviewScenario,
-	REVIEW_SCENARIOS,
+	CHECK_SCENARIOS,
+	getCheckScenario,
 	startCheckSession,
 } from '@/services/start-check-session.service'
 import { findAgentRules } from '../repositories/agent-guideline-context.payload.repository'
@@ -102,22 +102,22 @@ export function getAgentTools() {
 			execute: ({ templateId, values }, { context }) =>
 				prepareTemplateImage(context.user, templateId, values),
 		}),
-		runReview: tool({
+		runCheck: tool({
 			description:
-				'Run a quality review on the latest image attached by the user in this chat. Use when the user asks to review, inspect, validate, or check an attached image.',
+				'Run a quality check on the latest image attached by the user in this chat. Use when the user asks to inspect, validate, or check an attached image.',
 			inputSchema: z.object({
 				scenarioKey: z.string().min(1).max(80).optional(),
 			}),
 			contextSchema: guidelineToolContextSchema,
 			execute: async ({ scenarioKey }, { context, messages }) => {
-				const scenario = getReviewScenario(scenarioKey)
+				const scenario = getCheckScenario(scenarioKey)
 				const image = findLatestImage(messages)
 
 				if (!image) {
 					return {
 						status: 'missing-image',
 						message: '검수할 이미지 첨부가 없습니다.',
-						scenarios: REVIEW_SCENARIOS.map(({ key, title }) => ({ key, title })),
+						scenarios: CHECK_SCENARIOS.map(({ key, title }) => ({ key, title })),
 					}
 				}
 
@@ -130,7 +130,7 @@ export function getAgentTools() {
 					user: context.user as User,
 				})
 
-				return formatReviewToolResult(result, scenario.title)
+				return formatCheckToolResult(result, scenario.title)
 			},
 		}),
 	} satisfies ToolSet
@@ -202,23 +202,23 @@ function dataToBuffer(data: unknown): Buffer | null {
 	return base64 ? Buffer.from(base64, 'base64') : null
 }
 
-function formatReviewToolResult(
+function formatCheckToolResult(
 	result: Awaited<ReturnType<typeof startCheckSession>>,
 	scenarioTitle: string,
 ) {
 	const entries = Object.entries(result.results)
 	const counts = entries.reduce(
 		(acc, [, value]) => {
-			acc[value.status] += 1
+			acc[value.rawResult.status] += 1
 			return acc
 		},
-		{ fail: 0, needs_ai: 0, needs_review: 0, pass: 0 },
+		{ fail: 0, needs_review: 0, ok: 0, pass: 0 },
 	)
 	const outcome =
 		counts.fail > 0
 			? 'has_failed_items'
 			: counts.needs_review > 0
-				? 'needs_manager_review'
+				? 'needs_manager_check'
 				: 'passed'
 
 	return {
@@ -228,32 +228,37 @@ function formatReviewToolResult(
 		outcome,
 		summary:
 			outcome === 'passed'
-				? `검수 결과, ${counts.pass}개 항목이 통과했습니다.`
-				: `검수 결과, 통과 ${counts.pass}개 / 미통과 ${counts.fail}개 / 담당자 검토 ${counts.needs_review}개입니다.`,
+				? `검수 결과, 통과 ${counts.pass}개 / 적합 ${counts.ok}개입니다.`
+				: `검수 결과, 통과 ${counts.pass}개 / 적합 ${counts.ok}개 / 미통과 ${counts.fail}개 / 담당자 검토 필요 ${counts.needs_review}개입니다.`,
 		statusLabels: {
 			fail: '미통과',
-			needs_ai: 'AI 검수 대기',
-			needs_review: '담당자 검토',
+			needs_review: '담당자 검토 필요',
+			ok: '적합',
 			pass: '통과',
 		},
-		reviewGuidance: [
+		checkGuidance: [
 			'needs_review는 확정 실패가 아니라 담당자 확인이 필요한 항목입니다.',
 			'타이포그래피 needs_review는 폰트 파일 판정이 아니라 비전 기준 담당자 검토로 설명합니다.',
 		],
-		results: entries.map(([key, value]) => ({
-			key,
-			isFailure: value.status === 'fail',
-			statusLabel:
-				key.startsWith('typography.') && value.status === 'needs_review'
-					? '비전 기준 담당자 검토'
-					: value.status === 'needs_review'
-						? '담당자 검토'
-						: value.status === 'needs_ai'
-							? 'AI 검수 대기'
-							: value.status === 'pass'
-								? '통과'
-								: '미통과',
-			...value,
-		})),
+		results: entries.map(([key, value]) => {
+			const status = value.rawResult.status
+			return {
+				key,
+				isFailure: status === 'fail',
+				statusLabel:
+					key.startsWith('typography.') && status === 'needs_review'
+						? '비전 기준 담당자 검토 필요'
+						: status === 'needs_review'
+							? '담당자 검토 필요'
+							: status === 'ok'
+								? '적합'
+								: status === 'pass'
+									? '통과'
+									: '미통과',
+				status,
+				fulfillment: value.rawResult.fulfillment,
+				detail: value.message,
+			}
+		}),
 	}
 }
