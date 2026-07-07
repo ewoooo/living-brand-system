@@ -140,12 +140,6 @@ function toCheckResult(
 		checker,
 		rawResult,
 		message,
-		executor: rule?.executor ?? (checker.type === 'ai' ? 'heuristic' : 'deterministic'),
-		status: rawResult.status,
-		fulfillment: rawResult.fulfillment,
-		detail: message,
-		metric: rawResult.metric,
-		facts: rawResult.facts,
 	}
 }
 

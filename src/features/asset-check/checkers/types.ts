@@ -46,13 +46,15 @@ export interface CheckResultChecker {
 	type: 'algorithm' | 'ai' | 'advisory'
 }
 
-export interface CheckResult extends CheckResultBase {
+/**
+ * 룰 1건의 최종 검수 결과. rule(무엇을)·checker(누가)·rawResult(원판정)·message(사용자 문구)로
+ * 나뉘며, status/fulfillment/detail 등은 rawResult 안에서만 읽는다 (평탄 사본을 두지 않는다).
+ */
+export interface CheckResult {
 	rule: CheckResultRule
 	checker: CheckResultChecker
 	rawResult: RawCheckResult
 	message: string
-	/** 기존 UI/API 호환 필드. rule.executor와 같은 값이다. */
-	executor: CheckExecutor
 }
 
 /**

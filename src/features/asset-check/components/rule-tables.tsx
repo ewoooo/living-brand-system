@@ -55,7 +55,7 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 	const outcome = selected?.results?.[rule.key]
 	const inProgress =
 		selected?.status === '진행' && selected.pendingRuleKeys?.includes(rule.key) === true
-	const detail = outcome?.status !== 'pass' ? outcome?.detail : null
+	const detail = outcome?.rawResult.status !== 'pass' ? outcome?.message : null
 	const appliesToText = appliesTo.join(', ')
 
 	const ruleBorder = 'border-neutral-200 border-t dark:border-neutral-800'
@@ -105,7 +105,7 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 						<span
 							className={cn(
 								'text-xs leading-5',
-								outcome?.status === 'fail'
+								outcome?.rawResult.status === 'fail'
 									? 'text-rose-600 dark:text-rose-400'
 									: 'text-muted-foreground',
 							)}
@@ -123,10 +123,10 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 						<span
 							className={cn(
 								'inline-block whitespace-nowrap rounded px-1.5 py-0.5 font-medium text-[11px]',
-								STATUS[outcome.status].className,
+								STATUS[outcome.rawResult.status].className,
 							)}
 						>
-							{STATUS[outcome.status].label}
+							{STATUS[outcome.rawResult.status].label}
 						</span>
 					) : inProgress ? (
 						<span className="inline-flex justify-center" title="검수 중">
@@ -226,7 +226,7 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 			}
 
 			const implemented = rule.implemented
-			const status = results?.[rule.key]?.status
+			const status = results?.[rule.key]?.rawResult.status
 
 			if (implemented) {
 				if (status === 'pass') pass++

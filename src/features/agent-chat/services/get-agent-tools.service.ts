@@ -209,7 +209,7 @@ function formatCheckToolResult(
 	const entries = Object.entries(result.results)
 	const counts = entries.reduce(
 		(acc, [, value]) => {
-			acc[value.status] += 1
+			acc[value.rawResult.status] += 1
 			return acc
 		},
 		{ fail: 0, needs_review: 0, ok: 0, pass: 0 },
@@ -240,20 +240,25 @@ function formatCheckToolResult(
 			'needs_review는 확정 실패가 아니라 담당자 확인이 필요한 항목입니다.',
 			'타이포그래피 needs_review는 폰트 파일 판정이 아니라 비전 기준 담당자 검토로 설명합니다.',
 		],
-		results: entries.map(([key, value]) => ({
-			key,
-			isFailure: value.status === 'fail',
-			statusLabel:
-				key.startsWith('typography.') && value.status === 'needs_review'
-					? '비전 기준 담당자 검토 필요'
-					: value.status === 'needs_review'
-						? '담당자 검토 필요'
-						: value.status === 'ok'
-							? '적합'
-							: value.status === 'pass'
-								? '통과'
-								: '미통과',
-			...value,
-		})),
+		results: entries.map(([key, value]) => {
+			const status = value.rawResult.status
+			return {
+				key,
+				isFailure: status === 'fail',
+				statusLabel:
+					key.startsWith('typography.') && status === 'needs_review'
+						? '비전 기준 담당자 검토 필요'
+						: status === 'needs_review'
+							? '담당자 검토 필요'
+							: status === 'ok'
+								? '적합'
+								: status === 'pass'
+									? '통과'
+									: '미통과',
+				status,
+				fulfillment: value.rawResult.fulfillment,
+				detail: value.message,
+			}
+		}),
 	}
 }

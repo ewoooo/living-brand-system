@@ -55,10 +55,6 @@ export function aiFailureResults(ruleKeys: string[]): Record<string, CheckResult
 				checker: { key: 'ai', type: 'ai' },
 				rawResult: { status: 'needs_review', fulfillment: null, detail },
 				message: detail,
-				executor: 'heuristic',
-				status: 'needs_review',
-				fulfillment: null,
-				detail,
 			} satisfies CheckResult,
 		]),
 	)

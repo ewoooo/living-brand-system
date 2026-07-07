@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { hasChecker } from '@/features/asset-check/checkers/registry'
-import type { CheckResult } from '@/features/asset-check/checkers/types'
+import type { CheckStatus } from '@/features/asset-check/checkers/types'
 import {
 	getCheckRuleDocs,
 	getCheckRulesetPages,
@@ -11,7 +11,7 @@ import type { ApplicationImage, Rule } from '@/payload-types'
  * 룰별 상태 메시지 패턴 — checker facts({facts.x})를 치환해 사용자 문구를 만든다.
  * 패턴이 없는 룰은 checker detail을 그대로 노출한다. 장기적으로는 Rule 컬렉션 필드로 이전 후보.
  */
-const CHECK_RULE_MESSAGES: Record<string, Partial<Record<CheckResult['status'], string>>> = {
+const CHECK_RULE_MESSAGES: Record<string, Partial<Record<CheckStatus, string>>> = {
 	'application.stationery.format': {
 		pass: '{facts.closestFormat} 규격 비율에 맞습니다.',
 		fail: '캔버스가 스테이셔너리 규격과 다릅니다. {facts.allowedFormats} 중 선택한 산출물 규격에 맞춰 조정하세요.',
@@ -32,7 +32,7 @@ export interface CheckRule {
 	implemented: boolean
 	evidence: string
 	referenceAssets: CheckReferenceAsset[]
-	messages?: Partial<Record<CheckResult['status'], string>>
+	messages?: Partial<Record<CheckStatus, string>>
 }
 
 /** 검수 화면의 그룹 단위 = 룰 배치를 가진 가이드라인 페이지 (The Name, Brand Logo, …). */
