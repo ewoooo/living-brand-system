@@ -96,10 +96,7 @@ export async function runAiReview(
 function formatRule(rule: ReviewRule): string {
 	return [
 		`- key: ${rule.key}`,
-		`  title: ${rule.titleKo}`,
-		`  value: ${rule.value || 'Not provided'}`,
-		`  scoring: ${rule.scoring || 'Not provided'}`,
-		`  input: ${rule.input || 'Not provided'}`,
+		`  title: ${rule.title}`,
 		`  evidence: ${rule.evidence || 'Not provided'}`,
 		`  referenceImages: ${rule.referenceAssets.map((asset) => asset.name).join(', ') || 'None'}`,
 	].join('\n')

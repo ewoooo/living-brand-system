@@ -281,6 +281,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 		if (existing.docs[0]) continue
 		await payload.create({
 			collection: 'rules',
+			// 당시 스키마의 필드 — 20260707_130000에서 제거돼 현재 타입에는 없다.
 			data: {
 				key: entry.key,
 				title: entry.title,
@@ -292,7 +293,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 				input: entry.input,
 				notes: entry.note,
 				status: 'live',
-			},
+			} as never,
 			req,
 		})
 	}

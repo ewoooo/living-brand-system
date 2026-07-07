@@ -104,8 +104,8 @@ function getTemplateRules(templateRules: AgentTemplateDocument['templateRules'])
 
 			return [
 				{
-					title: rule.titleKo || rule.title || '',
-					description: rule.notes || '',
+					title: rule.title || '',
+					description: rule.evidence || '',
 					body: placement.body || '',
 				},
 			]

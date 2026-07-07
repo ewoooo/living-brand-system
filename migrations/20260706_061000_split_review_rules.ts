@@ -260,11 +260,12 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 		await payload.update({
 			collection: 'rules',
 			id,
+			// 당시 스키마의 value 필드 — 20260707_130000에서 evidence로 병합돼 현재 타입에는 없다.
 			data: {
 				value: criteria.value,
 				evidence: criteria.evidence,
 				referenceAssets: [...criteria.assets],
-			},
+			} as never,
 			req,
 		})
 	}

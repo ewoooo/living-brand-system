@@ -1,6 +1,6 @@
 /**
  * Checker: 이미지 배경 톤이 밝고 낮은 채도인지 본다.
- * ruleKey는 `imagery.background-tone`, 파일명은 배경 톤 측정 기능을 따른다.
+ * ruleKey는 `imagery.background.tone`, 파일명은 배경 톤 측정 기능을 따른다.
  */
 import { lightness, saturation } from '../color/color-metrics'
 import type { RuleChecker } from '../types'
@@ -8,9 +8,9 @@ import type { RuleChecker } from '../types'
 const MIN_LIGHTNESS = 0.7 // 밝음
 const MAX_SATURATION = 0.25 // 무채색
 
-/** imagery.background-tone: 사진 배경이 "밝은 무채색"인지 (평균 밝기↑·채도↓). */
+/** imagery.background.tone: 사진 배경이 "밝은 무채색"인지 (평균 밝기↑·채도↓). */
 export const backgroundToneChecker: RuleChecker = {
-	ruleKey: 'imagery.background-tone',
+	ruleKey: 'imagery.background.tone',
 	check: ({ pixels }) => {
 		if (pixels.length === 0) return { status: 'fail', fulfillment: 0, detail: '픽셀 없음' }
 		const avgL = pixels.reduce((sum, p) => sum + lightness(p), 0) / pixels.length
