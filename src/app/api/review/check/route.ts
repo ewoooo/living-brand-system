@@ -6,6 +6,8 @@ import { startCheckSession } from '@/services/start-check-session.service'
 
 export const maxDuration = 30
 
+const MAX_IMAGE_BYTES = 20_000_000 // 20MB — 무검증 Buffer 적재로 인한 메모리 고갈 방지 (docs/07 #17)
+
 const LEGACY_CONTENT_FLAGS: ImageContentFlags = {
 	logo: true,
 	typography: true,
@@ -57,6 +59,9 @@ export async function POST(req: Request) {
 	const file = form?.get('image')
 	if (!(file instanceof File)) {
 		return Response.json({ message: 'image is required.' }, { status: 400 })
+	}
+	if (file.size > MAX_IMAGE_BYTES) {
+		return Response.json({ message: 'Image is too large.' }, { status: 413 })
 	}
 
 	try {

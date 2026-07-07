@@ -8,6 +8,9 @@ import { authenticateRequest } from '@/lib/request-auth'
 
 export const maxDuration = 30
 
+// 25MB — base64 이미지 첨부(~33% 팽창) 여유. 무제한 JSON 적재 방지 (docs/07 #17).
+const MAX_BODY_BYTES = 25_000_000
+
 const uiMessageSchema = z
 	.object({
 		id: z.string().min(1),
@@ -28,6 +31,11 @@ export async function parseAgentChatRequest(req: Request) {
 }
 
 export async function POST(req: Request) {
+	// content-length 없는(chunked) 요청은 통과한다 — 브라우저 fetch는 항상 길이를 싣는다.
+	if (Number(req.headers.get('content-length')) > MAX_BODY_BYTES) {
+		return Response.json({ message: 'Request is too large.' }, { status: 413 })
+	}
+
 	const { payload, user } = await authenticateRequest()
 
 	// Agent 질의도 내부 사용자 요청만 허용한다.
