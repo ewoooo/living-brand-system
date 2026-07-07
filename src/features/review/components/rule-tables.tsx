@@ -207,7 +207,7 @@ function ReferenceAssets({ assets }: { assets: Rule['referenceAssets'] }) {
 }
 
 export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
-	const { scenarioKey, showUnimplemented, selected } = useReviewImages()
+	const { scenarioKey, selected } = useReviewImages()
 	const [showFailOnly, setShowFailOnly] = useState(false)
 	const results = selected?.results
 	const checking = Boolean(selected?.checking)
@@ -240,7 +240,7 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 				else pendingReview++
 			}
 
-			if (!implemented && !showUnimplemented) continue
+			if (!implemented) continue
 			if (showFailOnly && results && status !== 'fail') continue
 
 			const first = !seenSections.has(section.slug)

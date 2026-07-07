@@ -23,8 +23,6 @@ export function ReviewImageProvider({ children }: { children: ReactNode }) {
 	})
 	const [scenarioKey, setScenarioKeyValue] = useState(REVIEW_SCENARIOS[0].key)
 	const [flagsLocked, setFlagsLocked] = useState(false)
-	// 개발 중(체커 없는) 룰은 기본 숨김.
-	const [showUnimplemented, setShowUnimplemented] = useState(false)
 
 	// 서버 확정 판정을 한 번에 받아 반영한다.
 	async function runCheck(id: string, file: File, flags: ImageContentFlags) {
@@ -112,8 +110,6 @@ export function ReviewImageProvider({ children }: { children: ReactNode }) {
 		scenarioKey,
 		setScenarioKey,
 		runReview,
-		showUnimplemented,
-		setShowUnimplemented,
 	}
 
 	return <ReviewImageContext.Provider value={value}>{children}</ReviewImageContext.Provider>

@@ -1,4 +1,3 @@
-import type { Dispatch, SetStateAction } from 'react'
 import type { CheckResult } from '@/features/review/checkers/types'
 
 export interface ImageContentFlags {
@@ -50,7 +49,4 @@ export interface ReviewImageContextValue {
 	setScenarioKey: (key: string) => void
 	/** 선택 이미지를 검수 실행하고 플래그를 잠근다. */
 	runReview: () => void
-	/** 개발 중(체커 없는) 룰 표시 여부. 기본 숨김(false). */
-	showUnimplemented: boolean
-	setShowUnimplemented: Dispatch<SetStateAction<boolean>>
 }

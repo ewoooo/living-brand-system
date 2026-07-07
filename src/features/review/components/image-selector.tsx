@@ -24,8 +24,6 @@ export function ImageSelector() {
 		scenarioKey,
 		setScenarioKey,
 		runReview,
-		showUnimplemented,
-		setShowUnimplemented,
 	} = useReviewImages()
 	const inputRef = useRef<HTMLInputElement>(null)
 
@@ -85,18 +83,6 @@ export function ImageSelector() {
 							})
 						)}
 					</div>
-
-					<label
-						htmlFor="show-unimplemented"
-						className="flex shrink-0 cursor-pointer items-center gap-2 text-muted-foreground text-xs"
-					>
-						<Checkbox
-							id="show-unimplemented"
-							checked={showUnimplemented}
-							onCheckedChange={(checked) => setShowUnimplemented(checked === true)}
-						/>
-						개발 중인 항목 표시
-					</label>
 				</div>
 
 				<Separator className="my-4" />
