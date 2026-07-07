@@ -19,16 +19,17 @@ interface RuleRowData {
 	rowId: string
 	sectionLabel: string | null
 	appliesTo: string[]
+	appliesToSet: Set<string>
 	anchorId: string | null
 }
 
-const TIER: Record<
+const EXECUTOR: Record<
 	string,
 	{ label: string; Icon: ComponentType<{ size?: number }>; desc: string }
 > = {
-	A: { label: 'A · deterministic', Icon: Ruler, desc: '체커가 직접 판정하는 기준' },
-	B: { label: 'B · heuristic', Icon: AiGenerate, desc: 'AI 평가를 경유하는 기준' },
-	C: { label: 'C · advisory', Icon: User, desc: '브랜드 담당자 확인이 필요한 기준' },
+	deterministic: { label: 'deterministic', Icon: Ruler, desc: '체커가 직접 판정하는 기준' },
+	heuristic: { label: 'heuristic', Icon: AiGenerate, desc: 'AI 평가를 경유하는 기준' },
+	advisory: { label: 'advisory', Icon: User, desc: '브랜드 담당자 확인이 필요한 기준' },
 }
 
 const STATUS = {
@@ -53,8 +54,8 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 	const implemented = rule.implemented
 	const isSectionStart = sectionLabel !== null
 
-	const tier = TIER[rule.tier] ?? { label: rule.tier, Icon: User, desc: '' }
-	const TierIcon = tier.Icon
+	const executor = EXECUTOR[rule.executor] ?? { label: rule.executor, Icon: User, desc: '' }
+	const ExecutorIcon = executor.Icon
 
 	const outcome = selected?.results?.[rule.key]
 	const inProgress = Boolean(selected?.checking) && !outcome
@@ -68,7 +69,7 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 			<tr
 				id={anchorId ?? undefined}
 				aria-expanded={open}
-				aria-label={`${rule.titleKo} 상세 보기`}
+				aria-label={`${rule.title} 상세 보기`}
 				onClick={() => setOpen((value) => !value)}
 				onKeyDown={(event) => {
 					if (event.key === 'Enter' || event.key === ' ') {
@@ -89,19 +90,19 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<span className="inline-flex text-muted-foreground">
-								<TierIcon size={16} />
+								<ExecutorIcon size={16} />
 							</span>
 						</TooltipTrigger>
 						<TooltipContent>
-							<span className="font-medium">{tier.label}</span>
-							{tier.desc && (
-								<span className="block text-xs opacity-80">{tier.desc}</span>
+							<span className="font-medium">{executor.label}</span>
+							{executor.desc && (
+								<span className="block text-xs opacity-80">{executor.desc}</span>
 							)}
 						</TooltipContent>
 					</Tooltip>
 				</td>
 				<td className={cn('w-56 py-2.5 pr-4 align-top text-sm', ruleBorder)}>
-					{rule.titleKo}
+					{rule.title}
 				</td>
 				<td className={cn('py-2.5 pr-3 align-top text-sm', ruleBorder)}>
 					{detail && (
@@ -223,8 +224,10 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 		for (const rule of section.rules) {
 			const existing = rowByRuleKey.get(rule.key)
 			if (existing) {
-				if (!existing.appliesTo.includes(section.title))
+				if (!existing.appliesToSet.has(section.title)) {
+					existing.appliesToSet.add(section.title)
 					existing.appliesTo.push(section.title)
+				}
 				continue
 			}
 
@@ -247,6 +250,7 @@ export function ReviewSections({ sections }: { sections: ReviewSection[] }) {
 				rowId: `${section.slug}:${rule.key}`,
 				sectionLabel: first ? section.title : null,
 				appliesTo: [section.title],
+				appliesToSet: new Set([section.title]),
 				anchorId: first ? section.slug : null,
 			}
 			rows.push(row)

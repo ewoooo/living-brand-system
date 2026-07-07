@@ -2,8 +2,9 @@ import type { CollectionConfig } from 'payload'
 import { managerManagedAccess } from '@/lib/auth'
 
 /**
- * Rule catalog. 하나의 rule은 하나의 검수 컨텍스트와 기준값을 대표한다.
+ * Rule catalog. 하나의 rule은 하나의 검수 컨텍스트와 기준을 대표한다.
  * 페이지는 rule을 배치/노출만 하고, 검수 런타임은 이 컬렉션을 기준 SSOT로 읽는다.
+ * tier(중요도)와 executor(실행 방식)는 독립 축이다 — A=deterministic 같은 1:1 대응을 강제하지 않는다.
  */
 export const Rules: CollectionConfig = {
 	slug: 'rules',
@@ -15,7 +16,7 @@ export const Rules: CollectionConfig = {
 	admin: {
 		useAsTitle: 'key',
 		group: 'Guidelines',
-		defaultColumns: ['key', 'title', 'category', 'tier', 'executor'],
+		defaultColumns: ['key', 'title', 'category', 'tier', 'executor', 'status'],
 	},
 	fields: [
 		{
@@ -24,13 +25,16 @@ export const Rules: CollectionConfig = {
 			required: true,
 			unique: true,
 			index: true,
-			admin: { description: 'domain.subject.property 점 표기. 예: logo.size.minimum' },
+			admin: {
+				description:
+					'domain.subject.property 점 표기. 하이픈 없이 점으로만 구분한다. 예: logo.size.minimum',
+			},
 		},
-		{ name: 'title', type: 'text', required: true },
 		{
-			name: 'titleKo',
+			name: 'title',
 			type: 'text',
-			admin: { description: '룰의 한글 표기 (브랜드 무관, key당 1:1). 예: 로고 최소 크기' },
+			required: true,
+			admin: { description: '룰의 표시 이름. 예: 로고 최소 크기' },
 		},
 		{
 			name: 'category',
@@ -57,31 +61,31 @@ export const Rules: CollectionConfig = {
 		{
 			name: 'tier',
 			type: 'select',
-			options: [
-				{ label: 'A · deterministic', value: 'A' },
-				{ label: 'B · heuristic', value: 'B' },
-				{ label: 'C · advisory', value: 'C' },
-			],
+			options: ['A', 'B', 'C'],
+			admin: {
+				description: '참고 중요도. 실행 방식과 무관하며 우선순위·캐싱 구분에 쓴다.',
+			},
 		},
 		{
 			name: 'executor',
 			type: 'select',
 			options: ['deterministic', 'heuristic', 'advisory'],
-		},
-		{
-			name: 'paramSchema',
-			type: 'textarea',
-			admin: { description: '브랜드 값이 채워야 할 구조(요약 표기)' },
-		},
-		{
-			name: 'value',
-			type: 'textarea',
-			admin: { description: '이 rule의 검수 기준값입니다.' },
+			admin: {
+				description:
+					'검수 실행 방식. deterministic=코드 checker, heuristic=AI 검수, advisory=수동 안내.',
+			},
 		},
 		{
 			name: 'evidence',
 			type: 'textarea',
-			admin: { description: '이 rule의 가이드라인 근거 문장입니다.' },
+			admin: { description: '검수 기준값과 가이드라인 근거 문장입니다.' },
+		},
+		{
+			name: 'referencePages',
+			type: 'join',
+			collection: 'guideline-pages',
+			on: 'rules.rule',
+			admin: { description: '이 룰을 배치한 가이드라인 페이지 (역참조, 자동 집계).' },
 		},
 		{
 			name: 'referenceAssets',
@@ -90,9 +94,6 @@ export const Rules: CollectionConfig = {
 			hasMany: true,
 			admin: { description: '비전 검수나 운영 판단에 참고할 기준 이미지입니다.' },
 		},
-		{ name: 'scoring', type: 'textarea' },
-		{ name: 'input', type: 'textarea' },
-		{ name: 'notes', type: 'textarea' },
 		// 발행 Version의 최소 대체물. RuleVersion 정식 도입 전까지 forward-compatible 하게 둔다.
 		{
 			name: 'status',

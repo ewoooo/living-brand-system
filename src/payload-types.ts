@@ -94,6 +94,9 @@ export interface Config {
     sections: {
       pages: 'guideline-pages';
     };
+    rules: {
+      referencePages: 'guideline-pages';
+    };
     'template-categories': {
       templates: 'templates';
     };
@@ -283,14 +286,13 @@ export interface GuidelinePage {
 export interface Rule {
   id: number;
   /**
-   * domain.subject.property 점 표기. 예: logo.size.minimum
+   * domain.subject.property 점 표기. 하이픈 없이 점으로만 구분한다. 예: logo.size.minimum
    */
   key: string;
-  title: string;
   /**
-   * 룰의 한글 표기 (브랜드 무관, key당 1:1). 예: 로고 최소 크기
+   * 룰의 표시 이름. 예: 로고 최소 크기
    */
-  titleKo?: string | null;
+  title: string;
   category:
     | 'logo'
     | 'color'
@@ -307,27 +309,30 @@ export interface Rule {
     | 'accessibility'
     | 'application'
     | 'misc';
+  /**
+   * 참고 중요도. 실행 방식과 무관하며 우선순위·캐싱 구분에 쓴다.
+   */
   tier?: ('A' | 'B' | 'C') | null;
+  /**
+   * 검수 실행 방식. deterministic=코드 checker, heuristic=AI 검수, advisory=수동 안내.
+   */
   executor?: ('deterministic' | 'heuristic' | 'advisory') | null;
   /**
-   * 브랜드 값이 채워야 할 구조(요약 표기)
-   */
-  paramSchema?: string | null;
-  /**
-   * 이 rule의 검수 기준값입니다.
-   */
-  value?: string | null;
-  /**
-   * 이 rule의 가이드라인 근거 문장입니다.
+   * 검수 기준값과 가이드라인 근거 문장입니다.
    */
   evidence?: string | null;
+  /**
+   * 이 룰을 배치한 가이드라인 페이지 (역참조, 자동 집계).
+   */
+  referencePages?: {
+    docs?: (number | GuidelinePage)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   /**
    * 비전 검수나 운영 판단에 참고할 기준 이미지입니다.
    */
   referenceAssets?: (number | ApplicationImage)[] | null;
-  scoring?: string | null;
-  input?: string | null;
-  notes?: string | null;
   status?: ('draft' | 'live' | 'archived') | null;
   updatedAt: string;
   createdAt: string;
@@ -1142,17 +1147,12 @@ export interface ColorPaletteBlockSelect<T extends boolean = true> {
 export interface RulesSelect<T extends boolean = true> {
   key?: T;
   title?: T;
-  titleKo?: T;
   category?: T;
   tier?: T;
   executor?: T;
-  paramSchema?: T;
-  value?: T;
   evidence?: T;
+  referencePages?: T;
   referenceAssets?: T;
-  scoring?: T;
-  input?: T;
-  notes?: T;
   status?: T;
   updatedAt?: T;
   createdAt?: T;

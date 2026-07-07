@@ -20,6 +20,7 @@ import * as migration_20260706_052000_add_rule_reference_assets from './20260706
 import * as migration_20260706_053000_make_color_group_editable from './20260706_053000_make_color_group_editable';
 import * as migration_20260706_061000_split_review_rules from './20260706_061000_split_review_rules';
 import * as migration_20260707_090000_backfill_rule_executor from './20260707_090000_backfill_rule_executor';
+import * as migration_20260707_130000_rules_spec_cleanup from './20260707_130000_rules_spec_cleanup';
 
 export const migrations = [
   {
@@ -131,5 +132,10 @@ export const migrations = [
     up: migration_20260707_090000_backfill_rule_executor.up,
     down: migration_20260707_090000_backfill_rule_executor.down,
     name: '20260707_090000_backfill_rule_executor'
+  },
+  {
+    up: migration_20260707_130000_rules_spec_cleanup.up,
+    down: migration_20260707_130000_rules_spec_cleanup.down,
+    name: '20260707_130000_rules_spec_cleanup'
   },
 ];

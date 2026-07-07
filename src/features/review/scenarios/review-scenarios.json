@@ -26,7 +26,7 @@
 		"title": "명함/스테이셔너리 검수",
 		"ruleKeys": [
 			"application.stationery.format",
-			"application.print-spec",
+			"application.print.spec",
 			"color.palette",
 			"typography.usage",
 			"typography.family",
