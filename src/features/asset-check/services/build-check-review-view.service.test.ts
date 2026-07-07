@@ -15,6 +15,7 @@ const sections: CheckSection[] = [
 			rule('logo.space.clear'),
 			rule('color.palette'),
 			{ ...rule('logo.unimplemented'), implemented: false },
+			rule('application.stationery.format'),
 		],
 	},
 	{
@@ -63,6 +64,22 @@ describe('buildCheckReviewView', () => {
 		expect(view.rows.map((row) => row.rule.key)).toEqual(['logo.space.clear', 'color.palette'])
 		expect(view.rows[1]?.appliesTo).toEqual(['Brand Logo', 'Color System'])
 	})
+
+	it('uses the selected image scenario before the global fallback scenario', () => {
+		const selected = image({}, 'stationery')
+
+		const view = buildCheckReviewView({
+			sections,
+			scenarioKey: 'quick',
+			selected,
+			showFailOnly: false,
+		})
+
+		expect(view.rows.map((row) => row.rule.key)).toEqual([
+			'color.palette',
+			'application.stationery.format',
+		])
+	})
 })
 
 function rule(key: string): CheckSection['rules'][number] {
@@ -76,12 +93,13 @@ function rule(key: string): CheckSection['rules'][number] {
 	}
 }
 
-function image(results: NonNullable<CheckImage['results']>): CheckImage {
+function image(results: NonNullable<CheckImage['results']>, scenarioKey = 'quick'): CheckImage {
 	return {
 		id: 'image-1',
 		url: 'blob:test',
 		name: 'test.png',
 		file: {} as File,
+		scenarioKey,
 		status: 'completed',
 		results,
 	}

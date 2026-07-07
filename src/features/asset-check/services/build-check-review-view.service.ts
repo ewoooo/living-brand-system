@@ -47,7 +47,8 @@ export function buildCheckReviewView({
 	showFailOnly: boolean
 }): CheckReviewView {
 	const results = selected?.results
-	const visibleSections = filterRulesetByScenario(sections, getCheckScenario(scenarioKey))
+	const reviewScenarioKey = selected?.scenarioKey ?? scenarioKey
+	const visibleSections = filterRulesetByScenario(sections, getCheckScenario(reviewScenarioKey))
 	const allRows = buildRows({ visibleSections, selected })
 	const summary = buildSummary(allRows, results)
 	const rows =

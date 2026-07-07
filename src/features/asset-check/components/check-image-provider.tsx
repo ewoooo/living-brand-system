@@ -38,8 +38,9 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 	}
 
 	// 서버 즉시 판정을 먼저 받고, AI 룰만 후속 요청으로 이어 붙인다.
-	async function runServerCheck(id: string, file: File) {
+	async function runServerCheck(id: string, file: File, checkScenarioKey: string) {
 		patchImage(id, () => ({
+			scenarioKey: checkScenarioKey,
 			status: 'running',
 			results: undefined,
 			pendingRuleKeys: undefined,
@@ -47,7 +48,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 		try {
 			const { checkSessionId, results, pendingRuleKeys } = await submitCheck(
 				file,
-				scenarioKey,
+				checkScenarioKey,
 			)
 			patchImage(id, () => ({
 				checkSessionId,
@@ -89,6 +90,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 				url: URL.createObjectURL(file),
 				name: file.name,
 				file,
+				scenarioKey,
 				status: 'idle',
 			})
 		}
@@ -101,22 +103,32 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 	function setScenarioKey(key: string) {
 		const scenario = getCheckScenario(key)
 		setScenarioKeyValue(scenario.key)
+		if (!selectedId) return
+		patchImage(selectedId, (image) => ({
+			checkSessionId: undefined,
+			scenarioKey: scenario.key,
+			results: undefined,
+			pendingRuleKeys: undefined,
+			status: image.status === 'running' ? image.status : 'idle',
+		}))
 	}
 
 	function runCheck() {
 		if (!selectedId) return
 		const target = images.find((image) => image.id === selectedId)
 		if (!target) return
-		void runServerCheck(target.id, target.file)
+		void runServerCheck(target.id, target.file, target.scenarioKey)
 	}
+
+	const selected = images.find((image) => image.id === selectedId) ?? null
 
 	const value: CheckImageContextValue = {
 		images,
 		selectedId,
-		selected: images.find((image) => image.id === selectedId) ?? null,
+		selected,
 		select: setSelectedId,
 		addFiles,
-		scenarioKey,
+		scenarioKey: selected?.scenarioKey ?? scenarioKey,
 		setScenarioKey,
 		showFailOnly,
 		toggleFailOnly: () => setShowFailOnly((value) => !value),

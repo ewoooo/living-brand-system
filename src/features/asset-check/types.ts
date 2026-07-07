@@ -15,6 +15,8 @@ export interface CheckImage {
 	url: string
 	name: string
 	checkSessionId?: number
+	/** 이 이미지에 선택된 검수 시나리오 */
+	scenarioKey: string
 	/** 서버 검수 요청에 보낼 원본 파일 */
 	file: File
 	/** ruleKey → 검수 결과 (검수된 룰만; 진행 중엔 일부만 채워짐) */
