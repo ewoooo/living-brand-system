@@ -1,11 +1,19 @@
 'use client'
 
-import { useRef } from 'react'
+import { Upload } from '@carbon/icons-react'
+import { type DragEvent, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import {
+	Carousel,
+	type CarouselApi,
+	CarouselContent,
+	CarouselItem,
+	CarouselNext,
+	CarouselPrevious,
+} from '@/components/ui/carousel'
 import { Separator } from '@/components/ui/separator'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { CHECK_SCENARIOS } from '@/features/asset-check/scenarios'
-import { cn } from '@/lib/utils'
 
 export function ImageSelector() {
 	const {
@@ -19,65 +27,92 @@ export function ImageSelector() {
 		runCheck,
 	} = useCheckImages()
 	const inputRef = useRef<HTMLInputElement>(null)
+	const [carouselApi, setCarouselApi] = useState<CarouselApi>()
+
+	useEffect(() => {
+		if (!carouselApi) return
+		const api = carouselApi
+		function handleSelect() {
+			const image = images[api.selectedScrollSnap()]
+			if (image) select(image.id)
+		}
+		api.on('select', handleSelect)
+		return () => {
+			api.off('select', handleSelect)
+		}
+	}, [carouselApi, images, select])
+
+	useEffect(() => {
+		if (!carouselApi || !selectedId) return
+		const index = images.findIndex((image) => image.id === selectedId)
+		if (index >= 0) carouselApi.scrollTo(index)
+	}, [carouselApi, images, selectedId])
+
+	function handleDrop(event: DragEvent<HTMLDivElement>) {
+		event.preventDefault()
+		addFiles(event.dataTransfer.files)
+	}
 
 	return (
 		<div className="sticky top-0 z-10 bg-background/95 pt-6 pb-4 backdrop-blur">
 			<div className="rounded-lg border bg-card p-5 shadow-sm">
-				<div className="flex items-start justify-between gap-4">
-					<div className="flex items-center gap-3 overflow-x-auto">
-						<button
-							type="button"
-							onClick={() => inputRef.current?.click()}
-							className="flex size-20 shrink-0 flex-col items-center justify-center gap-1 rounded-md border border-border border-dashed text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-foreground"
-						>
-							<span className="text-lg leading-none">+</span>
-							업로드
-						</button>
-						<input
-							ref={inputRef}
-							type="file"
-							accept="image/*"
-							multiple
-							hidden
-							aria-label="검수할 이미지 업로드"
-							onChange={(event) => {
-								if (event.target.files) addFiles(event.target.files)
-								event.target.value = ''
-							}}
-						/>
+				<section
+					aria-label="이미지 업로드 및 미리보기"
+					className="relative flex min-h-72 items-center justify-center overflow-hidden rounded-lg border border-dashed bg-background"
+					onDragOver={(event) => event.preventDefault()}
+					onDrop={handleDrop}
+				>
+					<Button
+						type="button"
+						variant="outline"
+						size="icon-lg"
+						className="absolute top-4 left-4"
+						aria-label="검수할 이미지 업로드"
+						onClick={() => inputRef.current?.click()}
+					>
+						<Upload data-icon="inline-start" />
+					</Button>
+					<input
+						ref={inputRef}
+						type="file"
+						accept="image/*"
+						multiple
+						hidden
+						aria-label="검수할 이미지 업로드"
+						onChange={(event) => {
+							if (event.target.files) addFiles(event.target.files)
+							event.target.value = ''
+						}}
+					/>
 
-						{images.length === 0 ? (
-							<p className="text-muted-foreground text-sm">
-								검수할 이미지를 업로드하세요.
+					{images.length === 0 ? (
+						<div className="flex flex-col items-center gap-2 px-6 text-center">
+							<p className="font-medium text-sm">이미지를 드래그해서 업로드</p>
+							<p className="text-muted-foreground text-xs">
+								좌상단 업로드 버튼으로도 추가할 수 있습니다.
 							</p>
-						) : (
-							images.map((image) => {
-								const active = image.id === selectedId
-								return (
-									<button
-										key={image.id}
-										type="button"
-										onClick={() => select(image.id)}
-										title={image.name}
-										className={cn(
-											'shrink-0 overflow-hidden rounded-md transition-all',
-											active
-												? 'size-28 ring-2 ring-ring'
-												: 'size-20 opacity-60 hover:opacity-100',
-										)}
-									>
-										{/* biome-ignore lint/performance/noImgElement: 브라우저 object URL 미리보기 */}
-										<img
-											src={image.url}
-											alt={image.name}
-											className="size-full object-cover"
-										/>
-									</button>
-								)
-							})
-						)}
-					</div>
-				</div>
+						</div>
+					) : (
+						<Carousel setApi={setCarouselApi} className="w-full px-12">
+							<CarouselContent>
+								{images.map((image) => (
+									<CarouselItem key={image.id}>
+										<div className="flex h-72 items-center justify-center">
+											{/* biome-ignore lint/performance/noImgElement: 브라우저 object URL 미리보기 */}
+											<img
+												src={image.url}
+												alt={image.name}
+												className="max-h-full max-w-full object-contain"
+											/>
+										</div>
+									</CarouselItem>
+								))}
+							</CarouselContent>
+							<CarouselPrevious className="left-4" />
+							<CarouselNext className="right-4" />
+						</Carousel>
+					)}
+				</section>
 
 				<Separator className="my-4" />
 
