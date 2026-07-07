@@ -6,8 +6,7 @@ import type { Template } from '@/payload-types'
 type AgentTemplateRuleDocument = {
 	status?: null | string
 	title?: null | string
-	titleKo?: null | string
-	notes?: null | string
+	evidence?: null | string
 }
 
 type AgentTemplateRulePlacement = {

@@ -115,12 +115,9 @@ describe('agent tools', () => {
 		const getRules = vi.spyOn(agentGuidelineRepository, 'findAgentRules').mockResolvedValue([
 			{
 				category: 'color',
+				evidence: null,
 				executor: 'deterministic',
-				input: null,
 				key: 'color.palette',
-				notes: null,
-				paramSchema: null,
-				scoring: null,
 				tier: 'A',
 				title: 'Color palette',
 			},
@@ -151,7 +148,7 @@ describe('agent tools', () => {
 						body: 'Ask only for slots returned by the template.',
 						rule: {
 							title: 'Name input',
-							notes: 'Use the legal name.',
+							evidence: 'Use the legal name.',
 							status: 'live',
 						},
 					},
@@ -159,7 +156,7 @@ describe('agent tools', () => {
 						body: 'Hidden draft.',
 						rule: {
 							title: 'Draft rule',
-							notes: null,
+							evidence: null,
 							status: 'draft',
 						},
 					},
