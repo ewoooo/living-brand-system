@@ -17,6 +17,19 @@ const TIER_MAP: Record<string, 'A' | 'B' | 'C'> = {
 }
 const TIER_RANK: Record<'A' | 'B' | 'C', number> = { A: 0, B: 1, C: 2 } // 낮을수록 엄격, 충돌 시 우선
 
+type Executor = 'deterministic' | 'heuristic' | 'advisory'
+// executor 미지정 룰은 tier에서 유도한다 (A=자동판정, B=AI 판정, C=담당자 확인).
+// 누락 시 조회층이 deterministic으로 강등해 checker 없는 룰이 검수에서 조용히 빠진다.
+const EXECUTOR_BY_TIER: Record<'A' | 'B' | 'C', Executor> = {
+	A: 'deterministic',
+	B: 'heuristic',
+	C: 'advisory',
+}
+const EXECUTOR_OPTIONS = new Set<Executor>(['deterministic', 'heuristic', 'advisory'])
+
+const toExecutor = (value: unknown): Executor | null =>
+	EXECUTOR_OPTIONS.has(value as Executor) ? (value as Executor) : null
+
 type RuleCategory =
 	| 'logo'
 	| 'color'
@@ -134,16 +147,24 @@ async function upsertPage(
 
 async function upsertRule(
 	db: Db,
-	rule: { key: string; title: string; titleKo: string; category: RuleCategory; tier: 'A' | 'B' | 'C' },
+	rule: {
+		key: string
+		title: string
+		titleKo: string
+		category: RuleCategory
+		tier: 'A' | 'B' | 'C'
+		executor: Executor
+	},
 ): Promise<number> {
 	const inserted = await db.execute(sql`
-		INSERT INTO rules (key, title, title_ko, category, tier, status, updated_at, created_at)
+		INSERT INTO rules (key, title, title_ko, category, tier, executor, status, updated_at, created_at)
 		VALUES (
 			${rule.key},
 			${rule.title},
 			${rule.titleKo},
 			${rule.category}::enum_rules_category,
 			${rule.tier}::enum_rules_tier,
+			${rule.executor}::enum_rules_executor,
 			'live'::enum_rules_status,
 			now(),
 			now()
@@ -153,6 +174,7 @@ async function upsertRule(
 			title_ko = excluded.title_ko,
 			category = excluded.category,
 			tier = excluded.tier,
+			executor = excluded.executor,
 			updated_at = now()
 		RETURNING id`)
 	return (inserted.rows[0] as { id: number }).id
@@ -189,7 +211,13 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
 	// 3) rules dedup(113→69) 후 upsert (key 자연키). key → id 매핑.
 	const ruleByKey = new Map<
 		string,
-		{ title: string; titleKo: string; category: RuleCategory; tier: 'A' | 'B' | 'C' }
+		{
+			title: string
+			titleKo: string
+			category: RuleCategory
+			tier: 'A' | 'B' | 'C'
+			explicitExecutor: Executor | null
+		}
 	>()
 	for (const chapter of ruleset.chapters) {
 		for (const section of chapter.sections) {
@@ -197,19 +225,30 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
 				for (const rule of page.rules as Rule[]) {
 					const tier = TIER_MAP[rule.tier] ?? 'C'
 					const category = toCategory(rule.category)
+					const explicitExecutor = toExecutor((rule as { executor?: unknown }).executor)
 					const prev = ruleByKey.get(rule.key)
 					if (!prev) {
-						ruleByKey.set(rule.key, { title: rule.title, titleKo: rule.titleKo, category, tier })
-					} else if (TIER_RANK[tier] < TIER_RANK[prev.tier]) {
-						prev.tier = tier // 더 엄격한 tier로 승격
+						ruleByKey.set(rule.key, {
+							title: rule.title,
+							titleKo: rule.titleKo,
+							category,
+							tier,
+							explicitExecutor,
+						})
+					} else {
+						if (TIER_RANK[tier] < TIER_RANK[prev.tier]) {
+							prev.tier = tier // 더 엄격한 tier로 승격
+						}
+						prev.explicitExecutor ??= explicitExecutor
 					}
 				}
 			}
 		}
 	}
 	const ruleIdByKey = new Map<string, number>()
-	for (const [key, r] of ruleByKey) {
-		ruleIdByKey.set(key, await upsertRule(db, { key, ...r }))
+	for (const [key, { explicitExecutor, ...r }] of ruleByKey) {
+		const executor = explicitExecutor ?? EXECUTOR_BY_TIER[r.tier]
+		ruleIdByKey.set(key, await upsertRule(db, { key, ...r, executor }))
 	}
 
 	// 4) rule-bindings upsert ((page, rule) 자연키). 배치별 value/evidence.
