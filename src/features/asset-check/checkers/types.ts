@@ -2,7 +2,7 @@
  * Checker shared types — run-check service와 개별 checker 사이의 최소 실행 계약이다.
  * rule schema나 Payload 문서 타입은 여기에 들이지 않는다.
  */
-import type { Rgb, Swatch } from '@/features/asset-check/checkers/color/palette-match'
+import type { Rgb, Swatch } from './palette-match'
 
 /** 기준(expected) 대비 측정값(actual)을 분리해 실은 구조화 필드. */
 export interface RuleMetric {

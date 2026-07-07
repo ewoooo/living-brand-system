@@ -2,7 +2,7 @@
  * Color metric helper — 픽셀/색상에서 명도, 채도, 대비, 지배색 같은 측정값을 뽑는다.
  * 룰 판정은 하지 않고 checker들이 공유하는 계산만 제공한다.
  */
-import type { PixelGrid } from '../types'
+import type { PixelGrid } from './types'
 import type { Rgb } from './palette-match'
 
 /** WCAG relative luminance (0~1) */

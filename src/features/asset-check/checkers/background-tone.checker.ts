@@ -2,8 +2,8 @@
  * Checker: 이미지 배경 톤이 밝고 낮은 채도인지 본다.
  * ruleKey는 `imagery.background.tone`, 파일명은 배경 톤 측정 기능을 따른다.
  */
-import { lightness, saturation } from '../color/color-metrics'
-import type { AlgorithmChecker } from '../types'
+import { lightness, saturation } from './color-metrics'
+import type { AlgorithmChecker } from './types'
 
 const MIN_LIGHTNESS = 0.7 // 밝음
 const MAX_SATURATION = 0.25 // 무채색

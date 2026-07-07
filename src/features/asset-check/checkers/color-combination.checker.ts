@@ -2,7 +2,7 @@
  * Checker: 팔레트 안 색들의 조합 가능성을 본다.
  * ruleKey는 `color.combination`, 파일명은 색상 조합 판정 기능을 따른다.
  */
-import type { AlgorithmChecker } from '../types'
+import type { AlgorithmChecker } from './types'
 import { contrastRatio, dominantColors } from './color-metrics'
 import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from './palette-match'
 

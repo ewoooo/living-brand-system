@@ -1,4 +1,4 @@
-import { opaquePixels } from '@/features/asset-check/checkers/color/color-metrics'
+import { opaquePixels } from '@/features/asset-check/checkers/color-metrics'
 import { shouldCheckRule } from '@/features/asset-check/checkers/content-gate'
 import { getChecker } from '@/features/asset-check/checkers/registry'
 import type {

@@ -3,8 +3,8 @@
  * ruleKey는 `logo.space.clear`, 파일명은 여백 측정 기능을 따른다.
  */
 
-import { detectLogoRegion, estimateStemWidth } from '../logo/logo-geometry'
-import type { AlgorithmChecker } from '../types'
+import { detectLogoRegion, estimateStemWidth } from './logo-geometry'
+import type { AlgorithmChecker } from './types'
 
 // essenherb 규정: clear space 모듈 = stem width × 3 (정사각 배제구역).
 const MODULE_STEMS = 3

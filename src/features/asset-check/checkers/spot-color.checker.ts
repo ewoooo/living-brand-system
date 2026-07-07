@@ -3,12 +3,12 @@
  * ruleKey는 `application.print.spec`, 파일명은 Red+White 별색 1도 근사 판정 기능을 따른다.
  */
 
-import { STATIONERY_ALLOWED_HEX } from '@/features/asset-check/references/color.references'
-import type { AlgorithmChecker } from '../types'
 import { dominantColors } from './color-metrics'
 import { nearestSwatch, PALETTE_DELTA_E_TOLERANCE } from './palette-match'
+import type { AlgorithmChecker } from './types'
 
 // 명함은 별색 1도(Pantone Warm Red = Essenherb Red) 인쇄 → 실제 구성이 Essenherb Red + White 뿐이어야 한다.
+const STATIONERY_ALLOWED_HEX = new Set(['FFFFFF', 'EA5343'])
 const MAX_OFF_SHARE = 0.05
 
 /**
