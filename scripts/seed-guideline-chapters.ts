@@ -194,6 +194,45 @@ const BRAND_LOGO_PAGES: { slug: string; title: string; topics: TopicDef[] }[] = 
 	},
 ]
 
+// ── 비어 있는 섹션의 L3 페이지 뼈대(PDF 기준, 컴팩트). 블록은 후속 단계에서 채운다. ──
+// 키 = 섹션 슬러그(=옛 페이지 슬러그). 여기 없는 섹션은 기존 정규화 페이지를 유지한다.
+const PAGE_MAP: Record<string, { slug: string; title: string }[]> = {
+	illustration: [
+		{ slug: 'illustration', title: 'Illustration' },
+		{ slug: 'color-usage', title: 'Color Usage' },
+		{ slug: 'usage-example', title: 'Usage Example' },
+	],
+	photography: [
+		{ slug: 'brand-photography', title: 'Brand Photography' },
+		{ slug: 'photography', title: 'Photography' },
+		{ slug: 'ai-image', title: 'AI Image' },
+	],
+	'visual-system': [
+		{ slug: 'overview', title: 'Overview' },
+		{ slug: 'type-a-message', title: 'Type A (Message)' },
+		{ slug: 'type-b-contents', title: 'Type B (Contents)' },
+	],
+	'sns-contents': [
+		{ slug: 'content-guide', title: 'Content Guide' },
+		{ slug: 'layout-system', title: 'Layout System' },
+	],
+	ad: [
+		{ slug: 'online-ad', title: 'Online AD' },
+		{ slug: 'offline-ad-vertical', title: 'Offline AD (Vertical)' },
+		{ slug: 'offline-ad-horizontal', title: 'Offline AD (Horizontal)' },
+	],
+	stationery: [
+		{ slug: 'business-card', title: 'Business Card' },
+		{ slug: 'envelope', title: 'Envelope' },
+	],
+	package: [
+		{ slug: 'package-box-primary', title: 'Package Box (Primary)' },
+		{ slug: 'package-box-secondary', title: 'Package Box (Secondary)' },
+		{ slug: 'product-packages', title: 'Product Packages' },
+	],
+	etc: [{ slug: 'etc', title: 'Etc.' }],
+}
+
 // ── 1. 원본 구조 읽기 ──
 const oldSections = (
 	await payload.find({
@@ -307,6 +346,24 @@ for (const oldSection of oldSections) {
 						blocks: def.topics.map((t) =>
 							topic(t.title, t.body, b1ImageIds.get(t.image) as number),
 						),
+						rules: index === 0 ? (strip(oldPage.rules) ?? []) : [],
+						_status: 'published',
+					} as never,
+				})
+			}
+		} else if (PAGE_MAP[oldPage.slug]) {
+			// 비어 있던 섹션: PDF 기준 L3 페이지 뼈대만 생성(블록 없음). 옛 rule은 첫 페이지에 임시 보존.
+			for (const [index, def] of PAGE_MAP[oldPage.slug].entries()) {
+				await payload.create({
+					collection: 'guideline-pages',
+					locale: LOCALE,
+					overrideAccess: true,
+					data: {
+						title: def.title,
+						slug: def.slug,
+						section: section.id,
+						displayOrder: index,
+						blocks: [],
 						rules: index === 0 ? (strip(oldPage.rules) ?? []) : [],
 						_status: 'published',
 					} as never,
