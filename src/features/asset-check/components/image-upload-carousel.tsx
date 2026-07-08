@@ -14,10 +14,11 @@ import {
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { ImageCheckControls } from '@/features/asset-check/components/image-check-controls'
 import type { CheckImage } from '@/features/asset-check/types'
+import { useFileInput } from '@/hooks/use-file-input'
 
 export function ImageUploadCarousel() {
 	const { images, selectedId, select, addFiles } = useCheckImages()
-	const inputRef = useRef<HTMLInputElement>(null)
+	const fileInput = useFileInput()
 	const [carouselApi, setCarouselApi] = useState<CarouselApi>()
 	const selectStateRef = useRef({ images, select })
 	selectStateRef.current = { images, select }
@@ -60,12 +61,12 @@ export function ImageUploadCarousel() {
 				size="icon-lg"
 				className="absolute top-4 left-4 z-10"
 				aria-label="검수할 이미지 업로드"
-				onClick={() => inputRef.current?.click()}
+				onClick={fileInput.open}
 			>
 				<Upload data-icon="inline-start" />
 			</Button>
 			<input
-				ref={inputRef}
+				ref={fileInput.ref}
 				type="file"
 				accept="image/*"
 				multiple
@@ -73,7 +74,7 @@ export function ImageUploadCarousel() {
 				aria-label="검수할 이미지 업로드"
 				onChange={(event) => {
 					if (event.target.files) addFiles(event.target.files)
-					event.target.value = ''
+					fileInput.reset()
 				}}
 			/>
 
