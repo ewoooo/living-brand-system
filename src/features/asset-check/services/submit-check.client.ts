@@ -4,7 +4,6 @@
  * 화면 상태(진행/완료 표시)는 CheckImageProvider가 담당한다.
  */
 import type { CheckResult } from '@/features/asset-check/checkers/types'
-import type { ImageContentFlags } from '@/features/asset-check/types'
 
 export interface SubmitCheckResult {
 	checkSessionId: number
@@ -13,14 +12,9 @@ export interface SubmitCheckResult {
 }
 
 /** 즉시(deterministic/advisory) 판정을 요청한다. AI 룰은 pendingRuleKeys로 분리돼 돌아온다. */
-export async function submitCheck(
-	file: File,
-	flags: ImageContentFlags,
-	scenarioKey: string,
-): Promise<SubmitCheckResult> {
+export async function submitCheck(file: File, scenarioKey: string): Promise<SubmitCheckResult> {
 	const form = new FormData()
 	form.append('image', file)
-	form.append('flags', JSON.stringify(flags))
 	form.append('scenarioKey', scenarioKey)
 	form.append('source', 'review-page')
 	const response = await fetch('/api/check', { method: 'POST', body: form })

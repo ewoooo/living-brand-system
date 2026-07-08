@@ -1,25 +1,22 @@
 'use client'
 
 import { AiGenerate, ChevronDown, Ruler, User } from '@carbon/icons-react'
-import { type ComponentType, Fragment, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { type ComponentProps, type ComponentType, Fragment, type ReactNode, useState } from 'react'
 import { Spinner } from '@/components/ui/spinner'
+import { Table, TableBody, TableCell } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
-import { filterRulesetByScenario, getCheckScenario } from '@/features/asset-check/scenarios'
+import {
+	buildCheckReviewView,
+	type CheckReviewRuleRow,
+} from '@/features/asset-check/services/build-check-review-view.service'
 import type {
 	CheckSection,
 	CheckRule as Rule,
 } from '@/features/asset-check/services/get-check-ruleset.service'
 import { cn } from '@/lib/utils'
-
-interface RuleRowData {
-	rule: Rule
-	rowId: string
-	sectionLabel: string | null
-	appliesTo: string[]
-	appliesToSet: Set<string>
-	anchorId: string | null
-}
 
 const EXECUTOR: Record<
 	string,
@@ -37,35 +34,36 @@ const STATUS = {
 	},
 	ok: { label: '적합', className: 'bg-sky-500/15 text-sky-700 dark:text-sky-400' },
 	needs_review: {
-		label: '담당자 검토 필요',
+		label: '검토',
 		className: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
 	},
 	fail: { label: '미통과', className: 'bg-rose-500/15 text-rose-700 dark:text-rose-400' },
 } as const
 
-function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData) {
+const RULE_BORDER = 'border-neutral-200 border-t dark:border-neutral-800'
+
+function RuleRow({
+	rule,
+	rowId,
+	rowIndex,
+	sectionLabel,
+	appliesTo,
+	anchorId,
+	outcome,
+	inProgress,
+	detail,
+}: CheckReviewRuleRow & { rowIndex: number }) {
 	const [open, setOpen] = useState(false)
-	const { selected } = useCheckImages()
-	const implemented = rule.implemented
-	const isSectionStart = sectionLabel !== null
-
-	const executor = EXECUTOR[rule.executor] ?? { label: rule.executor, Icon: User, desc: '' }
-	const ExecutorIcon = executor.Icon
-
-	const outcome = selected?.results?.[rule.key]
-	const inProgress =
-		selected?.status === '진행' && selected.pendingRuleKeys?.includes(rule.key) === true
-	const detail = outcome?.rawResult.status !== 'pass' ? outcome?.message : null
-	const appliesToText = appliesTo.join(', ')
-
-	const ruleBorder = 'border-neutral-200 border-t dark:border-neutral-800'
+	const shouldReduceMotion = useReducedMotion()
 
 	return (
 		<Fragment key={rowId}>
-			<tr
+			<AnimatedRuleTableRow
 				id={anchorId ?? undefined}
 				aria-expanded={open}
 				aria-label={`${rule.title} 상세 보기`}
+				rowIndex={rowIndex}
+				shouldReduceMotion={shouldReduceMotion}
 				onClick={() => setOpen((value) => !value)}
 				onKeyDown={(event) => {
 					if (event.key === 'Enter' || event.key === ' ') {
@@ -74,108 +72,321 @@ function RuleRow({ rule, rowId, sectionLabel, appliesTo, anchorId }: RuleRowData
 					}
 				}}
 				tabIndex={0}
+				className="border-0 scroll-mt-72 cursor-pointer"
+			>
+				<RuleSectionCell sectionLabel={sectionLabel} />
+				<TableCell className={cn('w-0 py-2.5 pr-3 align-top', RULE_BORDER)}>
+					<RuleExecutorIcon rule={rule} />
+				</TableCell>
+				<RuleTitleCell title={rule.title} />
+				<RuleMessageCell
+					detail={detail}
+					outcome={outcome}
+					shouldReduceMotion={shouldReduceMotion}
+				/>
+				<RuleStatusCell
+					outcome={outcome}
+					inProgress={inProgress}
+					shouldReduceMotion={shouldReduceMotion}
+				/>
+				<RuleToggleCell open={open} />
+			</AnimatedRuleTableRow>
+			<AnimatePresence initial={false}>
+				{open && (
+					<RuleDetailRow
+						key={`${rowId}:detail`}
+						rule={rule}
+						appliesTo={appliesTo}
+						outcome={outcome}
+						shouldReduceMotion={shouldReduceMotion}
+					/>
+				)}
+			</AnimatePresence>
+		</Fragment>
+	)
+}
+
+function AnimatedRuleTableRow({
+	rowIndex,
+	shouldReduceMotion,
+	...props
+}: ComponentProps<typeof motion.tr> & {
+	rowIndex: number
+	shouldReduceMotion: boolean | null
+}) {
+	return (
+		<motion.tr
+			initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+			animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+			transition={{
+				duration: 0.22,
+				ease: 'easeOut',
+				delay: Math.min(rowIndex * 0.025, 0.18),
+			}}
+			{...props}
+		/>
+	)
+}
+
+function RuleSectionCell({ sectionLabel }: { sectionLabel: string | null }) {
+	return (
+		<TableCell className={cn('w-44 py-2.5 pr-4 align-top', sectionLabel && RULE_BORDER)}>
+			{sectionLabel && <span className="font-medium text-sm">{sectionLabel}</span>}
+		</TableCell>
+	)
+}
+
+function RuleTitleCell({ title }: { title: string }) {
+	return (
+		<TableCell className={cn('w-56 py-2.5 pr-4 align-top text-sm', RULE_BORDER)}>
+			{title}
+		</TableCell>
+	)
+}
+
+function RuleMessageCell({
+	detail,
+	outcome,
+	shouldReduceMotion,
+}: {
+	detail: string | null
+	outcome?: CheckResult
+	shouldReduceMotion: boolean | null
+}) {
+	return (
+		<TableCell className={cn('py-2.5 pr-3 align-top text-sm whitespace-normal', RULE_BORDER)}>
+			<AnimatePresence initial={false} mode="wait">
+				{detail && (
+					<motion.span
+						key={`${outcome?.rawResult.status ?? 'detail'}:${detail}`}
+						initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
+						animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+						exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+						transition={{ duration: 0.16, ease: 'easeOut' }}
+						className={cn(
+							'block text-xs leading-5',
+							outcome?.rawResult.status === 'fail'
+								? 'text-rose-600 dark:text-rose-400'
+								: 'text-muted-foreground',
+						)}
+					>
+						{detail}
+					</motion.span>
+				)}
+			</AnimatePresence>
+		</TableCell>
+	)
+}
+
+function RuleStatusCell({
+	outcome,
+	inProgress,
+	shouldReduceMotion,
+}: {
+	outcome?: CheckResult
+	inProgress: boolean
+	shouldReduceMotion: boolean | null
+}) {
+	return (
+		<TableCell className={cn('w-0 py-2.5 pr-3 align-top', RULE_BORDER)}>
+			<AnimatePresence initial={false} mode="wait">
+				<RuleStatusBadge
+					key={outcome?.rawResult.status ?? (inProgress ? 'running' : 'idle')}
+					outcome={outcome}
+					inProgress={inProgress}
+					shouldReduceMotion={shouldReduceMotion}
+				/>
+			</AnimatePresence>
+		</TableCell>
+	)
+}
+
+function RuleToggleCell({ open }: { open: boolean }) {
+	return (
+		<TableCell className={cn('w-0 py-2.5 pr-1 text-right align-top', RULE_BORDER)}>
+			<ChevronDown
+				size={16}
 				className={cn(
-					'scroll-mt-72 cursor-pointer transition-colors hover:bg-neutral-500/5 active:bg-neutral-500/10',
-					!implemented && 'opacity-45',
+					'inline-block text-muted-foreground transition-transform',
+					open && 'rotate-180',
+				)}
+			/>
+		</TableCell>
+	)
+}
+
+function RuleExecutorIcon({ rule }: { rule: Rule }) {
+	const executor = EXECUTOR[rule.executor] ?? { label: rule.executor, Icon: User, desc: '' }
+	const ExecutorIcon = executor.Icon
+
+	return (
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<span className="inline-flex text-muted-foreground">
+					<ExecutorIcon size={16} />
+				</span>
+			</TooltipTrigger>
+			<TooltipContent>
+				<span className="font-medium">{executor.label}</span>
+				{executor.desc && <span className="block text-xs opacity-80">{executor.desc}</span>}
+			</TooltipContent>
+		</Tooltip>
+	)
+}
+
+function RuleStatusBadge({
+	outcome,
+	inProgress,
+	shouldReduceMotion,
+}: {
+	outcome?: CheckResult
+	inProgress: boolean
+	shouldReduceMotion: boolean | null
+}) {
+	if (outcome) {
+		return (
+			<motion.span
+				initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 3, scale: 0.96 }}
+				animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+				exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -3, scale: 0.96 }}
+				transition={{ duration: 0.16, ease: 'easeOut' }}
+				className={cn(
+					'inline-block whitespace-nowrap rounded px-1.5 py-0.5 font-medium text-[11px]',
+					STATUS[outcome.rawResult.status].className,
 				)}
 			>
-				<td className={cn('w-44 py-2.5 pr-4 align-top', isSectionStart && ruleBorder)}>
-					{sectionLabel && <span className="font-medium text-sm">{sectionLabel}</span>}
-				</td>
-				<td className={cn('w-0 py-2.5 pr-3 align-top', ruleBorder)}>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<span className="inline-flex text-muted-foreground">
-								<ExecutorIcon size={16} />
-							</span>
-						</TooltipTrigger>
-						<TooltipContent>
-							<span className="font-medium">{executor.label}</span>
-							{executor.desc && (
-								<span className="block text-xs opacity-80">{executor.desc}</span>
-							)}
-						</TooltipContent>
-					</Tooltip>
-				</td>
-				<td className={cn('w-56 py-2.5 pr-4 align-top text-sm', ruleBorder)}>
-					{rule.title}
-				</td>
-				<td className={cn('py-2.5 pr-3 align-top text-sm', ruleBorder)}>
-					{detail && (
-						<span
-							className={cn(
-								'text-xs leading-5',
-								outcome?.rawResult.status === 'fail'
-									? 'text-rose-600 dark:text-rose-400'
-									: 'text-muted-foreground',
-							)}
-						>
-							{detail}
-						</span>
-					)}
-				</td>
-				<td className={cn('w-0 py-2.5 pr-3 align-top', ruleBorder)}>
-					{!implemented ? (
-						<span className="inline-block whitespace-nowrap rounded bg-neutral-500/10 px-1.5 py-0.5 text-[11px] text-muted-foreground">
-							개발 중
-						</span>
-					) : outcome ? (
-						<span
-							className={cn(
-								'inline-block whitespace-nowrap rounded px-1.5 py-0.5 font-medium text-[11px]',
-								STATUS[outcome.rawResult.status].className,
-							)}
-						>
-							{STATUS[outcome.rawResult.status].label}
-						</span>
-					) : inProgress ? (
-						<span className="inline-flex justify-center" title="검수 중">
-							<Spinner className="size-3.5 text-muted-foreground" />
-						</span>
-					) : null}
-				</td>
-				<td className={cn('w-0 py-2.5 pr-1 text-right align-top', ruleBorder)}>
-					<ChevronDown
-						size={16}
-						className={cn(
-							'inline-block text-muted-foreground transition-transform',
-							open && 'rotate-180',
-						)}
-					/>
-				</td>
-			</tr>
-			{open && (
-				<tr>
-					<td colSpan={2}>
-						<span className="sr-only">상세 정보</span>
-					</td>
-					<td className="w-56 pt-0 pb-3 pr-4 align-top">
+				{STATUS[outcome.rawResult.status].label}
+			</motion.span>
+		)
+	}
+	if (inProgress) {
+		return (
+			<motion.span
+				initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+				animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+				exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+				transition={{ duration: 0.14, ease: 'easeOut' }}
+				className="inline-flex justify-center"
+				title="검수 중"
+			>
+				<Spinner className="size-3.5 text-muted-foreground" />
+			</motion.span>
+		)
+	}
+	return null
+}
+
+function RuleDetailRow({
+	rule,
+	appliesTo,
+	outcome,
+	shouldReduceMotion,
+}: {
+	rule: Rule
+	appliesTo: string[]
+	outcome?: CheckResult
+	shouldReduceMotion: boolean | null
+}) {
+	const appliesToText = appliesTo.join(', ')
+	const facts = outcome?.rawResult.facts
+
+	return (
+		<motion.tr
+			className="border-0"
+			exit={{ visibility: 'visible' }}
+			transition={{ duration: 0.18, ease: 'easeOut' }}
+		>
+			<TableCell className="p-0" colSpan={2}>
+				<span className="sr-only">상세 정보</span>
+			</TableCell>
+			<TableCell className="w-56 pt-0 pb-0 pr-4 align-top">
+				<RuleDetailCollapse shouldReduceMotion={shouldReduceMotion}>
+					<div className="pb-3">
 						<code className="inline-flex items-center whitespace-nowrap rounded-md bg-secondary px-2 py-0.5 font-mono text-[11px] text-secondary-foreground">
 							{rule.key}
 						</code>
-					</td>
-					<td className="pt-0 pb-3 pr-3 align-top" colSpan={3}>
-						<div className="space-y-2">
-							{appliesTo.length > 1 && (
-								<p className="text-muted-foreground text-xs">
-									적용 위치: {appliesToText}
-								</p>
-							)}
-							{rule.evidence ? (
-								<blockquote className="rounded-md bg-white/5 px-3 py-2 text-muted-foreground text-xs leading-5">
-									{rule.evidence}
-								</blockquote>
-							) : (
-								<span className="text-muted-foreground text-xs">
-									관련 가이드라인 없음
-								</span>
-							)}
-							<ReferenceAssets assets={rule.referenceAssets} />
-						</div>
-					</td>
-				</tr>
+					</div>
+				</RuleDetailCollapse>
+			</TableCell>
+			<TableCell className="pt-0 pb-0 pr-3 align-top whitespace-normal" colSpan={3}>
+				<RuleDetailCollapse shouldReduceMotion={shouldReduceMotion}>
+					<div className="space-y-2 pb-3">
+						{appliesTo.length > 1 && (
+							<p className="text-muted-foreground text-xs">
+								적용 위치: {appliesToText}
+							</p>
+						)}
+						{rule.evidence ? (
+							<blockquote className="rounded-md bg-white/5 px-3 py-2 text-muted-foreground text-xs leading-5">
+								{rule.evidence}
+							</blockquote>
+						) : (
+							<span className="text-muted-foreground text-xs">
+								관련 가이드라인 없음
+							</span>
+						)}
+						<RuleFacts facts={facts} />
+						<ReferenceAssets assets={rule.referenceAssets} />
+					</div>
+				</RuleDetailCollapse>
+			</TableCell>
+		</motion.tr>
+	)
+}
+
+function RuleFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
+	if (!facts || Object.keys(facts).length === 0) return null
+
+	return (
+		<dl className="grid gap-1.5 rounded-md bg-white/5 px-3 py-2 text-xs">
+			{typeof facts.detectedCategory === 'string' && (
+				<RuleFact label="검출 분류" value={facts.detectedCategory} />
 			)}
-		</Fragment>
+			{typeof facts.confidence === 'number' && (
+				<RuleFact label="신뢰도" value={`${facts.confidence}%`} />
+			)}
+			{Array.isArray(facts.prohibitedSignals) && facts.prohibitedSignals.length > 0 && (
+				<div className="grid gap-1">
+					<dt className="text-muted-foreground">금지 신호</dt>
+					<dd>
+						<ul className="list-disc space-y-0.5 pl-4">
+							{facts.prohibitedSignals.map((signal) => (
+								<li key={signal}>{signal}</li>
+							))}
+						</ul>
+					</dd>
+				</div>
+			)}
+		</dl>
+	)
+}
+
+function RuleFact({ label, value }: { label: string; value: string }) {
+	return (
+		<div className="grid grid-cols-[5rem_1fr] gap-2">
+			<dt className="text-muted-foreground">{label}</dt>
+			<dd>{value}</dd>
+		</div>
+	)
+}
+
+function RuleDetailCollapse({
+	children,
+	shouldReduceMotion,
+}: {
+	children: ReactNode
+	shouldReduceMotion: boolean | null
+}) {
+	return (
+		<motion.div
+			className="overflow-hidden"
+			initial={shouldReduceMotion ? false : { height: 0 }}
+			animate={shouldReduceMotion ? {} : { height: 'auto' }}
+			exit={shouldReduceMotion ? {} : { height: 0 }}
+			transition={{ duration: 0.18, ease: 'easeOut' }}
+		>
+			{children}
+		</motion.div>
 	)
 }
 
@@ -201,81 +412,29 @@ function ReferenceAssets({ assets }: { assets: Rule['referenceAssets'] }) {
 }
 
 export function CheckSections({ sections }: { sections: CheckSection[] }) {
-	const { scenarioKey, selected } = useCheckImages()
-	const [showFailOnly, setShowFailOnly] = useState(false)
-	const results = selected?.results
-	const visibleSections = filterRulesetByScenario(sections, getCheckScenario(scenarioKey))
-
-	let pass = 0
-	let ok = 0
-	let fail = 0
-	let pendingManualCheck = 0
-	const rows: RuleRowData[] = []
-	const rowByRuleKey = new Map<string, RuleRowData>()
-	const seenSections = new Set<string>()
-
-	for (const section of visibleSections) {
-		for (const rule of section.rules) {
-			const existing = rowByRuleKey.get(rule.key)
-			if (existing) {
-				if (!existing.appliesToSet.has(section.title)) {
-					existing.appliesToSet.add(section.title)
-					existing.appliesTo.push(section.title)
-				}
-				continue
-			}
-
-			const implemented = rule.implemented
-			const status = results?.[rule.key]?.rawResult.status
-
-			if (implemented) {
-				if (status === 'pass') pass++
-				else if (status === 'ok') ok++
-				else if (status === 'fail') fail++
-				else pendingManualCheck++
-			}
-
-			if (!implemented) continue
-			if (showFailOnly && results && status !== 'fail') continue
-
-			const first = !seenSections.has(section.slug)
-			seenSections.add(section.slug)
-			const row = {
-				rule,
-				rowId: `${section.slug}:${rule.key}`,
-				sectionLabel: first ? section.title : null,
-				appliesTo: [section.title],
-				appliesToSet: new Set([section.title]),
-				anchorId: first ? section.slug : null,
-			}
-			rows.push(row)
-			rowByRuleKey.set(rule.key, row)
-		}
-	}
-	const checked = selected?.status === '완료' && Boolean(results)
+	const { scenarioKey, selectedId, selected, showFailOnly } = useCheckImages()
+	const { rows } = buildCheckReviewView({
+		sections,
+		scenarioKey,
+		selected,
+		showFailOnly,
+	})
 
 	return (
 		<TooltipProvider delayDuration={150}>
 			<div className="py-8">
-				{checked && (
-					<ResultSummary
-						pass={pass}
-						ok={ok}
-						fail={fail}
-						pendingManualCheck={pendingManualCheck}
-						showFailOnly={showFailOnly}
-						onToggleFailOnly={() => setShowFailOnly((value) => !value)}
-					/>
-				)}
-				<div className="border-neutral-200 border-b dark:border-neutral-800">
-					<table className="w-full border-collapse">
-						<tbody>
-							{rows.map((row) => (
-								<RuleRow {...row} key={row.rowId} />
-							))}
-						</tbody>
-					</table>
-				</div>
+				<Table className="table-fixed border-collapse">
+					<RuleTableColumns />
+					<TableBody>
+						{rows.map((row, index) => (
+							<RuleRow
+								{...row}
+								key={`${selectedId ?? 'empty'}:${row.rowId}`}
+								rowIndex={index}
+							/>
+						))}
+					</TableBody>
+				</Table>
 				{showFailOnly && rows.length === 0 && (
 					<p className="py-8 text-center text-muted-foreground text-sm">
 						미통과 항목이 없습니다.
@@ -286,54 +445,15 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 	)
 }
 
-/** 검수 결과 한눈 요약: 통과·미통과·검수 전 카운트 + 미통과만 보기 토글. */
-function ResultSummary({
-	pass,
-	ok,
-	fail,
-	pendingManualCheck,
-	showFailOnly,
-	onToggleFailOnly,
-}: {
-	pass: number
-	ok: number
-	fail: number
-	pendingManualCheck: number
-	showFailOnly: boolean
-	onToggleFailOnly: () => void
-}) {
+function RuleTableColumns() {
 	return (
-		<div className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border bg-card px-5 py-3.5 text-sm shadow-sm">
-			<span className="flex items-center gap-2">
-				<span className="inline-block size-2 rounded-full bg-emerald-500" />
-				통과 <span className="font-semibold tabular-nums">{pass}</span>
-			</span>
-			<span className="flex items-center gap-2">
-				<span className="inline-block size-2 rounded-full bg-sky-500" />
-				적합 <span className="font-semibold tabular-nums">{ok}</span>
-			</span>
-			<span className="flex items-center gap-2">
-				<span className="inline-block size-2 rounded-full bg-rose-500" />
-				미통과 <span className="font-semibold tabular-nums">{fail}</span>
-			</span>
-			<span className="flex items-center gap-2 text-muted-foreground">
-				<span className="inline-block size-2 rounded-full bg-amber-500" />
-				담당자 검토 필요{' '}
-				<span className="font-semibold tabular-nums">{pendingManualCheck}</span>
-			</span>
-			<button
-				type="button"
-				onClick={onToggleFailOnly}
-				disabled={fail === 0}
-				className={cn(
-					'ml-auto rounded-md border px-3 py-1.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40',
-					showFailOnly
-						? 'border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-400'
-						: 'text-muted-foreground hover:bg-accent hover:text-foreground',
-				)}
-			>
-				{showFailOnly ? '전체 보기' : '미통과만 보기'}
-			</button>
-		</div>
+		<colgroup>
+			<col className="w-44" />
+			<col className="w-8" />
+			<col className="w-56" />
+			<col />
+			<col className="w-36" />
+			<col className="w-8" />
+		</colgroup>
 	)
 }

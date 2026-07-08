@@ -1,18 +1,21 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { type DragEvent, useState } from 'react'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
 import { AgentChatMessageList } from '@/features/agent-chat/components/agent-chat-message-list'
 import { AgentChatUserInput } from '@/features/agent-chat/components/agent-chat-user-input'
 import { useAgentChat } from '@/features/agent-chat/hooks/use-agent-chat'
+import { cn } from '@/lib/utils'
 
 export function GlobalAgentChat() {
 	const pagePath = usePathname()
 	const [input, setInput] = useState('')
 	const [files, setFiles] = useState<FileList>()
+	const [isDraggingFile, setIsDraggingFile] = useState(false)
 	const { messages, sendMessage, status, error } = useAgentChat()
 	const isBusy = status === 'submitted' || status === 'streaming'
+	const canDropFiles = (event: DragEvent) => event.dataTransfer.types.includes('Files')
 
 	function handleSubmit() {
 		if (isBusy) return
@@ -27,7 +30,36 @@ export function GlobalAgentChat() {
 		<Sidebar
 			side="right"
 			collapsible="offcanvas"
-			className="border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900"
+			className={cn(
+				'border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900',
+				isDraggingFile && 'ring-2 ring-primary/30',
+			)}
+			onDragEnter={(event) => {
+				if (isBusy || !canDropFiles(event)) return
+				event.preventDefault()
+				setIsDraggingFile(true)
+			}}
+			onDragOver={(event) => {
+				if (isBusy || !canDropFiles(event)) return
+				event.preventDefault()
+				event.dataTransfer.dropEffect = 'copy'
+				setIsDraggingFile(true)
+			}}
+			onDragLeave={(event) => {
+				if (
+					event.relatedTarget instanceof Node &&
+					event.currentTarget.contains(event.relatedTarget)
+				) {
+					return
+				}
+				setIsDraggingFile(false)
+			}}
+			onDrop={(event) => {
+				event.preventDefault()
+				setIsDraggingFile(false)
+				if (isBusy || event.dataTransfer.files.length === 0) return
+				setFiles(event.dataTransfer.files)
+			}}
 		>
 			<SidebarHeader>
 				<GlobalAgentChatHeader />

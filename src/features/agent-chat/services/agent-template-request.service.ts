@@ -192,7 +192,18 @@ function filterSlotValues(
 
 function fitTextValue(element: Extract<JsonSlotElement, { type: 'text' }>, value: string) {
 	const maxLength = element.maxLength ?? value.length
-	const text = value.slice(0, maxLength)
+	const text = normalizeTextSlotValue(element, value).slice(0, maxLength)
 
 	return element.maxLines ? text.split('\n').slice(0, element.maxLines).join('\n') : text
+}
+
+function normalizeTextSlotValue(
+	element: Extract<JsonSlotElement, { type: 'text' }>,
+	value: string,
+) {
+	const text = value.trim()
+	const slotText = `${element.id} ${element.slotLabel ?? ''} ${element.text}`.toLowerCase()
+	const isDepartmentSlot = /부서|department|team|팀/.test(slotText)
+
+	return isDepartmentSlot ? text.replace(/\s*(팀|team)\s*(으로|로)?$/i, '').trim() : text
 }
