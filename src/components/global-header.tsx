@@ -104,7 +104,7 @@ function GuidelineSearch({ sections }: { sections: GuidelineSearchSection[] }) {
 				className="py-4 pl-3"
 				onClick={() => setOpen((current) => !current)}
 			>
-				<span className="pr-8 text-neutral-500">Search Guideline...</span>
+				<span className="pr-8 text-neutral-500">가이드라인 검색...</span>
 				<KbdGroup>
 					<Kbd className="bg-neutral-500/10">⌘</Kbd>
 					<Kbd className="bg-neutral-500/10">K</Kbd>
