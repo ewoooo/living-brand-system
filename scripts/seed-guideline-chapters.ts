@@ -233,6 +233,70 @@ const PAGE_MAP: Record<string, { slug: string; title: string }[]> = {
 	etc: [{ slug: 'etc', title: 'Etc.' }],
 }
 
+// B.1 Incorrect Usage: 카테고리(그룹)마다 서로 다른 룰(1:N) → do/dont 블록. 캡션은 PDF p.22.
+// 룰의 evidence/referenceAssets는 저장 시 afterChange 훅이 이 블록에서 파생한다.
+const INCORRECT_USAGE_GROUPS = [
+	{
+		category: 'Proportion / Space',
+		ruleKey: 'logo.geometry',
+		captions: [
+			'로고의 간격을 임의로 조정할 수 없습니다.',
+			'로고의 비례를 임의로 변형하여 사용할 수 없습니다.',
+			'로고의 기울기를 임의로 변형하여 사용할 수 없습니다.',
+		],
+	},
+	{
+		category: 'Shape',
+		ruleKey: 'logo.misuse',
+		captions: [
+			'로고 요소 일부분의 형태를 변형하여 사용할 수 없습니다.',
+			'로고의 두께를 임의로 변형할 수 없습니다.',
+			'로고의 형태를 임의로 변형하여 사용할 수 없습니다.',
+		],
+	},
+	{
+		category: 'Color',
+		ruleKey: 'logo.color.misuse',
+		captions: [
+			'로고를 윤곽선만으로 사용할 수 없습니다.',
+			'로고 내 일부 요소에 컬러를 변형하여 사용할 수 없습니다.',
+			'로고를 규정 외 컬러로 변형하여 사용할 수 없습니다.',
+		],
+	},
+	{
+		category: 'Effect / Background',
+		ruleKey: 'logo.background.legibility',
+		captions: [
+			'가시성을 해치는 배경 컬러와 함께 사용할 수 없습니다.',
+			'가시성을 해치는 배경 이미지와 함께 사용할 수 없습니다.',
+			'로고에 그라디언트 효과를 적용할 수 없습니다.',
+		],
+	},
+]
+
+async function ruleIdByKey(key: string): Promise<number | null> {
+	const res = await payload.find({
+		collection: 'rules',
+		where: { key: { equals: key } },
+		limit: 1,
+		overrideAccess: true,
+	})
+	return (res.docs[0]?.id as number) ?? null
+}
+
+// do/dont 블록 1개(그룹=카테고리=룰). 이미지는 후속(텍스트 우선) — 지금은 캡션만.
+async function buildIncorrectUsageBlock() {
+	const groups = []
+	for (const group of INCORRECT_USAGE_GROUPS) {
+		groups.push({
+			category: group.category,
+			rule: await ruleIdByKey(group.ruleKey),
+			examples: group.captions.map((caption) => ({ kind: 'dont', caption })),
+		})
+	}
+	return { blockType: 'doDont' as const, title: 'Incorrect Usage', groups }
+}
+
 // ── 1. 원본 구조 읽기 ──
 const oldSections = (
 	await payload.find({
@@ -343,9 +407,12 @@ for (const oldSection of oldSections) {
 						slug: def.slug,
 						section: section.id,
 						displayOrder: index,
-						blocks: def.topics.map((t) =>
-							topic(t.title, t.body, b1ImageIds.get(t.image) as number),
-						),
+						blocks:
+							def.slug === 'incorrect-usage'
+								? [await buildIncorrectUsageBlock()]
+								: def.topics.map((t) =>
+										topic(t.title, t.body, b1ImageIds.get(t.image) as number),
+									),
 						rules: index === 0 ? (strip(oldPage.rules) ?? []) : [],
 						_status: 'published',
 					} as never,
