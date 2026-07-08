@@ -26,7 +26,7 @@ export function ColorPaletteBlock({
 					>
 						<p className="font-semibold">{color.name}</p>
 						<p>HEX {color.hex}</p>
-						<p>RGB {hexToRgbLabel(color.hex)}</p>
+						{hexToRgbLabel(color.hex) && <p>RGB {hexToRgbLabel(color.hex)}</p>}
 						{color.pantone && <p>PMS {color.pantone}</p>}
 					</div>
 				))}
@@ -41,6 +41,8 @@ function parseHex(hex: string) {
 }
 
 function hexToRgbLabel(hex: string) {
+	const value = hex.replace(/^#/, '')
+	if (!/^[0-9a-fA-F]{6}$/.test(value)) return null
 	const { r, g, b } = parseHex(hex)
 	return `${r}/${g}/${b}`
 }

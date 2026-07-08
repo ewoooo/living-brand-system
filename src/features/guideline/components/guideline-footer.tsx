@@ -5,7 +5,7 @@ export function GuidelineFooter({ companyName }: { companyName: string }) {
 		<footer className="max-w-[1600px] w-full text-muted-foreground text-sm">
 			<section className="flex w-full items-center justify-between py-6">
 				<p className="text-neutral-300 dark:text-neutral-700">
-					© {companyName}. All rights reserved.
+					© {companyName}. 모든 권리 보유.
 				</p>
 				<ThemeToggle />
 			</section>
