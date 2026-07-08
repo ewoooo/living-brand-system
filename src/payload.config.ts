@@ -25,18 +25,17 @@ import { TemplateAssets } from './collections/TemplateAssets'
 import { TemplateCategories } from './collections/TemplateCategories'
 import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
+import { env } from './env'
 import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
 import { adminOnly } from './lib/auth'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
-const databaseURL = process.env.DATABASE_URL
-const resendAPIKey = process.env.RESEND_API_KEY
 const shouldRunProdMigrations =
-	process.env.PAYLOAD_RUN_MIGRATIONS_ON_STARTUP === 'true' &&
-	process.env.NODE_ENV === 'production' &&
-	process.env.NEXT_PHASE !== 'phase-production-build'
+	env.PAYLOAD_RUN_MIGRATIONS_ON_STARTUP === 'true' &&
+	env.NODE_ENV === 'production' &&
+	env.NEXT_PHASE !== 'phase-production-build'
 const mcpListParameters = {
 	limit: z.number().int().min(1).max(100).optional(),
 	locale: z.enum(['ko', 'en']).optional(),
@@ -62,12 +61,6 @@ const mcpTextTool = (
 		content: [{ type: 'text' as const, text: JSON.stringify(await run(args, req)) }],
 	}),
 })
-
-if (!databaseURL) {
-	throw new Error(
-		'DATABASE_URL is required. For local development, run Postgres and set DATABASE_URL=postgresql://payload:payload@127.0.0.1:5432/hd_cms_prototype',
-	)
-}
 
 export default buildConfig({
 	admin: {
@@ -103,14 +96,14 @@ export default buildConfig({
 		// 가이드라인 수치 규정 표(최소 사이즈, 자간 등) 입력용. EXPERIMENTAL: 업그레이드 시 변경 가능성 있음.
 		features: ({ defaultFeatures }) => [...defaultFeatures, EXPERIMENTAL_TableFeature()],
 	}),
-	email: resendAPIKey
+	email: env.RESEND_API_KEY
 		? resendAdapter({
-				apiKey: resendAPIKey,
-				defaultFromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@plus-ex.com',
-				defaultFromName: process.env.EMAIL_FROM_NAME || 'PROTO',
+				apiKey: env.RESEND_API_KEY,
+				defaultFromAddress: env.EMAIL_FROM_ADDRESS || 'noreply@plus-ex.com',
+				defaultFromName: env.EMAIL_FROM_NAME || 'PROTO',
 			})
 		: undefined,
-	secret: process.env.PAYLOAD_SECRET || '',
+	secret: env.PAYLOAD_SECRET,
 	upload: {
 		limits: {
 			fileSize: 20_000_000, // 20MB — 고해상 브랜드 에셋 여유 상한, 무제한 업로드 방지 (docs/07 #27)
@@ -122,10 +115,10 @@ export default buildConfig({
 	db: postgresAdapter({
 		migrationDir: './migrations',
 		pool: {
-			connectionString: databaseURL,
+			connectionString: env.DATABASE_URL,
 		},
 		prodMigrations: shouldRunProdMigrations ? migrations : undefined,
-		push: process.env.PAYLOAD_DB_PUSH === 'true',
+		push: env.PAYLOAD_DB_PUSH === 'true',
 	}),
 	sharp,
 	plugins: [
@@ -259,12 +252,12 @@ export default buildConfig({
 				'application-images': true,
 				'template-assets': true,
 			},
-			bucket: process.env.S3_BUCKET || '',
+			bucket: env.S3_BUCKET || '',
 			config: {
-				region: process.env.S3_REGION || '',
+				region: env.S3_REGION || '',
 				credentials: {
-					accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
-					secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+					accessKeyId: env.S3_ACCESS_KEY_ID || '',
+					secretAccessKey: env.S3_SECRET_ACCESS_KEY || '',
 				},
 			},
 		}),

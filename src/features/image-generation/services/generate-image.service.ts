@@ -1,5 +1,8 @@
 import { openai } from '@ai-sdk/openai'
 import { generateImage } from 'ai'
+import { env } from '@/env'
+
+const DEFAULT_MODEL = 'gpt-image-2'
 
 /**
  * 유스케이스 경계: 프롬프트를 받아 이미지 후보 N장을 생성해 data URI로 돌려준다.
@@ -13,9 +16,8 @@ export async function generateBrandImages({
 	prompt: string
 	count: number
 }): Promise<string[]> {
-	const model = process.env.OPENAI_IMAGE_MODEL ?? 'gpt-image-2'
 	const { images } = await generateImage({
-		model: openai.image(model),
+		model: openai.image(env.OPENAI_IMAGE_MODEL || DEFAULT_MODEL),
 		prompt,
 		n: count,
 		size: '1024x1024',

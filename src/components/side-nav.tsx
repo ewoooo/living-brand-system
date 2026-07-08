@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import type React from 'react'
 import { Sidebar, SidebarContent } from '@/components/ui/sidebar'
 
 /**
@@ -77,17 +76,26 @@ function NavGroup({ group, pathname }: { group: SideNavGroup; pathname: string }
 	)
 }
 
-export function SideNav({ groups, empty }: { groups: SideNavGroup[]; empty?: React.ReactNode }) {
+export function SideNav({
+	groups,
+	emptyText = '페이지 없음',
+}: {
+	groups: SideNavGroup[]
+	/** 그룹이 없을 때 표시할 안내 문구. */
+	emptyText?: string
+}) {
 	const pathname = usePathname()
 
 	return (
 		<Sidebar collapsible="none" className="h-full overflow-y-auto pl-6">
 			<SidebarContent className="pt-12">
-				{groups.length > 0
-					? groups.map((group) => (
-							<NavGroup key={group.key} group={group} pathname={pathname} />
-						))
-					: empty}
+				{groups.length > 0 ? (
+					groups.map((group) => (
+						<NavGroup key={group.key} group={group} pathname={pathname} />
+					))
+				) : (
+					<div className="px-4 py-2 text-neutral-400 text-xs">{emptyText}</div>
+				)}
 			</SidebarContent>
 		</Sidebar>
 	)

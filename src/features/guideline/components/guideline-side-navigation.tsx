@@ -17,10 +17,5 @@ export function GuidelineSideNavigation({
 		})),
 	}))
 
-	return (
-		<SideNav
-			groups={groups}
-			empty={<div className="px-4 py-2 text-neutral-400 text-xs">페이지 없음</div>}
-		/>
-	)
+	return <SideNav groups={groups} />
 }

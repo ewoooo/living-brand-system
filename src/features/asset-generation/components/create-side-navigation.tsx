@@ -13,12 +13,5 @@ export function CreateSideNavigation({ navigation }: { navigation: GetCreateNavi
 		})),
 	}))
 
-	return (
-		<SideNav
-			groups={groups}
-			empty={
-				<div className="px-4 py-2 text-neutral-400 text-xs">발행된 템플릿이 없습니다</div>
-			}
-		/>
-	)
+	return <SideNav groups={groups} emptyText="발행된 템플릿이 없습니다" />
 }

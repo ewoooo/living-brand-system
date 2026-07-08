@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useTemplatePngExport } from '@/hooks/use-template-png-export'
+import { revokeBlob } from '@/lib/object-url'
 import { collectOpenSlotElements, type JsonSlotElement } from '@/types/json-template'
 import type { PublishedTemplate } from '../services/get-published-template.service'
 
@@ -82,11 +83,7 @@ export function AssetGenerator({ template }: { template: PublishedTemplate }) {
 
 	function setSlotImage(elementId: string, file: File) {
 		// 교체된 blob URL은 즉시 해제해 세션 동안의 메모리 누수를 막는다.
-		const previousSrc = values[elementId]?.src
-
-		if (previousSrc?.startsWith('blob:')) {
-			URL.revokeObjectURL(previousSrc)
-		}
+		revokeBlob(values[elementId]?.src)
 		setSlotValue(elementId, { src: URL.createObjectURL(file) })
 	}
 

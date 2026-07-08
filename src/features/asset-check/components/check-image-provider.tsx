@@ -4,6 +4,7 @@ import { createContext, type ReactNode, use, useEffect, useMemo, useRef, useStat
 import { CHECK_SCENARIOS, getCheckScenario } from '@/features/asset-check/scenarios'
 import { runFullCheck } from '@/features/asset-check/services/submit-check.client'
 import type { CheckImage, CheckImageContextValue } from '@/features/asset-check/types'
+import { revokeBlob } from '@/lib/object-url'
 
 const CheckImageContext = createContext<CheckImageContextValue | null>(null)
 
@@ -32,7 +33,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 	imagesRef.current = images
 	useEffect(
 		() => () => {
-			for (const image of imagesRef.current) URL.revokeObjectURL(image.url)
+			for (const image of imagesRef.current) revokeBlob(image.url)
 		},
 		[],
 	)

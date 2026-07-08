@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { revokeBlob } from '@/lib/object-url'
 import type { JsonTemplate } from '@/types/json-template'
 
 /**
@@ -88,6 +89,15 @@ interface Cell {
 	image: ImageItem | null
 }
 type ItemKind = 'text' | 'image'
+
+/** 현재 선택된 셀 아이템 — 편집 패널이 참조한다. */
+interface Selected {
+	id: string
+	index: number
+	kind: ItemKind
+	text: TextItem | null
+	image: ImageItem | null
+}
 
 const emptyCell = (): Cell => ({ text: null, image: null })
 const defaultText = (content: string): TextItem => ({
@@ -312,10 +322,6 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 				i === index && cell.text ? { ...cell, text: { ...cell.text, ...patch } } : cell,
 			),
 		)
-	}
-	/** 교체·제거된 blob URL을 즉시 해제해 세션 동안의 메모리 누수를 막는다. */
-	function revokeBlob(url: string | null | undefined) {
-		if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
 	}
 	/** 이미지 아이템 부분 수정(src·크기). */
 	function patchImage(index: number, patch: Partial<ImageItem>) {
@@ -721,262 +727,335 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 			</div>
 
 			{/* ── 편집 패널 (오른쪽) ── */}
-			<aside className="flex w-64 shrink-0 flex-col gap-4">
-				<Field label="캔버스 크기">
-					<div className="flex gap-2">
-						<SizeInput label="폭" value={canvasW} onCommit={setCanvasW} />
-						<SizeInput label="높이" value={canvasH} onCommit={setCanvasH} />
-					</div>
-				</Field>
-
-				<Field label="여백 (Padding)">
-					<div className="flex gap-2">
-						<SizeInput
-							label="가로"
-							value={padX}
-							min={0}
-							onCommit={(v) => setPadX(Math.min(v, Math.floor(canvasW / 2) - 1))}
-						/>
-						<SizeInput
-							label="세로"
-							value={padY}
-							min={0}
-							onCommit={(v) => setPadY(Math.min(v, Math.floor(canvasH / 2) - 1))}
-						/>
-					</div>
-				</Field>
-
-				<Field label="셀 간격 (Gap)">
-					<SizeInput label="px" value={gap} min={0} onCommit={setGap} />
-				</Field>
-
-				<Field label="배경 (캔버스 전체)">
-					<div className="flex flex-col gap-2">
-						<div className="flex items-center gap-2">
-							<input
-								type="color"
-								value={bgColor}
-								onChange={(e) => setBgColor(e.target.value)}
-								aria-label="배경 색"
-								className="h-9 w-9 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0"
-							/>
-							<Input
-								value={bgColor}
-								onChange={(e) => setBgColor(e.target.value)}
-								className="flex-1"
-								aria-label="배경 색 (hex)"
-							/>
-						</div>
-						<Input
-							type="file"
-							accept="image/*"
-							aria-label="배경 이미지"
-							onChange={(e) => {
-								const file = e.target.files?.[0]
-								if (!file) return
-								revokeBlob(bgImage)
-								setBgImage(URL.createObjectURL(file))
-							}}
-						/>
-						{bgImage && (
-							<Button
-								size="sm"
-								variant="ghost"
-								className="self-start text-destructive"
-								onClick={() => {
-									revokeBlob(bgImage)
-									setBgImage(null)
-								}}
-							>
-								배경 이미지 제거
-							</Button>
-						)}
-					</div>
-				</Field>
-
-				<Separator />
-
-				<div className="flex gap-2">
-					<Button size="sm" className="flex-1" onClick={() => addItem('text')}>
-						+ 텍스트
-					</Button>
-					<Button
-						size="sm"
-						variant="secondary"
-						className="flex-1"
-						onClick={() => addItem('image')}
-					>
-						+ 이미지
-					</Button>
-				</div>
-
-				<Separator />
-
-				<label
-					htmlFor="hide-guides"
-					className="flex cursor-pointer items-center gap-2 text-sm"
-				>
-					<Checkbox
-						id="hide-guides"
-						checked={hideGuides}
-						onCheckedChange={(v) => setHideGuides(v === true)}
-					/>
-					안내선 숨기기
-				</label>
-
-				<TrackList
-					title="행 (Rows)"
-					weights={rows}
-					onCommit={(i, v) => setWeight('row', i, v)}
-					onAdd={() => addTrack('row')}
-					onRemove={(i) => removeTrack('row', i)}
-				/>
-				<TrackList
-					title="열 (Columns)"
-					weights={cols}
-					onCommit={(i, v) => setWeight('col', i, v)}
-					onAdd={() => addTrack('col')}
-					onRemove={(i) => removeTrack('col', i)}
-				/>
-
-				{selected && (
-					<>
-						<Separator />
-						<Field label={`선택한 ${selected.kind === 'text' ? '텍스트' : '이미지'}`}>
-							{selected.kind === 'text' && selected.text ? (
-								<div className="flex flex-col gap-2">
-									<Textarea
-										rows={2}
-										value={selected.text.content}
-										onChange={(e) =>
-											patchText(selected.index, { content: e.target.value })
-										}
-									/>
-									<AlignPicker
-										label="수평"
-										value={selected.text.hAlign}
-										options={H_ALIGN}
-										onChange={(hAlign) => patchText(selected.index, { hAlign })}
-									/>
-									<AlignPicker
-										label="수직"
-										value={selected.text.vAlign}
-										options={V_ALIGN}
-										onChange={(vAlign) => patchText(selected.index, { vAlign })}
-									/>
-									<AlignPicker
-										label="흐름"
-										value={selected.text.flow}
-										options={TEXT_FLOW}
-										onChange={(flow) => patchText(selected.index, { flow })}
-									/>
-									<AlignPicker
-										label="굵기"
-										value={selected.text.fontWeight}
-										options={FONT_WEIGHT}
-										onChange={(fontWeight) =>
-											patchText(selected.index, { fontWeight })
-										}
-									/>
-									<div className="flex gap-2">
-										<SizeInput
-											label="크기 (px)"
-											value={selected.text.fontSize}
-											min={1}
-											onCommit={(v) =>
-												patchText(selected.index, { fontSize: v })
-											}
-										/>
-										<SizeInput
-											label="줄간격 (배수)"
-											value={selected.text.lineHeight}
-											min={0.1}
-											float
-											onCommit={(v) =>
-												patchText(selected.index, { lineHeight: v })
-											}
-										/>
-									</div>
-									<div className="flex items-center gap-2">
-										<span className="w-8 shrink-0 text-muted-foreground text-xs">
-											색상
-										</span>
-										<input
-											type="color"
-											value={selected.text.color}
-											onChange={(e) =>
-												patchText(selected.index, { color: e.target.value })
-											}
-											aria-label="텍스트 색"
-											className="h-9 w-9 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0"
-										/>
-										<Input
-											value={selected.text.color}
-											onChange={(e) =>
-												patchText(selected.index, { color: e.target.value })
-											}
-											className="flex-1"
-											aria-label="텍스트 색 (hex)"
-										/>
-									</div>
-								</div>
-							) : selected.image ? (
-								<div className="flex flex-col gap-2">
-									<Input
-										type="file"
-										accept="image/*"
-										onChange={(e) => {
-											const file = e.target.files?.[0]
-											if (!file) return
-											revokeBlob(selected.image?.src)
-											patchImage(selected.index, {
-												src: URL.createObjectURL(file),
-											})
-										}}
-									/>
-									{/* 셀 크기와 무관한 임의 크기 — 입력 또는 캔버스의 se 핸들 드래그로 조절 */}
-									<div className="flex gap-2">
-										<SizeInput
-											label="너비"
-											value={selected.image.width}
-											min={8}
-											onCommit={(v) =>
-												patchImage(selected.index, { width: v })
-											}
-										/>
-										<SizeInput
-											label="높이"
-											value={selected.image.height}
-											min={8}
-											onCommit={(v) =>
-												patchImage(selected.index, { height: v })
-											}
-										/>
-									</div>
-								</div>
-							) : null}
-							<div className="mt-2 flex justify-between">
-								<Button
-									size="sm"
-									variant="ghost"
-									className="text-destructive"
-									onClick={() => removeItem(selected.index, selected.kind)}
-								>
-									삭제
-								</Button>
-								<Button
-									size="sm"
-									variant="ghost"
-									onClick={() => setSelectedId(null)}
-								>
-									닫기
-								</Button>
-							</div>
-						</Field>
-					</>
-				)}
-			</aside>
+			<CompositionPanel
+				canvasW={canvasW}
+				canvasH={canvasH}
+				setCanvasW={setCanvasW}
+				setCanvasH={setCanvasH}
+				padX={padX}
+				padY={padY}
+				setPadX={setPadX}
+				setPadY={setPadY}
+				gap={gap}
+				setGap={setGap}
+				bgColor={bgColor}
+				setBgColor={setBgColor}
+				bgImage={bgImage}
+				setBgImage={setBgImage}
+				addItem={addItem}
+				hideGuides={hideGuides}
+				setHideGuides={setHideGuides}
+				rows={rows}
+				cols={cols}
+				setWeight={setWeight}
+				addTrack={addTrack}
+				removeTrack={removeTrack}
+				selected={selected}
+				patchText={patchText}
+				patchImage={patchImage}
+				removeItem={removeItem}
+				onCloseSelected={() => setSelectedId(null)}
+			/>
 		</section>
+	)
+}
+
+interface CompositionPanelProps {
+	canvasW: number
+	canvasH: number
+	setCanvasW: (value: number) => void
+	setCanvasH: (value: number) => void
+	padX: number
+	padY: number
+	setPadX: (value: number) => void
+	setPadY: (value: number) => void
+	gap: number
+	setGap: (value: number) => void
+	bgColor: string
+	setBgColor: (value: string) => void
+	bgImage: string | null
+	setBgImage: (value: string | null) => void
+	addItem: (kind: ItemKind) => void
+	hideGuides: boolean
+	setHideGuides: (value: boolean) => void
+	rows: number[]
+	cols: number[]
+	setWeight: (axis: 'row' | 'col', index: number, value: number) => void
+	addTrack: (axis: 'row' | 'col') => void
+	removeTrack: (axis: 'row' | 'col', index: number) => void
+	selected: Selected | null
+	patchText: (index: number, patch: Partial<TextItem>) => void
+	patchImage: (index: number, patch: Partial<ImageItem>) => void
+	removeItem: (index: number, kind: ItemKind) => void
+	onCloseSelected: () => void
+}
+
+/** 편집 컨트롤(오른쪽) — 캔버스 크기·여백·배경·요소 추가·그리드·선택 요소 편집. 상태는 GridComposer가 소유한다. */
+function CompositionPanel({
+	canvasW,
+	canvasH,
+	setCanvasW,
+	setCanvasH,
+	padX,
+	padY,
+	setPadX,
+	setPadY,
+	gap,
+	setGap,
+	bgColor,
+	setBgColor,
+	bgImage,
+	setBgImage,
+	addItem,
+	hideGuides,
+	setHideGuides,
+	rows,
+	cols,
+	setWeight,
+	addTrack,
+	removeTrack,
+	selected,
+	patchText,
+	patchImage,
+	removeItem,
+	onCloseSelected,
+}: CompositionPanelProps) {
+	return (
+		<aside className="flex w-64 shrink-0 flex-col gap-4">
+			<Field label="캔버스 크기">
+				<div className="flex gap-2">
+					<SizeInput label="폭" value={canvasW} onCommit={setCanvasW} />
+					<SizeInput label="높이" value={canvasH} onCommit={setCanvasH} />
+				</div>
+			</Field>
+
+			<Field label="여백 (Padding)">
+				<div className="flex gap-2">
+					<SizeInput
+						label="가로"
+						value={padX}
+						min={0}
+						onCommit={(v) => setPadX(Math.min(v, Math.floor(canvasW / 2) - 1))}
+					/>
+					<SizeInput
+						label="세로"
+						value={padY}
+						min={0}
+						onCommit={(v) => setPadY(Math.min(v, Math.floor(canvasH / 2) - 1))}
+					/>
+				</div>
+			</Field>
+
+			<Field label="셀 간격 (Gap)">
+				<SizeInput label="px" value={gap} min={0} onCommit={setGap} />
+			</Field>
+
+			<Field label="배경 (캔버스 전체)">
+				<div className="flex flex-col gap-2">
+					<div className="flex items-center gap-2">
+						<ColorField value={bgColor} onChange={setBgColor} label="배경 색" />
+					</div>
+					<Input
+						type="file"
+						accept="image/*"
+						aria-label="배경 이미지"
+						onChange={(e) => {
+							const file = e.target.files?.[0]
+							if (!file) return
+							revokeBlob(bgImage)
+							setBgImage(URL.createObjectURL(file))
+						}}
+					/>
+					{bgImage && (
+						<Button
+							size="sm"
+							variant="ghost"
+							className="self-start text-destructive"
+							onClick={() => {
+								revokeBlob(bgImage)
+								setBgImage(null)
+							}}
+						>
+							배경 이미지 제거
+						</Button>
+					)}
+				</div>
+			</Field>
+
+			<Separator />
+
+			<div className="flex gap-2">
+				<Button size="sm" className="flex-1" onClick={() => addItem('text')}>
+					+ 텍스트
+				</Button>
+				<Button
+					size="sm"
+					variant="secondary"
+					className="flex-1"
+					onClick={() => addItem('image')}
+				>
+					+ 이미지
+				</Button>
+			</div>
+
+			<Separator />
+
+			<label htmlFor="hide-guides" className="flex cursor-pointer items-center gap-2 text-sm">
+				<Checkbox
+					id="hide-guides"
+					checked={hideGuides}
+					onCheckedChange={(v) => setHideGuides(v === true)}
+				/>
+				안내선 숨기기
+			</label>
+
+			<TrackList
+				title="행 (Rows)"
+				weights={rows}
+				onCommit={(i, v) => setWeight('row', i, v)}
+				onAdd={() => addTrack('row')}
+				onRemove={(i) => removeTrack('row', i)}
+			/>
+			<TrackList
+				title="열 (Columns)"
+				weights={cols}
+				onCommit={(i, v) => setWeight('col', i, v)}
+				onAdd={() => addTrack('col')}
+				onRemove={(i) => removeTrack('col', i)}
+			/>
+
+			{selected && (
+				<>
+					<Separator />
+					<SelectedItemEditor
+						selected={selected}
+						patchText={patchText}
+						patchImage={patchImage}
+						removeItem={removeItem}
+						onClose={onCloseSelected}
+					/>
+				</>
+			)}
+		</aside>
+	)
+}
+
+/** 선택한 텍스트/이미지 아이템 편집기 — 패널 하단에 접혀 나온다. */
+function SelectedItemEditor({
+	selected,
+	patchText,
+	patchImage,
+	removeItem,
+	onClose,
+}: {
+	selected: Selected
+	patchText: (index: number, patch: Partial<TextItem>) => void
+	patchImage: (index: number, patch: Partial<ImageItem>) => void
+	removeItem: (index: number, kind: ItemKind) => void
+	onClose: () => void
+}) {
+	return (
+		<Field label={`선택한 ${selected.kind === 'text' ? '텍스트' : '이미지'}`}>
+			{selected.kind === 'text' && selected.text ? (
+				<div className="flex flex-col gap-2">
+					<Textarea
+						rows={2}
+						value={selected.text.content}
+						onChange={(e) => patchText(selected.index, { content: e.target.value })}
+					/>
+					<AlignPicker
+						label="수평"
+						value={selected.text.hAlign}
+						options={H_ALIGN}
+						onChange={(hAlign) => patchText(selected.index, { hAlign })}
+					/>
+					<AlignPicker
+						label="수직"
+						value={selected.text.vAlign}
+						options={V_ALIGN}
+						onChange={(vAlign) => patchText(selected.index, { vAlign })}
+					/>
+					<AlignPicker
+						label="흐름"
+						value={selected.text.flow}
+						options={TEXT_FLOW}
+						onChange={(flow) => patchText(selected.index, { flow })}
+					/>
+					<AlignPicker
+						label="굵기"
+						value={selected.text.fontWeight}
+						options={FONT_WEIGHT}
+						onChange={(fontWeight) => patchText(selected.index, { fontWeight })}
+					/>
+					<div className="flex gap-2">
+						<SizeInput
+							label="크기 (px)"
+							value={selected.text.fontSize}
+							min={1}
+							onCommit={(v) => patchText(selected.index, { fontSize: v })}
+						/>
+						<SizeInput
+							label="줄간격 (배수)"
+							value={selected.text.lineHeight}
+							min={0.1}
+							float
+							onCommit={(v) => patchText(selected.index, { lineHeight: v })}
+						/>
+					</div>
+					<div className="flex items-center gap-2">
+						<span className="w-8 shrink-0 text-muted-foreground text-xs">색상</span>
+						<ColorField
+							value={selected.text.color}
+							onChange={(color) => patchText(selected.index, { color })}
+							label="텍스트 색"
+						/>
+					</div>
+				</div>
+			) : selected.image ? (
+				<div className="flex flex-col gap-2">
+					<Input
+						type="file"
+						accept="image/*"
+						onChange={(e) => {
+							const file = e.target.files?.[0]
+							if (!file) return
+							revokeBlob(selected.image?.src)
+							patchImage(selected.index, {
+								src: URL.createObjectURL(file),
+							})
+						}}
+					/>
+					{/* 셀 크기와 무관한 임의 크기 — 입력 또는 캔버스의 se 핸들 드래그로 조절 */}
+					<div className="flex gap-2">
+						<SizeInput
+							label="너비"
+							value={selected.image.width}
+							min={8}
+							onCommit={(v) => patchImage(selected.index, { width: v })}
+						/>
+						<SizeInput
+							label="높이"
+							value={selected.image.height}
+							min={8}
+							onCommit={(v) => patchImage(selected.index, { height: v })}
+						/>
+					</div>
+				</div>
+			) : null}
+			<div className="mt-2 flex justify-between">
+				<Button
+					size="sm"
+					variant="ghost"
+					className="text-destructive"
+					onClick={() => removeItem(selected.index, selected.kind)}
+				>
+					삭제
+				</Button>
+				<Button size="sm" variant="ghost" onClick={onClose}>
+					닫기
+				</Button>
+			</div>
+		</Field>
 	)
 }
 
@@ -1072,6 +1151,35 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 			<span className="font-medium text-muted-foreground text-xs">{label}</span>
 			{children}
 		</div>
+	)
+}
+
+/** color picker + hex 입력 쌍. label로 두 컨트롤의 접근 이름을 만든다(hex는 " (hex)" 접미). */
+function ColorField({
+	value,
+	onChange,
+	label,
+}: {
+	value: string
+	onChange: (value: string) => void
+	label: string
+}) {
+	return (
+		<>
+			<input
+				type="color"
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
+				aria-label={label}
+				className="h-9 w-9 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0"
+			/>
+			<Input
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
+				className="flex-1"
+				aria-label={`${label} (hex)`}
+			/>
+		</>
 	)
 }
 

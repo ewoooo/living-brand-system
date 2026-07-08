@@ -1,5 +1,4 @@
 import { ArrowUp, Close, Upload } from '@carbon/icons-react'
-import { useRef } from 'react'
 import {
 	Attachment,
 	AttachmentAction,
@@ -13,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
+import { useFileInput } from '@/hooks/use-file-input'
 
 export function AgentChatUserInput({
 	files,
@@ -29,14 +29,12 @@ export function AgentChatUserInput({
 	onFilesChange: (files: FileList | undefined) => void
 	onSubmit: () => void
 }) {
-	const fileInputRef = useRef<HTMLInputElement>(null)
+	const fileInput = useFileInput()
 	const hasFiles = Boolean(files?.length)
 	const canSubmit = !isBusy && (Boolean(value.trim()) || hasFiles)
 	const clearFiles = () => {
 		onFilesChange(undefined)
-		if (fileInputRef.current) {
-			fileInputRef.current.value = ''
-		}
+		fileInput.reset()
 	}
 
 	return (
@@ -69,7 +67,7 @@ export function AgentChatUserInput({
 					accept="image/*,text/*"
 					className="sr-only"
 					multiple
-					ref={fileInputRef}
+					ref={fileInput.ref}
 					type="file"
 					onChange={(event) => onFilesChange(event.currentTarget.files || undefined)}
 				/>
@@ -99,7 +97,7 @@ export function AgentChatUserInput({
 						variant="ghost"
 						size="icon-lg"
 						disabled={isBusy}
-						onClick={() => fileInputRef.current?.click()}
+						onClick={fileInput.open}
 					>
 						<Upload data-icon="inline-start" />
 					</Button>

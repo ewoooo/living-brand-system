@@ -1,5 +1,6 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { GuidelinePage } from '@/payload-types'
+import { BlockHeading } from './block-heading'
 import { GuidelineImage } from './guideline-image'
 
 type GuidelineBlock = NonNullable<GuidelinePage['blocks']>[number]
@@ -14,7 +15,7 @@ export function ColumnUnitBlock({
 
 	return (
 		<section>
-			{block.title && <h2 className="mb-6 font-semibold text-xl">{block.title}</h2>}
+			<BlockHeading title={block.title} />
 			<div className={gridClassName}>
 				{block.columns?.map((column) => (
 					<div key={column.id}>

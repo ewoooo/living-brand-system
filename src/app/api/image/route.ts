@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import { generateBrandImages } from '@/features/image-generation/services/generate-image.service'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
 	const n = Math.min(Math.max(count ?? 4, 1), 6)
 
 	// ponytail: 키 없으면 dev 폴백(무료 가짜 이미지, 인증 없음). 키가 있으면 아래 유료 경로로 감.
-	if (!process.env.OPENAI_API_KEY) {
+	if (!env.OPENAI_API_KEY) {
 		const images = Array.from({ length: n }, (_, i) => placeholder(prompt, i))
 		return Response.json({ images })
 	}
