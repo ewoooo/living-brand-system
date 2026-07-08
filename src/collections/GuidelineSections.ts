@@ -13,8 +13,8 @@ export const GuidelineSections: CollectionConfig = {
 	admin: {
 		group: 'Guidelines',
 		useAsTitle: 'title',
-		defaultColumns: ['title', 'slug', 'displayOrder', 'updatedAt'],
-		description: '가이드라인 상위 내비게이션 섹션입니다.',
+		defaultColumns: ['title', 'chapter', 'slug', 'displayOrder', 'updatedAt'],
+		description: '장 하위 섹션입니다. 상위 장에 속하며 하위에 페이지를 가집니다.',
 		listSearchableFields: ['title', 'slug'],
 	},
 	versions: draftVersions,
@@ -34,6 +34,17 @@ export const GuidelineSections: CollectionConfig = {
 			localized: true,
 			required: true,
 		}),
+		{
+			name: 'chapter',
+			type: 'relationship',
+			relationTo: 'chapters',
+			required: true,
+			index: true,
+			admin: {
+				position: 'sidebar',
+				description: '사이드바 내비게이션과 URL에 사용할 상위 장입니다.',
+			},
+		},
 		{
 			name: 'description',
 			type: 'textarea',

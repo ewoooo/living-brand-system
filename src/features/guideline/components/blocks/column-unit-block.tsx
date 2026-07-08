@@ -1,7 +1,7 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { GuidelinePage } from '@/payload-types'
-import { BlockHeading } from './block-heading'
-import { GuidelineImage } from './guideline-image'
+import { BlockHeading } from './children/block-heading'
+import { GuidelineImage } from './children/guideline-image'
 
 type GuidelineBlock = NonNullable<GuidelinePage['blocks']>[number]
 

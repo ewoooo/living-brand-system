@@ -68,6 +68,7 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    chapters: Chapter;
     sections: Section;
     'guideline-pages': GuidelinePage;
     rules: Rule;
@@ -91,6 +92,9 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
+    chapters: {
+      sections: 'sections';
+    };
     sections: {
       pages: 'guideline-pages';
     };
@@ -102,6 +106,7 @@ export interface Config {
     };
   };
   collectionsSelect: {
+    chapters: ChaptersSelect<false> | ChaptersSelect<true>;
     sections: SectionsSelect<false> | SectionsSelect<true>;
     'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
     rules: RulesSelect<false> | RulesSelect<true>;
@@ -189,7 +194,41 @@ export interface PayloadMcpApiKeyAuthOperations {
   };
 }
 /**
- * 가이드라인 상위 내비게이션 섹션입니다.
+ * 가이드라인 최상위 장입니다. 하위에 섹션을 가집니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "chapters".
+ */
+export interface Chapter {
+  id: number;
+  /**
+   * 사이드바 최상위 장 제목으로 표시됩니다.
+   */
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  /**
+   * 장 랜딩 페이지에 표시할 선택 요약입니다.
+   */
+  description?: string | null;
+  sections?: {
+    docs?: (number | Section)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * 숫자가 낮을수록 가이드라인 내비게이션에서 먼저 표시됩니다.
+   */
+  displayOrder: number;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * 장 하위 섹션입니다. 상위 장에 속하며 하위에 페이지를 가집니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sections".
@@ -205,6 +244,10 @@ export interface Section {
    */
   generateSlug?: boolean | null;
   slug: string;
+  /**
+   * 사이드바 내비게이션과 URL에 사용할 상위 장입니다.
+   */
+  chapter: number | Chapter;
   /**
    * 섹션 랜딩 페이지에 표시할 선택 요약입니다.
    */
@@ -258,7 +301,7 @@ export interface GuidelinePage {
     [k: string]: unknown;
   } | null;
   /**
-   * 이 페이지에서 설명하거나 적용하는 룰입니다.
+   * [deprecated] 블록 레벨 rules로 이전 중입니다. 신규 배치는 블록에 연결하세요.
    */
   rules?:
     | {
@@ -274,7 +317,7 @@ export interface GuidelinePage {
    * 숫자가 낮을수록 선택한 섹션 안에서 먼저 표시됩니다.
    */
   displayOrder: number;
-  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock)[] | null;
+  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -401,6 +444,10 @@ export interface ColumnUnitBlock {
         id?: string | null;
       }[]
     | null;
+  /**
+   * 이 블록이 문서화하는 룰입니다. 룰의 기준·이미지는 이 블록 내용에서 자동 파생됩니다.
+   */
+  rule?: (number | null) | Rule;
   id?: string | null;
   blockName?: string | null;
   blockType: 'columnUnit';
@@ -444,6 +491,10 @@ export interface MediaShowcaseBlock {
    */
   imageBackgroundColor?: (number | null) | BrandColor;
   imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
+  /**
+   * 이 블록이 문서화하는 룰입니다. 룰의 기준·이미지는 이 블록 내용에서 자동 파생됩니다.
+   */
+  rule?: (number | null) | Rule;
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaShowcase';
@@ -458,9 +509,44 @@ export interface ColorPaletteBlock {
    * 선택한 순서대로 스와치 카드가 표시됩니다.
    */
   colors: (number | BrandColor)[];
+  /**
+   * 이 블록이 문서화하는 룰입니다. 룰의 기준·이미지는 이 블록 내용에서 자동 파생됩니다.
+   */
+  rule?: (number | null) | Rule;
   id?: string | null;
   blockName?: string | null;
   blockType: 'colorPalette';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DoDontBlock".
+ */
+export interface DoDontBlock {
+  title?: string | null;
+  /**
+   * 카테고리 단위 그룹. 그룹마다 룰 1개를 문서화합니다.
+   */
+  groups?:
+    | {
+        category?: string | null;
+        /**
+         * 이 그룹(카테고리)이 문서화하는 룰입니다.
+         */
+        rule?: (number | null) | Rule;
+        examples?:
+          | {
+              kind: 'do' | 'dont';
+              image?: (number | null) | ApplicationImage;
+              caption?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'doDont';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -780,6 +866,10 @@ export interface Search {
     | {
         relationTo: 'sections';
         value: number | Section;
+      }
+    | {
+        relationTo: 'chapters';
+        value: number | Chapter;
       };
   updatedAt: string;
   createdAt: string;
@@ -810,7 +900,11 @@ export interface PayloadMcpApiKey {
      */
     findGuidelinePages?: boolean | null;
     /**
-     * Find live guideline navigation sections and their page ordering.
+     * Find live guideline top-level chapters and their ordering.
+     */
+    findChapters?: boolean | null;
+    /**
+     * Find live guideline sections, their parent chapter, and page ordering.
      */
     findSections?: boolean | null;
     /**
@@ -946,6 +1040,10 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
+        relationTo: 'chapters';
+        value: number | Chapter;
+      } | null)
+    | ({
         relationTo: 'sections';
         value: number | Section;
       } | null)
@@ -1063,12 +1161,28 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "chapters_select".
+ */
+export interface ChaptersSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  description?: T;
+  sections?: T;
+  displayOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sections_select".
  */
 export interface SectionsSelect<T extends boolean = true> {
   title?: T;
   generateSlug?: T;
   slug?: T;
+  chapter?: T;
   description?: T;
   pages?: T;
   displayOrder?: T;
@@ -1099,6 +1213,7 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
         columnUnit?: T | ColumnUnitBlockSelect<T>;
         mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
         colorPalette?: T | ColorPaletteBlockSelect<T>;
+        doDont?: T | DoDontBlockSelect<T>;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -1120,6 +1235,7 @@ export interface ColumnUnitBlockSelect<T extends boolean = true> {
         imageScale?: T;
         id?: T;
       };
+  rule?: T;
   id?: T;
   blockName?: T;
 }
@@ -1131,6 +1247,7 @@ export interface MediaShowcaseBlockSelect<T extends boolean = true> {
   image?: T;
   imageBackgroundColor?: T;
   imageScale?: T;
+  rule?: T;
   id?: T;
   blockName?: T;
 }
@@ -1141,6 +1258,31 @@ export interface MediaShowcaseBlockSelect<T extends boolean = true> {
 export interface ColorPaletteBlockSelect<T extends boolean = true> {
   title?: T;
   colors?: T;
+  rule?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DoDontBlock_select".
+ */
+export interface DoDontBlockSelect<T extends boolean = true> {
+  title?: T;
+  groups?:
+    | T
+    | {
+        category?: T;
+        rule?: T;
+        examples?:
+          | T
+          | {
+              kind?: T;
+              image?: T;
+              caption?: T;
+              id?: T;
+            };
+        id?: T;
+      };
   id?: T;
   blockName?: T;
 }
@@ -1403,6 +1545,7 @@ export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
     | T
     | {
         findGuidelinePages?: T;
+        findChapters?: T;
         findSections?: T;
         findRules?: T;
         findGuideline?: T;
@@ -1588,6 +1731,10 @@ export interface TaskSchedulePublish {
     type?: ('publish' | 'unpublish') | null;
     locale?: string | null;
     doc?:
+      | ({
+          relationTo: 'chapters';
+          value: number | Chapter;
+        } | null)
       | ({
           relationTo: 'sections';
           value: number | Section;

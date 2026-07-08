@@ -1,6 +1,6 @@
 import { hexToRgb, isLightColor, isValidHex } from '@/lib/color'
 import type { BrandColor, GuidelinePage } from '@/payload-types'
-import { BlockHeading } from './block-heading'
+import { BlockHeading } from './children/block-heading'
 
 type GuidelineBlock = NonNullable<GuidelinePage['blocks']>[number]
 

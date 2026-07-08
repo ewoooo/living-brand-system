@@ -4,11 +4,11 @@ import * as agentGuidelineRepository from '@/features/agent-chat/repositories/ag
 import * as agentSkillRepository from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import * as agentTemplateRepository from '@/features/agent-chat/repositories/agent-template.payload.repository'
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
-import { extractTextFromLexical } from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { getAgentTools } from '@/features/agent-chat/services/get-agent-tools.service'
 import { validateAgentChatMessages } from '@/features/agent-chat/services/validate-agent-chat-messages.service'
 import { getAgentCitations } from '@/features/agent-chat/utils/get-agent-citations'
 import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-text'
+import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
 
 const textElement = (
 	overrides: Partial<{
