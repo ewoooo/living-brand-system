@@ -28,7 +28,7 @@ const LINKS = [
 
 const LOGIN = { href: '/login', label: 'Admin Login (Temp)' } as const
 
-type GuidelineSearchSection = GetGuidelineNavigationOutput['sections'][number]
+type GuidelineSearchChapter = GetGuidelineNavigationOutput['chapters'][number]
 
 function HeaderLinkBlock({
 	href,
@@ -76,7 +76,7 @@ function HeaderHead({ className }: { className?: string }) {
 	)
 }
 
-function GuidelineSearch({ sections }: { sections: GuidelineSearchSection[] }) {
+function GuidelineSearch({ chapters }: { chapters: GuidelineSearchChapter[] }) {
 	const router = useRouter()
 	const [open, setOpen] = useState(false)
 
@@ -116,18 +116,18 @@ function GuidelineSearch({ sections }: { sections: GuidelineSearchSection[] }) {
 					<CommandInput placeholder="가이드라인 페이지 검색..." />
 					<CommandList>
 						<CommandEmpty>검색 결과가 없습니다.</CommandEmpty>
-						{sections.map((section) => (
-							<CommandGroup heading={section.title} key={section.id}>
-								{section.pages.map((page) => (
+						{chapters.map((chapter) => (
+							<CommandGroup heading={chapter.title} key={chapter.id}>
+								{chapter.sections.map((section) => (
 									<CommandItem
-										key={page.id}
-										value={`${section.title} ${page.title}`}
+										key={section.id}
+										value={`${chapter.title} ${section.title}`}
 										onSelect={() => {
 											setOpen(false)
-											router.push(page.href)
+											router.push(section.href)
 										}}
 									>
-										<span>{page.title}</span>
+										<span>{section.title}</span>
 									</CommandItem>
 								))}
 							</CommandGroup>
@@ -140,16 +140,16 @@ function GuidelineSearch({ sections }: { sections: GuidelineSearchSection[] }) {
 }
 
 export function GlobalHeader({
-	guidelineSections,
+	guidelineChapters,
 }: {
-	guidelineSections: GuidelineSearchSection[]
+	guidelineChapters: GuidelineSearchChapter[]
 }) {
 	return (
 		<header className="z-10 flex shrink-0 bg-white dark:bg-black">
 			<HeaderHead className="flex-1" />
 			<section className="ml-auto p-4 flex gap-2 items-center">
 				<HeaderLinkBlock href={LOGIN.href} isActive={false} label={LOGIN.label} />
-				<GuidelineSearch sections={guidelineSections} />
+				<GuidelineSearch chapters={guidelineChapters} />
 				<SidebarTrigger variant="default" size="default">
 					Ask AI
 				</SidebarTrigger>
