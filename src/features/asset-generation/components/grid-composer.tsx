@@ -178,13 +178,79 @@ function deriveInitial(source?: JsonTemplate) {
 	return { canvasW, canvasH, bgColor, bgImage: null, padX, padY, gap, rows, cols, cells }
 }
 
+/**
+ * 캔버스 크기 상태 + 테두리 드래그 리사이즈를 소유한다.
+ * 포인터 캡처로 이벤트를 독점하고, 시작값 기준 절대 delta를 rAF로 프레임당 1회만 반영해 떨림을 막는다.
+ */
+function useCanvasResize(initialW: number, initialH: number, scale: number) {
+	const [canvasW, setCanvasW] = useState(initialW)
+	const [canvasH, setCanvasH] = useState(initialH)
+	const [resizing, setResizing] = useState<Edge | null>(null)
+	const rafRef = useRef<number | null>(null)
+	const pendingRef = useRef<{ w: number; h: number } | null>(null)
+
+	function startResize(edge: Edge, event: React.PointerEvent<HTMLElement>) {
+		event.preventDefault()
+		const handle = event.currentTarget
+		handle.setPointerCapture(event.pointerId)
+		const startX = event.clientX
+		const startY = event.clientY
+		const startW = canvasW
+		const startH = canvasH
+		document.body.style.userSelect = 'none'
+		setResizing(edge)
+
+		const flush = () => {
+			rafRef.current = null
+			if (pendingRef.current) {
+				setCanvasW(pendingRef.current.w)
+				setCanvasH(pendingRef.current.h)
+			}
+		}
+		const growsRight = edge === 'right' || edge === 'ne' || edge === 'se'
+		const growsLeft = edge === 'left' || edge === 'nw' || edge === 'sw'
+		const growsDown = edge === 'bottom' || edge === 'se' || edge === 'sw'
+		const growsUp = edge === 'top' || edge === 'ne' || edge === 'nw'
+		const onMove = (ev: PointerEvent) => {
+			const dx = (ev.clientX - startX) / scale
+			const dy = (ev.clientY - startY) / scale
+			pendingRef.current = {
+				w: clamp(growsRight ? startW + dx : growsLeft ? startW - dx : startW),
+				h: clamp(growsDown ? startH + dy : growsUp ? startH - dy : startH),
+			}
+			// 프레임당 1회만 상태 갱신 — pointermove 폭주로 인한 리렌더 떨림 차단.
+			if (rafRef.current == null) rafRef.current = requestAnimationFrame(flush)
+		}
+		const onUp = () => {
+			handle.releasePointerCapture(event.pointerId)
+			handle.removeEventListener('pointermove', onMove)
+			handle.removeEventListener('pointerup', onUp)
+			document.body.style.userSelect = ''
+			if (rafRef.current != null) {
+				cancelAnimationFrame(rafRef.current)
+				rafRef.current = null
+			}
+			flush()
+			pendingRef.current = null
+			setResizing(null)
+		}
+		handle.addEventListener('pointermove', onMove)
+		handle.addEventListener('pointerup', onUp)
+	}
+
+	return { canvasW, canvasH, setCanvasW, setCanvasH, resizing, startResize }
+}
+
 export function GridComposer({ source }: { source?: JsonTemplate }) {
 	const initial = useMemo(() => deriveInitial(source), [source])
 	// 표시 배율은 마운트 시 고정 — 캔버스 크기를 바꾸면 표시 크기가 실제로 변한다.
 	const scale = PREVIEW_WIDTH / initial.canvasW
+	const { canvasW, canvasH, setCanvasW, setCanvasH, resizing, startResize } = useCanvasResize(
+		initial.canvasW,
+		initial.canvasH,
+		scale,
+	)
 
-	const [canvasW, setCanvasW] = useState(initial.canvasW)
-	const [canvasH, setCanvasH] = useState(initial.canvasH)
 	const [padX, setPadX] = useState(initial.padX)
 	const [padY, setPadY] = useState(initial.padY)
 	const [gap, setGap] = useState(initial.gap)
@@ -198,11 +264,8 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 	const [dragFree, setDragFree] = useState<{ id: string; x: number; y: number } | null>(null)
 	const [dropCell, setDropCell] = useState<{ row: number; col: number } | null>(null)
 	const [moveableTarget, setMoveableTarget] = useState<HTMLElement | null>(null)
-	const [resizing, setResizing] = useState<Edge | null>(null)
 	const [hideGuides, setHideGuides] = useState(false)
 	const canvasRef = useRef<HTMLDivElement>(null)
-	const rafRef = useRef<number | null>(null)
-	const pendingRef = useRef<{ w: number; h: number } | null>(null)
 
 	// 그리드는 캔버스 안쪽 여백(padX·padY) 영역에 배치된다.
 	const innerW = Math.max(1, canvasW - padX * 2)
@@ -314,57 +377,6 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 			setCols((prev) => prev.filter((_, i) => i !== index))
 			setCells((prev) => prev.filter((_, i) => i % w !== index))
 		}
-	}
-
-	// 테두리 드래그로 캔버스 크기 조절 — 가운데 정렬은 컨테이너가 유지한다.
-	// 성능: 포인터 캡처로 이벤트 독점, 시작값 기준 절대 delta, rAF로 프레임당 1회만 반영(떨림 방지).
-	function startResize(edge: Edge, event: React.PointerEvent<HTMLElement>) {
-		event.preventDefault()
-		const handle = event.currentTarget
-		handle.setPointerCapture(event.pointerId)
-		const startX = event.clientX
-		const startY = event.clientY
-		const startW = canvasW
-		const startH = canvasH
-		document.body.style.userSelect = 'none'
-		setResizing(edge)
-
-		const flush = () => {
-			rafRef.current = null
-			if (pendingRef.current) {
-				setCanvasW(pendingRef.current.w)
-				setCanvasH(pendingRef.current.h)
-			}
-		}
-		const growsRight = edge === 'right' || edge === 'ne' || edge === 'se'
-		const growsLeft = edge === 'left' || edge === 'nw' || edge === 'sw'
-		const growsDown = edge === 'bottom' || edge === 'se' || edge === 'sw'
-		const growsUp = edge === 'top' || edge === 'ne' || edge === 'nw'
-		const onMove = (ev: PointerEvent) => {
-			const dx = (ev.clientX - startX) / scale
-			const dy = (ev.clientY - startY) / scale
-			pendingRef.current = {
-				w: clamp(growsRight ? startW + dx : growsLeft ? startW - dx : startW),
-				h: clamp(growsDown ? startH + dy : growsUp ? startH - dy : startH),
-			}
-			// 프레임당 1회만 상태 갱신 — pointermove 폭주로 인한 리렌더 떨림 차단.
-			if (rafRef.current == null) rafRef.current = requestAnimationFrame(flush)
-		}
-		const onUp = () => {
-			handle.releasePointerCapture(event.pointerId)
-			handle.removeEventListener('pointermove', onMove)
-			handle.removeEventListener('pointerup', onUp)
-			document.body.style.userSelect = ''
-			if (rafRef.current != null) {
-				cancelAnimationFrame(rafRef.current)
-				rafRef.current = null
-			}
-			flush()
-			pendingRef.current = null
-			setResizing(null)
-		}
-		handle.addEventListener('pointermove', onMove)
-		handle.addEventListener('pointerup', onUp)
 	}
 
 	const template = useMemo<JsonTemplate>(() => {
