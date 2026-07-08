@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { IMAGE_PRESETS } from '@/features/image-generation/presets'
 
 // 프롬프트 입력 → /api/image 호출 → 후보 그리드. 생성 로직은 라우트/서비스가 소유.
 // OPENAI_API_KEY 없으면 라우트가 placeholder를 돌려줘 이 UI는 그대로 동작한다.
 
 export default function ImagePage() {
 	const [prompt, setPrompt] = useState('')
+	const [presetId, setPresetId] = useState('')
 	const [count, setCount] = useState(4)
 	const [images, setImages] = useState<string[]>([])
 	const [loading, setLoading] = useState(false)
@@ -21,7 +23,7 @@ export default function ImagePage() {
 			const res = await fetch('/api/image', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ prompt, count }),
+				body: JSON.stringify({ prompt, count, presetId }),
 			})
 			if (!res.ok) throw new Error(`생성 실패 (${res.status})`)
 			const data = (await res.json()) as { images: string[] }
@@ -41,8 +43,8 @@ export default function ImagePage() {
 					<h1 className="text-3xl">이미지 생성</h1>
 				</hgroup>
 				<p className="mb-4 text-muted-foreground">
-					프롬프트를 입력하면 후보 이미지를 여러 장 생성합니다. 마음에 드는 것을 골라
-					사용하세요. <wbr />
+					프리셋을 고르면 브랜드 톤·비율이 프롬프트에 자동으로 더해집니다. 만들 대상만
+					입력해 후보를 여러 장 생성하고 마음에 드는 것을 고르세요. <wbr />
 					(OpenAI 키 미설정 시 placeholder 표시)
 				</p>
 			</header>
@@ -51,11 +53,26 @@ export default function ImagePage() {
 				<textarea
 					value={prompt}
 					onChange={(e) => setPrompt(e.target.value)}
-					placeholder="예: 미니멀한 브랜드 명함 목업, 밝은 배경"
+					placeholder="만들 대상 (예: 허브 세럼 제품, 웃는 모델)"
 					rows={3}
 					className="w-full resize-y rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
 				/>
-				<div className="flex items-center gap-3">
+				<div className="flex flex-wrap items-center gap-3">
+					<label className="flex items-center gap-2 text-muted-foreground text-sm">
+						프리셋
+						<select
+							value={presetId}
+							onChange={(e) => setPresetId(e.target.value)}
+							className="rounded-md border border-neutral-300 bg-transparent px-2 py-1 dark:border-neutral-700"
+						>
+							<option value="">자유 (프리셋 없음)</option>
+							{IMAGE_PRESETS.map((preset) => (
+								<option key={preset.id} value={preset.id}>
+									{preset.label}
+								</option>
+							))}
+						</select>
+					</label>
 					<label className="flex items-center gap-2 text-muted-foreground text-sm">
 						장수
 						<select
