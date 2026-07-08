@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import { FigmaConfigurationError } from '@/lib/errors'
 
 /**
@@ -63,13 +64,11 @@ const FIGMA_API_BASE = 'https://api.figma.com/v1'
 const IMAGE_BATCH_SIZE = 100
 
 function getFigmaToken(): string {
-	const token = process.env.FIGMA_API_TOKEN
-
-	if (!token) {
+	if (!env.FIGMA_API_TOKEN) {
 		throw new FigmaConfigurationError()
 	}
 
-	return token
+	return env.FIGMA_API_TOKEN
 }
 
 export async function findFigmaNodeTree(fileKey: string, nodeId: string): Promise<FigmaNode> {
