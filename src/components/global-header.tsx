@@ -23,6 +23,7 @@ const LINKS = [
 	{ href: '/guideline', label: 'Guideline' },
 	{ href: '/review', label: 'Review' },
 	{ href: '/create', label: 'Create' },
+	{ href: '/image', label: 'Image' },
 ] as const
 
 const LOGIN = { href: '/login', label: 'Admin Login (Temp)' } as const
