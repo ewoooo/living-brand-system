@@ -334,6 +334,51 @@ export default function TemplatePreviewField() {
 								/>
 							</>
 						)}
+						{/* 위치·크기는 포인터 드래그 외에 키보드로도 조절할 수 있어야 한다(docs/08) */}
+						{selected.type !== 'stack' && 'x' in selected && (
+							<div style={{ display: 'flex', gap: 8 }}>
+								{(['x', 'y'] as const).map((axis) => (
+									<div key={axis} style={{ flex: 1 }}>
+										<TextInput
+											path={`templatePreview-${axis}`}
+											label={axis === 'x' ? 'X (px)' : 'Y (px)'}
+											value={String(selected[axis])}
+											onChange={(
+												event: React.ChangeEvent<HTMLInputElement>,
+											) => {
+												const value = Number(event.target.value)
+												if (Number.isFinite(value)) {
+													updateSelected({ [axis]: Math.round(value) })
+												}
+											}}
+										/>
+									</div>
+								))}
+							</div>
+						)}
+						{selected.type !== 'stack' && (
+							<div style={{ display: 'flex', gap: 8 }}>
+								{(['width', 'height'] as const).map((dimension) => (
+									<div key={dimension} style={{ flex: 1 }}>
+										<TextInput
+											path={`templatePreview-${dimension}`}
+											label={
+												dimension === 'width' ? '너비 (px)' : '높이 (px)'
+											}
+											value={String(selected[dimension])}
+											onChange={(
+												event: React.ChangeEvent<HTMLInputElement>,
+											) => {
+												const value = Number(event.target.value)
+												if (Number.isFinite(value) && value > 0) {
+													updateSelected({ [dimension]: value })
+												}
+											}}
+										/>
+									</div>
+								))}
+							</div>
+						)}
 						{selected.type === 'text' && (
 							<>
 								<ColorInput
@@ -439,30 +484,6 @@ export default function TemplatePreviewField() {
 						)}
 						{selected.type === 'image' && (
 							<>
-								<div style={{ display: 'flex', gap: 8 }}>
-									{(['width', 'height'] as const).map((dimension) => (
-										<div key={dimension} style={{ flex: 1 }}>
-											<TextInput
-												path={`templatePreview-${dimension}`}
-												label={
-													dimension === 'width'
-														? '너비 (px)'
-														: '높이 (px)'
-												}
-												value={String(selected[dimension])}
-												onChange={(
-													event: React.ChangeEvent<HTMLInputElement>,
-												) => {
-													const value = Number(event.target.value)
-
-													if (Number.isFinite(value) && value > 0) {
-														updateSelected({ [dimension]: value })
-													}
-												}}
-											/>
-										</div>
-									))}
-								</div>
 								<SelectInput
 									name="templatePreviewObjectFit"
 									path="templatePreviewObjectFit"
