@@ -273,16 +273,30 @@ export default function TemplatePreviewField() {
 							keepRatio={false}
 							origin={false}
 							renderDirections={['se']}
+							// 제스처 중에는 DOM만 갱신하고, 종료 시 1회만 폼에 커밋한다.
+							// (매 프레임 dispatchFields + 전체 트리 재파싱을 피한다)
 							onDrag={(event) => {
+								event.target.style.transform = event.transform
+							}}
+							onDragEnd={(event) => {
+								event.target.style.transform = ''
+								if (!event.lastEvent) return
 								updateSelected({
-									x: Math.round(event.left / scale),
-									y: Math.round(event.top / scale),
+									x: Math.round(event.lastEvent.left / scale),
+									y: Math.round(event.lastEvent.top / scale),
 								})
 							}}
 							onResize={(event) => {
+								event.target.style.width = `${event.width}px`
+								event.target.style.height = `${event.height}px`
+								event.target.style.transform = event.drag.transform
+							}}
+							onResizeEnd={(event) => {
+								event.target.style.transform = ''
+								if (!event.lastEvent) return
 								updateSelected({
-									width: Math.max(1, Math.round(event.width / scale)),
-									height: Math.max(1, Math.round(event.height / scale)),
+									width: Math.max(1, Math.round(event.lastEvent.width / scale)),
+									height: Math.max(1, Math.round(event.lastEvent.height / scale)),
 								})
 							}}
 						/>
