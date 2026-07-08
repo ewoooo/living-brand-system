@@ -108,36 +108,48 @@ When docs conflict, prefer the newer or more specific document. If a code change
 
 ## Branch Rules
 
-- Layers: use `develop` for active work, `stage` for release validation, and `main` for stable production-ready state.
-- Flow: merge feature and fix branches into `develop`, promote `develop` to `stage`, then promote verified `stage` to `main`.
-- Base: branch from `develop` for normal product work. Branch from `main` only for urgent production fixes or docs that must bypass the development line.
+- Layers: use `stage` for active integration and release validation, and `main` for stable production-ready state.
+- Flow: merge normal work branches into `stage`, then promote verified `stage` to `main`.
+- Base: branch from `stage` for normal product work. Branch from `main` only for urgent production fixes.
 - Requirement: create or switch to a purpose branch before changing source code, product behavior, refactors, tests, tooling, dependencies, or non-trivial docs.
 - Worktree default: when creating or opening a branch, create a new git worktree for it unless the user explicitly asks to use the current worktree.
-- Protected branches: do not commit directly to `main`, `stage`, or `develop`; use them only as merge targets or promotion branches.
+- Protected branches: do not commit directly to `main` or `stage`; use them only as merge targets or promotion branches.
 - Exception: trivial local-only edits may stay unbranched only when the user explicitly asks not to create a branch.
-- Format: use `<type>/<short-purpose>`.
+- Format: use `<type>/<short-kebab-purpose>`.
 - Types:
   - `docs/` for documentation-only work.
-  - `feature/` for new product behavior.
+  - `feat/` for new product behavior.
   - `fix/` for bug fixes.
   - `refactor/` for behavior-preserving code changes.
+  - `test/` for test-only changes.
+  - `style/` for formatting and lint-only changes.
   - `chore/` for tooling, dependency, or maintenance changes.
-- Examples: `docs/update-guidelines`, `fix/auth-access`.
+- Examples: `docs/update-guidelines`, `feat/review-page`, `fix/auth-access`, `chore/stage-db-migrations`.
 - Scope: keep documentation-only changes separate from source code changes when practical.
 
 ## Commit Rules
 
-- Format: use Conventional Commits.
+- Format: use Conventional Commits with a Korean summary: `<type>: <한국어 요약>`.
 - Types:
   - `docs:` for documentation changes.
   - `feat:` for user-facing product behavior.
   - `fix:` for bug fixes.
   - `test:` for test-only changes.
   - `refactor:` for behavior-preserving code changes.
+  - `style:` for formatting and lint-only changes.
   - `chore:` for tooling, dependency, or maintenance changes.
 - Scope: keep each commit focused on one purpose.
 - Hygiene: do not include unrelated dirty worktree changes in a commit.
-- Language: write commit messages in English.
+- Language: write commit messages in Korean unless an external tool requires English.
+
+## Pull Request Rules
+
+- Normal work PRs target `stage`.
+- Promotion PRs target `main` from `stage`.
+- Format PR titles like commits: `<type>: <한국어 요약>`.
+- Use `chore: stage를 main으로 승격` for stage-to-main promotion PRs.
+- Open a draft PR when CI, migration verification, or reviewer-ready cleanup is still pending.
+- Keep one branch focused on one PR or work item. Do not reuse an old branch for unrelated follow-up work.
 
 ## Pull Request Description Rules
 
