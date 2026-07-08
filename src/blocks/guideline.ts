@@ -1,5 +1,25 @@
 import type { Block, Field } from 'payload'
 
+// 모든 가이드라인 블록이 공유하는 표준 필드. 새 공통 옵션은 여기 한 곳에 추가한다.
+// rules는 이 블록이 설명·적용하는 룰을 배치한다(가이드라인 표시·문맥용).
+// 검수 실행은 Rules 컬렉션을 직접 읽으므로 이 배치에 의존하지 않는다.
+function baseBlockFields(): Field[] {
+	return [
+		{
+			name: 'rules',
+			type: 'relationship',
+			relationTo: 'rules',
+			hasMany: true,
+			filterOptions: {
+				status: { equals: 'live' },
+			},
+			admin: {
+				description: '이 블록이 설명하거나 적용하는 룰입니다. 선택한 순서대로 배치됩니다.',
+			},
+		},
+	]
+}
+
 function imageBackgroundColorField(): Field {
 	return {
 		name: 'imageBackgroundColor',
@@ -42,6 +62,7 @@ export const ColumnUnitBlock: Block = {
 				imageScaleField(),
 			],
 		},
+		...baseBlockFields(),
 	],
 }
 
@@ -56,6 +77,7 @@ export const MediaShowcaseBlock: Block = {
 		},
 		imageBackgroundColorField(),
 		imageScaleField(),
+		...baseBlockFields(),
 	],
 }
 
@@ -74,6 +96,7 @@ export const ColorPaletteBlock: Block = {
 				description: '선택한 순서대로 스와치 카드가 표시됩니다.',
 			},
 		},
+		...baseBlockFields(),
 	],
 }
 
