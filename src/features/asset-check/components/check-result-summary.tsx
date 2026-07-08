@@ -5,6 +5,7 @@ import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
+import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
 import { buildCheckReviewView } from '@/features/asset-check/services/build-check-review-view.service'
 import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
 import { cn } from '@/lib/utils'
@@ -30,14 +31,22 @@ export function CheckResultSummary({ sections }: CheckResultSummaryProps) {
 					<SummaryMetric
 						label="PASS"
 						value={summary.pass}
-						colorClassName="bg-emerald-500"
+						colorClassName={CHECK_STATUS.pass.dot}
 					/>
-					<SummaryMetric label="OK" value={summary.ok} colorClassName="bg-sky-500" />
-					<SummaryMetric label="FAIL" value={summary.fail} colorClassName="bg-rose-500" />
+					<SummaryMetric
+						label="OK"
+						value={summary.ok}
+						colorClassName={CHECK_STATUS.ok.dot}
+					/>
+					<SummaryMetric
+						label="FAIL"
+						value={summary.fail}
+						colorClassName={CHECK_STATUS.fail.dot}
+					/>
 					<SummaryMetric
 						label="REVIEW"
 						value={summary.pendingManualCheck}
-						colorClassName="bg-amber-500"
+						colorClassName={CHECK_STATUS.needs_review.dot}
 						muted
 					/>
 				</section>

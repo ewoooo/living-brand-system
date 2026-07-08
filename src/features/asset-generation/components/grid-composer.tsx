@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { revokeBlob } from '@/lib/object-url'
 import type { JsonTemplate } from '@/types/json-template'
 
 /**
@@ -312,10 +313,6 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 				i === index && cell.text ? { ...cell, text: { ...cell.text, ...patch } } : cell,
 			),
 		)
-	}
-	/** 교체·제거된 blob URL을 즉시 해제해 세션 동안의 메모리 누수를 막는다. */
-	function revokeBlob(url: string | null | undefined) {
-		if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
 	}
 	/** 이미지 아이템 부분 수정(src·크기). */
 	function patchImage(index: number, patch: Partial<ImageItem>) {
