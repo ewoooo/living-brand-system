@@ -13,8 +13,8 @@
 | Feature | 상태 | 명세 |
 | --- | --- | --- |
 | Image | 구현 | [image.md](image.md) |
-| Review | 구현 (명세 소급 예정) | — |
-| Create | 구현 (명세 소급 예정) | — |
+| Review | 구현 | [review.md](review.md) |
+| Create | 구현(일부 로드맵) | [create.md](create.md) |
 
 ## 3. 작성 규칙
 

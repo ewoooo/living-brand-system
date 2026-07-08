@@ -8,9 +8,11 @@ Feature는 "무엇을"(역량), Surface는 "어떻게 노출"(채널)입니다. 
 
 | Feature \ Surface | Page | AI Chat | Slack | REST |
 | --- | --- | --- | --- | --- |
-| Image | 구현 | 계획 | 계획 | 계획 |
-| Review | 구현 | 부분 | 계획 | 구현 |
-| Create | 구현 | 부분 | 계획 | — |
+| Image | 구현 | 계획 | 계획 | 구현 |
+| Review | 구현 | 구현 | 계획 | 구현 |
+| Create | 구현(POC) | 구현 | 계획 | 부분 |
+
+REST 칸은 "기능을 HTTP로 서빙하는 route handler가 있는가" 기준입니다. 현재 `/api/*` 라우트는 same-origin 게이트가 걸려 앱 자체 백엔드로 동작하며, 외부/프로그램 호출용 공개 API는 아직 별도 정비 대상입니다(각 기능 명세의 표면 섹션 참고).
 
 교차점(예: "Image를 Slack에서")의 세부는 해당 Feature 명세의 `표면` 섹션에 한 줄로 두고, 무거워질 때만 분리합니다.
 
