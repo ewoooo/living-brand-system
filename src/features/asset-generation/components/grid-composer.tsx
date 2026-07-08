@@ -250,6 +250,10 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 			),
 		)
 	}
+	/** 교체·제거된 blob URL을 즉시 해제해 세션 동안의 메모리 누수를 막는다. */
+	function revokeBlob(url: string | null | undefined) {
+		if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
+	}
 	/** 이미지 아이템 부분 수정(src·크기). */
 	function patchImage(index: number, patch: Partial<ImageItem>) {
 		setCells((prev) =>
@@ -739,7 +743,9 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 							aria-label="배경 이미지"
 							onChange={(e) => {
 								const file = e.target.files?.[0]
-								if (file) setBgImage(URL.createObjectURL(file))
+								if (!file) return
+								revokeBlob(bgImage)
+								setBgImage(URL.createObjectURL(file))
 							}}
 						/>
 						{bgImage && (
@@ -747,7 +753,10 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 								size="sm"
 								variant="ghost"
 								className="self-start text-destructive"
-								onClick={() => setBgImage(null)}
+								onClick={() => {
+									revokeBlob(bgImage)
+									setBgImage(null)
+								}}
 							>
 								배경 이미지 제거
 							</Button>
@@ -888,10 +897,11 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 										accept="image/*"
 										onChange={(e) => {
 											const file = e.target.files?.[0]
-											if (file)
-												patchImage(selected.index, {
-													src: URL.createObjectURL(file),
-												})
+											if (!file) return
+											revokeBlob(selected.image?.src)
+											patchImage(selected.index, {
+												src: URL.createObjectURL(file),
+											})
 										}}
 									/>
 									{/* 셀 크기와 무관한 임의 크기 — 입력 또는 캔버스의 se 핸들 드래그로 조절 */}
