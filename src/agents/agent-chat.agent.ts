@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { type InferAgentUIMessage, isStepCount, ToolLoopAgent } from 'ai'
 import { z } from 'zod'
+import { env } from '@/env'
 import { findEnabledAgentSkillSummaries } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import { getAgentDefaultInstructions } from '@/features/agent-chat/services/get-agent-default-instructions.service'
 import { getAgentTools } from '@/features/agent-chat/services/get-agent-tools.service'
@@ -17,7 +18,7 @@ type AgentChatCallOptions = z.infer<typeof agentChatCallOptionsSchema>
 
 /** provider 자격 증명은 agent가 소유한다 — route는 던져진 설정 오류를 HTTP 응답으로 매핑만 한다. */
 export function assertAgentChatProviderConfigured() {
-	if (!process.env.ANTHROPIC_API_KEY) {
+	if (!env.ANTHROPIC_API_KEY) {
 		throw new AgentConfigurationError()
 	}
 }
@@ -37,7 +38,7 @@ export const agentChatAgent = new ToolLoopAgent<
 	AgentChatCallOptions,
 	ReturnType<typeof getAgentTools>
 >({
-	model: anthropic(process.env.ANTHROPIC_MODEL || DEFAULT_MODEL),
+	model: anthropic(env.ANTHROPIC_MODEL || DEFAULT_MODEL),
 	providerOptions: {
 		anthropic: {
 			effort: 'medium',
