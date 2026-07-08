@@ -82,7 +82,7 @@ export default function ImagePage() {
 					{images.map((src, i) => (
 						// biome-ignore lint/performance/noImgElement: placeholder 미리보기, 최적화 불필요
 						<img
-							key={i}
+							key={src}
 							src={src}
 							alt={`생성 결과 ${i + 1}`}
 							className="w-full rounded-md border border-neutral-200 dark:border-neutral-800"
