@@ -9,11 +9,20 @@ import type {
 
 const DEFAULT_MODEL = 'claude-haiku-4-5'
 
+const aiFactsSchema = z
+	.object({
+		confidence: z.number().min(0).max(100).optional(),
+		detectedCategory: z.string().min(1).max(80).optional(),
+		prohibitedSignals: z.array(z.string().min(1).max(80)).max(8).optional(),
+	})
+	.optional()
+
 const aiRuleResultSchema = z.object({
 	key: z.string().min(1),
 	status: z.enum(['pass', 'ok', 'needs_review', 'fail']),
 	fulfillment: z.number().min(0).max(100).nullable(),
 	detail: z.string().min(1).max(300),
+	facts: aiFactsSchema,
 })
 
 const aiCheckSchema = z.object({
@@ -52,6 +61,10 @@ export async function runAiCheck(
 								'Return ok when the image visually appears acceptable but exact metadata or minor details cannot be fully verified from pixels.',
 								'Return needs_review only when the image cannot be judged from visual evidence or brand policy context is required.',
 								'Return fail when the violation is visually obvious from pixels.',
+								'If a rule evidence includes prohibitions such as "금지", "Don’t", "Incorrect Example", or "prohibit", return fail when the target image visibly matches that prohibited condition.',
+								'Do not return ok for a prohibited example just because the image is polished, aesthetically acceptable, or belongs to the expected photography category.',
+								'For classification rules, treat the category as descriptive evidence, not final approval. Put the detected category in facts.detectedCategory when possible.',
+								'When relevant, return facts.confidence as 0-100 and facts.prohibitedSignals as short labels for visible prohibited signals.',
 								'For typography rules, judge visual similarity only. If the visual match is acceptable but exact font metadata is unavailable, return ok instead of needs_review.',
 								referenceFiles.length
 									? 'Use the attached reference images as the visual basis for typography and usage judgments.'
@@ -84,6 +97,7 @@ export async function runAiCheck(
 				status: result.status,
 				fulfillment: result.fulfillment,
 				detail: result.detail,
+				facts: compactFacts(result.facts),
 			}
 		}
 		for (const rule of rules) {
@@ -93,6 +107,16 @@ export async function runAiCheck(
 	} catch {
 		return fallbackResults(rules, 'AI 평가 실패')
 	}
+}
+
+function compactFacts(facts: z.infer<typeof aiFactsSchema>) {
+	if (!facts) return undefined
+
+	return Object.fromEntries(
+		Object.entries(facts).filter(([, value]) =>
+			Array.isArray(value) ? value.length > 0 : value !== undefined,
+		),
+	)
 }
 
 function formatRule(rule: CheckRule): string {

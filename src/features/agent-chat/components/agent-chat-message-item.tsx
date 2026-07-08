@@ -30,7 +30,7 @@ export function AgentChatMessageItem({
 	const files = message.parts.filter((part) => part.type === 'file')
 	const templateAttachments = isUser
 		? []
-		: message.parts.flatMap((part) => {
+		: message.parts.flatMap((part, index) => {
 				if (
 					part.type !== 'tool-prepareTemplateImage' ||
 					part.state !== 'output-available' ||
@@ -40,7 +40,14 @@ export function AgentChatMessageItem({
 				}
 
 				const output = (part as { output: AgentTemplateImageAttachment }).output
-				return output.type === 'template-image' ? [output] : []
+				return output.type === 'template-image'
+					? [
+							{
+								attachment: output,
+								key: part.toolCallId ?? `${output.templateId}-${index}`,
+							},
+						]
+					: []
 			})
 
 	return (
@@ -65,11 +72,8 @@ export function AgentChatMessageItem({
 				<AgentChatUserBubble text={messageText} files={files} />
 			) : (
 				<>
-					{templateAttachments.map((attachment) => (
-						<AgentChatTemplateAttachment
-							key={`${attachment.templateId}-${attachment.name}`}
-							attachment={attachment}
-						/>
+					{templateAttachments.map(({ attachment, key }) => (
+						<AgentChatTemplateAttachment key={key} attachment={attachment} />
 					))}
 					<AgentChatAgentBubble text={messageText} isStreaming={isActive} />
 					{citations.length > 0 && (

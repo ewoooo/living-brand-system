@@ -30,6 +30,10 @@ const guidelineToolContextSchema = z.object({
 	user: z.unknown(),
 })
 
+const checkScenarioSummary = CHECK_SCENARIOS.map(
+	(scenario) => `${scenario.key} (${scenario.title})`,
+).join(', ')
+
 /**
  * Agent answer stream에 전달할 AI SDK tool set을 만든다.
  * 실제 skill/guideline I/O는 tool 실행 시 주입되는 user context로 수행한다.
@@ -82,6 +86,13 @@ export function getAgentTools() {
 			contextSchema: guidelineToolContextSchema,
 			execute: (_input, { context }) => findAgentRules(context.user),
 		}),
+		listCheckScenarios: tool({
+			description:
+				'List supported image quality check scenarios and their scenarioKey values.',
+			inputSchema: z.object({}),
+			contextSchema: guidelineToolContextSchema,
+			execute: () => CHECK_SCENARIOS.map(({ key, title }) => ({ key, title })),
+		}),
 		findTemplatesForRequest: tool({
 			description:
 				'Find or list published production templates, their template rules, and their open slots for asset creation requests or questions about what templates/assets can be made.',
@@ -103,8 +114,7 @@ export function getAgentTools() {
 				prepareTemplateImage(context.user, templateId, values),
 		}),
 		runCheck: tool({
-			description:
-				'Run a quality check on the latest image attached by the user in this chat. Use when the user asks to inspect, validate, or check an attached image.',
+			description: `Run a quality check on the latest image attached by the user in this chat. Use when the user asks to inspect, validate, or check an attached image. Supported scenarioKey values: ${checkScenarioSummary}. Use scenarioKey "stationery" for business card or 명함 checks.`,
 			inputSchema: z.object({
 				scenarioKey: z.string().min(1).max(80).optional(),
 			}),

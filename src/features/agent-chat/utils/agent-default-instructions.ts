@@ -1,3 +1,9 @@
+import { CHECK_SCENARIOS } from '@/features/asset-check/scenarios'
+
+const checkScenarioSummary = CHECK_SCENARIOS.map(
+	(scenario) => `${scenario.key} (${scenario.title})`,
+).join(', ')
+
 export const agentDefaultInstructionSections = [
 	{
 		field: 'productInformation',
@@ -38,8 +44,7 @@ export const agentDefaultInstructionSections = [
 		field: 'availableTools',
 		tag: 'available_tools',
 		label: 'Available Tools',
-		defaultValue:
-			'Guideline tools can list, search, and read published guideline context. Template tools can find published templates with template rules and prepare downloadable template image attachments from open slot values. Check tools can inspect attached images using quick, image-mood, or stationery scenarios.',
+		defaultValue: `Guideline tools can list, search, and read published guideline context. Template tools can find published templates with template rules and prepare downloadable template image attachments from open slot values. Check tools can list supported check scenarios and inspect attached images using these scenarios: ${checkScenarioSummary}.`,
 	},
 ] as const
 

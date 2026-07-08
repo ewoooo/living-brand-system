@@ -114,7 +114,7 @@ describe('agent chat errors', () => {
 
 		expect(getAgentReasoningMarker(message)).toEqual({
 			isPending: true,
-			text: 'Reasoning',
+			text: '확인 중',
 		})
 	})
 
@@ -127,7 +127,7 @@ describe('agent chat errors', () => {
 
 		expect(getAgentReasoningMarker(message, true)).toEqual({
 			isPending: true,
-			text: 'Reasoning',
+			text: '확인 중',
 		})
 		expect(getAgentReasoningMarker(message, false)).toBeNull()
 	})
@@ -141,7 +141,7 @@ describe('agent chat errors', () => {
 
 		expect(getAgentReasoningMarker(message)).toEqual({
 			isPending: false,
-			text: 'Reasoning complete',
+			text: '확인 완료',
 		})
 	})
 
@@ -157,7 +157,7 @@ describe('agent chat errors', () => {
 
 		expect(getAgentReasoningMarker(message)).toEqual({
 			isPending: true,
-			text: 'Reasoning',
+			text: '확인 중',
 		})
 	})
 

@@ -237,6 +237,7 @@ describe('agent tools', () => {
 			description: null,
 			jsonTemplate: template(
 				textElement({ maxLength: 5 }),
+				textElement({ id: 'department', slotLabel: '부서', text: 'Team' }),
 				textElement({ id: 'fixed', locked: true, text: 'Fixed' }),
 			),
 		} as never)
@@ -246,6 +247,7 @@ describe('agent tools', () => {
 			{
 				templateId: 4,
 				values: {
+					department: { text: 'HX팀' },
 					name: { text: '홍길동입니다' },
 					fixed: { text: 'changed' },
 				},
@@ -258,6 +260,7 @@ describe('agent tools', () => {
 			templateId: 4,
 			type: 'template-image',
 			values: {
+				department: { text: 'HX' },
 				name: { text: '홍길동입니' },
 			},
 		})
