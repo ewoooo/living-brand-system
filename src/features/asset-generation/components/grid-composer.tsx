@@ -750,19 +750,7 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 				<Field label="배경 (캔버스 전체)">
 					<div className="flex flex-col gap-2">
 						<div className="flex items-center gap-2">
-							<input
-								type="color"
-								value={bgColor}
-								onChange={(e) => setBgColor(e.target.value)}
-								aria-label="배경 색"
-								className="h-9 w-9 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0"
-							/>
-							<Input
-								value={bgColor}
-								onChange={(e) => setBgColor(e.target.value)}
-								className="flex-1"
-								aria-label="배경 색 (hex)"
-							/>
+							<ColorField value={bgColor} onChange={setBgColor} label="배경 색" />
 						</div>
 						<Input
 							type="file"
@@ -898,22 +886,12 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 										<span className="w-8 shrink-0 text-muted-foreground text-xs">
 											색상
 										</span>
-										<input
-											type="color"
+										<ColorField
 											value={selected.text.color}
-											onChange={(e) =>
-												patchText(selected.index, { color: e.target.value })
+											onChange={(color) =>
+												patchText(selected.index, { color })
 											}
-											aria-label="텍스트 색"
-											className="h-9 w-9 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0"
-										/>
-										<Input
-											value={selected.text.color}
-											onChange={(e) =>
-												patchText(selected.index, { color: e.target.value })
-											}
-											className="flex-1"
-											aria-label="텍스트 색 (hex)"
+											label="텍스트 색"
 										/>
 									</div>
 								</div>
@@ -1069,6 +1047,35 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 			<span className="font-medium text-muted-foreground text-xs">{label}</span>
 			{children}
 		</div>
+	)
+}
+
+/** color picker + hex 입력 쌍. label로 두 컨트롤의 접근 이름을 만든다(hex는 " (hex)" 접미). */
+function ColorField({
+	value,
+	onChange,
+	label,
+}: {
+	value: string
+	onChange: (value: string) => void
+	label: string
+}) {
+	return (
+		<>
+			<input
+				type="color"
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
+				aria-label={label}
+				className="h-9 w-9 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0"
+			/>
+			<Input
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
+				className="flex-1"
+				aria-label={`${label} (hex)`}
+			/>
+		</>
 	)
 }
 
