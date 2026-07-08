@@ -31,7 +31,7 @@ type TextLike = Pick<
 >
 type ImageLike = Pick<
 	Extract<JsonFlowElement, { type: 'image' }>,
-	'borderRadius' | 'boxShadow' | 'color' | 'filter' | 'objectFit'
+	'borderRadius' | 'boxShadow' | 'color' | 'filter' | 'objectFit' | 'slotLabel'
 >
 type RectLike = Pick<
 	Extract<JsonFlowElement, { type: 'rect' }>,
@@ -310,7 +310,14 @@ function ImageView({
 
 	return (
 		<div style={imageFrameCss(style, element)}>
-			<NextImage alt="" fill sizes="100vw" src={src} style={imageCss(element)} unoptimized />
+			<NextImage
+				alt={element.slotLabel ?? ''}
+				fill
+				sizes="100vw"
+				src={src}
+				style={imageCss(element)}
+				unoptimized
+			/>
 		</div>
 	)
 }
