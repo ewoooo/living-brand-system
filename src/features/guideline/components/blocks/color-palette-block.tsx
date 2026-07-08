@@ -1,4 +1,6 @@
+import { hexToRgb, isLightColor, isValidHex } from '@/lib/color'
 import type { BrandColor, GuidelinePage } from '@/payload-types'
+import { BlockHeading } from './block-heading'
 
 type GuidelineBlock = NonNullable<GuidelinePage['blocks']>[number]
 
@@ -13,7 +15,7 @@ export function ColorPaletteBlock({
 
 	return (
 		<section>
-			{block.title && <h2 className="mb-6 font-semibold text-xl">{block.title}</h2>}
+			<BlockHeading title={block.title} />
 			<div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
 				{colors.map((color) => (
 					<div
@@ -26,7 +28,7 @@ export function ColorPaletteBlock({
 					>
 						<p className="font-semibold">{color.name}</p>
 						<p>HEX {color.hex}</p>
-						{hexToRgbLabel(color.hex) && <p>RGB {hexToRgbLabel(color.hex)}</p>}
+						{rgbLabel(color.hex) && <p>RGB {rgbLabel(color.hex)}</p>}
 						{color.pantone && <p>PMS {color.pantone}</p>}
 					</div>
 				))}
@@ -35,20 +37,8 @@ export function ColorPaletteBlock({
 	)
 }
 
-function parseHex(hex: string) {
-	const value = Number.parseInt(hex.replace(/^#/, ''), 16)
-	return { r: (value >> 16) & 0xff, g: (value >> 8) & 0xff, b: value & 0xff }
-}
-
-function hexToRgbLabel(hex: string) {
-	const value = hex.replace(/^#/, '')
-	if (!/^[0-9a-fA-F]{6}$/.test(value)) return null
-	const { r, g, b } = parseHex(hex)
+function rgbLabel(hex: string) {
+	if (!isValidHex(hex)) return null
+	const { r, g, b } = hexToRgb(hex)
 	return `${r}/${g}/${b}`
-}
-
-/** 스와치 위 스펙 텍스트의 흑/백 선택용 밝기 판정 (YIQ 근사). */
-function isLightColor(hex: string) {
-	const { r, g, b } = parseHex(hex)
-	return (r * 299 + g * 587 + b * 114) / 1000 > 150
 }

@@ -42,6 +42,7 @@
 		"@payloadcms/translations": "^3.85.1",
 		"@payloadcms/ui": "3.85.1",
 		"@shadcn/react": "0.1.0",
+		"@t3-oss/env-nextjs": "^0.13.11",
 		"@tailwindcss/postcss": "^4.3.1",
 		"ai": "^7.0.0",
 		"class-variance-authority": "^0.7.1",
@@ -69,6 +70,9 @@
 	"devDependencies": {
 		"@biomejs/biome": "2.5.0",
 		"@playwright/test": "1.61.1",
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/react": "^16.3.2",
+		"@testing-library/user-event": "^14.6.1",
 		"@types/culori": "^4.0.1",
 		"@types/node": "22.19.9",
 		"@types/react": "19.2.17",
@@ -86,6 +90,13 @@
 		"pnpm": "^9 || ^10"
 	},
 	"pnpm": {
+		"overrides": {
+			"dompurify@<3.4.11": "3.4.11",
+			"esbuild@<=0.24.2": "0.25.12",
+			"esbuild@>=0.27.3 <0.28.1": "0.28.1",
+			"postcss@<8.5.10": "8.5.15",
+			"undici@<7.28.0": "7.28.0"
+		},
 		"onlyBuiltDependencies": [
 			"sharp",
 			"esbuild",

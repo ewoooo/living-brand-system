@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { generateText, Output } from 'ai'
 import { z } from 'zod'
+import { env } from '@/env'
 import type { AiCheckResult, CheckerContext } from '@/features/asset-check/checkers/types'
 import type {
 	CheckReferenceAsset,
@@ -38,13 +39,13 @@ export async function runAiCheck(
 	rules: CheckRule[],
 	ctx: CheckerContext,
 ): Promise<Record<string, AiCheckResult>> {
-	if (!process.env.ANTHROPIC_API_KEY) return fallbackResults(rules, 'AI 설정 없음')
+	if (!env.ANTHROPIC_API_KEY) return fallbackResults(rules, 'AI 설정 없음')
 	if (!ctx.image) return fallbackResults(rules, 'AI 평가용 이미지 없음')
 
 	try {
 		const referenceFiles = await loadReferenceFiles(rules)
 		const { output } = await generateText({
-			model: anthropic(process.env.ANTHROPIC_MODEL || DEFAULT_MODEL),
+			model: anthropic(env.ANTHROPIC_MODEL || DEFAULT_MODEL),
 			output: Output.object({ schema: aiCheckSchema }),
 			system: 'You are a brand guideline checker. Judge only the supplied raster image against the supplied rules and reference images. Do not claim access to font metadata, embedded fonts, CSS, or source design files. Return conservative structured results for every rule key.',
 			messages: [
@@ -158,8 +159,8 @@ async function readReferenceAsset(asset: CheckReferenceAsset): Promise<Buffer | 
 function toAbsoluteUrl(url: string) {
 	if (/^https?:\/\//.test(url)) return url
 	const origin =
-		process.env.NEXT_PUBLIC_SITE_URL ||
-		(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+		env.NEXT_PUBLIC_SITE_URL ||
+		(env.VERCEL_URL ? `https://${env.VERCEL_URL}` : 'http://localhost:3000')
 	return new URL(url, origin).toString()
 }
 

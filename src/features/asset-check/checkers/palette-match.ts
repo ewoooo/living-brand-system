@@ -3,12 +3,11 @@
  * 픽셀 추출과 기준 팔레트 조회는 상위 레이어가 소유한다.
  */
 import { converter, differenceCiede2000 } from 'culori'
+import { hexToRgb, type Rgb } from '@/lib/color'
 
-export interface Rgb {
-	r: number
-	g: number
-	b: number
-}
+export type { Rgb }
+// hex→Rgb 파싱은 lib/color가 소유한다. 기존 import 경로(checkers 테스트 등) 보존을 위해 재노출한다.
+export { hexToRgb }
 
 export type SwatchFamily = 'red' | 'yellow' | 'green' | 'blue' | 'purple' | 'gray' | 'extreme'
 
@@ -27,11 +26,6 @@ export const PALETTE_DELTA_E_TOLERANCE = 6
 
 const toLab = converter('lab')
 const deltaE00 = differenceCiede2000()
-
-export function hexToRgb(hex: string): Rgb {
-	const v = Number.parseInt(hex.replace(/^#/, ''), 16)
-	return { r: (v >> 16) & 0xff, g: (v >> 8) & 0xff, b: v & 0xff }
-}
 
 /** 0–255 Rgb → culori Lab (deltaE00 입력용) */
 function labOf({ r, g, b }: Rgb) {
