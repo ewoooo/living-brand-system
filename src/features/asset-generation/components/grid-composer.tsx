@@ -351,6 +351,19 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 	// 행/열 추가·삭제 시 cells(w*h flat)를 리맵해 기존 셀 내용을 (row,col) 기준으로 보존한다.
 	const w = cols.length
 	const h = rows.length
+	// 키보드 재배치: 선택 요소를 화살표로 인접 셀에 옮긴다(포인터 드래그의 셀 스냅과 동일 동작).
+	function moveSelectedByArrow(index: number, kind: ItemKind, key: string) {
+		const col = index % w
+		const row = Math.floor(index / w)
+		let target = index
+		if (key === 'ArrowLeft' && col > 0) target = index - 1
+		else if (key === 'ArrowRight' && col < w - 1) target = index + 1
+		else if (key === 'ArrowUp' && row > 0) target = index - w
+		else if (key === 'ArrowDown' && row < h - 1) target = index + w
+		else return
+		moveItem(index, kind, target)
+		setSelectedId(`${target}:${kind}`)
+	}
 	function addTrack(axis: 'row' | 'col') {
 		if (axis === 'row') {
 			setRows((prev) => [...prev, 1])
@@ -594,6 +607,11 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 										key={id}
 										ref={isSelected ? setMoveableTarget : undefined}
 										onClick={() => setSelectedId(isSelected ? null : id)}
+										onKeyDown={(e) => {
+											if (!isSelected || !e.key.startsWith('Arrow')) return
+											e.preventDefault()
+											moveSelectedByArrow(index, kind, e.key)
+										}}
 										className={`absolute cursor-move p-0 ${isSelected ? 'ring-2 ring-primary' : ''}`}
 										style={{
 											left: box.x * scale,
