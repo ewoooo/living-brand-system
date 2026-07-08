@@ -64,9 +64,10 @@ function RuleRow({
 	const shouldReduceMotion = useReducedMotion()
 
 	return (
-		<Fragment key={rowId}>
+		<Fragment>
 			<AnimatedRuleTableRow
 				id={anchorId ?? undefined}
+				role="button"
 				aria-expanded={open}
 				aria-label={`${rule.title} 상세 보기`}
 				rowIndex={rowIndex}
