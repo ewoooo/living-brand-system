@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, type ReactNode, use, useMemo, useState } from 'react'
+import { createContext, type ReactNode, use, useEffect, useMemo, useRef, useState } from 'react'
 import { CHECK_SCENARIOS, getCheckScenario } from '@/features/asset-check/scenarios'
 import {
 	aiFailureResults,
@@ -30,6 +30,16 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 	const [selectedId, setSelectedId] = useState<string | null>(null)
 	const [scenarioKey, setScenarioKeyValue] = useState(CHECK_SCENARIOS[0].key)
 	const [showFailOnly, setShowFailOnly] = useState(false)
+
+	// 미리보기 object URL은 언마운트 시 일괄 해제한다(이미지는 제거 경로가 없어 세션 동안 유지됨).
+	const imagesRef = useRef(images)
+	imagesRef.current = images
+	useEffect(
+		() => () => {
+			for (const image of imagesRef.current) URL.revokeObjectURL(image.url)
+		},
+		[],
+	)
 
 	function patchImage(id: string, patch: (image: CheckImage) => Partial<CheckImage>) {
 		setImages((prev) =>
