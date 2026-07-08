@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 
-// ponytail: 프로바이더 미연동 상태의 껍데기 페이지. UI 흐름(입력→생성→그리드)만 먼저.
-// 실제 생성은 /api/image가 placeholder를 돌려주고, 나중에 그 라우트만 실 프로바이더로 교체.
+// 프롬프트 입력 → /api/image 호출 → 후보 그리드. 생성 로직은 라우트/서비스가 소유.
+// OPENAI_API_KEY 없으면 라우트가 placeholder를 돌려줘 이 UI는 그대로 동작한다.
 
 export default function ImagePage() {
 	const [prompt, setPrompt] = useState('')
@@ -43,7 +43,7 @@ export default function ImagePage() {
 				<p className="mb-4 text-muted-foreground">
 					프롬프트를 입력하면 후보 이미지를 여러 장 생성합니다. 마음에 드는 것을 골라
 					사용하세요. <wbr />
-					(현재 프로바이더 미연동 — placeholder 표시)
+					(OpenAI 키 미설정 시 placeholder 표시)
 				</p>
 			</header>
 

@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
+import { generateBrandImages } from '@/features/image-generation/services/generate-image.service'
+import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
-// ponytail: placeholder 생성기. 실제 이미지 프로바이더(예: @ai-sdk/google generateImage)로 교체할 자리.
-// 교체 시 함께 붙일 것: (1) 요청 인증(authenticateRequest) — 유료 호출이라 게이트 필요, (2) 새 env 키.
+export const maxDuration = 60
 
 const COLORS = ['#e2e8f0', '#cbd5e1', '#94a3b8', '#a5b4fc', '#fca5a5', '#86efac']
 
@@ -17,11 +17,36 @@ function placeholder(prompt: string, i: number): string {
 }
 
 export async function POST(request: Request) {
-	const { prompt, count } = (await request.json()) as { prompt?: string; count?: number }
+	if (isCrossOriginRequest(request)) {
+		return Response.json({ message: 'Invalid origin.' }, { status: 403 })
+	}
+
+	const { prompt, count } = (await request.json().catch(() => ({}))) as {
+		prompt?: string
+		count?: number
+	}
 	if (!prompt?.trim()) {
-		return NextResponse.json({ error: 'prompt required' }, { status: 400 })
+		return Response.json({ message: 'prompt required' }, { status: 400 })
 	}
 	const n = Math.min(Math.max(count ?? 4, 1), 6)
-	const images = Array.from({ length: n }, (_, i) => placeholder(prompt, i))
-	return NextResponse.json({ images })
+
+	// ponytail: 키 없으면 dev 폴백(무료 가짜 이미지, 인증 없음). 키가 있으면 아래 유료 경로로 감.
+	if (!process.env.OPENAI_API_KEY) {
+		const images = Array.from({ length: n }, (_, i) => placeholder(prompt, i))
+		return Response.json({ images })
+	}
+
+	// 유료 경로 — 인증 게이트 (docs/07)
+	const { payload, user } = await authenticateRequest()
+	if (!user) {
+		return Response.json({ message: 'Unauthorized' }, { status: 401 })
+	}
+
+	try {
+		const images = await generateBrandImages({ prompt, count: n })
+		return Response.json({ images })
+	} catch (error) {
+		payload.logger.error({ err: error }, 'image-generation.failed')
+		return Response.json({ message: 'Image generation failed.' }, { status: 500 })
+	}
 }

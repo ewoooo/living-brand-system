@@ -30,6 +30,7 @@
 	},
 	"dependencies": {
 		"@ai-sdk/anthropic": "^4.0.0",
+		"@ai-sdk/openai": "^4.0.4",
 		"@ai-sdk/react": "^4.0.0",
 		"@carbon/icons-react": "^11.82.0",
 		"@payloadcms/db-postgres": "3.85.1",
