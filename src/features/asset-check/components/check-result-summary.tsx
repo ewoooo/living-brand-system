@@ -29,22 +29,22 @@ export function CheckResultSummary({ sections }: CheckResultSummaryProps) {
 			<TooltipProvider delayDuration={150}>
 				<section className="flex flex-wrap gap-4">
 					<SummaryMetric
-						label="PASS"
+						label={CHECK_STATUS.pass.label}
 						value={summary.pass}
 						colorClassName={CHECK_STATUS.pass.dot}
 					/>
 					<SummaryMetric
-						label="OK"
+						label={CHECK_STATUS.ok.label}
 						value={summary.ok}
 						colorClassName={CHECK_STATUS.ok.dot}
 					/>
 					<SummaryMetric
-						label="FAIL"
+						label={CHECK_STATUS.fail.label}
 						value={summary.fail}
 						colorClassName={CHECK_STATUS.fail.dot}
 					/>
 					<SummaryMetric
-						label="REVIEW"
+						label={CHECK_STATUS.needs_review.label}
 						value={summary.pendingManualCheck}
 						colorClassName={CHECK_STATUS.needs_review.dot}
 						muted

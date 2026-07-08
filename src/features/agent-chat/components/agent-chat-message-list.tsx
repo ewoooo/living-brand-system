@@ -1,4 +1,5 @@
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
+import { Empty, EmptyDescription } from '@/components/ui/empty'
 import {
 	MessageScroller,
 	MessageScrollerButton,
@@ -60,5 +61,9 @@ export function AgentChatMessageList({
 }
 
 function AgentEmptyMessage() {
-	return <p className="text-muted-foreground text-sm px-3">이 가이드라인에 대해 물어보세요.</p>
+	return (
+		<Empty>
+			<EmptyDescription>이 가이드라인에 대해 물어보세요.</EmptyDescription>
+		</Empty>
+	)
 }

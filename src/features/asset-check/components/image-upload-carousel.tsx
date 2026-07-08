@@ -11,6 +11,7 @@ import {
 	CarouselNext,
 	CarouselPrevious,
 } from '@/components/ui/carousel'
+import { Empty, EmptyDescription, EmptyTitle } from '@/components/ui/empty'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { ImageCheckControls } from '@/features/asset-check/components/image-check-controls'
 import type { CheckImage } from '@/features/asset-check/types'
@@ -90,10 +91,12 @@ export function ImageUploadCarousel() {
 
 function CheckCarouselEmpty() {
 	return (
-		<div className="flex flex-col items-center gap-2 px-6 text-center text-neutral-300">
-			<p className="font-medium text-sm">이미지를 드래그해서 업로드하세요</p>
-			<p className="opacity-60 text-xs">좌상단 업로드 버튼으로도 추가할 수 있습니다.</p>
-		</div>
+		<Empty className="gap-2 text-neutral-300">
+			<EmptyTitle>이미지를 드래그해서 업로드하세요</EmptyTitle>
+			<EmptyDescription className="text-neutral-300 opacity-60">
+				좌상단 업로드 버튼으로도 추가할 수 있습니다.
+			</EmptyDescription>
+		</Empty>
 	)
 }
 

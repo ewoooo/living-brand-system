@@ -10,6 +10,7 @@ import {
 	useMemo,
 	useState,
 } from 'react'
+import { Empty, EmptyDescription } from '@/components/ui/empty'
 import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -430,9 +431,9 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 					</TableBody>
 				</Table>
 				{showFailOnly && rows.length === 0 && (
-					<p className="py-8 text-center text-muted-foreground text-sm">
-						미통과 항목이 없습니다.
-					</p>
+					<Empty>
+						<EmptyDescription>미통과 항목이 없습니다.</EmptyDescription>
+					</Empty>
 				)}
 			</div>
 		</TooltipProvider>
