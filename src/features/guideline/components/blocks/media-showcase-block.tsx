@@ -1,5 +1,5 @@
 import type { GuidelinePage } from '@/payload-types'
-import { GuidelineImage } from './guideline-image'
+import { GuidelineImage } from './children/guideline-image'
 
 type GuidelineBlock = NonNullable<GuidelinePage['blocks']>[number]
 

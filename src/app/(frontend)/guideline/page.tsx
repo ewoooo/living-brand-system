@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { getGuidelineNavigation } from '@/features/guideline/services/get-guideline-navigation.service'
 
 export default async function GuidelineIndexPage() {
-	const { title, sections } = await getGuidelineNavigation()
+	const { title, chapters } = await getGuidelineNavigation()
 
 	return (
 		<div className="w-full max-w-[1250px] px-8 py-10">
@@ -21,16 +21,16 @@ export default async function GuidelineIndexPage() {
 			<section className="mb-8">
 				<h3 className="pb-4 text-xl">여기서 시작하기</h3>
 				<section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-					{sections.map((section) => (
+					{chapters.map((chapter) => (
 						<Link
-							key={section.id}
-							href={section.href}
+							key={chapter.id}
+							href={chapter.href}
 							className="rounded-md border border-neutral-200 p-4 transition-colors hover:bg-neutral-500/5 dark:border-neutral-800"
 						>
-							<h2 className="text-lg">{section.title}</h2>
-							{section.description && (
+							<h2 className="text-lg">{chapter.title}</h2>
+							{chapter.description && (
 								<p className="mt-3 text-muted-foreground text-sm leading-6">
-									{section.description}
+									{chapter.description}
 								</p>
 							)}
 						</Link>

@@ -1,7 +1,7 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { notFound } from 'next/navigation'
 import { Separator } from '@/components/ui/separator'
-import { GuidelineBlocks } from '@/features/guideline/components/guideline-blocks'
+import { GuidelineBlocks } from '@/features/guideline/components/blocks/guideline-blocks'
 import {
 	type GetGuidelineSectionOutput,
 	getGuidelineSection,
@@ -10,10 +10,10 @@ import {
 export default async function GuidelineSectionPage({
 	params,
 }: {
-	params: Promise<{ sectionSlug: string }>
+	params: Promise<{ chapterSlug: string; sectionSlug: string }>
 }) {
-	const { sectionSlug } = await params
-	const sectionView = await getGuidelineSection(sectionSlug)
+	const { chapterSlug, sectionSlug } = await params
+	const sectionView = await getGuidelineSection(chapterSlug, sectionSlug)
 
 	if (!sectionView) {
 		notFound()

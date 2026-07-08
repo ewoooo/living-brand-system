@@ -25,10 +25,10 @@ export async function findGuidelineMetadataGlobal() {
 	})
 }
 
-export async function listPublishedSections() {
+export async function listPublishedChapters() {
 	const payload = await getPayload({ config })
-	const sections = await payload.find({
-		collection: 'sections',
+	const chapters = await payload.find({
+		collection: 'chapters',
 		sort: 'displayOrder',
 		limit: 100,
 		locale: LOCALE,
@@ -41,6 +41,26 @@ export async function listPublishedSections() {
 		},
 	})
 
+	return chapters.docs
+}
+
+export async function listPublishedSectionNavItems() {
+	const payload = await getPayload({ config })
+	const sections = await payload.find({
+		collection: 'sections',
+		depth: 0,
+		sort: 'displayOrder',
+		limit: 500,
+		locale: LOCALE,
+		fallbackLocale: FALLBACK_LOCALE,
+		draft: false,
+		select: {
+			title: true,
+			slug: true,
+			chapter: true,
+		},
+	})
+
 	return sections.docs
 }
 
@@ -50,7 +70,7 @@ export async function listPublishedPageNavItems() {
 		collection: 'guideline-pages',
 		depth: 0,
 		sort: 'displayOrder',
-		limit: 500,
+		limit: 1000,
 		locale: LOCALE,
 		fallbackLocale: FALLBACK_LOCALE,
 		draft: false,
@@ -64,13 +84,13 @@ export async function listPublishedPageNavItems() {
 	return pages.docs
 }
 
-export async function findPublishedSectionBySlug(sectionSlug: string) {
+export async function findPublishedChapterBySlug(chapterSlug: string) {
 	const payload = await getPayload({ config })
-	const sections = await payload.find({
-		collection: 'sections',
+	const chapters = await payload.find({
+		collection: 'chapters',
 		where: {
 			slug: {
-				equals: sectionSlug,
+				equals: chapterSlug,
 			},
 		},
 		limit: 1,
@@ -79,10 +99,60 @@ export async function findPublishedSectionBySlug(sectionSlug: string) {
 		draft: false,
 		select: {
 			title: true,
+			description: true,
+		},
+	})
+
+	return chapters.docs[0] ?? null
+}
+
+export async function findPublishedSectionBySlug(chapterId: number, sectionSlug: string) {
+	const payload = await getPayload({ config })
+	const sections = await payload.find({
+		collection: 'sections',
+		where: {
+			slug: {
+				equals: sectionSlug,
+			},
+			chapter: {
+				equals: chapterId,
+			},
+		},
+		limit: 1,
+		locale: LOCALE,
+		fallbackLocale: FALLBACK_LOCALE,
+		draft: false,
+		select: {
+			title: true,
+			description: true,
 		},
 	})
 
 	return sections.docs[0] ?? null
+}
+
+export async function listPublishedSectionsByChapter(chapterId: number) {
+	const payload = await getPayload({ config })
+	const sections = await payload.find({
+		collection: 'sections',
+		where: {
+			chapter: {
+				equals: chapterId,
+			},
+		},
+		sort: 'displayOrder',
+		limit: 100,
+		locale: LOCALE,
+		fallbackLocale: FALLBACK_LOCALE,
+		draft: false,
+		select: {
+			title: true,
+			slug: true,
+			description: true,
+		},
+	})
+
+	return sections.docs
 }
 
 export async function listPublishedPagesBySection(sectionId: number) {

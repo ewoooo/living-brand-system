@@ -6,14 +6,19 @@ export function GuidelineSideNavigation({
 }: {
 	navigation: GetGuidelineNavigationOutput
 }) {
-	const groups: SideNavGroup[] = navigation.sections.map((section) => ({
-		key: section.id,
-		title: section.title,
-		titleHref: section.href,
-		items: section.pages.map((page) => ({
-			key: page.id,
-			label: page.title,
-			href: page.href,
+	const groups: SideNavGroup[] = navigation.chapters.map((chapter) => ({
+		key: chapter.id,
+		title: chapter.title,
+		titleHref: chapter.href,
+		items: chapter.sections.map((section) => ({
+			key: section.id,
+			label: section.title,
+			href: section.href,
+			children: section.pages.map((page) => ({
+				key: page.id,
+				label: page.title,
+				href: page.href,
+			})),
 		})),
 	}))
 

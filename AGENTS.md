@@ -108,7 +108,10 @@ When docs conflict, prefer the newer or more specific document. If a code change
 
 ## Branch Rules
 
-- Layers: use `stage` for active integration and release validation, and `main` for stable production-ready state.
+- Layers: the ideal is `develop` / `stage` / `main`, but this repo does not run a `develop` branch yet. In practice:
+  - `main`: the effective production target — the deployable, production-ready state, though nothing is deployed yet.
+  - `stage`: the gateway to `main` — verify checks here, then merge to `main`. Currently identical to `main`; treat it as a rehearsal.
+  - all other branches: feature development, filling the role a `develop` branch would; `develop` itself is unused here.
 - Flow: merge normal work branches into `stage`, then promote verified `stage` to `main`.
 - Base: branch from `stage` for normal product work. Branch from `main` only for urgent production fixes.
 - Requirement: create or switch to a purpose branch before changing source code, product behavior, refactors, tests, tooling, dependencies, or non-trivial docs.

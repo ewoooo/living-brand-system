@@ -1,6 +1,6 @@
-import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical'
-import { convertLexicalToPlaintext } from '@payloadcms/richtext-lexical/plaintext'
-import type { ApplicationImage, BrandColor, GuidelinePage, Rule, Section } from '@/payload-types'
+import { formatBlockForAgent } from '@/features/guideline/blocks/registry'
+import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
+import type { GuidelinePage, Rule, Section } from '@/payload-types'
 import {
 	type AgentGuidelineDocument,
 	type AgentGuidelineSearchResult,
@@ -177,7 +177,7 @@ function formatGuidelinePage(
 		sectionTitle ? `Section: ${sectionTitle}` : null,
 		`Page: ${page.title}`,
 		extractTextFromLexical(page.description),
-		...(page.blocks?.map(formatBlock).filter(Boolean) ?? []),
+		...(page.blocks?.map(formatBlockForAgent).filter(Boolean) ?? []),
 		rules.length ? `Rules:\n${rules.join('\n')}` : null,
 	]).join('\n\n')
 }
@@ -185,36 +185,6 @@ function formatGuidelinePage(
 type GuidelineDocumentRelatedPage = {
 	id: string
 	title: string
-}
-
-function formatBlock(block: NonNullable<GuidelinePage['blocks']>[number]): string {
-	if (block.blockType === 'mediaShowcase') {
-		return compact(['Media showcase', formatImage(block.image)]).join('\n')
-	}
-
-	if (block.blockType === 'colorPalette') {
-		const colors = block.colors.filter(
-			(color): color is BrandColor => typeof color === 'object' && color !== null,
-		)
-		return compact([
-			block.title ?? 'Color palette',
-			...colors.map(
-				(color) =>
-					`- ${color.name}: HEX ${color.hex}${color.pantone ? `, PMS ${color.pantone}` : ''}`,
-			),
-		]).join('\n')
-	}
-
-	return compact([
-		block.title,
-		...(block.columns?.map((column) =>
-			compact([
-				column.heading,
-				extractTextFromLexical(column.body),
-				formatImage(column.image),
-			]).join('\n'),
-		) ?? []),
-	]).join('\n\n')
 }
 
 function formatRule(value: GuidelineDocumentRule): string {
@@ -233,28 +203,12 @@ function getLiveRules(values: GuidelinePage['rules']): GuidelineDocumentRule[] {
 	)
 }
 
-function formatImage(value: unknown): string {
-	if (!value || typeof value !== 'object') {
-		return ''
-	}
-
-	const image = value as Partial<ApplicationImage>
-	return compact([image.alt, image.name, image.url]).join(' ')
-}
-
 function getTitle(value: number | Section): string {
 	return typeof value === 'object' ? value.title : ''
 }
 
 function getSectionSlug(value: number | Section): string | null {
 	return typeof value === 'object' ? (value.slug ?? null) : null
-}
-
-export function extractTextFromLexical(value: unknown): string {
-	// agent 컨텍스트용 한 줄 텍스트 — 블록 구분 개행은 공백으로 접는다.
-	return convertLexicalToPlaintext({ data: value as SerializedEditorState })
-		.replace(/\s+/g, ' ')
-		.trim()
 }
 
 function compact(values: (string | null | undefined)[]): string[] {
