@@ -7,9 +7,9 @@ import {
 	getAgentSkillMarker,
 	getAgentToolMarker,
 } from '@/features/agent-chat/utils/get-agent-tool-marker'
-import type { AgentTemplateImageAttachment } from '../services/get-agent-tools.service'
 import { getAgentCitations } from '../utils/get-agent-citations'
 import { getAgentMessageText } from '../utils/get-agent-message-text'
+import { getAgentTemplateAttachments } from '../utils/get-agent-template-attachments'
 import { AgentChatAgentBubble, AgentChatUserBubble } from './agent-chat-bubbles'
 import { AgentChatTemplateAttachment } from './agent-chat-template-attachment'
 import { AgentChatMarker } from './agent-chat-tool-marker'
@@ -28,27 +28,7 @@ export function AgentChatMessageItem({
 	const citations = isUser ? [] : getAgentCitations(message)
 	const messageText = getAgentMessageText(message)
 	const files = message.parts.filter((part) => part.type === 'file')
-	const templateAttachments = isUser
-		? []
-		: message.parts.flatMap((part, index) => {
-				if (
-					part.type !== 'tool-prepareTemplateImage' ||
-					part.state !== 'output-available' ||
-					!('output' in part)
-				) {
-					return []
-				}
-
-				const output = (part as { output: AgentTemplateImageAttachment }).output
-				return output.type === 'template-image'
-					? [
-							{
-								attachment: output,
-								key: part.toolCallId ?? `${output.templateId}-${index}`,
-							},
-						]
-					: []
-			})
+	const templateAttachments = isUser ? [] : getAgentTemplateAttachments(message)
 
 	return (
 		<div
