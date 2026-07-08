@@ -74,9 +74,10 @@ export function AgentChatUserInput({
 					onChange={(event) => onFilesChange(event.currentTarget.files || undefined)}
 				/>
 				<Textarea
+					aria-label="무엇이든 물어보세요"
 					className="max-h-40 min-h-20 border-0 bg-transparent px-2 py-2 text-sm shadow-none focus-visible:border-transparent focus-visible:ring-0 md:text-sm"
 					value={value}
-					placeholder="Ask Anything"
+					placeholder="무엇이든 물어보세요"
 					disabled={isBusy}
 					onChange={(event) => onChange(event.currentTarget.value)}
 					onKeyDown={(event) => {
@@ -93,7 +94,7 @@ export function AgentChatUserInput({
 				/>
 				<div className="flex items-center justify-between">
 					<Button
-						aria-label="Attach files"
+						aria-label="파일 첨부"
 						type="button"
 						variant="ghost"
 						size="icon-lg"
@@ -103,7 +104,7 @@ export function AgentChatUserInput({
 						<Upload data-icon="inline-start" />
 					</Button>
 					<Button
-						aria-label="Send message"
+						aria-label="메시지 보내기"
 						type="submit"
 						variant="default"
 						size="icon-lg"
@@ -127,7 +128,7 @@ function SelectedAttachment({ file, onClear }: { file: File; onClear: () => void
 				<AttachmentDescription>{file.type || 'file'}</AttachmentDescription>
 			</AttachmentContent>
 			<AttachmentActions>
-				<AttachmentAction aria-label="Clear attachments" type="button" onClick={onClear}>
+				<AttachmentAction aria-label="첨부 지우기" type="button" onClick={onClear}>
 					<Close />
 				</AttachmentAction>
 			</AttachmentActions>

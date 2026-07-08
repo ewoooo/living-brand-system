@@ -178,142 +178,17 @@ function deriveInitial(source?: JsonTemplate) {
 	return { canvasW, canvasH, bgColor, bgImage: null, padX, padY, gap, rows, cols, cells }
 }
 
-export function GridComposer({ source }: { source?: JsonTemplate }) {
-	const initial = useMemo(() => deriveInitial(source), [source])
-	// 표시 배율은 마운트 시 고정 — 캔버스 크기를 바꾸면 표시 크기가 실제로 변한다.
-	const scale = PREVIEW_WIDTH / initial.canvasW
-
-	const [canvasW, setCanvasW] = useState(initial.canvasW)
-	const [canvasH, setCanvasH] = useState(initial.canvasH)
-	const [padX, setPadX] = useState(initial.padX)
-	const [padY, setPadY] = useState(initial.padY)
-	const [gap, setGap] = useState(initial.gap)
-	// 배경 = 캔버스 전체 크기(gap·여백 무시)의 별도 레이어. 단색 fill + 선택적 이미지(z 0).
-	const [bgColor, setBgColor] = useState(initial.bgColor)
-	const [bgImage, setBgImage] = useState<string | null>(initial.bgImage)
-	const [rows, setRows] = useState<number[]>(initial.rows)
-	const [cols, setCols] = useState<number[]>(initial.cols)
-	const [cells, setCells] = useState<Cell[]>(initial.cells)
-	const [selectedId, setSelectedId] = useState<string | null>(null)
-	const [dragFree, setDragFree] = useState<{ id: string; x: number; y: number } | null>(null)
-	const [dropCell, setDropCell] = useState<{ row: number; col: number } | null>(null)
-	const [moveableTarget, setMoveableTarget] = useState<HTMLElement | null>(null)
+/**
+ * 캔버스 크기 상태 + 테두리 드래그 리사이즈를 소유한다.
+ * 포인터 캡처로 이벤트를 독점하고, 시작값 기준 절대 delta를 rAF로 프레임당 1회만 반영해 떨림을 막는다.
+ */
+function useCanvasResize(initialW: number, initialH: number, scale: number) {
+	const [canvasW, setCanvasW] = useState(initialW)
+	const [canvasH, setCanvasH] = useState(initialH)
 	const [resizing, setResizing] = useState<Edge | null>(null)
-	const [hideGuides, setHideGuides] = useState(false)
-	const canvasRef = useRef<HTMLDivElement>(null)
 	const rafRef = useRef<number | null>(null)
 	const pendingRef = useRef<{ w: number; h: number } | null>(null)
 
-	// 그리드는 캔버스 안쪽 여백(padX·padY) 영역에 배치된다.
-	const innerW = Math.max(1, canvasW - padX * 2)
-	const innerH = Math.max(1, canvasH - padY * 2)
-	const rowSizes = useMemo(() => trackSizes(rows, innerH, gap), [rows, innerH, gap])
-	const colSizes = useMemo(() => trackSizes(cols, innerW, gap), [cols, innerW, gap])
-
-	function cellBox(row: number, col: number) {
-		const r = Math.min(row, rowSizes.length - 1)
-		const c = Math.min(col, colSizes.length - 1)
-		return {
-			x: padX + offsetAt(colSizes, c, gap),
-			y: padY + offsetAt(rowSizes, r, gap),
-			width: colSizes[c],
-			height: rowSizes[r],
-		}
-	}
-
-	/** 해당 kind가 비어 있는 첫 셀에 아이템을 넣고 선택한다. 이미지 기본 크기 = 그 셀 크기. */
-	function addItem(kind: ItemKind) {
-		const index = cells.findIndex((cell) => cell[kind] == null)
-		const target = index === -1 ? 0 : index
-		const box = cellBox(Math.floor(target / cols.length), target % cols.length)
-		const value =
-			kind === 'text'
-				? defaultText('텍스트')
-				: ({
-						src: GRAY,
-						width: box.width,
-						height: box.height,
-						offsetX: 0,
-						offsetY: 0,
-					} satisfies ImageItem)
-		setCells((prev) =>
-			prev.map((cell, i) => (i === target ? { ...cell, [kind]: value } : cell)),
-		)
-		setSelectedId(`${target}:${kind}`)
-	}
-
-	/** 텍스트 아이템 부분 수정(내용·정렬·흐름). */
-	function patchText(index: number, patch: Partial<TextItem>) {
-		setCells((prev) =>
-			prev.map((cell, i) =>
-				i === index && cell.text ? { ...cell, text: { ...cell.text, ...patch } } : cell,
-			),
-		)
-	}
-	/** 이미지 아이템 부분 수정(src·크기). */
-	function patchImage(index: number, patch: Partial<ImageItem>) {
-		setCells((prev) =>
-			prev.map((cell, i) =>
-				i === index && cell.image ? { ...cell, image: { ...cell.image, ...patch } } : cell,
-			),
-		)
-	}
-	function removeItem(index: number, kind: ItemKind) {
-		setCells((prev) => prev.map((cell, i) => (i === index ? { ...cell, [kind]: null } : cell)))
-		setSelectedId(null)
-	}
-	/** 아이템을 다른 셀로 이동 — 대상 셀의 같은 kind를 덮어쓰고 원본을 비운다. */
-	function moveItem(index: number, kind: ItemKind, targetIndex: number) {
-		if (targetIndex === index) return
-		setCells((prev) => {
-			const value = prev[index][kind]
-			return prev.map((cell, i) => {
-				if (i === index) return { ...cell, [kind]: null }
-				if (i === targetIndex) return { ...cell, [kind]: value }
-				return cell
-			})
-		})
-	}
-
-	function setWeight(axis: 'row' | 'col', index: number, value: number) {
-		const clamped = Number.isFinite(value) && value > 0 ? Math.round(value) : 1
-		;(axis === 'row' ? setRows : setCols)((prev) =>
-			prev.map((w, i) => (i === index ? clamped : w)),
-		)
-	}
-	// 행/열 추가·삭제 시 cells(w*h flat)를 리맵해 기존 셀 내용을 (row,col) 기준으로 보존한다.
-	const w = cols.length
-	const h = rows.length
-	function addTrack(axis: 'row' | 'col') {
-		if (axis === 'row') {
-			setRows((prev) => [...prev, 1])
-			setCells((prev) => [...prev, ...Array.from({ length: w }, emptyCell)])
-		} else {
-			setCols((prev) => [...prev, 1])
-			setCells((prev) => {
-				const next: Cell[] = []
-				for (let r = 0; r < h; r++) {
-					for (let c = 0; c < w; c++) next.push(prev[r * w + c])
-					next.push(emptyCell())
-				}
-				return next
-			})
-		}
-	}
-	function removeTrack(axis: 'row' | 'col', index: number) {
-		if (axis === 'row') {
-			if (h <= 1) return
-			setRows((prev) => prev.filter((_, i) => i !== index))
-			setCells((prev) => prev.filter((_, i) => Math.floor(i / w) !== index))
-		} else {
-			if (w <= 1) return
-			setCols((prev) => prev.filter((_, i) => i !== index))
-			setCells((prev) => prev.filter((_, i) => i % w !== index))
-		}
-	}
-
-	// 테두리 드래그로 캔버스 크기 조절 — 가운데 정렬은 컨테이너가 유지한다.
-	// 성능: 포인터 캡처로 이벤트 독점, 시작값 기준 절대 delta, rAF로 프레임당 1회만 반영(떨림 방지).
 	function startResize(edge: Edge, event: React.PointerEvent<HTMLElement>) {
 		event.preventDefault()
 		const handle = event.currentTarget
@@ -361,6 +236,160 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 		}
 		handle.addEventListener('pointermove', onMove)
 		handle.addEventListener('pointerup', onUp)
+	}
+
+	return { canvasW, canvasH, setCanvasW, setCanvasH, resizing, startResize }
+}
+
+export function GridComposer({ source }: { source?: JsonTemplate }) {
+	const initial = useMemo(() => deriveInitial(source), [source])
+	// 표시 배율은 마운트 시 고정 — 캔버스 크기를 바꾸면 표시 크기가 실제로 변한다.
+	const scale = PREVIEW_WIDTH / initial.canvasW
+	const { canvasW, canvasH, setCanvasW, setCanvasH, resizing, startResize } = useCanvasResize(
+		initial.canvasW,
+		initial.canvasH,
+		scale,
+	)
+
+	const [padX, setPadX] = useState(initial.padX)
+	const [padY, setPadY] = useState(initial.padY)
+	const [gap, setGap] = useState(initial.gap)
+	// 배경 = 캔버스 전체 크기(gap·여백 무시)의 별도 레이어. 단색 fill + 선택적 이미지(z 0).
+	const [bgColor, setBgColor] = useState(initial.bgColor)
+	const [bgImage, setBgImage] = useState<string | null>(initial.bgImage)
+	const [rows, setRows] = useState<number[]>(initial.rows)
+	const [cols, setCols] = useState<number[]>(initial.cols)
+	const [cells, setCells] = useState<Cell[]>(initial.cells)
+	const [selectedId, setSelectedId] = useState<string | null>(null)
+	const [dragFree, setDragFree] = useState<{ id: string; x: number; y: number } | null>(null)
+	const [dropCell, setDropCell] = useState<{ row: number; col: number } | null>(null)
+	const [moveableTarget, setMoveableTarget] = useState<HTMLElement | null>(null)
+	const [hideGuides, setHideGuides] = useState(false)
+	const canvasRef = useRef<HTMLDivElement>(null)
+
+	// 그리드는 캔버스 안쪽 여백(padX·padY) 영역에 배치된다.
+	const innerW = Math.max(1, canvasW - padX * 2)
+	const innerH = Math.max(1, canvasH - padY * 2)
+	const rowSizes = useMemo(() => trackSizes(rows, innerH, gap), [rows, innerH, gap])
+	const colSizes = useMemo(() => trackSizes(cols, innerW, gap), [cols, innerW, gap])
+
+	function cellBox(row: number, col: number) {
+		const r = Math.min(row, rowSizes.length - 1)
+		const c = Math.min(col, colSizes.length - 1)
+		return {
+			x: padX + offsetAt(colSizes, c, gap),
+			y: padY + offsetAt(rowSizes, r, gap),
+			width: colSizes[c],
+			height: rowSizes[r],
+		}
+	}
+
+	/** 해당 kind가 비어 있는 첫 셀에 아이템을 넣고 선택한다. 이미지 기본 크기 = 그 셀 크기. */
+	function addItem(kind: ItemKind) {
+		const index = cells.findIndex((cell) => cell[kind] == null)
+		const target = index === -1 ? 0 : index
+		const box = cellBox(Math.floor(target / cols.length), target % cols.length)
+		const value =
+			kind === 'text'
+				? defaultText('텍스트')
+				: ({
+						src: GRAY,
+						width: box.width,
+						height: box.height,
+						offsetX: 0,
+						offsetY: 0,
+					} satisfies ImageItem)
+		setCells((prev) =>
+			prev.map((cell, i) => (i === target ? { ...cell, [kind]: value } : cell)),
+		)
+		setSelectedId(`${target}:${kind}`)
+	}
+
+	/** 텍스트 아이템 부분 수정(내용·정렬·흐름). */
+	function patchText(index: number, patch: Partial<TextItem>) {
+		setCells((prev) =>
+			prev.map((cell, i) =>
+				i === index && cell.text ? { ...cell, text: { ...cell.text, ...patch } } : cell,
+			),
+		)
+	}
+	/** 교체·제거된 blob URL을 즉시 해제해 세션 동안의 메모리 누수를 막는다. */
+	function revokeBlob(url: string | null | undefined) {
+		if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
+	}
+	/** 이미지 아이템 부분 수정(src·크기). */
+	function patchImage(index: number, patch: Partial<ImageItem>) {
+		setCells((prev) =>
+			prev.map((cell, i) =>
+				i === index && cell.image ? { ...cell, image: { ...cell.image, ...patch } } : cell,
+			),
+		)
+	}
+	function removeItem(index: number, kind: ItemKind) {
+		setCells((prev) => prev.map((cell, i) => (i === index ? { ...cell, [kind]: null } : cell)))
+		setSelectedId(null)
+	}
+	/** 아이템을 다른 셀로 이동 — 대상 셀의 같은 kind를 덮어쓰고 원본을 비운다. */
+	function moveItem(index: number, kind: ItemKind, targetIndex: number) {
+		if (targetIndex === index) return
+		setCells((prev) => {
+			const value = prev[index][kind]
+			return prev.map((cell, i) => {
+				if (i === index) return { ...cell, [kind]: null }
+				if (i === targetIndex) return { ...cell, [kind]: value }
+				return cell
+			})
+		})
+	}
+
+	function setWeight(axis: 'row' | 'col', index: number, value: number) {
+		const clamped = Number.isFinite(value) && value > 0 ? Math.round(value) : 1
+		;(axis === 'row' ? setRows : setCols)((prev) =>
+			prev.map((w, i) => (i === index ? clamped : w)),
+		)
+	}
+	// 행/열 추가·삭제 시 cells(w*h flat)를 리맵해 기존 셀 내용을 (row,col) 기준으로 보존한다.
+	const w = cols.length
+	const h = rows.length
+	// 키보드 재배치: 선택 요소를 화살표로 인접 셀에 옮긴다(포인터 드래그의 셀 스냅과 동일 동작).
+	function moveSelectedByArrow(index: number, kind: ItemKind, key: string) {
+		const col = index % w
+		const row = Math.floor(index / w)
+		let target = index
+		if (key === 'ArrowLeft' && col > 0) target = index - 1
+		else if (key === 'ArrowRight' && col < w - 1) target = index + 1
+		else if (key === 'ArrowUp' && row > 0) target = index - w
+		else if (key === 'ArrowDown' && row < h - 1) target = index + w
+		else return
+		moveItem(index, kind, target)
+		setSelectedId(`${target}:${kind}`)
+	}
+	function addTrack(axis: 'row' | 'col') {
+		if (axis === 'row') {
+			setRows((prev) => [...prev, 1])
+			setCells((prev) => [...prev, ...Array.from({ length: w }, emptyCell)])
+		} else {
+			setCols((prev) => [...prev, 1])
+			setCells((prev) => {
+				const next: Cell[] = []
+				for (let r = 0; r < h; r++) {
+					for (let c = 0; c < w; c++) next.push(prev[r * w + c])
+					next.push(emptyCell())
+				}
+				return next
+			})
+		}
+	}
+	function removeTrack(axis: 'row' | 'col', index: number) {
+		if (axis === 'row') {
+			if (h <= 1) return
+			setRows((prev) => prev.filter((_, i) => i !== index))
+			setCells((prev) => prev.filter((_, i) => Math.floor(i / w) !== index))
+		} else {
+			if (w <= 1) return
+			setCols((prev) => prev.filter((_, i) => i !== index))
+			setCells((prev) => prev.filter((_, i) => i % w !== index))
+		}
 	}
 
 	const template = useMemo<JsonTemplate>(() => {
@@ -578,6 +607,11 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 										key={id}
 										ref={isSelected ? setMoveableTarget : undefined}
 										onClick={() => setSelectedId(isSelected ? null : id)}
+										onKeyDown={(e) => {
+											if (!isSelected || !e.key.startsWith('Arrow')) return
+											e.preventDefault()
+											moveSelectedByArrow(index, kind, e.key)
+										}}
 										className={`absolute cursor-move p-0 ${isSelected ? 'ring-2 ring-primary' : ''}`}
 										style={{
 											left: box.x * scale,
@@ -739,7 +773,9 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 							aria-label="배경 이미지"
 							onChange={(e) => {
 								const file = e.target.files?.[0]
-								if (file) setBgImage(URL.createObjectURL(file))
+								if (!file) return
+								revokeBlob(bgImage)
+								setBgImage(URL.createObjectURL(file))
 							}}
 						/>
 						{bgImage && (
@@ -747,7 +783,10 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 								size="sm"
 								variant="ghost"
 								className="self-start text-destructive"
-								onClick={() => setBgImage(null)}
+								onClick={() => {
+									revokeBlob(bgImage)
+									setBgImage(null)
+								}}
 							>
 								배경 이미지 제거
 							</Button>
@@ -888,10 +927,11 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 										accept="image/*"
 										onChange={(e) => {
 											const file = e.target.files?.[0]
-											if (file)
-												patchImage(selected.index, {
-													src: URL.createObjectURL(file),
-												})
+											if (!file) return
+											revokeBlob(selected.image?.src)
+											patchImage(selected.index, {
+												src: URL.createObjectURL(file),
+											})
 										}}
 									/>
 									{/* 셀 크기와 무관한 임의 크기 — 입력 또는 캔버스의 se 핸들 드래그로 조절 */}

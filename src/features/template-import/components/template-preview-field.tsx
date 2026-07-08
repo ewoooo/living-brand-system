@@ -13,7 +13,10 @@ import { type CSSProperties, useMemo, useState } from 'react'
 import { flushSync } from 'react-dom'
 import Moveable from 'react-moveable'
 import { TemplateRenderer } from '@/components/template-renderer'
-import { isUnauthorizedAssetCollection } from '@/features/template-import/utils/validate-authorized-assets'
+import {
+	countUnauthorizedImages,
+	isUnauthorizedAssetCollection,
+} from '@/features/template-import/utils/validate-authorized-assets'
 import {
 	AUTHORIZED_ASSET_COLLECTIONS,
 	type JsonFlowElement,
@@ -77,20 +80,6 @@ function selectOneOf<T extends string>(allowed: readonly T[], apply: (value: T) 
 			apply(value as T)
 		}
 	}
-}
-
-/** 스택 하위까지 포함한 비인가 이미지 수 — 경고 배너와 오버레이 표시가 함께 쓴다. */
-function countUnauthorizedImages(elements: readonly AnyElement[]): number {
-	return elements.reduce((total, element) => {
-		if (element.type === 'stack') {
-			return total + countUnauthorizedImages(element.children)
-		}
-		if (element.type === 'image' && isUnauthorizedAssetCollection(element.assetCollection)) {
-			return total + 1
-		}
-
-		return total
-	}, 0)
 }
 
 function overlayButtonStyle(
@@ -273,16 +262,30 @@ export default function TemplatePreviewField() {
 							keepRatio={false}
 							origin={false}
 							renderDirections={['se']}
+							// 제스처 중에는 DOM만 갱신하고, 종료 시 1회만 폼에 커밋한다.
+							// (매 프레임 dispatchFields + 전체 트리 재파싱을 피한다)
 							onDrag={(event) => {
+								event.target.style.transform = event.transform
+							}}
+							onDragEnd={(event) => {
+								event.target.style.transform = ''
+								if (!event.lastEvent) return
 								updateSelected({
-									x: Math.round(event.left / scale),
-									y: Math.round(event.top / scale),
+									x: Math.round(event.lastEvent.left / scale),
+									y: Math.round(event.lastEvent.top / scale),
 								})
 							}}
 							onResize={(event) => {
+								event.target.style.width = `${event.width}px`
+								event.target.style.height = `${event.height}px`
+								event.target.style.transform = event.drag.transform
+							}}
+							onResizeEnd={(event) => {
+								event.target.style.transform = ''
+								if (!event.lastEvent) return
 								updateSelected({
-									width: Math.max(1, Math.round(event.width / scale)),
-									height: Math.max(1, Math.round(event.height / scale)),
+									width: Math.max(1, Math.round(event.lastEvent.width / scale)),
+									height: Math.max(1, Math.round(event.lastEvent.height / scale)),
 								})
 							}}
 						/>
@@ -330,6 +333,51 @@ export default function TemplatePreviewField() {
 									}
 								/>
 							</>
+						)}
+						{/* 위치·크기는 포인터 드래그 외에 키보드로도 조절할 수 있어야 한다(docs/08) */}
+						{selected.type !== 'stack' && 'x' in selected && (
+							<div style={{ display: 'flex', gap: 8 }}>
+								{(['x', 'y'] as const).map((axis) => (
+									<div key={axis} style={{ flex: 1 }}>
+										<TextInput
+											path={`templatePreview-${axis}`}
+											label={axis === 'x' ? 'X (px)' : 'Y (px)'}
+											value={String(selected[axis])}
+											onChange={(
+												event: React.ChangeEvent<HTMLInputElement>,
+											) => {
+												const value = Number(event.target.value)
+												if (Number.isFinite(value)) {
+													updateSelected({ [axis]: Math.round(value) })
+												}
+											}}
+										/>
+									</div>
+								))}
+							</div>
+						)}
+						{selected.type !== 'stack' && (
+							<div style={{ display: 'flex', gap: 8 }}>
+								{(['width', 'height'] as const).map((dimension) => (
+									<div key={dimension} style={{ flex: 1 }}>
+										<TextInput
+											path={`templatePreview-${dimension}`}
+											label={
+												dimension === 'width' ? '너비 (px)' : '높이 (px)'
+											}
+											value={String(selected[dimension])}
+											onChange={(
+												event: React.ChangeEvent<HTMLInputElement>,
+											) => {
+												const value = Number(event.target.value)
+												if (Number.isFinite(value) && value > 0) {
+													updateSelected({ [dimension]: value })
+												}
+											}}
+										/>
+									</div>
+								))}
+							</div>
 						)}
 						{selected.type === 'text' && (
 							<>
@@ -436,30 +484,6 @@ export default function TemplatePreviewField() {
 						)}
 						{selected.type === 'image' && (
 							<>
-								<div style={{ display: 'flex', gap: 8 }}>
-									{(['width', 'height'] as const).map((dimension) => (
-										<div key={dimension} style={{ flex: 1 }}>
-											<TextInput
-												path={`templatePreview-${dimension}`}
-												label={
-													dimension === 'width'
-														? '너비 (px)'
-														: '높이 (px)'
-												}
-												value={String(selected[dimension])}
-												onChange={(
-													event: React.ChangeEvent<HTMLInputElement>,
-												) => {
-													const value = Number(event.target.value)
-
-													if (Number.isFinite(value) && value > 0) {
-														updateSelected({ [dimension]: value })
-													}
-												}}
-											/>
-										</div>
-									))}
-								</div>
 								<SelectInput
 									name="templatePreviewObjectFit"
 									path="templatePreviewObjectFit"

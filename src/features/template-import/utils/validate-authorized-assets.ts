@@ -12,6 +12,21 @@ export function isUnauthorizedAssetCollection(
 	return collection === 'template-assets'
 }
 
+/** 스택 하위까지 포함한 비인가 이미지 수 — 경고 배너와 오버레이 표시가 함께 쓴다. */
+export function countUnauthorizedImages(
+	elements: readonly (JsonFlowElement | JsonTemplateElement)[],
+): number {
+	return elements.reduce((total, element) => {
+		if (element.type === 'stack') {
+			return total + countUnauthorizedImages(element.children)
+		}
+		if (element.type === 'image' && isUnauthorizedAssetCollection(element.assetCollection)) {
+			return total + 1
+		}
+		return total
+	}, 0)
+}
+
 export interface AuthorizedImageRef {
 	collection: (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
 	assetId: number

@@ -82,6 +82,11 @@ function GuidelineSearch({ sections }: { sections: GuidelineSearchSection[] }) {
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.key === 'k' && (event.metaKey || event.ctrlKey)) {
+				const target = (event.target ?? document.activeElement) as HTMLElement | null
+				const tagName = target?.tagName
+				if (tagName === 'INPUT' || tagName === 'TEXTAREA' || target?.isContentEditable) {
+					return
+				}
 				event.preventDefault()
 				setOpen((current) => !current)
 			}
@@ -94,22 +99,22 @@ function GuidelineSearch({ sections }: { sections: GuidelineSearchSection[] }) {
 	return (
 		<>
 			<Button
-				aria-label="Toggle guideline search"
+				aria-label="가이드라인 검색"
 				variant="secondary"
 				className="py-4 pl-3"
 				onClick={() => setOpen((current) => !current)}
 			>
-				<span className="pr-8 text-neutral-500">Search Guideline...</span>
+				<span className="pr-8 text-neutral-500">가이드라인 검색...</span>
 				<KbdGroup>
 					<Kbd className="bg-neutral-500/10">⌘</Kbd>
 					<Kbd className="bg-neutral-500/10">K</Kbd>
 				</KbdGroup>
 			</Button>
-			<CommandDialog open={open} onOpenChange={setOpen} title="Search Guideline">
+			<CommandDialog open={open} onOpenChange={setOpen} title="가이드라인 검색">
 				<Command>
-					<CommandInput placeholder="Search guideline pages..." />
+					<CommandInput placeholder="가이드라인 페이지 검색..." />
 					<CommandList>
-						<CommandEmpty>No results found.</CommandEmpty>
+						<CommandEmpty>검색 결과가 없습니다.</CommandEmpty>
 						{sections.map((section) => (
 							<CommandGroup heading={section.title} key={section.id}>
 								{section.pages.map((page) => (

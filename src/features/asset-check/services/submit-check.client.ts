@@ -38,8 +38,39 @@ export async function submitAiCheck(
 	return results
 }
 
+export interface RunFullCheckCallbacks {
+	/** 서버 즉시 판정 결과. pendingRuleKeys가 남으면 AI 후속 판정이 이어진다. */
+	onServerResult: (result: SubmitCheckResult) => void
+	/** AI 후속 판정 결과(실패 시 폴백). checkSessionId로 어느 검수 세션의 결과인지 식별한다. */
+	onAiResult: (checkSessionId: number, results: Record<string, CheckResult>) => void
+}
+
+/**
+ * 한 이미지의 검수 흐름을 순서대로 실행한다: 서버 즉시 판정 → (남은 AI 룰이 있으면)
+ * AI 후속 판정(실패 시 폴백). 요청 순서와 폴백은 이 서비스가 소유하고,
+ * 화면 상태 반영은 콜백을 받은 호출자(CheckImageProvider)가 담당한다.
+ * 서버 즉시 판정 실패는 그대로 throw하며, 호출자가 실패 상태로 반영한다.
+ */
+export async function runFullCheck(
+	file: File,
+	scenarioKey: string,
+	{ onServerResult, onAiResult }: RunFullCheckCallbacks,
+): Promise<void> {
+	const serverResult = await submitCheck(file, scenarioKey)
+	onServerResult(serverResult)
+
+	if (serverResult.pendingRuleKeys.length === 0) return
+
+	const aiResults = await submitAiCheck(
+		file,
+		serverResult.checkSessionId,
+		serverResult.pendingRuleKeys,
+	).catch(() => aiFailureResults(serverResult.pendingRuleKeys))
+	onAiResult(serverResult.checkSessionId, aiResults)
+}
+
 /** AI 검수 실패 시 해당 룰들을 "담당자 검토 필요"로 채우는 폴백 결과. */
-export function aiFailureResults(ruleKeys: string[]): Record<string, CheckResult> {
+function aiFailureResults(ruleKeys: string[]): Record<string, CheckResult> {
 	const detail = 'AI 평가 실패'
 	return Object.fromEntries(
 		ruleKeys.map((key) => [

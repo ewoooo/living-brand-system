@@ -3,17 +3,9 @@
 import { Moon, Screen, Sun } from '@carbon/icons-react'
 import { useEffect, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { applyTheme } from '@/lib/theme'
 
 type Theme = 'light' | 'dark' | 'system'
-
-function applyTheme() {
-	document.documentElement.classList.toggle(
-		'dark',
-		localStorage.theme === 'dark' ||
-			(!('theme' in localStorage) &&
-				window.matchMedia('(prefers-color-scheme: dark)').matches),
-	)
-}
 
 function getTheme(): Theme {
 	return localStorage.theme === 'light' || localStorage.theme === 'dark'
@@ -47,7 +39,7 @@ export function ThemeToggle() {
 		<ToggleGroup
 			type="single"
 			value={theme}
-			aria-label="Theme"
+			aria-label="테마"
 			className="rounded-full bg-muted p-1"
 			spacing={1}
 			onValueChange={(value) => {
@@ -61,21 +53,21 @@ export function ThemeToggle() {
 		>
 			<ToggleGroupItem
 				value="system"
-				aria-label="Use system theme"
+				aria-label="시스템 테마 사용"
 				className="size-8 rounded-full p-0! data-[state=on]:bg-background data-[state=on]:shadow-xs"
 			>
 				<Screen data-icon="inline-start" />
 			</ToggleGroupItem>
 			<ToggleGroupItem
 				value="light"
-				aria-label="Use light theme"
+				aria-label="라이트 테마 사용"
 				className="size-8 rounded-full p-0! data-[state=on]:bg-background data-[state=on]:shadow-xs"
 			>
 				<Sun data-icon="inline-start" />
 			</ToggleGroupItem>
 			<ToggleGroupItem
 				value="dark"
-				aria-label="Use dark theme"
+				aria-label="다크 테마 사용"
 				className="size-8 rounded-full p-0! data-[state=on]:bg-background data-[state=on]:shadow-xs"
 			>
 				<Moon data-icon="inline-start" />

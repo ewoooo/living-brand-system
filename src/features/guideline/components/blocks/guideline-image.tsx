@@ -1,8 +1,6 @@
-type ImageValue = {
-	url?: string | null
-	alt?: string | null
-	name?: string | null
-}
+// 특정 Payload 컬렉션에 결합하지 않는다 — url/alt/name(색은 hex)만 있으면 무엇이든 렌더한다.
+type ImageValue = { url?: string | null; alt?: string | null; name?: string | null }
+type ColorValue = { hex?: string | null }
 
 export function GuidelineImage({
 	image,
@@ -11,9 +9,9 @@ export function GuidelineImage({
 	scale = '100',
 	className,
 }: {
-	image: unknown
+	image?: number | ImageValue | null
 	alt?: string
-	backgroundColor?: unknown
+	backgroundColor?: number | ColorValue | null
 	scale?: string | null
 	className?: string
 }) {
@@ -41,14 +39,11 @@ export function GuidelineImage({
 	)
 }
 
-function getImage(value: unknown): ImageValue | null {
-	return value && typeof value === 'object' ? (value as ImageValue) : null
+// 관계 필드는 populate되면 객체, 아니면 id(number) — 객체일 때만 렌더 값으로 쓴다.
+function getImage(value?: number | ImageValue | null): ImageValue | null {
+	return value && typeof value === 'object' ? value : null
 }
 
-function getColorHex(value: unknown): string | null {
-	if (!value || typeof value !== 'object' || !('hex' in value)) {
-		return null
-	}
-
-	return typeof value.hex === 'string' ? value.hex : null
+function getColorHex(value?: number | ColorValue | null): string | null {
+	return value && typeof value === 'object' ? (value.hex ?? null) : null
 }

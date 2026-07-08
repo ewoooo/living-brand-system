@@ -5,7 +5,7 @@ export default async function GuidelineIndexPage() {
 	const { title, sections } = await getGuidelineNavigation()
 
 	return (
-		<main className="w-full max-w-[1250px] px-8 py-10">
+		<div className="w-full max-w-[1250px] px-8 py-10">
 			<header className="mb-8">
 				<hgroup className="mb-4">
 					<h2 className="pb-1 text-muted-foreground text-xl">시작하기</h2>
@@ -37,6 +37,6 @@ export default async function GuidelineIndexPage() {
 					))}
 				</section>
 			</section>
-		</main>
+		</div>
 	)
 }
