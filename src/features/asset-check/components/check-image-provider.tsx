@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, type ReactNode, use, useState } from 'react'
+import { createContext, type ReactNode, use, useMemo, useState } from 'react'
 import { CHECK_SCENARIOS, getCheckScenario } from '@/features/asset-check/scenarios'
 import {
 	aiFailureResults,
@@ -130,7 +130,11 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 		void runServerCheck(target.id, target.file, target.scenarioKey)
 	}
 
-	const selected = images.find((image) => image.id === selectedId) ?? null
+	// selected 참조를 안정화해 소비 측 useMemo(뷰 계산)가 불필요하게 무효화되지 않게 한다
+	const selected = useMemo(
+		() => images.find((image) => image.id === selectedId) ?? null,
+		[images, selectedId],
+	)
 
 	const value: CheckImageContextValue = {
 		images,
