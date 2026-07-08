@@ -1,22 +1,50 @@
 import { env } from '@/env'
-import { composeImageRequest, type ImageSize } from '@/features/image-generation/presets'
+import { composeImageRequest } from '@/features/image-generation/presets'
 import { generateBrandImages } from '@/features/image-generation/services/generate-image.service'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
 export const maxDuration = 60
 
-const COLORS = ['#e2e8f0', '#cbd5e1', '#94a3b8', '#a5b4fc', '#fca5a5', '#86efac']
+// ponytail: 임시 dev 프로바이더 (Pollinations FLUX, 키·가입 불필요). 실제 생성 파이프라인 검증용.
+// 서버에서 순차 fetch 후 data URI로 반환해 브라우저의 외부 이미지 로드 누락을 없앤다.
+// OPENAI_API_KEY 오면 이 두 함수와 아래 no-key 분기를 통째로 지우면 됨. 프롬프트가 외부 무료 서비스로 전송됨 — 민감 입력 금지.
+async function fetchPollinationsDataUri(
+	prompt: string,
+	width: string,
+	height: string,
+	seed: number,
+): Promise<string | null> {
+	const query = new URLSearchParams({
+		width,
+		height,
+		seed: String(seed),
+		nologo: 'true',
+		model: 'flux',
+	})
+	const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${query}`
+	for (let attempt = 0; attempt < 2; attempt++) {
+		try {
+			const res = await fetch(url, { signal: AbortSignal.timeout(30_000) })
+			if (!res.ok) continue
+			const buffer = Buffer.from(await res.arrayBuffer())
+			const mediaType = res.headers.get('content-type') ?? 'image/jpeg'
+			return `data:${mediaType};base64,${buffer.toString('base64')}`
+		} catch {
+			// 타임아웃/네트워크 오류 → 재시도
+		}
+	}
+	return null
+}
 
-function placeholder(label: string, size: ImageSize, i: number): string {
-	const bg = COLORS[i % COLORS.length]
-	const [w, h] = size.split('x').map(Number)
-	const text = label.length > 40 ? `${label.slice(0, 40)}…` : label
-	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-<rect width="${w}" height="${h}" fill="${bg}"/>
-<text x="${w / 2}" y="${h / 2 - 8}" font-family="sans-serif" font-size="28" fill="#334155" text-anchor="middle">placeholder ${i + 1}</text>
-<text x="${w / 2}" y="${h / 2 + 24}" font-family="sans-serif" font-size="18" fill="#475569" text-anchor="middle">${text.replace(/[<&>]/g, '')}</text>
-</svg>`
-	return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`
+async function devGenerate(prompt: string, size: string, n: number): Promise<string[]> {
+	const [width, height] = size.split('x')
+	const base = Math.floor(Math.random() * 1_000_000)
+	const images: string[] = []
+	for (let i = 0; i < n; i++) {
+		const uri = await fetchPollinationsDataUri(prompt, width, height, base + i)
+		if (uri) images.push(uri)
+	}
+	return images
 }
 
 export async function POST(request: Request) {
@@ -39,9 +67,12 @@ export async function POST(request: Request) {
 	const n = Math.min(Math.max(count ?? 4, 1), 6)
 	const { prompt, size } = composeImageRequest(userInput, presetId)
 
-	// ponytail: 키 없으면 dev 폴백(무료 가짜 이미지, 인증 없음). 키가 있으면 아래 유료 경로로 감.
+	// 키 없으면 임시 dev 프로바이더로 실제 이미지 반환(인증 없음). 키 있으면 아래 유료 경로.
 	if (!env.OPENAI_API_KEY) {
-		const images = Array.from({ length: n }, (_, i) => placeholder(userInput, size, i))
+		const images = await devGenerate(prompt, size, n)
+		if (images.length === 0) {
+			return Response.json({ message: '임시 프로바이더 생성 실패' }, { status: 502 })
+		}
 		return Response.json({ images })
 	}
 
