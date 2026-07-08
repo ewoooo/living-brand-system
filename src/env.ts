@@ -44,5 +44,6 @@ export const env = createEnv({
 		S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY,
 		VERCEL_URL: process.env.VERCEL_URL,
 	},
+	isServer: typeof window === 'undefined' || process.env.VITEST === 'true',
 	emptyStringAsUndefined: true,
 })
