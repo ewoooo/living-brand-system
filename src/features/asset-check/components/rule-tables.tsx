@@ -10,11 +10,13 @@ import {
 	useMemo,
 	useState,
 } from 'react'
+import { Empty, EmptyDescription } from '@/components/ui/empty'
 import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
+import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
 import {
 	buildCheckReviewView,
 	type CheckReviewRuleRow,
@@ -33,19 +35,6 @@ const EXECUTOR: Record<
 	heuristic: { label: 'heuristic', Icon: AiGenerate, desc: 'AI 평가를 경유하는 기준' },
 	advisory: { label: 'advisory', Icon: User, desc: '브랜드 담당자 확인이 필요한 기준' },
 }
-
-const STATUS = {
-	pass: {
-		label: '통과',
-		className: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
-	},
-	ok: { label: '적합', className: 'bg-sky-500/15 text-sky-700 dark:text-sky-400' },
-	needs_review: {
-		label: '검토',
-		className: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
-	},
-	fail: { label: '미통과', className: 'bg-rose-500/15 text-rose-700 dark:text-rose-400' },
-} as const
 
 const RULE_BORDER = 'border-neutral-200 border-t dark:border-neutral-800'
 
@@ -260,10 +249,10 @@ function RuleStatusBadge({
 				transition={{ duration: 0.16, ease: 'easeOut' }}
 				className={cn(
 					'inline-block whitespace-nowrap rounded px-1.5 py-0.5 font-medium text-[11px]',
-					STATUS[outcome.rawResult.status].className,
+					CHECK_STATUS[outcome.rawResult.status].pill,
 				)}
 			>
-				{STATUS[outcome.rawResult.status].label}
+				{CHECK_STATUS[outcome.rawResult.status].label}
 			</motion.span>
 		)
 	}
@@ -442,9 +431,9 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 					</TableBody>
 				</Table>
 				{showFailOnly && rows.length === 0 && (
-					<p className="py-8 text-center text-muted-foreground text-sm">
-						미통과 항목이 없습니다.
-					</p>
+					<Empty>
+						<EmptyDescription>미통과 항목이 없습니다.</EmptyDescription>
+					</Empty>
 				)}
 			</div>
 		</TooltipProvider>

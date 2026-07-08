@@ -338,44 +338,36 @@ export default function TemplatePreviewField() {
 						{selected.type !== 'stack' && 'x' in selected && (
 							<div style={{ display: 'flex', gap: 8 }}>
 								{(['x', 'y'] as const).map((axis) => (
-									<div key={axis} style={{ flex: 1 }}>
-										<TextInput
-											path={`templatePreview-${axis}`}
-											label={axis === 'x' ? 'X (px)' : 'Y (px)'}
-											value={String(selected[axis])}
-											onChange={(
-												event: React.ChangeEvent<HTMLInputElement>,
-											) => {
-												const value = Number(event.target.value)
-												if (Number.isFinite(value)) {
-													updateSelected({ [axis]: Math.round(value) })
-												}
-											}}
-										/>
-									</div>
+									<NumberField
+										key={axis}
+										path={`templatePreview-${axis}`}
+										label={axis === 'x' ? 'X (px)' : 'Y (px)'}
+										value={String(selected[axis])}
+										onCommit={(raw) => {
+											const value = Number(raw)
+											if (Number.isFinite(value)) {
+												updateSelected({ [axis]: Math.round(value) })
+											}
+										}}
+									/>
 								))}
 							</div>
 						)}
 						{selected.type !== 'stack' && (
 							<div style={{ display: 'flex', gap: 8 }}>
 								{(['width', 'height'] as const).map((dimension) => (
-									<div key={dimension} style={{ flex: 1 }}>
-										<TextInput
-											path={`templatePreview-${dimension}`}
-											label={
-												dimension === 'width' ? '너비 (px)' : '높이 (px)'
+									<NumberField
+										key={dimension}
+										path={`templatePreview-${dimension}`}
+										label={dimension === 'width' ? '너비 (px)' : '높이 (px)'}
+										value={String(selected[dimension])}
+										onCommit={(raw) => {
+											const value = Number(raw)
+											if (Number.isFinite(value) && value > 0) {
+												updateSelected({ [dimension]: value })
 											}
-											value={String(selected[dimension])}
-											onChange={(
-												event: React.ChangeEvent<HTMLInputElement>,
-											) => {
-												const value = Number(event.target.value)
-												if (Number.isFinite(value) && value > 0) {
-													updateSelected({ [dimension]: value })
-												}
-											}}
-										/>
-									</div>
+										}}
+									/>
 								))}
 							</div>
 						)}
@@ -446,38 +438,35 @@ export default function TemplatePreviewField() {
 								/>
 								<div style={{ display: 'flex', gap: 8 }}>
 									{(['maxLength', 'maxLines'] as const).map((constraint) => (
-										<div key={constraint} style={{ flex: 1 }}>
-											<TextInput
-												path={`templatePreview-${constraint}`}
-												label={
-													constraint === 'maxLength'
-														? '최대 글자수'
-														: '최대 줄수'
+										<NumberField
+											key={constraint}
+											path={`templatePreview-${constraint}`}
+											label={
+												constraint === 'maxLength'
+													? '최대 글자수'
+													: '최대 줄수'
+											}
+											placeholder="제한 없음"
+											value={
+												selected[constraint] != null
+													? String(selected[constraint])
+													: ''
+											}
+											onCommit={(raw) => {
+												const trimmed = raw.trim()
+
+												if (trimmed === '') {
+													updateSelected({ [constraint]: undefined })
+													return
 												}
-												placeholder="제한 없음"
-												value={
-													selected[constraint] != null
-														? String(selected[constraint])
-														: ''
+
+												const value = Number(trimmed)
+
+												if (Number.isInteger(value) && value > 0) {
+													updateSelected({ [constraint]: value })
 												}
-												onChange={(
-													event: React.ChangeEvent<HTMLInputElement>,
-												) => {
-													const raw = event.target.value.trim()
-
-													if (raw === '') {
-														updateSelected({ [constraint]: undefined })
-														return
-													}
-
-													const value = Number(raw)
-
-													if (Number.isInteger(value) && value > 0) {
-														updateSelected({ [constraint]: value })
-													}
-												}}
-											/>
-										</div>
+											}}
+										/>
 									))}
 								</div>
 							</>
@@ -602,6 +591,35 @@ function ColorInput({
 
 function normalizeColor(value: string) {
 	return /^#[0-9a-f]{6}$/i.test(value) ? value : '#000000'
+}
+
+/** flex:1 래퍼 + 숫자 TextInput. 파싱·검증은 호출부가 onCommit(raw)에서 담당한다. */
+function NumberField({
+	path,
+	label,
+	value,
+	placeholder,
+	onCommit,
+}: {
+	path: string
+	label: string
+	value: string
+	placeholder?: string
+	onCommit: (raw: string) => void
+}) {
+	return (
+		<div style={{ flex: 1 }}>
+			<TextInput
+				path={path}
+				label={label}
+				placeholder={placeholder}
+				value={value}
+				onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+					onCommit(event.target.value)
+				}
+			/>
+		</div>
+	)
 }
 
 function imageFilterPreset(filter?: string) {
