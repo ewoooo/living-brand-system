@@ -13,7 +13,10 @@ import { type CSSProperties, useMemo, useState } from 'react'
 import { flushSync } from 'react-dom'
 import Moveable from 'react-moveable'
 import { TemplateRenderer } from '@/components/template-renderer'
-import { isUnauthorizedAssetCollection } from '@/features/template-import/utils/validate-authorized-assets'
+import {
+	countUnauthorizedImages,
+	isUnauthorizedAssetCollection,
+} from '@/features/template-import/utils/validate-authorized-assets'
 import {
 	AUTHORIZED_ASSET_COLLECTIONS,
 	type JsonFlowElement,
@@ -77,20 +80,6 @@ function selectOneOf<T extends string>(allowed: readonly T[], apply: (value: T) 
 			apply(value as T)
 		}
 	}
-}
-
-/** 스택 하위까지 포함한 비인가 이미지 수 — 경고 배너와 오버레이 표시가 함께 쓴다. */
-function countUnauthorizedImages(elements: readonly AnyElement[]): number {
-	return elements.reduce((total, element) => {
-		if (element.type === 'stack') {
-			return total + countUnauthorizedImages(element.children)
-		}
-		if (element.type === 'image' && isUnauthorizedAssetCollection(element.assetCollection)) {
-			return total + 1
-		}
-
-		return total
-	}, 0)
 }
 
 function overlayButtonStyle(
