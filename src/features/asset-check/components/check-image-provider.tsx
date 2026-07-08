@@ -50,12 +50,16 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 				file,
 				checkScenarioKey,
 			)
-			patchImage(id, () => ({
-				checkSessionId,
-				results,
-				pendingRuleKeys,
-				status: pendingRuleKeys.length > 0 ? 'running' : 'completed',
-			}))
+			patchImage(id, (image) => {
+				// 대기 중 시나리오가 바뀌면 이전 시나리오 판정은 버린다
+				if (image.scenarioKey !== checkScenarioKey) return {}
+				return {
+					checkSessionId,
+					results,
+					pendingRuleKeys,
+					status: pendingRuleKeys.length > 0 ? 'running' : 'completed',
+				}
+			})
 			if (pendingRuleKeys.length > 0) {
 				void finishAiCheck(id, file, checkSessionId, pendingRuleKeys)
 			}
@@ -74,11 +78,15 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 		const results = await submitAiCheck(file, checkSessionId, pendingRuleKeys).catch(() =>
 			aiFailureResults(pendingRuleKeys),
 		)
-		patchImage(id, (image) => ({
-			results: { ...image.results, ...results },
-			pendingRuleKeys: undefined,
-			status: 'completed',
-		}))
+		patchImage(id, (image) => {
+			// 시나리오 변경·재검수로 세션이 교체됐으면 이 응답은 버린다
+			if (image.checkSessionId !== checkSessionId) return {}
+			return {
+				results: { ...image.results, ...results },
+				pendingRuleKeys: undefined,
+				status: 'completed',
+			}
+		})
 	}
 
 	function addFiles(files: FileList | File[]) {
@@ -104,12 +112,13 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 		const scenario = getCheckScenario(key)
 		setScenarioKeyValue(scenario.key)
 		if (!selectedId) return
-		patchImage(selectedId, (image) => ({
+		// 시나리오가 바뀌면 진행 중 검수는 무효이므로 idle로 되돌리고 재검수를 기다린다
+		patchImage(selectedId, () => ({
 			checkSessionId: undefined,
 			scenarioKey: scenario.key,
 			results: undefined,
 			pendingRuleKeys: undefined,
-			status: image.status === 'running' ? image.status : 'idle',
+			status: 'idle',
 		}))
 	}
 
@@ -117,6 +126,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 		if (!selectedId) return
 		const target = images.find((image) => image.id === selectedId)
 		if (!target) return
+		if (target.status === 'running') return // 검수 진행 중 중복 실행 방지
 		void runServerCheck(target.id, target.file, target.scenarioKey)
 	}
 
