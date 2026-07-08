@@ -19,11 +19,14 @@ export function ImageUploadCarousel() {
 	const { images, selectedId, select, addFiles } = useCheckImages()
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [carouselApi, setCarouselApi] = useState<CarouselApi>()
+	const selectStateRef = useRef({ images, select })
+	selectStateRef.current = { images, select }
 
 	useEffect(() => {
 		if (!carouselApi) return
 		const api = carouselApi
 		function handleSelect() {
+			const { images, select } = selectStateRef.current
 			const image = images[api.selectedScrollSnap()]
 			if (image) select(image.id)
 		}
@@ -31,7 +34,7 @@ export function ImageUploadCarousel() {
 		return () => {
 			api.off('select', handleSelect)
 		}
-	}, [carouselApi, images, select])
+	}, [carouselApi])
 
 	useEffect(() => {
 		if (!carouselApi || !selectedId) return
