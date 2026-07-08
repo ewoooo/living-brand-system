@@ -1,7 +1,7 @@
 import { cache } from 'react'
 import {
-	listPublishedPageNavItems,
-	listPublishedSections,
+	listPublishedChapters,
+	listPublishedSectionNavItems,
 } from '../repositories/guideline-view.payload.repository'
 import {
 	type GetGuidelineMetadataOutput,
@@ -11,12 +11,12 @@ import {
 export interface GetGuidelineNavigationOutput {
 	metadata: GetGuidelineMetadataOutput
 	title: string
-	sections: {
+	chapters: {
 		id: number
 		title: string
 		description: string | null
 		href: string
-		pages: {
+		sections: {
 			id: number
 			title: string
 			href: string
@@ -25,33 +25,33 @@ export interface GetGuidelineNavigationOutput {
 }
 
 /**
- * Creator UI 사이드바는 발행된 가이드라인의 목차 정보만 읽는다.
- * 본문 렌더링은 page/section service가 담당한다.
+ * Creator UI 사이드바는 발행된 가이드라인의 목차 정보만 읽는다(장 → 섹션).
+ * 본문과 섹션 하위 페이지 렌더링은 chapter/section service가 담당한다.
  * Payload 조회는 guideline-view repository가 소유한다.
  */
 export const getGuidelineNavigation = cache(async (): Promise<GetGuidelineNavigationOutput> => {
 	try {
-		const [metadata, sections, pages] = await Promise.all([
+		const [metadata, chapters, sections] = await Promise.all([
 			getGuidelineMetadata(),
-			listPublishedSections(),
-			listPublishedPageNavItems(),
+			listPublishedChapters(),
+			listPublishedSectionNavItems(),
 		])
 
 		return {
 			metadata,
 			title: metadata.documentTitle,
 			// ponytail: sidebar lists are tiny; index pages if this grows.
-			sections: sections.map((section) => ({
-				id: section.id,
-				title: section.title,
-				description: section.description || null,
-				href: `/guideline/${section.slug}`,
-				pages: pages
-					.filter((page) => page.section === section.id)
-					.map((page) => ({
-						id: page.id,
-						title: page.title,
-						href: `/guideline/${section.slug}#${page.slug}`,
+			chapters: chapters.map((chapter) => ({
+				id: chapter.id,
+				title: chapter.title,
+				description: chapter.description || null,
+				href: `/guideline/${chapter.slug}`,
+				sections: sections
+					.filter((section) => section.chapter === chapter.id)
+					.map((section) => ({
+						id: section.id,
+						title: section.title,
+						href: `/guideline/${chapter.slug}/${section.slug}`,
 					})),
 			})),
 		}
@@ -64,7 +64,7 @@ export const getGuidelineNavigation = cache(async (): Promise<GetGuidelineNaviga
 				issuedLabel: null,
 			},
 			title: 'Untitled Guideline',
-			sections: [],
+			chapters: [],
 		}
 	}
 })

@@ -17,6 +17,7 @@ import { BrandColors } from './collections/BrandColors'
 import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
 import { CheckSessions } from './collections/CheckSessions'
+import { GuidelineChapters } from './collections/GuidelineChapters'
 import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
@@ -77,6 +78,7 @@ export default buildConfig({
 		},
 	},
 	collections: [
+		GuidelineChapters,
 		GuidelineSections,
 		GuidelinePages,
 		Rules,
@@ -170,8 +172,33 @@ export default buildConfig({
 							}),
 					),
 					mcpTextTool(
+						'findChapters',
+						'Find live guideline top-level chapters and their ordering.',
+						mcpListParameters,
+						(args, req) =>
+							req.payload.find({
+								collection: 'chapters',
+								depth: 0,
+								draft: false,
+								fallbackLocale: 'en',
+								limit: mcpNumber(args.limit, 100),
+								locale: mcpLocale(args.locale),
+								overrideAccess: false,
+								page: mcpNumber(args.page, 1),
+								req,
+								sort: 'displayOrder',
+								user: req.user,
+								select: {
+									title: true,
+									slug: true,
+									description: true,
+									displayOrder: true,
+								},
+							}),
+					),
+					mcpTextTool(
 						'findSections',
-						'Find live guideline navigation sections and their page ordering.',
+						'Find live guideline sections, their parent chapter, and page ordering.',
 						mcpListParameters,
 						(args, req) =>
 							req.payload.find({
@@ -191,6 +218,7 @@ export default buildConfig({
 									slug: true,
 									description: true,
 									displayOrder: true,
+									chapter: true,
 								},
 							}),
 					),
@@ -235,10 +263,11 @@ export default buildConfig({
 			},
 		} as never),
 		searchPlugin({
-			collections: ['guideline-pages', 'sections'],
+			collections: ['guideline-pages', 'sections', 'chapters'],
 			defaultPriorities: {
 				'guideline-pages': 20,
 				sections: 10,
+				chapters: 5,
 			},
 			searchOverrides: {
 				access: {

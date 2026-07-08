@@ -10,10 +10,10 @@ import {
 export default async function GuidelineSectionPage({
 	params,
 }: {
-	params: Promise<{ sectionSlug: string }>
+	params: Promise<{ chapterSlug: string; sectionSlug: string }>
 }) {
-	const { sectionSlug } = await params
-	const sectionView = await getGuidelineSection(sectionSlug)
+	const { chapterSlug, sectionSlug } = await params
+	const sectionView = await getGuidelineSection(chapterSlug, sectionSlug)
 
 	if (!sectionView) {
 		notFound()
