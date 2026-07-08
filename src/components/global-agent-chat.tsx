@@ -19,9 +19,14 @@ export function GlobalAgentChat() {
 
 	function handleSubmit() {
 		if (isBusy) return
-		sendMessage(input.trim() ? { text: input, files } : { files: files as FileList }, {
-			body: { pagePath },
-		})
+		const text = input.trim()
+		if (text) {
+			sendMessage({ text, files }, { body: { pagePath } })
+		} else if (files?.length) {
+			sendMessage({ files }, { body: { pagePath } })
+		} else {
+			return
+		}
 		setInput('')
 		setFiles(undefined)
 	}
