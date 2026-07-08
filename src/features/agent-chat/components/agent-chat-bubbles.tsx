@@ -47,8 +47,9 @@ function AgentChatFileAttachments({ files }: { files: FileUIPart[] }) {
 
 	return (
 		<AttachmentGroup>
-			{files.map((file) => (
-				<AgentChatFileAttachment key={file.url} file={file} />
+			{files.map((file, index) => (
+				// biome-ignore lint/suspicious/noArrayIndexKey: same data-URL image can repeat, so url alone collides.
+				<AgentChatFileAttachment key={`${file.url}-${index}`} file={file} />
 			))}
 		</AttachmentGroup>
 	)

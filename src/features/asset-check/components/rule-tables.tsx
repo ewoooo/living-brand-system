@@ -2,7 +2,14 @@
 
 import { AiGenerate, ChevronDown, Ruler, User } from '@carbon/icons-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { type ComponentProps, type ComponentType, Fragment, type ReactNode, useState } from 'react'
+import {
+	type ComponentProps,
+	type ComponentType,
+	Fragment,
+	type ReactNode,
+	useMemo,
+	useState,
+} from 'react'
 import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -57,9 +64,10 @@ function RuleRow({
 	const shouldReduceMotion = useReducedMotion()
 
 	return (
-		<Fragment key={rowId}>
+		<Fragment>
 			<AnimatedRuleTableRow
 				id={anchorId ?? undefined}
+				role="button"
 				aria-expanded={open}
 				aria-label={`${rule.title} 상세 보기`}
 				rowIndex={rowIndex}
@@ -413,12 +421,10 @@ function ReferenceAssets({ assets }: { assets: Rule['referenceAssets'] }) {
 
 export function CheckSections({ sections }: { sections: CheckSection[] }) {
 	const { scenarioKey, selectedId, selected, showFailOnly } = useCheckImages()
-	const { rows } = buildCheckReviewView({
-		sections,
-		scenarioKey,
-		selected,
-		showFailOnly,
-	})
+	const { rows } = useMemo(
+		() => buildCheckReviewView({ sections, scenarioKey, selected, showFailOnly }),
+		[sections, scenarioKey, selected, showFailOnly],
+	)
 
 	return (
 		<TooltipProvider delayDuration={150}>

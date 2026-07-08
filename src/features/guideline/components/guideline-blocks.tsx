@@ -6,15 +6,18 @@ import { MediaShowcaseBlock } from './blocks/media-showcase-block'
 export function GuidelineBlocks({ blocks }: { blocks: GuidelinePage['blocks'] }) {
 	return (
 		<div className="flex flex-col gap-12">
-			{blocks?.map((block) =>
-				block.blockType === 'mediaShowcase' ? (
-					<MediaShowcaseBlock key={block.id} block={block} />
-				) : block.blockType === 'colorPalette' ? (
-					<ColorPaletteBlock key={block.id} block={block} />
-				) : (
-					<ColumnUnitBlock key={block.id} block={block} />
-				),
-			)}
+			{blocks?.map((block) => {
+				switch (block.blockType) {
+					case 'mediaShowcase':
+						return <MediaShowcaseBlock key={block.id} block={block} />
+					case 'colorPalette':
+						return <ColorPaletteBlock key={block.id} block={block} />
+					case 'columnUnit':
+						return <ColumnUnitBlock key={block.id} block={block} />
+					default:
+						return null
+				}
+			})}
 		</div>
 	)
 }

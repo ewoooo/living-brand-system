@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { validateTemplateImages } from './validate-authorized-assets'
+import { jsonTemplateSchema } from '@/types/json-template'
+import { countUnauthorizedImages, validateTemplateImages } from './validate-authorized-assets'
 
 function buildTemplate(imageOverrides: Record<string, unknown>) {
 	return {
@@ -25,6 +26,67 @@ function buildTemplate(imageOverrides: Record<string, unknown>) {
 			},
 		],
 	}
+}
+
+// 스택(2단) 안에 비인가 이미지 1개 + 인가 이미지 1개 — 재귀 탐색 검증용
+const STACKED_TEMPLATE = {
+	width: 1080,
+	height: 1350,
+	background: '#ffffff',
+	elements: [
+		{
+			id: 'stack_1',
+			type: 'stack',
+			x: 0,
+			y: 0,
+			width: 1080,
+			height: 500,
+			zIndex: 1,
+			locked: true,
+			direction: 'vertical',
+			gap: 10,
+			padding: { top: 0, right: 0, bottom: 0, left: 0 },
+			children: [
+				{
+					id: 'stack_2',
+					type: 'stack',
+					locked: true,
+					width: 500,
+					height: 200,
+					direction: 'horizontal',
+					gap: 0,
+					padding: { top: 0, right: 0, bottom: 0, left: 0 },
+					children: [
+						{
+							id: 'image_nested',
+							type: 'image',
+							locked: false,
+							slotLabel: '중첩 로고',
+							width: 100,
+							height: 100,
+							assetCollection: 'template-assets',
+							assetId: 2,
+							src: '/api/template-assets/file/nested.png',
+							objectFit: 'cover',
+							borderRadius: 0,
+						},
+						{
+							id: 'image_authorized',
+							type: 'image',
+							locked: false,
+							width: 100,
+							height: 100,
+							assetCollection: 'brand-logos',
+							assetId: 3,
+							src: '/api/brand-logos/file/ok.svg',
+							objectFit: 'contain',
+							borderRadius: 0,
+						},
+					],
+				},
+			],
+		},
+	],
 }
 
 describe('validateTemplateImages', () => {
@@ -71,68 +133,33 @@ describe('validateTemplateImages', () => {
 	})
 
 	it('스택 안에 중첩된 비인가 이미지를 재귀로 찾아낸다', () => {
-		const stackedTemplate = {
-			width: 1080,
-			height: 1350,
-			background: '#ffffff',
-			elements: [
-				{
-					id: 'stack_1',
-					type: 'stack',
-					x: 0,
-					y: 0,
-					width: 1080,
-					height: 500,
-					zIndex: 1,
-					locked: true,
-					direction: 'vertical',
-					gap: 10,
-					padding: { top: 0, right: 0, bottom: 0, left: 0 },
-					children: [
-						{
-							id: 'stack_2',
-							type: 'stack',
-							locked: true,
-							width: 500,
-							height: 200,
-							direction: 'horizontal',
-							gap: 0,
-							padding: { top: 0, right: 0, bottom: 0, left: 0 },
-							children: [
-								{
-									id: 'image_nested',
-									type: 'image',
-									locked: false,
-									slotLabel: '중첩 로고',
-									width: 100,
-									height: 100,
-									assetCollection: 'template-assets',
-									assetId: 2,
-									src: '/api/template-assets/file/nested.png',
-									objectFit: 'cover',
-									borderRadius: 0,
-								},
-								{
-									id: 'image_authorized',
-									type: 'image',
-									locked: false,
-									width: 100,
-									height: 100,
-									assetCollection: 'brand-logos',
-									assetId: 3,
-									src: '/api/brand-logos/file/ok.svg',
-									objectFit: 'contain',
-									borderRadius: 0,
-								},
-							],
-						},
-					],
-				},
-			],
-		}
-		const validation = validateTemplateImages(stackedTemplate)
+		const validation = validateTemplateImages(STACKED_TEMPLATE)
 
 		expect(validation.unauthorizedLabels).toEqual(['중첩 로고'])
 		expect(validation.authorizedRefs.map((ref) => ref.assetId)).toEqual([3])
+	})
+})
+
+describe('countUnauthorizedImages', () => {
+	it('최상위 비인가 이미지를 센다', () => {
+		const template = jsonTemplateSchema.parse(
+			buildTemplate({ assetCollection: 'template-assets' }),
+		)
+		expect(countUnauthorizedImages(template.elements)).toBe(1)
+	})
+
+	it('인가 이미지는 세지 않는다', () => {
+		const template = jsonTemplateSchema.parse(
+			buildTemplate({
+				assetCollection: 'brand-logos',
+				src: '/api/brand-logos/file/logo.svg',
+			}),
+		)
+		expect(countUnauthorizedImages(template.elements)).toBe(0)
+	})
+
+	it('스택 하위에 중첩된 비인가 이미지만 재귀로 센다', () => {
+		const template = jsonTemplateSchema.parse(STACKED_TEMPLATE)
+		expect(countUnauthorizedImages(template.elements)).toBe(1)
 	})
 })

@@ -1,6 +1,7 @@
 'use client'
 
 import { View, ViewFilled } from '@carbon/icons-react'
+import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
@@ -17,12 +18,10 @@ export function CheckResultSummary({ sections }: CheckResultSummaryProps) {
 	const { scenarioKey, selected, showFailOnly, toggleFailOnly } = useCheckImages()
 	const failOnlyLabel = showFailOnly ? '전체 보기' : '미통과만 보기'
 	const FailOnlyIcon = showFailOnly ? ViewFilled : View
-	const { summary } = buildCheckReviewView({
-		sections,
-		scenarioKey,
-		selected,
-		showFailOnly,
-	})
+	const { summary } = useMemo(
+		() => buildCheckReviewView({ sections, scenarioKey, selected, showFailOnly }),
+		[sections, scenarioKey, selected, showFailOnly],
+	)
 
 	return (
 		<div className="mb-6 pl-2 flex flex-wrap items-center gap-x-5">
@@ -77,21 +76,12 @@ function SummaryMetric({
 	colorClassName: string
 	muted?: boolean
 }) {
+	// 색만으로 상태를 구분하지 않도록 라벨을 텍스트로 함께 노출한다(docs/08 §2)
 	return (
-		<Tooltip>
-			<TooltipTrigger asChild>
-				<span
-					className={cn(
-						'flex items-center gap-2 text-xs',
-						muted && 'text-muted-foreground',
-					)}
-				>
-					<span className={cn('inline-block size-2 rounded-full', colorClassName)} />
-					<span className="sr-only">{label}</span>
-					<span className="font-semibold tabular-nums">{value}</span>
-				</span>
-			</TooltipTrigger>
-			<TooltipContent>{label}</TooltipContent>
-		</Tooltip>
+		<span className={cn('flex items-center gap-2 text-xs', muted && 'text-muted-foreground')}>
+			<span aria-hidden className={cn('inline-block size-2 rounded-full', colorClassName)} />
+			<span className="font-medium">{label}</span>
+			<span className="font-semibold tabular-nums">{value}</span>
+		</span>
 	)
 }

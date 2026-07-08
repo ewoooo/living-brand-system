@@ -19,9 +19,14 @@ export function GlobalAgentChat() {
 
 	function handleSubmit() {
 		if (isBusy) return
-		sendMessage(input.trim() ? { text: input, files } : { files: files as FileList }, {
-			body: { pagePath },
-		})
+		const text = input.trim()
+		if (text) {
+			sendMessage({ text, files }, { body: { pagePath } })
+		} else if (files?.length) {
+			sendMessage({ files }, { body: { pagePath } })
+		} else {
+			return
+		}
 		setInput('')
 		setFiles(undefined)
 	}
@@ -84,7 +89,7 @@ export function GlobalAgentChat() {
 function GlobalAgentChatHeader() {
 	return (
 		<header className="p-3.5">
-			<h2 className="font-medium text-sm">Chat</h2>
+			<h2 className="font-medium text-sm">채팅</h2>
 		</header>
 	)
 }
