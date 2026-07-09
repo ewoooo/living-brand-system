@@ -300,7 +300,7 @@ async function buildIncorrectUsageBlock() {
 // ── 1. 원본 구조 읽기 ──
 const oldSections = (
 	await payload.find({
-		collection: 'sections',
+		collection: 'guideline-sections',
 		depth: 0,
 		locale: LOCALE,
 		fallbackLocale: 'en',
@@ -355,12 +355,12 @@ await payload.delete({
 	overrideAccess: true,
 })
 await payload.delete({
-	collection: 'sections',
+	collection: 'guideline-sections',
 	where: { id: { exists: true } },
 	overrideAccess: true,
 })
 await payload.delete({
-	collection: 'chapters',
+	collection: 'guideline-chapters',
 	where: { id: { exists: true } },
 	overrideAccess: true,
 })
@@ -368,7 +368,7 @@ await payload.delete({
 // ── 4. 4계층 재생성 ──
 for (const oldSection of oldSections) {
 	const chapter = await payload.create({
-		collection: 'chapters',
+		collection: 'guideline-chapters',
 		locale: LOCALE,
 		overrideAccess: true,
 		data: {
@@ -383,7 +383,7 @@ for (const oldSection of oldSections) {
 	const childPages = pagesBySection.get(oldSection.id) ?? []
 	for (const oldPage of childPages) {
 		const section = await payload.create({
-			collection: 'sections',
+			collection: 'guideline-sections',
 			locale: LOCALE,
 			overrideAccess: true,
 			data: {

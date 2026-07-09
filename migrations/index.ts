@@ -12,6 +12,7 @@ import * as migration_20260709_015302_add_agent_chat_session_ai_usage from './20
 import * as migration_20260709_020738_link_check_sessions_to_agent_chat_sessions from './20260709_020738_link_check_sessions_to_agent_chat_sessions';
 import * as migration_20260709_021643_add_agent_chat_session_reaction from './20260709_021643_add_agent_chat_session_reaction';
 import * as migration_20260709_024939_add_agent_chat_session_messages from './20260709_024939_add_agent_chat_session_messages';
+import * as migration_20260709_070452_guideline_collection_slugs from './20260709_070452_guideline_collection_slugs';
 
 export const migrations = [
   {
@@ -82,6 +83,11 @@ export const migrations = [
   {
     up: migration_20260709_024939_add_agent_chat_session_messages.up,
     down: migration_20260709_024939_add_agent_chat_session_messages.down,
-    name: '20260709_024939_add_agent_chat_session_messages'
+    name: '20260709_024939_add_agent_chat_session_messages',
+  },
+  {
+    up: migration_20260709_070452_guideline_collection_slugs.up,
+    down: migration_20260709_070452_guideline_collection_slugs.down,
+    name: '20260709_070452_guideline_collection_slugs'
   },
 ];

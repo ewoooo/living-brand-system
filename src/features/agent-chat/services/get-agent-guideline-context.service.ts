@@ -1,6 +1,6 @@
 import { formatBlockForAgent } from '@/features/guideline/blocks/registry'
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
-import type { GuidelinePage, Rule, Section } from '@/payload-types'
+import type { GuidelinePage, GuidelineSection, Rule } from '@/payload-types'
 import {
 	type AgentGuidelineDocument,
 	type AgentGuidelineSearchResult,
@@ -16,7 +16,7 @@ interface GuidelineSearchInput {
 	query: string
 }
 
-type GuidelineDocumentCollection = 'guideline-pages' | 'sections'
+type GuidelineDocumentCollection = 'guideline-pages' | 'guideline-sections'
 
 interface GuidelinePageListResult {
 	title: string
@@ -109,8 +109,8 @@ export async function readAgentGuidelineDocument(
 }
 
 function formatGuidelineSection(
-	section: Extract<AgentGuidelineDocument, { collection: 'sections' }>['section'],
-	pages: Extract<AgentGuidelineDocument, { collection: 'sections' }>['pages'],
+	section: Extract<AgentGuidelineDocument, { collection: 'guideline-sections' }>['section'],
+	pages: Extract<AgentGuidelineDocument, { collection: 'guideline-sections' }>['pages'],
 ): string {
 	const pageSummaries = pages.map((page) =>
 		compact([page.title, extractTextFromLexical(page.description)]).join('\n'),
@@ -144,16 +144,16 @@ function formatGuidelinePageResult(
 }
 
 function formatGuidelineSectionResult(
-	document: Extract<AgentGuidelineDocument, { collection: 'sections' }>,
+	document: Extract<AgentGuidelineDocument, { collection: 'guideline-sections' }>,
 ): GuidelineDocumentResult {
 	const id = String(document.section.id)
 
 	return {
 		title: document.section.title,
-		collection: 'sections',
+		collection: 'guideline-sections',
 		id,
 		source: {
-			collection: 'sections',
+			collection: 'guideline-sections',
 			id,
 			title: document.section.title,
 			href: document.section.slug ? `/guideline/${document.section.slug}` : null,
@@ -203,11 +203,11 @@ function getLiveRules(values: GuidelinePage['rules']): GuidelineDocumentRule[] {
 	)
 }
 
-function getTitle(value: number | Section): string {
+function getTitle(value: number | GuidelineSection): string {
 	return typeof value === 'object' ? value.title : ''
 }
 
-function getSectionSlug(value: number | Section): string | null {
+function getSectionSlug(value: number | GuidelineSection): string | null {
 	return typeof value === 'object' ? (value.slug ?? null) : null
 }
 
