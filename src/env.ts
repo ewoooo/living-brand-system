@@ -11,6 +11,7 @@ export const env = createEnv({
 		FIGMA_API_TOKEN: z.string().min(1).optional(),
 		NEXT_PHASE: z.string().min(1).optional(),
 		NODE_ENV: z.enum(['development', 'production', 'test']).optional(),
+		// 이미지 생성 정식 엔진 gpt-image-2의 키. 수령 전까지는 dev-fallback(Pollinations)로 임시 대체.
 		OPENAI_API_KEY: z.string().min(1).optional(),
 		OPENAI_IMAGE_MODEL: z.string().min(1).optional(),
 		PAYLOAD_DB_PUSH: z.enum(['true', 'false']).optional(),

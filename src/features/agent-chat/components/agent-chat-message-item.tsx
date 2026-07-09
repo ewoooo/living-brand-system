@@ -8,9 +8,11 @@ import {
 	getAgentToolMarker,
 } from '@/features/agent-chat/utils/get-agent-tool-marker'
 import { getAgentCitations } from '../utils/get-agent-citations'
+import { getAgentGeneratedImages } from '../utils/get-agent-generated-images'
 import { getAgentMessageText } from '../utils/get-agent-message-text'
 import { getAgentTemplateAttachments } from '../utils/get-agent-template-attachments'
 import { AgentChatAgentBubble, AgentChatUserBubble } from './agent-chat-bubbles'
+import { AgentChatGeneratedImages } from './agent-chat-generated-images'
 import { AgentChatTemplateAttachment } from './agent-chat-template-attachment'
 import { AgentChatMarker } from './agent-chat-tool-marker'
 
@@ -31,6 +33,7 @@ export function AgentChatMessageItem({
 	const messageText = getAgentMessageText(message)
 	const files = message.parts.filter((part) => part.type === 'file')
 	const templateAttachments = isUser ? [] : getAgentTemplateAttachments(message)
+	const generatedImages = isUser ? [] : getAgentGeneratedImages(message)
 
 	return (
 		<div
@@ -56,6 +59,9 @@ export function AgentChatMessageItem({
 				<>
 					{templateAttachments.map(({ attachment, key }) => (
 						<AgentChatTemplateAttachment key={key} attachment={attachment} />
+					))}
+					{generatedImages.map(({ attachment, key }) => (
+						<AgentChatGeneratedImages key={key} attachment={attachment} />
 					))}
 					<AgentChatAgentBubble
 						agentChatMessageId={message.metadata?.agentChatMessageId}

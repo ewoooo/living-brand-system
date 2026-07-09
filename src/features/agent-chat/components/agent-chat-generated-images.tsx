@@ -1,0 +1,52 @@
+'use client'
+
+import { IMAGE_SCENES } from '@/features/image-generation/presets'
+import type { AgentGeneratedImagesAttachment } from '../services/get-agent-tools.service'
+
+export function AgentChatGeneratedImages({
+	attachment,
+}: {
+	attachment: AgentGeneratedImagesAttachment
+}) {
+	const label = sceneLabel(attachment.sceneId)
+	return (
+		<div className="flex w-full flex-col gap-2">
+			{label && <p className="text-muted-foreground text-xs">적용된 씬: {label}</p>}
+			<div className="grid w-full grid-cols-2 gap-2">
+				{attachment.images.map((src, index) => (
+					<div key={src} className="relative">
+						{/* biome-ignore lint/performance/noImgElement: 챗 생성 미리보기, 최적화 불필요 */}
+						<img
+							src={src}
+							alt={`생성 결과 ${index + 1}`}
+							className="w-full rounded-md border border-border bg-background"
+						/>
+						<a
+							href={src}
+							download={`essenherb-image-${index + 1}.${imgExt(src)}`}
+							className="absolute right-1 bottom-1 rounded bg-background/80 px-1.5 py-0.5 text-xs underline"
+						>
+							다운로드
+						</a>
+					</div>
+				))}
+			</div>
+			{attachment.prompt && (
+				<details className="text-muted-foreground text-xs">
+					<summary className="cursor-pointer">생성 프롬프트</summary>
+					<p className="mt-1 whitespace-pre-wrap">{attachment.prompt}</p>
+				</details>
+			)}
+		</div>
+	)
+}
+
+function sceneLabel(sceneId?: string) {
+	if (!sceneId || sceneId === 'auto') return null
+	if (sceneId === 'free') return '자유 생성'
+	return IMAGE_SCENES.find((scene) => scene.id === sceneId)?.label ?? null
+}
+
+function imgExt(src: string) {
+	return src.slice(5, src.indexOf(';')).split('/')[1] || 'png'
+}
