@@ -1,54 +1,30 @@
 'use client'
 
 import { Moon, Screen, Sun } from '@carbon/icons-react'
-import { useEffect, useState } from 'react'
+import { useTheme } from 'next-themes'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { applyTheme } from '@/lib/theme'
 
 type Theme = 'light' | 'dark' | 'system'
 
-function getTheme(): Theme {
-	return localStorage.theme === 'light' || localStorage.theme === 'dark'
-		? localStorage.theme
-		: 'system'
-}
-
-function setThemePreference(theme: Theme) {
-	if (theme === 'system') {
-		localStorage.removeItem('theme')
-	} else {
-		localStorage.theme = theme
-	}
-
-	applyTheme()
+function isTheme(value: string | undefined): value is Theme {
+	return value === 'light' || value === 'dark' || value === 'system'
 }
 
 export function ThemeToggle() {
-	const [theme, setTheme] = useState<Theme>('system')
-
-	useEffect(() => {
-		const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
-
-		setTheme(getTheme())
-		systemTheme.addEventListener('change', applyTheme)
-
-		return () => systemTheme.removeEventListener('change', applyTheme)
-	}, [])
+	const { setTheme, theme } = useTheme()
+	const value = isTheme(theme) ? theme : 'system'
 
 	return (
 		<ToggleGroup
 			type="single"
-			value={theme}
+			value={value}
+			suppressHydrationWarning
 			aria-label="테마"
 			className="rounded-full bg-muted p-1"
 			spacing={1}
 			onValueChange={(value) => {
 				if (!value) return
-
-				const nextTheme = value as Theme
-
-				setTheme(nextTheme)
-				setThemePreference(nextTheme)
+				setTheme(value)
 			}}
 		>
 			<ToggleGroupItem
