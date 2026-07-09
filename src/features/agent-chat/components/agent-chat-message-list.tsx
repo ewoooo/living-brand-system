@@ -22,6 +22,10 @@ export function AgentChatMessageList({
 }) {
 	const isEmpty = messages.length === 0 && !error
 	const activeMessageId = isBusy ? messages.at(-1)?.id : undefined
+	let lastAssistantMessageId: string | undefined
+	for (const message of messages) {
+		if (message.role === 'assistant') lastAssistantMessageId = message.id
+	}
 
 	return (
 		<MessageScrollerProvider>
@@ -42,6 +46,11 @@ export function AgentChatMessageList({
 								>
 									<AgentChatMessageItem
 										message={message}
+										canReact={
+											!isBusy &&
+											message.role === 'assistant' &&
+											message.id === lastAssistantMessageId
+										}
 										isActive={message.id === activeMessageId}
 									/>
 								</MessageScrollerItem>

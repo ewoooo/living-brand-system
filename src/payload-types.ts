@@ -81,6 +81,7 @@ export interface Config {
     'template-assets': TemplateAsset;
     plugins: Plugin;
     'check-sessions': CheckSession;
+    'agent-chat-sessions': AgentChatSession;
     'agent-skills': AgentSkill;
     users: User;
     search: Search;
@@ -119,6 +120,7 @@ export interface Config {
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
     plugins: PluginsSelect<false> | PluginsSelect<true>;
     'check-sessions': CheckSessionsSelect<false> | CheckSessionsSelect<true>;
+    'agent-chat-sessions': AgentChatSessionsSelect<false> | AgentChatSessionsSelect<true>;
     'agent-skills': AgentSkillsSelect<false> | AgentSkillsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
@@ -745,6 +747,155 @@ export interface CheckSession {
     | number
     | boolean
     | null;
+  /**
+   * 채팅에서 시작된 검수일 때 원본 Agent Chat Session입니다.
+   */
+  agentChatSession?: (number | null) | AgentChatSession;
+  /**
+   * AI 검수 비용 분석에 쓰는 모델과 토큰 사용량입니다.
+   */
+  aiUsage?: {
+    model?: string | null;
+    callCount?: number | null;
+    inputTokens?: number | null;
+    outputTokens?: number | null;
+    totalTokens?: number | null;
+    cacheReadInputTokens?: number | null;
+    cacheWriteInputTokens?: number | null;
+    reasoningTokens?: number | null;
+    rawUsage?:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+  };
+  errorMessage?: string | null;
+  completedAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Agent 채팅 실행 1회 단위의 세션 기록입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-chat-sessions".
+ */
+export interface AgentChatSession {
+  id: number;
+  status: 'running' | 'completed' | 'failed';
+  /**
+   * 채팅이 시작된 화면 경로입니다.
+   */
+  pagePath?: string | null;
+  /**
+   * 요청과 응답을 포함한 세션 메시지 수입니다.
+   */
+  messageCount?: number | null;
+  /**
+   * 세션에 포함된 대화 버블과 버블별 실행 메타데이터입니다.
+   */
+  messages?:
+    | {
+        messageId: string;
+        role: 'system' | 'user' | 'assistant';
+        text?: string | null;
+        /**
+         * 이 메시지를 생성하는 동안 호출된 tool입니다.
+         */
+        usedTools?:
+          | {
+              name: string;
+              callCount?: number | null;
+              id?: string | null;
+            }[]
+          | null;
+        /**
+         * 이 메시지를 생성하는 동안 선택된 skill입니다.
+         */
+        usedSkills?:
+          | {
+              name: string;
+              callCount?: number | null;
+              id?: string | null;
+            }[]
+          | null;
+        /**
+         * 이 메시지를 생성한 모델과 토큰 사용량입니다.
+         */
+        aiUsage?: {
+          model?: string | null;
+          callCount?: number | null;
+          inputTokens?: number | null;
+          outputTokens?: number | null;
+          totalTokens?: number | null;
+          cacheReadInputTokens?: number | null;
+          cacheWriteInputTokens?: number | null;
+          reasoningTokens?: number | null;
+          rawUsage?:
+            | {
+                [k: string]: unknown;
+              }
+            | unknown[]
+            | string
+            | number
+            | boolean
+            | null;
+        };
+        /**
+         * 이 Agent 답변 버블에 대한 사용자 피드백입니다.
+         */
+        reaction?: ('good' | 'bad') | null;
+        reactedAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Agent가 호출한 tool 이름과 호출 횟수입니다.
+   */
+  usedTools?:
+    | {
+        name: string;
+        callCount?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * loadSkill로 선택된 Agent skill 이름과 호출 횟수입니다.
+   */
+  usedSkills?:
+    | {
+        name: string;
+        callCount?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Agent 채팅 비용 분석에 쓰는 모델과 토큰 사용량입니다.
+   */
+  aiUsage?: {
+    model?: string | null;
+    callCount?: number | null;
+    inputTokens?: number | null;
+    outputTokens?: number | null;
+    totalTokens?: number | null;
+    cacheReadInputTokens?: number | null;
+    cacheWriteInputTokens?: number | null;
+    reasoningTokens?: number | null;
+    rawUsage?:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+  };
   errorMessage?: string | null;
   completedAt?: string | null;
   createdBy?: (number | null) | User;
@@ -1090,6 +1241,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'check-sessions';
         value: number | CheckSession;
+      } | null)
+    | ({
+        relationTo: 'agent-chat-sessions';
+        value: number | AgentChatSession;
       } | null)
     | ({
         relationTo: 'agent-skills';
@@ -1473,6 +1628,98 @@ export interface CheckSessionsSelect<T extends boolean = true> {
   imageName?: T;
   rulesetSnapshot?: T;
   results?: T;
+  agentChatSession?: T;
+  aiUsage?:
+    | T
+    | {
+        model?: T;
+        callCount?: T;
+        inputTokens?: T;
+        outputTokens?: T;
+        totalTokens?: T;
+        cacheReadInputTokens?: T;
+        cacheWriteInputTokens?: T;
+        reasoningTokens?: T;
+        rawUsage?: T;
+      };
+  errorMessage?: T;
+  completedAt?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-chat-sessions_select".
+ */
+export interface AgentChatSessionsSelect<T extends boolean = true> {
+  status?: T;
+  pagePath?: T;
+  messageCount?: T;
+  messages?:
+    | T
+    | {
+        messageId?: T;
+        role?: T;
+        text?: T;
+        usedTools?:
+          | T
+          | {
+              name?: T;
+              callCount?: T;
+              id?: T;
+            };
+        usedSkills?:
+          | T
+          | {
+              name?: T;
+              callCount?: T;
+              id?: T;
+            };
+        aiUsage?:
+          | T
+          | {
+              model?: T;
+              callCount?: T;
+              inputTokens?: T;
+              outputTokens?: T;
+              totalTokens?: T;
+              cacheReadInputTokens?: T;
+              cacheWriteInputTokens?: T;
+              reasoningTokens?: T;
+              rawUsage?: T;
+            };
+        reaction?: T;
+        reactedAt?: T;
+        id?: T;
+      };
+  usedTools?:
+    | T
+    | {
+        name?: T;
+        callCount?: T;
+        id?: T;
+      };
+  usedSkills?:
+    | T
+    | {
+        name?: T;
+        callCount?: T;
+        id?: T;
+      };
+  aiUsage?:
+    | T
+    | {
+        model?: T;
+        callCount?: T;
+        inputTokens?: T;
+        outputTokens?: T;
+        totalTokens?: T;
+        cacheReadInputTokens?: T;
+        cacheWriteInputTokens?: T;
+        reasoningTokens?: T;
+        rawUsage?: T;
+      };
   errorMessage?: T;
   completedAt?: T;
   createdBy?: T;

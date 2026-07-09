@@ -1,0 +1,98 @@
+import type { LanguageModelUsage } from 'ai'
+import type {
+	AgentChatAiUsage,
+	AgentChatSessionUsage,
+} from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
+
+interface ToolCallLike {
+	input?: unknown
+	toolName?: unknown
+}
+
+export interface AgentChatSessionUsageSnapshot {
+	aiUsage?: AgentChatAiUsage
+	usedSkills: AgentChatSessionUsage[]
+	usedTools: AgentChatSessionUsage[]
+}
+
+/**
+ * Agent 채팅 세션 기록용 usage collector — AI SDK step에서 token/tool/skill 이름만 모은다.
+ */
+export function createAgentChatSessionUsageCollector() {
+	const toolCounts = new Map<string, number>()
+	const skillCounts = new Map<string, number>()
+	const usage = createEmptyUsage()
+	const rawUsages: unknown[] = []
+	let model: string | undefined
+
+	return {
+		addStep(step: {
+			model?: { modelId?: string }
+			toolCalls?: readonly unknown[]
+			usage?: LanguageModelUsage
+		}) {
+			model ??= step.model?.modelId
+			if (step.usage) addUsage(usage, step.usage)
+			if (step.usage?.raw) rawUsages.push(step.usage.raw)
+
+			for (const toolCall of step.toolCalls ?? []) {
+				const call = toolCall as ToolCallLike
+				if (typeof call.toolName !== 'string') continue
+				increment(toolCounts, call.toolName)
+				const skillName = readSkillName(call.input)
+				if (call.toolName === 'loadSkill' && skillName) {
+					increment(skillCounts, skillName)
+				}
+			}
+		},
+		snapshot(): AgentChatSessionUsageSnapshot {
+			const aiUsage: AgentChatAiUsage | undefined =
+				usage.callCount > 0 ? { model, ...usage } : undefined
+			if (aiUsage && rawUsages.length > 0) {
+				aiUsage.rawUsage = { steps: rawUsages }
+			}
+
+			return {
+				aiUsage,
+				usedTools: toUsage(toolCounts),
+				usedSkills: toUsage(skillCounts),
+			}
+		},
+	}
+}
+
+function increment(counts: Map<string, number>, key: string) {
+	counts.set(key, (counts.get(key) ?? 0) + 1)
+}
+
+function toUsage(counts: Map<string, number>) {
+	return [...counts.entries()].map(([name, callCount]) => ({ name, callCount }))
+}
+
+function readSkillName(input: unknown) {
+	if (!input || typeof input !== 'object' || !('name' in input)) return null
+	const name = (input as { name?: unknown }).name
+	return typeof name === 'string' ? name : null
+}
+
+function createEmptyUsage(): Required<Omit<AgentChatAiUsage, 'model' | 'rawUsage'>> {
+	return {
+		callCount: 0,
+		inputTokens: 0,
+		outputTokens: 0,
+		totalTokens: 0,
+		cacheReadInputTokens: 0,
+		cacheWriteInputTokens: 0,
+		reasoningTokens: 0,
+	}
+}
+
+function addUsage(target: ReturnType<typeof createEmptyUsage>, usage: LanguageModelUsage) {
+	target.callCount += 1
+	target.inputTokens += usage.inputTokens ?? 0
+	target.outputTokens += usage.outputTokens ?? 0
+	target.totalTokens += usage.totalTokens ?? 0
+	target.cacheReadInputTokens += usage.inputTokenDetails.cacheReadTokens ?? 0
+	target.cacheWriteInputTokens += usage.inputTokenDetails.cacheWriteTokens ?? 0
+	target.reasoningTokens += usage.outputTokenDetails.reasoningTokens ?? 0
+}
