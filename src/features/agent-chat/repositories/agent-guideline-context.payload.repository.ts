@@ -1,15 +1,15 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type { GuidelinePage, Rule, Section } from '@/payload-types'
+import type { GuidelinePage, GuidelineSection, Rule } from '@/payload-types'
 
 type AgentGuidelinePage = Pick<
 	GuidelinePage,
 	'id' | 'title' | 'slug' | 'description' | 'blocks' | 'rules' | 'section'
 >
 
-type AgentGuidelineSection = Pick<Section, 'id' | 'title' | 'slug' | 'description'>
+type AgentGuidelineSection = Pick<GuidelineSection, 'id' | 'title' | 'slug' | 'description'>
 
-type AgentGuidelineSectionListItem = Pick<Section, 'id' | 'title'>
+type AgentGuidelineSectionListItem = Pick<GuidelineSection, 'id' | 'title'>
 
 type AgentGuidelinePageListItem = Pick<GuidelinePage, 'id' | 'title' | 'section'>
 
@@ -32,7 +32,7 @@ export type AgentGuidelineDocument =
 			page: AgentGuidelinePage
 	  }
 	| {
-			collection: 'sections'
+			collection: 'guideline-sections'
 			section: AgentGuidelineSection
 			pages: AgentGuidelinePageSummary[]
 	  }
@@ -60,7 +60,7 @@ export async function listGuidelineSections(
 	const payload = await getPayload({ config })
 	const sections = await payload.find({
 		...publishedKoQuery(user),
-		collection: 'sections',
+		collection: 'guideline-sections',
 		depth: 0,
 		limit: 100,
 		sort: 'displayOrder',
@@ -148,14 +148,14 @@ export async function findAgentRules(user: unknown): Promise<AgentRuleCatalogIte
 
 export async function findAgentGuidelineDocument(
 	user: unknown,
-	input: { collection: 'guideline-pages' | 'sections'; id: string },
+	input: { collection: 'guideline-pages' | 'guideline-sections'; id: string },
 ): Promise<AgentGuidelineDocument | null> {
-	if (input.collection === 'sections') {
+	if (input.collection === 'guideline-sections') {
 		const section = await findGuidelineSection(user, input.id)
 
 		return section
 			? {
-					collection: 'sections',
+					collection: 'guideline-sections',
 					section,
 					pages: await listGuidelinePagesBySection(user, section.id),
 				}
@@ -195,7 +195,7 @@ async function findGuidelineSection(
 
 	return payload.findByID({
 		...publishedKoQuery(user),
-		collection: 'sections',
+		collection: 'guideline-sections',
 		id,
 		disableErrors: true,
 		depth: 0,

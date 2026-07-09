@@ -1,5 +1,5 @@
 import type React from 'react'
-import { SectionLayout } from '@/components/section-layout'
+import { SectionLayout } from '@/components/global/section-layout'
 import { CheckImageProvider } from '@/features/asset-check/components/check-image-provider'
 import { CheckSideNavigation } from '@/features/asset-check/components/check-side-navigation'
 import { getCheckRuleset } from '@/features/asset-check/services/get-check-ruleset.service'

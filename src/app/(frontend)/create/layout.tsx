@@ -1,5 +1,5 @@
 import type React from 'react'
-import { SectionLayout } from '@/components/section-layout'
+import { SectionLayout } from '@/components/global/section-layout'
 import { CreateSideNavigation } from '@/features/asset-generation/components/create-side-navigation'
 import { getCreateNavigation } from '@/features/asset-generation/services/get-create-navigation.service'
 

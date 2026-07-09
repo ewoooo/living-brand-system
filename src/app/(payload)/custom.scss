@@ -16,3 +16,59 @@
 		margin: 0;
 	}
 }
+
+.agent-chat-messages-table,
+.agent-chat-usage-table,
+.agent-chat-counted-items-table {
+	margin-bottom: var(--base);
+
+	h3 {
+		margin: 0 0 calc(var(--base) / 2);
+	}
+
+	p {
+		color: var(--theme-elevation-600);
+		margin: 0;
+	}
+
+	table {
+		border-collapse: collapse;
+		min-width: 960px;
+		width: 100%;
+	}
+
+	th,
+	td {
+		border-bottom: 1px solid var(--theme-elevation-150);
+		padding: calc(var(--base) / 3);
+		text-align: left;
+		vertical-align: top;
+	}
+
+	th {
+		color: var(--theme-elevation-600);
+		font-size: 0.85rem;
+		font-weight: 600;
+	}
+}
+
+.agent-chat-messages-table [data-slot="table-container"],
+.agent-chat-usage-table [data-slot="table-container"],
+.agent-chat-counted-items-table [data-slot="table-container"] {
+	overflow-x: auto;
+}
+
+.agent-chat-counted-items-table table {
+	min-width: 420px;
+	table-layout: fixed;
+}
+
+.agent-chat-counted-items-table th:nth-child(2),
+.agent-chat-counted-items-table td:nth-child(2) {
+	width: 160px;
+}
+
+.agent-chat-messages-table__message {
+	max-width: 420px;
+	white-space: pre-wrap;
+}

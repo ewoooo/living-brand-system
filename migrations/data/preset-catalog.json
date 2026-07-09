@@ -3,7 +3,7 @@
 		"key": "logo.size.minimum",
 		"title": "Logo minimum size",
 		"category": "logo",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -26,7 +26,7 @@
 		"key": "logo.space.clear",
 		"title": "Logo clear space / exclusion zone",
 		"category": "logo",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -49,7 +49,7 @@
 		"key": "logo.variant",
 		"title": "Approved logo variants / lockup set",
 		"category": "logo",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -70,7 +70,7 @@
 		"key": "logo.package.variant",
 		"title": "Package logo variants / lockup set",
 		"category": "logo",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -91,7 +91,7 @@
 		"key": "logo.color-variants",
 		"title": "Logo color renditions (mono/reverse/gradient)",
 		"category": "logo",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -111,7 +111,7 @@
 		"key": "logo.misuse",
 		"title": "Logo incorrect-usage prohibitions",
 		"category": "logo",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -132,7 +132,7 @@
 		"key": "logo.geometry",
 		"title": "Logotype construction geometry (proportion lock)",
 		"category": "logo",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -150,7 +150,7 @@
 		"key": "logo.lockup.modifier",
 		"title": "Modifier / sub-brand lockup system",
 		"category": "logo",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -164,13 +164,13 @@
 		"paramSchema": "{types:[{name:string,align:string,modifierSize:{factor:number},gaps:[{factor:number}],range:{min:number,max:number},modifierContent:'text|symbol',font:string?,maxTextWidth:number?}],strategy:string}",
 		"scoring": "Compare offset/size/gap in module units; text-overflow separate flag.",
 		"input": "Detect sub-name/region locked up with master; measure size/gaps/alignment per modifier type.",
-		"fixApplied": "modifierContent enum gates optional font/maxTextWidth; strategy demoted to advisory metadata."
+		"fixApplied": "modifierContent enum gates optional font/maxTextWidth; strategy demoted to manual review metadata."
 	},
 	{
 		"key": "logo.lockup.signature",
 		"title": "Signature lockup (logo + contact/info)",
 		"category": "logo",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -187,7 +187,7 @@
 		"key": "logo.package.placement",
 		"title": "Package logo placement",
 		"category": "logo",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -209,7 +209,7 @@
 		"key": "logo.sns.placement",
 		"title": "SNS logo placement",
 		"category": "logo",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -231,7 +231,7 @@
 		"key": "logo.placement.brightness",
 		"title": "Logo placement by background brightness level",
 		"category": "logo",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -248,7 +248,7 @@
 		"key": "logo.derived-motif",
 		"title": "Logotype-angle-derived structural motif",
 		"category": "logo",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -265,7 +265,7 @@
 		"key": "logo.symbol-concept",
 		"title": "Symbol / logo design concept (formal origin)",
 		"category": "logo",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -278,14 +278,14 @@
 			"essenherb"
 		],
 		"paramSchema": "{concept:string,attributes:[string]}",
-		"scoring": "VLM/human judgment of concept fidelity; advisory, escalate on low confidence.",
+		"scoring": "VLM/human judgment of concept fidelity; manual review, escalate on low confidence.",
 		"input": "Assess symbol/logo forms match documented conceptual/formal origin."
 	},
 	{
 		"key": "logo.primary",
 		"title": "Canonical primary logo asset",
 		"category": "logo",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -302,7 +302,7 @@
 		"key": "logo.trademark",
 		"title": "Registered-trademark (R) usage & size threshold",
 		"category": "logo",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -313,14 +313,14 @@
 			"essenherb"
 		],
 		"paramSchema": "{symbol:string,requiredOnRegistered:boolean,perVariant:[{variant:string,removeRMarkBelow:{px:number,mm:number}}]}",
-		"scoring": "If height<removeRMarkBelow and R present -> fail; legal-condition advisory.",
+		"scoring": "If height<removeRMarkBelow and R present -> fail; legal-condition manual review.",
 		"input": "Detect R mark; verify only on registered marks and removed below per-variant threshold."
 	},
 	{
 		"key": "logo.size-steps",
 		"title": "Discrete logo size-step chart",
 		"category": "logo",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -337,7 +337,7 @@
 		"key": "logo.expansion",
 		"title": "Logo-expansion creative system",
 		"category": "logo",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -354,7 +354,7 @@
 		"key": "logo.co-branding",
 		"title": "Co-branding / partner / endorsement lockup",
 		"category": "logo",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -371,7 +371,7 @@
 		"key": "logo.favicon-appicon",
 		"title": "Favicon / app icon / avatar mark",
 		"category": "logo",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen"
@@ -389,7 +389,7 @@
 		"key": "logo.misuse.examples",
 		"title": "Logo misuse - visual prohibited-example tiles",
 		"category": "logo",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -410,7 +410,7 @@
 		"key": "logo.space.construction",
 		"title": "Logo clear-space construction method",
 		"category": "logo",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -432,7 +432,7 @@
 		"key": "color.palette",
 		"title": "Brand color palette (swatch values)",
 		"category": "color",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -454,7 +454,7 @@
 		"key": "color.roles",
 		"title": "Color role assignment",
 		"category": "color",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -474,7 +474,7 @@
 		"key": "color.scale",
 		"title": "Color tonal/brightness scale",
 		"category": "color",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -493,7 +493,7 @@
 		"key": "color.combination",
 		"title": "Approved color pairing / background combinations",
 		"category": "color",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -515,7 +515,7 @@
 		"key": "illustration.color.combination",
 		"title": "Illustration approved color combinations",
 		"category": "illustration",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -537,7 +537,7 @@
 		"key": "color.contrast",
 		"title": "Color/legibility contrast minimum",
 		"category": "color",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -557,7 +557,7 @@
 		"key": "logo.color.misuse",
 		"title": "Logo color misuse",
 		"category": "logo",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -578,7 +578,7 @@
 		"key": "color.misuse",
 		"title": "Color incorrect-usage prohibitions",
 		"category": "color",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -598,7 +598,7 @@
 		"key": "color.proportion",
 		"title": "Brand color proportion / dominance per surface",
 		"category": "color",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -617,7 +617,7 @@
 		"key": "color.usage",
 		"title": "Color usage contexts & emotional mapping",
 		"category": "color",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -636,8 +636,8 @@
 		"key": "illustration.color.usage",
 		"title": "Illustration brand color usage",
 		"category": "illustration",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
@@ -656,7 +656,7 @@
 		"key": "color.treatment",
 		"title": "Gradient / special color treatment generation",
 		"category": "color",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -673,7 +673,7 @@
 		"key": "color.print.fidelity",
 		"title": "Brand color print fidelity",
 		"category": "color",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"print"
@@ -685,7 +685,7 @@
 			"essenherb"
 		],
 		"paramSchema": "{referenceSystem:string,pantoneRefs:[string],deltaETolerance:number,requireProofReview:boolean}",
-		"scoring": "deltaE vs Pantone reference; proof-review process flag advisory.",
+		"scoring": "deltaE vs Pantone reference; proof-review process flag manual review.",
 		"input": "Compare reproduced print color to Pantone reference within tolerance; verify ink density/proof.",
 		"titleKo": "컬러 인쇄 재현성"
 	},
@@ -693,7 +693,7 @@
 		"key": "application.package.print.fidelity",
 		"title": "Package print color fidelity",
 		"category": "application",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"print"
@@ -705,7 +705,7 @@
 			"essenherb"
 		],
 		"paramSchema": "{referenceSystem:string,pantoneRefs:[string],deltaETolerance:number,requireProofReview:boolean}",
-		"scoring": "deltaE vs Pantone reference; proof-review process flag advisory.",
+		"scoring": "deltaE vs Pantone reference; proof-review process flag manual review.",
 		"input": "Compare reproduced print color to Pantone reference within tolerance; verify ink density/proof.",
 		"titleKo": "패키지 인쇄 컬러 재현성"
 	},
@@ -713,7 +713,7 @@
 		"key": "application.stationery.spot.color",
 		"title": "Stationery spot-color print rule",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"print"
@@ -725,7 +725,7 @@
 			"essenherb"
 		],
 		"paramSchema": "{referenceSystem:string,pantoneRefs:[string],deltaETolerance:number,requireProofReview:boolean}",
-		"scoring": "deltaE vs Pantone reference; proof-review process flag advisory.",
+		"scoring": "deltaE vs Pantone reference; proof-review process flag manual review.",
 		"input": "Compare reproduced print color to Pantone reference within tolerance; verify ink density/proof.",
 		"titleKo": "스테이셔너리 별색 인쇄 기준"
 	},
@@ -733,7 +733,7 @@
 		"key": "color.mode",
 		"title": "Color mode / spot-color by medium",
 		"category": "color",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -752,7 +752,7 @@
 		"key": "color.age-rating-system",
 		"title": "Age-rating color system (broadcast)",
 		"category": "color",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen"
@@ -769,7 +769,7 @@
 		"key": "color.tokens",
 		"title": "Semantic color tokens & theme mapping",
 		"category": "color",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -786,7 +786,7 @@
 		"key": "color.dark-mode",
 		"title": "Dark-mode / theme variants",
 		"category": "color",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen"
@@ -804,7 +804,7 @@
 		"key": "color.swatch-grid",
 		"title": "Visual swatch grid (hex per tonal step)",
 		"category": "color",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -826,7 +826,7 @@
 		"key": "color.combination.examples",
 		"title": "Color pairing example matrix",
 		"category": "color",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -846,7 +846,7 @@
 		"key": "logo.background.legibility",
 		"title": "Logo legibility on background",
 		"category": "logo",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -868,7 +868,7 @@
 		"key": "application.sns.caption.legibility",
 		"title": "SNS caption legibility on photographic background",
 		"category": "application",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -890,7 +890,7 @@
 		"key": "color.combo-tonal-balance",
 		"title": "Color combination tonal balance (inter-color lightness relationship)",
 		"category": "color",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -909,7 +909,7 @@
 		"key": "color.area-containment",
 		"title": "Spatial color-area containment & offset-step mapping (motion)",
 		"category": "color",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen"
@@ -927,8 +927,8 @@
 		"key": "typography.family",
 		"title": "Typeface family usage",
 		"category": "typography",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
@@ -948,8 +948,8 @@
 		"key": "typography.weight",
 		"title": "Typeface weight usage",
 		"category": "typography",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"screen",
@@ -969,7 +969,7 @@
 		"key": "typography.scale",
 		"title": "Typographic hierarchy / type scale",
 		"category": "typography",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -987,7 +987,7 @@
 		"key": "typography.spacing",
 		"title": "Letter spacing / tracking & kerning spec",
 		"category": "typography",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -1008,7 +1008,7 @@
 		"key": "typography.pairing",
 		"title": "Multilingual type pairing (KR+EN)",
 		"category": "typography",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -1027,7 +1027,7 @@
 		"key": "typography.misuse",
 		"title": "Typography incorrect-usage prohibitions",
 		"category": "typography",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1047,8 +1047,8 @@
 		"key": "typography.usage",
 		"title": "Type usage policy & context restrictions",
 		"category": "typography",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"screen"
@@ -1060,15 +1060,15 @@
 			"pledis"
 		],
 		"paramSchema": "{designatedFamilies:[string],restrictedFaces:[{family:string,allowedMedia:[string],rationale:string}],lockups:[{lang:string,variants:[string]}]}",
-		"scoring": "Designated-font enforcement heuristic; context restriction advisory.",
+		"scoring": "Designated-font enforcement heuristic; context restriction manual review.",
 		"input": "Verify only designated typefaces used and restricted faces appear only in permitted contexts."
 	},
 	{
 		"key": "typography.licensing",
 		"title": "Font licensing / no test fonts policy",
 		"category": "typography",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
@@ -1078,14 +1078,14 @@
 			"pledis"
 		],
 		"paramSchema": "{paidFonts:[{family:string,licenseTypes:[string],url:string,price:string}],freeFonts:[string],prohibitTestFont:boolean}",
-		"scoring": "Policy/process check, not CV-measurable; human/metadata; advisory.",
+		"scoring": "Policy/process check, not CV-measurable; human/metadata; manual review.",
 		"input": "Verify paid fonts licensed and test/trial fonts not used (metadata)."
 	},
 	{
 		"key": "typography.area-type",
 		"title": "Text-frame first-baseline option",
 		"category": "typography",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen"
@@ -1102,7 +1102,7 @@
 		"key": "typography.head-copy.character-style",
 		"title": "Headline/sub-copy character style per template type",
 		"category": "typography",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -1120,8 +1120,8 @@
 		"key": "typography.alignment",
 		"title": "Headline alignment / glyph-baseline scheme",
 		"category": "typography",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
@@ -1130,7 +1130,7 @@
 			"SLL"
 		],
 		"paramSchema": "{rules:[{reference:string,offset:{value:number,unit:string}}],lengthCases:[{condition:string,alignment:string}],glyphIndents:[{glyph:string,indentPx:number}]?,prohibitions:[{category:string,rule:string}]}",
-		"scoring": "Glyph-indent deterministic; length/meaning-unit heuristic/advisory.",
+		"scoring": "Glyph-indent deterministic; length/meaning-unit heuristic/manual review.",
 		"input": "Verify headline alignment/indents follow glyph visual-reference scheme and length rule.",
 		"fixApplied": "prohibitions[] typed; glyphIndents[] sub-array added."
 	},
@@ -1138,7 +1138,7 @@
 		"key": "typography.min-size",
 		"title": "Typographic minimum / legibility floor",
 		"category": "typography",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -1156,7 +1156,7 @@
 		"key": "typography.line-settings",
 		"title": "Line-height, measure & paragraph spacing defaults",
 		"category": "typography",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -1176,7 +1176,7 @@
 		"key": "grid.package.system",
 		"title": "Package grid system",
 		"category": "grid",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -1199,7 +1199,7 @@
 		"key": "grid.stationery.system",
 		"title": "Stationery grid system",
 		"category": "grid",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -1222,7 +1222,7 @@
 		"key": "grid.visual.system",
 		"title": "Visual system grid",
 		"category": "grid",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -1245,7 +1245,7 @@
 		"key": "spacing.advertisement.scale",
 		"title": "Advertisement spacing scale",
 		"category": "spacing",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -1265,7 +1265,7 @@
 		"key": "spacing.package.scale",
 		"title": "Package spacing scale",
 		"category": "spacing",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -1285,7 +1285,7 @@
 		"key": "layout.advertisement.template",
 		"title": "Advertisement template canvas and zones",
 		"category": "layout",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen",
@@ -1304,7 +1304,7 @@
 		"key": "layout.sns.template",
 		"title": "SNS template canvas and zones",
 		"category": "layout",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen",
@@ -1323,7 +1323,7 @@
 		"key": "layout.visual.template",
 		"title": "Visual system template canvas and zones",
 		"category": "layout",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen",
@@ -1342,7 +1342,7 @@
 		"key": "layout.zone.size",
 		"title": "Template zone & element dimensions",
 		"category": "layout",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen"
@@ -1359,7 +1359,7 @@
 		"key": "layout.advertisement.zones",
 		"title": "Advertisement content zones",
 		"category": "layout",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -1381,7 +1381,7 @@
 		"key": "layout.package.zones",
 		"title": "Package content zones",
 		"category": "layout",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -1403,7 +1403,7 @@
 		"key": "layout.sns.zones",
 		"title": "SNS content zones",
 		"category": "layout",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -1425,7 +1425,7 @@
 		"key": "layout.stationery.zones",
 		"title": "Stationery content zones",
 		"category": "layout",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -1447,7 +1447,7 @@
 		"key": "layout.placement",
 		"title": "Fixed element placement (nav/footer position)",
 		"category": "layout",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"screen"
@@ -1465,7 +1465,7 @@
 		"key": "layout.package.tone",
 		"title": "Package layout tone",
 		"category": "layout",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1477,7 +1477,7 @@
 			"ChannelA"
 		],
 		"paramSchema": "{moodKeywords:[string]}",
-		"scoring": "VLM/human judgment against mood keywords; advisory, escalate.",
+		"scoring": "VLM/human judgment against mood keywords; manual review, escalate.",
 		"input": "Subjective assessment layout restrained/minimal yet conveys bold professional impression.",
 		"titleKo": "패키지 레이아웃 톤"
 	},
@@ -1485,7 +1485,7 @@
 		"key": "layout.sns.tone",
 		"title": "SNS layout tone",
 		"category": "layout",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1497,7 +1497,7 @@
 			"ChannelA"
 		],
 		"paramSchema": "{moodKeywords:[string]}",
-		"scoring": "VLM/human judgment against mood keywords; advisory, escalate.",
+		"scoring": "VLM/human judgment against mood keywords; manual review, escalate.",
 		"input": "Subjective assessment layout restrained/minimal yet conveys bold professional impression.",
 		"titleKo": "SNS 레이아웃 톤"
 	},
@@ -1505,7 +1505,7 @@
 		"key": "layout.stationery.tone",
 		"title": "Stationery layout tone",
 		"category": "layout",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1517,7 +1517,7 @@
 			"ChannelA"
 		],
 		"paramSchema": "{moodKeywords:[string]}",
-		"scoring": "VLM/human judgment against mood keywords; advisory, escalate.",
+		"scoring": "VLM/human judgment against mood keywords; manual review, escalate.",
 		"input": "Subjective assessment layout restrained/minimal yet conveys bold professional impression.",
 		"titleKo": "스테이셔너리 레이아웃 톤"
 	},
@@ -1525,7 +1525,7 @@
 		"key": "imagery.style",
 		"title": "Key-visual style / type system",
 		"category": "imagery",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1537,14 +1537,14 @@
 			"pledis"
 		],
 		"paramSchema": "{conceptName:string,types:[{id:string,name:string,description:string,variants:[string]}]}",
-		"scoring": "VLM classification into defined KV type; pass if matches; concept-fidelity advisory.",
+		"scoring": "VLM classification into defined KV type; pass if matches; concept-fidelity manual review.",
 		"input": "Classify composition against defined KV types and verify it matches one."
 	},
 	{
 		"key": "imagery.treatment",
 		"title": "Key-visual sub-type treatments & arrangement principle",
 		"category": "imagery",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -1556,14 +1556,14 @@
 			"SLL"
 		],
 		"paramSchema": "{subtypes:[{id:string,name:string,usage:string,constraint:string}],principle:string,technique:string}",
-		"scoring": "VLM sub-type classification + constraint check; advisory.",
+		"scoring": "VLM sub-type classification + constraint check; manual review.",
 		"input": "Classify KV sub-type and verify treatment constraints and arrangement principle."
 	},
 	{
 		"key": "imagery.advertisement.classification",
 		"title": "Advertisement imagery classification",
 		"category": "imagery",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1573,7 +1573,7 @@
 			"SLL"
 		],
 		"paramSchema": "{categories:[{side:string,subtypes:[{name:string,moodCriteria:[string]}]}]}",
-		"scoring": "VLM classification + mood-criteria judgment; advisory, escalate.",
+		"scoring": "VLM classification + mood-criteria judgment; manual review, escalate.",
 		"input": "Classify photo into taxonomy and assess subtype mood/composition criteria.",
 		"titleKo": "광고 이미지 분류 기준"
 	},
@@ -1581,7 +1581,7 @@
 		"key": "imagery.photography.classification",
 		"title": "Photography taxonomy & mood criteria",
 		"category": "imagery",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1591,7 +1591,7 @@
 			"SLL"
 		],
 		"paramSchema": "{categories:[{side:string,subtypes:[{name:string,moodCriteria:[string]}]}]}",
-		"scoring": "VLM classification + mood-criteria judgment; advisory, escalate.",
+		"scoring": "VLM classification + mood-criteria judgment; manual review, escalate.",
 		"input": "Classify photo into taxonomy and assess subtype mood/composition criteria.",
 		"titleKo": "사진 분류·무드 기준"
 	},
@@ -1599,7 +1599,7 @@
 		"key": "imagery.sns.classification",
 		"title": "SNS imagery classification",
 		"category": "imagery",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1609,7 +1609,7 @@
 			"SLL"
 		],
 		"paramSchema": "{categories:[{side:string,subtypes:[{name:string,moodCriteria:[string]}]}]}",
-		"scoring": "VLM classification + mood-criteria judgment; advisory, escalate.",
+		"scoring": "VLM classification + mood-criteria judgment; manual review, escalate.",
 		"input": "Classify photo into taxonomy and assess subtype mood/composition criteria.",
 		"titleKo": "SNS 이미지 분류 기준"
 	},
@@ -1617,7 +1617,7 @@
 		"key": "imagery.stationery.classification",
 		"title": "Stationery imagery classification",
 		"category": "imagery",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1627,7 +1627,7 @@
 			"SLL"
 		],
 		"paramSchema": "{categories:[{side:string,subtypes:[{name:string,moodCriteria:[string]}]}]}",
-		"scoring": "VLM classification + mood-criteria judgment; advisory, escalate.",
+		"scoring": "VLM classification + mood-criteria judgment; manual review, escalate.",
 		"input": "Classify photo into taxonomy and assess subtype mood/composition criteria.",
 		"titleKo": "스테이셔너리 이미지 분류 기준"
 	},
@@ -1635,7 +1635,7 @@
 		"key": "imagery.misuse",
 		"title": "Photography / imagery incorrect-usage prohibitions",
 		"category": "imagery",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1651,7 +1651,7 @@
 		"key": "imagery.treatment-spec",
 		"title": "Image color treatment / overlay / crop ratios",
 		"category": "imagery",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -1671,7 +1671,7 @@
 		"key": "imagery.background-tone",
 		"title": "Photography background tone (bright achromatic)",
 		"category": "imagery",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -1689,7 +1689,7 @@
 		"key": "illustration.ai-symbol",
 		"title": "AI-generated 3D symbol concept & type matrix",
 		"category": "illustration",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1699,14 +1699,14 @@
 			"ChannelA"
 		],
 		"paramSchema": "{brandValueStatement:string,types:[{type:string,keywords:[string],moodAdjectives:[string],visualLanguage:[string],referencePrograms:[string]}],allowedTools:[string],combinableWithContentIP:boolean}",
-		"scoring": "VLM judgment generated symbol mood matches intended type matrix; advisory.",
+		"scoring": "VLM judgment generated symbol mood matches intended type matrix; manual review.",
 		"input": "Verify AI 3D symbols express brand value and match Symbol Type matrix."
 	},
 	{
 		"key": "illustration.ai-workflow",
 		"title": "AI asset production workflow",
 		"category": "illustration",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1724,8 +1724,8 @@
 		"key": "illustration.symbol-usage",
 		"title": "Symbol application touchpoints & mood",
 		"category": "illustration",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
@@ -1741,7 +1741,7 @@
 		"key": "illustration.pattern-graphics",
 		"title": "Brand pattern-graphics construction system",
 		"category": "illustration",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -1759,7 +1759,7 @@
 		"key": "illustration.line-graphic",
 		"title": "Key Layout line-graphic construction (pledis)",
 		"category": "illustration",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -1778,7 +1778,7 @@
 		"key": "iconography.style",
 		"title": "Iconography style & generation spec",
 		"category": "iconography",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1796,7 +1796,7 @@
 		"key": "iconography.color",
 		"title": "Iconography color mapping & accent",
 		"category": "iconography",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -1806,16 +1806,16 @@
 			"ChannelA"
 		],
 		"paramSchema": "{gradients:[{index:number,name:string}],colorChoiceRef:string?,primaryColorAreaPct:{min:number,max:number},application:string,gradientSource:string?}",
-		"scoring": "Primary-accent area % deterministic 20-30%; gradient-set match deterministic; touchpoint advisory.",
+		"scoring": "Primary-accent area % deterministic 20-30%; gradient-set match deterministic; touchpoint manual review.",
 		"input": "Verify icon color mapping uses defined gradient and primary accent ~20-30%.",
-		"fixApplied": "Dropped untyped mappingTool:object; colorChoiceRef/gradientSource optional advisory."
+		"fixApplied": "Dropped untyped mappingTool:object; colorChoiceRef/gradientSource optional manual review."
 	},
 	{
 		"key": "iconography.usage",
 		"title": "Iconography application touchpoints & mood",
 		"category": "iconography",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
@@ -1831,7 +1831,7 @@
 		"key": "iconography.construction",
 		"title": "Functional icon grid / keyline / stroke construction",
 		"category": "iconography",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -1848,7 +1848,7 @@
 		"key": "motion.timing",
 		"title": "Motion variants, durations & transitions",
 		"category": "motion",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"screen"
@@ -1868,8 +1868,8 @@
 		"key": "motion.behavior",
 		"title": "Scroll/section motion behavior & interaction",
 		"category": "motion",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"screen"
 		],
@@ -1880,15 +1880,15 @@
 			"SLL"
 		],
 		"paramSchema": "{sections:[{name:string,scrollBehavior:string,interaction:string,mediaBehavior:string}],opacityStates:{activeOpacity:number,inactiveOpacity:number},hover:{trigger:string,targetColor:string}}",
-		"scoring": "Behavioral observation advisory; opacity/hover-color deterministic where measurable.",
+		"scoring": "Behavioral observation manual review; opacity/hover-color deterministic where measurable.",
 		"input": "Check per-section scroll/media/interaction behavior matches specified behavior."
 	},
 	{
 		"key": "motion.sequence",
 		"title": "Branded motion sequence (ID / ending)",
 		"category": "motion",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"screen"
 		],
@@ -1897,22 +1897,22 @@
 			"ChannelA"
 		],
 		"paramSchema": "{sequence:[string],trigger:string,behavior:string,referenceAsset:string}",
-		"scoring": "Sequence-order observation against reference; advisory/heuristic video match.",
+		"scoring": "Sequence-order observation against reference; manual review/heuristic video match.",
 		"input": "Verify branded sequences follow prescribed order (KV->slogan->logo) and match reference."
 	},
 	{
 		"key": "motion.sound",
 		"title": "Sonic branding / audio mnemonic",
 		"category": "motion",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"screen"
 		],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{sonicLogo:{asset:string,durationSec:number},uiSounds:[{name:string,asset:string}],musicGuidelines:[string],usageContexts:[string]}",
-		"scoring": "Audio fingerprint/duration heuristic-deterministic; music/tone fit advisory.",
+		"scoring": "Audio fingerprint/duration heuristic-deterministic; music/tone fit manual review.",
 		"input": "Verify audio brand elements match approved asset/duration/context.",
 		"domainDefault": true
 	},
@@ -1920,7 +1920,7 @@
 		"key": "voice.tone",
 		"title": "Brand voice & tone of voice",
 		"category": "voice",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1932,14 +1932,14 @@
 			"pledis"
 		],
 		"paramSchema": "{tone_attributes:[string],guidelines:[string],preferredWords:[string],avoid:[string]}",
-		"scoring": "VLM/human tone judgment against attributes; advisory.",
+		"scoring": "VLM/human tone judgment against attributes; manual review.",
 		"input": "Assess copy for intended tone/personality (sentence length, positivity, preferred/avoided words)."
 	},
 	{
 		"key": "voice.personality",
 		"title": "Brand personality / persona traits",
 		"category": "voice",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1949,14 +1949,14 @@
 			"SLL"
 		],
 		"paramSchema": "{traits:[{name:string,description:string}],persona:{name:string,description:string}}",
-		"scoring": "VLM/human judgment against traits/persona; advisory.",
+		"scoring": "VLM/human judgment against traits/persona; manual review.",
 		"input": "Assess expression aligns with defined personality traits and persona character."
 	},
 	{
 		"key": "voice.design-principle",
 		"title": "Design expression principles",
 		"category": "voice",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1967,14 +1967,14 @@
 			"SLL"
 		],
 		"paramSchema": "{principles:[{name:string,kr:string,description:string}]}",
-		"scoring": "VLM/human judgment output embodies principles; advisory.",
+		"scoring": "VLM/human judgment output embodies principles; manual review.",
 		"input": "Assess design output against named guiding design-expression principles."
 	},
 	{
 		"key": "voice.naming-grammar",
 		"title": "Brand & product naming, capitalization & grammar",
 		"category": "voice",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -1984,7 +1984,7 @@
 			"ChannelA"
 		],
 		"paramSchema": "{brandName:{canonical:string,neverWrite:[string],casing:string,possessiveRule:string},productNaming:object,firstMentionTM:boolean,abbreviationsAllowed:[string]}",
-		"scoring": "OCR + rule-based string checks; mismatch (wrong casing) fails; tone advisory.",
+		"scoring": "OCR + rule-based string checks; mismatch (wrong casing) fails; tone manual review.",
 		"input": "Verify brand/product/feature name correct casing/spacing/spelling/grammar.",
 		"underRepresented": true
 	},
@@ -1992,15 +1992,15 @@
 		"key": "voice.editorial-style",
 		"title": "Editorial / writing style conventions",
 		"category": "voice",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{headingCase:string,numberFormat:string,dateFormat:string,timeFormat:string,currency:string,oxfordComma:boolean,terminology:[{use:string,avoid:string}],spellingVariant:string}",
-		"scoring": "Many rules deterministic string/regex; overall consistency advisory; composite.",
+		"scoring": "Many rules deterministic string/regex; overall consistency manual review; composite.",
 		"input": "Verify copy follows editorial conventions: number/date/heading-case/terminology/spelling.",
 		"domainDefault": true
 	},
@@ -2008,8 +2008,8 @@
 		"key": "messaging.advertisement.tagline",
 		"title": "Advertisement tagline",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
@@ -2022,15 +2022,15 @@
 		"paramSchema": "{tagline:string,slogan_kr:string,slogan_en:string,logline_kr:string,logline_en:string,casing:string,lockupForms:[string]}",
 		"scoring": "OCR + exact-string match case-sensitive; presence/placement heuristic; mismatch fails.",
 		"input": "Detect tagline/slogan/logline; verify exact wording/casing matches approved copy.",
-		"note": "schema brand-agnostic; executor/tier could be heuristic/B for verbatim match, kept advisory for placement safety.",
+		"note": "schema brand-agnostic; executor/tier could be heuristic/B for verbatim match, kept manual review for placement safety.",
 		"titleKo": "광고 태그라인"
 	},
 	{
 		"key": "messaging.signature.tagline",
 		"title": "Signature tagline",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
@@ -2043,15 +2043,15 @@
 		"paramSchema": "{tagline:string,slogan_kr:string,slogan_en:string,logline_kr:string,logline_en:string,casing:string,lockupForms:[string]}",
 		"scoring": "OCR + exact-string match case-sensitive; presence/placement heuristic; mismatch fails.",
 		"input": "Detect tagline/slogan/logline; verify exact wording/casing matches approved copy.",
-		"note": "schema brand-agnostic; executor/tier could be heuristic/B for verbatim match, kept advisory for placement safety.",
+		"note": "schema brand-agnostic; executor/tier could be heuristic/B for verbatim match, kept manual review for placement safety.",
 		"titleKo": "시그니처 태그라인"
 	},
 	{
 		"key": "messaging.visual.tagline",
 		"title": "Visual system tagline",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
@@ -2064,15 +2064,15 @@
 		"paramSchema": "{tagline:string,slogan_kr:string,slogan_en:string,logline_kr:string,logline_en:string,casing:string,lockupForms:[string]}",
 		"scoring": "OCR + exact-string match case-sensitive; presence/placement heuristic; mismatch fails.",
 		"input": "Detect tagline/slogan/logline; verify exact wording/casing matches approved copy.",
-		"note": "schema brand-agnostic; executor/tier could be heuristic/B for verbatim match, kept advisory for placement safety.",
+		"note": "schema brand-agnostic; executor/tier could be heuristic/B for verbatim match, kept manual review for placement safety.",
 		"titleKo": "비주얼 태그라인"
 	},
 	{
 		"key": "messaging.name.statement",
 		"title": "Brand name statement",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
@@ -2082,7 +2082,7 @@
 			"SLL"
 		],
 		"paramSchema": "{statements:[{role:string,text_kr:string,text_en:string}],values:[{name:string,description:string}]}",
-		"scoring": "Exact-string match per role; deterministic on clean text, advisory in practice.",
+		"scoring": "Exact-string match per role; deterministic on clean text, manual review in practice.",
 		"input": "Verify long-form brand copy matches approved wording per role.",
 		"titleKo": "브랜드 네임 문구"
 	},
@@ -2090,8 +2090,8 @@
 		"key": "messaging.narrative.statement",
 		"title": "Brand narrative statement",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
@@ -2101,7 +2101,7 @@
 			"SLL"
 		],
 		"paramSchema": "{statements:[{role:string,text_kr:string,text_en:string}],values:[{name:string,description:string}]}",
-		"scoring": "Exact-string match per role; deterministic on clean text, advisory in practice.",
+		"scoring": "Exact-string match per role; deterministic on clean text, manual review in practice.",
 		"input": "Verify long-form brand copy matches approved wording per role.",
 		"titleKo": "브랜드 내러티브 문구"
 	},
@@ -2109,7 +2109,7 @@
 		"key": "messaging.key-message",
 		"title": "Core message values / concept",
 		"category": "messaging",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -2119,15 +2119,15 @@
 			"pledis"
 		],
 		"paramSchema": "{coreValues:[string]}",
-		"scoring": "VLM/human judgment of message-concept alignment; advisory.",
+		"scoring": "VLM/human judgment of message-concept alignment; manual review.",
 		"input": "Assess messaging reflects brand core values/concept."
 	},
 	{
 		"key": "messaging.advertisement.boilerplate",
 		"title": "Advertisement boilerplate",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"print"
@@ -2139,7 +2139,7 @@
 			"pledis"
 		],
 		"paramSchema": "{statements:[{role:string,text:string}]}",
-		"scoring": "OCR + string match; deterministic on clean text, advisory overall.",
+		"scoring": "OCR + string match; deterministic on clean text, manual review overall.",
 		"input": "Check descriptor/boilerplate statements on applications match approved wording.",
 		"titleKo": "광고 보일러플레이트"
 	},
@@ -2147,8 +2147,8 @@
 		"key": "messaging.stationery.boilerplate",
 		"title": "Stationery boilerplate",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"print"
@@ -2160,7 +2160,7 @@
 			"pledis"
 		],
 		"paramSchema": "{statements:[{role:string,text:string}]}",
-		"scoring": "OCR + string match; deterministic on clean text, advisory overall.",
+		"scoring": "OCR + string match; deterministic on clean text, manual review overall.",
 		"input": "Check descriptor/boilerplate statements on applications match approved wording.",
 		"titleKo": "스테이셔너리 보일러플레이트"
 	},
@@ -2168,8 +2168,8 @@
 		"key": "messaging.visual.boilerplate",
 		"title": "Visual system boilerplate",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"print"
@@ -2181,7 +2181,7 @@
 			"pledis"
 		],
 		"paramSchema": "{statements:[{role:string,text:string}]}",
-		"scoring": "OCR + string match; deterministic on clean text, advisory overall.",
+		"scoring": "OCR + string match; deterministic on clean text, manual review overall.",
 		"input": "Check descriptor/boilerplate statements on applications match approved wording.",
 		"titleKo": "비주얼 보일러플레이트"
 	},
@@ -2189,8 +2189,8 @@
 		"key": "messaging.package.contact",
 		"title": "Package contact information block",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"print",
@@ -2212,8 +2212,8 @@
 		"key": "messaging.stationery.contact",
 		"title": "Stationery contact information block",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"print",
@@ -2235,7 +2235,7 @@
 		"key": "messaging.legal-footer",
 		"title": "Legal / copyright / distribution footer",
 		"category": "messaging",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all"
@@ -2254,7 +2254,7 @@
 		"key": "messaging.email-signature",
 		"title": "Email signature content block",
 		"category": "messaging",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"screen"
@@ -2272,8 +2272,8 @@
 		"key": "messaging.package.content.fields",
 		"title": "Package required content fields",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"print"
@@ -2294,8 +2294,8 @@
 		"key": "messaging.stationery.content.fields",
 		"title": "Stationery required content fields",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"print"
@@ -2316,8 +2316,8 @@
 		"key": "messaging.advertisement.copy",
 		"title": "Advertisement approved copy",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"print"
@@ -2327,7 +2327,7 @@
 			"ChannelA"
 		],
 		"paramSchema": "{approvedCopy:[string]}",
-		"scoring": "OCR + string match against approved copy set; advisory.",
+		"scoring": "OCR + string match against approved copy set; manual review.",
 		"input": "Check brand-story/tagline/sign-off copy on collateral/merch matches approved statements.",
 		"titleKo": "광고 승인 카피"
 	},
@@ -2335,8 +2335,8 @@
 		"key": "messaging.sns.copy",
 		"title": "SNS approved copy",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"print"
@@ -2346,7 +2346,7 @@
 			"ChannelA"
 		],
 		"paramSchema": "{approvedCopy:[string]}",
-		"scoring": "OCR + string match against approved copy set; advisory.",
+		"scoring": "OCR + string match against approved copy set; manual review.",
 		"input": "Check brand-story/tagline/sign-off copy on collateral/merch matches approved statements.",
 		"titleKo": "SNS 승인 카피"
 	},
@@ -2354,8 +2354,8 @@
 		"key": "messaging.stationery.copy",
 		"title": "Stationery approved copy",
 		"category": "messaging",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"print"
@@ -2365,7 +2365,7 @@
 			"ChannelA"
 		],
 		"paramSchema": "{approvedCopy:[string]}",
-		"scoring": "OCR + string match against approved copy set; advisory.",
+		"scoring": "OCR + string match against approved copy set; manual review.",
 		"input": "Check brand-story/tagline/sign-off copy on collateral/merch matches approved statements.",
 		"titleKo": "스테이셔너리 승인 카피"
 	},
@@ -2373,7 +2373,7 @@
 		"key": "application.advertisement.format",
 		"title": "Advertisement application format / size & aspect ratios per item",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -2397,7 +2397,7 @@
 		"key": "application.stationery.format",
 		"title": "Stationery format / trim size per item",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -2421,7 +2421,7 @@
 		"key": "application.package.format",
 		"title": "Package format / size & aspect ratios per item",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -2445,7 +2445,7 @@
 		"key": "application.print-spec",
 		"title": "Print method / spot color / ink spec (per item)",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"print"
@@ -2457,15 +2457,15 @@
 			"pledis"
 		],
 		"paramSchema": "{items:[{name:string,method:string,inkType:string,spotColors:[string],colorCount:number,binding:string}]}",
-		"scoring": "Spot-color values/count vs Pantone deterministic; method/binding advisory; composite.",
+		"scoring": "Spot-color values/count vs Pantone deterministic; method/binding manual review; composite.",
 		"input": "Verify print method, ink/spot-color count and Pantone/CMYK, color count per item."
 	},
 	{
 		"key": "application.material",
 		"title": "Substrate / paper stock / material (per item)",
 		"category": "application",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"print"
 		],
@@ -2478,14 +2478,14 @@
 		"paramSchema": "{items:[{name:string,stock:string,weight:number,unit:string,material:string}]}",
 		"scoring": "Metadata/physical heuristic; pass if stock in approved list.",
 		"input": "Verify substrate/paper stock/weight or material matches approved list.",
-		"fixApplied": "tier B -> C to match executor=advisory (not CV-checkable)."
+		"fixApplied": "tier B -> C to match executor=manual (not CV-checkable)."
 	},
 	{
 		"key": "application.finishing",
 		"title": "Post-processing / finishing (per item)",
 		"category": "application",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"print"
 		],
@@ -2498,13 +2498,13 @@
 		"paramSchema": "{items:[{name:string,technique:string,depth:number,unit:string,optional:boolean,options:[string]}]}",
 		"scoring": "Finishing presence; some measurable (deboss depth); optional absent doesn't fail.",
 		"input": "Verify applied finishing operations match spec; many optional.",
-		"fixApplied": "tier B -> C to align executor=advisory."
+		"fixApplied": "tier B -> C to align executor=manual."
 	},
 	{
 		"key": "application.die-line",
 		"title": "Packaging die-line (join / perforation areas)",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"print"
@@ -2522,7 +2522,7 @@
 		"key": "application.stationery.spec.scale",
 		"title": "Stationery specification display-scale convention",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -2542,7 +2542,7 @@
 		"key": "application.package.spec.scale",
 		"title": "Package specification display-scale convention",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -2562,8 +2562,8 @@
 		"key": "application.kit-composition",
 		"title": "Kit / package component inventory",
 		"category": "application",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"print"
@@ -2581,8 +2581,8 @@
 		"key": "application.touchpoint-catalog",
 		"title": "Application touchpoint catalog (offline/online index)",
 		"category": "application",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"print",
@@ -2601,7 +2601,7 @@
 		"key": "application.web",
 		"title": "Website spec (format/nav/footer/sections/responsive)",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen"
@@ -2620,7 +2620,7 @@
 		"key": "application.sns",
 		"title": "SNS content spec (format/profile/look-and-feel)",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen"
@@ -2632,14 +2632,14 @@
 			"pledis"
 		],
 		"paramSchema": "{formats:[{ratio:string,width:number,height:number,margin:number,content_area:number,unit:string}],profile:{handle:string,name:string,category:string,tagline:string,url:string},contentModes:[string],requiredElements:[string],modificationAllowed:boolean}",
-		"scoring": "Format dims/safe-margin deterministic; profile OCR; look-and-feel advisory; composite.",
+		"scoring": "Format dims/safe-margin deterministic; profile OCR; look-and-feel manual review; composite.",
 		"input": "Verify SNS posts/profile conform to canvas size, safe margins, profile fields, content modes."
 	},
 	{
 		"key": "application.display-broadcast",
 		"title": "Broadcast display elements (bug/banner/disclaimer/caption)",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen"
@@ -2657,7 +2657,7 @@
 		"key": "application.merch-spec",
 		"title": "Merchandise / collateral design spec",
 		"category": "application",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -2669,15 +2669,15 @@
 			"pledis"
 		],
 		"paramSchema": "{items:[{name:string,requiredAssets:[string],tone:string,components:[string]}]}",
-		"scoring": "VLM/human: core assets present + restrained layout + components; advisory.",
+		"scoring": "VLM/human: core assets present + restrained layout + components; manual review.",
 		"input": "Verify merch/collateral use consistent core brand assets in restrained layout."
 	},
 	{
 		"key": "application.booth",
 		"title": "Offline booth / exhibition structures spec",
 		"category": "application",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"print",
 			"all"
@@ -2687,14 +2687,14 @@
 			"SLL"
 		],
 		"paramSchema": "{structures:[{name:string,form:string,keyVisual:boolean,reflectsLogoSlant:boolean,copyPlacement:string,lightingRecommendation:string,views:[string]}],wallGraphicTypes:[{type:string,recommendedContext:string}],purpose:string,moodKeywords:[string]}",
-		"scoring": "Subjective structure/look review advisory; measurable sub-parts route elsewhere.",
+		"scoring": "Subjective structure/look review manual review; measurable sub-parts route elsewhere.",
 		"input": "Verify booth structures match defined type specs (form/KV/slant/copy/lighting)."
 	},
 	{
 		"key": "application.online-misc",
 		"title": "Online application templates (banner/job-posting/document/PPT)",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen",
@@ -2713,7 +2713,7 @@
 		"key": "application.source",
 		"title": "Canonical source asset reference",
 		"category": "application",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -2732,7 +2732,7 @@
 		"key": "application.poster-motion",
 		"title": "Motion poster spec (format / composition)",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen"
@@ -2749,7 +2749,7 @@
 		"key": "application.design-concept",
 		"title": "Application design-concept alignment",
 		"category": "application",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all"
@@ -2760,14 +2760,14 @@
 			"ChannelA"
 		],
 		"paramSchema": "{conceptKeywords:[string],mustUse:[string],moodKeywords:[string]}",
-		"scoring": "VLM/human concept-alignment judgment; advisory.",
+		"scoring": "VLM/human concept-alignment judgment; manual review.",
 		"input": "Subjective review application aligns with stated design concept / brand persona experience."
 	},
 	{
 		"key": "application.social-export",
 		"title": "Per-platform social export size matrix",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen"
@@ -2786,7 +2786,7 @@
 		"key": "application.open-graph",
 		"title": "Open Graph / link-preview & metadata imagery",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen"
@@ -2794,7 +2794,7 @@
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{ogImage:{width:number,height:number,unit:string},cardType:string,faviconSizes:[number],manifestIcons:[number],titleTemplate:string}",
-		"scoring": "Dimensions/icon-size presence deterministic; title framing OCR+advisory; composite.",
+		"scoring": "Dimensions/icon-size presence deterministic; title framing OCR+manual review; composite.",
 		"input": "Verify link-preview/OG and metadata assets exist at required dimensions with correct framing.",
 		"domainDefault": true
 	},
@@ -2802,7 +2802,7 @@
 		"key": "application.ui-components",
 		"title": "UI component styling & states",
 		"category": "application",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"screen"
@@ -2820,7 +2820,7 @@
 		"key": "application.data-viz",
 		"title": "Data visualization / chart / table styling",
 		"category": "application",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -2838,8 +2838,8 @@
 		"key": "application.signage-wayfinding",
 		"title": "Signage / wayfinding / environmental graphics",
 		"category": "application",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"print",
 			"all"
@@ -2849,7 +2849,7 @@
 			"SLL"
 		],
 		"paramSchema": "{signTypes:[{name:string,minLetterHeight:object,viewingDistance:object,material:string,illumination:string,contrast:object}],wayfindingSystem:object}",
-		"scoring": "Letter-height-vs-distance and contrast deterministic; material/illumination physical human; mostly advisory.",
+		"scoring": "Letter-height-vs-distance and contrast deterministic; material/illumination physical human; mostly manual review.",
 		"input": "Verify signage/environmental graphics meet viewing-distance legibility, material, mounting, contrast.",
 		"underRepresented": true
 	},
@@ -2857,7 +2857,7 @@
 		"key": "application.export-format",
 		"title": "Asset export format, resolution & color-profile convention",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -2877,7 +2877,7 @@
 		"key": "accessibility.text-contrast",
 		"title": "Text/UI contrast minimum (WCAG tiers)",
 		"category": "accessibility",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"all",
@@ -2896,7 +2896,7 @@
 		"key": "accessibility.non-color-cue",
 		"title": "Information not conveyed by color alone",
 		"category": "accessibility",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"all",
@@ -2913,7 +2913,7 @@
 		"key": "accessibility.alt-text-captions",
 		"title": "Alternative text, captions & transcripts",
 		"category": "accessibility",
-		"tier": "C",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"screen"
@@ -2923,7 +2923,7 @@
 			"ChannelA"
 		],
 		"paramSchema": "{requireAltText:boolean,requireCaptions:boolean,requireTranscript:boolean,decorativeMarking:string,captionStyleRef:string}",
-		"scoring": "Metadata/markup presence; human/VLM meaningfulness; advisory.",
+		"scoring": "Metadata/markup presence; human/VLM meaningfulness; manual review.",
 		"input": "Verify images carry alt text, video/audio carry captions/transcripts, decorative images marked.",
 		"note": "ChannelA broadcast caption credit promoted to general media-a11y slot."
 	},
@@ -2931,7 +2931,7 @@
 		"key": "accessibility.touch-target",
 		"title": "Minimum interactive target size",
 		"category": "accessibility",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic",
 		"scopeOptions": [
 			"screen"
@@ -2947,7 +2947,7 @@
 		"key": "accessibility.focus-state",
 		"title": "Keyboard focus visibility",
 		"category": "accessibility",
-		"tier": "B",
+		"tier": "recommended",
 		"executor": "heuristic",
 		"scopeOptions": [
 			"screen"
@@ -2963,15 +2963,15 @@
 		"key": "accessibility.reduced-motion",
 		"title": "Reduced-motion / animation safety",
 		"category": "accessibility",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"screen"
 		],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{honorPrefersReducedMotion:boolean,maxFlashesPerSec:number,provideStaticAlternative:boolean}",
-		"scoring": "Flash-rate <=3/sec deterministic; prefers-reduced-motion behavioral advisory; composite (WCAG 2.3.1).",
+		"scoring": "Flash-rate <=3/sec deterministic; prefers-reduced-motion behavioral manual review; composite (WCAG 2.3.1).",
 		"input": "Verify motion honors reduced-motion preference and avoids flashing above seizure threshold.",
 		"domainDefault": true
 	},
@@ -2979,8 +2979,8 @@
 		"key": "accessibility.localization",
 		"title": "Localization / multilingual & RTL handling",
 		"category": "accessibility",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all",
 			"screen"
@@ -2991,7 +2991,7 @@
 			"ChannelA"
 		],
 		"paramSchema": "{scripts:[{name:string,font:string,fallback:string}],rtlSupport:boolean,expansionAllowancePct:number,mirroredElements:[string],dateNumberLocale:boolean}",
-		"scoring": "Script-font/truncation heuristic; RTL/mirroring/locale advisory; composite.",
+		"scoring": "Script-font/truncation heuristic; RTL/mirroring/locale manual review; composite.",
 		"input": "Verify multilingual content uses correct script fonts, accommodates expansion, applies LTR/RTL.",
 		"underRepresented": true
 	},
@@ -2999,8 +2999,8 @@
 		"key": "misc.governance",
 		"title": "Asset governance / no-modification / escalation policy",
 		"category": "misc",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
@@ -3012,7 +3012,7 @@
 			"essenherb"
 		],
 		"paramSchema": "{policies:[{policy:string,value:boolean}],rules:[string],escalationPath:string,strictAdherence:boolean,modificationAllowed:boolean,externalRemovalProhibited:boolean}",
-		"scoring": "Not visually measurable; human review; escalate undefined cases; advisory.",
+		"scoring": "Not visually measurable; human review; escalate undefined cases; manual review.",
 		"input": "Process check: strict adherence, no arbitrary modification, changes via responsible dept, no external distribution.",
 		"fixApplied": "Typed policies[]; rules[] kept as human-readable notes only (removed boolean/freeform redundancy).",
 		"note": "This IS the escalation-path definition for the lint system. essenherb implied via misuse rules."
@@ -3021,8 +3021,8 @@
 		"key": "misc.document-version",
 		"title": "Guideline document version / validity",
 		"category": "misc",
-		"tier": "C",
-		"executor": "advisory",
+		"tier": "recommended",
+		"executor": "manual",
 		"scopeOptions": [
 			"all"
 		],
@@ -3042,15 +3042,15 @@
 		"title": "Typeface case policy",
 		"titleKo": "대소문자 사용 기준",
 		"category": "typography",
-		"tier": "C",
-		"executor": "advisory"
+		"tier": "recommended",
+		"executor": "manual"
 	},
 	{
 		"key": "application.sns.canvas-format",
 		"title": "SNS canvas ratio in visual system",
 		"titleKo": "비주얼 시스템 SNS 판형",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic"
 	},
 	{
@@ -3058,7 +3058,7 @@
 		"title": "SNS content spec (format/profile/look-and-feel)",
 		"titleKo": "SNS 콘텐츠 규격",
 		"category": "application",
-		"tier": "A",
+		"tier": "required",
 		"executor": "deterministic"
 	}
 ]

@@ -18,7 +18,7 @@ export function SectionLayout({
 	return (
 		<SidebarProvider className="h-full min-h-0">
 			{nav}
-			<div className="flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-y-auto">
+			<div className="flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-y-auto motion-safe:scroll-smooth">
 				<main className="flex w-full flex-1 justify-center px-4 md:px-12">{children}</main>
 				{footer}
 			</div>
