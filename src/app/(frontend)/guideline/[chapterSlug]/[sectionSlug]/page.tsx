@@ -1,7 +1,7 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { notFound } from 'next/navigation'
 import { Separator } from '@/components/ui/separator'
-import { GuidelineBlocks } from '@/features/guideline/components/guideline-blocks'
+import { GuidelineBlocks } from '@/features/guideline/components/blocks/guideline-blocks'
 import {
 	type GetGuidelineSectionOutput,
 	getGuidelineSection,

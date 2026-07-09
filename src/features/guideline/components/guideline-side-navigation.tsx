@@ -14,6 +14,11 @@ export function GuidelineSideNavigation({
 			key: section.id,
 			label: section.title,
 			href: section.href,
+			children: section.pages.map((page) => ({
+				key: page.id,
+				label: page.title,
+				href: page.href,
+			})),
 		})),
 	}))
 

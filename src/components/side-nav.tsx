@@ -14,6 +14,7 @@ export interface SideNavItem {
 	key: string | number
 	label: string
 	href: string
+	children?: SideNavItem[]
 }
 
 export interface SideNavGroup {
@@ -29,8 +30,16 @@ function isAnchor(href: string) {
 	return href.startsWith('#')
 }
 
-function NavItem({ item, active }: { item: SideNavItem; active: boolean }) {
-	const className = `block px-2 py-1.5 text-sm transition-colors ${
+function NavItem({
+	item,
+	active,
+	child = false,
+}: {
+	item: SideNavItem
+	active: boolean
+	child?: boolean
+}) {
+	const className = `block px-2 py-1.5 ${child ? 'text-xs' : 'text-sm'} transition-colors ${
 		active ? 'font-medium text-foreground' : 'text-neutral-500 hover:text-foreground'
 	}`
 
@@ -69,6 +78,19 @@ function NavGroup({ group, pathname }: { group: SideNavGroup; pathname: string }
 				{group.items.map((item) => (
 					<li key={item.key}>
 						<NavItem item={item} active={pathname === item.href} />
+						{item.children && item.children.length > 0 && (
+							<ul className="ml-3 border-neutral-200 border-l pl-2 dark:border-neutral-800">
+								{item.children.map((child) => (
+									<li key={child.key}>
+										<NavItem
+											child
+											item={child}
+											active={pathname === child.href}
+										/>
+									</li>
+								))}
+							</ul>
+						)}
 					</li>
 				))}
 			</ul>

@@ -317,7 +317,7 @@ export interface GuidelinePage {
    * 숫자가 낮을수록 선택한 섹션 안에서 먼저 표시됩니다.
    */
   displayOrder: number;
-  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock)[] | null;
+  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -445,9 +445,9 @@ export interface ColumnUnitBlock {
       }[]
     | null;
   /**
-   * 이 블록이 설명하거나 적용하는 룰입니다. 선택한 순서대로 배치됩니다.
+   * 이 블록이 문서화하는 룰입니다. 룰의 기준·이미지는 이 블록 내용에서 자동 파생됩니다.
    */
-  rules?: (number | Rule)[] | null;
+  rule?: (number | null) | Rule;
   id?: string | null;
   blockName?: string | null;
   blockType: 'columnUnit';
@@ -492,9 +492,9 @@ export interface MediaShowcaseBlock {
   imageBackgroundColor?: (number | null) | BrandColor;
   imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
   /**
-   * 이 블록이 설명하거나 적용하는 룰입니다. 선택한 순서대로 배치됩니다.
+   * 이 블록이 문서화하는 룰입니다. 룰의 기준·이미지는 이 블록 내용에서 자동 파생됩니다.
    */
-  rules?: (number | Rule)[] | null;
+  rule?: (number | null) | Rule;
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaShowcase';
@@ -510,12 +510,43 @@ export interface ColorPaletteBlock {
    */
   colors: (number | BrandColor)[];
   /**
-   * 이 블록이 설명하거나 적용하는 룰입니다. 선택한 순서대로 배치됩니다.
+   * 이 블록이 문서화하는 룰입니다. 룰의 기준·이미지는 이 블록 내용에서 자동 파생됩니다.
    */
-  rules?: (number | Rule)[] | null;
+  rule?: (number | null) | Rule;
   id?: string | null;
   blockName?: string | null;
   blockType: 'colorPalette';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DoDontBlock".
+ */
+export interface DoDontBlock {
+  title?: string | null;
+  /**
+   * 카테고리 단위 그룹. 그룹마다 룰 1개를 문서화합니다.
+   */
+  groups?:
+    | {
+        category?: string | null;
+        /**
+         * 이 그룹(카테고리)이 문서화하는 룰입니다.
+         */
+        rule?: (number | null) | Rule;
+        examples?:
+          | {
+              kind: 'do' | 'dont';
+              image?: (number | null) | ApplicationImage;
+              caption?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'doDont';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1182,6 +1213,7 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
         columnUnit?: T | ColumnUnitBlockSelect<T>;
         mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
         colorPalette?: T | ColorPaletteBlockSelect<T>;
+        doDont?: T | DoDontBlockSelect<T>;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -1203,7 +1235,7 @@ export interface ColumnUnitBlockSelect<T extends boolean = true> {
         imageScale?: T;
         id?: T;
       };
-  rules?: T;
+  rule?: T;
   id?: T;
   blockName?: T;
 }
@@ -1215,7 +1247,7 @@ export interface MediaShowcaseBlockSelect<T extends boolean = true> {
   image?: T;
   imageBackgroundColor?: T;
   imageScale?: T;
-  rules?: T;
+  rule?: T;
   id?: T;
   blockName?: T;
 }
@@ -1226,7 +1258,31 @@ export interface MediaShowcaseBlockSelect<T extends boolean = true> {
 export interface ColorPaletteBlockSelect<T extends boolean = true> {
   title?: T;
   colors?: T;
-  rules?: T;
+  rule?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DoDontBlock_select".
+ */
+export interface DoDontBlockSelect<T extends boolean = true> {
+  title?: T;
+  groups?:
+    | T
+    | {
+        category?: T;
+        rule?: T;
+        examples?:
+          | T
+          | {
+              kind?: T;
+              image?: T;
+              caption?: T;
+              id?: T;
+            };
+        id?: T;
+      };
   id?: T;
   blockName?: T;
 }

@@ -1,5 +1,6 @@
 import { type CollectionConfig, slugField } from 'payload'
 import { guidelineBlocks } from '@/blocks/guideline'
+import { deriveRulesFromBlocks } from '@/features/guideline/blocks/registry'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -19,6 +20,28 @@ export const GuidelinePages: CollectionConfig = {
 	},
 	versions: draftVersions,
 	defaultSort: 'displayOrder',
+	hooks: {
+		// 가이드라인(블록)이 SSOT — 발행 시 블록 내용에서 룰의 evidence·referenceAssets를 파생해 반영한다.
+		// 파생 규칙은 rule-derivation이 소유(순수)하고, rules 갱신 I/O만 이 훅이 req 트랜잭션으로 처리한다.
+		// rules 컬렉션엔 되돌아오는 훅이 없어 루프가 없다.
+		afterChange: [
+			async ({ doc, req }) => {
+				if (doc._status && doc._status !== 'published') return doc
+				for (const derivation of deriveRulesFromBlocks(doc.blocks)) {
+					await req.payload.update({
+						collection: 'rules',
+						id: derivation.rule,
+						data: {
+							evidence: derivation.evidence,
+							referenceAssets: derivation.referenceAssets,
+						},
+						req,
+					})
+				}
+				return doc
+			},
+		],
+	},
 	fields: [
 		{
 			name: 'title',

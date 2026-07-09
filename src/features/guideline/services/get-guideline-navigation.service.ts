@@ -1,6 +1,7 @@
 import { cache } from 'react'
 import {
 	listPublishedChapters,
+	listPublishedPageNavItems,
 	listPublishedSectionNavItems,
 } from '../repositories/guideline-view.payload.repository'
 import {
@@ -20,21 +21,27 @@ export interface GetGuidelineNavigationOutput {
 			id: number
 			title: string
 			href: string
+			pages: {
+				id: number
+				title: string
+				href: string
+			}[]
 		}[]
 	}[]
 }
 
 /**
- * Creator UI 사이드바는 발행된 가이드라인의 목차 정보만 읽는다(장 → 섹션).
- * 본문과 섹션 하위 페이지 렌더링은 chapter/section service가 담당한다.
+ * Creator UI 사이드바는 발행된 가이드라인의 목차 정보만 읽는다(장 → 섹션 → 페이지).
+ * 본문 렌더링은 chapter/section service가 담당한다.
  * Payload 조회는 guideline-view repository가 소유한다.
  */
 export const getGuidelineNavigation = cache(async (): Promise<GetGuidelineNavigationOutput> => {
 	try {
-		const [metadata, chapters, sections] = await Promise.all([
+		const [metadata, chapters, sections, pages] = await Promise.all([
 			getGuidelineMetadata(),
 			listPublishedChapters(),
 			listPublishedSectionNavItems(),
+			listPublishedPageNavItems(),
 		])
 
 		return {
@@ -52,6 +59,13 @@ export const getGuidelineNavigation = cache(async (): Promise<GetGuidelineNaviga
 						id: section.id,
 						title: section.title,
 						href: `/guideline/${chapter.slug}/${section.slug}`,
+						pages: pages
+							.filter((page) => getId(page.section) === section.id)
+							.map((page) => ({
+								id: page.id,
+								title: page.title,
+								href: `/guideline/${chapter.slug}/${section.slug}#${page.slug}`,
+							})),
 					})),
 			})),
 		}
@@ -68,3 +82,7 @@ export const getGuidelineNavigation = cache(async (): Promise<GetGuidelineNaviga
 		}
 	}
 })
+
+function getId(value: number | { id: number }) {
+	return typeof value === 'object' ? value.id : value
+}

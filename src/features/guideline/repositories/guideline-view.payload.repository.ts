@@ -64,6 +64,26 @@ export async function listPublishedSectionNavItems() {
 	return sections.docs
 }
 
+export async function listPublishedPageNavItems() {
+	const payload = await getPayload({ config })
+	const pages = await payload.find({
+		collection: 'guideline-pages',
+		depth: 0,
+		sort: 'displayOrder',
+		limit: 1000,
+		locale: LOCALE,
+		fallbackLocale: FALLBACK_LOCALE,
+		draft: false,
+		select: {
+			title: true,
+			slug: true,
+			section: true,
+		},
+	})
+
+	return pages.docs
+}
+
 export async function findPublishedChapterBySlug(chapterSlug: string) {
 	const payload = await getPayload({ config })
 	const chapters = await payload.find({
