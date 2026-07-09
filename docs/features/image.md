@@ -19,7 +19,7 @@ Create가 산출물에 이미지가 필요할 때 이 기능을 호출하는 것
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
 | [Page](../surfaces/page.md) | 구현 | `/image` — 프롬프트 입력 → 후보 그리드 → 택1 |
-| [AI Chat](../surfaces/ai-chat.md) | 계획 | agent tool로 등록해 대화 중 생성 |
+| [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `generateImage`로 대화 중 생성, 후보를 챗에 렌더 |
 | REST | 구현 | `POST /api/image`(same-origin, 유료 경로는 인증 게이트) |
 | Slack | 계획 | — |
 

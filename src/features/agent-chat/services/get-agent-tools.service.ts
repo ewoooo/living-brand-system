@@ -5,6 +5,11 @@ import {
 	type AgentSkillDetail,
 	findEnabledAgentSkillByName,
 } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
+import { IMAGE_PRESETS } from '@/features/image-generation/presets'
+import {
+	type AgentGeneratedImagesAttachment,
+	generateImageCandidates,
+} from '@/features/image-generation/services/generate-image.service'
 import { AgentConfigurationError } from '@/lib/errors'
 import type { User } from '@/payload-types'
 import {
@@ -24,6 +29,7 @@ import {
 	searchAgentGuidelines,
 } from './get-agent-guideline-context.service'
 
+export type { AgentGeneratedImagesAttachment } from '@/features/image-generation/services/generate-image.service'
 export type { AgentTemplateImageAttachment } from './agent-template-request.service'
 
 const guidelineToolContextSchema = z.object({
@@ -33,6 +39,10 @@ const guidelineToolContextSchema = z.object({
 const checkScenarioSummary = CHECK_SCENARIOS.map(
 	(scenario) => `${scenario.key} (${scenario.title})`,
 ).join(', ')
+
+const imagePresetSummary = IMAGE_PRESETS.map((preset) => `${preset.id} (${preset.label})`).join(
+	', ',
+)
 
 /**
  * Agent answer stream에 전달할 AI SDK tool set을 만든다.
@@ -112,6 +122,27 @@ export function getAgentTools() {
 			contextSchema: guidelineToolContextSchema,
 			execute: ({ templateId, values }, { context }) =>
 				prepareTemplateImage(context.user, templateId, values),
+		}),
+		generateImage: tool({
+			description: `Generate NEW brand-styled images from a text prompt using AI image generation. Use when the user wants to create or generate a fresh image from a description (배경, 풍경, 제품컷, 헤더 이미지 등). This is DIFFERENT from prepareTemplateImage, which only fills fixed templates like 명함/카드. Optional presetId applies a brand tone and size: ${imagePresetSummary}.`,
+			inputSchema: z.object({
+				prompt: z.string().min(1).max(500),
+				presetId: z.string().max(40).optional(),
+				count: z.number().int().min(1).max(4).optional(),
+			}),
+			contextSchema: guidelineToolContextSchema,
+			execute: async ({ prompt, presetId, count }) => {
+				const images = await generateImageCandidates({
+					userInput: prompt,
+					presetId,
+					count: count ?? 2,
+				})
+				return {
+					type: 'generated-images',
+					prompt,
+					images,
+				} satisfies AgentGeneratedImagesAttachment
+			},
 		}),
 		runCheck: tool({
 			description: `Run a quality check on the latest image attached by the user in this chat. Use when the user asks to inspect, validate, or check an attached image. Supported scenarioKey values: ${checkScenarioSummary}. Use scenarioKey "stationery" for business card or 명함 checks.`,
