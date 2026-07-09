@@ -9,6 +9,8 @@ import {
 	AttachmentTitle,
 } from '@/components/ui/attachment'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
+import type { AgentChatReaction } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
+import { AgentChatReactions } from './agent-chat-reactions'
 
 export function AgentChatErrorBubble({ error }: { error: Error }) {
 	return (
@@ -77,9 +79,17 @@ function AgentChatFileAttachment({ file }: { file: FileUIPart }) {
 }
 
 export function AgentChatAgentBubble({
+	agentChatMessageId,
+	agentChatSessionId,
+	canReact = false,
+	initialReaction,
 	text,
 	isStreaming = false,
 }: {
+	agentChatMessageId?: string
+	agentChatSessionId?: number
+	canReact?: boolean
+	initialReaction?: AgentChatReaction
 	text: string
 	isStreaming?: boolean
 }) {
@@ -88,7 +98,11 @@ export function AgentChatAgentBubble({
 	}
 
 	return (
-		<Bubble align="start" variant="muted" className="rounded-full">
+		<Bubble
+			align="start"
+			variant="muted"
+			className={canReact ? 'mt-2 rounded-full' : 'rounded-full'}
+		>
 			<BubbleContent className="px-4 py-4">
 				<Streamdown
 					animated
@@ -99,6 +113,13 @@ export function AgentChatAgentBubble({
 					{text}
 				</Streamdown>
 			</BubbleContent>
+			{canReact && agentChatSessionId && agentChatMessageId ? (
+				<AgentChatReactions
+					agentChatMessageId={agentChatMessageId}
+					agentChatSessionId={agentChatSessionId}
+					initialReaction={initialReaction}
+				/>
+			) : null}
 		</Bubble>
 	)
 }

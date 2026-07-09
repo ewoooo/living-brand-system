@@ -2,6 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic'
 import { type InferAgentUIMessage, isStepCount, ToolLoopAgent } from 'ai'
 import { z } from 'zod'
 import { env } from '@/env'
+import type { AgentChatReaction } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import { findEnabledAgentSkillSummaries } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import { getAgentDefaultInstructions } from '@/features/agent-chat/services/get-agent-default-instructions.service'
 import { getAgentTools } from '@/features/agent-chat/services/get-agent-tools.service'
@@ -10,6 +11,7 @@ import { AgentConfigurationError } from '@/lib/errors'
 const DEFAULT_MODEL = 'claude-sonnet-4-6'
 
 const agentChatCallOptionsSchema = z.object({
+	agentChatSessionId: z.number().int().positive().optional(),
 	pagePath: z.string().max(300).optional(),
 	user: z.unknown(),
 })
@@ -23,11 +25,11 @@ export function assertAgentChatProviderConfigured() {
 	}
 }
 
-/** 모든 tool은 동일한 user 컨텍스트를 받는다 — tool 추가 시 여기 한 곳만 따라간다. */
-function toolsContextFor(user: unknown) {
+/** 모든 tool은 동일한 요청 컨텍스트를 받는다 — tool 추가 시 여기 한 곳만 따라간다. */
+function toolsContextFor(context: AgentChatCallOptions) {
 	return Object.fromEntries(
-		Object.keys(getAgentTools()).map((toolName) => [toolName, { user }]),
-	) as Record<keyof ReturnType<typeof getAgentTools>, { user: unknown }>
+		Object.keys(getAgentTools()).map((toolName) => [toolName, context]),
+	) as Record<keyof ReturnType<typeof getAgentTools>, AgentChatCallOptions>
 }
 
 /**
@@ -48,7 +50,7 @@ export const agentChatAgent = new ToolLoopAgent<
 	reasoning: 'medium',
 	tools: getAgentTools(),
 	// ponytail: AI SDK requires constructor toolsContext; prepareCall replaces it per request.
-	toolsContext: toolsContextFor(null),
+	toolsContext: toolsContextFor({ user: null }),
 	callOptionsSchema: agentChatCallOptionsSchema,
 	stopWhen: isStepCount(10),
 	prepareStep: ({ stepNumber }) =>
@@ -81,12 +83,18 @@ export const agentChatAgent = new ToolLoopAgent<
 			]
 				.filter(Boolean)
 				.join('\n\n'),
-			toolsContext: toolsContextFor(options.user),
+			toolsContext: toolsContextFor(options),
 		}
 	},
 })
 
-export type AgentChatMessage = InferAgentUIMessage<typeof agentChatAgent>
+export interface AgentChatMessageMetadata {
+	agentChatMessageId?: string
+	agentChatSessionId?: number
+	reaction?: AgentChatReaction
+}
+
+export type AgentChatMessage = InferAgentUIMessage<typeof agentChatAgent, AgentChatMessageMetadata>
 
 function formatAgentSkillSelectionInstructions(
 	skills: Awaited<ReturnType<typeof findEnabledAgentSkillSummaries>>,

@@ -1,6 +1,7 @@
 import { opaquePixels } from '@/features/asset-check/checkers/color-metrics'
 import { getChecker } from '@/features/asset-check/checkers/registry'
 import type {
+	AiUsage,
 	AlgorithmCheckResult,
 	CheckerContext,
 	CheckResult,
@@ -19,6 +20,11 @@ import type { ImageContentFlags } from '@/features/asset-check/types'
 export interface ImmediateCheckResult {
 	results: Record<string, CheckResult>
 	pendingRuleKeys: string[]
+}
+
+export interface HeuristicCheckResult {
+	results: Record<string, CheckResult>
+	aiUsage?: AiUsage
 }
 
 /**
@@ -62,26 +68,29 @@ export async function runHeuristicCheck(
 	buffer: Buffer,
 	ruleKeys: string[],
 	inputRules?: CheckRule[],
-): Promise<Record<string, CheckResult>> {
+): Promise<HeuristicCheckResult> {
 	const rules = (inputRules ?? (await getCheckRules(ruleKeys))).filter(
 		(rule) => rule.executor === 'heuristic' && ruleKeys.includes(rule.key),
 	)
-	if (rules.length === 0) return {}
-	const results = await runAiCheck(rules, {
+	if (rules.length === 0) return { results: {} }
+	const aiCheck = await runAiCheck(rules, {
 		image: imageInputFrom(buffer),
 		pixels: [],
 		palette: [],
 	})
-	return Object.fromEntries(
-		Object.entries(results).map(([key, result]) => [
-			key,
-			toCheckResult(
-				result,
-				rules.find((rule) => rule.key === key),
-				{ key: 'ai', type: 'ai' },
-			),
-		]),
-	)
+	return {
+		results: Object.fromEntries(
+			Object.entries(aiCheck.results).map(([key, result]) => [
+				key,
+				toCheckResult(
+					result,
+					rules.find((rule) => rule.key === key),
+					{ key: 'ai', type: 'ai' },
+				),
+			]),
+		),
+		aiUsage: aiCheck.aiUsage,
+	}
 }
 
 /** 룰이 요소 종속이면 시나리오 플래그가 켜져 있을 때만 검수한다. */
