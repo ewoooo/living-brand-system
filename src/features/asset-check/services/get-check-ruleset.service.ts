@@ -41,6 +41,12 @@ export interface CheckSection {
 	slug: string
 	groupTitle: string
 	groupSlug: string
+	chapterTitle: string
+	chapterSlug: string
+	chapterOrder: number
+	sectionTitle: string
+	sectionSlug: string
+	sectionOrder: number
 	rules: CheckRule[]
 }
 
@@ -55,14 +61,18 @@ export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
 	return pages
 		.filter((page) => (page.rules?.length ?? 0) > 0)
 		.sort((a, b) => {
-			const sectionOrder = (page: (typeof pages)[number]) =>
-				typeof page.section === 'number' ? 0 : page.section.displayOrder
-			return sectionOrder(a) - sectionOrder(b) || a.displayOrder - b.displayOrder
+			const aPlacement = toCheckPlacement(a.section)
+			const bPlacement = toCheckPlacement(b.section)
+			return (
+				aPlacement.chapterOrder - bPlacement.chapterOrder ||
+				aPlacement.sectionOrder - bPlacement.sectionOrder ||
+				a.displayOrder - b.displayOrder
+			)
 		})
 		.map((page) => ({
 			title: page.title,
 			slug: page.slug ?? String(page.id),
-			...toCheckGroup(page.section),
+			...toCheckPlacement(page.section),
 			rules: (page.rules ?? []).flatMap((placement) =>
 				typeof placement.rule === 'number' ? [] : [toCheckRule(placement.rule)],
 			),
@@ -96,15 +106,35 @@ function toCheckRule(rule: Rule): CheckRule {
 	}
 }
 
-function toCheckGroup(
+function toCheckPlacement(
 	section: Awaited<ReturnType<typeof getCheckRulesetPages>>[number]['section'],
 ) {
 	if (typeof section === 'number') {
-		return { groupTitle: 'Check', groupSlug: 'check' }
+		return {
+			groupTitle: 'Check',
+			groupSlug: 'check',
+			chapterTitle: 'Check',
+			chapterSlug: 'check',
+			chapterOrder: 0,
+			sectionTitle: 'Check',
+			sectionSlug: 'check',
+			sectionOrder: 0,
+		}
 	}
+	const sectionSlug = section.slug ?? String(section.id)
+	const chapter = typeof section.chapter === 'number' ? null : section.chapter
+	const chapterTitle = chapter?.title ?? section.title
+	const chapterSlug = chapter?.slug ?? sectionSlug
+
 	return {
 		groupTitle: section.title,
-		groupSlug: section.slug ?? String(section.id),
+		groupSlug: sectionSlug,
+		chapterTitle,
+		chapterSlug,
+		chapterOrder: chapter?.displayOrder ?? 0,
+		sectionTitle: section.title,
+		sectionSlug,
+		sectionOrder: section.displayOrder,
 	}
 }
 

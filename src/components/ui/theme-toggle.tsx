@@ -2,6 +2,7 @@
 
 import { Moon, Screen, Sun } from '@carbon/icons-react'
 import { useTheme } from 'next-themes'
+import { useEffect, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 type Theme = 'light' | 'dark' | 'system'
@@ -12,13 +13,22 @@ function isTheme(value: string | undefined): value is Theme {
 
 export function ThemeToggle() {
 	const { setTheme, theme } = useTheme()
+	const [mounted, setMounted] = useState(false)
+
+	useEffect(() => {
+		setMounted(true)
+	}, [])
+
+	if (!mounted) {
+		return <div aria-hidden className="h-10 w-[8.75rem]" />
+	}
+
 	const value = isTheme(theme) ? theme : 'system'
 
 	return (
 		<ToggleGroup
 			type="single"
 			value={value}
-			suppressHydrationWarning
 			aria-label="테마"
 			className="rounded-full bg-muted p-1"
 			spacing={1}
