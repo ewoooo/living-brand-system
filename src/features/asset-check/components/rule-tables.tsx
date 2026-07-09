@@ -423,8 +423,8 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 					<TableBody>
 						{rows.map((row, index) => (
 							<RuleRow
-								{...row}
 								key={`${selectedId ?? 'empty'}:${row.rowId}`}
+								{...row}
 								rowIndex={index}
 							/>
 						))}

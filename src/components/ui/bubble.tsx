@@ -63,4 +63,27 @@ function BubbleContent({
 	)
 }
 
-export { Bubble, BubbleContent }
+function BubbleReactions({
+	align = 'end',
+	className,
+	side = 'bottom',
+	...props
+}: React.ComponentProps<'div'> & {
+	align?: 'start' | 'end'
+	side?: 'top' | 'bottom'
+}) {
+	return (
+		<div
+			data-slot="bubble-reactions"
+			data-align={align}
+			data-side={side}
+			className={cn(
+				'absolute z-10 flex items-center gap-1 px-1 data-[align=end]:right-2 data-[align=start]:left-2 data-[side=bottom]:bottom-0 data-[side=bottom]:translate-y-1/2 data-[side=top]:top-0 data-[side=top]:-translate-y-1/2',
+				className,
+			)}
+			{...props}
+		/>
+	)
+}
+
+export { Bubble, BubbleContent, BubbleReactions }

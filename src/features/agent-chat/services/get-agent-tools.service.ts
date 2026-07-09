@@ -33,6 +33,7 @@ export type { AgentGeneratedImagesAttachment } from '@/features/image-generation
 export type { AgentTemplateImageAttachment } from './agent-template-request.service'
 
 const guidelineToolContextSchema = z.object({
+	agentChatSessionId: z.number().int().positive().optional(),
 	user: z.unknown(),
 })
 
@@ -161,6 +162,7 @@ export function getAgentTools() {
 				}
 
 				const result = await startCheckSession({
+					agentChatSessionId: context.agentChatSessionId,
 					buffer: image.buffer,
 					flags: scenario.flags,
 					imageName: image.name,

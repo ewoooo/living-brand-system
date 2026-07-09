@@ -15,7 +15,7 @@ import {
 	runImmediateCheck,
 } from '@/features/asset-check/services/run-check.service'
 import type { ImageContentFlags } from '@/features/asset-check/types'
-import type { CheckSession, User } from '@/payload-types'
+import type { AgentChatSession, CheckSession, User } from '@/payload-types'
 
 // 시나리오 어휘는 scenarioKey 입력 계약의 일부다 — 다른 기능은 asset-check 내부 대신 여기서 가져간다.
 export {
@@ -25,6 +25,7 @@ export {
 } from '@/features/asset-check/scenarios'
 
 interface StartCheckSessionInput {
+	agentChatSessionId?: AgentChatSession['id']
 	buffer: Buffer
 	deferHeuristic?: boolean
 	flags?: ImageContentFlags
@@ -50,6 +51,7 @@ export async function startCheckSession(input: StartCheckSessionInput) {
 	const scenario = getCheckScenario(input.scenarioKey)
 	const rulesetSnapshot = await getCheckRules(scenario.ruleKeys)
 	const session = await createCheckSessionRecord({
+		agentChatSessionId: input.agentChatSessionId,
 		source: input.source,
 		status: 'running',
 		imageName: input.imageName,
@@ -63,15 +65,16 @@ export async function startCheckSession(input: StartCheckSessionInput) {
 			input.flags ?? scenario.flags,
 			rulesetSnapshot,
 		)
-		const aiResults = input.deferHeuristic
-			? {}
+		const aiCheck = input.deferHeuristic
+			? { results: {} }
 			: await runHeuristicCheck(input.buffer, immediate.pendingRuleKeys, rulesetSnapshot)
-		const results = { ...immediate.results, ...aiResults }
+		const results = { ...immediate.results, ...aiCheck.results }
 		const pendingRuleKeys = input.deferHeuristic ? immediate.pendingRuleKeys : []
 		await updateCheckSessionRecord({
 			id: session.id,
 			status: pendingRuleKeys.length > 0 ? 'running' : 'completed',
 			results,
+			aiUsage: aiCheck.aiUsage,
 			user: input.user,
 		})
 
@@ -96,18 +99,19 @@ export async function completeCheckSessionAiCheck(input: CompleteCheckSessionAiC
 	const rulesetSnapshot = Array.isArray(session.rulesetSnapshot)
 		? (session.rulesetSnapshot as CheckRule[])
 		: undefined
-	const aiResults = await runHeuristicCheck(input.buffer, input.ruleKeys, rulesetSnapshot)
+	const aiCheck = await runHeuristicCheck(input.buffer, input.ruleKeys, rulesetSnapshot)
 	const results = {
 		...((session.results ?? {}) as Record<string, CheckResult>),
-		...aiResults,
+		...aiCheck.results,
 	}
 
 	await updateCheckSessionRecord({
 		id: session.id,
 		status: 'completed',
 		results,
+		aiUsage: aiCheck.aiUsage,
 		user: input.user,
 	})
 
-	return { checkSessionId: session.id, results: aiResults }
+	return { checkSessionId: session.id, results: aiCheck.results }
 }

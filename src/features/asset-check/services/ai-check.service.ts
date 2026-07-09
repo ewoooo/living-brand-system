@@ -1,8 +1,8 @@
 import { anthropic } from '@ai-sdk/anthropic'
-import { generateText, Output } from 'ai'
+import { generateText, type LanguageModelUsage, Output } from 'ai'
 import { z } from 'zod'
 import { env } from '@/env'
-import type { AiCheckResult, CheckerContext } from '@/features/asset-check/checkers/types'
+import type { AiCheckResult, AiUsage, CheckerContext } from '@/features/asset-check/checkers/types'
 import type {
 	CheckReferenceAsset,
 	CheckRule,
@@ -30,6 +30,11 @@ const aiCheckSchema = z.object({
 	results: z.array(aiRuleResultSchema),
 })
 
+export interface AiCheckRunResult {
+	results: Record<string, AiCheckResult>
+	aiUsage?: AiUsage
+}
+
 /**
  * AI 기반 휴리스틱 검수 유스케이스 경계.
  * 모델 호출(AI SDK)과 레퍼런스 이미지 fetch I/O는 현재 이 서비스가 직접 소유한다.
@@ -38,14 +43,15 @@ const aiCheckSchema = z.object({
 export async function runAiCheck(
 	rules: CheckRule[],
 	ctx: CheckerContext,
-): Promise<Record<string, AiCheckResult>> {
-	if (!env.ANTHROPIC_API_KEY) return fallbackResults(rules, 'AI 설정 없음')
-	if (!ctx.image) return fallbackResults(rules, 'AI 평가용 이미지 없음')
+): Promise<AiCheckRunResult> {
+	if (!env.ANTHROPIC_API_KEY) return { results: fallbackResults(rules, 'AI 설정 없음') }
+	if (!ctx.image) return { results: fallbackResults(rules, 'AI 평가용 이미지 없음') }
 
 	try {
 		const referenceFiles = await loadReferenceFiles(rules)
-		const { output } = await generateText({
-			model: anthropic(env.ANTHROPIC_MODEL || DEFAULT_MODEL),
+		const model = env.ANTHROPIC_MODEL || DEFAULT_MODEL
+		const { output, usage } = await generateText({
+			model: anthropic(model),
 			output: Output.object({ schema: aiCheckSchema }),
 			system: 'You are a brand guideline checker. Judge only the supplied raster image against the supplied rules and reference images. Do not claim access to font metadata, embedded fonts, CSS, or source design files. Return conservative structured results for every rule key.',
 			messages: [
@@ -104,9 +110,23 @@ export async function runAiCheck(
 		for (const rule of rules) {
 			byKey[rule.key] ??= needsManualCheck('AI 평가 결과 없음')
 		}
-		return byKey
+		return { results: byKey, aiUsage: toAiUsage(model, usage) }
 	} catch {
-		return fallbackResults(rules, 'AI 평가 실패')
+		return { results: fallbackResults(rules, 'AI 평가 실패') }
+	}
+}
+
+function toAiUsage(model: string, usage: LanguageModelUsage): AiUsage {
+	return {
+		model,
+		callCount: 1,
+		inputTokens: usage.inputTokens,
+		outputTokens: usage.outputTokens,
+		totalTokens: usage.totalTokens,
+		cacheReadInputTokens: usage.inputTokenDetails.cacheReadTokens,
+		cacheWriteInputTokens: usage.inputTokenDetails.cacheWriteTokens,
+		reasoningTokens: usage.outputTokenDetails.reasoningTokens,
+		rawUsage: usage.raw,
 	}
 }
 

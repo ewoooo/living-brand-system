@@ -18,9 +18,11 @@ import { AgentChatMarker } from './agent-chat-tool-marker'
 
 export function AgentChatMessageItem({
 	message,
+	canReact = false,
 	isActive,
 }: {
 	message: AgentChatMessage
+	canReact?: boolean
 	isActive: boolean
 }) {
 	const isUser = message.role === 'user'
@@ -61,7 +63,14 @@ export function AgentChatMessageItem({
 					{generatedImages.map(({ attachment, key }) => (
 						<AgentChatGeneratedImages key={key} attachment={attachment} />
 					))}
-					<AgentChatAgentBubble text={messageText} isStreaming={isActive} />
+					<AgentChatAgentBubble
+						agentChatMessageId={message.metadata?.agentChatMessageId}
+						agentChatSessionId={message.metadata?.agentChatSessionId}
+						canReact={canReact && !isActive}
+						initialReaction={message.metadata?.reaction}
+						text={messageText}
+						isStreaming={isActive}
+					/>
 					{citations.length > 0 && (
 						<div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-neutral-500 text-xs">
 							<span>출처</span>
