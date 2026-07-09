@@ -1,17 +1,19 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type { CheckResult } from '@/features/asset-check/checkers/types'
+import type { AiUsage, CheckResult } from '@/features/asset-check/checkers/types'
 import type { CheckRule } from '@/features/asset-check/services/get-check-ruleset.service'
-import type { CheckSession, User } from '@/payload-types'
+import type { AgentChatSession, CheckSession, User } from '@/payload-types'
 
 export type CheckSessionSource = CheckSession['source']
 
 interface CreateCheckSessionInput {
+	agentChatSessionId?: AgentChatSession['id']
 	source: CheckSessionSource
 	status: CheckSession['status']
 	imageName?: string
 	rulesetSnapshot?: CheckRule[]
 	results?: Record<string, CheckResult>
+	aiUsage?: AiUsage
 	errorMessage?: string
 	user: User
 }
@@ -20,6 +22,7 @@ interface UpdateCheckSessionInput {
 	id: CheckSession['id']
 	status: CheckSession['status']
 	results?: Record<string, CheckResult>
+	aiUsage?: AiUsage
 	errorMessage?: string
 	user: User
 }
@@ -39,6 +42,8 @@ export async function createCheckSessionRecord(input: CreateCheckSessionInput) {
 			imageName: input.imageName,
 			rulesetSnapshot: input.rulesetSnapshot,
 			results: input.results,
+			agentChatSession: input.agentChatSessionId,
+			aiUsage: input.aiUsage,
 			errorMessage: input.errorMessage,
 			completedAt: input.status === 'running' ? undefined : new Date().toISOString(),
 			createdBy: input.user.id,
@@ -74,6 +79,7 @@ export async function updateCheckSessionRecord(input: UpdateCheckSessionInput) {
 		data: {
 			status: input.status,
 			results: input.results,
+			aiUsage: input.aiUsage,
 			errorMessage: input.errorMessage,
 			completedAt: input.status === 'running' ? undefined : new Date().toISOString(),
 		},

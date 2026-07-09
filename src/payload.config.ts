@@ -11,6 +11,7 @@ import { buildConfig, type CollectionConfig, type PayloadRequest } from 'payload
 import sharp from 'sharp'
 import { z } from 'zod/v3'
 import { migrations } from '../migrations'
+import { AgentChatSessions } from './collections/AgentChatSessions'
 import { AgentSkills } from './collections/AgentSkills'
 import { ApplicationImages } from './collections/ApplicationImages'
 import { BrandColors } from './collections/BrandColors'
@@ -91,6 +92,7 @@ export default buildConfig({
 		TemplateAssets,
 		Plugins,
 		CheckSessions,
+		AgentChatSessions,
 		AgentSkills,
 		Users,
 	],

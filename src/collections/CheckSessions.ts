@@ -4,11 +4,11 @@ import { authenticated, managerOrAdmin } from '@/lib/auth'
 export const CheckSessions: CollectionConfig = {
 	slug: 'check-sessions',
 	access: {
-		// Worker는 검수 실행(create)만 가능하고, 결과 이력의 조회·수정·삭제는 Manager 권한이다.
-		// 검수 기록은 품질 감사 대상이라 실행자가 자신의 기록을 지우거나 고칠 수 없어야 한다.
+		// Worker는 검수 실행(create)만 가능하고, 기록된 결과는 수정하지 못한다.
+		// 검수 완료 저장은 service repository의 trusted write만 우회한다.
 		read: managerOrAdmin,
 		create: authenticated,
-		update: managerOrAdmin,
+		update: () => false,
 		delete: managerOrAdmin,
 	},
 	labels: {
@@ -71,6 +71,66 @@ export const CheckSessions: CollectionConfig = {
 			admin: {
 				description: 'rule key별 검수 결과입니다.',
 			},
+		},
+		{
+			name: 'agentChatSession',
+			type: 'relationship',
+			relationTo: 'agent-chat-sessions',
+			admin: {
+				description: '채팅에서 시작된 검수일 때 원본 Agent Chat Session입니다.',
+			},
+		},
+		{
+			name: 'aiUsage',
+			type: 'group',
+			admin: {
+				description: 'AI 검수 비용 분석에 쓰는 모델과 토큰 사용량입니다.',
+			},
+			fields: [
+				{
+					name: 'model',
+					type: 'text',
+				},
+				{
+					name: 'callCount',
+					type: 'number',
+					admin: { step: 1 },
+				},
+				{
+					name: 'inputTokens',
+					type: 'number',
+					admin: { step: 1 },
+				},
+				{
+					name: 'outputTokens',
+					type: 'number',
+					admin: { step: 1 },
+				},
+				{
+					name: 'totalTokens',
+					type: 'number',
+					admin: { step: 1 },
+				},
+				{
+					name: 'cacheReadInputTokens',
+					type: 'number',
+					admin: { step: 1 },
+				},
+				{
+					name: 'cacheWriteInputTokens',
+					type: 'number',
+					admin: { step: 1 },
+				},
+				{
+					name: 'reasoningTokens',
+					type: 'number',
+					admin: { step: 1 },
+				},
+				{
+					name: 'rawUsage',
+					type: 'json',
+				},
+			],
 		},
 		{
 			name: 'errorMessage',

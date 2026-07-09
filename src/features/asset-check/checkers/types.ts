@@ -33,6 +33,18 @@ export interface AiCheckResult extends CheckResultBase {
 	status: CheckStatus
 }
 
+export interface AiUsage {
+	model: string
+	callCount?: number
+	inputTokens?: number
+	outputTokens?: number
+	totalTokens?: number
+	cacheReadInputTokens?: number
+	cacheWriteInputTokens?: number
+	reasoningTokens?: number
+	rawUsage?: Record<string, unknown>
+}
+
 export type RawCheckResult = AlgorithmCheckResult | AiCheckResult
 
 export interface CheckResultRule {
