@@ -34,13 +34,17 @@ function HeaderLinkBlock({
 	href,
 	isActive,
 	label,
+	rel,
+	target,
 }: {
 	href: string
 	isActive: boolean
 	label: string
+	rel?: string
+	target?: string
 }) {
 	return (
-		<Link href={href}>
+		<Link href={href} rel={rel} target={target}>
 			<span
 				className={cn(
 					'rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-neutral-400/10 hover:text-neutral-500',
@@ -148,7 +152,13 @@ export function GlobalHeader({
 		<header className="z-10 flex shrink-0 bg-white dark:bg-black">
 			<HeaderHead className="flex-1" />
 			<section className="ml-auto p-4 flex gap-2 items-center">
-				<HeaderLinkBlock href={LOGIN.href} isActive={false} label={LOGIN.label} />
+				<HeaderLinkBlock
+					href={LOGIN.href}
+					isActive={false}
+					label={LOGIN.label}
+					rel="noreferrer"
+					target="_blank"
+				/>
 				<GuidelineSearch chapters={guidelineChapters} />
 				<SidebarTrigger variant="default" size="default">
 					Ask AI
