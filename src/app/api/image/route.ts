@@ -12,11 +12,11 @@ export async function POST(request: Request) {
 	const {
 		prompt: userInput,
 		count,
-		presetId,
+		sceneId,
 	} = (await request.json().catch(() => ({}))) as {
 		prompt?: string
 		count?: number
-		presetId?: string
+		sceneId?: string
 	}
 	if (!userInput?.trim()) {
 		return Response.json({ message: 'prompt required' }, { status: 400 })
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 	}
 
 	try {
-		const images = await generateImageCandidates({ userInput, presetId, count: n })
+		const images = await generateImageCandidates({ userInput, sceneId, count: n })
 		if (images.length === 0) {
 			return Response.json({ message: 'Image generation failed.' }, { status: 502 })
 		}

@@ -1,7 +1,8 @@
 import { openai } from '@ai-sdk/openai'
 import { generateImage } from 'ai'
 import { env } from '@/env'
-import { composeImageRequest, type ImageSize } from '@/features/image-generation/presets'
+import type { ImageSize } from '@/features/image-generation/presets'
+import { buildImagePrompt } from '@/features/image-generation/services/prompt-decorator.service'
 
 const DEFAULT_MODEL = 'gpt-image-2'
 
@@ -13,20 +14,20 @@ export interface AgentGeneratedImagesAttachment {
 }
 
 /**
- * 유스케이스 경계: 사용자 입력(+프리셋)을 받아 이미지 후보 N장을 생성해 data URI로 돌려준다.
- * 외부 I/O(OpenAI 또는 임시 dev 프로바이더 호출)는 이 모듈이 소유하고, 상위(route·agent tool)는
- * 인증·검증만 담당한다 (docs/06 §6). 키가 있으면 사내 gpt-image, 없으면 dev 폴백을 쓴다.
+ * 유스케이스 경계: 사용자 입력(+Scene)을 받아 이미지 후보 N장을 생성해 data URI로 돌려준다.
+ * 프롬프트 합성(Text Decorator)은 prompt-decorator 서비스가, 프로바이더 호출 I/O는 이 모듈이 소유하고,
+ * 상위(route·agent tool)는 인증·검증만 담당한다 (docs/06 §6). 키가 있으면 사내 gpt-image, 없으면 dev 폴백.
  */
 export async function generateImageCandidates({
 	userInput,
-	presetId,
+	sceneId,
 	count,
 }: {
 	userInput: string
-	presetId?: string
+	sceneId?: string
 	count: number
 }): Promise<string[]> {
-	const { prompt, size } = composeImageRequest(userInput, presetId)
+	const { prompt, size } = await buildImagePrompt({ userInput, sceneId })
 	if (env.OPENAI_API_KEY) {
 		return generateBrandImages({ prompt, count, size })
 	}

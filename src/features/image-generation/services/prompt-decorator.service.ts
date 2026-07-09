@@ -1,0 +1,63 @@
+import { anthropic } from '@ai-sdk/anthropic'
+import { generateText } from 'ai'
+import { env } from '@/env'
+import {
+	composeScenePrompt,
+	ESSENHERB_BASE,
+	type ImageScene,
+	type ImageSize,
+	pickSceneByKeyword,
+	resolveScene,
+} from '@/features/image-generation/presets'
+
+// essenherb R&D의 Text Decorator 단계. 짧고 추상적인 한국어 입력을 고정 브랜드 base + 선택 Scene과 합쳐
+// 이미지 모델용 영어 프롬프트 한 개로 확장한다. 규격화된 Scene(사전 QA)만 쓰므로 생성이 안정적이다.
+const DECORATOR_MODEL = 'claude-haiku-4-5'
+
+const SYSTEM = [
+	'You write ONE image-generation prompt for a branded cosmetic product photograph.',
+	'Merge the fixed brand base style, the chosen scene, and the user subject into a single vivid English prompt of about 50-80 words.',
+	'Keep the brand base style, lighting, and pure white seamless background exactly as given.',
+	'Treat the user subject as the hero product (a branded cosmetic bottle). Translate Korean to English.',
+	'Output only the prompt text — no quotes, labels, or preamble.',
+].join(' ')
+
+/**
+ * 유스케이스 경계: 사용자 입력(+선택 Scene)을 받아 이미지 생성용 프롬프트와 size를 만든다.
+ * 외부 I/O(Anthropic 호출)는 이 서비스가 소유하고, 하위 이미지 생성 서비스는 프로바이더 호출만 한다.
+ * 키가 없거나 실패하면 결정론적 composeScenePrompt로 폴백한다.
+ */
+export async function buildImagePrompt({
+	userInput,
+	sceneId,
+}: {
+	userInput: string
+	sceneId?: string
+}): Promise<{ prompt: string; size: ImageSize; sceneId: string }> {
+	const scene = resolveScene(sceneId) ?? pickSceneByKeyword(userInput)
+	const prompt = await decorate(scene, userInput)
+	return { prompt, size: scene.size, sceneId: scene.id }
+}
+
+async function decorate(scene: ImageScene, userInput: string): Promise<string> {
+	if (!env.ANTHROPIC_API_KEY) return composeScenePrompt(scene, userInput)
+	try {
+		const { text } = await generateText({
+			model: anthropic(env.ANTHROPIC_MODEL || DECORATOR_MODEL),
+			system: SYSTEM,
+			prompt: [
+				`Brand base:\n${JSON.stringify(ESSENHERB_BASE, null, 2)}`,
+				`Scene:\n${JSON.stringify(sceneContext(scene), null, 2)}`,
+				`User subject: ${userInput.trim()}`,
+			].join('\n\n'),
+		})
+		return text.trim() || composeScenePrompt(scene, userInput)
+	} catch {
+		return composeScenePrompt(scene, userInput)
+	}
+}
+
+function sceneContext(scene: ImageScene) {
+	const { id: _id, label: _label, size: _size, ...context } = scene
+	return context
+}

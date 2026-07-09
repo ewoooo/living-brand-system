@@ -5,7 +5,7 @@ import {
 	type AgentSkillDetail,
 	findEnabledAgentSkillByName,
 } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
-import { IMAGE_PRESETS } from '@/features/image-generation/presets'
+import { IMAGE_SCENES } from '@/features/image-generation/presets'
 import {
 	type AgentGeneratedImagesAttachment,
 	generateImageCandidates,
@@ -40,9 +40,7 @@ const checkScenarioSummary = CHECK_SCENARIOS.map(
 	(scenario) => `${scenario.key} (${scenario.title})`,
 ).join(', ')
 
-const imagePresetSummary = IMAGE_PRESETS.map((preset) => `${preset.id} (${preset.label})`).join(
-	', ',
-)
+const imageSceneSummary = IMAGE_SCENES.map((scene) => `${scene.id} (${scene.label})`).join(', ')
 
 /**
  * Agent answer stream에 전달할 AI SDK tool set을 만든다.
@@ -124,17 +122,17 @@ export function getAgentTools() {
 				prepareTemplateImage(context.user, templateId, values),
 		}),
 		generateImage: tool({
-			description: `Generate NEW brand-styled images from a text prompt using AI image generation. Use when the user wants to create or generate a fresh image from a description (배경, 풍경, 제품컷, 헤더 이미지 등). This is DIFFERENT from prepareTemplateImage, which only fills fixed templates like 명함/카드. Optional presetId applies a brand tone and size: ${imagePresetSummary}.`,
+			description: `Generate NEW brand-styled product images from a text prompt using AI image generation. Use when the user wants to create or generate a fresh image from a description (배경, 풍경, 제품컷, 헤더 이미지 등). This is DIFFERENT from prepareTemplateImage, which only fills fixed templates like 명함/카드. The prompt describes the hero product. Optional sceneId picks the brand-curated environment/composition; omit it to auto-pick. Scenes: ${imageSceneSummary}.`,
 			inputSchema: z.object({
 				prompt: z.string().min(1).max(500),
-				presetId: z.string().max(40).optional(),
+				sceneId: z.string().max(40).optional(),
 				count: z.number().int().min(1).max(4).optional(),
 			}),
 			contextSchema: guidelineToolContextSchema,
-			execute: async ({ prompt, presetId, count }) => {
+			execute: async ({ prompt, sceneId, count }) => {
 				const images = await generateImageCandidates({
 					userInput: prompt,
-					presetId,
+					sceneId,
 					count: count ?? 2,
 				})
 				return {
