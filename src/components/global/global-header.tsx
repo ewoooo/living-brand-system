@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
 import {
 	Command,
 	CommandDialog,
@@ -12,11 +13,10 @@ import {
 	CommandItem,
 	CommandList,
 } from '@/components/ui/command'
+import { Kbd, KbdGroup } from '@/components/ui/kbd'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
 import { cn } from '@/lib/utils'
-import { Button } from './ui/button'
-import { Kbd, KbdGroup } from './ui/kbd'
 
 const LINKS = [
 	{ href: '/', label: 'Main' },
@@ -26,7 +26,7 @@ const LINKS = [
 	{ href: '/image', label: 'Image' },
 ] as const
 
-const LOGIN = { href: '/login', label: 'Admin Login (Temp)' } as const
+const LOGIN = { href: '/login', label: 'Admin' } as const
 
 type GuidelineSearchChapter = GetGuidelineNavigationOutput['chapters'][number]
 
@@ -34,13 +34,17 @@ function HeaderLinkBlock({
 	href,
 	isActive,
 	label,
+	rel,
+	target,
 }: {
 	href: string
 	isActive: boolean
 	label: string
+	rel?: string
+	target?: string
 }) {
 	return (
-		<Link href={href}>
+		<Link href={href} rel={rel} target={target}>
 			<span
 				className={cn(
 					'rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-neutral-400/10 hover:text-neutral-500',
@@ -139,21 +143,50 @@ function GuidelineSearch({ chapters }: { chapters: GuidelineSearchChapter[] }) {
 	)
 }
 
+function HeaderCenter({
+	className,
+	guidelineChapters,
+}: {
+	className?: string
+	guidelineChapters: GuidelineSearchChapter[]
+}) {
+	return (
+		<section className={className}>
+			<GuidelineSearch chapters={guidelineChapters} />
+			<SidebarTrigger variant="default" size="default">
+				Ask AI
+			</SidebarTrigger>
+		</section>
+	)
+}
+
+function HeaderTail({ className, login }: { className?: string; login: typeof LOGIN }) {
+	return (
+		<section className={className}>
+			<HeaderLinkBlock
+				href={login.href}
+				isActive={false}
+				label={login.label}
+				rel="noreferrer"
+				target="_blank"
+			/>
+		</section>
+	)
+}
+
 export function GlobalHeader({
 	guidelineChapters,
 }: {
 	guidelineChapters: GuidelineSearchChapter[]
 }) {
 	return (
-		<header className="z-10 flex shrink-0 bg-white dark:bg-black">
+		<header className="relative z-10 flex shrink-0 bg-white dark:bg-black">
 			<HeaderHead className="flex-1" />
-			<section className="ml-auto p-4 flex gap-2 items-center">
-				<HeaderLinkBlock href={LOGIN.href} isActive={false} label={LOGIN.label} />
-				<GuidelineSearch chapters={guidelineChapters} />
-				<SidebarTrigger variant="default" size="default">
-					Ask AI
-				</SidebarTrigger>
-			</section>
+			<HeaderCenter
+				className="-translate-x-1/2 absolute left-1/2 flex items-center gap-2 p-4"
+				guidelineChapters={guidelineChapters}
+			/>
+			<HeaderTail className="ml-auto flex items-center gap-2 p-4" login={LOGIN} />
 		</header>
 	)
 }

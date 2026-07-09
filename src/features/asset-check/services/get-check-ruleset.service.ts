@@ -5,18 +5,8 @@ import {
 	getCheckRuleDocs,
 	getCheckRulesetPages,
 } from '@/features/asset-check/repositories/check-ruleset.payload.repository'
+import { toCheckRuleMessages } from '@/features/asset-check/utils/check-rule-messages'
 import type { ApplicationImage, Rule } from '@/payload-types'
-
-/**
- * 룰별 상태 메시지 패턴 — checker facts({facts.x})를 치환해 사용자 문구를 만든다.
- * 패턴이 없는 룰은 checker detail을 그대로 노출한다. 장기적으로는 Rule 컬렉션 필드로 이전 후보.
- */
-const CHECK_RULE_MESSAGES: Record<string, Partial<Record<CheckStatus, string>>> = {
-	'application.stationery.format': {
-		pass: '{facts.closestFormat} 규격 비율에 맞습니다.',
-		fail: '캔버스가 스테이셔너리 규격과 다릅니다. {facts.allowedFormats} 중 선택한 산출물 규격에 맞춰 조정하세요.',
-	},
-}
 
 export interface CheckReferenceAsset {
 	name: string
@@ -41,6 +31,12 @@ export interface CheckSection {
 	slug: string
 	groupTitle: string
 	groupSlug: string
+	chapterTitle: string
+	chapterSlug: string
+	chapterOrder: number
+	sectionTitle: string
+	sectionSlug: string
+	sectionOrder: number
 	rules: CheckRule[]
 }
 
@@ -55,14 +51,18 @@ export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
 	return pages
 		.filter((page) => (page.rules?.length ?? 0) > 0)
 		.sort((a, b) => {
-			const sectionOrder = (page: (typeof pages)[number]) =>
-				typeof page.section === 'number' ? 0 : page.section.displayOrder
-			return sectionOrder(a) - sectionOrder(b) || a.displayOrder - b.displayOrder
+			const aPlacement = toCheckPlacement(a.section)
+			const bPlacement = toCheckPlacement(b.section)
+			return (
+				aPlacement.chapterOrder - bPlacement.chapterOrder ||
+				aPlacement.sectionOrder - bPlacement.sectionOrder ||
+				a.displayOrder - b.displayOrder
+			)
 		})
 		.map((page) => ({
 			title: page.title,
 			slug: page.slug ?? String(page.id),
-			...toCheckGroup(page.section),
+			...toCheckPlacement(page.section),
 			rules: (page.rules ?? []).flatMap((placement) =>
 				typeof placement.rule === 'number' ? [] : [toCheckRule(placement.rule)],
 			),
@@ -92,19 +92,39 @@ function toCheckRule(rule: Rule): CheckRule {
 		implemented: executor !== 'deterministic' || hasChecker(rule.key),
 		evidence: rule.evidence ?? '',
 		referenceAssets: (rule.referenceAssets ?? []).flatMap(toReferenceAsset),
-		messages: CHECK_RULE_MESSAGES[rule.key],
+		messages: toCheckRuleMessages(rule.messages),
 	}
 }
 
-function toCheckGroup(
+function toCheckPlacement(
 	section: Awaited<ReturnType<typeof getCheckRulesetPages>>[number]['section'],
 ) {
 	if (typeof section === 'number') {
-		return { groupTitle: 'Check', groupSlug: 'check' }
+		return {
+			groupTitle: 'Check',
+			groupSlug: 'check',
+			chapterTitle: 'Check',
+			chapterSlug: 'check',
+			chapterOrder: 0,
+			sectionTitle: 'Check',
+			sectionSlug: 'check',
+			sectionOrder: 0,
+		}
 	}
+	const sectionSlug = section.slug ?? String(section.id)
+	const chapter = typeof section.chapter === 'number' ? null : section.chapter
+	const chapterTitle = chapter?.title ?? section.title
+	const chapterSlug = chapter?.slug ?? sectionSlug
+
 	return {
 		groupTitle: section.title,
-		groupSlug: section.slug ?? String(section.id),
+		groupSlug: sectionSlug,
+		chapterTitle,
+		chapterSlug,
+		chapterOrder: chapter?.displayOrder ?? 0,
+		sectionTitle: section.title,
+		sectionSlug,
+		sectionOrder: section.displayOrder,
 	}
 }
 

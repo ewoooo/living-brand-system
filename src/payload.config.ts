@@ -63,6 +63,26 @@ const mcpTextTool = (
 		content: [{ type: 'text' as const, text: JSON.stringify(await run(args, req)) }],
 	}),
 })
+// ponytail: custom MCP tools go here; keep each handler narrow and access-checked.
+// Example:
+// const customMcpTools = [
+// 	mcpTextTool(
+// 		'findLiveTemplates',
+// 		'Find live templates available to the authenticated MCP user.',
+// 		mcpListParameters,
+// 		(args, req) =>
+// 			req.payload.find({
+// 				collection: 'templates',
+// 				limit: mcpNumber(args.limit, 20),
+// 				overrideAccess: false,
+// 				page: mcpNumber(args.page, 1),
+// 				req,
+// 				user: req.user,
+// 				where: { status: { equals: 'live' } },
+// 			}),
+// 	),
+// ]
+const customMcpTools: ReturnType<typeof mcpTextTool>[] = []
 
 export default buildConfig({
 	admin: {
@@ -179,7 +199,7 @@ export default buildConfig({
 						mcpListParameters,
 						(args, req) =>
 							req.payload.find({
-								collection: 'chapters',
+								collection: 'guideline-chapters',
 								depth: 0,
 								draft: false,
 								fallbackLocale: 'en',
@@ -204,7 +224,7 @@ export default buildConfig({
 						mcpListParameters,
 						(args, req) =>
 							req.payload.find({
-								collection: 'sections',
+								collection: 'guideline-sections',
 								depth: 0,
 								draft: false,
 								fallbackLocale: 'en',
@@ -261,15 +281,16 @@ export default buildConfig({
 								user: req.user,
 							}),
 					),
+					...customMcpTools,
 				],
 			},
 		} as never),
 		searchPlugin({
-			collections: ['guideline-pages', 'sections', 'chapters'],
+			collections: ['guideline-pages', 'guideline-sections', 'guideline-chapters'],
 			defaultPriorities: {
 				'guideline-pages': 20,
-				sections: 10,
-				chapters: 5,
+				'guideline-sections': 10,
+				'guideline-chapters': 5,
 			},
 			searchOverrides: {
 				access: {

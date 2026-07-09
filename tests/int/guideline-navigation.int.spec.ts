@@ -14,12 +14,14 @@ vi.mock('@/features/guideline/repositories/guideline-view.payload.repository', (
 	listPublishedChapters: vi
 		.fn()
 		.mockResolvedValue([{ id: 1, title: 'Basics', slug: 'basics', description: null }]),
-	listPublishedSectionNavItems: vi
-		.fn()
-		.mockResolvedValue([{ id: 10, title: 'Logo', slug: 'logo', chapter: 1 }]),
+	listPublishedSectionNavItems: vi.fn().mockResolvedValue([
+		{ id: 10, title: 'Logo', slug: 'logo', chapter: 1 },
+		{ id: 11, title: 'The Name', slug: 'the-name', chapter: 1 },
+	]),
 	listPublishedPageNavItems: vi.fn().mockResolvedValue([
 		{ id: 100, title: 'Primary Logo', slug: 'primary-logo', section: 10 },
 		{ id: 101, title: 'Clear Space', slug: 'clear-space', section: 10 },
+		{ id: 102, title: 'The Name', slug: 'the-name', section: 11 },
 	]),
 }))
 
@@ -42,6 +44,16 @@ describe('getGuidelineNavigation', () => {
 								{
 									title: 'Clear Space',
 									href: '/guideline/basics/logo#clear-space',
+								},
+							],
+						},
+						{
+							title: 'The Name',
+							href: '/guideline/basics/the-name',
+							pages: [
+								{
+									title: 'The Name',
+									href: '/guideline/basics/the-name#the-name',
 								},
 							],
 						},

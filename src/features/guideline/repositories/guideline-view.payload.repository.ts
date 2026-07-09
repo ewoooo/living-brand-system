@@ -28,7 +28,7 @@ export async function findGuidelineMetadataGlobal() {
 export async function listPublishedChapters() {
 	const payload = await getPayload({ config })
 	const chapters = await payload.find({
-		collection: 'chapters',
+		collection: 'guideline-chapters',
 		sort: 'displayOrder',
 		limit: 100,
 		locale: LOCALE,
@@ -47,7 +47,7 @@ export async function listPublishedChapters() {
 export async function listPublishedSectionNavItems() {
 	const payload = await getPayload({ config })
 	const sections = await payload.find({
-		collection: 'sections',
+		collection: 'guideline-sections',
 		depth: 0,
 		sort: 'displayOrder',
 		limit: 500,
@@ -87,7 +87,7 @@ export async function listPublishedPageNavItems() {
 export async function findPublishedChapterBySlug(chapterSlug: string) {
 	const payload = await getPayload({ config })
 	const chapters = await payload.find({
-		collection: 'chapters',
+		collection: 'guideline-chapters',
 		where: {
 			slug: {
 				equals: chapterSlug,
@@ -109,7 +109,7 @@ export async function findPublishedChapterBySlug(chapterSlug: string) {
 export async function findPublishedSectionBySlug(chapterId: number, sectionSlug: string) {
 	const payload = await getPayload({ config })
 	const sections = await payload.find({
-		collection: 'sections',
+		collection: 'guideline-sections',
 		where: {
 			slug: {
 				equals: sectionSlug,
@@ -134,7 +134,7 @@ export async function findPublishedSectionBySlug(chapterId: number, sectionSlug:
 export async function listPublishedSectionsByChapter(chapterId: number) {
 	const payload = await getPayload({ config })
 	const sections = await payload.find({
-		collection: 'sections',
+		collection: 'guideline-sections',
 		where: {
 			chapter: {
 				equals: chapterId,

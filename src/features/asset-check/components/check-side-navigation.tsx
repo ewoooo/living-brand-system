@@ -1,28 +1,63 @@
-import { SideNav, type SideNavGroup } from '@/components/side-nav'
+import { SideNav, type SideNavGroup } from '@/components/global/side-nav'
 import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
+import { toCheckRuleAnchor } from '@/features/asset-check/utils/check-rule-anchor'
 
-type CheckNavSection = Pick<CheckSection, 'title' | 'slug' | 'groupTitle' | 'groupSlug'>
+type CheckNavSection = Pick<
+	CheckSection,
+	'title' | 'slug' | 'chapterTitle' | 'chapterSlug' | 'sectionTitle' | 'sectionSlug' | 'rules'
+>
 
 /**
- * 단일 check 페이지의 목차 nav — 라우팅이 아니라 섹션 앵커(#slug)로 스크롤 이동한다.
+ * check 영역 nav — 검수 실행 화면으로 가는 링크와 룰 조회 페이지의 앵커 링크를 함께 렌더한다.
  * 사이트 공통 SideNav로 렌더해 스타일을 통일한다(앵커 href는 SideNav가 <a>로 렌더).
  */
 export function CheckSideNavigation({ sections }: { sections: CheckNavSection[] }) {
-	const groups: SideNavGroup[] = []
-	const byGroupSlug = new Map<string, SideNavGroup>()
+	return <SideNav groups={toCheckSideNavGroups(sections)} />
+}
+
+export function toCheckSideNavGroups(sections: CheckNavSection[]): SideNavGroup[] {
+	const groups: SideNavGroup[] = [
+		{
+			key: 'review',
+			items: [{ key: 'review', label: '검수하기', href: '/review' }],
+		},
+	]
+	const byChapterSlug = new Map<string, SideNavGroup>()
+	const bySectionSlug = new Map<string, SideNavGroup['items'][number]>()
 	for (const section of sections) {
-		let group = byGroupSlug.get(section.groupSlug)
+		let group = byChapterSlug.get(section.chapterSlug)
 		if (!group) {
-			group = { key: section.groupSlug, title: section.groupTitle, items: [] }
-			byGroupSlug.set(section.groupSlug, group)
+			group = { key: section.chapterSlug, title: section.chapterTitle, items: [] }
+			byChapterSlug.set(section.chapterSlug, group)
 			groups.push(group)
 		}
-		group.items.push({
-			key: section.slug,
-			label: section.title,
-			href: `#${section.slug}`,
-		})
+
+		const sectionKey = `${section.chapterSlug}:${section.sectionSlug}`
+		let item = bySectionSlug.get(sectionKey)
+		if (!item) {
+			item = {
+				key: sectionKey,
+				label: section.sectionTitle,
+				href: `/review/rules#${section.slug}`,
+				children: [],
+			}
+			bySectionSlug.set(sectionKey, item)
+			group.items.push(item)
+		}
+		for (const rule of section.rules) {
+			item.children?.push({
+				key: `${section.slug}:${rule.key}`,
+				label: rule.title,
+				href: `/review/rules#${toCheckRuleAnchor(section.slug, rule.key)}`,
+			})
+		}
 	}
 
-	return <SideNav groups={groups} />
+	return groups.map((group) => ({
+		...group,
+		items: group.items.map((item) => ({
+			...item,
+			children: item.children,
+		})),
+	}))
 }

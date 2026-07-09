@@ -28,7 +28,7 @@ export interface HeuristicCheckResult {
 }
 
 /**
- * 검수 대상 이미지를 deterministic/advisory 룰까지만 즉시 판정한다.
+ * 검수 대상 이미지를 deterministic/manual 룰까지만 즉시 판정한다.
  * AI 휴리스틱 룰은 pendingRuleKeys로 분리해 후속 요청이 실행한다.
  */
 export async function runImmediateCheck(
@@ -120,13 +120,13 @@ function readPath(value: unknown, path: string): unknown {
 
 // heuristic 룰은 호출 전에 runAiCheck로 분기되므로 여기 오지 않는다.
 function runRuleByExecutor(rule: CheckRule, ctx: CheckerContext): CheckResult | null {
-	if (rule.executor === 'advisory') {
+	if (rule.executor === 'manual') {
 		const rawResult: AlgorithmCheckResult = {
 			status: 'needs_review',
 			fulfillment: null,
 			detail: '브랜드 담당자 확인 필요',
 		}
-		return toCheckResult(rawResult, rule, { key: 'advisory', type: 'advisory' })
+		return toCheckResult(rawResult, rule, { key: 'manual', type: 'manual' })
 	}
 	const checker = getChecker(rule.key)
 	if (!checker) return null

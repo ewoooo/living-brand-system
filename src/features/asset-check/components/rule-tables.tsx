@@ -33,7 +33,7 @@ const EXECUTOR: Record<
 > = {
 	deterministic: { label: 'deterministic', Icon: Ruler, desc: '체커가 직접 판정하는 기준' },
 	heuristic: { label: 'heuristic', Icon: AiGenerate, desc: 'AI 평가를 경유하는 기준' },
-	advisory: { label: 'advisory', Icon: User, desc: '브랜드 담당자 확인이 필요한 기준' },
+	manual: { label: 'manual', Icon: User, desc: '브랜드 담당자 확인이 필요한 기준' },
 }
 
 const RULE_BORDER = 'border-neutral-200 border-t dark:border-neutral-800'

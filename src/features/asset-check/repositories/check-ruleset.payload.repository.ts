@@ -10,7 +10,7 @@ export async function getCheckRulesetPages() {
 	const payload = await getPayload({ config })
 	const pages = await payload.find({
 		collection: 'guideline-pages',
-		depth: 2, // rules[].rule.referenceAssets, section을 채운다
+		depth: 3, // rules[].rule.referenceAssets, section.chapter를 채운다
 		sort: 'displayOrder',
 		limit: 100,
 		locale: LOCALE,

@@ -1,8 +1,14 @@
-import { SideNav, type SideNavGroup } from '@/components/side-nav'
+import { SideNav, type SideNavGroup } from '@/components/global/side-nav'
 import type { GetCreateNavigationOutput } from '../services/get-create-navigation.service'
 
 export function CreateSideNavigation({ navigation }: { navigation: GetCreateNavigationOutput }) {
-	const groups: SideNavGroup[] = navigation.categories.map((category) => ({
+	return (
+		<SideNav groups={toCreateSideNavGroups(navigation)} emptyText="발행된 템플릿이 없습니다" />
+	)
+}
+
+export function toCreateSideNavGroups(navigation: GetCreateNavigationOutput): SideNavGroup[] {
+	return navigation.categories.map((category) => ({
 		key: category.id,
 		title: category.title,
 		titleHref: category.href,
@@ -12,6 +18,4 @@ export function CreateSideNavigation({ navigation }: { navigation: GetCreateNavi
 			href: template.href,
 		})),
 	}))
-
-	return <SideNav groups={groups} emptyText="발행된 템플릿이 없습니다" />
 }

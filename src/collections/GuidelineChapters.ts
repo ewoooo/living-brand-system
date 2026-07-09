@@ -3,7 +3,7 @@ import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
 
 export const GuidelineChapters: CollectionConfig = {
-	slug: 'chapters',
+	slug: 'guideline-chapters',
 	dbName: 'guideline_chapters',
 	access: managerManagedAccess,
 	labels: {
@@ -46,7 +46,7 @@ export const GuidelineChapters: CollectionConfig = {
 		{
 			name: 'sections',
 			type: 'join',
-			collection: 'sections',
+			collection: 'guideline-sections',
 			on: 'chapter',
 		},
 		{
