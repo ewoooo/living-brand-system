@@ -56,10 +56,15 @@ async function decorate(scene: ImageScene, userInput: string): Promise<string> {
 				`User subject: ${userInput.trim()}`,
 			].join('\n\n'),
 		})
-		return text.trim() || composeScenePrompt(scene, userInput)
+		return ensureBrandAnchors(text.trim() || composeScenePrompt(scene, userInput))
 	} catch {
 		return composeScenePrompt(scene, userInput)
 	}
+}
+
+// base는 항상 얹혀야 한다(R&D). Decorator가 순백 배경 앵커를 빠뜨리면 값싸게 덧붙여 base drift를 막는다.
+function ensureBrandAnchors(prompt: string): string {
+	return /white/i.test(prompt) ? prompt : `${prompt} Background: ${ESSENHERB_BASE.background}.`
 }
 
 function sceneContext(scene: ImageScene) {

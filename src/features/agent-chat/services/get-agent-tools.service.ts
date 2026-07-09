@@ -131,14 +131,27 @@ export function getAgentTools() {
 			}),
 			contextSchema: guidelineToolContextSchema,
 			execute: async ({ prompt, sceneId, count }) => {
-				const images = await generateImageCandidates({
+				const {
+					images,
+					prompt: composedPrompt,
+					sceneId: usedSceneId,
+				} = await generateImageCandidates({
 					userInput: prompt,
 					sceneId,
 					count: count ?? 2,
 				})
+				if (images.length === 0) {
+					// 실패를 모델에 명시적으로 알린다 — 안 그러면 빈 결과에도 "만들었어"라고 답한다.
+					return {
+						status: 'failed',
+						message:
+							'이미지 생성에 실패했어요. 무료 엔진이 느려 그럴 수 있으니 잠시 후 다시 시도해 주세요.',
+					}
+				}
 				return {
 					type: 'generated-images',
-					prompt,
+					prompt: composedPrompt,
+					sceneId: usedSceneId,
 					images,
 				} satisfies AgentGeneratedImagesAttachment
 			},

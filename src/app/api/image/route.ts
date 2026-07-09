@@ -30,11 +30,28 @@ export async function POST(request: Request) {
 	}
 
 	try {
-		const images = await generateImageCandidates({ userInput, sceneId, count: n })
+		const {
+			images,
+			prompt,
+			sceneId: usedSceneId,
+		} = await generateImageCandidates({
+			userInput,
+			sceneId,
+			count: n,
+		})
 		if (images.length === 0) {
 			return Response.json({ message: 'Image generation failed.' }, { status: 502 })
 		}
-		return Response.json({ images })
+		payload.logger.info(
+			{
+				sceneId: usedSceneId,
+				provider: env.OPENAI_API_KEY ? 'gpt-image' : 'pollinations',
+				promptLength: prompt.length,
+				count: images.length,
+			},
+			'image-generation.done',
+		)
+		return Response.json({ images, prompt, sceneId: usedSceneId })
 	} catch (error) {
 		payload.logger.error({ err: error }, 'image-generation.failed')
 		return Response.json({ message: 'Image generation failed.' }, { status: 500 })
