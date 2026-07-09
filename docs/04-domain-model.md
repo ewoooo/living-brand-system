@@ -501,3 +501,35 @@ AgentRunStarted, AgentRunCompleted, AgentRunFailed는 업무 도메인 이벤트
 | --- | --- | --- |
 | Usage history | 제작 관리, 품질 검수 | 기본 레코드를 조회해 운영 이력을 구성합니다. |
 | BehaviorEventLog | 가이드라인 관리 | 화면 조회, 클릭, 검색, 에셋 다운로드, 구간 체류, 외부 링크 클릭을 저장합니다. |
+
+### 화면 행동 기록 저장소 분리
+
+화면 행동은 두 종류로 나눠 서로 다른 저장소가 소유합니다. 가르는 기준은 하나입니다.
+도메인 엔티티(BrandGuideline, BrandRule, BrandAsset)에 조인되거나, 감사 대상이거나, 레코드 단위로 조회해야 하면 BehaviorEventLog(자체 저장소)가 소유합니다.
+그렇지 않고 익명 집계 지표로 충분하면 외부 웹 애널리틱스(Vercel Analytics)가 소유합니다.
+
+| 이벤트 | 소유 | 근거 |
+| --- | --- | --- |
+| PageViewEvent | Vercel Analytics | 어느 페이지가 조회되는지 익명 집계, 도메인 참조 불필요 |
+| SectionDwellEvent | Vercel Analytics | 어느 구간이 오래 조회되는지 집계로 충분 (단, 사용자·브랜드와 엮어 분석하면 BehaviorEventLog로 이동) |
+| OutboundLinkEvent | Vercel Analytics | 외부 링크 이탈 익명 집계 |
+| ClickEvent | Vercel Analytics | 도메인에 엮이지 않은 일반 UI 클릭 집계 |
+| AssetDownloadEvent | BehaviorEventLog | 어떤 BrandAsset을 누가 받았는지 조인 필요 |
+| SearchEvent | BehaviorEventLog | 검색어와 매칭된 규칙·가이드라인 결과를 조인해 검색 품질을 분석 |
+| CustomEvent (도메인) | BehaviorEventLog | 규칙 사용, 체크 같은 도메인 의미를 가진 행동 |
+
+교차 관심사 소유권은 다음과 같이 나눕니다.
+
+| 관심사 | Vercel Analytics | BehaviorEventLog |
+| --- | --- | --- |
+| 신원 | 익명 visitorId | 인증된 사용자 참조 |
+| 조회 방식 | 대시보드와 집계 API | 관계형 레코드 단위 조회 |
+| 보관과 삭제 | 플랫폼 관리 | `docs/03-data-lifecycle.md`의 수명주기 정책이 소유 |
+| PII | 식별 정보를 보내지 않음 | `docs/07-security.md` 규칙 하에 통제 저장 |
+
+다음은 하지 않습니다.
+
+- 같은 이벤트를 두 저장소에 이중 기록하지 않습니다. 이벤트 하나는 소유자 한 곳만 기록합니다.
+- 도메인 참조가 필요한 이벤트를 Vercel Analytics로 보내지 않습니다.
+- 관리자 작업 감사 로그(`docs/07-security.md`)를 애널리틱스에 넣지 않습니다. 감사 기록은 별도 소유합니다.
+- Vercel Analytics 커스텀 이벤트에 사용자 식별 정보를 넣지 않습니다.
