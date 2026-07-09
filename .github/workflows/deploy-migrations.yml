@@ -3,6 +3,8 @@ name: Deploy migrations
 on:
   push:
     branches: [main]
+    paths:
+      - 'migrations/**'
   workflow_dispatch:
 
 permissions:
