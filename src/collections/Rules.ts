@@ -4,7 +4,7 @@ import { managerManagedAccess } from '@/lib/auth'
 /**
  * Rule catalog. 하나의 rule은 하나의 검수 컨텍스트와 기준을 대표한다.
  * 페이지는 rule을 배치/노출만 하고, 검수 런타임은 이 컬렉션을 기준 SSOT로 읽는다.
- * tier(중요도)와 executor(실행 방식)는 독립 축이다 — A=deterministic 같은 1:1 대응을 강제하지 않는다.
+ * tier(중요도)와 executor(실행 방식)는 독립 축이다 — required=deterministic 같은 1:1 대응을 강제하지 않는다.
  */
 export const Rules: CollectionConfig = {
 	slug: 'rules',
@@ -61,24 +61,54 @@ export const Rules: CollectionConfig = {
 		{
 			name: 'tier',
 			type: 'select',
-			options: ['A', 'B', 'C'],
+			options: ['required', 'recommended'],
 			admin: {
-				description: '참고 중요도. 실행 방식과 무관하며 우선순위·캐싱 구분에 쓴다.',
+				description: '기준 강도. required=반드시 지켜야 하는 기준, recommended=권장 기준.',
 			},
 		},
 		{
 			name: 'executor',
 			type: 'select',
-			options: ['deterministic', 'heuristic', 'advisory'],
+			options: ['deterministic', 'heuristic', 'manual'],
 			admin: {
 				description:
-					'검수 실행 방식. deterministic=코드 checker, heuristic=AI 검수, advisory=수동 안내.',
+					'검수 실행 방식. deterministic=코드 checker, heuristic=AI/시각 추론, manual=사람 확인.',
 			},
 		},
 		{
 			name: 'evidence',
 			type: 'textarea',
 			admin: { description: '검수 기준값과 가이드라인 근거 문장입니다.' },
+		},
+		{
+			name: 'messages',
+			type: 'group',
+			admin: {
+				description:
+					'검수 결과 상태별 사용자 노출 문구입니다. {facts.closestFormat}처럼 checker facts를 치환할 수 있습니다.',
+			},
+			fields: [
+				{
+					name: 'pass',
+					type: 'textarea',
+					admin: { description: '통과 시 표시할 문구입니다.' },
+				},
+				{
+					name: 'ok',
+					type: 'textarea',
+					admin: { description: '부분 확인/허용 시 표시할 문구입니다.' },
+				},
+				{
+					name: 'needsReview',
+					type: 'textarea',
+					admin: { description: '수동 확인 필요 시 표시할 문구입니다.' },
+				},
+				{
+					name: 'fail',
+					type: 'textarea',
+					admin: { description: '미통과 시 표시할 문구입니다.' },
+				},
+			],
 		},
 		{
 			name: 'referencePages',

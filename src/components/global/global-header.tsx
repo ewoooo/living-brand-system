@@ -26,7 +26,7 @@ const LINKS = [
 	{ href: '/image', label: 'Image' },
 ] as const
 
-const LOGIN = { href: '/login', label: 'Admin Login (Temp)' } as const
+const LOGIN = { href: '/login', label: 'Admin' } as const
 
 type GuidelineSearchChapter = GetGuidelineNavigationOutput['chapters'][number]
 

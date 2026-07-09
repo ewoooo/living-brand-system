@@ -10,7 +10,7 @@ export interface RuleMetric {
 	actual: string
 }
 
-export type CheckExecutor = 'deterministic' | 'heuristic' | 'advisory'
+export type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
 export type CheckStatus = 'pass' | 'ok' | 'needs_review' | 'fail'
 export type CheckFactValue = string | number | string[]
 
@@ -55,7 +55,7 @@ export interface CheckResultRule {
 
 export interface CheckResultChecker {
 	key: string
-	type: 'algorithm' | 'ai' | 'advisory'
+	type: 'algorithm' | 'ai' | 'manual'
 }
 
 /**

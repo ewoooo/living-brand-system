@@ -69,12 +69,36 @@ describe('side navigation mappers', () => {
 					chapterSlug: 'brand-design-elements',
 					sectionTitle: 'Brand Logo',
 					sectionSlug: 'brand-logo',
+					rules: [
+						{
+							key: 'logo.size.minimum',
+							title: 'Minimum Size',
+							executor: 'deterministic',
+							implemented: true,
+							evidence: '',
+							referenceAssets: [],
+						},
+					],
 				},
 			]),
 		).toMatchObject([
 			{
+				items: [{ label: '검수하기', href: '/review' }],
+			},
+			{
 				title: 'Brand Design Elements',
-				items: [{ label: 'Brand Logo', children: [{ label: 'Primary Logo' }] }],
+				items: [
+					{
+						label: 'Brand Logo',
+						href: '/review/rules#primary-logo',
+						children: [
+							{
+								label: 'Minimum Size',
+								href: '/review/rules#primary-logo:logo.size.minimum',
+							},
+						],
+					},
+				],
 			},
 		])
 	})

@@ -11,7 +11,7 @@ export interface SubmitCheckResult {
 	pendingRuleKeys: string[]
 }
 
-/** 즉시(deterministic/advisory) 판정을 요청한다. AI 룰은 pendingRuleKeys로 분리돼 돌아온다. */
+/** 즉시(deterministic/manual) 판정을 요청한다. AI 룰은 pendingRuleKeys로 분리돼 돌아온다. */
 export async function submitCheck(file: File, scenarioKey: string): Promise<SubmitCheckResult> {
 	const form = new FormData()
 	form.append('image', file)

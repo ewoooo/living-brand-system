@@ -1,7 +1,10 @@
 'use client'
 
+import { ChevronDown } from '@carbon/icons-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
 	Sidebar,
 	SidebarContent,
@@ -86,24 +89,68 @@ function SideNavItem({
 	pathname: string
 	nested?: boolean
 }) {
-	const content = (
-		<>
-			<SideNavLink item={item} active={pathname === item.href} nested={nested} />
-			{!nested && item.children && item.children.length > 0 && (
-				<SidebarMenuSub>
-					{item.children.map((child) => (
-						<SideNavItem key={child.key} item={child} pathname={pathname} nested />
-					))}
-				</SidebarMenuSub>
-			)}
-		</>
-	)
+	const active = pathname === item.href
+	const children = item.children ?? []
+	const hasChildren = !nested && children.length > 0
+	const [open, setOpen] = useState(active)
+
+	useEffect(() => {
+		if (active) setOpen(true)
+	}, [active])
 
 	if (nested) {
-		return <SidebarMenuSubItem>{content}</SidebarMenuSubItem>
+		return (
+			<SidebarMenuSubItem>
+				<SideNavLink item={item} active={active} nested />
+			</SidebarMenuSubItem>
+		)
 	}
 
-	return <SidebarMenuItem>{content}</SidebarMenuItem>
+	if (hasChildren) {
+		return (
+			<SidebarMenuItem>
+				<Collapsible className="group/collapsible" open={open} onOpenChange={setOpen}>
+					<CollapsibleTrigger asChild>
+						<SidebarMenuButton
+							className={getSideNavLinkClassName(false)}
+							isActive={active}
+							size="sm"
+						>
+							<span>{item.label}</span>
+							<ChevronDown
+								className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180"
+								data-icon="inline-end"
+							/>
+						</SidebarMenuButton>
+					</CollapsibleTrigger>
+					<CollapsibleContent className="side-nav-collapsible-content">
+						<SidebarMenuSub className="mx-0 mb-0 gap-0 border-l-0 py-0 pr-0 pl-3">
+							{children.map((child) => (
+								<SideNavItem
+									key={child.key}
+									item={child}
+									pathname={pathname}
+									nested
+								/>
+							))}
+						</SidebarMenuSub>
+					</CollapsibleContent>
+				</Collapsible>
+			</SidebarMenuItem>
+		)
+	}
+
+	return (
+		<SidebarMenuItem>
+			<SideNavLink item={item} active={active} nested={false} />
+		</SidebarMenuItem>
+	)
+}
+
+function getSideNavLinkClassName(nested: boolean) {
+	return nested
+		? 'text-sidebar-foreground/40 data-active:text-sidebar-foreground'
+		: 'text-sidebar-foreground/65 data-active:text-sidebar-foreground'
 }
 
 function SideNavLink({
@@ -116,9 +163,7 @@ function SideNavLink({
 	nested: boolean
 }) {
 	const Button = nested ? SidebarMenuSubButton : SidebarMenuButton
-	const className = nested
-		? 'text-sidebar-foreground/60 data-active:text-sidebar-foreground'
-		: 'text-sidebar-foreground/75 data-active:text-sidebar-foreground'
+	const className = getSideNavLinkClassName(nested)
 
 	if (isAnchor(item.href)) {
 		return (

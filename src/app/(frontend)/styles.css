@@ -96,3 +96,37 @@ body {
 	word-break: keep-all;
 	overflow-wrap: break-word;
 }
+
+.side-nav-collapsible-content {
+	overflow: hidden;
+}
+
+.side-nav-collapsible-content[data-state="open"] {
+	animation: collapsible-down 180ms ease-out;
+}
+
+.side-nav-collapsible-content[data-state="closed"] {
+	animation: collapsible-up 160ms ease-out;
+}
+
+@keyframes collapsible-down {
+	from {
+		height: 0;
+		opacity: 0;
+	}
+	to {
+		height: var(--radix-collapsible-content-height);
+		opacity: 1;
+	}
+}
+
+@keyframes collapsible-up {
+	from {
+		height: var(--radix-collapsible-content-height);
+		opacity: 1;
+	}
+	to {
+		height: 0;
+		opacity: 0;
+	}
+}

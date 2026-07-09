@@ -355,17 +355,38 @@ export interface Rule {
     | 'application'
     | 'misc';
   /**
-   * 참고 중요도. 실행 방식과 무관하며 우선순위·캐싱 구분에 쓴다.
+   * 기준 강도. required=반드시 지켜야 하는 기준, recommended=권장 기준.
    */
-  tier?: ('A' | 'B' | 'C') | null;
+  tier?: ('required' | 'recommended') | null;
   /**
-   * 검수 실행 방식. deterministic=코드 checker, heuristic=AI 검수, advisory=수동 안내.
+   * 검수 실행 방식. deterministic=코드 checker, heuristic=AI/시각 추론, manual=사람 확인.
    */
-  executor?: ('deterministic' | 'heuristic' | 'advisory') | null;
+  executor?: ('deterministic' | 'heuristic' | 'manual') | null;
   /**
    * 검수 기준값과 가이드라인 근거 문장입니다.
    */
   evidence?: string | null;
+  /**
+   * 검수 결과 상태별 사용자 노출 문구입니다. {facts.closestFormat}처럼 checker facts를 치환할 수 있습니다.
+   */
+  messages?: {
+    /**
+     * 통과 시 표시할 문구입니다.
+     */
+    pass?: string | null;
+    /**
+     * 부분 확인/허용 시 표시할 문구입니다.
+     */
+    ok?: string | null;
+    /**
+     * 수동 확인 필요 시 표시할 문구입니다.
+     */
+    needsReview?: string | null;
+    /**
+     * 미통과 시 표시할 문구입니다.
+     */
+    fail?: string | null;
+  };
   /**
    * 이 룰을 배치한 가이드라인 페이지 (역참조, 자동 집계).
    */
@@ -1452,6 +1473,14 @@ export interface RulesSelect<T extends boolean = true> {
   tier?: T;
   executor?: T;
   evidence?: T;
+  messages?:
+    | T
+    | {
+        pass?: T;
+        ok?: T;
+        needsReview?: T;
+        fail?: T;
+      };
   referencePages?: T;
   referenceAssets?: T;
   status?: T;

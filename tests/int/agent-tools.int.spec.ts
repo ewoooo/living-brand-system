@@ -118,7 +118,7 @@ describe('agent tools', () => {
 				evidence: null,
 				executor: 'deterministic',
 				key: 'color.palette',
-				tier: 'A',
+				tier: 'required',
 				title: 'Color palette',
 			},
 		])
