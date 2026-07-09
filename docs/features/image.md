@@ -20,7 +20,8 @@ Create가 산출물에 이미지가 필요할 때 이 기능을 호출하는 것
 
 - **base**: 브랜드 고정 스타일(조명·배경·톤·기술) — 모든 씬에 항상 적용.
 - **scene**: 환경·구성(원료·카메라·색 harmony 등) — 사용자가 고르거나 입력에서 자동 선택.
-- **Text Decorator**: 짧고 추상적인 입력을 `base ⊕ scene ⊕ 입력`으로 합쳐 이미지 모델용 프롬프트로 확장(한국어→영어 번역 포함). Anthropic 키가 없으면 결정론적 합성으로 폴백합니다.
+- **합성(결정론)**: 사용자 입력을 hero product 자리에 넣고 `base ⊕ scene ⊕ 입력`을 규칙 기반으로 이어 붙여 이미지 모델용 프롬프트를 만듭니다. LLM 없이 `presets.composeImageRequest`가 담당하며 재작성·번역은 하지 않습니다(입력 원문 그대로 삽입). 이미지 경로에 Anthropic 의존성은 없습니다.
+- **free 모드**: 제품컷이 아닌 이미지는 `sceneId: 'free'`로 base/scene 없이 입력 프롬프트를 그대로 사용합니다.
 
 씬은 사전 QA된 규격 데이터만 사용하므로 1~2회 안에 브랜드 일관 결과가 나오고, 레퍼런스 이미지 없이 텍스트 프롬프트만으로 동작합니다. 데이터는 essenherb 샘플을 하드코딩하고 있으며 이후 Brand Resource로 이관합니다.
 
@@ -37,9 +38,9 @@ Create가 산출물에 이미지가 필요할 때 이 기능을 호출하는 것
 
 - 이미지 프로바이더: OpenAI `gpt-image-2`(사내 채택). 모델은 `OPENAI_IMAGE_MODEL`로 교체 가능하며, 프로바이더 교체도 코어 한 곳(service)에서 이뤄집니다.
 - Vercel AI SDK `generateImage`.
-- Text Decorator: Anthropic(`ANTHROPIC_API_KEY`, 모델 `ANTHROPIC_MODEL`). 프롬프트 합성 I/O는 `prompt-decorator.service.ts`가 소유합니다.
+- 프롬프트 합성: 외부 의존 없음. `presets.ts`의 `composeImageRequest`가 LLM 없이 결정론으로 합성하며, 이미지 경로는 Anthropic에 의존하지 않습니다.
 - Review 미사용(의도적) — 이미지 검수 성능이 아직 일부 항목에 한정되어 있어 생성 품질을 검수에 묶지 않습니다.
-- API 키(`OPENAI_API_KEY`)가 없으면 placeholder 후보로 폴백해 UI 흐름은 그대로 동작합니다.
+- dev 폴백: `OPENAI_API_KEY`(정식 엔진 gpt-image-2 키)가 없으면 개발용으로 Pollinations FLUX(무료·키 불필요)로 임시 대체합니다(`services/dev-fallback.provider.ts`). 키 수령 후 이 폴백 분기는 삭제합니다. ⚠️ 프롬프트가 외부 무료 서비스로 전송되므로 민감 입력은 금지합니다.
 
 ## 5. 크로스커팅
 
