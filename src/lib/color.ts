@@ -1,4 +1,5 @@
 /** 색 계산 공통 유틸. hex 파싱은 6자리(#RRGGBB)를 가정한다. */
+import { rgb } from 'culori'
 
 export interface Rgb {
 	r: number
@@ -7,8 +8,14 @@ export interface Rgb {
 }
 
 export function hexToRgb(hex: string): Rgb {
-	const v = Number.parseInt(hex.replace(/^#/, ''), 16)
-	return { r: (v >> 16) & 0xff, g: (v >> 8) & 0xff, b: v & 0xff }
+	// culori는 0–1을 돌려주므로 0–255 정수로 복원한다. rgbLabel 등 정수 표시 계약 유지.
+	const c = rgb(hex.startsWith('#') ? hex : `#${hex}`)
+	if (!c) throw new Error(`Invalid hex color: ${hex}`)
+	return {
+		r: Math.round(c.r * 255),
+		g: Math.round(c.g * 255),
+		b: Math.round(c.b * 255),
+	}
 }
 
 export function isValidHex(hex: string): boolean {
