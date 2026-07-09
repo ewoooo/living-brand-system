@@ -63,6 +63,26 @@ const mcpTextTool = (
 		content: [{ type: 'text' as const, text: JSON.stringify(await run(args, req)) }],
 	}),
 })
+// ponytail: custom MCP tools go here; keep each handler narrow and access-checked.
+// Example:
+// const customMcpTools = [
+// 	mcpTextTool(
+// 		'findLiveTemplates',
+// 		'Find live templates available to the authenticated MCP user.',
+// 		mcpListParameters,
+// 		(args, req) =>
+// 			req.payload.find({
+// 				collection: 'templates',
+// 				limit: mcpNumber(args.limit, 20),
+// 				overrideAccess: false,
+// 				page: mcpNumber(args.page, 1),
+// 				req,
+// 				user: req.user,
+// 				where: { status: { equals: 'live' } },
+// 			}),
+// 	),
+// ]
+const customMcpTools: ReturnType<typeof mcpTextTool>[] = []
 
 export default buildConfig({
 	admin: {
@@ -261,6 +281,7 @@ export default buildConfig({
 								user: req.user,
 							}),
 					),
+					...customMcpTools,
 				],
 			},
 		} as never),
