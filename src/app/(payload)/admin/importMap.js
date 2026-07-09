@@ -26,6 +26,9 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { default as default_36acbba7f1182725fb35765f5d4542e4 } from '../../../components/admin/ColorSwatchCell'
 import { default as default_61ea2b42633ef6f53802837af44ac176 } from '../../../features/template-import/components/figma-import-field'
 import { default as default_5cb2a756c2ee6eaf83b0120bd2999598 } from '../../../features/template-import/components/template-preview-field'
+import { default as default_55a6b37228c5405acd0fc7b5977e6d29 } from '../../../components/admin/AgentChatMessagesTable'
+import { default as default_fefc0aa6463fb8af4fa50c0b3a53cbba } from '../../../components/admin/AgentChatCountedItemsTable'
+import { default as default_c30c461be6387021ff789d8393e59cf0 } from '../../../components/admin/AgentChatUsageTable'
 import { LinkToDoc as LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { ReindexButton as ReindexButton_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { default as default_68a16153b61e0e8909eb1452171e2a49 } from '../../../components/admin/DashboardSummary'
@@ -62,6 +65,9 @@ export const importMap = {
   "/components/admin/ColorSwatchCell#default": default_36acbba7f1182725fb35765f5d4542e4,
   "/features/template-import/components/figma-import-field#default": default_61ea2b42633ef6f53802837af44ac176,
   "/features/template-import/components/template-preview-field#default": default_5cb2a756c2ee6eaf83b0120bd2999598,
+  "/components/admin/AgentChatMessagesTable#default": default_55a6b37228c5405acd0fc7b5977e6d29,
+  "/components/admin/AgentChatCountedItemsTable#default": default_fefc0aa6463fb8af4fa50c0b3a53cbba,
+  "/components/admin/AgentChatUsageTable#default": default_c30c461be6387021ff789d8393e59cf0,
   "@payloadcms/plugin-search/client#LinkToDoc": LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634,
   "@payloadcms/plugin-search/client#ReindexButton": ReindexButton_aead06e4cbf6b2620c5c51c9ab283634,
   "/components/admin/DashboardSummary#default": default_68a16153b61e0e8909eb1452171e2a49,

@@ -25,6 +25,9 @@ export const AgentChatSessions: CollectionConfig = {
 			type: 'select',
 			required: true,
 			defaultValue: 'running',
+			admin: {
+				position: 'sidebar',
+			},
 			options: [
 				{ label: 'Running', value: 'running' },
 				{ label: 'Completed', value: 'completed' },
@@ -36,6 +39,7 @@ export const AgentChatSessions: CollectionConfig = {
 			type: 'text',
 			admin: {
 				description: '채팅이 시작된 화면 경로입니다.',
+				position: 'sidebar',
 			},
 		},
 		{
@@ -43,7 +47,17 @@ export const AgentChatSessions: CollectionConfig = {
 			type: 'number',
 			admin: {
 				description: '요청과 응답을 포함한 세션 메시지 수입니다.',
+				position: 'sidebar',
 				step: 1,
+			},
+		},
+		{
+			name: 'messagesTable',
+			type: 'ui',
+			admin: {
+				components: {
+					Field: '/components/admin/AgentChatMessagesTable',
+				},
 			},
 		},
 		{
@@ -51,6 +65,7 @@ export const AgentChatSessions: CollectionConfig = {
 			type: 'array',
 			admin: {
 				description: '세션에 포함된 대화 버블과 버블별 실행 메타데이터입니다.',
+				hidden: true,
 				initCollapsed: true,
 			},
 			fields: [
@@ -183,10 +198,20 @@ export const AgentChatSessions: CollectionConfig = {
 			],
 		},
 		{
+			name: 'usedToolsTable',
+			type: 'ui',
+			admin: {
+				components: {
+					Field: '/components/admin/AgentChatCountedItemsTable',
+				},
+			},
+		},
+		{
 			name: 'usedTools',
 			type: 'array',
 			admin: {
 				description: 'Agent가 호출한 tool 이름과 호출 횟수입니다.',
+				hidden: true,
 				initCollapsed: true,
 			},
 			fields: [
@@ -201,12 +226,22 @@ export const AgentChatSessions: CollectionConfig = {
 					admin: { step: 1 },
 				},
 			],
+		},
+		{
+			name: 'usedSkillsTable',
+			type: 'ui',
+			admin: {
+				components: {
+					Field: '/components/admin/AgentChatCountedItemsTable',
+				},
+			},
 		},
 		{
 			name: 'usedSkills',
 			type: 'array',
 			admin: {
 				description: 'loadSkill로 선택된 Agent skill 이름과 호출 횟수입니다.',
+				hidden: true,
 				initCollapsed: true,
 			},
 			fields: [
@@ -223,10 +258,20 @@ export const AgentChatSessions: CollectionConfig = {
 			],
 		},
 		{
+			name: 'aiUsageTable',
+			type: 'ui',
+			admin: {
+				components: {
+					Field: '/components/admin/AgentChatUsageTable',
+				},
+			},
+		},
+		{
 			name: 'aiUsage',
 			type: 'group',
 			admin: {
 				description: 'Agent 채팅 비용 분석에 쓰는 모델과 토큰 사용량입니다.',
+				hidden: true,
 			},
 			fields: [
 				{
@@ -277,10 +322,16 @@ export const AgentChatSessions: CollectionConfig = {
 		{
 			name: 'errorMessage',
 			type: 'textarea',
+			admin: {
+				position: 'sidebar',
+			},
 		},
 		{
 			name: 'completedAt',
 			type: 'date',
+			admin: {
+				position: 'sidebar',
+			},
 		},
 		{
 			name: 'createdBy',
