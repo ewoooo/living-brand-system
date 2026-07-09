@@ -12,6 +12,7 @@ export default function ImagePage() {
 	const [sceneId, setSceneId] = useState('auto')
 	const [count, setCount] = useState(4)
 	const [images, setImages] = useState<string[]>([])
+	const [selected, setSelected] = useState<number | null>(null)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 
@@ -19,6 +20,7 @@ export default function ImagePage() {
 		if (!prompt.trim() || loading) return
 		setLoading(true)
 		setError(null)
+		setSelected(null)
 		try {
 			const res = await fetch('/api/image', {
 				method: 'POST',
@@ -103,18 +105,53 @@ export default function ImagePage() {
 			</div>
 
 			{images.length > 0 && (
-				<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-					{images.map((src, i) => (
-						// biome-ignore lint/performance/noImgElement: placeholder 미리보기, 최적화 불필요
-						<img
-							key={src}
-							src={src}
-							alt={`생성 결과 ${i + 1}`}
-							className="w-full rounded-md border border-neutral-200 dark:border-neutral-800"
-						/>
-					))}
+				<div className="flex flex-col gap-4">
+					<div className="flex flex-wrap items-center gap-3">
+						<Button
+							onClick={() =>
+								selected !== null && downloadImage(images[selected], selected)
+							}
+							disabled={selected === null}
+						>
+							선택한 이미지 다운로드
+						</Button>
+						<span className="text-muted-foreground text-sm">
+							{selected === null
+								? '이미지를 클릭해 선택하세요'
+								: `${selected + 1}번 선택됨`}
+						</span>
+					</div>
+					<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+						{images.map((src, i) => (
+							<button
+								type="button"
+								key={src}
+								onClick={() => setSelected(i)}
+								aria-pressed={selected === i}
+								className={`overflow-hidden rounded-md border-2 transition-colors ${
+									selected === i
+										? 'border-blue-500'
+										: 'border-neutral-200 hover:border-neutral-400 dark:border-neutral-800'
+								}`}
+							>
+								{/* biome-ignore lint/performance/noImgElement: 미리보기, 최적화 불필요 */}
+								<img src={src} alt={`생성 결과 ${i + 1}`} className="w-full" />
+							</button>
+						))}
+					</div>
 				</div>
 			)}
 		</div>
 	)
+}
+
+/** data URI 이미지를 파일로 저장한다 (data:image/…;base64,… 에서 확장자 추출). */
+function downloadImage(src: string, index: number) {
+	const ext = src.slice(5, src.indexOf(';')).split('/')[1] || 'png'
+	const a = document.createElement('a')
+	a.href = src
+	a.download = `essenherb-image-${index + 1}.${ext}`
+	document.body.appendChild(a)
+	a.click()
+	a.remove()
 }
