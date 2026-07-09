@@ -5,6 +5,11 @@ import {
 	type AgentSkillDetail,
 	findEnabledAgentSkillByName,
 } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
+import { IMAGE_SCENES } from '@/features/image-generation/presets'
+import {
+	type AgentGeneratedImagesAttachment,
+	generateImageCandidates,
+} from '@/features/image-generation/services/generate-image.service'
 import { AgentConfigurationError } from '@/lib/errors'
 import type { User } from '@/payload-types'
 import {
@@ -24,6 +29,7 @@ import {
 	searchAgentGuidelines,
 } from './get-agent-guideline-context.service'
 
+export type { AgentGeneratedImagesAttachment } from '@/features/image-generation/services/generate-image.service'
 export type { AgentTemplateImageAttachment } from './agent-template-request.service'
 
 const guidelineToolContextSchema = z.object({
@@ -34,6 +40,8 @@ const guidelineToolContextSchema = z.object({
 const checkScenarioSummary = CHECK_SCENARIOS.map(
 	(scenario) => `${scenario.key} (${scenario.title})`,
 ).join(', ')
+
+const imageSceneSummary = IMAGE_SCENES.map((scene) => `${scene.id} (${scene.label})`).join(', ')
 
 /**
  * Agent answer stream에 전달할 AI SDK tool set을 만든다.
@@ -113,6 +121,40 @@ export function getAgentTools() {
 			contextSchema: guidelineToolContextSchema,
 			execute: ({ templateId, values }, { context }) =>
 				prepareTemplateImage(context.user, templateId, values),
+		}),
+		generateImage: tool({
+			description: `Generate NEW images from a text prompt using AI image generation. Use when the user wants to create or generate a fresh image from a description (배경, 풍경, 제품컷, 헤더 이미지 등). This is DIFFERENT from prepareTemplateImage, which only fills fixed templates like 명함/카드. For a branded cosmetic PRODUCT shot, the prompt describes the hero product and sceneId picks the brand environment/composition (omit to auto-pick). For any NON-product image (backgrounds, textures, key visuals, 자유 생성), pass sceneId "free" to generate the prompt as-is without brand product styling. Scenes: ${imageSceneSummary}.`,
+			inputSchema: z.object({
+				prompt: z.string().min(1).max(500),
+				sceneId: z.string().max(40).optional(),
+				count: z.number().int().min(1).max(4).optional(),
+			}),
+			contextSchema: guidelineToolContextSchema,
+			execute: async ({ prompt, sceneId, count }) => {
+				const {
+					images,
+					prompt: composedPrompt,
+					sceneId: usedSceneId,
+				} = await generateImageCandidates({
+					userInput: prompt,
+					sceneId,
+					count: count ?? 2,
+				})
+				if (images.length === 0) {
+					// 실패를 모델에 명시적으로 알린다 — 안 그러면 빈 결과에도 "만들었어"라고 답한다.
+					return {
+						status: 'failed',
+						message:
+							'이미지 생성에 실패했어요. 무료 엔진이 느려 그럴 수 있으니 잠시 후 다시 시도해 주세요.',
+					}
+				}
+				return {
+					type: 'generated-images',
+					prompt: composedPrompt,
+					sceneId: usedSceneId,
+					images,
+				} satisfies AgentGeneratedImagesAttachment
+			},
 		}),
 		runCheck: tool({
 			description: `Run a quality check on the latest image attached by the user in this chat. Use when the user asks to inspect, validate, or check an attached image. Supported scenarioKey values: ${checkScenarioSummary}. Use scenarioKey "stationery" for business card or 명함 checks.`,

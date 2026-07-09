@@ -8,7 +8,7 @@ Feature는 "무엇을"(역량), Surface는 "어떻게 노출"(채널)입니다. 
 
 | Feature \ Surface | Page | AI Chat | Slack | REST |
 | --- | --- | --- | --- | --- |
-| Image | 구현 | 계획 | 계획 | 구현 |
+| Image | 구현 | 구현 | 계획 | 구현 |
 | Review | 구현 | 구현 | 계획 | 구현 |
 | Create | 구현(POC) | 구현 | 계획 | 부분 |
 
