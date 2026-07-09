@@ -68,8 +68,8 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    chapters: Chapter;
-    sections: Section;
+    'guideline-chapters': GuidelineChapter;
+    'guideline-sections': GuidelineSection;
     'guideline-pages': GuidelinePage;
     rules: Rule;
     'brand-logos': BrandLogo;
@@ -93,10 +93,10 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
-    chapters: {
-      sections: 'sections';
+    'guideline-chapters': {
+      sections: 'guideline-sections';
     };
-    sections: {
+    'guideline-sections': {
       pages: 'guideline-pages';
     };
     rules: {
@@ -107,8 +107,8 @@ export interface Config {
     };
   };
   collectionsSelect: {
-    chapters: ChaptersSelect<false> | ChaptersSelect<true>;
-    sections: SectionsSelect<false> | SectionsSelect<true>;
+    'guideline-chapters': GuidelineChaptersSelect<false> | GuidelineChaptersSelect<true>;
+    'guideline-sections': GuidelineSectionsSelect<false> | GuidelineSectionsSelect<true>;
     'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
     rules: RulesSelect<false> | RulesSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
@@ -199,9 +199,9 @@ export interface PayloadMcpApiKeyAuthOperations {
  * 가이드라인 최상위 장입니다. 하위에 섹션을 가집니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "chapters".
+ * via the `definition` "guideline-chapters".
  */
-export interface Chapter {
+export interface GuidelineChapter {
   id: number;
   /**
    * 사이드바 최상위 장 제목으로 표시됩니다.
@@ -217,7 +217,7 @@ export interface Chapter {
    */
   description?: string | null;
   sections?: {
-    docs?: (number | Section)[];
+    docs?: (number | GuidelineSection)[];
     hasNextPage?: boolean;
     totalDocs?: number;
   };
@@ -233,9 +233,9 @@ export interface Chapter {
  * 장 하위 섹션입니다. 상위 장에 속하며 하위에 페이지를 가집니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sections".
+ * via the `definition` "guideline-sections".
  */
-export interface Section {
+export interface GuidelineSection {
   id: number;
   /**
    * 사이드바 상위 섹션 제목으로 표시됩니다.
@@ -249,7 +249,7 @@ export interface Section {
   /**
    * 사이드바 내비게이션과 URL에 사용할 상위 장입니다.
    */
-  chapter: number | Chapter;
+  chapter: number | GuidelineChapter;
   /**
    * 섹션 랜딩 페이지에 표시할 선택 요약입니다.
    */
@@ -314,7 +314,7 @@ export interface GuidelinePage {
   /**
    * 사이드바 내비게이션과 URL에 사용할 상위 섹션입니다.
    */
-  section: number | Section;
+  section: number | GuidelineSection;
   /**
    * 숫자가 낮을수록 선택한 섹션 안에서 먼저 표시됩니다.
    */
@@ -1015,12 +1015,12 @@ export interface Search {
         value: number | GuidelinePage;
       }
     | {
-        relationTo: 'sections';
-        value: number | Section;
+        relationTo: 'guideline-sections';
+        value: number | GuidelineSection;
       }
     | {
-        relationTo: 'chapters';
-        value: number | Chapter;
+        relationTo: 'guideline-chapters';
+        value: number | GuidelineChapter;
       };
   updatedAt: string;
   createdAt: string;
@@ -1191,12 +1191,12 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'chapters';
-        value: number | Chapter;
+        relationTo: 'guideline-chapters';
+        value: number | GuidelineChapter;
       } | null)
     | ({
-        relationTo: 'sections';
-        value: number | Section;
+        relationTo: 'guideline-sections';
+        value: number | GuidelineSection;
       } | null)
     | ({
         relationTo: 'guideline-pages';
@@ -1316,9 +1316,9 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "chapters_select".
+ * via the `definition` "guideline-chapters_select".
  */
-export interface ChaptersSelect<T extends boolean = true> {
+export interface GuidelineChaptersSelect<T extends boolean = true> {
   title?: T;
   generateSlug?: T;
   slug?: T;
@@ -1331,9 +1331,9 @@ export interface ChaptersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sections_select".
+ * via the `definition` "guideline-sections_select".
  */
-export interface SectionsSelect<T extends boolean = true> {
+export interface GuidelineSectionsSelect<T extends boolean = true> {
   title?: T;
   generateSlug?: T;
   slug?: T;
@@ -1979,12 +1979,12 @@ export interface TaskSchedulePublish {
     locale?: string | null;
     doc?:
       | ({
-          relationTo: 'chapters';
-          value: number | Chapter;
+          relationTo: 'guideline-chapters';
+          value: number | GuidelineChapter;
         } | null)
       | ({
-          relationTo: 'sections';
-          value: number | Section;
+          relationTo: 'guideline-sections';
+          value: number | GuidelineSection;
         } | null)
       | ({
           relationTo: 'guideline-pages';

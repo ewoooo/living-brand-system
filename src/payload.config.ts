@@ -179,7 +179,7 @@ export default buildConfig({
 						mcpListParameters,
 						(args, req) =>
 							req.payload.find({
-								collection: 'chapters',
+								collection: 'guideline-chapters',
 								depth: 0,
 								draft: false,
 								fallbackLocale: 'en',
@@ -204,7 +204,7 @@ export default buildConfig({
 						mcpListParameters,
 						(args, req) =>
 							req.payload.find({
-								collection: 'sections',
+								collection: 'guideline-sections',
 								depth: 0,
 								draft: false,
 								fallbackLocale: 'en',
@@ -265,11 +265,11 @@ export default buildConfig({
 			},
 		} as never),
 		searchPlugin({
-			collections: ['guideline-pages', 'sections', 'chapters'],
+			collections: ['guideline-pages', 'guideline-sections', 'guideline-chapters'],
 			defaultPriorities: {
 				'guideline-pages': 20,
-				sections: 10,
-				chapters: 5,
+				'guideline-sections': 10,
+				'guideline-chapters': 5,
 			},
 			searchOverrides: {
 				access: {

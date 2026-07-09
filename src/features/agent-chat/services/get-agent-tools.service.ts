@@ -74,7 +74,7 @@ export function getAgentTools() {
 		readGuidelineDocument: tool({
 			description: 'Read a published guideline page or section returned by searchGuidelines.',
 			inputSchema: z.object({
-				collection: z.enum(['guideline-pages', 'sections']),
+				collection: z.enum(['guideline-pages', 'guideline-sections']),
 				id: z.string().min(1),
 			}),
 			contextSchema: guidelineToolContextSchema,

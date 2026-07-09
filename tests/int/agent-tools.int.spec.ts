@@ -466,7 +466,7 @@ describe('agent tools', () => {
 					type: 'tool-readGuidelineDocument',
 					toolCallId: 'tool-call-pending',
 					state: 'input-available',
-					input: { collection: 'sections', id: '9' },
+					input: { collection: 'guideline-sections', id: '9' },
 				},
 			],
 		} as AgentChatMessage)

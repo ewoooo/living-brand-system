@@ -89,7 +89,7 @@ export const GuidelinePages: CollectionConfig = {
 		{
 			name: 'section',
 			type: 'relationship',
-			relationTo: 'sections',
+			relationTo: 'guideline-sections',
 			required: true,
 			index: true,
 			admin: {

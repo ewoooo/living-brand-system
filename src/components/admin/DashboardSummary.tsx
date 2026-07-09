@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 
 export default async function DashboardSummary({ payload }: { payload: Payload }) {
-	const countDocs = (collection: 'rules' | 'sections' | 'guideline-pages') =>
+	const countDocs = (collection: 'rules' | 'guideline-sections' | 'guideline-pages') =>
 		payload
 			.count({ collection })
 			.then((result) => result.totalDocs)
@@ -9,7 +9,7 @@ export default async function DashboardSummary({ payload }: { payload: Payload }
 
 	const [rules, sections, pages] = await Promise.all([
 		countDocs('rules'),
-		countDocs('sections'),
+		countDocs('guideline-sections'),
 		countDocs('guideline-pages'),
 	])
 
