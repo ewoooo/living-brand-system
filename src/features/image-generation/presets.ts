@@ -228,7 +228,23 @@ export function pickSceneByKeyword(userInput: string): ImageScene {
 }
 
 /**
- * base⊕Scene⊕사용자 입력 → 결정론적 생성 프롬프트. Text Decorator(LLM)가 없거나 실패할 때의 폴백.
+ * 사용자 입력(+선택 Scene) → 이미지 생성 요청(프롬프트·size·적용 씬). LLM 없이 결정론으로 합성한다.
+ * - free: 브랜드 base/Scene 없이 입력 프롬프트 원문(제품컷 외 이미지용).
+ * - 그 외: sceneId로 Scene을 찾거나(auto/미매칭은 키워드 자동 선택) base⊕Scene⊕입력을 합친다.
+ */
+export function composeImageRequest(
+	userInput: string,
+	sceneId?: string,
+): { prompt: string; size: ImageSize; sceneId: string } {
+	if (sceneId === 'free') {
+		return { prompt: userInput.trim(), size: '1024x1024', sceneId: 'free' }
+	}
+	const scene = resolveScene(sceneId) ?? pickSceneByKeyword(userInput)
+	return { prompt: composeScenePrompt(scene, userInput), size: scene.size, sceneId: scene.id }
+}
+
+/**
+ * base⊕Scene⊕사용자 입력 → 결정론적 생성 프롬프트.
  * 사용자 입력은 hero product 자리에 들어가고, Scene이 환경/구성을 씌운다.
  */
 export function composeScenePrompt(scene: ImageScene, subject: string): string {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+	composeImageRequest,
 	composeScenePrompt,
 	ESSENHERB_BASE,
 	IMAGE_SCENES,
@@ -40,6 +41,28 @@ describe('composeScenePrompt', () => {
 		expect(prompt).toContain(ESSENHERB_BASE.background)
 		expect(prompt).toContain(scene.composition)
 		expect(prompt).toContain(scene.moodAccent)
+	})
+})
+
+describe('composeImageRequest', () => {
+	it('free는 입력 원문·정사각 size·free 씬 (브랜드 스타일 없음)', () => {
+		expect(composeImageRequest('  봄 느낌의 추상 배경  ', 'free')).toEqual({
+			prompt: '봄 느낌의 추상 배경',
+			size: '1024x1024',
+			sceneId: 'free',
+		})
+	})
+
+	it('지정 sceneId는 그 Scene으로 프롬프트·size 합성', () => {
+		const result = composeImageRequest('허브 세럼 앰플', 'red-pumpkin')
+		expect(result.sceneId).toBe('red-pumpkin')
+		expect(result.size).toBe('1024x1536')
+		expect(result.prompt).toContain('허브 세럼 앰플')
+		expect(result.prompt).toContain(ESSENHERB_BASE.background)
+	})
+
+	it('auto/미지정은 입력 키워드로 Scene 자동 선택', () => {
+		expect(composeImageRequest('아스파라거스 사이에 앰플', 'auto').sceneId).toBe('asparagus')
 	})
 })
 
