@@ -34,6 +34,11 @@ export async function buildImagePrompt({
 	userInput: string
 	sceneId?: string
 }): Promise<{ prompt: string; size: ImageSize; sceneId: string }> {
+	// 자유 생성: 브랜드 base/Scene/제품 강제 없이 입력 프롬프트를 그대로 쓴다 (제품컷 외 이미지용).
+	// ponytail: 우선 원문 그대로. 번역/보정이 필요해지면 여기서 가벼운 decorate만 추가.
+	if (sceneId === 'free') {
+		return { prompt: userInput.trim(), size: '1024x1024', sceneId: 'free' }
+	}
 	const scene = resolveScene(sceneId) ?? pickSceneByKeyword(userInput)
 	const prompt = await decorate(scene, userInput)
 	return { prompt, size: scene.size, sceneId: scene.id }

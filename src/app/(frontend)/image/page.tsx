@@ -43,9 +43,9 @@ export default function ImagePage() {
 					<h1 className="text-3xl">이미지 생성</h1>
 				</hgroup>
 				<p className="mb-4 text-muted-foreground">
-					만들 제품을 입력하고 씬(환경·구성)을 고르면 브랜드 톤·조명·구도가 프롬프트에
-					자동으로 더해집니다. 씬은 자동 선택도 가능합니다. 후보를 여러 장 생성해 마음에
-					드는 것을 고르세요. <wbr />
+					브랜드 제품컷은 씬(환경·구성)을 고르면 브랜드 톤·조명·구도가 자동으로
+					더해집니다. 제품컷이 아닌 이미지는 자유 생성 모드로 프롬프트를 그대로
+					생성하세요. 후보를 여러 장 만들어 마음에 드는 것을 고르면 됩니다. <wbr />
 					(OpenAI 키 미설정 시 placeholder 표시)
 				</p>
 			</header>
@@ -54,24 +54,31 @@ export default function ImagePage() {
 				<textarea
 					value={prompt}
 					onChange={(e) => setPrompt(e.target.value)}
-					placeholder="만들 제품 (예: 허브 세럼 앰플, 블루 크림 튜브)"
+					placeholder={
+						sceneId === 'free'
+							? '만들 이미지 (자유 생성 — 예: 봄 느낌의 추상 배경, 허브 텍스처)'
+							: '만들 제품 (예: 허브 세럼 앰플, 블루 크림 튜브)'
+					}
 					rows={3}
 					className="w-full resize-y rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
 				/>
 				<div className="flex flex-wrap items-center gap-3">
 					<label className="flex items-center gap-2 text-muted-foreground text-sm">
-						씬
+						모드
 						<select
 							value={sceneId}
 							onChange={(e) => setSceneId(e.target.value)}
 							className="rounded-md border border-neutral-300 bg-transparent px-2 py-1 dark:border-neutral-700"
 						>
-							<option value="auto">자동 (입력에서 선택)</option>
-							{IMAGE_SCENES.map((scene) => (
-								<option key={scene.id} value={scene.id}>
-									{scene.label}
-								</option>
-							))}
+							<option value="free">자유 생성 (브랜드 스타일 없음)</option>
+							<optgroup label="브랜드 제품컷">
+								<option value="auto">자동 (입력에서 씬 선택)</option>
+								{IMAGE_SCENES.map((scene) => (
+									<option key={scene.id} value={scene.id}>
+										{scene.label}
+									</option>
+								))}
+							</optgroup>
 						</select>
 					</label>
 					<label className="flex items-center gap-2 text-muted-foreground text-sm">
