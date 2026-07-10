@@ -17,6 +17,7 @@ import {
 	countUnauthorizedImages,
 	isUnauthorizedAssetCollection,
 } from '@/features/template-import/utils/validate-authorized-assets'
+import { GenerateTextField } from '@/features/text-generation/components/generate-text-field'
 import {
 	AUTHORIZED_ASSET_COLLECTIONS,
 	type JsonFlowElement,
@@ -317,14 +318,17 @@ export default function TemplatePreviewField() {
 							</div>
 						) : (
 							<>
-								<CheckboxInput
-									id="template-preview-locked"
-									label="슬롯으로 열기 (Create에서 편집 허용)"
-									checked={!selected.locked}
-									onToggle={(event) =>
-										updateSelected({ locked: !event.target.checked })
-									}
-								/>
+								{/* 텍스트는 값 고정 토글을 '텍스트 내용' 옆에 두므로 여기선 텍스트 외 요소만 */}
+								{selected.type !== 'text' && (
+									<CheckboxInput
+										id="template-preview-locked"
+										label="값 고정 (해제하면 worker가 수정)"
+										checked={!!selected.locked}
+										onToggle={(event) =>
+											updateSelected({ locked: event.target.checked })
+										}
+									/>
+								)}
 								<TextInput
 									path="templatePreviewSlotLabel"
 									label="슬롯 이름"
@@ -382,25 +386,43 @@ export default function TemplatePreviewField() {
 								/>
 								<TextInput
 									path="templatePreviewText"
-									label={
-										selected.locked
-											? '텍스트 내용 (고정값)'
-											: '텍스트 내용 (기본값)'
-									}
+									label="텍스트 내용"
 									value={selected.text}
 									onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
 										updateSelected({ text: event.target.value })
 									}
 								/>
+								<CheckboxInput
+									id="template-preview-text-locked"
+									label="값 고정"
+									checked={!!selected.locked}
+									onToggle={(event) =>
+										updateSelected({ locked: event.target.checked })
+									}
+								/>
+								<GenerateTextField
+									defaultPrompt={selected.slotLabel ?? ''}
+									onGenerated={(text) => updateSelected({ text })}
+								/>
 								{!selected.locked && (
-									<TextInput
-										path="templatePreviewPlaceholder"
-										label="Placeholder (worker 안내 문구)"
-										value={selected.placeholder ?? ''}
-										onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-											updateSelected({ placeholder: event.target.value })
-										}
-									/>
+									<>
+										<TextInput
+											path="templatePreviewPlaceholder"
+											label="Placeholder (worker 안내 문구)"
+											value={selected.placeholder ?? ''}
+											onChange={(
+												event: React.ChangeEvent<HTMLInputElement>,
+											) =>
+												updateSelected({ placeholder: event.target.value })
+											}
+										/>
+										<GenerateTextField
+											defaultPrompt="worker에게 보일 안내 문구"
+											onGenerated={(text) =>
+												updateSelected({ placeholder: text })
+											}
+										/>
+									</>
 								)}
 								<SelectInput
 									name="templatePreviewTextFit"

@@ -5,6 +5,7 @@ import { TemplateRenderer, type TemplateSlotValue } from '@/components/template-
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { GenerateTextField } from '@/features/text-generation/components/generate-text-field'
 import { useTemplatePngExport } from '@/hooks/use-template-png-export'
 import { revokeBlob } from '@/lib/object-url'
 import { collectOpenSlotElements, type JsonSlotElement } from '@/types/json-template'
@@ -103,12 +104,18 @@ export function AssetGenerator({ template }: { template: PublishedTemplate }) {
 							{element.slotLabel ?? element.id}
 						</label>
 						{element.type === 'text' ? (
-							<TextSlotInput
-								id={`slot-${element.id}`}
-								element={element}
-								value={values[element.id]?.text ?? ''}
-								onChange={(text) => setSlotValue(element.id, { text })}
-							/>
+							<>
+								<TextSlotInput
+									id={`slot-${element.id}`}
+									element={element}
+									value={values[element.id]?.text ?? ''}
+									onChange={(text) => setSlotValue(element.id, { text })}
+								/>
+								<GenerateTextField
+									defaultPrompt={element.placeholder || element.slotLabel || ''}
+									onGenerated={(text) => setSlotValue(element.id, { text })}
+								/>
+							</>
 						) : (
 							<Input
 								id={`slot-${element.id}`}
