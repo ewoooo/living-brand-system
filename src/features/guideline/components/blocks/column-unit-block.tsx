@@ -26,7 +26,7 @@ export function ColumnUnitBlock({
 							scale={column.imageScale}
 							className="mb-4 aspect-4/3 p-6"
 						/>
-						{column.heading && <h3 className="mb-4 font-semibold">{column.heading}</h3>}
+						{column.heading && <h4 className="mb-4 font-semibold">{column.heading}</h4>}
 						{column.body && (
 							<RichText
 								data={column.body}

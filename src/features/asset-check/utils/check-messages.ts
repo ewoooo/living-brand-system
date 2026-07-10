@@ -1,8 +1,14 @@
 import type { CheckStatus } from '@/features/asset-check/checkers/types'
-import type { Rule } from '@/payload-types'
 
-export function toCheckRuleMessages(
-	messages: Rule['messages'],
+interface CheckMessages {
+	pass?: string | null
+	ok?: string | null
+	needsReview?: string | null
+	fail?: string | null
+}
+
+export function toRuntimeCheckMessages(
+	messages: CheckMessages | null | undefined,
 ): Partial<Record<CheckStatus, string>> {
 	if (!messages) return {}
 	return {

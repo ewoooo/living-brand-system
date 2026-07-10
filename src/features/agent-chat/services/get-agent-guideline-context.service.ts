@@ -1,6 +1,6 @@
 import { formatBlockForAgent } from '@/features/guideline/blocks/registry'
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
-import type { GuidelinePage, GuidelineSection, Rule } from '@/payload-types'
+import type { GuidelineSection } from '@/payload-types'
 import {
 	type AgentGuidelineDocument,
 	type AgentGuidelineSearchResult,
@@ -36,7 +36,7 @@ interface GuidelineDocumentResult {
 	collection: GuidelineDocumentCollection
 	id: string
 	source: GuidelineDocumentSource
-	rules: GuidelineDocumentRule[]
+	checks: GuidelineDocumentCheck[]
 	content: string
 	relatedPages?: GuidelineDocumentRelatedPage[]
 }
@@ -49,7 +49,7 @@ interface GuidelineDocumentSource {
 	href: string | null
 }
 
-interface GuidelineDocumentRule {
+interface GuidelineDocumentCheck {
 	key: string
 	title: string
 }
@@ -138,8 +138,8 @@ function formatGuidelinePageResult(
 					? `/guideline/${sectionSlug}#${document.page.slug}`
 					: null,
 		},
-		rules: getLiveRules(document.page.rules),
-		content: limitContent(formatGuidelinePage(document.page)),
+		checks: document.checks.map(toDocumentCheck),
+		content: limitContent(formatGuidelinePage(document.page, document.checks)),
 	}
 }
 
@@ -158,7 +158,7 @@ function formatGuidelineSectionResult(
 			title: document.section.title,
 			href: document.section.slug ? `/guideline/${document.section.slug}` : null,
 		},
-		rules: [],
+		checks: document.checks.map(toDocumentCheck),
 		content: limitContent(formatGuidelineSection(document.section, document.pages)),
 		relatedPages: document.pages.map((page) => ({
 			id: String(page.id),
@@ -169,16 +169,17 @@ function formatGuidelineSectionResult(
 
 function formatGuidelinePage(
 	page: Extract<AgentGuidelineDocument, { collection: 'guideline-pages' }>['page'],
+	documentChecks: Extract<AgentGuidelineDocument, { collection: 'guideline-pages' }>['checks'],
 ): string {
 	const sectionTitle = getTitle(page.section)
-	const rules = getLiveRules(page.rules).map(formatRule)
+	const checks = documentChecks.map(toDocumentCheck).map(formatCheck)
 
 	return compact([
 		sectionTitle ? `Section: ${sectionTitle}` : null,
 		`Page: ${page.title}`,
 		extractTextFromLexical(page.description),
 		...(page.blocks?.map(formatBlockForAgent).filter(Boolean) ?? []),
-		rules.length ? `Rules:\n${rules.join('\n')}` : null,
+		checks.length ? `Checks:\n${checks.join('\n')}` : null,
 	]).join('\n\n')
 }
 
@@ -187,20 +188,12 @@ type GuidelineDocumentRelatedPage = {
 	title: string
 }
 
-function formatRule(value: GuidelineDocumentRule): string {
+function formatCheck(value: GuidelineDocumentCheck): string {
 	return `- ${value.key}: ${value.title}`
 }
 
-function getLiveRules(values: GuidelinePage['rules']): GuidelineDocumentRule[] {
-	return (
-		values
-			?.map((placement) => placement.rule)
-			.filter((rule): rule is Rule => typeof rule === 'object' && rule.status === 'live')
-			.map((rule) => ({
-				key: rule.key,
-				title: rule.title,
-			})) ?? []
-	)
+function toDocumentCheck(check: { key: string; title: string }): GuidelineDocumentCheck {
+	return { key: check.key, title: check.title }
 }
 
 function getTitle(value: number | GuidelineSection): string {

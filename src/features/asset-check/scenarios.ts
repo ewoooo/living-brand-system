@@ -4,7 +4,7 @@ import type { ImageContentFlags } from '@/features/asset-check/types'
 export interface CheckScenario {
 	key: string
 	title: string
-	ruleKeys: string[]
+	checkKeys: string[]
 	flags: ImageContentFlags
 }
 
@@ -12,17 +12,17 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 	{
 		key: 'quick',
 		title: '빠른 기본 검수',
-		ruleKeys: ['color.palette', 'color.combination', 'logo.size.minimum', 'logo.space.clear'],
+		checkKeys: ['color.palette', 'color.combination', 'logo.size.minimum', 'logo.space.clear'],
 		flags: { logo: true, typography: false, illustration: false, photography: false },
 	},
 	{
 		key: 'image-mood',
 		title: '이미지 무드 검수',
-		ruleKeys: [
+		checkKeys: [
 			'imagery.style',
 			'imagery.photography.classification',
 			'imagery.misuse',
-			'imagery.ai-consistency',
+			'imagery.ai.consistency',
 			'color.usage',
 		],
 		flags: { logo: false, typography: false, illustration: false, photography: true },
@@ -30,7 +30,7 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 	{
 		key: 'sns',
 		title: 'SNS 콘텐츠 검수',
-		ruleKeys: [
+		checkKeys: [
 			'application.sns.format',
 			'layout.sns.template',
 			'layout.sns.zones',
@@ -44,19 +44,13 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 	{
 		key: 'web-visual',
 		title: '웹/비주얼 템플릿 검수',
-		ruleKeys: [
-			'layout.visual.template',
-			'application.web',
-			'color.palette',
-			'color.combination',
-			'typography.usage',
-		],
+		checkKeys: ['application.web', 'color.palette', 'color.combination', 'typography.usage'],
 		flags: { logo: false, typography: true, illustration: false, photography: false },
 	},
 	{
 		key: 'advertisement',
 		title: '광고 검수',
-		ruleKeys: [
+		checkKeys: [
 			'application.advertisement.format',
 			'layout.advertisement.template',
 			'layout.advertisement.zones',
@@ -72,7 +66,7 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 	{
 		key: 'stationery',
 		title: '명함/스테이셔너리 검수',
-		ruleKeys: [
+		checkKeys: [
 			'application.stationery.format',
 			'application.print.spec',
 			'color.palette',
@@ -108,9 +102,9 @@ export function filterRulesetByScenario(
 	sections: CheckSection[],
 	scenario: CheckScenario,
 ): CheckSection[] {
-	const keys = new Set(scenario.ruleKeys)
+	const keys = new Set(scenario.checkKeys)
 	return sections.flatMap((section) => {
-		const rules = section.rules.filter((rule) => keys.has(rule.key))
-		return rules.length ? [{ ...section, rules }] : []
+		const checks = section.checks.filter((check) => keys.has(check.key))
+		return checks.length ? [{ ...section, checks }] : []
 	})
 }

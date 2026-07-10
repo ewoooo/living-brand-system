@@ -15,6 +15,23 @@ import * as migration_20260709_024939_add_agent_chat_session_messages from './20
 import * as migration_20260709_070452_guideline_collection_slugs from './20260709_070452_guideline_collection_slugs';
 import * as migration_20260709_094407_add_rule_messages from './20260709_094407_add_rule_messages';
 import * as migration_20260709_095923_add_rule_tier_executor from './20260709_095923_add_rule_tier_executor';
+import * as migration_20260710_014408_add_section_header_image from './20260710_014408_add_section_header_image';
+import * as migration_20260710_020645_add_section_blocks from './20260710_020645_add_section_blocks';
+import * as migration_20260710_021947_add_section_rule_references from './20260710_021947_add_section_rule_references';
+import * as migration_20260710_042810_add_rule_specs from './20260710_042810_add_rule_specs';
+import * as migration_20260710_043223_backfill_rule_specs from './20260710_043223_backfill_rule_specs';
+import * as migration_20260710_045145_add_rule_document_relations from './20260710_045145_add_rule_document_relations';
+import * as migration_20260710_045208_backfill_rule_documents from './20260710_045208_backfill_rule_documents';
+import * as migration_20260710_050945_contract_rule_legacy_fields from './20260710_050945_contract_rule_legacy_fields';
+import * as migration_20260710_052026_rename_rule_specs_to_checkers from './20260710_052026_rename_rule_specs_to_checkers';
+import * as migration_20260710_070644_add_rule_source from './20260710_070644_add_rule_source';
+import * as migration_20260710_070752_backfill_rule_source from './20260710_070752_backfill_rule_source';
+import * as migration_20260710_082044_add_guideline_checks from './20260710_082044_add_guideline_checks';
+import * as migration_20260710_082120_backfill_guideline_checks from './20260710_082120_backfill_guideline_checks';
+import * as migration_20260710_085848 from './20260710_085848';
+import * as migration_20260710_085950_backfill_template_checks from './20260710_085950_backfill_template_checks';
+import * as migration_20260710_093702_connect_scenario_checks from './20260710_093702_connect_scenario_checks';
+import * as migration_20260710_100108_contract_guideline_checks from './20260710_100108_contract_guideline_checks';
 
 export const migrations = [
   {
@@ -101,5 +118,90 @@ export const migrations = [
     up: migration_20260709_095923_add_rule_tier_executor.up,
     down: migration_20260709_095923_add_rule_tier_executor.down,
     name: '20260709_095923_add_rule_tier_executor',
+  },
+  {
+    up: migration_20260710_014408_add_section_header_image.up,
+    down: migration_20260710_014408_add_section_header_image.down,
+    name: '20260710_014408_add_section_header_image',
+  },
+  {
+    up: migration_20260710_020645_add_section_blocks.up,
+    down: migration_20260710_020645_add_section_blocks.down,
+    name: '20260710_020645_add_section_blocks',
+  },
+  {
+    up: migration_20260710_021947_add_section_rule_references.up,
+    down: migration_20260710_021947_add_section_rule_references.down,
+    name: '20260710_021947_add_section_rule_references',
+  },
+  {
+    up: migration_20260710_042810_add_rule_specs.up,
+    down: migration_20260710_042810_add_rule_specs.down,
+    name: '20260710_042810_add_rule_specs',
+  },
+  {
+    up: migration_20260710_043223_backfill_rule_specs.up,
+    down: migration_20260710_043223_backfill_rule_specs.down,
+    name: '20260710_043223_backfill_rule_specs',
+  },
+  {
+    up: migration_20260710_045145_add_rule_document_relations.up,
+    down: migration_20260710_045145_add_rule_document_relations.down,
+    name: '20260710_045145_add_rule_document_relations',
+  },
+  {
+    up: migration_20260710_045208_backfill_rule_documents.up,
+    down: migration_20260710_045208_backfill_rule_documents.down,
+    name: '20260710_045208_backfill_rule_documents',
+  },
+  {
+    up: migration_20260710_050945_contract_rule_legacy_fields.up,
+    down: migration_20260710_050945_contract_rule_legacy_fields.down,
+    name: '20260710_050945_contract_rule_legacy_fields',
+  },
+  {
+    up: migration_20260710_052026_rename_rule_specs_to_checkers.up,
+    down: migration_20260710_052026_rename_rule_specs_to_checkers.down,
+    name: '20260710_052026_rename_rule_specs_to_checkers',
+  },
+  {
+    up: migration_20260710_070644_add_rule_source.up,
+    down: migration_20260710_070644_add_rule_source.down,
+    name: '20260710_070644_add_rule_source',
+  },
+  {
+    up: migration_20260710_070752_backfill_rule_source.up,
+    down: migration_20260710_070752_backfill_rule_source.down,
+    name: '20260710_070752_backfill_rule_source',
+  },
+  {
+    up: migration_20260710_082044_add_guideline_checks.up,
+    down: migration_20260710_082044_add_guideline_checks.down,
+    name: '20260710_082044_add_guideline_checks',
+  },
+  {
+    up: migration_20260710_082120_backfill_guideline_checks.up,
+    down: migration_20260710_082120_backfill_guideline_checks.down,
+    name: '20260710_082120_backfill_guideline_checks',
+  },
+  {
+    up: migration_20260710_085848.up,
+    down: migration_20260710_085848.down,
+    name: '20260710_085848',
+  },
+  {
+    up: migration_20260710_085950_backfill_template_checks.up,
+    down: migration_20260710_085950_backfill_template_checks.down,
+    name: '20260710_085950_backfill_template_checks',
+  },
+  {
+    up: migration_20260710_093702_connect_scenario_checks.up,
+    down: migration_20260710_093702_connect_scenario_checks.down,
+    name: '20260710_093702_connect_scenario_checks',
+  },
+  {
+    up: migration_20260710_100108_contract_guideline_checks.up,
+    down: migration_20260710_100108_contract_guideline_checks.down,
+    name: '20260710_100108_contract_guideline_checks',
   },
 ];

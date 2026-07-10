@@ -16,12 +16,12 @@ const sections: CheckSection[] = [
 		sectionTitle: 'Brand Logo',
 		sectionSlug: 'brand-logo',
 		sectionOrder: 1,
-		rules: [
-			rule('logo.size.minimum'),
-			rule('logo.space.clear'),
-			rule('color.palette'),
-			{ ...rule('logo.unimplemented'), implemented: false },
-			rule('application.stationery.format'),
+		checks: [
+			check('logo.size.minimum'),
+			check('logo.space.clear'),
+			check('color.palette'),
+			{ ...check('logo.unimplemented'), implemented: false },
+			check('application.stationery.format'),
 		],
 	},
 	{
@@ -35,7 +35,7 @@ const sections: CheckSection[] = [
 		sectionTitle: 'Color System',
 		sectionSlug: 'color-system',
 		sectionOrder: 2,
-		rules: [rule('color.palette'), rule('color.combination')],
+		checks: [check('color.palette'), check('color.combination')],
 	},
 ]
 
@@ -49,7 +49,7 @@ describe('buildCheckReviewView', () => {
 		})
 
 		expect(view.summary).toEqual({ pass: 0, ok: 0, fail: 0, pendingManualCheck: 0 })
-		expect(view.rows.map((row) => row.rule.key)).toEqual([
+		expect(view.rows.map((row) => row.check.key)).toEqual([
 			'logo.size.minimum',
 			'logo.space.clear',
 			'color.palette',
@@ -57,7 +57,7 @@ describe('buildCheckReviewView', () => {
 		])
 	})
 
-	it('builds fail-only rows and merges duplicate rule sections', () => {
+	it('builds fail-only rows and merges duplicate Check sections', () => {
 		const selected = image({
 			'logo.size.minimum': result('logo.size.minimum', 'pass'),
 			'logo.space.clear': result('logo.space.clear', 'fail'),
@@ -73,7 +73,7 @@ describe('buildCheckReviewView', () => {
 		})
 
 		expect(view.summary).toEqual({ pass: 1, ok: 1, fail: 2, pendingManualCheck: 0 })
-		expect(view.rows.map((row) => row.rule.key)).toEqual(['logo.space.clear', 'color.palette'])
+		expect(view.rows.map((row) => row.check.key)).toEqual(['logo.space.clear', 'color.palette'])
 		expect(view.rows[1]?.appliesTo).toEqual(['Brand Logo', 'Color System'])
 	})
 
@@ -87,14 +87,14 @@ describe('buildCheckReviewView', () => {
 			showFailOnly: false,
 		})
 
-		expect(view.rows.map((row) => row.rule.key)).toEqual([
+		expect(view.rows.map((row) => row.check.key)).toEqual([
 			'color.palette',
 			'application.stationery.format',
 		])
 	})
 })
 
-function rule(key: string): CheckSection['rules'][number] {
+function check(key: string): CheckSection['checks'][number] {
 	return {
 		key,
 		title: key,

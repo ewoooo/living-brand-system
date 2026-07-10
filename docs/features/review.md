@@ -11,10 +11,11 @@
 재사용 단위는 유스케이스 서비스 **`startCheckSession`**입니다. 어떤 표면에서도 호출하도록 feature 폴더가 아닌 최상위(`src/services/start-check-session.service.ts`)에 둡니다.
 
 - 입력: 이미지 바이트(Buffer), 시나리오 키(룰셋·콘텐츠 플래그 선택), 콘텐츠 플래그(logo/typography/illustration/photography), 호출 출처(`review-page`/`chat`/`mcp-call`), 사용자
-- 출력: `{ checkSessionId, results(ruleKey→CheckResult), pendingRuleKeys }`
+- 출력: `{ checkSessionId, results(checkKey→CheckResult), pendingCheckKeys }`
 - `CheckResult`의 판정은 `rawResult.status`(`pass`/`ok`/`needs_review`/`fail`)와 `fulfillment`(충족도 %)로 표현됩니다.
-- 2단계 계약: 결정론적 rule은 즉시 채워지고, AI(heuristic) rule은 `pendingRuleKeys`로 반환된 뒤 **`completeCheckSessionAiCheck`**로 완성합니다.
-- 룰셋 조회 단위: `getCheckRules(ruleKeys?)`(코어), `getCheckRuleset()`(페이지 뷰모델).
+- 2단계 계약: 결정론적 Check는 즉시 채워지고, AI(heuristic) Check는 `pendingCheckKeys`로 반환된 뒤 **`completeCheckSessionAiCheck`**로 완성합니다.
+- 기준 조회 단위: `getRuntimeChecks(checkKeys?)`(실행), `getCheckRuleset()`(페이지 뷰모델).
+- 기준 소스: published `guideline-sections`·`guideline-pages`의 문서 및 Block `checks[]`. 실행 시 evidence·referenceAssets와 RuleChecker 계약을 `CheckSession.rulesetSnapshot`에 고정합니다.
 
 ## 3. 표면
 
@@ -27,9 +28,9 @@
 
 ## 4. 의존
 
-- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 기본 모델 `claude-haiku-4-5`, `ANTHROPIC_MODEL`로 교체. `ANTHROPIC_API_KEY` 없으면 AI 항목은 `needs_review`로 폴백.
+- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 모델과 프롬프트는 BrandRule이 참조하는 RuleChecker에서 선택한다. `ANTHROPIC_API_KEY` 없으면 AI 항목은 `needs_review`로 폴백.
 - 이미지 디코딩: `sharp`(128px 픽셀 그리드 추출).
-- 결정론적 checker: palette-compliance / color-combination / spot-color / background-tone / clear-space / relative-size / canvas-format. rule→checker 매핑은 registry가 소유하며, 미매핑 결정론 rule은 `implemented:false`로 표시.
+- 결정론적 checker: palette-compliance / color-combination / spot-color / background-tone / clear-space / relative-size / canvas-format. RuleChecker의 `checkerKey`로 registry를 조회하며, 미등록 checker는 `implemented:false`로 표시.
 - Payload 컬렉션: `rules`·`guideline-pages`(룰셋), `brand-colors`(팔레트) 읽기. 세션은 `check-sessions`에 영속(룰셋 스냅샷을 함께 저장해 AI 후속 단계가 재사용).
 
 ## 5. 크로스커팅

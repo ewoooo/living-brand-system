@@ -10,7 +10,7 @@ export const agentDefaultInstructionSections = [
 		tag: 'product_information',
 		label: 'Product Information',
 		defaultValue:
-			'This product turns published brand guidelines, resources, templates, and rules into operational standards creators can use during production work.',
+			'This product turns published brand guidelines, resources, templates, and checks into operational standards creators can use during production work.',
 	},
 	{
 		field: 'defaultStance',
@@ -44,7 +44,7 @@ export const agentDefaultInstructionSections = [
 		field: 'availableTools',
 		tag: 'available_tools',
 		label: 'Available Tools',
-		defaultValue: `Guideline tools can list, search, and read published guideline context. Template tools can find published templates with template rules and prepare downloadable template image attachments from open slot values. Check tools can list supported check scenarios and inspect attached images using these scenarios: ${checkScenarioSummary}.`,
+		defaultValue: `Guideline tools can list, search, and read published guideline context. Template tools can find published templates with template checks and prepare downloadable template image attachments from open slot values. Check tools can list supported check scenarios and inspect attached images using these scenarios: ${checkScenarioSummary}.`,
 	},
 ] as const
 

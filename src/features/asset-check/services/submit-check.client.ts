@@ -8,10 +8,10 @@ import type { CheckResult } from '@/features/asset-check/checkers/types'
 export interface SubmitCheckResult {
 	checkSessionId: number
 	results: Record<string, CheckResult>
-	pendingRuleKeys: string[]
+	pendingCheckKeys: string[]
 }
 
-/** 즉시(deterministic/manual) 판정을 요청한다. AI 룰은 pendingRuleKeys로 분리돼 돌아온다. */
+/** 즉시(deterministic/manual) 판정을 요청한다. AI Check는 pendingCheckKeys로 분리돼 돌아온다. */
 export async function submitCheck(file: File, scenarioKey: string): Promise<SubmitCheckResult> {
 	const form = new FormData()
 	form.append('image', file)
@@ -26,12 +26,12 @@ export async function submitCheck(file: File, scenarioKey: string): Promise<Subm
 export async function submitAiCheck(
 	file: File,
 	checkSessionId: number,
-	ruleKeys: string[],
+	checkKeys: string[],
 ): Promise<Record<string, CheckResult>> {
 	const form = new FormData()
 	form.append('image', file)
 	form.append('checkSessionId', String(checkSessionId))
-	form.append('ruleKeys', JSON.stringify(ruleKeys))
+	form.append('checkKeys', JSON.stringify(checkKeys))
 	const response = await fetch('/api/check/ai', { method: 'POST', body: form })
 	if (!response.ok) throw new Error(`ai check failed: ${response.status}`)
 	const { results } = (await response.json()) as { results: Record<string, CheckResult> }
@@ -39,7 +39,7 @@ export async function submitAiCheck(
 }
 
 export interface RunFullCheckCallbacks {
-	/** 서버 즉시 판정 결과. pendingRuleKeys가 남으면 AI 후속 판정이 이어진다. */
+	/** 서버 즉시 판정 결과. pendingCheckKeys가 남으면 AI 후속 판정이 이어진다. */
 	onServerResult: (result: SubmitCheckResult) => void
 	/** AI 후속 판정 결과(실패 시 폴백). checkSessionId로 어느 검수 세션의 결과인지 식별한다. */
 	onAiResult: (checkSessionId: number, results: Record<string, CheckResult>) => void
@@ -59,21 +59,21 @@ export async function runFullCheck(
 	const serverResult = await submitCheck(file, scenarioKey)
 	onServerResult(serverResult)
 
-	if (serverResult.pendingRuleKeys.length === 0) return
+	if (serverResult.pendingCheckKeys.length === 0) return
 
 	const aiResults = await submitAiCheck(
 		file,
 		serverResult.checkSessionId,
-		serverResult.pendingRuleKeys,
-	).catch(() => aiFailureResults(serverResult.pendingRuleKeys))
+		serverResult.pendingCheckKeys,
+	).catch(() => aiFailureResults(serverResult.pendingCheckKeys))
 	onAiResult(serverResult.checkSessionId, aiResults)
 }
 
 /** AI 검수 실패 시 해당 룰들을 "담당자 검토 필요"로 채우는 폴백 결과. */
-function aiFailureResults(ruleKeys: string[]): Record<string, CheckResult> {
+function aiFailureResults(checkKeys: string[]): Record<string, CheckResult> {
 	const detail = 'AI 평가 실패'
 	return Object.fromEntries(
-		ruleKeys.map((key) => [
+		checkKeys.map((key) => [
 			key,
 			{
 				rule: { key, title: key, executor: 'heuristic' },

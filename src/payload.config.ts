@@ -22,12 +22,14 @@ import { GuidelineChapters } from './collections/GuidelineChapters'
 import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
-import { Rules } from './collections/Rules'
+import { RuleCheckers } from './collections/RuleCheckers'
 import { TemplateAssets } from './collections/TemplateAssets'
 import { TemplateCategories } from './collections/TemplateCategories'
 import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
 import { env } from './env'
+import { collectGuidelineCheckSources } from './features/guideline/checks/collect-guideline-check-sources'
+import { findPublishedGuidelineCheckDocuments } from './features/guideline/repositories/published-guideline-checks.payload.repository'
 import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
 import { adminOnly } from './lib/auth'
@@ -102,7 +104,7 @@ export default buildConfig({
 		GuidelineChapters,
 		GuidelineSections,
 		GuidelinePages,
-		Rules,
+		RuleCheckers,
 		BrandLogos,
 		BrandColors,
 		BrandTypefaces,
@@ -168,7 +170,7 @@ export default buildConfig({
 				tools: [
 					mcpTextTool(
 						'findGuidelinePages',
-						'Find live guideline pages with localized copy, rich content blocks, and linked rules.',
+						'Find published guideline pages with localized copy, content blocks, and checks.',
 						mcpListParameters,
 						(args, req) =>
 							req.payload.find({
@@ -187,7 +189,7 @@ export default buildConfig({
 									title: true,
 									slug: true,
 									description: true,
-									rules: true,
+									checks: true,
 									section: true,
 									blocks: true,
 								},
@@ -241,29 +243,59 @@ export default buildConfig({
 									description: true,
 									displayOrder: true,
 									chapter: true,
+									checks: true,
+									blocks: true,
 								},
 							}),
 					),
 					mcpTextTool(
-						'findRules',
-						'Find live operational brand rules used to check production work.',
+						'findChecks',
+						'Find checks declared by published guideline documents and blocks.',
 						mcpListParameters,
-						(args, req) =>
-							req.payload.find({
-								collection: 'rules',
-								depth: 0,
-								limit: mcpNumber(args.limit, 100),
-								overrideAccess: false,
-								page: mcpNumber(args.page, 1),
-								req,
-								sort: 'key',
-								user: req.user,
-								where: {
-									status: {
-										equals: 'live',
-									},
+						async (args, req) => {
+							const documents = await findPublishedGuidelineCheckDocuments(
+								req.payload,
+								{
+									locale: mcpLocale(args.locale),
+									overrideAccess: false,
+									user: req.user,
 								},
-							}),
+							)
+							const checks = [
+								...documents.sections.map((document) => ({
+									collection: 'guideline-sections' as const,
+									document,
+								})),
+								...documents.pages.map((document) => ({
+									collection: 'guideline-pages' as const,
+									document,
+								})),
+							]
+								.flatMap(({ collection, document }) =>
+									collectGuidelineCheckSources(document).map(
+										({ blockId, check, evidence }) => ({
+											key: check.key,
+											title: check.title,
+											tier: check.tier,
+											evidence,
+											source: {
+												collection,
+												documentId: document.id,
+												blockId,
+											},
+										}),
+									),
+								)
+								.sort((a, b) => a.key.localeCompare(b.key))
+							const limit = mcpNumber(args.limit, 100)
+							const page = mcpNumber(args.page, 1)
+							return {
+								docs: checks.slice((page - 1) * limit, page * limit),
+								page,
+								totalDocs: checks.length,
+								totalPages: Math.ceil(checks.length / limit),
+							}
+						},
 					),
 					mcpTextTool(
 						'findGuideline',

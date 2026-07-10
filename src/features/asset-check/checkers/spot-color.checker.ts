@@ -1,6 +1,6 @@
 /**
  * Checker: 제한된 별색/부분 팔레트 사용 여부를 본다.
- * ruleKey는 `application.print.spec`, 파일명은 Red+White 별색 1도 근사 판정 기능을 따른다.
+ * checkKey는 `application.print.spec`, 파일명은 Red+White 별색 1도 근사 판정 기능을 따른다.
  */
 
 import { dominantColors } from './color-metrics'

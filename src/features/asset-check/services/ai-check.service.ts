@@ -5,10 +5,10 @@ import { env } from '@/env'
 import type { AiCheckResult, AiUsage, CheckerContext } from '@/features/asset-check/checkers/types'
 import type {
 	CheckReferenceAsset,
-	CheckRule,
+	RuntimeCheck,
 } from '@/features/asset-check/services/get-check-ruleset.service'
 
-const DEFAULT_MODEL = 'claude-haiku-4-5'
+export const AI_CHECK_PROMPT_KEY = 'asset-check.brand-guideline.v1'
 
 const aiFactsSchema = z
 	.object({
@@ -18,7 +18,7 @@ const aiFactsSchema = z
 	})
 	.optional()
 
-const aiRuleResultSchema = z.object({
+const aiCheckResultSchema = z.object({
 	key: z.string().min(1),
 	status: z.enum(['pass', 'ok', 'needs_review', 'fail']),
 	fulfillment: z.number().min(0).max(100).nullable(),
@@ -27,7 +27,7 @@ const aiRuleResultSchema = z.object({
 })
 
 const aiCheckSchema = z.object({
-	results: z.array(aiRuleResultSchema),
+	results: z.array(aiCheckResultSchema),
 })
 
 export interface AiCheckRunResult {
@@ -41,19 +41,26 @@ export interface AiCheckRunResult {
  * ponytail: 두 번째 소비자나 provider 교체가 생기면 repository로 내린다.
  */
 export async function runAiCheck(
-	rules: CheckRule[],
+	checks: RuntimeCheck[],
 	ctx: CheckerContext,
 ): Promise<AiCheckRunResult> {
-	if (!env.ANTHROPIC_API_KEY) return { results: fallbackResults(rules, 'AI 설정 없음') }
-	if (!ctx.image) return { results: fallbackResults(rules, 'AI 평가용 이미지 없음') }
+	if (!env.ANTHROPIC_API_KEY) return { results: fallbackResults(checks, 'AI 설정 없음') }
+	if (!ctx.image) return { results: fallbackResults(checks, 'AI 평가용 이미지 없음') }
+	const { model, promptKey } = checks[0] ?? {}
+	if (
+		!model ||
+		promptKey !== AI_CHECK_PROMPT_KEY ||
+		checks.some((check) => check.model !== model || check.promptKey !== promptKey)
+	) {
+		return { results: fallbackResults(checks, 'AI 검사 도구 설정 오류') }
+	}
 
 	try {
-		const referenceFiles = await loadReferenceFiles(rules)
-		const model = env.ANTHROPIC_MODEL || DEFAULT_MODEL
+		const referenceFiles = await loadReferenceFiles(checks)
 		const { output, usage } = await generateText({
 			model: anthropic(model),
 			output: Output.object({ schema: aiCheckSchema }),
-			system: 'You are a brand guideline checker. Judge only the supplied raster image against the supplied rules and reference images. Do not claim access to font metadata, embedded fonts, CSS, or source design files. Return conservative structured results for every rule key.',
+			system: 'You are a brand guideline checker. Judge only the supplied raster image against the supplied checks and reference images. Do not claim access to font metadata, embedded fonts, CSS, or source design files. Return conservative structured results for every check key.',
 			messages: [
 				{
 					role: 'user',
@@ -61,9 +68,9 @@ export async function runAiCheck(
 						{
 							type: 'text',
 							text: [
-								'Rules:',
-								...rules.map(formatRule),
-								'Return one result per rule key.',
+								'Checks:',
+								...checks.map(formatCheck),
+								'Return one result per check key.',
 								'Return pass only when the image clearly and fully satisfies the rule.',
 								'Return ok when the image visually appears acceptable but exact metadata or minor details cannot be fully verified from pixels.',
 								'Return needs_review only when the image cannot be judged from visual evidence or brand policy context is required.',
@@ -107,12 +114,12 @@ export async function runAiCheck(
 				facts: compactFacts(result.facts),
 			}
 		}
-		for (const rule of rules) {
-			byKey[rule.key] ??= needsManualCheck('AI 평가 결과 없음')
+		for (const check of checks) {
+			byKey[check.key] ??= needsManualCheck('AI 평가 결과 없음')
 		}
 		return { results: byKey, aiUsage: toAiUsage(model, usage) }
 	} catch {
-		return { results: fallbackResults(rules, 'AI 평가 실패') }
+		return { results: fallbackResults(checks, 'AI 평가 실패') }
 	}
 }
 
@@ -140,19 +147,19 @@ function compactFacts(facts: z.infer<typeof aiFactsSchema>) {
 	)
 }
 
-function formatRule(rule: CheckRule): string {
+function formatCheck(check: RuntimeCheck): string {
 	return [
-		`- key: ${rule.key}`,
-		`  title: ${rule.title}`,
-		`  evidence: ${rule.evidence || 'Not provided'}`,
-		`  referenceImages: ${rule.referenceAssets.map((asset) => asset.name).join(', ') || 'None'}`,
+		`- key: ${check.key}`,
+		`  title: ${check.title}`,
+		`  evidence: ${check.evidence || 'Not provided'}`,
+		`  referenceImages: ${check.referenceAssets.map((asset) => asset.name).join(', ') || 'None'}`,
 	].join('\n')
 }
 
-async function loadReferenceFiles(rules: CheckRule[]) {
+async function loadReferenceFiles(checks: RuntimeCheck[]) {
 	const assets = new Map<string, CheckReferenceAsset>()
-	for (const rule of rules) {
-		for (const asset of rule.referenceAssets) assets.set(asset.url, asset)
+	for (const check of checks) {
+		for (const asset of check.referenceAssets) assets.set(asset.url, asset)
 	}
 
 	const files = await Promise.all(
@@ -188,6 +195,6 @@ function needsManualCheck(detail: string): AiCheckResult {
 	return { status: 'needs_review', fulfillment: null, detail }
 }
 
-function fallbackResults(rules: CheckRule[], detail: string): Record<string, AiCheckResult> {
-	return Object.fromEntries(rules.map((rule) => [rule.key, needsManualCheck(detail)]))
+function fallbackResults(checks: RuntimeCheck[], detail: string): Record<string, AiCheckResult> {
+	return Object.fromEntries(checks.map((check) => [check.key, needsManualCheck(detail)]))
 }

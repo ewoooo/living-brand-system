@@ -12,7 +12,7 @@ export default async function GuidelineLayout({ children }: { children: React.Re
 			nav={<GuidelineSideNavigation navigation={navigation} />}
 			footer={<GuidelineFooter companyName={navigation.metadata.companyName} />}
 		>
-			{children}
+			<div className="w-full max-w-[1250px] px-4 py-8 md:px-8 md:py-10">{children}</div>
 		</SectionLayout>
 	)
 }
