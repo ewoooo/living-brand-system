@@ -11,7 +11,7 @@ type ImageResult = { images: string[]; prompt: string; sceneId: string }
 
 const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
 
-export default function ImagePage() {
+export function ImageGenerator() {
 	const [prompt, setPrompt] = useState('')
 	const [sceneId, setSceneId] = useState('auto')
 	const [count, setCount] = useState(2)
@@ -49,22 +49,19 @@ export default function ImagePage() {
 	}
 
 	return (
-		<div className="flex w-full max-w-[1250px] flex-col px-8 py-10">
-			<header className="mb-8">
-				<hgroup className="mb-4">
-					<h2 className="pb-1 text-muted-foreground text-xl">생성하기</h2>
-					<h1 className="text-3xl">이미지 생성</h1>
-				</hgroup>
-				<p className="mb-4 text-muted-foreground">
+		<section className="flex flex-col">
+			<hgroup className="mb-4">
+				<h2 className="text-2xl">이미지 생성</h2>
+				<p className="mt-1 text-muted-foreground text-sm">
 					브랜드 제품컷은 씬(환경·구성)을 고르면 브랜드 톤·조명·구도가 자동으로
 					더해집니다. 제품컷이 아닌 이미지는 자유 생성 모드로 프롬프트를 그대로
-					생성하세요. 후보를 여러 장 만들어 마음에 드는 것을 고르면 됩니다. <wbr />
+					생성하세요. <wbr />
 					(정식 엔진 gpt-image-2 연결 대기 중 — 현재는 미리보기용 임시 엔진이라 다소
 					느리고 품질이 들쭉날쭉할 수 있어요)
 				</p>
-			</header>
+			</hgroup>
 
-			<div className="mb-8 flex flex-col gap-3">
+			<div className="mb-6 flex flex-col gap-3">
 				<textarea
 					value={prompt}
 					onChange={(e) => setPrompt(e.target.value)}
@@ -215,7 +212,7 @@ export default function ImagePage() {
 					</div>
 				)}
 			</div>
-		</div>
+		</section>
 	)
 }
 
