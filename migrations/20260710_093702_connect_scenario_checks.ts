@@ -4,47 +4,72 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
 	await db.execute(sql`
 		CREATE TEMP TABLE "_scenario_check_sources" (
 			"key" text PRIMARY KEY,
-			"page_id" integer NOT NULL,
-			"block_id" varchar
+			"page_slug" text NOT NULL,
+			"fallback_page_slug" text NOT NULL,
+			"block_title" text
 		) ON COMMIT DROP;
 
-		INSERT INTO "_scenario_check_sources" ("key", "page_id", "block_id") VALUES
-			('imagery.misuse', 135, '6a4f79604377e66a665d82f8'),
-			('application.web', 138, '6a4f79614377e66a665d8302'),
-			('imagery.sns.classification', 140, '6a4f79614377e66a665d8312'),
-			('layout.sns.zones', 142, '6a4f79614377e66a665d8318'),
-			('application.sns.caption.legibility', 142, '6a4f79614377e66a665d8318'),
-			('logo.sns.placement', 142, '6a4f79614377e66a665d831a'),
-			('application.sns.format', 96, NULL),
-			('messaging.advertisement.copy', 104, '6a4f79614377e66a665d831c'),
-			('messaging.advertisement.tagline', 105, '6a4f79614377e66a665d8320'),
-			('imagery.advertisement.classification', 105, '6a4f79614377e66a665d8320'),
-			('messaging.advertisement.boilerplate', 106, '6a4f79614377e66a665d8324'),
-			('spacing.advertisement.scale', 106, '6a4f79614377e66a665d8328'),
-			('application.print.spec', 109, '6a4f79614377e66a665d832c');
+		INSERT INTO "_scenario_check_sources" (
+			"key", "page_slug", "fallback_page_slug", "block_title"
+		) VALUES
+			('imagery.misuse', 'brand-model', 'photography', 'Brand Model'),
+			('application.web', 'type-a-message', 'visual-system', 'Grids & Size Variation'),
+			('imagery.sns.classification', 'brand-contents', 'sns-contents', 'Usage Example'),
+			('layout.sns.zones', 'communication-contents', 'sns-contents', 'Influencer Gifting & Interview'),
+			('application.sns.caption.legibility', 'communication-contents', 'sns-contents', 'Influencer Gifting & Interview'),
+			('logo.sns.placement', 'communication-contents', 'sns-contents', 'Events & Etc.'),
+			('application.sns.format', 'sns-contents', 'sns-contents', NULL),
+			('messaging.advertisement.copy', 'online-ad', 'ad', 'Layout System'),
+			('messaging.advertisement.tagline', 'offline-ad-vertical', 'ad', 'Layout System'),
+			('imagery.advertisement.classification', 'offline-ad-vertical', 'ad', 'Layout System'),
+			('messaging.advertisement.boilerplate', 'offline-ad-horizontal', 'ad', 'Layout System'),
+			('spacing.advertisement.scale', 'offline-ad-horizontal', 'ad', 'Usage Example 2'),
+			('application.print.spec', 'business-card', 'stationery', 'Design / Specification');
+
+		CREATE TEMP TABLE "_scenario_check_targets" ON COMMIT DROP AS
+		SELECT
+			"source"."key",
+			"page"."id" AS "page_id",
+			"block"."id" AS "block_id"
+		FROM "_scenario_check_sources" "source"
+		JOIN LATERAL (
+			SELECT "candidate"."id"
+			FROM "guideline_pages" "candidate"
+			JOIN "guideline_pages_locales" "locale"
+				ON "locale"."_parent_id" = "candidate"."id"
+			WHERE "locale"."slug" IN ("source"."page_slug", "source"."fallback_page_slug")
+			ORDER BY
+				CASE WHEN "locale"."slug" = "source"."page_slug" THEN 0 ELSE 1 END,
+				"candidate"."id"
+			LIMIT 1
+		) "page" ON true
+		LEFT JOIN LATERAL (
+			SELECT "candidate"."id"
+			FROM "guideline_pages_blocks_column_unit" "candidate"
+			JOIN "guideline_pages_blocks_column_unit_locales" "locale"
+				ON "locale"."_parent_id" = "candidate"."id"
+			WHERE "candidate"."_parent_id" = "page"."id"
+				AND "source"."block_title" IS NOT NULL
+				AND "locale"."title" = "source"."block_title"
+			ORDER BY "candidate"."_order", "candidate"."id"
+			LIMIT 1
+		) "block" ON true;
 
 		DO $$
 		BEGIN
-			IF (SELECT count(*) FROM "rules" JOIN "_scenario_check_sources" USING ("key")
+			IF (SELECT count(*) FROM "rules" JOIN "_scenario_check_targets" USING ("key")
 				WHERE "rules"."checker_id" IS NOT NULL) <> 13 THEN
 				RAISE EXCEPTION 'Scenario Check source migration requires 13 Rules with RuleCheckers';
 			END IF;
 
-			IF EXISTS (
-				SELECT 1
-				FROM "_scenario_check_sources" "source"
-				LEFT JOIN "guideline_pages" "page" ON "page"."id" = "source"."page_id"
-				LEFT JOIN "guideline_pages_blocks_column_unit" "block"
-					ON "block"."id" = "source"."block_id"
-					AND "block"."_parent_id" = "source"."page_id"
-				WHERE "page"."id" IS NULL
-					OR ("source"."block_id" IS NOT NULL AND "block"."id" IS NULL)
-			) THEN
-				RAISE EXCEPTION 'Scenario Check source migration found a missing Page or Block';
+			IF (SELECT count(*) FROM "_scenario_check_targets") <> 13 THEN
+				RAISE EXCEPTION 'Scenario Check source migration found a missing Page';
 			END IF;
 		END $$;
 
 		DELETE FROM "guideline_pages_blocks_column_unit_checks"
+		WHERE "key" = 'application.sns.canvas.format';
+		DELETE FROM "guideline_pages_checks"
 		WHERE "key" = 'application.sns.canvas.format';
 
 		INSERT INTO "guideline_pages_blocks_column_unit_checks" (
@@ -73,7 +98,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
 			"rule"."messages_ok",
 			"rule"."messages_needs_review",
 			"rule"."messages_fail"
-		FROM "_scenario_check_sources" "source"
+		FROM "_scenario_check_targets" "source"
 		JOIN "rules" "rule" ON "rule"."key" = "source"."key"
 		WHERE "source"."block_id" IS NOT NULL;
 
@@ -82,8 +107,10 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
 			"messages_pass", "messages_ok", "messages_needs_review", "messages_fail"
 		)
 		SELECT
-			COALESCE((SELECT max("_order") FROM "guideline_pages_checks"
-				WHERE "_parent_id" = "source"."page_id"), 0) + 1,
+			(COALESCE((SELECT max("_order") FROM "guideline_pages_checks"
+				WHERE "_parent_id" = "source"."page_id"), 0) + row_number() OVER (
+					PARTITION BY "source"."page_id" ORDER BY "rule"."id"
+			))::integer,
 			"source"."page_id",
 			substring(md5('guideline-check:' || "rule"."id"::text), 1, 24),
 			"rule"."key",
@@ -95,7 +122,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
 			"rule"."messages_ok",
 			"rule"."messages_needs_review",
 			"rule"."messages_fail"
-		FROM "_scenario_check_sources" "source"
+		FROM "_scenario_check_targets" "source"
 		JOIN "rules" "rule" ON "rule"."key" = "source"."key"
 		WHERE "source"."block_id" IS NULL;
 	`)
@@ -128,13 +155,29 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
 			)
 		);
 
+		CREATE TEMP TABLE "_legacy_sns_check_source" ON COMMIT DROP AS
+		SELECT
+			"rule".*,
+			"source"."guideline_pages_id" AS "page_id",
+			"block"."id" AS "block_id"
+		FROM "rules" "rule"
+		JOIN "rules_rels" "source"
+			ON "source"."parent_id" = "rule"."id"
+			AND "source"."path" = 'source.document'
+		LEFT JOIN "guideline_pages_blocks_column_unit" "block"
+			ON "block"."id" = "rule"."source_block_id"
+			AND "block"."_parent_id" = "source"."guideline_pages_id"
+		WHERE "rule"."key" = 'application.sns.canvas.format'
+			AND "source"."guideline_pages_id" IS NOT NULL;
+
 		INSERT INTO "guideline_pages_blocks_column_unit_checks" (
 			"_order", "_parent_id", "id", "key", "title", "tier", "checker_id", "options",
 			"messages_pass", "messages_ok", "messages_needs_review", "messages_fail"
 		)
 		SELECT
-			1,
-			'6a4f79614377e66a665d830a',
+			COALESCE((SELECT max("_order") FROM "guideline_pages_blocks_column_unit_checks"
+				WHERE "_parent_id" = "rule"."block_id"), 0) + 1,
+			"rule"."block_id",
 			substring(md5('guideline-check:' || "rule"."id"::text), 1, 24),
 			"rule"."key",
 			"rule"."title",
@@ -145,8 +188,30 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
 			"rule"."messages_ok",
 			"rule"."messages_needs_review",
 			"rule"."messages_fail"
-		FROM "rules" "rule"
-		WHERE "rule"."key" = 'application.sns.canvas.format'
+		FROM "_legacy_sns_check_source" "rule"
+		WHERE "rule"."block_id" IS NOT NULL
+		ON CONFLICT ("id") DO NOTHING;
+
+		INSERT INTO "guideline_pages_checks" (
+			"_order", "_parent_id", "id", "key", "title", "tier", "checker_id", "options",
+			"messages_pass", "messages_ok", "messages_needs_review", "messages_fail"
+		)
+		SELECT
+			COALESCE((SELECT max("_order") FROM "guideline_pages_checks"
+				WHERE "_parent_id" = "rule"."page_id"), 0) + 1,
+			"rule"."page_id",
+			substring(md5('guideline-check:' || "rule"."id"::text), 1, 24),
+			"rule"."key",
+			"rule"."title",
+			"rule"."tier"::text::"enum_guideline_pages_checks_tier",
+			"rule"."checker_id",
+			'{"formats":[{"label":"3:5(SNS) 1080x1440px","width":1080,"height":1440}]}'::jsonb,
+			"rule"."messages_pass",
+			"rule"."messages_ok",
+			"rule"."messages_needs_review",
+			"rule"."messages_fail"
+		FROM "_legacy_sns_check_source" "rule"
+		WHERE "rule"."block_id" IS NULL
 		ON CONFLICT ("id") DO NOTHING;
 	`)
 }
