@@ -10,7 +10,7 @@ function isUser(value: unknown): value is User {
 	return Boolean(value && typeof value === 'object' && 'email' in value && 'role' in value)
 }
 
-function parseRuleKeys(value: FormDataEntryValue | null | undefined): string[] {
+function parseCheckKeys(value: FormDataEntryValue | null | undefined): string[] {
 	if (typeof value !== 'string') return []
 	try {
 		const raw = JSON.parse(value)
@@ -38,8 +38,8 @@ export async function POST(req: Request) {
 	const form = await req.formData().catch(() => null)
 	const file = form?.get('image')
 	const checkSessionId = parseCheckSessionId(form?.get('checkSessionId'))
-	const ruleKeys = parseRuleKeys(form?.get('ruleKeys'))
-	if (!(file instanceof File) || checkSessionId === null || ruleKeys.length === 0) {
+	const checkKeys = parseCheckKeys(form?.get('checkKeys'))
+	if (!(file instanceof File) || checkSessionId === null || checkKeys.length === 0) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
 	}
 	if (file.size > MAX_IMAGE_BYTES) {
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 		const result = await completeCheckSessionAiCheck({
 			buffer: Buffer.from(await file.arrayBuffer()),
 			checkSessionId,
-			ruleKeys,
+			checkKeys,
 			user,
 		})
 

@@ -1,10 +1,10 @@
 import { SideNav, type SideNavGroup } from '@/components/global/side-nav'
 import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
-import { toCheckRuleAnchor } from '@/features/asset-check/utils/check-rule-anchor'
+import { toCheckAnchor } from '@/features/asset-check/utils/check-anchor'
 
 type CheckNavSection = Pick<
 	CheckSection,
-	'title' | 'slug' | 'chapterTitle' | 'chapterSlug' | 'sectionTitle' | 'sectionSlug' | 'rules'
+	'title' | 'slug' | 'chapterTitle' | 'chapterSlug' | 'sectionTitle' | 'sectionSlug' | 'checks'
 >
 
 /**
@@ -44,11 +44,11 @@ export function toCheckSideNavGroups(sections: CheckNavSection[]): SideNavGroup[
 			bySectionSlug.set(sectionKey, item)
 			group.items.push(item)
 		}
-		for (const rule of section.rules) {
+		for (const check of section.checks) {
 			item.children?.push({
-				key: `${section.slug}:${rule.key}`,
-				label: rule.title,
-				href: `/review/rules#${toCheckRuleAnchor(section.slug, rule.key)}`,
+				key: `${section.slug}:${check.key}`,
+				label: check.title,
+				href: `/review/rules#${toCheckAnchor(section.slug, check.key)}`,
 			})
 		}
 	}

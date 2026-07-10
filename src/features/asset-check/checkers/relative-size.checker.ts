@@ -1,6 +1,6 @@
 /**
  * Checker: 검출된 로고가 프레임 대비 충분히 큰지 본다.
- * ruleKey는 `logo.size.minimum`, 파일명은 상대 크기 측정 기능을 따른다.
+ * checkKey는 `logo.size.minimum`, 파일명은 상대 크기 측정 기능을 따른다.
  */
 
 import { detectLogoRegion } from './logo-geometry'

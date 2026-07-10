@@ -1,9 +1,8 @@
-import type { GuidelinePage } from '@/payload-types'
 import { behavior as colorPalette } from './color-palette.block'
 import { behavior as columnUnit } from './column-unit.block'
 import { behavior as doDont } from './do-dont.block'
 import { behavior as mediaShowcase } from './media-showcase.block'
-import type { BlockBehavior, GuidelineBlock, RuleDerivation } from './types'
+import type { BlockBehavior, CheckSourceSnapshot, GuidelineBlock } from './types'
 
 // blockType → 동작. Record라서 새 블록 타입을 union에 추가하면 항목 누락이 컴파일 에러가 된다.
 // 로직은 각 *.block.ts가 소유하고, 여기서는 배선만 한다.
@@ -14,17 +13,12 @@ const blockRegistry: Record<GuidelineBlock['blockType'], BlockBehavior> = {
 	doDont,
 }
 
-/**
- * 페이지 블록들에서 룰 파생 목록을 만든다. 순수 함수 — rules 갱신 I/O는 GuidelinePages afterChange 훅이 소유한다.
- * 가이드라인(블록)이 SSOT이고 룰은 파생물이다.
- */
-export function deriveRulesFromBlocks(blocks: GuidelinePage['blocks']): RuleDerivation[] {
-	return (blocks ?? []).flatMap(
-		(block) => blockRegistry[block.blockType].deriveRules?.(block) ?? [],
-	)
-}
-
 /** 블록 하나를 agent 컨텍스트용 평문으로 변환한다. 빈 문자열은 호출측에서 걸러낸다. */
 export function formatBlockForAgent(block: GuidelineBlock): string {
 	return blockRegistry[block.blockType].formatForAgent(block)
+}
+
+/** 블록 하나를 Check source evidence/referenceAssets로 정규화한다. */
+export function snapshotBlock(block: GuidelineBlock): CheckSourceSnapshot {
+	return blockRegistry[block.blockType].toCheckSourceSnapshot(block)
 }

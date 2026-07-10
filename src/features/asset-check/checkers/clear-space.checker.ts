@@ -1,6 +1,6 @@
 /**
  * Checker: 검출된 로고 bbox 주변 clear-space가 충분한지 본다.
- * ruleKey는 `logo.space.clear`, 파일명은 여백 측정 기능을 따른다.
+ * checkKey는 `logo.space.clear`, 파일명은 여백 측정 기능을 따른다.
  */
 
 import { detectLogoRegion, estimateStemWidth } from './logo-geometry'

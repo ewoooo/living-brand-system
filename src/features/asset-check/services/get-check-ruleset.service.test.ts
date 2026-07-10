@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { toCheckRuleMessages } from '@/features/asset-check/utils/check-rule-messages'
+import { toRuntimeCheckMessages } from '@/features/asset-check/utils/check-messages'
 
-describe('toCheckRuleMessages', () => {
-	it('maps Payload rule message fields to check status keys', () => {
+describe('toRuntimeCheckMessages', () => {
+	it('maps Payload Check message fields to runtime status keys', () => {
 		expect(
-			toCheckRuleMessages({
+			toRuntimeCheckMessages({
 				pass: 'pass message',
 				ok: 'ok message',
 				needsReview: 'review message',

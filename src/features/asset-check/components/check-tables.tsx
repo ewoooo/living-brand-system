@@ -19,11 +19,11 @@ import { useCheckImages } from '@/features/asset-check/components/check-image-pr
 import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
 import {
 	buildCheckReviewView,
-	type CheckReviewRuleRow,
+	type CheckReviewRow,
 } from '@/features/asset-check/services/build-check-review-view.service'
 import type {
+	RuntimeCheck as Check,
 	CheckSection,
-	CheckRule as Rule,
 } from '@/features/asset-check/services/get-check-ruleset.service'
 import { cn } from '@/lib/utils'
 
@@ -36,10 +36,10 @@ const EXECUTOR: Record<
 	manual: { label: 'manual', Icon: User, desc: '브랜드 담당자 확인이 필요한 기준' },
 }
 
-const RULE_BORDER = 'border-neutral-200 border-t dark:border-neutral-800'
+const CHECK_BORDER = 'border-neutral-200 border-t dark:border-neutral-800'
 
-function RuleRow({
-	rule,
+function CheckRow({
+	check,
 	rowId,
 	rowIndex,
 	sectionLabel,
@@ -48,17 +48,17 @@ function RuleRow({
 	outcome,
 	inProgress,
 	detail,
-}: CheckReviewRuleRow & { rowIndex: number }) {
+}: CheckReviewRow & { rowIndex: number }) {
 	const [open, setOpen] = useState(false)
 	const shouldReduceMotion = useReducedMotion()
 
 	return (
 		<Fragment>
-			<AnimatedRuleTableRow
+			<AnimatedCheckTableRow
 				id={anchorId ?? undefined}
 				role="button"
 				aria-expanded={open}
-				aria-label={`${rule.title} 상세 보기`}
+				aria-label={`${check.title} 상세 보기`}
 				rowIndex={rowIndex}
 				shouldReduceMotion={shouldReduceMotion}
 				onClick={() => setOpen((value) => !value)}
@@ -71,28 +71,28 @@ function RuleRow({
 				tabIndex={0}
 				className="border-0 scroll-mt-72 cursor-pointer"
 			>
-				<RuleSectionCell sectionLabel={sectionLabel} />
-				<TableCell className={cn('w-0 py-2.5 pr-3 align-top', RULE_BORDER)}>
-					<RuleExecutorIcon rule={rule} />
+				<CheckSectionCell sectionLabel={sectionLabel} />
+				<TableCell className={cn('w-0 py-2.5 pr-3 align-top', CHECK_BORDER)}>
+					<CheckExecutorIcon check={check} />
 				</TableCell>
-				<RuleTitleCell title={rule.title} />
-				<RuleMessageCell
+				<CheckTitleCell title={check.title} />
+				<CheckMessageCell
 					detail={detail}
 					outcome={outcome}
 					shouldReduceMotion={shouldReduceMotion}
 				/>
-				<RuleStatusCell
+				<CheckStatusCell
 					outcome={outcome}
 					inProgress={inProgress}
 					shouldReduceMotion={shouldReduceMotion}
 				/>
-				<RuleToggleCell open={open} />
-			</AnimatedRuleTableRow>
+				<CheckToggleCell open={open} />
+			</AnimatedCheckTableRow>
 			<AnimatePresence initial={false}>
 				{open && (
-					<RuleDetailRow
+					<CheckDetailRow
 						key={`${rowId}:detail`}
-						rule={rule}
+						check={check}
 						appliesTo={appliesTo}
 						outcome={outcome}
 						shouldReduceMotion={shouldReduceMotion}
@@ -103,7 +103,7 @@ function RuleRow({
 	)
 }
 
-function AnimatedRuleTableRow({
+function AnimatedCheckTableRow({
 	rowIndex,
 	shouldReduceMotion,
 	...props
@@ -125,23 +125,23 @@ function AnimatedRuleTableRow({
 	)
 }
 
-function RuleSectionCell({ sectionLabel }: { sectionLabel: string | null }) {
+function CheckSectionCell({ sectionLabel }: { sectionLabel: string | null }) {
 	return (
-		<TableCell className={cn('w-44 py-2.5 pr-4 align-top', sectionLabel && RULE_BORDER)}>
+		<TableCell className={cn('w-44 py-2.5 pr-4 align-top', sectionLabel && CHECK_BORDER)}>
 			{sectionLabel && <span className="font-medium text-sm">{sectionLabel}</span>}
 		</TableCell>
 	)
 }
 
-function RuleTitleCell({ title }: { title: string }) {
+function CheckTitleCell({ title }: { title: string }) {
 	return (
-		<TableCell className={cn('w-56 py-2.5 pr-4 align-top text-sm', RULE_BORDER)}>
+		<TableCell className={cn('w-56 py-2.5 pr-4 align-top text-sm', CHECK_BORDER)}>
 			{title}
 		</TableCell>
 	)
 }
 
-function RuleMessageCell({
+function CheckMessageCell({
 	detail,
 	outcome,
 	shouldReduceMotion,
@@ -151,7 +151,7 @@ function RuleMessageCell({
 	shouldReduceMotion: boolean | null
 }) {
 	return (
-		<TableCell className={cn('py-2.5 pr-3 align-top text-sm whitespace-normal', RULE_BORDER)}>
+		<TableCell className={cn('py-2.5 pr-3 align-top text-sm whitespace-normal', CHECK_BORDER)}>
 			<AnimatePresence initial={false} mode="wait">
 				{detail && (
 					<motion.span
@@ -175,7 +175,7 @@ function RuleMessageCell({
 	)
 }
 
-function RuleStatusCell({
+function CheckStatusCell({
 	outcome,
 	inProgress,
 	shouldReduceMotion,
@@ -185,9 +185,9 @@ function RuleStatusCell({
 	shouldReduceMotion: boolean | null
 }) {
 	return (
-		<TableCell className={cn('w-0 py-2.5 pr-3 align-top', RULE_BORDER)}>
+		<TableCell className={cn('w-0 py-2.5 pr-3 align-top', CHECK_BORDER)}>
 			<AnimatePresence initial={false} mode="wait">
-				<RuleStatusBadge
+				<CheckStatusBadge
 					key={outcome?.rawResult.status ?? (inProgress ? 'running' : 'idle')}
 					outcome={outcome}
 					inProgress={inProgress}
@@ -198,9 +198,9 @@ function RuleStatusCell({
 	)
 }
 
-function RuleToggleCell({ open }: { open: boolean }) {
+function CheckToggleCell({ open }: { open: boolean }) {
 	return (
-		<TableCell className={cn('w-0 py-2.5 pr-1 text-right align-top', RULE_BORDER)}>
+		<TableCell className={cn('w-0 py-2.5 pr-1 text-right align-top', CHECK_BORDER)}>
 			<ChevronDown
 				size={16}
 				className={cn(
@@ -212,8 +212,8 @@ function RuleToggleCell({ open }: { open: boolean }) {
 	)
 }
 
-function RuleExecutorIcon({ rule }: { rule: Rule }) {
-	const executor = EXECUTOR[rule.executor] ?? { label: rule.executor, Icon: User, desc: '' }
+function CheckExecutorIcon({ check }: { check: Check }) {
+	const executor = EXECUTOR[check.executor] ?? { label: check.executor, Icon: User, desc: '' }
 	const ExecutorIcon = executor.Icon
 
 	return (
@@ -231,7 +231,7 @@ function RuleExecutorIcon({ rule }: { rule: Rule }) {
 	)
 }
 
-function RuleStatusBadge({
+function CheckStatusBadge({
 	outcome,
 	inProgress,
 	shouldReduceMotion,
@@ -273,13 +273,13 @@ function RuleStatusBadge({
 	return null
 }
 
-function RuleDetailRow({
-	rule,
+function CheckDetailRow({
+	check,
 	appliesTo,
 	outcome,
 	shouldReduceMotion,
 }: {
-	rule: Rule
+	check: Check
 	appliesTo: string[]
 	outcome?: CheckResult
 	shouldReduceMotion: boolean | null
@@ -297,50 +297,50 @@ function RuleDetailRow({
 				<span className="sr-only">상세 정보</span>
 			</TableCell>
 			<TableCell className="w-56 pt-0 pb-0 pr-4 align-top">
-				<RuleDetailCollapse shouldReduceMotion={shouldReduceMotion}>
+				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="pb-3">
 						<code className="inline-flex items-center whitespace-nowrap rounded-md bg-secondary px-2 py-0.5 font-mono text-[11px] text-secondary-foreground">
-							{rule.key}
+							{check.key}
 						</code>
 					</div>
-				</RuleDetailCollapse>
+				</CheckDetailCollapse>
 			</TableCell>
 			<TableCell className="pt-0 pb-0 pr-3 align-top whitespace-normal" colSpan={3}>
-				<RuleDetailCollapse shouldReduceMotion={shouldReduceMotion}>
+				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="space-y-2 pb-3">
 						{appliesTo.length > 1 && (
 							<p className="text-muted-foreground text-xs">
 								적용 위치: {appliesToText}
 							</p>
 						)}
-						{rule.evidence ? (
+						{check.evidence ? (
 							<blockquote className="rounded-md bg-white/5 px-3 py-2 text-muted-foreground text-xs leading-5">
-								{rule.evidence}
+								{check.evidence}
 							</blockquote>
 						) : (
 							<span className="text-muted-foreground text-xs">
 								관련 가이드라인 없음
 							</span>
 						)}
-						<RuleFacts facts={facts} />
-						<ReferenceAssets assets={rule.referenceAssets} />
+						<CheckFacts facts={facts} />
+						<ReferenceAssets assets={check.referenceAssets} />
 					</div>
-				</RuleDetailCollapse>
+				</CheckDetailCollapse>
 			</TableCell>
 		</motion.tr>
 	)
 }
 
-function RuleFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
+function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 	if (!facts || Object.keys(facts).length === 0) return null
 
 	return (
 		<dl className="grid gap-1.5 rounded-md bg-white/5 px-3 py-2 text-xs">
 			{typeof facts.detectedCategory === 'string' && (
-				<RuleFact label="검출 분류" value={facts.detectedCategory} />
+				<CheckFact label="검출 분류" value={facts.detectedCategory} />
 			)}
 			{typeof facts.confidence === 'number' && (
-				<RuleFact label="신뢰도" value={`${facts.confidence}%`} />
+				<CheckFact label="신뢰도" value={`${facts.confidence}%`} />
 			)}
 			{Array.isArray(facts.prohibitedSignals) && facts.prohibitedSignals.length > 0 && (
 				<div className="grid gap-1">
@@ -358,7 +358,7 @@ function RuleFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 	)
 }
 
-function RuleFact({ label, value }: { label: string; value: string }) {
+function CheckFact({ label, value }: { label: string; value: string }) {
 	return (
 		<div className="grid grid-cols-[5rem_1fr] gap-2">
 			<dt className="text-muted-foreground">{label}</dt>
@@ -367,7 +367,7 @@ function RuleFact({ label, value }: { label: string; value: string }) {
 	)
 }
 
-function RuleDetailCollapse({
+function CheckDetailCollapse({
 	children,
 	shouldReduceMotion,
 }: {
@@ -387,7 +387,7 @@ function RuleDetailCollapse({
 	)
 }
 
-function ReferenceAssets({ assets }: { assets: Rule['referenceAssets'] }) {
+function ReferenceAssets({ assets }: { assets: Check['referenceAssets'] }) {
 	if (assets.length === 0) return null
 
 	return (
@@ -419,10 +419,10 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 		<TooltipProvider delayDuration={150}>
 			<div className="py-8">
 				<Table className="table-fixed border-collapse">
-					<RuleTableColumns />
+					<CheckTableColumns />
 					<TableBody>
 						{rows.map((row, index) => (
-							<RuleRow
+							<CheckRow
 								key={`${selectedId ?? 'empty'}:${row.rowId}`}
 								{...row}
 								rowIndex={index}
@@ -440,7 +440,7 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 	)
 }
 
-function RuleTableColumns() {
+function CheckTableColumns() {
 	return (
 		<colgroup>
 			<col className="w-44" />
