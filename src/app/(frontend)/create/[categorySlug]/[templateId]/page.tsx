@@ -1,5 +1,8 @@
 import { notFound } from 'next/navigation'
+import { TemplateSandbox } from '@/components/template-sandbox'
+import { AssetGenerator } from '@/features/asset-generation/components/asset-generator'
 import { GridComposer } from '@/features/asset-generation/components/grid-composer'
+import type { PublishedTemplate } from '@/features/asset-generation/services/get-published-template.service'
 import { getPublishedTemplate } from '@/features/asset-generation/services/get-published-template.service'
 
 export default async function CreateTemplatePage({
@@ -23,8 +26,28 @@ export default async function CreateTemplatePage({
 	return (
 		<article className="w-full max-w-[1250px] px-8 py-10">
 			<h1 className="mb-6">{template.name}</h1>
-			{/* key로 템플릿마다 강제 리마운트 → 그리드·요소가 해당 템플릿 기준으로 재초기화 */}
-			<GridComposer key={template.id} source={template.jsonTemplate} />
+			{renderTemplateBody(template)}
 		</article>
 	)
+}
+
+/**
+ * 렌더 디스패치 (Create = 스펙트럼 호스트):
+ * - code.js 있음 → TemplateSandbox (디자인 위에 템플릿 코드를 iframe 샌드박스에서 실행)
+ * - grid 있음   → GridComposer (그리드 저작 POC)
+ * - 그 외        → AssetGenerator (절대좌표 디자인 + 슬롯 채우기)
+ * key로 템플릿마다 강제 리마운트해 상태를 재초기화한다.
+ */
+function renderTemplateBody(template: PublishedTemplate) {
+	const t = template.jsonTemplate
+
+	if (t.code?.js) {
+		return <TemplateSandbox key={template.id} template={t} fileName={template.name} />
+	}
+
+	if (t.grid) {
+		return <GridComposer key={template.id} source={t} />
+	}
+
+	return <AssetGenerator key={template.id} template={template} />
 }
