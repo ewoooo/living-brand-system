@@ -18,6 +18,8 @@ const rules: CheckRule[] = [
 		key: 'imagery.mood',
 		title: '이미지 무드',
 		executor: 'heuristic',
+		model: 'rule-spec-model',
+		promptKey: 'asset-check.brand-guideline.v1',
 		implemented: true,
 		evidence: '',
 		referenceAssets: [],
@@ -71,7 +73,7 @@ describe('runAiCheck', () => {
 		})
 
 		expect(result.aiUsage).toEqual({
-			model: 'claude-haiku-4-5',
+			model: 'rule-spec-model',
 			callCount: 1,
 			inputTokens: 100,
 			outputTokens: 20,

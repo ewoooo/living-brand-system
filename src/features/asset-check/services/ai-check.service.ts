@@ -8,7 +8,7 @@ import type {
 	CheckRule,
 } from '@/features/asset-check/services/get-check-ruleset.service'
 
-const DEFAULT_MODEL = 'claude-haiku-4-5'
+export const AI_CHECK_PROMPT_KEY = 'asset-check.brand-guideline.v1'
 
 const aiFactsSchema = z
 	.object({
@@ -46,10 +46,17 @@ export async function runAiCheck(
 ): Promise<AiCheckRunResult> {
 	if (!env.ANTHROPIC_API_KEY) return { results: fallbackResults(rules, 'AI 설정 없음') }
 	if (!ctx.image) return { results: fallbackResults(rules, 'AI 평가용 이미지 없음') }
+	const { model, promptKey } = rules[0] ?? {}
+	if (
+		!model ||
+		promptKey !== AI_CHECK_PROMPT_KEY ||
+		rules.some((rule) => rule.model !== model || rule.promptKey !== promptKey)
+	) {
+		return { results: fallbackResults(rules, 'AI 검사 도구 설정 오류') }
+	}
 
 	try {
 		const referenceFiles = await loadReferenceFiles(rules)
-		const model = env.ANTHROPIC_MODEL || DEFAULT_MODEL
 		const { output, usage } = await generateText({
 			model: anthropic(model),
 			output: Output.object({ schema: aiCheckSchema }),

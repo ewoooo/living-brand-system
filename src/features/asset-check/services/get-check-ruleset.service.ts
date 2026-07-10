@@ -6,7 +6,7 @@ import {
 	getCheckRulesetPages,
 } from '@/features/asset-check/repositories/check-ruleset.payload.repository'
 import { toCheckRuleMessages } from '@/features/asset-check/utils/check-rule-messages'
-import type { ApplicationImage, Rule } from '@/payload-types'
+import type { ApplicationImage, Rule, RuleSpec } from '@/payload-types'
 
 export interface CheckReferenceAsset {
 	name: string
@@ -17,7 +17,10 @@ export interface CheckReferenceAsset {
 export interface CheckRule {
 	key: string
 	title: string
-	executor: NonNullable<Rule['executor']>
+	executor: RuleSpec['executor']
+	checkerKey?: string
+	model?: string
+	promptKey?: string
 	/** 자동 검수 가능 여부 — deterministic인데 checker 미등록이면 false (UI 배지용). */
 	implemented: boolean
 	evidence: string
@@ -83,13 +86,26 @@ export async function getCheckRules(ruleKeys?: string[]): Promise<CheckRule[]> {
 }
 
 function toCheckRule(rule: Rule): CheckRule {
-	const executor = rule.executor ?? 'deterministic'
+	const spec = typeof rule.spec === 'object' ? rule.spec : null
+	if (!spec) throw new Error(`RuleSpec이 연결되지 않은 룰입니다: ${rule.key}`)
+	const checkerKey = spec.checkerKey ?? undefined
+	const model = spec.model ?? undefined
+	const promptKey = spec.promptKey ?? undefined
+	const implemented =
+		spec.executor === 'deterministic'
+			? Boolean(checkerKey && hasChecker(checkerKey, rule.key))
+			: spec.executor === 'heuristic'
+				? Boolean(model && promptKey)
+				: true
 	return {
 		key: rule.key,
 		title: rule.title,
-		executor,
-		// 서버에서 계산해 내려보낸다 — 클라이언트가 checker registry를 import하지 않게.
-		implemented: executor !== 'deterministic' || hasChecker(rule.key),
+		executor: spec.executor,
+		checkerKey,
+		model,
+		promptKey,
+		// 서버에서 계산해 내려보낸다 — 클라이언트가 실행 registry를 import하지 않게.
+		implemented,
 		evidence: rule.evidence ?? '',
 		referenceAssets: (rule.referenceAssets ?? []).flatMap(toReferenceAsset),
 		messages: toCheckRuleMessages(rule.messages),

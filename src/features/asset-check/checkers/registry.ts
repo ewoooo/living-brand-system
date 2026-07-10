@@ -1,5 +1,5 @@
 /**
- * Checker registry — ruleKey와 checker 구현, 룰별 기준 데이터를 연결한다.
+ * Checker registry — RuleSpec checkerKey와 checker 구현, 룰별 기준 데이터를 연결한다.
  * checker 파일은 알고리즘 하나만 소유하고, 같은 알고리즘을 쓰는 룰은
  * 여기서 데이터만 다르게 바인딩한다 (룰별 래퍼 파일 금지).
  */
@@ -58,25 +58,27 @@ const WEB_FORMATS: CanvasFormat[] = [
 ]
 
 /**
- * rule key → checker 레지스트리.
- * 아직 checker가 없는 룰은 미개발로 빠지고, 추가하며 점진 확장한다.
+ * checker key → checker 레지스트리.
  * essenherb color 검수는 palette(허용 색) + pairing(허용 조합) 2축으로 수렴 —
  * scale/roles/contrast/combo는 팔레트 정의·서사이거나 pairing에 흡수돼 제거했다.
  * color.mode는 파일 색모드 메타가 래스터에 없어 spot-color와 같은 픽셀 프록시로 판정한다.
  */
 const checkers: Record<string, AlgorithmChecker> = {
-	'color.palette': paletteComplianceChecker,
-	'color.combination': colorCombinationChecker,
-	'color.mode': spotColorChecker,
-	'imagery.background.tone': backgroundToneChecker,
-	'logo.space.clear': clearSpaceChecker,
-	'logo.size.minimum': relativeSizeChecker,
+	'palette-compliance': paletteComplianceChecker,
+	'color-combination': colorCombinationChecker,
+	'spot-color': spotColorChecker,
+	'background-tone': backgroundToneChecker,
+	'clear-space': clearSpaceChecker,
+	'relative-size': relativeSizeChecker,
+}
+
+// canvas-format의 기준값은 RuleValue 도입 전까지 기존 룰 키별 설정을 재사용한다.
+const canvasFormatCheckers: Record<string, AlgorithmChecker> = {
 	// 스테이셔너리는 mm 규격·회전 자유라 방향 무시 + 느슨한 허용 오차로 본다.
 	'application.stationery.format': makeCanvasFormatChecker(STATIONERY_FORMATS, {
 		tolerance: 0.05,
 		ignoreOrientation: true,
 	}),
-	'application.print.spec': spotColorChecker,
 	'application.sns.format': makeCanvasFormatChecker(SNS_FORMATS),
 	'application.sns.canvas.format': makeCanvasFormatChecker(SNS_CANVAS_FORMATS),
 	'application.web': makeCanvasFormatChecker(WEB_FORMATS),
@@ -86,10 +88,12 @@ const checkers: Record<string, AlgorithmChecker> = {
 	'layout.advertisement.template': makeCanvasFormatChecker(ADVERTISEMENT_TEMPLATE_FORMATS),
 }
 
-export function getChecker(ruleKey: string): AlgorithmChecker | null {
-	return checkers[ruleKey] ?? null
+export function getChecker(checkerKey: string, ruleKey: string): AlgorithmChecker | null {
+	return checkerKey === 'canvas-format'
+		? (canvasFormatCheckers[ruleKey] ?? null)
+		: (checkers[checkerKey] ?? null)
 }
 
-export function hasChecker(ruleKey: string): boolean {
-	return ruleKey in checkers
+export function hasChecker(checkerKey: string, ruleKey: string): boolean {
+	return getChecker(checkerKey, ruleKey) !== null
 }

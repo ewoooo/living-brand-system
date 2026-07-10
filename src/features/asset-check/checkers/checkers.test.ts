@@ -22,9 +22,28 @@ const PALETTE: Swatch[] = [
 	{ name: 'Black', hex: '#000000', family: 'extreme' },
 ]
 
+const CHECKER_KEYS: Record<string, string> = {
+	'color.palette': 'palette-compliance',
+	'color.combination': 'color-combination',
+	'color.mode': 'spot-color',
+	'application.print.spec': 'spot-color',
+	'imagery.background.tone': 'background-tone',
+	'logo.space.clear': 'clear-space',
+	'logo.size.minimum': 'relative-size',
+	'application.stationery.format': 'canvas-format',
+	'application.sns.format': 'canvas-format',
+	'application.sns.canvas.format': 'canvas-format',
+	'application.web': 'canvas-format',
+	'application.advertisement.format': 'canvas-format',
+	'layout.visual.template': 'canvas-format',
+	'layout.sns.template': 'canvas-format',
+	'layout.advertisement.template': 'canvas-format',
+}
+
 /** registry에서 checker를 꺼낸다 — 미등록이면 테스트가 즉시 실패한다. */
 function checkerFor(ruleKey: string) {
-	const checker = getChecker(ruleKey)
+	const checkerKey = CHECKER_KEYS[ruleKey]
+	const checker = checkerKey ? getChecker(checkerKey, ruleKey) : null
 	if (!checker) throw new Error(`checker not registered: ${ruleKey}`)
 	return checker
 }

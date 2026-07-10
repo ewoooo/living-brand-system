@@ -128,10 +128,12 @@ function runRuleByExecutor(rule: CheckRule, ctx: CheckerContext): CheckResult | 
 		}
 		return toCheckResult(rawResult, rule, { key: 'manual', type: 'manual' })
 	}
-	const checker = getChecker(rule.key)
+	const checker = rule.checkerKey ? getChecker(rule.checkerKey, rule.key) : null
 	if (!checker) return null
 	const result = checker(ctx)
-	return result ? toCheckResult(result, rule, { key: rule.key, type: 'algorithm' }) : null
+	return result
+		? toCheckResult(result, rule, { key: rule.checkerKey ?? rule.key, type: 'algorithm' })
+		: null
 }
 
 function toCheckResult(

@@ -27,9 +27,9 @@
 
 ## 4. 의존
 
-- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 기본 모델 `claude-haiku-4-5`, `ANTHROPIC_MODEL`로 교체. `ANTHROPIC_API_KEY` 없으면 AI 항목은 `needs_review`로 폴백.
+- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 모델과 프롬프트는 BrandRule이 참조하는 RuleSpec에서 선택한다. `ANTHROPIC_API_KEY` 없으면 AI 항목은 `needs_review`로 폴백.
 - 이미지 디코딩: `sharp`(128px 픽셀 그리드 추출).
-- 결정론적 checker: palette-compliance / color-combination / spot-color / background-tone / clear-space / relative-size / canvas-format. rule→checker 매핑은 registry가 소유하며, 미매핑 결정론 rule은 `implemented:false`로 표시.
+- 결정론적 checker: palette-compliance / color-combination / spot-color / background-tone / clear-space / relative-size / canvas-format. RuleSpec의 `checkerKey`로 registry를 조회하며, 미등록 checker는 `implemented:false`로 표시.
 - Payload 컬렉션: `rules`·`guideline-pages`(룰셋), `brand-colors`(팔레트) 읽기. 세션은 `check-sessions`에 영속(룰셋 스냅샷을 함께 저장해 AI 후속 단계가 재사용).
 
 ## 5. 크로스커팅
