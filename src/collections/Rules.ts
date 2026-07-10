@@ -27,6 +27,8 @@ export const Rules: CollectionConfig = {
 			index: true,
 			admin: {
 				position: 'sidebar',
+				allowCreate: true,
+				allowEdit: true,
 				description: '이 브랜드 규칙을 검사할 Rule Checker입니다.',
 			},
 		},
@@ -36,7 +38,7 @@ export const Rules: CollectionConfig = {
 			relationTo: ['guideline-sections', 'guideline-pages', 'guideline-blocks'],
 			hasMany: true,
 			admin: {
-				position: 'sidebar',
+				allowCreate: false,
 				description: '이 규칙을 설명하거나 적용하는 Section, Page, Block입니다.',
 			},
 		},

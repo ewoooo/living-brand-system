@@ -194,11 +194,11 @@ flowchart LR
 GuidelineSection, GuidelinePage, GuidelineBlock은 독립 식별자를 가진 문서입니다. 세 문서는 `Section -> Page -> Block` 계층을 이룹니다.
 GuidelineDocument는 세 문서 타입을 함께 부르는 이름입니다.
 
-RuleChecker과 BrandRule은 책임이 다릅니다.
+RuleChecker와 BrandRule은 책임이 다릅니다.
 RuleChecker는 BrandRule을 검사할 실행 도구 계약입니다. 하나의 RuleChecker는 하나의 ExecutorType과 결합합니다. deterministic은 CheckerKey를 사용하고, heuristic은 ModelRef와 PromptKey를 사용하며, manual은 자동 실행 binding을 갖지 않습니다.
 BrandRule은 사용자가 정한 브랜드 기준입니다. RuleChecker, RuleValue, Tier, Messages와 Section, Page, Block을 가리키는 GuidelineDocumentRef 목록을 보유합니다. EvidenceSnapshot과 ReferenceAssetRef는 근거 문서에서 파생합니다. 규칙 분류는 별도 category에 저장하지 않고 문서 계층에서 파생합니다.
 하나의 BrandRule은 정확히 하나의 RuleChecker를 참조하고 여러 GuidelineDocument에서 설명되거나 적용될 수 있습니다. 하나의 GuidelineDocument도 여러 BrandRule의 근거가 될 수 있습니다.
-RuleChecker과 BrandRule은 각각 Official Version을 가집니다. 검수는 BrandRuleVersion과 그 버전이 참조하는 RuleCheckerVersion을 함께 고정합니다.
+RuleChecker와 BrandRule은 각각 Official Version을 가집니다. 검수는 BrandRuleVersion과 그 버전이 참조하는 RuleCheckerVersion을 함께 고정합니다.
 
 ```text
 [도메인] 브랜드 운영 시스템
