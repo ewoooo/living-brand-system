@@ -19,6 +19,7 @@ import * as migration_20260710_014408_add_section_header_image from './20260710_
 import * as migration_20260710_020645_add_section_blocks from './20260710_020645_add_section_blocks';
 import * as migration_20260710_021947_add_section_rule_references from './20260710_021947_add_section_rule_references';
 import * as migration_20260710_042810_add_rule_specs from './20260710_042810_add_rule_specs';
+import * as migration_20260710_043223_backfill_rule_specs from './20260710_043223_backfill_rule_specs';
 
 export const migrations = [
   {
@@ -124,6 +125,11 @@ export const migrations = [
   {
     up: migration_20260710_042810_add_rule_specs.up,
     down: migration_20260710_042810_add_rule_specs.down,
-    name: '20260710_042810_add_rule_specs'
+    name: '20260710_042810_add_rule_specs',
+  },
+  {
+    up: migration_20260710_043223_backfill_rule_specs.up,
+    down: migration_20260710_043223_backfill_rule_specs.down,
+    name: '20260710_043223_backfill_rule_specs'
   },
 ];
