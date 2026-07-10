@@ -15,6 +15,9 @@ import * as migration_20260709_024939_add_agent_chat_session_messages from './20
 import * as migration_20260709_070452_guideline_collection_slugs from './20260709_070452_guideline_collection_slugs';
 import * as migration_20260709_094407_add_rule_messages from './20260709_094407_add_rule_messages';
 import * as migration_20260709_095923_add_rule_tier_executor from './20260709_095923_add_rule_tier_executor';
+import * as migration_20260710_014408_add_section_header_image from './20260710_014408_add_section_header_image';
+import * as migration_20260710_020645_add_section_blocks from './20260710_020645_add_section_blocks';
+import * as migration_20260710_021947_add_section_rule_references from './20260710_021947_add_section_rule_references';
 
 export const migrations = [
   {
@@ -101,5 +104,20 @@ export const migrations = [
     up: migration_20260709_095923_add_rule_tier_executor.up,
     down: migration_20260709_095923_add_rule_tier_executor.down,
     name: '20260709_095923_add_rule_tier_executor',
+  },
+  {
+    up: migration_20260710_014408_add_section_header_image.up,
+    down: migration_20260710_014408_add_section_header_image.down,
+    name: '20260710_014408_add_section_header_image',
+  },
+  {
+    up: migration_20260710_020645_add_section_blocks.up,
+    down: migration_20260710_020645_add_section_blocks.down,
+    name: '20260710_020645_add_section_blocks',
+  },
+  {
+    up: migration_20260710_021947_add_section_rule_references.up,
+    down: migration_20260710_021947_add_section_rule_references.down,
+    name: '20260710_021947_add_section_rule_references'
   },
 ];

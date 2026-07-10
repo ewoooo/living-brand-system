@@ -115,7 +115,14 @@ export const Rules: CollectionConfig = {
 			type: 'join',
 			collection: 'guideline-pages',
 			on: 'rules.rule',
-			admin: { description: '이 룰을 배치한 가이드라인 페이지 (역참조, 자동 집계).' },
+			admin: { description: '이 룰을 블록에서 사용하는 가이드라인 페이지입니다.' },
+		},
+		{
+			name: 'referenceSections',
+			type: 'join',
+			collection: 'guideline-sections',
+			on: 'rules.rule',
+			admin: { description: '이 룰을 블록에서 사용하는 가이드라인 섹션입니다.' },
 		},
 		{
 			name: 'referenceAssets',

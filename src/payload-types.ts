@@ -101,6 +101,7 @@ export interface Config {
     };
     rules: {
       referencePages: 'guideline-pages';
+      referenceSections: 'guideline-sections';
     };
     'template-categories': {
       templates: 'templates';
@@ -230,7 +231,7 @@ export interface GuidelineChapter {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * 장 하위 섹션입니다. 상위 장에 속하며 하위에 페이지를 가집니다.
+ * 장 하위 섹션입니다. 자체 블록과 하위 페이지를 가질 수 있습니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline-sections".
@@ -254,11 +255,25 @@ export interface GuidelineSection {
    * 섹션 랜딩 페이지에 표시할 선택 요약입니다.
    */
   description?: string | null;
+  /**
+   * 섹션 랜딩 헤더에 표시할 이미지입니다.
+   */
+  headerImage?: (number | null) | ApplicationImage;
   pages?: {
     docs?: (number | GuidelinePage)[];
     hasNextPage?: boolean;
     totalDocs?: number;
   };
+  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
+  /**
+   * 블록의 룰 관계에서 자동 생성하는 역참조용 인덱스입니다.
+   */
+  rules?:
+    | {
+        rule: number | Rule;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * 숫자가 낮을수록 가이드라인 내비게이션에서 먼저 표시됩니다.
    */
@@ -266,6 +281,37 @@ export interface GuidelineSection {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "application-images".
+ */
+export interface ApplicationImage {
+  id: number;
+  name: string;
+  alt: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * 블록으로 구성하는 가이드라인 페이지입니다.
@@ -303,7 +349,7 @@ export interface GuidelinePage {
     [k: string]: unknown;
   } | null;
   /**
-   * [deprecated] 블록 레벨 rules로 이전 중입니다. 신규 배치는 블록에 연결하세요.
+   * 블록의 룰 관계에서 자동 생성하는 역참조용 인덱스입니다.
    */
   rules?:
     | {
@@ -388,10 +434,18 @@ export interface Rule {
     fail?: string | null;
   };
   /**
-   * 이 룰을 배치한 가이드라인 페이지 (역참조, 자동 집계).
+   * 이 룰을 블록에서 사용하는 가이드라인 페이지입니다.
    */
   referencePages?: {
     docs?: (number | GuidelinePage)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * 이 룰을 블록에서 사용하는 가이드라인 섹션입니다.
+   */
+  referenceSections?: {
+    docs?: (number | GuidelineSection)[];
     hasNextPage?: boolean;
     totalDocs?: number;
   };
@@ -402,37 +456,6 @@ export interface Rule {
   status?: ('draft' | 'live' | 'archived') | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "application-images".
- */
-export interface ApplicationImage {
-  id: number;
-  name: string;
-  alt: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-  sizes?: {
-    thumbnail?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1360,29 +1383,8 @@ export interface GuidelineSectionsSelect<T extends boolean = true> {
   slug?: T;
   chapter?: T;
   description?: T;
+  headerImage?: T;
   pages?: T;
-  displayOrder?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guideline-pages_select".
- */
-export interface GuidelinePagesSelect<T extends boolean = true> {
-  title?: T;
-  generateSlug?: T;
-  slug?: T;
-  description?: T;
-  rules?:
-    | T
-    | {
-        rule?: T;
-        id?: T;
-      };
-  section?: T;
-  displayOrder?: T;
   blocks?:
     | T
     | {
@@ -1391,6 +1393,13 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
         colorPalette?: T | ColorPaletteBlockSelect<T>;
         doDont?: T | DoDontBlockSelect<T>;
       };
+  rules?:
+    | T
+    | {
+        rule?: T;
+        id?: T;
+      };
+  displayOrder?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1464,6 +1473,35 @@ export interface DoDontBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guideline-pages_select".
+ */
+export interface GuidelinePagesSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  description?: T;
+  rules?:
+    | T
+    | {
+        rule?: T;
+        id?: T;
+      };
+  section?: T;
+  displayOrder?: T;
+  blocks?:
+    | T
+    | {
+        columnUnit?: T | ColumnUnitBlockSelect<T>;
+        mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
+        colorPalette?: T | ColorPaletteBlockSelect<T>;
+        doDont?: T | DoDontBlockSelect<T>;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "rules_select".
  */
 export interface RulesSelect<T extends boolean = true> {
@@ -1482,6 +1520,7 @@ export interface RulesSelect<T extends boolean = true> {
         fail?: T;
       };
   referencePages?: T;
+  referenceSections?: T;
   referenceAssets?: T;
   status?: T;
   updatedAt?: T;
