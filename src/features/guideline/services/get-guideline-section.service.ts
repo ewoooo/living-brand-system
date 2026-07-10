@@ -9,6 +9,7 @@ export interface GetGuidelineSectionOutput {
 	title: string
 	headerImage: GuidelineSection['headerImage']
 	blocks: GuidelinePage['blocks']
+	description: string | null
 	pages: {
 		id: number
 		title: string
@@ -48,6 +49,7 @@ export async function getGuidelineSection(
 			title: section.title,
 			headerImage: section.headerImage ?? null,
 			blocks: section.blocks ?? [],
+			description: section.description || null,
 			pages: pages.map((page) => ({
 				id: page.id,
 				title: page.title,

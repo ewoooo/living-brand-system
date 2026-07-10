@@ -5,11 +5,11 @@ export default async function GuidelineIndexPage() {
 	const { title, chapters } = await getGuidelineNavigation()
 
 	return (
-		<div className="w-full max-w-[1250px] px-8 py-10">
+		<>
 			<header className="mb-8">
 				<hgroup className="mb-4">
-					<h2 className="pb-1 text-muted-foreground text-xl">시작하기</h2>
-					<h1 className="text-3xl">{title}</h1>
+					<p className="pb-1 text-muted-foreground text-xl">시작하기</p>
+					<h1 className="font-semibold text-3xl">{title}</h1>
 				</hgroup>
 				<p className="mb-4 text-muted-foreground">
 					가이드라인은 브랜드 기준을 구축하기 위한 운영 문서입니다. 이를 사용해 브랜드
@@ -19,7 +19,7 @@ export default async function GuidelineIndexPage() {
 				<div className="aspect-video rounded-md bg-neutral-500/10" />
 			</header>
 			<section className="mb-8">
-				<h3 className="pb-4 text-xl">여기서 시작하기</h3>
+				<h2 className="pb-4 font-semibold text-xl">여기서 시작하기</h2>
 				<section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 					{chapters.map((chapter) => (
 						<Link
@@ -27,7 +27,7 @@ export default async function GuidelineIndexPage() {
 							href={chapter.href}
 							className="rounded-md border border-neutral-200 p-4 transition-colors hover:bg-neutral-500/5 dark:border-neutral-800"
 						>
-							<h2 className="text-lg">{chapter.title}</h2>
+							<h3 className="font-semibold text-lg">{chapter.title}</h3>
 							{chapter.description && (
 								<p className="mt-3 text-muted-foreground text-sm leading-6">
 									{chapter.description}
@@ -37,6 +37,6 @@ export default async function GuidelineIndexPage() {
 					))}
 				</section>
 			</section>
-		</div>
+		</>
 	)
 }

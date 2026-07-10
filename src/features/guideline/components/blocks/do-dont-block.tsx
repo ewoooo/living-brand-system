@@ -13,9 +13,9 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 				{block.groups?.map((group) => (
 					<div key={group.id}>
 						{group.category && (
-							<h3 className="mb-4 font-semibold text-neutral-500">
+							<h4 className="mb-4 font-semibold text-neutral-500">
 								{group.category}
-							</h3>
+							</h4>
 						)}
 						<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 							{group.examples?.map((example) => (
