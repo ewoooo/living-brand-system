@@ -68,13 +68,19 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
   DROP TABLE "templates_template_rules";
   DROP TABLE "_templates_v_version_template_rules_locales";
   DROP TABLE "_templates_v_version_template_rules";
+  DROP TABLE IF EXISTS "_rules_v_rels" CASCADE;
+  DROP TABLE IF EXISTS "_rules_v_locales" CASCADE;
+  DROP TABLE IF EXISTS "_rules_v" CASCADE;
   DROP TABLE "rules_rels";
   DROP TABLE "guideline_blocks_rels";
   DROP TABLE "guideline_blocks";
-  DROP TABLE "rules";
+  DROP TABLE "rules" CASCADE;
   DROP TYPE "public"."enum_guideline_blocks_block_type";
   DROP TYPE "public"."enum_rules_tier";
-  DROP TYPE "public"."enum_rules_status";`)
+  DROP TYPE "public"."enum_rules_status";
+  DROP TYPE IF EXISTS "public"."enum__rules_v_version_tier";
+  DROP TYPE IF EXISTS "public"."enum__rules_v_version_status";
+  DROP TYPE IF EXISTS "public"."enum__rules_v_published_locale";`)
 }
 
 export async function down({ db }: MigrateDownArgs): Promise<void> {
