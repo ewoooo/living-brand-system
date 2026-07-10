@@ -493,12 +493,14 @@ flowchart TB
 | 후보 | 관리 단위 | 주요 관계 |
 | --- | --- | --- |
 | `guideline` global | BrandGuideline | 단일 가이드라인 설정 |
-| `sections` | GuidelineSection | pages를 소유 |
-| `guideline-pages` | GuidelinePage | section에 속하고 blocks, rule refs, asset refs, template refs, plugin refs를 소유 |
-| `rules` | RuleSpec preset catalog | page, template, plugin, BrandRule 후보에서 참조하는 브랜드 무관 규칙 명세 |
+| `guideline-sections` | GuidelineSection | pages를 소유하고 자신을 근거로 삼는 BrandRule을 역참조 |
+| `guideline-pages` | GuidelinePage | section에 속하고 blocks를 소유하며 자신을 근거로 삼는 BrandRule을 역참조 |
+| `guideline-blocks` | GuidelineBlock | page에 속하는 최소 콘텐츠 문서이며 자신을 근거로 삼는 BrandRule을 역참조 |
+| `rule-specs` | RuleSpec | executor 유형과 checker 또는 model binding을 1:1로 관리하는 검사 도구 계약 |
+| `rules` | BrandRule | RuleSpec과 Section, Page, Block 중 하나를 참조하고 브랜드 기준값과 evidence를 보유 |
 | `brand-logos` | BrandLogo | page, rule, asset generation session, check basis에서 참조 |
-| `brand-colors` | BrandColor | page, rule, template, plugin에서 참조 |
-| `brand-typefaces` | BrandTypeface | page, rule, template에서 참조 |
+| `brand-colors` | BrandColor | guideline document, BrandRule, template, plugin에서 참조 |
+| `brand-typefaces` | BrandTypeface | guideline document, BrandRule, template에서 참조 |
 | `application-images` | ApplicationImage | page, asset generation session, check basis에서 참조 |
 | `templates` | Template | page, plugin, asset generation session에서 참조 |
 | `plugins` | Plugin | page, template, asset generation session에서 참조 |
