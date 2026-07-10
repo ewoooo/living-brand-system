@@ -77,13 +77,13 @@
 ### 3.4 GuidelineBlock
 
 데이터명: GuidelineBlock
-수집 목적: 페이지를 구성하는 최소 콘텐츠 단위이자 브랜드 규칙의 근거 문서가 된다.
+수집 목적: 섹션 또는 페이지를 구성하는 최소 콘텐츠 단위이자 브랜드 규칙의 근거 문서가 된다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Manager가 블록 유형과 콘텐츠를 입력하면 GuidelinePage 아래에 생성한다. |
+| 생성·수집 | Manager가 블록 유형과 콘텐츠를 입력하면 GuidelineSection 또는 GuidelinePage 아래에 생성한다. |
 | 전송 | 블록 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
-| 저장 | 소속 GuidelinePage, 블록 유형, 콘텐츠, 표시 순서를 독립 식별자와 함께 저장한다. |
+| 저장 | 콘텐츠는 소속 Section/Page에 저장하고, 관계 조회용 독립 식별자와 표시 순서를 GuidelineBlock 인덱스에 저장한다. |
 | 처리 | 이미지와 컬러 같은 표시 자원을 참조하고, 연결된 BrandRule을 역참조한다. |
 | 활용 | Creator 가이드라인 화면, Agent 답변 근거, 품질 검수 evidence 생성에 사용한다. |
 | 공유·제공 | 다른 도메인에는 GuidelineVersion에 포함된 읽기 모델로 제공한다. |
@@ -163,9 +163,9 @@
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Manager가 규칙 이름, 기준값, 중요도, 사용자 메시지를 입력하고 RuleSpec 하나와 근거 문서 하나를 선택하면 draft 상태로 생성한다. |
+| 생성·수집 | Manager가 규칙 이름, 기준값, 중요도, 사용자 메시지를 입력하고 RuleSpec 하나와 관련 문서를 선택하면 draft 상태로 생성한다. |
 | 전송 | BrandRule 편집 요청은 Payload API를 통해 Brand resource publishing service로 전달한다. |
-| 저장 | RuleSpecRef, GuidelineDocumentRef, RuleValue, Tier, Messages, EvidenceSnapshot, ReferenceAssetRef를 저장한다. |
+| 저장 | RuleSpecRef, GuidelineDocumentRef 목록, RuleValue, Tier, Messages, EvidenceSnapshot, ReferenceAssetRef를 저장한다. |
 | 처리 | 근거 문서가 발행되면 evidence와 참고 자원을 갱신하고 BrandRuleVersion 후보를 만든다. |
 | 활용 | Creator, Agent, 품질 검수가 실제 브랜드 판단 기준으로 사용한다. |
 | 공유·제공 | Creator와 Agent에는 live 상태의 BrandRuleVersion만 제공한다. |

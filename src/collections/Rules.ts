@@ -31,6 +31,16 @@ export const Rules: CollectionConfig = {
 			},
 		},
 		{
+			name: 'documents',
+			type: 'relationship',
+			relationTo: ['guideline-sections', 'guideline-pages', 'guideline-blocks'],
+			hasMany: true,
+			admin: {
+				position: 'sidebar',
+				description: '이 규칙을 설명하거나 적용하는 Section, Page, Block입니다.',
+			},
+		},
+		{
 			name: 'key',
 			type: 'text',
 			required: true,

@@ -52,7 +52,7 @@ export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
 	const pages = await getCheckRulesetPages()
 
 	return pages
-		.filter((page) => (page.rules?.length ?? 0) > 0)
+		.filter((page) => (page.linkedRules?.docs?.length ?? 0) > 0)
 		.sort((a, b) => {
 			const aPlacement = toCheckPlacement(a.section)
 			const bPlacement = toCheckPlacement(b.section)
@@ -66,8 +66,8 @@ export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
 			title: page.title,
 			slug: page.slug ?? String(page.id),
 			...toCheckPlacement(page.section),
-			rules: (page.rules ?? []).flatMap((placement) =>
-				typeof placement.rule === 'number' ? [] : [toCheckRule(placement.rule)],
+			rules: (page.linkedRules?.docs ?? []).flatMap((rule) =>
+				typeof rule === 'number' ? [] : [toCheckRule(rule)],
 			),
 		}))
 })

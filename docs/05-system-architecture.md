@@ -495,9 +495,9 @@ flowchart TB
 | `guideline` global | BrandGuideline | 단일 가이드라인 설정 |
 | `guideline-sections` | GuidelineSection | pages를 소유하고 자신을 근거로 삼는 BrandRule을 역참조 |
 | `guideline-pages` | GuidelinePage | section에 속하고 blocks를 소유하며 자신을 근거로 삼는 BrandRule을 역참조 |
-| `guideline-blocks` | GuidelineBlock | page에 속하는 최소 콘텐츠 문서이며 자신을 근거로 삼는 BrandRule을 역참조 |
+| `guideline-blocks` | GuidelineBlock | Section/Page의 임베디드 block을 관계 대상으로 식별하고 자신을 참조하는 BrandRule을 역참조 |
 | `rule-specs` | RuleSpec | executor 유형과 checker 또는 model binding을 1:1로 관리하는 검사 도구 계약 |
-| `rules` | BrandRule | RuleSpec과 Section, Page, Block 중 하나를 참조하고 브랜드 기준값과 evidence를 보유 |
+| `rules` | BrandRule | RuleSpec 하나와 Section, Page, Block 관계 목록을 참조하고 브랜드 기준값과 evidence를 보유 |
 | `brand-logos` | BrandLogo | page, rule, asset generation session, check basis에서 참조 |
 | `brand-colors` | BrandColor | guideline document, BrandRule, template, plugin에서 참조 |
 | `brand-typefaces` | BrandTypeface | guideline document, BrandRule, template에서 참조 |

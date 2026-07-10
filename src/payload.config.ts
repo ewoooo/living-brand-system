@@ -18,6 +18,7 @@ import { BrandColors } from './collections/BrandColors'
 import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
 import { CheckSessions } from './collections/CheckSessions'
+import { GuidelineBlocks } from './collections/GuidelineBlocks'
 import { GuidelineChapters } from './collections/GuidelineChapters'
 import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
@@ -103,6 +104,7 @@ export default buildConfig({
 		GuidelineChapters,
 		GuidelineSections,
 		GuidelinePages,
+		GuidelineBlocks,
 		RuleSpecs,
 		Rules,
 		BrandLogos,

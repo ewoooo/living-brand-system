@@ -174,7 +174,7 @@ flowchart LR
 | 관계 | 의미 |
 | --- | --- |
 | GuidelineSection -> GuidelinePage -> GuidelineBlock | 세 문서 타입은 상위 문서가 하위 문서를 소유하는 계층을 이룹니다. |
-| BrandRule -> GuidelineSection / GuidelinePage / GuidelineBlock | BrandRule은 세 문서 중 하나를 근거 문서로 참조합니다. 문서는 자신을 참조하는 BrandRule을 역참조합니다. |
+| BrandRule -> GuidelineSection / GuidelinePage / GuidelineBlock | BrandRule은 관련된 세 문서 타입을 참조합니다. 문서는 자신을 참조하는 BrandRule을 역참조합니다. |
 | GuidelinePage -> BrandAssetVersion / TemplateVersion / PluginVersion | 페이지는 브랜드가 채택한 자원을 Official Version으로 참조합니다. |
 | AssetGenerationSession -> BrandGuideline / BrandAsset / Template / Plugin | 제작은 발행 기준, 에셋, 템플릿, 플러그인을 사용하고 ResourceRef를 저장합니다. |
 | 사용 기록 -> AssetGenerationSession / QASession / CheckSession | 운영 조회는 기본 레코드를 읽어 사용 이력을 구성합니다. |
@@ -196,8 +196,8 @@ GuidelineDocument는 세 문서 타입을 함께 부르는 이름입니다.
 
 RuleSpec과 BrandRule은 책임이 다릅니다.
 RuleSpec은 BrandRule을 검사할 실행 도구 계약입니다. 하나의 RuleSpec은 하나의 ExecutorType과 결합합니다. deterministic은 CheckerKey를 사용하고, heuristic은 ModelRef와 PromptKey를 사용하며, manual은 자동 실행 binding을 갖지 않습니다.
-BrandRule은 사용자가 정한 브랜드 기준입니다. RuleSpec, RuleValue, Tier, Messages와 세 문서 중 하나를 가리키는 GuidelineDocumentRef를 보유합니다. EvidenceSnapshot과 ReferenceAssetRef는 근거 문서에서 파생합니다. 규칙 분류는 별도 category에 저장하지 않고 문서 계층에서 파생합니다.
-하나의 BrandRule은 정확히 하나의 RuleSpec과 하나의 GuidelineDocument를 참조합니다. 하나의 GuidelineDocument는 여러 BrandRule의 근거가 될 수 있습니다.
+BrandRule은 사용자가 정한 브랜드 기준입니다. RuleSpec, RuleValue, Tier, Messages와 Section, Page, Block을 가리키는 GuidelineDocumentRef 목록을 보유합니다. EvidenceSnapshot과 ReferenceAssetRef는 근거 문서에서 파생합니다. 규칙 분류는 별도 category에 저장하지 않고 문서 계층에서 파생합니다.
+하나의 BrandRule은 정확히 하나의 RuleSpec을 참조하고 여러 GuidelineDocument에서 설명되거나 적용될 수 있습니다. 하나의 GuidelineDocument도 여러 BrandRule의 근거가 될 수 있습니다.
 RuleSpec과 BrandRule은 각각 Official Version을 가집니다. 검수는 BrandRuleVersion과 그 버전이 참조하는 RuleSpecVersion을 함께 고정합니다.
 
 ```text
@@ -301,7 +301,7 @@ GuidelineSection, GuidelinePage, GuidelineBlock은 `Section -> Page -> Block` �
 GuidelineVersionRef는 BrandGuideline이 소유한 Official Version을 CheckBasis가 참조하기 위해 저장하는 값 객체입니다.
 
 GuidelinePage는 GuidelineBlock 목록을 소유합니다. GuidelineBlock은 column unit, media showcase처럼 화면에 렌더링되는 최소 콘텐츠 문서입니다.
-BrandRule은 세 문서 타입 중 하나를 GuidelineDocumentRef로 참조합니다. 문서는 자신을 참조하는 BrandRule 목록을 역참조합니다.
+BrandRule은 세 문서 타입을 GuidelineDocumentRef 목록으로 참조합니다. 문서는 자신을 참조하는 BrandRule 목록을 역참조합니다.
 PageAssetRef는 페이지 안에서의 표시 순서, 캡션, 예시 역할을 기록합니다.
 
 RuleSpec은 BrandRule을 검사할 실행 도구 계약입니다. deterministic RuleSpec은 CheckerKey와, heuristic RuleSpec은 ModelRef 및 PromptKey와 결합합니다.

@@ -4,6 +4,7 @@ import {
 	deriveRuleRefsFromBlocks,
 	deriveRulesFromBlocks,
 } from '@/features/guideline/blocks/registry'
+import { syncGuidelineBlockDocuments } from '@/features/guideline/services/sync-guideline-block-documents.service'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -36,6 +37,7 @@ export const GuidelinePages: CollectionConfig = {
 		afterChange: [
 			async ({ doc, req }) => {
 				if (doc._status && doc._status !== 'published') return doc
+				await syncGuidelineBlockDocuments({ collection: 'guideline-pages', doc, req })
 				for (const derivation of deriveRulesFromBlocks(doc.blocks)) {
 					await req.payload.update({
 						collection: 'rules',
@@ -92,6 +94,13 @@ export const GuidelinePages: CollectionConfig = {
 					},
 				},
 			],
+		},
+		{
+			name: 'linkedRules',
+			type: 'join',
+			collection: 'rules',
+			on: 'documents',
+			admin: { allowCreate: false },
 		},
 		{
 			name: 'section',

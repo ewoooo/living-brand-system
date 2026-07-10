@@ -71,6 +71,7 @@ export interface Config {
     'guideline-chapters': GuidelineChapter;
     'guideline-sections': GuidelineSection;
     'guideline-pages': GuidelinePage;
+    'guideline-blocks': GuidelineBlock;
     'rule-specs': RuleSpec;
     rules: Rule;
     'brand-logos': BrandLogo;
@@ -99,6 +100,13 @@ export interface Config {
     };
     'guideline-sections': {
       pages: 'guideline-pages';
+      linkedRules: 'rules';
+    };
+    'guideline-pages': {
+      linkedRules: 'rules';
+    };
+    'guideline-blocks': {
+      linkedRules: 'rules';
     };
     'rule-specs': {
       rules: 'rules';
@@ -115,6 +123,7 @@ export interface Config {
     'guideline-chapters': GuidelineChaptersSelect<false> | GuidelineChaptersSelect<true>;
     'guideline-sections': GuidelineSectionsSelect<false> | GuidelineSectionsSelect<true>;
     'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
+    'guideline-blocks': GuidelineBlocksSelect<false> | GuidelineBlocksSelect<true>;
     'rule-specs': RuleSpecsSelect<false> | RuleSpecsSelect<true>;
     rules: RulesSelect<false> | RulesSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
@@ -279,6 +288,11 @@ export interface GuidelineSection {
         id?: string | null;
       }[]
     | null;
+  linkedRules?: {
+    docs?: (number | Rule)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   /**
    * 숫자가 낮을수록 가이드라인 내비게이션에서 먼저 표시됩니다.
    */
@@ -362,6 +376,11 @@ export interface GuidelinePage {
         id?: string | null;
       }[]
     | null;
+  linkedRules?: {
+    docs?: (number | Rule)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   /**
    * 사이드바 내비게이션과 URL에 사용할 상위 섹션입니다.
    */
@@ -385,6 +404,25 @@ export interface Rule {
    * 이 브랜드 규칙을 검사할 Rule Tool입니다. 데이터 전환 후 필수가 됩니다.
    */
   spec?: (number | null) | RuleSpec;
+  /**
+   * 이 규칙을 설명하거나 적용하는 Section, Page, Block입니다.
+   */
+  documents?:
+    | (
+        | {
+            relationTo: 'guideline-sections';
+            value: number | GuidelineSection;
+          }
+        | {
+            relationTo: 'guideline-pages';
+            value: number | GuidelinePage;
+          }
+        | {
+            relationTo: 'guideline-blocks';
+            value: number | GuidelineBlock;
+          }
+      )[]
+    | null;
   /**
    * domain.subject.property 점 표기. 하이픈 없이 점으로만 구분한다. 예: logo.size.minimum
    */
@@ -499,6 +537,35 @@ export interface RuleSpec {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * Section/Page에 포함된 block을 관계 대상으로 식별하는 인덱스입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guideline-blocks".
+ */
+export interface GuidelineBlock {
+  id: number;
+  key: string;
+  parent:
+    | {
+        relationTo: 'guideline-sections';
+        value: number | GuidelineSection;
+      }
+    | {
+        relationTo: 'guideline-pages';
+        value: number | GuidelinePage;
+      };
+  sourceBlockId: string;
+  blockType: 'columnUnit' | 'mediaShowcase' | 'colorPalette' | 'doDont';
+  displayOrder: number;
+  linkedRules?: {
+    docs?: (number | Rule)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1290,6 +1357,10 @@ export interface PayloadLockedDocument {
         value: number | GuidelinePage;
       } | null)
     | ({
+        relationTo: 'guideline-blocks';
+        value: number | GuidelineBlock;
+      } | null)
+    | ({
         relationTo: 'rule-specs';
         value: number | RuleSpec;
       } | null)
@@ -1446,6 +1517,7 @@ export interface GuidelineSectionsSelect<T extends boolean = true> {
         rule?: T;
         id?: T;
       };
+  linkedRules?: T;
   displayOrder?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1533,6 +1605,7 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
         rule?: T;
         id?: T;
       };
+  linkedRules?: T;
   section?: T;
   displayOrder?: T;
   blocks?:
@@ -1546,6 +1619,20 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guideline-blocks_select".
+ */
+export interface GuidelineBlocksSelect<T extends boolean = true> {
+  key?: T;
+  parent?: T;
+  sourceBlockId?: T;
+  blockType?: T;
+  displayOrder?: T;
+  linkedRules?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1568,6 +1655,7 @@ export interface RuleSpecsSelect<T extends boolean = true> {
  */
 export interface RulesSelect<T extends boolean = true> {
   spec?: T;
+  documents?: T;
   key?: T;
   title?: T;
   category?: T;
