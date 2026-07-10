@@ -17,7 +17,7 @@ import {
 	getCheckScenario,
 	startCheckSession,
 } from '@/services/start-check-session.service'
-import { findAgentRules } from '../repositories/agent-guideline-context.payload.repository'
+import { findAgentChecks } from '../repositories/agent-guideline-context.payload.repository'
 import {
 	findTemplatesForRequest,
 	prepareTemplateImage,
@@ -89,11 +89,11 @@ export function getAgentTools() {
 			execute: ({ collection, id }, { context }) =>
 				readAgentGuidelineDocument(context.user, { collection, id }),
 		}),
-		getRuleCatalog: tool({
-			description: 'Get the live built-in rule preset catalog registered in Payload.',
+		getCheckCatalog: tool({
+			description: 'Get checks declared by published brand guideline documents.',
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
-			execute: (_input, { context }) => findAgentRules(context.user),
+			execute: (_input, { context }) => findAgentChecks(context.user),
 		}),
 		listCheckScenarios: tool({
 			description:
@@ -104,7 +104,7 @@ export function getAgentTools() {
 		}),
 		findTemplatesForRequest: tool({
 			description:
-				'Find or list published production templates, their template rules, and their open slots for asset creation requests or questions about what templates/assets can be made.',
+				'Find or list published production templates, their template checks, and their open slots for asset creation requests or questions about what templates/assets can be made.',
 			inputSchema: z.object({
 				query: z.string().min(1).max(120).optional(),
 			}),

@@ -51,18 +51,18 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 			scenarioKey: checkScenarioKey,
 			status: 'running',
 			results: undefined,
-			pendingRuleKeys: undefined,
+			pendingCheckKeys: undefined,
 		}))
 		void runFullCheck(file, checkScenarioKey, {
-			onServerResult: ({ checkSessionId, results, pendingRuleKeys }) => {
+			onServerResult: ({ checkSessionId, results, pendingCheckKeys }) => {
 				patchImage(id, (image) => {
 					// 대기 중 시나리오가 바뀌면 이전 시나리오 판정은 버린다
 					if (image.scenarioKey !== checkScenarioKey) return {}
 					return {
 						checkSessionId,
 						results,
-						pendingRuleKeys,
-						status: pendingRuleKeys.length > 0 ? 'running' : 'completed',
+						pendingCheckKeys,
+						status: pendingCheckKeys.length > 0 ? 'running' : 'completed',
 					}
 				})
 			},
@@ -72,14 +72,14 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 					if (image.checkSessionId !== checkSessionId) return {}
 					return {
 						results: { ...image.results, ...results },
-						pendingRuleKeys: undefined,
+						pendingCheckKeys: undefined,
 						status: 'completed',
 					}
 				})
 			},
 		}).catch(() => {
 			// 서버 즉시 판정 실패 — 결과 없이 종료, 재검수는 검수 버튼으로 다시 트리거한다.
-			patchImage(id, () => ({ status: 'failed', pendingRuleKeys: undefined }))
+			patchImage(id, () => ({ status: 'failed', pendingCheckKeys: undefined }))
 		})
 	}
 
@@ -111,7 +111,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 			checkSessionId: undefined,
 			scenarioKey: scenario.key,
 			results: undefined,
-			pendingRuleKeys: undefined,
+			pendingCheckKeys: undefined,
 			status: 'idle',
 		}))
 	}

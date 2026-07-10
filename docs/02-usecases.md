@@ -35,7 +35,7 @@
 
 | ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| RULE-01 | 규칙 명세 등록 | Manager, System | 규칙 이름, 범위, 기본 심각도, 측정 단위 | Manager가 브랜드 공통 규칙 명세를 입력하면 System이 RuleSpec을 draft 상태로 저장합니다. | Draft RuleSpec | RuleSpec, RuleScope, RuleSpecUpdated | 브랜드 규칙 채택 |
+| RULE-01 | 규칙 명세 등록 | Manager, System | 규칙 이름, 범위, 기본 심각도, 측정 단위 | Manager가 브랜드 공통 규칙 명세를 입력하면 System이 RuleChecker를 draft 상태로 저장합니다. | Draft RuleChecker | RuleChecker, RuleScope, RuleCheckerUpdated | 브랜드 규칙 채택 |
 
 ## 5. 도메인별 유즈케이스 목록
 
@@ -66,8 +66,8 @@ Creator가 사용하는 기준과 자원은 이 도메인에서 발행된 것만
 
 | ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| RULE-01 | 규칙 명세 등록 | Manager, System | 규칙 이름, 범위, 기본 심각도, 측정 단위, 검출 방법 | Manager가 브랜드 공통 규칙 명세를 입력하면 System이 RuleSpec을 draft 상태로 저장합니다. | Draft RuleSpec | RuleSpec, RuleScope, RuleSpecUpdated | 브랜드 규칙 채택 |
-| RULE-02 | 브랜드 규칙 채택 | Manager, System | RuleSpec, 브랜드 기준값, 출처 | Manager가 브랜드가 사용할 규칙 명세와 기준값을 입력하면 System이 BrandRule을 저장합니다. | Draft BrandRule | BrandRule, RuleValue, SourceRef, BrandRuleAdopted | stage 상태의 Official Version 생성 |
+| RULE-01 | 규칙 명세 등록 | Manager, System | 규칙 이름, 범위, 기본 심각도, 측정 단위, 검출 방법 | Manager가 브랜드 공통 규칙 명세를 입력하면 System이 RuleChecker를 draft 상태로 저장합니다. | Draft RuleChecker | RuleChecker, RuleScope, RuleCheckerUpdated | 브랜드 규칙 채택 |
+| RULE-02 | 브랜드 규칙 채택 | Manager, System | RuleChecker, 브랜드 기준값, 출처 | Manager가 브랜드가 사용할 규칙 명세와 기준값을 입력하면 System이 BrandRule을 저장합니다. | Draft BrandRule | BrandRule, RuleValue, SourceRef, BrandRuleAdopted | stage 상태의 Official Version 생성 |
 | RULE-03 | 브랜드 규칙 수정 | Manager, System | 기존 BrandRule, 수정 기준값, VersionReason | Manager가 브랜드 기준값을 수정하면 System이 충돌을 확인하고 새 BrandRuleVersion 후보를 저장합니다. | Updated BrandRule | BrandRule, RuleValue, VersionReason, BrandRuleValueUpdated | stage 상태의 Official Version 생성 |
 | RULE-04 | 규칙 충돌 확인 | Manager, System | 신규 또는 수정 BrandRule, 적용 범위 | System이 같은 범위의 기존 BrandRule과 조건을 비교해 충돌 여부를 판단합니다. | Conflict Result | - | 브랜드 규칙 채택 또는 브랜드 규칙 수정 |
 | RES-01 | 브랜드 에셋 등록 | Manager, System | 에셋 파일, 에셋 유형, 메타데이터 | Manager가 파일과 메타데이터를 입력하면 System이 BrandAsset과 AssetFile을 저장합니다. | Draft BrandAsset | BrandAsset, AssetFile, AssetType, BrandAssetRegistered | 브랜드 에셋 발행 |
@@ -101,10 +101,10 @@ Creator가 사용하는 기준과 자원은 이 도메인에서 발행된 것만
 
 | ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| VER-01 | stage 상태의 Official Version 생성 | Manager, System | 발행 대상, Payload revision, VersionReason | System이 대상에 맞는 Official Version을 stage 상태로 생성합니다. | Stage Official Version | BrandGuidelineVersion, RuleSpecVersion, BrandRuleVersion, BrandAssetVersion, TemplateVersion, PluginVersion, PayloadRevisionRef, VersionReason, GuidelineVersionStaged, RuleSpecVersionStaged, BrandRuleVersionStaged, BrandAssetVersionStaged, TemplateVersionStaged, PluginVersionStaged | Official Version 차이 확인 |
+| VER-01 | stage 상태의 Official Version 생성 | Manager, System | 발행 대상, Payload revision, VersionReason | System이 대상에 맞는 Official Version을 stage 상태로 생성합니다. | Stage Official Version | BrandGuidelineVersion, RuleCheckerVersion, BrandRuleVersion, BrandAssetVersion, TemplateVersion, PluginVersion, PayloadRevisionRef, VersionReason, GuidelineVersionStaged, RuleCheckerVersionStaged, BrandRuleVersionStaged, BrandAssetVersionStaged, TemplateVersionStaged, PluginVersionStaged | Official Version 차이 확인 |
 | VER-02 | Official Version 차이 확인 | Manager, System | stage 상태의 Official Version, 이전 live 상태의 Official Version | Manager가 Payload revision 기반 diff로 이전 live 상태와 차이를 확인합니다. | Version Diff | - | live 전환 |
-| VER-03 | live 전환 | Manager, System | stage 상태의 Official Version, 적용 시작일 | Manager가 발행하면 System이 Official Version을 live 상태로 전환하고 기존 live 상태의 Official Version을 archived 상태로 바꿉니다. | Live Official Version | VersionStatus, EffectivePeriod, GuidelineVersionPublished, RuleSpecVersionPublished, BrandRuleVersionPublished, BrandAssetVersionPublished, TemplateVersionPublished, PluginVersionPublished | Official Version 보관 |
-| VER-04 | Official Version 보관 | System | 기존 live 상태의 Official Version, 대체 Official Version | System이 대체된 Official Version을 archived 상태로 전환합니다. | Archived Official Version | VersionStatus, GuidelineVersionArchived, RuleSpecVersionArchived, BrandRuleVersionArchived, BrandAssetVersionArchived, TemplateVersionArchived, PluginVersionArchived | - |
+| VER-03 | live 전환 | Manager, System | stage 상태의 Official Version, 적용 시작일 | Manager가 발행하면 System이 Official Version을 live 상태로 전환하고 기존 live 상태의 Official Version을 archived 상태로 바꿉니다. | Live Official Version | VersionStatus, EffectivePeriod, GuidelineVersionPublished, RuleCheckerVersionPublished, BrandRuleVersionPublished, BrandAssetVersionPublished, TemplateVersionPublished, PluginVersionPublished | Official Version 보관 |
+| VER-04 | Official Version 보관 | System | 기존 live 상태의 Official Version, 대체 Official Version | System이 대체된 Official Version을 archived 상태로 전환합니다. | Archived Official Version | VersionStatus, GuidelineVersionArchived, RuleCheckerVersionArchived, BrandRuleVersionArchived, BrandAssetVersionArchived, TemplateVersionArchived, PluginVersionArchived | - |
 
 ### 5.2 제작 관리
 

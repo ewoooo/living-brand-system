@@ -79,9 +79,9 @@ const TOOL_MARKER_RULES: {
 		text: (count) => `가이드라인 결과 ${count}개를 찾았습니다`,
 	},
 	{
-		type: 'tool-getRuleCatalog',
+		type: 'tool-getCheckCatalog',
 		count: countArrayLength,
-		text: (count) => `룰 카탈로그 ${count}개를 확인했습니다`,
+		text: (count) => `Check 카탈로그 ${count}개를 확인했습니다`,
 	},
 	{
 		type: 'tool-prepareTemplateImage',

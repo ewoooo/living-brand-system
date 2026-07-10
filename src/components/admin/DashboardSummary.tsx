@@ -1,23 +1,18 @@
 import type { Payload } from 'payload'
+import { getAdminGuidelineSummary } from '@/features/guideline/repositories/admin-guideline-summary.payload.repository'
 
 export default async function DashboardSummary({ payload }: { payload: Payload }) {
-	const countDocs = (collection: 'rules' | 'guideline-sections' | 'guideline-pages') =>
-		payload
-			.count({ collection })
-			.then((result) => result.totalDocs)
-			.catch(() => 0)
-
-	const [rules, sections, pages] = await Promise.all([
-		countDocs('rules'),
-		countDocs('guideline-sections'),
-		countDocs('guideline-pages'),
-	])
+	const { checks, sections, pages } = await getAdminGuidelineSummary(payload).catch(() => ({
+		checks: 0,
+		sections: 0,
+		pages: 0,
+	}))
 
 	return (
 		<section className="dashboard-summary">
 			<h2>대시보드 요약</h2>
 			<ul>
-				<li>규칙: {rules.toLocaleString('ko-KR')}</li>
+				<li>Check: {checks.toLocaleString('ko-KR')}</li>
 				<li>섹션: {sections.toLocaleString('ko-KR')}</li>
 				<li>페이지: {pages.toLocaleString('ko-KR')}</li>
 			</ul>

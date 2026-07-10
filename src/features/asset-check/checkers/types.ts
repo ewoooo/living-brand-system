@@ -5,7 +5,7 @@
 import type { Rgb, Swatch } from './palette-match'
 
 /** 기준(expected) 대비 측정값(actual)을 분리해 실은 구조화 필드. */
-export interface RuleMetric {
+export interface CheckMetric {
 	expected: string
 	actual: string
 }
@@ -20,7 +20,7 @@ interface CheckResultBase {
 	fulfillment: number | null
 	detail: string
 	/** 기준/현재값 구조화 필드 (계산된 룰만; 에러 분기는 생략) */
-	metric?: RuleMetric
+	metric?: CheckMetric
 	/** 룰 메시지 패턴이 참조할 수 있는 checker 계산 사실. */
 	facts?: Record<string, CheckFactValue>
 }
@@ -91,5 +91,5 @@ export interface CheckerContext {
 	grid?: PixelGrid
 }
 
-/** checker 파일이 export하는 순수 판정 함수. ruleKey/message는 registry/service가 붙인다. */
+/** checker 파일이 export하는 순수 판정 함수. checkKey/message는 registry/service가 붙인다. */
 export type AlgorithmChecker = (ctx: CheckerContext) => AlgorithmCheckResult
