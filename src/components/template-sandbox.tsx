@@ -58,14 +58,15 @@ function buildRuntime(slots: { id: string; type: string }[], params: unknown): s
  */
 export function TemplateSandbox({
 	template,
+	css,
+	js,
 	fileName,
 }: {
 	template: JsonTemplate
+	css: string
+	js: string
 	fileName: string
 }) {
-	const css = template.code?.css ?? ''
-	const js = template.code?.js ?? ''
-	const params = template.code?.params
 	const { width, height } = template
 	const scale = Math.min(1, PREVIEW_WIDTH / width)
 
@@ -93,7 +94,7 @@ export function TemplateSandbox({
 		const safeJs = js.replace(/<\/script>/gi, '<\\/script>')
 		const runtime = buildRuntime(
 			slots.map((s) => ({ id: s.id, type: s.type })),
-			params,
+			undefined,
 		)
 		return (
 			`<!doctype html><html><head><meta charset="utf-8">` +
@@ -101,7 +102,7 @@ export function TemplateSandbox({
 			`<style>*{margin:0;box-sizing:border-box}${css}</style></head>` +
 			`<body>${stageHtml}<script>${runtime}</script><script>${safeJs}</script></body></html>`
 		)
-	}, [stageHtml, css, js, params, slots])
+	}, [stageHtml, css, js, slots])
 
 	useEffect(() => {
 		function onMessage(e: MessageEvent) {

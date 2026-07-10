@@ -86,16 +86,19 @@ const RADIAL_JS = `
 const payload = await getPayload({ config })
 
 const doc = await payload.findByID({ collection: 'templates', id: TEMPLATE_ID, overrideAccess: true })
-const jsonTemplate = doc.jsonTemplate as JsonTemplate
+// 옛 위치(jsonTemplate.code)에 남은 code는 떼어내고 디자인 구조만 남긴다.
+const { code: _legacy, ...designOnly } = doc.jsonTemplate as JsonTemplate & { code?: unknown }
 
 await payload.update({
 	collection: 'templates',
 	id: TEMPLATE_ID,
 	data: {
-		jsonTemplate: { ...jsonTemplate, code: { css: '', js: RADIAL_JS } },
+		jsonTemplate: designOnly,
+		// 기능 코드는 이제 별도 top-level 필드(진짜 code 에디터).
+		code: { css: '', js: RADIAL_JS },
 		_status: 'published',
 	},
 	overrideAccess: true,
 })
 
-console.log(`template ${TEMPLATE_ID}: code.js 삽입 완료 (${RADIAL_JS.length} chars)`)
+console.log(`template ${TEMPLATE_ID}: 별도 code 필드로 이동 완료 (${RADIAL_JS.length} chars)`)

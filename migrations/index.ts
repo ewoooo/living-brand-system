@@ -15,6 +15,7 @@ import * as migration_20260709_024939_add_agent_chat_session_messages from './20
 import * as migration_20260709_070452_guideline_collection_slugs from './20260709_070452_guideline_collection_slugs';
 import * as migration_20260709_094407_add_rule_messages from './20260709_094407_add_rule_messages';
 import * as migration_20260709_095923_add_rule_tier_executor from './20260709_095923_add_rule_tier_executor';
+import * as migration_20260710_075515_add_template_code_field from './20260710_075515_add_template_code_field';
 
 export const migrations = [
   {
@@ -101,5 +102,10 @@ export const migrations = [
     up: migration_20260709_095923_add_rule_tier_executor.up,
     down: migration_20260709_095923_add_rule_tier_executor.down,
     name: '20260709_095923_add_rule_tier_executor',
+  },
+  {
+    up: migration_20260710_075515_add_template_code_field.up,
+    down: migration_20260710_075515_add_template_code_field.down,
+    name: '20260710_075515_add_template_code_field'
   },
 ];

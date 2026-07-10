@@ -86,12 +86,40 @@ export const Templates: CollectionConfig = {
 			},
 		},
 		{
-			name: 'jsonTemplate',
-			type: 'json',
-			admin: {
-				description:
-					'렌더 계약(JsonTemplate). 임포트가 생성하며, 수정 시 src/types/json-template.ts 스키마를 지켜야 합니다.',
-			},
+			type: 'collapsible',
+			label: '구조 (디자인 레이아웃)',
+			admin: { initCollapsed: true },
+			fields: [
+				{
+					name: 'jsonTemplate',
+					type: 'json',
+					admin: {
+						description:
+							'렌더 계약(JsonTemplate). 임포트가 생성하며, 수정 시 src/types/json-template.ts 스키마를 지켜야 합니다.',
+					},
+				},
+			],
+		},
+		{
+			// 기능(코드) 층. 디자인 구조(jsonTemplate)와 분리해 실제 코드로 저장한다(json 이스케이프 없음).
+			// 특정 배치·동작이 필요할 때만 작성하고, 비우면 정적 디자인으로 동작한다. iframe 샌드박스에서 실행된다.
+			type: 'collapsible',
+			label: '기능 코드 (선택)',
+			admin: { initCollapsed: true },
+			fields: [
+				{
+					name: 'code',
+					type: 'group',
+					admin: {
+						description:
+							'디자인 위에 얹을 css/js. 비우면 정적 디자인. js가 있으면 샌드박스로 실행됩니다.',
+					},
+					fields: [
+						{ name: 'css', type: 'code', admin: { language: 'css' } },
+						{ name: 'js', type: 'code', admin: { language: 'javascript' } },
+					],
+				},
+			],
 		},
 		{
 			name: 'category',

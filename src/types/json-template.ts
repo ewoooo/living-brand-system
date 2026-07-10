@@ -177,15 +177,6 @@ export const jsonTemplateSchema = z.object({
 			stackElementSchema,
 		]),
 	),
-	// 기능(코드) 층: 템플릿에 딸린 css/js. 플랫폼은 내용을 모르고 iframe 샌드박스에서 실행만 한다.
-	// jsonTemplate이 Payload json 컬럼이라 마이그레이션 없이 스키마만 확장한다. code.js 유무로 소비를 판별.
-	code: z
-		.object({
-			css: z.string().default(''),
-			js: z.string(),
-			params: z.record(z.string(), z.unknown()).optional(),
-		})
-		.optional(),
 })
 
 export type JsonTemplate = z.infer<typeof jsonTemplateSchema>

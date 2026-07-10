@@ -668,6 +668,13 @@ export interface Template {
     | boolean
     | null;
   /**
+   * 디자인 위에 얹을 css/js. 비우면 정적 디자인. js가 있으면 샌드박스로 실행됩니다.
+   */
+  code?: {
+    css?: string | null;
+    js?: string | null;
+  };
+  /**
    * Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.
    */
   category: number | TemplateCategory;
@@ -1603,6 +1610,12 @@ export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
   jsonTemplate?: T;
+  code?:
+    | T
+    | {
+        css?: T;
+        js?: T;
+      };
   category?: T;
   templateRules?:
     | T

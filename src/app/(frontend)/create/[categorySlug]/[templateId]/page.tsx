@@ -41,8 +41,16 @@ export default async function CreateTemplatePage({
 function renderTemplateBody(template: PublishedTemplate) {
 	const t = template.jsonTemplate
 
-	if (t.code?.js) {
-		return <TemplateSandbox key={template.id} template={t} fileName={template.name} />
+	if (template.code) {
+		return (
+			<TemplateSandbox
+				key={template.id}
+				template={t}
+				css={template.code.css}
+				js={template.code.js}
+				fileName={template.name}
+			/>
+		)
 	}
 
 	if (t.grid) {
