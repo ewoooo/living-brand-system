@@ -396,7 +396,7 @@ for (const oldSection of oldSections) {
 		})
 
 		if (oldPage.slug === 'brand-logo') {
-			// B.1: PDF 기반 4개 L3 페이지 신규 작성. 옛 B.1 rule은 첫 페이지(Primary Logo)에 임시 보존.
+			// B.1: PDF 기반 4개 L3 페이지 신규 작성.
 			for (const [index, def] of BRAND_LOGO_PAGES.entries()) {
 				await payload.create({
 					collection: 'guideline-pages',
@@ -413,13 +413,12 @@ for (const oldSection of oldSections) {
 								: def.topics.map((t) =>
 										topic(t.title, t.body, b1ImageIds.get(t.image) as number),
 									),
-						rules: index === 0 ? (strip(oldPage.rules) ?? []) : [],
 						_status: 'published',
 					} as never,
 				})
 			}
 		} else if (PAGE_MAP[oldPage.slug]) {
-			// 비어 있던 섹션: PDF 기준 L3 페이지 뼈대만 생성(블록 없음). 옛 rule은 첫 페이지에 임시 보존.
+			// 비어 있던 섹션: PDF 기준 L3 페이지 뼈대만 생성(블록 없음).
 			for (const [index, def] of PAGE_MAP[oldPage.slug].entries()) {
 				await payload.create({
 					collection: 'guideline-pages',
@@ -431,13 +430,12 @@ for (const oldSection of oldSections) {
 						section: section.id,
 						displayOrder: index,
 						blocks: [],
-						rules: index === 0 ? (strip(oldPage.rules) ?? []) : [],
 						_status: 'published',
 					} as never,
 				})
 			}
 		} else {
-			// 얕은 섹션: 기존 콘텐츠(blocks·description·rules)를 그대로 옮긴 정규화 페이지 1개.
+			// 얕은 섹션: 기존 콘텐츠(blocks·description)를 그대로 옮긴 정규화 페이지 1개.
 			await payload.create({
 				collection: 'guideline-pages',
 				locale: LOCALE,
@@ -449,7 +447,6 @@ for (const oldSection of oldSections) {
 					displayOrder: 0,
 					description: oldPage.description ?? null,
 					blocks: strip(oldPage.blocks) ?? [],
-					rules: strip(oldPage.rules) ?? [],
 					_status: 'published',
 				} as never,
 			})

@@ -111,10 +111,6 @@ export interface Config {
     'rule-specs': {
       rules: 'rules';
     };
-    rules: {
-      referencePages: 'guideline-pages';
-      referenceSections: 'guideline-sections';
-    };
     'template-categories': {
       templates: 'templates';
     };
@@ -279,15 +275,6 @@ export interface GuidelineSection {
     totalDocs?: number;
   };
   blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
-  /**
-   * 블록의 룰 관계에서 자동 생성하는 역참조용 인덱스입니다.
-   */
-  rules?:
-    | {
-        rule: number | Rule;
-        id?: string | null;
-      }[]
-    | null;
   linkedRules?: {
     docs?: (number | Rule)[];
     hasNextPage?: boolean;
@@ -367,15 +354,6 @@ export interface GuidelinePage {
     };
     [k: string]: unknown;
   } | null;
-  /**
-   * 블록의 룰 관계에서 자동 생성하는 역참조용 인덱스입니다.
-   */
-  rules?:
-    | {
-        rule: number | Rule;
-        id?: string | null;
-      }[]
-    | null;
   linkedRules?: {
     docs?: (number | Rule)[];
     hasNextPage?: boolean;
@@ -401,9 +379,9 @@ export interface GuidelinePage {
 export interface Rule {
   id: number;
   /**
-   * 이 브랜드 규칙을 검사할 Rule Tool입니다. 데이터 전환 후 필수가 됩니다.
+   * 이 브랜드 규칙을 검사할 Rule Tool입니다.
    */
-  spec?: (number | null) | RuleSpec;
+  spec: number | RuleSpec;
   /**
    * 이 규칙을 설명하거나 적용하는 Section, Page, Block입니다.
    */
@@ -431,30 +409,10 @@ export interface Rule {
    * 룰의 표시 이름. 예: 로고 최소 크기
    */
   title: string;
-  category:
-    | 'logo'
-    | 'color'
-    | 'typography'
-    | 'grid'
-    | 'spacing'
-    | 'layout'
-    | 'imagery'
-    | 'illustration'
-    | 'iconography'
-    | 'motion'
-    | 'voice'
-    | 'messaging'
-    | 'accessibility'
-    | 'application'
-    | 'misc';
   /**
    * 기준 강도. required=반드시 지켜야 하는 기준, recommended=권장 기준.
    */
   tier?: ('required' | 'recommended') | null;
-  /**
-   * 검수 실행 방식. deterministic=코드 checker, heuristic=AI/시각 추론, manual=사람 확인.
-   */
-  executor?: ('deterministic' | 'heuristic' | 'manual') | null;
   /**
    * 검수 기준값과 가이드라인 근거 문장입니다.
    */
@@ -479,22 +437,6 @@ export interface Rule {
      * 미통과 시 표시할 문구입니다.
      */
     fail?: string | null;
-  };
-  /**
-   * 이 룰을 블록에서 사용하는 가이드라인 페이지입니다.
-   */
-  referencePages?: {
-    docs?: (number | GuidelinePage)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  /**
-   * 이 룰을 블록에서 사용하는 가이드라인 섹션입니다.
-   */
-  referenceSections?: {
-    docs?: (number | GuidelineSection)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
   };
   /**
    * 비전 검수나 운영 판단에 참고할 기준 이미지입니다.
@@ -1511,12 +1453,6 @@ export interface GuidelineSectionsSelect<T extends boolean = true> {
         colorPalette?: T | ColorPaletteBlockSelect<T>;
         doDont?: T | DoDontBlockSelect<T>;
       };
-  rules?:
-    | T
-    | {
-        rule?: T;
-        id?: T;
-      };
   linkedRules?: T;
   displayOrder?: T;
   updatedAt?: T;
@@ -1599,12 +1535,6 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
   generateSlug?: T;
   slug?: T;
   description?: T;
-  rules?:
-    | T
-    | {
-        rule?: T;
-        id?: T;
-      };
   linkedRules?: T;
   section?: T;
   displayOrder?: T;
@@ -1658,9 +1588,7 @@ export interface RulesSelect<T extends boolean = true> {
   documents?: T;
   key?: T;
   title?: T;
-  category?: T;
   tier?: T;
-  executor?: T;
   evidence?: T;
   messages?:
     | T
@@ -1670,8 +1598,6 @@ export interface RulesSelect<T extends boolean = true> {
         needsReview?: T;
         fail?: T;
       };
-  referencePages?: T;
-  referenceSections?: T;
   referenceAssets?: T;
   status?: T;
   updatedAt?: T;

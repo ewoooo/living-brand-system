@@ -114,9 +114,7 @@ describe('agent tools', () => {
 	it('gets rule catalog through the tool service', async () => {
 		const getRules = vi.spyOn(agentGuidelineRepository, 'findAgentRules').mockResolvedValue([
 			{
-				category: 'color',
 				evidence: null,
-				executor: 'deterministic',
 				key: 'color.palette',
 				tier: 'required',
 				title: 'Color palette',

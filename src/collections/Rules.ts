@@ -4,7 +4,7 @@ import { managerManagedAccess } from '@/lib/auth'
 /**
  * Rule catalog. 하나의 rule은 하나의 검수 컨텍스트와 기준을 대표한다.
  * 페이지는 rule을 배치/노출만 하고, 검수 런타임은 이 컬렉션을 기준 SSOT로 읽는다.
- * tier(중요도)와 executor(실행 방식)는 독립 축이다 — required=deterministic 같은 1:1 대응을 강제하지 않는다.
+ * tier는 기준 강도이고 실행 방식은 연결된 RuleSpec이 소유한다.
  */
 export const Rules: CollectionConfig = {
 	slug: 'rules',
@@ -16,18 +16,18 @@ export const Rules: CollectionConfig = {
 	admin: {
 		useAsTitle: 'key',
 		group: 'Guidelines',
-		defaultColumns: ['key', 'title', 'category', 'tier', 'executor', 'status'],
+		defaultColumns: ['key', 'title', 'spec', 'tier', 'status'],
 	},
 	fields: [
 		{
 			name: 'spec',
 			type: 'relationship',
 			relationTo: 'rule-specs',
+			required: true,
 			index: true,
 			admin: {
 				position: 'sidebar',
-				description:
-					'이 브랜드 규칙을 검사할 Rule Tool입니다. 데이터 전환 후 필수가 됩니다.',
+				description: '이 브랜드 규칙을 검사할 Rule Tool입니다.',
 			},
 		},
 		{
@@ -58,42 +58,11 @@ export const Rules: CollectionConfig = {
 			admin: { description: '룰의 표시 이름. 예: 로고 최소 크기' },
 		},
 		{
-			name: 'category',
-			type: 'select',
-			required: true,
-			options: [
-				'logo',
-				'color',
-				'typography',
-				'grid',
-				'spacing',
-				'layout',
-				'imagery',
-				'illustration',
-				'iconography',
-				'motion',
-				'voice',
-				'messaging',
-				'accessibility',
-				'application',
-				'misc',
-			],
-		},
-		{
 			name: 'tier',
 			type: 'select',
 			options: ['required', 'recommended'],
 			admin: {
 				description: '기준 강도. required=반드시 지켜야 하는 기준, recommended=권장 기준.',
-			},
-		},
-		{
-			name: 'executor',
-			type: 'select',
-			options: ['deterministic', 'heuristic', 'manual'],
-			admin: {
-				description:
-					'검수 실행 방식. deterministic=코드 checker, heuristic=AI/시각 추론, manual=사람 확인.',
 			},
 		},
 		{
@@ -130,20 +99,6 @@ export const Rules: CollectionConfig = {
 					admin: { description: '미통과 시 표시할 문구입니다.' },
 				},
 			],
-		},
-		{
-			name: 'referencePages',
-			type: 'join',
-			collection: 'guideline-pages',
-			on: 'rules.rule',
-			admin: { description: '이 룰을 블록에서 사용하는 가이드라인 페이지입니다.' },
-		},
-		{
-			name: 'referenceSections',
-			type: 'join',
-			collection: 'guideline-sections',
-			on: 'rules.rule',
-			admin: { description: '이 룰을 블록에서 사용하는 가이드라인 섹션입니다.' },
 		},
 		{
 			name: 'referenceAssets',

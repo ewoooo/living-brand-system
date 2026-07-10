@@ -62,11 +62,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
   await db.execute(sql`
-   ALTER TABLE "rule_specs" DISABLE ROW LEVEL SECURITY;
-  ALTER TABLE "_rule_specs_v" DISABLE ROW LEVEL SECURITY;
-  DROP TABLE "rule_specs" CASCADE;
-  DROP TABLE "_rule_specs_v" CASCADE;
-  ALTER TABLE "rules" DROP CONSTRAINT "rules_spec_id_rule_specs_id_fk";
+   ALTER TABLE "rules" DROP CONSTRAINT "rules_spec_id_rule_specs_id_fk";
 
   ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_rule_specs_fk";
 
@@ -74,6 +70,10 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP INDEX "payload_locked_documents_rels_rule_specs_id_idx";
   ALTER TABLE "rules" DROP COLUMN "spec_id";
   ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "rule_specs_id";
+  ALTER TABLE "rule_specs" DISABLE ROW LEVEL SECURITY;
+  ALTER TABLE "_rule_specs_v" DISABLE ROW LEVEL SECURITY;
+  DROP TABLE "_rule_specs_v" CASCADE;
+  DROP TABLE "rule_specs" CASCADE;
   DROP TYPE "public"."enum_rule_specs_executor";
   DROP TYPE "public"."enum_rule_specs_status";
   DROP TYPE "public"."enum__rule_specs_v_version_executor";

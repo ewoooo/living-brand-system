@@ -138,7 +138,7 @@ function formatGuidelinePageResult(
 					? `/guideline/${sectionSlug}#${document.page.slug}`
 					: null,
 		},
-		rules: getLiveRules(document.page.rules),
+		rules: getLiveRules(document.page.linkedRules),
 		content: limitContent(formatGuidelinePage(document.page)),
 	}
 }
@@ -171,7 +171,7 @@ function formatGuidelinePage(
 	page: Extract<AgentGuidelineDocument, { collection: 'guideline-pages' }>['page'],
 ): string {
 	const sectionTitle = getTitle(page.section)
-	const rules = getLiveRules(page.rules).map(formatRule)
+	const rules = getLiveRules(page.linkedRules).map(formatRule)
 
 	return compact([
 		sectionTitle ? `Section: ${sectionTitle}` : null,
@@ -191,16 +191,13 @@ function formatRule(value: GuidelineDocumentRule): string {
 	return `- ${value.key}: ${value.title}`
 }
 
-function getLiveRules(values: GuidelinePage['rules']): GuidelineDocumentRule[] {
-	return (
-		values
-			?.map((placement) => placement.rule)
-			.filter((rule): rule is Rule => typeof rule === 'object' && rule.status === 'live')
-			.map((rule) => ({
-				key: rule.key,
-				title: rule.title,
-			})) ?? []
-	)
+function getLiveRules(values: GuidelinePage['linkedRules']): GuidelineDocumentRule[] {
+	return (values?.docs ?? [])
+		.filter((rule): rule is Rule => typeof rule === 'object' && rule.status === 'live')
+		.map((rule) => ({
+			key: rule.key,
+			title: rule.title,
+		}))
 }
 
 function getTitle(value: number | GuidelineSection): string {

@@ -1,9 +1,6 @@
 import { type CollectionConfig, slugField } from 'payload'
 import { guidelineBlocks } from '@/blocks/guideline'
-import {
-	deriveRuleRefsFromBlocks,
-	deriveRulesFromBlocks,
-} from '@/features/guideline/blocks/registry'
+import { deriveRulesFromBlocks } from '@/features/guideline/blocks/registry'
 import { syncGuidelineBlockDocuments } from '@/features/guideline/services/sync-guideline-block-documents.service'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
@@ -38,12 +35,6 @@ export const GuidelineSections: CollectionConfig = {
 	versions: draftVersions,
 	defaultSort: 'displayOrder',
 	hooks: {
-		beforeChange: [
-			({ data }) => {
-				if (data.blocks !== undefined) data.rules = deriveRuleRefsFromBlocks(data.blocks)
-				return data
-			},
-		],
 		afterChange: [
 			async ({ doc, req }) => {
 				if (doc._status && doc._status !== 'published') return doc
@@ -116,22 +107,6 @@ export const GuidelineSections: CollectionConfig = {
 			name: 'blocks',
 			type: 'blocks',
 			blocks: sectionBlocks,
-		},
-		{
-			name: 'rules',
-			type: 'array',
-			admin: {
-				hidden: true,
-				description: '블록의 룰 관계에서 자동 생성하는 역참조용 인덱스입니다.',
-			},
-			fields: [
-				{
-					name: 'rule',
-					type: 'relationship',
-					relationTo: 'rules',
-					required: true,
-				},
-			],
 		},
 		{
 			name: 'linkedRules',

@@ -1,9 +1,6 @@
 import { type CollectionConfig, slugField } from 'payload'
 import { guidelineBlocks } from '@/blocks/guideline'
-import {
-	deriveRuleRefsFromBlocks,
-	deriveRulesFromBlocks,
-} from '@/features/guideline/blocks/registry'
+import { deriveRulesFromBlocks } from '@/features/guideline/blocks/registry'
 import { syncGuidelineBlockDocuments } from '@/features/guideline/services/sync-guideline-block-documents.service'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
@@ -28,12 +25,6 @@ export const GuidelinePages: CollectionConfig = {
 		// 가이드라인(블록)이 SSOT — 발행 시 블록 내용에서 룰의 evidence·referenceAssets를 파생해 반영한다.
 		// 파생 규칙은 rule-derivation이 소유(순수)하고, rules 갱신 I/O만 이 훅이 req 트랜잭션으로 처리한다.
 		// rules 컬렉션엔 되돌아오는 훅이 없어 루프가 없다.
-		beforeChange: [
-			({ data }) => {
-				if (data.blocks !== undefined) data.rules = deriveRuleRefsFromBlocks(data.blocks)
-				return data
-			},
-		],
 		afterChange: [
 			async ({ doc, req }) => {
 				if (doc._status && doc._status !== 'published') return doc
@@ -75,25 +66,6 @@ export const GuidelinePages: CollectionConfig = {
 			admin: {
 				description: '페이지 제목 아래에 표시할 선택 설명입니다.',
 			},
-		},
-		{
-			name: 'rules',
-			type: 'array',
-			admin: {
-				hidden: true,
-				description: '블록의 룰 관계에서 자동 생성하는 역참조용 인덱스입니다.',
-			},
-			fields: [
-				{
-					name: 'rule',
-					type: 'relationship',
-					relationTo: 'rules',
-					required: true,
-					filterOptions: {
-						status: { equals: 'live' },
-					},
-				},
-			],
 		},
 		{
 			name: 'linkedRules',

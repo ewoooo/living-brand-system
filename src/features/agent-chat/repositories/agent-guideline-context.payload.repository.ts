@@ -4,7 +4,7 @@ import type { GuidelinePage, GuidelineSection, Rule } from '@/payload-types'
 
 type AgentGuidelinePage = Pick<
 	GuidelinePage,
-	'id' | 'title' | 'slug' | 'description' | 'blocks' | 'rules' | 'section'
+	'id' | 'title' | 'slug' | 'description' | 'blocks' | 'linkedRules' | 'section'
 >
 
 type AgentGuidelineSection = Pick<GuidelineSection, 'id' | 'title' | 'slug' | 'description'>
@@ -15,10 +15,7 @@ type AgentGuidelinePageListItem = Pick<GuidelinePage, 'id' | 'title' | 'section'
 
 type AgentGuidelinePageSummary = Pick<GuidelinePage, 'id' | 'title' | 'slug' | 'description'>
 
-type AgentRuleCatalogItem = Pick<
-	Rule,
-	'category' | 'evidence' | 'executor' | 'key' | 'tier' | 'title'
->
+type AgentRuleCatalogItem = Pick<Rule, 'evidence' | 'key' | 'tier' | 'title'>
 
 export type AgentGuidelineSearchResult = {
 	title: string
@@ -134,9 +131,7 @@ export async function findAgentRules(user: unknown): Promise<AgentRuleCatalogIte
 			},
 		},
 		select: {
-			category: true,
 			evidence: true,
-			executor: true,
 			key: true,
 			tier: true,
 			title: true,
@@ -181,7 +176,7 @@ async function findGuidelinePage(user: unknown, id: string): Promise<AgentGuidel
 			slug: true,
 			description: true,
 			blocks: true,
-			rules: true,
+			linkedRules: true,
 			section: true,
 		},
 	})
