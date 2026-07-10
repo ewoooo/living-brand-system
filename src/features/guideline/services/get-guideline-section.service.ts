@@ -7,6 +7,7 @@ import {
 
 export interface GetGuidelineSectionOutput {
 	title: string
+	description: string | null
 	pages: {
 		id: number
 		title: string
@@ -44,6 +45,7 @@ export async function getGuidelineSection(
 
 		return {
 			title: section.title,
+			description: section.description || null,
 			pages: pages.map((page) => ({
 				id: page.id,
 				title: page.title,
