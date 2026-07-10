@@ -158,6 +158,7 @@ export default function TemplatePreviewField() {
 		locked?: boolean
 		slotLabel?: string
 		text?: string
+		placeholder?: string
 		textFit?: 'fixed' | 'auto-width' | 'truncate'
 		verticalAlign?: 'top' | 'middle' | 'bottom'
 		color?: string
@@ -381,12 +382,26 @@ export default function TemplatePreviewField() {
 								/>
 								<TextInput
 									path="templatePreviewText"
-									label="텍스트 내용"
+									label={
+										selected.locked
+											? '텍스트 내용 (고정값)'
+											: '텍스트 내용 (기본값)'
+									}
 									value={selected.text}
 									onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
 										updateSelected({ text: event.target.value })
 									}
 								/>
+								{!selected.locked && (
+									<TextInput
+										path="templatePreviewPlaceholder"
+										label="Placeholder (worker 안내 문구)"
+										value={selected.placeholder ?? ''}
+										onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+											updateSelected({ placeholder: event.target.value })
+										}
+									/>
+								)}
 								<SelectInput
 									name="templatePreviewTextFit"
 									path="templatePreviewTextFit"

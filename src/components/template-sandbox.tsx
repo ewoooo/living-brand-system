@@ -78,9 +78,9 @@ export function TemplateSandbox({
 	const ref = useRef<HTMLIFrameElement>(null)
 	const measureRef = useRef<HTMLDivElement>(null)
 	const [stageHtml, setStageHtml] = useState<string | null>(null)
-	const [texts, setTexts] = useState<Record<string, string>>(() =>
-		Object.fromEntries(textSlots.map((s) => [s.id, s.text])),
-	)
+	// 빈 값으로 시작해 placeholder(안내 문구)가 보이게 한다. iframe은 baked-in 기본 텍스트를 그대로 보여주다가
+	// worker가 입력하면 __setText로 덮어쓴다.
+	const [texts, setTexts] = useState<Record<string, string>>({})
 
 	// 디자인 HTML은 화면 밖 TemplateRenderer(emitDomIds)에서 한 번 뽑는다. 뽑으면 measure DOM은 제거된다.
 	useLayoutEffect(() => {
@@ -138,6 +138,7 @@ export function TemplateSandbox({
 						<Textarea
 							id={`slot-${s.id}`}
 							rows={1}
+							placeholder={s.placeholder ?? s.slotLabel}
 							value={texts[s.id] ?? ''}
 							onChange={(e) => setText(s.id, e.target.value)}
 						/>
