@@ -20,6 +20,17 @@ export const Rules: CollectionConfig = {
 	},
 	fields: [
 		{
+			name: 'spec',
+			type: 'relationship',
+			relationTo: 'rule-specs',
+			index: true,
+			admin: {
+				position: 'sidebar',
+				description:
+					'이 브랜드 규칙을 검사할 Rule Tool입니다. 데이터 전환 후 필수가 됩니다.',
+			},
+		},
+		{
 			name: 'key',
 			type: 'text',
 			required: true,

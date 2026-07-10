@@ -18,6 +18,7 @@ import * as migration_20260709_095923_add_rule_tier_executor from './20260709_09
 import * as migration_20260710_014408_add_section_header_image from './20260710_014408_add_section_header_image';
 import * as migration_20260710_020645_add_section_blocks from './20260710_020645_add_section_blocks';
 import * as migration_20260710_021947_add_section_rule_references from './20260710_021947_add_section_rule_references';
+import * as migration_20260710_042810_add_rule_specs from './20260710_042810_add_rule_specs';
 
 export const migrations = [
   {
@@ -118,6 +119,11 @@ export const migrations = [
   {
     up: migration_20260710_021947_add_section_rule_references.up,
     down: migration_20260710_021947_add_section_rule_references.down,
-    name: '20260710_021947_add_section_rule_references'
+    name: '20260710_021947_add_section_rule_references',
+  },
+  {
+    up: migration_20260710_042810_add_rule_specs.up,
+    down: migration_20260710_042810_add_rule_specs.down,
+    name: '20260710_042810_add_rule_specs'
   },
 ];

@@ -71,6 +71,7 @@ export interface Config {
     'guideline-chapters': GuidelineChapter;
     'guideline-sections': GuidelineSection;
     'guideline-pages': GuidelinePage;
+    'rule-specs': RuleSpec;
     rules: Rule;
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
@@ -99,6 +100,9 @@ export interface Config {
     'guideline-sections': {
       pages: 'guideline-pages';
     };
+    'rule-specs': {
+      rules: 'rules';
+    };
     rules: {
       referencePages: 'guideline-pages';
       referenceSections: 'guideline-sections';
@@ -111,6 +115,7 @@ export interface Config {
     'guideline-chapters': GuidelineChaptersSelect<false> | GuidelineChaptersSelect<true>;
     'guideline-sections': GuidelineSectionsSelect<false> | GuidelineSectionsSelect<true>;
     'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
+    'rule-specs': RuleSpecsSelect<false> | RuleSpecsSelect<true>;
     rules: RulesSelect<false> | RulesSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
@@ -377,6 +382,10 @@ export interface GuidelinePage {
 export interface Rule {
   id: number;
   /**
+   * 이 브랜드 규칙을 검사할 Rule Tool입니다. 데이터 전환 후 필수가 됩니다.
+   */
+  spec?: (number | null) | RuleSpec;
+  /**
    * domain.subject.property 점 표기. 하이픈 없이 점으로만 구분한다. 예: logo.size.minimum
    */
   key: string;
@@ -456,6 +465,40 @@ export interface Rule {
   status?: ('draft' | 'live' | 'archived') | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * Brand Rule을 검사할 실행 도구와 호출 계약입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rule-specs".
+ */
+export interface RuleSpec {
+  id: number;
+  /**
+   * 검사 도구의 안정적인 식별자입니다.
+   */
+  key: string;
+  executor: 'deterministic' | 'heuristic' | 'manual';
+  /**
+   * 결정론적 checker registry에서 사용할 키입니다.
+   */
+  checkerKey?: string | null;
+  /**
+   * 휴리스틱 검수에 사용할 모델 식별자입니다.
+   */
+  model?: string | null;
+  /**
+   * 휴리스틱 검수 프롬프트의 안정적인 키입니다.
+   */
+  promptKey?: string | null;
+  rules?: {
+    docs?: (number | Rule)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1247,6 +1290,10 @@ export interface PayloadLockedDocument {
         value: number | GuidelinePage;
       } | null)
     | ({
+        relationTo: 'rule-specs';
+        value: number | RuleSpec;
+      } | null)
+    | ({
         relationTo: 'rules';
         value: number | Rule;
       } | null)
@@ -1502,9 +1549,25 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rule-specs_select".
+ */
+export interface RuleSpecsSelect<T extends boolean = true> {
+  key?: T;
+  executor?: T;
+  checkerKey?: T;
+  model?: T;
+  promptKey?: T;
+  rules?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "rules_select".
  */
 export interface RulesSelect<T extends boolean = true> {
+  spec?: T;
   key?: T;
   title?: T;
   category?: T;
@@ -2057,6 +2120,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'guideline-pages';
           value: number | GuidelinePage;
+        } | null)
+      | ({
+          relationTo: 'rule-specs';
+          value: number | RuleSpec;
         } | null)
       | ({
           relationTo: 'brand-logos';

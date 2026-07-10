@@ -22,6 +22,7 @@ import { GuidelineChapters } from './collections/GuidelineChapters'
 import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
+import { RuleSpecs } from './collections/RuleSpecs'
 import { Rules } from './collections/Rules'
 import { TemplateAssets } from './collections/TemplateAssets'
 import { TemplateCategories } from './collections/TemplateCategories'
@@ -102,6 +103,7 @@ export default buildConfig({
 		GuidelineChapters,
 		GuidelineSections,
 		GuidelinePages,
+		RuleSpecs,
 		Rules,
 		BrandLogos,
 		BrandColors,
