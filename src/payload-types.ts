@@ -7,6 +7,45 @@
  */
 
 /**
+ * 이 문서 단위에 적용할 검수 선언입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GuidelineChecks".
+ */
+export type GuidelineChecks =
+  | {
+      /**
+       * 시나리오와 검수 결과에서 사용하는 안정적인 식별자입니다.
+       */
+      key: string;
+      title: string;
+      tier: 'required' | 'recommended';
+      /**
+       * 검수 실행 방식과 구현체를 선택합니다.
+       */
+      checker: number | RuleChecker;
+      /**
+       * 이 Check에서 Checker에 전달할 source별 설정입니다.
+       */
+      options?:
+        | {
+            [k: string]: unknown;
+          }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+      messages?: {
+        pass?: string | null;
+        ok?: string | null;
+        needsReview?: string | null;
+        fail?: string | null;
+      };
+      id?: string | null;
+    }[]
+  | null;
+/**
  * Supported timezones in IANA format.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -71,9 +110,7 @@ export interface Config {
     'guideline-chapters': GuidelineChapter;
     'guideline-sections': GuidelineSection;
     'guideline-pages': GuidelinePage;
-    'guideline-blocks': GuidelineBlock;
     'rule-checkers': RuleChecker;
-    rules: Rule;
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
     'brand-typefaces': BrandTypeface;
@@ -100,16 +137,6 @@ export interface Config {
     };
     'guideline-sections': {
       pages: 'guideline-pages';
-      linkedRules: 'rules';
-    };
-    'guideline-pages': {
-      linkedRules: 'rules';
-    };
-    'guideline-blocks': {
-      linkedRules: 'rules';
-    };
-    'rule-checkers': {
-      rules: 'rules';
     };
     'template-categories': {
       templates: 'templates';
@@ -119,9 +146,7 @@ export interface Config {
     'guideline-chapters': GuidelineChaptersSelect<false> | GuidelineChaptersSelect<true>;
     'guideline-sections': GuidelineSectionsSelect<false> | GuidelineSectionsSelect<true>;
     'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
-    'guideline-blocks': GuidelineBlocksSelect<false> | GuidelineBlocksSelect<true>;
     'rule-checkers': RuleCheckersSelect<false> | RuleCheckersSelect<true>;
-    rules: RulesSelect<false> | RulesSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
@@ -269,17 +294,13 @@ export interface GuidelineSection {
    * 섹션 랜딩 헤더에 표시할 이미지입니다.
    */
   headerImage?: (number | null) | ApplicationImage;
+  checks?: GuidelineChecks;
   pages?: {
     docs?: (number | GuidelinePage)[];
     hasNextPage?: boolean;
     totalDocs?: number;
   };
   blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
-  linkedRules?: {
-    docs?: (number | Rule)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
   /**
    * 숫자가 낮을수록 가이드라인 내비게이션에서 먼저 표시됩니다.
    */
@@ -320,6 +341,35 @@ export interface ApplicationImage {
   };
 }
 /**
+ * Guideline Check를 실행할 도구와 호출 계약입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rule-checkers".
+ */
+export interface RuleChecker {
+  id: number;
+  /**
+   * 검사 도구의 안정적인 식별자입니다.
+   */
+  key: string;
+  executor: 'deterministic' | 'heuristic' | 'manual';
+  /**
+   * 결정론적 checker registry에서 사용할 키입니다.
+   */
+  checkerKey?: string | null;
+  /**
+   * 휴리스틱 검수에 사용할 모델 식별자입니다.
+   */
+  model?: string | null;
+  /**
+   * 휴리스틱 검수 프롬프트의 안정적인 키입니다.
+   */
+  promptKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * 블록으로 구성하는 가이드라인 페이지입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -354,11 +404,7 @@ export interface GuidelinePage {
     };
     [k: string]: unknown;
   } | null;
-  linkedRules?: {
-    docs?: (number | Rule)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
+  checks?: GuidelineChecks;
   /**
    * 사이드바 내비게이션과 URL에 사용할 상위 섹션입니다.
    */
@@ -371,143 +417,6 @@ export interface GuidelinePage {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "rules".
- */
-export interface Rule {
-  id: number;
-  /**
-   * 이 브랜드 규칙을 검사할 Rule Checker입니다.
-   */
-  checker: number | RuleChecker;
-  /**
-   * 이 규칙을 설명하거나 적용하는 Section, Page, Block입니다.
-   */
-  documents?:
-    | (
-        | {
-            relationTo: 'guideline-sections';
-            value: number | GuidelineSection;
-          }
-        | {
-            relationTo: 'guideline-pages';
-            value: number | GuidelinePage;
-          }
-        | {
-            relationTo: 'guideline-blocks';
-            value: number | GuidelineBlock;
-          }
-      )[]
-    | null;
-  /**
-   * domain.subject.property 점 표기. 하이픈 없이 점으로만 구분한다. 예: logo.size.minimum
-   */
-  key: string;
-  /**
-   * 룰의 표시 이름. 예: 로고 최소 크기
-   */
-  title: string;
-  /**
-   * 기준 강도. required=반드시 지켜야 하는 기준, recommended=권장 기준.
-   */
-  tier?: ('required' | 'recommended') | null;
-  /**
-   * 검수 기준값과 가이드라인 근거 문장입니다.
-   */
-  evidence?: string | null;
-  /**
-   * 검수 결과 상태별 사용자 노출 문구입니다. {facts.closestFormat}처럼 checker facts를 치환할 수 있습니다.
-   */
-  messages?: {
-    /**
-     * 통과 시 표시할 문구입니다.
-     */
-    pass?: string | null;
-    /**
-     * 부분 확인/허용 시 표시할 문구입니다.
-     */
-    ok?: string | null;
-    /**
-     * 수동 확인 필요 시 표시할 문구입니다.
-     */
-    needsReview?: string | null;
-    /**
-     * 미통과 시 표시할 문구입니다.
-     */
-    fail?: string | null;
-  };
-  /**
-   * 비전 검수나 운영 판단에 참고할 기준 이미지입니다.
-   */
-  referenceAssets?: (number | ApplicationImage)[] | null;
-  status?: ('draft' | 'live' | 'archived') | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Brand Rule을 검사할 실행 도구와 호출 계약입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "rule-checkers".
- */
-export interface RuleChecker {
-  id: number;
-  /**
-   * 검사 도구의 안정적인 식별자입니다.
-   */
-  key: string;
-  executor: 'deterministic' | 'heuristic' | 'manual';
-  /**
-   * 결정론적 checker registry에서 사용할 키입니다.
-   */
-  checkerKey?: string | null;
-  /**
-   * 휴리스틱 검수에 사용할 모델 식별자입니다.
-   */
-  model?: string | null;
-  /**
-   * 휴리스틱 검수 프롬프트의 안정적인 키입니다.
-   */
-  promptKey?: string | null;
-  rules?: {
-    docs?: (number | Rule)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * Section/Page에 포함된 block을 관계 대상으로 식별하는 인덱스입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guideline-blocks".
- */
-export interface GuidelineBlock {
-  id: number;
-  key: string;
-  parent:
-    | {
-        relationTo: 'guideline-sections';
-        value: number | GuidelineSection;
-      }
-    | {
-        relationTo: 'guideline-pages';
-        value: number | GuidelinePage;
-      };
-  sourceBlockId: string;
-  blockType: 'columnUnit' | 'mediaShowcase' | 'colorPalette' | 'doDont';
-  displayOrder: number;
-  linkedRules?: {
-    docs?: (number | Rule)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -542,10 +451,7 @@ export interface ColumnUnitBlock {
         id?: string | null;
       }[]
     | null;
-  /**
-   * 이 블록이 문서화하는 룰입니다. 룰의 기준·이미지는 이 블록 내용에서 자동 파생됩니다.
-   */
-  rule?: (number | null) | Rule;
+  checks?: GuidelineChecks;
   id?: string | null;
   blockName?: string | null;
   blockType: 'columnUnit';
@@ -589,10 +495,7 @@ export interface MediaShowcaseBlock {
    */
   imageBackgroundColor?: (number | null) | BrandColor;
   imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
-  /**
-   * 이 블록이 문서화하는 룰입니다. 룰의 기준·이미지는 이 블록 내용에서 자동 파생됩니다.
-   */
-  rule?: (number | null) | Rule;
+  checks?: GuidelineChecks;
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaShowcase';
@@ -607,10 +510,7 @@ export interface ColorPaletteBlock {
    * 선택한 순서대로 스와치 카드가 표시됩니다.
    */
   colors: (number | BrandColor)[];
-  /**
-   * 이 블록이 문서화하는 룰입니다. 룰의 기준·이미지는 이 블록 내용에서 자동 파생됩니다.
-   */
-  rule?: (number | null) | Rule;
+  checks?: GuidelineChecks;
   id?: string | null;
   blockName?: string | null;
   blockType: 'colorPalette';
@@ -622,15 +522,11 @@ export interface ColorPaletteBlock {
 export interface DoDontBlock {
   title?: string | null;
   /**
-   * 카테고리 단위 그룹. 그룹마다 룰 1개를 문서화합니다.
+   * 카테고리 단위 예시 그룹입니다.
    */
   groups?:
     | {
         category?: string | null;
-        /**
-         * 이 그룹(카테고리)이 문서화하는 룰입니다.
-         */
-        rule?: (number | null) | Rule;
         examples?:
           | {
               kind: 'do' | 'dont';
@@ -642,6 +538,7 @@ export interface DoDontBlock {
         id?: string | null;
       }[]
     | null;
+  checks?: GuidelineChecks;
   id?: string | null;
   blockName?: string | null;
   blockType: 'doDont';
@@ -747,13 +644,16 @@ export interface Template {
    */
   category: number | TemplateCategory;
   /**
-   * Agent가 이 템플릿으로 이미지를 만들 때 함께 참고할 룰입니다.
+   * Agent가 이 템플릿으로 이미지를 만들 때 함께 참고할 Check입니다.
    */
-  templateRules?:
+  templateChecks?:
     | {
-        rule: number | Rule;
         /**
-         * 이 템플릿에서 해당 룰을 Agent가 적용할 때 참고할 지침입니다.
+         * published 가이드라인 checks[]의 key를 입력합니다.
+         */
+        checkKey: string;
+        /**
+         * 이 템플릿에서 해당 Check를 적용할 때 Agent가 참고할 지침입니다.
          */
         body: string;
         id?: string | null;
@@ -1143,7 +1043,7 @@ export interface PayloadMcpApiKey {
   description?: string | null;
   'payload-mcp-tool'?: {
     /**
-     * Find live guideline pages with localized copy, rich content blocks, and linked rules.
+     * Find published guideline pages with localized copy, content blocks, and checks.
      */
     findGuidelinePages?: boolean | null;
     /**
@@ -1155,9 +1055,9 @@ export interface PayloadMcpApiKey {
      */
     findSections?: boolean | null;
     /**
-     * Find live operational brand rules used to check production work.
+     * Find checks declared by published guideline documents and blocks.
      */
-    findRules?: boolean | null;
+    findChecks?: boolean | null;
     /**
      * Find live top-level guideline document metadata.
      */
@@ -1299,16 +1199,8 @@ export interface PayloadLockedDocument {
         value: number | GuidelinePage;
       } | null)
     | ({
-        relationTo: 'guideline-blocks';
-        value: number | GuidelineBlock;
-      } | null)
-    | ({
         relationTo: 'rule-checkers';
         value: number | RuleChecker;
-      } | null)
-    | ({
-        relationTo: 'rules';
-        value: number | Rule;
       } | null)
     | ({
         relationTo: 'brand-logos';
@@ -1444,6 +1336,7 @@ export interface GuidelineSectionsSelect<T extends boolean = true> {
   chapter?: T;
   description?: T;
   headerImage?: T;
+  checks?: T | GuidelineChecksSelect<T>;
   pages?: T;
   blocks?:
     | T
@@ -1453,11 +1346,30 @@ export interface GuidelineSectionsSelect<T extends boolean = true> {
         colorPalette?: T | ColorPaletteBlockSelect<T>;
         doDont?: T | DoDontBlockSelect<T>;
       };
-  linkedRules?: T;
   displayOrder?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GuidelineChecks_select".
+ */
+export interface GuidelineChecksSelect<T extends boolean = true> {
+  key?: T;
+  title?: T;
+  tier?: T;
+  checker?: T;
+  options?: T;
+  messages?:
+    | T
+    | {
+        pass?: T;
+        ok?: T;
+        needsReview?: T;
+        fail?: T;
+      };
+  id?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1475,7 +1387,7 @@ export interface ColumnUnitBlockSelect<T extends boolean = true> {
         imageScale?: T;
         id?: T;
       };
-  rule?: T;
+  checks?: T | GuidelineChecksSelect<T>;
   id?: T;
   blockName?: T;
 }
@@ -1487,7 +1399,7 @@ export interface MediaShowcaseBlockSelect<T extends boolean = true> {
   image?: T;
   imageBackgroundColor?: T;
   imageScale?: T;
-  rule?: T;
+  checks?: T | GuidelineChecksSelect<T>;
   id?: T;
   blockName?: T;
 }
@@ -1498,7 +1410,7 @@ export interface MediaShowcaseBlockSelect<T extends boolean = true> {
 export interface ColorPaletteBlockSelect<T extends boolean = true> {
   title?: T;
   colors?: T;
-  rule?: T;
+  checks?: T | GuidelineChecksSelect<T>;
   id?: T;
   blockName?: T;
 }
@@ -1512,7 +1424,6 @@ export interface DoDontBlockSelect<T extends boolean = true> {
     | T
     | {
         category?: T;
-        rule?: T;
         examples?:
           | T
           | {
@@ -1523,6 +1434,7 @@ export interface DoDontBlockSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  checks?: T | GuidelineChecksSelect<T>;
   id?: T;
   blockName?: T;
 }
@@ -1535,7 +1447,7 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
   generateSlug?: T;
   slug?: T;
   description?: T;
-  linkedRules?: T;
+  checks?: T | GuidelineChecksSelect<T>;
   section?: T;
   displayOrder?: T;
   blocks?:
@@ -1552,20 +1464,6 @@ export interface GuidelinePagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guideline-blocks_select".
- */
-export interface GuidelineBlocksSelect<T extends boolean = true> {
-  key?: T;
-  parent?: T;
-  sourceBlockId?: T;
-  blockType?: T;
-  displayOrder?: T;
-  linkedRules?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "rule-checkers_select".
  */
 export interface RuleCheckersSelect<T extends boolean = true> {
@@ -1574,34 +1472,9 @@ export interface RuleCheckersSelect<T extends boolean = true> {
   checkerKey?: T;
   model?: T;
   promptKey?: T;
-  rules?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "rules_select".
- */
-export interface RulesSelect<T extends boolean = true> {
-  checker?: T;
-  documents?: T;
-  key?: T;
-  title?: T;
-  tier?: T;
-  evidence?: T;
-  messages?:
-    | T
-    | {
-        pass?: T;
-        ok?: T;
-        needsReview?: T;
-        fail?: T;
-      };
-  referenceAssets?: T;
-  status?: T;
-  updatedAt?: T;
-  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1720,10 +1593,10 @@ export interface TemplatesSelect<T extends boolean = true> {
   description?: T;
   jsonTemplate?: T;
   category?: T;
-  templateRules?:
+  templateChecks?:
     | T
     | {
-        rule?: T;
+        checkKey?: T;
         body?: T;
         id?: T;
       };
@@ -1939,7 +1812,7 @@ export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
         findGuidelinePages?: T;
         findChapters?: T;
         findSections?: T;
-        findRules?: T;
+        findChecks?: T;
         findGuideline?: T;
       };
   updatedAt?: T;

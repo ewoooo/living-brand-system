@@ -1,5 +1,5 @@
 /**
- * Checker 스냅샷 테스트 — registry 바인딩을 경유해 ruleKey별 pass/fail 판정을 고정한다.
+ * Checker 스냅샷 테스트 — registry 바인딩을 경유해 checkKey별 pass/fail 판정을 고정한다.
  * palette-match(deltaE) 교체 같은 색 수학 변경 시 판정이 뒤집히지 않는지 잡는 회귀 안전망.
  * 픽스처 팔레트는 brand-colors 실데이터(Essenherb)의 부분집합이다.
  */
@@ -32,7 +32,6 @@ const CHECKER_KEYS: Record<string, string> = {
 	'logo.size.minimum': 'relative-size',
 	'application.stationery.format': 'canvas-format',
 	'application.sns.format': 'canvas-format',
-	'application.sns.canvas.format': 'canvas-format',
 	'application.web': 'canvas-format',
 	'application.advertisement.format': 'canvas-format',
 	'layout.visual.template': 'canvas-format',
@@ -40,13 +39,69 @@ const CHECKER_KEYS: Record<string, string> = {
 	'layout.advertisement.template': 'canvas-format',
 }
 
+const CHECKER_OPTIONS: Record<string, unknown> = {
+	'application.stationery.format': {
+		formats: [
+			{ label: '명함 90×50mm', width: 90, height: 50 },
+			{ label: '리플렛 A4 210×297mm', width: 210, height: 297 },
+			{ label: '제품 정보 카드 A5 148×210mm', width: 148, height: 210 },
+		],
+		tolerance: 0.05,
+		ignoreOrientation: true,
+	},
+	'application.sns.format': {
+		formats: [
+			{ label: 'Feed', width: 1080, height: 1440 },
+			{ label: 'Reels', width: 1080, height: 1920 },
+		],
+	},
+	'application.web': {
+		formats: [
+			{ label: '16:9', width: 16, height: 9 },
+			{ label: '3:1', width: 3, height: 1 },
+		],
+	},
+	'application.advertisement.format': {
+		formats: [
+			{ label: '1:2', width: 1, height: 2 },
+			{ label: 'Offline Vertical', width: 1440, height: 2100 },
+			{ label: 'Offline Horizontal', width: 8600, height: 2100 },
+		],
+	},
+	'layout.visual.template': {
+		formats: [
+			{ label: 'A4', width: 210, height: 297 },
+			{ label: '3:5', width: 1080, height: 1440 },
+		],
+	},
+	'layout.sns.template': {
+		formats: [
+			{ label: 'Feed', width: 1080, height: 1440 },
+			{ label: 'Reels', width: 1080, height: 1920 },
+		],
+	},
+	'layout.advertisement.template': {
+		formats: [
+			{ label: 'Offline Vertical', width: 1440, height: 2100 },
+			{ label: 'Offline Horizontal', width: 8600, height: 2100 },
+		],
+	},
+}
+
 /** registry에서 checker를 꺼낸다 — 미등록이면 테스트가 즉시 실패한다. */
-function checkerFor(ruleKey: string) {
-	const checkerKey = CHECKER_KEYS[ruleKey]
-	const checker = checkerKey ? getChecker(checkerKey, ruleKey) : null
-	if (!checker) throw new Error(`checker not registered: ${ruleKey}`)
+function checkerFor(checkKey: string) {
+	const checkerKey = CHECKER_KEYS[checkKey]
+	const checker = checkerKey ? getChecker(checkerKey, CHECKER_OPTIONS[checkKey]) : null
+	if (!checker) throw new Error(`checker not registered: ${checkKey}`)
 	return checker
 }
+
+describe('checker options', () => {
+	it('canvas-format은 유효한 options가 없으면 실행하지 않는다', () => {
+		expect(getChecker('canvas-format')).toBeNull()
+		expect(getChecker('canvas-format', { formats: [] })).toBeNull()
+	})
+})
 
 /** hex → 픽셀 n개 (dominantColors가 점유율을 보므로 개수 비율 = share) */
 function px(hex: string, n: number): Rgb[] {
@@ -168,7 +223,7 @@ describe('application.print.spec (spot-color)', () => {
 })
 
 describe('color.mode (spot-color 픽셀 프록시 공유)', () => {
-	it('ruleKey만 다르고 판정은 application.print.spec과 동일', () => {
+	it('checkKey만 다르고 판정은 application.print.spec과 동일', () => {
 		expect(checkerFor('color.mode')).toBe(checkerFor('application.print.spec'))
 		const result = checkerFor('color.mode')({
 			pixels: [...px('#EA5343', 50), ...px('#FFFFFF', 50)],
@@ -281,12 +336,6 @@ describe('canvas-format 규격 룰들', () => {
 		expect(checkerFor('application.sns.format')({ pixels: [], palette: [] }).status).toBe(
 			'fail',
 		)
-	})
-
-	it('application.sns.canvas.format: 1080×1440만 pass (Reels 규격은 이 룰 밖)', () => {
-		const check = checkerFor('application.sns.canvas.format')
-		expect(check({ pixels: [], palette: [], grid: sizeGrid(1080, 1440) }).status).toBe('pass')
-		expect(check({ pixels: [], palette: [], grid: sizeGrid(1080, 1920) }).status).toBe('fail')
 	})
 
 	it('layout.sns.template: Feed/Reels 캔버스 pass', () => {

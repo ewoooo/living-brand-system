@@ -1,6 +1,6 @@
 import { generateText } from 'ai'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { CheckRule } from '@/features/asset-check/services/get-check-ruleset.service'
+import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
 
 vi.mock('ai', () => ({
 	generateText: vi.fn(),
@@ -13,7 +13,7 @@ vi.mock('@ai-sdk/anthropic', () => ({
 	anthropic: vi.fn((model: string) => ({ model })),
 }))
 
-const rules: CheckRule[] = [
+const checks: RuntimeCheck[] = [
 	{
 		key: 'imagery.mood',
 		title: '이미지 무드',
@@ -66,7 +66,7 @@ describe('runAiCheck', () => {
 		} as unknown as Awaited<ReturnType<typeof generateText>>)
 
 		const { runAiCheck } = await import('@/features/asset-check/services/ai-check.service')
-		const result = await runAiCheck(rules, {
+		const result = await runAiCheck(checks, {
 			image: { data: Buffer.from('png'), mediaType: 'image/png' },
 			pixels: [],
 			palette: [],

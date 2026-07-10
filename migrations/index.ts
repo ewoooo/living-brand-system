@@ -24,6 +24,14 @@ import * as migration_20260710_045145_add_rule_document_relations from './202607
 import * as migration_20260710_045208_backfill_rule_documents from './20260710_045208_backfill_rule_documents';
 import * as migration_20260710_050945_contract_rule_legacy_fields from './20260710_050945_contract_rule_legacy_fields';
 import * as migration_20260710_052026_rename_rule_specs_to_checkers from './20260710_052026_rename_rule_specs_to_checkers';
+import * as migration_20260710_070644_add_rule_source from './20260710_070644_add_rule_source';
+import * as migration_20260710_070752_backfill_rule_source from './20260710_070752_backfill_rule_source';
+import * as migration_20260710_082044_add_guideline_checks from './20260710_082044_add_guideline_checks';
+import * as migration_20260710_082120_backfill_guideline_checks from './20260710_082120_backfill_guideline_checks';
+import * as migration_20260710_085848 from './20260710_085848';
+import * as migration_20260710_085950_backfill_template_checks from './20260710_085950_backfill_template_checks';
+import * as migration_20260710_093702_connect_scenario_checks from './20260710_093702_connect_scenario_checks';
+import * as migration_20260710_100108_contract_guideline_checks from './20260710_100108_contract_guideline_checks';
 
 export const migrations = [
   {
@@ -154,6 +162,46 @@ export const migrations = [
   {
     up: migration_20260710_052026_rename_rule_specs_to_checkers.up,
     down: migration_20260710_052026_rename_rule_specs_to_checkers.down,
-    name: '20260710_052026_rename_rule_specs_to_checkers'
+    name: '20260710_052026_rename_rule_specs_to_checkers',
+  },
+  {
+    up: migration_20260710_070644_add_rule_source.up,
+    down: migration_20260710_070644_add_rule_source.down,
+    name: '20260710_070644_add_rule_source',
+  },
+  {
+    up: migration_20260710_070752_backfill_rule_source.up,
+    down: migration_20260710_070752_backfill_rule_source.down,
+    name: '20260710_070752_backfill_rule_source',
+  },
+  {
+    up: migration_20260710_082044_add_guideline_checks.up,
+    down: migration_20260710_082044_add_guideline_checks.down,
+    name: '20260710_082044_add_guideline_checks',
+  },
+  {
+    up: migration_20260710_082120_backfill_guideline_checks.up,
+    down: migration_20260710_082120_backfill_guideline_checks.down,
+    name: '20260710_082120_backfill_guideline_checks',
+  },
+  {
+    up: migration_20260710_085848.up,
+    down: migration_20260710_085848.down,
+    name: '20260710_085848',
+  },
+  {
+    up: migration_20260710_085950_backfill_template_checks.up,
+    down: migration_20260710_085950_backfill_template_checks.down,
+    name: '20260710_085950_backfill_template_checks',
+  },
+  {
+    up: migration_20260710_093702_connect_scenario_checks.up,
+    down: migration_20260710_093702_connect_scenario_checks.down,
+    name: '20260710_093702_connect_scenario_checks',
+  },
+  {
+    up: migration_20260710_100108_contract_guideline_checks.up,
+    down: migration_20260710_100108_contract_guideline_checks.down,
+    name: '20260710_100108_contract_guideline_checks',
   },
 ];

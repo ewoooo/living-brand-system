@@ -8,6 +8,7 @@ import {
 	type JsonTemplate,
 	jsonTemplateSchema,
 } from '@/types/json-template'
+import { findAgentChecks } from '../repositories/agent-guideline-context.payload.repository'
 import {
 	type AgentTemplateDocument,
 	findAgentTemplate,
@@ -33,7 +34,8 @@ export interface AgentTemplateImageAttachment {
  * Payload 템플릿 조회는 agent template repository가 담당한다.
  */
 export async function findTemplatesForRequest(user: unknown, query?: string) {
-	const templates = await listAgentTemplates(user)
+	const [templates, checks] = await Promise.all([listAgentTemplates(user), findAgentChecks(user)])
+	const checksByKey = new Map(checks.map((check) => [check.key, check]))
 	const normalizedQuery = query?.trim().toLowerCase()
 
 	const summaries = templates
@@ -44,7 +46,7 @@ export async function findTemplatesForRequest(user: unknown, query?: string) {
 						id: template.id,
 						name: template.name,
 						description: template.description || '',
-						rules: getTemplateRules(template.templateRules),
+						checks: getTemplateChecks(template.templateChecks, checksByKey),
 						slots: getOpenSlots(parsed.data),
 					}
 				: null
@@ -56,7 +58,11 @@ export async function findTemplatesForRequest(user: unknown, query?: string) {
 				[
 					template.name,
 					template.description,
-					...template.rules.flatMap((rule) => [rule.title, rule.description, rule.body]),
+					...template.checks.flatMap((check) => [
+						check.title,
+						check.description,
+						check.body,
+					]),
 					...template.slots.map((slot) => slot.label),
 				]
 					.join(' ')
@@ -94,23 +100,24 @@ export async function prepareTemplateImage(
 	}
 }
 
-function getTemplateRules(templateRules: AgentTemplateDocument['templateRules']) {
-	return (templateRules ?? [])
+function getTemplateChecks(
+	templateChecks: AgentTemplateDocument['templateChecks'],
+	checksByKey: Map<string, { evidence: string; title: string }>,
+) {
+	return (templateChecks ?? [])
 		.flatMap((placement) => {
-			const rule = placement.rule
-			if (!rule || typeof rule === 'number' || rule.status !== 'live') {
-				return []
-			}
-
+			if (!placement.checkKey) return []
+			const check = checksByKey.get(placement.checkKey)
 			return [
 				{
-					title: rule.title || '',
-					description: rule.evidence || '',
+					key: placement.checkKey,
+					title: check?.title ?? placement.checkKey,
+					description: check?.evidence ?? '',
 					body: placement.body || '',
 				},
 			]
 		})
-		.filter((rule) => rule.title || rule.description || rule.body)
+		.filter((check) => check.title || check.description || check.body)
 }
 
 type AgentSlotSummary =

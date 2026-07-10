@@ -27,7 +27,7 @@ export const RuleCheckers: CollectionConfig = {
 		group: false,
 		useAsTitle: 'key',
 		defaultColumns: ['key', 'executor', '_status', 'updatedAt'],
-		description: 'Brand Rule을 검사할 실행 도구와 호출 계약입니다.',
+		description: 'Guideline Check를 실행할 도구와 호출 계약입니다.',
 		listSearchableFields: ['key', 'checkerKey', 'model', 'promptKey'],
 	},
 	versions: draftVersions,
@@ -73,16 +73,6 @@ export const RuleCheckers: CollectionConfig = {
 			admin: {
 				condition: (_, siblingData) => siblingData?.executor === 'heuristic',
 				description: '휴리스틱 검수 프롬프트의 안정적인 키입니다.',
-			},
-		},
-		{
-			name: 'rules',
-			type: 'join',
-			collection: 'rules',
-			on: 'checker',
-			admin: {
-				allowCreate: false,
-				defaultColumns: ['key', 'title', 'tier', 'status'],
 			},
 		},
 	],

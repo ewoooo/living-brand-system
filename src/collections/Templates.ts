@@ -105,20 +105,19 @@ export const Templates: CollectionConfig = {
 			},
 		},
 		{
-			name: 'templateRules',
+			name: 'templateChecks',
 			type: 'array',
 			admin: {
 				position: 'sidebar',
-				description: 'Agent가 이 템플릿으로 이미지를 만들 때 함께 참고할 룰입니다.',
+				description: 'Agent가 이 템플릿으로 이미지를 만들 때 함께 참고할 Check입니다.',
 			},
 			fields: [
 				{
-					name: 'rule',
-					type: 'relationship',
-					relationTo: 'rules',
+					name: 'checkKey',
+					type: 'text',
 					required: true,
-					filterOptions: {
-						status: { equals: 'live' },
+					admin: {
+						description: 'published 가이드라인 checks[]의 key를 입력합니다.',
 					},
 				},
 				{
@@ -127,7 +126,8 @@ export const Templates: CollectionConfig = {
 					required: true,
 					localized: true,
 					admin: {
-						description: '이 템플릿에서 해당 룰을 Agent가 적용할 때 참고할 지침입니다.',
+						description:
+							'이 템플릿에서 해당 Check를 적용할 때 Agent가 참고할 지침입니다.',
 					},
 				},
 			],

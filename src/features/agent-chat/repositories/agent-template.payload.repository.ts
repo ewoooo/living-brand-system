@@ -3,22 +3,16 @@ import { getPayload } from 'payload'
 import { DEFAULT_LOCALE, FALLBACK_LOCALE } from '@/lib/locale'
 import type { Template } from '@/payload-types'
 
-type AgentTemplateRuleDocument = {
-	status?: null | string
-	title?: null | string
-	evidence?: null | string
-}
-
-type AgentTemplateRulePlacement = {
+type AgentTemplateCheckPlacement = {
 	body?: null | string
-	rule?: null | number | AgentTemplateRuleDocument
+	checkKey?: null | string
 }
 
 export type AgentTemplateDocument = Pick<
 	Template,
 	'description' | 'id' | 'jsonTemplate' | 'name'
 > & {
-	templateRules?: AgentTemplateRulePlacement[] | null
+	templateChecks?: AgentTemplateCheckPlacement[] | null
 }
 
 /** 두 조회가 공유하는 published 템플릿 질의 기본값 — user 컨텍스트로 access를 강제한다. */
@@ -35,7 +29,7 @@ function publishedTemplateQuery(user: unknown) {
 			name: true,
 			description: true,
 			jsonTemplate: true,
-			templateRules: true,
+			templateChecks: true,
 		},
 	} as const
 }

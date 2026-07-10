@@ -45,14 +45,14 @@
 ### 3.2 GuidelineSection
 
 데이터명: GuidelineSection
-수집 목적: 가이드라인 페이지를 장 단위로 묶고 자체 브랜드 규칙의 근거 문서가 된다.
+수집 목적: 가이드라인 페이지를 장 단위로 묶고 자체 검수 선언을 소유한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 섹션 이름, 설명, 표시 순서를 입력하면 BrandGuideline 아래에 생성한다. |
 | 전송 | 섹션 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | BrandGuideline 하위 엔티티로 저장하고 표시 순서를 함께 보관한다. |
-| 처리 | GuidelinePage를 소유하고, 연결된 BrandRule을 역참조한다. |
+| 처리 | GuidelinePage와 자체 GuidelineBlock을 소유하고, 자신에게 적용할 Check를 함께 관리한다. |
 | 활용 | Manager 편집 화면과 Creator 가이드라인 탐색 구조에 사용한다. |
 | 공유·제공 | 다른 도메인에는 직접 제공하지 않고 GuidelineVersion에 포함된 구조로 제공한다. |
 | 보관 | BrandGuideline revision과 Official Version에 포함해 보관한다. |
@@ -61,14 +61,14 @@
 ### 3.3 GuidelinePage
 
 데이터명: GuidelinePage
-수집 목적: GuidelineBlock을 묶고 자체 브랜드 규칙의 근거 문서가 된다.
+수집 목적: GuidelineBlock을 묶고 자체 검수 선언을 소유한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 페이지 제목, 배치 정보, 소속 섹션을 입력하면 GuidelineSection 아래에 생성한다. |
 | 전송 | 페이지 구성 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | 소속 GuidelineSection, PagePolicy, PageAssetRef, PageExample, PageComposition과 함께 저장한다. |
-| 처리 | GuidelineBlock을 소유하고, 연결된 BrandRule을 역참조한다. |
+| 처리 | GuidelineBlock을 소유하고, 자신에게 적용할 Check를 함께 관리한다. |
 | 활용 | Creator 가이드라인 화면, Agent 답변 근거, 품질 검수 기준 탐색에 사용한다. |
 | 공유·제공 | BehaviorEventLog에는 페이지 조회와 클릭 대상인 PageRef만 제공한다. |
 | 보관 | Official Version에 포함된 페이지 구조를 유지한다. |
@@ -77,14 +77,14 @@
 ### 3.4 GuidelineBlock
 
 데이터명: GuidelineBlock
-수집 목적: 섹션 또는 페이지를 구성하는 최소 콘텐츠 단위이자 브랜드 규칙의 근거 문서가 된다.
+수집 목적: 섹션 또는 페이지를 구성하는 최소 콘텐츠 단위이자 검수 근거가 된다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 블록 유형과 콘텐츠를 입력하면 GuidelineSection 또는 GuidelinePage 아래에 생성한다. |
 | 전송 | 블록 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
-| 저장 | 콘텐츠는 소속 Section/Page에 저장하고, 관계 조회용 독립 식별자와 표시 순서를 GuidelineBlock 인덱스에 저장한다. |
-| 처리 | 이미지와 컬러 같은 표시 자원을 참조하고, 연결된 BrandRule을 역참조한다. |
+| 저장 | 콘텐츠와 식별자는 소속 Section/Page 안에 임베디드 데이터로 저장한다. Block 식별자는 부모 문서 안에서만 유효하다. |
+| 처리 | 이미지와 컬러 같은 표시 자원을 참조하고, 자신에게 적용할 Check를 함께 관리한다. |
 | 활용 | Creator 가이드라인 화면, Agent 답변 근거, 품질 검수 evidence 생성에 사용한다. |
 | 공유·제공 | 다른 도메인에는 GuidelineVersion에 포함된 읽기 모델로 제공한다. |
 | 보관 | GuidelineVersion과 Payload revision에 포함해 변경 이력을 보관한다. |
@@ -131,8 +131,8 @@
 | --- | --- |
 | 생성·수집 | Manager가 예시 이미지, 설명, 예시 유형을 입력하면 GuidelinePage 아래에 생성한다. |
 | 전송 | 예시 등록 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
-| 저장 | GuidelinePage 하위 엔티티로 저장하고 관련 PageAssetRef나 BrandRuleVersionRef를 함께 보관한다. |
-| 처리 | 페이지 안에서 Policy, Rule, Asset과 함께 예시 맥락을 구성한다. |
+| 저장 | GuidelinePage 하위 엔티티로 저장하고 관련 PageAssetRef나 CheckKey를 함께 보관한다. |
+| 처리 | 페이지 안에서 Policy, Check, Asset과 함께 예시 맥락을 구성한다. |
 | 활용 | Creator가 기준을 해석하는 데 사용하고, Agent가 설명을 보강할 때 참조한다. |
 | 공유·제공 | 다른 도메인에는 GuidelineVersion에 포함된 읽기 모델로 제공한다. |
 | 보관 | Official Version에 포함된 예시를 보관한다. |
@@ -143,48 +143,48 @@
 ### 4.1 RuleChecker
 
 데이터명: RuleChecker
-수집 목적: BrandRule을 검사할 실행 도구와 호출 계약을 관리한다.
+수집 목적: Check를 실행할 도구와 호출 계약을 관리한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 실행 유형과 실행 도구를 선택하면 draft 상태로 생성한다. |
 | 전송 | RuleChecker 편집 요청은 Payload API를 통해 Brand resource publishing service로 전달한다. |
 | 저장 | RuleCheckerKey, ExecutorType과 실행 유형별 binding을 저장한다. deterministic은 CheckerKey를, heuristic은 ModelRef와 PromptKey를 저장한다. |
-| 처리 | 하나의 RuleChecker는 하나의 executor binding만 가지며 BrandRule의 검사 요청을 해당 실행기로 전달한다. |
-| 활용 | 품질 검수는 BrandRule이 참조하는 RuleChecker로 checker 또는 model을 선택한다. |
+| 처리 | 하나의 RuleChecker는 하나의 executor binding만 가지며 Check의 실행 요청을 해당 실행기로 전달한다. |
+| 활용 | 품질 검수는 Check가 참조하는 RuleChecker로 checker 또는 model을 선택한다. |
 | 공유·제공 | 검수 런타임에는 live 상태의 RuleCheckerVersion만 제공한다. |
 | 보관 | RuleCheckerVersion과 Payload revision을 함께 보관한다. |
 | 파기 | draft RuleChecker는 삭제할 수 있다. 발행된 RuleChecker는 archived 상태로 전환하고 기존 검수 기록의 참조는 보존한다. |
 
-### 4.2 BrandRule
+### 4.2 Check
 
-데이터명: BrandRule
-수집 목적: 사용자가 정한 브랜드 기준과 근거 문서를 관리하고 품질 검수에 제공한다.
-
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | Manager가 규칙 이름, 기준값, 중요도, 사용자 메시지를 입력하고 RuleChecker 하나와 관련 문서를 선택하면 draft 상태로 생성한다. |
-| 전송 | BrandRule 편집 요청은 Payload API를 통해 Brand resource publishing service로 전달한다. |
-| 저장 | RuleCheckerRef, GuidelineDocumentRef 목록, RuleValue, Tier, Messages, EvidenceSnapshot, ReferenceAssetRef를 저장한다. |
-| 처리 | 근거 문서가 발행되면 evidence와 참고 자원을 갱신하고 BrandRuleVersion 후보를 만든다. |
-| 활용 | Creator, Agent, 품질 검수가 실제 브랜드 판단 기준으로 사용한다. |
-| 공유·제공 | Creator와 Agent에는 live 상태의 BrandRuleVersion만 제공한다. |
-| 보관 | BrandRuleVersion과 Payload revision을 함께 보관한다. |
-| 파기 | draft BrandRule은 삭제할 수 있다. 발행된 BrandRule은 archived 상태로 전환하고 기존 검수 기록의 참조는 보존한다. |
-
-### 4.3 RuleException
-
-데이터명: RuleException
-수집 목적: 특정 BrandRule에 종속되는 예외 조건과 적용 기간을 관리한다.
+데이터명: Check
+수집 목적: GuidelineSection, GuidelinePage 또는 GuidelineBlock에 적용할 검수 규칙을 선언한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Manager가 예외 조건, 예외 사유, 적용 기간을 입력하면 BrandRule 아래에 생성한다. |
+| 생성·수집 | Manager가 문서 단위 안에서 key, 이름, 중요도, options, 메시지와 RuleChecker를 입력한다. |
+| 전송 | Check는 부모 Guideline 문서 편집 요청에 포함해 Payload API로 전달한다. |
+| 저장 | CheckKey, Title, Tier, RuleCheckerRef, Options, Messages를 부모 Section/Page/Block 안에 저장한다. 별도 source 필드는 두지 않는다. |
+| 처리 | 검수 시작 시 부모 문서 콘텐츠와 RuleChecker 실행 계약을 결합한다. Guideline 변경 시 별도 snapshot을 동기화하지 않는다. |
+| 활용 | Scenario는 CheckKey로 실행 범위를 선택하고, 검수 런타임은 Check options를 RuleChecker에 전달한다. |
+| 공유·제공 | Creator와 Agent에는 발행된 GuidelineVersion에 포함된 Check만 제공한다. |
+| 보관 | Check는 부모 GuidelineVersion과 Payload revision에 포함해 보관하고, 실행 당시 값은 CheckSession에 snapshot으로 저장한다. |
+| 파기 | 부모 Section/Page가 draft 또는 삭제 상태가 되거나 Block이 제거되면 이후 검수 대상에서 제외한다. 기존 CheckSession snapshot은 보존한다. |
+
+### 4.3 CheckException
+
+데이터명: CheckException
+수집 목적: 특정 Check에 종속되는 예외 조건과 적용 기간을 관리한다. 현재 구현 범위에서는 제외한다.
+
+| 단계 | 작성 내용 |
+| --- | --- |
+| 생성·수집 | Manager가 예외 조건, 예외 사유, 적용 기간을 입력하면 Check 아래에 생성한다. |
 | 전송 | 예외 등록 요청은 Payload API를 통해 Brand resource publishing service로 전달한다. |
-| 저장 | BrandRule 하위 엔티티로 저장하고 ExceptionReason과 적용 기간을 보관한다. |
-| 처리 | BrandRule의 기준값과 함께 평가되어 예외 적용 여부를 판단한다. |
+| 저장 | Check 하위 값으로 저장하고 ExceptionReason과 적용 기간을 보관한다. |
+| 처리 | Check options와 함께 평가되어 예외 적용 여부를 판단한다. |
 | 활용 | Agent 답변과 품질 검수에서 위반 여부를 해석할 때 사용한다. |
-| 공유·제공 | BrandRuleVersion에 포함된 예외 조건으로 Creator와 Agent에 제공한다. |
+| 공유·제공 | GuidelineVersion에 포함된 예외 조건으로 Creator와 Agent에 제공한다. |
 | 보관 | 예외 적용 기간과 변경 사유를 보관한다. |
 | 파기 | 적용 종료 후에는 archived 상태로 남기고, 잘못 만든 draft 예외만 삭제한다. |
 
@@ -199,7 +199,7 @@
 | 전송 | 파일과 메타데이터는 Payload upload 흐름을 통해 전송한다. |
 | 저장 | 파일은 Uploaded file storage에 저장하고, 메타데이터는 Payload collection과 PostgreSQL에 저장한다. |
 | 처리 | AssetFile, BrandAssetVersion, UsageCondition, DownloadStatus를 함께 관리한다. |
-| 활용 | GuidelineDocument, BrandRule, AssetGenerationSession, CheckBasis에서 공식 자원으로 참조한다. |
+| 활용 | GuidelineDocument, Check, AssetGenerationSession, CheckBasis에서 공식 자원으로 참조한다. |
 | 공유·제공 | Creator에게 다운로드 가능한 live 상태의 BrandAssetVersion만 제공한다. |
 | 보관 | 파일 원본, Official Version, 사용 조건, 폐기 사유를 보관한다. |
 | 파기 | draft 파일은 삭제할 수 있다. 발행된 에셋은 archived 처리하고 실제 파일 삭제는 참조 종료 후 수행한다. |
@@ -214,7 +214,7 @@
 | 생성·수집 | Manager가 템플릿 이름, 설명, Figma 노드 또는 템플릿 파일 참조를 입력하면 Template을 생성한다. |
 | 전송 | 템플릿 메타데이터는 Payload API로 전달하고, 원본은 Figma node 또는 파일 업로드 흐름으로 참조한다. |
 | 저장 | TemplateSourceRef, LayoutSpec, TextStyleSpec, EditableBlockSpec, TemplateUsageCondition, TemplateVersion을 함께 저장한다. |
-| 처리 | 지정된 레이아웃, 텍스트 스타일, 텍스트 블록, 에셋 슬롯, 컬러 토큰과 연결된 BrandRuleVersionRef, BrandAssetVersionRef를 검증한다. |
+| 처리 | 지정된 레이아웃, 텍스트 스타일, 텍스트 블록, 에셋 슬롯, 컬러 토큰과 연결된 CheckKey, BrandAssetVersionRef를 검증한다. |
 | 활용 | AssetGenerationSession에서 산출물 제작 형식으로 사용하고, Brand asset generation service가 React 또는 HTML 편집 노드로 변환한다. |
 | 공유·제공 | Creator에게 live 상태의 TemplateVersion만 제공한다. |
 | 보관 | TemplateVersion과 사용 조건 변경 이력을 보관한다. |
@@ -230,7 +230,7 @@
 | 생성·수집 | Manager가 플러그인 이름, 설명, 유형, 실행물 참조를 입력하면 Plugin을 생성한다. |
 | 전송 | 플러그인 설정은 Payload API를 통해 저장하고, 테스트 실행은 Agent repository로 전달한다. |
 | 저장 | PluginEntry, PluginCapability, PluginUsageCondition, PluginVersion과 Plugin runtime 참조를 함께 저장한다. |
-| 처리 | 입력 스키마, 출력 형식, 사용 조건, 연결된 TemplateVersionRef와 BrandRuleVersionRef를 검증한다. |
+| 처리 | 입력 스키마, 출력 형식, 사용 조건, 연결된 TemplateVersionRef와 CheckKey를 검증한다. |
 | 활용 | AssetGenerationSession에서 제작 기능으로 사용하고, AgentRunRef로 실행 이력을 남긴다. |
 | 공유·제공 | Creator에게 live 상태의 PluginVersion만 제공한다. |
 | 보관 | PluginVersion, 테스트 결과 참조, 사용 조건 변경 이력을 보관한다. |
@@ -265,26 +265,26 @@
 | 전송 | Official Version 생성 요청은 Brand resource publishing service로 전달한다. |
 | 저장 | VersionNumber, VersionStatus, ExecutorType, CheckerKey 또는 ModelRef와 PromptKey, PayloadRevisionRef를 저장한다. |
 | 처리 | live 전환 시 기존 live 상태의 RuleCheckerVersion을 archived 상태로 바꾼다. |
-| 활용 | BrandRuleVersion과 검수 런타임이 실행 도구를 선택할 때 참조한다. |
+| 활용 | GuidelineVersion의 Check와 검수 런타임이 실행 도구를 선택할 때 참조한다. |
 | 공유·제공 | 검수 런타임에는 live 상태의 RuleCheckerVersion만 제공한다. |
 | 보관 | 모든 Official Version과 변경 사유를 보관한다. |
 | 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 잘못 생성된 stage 상태만 삭제할 수 있다. |
 
-### 5.3 BrandRuleVersion
+### 5.3 CheckRulesetSnapshot
 
-데이터명: BrandRuleVersion
-수집 목적: Agent 답변과 품질 검수에서 사용할 브랜드 기준과 근거를 고정한다.
+데이터명: CheckRulesetSnapshot
+수집 목적: 품질 검수 실행 당시의 문서 근거, Check, RuleChecker 계약을 고정한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | BrandRule이 승인되거나 수정되면 System이 BrandRuleVersion 후보를 만든다. |
-| 전송 | Official Version 생성 요청은 Brand resource publishing service로 전달한다. |
-| 저장 | VersionNumber, VersionStatus, RuleCheckerVersionRef, GuidelineDocumentRef, RuleValue, Tier, EvidenceSnapshot, PayloadRevisionRef를 저장한다. |
-| 처리 | live 전환 시 기존 live 상태의 BrandRuleVersion을 archived 상태로 바꾼다. |
-| 활용 | AnswerCitation과 CheckBasis에서 BrandRuleVersionRef로 참조한다. |
-| 공유·제공 | Creator와 Agent에는 live 상태의 BrandRuleVersion만 제공한다. |
-| 보관 | 모든 Official Version과 변경 사유를 보관한다. |
-| 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 잘못 생성된 stage 상태만 삭제할 수 있다. |
+| 생성·수집 | CheckSession을 시작할 때 발행된 Guideline에서 선택된 Check와 문서 근거를 읽어 생성한다. |
+| 전송 | 검수 Service가 CheckSession 저장 Repository에 전달한다. |
+| 저장 | CheckKey, Title, Tier, Options, Messages, RuleChecker 실행 계약, Evidence, ReferenceAssetRef를 JSON snapshot으로 저장한다. |
+| 처리 | 즉시 검수와 후속 AI 검수가 같은 snapshot을 사용한다. Guideline이나 RuleChecker 변경을 역으로 반영하지 않는다. |
+| 활용 | CheckRun과 결과 재현, 감사, 후속 AI 검수에 사용한다. |
+| 공유·제공 | CheckSession 조회 권한이 있는 Manager와 Admin에게 제공한다. |
+| 보관 | CheckSession과 함께 보관한다. |
+| 파기 | CheckSession 보관 정책을 따른다. |
 
 ### 5.4 BrandAssetVersion
 
@@ -414,7 +414,7 @@ AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 아키텍
 | 생성·수집 | Creator가 질문 원문을 입력하면 QASession 아래에 생성한다. |
 | 전송 | 질문 원문과 AssetGenerationSession 맥락은 Answer generation service로 전달한다. |
 | 저장 | QASession 하위 엔티티로 저장하고 QuestionAsked 이벤트를 남긴다. |
-| 처리 | 관련 BrandRuleVersion, PagePolicy, GuidelineDocument를 검색하는 입력으로 사용한다. |
+| 처리 | 관련 Check, PagePolicy, GuidelineDocument를 검색하는 입력으로 사용한다. |
 | 활용 | Agent 답변 생성과 질문 이력 조회에 사용한다. |
 | 공유·제공 | Agent에는 답변 생성에 필요한 질문 원문과 최소 맥락만 제공한다. |
 | 보관 | QASession 보관 기간에 맞춰 보관한다. |
@@ -439,14 +439,14 @@ AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 아키텍
 ### 7.4 AnswerCitation
 
 데이터명: AnswerCitation
-수집 목적: Answer가 어떤 GuidelineDocument 또는 BrandRuleVersion을 근거로 삼았는지 기록한다.
+수집 목적: Answer가 어떤 GuidelineDocument 또는 Check를 근거로 삼았는지 기록한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | System이 답변에 사용한 기준을 확인하면 Answer 아래에 생성한다. |
 | 전송 | 검색 결과와 Agent 응답 근거가 Answer generation service로 전달된다. |
 | 저장 | Answer 하위 값 객체 또는 하위 기록으로 저장한다. |
-| 처리 | BrandRuleVersionRef, GuidelineDocumentRef, 근거 유형을 연결한다. |
+| 처리 | GuidelineDocumentRef, CheckKey, 근거 유형을 연결한다. |
 | 활용 | 답변 신뢰도 표시와 Agent 품질 확인에 사용한다. |
 | 공유·제공 | Creator 화면에는 필요한 근거 링크만 제공한다. |
 | 보관 | Answer와 같은 기간 보관한다. |
@@ -537,11 +537,11 @@ AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 아키텍
 ### 8.5 CheckBasis
 
 데이터명: CheckBasis
-수집 목적: 점검 실행 시점의 GuidelineVersionRef, BrandRuleVersionRef, BrandAssetVersionRef를 한 묶음으로 저장한다.
+수집 목적: 점검 실행 시점의 GuidelineVersionRef, CheckRulesetSnapshot, BrandAssetVersionRef를 한 묶음으로 저장한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | CheckRun 시작 시 System이 GuidelineVersionRef, BrandRuleVersionRef, BrandAssetVersionRef를 수집한다. |
+| 생성·수집 | CheckRun 시작 시 System이 GuidelineVersionRef, CheckRulesetSnapshot, BrandAssetVersionRef를 수집한다. |
 | 전송 | 기준 참조는 Quality check service에서 Agent repository로 전달된다. |
 | 저장 | CheckRun 하위 엔티티로 저장하고 각 VersionRef를 값 객체로 보관한다. |
 | 처리 | Agent와 System이 같은 기준으로 판단하도록 기준 묶음을 잠근다. |

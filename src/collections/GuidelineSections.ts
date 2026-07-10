@@ -1,7 +1,5 @@
 import { type CollectionConfig, slugField } from 'payload'
-import { guidelineBlocks } from '@/blocks/guideline'
-import { deriveRulesFromBlocks } from '@/features/guideline/blocks/registry'
-import { syncGuidelineBlockDocuments } from '@/features/guideline/services/sync-guideline-block-documents.service'
+import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -34,26 +32,6 @@ export const GuidelineSections: CollectionConfig = {
 	},
 	versions: draftVersions,
 	defaultSort: 'displayOrder',
-	hooks: {
-		afterChange: [
-			async ({ doc, req }) => {
-				if (doc._status && doc._status !== 'published') return doc
-				await syncGuidelineBlockDocuments({ collection: 'guideline-sections', doc, req })
-				for (const derivation of deriveRulesFromBlocks(doc.blocks)) {
-					await req.payload.update({
-						collection: 'rules',
-						id: derivation.rule,
-						data: {
-							evidence: derivation.evidence,
-							referenceAssets: derivation.referenceAssets,
-						},
-						req,
-					})
-				}
-				return doc
-			},
-		],
-	},
 	fields: [
 		{
 			name: 'title',
@@ -97,6 +75,7 @@ export const GuidelineSections: CollectionConfig = {
 				description: '섹션 랜딩 헤더에 표시할 이미지입니다.',
 			},
 		},
+		guidelineChecksField(),
 		{
 			name: 'pages',
 			type: 'join',
@@ -107,13 +86,6 @@ export const GuidelineSections: CollectionConfig = {
 			name: 'blocks',
 			type: 'blocks',
 			blocks: sectionBlocks,
-		},
-		{
-			name: 'linkedRules',
-			type: 'join',
-			collection: 'rules',
-			on: 'documents',
-			admin: { allowCreate: false },
 		},
 		{
 			name: 'displayOrder',

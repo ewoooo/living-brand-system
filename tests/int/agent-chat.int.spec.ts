@@ -41,13 +41,13 @@ describe('agent chat errors', () => {
 		expect(getAgentToolMarker(message)?.text).toBe('가이드라인 결과 2개를 찾았습니다')
 	})
 
-	it('summarizes rule catalog tool results as marker text', () => {
+	it('summarizes Check catalog tool results as marker text', () => {
 		const message = {
 			id: '1',
 			role: 'assistant',
 			parts: [
 				{
-					type: 'tool-getRuleCatalog',
+					type: 'tool-getCheckCatalog',
 					toolCallId: 'tool-1',
 					state: 'output-available',
 					input: {},
@@ -59,7 +59,7 @@ describe('agent chat errors', () => {
 			],
 		} as AgentChatMessage
 
-		expect(getAgentToolMarker(message)?.text).toBe('룰 카탈로그 2개를 확인했습니다')
+		expect(getAgentToolMarker(message)?.text).toBe('Check 카탈로그 2개를 확인했습니다')
 	})
 
 	it('uses loadSkill tool results as skill marker text', () => {

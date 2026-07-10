@@ -1,7 +1,7 @@
 import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
-import { toCheckRuleAnchor } from '@/features/asset-check/utils/check-rule-anchor'
+import { toCheckAnchor } from '@/features/asset-check/utils/check-anchor'
 
-export function CheckRuleCatalog({ sections }: { sections: CheckSection[] }) {
+export function CheckCatalog({ sections }: { sections: CheckSection[] }) {
 	return (
 		<div className="divide-y divide-border">
 			{sections.map((section) => (
@@ -11,27 +11,27 @@ export function CheckRuleCatalog({ sections }: { sections: CheckSection[] }) {
 					</p>
 					<h2 className="text-2xl">{section.title}</h2>
 					<div className="mt-6 divide-y divide-border">
-						{section.rules.map((rule) => (
+						{section.checks.map((check) => (
 							<article
-								key={`${section.slug}:${rule.key}`}
-								id={toCheckRuleAnchor(section.slug, rule.key)}
+								key={`${section.slug}:${check.key}`}
+								id={toCheckAnchor(section.slug, check.key)}
 								className="grid scroll-mt-16 gap-3 py-5 md:grid-cols-[18rem_1fr]"
 							>
 								<div>
-									<h3 className="font-medium">{rule.title}</h3>
+									<h3 className="font-medium">{check.title}</h3>
 									<code className="mt-2 block text-muted-foreground text-xs">
-										{rule.key}
+										{check.key}
 									</code>
 								</div>
 								<div className="space-y-2 text-sm">
 									<p className="text-muted-foreground">
-										{rule.evidence || '관련 가이드라인 없음'}
+										{check.evidence || '관련 가이드라인 없음'}
 									</p>
 									<p className="text-muted-foreground text-xs">
-										{rule.executor}
-										{rule.implemented ? '' : ' / 미구현'}
+										{check.executor}
+										{check.implemented ? '' : ' / 미구현'}
 									</p>
-									<RuleMessages messages={rule.messages} />
+									<CheckMessages messages={check.messages} />
 								</div>
 							</article>
 						))}
@@ -42,7 +42,7 @@ export function CheckRuleCatalog({ sections }: { sections: CheckSection[] }) {
 	)
 }
 
-function RuleMessages({ messages }: { messages: CheckSection['rules'][number]['messages'] }) {
+function CheckMessages({ messages }: { messages: CheckSection['checks'][number]['messages'] }) {
 	const entries = [
 		['pass', messages?.pass],
 		['ok', messages?.ok],

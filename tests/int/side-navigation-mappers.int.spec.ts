@@ -69,7 +69,7 @@ describe('side navigation mappers', () => {
 					chapterSlug: 'brand-design-elements',
 					sectionTitle: 'Brand Logo',
 					sectionSlug: 'brand-logo',
-					rules: [
+					checks: [
 						{
 							key: 'logo.size.minimum',
 							title: 'Minimum Size',

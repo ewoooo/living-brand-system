@@ -1,7 +1,5 @@
 import { type CollectionConfig, slugField } from 'payload'
-import { guidelineBlocks } from '@/blocks/guideline'
-import { deriveRulesFromBlocks } from '@/features/guideline/blocks/registry'
-import { syncGuidelineBlockDocuments } from '@/features/guideline/services/sync-guideline-block-documents.service'
+import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -21,29 +19,6 @@ export const GuidelinePages: CollectionConfig = {
 	},
 	versions: draftVersions,
 	defaultSort: 'displayOrder',
-	hooks: {
-		// 가이드라인(블록)이 SSOT — 발행 시 블록 내용에서 룰의 evidence·referenceAssets를 파생해 반영한다.
-		// 파생 규칙은 rule-derivation이 소유(순수)하고, rules 갱신 I/O만 이 훅이 req 트랜잭션으로 처리한다.
-		// rules 컬렉션엔 되돌아오는 훅이 없어 루프가 없다.
-		afterChange: [
-			async ({ doc, req }) => {
-				if (doc._status && doc._status !== 'published') return doc
-				await syncGuidelineBlockDocuments({ collection: 'guideline-pages', doc, req })
-				for (const derivation of deriveRulesFromBlocks(doc.blocks)) {
-					await req.payload.update({
-						collection: 'rules',
-						id: derivation.rule,
-						data: {
-							evidence: derivation.evidence,
-							referenceAssets: derivation.referenceAssets,
-						},
-						req,
-					})
-				}
-				return doc
-			},
-		],
-	},
 	fields: [
 		{
 			name: 'title',
@@ -67,13 +42,7 @@ export const GuidelinePages: CollectionConfig = {
 				description: '페이지 제목 아래에 표시할 선택 설명입니다.',
 			},
 		},
-		{
-			name: 'linkedRules',
-			type: 'join',
-			collection: 'rules',
-			on: 'documents',
-			admin: { allowCreate: false },
-		},
+		guidelineChecksField(),
 		{
 			name: 'section',
 			type: 'relationship',

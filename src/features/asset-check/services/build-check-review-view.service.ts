@@ -1,13 +1,13 @@
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { filterRulesetByScenario, getCheckScenario } from '@/features/asset-check/scenarios'
 import type {
-	CheckRule,
 	CheckSection,
+	RuntimeCheck,
 } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { CheckImage } from '@/features/asset-check/types'
 
-export interface CheckReviewRuleRow {
-	rule: CheckRule
+export interface CheckReviewRow {
+	check: RuntimeCheck
 	rowId: string
 	sectionLabel: string | null
 	appliesTo: string[]
@@ -25,11 +25,11 @@ export interface CheckReviewSummary {
 }
 
 export interface CheckReviewView {
-	rows: CheckReviewRuleRow[]
+	rows: CheckReviewRow[]
 	summary: CheckReviewSummary
 }
 
-type MutableRuleRow = CheckReviewRuleRow & { appliesToSet: Set<string> }
+type MutableCheckRow = CheckReviewRow & { appliesToSet: Set<string> }
 
 /**
  * 검수 리뷰 화면 view model 생성 경계.
@@ -59,10 +59,7 @@ export function buildCheckReviewView({
 	return { rows, summary }
 }
 
-function buildSummary(
-	rows: CheckReviewRuleRow[],
-	results: CheckImage['results'],
-): CheckReviewSummary {
+function buildSummary(rows: CheckReviewRow[], results: CheckImage['results']): CheckReviewSummary {
 	const summary = { pass: 0, ok: 0, fail: 0, pendingManualCheck: 0 }
 	if (!results) return summary
 
@@ -83,15 +80,15 @@ function buildRows({
 }: {
 	visibleSections: CheckSection[]
 	selected: CheckImage | null
-}): CheckReviewRuleRow[] {
+}): CheckReviewRow[] {
 	const results = selected?.results
-	const rows: MutableRuleRow[] = []
-	const rowByRuleKey = new Map<string, MutableRuleRow>()
+	const rows: MutableCheckRow[] = []
+	const rowByCheckKey = new Map<string, MutableCheckRow>()
 	const seenSections = new Set<string>()
 
 	for (const section of visibleSections) {
-		for (const rule of section.rules) {
-			const existing = rowByRuleKey.get(rule.key)
+		for (const check of section.checks) {
+			const existing = rowByCheckKey.get(check.key)
 			if (existing) {
 				if (!existing.appliesToSet.has(section.title)) {
 					existing.appliesToSet.add(section.title)
@@ -100,15 +97,15 @@ function buildRows({
 				continue
 			}
 
-			const outcome = results?.[rule.key]
+			const outcome = results?.[check.key]
 			const status = outcome?.rawResult.status
-			if (!rule.implemented) continue
+			if (!check.implemented) continue
 
 			const first = !seenSections.has(section.slug)
 			seenSections.add(section.slug)
 			const row = {
-				rule,
-				rowId: `${section.slug}:${rule.key}`,
+				check,
+				rowId: `${section.slug}:${check.key}`,
 				sectionLabel: first ? section.title : null,
 				appliesTo: [section.title],
 				appliesToSet: new Set([section.title]),
@@ -116,11 +113,11 @@ function buildRows({
 				outcome,
 				inProgress:
 					selected?.status === 'running' &&
-					selected.pendingRuleKeys?.includes(rule.key) === true,
+					selected.pendingCheckKeys?.includes(check.key) === true,
 				detail: status !== 'pass' ? (outcome?.message ?? null) : null,
 			}
 			rows.push(row)
-			rowByRuleKey.set(rule.key, row)
+			rowByCheckKey.set(check.key, row)
 		}
 	}
 

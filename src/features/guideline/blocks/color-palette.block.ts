@@ -1,19 +1,22 @@
 import type { BrandColor } from '@/payload-types'
 import { compact } from '../utils/block-text'
-import type { BlockBehavior } from './types'
+import type { BlockBehavior, GuidelineBlock } from './types'
+
+function format(block: GuidelineBlock): string {
+	if (block.blockType !== 'colorPalette') return ''
+	const colors = block.colors.filter(
+		(color): color is BrandColor => typeof color === 'object' && color !== null,
+	)
+	return compact([
+		block.title ?? 'Color palette',
+		...colors.map(
+			(color) =>
+				`- ${color.name}: HEX ${color.hex}${color.pantone ? `, PMS ${color.pantone}` : ''}`,
+		),
+	]).join('\n')
+}
 
 export const behavior: BlockBehavior = {
-	formatForAgent: (block) => {
-		if (block.blockType !== 'colorPalette') return ''
-		const colors = block.colors.filter(
-			(color): color is BrandColor => typeof color === 'object' && color !== null,
-		)
-		return compact([
-			block.title ?? 'Color palette',
-			...colors.map(
-				(color) =>
-					`- ${color.name}: HEX ${color.hex}${color.pantone ? `, PMS ${color.pantone}` : ''}`,
-			),
-		]).join('\n')
-	},
+	formatForAgent: format,
+	toCheckSourceSnapshot: (block) => ({ evidence: format(block), referenceAssets: [] }),
 }

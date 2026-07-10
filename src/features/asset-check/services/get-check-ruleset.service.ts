@@ -1,12 +1,13 @@
 import { cache } from 'react'
 import { hasChecker } from '@/features/asset-check/checkers/registry'
 import type { CheckStatus } from '@/features/asset-check/checkers/types'
+import { getCheckSourceDocuments } from '@/features/asset-check/repositories/check-ruleset.payload.repository'
+import { toRuntimeCheckMessages } from '@/features/asset-check/utils/check-messages'
 import {
-	getCheckRuleDocs,
-	getCheckRulesetPages,
-} from '@/features/asset-check/repositories/check-ruleset.payload.repository'
-import { toCheckRuleMessages } from '@/features/asset-check/utils/check-rule-messages'
-import type { ApplicationImage, Rule, RuleChecker } from '@/payload-types'
+	collectGuidelineCheckSources,
+	type GuidelineCheckSource,
+} from '@/features/guideline/checks/collect-guideline-check-sources'
+import type { GuidelineSection, RuleChecker } from '@/payload-types'
 
 export interface CheckReferenceAsset {
 	name: string
@@ -14,13 +15,15 @@ export interface CheckReferenceAsset {
 	mimeType: string
 }
 
-export interface CheckRule {
+export interface RuntimeCheck {
 	key: string
 	title: string
+	tier?: 'recommended' | 'required'
 	executor: RuleChecker['executor']
 	checkerKey?: string
 	model?: string
 	promptKey?: string
+	options?: unknown
 	/** 자동 검수 가능 여부 — deterministic인데 checker 미등록이면 false (UI 배지용). */
 	implemented: boolean
 	evidence: string
@@ -28,7 +31,7 @@ export interface CheckRule {
 	messages?: Partial<Record<CheckStatus, string>>
 }
 
-/** 검수 화면의 그룹 단위 = 룰 배치를 가진 가이드라인 페이지 (The Name, Brand Logo, …). */
+/** 검수 화면에서 Check 배치를 표시하는 가이드라인 문서 단위다. */
 export interface CheckSection {
 	title: string
 	slug: string
@@ -40,81 +43,107 @@ export interface CheckSection {
 	sectionTitle: string
 	sectionSlug: string
 	sectionOrder: number
-	rules: CheckRule[]
+	checks: RuntimeCheck[]
 }
 
 /**
- * 검수 화면용 룰셋 뷰모델 — 페이지의 rules 배치를 그대로 묶는다 (목차·본문·검수 대상의 단일 소스).
- * 정렬: 섹션 displayOrder → 페이지 displayOrder → 배치 순서. Payload 접근은 repository가 소유한다.
- * layout과 page가 같은 요청에서 함께 부르므로 React cache로 요청당 1회만 조회한다.
+ * 검수 화면용 Check 뷰모델을 published Section/Page와 내부 Block에서 조립한다.
+ * Payload 조회는 check-ruleset repository가 소유한다.
  */
 export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
-	const pages = await getCheckRulesetPages()
+	const { sections, pages } = await getCheckSourceDocuments()
+	const items = [
+		...sections.map((section) => ({
+			documentOrder: -1,
+			item: {
+				title: section.title,
+				slug: section.slug ?? String(section.id),
+				...toCheckPlacement(section),
+				checks: collectGuidelineCheckSources(section).map(toRuntimeCheck),
+			},
+		})),
+		...pages.map((page) => ({
+			documentOrder: page.displayOrder,
+			item: {
+				title: page.title,
+				slug: page.slug ?? String(page.id),
+				...toCheckPlacement(page.section),
+				checks: collectGuidelineCheckSources(page).map(toRuntimeCheck),
+			},
+		})),
+	]
 
-	return pages
-		.filter((page) => (page.linkedRules?.docs?.length ?? 0) > 0)
-		.sort((a, b) => {
-			const aPlacement = toCheckPlacement(a.section)
-			const bPlacement = toCheckPlacement(b.section)
-			return (
-				aPlacement.chapterOrder - bPlacement.chapterOrder ||
-				aPlacement.sectionOrder - bPlacement.sectionOrder ||
-				a.displayOrder - b.displayOrder
-			)
-		})
-		.map((page) => ({
-			title: page.title,
-			slug: page.slug ?? String(page.id),
-			...toCheckPlacement(page.section),
-			rules: (page.linkedRules?.docs ?? []).flatMap((rule) =>
-				typeof rule === 'number' ? [] : [toCheckRule(rule)],
-			),
-		}))
+	return items
+		.filter(({ item }) => item.checks.length > 0)
+		.sort(
+			(a, b) =>
+				a.item.chapterOrder - b.item.chapterOrder ||
+				a.item.sectionOrder - b.item.sectionOrder ||
+				a.documentOrder - b.documentOrder,
+		)
+		.map(({ item }) => item)
 })
 
 /**
- * 검수 실행용 룰 스냅샷 read service — ruleKeys가 있으면 그 순서대로 필터·정렬해 반환한다.
- * Payload 조회는 check-ruleset repository가 소유한다.
+ * 검수 실행용 Check snapshot을 checkKeys 순서로 반환한다.
+ * published source 조회는 check-ruleset repository가 소유한다.
  */
-export async function getCheckRules(ruleKeys?: string[]): Promise<CheckRule[]> {
-	const rules = (await getCheckRuleDocs()).map(toCheckRule)
-	if (!ruleKeys) return rules
-	const order = new Map(ruleKeys.map((key, index) => [key, index]))
-	return rules
-		.filter((rule) => order.has(rule.key))
+export async function getRuntimeChecks(checkKeys?: string[]): Promise<RuntimeCheck[]> {
+	const checks = uniqueChecks((await getCheckRuleset()).flatMap((section) => section.checks))
+	if (!checkKeys) return checks
+	const order = new Map(checkKeys.map((key, index) => [key, index]))
+
+	return checks
+		.filter((check) => order.has(check.key))
 		.sort((a, b) => (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0))
 }
 
-function toCheckRule(rule: Rule): CheckRule {
-	const checker = typeof rule.checker === 'object' ? rule.checker : null
-	if (!checker) throw new Error(`RuleChecker가 연결되지 않은 룰입니다: ${rule.key}`)
+function toRuntimeCheck({ check, evidence, referenceAssets }: GuidelineCheckSource): RuntimeCheck {
+	const checker = typeof check.checker === 'object' ? check.checker : null
+	if (!checker) throw new Error(`RuleChecker가 연결되지 않은 Check입니다: ${check.key}`)
 	const checkerKey = checker.checkerKey ?? undefined
 	const model = checker.model ?? undefined
 	const promptKey = checker.promptKey ?? undefined
+	const options = check.options ?? undefined
 	const implemented =
 		checker.executor === 'deterministic'
-			? Boolean(checkerKey && hasChecker(checkerKey, rule.key))
+			? Boolean(checkerKey && hasChecker(checkerKey, options))
 			: checker.executor === 'heuristic'
 				? Boolean(model && promptKey)
 				: true
+
 	return {
-		key: rule.key,
-		title: rule.title,
+		key: check.key,
+		title: check.title,
+		tier: check.tier ?? undefined,
 		executor: checker.executor,
 		checkerKey,
 		model,
 		promptKey,
-		// 서버에서 계산해 내려보낸다 — 클라이언트가 실행 registry를 import하지 않게.
+		options,
 		implemented,
-		evidence: rule.evidence ?? '',
-		referenceAssets: (rule.referenceAssets ?? []).flatMap(toReferenceAsset),
-		messages: toCheckRuleMessages(rule.messages),
+		evidence,
+		referenceAssets: referenceAssets.flatMap((asset) =>
+			asset.url && asset.mimeType
+				? [{ name: asset.name, url: asset.url, mimeType: asset.mimeType }]
+				: [],
+		),
+		messages: toRuntimeCheckMessages(check.messages),
 	}
 }
 
-function toCheckPlacement(
-	section: Awaited<ReturnType<typeof getCheckRulesetPages>>[number]['section'],
-) {
+function uniqueChecks(checks: RuntimeCheck[]): RuntimeCheck[] {
+	const byKey = new Map<string, RuntimeCheck>()
+	for (const check of checks) {
+		if (byKey.has(check.key)) {
+			throw new Error(`중복된 Check key입니다: ${check.key}`)
+		}
+		byKey.set(check.key, check)
+	}
+	return [...byKey.values()]
+}
+
+function toCheckPlacement(section: number | GuidelineSection) {
 	if (typeof section === 'number') {
 		return {
 			groupTitle: 'Check',
@@ -142,15 +171,4 @@ function toCheckPlacement(
 		sectionSlug,
 		sectionOrder: section.displayOrder,
 	}
-}
-
-function toReferenceAsset(asset: number | ApplicationImage): CheckReferenceAsset[] {
-	if (typeof asset === 'number' || !asset.url || !asset.mimeType) return []
-	return [
-		{
-			name: asset.name,
-			url: asset.url,
-			mimeType: asset.mimeType,
-		},
-	]
 }

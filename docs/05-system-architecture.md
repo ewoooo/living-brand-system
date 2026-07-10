@@ -154,8 +154,8 @@ flowchart LR
   AgentAdapter["Agent adapter / tool set"]
 
   subgraph Storage["Records and files"]
-    GuidelineStore["Guideline records<br/>(BrandGuideline / GuidelineSection / GuidelinePage)"]
-    BrandResourceStore["Brand resource records<br/>(RuleChecker / BrandRule / Asset metadata / Template metadata / Plugin ref)"]
+    GuidelineStore["Guideline records<br/>(BrandGuideline / GuidelineSection / GuidelinePage / Check)"]
+    BrandResourceStore["Brand resource records<br/>(RuleChecker / Asset metadata / Template metadata / Plugin ref)"]
     BrandAssetGenerationStore["Brand asset generation records<br/>(AssetGenerationSession / AssetGenerationInput / AssetGenerationOutput)"]
     QualityStore["Quality session records<br/>(QASession / CheckSession)"]
     BehaviorEventStore["Behavior event logs<br/>(BehaviorEventLog)"]
@@ -304,7 +304,7 @@ flowchart TB
   GuidelineService -->|"read / update published guideline"| GuidelineRepository
   ResourceService -->|"read / update resource links"| BrandResourceRepository
   ResourceService --> ConflictCheck
-  ConflictCheck -->|"read linked rules / assets"| BrandResourceRepository
+  ConflictCheck -->|"read checks / linked assets"| BrandResourceRepository
 
   GuidelineRequest --> ServerRender
   ServerRender -->|"read published guideline"| GuidelineRepository
@@ -493,14 +493,12 @@ flowchart TB
 | 후보 | 관리 단위 | 주요 관계 |
 | --- | --- | --- |
 | `guideline` global | BrandGuideline | 단일 가이드라인 설정 |
-| `guideline-sections` | GuidelineSection | pages를 소유하고 자신을 근거로 삼는 BrandRule을 역참조 |
-| `guideline-pages` | GuidelinePage | section에 속하고 blocks를 소유하며 자신을 근거로 삼는 BrandRule을 역참조 |
-| `guideline-blocks` | GuidelineBlock | Section/Page의 임베디드 block을 관계 대상으로 식별하고 자신을 참조하는 BrandRule을 역참조 |
+| `guideline-sections` | GuidelineSection | pages, blocks와 자체 checks를 소유 |
+| `guideline-pages` | GuidelinePage | section에 속하고 blocks와 자체 checks를 소유 |
 | `rule-checkers` | RuleChecker | executor 유형과 checker 또는 model binding을 1:1로 관리하는 검사 도구 계약 |
-| `rules` | BrandRule | RuleChecker 하나와 Section, Page, Block 관계 목록을 참조하고 브랜드 기준값과 evidence를 보유 |
-| `brand-logos` | BrandLogo | page, rule, asset generation session, check basis에서 참조 |
-| `brand-colors` | BrandColor | guideline document, BrandRule, template, plugin에서 참조 |
-| `brand-typefaces` | BrandTypeface | guideline document, BrandRule, template에서 참조 |
+| `brand-logos` | BrandLogo | guideline document, asset generation session, check basis에서 참조 |
+| `brand-colors` | BrandColor | guideline document, Check, template, plugin에서 참조 |
+| `brand-typefaces` | BrandTypeface | guideline document, Check, template에서 참조 |
 | `application-images` | ApplicationImage | page, asset generation session, check basis에서 참조 |
 | `templates` | Template | page, plugin, asset generation session에서 참조 |
 | `plugins` | Plugin | page, template, asset generation session에서 참조 |
@@ -527,10 +525,10 @@ flowchart TB
 | 표준 용어 | 의미 |
 | --- | --- |
 | Payload revision | Payload CMS가 남기는 편집 이력입니다. Admin diff와 restore에 사용합니다. |
-| Official Version | Creator와 Agent가 참조하는 발행 기준입니다. GuidelineVersion, RuleCheckerVersion, BrandRuleVersion, BrandAssetVersion, TemplateVersion, PluginVersion이 여기에 속합니다. |
+| Official Version | Creator와 Agent가 참조하는 발행 기준입니다. GuidelineVersion, RuleCheckerVersion, BrandAssetVersion, TemplateVersion, PluginVersion이 여기에 속합니다. Check는 GuidelineVersion에 포함됩니다. |
 | VersionStatus | Official Version의 상태입니다. `stage`, `live`, `archived`를 사용합니다. |
 | VersionRef | 실행 기록이 특정 Official Version을 가리키는 참조값입니다. |
-| ResourceRef | 에셋 제너레이션이 사용하는 published guideline, BrandRule, asset, template, plugin 참조 묶음입니다. 품질 검수는 요청 입력의 ResourceRef에서 필요한 VersionRef만 CheckBasis로 고정합니다. |
+| ResourceRef | 에셋 제너레이션이 사용하는 published guideline, CheckKey, asset, template, plugin 참조 묶음입니다. 품질 검수는 선택된 Check를 CheckRulesetSnapshot으로 고정합니다. |
 | Snapshot | 실행 당시 입력값 자체를 재현해야 할 때만 복사해 고정한 값입니다. |
 
 Payload revision은 CMS 편집 이력과 draft/publish 흐름에 사용합니다.
@@ -553,7 +551,7 @@ Payload revision, Official Version, Snapshot으로 재현할 수 있는 변경�
 - 다른 도메인이 알아야 하는 확정된 결과
 - 비동기 후속 작업을 시작해야 하는 결과
 
-예를 들어 `GuidelinePublished`, `BrandRuleVersionPublished`, `AssetGenerationSessionCompleted`, `CheckCompleted`는 저장할 수 있습니다.
+예를 들어 `GuidelinePublished`, `RuleCheckerVersionPublished`, `AssetGenerationSessionCompleted`, `CheckCompleted`는 저장할 수 있습니다.
 반면 단순 문구 수정, 내부 계산값, 장애 로그는 도메인 이벤트로 저장하지 않습니다.
 
 #### 저장하는 이벤트 예시

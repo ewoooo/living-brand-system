@@ -11,10 +11,11 @@
 재사용 단위는 유스케이스 서비스 **`startCheckSession`**입니다. 어떤 표면에서도 호출하도록 feature 폴더가 아닌 최상위(`src/services/start-check-session.service.ts`)에 둡니다.
 
 - 입력: 이미지 바이트(Buffer), 시나리오 키(룰셋·콘텐츠 플래그 선택), 콘텐츠 플래그(logo/typography/illustration/photography), 호출 출처(`review-page`/`chat`/`mcp-call`), 사용자
-- 출력: `{ checkSessionId, results(ruleKey→CheckResult), pendingRuleKeys }`
+- 출력: `{ checkSessionId, results(checkKey→CheckResult), pendingCheckKeys }`
 - `CheckResult`의 판정은 `rawResult.status`(`pass`/`ok`/`needs_review`/`fail`)와 `fulfillment`(충족도 %)로 표현됩니다.
-- 2단계 계약: 결정론적 rule은 즉시 채워지고, AI(heuristic) rule은 `pendingRuleKeys`로 반환된 뒤 **`completeCheckSessionAiCheck`**로 완성합니다.
-- 룰셋 조회 단위: `getCheckRules(ruleKeys?)`(코어), `getCheckRuleset()`(페이지 뷰모델).
+- 2단계 계약: 결정론적 Check는 즉시 채워지고, AI(heuristic) Check는 `pendingCheckKeys`로 반환된 뒤 **`completeCheckSessionAiCheck`**로 완성합니다.
+- 기준 조회 단위: `getRuntimeChecks(checkKeys?)`(실행), `getCheckRuleset()`(페이지 뷰모델).
+- 기준 소스: published `guideline-sections`·`guideline-pages`의 문서 및 Block `checks[]`. 실행 시 evidence·referenceAssets와 RuleChecker 계약을 `CheckSession.rulesetSnapshot`에 고정합니다.
 
 ## 3. 표면
 
