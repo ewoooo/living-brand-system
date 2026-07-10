@@ -155,7 +155,7 @@ flowchart LR
 
   subgraph Storage["Records and files"]
     GuidelineStore["Guideline records<br/>(BrandGuideline / GuidelineSection / GuidelinePage)"]
-    BrandResourceStore["Brand resource records<br/>(RuleSpec / BrandRule / Asset metadata / Template metadata / Plugin ref)"]
+    BrandResourceStore["Brand resource records<br/>(RuleChecker / BrandRule / Asset metadata / Template metadata / Plugin ref)"]
     BrandAssetGenerationStore["Brand asset generation records<br/>(AssetGenerationSession / AssetGenerationInput / AssetGenerationOutput)"]
     QualityStore["Quality session records<br/>(QASession / CheckSession)"]
     BehaviorEventStore["Behavior event logs<br/>(BehaviorEventLog)"]
@@ -496,8 +496,8 @@ flowchart TB
 | `guideline-sections` | GuidelineSection | pages를 소유하고 자신을 근거로 삼는 BrandRule을 역참조 |
 | `guideline-pages` | GuidelinePage | section에 속하고 blocks를 소유하며 자신을 근거로 삼는 BrandRule을 역참조 |
 | `guideline-blocks` | GuidelineBlock | Section/Page의 임베디드 block을 관계 대상으로 식별하고 자신을 참조하는 BrandRule을 역참조 |
-| `rule-specs` | RuleSpec | executor 유형과 checker 또는 model binding을 1:1로 관리하는 검사 도구 계약 |
-| `rules` | BrandRule | RuleSpec 하나와 Section, Page, Block 관계 목록을 참조하고 브랜드 기준값과 evidence를 보유 |
+| `rule-checkers` | RuleChecker | executor 유형과 checker 또는 model binding을 1:1로 관리하는 검사 도구 계약 |
+| `rules` | BrandRule | RuleChecker 하나와 Section, Page, Block 관계 목록을 참조하고 브랜드 기준값과 evidence를 보유 |
 | `brand-logos` | BrandLogo | page, rule, asset generation session, check basis에서 참조 |
 | `brand-colors` | BrandColor | guideline document, BrandRule, template, plugin에서 참조 |
 | `brand-typefaces` | BrandTypeface | guideline document, BrandRule, template에서 참조 |
@@ -527,7 +527,7 @@ flowchart TB
 | 표준 용어 | 의미 |
 | --- | --- |
 | Payload revision | Payload CMS가 남기는 편집 이력입니다. Admin diff와 restore에 사용합니다. |
-| Official Version | Creator와 Agent가 참조하는 발행 기준입니다. GuidelineVersion, RuleSpecVersion, BrandRuleVersion, BrandAssetVersion, TemplateVersion, PluginVersion이 여기에 속합니다. |
+| Official Version | Creator와 Agent가 참조하는 발행 기준입니다. GuidelineVersion, RuleCheckerVersion, BrandRuleVersion, BrandAssetVersion, TemplateVersion, PluginVersion이 여기에 속합니다. |
 | VersionStatus | Official Version의 상태입니다. `stage`, `live`, `archived`를 사용합니다. |
 | VersionRef | 실행 기록이 특정 Official Version을 가리키는 참조값입니다. |
 | ResourceRef | 에셋 제너레이션이 사용하는 published guideline, BrandRule, asset, template, plugin 참조 묶음입니다. 품질 검수는 요청 입력의 ResourceRef에서 필요한 VersionRef만 CheckBasis로 고정합니다. |

@@ -23,6 +23,7 @@ import * as migration_20260710_043223_backfill_rule_specs from './20260710_04322
 import * as migration_20260710_045145_add_rule_document_relations from './20260710_045145_add_rule_document_relations';
 import * as migration_20260710_045208_backfill_rule_documents from './20260710_045208_backfill_rule_documents';
 import * as migration_20260710_050945_contract_rule_legacy_fields from './20260710_050945_contract_rule_legacy_fields';
+import * as migration_20260710_052026_rename_rule_specs_to_checkers from './20260710_052026_rename_rule_specs_to_checkers';
 
 export const migrations = [
   {
@@ -148,6 +149,11 @@ export const migrations = [
   {
     up: migration_20260710_050945_contract_rule_legacy_fields.up,
     down: migration_20260710_050945_contract_rule_legacy_fields.down,
-    name: '20260710_050945_contract_rule_legacy_fields'
+    name: '20260710_050945_contract_rule_legacy_fields',
+  },
+  {
+    up: migration_20260710_052026_rename_rule_specs_to_checkers.up,
+    down: migration_20260710_052026_rename_rule_specs_to_checkers.down,
+    name: '20260710_052026_rename_rule_specs_to_checkers'
   },
 ];

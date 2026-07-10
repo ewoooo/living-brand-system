@@ -6,7 +6,7 @@ import {
 	getCheckRulesetPages,
 } from '@/features/asset-check/repositories/check-ruleset.payload.repository'
 import { toCheckRuleMessages } from '@/features/asset-check/utils/check-rule-messages'
-import type { ApplicationImage, Rule, RuleSpec } from '@/payload-types'
+import type { ApplicationImage, Rule, RuleChecker } from '@/payload-types'
 
 export interface CheckReferenceAsset {
 	name: string
@@ -17,7 +17,7 @@ export interface CheckReferenceAsset {
 export interface CheckRule {
 	key: string
 	title: string
-	executor: RuleSpec['executor']
+	executor: RuleChecker['executor']
 	checkerKey?: string
 	model?: string
 	promptKey?: string
@@ -86,21 +86,21 @@ export async function getCheckRules(ruleKeys?: string[]): Promise<CheckRule[]> {
 }
 
 function toCheckRule(rule: Rule): CheckRule {
-	const spec = typeof rule.spec === 'object' ? rule.spec : null
-	if (!spec) throw new Error(`RuleSpec이 연결되지 않은 룰입니다: ${rule.key}`)
-	const checkerKey = spec.checkerKey ?? undefined
-	const model = spec.model ?? undefined
-	const promptKey = spec.promptKey ?? undefined
+	const checker = typeof rule.checker === 'object' ? rule.checker : null
+	if (!checker) throw new Error(`RuleChecker가 연결되지 않은 룰입니다: ${rule.key}`)
+	const checkerKey = checker.checkerKey ?? undefined
+	const model = checker.model ?? undefined
+	const promptKey = checker.promptKey ?? undefined
 	const implemented =
-		spec.executor === 'deterministic'
+		checker.executor === 'deterministic'
 			? Boolean(checkerKey && hasChecker(checkerKey, rule.key))
-			: spec.executor === 'heuristic'
+			: checker.executor === 'heuristic'
 				? Boolean(model && promptKey)
 				: true
 	return {
 		key: rule.key,
 		title: rule.title,
-		executor: spec.executor,
+		executor: checker.executor,
 		checkerKey,
 		model,
 		promptKey,

@@ -78,7 +78,7 @@ flowchart LR
   end
 
   subgraph Resource["브랜드 자원 관리"]
-    RuleSpec["RuleSpec"]
+    RuleChecker["RuleChecker"]
     BrandRule["BrandRule"]
     BrandAsset["BrandAsset"]
     Template["Template"]
@@ -126,7 +126,7 @@ flowchart LR
   BrandRule -->|"근거 문서"| GuidelineSection
   BrandRule -->|"근거 문서"| GuidelinePage
   BrandRule -->|"근거 문서"| GuidelineBlock
-  BrandRule -->|"실행 도구"| RuleSpec
+  BrandRule -->|"실행 도구"| RuleChecker
   GuidelinePage -->|"소유"| PageAssetRef
   PageAssetRef -->|"자원 사용"| BrandAsset
   GuidelinePage -->|"템플릿 사용"| Template
@@ -166,7 +166,7 @@ flowchart LR
   classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
   classDef record fill:#F1F3F5,stroke:#868E96,stroke-width:1.5px,color:#1F1F1F;
 
-  class BrandGuideline,RuleSpec,BrandRule,BrandAsset,Template,Plugin,AssetGenerationSession,QASession,CheckSession,BehaviorEventLog aggregate;
+  class BrandGuideline,RuleChecker,BrandRule,BrandAsset,Template,Plugin,AssetGenerationSession,QASession,CheckSession,BehaviorEventLog aggregate;
   class GuidelineSection,GuidelinePage,GuidelineBlock,AssetGenerationInput,AssetGenerationOutput,Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult entity;
   class PageAssetRef,AnswerCitation,CheckRecommendation,PageViewEvent,ClickEvent,AssetDownloadEvent,SectionDwellEvent,SearchEvent,OutboundLinkEvent,CustomEvent childEntity;
 ```
@@ -184,9 +184,9 @@ flowchart LR
 | CheckBasis -> BrandGuideline / BrandRule / BrandAsset | 기준 묶음은 검수 시점의 GuidelineVersionRef, BrandRuleVersionRef, BrandAssetVersionRef를 참조합니다. |
 | CheckDecision -> CheckResult | 최종 판정은 여러 점검 결과를 소유합니다. |
 | CheckResult -> CheckRecommendation | 점검 결과는 필요한 수정 권장 사항을 소유합니다. |
-| BrandGuideline / RuleSpec / BrandRule / BrandAsset / Template / Plugin -> Version | 발행 대상은 Official Version을 만들고, Version은 PreviousVersionRef와 PayloadRevisionRef를 보존합니다. |
+| BrandGuideline / RuleChecker / BrandRule / BrandAsset / Template / Plugin -> Version | 발행 대상은 Official Version을 만들고, Version은 PreviousVersionRef와 PayloadRevisionRef를 보존합니다. |
 | BrandGuideline -> BrandRule | 브랜드가 채택한 규칙과 기준값을 보유합니다. |
-| BrandRule -> RuleSpec | BrandRule은 검사에 사용할 실행 도구 계약을 참조합니다. |
+| BrandRule -> RuleChecker | BrandRule은 검사에 사용할 실행 도구 계약을 참조합니다. |
 
 ## 4. 가이드라인 관리
 
@@ -194,11 +194,11 @@ flowchart LR
 GuidelineSection, GuidelinePage, GuidelineBlock은 독립 식별자를 가진 문서입니다. 세 문서는 `Section -> Page -> Block` 계층을 이룹니다.
 GuidelineDocument는 세 문서 타입을 함께 부르는 이름입니다.
 
-RuleSpec과 BrandRule은 책임이 다릅니다.
-RuleSpec은 BrandRule을 검사할 실행 도구 계약입니다. 하나의 RuleSpec은 하나의 ExecutorType과 결합합니다. deterministic은 CheckerKey를 사용하고, heuristic은 ModelRef와 PromptKey를 사용하며, manual은 자동 실행 binding을 갖지 않습니다.
-BrandRule은 사용자가 정한 브랜드 기준입니다. RuleSpec, RuleValue, Tier, Messages와 Section, Page, Block을 가리키는 GuidelineDocumentRef 목록을 보유합니다. EvidenceSnapshot과 ReferenceAssetRef는 근거 문서에서 파생합니다. 규칙 분류는 별도 category에 저장하지 않고 문서 계층에서 파생합니다.
-하나의 BrandRule은 정확히 하나의 RuleSpec을 참조하고 여러 GuidelineDocument에서 설명되거나 적용될 수 있습니다. 하나의 GuidelineDocument도 여러 BrandRule의 근거가 될 수 있습니다.
-RuleSpec과 BrandRule은 각각 Official Version을 가집니다. 검수는 BrandRuleVersion과 그 버전이 참조하는 RuleSpecVersion을 함께 고정합니다.
+RuleChecker과 BrandRule은 책임이 다릅니다.
+RuleChecker는 BrandRule을 검사할 실행 도구 계약입니다. 하나의 RuleChecker는 하나의 ExecutorType과 결합합니다. deterministic은 CheckerKey를 사용하고, heuristic은 ModelRef와 PromptKey를 사용하며, manual은 자동 실행 binding을 갖지 않습니다.
+BrandRule은 사용자가 정한 브랜드 기준입니다. RuleChecker, RuleValue, Tier, Messages와 Section, Page, Block을 가리키는 GuidelineDocumentRef 목록을 보유합니다. EvidenceSnapshot과 ReferenceAssetRef는 근거 문서에서 파생합니다. 규칙 분류는 별도 category에 저장하지 않고 문서 계층에서 파생합니다.
+하나의 BrandRule은 정확히 하나의 RuleChecker를 참조하고 여러 GuidelineDocument에서 설명되거나 적용될 수 있습니다. 하나의 GuidelineDocument도 여러 BrandRule의 근거가 될 수 있습니다.
+RuleChecker과 BrandRule은 각각 Official Version을 가집니다. 검수는 BrandRuleVersion과 그 버전이 참조하는 RuleCheckerVersion을 함께 고정합니다.
 
 ```text
 [도메인] 브랜드 운영 시스템
@@ -221,12 +221,12 @@ RuleSpec과 BrandRule은 각각 Official Version을 가집니다. 검수는 Bran
       │              └── GuidelineVersionStaged, GuidelineVersionPublished, GuidelineVersionArchived
       ├── [바운디드 컨텍스트] 브랜드 자원 관리
       │    └── [도메인 모델]
-      │         ├── 애그리거트(관리 단위): RuleSpec
-      │         │    ├── 엔티티: RuleSpecVersion
-      │         │    └── 값 객체: RuleSpecKey, ExecutorType, CheckerKey, ModelRef, PromptKey
+      │         ├── 애그리거트(관리 단위): RuleChecker
+      │         │    ├── 엔티티: RuleCheckerVersion
+      │         │    └── 값 객체: RuleCheckerKey, ExecutorType, CheckerKey, ModelRef, PromptKey
       │         ├── 애그리거트(관리 단위): BrandRule
       │         │    ├── 엔티티: BrandRuleVersion
-      │         │    └── 값 객체: RuleSpecRef, GuidelineDocumentRef, RuleValue, Tier, Messages, EvidenceSnapshot, ReferenceAssetRef
+      │         │    └── 값 객체: RuleCheckerRef, GuidelineDocumentRef, RuleValue, Tier, Messages, EvidenceSnapshot, ReferenceAssetRef
       │         ├── 애그리거트(관리 단위): BrandAsset
       │         │    ├── 엔티티: AssetFile
       │         │    ├── 엔티티: BrandAssetVersion
@@ -244,7 +244,7 @@ RuleSpec과 BrandRule은 각각 Official Version을 가집니다. 검수는 Bran
       │              ├── TemplateRegistered, TemplatePublished, TemplateDeprecated
       │              ├── PluginRegistered, PluginPublished, PluginDeprecated
       │              ├── ResourceLinkedToGuideline
-      │              ├── RuleSpecVersionStaged, RuleSpecVersionPublished, RuleSpecVersionArchived
+      │              ├── RuleCheckerVersionStaged, RuleCheckerVersionPublished, RuleCheckerVersionArchived
       │              ├── BrandRuleVersionStaged, BrandRuleVersionPublished, BrandRuleVersionArchived
       │              ├── BrandAssetVersionStaged, BrandAssetVersionPublished, BrandAssetVersionArchived
       │              ├── TemplateVersionStaged, TemplateVersionPublished, TemplateVersionArchived
@@ -267,7 +267,7 @@ flowchart LR
   end
 
   subgraph Resource["브랜드 자원 관리"]
-    RuleSpec["RuleSpec"]
+    RuleChecker["RuleChecker"]
     BrandRule["BrandRule"]
     BrandAsset["BrandAsset"]
     Template["Template"]
@@ -280,7 +280,7 @@ flowchart LR
   BrandRule -->|"근거 문서"| Section
   BrandRule -->|"근거 문서"| Page
   BrandRule -->|"근거 문서"| Block
-  BrandRule -->|"실행 도구"| RuleSpec
+  BrandRule -->|"실행 도구"| RuleChecker
   Page -->|"소유"| PageAssetRefNode
   PageAssetRefNode -->|"자원 사용"| BrandAsset
   Page -->|"템플릿 사용"| Template
@@ -291,7 +291,7 @@ flowchart LR
   classDef entity fill:#E7F5FF,stroke:#1C7ED6,stroke-width:1.5px,color:#1F1F1F;
   classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
 
-  class BrandGuideline,RuleSpec,BrandRule,BrandAsset,Template,Plugin aggregate;
+  class BrandGuideline,RuleChecker,BrandRule,BrandAsset,Template,Plugin aggregate;
   class Section,Page,Block entity;
   class PageAssetRefNode childEntity;
 ```
@@ -304,8 +304,8 @@ GuidelinePage는 GuidelineBlock 목록을 소유합니다. GuidelineBlock은 col
 BrandRule은 세 문서 타입을 GuidelineDocumentRef 목록으로 참조합니다. 문서는 자신을 참조하는 BrandRule 목록을 역참조합니다.
 PageAssetRef는 페이지 안에서의 표시 순서, 캡션, 예시 역할을 기록합니다.
 
-RuleSpec은 BrandRule을 검사할 실행 도구 계약입니다. deterministic RuleSpec은 CheckerKey와, heuristic RuleSpec은 ModelRef 및 PromptKey와 결합합니다.
-BrandRule은 사용자가 정한 RuleValue와 근거 문서를 보유하고 RuleSpec을 통해 검수합니다. 자체 Official Version으로 기준값과 근거 변경 이력을 관리합니다.
+RuleChecker는 BrandRule을 검사할 실행 도구 계약입니다. deterministic RuleChecker는 CheckerKey와, heuristic RuleChecker는 ModelRef 및 PromptKey와 결합합니다.
+BrandRule은 사용자가 정한 RuleValue와 근거 문서를 보유하고 RuleChecker를 통해 검수합니다. 자체 Official Version으로 기준값과 근거 변경 이력을 관리합니다.
 RuleException(규칙별 예외)과 RuleValue의 세부 값 분해는 현재 범위에서 제외하고 추후 고도화합니다.
 
 Official Version 전환은 별도 애그리거트를 만들지 않고, 각 원본 애그리거트가 소유한 Version 엔티티의 stage/live/archived 상태를 바꾸는 서비스 흐름으로 둡니다.

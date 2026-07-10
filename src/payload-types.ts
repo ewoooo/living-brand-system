@@ -72,7 +72,7 @@ export interface Config {
     'guideline-sections': GuidelineSection;
     'guideline-pages': GuidelinePage;
     'guideline-blocks': GuidelineBlock;
-    'rule-specs': RuleSpec;
+    'rule-checkers': RuleChecker;
     rules: Rule;
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
@@ -108,7 +108,7 @@ export interface Config {
     'guideline-blocks': {
       linkedRules: 'rules';
     };
-    'rule-specs': {
+    'rule-checkers': {
       rules: 'rules';
     };
     'template-categories': {
@@ -120,7 +120,7 @@ export interface Config {
     'guideline-sections': GuidelineSectionsSelect<false> | GuidelineSectionsSelect<true>;
     'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
     'guideline-blocks': GuidelineBlocksSelect<false> | GuidelineBlocksSelect<true>;
-    'rule-specs': RuleSpecsSelect<false> | RuleSpecsSelect<true>;
+    'rule-checkers': RuleCheckersSelect<false> | RuleCheckersSelect<true>;
     rules: RulesSelect<false> | RulesSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
@@ -379,9 +379,9 @@ export interface GuidelinePage {
 export interface Rule {
   id: number;
   /**
-   * 이 브랜드 규칙을 검사할 Rule Tool입니다.
+   * 이 브랜드 규칙을 검사할 Rule Checker입니다.
    */
-  spec: number | RuleSpec;
+  checker: number | RuleChecker;
   /**
    * 이 규칙을 설명하거나 적용하는 Section, Page, Block입니다.
    */
@@ -450,9 +450,9 @@ export interface Rule {
  * Brand Rule을 검사할 실행 도구와 호출 계약입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "rule-specs".
+ * via the `definition` "rule-checkers".
  */
-export interface RuleSpec {
+export interface RuleChecker {
   id: number;
   /**
    * 검사 도구의 안정적인 식별자입니다.
@@ -1303,8 +1303,8 @@ export interface PayloadLockedDocument {
         value: number | GuidelineBlock;
       } | null)
     | ({
-        relationTo: 'rule-specs';
-        value: number | RuleSpec;
+        relationTo: 'rule-checkers';
+        value: number | RuleChecker;
       } | null)
     | ({
         relationTo: 'rules';
@@ -1566,9 +1566,9 @@ export interface GuidelineBlocksSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "rule-specs_select".
+ * via the `definition` "rule-checkers_select".
  */
-export interface RuleSpecsSelect<T extends boolean = true> {
+export interface RuleCheckersSelect<T extends boolean = true> {
   key?: T;
   executor?: T;
   checkerKey?: T;
@@ -1584,7 +1584,7 @@ export interface RuleSpecsSelect<T extends boolean = true> {
  * via the `definition` "rules_select".
  */
 export interface RulesSelect<T extends boolean = true> {
-  spec?: T;
+  checker?: T;
   documents?: T;
   key?: T;
   title?: T;
@@ -2136,8 +2136,8 @@ export interface TaskSchedulePublish {
           value: number | GuidelinePage;
         } | null)
       | ({
-          relationTo: 'rule-specs';
-          value: number | RuleSpec;
+          relationTo: 'rule-checkers';
+          value: number | RuleChecker;
         } | null)
       | ({
           relationTo: 'brand-logos';

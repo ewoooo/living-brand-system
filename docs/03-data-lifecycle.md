@@ -140,21 +140,21 @@
 
 ## 4. 브랜드 자원
 
-### 4.1 RuleSpec
+### 4.1 RuleChecker
 
-데이터명: RuleSpec
+데이터명: RuleChecker
 수집 목적: BrandRule을 검사할 실행 도구와 호출 계약을 관리한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 실행 유형과 실행 도구를 선택하면 draft 상태로 생성한다. |
-| 전송 | RuleSpec 편집 요청은 Payload API를 통해 Brand resource publishing service로 전달한다. |
-| 저장 | RuleSpecKey, ExecutorType과 실행 유형별 binding을 저장한다. deterministic은 CheckerKey를, heuristic은 ModelRef와 PromptKey를 저장한다. |
-| 처리 | 하나의 RuleSpec은 하나의 executor binding만 가지며 BrandRule의 검사 요청을 해당 실행기로 전달한다. |
-| 활용 | 품질 검수는 BrandRule이 참조하는 RuleSpec으로 checker 또는 model을 선택한다. |
-| 공유·제공 | 검수 런타임에는 live 상태의 RuleSpecVersion만 제공한다. |
-| 보관 | RuleSpecVersion과 Payload revision을 함께 보관한다. |
-| 파기 | draft RuleSpec은 삭제할 수 있다. 발행된 RuleSpec은 archived 상태로 전환하고 기존 검수 기록의 참조는 보존한다. |
+| 전송 | RuleChecker 편집 요청은 Payload API를 통해 Brand resource publishing service로 전달한다. |
+| 저장 | RuleCheckerKey, ExecutorType과 실행 유형별 binding을 저장한다. deterministic은 CheckerKey를, heuristic은 ModelRef와 PromptKey를 저장한다. |
+| 처리 | 하나의 RuleChecker는 하나의 executor binding만 가지며 BrandRule의 검사 요청을 해당 실행기로 전달한다. |
+| 활용 | 품질 검수는 BrandRule이 참조하는 RuleChecker로 checker 또는 model을 선택한다. |
+| 공유·제공 | 검수 런타임에는 live 상태의 RuleCheckerVersion만 제공한다. |
+| 보관 | RuleCheckerVersion과 Payload revision을 함께 보관한다. |
+| 파기 | draft RuleChecker는 삭제할 수 있다. 발행된 RuleChecker는 archived 상태로 전환하고 기존 검수 기록의 참조는 보존한다. |
 
 ### 4.2 BrandRule
 
@@ -163,9 +163,9 @@
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Manager가 규칙 이름, 기준값, 중요도, 사용자 메시지를 입력하고 RuleSpec 하나와 관련 문서를 선택하면 draft 상태로 생성한다. |
+| 생성·수집 | Manager가 규칙 이름, 기준값, 중요도, 사용자 메시지를 입력하고 RuleChecker 하나와 관련 문서를 선택하면 draft 상태로 생성한다. |
 | 전송 | BrandRule 편집 요청은 Payload API를 통해 Brand resource publishing service로 전달한다. |
-| 저장 | RuleSpecRef, GuidelineDocumentRef 목록, RuleValue, Tier, Messages, EvidenceSnapshot, ReferenceAssetRef를 저장한다. |
+| 저장 | RuleCheckerRef, GuidelineDocumentRef 목록, RuleValue, Tier, Messages, EvidenceSnapshot, ReferenceAssetRef를 저장한다. |
 | 처리 | 근거 문서가 발행되면 evidence와 참고 자원을 갱신하고 BrandRuleVersion 후보를 만든다. |
 | 활용 | Creator, Agent, 품질 검수가 실제 브랜드 판단 기준으로 사용한다. |
 | 공유·제공 | Creator와 Agent에는 live 상태의 BrandRuleVersion만 제공한다. |
@@ -254,19 +254,19 @@
 | 보관 | stage, live, archived 상태와 VersionReason을 보관한다. |
 | 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 잘못 생성된 stage 상태의 BrandGuidelineVersion만 삭제할 수 있다. |
 
-### 5.2 RuleSpecVersion
+### 5.2 RuleCheckerVersion
 
-데이터명: RuleSpecVersion
+데이터명: RuleCheckerVersion
 수집 목적: 품질 검수에서 사용할 실행 도구와 호출 계약을 고정한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | RuleSpec이 승인되거나 수정되면 System이 RuleSpecVersion 후보를 만든다. |
+| 생성·수집 | RuleChecker가 승인되거나 수정되면 System이 RuleCheckerVersion 후보를 만든다. |
 | 전송 | Official Version 생성 요청은 Brand resource publishing service로 전달한다. |
 | 저장 | VersionNumber, VersionStatus, ExecutorType, CheckerKey 또는 ModelRef와 PromptKey, PayloadRevisionRef를 저장한다. |
-| 처리 | live 전환 시 기존 live 상태의 RuleSpecVersion을 archived 상태로 바꾼다. |
+| 처리 | live 전환 시 기존 live 상태의 RuleCheckerVersion을 archived 상태로 바꾼다. |
 | 활용 | BrandRuleVersion과 검수 런타임이 실행 도구를 선택할 때 참조한다. |
-| 공유·제공 | 검수 런타임에는 live 상태의 RuleSpecVersion만 제공한다. |
+| 공유·제공 | 검수 런타임에는 live 상태의 RuleCheckerVersion만 제공한다. |
 | 보관 | 모든 Official Version과 변경 사유를 보관한다. |
 | 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 잘못 생성된 stage 상태만 삭제할 수 있다. |
 
@@ -279,7 +279,7 @@
 | --- | --- |
 | 생성·수집 | BrandRule이 승인되거나 수정되면 System이 BrandRuleVersion 후보를 만든다. |
 | 전송 | Official Version 생성 요청은 Brand resource publishing service로 전달한다. |
-| 저장 | VersionNumber, VersionStatus, RuleSpecVersionRef, GuidelineDocumentRef, RuleValue, Tier, EvidenceSnapshot, PayloadRevisionRef를 저장한다. |
+| 저장 | VersionNumber, VersionStatus, RuleCheckerVersionRef, GuidelineDocumentRef, RuleValue, Tier, EvidenceSnapshot, PayloadRevisionRef를 저장한다. |
 | 처리 | live 전환 시 기존 live 상태의 BrandRuleVersion을 archived 상태로 바꾼다. |
 | 활용 | AnswerCitation과 CheckBasis에서 BrandRuleVersionRef로 참조한다. |
 | 공유·제공 | Creator와 Agent에는 live 상태의 BrandRuleVersion만 제공한다. |

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { RuleSpecs } from './RuleSpecs'
+import { RuleCheckers } from './RuleCheckers'
 
 type Validate = (
 	value: unknown,
@@ -7,7 +7,7 @@ type Validate = (
 ) => unknown
 
 function validationFor(name: string): Validate {
-	const field = RuleSpecs.fields.find(
+	const field = RuleCheckers.fields.find(
 		(candidate) => 'name' in candidate && candidate.name === name,
 	)
 	if (field?.type !== 'text' || typeof field.validate !== 'function') {
@@ -16,7 +16,7 @@ function validationFor(name: string): Validate {
 	return field.validate as unknown as Validate
 }
 
-describe('RuleSpecs executor binding', () => {
+describe('RuleCheckers executor binding', () => {
 	it('선택한 executor에 필요한 binding만 필수로 검증한다', () => {
 		expect(
 			validationFor('checkerKey')('', { siblingData: { executor: 'deterministic' } }),

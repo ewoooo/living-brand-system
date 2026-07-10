@@ -4,7 +4,7 @@ import { managerManagedAccess } from '@/lib/auth'
 /**
  * Rule catalog. 하나의 rule은 하나의 검수 컨텍스트와 기준을 대표한다.
  * 페이지는 rule을 배치/노출만 하고, 검수 런타임은 이 컬렉션을 기준 SSOT로 읽는다.
- * tier는 기준 강도이고 실행 방식은 연결된 RuleSpec이 소유한다.
+ * tier는 기준 강도이고 실행 방식은 연결된 RuleChecker가 소유한다.
  */
 export const Rules: CollectionConfig = {
 	slug: 'rules',
@@ -16,18 +16,18 @@ export const Rules: CollectionConfig = {
 	admin: {
 		useAsTitle: 'key',
 		group: 'Guidelines',
-		defaultColumns: ['key', 'title', 'spec', 'tier', 'status'],
+		defaultColumns: ['key', 'title', 'checker', 'tier', 'status'],
 	},
 	fields: [
 		{
-			name: 'spec',
+			name: 'checker',
 			type: 'relationship',
-			relationTo: 'rule-specs',
+			relationTo: 'rule-checkers',
 			required: true,
 			index: true,
 			admin: {
 				position: 'sidebar',
-				description: '이 브랜드 규칙을 검사할 Rule Tool입니다.',
+				description: '이 브랜드 규칙을 검사할 Rule Checker입니다.',
 			},
 		},
 		{

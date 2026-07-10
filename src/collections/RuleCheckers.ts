@@ -15,13 +15,13 @@ const requiredFor =
 		)
 	}
 
-export const RuleSpecs: CollectionConfig = {
-	slug: 'rule-specs',
-	dbName: 'rule_specs',
+export const RuleCheckers: CollectionConfig = {
+	slug: 'rule-checkers',
+	dbName: 'rule_checkers',
 	access: managerManagedAccess,
 	labels: {
-		singular: 'Rule Tool',
-		plural: 'Rule Tools',
+		singular: 'Rule Checker',
+		plural: 'Rule Checkers',
 	},
 	admin: {
 		group: 'Guidelines',
@@ -79,7 +79,7 @@ export const RuleSpecs: CollectionConfig = {
 			name: 'rules',
 			type: 'join',
 			collection: 'rules',
-			on: 'spec',
+			on: 'checker',
 			admin: {
 				allowCreate: false,
 				defaultColumns: ['key', 'title', 'tier', 'status'],

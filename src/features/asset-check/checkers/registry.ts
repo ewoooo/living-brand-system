@@ -1,5 +1,5 @@
 /**
- * Checker registry — RuleSpec checkerKey와 checker 구현, 룰별 기준 데이터를 연결한다.
+ * Checker registry — RuleChecker checkerKey와 checker 구현, 룰별 기준 데이터를 연결한다.
  * checker 파일은 알고리즘 하나만 소유하고, 같은 알고리즘을 쓰는 룰은
  * 여기서 데이터만 다르게 바인딩한다 (룰별 래퍼 파일 금지).
  */
