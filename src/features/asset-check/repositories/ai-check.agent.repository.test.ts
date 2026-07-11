@@ -65,7 +65,9 @@ describe('runAiCheck', () => {
 			},
 		} as unknown as Awaited<ReturnType<typeof generateText>>)
 
-		const { runAiCheck } = await import('@/features/asset-check/services/ai-check.service')
+		const { runAiCheck } = await import(
+			'@/features/asset-check/repositories/ai-check.agent.repository'
+		)
 		const result = await runAiCheck(checks, {
 			image: { data: Buffer.from('png'), mediaType: 'image/png' },
 			pixels: [],

@@ -84,9 +84,9 @@ export function convertFigmaNodeTree(
 	// 스택 자식은 흐름이 배치하므로 좌표 없이 크기 모드만 승계한다. 순서는 Figma 자식 순서 그대로.
 	const convertFlowChildren = (node: FigmaNode): JsonFlowElement[] =>
 		(node.children ?? []).flatMap((child): JsonFlowElement[] => {
-			const box = child.absoluteBoundingBox
+			const box = visibleBox(child)
 
-			if (!box || child.visible === false) {
+			if (!box) {
 				return []
 			}
 
@@ -97,11 +97,13 @@ export function convertFigmaNodeTree(
 				heightMode: toSizeMode(child.layoutSizingVertical),
 			}
 
-			if (child.type === 'TEXT') {
+			const kind = nodeKind(child)
+
+			if (kind === 'text') {
 				return [{ id: nextId('text'), ...size, ...textPropsFromNode(child) }]
 			}
 
-			if (isImageLikeNode(child)) {
+			if (kind === 'image') {
 				const asset = assets[child.id]
 
 				return asset
@@ -119,7 +121,7 @@ export function convertFigmaNodeTree(
 					: []
 			}
 
-			if (CONTAINER_TYPES.has(child.type) && isAutoLayout(child)) {
+			if (kind === 'container' && isAutoLayout(child)) {
 				return [
 					{
 						id: nextId('stack'),
@@ -131,7 +133,7 @@ export function convertFigmaNodeTree(
 				]
 			}
 
-			if (child.type === 'RECTANGLE') {
+			if (kind === 'rectangle') {
 				const rectProps = rectPropsFromNode(child)
 
 				return rectProps ? [{ id: nextId('rect'), ...size, ...rectProps }] : []
@@ -142,9 +144,9 @@ export function convertFigmaNodeTree(
 
 	const walk = (node: FigmaNode) => {
 		for (const child of node.children ?? []) {
-			const box = child.absoluteBoundingBox
+			const box = visibleBox(child)
 
-			if (!box || child.visible === false) {
+			if (!box) {
 				continue
 			}
 
@@ -155,7 +157,9 @@ export function convertFigmaNodeTree(
 				height: Math.round(box.height),
 			}
 
-			if (child.type === 'TEXT') {
+			const kind = nodeKind(child)
+
+			if (kind === 'text') {
 				elements.push({
 					id: nextId('text'),
 					zIndex: nextZ(),
@@ -165,7 +169,7 @@ export function convertFigmaNodeTree(
 				continue
 			}
 
-			if (isImageLikeNode(child)) {
+			if (kind === 'image') {
 				const asset = assets[child.id]
 
 				// 렌더 실패 등으로 에셋이 없는 노드는 요소를 만들지 않는다 (호출자가 skipped로 보고).
@@ -185,7 +189,7 @@ export function convertFigmaNodeTree(
 			}
 
 			// 슬롯을 품고 flow로 표현 가능한 auto-layout 프레임은 stack으로 승격한다.
-			if (CONTAINER_TYPES.has(child.type) && isPromotableStack(child)) {
+			if (kind === 'container' && isPromotableStack(child)) {
 				elements.push({
 					id: nextId('stack'),
 					zIndex: nextZ(),
@@ -197,14 +201,14 @@ export function convertFigmaNodeTree(
 				continue
 			}
 
-			if (child.type === 'RECTANGLE' || CONTAINER_TYPES.has(child.type)) {
+			if (kind === 'rectangle' || kind === 'container') {
 				const rectProps = rectPropsFromNode(child)
 
 				if (rectProps) {
 					elements.push({ id: nextId('rect'), zIndex: nextZ(), ...frame, ...rectProps })
 				}
 
-				if (CONTAINER_TYPES.has(child.type)) {
+				if (kind === 'container') {
 					walk(child)
 				}
 			}
@@ -240,6 +244,17 @@ export function convertFigmaNodeTree(
 	walk(root)
 
 	return { width, height, background, elements }
+}
+
+function visibleBox(node: FigmaNode) {
+	return node.visible === false ? null : (node.absoluteBoundingBox ?? null)
+}
+
+function nodeKind(node: FigmaNode): 'text' | 'image' | 'container' | 'rectangle' | null {
+	if (node.type === 'TEXT') return 'text'
+	if (isImageLikeNode(node)) return 'image'
+	if (CONTAINER_TYPES.has(node.type)) return 'container'
+	return node.type === 'RECTANGLE' ? 'rectangle' : null
 }
 
 function isAutoLayout(node: FigmaNode): boolean {

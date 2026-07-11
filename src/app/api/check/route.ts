@@ -1,6 +1,6 @@
-import type { CheckSessionSource } from '@/features/asset-check/repositories/check-session.payload.repository'
+import type { CheckSessionSource } from '@/features/asset-check/types'
+import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
-import type { User } from '@/payload-types'
 import { startCheckSession } from '@/services/start-check-session.service'
 
 export const maxDuration = 30
@@ -16,10 +16,6 @@ function parseScenarioKey(value: FormDataEntryValue | null | undefined): string 
 	return typeof value === 'string' && value ? value : undefined
 }
 
-function isUser(value: unknown): value is User {
-	return Boolean(value && typeof value === 'object' && 'email' in value && 'role' in value)
-}
-
 /**
  * 검수 대상 이미지(FormData)를 받아 시나리오 기준으로 룰별 서버 확정 판정을 돌려준다.
  * 브라우저 check 화면이 부르는 통로. 검수 세션 저장과 계산은 service가 소유한다.
@@ -30,7 +26,7 @@ export async function POST(req: Request) {
 	}
 
 	const { payload, user } = await authenticateRequest()
-	if (!isUser(user)) {
+	if (!isPayloadUser(user)) {
 		return Response.json({ message: 'Unauthorized' }, { status: 401 })
 	}
 

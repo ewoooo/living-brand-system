@@ -1,14 +1,10 @@
+import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
-import type { User } from '@/payload-types'
 import { completeCheckSessionAiCheck } from '@/services/start-check-session.service'
 
 export const maxDuration = 30
 
 const MAX_IMAGE_BYTES = 20_000_000
-
-function isUser(value: unknown): value is User {
-	return Boolean(value && typeof value === 'object' && 'email' in value && 'role' in value)
-}
 
 function parseCheckKeys(value: FormDataEntryValue | null | undefined): string[] {
 	if (typeof value !== 'string') return []
@@ -31,7 +27,7 @@ export async function POST(req: Request) {
 	}
 
 	const { payload, user } = await authenticateRequest()
-	if (!isUser(user)) {
+	if (!isPayloadUser(user)) {
 		return Response.json({ message: 'Unauthorized' }, { status: 401 })
 	}
 

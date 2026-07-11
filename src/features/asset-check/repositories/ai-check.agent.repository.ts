@@ -36,9 +36,8 @@ export interface AiCheckRunResult {
 }
 
 /**
- * AI 기반 휴리스틱 검수 유스케이스 경계.
- * 모델 호출(AI SDK)과 레퍼런스 이미지 fetch I/O는 현재 이 서비스가 직접 소유한다.
- * ponytail: 두 번째 소비자나 provider 교체가 생기면 repository로 내린다.
+ * AI 기반 휴리스틱 검수 adapter.
+ * 모델 호출(AI SDK)과 레퍼런스 이미지 fetch I/O를 소유한다.
  */
 export async function runAiCheck(
 	checks: RuntimeCheck[],

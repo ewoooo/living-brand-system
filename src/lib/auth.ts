@@ -1,4 +1,5 @@
 import type { Access, CollectionConfig, FieldAccess } from 'payload'
+import type { User } from '@/payload-types'
 
 /**
  * 역할 기반 접근 제어 헬퍼.
@@ -23,6 +24,10 @@ export const isManager = (user: unknown): boolean => {
 	const r = roleOf(user)
 	return r === 'admin' || r === 'manager'
 }
+
+/** Payload 인증 결과가 애플리케이션 User 문서인지 확인한다. */
+export const isPayloadUser = (user: unknown): user is User =>
+	Boolean(user && typeof user === 'object' && 'role' in user && 'email' in user)
 
 const isAuthenticated = (user: unknown): boolean => Boolean(user)
 

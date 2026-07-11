@@ -10,6 +10,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
+import { fieldNumber, fieldRowCount, fieldString, formatNumber } from './form-fields'
 
 type CountedItem = {
 	callCount?: number | null
@@ -21,36 +22,12 @@ type Props = {
 	path?: string
 }
 
-function fieldValue<T>(fields: FormState, path: string) {
-	return fields[path]?.value as T | undefined
-}
-
-function fieldString(fields: FormState, path: string) {
-	const value = fieldValue<unknown>(fields, path)
-
-	return typeof value === 'string' ? value : null
-}
-
-function fieldNumber(fields: FormState, path: string) {
-	const value = fieldValue<unknown>(fields, path)
-
-	return typeof value === 'number' ? value : null
-}
-
-function fieldRowCount(fields: FormState, path: string) {
-	return fields[path]?.rows?.length ?? fieldNumber(fields, path) ?? 0
-}
-
 function buildItems(fields: FormState, path: string): CountedItem[] {
 	return Array.from({ length: fieldRowCount(fields, path) }, (_, index) => ({
 		callCount: fieldNumber(fields, `${path}.${index}.callCount`),
 		id: fieldString(fields, `${path}.${index}.id`),
 		name: fieldString(fields, `${path}.${index}.name`),
 	}))
-}
-
-function formatNumber(value?: number | null) {
-	return typeof value === 'number' ? value.toLocaleString('ko-KR') : '-'
 }
 
 export default function AgentChatCountedItemsTable({ path }: Props) {
