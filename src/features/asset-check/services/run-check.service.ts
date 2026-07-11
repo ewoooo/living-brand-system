@@ -8,6 +8,7 @@ import type {
 	CheckResultChecker,
 	RawCheckResult,
 } from '@/features/asset-check/checkers/types'
+import { detectCheckImageMediaType } from '@/features/asset-check/image-format'
 import { runAiCheck } from '@/features/asset-check/repositories/ai-check.agent.repository'
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
@@ -156,18 +157,6 @@ function toCheckResult(
 }
 
 function imageInputFrom(buffer: Buffer): CheckerContext['image'] {
-	if (buffer.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))) {
-		return { data: buffer, mediaType: 'image/jpeg' }
-	}
-	if (
-		buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
-	) {
-		return { data: buffer, mediaType: 'image/png' }
-	}
-	if (
-		buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
-		buffer.subarray(8, 12).toString('ascii') === 'WEBP'
-	) {
-		return { data: buffer, mediaType: 'image/webp' }
-	}
+	const mediaType = detectCheckImageMediaType(buffer)
+	return mediaType ? { data: buffer, mediaType } : undefined
 }

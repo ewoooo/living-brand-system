@@ -2,10 +2,9 @@ import type { CheckSessionSource } from '@/features/asset-check/types'
 import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 import { startCheckSession } from '@/services/start-check-session.service'
+import { readCheckImage } from './read-check-image'
 
 export const maxDuration = 30
-
-const MAX_IMAGE_BYTES = 20_000_000 // 20MB — 무검증 Buffer 적재로 인한 메모리 고갈 방지 (docs/07 #17)
 
 function parseSource(value: FormDataEntryValue | null | undefined): CheckSessionSource {
 	if (value === 'mcp-call') return 'mcp-call'
@@ -31,20 +30,14 @@ export async function POST(req: Request) {
 	}
 
 	const form = await req.formData().catch(() => null)
-	const file = form?.get('image')
-	if (!(file instanceof File)) {
-		return Response.json({ message: 'image is required.' }, { status: 400 })
-	}
-	if (file.size > MAX_IMAGE_BYTES) {
-		return Response.json({ message: 'Image is too large.' }, { status: 413 })
-	}
+	const image = await readCheckImage(form?.get('image'))
+	if ('response' in image) return image.response
 
 	try {
-		const buffer = Buffer.from(await file.arrayBuffer())
 		const result = await startCheckSession({
-			buffer,
+			buffer: image.buffer,
 			deferHeuristic: true,
-			imageName: file.name,
+			imageName: image.name,
 			scenarioKey: parseScenarioKey(form?.get('scenarioKey')),
 			source: parseSource(form?.get('source')),
 			user,

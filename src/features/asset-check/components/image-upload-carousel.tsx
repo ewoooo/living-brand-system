@@ -14,6 +14,7 @@ import {
 import { Empty, EmptyDescription, EmptyTitle } from '@/components/ui/empty'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { ImageCheckControls } from '@/features/asset-check/components/image-check-controls'
+import { CHECK_IMAGE_ACCEPT } from '@/features/asset-check/image-format'
 import type { CheckImage } from '@/features/asset-check/types'
 import { useFileInput } from '@/hooks/use-file-input'
 
@@ -69,7 +70,7 @@ export function ImageUploadCarousel() {
 			<input
 				ref={fileInput.ref}
 				type="file"
-				accept="image/*"
+				accept={CHECK_IMAGE_ACCEPT}
 				multiple
 				hidden
 				aria-label="검수할 이미지 업로드"
@@ -94,7 +95,7 @@ function CheckCarouselEmpty() {
 		<Empty className="gap-2 text-neutral-300">
 			<EmptyTitle>이미지를 드래그해서 업로드하세요</EmptyTitle>
 			<EmptyDescription className="text-neutral-300 opacity-60">
-				좌상단 업로드 버튼으로도 추가할 수 있습니다.
+				PNG, JPEG, WebP 파일을 지원합니다.
 			</EmptyDescription>
 		</Empty>
 	)

@@ -2,6 +2,8 @@
  * Checker shared types — run-check service와 개별 checker 사이의 최소 실행 계약이다.
  * rule schema나 Payload 문서 타입은 여기에 들이지 않는다.
  */
+
+import type { CheckImageMediaType } from '@/features/asset-check/image-format'
 import type { Rgb, Swatch } from './palette-match'
 
 /** 기준(expected) 대비 측정값(actual)을 분리해 실은 구조화 필드. */
@@ -85,7 +87,7 @@ export interface CheckerContext {
 	palette: Swatch[]
 	image?: {
 		data: Buffer
-		mediaType: 'image/jpeg' | 'image/png' | 'image/webp'
+		mediaType: CheckImageMediaType
 	}
 	/** 기하가 필요한 checker(로고 등)만 사용. color checker는 무시. */
 	grid?: PixelGrid
