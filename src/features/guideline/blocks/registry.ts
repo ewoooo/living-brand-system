@@ -20,5 +20,11 @@ export function formatBlockForAgent(block: GuidelineBlock): string {
 
 /** 블록 하나를 Check source evidence/referenceAssets로 정규화한다. */
 export function snapshotBlock(block: GuidelineBlock): CheckSourceSnapshot {
-	return blockRegistry[block.blockType].toCheckSourceSnapshot(block)
+	const snapshot = blockRegistry[block.blockType].toCheckSourceSnapshot(block)
+	const uniqueReferenceAssetIds = Array.from(new Set(snapshot.referenceAssets))
+
+	return {
+		evidence: snapshot.evidence,
+		referenceAssets: uniqueReferenceAssetIds,
+	}
 }
