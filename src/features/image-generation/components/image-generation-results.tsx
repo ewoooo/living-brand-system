@@ -1,0 +1,130 @@
+'use client'
+
+import { Button } from '@/components/ui/button'
+import type { ImageGenerationResult } from '@/features/image-generation/hooks/use-image-generation'
+import { IMAGE_SCENES } from '@/features/image-generation/presets'
+
+const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
+
+export function ImageGenerationResults({
+	loading,
+	onSelect,
+	requested,
+	result,
+	selected,
+}: {
+	loading: boolean
+	onSelect: (index: number) => void
+	requested: number
+	result: ImageGenerationResult | null
+	selected: number | null
+}) {
+	const images = result?.images ?? []
+
+	return (
+		<div aria-live="polite" aria-busy={loading}>
+			{loading && <ImageGenerationSkeleton count={requested} />}
+
+			{!loading && images.length > 0 && result && (
+				<div className="flex flex-col gap-4">
+					<div className="flex flex-wrap items-center gap-3">
+						<Button
+							onClick={() =>
+								selected !== null && downloadImage(images[selected], selected)
+							}
+							disabled={selected === null}
+						>
+							선택한 이미지 다운로드
+						</Button>
+						<span className="text-muted-foreground text-sm">
+							{selected === null
+								? '이미지를 클릭해 선택하세요'
+								: `${selected + 1}번 선택됨`}
+						</span>
+					</div>
+
+					{images.length < requested && (
+						<p className="text-muted-foreground text-sm">
+							요청 {requested}장 중 {images.length}장 생성됨 (일부는 무료 서버
+							지연으로 실패)
+						</p>
+					)}
+
+					<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+						{images.map((src, index) => (
+							<div key={src} className="flex flex-col gap-1">
+								<button
+									type="button"
+									onClick={() => onSelect(index)}
+									aria-pressed={selected === index}
+									className={`overflow-hidden rounded-md border-2 transition-colors ${
+										selected === index
+											? 'border-blue-500'
+											: 'border-neutral-200 hover:border-neutral-400 dark:border-neutral-800'
+									}`}
+								>
+									{/* biome-ignore lint/performance/noImgElement: 미리보기, 최적화 불필요 */}
+									<img
+										src={src}
+										alt={`생성 결과 ${index + 1}`}
+										className="w-full"
+									/>
+								</button>
+								<a
+									href={src}
+									target="_blank"
+									rel="noreferrer"
+									className="text-muted-foreground text-xs underline"
+								>
+									원본 보기
+								</a>
+							</div>
+						))}
+					</div>
+
+					<div className="text-muted-foreground text-sm">
+						적용된 씬: {resultSceneLabel(result.sceneId)}
+						<details className="mt-1">
+							<summary className="cursor-pointer">생성 프롬프트 보기</summary>
+							<p className="mt-1 whitespace-pre-wrap text-xs">{result.prompt}</p>
+						</details>
+					</div>
+				</div>
+			)}
+		</div>
+	)
+}
+
+function ImageGenerationSkeleton({ count }: { count: number }) {
+	return (
+		<div className="flex flex-col gap-3">
+			<p className="text-muted-foreground text-sm">
+				생성 중… 무료 서버라 최대 1~2분 걸릴 수 있어요.
+			</p>
+			<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+				{SKELETON_KEYS.slice(0, count).map((key) => (
+					<div
+						key={key}
+						className="aspect-[3/4] animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800"
+					/>
+				))}
+			</div>
+		</div>
+	)
+}
+
+function resultSceneLabel(sceneId: string) {
+	if (sceneId === 'free') return '자유 생성 (브랜드 스타일 없음)'
+	return IMAGE_SCENES.find((scene) => scene.id === sceneId)?.label ?? '자동 선택'
+}
+
+/** data URI 이미지를 파일로 저장한다 (data:image/…;base64,… 에서 확장자 추출). */
+function downloadImage(src: string, index: number) {
+	const ext = src.slice(5, src.indexOf(';')).split('/')[1] || 'png'
+	const anchor = document.createElement('a')
+	anchor.href = src
+	anchor.download = `essenherb-image-${index + 1}.${ext}`
+	document.body.appendChild(anchor)
+	anchor.click()
+	anchor.remove()
+}
