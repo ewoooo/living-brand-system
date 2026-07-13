@@ -16,9 +16,9 @@ export function GuidelineChapterHeader({
 		<header className="mb-8">
 			<hgroup className="mb-4">
 				<h1 className="pb-1 text-md text-muted-foreground">{title}</h1>
-				<h2 className="max-w-96 text-balance font-medium text-3xl">{label}</h2>
+				<h2 className="max-w-96 text-balance text-3xl">{label}</h2>
 			</hgroup>
-			<p className="mb-4 text-muted-foreground">{description}</p>
+			<p className="mb-4 max-w-xl text-muted-foreground">{description}</p>
 		</header>
 	)
 }

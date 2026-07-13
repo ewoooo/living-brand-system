@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { GuidelineChapterHeader } from '@/components/guideline/guideline-chapter-header'
+import { GuidelineHeaderImage } from '@/components/guideline/guideline-header-image'
 import { getGuidelineChapter } from '@/features/guideline/services/get-guideline-chapter.service'
 
 export default async function GuidelineChapterPage({
@@ -22,7 +23,8 @@ export default async function GuidelineChapterPage({
 				label={chapter.label || undefined}
 				description={chapter.description || ''}
 			/>
-			<section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+			<GuidelineHeaderImage className="mb-4" />
+			<section className="grid gap-4 xl:grid-cols-2">
 				{chapter.sections.map((section) => (
 					<Link
 						key={section.id}
