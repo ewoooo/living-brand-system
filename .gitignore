@@ -66,3 +66,8 @@ tests/fixtures/review/
 scripts/diagnose-*.ts
 .gstack/
 backups/
+.pnpm-store/
+
+# Local build output
+output/
+temp/
