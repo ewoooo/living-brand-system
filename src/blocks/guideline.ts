@@ -93,7 +93,6 @@ export const ColumnUnitBlock: Block = {
 	slug: 'columnUnit',
 	interfaceName: 'ColumnUnitBlock',
 	fields: [
-		{ name: 'title', type: 'text', localized: true },
 		{
 			name: 'columns',
 			type: 'array',

@@ -423,7 +423,6 @@ export interface GuidelinePage {
  * via the `definition` "ColumnUnitBlock".
  */
 export interface ColumnUnitBlock {
-  title?: string | null;
   columns?:
     | {
         heading?: string | null;
@@ -1376,7 +1375,6 @@ export interface GuidelineChecksSelect<T extends boolean = true> {
  * via the `definition` "ColumnUnitBlock_select".
  */
 export interface ColumnUnitBlockSelect<T extends boolean = true> {
-  title?: T;
   columns?:
     | T
     | {

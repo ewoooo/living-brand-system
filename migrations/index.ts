@@ -32,6 +32,7 @@ import * as migration_20260710_085848 from './20260710_085848';
 import * as migration_20260710_085950_backfill_template_checks from './20260710_085950_backfill_template_checks';
 import * as migration_20260710_093702_connect_scenario_checks from './20260710_093702_connect_scenario_checks';
 import * as migration_20260710_100108_contract_guideline_checks from './20260710_100108_contract_guideline_checks';
+import * as migration_20260713_025218_remove_column_unit_title from './20260713_025218_remove_column_unit_title';
 
 export const migrations = [
   {
@@ -203,5 +204,10 @@ export const migrations = [
     up: migration_20260710_100108_contract_guideline_checks.up,
     down: migration_20260710_100108_contract_guideline_checks.down,
     name: '20260710_100108_contract_guideline_checks',
+  },
+  {
+    up: migration_20260713_025218_remove_column_unit_title.up,
+    down: migration_20260713_025218_remove_column_unit_title.down,
+    name: '20260713_025218_remove_column_unit_title'
   },
 ];
