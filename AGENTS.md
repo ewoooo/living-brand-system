@@ -15,24 +15,68 @@ Start with `.agents/skills/payload/SKILL.md` for a quick reference, then see `.a
 
 When changing Payload collections, fields, indexes, relationships, or other database-backed model behavior:
 
-- Commit the matching migration files with the source change.
+- Commit the matching migration files with every finished schema change before review, merge, or shared-environment use.
 - Commit the drizzle schema snapshot (`.json`) that `migrate:create` emits next to the `.ts`, and never delete snapshots; without them `migrate:create` regenerates the entire schema instead of an incremental diff.
 - Do not rely on local automatic schema changes as the team handoff mechanism.
-- After pulling schema-related changes, run pending migrations before debugging local database errors.
+- On migration-driven databases, run pending migrations after pulling schema-related changes and before debugging local database errors.
 - Do not manually patch a local database to match pulled code unless documenting a one-off recovery step.
 - Breaking schema changes must be split into safe steps: expand, migrate/backfill, then contract.
 - PRs that change schema without migrations are incomplete.
 - Seed or fixture changes required by the new schema must be committed with the same change.
 
-Recommended local pull flow:
+### Local Machine Database Rules
+
+- Treat every personal local Postgres database that uses `PAYLOAD_DB_PUSH=true` as disposable.
+- Give each physical machine its own `DATABASE_URL`. Never point a desktop and laptop at the same push-enabled database.
+- Give each concurrently running worktree its own database when `PAYLOAD_DB_PUSH=true`. A worktree that shares a database must use `push=false` and must not change the Payload schema.
+- Keep each machine's `DATABASE_URL` and `PAYLOAD_DB_PUSH` in its untracked `.env.local`; never commit them.
+- Use `PAYLOAD_DB_PUSH=true` only for isolated local development. Keep CI, stage, production, and any database with important shared data on `push=false`.
+- After Payload has pushed schema changes to a local database, do not run `payload migrate` against that database. Recreate the database when committed migrations must be applied or verified.
+- Git synchronizes source and migration files, not local CMS content. Transfer local data separately and in one direction if two machines must start with the same content.
+
+Initialize a new or rebuilt local database from committed migrations before switching it to push mode:
 
 ```bash
 pnpm install
-pnpm payload migrate
+PAYLOAD_DB_PUSH=false pnpm payload migrate
+# Set PAYLOAD_DB_PUSH=true in this machine's .env.local.
 pnpm dev
 ```
 
-For Payload/Postgres projects, prefer explicit migrations over implicit schema push. If the adapter supports `push: false`, keep schema updates migration-driven so every teammate and environment applies the same changes in the same order.
+From then on, let Payload update that disposable database and do not mix in migration execution.
+
+### Device Handoff Rules
+
+- Use a work branch as the source handoff between a desktop and laptop. Commit and push before leaving one machine; fetch and pull before starting on the other.
+- Do not edit the same branch on both machines concurrently. Use separate branches when concurrent work is unavoidable, then merge the source changes before creating migrations.
+- A private handoff branch used only by one developer across personal machines may temporarily omit a migration while schema work is unfinished. Both machines must use separate disposable databases with `push=true`.
+- Before opening a PR, requesting review, merging to `stage`, or updating a shared database, choose one machine to generate the final migration after all schema-changing branches are merged.
+- Never generate competing migrations for the same unfinished schema change on both machines.
+
+Normal device handoff flow:
+
+```bash
+# Leaving the current machine
+git status
+git push <remote> <work-branch>
+
+# Starting on the other machine
+git fetch <remote>
+git switch <work-branch>
+git pull --ff-only
+pnpm install
+pnpm dev
+```
+
+Finalize schema work on one machine only:
+
+```bash
+pnpm migrate:create <name>
+pnpm check
+pnpm typecheck
+```
+
+Review and commit the generated `.ts`, matching `.json` snapshot, and `migrations/index.ts` with the schema source. Do not run that migration against a local database already updated by push; verify it against a fresh database with `push=false`. Shared and durable environments must apply the committed migration with `pnpm payload migrate` before starting the application.
 
 ## Operating Principles
 
