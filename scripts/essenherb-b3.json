@@ -1,0 +1,480 @@
+{
+	"source": {
+		"document": "inventory/Brand Guideline Reference.pdf",
+		"illustrator": "inventory/Essenherb_Brand Identity Guidelines_AB.ai",
+		"pages": [33, 34, 35, 36, 37, 38, 39, 40, 41]
+	},
+	"assets": [
+		{
+			"filename": "agfa-rotis-primary-typeface.svg",
+			"sourcePage": 34,
+			"format": "svg",
+			"kind": "type-specimen",
+			"alt": "AgfaRotis Semi Serif의 영문 대문자와 소문자, 숫자 표본 및 본문 사용 예시",
+			"targets": ["primary-typeface"]
+		},
+		{
+			"filename": "pretendard-primary-typeface.svg",
+			"sourcePage": 35,
+			"format": "svg",
+			"kind": "type-specimen",
+			"alt": "Pretendard의 한글 자모와 숫자 표본 및 국문 본문 사용 예시",
+			"targets": ["primary-typeface"]
+		},
+		{
+			"filename": "illustrator-word-spacing-options.png",
+			"sourcePage": 34,
+			"format": "png",
+			"kind": "source-raster",
+			"alt": "단어 간격을 최소 55퍼센트, 기준 70퍼센트, 최대 95퍼센트로 설정한 Illustrator 옵션 화면",
+			"targets": ["primary-typeface", "micro-typography"]
+		},
+		{
+			"filename": "micro-typography-pairing.svg",
+			"sourcePage": 36,
+			"format": "svg",
+			"kind": "type-specimen",
+			"alt": "Pretendard와 AgfaRotis의 Medium·Bold 조합 및 Regular 조합 비교",
+			"targets": ["micro-typography"]
+		},
+		{
+			"filename": "typography-incorrect-spacing-tight.svg",
+			"sourcePage": 37,
+			"format": "svg",
+			"kind": "incorrect-example",
+			"alt": "글자 사이 간격을 지나치게 좁힌 잘못된 타이포그래피 예시",
+			"targets": ["typography-incorrect-usage"]
+		},
+		{
+			"filename": "typography-incorrect-spacing-wide.svg",
+			"sourcePage": 37,
+			"format": "svg",
+			"kind": "incorrect-example",
+			"alt": "글자 사이 간격을 지나치게 넓힌 잘못된 타이포그래피 예시",
+			"targets": ["typography-incorrect-usage"]
+		},
+		{
+			"filename": "typography-incorrect-mixed-weight.svg",
+			"sourcePage": 37,
+			"format": "svg",
+			"kind": "incorrect-example",
+			"alt": "한 문장 안에 서로 다른 글자 굵기를 적용한 잘못된 예시",
+			"targets": ["typography-incorrect-usage"]
+		},
+		{
+			"filename": "typography-incorrect-mixed-size.svg",
+			"sourcePage": 37,
+			"format": "svg",
+			"kind": "incorrect-example",
+			"alt": "한 문장 안에 서로 다른 글자 크기를 적용한 잘못된 예시",
+			"targets": ["typography-incorrect-usage"]
+		},
+		{
+			"filename": "typography-incorrect-distorted-shape.svg",
+			"sourcePage": 37,
+			"format": "svg",
+			"kind": "incorrect-example",
+			"alt": "글자 형태를 임의로 변형한 잘못된 타이포그래피 예시",
+			"targets": ["typography-incorrect-usage"]
+		},
+		{
+			"filename": "typography-incorrect-other-font.svg",
+			"sourcePage": 37,
+			"format": "svg",
+			"kind": "incorrect-example",
+			"alt": "지정된 서체가 아닌 다른 서체를 사용한 잘못된 예시",
+			"targets": ["typography-incorrect-usage"]
+		},
+		{
+			"filename": "essen-flux-structure.svg",
+			"sourcePage": 38,
+			"format": "svg",
+			"kind": "type-structure",
+			"alt": "상단 기준선에 맞춘 Essen Flux 글자의 구조와 글리프 비례",
+			"targets": ["essen-flux"]
+		},
+		{
+			"filename": "essen-flux-glyphs.svg",
+			"sourcePage": 39,
+			"format": "svg",
+			"kind": "glyph-chart",
+			"alt": "Essen Flux 대문자, 소문자, 숫자와 기호 글리프 목록",
+			"targets": ["essen-flux"]
+		},
+		{
+			"filename": "essen-flux-case-usage.svg",
+			"sourcePage": 40,
+			"format": "svg",
+			"kind": "usage-comparison",
+			"alt": "Essen Flux의 권장 Mixed Case와 소문자 조합 및 금지된 All Caps 비교",
+			"targets": ["essen-flux"]
+		},
+		{
+			"filename": "essen-flux-text-length-usage.svg",
+			"sourcePage": 40,
+			"format": "svg",
+			"kind": "usage-comparison",
+			"alt": "Essen Flux의 짧은 문장 사용과 가독성이 낮은 긴 문단 사용 비교",
+			"targets": ["essen-flux"]
+		},
+		{
+			"filename": "essen-flux-resilience-example.png",
+			"sourcePage": 41,
+			"format": "png",
+			"kind": "application-example",
+			"alt": "인물 사진 위에 Essen Flux로 Resilience를 조합한 포스터 예시",
+			"targets": ["essen-flux"]
+		},
+		{
+			"filename": "essen-flux-ampoule-title-card.png",
+			"sourcePage": 41,
+			"format": "png",
+			"kind": "application-example",
+			"alt": "보라색 배경에 Essen Flux로 앰플 제품명을 배치한 타이틀 카드 예시",
+			"targets": ["essen-flux"]
+		},
+		{
+			"filename": "essen-flux-seasonal-cards.png",
+			"sourcePage": 41,
+			"format": "png",
+			"kind": "application-example",
+			"alt": "Essen Flux를 적용한 December Sale과 Summer 시즌 카드 예시",
+			"targets": ["essen-flux"]
+		},
+		{
+			"filename": "essen-flux-book-spines.png",
+			"sourcePage": 41,
+			"format": "png",
+			"kind": "application-example",
+			"alt": "다채로운 책등에 Essen Flux로 이름을 조합한 적용 예시",
+			"targets": ["essen-flux"]
+		}
+	],
+	"chapter": {
+		"title": "Brand Design Elements",
+		"slug": "brand-design-elements",
+		"description": "Essenherb 브랜드의 시각 아이덴티티를 구성하는 디자인 기준입니다.",
+		"displayOrder": 2
+	},
+	"section": {
+		"title": "Typography",
+		"slug": "typography",
+		"description": "지정 서체와 마이크로 타이포그래피, 사용 금지 규정 및 Essen Flux 활용 기준입니다.",
+		"displayOrder": 2
+	},
+	"pages": [
+		{
+			"title": "Primary Typeface",
+			"slug": "primary-typeface",
+			"displayOrder": 0,
+			"description": [
+				"Essenherb는 브랜드 로고의 조형적 특성을 반영하는 영문 서체 AgfaRotis Semi Serif와, 높은 가독성을 바탕으로 다양한 환경에서 폭 넓게 활용할 수 있는 국문 서체 Pretendard를 지정 서체로 활용합니다.",
+				"일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다."
+			],
+			"blocks": [
+				{
+					"blockType": "columnUnit",
+					"title": "AgfaRotis Semi Serif",
+					"columns": [
+						{
+							"heading": "Primary Typeface / English",
+							"image": "agfa-rotis-primary-typeface.svg",
+							"body": [
+								"Essenherb의 영문 지정 서체 AgfaRotis Semi Serif는 획 끝의 미묘한 삐침을 통해 독창적인 조형성을 확보하고, 브랜드 로고와의 조형적 연계성을 높이는 영문 서체입니다. 세리프의 장식적인 요소를 최소화한 세미 세리프 서체로, 높은 각인력과 현대적인 정돈감을 동시에 갖춘 서체입니다.",
+								"AgfaRotis Semi Serif의 Weight Family는 가이드라인에 제시된 Regular, Bold의 활용을 권장하며, 타이포그래피의 위계를 정보의 흐름에 맞게 배열하여 디자인 할 수 있습니다.",
+								"Weight: Regular, Bold / Kerning: Metric, -10 to 0 / Word Spacing: 55% 70% 95%",
+								"Usage Example: Essenherb is a vegan skincare brand designed and made in Korea.",
+								"We started with a simple belief—and our name embodies it: “Essence” of “Herb,”—where nature holds the essential answers to skin health, and we extract its power through carefully selected botanical ingredients.",
+								"Korea’s extreme climate has always demanded smarter skincare. Burning summers, freezing winters, constant change—skin needs energy to stay resilient. Generations of Korean skincare innovation have risen to this challenge, refining formulas that restore, protect, and strengthen skin.",
+								"We seek ingredients from around the world—tea tree from Australia, jojoba from Israel, wild soybeans and yams from Korea—plants that hold powerful vitality even in extreme environments."
+							]
+						},
+						{
+							"heading": "Word Spacing Option",
+							"image": "illustrator-word-spacing-options.png",
+							"body": ["Minimum 55% / Desired 70% / Maximum 95%"]
+						}
+					],
+					"checks": [
+						{
+							"key": "typography.family",
+							"title": "지정 서체 준수",
+							"tier": "recommended",
+							"checkerKey": "model.anthropic.brand-guideline"
+						}
+					]
+				},
+				{
+					"blockType": "columnUnit",
+					"title": "Pretendard",
+					"columns": [
+						{
+							"heading": "Primary Typeface / Korean",
+							"image": "pretendard-primary-typeface.svg",
+							"body": [
+								"Essenherb의 국문 지정 서체는 Pretendard입니다. Pretendard는 한국어와 라틴 문자의 조화로운 병행을 목표로 설계된 범용 산세리프 서체로, 균형 잡힌 자폭과 안정적인 획 대비를 통해 디지털 환경은 물론 인쇄 매체에서도 일관된 읽기 경험을 제공하며, 헤드라인과 본문 구분 없이 폭 넓게 활용할 수 있는 실용적인 서체입니다.",
+								"Pretendard의 Weight Family는 영문과 병용하기 위해 가이드라인에 제시된 Regular, Medium의 활용을 권장하며 타이포그래피의 위계를 정보의 흐름에 맞게 배열하여 디자인 할 수 있습니다.",
+								"Weight: Regular, Medium / Kerning: Metric, 0",
+								"Usage Example: 에센허브는 피부의 본질에 집중하는 식물성 비건 스킨케어 브랜드입니다.",
+								"지치고 힘든 도시의 일상 속에서도 늘 건강하고 아름다운 피부를 위하여",
+								"호주의 티트리, 이스라엘의 호호바부터 한국의 야생 돌콩과 참마까지,",
+								"혹독한 환경에서도 생명력을 지켜낸 자연의 순수하고 강인한 에너지를 찾아 피부 본연의 활력을 깨우는 스킨케어를 만듭니다."
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"title": "Micro Typography",
+			"slug": "micro-typography",
+			"displayOrder": 1,
+			"description": [
+				"국·영문 지정 서체 병용을 위한 마이크로 타이포그래피 규정은 다음과 같습니다. 가이드라인에 제시된 국·영문 지정 서체 웨이트를 적용하며, 균일한 회색도를 유지할 수 있도록 정해진 세팅 값을 준수하여 사용해야 합니다.",
+				"일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다."
+			],
+			"blocks": [
+				{
+					"blockType": "columnUnit",
+					"title": "English + Korean",
+					"columns": [
+						{
+							"heading": "Kor-Medium & Eng-Bold / Kor-Regular & Eng-Regular",
+							"image": "micro-typography-pairing.svg",
+							"body": [
+								"Kor-Medium & Eng-Bold — Pretendard (Based): Weight Medium, Kerning Metric 0, Scale 100%. AgfaRotis Semi Serif: Weight Bold, Kerning Metric -5, Scale 105%. Word Spacing 55% 70% 95%.",
+								"Kor-Regular & Eng-Regular — Pretendard (Based): Weight Regular, Kerning Metric 0, Scale 100%. AgfaRotis Semi Serif: Weight Regular, Kerning Metric -5, Scale 105%. Word Spacing 55% 70% 95%.",
+								"표본: 에센허브 스킨 케어 Essenherb Skincare / Vegan Skincare Brand 비건 스킨 케어 / Muco Ritual Ampoule 뮤코 리추얼 앰플 / 서울특별시 강남구 언주로 149길 17 3층",
+								"에센허브는 피부의 본질에 집중하는 식물성 비건 스킨케어 브랜드입니다. 우리는 혹독한 환경에서도 생명력을 지켜낸 자연의 순수하고 강인한 에너지를 찾아 피부 본연의 활력을 깨우는 스킨케어를 만듭니다. Essenherb started with a simple belief — skin needs energy to stay resilient. Generations of Korean skincare innovation have risen to this challenge, refining formulas that restore, protect, and strengthen skin."
+							]
+						},
+						{
+							"heading": "Word Spacing Option",
+							"image": "illustrator-word-spacing-options.png",
+							"body": ["Minimum 55% / Desired 70% / Maximum 95%"]
+						}
+					],
+					"checks": [
+						{
+							"key": "typography.pairing",
+							"title": "국·영문 서체 조합 준수",
+							"tier": "recommended",
+							"checkerKey": "model.anthropic.brand-guideline"
+						}
+					]
+				}
+			]
+		},
+		{
+			"title": "Incorrect Usage",
+			"slug": "typography-incorrect-usage",
+			"displayOrder": 2,
+			"description": [
+				"사용 금지 규정은 브랜드 아이덴티티를 철저하게 관리하기 위한 규정입니다. Typography의 자간, 크기와 굵기, 형태 및 지정 서체의 정확한 적용 여부 등에 유의하여 사용해야 하며, 잘못 사용하기 쉬운 예를 수록하였습니다.",
+				"일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다."
+			],
+			"blocks": [
+				{
+					"blockType": "doDont",
+					"title": "Spacing / Size & Thickness / Shape & Font",
+					"groups": [
+						{
+							"category": "Spacing",
+							"examples": [
+								{
+									"kind": "dont",
+									"image": "typography-incorrect-spacing-tight.svg",
+									"caption": "글자 사이 간격을 지나치게 좁힐 수 없습니다."
+								},
+								{
+									"kind": "dont",
+									"image": "typography-incorrect-spacing-wide.svg",
+									"caption": "글자 사이 간격을 지나치게 넓힐 수 없습니다."
+								}
+							]
+						},
+						{
+							"category": "Size & Thickness",
+							"examples": [
+								{
+									"kind": "dont",
+									"image": "typography-incorrect-mixed-weight.svg",
+									"caption": "한 문장 안에 각기 다른 굵기를 적용할 수 없습니다."
+								},
+								{
+									"kind": "dont",
+									"image": "typography-incorrect-mixed-size.svg",
+									"caption": "한 문장 안에 각기 다른 글자 크기를 적용할 수 없습니다."
+								}
+							]
+						},
+						{
+							"category": "Shape & Font",
+							"examples": [
+								{
+									"kind": "dont",
+									"image": "typography-incorrect-distorted-shape.svg",
+									"caption": "글자의 형태를 변형할 수 없습니다."
+								},
+								{
+									"kind": "dont",
+									"image": "typography-incorrect-other-font.svg",
+									"caption": "지정된 서체 이외에 다른 서체를 사용할 수 없습니다."
+								}
+							]
+						}
+					],
+					"checks": [
+						{
+							"key": "typography.weight",
+							"title": "서체 굵기 혼용 금지",
+							"tier": "recommended",
+							"checkerKey": "model.anthropic.brand-guideline"
+						},
+						{
+							"key": "typography.spacing",
+							"title": "자간 규정 준수",
+							"tier": "required",
+							"checkerKey": "manual.review"
+						},
+						{
+							"key": "typography.misuse",
+							"title": "형태 및 지정 서체 준수",
+							"tier": "recommended",
+							"checkerKey": "model.anthropic.brand-guideline"
+						}
+					]
+				}
+			]
+		},
+		{
+			"title": "Signature Typeface: Essen Flux",
+			"slug": "essen-flux",
+			"displayOrder": 3,
+			"description": [
+				"Signature Typeface Essen Flux는 Essenherb의 로고를 기반으로 개발된 영문 전용 서체입니다. 브랜드 아이덴티티의 조형적 특징을 계승함과 동시에 실험적이고 상징적인 표현이 가능하도록 설계되었습니다.",
+				"Essen Flux는 일반적인 베이스라인 구조가 아닌 상단 기준선에 고정되는 독특한 구조를 통해 에너지의 발산, 상승, 경쾌한 리듬과 같은 브랜드 인상을 시각적으로 구현합니다. 이러한 구조적 차별성을 통해 Essenherb가 지향하는 역동성과 확장성을 직관적으로 전달합니다.",
+				"일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다."
+			],
+			"blocks": [
+				{
+					"blockType": "columnUnit",
+					"title": "Structure",
+					"columns": [
+						{
+							"heading": "Signature Typeface Essen Flux",
+							"image": "essen-flux-structure.svg",
+							"body": [
+								"Essenherb 로고형과 영문 혼합 글리프, 숫자 및 구두점은 상단 기준선에 맞춘 고유한 자폭과 비례를 사용합니다."
+							]
+						}
+					]
+				},
+				{
+					"blockType": "columnUnit",
+					"title": "Glyphs",
+					"columns": [
+						{
+							"heading": "Signature Typeface Essen Flux / Glyphs",
+							"image": "essen-flux-glyphs.svg",
+							"body": [
+								"대문자 A–Z, 소문자 a–z, 숫자 0–9와 구두점 및 기호 . , : ; ! ? · * # / \\ - _ ( ) @ & ® | + − × ÷ = ~ %를 Essen Flux 고유 형태로 사용합니다."
+							]
+						}
+					]
+				},
+				{
+					"blockType": "columnUnit",
+					"title": "Usage Policy",
+					"columns": [
+						{
+							"heading": "Signature Typeface: Essen Flux / Usage Example",
+							"body": [
+								"Essen Flux는 전통적인 영문 타이포그래피의 가독 체계와는 다른 조형 원리를 기반으로 설계된 서체입니다. 일반적인 베이스라인, 자간 리듬, 획의 균형 구조를 따르지 않기 때문에 연속적인 문장 구성이나 장문 단락과 같이 정보 전달을 우선하는 텍스트 환경에서는 가독 효율이 낮아질 수 있습니다.",
+								"Essen Flux는 형태 자체가 메시지가 되는 디스플레이형 서체로, 브랜드 콘셉트를 시각적으로 강조해야 하는 캠페인 타이틀, 키 비주얼, 슬로건, 그래픽 모티프 등 제한적이고 전략적인 영역에 활용할 경우, 브랜드의 실험성·에너지·차별성을 직관적으로 전달할 수 있습니다."
+							]
+						}
+					],
+					"checks": [
+						{
+							"key": "typography.usage",
+							"title": "Essen Flux 용도 준수",
+							"tier": "recommended",
+							"checkerKey": "manual.review"
+						}
+					]
+				},
+				{
+					"blockType": "columnUnit",
+					"title": "Case and Text Length",
+					"columns": [
+						{
+							"heading": "Mixed Case or Lowercase Only",
+							"image": "essen-flux-case-usage.svg",
+							"body": [
+								"타이포그래피는 대·소문자 조합(Mixed Case) 또는 소문자 조합(Lowercase Only) 방식으로만 운영 가능합니다.",
+								"전체 대문자(All Caps) 구성은 서체 고유의 리듬감과 조형 균형을 충분히 확보하기 어려우므로 사용을 금지합니다.",
+								"표본: skincare / Texture / clean beauty / Korea"
+							]
+						},
+						{
+							"heading": "Sentence and Paragraph",
+							"image": "essen-flux-text-length-usage.svg",
+							"body": [
+								"Sentence / Mixed Case or Lowercase Only: Hydration is the foundation of healthy skin / Niacinamide refines uneven skin tone / Daily sunscreen prevents premature agin / Facial oils lock in moisture",
+								"Paragraph 표본은 장문 환경에서 가독 효율이 낮아질 수 있음을 보여주는 주의 예시입니다.",
+								"Texture engineering plays a decisive role, because gel texture, watery texture, creamy texture, balm texture, and oil texture determine spreadability, adherence, penetration speed, and layering synergy. Micro emulsion systems, liposome encapsulation delivery, nano carrier technology, and time release stabilization platforms enhance ingredient bioavailability, oxidation resistance, and long lasting efficacy. Antioxidant complexes, botanical oil blends, herbal extracts, marine minerals, fermented actives, and phyto nutrient infusions further elevate formulation sophistication, uniting sensory elegance with performance driven skincare science."
+							]
+						}
+					],
+					"checks": [
+						{
+							"key": "typography.case",
+							"title": "Essen Flux 대소문자 규정 준수",
+							"tier": "required",
+							"checkerKey": "manual.review"
+						}
+					]
+				},
+				{
+					"blockType": "columnUnit",
+					"title": "Usage Examples 1–2",
+					"columns": [
+						{
+							"heading": "Usage Example 1",
+							"image": "essen-flux-resilience-example.png",
+							"body": [
+								"인물 사진 위 Resilience 타이포그래피 적용 예시. Visible copy: Resilience / Essence for Energy."
+							]
+						},
+						{
+							"heading": "Usage Example 2",
+							"image": "essen-flux-ampoule-title-card.png",
+							"body": [
+								"제품명 타이포그래피 적용 예시. Visible copy: deep core hydra ampoule / muco ritual ampoule."
+							]
+						}
+					]
+				},
+				{
+					"blockType": "columnUnit",
+					"title": "Usage Examples 3–4",
+					"columns": [
+						{
+							"heading": "Usage Example 3",
+							"image": "essen-flux-seasonal-cards.png",
+							"body": [
+								"시즌 프로모션 포스터 타이포그래피 적용 예시. Visible copy: December Sale / 2026 December / Christmas Season Price Off / Summer / 2026 / Season Special / Vegan skincare brand / Designed & Made in Korea."
+							]
+						},
+						{
+							"heading": "Usage Example 4",
+							"image": "essen-flux-book-spines.png",
+							"body": ["책 표지 스택 타이포그래피 적용 예시."]
+						}
+					]
+				}
+			]
+		}
+	]
+}
