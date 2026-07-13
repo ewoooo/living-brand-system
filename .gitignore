@@ -66,3 +66,11 @@ tests/fixtures/review/
 scripts/diagnose-*.ts
 .gstack/
 backups/
+
+# Local build output
+output/
+temp/
+.pnpm-store/
+.playwright-cli/
+scripts/assets/
+inventory/

@@ -36,6 +36,7 @@
 		"@carbon/icons-react": "^11.82.0",
 		"@payloadcms/db-postgres": "3.85.1",
 		"@payloadcms/email-resend": "^3.85.1",
+		"@payloadcms/live-preview-react": "3.85.1",
 		"@payloadcms/next": "3.85.1",
 		"@payloadcms/plugin-mcp": "3.85.1",
 		"@payloadcms/plugin-search": "3.85.1",

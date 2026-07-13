@@ -1,4 +1,4 @@
-import type { CollectionConfig, TextFieldValidation } from 'payload'
+import type { CollectionConfig, SelectFieldValidation, TextFieldValidation } from 'payload'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -11,6 +11,17 @@ const requiredFor =
 		return (
 			selectedExecutor !== executor ||
 			(typeof value === 'string' && value.trim().length > 0) ||
+			message
+		)
+	}
+
+const requiredSelectFor =
+	(executor: RuleExecutor, message: string): SelectFieldValidation =>
+	(value, { siblingData }) => {
+		const selectedExecutor = (siblingData as { executor?: RuleExecutor })?.executor
+		return (
+			selectedExecutor !== executor ||
+			(typeof value === 'string' && value.length > 0) ||
 			message
 		)
 	}
@@ -59,11 +70,16 @@ export const RuleCheckers: CollectionConfig = {
 		},
 		{
 			name: 'model',
-			type: 'text',
-			validate: requiredFor('heuristic', 'Model을 입력하세요.'),
+			type: 'select',
+			options: [
+				{ label: 'Opus', value: 'claude-opus-4-8' },
+				{ label: 'Sonnet', value: 'claude-sonnet-5' },
+				{ label: 'Haiku', value: 'claude-haiku-4-5' },
+			],
+			validate: requiredSelectFor('heuristic', 'Model을 선택하세요.'),
 			admin: {
 				condition: (_, siblingData) => siblingData?.executor === 'heuristic',
-				description: '휴리스틱 검수에 사용할 모델 식별자입니다.',
+				description: '휴리스틱 검수에 사용할 Anthropic 모델입니다.',
 			},
 		},
 		{
