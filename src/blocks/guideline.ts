@@ -1,4 +1,28 @@
-import type { Block, Field } from 'payload'
+import type { Block, Field, FieldHook } from 'payload'
+
+type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
+
+const executorCondition =
+	(executor: CheckExecutor) => (_data: unknown, siblingData: { executor?: CheckExecutor }) =>
+		siblingData?.executor === executor
+
+const nonHeuristicCondition = (_data: unknown, siblingData: { executor?: CheckExecutor }) =>
+	siblingData?.executor !== 'heuristic'
+
+export function checkKeyFromEnglishTitle(value: unknown): string {
+	if (typeof value !== 'string') return ''
+
+	return value
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '')
+}
+
+const populateCheckKey: FieldHook = ({ siblingData, value }) => {
+	if (typeof value === 'string' && value.trim()) return value.trim()
+	return checkKeyFromEnglishTitle(siblingData?.title)
+}
 
 export function guidelineChecksField(): Field {
 	return {
@@ -15,21 +39,46 @@ export function guidelineChecksField(): Field {
 		},
 		fields: [
 			{
-				name: 'key',
-				type: 'text',
-				required: true,
-				admin: { description: '시나리오와 검수 결과에서 사용하는 안정적인 식별자입니다.' },
-			},
-			{
 				name: 'title',
 				type: 'text',
 				required: true,
+				label: 'Title (EN)',
+			},
+			{
+				name: 'titleKo',
+				type: 'text',
+				label: 'Title (KO)',
+			},
+			{
+				name: 'key',
+				type: 'text',
+				required: true,
+				hooks: { beforeValidate: [populateCheckKey] },
+				admin: {
+					readOnly: true,
+					description:
+						'최초 저장 시 영문 제목을 기준으로 자동 생성되는 안정적인 식별자입니다.',
+				},
 			},
 			{
 				name: 'tier',
 				type: 'select',
 				required: true,
 				options: ['required', 'recommended'],
+			},
+			{
+				name: 'executor',
+				type: 'select',
+				required: true,
+				defaultValue: 'deterministic',
+				options: [
+					{ label: 'Deterministic', value: 'deterministic' },
+					{ label: 'Heuristic (AI)', value: 'heuristic' },
+					{ label: 'Manual', value: 'manual' },
+				],
+				admin: {
+					description: 'Checker 후보와 아래 설정 항목을 이 실행 유형에 맞춰 제한합니다.',
+				},
 			},
 			{
 				name: 'checker',
@@ -42,17 +91,36 @@ export function guidelineChecksField(): Field {
 					appearance: 'drawer',
 					description: '검수 실행 방식과 구현체를 선택합니다.',
 				},
+				filterOptions: ({ siblingData }) => {
+					const executor = (siblingData as { executor?: CheckExecutor })?.executor
+					return executor ? { executor: { equals: executor } } : true
+				},
 			},
 			{
 				name: 'options',
 				type: 'json',
 				admin: {
-					description: '이 Check에서 Checker에 전달할 source별 설정입니다.',
+					condition: executorCondition('deterministic'),
+					description: '이 Check에서 결정론적 Checker에 전달할 설정입니다.',
+				},
+			},
+			{
+				name: 'heuristicPrompt',
+				type: 'textarea',
+				maxLength: 2000,
+				admin: {
+					condition: executorCondition('heuristic'),
+					description:
+						'AI가 이 Check를 판단할 때 추가로 적용할 기준입니다. 선택 입력, 최대 2,000자.',
 				},
 			},
 			{
 				name: 'messages',
 				type: 'group',
+				admin: {
+					condition: nonHeuristicCondition,
+					description: '결정론적 또는 수동 검수 결과에 표시할 메시지입니다.',
+				},
 				fields: [
 					{ name: 'pass', type: 'textarea' },
 					{ name: 'ok', type: 'textarea' },

@@ -16,12 +16,14 @@ vi.mock('@ai-sdk/anthropic', () => ({
 const checks: RuntimeCheck[] = [
 	{
 		key: 'imagery.mood',
-		title: '이미지 무드',
+		title: 'Imagery mood',
+		titleKo: '이미지 무드',
 		executor: 'heuristic',
 		model: 'rule-spec-model',
 		promptKey: 'asset-check.brand-guideline.v1',
+		heuristicPrompt: '인물의 표정이 자연스럽고 과장되지 않았는지 우선 판단한다.',
 		implemented: true,
-		evidence: '',
+		evidence: 'Block title: Lifestyle\nCaption: 자연스러운 일상의 순간',
 		referenceAssets: [],
 		messages: {},
 	},
@@ -85,5 +87,16 @@ describe('runAiCheck', () => {
 			reasoningTokens: 0,
 			rawUsage: { providerUsage: true },
 		})
+		expect(generateText).toHaveBeenCalledTimes(1)
+		const request = vi.mocked(generateText).mock.calls[0]?.[0] as {
+			messages?: Array<{ content?: Array<{ text?: string }> }>
+		}
+		const prompt = request.messages?.[0]?.content?.find((part) => part.text)?.text
+		expect(prompt).toContain(
+			'evidence: Block title: Lifestyle\nCaption: 자연스러운 일상의 순간',
+		)
+		expect(prompt).toContain(
+			'heuristicPrompt: 인물의 표정이 자연스럽고 과장되지 않았는지 우선 판단한다.',
+		)
 	})
 })

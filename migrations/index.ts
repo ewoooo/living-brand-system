@@ -32,6 +32,7 @@ import * as migration_20260710_085848 from './20260710_085848';
 import * as migration_20260710_085950_backfill_template_checks from './20260710_085950_backfill_template_checks';
 import * as migration_20260710_093702_connect_scenario_checks from './20260710_093702_connect_scenario_checks';
 import * as migration_20260710_100108_contract_guideline_checks from './20260710_100108_contract_guideline_checks';
+import * as migration_20260713_060221_check_editor_ai_context from './20260713_060221_check_editor_ai_context';
 
 export const migrations = [
   {
@@ -204,4 +205,9 @@ export const migrations = [
     down: migration_20260710_100108_contract_guideline_checks.down,
     name: '20260710_100108_contract_guideline_checks',
   },
+	{
+		up: migration_20260713_060221_check_editor_ai_context.up,
+		down: migration_20260713_060221_check_editor_ai_context.down,
+		name: '20260713_060221_check_editor_ai_context',
+	},
 ];

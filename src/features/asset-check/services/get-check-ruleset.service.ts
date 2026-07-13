@@ -18,12 +18,14 @@ export interface CheckReferenceAsset {
 export interface RuntimeCheck {
 	key: string
 	title: string
+	titleKo?: string
 	tier?: 'recommended' | 'required'
 	executor: RuleChecker['executor']
 	checkerKey?: string
 	model?: string
 	promptKey?: string
 	options?: unknown
+	heuristicPrompt?: string
 	/** 자동 검수 가능 여부 — deterministic인데 checker 미등록이면 false (UI 배지용). */
 	implemented: boolean
 	evidence: string
@@ -104,7 +106,11 @@ function toRuntimeCheck({ check, evidence, referenceAssets }: GuidelineCheckSour
 	const checkerKey = checker.checkerKey ?? undefined
 	const model = checker.model ?? undefined
 	const promptKey = checker.promptKey ?? undefined
-	const options = check.options ?? undefined
+	const options = checker.executor === 'deterministic' ? (check.options ?? undefined) : undefined
+	const heuristicPrompt =
+		checker.executor === 'heuristic' && check.heuristicPrompt?.trim()
+			? check.heuristicPrompt.trim()
+			: undefined
 	const implemented =
 		checker.executor === 'deterministic'
 			? Boolean(checkerKey && hasChecker(checkerKey, options))
@@ -115,12 +121,14 @@ function toRuntimeCheck({ check, evidence, referenceAssets }: GuidelineCheckSour
 	return {
 		key: check.key,
 		title: check.title,
+		titleKo: check.titleKo?.trim() || undefined,
 		tier: check.tier ?? undefined,
 		executor: checker.executor,
 		checkerKey,
 		model,
 		promptKey,
 		options,
+		heuristicPrompt,
 		implemented,
 		evidence,
 		referenceAssets: referenceAssets.flatMap((asset) =>
@@ -128,7 +136,8 @@ function toRuntimeCheck({ check, evidence, referenceAssets }: GuidelineCheckSour
 				? [{ name: asset.name, url: asset.url, mimeType: asset.mimeType }]
 				: [],
 		),
-		messages: toRuntimeCheckMessages(check.messages),
+		messages:
+			checker.executor === 'heuristic' ? undefined : toRuntimeCheckMessages(check.messages),
 	}
 }
 
