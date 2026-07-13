@@ -7,7 +7,7 @@ import * as agentSkillRepository from '@/features/agent-chat/repositories/agent-
 import * as agentTemplateRepository from '@/features/agent-chat/repositories/agent-template.payload.repository'
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { getAgentCitations } from '@/features/agent-chat/utils/get-agent-citations'
-import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-text'
+import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-parts'
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
 
 const textElement = (

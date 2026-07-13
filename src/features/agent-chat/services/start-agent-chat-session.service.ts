@@ -9,7 +9,7 @@ import {
 	createAgentChatSessionUsageCollector,
 } from '@/features/agent-chat/services/collect-agent-chat-session-usage.service'
 import type { AgentChatSessionMessageInput } from '@/features/agent-chat/types'
-import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-text'
+import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-parts'
 import type { AgentChatSession, User } from '@/payload-types'
 
 export interface StartAgentChatSessionInput {

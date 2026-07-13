@@ -1,20 +1,41 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
+import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Separator } from '@/components/ui/separator'
 import { GuidelineImage } from '@/features/guideline/components/blocks/children/guideline-image'
 import { GuidelineBlocks } from '@/features/guideline/components/blocks/guideline-blocks'
+import { RefreshRouteOnSave } from '@/features/guideline/components/refresh-route-on-save'
+import { getGuidelinePagePreview } from '@/features/guideline/services/get-guideline-page-preview.service'
 import {
 	type GetGuidelineSectionOutput,
 	getGuidelineSection,
 } from '@/features/guideline/services/get-guideline-section.service'
+import { isManager, isPayloadUser } from '@/lib/auth'
+import { authenticateRequest } from '@/lib/request-auth'
 
 export default async function GuidelineSectionPage({
 	params,
+	searchParams,
 }: {
 	params: Promise<{ chapterSlug: string; sectionSlug: string }>
+	searchParams: Promise<{ previewPage?: string }>
 }) {
 	const { chapterSlug, sectionSlug } = await params
-	const sectionView = await getGuidelineSection(chapterSlug, sectionSlug)
+	const previewPage = Number((await searchParams).previewPage)
+	const { isEnabled: isDraftMode } = await draftMode()
+	let sectionView: GetGuidelineSectionOutput | null = null
+	let isPreview = false
+
+	if (isDraftMode && Number.isSafeInteger(previewPage) && previewPage > 0) {
+		const { user } = await authenticateRequest()
+
+		if (isPayloadUser(user) && isManager(user)) {
+			sectionView = await getGuidelinePagePreview(previewPage, user)
+			isPreview = Boolean(sectionView)
+		}
+	}
+
+	sectionView ??= await getGuidelineSection(chapterSlug, sectionSlug)
 
 	if (!sectionView) {
 		notFound()
@@ -22,6 +43,7 @@ export default async function GuidelineSectionPage({
 
 	return (
 		<article className="grid w-full grid-rows-[auto_1fr]">
+			{isPreview && <RefreshRouteOnSave />}
 			<header className="mb-10">
 				<GuidelineSectionHeader
 					title={sectionView.title}
