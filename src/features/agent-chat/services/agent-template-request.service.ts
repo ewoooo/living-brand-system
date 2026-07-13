@@ -8,12 +8,12 @@ import {
 	type JsonTemplate,
 	jsonTemplateSchema,
 } from '@/types/json-template'
-import { findAgentChecks } from '../repositories/agent-guideline-context.payload.repository'
 import {
 	type AgentTemplateDocument,
 	findAgentTemplate,
 	listAgentTemplates,
 } from '../repositories/agent-template.payload.repository'
+import { listAgentChecks } from './get-agent-guideline-context.service'
 
 export const templateSlotValueSchema = z.object({
 	src: z.string().max(2000).optional(),
@@ -34,7 +34,7 @@ export interface AgentTemplateImageAttachment {
  * Payload 템플릿 조회는 agent template repository가 담당한다.
  */
 export async function findTemplatesForRequest(user: unknown, query?: string) {
-	const [templates, checks] = await Promise.all([listAgentTemplates(user), findAgentChecks(user)])
+	const [templates, checks] = await Promise.all([listAgentTemplates(user), listAgentChecks(user)])
 	const checksByKey = new Map(checks.map((check) => [check.key, check]))
 	const normalizedQuery = query?.trim().toLowerCase()
 

@@ -4,16 +4,15 @@ import type { BlockBehavior, GuidelineBlock } from './types'
 
 function format(block: GuidelineBlock): string {
 	if (block.blockType !== 'columnUnit') return ''
-	return compact([
-		block.title,
-		...(block.columns?.map((column) =>
+	return compact(
+		block.columns?.map((column) =>
 			compact([
 				column.heading,
 				extractTextFromLexical(column.body),
 				formatImage(column.image),
 			]).join('\n'),
-		) ?? []),
-	]).join('\n\n')
+		) ?? [],
+	).join('\n\n')
 }
 
 export const behavior: BlockBehavior = {

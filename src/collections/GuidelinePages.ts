@@ -1,11 +1,20 @@
 import { type CollectionConfig, slugField } from 'payload'
 import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
+import { validateGuidelineCheckKeys } from '@/features/guideline/checks/validate-guideline-check-keys'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
+
+const previewURL = (id: unknown) =>
+	typeof id === 'number' || typeof id === 'string'
+		? `/api/guideline-preview?id=${encodeURIComponent(String(id))}`
+		: null
 
 export const GuidelinePages: CollectionConfig = {
 	slug: 'guideline-pages',
 	access: managerManagedAccess,
+	hooks: {
+		beforeValidate: [validateGuidelineCheckKeys],
+	},
 	labels: {
 		singular: 'Guideline Page',
 		plural: 'Guideline Pages',
@@ -16,6 +25,10 @@ export const GuidelinePages: CollectionConfig = {
 		defaultColumns: ['title', 'section', 'displayOrder', 'updatedAt'],
 		description: '블록으로 구성하는 가이드라인 페이지입니다.',
 		listSearchableFields: ['title', 'slug'],
+		livePreview: {
+			url: ({ data }) => previewURL(data.id),
+		},
+		preview: (data) => previewURL(data.id),
 	},
 	versions: draftVersions,
 	defaultSort: 'displayOrder',

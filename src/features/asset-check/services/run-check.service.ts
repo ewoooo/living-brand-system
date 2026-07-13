@@ -8,8 +8,9 @@ import type {
 	CheckResultChecker,
 	RawCheckResult,
 } from '@/features/asset-check/checkers/types'
+import { detectCheckImageMediaType } from '@/features/asset-check/image-format'
+import { runAiCheck } from '@/features/asset-check/repositories/ai-check.agent.repository'
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
-import { runAiCheck } from '@/features/asset-check/services/ai-check.service'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
 import {
 	getRuntimeChecks,
@@ -63,6 +64,7 @@ export async function runImmediateCheck(
 /**
  * 후속 AI 검수 요청에서 heuristic 룰만 판정한다.
  * 첫 응답의 pendingCheckKeys를 기준으로 실행 범위를 좁힌다.
+ * 모델 I/O는 ai-check Agent repository가 소유한다.
  */
 export async function runHeuristicCheck(
 	buffer: Buffer,
@@ -155,18 +157,6 @@ function toCheckResult(
 }
 
 function imageInputFrom(buffer: Buffer): CheckerContext['image'] {
-	if (buffer.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))) {
-		return { data: buffer, mediaType: 'image/jpeg' }
-	}
-	if (
-		buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
-	) {
-		return { data: buffer, mediaType: 'image/png' }
-	}
-	if (
-		buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
-		buffer.subarray(8, 12).toString('ascii') === 'WEBP'
-	) {
-		return { data: buffer, mediaType: 'image/webp' }
-	}
+	const mediaType = detectCheckImageMediaType(buffer)
+	return mediaType ? { data: buffer, mediaType } : undefined
 }

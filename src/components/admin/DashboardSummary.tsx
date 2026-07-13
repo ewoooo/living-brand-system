@@ -1,8 +1,7 @@
-import type { Payload } from 'payload'
-import { getAdminGuidelineSummary } from '@/features/guideline/repositories/admin-guideline-summary.payload.repository'
+import { getAdminGuidelineSummary } from '@/features/guideline/services/get-admin-guideline-summary.service'
 
-export default async function DashboardSummary({ payload }: { payload: Payload }) {
-	const { checks, sections, pages } = await getAdminGuidelineSummary(payload).catch(() => ({
+export default async function DashboardSummary() {
+	const { checks, sections, pages } = await getAdminGuidelineSummary().catch(() => ({
 		checks: 0,
 		sections: 0,
 		pages: 0,

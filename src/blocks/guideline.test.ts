@@ -2,7 +2,7 @@ import type { Field } from 'payload'
 import { describe, expect, it } from 'vitest'
 import { GuidelinePages } from '@/collections/GuidelinePages'
 import { GuidelineSections } from '@/collections/GuidelineSections'
-import { guidelineBlocks, guidelineChecksField } from './guideline'
+import { checkKeyFromEnglishTitle, guidelineBlocks, guidelineChecksField } from './guideline'
 
 const fieldNames = (fields: Field[]) =>
 	fields.flatMap((field) =>
@@ -15,15 +15,60 @@ describe('guideline checks field', () => {
 		expect(checks.type).toBe('array')
 		if (checks.type !== 'array') return
 		expect(fieldNames(checks.fields)).toEqual([
-			'key',
 			'title',
+			'titleKo',
+			'key',
 			'tier',
+			'executor',
 			'checker',
 			'options',
+			'heuristicPrompt',
 			'messages',
 		])
 		expect(fieldNames(GuidelineSections.fields)).toContain('checks')
 		expect(fieldNames(GuidelinePages.fields)).toContain('checks')
 		for (const block of guidelineBlocks) expect(fieldNames(block.fields)).toContain('checks')
+	})
+
+	it('영문 제목에서 namespace 없는 안정적인 key를 만든다', () => {
+		expect(checkKeyFromEnglishTitle('Imagery Mood & Tone')).toBe('imagery-mood-tone')
+		expect(checkKeyFromEnglishTitle('  Logo / Clear Space  ')).toBe('logo-clear-space')
+	})
+
+	it('executor에 따라 Options, Heuristic Prompt, Messages를 조건부 노출한다', () => {
+		const checks = guidelineChecksField()
+		if (checks.type !== 'array') return
+		const field = (name: string) =>
+			checks.fields.find((candidate) => 'name' in candidate && candidate.name === name)
+		const condition = (name: string, executor: 'deterministic' | 'heuristic' | 'manual') => {
+			const candidate = field(name)
+			const adminCondition =
+				candidate && 'admin' in candidate ? candidate.admin?.condition : null
+			if (typeof adminCondition !== 'function')
+				throw new Error(`${name} condition is missing`)
+			return adminCondition({}, { executor }, {} as never)
+		}
+
+		expect(condition('options', 'deterministic')).toBe(true)
+		expect(condition('options', 'heuristic')).toBe(false)
+		expect(condition('heuristicPrompt', 'heuristic')).toBe(true)
+		expect(condition('heuristicPrompt', 'manual')).toBe(false)
+		expect(condition('messages', 'heuristic')).toBe(false)
+		expect(condition('messages', 'manual')).toBe(true)
+
+		const heuristicPrompt = field('heuristicPrompt')
+		if (heuristicPrompt?.type !== 'textarea') {
+			throw new Error('heuristicPrompt textarea is missing')
+		}
+		expect(heuristicPrompt.maxLength).toBe(2000)
+		expect(heuristicPrompt.required).not.toBe(true)
+
+		const checker = field('checker')
+		if (checker?.type !== 'relationship' || typeof checker.filterOptions !== 'function') {
+			throw new Error('checker filter is missing')
+		}
+		expect(checker.filterOptions({ siblingData: { executor: 'heuristic' } } as never)).toEqual({
+			executor: { equals: 'heuristic' },
+		})
 	})
 })

@@ -34,4 +34,37 @@ describe('collectGuidelineCheckSources', () => {
 		expect(sources[1]?.evidence).toContain('Media showcase')
 		expect(sources[1]?.referenceAssets).toEqual([image])
 	})
+
+	it('Block Check에서 동일한 기준 이미지를 중복 제거한다', () => {
+		const image = {
+			id: 66,
+			name: 'Brand Guideline Reference p.37',
+			url: '/api/application-images/file/page-37.jpg',
+			mimeType: 'image/jpeg',
+		}
+		const page = {
+			title: 'Incorrect Usage',
+			blocks: [
+				{
+					id: 'incorrect-usage',
+					blockType: 'doDont',
+					groups: [
+						{
+							examples: [
+								{ kind: 'dont', image },
+								{ kind: 'dont', image },
+							],
+						},
+					],
+					checks: [
+						{ key: 'typography.misuse', title: '타이포그래피 오용 금지', checker: 1 },
+					],
+				},
+			],
+		} as unknown as GuidelinePage
+
+		const sources = collectGuidelineCheckSources(page)
+
+		expect(sources[0]?.referenceAssets).toEqual([image])
+	})
 })

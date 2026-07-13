@@ -355,6 +355,8 @@ export default buildConfig({
 	localization: {
 		locales: ['ko', 'en'],
 		defaultLocale: 'ko',
+		// 기존 en revision은 보존하되 Admin 편집은 초기 릴리스 언어인 ko로 고정한다.
+		filterAvailableLocales: ({ locales }) => locales.filter((locale) => locale.code === 'ko'),
 	},
 	globals: [Guideline, AgentSettings],
 })
