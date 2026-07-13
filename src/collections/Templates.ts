@@ -9,9 +9,13 @@ export const Templates: CollectionConfig = {
 	access: managerManagedAccess,
 	hooks: {
 		// 보안/브랜드 통제: 이미지·벡터는 인가된 내부 에셋만 허용한다.
-		// 임포트 조각(template-assets)이 남아 있으면 draft를 포함해 어떤 저장도 거부한다 (docs/07).
+		// 인가 검사는 발행 시에만 한다 — draft 저장은 충실 import를 위해 항상 통과하고,
+		// worker/공개 페이지는 발행본만 읽으므로 비인가 draft가 외부로 새지 않는다 (docs/07).
 		beforeChange: [
 			async ({ data, req }) => {
+				// draft(및 상태 미지정) 저장은 게이트 없이 통과. 발행 전이일 때만 인가 검증.
+				if (data?._status !== 'published') return data
+
 				const validation = validateTemplateImages(data?.jsonTemplate)
 
 				// 보안 게이트는 fail-closed — 검사할 수 없는 값은 저장하지 않는다.
