@@ -1,8 +1,8 @@
 import { createAgentUIStreamResponse } from 'ai'
-import { z } from 'zod'
 
 import { agentChatAgent, assertAgentChatProviderConfigured } from '@/agents/agent-chat.agent'
 import { validateAgentChatMessages } from '@/agents/validate-agent-chat-messages.agent'
+import { parseAgentChatRequest } from '@/app/api/agent-chat/parse-agent-chat-request'
 import { startAgentChatSession } from '@/features/agent-chat/services/start-agent-chat-session.service'
 import { isPayloadUser } from '@/lib/auth'
 import { AgentConfigurationError } from '@/lib/errors'
@@ -12,25 +12,6 @@ export const maxDuration = 30
 
 // 25MB — base64 이미지 첨부(~33% 팽창) 여유. 무제한 JSON 적재 방지 (docs/07 #17).
 const MAX_BODY_BYTES = 25_000_000
-
-const uiMessageSchema = z
-	.object({
-		id: z.string().min(1),
-		role: z.enum(['system', 'user', 'assistant']),
-		parts: z.array(z.object({ type: z.string() }).passthrough()).min(1),
-	})
-	.passthrough()
-
-const agentChatRequestSchema = z.object({
-	messages: z.array(uiMessageSchema).min(1),
-	pagePath: z.string().max(300).optional(),
-})
-
-export async function parseAgentChatRequest(req: Request) {
-	const body = await req.json().catch(() => null)
-
-	return agentChatRequestSchema.safeParse(body)
-}
 
 export async function POST(req: Request) {
 	if (isCrossOriginRequest(req)) {

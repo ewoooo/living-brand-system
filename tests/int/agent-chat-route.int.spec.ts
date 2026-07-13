@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseAgentChatRequest } from '@/app/api/agent-chat/route'
+import { parseAgentChatRequest } from '@/app/api/agent-chat/parse-agent-chat-request'
 
 describe('agent chat route request parsing', () => {
 	it('rejects malformed JSON', async () => {
