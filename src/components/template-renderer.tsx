@@ -151,7 +151,9 @@ function ElementView({
 	}
 
 	if (element.type === 'image') {
-		return <ImageView element={element} src={value?.src ?? element.src} style={frame} id={domId} />
+		return (
+			<ImageView element={element} src={value?.src ?? element.src} style={frame} id={domId} />
+		)
 	}
 
 	return <div id={domId} style={{ ...frame, ...rectCss(element) }} />
