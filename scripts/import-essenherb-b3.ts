@@ -3,7 +3,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Payload } from 'payload'
-import type { GuidelineChecks, GuidelinePage } from '@/payload-types'
+import type { GuidelineChecks, GuidelinePage, RuleChecker } from '@/payload-types'
 
 type Mode = 'dry-run' | 'draft' | 'publish'
 type CheckSpec = {
@@ -51,6 +51,7 @@ type Manifest = {
 	pages: PageSpec[]
 }
 type GuidelineBlock = NonNullable<GuidelinePage['blocks']>[number]
+type CheckerRef = Pick<RuleChecker, 'executor' | 'id'>
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))
 const assetDirectory = path.join(scriptDirectory, 'assets', 'essenherb-b3')
@@ -229,31 +230,34 @@ function matchingBlock(
 function materializeChecks(
 	specs: CheckSpec[] | undefined,
 	preserved: Map<string, NonNullable<GuidelineChecks>[number]>,
-	checkerIds: Map<string, number>,
+	checkerRefs: Map<string, CheckerRef>,
 ): GuidelineChecks {
 	return (
-		specs?.map(
-			(spec) =>
+		specs?.map((spec) => {
+			const checker = assertCheckerRef(checkerRefs, spec.checkerKey)
+			return (
 				preserved.get(spec.key) ?? {
 					key: spec.key,
 					title: spec.title,
 					tier: spec.tier,
-					checker: assertCheckerId(checkerIds, spec.checkerKey),
-				},
-		) ?? []
+					executor: checker.executor,
+					checker: checker.id,
+				}
+			)
+		}) ?? []
 	)
 }
 
-function assertCheckerId(checkerIds: Map<string, number>, key: string): number {
-	const id = checkerIds.get(key)
-	assert.ok(id, `RuleChecker가 없습니다: ${key}`)
-	return id
+function assertCheckerRef(checkerRefs: Map<string, CheckerRef>, key: string): CheckerRef {
+	const checker = checkerRefs.get(key)
+	assert.ok(checker, `RuleChecker가 없습니다: ${key}`)
+	return checker
 }
 
 function materializeBlocks(
 	page: PageSpec,
 	assetIds: Map<string, number>,
-	checkerIds: Map<string, number>,
+	checkerRefs: Map<string, CheckerRef>,
 	existingPage?: GuidelinePage,
 ): NonNullable<GuidelinePage['blocks']> {
 	const preservedChecks = existingChecks(existingPage)
@@ -265,7 +269,7 @@ function materializeBlocks(
 		const existing = matchingBlock(spec, existingPage?.blocks ?? [], index)
 		const common = {
 			id: existing?.id,
-			checks: materializeChecks(spec.checks, preservedChecks, checkerIds),
+			checks: materializeChecks(spec.checks, preservedChecks, checkerRefs),
 		}
 		if (spec.blockType === 'columnUnit') {
 			return {
@@ -319,7 +323,7 @@ async function findPage(
 	return result.docs[0]
 }
 
-async function checkerIds(payload: Payload): Promise<Map<string, number>> {
+async function checkerRefs(payload: Payload): Promise<Map<string, CheckerRef>> {
 	const keys = [...new Set(manifest.pages.flatMap(expectedCheckKeys))]
 	const checkerKeys = [
 		...new Set(
@@ -339,9 +343,11 @@ async function checkerIds(payload: Payload): Promise<Map<string, number>> {
 		limit: checkerKeys.length,
 		overrideAccess: true,
 	})
-	const ids = new Map(result.docs.map((checker) => [checker.key, checker.id]))
-	for (const key of checkerKeys) assertCheckerId(ids, key)
-	return ids
+	const refs = new Map(
+		result.docs.map((checker) => [checker.key, { id: checker.id, executor: checker.executor }]),
+	)
+	for (const key of checkerKeys) assertCheckerRef(refs, key)
+	return refs
 }
 
 async function draftAssets(payload: Payload): Promise<Map<string, number>> {
@@ -458,7 +464,7 @@ async function draftHierarchy(payload: Payload): Promise<{ chapterId: number; se
 
 async function writeDraft(payload: Payload): Promise<void> {
 	const assets = await draftAssets(payload)
-	const checkers = await checkerIds(payload)
+	const checkers = await checkerRefs(payload)
 	const { sectionId } = await draftHierarchy(payload)
 	for (const pageSpec of manifest.pages) {
 		const existing = await findPage(payload, pageSpec.slug, true)
