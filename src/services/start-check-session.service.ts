@@ -1,6 +1,5 @@
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import {
-	type CheckSessionSource,
 	createCheckSessionRecord,
 	getCheckSessionRecord,
 	updateCheckSessionRecord,
@@ -14,7 +13,7 @@ import {
 	runHeuristicCheck,
 	runImmediateCheck,
 } from '@/features/asset-check/services/run-check.service'
-import type { ImageContentFlags } from '@/features/asset-check/types'
+import type { CheckSessionSource, ImageContentFlags } from '@/features/asset-check/types'
 import type { AgentChatSession, CheckSession, User } from '@/payload-types'
 
 // 시나리오 어휘는 scenarioKey 입력 계약의 일부다 — 다른 기능은 asset-check 내부 대신 여기서 가져간다.

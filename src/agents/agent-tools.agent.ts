@@ -5,6 +5,17 @@ import {
 	type AgentSkillDetail,
 	findEnabledAgentSkillByName,
 } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
+import {
+	findTemplatesForRequest,
+	prepareTemplateImage,
+	templateSlotValueSchema,
+} from '@/features/agent-chat/services/agent-template-request.service'
+import {
+	listAgentChecks,
+	listAgentGuidelinePages,
+	readAgentGuidelineDocument,
+	searchAgentGuidelines,
+} from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { IMAGE_SCENES } from '@/features/image-generation/presets'
 import {
 	type AgentGeneratedImagesAttachment,
@@ -17,20 +28,6 @@ import {
 	getCheckScenario,
 	startCheckSession,
 } from '@/services/start-check-session.service'
-import { findAgentChecks } from '../repositories/agent-guideline-context.payload.repository'
-import {
-	findTemplatesForRequest,
-	prepareTemplateImage,
-	templateSlotValueSchema,
-} from './agent-template-request.service'
-import {
-	listAgentGuidelinePages,
-	readAgentGuidelineDocument,
-	searchAgentGuidelines,
-} from './get-agent-guideline-context.service'
-
-export type { AgentGeneratedImagesAttachment } from '@/features/image-generation/services/generate-image.service'
-export type { AgentTemplateImageAttachment } from './agent-template-request.service'
 
 const guidelineToolContextSchema = z.object({
 	agentChatSessionId: z.number().int().positive().optional(),
@@ -93,7 +90,7 @@ export function getAgentTools() {
 			description: 'Get checks declared by published brand guideline documents.',
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
-			execute: (_input, { context }) => findAgentChecks(context.user),
+			execute: (_input, { context }) => listAgentChecks(context.user),
 		}),
 		listCheckScenarios: tool({
 			description:

@@ -1,14 +1,9 @@
+import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
-import type { User } from '@/payload-types'
 import { completeCheckSessionAiCheck } from '@/services/start-check-session.service'
+import { readCheckImage } from '../read-check-image'
 
 export const maxDuration = 30
-
-const MAX_IMAGE_BYTES = 20_000_000
-
-function isUser(value: unknown): value is User {
-	return Boolean(value && typeof value === 'object' && 'email' in value && 'role' in value)
-}
 
 function parseCheckKeys(value: FormDataEntryValue | null | undefined): string[] {
 	if (typeof value !== 'string') return []
@@ -31,24 +26,22 @@ export async function POST(req: Request) {
 	}
 
 	const { payload, user } = await authenticateRequest()
-	if (!isUser(user)) {
+	if (!isPayloadUser(user)) {
 		return Response.json({ message: 'Unauthorized' }, { status: 401 })
 	}
 
 	const form = await req.formData().catch(() => null)
-	const file = form?.get('image')
 	const checkSessionId = parseCheckSessionId(form?.get('checkSessionId'))
 	const checkKeys = parseCheckKeys(form?.get('checkKeys'))
-	if (!(file instanceof File) || checkSessionId === null || checkKeys.length === 0) {
+	if (checkSessionId === null || checkKeys.length === 0) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
 	}
-	if (file.size > MAX_IMAGE_BYTES) {
-		return Response.json({ message: 'Image is too large.' }, { status: 413 })
-	}
+	const image = await readCheckImage(form?.get('image'))
+	if ('response' in image) return image.response
 
 	try {
 		const result = await completeCheckSessionAiCheck({
-			buffer: Buffer.from(await file.arrayBuffer()),
+			buffer: image.buffer,
 			checkSessionId,
 			checkKeys,
 			user,

@@ -10,6 +10,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
+import { fieldNumber, fieldRowCount, fieldString } from './form-fields'
 
 type CountedItem = {
 	callCount?: number | null
@@ -29,26 +30,6 @@ type MessageRow = {
 	text?: string | null
 	usedSkills?: CountedItem[] | null
 	usedTools?: CountedItem[] | null
-}
-
-function fieldValue<T>(fields: FormState, path: string) {
-	return fields[path]?.value as T | undefined
-}
-
-function fieldString(fields: FormState, path: string) {
-	const value = fieldValue<unknown>(fields, path)
-
-	return typeof value === 'string' ? value : null
-}
-
-function fieldNumber(fields: FormState, path: string) {
-	const value = fieldValue<unknown>(fields, path)
-
-	return typeof value === 'number' ? value : null
-}
-
-function fieldRowCount(fields: FormState, path: string) {
-	return fields[path]?.rows?.length ?? fieldNumber(fields, path) ?? 0
 }
 
 function buildCountedItems(fields: FormState, path: string): CountedItem[] {

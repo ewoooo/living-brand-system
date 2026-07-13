@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, type ReactNode, use, useEffect, useMemo, useRef, useState } from 'react'
+import { isSupportedCheckImageMediaType } from '@/features/asset-check/image-format'
 import { CHECK_SCENARIOS, getCheckScenario } from '@/features/asset-check/scenarios'
 import { runFullCheck } from '@/features/asset-check/services/submit-check.client'
 import type { CheckImage, CheckImageContextValue } from '@/features/asset-check/types'
@@ -86,7 +87,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 	function addFiles(files: FileList | File[]) {
 		const added: CheckImage[] = []
 		for (const file of files) {
-			if (!file.type.startsWith('image/')) continue
+			if (!isSupportedCheckImageMediaType(file.type)) continue
 			added.push({
 				id: crypto.randomUUID(),
 				url: URL.createObjectURL(file),

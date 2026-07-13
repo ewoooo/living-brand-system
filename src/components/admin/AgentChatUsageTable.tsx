@@ -10,6 +10,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
+import { fieldNumber, fieldString, formatNumber } from './form-fields'
 
 type UsageRow = {
 	cacheReadInputTokens?: number | null
@@ -20,26 +21,6 @@ type UsageRow = {
 	outputTokens?: number | null
 	reasoningTokens?: number | null
 	totalTokens?: number | null
-}
-
-function fieldValue<T>(fields: FormState, path: string) {
-	return fields[path]?.value as T | undefined
-}
-
-function fieldString(fields: FormState, path: string) {
-	const value = fieldValue<unknown>(fields, path)
-
-	return typeof value === 'string' ? value : null
-}
-
-function fieldNumber(fields: FormState, path: string) {
-	const value = fieldValue<unknown>(fields, path)
-
-	return typeof value === 'number' ? value : null
-}
-
-function formatNumber(value?: number | null) {
-	return typeof value === 'number' ? value.toLocaleString('ko-KR') : '-'
 }
 
 function buildUsage(fields: FormState): UsageRow {

@@ -1,9 +1,11 @@
 import { formatBlockForAgent } from '@/features/guideline/blocks/registry'
+import { compact } from '@/features/guideline/utils/block-text'
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
 import type { GuidelineSection } from '@/payload-types'
 import {
 	type AgentGuidelineDocument,
 	type AgentGuidelineSearchResult,
+	findAgentChecks,
 	findAgentGuidelineDocument,
 	listGuidelinePageListItems,
 	listGuidelineSections,
@@ -11,6 +13,14 @@ import {
 } from '../repositories/agent-guideline-context.payload.repository'
 
 const MAX_DOCUMENT_CONTENT_LENGTH = 6000
+
+/**
+ * Agent가 읽을 수 있는 발행 Check 카탈로그를 조회한다.
+ * Payload 조회와 접근 조건은 agent-guideline-context repository가 소유한다.
+ */
+export function listAgentChecks(user: unknown) {
+	return findAgentChecks(user)
+}
 
 interface GuidelineSearchInput {
 	query: string
@@ -202,10 +212,6 @@ function getTitle(value: number | GuidelineSection): string {
 
 function getSectionSlug(value: number | GuidelineSection): string | null {
 	return typeof value === 'object' ? (value.slug ?? null) : null
-}
-
-function compact(values: (string | null | undefined)[]): string[] {
-	return values.map((value) => value?.trim()).filter((value): value is string => Boolean(value))
 }
 
 function limitContent(value: string): string {

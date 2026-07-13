@@ -1,12 +1,30 @@
-import type { LanguageModelUsage } from 'ai'
-import type {
-	AgentChatAiUsage,
-	AgentChatSessionUsage,
-} from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
+import type { AgentChatAiUsage, AgentChatSessionUsage } from '@/features/agent-chat/types'
+
+interface LanguageModelUsageLike {
+	inputTokenDetails: {
+		[key: string]: number | undefined
+		cacheReadTokens?: number
+		cacheWriteTokens?: number
+	}
+	inputTokens?: number
+	outputTokenDetails: {
+		[key: string]: number | undefined
+		reasoningTokens?: number
+	}
+	outputTokens?: number
+	raw?: unknown
+	totalTokens?: number
+}
 
 interface ToolCallLike {
 	input?: unknown
 	toolName?: unknown
+}
+
+export interface AgentChatSessionUsageStep {
+	model?: { modelId?: string }
+	toolCalls?: readonly unknown[]
+	usage?: LanguageModelUsageLike
 }
 
 export interface AgentChatSessionUsageSnapshot {
@@ -26,11 +44,7 @@ export function createAgentChatSessionUsageCollector() {
 	let model: string | undefined
 
 	return {
-		addStep(step: {
-			model?: { modelId?: string }
-			toolCalls?: readonly unknown[]
-			usage?: LanguageModelUsage
-		}) {
+		addStep(step: AgentChatSessionUsageStep) {
 			model ??= step.model?.modelId
 			if (step.usage) addUsage(usage, step.usage)
 			if (step.usage?.raw) rawUsages.push(step.usage.raw)
@@ -87,7 +101,7 @@ function createEmptyUsage(): Required<Omit<AgentChatAiUsage, 'model' | 'rawUsage
 	}
 }
 
-function addUsage(target: ReturnType<typeof createEmptyUsage>, usage: LanguageModelUsage) {
+function addUsage(target: ReturnType<typeof createEmptyUsage>, usage: LanguageModelUsageLike) {
 	target.callCount += 1
 	target.inputTokens += usage.inputTokens ?? 0
 	target.outputTokens += usage.outputTokens ?? 0

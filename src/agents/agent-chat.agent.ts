@@ -1,11 +1,11 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { type InferAgentUIMessage, isStepCount, ToolLoopAgent } from 'ai'
 import { z } from 'zod'
+import { getAgentTools } from '@/agents/agent-tools.agent'
 import { env } from '@/env'
-import type { AgentChatReaction } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import { findEnabledAgentSkillSummaries } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import { getAgentDefaultInstructions } from '@/features/agent-chat/services/get-agent-default-instructions.service'
-import { getAgentTools } from '@/features/agent-chat/services/get-agent-tools.service'
+import type { AgentChatReaction } from '@/features/agent-chat/types'
 import { AgentConfigurationError } from '@/lib/errors'
 
 const DEFAULT_MODEL = 'claude-sonnet-4-6'
