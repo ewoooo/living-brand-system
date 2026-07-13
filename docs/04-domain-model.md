@@ -176,7 +176,7 @@ flowchart LR
 | --- | --- |
 | GuidelineSection -> GuidelinePage -> GuidelineBlock | Section은 Page와 자체 Block을, Page는 자체 Block을 소유합니다. Block 식별자는 부모 문서 안에서만 유효합니다. |
 | GuidelineSection / GuidelinePage / GuidelineBlock -> Check | 각 문서 단위는 자신에게 적용할 Check를 소유하므로 별도 source 참조가 필요하지 않습니다. |
-| Check -> RuleChecker | Check는 기준과 source별 options를 선언하고 RuleChecker 실행 계약을 참조합니다. |
+| Check -> RuleChecker | Check는 실행 유형에 따라 결정론적 options 또는 AI 추가 판단 기준을 선언하고 RuleChecker 실행 계약을 참조합니다. |
 | GuidelinePage -> BrandAssetVersion / TemplateVersion / PluginVersion | 페이지는 브랜드가 채택한 자원을 Official Version으로 참조합니다. |
 | AssetGenerationSession -> BrandGuideline / BrandAsset / Template / Plugin | 제작은 발행 기준, 에셋, 템플릿, 플러그인을 사용하고 ResourceRef를 저장합니다. |
 | 사용 기록 -> AssetGenerationSession / QASession / CheckSession | 운영 조회는 기본 레코드를 읽어 사용 이력을 구성합니다. |

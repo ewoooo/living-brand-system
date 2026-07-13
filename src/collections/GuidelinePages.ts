@@ -1,5 +1,6 @@
 import { type CollectionConfig, slugField } from 'payload'
 import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
+import { validateGuidelineCheckKeys } from '@/features/guideline/checks/validate-guideline-check-keys'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -11,6 +12,9 @@ const previewURL = (id: unknown) =>
 export const GuidelinePages: CollectionConfig = {
 	slug: 'guideline-pages',
 	access: managerManagedAccess,
+	hooks: {
+		beforeValidate: [validateGuidelineCheckKeys],
+	},
 	labels: {
 		singular: 'Guideline Page',
 		plural: 'Guideline Pages',
