@@ -9,10 +9,12 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 export function SectionLayout({
 	nav,
 	children,
+	pageNavigation,
 	footer,
 }: {
 	nav: React.ReactNode
 	children: React.ReactNode
+	pageNavigation?: React.ReactNode
 	footer?: React.ReactNode
 }) {
 	return (
@@ -27,6 +29,7 @@ export function SectionLayout({
 					목차
 				</SidebarTrigger>
 				<main className="flex w-full flex-1 justify-center px-4 md:px-12">{children}</main>
+				{pageNavigation}
 				{footer}
 			</div>
 		</SidebarProvider>
