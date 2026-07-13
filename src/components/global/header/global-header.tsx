@@ -78,7 +78,7 @@ export function GlobalHeader({
 	guidelineChapters: GuidelineSearchChapter[]
 }) {
 	return (
-		<header className="relative z-10 flex shrink-0 bg-white dark:bg-black">
+		<header className="relative z-30 flex shrink-0 bg-white dark:bg-black">
 			<HeaderHead className="flex-1" />
 			<HeaderCenter
 				className="-translate-x-1/2 absolute left-1/2 flex items-center gap-2 p-4"
