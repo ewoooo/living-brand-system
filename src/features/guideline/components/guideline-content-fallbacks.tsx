@@ -1,7 +1,12 @@
 import { Warning } from '@carbon/icons-react'
+import type { GuidelineVariant } from './globals/guideline-variant'
 
-export function GuidelineDescriptionFallback() {
-	return <p className="text-red-400">Description must be filled on purpose.</p>
+export function GuidelineDescriptionFallback({ variant }: { variant: GuidelineVariant }) {
+	return (
+		<p data-variant={variant} className="text-red-400">
+			Description must be filled on purpose.
+		</p>
+	)
 }
 
 export function GuidelineLabelFallback() {

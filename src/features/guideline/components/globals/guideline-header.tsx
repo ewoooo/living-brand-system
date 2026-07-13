@@ -1,22 +1,25 @@
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import type { GuidelineSection } from '@/payload-types'
-import { GuidelineImage } from './blocks/children/guideline-image'
+import { GuidelineImage } from '../blocks/children/guideline-image'
+import type { GuidelineVariant } from './guideline-variant'
 
 export function GuidelineHeader({
 	title,
 	image,
 	as: Heading = 'h1',
 	label,
+	variant = 'chapter',
 }: {
 	title: string
 	image?: GuidelineSection['headerImage']
 	as?: 'h1' | 'h2'
 	label?: string | number
+	variant?: GuidelineVariant
 }) {
 	const hasImage = typeof image === 'object' && image !== null && Boolean(image.url)
 
 	return (
-		<header>
+		<header data-variant={variant}>
 			<AspectRatio ratio={16 / 9} className="relative overflow-hidden bg-neutral-950">
 				<GuidelineImage
 					image={image}

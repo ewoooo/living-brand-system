@@ -1,8 +1,8 @@
 import type React from 'react'
 import { SectionLayout } from '@/components/global/section-layout'
 import { PageNavigation } from '@/components/page-navigation'
-import { GuidelineFooter } from '@/features/guideline/components/guideline-footer'
-import { GuidelineSideNavigation } from '@/features/guideline/components/guideline-side-navigation'
+import { GuidelineFooter } from '@/features/guideline/components/globals/guideline-footer'
+import { GuidelineSideNavigation } from '@/features/guideline/components/globals/guideline-side-navigation'
 import { getGuidelineNavigation } from '@/features/guideline/services/get-guideline-navigation.service'
 
 export default async function GuidelineLayout({ children }: { children: React.ReactNode }) {
