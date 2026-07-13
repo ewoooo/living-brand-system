@@ -106,6 +106,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "label": {
+          "name": "label",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "generate_slug": {
           "name": "generate_slug",
           "type": "boolean",
@@ -451,6 +457,12 @@
       "columns": {
         "version_title": {
           "name": "version_title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_label": {
+          "name": "version_label",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
@@ -1236,80 +1248,6 @@
           "name": "section_cu_parent_id_fk",
           "tableFrom": "section_cu",
           "tableTo": "guideline_sections",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.section_cu_locales": {
-      "name": "section_cu_locales",
-      "schema": "",
-      "columns": {
-        "title": {
-          "name": "title",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "section_cu_locales_locale_parent_id_unique": {
-          "name": "section_cu_locales_locale_parent_id_unique",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "section_cu_locales_parent_id_fk": {
-          "name": "section_cu_locales_parent_id_fk",
-          "tableFrom": "section_cu_locales",
-          "tableTo": "section_cu",
           "columnsFrom": [
             "_parent_id"
           ],
@@ -3847,80 +3785,6 @@
           "name": "_section_cu_v_parent_id_fk",
           "tableFrom": "_section_cu_v",
           "tableTo": "_guideline_sections_v",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public._section_cu_v_locales": {
-      "name": "_section_cu_v_locales",
-      "schema": "",
-      "columns": {
-        "title": {
-          "name": "title",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "_section_cu_v_locales_locale_parent_id_unique": {
-          "name": "_section_cu_v_locales_locale_parent_id_unique",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "_section_cu_v_locales_parent_id_fk": {
-          "name": "_section_cu_v_locales_parent_id_fk",
-          "tableFrom": "_section_cu_v_locales",
-          "tableTo": "_section_cu_v",
           "columnsFrom": [
             "_parent_id"
           ],
@@ -6638,80 +6502,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.guideline_pages_blocks_column_unit_locales": {
-      "name": "guideline_pages_blocks_column_unit_locales",
-      "schema": "",
-      "columns": {
-        "title": {
-          "name": "title",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "guideline_pages_blocks_column_unit_locales_locale_parent_id_": {
-          "name": "guideline_pages_blocks_column_unit_locales_locale_parent_id_",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "guideline_pages_blocks_column_unit_locales_parent_id_fk": {
-          "name": "guideline_pages_blocks_column_unit_locales_parent_id_fk",
-          "tableFrom": "guideline_pages_blocks_column_unit_locales",
-          "tableTo": "guideline_pages_blocks_column_unit",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.guideline_pages_blocks_media_showcase_checks": {
       "name": "guideline_pages_blocks_media_showcase_checks",
       "schema": "",
@@ -9199,80 +8989,6 @@
           "name": "_guideline_pages_v_blocks_column_unit_parent_id_fk",
           "tableFrom": "_guideline_pages_v_blocks_column_unit",
           "tableTo": "_guideline_pages_v",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public._guideline_pages_v_blocks_column_unit_locales": {
-      "name": "_guideline_pages_v_blocks_column_unit_locales",
-      "schema": "",
-      "columns": {
-        "title": {
-          "name": "title",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "_guideline_pages_v_blocks_column_unit_locales_locale_parent_": {
-          "name": "_guideline_pages_v_blocks_column_unit_locales_locale_parent_",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "_guideline_pages_v_blocks_column_unit_locales_parent_id_fk": {
-          "name": "_guideline_pages_v_blocks_column_unit_locales_parent_id_fk",
-          "tableFrom": "_guideline_pages_v_blocks_column_unit_locales",
-          "tableTo": "_guideline_pages_v_blocks_column_unit",
           "columnsFrom": [
             "_parent_id"
           ],
@@ -20955,6 +20671,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "c446449f-eca8-483c-a0fd-45aa35015b05",
+  "id": "b9880a56-b930-450f-a20c-768f48b5434f",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
