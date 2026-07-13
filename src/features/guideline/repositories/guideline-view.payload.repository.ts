@@ -99,6 +99,7 @@ export async function findPublishedChapterBySlug(chapterSlug: string) {
 		draft: false,
 		select: {
 			title: true,
+			label: true,
 			description: true,
 		},
 	})

@@ -5,6 +5,7 @@ import {
 
 export interface GetGuidelineChapterOutput {
 	title: string
+	label: string | null
 	description: string | null
 	sections: {
 		id: number
@@ -33,6 +34,7 @@ export async function getGuidelineChapter(
 
 		return {
 			title: chapter.title,
+			label: chapter.label || null,
 			description: chapter.description || null,
 			sections: sections.map((section) => ({
 				id: section.id,

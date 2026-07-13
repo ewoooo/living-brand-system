@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { GuidelineChapterHeader } from '@/components/guideline/guideline-chapter-header'
 import { getGuidelineChapter } from '@/features/guideline/services/get-guideline-chapter.service'
 
 export default async function GuidelineChapterPage({
@@ -16,12 +17,11 @@ export default async function GuidelineChapterPage({
 
 	return (
 		<>
-			<header className="mb-8">
-				<h1 className="font-semibold text-3xl">{chapter.title}</h1>
-				{chapter.description && (
-					<p className="mt-4 text-muted-foreground">{chapter.description}</p>
-				)}
-			</header>
+			<GuidelineChapterHeader
+				title={chapter.title}
+				label={chapter.label || undefined}
+				description={chapter.description || ''}
+			/>
 			<section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 				{chapter.sections.map((section) => (
 					<Link
