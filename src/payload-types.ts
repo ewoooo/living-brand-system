@@ -244,6 +244,10 @@ export interface GuidelineChapter {
    */
   title: string;
   /**
+   * 장 제목 위에 표시할 선택 라벨입니다.
+   */
+  label?: string | null;
+  /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
@@ -1315,6 +1319,7 @@ export interface PayloadMigration {
  */
 export interface GuidelineChaptersSelect<T extends boolean = true> {
   title?: T;
+  label?: T;
   generateSlug?: T;
   slug?: T;
   description?: T;

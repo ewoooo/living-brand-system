@@ -29,6 +29,14 @@ export const GuidelineChapters: CollectionConfig = {
 				description: '사이드바 최상위 장 제목으로 표시됩니다.',
 			},
 		},
+		{
+			name: 'label',
+			type: 'text',
+			localized: true,
+			admin: {
+				description: '장 제목 위에 표시할 선택 라벨입니다.',
+			},
+		},
 		slugField({
 			useAsSlug: 'title',
 			localized: true,
