@@ -3,7 +3,7 @@
 // ⚠️ 프롬프트가 외부 무료 서비스로 전송된다 — 민감 입력 금지.
 import type { ImageSize } from '@/features/image-generation/presets'
 
-/** 후보 N장을 병렬로 요청해 성공분만 data URI로 반환한다(느린 무료 서버라 순차면 route 60s 초과). */
+/** Pollinations REST 후보를 병렬 요청해 성공분만 data URI로 반환한다. */
 export async function devGenerateImages(
 	prompt: string,
 	size: ImageSize,

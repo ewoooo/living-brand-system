@@ -1,6 +1,8 @@
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import type { CheckSession } from '@/payload-types'
 
+export type CheckSessionSource = CheckSession['source']
+
 export interface ImageContentFlags {
 	logo: boolean
 	typography: boolean

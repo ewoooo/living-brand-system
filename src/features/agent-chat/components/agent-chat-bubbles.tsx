@@ -9,7 +9,7 @@ import {
 	AttachmentTitle,
 } from '@/components/ui/attachment'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
-import type { AgentChatReaction } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
+import type { AgentChatReaction } from '@/features/agent-chat/types'
 import { AgentChatReactions } from './agent-chat-reactions'
 
 export function AgentChatErrorBubble({ error }: { error: Error }) {

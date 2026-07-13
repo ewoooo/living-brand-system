@@ -1,7 +1,9 @@
-import type { Payload } from 'payload'
+import config from '@payload-config'
+import { getPayload } from 'payload'
 
 /** Admin 대시보드용 Section/Page/임베디드 Check 수를 현재 문서 기준으로 집계한다. */
-export async function getAdminGuidelineSummary(payload: Payload) {
+export async function findAdminGuidelineSummary() {
+	const payload = await getPayload({ config })
 	const [sections, pages] = await Promise.all([
 		payload.find({
 			collection: 'guideline-sections',

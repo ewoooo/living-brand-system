@@ -2,9 +2,8 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import type { AiUsage, CheckResult } from '@/features/asset-check/checkers/types'
 import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
+import type { CheckSessionSource } from '@/features/asset-check/types'
 import type { AgentChatSession, CheckSession, User } from '@/payload-types'
-
-export type CheckSessionSource = CheckSession['source']
 
 interface CreateCheckSessionInput {
 	agentChatSessionId?: AgentChatSession['id']
