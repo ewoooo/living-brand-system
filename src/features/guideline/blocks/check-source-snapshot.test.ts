@@ -13,7 +13,6 @@ describe('buildCheckSourceSnapshot', () => {
 				{
 					id: 'target',
 					blockType: 'columnUnit',
-					title: 'Minimum size',
 					columns: [{ heading: 'Digital', body: lexical('Use 24 px.'), image: 7 }],
 				},
 				{ id: 'other', blockType: 'mediaShowcase', image: 8 },
@@ -21,7 +20,7 @@ describe('buildCheckSourceSnapshot', () => {
 		} as unknown as GuidelinePage
 
 		expect(buildCheckSourceSnapshot(page, 'target')).toEqual({
-			evidence: 'Minimum size\n\nDigital\nUse 24 px.',
+			evidence: 'Digital\nUse 24 px.',
 			referenceAssets: [7],
 		})
 	})
