@@ -207,12 +207,23 @@ function existingChecks(page?: GuidelinePage): Map<string, NonNullable<Guideline
 	return checks
 }
 
-function matchingBlock(spec: BlockSpec, blocks: GuidelineBlock[]): GuidelineBlock | undefined {
+function matchingBlock(
+	spec: BlockSpec,
+	blocks: GuidelineBlock[],
+	index: number,
+): GuidelineBlock | undefined {
 	const checkKeys = new Set(spec.checks?.map((check) => check.key) ?? [])
-	return (
-		blocks.find((block) => block.checks?.some((check) => checkKeys.has(check.key))) ??
-		blocks.find((block) => block.blockType === spec.blockType && block.title === spec.title)
+	const matchingCheck = blocks.find((block) =>
+		block.checks?.some((check) => checkKeys.has(check.key)),
 	)
+	if (matchingCheck) return matchingCheck
+
+	const samePosition = blocks[index]
+	if (samePosition?.blockType === spec.blockType) return samePosition
+
+	if (spec.blockType === 'doDont') {
+		return blocks.find((block) => block.blockType === 'doDont' && block.title === spec.title)
+	}
 }
 
 function materializeChecks(
@@ -250,11 +261,10 @@ function materializeBlocks(
 	for (const key of preservedChecks.keys())
 		assert.ok(expected.has(key), `${page.slug}: 예상하지 못한 Check ${key}`)
 
-	return page.blocks.map((spec) => {
-		const existing = matchingBlock(spec, existingPage?.blocks ?? [])
+	return page.blocks.map((spec, index) => {
+		const existing = matchingBlock(spec, existingPage?.blocks ?? [], index)
 		const common = {
 			id: existing?.id,
-			title: spec.title,
 			checks: materializeChecks(spec.checks, preservedChecks, checkerIds),
 		}
 		if (spec.blockType === 'columnUnit') {
@@ -272,6 +282,7 @@ function materializeBlocks(
 		return {
 			...common,
 			blockType: 'doDont' as const,
+			title: spec.title,
 			groups: spec.groups.map((group) => ({
 				category: group.category,
 				examples: group.examples.map((example) => ({
