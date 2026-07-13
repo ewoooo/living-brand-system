@@ -110,6 +110,7 @@ export async function findPublishedSectionBySlug(chapterId: number, sectionSlug:
 	const payload = await getPayload({ config })
 	const sections = await payload.find({
 		collection: 'guideline-sections',
+		depth: 1,
 		where: {
 			slug: {
 				equals: sectionSlug,
@@ -125,6 +126,8 @@ export async function findPublishedSectionBySlug(chapterId: number, sectionSlug:
 		select: {
 			title: true,
 			description: true,
+			headerImage: true,
+			blocks: true,
 		},
 	})
 

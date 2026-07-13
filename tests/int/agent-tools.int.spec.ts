@@ -1,11 +1,11 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
+import { getAgentTools } from '@/agents/agent-tools.agent'
+import { validateAgentChatMessages } from '@/agents/validate-agent-chat-messages.agent'
 import * as agentGuidelineRepository from '@/features/agent-chat/repositories/agent-guideline-context.payload.repository'
 import * as agentSkillRepository from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import * as agentTemplateRepository from '@/features/agent-chat/repositories/agent-template.payload.repository'
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
-import { getAgentTools } from '@/features/agent-chat/services/get-agent-tools.service'
-import { validateAgentChatMessages } from '@/features/agent-chat/services/validate-agent-chat-messages.service'
 import { getAgentCitations } from '@/features/agent-chat/utils/get-agent-citations'
 import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-text'
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
@@ -47,6 +47,10 @@ const template = (...elements: ReturnType<typeof textElement>[]) => ({
 })
 
 describe('agent tools', () => {
+	beforeEach(() => {
+		vi.spyOn(agentGuidelineRepository, 'findAgentChecks').mockResolvedValue([])
+	})
+
 	afterEach(() => {
 		vi.restoreAllMocks()
 	})
@@ -111,12 +115,10 @@ describe('agent tools', () => {
 		)
 	})
 
-	it('gets rule catalog through the tool service', async () => {
-		const getRules = vi.spyOn(agentGuidelineRepository, 'findAgentRules').mockResolvedValue([
+	it('gets Check catalog through the tool service', async () => {
+		const getChecks = vi.spyOn(agentGuidelineRepository, 'findAgentChecks').mockResolvedValue([
 			{
-				category: 'color',
-				evidence: null,
-				executor: 'deterministic',
+				evidence: '',
 				key: 'color.palette',
 				tier: 'required',
 				title: 'Color palette',
@@ -124,11 +126,11 @@ describe('agent tools', () => {
 		])
 		const tools = getAgentTools()
 
-		const result = await tools.getRuleCatalog.execute?.({}, {
+		const result = await tools.getCheckCatalog.execute?.({}, {
 			context: { user: { id: 1 } },
 		} as never)
 
-		expect(getRules).toHaveBeenCalledWith({ id: 1 })
+		expect(getChecks).toHaveBeenCalledWith({ id: 1 })
 		expect(result).toEqual([
 			expect.objectContaining({
 				key: 'color.palette',
@@ -137,28 +139,24 @@ describe('agent tools', () => {
 		])
 	})
 
-	it('lists published templates with open slots and template rules', async () => {
+	it('lists published templates with open slots and template Checks', async () => {
+		vi.spyOn(agentGuidelineRepository, 'findAgentChecks').mockResolvedValue([
+			{
+				evidence: 'Use the legal name.',
+				key: 'name.input',
+				tier: 'required',
+				title: 'Name input',
+			},
+		])
 		vi.spyOn(agentTemplateRepository, 'listAgentTemplates').mockResolvedValue([
 			{
 				id: 3,
 				name: 'Business card',
 				description: 'Name card template',
-				templateRules: [
+				templateChecks: [
 					{
 						body: 'Ask only for slots returned by the template.',
-						rule: {
-							title: 'Name input',
-							evidence: 'Use the legal name.',
-							status: 'live',
-						},
-					},
-					{
-						body: 'Hidden draft.',
-						rule: {
-							title: 'Draft rule',
-							evidence: null,
-							status: 'draft',
-						},
+						checkKey: 'name.input',
 					},
 				],
 				jsonTemplate: template(textElement({ slotLabel: '이름' })),
@@ -173,8 +171,9 @@ describe('agent tools', () => {
 		expect(result).toEqual([
 			expect.objectContaining({
 				id: 3,
-				rules: [
+				checks: [
 					{
+						key: 'name.input',
 						title: 'Name input',
 						description: 'Use the legal name.',
 						body: 'Ask only for slots returned by the template.',
@@ -191,7 +190,7 @@ describe('agent tools', () => {
 				id: 7,
 				name: '신규입사자 웰컴 카드',
 				description: null,
-				templateRules: [],
+				templateChecks: [],
 				jsonTemplate: template(textElement({ slotLabel: '이름' })),
 			},
 		] as never)
@@ -211,7 +210,7 @@ describe('agent tools', () => {
 				id: 7,
 				name: '환영 카드',
 				description: '신규 입사자에게 온라인으로 배부되는 카드',
-				templateRules: [],
+				templateChecks: [],
 				jsonTemplate: template(textElement({ slotLabel: '이름 (한글)' })),
 			},
 		] as never)
@@ -451,7 +450,7 @@ describe('agent tools', () => {
 				collection: 'guideline-pages',
 				id,
 				source: { collection: 'guideline-pages', id, title, href },
-				rules: [],
+				checks: [],
 				content: title,
 			},
 		})

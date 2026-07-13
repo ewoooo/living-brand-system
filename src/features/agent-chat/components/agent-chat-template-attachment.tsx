@@ -13,7 +13,7 @@ import {
 	AttachmentTitle,
 } from '@/components/ui/attachment'
 import { useTemplatePngExport } from '@/hooks/use-template-png-export'
-import type { AgentTemplateImageAttachment } from '../services/get-agent-tools.service'
+import type { AgentTemplateImageAttachment } from '../services/agent-template-request.service'
 
 const PREVIEW_WIDTH = 280
 

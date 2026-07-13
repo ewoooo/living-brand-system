@@ -16,8 +16,14 @@ describe('getCheckScenario', () => {
 	})
 
 	it('checks photography prohibitions in image mood scenarios', () => {
-		expect(getCheckScenario('image-mood').ruleKeys).toEqual(
-			expect.arrayContaining(['imagery.misuse', 'imagery.ai-consistency']),
+		expect(getCheckScenario('image-mood').checkKeys).toEqual(
+			expect.arrayContaining(['imagery.misuse', 'imagery.ai.consistency']),
 		)
+	})
+
+	it('uses only the web-specific canvas format check', () => {
+		const checkKeys = getCheckScenario('web-visual').checkKeys
+		expect(checkKeys).toContain('application.web')
+		expect(checkKeys).not.toContain('layout.visual.template')
 	})
 })

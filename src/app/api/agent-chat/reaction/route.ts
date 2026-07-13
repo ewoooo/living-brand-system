@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { updateAgentChatSessionReaction } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
+import { saveAgentChatReaction } from '@/features/agent-chat/services/save-agent-chat-reaction.service'
+import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
-import type { User } from '@/payload-types'
 
 const reactionSchema = z.object({
 	agentChatSessionId: z.number().int().positive(),
@@ -27,8 +27,8 @@ export async function POST(req: Request) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
 	}
 
-	const session = await updateAgentChatSessionReaction({
-		id: parsed.data.agentChatSessionId,
+	const session = await saveAgentChatReaction({
+		agentChatSessionId: parsed.data.agentChatSessionId,
 		messageId: parsed.data.messageId,
 		reaction: parsed.data.reaction,
 		user,
@@ -39,8 +39,4 @@ export async function POST(req: Request) {
 	}
 
 	return Response.json({ reaction: parsed.data.reaction })
-}
-
-function isPayloadUser(user: unknown): user is User {
-	return Boolean(user && typeof user === 'object' && 'role' in user && 'email' in user)
 }

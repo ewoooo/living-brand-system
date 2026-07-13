@@ -8,18 +8,19 @@ import type {
 	CheckResultChecker,
 	RawCheckResult,
 } from '@/features/asset-check/checkers/types'
+import { detectCheckImageMediaType } from '@/features/asset-check/image-format'
+import { runAiCheck } from '@/features/asset-check/repositories/ai-check.agent.repository'
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
-import { runAiCheck } from '@/features/asset-check/services/ai-check.service'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
 import {
-	type CheckRule,
-	getCheckRules,
+	getRuntimeChecks,
+	type RuntimeCheck,
 } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { ImageContentFlags } from '@/features/asset-check/types'
 
 export interface ImmediateCheckResult {
 	results: Record<string, CheckResult>
-	pendingRuleKeys: string[]
+	pendingCheckKeys: string[]
 }
 
 export interface HeuristicCheckResult {
@@ -29,51 +30,52 @@ export interface HeuristicCheckResult {
 
 /**
  * 검수 대상 이미지를 deterministic/manual 룰까지만 즉시 판정한다.
- * AI 휴리스틱 룰은 pendingRuleKeys로 분리해 후속 요청이 실행한다.
+ * AI 휴리스틱 Check는 pendingCheckKeys로 분리해 후속 요청이 실행한다.
  */
 export async function runImmediateCheck(
 	buffer: Buffer,
 	flags: ImageContentFlags,
-	inputRules?: CheckRule[],
+	inputChecks?: RuntimeCheck[],
 ): Promise<ImmediateCheckResult> {
-	const [grid, rules, palette] = await Promise.all([
+	const [grid, checks, palette] = await Promise.all([
 		extractPixelGrid(buffer),
-		inputRules ?? getCheckRules(),
+		inputChecks ?? getRuntimeChecks(),
 		getCheckPalette(),
 	])
 	const pixels = opaquePixels(grid)
 	const image = imageInputFrom(buffer)
 
 	const results: Record<string, CheckResult> = {}
-	const pendingRuleKeys: string[] = []
+	const pendingCheckKeys: string[] = []
 	const ctx = { pixels, palette, grid, image }
-	for (const rule of rules) {
-		if (results[rule.key] || !shouldCheckRule(rule.key, flags)) continue
-		if (rule.executor === 'heuristic') {
-			pendingRuleKeys.push(rule.key)
+	for (const check of checks) {
+		if (results[check.key] || !shouldRunCheck(check.key, flags)) continue
+		if (check.executor === 'heuristic') {
+			pendingCheckKeys.push(check.key)
 			continue
 		}
-		const result = runRuleByExecutor(rule, ctx)
-		if (result) results[rule.key] = result
+		const result = runCheckByExecutor(check, ctx)
+		if (result) results[check.key] = result
 	}
 
-	return { results, pendingRuleKeys }
+	return { results, pendingCheckKeys }
 }
 
 /**
  * 후속 AI 검수 요청에서 heuristic 룰만 판정한다.
- * 첫 응답의 pendingRuleKeys를 기준으로 실행 범위를 좁힌다.
+ * 첫 응답의 pendingCheckKeys를 기준으로 실행 범위를 좁힌다.
+ * 모델 I/O는 ai-check Agent repository가 소유한다.
  */
 export async function runHeuristicCheck(
 	buffer: Buffer,
-	ruleKeys: string[],
-	inputRules?: CheckRule[],
+	checkKeys: string[],
+	inputChecks?: RuntimeCheck[],
 ): Promise<HeuristicCheckResult> {
-	const rules = (inputRules ?? (await getCheckRules(ruleKeys))).filter(
-		(rule) => rule.executor === 'heuristic' && ruleKeys.includes(rule.key),
+	const checks = (inputChecks ?? (await getRuntimeChecks(checkKeys))).filter(
+		(check) => check.executor === 'heuristic' && checkKeys.includes(check.key),
 	)
-	if (rules.length === 0) return { results: {} }
-	const aiCheck = await runAiCheck(rules, {
+	if (checks.length === 0) return { results: {} }
+	const aiCheck = await runAiCheck(checks, {
 		image: imageInputFrom(buffer),
 		pixels: [],
 		palette: [],
@@ -84,7 +86,7 @@ export async function runHeuristicCheck(
 				key,
 				toCheckResult(
 					result,
-					rules.find((rule) => rule.key === key),
+					checks.find((check) => check.key === key),
 					{ key: 'ai', type: 'ai' },
 				),
 			]),
@@ -93,12 +95,12 @@ export async function runHeuristicCheck(
 	}
 }
 
-/** 룰이 요소 종속이면 시나리오 플래그가 켜져 있을 때만 검수한다. */
-function shouldCheckRule(ruleKey: string, flags: ImageContentFlags): boolean {
-	if (ruleKey.startsWith('logo.')) return flags.logo
-	if (ruleKey.startsWith('typography.')) return flags.typography
-	if (ruleKey.startsWith('illustration.')) return flags.illustration
-	if (ruleKey.startsWith('imagery.')) return flags.photography
+/** Check가 요소 종속이면 시나리오 플래그가 켜져 있을 때만 검수한다. */
+function shouldRunCheck(checkKey: string, flags: ImageContentFlags): boolean {
+	if (checkKey.startsWith('logo.')) return flags.logo
+	if (checkKey.startsWith('typography.')) return flags.typography
+	if (checkKey.startsWith('illustration.')) return flags.illustration
+	if (checkKey.startsWith('imagery.')) return flags.photography
 	return true
 }
 
@@ -118,33 +120,35 @@ function readPath(value: unknown, path: string): unknown {
 	}, value)
 }
 
-// heuristic 룰은 호출 전에 runAiCheck로 분기되므로 여기 오지 않는다.
-function runRuleByExecutor(rule: CheckRule, ctx: CheckerContext): CheckResult | null {
-	if (rule.executor === 'manual') {
+// heuristic Check는 호출 전에 runAiCheck로 분기되므로 여기 오지 않는다.
+function runCheckByExecutor(check: RuntimeCheck, ctx: CheckerContext): CheckResult | null {
+	if (check.executor === 'manual') {
 		const rawResult: AlgorithmCheckResult = {
 			status: 'needs_review',
 			fulfillment: null,
 			detail: '브랜드 담당자 확인 필요',
 		}
-		return toCheckResult(rawResult, rule, { key: 'manual', type: 'manual' })
+		return toCheckResult(rawResult, check, { key: 'manual', type: 'manual' })
 	}
-	const checker = getChecker(rule.key)
+	const checker = check.checkerKey ? getChecker(check.checkerKey, check.options) : null
 	if (!checker) return null
 	const result = checker(ctx)
-	return result ? toCheckResult(result, rule, { key: rule.key, type: 'algorithm' }) : null
+	return result
+		? toCheckResult(result, check, { key: check.checkerKey ?? check.key, type: 'algorithm' })
+		: null
 }
 
 function toCheckResult(
 	rawResult: RawCheckResult,
-	rule: CheckRule | undefined,
+	check: RuntimeCheck | undefined,
 	checker: CheckResultChecker,
 ): CheckResult {
-	const message = renderCheckMessage(rule?.messages?.[rawResult.status], rawResult)
+	const message = renderCheckMessage(check?.messages?.[rawResult.status], rawResult)
 	return {
 		rule: {
-			key: rule?.key ?? checker.key,
-			title: rule?.title ?? checker.key,
-			executor: rule?.executor ?? (checker.type === 'ai' ? 'heuristic' : 'deterministic'),
+			key: check?.key ?? checker.key,
+			title: check?.title ?? checker.key,
+			executor: check?.executor ?? (checker.type === 'ai' ? 'heuristic' : 'deterministic'),
 		},
 		checker,
 		rawResult,
@@ -153,18 +157,6 @@ function toCheckResult(
 }
 
 function imageInputFrom(buffer: Buffer): CheckerContext['image'] {
-	if (buffer.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))) {
-		return { data: buffer, mediaType: 'image/jpeg' }
-	}
-	if (
-		buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
-	) {
-		return { data: buffer, mediaType: 'image/png' }
-	}
-	if (
-		buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
-		buffer.subarray(8, 12).toString('ascii') === 'WEBP'
-	) {
-		return { data: buffer, mediaType: 'image/webp' }
-	}
+	const mediaType = detectCheckImageMediaType(buffer)
+	return mediaType ? { data: buffer, mediaType } : undefined
 }

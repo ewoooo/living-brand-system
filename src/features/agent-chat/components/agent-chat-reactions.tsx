@@ -4,8 +4,8 @@ import { ThumbsDown, ThumbsDownFilled, ThumbsUp, ThumbsUpFilled } from '@carbon/
 import { useState } from 'react'
 import { BubbleReactions } from '@/components/ui/bubble'
 import { Button } from '@/components/ui/button'
-import type { AgentChatReaction } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import { saveAgentChatReaction } from '@/features/agent-chat/services/save-agent-chat-reaction.client'
+import type { AgentChatReaction } from '@/features/agent-chat/types'
 
 const reactionText: Record<AgentChatReaction, string> = {
 	good: 'Good',

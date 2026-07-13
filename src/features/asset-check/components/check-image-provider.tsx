@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, type ReactNode, use, useEffect, useMemo, useRef, useState } from 'react'
+import { isSupportedCheckImageMediaType } from '@/features/asset-check/image-format'
 import { CHECK_SCENARIOS, getCheckScenario } from '@/features/asset-check/scenarios'
 import { runFullCheck } from '@/features/asset-check/services/submit-check.client'
 import type { CheckImage, CheckImageContextValue } from '@/features/asset-check/types'
@@ -51,18 +52,18 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 			scenarioKey: checkScenarioKey,
 			status: 'running',
 			results: undefined,
-			pendingRuleKeys: undefined,
+			pendingCheckKeys: undefined,
 		}))
 		void runFullCheck(file, checkScenarioKey, {
-			onServerResult: ({ checkSessionId, results, pendingRuleKeys }) => {
+			onServerResult: ({ checkSessionId, results, pendingCheckKeys }) => {
 				patchImage(id, (image) => {
 					// 대기 중 시나리오가 바뀌면 이전 시나리오 판정은 버린다
 					if (image.scenarioKey !== checkScenarioKey) return {}
 					return {
 						checkSessionId,
 						results,
-						pendingRuleKeys,
-						status: pendingRuleKeys.length > 0 ? 'running' : 'completed',
+						pendingCheckKeys,
+						status: pendingCheckKeys.length > 0 ? 'running' : 'completed',
 					}
 				})
 			},
@@ -72,21 +73,21 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 					if (image.checkSessionId !== checkSessionId) return {}
 					return {
 						results: { ...image.results, ...results },
-						pendingRuleKeys: undefined,
+						pendingCheckKeys: undefined,
 						status: 'completed',
 					}
 				})
 			},
 		}).catch(() => {
 			// 서버 즉시 판정 실패 — 결과 없이 종료, 재검수는 검수 버튼으로 다시 트리거한다.
-			patchImage(id, () => ({ status: 'failed', pendingRuleKeys: undefined }))
+			patchImage(id, () => ({ status: 'failed', pendingCheckKeys: undefined }))
 		})
 	}
 
 	function addFiles(files: FileList | File[]) {
 		const added: CheckImage[] = []
 		for (const file of files) {
-			if (!file.type.startsWith('image/')) continue
+			if (!isSupportedCheckImageMediaType(file.type)) continue
 			added.push({
 				id: crypto.randomUUID(),
 				url: URL.createObjectURL(file),
@@ -111,7 +112,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 			checkSessionId: undefined,
 			scenarioKey: scenario.key,
 			results: undefined,
-			pendingRuleKeys: undefined,
+			pendingCheckKeys: undefined,
 			status: 'idle',
 		}))
 	}

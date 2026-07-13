@@ -8,12 +8,14 @@ export function GuidelineImage({
 	backgroundColor,
 	scale = '100',
 	className,
+	imgClassName = 'max-h-full max-w-full',
 }: {
 	image?: number | ImageValue | null
 	alt?: string
 	backgroundColor?: number | ColorValue | null
 	scale?: string | null
 	className?: string
+	imgClassName?: string
 }) {
 	const imageValue = getImage(image)
 
@@ -32,7 +34,7 @@ export function GuidelineImage({
 			<img
 				src={imageValue.url}
 				alt={imageValue.alt || imageValue.name || alt}
-				className="max-h-full max-w-full"
+				className={imgClassName}
 				style={{ width: `${scale || '100'}%` }}
 			/>
 		</div>

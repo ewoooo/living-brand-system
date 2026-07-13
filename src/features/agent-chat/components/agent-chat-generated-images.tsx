@@ -1,7 +1,7 @@
 'use client'
 
 import { IMAGE_SCENES } from '@/features/image-generation/presets'
-import type { AgentGeneratedImagesAttachment } from '../services/get-agent-tools.service'
+import type { AgentGeneratedImagesAttachment } from '@/features/image-generation/services/generate-image.service'
 
 export function AgentChatGeneratedImages({
 	attachment,

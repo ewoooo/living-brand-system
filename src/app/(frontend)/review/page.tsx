@@ -1,6 +1,6 @@
 import { CheckResultSummary } from '@/features/asset-check/components/check-result-summary'
+import { CheckSections } from '@/features/asset-check/components/check-tables'
 import { ImageUploadCarousel } from '@/features/asset-check/components/image-upload-carousel'
-import { CheckSections } from '@/features/asset-check/components/rule-tables'
 import { getCheckRuleset } from '@/features/asset-check/services/get-check-ruleset.service'
 
 export default async function ReviewPage() {

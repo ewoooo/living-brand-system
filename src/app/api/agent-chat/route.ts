@@ -1,25 +1,12 @@
 import { createAgentUIStreamResponse } from 'ai'
 import { z } from 'zod'
 
-import {
-	type AgentChatMessage,
-	agentChatAgent,
-	assertAgentChatProviderConfigured,
-} from '@/agents/agent-chat.agent'
-import {
-	type AgentChatSessionMessageInput,
-	createAgentChatSessionRecord,
-	updateAgentChatSessionRecord,
-} from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
-import {
-	type AgentChatSessionUsageSnapshot,
-	createAgentChatSessionUsageCollector,
-} from '@/features/agent-chat/services/collect-agent-chat-session-usage.service'
-import { validateAgentChatMessages } from '@/features/agent-chat/services/validate-agent-chat-messages.service'
-import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-text'
+import { agentChatAgent, assertAgentChatProviderConfigured } from '@/agents/agent-chat.agent'
+import { validateAgentChatMessages } from '@/agents/validate-agent-chat-messages.agent'
+import { startAgentChatSession } from '@/features/agent-chat/services/start-agent-chat-session.service'
+import { isPayloadUser } from '@/lib/auth'
 import { AgentConfigurationError } from '@/lib/errors'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
-import type { User } from '@/payload-types'
 
 export const maxDuration = 30
 
@@ -75,42 +62,11 @@ export async function POST(req: Request) {
 	}
 
 	const requestId = crypto.randomUUID()
-	const assistantMessageId = crypto.randomUUID()
-	const requestMessages = toSessionMessages(validatedMessages.data)
-	const chatSession = await createAgentChatSessionRecord({
-		status: 'running',
+	const chatSession = await startAgentChatSession({
 		pagePath: parsed.data.pagePath,
-		messageCount: requestMessages.length,
-		messages: requestMessages,
+		messages: validatedMessages.data,
 		user,
 	})
-	const usageCollector = createAgentChatSessionUsageCollector()
-	let assistantText = ''
-
-	const updateChatSession = async (
-		status: 'completed' | 'failed' | 'running',
-		errorMessage?: string,
-	) => {
-		const usage = usageCollector.snapshot()
-		const messages = toMessagesWithAssistant({
-			assistantMessageId,
-			assistantText,
-			requestMessages,
-			usage,
-		})
-
-		await updateAgentChatSessionRecord({
-			id: chatSession.id,
-			status,
-			messageCount: messages.length,
-			messages,
-			usedTools: usage.usedTools,
-			usedSkills: usage.usedSkills,
-			aiUsage: usage.aiUsage,
-			errorMessage,
-			user,
-		})
-	}
 
 	try {
 		// stream 시작 전에 동기로 검증해야 설정 오류를 HTTP 상태로 매핑할 수 있다.
@@ -126,20 +82,21 @@ export async function POST(req: Request) {
 				user,
 			},
 			onStepEnd: async (step) => {
-				if ('text' in step && typeof step.text === 'string' && step.text) {
-					assistantText = step.text
-				}
-				usageCollector.addStep(step)
-				await updateChatSession(
-					step.finishReason === 'tool-calls' ? 'running' : 'completed',
-				)
+				await chatSession.recordStep({
+					step,
+					text: 'text' in step && typeof step.text === 'string' ? step.text : undefined,
+					status: step.finishReason === 'tool-calls' ? 'running' : 'completed',
+				})
 			},
 			messageMetadata: ({ part }) =>
 				part.type === 'start'
-					? { agentChatSessionId: chatSession.id, agentChatMessageId: assistantMessageId }
+					? {
+							agentChatSessionId: chatSession.id,
+							agentChatMessageId: chatSession.assistantMessageId,
+						}
 					: undefined,
 			onError: () => {
-				void updateChatSession('failed', 'Agent response failed.').catch((error) => {
+				void chatSession.fail('Agent response failed.').catch((error) => {
 					payload.logger.error(
 						{ err: error, requestId },
 						'agent-chat.session-update.failed',
@@ -149,15 +106,14 @@ export async function POST(req: Request) {
 			},
 		})
 	} catch (error) {
-		await updateChatSession(
-			'failed',
-			error instanceof Error ? error.message : 'Agent response failed.',
-		).catch((updateError) => {
-			payload.logger.error(
-				{ err: updateError, requestId },
-				'agent-chat.session-update.failed',
-			)
-		})
+		await chatSession
+			.fail(error instanceof Error ? error.message : 'Agent response failed.')
+			.catch((updateError) => {
+				payload.logger.error(
+					{ err: updateError, requestId },
+					'agent-chat.session-update.failed',
+				)
+			})
 		payload.logger.error({ err: error, requestId }, 'agent-chat.request.failed')
 
 		if (error instanceof AgentConfigurationError) {
@@ -168,45 +124,4 @@ export async function POST(req: Request) {
 		// 상세 오류는 위 로그에만 남기고 사용자에게는 일반화된 메시지만 반환한다.
 		return Response.json({ message: 'Agent response failed.' }, { status: 500 })
 	}
-}
-
-function isPayloadUser(user: unknown): user is User {
-	return Boolean(user && typeof user === 'object' && 'role' in user && 'email' in user)
-}
-
-function toSessionMessages(messages: AgentChatMessage[]): AgentChatSessionMessageInput[] {
-	return messages.map((message) => ({
-		messageId: message.metadata?.agentChatMessageId ?? message.id,
-		role: message.role,
-		text: getAgentMessageText(message),
-		reaction: message.metadata?.reaction,
-	}))
-}
-
-function toMessagesWithAssistant(input: {
-	assistantMessageId: string
-	assistantText: string
-	requestMessages: AgentChatSessionMessageInput[]
-	usage: AgentChatSessionUsageSnapshot
-}): AgentChatSessionMessageInput[] {
-	if (
-		!input.assistantText &&
-		!input.usage.aiUsage &&
-		input.usage.usedTools.length === 0 &&
-		input.usage.usedSkills.length === 0
-	) {
-		return input.requestMessages
-	}
-
-	return [
-		...input.requestMessages,
-		{
-			messageId: input.assistantMessageId,
-			role: 'assistant',
-			text: input.assistantText,
-			usedTools: input.usage.usedTools,
-			usedSkills: input.usage.usedSkills,
-			aiUsage: input.usage.aiUsage,
-		},
-	]
 }

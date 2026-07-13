@@ -2,50 +2,24 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { ImageGenerationResults } from '@/features/image-generation/components/image-generation-results'
+import { useImageGeneration } from '@/features/image-generation/hooks/use-image-generation'
 import { IMAGE_SCENES } from '@/features/image-generation/presets'
 
 // 제품(프롬프트) + 씬 선택 → /api/image → 후보 그리드(택1·다운로드). 프롬프트 합성·생성은 라우트/서비스 소유.
 // 결과에 실제 합성 프롬프트·적용 씬을 함께 노출해 품질을 디버깅할 수 있게 한다(R&D 방식).
 
-type ImageResult = { images: string[]; prompt: string; sceneId: string }
-
-const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
-
 export function ImageGenerator() {
 	const [prompt, setPrompt] = useState('')
 	const [sceneId, setSceneId] = useState('auto')
 	const [count, setCount] = useState(2)
-	const [result, setResult] = useState<ImageResult | null>(null)
-	const [requested, setRequested] = useState(0)
-	const [selected, setSelected] = useState<number | null>(null)
-	const [loading, setLoading] = useState(false)
-	const [error, setError] = useState<string | null>(null)
+	const { error, generate, loading, requested, result, selected, setSelected } =
+		useImageGeneration()
 
 	const scene = IMAGE_SCENES.find((s) => s.id === sceneId)
-	const images = result?.images ?? []
 
-	async function generate() {
-		if (!prompt.trim() || loading) return
-		setLoading(true)
-		setError(null)
-		setSelected(null)
-		setRequested(count)
-		try {
-			const res = await fetch('/api/image', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ prompt, count, sceneId }),
-			})
-			if (!res.ok) throw new Error(`생성 실패 (${res.status})`)
-			setResult((await res.json()) as ImageResult)
-		} catch (err) {
-			console.error(err)
-			setError(
-				'이미지 생성에 실패했어요. 무료 엔진이 느려 그럴 수 있으니 다시 시도해 주세요.',
-			)
-		} finally {
-			setLoading(false)
-		}
+	function requestGeneration() {
+		void generate({ count, prompt, sceneId })
 	}
 
 	return (
@@ -108,7 +82,7 @@ export function ImageGenerator() {
 							))}
 						</select>
 					</label>
-					<Button onClick={generate} disabled={loading || !prompt.trim()}>
+					<Button onClick={requestGeneration} disabled={loading || !prompt.trim()}>
 						{loading ? '생성 중…' : '생성'}
 					</Button>
 				</div>
@@ -120,114 +94,20 @@ export function ImageGenerator() {
 				{error && (
 					<p role="alert" className="flex items-center gap-2 text-red-500 text-sm">
 						{error}
-						<button type="button" onClick={generate} className="underline">
+						<button type="button" onClick={requestGeneration} className="underline">
 							다시 시도
 						</button>
 					</p>
 				)}
 			</div>
 
-			<div aria-live="polite" aria-busy={loading}>
-				{loading && (
-					<div className="flex flex-col gap-3">
-						<p className="text-muted-foreground text-sm">
-							생성 중… 무료 서버라 최대 1~2분 걸릴 수 있어요.
-						</p>
-						<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-							{SKELETON_KEYS.slice(0, requested).map((k) => (
-								<div
-									key={k}
-									className="aspect-[3/4] animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800"
-								/>
-							))}
-						</div>
-					</div>
-				)}
-
-				{!loading && images.length > 0 && (
-					<div className="flex flex-col gap-4">
-						<div className="flex flex-wrap items-center gap-3">
-							<Button
-								onClick={() =>
-									selected !== null && downloadImage(images[selected], selected)
-								}
-								disabled={selected === null}
-							>
-								선택한 이미지 다운로드
-							</Button>
-							<span className="text-muted-foreground text-sm">
-								{selected === null
-									? '이미지를 클릭해 선택하세요'
-									: `${selected + 1}번 선택됨`}
-							</span>
-						</div>
-						{images.length < requested && (
-							<p className="text-muted-foreground text-sm">
-								요청 {requested}장 중 {images.length}장 생성됨 (일부는 무료 서버
-								지연으로 실패)
-							</p>
-						)}
-						<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-							{images.map((src, i) => (
-								<div key={src} className="flex flex-col gap-1">
-									<button
-										type="button"
-										onClick={() => setSelected(i)}
-										aria-pressed={selected === i}
-										className={`overflow-hidden rounded-md border-2 transition-colors ${
-											selected === i
-												? 'border-blue-500'
-												: 'border-neutral-200 hover:border-neutral-400 dark:border-neutral-800'
-										}`}
-									>
-										{/* biome-ignore lint/performance/noImgElement: 미리보기, 최적화 불필요 */}
-										<img
-											src={src}
-											alt={`생성 결과 ${i + 1}`}
-											className="w-full"
-										/>
-									</button>
-									<a
-										href={src}
-										target="_blank"
-										rel="noreferrer"
-										className="text-muted-foreground text-xs underline"
-									>
-										원본 보기
-									</a>
-								</div>
-							))}
-						</div>
-						{result && (
-							<div className="text-muted-foreground text-sm">
-								적용된 씬: {resultSceneLabel(result.sceneId)}
-								<details className="mt-1">
-									<summary className="cursor-pointer">생성 프롬프트 보기</summary>
-									<p className="mt-1 whitespace-pre-wrap text-xs">
-										{result.prompt}
-									</p>
-								</details>
-							</div>
-						)}
-					</div>
-				)}
-			</div>
+			<ImageGenerationResults
+				loading={loading}
+				onSelect={setSelected}
+				requested={requested}
+				result={result}
+				selected={selected}
+			/>
 		</section>
 	)
-}
-
-function resultSceneLabel(sceneId: string) {
-	if (sceneId === 'free') return '자유 생성 (브랜드 스타일 없음)'
-	return IMAGE_SCENES.find((s) => s.id === sceneId)?.label ?? '자동 선택'
-}
-
-/** data URI 이미지를 파일로 저장한다 (data:image/…;base64,… 에서 확장자 추출). */
-function downloadImage(src: string, index: number) {
-	const ext = src.slice(5, src.indexOf(';')).split('/')[1] || 'png'
-	const a = document.createElement('a')
-	a.href = src
-	a.download = `essenherb-image-${index + 1}.${ext}`
-	document.body.appendChild(a)
-	a.click()
-	a.remove()
 }

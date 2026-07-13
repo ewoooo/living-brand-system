@@ -1,6 +1,8 @@
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import type { CheckSession } from '@/payload-types'
 
+export type CheckSessionSource = CheckSession['source']
+
 export interface ImageContentFlags {
 	logo: boolean
 	typography: boolean
@@ -19,9 +21,9 @@ export interface CheckImage {
 	scenarioKey: string
 	/** 서버 검수 요청에 보낼 원본 파일 */
 	file: File
-	/** ruleKey → 검수 결과 (검수된 룰만; 진행 중엔 일부만 채워짐) */
+	/** checkKey → 검수 결과 (검수된 Check만; 진행 중엔 일부만 채워짐) */
 	results?: Record<string, CheckResult>
-	pendingRuleKeys?: string[]
+	pendingCheckKeys?: string[]
 	status: CheckImageStatus
 }
 

@@ -1,5 +1,5 @@
 import type React from 'react'
-import { SidebarProvider } from '@/components/ui/sidebar'
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 
 /**
  * 섹션(가이드라인·검수·제작) 공통 레이아웃 셸 — 사이드 nav + 가운데 정렬 스크롤 main.
@@ -19,6 +19,13 @@ export function SectionLayout({
 		<SidebarProvider className="h-full min-h-0">
 			{nav}
 			<div className="flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-y-auto motion-safe:scroll-smooth">
+				<SidebarTrigger
+					aria-label="목차 열기"
+					className="mx-4 mt-4 self-start md:hidden"
+					size="default"
+				>
+					목차
+				</SidebarTrigger>
 				<main className="flex w-full flex-1 justify-center px-4 md:px-12">{children}</main>
 				{footer}
 			</div>

@@ -1,6 +1,19 @@
 import { type CollectionConfig, slugField } from 'payload'
+import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
+
+const sectionBlockDbNames: Record<string, string> = {
+	columnUnit: 'section_cu',
+	mediaShowcase: 'section_ms',
+	colorPalette: 'section_cp',
+	doDont: 'section_dd',
+}
+
+const sectionBlocks = guidelineBlocks.map((block) => ({
+	...block,
+	dbName: sectionBlockDbNames[block.slug],
+}))
 
 export const GuidelineSections: CollectionConfig = {
 	slug: 'guideline-sections',
@@ -14,7 +27,7 @@ export const GuidelineSections: CollectionConfig = {
 		group: 'Guidelines',
 		useAsTitle: 'title',
 		defaultColumns: ['title', 'chapter', 'slug', 'displayOrder', 'updatedAt'],
-		description: '장 하위 섹션입니다. 상위 장에 속하며 하위에 페이지를 가집니다.',
+		description: '장 하위 섹션입니다. 자체 블록과 하위 페이지를 가질 수 있습니다.',
 		listSearchableFields: ['title', 'slug'],
 	},
 	versions: draftVersions,
@@ -55,10 +68,24 @@ export const GuidelineSections: CollectionConfig = {
 			},
 		},
 		{
+			name: 'headerImage',
+			type: 'upload',
+			relationTo: 'application-images',
+			admin: {
+				description: '섹션 랜딩 헤더에 표시할 이미지입니다.',
+			},
+		},
+		guidelineChecksField(),
+		{
 			name: 'pages',
 			type: 'join',
 			collection: 'guideline-pages',
 			on: 'section',
+		},
+		{
+			name: 'blocks',
+			type: 'blocks',
+			blocks: sectionBlocks,
 		},
 		{
 			name: 'displayOrder',

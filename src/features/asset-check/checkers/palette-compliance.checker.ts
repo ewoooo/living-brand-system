@@ -1,6 +1,6 @@
 /**
  * Checker: 브랜드 팔레트 준수 여부를 본다.
- * ruleKey는 `color.palette`, 파일명은 지배색이 허용 팔레트에 들어오는지 보는 기능을 따른다.
+ * checkKey는 `color.palette`, 파일명은 지배색이 허용 팔레트에 들어오는지 보는 기능을 따른다.
  */
 
 import { dominantColors } from './color-metrics'
