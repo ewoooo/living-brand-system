@@ -27,12 +27,12 @@ export function GuidelineHeader({
 					imgClassName="size-full object-cover"
 				/>
 				{hasImage && <div aria-hidden="true" className="absolute inset-0 bg-scrim/25" />}
-				<div className="relative z-10 flex size-full items-end p-4 pb-6 text-scrim-foreground">
+				<div className="relative z-10 flex size-full items-end p-4 pb-8 text-scrim-foreground">
 					<div>
 						{label !== undefined && (
 							<p className="type-body mb-2 opacity-70">{label}</p>
 						)}
-						<Heading className="type-large-title">{title}</Heading>
+						<Heading className="type-large-title text-6xl">{title}</Heading>
 					</div>
 				</div>
 			</AspectRatio>

@@ -115,7 +115,7 @@
 	--muted-foreground: var(--foreground-muted);
 	--accent: var(--fill-hover);
 	--accent-foreground: var(--foreground);
-	--sidebar: var(--background-secondary);
+	--sidebar: transparent;
 	--sidebar-foreground: var(--foreground);
 	--sidebar-primary: var(--primary);
 	--sidebar-primary-foreground: var(--primary-foreground);
@@ -183,14 +183,14 @@
 
 .type-large-title,
 .type-large-title-emphasized {
-	font-size: 1.625rem;
+	font-size: 3.625rem;
 	line-height: 2rem;
 }
 
 .type-title-1,
 .type-title-1-emphasized {
-	font-size: 1.375rem;
-	line-height: 1.625rem;
+	font-size: 2.4rem;
+	line-height: 2.625rem;
 }
 
 .type-title-2,
