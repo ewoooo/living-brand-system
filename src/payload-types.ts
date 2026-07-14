@@ -176,10 +176,12 @@ export interface Config {
   globals: {
     guideline: Guideline;
     'agent-settings': AgentSetting;
+    'better-editor-settings': BetterEditorSetting;
   };
   globalsSelect: {
     guideline: GuidelineSelect<false> | GuidelineSelect<true>;
     'agent-settings': AgentSettingsSelect<false> | AgentSettingsSelect<true>;
+    'better-editor-settings': BetterEditorSettingsSelect<false> | BetterEditorSettingsSelect<true>;
   };
   locale: 'ko' | 'en';
   widgets: {
@@ -1844,6 +1846,38 @@ export interface AgentSetting {
   createdAt?: string | null;
 }
 /**
+ * Editor-wide preferences for the Better Editor overlay.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "better-editor-settings".
+ */
+export interface BetterEditorSetting {
+  id: number;
+  sidebarPosition?: ('right' | 'left') | null;
+  /**
+   * Override admin.width on sidebar fields so they always span the full row.
+   */
+  forceFullWidthFields?: boolean | null;
+  tabletWidth?: number | null;
+  mobileWidth?: number | null;
+  /**
+   * Hex color (e.g. `#3b82f6`).
+   */
+  hoverColorTopLevel?: string | null;
+  /**
+   * Hex color for blocks nested inside another block.
+   */
+  hoverColorNested?: string | null;
+  /**
+   * Outline thickness in pixels (1–5).
+   */
+  hoverOutlineWidth?: number | null;
+  showHoverToolbar?: boolean | null;
+  hoverToolbarPosition?: ('top-right' | 'top-left' | 'bottom-right' | 'bottom-left') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline_select".
  */
@@ -1870,6 +1904,24 @@ export interface AgentSettingsSelect<T extends boolean = true> {
   refusalHandling?: T;
   toolCalling?: T;
   availableTools?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "better-editor-settings_select".
+ */
+export interface BetterEditorSettingsSelect<T extends boolean = true> {
+  sidebarPosition?: T;
+  forceFullWidthFields?: T;
+  tabletWidth?: T;
+  mobileWidth?: T;
+  hoverColorTopLevel?: T;
+  hoverColorNested?: T;
+  hoverOutlineWidth?: T;
+  showHoverToolbar?: T;
+  hoverToolbarPosition?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

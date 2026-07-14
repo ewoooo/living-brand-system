@@ -44,6 +44,7 @@ import * as migration_20260714_040034_contract_guideline_collections from './202
 import * as migration_20260714_043746_prepare_guideline_route_slugs from './20260714_043746_prepare_guideline_route_slugs';
 import * as migration_20260714_043817_backfill_guideline_route_slugs from './20260714_043817_backfill_guideline_route_slugs';
 import * as migration_20260714_044457_remove_guideline_legacy_mapping from './20260714_044457_remove_guideline_legacy_mapping';
+import * as migration_20260714_051528_consolidate_guideline_editor from './20260714_051528_consolidate_guideline_editor';
 
 export const migrations = [
   {
@@ -274,6 +275,11 @@ export const migrations = [
   {
     up: migration_20260714_044457_remove_guideline_legacy_mapping.up,
     down: migration_20260714_044457_remove_guideline_legacy_mapping.down,
-    name: '20260714_044457_remove_guideline_legacy_mapping'
+    name: '20260714_044457_remove_guideline_legacy_mapping',
+  },
+  {
+    up: migration_20260714_051528_consolidate_guideline_editor.up,
+    down: migration_20260714_051528_consolidate_guideline_editor.down,
+    name: '20260714_051528_consolidate_guideline_editor'
   },
 ];
