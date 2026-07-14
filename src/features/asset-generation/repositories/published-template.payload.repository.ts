@@ -71,6 +71,7 @@ export async function findPublishedTemplate(templateId: number) {
 		select: {
 			name: true,
 			jsonTemplate: true,
+			code: true,
 		},
 	})
 

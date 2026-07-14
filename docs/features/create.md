@@ -41,7 +41,7 @@
 
 - 클라이언트 라이브러리: `html-to-image`(PNG 캡처), `react-moveable`(GridComposer 드래그/스냅).
 - 공유 훅: `use-template-png-export`(Create·Chat 공유).
-- Payload 컬렉션: `templates`·`template-categories`·`template-assets`. 템플릿은 임베디드 Check를 relationship으로 참조하지 않고 `templateChecks[].checkKey`를 저장합니다. import은 `brand-logos`·`application-images`를 사용. 보안 게이트: 템플릿의 모든 이미지가 인가된 에셋 컬렉션을 참조해야 저장됨(fail-closed).
+- Payload 컬렉션: `templates`·`template-categories`·`template-assets`. 템플릿은 임베디드 Check를 relationship으로 참조하지 않고 `templateChecks[].checkKey`를 저장합니다. import은 `brand-logos`·`application-images`를 사용. 보안 게이트: **발행(publish) 시** 템플릿의 모든 이미지가 인가된 에셋 컬렉션을 참조해야 함(fail-closed). draft 저장은 충실 import를 위해 항상 허용하고, 공개 페이지는 발행본만 읽으므로 비인가 draft가 외부로 노출되지 않음.
 - Figma import(`src/features/template-import/`): frame → `jsonTemplate` 변환 후 이미지 fill을 `template-assets`에 저장. Template 문서를 자동 생성하지는 않고 manager가 Admin에서 저장.
 - Review 미사용, Image 미호출(현재) — 위 "의도된 방향" 참조.
 

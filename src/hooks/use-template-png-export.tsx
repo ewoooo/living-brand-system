@@ -78,3 +78,27 @@ export function useTemplatePngExport({
 
 	return { exportPng, isExporting, exportError, exportNode }
 }
+
+/**
+ * 샌드박스(iframe)가 반송한 최종 배치 HTML(전부 인라인 style)을 화면 밖에 심어 PNG로 저장한다.
+ * 코드 실행 템플릿은 최종 좌표가 iframe DOM에만 있으므로 부모가 그 outerHTML을 재현해 캡처한다.
+ * ponytail: html이 iframe(미검증 코드)에서 오므로 innerHTML은 XSS 천장이 있다 — 현재 템플릿 코드는
+ * 1급(우리/manager 저작)이라 허용. 서드파티 plugin 개방 전엔 sanitize하거나 iframe 내부 캡처로 올릴 것.
+ */
+export async function exportHtmlToPng(html: string, css: string, fileName: string): Promise<void> {
+	const holder = document.createElement('div')
+	holder.style.cssText = 'position:fixed;left:-99999px;top:0'
+	holder.innerHTML = `<style>${css}</style>${html}`
+	document.body.appendChild(holder)
+	try {
+		await new Promise((resolve) => requestAnimationFrame(resolve))
+		const stage = holder.querySelector<HTMLElement>('#__stage') ?? holder
+		const dataUrl = await toPng(stage, { cacheBust: true })
+		const link = document.createElement('a')
+		link.href = dataUrl
+		link.download = `${fileName}.png`
+		link.click()
+	} finally {
+		holder.remove()
+	}
+}

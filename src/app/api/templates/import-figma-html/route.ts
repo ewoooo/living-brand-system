@@ -1,19 +1,17 @@
 import { z } from 'zod'
-import { convertFigmaFrame } from '@/features/template-import/services/convert-figma-frame.service'
+import { importFigmaHtml } from '@/features/template-import/services/import-figma-html.service'
 import { parseFigmaUrl } from '@/features/template-import/utils/parse-figma-url'
 import { isManager } from '@/lib/auth'
-import { AssetAccessDeniedError, FigmaConfigurationError } from '@/lib/errors'
+import { FigmaConfigurationError } from '@/lib/errors'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
-// 이미지 조각 다운로드·업로드가 이어지므로 기본 시간보다 길게 잡는다.
-export const maxDuration = 60
+// Figma REST GET만 하므로 이미지 파이프라인보다 짧지만 여유를 둔다.
+export const maxDuration = 30
 
-const convertFigmaRequestSchema = z.object({
-	sourceUrl: z.string().min(1).max(500),
-})
+const requestSchema = z.object({ sourceUrl: z.string().min(1).max(500) })
 
 /**
- * Figma URL을 JsonTemplate으로 변환해 돌려주는 adapter. Admin의 Templates 폼 UI 필드가 호출한다.
+ * Figma URL을 inline-style HTML로 변환해 돌려주는 adapter. Admin의 Templates 폼 UI 필드가 호출한다.
  * Template 문서는 만들지 않는다. 서버 FIGMA_API_TOKEN을 구동하므로 manager 이상만 허용한다 (docs/07).
  */
 export async function POST(req: Request) {
@@ -30,7 +28,7 @@ export async function POST(req: Request) {
 		return Response.json({ message: 'Forbidden' }, { status: 403 })
 	}
 
-	const parsed = convertFigmaRequestSchema.safeParse(await req.json().catch(() => null))
+	const parsed = requestSchema.safeParse(await req.json().catch(() => null))
 
 	if (!parsed.success) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
@@ -46,19 +44,16 @@ export async function POST(req: Request) {
 	}
 
 	try {
-		const output = await convertFigmaFrame(user, source)
+		const output = await importFigmaHtml(source)
 
 		return Response.json(output)
 	} catch (error) {
-		payload.logger.error({ err: error }, 'template-import.convert.failed')
+		payload.logger.error({ err: error }, 'template-import.import-html.failed')
 
 		if (error instanceof FigmaConfigurationError) {
 			return Response.json({ message: error.message }, { status: 503 })
 		}
-		if (error instanceof AssetAccessDeniedError) {
-			return Response.json({ message: 'Forbidden' }, { status: 403 })
-		}
 
-		return Response.json({ message: 'Figma conversion failed.' }, { status: 500 })
+		return Response.json({ message: 'Figma import failed.' }, { status: 500 })
 	}
 }

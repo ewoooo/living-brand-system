@@ -1,10 +1,17 @@
 import { type JsonTemplate, jsonTemplateSchema } from '@/types/json-template'
 import { findPublishedTemplate } from '../repositories/published-template.payload.repository'
 
+/** 기능 코드 층 — 디자인(jsonTemplate)과 분리된 별도 필드. js가 있으면 샌드박스로 실행된다. */
+export interface TemplateCode {
+	css: string
+	js: string
+}
+
 export interface PublishedTemplate {
 	id: number
 	name: string
 	jsonTemplate: JsonTemplate
+	code?: TemplateCode
 }
 
 /**
@@ -22,9 +29,17 @@ export async function getPublishedTemplate(templateId: number): Promise<Publishe
 
 		const parsed = jsonTemplateSchema.safeParse(template.jsonTemplate)
 
-		return parsed.success
-			? { id: template.id, name: template.name, jsonTemplate: parsed.data }
-			: null
+		if (!parsed.success) {
+			return null
+		}
+
+		// 기능 코드는 별도 필드. js가 있을 때만 실행 대상으로 넘긴다(비었으면 정적 디자인).
+		const code =
+			template.code?.js != null && template.code.js !== ''
+				? { css: template.code.css ?? '', js: template.code.js }
+				: undefined
+
+		return { id: template.id, name: template.name, jsonTemplate: parsed.data, code }
 	} catch {
 		return null
 	}
