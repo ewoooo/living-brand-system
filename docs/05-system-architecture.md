@@ -493,8 +493,7 @@ flowchart TB
 | 후보 | 관리 단위 | 주요 관계 |
 | --- | --- | --- |
 | `guideline` global | BrandGuideline | 단일 가이드라인 설정 |
-| `guideline-sections` | GuidelineSection | pages, blocks와 자체 checks를 소유 |
-| `guideline-pages` | GuidelinePage | section에 속하고 blocks와 자체 checks를 소유 |
+| `guideline-documents` | GuidelineDocument | 계층 깊이로 장·섹션·페이지를 표현하고 blocks와 자체 checks를 소유 |
 | `rule-checkers` | RuleChecker | executor 유형과 checker 또는 model binding을 1:1로 관리하는 검사 도구 계약 |
 | `brand-logos` | BrandLogo | guideline document, asset generation session, check basis에서 참조 |
 | `brand-colors` | BrandColor | guideline document, Check, template, plugin에서 참조 |

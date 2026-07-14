@@ -2,14 +2,14 @@ import { type CollectionConfig, slugField } from 'payload'
 import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
 import { validateGuidelineCheckKeys } from '@/features/guideline/checks/validate-guideline-check-keys'
 import { managerManagedAccess } from '@/lib/auth'
-import { draftVersions } from './shared'
+import { draftVersions } from '../../src/collections/shared'
 
 const previewURL = (id: unknown) =>
 	typeof id === 'number' || typeof id === 'string'
 		? `/api/guideline-preview?id=${encodeURIComponent(String(id))}`
 		: null
 
-export const GuidelinePages: CollectionConfig = {
+export const LegacyGuidelinePages: CollectionConfig = {
 	slug: 'guideline-pages',
 	access: managerManagedAccess,
 	hooks: {
@@ -59,7 +59,7 @@ export const GuidelinePages: CollectionConfig = {
 		{
 			name: 'section',
 			type: 'relationship',
-			relationTo: 'guideline-sections',
+			relationTo: 'guideline-sections' as never,
 			required: true,
 			index: true,
 			admin: {

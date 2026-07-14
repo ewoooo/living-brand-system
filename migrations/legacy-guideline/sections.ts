@@ -2,7 +2,7 @@ import { type CollectionConfig, slugField } from 'payload'
 import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
 import { validateGuidelineCheckKeys } from '@/features/guideline/checks/validate-guideline-check-keys'
 import { managerManagedAccess } from '@/lib/auth'
-import { draftVersions } from './shared'
+import { draftVersions } from '../../src/collections/shared'
 
 const sectionBlockDbNames: Record<string, string> = {
 	columnUnit: 'section_cu',
@@ -16,7 +16,7 @@ const sectionBlocks = guidelineBlocks.map((block) => ({
 	dbName: sectionBlockDbNames[block.slug],
 }))
 
-export const GuidelineSections: CollectionConfig = {
+export const LegacyGuidelineSections: CollectionConfig = {
 	slug: 'guideline-sections',
 	dbName: 'guideline_sections',
 	access: managerManagedAccess,
@@ -54,7 +54,7 @@ export const GuidelineSections: CollectionConfig = {
 		{
 			name: 'chapter',
 			type: 'relationship',
-			relationTo: 'guideline-chapters',
+			relationTo: 'guideline-chapters' as never,
 			required: true,
 			index: true,
 			admin: {
@@ -83,7 +83,7 @@ export const GuidelineSections: CollectionConfig = {
 		{
 			name: 'pages',
 			type: 'join',
-			collection: 'guideline-pages',
+			collection: 'guideline-pages' as never,
 			on: 'section',
 		},
 		{

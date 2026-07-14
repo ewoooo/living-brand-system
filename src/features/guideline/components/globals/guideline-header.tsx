@@ -1,5 +1,5 @@
 import { AspectRatio } from '@/components/ui/aspect-ratio'
-import type { GuidelineSection } from '@/payload-types'
+import type { GuidelineDocument } from '@/payload-types'
 import { GuidelineImage } from '../blocks/children/guideline-image'
 import type { GuidelineVariant } from './guideline-variant'
 
@@ -11,7 +11,7 @@ export function GuidelineHeader({
 	variant = 'chapter',
 }: {
 	title: string
-	image?: GuidelineSection['headerImage']
+	image?: GuidelineDocument['headerImage']
 	as?: 'h1' | 'h2'
 	label?: string | number
 	variant?: GuidelineVariant
