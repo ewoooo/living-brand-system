@@ -57,6 +57,13 @@ export const Templates: CollectionConfig = {
 		group: 'Production',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'updatedAt'],
+		components: {
+			edit: {
+				// 저장 컨트롤 옆 [검수] 버튼 + (검수통과 && 수정없음)일 때만 여는 게시 버튼.
+				beforeDocumentControls: ['/features/template-import/components/review-gate-button'],
+				PublishButton: '/features/template-import/components/review-gated-publish-button',
+			},
+		},
 	},
 	versions: draftVersions,
 	fields: [
