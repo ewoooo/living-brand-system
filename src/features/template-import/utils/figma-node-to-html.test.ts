@@ -44,12 +44,17 @@ const GRID_FRAME = {
 	],
 }
 
-// 첫 자식 <p>의 style="..." 속성값만 뽑는다.
+// pretty-print(속성/선언 여러 줄)이라 개행 포함해 style 값을 뽑는다.
 function firstTextStyle(html: string): string {
-	return html.match(/<p [^>]*style="([^"]*)"/)?.[1] ?? ''
+	return html.match(/<p\b[\s\S]*?style="([\s\S]*?)"/)?.[1] ?? ''
 }
 function rootStyle(html: string): string {
-	return html.match(/^<(?:div|p) [^>]*style="([^"]*)"/)?.[1] ?? ''
+	return html.match(/^<(?:div|p)\b[\s\S]*?style="([\s\S]*?)"/)?.[1] ?? ''
+}
+// 특정 node-id div의 style 값.
+function nodeStyle(html: string, id: string): string {
+	const re = new RegExp(`<div\\b[\\s\\S]*?data-node-id="${id}"[\\s\\S]*?style="([\\s\\S]*?)"`)
+	return html.match(re)?.[1] ?? ''
 }
 
 describe('figmaNodeToHtml — 레이아웃', () => {
@@ -242,7 +247,7 @@ describe('figmaNodeToHtml — flex', () => {
 		})
 		expect(html).toContain('flex-wrap:wrap')
 		expect(html).toContain('gap:8px')
-		const child = html.match(/<div data-node-id="1:2"[^>]*style="([^"]*)"/)?.[1] ?? ''
+		const child = nodeStyle(html, '1:2')
 		expect(child).toContain('align-self:stretch')
 		expect(child).toContain('width:50px')
 		expect(child).not.toContain('height:40px')
@@ -268,8 +273,7 @@ describe('figmaNodeToHtml — 리뷰 수정 회귀', () => {
 			},
 		],
 	})
-	const childStyle = (html: string) =>
-		html.match(/<div data-node-id="1:2"[^>]*style="([^"]*)"/)?.[1] ?? ''
+	const childStyle = (html: string) => nodeStyle(html, '1:2')
 
 	it('그리드 FIXED 자식은 명시 치수 + start (0폭 붕괴 방지)', () => {
 		const s = childStyle(
@@ -309,35 +313,36 @@ describe('figmaNodeToHtml — 리뷰 수정 회귀', () => {
 				},
 			],
 		})
-		const root = html.match(/^<div [^>]*style="([^"]*)"/)?.[1] ?? ''
+		const root = rootStyle(html)
 		expect(root).toContain('position:relative')
-		const child = html.match(/<p data-node-id="1:2"[^>]*style="([^"]*)"/)?.[1] ?? ''
+		const child =
+			html.match(/<p\b[\s\S]*?data-node-id="1:2"[\s\S]*?style="([\s\S]*?)"/)?.[1] ?? ''
 		expect(child).toContain('position:absolute')
 		expect(child).toContain('left:20px')
 	})
 
 	it('gradient는 paint.opacity를 정지점 알파에 곱한다', () => {
-		const s =
-			figmaNodeToHtml({
-				id: '1:1',
-				name: 'g',
-				type: 'FRAME',
-				absoluteBoundingBox: { x: 0, y: 0, width: 10, height: 10 },
-				fills: [
-					{
-						type: 'GRADIENT_LINEAR',
-						opacity: 0.5,
-						gradientHandlePositions: [
-							{ x: 0, y: 0 },
-							{ x: 0, y: 1 },
-						],
-						gradientStops: [
-							{ color: { r: 1, g: 0, b: 0, a: 1 }, position: 0 },
-							{ color: { r: 0, g: 0, b: 1, a: 1 }, position: 1 },
-						],
-					},
-				],
-			}).html.match(/^<div [^>]*style="([^"]*)"/)?.[1] ?? ''
+		const gradHtml = figmaNodeToHtml({
+			id: '1:1',
+			name: 'g',
+			type: 'FRAME',
+			absoluteBoundingBox: { x: 0, y: 0, width: 10, height: 10 },
+			fills: [
+				{
+					type: 'GRADIENT_LINEAR',
+					opacity: 0.5,
+					gradientHandlePositions: [
+						{ x: 0, y: 0 },
+						{ x: 0, y: 1 },
+					],
+					gradientStops: [
+						{ color: { r: 1, g: 0, b: 0, a: 1 }, position: 0 },
+						{ color: { r: 0, g: 0, b: 1, a: 1 }, position: 1 },
+					],
+				},
+			],
+		})
+		const s = rootStyle(gradHtml.html)
 		expect(s).toContain('rgba(255,0,0,0.5)')
 		expect(s).toContain('rgba(0,0,255,0.5)')
 	})

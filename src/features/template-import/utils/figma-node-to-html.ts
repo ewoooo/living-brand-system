@@ -371,19 +371,12 @@ function childPlacement(node: Node, parent: Node | null): Record<string, string 
 	return {}
 }
 
-function decls(map: Record<string, string | undefined>): string {
-	return Object.entries(map)
-		.filter(([, v]) => v != null && v !== '')
-		.map(([k, v]) => `${k}:${v}`)
-		.join(';')
-}
-
 const escapeHtml = (t: string) =>
 	t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 const escapeAttr = (t: string) => t.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 
-function renderNode(node: Node, parent: Node | null, isRoot: boolean): string {
+function renderNode(node: Node, parent: Node | null, isRoot: boolean, depth: number): string {
 	if (node.visible === false) return ''
 
 	const isText = node.type === 'TEXT'
@@ -404,20 +397,45 @@ function renderNode(node: Node, parent: Node | null, isRoot: boolean): string {
 		...childPlacement(node, parent),
 	}
 
-	const content = isText
-		? escapeHtml(node.characters ?? '')
-		: (node.children ?? []).map((c) => renderNode(c, node, false)).join('')
-
 	const tag = isText ? 'p' : 'div'
-	// 모든 속성값은 escapeAttr로 감싼다 — style의 큰따옴표(font-family:"Inter")나 id/name의 " 가 속성을 끊고 핸들러를 주입하는 걸 막는다.
-	// ponytail: escapeAttr는 속성 탈출만 막고 CSS 값 내부(font-family/grid-*Sizing 등 Figma 원본 문자열)의 ';' 주입은 못 막는다.
-	// 이 HTML은 다운스트림에서 dangerouslySetInnerHTML로 렌더되며 sanitizer가 없다 → 렌더 경계에 DOMPurify 도입이 후속 과제(신뢰경계는 Figma 파일).
-	return `<${tag} data-node-id="${escapeAttr(node.id)}" data-figma-type="${escapeAttr(node.type)}" data-name="${escapeAttr(node.name ?? '')}" style="${escapeAttr(decls(style))}">${content}</${tag}>`
+
+	// 개발자 확인용 pretty-print: 속성 한 줄씩, style은 선언 한 줄씩 펼친다.
+	// HTML 속성값은 개행/탭을 담을 수 있고 CSS는 선언 사이 공백을 무시하므로 렌더에 영향 없다.
+	// 모든 속성/선언 값은 escapeAttr로 감싼다 — style의 " (font-family:"Inter")나 id/name의 " 가 속성을 끊고 핸들러를 주입하는 걸 막는다.
+	// ponytail: escapeAttr는 속성 탈출만 막고 CSS 값 내부(Figma 원본 문자열)의 ';' 주입은 못 막는다 → 렌더 경계 DOMPurify가 후속 과제.
+	const pad = '\t'.repeat(depth)
+	const attrPad = `${pad}\t`
+	const declPad = `${pad}\t\t`
+
+	const attrLines = [
+		`data-node-id="${escapeAttr(node.id)}"`,
+		`data-figma-type="${escapeAttr(node.type)}"`,
+		`data-name="${escapeAttr(node.name ?? '')}"`,
+	]
+		.map((a) => `${attrPad}${a}`)
+		.join('\n')
+
+	const declLines = Object.entries(style)
+		.filter(([, v]) => v != null && v !== '')
+		.map(([k, v]) => `${declPad}${escapeAttr(`${k}:${v}`)};`)
+		.join('\n')
+
+	const open = `${pad}<${tag}\n${attrLines}\n${attrPad}style="\n${declLines}\n${attrPad}"\n${pad}>`
+
+	// 텍스트는 내용을 여는 태그와 같은 줄에 둔다(공백/개행 보존이 white-space에 걸리므로 재들여쓰기 금지).
+	if (isText) return `${open}${escapeHtml(node.characters ?? '')}</${tag}>`
+
+	// 요소 사이 공백은 grid/flex 아이템이 되지 않고 block에선 collapse되어 렌더에 영향 없다.
+	const children = (node.children ?? [])
+		.map((c) => renderNode(c, node, false, depth + 1))
+		.filter(Boolean)
+	if (!children.length) return `${open}</${tag}>`
+	return `${open}\n${children.join('\n')}\n${pad}</${tag}>`
 }
 
 export function figmaNodeToHtml(node: Node): FigmaHtmlResult {
 	return {
-		html: renderNode(node, null, true),
+		html: renderNode(node, null, true, 0),
 		width: round(node.absoluteBoundingBox?.width ?? 0),
 		height: round(node.absoluteBoundingBox?.height ?? 0),
 	}
