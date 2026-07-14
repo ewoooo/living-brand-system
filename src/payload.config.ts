@@ -171,6 +171,9 @@ export default buildConfig({
 		},
 		components: {
 			beforeDashboard: ['/components/admin/DashboardSummary'],
+			graphics: {
+				Logo: '/components/admin/AdminLogo',
+			},
 		},
 	},
 	collections: [
