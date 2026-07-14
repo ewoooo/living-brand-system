@@ -55,18 +55,34 @@ describe('agent tools', () => {
 		vi.restoreAllMocks()
 	})
 
-	it('lists guideline pages through the tool service', async () => {
-		const listPages = vi
-			.spyOn(agentGuidelineContext, 'listAgentGuidelinePages')
-			.mockResolvedValue([{ title: 'Core', pages: [{ id: '7', title: 'Narrative' }] }])
+	it('lists guideline documents through the tool service', async () => {
+		const listDocuments = vi
+			.spyOn(agentGuidelineContext, 'listAgentGuidelineDocuments')
+			.mockResolvedValue([
+				{
+					collection: 'guideline-documents',
+					id: '7',
+					level: 3,
+					parentId: '2',
+					title: 'Narrative',
+				},
+			])
 		const tools = getAgentTools()
 
-		const result = await tools.listGuidelinePages.execute?.({}, {
+		const result = await tools.listGuidelineDocuments.execute?.({}, {
 			context: { user: { id: 1 } },
 		} as never)
 
-		expect(listPages).toHaveBeenCalled()
-		expect(result).toEqual([{ title: 'Core', pages: [{ id: '7', title: 'Narrative' }] }])
+		expect(listDocuments).toHaveBeenCalled()
+		expect(result).toEqual([
+			{
+				collection: 'guideline-documents',
+				id: '7',
+				level: 3,
+				parentId: '2',
+				title: 'Narrative',
+			},
+		])
 	})
 
 	it('loads agent skill instructions through the tool service', async () => {

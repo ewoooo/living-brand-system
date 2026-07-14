@@ -1,9 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { findAgentGuidelineDocument } from '../repositories/agent-guideline-context.payload.repository'
-import { readAgentGuidelineDocument } from './get-agent-guideline-context.service'
+import {
+	findAgentGuidelineDocument,
+	listGuidelineDocuments,
+} from '../repositories/agent-guideline-context.payload.repository'
+import {
+	listAgentGuidelineDocuments,
+	readAgentGuidelineDocument,
+} from './get-agent-guideline-context.service'
 
 vi.mock('../repositories/agent-guideline-context.payload.repository', () => ({
 	findAgentGuidelineDocument: vi.fn(),
+	listGuidelineDocuments: vi.fn(),
 }))
 
 describe('readAgentGuidelineDocument', () => {
@@ -76,6 +83,31 @@ describe('readAgentGuidelineDocument', () => {
 		)
 
 		expect(result?.checks).toEqual([{ key: 'brand.core', title: 'Brand core' }])
-		expect(result?.relatedPages).toEqual([{ id: '7', title: 'Primary Logo' }])
+		expect(result?.relatedDocuments).toEqual([{ id: '7', title: 'Primary Logo' }])
+	})
+
+	it('통합 문서 목록에 깊이와 부모 ID를 포함한다', async () => {
+		vi.mocked(listGuidelineDocuments).mockResolvedValue([
+			{
+				id: 7,
+				title: 'Primary Logo',
+				parent: 2,
+				breadcrumbs: [
+					{ doc: 1, label: 'Brand', url: '/guideline/brand' },
+					{ doc: 2, label: 'Logo', url: '/guideline/brand/logo' },
+					{ doc: 7, label: 'Primary Logo', url: '/guideline/brand/logo/primary-logo' },
+				],
+			},
+		] as never)
+
+		await expect(listAgentGuidelineDocuments({ id: 1 })).resolves.toEqual([
+			{
+				collection: 'guideline-documents',
+				id: '7',
+				level: 3,
+				parentId: '2',
+				title: 'Primary Logo',
+			},
+		])
 	})
 })

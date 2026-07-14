@@ -93,11 +93,7 @@ const mcpTextTool = (
 	}),
 })
 
-const findMcpGuidelineDocuments = async (
-	args: McpToolArgs,
-	req: PayloadRequest,
-	level: 1 | 2 | 3,
-) => {
+const findMcpGuidelineDocuments = async (args: McpToolArgs, req: PayloadRequest) => {
 	const result = await req.payload.find({
 		collection: 'guideline-documents',
 		depth: 1,
@@ -122,7 +118,10 @@ const findMcpGuidelineDocuments = async (
 			breadcrumbs: true,
 		},
 	})
-	const documents = result.docs.filter((document) => document.breadcrumbs?.length === level)
+	const level = args.level === 1 || args.level === 2 || args.level === 3 ? args.level : null
+	const documents = level
+		? result.docs.filter((document) => document.breadcrumbs?.length === level)
+		: result.docs
 	const limit = mcpNumber(args.limit, level === 3 ? 20 : 100)
 	const page = mcpNumber(args.page, 1)
 	const totalPages = Math.ceil(documents.length / limit)
@@ -247,22 +246,13 @@ export default buildConfig({
 			mcp: {
 				tools: [
 					mcpTextTool(
-						'findGuidelinePages',
-						'Find published guideline pages with localized copy, content blocks, and checks.',
-						mcpListParameters,
-						(args, req) => findMcpGuidelineDocuments(args, req, 3),
-					),
-					mcpTextTool(
-						'findChapters',
-						'Find live guideline top-level chapters and their ordering.',
-						mcpListParameters,
-						(args, req) => findMcpGuidelineDocuments(args, req, 1),
-					),
-					mcpTextTool(
-						'findSections',
-						'Find live guideline sections, their parent chapter, and page ordering.',
-						mcpListParameters,
-						(args, req) => findMcpGuidelineDocuments(args, req, 2),
+						'findGuidelineDocuments',
+						'Find published guideline documents with localized content, hierarchy, blocks, and checks.',
+						{
+							...mcpListParameters,
+							level: z.number().int().min(1).max(3).optional(),
+						},
+						findMcpGuidelineDocuments,
 					),
 					mcpTextTool(
 						'findChecks',

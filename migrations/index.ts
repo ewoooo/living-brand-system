@@ -45,6 +45,7 @@ import * as migration_20260714_043746_prepare_guideline_route_slugs from './2026
 import * as migration_20260714_043817_backfill_guideline_route_slugs from './20260714_043817_backfill_guideline_route_slugs';
 import * as migration_20260714_044457_remove_guideline_legacy_mapping from './20260714_044457_remove_guideline_legacy_mapping';
 import * as migration_20260714_051528_consolidate_guideline_editor from './20260714_051528_consolidate_guideline_editor';
+import * as migration_20260714_055652_cleanup_guideline_mcp_tools from './20260714_055652_cleanup_guideline_mcp_tools';
 
 export const migrations = [
   {
@@ -280,6 +281,11 @@ export const migrations = [
   {
     up: migration_20260714_051528_consolidate_guideline_editor.up,
     down: migration_20260714_051528_consolidate_guideline_editor.down,
-    name: '20260714_051528_consolidate_guideline_editor'
+    name: '20260714_051528_consolidate_guideline_editor',
+  },
+  {
+    up: migration_20260714_055652_cleanup_guideline_mcp_tools.up,
+    down: migration_20260714_055652_cleanup_guideline_mcp_tools.down,
+    name: '20260714_055652_cleanup_guideline_mcp_tools',
   },
 ];

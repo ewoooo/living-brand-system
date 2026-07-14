@@ -64,9 +64,9 @@ const TOOL_MARKER_RULES: {
 	text: (count: number) => string
 }[] = [
 	{
-		type: 'tool-listGuidelinePages',
+		type: 'tool-listGuidelineDocuments',
 		count: countArrayLength,
-		text: (count) => `가이드라인 섹션 ${count}개를 확인했습니다`,
+		text: (count) => `가이드라인 문서 ${count}개를 확인했습니다`,
 	},
 	{
 		type: 'tool-readGuidelineDocument',

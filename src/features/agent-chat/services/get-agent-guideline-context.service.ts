@@ -4,7 +4,6 @@ import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
 import type { GuidelineDocument } from '@/payload-types'
 import {
 	type AgentGuidelineDocument,
-	type AgentGuidelineListItem,
 	type AgentGuidelineSearchResult,
 	findAgentChecks,
 	findAgentGuidelineDocument,
@@ -27,11 +26,11 @@ interface GuidelineSearchInput {
 }
 
 interface GuidelineDocumentListResult {
+	collection: 'guideline-documents'
+	id: string
+	level: number
+	parentId: string | null
 	title: string
-	pages: {
-		id: string
-		title: string
-	}[]
 }
 
 interface GuidelineDocumentInput {
@@ -46,7 +45,7 @@ interface GuidelineDocumentResult {
 	source: GuidelineDocumentSource
 	checks: GuidelineDocumentCheck[]
 	content: string
-	relatedPages?: GuidelineDocumentRelatedPage[]
+	relatedDocuments?: GuidelineDocumentRelatedDocument[]
 }
 
 interface GuidelineDocumentSource {
@@ -62,29 +61,20 @@ interface GuidelineDocumentCheck {
 }
 
 /**
- * Agent tool에 제공할 published guideline 페이지 목록을 조립한다.
+ * Agent tool에 제공할 published guideline 문서 목록을 조립한다.
  * Payload Local API 호출과 접근 제어는 agent guideline context repository가 담당한다.
  */
-export async function listAgentGuidelinePages(
+export async function listAgentGuidelineDocuments(
 	user: unknown,
 ): Promise<GuidelineDocumentListResult[]> {
 	const documents = await listGuidelineDocuments(user)
-	const children = new Map<number, AgentGuidelineListItem[]>()
-	for (const document of documents) {
-		const parentId = relationshipId(document.parent)
-		if (parentId === null) continue
-		children.set(parentId, [...(children.get(parentId) ?? []), document])
-	}
-
-	return documents
-		.filter((document) => document.breadcrumbs?.length === 2)
-		.map((section) => ({
-			title: section.title,
-			pages: (children.get(section.id) ?? []).map((page) => ({
-				id: String(page.id),
-				title: page.title,
-			})),
-		}))
+	return documents.map((document) => ({
+		collection: 'guideline-documents',
+		id: String(document.id),
+		level: document.breadcrumbs?.length ?? 1,
+		parentId: relationshipId(document.parent)?.toString() ?? null,
+		title: document.title,
+	}))
 }
 
 /**
@@ -127,7 +117,7 @@ export async function readAgentGuidelineDocument(
 		content: limitContent(formatGuidelineDocument(result)),
 		...(result.children.length
 			? {
-					relatedPages: result.children.map((child) => ({
+					relatedDocuments: result.children.map((child) => ({
 						id: String(child.id),
 						title: child.title,
 					})),
@@ -166,7 +156,7 @@ function documentHref(document: AgentGuidelineDocument['document']): string | nu
 	return breadcrumbs.at(-1)?.url ?? null
 }
 
-type GuidelineDocumentRelatedPage = {
+type GuidelineDocumentRelatedDocument = {
 	id: string
 	title: string
 }

@@ -161,25 +161,37 @@ describe('agent chat errors', () => {
 		})
 	})
 
-	it('summarizes guideline page list tool results as marker text', () => {
+	it('summarizes guideline document list tool results as marker text', () => {
 		const message = {
 			id: '1',
 			role: 'assistant',
 			parts: [
 				{
-					type: 'tool-listGuidelinePages',
+					type: 'tool-listGuidelineDocuments',
 					toolCallId: 'tool-1',
 					state: 'output-available',
 					input: {},
 					output: [
-						{ title: 'Core', pages: [{ id: '1', title: 'Narrative' }] },
-						{ title: 'Name', pages: [] },
+						{
+							collection: 'guideline-documents',
+							id: '1',
+							level: 2,
+							parentId: null,
+							title: 'Core',
+						},
+						{
+							collection: 'guideline-documents',
+							id: '2',
+							level: 3,
+							parentId: '1',
+							title: 'Name',
+						},
 					],
 				},
 			],
 		} as AgentChatMessage
 
-		expect(getAgentToolMarker(message)?.text).toBe('가이드라인 섹션 2개를 확인했습니다')
+		expect(getAgentToolMarker(message)?.text).toBe('가이드라인 문서 2개를 확인했습니다')
 	})
 
 	it('shimmers tool markers until output is available', () => {

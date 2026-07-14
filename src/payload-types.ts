@@ -969,17 +969,9 @@ export interface PayloadMcpApiKey {
   description?: string | null;
   'payload-mcp-tool'?: {
     /**
-     * Find published guideline pages with localized copy, content blocks, and checks.
+     * Find published guideline documents with localized content, hierarchy, blocks, and checks.
      */
-    findGuidelinePages?: boolean | null;
-    /**
-     * Find live guideline top-level chapters and their ordering.
-     */
-    findChapters?: boolean | null;
-    /**
-     * Find live guideline sections, their parent chapter, and page ordering.
-     */
-    findSections?: boolean | null;
+    findGuidelineDocuments?: boolean | null;
     /**
      * Find checks declared by published guideline documents and blocks.
      */
@@ -1698,9 +1690,7 @@ export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
   'payload-mcp-tool'?:
     | T
     | {
-        findGuidelinePages?: T;
-        findChapters?: T;
-        findSections?: T;
+        findGuidelineDocuments?: T;
         findChecks?: T;
         findGuideline?: T;
       };
