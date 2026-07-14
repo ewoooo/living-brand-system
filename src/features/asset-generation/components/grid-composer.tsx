@@ -1103,7 +1103,7 @@ function ResizeHandle({
 		>
 			{/* 배경: 평소 투명, hover/active 시에만 흰색 반투명 등장 */}
 			<span
-				className={`absolute inset-0 transition-colors ${active ? 'bg-foreground-inverse/25' : 'bg-foreground-inverse/0 group-hover:bg-foreground-inverse/15'}`}
+				className={`absolute inset-0 transition-colors ${active ? 'bg-scrim-foreground/25' : 'bg-scrim-foreground/0 group-hover:bg-scrim-foreground/15'}`}
 			/>
 			{/* grip: 상하좌우만, 항상 보임 */}
 			{isSide && (
