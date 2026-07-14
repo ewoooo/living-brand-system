@@ -1,3 +1,4 @@
+import { toCheckResult } from '@/features/asset-check/checkers/check-result.adapter'
 import { opaquePixels } from '@/features/asset-check/checkers/color-metrics'
 import { getChecker } from '@/features/asset-check/checkers/registry'
 import type {
@@ -5,8 +6,6 @@ import type {
 	AlgorithmCheckResult,
 	CheckerContext,
 	CheckResult,
-	CheckResultChecker,
-	RawCheckResult,
 } from '@/features/asset-check/checkers/types'
 import { detectCheckImageMediaType } from '@/features/asset-check/image-format'
 import { runAiCheck } from '@/features/asset-check/repositories/ai-check.agent.repository'
@@ -104,22 +103,6 @@ function shouldRunCheck(checkKey: string, flags: ImageContentFlags): boolean {
 	return true
 }
 
-/** 룰 메시지 패턴({facts.x} 치환)을 렌더한다. 패턴이 없으면 checker detail을 그대로 쓴다. */
-function renderCheckMessage(pattern: string | undefined, result: RawCheckResult): string {
-	if (!pattern) return result.detail
-	return pattern.replace(/\{([^}]+)\}/g, (_match, path: string) =>
-		String(readPath(result, path.trim()) ?? ''),
-	)
-}
-
-function readPath(value: unknown, path: string): unknown {
-	return path.split('.').reduce<unknown>((current, key) => {
-		if (!current || typeof current !== 'object') return undefined
-		const next = (current as Record<string, unknown>)[key]
-		return Array.isArray(next) ? next.join(', ') : next
-	}, value)
-}
-
 // heuristic Check는 호출 전에 runAiCheck로 분기되므로 여기 오지 않는다.
 function runCheckByExecutor(check: RuntimeCheck, ctx: CheckerContext): CheckResult | null {
 	if (check.executor === 'manual') {
@@ -137,25 +120,6 @@ function runCheckByExecutor(check: RuntimeCheck, ctx: CheckerContext): CheckResu
 		? toCheckResult(result, check, { key: check.checkerKey ?? check.key, type: 'algorithm' })
 		: null
 }
-
-function toCheckResult(
-	rawResult: RawCheckResult,
-	check: RuntimeCheck | undefined,
-	checker: CheckResultChecker,
-): CheckResult {
-	const message = renderCheckMessage(check?.messages?.[rawResult.status], rawResult)
-	return {
-		rule: {
-			key: check?.key ?? checker.key,
-			title: check?.title ?? checker.key,
-			executor: check?.executor ?? (checker.type === 'ai' ? 'heuristic' : 'deterministic'),
-		},
-		checker,
-		rawResult,
-		message,
-	}
-}
-
 function imageInputFrom(buffer: Buffer): CheckerContext['image'] {
 	const mediaType = detectCheckImageMediaType(buffer)
 	return mediaType ? { data: buffer, mediaType } : undefined
