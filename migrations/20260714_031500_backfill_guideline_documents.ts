@@ -35,11 +35,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 	for (const collection of LEGACY_COLLECTIONS) {
 		const states = await loadStates(payload, collection)
 		payload.logger.info(
-			`${collection}: ${states.length}건 중 published ${states.filter(([, state]) => primaryDocument(state.published, true)).length}건을 백필합니다.`,
+			`${collection}: ${states.length}건 중 published ${states.filter(([, state]) => primaryDocument(state.published)).length}건을 백필합니다.`,
 		)
 		for (const [legacyId, state] of states) {
-			const published = primaryDocument(state.published, true)
-			const latest = primaryDocument(state.latest, false)
+			const published = primaryDocument(state.published)
+			const latest = primaryDocument(state.latest)
 			const initial = published ?? latest
 			if (!initial) continue
 
@@ -77,7 +77,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 				)
 			}
 
-			const latestDocument = primaryDocument(state.latest, false)
+			const latestDocument = primaryDocument(state.latest)
 			if (latestDocument?._status === 'draft') {
 				await copyLocales(
 					payload,
@@ -303,7 +303,7 @@ async function copyLocales(
 	}
 }
 
-async function updateLocale(
+export async function updateLocale(
 	payload: Payload,
 	db: MigrateUpArgs['db'],
 	documentId: number,
@@ -314,6 +314,12 @@ async function updateLocale(
 	documentIds: Map<string, number>,
 	req: MigrateUpArgs['req'],
 ) {
+	if (!hasRequiredCopy(document)) {
+		payload.logger.warn(
+			`${collection}:${document.id}의 ${locale} 최신 상태는 필수 번역 필드가 없어 제외합니다.`,
+		)
+		return
+	}
 	const parent = resolveParent(collection, document, documentIds)
 	if (parent === undefined) {
 		payload.logger.warn(`${collection}:${document.id}의 최신 상태는 상위 문서가 없어 제외합니다.`)
@@ -473,10 +479,10 @@ function resolveParent(
 	return mappedId
 }
 
-function primaryDocument(state: LocalizedState, requirePublishedFields: boolean) {
+function primaryDocument(state: LocalizedState) {
 	return LOCALES.map((locale) => state[locale]).find(
 		(document): document is LegacyDocument =>
-			document !== undefined && (!requirePublishedFields || hasRequiredCopy(document)),
+			document !== undefined && hasRequiredCopy(document),
 	)
 }
 
