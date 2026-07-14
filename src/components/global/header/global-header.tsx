@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils'
 
 const STUDIO_LINKS = [
 	{ href: '/create', label: 'Templates' },
-	{ href: '/image', label: 'Image' },
+	{ href: '/generate', label: 'Generate' },
 ] as const
 
 const LOGIN = { href: '/login', label: 'Admin' } as const

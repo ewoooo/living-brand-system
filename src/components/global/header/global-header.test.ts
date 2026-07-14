@@ -42,6 +42,6 @@ describe('GlobalHeader', () => {
 		fireEvent.click(screen.getByRole('button', { name: /Studio/ }))
 
 		expect(screen.getByRole('link', { name: 'Templates' })).toHaveAttribute('href', '/create')
-		expect(screen.getByRole('link', { name: 'Image' })).toHaveAttribute('href', '/image')
+		expect(screen.getByRole('link', { name: 'Generate' })).toHaveAttribute('href', '/generate')
 	})
 })

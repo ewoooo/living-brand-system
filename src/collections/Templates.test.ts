@@ -40,45 +40,64 @@ function buildTemplate(imageOverrides: Record<string, unknown>) {
 }
 
 describe('Templates beforeChange hook', () => {
+	// 인가 검사는 발행(_status:'published') 시에만 돈다 — draft 저장은 항상 통과(Templates.ts 훅 참조).
+	// 그래서 검증 동작을 확인하는 케이스는 _status:'published'를 넣어 게이트를 통과시킨다.
 	it('jsonTemplate이 없으면 통과한다 (file 타입 템플릿)', async () => {
-		const data = { name: 'no template' }
+		const data = { name: 'no template', _status: 'published' }
 
 		await expect(hook({ data, ...buildRequest() })).resolves.toBe(data)
 	})
 
 	it('스키마가 깨진 jsonTemplate은 저장을 거부한다 (fail-closed)', async () => {
 		await expect(
-			hook({ data: { jsonTemplate: { width: 'broken' } }, ...buildRequest() }),
+			hook({
+				data: { _status: 'published', jsonTemplate: { width: 'broken' } },
+				...buildRequest(),
+			}),
 		).rejects.toThrow('스키마')
 	})
 
 	it('임포트 조각이 남아 있으면 저장을 거부한다', async () => {
 		await expect(
 			hook({
-				data: { jsonTemplate: buildTemplate({ assetCollection: 'template-assets' }) },
+				data: {
+					_status: 'published',
+					jsonTemplate: buildTemplate({ assetCollection: 'template-assets' }),
+				},
 				...buildRequest(),
 			}),
 		).rejects.toThrow('인가된 에셋으로 교체되지 않은 이미지')
 	})
 
 	it('인가 참조가 실제 문서를 가리키면 통과한다', async () => {
-		const data = { jsonTemplate: buildTemplate({}) }
+		const data = { _status: 'published', jsonTemplate: buildTemplate({}) }
 
 		await expect(
 			hook({ data, ...buildRequest([{ id: 1, url: '/api/brand-logos/file/logo.svg' }]) }),
 		).resolves.toBe(data)
 	})
 
+	it('draft 저장은 인가 검사 없이 통과한다', async () => {
+		// 발행이 아니면(_status !== 'published') 깨진 jsonTemplate도 통과 — import 충실도 우선.
+		const data = { jsonTemplate: { width: 'broken' } }
+
+		await expect(hook({ data, ...buildRequest() })).resolves.toBe(data)
+	})
+
 	it('자기신고 라벨만 인가 컬렉션인 위장 참조는 거부한다', async () => {
 		// 존재하지 않는 assetId
 		await expect(
-			hook({ data: { jsonTemplate: buildTemplate({ assetId: 999 }) }, ...buildRequest() }),
+			hook({
+				data: { _status: 'published', jsonTemplate: buildTemplate({ assetId: 999 }) },
+				...buildRequest(),
+			}),
 		).rejects.toThrow('인가 에셋 참조가 유효하지 않습니다')
 
 		// 실제 문서는 있지만 src가 외부 URL
 		await expect(
 			hook({
 				data: {
+					_status: 'published',
 					jsonTemplate: buildTemplate({ src: 'https://attacker.example/x.png' }),
 				},
 				...buildRequest([{ id: 1, url: '/api/brand-logos/file/logo.svg' }]),

@@ -64,6 +64,8 @@ node_modules/
 # Local review calibration (검수기 회귀용 샘플·진단 스크립트 — 로컬 전용)
 tests/fixtures/review/
 scripts/diagnose-*.ts
+# Throwaway 스파이크 스크립트 (dogfood·dry-run — 로컬 전용)
+scripts/_*.ts
 .gstack/
 backups/
 

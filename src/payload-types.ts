@@ -565,9 +565,6 @@ export interface Template {
   id: number;
   name: string;
   description?: string | null;
-  /**
-   * 렌더 계약(JsonTemplate). 임포트가 생성하며, 수정 시 src/types/json-template.ts 스키마를 지켜야 합니다.
-   */
   jsonTemplate?:
     | {
         [k: string]: unknown;
@@ -577,6 +574,29 @@ export interface Template {
     | number
     | boolean
     | null;
+  code?: {
+    css?: string | null;
+    js?: string | null;
+  };
+  sourceUrl?: string | null;
+  baseHtml?: string | null;
+  overrides?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Figma 너비(px). 가져오기가 채웁니다.
+   */
+  width?: number | null;
+  /**
+   * Figma 높이(px). 가져오기가 채웁니다.
+   */
+  height?: number | null;
   /**
    * Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.
    */
@@ -598,9 +618,9 @@ export interface Template {
       }[]
     | null;
   /**
-   * 임포트에 사용한 Figma URL 원문입니다. 출처 기록용이며 재동기화하지 않습니다.
+   * baseHtml(Figma 원본) + overrides(앱 편집)의 합성 결과입니다. 워크스페이스 편집·재import 시 자동 갱신됩니다.
    */
-  sourceUrl?: string | null;
+  html?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1476,6 +1496,17 @@ export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
   jsonTemplate?: T;
+  code?:
+    | T
+    | {
+        css?: T;
+        js?: T;
+      };
+  sourceUrl?: T;
+  baseHtml?: T;
+  overrides?: T;
+  width?: T;
+  height?: T;
   category?: T;
   templateChecks?:
     | T
@@ -1484,7 +1515,7 @@ export interface TemplatesSelect<T extends boolean = true> {
         body?: T;
         id?: T;
       };
-  sourceUrl?: T;
+  html?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
