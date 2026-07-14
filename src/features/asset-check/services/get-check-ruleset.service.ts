@@ -1,5 +1,5 @@
 import { cache } from 'react'
-import { hasChecker } from '@/features/asset-check/checkers/registry'
+import { hasChecker, hasDeterministicChecker } from '@/features/asset-check/checkers/registry'
 import type { CheckStatus } from '@/features/asset-check/checkers/types'
 import { getCheckSourceDocuments } from '@/features/asset-check/repositories/check-ruleset.payload.repository'
 import { toRuntimeCheckMessages } from '@/features/asset-check/utils/check-messages'
@@ -112,7 +112,10 @@ function toRuntimeCheck({ check, evidence, referenceAssets }: GuidelineCheckSour
 			: undefined
 	const implemented =
 		checker.executor === 'deterministic'
-			? Boolean(checkerKey && hasChecker(checkerKey, options))
+			? Boolean(
+					checkerKey &&
+						(hasDeterministicChecker(checkerKey) || hasChecker(checkerKey, options)),
+				)
 			: checker.executor === 'heuristic'
 				? Boolean(model && promptKey)
 				: true
