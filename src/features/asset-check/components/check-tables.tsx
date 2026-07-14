@@ -36,7 +36,7 @@ const EXECUTOR: Record<
 	manual: { label: 'manual', Icon: User, desc: '브랜드 담당자 확인이 필요한 기준' },
 }
 
-const CHECK_BORDER = 'border-neutral-200 border-t dark:border-neutral-800'
+const CHECK_BORDER = 'border-border border-t'
 
 function CheckRow({
 	check,
@@ -128,14 +128,14 @@ function AnimatedCheckTableRow({
 function CheckSectionCell({ sectionLabel }: { sectionLabel: string | null }) {
 	return (
 		<TableCell className={cn('w-44 py-2.5 pr-4 align-top', sectionLabel && CHECK_BORDER)}>
-			{sectionLabel && <span className="font-medium text-sm">{sectionLabel}</span>}
+			{sectionLabel && <span className="type-callout-emphasized">{sectionLabel}</span>}
 		</TableCell>
 	)
 }
 
 function CheckTitleCell({ title }: { title: string }) {
 	return (
-		<TableCell className={cn('w-56 py-2.5 pr-4 align-top text-sm', CHECK_BORDER)}>
+		<TableCell className={cn('type-callout w-56 py-2.5 pr-4 align-top', CHECK_BORDER)}>
 			{title}
 		</TableCell>
 	)
@@ -151,7 +151,9 @@ function CheckMessageCell({
 	shouldReduceMotion: boolean | null
 }) {
 	return (
-		<TableCell className={cn('py-2.5 pr-3 align-top text-sm whitespace-normal', CHECK_BORDER)}>
+		<TableCell
+			className={cn('type-callout py-2.5 pr-3 align-top whitespace-normal', CHECK_BORDER)}
+		>
 			<AnimatePresence initial={false} mode="wait">
 				{detail && (
 					<motion.span
@@ -161,10 +163,10 @@ function CheckMessageCell({
 						exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
 						transition={{ duration: 0.16, ease: 'easeOut' }}
 						className={cn(
-							'block text-xs leading-5',
+							'type-caption-1 block',
 							outcome?.rawResult.status === 'fail'
-								? 'text-rose-600 dark:text-rose-400'
-								: 'text-muted-foreground',
+								? 'text-destructive'
+								: 'text-foreground-muted',
 						)}
 					>
 						{detail}
@@ -204,7 +206,7 @@ function CheckToggleCell({ open }: { open: boolean }) {
 			<ChevronDown
 				size={16}
 				className={cn(
-					'inline-block text-muted-foreground transition-transform',
+					'inline-block text-foreground-muted transition-transform',
 					open && 'rotate-180',
 				)}
 			/>
@@ -219,13 +221,15 @@ function CheckExecutorIcon({ check }: { check: Check }) {
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<span className="inline-flex text-muted-foreground">
+				<span className="inline-flex text-foreground-muted">
 					<ExecutorIcon size={16} />
 				</span>
 			</TooltipTrigger>
 			<TooltipContent>
-				<span className="font-medium">{executor.label}</span>
-				{executor.desc && <span className="block text-xs opacity-80">{executor.desc}</span>}
+				<span className="type-caption-1-emphasized">{executor.label}</span>
+				{executor.desc && (
+					<span className="type-caption-1 block opacity-80">{executor.desc}</span>
+				)}
 			</TooltipContent>
 		</Tooltip>
 	)
@@ -248,7 +252,7 @@ function CheckStatusBadge({
 				exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -3, scale: 0.96 }}
 				transition={{ duration: 0.16, ease: 'easeOut' }}
 				className={cn(
-					'inline-block whitespace-nowrap rounded px-1.5 py-0.5 font-medium text-[11px]',
+					'type-subheadline-emphasized inline-block whitespace-nowrap rounded px-1.5 py-0.5',
 					CHECK_STATUS[outcome.rawResult.status].pill,
 				)}
 			>
@@ -266,7 +270,7 @@ function CheckStatusBadge({
 				className="inline-flex justify-center"
 				title="검수 중"
 			>
-				<Spinner className="size-3.5 text-muted-foreground" />
+				<Spinner className="size-3.5 text-foreground-muted" />
 			</motion.span>
 		)
 	}
@@ -299,7 +303,7 @@ function CheckDetailRow({
 			<TableCell className="w-56 pt-0 pb-0 pr-4 align-top">
 				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="pb-3">
-						<code className="inline-flex items-center whitespace-nowrap rounded-md bg-secondary px-2 py-0.5 font-mono text-[11px] text-secondary-foreground">
+						<code className="type-subheadline inline-flex items-center whitespace-nowrap rounded-md bg-fill-muted px-2 py-0.5 font-mono text-foreground">
 							{check.key}
 						</code>
 					</div>
@@ -309,16 +313,16 @@ function CheckDetailRow({
 				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="space-y-2 pb-3">
 						{appliesTo.length > 1 && (
-							<p className="text-muted-foreground text-xs">
+							<p className="type-caption-1 text-foreground-muted">
 								적용 위치: {appliesToText}
 							</p>
 						)}
 						{check.evidence ? (
-							<blockquote className="rounded-md bg-white/5 px-3 py-2 text-muted-foreground text-xs leading-5">
+							<blockquote className="type-caption-1 rounded-md bg-fill-muted px-3 py-2 text-foreground-muted">
 								{check.evidence}
 							</blockquote>
 						) : (
-							<span className="text-muted-foreground text-xs">
+							<span className="type-caption-1 text-foreground-muted">
 								관련 가이드라인 없음
 							</span>
 						)}
@@ -335,7 +339,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 	if (!facts || Object.keys(facts).length === 0) return null
 
 	return (
-		<dl className="grid gap-1.5 rounded-md bg-white/5 px-3 py-2 text-xs">
+		<dl className="type-caption-1 grid gap-1.5 rounded-md bg-fill-muted px-3 py-2">
 			{typeof facts.detectedCategory === 'string' && (
 				<CheckFact label="검출 분류" value={facts.detectedCategory} />
 			)}
@@ -344,7 +348,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 			)}
 			{Array.isArray(facts.prohibitedSignals) && facts.prohibitedSignals.length > 0 && (
 				<div className="grid gap-1">
-					<dt className="text-muted-foreground">금지 신호</dt>
+					<dt className="text-foreground-muted">금지 신호</dt>
 					<dd>
 						<ul className="list-disc space-y-0.5 pl-4">
 							{facts.prohibitedSignals.map((signal) => (
@@ -361,7 +365,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 function CheckFact({ label, value }: { label: string; value: string }) {
 	return (
 		<div className="grid grid-cols-[5rem_1fr] gap-2">
-			<dt className="text-muted-foreground">{label}</dt>
+			<dt className="text-foreground-muted">{label}</dt>
 			<dd>{value}</dd>
 		</div>
 	)
@@ -391,15 +395,15 @@ function ReferenceAssets({ assets }: { assets: Check['referenceAssets'] }) {
 	if (assets.length === 0) return null
 
 	return (
-		<div className="flex flex-wrap items-center gap-1.5 text-xs">
-			<span className="text-muted-foreground">기준 이미지 {assets.length}개</span>
+		<div className="type-caption-1 flex flex-wrap items-center gap-1.5">
+			<span className="text-foreground-muted">기준 이미지 {assets.length}개</span>
 			{assets.map((asset) => (
 				<a
 					key={`${asset.url}-${asset.name}`}
 					href={asset.url}
 					target="_blank"
 					rel="noreferrer"
-					className="rounded-md border px-2 py-1 text-foreground transition-colors hover:bg-accent"
+					className="rounded-md border px-2 py-1 text-foreground transition-colors hover:bg-fill-hover"
 				>
 					{asset.name}
 				</a>

@@ -13,7 +13,7 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 				{block.groups?.map((group) => (
 					<div key={group.id}>
 						{group.category && (
-							<h4 className="mb-4 font-semibold text-neutral-500">
+							<h4 className="type-body-emphasized mb-4 text-foreground-muted">
 								{group.category}
 							</h4>
 						)}
@@ -24,21 +24,21 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 										<GuidelineImage
 											image={example.image}
 											alt={example.caption || ''}
-											className="aspect-4/3 bg-neutral-500/5 p-6"
+											className="aspect-4/3 bg-fill-muted p-6"
 										/>
 										<span
 											aria-hidden
-											className={`absolute top-2 right-2 grid size-6 place-items-center rounded-full text-white text-xs ${
+											className={`type-caption-1-emphasized absolute top-2 right-2 grid size-6 place-items-center rounded-full text-foreground-inverse ${
 												example.kind === 'do'
-													? 'bg-emerald-600'
-													: 'bg-red-600'
+													? 'bg-success'
+													: 'bg-destructive'
 											}`}
 										>
 											{example.kind === 'do' ? '✓' : '✕'}
 										</span>
 									</div>
 									{example.caption && (
-										<figcaption className="mt-2 text-neutral-500 text-sm leading-6">
+										<figcaption className="type-callout mt-2 text-foreground-muted">
 											{example.caption}
 										</figcaption>
 									)}

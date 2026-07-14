@@ -49,7 +49,7 @@ export function ImageCheckControls() {
 						<span className="sr-only">검수 중</span>
 					</>
 				) : (
-					<span className="text-base font-normal">검수하기</span>
+					<span className="type-body">검수하기</span>
 				)}
 			</Button>
 		</section>

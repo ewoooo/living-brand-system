@@ -20,13 +20,13 @@ export function ColorPaletteBlock({
 				{colors.map((color) => (
 					<div
 						key={color.id}
-						className="aspect-square rounded-sm border border-black/10 p-4 text-xs leading-5"
+						className="type-caption-1 aspect-square rounded-sm border border-scrim/10 p-4"
 						style={{
 							backgroundColor: color.hex,
 							color: isLightColor(color.hex) ? '#000000' : '#FFFFFF',
 						}}
 					>
-						<p className="font-semibold">{color.name}</p>
+						<p className="type-caption-1-emphasized">{color.name}</p>
 						<p>HEX {color.hex}</p>
 						{rgbLabel(color.hex) && <p>RGB {rgbLabel(color.hex)}</p>}
 						{color.pantone && <p>PMS {color.pantone}</p>}

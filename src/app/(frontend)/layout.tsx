@@ -32,7 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
 	return (
 		<html lang="ko" style={brandColorStyle} suppressHydrationWarning>
-			<body className="h-svh overflow-hidden bg-white text-black dark:bg-black dark:text-white">
+			<body className="h-svh overflow-hidden bg-background text-foreground">
 				<ThemeProvider
 					attribute="class"
 					defaultTheme="system"
