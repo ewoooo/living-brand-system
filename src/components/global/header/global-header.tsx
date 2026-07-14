@@ -59,10 +59,10 @@ function HeaderHead({
 					/>
 				</Link>
 				<NavigationMenu viewport={false}>
-					<NavigationMenuList>
+					<NavigationMenuList className="gap-2">
 						<NavigationMenuItem>
 							<NavigationMenuTrigger
-								className={cn(guidelineActive && 'bg-muted text-foreground')}
+								className={cn(guidelineActive && 'text-foreground')}
 							>
 								Guideline
 							</NavigationMenuTrigger>
@@ -114,22 +114,8 @@ function HeaderHead({
 							</NavigationMenuContent>
 						</NavigationMenuItem>
 						<NavigationMenuItem>
-							<NavigationMenuLink
-								active={reviewActive}
-								asChild
-								className={navigationMenuTriggerStyle()}
-							>
-								<Link
-									aria-current={reviewActive ? 'page' : undefined}
-									href="/review"
-								>
-									Review
-								</Link>
-							</NavigationMenuLink>
-						</NavigationMenuItem>
-						<NavigationMenuItem>
 							<NavigationMenuTrigger
-								className={cn(studioActive && 'bg-muted text-foreground')}
+								className={cn(studioActive && 'text-foreground')}
 							>
 								Studio
 							</NavigationMenuTrigger>
@@ -155,6 +141,20 @@ function HeaderHead({
 									})}
 								</ul>
 							</NavigationMenuContent>
+						</NavigationMenuItem>
+						<NavigationMenuItem>
+							<NavigationMenuLink
+								active={reviewActive}
+								asChild
+								className={navigationMenuTriggerStyle()}
+							>
+								<Link
+									aria-current={reviewActive ? 'page' : undefined}
+									href="/review"
+								>
+									Review
+								</Link>
+							</NavigationMenuLink>
 						</NavigationMenuItem>
 					</NavigationMenuList>
 				</NavigationMenu>

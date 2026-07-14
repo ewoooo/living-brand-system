@@ -2,8 +2,8 @@ import { GlobalFooter } from '@/components/global/footer/global-footer'
 
 export default function HomePage() {
 	return (
-		<main className="grid h-full overflow-y-auto">
-			<section aria-label="hero" className="grid min-h-full place-items-center">
+		<main className="grid min-h-screen overflow-y-auto">
+			<section aria-label="hero" className="grid min-h-screen place-items-center">
 				<hgroup className="flex flex-col items-center gap-4">
 					<h1 className="type-large-title">Living Brand System</h1>
 					<h2>
