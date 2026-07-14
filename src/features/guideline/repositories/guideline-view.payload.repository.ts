@@ -21,6 +21,8 @@ export async function findGuidelineMetadataGlobal() {
 			documentTitle: true,
 			favicon: true,
 			issuedLabel: true,
+			primaryColor: true,
+			primaryColorDark: true,
 		},
 	})
 }

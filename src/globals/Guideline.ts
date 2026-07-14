@@ -1,4 +1,13 @@
-import type { GlobalConfig } from 'payload'
+import { revalidatePath } from 'next/cache'
+import type { GlobalAfterChangeHook, GlobalConfig } from 'payload'
+
+export const revalidateGuideline: GlobalAfterChangeHook = ({ doc, req }) => {
+	if (doc._status === 'published' && !req.context.disableRevalidate) {
+		revalidatePath('/', 'layout')
+	}
+
+	return doc
+}
 
 export const Guideline: GlobalConfig = {
 	slug: 'guideline',
@@ -11,6 +20,9 @@ export const Guideline: GlobalConfig = {
 			schedulePublish: true,
 		},
 		max: 50,
+	},
+	hooks: {
+		afterChange: [revalidateGuideline],
 	},
 	fields: [
 		{
@@ -43,6 +55,25 @@ export const Guideline: GlobalConfig = {
 			admin: {
 				description:
 					'브라우저 탭과 메타데이터에 사용할 파비콘 이미지입니다. 최대 사이즈는 1024px x 1024px 입니다.',
+			},
+		},
+		{
+			name: 'primaryColor',
+			type: 'relationship',
+			relationTo: 'brand-colors',
+			maxDepth: 1,
+			admin: {
+				description: 'Creator UI의 기본·라이트 모드 primary 색상입니다.',
+			},
+		},
+		{
+			name: 'primaryColorDark',
+			type: 'relationship',
+			relationTo: 'brand-colors',
+			maxDepth: 1,
+			admin: {
+				description:
+					'Creator UI의 다크 모드 primary 색상입니다. 비어 있으면 기본 색상을 사용합니다.',
 			},
 		},
 	],

@@ -22,9 +22,16 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
 	const guidelineNavigation = await getGuidelineNavigation()
+	const { metadata } = guidelineNavigation
+	const brandColorStyle = {
+		'--brand-primary-dark': metadata.primaryDarkHex ?? undefined,
+		'--brand-primary-dark-foreground': metadata.primaryDarkForegroundHex ?? undefined,
+		'--brand-primary-light': metadata.primaryHex ?? undefined,
+		'--brand-primary-light-foreground': metadata.primaryForegroundHex ?? undefined,
+	} as React.CSSProperties
 
 	return (
-		<html lang="ko" suppressHydrationWarning>
+		<html lang="ko" style={brandColorStyle} suppressHydrationWarning>
 			<body className="h-svh overflow-hidden bg-white text-black dark:bg-black dark:text-white">
 				<ThemeProvider
 					attribute="class"

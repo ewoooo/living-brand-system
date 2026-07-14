@@ -1798,6 +1798,14 @@ export interface Guideline {
    * 브라우저 탭과 메타데이터에 사용할 파비콘 이미지입니다. 최대 사이즈는 1024px x 1024px 입니다.
    */
   favicon?: (number | null) | ApplicationImage;
+  /**
+   * Creator UI의 기본·라이트 모드 primary 색상입니다.
+   */
+  primaryColor?: (number | null) | BrandColor;
+  /**
+   * Creator UI의 다크 모드 primary 색상입니다. 비어 있으면 기본 색상을 사용합니다.
+   */
+  primaryColorDark?: (number | null) | BrandColor;
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -1844,6 +1852,8 @@ export interface GuidelineSelect<T extends boolean = true> {
   documentTitle?: T;
   issuedLabel?: T;
   favicon?: T;
+  primaryColor?: T;
+  primaryColorDark?: T;
   _status?: T;
   updatedAt?: T;
   createdAt?: T;
