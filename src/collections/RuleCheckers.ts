@@ -35,7 +35,7 @@ export const RuleCheckers: CollectionConfig = {
 		plural: 'Checkers',
 	},
 	admin: {
-		group: false,
+		group: 'Quality',
 		useAsTitle: 'key',
 		defaultColumns: ['key', 'executor', '_status', 'updatedAt'],
 		description: 'Guideline Check를 실행할 도구와 호출 계약입니다.',
