@@ -1,3 +1,15 @@
+@font-face {
+	font-family: "Pretendard";
+	src: url("/fonts/pretendard/PretendardVariable.woff2") format("woff2");
+	font-weight: 45 920;
+	font-display: swap;
+}
+
+:root {
+	--font-body: "Pretendard", system-ui, sans-serif;
+	--font-serif: var(--font-body);
+}
+
 .dashboard-summary {
 	width: 100%;
 	aspect-ratio: 7 / 1;
