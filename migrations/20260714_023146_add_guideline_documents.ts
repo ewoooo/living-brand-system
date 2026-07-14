@@ -474,7 +474,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
 	"snapshot" boolean,
 	"published_locale" "enum__guideline_docs_v_published_locale",
-	"latest" boolean
+	"latest" boolean,
+	"autosave" boolean
   );
 
   CREATE TABLE "_guideline_docs_v_locales" (
@@ -682,6 +683,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "_guideline_docs_v_snapshot_idx" ON "_guideline_docs_v" USING btree ("snapshot");
   CREATE INDEX "_guideline_docs_v_published_locale_idx" ON "_guideline_docs_v" USING btree ("published_locale");
   CREATE INDEX "_guideline_docs_v_latest_idx" ON "_guideline_docs_v" USING btree ("latest");
+  CREATE INDEX "_guideline_docs_v_autosave_idx" ON "_guideline_docs_v" USING btree ("autosave");
   CREATE INDEX "_guideline_docs_v_version_version_slug_idx" ON "_guideline_docs_v_locales" USING btree ("version_slug","_locale");
   CREATE UNIQUE INDEX "_guideline_docs_v_locales_locale_parent_id_unique" ON "_guideline_docs_v_locales" USING btree ("_locale","_parent_id");
   CREATE INDEX "_guideline_docs_v_rels_order_idx" ON "_guideline_docs_v_rels" USING btree ("order");
