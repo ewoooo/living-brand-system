@@ -1,7 +1,8 @@
 'use client'
 
-import { useForm, useFormFields } from '@payloadcms/ui'
+import { Button, Popup, toast, useForm, useFormFields } from '@payloadcms/ui'
 import { useMemo, useState } from 'react'
+import { generateOneText } from '@/features/text-generation/generate-one-text'
 
 /**
  * Templates 편집 폼(Admin)의 레이어 패널.
@@ -67,6 +68,56 @@ function setNodeText(html: string, nodeId: string, text: string): string {
 	if (!el) return html
 	el.textContent = text
 	return doc.body.innerHTML
+}
+
+// Popup 안에 뜨는 AI 생성 폼. Popup이 열릴 때만 마운트되므로 프롬프트는 열 때마다 초기화된다.
+function AiTextForm({ onApply }: { onApply: (text: string) => void }) {
+	const [prompt, setPrompt] = useState('')
+	const [loading, setLoading] = useState(false)
+
+	async function run() {
+		const trimmed = prompt.trim()
+		if (!trimmed || loading) return
+		setLoading(true)
+		try {
+			const text = await generateOneText(trimmed)
+			if (text) onApply(text)
+			else toast.error('생성 실패 — 프롬프트를 바꾸거나 잠시 후 다시 시도하세요.')
+		} finally {
+			setLoading(false)
+		}
+	}
+
+	return (
+		<div style={{ width: 260, padding: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+			<span style={{ fontSize: 12, color: 'var(--theme-elevation-600)' }}>
+				AI 텍스트 생성
+			</span>
+			<textarea
+				value={prompt}
+				onChange={(event) => setPrompt(event.target.value)}
+				rows={3}
+				placeholder="예: 12자 이내 캐치프레이즈, 존댓말"
+				style={{
+					width: '100%',
+					fontSize: 13,
+					padding: 6,
+					borderRadius: 4,
+					border: '1px solid var(--theme-elevation-150)',
+					background: 'var(--theme-input-bg)',
+					color: 'var(--theme-text)',
+				}}
+			/>
+			<Button
+				buttonStyle="primary"
+				size="small"
+				disabled={loading || !prompt.trim()}
+				onClick={run}
+			>
+				{loading ? '생성 중...' : '생성'}
+			</Button>
+		</div>
+	)
 }
 
 export default function TemplateLayersField() {
@@ -160,32 +211,67 @@ export default function TemplateLayersField() {
 			</div>
 
 			{selected?.isText && (
-				<label style={{ display: 'block', marginTop: 8 }}>
-					<span
-						style={{
-							display: 'block',
-							fontSize: 12,
-							marginBottom: 4,
-							color: 'var(--theme-elevation-600)',
-						}}
-					>
-						텍스트 편집 — {selected.name}
-					</span>
-					<textarea
-						value={selected.text}
-						onChange={(event) => commitText(event.target.value)}
-						rows={2}
-						style={{
-							width: '100%',
-							fontSize: 13,
-							padding: 6,
-							borderRadius: 4,
-							border: '1px solid var(--theme-elevation-150)',
-							background: 'var(--theme-input-bg)',
-							color: 'var(--theme-text)',
-						}}
-					/>
-				</label>
+				<div style={{ marginTop: 8 }}>
+					<label style={{ display: 'block' }}>
+						<span
+							style={{
+								display: 'block',
+								fontSize: 12,
+								marginBottom: 4,
+								color: 'var(--theme-elevation-600)',
+							}}
+						>
+							텍스트 편집 — {selected.name}
+						</span>
+						<textarea
+							value={selected.text}
+							onChange={(event) => commitText(event.target.value)}
+							rows={2}
+							style={{
+								width: '100%',
+								fontSize: 13,
+								padding: 6,
+								borderRadius: 4,
+								border: '1px solid var(--theme-elevation-150)',
+								background: 'var(--theme-input-bg)',
+								color: 'var(--theme-text)',
+							}}
+						/>
+					</label>
+					<div style={{ marginTop: 6 }}>
+						<Popup
+							buttonType="custom"
+							verticalAlign="top"
+							horizontalAlign="left"
+							size="fit-content"
+							button={
+								<span
+									style={{
+										display: 'inline-flex',
+										alignItems: 'center',
+										gap: 4,
+										fontSize: 12,
+										padding: '4px 10px',
+										borderRadius: 4,
+										border: '1px solid var(--theme-elevation-150)',
+										cursor: 'pointer',
+										color: 'var(--theme-text)',
+									}}
+								>
+									✨ AI 생성
+								</span>
+							}
+							render={({ close }) => (
+								<AiTextForm
+									onApply={(text) => {
+										commitText(text)
+										close()
+									}}
+								/>
+							)}
+						/>
+					</div>
+				</div>
 			)}
 
 			{selected && !selected.isText && (
