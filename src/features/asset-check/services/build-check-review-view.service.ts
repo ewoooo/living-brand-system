@@ -82,12 +82,14 @@ function buildRows({
 	selected: CheckImage | null
 }): CheckReviewRow[] {
 	const results = selected?.results
+	const snapshotByKey = new Map(selected?.rulesetSnapshot?.map((check) => [check.key, check]))
 	const rows: MutableCheckRow[] = []
 	const rowByCheckKey = new Map<string, MutableCheckRow>()
 	const seenSections = new Set<string>()
 
 	for (const section of visibleSections) {
-		for (const check of section.checks) {
+		for (const currentCheck of section.checks) {
+			const check = snapshotByKey.get(currentCheck.key) ?? currentCheck
 			const existing = rowByCheckKey.get(check.key)
 			if (existing) {
 				if (!existing.appliesToSet.has(section.title)) {

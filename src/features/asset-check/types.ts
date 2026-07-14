@@ -1,4 +1,5 @@
 import type { CheckResult } from '@/features/asset-check/checkers/types'
+import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { CheckSession } from '@/payload-types'
 
 export type CheckSessionSource = CheckSession['source']
@@ -24,6 +25,8 @@ export interface CheckImage {
 	/** checkKey → 검수 결과 (검수된 Check만; 진행 중엔 일부만 채워짐) */
 	results?: Record<string, CheckResult>
 	pendingCheckKeys?: string[]
+	/** 검수 세션 시작 시 저장된 룰 정의. 결과 근거와 기준값은 이 스냅샷에서 표시한다. */
+	rulesetSnapshot?: RuntimeCheck[]
 	status: CheckImageStatus
 }
 

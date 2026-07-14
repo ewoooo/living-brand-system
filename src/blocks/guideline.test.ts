@@ -96,4 +96,35 @@ describe('guideline checks field', () => {
 			executor: { equals: 'heuristic' },
 		})
 	})
+
+	it('Contrast options를 전용 입력으로 편집하고 저장 전에 검증한다', async () => {
+		const checks = guidelineChecksField()
+		if (checks.type !== 'array') throw new Error('checks array is missing')
+		const options = checks.fields.find(
+			(candidate) => 'name' in candidate && candidate.name === 'options',
+		)
+		if (options?.type !== 'json' || typeof options.validate !== 'function') {
+			throw new Error('options json validation is missing')
+		}
+
+		expect(options.admin?.components?.Field).toBe('/components/admin/CheckOptionsField')
+		const context = {
+			req: { payload: {} },
+			siblingData: {
+				executor: 'deterministic',
+				checker: { checkerKey: 'contrast' },
+			},
+		} as never
+		expect(
+			await options.validate(
+				{
+					criteria: [{ measurement: 'contrastRatio', operator: 'gte', expected: 4.5 }],
+				} as never,
+				context,
+			),
+		).toBe(true)
+		expect(await options.validate(null as never, context)).toBe(
+			'최소 대비율은 1 이상 21 이하의 숫자로 입력하세요.',
+		)
+	})
 })

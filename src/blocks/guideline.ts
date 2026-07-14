@@ -1,4 +1,5 @@
 import type { Block, Field, FieldHook } from 'payload'
+import { validateGuidelineCheckOptions } from '@/features/guideline/checks/validate-guideline-check-options'
 
 type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
 
@@ -99,9 +100,13 @@ export function guidelineChecksField(): Field {
 			{
 				name: 'options',
 				type: 'json',
+				validate: validateGuidelineCheckOptions,
 				admin: {
 					condition: executorCondition('deterministic'),
 					description: '이 Check에서 결정론적 Checker에 전달할 설정입니다.',
+					components: {
+						Field: '/components/admin/CheckOptionsField',
+					},
 				},
 			},
 			{

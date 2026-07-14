@@ -154,6 +154,50 @@ describe('deterministic CheckResult integration', () => {
 			},
 		})
 	})
+
+	it('returns fail when the measured contrast is below the configured criterion', async () => {
+		vi.mocked(extractPixelGrid).mockResolvedValue(lowContrastGrid())
+		vi.mocked(getCheckPalette).mockResolvedValue([])
+		const { runImmediateCheck } = await import(
+			'@/features/asset-check/services/run-check.service'
+		)
+
+		const result = await runImmediateCheck(
+			Buffer.from('low-contrast-image'),
+			{ logo: false, typography: true, illustration: false, photography: false },
+			[runtimeCheck()],
+		)
+
+		expect(result.results['typography.contrast']).toMatchObject({
+			rawResult: {
+				status: 'fail',
+				fulfillment: 0,
+				comparisons: [{ expected: 4.5, satisfied: false }],
+			},
+		})
+	})
+
+	it('returns needs_review when a color pair cannot be extracted', async () => {
+		vi.mocked(extractPixelGrid).mockResolvedValue(solidGrid())
+		vi.mocked(getCheckPalette).mockResolvedValue([])
+		const { runImmediateCheck } = await import(
+			'@/features/asset-check/services/run-check.service'
+		)
+
+		const result = await runImmediateCheck(
+			Buffer.from('single-color-image'),
+			{ logo: false, typography: true, illustration: false, photography: false },
+			[runtimeCheck()],
+		)
+
+		expect(result.results['typography.contrast']).toMatchObject({
+			rawResult: {
+				status: 'needs_review',
+				fulfillment: null,
+				reasonCode: 'color_pair_not_found',
+			},
+		})
+	})
 })
 
 function runtimeCheck(): RuntimeCheck {
@@ -188,6 +232,18 @@ function solidGrid(): PixelGrid {
 		width: 10,
 		height: 10,
 		pixels: Array.from({ length: 100 }, () => ({ r: 255, g: 255, b: 255 })),
+		alpha: new Uint8Array(100).fill(255),
+	}
+}
+
+function lowContrastGrid(): PixelGrid {
+	return {
+		width: 10,
+		height: 10,
+		pixels: [
+			...Array.from({ length: 80 }, () => ({ r: 255, g: 255, b: 255 })),
+			...Array.from({ length: 20 }, () => ({ r: 180, g: 180, b: 180 })),
+		],
 		alpha: new Uint8Array(100).fill(255),
 	}
 }

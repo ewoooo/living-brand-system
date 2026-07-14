@@ -17,8 +17,8 @@ import type { AlgorithmChecker, CheckerContext, DeterministicEvaluationResult } 
 
 /**
  * checker key → checker 레지스트리.
- * essenherb color 검수는 palette(허용 색) + pairing(허용 조합) 2축으로 수렴 —
- * scale/roles/contrast/combo는 팔레트 정의·서사이거나 pairing에 흡수돼 제거했다.
+ * 기존 essenherb color 검수는 palette(허용 색) + pairing(허용 조합)을 유지하고,
+ * 정규화된 contrast는 측정·기준 평가 경로로 별도 등록한다.
  * color.mode는 파일 색모드 메타가 래스터에 없어 spot-color와 같은 픽셀 프록시로 판정한다.
  */
 const checkers: Record<string, AlgorithmChecker> = {

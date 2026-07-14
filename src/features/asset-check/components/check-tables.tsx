@@ -14,6 +14,7 @@ import { Empty, EmptyDescription } from '@/components/ui/empty'
 import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { contrastOptionsSchema } from '@/features/asset-check/checkers/contrast.checker'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
@@ -326,6 +327,7 @@ function CheckDetailRow({
 								관련 가이드라인 없음
 							</span>
 						)}
+						<CheckExecutionDetails check={check} outcome={outcome} />
 						<CheckFacts facts={facts} />
 						<ReferenceAssets assets={check.referenceAssets} />
 					</div>
@@ -335,11 +337,73 @@ function CheckDetailRow({
 	)
 }
 
+function CheckExecutionDetails({ check, outcome }: { check: Check; outcome?: CheckResult }) {
+	const comparison = outcome?.rawResult.comparisons?.[0]
+	const configuredCriterion =
+		check.checker.implementationKey === 'contrast'
+			? contrastOptionsSchema.safeParse(check.options).data?.criteria[0]
+			: undefined
+	const criterion = comparison ?? configuredCriterion
+	const reasonCode = outcome?.rawResult.reasonCode
+
+	return (
+		<dl className="type-caption-1 grid gap-1.5 rounded-md border px-3 py-2">
+			<CheckFact
+				label="체커"
+				value={
+					check.checker.implementationKey
+						? `${check.checker.key} · ${check.checker.implementationKey}`
+						: check.checker.key
+				}
+			/>
+			<CheckFact label="판정 방식" value={executorLabel(check.executor)} />
+			{criterion?.measurement === 'contrastRatio' && (
+				<CheckFact
+					label="기준"
+					value={`대비율 ${operatorLabel(criterion.operator)} ${criterion.expected}:1`}
+				/>
+			)}
+			{comparison?.measurement === 'contrastRatio' && (
+				<CheckFact
+					label="측정 결과"
+					value={`${comparison.actual}:1 · ${comparison.satisfied ? '기준 충족' : '기준 미충족'}`}
+				/>
+			)}
+			{reasonCode && <CheckFact label="검토 사유" value={reasonLabel(reasonCode)} />}
+		</dl>
+	)
+}
+
+function executorLabel(executor: Check['executor']) {
+	if (executor === 'deterministic') return '자동 측정'
+	if (executor === 'heuristic') return 'AI 평가'
+	return '담당자 확인'
+}
+
+function operatorLabel(operator: string) {
+	if (operator === 'gte') return '≥'
+	if (operator === 'lte') return '≤'
+	if (operator === 'eq') return '='
+	return operator
+}
+
+function reasonLabel(reasonCode: string) {
+	if (reasonCode === 'color_pair_not_found') return '비교할 두 색상을 이미지에서 찾지 못했습니다.'
+	if (reasonCode === 'missing_measurement') return '판정에 필요한 측정값이 없습니다.'
+	return reasonCode
+}
+
 function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 	if (!facts || Object.keys(facts).length === 0) return null
 
 	return (
 		<dl className="type-caption-1 grid gap-1.5 rounded-md bg-fill-muted px-3 py-2">
+			{typeof facts.foreground === 'string' && (
+				<CheckFact label="전경색" value={facts.foreground} />
+			)}
+			{typeof facts.background === 'string' && (
+				<CheckFact label="배경색" value={facts.background} />
+			)}
 			{typeof facts.detectedCategory === 'string' && (
 				<CheckFact label="검출 분류" value={facts.detectedCategory} />
 			)}
