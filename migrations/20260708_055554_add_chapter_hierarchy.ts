@@ -87,18 +87,14 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   ALTER TABLE "guideline_chapters_locales" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_guideline_chapters_v" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_guideline_chapters_v_locales" DISABLE ROW LEVEL SECURITY;
+  ALTER TABLE "guideline_sections" DROP CONSTRAINT "guideline_sections_chapter_id_guideline_chapters_id_fk";
+  ALTER TABLE "_guideline_sections_v" DROP CONSTRAINT "_guideline_sections_v_version_chapter_id_guideline_chapters_id_fk";
+  ALTER TABLE "search_rels" DROP CONSTRAINT "search_rels_chapters_fk";
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_chapters_fk";
   DROP TABLE "guideline_chapters" CASCADE;
   DROP TABLE "guideline_chapters_locales" CASCADE;
   DROP TABLE "_guideline_chapters_v" CASCADE;
   DROP TABLE "_guideline_chapters_v_locales" CASCADE;
-  ALTER TABLE "guideline_sections" DROP CONSTRAINT "guideline_sections_chapter_id_guideline_chapters_id_fk";
-  
-  ALTER TABLE "_guideline_sections_v" DROP CONSTRAINT "_guideline_sections_v_version_chapter_id_guideline_chapters_id_fk";
-  
-  ALTER TABLE "search_rels" DROP CONSTRAINT "search_rels_chapters_fk";
-  
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_chapters_fk";
-  
   DROP INDEX "guideline_sections_chapter_idx";
   DROP INDEX "_guideline_sections_v_version_version_chapter_idx";
   DROP INDEX "search_rels_guideline_chapters_id_idx";

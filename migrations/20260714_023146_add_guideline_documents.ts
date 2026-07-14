@@ -736,6 +736,7 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   ALTER TABLE "_guideline_docs_v" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_guideline_docs_v_locales" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_guideline_docs_v_rels" DISABLE ROW LEVEL SECURITY;
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_guideline_documents_fk";
   DROP TABLE "guideline_docs_checks" CASCADE;
   DROP TABLE "guideline_docs_blocks_column_unit_columns" CASCADE;
   DROP TABLE "guideline_docs_blocks_column_unit_columns_locales" CASCADE;
@@ -778,8 +779,6 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "_guideline_docs_v" CASCADE;
   DROP TABLE "_guideline_docs_v_locales" CASCADE;
   DROP TABLE "_guideline_docs_v_rels" CASCADE;
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_guideline_documents_fk";
-
   DROP INDEX "payload_locked_documents_rels_guideline_docs_id_idx";
   ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "guideline_docs_id";
   DROP TYPE "public"."enum_guideline_docs_checks_tier";
