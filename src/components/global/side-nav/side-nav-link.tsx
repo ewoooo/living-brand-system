@@ -7,8 +7,8 @@ function isAnchor(href: string) {
 
 export function getSideNavLinkClassName(nested: boolean) {
 	return nested
-		? 'text-sidebar-foreground/40 data-active:text-sidebar-foreground'
-		: 'text-sidebar-foreground/65 data-active:text-sidebar-foreground'
+		? 'text-foreground/40 data-active:text-foreground'
+		: 'text-foreground/65 data-active:text-foreground'
 }
 
 export function SideNavLink({

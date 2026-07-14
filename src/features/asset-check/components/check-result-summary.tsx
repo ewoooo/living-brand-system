@@ -25,7 +25,7 @@ export function CheckResultSummary({ sections }: CheckResultSummaryProps) {
 	)
 
 	return (
-		<div className="mb-6 pl-2 flex flex-wrap items-center gap-x-5">
+		<div className="mb-6 flex flex-wrap items-center gap-x-5 pl-2">
 			<TooltipProvider delayDuration={150}>
 				<section className="flex flex-wrap gap-4">
 					<SummaryMetric
@@ -60,7 +60,7 @@ export function CheckResultSummary({ sections }: CheckResultSummaryProps) {
 								aria-label={failOnlyLabel}
 								onClick={toggleFailOnly}
 								disabled={summary.fail === 0}
-								className={cn(showFailOnly && 'text-rose-700 dark:text-rose-400')}
+								className={cn(showFailOnly && 'text-destructive')}
 							>
 								<FailOnlyIcon data-icon="inline-start" />
 								<span className="sr-only">{failOnlyLabel}</span>
@@ -87,10 +87,15 @@ function SummaryMetric({
 }) {
 	// 색만으로 상태를 구분하지 않도록 라벨을 텍스트로 함께 노출한다(docs/08 §2)
 	return (
-		<span className={cn('flex items-center gap-2 text-xs', muted && 'text-muted-foreground')}>
+		<span
+			className={cn(
+				'type-caption-1 flex items-center gap-2',
+				muted && 'text-foreground-muted',
+			)}
+		>
 			<span aria-hidden className={cn('inline-block size-2 rounded-full', colorClassName)} />
-			<span className="font-medium">{label}</span>
-			<span className="font-semibold tabular-nums">{value}</span>
+			<span>{label}</span>
+			<span className="type-caption-1-emphasized tabular-nums">{value}</span>
 		</span>
 	)
 }

@@ -535,7 +535,7 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 									<div
 										// biome-ignore lint/suspicious/noArrayIndexKey: 경계는 위치가 곧 정체성
 										key={`h-${i}`}
-										className="pointer-events-none absolute bg-neutral-500/30"
+										className="pointer-events-none absolute bg-foreground-muted/30"
 										style={{
 											left: padX * scale,
 											top:
@@ -551,7 +551,7 @@ export function GridComposer({ source }: { source?: JsonTemplate }) {
 									<div
 										// biome-ignore lint/suspicious/noArrayIndexKey: 경계는 위치가 곧 정체성
 										key={`v-${j}`}
-										className="pointer-events-none absolute bg-neutral-500/30"
+										className="pointer-events-none absolute bg-foreground-muted/30"
 										style={{
 											left:
 												(padX + offsetAt(colSizes, j + 1, gap) - gap / 2) *
@@ -900,7 +900,10 @@ function CompositionPanel({
 
 			<Separator />
 
-			<label htmlFor="hide-guides" className="flex cursor-pointer items-center gap-2 text-sm">
+			<label
+				htmlFor="hide-guides"
+				className="type-callout flex cursor-pointer items-center gap-2"
+			>
 				<Checkbox
 					id="hide-guides"
 					checked={hideGuides}
@@ -1003,7 +1006,9 @@ function SelectedItemEditor({
 						/>
 					</div>
 					<div className="flex items-center gap-2">
-						<span className="w-8 shrink-0 text-muted-foreground text-xs">색상</span>
+						<span className="type-caption-1 w-8 shrink-0 text-foreground-muted">
+							색상
+						</span>
 						<ColorField
 							value={selected.text.color}
 							onChange={(color) => patchText(selected.index, { color })}
@@ -1098,12 +1103,12 @@ function ResizeHandle({
 		>
 			{/* 배경: 평소 투명, hover/active 시에만 흰색 반투명 등장 */}
 			<span
-				className={`absolute inset-0 transition-colors ${active ? 'bg-white/25' : 'bg-white/0 group-hover:bg-white/15'}`}
+				className={`absolute inset-0 transition-colors ${active ? 'bg-foreground-inverse/25' : 'bg-foreground-inverse/0 group-hover:bg-foreground-inverse/15'}`}
 			/>
 			{/* grip: 상하좌우만, 항상 보임 */}
 			{isSide && (
 				<span
-					className={`relative rounded-full bg-muted-foreground/60 ${horizontalGrip ? 'h-1 w-6' : 'h-6 w-1'}`}
+					className={`relative rounded-full bg-foreground-muted/60 ${horizontalGrip ? 'h-1 w-6' : 'h-6 w-1'}`}
 				/>
 			)}
 		</button>
@@ -1124,7 +1129,7 @@ function AlignPicker<T extends string>({
 }) {
 	return (
 		<div className="flex items-center gap-2">
-			<span className="w-8 shrink-0 text-muted-foreground text-xs">{label}</span>
+			<span className="type-caption-1 w-8 shrink-0 text-foreground-muted">{label}</span>
 			<ToggleGroup
 				type="single"
 				size="sm"
@@ -1136,7 +1141,11 @@ function AlignPicker<T extends string>({
 				className="flex-1"
 			>
 				{options.map((o) => (
-					<ToggleGroupItem key={o.value} value={o.value} className="flex-1 text-xs">
+					<ToggleGroupItem
+						key={o.value}
+						value={o.value}
+						className="type-caption-1 flex-1"
+					>
 						{o.label}
 					</ToggleGroupItem>
 				))}
@@ -1148,7 +1157,7 @@ function AlignPicker<T extends string>({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
 		<div className="flex flex-col gap-1.5">
-			<span className="font-medium text-muted-foreground text-xs">{label}</span>
+			<span className="type-caption-1-emphasized text-foreground-muted">{label}</span>
 			{children}
 		</div>
 	)
@@ -1205,7 +1214,7 @@ function SizeInput({
 		else setDraft(String(value))
 	}
 	return (
-		<div className="flex flex-1 flex-col gap-1 text-muted-foreground text-xs">
+		<div className="type-caption-1 flex flex-1 flex-col gap-1 text-foreground-muted">
 			<span>{label}</span>
 			<Input
 				type="number"
@@ -1240,7 +1249,7 @@ function TrackList({
 }) {
 	return (
 		<div className="flex flex-col gap-1.5">
-			<span className="font-medium text-muted-foreground text-xs">{title}</span>
+			<span className="type-caption-1-emphasized text-foreground-muted">{title}</span>
 			{weights.map((w, i) => (
 				// biome-ignore lint/suspicious/noArrayIndexKey: 트랙은 위치가 곧 정체성
 				<div key={i} className="flex items-center gap-2">
@@ -1248,7 +1257,7 @@ function TrackList({
 					<Button
 						size="icon"
 						variant="ghost"
-						className="size-7 text-muted-foreground hover:text-destructive"
+						className="size-7 text-foreground-muted hover:text-destructive"
 						onClick={() => onRemove(i)}
 						aria-label="트랙 삭제"
 					>

@@ -40,7 +40,7 @@ function TextSlotInput({
 					onChange={(event) => onChange(event.target.value)}
 				/>
 				{isInvalidEmail && (
-					<p className="text-destructive text-xs">이메일 형식이 아닙니다.</p>
+					<p className="type-caption-1 text-destructive">이메일 형식이 아닙니다.</p>
 				)}
 			</>
 		)
@@ -96,7 +96,7 @@ export function AssetGenerator({ template }: { template: PublishedTemplate }) {
 					<div key={element.id} className="flex flex-col gap-1">
 						<label
 							htmlFor={`slot-${element.id}`}
-							className="text-muted-foreground text-xs"
+							className="type-caption-1 text-foreground-muted"
 						>
 							{element.slotLabel ?? element.id}
 						</label>
@@ -123,14 +123,14 @@ export function AssetGenerator({ template }: { template: PublishedTemplate }) {
 					</div>
 				))}
 				{slots.length === 0 && (
-					<p className="text-muted-foreground text-xs">
+					<p className="type-caption-1 text-foreground-muted">
 						이 템플릿에는 편집 가능한 슬롯이 없습니다.
 					</p>
 				)}
 				<Button onClick={exportPng} disabled={isExporting}>
 					{isExporting ? '내보내는 중...' : 'PNG로 내보내기'}
 				</Button>
-				{exportError && <p className="text-destructive text-xs">{exportError}</p>}
+				{exportError && <p className="type-caption-1 text-destructive">{exportError}</p>}
 			</div>
 
 			<div className="min-w-0">

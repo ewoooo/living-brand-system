@@ -27,9 +27,7 @@ export function GuidelineSection({
 				/>
 				{section.description ? (
 					<section className="mt-8 grid gap-4 md:grid-cols-2">
-						<p className="leading-7 tracking-normal md:col-start-2">
-							{section.description}
-						</p>
+						<p className="type-body md:col-start-2">{section.description}</p>
 					</section>
 				) : (
 					<GuidelineDescriptionFallback variant={variant} />

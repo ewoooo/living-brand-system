@@ -23,7 +23,7 @@ function HeaderHead({ className }: { className?: string }) {
 
 	return (
 		<section className={className}>
-			<nav className="flex gap-1 py-4 pl-5 font-[450] text-sm">
+			<nav className="type-subheadline-emphasized flex gap-1 py-4 pl-5">
 				{LINKS.map((item) => (
 					<HeaderLinkBlock
 						key={item.href}
@@ -78,7 +78,7 @@ export function GlobalHeader({
 	guidelineChapters: GuidelineSearchChapter[]
 }) {
 	return (
-		<header className="relative z-50 flex shrink-0 bg-white dark:bg-black">
+		<header className="relative z-50 flex shrink-0 bg-background">
 			<HeaderHead className="flex-1" />
 			<HeaderCenter
 				className="-translate-x-1/2 absolute left-1/2 flex items-center gap-2 p-4"
