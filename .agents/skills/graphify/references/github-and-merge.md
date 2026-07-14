@@ -42,5 +42,3 @@ graphify merge-graphs \
   ./platform/graphify-out/graph.json \
   --out graphify-out/graph.json
 ```
-
-Once `graphify-out/graph.json` exists, the fast path above takes over: any codebase question runs `graphify query` directly on the merged graph — no re-extraction, no size gate.
