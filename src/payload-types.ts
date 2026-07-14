@@ -631,9 +631,6 @@ export interface Template {
    * Figma에서 가져온 inline-style HTML. 위 "가져오기"가 채웁니다. 렌더는 이 값을 그대로 사용합니다.
    */
   html?: string | null;
-  /**
-   * 레거시 절대좌표 모델. 신규 템플릿은 위 디자인 HTML을 사용합니다.
-   */
   jsonTemplate?:
     | {
         [k: string]: unknown;
@@ -643,9 +640,6 @@ export interface Template {
     | number
     | boolean
     | null;
-  /**
-   * 디자인 위에 얹을 css/js. 비우면 정적 디자인. js가 있으면 샌드박스로 실행됩니다.
-   */
   code?: {
     css?: string | null;
     js?: string | null;

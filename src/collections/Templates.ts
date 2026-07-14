@@ -90,6 +90,15 @@ export const Templates: CollectionConfig = {
 			},
 		},
 		{
+			name: 'templateLayers',
+			type: 'ui',
+			admin: {
+				components: {
+					Field: '/features/template-import/components/template-layers-field',
+				},
+			},
+		},
+		{
 			// Figma Dev Mode 산출을 그대로 굳힌 inline-style HTML. 가져오기 필드가 채우며, 렌더는 이 값을 그대로 쓴다.
 			type: 'collapsible',
 			label: '디자인 HTML (Figma import)',
@@ -106,40 +115,16 @@ export const Templates: CollectionConfig = {
 				},
 			],
 		},
+		// 레거시 절대좌표 모델 — 폼에서 숨김(컬럼·기존 데이터 유지). 신규 템플릿은 html을 쓴다.
+		{ name: 'jsonTemplate', type: 'json', admin: { hidden: true } },
+		// 기능 코드(css/js) — manager가 코드를 쓰지 않으므로 폼에서 숨김(컬럼·샌드박스 읽기 유지).
 		{
-			type: 'collapsible',
-			label: '구조 (레거시 JsonTemplate)',
-			admin: { initCollapsed: true },
+			name: 'code',
+			type: 'group',
+			admin: { hidden: true },
 			fields: [
-				{
-					name: 'jsonTemplate',
-					type: 'json',
-					admin: {
-						description:
-							'레거시 절대좌표 모델. 신규 템플릿은 위 디자인 HTML을 사용합니다.',
-					},
-				},
-			],
-		},
-		{
-			// 기능(코드) 층. 디자인 구조(jsonTemplate)와 분리해 실제 코드로 저장한다(json 이스케이프 없음).
-			// 특정 배치·동작이 필요할 때만 작성하고, 비우면 정적 디자인으로 동작한다. iframe 샌드박스에서 실행된다.
-			type: 'collapsible',
-			label: '기능 코드 (선택)',
-			admin: { initCollapsed: true },
-			fields: [
-				{
-					name: 'code',
-					type: 'group',
-					admin: {
-						description:
-							'디자인 위에 얹을 css/js. 비우면 정적 디자인. js가 있으면 샌드박스로 실행됩니다.',
-					},
-					fields: [
-						{ name: 'css', type: 'code', admin: { language: 'css' } },
-						{ name: 'js', type: 'code', admin: { language: 'javascript' } },
-					],
-				},
+				{ name: 'css', type: 'code', admin: { language: 'css' } },
+				{ name: 'js', type: 'code', admin: { language: 'javascript' } },
 			],
 		},
 		{

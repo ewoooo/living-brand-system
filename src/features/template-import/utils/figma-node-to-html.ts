@@ -52,6 +52,8 @@ function decls(map: Record<string, string | undefined>): string {
 const escapeHtml = (t: string) =>
 	t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
+const escapeAttr = (t: string) => t.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+
 // Figma primary/counter axis 정렬 → flexbox 값.
 const AXIS_ALIGN: Record<string, string> = {
 	MIN: 'flex-start',
@@ -155,7 +157,8 @@ function renderNode(node: Node, parent: Node | null, isRoot: boolean): string {
 		? escapeHtml(node.characters ?? '')
 		: (node.children ?? []).map((c) => renderNode(c, node, false)).join('')
 
-	return `<${isText ? 'p' : 'div'} data-node-id="${node.id}" style="${decls(style)}">${content}</${isText ? 'p' : 'div'}>`
+	const tag = isText ? 'p' : 'div'
+	return `<${tag} data-node-id="${node.id}" data-name="${escapeAttr(node.name ?? '')}" style="${decls(style)}">${content}</${tag}>`
 }
 
 export function figmaNodeToHtml(node: Node): FigmaHtmlResult {
