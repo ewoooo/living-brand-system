@@ -2,6 +2,11 @@
 
 import { Button, Popup, toast, useForm, useFormFields } from '@payloadcms/ui'
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
+import {
+	composeTemplateHtml,
+	type TemplateOverride,
+	type TemplateOverrides,
+} from '@/features/template-import/utils/compose-template-html'
 import { generateOneText } from '@/features/text-generation/generate-one-text'
 
 /**
@@ -75,28 +80,6 @@ function parseLayers(html: string): LayerRow[] {
 
 	for (const root of Array.from(doc.body.children)) walk(root, 0)
 	return rows
-}
-
-// html 문자열에서 특정 노드의 텍스트만 교체해 되돌린다. 직렬화가 style의 " 를 &quot;로 다시 이스케이프하므로 안전.
-function setNodeText(html: string, nodeId: string, text: string): string {
-	const doc = new DOMParser().parseFromString(html, 'text/html')
-	const el = doc.querySelector(`[data-node-id="${nodeId}"]`)
-	if (!el) return html
-	el.textContent = text
-	return doc.body.innerHTML
-}
-
-// 특정 노드에 배경 이미지를 얹는다. CSSOM(el.style)으로 세팅해 data-URI 안의 ';'가 CSS 선언 구분자로 오인되는 걸 피한다.
-// background(color/gradient) shorthand는 남기고 background-image만 덧씌운다(figma 배경색 위에 이미지).
-function setNodeBackground(html: string, nodeId: string, src: string): string {
-	const doc = new DOMParser().parseFromString(html, 'text/html')
-	const el = doc.querySelector(`[data-node-id="${nodeId}"]`)
-	if (!(el instanceof HTMLElement)) return html
-	el.style.backgroundImage = `url("${src}")`
-	el.style.backgroundSize = 'cover'
-	el.style.backgroundPosition = 'center'
-	el.style.backgroundRepeat = 'no-repeat'
-	return doc.body.innerHTML
 }
 
 // Popup 안에 뜨는 AI 생성 폼. Popup이 열릴 때만 마운트되므로 프롬프트는 열 때마다 초기화된다.
@@ -211,6 +194,9 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 export default function TemplateLayersField() {
 	const { dispatchFields, setModified } = useForm()
 	const html = useFormFields(([fields]) => fields.html?.value) as string | undefined
+	const baseHtml = useFormFields(([fields]) => fields.baseHtml?.value) as string | undefined
+	const overrides = (useFormFields(([fields]) => fields.overrides?.value) ??
+		{}) as TemplateOverrides
 	const width = useFormFields(([fields]) => fields.width?.value) as number | undefined
 	const height = useFormFields(([fields]) => fields.height?.value) as number | undefined
 	const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -240,21 +226,23 @@ export default function TemplateLayersField() {
 	const availW = canvasWidth || 640
 	const scale = w && h ? Math.min(1, (availW - 32) / w, (CANVAS_HEIGHT - 32) / h) : 1
 
-	function commitText(text: string) {
-		if (typeof html !== 'string' || !selectedId) return
-		dispatchFields({ type: 'UPDATE', path: 'html', value: setNodeText(html, selectedId, text) })
+	// 편집은 html을 직접 굽지 않고 overrides[nodeId]에 쌓은 뒤 base ⊕ overrides로 html을 재합성한다.
+	// base(=baseHtml, 없으면 현재 html)만 재import 때 갈리고 overrides는 유지되므로 앱 편집이 보존된다.
+	function commitOverride(patch: TemplateOverride) {
+		if (!selectedId) return
+		const base = baseHtml || html
+		if (typeof base !== 'string') return
+		const next: TemplateOverrides = {
+			...overrides,
+			[selectedId]: { ...overrides[selectedId], ...patch },
+		}
+		dispatchFields({ type: 'UPDATE', path: 'overrides', value: next })
+		dispatchFields({ type: 'UPDATE', path: 'html', value: composeTemplateHtml(base, next) })
 		setModified(true)
 	}
 
-	function commitBackground(src: string) {
-		if (typeof html !== 'string' || !selectedId) return
-		dispatchFields({
-			type: 'UPDATE',
-			path: 'html',
-			value: setNodeBackground(html, selectedId, src),
-		})
-		setModified(true)
-	}
+	const commitText = (text: string) => commitOverride({ text })
+	const commitBackground = (src: string) => commitOverride({ backgroundImage: src })
 
 	return (
 		<div style={{ marginBottom: 'var(--base)' }}>

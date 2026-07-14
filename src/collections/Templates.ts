@@ -102,6 +102,10 @@ export const Templates: CollectionConfig = {
 		},
 		// 출처 URL. 입력창은 사이드바의 Figma 가져오기 필드와 통합했으므로 폼에서 숨긴다(컬럼·값 유지).
 		{ name: 'sourceUrl', type: 'text', admin: { hidden: true } },
+		// 오버라이드 레이어: Figma import 원본(baseHtml) + 앱 편집(overrides). 렌더 html은 이 둘의 합성 결과다.
+		// 재import는 baseHtml만 갱신하고 overrides를 유지 → html 재합성 → 앱 편집 보존.
+		{ name: 'baseHtml', type: 'code', admin: { hidden: true, language: 'html' } },
+		{ name: 'overrides', type: 'json', admin: { hidden: true } },
 
 		// ── 사이드바 (렌더 순서 = 배열 순서) ──
 		{
@@ -187,9 +191,9 @@ export const Templates: CollectionConfig = {
 			},
 		},
 		{
-			// Figma Dev Mode 산출을 그대로 굳힌 inline-style HTML. 가져오기 필드가 채우며, 렌더는 이 값을 그대로 쓴다.
+			// 렌더 결과 HTML = baseHtml ⊕ overrides 합성물. 워크스페이스가 자동 재합성하므로 읽기 전용(직접 편집 X).
 			type: 'collapsible',
-			label: '디자인 HTML (Figma import)',
+			label: '디자인 HTML (합성 결과)',
 			admin: { position: 'sidebar', initCollapsed: true },
 			fields: [
 				{
@@ -197,8 +201,9 @@ export const Templates: CollectionConfig = {
 					type: 'code',
 					admin: {
 						language: 'html',
+						readOnly: true,
 						description:
-							'Figma에서 가져온 inline-style HTML. 위 "가져오기"가 채웁니다. 렌더는 이 값을 그대로 사용합니다.',
+							'baseHtml(Figma 원본) + overrides(앱 편집)의 합성 결과입니다. 워크스페이스 편집·재import 시 자동 갱신됩니다.',
 					},
 				},
 			],

@@ -2,11 +2,16 @@
 
 import { Button, TextInput, toast, useForm, useFormFields } from '@payloadcms/ui'
 import { useState } from 'react'
+import {
+	composeTemplateHtml,
+	type TemplateOverrides,
+} from '@/features/template-import/utils/compose-template-html'
 
 /**
  * Templates 편집 폼(Admin)의 Figma 가져오기 UI 필드.
- * 입력창은 sourceUrl 폼 필드를 그대로 편집한다(별도 Source Url 필드와 통합). 링크를 변환 API로 보내
- * 폼의 html·width·height·sourceUrl(·비어있으면 name) 값을 채운다. 저장은 Manager가 폼에서 결정한다.
+ * 입력창은 sourceUrl 폼 필드를 그대로 편집한다(별도 Source Url 필드와 통합).
+ * 가져오면 baseHtml(원본)만 갱신하고 기존 overrides(앱 편집)는 유지해 html을 재합성한다 → 앱 작업 보존.
+ * 저장은 Manager가 폼에서 결정한다.
  */
 export default function FigmaHtmlImportField() {
 	const { dispatchFields, getData, setModified } = useForm()
@@ -36,7 +41,14 @@ export default function FigmaHtmlImportField() {
 				return
 			}
 
-			dispatchFields({ type: 'UPDATE', path: 'html', value: body.html })
+			// body.html = 새 base. 기존 overrides를 유지한 채 재합성 → 재import에도 앱 편집이 보존된다.
+			const currentOverrides = (getData()?.overrides ?? {}) as TemplateOverrides
+			dispatchFields({ type: 'UPDATE', path: 'baseHtml', value: body.html })
+			dispatchFields({
+				type: 'UPDATE',
+				path: 'html',
+				value: composeTemplateHtml(body.html, currentOverrides),
+			})
 			dispatchFields({ type: 'UPDATE', path: 'width', value: body.width })
 			dispatchFields({ type: 'UPDATE', path: 'height', value: body.height })
 			dispatchFields({ type: 'UPDATE', path: 'sourceUrl', value: sourceUrl })

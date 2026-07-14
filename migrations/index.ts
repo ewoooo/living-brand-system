@@ -37,6 +37,7 @@ import * as migration_20260713_025218_remove_column_unit_title from './20260713_
 import * as migration_20260713_060746_add_chapter_label from './20260713_060746_add_chapter_label';
 import * as migration_20260713_064522_check_editor_ai_context_rebased from './20260713_064522_check_editor_ai_context_rebased';
 import * as migration_20260714_004502_add_template_html_fields from './20260714_004502_add_template_html_fields';
+import * as migration_20260714_061204_add_template_overrides from './20260714_061204_add_template_overrides';
 
 export const migrations = [
   {
@@ -233,5 +234,10 @@ export const migrations = [
     up: migration_20260714_004502_add_template_html_fields.up,
     down: migration_20260714_004502_add_template_html_fields.down,
     name: '20260714_004502_add_template_html_fields',
+  },
+  {
+    up: migration_20260714_061204_add_template_overrides.up,
+    down: migration_20260714_061204_add_template_overrides.down,
+    name: '20260714_061204_add_template_overrides'
   },
 ];

@@ -656,6 +656,16 @@ export interface Template {
     js?: string | null;
   };
   sourceUrl?: string | null;
+  baseHtml?: string | null;
+  overrides?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * Figma 너비(px). 가져오기가 채웁니다.
    */
@@ -685,7 +695,7 @@ export interface Template {
       }[]
     | null;
   /**
-   * Figma에서 가져온 inline-style HTML. 위 "가져오기"가 채웁니다. 렌더는 이 값을 그대로 사용합니다.
+   * baseHtml(Figma 원본) + overrides(앱 편집)의 합성 결과입니다. 워크스페이스 편집·재import 시 자동 갱신됩니다.
    */
   html?: string | null;
   updatedAt: string;
@@ -1627,6 +1637,8 @@ export interface TemplatesSelect<T extends boolean = true> {
         js?: T;
       };
   sourceUrl?: T;
+  baseHtml?: T;
+  overrides?: T;
   width?: T;
   height?: T;
   category?: T;
