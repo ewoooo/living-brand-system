@@ -1,9 +1,7 @@
 import { cache } from 'react'
-import {
-	listPublishedChapters,
-	listPublishedPageNavItems,
-	listPublishedSectionNavItems,
-} from '../repositories/guideline-view.payload.repository'
+import type { GuidelineDocument } from '@/payload-types'
+import { listPublishedGuidelineNavigationDocuments } from '../repositories/guideline-view.payload.repository'
+import { extractTextFromLexical } from '../utils/lexical-text'
 import {
 	type GetGuidelineMetadataOutput,
 	getGuidelineMetadata,
@@ -37,37 +35,15 @@ export interface GetGuidelineNavigationOutput {
  */
 export const getGuidelineNavigation = cache(async (): Promise<GetGuidelineNavigationOutput> => {
 	try {
-		const [metadata, chapters, sections, pages] = await Promise.all([
+		const [metadata, documents] = await Promise.all([
 			getGuidelineMetadata(),
-			listPublishedChapters(),
-			listPublishedSectionNavItems(),
-			listPublishedPageNavItems(),
+			listPublishedGuidelineNavigationDocuments(),
 		])
 
 		return {
 			metadata,
 			title: metadata.documentTitle,
-			// ponytail: sidebar lists are tiny; index pages if this grows.
-			chapters: chapters.map((chapter) => ({
-				id: chapter.id,
-				title: chapter.title,
-				description: chapter.description || null,
-				href: `/guideline/${chapter.slug}`,
-				sections: sections
-					.filter((section) => section.chapter === chapter.id)
-					.map((section) => ({
-						id: section.id,
-						title: section.title,
-						href: `/guideline/${chapter.slug}/${section.slug}`,
-						pages: pages
-							.filter((page) => getId(page.section) === section.id)
-							.map((page) => ({
-								id: page.id,
-								title: page.title,
-								href: `/guideline/${chapter.slug}/${section.slug}#${page.slug}`,
-							})),
-					})),
-			})),
+			chapters: buildGuidelineNavigationChapters(documents),
 		}
 	} catch {
 		return {
@@ -83,6 +59,45 @@ export const getGuidelineNavigation = cache(async (): Promise<GetGuidelineNaviga
 	}
 })
 
-function getId(value: number | { id: number }) {
-	return typeof value === 'object' ? value.id : value
+type NavigationDocument = Pick<
+	GuidelineDocument,
+	'id' | 'title' | 'slug' | 'legacySlug' | 'description' | 'parent' | 'breadcrumbs'
+>
+
+export function buildGuidelineNavigationChapters(documents: NavigationDocument[]) {
+	const children = new Map<number | null, NavigationDocument[]>()
+	for (const document of documents) {
+		const parentId = relationshipId(document.parent)
+		children.set(parentId, [...(children.get(parentId) ?? []), document])
+	}
+
+	return (children.get(null) ?? []).map((chapter) => ({
+		id: chapter.id,
+		title: chapter.title,
+		description: extractTextFromLexical(chapter.description) || null,
+		href: breadcrumbURL(chapter),
+		sections: (children.get(chapter.id) ?? []).map((section) => ({
+			id: section.id,
+			title: section.title,
+			href: breadcrumbURL(section),
+			pages: (children.get(section.id) ?? []).map((page) => ({
+				id: page.id,
+				title: page.title,
+				href: `${breadcrumbURL(section)}#${pathSegment(page)}`,
+			})),
+		})),
+	}))
+}
+
+function breadcrumbURL(document: NavigationDocument) {
+	return document.breadcrumbs?.at(-1)?.url || `/guideline/${document.slug}`
+}
+
+function pathSegment(document: NavigationDocument) {
+	return document.legacySlug || document.slug
+}
+
+function relationshipId(value: NavigationDocument['parent']): number | null {
+	if (typeof value === 'number') return value
+	return value?.id ?? null
 }

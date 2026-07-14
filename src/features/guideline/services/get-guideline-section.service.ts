@@ -4,6 +4,7 @@ import {
 	findPublishedSectionBySlug,
 	listPublishedPagesBySection,
 } from '../repositories/guideline-view.payload.repository'
+import { extractTextFromLexical } from '../utils/lexical-text'
 
 export interface GetGuidelineSectionOutput {
 	title: string
@@ -49,11 +50,11 @@ export async function getGuidelineSection(
 			title: section.title,
 			headerImage: section.headerImage ?? null,
 			blocks: section.blocks ?? [],
-			description: section.description || null,
+			description: extractTextFromLexical(section.description) || null,
 			pages: pages.map((page) => ({
 				id: page.id,
 				title: page.title,
-				slug: page.slug,
+				slug: page.legacySlug || page.slug,
 				description: page.description || null,
 				displayOrder: page.displayOrder,
 				blocks: page.blocks || [],

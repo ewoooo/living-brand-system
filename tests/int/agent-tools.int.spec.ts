@@ -100,7 +100,7 @@ describe('agent tools', () => {
 
 		await tools.readGuidelineDocument.execute?.(
 			{
-				collection: 'guideline-pages',
+				collection: 'guideline-documents',
 				id: '7',
 			},
 			{ context: { user: { id: 1 } } } as never,
@@ -109,7 +109,7 @@ describe('agent tools', () => {
 		expect(readDocument).toHaveBeenCalledWith(
 			{ id: 1 },
 			{
-				collection: 'guideline-pages',
+				collection: 'guideline-documents',
 				id: '7',
 			},
 		)
@@ -444,12 +444,12 @@ describe('agent tools', () => {
 			type: 'tool-readGuidelineDocument',
 			toolCallId: `tool-call-${id}-${title}`,
 			state: 'output-available',
-			input: { collection: 'guideline-pages', id },
+			input: { collection: 'guideline-documents', id },
 			output: {
 				title,
-				collection: 'guideline-pages',
+				collection: 'guideline-documents',
 				id,
-				source: { collection: 'guideline-pages', id, title, href },
+				source: { collection: 'guideline-documents', id, title, href },
 				checks: [],
 				content: title,
 			},
@@ -465,18 +465,18 @@ describe('agent tools', () => {
 					type: 'tool-readGuidelineDocument',
 					toolCallId: 'tool-call-pending',
 					state: 'input-available',
-					input: { collection: 'guideline-sections', id: '9' },
+					input: { collection: 'guideline-documents', id: '9' },
 				},
 			],
 		} as AgentChatMessage)
 
 		expect(citations).toEqual([
 			{
-				key: 'guideline-pages:1',
+				key: 'guideline-documents:1',
 				title: '로고 사용 규정',
 				href: '/guideline/logo#usage',
 			},
-			{ key: 'guideline-pages:2', title: '크기 기준', href: null },
+			{ key: 'guideline-documents:2', title: '크기 기준', href: null },
 		])
 	})
 })

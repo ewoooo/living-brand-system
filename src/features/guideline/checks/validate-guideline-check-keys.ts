@@ -11,7 +11,11 @@ type CheckContainer = {
 	checks?: unknown
 }
 
-const GUIDELINE_COLLECTIONS = ['guideline-sections', 'guideline-pages'] as const
+const GUIDELINE_COLLECTIONS = [
+	'guideline-sections',
+	'guideline-pages',
+	'guideline-documents',
+] as const
 
 /** Guideline 문서 저장 전에 Section/Page/Block 전체에서 Check key 중복을 막는다. */
 export const validateGuidelineCheckKeys: CollectionBeforeValidateHook = async ({
@@ -20,6 +24,8 @@ export const validateGuidelineCheckKeys: CollectionBeforeValidateHook = async ({
 	originalDoc,
 	req,
 }) => {
+	if (req.context?.skipGuidelineCheckUniqueness === true) return data
+
 	const document = { ...originalDoc, ...data }
 	const currentKeys = collectCheckKeys(document)
 	const duplicateInDocument = duplicateKey(currentKeys)

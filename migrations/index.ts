@@ -35,6 +35,11 @@ import * as migration_20260710_100108_contract_guideline_checks from './20260710
 import * as migration_20260713_025218_remove_column_unit_title from './20260713_025218_remove_column_unit_title';
 import * as migration_20260713_060746_add_chapter_label from './20260713_060746_add_chapter_label';
 import * as migration_20260713_064522_check_editor_ai_context_rebased from './20260713_064522_check_editor_ai_context_rebased';
+import * as migration_20260714_023146_add_guideline_documents from './20260714_023146_add_guideline_documents';
+import * as migration_20260714_024739_switch_guideline_search_index from './20260714_024739_switch_guideline_search_index';
+import * as migration_20260714_024930_add_guideline_legacy_mapping from './20260714_024930_add_guideline_legacy_mapping';
+import * as migration_20260714_031420_add_guideline_legacy_slug from './20260714_031420_add_guideline_legacy_slug';
+import * as migration_20260714_031500_backfill_guideline_documents from './20260714_031500_backfill_guideline_documents';
 
 export const migrations = [
   {
@@ -221,5 +226,30 @@ export const migrations = [
     up: migration_20260713_064522_check_editor_ai_context_rebased.up,
     down: migration_20260713_064522_check_editor_ai_context_rebased.down,
     name: '20260713_064522_check_editor_ai_context_rebased',
+  },
+  {
+    up: migration_20260714_023146_add_guideline_documents.up,
+    down: migration_20260714_023146_add_guideline_documents.down,
+    name: '20260714_023146_add_guideline_documents',
+  },
+  {
+    up: migration_20260714_024739_switch_guideline_search_index.up,
+    down: migration_20260714_024739_switch_guideline_search_index.down,
+    name: '20260714_024739_switch_guideline_search_index',
+  },
+  {
+    up: migration_20260714_024930_add_guideline_legacy_mapping.up,
+    down: migration_20260714_024930_add_guideline_legacy_mapping.down,
+    name: '20260714_024930_add_guideline_legacy_mapping',
+  },
+  {
+    up: migration_20260714_031420_add_guideline_legacy_slug.up,
+    down: migration_20260714_031420_add_guideline_legacy_slug.down,
+    name: '20260714_031420_add_guideline_legacy_slug',
+  },
+  {
+    up: migration_20260714_031500_backfill_guideline_documents.up,
+    down: migration_20260714_031500_backfill_guideline_documents.down,
+    name: '20260714_031500_backfill_guideline_documents',
   },
 ];

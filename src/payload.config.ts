@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { resendAdapter } from '@payloadcms/email-resend'
 import { type MCPAccessSettings, mcpPlugin } from '@payloadcms/plugin-mcp'
+import { nestedDocsPlugin } from '@payloadcms/plugin-nested-docs'
 import { searchPlugin } from '@payloadcms/plugin-search'
 import { EXPERIMENTAL_TableFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -19,6 +20,7 @@ import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
 import { CheckSessions } from './collections/CheckSessions'
 import { GuidelineChapters } from './collections/GuidelineChapters'
+import { GuidelineDocuments } from './collections/GuidelineDocuments'
 import { GuidelinePages } from './collections/GuidelinePages'
 import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
@@ -104,6 +106,7 @@ export default buildConfig({
 		GuidelineChapters,
 		GuidelineSections,
 		GuidelinePages,
+		GuidelineDocuments,
 		RuleCheckers,
 		BrandLogos,
 		BrandColors,
@@ -148,6 +151,12 @@ export default buildConfig({
 	}),
 	sharp,
 	plugins: [
+		nestedDocsPlugin({
+			collections: ['guideline-documents'],
+			generateLabel: (_, doc) => String(doc.title),
+			generateURL: (docs) =>
+				`/guideline/${docs.map((doc) => String(doc.legacySlug || doc.slug)).join('/')}`,
+		}),
 		mcpPlugin({
 			overrideAuth: async (
 				req: PayloadRequest,
@@ -318,11 +327,9 @@ export default buildConfig({
 			},
 		} as never),
 		searchPlugin({
-			collections: ['guideline-pages', 'guideline-sections', 'guideline-chapters'],
+			collections: ['guideline-documents'],
 			defaultPriorities: {
-				'guideline-pages': 20,
-				'guideline-sections': 10,
-				'guideline-chapters': 5,
+				'guideline-documents': 20,
 			},
 			searchOverrides: {
 				access: {

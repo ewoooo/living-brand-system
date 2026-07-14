@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GuidelinePage, GuidelineSection } from '@/payload-types'
+import { collectGuidelineCheckSources } from '../checks/collect-guideline-check-sources'
 import { buildCheckSourceSnapshot } from './check-source-snapshot'
 
 const lexical = (text: string) =>
@@ -72,5 +73,35 @@ describe('buildCheckSourceSnapshot', () => {
 	it('존재하지 않는 blockId는 기존 snapshot을 지우지 않도록 null을 반환한다', () => {
 		const page = { title: 'Logo', blocks: [] } as unknown as GuidelinePage
 		expect(buildCheckSourceSnapshot(page, 'missing')).toBeNull()
+	})
+
+	it('통합 문서로 옮긴 뒤에도 Check 개수와 evidence를 유지한다', () => {
+		const checks = [{ key: 'logo-size', title: 'Logo size' }]
+		const blocks = [
+			{
+				id: 'usage',
+				blockType: 'columnUnit',
+				columns: [{ heading: 'Minimum', body: lexical('Use 24 px.') }],
+				checks,
+			},
+		]
+		const legacy = {
+			title: 'Primary Logo',
+			description: lexical('Approved usage'),
+			blocks,
+			checks,
+		} as unknown as GuidelinePage
+		const unified = {
+			...legacy,
+			headerImage: null,
+		} as never
+
+		const legacySources = collectGuidelineCheckSources(legacy)
+		const unifiedSources = collectGuidelineCheckSources(unified)
+
+		expect(unifiedSources).toHaveLength(legacySources.length)
+		expect(unifiedSources.map(({ check, evidence }) => ({ key: check.key, evidence }))).toEqual(
+			legacySources.map(({ check, evidence }) => ({ key: check.key, evidence })),
+		)
 	})
 })

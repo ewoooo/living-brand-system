@@ -31,8 +31,8 @@ describe('agent chat errors', () => {
 					state: 'output-available',
 					input: { query: 'brand core' },
 					output: [
-						{ title: 'Brand Core', collection: 'guideline-pages', id: '1' },
-						{ title: 'Identity', collection: 'guideline-pages', id: '2' },
+						{ title: 'Brand Core', collection: 'guideline-documents', id: '1' },
+						{ title: 'Identity', collection: 'guideline-documents', id: '2' },
 					],
 				},
 			],

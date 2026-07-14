@@ -42,6 +42,9 @@ importers:
       '@payloadcms/plugin-mcp':
         specifier: 3.85.1
         version: 3.85.1(next@16.2.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-macros@3.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(sass@1.77.4))(payload@3.85.1(graphql@16.14.2)(typescript@5.7.3))
+      '@payloadcms/plugin-nested-docs':
+        specifier: 3.85.1
+        version: 3.85.1(payload@3.85.1(graphql@16.14.2)(typescript@5.7.3))
       '@payloadcms/plugin-search':
         specifier: 3.85.1
         version: 3.85.1(@types/react@19.2.17)(graphql@16.14.2)(monaco-editor@0.55.1)(next@16.2.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-macros@3.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(sass@1.77.4))(payload@3.85.1(graphql@16.14.2)(typescript@5.7.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.7.3)
@@ -1655,6 +1658,11 @@ packages:
 
   '@payloadcms/plugin-mcp@3.85.1':
     resolution: {integrity: sha512-Zmnny3lTBN9zz4SOSLKbN4N337FFJaeqV7ha0NnYZRz9gIMMs7MYZCwOnPp4AzfXW8UQkhfId7QHdSPWqD5R2w==}
+    peerDependencies:
+      payload: 3.85.1
+
+  '@payloadcms/plugin-nested-docs@3.85.1':
+    resolution: {integrity: sha512-SzZmvIgchOwn0OgV/JhEmIfQwT537fgo8FEk35Lh0ENPX4xoF2dF9gMCc/2yHpqCaIrXTCKCYYFbh0DcN128qA==}
     peerDependencies:
       payload: 3.85.1
 
@@ -7830,6 +7838,10 @@ snapshots:
       - '@cfworker/json-schema'
       - next
       - supports-color
+
+  '@payloadcms/plugin-nested-docs@3.85.1(payload@3.85.1(graphql@16.14.2)(typescript@5.7.3))':
+    dependencies:
+      payload: 3.85.1(graphql@16.14.2)(typescript@5.7.3)
 
   '@payloadcms/plugin-search@3.85.1(@types/react@19.2.17)(graphql@16.14.2)(monaco-editor@0.55.1)(next@16.2.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-macros@3.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(sass@1.77.4))(payload@3.85.1(graphql@16.14.2)(typescript@5.7.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.7.3)':
     dependencies:

@@ -1,4 +1,4 @@
-import type { GuidelinePage, GuidelineSection } from '@/payload-types'
+import type { GuidelineDocument, GuidelinePage, GuidelineSection } from '@/payload-types'
 import { compact, formatImage, relationshipId } from '../utils/block-text'
 import { extractTextFromLexical } from '../utils/lexical-text'
 import { snapshotBlock } from './registry'
@@ -7,6 +7,7 @@ import type { CheckSourceSnapshot } from './types'
 export type GuidelineCheckDocument =
 	| Pick<GuidelinePage, 'blocks' | 'checks' | 'description' | 'title'>
 	| Pick<GuidelineSection, 'blocks' | 'checks' | 'description' | 'headerImage' | 'title'>
+	| Pick<GuidelineDocument, 'blocks' | 'checks' | 'description' | 'headerImage' | 'title'>
 
 /** Section/Page 전체 또는 blockId가 가리키는 단일 Block을 Check source로 정규화한다. */
 export function buildCheckSourceSnapshot(
@@ -20,19 +21,20 @@ export function buildCheckSourceSnapshot(
 	}
 
 	const blockSnapshots = blocks.map(snapshotBlock)
-	const isSection = 'headerImage' in document
-	const headerImageId = isSection ? relationshipId(document.headerImage) : null
-	const description = isSection
-		? document.description
-		: document.description
-			? extractTextFromLexical(document.description)
-			: null
+	const headerImage = 'headerImage' in document ? document.headerImage : null
+	const headerImageId = relationshipId(headerImage)
+	const description =
+		typeof document.description === 'string'
+			? document.description
+			: document.description
+				? extractTextFromLexical(document.description)
+				: null
 
 	return {
 		evidence: compact([
 			document.title,
 			description,
-			isSection ? formatImage(document.headerImage) : null,
+			formatImage(headerImage),
 			...blockSnapshots.map((snapshot) => snapshot.evidence),
 		]).join('\n\n'),
 		referenceAssets: [
