@@ -9,7 +9,7 @@ import { EXPERIMENTAL_TableFeature, lexicalEditor } from '@payloadcms/richtext-l
 import { s3Storage } from '@payloadcms/storage-s3'
 import { ko } from '@payloadcms/translations/languages/ko'
 import { buildConfig, type CollectionConfig, type GlobalConfig, type PayloadRequest } from 'payload'
-import { betterEditor, betterEditorSettingsGlobal } from 'payload-better-editor'
+import { betterEditorSettingsGlobal } from 'payload-better-editor'
 import sharp from 'sharp'
 import { z } from 'zod/v3'
 import { migrations } from '../migrations'
@@ -339,9 +339,6 @@ export default buildConfig({
 					secretAccessKey: env.S3_SECRET_ACCESS_KEY || '',
 				},
 			},
-		}),
-		betterEditor({
-			collections: { 'guideline-documents': { blocksField: 'blocks' } },
 		}),
 	],
 	i18n: {

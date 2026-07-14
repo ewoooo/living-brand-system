@@ -9,6 +9,12 @@ const fieldNames = (fields: Field[]) =>
 	)
 
 describe('guideline checks field', () => {
+	it('Better Editor 버튼을 초안 저장 컨트롤에 둔다', () => {
+		expect(GuidelineDocuments.admin?.components?.edit?.SaveDraftButton).toBe(
+			'/components/admin/BetterEditorSaveDraftButton',
+		)
+	})
+
 	it('통합 문서와 모든 Block에 같은 checks[] 계약을 둔다', () => {
 		const checks = guidelineChecksField()
 		expect(checks.type).toBe('array')
