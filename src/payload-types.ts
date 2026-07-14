@@ -628,7 +628,11 @@ export interface Template {
   name: string;
   description?: string | null;
   /**
-   * 렌더 계약(JsonTemplate). 임포트가 생성하며, 수정 시 src/types/json-template.ts 스키마를 지켜야 합니다.
+   * Figma에서 가져온 inline-style HTML. 위 "가져오기"가 채웁니다. 렌더는 이 값을 그대로 사용합니다.
+   */
+  html?: string | null;
+  /**
+   * 레거시 절대좌표 모델. 신규 템플릿은 위 디자인 HTML을 사용합니다.
    */
   jsonTemplate?:
     | {
@@ -646,6 +650,14 @@ export interface Template {
     css?: string | null;
     js?: string | null;
   };
+  /**
+   * Figma 캔버스 너비(px). 가져오기가 채웁니다.
+   */
+  width?: number | null;
+  /**
+   * Figma 캔버스 높이(px). 가져오기가 채웁니다.
+   */
+  height?: number | null;
   /**
    * Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.
    */
@@ -1598,6 +1610,7 @@ export interface TemplateCategoriesSelect<T extends boolean = true> {
 export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
+  html?: T;
   jsonTemplate?: T;
   code?:
     | T
@@ -1605,6 +1618,8 @@ export interface TemplatesSelect<T extends boolean = true> {
         css?: T;
         js?: T;
       };
+  width?: T;
+  height?: T;
   category?: T;
   templateChecks?:
     | T

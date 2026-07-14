@@ -72,11 +72,11 @@ export const Templates: CollectionConfig = {
 			localized: true,
 		},
 		{
-			name: 'figmaImport',
+			name: 'figmaHtmlImport',
 			type: 'ui',
 			admin: {
 				components: {
-					Field: '/features/template-import/components/figma-import-field',
+					Field: '/features/template-import/components/figma-html-import-field',
 				},
 			},
 		},
@@ -90,8 +90,25 @@ export const Templates: CollectionConfig = {
 			},
 		},
 		{
+			// Figma Dev Mode 산출을 그대로 굳힌 inline-style HTML. 가져오기 필드가 채우며, 렌더는 이 값을 그대로 쓴다.
 			type: 'collapsible',
-			label: '구조 (디자인 레이아웃)',
+			label: '디자인 HTML (Figma import)',
+			admin: { initCollapsed: true },
+			fields: [
+				{
+					name: 'html',
+					type: 'code',
+					admin: {
+						language: 'html',
+						description:
+							'Figma에서 가져온 inline-style HTML. 위 "가져오기"가 채웁니다. 렌더는 이 값을 그대로 사용합니다.',
+					},
+				},
+			],
+		},
+		{
+			type: 'collapsible',
+			label: '구조 (레거시 JsonTemplate)',
 			admin: { initCollapsed: true },
 			fields: [
 				{
@@ -99,7 +116,7 @@ export const Templates: CollectionConfig = {
 					type: 'json',
 					admin: {
 						description:
-							'렌더 계약(JsonTemplate). 임포트가 생성하며, 수정 시 src/types/json-template.ts 스키마를 지켜야 합니다.',
+							'레거시 절대좌표 모델. 신규 템플릿은 위 디자인 HTML을 사용합니다.',
 					},
 				},
 			],
@@ -124,6 +141,22 @@ export const Templates: CollectionConfig = {
 					],
 				},
 			],
+		},
+		{
+			name: 'width',
+			type: 'number',
+			admin: {
+				position: 'sidebar',
+				description: 'Figma 캔버스 너비(px). 가져오기가 채웁니다.',
+			},
+		},
+		{
+			name: 'height',
+			type: 'number',
+			admin: {
+				position: 'sidebar',
+				description: 'Figma 캔버스 높이(px). 가져오기가 채웁니다.',
+			},
 		},
 		{
 			name: 'category',
