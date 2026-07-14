@@ -21,7 +21,13 @@ export default async function GuidelineChapterPage({
 		notFound()
 	}
 
-	return <GuidelineChapter chapter={chapter} chapterSlug={chapterSlug} />
+	return (
+		<GuidelineChapter
+			chapter={chapter}
+			chapterSlug={chapterSlug}
+			isPreview={Boolean(previewChapter)}
+		/>
+	)
 }
 
 async function getAuthorizedPreview(previewDocument?: string) {
