@@ -9,6 +9,24 @@ export type GuidelineDocumentTreeNode = TreeDocument & {
 const parentId = (parent: TreeDocument['parent']) =>
 	typeof parent === 'object' && parent !== null ? parent.id : parent
 
+const documentTypeLabels = ['챕터', '섹션', '페이지']
+
+export function guidelineBreadcrumbCount(value: unknown, initialValue: unknown, rowCount: number) {
+	if (Array.isArray(value)) return value.length
+	if (Array.isArray(initialValue)) return initialValue.length
+	return rowCount
+}
+
+export function guidelineDocumentTypeLabel(
+	breadcrumbCount: number,
+	hasParent: boolean,
+	parentModified: boolean,
+) {
+	if (!hasParent) return '챕터'
+	if (parentModified || breadcrumbCount === 0) return '저장 후 결정'
+	return documentTypeLabels[breadcrumbCount - 1] ?? `${breadcrumbCount}단계 문서`
+}
+
 export function buildGuidelineDocumentTree(documents: TreeDocument[]): GuidelineDocumentTreeNode[] {
 	const sorted = [...documents].sort(
 		(a, b) => a.displayOrder - b.displayOrder || a.title.localeCompare(b.title, 'ko'),

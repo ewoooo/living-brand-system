@@ -1,3 +1,4 @@
+import { createBreadcrumbsField, createParentField } from '@payloadcms/plugin-nested-docs'
 import { type CollectionConfig, slugField } from 'payload'
 import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
 import { validateGuidelineCheckKeys } from '@/features/guideline/checks/validate-guideline-check-keys'
@@ -41,6 +42,23 @@ export const GuidelineDocuments: CollectionConfig = {
 	versions: guidelineDraftVersions,
 	defaultSort: 'displayOrder',
 	fields: [
+		{
+			name: 'documentLocation',
+			type: 'ui',
+			admin: {
+				components: {
+					Field: '/components/admin/GuidelineDocumentLocation',
+				},
+			},
+		},
+		createParentField('guideline-documents', {
+			label: '상위 문서',
+			admin: {
+				position: 'main',
+				description:
+					'상위 문서가 없으면 챕터, 챕터 아래는 섹션, 섹션 아래는 페이지가 됩니다.',
+			},
+		}),
 		{
 			name: 'title',
 			type: 'text',
@@ -90,12 +108,18 @@ export const GuidelineDocuments: CollectionConfig = {
 				description: '문서 헤더에 표시할 선택 이미지입니다.',
 			},
 		},
-		guidelineChecksField(),
 		{
 			name: 'blocks',
 			type: 'blocks',
+			label: '본문',
 			blocks: guidelineBlocks,
+			admin: {
+				components: {
+					Field: '/components/admin/GuidelineBlocksField',
+				},
+			},
 		},
+		guidelineChecksField(),
 		{
 			name: 'displayOrder',
 			type: 'number',
@@ -107,5 +131,10 @@ export const GuidelineDocuments: CollectionConfig = {
 				description: '숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.',
 			},
 		},
+		createBreadcrumbsField('guideline-documents', {
+			admin: {
+				hidden: true,
+			},
+		}),
 	],
 }
