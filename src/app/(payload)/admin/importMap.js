@@ -36,6 +36,7 @@ import { default as default_c30c461be6387021ff789d8393e59cf0 } from '../../../co
 import { LinkToDoc as LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { ReindexButton as ReindexButton_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { SettingsBanner as SettingsBanner_d26de2934fab2f5e50b16fb3e402473a } from 'payload-better-editor/client'
+import { default as default_27eed1898e8caadb2fd2266b54bb4509 } from '../../../components/admin/AdminLogo'
 import { default as default_68a16153b61e0e8909eb1452171e2a49 } from '../../../components/admin/DashboardSummary'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
@@ -80,6 +81,7 @@ export const importMap = {
   "@payloadcms/plugin-search/client#LinkToDoc": LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634,
   "@payloadcms/plugin-search/client#ReindexButton": ReindexButton_aead06e4cbf6b2620c5c51c9ab283634,
   "payload-better-editor/client#SettingsBanner": SettingsBanner_d26de2934fab2f5e50b16fb3e402473a,
+  "/components/admin/AdminLogo#default": default_27eed1898e8caadb2fd2266b54bb4509,
   "/components/admin/DashboardSummary#default": default_68a16153b61e0e8909eb1452171e2a49,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
