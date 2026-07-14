@@ -3,6 +3,7 @@ import { hasChecker } from '@/features/asset-check/checkers/registry'
 import type { CheckStatus } from '@/features/asset-check/checkers/types'
 import { getCheckSourceDocuments } from '@/features/asset-check/repositories/check-ruleset.payload.repository'
 import { toRuntimeCheckMessages } from '@/features/asset-check/utils/check-messages'
+import type { CheckReferenceAssetRole } from '@/features/guideline/blocks/types'
 import {
 	collectGuidelineCheckSources,
 	type GuidelineCheckSource,
@@ -13,6 +14,7 @@ export interface CheckReferenceAsset {
 	name: string
 	url: string
 	mimeType: string
+	role: CheckReferenceAssetRole
 }
 
 export interface RuntimeCheck {
@@ -25,6 +27,11 @@ export interface RuntimeCheck {
 	model?: string
 	promptKey?: string
 	options?: unknown
+	heuristicCriteria?: {
+		id: string
+		question: string
+		expected: 'present' | 'absent'
+	}[]
 	heuristicPrompt?: string
 	/** 자동 검수 가능 여부 — deterministic인데 checker 미등록이면 false (UI 배지용). */
 	implemented: boolean
@@ -97,6 +104,21 @@ function toRuntimeCheck({ check, evidence, referenceAssets }: GuidelineCheckSour
 	const model = checker.model ?? undefined
 	const promptKey = checker.promptKey ?? undefined
 	const options = checker.executor === 'deterministic' ? (check.options ?? undefined) : undefined
+	const heuristicCriteria =
+		checker.executor === 'heuristic'
+			? (check.criteria ?? []).flatMap((criterion) => {
+					const question = criterion.question?.trim()
+					return criterion.id && question
+						? [
+								{
+									id: criterion.id,
+									question,
+									expected: criterion.expected,
+								},
+							]
+						: []
+				})
+			: undefined
 	const heuristicPrompt =
 		checker.executor === 'heuristic' && check.heuristicPrompt?.trim()
 			? check.heuristicPrompt.trim()
@@ -118,12 +140,20 @@ function toRuntimeCheck({ check, evidence, referenceAssets }: GuidelineCheckSour
 		model,
 		promptKey,
 		options,
+		heuristicCriteria,
 		heuristicPrompt,
 		implemented,
 		evidence,
 		referenceAssets: referenceAssets.flatMap((asset) =>
-			asset.url && asset.mimeType
-				? [{ name: asset.name, url: asset.url, mimeType: asset.mimeType }]
+			asset.asset.url && asset.asset.mimeType
+				? [
+						{
+							name: asset.asset.name,
+							url: asset.asset.url,
+							mimeType: asset.asset.mimeType,
+							role: asset.role,
+						},
+					]
 				: [],
 		),
 		messages:

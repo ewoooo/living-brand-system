@@ -21,6 +21,7 @@ describe('guideline checks field', () => {
 			'executor',
 			'checker',
 			'options',
+			'criteria',
 			'heuristicPrompt',
 			'messages',
 		])
@@ -33,7 +34,7 @@ describe('guideline checks field', () => {
 		expect(checkKeyFromEnglishTitle('  Logo / Clear Space  ')).toBe('logo-clear-space')
 	})
 
-	it('executor에 따라 Options, Heuristic Prompt, Messages를 조건부 노출한다', () => {
+	it('executor에 따라 Options, Heuristic Criteria, Prompt, Messages를 조건부 노출한다', async () => {
 		const checks = guidelineChecksField()
 		if (checks.type !== 'array') return
 		const field = (name: string) =>
@@ -49,6 +50,8 @@ describe('guideline checks field', () => {
 
 		expect(condition('options', 'deterministic')).toBe(true)
 		expect(condition('options', 'heuristic')).toBe(false)
+		expect(condition('criteria', 'heuristic')).toBe(true)
+		expect(condition('criteria', 'deterministic')).toBe(false)
 		expect(condition('heuristicPrompt', 'heuristic')).toBe(true)
 		expect(condition('heuristicPrompt', 'manual')).toBe(false)
 		expect(condition('messages', 'heuristic')).toBe(false)
@@ -60,6 +63,21 @@ describe('guideline checks field', () => {
 		}
 		expect(heuristicPrompt.maxLength).toBe(2000)
 		expect(heuristicPrompt.required).not.toBe(true)
+
+		const heuristicCriteria = field('criteria')
+		if (heuristicCriteria?.type !== 'array' || !heuristicCriteria.validate) {
+			throw new Error('heuristicCriteria array is missing')
+		}
+		expect(
+			await heuristicCriteria.validate([], {
+				siblingData: { executor: 'heuristic' },
+			} as never),
+		).toBe('Heuristic Check에는 판정 기준이 1개 이상 필요합니다.')
+		expect(
+			await heuristicCriteria.validate([], {
+				siblingData: { executor: 'deterministic' },
+			} as never),
+		).toBe(true)
 
 		const checker = field('checker')
 		if (checker?.type !== 'relationship' || typeof checker.filterOptions !== 'function') {

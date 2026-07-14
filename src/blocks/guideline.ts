@@ -1,4 +1,4 @@
-import type { Block, Field, FieldHook } from 'payload'
+import type { ArrayField, Block, Field, FieldHook } from 'payload'
 
 type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
 
@@ -8,6 +8,15 @@ const executorCondition =
 
 const nonHeuristicCondition = (_data: unknown, siblingData: { executor?: CheckExecutor }) =>
 	siblingData?.executor !== 'heuristic'
+
+const validateHeuristicCriteria: NonNullable<ArrayField['validate']> = (value, { siblingData }) => {
+	const executor = (siblingData as { executor?: CheckExecutor })?.executor
+	if (executor !== 'heuristic') return true
+	return (
+		(Array.isArray(value) && value.length > 0) ||
+		'Heuristic Check에는 판정 기준이 1개 이상 필요합니다.'
+	)
+}
 
 export function checkKeyFromEnglishTitle(value: unknown): string {
 	if (typeof value !== 'string') return ''
@@ -103,6 +112,48 @@ export function guidelineChecksField(): Field {
 					condition: executorCondition('deterministic'),
 					description: '이 Check에서 결정론적 Checker에 전달할 설정입니다.',
 				},
+			},
+			{
+				name: 'criteria',
+				type: 'array',
+				minRows: 1,
+				validate: validateHeuristicCriteria,
+				labels: {
+					singular: '판정 기준',
+					plural: '판정 기준',
+				},
+				admin: {
+					condition: executorCondition('heuristic'),
+					description: 'AI가 관측할 질문과 통과 기준을 행 단위로 입력합니다.',
+					initCollapsed: false,
+				},
+				fields: [
+					{
+						type: 'row',
+						fields: [
+							{
+								name: 'question',
+								type: 'text',
+								required: true,
+								maxLength: 300,
+								label: '판정 질문',
+								admin: { width: '70%' },
+							},
+							{
+								name: 'expected',
+								enumName: 'enum_heuristic_criterion_expected',
+								type: 'select',
+								required: true,
+								label: '적합 기준',
+								options: [
+									{ label: '있어야 함', value: 'present' },
+									{ label: '없어야 함', value: 'absent' },
+								],
+								admin: { width: '30%' },
+							},
+						],
+					},
+				],
 			},
 			{
 				name: 'heuristicPrompt',

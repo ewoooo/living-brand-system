@@ -33,8 +33,13 @@ export function buildCheckSourceSnapshot(
 			...blockSnapshots.map((snapshot) => snapshot.evidence),
 		]).join('\n\n'),
 		referenceAssets: [
-			...(headerImageId == null ? [] : [headerImageId]),
+			...(headerImageId == null ? [] : [{ id: headerImageId, role: 'context' as const }]),
 			...blockSnapshots.flatMap((snapshot) => snapshot.referenceAssets),
-		].filter((id, index, ids) => ids.indexOf(id) === index),
+		].filter(
+			(asset, index, assets) =>
+				assets.findIndex(
+					(candidate) => candidate.id === asset.id && candidate.role === asset.role,
+				) === index,
+		),
 	}
 }

@@ -15,7 +15,7 @@
 - `CheckResult`의 판정은 `rawResult.status`(`pass`/`ok`/`needs_review`/`fail`)와 `fulfillment`(충족도 %)로 표현됩니다.
 - 2단계 계약: 결정론적 Check는 즉시 채워지고, AI(heuristic) Check는 `pendingCheckKeys`로 반환된 뒤 **`completeCheckSessionAiCheck`**로 완성합니다.
 - 기준 조회 단위: `getRuntimeChecks(checkKeys?)`(실행), `getCheckRuleset()`(페이지 뷰모델).
-- 기준 소스: published `guideline-documents`의 문서 및 Block `checks[]`. 실행 시 소유 문서 또는 Block의 전체 정규화 콘텐츠를 evidence로 만들고, referenceAssets·heuristicPrompt·RuleChecker 계약과 함께 `CheckSession.rulesetSnapshot`에 고정합니다.
+- 기준 소스: published `guideline-documents`의 문서 및 Block `checks[]`. 실행 시 소유 문서 또는 Block의 전체 정규화 콘텐츠를 evidence로 만들고, heuristicCriteria·heuristicPrompt·역할이 포함된 referenceAssets·RuleChecker 계약과 함께 `CheckSession.rulesetSnapshot`에 고정합니다.
 
 ## 3. 표면
 
@@ -28,7 +28,7 @@
 
 ## 4. 의존
 
-- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 모델과 기본 프롬프트는 Check가 참조하는 RuleChecker에서 선택하고, Check의 heuristicPrompt를 해당 기준의 추가 판단 컨텍스트로 명시적으로 전달한다. 한 세션의 heuristic Check는 한 번의 AI 호출로 평가한다. `ANTHROPIC_API_KEY` 없으면 AI 항목은 `needs_review`로 폴백.
+- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 모델과 기본 프롬프트는 Check가 참조하는 RuleChecker에서 선택하고, Check의 heuristicCriteria와 heuristicPrompt를 전달한다. 모델은 기준별 `present`/`absent`/`uncertain` 관찰값만 반환하며 최종 `pass`/`fail`/`needs_review`는 검수 Service의 Evaluator가 결정한다. 한 세션의 heuristic Check는 한 번의 AI 호출로 평가하고, 설정·호출·출력 검증 실패는 `needs_review`로 처리한다.
 - 이미지 디코딩: `sharp`(128px 픽셀 그리드 추출).
 - 결정론적 checker: palette-compliance / color-combination / spot-color / background-tone / clear-space / relative-size / canvas-format. RuleChecker의 `checkerKey`로 registry를 조회하며, 미등록 checker는 `implemented:false`로 표시.
 - Payload 컬렉션: `guideline-documents`(룰셋), `brand-colors`(팔레트) 읽기. 세션은 `check-sessions`에 영속(룰셋 스냅샷을 함께 저장해 AI 후속 단계가 재사용).

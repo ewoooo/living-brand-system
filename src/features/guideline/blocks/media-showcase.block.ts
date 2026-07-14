@@ -13,7 +13,7 @@ export const behavior: BlockBehavior = {
 		const imageId = relationshipId(block.image)
 		return {
 			evidence: format(block),
-			referenceAssets: imageId == null ? [] : [imageId],
+			referenceAssets: imageId == null ? [] : [{ id: imageId, role: 'context' }],
 		}
 	},
 }

@@ -1,9 +1,10 @@
-import { generateText } from 'ai'
+import { generateText, Output } from 'ai'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
 
 vi.mock('ai', () => ({
 	generateText: vi.fn(),
+	NoObjectGeneratedError: { isInstance: vi.fn(() => false) },
 	Output: {
 		object: vi.fn((value) => value),
 	},
@@ -22,6 +23,13 @@ const checks: RuntimeCheck[] = [
 		model: 'rule-spec-model',
 		promptKey: 'asset-check.brand-guideline.v1',
 		heuristicPrompt: '인물의 표정이 자연스럽고 과장되지 않았는지 우선 판단한다.',
+		heuristicCriteria: [
+			{
+				id: 'natural-expression',
+				question: '인물의 표정이 자연스러운가?',
+				expected: 'present',
+			},
+		],
 		implemented: true,
 		evidence: 'Block title: Lifestyle\nCaption: 자연스러운 일상의 순간',
 		referenceAssets: [],
@@ -41,14 +49,17 @@ describe('runAiCheck', () => {
 	it('maps AI SDK token usage for cost analysis', async () => {
 		vi.mocked(generateText).mockResolvedValue({
 			output: {
-				results: [
-					{
-						key: 'imagery.mood',
-						status: 'ok',
-						fulfillment: 80,
-						detail: '이미지상 기준에 대체로 부합합니다.',
+				results: {
+					'imagery.mood': {
+						observations: {
+							'natural-expression': {
+								value: 'present',
+								confidence: 80,
+								reason: '자연스러운 표정이 관측됩니다.',
+							},
+						},
 					},
-				],
+				},
 			},
 			usage: {
 				inputTokens: 100,
@@ -87,6 +98,15 @@ describe('runAiCheck', () => {
 			reasoningTokens: 0,
 			rawUsage: { providerUsage: true },
 		})
+		expect(result.observations).toEqual({
+			'imagery.mood': {
+				'natural-expression': {
+					value: 'present',
+					confidence: 80,
+					reason: '자연스러운 표정이 관측됩니다.',
+				},
+			},
+		})
 		expect(generateText).toHaveBeenCalledTimes(1)
 		const request = vi.mocked(generateText).mock.calls[0]?.[0] as {
 			messages?: Array<{ content?: Array<{ text?: string }> }>
@@ -98,5 +118,48 @@ describe('runAiCheck', () => {
 		expect(prompt).toContain(
 			'heuristicPrompt: 인물의 표정이 자연스럽고 과장되지 않았는지 우선 판단한다.',
 		)
+		expect(prompt).toContain('id: natural-expression')
+		expect(prompt).toContain('question: 인물의 표정이 자연스러운가?')
+		expect(prompt).not.toContain('expected: present')
+
+		const schema = (
+			vi.mocked(Output.object).mock.calls[0]?.[0] as {
+				schema: { safeParse: (value: unknown) => { success: boolean } }
+			}
+		).schema
+		expect(schema.safeParse({ results: {} }).success).toBe(false)
+		expect(
+			schema.safeParse({
+				results: {
+					'imagery.mood': {
+						observations: {
+							'natural-expression': {
+								value: 'present',
+								confidence: 80,
+								reason: '자연스러운 표정이 관측됩니다.',
+							},
+						},
+					},
+				},
+			}).success,
+		).toBe(true)
+	})
+
+	it('AI 요청 실패는 판정 대신 구조화된 실패 사유를 반환한다', async () => {
+		vi.mocked(generateText).mockRejectedValue(new Error('provider unavailable'))
+		const { runAiCheck } = await import(
+			'@/features/asset-check/repositories/ai-check.agent.repository'
+		)
+
+		const result = await runAiCheck(checks, {
+			image: { data: Buffer.from('png'), mediaType: 'image/png' },
+			pixels: [],
+			palette: [],
+		})
+
+		expect(result).toEqual({
+			observations: {},
+			failure: { detail: 'AI 평가 실패', reasonCode: 'ai_request_failed' },
+		})
 	})
 })

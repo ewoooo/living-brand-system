@@ -49,6 +49,7 @@ import * as migration_20260714_044457_remove_guideline_legacy_mapping from './20
 import * as migration_20260714_051528_consolidate_guideline_editor from './20260714_051528_consolidate_guideline_editor';
 import * as migration_20260714_055652_cleanup_guideline_mcp_tools from './20260714_055652_cleanup_guideline_mcp_tools';
 import * as migration_20260714_061204_add_template_overrides from './20260714_061204_add_template_overrides';
+import * as migration_20260714_121152_heuristic_criteria_contract from './20260714_121152_heuristic_criteria_contract';
 
 export const migrations = [
   {
@@ -305,5 +306,10 @@ export const migrations = [
     up: migration_20260714_061204_add_template_overrides.up,
     down: migration_20260714_061204_add_template_overrides.down,
     name: '20260714_061204_add_template_overrides',
+  },
+  {
+    up: migration_20260714_121152_heuristic_criteria_contract.up,
+    down: migration_20260714_121152_heuristic_criteria_contract.down,
+    name: '20260714_121152_heuristic_criteria_contract'
   },
 ];

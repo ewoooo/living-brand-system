@@ -14,7 +14,7 @@ import { Empty, EmptyDescription } from '@/components/ui/empty'
 import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import type { CheckResult } from '@/features/asset-check/checkers/types'
+import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
 import {
@@ -286,6 +286,8 @@ function CheckDetailRow({
 }) {
 	const appliesToText = appliesTo.join(', ')
 	const facts = outcome?.rawResult.facts
+	const observations =
+		outcome && 'observations' in outcome.rawResult ? outcome.rawResult.observations : undefined
 
 	return (
 		<motion.tr
@@ -323,11 +325,60 @@ function CheckDetailRow({
 							</span>
 						)}
 						<CheckFacts facts={facts} />
+						<HeuristicObservations observations={observations} />
 						<ReferenceAssets assets={check.referenceAssets} />
 					</div>
 				</CheckDetailCollapse>
 			</TableCell>
 		</motion.tr>
+	)
+}
+
+function HeuristicObservations({ observations }: { observations: AiCheckResult['observations'] }) {
+	if (!observations?.length) return null
+
+	return (
+		<div className="overflow-x-auto rounded-md border">
+			<table className="w-full text-left text-xs">
+				<caption className="sr-only">휴리스틱 판정 기준별 비교</caption>
+				<thead className="bg-white/5 text-muted-foreground">
+					<tr>
+						<th className="px-3 py-2 font-medium">판정 질문</th>
+						<th className="px-3 py-2 font-medium">기준값</th>
+						<th className="px-3 py-2 font-medium">관찰값</th>
+						<th className="px-3 py-2 font-medium">결과</th>
+					</tr>
+				</thead>
+				<tbody>
+					{observations.map((observation) => (
+						<tr key={observation.criterionId} className="border-t">
+							<td className="px-3 py-2 align-top">
+								{observation.question}
+								<p className="mt-1 text-muted-foreground">{observation.reason}</p>
+							</td>
+							<td className="px-3 py-2 align-top whitespace-nowrap">
+								{observation.expected === 'present' ? '있어야 함' : '없어야 함'}
+							</td>
+							<td className="px-3 py-2 align-top whitespace-nowrap">
+								{observation.actual === 'present'
+									? '있음'
+									: observation.actual === 'absent'
+										? '없음'
+										: '판단 불가'}{' '}
+								({observation.confidence}%)
+							</td>
+							<td className="px-3 py-2 align-top whitespace-nowrap">
+								{observation.satisfied === true
+									? '충족'
+									: observation.satisfied === false
+										? '미충족'
+										: '검토 필요'}
+							</td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+		</div>
 	)
 }
 
@@ -389,19 +440,20 @@ function CheckDetailCollapse({
 
 function ReferenceAssets({ assets }: { assets: Check['referenceAssets'] }) {
 	if (assets.length === 0) return null
+	const roleLabel = { positive: '권장', negative: '금지', context: '참고' }
 
 	return (
 		<div className="flex flex-wrap items-center gap-1.5 text-xs">
 			<span className="text-muted-foreground">기준 이미지 {assets.length}개</span>
 			{assets.map((asset) => (
 				<a
-					key={`${asset.url}-${asset.name}`}
+					key={`${asset.url}-${asset.name}-${asset.role}`}
 					href={asset.url}
 					target="_blank"
 					rel="noreferrer"
 					className="rounded-md border px-2 py-1 text-foreground transition-colors hover:bg-accent"
 				>
-					{asset.name}
+					{roleLabel[asset.role]} · {asset.name}
 				</a>
 			))}
 		</div>
