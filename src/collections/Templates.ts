@@ -72,45 +72,27 @@ export const Templates: CollectionConfig = {
 			localized: true,
 		},
 		{
-			name: 'figmaHtmlImport',
-			type: 'ui',
-			admin: {
-				components: {
-					Field: '/features/template-import/components/figma-html-import-field',
-				},
-			},
-		},
-		{
-			name: 'templatePreview',
-			type: 'ui',
-			admin: {
-				components: {
-					Field: '/features/template-import/components/template-preview-field',
-				},
-			},
-		},
-		{
-			name: 'templateLayers',
-			type: 'ui',
-			admin: {
-				components: {
-					Field: '/features/template-import/components/template-layers-field',
-				},
-			},
-		},
-		{
-			// Figma Dev Mode 산출을 그대로 굳힌 inline-style HTML. 가져오기 필드가 채우며, 렌더는 이 값을 그대로 쓴다.
-			type: 'collapsible',
-			label: '디자인 HTML (Figma import)',
-			admin: { initCollapsed: true },
+			// 렌더 캔버스(왼쪽)와 레이어 패널(오른쪽)을 한 행에 나란히 둔다.
+			type: 'row',
 			fields: [
 				{
-					name: 'html',
-					type: 'code',
+					name: 'templatePreview',
+					type: 'ui',
 					admin: {
-						language: 'html',
-						description:
-							'Figma에서 가져온 inline-style HTML. 위 "가져오기"가 채웁니다. 렌더는 이 값을 그대로 사용합니다.',
+						width: '60%',
+						components: {
+							Field: '/features/template-import/components/template-preview-field',
+						},
+					},
+				},
+				{
+					name: 'templateLayers',
+					type: 'ui',
+					admin: {
+						width: '40%',
+						components: {
+							Field: '/features/template-import/components/template-layers-field',
+						},
 					},
 				},
 			],
@@ -127,21 +109,25 @@ export const Templates: CollectionConfig = {
 				{ name: 'js', type: 'code', admin: { language: 'javascript' } },
 			],
 		},
+		// 출처 URL. 입력창은 사이드바의 Figma 가져오기 필드와 통합했으므로 폼에서 숨긴다(컬럼·값 유지).
+		{ name: 'sourceUrl', type: 'text', admin: { hidden: true } },
+
+		// ── 사이드바 (렌더 순서 = 배열 순서) ──
 		{
-			name: 'width',
-			type: 'number',
-			admin: {
-				position: 'sidebar',
-				description: 'Figma 캔버스 너비(px). 가져오기가 채웁니다.',
-			},
-		},
-		{
-			name: 'height',
-			type: 'number',
-			admin: {
-				position: 'sidebar',
-				description: 'Figma 캔버스 높이(px). 가져오기가 채웁니다.',
-			},
+			type: 'row',
+			admin: { position: 'sidebar' },
+			fields: [
+				{
+					name: 'width',
+					type: 'number',
+					admin: { width: '50%', description: 'Figma 너비(px). 가져오기가 채웁니다.' },
+				},
+				{
+					name: 'height',
+					type: 'number',
+					admin: { width: '50%', description: 'Figma 높이(px). 가져오기가 채웁니다.' },
+				},
+			],
 		},
 		{
 			name: 'category',
@@ -152,6 +138,14 @@ export const Templates: CollectionConfig = {
 			admin: {
 				position: 'sidebar',
 				description: 'Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.',
+			},
+		},
+		{
+			name: 'dividerChecks',
+			type: 'ui',
+			admin: {
+				position: 'sidebar',
+				components: { Field: '/features/template-import/components/sidebar-divider' },
 			},
 		},
 		{
@@ -183,13 +177,40 @@ export const Templates: CollectionConfig = {
 			],
 		},
 		{
-			name: 'sourceUrl',
-			type: 'text',
+			name: 'dividerImport',
+			type: 'ui',
 			admin: {
 				position: 'sidebar',
-				description:
-					'임포트에 사용한 Figma URL 원문입니다. 출처 기록용이며 재동기화하지 않습니다.',
+				components: { Field: '/features/template-import/components/sidebar-divider' },
 			},
+		},
+		{
+			// sourceUrl 입력 + 가져오기 버튼을 겸한다(입력창은 sourceUrl 폼 필드를 편집).
+			name: 'figmaHtmlImport',
+			type: 'ui',
+			admin: {
+				position: 'sidebar',
+				components: {
+					Field: '/features/template-import/components/figma-html-import-field',
+				},
+			},
+		},
+		{
+			// Figma Dev Mode 산출을 그대로 굳힌 inline-style HTML. 가져오기 필드가 채우며, 렌더는 이 값을 그대로 쓴다.
+			type: 'collapsible',
+			label: '디자인 HTML (Figma import)',
+			admin: { position: 'sidebar', initCollapsed: true },
+			fields: [
+				{
+					name: 'html',
+					type: 'code',
+					admin: {
+						language: 'html',
+						description:
+							'Figma에서 가져온 inline-style HTML. 위 "가져오기"가 채웁니다. 렌더는 이 값을 그대로 사용합니다.',
+					},
+				},
+			],
 		},
 	],
 }

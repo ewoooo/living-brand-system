@@ -1,15 +1,18 @@
 'use client'
 
-import { Button, TextInput, toast, useForm } from '@payloadcms/ui'
+import { Button, TextInput, toast, useForm, useFormFields } from '@payloadcms/ui'
 import { useState } from 'react'
 
 /**
  * Templates 편집 폼(Admin)의 Figma 가져오기 UI 필드.
- * 링크를 변환 API로 보내 폼의 html·width·height·sourceUrl(·비어있으면 name) 값을 채운다. 저장은 Manager가 폼에서 결정한다.
+ * 입력창은 sourceUrl 폼 필드를 그대로 편집한다(별도 Source Url 필드와 통합). 링크를 변환 API로 보내
+ * 폼의 html·width·height·sourceUrl(·비어있으면 name) 값을 채운다. 저장은 Manager가 폼에서 결정한다.
  */
 export default function FigmaHtmlImportField() {
 	const { dispatchFields, getData, setModified } = useForm()
-	const [sourceUrl, setSourceUrl] = useState('')
+	const sourceUrl = (useFormFields(([fields]) => fields.sourceUrl?.value) as string) ?? ''
+	const setSourceUrl = (value: string) =>
+		dispatchFields({ type: 'UPDATE', path: 'sourceUrl', value })
 	const [isLoading, setIsLoading] = useState(false)
 
 	async function handleImport() {
@@ -62,8 +65,8 @@ export default function FigmaHtmlImportField() {
 		>
 			<TextInput
 				path="figmaHtmlImportUrl"
-				label="Figma에서 가져오기 (HTML)"
-				description="Dev Mode 프레임 링크를 붙여넣으세요 (node-id 포함)"
+				label="Figma 소스 URL"
+				description="Dev Mode 프레임 링크(node-id 포함). 가져오기로 변환하며, 출처로도 저장됩니다."
 				placeholder="https://www.figma.com/design/...?node-id=..."
 				value={sourceUrl}
 				style={{ flex: 1 }}

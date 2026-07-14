@@ -642,10 +642,6 @@ export interface Template {
   id: number;
   name: string;
   description?: string | null;
-  /**
-   * Figma에서 가져온 inline-style HTML. 위 "가져오기"가 채웁니다. 렌더는 이 값을 그대로 사용합니다.
-   */
-  html?: string | null;
   jsonTemplate?:
     | {
         [k: string]: unknown;
@@ -659,12 +655,13 @@ export interface Template {
     css?: string | null;
     js?: string | null;
   };
+  sourceUrl?: string | null;
   /**
-   * Figma 캔버스 너비(px). 가져오기가 채웁니다.
+   * Figma 너비(px). 가져오기가 채웁니다.
    */
   width?: number | null;
   /**
-   * Figma 캔버스 높이(px). 가져오기가 채웁니다.
+   * Figma 높이(px). 가져오기가 채웁니다.
    */
   height?: number | null;
   /**
@@ -688,9 +685,9 @@ export interface Template {
       }[]
     | null;
   /**
-   * 임포트에 사용한 Figma URL 원문입니다. 출처 기록용이며 재동기화하지 않습니다.
+   * Figma에서 가져온 inline-style HTML. 위 "가져오기"가 채웁니다. 렌더는 이 값을 그대로 사용합니다.
    */
-  sourceUrl?: string | null;
+  html?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1622,7 +1619,6 @@ export interface TemplateCategoriesSelect<T extends boolean = true> {
 export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
-  html?: T;
   jsonTemplate?: T;
   code?:
     | T
@@ -1630,6 +1626,7 @@ export interface TemplatesSelect<T extends boolean = true> {
         css?: T;
         js?: T;
       };
+  sourceUrl?: T;
   width?: T;
   height?: T;
   category?: T;
@@ -1640,7 +1637,7 @@ export interface TemplatesSelect<T extends boolean = true> {
         body?: T;
         id?: T;
       };
-  sourceUrl?: T;
+  html?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
