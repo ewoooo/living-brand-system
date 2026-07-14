@@ -8,7 +8,8 @@ import { searchPlugin } from '@payloadcms/plugin-search'
 import { EXPERIMENTAL_TableFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { ko } from '@payloadcms/translations/languages/ko'
-import { buildConfig, type CollectionConfig, type PayloadRequest } from 'payload'
+import { buildConfig, type CollectionConfig, type GlobalConfig, type PayloadRequest } from 'payload'
+import { betterEditor, betterEditorSettingsGlobal } from 'payload-better-editor'
 import sharp from 'sharp'
 import { z } from 'zod/v3'
 import { migrations } from '../migrations'
@@ -34,7 +35,7 @@ import { collectGuidelineCheckSources } from './features/guideline/checks/collec
 import { findPublishedUnifiedGuidelineCheckDocuments } from './features/guideline/repositories/published-guideline-checks.payload.repository'
 import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
-import { adminOnly } from './lib/auth'
+import { adminOnly, authenticated, managerOrAdmin } from './lib/auth'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -71,6 +72,11 @@ const mcpNumber = (value: unknown, fallback: number) =>
 	typeof value === 'number' ? value : fallback
 type McpToolArgs = Record<string, unknown>
 type GetDefaultMcpAccessSettings = (overrideApiKey?: null | string) => Promise<MCPAccessSettings>
+
+const BetterEditorSettings: GlobalConfig = {
+	...betterEditorSettingsGlobal,
+	access: { read: authenticated, update: managerOrAdmin },
+}
 
 /** MCP 툴 공통 골격 — 조회 결과를 text 콘텐츠(JSON 문자열)로 감싼다. */
 const mcpTextTool = (
@@ -344,6 +350,9 @@ export default buildConfig({
 				},
 			},
 		}),
+		betterEditor({
+			collections: { 'guideline-documents': { blocksField: 'blocks' } },
+		}),
 	],
 	i18n: {
 		// 관리자 UI 언어는 언어 쿠키, 브라우저 언어, fallbackLanguage 순서로 결정된다.
@@ -357,5 +366,5 @@ export default buildConfig({
 		// 기존 en revision은 보존하되 Admin 편집은 초기 릴리스 언어인 ko로 고정한다.
 		filterAvailableLocales: ({ locales }) => locales.filter((locale) => locale.code === 'ko'),
 	},
-	globals: [Guideline, AgentSettings],
+	globals: [Guideline, AgentSettings, BetterEditorSettings],
 })

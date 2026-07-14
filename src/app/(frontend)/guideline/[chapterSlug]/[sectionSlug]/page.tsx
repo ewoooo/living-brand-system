@@ -14,18 +14,23 @@ export default async function GuidelineSectionPage({
 	searchParams: Promise<{ previewDocument?: string }>
 }) {
 	const { chapterSlug, sectionSlug } = await params
-	const previewSection = await getAuthorizedPreview((await searchParams).previewDocument)
+	const previewDocumentId = Number((await searchParams).previewDocument)
+	const previewSection = await getAuthorizedPreview(previewDocumentId)
 	const section = previewSection ?? (await getGuidelineSection(chapterSlug, sectionSlug))
 
 	if (!section) {
 		notFound()
 	}
 
-	return <GuidelineSection section={section} isPreview={Boolean(previewSection)} />
+	return (
+		<GuidelineSection
+			section={section}
+			previewDocumentId={previewSection ? previewDocumentId : undefined}
+		/>
+	)
 }
 
-async function getAuthorizedPreview(previewDocument?: string) {
-	const documentId = Number(previewDocument)
+async function getAuthorizedPreview(documentId: number) {
 	const { isEnabled } = await draftMode()
 
 	if (!isEnabled || !Number.isSafeInteger(documentId) || documentId < 1) return null

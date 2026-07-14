@@ -5,7 +5,13 @@ import { GuidelineHeader } from '../globals/guideline-header'
 import type { GuidelineVariant } from '../globals/guideline-variant'
 import { GuidelineDescriptionFallback } from '../guideline-content-fallbacks'
 
-export function GuidelinePage({ page }: { page: GetGuidelineSectionOutput['pages'][number] }) {
+export function GuidelinePage({
+	page,
+	betterEditor = false,
+}: {
+	page: GetGuidelineSectionOutput['pages'][number]
+	betterEditor?: boolean
+}) {
 	const variant = 'page' satisfies GuidelineVariant
 
 	return (
@@ -26,7 +32,7 @@ export function GuidelinePage({ page }: { page: GetGuidelineSectionOutput['pages
 			) : (
 				<GuidelineDescriptionFallback variant={variant} />
 			)}
-			<GuidelineBlocks blocks={page.blocks} />
+			<GuidelineBlocks blocks={page.blocks} betterEditor={betterEditor} />
 		</article>
 	)
 }
