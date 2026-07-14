@@ -29,7 +29,7 @@ export const GuidelineDocuments: CollectionConfig = {
 		description: '계층형 가이드라인 문서입니다.',
 		components: {
 			edit: {
-				SaveDraftButton: '/components/admin/BetterEditorSaveDraftButton',
+				PublishButton: '/components/admin/BetterEditorPublishButton',
 			},
 			views: {
 				list: {

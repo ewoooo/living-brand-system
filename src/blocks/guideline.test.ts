@@ -36,9 +36,9 @@ describe('guideline checks field', () => {
 		expect(guidelineDocumentTypeLabel(2, true, true)).toBe('저장 후 결정')
 	})
 
-	it('Better Editor 버튼을 초안 저장 컨트롤에 둔다', () => {
-		expect(GuidelineDocuments.admin?.components?.edit?.SaveDraftButton).toBe(
-			'/components/admin/BetterEditorSaveDraftButton',
+	it('Better Editor 버튼을 게시 컨트롤 앞에 둔다', () => {
+		expect(GuidelineDocuments.admin?.components?.edit?.PublishButton).toBe(
+			'/components/admin/BetterEditorPublishButton',
 		)
 	})
 
