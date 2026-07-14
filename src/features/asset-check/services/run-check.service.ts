@@ -1,6 +1,9 @@
-import { toCheckResult } from '@/features/asset-check/checkers/check-result.adapter'
+import {
+	toCheckResult,
+	toDeterministicCheckResult,
+} from '@/features/asset-check/checkers/check-result.adapter'
 import { opaquePixels } from '@/features/asset-check/checkers/color-metrics'
-import { getChecker } from '@/features/asset-check/checkers/registry'
+import { getChecker, runDeterministicChecker } from '@/features/asset-check/checkers/registry'
 import type {
 	AiUsage,
 	AlgorithmCheckResult,
@@ -112,6 +115,12 @@ function runCheckByExecutor(check: RuntimeCheck, ctx: CheckerContext): CheckResu
 			detail: '브랜드 담당자 확인 필요',
 		}
 		return toCheckResult(rawResult, check, { key: 'manual', type: 'manual' })
+	}
+	const evaluation = check.checkerKey
+		? runDeterministicChecker(check.checkerKey, check.options, ctx)
+		: null
+	if (evaluation && check.checkerKey) {
+		return toDeterministicCheckResult(evaluation, check, check.checkerKey)
 	}
 	const checker = check.checkerKey ? getChecker(check.checkerKey, check.options) : null
 	if (!checker) return null

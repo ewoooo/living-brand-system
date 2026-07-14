@@ -7,10 +7,13 @@ import {
 } from './canvas-format.checker'
 import { clearSpaceChecker } from './clear-space.checker'
 import { colorCombinationChecker } from './color-combination.checker'
+import { extractDominantColorPair } from './color-pair.extractor'
+import { contrastChecker, contrastOptionsSchema } from './contrast.checker'
+import { evaluateExtraction, evaluateMeasurement } from './deterministic-evaluator'
 import { paletteComplianceChecker } from './palette-compliance.checker'
 import { relativeSizeChecker } from './relative-size.checker'
 import { spotColorChecker } from './spot-color.checker'
-import type { AlgorithmChecker } from './types'
+import type { AlgorithmChecker, CheckerContext, DeterministicEvaluationResult } from './types'
 
 /**
  * checker key → checker 레지스트리.
@@ -27,6 +30,30 @@ const checkers: Record<string, AlgorithmChecker> = {
 	'relative-size': relativeSizeChecker,
 }
 
+const deterministicCheckers: Record<
+	string,
+	(ctx: CheckerContext, options: unknown) => DeterministicEvaluationResult
+> = {
+	contrast: (ctx, options) => {
+		const parsed = contrastOptionsSchema.safeParse(options)
+		if (!parsed.success) {
+			return evaluateMeasurement(
+				{ state: 'not_measurable', reasonCode: 'invalid_criteria' },
+				[],
+			)
+		}
+		const extraction = ctx.grid
+			? extractDominantColorPair(ctx.grid)
+			: { state: 'not_extractable' as const, reasonCode: 'raster_not_available' }
+		return evaluateExtraction(
+			extraction,
+			contrastChecker,
+			parsed.data.criteria,
+			parsed.data.parameters,
+		)
+	},
+}
+
 interface CanvasFormatCheckOptions extends CanvasFormatOptions {
 	formats: CanvasFormat[]
 }
@@ -39,6 +66,18 @@ export function getChecker(checkerKey: string, options?: unknown): AlgorithmChec
 
 export function hasChecker(checkerKey: string, options?: unknown): boolean {
 	return getChecker(checkerKey, options) !== null
+}
+
+export function hasDeterministicChecker(checkerKey: string): boolean {
+	return checkerKey in deterministicCheckers
+}
+
+export function runDeterministicChecker(
+	checkerKey: string,
+	options: unknown,
+	ctx: CheckerContext,
+): DeterministicEvaluationResult | null {
+	return deterministicCheckers[checkerKey]?.(ctx, options) ?? null
 }
 
 function isCanvasFormatOptions(value: unknown): value is CanvasFormatCheckOptions {

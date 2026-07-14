@@ -1,9 +1,21 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
+import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
 import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
 import { toDeterministicCheckResult } from './check-result.adapter'
+import { extractDominantColorPair } from './color-pair.extractor'
 import { contrastChecker, contrastOptionsSchema } from './contrast.checker'
 import { evaluateExtraction, evaluateMeasurement } from './deterministic-evaluator'
-import type { ColorPairObservation, ExtractionResult } from './types'
+import { hasDeterministicChecker } from './registry'
+import type { ColorPairObservation, ExtractionResult, PixelGrid } from './types'
+
+vi.mock('@/features/asset-check/repositories/image-decoder.sharp.repository', () => ({
+	extractPixelGrid: vi.fn(),
+}))
+
+vi.mock('@/features/asset-check/services/get-check-palette.service', () => ({
+	getCheckPalette: vi.fn(),
+}))
 
 const validOptions = {
 	criteria: [{ measurement: 'contrastRatio', operator: 'gte', expected: 4.5 }],
@@ -76,6 +88,26 @@ describe('Contrast Checker measurement contract', () => {
 	})
 })
 
+describe('ColorPair Extractor contract', () => {
+	it('maps the two dominant raster colors to background and foreground', () => {
+		expect(extractDominantColorPair(twoColorGrid())).toMatchObject({
+			state: 'extracted',
+			value: {
+				kind: 'color-pair',
+				background: { r: 255, g: 255, b: 255 },
+				foreground: { r: 0, g: 0, b: 0 },
+			},
+		})
+	})
+
+	it('returns not_extractable when the raster has only one dominant color', () => {
+		expect(extractDominantColorPair(solidGrid())).toEqual({
+			state: 'not_extractable',
+			reasonCode: 'color_pair_not_found',
+		})
+	})
+})
+
 describe('deterministic CheckResult integration', () => {
 	it('maps extractor failure to a needs_review CheckResult', () => {
 		const extraction: ExtractionResult<ColorPairObservation> = {
@@ -96,6 +128,32 @@ describe('deterministic CheckResult integration', () => {
 			message: '자동 판정 보류: color_pair_not_found',
 		})
 	})
+
+	it('runs registered Contrast extraction, measurement, evaluation, and adapter', async () => {
+		vi.stubEnv('DATABASE_URL', 'postgres://user:pass@localhost:5432/test')
+		vi.stubEnv('PAYLOAD_SECRET', 'test-secret')
+		vi.mocked(extractPixelGrid).mockResolvedValue(twoColorGrid())
+		vi.mocked(getCheckPalette).mockResolvedValue([])
+		const { runImmediateCheck } = await import(
+			'@/features/asset-check/services/run-check.service'
+		)
+
+		const result = await runImmediateCheck(
+			Buffer.from('test-image'),
+			{ logo: false, typography: true, illustration: false, photography: false },
+			[runtimeCheck()],
+		)
+
+		expect(hasDeterministicChecker('contrast')).toBe(true)
+		expect(result.results['typography.contrast']).toMatchObject({
+			rawResult: {
+				status: 'pass',
+				fulfillment: 100,
+				measurements: { contrastRatio: 21 },
+				comparisons: [{ actual: 21, expected: 4.5, satisfied: true }],
+			},
+		})
+	})
 })
 
 function runtimeCheck(): RuntimeCheck {
@@ -110,5 +168,26 @@ function runtimeCheck(): RuntimeCheck {
 		evidence: 'Text must remain readable.',
 		referenceAssets: [],
 		messages: { needs_review: '자동 판정 보류: {reasonCode}' },
+	}
+}
+
+function twoColorGrid(): PixelGrid {
+	return {
+		width: 10,
+		height: 10,
+		pixels: [
+			...Array.from({ length: 80 }, () => ({ r: 255, g: 255, b: 255 })),
+			...Array.from({ length: 20 }, () => ({ r: 0, g: 0, b: 0 })),
+		],
+		alpha: new Uint8Array(100).fill(255),
+	}
+}
+
+function solidGrid(): PixelGrid {
+	return {
+		width: 10,
+		height: 10,
+		pixels: Array.from({ length: 100 }, () => ({ r: 255, g: 255, b: 255 })),
+		alpha: new Uint8Array(100).fill(255),
 	}
 }
