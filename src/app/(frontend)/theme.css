@@ -24,6 +24,7 @@
 	--color-background: var(--background);
 	--color-background-secondary: var(--background-secondary);
 	--color-background-tertiary: var(--background-tertiary);
+	--color-background-inverse: var(--background-inverse);
 	--color-fill-muted: var(--fill-muted);
 	--color-fill-hover: var(--fill-hover);
 	--color-fill-selected: var(--fill-selected);
@@ -44,6 +45,7 @@
 	--color-input: var(--input);
 	--color-ring: var(--ring);
 	--color-scrim: var(--scrim);
+	--color-scrim-foreground: var(--scrim-foreground);
 
 	--color-card: var(--card);
 	--color-card-foreground: var(--card-foreground);
@@ -80,7 +82,8 @@
 	--fill-selected: oklch(0.922 0 0);
 	--foreground: oklch(0.145 0 0);
 	--foreground-muted: oklch(0.556 0 0);
-	--foreground-inverse: oklch(0.985 0 0);
+	--background-inverse: var(--foreground);
+	--foreground-inverse: var(--background);
 	--brand-primary-dark: oklch(0.922 0 0);
 	--brand-primary-dark-foreground: oklch(0.205 0 0);
 	--brand-primary-light: oklch(0.205 0 0);
@@ -99,6 +102,7 @@
 	--input: oklch(0.922 0 0);
 	--ring: oklch(0.708 0 0);
 	--scrim: oklch(0 0 0);
+	--scrim-foreground: oklch(0.985 0 0);
 
 	/* shadcn 호환 별칭: 제품 코드에서는 위의 역할 기반 토큰을 사용한다. */
 	--card: var(--background-secondary);
@@ -130,7 +134,6 @@
 	--fill-selected: oklch(0.36 0 0);
 	--foreground: oklch(0.985 0 0);
 	--foreground-muted: oklch(0.708 0 0);
-	--foreground-inverse: oklch(0.985 0 0);
 	--primary: var(--brand-primary-dark);
 	--primary-foreground: var(--brand-primary-dark-foreground);
 	--destructive: oklch(0.704 0.191 22.216);

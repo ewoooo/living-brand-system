@@ -28,10 +28,10 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 										/>
 										<span
 											aria-hidden
-											className={`type-caption-1-emphasized absolute top-2 right-2 grid size-6 place-items-center rounded-full text-foreground-inverse ${
+											className={`type-caption-1-emphasized absolute top-2 right-2 grid size-6 place-items-center rounded-full ${
 												example.kind === 'do'
-													? 'bg-success'
-													: 'bg-destructive'
+													? 'bg-success text-success-foreground'
+													: 'bg-destructive text-destructive-foreground'
 											}`}
 										>
 											{example.kind === 'do' ? '✓' : '✕'}
