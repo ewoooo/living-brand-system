@@ -36,8 +36,7 @@ export async function getGuidelineDocumentPreviewTarget(
 		const baseURL = level === 3 ? breadcrumbs[1]?.url : breadcrumbs.at(-1)?.url
 		if (!chapterSlug || !baseURL || (level > 1 && !sectionSlug)) return null
 
-		const anchor =
-			level === 3 ? `#${encodeURIComponent(document.legacySlug || document.slug)}` : ''
+		const anchor = level === 3 ? `#${encodeURIComponent(document.slug)}` : ''
 
 		return {
 			chapterSlug,
@@ -71,7 +70,7 @@ export async function getGuidelineChapterPreview(
 			sections: sections.map((section) => ({
 				id: section.id,
 				title: section.title,
-				slug: section.legacySlug || section.slug,
+				slug: section.slug,
 				description: extractTextFromLexical(section.description) || null,
 			})),
 		}
@@ -110,7 +109,7 @@ export async function getGuidelineSectionPreview(
 			pages: pages.map((page) => ({
 				id: page.id,
 				title: page.title,
-				slug: page.legacySlug || page.slug,
+				slug: page.slug,
 				description: page.description || null,
 				displayOrder: page.displayOrder,
 				blocks: page.blocks || [],

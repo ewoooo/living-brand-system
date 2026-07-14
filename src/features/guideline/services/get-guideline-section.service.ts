@@ -54,7 +54,7 @@ export async function getGuidelineSection(
 			pages: pages.map((page) => ({
 				id: page.id,
 				title: page.title,
-				slug: page.legacySlug || page.slug,
+				slug: page.slug,
 				description: page.description || null,
 				displayOrder: page.displayOrder,
 				blocks: page.blocks || [],

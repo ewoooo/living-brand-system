@@ -38,7 +38,6 @@ export async function listPublishedGuidelineNavigationDocuments() {
 		select: {
 			title: true,
 			slug: true,
-			legacySlug: true,
 			description: true,
 			displayOrder: true,
 			parent: true,
@@ -59,21 +58,12 @@ export async function findPublishedChapterBySlug(chapterSlug: string) {
 		limit: 1,
 		locale: LOCALE,
 		where: {
-			and: [
-				{
-					or: [
-						{ legacySlug: { equals: chapterSlug } },
-						{ slug: { equals: chapterSlug } },
-					],
-				},
-				{ parent: { exists: false } },
-			],
+			and: [{ slug: { equals: chapterSlug } }, { parent: { exists: false } }],
 		},
 		select: {
 			title: true,
 			label: true,
 			slug: true,
-			legacySlug: true,
 			description: true,
 		},
 	})
@@ -91,20 +81,11 @@ export async function findPublishedSectionBySlug(chapterId: number, sectionSlug:
 		limit: 1,
 		locale: LOCALE,
 		where: {
-			and: [
-				{
-					or: [
-						{ legacySlug: { equals: sectionSlug } },
-						{ slug: { equals: sectionSlug } },
-					],
-				},
-				{ parent: { equals: chapterId } },
-			],
+			and: [{ slug: { equals: sectionSlug } }, { parent: { equals: chapterId } }],
 		},
 		select: {
 			title: true,
 			slug: true,
-			legacySlug: true,
 			description: true,
 			headerImage: true,
 			blocks: true,
@@ -118,7 +99,6 @@ export async function listPublishedSectionsByChapter(chapterId: number) {
 	return listPublishedChildren(chapterId, {
 		title: true,
 		slug: true,
-		legacySlug: true,
 		description: true,
 	})
 }
@@ -127,7 +107,6 @@ export async function listPublishedPagesBySection(sectionId: number) {
 	return listPublishedChildren(sectionId, {
 		title: true,
 		slug: true,
-		legacySlug: true,
 		description: true,
 		displayOrder: true,
 		blocks: true,

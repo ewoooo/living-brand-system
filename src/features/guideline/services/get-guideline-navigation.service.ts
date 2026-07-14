@@ -61,7 +61,7 @@ export const getGuidelineNavigation = cache(async (): Promise<GetGuidelineNaviga
 
 type NavigationDocument = Pick<
 	GuidelineDocument,
-	'id' | 'title' | 'slug' | 'legacySlug' | 'description' | 'parent' | 'breadcrumbs'
+	'id' | 'title' | 'slug' | 'description' | 'parent' | 'breadcrumbs'
 >
 
 export function buildGuidelineNavigationChapters(documents: NavigationDocument[]) {
@@ -83,7 +83,7 @@ export function buildGuidelineNavigationChapters(documents: NavigationDocument[]
 			pages: (children.get(section.id) ?? []).map((page) => ({
 				id: page.id,
 				title: page.title,
-				href: `${breadcrumbURL(section)}#${pathSegment(page)}`,
+				href: `${breadcrumbURL(section)}#${page.slug}`,
 			})),
 		})),
 	}))
@@ -91,10 +91,6 @@ export function buildGuidelineNavigationChapters(documents: NavigationDocument[]
 
 function breadcrumbURL(document: NavigationDocument) {
 	return document.breadcrumbs?.at(-1)?.url || `/guideline/${document.slug}`
-}
-
-function pathSegment(document: NavigationDocument) {
-	return document.legacySlug || document.slug
 }
 
 function relationshipId(value: NavigationDocument['parent']): number | null {

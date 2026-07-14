@@ -23,15 +23,13 @@ describe('guideline document preview', () => {
 			title: 'Draft Brand System',
 			label: 'Draft',
 			description: null,
-			slug: 'brand-system-chapter-1',
-			legacySlug: 'brand-system',
+			slug: 'brand-system',
 			breadcrumbs: [{ url: '/guideline/brand-system' }],
 		}
 		const section = {
 			id: 2,
 			title: 'Draft Basics',
-			slug: 'basics-section-2',
-			legacySlug: 'basics',
+			slug: 'basics',
 			description: null,
 			headerImage: null,
 			blocks: [],
@@ -44,8 +42,7 @@ describe('guideline document preview', () => {
 		const page = {
 			id: 3,
 			title: 'Draft Logo Usage',
-			slug: 'logo-usage-page-3',
-			legacySlug: 'logo usage',
+			slug: 'logo-usage',
 			description: null,
 			displayOrder: 1,
 			blocks: [],
@@ -68,7 +65,7 @@ describe('guideline document preview', () => {
 
 		const target = await getGuidelineDocumentPreviewTarget(3, { id: 1 } as never)
 
-		expect(target?.href).toBe('/guideline/brand-system/basics?previewDocument=3#logo%20usage')
+		expect(target?.href).toBe('/guideline/brand-system/basics?previewDocument=3#logo-usage')
 
 		await expect(getGuidelineChapterPreview(1, { id: 1 } as never)).resolves.toMatchObject({
 			title: 'Draft Brand System',
@@ -76,7 +73,7 @@ describe('guideline document preview', () => {
 		})
 		await expect(getGuidelineSectionPreview(3, { id: 1 } as never)).resolves.toMatchObject({
 			title: 'Draft Basics',
-			pages: [{ title: 'Draft Logo Usage', slug: 'logo usage' }],
+			pages: [{ title: 'Draft Logo Usage', slug: 'logo-usage' }],
 		})
 	})
 })

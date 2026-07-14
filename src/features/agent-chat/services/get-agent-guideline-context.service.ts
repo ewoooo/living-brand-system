@@ -161,8 +161,7 @@ function documentHref(document: AgentGuidelineDocument['document']): string | nu
 	const breadcrumbs = document.breadcrumbs ?? []
 	if (breadcrumbs.length === 3) {
 		const sectionURL = breadcrumbs[1]?.url
-		const segment = document.legacySlug || document.slug
-		return sectionURL && segment ? `${sectionURL}#${segment}` : null
+		return sectionURL ? `${sectionURL}#${document.slug}` : null
 	}
 	return breadcrumbs.at(-1)?.url ?? null
 }

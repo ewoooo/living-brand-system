@@ -9,7 +9,6 @@ type AgentGuidelineDocumentData = Pick<
 	| 'id'
 	| 'title'
 	| 'slug'
-	| 'legacySlug'
 	| 'description'
 	| 'headerImage'
 	| 'blocks'
@@ -23,10 +22,7 @@ export type AgentGuidelineListItem = Pick<
 	'id' | 'title' | 'parent' | 'breadcrumbs'
 >
 
-type AgentGuidelineChild = Pick<
-	GuidelineDocument,
-	'id' | 'title' | 'slug' | 'legacySlug' | 'description'
->
+type AgentGuidelineChild = Pick<GuidelineDocument, 'id' | 'title' | 'slug' | 'description'>
 
 export interface AgentCheckCatalogItem {
 	evidence: string
@@ -144,7 +140,6 @@ export async function findAgentGuidelineDocument(
 		select: {
 			title: true,
 			slug: true,
-			legacySlug: true,
 			description: true,
 			headerImage: true,
 			blocks: true,
@@ -166,7 +161,6 @@ export async function findAgentGuidelineDocument(
 		select: {
 			title: true,
 			slug: true,
-			legacySlug: true,
 			description: true,
 		},
 	})

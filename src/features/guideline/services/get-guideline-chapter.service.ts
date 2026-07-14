@@ -40,7 +40,7 @@ export async function getGuidelineChapter(
 			sections: sections.map((section) => ({
 				id: section.id,
 				title: section.title,
-				slug: section.legacySlug || section.slug,
+				slug: section.slug,
 				description: extractTextFromLexical(section.description) || null,
 			})),
 		}

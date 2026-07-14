@@ -162,7 +162,7 @@ function toCheckPlacement(document: GuidelineDocument, documents: Map<number, Gu
 }
 
 function pathSegment(document: GuidelineDocument) {
-	return document.legacySlug || document.slug || String(document.id)
+	return document.slug
 }
 
 function relationshipId(value: GuidelineDocument['parent'] | undefined): number {

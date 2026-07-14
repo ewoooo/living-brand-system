@@ -1,6 +1,10 @@
 import { getPayload } from 'payload'
 import { describe, expect, it, vi } from 'vitest'
-import { listPublishedGuidelineNavigationDocuments } from './guideline-view.payload.repository'
+import {
+	findPublishedChapterBySlug,
+	findPublishedSectionBySlug,
+	listPublishedGuidelineNavigationDocuments,
+} from './guideline-view.payload.repository'
 
 vi.mock('@payload-config', () => ({ default: {} }))
 vi.mock('payload', () => ({ getPayload: vi.fn() }))
@@ -22,5 +26,20 @@ describe('listPublishedGuidelineNavigationDocuments', () => {
 			}),
 		)
 		expect(find.mock.calls[0]?.[0]).not.toHaveProperty('where')
+	})
+
+	it('chapter와 section을 canonical slug와 부모 범위로 조회한다', async () => {
+		const find = vi.fn().mockResolvedValue({ docs: [] })
+		vi.mocked(getPayload).mockResolvedValue({ find } as never)
+
+		await findPublishedChapterBySlug('brand')
+		await findPublishedSectionBySlug(1, 'logo')
+
+		expect(find.mock.calls[0]?.[0].where).toEqual({
+			and: [{ slug: { equals: 'brand' } }, { parent: { exists: false } }],
+		})
+		expect(find.mock.calls[1]?.[0].where).toEqual({
+			and: [{ slug: { equals: 'logo' } }, { parent: { equals: 1 } }],
+		})
 	})
 })

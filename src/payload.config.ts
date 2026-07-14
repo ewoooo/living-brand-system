@@ -107,7 +107,6 @@ const findMcpGuidelineDocuments = async (
 		select: {
 			title: true,
 			slug: true,
-			legacySlug: true,
 			description: true,
 			headerImage: true,
 			checks: true,
@@ -219,8 +218,7 @@ export default buildConfig({
 		nestedDocsPlugin({
 			collections: ['guideline-documents'],
 			generateLabel: (_, doc) => String(doc.title),
-			generateURL: (docs) =>
-				`/guideline/${docs.map((doc) => String(doc.legacySlug || doc.slug)).join('/')}`,
+			generateURL: (docs) => `/guideline/${docs.map((doc) => String(doc.slug)).join('/')}`,
 		}),
 		mcpPlugin({
 			overrideAuth: async (

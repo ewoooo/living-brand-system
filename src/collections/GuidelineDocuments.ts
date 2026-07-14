@@ -2,6 +2,7 @@ import { type CollectionConfig, slugField } from 'payload'
 import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
 import { validateGuidelineCheckKeys } from '@/features/guideline/checks/validate-guideline-check-keys'
 import { validateGuidelineDocumentDepth } from '@/features/guideline/checks/validate-guideline-document-depth'
+import { validateGuidelineDocumentSlug } from '@/features/guideline/checks/validate-guideline-document-slug'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -49,11 +50,24 @@ export const GuidelineDocuments: CollectionConfig = {
 				description: '제목 위에 표시할 선택 라벨입니다.',
 			},
 		},
-		// ponytail: 현재 slug는 전역 고유로 둔다. 실제 중복 경로가 필요할 때 parent+slug 복합 제약으로 바꾼다.
 		slugField({
+			disableUnique: true,
 			useAsSlug: 'title',
 			localized: true,
 			required: true,
+			overrides: (field) => {
+				const slug = field.fields[1]
+				if (slug && 'hooks' in slug) {
+					slug.hooks = {
+						...slug.hooks,
+						beforeChange: [
+							...(slug.hooks?.beforeChange ?? []),
+							validateGuidelineDocumentSlug,
+						],
+					}
+				}
+				return field
+			},
 		}),
 		{
 			name: 'legacySlug',
