@@ -22,7 +22,7 @@ export function SideNav({
 }) {
 	return (
 		<Sidebar collapsible="offcanvas" className="h-full pl-6">
-			<SidebarContent className="pt-12">
+			<SidebarContent className="pt-24">
 				{Children.count(children) > 0 ? (
 					children
 				) : (

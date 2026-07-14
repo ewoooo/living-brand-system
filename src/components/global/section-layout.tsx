@@ -1,4 +1,5 @@
 import type React from 'react'
+import { GlobalFooter } from '@/components/global/footer/global-footer'
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 
 /**
@@ -10,12 +11,10 @@ export function SectionLayout({
 	nav,
 	children,
 	pageNavigation,
-	footer,
 }: {
 	nav: React.ReactNode
 	children: React.ReactNode
 	pageNavigation?: React.ReactNode
-	footer?: React.ReactNode
 }) {
 	return (
 		<SidebarProvider className="h-full min-h-0">
@@ -30,7 +29,7 @@ export function SectionLayout({
 				</SidebarTrigger>
 				<main className="flex w-full flex-1 justify-center px-4 md:px-12">{children}</main>
 				{pageNavigation}
-				{footer}
+				<GlobalFooter />
 			</div>
 		</SidebarProvider>
 	)
