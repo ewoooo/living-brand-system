@@ -13,16 +13,10 @@ export default async function GuidelineLayout({ children }: { children: React.Re
 			nav={<GuidelineSideNavigation navigation={navigation} />}
 			pageNavigation={
 				<PageNavigation
-					items={[
-						{ title: navigation.title, href: '/guideline' },
-						...navigation.chapters.flatMap((chapter) => [
-							{ title: chapter.title, href: chapter.href },
-							...chapter.sections.flatMap((section) => [
-								{ title: section.title, href: section.href },
-								...section.pages,
-							]),
-						]),
-					]}
+					items={navigation.chapters.flatMap((chapter) =>
+						chapter.sections.map(({ title, href }) => ({ title, href })),
+					)}
+					unitLabel="섹션"
 				/>
 			}
 			footer={<GuidelineFooter companyName={navigation.metadata.companyName} />}
