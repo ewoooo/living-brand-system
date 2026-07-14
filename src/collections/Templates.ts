@@ -79,30 +79,14 @@ export const Templates: CollectionConfig = {
 			localized: true,
 		},
 		{
-			// 렌더 캔버스(왼쪽)와 레이어 패널(오른쪽)을 한 행에 나란히 둔다.
-			type: 'row',
-			fields: [
-				{
-					name: 'templatePreview',
-					type: 'ui',
-					admin: {
-						width: '60%',
-						components: {
-							Field: '/features/template-import/components/template-preview-field',
-						},
-					},
+			// 워크스페이스: 캔버스 + 레이어 목록 + 값 편집을 한 컴포넌트가 렌더한다.
+			name: 'templateLayers',
+			type: 'ui',
+			admin: {
+				components: {
+					Field: '/features/template-import/components/template-layers-field',
 				},
-				{
-					name: 'templateLayers',
-					type: 'ui',
-					admin: {
-						width: '40%',
-						components: {
-							Field: '/features/template-import/components/template-layers-field',
-						},
-					},
-				},
-			],
+			},
 		},
 		// 레거시 절대좌표 모델 — 폼에서 숨김(컬럼·기존 데이터 유지). 신규 템플릿은 html을 쓴다.
 		{ name: 'jsonTemplate', type: 'json', admin: { hidden: true } },
