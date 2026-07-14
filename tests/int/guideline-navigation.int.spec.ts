@@ -15,8 +15,7 @@ vi.mock('@/features/guideline/repositories/guideline-view.payload.repository', (
 		{
 			id: 1,
 			title: 'Basics',
-			slug: 'basics-chapter-1',
-			legacySlug: 'basics',
+			slug: 'basics',
 			description: null,
 			parent: null,
 			breadcrumbs: [{ url: '/guideline/basics', label: 'Basics', doc: 1 }],
@@ -24,8 +23,7 @@ vi.mock('@/features/guideline/repositories/guideline-view.payload.repository', (
 		{
 			id: 10,
 			title: 'Logo',
-			slug: 'logo-section-10',
-			legacySlug: 'logo',
+			slug: 'logo',
 			description: null,
 			parent: 1,
 			breadcrumbs: [{ url: '/guideline/basics/logo', label: 'Logo', doc: 10 }],
@@ -33,8 +31,7 @@ vi.mock('@/features/guideline/repositories/guideline-view.payload.repository', (
 		{
 			id: 11,
 			title: 'The Name',
-			slug: 'the-name-section-11',
-			legacySlug: 'the-name',
+			slug: 'the-name',
 			description: null,
 			parent: 1,
 			breadcrumbs: [{ url: '/guideline/basics/the-name', label: 'The Name', doc: 11 }],
@@ -42,8 +39,7 @@ vi.mock('@/features/guideline/repositories/guideline-view.payload.repository', (
 		{
 			id: 100,
 			title: 'Primary Logo',
-			slug: 'primary-logo-page-100',
-			legacySlug: 'primary-logo',
+			slug: 'primary-logo',
 			description: null,
 			parent: 10,
 			breadcrumbs: [],
@@ -51,8 +47,7 @@ vi.mock('@/features/guideline/repositories/guideline-view.payload.repository', (
 		{
 			id: 101,
 			title: 'Clear Space',
-			slug: 'clear-space-page-101',
-			legacySlug: 'clear-space',
+			slug: 'clear-space',
 			description: null,
 			parent: 10,
 			breadcrumbs: [],
@@ -60,8 +55,7 @@ vi.mock('@/features/guideline/repositories/guideline-view.payload.repository', (
 		{
 			id: 102,
 			title: 'The Name',
-			slug: 'the-name-page-102',
-			legacySlug: 'the-name',
+			slug: 'the-name',
 			description: null,
 			parent: 11,
 			breadcrumbs: [],

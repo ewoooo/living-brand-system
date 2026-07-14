@@ -32,6 +32,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
 			"version_generate_slug" = false
 		WHERE "version_legacy_slug" IS NOT NULL;
 	`)
+	await refreshBreadcrumbURLs(db)
 }
 
 export async function down({ db }: MigrateDownArgs): Promise<void> {
@@ -69,5 +70,50 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
 			AND "locale"."version_legacy_slug" IS NOT NULL
 			AND "version"."version_legacy_collection" IS NOT NULL
 			AND "version"."version_legacy_id" IS NOT NULL;
+	`)
+	await refreshBreadcrumbURLs(db)
+}
+
+async function refreshBreadcrumbURLs(db: MigrateUpArgs['db']) {
+	await db.execute(sql`
+		WITH RECURSIVE "document_paths" AS (
+			SELECT
+				"document"."id",
+				"document"."parent_id",
+				"locale"."_locale",
+				concat('/guideline/', "locale"."slug") AS "url"
+			FROM "guideline_docs" "document"
+			JOIN "guideline_docs_locales" "locale"
+				ON "locale"."_parent_id" = "document"."id"
+			WHERE "document"."parent_id" IS NULL
+
+			UNION ALL
+
+			SELECT
+				"document"."id",
+				"document"."parent_id",
+				"locale"."_locale",
+				concat("parent_path"."url", '/', "locale"."slug") AS "url"
+			FROM "guideline_docs" "document"
+			JOIN "guideline_docs_locales" "locale"
+				ON "locale"."_parent_id" = "document"."id"
+			JOIN "document_paths" "parent_path"
+				ON "parent_path"."id" = "document"."parent_id"
+				AND "parent_path"."_locale" = "locale"."_locale"
+		), "updated_breadcrumbs" AS (
+			UPDATE "guideline_docs_breadcrumbs" "breadcrumb"
+			SET "url" = "document_path"."url"
+			FROM "document_paths" "document_path"
+			WHERE
+				"breadcrumb"."doc_id" = "document_path"."id"
+				AND "breadcrumb"."_locale" = "document_path"."_locale"
+			RETURNING "breadcrumb"."id"
+		)
+		UPDATE "_guideline_docs_v_version_breadcrumbs" "breadcrumb"
+		SET "url" = "document_path"."url"
+		FROM "document_paths" "document_path"
+		WHERE
+			"breadcrumb"."doc_id" = "document_path"."id"
+			AND "breadcrumb"."_locale" = "document_path"."_locale";
 	`)
 }

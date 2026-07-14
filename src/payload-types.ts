@@ -251,7 +251,6 @@ export interface GuidelineDocument {
    */
   generateSlug?: boolean | null;
   slug: string;
-  legacySlug?: string | null;
   /**
    * 문서 제목 아래에 표시할 선택 설명입니다.
    */
@@ -280,8 +279,6 @@ export interface GuidelineDocument {
    * 숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.
    */
   displayOrder: number;
-  legacyCollection?: ('guideline-chapters' | 'guideline-sections' | 'guideline-pages') | null;
-  legacyId?: number | null;
   parent?: (number | null) | GuidelineDocument;
   breadcrumbs?:
     | {
@@ -1238,7 +1235,6 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
   label?: T;
   generateSlug?: T;
   slug?: T;
-  legacySlug?: T;
   description?: T;
   headerImage?: T;
   checks?: T | GuidelineChecksSelect<T>;
@@ -1251,8 +1247,6 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         doDont?: T | DoDontBlockSelect<T>;
       };
   displayOrder?: T;
-  legacyCollection?: T;
-  legacyId?: T;
   parent?: T;
   breadcrumbs?:
     | T

@@ -52,7 +52,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 			const created = await payload.create({
 				collection: 'guideline-documents',
 				context: MIGRATION_CONTEXT,
-				data: documentData(initial, parent, collection, legacyId),
+				data: documentData(initial, parent, collection),
 				depth: 0,
 				draft: !published,
 				fallbackLocale: false,
@@ -60,11 +60,13 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 				overrideAccess: true,
 				req,
 			})
+			await recordLegacyMapping(db, created.id, initial, initialLocale, collection)
 			documentIds.set(legacyKey(collection, legacyId), created.id)
 
 			if (published) {
 				await copyOtherLocales(
 					payload,
+					db,
 					created.id,
 					state.published,
 					initialLocale,
@@ -79,6 +81,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 			if (latestDocument?._status === 'draft') {
 				await copyLocales(
 					payload,
+					db,
 					created.id,
 					state.latest,
 					true,
@@ -246,6 +249,7 @@ async function loadDraftDocuments(
 
 async function copyOtherLocales(
 	payload: Payload,
+	db: MigrateUpArgs['db'],
 	documentId: number,
 	state: LocalizedState,
 	initialLocale: Locale,
@@ -258,12 +262,23 @@ async function copyOtherLocales(
 		if (locale === initialLocale) continue
 		const document = state[locale]
 		if (!document || !hasRequiredCopy(document)) continue
-		await updateLocale(payload, documentId, document, locale, draft, collection, documentIds, req)
+		await updateLocale(
+			payload,
+			db,
+			documentId,
+			document,
+			locale,
+			draft,
+			collection,
+			documentIds,
+			req,
+		)
 	}
 }
 
 async function copyLocales(
 	payload: Payload,
+	db: MigrateUpArgs['db'],
 	documentId: number,
 	state: LocalizedState,
 	draft: boolean,
@@ -274,12 +289,23 @@ async function copyLocales(
 	for (const locale of LOCALES) {
 		const document = state[locale]
 		if (!document) continue
-		await updateLocale(payload, documentId, document, locale, draft, collection, documentIds, req)
+		await updateLocale(
+			payload,
+			db,
+			documentId,
+			document,
+			locale,
+			draft,
+			collection,
+			documentIds,
+			req,
+		)
 	}
 }
 
 async function updateLocale(
 	payload: Payload,
+	db: MigrateUpArgs['db'],
 	documentId: number,
 	document: LegacyDocument,
 	locale: Locale,
@@ -305,13 +331,13 @@ async function updateLocale(
 		overrideAccess: true,
 		req,
 	})
+	await recordLegacyMapping(db, documentId, document, locale, collection)
 }
 
 function documentData(
 	document: LegacyDocument,
 	parent: number | null,
 	legacyCollection: LegacyCollection,
-	legacyId?: number,
 ) {
 	return {
 		_status: document._status,
@@ -319,7 +345,6 @@ function documentData(
 		...('label' in document ? { label: document.label } : {}),
 		generateSlug: false,
 		slug: migrationSlug(document.slug, legacyCollection, document.id),
-		legacySlug: document.slug,
 		description: normalizeDescription(document.description),
 		...('headerImage' in document
 			? { headerImage: relationshipId(document.headerImage) }
@@ -328,8 +353,59 @@ function documentData(
 		...('blocks' in document ? { blocks: document.blocks } : {}),
 		displayOrder: document.displayOrder,
 		parent,
-		...(legacyId === undefined ? {} : { legacyCollection, legacyId }),
 	} as never
+}
+
+async function recordLegacyMapping(
+	db: MigrateUpArgs['db'],
+	documentId: number,
+	document: LegacyDocument,
+	locale: Locale,
+	collection: LegacyCollection,
+) {
+	await db.execute(sql`
+		UPDATE "guideline_docs"
+		SET
+			"legacy_collection" = ${collection},
+			"legacy_id" = ${document.id}
+		WHERE "id" = ${documentId};
+	`)
+	await db.execute(sql`
+		UPDATE "guideline_docs_locales"
+		SET "legacy_slug" = ${document.slug}
+		WHERE "_parent_id" = ${documentId} AND "_locale" = ${locale};
+	`)
+	await db.execute(sql`
+		WITH "latest_version" AS (
+			SELECT "id"
+			FROM "_guideline_docs_v"
+			WHERE "parent_id" = ${documentId}
+			ORDER BY "id" DESC
+			LIMIT 1
+		)
+		UPDATE "_guideline_docs_v" "version"
+		SET
+			"version_legacy_collection" = ${collection},
+			"version_legacy_id" = ${document.id}
+		FROM "latest_version"
+		WHERE "version"."id" = "latest_version"."id";
+	`)
+	await db.execute(sql`
+		WITH "latest_version" AS (
+			SELECT "id"
+			FROM "_guideline_docs_v"
+			WHERE "parent_id" = ${documentId}
+			ORDER BY "id" DESC
+			LIMIT 1
+		)
+		UPDATE "_guideline_docs_v_locales" "version_locale"
+		SET "version_legacy_slug" = "document_locale"."legacy_slug"
+		FROM "latest_version", "guideline_docs_locales" "document_locale"
+		WHERE
+			"version_locale"."_parent_id" = "latest_version"."id"
+			AND "document_locale"."_parent_id" = ${documentId}
+			AND "document_locale"."_locale" = "version_locale"."_locale";
+	`)
 }
 
 function migrationSlug(slug: string, collection: LegacyCollection, id: number) {

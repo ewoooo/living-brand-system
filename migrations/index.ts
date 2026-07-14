@@ -43,6 +43,7 @@ import * as migration_20260714_031500_backfill_guideline_documents from './20260
 import * as migration_20260714_040034_contract_guideline_collections from './20260714_040034_contract_guideline_collections';
 import * as migration_20260714_043746_prepare_guideline_route_slugs from './20260714_043746_prepare_guideline_route_slugs';
 import * as migration_20260714_043817_backfill_guideline_route_slugs from './20260714_043817_backfill_guideline_route_slugs';
+import * as migration_20260714_044457_remove_guideline_legacy_mapping from './20260714_044457_remove_guideline_legacy_mapping';
 
 export const migrations = [
   {
@@ -268,6 +269,11 @@ export const migrations = [
   {
     up: migration_20260714_043817_backfill_guideline_route_slugs.up,
     down: migration_20260714_043817_backfill_guideline_route_slugs.down,
-    name: '20260714_043817_backfill_guideline_route_slugs'
+    name: '20260714_043817_backfill_guideline_route_slugs',
+  },
+  {
+    up: migration_20260714_044457_remove_guideline_legacy_mapping.up,
+    down: migration_20260714_044457_remove_guideline_legacy_mapping.down,
+    name: '20260714_044457_remove_guideline_legacy_mapping'
   },
 ];

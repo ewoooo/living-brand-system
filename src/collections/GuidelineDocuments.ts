@@ -70,16 +70,6 @@ export const GuidelineDocuments: CollectionConfig = {
 			},
 		}),
 		{
-			name: 'legacySlug',
-			type: 'text',
-			localized: true,
-			index: true,
-			admin: {
-				hidden: true,
-				readOnly: true,
-			},
-		},
-		{
 			name: 'description',
 			type: 'richText',
 			localized: true,
@@ -110,25 +100,6 @@ export const GuidelineDocuments: CollectionConfig = {
 			admin: {
 				position: 'sidebar',
 				description: '숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.',
-			},
-		},
-		{
-			name: 'legacyCollection',
-			type: 'select',
-			index: true,
-			options: ['guideline-chapters', 'guideline-sections', 'guideline-pages'],
-			admin: {
-				hidden: true,
-				readOnly: true,
-			},
-		},
-		{
-			name: 'legacyId',
-			type: 'number',
-			index: true,
-			admin: {
-				hidden: true,
-				readOnly: true,
 			},
 		},
 	],
