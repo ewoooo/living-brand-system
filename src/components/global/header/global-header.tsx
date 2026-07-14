@@ -8,24 +8,43 @@ import {
 	GuidelineSearch,
 	type GuidelineSearchChapter,
 } from '@/components/global/search/guideline-search'
+import {
+	NavigationMenu,
+	NavigationMenuContent,
+	NavigationMenuItem,
+	NavigationMenuLink,
+	NavigationMenuList,
+	NavigationMenuTrigger,
+	navigationMenuTriggerStyle,
+} from '@/components/ui/navigation-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
+import { cn } from '@/lib/utils'
 
-const LINKS = [
-	{ href: '/guideline', label: 'Guideline' },
-	{ href: '/review', label: 'Review' },
-	{ href: '/create', label: 'Create' },
+const STUDIO_LINKS = [
+	{ href: '/create', label: 'Templates' },
 	{ href: '/image', label: 'Image' },
 ] as const
 
 const LOGIN = { href: '/login', label: 'Admin' } as const
 
-function HeaderHead({ className }: { className?: string }) {
+function HeaderHead({
+	className,
+	guidelineChapters,
+}: {
+	className?: string
+	guidelineChapters: GuidelineSearchChapter[]
+}) {
 	const pathname = usePathname()
 	const LOGO_SIZE = 14
+	const guidelineActive = pathname === '/guideline' || pathname.startsWith('/guideline/')
+	const reviewActive = pathname === '/review' || pathname.startsWith('/review/')
+	const studioActive = STUDIO_LINKS.some(
+		({ href }) => pathname === href || pathname.startsWith(`${href}/`),
+	)
 
 	return (
 		<section className={className}>
-			<nav className="type-body flex items-center gap-1 py-4 pl-5">
+			<nav aria-label="주요 메뉴" className="type-body flex items-center gap-1 py-4 pl-5">
 				<Link
 					aria-label="메인으로 이동"
 					className="flex size-8 shrink-0 items-center justify-center rounded-md transition-opacity hover:opacity-60"
@@ -39,14 +58,106 @@ function HeaderHead({ className }: { className?: string }) {
 						width={LOGO_SIZE}
 					/>
 				</Link>
-				{LINKS.map((item) => (
-					<HeaderLinkBlock
-						key={item.href}
-						href={item.href}
-						isActive={pathname === item.href || pathname.startsWith(`${item.href}/`)}
-						label={item.label}
-					/>
-				))}
+				<NavigationMenu viewport={false}>
+					<NavigationMenuList>
+						<NavigationMenuItem>
+							<NavigationMenuTrigger
+								className={cn(guidelineActive && 'bg-muted text-foreground')}
+							>
+								Guideline
+							</NavigationMenuTrigger>
+							<NavigationMenuContent>
+								<ul className="grid w-72 gap-1">
+									<li>
+										<NavigationMenuLink
+											active={pathname === '/guideline'}
+											asChild
+										>
+											<Link
+												aria-current={
+													pathname === '/guideline' ? 'page' : undefined
+												}
+												href="/guideline"
+											>
+												Overview
+											</Link>
+										</NavigationMenuLink>
+									</li>
+									{guidelineChapters.map((chapter) => {
+										const active =
+											pathname === chapter.href ||
+											pathname.startsWith(`${chapter.href}/`)
+
+										return (
+											<li key={chapter.id}>
+												<NavigationMenuLink
+													active={active}
+													asChild
+													className="flex-col items-start gap-0.5"
+												>
+													<Link
+														aria-current={active ? 'page' : undefined}
+														href={chapter.href}
+													>
+														<span>{chapter.title}</span>
+														{chapter.description && (
+															<span className="text-muted-foreground">
+																{chapter.description}
+															</span>
+														)}
+													</Link>
+												</NavigationMenuLink>
+											</li>
+										)
+									})}
+								</ul>
+							</NavigationMenuContent>
+						</NavigationMenuItem>
+						<NavigationMenuItem>
+							<NavigationMenuLink
+								active={reviewActive}
+								asChild
+								className={navigationMenuTriggerStyle()}
+							>
+								<Link
+									aria-current={reviewActive ? 'page' : undefined}
+									href="/review"
+								>
+									Review
+								</Link>
+							</NavigationMenuLink>
+						</NavigationMenuItem>
+						<NavigationMenuItem>
+							<NavigationMenuTrigger
+								className={cn(studioActive && 'bg-muted text-foreground')}
+							>
+								Studio
+							</NavigationMenuTrigger>
+							<NavigationMenuContent>
+								<ul className="grid w-48 gap-1">
+									{STUDIO_LINKS.map((item) => {
+										const active =
+											pathname === item.href ||
+											pathname.startsWith(`${item.href}/`)
+
+										return (
+											<li key={item.href}>
+												<NavigationMenuLink active={active} asChild>
+													<Link
+														aria-current={active ? 'page' : undefined}
+														href={item.href}
+													>
+														{item.label}
+													</Link>
+												</NavigationMenuLink>
+											</li>
+										)
+									})}
+								</ul>
+							</NavigationMenuContent>
+						</NavigationMenuItem>
+					</NavigationMenuList>
+				</NavigationMenu>
 			</nav>
 		</section>
 	)
@@ -90,7 +201,7 @@ export function GlobalHeader({
 }) {
 	return (
 		<header className="relative z-50 flex shrink-0 bg-background">
-			<HeaderHead className="flex-1" />
+			<HeaderHead className="flex-1" guidelineChapters={guidelineChapters} />
 			<HeaderCenter
 				className="-translate-x-1/2 absolute left-1/2 flex items-center gap-2 p-4"
 				guidelineChapters={guidelineChapters}
