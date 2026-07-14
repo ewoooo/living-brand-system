@@ -1,6 +1,10 @@
 import type { Field } from 'payload'
 import { describe, expect, it } from 'vitest'
 import { GuidelineDocuments } from '@/collections/GuidelineDocuments'
+import {
+	guidelineBreadcrumbCount,
+	guidelineDocumentTypeLabel,
+} from '@/components/admin/guideline-document-tree'
 import { checkKeyFromEnglishTitle, guidelineBlocks, guidelineChecksField } from './guideline'
 
 const fieldNames = (fields: Field[]) =>
@@ -9,6 +13,29 @@ const fieldNames = (fields: Field[]) =>
 	)
 
 describe('guideline checks field', () => {
+	it('작성 순서와 자동 계층 필드 노출을 구성한다', () => {
+		const names = fieldNames(GuidelineDocuments.fields)
+		const field = (name: string) =>
+			GuidelineDocuments.fields.find(
+				(candidate) => 'name' in candidate && candidate.name === name,
+			)
+
+		expect(names.indexOf('parent')).toBeLessThan(names.indexOf('title'))
+		expect(names.indexOf('blocks')).toBeLessThan(names.indexOf('checks'))
+		expect(field('parent')?.admin?.position).toBe('main')
+		expect(field('breadcrumbs')?.admin).toMatchObject({ hidden: true })
+	})
+
+	it('저장된 계층 깊이를 문서 유형으로 표시한다', () => {
+		expect(guidelineBreadcrumbCount([{ url: '/chapter' }], undefined, 0)).toBe(1)
+		expect(guidelineBreadcrumbCount(undefined, [{ url: '/chapter/section' }], 0)).toBe(1)
+		expect(guidelineBreadcrumbCount(undefined, undefined, 3)).toBe(3)
+		expect(guidelineDocumentTypeLabel(1, false, false)).toBe('챕터')
+		expect(guidelineDocumentTypeLabel(2, true, false)).toBe('섹션')
+		expect(guidelineDocumentTypeLabel(3, true, false)).toBe('페이지')
+		expect(guidelineDocumentTypeLabel(2, true, true)).toBe('저장 후 결정')
+	})
+
 	it('통합 문서와 모든 Block에 같은 checks[] 계약을 둔다', () => {
 		const checks = guidelineChecksField()
 		expect(checks.type).toBe('array')
