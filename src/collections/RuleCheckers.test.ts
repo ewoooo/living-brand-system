@@ -20,6 +20,11 @@ function validationFor(name: string): Validate {
 }
 
 describe('RuleCheckers executor binding', () => {
+	it('저장소 식별자는 유지하고 Admin에는 Checker로 표시한다', () => {
+		expect(RuleCheckers.slug).toBe('rule-checkers')
+		expect(RuleCheckers.labels).toEqual({ singular: 'Checker', plural: 'Checkers' })
+	})
+
 	it('선택한 executor에 필요한 binding만 필수로 검증한다', () => {
 		expect(
 			validationFor('checkerKey')('', { siblingData: { executor: 'deterministic' } }),

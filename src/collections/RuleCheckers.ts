@@ -31,8 +31,8 @@ export const RuleCheckers: CollectionConfig = {
 	dbName: 'rule_checkers',
 	access: managerManagedAccess,
 	labels: {
-		singular: 'Rule Checker',
-		plural: 'Rule Checkers',
+		singular: 'Checker',
+		plural: 'Checkers',
 	},
 	admin: {
 		group: false,
