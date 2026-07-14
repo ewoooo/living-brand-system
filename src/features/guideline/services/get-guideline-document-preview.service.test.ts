@@ -1,83 +1,82 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { findDraftGuidelineDocumentById } from '../repositories/guideline-preview.payload.repository'
-import { getGuidelineChapter } from './get-guideline-chapter.service'
+import {
+	findDraftGuidelineDocumentById,
+	listDraftGuidelineChildren,
+} from '../repositories/guideline-preview.payload.repository'
 import {
 	getGuidelineChapterPreview,
 	getGuidelineDocumentPreviewTarget,
 	getGuidelineSectionPreview,
 } from './get-guideline-document-preview.service'
-import { getGuidelineSection } from './get-guideline-section.service'
 
 vi.mock('../repositories/guideline-preview.payload.repository', () => ({
 	findDraftGuidelineDocumentById: vi.fn(),
-}))
-vi.mock('./get-guideline-chapter.service', () => ({ getGuidelineChapter: vi.fn() }))
-vi.mock('./get-guideline-section.service', () => ({
-	getGuidelineSection: vi.fn(),
+	listDraftGuidelineChildren: vi.fn(),
 }))
 
 describe('guideline document preview', () => {
 	beforeEach(() => vi.clearAllMocks())
 
-	it('breadcrumb 깊이에 따라 chapter와 page draft를 치환한다', async () => {
-		vi.mocked(findDraftGuidelineDocumentById).mockResolvedValue({
-			id: 7,
-			title: 'Logo Usage',
-			slug: 'logo-usage-page-7',
+	it('발행된 부모가 없는 draft chapter·section·page를 preview한다', async () => {
+		const chapter = {
+			id: 1,
+			title: 'Draft Brand System',
+			label: 'Draft',
+			description: null,
+			slug: 'brand-system-chapter-1',
+			legacySlug: 'brand-system',
+			breadcrumbs: [{ url: '/guideline/brand-system' }],
+		}
+		const section = {
+			id: 2,
+			title: 'Draft Basics',
+			slug: 'basics-section-2',
+			legacySlug: 'basics',
+			description: null,
+			headerImage: null,
+			blocks: [],
+			parent: 1,
+			breadcrumbs: [
+				{ url: '/guideline/brand-system' },
+				{ url: '/guideline/brand-system/basics' },
+			],
+		}
+		const page = {
+			id: 3,
+			title: 'Draft Logo Usage',
+			slug: 'logo-usage-page-3',
 			legacySlug: 'logo usage',
 			description: null,
 			displayOrder: 1,
 			blocks: [],
+			parent: 2,
 			breadcrumbs: [
 				{ url: '/guideline/brand-system' },
 				{ url: '/guideline/brand-system/basics' },
 				{ url: '/guideline/brand-system/basics/logo-usage' },
 			],
-		} as never)
-
-		const target = await getGuidelineDocumentPreviewTarget(7, { id: 1 } as never)
-
-		expect(target?.href).toBe('/guideline/brand-system/basics?previewDocument=7#logo%20usage')
-
-		vi.mocked(getGuidelineSection).mockResolvedValue({
-			title: 'Basics',
-			headerImage: null,
-			blocks: [],
-			description: null,
-			pages: [
-				{
-					id: 7,
-					title: 'Published title',
-					slug: 'logo-usage',
-					description: null,
-					displayOrder: 1,
-					blocks: [],
-				},
-			],
+		}
+		vi.mocked(findDraftGuidelineDocumentById).mockImplementation(async (id) => {
+			if (id === 1) return chapter as never
+			if (id === 2) return section as never
+			return page as never
+		})
+		vi.mocked(listDraftGuidelineChildren).mockImplementation(async (id) => {
+			if (id === 1) return [section] as never
+			return [page] as never
 		})
 
-		const preview = await getGuidelineSectionPreview(7, { id: 1 } as never)
+		const target = await getGuidelineDocumentPreviewTarget(3, { id: 1 } as never)
 
-		expect(preview?.pages).toHaveLength(1)
-		expect(preview?.pages[0]?.title).toBe('Logo Usage')
+		expect(target?.href).toBe('/guideline/brand-system/basics?previewDocument=3#logo%20usage')
 
-		vi.mocked(findDraftGuidelineDocumentById).mockResolvedValue({
-			id: 2,
+		await expect(getGuidelineChapterPreview(1, { id: 1 } as never)).resolves.toMatchObject({
 			title: 'Draft Brand System',
-			label: 'Draft',
-			description: null,
-			breadcrumbs: [{ url: '/guideline/brand-system' }],
-		} as never)
-		vi.mocked(getGuidelineChapter).mockResolvedValue({
-			title: 'Brand System',
-			label: null,
-			description: null,
-			sections: [],
+			sections: [{ title: 'Draft Basics', slug: 'basics' }],
 		})
-
-		await expect(getGuidelineChapterPreview(2, { id: 1 } as never)).resolves.toMatchObject({
-			title: 'Draft Brand System',
-			label: 'Draft',
+		await expect(getGuidelineSectionPreview(3, { id: 1 } as never)).resolves.toMatchObject({
+			title: 'Draft Basics',
+			pages: [{ title: 'Draft Logo Usage', slug: 'logo usage' }],
 		})
 	})
 })

@@ -1,14 +1,12 @@
 import type { GuidelineDocument, User } from '@/payload-types'
-import { findDraftGuidelineDocumentById } from '../repositories/guideline-preview.payload.repository'
+import {
+	findDraftGuidelineDocumentById,
+	listDraftGuidelineChildren,
+} from '../repositories/guideline-preview.payload.repository'
+import { relationshipId } from '../utils/block-text'
 import { extractTextFromLexical } from '../utils/lexical-text'
-import {
-	type GetGuidelineChapterOutput,
-	getGuidelineChapter,
-} from './get-guideline-chapter.service'
-import {
-	type GetGuidelineSectionOutput,
-	getGuidelineSection,
-} from './get-guideline-section.service'
+import type { GetGuidelineChapterOutput } from './get-guideline-chapter.service'
+import type { GetGuidelineSectionOutput } from './get-guideline-section.service'
 
 interface GuidelineDocumentPreviewTarget {
 	chapterSlug: string
@@ -54,8 +52,8 @@ export async function getGuidelineDocumentPreviewTarget(
 }
 
 /**
- * 실제 chapter 화면은 published 하위 문서를 유지하면서 선택한 chapter만 draft로 치환한다.
- * 외부 조회는 preview target service와 기존 guideline chapter service가 소유한다.
+ * Chapter preview는 발행 여부와 무관하게 선택한 draft와 최신 draft 하위 문서를 렌더링한다.
+ * Payload 조회는 guideline-preview repository가 소유한다.
  */
 export async function getGuidelineChapterPreview(
 	documentId: number,
@@ -64,20 +62,27 @@ export async function getGuidelineChapterPreview(
 	const target = await getGuidelineDocumentPreviewTarget(documentId, user)
 	if (target?.level !== 1) return null
 
-	const chapter = await getGuidelineChapter(target.chapterSlug)
-	if (!chapter) return null
-
-	return {
-		...chapter,
-		title: target.document.title,
-		label: target.document.label || null,
-		description: extractTextFromLexical(target.document.description) || null,
+	try {
+		const sections = await listDraftGuidelineChildren(target.document.id, user)
+		return {
+			title: target.document.title,
+			label: target.document.label || null,
+			description: extractTextFromLexical(target.document.description) || null,
+			sections: sections.map((section) => ({
+				id: section.id,
+				title: section.title,
+				slug: section.legacySlug || section.slug,
+				description: extractTextFromLexical(section.description) || null,
+			})),
+		}
+	} catch {
+		return null
 	}
 }
 
 /**
- * 실제 section 화면은 published 구조를 유지하면서 선택한 section 또는 page만 draft로 치환한다.
- * 외부 조회는 preview target service와 기존 guideline section service가 소유한다.
+ * Section preview는 draft 부모와 최신 draft 하위 문서를 함께 읽어 신규 트리도 렌더링한다.
+ * Payload 조회는 guideline-preview repository가 소유한다.
  */
 export async function getGuidelineSectionPreview(
 	documentId: number,
@@ -87,32 +92,31 @@ export async function getGuidelineSectionPreview(
 
 	if (!target?.sectionSlug || target.level === 1) return null
 
-	const section = await getGuidelineSection(target.chapterSlug, target.sectionSlug)
-
-	if (!section) return null
-	if (target.level === 2) {
-		return {
-			...section,
-			title: target.document.title,
-			headerImage: target.document.headerImage ?? null,
-			blocks: target.document.blocks ?? [],
-			description: extractTextFromLexical(target.document.description) || null,
+	try {
+		let section = target.document
+		if (target.level === 3) {
+			const parentId = relationshipId(target.document.parent)
+			if (parentId === null) return null
+			section = await findDraftGuidelineDocumentById(parentId, user)
 		}
-	}
+		if (section?.breadcrumbs?.length !== 2) return null
 
-	const page = {
-		id: target.document.id,
-		title: target.document.title,
-		slug: target.document.legacySlug || target.document.slug,
-		description: target.document.description || null,
-		displayOrder: target.document.displayOrder,
-		blocks: target.document.blocks || [],
-	}
-
-	return {
-		...section,
-		pages: [...section.pages.filter((item) => item.id !== page.id), page].sort(
-			(a, b) => a.displayOrder - b.displayOrder,
-		),
+		const pages = await listDraftGuidelineChildren(section.id, user)
+		return {
+			title: section.title,
+			headerImage: section.headerImage ?? null,
+			blocks: section.blocks ?? [],
+			description: extractTextFromLexical(section.description) || null,
+			pages: pages.map((page) => ({
+				id: page.id,
+				title: page.title,
+				slug: page.legacySlug || page.slug,
+				description: page.description || null,
+				displayOrder: page.displayOrder,
+				blocks: page.blocks || [],
+			})),
+		}
+	} catch {
+		return null
 	}
 }
