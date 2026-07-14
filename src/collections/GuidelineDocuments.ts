@@ -5,6 +5,11 @@ import { validateGuidelineDocumentDepth } from '@/features/guideline/checks/vali
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
 
+const previewURL = (id: unknown) =>
+	typeof id === 'number' || typeof id === 'string'
+		? `/api/guideline-preview?id=${encodeURIComponent(String(id))}`
+		: null
+
 export const GuidelineDocuments: CollectionConfig = {
 	slug: 'guideline-documents',
 	dbName: 'guideline_docs',
@@ -22,6 +27,10 @@ export const GuidelineDocuments: CollectionConfig = {
 		defaultColumns: ['title', 'parent', 'slug', 'displayOrder', 'updatedAt'],
 		description: '장·섹션·페이지를 같은 구조로 관리하는 계층형 가이드라인 문서입니다.',
 		listSearchableFields: ['title', 'slug'],
+		livePreview: {
+			url: ({ data }) => previewURL(data.id),
+		},
+		preview: (data) => previewURL(data.id),
 	},
 	versions: draftVersions,
 	defaultSort: 'displayOrder',

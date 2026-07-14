@@ -1,10 +1,10 @@
-import type { GuidelinePage } from '@/payload-types'
+import type { GuidelineDocument } from '@/payload-types'
 import { ColorPaletteBlock } from './color-palette-block'
 import { ColumnUnitBlock } from './column-unit-block'
 import { DoDontBlock } from './do-dont-block'
 import { MediaShowcaseBlock } from './media-showcase-block'
 
-export function GuidelineBlocks({ blocks }: { blocks: GuidelinePage['blocks'] }) {
+export function GuidelineBlocks({ blocks }: { blocks: GuidelineDocument['blocks'] }) {
 	return (
 		<div className="flex flex-col gap-12">
 			{blocks?.map((block) => {

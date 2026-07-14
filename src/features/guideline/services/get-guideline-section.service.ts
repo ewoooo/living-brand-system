@@ -1,4 +1,4 @@
-import type { GuidelinePage, GuidelineSection } from '@/payload-types'
+import type { GuidelineDocument } from '@/payload-types'
 import {
 	findPublishedChapterBySlug,
 	findPublishedSectionBySlug,
@@ -8,16 +8,16 @@ import { extractTextFromLexical } from '../utils/lexical-text'
 
 export interface GetGuidelineSectionOutput {
 	title: string
-	headerImage: GuidelineSection['headerImage']
-	blocks: GuidelinePage['blocks']
+	headerImage: GuidelineDocument['headerImage']
+	blocks: GuidelineDocument['blocks']
 	description: string | null
 	pages: {
 		id: number
 		title: string
 		slug: string
-		description: GuidelinePage['description']
+		description: GuidelineDocument['description']
 		displayOrder: number
-		blocks: GuidelinePage['blocks']
+		blocks: GuidelineDocument['blocks']
 	}[]
 }
 

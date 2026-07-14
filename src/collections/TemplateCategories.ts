@@ -3,7 +3,7 @@ import { managerManagedAccess } from '@/lib/auth'
 
 /**
  * Create 화면 사이드바의 템플릿 분류 단위.
- * GuidelineSections → GuidelinePages 관계와 같은 방식으로 Templates가 category로 참조한다.
+ * Templates가 category를 참조한다.
  */
 export const TemplateCategories: CollectionConfig = {
 	slug: 'template-categories',

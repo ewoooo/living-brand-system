@@ -1,7 +1,7 @@
 import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { GuidelineSection } from '@/features/guideline/components/pages/guideline-section'
-import { getGuidelinePagePreview } from '@/features/guideline/services/get-guideline-page-preview.service'
+import { getGuidelineSectionPreview } from '@/features/guideline/services/get-guideline-document-preview.service'
 import { getGuidelineSection } from '@/features/guideline/services/get-guideline-section.service'
 import { isManager, isPayloadUser } from '@/lib/auth'
 import { authenticateRequest } from '@/lib/request-auth'
@@ -11,10 +11,10 @@ export default async function GuidelineSectionPage({
 	searchParams,
 }: {
 	params: Promise<{ chapterSlug: string; sectionSlug: string }>
-	searchParams: Promise<{ previewPage?: string }>
+	searchParams: Promise<{ previewDocument?: string }>
 }) {
 	const { chapterSlug, sectionSlug } = await params
-	const previewSection = await getAuthorizedPreview((await searchParams).previewPage)
+	const previewSection = await getAuthorizedPreview((await searchParams).previewDocument)
 	const section = previewSection ?? (await getGuidelineSection(chapterSlug, sectionSlug))
 
 	if (!section) {
@@ -24,15 +24,15 @@ export default async function GuidelineSectionPage({
 	return <GuidelineSection section={section} isPreview={Boolean(previewSection)} />
 }
 
-async function getAuthorizedPreview(previewPage?: string) {
-	const pageId = Number(previewPage)
+async function getAuthorizedPreview(previewDocument?: string) {
+	const documentId = Number(previewDocument)
 	const { isEnabled } = await draftMode()
 
-	if (!isEnabled || !Number.isSafeInteger(pageId) || pageId < 1) return null
+	if (!isEnabled || !Number.isSafeInteger(documentId) || documentId < 1) return null
 
 	const { user } = await authenticateRequest()
 
 	if (!isPayloadUser(user) || !isManager(user)) return null
 
-	return getGuidelinePagePreview(pageId, user)
+	return getGuidelineSectionPreview(documentId, user)
 }

@@ -18,7 +18,7 @@ describe('validateGuidelineCheckKeys', () => {
 
 		await expect(
 			validateGuidelineCheckKeys({
-				collection: { slug: 'guideline-pages' },
+				collection: { slug: 'guideline-documents' },
 				data: { checks: [{ title: 'Imagery Mood' }] },
 				operation: 'create',
 				req: { payload: { find } },

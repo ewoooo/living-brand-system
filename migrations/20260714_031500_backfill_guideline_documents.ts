@@ -1,11 +1,6 @@
 import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 import type { Payload } from 'payload'
-import type {
-	GuidelineChapter,
-	GuidelineDocument,
-	GuidelinePage,
-	GuidelineSection,
-} from '../src/payload-types'
+import type { GuidelineDocument } from '../src/payload-types'
 
 const LEGACY_COLLECTIONS = [
 	'guideline-chapters',
@@ -17,7 +12,20 @@ const MIGRATION_CONTEXT = { skipGuidelineCheckUniqueness: true }
 
 type LegacyCollection = (typeof LEGACY_COLLECTIONS)[number]
 type Locale = (typeof LOCALES)[number]
-type LegacyDocument = GuidelineChapter | GuidelinePage | GuidelineSection
+type LegacyDocument = {
+	_status?: 'draft' | 'published' | null
+	blocks?: GuidelineDocument['blocks']
+	chapter?: number | { id: number } | null
+	checks?: GuidelineDocument['checks']
+	description?: GuidelineDocument['description'] | string | null
+	displayOrder: number
+	headerImage?: GuidelineDocument['headerImage']
+	id: number
+	label?: string | null
+	section?: number | { id: number } | null
+	slug: string
+	title: string
+}
 type LocalizedState = Record<Locale, LegacyDocument | undefined>
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
@@ -190,7 +198,7 @@ async function loadPublishedDocuments(
 	locale: Locale,
 ) {
 	const result = await payload.find({
-		collection,
+		collection: collection as never,
 		depth: 0,
 		draft: false,
 		fallbackLocale: false,
@@ -200,7 +208,12 @@ async function loadPublishedDocuments(
 		pagination: false,
 	})
 
-	return new Map(result.docs.map((document) => [document.id, document as LegacyDocument]))
+	return new Map(
+		result.docs.map((document) => {
+			const legacyDocument = document as unknown as LegacyDocument
+			return [legacyDocument.id, legacyDocument]
+		}),
+	)
 }
 
 async function loadDraftDocuments(
@@ -209,7 +222,7 @@ async function loadDraftDocuments(
 	locale: Locale,
 ) {
 	const result = await payload.findVersions({
-		collection,
+		collection: collection as never,
 		depth: 0,
 		fallbackLocale: false,
 		limit: 0,
@@ -224,8 +237,9 @@ async function loadDraftDocuments(
 		const id = relationshipId(entry.parent)
 		if (id === null || visited.has(id)) continue
 		visited.add(id)
-		if (entry.version._status !== 'draft') continue
-		documents.set(id, { ...entry.version, id } as LegacyDocument)
+		const version = entry.version as unknown as LegacyDocument
+		if (version._status !== 'draft') continue
+		documents.set(id, { ...version, id })
 	}
 	return documents
 }

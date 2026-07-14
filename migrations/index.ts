@@ -40,6 +40,7 @@ import * as migration_20260714_024739_switch_guideline_search_index from './2026
 import * as migration_20260714_024930_add_guideline_legacy_mapping from './20260714_024930_add_guideline_legacy_mapping';
 import * as migration_20260714_031420_add_guideline_legacy_slug from './20260714_031420_add_guideline_legacy_slug';
 import * as migration_20260714_031500_backfill_guideline_documents from './20260714_031500_backfill_guideline_documents';
+import * as migration_20260714_040034_contract_guideline_collections from './20260714_040034_contract_guideline_collections';
 
 export const migrations = [
   {
@@ -251,5 +252,10 @@ export const migrations = [
     up: migration_20260714_031500_backfill_guideline_documents.up,
     down: migration_20260714_031500_backfill_guideline_documents.down,
     name: '20260714_031500_backfill_guideline_documents',
+  },
+  {
+    up: migration_20260714_040034_contract_guideline_collections.up,
+    down: migration_20260714_040034_contract_guideline_collections.down,
+    name: '20260714_040034_contract_guideline_collections',
   },
 ];

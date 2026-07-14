@@ -12,6 +12,9 @@ import { buildConfig, type CollectionConfig, type PayloadRequest } from 'payload
 import sharp from 'sharp'
 import { z } from 'zod/v3'
 import { migrations } from '../migrations'
+import { LegacyGuidelineChapters } from '../migrations/legacy-guideline/chapters'
+import { LegacyGuidelinePages } from '../migrations/legacy-guideline/pages'
+import { LegacyGuidelineSections } from '../migrations/legacy-guideline/sections'
 import { AgentChatSessions } from './collections/AgentChatSessions'
 import { AgentSkills } from './collections/AgentSkills'
 import { ApplicationImages } from './collections/ApplicationImages'
@@ -19,10 +22,7 @@ import { BrandColors } from './collections/BrandColors'
 import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
 import { CheckSessions } from './collections/CheckSessions'
-import { GuidelineChapters } from './collections/GuidelineChapters'
 import { GuidelineDocuments } from './collections/GuidelineDocuments'
-import { GuidelinePages } from './collections/GuidelinePages'
-import { GuidelineSections } from './collections/GuidelineSections'
 import { Plugins } from './collections/Plugins'
 import { RuleCheckers } from './collections/RuleCheckers'
 import { TemplateAssets } from './collections/TemplateAssets'
@@ -31,7 +31,7 @@ import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
 import { env } from './env'
 import { collectGuidelineCheckSources } from './features/guideline/checks/collect-guideline-check-sources'
-import { findPublishedGuidelineCheckDocuments } from './features/guideline/repositories/published-guideline-checks.payload.repository'
+import { findPublishedUnifiedGuidelineCheckDocuments } from './features/guideline/repositories/published-guideline-checks.payload.repository'
 import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
 import { adminOnly } from './lib/auth'
@@ -42,6 +42,25 @@ const shouldRunProdMigrations =
 	env.PAYLOAD_RUN_MIGRATIONS_ON_STARTUP === 'true' &&
 	env.NODE_ENV === 'production' &&
 	env.NEXT_PHASE !== 'phase-production-build'
+const isCreatingMigration = process.argv.includes('migrate:create')
+const shouldLoadLegacyGuidelineCollections =
+	!isCreatingMigration &&
+	(shouldRunProdMigrations || process.argv.some((argument) => argument.startsWith('migrate')))
+// 기존 Local API 기반 backfill을 재실행할 때만 schema를 로드한다. Admin/API에서는 항상 숨기고 쓰기를 막는다.
+const legacyGuidelineCollections: CollectionConfig[] = shouldLoadLegacyGuidelineCollections
+	? [LegacyGuidelineChapters, LegacyGuidelineSections, LegacyGuidelinePages].map(
+			(collection) => ({
+				...collection,
+				access: {
+					create: () => false,
+					delete: () => false,
+					read: () => false,
+					update: () => false,
+				},
+				admin: { ...collection.admin, hidden: true },
+			}),
+		)
+	: []
 const mcpListParameters = {
 	limit: z.number().int().min(1).max(100).optional(),
 	locale: z.enum(['ko', 'en']).optional(),
@@ -67,6 +86,54 @@ const mcpTextTool = (
 		content: [{ type: 'text' as const, text: JSON.stringify(await run(args, req)) }],
 	}),
 })
+
+const findMcpGuidelineDocuments = async (
+	args: McpToolArgs,
+	req: PayloadRequest,
+	level: 1 | 2 | 3,
+) => {
+	const result = await req.payload.find({
+		collection: 'guideline-documents',
+		depth: 1,
+		draft: false,
+		fallbackLocale: 'en',
+		limit: 2000,
+		locale: mcpLocale(args.locale),
+		overrideAccess: false,
+		pagination: false,
+		req,
+		sort: 'displayOrder',
+		user: req.user,
+		select: {
+			title: true,
+			slug: true,
+			legacySlug: true,
+			description: true,
+			headerImage: true,
+			checks: true,
+			blocks: true,
+			displayOrder: true,
+			parent: true,
+			breadcrumbs: true,
+		},
+	})
+	const documents = result.docs.filter((document) => document.breadcrumbs?.length === level)
+	const limit = mcpNumber(args.limit, level === 3 ? 20 : 100)
+	const page = mcpNumber(args.page, 1)
+	const totalPages = Math.ceil(documents.length / limit)
+
+	return {
+		docs: documents.slice((page - 1) * limit, page * limit),
+		hasNextPage: page < totalPages,
+		hasPrevPage: page > 1,
+		nextPage: page < totalPages ? page + 1 : null,
+		page,
+		pagingCounter: (page - 1) * limit + 1,
+		prevPage: page > 1 ? page - 1 : null,
+		totalDocs: documents.length,
+		totalPages,
+	}
+}
 // ponytail: custom MCP tools go here; keep each handler narrow and access-checked.
 // Example:
 // const customMcpTools = [
@@ -103,9 +170,7 @@ export default buildConfig({
 		},
 	},
 	collections: [
-		GuidelineChapters,
-		GuidelineSections,
-		GuidelinePages,
+		...legacyGuidelineCollections,
 		GuidelineDocuments,
 		RuleCheckers,
 		BrandLogos,
@@ -181,88 +246,26 @@ export default buildConfig({
 						'findGuidelinePages',
 						'Find published guideline pages with localized copy, content blocks, and checks.',
 						mcpListParameters,
-						(args, req) =>
-							req.payload.find({
-								collection: 'guideline-pages',
-								depth: 1,
-								draft: false,
-								fallbackLocale: 'en',
-								limit: mcpNumber(args.limit, 20),
-								locale: mcpLocale(args.locale),
-								overrideAccess: false,
-								page: mcpNumber(args.page, 1),
-								req,
-								sort: 'displayOrder',
-								user: req.user,
-								select: {
-									title: true,
-									slug: true,
-									description: true,
-									checks: true,
-									section: true,
-									blocks: true,
-								},
-							}),
+						(args, req) => findMcpGuidelineDocuments(args, req, 3),
 					),
 					mcpTextTool(
 						'findChapters',
 						'Find live guideline top-level chapters and their ordering.',
 						mcpListParameters,
-						(args, req) =>
-							req.payload.find({
-								collection: 'guideline-chapters',
-								depth: 0,
-								draft: false,
-								fallbackLocale: 'en',
-								limit: mcpNumber(args.limit, 100),
-								locale: mcpLocale(args.locale),
-								overrideAccess: false,
-								page: mcpNumber(args.page, 1),
-								req,
-								sort: 'displayOrder',
-								user: req.user,
-								select: {
-									title: true,
-									slug: true,
-									description: true,
-									displayOrder: true,
-								},
-							}),
+						(args, req) => findMcpGuidelineDocuments(args, req, 1),
 					),
 					mcpTextTool(
 						'findSections',
 						'Find live guideline sections, their parent chapter, and page ordering.',
 						mcpListParameters,
-						(args, req) =>
-							req.payload.find({
-								collection: 'guideline-sections',
-								depth: 0,
-								draft: false,
-								fallbackLocale: 'en',
-								limit: mcpNumber(args.limit, 100),
-								locale: mcpLocale(args.locale),
-								overrideAccess: false,
-								page: mcpNumber(args.page, 1),
-								req,
-								sort: 'displayOrder',
-								user: req.user,
-								select: {
-									title: true,
-									slug: true,
-									description: true,
-									displayOrder: true,
-									chapter: true,
-									checks: true,
-									blocks: true,
-								},
-							}),
+						(args, req) => findMcpGuidelineDocuments(args, req, 2),
 					),
 					mcpTextTool(
 						'findChecks',
 						'Find checks declared by published guideline documents and blocks.',
 						mcpListParameters,
 						async (args, req) => {
-							const documents = await findPublishedGuidelineCheckDocuments(
+							const { documents } = await findPublishedUnifiedGuidelineCheckDocuments(
 								req.payload,
 								{
 									locale: mcpLocale(args.locale),
@@ -270,17 +273,8 @@ export default buildConfig({
 									user: req.user,
 								},
 							)
-							const checks = [
-								...documents.sections.map((document) => ({
-									collection: 'guideline-sections' as const,
-									document,
-								})),
-								...documents.pages.map((document) => ({
-									collection: 'guideline-pages' as const,
-									document,
-								})),
-							]
-								.flatMap(({ collection, document }) =>
+							const checks = documents
+								.flatMap((document) =>
 									collectGuidelineCheckSources(document).map(
 										({ blockId, check, evidence }) => ({
 											key: check.key,
@@ -288,7 +282,7 @@ export default buildConfig({
 											tier: check.tier,
 											evidence,
 											source: {
-												collection,
+												collection: 'guideline-documents' as const,
 												documentId: document.id,
 												blockId,
 											},

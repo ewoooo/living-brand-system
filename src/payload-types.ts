@@ -119,9 +119,6 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    'guideline-chapters': GuidelineChapter;
-    'guideline-sections': GuidelineSection;
-    'guideline-pages': GuidelinePage;
     'guideline-documents': GuidelineDocument;
     'rule-checkers': RuleChecker;
     'brand-logos': BrandLogo;
@@ -145,20 +142,11 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
-    'guideline-chapters': {
-      sections: 'guideline-sections';
-    };
-    'guideline-sections': {
-      pages: 'guideline-pages';
-    };
     'template-categories': {
       templates: 'templates';
     };
   };
   collectionsSelect: {
-    'guideline-chapters': GuidelineChaptersSelect<false> | GuidelineChaptersSelect<true>;
-    'guideline-sections': GuidelineSectionsSelect<false> | GuidelineSectionsSelect<true>;
-    'guideline-pages': GuidelinePagesSelect<false> | GuidelinePagesSelect<true>;
     'guideline-documents': GuidelineDocumentsSelect<false> | GuidelineDocumentsSelect<true>;
     'rule-checkers': RuleCheckersSelect<false> | RuleCheckersSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
@@ -246,19 +234,16 @@ export interface PayloadMcpApiKeyAuthOperations {
   };
 }
 /**
- * 가이드라인 최상위 장입니다. 하위에 섹션을 가집니다.
+ * 장·섹션·페이지를 같은 구조로 관리하는 계층형 가이드라인 문서입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guideline-chapters".
+ * via the `definition` "guideline-documents".
  */
-export interface GuidelineChapter {
+export interface GuidelineDocument {
   id: number;
-  /**
-   * 사이드바 최상위 장 제목으로 표시됩니다.
-   */
   title: string;
   /**
-   * 장 제목 위에 표시할 선택 라벨입니다.
+   * 제목 위에 표시할 선택 라벨입니다.
    */
   label?: string | null;
   /**
@@ -266,63 +251,46 @@ export interface GuidelineChapter {
    */
   generateSlug?: boolean | null;
   slug: string;
+  legacySlug?: string | null;
   /**
-   * 장 랜딩 페이지에 표시할 선택 요약입니다.
+   * 문서 제목 아래에 표시할 선택 설명입니다.
    */
-  description?: string | null;
-  sections?: {
-    docs?: (number | GuidelineSection)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   /**
-   * 숫자가 낮을수록 가이드라인 내비게이션에서 먼저 표시됩니다.
-   */
-  displayOrder: number;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * 장 하위 섹션입니다. 자체 블록과 하위 페이지를 가질 수 있습니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guideline-sections".
- */
-export interface GuidelineSection {
-  id: number;
-  /**
-   * 사이드바 상위 섹션 제목으로 표시됩니다.
-   */
-  title: string;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  /**
-   * 사이드바 내비게이션과 URL에 사용할 상위 장입니다.
-   */
-  chapter: number | GuidelineChapter;
-  /**
-   * 섹션 랜딩 페이지에 표시할 선택 요약입니다.
-   */
-  description?: string | null;
-  /**
-   * 섹션 랜딩 헤더에 표시할 이미지입니다.
+   * 문서 헤더에 표시할 선택 이미지입니다.
    */
   headerImage?: (number | null) | ApplicationImage;
   checks?: GuidelineChecks;
-  pages?: {
-    docs?: (number | GuidelinePage)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
   blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
   /**
-   * 숫자가 낮을수록 가이드라인 내비게이션에서 먼저 표시됩니다.
+   * 숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.
    */
   displayOrder: number;
+  legacyCollection?: ('guideline-chapters' | 'guideline-sections' | 'guideline-pages') | null;
+  legacyId?: number | null;
+  parent?: (number | null) | GuidelineDocument;
+  breadcrumbs?:
+    | {
+        doc?: (number | null) | GuidelineDocument;
+        url?: string | null;
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -383,55 +351,6 @@ export interface RuleChecker {
    * 휴리스틱 검수 프롬프트의 안정적인 키입니다.
    */
   promptKey?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * 블록으로 구성하는 가이드라인 페이지입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guideline-pages".
- */
-export interface GuidelinePage {
-  id: number;
-  /**
-   * 가이드라인 화면의 페이지 제목으로 표시됩니다.
-   */
-  title: string;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  /**
-   * 페이지 제목 아래에 표시할 선택 설명입니다.
-   */
-  description?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  checks?: GuidelineChecks;
-  /**
-   * 사이드바 내비게이션과 URL에 사용할 상위 섹션입니다.
-   */
-  section: number | GuidelineSection;
-  /**
-   * 숫자가 낮을수록 선택한 섹션 안에서 먼저 표시됩니다.
-   */
-  displayOrder: number;
-  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -559,68 +478,6 @@ export interface DoDontBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'doDont';
-}
-/**
- * 장·섹션·페이지를 같은 구조로 관리하는 계층형 가이드라인 문서입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guideline-documents".
- */
-export interface GuidelineDocument {
-  id: number;
-  title: string;
-  /**
-   * 제목 위에 표시할 선택 라벨입니다.
-   */
-  label?: string | null;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  legacySlug?: string | null;
-  /**
-   * 문서 제목 아래에 표시할 선택 설명입니다.
-   */
-  description?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * 문서 헤더에 표시할 선택 이미지입니다.
-   */
-  headerImage?: (number | null) | ApplicationImage;
-  checks?: GuidelineChecks;
-  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
-  /**
-   * 숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.
-   */
-  displayOrder: number;
-  legacyCollection?: ('guideline-chapters' | 'guideline-sections' | 'guideline-pages') | null;
-  legacyId?: number | null;
-  parent?: (number | null) | GuidelineDocument;
-  breadcrumbs?:
-    | {
-        doc?: (number | null) | GuidelineDocument;
-        url?: string | null;
-        label?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1257,18 +1114,6 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'guideline-chapters';
-        value: number | GuidelineChapter;
-      } | null)
-    | ({
-        relationTo: 'guideline-sections';
-        value: number | GuidelineSection;
-      } | null)
-    | ({
-        relationTo: 'guideline-pages';
-        value: number | GuidelinePage;
-      } | null)
-    | ({
         relationTo: 'guideline-documents';
         value: number | GuidelineDocument;
       } | null)
@@ -1386,33 +1231,17 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guideline-chapters_select".
+ * via the `definition` "guideline-documents_select".
  */
-export interface GuidelineChaptersSelect<T extends boolean = true> {
+export interface GuidelineDocumentsSelect<T extends boolean = true> {
   title?: T;
   label?: T;
   generateSlug?: T;
   slug?: T;
-  description?: T;
-  sections?: T;
-  displayOrder?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guideline-sections_select".
- */
-export interface GuidelineSectionsSelect<T extends boolean = true> {
-  title?: T;
-  generateSlug?: T;
-  slug?: T;
-  chapter?: T;
+  legacySlug?: T;
   description?: T;
   headerImage?: T;
   checks?: T | GuidelineChecksSelect<T>;
-  pages?: T;
   blocks?:
     | T
     | {
@@ -1422,6 +1251,17 @@ export interface GuidelineSectionsSelect<T extends boolean = true> {
         doDont?: T | DoDontBlockSelect<T>;
       };
   displayOrder?: T;
+  legacyCollection?: T;
+  legacyId?: T;
+  parent?: T;
+  breadcrumbs?:
+    | T
+    | {
+        doc?: T;
+        url?: T;
+        label?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1514,67 +1354,6 @@ export interface DoDontBlockSelect<T extends boolean = true> {
   checks?: T | GuidelineChecksSelect<T>;
   id?: T;
   blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guideline-pages_select".
- */
-export interface GuidelinePagesSelect<T extends boolean = true> {
-  title?: T;
-  generateSlug?: T;
-  slug?: T;
-  description?: T;
-  checks?: T | GuidelineChecksSelect<T>;
-  section?: T;
-  displayOrder?: T;
-  blocks?:
-    | T
-    | {
-        columnUnit?: T | ColumnUnitBlockSelect<T>;
-        mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
-        colorPalette?: T | ColorPaletteBlockSelect<T>;
-        doDont?: T | DoDontBlockSelect<T>;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guideline-documents_select".
- */
-export interface GuidelineDocumentsSelect<T extends boolean = true> {
-  title?: T;
-  label?: T;
-  generateSlug?: T;
-  slug?: T;
-  legacySlug?: T;
-  description?: T;
-  headerImage?: T;
-  checks?: T | GuidelineChecksSelect<T>;
-  blocks?:
-    | T
-    | {
-        columnUnit?: T | ColumnUnitBlockSelect<T>;
-        mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
-        colorPalette?: T | ColorPaletteBlockSelect<T>;
-        doDont?: T | DoDontBlockSelect<T>;
-      };
-  displayOrder?: T;
-  legacyCollection?: T;
-  legacyId?: T;
-  parent?: T;
-  breadcrumbs?:
-    | T
-    | {
-        doc?: T;
-        url?: T;
-        label?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2110,18 +1889,6 @@ export interface TaskSchedulePublish {
     type?: ('publish' | 'unpublish') | null;
     locale?: string | null;
     doc?:
-      | ({
-          relationTo: 'guideline-chapters';
-          value: number | GuidelineChapter;
-        } | null)
-      | ({
-          relationTo: 'guideline-sections';
-          value: number | GuidelineSection;
-        } | null)
-      | ({
-          relationTo: 'guideline-pages';
-          value: number | GuidelinePage;
-        } | null)
       | ({
           relationTo: 'guideline-documents';
           value: number | GuidelineDocument;

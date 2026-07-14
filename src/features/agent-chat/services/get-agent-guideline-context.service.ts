@@ -26,9 +26,7 @@ interface GuidelineSearchInput {
 	query: string
 }
 
-type GuidelineDocumentCollection = 'guideline-documents'
-
-interface GuidelinePageListResult {
+interface GuidelineDocumentListResult {
 	title: string
 	pages: {
 		id: string
@@ -37,13 +35,13 @@ interface GuidelinePageListResult {
 }
 
 interface GuidelineDocumentInput {
-	collection: GuidelineDocumentCollection
+	collection: 'guideline-documents'
 	id: string
 }
 
 interface GuidelineDocumentResult {
 	title: string
-	collection: GuidelineDocumentCollection
+	collection: 'guideline-documents'
 	id: string
 	source: GuidelineDocumentSource
 	checks: GuidelineDocumentCheck[]
@@ -52,7 +50,7 @@ interface GuidelineDocumentResult {
 }
 
 interface GuidelineDocumentSource {
-	collection: GuidelineDocumentCollection
+	collection: 'guideline-documents'
 	id: string
 	title: string
 	href: string | null
@@ -67,7 +65,9 @@ interface GuidelineDocumentCheck {
  * Agent tool에 제공할 published guideline 페이지 목록을 조립한다.
  * Payload Local API 호출과 접근 제어는 agent guideline context repository가 담당한다.
  */
-export async function listAgentGuidelinePages(user: unknown): Promise<GuidelinePageListResult[]> {
+export async function listAgentGuidelinePages(
+	user: unknown,
+): Promise<GuidelineDocumentListResult[]> {
 	const documents = await listGuidelineDocuments(user)
 	const children = new Map<number, AgentGuidelineListItem[]>()
 	for (const document of documents) {

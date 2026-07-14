@@ -1,6 +1,6 @@
-import type { GuidelinePage } from '@/payload-types'
+import type { GuidelineDocument } from '@/payload-types'
 
-export type GuidelineBlock = NonNullable<GuidelinePage['blocks']>[number]
+export type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 
 export interface CheckSourceSnapshot {
 	evidence: string

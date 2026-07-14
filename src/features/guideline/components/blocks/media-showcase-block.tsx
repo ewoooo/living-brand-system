@@ -1,7 +1,7 @@
-import type { GuidelinePage } from '@/payload-types'
+import type { GuidelineDocument } from '@/payload-types'
 import { GuidelineImage } from './children/guideline-image'
 
-type GuidelineBlock = NonNullable<GuidelinePage['blocks']>[number]
+type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 
 export function MediaShowcaseBlock({
 	block,

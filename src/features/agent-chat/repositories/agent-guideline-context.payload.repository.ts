@@ -37,7 +37,7 @@ export interface AgentCheckCatalogItem {
 
 export type AgentGuidelineSearchResult = {
 	title: string
-	collection: string
+	collection: 'guideline-documents'
 	id: string
 }
 
@@ -103,12 +103,13 @@ export async function searchGuidelineDocuments(
 	})
 
 	return (results.docs as SearchDoc[])
+		.filter((result) => result.doc?.relationTo === 'guideline-documents')
 		.map((result) => ({
 			title: result.title || '',
-			collection: result.doc?.relationTo || '',
+			collection: 'guideline-documents' as const,
 			id: String(result.doc?.value || ''),
 		}))
-		.filter((result) => result.title && result.collection && result.id)
+		.filter((result) => result.title && result.id)
 }
 
 export async function findAgentChecks(user: unknown): Promise<AgentCheckCatalogItem[]> {

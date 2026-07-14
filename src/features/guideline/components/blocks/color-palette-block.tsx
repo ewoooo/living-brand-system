@@ -1,8 +1,8 @@
 import { hexToRgb, isLightColor, isValidHex } from '@/lib/color'
-import type { BrandColor, GuidelinePage } from '@/payload-types'
+import type { BrandColor, GuidelineDocument } from '@/payload-types'
 import { BlockHeading } from './children/block-heading'
 
-type GuidelineBlock = NonNullable<GuidelinePage['blocks']>[number]
+type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 
 export function ColorPaletteBlock({
 	block,

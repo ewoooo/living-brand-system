@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { GuidelinePage, GuidelineSection } from '@/payload-types'
+import type { GuidelineDocument } from '@/payload-types'
 import { collectGuidelineCheckSources } from '../checks/collect-guideline-check-sources'
 import { buildCheckSourceSnapshot } from './check-source-snapshot'
 
@@ -18,7 +18,7 @@ describe('buildCheckSourceSnapshot', () => {
 				},
 				{ id: 'other', blockType: 'mediaShowcase', image: 8 },
 			],
-		} as unknown as GuidelinePage
+		} as unknown as GuidelineDocument
 
 		expect(buildCheckSourceSnapshot(page, 'target')).toEqual({
 			evidence: 'Digital\nUse 24 px.',
@@ -43,7 +43,7 @@ describe('buildCheckSourceSnapshot', () => {
 					],
 				},
 			],
-		} as unknown as GuidelinePage
+		} as unknown as GuidelineDocument
 
 		const snapshot = buildCheckSourceSnapshot(page)
 
@@ -55,14 +55,12 @@ describe('buildCheckSourceSnapshot', () => {
 	it('Section 전체 snapshot은 header image와 자체 block만 포함한다', () => {
 		const section = {
 			title: 'Brand Core',
-			chapter: 1,
-			description: 'Foundation',
+			description: lexical('Foundation'),
 			headerImage: { id: 3, name: 'Core', alt: 'Core visual' },
-			pages: { docs: [{ id: 9, title: 'Child page' }] },
 			blocks: [
 				{ id: 'palette', blockType: 'colorPalette', title: 'Main colors', colors: [] },
 			],
-		} as unknown as GuidelineSection
+		} as unknown as GuidelineDocument
 
 		expect(buildCheckSourceSnapshot(section)).toEqual({
 			evidence: 'Brand Core\n\nFoundation\n\nCore visual Core\n\nMain colors',
@@ -71,7 +69,7 @@ describe('buildCheckSourceSnapshot', () => {
 	})
 
 	it('존재하지 않는 blockId는 기존 snapshot을 지우지 않도록 null을 반환한다', () => {
-		const page = { title: 'Logo', blocks: [] } as unknown as GuidelinePage
+		const page = { title: 'Logo', blocks: [] } as unknown as GuidelineDocument
 		expect(buildCheckSourceSnapshot(page, 'missing')).toBeNull()
 	})
 
@@ -90,7 +88,7 @@ describe('buildCheckSourceSnapshot', () => {
 			description: lexical('Approved usage'),
 			blocks,
 			checks,
-		} as unknown as GuidelinePage
+		} as unknown as GuidelineDocument
 		const unified = {
 			...legacy,
 			headerImage: null,

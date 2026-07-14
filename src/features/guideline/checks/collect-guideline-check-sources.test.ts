@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { GuidelinePage } from '@/payload-types'
+import type { GuidelineDocument } from '@/payload-types'
 import { collectGuidelineCheckSources } from './collect-guideline-check-sources'
 
 describe('collectGuidelineCheckSources', () => {
@@ -22,7 +22,7 @@ describe('collectGuidelineCheckSources', () => {
 					checks: [{ key: 'logo.block', title: 'Block Check', checker: 1 }],
 				},
 			],
-		} as unknown as GuidelinePage
+		} as unknown as GuidelineDocument
 
 		const sources = collectGuidelineCheckSources(page)
 
@@ -61,7 +61,7 @@ describe('collectGuidelineCheckSources', () => {
 					],
 				},
 			],
-		} as unknown as GuidelinePage
+		} as unknown as GuidelineDocument
 
 		const sources = collectGuidelineCheckSources(page)
 
