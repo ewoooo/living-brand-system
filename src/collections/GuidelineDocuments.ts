@@ -4,7 +4,7 @@ import { validateGuidelineCheckKeys } from '@/features/guideline/checks/validate
 import { validateGuidelineDocumentDepth } from '@/features/guideline/checks/validate-guideline-document-depth'
 import { validateGuidelineDocumentSlug } from '@/features/guideline/checks/validate-guideline-document-slug'
 import { managerManagedAccess } from '@/lib/auth'
-import { draftVersions } from './shared'
+import { guidelineDraftVersions } from './shared'
 
 const previewURL = (id: unknown) =>
 	typeof id === 'number' || typeof id === 'string'
@@ -33,7 +33,7 @@ export const GuidelineDocuments: CollectionConfig = {
 		},
 		preview: (data) => previewURL(data.id),
 	},
-	versions: draftVersions,
+	versions: guidelineDraftVersions,
 	defaultSort: 'displayOrder',
 	fields: [
 		{
