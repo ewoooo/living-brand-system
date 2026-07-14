@@ -1,24 +1,28 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import { collectGuidelineCheckSources } from '@/features/guideline/checks/collect-guideline-check-sources'
-import { findPublishedGuidelineCheckDocuments } from '@/features/guideline/repositories/published-guideline-checks.payload.repository'
-import type { GuidelinePage, GuidelineSection } from '@/payload-types'
+import { findPublishedUnifiedGuidelineCheckDocuments } from '@/features/guideline/repositories/published-guideline-checks.payload.repository'
+import type { GuidelineDocument } from '@/payload-types'
 
-type AgentGuidelinePage = Pick<
-	GuidelinePage,
-	'id' | 'title' | 'slug' | 'description' | 'blocks' | 'checks' | 'section'
+type AgentGuidelineDocumentData = Pick<
+	GuidelineDocument,
+	| 'id'
+	| 'title'
+	| 'slug'
+	| 'description'
+	| 'headerImage'
+	| 'blocks'
+	| 'checks'
+	| 'parent'
+	| 'breadcrumbs'
 >
 
-type AgentGuidelineSection = Pick<
-	GuidelineSection,
-	'id' | 'title' | 'slug' | 'description' | 'headerImage' | 'blocks' | 'checks'
+export type AgentGuidelineListItem = Pick<
+	GuidelineDocument,
+	'id' | 'title' | 'parent' | 'breadcrumbs'
 >
 
-type AgentGuidelineSectionListItem = Pick<GuidelineSection, 'id' | 'title'>
-
-type AgentGuidelinePageListItem = Pick<GuidelinePage, 'id' | 'title' | 'section'>
-
-type AgentGuidelinePageSummary = Pick<GuidelinePage, 'id' | 'title' | 'slug' | 'description'>
+type AgentGuidelineChild = Pick<GuidelineDocument, 'id' | 'title' | 'slug' | 'description'>
 
 export interface AgentCheckCatalogItem {
 	evidence: string
@@ -29,22 +33,16 @@ export interface AgentCheckCatalogItem {
 
 export type AgentGuidelineSearchResult = {
 	title: string
-	collection: string
+	collection: 'guideline-documents'
 	id: string
 }
 
-export type AgentGuidelineDocument =
-	| {
-			collection: 'guideline-pages'
-			page: AgentGuidelinePage
-			checks: AgentCheckCatalogItem[]
-	  }
-	| {
-			collection: 'guideline-sections'
-			section: AgentGuidelineSection
-			pages: AgentGuidelinePageSummary[]
-			checks: AgentCheckCatalogItem[]
-	  }
+export type AgentGuidelineDocument = {
+	collection: 'guideline-documents'
+	document: AgentGuidelineDocumentData
+	children: AgentGuidelineChild[]
+	checks: AgentCheckCatalogItem[]
+}
 
 type SearchDoc = {
 	title?: string | null
@@ -63,41 +61,22 @@ const publishedKoQuery = (user: unknown) => ({
 	user: user as never,
 })
 
-export async function listGuidelineSections(
-	user: unknown,
-): Promise<AgentGuidelineSectionListItem[]> {
+export async function listGuidelineDocuments(user: unknown): Promise<AgentGuidelineListItem[]> {
 	const payload = await getPayload({ config })
-	const sections = await payload.find({
+	const documents = await payload.find({
 		...publishedKoQuery(user),
-		collection: 'guideline-sections',
+		collection: 'guideline-documents',
 		depth: 0,
-		limit: 100,
+		limit: 2000,
 		sort: 'displayOrder',
 		select: {
 			title: true,
+			parent: true,
+			breadcrumbs: true,
 		},
 	})
 
-	return sections.docs
-}
-
-export async function listGuidelinePageListItems(
-	user: unknown,
-): Promise<AgentGuidelinePageListItem[]> {
-	const payload = await getPayload({ config })
-	const pages = await payload.find({
-		...publishedKoQuery(user),
-		collection: 'guideline-pages',
-		depth: 0,
-		limit: 500,
-		sort: 'displayOrder',
-		select: {
-			title: true,
-			section: true,
-		},
-	})
-
-	return pages.docs
+	return documents.docs
 }
 
 export async function searchGuidelineDocuments(
@@ -120,22 +99,23 @@ export async function searchGuidelineDocuments(
 	})
 
 	return (results.docs as SearchDoc[])
+		.filter((result) => result.doc?.relationTo === 'guideline-documents')
 		.map((result) => ({
 			title: result.title || '',
-			collection: result.doc?.relationTo || '',
+			collection: 'guideline-documents' as const,
 			id: String(result.doc?.value || ''),
 		}))
-		.filter((result) => result.title && result.collection && result.id)
+		.filter((result) => result.title && result.id)
 }
 
 export async function findAgentChecks(user: unknown): Promise<AgentCheckCatalogItem[]> {
 	const payload = await getPayload({ config })
-	const { sections, pages } = await findPublishedGuidelineCheckDocuments(payload, {
+	const { documents } = await findPublishedUnifiedGuidelineCheckDocuments(payload, {
 		overrideAccess: false,
 		user,
 	})
 
-	return [...sections, ...pages]
+	return documents
 		.flatMap(collectGuidelineCheckSources)
 		.map(({ check, evidence }) => ({
 			evidence,
@@ -148,64 +128,15 @@ export async function findAgentChecks(user: unknown): Promise<AgentCheckCatalogI
 
 export async function findAgentGuidelineDocument(
 	user: unknown,
-	input: { collection: 'guideline-pages' | 'guideline-sections'; id: string },
+	input: { collection: 'guideline-documents'; id: string },
 ): Promise<AgentGuidelineDocument | null> {
-	if (input.collection === 'guideline-sections') {
-		const section = await findGuidelineSection(user, input.id)
-
-		return section
-			? {
-					collection: 'guideline-sections',
-					section,
-					pages: await listGuidelinePagesBySection(user, section.id),
-					checks: collectGuidelineCheckSources(section).map(toAgentCheck),
-				}
-			: null
-	}
-
-	const page = await findGuidelinePage(user, input.id)
-
-	return page
-		? {
-				collection: 'guideline-pages',
-				page,
-				checks: collectGuidelineCheckSources(page).map(toAgentCheck),
-			}
-		: null
-}
-
-async function findGuidelinePage(user: unknown, id: string): Promise<AgentGuidelinePage | null> {
 	const payload = await getPayload({ config })
-
-	return payload.findByID({
+	const document = await payload.findByID({
 		...publishedKoQuery(user),
-		collection: 'guideline-pages',
-		id,
+		collection: 'guideline-documents',
+		id: input.id,
 		disableErrors: true,
-		depth: 1,
-		select: {
-			title: true,
-			slug: true,
-			description: true,
-			blocks: true,
-			checks: true,
-			section: true,
-		},
-	})
-}
-
-async function findGuidelineSection(
-	user: unknown,
-	id: string,
-): Promise<AgentGuidelineSection | null> {
-	const payload = await getPayload({ config })
-
-	return payload.findByID({
-		...publishedKoQuery(user),
-		collection: 'guideline-sections',
-		id,
-		disableErrors: true,
-		depth: 1,
+		depth: 2,
 		select: {
 			title: true,
 			slug: true,
@@ -213,26 +144,20 @@ async function findGuidelineSection(
 			headerImage: true,
 			blocks: true,
 			checks: true,
+			parent: true,
+			breadcrumbs: true,
+			_status: true,
 		},
 	})
-}
+	if (document?._status !== 'published') return null
 
-async function listGuidelinePagesBySection(
-	user: unknown,
-	sectionId: number,
-): Promise<AgentGuidelinePageSummary[]> {
-	const payload = await getPayload({ config })
-	const pages = await payload.find({
+	const children = await payload.find({
 		...publishedKoQuery(user),
-		collection: 'guideline-pages',
+		collection: 'guideline-documents',
 		depth: 0,
-		limit: 20,
+		limit: 100,
 		sort: 'displayOrder',
-		where: {
-			section: {
-				equals: sectionId,
-			},
-		},
+		where: { parent: { equals: document.id } },
 		select: {
 			title: true,
 			slug: true,
@@ -240,7 +165,12 @@ async function listGuidelinePagesBySection(
 		},
 	})
 
-	return pages.docs
+	return {
+		collection: 'guideline-documents',
+		document,
+		children: children.docs,
+		checks: collectGuidelineCheckSources(document).map(toAgentCheck),
+	}
 }
 
 function toAgentCheck({

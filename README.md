@@ -55,7 +55,6 @@ pnpm dev
 | `pnpm build` / `pnpm start` | 프로덕션 빌드 / 실행 |
 | `pnpm generate:types` | Payload 컬렉션 타입 생성 (`src/payload-types.ts`) |
 | `pnpm migrate` / `migrate:create` / `migrate:status` | DB 마이그레이션 실행 / 생성 / 상태 확인 |
-| `pnpm seed:guideline-pages` / `seed:rules` / `seed:agent-skills` | 시드 데이터 입력 |
 | `pnpm test:int` / `pnpm test:e2e` | Vitest 통합 테스트 / Playwright E2E 테스트 |
 | `pnpm doctor` | 타입 생성 + Biome 검사 + 타입체크 일괄 실행 |
 | `pnpm ci` | 검사 + 타입체크 + 통합 테스트 + 빌드 |

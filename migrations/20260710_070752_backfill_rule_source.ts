@@ -154,7 +154,7 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
 				{"id":55,"key":"layout.zones","tier":"required","title":"콘텐츠 영역 지정 (인물·텍스트)","status":"archived","evidence":null,"checker_id":44,"created_at":"2026-06-26T05:48:51.287+00:00","updated_at":"2026-07-06T00:48:02.993+00:00"},
 				{"id":57,"key":"layout.tone","tier":"recommended","title":"레이아웃 톤앤매너 (피드 일관성)","status":"archived","evidence":"'일관된 피드 룩앤필과 브랜드 통일감이 유지되고 있는지'에 유의하여 콘텐츠를 제작·운영해야 한다. 가이드 디자인 예시를 참고해 일관된 피드 룩앤필 및 브랜드 통일감 유지.","checker_id":44,"created_at":"2026-06-26T05:48:51.838+00:00","updated_at":"2026-07-06T10:03:08.116+00:00"},
 				{"id":60,"key":"imagery.classification","tier":"recommended","title":"사진 분류·무드 기준","status":"archived","evidence":null,"checker_id":44,"created_at":"2026-06-26T05:48:52.665+00:00","updated_at":"2026-07-06T00:48:02.897+00:00"},
-				{"id":81,"key":"messaging.tagline","tier":"recommended","title":"브랜드 시그니처 문구","status":"archived","evidence":"signatures: 'Essence for Energy', 'Daily Skin Energy', 'Essen-tial Skincare'\n\nA.4 The Signature: 세 가지 타입 시그니처 '1 Essence for Energy / 2 Daily Skin Energy / 3 Essen-tial Skincare'. 브랜드 철학·태도를 압축한 서명 문구로 정확한 워딩/표기 검증 가능.","checker_id":45,"created_at":"2026-06-26T05:48:58.396+00:00","updated_at":"2026-07-06T10:03:08.09+00:00"},
+				{"id":81,"key":"messaging.tagline","tier":"recommended","title":"브랜드 시그니처 문구","status":"archived","evidence":"signatures: 'Essence for Energy', 'Daily Skin Energy', 'Essen-tial Skincare'\\n\\nA.4 The Signature: 세 가지 타입 시그니처 '1 Essence for Energy / 2 Daily Skin Energy / 3 Essen-tial Skincare'. 브랜드 철학·태도를 압축한 서명 문구로 정확한 워딩/표기 검증 가능.","checker_id":45,"created_at":"2026-06-26T05:48:58.396+00:00","updated_at":"2026-07-06T10:03:08.09+00:00"},
 				{"id":82,"key":"messaging.statement","tier":"recommended","title":"브랜드 본질·철학 문구","status":"archived","evidence":null,"checker_id":45,"created_at":"2026-06-26T05:48:58.667+00:00","updated_at":"2026-07-06T00:48:02.745+00:00"},
 				{"id":84,"key":"messaging.boilerplate","tier":"recommended","title":"반복 서술·보일러플레이트","status":"archived","evidence":null,"checker_id":45,"created_at":"2026-06-26T05:48:59.213+00:00","updated_at":"2026-07-06T00:48:02.955+00:00"},
 				{"id":85,"key":"messaging.contact-block","tier":"required","title":"연락처·회사 정보 블록","status":"archived","evidence":null,"checker_id":45,"created_at":"2026-06-26T05:48:59.485+00:00","updated_at":"2026-07-06T00:48:03.083+00:00"},
@@ -180,7 +180,12 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
 		)
 		SELECT
 			"id", "key", "tier"::"enum_rules_tier", "title", "status"::"enum_rules_status",
-			"evidence", "checker_id", "created_at", "updated_at"
+			"evidence",
+			CASE "checker_id"
+				WHEN 44 THEN (SELECT "id" FROM "rule_checkers" WHERE "key" = 'model.anthropic.brand-guideline')
+				WHEN 45 THEN (SELECT "id" FROM "rule_checkers" WHERE "key" = 'manual.review')
+			END,
+			"created_at", "updated_at"
 		FROM "restored";
 
 		SELECT setval(pg_get_serial_sequence('rules', 'id'), (SELECT max("id") FROM "rules"), true);

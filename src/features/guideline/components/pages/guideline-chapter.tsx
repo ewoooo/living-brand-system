@@ -6,18 +6,22 @@ import {
 	GuidelineLabelFallback,
 } from '../guideline-content-fallbacks'
 import { GuidelineNavigationGrid } from '../guideline-navigation-grid'
+import { RefreshRouteOnSave } from '../refresh-route-on-save'
 
 const variant = 'chapter' satisfies GuidelineVariant
 
 export function GuidelineChapter({
 	chapter,
 	chapterSlug,
+	isPreview,
 }: {
 	chapter: GetGuidelineChapterOutput
 	chapterSlug: string
+	isPreview: boolean
 }) {
 	return (
 		<>
+			{isPreview && <RefreshRouteOnSave />}
 			<GuidelineHeader variant={variant} title={chapter.title} />
 			<GuidelineChapterDescription label={chapter.label} description={chapter.description} />
 			<GuidelineNavigationGrid

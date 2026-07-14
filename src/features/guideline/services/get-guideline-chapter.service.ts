@@ -2,6 +2,7 @@ import {
 	findPublishedChapterBySlug,
 	listPublishedSectionsByChapter,
 } from '../repositories/guideline-view.payload.repository'
+import { extractTextFromLexical } from '../utils/lexical-text'
 
 export interface GetGuidelineChapterOutput {
 	title: string
@@ -35,12 +36,12 @@ export async function getGuidelineChapter(
 		return {
 			title: chapter.title,
 			label: chapter.label || null,
-			description: chapter.description || null,
+			description: extractTextFromLexical(chapter.description) || null,
 			sections: sections.map((section) => ({
 				id: section.id,
 				title: section.title,
 				slug: section.slug,
-				description: section.description || null,
+				description: extractTextFromLexical(section.description) || null,
 			})),
 		}
 	} catch {

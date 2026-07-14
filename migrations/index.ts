@@ -37,6 +37,17 @@ import * as migration_20260713_025218_remove_column_unit_title from './20260713_
 import * as migration_20260713_060746_add_chapter_label from './20260713_060746_add_chapter_label';
 import * as migration_20260713_064522_check_editor_ai_context_rebased from './20260713_064522_check_editor_ai_context_rebased';
 import * as migration_20260714_004502_add_template_html_fields from './20260714_004502_add_template_html_fields';
+import * as migration_20260714_023146_add_guideline_documents from './20260714_023146_add_guideline_documents';
+import * as migration_20260714_024739_switch_guideline_search_index from './20260714_024739_switch_guideline_search_index';
+import * as migration_20260714_024930_add_guideline_legacy_mapping from './20260714_024930_add_guideline_legacy_mapping';
+import * as migration_20260714_031420_add_guideline_legacy_slug from './20260714_031420_add_guideline_legacy_slug';
+import * as migration_20260714_031500_backfill_guideline_documents from './20260714_031500_backfill_guideline_documents';
+import * as migration_20260714_040034_contract_guideline_collections from './20260714_040034_contract_guideline_collections';
+import * as migration_20260714_043746_prepare_guideline_route_slugs from './20260714_043746_prepare_guideline_route_slugs';
+import * as migration_20260714_043817_backfill_guideline_route_slugs from './20260714_043817_backfill_guideline_route_slugs';
+import * as migration_20260714_044457_remove_guideline_legacy_mapping from './20260714_044457_remove_guideline_legacy_mapping';
+import * as migration_20260714_051528_consolidate_guideline_editor from './20260714_051528_consolidate_guideline_editor';
+import * as migration_20260714_055652_cleanup_guideline_mcp_tools from './20260714_055652_cleanup_guideline_mcp_tools';
 import * as migration_20260714_061204_add_template_overrides from './20260714_061204_add_template_overrides';
 
 export const migrations = [
@@ -236,8 +247,63 @@ export const migrations = [
     name: '20260714_004502_add_template_html_fields',
   },
   {
+    up: migration_20260714_023146_add_guideline_documents.up,
+    down: migration_20260714_023146_add_guideline_documents.down,
+    name: '20260714_023146_add_guideline_documents',
+  },
+  {
+    up: migration_20260714_024739_switch_guideline_search_index.up,
+    down: migration_20260714_024739_switch_guideline_search_index.down,
+    name: '20260714_024739_switch_guideline_search_index',
+  },
+  {
+    up: migration_20260714_024930_add_guideline_legacy_mapping.up,
+    down: migration_20260714_024930_add_guideline_legacy_mapping.down,
+    name: '20260714_024930_add_guideline_legacy_mapping',
+  },
+  {
+    up: migration_20260714_031420_add_guideline_legacy_slug.up,
+    down: migration_20260714_031420_add_guideline_legacy_slug.down,
+    name: '20260714_031420_add_guideline_legacy_slug',
+  },
+  {
+    up: migration_20260714_031500_backfill_guideline_documents.up,
+    down: migration_20260714_031500_backfill_guideline_documents.down,
+    name: '20260714_031500_backfill_guideline_documents',
+  },
+  {
+    up: migration_20260714_040034_contract_guideline_collections.up,
+    down: migration_20260714_040034_contract_guideline_collections.down,
+    name: '20260714_040034_contract_guideline_collections',
+  },
+  {
+    up: migration_20260714_043746_prepare_guideline_route_slugs.up,
+    down: migration_20260714_043746_prepare_guideline_route_slugs.down,
+    name: '20260714_043746_prepare_guideline_route_slugs',
+  },
+  {
+    up: migration_20260714_043817_backfill_guideline_route_slugs.up,
+    down: migration_20260714_043817_backfill_guideline_route_slugs.down,
+    name: '20260714_043817_backfill_guideline_route_slugs',
+  },
+  {
+    up: migration_20260714_044457_remove_guideline_legacy_mapping.up,
+    down: migration_20260714_044457_remove_guideline_legacy_mapping.down,
+    name: '20260714_044457_remove_guideline_legacy_mapping',
+  },
+  {
+    up: migration_20260714_051528_consolidate_guideline_editor.up,
+    down: migration_20260714_051528_consolidate_guideline_editor.down,
+    name: '20260714_051528_consolidate_guideline_editor',
+  },
+  {
+    up: migration_20260714_055652_cleanup_guideline_mcp_tools.up,
+    down: migration_20260714_055652_cleanup_guideline_mcp_tools.down,
+    name: '20260714_055652_cleanup_guideline_mcp_tools',
+  },
+  {
     up: migration_20260714_061204_add_template_overrides.up,
     down: migration_20260714_061204_add_template_overrides.down,
-    name: '20260714_061204_add_template_overrides'
+    name: '20260714_061204_add_template_overrides',
   },
 ];

@@ -12,7 +12,7 @@ import {
 } from '@/features/agent-chat/services/agent-template-request.service'
 import {
 	listAgentChecks,
-	listAgentGuidelinePages,
+	listAgentGuidelineDocuments,
 	readAgentGuidelineDocument,
 	searchAgentGuidelines,
 } from '@/features/agent-chat/services/get-agent-guideline-context.service'
@@ -62,14 +62,14 @@ export function getAgentTools() {
 				return formatLoadedSkill(skill)
 			},
 		}),
-		listGuidelinePages: tool({
-			description: 'List published brand guideline sections and pages available to read.',
+		listGuidelineDocuments: tool({
+			description: 'List published brand guideline documents available to read.',
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
-			execute: (_input, { context }) => listAgentGuidelinePages(context.user),
+			execute: (_input, { context }) => listAgentGuidelineDocuments(context.user),
 		}),
 		searchGuidelines: tool({
-			description: 'Search published brand guideline pages and sections.',
+			description: 'Search published brand guideline documents.',
 			inputSchema: z.object({
 				query: z.string().min(1).max(120),
 			}),
@@ -77,9 +77,9 @@ export function getAgentTools() {
 			execute: ({ query }, { context }) => searchAgentGuidelines(context.user, { query }),
 		}),
 		readGuidelineDocument: tool({
-			description: 'Read a published guideline page or section returned by searchGuidelines.',
+			description: 'Read a published guideline document returned by searchGuidelines.',
 			inputSchema: z.object({
-				collection: z.enum(['guideline-pages', 'guideline-sections']),
+				collection: z.literal('guideline-documents'),
 				id: z.string().min(1),
 			}),
 			contextSchema: guidelineToolContextSchema,

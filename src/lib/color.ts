@@ -22,6 +22,18 @@ export function isValidHex(hex: string): boolean {
 	return /^#?[0-9a-fA-F]{6}$/.test(hex)
 }
 
+/** 배경색 대비가 더 높은 흑/백 foreground를 고른다. */
+export function getContrastingForeground(hex: string): '#000000' | '#FFFFFF' {
+	const { r, g, b } = hexToRgb(hex)
+	const linear = (channel: number) => {
+		const value = channel / 255
+		return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+	}
+	const luminance = 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b)
+
+	return (luminance + 0.05) / 0.05 >= 1.05 / (luminance + 0.05) ? '#000000' : '#FFFFFF'
+}
+
 /** 스와치 위 텍스트의 흑/백 선택용 밝기 판정 (YIQ 근사). */
 export function isLightColor(hex: string): boolean {
 	const { r, g, b } = hexToRgb(hex)

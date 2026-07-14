@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { getContrastingForeground, isValidHex } from '@/lib/color'
 import { findGuidelineMetadataGlobal } from '../repositories/guideline-view.payload.repository'
 
 export interface GetGuidelineMetadataOutput {
@@ -6,6 +7,10 @@ export interface GetGuidelineMetadataOutput {
 	documentTitle: string
 	faviconHref: string | null
 	issuedLabel: string | null
+	primaryDarkForegroundHex: string | null
+	primaryDarkHex: string | null
+	primaryForegroundHex: string | null
+	primaryHex: string | null
 }
 
 /**
@@ -16,12 +21,20 @@ export interface GetGuidelineMetadataOutput {
 export const getGuidelineMetadata = cache(async (): Promise<GetGuidelineMetadataOutput> => {
 	try {
 		const guideline = await findGuidelineMetadataGlobal()
+		const primaryHex = getColorHex(guideline.primaryColor)
+		const primaryDarkHex = getColorHex(guideline.primaryColorDark) ?? primaryHex
 
 		return {
 			companyName: guideline.companyName,
 			documentTitle: guideline.documentTitle,
 			faviconHref: getUploadUrl(guideline.favicon),
 			issuedLabel: guideline.issuedLabel || null,
+			primaryDarkForegroundHex: primaryDarkHex
+				? getContrastingForeground(primaryDarkHex)
+				: null,
+			primaryDarkHex,
+			primaryForegroundHex: primaryHex ? getContrastingForeground(primaryHex) : null,
+			primaryHex,
 		}
 	} catch {
 		return {
@@ -29,9 +42,21 @@ export const getGuidelineMetadata = cache(async (): Promise<GetGuidelineMetadata
 			documentTitle: 'Living Brand System',
 			faviconHref: null,
 			issuedLabel: null,
+			primaryDarkForegroundHex: null,
+			primaryDarkHex: null,
+			primaryForegroundHex: null,
+			primaryHex: null,
 		}
 	}
 })
+
+function getColorHex(value: unknown): string | null {
+	if (!value || typeof value !== 'object' || !('hex' in value) || typeof value.hex !== 'string') {
+		return null
+	}
+
+	return isValidHex(value.hex) ? (value.hex.startsWith('#') ? value.hex : `#${value.hex}`) : null
+}
 
 function getUploadUrl(value: unknown): string | null {
 	if (!value || typeof value !== 'object' || !('url' in value)) {

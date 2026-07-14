@@ -42,6 +42,9 @@ importers:
       '@payloadcms/plugin-mcp':
         specifier: 3.85.1
         version: 3.85.1(next@16.2.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-macros@3.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(sass@1.77.4))(payload@3.85.1(graphql@16.14.2)(typescript@5.7.3))
+      '@payloadcms/plugin-nested-docs':
+        specifier: 3.85.1
+        version: 3.85.1(payload@3.85.1(graphql@16.14.2)(typescript@5.7.3))
       '@payloadcms/plugin-search':
         specifier: 3.85.1
         version: 3.85.1(@types/react@19.2.17)(graphql@16.14.2)(monaco-editor@0.55.1)(next@16.2.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-macros@3.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(sass@1.77.4))(payload@3.85.1(graphql@16.14.2)(typescript@5.7.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.7.3)
@@ -108,6 +111,9 @@ importers:
       payload:
         specifier: 3.85.1
         version: 3.85.1(graphql@16.14.2)(typescript@5.7.3)
+      payload-better-editor:
+        specifier: ^1.3.0
+        version: 1.3.0(payload@3.85.1(graphql@16.14.2)(typescript@5.7.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       radix-ui:
         specifier: ^1.6.0
         version: 1.6.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -1655,6 +1661,11 @@ packages:
 
   '@payloadcms/plugin-mcp@3.85.1':
     resolution: {integrity: sha512-Zmnny3lTBN9zz4SOSLKbN4N337FFJaeqV7ha0NnYZRz9gIMMs7MYZCwOnPp4AzfXW8UQkhfId7QHdSPWqD5R2w==}
+    peerDependencies:
+      payload: 3.85.1
+
+  '@payloadcms/plugin-nested-docs@3.85.1':
+    resolution: {integrity: sha512-SzZmvIgchOwn0OgV/JhEmIfQwT537fgo8FEk35Lh0ENPX4xoF2dF9gMCc/2yHpqCaIrXTCKCYYFbh0DcN128qA==}
     peerDependencies:
       payload: 3.85.1
 
@@ -5107,6 +5118,14 @@ packages:
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
 
+  payload-better-editor@1.3.0:
+    resolution: {integrity: sha512-EZMwstfDAEnURE1pZqsVTEa229rtqd4uKySaXCRTgV0g7sjq7p4l76OaszdzPLfvTG0Qe3qp7zb479sWRmpXhw==}
+    engines: {node: ^18.20.2 || >=20.9.0, pnpm: ^9 || ^10}
+    peerDependencies:
+      payload: '>=3.81.0'
+      react: ^19.0.0
+      react-dom: ^19.0.0
+
   payload@3.85.1:
     resolution: {integrity: sha512-vfnqwwMOru9wpdiFB3gyb6B+gUt7cjE8+YiNn1g+26dPOyGkAZa9U1QmCMSZfgARj5H42llElQHQw9WX3lYbIw==}
     engines: {node: ^18.20.2 || >=20.9.0}
@@ -7830,6 +7849,10 @@ snapshots:
       - '@cfworker/json-schema'
       - next
       - supports-color
+
+  '@payloadcms/plugin-nested-docs@3.85.1(payload@3.85.1(graphql@16.14.2)(typescript@5.7.3))':
+    dependencies:
+      payload: 3.85.1(graphql@16.14.2)(typescript@5.7.3)
 
   '@payloadcms/plugin-search@3.85.1(@types/react@19.2.17)(graphql@16.14.2)(monaco-editor@0.55.1)(next@16.2.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-macros@3.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(sass@1.77.4))(payload@3.85.1(graphql@16.14.2)(typescript@5.7.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.7.3)':
     dependencies:
@@ -11502,6 +11525,12 @@ snapshots:
   path-type@4.0.0: {}
 
   pathe@2.0.3: {}
+
+  payload-better-editor@1.3.0(payload@3.85.1(graphql@16.14.2)(typescript@5.7.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+    dependencies:
+      payload: 3.85.1(graphql@16.14.2)(typescript@5.7.3)
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
 
   payload@3.85.1(graphql@16.14.2)(typescript@5.7.3):
     dependencies:

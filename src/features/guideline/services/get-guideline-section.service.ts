@@ -1,22 +1,23 @@
-import type { GuidelinePage, GuidelineSection } from '@/payload-types'
+import type { GuidelineDocument } from '@/payload-types'
 import {
 	findPublishedChapterBySlug,
 	findPublishedSectionBySlug,
 	listPublishedPagesBySection,
 } from '../repositories/guideline-view.payload.repository'
+import { extractTextFromLexical } from '../utils/lexical-text'
 
 export interface GetGuidelineSectionOutput {
 	title: string
-	headerImage: GuidelineSection['headerImage']
-	blocks: GuidelinePage['blocks']
+	headerImage: GuidelineDocument['headerImage']
+	blocks: GuidelineDocument['blocks']
 	description: string | null
 	pages: {
 		id: number
 		title: string
 		slug: string
-		description: GuidelinePage['description']
+		description: GuidelineDocument['description']
 		displayOrder: number
-		blocks: GuidelinePage['blocks']
+		blocks: GuidelineDocument['blocks']
 	}[]
 }
 
@@ -49,7 +50,7 @@ export async function getGuidelineSection(
 			title: section.title,
 			headerImage: section.headerImage ?? null,
 			blocks: section.blocks ?? [],
-			description: section.description || null,
+			description: extractTextFromLexical(section.description) || null,
 			pages: pages.map((page) => ({
 				id: page.id,
 				title: page.title,

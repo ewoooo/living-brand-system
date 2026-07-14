@@ -11,17 +11,55 @@ vi.mock('@/features/guideline/services/get-guideline-metadata.service', () => ({
 }))
 
 vi.mock('@/features/guideline/repositories/guideline-view.payload.repository', () => ({
-	listPublishedChapters: vi
-		.fn()
-		.mockResolvedValue([{ id: 1, title: 'Basics', slug: 'basics', description: null }]),
-	listPublishedSectionNavItems: vi.fn().mockResolvedValue([
-		{ id: 10, title: 'Logo', slug: 'logo', chapter: 1 },
-		{ id: 11, title: 'The Name', slug: 'the-name', chapter: 1 },
-	]),
-	listPublishedPageNavItems: vi.fn().mockResolvedValue([
-		{ id: 100, title: 'Primary Logo', slug: 'primary-logo', section: 10 },
-		{ id: 101, title: 'Clear Space', slug: 'clear-space', section: 10 },
-		{ id: 102, title: 'The Name', slug: 'the-name', section: 11 },
+	listPublishedGuidelineNavigationDocuments: vi.fn().mockResolvedValue([
+		{
+			id: 1,
+			title: 'Basics',
+			slug: 'basics',
+			description: null,
+			parent: null,
+			breadcrumbs: [{ url: '/guideline/basics', label: 'Basics', doc: 1 }],
+		},
+		{
+			id: 10,
+			title: 'Logo',
+			slug: 'logo',
+			description: null,
+			parent: 1,
+			breadcrumbs: [{ url: '/guideline/basics/logo', label: 'Logo', doc: 10 }],
+		},
+		{
+			id: 11,
+			title: 'The Name',
+			slug: 'the-name',
+			description: null,
+			parent: 1,
+			breadcrumbs: [{ url: '/guideline/basics/the-name', label: 'The Name', doc: 11 }],
+		},
+		{
+			id: 100,
+			title: 'Primary Logo',
+			slug: 'primary-logo',
+			description: null,
+			parent: 10,
+			breadcrumbs: [],
+		},
+		{
+			id: 101,
+			title: 'Clear Space',
+			slug: 'clear-space',
+			description: null,
+			parent: 10,
+			breadcrumbs: [],
+		},
+		{
+			id: 102,
+			title: 'The Name',
+			slug: 'the-name',
+			description: null,
+			parent: 11,
+			breadcrumbs: [],
+		},
 	]),
 }))
 
