@@ -25,9 +25,14 @@ export const GuidelineDocuments: CollectionConfig = {
 	admin: {
 		group: 'Guidelines',
 		useAsTitle: 'title',
-		defaultColumns: ['title', 'parent', 'slug', 'displayOrder', 'updatedAt'],
 		description: '장·섹션·페이지를 같은 구조로 관리하는 계층형 가이드라인 문서입니다.',
-		listSearchableFields: ['title', 'slug'],
+		components: {
+			views: {
+				list: {
+					Component: '/components/admin/GuidelineDocumentTreeList',
+				},
+			},
+		},
 		livePreview: {
 			url: ({ data }) => previewURL(data.id),
 		},
