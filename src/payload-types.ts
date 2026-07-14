@@ -243,6 +243,10 @@ export interface PayloadMcpApiKeyAuthOperations {
  */
 export interface GuidelineDocument {
   id: number;
+  /**
+   * 상위 문서가 없으면 챕터, 챕터 아래는 섹션, 섹션 아래는 페이지가 됩니다.
+   */
+  parent?: (number | null) | GuidelineDocument;
   title: string;
   /**
    * 제목 위에 표시할 선택 라벨입니다.
@@ -275,13 +279,12 @@ export interface GuidelineDocument {
    * 문서 헤더에 표시할 선택 이미지입니다.
    */
   headerImage?: (number | null) | ApplicationImage;
-  checks?: GuidelineChecks;
   blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
+  checks?: GuidelineChecks;
   /**
    * 숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.
    */
   displayOrder: number;
-  parent?: (number | null) | GuidelineDocument;
   breadcrumbs?:
     | {
         doc?: (number | null) | GuidelineDocument;
@@ -324,35 +327,6 @@ export interface ApplicationImage {
       filename?: string | null;
     };
   };
-}
-/**
- * Guideline Check를 실행할 도구와 호출 계약입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "rule-checkers".
- */
-export interface RuleChecker {
-  id: number;
-  /**
-   * 검사 도구의 안정적인 식별자입니다.
-   */
-  key: string;
-  executor: 'deterministic' | 'heuristic' | 'manual';
-  /**
-   * 결정론적 checker registry에서 사용할 키입니다.
-   */
-  checkerKey?: string | null;
-  /**
-   * 휴리스틱 검수에 사용할 Anthropic 모델입니다.
-   */
-  model?: ('claude-opus-4-8' | 'claude-sonnet-5' | 'claude-haiku-4-5') | null;
-  /**
-   * 휴리스틱 검수 프롬프트의 안정적인 키입니다.
-   */
-  promptKey?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -415,6 +389,35 @@ export interface BrandColor {
    * Main Color 팔레트에 포함되는 컬러인지 여부입니다.
    */
   isMain?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Guideline Check를 실행할 도구와 호출 계약입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rule-checkers".
+ */
+export interface RuleChecker {
+  id: number;
+  /**
+   * 검사 도구의 안정적인 식별자입니다.
+   */
+  key: string;
+  executor: 'deterministic' | 'heuristic' | 'manual';
+  /**
+   * 결정론적 checker registry에서 사용할 키입니다.
+   */
+  checkerKey?: string | null;
+  /**
+   * 휴리스틱 검수에 사용할 Anthropic 모델입니다.
+   */
+  model?: ('claude-opus-4-8' | 'claude-sonnet-5' | 'claude-haiku-4-5') | null;
+  /**
+   * 휴리스틱 검수 프롬프트의 안정적인 키입니다.
+   */
+  promptKey?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1225,13 +1228,13 @@ export interface PayloadMigration {
  * via the `definition` "guideline-documents_select".
  */
 export interface GuidelineDocumentsSelect<T extends boolean = true> {
+  parent?: T;
   title?: T;
   label?: T;
   generateSlug?: T;
   slug?: T;
   description?: T;
   headerImage?: T;
-  checks?: T | GuidelineChecksSelect<T>;
   blocks?:
     | T
     | {
@@ -1240,8 +1243,8 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         colorPalette?: T | ColorPaletteBlockSelect<T>;
         doDont?: T | DoDontBlockSelect<T>;
       };
+  checks?: T | GuidelineChecksSelect<T>;
   displayOrder?: T;
-  parent?: T;
   breadcrumbs?:
     | T
     | {
@@ -1253,6 +1256,25 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColumnUnitBlock_select".
+ */
+export interface ColumnUnitBlockSelect<T extends boolean = true> {
+  columns?:
+    | T
+    | {
+        heading?: T;
+        body?: T;
+        image?: T;
+        imageBackgroundColor?: T;
+        imageScale?: T;
+        id?: T;
+      };
+  checks?: T | GuidelineChecksSelect<T>;
+  id?: T;
+  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1276,25 +1298,6 @@ export interface GuidelineChecksSelect<T extends boolean = true> {
         fail?: T;
       };
   id?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ColumnUnitBlock_select".
- */
-export interface ColumnUnitBlockSelect<T extends boolean = true> {
-  columns?:
-    | T
-    | {
-        heading?: T;
-        body?: T;
-        image?: T;
-        imageBackgroundColor?: T;
-        imageScale?: T;
-        id?: T;
-      };
-  checks?: T | GuidelineChecksSelect<T>;
-  id?: T;
-  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
