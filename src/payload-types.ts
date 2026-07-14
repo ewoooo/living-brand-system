@@ -14,18 +14,23 @@
  */
 export type GuidelineChecks =
   | {
+      title: string;
+      titleKo?: string | null;
       /**
-       * 시나리오와 검수 결과에서 사용하는 안정적인 식별자입니다.
+       * 최초 저장 시 영문 제목을 기준으로 자동 생성되는 안정적인 식별자입니다.
        */
       key: string;
-      title: string;
       tier: 'required' | 'recommended';
+      /**
+       * Checker 후보와 아래 설정 항목을 이 실행 유형에 맞춰 제한합니다.
+       */
+      executor: 'deterministic' | 'heuristic' | 'manual';
       /**
        * 검수 실행 방식과 구현체를 선택합니다.
        */
       checker: number | RuleChecker;
       /**
-       * 이 Check에서 Checker에 전달할 source별 설정입니다.
+       * 이 Check에서 결정론적 Checker에 전달할 설정입니다.
        */
       options?:
         | {
@@ -36,6 +41,13 @@ export type GuidelineChecks =
         | number
         | boolean
         | null;
+      /**
+       * AI가 이 Check를 판단할 때 추가로 적용할 기준입니다. 선택 입력, 최대 2,000자.
+       */
+      heuristicPrompt?: string | null;
+      /**
+       * 결정론적 또는 수동 검수 결과에 표시할 메시지입니다.
+       */
       messages?: {
         pass?: string | null;
         ok?: string | null;
@@ -244,6 +256,10 @@ export interface GuidelineChapter {
    */
   title: string;
   /**
+   * 장 제목 위에 표시할 선택 라벨입니다.
+   */
+  label?: string | null;
+  /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
@@ -358,9 +374,9 @@ export interface RuleChecker {
    */
   checkerKey?: string | null;
   /**
-   * 휴리스틱 검수에 사용할 모델 식별자입니다.
+   * 휴리스틱 검수에 사용할 Anthropic 모델입니다.
    */
-  model?: string | null;
+  model?: ('claude-opus-4-8' | 'claude-sonnet-5' | 'claude-haiku-4-5') | null;
   /**
    * 휴리스틱 검수 프롬프트의 안정적인 키입니다.
    */
@@ -423,7 +439,6 @@ export interface GuidelinePage {
  * via the `definition` "ColumnUnitBlock".
  */
 export interface ColumnUnitBlock {
-  title?: string | null;
   columns?:
     | {
         heading?: string | null;
@@ -1329,6 +1344,7 @@ export interface PayloadMigration {
  */
 export interface GuidelineChaptersSelect<T extends boolean = true> {
   title?: T;
+  label?: T;
   generateSlug?: T;
   slug?: T;
   description?: T;
@@ -1369,11 +1385,14 @@ export interface GuidelineSectionsSelect<T extends boolean = true> {
  * via the `definition` "GuidelineChecks_select".
  */
 export interface GuidelineChecksSelect<T extends boolean = true> {
-  key?: T;
   title?: T;
+  titleKo?: T;
+  key?: T;
   tier?: T;
+  executor?: T;
   checker?: T;
   options?: T;
+  heuristicPrompt?: T;
   messages?:
     | T
     | {
@@ -1389,7 +1408,6 @@ export interface GuidelineChecksSelect<T extends boolean = true> {
  * via the `definition` "ColumnUnitBlock_select".
  */
 export interface ColumnUnitBlockSelect<T extends boolean = true> {
-  title?: T;
   columns?:
     | T
     | {

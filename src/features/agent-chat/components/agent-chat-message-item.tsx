@@ -8,9 +8,11 @@ import {
 	getAgentToolMarker,
 } from '@/features/agent-chat/utils/get-agent-tool-marker'
 import { getAgentCitations } from '../utils/get-agent-citations'
-import { getAgentGeneratedImages } from '../utils/get-agent-generated-images'
-import { getAgentMessageText } from '../utils/get-agent-message-text'
-import { getAgentTemplateAttachments } from '../utils/get-agent-template-attachments'
+import {
+	getAgentGeneratedImages,
+	getAgentMessageText,
+	getAgentTemplateAttachments,
+} from '../utils/get-agent-message-parts'
 import { AgentChatAgentBubble, AgentChatUserBubble } from './agent-chat-bubbles'
 import { AgentChatGeneratedImages } from './agent-chat-generated-images'
 import { AgentChatTemplateAttachment } from './agent-chat-template-attachment'

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { groupCheckSectionsByChapter } from '@/features/asset-check/components/check-side-navigation'
-import { getGuidelineSectionPages } from '@/features/guideline/components/guideline-side-navigation'
+import { getGuidelineSectionPages } from '@/features/guideline/components/globals/guideline-side-navigation'
 
 describe('side navigation domain composition', () => {
 	it('folds guideline sections with one same-title page', () => {

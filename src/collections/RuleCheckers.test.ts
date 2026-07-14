@@ -10,7 +10,10 @@ function validationFor(name: string): Validate {
 	const field = RuleCheckers.fields.find(
 		(candidate) => 'name' in candidate && candidate.name === name,
 	)
-	if (field?.type !== 'text' || typeof field.validate !== 'function') {
+	if (
+		(field?.type !== 'text' && field?.type !== 'select') ||
+		typeof field.validate !== 'function'
+	) {
 		throw new Error(`${name} validation is not configured`)
 	}
 	return field.validate as unknown as Validate
@@ -25,11 +28,24 @@ describe('RuleCheckers executor binding', () => {
 			true,
 		)
 		expect(validationFor('model')('', { siblingData: { executor: 'heuristic' } })).toBe(
-			'Model을 입력하세요.',
+			'Model을 선택하세요.',
 		)
 		expect(validationFor('promptKey')('', { siblingData: { executor: 'heuristic' } })).toBe(
 			'Prompt Key를 입력하세요.',
 		)
 		expect(validationFor('promptKey')('', { siblingData: { executor: 'manual' } })).toBe(true)
+	})
+
+	it('heuristic model은 Opus, Sonnet, Haiku 중에서 선택한다', () => {
+		const model = RuleCheckers.fields.find(
+			(candidate) => 'name' in candidate && candidate.name === 'model',
+		)
+		if (model?.type !== 'select') throw new Error('model select is not configured')
+
+		expect(model.options).toEqual([
+			{ label: 'Opus', value: 'claude-opus-4-8' },
+			{ label: 'Sonnet', value: 'claude-sonnet-5' },
+			{ label: 'Haiku', value: 'claude-haiku-4-5' },
+		])
 	})
 })

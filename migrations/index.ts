@@ -33,6 +33,9 @@ import * as migration_20260710_085848 from './20260710_085848';
 import * as migration_20260710_085950_backfill_template_checks from './20260710_085950_backfill_template_checks';
 import * as migration_20260710_093702_connect_scenario_checks from './20260710_093702_connect_scenario_checks';
 import * as migration_20260710_100108_contract_guideline_checks from './20260710_100108_contract_guideline_checks';
+import * as migration_20260713_025218_remove_column_unit_title from './20260713_025218_remove_column_unit_title';
+import * as migration_20260713_060746_add_chapter_label from './20260713_060746_add_chapter_label';
+import * as migration_20260713_064522_check_editor_ai_context_rebased from './20260713_064522_check_editor_ai_context_rebased';
 import * as migration_20260714_004502_add_template_html_fields from './20260714_004502_add_template_html_fields';
 
 export const migrations = [
@@ -212,8 +215,23 @@ export const migrations = [
     name: '20260710_100108_contract_guideline_checks',
   },
   {
+    up: migration_20260713_025218_remove_column_unit_title.up,
+    down: migration_20260713_025218_remove_column_unit_title.down,
+    name: '20260713_025218_remove_column_unit_title',
+  },
+  {
+    up: migration_20260713_060746_add_chapter_label.up,
+    down: migration_20260713_060746_add_chapter_label.down,
+    name: '20260713_060746_add_chapter_label',
+  },
+  {
+    up: migration_20260713_064522_check_editor_ai_context_rebased.up,
+    down: migration_20260713_064522_check_editor_ai_context_rebased.down,
+    name: '20260713_064522_check_editor_ai_context_rebased',
+  },
+  {
     up: migration_20260714_004502_add_template_html_fields.up,
     down: migration_20260714_004502_add_template_html_fields.down,
-    name: '20260714_004502_add_template_html_fields'
+    name: '20260714_004502_add_template_html_fields',
   },
 ];

@@ -1,5 +1,6 @@
 import { type CollectionConfig, slugField } from 'payload'
 import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
+import { validateGuidelineCheckKeys } from '@/features/guideline/checks/validate-guideline-check-keys'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -19,6 +20,9 @@ export const GuidelineSections: CollectionConfig = {
 	slug: 'guideline-sections',
 	dbName: 'guideline_sections',
 	access: managerManagedAccess,
+	hooks: {
+		beforeValidate: [validateGuidelineCheckKeys],
+	},
 	labels: {
 		singular: 'Guideline Section',
 		plural: 'Guideline Sections',

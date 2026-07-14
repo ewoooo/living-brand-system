@@ -1,5 +1,6 @@
 import type React from 'react'
 import { SectionLayout } from '@/components/global/section-layout'
+import { PageNavigation } from '@/components/page-navigation'
 import { CreateSideNavigation } from '@/features/asset-generation/components/create-side-navigation'
 import { getCreateNavigation } from '@/features/asset-generation/services/get-create-navigation.service'
 
@@ -10,7 +11,23 @@ export default async function CreateLayout({ children }: { children: React.React
 	const navigation = await getCreateNavigation()
 
 	return (
-		<SectionLayout nav={<CreateSideNavigation navigation={navigation} />}>
+		<SectionLayout
+			nav={<CreateSideNavigation navigation={navigation} />}
+			pageNavigation={
+				<PageNavigation
+					items={[
+						{ title: '제작', href: '/create' },
+						...navigation.categories.flatMap((category) => [
+							{ title: category.title, href: category.href },
+							...category.templates.map((template) => ({
+								title: template.name,
+								href: template.href,
+							})),
+						]),
+					]}
+				/>
+			}
+		>
 			{children}
 		</SectionLayout>
 	)

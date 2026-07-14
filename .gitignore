@@ -68,3 +68,11 @@ scripts/diagnose-*.ts
 scripts/_*.ts
 .gstack/
 backups/
+
+# Local build output
+output/
+temp/
+.pnpm-store/
+.playwright-cli/
+scripts/assets/
+inventory/
