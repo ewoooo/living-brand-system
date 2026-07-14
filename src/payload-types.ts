@@ -236,7 +236,7 @@ export interface PayloadMcpApiKeyAuthOperations {
   };
 }
 /**
- * 장·섹션·페이지를 같은 구조로 관리하는 계층형 가이드라인 문서입니다.
+ * 계층형 가이드라인 문서입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline-documents".
