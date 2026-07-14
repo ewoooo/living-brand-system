@@ -15,11 +15,20 @@ export interface CheckReferenceAsset {
 	mimeType: string
 }
 
+export interface CheckerSummary {
+	key: string
+	type: RuleChecker['executor']
+	implementationKey?: string
+}
+
 export interface RuntimeCheck {
 	key: string
 	title: string
 	titleKo?: string
 	tier?: 'recommended' | 'required'
+	/** 화면에 표시할 Checker 계약이다. */
+	checker: CheckerSummary
+	/** 아래 필드는 기존 CheckSession snapshot과 런타임 실행 계약이다. */
 	executor: RuleChecker['executor']
 	checkerKey?: string
 	model?: string
@@ -113,6 +122,11 @@ function toRuntimeCheck({ check, evidence, referenceAssets }: GuidelineCheckSour
 		title: check.title,
 		titleKo: check.titleKo?.trim() || undefined,
 		tier: check.tier ?? undefined,
+		checker: {
+			key: checker.key,
+			type: checker.executor,
+			implementationKey: checker.executor === 'deterministic' ? checkerKey : undefined,
+		},
 		executor: checker.executor,
 		checkerKey,
 		model,

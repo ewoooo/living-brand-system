@@ -18,6 +18,7 @@ const checks: RuntimeCheck[] = [
 		key: 'imagery.mood',
 		title: 'Imagery mood',
 		titleKo: '이미지 무드',
+		checker: { key: 'asset-check.brand-guideline', type: 'heuristic' },
 		executor: 'heuristic',
 		model: 'rule-spec-model',
 		promptKey: 'asset-check.brand-guideline.v1',

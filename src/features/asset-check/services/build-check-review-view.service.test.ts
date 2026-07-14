@@ -98,6 +98,11 @@ function check(key: string): CheckSection['checks'][number] {
 	return {
 		key,
 		title: key,
+		checker: {
+			key: 'test-checker',
+			type: 'deterministic',
+			implementationKey: 'test-implementation',
+		},
 		executor: 'deterministic',
 		implemented: true,
 		evidence: '',

@@ -34,6 +34,11 @@ describe('side navigation domain composition', () => {
 						{
 							key: 'logo.size.minimum',
 							title: 'Minimum Size',
+							checker: {
+								key: 'logo-size-checker',
+								type: 'deterministic',
+								implementationKey: 'relative-size',
+							},
 							executor: 'deterministic',
 							implemented: true,
 							evidence: '',
