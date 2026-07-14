@@ -28,6 +28,9 @@ export const GuidelineDocuments: CollectionConfig = {
 		useAsTitle: 'title',
 		description: '계층형 가이드라인 문서입니다.',
 		components: {
+			edit: {
+				SaveDraftButton: '/components/admin/BetterEditorSaveDraftButton',
+			},
 			views: {
 				list: {
 					Component: '/components/admin/GuidelineDocumentTreeList',
