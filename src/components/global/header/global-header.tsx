@@ -13,7 +13,7 @@ const LINKS = [
 	{ href: '/guideline', label: 'Guideline' },
 	{ href: '/review', label: 'Review' },
 	{ href: '/create', label: 'Create' },
-	{ href: '/image', label: 'Image' },
+	{ href: '/generate', label: 'Generate' },
 ] as const
 
 const LOGIN = { href: '/login', label: 'Admin' } as const

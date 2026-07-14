@@ -37,6 +37,8 @@ const textPropsShape = {
 	textFit: z.enum(['fixed', 'auto-width', 'truncate']).default('fixed'),
 	// 줄바꿈으로 늘어날 때 상자 안에서 쌓이는 기준. bottom은 아래 변 고정 — 넘치면 위로 자란다.
 	verticalAlign: z.enum(['top', 'middle', 'bottom']).default('top'),
+	// 슬롯(locked=false)일 때 worker에게 보이는 안내 문구. manager가 요소별로 설정한다.
+	placeholder: z.string().optional(),
 	// /create 슬롯 입력 제약 — 제작자가 admin에서 요소별로 설정한다.
 	maxLength: z.number().int().positive().optional(),
 	maxLines: z.number().int().positive().optional(),

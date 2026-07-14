@@ -52,10 +52,14 @@ export function TemplateRenderer({
 	template,
 	values,
 	scale = 1,
+	// 코드 실행(iframe 샌드박스) 직렬화 전용: 안쪽 stage div와 각 요소에 DOM id를 부여해
+	// 템플릿 js가 getElementById로 통제할 수 있게 한다. 기본 off라 다른 소비자엔 영향 없다.
+	emitDomIds = false,
 }: {
 	template: JsonTemplate
 	values?: Record<string, TemplateSlotValue>
 	scale?: number
+	emitDomIds?: boolean
 }) {
 	return (
 		<div
@@ -66,6 +70,7 @@ export function TemplateRenderer({
 			}}
 		>
 			<div
+				id={emitDomIds ? '__stage' : undefined}
 				style={{
 					position: 'relative',
 					width: template.width,
@@ -81,6 +86,7 @@ export function TemplateRenderer({
 						element={element}
 						frame={absoluteFrameCss(element)}
 						values={values}
+						emitDomIds={emitDomIds}
 					/>
 				))}
 			</div>
@@ -109,20 +115,25 @@ function ElementView({
 	element,
 	frame,
 	values,
+	emitDomIds = false,
 }: {
 	element: JsonTemplateElement | JsonFlowElement
 	frame: CSSProperties
 	values?: Record<string, TemplateSlotValue>
+	emitDomIds?: boolean
 }) {
+	const domId = emitDomIds ? element.id : undefined
+
 	if (element.type === 'stack') {
 		return (
-			<div style={{ ...frame, ...stackFlexCss(element) }}>
+			<div id={domId} style={{ ...frame, ...stackFlexCss(element) }}>
 				{element.children.map((child) => (
 					<ElementView
 						key={child.id}
 						element={child}
 						frame={flowFrameCss(child, element.direction)}
 						values={values}
+						emitDomIds={emitDomIds}
 					/>
 				))}
 			</div>
@@ -133,17 +144,19 @@ function ElementView({
 
 	if (element.type === 'text') {
 		return (
-			<div style={{ ...frame, ...textBoxCss(element) }}>
+			<div id={domId} style={{ ...frame, ...textBoxCss(element) }}>
 				<TextContent element={element} value={value} />
 			</div>
 		)
 	}
 
 	if (element.type === 'image') {
-		return <ImageView element={element} src={value?.src ?? element.src} style={frame} />
+		return (
+			<ImageView element={element} src={value?.src ?? element.src} style={frame} id={domId} />
+		)
 	}
 
-	return <div style={{ ...frame, ...rectCss(element) }} />
+	return <div id={domId} style={{ ...frame, ...rectCss(element) }} />
 }
 
 function TextContent({ element, value }: { element: TextLike; value?: TemplateSlotValue }) {
@@ -297,19 +310,21 @@ function ImageView({
 	element,
 	src,
 	style,
+	id,
 }: {
 	element: ImageLike
 	src: string
 	style: CSSProperties
+	id?: string
 }) {
 	if (element.color) {
 		const maskSize = element.objectFit === 'fill' ? '100% 100%' : element.objectFit
 
-		return <div style={maskCss(style, element, src, maskSize)} />
+		return <div id={id} style={maskCss(style, element, src, maskSize)} />
 	}
 
 	return (
-		<div style={imageFrameCss(style, element)}>
+		<div id={id} style={imageFrameCss(style, element)}>
 			<NextImage
 				alt={element.slotLabel ?? ''}
 				fill

@@ -26,6 +26,7 @@ import * as migration_20260710_050945_contract_rule_legacy_fields from './202607
 import * as migration_20260710_052026_rename_rule_specs_to_checkers from './20260710_052026_rename_rule_specs_to_checkers';
 import * as migration_20260710_070644_add_rule_source from './20260710_070644_add_rule_source';
 import * as migration_20260710_070752_backfill_rule_source from './20260710_070752_backfill_rule_source';
+import * as migration_20260710_075515_add_template_code_field from './20260710_075515_add_template_code_field';
 import * as migration_20260710_082044_add_guideline_checks from './20260710_082044_add_guideline_checks';
 import * as migration_20260710_082120_backfill_guideline_checks from './20260710_082120_backfill_guideline_checks';
 import * as migration_20260710_085848 from './20260710_085848';
@@ -35,6 +36,7 @@ import * as migration_20260710_100108_contract_guideline_checks from './20260710
 import * as migration_20260713_025218_remove_column_unit_title from './20260713_025218_remove_column_unit_title';
 import * as migration_20260713_060746_add_chapter_label from './20260713_060746_add_chapter_label';
 import * as migration_20260713_064522_check_editor_ai_context_rebased from './20260713_064522_check_editor_ai_context_rebased';
+import * as migration_20260714_004502_add_template_html_fields from './20260714_004502_add_template_html_fields';
 import * as migration_20260714_023146_add_guideline_documents from './20260714_023146_add_guideline_documents';
 import * as migration_20260714_024739_switch_guideline_search_index from './20260714_024739_switch_guideline_search_index';
 import * as migration_20260714_024930_add_guideline_legacy_mapping from './20260714_024930_add_guideline_legacy_mapping';
@@ -46,6 +48,7 @@ import * as migration_20260714_043817_backfill_guideline_route_slugs from './202
 import * as migration_20260714_044457_remove_guideline_legacy_mapping from './20260714_044457_remove_guideline_legacy_mapping';
 import * as migration_20260714_051528_consolidate_guideline_editor from './20260714_051528_consolidate_guideline_editor';
 import * as migration_20260714_055652_cleanup_guideline_mcp_tools from './20260714_055652_cleanup_guideline_mcp_tools';
+import * as migration_20260714_061204_add_template_overrides from './20260714_061204_add_template_overrides';
 
 export const migrations = [
   {
@@ -189,6 +192,11 @@ export const migrations = [
     name: '20260710_070752_backfill_rule_source',
   },
   {
+    up: migration_20260710_075515_add_template_code_field.up,
+    down: migration_20260710_075515_add_template_code_field.down,
+    name: '20260710_075515_add_template_code_field',
+  },
+  {
     up: migration_20260710_082044_add_guideline_checks.up,
     down: migration_20260710_082044_add_guideline_checks.down,
     name: '20260710_082044_add_guideline_checks',
@@ -232,6 +240,11 @@ export const migrations = [
     up: migration_20260713_064522_check_editor_ai_context_rebased.up,
     down: migration_20260713_064522_check_editor_ai_context_rebased.down,
     name: '20260713_064522_check_editor_ai_context_rebased',
+  },
+  {
+    up: migration_20260714_004502_add_template_html_fields.up,
+    down: migration_20260714_004502_add_template_html_fields.down,
+    name: '20260714_004502_add_template_html_fields',
   },
   {
     up: migration_20260714_023146_add_guideline_documents.up,
@@ -287,5 +300,10 @@ export const migrations = [
     up: migration_20260714_055652_cleanup_guideline_mcp_tools.up,
     down: migration_20260714_055652_cleanup_guideline_mcp_tools.down,
     name: '20260714_055652_cleanup_guideline_mcp_tools',
+  },
+  {
+    up: migration_20260714_061204_add_template_overrides.up,
+    down: migration_20260714_061204_add_template_overrides.down,
+    name: '20260714_061204_add_template_overrides',
   },
 ];
