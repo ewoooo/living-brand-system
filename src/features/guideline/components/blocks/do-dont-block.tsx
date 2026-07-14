@@ -1,8 +1,8 @@
-import type { GuidelinePage } from '@/payload-types'
+import type { GuidelineDocument } from '@/payload-types'
 import { BlockHeading } from './children/block-heading'
 import { GuidelineImage } from './children/guideline-image'
 
-type GuidelineBlock = NonNullable<GuidelinePage['blocks']>[number]
+type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type DoDont = Extract<GuidelineBlock, { blockType: 'doDont' }>
 
 export function DoDontBlock({ block }: { block: DoDont }) {

@@ -1,6 +1,6 @@
 import { draftMode } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { getGuidelinePagePreviewTarget } from '@/features/guideline/services/get-guideline-page-preview.service'
+import { getGuidelineDocumentPreviewTarget } from '@/features/guideline/services/get-guideline-document-preview.service'
 import { isManager, isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
@@ -22,13 +22,13 @@ export async function GET(req: Request) {
 		return new Response('Forbidden', { status: 403 })
 	}
 
-	const pageId = Number(new URL(req.url).searchParams.get('id'))
+	const documentId = Number(new URL(req.url).searchParams.get('id'))
 
-	if (!Number.isSafeInteger(pageId) || pageId < 1) {
+	if (!Number.isSafeInteger(documentId) || documentId < 1) {
 		return new Response('Invalid preview', { status: 400 })
 	}
 
-	const target = await getGuidelinePagePreviewTarget(pageId, user)
+	const target = await getGuidelineDocumentPreviewTarget(documentId, user)
 
 	if (!target) {
 		return new Response('Preview not found', { status: 404 })

@@ -18,7 +18,7 @@ describe('validateGuidelineCheckKeys', () => {
 
 		await expect(
 			validateGuidelineCheckKeys({
-				collection: { slug: 'guideline-pages' },
+				collection: { slug: 'guideline-documents' },
 				data: { checks: [{ title: 'Imagery Mood' }] },
 				operation: 'create',
 				req: { payload: { find } },
@@ -28,5 +28,23 @@ describe('validateGuidelineCheckKeys', () => {
 				errors: [{ message: '이미 사용 중인 Check key입니다: imagery-mood' }],
 			},
 		})
+	})
+
+	it('백필 migration context에서는 기존 컬렉션과의 일시적인 중복을 허용한다', async () => {
+		const find = vi.fn()
+		const data = { checks: [{ title: 'Imagery Mood' }] }
+
+		await expect(
+			validateGuidelineCheckKeys({
+				collection: { slug: 'guideline-documents' },
+				data,
+				operation: 'create',
+				req: {
+					context: { skipGuidelineCheckUniqueness: true },
+					payload: { find },
+				},
+			} as never),
+		).resolves.toBe(data)
+		expect(find).not.toHaveBeenCalled()
 	})
 })

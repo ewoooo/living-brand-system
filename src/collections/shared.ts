@@ -7,3 +7,15 @@ export const draftVersions: CollectionConfig['versions'] = {
 	},
 	maxPerDoc: 50,
 }
+
+/** 가이드라인 versions 프리셋 — 편집 내용을 2초 간격으로 자동 저장한다. */
+export const guidelineDraftVersions: CollectionConfig['versions'] = {
+	drafts: {
+		autosave: {
+			interval: 2000,
+			showSaveDraftButton: true,
+		},
+		schedulePublish: true,
+	},
+	maxPerDoc: 50,
+}

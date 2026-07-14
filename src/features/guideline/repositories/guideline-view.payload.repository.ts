@@ -21,85 +21,51 @@ export async function findGuidelineMetadataGlobal() {
 			documentTitle: true,
 			favicon: true,
 			issuedLabel: true,
+			primaryColor: true,
+			primaryColorDark: true,
 		},
 	})
 }
 
-export async function listPublishedChapters() {
+export async function listPublishedGuidelineNavigationDocuments() {
 	const payload = await getPayload({ config })
-	const chapters = await payload.find({
-		collection: 'guideline-chapters',
-		sort: 'displayOrder',
-		limit: 100,
-		locale: LOCALE,
-		fallbackLocale: FALLBACK_LOCALE,
+	const documents = await payload.find({
+		collection: 'guideline-documents',
+		depth: 0,
 		draft: false,
+		fallbackLocale: FALLBACK_LOCALE,
+		limit: 2000,
+		locale: LOCALE,
+		sort: 'displayOrder',
 		select: {
 			title: true,
 			slug: true,
 			description: true,
+			displayOrder: true,
+			parent: true,
+			breadcrumbs: true,
 		},
 	})
 
-	return chapters.docs
-}
-
-export async function listPublishedSectionNavItems() {
-	const payload = await getPayload({ config })
-	const sections = await payload.find({
-		collection: 'guideline-sections',
-		depth: 0,
-		sort: 'displayOrder',
-		limit: 500,
-		locale: LOCALE,
-		fallbackLocale: FALLBACK_LOCALE,
-		draft: false,
-		select: {
-			title: true,
-			slug: true,
-			chapter: true,
-		},
-	})
-
-	return sections.docs
-}
-
-export async function listPublishedPageNavItems() {
-	const payload = await getPayload({ config })
-	const pages = await payload.find({
-		collection: 'guideline-pages',
-		depth: 0,
-		sort: 'displayOrder',
-		limit: 1000,
-		locale: LOCALE,
-		fallbackLocale: FALLBACK_LOCALE,
-		draft: false,
-		select: {
-			title: true,
-			slug: true,
-			section: true,
-		},
-	})
-
-	return pages.docs
+	return documents.docs
 }
 
 export async function findPublishedChapterBySlug(chapterSlug: string) {
 	const payload = await getPayload({ config })
 	const chapters = await payload.find({
-		collection: 'guideline-chapters',
-		where: {
-			slug: {
-				equals: chapterSlug,
-			},
-		},
+		collection: 'guideline-documents',
+		depth: 0,
+		draft: false,
+		fallbackLocale: FALLBACK_LOCALE,
 		limit: 1,
 		locale: LOCALE,
-		fallbackLocale: FALLBACK_LOCALE,
-		draft: false,
+		where: {
+			and: [{ slug: { equals: chapterSlug } }, { parent: { exists: false } }],
+		},
 		select: {
 			title: true,
 			label: true,
+			slug: true,
 			description: true,
 		},
 	})
@@ -110,22 +76,18 @@ export async function findPublishedChapterBySlug(chapterSlug: string) {
 export async function findPublishedSectionBySlug(chapterId: number, sectionSlug: string) {
 	const payload = await getPayload({ config })
 	const sections = await payload.find({
-		collection: 'guideline-sections',
+		collection: 'guideline-documents',
 		depth: 1,
-		where: {
-			slug: {
-				equals: sectionSlug,
-			},
-			chapter: {
-				equals: chapterId,
-			},
-		},
+		draft: false,
+		fallbackLocale: FALLBACK_LOCALE,
 		limit: 1,
 		locale: LOCALE,
-		fallbackLocale: FALLBACK_LOCALE,
-		draft: false,
+		where: {
+			and: [{ slug: { equals: sectionSlug } }, { parent: { equals: chapterId } }],
+		},
 		select: {
 			title: true,
+			slug: true,
 			description: true,
 			headerImage: true,
 			blocks: true,
@@ -136,51 +98,36 @@ export async function findPublishedSectionBySlug(chapterId: number, sectionSlug:
 }
 
 export async function listPublishedSectionsByChapter(chapterId: number) {
-	const payload = await getPayload({ config })
-	const sections = await payload.find({
-		collection: 'guideline-sections',
-		where: {
-			chapter: {
-				equals: chapterId,
-			},
-		},
-		sort: 'displayOrder',
-		limit: 100,
-		locale: LOCALE,
-		fallbackLocale: FALLBACK_LOCALE,
-		draft: false,
-		select: {
-			title: true,
-			slug: true,
-			description: true,
-		},
+	return listPublishedChildren(chapterId, {
+		title: true,
+		slug: true,
+		description: true,
 	})
-
-	return sections.docs
 }
 
 export async function listPublishedPagesBySection(sectionId: number) {
+	return listPublishedChildren(sectionId, {
+		title: true,
+		slug: true,
+		description: true,
+		displayOrder: true,
+		blocks: true,
+	})
+}
+
+async function listPublishedChildren(parentId: number, select: Record<string, true>) {
 	const payload = await getPayload({ config })
-	const pages = await payload.find({
-		collection: 'guideline-pages',
-		where: {
-			section: {
-				equals: sectionId,
-			},
-		},
-		sort: 'displayOrder',
+	const children = await payload.find({
+		collection: 'guideline-documents',
+		depth: 0,
+		draft: false,
+		fallbackLocale: FALLBACK_LOCALE,
 		limit: 100,
 		locale: LOCALE,
-		fallbackLocale: FALLBACK_LOCALE,
-		draft: false,
-		select: {
-			title: true,
-			slug: true,
-			description: true,
-			displayOrder: true,
-			blocks: true,
-		},
+		sort: 'displayOrder',
+		where: { parent: { equals: parentId } },
+		select,
 	})
 
-	return pages.docs
+	return children.docs
 }

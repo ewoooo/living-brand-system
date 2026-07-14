@@ -1,8 +1,8 @@
 import { type CollectionConfig, slugField } from 'payload'
 import { managerManagedAccess } from '@/lib/auth'
-import { draftVersions } from './shared'
+import { draftVersions } from '../../src/collections/shared'
 
-export const GuidelineChapters: CollectionConfig = {
+export const LegacyGuidelineChapters: CollectionConfig = {
 	slug: 'guideline-chapters',
 	dbName: 'guideline_chapters',
 	access: managerManagedAccess,
@@ -54,7 +54,7 @@ export const GuidelineChapters: CollectionConfig = {
 		{
 			name: 'sections',
 			type: 'join',
-			collection: 'guideline-sections',
+			collection: 'guideline-sections' as never,
 			on: 'chapter',
 		},
 		{

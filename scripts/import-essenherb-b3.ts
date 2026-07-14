@@ -3,7 +3,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Payload } from 'payload'
-import type { GuidelineChecks, GuidelinePage, RuleChecker } from '@/payload-types'
+import type { GuidelineChecks, GuidelineDocument, RuleChecker } from '@/payload-types'
 
 type Mode = 'dry-run' | 'draft' | 'publish'
 type CheckSpec = {
@@ -50,7 +50,7 @@ type Manifest = {
 	section: { title: string; slug: string; description: string; displayOrder: number }
 	pages: PageSpec[]
 }
-type GuidelineBlock = NonNullable<GuidelinePage['blocks']>[number]
+type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type CheckerRef = Pick<RuleChecker, 'executor' | 'id'>
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))
@@ -165,7 +165,7 @@ function validateManifest(): void {
 	}
 }
 
-function richText(paragraphs: string[]): NonNullable<GuidelinePage['description']> {
+function richText(paragraphs: string[]): NonNullable<GuidelineDocument['description']> {
 	return {
 		root: {
 			type: 'root',
@@ -197,11 +197,13 @@ function richText(paragraphs: string[]): NonNullable<GuidelinePage['description'
 	}
 }
 
-function existingChecks(page?: GuidelinePage): Map<string, NonNullable<GuidelineChecks>[number]> {
+function existingChecks(
+	document?: GuidelineDocument,
+): Map<string, NonNullable<GuidelineChecks>[number]> {
 	const checks = new Map<string, NonNullable<GuidelineChecks>[number]>()
-	for (const block of page?.blocks ?? []) {
+	for (const block of document?.blocks ?? []) {
 		for (const check of block.checks ?? []) {
-			assert.ok(!checks.has(check.key), `${page?.slug}: 중복 Check ${check.key}`)
+			assert.ok(!checks.has(check.key), `${document?.slug}: 중복 Check ${check.key}`)
 			checks.set(check.key, check)
 		}
 	}
@@ -258,8 +260,8 @@ function materializeBlocks(
 	page: PageSpec,
 	assetIds: Map<string, number>,
 	checkerRefs: Map<string, CheckerRef>,
-	existingPage?: GuidelinePage,
-): NonNullable<GuidelinePage['blocks']> {
+	existingPage?: GuidelineDocument,
+): NonNullable<GuidelineDocument['blocks']> {
 	const preservedChecks = existingChecks(existingPage)
 	const expected = new Set(expectedCheckKeys(page))
 	for (const key of preservedChecks.keys())
@@ -304,13 +306,13 @@ function assertAssetId(assetIds: Map<string, number>, filename: string): number 
 	return id
 }
 
-async function findPage(
+async function findDocument(
 	payload: Payload,
 	slug: string,
 	draft: boolean,
-): Promise<GuidelinePage | undefined> {
+): Promise<GuidelineDocument | undefined> {
 	const result = await payload.find({
-		collection: 'guideline-pages',
+		collection: 'guideline-documents',
 		where: { slug: { equals: slug } },
 		depth: 0,
 		draft,
@@ -319,7 +321,7 @@ async function findPage(
 		limit: 2,
 		overrideAccess: true,
 	})
-	assert.ok(result.docs.length <= 1, `중복 Guideline Page slug: ${slug}`)
+	assert.ok(result.docs.length <= 1, `중복 Guideline Document slug: ${slug}`)
 	return result.docs[0]
 }
 
@@ -400,7 +402,7 @@ async function draftAssets(payload: Payload): Promise<Map<string, number>> {
 
 async function draftHierarchy(payload: Payload): Promise<{ chapterId: number; sectionId: number }> {
 	const chapters = await payload.find({
-		collection: 'guideline-chapters',
+		collection: 'guideline-documents',
 		where: { slug: { equals: manifest.chapter.slug } },
 		depth: 0,
 		draft: true,
@@ -412,17 +414,17 @@ async function draftHierarchy(payload: Payload): Promise<{ chapterId: number; se
 	assert.ok(chapters.docs.length <= 1, `중복 Guideline Chapter slug: ${manifest.chapter.slug}`)
 	const chapter = chapters.docs[0]
 		? await payload.update({
-				collection: 'guideline-chapters',
+				collection: 'guideline-documents',
 				id: chapters.docs[0].id,
-				data: manifest.chapter as never,
+				data: { ...manifest.chapter, parent: null } as never,
 				draft: true,
 				fallbackLocale: false,
 				locale: 'ko',
 				overrideAccess: true,
 			})
 		: await payload.create({
-				collection: 'guideline-chapters',
-				data: manifest.chapter as never,
+				collection: 'guideline-documents',
+				data: { ...manifest.chapter, parent: null } as never,
 				draft: true,
 				fallbackLocale: false,
 				locale: 'ko',
@@ -430,7 +432,7 @@ async function draftHierarchy(payload: Payload): Promise<{ chapterId: number; se
 			})
 
 	const sections = await payload.find({
-		collection: 'guideline-sections',
+		collection: 'guideline-documents',
 		where: { slug: { equals: manifest.section.slug } },
 		depth: 0,
 		draft: true,
@@ -440,10 +442,10 @@ async function draftHierarchy(payload: Payload): Promise<{ chapterId: number; se
 		overrideAccess: true,
 	})
 	assert.ok(sections.docs.length <= 1, `중복 Guideline Section slug: ${manifest.section.slug}`)
-	const sectionData = { ...manifest.section, chapter: chapter.id }
+	const sectionData = { ...manifest.section, parent: chapter.id }
 	const section = sections.docs[0]
 		? await payload.update({
-				collection: 'guideline-sections',
+				collection: 'guideline-documents',
 				id: sections.docs[0].id,
 				data: sectionData as never,
 				draft: true,
@@ -452,7 +454,7 @@ async function draftHierarchy(payload: Payload): Promise<{ chapterId: number; se
 				overrideAccess: true,
 			})
 		: await payload.create({
-				collection: 'guideline-sections',
+				collection: 'guideline-documents',
 				data: sectionData as never,
 				draft: true,
 				fallbackLocale: false,
@@ -467,18 +469,18 @@ async function writeDraft(payload: Payload): Promise<void> {
 	const checkers = await checkerRefs(payload)
 	const { sectionId } = await draftHierarchy(payload)
 	for (const pageSpec of manifest.pages) {
-		const existing = await findPage(payload, pageSpec.slug, true)
+		const existing = await findDocument(payload, pageSpec.slug, true)
 		const data = {
 			title: pageSpec.title,
 			slug: pageSpec.slug,
 			description: richText(pageSpec.description),
-			section: sectionId,
+			parent: sectionId,
 			displayOrder: pageSpec.displayOrder,
 			blocks: materializeBlocks(pageSpec, assets, checkers, existing),
 		}
 		if (existing) {
 			await payload.update({
-				collection: 'guideline-pages',
+				collection: 'guideline-documents',
 				id: existing.id,
 				data: data as never,
 				draft: true,
@@ -488,7 +490,7 @@ async function writeDraft(payload: Payload): Promise<void> {
 			})
 		} else {
 			await payload.create({
-				collection: 'guideline-pages',
+				collection: 'guideline-documents',
 				data: data as never,
 				draft: true,
 				fallbackLocale: false,
@@ -529,7 +531,7 @@ async function verifyPages(
 	draft: boolean,
 ): Promise<void> {
 	for (const pageSpec of manifest.pages) {
-		const page = await findPage(payload, pageSpec.slug, draft)
+		const page = await findDocument(payload, pageSpec.slug, draft)
 		assert.ok(page, `Guideline Page가 없습니다: ${pageSpec.slug}`)
 		assert.equal(page.blocks?.length, pageSpec.blocks.length)
 		assert.deepEqual(
@@ -578,11 +580,9 @@ async function publishDraft(payload: Payload): Promise<void> {
 			overrideAccess: true,
 		})
 	}
-	for (const collection of ['guideline-chapters', 'guideline-sections'] as const) {
-		const slug =
-			collection === 'guideline-chapters' ? manifest.chapter.slug : manifest.section.slug
+	for (const slug of [manifest.chapter.slug, manifest.section.slug]) {
 		const result = await payload.find({
-			collection,
+			collection: 'guideline-documents',
 			where: { slug: { equals: slug } },
 			depth: 0,
 			draft: true,
@@ -591,7 +591,7 @@ async function publishDraft(payload: Payload): Promise<void> {
 		})
 		assert.equal(result.docs.length, 1, `발행할 문서가 없습니다: ${slug}`)
 		await payload.update({
-			collection,
+			collection: 'guideline-documents',
 			id: result.docs[0].id,
 			data: { _status: 'published' } as never,
 			draft: false,
@@ -599,10 +599,10 @@ async function publishDraft(payload: Payload): Promise<void> {
 		})
 	}
 	for (const pageSpec of manifest.pages) {
-		const page = await findPage(payload, pageSpec.slug, true)
+		const page = await findDocument(payload, pageSpec.slug, true)
 		assert.ok(page)
 		await payload.update({
-			collection: 'guideline-pages',
+			collection: 'guideline-documents',
 			id: page.id,
 			data: { _status: 'published' } as never,
 			draft: false,

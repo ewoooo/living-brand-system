@@ -7,7 +7,7 @@ import {
 	collectGuidelineCheckSources,
 	type GuidelineCheckSource,
 } from '@/features/guideline/checks/collect-guideline-check-sources'
-import type { GuidelineSection, RuleChecker } from '@/payload-types'
+import type { GuidelineDocument, RuleChecker } from '@/payload-types'
 
 export interface CheckReferenceAsset {
 	name: string
@@ -49,31 +49,21 @@ export interface CheckSection {
 }
 
 /**
- * 검수 화면용 Check 뷰모델을 published Section/Page와 내부 Block에서 조립한다.
+ * 검수 화면용 Check 뷰모델을 published 통합 문서와 내부 Block에서 조립한다.
  * Payload 조회는 check-ruleset repository가 소유한다.
  */
 export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
-	const { sections, pages } = await getCheckSourceDocuments()
-	const items = [
-		...sections.map((section) => ({
-			documentOrder: -1,
-			item: {
-				title: section.title,
-				slug: section.slug ?? String(section.id),
-				...toCheckPlacement(section),
-				checks: collectGuidelineCheckSources(section).map(toRuntimeCheck),
-			},
-		})),
-		...pages.map((page) => ({
-			documentOrder: page.displayOrder,
-			item: {
-				title: page.title,
-				slug: page.slug ?? String(page.id),
-				...toCheckPlacement(page.section),
-				checks: collectGuidelineCheckSources(page).map(toRuntimeCheck),
-			},
-		})),
-	]
+	const { documents } = await getCheckSourceDocuments()
+	const byId = new Map(documents.map((document) => [document.id, document]))
+	const items = documents.map((document) => ({
+		documentOrder: (document.breadcrumbs?.length ?? 1) < 3 ? -1 : document.displayOrder,
+		item: {
+			title: document.title,
+			slug: pathSegment(document),
+			...toCheckPlacement(document, byId),
+			checks: collectGuidelineCheckSources(document).map(toRuntimeCheck),
+		},
+	}))
 
 	return items
 		.filter(({ item }) => item.checks.length > 0)
@@ -152,32 +142,30 @@ function uniqueChecks(checks: RuntimeCheck[]): RuntimeCheck[] {
 	return [...byKey.values()]
 }
 
-function toCheckPlacement(section: number | GuidelineSection) {
-	if (typeof section === 'number') {
-		return {
-			groupTitle: 'Check',
-			groupSlug: 'check',
-			chapterTitle: 'Check',
-			chapterSlug: 'check',
-			chapterOrder: 0,
-			sectionTitle: 'Check',
-			sectionSlug: 'check',
-			sectionOrder: 0,
-		}
-	}
-	const sectionSlug = section.slug ?? String(section.id)
-	const chapter = typeof section.chapter === 'number' ? null : section.chapter
-	const chapterTitle = chapter?.title ?? section.title
-	const chapterSlug = chapter?.slug ?? sectionSlug
+function toCheckPlacement(document: GuidelineDocument, documents: Map<number, GuidelineDocument>) {
+	const breadcrumbs = document.breadcrumbs ?? []
+	const chapter = documents.get(relationshipId(breadcrumbs[0]?.doc)) ?? document
+	const section = documents.get(relationshipId(breadcrumbs[1]?.doc)) ?? chapter
+	const sectionSlug = pathSegment(section)
+	const chapterSlug = pathSegment(chapter)
 
 	return {
 		groupTitle: section.title,
 		groupSlug: sectionSlug,
-		chapterTitle,
+		chapterTitle: chapter.title,
 		chapterSlug,
-		chapterOrder: chapter?.displayOrder ?? 0,
+		chapterOrder: chapter.displayOrder,
 		sectionTitle: section.title,
 		sectionSlug,
 		sectionOrder: section.displayOrder,
 	}
+}
+
+function pathSegment(document: GuidelineDocument) {
+	return document.slug
+}
+
+function relationshipId(value: GuidelineDocument['parent'] | undefined): number {
+	if (typeof value === 'number') return value
+	return value?.id ?? -1
 }
