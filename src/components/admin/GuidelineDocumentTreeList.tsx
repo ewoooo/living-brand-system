@@ -7,7 +7,7 @@ import {
 	type GuidelineDocumentTreeNode,
 } from './guideline-document-tree'
 
-const depthLabels = ['장', '섹션', '페이지']
+const depthLabels = ['챕터', '섹션', '페이지']
 
 function TreeItems({
 	adminRoute,
