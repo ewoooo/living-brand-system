@@ -31,7 +31,13 @@ describe('GlobalHeader', () => {
 			}),
 		)
 
-		fireEvent.click(screen.getByRole('button', { name: /Guideline/ }))
+		expect(screen.getByRole('link', { name: 'Guideline' })).toHaveAttribute(
+			'href',
+			'/guideline',
+		)
+		expect(screen.getByRole('link', { name: 'Studio' })).toHaveAttribute('href', '/create')
+
+		fireEvent.click(screen.getByRole('button', { name: 'Guideline 메뉴 열기' }))
 
 		expect(screen.getByRole('link', { name: /Foundations/ })).toHaveAttribute(
 			'href',
@@ -39,7 +45,7 @@ describe('GlobalHeader', () => {
 		)
 		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute('href', '/review')
 
-		fireEvent.click(screen.getByRole('button', { name: /Studio/ }))
+		fireEvent.click(screen.getByRole('button', { name: 'Studio 메뉴 열기' }))
 
 		expect(screen.getByRole('link', { name: 'Templates' })).toHaveAttribute('href', '/create')
 		expect(screen.getByRole('link', { name: 'Generate' })).toHaveAttribute('href', '/generate')
