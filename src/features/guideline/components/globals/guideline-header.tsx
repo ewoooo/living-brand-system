@@ -1,17 +1,15 @@
-'use client'
-
-import { useEffect, useRef } from 'react'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import type { GuidelineDocument } from '@/payload-types'
 import { GuidelineImage } from '../blocks/children/guideline-image'
 import type { GuidelineVariant } from './guideline-variant'
 
 // 최상위 헤더(section/chapter/onboard). page 헤더는 GuidelinePageHeading으로 분리됨.
-// 이미지 없으면: 스크롤에 따라 축소 → 타이틀 높이에서 sticky. 배경은 사이트 단색(불투명)이라 하위 콘텐츠는 그 뒤로 가려짐.
-// 높이는 리렌더 없이 rAF로 style.height만 직접 갱신한다(스크롤 성능).
-// 이미지 있으면: 기존 16:9 히어로 유지.
-const MAX_HEIGHT = 200
-const MIN_HEIGHT = 88
+// CSS만으로 collapsing sticky: 위 spacer(스크롤하면 사라짐) + 아래 sticky 타이틀 바.
+// scrollTop을 읽지 않으므로 높이↔스크롤 피드백 루프(진동)가 없고, JS 리스너가 없어 렉도 없다.
+// sticky 바는 부모(section=article, chapter/onboard=wrapper) 전체에서 고정된다.
+// 이미지 있으면 기존 16:9 히어로 유지.
+const HEADER_HEIGHT = 200 // 스크롤 전 헤더 영역 높이
+const BAR_HEIGHT = 88 // 축소·고정 시(타이틀) 높이
 
 export function GuidelineHeader({
 	title,
@@ -27,43 +25,6 @@ export function GuidelineHeader({
 	variant?: GuidelineVariant
 }) {
 	const hasImage = typeof image === 'object' && image !== null && Boolean(image.url)
-	const ref = useRef<HTMLElement>(null)
-
-	useEffect(() => {
-		if (hasImage) return
-		const el = ref.current
-		if (!el) return
-		// 중첩 스크롤 컨테이너(SectionLayout의 main)를 런타임에 찾는다. 없으면 window.
-		let node = el.parentElement
-		let scroller: HTMLElement | null = null
-		while (node) {
-			const overflowY = getComputedStyle(node).overflowY
-			if (
-				(overflowY === 'auto' || overflowY === 'scroll') &&
-				node.scrollHeight > node.clientHeight
-			) {
-				scroller = node
-				break
-			}
-			node = node.parentElement
-		}
-		const target: HTMLElement | Window = scroller ?? window
-		const readTop = () => (scroller ? scroller.scrollTop : window.scrollY)
-		let frame = 0
-		const update = () => {
-			frame = 0
-			el.style.height = `${Math.max(MIN_HEIGHT, MAX_HEIGHT - readTop())}px`
-		}
-		const onScroll = () => {
-			if (!frame) frame = requestAnimationFrame(update)
-		}
-		update()
-		target.addEventListener('scroll', onScroll, { passive: true })
-		return () => {
-			target.removeEventListener('scroll', onScroll)
-			if (frame) cancelAnimationFrame(frame)
-		}
-	}, [hasImage])
 
 	if (hasImage) {
 		return (
@@ -89,14 +50,18 @@ export function GuidelineHeader({
 	}
 
 	return (
-		<header
-			ref={ref}
-			data-variant={variant}
-			className="sticky top-0 z-20 flex items-end border-scrim/10 border-b bg-background pb-4"
-			style={{ height: MAX_HEIGHT }}
-		>
-			{label !== undefined && <p className="type-body mr-3 text-foreground-muted">{label}</p>}
-			<Heading className="type-large-title text-6xl text-foreground">{title}</Heading>
-		</header>
+		<>
+			<div aria-hidden="true" style={{ height: HEADER_HEIGHT - BAR_HEIGHT }} />
+			<header
+				data-variant={variant}
+				className="sticky top-0 z-20 flex items-end border-scrim/10 border-b bg-background pb-4"
+				style={{ height: BAR_HEIGHT }}
+			>
+				{label !== undefined && (
+					<p className="type-body mr-3 text-foreground-muted">{label}</p>
+				)}
+				<Heading className="type-large-title text-6xl text-foreground">{title}</Heading>
+			</header>
+		</>
 	)
 }
