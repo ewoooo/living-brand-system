@@ -20,9 +20,21 @@ function format(block: GuidelineBlock): string {
 export const behavior: BlockBehavior = {
 	formatForAgent: format,
 	toCheckSourceSnapshot: (block) => {
-		if (block.blockType !== 'doDont') return { evidence: '', referenceAssets: [] }
+		if (block.blockType !== 'doDont') {
+			return { evidence: { type: 'doDont', groups: [] }, referenceAssets: [] }
+		}
 		return {
-			evidence: format(block),
+			evidence: {
+				type: 'doDont',
+				title: block.title?.trim() || undefined,
+				groups: (block.groups ?? []).map((group) => ({
+					category: group.category?.trim() || undefined,
+					examples: (group.examples ?? []).map((example) => ({
+						kind: example.kind,
+						caption: example.caption?.trim() || undefined,
+					})),
+				})),
+			},
 			referenceAssets: (block.groups ?? [])
 				.flatMap((group) => group.examples ?? [])
 				.flatMap((example) => {

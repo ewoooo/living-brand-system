@@ -11,6 +11,7 @@ describe('collectGuidelineCheckSources', () => {
 			mimeType: 'image/png',
 		}
 		const page = {
+			id: 12,
 			title: 'Logo usage',
 			description: null,
 			checks: [{ key: 'logo.page', title: 'Page Check', checker: 1 }],
@@ -26,12 +27,15 @@ describe('collectGuidelineCheckSources', () => {
 
 		const sources = collectGuidelineCheckSources(page)
 
-		expect(sources.map((source) => [source.check.key, source.blockId])).toEqual([
-			['logo.page', null],
-			['logo.block', 'logo-block'],
+		expect(sources.map(({ check, source }) => [check.key, source.documentId])).toEqual([
+			['logo.page', 12],
+			['logo.block', 12],
 		])
-		expect(sources[0]?.evidence).toContain('Logo usage')
-		expect(sources[1]?.evidence).toContain('Media showcase')
+		expect(sources[0]?.evidence).toEqual({
+			type: 'document',
+			blocks: [{ type: 'mediaShowcase' }],
+		})
+		expect(sources[1]?.evidence).toEqual({ type: 'mediaShowcase' })
 		expect(sources[1]?.referenceAssets).toEqual([{ asset: image, role: 'context' }])
 	})
 
@@ -43,6 +47,7 @@ describe('collectGuidelineCheckSources', () => {
 			mimeType: 'image/jpeg',
 		}
 		const page = {
+			id: 46,
 			title: 'Incorrect Usage',
 			blocks: [
 				{

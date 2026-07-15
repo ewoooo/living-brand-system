@@ -1,6 +1,7 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import { collectGuidelineCheckSources } from '@/features/guideline/checks/collect-guideline-check-sources'
+import { formatCheckEvidence } from '@/features/guideline/checks/format-check-evidence'
 import { findPublishedUnifiedGuidelineCheckDocuments } from '@/features/guideline/repositories/published-guideline-checks.payload.repository'
 import type { GuidelineDocument } from '@/payload-types'
 
@@ -118,7 +119,7 @@ export async function findAgentChecks(user: unknown): Promise<AgentCheckCatalogI
 	return documents
 		.flatMap(collectGuidelineCheckSources)
 		.map(({ check, evidence }) => ({
-			evidence,
+			evidence: formatCheckEvidence(evidence),
 			key: check.key,
 			tier: check.tier ?? null,
 			title: check.title,
@@ -178,7 +179,7 @@ function toAgentCheck({
 	evidence,
 }: ReturnType<typeof collectGuidelineCheckSources>[number]): AgentCheckCatalogItem {
 	return {
-		evidence,
+		evidence: formatCheckEvidence(evidence),
 		key: check.key,
 		tier: check.tier ?? null,
 		title: check.title,

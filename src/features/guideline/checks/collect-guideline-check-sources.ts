@@ -4,15 +4,15 @@ import {
 	type GuidelineCheckDocument,
 } from '../blocks/check-source-snapshot'
 import { snapshotBlock } from '../blocks/registry'
-import type { CheckReferenceAssetRole } from '../blocks/types'
+import type { CheckEvidence, CheckReferenceAssetRole } from '../blocks/types'
 import { relationshipId } from '../utils/block-text'
 
 type GuidelineCheck = NonNullable<GuidelineChecks>[number]
 
 export interface GuidelineCheckSource {
 	check: GuidelineCheck
-	blockId: string | null
-	evidence: string
+	source: { documentId: number }
+	evidence: CheckEvidence
 	referenceAssets: { asset: ApplicationImage; role: CheckReferenceAssetRole }[]
 }
 
@@ -22,9 +22,9 @@ export function collectGuidelineCheckSources(
 ): GuidelineCheckSource[] {
 	const assets = collectApplicationImages(document)
 	const documentSnapshot = buildCheckSourceSnapshot(document)
-	const documentChecks = toSources(document.checks, null, documentSnapshot, assets)
+	const documentChecks = toSources(document.checks, document.id, documentSnapshot, assets)
 	const blockChecks = (document.blocks ?? []).flatMap((block) =>
-		toSources(block.checks, block.id ?? null, snapshotBlock(block), assets),
+		toSources(block.checks, document.id, snapshotBlock(block), assets),
 	)
 
 	return [...documentChecks, ...blockChecks]
@@ -32,7 +32,7 @@ export function collectGuidelineCheckSources(
 
 function toSources(
 	checks: GuidelineChecks | undefined,
-	blockId: string | null,
+	documentId: number,
 	snapshot: ReturnType<typeof buildCheckSourceSnapshot>,
 	assets: Map<number, ApplicationImage>,
 ): GuidelineCheckSource[] {
@@ -40,7 +40,7 @@ function toSources(
 
 	return (checks ?? []).map((check) => ({
 		check,
-		blockId,
+		source: { documentId },
 		evidence: snapshot.evidence,
 		referenceAssets: snapshot.referenceAssets.flatMap((reference) => {
 			const asset = assets.get(reference.id)

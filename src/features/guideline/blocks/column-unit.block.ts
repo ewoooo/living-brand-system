@@ -18,9 +18,17 @@ function format(block: GuidelineBlock): string {
 export const behavior: BlockBehavior = {
 	formatForAgent: format,
 	toCheckSourceSnapshot: (block) => {
-		if (block.blockType !== 'columnUnit') return { evidence: '', referenceAssets: [] }
+		if (block.blockType !== 'columnUnit') {
+			return { evidence: { type: 'columnUnit', columns: [] }, referenceAssets: [] }
+		}
 		return {
-			evidence: format(block),
+			evidence: {
+				type: 'columnUnit',
+				columns: (block.columns ?? []).map((column) => ({
+					heading: column.heading?.trim() || undefined,
+					body: extractTextFromLexical(column.body).trim() || undefined,
+				})),
+			},
 			referenceAssets: (block.columns ?? [])
 				.map((column) => relationshipId(column.image))
 				.filter((id): id is number => id != null)

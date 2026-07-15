@@ -35,10 +35,14 @@ describe('getCheckRuleset', () => {
 
 		const sections = await getCheckRuleset()
 
-		expect(sections[0]?.checks[0]?.checker).toEqual({
-			key: 'logo-layout',
-			type: 'deterministic',
-			implementationKey: 'clear-space',
+		expect(sections[0]?.checks[0]).toMatchObject({
+			source: { documentId: 1 },
+			evidence: { type: 'document', blocks: [] },
+			checker: {
+				key: 'logo-layout',
+				type: 'deterministic',
+				implementationKey: 'clear-space',
+			},
 		})
 	})
 })

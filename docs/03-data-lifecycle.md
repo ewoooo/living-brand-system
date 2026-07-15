@@ -279,7 +279,7 @@
 | --- | --- |
 | 생성·수집 | CheckSession을 시작할 때 발행된 Guideline에서 선택된 Check와 문서 근거를 읽어 생성한다. |
 | 전송 | 검수 Service가 CheckSession 저장 Repository에 전달한다. |
-| 저장 | CheckKey, 영문·한글 Title, Tier, Options, HeuristicCriteria, HeuristicPrompt, Messages, RuleChecker 실행 계약, Evidence, 역할이 포함된 ReferenceAssetRef를 JSON snapshot으로 저장한다. |
+| 저장 | CheckKey, 영문·한글 Title, Tier, Options, HeuristicCriteria, HeuristicPrompt, Messages, RuleChecker 실행 계약, `source.documentId`, 타입별 구조화 Evidence, 역할이 포함된 ReferenceAssetRef를 JSON snapshot으로 저장한다. Block 식별자와 문서 제목은 중복 저장하지 않는다. |
 | 처리 | 즉시 검수와 후속 AI 검수가 같은 snapshot을 사용한다. Guideline이나 RuleChecker 변경을 역으로 반영하지 않는다. |
 | 활용 | CheckRun과 결과 재현, 감사, 후속 AI 검수에 사용한다. |
 | 공유·제공 | CheckSession 조회 권한이 있는 Manager와 Admin에게 제공한다. |

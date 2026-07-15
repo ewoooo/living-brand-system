@@ -21,7 +21,10 @@ describe('buildCheckSourceSnapshot', () => {
 		} as unknown as GuidelineDocument
 
 		expect(buildCheckSourceSnapshot(page, 'target')).toEqual({
-			evidence: 'Digital\nUse 24 px.',
+			evidence: {
+				type: 'columnUnit',
+				columns: [{ heading: 'Digital', body: 'Use 24 px.' }],
+			},
 			referenceAssets: [{ id: 7, role: 'context' }],
 		})
 	})
@@ -47,8 +50,22 @@ describe('buildCheckSourceSnapshot', () => {
 
 		const snapshot = buildCheckSourceSnapshot(page)
 
-		expect(snapshot?.evidence).toContain('Logo usage\n\nApproved applications')
-		expect(snapshot?.evidence).toContain('권장: Clear')
+		expect(snapshot?.evidence).toEqual({
+			type: 'document',
+			description: 'Approved applications',
+			blocks: [
+				{ type: 'mediaShowcase' },
+				{
+					type: 'doDont',
+					groups: [
+						{
+							category: 'Placement',
+							examples: [{ kind: 'do', caption: 'Clear' }],
+						},
+					],
+				},
+			],
+		})
 		expect(snapshot?.referenceAssets).toEqual([
 			{ id: 8, role: 'context' },
 			{ id: 8, role: 'positive' },
@@ -66,7 +83,11 @@ describe('buildCheckSourceSnapshot', () => {
 		} as unknown as GuidelineDocument
 
 		expect(buildCheckSourceSnapshot(section)).toEqual({
-			evidence: 'Brand Core\n\nFoundation\n\nCore visual Core\n\nMain colors',
+			evidence: {
+				type: 'document',
+				description: 'Foundation',
+				blocks: [{ type: 'colorPalette', title: 'Main colors', colors: [] }],
+			},
 			referenceAssets: [{ id: 3, role: 'context' }],
 		})
 	})
