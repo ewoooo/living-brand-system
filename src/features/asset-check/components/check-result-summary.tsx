@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
-import { buildCheckReviewView } from '@/features/asset-check/services/build-check-review-view.service'
 import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
+import { buildCheckReviewView } from '@/features/asset-check/utils/build-check-review-view'
 import { cn } from '@/lib/utils'
 
 interface CheckResultSummaryProps {

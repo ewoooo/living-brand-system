@@ -18,14 +18,14 @@ import { contrastOptionsSchema } from '@/features/asset-check/checkers/contrast.
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
-import {
-	buildCheckReviewView,
-	type CheckReviewRow,
-} from '@/features/asset-check/services/build-check-review-view.service'
 import type {
 	RuntimeCheck as Check,
 	CheckSection,
 } from '@/features/asset-check/services/get-check-ruleset.service'
+import {
+	buildCheckReviewView,
+	type CheckReviewRow,
+} from '@/features/asset-check/utils/build-check-review-view'
 import { cn } from '@/lib/utils'
 import { CheckEvidence } from './check-evidence'
 

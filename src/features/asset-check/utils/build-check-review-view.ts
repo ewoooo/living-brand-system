@@ -33,7 +33,7 @@ type MutableCheckRow = CheckReviewRow & { appliesToSet: Set<string> }
 
 /**
  * 검수 리뷰 화면 view model 생성 경계.
- * ruleset/result 조회와 외부 I/O는 호출자가 소유하고, 이 서비스는 화면 표시용 순수 계산만 담당한다.
+ * ruleset/result 조회와 외부 I/O는 호출자가 소유하고, 이 함수는 화면 표시용 순수 계산만 담당한다.
  */
 export function buildCheckReviewView({
 	sections,
