@@ -1,7 +1,6 @@
 import type { GetGuidelineSectionOutput } from '../../services/get-guideline-section.service'
 import { GuidelineBlocks } from '../blocks/guideline-blocks'
 import { GuidelineHeader } from '../globals/guideline-header'
-import { GuidelineOnThisPage } from '../globals/guideline-on-this-page'
 import type { GuidelineVariant } from '../globals/guideline-variant'
 import { GuidelineDescriptionFallback } from '../guideline-content-fallbacks'
 import { RefreshRouteOnSave } from '../refresh-route-on-save'
@@ -36,7 +35,6 @@ export function GuidelineSection({
 					<GuidelineDescriptionFallback variant={variant} />
 				)}
 			</div>
-			<GuidelineOnThisPage pages={section.pages} />
 			<GuidelineBlocks
 				blocks={section.blocks}
 				betterEditor={previewDocumentId !== undefined && !previewedPage}
