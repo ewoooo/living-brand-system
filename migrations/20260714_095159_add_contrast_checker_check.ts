@@ -7,6 +7,12 @@ const DOCUMENT_SLUG = 'color-pairing'
 
 export async function up({ payload, req }: MigrateUpArgs): Promise<void> {
 	const document = await findTargetDocument({ payload, req })
+	// 신규 DB에는 backfill된 guideline 콘텐츠가 없어 대상 문서가 존재하지 않는다.
+	// 이 시드는 기존 콘텐츠 DB에 Check를 붙이는 목적이므로, 대상이 없으면 건너뛴다.
+	if (!document) {
+		payload.logger.info(`${DOCUMENT_SLUG} 문서가 없어 contrast checker 시드를 건너뜁니다.`)
+		return
+	}
 	if (document.checks?.some((check) => check.key === CHECK_KEY)) {
 		throw new Error(`${CHECK_KEY} Check가 이미 존재합니다.`)
 	}
@@ -117,7 +123,7 @@ export async function down({ payload, req }: MigrateDownArgs): Promise<void> {
 async function findTargetDocument({
 	payload,
 	req,
-}: Pick<MigrateUpArgs, 'payload' | 'req'>): Promise<GuidelineDocument> {
+}: Pick<MigrateUpArgs, 'payload' | 'req'>): Promise<GuidelineDocument | null> {
 	const documents = await payload.find({
 		collection: 'guideline-documents',
 		depth: 0,
@@ -129,7 +135,8 @@ async function findTargetDocument({
 		req,
 		where: { slug: { equals: DOCUMENT_SLUG } },
 	})
-	if (documents.docs.length !== 1) {
+	if (documents.docs.length === 0) return null
+	if (documents.docs.length > 1) {
 		throw new Error(`${DOCUMENT_SLUG} published 문서를 1건 찾을 수 없습니다.`)
 	}
 	return documents.docs[0]
