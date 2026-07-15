@@ -15,6 +15,14 @@ Start with `.agents/skills/payload/SKILL.md` for a quick reference, then see `.a
 
 When changing Payload collections, fields, indexes, relationships, or other database-backed model behavior:
 
+### Required Default Workflow
+
+1. During local schema development, use a disposable, isolated local Postgres database with `PAYLOAD_DB_PUSH=true`. Let Payload push each in-progress schema change; do not create or run migrations for every local iteration.
+2. When the schema change is finished, generate the handoff migration on one designated machine with `pnpm migrate:create <name>`. Do this after all schema-changing branches are merged and before requesting PR review, merging, or updating any shared database. An unfinished draft PR may temporarily omit the migration, but it must remain draft.
+3. Commit the schema source, generated migration `.ts`, matching drizzle snapshot `.json`, and `migrations/index.ts` together.
+4. Do not run the generated migration against the same local database already updated by push. Verify it against a fresh database with `PAYLOAD_DB_PUSH=false`.
+5. Keep CI, stage, production, and every shared or durable database on `PAYLOAD_DB_PUSH=false`; apply only committed migrations with `pnpm payload migrate` before starting the application.
+
 - Commit the matching migration files with every finished schema change before review, merge, or shared-environment use.
 - Commit the drizzle schema snapshot (`.json`) that `migrate:create` emits next to the `.ts`, and never delete snapshots; without them `migrate:create` regenerates the entire schema instead of an incremental diff.
 - Do not rely on local automatic schema changes as the team handoff mechanism.
@@ -50,7 +58,7 @@ From then on, let Payload update that disposable database and do not mix in migr
 - Use a work branch as the source handoff between a desktop and laptop. Commit and push before leaving one machine; fetch and pull before starting on the other.
 - Do not edit the same branch on both machines concurrently. Use separate branches when concurrent work is unavoidable, then merge the source changes before creating migrations.
 - A private handoff branch used only by one developer across personal machines may temporarily omit a migration while schema work is unfinished. Both machines must use separate disposable databases with `push=true`.
-- Before opening a PR, requesting review, merging to `stage`, or updating a shared database, choose one machine to generate the final migration after all schema-changing branches are merged.
+- Before requesting PR review, merging to `stage`, or updating a shared database, choose one machine to generate the final migration after all schema-changing branches are merged.
 - Never generate competing migrations for the same unfinished schema change on both machines.
 
 Normal device handoff flow:
