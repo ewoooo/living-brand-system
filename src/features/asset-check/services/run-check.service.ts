@@ -11,7 +11,6 @@ import type {
 	CheckerContext,
 	CheckResult,
 } from '@/features/asset-check/checkers/types'
-import { detectCheckImageMediaType } from '@/features/asset-check/image-format'
 import { runAiCheck } from '@/features/asset-check/repositories/ai-check.agent.repository'
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
@@ -20,6 +19,7 @@ import {
 	type RuntimeCheck,
 } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { ImageContentFlags } from '@/features/asset-check/types'
+import { detectCheckImageMediaType } from '@/features/asset-check/utils/image-format'
 
 export interface ImmediateCheckResult {
 	results: Record<string, CheckResult>

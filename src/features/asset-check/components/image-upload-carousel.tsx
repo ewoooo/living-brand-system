@@ -14,8 +14,8 @@ import {
 import { Empty, EmptyDescription, EmptyTitle } from '@/components/ui/empty'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { ImageCheckControls } from '@/features/asset-check/components/image-check-controls'
-import { CHECK_IMAGE_ACCEPT } from '@/features/asset-check/image-format'
 import type { CheckImage } from '@/features/asset-check/types'
+import { CHECK_IMAGE_ACCEPT } from '@/features/asset-check/utils/image-format'
 import { useFileInput } from '@/hooks/use-file-input'
 
 export function ImageUploadCarousel() {

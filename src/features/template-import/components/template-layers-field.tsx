@@ -7,7 +7,7 @@ import {
 	type TemplateOverride,
 	type TemplateOverrides,
 } from '@/features/template-import/utils/compose-template-html'
-import { generateOneText } from '@/features/text-generation/generate-one-text'
+import { generateOneText } from '@/features/text-generation/services/generate-one-text.client'
 
 /**
  * Templates 편집 폼(Admin)의 워크스페이스 — 렌더 캔버스 + 레이어 패널 + 값 편집을 한 곳에서 다룬다.

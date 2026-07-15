@@ -1,10 +1,10 @@
 'use client'
 
 import { createContext, type ReactNode, use, useEffect, useMemo, useRef, useState } from 'react'
-import { isSupportedCheckImageMediaType } from '@/features/asset-check/image-format'
 import { CHECK_SCENARIOS, getCheckScenario } from '@/features/asset-check/scenarios'
 import { runFullCheck } from '@/features/asset-check/services/submit-check.client'
 import type { CheckImage, CheckImageContextValue } from '@/features/asset-check/types'
+import { isSupportedCheckImageMediaType } from '@/features/asset-check/utils/image-format'
 import { revokeBlob } from '@/lib/object-url'
 
 const CheckImageContext = createContext<CheckImageContextValue | null>(null)

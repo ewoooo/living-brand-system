@@ -2,7 +2,7 @@
 
 import { Button, PublishButton, useFormModified } from '@payloadcms/ui'
 import type { PublishButtonClientProps } from 'payload'
-import { useReviewPassed } from './use-review-gate'
+import { useReviewPassed } from '../hooks/use-review-gate'
 
 /**
  * [변경사항 게시] 버튼 오버라이드. (검수 통과 && 수정사항 없음)일 때만 내장 PublishButton을 노출하고,
