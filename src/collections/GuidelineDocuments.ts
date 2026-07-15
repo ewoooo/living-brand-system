@@ -47,6 +47,7 @@ export const GuidelineDocuments: CollectionConfig = {
 			type: 'text',
 			localized: true,
 			admin: {
+				hidden: true,
 				description: '제목 위에 표시할 선택 라벨입니다.',
 			},
 		},
@@ -82,6 +83,7 @@ export const GuidelineDocuments: CollectionConfig = {
 			type: 'upload',
 			relationTo: 'application-images',
 			admin: {
+				position: 'sidebar',
 				description: '문서 헤더에 표시할 선택 이미지입니다.',
 			},
 		},
