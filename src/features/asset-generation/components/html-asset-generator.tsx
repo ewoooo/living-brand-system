@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { composeTemplateHtml } from '@/features/template-import/utils/compose-template-html'
 import { GenerateTextField } from '@/features/text-generation/components/generate-text-field'
@@ -24,7 +24,13 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 	const { html, overrides, width, height } = template
 	const scale = Math.min(1, PREVIEW_WIDTH / width)
 
-	const slots = useMemo(() => collectHtmlSlots(html, overrides), [html, overrides])
+	// 슬롯 수집은 DOMParser가 필요해 마운트 후에만 계산한다(SSR·하이드레이션은 슬롯 없이 렌더).
+	const [mounted, setMounted] = useState(false)
+	useEffect(() => setMounted(true), [])
+	const slots = useMemo(
+		() => (mounted ? collectHtmlSlots(html, overrides) : []),
+		[mounted, html, overrides],
+	)
 
 	// 사용자가 만진 슬롯만 텍스트 오버라이드로 합성한다(만지지 않은 슬롯은 저작 텍스트 유지).
 	const composedHtml = useMemo(
@@ -81,7 +87,7 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 						/>
 					</div>
 				))}
-				{slots.length === 0 && (
+				{mounted && slots.length === 0 && (
 					<p className="type-caption-1 text-foreground-muted">
 						이 템플릿에는 편집 가능한 슬롯이 없습니다.
 					</p>
