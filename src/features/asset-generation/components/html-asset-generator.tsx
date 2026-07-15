@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { composeTemplateHtml } from '@/features/template-import/utils/compose-template-html'
-import { GenerateTextField } from '@/features/text-generation/components/generate-text-field'
 import { exportHtmlToPng } from '@/hooks/use-template-png-export'
 import type { PublishedHtmlTemplate } from '../services/get-published-template.service'
 import { collectHtmlSlots } from '../utils/collect-html-slots'
@@ -75,13 +74,6 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 							spec={slot.input}
 							value={values[slot.nodeId] ?? slot.text}
 							onChange={(text) =>
-								setValues((current) => ({ ...current, [slot.nodeId]: text }))
-							}
-						/>
-						<GenerateTextField
-							defaultPrompt={slot.input.placeholder || slot.input.label || slot.name}
-							rule={slot.input.aiInstruction}
-							onGenerated={(text) =>
 								setValues((current) => ({ ...current, [slot.nodeId]: text }))
 							}
 						/>

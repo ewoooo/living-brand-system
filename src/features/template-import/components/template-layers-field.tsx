@@ -1,7 +1,7 @@
 'use client'
 
 import { Button, Popup, toast, useForm, useFormFields } from '@payloadcms/ui'
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { generateImages } from '@/features/image-generation/services/generate-image.client'
 import {
 	composeTemplateHtml,
@@ -195,6 +195,7 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 
 // 슬롯 스펙 편집 폼 공통 필드 스타일.
 const FIELD_STYLE: CSSProperties = {
+	width: '100%',
 	fontSize: 13,
 	padding: 6,
 	borderRadius: 4,
@@ -203,25 +204,46 @@ const FIELD_STYLE: CSSProperties = {
 	color: 'var(--theme-text)',
 }
 
+// 슬롯 스펙 필드 한 칸 — 위 라벨 + 아래 컨트롤. span이면 그리드 전체 폭.
+function SpecField({
+	id,
+	label,
+	span,
+	children,
+}: {
+	id: string
+	label: string
+	span?: boolean
+	children: ReactNode
+}) {
+	return (
+		<div
+			style={{
+				display: 'flex',
+				flexDirection: 'column',
+				gap: 3,
+				gridColumn: span ? '1 / -1' : undefined,
+			}}
+		>
+			<label htmlFor={id} style={{ fontSize: 11, color: 'var(--theme-elevation-500)' }}>
+				{label}
+			</label>
+			{children}
+		</div>
+	)
+}
+
 /**
- * 선택 텍스트 노드의 입력 슬롯 스펙 편집기.
- * input의 존재 자체가 열린 슬롯 선언 — 열면 유저(Create) 화면에 입력이 노출된다.
+ * 열린 슬롯의 스펙 편집 폼. 열기/닫기는 호출부의 자물쇠 토글이 담당한다.
+ * input의 존재 자체가 열린 슬롯 선언 — 유저(Create) 화면에 입력이 노출된다.
  */
 function SlotSpecEditor({
 	input,
 	onChange,
 }: {
-	input: TemplateInput | undefined
-	onChange: (input: TemplateInput | undefined) => void
+	input: TemplateInput
+	onChange: (input: TemplateInput) => void
 }) {
-	if (!input) {
-		return (
-			<button type="button" style={TRIGGER_STYLE} onClick={() => onChange({})}>
-				입력 슬롯 열기
-			</button>
-		)
-	}
-
 	const patch = (part: Partial<TemplateInput>) => onChange({ ...input, ...part })
 	const positiveInt = (raw: string) => {
 		const parsed = Number.parseInt(raw, 10)
@@ -229,39 +251,38 @@ function SlotSpecEditor({
 	}
 
 	return (
-		<div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: 520 }}>
-			<div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+		<div
+			style={{
+				display: 'grid',
+				gridTemplateColumns: 'repeat(3, 1fr)',
+				gap: 8,
+				maxWidth: 560,
+				padding: 10,
+				borderRadius: 4,
+				border: '1px solid var(--theme-elevation-150)',
+			}}
+		>
+			<SpecField id="slot-spec-label" label="라벨">
 				<input
+					id="slot-spec-label"
 					value={input.label ?? ''}
 					onChange={(event) => patch({ label: event.target.value || undefined })}
-					placeholder="라벨 (예: 영문 이름)"
-					style={{ ...FIELD_STYLE, flex: 1, minWidth: 140 }}
+					placeholder="예: 영문 이름"
+					style={FIELD_STYLE}
 				/>
+			</SpecField>
+			<SpecField id="slot-spec-placeholder" label="플레이스홀더">
 				<input
+					id="slot-spec-placeholder"
 					value={input.placeholder ?? ''}
 					onChange={(event) => patch({ placeholder: event.target.value || undefined })}
-					placeholder="플레이스홀더"
-					style={{ ...FIELD_STYLE, flex: 1, minWidth: 140 }}
+					placeholder="입력 전 안내 문구"
+					style={FIELD_STYLE}
 				/>
-			</div>
-			<div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-				<input
-					type="number"
-					min={1}
-					value={input.maxLength ?? ''}
-					onChange={(event) => patch({ maxLength: positiveInt(event.target.value) })}
-					placeholder="최대 글자"
-					style={{ ...FIELD_STYLE, width: 96 }}
-				/>
-				<input
-					type="number"
-					min={1}
-					value={input.maxLines ?? ''}
-					onChange={(event) => patch({ maxLines: positiveInt(event.target.value) })}
-					placeholder="최대 줄"
-					style={{ ...FIELD_STYLE, width: 96 }}
-				/>
+			</SpecField>
+			<SpecField id="slot-spec-format" label="형식">
 				<select
+					id="slot-spec-format"
 					value={input.inputFormat ?? 'free'}
 					onChange={(event) =>
 						patch({ inputFormat: event.target.value as TemplateInput['inputFormat'] })
@@ -273,19 +294,39 @@ function SlotSpecEditor({
 					<option value="email">이메일</option>
 					<option value="date">날짜</option>
 				</select>
-			</div>
-			<textarea
-				value={input.aiInstruction ?? ''}
-				onChange={(event) => patch({ aiInstruction: event.target.value || undefined })}
-				rows={2}
-				placeholder="AI 지시 — 이 슬롯의 생성 규칙 (예: 영문 이름만, 성-이름 순)"
-				style={{ ...FIELD_STYLE, width: '100%' }}
-			/>
-			<div>
-				<button type="button" style={TRIGGER_STYLE} onClick={() => onChange(undefined)}>
-					슬롯 닫기
-				</button>
-			</div>
+			</SpecField>
+			<SpecField id="slot-spec-max-length" label="최대 글자">
+				<input
+					type="number"
+					min={1}
+					id="slot-spec-max-length"
+					value={input.maxLength ?? ''}
+					onChange={(event) => patch({ maxLength: positiveInt(event.target.value) })}
+					placeholder="없음"
+					style={FIELD_STYLE}
+				/>
+			</SpecField>
+			<SpecField id="slot-spec-max-lines" label="최대 줄">
+				<input
+					type="number"
+					min={1}
+					id="slot-spec-max-lines"
+					value={input.maxLines ?? ''}
+					onChange={(event) => patch({ maxLines: positiveInt(event.target.value) })}
+					placeholder="없음"
+					style={FIELD_STYLE}
+				/>
+			</SpecField>
+			<SpecField id="slot-spec-ai" label="AI 지시 — 이 슬롯의 생성 규칙" span>
+				<textarea
+					id="slot-spec-ai"
+					value={input.aiInstruction ?? ''}
+					onChange={(event) => patch({ aiInstruction: event.target.value || undefined })}
+					rows={2}
+					placeholder="예: 영문 이름만, 성-이름 순"
+					style={FIELD_STYLE}
+				/>
+			</SpecField>
 		</div>
 	)
 }
@@ -517,20 +558,50 @@ export default function TemplateLayersField() {
 						/>
 					</div>
 					<div style={{ marginTop: 12 }}>
-						<span
+						<div
 							style={{
-								display: 'block',
-								fontSize: 12,
-								marginBottom: 4,
-								color: 'var(--theme-elevation-600)',
+								display: 'flex',
+								alignItems: 'center',
+								gap: 6,
+								marginBottom: 6,
 							}}
 						>
-							입력 슬롯 — 유저 화면에 열 입력과 규칙
-						</span>
-						<SlotSpecEditor
-							input={overrides[selected.id]?.input}
-							onChange={(input) => commitOverride({ input })}
-						/>
+							<span style={{ fontSize: 12, color: 'var(--theme-elevation-600)' }}>
+								입력 슬롯
+							</span>
+							<button
+								type="button"
+								onClick={() =>
+									commitOverride({
+										input: overrides[selected.id]?.input ? undefined : {},
+									})
+								}
+								title={
+									overrides[selected.id]?.input
+										? '슬롯 닫기 — 유저 화면에서 숨김'
+										: '슬롯 열기 — 유저 화면에 입력 노출'
+								}
+								style={{
+									border: 'none',
+									background: 'transparent',
+									cursor: 'pointer',
+									fontSize: 14,
+									padding: 2,
+									lineHeight: 1,
+								}}
+							>
+								{overrides[selected.id]?.input ? '🔓' : '🔒'}
+							</button>
+							<span style={{ fontSize: 11, color: 'var(--theme-elevation-500)' }}>
+								{overrides[selected.id]?.input ? '유저 화면에 열림' : '닫힘'}
+							</span>
+						</div>
+						{overrides[selected.id]?.input && (
+							<SlotSpecEditor
+								input={overrides[selected.id]?.input ?? {}}
+								onChange={(input) => commitOverride({ input })}
+							/>
+						)}
 					</div>
 				</div>
 			)}
