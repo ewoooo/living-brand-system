@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { TemplateRenderer, type TemplateSlotValue } from '@/components/template-renderer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { GenerateTextField } from '@/features/text-generation/components/generate-text-field'
 import { useTemplatePngExport } from '@/hooks/use-template-png-export'
 import { revokeBlob } from '@/lib/object-url'
 import { collectOpenSlotElements } from '@/types/json-template'
@@ -49,18 +48,12 @@ export function AssetGenerator({ template }: { template: PublishedJsonTemplate }
 							{element.slotLabel ?? element.id}
 						</label>
 						{element.type === 'text' ? (
-							<>
-								<TextSlotInput
-									id={`slot-${element.id}`}
-									spec={{ ...element, label: element.slotLabel }}
-									value={values[element.id]?.text ?? ''}
-									onChange={(text) => setSlotValue(element.id, { text })}
-								/>
-								<GenerateTextField
-									defaultPrompt={element.placeholder || element.slotLabel || ''}
-									onGenerated={(text) => setSlotValue(element.id, { text })}
-								/>
-							</>
+							<TextSlotInput
+								id={`slot-${element.id}`}
+								spec={{ ...element, label: element.slotLabel }}
+								value={values[element.id]?.text ?? ''}
+								onChange={(text) => setSlotValue(element.id, { text })}
+							/>
 						) : (
 							<Input
 								id={`slot-${element.id}`}
