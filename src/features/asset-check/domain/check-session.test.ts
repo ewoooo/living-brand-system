@@ -67,9 +67,9 @@ describe('CheckSession aggregate', () => {
 		expect(() => completed.fail('boom')).toThrow(CheckSessionStateError)
 
 		const failed = CheckSession.fromRecord(record({ status: 'failed' }))
-		expect(() =>
-			failed.applyImmediateResults({ results: {}, pendingCheckKeys: [] }),
-		).toThrow(CheckSessionStateError)
+		expect(() => failed.applyImmediateResults({ results: {}, pendingCheckKeys: [] })).toThrow(
+			CheckSessionStateError,
+		)
 	})
 
 	it('fail은 errorMessage와 completedAt을 기록한다', () => {
