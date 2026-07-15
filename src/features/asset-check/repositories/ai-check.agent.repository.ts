@@ -2,7 +2,11 @@ import { anthropic } from '@ai-sdk/anthropic'
 import { generateText, type LanguageModelUsage, NoObjectGeneratedError, Output } from 'ai'
 import { z } from 'zod'
 import { env } from '@/env'
-import { heuristicObservationSchema } from '@/features/asset-check/checkers/heuristic-evaluator'
+import {
+	type HeuristicObservation,
+	measureObservationSchema,
+	presenceObservationSchema,
+} from '@/features/asset-check/checkers/heuristic-evaluator'
 import type { AiUsage, CheckerContext } from '@/features/asset-check/checkers/types'
 import type {
 	CheckReferenceAsset,
@@ -10,7 +14,7 @@ import type {
 } from '@/features/asset-check/services/get-check-ruleset.service'
 
 export interface AiCheckRunResult {
-	observations: Record<string, Record<string, z.infer<typeof heuristicObservationSchema>>>
+	observations: Record<string, Record<string, HeuristicObservation>>
 	advices: Record<string, string>
 	failure?: { detail: string; reasonCode: string }
 	aiUsage?: AiUsage
@@ -55,7 +59,9 @@ export async function runAiCheck(
 								'For checks whose kind is "advisory", return an advice field instead: one concise Korean paragraph of designer improvement advice about the target image from that check\'s perspective. The advice must not declare pass, fail, or overall approval.',
 								'Treat each evidence value as the complete normalized structured content of the document or block that owns that check.',
 								'Apply heuristicPrompt and checkerPrompt as additional observation context without changing the output contract.',
-								'Return present when the questioned condition is visibly present, absent when it is visibly absent, and uncertain when pixels or supplied context are insufficient.',
+								'Each criterion carries a kind. For "presence" criteria, return present when the questioned condition is visibly present, absent when it is visibly absent, and uncertain when pixels or supplied context are insufficient.',
+								'For "measure" criteria, estimate the numeric answer to the question in the stated unit and return the bare number as value; return "uncertain" when the image cannot support an estimate.',
+								'For any criterion, return "not_applicable" when the element the question asks about does not exist in the target image at all.',
 								'Do not return pass, ok, needs_review, fail, fulfillment, or an overall approval decision.',
 								referenceFiles.length
 									? 'Use each attached reference image according to its stated positive, negative, or context role.'
@@ -75,12 +81,15 @@ export async function runAiCheck(
 									evidence: check.evidence,
 									heuristicPrompt: check.heuristicPrompt,
 									checkerPrompt: check.prompt,
-									criteria: (check.heuristicCriteria ?? []).map(
-										({ id, question }) => ({
-											id,
-											question,
-										}),
-									),
+									criteria: (check.heuristicCriteria ?? []).map((criterion) => ({
+										id: criterion.id,
+										question: criterion.question,
+										kind: criterion.kind ?? 'presence',
+										unit:
+											criterion.kind === 'measure'
+												? criterion.unit
+												: undefined,
+									})),
 									referenceAssets: check.referenceAssets.map(
 										({ name, role }) => ({
 											name,
@@ -115,7 +124,7 @@ export async function runAiCheck(
 		const results = output.results as Record<
 			string,
 			{
-				observations?: Record<string, z.infer<typeof heuristicObservationSchema>>
+				observations?: Record<string, HeuristicObservation>
 				advice?: string
 			}
 		>
@@ -153,7 +162,9 @@ function buildAiCheckSchema(checks: RuntimeCheck[]) {
 									Object.fromEntries(
 										(check.heuristicCriteria ?? []).map((criterion) => [
 											criterion.id,
-											heuristicObservationSchema,
+											criterion.kind === 'measure'
+												? measureObservationSchema
+												: presenceObservationSchema,
 										]),
 									),
 								),
