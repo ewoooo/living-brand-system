@@ -50,7 +50,7 @@ describe('buildCheckReviewView', () => {
 			showFailOnly: false,
 		})
 
-		expect(view.summary).toEqual({ pass: 0, ok: 0, fail: 0, pendingManualCheck: 0 })
+		expect(view.summary).toEqual({ pass: 0, ok: 0, fail: 0, advisory: 0, pendingManualCheck: 0 })
 		expect(view.rows[0]?.guidelineHref).toBe('/guideline/brand-design-elements/brand-logo')
 		expect(view.rows.map((row) => row.check.key)).toEqual([
 			'logo.size.minimum',
@@ -78,9 +78,32 @@ describe('buildCheckReviewView', () => {
 			showFailOnly: true,
 		})
 
-		expect(view.summary).toEqual({ pass: 2, ok: 1, fail: 2, pendingManualCheck: 0 })
+		expect(view.summary).toEqual({ pass: 2, ok: 1, fail: 2, advisory: 0, pendingManualCheck: 0 })
 		expect(view.rows.map((row) => row.check.key)).toEqual(['logo.space.clear', 'color.palette'])
 		expect(view.rows[1]?.appliesTo).toEqual(['Brand Logo', 'Color System'])
+	})
+
+	it('advisory 결과는 통과/미통과가 아닌 별도 카운트로 센다', () => {
+		const selected = image({
+			'logo.size.minimum': result('logo.size.minimum', 'pass'),
+			'logo.space.clear': result('logo.space.clear', 'advisory'),
+		})
+
+		const view = buildCheckReviewView({
+			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarioKey: 'quick',
+			selected,
+			showFailOnly: false,
+		})
+
+		expect(view.summary).toEqual({
+			pass: 1,
+			ok: 0,
+			fail: 0,
+			advisory: 1,
+			pendingManualCheck: 3,
+		})
 	})
 
 	it('uses the session ruleset snapshot for criteria and evidence', () => {

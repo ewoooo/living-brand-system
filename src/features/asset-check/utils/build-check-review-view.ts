@@ -26,6 +26,7 @@ export interface CheckReviewSummary {
 	pass: number
 	ok: number
 	fail: number
+	advisory: number
 	pendingManualCheck: number
 }
 
@@ -70,7 +71,7 @@ export function buildCheckReviewView({
 }
 
 function buildSummary(rows: CheckReviewRow[], results: CheckImage['results']): CheckReviewSummary {
-	const summary = { pass: 0, ok: 0, fail: 0, pendingManualCheck: 0 }
+	const summary = { pass: 0, ok: 0, fail: 0, advisory: 0, pendingManualCheck: 0 }
 	if (!results) return summary
 
 	for (const row of rows) {
@@ -78,6 +79,7 @@ function buildSummary(rows: CheckReviewRow[], results: CheckImage['results']): C
 		if (status === 'pass') summary.pass++
 		else if (status === 'ok') summary.ok++
 		else if (status === 'fail') summary.fail++
+		else if (status === 'advisory') summary.advisory++
 		else summary.pendingManualCheck++
 	}
 

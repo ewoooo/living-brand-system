@@ -39,6 +39,11 @@ export function CheckResultSummary({ sections }: CheckResultSummaryProps) {
 						colorClassName={CHECK_STATUS.ok.dot}
 					/>
 					<SummaryMetric
+						label={CHECK_STATUS.advisory.label}
+						value={summary.advisory}
+						colorClassName={CHECK_STATUS.advisory.dot}
+					/>
+					<SummaryMetric
 						label={CHECK_STATUS.fail.label}
 						value={summary.fail}
 						colorClassName={CHECK_STATUS.fail.dot}
