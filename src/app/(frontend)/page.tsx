@@ -11,7 +11,10 @@ export default function HomePage() {
 					</h2>
 				</hgroup>
 			</section>
-			<section aria-label="function-description" className="max-w-[1600px] w-full mx-auto"></section>
+			<section
+				aria-label="function-description"
+				className="max-w-[1600px] w-full mx-auto"
+			></section>
 			<section aria-label="updates" className=""></section>
 			<section aria-label="changelogs" className=""></section>
 			<GlobalFooter />
