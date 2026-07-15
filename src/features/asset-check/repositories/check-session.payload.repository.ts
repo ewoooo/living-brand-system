@@ -1,88 +1,71 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type { AiUsage, CheckResult } from '@/features/asset-check/checkers/types'
+import { CheckSession } from '@/features/asset-check/domain/check-session'
 import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { CheckSessionSource } from '@/features/asset-check/types'
-import type { AgentChatSession, CheckSession, User } from '@/payload-types'
+import type { AgentChatSession, User } from '@/payload-types'
 
 interface CreateCheckSessionInput {
 	agentChatSessionId?: AgentChatSession['id']
 	source: CheckSessionSource
-	status: CheckSession['status']
 	imageName?: string
 	rulesetSnapshot?: RuntimeCheck[]
-	results?: Record<string, CheckResult>
-	aiUsage?: AiUsage
-	errorMessage?: string
-	user: User
-}
-
-interface UpdateCheckSessionInput {
-	id: CheckSession['id']
-	status: CheckSession['status']
-	results?: Record<string, CheckResult>
-	aiUsage?: AiUsage
-	errorMessage?: string
 	user: User
 }
 
 /**
- * CheckSession 저장 repository — 검수 실행 기록의 Payload Local API 쓰기를 소유한다.
+ * CheckSession 저장 repository — Aggregate ↔ Payload 레코드 변환과 Local API 쓰기를 소유한다.
+ * 세션은 항상 running으로 시작하고, 이후 전이는 CheckSession Aggregate가 소유한다.
  */
-export async function createCheckSessionRecord(input: CreateCheckSessionInput) {
+export async function createCheckSessionRecord(
+	input: CreateCheckSessionInput,
+): Promise<CheckSession> {
 	const payload = await getPayload({ config })
-
-	return payload.create({
+	const record = await payload.create({
 		collection: 'check-sessions',
 		data: {
 			source: input.source,
-			status: input.status,
+			status: 'running',
 			targetType: 'uploaded-image',
 			imageName: input.imageName,
 			rulesetSnapshot: input.rulesetSnapshot,
-			results: input.results,
+			pendingCheckKeys: [],
 			agentChatSession: input.agentChatSessionId,
-			aiUsage: input.aiUsage,
-			errorMessage: input.errorMessage,
-			completedAt: input.status === 'running' ? undefined : new Date().toISOString(),
 			createdBy: input.user.id,
 		},
 		overrideAccess: false,
 		user: input.user,
 	})
+
+	return CheckSession.fromRecord(record)
 }
 
 /**
- * CheckSession 단건 조회 repository — 후속 AI 검수가 기존 즉시 검수 결과와 Check 스냅샷을 이어받는다.
+ * CheckSession 단건 조회 repository — 저장 레코드를 Aggregate로 복원해 돌려준다.
  */
-export async function getCheckSessionRecord(id: CheckSession['id'], user: User) {
+export async function getCheckSessionRecord(id: number, user: User): Promise<CheckSession> {
 	const payload = await getPayload({ config })
-
-	return payload.findByID({
+	const record = await payload.findByID({
 		collection: 'check-sessions',
 		id,
 		overrideAccess: true,
 		user,
 	})
+
+	return CheckSession.fromRecord(record)
 }
 
 /**
- * CheckSession 상태 갱신 repository — 실행 중 세션의 완료/실패 결과 저장만 소유한다.
+ * CheckSession 저장 repository — Aggregate의 현재 상태를 기록한다.
+ * 저장 필드 선택은 Aggregate의 toUpdateData()가 소유한다.
  */
-export async function updateCheckSessionRecord(input: UpdateCheckSessionInput) {
+export async function saveCheckSessionRecord(session: CheckSession, user: User): Promise<void> {
 	const payload = await getPayload({ config })
-
-	return payload.update({
+	await payload.update({
 		collection: 'check-sessions',
-		id: input.id,
-		data: {
-			status: input.status,
-			results: input.results,
-			aiUsage: input.aiUsage,
-			errorMessage: input.errorMessage,
-			completedAt: input.status === 'running' ? undefined : new Date().toISOString(),
-		},
+		id: session.id,
+		data: session.toUpdateData(),
 		overrideAccess: true,
-		user: input.user,
+		user,
 	})
 }

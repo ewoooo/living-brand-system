@@ -24,16 +24,14 @@ export async function submitCheck(file: File, scenarioKey: string): Promise<Subm
 	return (await response.json()) as SubmitCheckResult
 }
 
-/** 첫 응답에서 분리된 AI(heuristic) 룰의 후속 판정을 요청한다. */
+/** 첫 응답에서 분리된 AI(heuristic) 룰의 후속 판정을 요청한다. 대상 룰은 서버가 세션에서 읽는다. */
 export async function submitAiCheck(
 	file: File,
 	checkSessionId: number,
-	checkKeys: string[],
 ): Promise<Record<string, CheckResult>> {
 	const form = new FormData()
 	form.append('image', file)
 	form.append('checkSessionId', String(checkSessionId))
-	form.append('checkKeys', JSON.stringify(checkKeys))
 	const response = await fetch('/api/check/ai', { method: 'POST', body: form })
 	if (!response.ok) throw new Error(`ai check failed: ${response.status}`)
 	const { results } = (await response.json()) as { results: Record<string, CheckResult> }
@@ -63,11 +61,9 @@ export async function runFullCheck(
 
 	if (serverResult.pendingCheckKeys.length === 0) return
 
-	const aiResults = await submitAiCheck(
-		file,
-		serverResult.checkSessionId,
-		serverResult.pendingCheckKeys,
-	).catch(() => aiFailureResults(serverResult.pendingCheckKeys))
+	const aiResults = await submitAiCheck(file, serverResult.checkSessionId).catch(() =>
+		aiFailureResults(serverResult.pendingCheckKeys),
+	)
 	onAiResult(serverResult.checkSessionId, aiResults)
 }
 
