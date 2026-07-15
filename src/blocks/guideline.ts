@@ -1,5 +1,6 @@
 import type { ArrayField, Block, Field, FieldHook } from 'payload'
 import { validateGuidelineCheckOptions } from '@/features/guideline/checks/validate-guideline-check-options'
+import { relationshipId } from '@/features/guideline/utils/block-text'
 
 type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
 
@@ -32,6 +33,17 @@ export function checkKeyFromEnglishTitle(value: unknown): string {
 const populateCheckKey: FieldHook = ({ siblingData, value }) => {
 	if (typeof value === 'string' && value.trim()) return value.trim()
 	return checkKeyFromEnglishTitle(siblingData?.title)
+}
+
+const populateCheckExecutor: FieldHook = async ({ req, siblingData, value }) => {
+	const checkerId = relationshipId(siblingData?.checker)
+	if (checkerId === null) return value
+	const checker = await req.payload.findByID({
+		collection: 'rule-checkers',
+		id: checkerId,
+		depth: 0,
+	})
+	return checker.executor
 }
 
 export function guidelineChecksField(): Field {
@@ -80,14 +92,14 @@ export function guidelineChecksField(): Field {
 				name: 'executor',
 				type: 'select',
 				required: true,
-				defaultValue: 'deterministic',
 				options: [
 					{ label: 'Deterministic', value: 'deterministic' },
 					{ label: 'Heuristic (AI)', value: 'heuristic' },
 					{ label: 'Manual', value: 'manual' },
 				],
+				hooks: { beforeValidate: [populateCheckExecutor] },
 				admin: {
-					description: 'Checker 후보와 아래 설정 항목을 이 실행 유형에 맞춰 제한합니다.',
+					hidden: true,
 				},
 			},
 			{
@@ -100,10 +112,9 @@ export function guidelineChecksField(): Field {
 					allowEdit: true,
 					appearance: 'drawer',
 					description: '검수 실행 방식과 구현체를 선택합니다.',
-				},
-				filterOptions: ({ siblingData }) => {
-					const executor = (siblingData as { executor?: CheckExecutor })?.executor
-					return executor ? { executor: { equals: executor } } : true
+					components: {
+						Field: '/components/admin/CheckCheckerField',
+					},
 				},
 			},
 			{

@@ -24,6 +24,7 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { default as default_ad1d969b642204b60b7dd66ef5c88f1c } from '../../../components/admin/CheckCheckerField'
 import { default as default_b2590831ecdbc846ead523de86ea1f09 } from '../../../components/admin/CheckOptionsField'
 import { default as default_fa2a66b57d80a7ab7d39bcf3d00cd7fd } from '../../../components/admin/GuidelineBlocksField'
 import { default as default_3cb64f97d1dcec18a20e3bc2bf9faba7 } from '../../../components/admin/BetterEditorPublishButton'
@@ -73,6 +74,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "/components/admin/CheckCheckerField#default": default_ad1d969b642204b60b7dd66ef5c88f1c,
   "/components/admin/CheckOptionsField#default": default_b2590831ecdbc846ead523de86ea1f09,
   "/components/admin/GuidelineBlocksField#default": default_fa2a66b57d80a7ab7d39bcf3d00cd7fd,
   "/components/admin/BetterEditorPublishButton#default": default_3cb64f97d1dcec18a20e3bc2bf9faba7,
