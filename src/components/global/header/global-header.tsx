@@ -18,14 +18,11 @@ import {
 } from '@/components/ui/navigation-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
-import { ArrowUpRight } from '@carbon/icons-react'
-
 
 const STUDIO_LINKS = [
 	{ href: '/create', label: 'Templates' },
 	{ href: '/generate', label: 'Generate' },
 ] as const
-
 
 function HeaderHead({
 	className,
@@ -167,13 +164,12 @@ function HeaderHead({
 									href="/admin"
 									rel="noreferrer"
 									target="_blank"
-									className='text-muted-foreground/50'
+									className="text-muted-foreground/50"
 								>
 									Admin ↗
 								</Link>
 							</NavigationMenuLink>
 						</NavigationMenuItem>
-
 					</NavigationMenuList>
 				</NavigationMenu>
 			</nav>
@@ -181,7 +177,13 @@ function HeaderHead({
 	)
 }
 
-function HeaderTail({ className, guidelineChapters }: { className?: string; guidelineChapters: GuidelineSearchChapter[] }) {
+function HeaderTail({
+	className,
+	guidelineChapters,
+}: {
+	className?: string
+	guidelineChapters: GuidelineSearchChapter[]
+}) {
 	return (
 		<section className={className}>
 			<GuidelineSearch chapters={guidelineChapters} />
@@ -200,7 +202,10 @@ export function GlobalHeader({
 	return (
 		<header className="relative z-50 flex shrink-0 bg-background">
 			<HeaderHead className="" guidelineChapters={guidelineChapters} />
-			<HeaderTail className="ml-auto flex items-center gap-2 p-4" guidelineChapters={guidelineChapters} />
+			<HeaderTail
+				className="ml-auto flex items-center gap-2 p-4"
+				guidelineChapters={guidelineChapters}
+			/>
 		</header>
 	)
 }
