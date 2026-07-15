@@ -106,20 +106,29 @@ export async function listPublishedSectionsByChapter(chapterId: number) {
 }
 
 export async function listPublishedPagesBySection(sectionId: number) {
-	return listPublishedChildren(sectionId, {
-		title: true,
-		slug: true,
-		description: true,
-		displayOrder: true,
-		blocks: true,
-	})
+	// depth 1: 페이지 blocks의 이미지(application-images)·색상(brand-colors) 관계를 populate해야 렌더된다.
+	return listPublishedChildren(
+		sectionId,
+		{
+			title: true,
+			slug: true,
+			description: true,
+			displayOrder: true,
+			blocks: true,
+		},
+		1,
+	)
 }
 
-async function listPublishedChildren(parentId: number, select: Record<string, true>) {
+async function listPublishedChildren(
+	parentId: number,
+	select: Record<string, true>,
+	depth = 0,
+) {
 	const payload = await getPayload({ config })
 	const children = await payload.find({
 		collection: 'guideline-documents',
-		depth: 0,
+		depth,
 		draft: false,
 		fallbackLocale: FALLBACK_LOCALE,
 		limit: 100,
