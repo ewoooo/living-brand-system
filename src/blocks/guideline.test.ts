@@ -5,7 +5,15 @@ import {
 	guidelineBreadcrumbCount,
 	guidelineDocumentTypeLabel,
 } from '@/components/admin/guideline-document-tree'
-import { checkKeyFromEnglishTitle, guidelineBlocks, guidelineChecksField } from './guideline'
+import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
+import {
+	ColumnUnitBlock,
+	checkKeyFromEnglishTitle,
+	DoDontBlock,
+	guidelineBlocks,
+	guidelineChecksField,
+	MediaShowcaseBlock,
+} from './guideline'
 
 const fieldNames = (fields: Field[]) =>
 	fields.flatMap((field) =>
@@ -64,6 +72,42 @@ describe('guideline checks field', () => {
 		])
 		expect(fieldNames(GuidelineDocuments.fields)).toContain('checks')
 		for (const block of guidelineBlocks) expect(fieldNames(block.fields)).toContain('checks')
+	})
+
+	it('Do/Don’t 이미지 비율에 공용 계약을 사용한다', () => {
+		const row = DoDontBlock.fields.find((field) => field.type === 'row')
+		if (row?.type !== 'row') throw new Error('Do/Don’t option row is missing')
+		const imageRatio = row.fields.find(
+			(field) => 'name' in field && field.name === 'imageRatio',
+		)
+		if (imageRatio?.type !== 'select') throw new Error('imageRatio select is missing')
+
+		expect(imageRatio.options).toEqual(IMAGE_RATIO_OPTIONS)
+		expect(IMAGE_RATIO_OPTIONS.map(({ value }) => value)).toEqual([
+			'4:3',
+			'1:1',
+			'16:9',
+			'3:2',
+			'2:3',
+			'4:5',
+			'5:4',
+			'9:16',
+		])
+	})
+
+	it('다른 이미지 블록도 공용 비율 계약을 사용한다', () => {
+		for (const [block, defaultValue] of [
+			[ColumnUnitBlock, '4:3'],
+			[MediaShowcaseBlock, '16:9'],
+		] as const) {
+			const imageRatio = block.fields.find(
+				(field) => 'name' in field && field.name === 'imageRatio',
+			)
+			if (imageRatio?.type !== 'select') throw new Error('imageRatio select is missing')
+
+			expect(imageRatio.options).toEqual(IMAGE_RATIO_OPTIONS)
+			expect(imageRatio.defaultValue).toBe(defaultValue)
+		}
 	})
 
 	it('영문 제목에서 namespace 없는 안정적인 key를 만든다', () => {
@@ -169,5 +213,75 @@ describe('guideline checks field', () => {
 		expect(await options.validate(null as never, context)).toBe(
 			'최소 대비율은 1 이상 21 이하의 숫자로 입력하세요.',
 		)
+	})
+
+	it('criteria row는 kind에 따라 관찰형/수치형 입력을 나눈다', () => {
+		const checks = guidelineChecksField() as { fields: { name?: string; fields?: unknown[] }[] }
+		const criteria = checks.fields.find(
+			(field) => 'name' in field && field.name === 'criteria',
+		) as {
+			validate: (value: unknown, args: { siblingData: unknown }) => true | string
+			fields: { fields: { name: string; required?: boolean }[] }[]
+		}
+		const rowFieldNames = criteria.fields.flatMap((row) =>
+			row.fields.map((field) => field.name),
+		)
+		expect(rowFieldNames).toEqual(
+			expect.arrayContaining([
+				'question',
+				'kind',
+				'expected',
+				'operator',
+				'expectedValue',
+				'max',
+				'unit',
+			]),
+		)
+
+		const heuristic = { executor: 'heuristic' }
+		// 관찰형: expected 필수
+		expect(
+			criteria.validate([{ kind: 'presence', question: 'q' }], { siblingData: heuristic }),
+		).toContain('적합 기준')
+		// 수치형: operator/expectedValue 필수
+		expect(
+			criteria.validate([{ kind: 'measure', question: 'q' }], { siblingData: heuristic }),
+		).toContain('연산과 기대값')
+		// between: max > expectedValue
+		expect(
+			criteria.validate(
+				[
+					{
+						kind: 'measure',
+						question: 'q',
+						operator: 'between',
+						expectedValue: 30,
+						max: 5,
+					},
+				],
+				{ siblingData: heuristic },
+			),
+		).toContain('최대값')
+		// 정상 케이스
+		expect(
+			criteria.validate(
+				[
+					{ kind: 'presence', question: 'q', expected: 'present' },
+					{
+						kind: 'measure',
+						question: 'q',
+						operator: 'between',
+						expectedValue: 5,
+						max: 30,
+						unit: '%',
+					},
+				],
+				{ siblingData: heuristic },
+			),
+		).toBe(true)
+		// kind 미지정 기존 데이터는 presence로 검증
+		expect(
+			criteria.validate([{ question: 'q', expected: 'absent' }], { siblingData: heuristic }),
+		).toBe(true)
 	})
 })

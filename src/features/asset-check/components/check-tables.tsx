@@ -17,7 +17,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { contrastOptionsSchema } from '@/features/asset-check/checkers/contrast.checker'
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
-import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
+import {
+	formatObservationActual,
+	formatObservationExpected,
+} from '@/features/asset-check/components/check-observation-format'
+import { CHECK_STATUS, checkDisplayStatus } from '@/features/asset-check/components/check-status'
 import type {
 	RuntimeCheck as Check,
 	CheckSection,
@@ -43,7 +47,7 @@ function CheckRow({
 	check,
 	rowId,
 	rowIndex,
-	sectionLabel,
+	scenarioLabel,
 	appliesTo,
 	guidelineHref,
 	anchorId,
@@ -73,7 +77,7 @@ function CheckRow({
 				tabIndex={0}
 				className="border-0 scroll-mt-72 cursor-pointer"
 			>
-				<CheckSectionCell sectionLabel={sectionLabel} />
+				<CheckScenarioCell scenarioLabel={scenarioLabel} />
 				<TableCell className={cn('w-0 py-2.5 pr-3 align-top', CHECK_BORDER)}>
 					<CheckExecutorIcon check={check} />
 				</TableCell>
@@ -128,10 +132,10 @@ function AnimatedCheckTableRow({
 	)
 }
 
-function CheckSectionCell({ sectionLabel }: { sectionLabel: string | null }) {
+function CheckScenarioCell({ scenarioLabel }: { scenarioLabel: string | null }) {
 	return (
-		<TableCell className={cn('w-44 py-2.5 pr-4 align-top', sectionLabel && CHECK_BORDER)}>
-			{sectionLabel && <span className="type-callout-emphasized">{sectionLabel}</span>}
+		<TableCell className={cn('w-44 py-2.5 pr-4 align-top', scenarioLabel && CHECK_BORDER)}>
+			{scenarioLabel && <span className="type-callout-emphasized">{scenarioLabel}</span>}
 		</TableCell>
 	)
 }
@@ -256,10 +260,10 @@ function CheckStatusBadge({
 				transition={{ duration: 0.16, ease: 'easeOut' }}
 				className={cn(
 					'type-subheadline-emphasized inline-block whitespace-nowrap rounded px-1.5 py-0.5',
-					CHECK_STATUS[outcome.rawResult.status].pill,
+					CHECK_STATUS[checkDisplayStatus(outcome.rawResult)].pill,
 				)}
 			>
-				{CHECK_STATUS[outcome.rawResult.status].label}
+				{CHECK_STATUS[checkDisplayStatus(outcome.rawResult)].label}
 			</motion.span>
 		)
 	}
@@ -421,22 +425,19 @@ function HeuristicObservations({ observations }: { observations: AiCheckResult['
 								<p className="mt-1 text-muted-foreground">{observation.reason}</p>
 							</td>
 							<td className="px-3 py-2 align-top whitespace-nowrap">
-								{observation.expected === 'present' ? '있어야 함' : '없어야 함'}
+								{formatObservationExpected(observation)}
 							</td>
 							<td className="px-3 py-2 align-top whitespace-nowrap">
-								{observation.actual === 'present'
-									? '있음'
-									: observation.actual === 'absent'
-										? '없음'
-										: '판단 불가'}{' '}
-								({observation.confidence}%)
+								{formatObservationActual(observation)} ({observation.confidence}%)
 							</td>
 							<td className="px-3 py-2 align-top whitespace-nowrap">
 								{observation.satisfied === true
 									? '충족'
 									: observation.satisfied === false
 										? '미충족'
-										: '검토 필요'}
+										: observation.actual === 'not_applicable'
+											? '해당 없음'
+											: '검토 필요'}
 							</td>
 						</tr>
 					))}
@@ -509,10 +510,10 @@ function CheckDetailCollapse({
 }
 
 export function CheckSections({ sections }: { sections: CheckSection[] }) {
-	const { scenarioKey, selectedId, selected, showFailOnly } = useCheckImages()
+	const { scenarios, scenarioKey, selectedId, selected, showFailOnly } = useCheckImages()
 	const { rows } = useMemo(
-		() => buildCheckReviewView({ sections, scenarioKey, selected, showFailOnly }),
-		[sections, scenarioKey, selected, showFailOnly],
+		() => buildCheckReviewView({ sections, scenarios, scenarioKey, selected, showFailOnly }),
+		[sections, scenarios, scenarioKey, selected, showFailOnly],
 	)
 
 	return (

@@ -51,9 +51,11 @@ function firstTextStyle(html: string): string {
 function rootStyle(html: string): string {
 	return html.match(/^<(?:div|p)\b[\s\S]*?style="([\s\S]*?)"/)?.[1] ?? ''
 }
-// 특정 node-id div의 style 값.
+// 특정 node-id 요소의 style 값.
 function nodeStyle(html: string, id: string): string {
-	const re = new RegExp(`<div\\b[\\s\\S]*?data-node-id="${id}"[\\s\\S]*?style="([\\s\\S]*?)"`)
+	const re = new RegExp(
+		`<(?:div|img)\\b[\\s\\S]*?data-node-id="${id}"[\\s\\S]*?style="([\\s\\S]*?)"`,
+	)
 	return html.match(re)?.[1] ?? ''
 }
 
@@ -83,6 +85,37 @@ describe('figmaNodeToHtml — 레이아웃', () => {
 		const { html } = figmaNodeToHtml(GRID_FRAME)
 		expect(html).toContain('data-figma-type="FRAME"')
 		expect(html).toContain('data-figma-type="TEXT"')
+	})
+})
+
+describe('figmaNodeToHtml — 벡터', () => {
+	it('내부 SVG URL을 원본 bounding box 크기·위치의 img로 렌더링한다', () => {
+		const { html } = figmaNodeToHtml(
+			{
+				id: '1:1',
+				name: 'card',
+				type: 'FRAME',
+				absoluteBoundingBox: { x: 0, y: 0, width: 300, height: 200 },
+				children: [
+					{
+						id: '1:2',
+						name: 'logo',
+						type: 'VECTOR',
+						absoluteBoundingBox: { x: 20, y: 30, width: 80, height: 40 },
+						size: { width: 60, height: 20 },
+					},
+				],
+			},
+			{ '1:2': '/api/template-assets/file/figma-1-2.svg' },
+		)
+
+		expect(html).toContain('<img')
+		expect(html).toContain('src="/api/template-assets/file/figma-1-2.svg"')
+		const style = nodeStyle(html, '1:2')
+		expect(style).toContain('left:20px')
+		expect(style).toContain('top:30px')
+		expect(style).toContain('width:80px')
+		expect(style).toContain('height:40px')
 	})
 })
 

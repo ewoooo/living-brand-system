@@ -4,11 +4,16 @@ import {
 	getCheckSessionRecord,
 	updateCheckSessionRecord,
 } from '@/features/asset-check/repositories/check-session.payload.repository'
-import { getCheckScenario } from '@/features/asset-check/scenarios'
+import {
+	type CheckScenario,
+	getCheckScenario,
+	getCheckScenarioFlags,
+} from '@/features/asset-check/scenarios'
 import {
 	getRuntimeChecks,
 	type RuntimeCheck,
 } from '@/features/asset-check/services/get-check-ruleset.service'
+import { getCheckScenarios } from '@/features/asset-check/services/get-check-scenarios.service'
 import {
 	runHeuristicCheck,
 	runImmediateCheck,
@@ -16,19 +21,13 @@ import {
 import type { CheckSessionSource, ImageContentFlags } from '@/features/asset-check/types'
 import type { AgentChatSession, CheckSession, User } from '@/payload-types'
 
-// 시나리오 어휘는 scenarioKey 입력 계약의 일부다 — 다른 기능은 asset-check 내부 대신 여기서 가져간다.
-export {
-	CHECK_SCENARIOS,
-	type CheckScenario,
-	getCheckScenario,
-} from '@/features/asset-check/scenarios'
-
 interface StartCheckSessionInput {
 	agentChatSessionId?: AgentChatSession['id']
 	buffer: Buffer
 	deferHeuristic?: boolean
 	flags?: ImageContentFlags
 	imageName?: string
+	scenario?: CheckScenario
 	scenarioKey?: string
 	source: CheckSessionSource
 	user: User
@@ -47,7 +46,8 @@ interface CompleteCheckSessionAiCheckInput {
  * run-check/get-check-rules service가 소유한다.
  */
 export async function startCheckSession(input: StartCheckSessionInput) {
-	const scenario = getCheckScenario(input.scenarioKey)
+	const scenario =
+		input.scenario ?? getCheckScenario(await getCheckScenarios(input.user), input.scenarioKey)
 	const rulesetSnapshot = await getRuntimeChecks(scenario.checkKeys)
 	const session = await createCheckSessionRecord({
 		agentChatSessionId: input.agentChatSessionId,
@@ -61,7 +61,7 @@ export async function startCheckSession(input: StartCheckSessionInput) {
 	try {
 		const immediate = await runImmediateCheck(
 			input.buffer,
-			input.flags ?? scenario.flags,
+			input.flags ?? getCheckScenarioFlags(scenario),
 			rulesetSnapshot,
 		)
 		const aiCheck = input.deferHeuristic

@@ -1,6 +1,15 @@
-import { describe, expect, it } from 'vitest'
-import { groupCheckSectionsByChapter } from '@/features/asset-check/components/check-side-navigation'
+import { render, screen } from '@testing-library/react'
+import { createElement, type ReactNode } from 'react'
+import { describe, expect, it, vi } from 'vitest'
+import { CheckSideNavigation } from '@/features/asset-check/components/check-side-navigation'
 import { getGuidelineSectionPages } from '@/features/guideline/components/globals/guideline-side-navigation'
+
+vi.mock('@/components/global/side-nav/side-nav', () => ({
+	SideNav: ({ children }: { children: ReactNode }) => createElement('nav', null, children),
+	SideNavGroup: ({ children }: { children: ReactNode }) => createElement('div', null, children),
+	SideNavItem: ({ label, href }: { label: string; href: string }) =>
+		createElement('a', { href }, label),
+}))
 
 describe('side navigation domain composition', () => {
 	it('folds guideline sections with one same-title page', () => {
@@ -20,49 +29,23 @@ describe('side navigation domain composition', () => {
 		).toEqual([])
 	})
 
-	it('groups check pages as chapter, section, and check navigation', () => {
-		expect(
-			groupCheckSectionsByChapter([
-				{
-					title: 'Primary Logo',
-					slug: 'primary-logo',
-					chapterTitle: 'Brand Design Elements',
-					chapterSlug: 'brand-design-elements',
-					sectionTitle: 'Brand Logo',
-					sectionSlug: 'brand-logo',
-					checks: [
-						{
-							key: 'logo.size.minimum',
-							title: 'Minimum Size',
-							checker: {
-								key: 'logo-size-checker',
-								type: 'deterministic',
-								implementationKey: 'relative-size',
-							},
-							executor: 'deterministic',
-							implemented: true,
-							evidence: '',
-							referenceAssets: [],
-						},
-					],
-				},
-			]),
-		).toMatchObject([
-			{
-				title: 'Brand Design Elements',
-				sections: [
-					{
-						title: 'Brand Logo',
-						href: '/review/rules#primary-logo',
-						checks: [
-							{
-								title: 'Minimum Size',
-								href: '/review/rules#primary-logo:logo.size.minimum',
-							},
-						],
-					},
+	it('lists published check scenarios', () => {
+		render(
+			createElement(CheckSideNavigation, {
+				scenarios: [
+					{ key: 'quick', title: '빠른 기본 검수', checkKeys: ['color.palette'] },
+					{ key: 'sns', title: 'SNS 콘텐츠 검수', checkKeys: ['messaging.sns.copy'] },
 				],
-			},
-		])
+			}),
+		)
+
+		expect(screen.getByRole('link', { name: '빠른 기본 검수' })).toHaveAttribute(
+			'href',
+			'/review/rules#quick',
+		)
+		expect(screen.getByRole('link', { name: 'SNS 콘텐츠 검수' })).toHaveAttribute(
+			'href',
+			'/review/rules#sns',
+		)
 	})
 })

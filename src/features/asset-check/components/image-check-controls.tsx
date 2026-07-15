@@ -11,10 +11,10 @@ import {
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
-import { CHECK_SCENARIOS } from '@/features/asset-check/scenarios'
 
 export function ImageCheckControls() {
-	const { selectedId, selected, scenarioKey, setScenarioKey, runCheck } = useCheckImages()
+	const { scenarios, selectedId, selected, scenarioKey, setScenarioKey, runCheck } =
+		useCheckImages()
 
 	return (
 		<section className="pointer-events-none absolute inset-x-4 top-4 bottom-4 z-10 flex flex-col items-center justify-between">
@@ -28,7 +28,7 @@ export function ImageCheckControls() {
 				</SelectTrigger>
 				<SelectContent>
 					<SelectGroup>
-						{CHECK_SCENARIOS.map((scenario) => (
+						{scenarios.map((scenario) => (
 							<SelectItem key={scenario.key} value={scenario.key}>
 								{scenario.title}
 							</SelectItem>

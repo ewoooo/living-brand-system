@@ -494,6 +494,7 @@ flowchart TB
 | --- | --- | --- |
 | `guideline` global | BrandGuideline | 단일 가이드라인 설정 |
 | `guideline-documents` | GuidelineDocument | 계층 깊이로 장·섹션·페이지를 표현하고 blocks와 자체 checks를 소유 |
+| `check-scenarios` | CheckScenario | 검수 목적별 이름, 설명과 순서가 있는 CheckKey 목록을 관리 |
 | `rule-checkers` | RuleChecker | executor 유형과 checker 또는 model binding을 1:1로 관리하는 검사 도구 계약 |
 | `brand-logos` | BrandLogo | guideline document, asset generation session, check basis에서 참조 |
 | `brand-colors` | BrandColor | guideline document, Check, template, plugin에서 참조 |

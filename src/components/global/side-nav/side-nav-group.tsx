@@ -28,7 +28,7 @@ export function SideNavGroup({
 
 function SideNavGroupTitle({ title, titleHref }: { title?: string; titleHref?: string }) {
 	if (!title) return null
-	const className = 'type-body text-foreground'
+	const className = 'type-callout text-foreground'
 
 	if (titleHref) {
 		return (

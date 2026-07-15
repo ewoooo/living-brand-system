@@ -167,12 +167,28 @@
 | 전송 | Check는 부모 Guideline 문서 편집 요청에 포함해 Payload API로 전달한다. |
 | 저장 | CheckKey, 영문·한글 Title, Tier, RuleCheckerRef와 실행 유형에 따른 Options, HeuristicCriteria, HeuristicPrompt, Messages를 부모 Section/Page/Block 안에 저장한다. 별도 source 필드는 두지 않는다. |
 | 처리 | 검수 시작 시 부모 문서 또는 Block의 전체 정규화 콘텐츠와 RuleChecker 실행 계약을 결합한다. 휴리스틱 AI는 HeuristicCriteria별 관찰값만 반환하고, 검수 Service가 기대값과 비교해 최종 상태를 결정한다. Guideline 변경 시 별도 snapshot을 동기화하지 않는다. |
-| 활용 | Scenario는 CheckKey로 실행 범위를 선택하고, 검수 런타임은 Check options를 RuleChecker에 전달한다. |
+| 활용 | CheckScenario는 CheckKey로 실행 범위를 선택하고, 검수 런타임은 Check options를 RuleChecker에 전달한다. |
 | 공유·제공 | Creator와 Agent에는 발행된 GuidelineVersion에 포함된 Check만 제공한다. |
 | 보관 | Check는 부모 GuidelineVersion과 Payload revision에 포함해 보관하고, 실행 당시 값은 CheckSession에 snapshot으로 저장한다. |
 | 파기 | 부모 Section/Page가 draft 또는 삭제 상태가 되거나 Block이 제거되면 이후 검수 대상에서 제외한다. 기존 CheckSession snapshot은 보존한다. |
 
-### 4.3 CheckException
+### 4.3 CheckScenario
+
+데이터명: CheckScenario
+수집 목적: Manager가 검수 목적별로 실행할 Check를 조립하고 발행한다.
+
+| 단계 | 작성 내용 |
+| --- | --- |
+| 생성·수집 | Manager가 이름, 설명, 안정적인 Key와 포함할 CheckKey를 선택해 draft로 생성한다. |
+| 전송 | CheckScenario 편집 요청은 Payload API를 통해 전달한다. |
+| 저장 | CheckScenarioKey와 순서가 있는 CheckKey 목록을 Payload collection과 PostgreSQL에 저장한다. Check 정의를 복제하지 않는다. |
+| 처리 | 발행 시 CheckKey 중복과 published Guideline에 존재하지 않는 Check를 거부한다. |
+| 활용 | 검수 시작 시 선택된 CheckKey 범위를 실행하고 실제 Check 정의는 CheckSession snapshot에 고정한다. |
+| 공유·제공 | Creator와 Agent에는 published이며 archived가 아닌 CheckScenario만 제공한다. |
+| 보관 | draft와 published revision을 Payload version으로 보관한다. |
+| 파기 | 발행 전 draft는 삭제할 수 있다. 한 번 발행된 CheckScenario는 삭제하지 않고 archived로 전환한다. |
+
+### 4.4 CheckException
 
 데이터명: CheckException
 수집 목적: 특정 Check에 종속되는 예외 조건과 적용 기간을 관리한다. 현재 구현 범위에서는 제외한다.
@@ -188,7 +204,7 @@
 | 보관 | 예외 적용 기간과 변경 사유를 보관한다. |
 | 파기 | 적용 종료 후에는 archived 상태로 남기고, 잘못 만든 draft 예외만 삭제한다. |
 
-### 4.4 BrandAsset
+### 4.5 BrandAsset
 
 데이터명: BrandAsset
 수집 목적: 로고, 이미지, 아이콘, 참고 파일 같은 공식 브랜드 자원을 관리한다.
@@ -204,7 +220,7 @@
 | 보관 | 파일 원본, Official Version, 사용 조건, 폐기 사유를 보관한다. |
 | 파기 | draft 파일은 삭제할 수 있다. 발행된 에셋은 archived 처리하고 실제 파일 삭제는 참조 종료 후 수행한다. |
 
-### 4.5 Template
+### 4.6 Template
 
 데이터명: Template
 수집 목적: Creator가 산출물을 만들 때 사용할 공식 형식을 관리한다.
@@ -220,7 +236,7 @@
 | 보관 | TemplateVersion과 사용 조건 변경 이력을 보관한다. |
 | 파기 | draft 템플릿은 삭제할 수 있다. 발행된 템플릿은 archived 처리하고 기존 AssetGenerationSession 참조는 보존한다. |
 
-### 4.6 Plugin
+### 4.7 Plugin
 
 데이터명: Plugin
 수집 목적: Creator가 산출물을 만들 때 사용할 공식 제작 기능을 관리한다.

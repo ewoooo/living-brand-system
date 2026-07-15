@@ -62,7 +62,7 @@ export const CheckSessions: CollectionConfig = {
 			name: 'rulesetSnapshot',
 			type: 'json',
 			admin: {
-				description: '검수 실행 시점의 룰셋 스냅샷입니다.',
+				description: '검수 실행 시점의 Check Scenario 기준 Check 스냅샷입니다.',
 			},
 		},
 		{

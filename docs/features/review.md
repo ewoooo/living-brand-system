@@ -10,7 +10,7 @@
 
 재사용 단위는 유스케이스 서비스 **`startCheckSession`**입니다. 어떤 표면에서도 호출하도록 feature 폴더가 아닌 최상위(`src/services/start-check-session.service.ts`)에 둡니다.
 
-- 입력: 이미지 바이트(Buffer), 시나리오 키(룰셋·콘텐츠 플래그 선택), 콘텐츠 플래그(logo/typography/illustration/photography), 호출 출처(`review-page`/`chat`/`mcp-call`), 사용자
+- 입력: 이미지 바이트(Buffer), CheckScenario Key(Check 실행 범위 선택), 콘텐츠 플래그(logo/typography/illustration/photography), 호출 출처(`review-page`/`chat`/`mcp-call`), 사용자
 - 출력: `{ checkSessionId, results(checkKey→CheckResult), pendingCheckKeys }`
 - `CheckResult`의 판정은 `rawResult.status`(`pass`/`ok`/`needs_review`/`fail`)와 `fulfillment`(충족도 %)로 표현됩니다.
 - 2단계 계약: 결정론적 Check는 즉시 채워지고, AI(heuristic) Check는 `pendingCheckKeys`로 반환된 뒤 **`completeCheckSessionAiCheck`**로 완성합니다.
@@ -124,23 +124,128 @@ Raster Observation
 
 색상 쌍을 찾지 못하면 `needs_review`로 끝냅니다. 이 경로가 검증되기 전에는 범용 Extractor DAG, 새 의존성, 전체 Checker 일괄 변환을 도입하지 않습니다.
 
-## 3. 표면
+## 3. 객체 모델 전환 방향
+
+현재 Review는 `CheckSession` 레코드와 여러 순수 함수로 검수 흐름을 구현합니다. 계산 자체는 단순하지만, 세션 상태 전이와 결과 병합 규칙은 유스케이스 서비스가 직접 관리합니다. 검수 단계와 재실행 조건이 늘어날 때 이 규칙이 여러 호출 경로로 흩어지지 않도록 `CheckSession`을 Aggregate 객체로 전환합니다.
+
+### 현재 구현 관계
+
+검수 기준은 발행된 Guideline 문서의 Check에서 읽고, `CheckScenario.checkKeys`로 실행 범위를 선택합니다. 실행 시점의 Check와 Checker 계약은 `rulesetSnapshot`에 복사합니다.
+
+```text
+GuidelineDocument
+└─ checks[]
+   └─ Check
+      ├─ key
+      ├─ options / heuristicCriteria / messages
+      ├─ evidence / referenceAssets
+      └─ checkerRef → RuleChecker
+
+CheckScenario
+└─ checkKeys[] → GuidelineDocument.checks[]
+
+CheckSessionRecord
+├─ source / status
+├─ targetType / imageName
+├─ rulesetSnapshot[]
+│  └─ RuntimeCheck
+│     ├─ key / source.documentId
+│     ├─ checker
+│     ├─ options / heuristicCriteria / heuristicPrompt
+│     └─ evidence / referenceAssets / messages
+├─ results[checkKey]
+│  └─ CheckResult
+│     ├─ rule
+│     ├─ checker
+│     ├─ rawResult
+│     └─ message
+├─ aiUsage / errorMessage
+├─ agentChatSessionRef / createdByRef
+└─ completedAt
+```
+
+`startCheckSession`은 세션 생성, 즉시 검수, AI 검수, 결과 병합, 완료 또는 실패 상태 저장을 순서대로 수행합니다. `completeCheckSessionAiCheck`도 저장된 snapshot과 결과를 읽어 AI 결과를 병합하고 세션을 완료합니다.
+
+현재 `CheckTarget`, `CheckRun`, `CheckBasis`, `CheckDecision`은 독립된 런타임 객체가 아닙니다. `CheckTarget`은 `targetType`과 `imageName`으로 평탄화되어 있고, `CheckBasis`는 `rulesetSnapshot`만 구현되어 있습니다. `GuidelineVersionRef`와 `BrandAssetVersionRef`는 아직 저장하지 않습니다. `CheckRun`과 `CheckDecision`의 동작은 서비스 함수와 지역 변수에 들어 있습니다. `pendingCheckKeys`는 API 응답과 클라이언트 상태에만 존재하고 `CheckSession`에는 저장하지 않습니다.
+
+### 구현할 객체 모델
+
+첫 전환에서는 `CheckSession`만 Aggregate 객체로 만들고 상태 전이와 결과 병합을 소유하게 합니다. Repository는 Aggregate와 Payload 레코드 사이를 변환합니다. 두 요청에 걸친 AI 검수에서도 상태를 복원할 수 있도록 `pendingCheckKeys`도 세션 상태로 저장합니다.
+
+```text
+CheckSession                         ← Aggregate Root
+├─ id / source / status
+├─ target
+│  └─ CheckTarget
+├─ ruleset
+│  └─ CheckRulesetSnapshot
+│     └─ checks[checkKey]
+├─ results[checkKey]
+│  └─ CheckResult
+├─ pendingCheckKeys[]
+├─ aiUsage / error
+├─ applyImmediateResults()
+├─ applyAiResults()
+├─ complete()
+└─ fail()
+```
+
+이 객체는 다음 불변식을 지킵니다.
+
+- `running` 상태에서만 결과를 추가하거나 실패로 전환할 수 있습니다.
+- 즉시 검수 결과를 적용할 때 기존 결과와 `pendingCheckKeys`를 함께 갱신합니다.
+- AI 결과를 적용하면 해당 pending Check를 제거하고, 남은 Check가 없을 때만 완료합니다.
+- 완료되거나 실패한 세션은 다시 변경하지 않습니다.
+- Repository만 Aggregate를 Payload 저장 데이터로 변환합니다.
+
+Checker, Extractor, Evaluator와 색상·기하 계산은 상태가 없는 계산이므로 순수 함수로 유지합니다. 재검수 이력, 여러 실행, 실행별 감사가 필요해지면 그때 `CheckSession.runs[]` 아래에 `CheckRun`, `CheckBasis`, `CheckDecision`을 분리합니다.
+
+```text
+CheckSession
+└─ runs[]
+   └─ CheckRun
+      ├─ basis
+      │  └─ CheckBasis
+      │     ├─ guidelineVersionRef
+      │     ├─ brandAssetVersionRef
+      │     └─ rulesetSnapshot
+      ├─ agentRunRef
+      └─ decision
+         └─ CheckDecision
+            ├─ outcome
+            └─ results[checkKey]
+               └─ CheckResult
+                  └─ recommendations[]
+```
+
+### 변경 효과
+
+- **상태 전이 집중**: `running → completed/failed` 조건과 결과 병합 규칙을 `CheckSession` 한곳에서 관리합니다.
+- **잘못된 변경 차단**: 완료된 세션에 결과를 추가하는 것처럼 유효하지 않은 동작을 객체 경계에서 거부합니다.
+- **호출 경로 통일**: Page, AI Chat, MCP가 같은 Aggregate 동작을 사용하고 각 호출자가 완료 조건을 다시 구현하지 않습니다.
+- **코드와 문서의 일치**: 문서에서 Aggregate로 정의한 `CheckSession`이 실제 코드에서도 검수 생명주기를 소유합니다.
+- **테스트 단순화**: DB, Payload, AI 호출 없이 즉시 결과 적용, AI 결과 병합, 완료와 실패 전이를 검사할 수 있습니다.
+- **확장 위치 명확화**: 재시도, 재검수, 여러 `CheckRun`, 감사 이력이 필요할 때 `CheckSession` 아래에 추가할 위치가 분명합니다.
+
+대신 Aggregate와 Payload 레코드 사이의 변환 코드가 생깁니다. 이 비용을 제한하기 위해 첫 전환에서는 `CheckSession`만 객체화하고, 상태가 없는 Checker 계산과 아직 필요하지 않은 하위 엔티티는 추가하지 않습니다.
+
+## 4. 표면
 
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
-| [Page](../surfaces/page.md) | 구현 | `/review` — 이미지 업로드 → 항목별 결과 테이블. `/review/rules` — 블록 타입별 구조화 evidence 카탈로그(제목·키·근거 검색, 판정 방식 필터, 결과 개수 표시). 클라이언트가 `/api/check` → `/api/check/ai` 순으로 호출 |
+| [Page](../surfaces/page.md) | 구현 | `/review` — 이미지 업로드 → 선택한 CheckScenario의 항목별 결과 테이블. 사이드바와 `/review/rules` 카탈로그는 발행된 CheckScenario별 Check를 표시하며 제목·키·근거 검색, 판정 방식 필터, 결과 개수를 제공합니다. 클라이언트가 `/api/check` → `/api/check/ai` 순으로 호출 |
 | REST | 구현 | `POST /api/check`(FormData, 20MB 제한, origin·인증 게이트), `POST /api/check/ai` |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `runCheck`(+`listCheckScenarios`)이 `startCheckSession`을 호출 |
 | MCP | 부분 | `mcp-call` 출처값은 정의됨, 전용 라우트는 없이 `/api/check` 재사용 |
 
-## 4. 의존
+## 5. 의존
 
-- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 모델과 기본 프롬프트는 Check가 참조하는 RuleChecker에서 선택하고, Check의 source·구조화 evidence·heuristicCriteria·heuristicPrompt를 JSON text part로, 검수 대상과 referenceAssets를 file part로 전달한다. 모델은 기준별 `present`/`absent`/`uncertain` 관찰값만 반환하며 최종 `pass`/`fail`/`needs_review`는 검수 Service의 Evaluator가 결정한다. 한 세션의 heuristic Check는 한 번의 AI 호출로 평가하고, 설정·호출·출력 검증 실패는 `needs_review`로 처리한다.
+- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 모델과 기본 프롬프트는 Check가 참조하는 RuleChecker에서 선택하고, Check의 source·구조화 evidence·heuristicCriteria·heuristicPrompt를 JSON text part로, 검수 대상과 referenceAssets를 file part로 전달한다. 모델은 기준별 관찰값만 반환하며(관찰형은 `present`/`absent`, 수치형은 숫자, 공통으로 `uncertain`/`not_applicable`) 최종 `pass`/`fail`/`needs_review`는 검수 Service의 Evaluator가 결정한다. 한 세션의 heuristic Check는 한 번의 AI 호출로 평가하고, 설정·호출·출력 검증 실패는 `needs_review`로 처리한다.
 - 이미지 디코딩: `sharp`(128px 픽셀 그리드 추출).
 - 결정론적 checker: palette-compliance / color-combination / spot-color / background-tone / clear-space / relative-size / canvas-format. RuleChecker의 `checkerKey`로 registry를 조회하며, 미등록 checker는 `implemented:false`로 표시.
-- Payload 컬렉션: `guideline-documents`(룰셋), `brand-colors`(팔레트) 읽기. 세션은 `check-sessions`에 영속(룰셋 스냅샷을 함께 저장해 AI 후속 단계가 재사용).
+- Payload 컬렉션: `guideline-documents`(Check 기준), `brand-colors`(팔레트) 읽기. 세션은 `check-sessions`에 영속(CheckRulesetSnapshot을 함께 저장해 AI 후속 단계가 재사용).
 
-## 5. 크로스커팅
+## 6. 크로스커팅
 
 - 인증·업로드 제한: [07. 보안](../07-security.md)
 - 결과 문구·접근성: [08. 접근성과 다국어](../08-accessibility-i18n.md)

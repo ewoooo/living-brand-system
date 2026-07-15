@@ -1,6 +1,7 @@
 import type { ArrayField, Block, Field, FieldHook } from 'payload'
 import { validateGuidelineCheckOptions } from '@/features/guideline/checks/validate-guideline-check-options'
 import { relationshipId } from '@/features/guideline/utils/block-text'
+import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 
 type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
 
@@ -11,13 +12,39 @@ const executorCondition =
 const nonHeuristicCondition = (_data: unknown, siblingData: { executor?: CheckExecutor }) =>
 	siblingData?.executor !== 'heuristic'
 
+const measureCriterionCondition = (_data: unknown, siblingData: { kind?: string }) =>
+	siblingData?.kind === 'measure'
+
+type HeuristicCriterionRow = {
+	kind?: string
+	expected?: string
+	operator?: string
+	expectedValue?: number
+	max?: number
+}
+
 const validateHeuristicCriteria: NonNullable<ArrayField['validate']> = (value, { siblingData }) => {
 	const executor = (siblingData as { executor?: CheckExecutor })?.executor
 	if (executor !== 'heuristic') return true
-	return (
-		(Array.isArray(value) && value.length > 0) ||
-		'Heuristic Check에는 판정 기준이 1개 이상 필요합니다.'
-	)
+	if (!Array.isArray(value) || value.length === 0) {
+		return 'Heuristic Check에는 판정 기준이 1개 이상 필요합니다.'
+	}
+	for (const row of value as HeuristicCriterionRow[]) {
+		if (row?.kind === 'measure') {
+			if (!row.operator || typeof row.expectedValue !== 'number') {
+				return '수치형 기준에는 연산과 기대값이 필요합니다.'
+			}
+			if (
+				row.operator === 'between' &&
+				!(typeof row.max === 'number' && row.max > row.expectedValue)
+			) {
+				return '범위(between) 기준에는 기대값보다 큰 최대값이 필요합니다.'
+			}
+		} else if (row?.expected !== 'present' && row?.expected !== 'absent') {
+			return '관찰형 기준에는 적합 기준(있어야 함/없어야 함)이 필요합니다.'
+		}
+	}
+	return true
 }
 
 export function checkKeyFromEnglishTitle(value: unknown): string {
@@ -95,7 +122,7 @@ export function guidelineChecksField(): Field {
 				options: [
 					{ label: 'Deterministic', value: 'deterministic' },
 					{ label: 'Heuristic (AI)', value: 'heuristic' },
-					{ label: 'Manual', value: 'manual' },
+					{ label: 'Advisory (AI)', value: 'manual' },
 				],
 				hooks: { beforeValidate: [populateCheckExecutor] },
 				admin: {
@@ -153,19 +180,78 @@ export function guidelineChecksField(): Field {
 								required: true,
 								maxLength: 300,
 								label: '판정 질문',
-								admin: { width: '70%' },
+								admin: { width: '55%' },
+							},
+							{
+								name: 'kind',
+								enumName: 'enum_heuristic_criterion_kind',
+								type: 'select',
+								required: true,
+								defaultValue: 'presence',
+								label: '기준 유형',
+								options: [
+									{ label: '관찰형', value: 'presence' },
+									{ label: '수치형', value: 'measure' },
+								],
+								admin: { width: '20%' },
 							},
 							{
 								name: 'expected',
 								enumName: 'enum_heuristic_criterion_expected',
 								type: 'select',
-								required: true,
 								label: '적합 기준',
 								options: [
 									{ label: '있어야 함', value: 'present' },
 									{ label: '없어야 함', value: 'absent' },
 								],
-								admin: { width: '30%' },
+								admin: {
+									width: '25%',
+									condition: (_data, siblingData) =>
+										(siblingData as { kind?: string })?.kind !== 'measure',
+								},
+							},
+						],
+					},
+					{
+						type: 'row',
+						fields: [
+							{
+								name: 'operator',
+								enumName: 'enum_heuristic_criterion_operator',
+								type: 'select',
+								label: '연산',
+								options: [
+									{ label: '이상 (≥)', value: 'gte' },
+									{ label: '이하 (≤)', value: 'lte' },
+									{ label: '범위', value: 'between' },
+								],
+								admin: { width: '25%', condition: measureCriterionCondition },
+							},
+							{
+								name: 'expectedValue',
+								type: 'number',
+								label: '기대값',
+								admin: { width: '25%', condition: measureCriterionCondition },
+							},
+							{
+								name: 'max',
+								type: 'number',
+								label: '최대값',
+								admin: {
+									width: '25%',
+									condition: (_data, siblingData) =>
+										(siblingData as { kind?: string; operator?: string })
+											?.kind === 'measure' &&
+										(siblingData as { operator?: string })?.operator ===
+											'between',
+								},
+							},
+							{
+								name: 'unit',
+								type: 'text',
+								maxLength: 20,
+								label: '단위',
+								admin: { width: '25%', condition: measureCriterionCondition },
 							},
 						],
 					},
@@ -229,6 +315,13 @@ export const ColumnUnitBlock: Block = {
 	interfaceName: 'ColumnUnitBlock',
 	fields: [
 		{
+			name: 'imageRatio',
+			type: 'select',
+			defaultValue: '4:3',
+			options: [...IMAGE_RATIO_OPTIONS],
+			admin: { description: '열 이미지의 표시 비율입니다.' },
+		},
+		{
 			name: 'columns',
 			type: 'array',
 			minRows: 1,
@@ -253,6 +346,13 @@ export const MediaShowcaseBlock: Block = {
 	slug: 'mediaShowcase',
 	interfaceName: 'MediaShowcaseBlock',
 	fields: [
+		{
+			name: 'imageRatio',
+			type: 'select',
+			defaultValue: '16:9',
+			options: [...IMAGE_RATIO_OPTIONS],
+			admin: { description: '이미지의 표시 비율입니다.' },
+		},
 		{
 			name: 'image',
 			type: 'upload',
@@ -296,11 +396,7 @@ export const DoDontBlock: Block = {
 					name: 'imageRatio',
 					type: 'select',
 					defaultValue: '4:3',
-					options: [
-						{ label: '4:3', value: '4:3' },
-						{ label: '1:1', value: '1:1' },
-						{ label: '16:9', value: '16:9' },
-					],
+					options: [...IMAGE_RATIO_OPTIONS],
 					admin: { width: '50%', description: '예시 이미지의 표시 비율입니다.' },
 				},
 				{

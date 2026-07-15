@@ -149,11 +149,15 @@
 	--ring: oklch(0.556 0 0);
 }
 
+.font-title {
+	font-family: var(--font-title);
+}
+
 .type-large-title,
 .type-title-1,
 .type-title-2,
 .type-title-3 {
-	font-family: var(--font-title);
+	font-family: var(--font-sans);
 	font-weight: 400;
 }
 
@@ -189,49 +193,53 @@
 
 .type-title-1,
 .type-title-1-emphasized {
-	font-size: 2.4rem;
-	line-height: 2.625rem;
+	font-size: 1.625rem;
+	line-height: 2rem;
 }
 
 .type-title-2,
 .type-title-2-emphasized {
-	font-size: 1.0625rem;
-	line-height: 1.375rem;
+	font-size: 1.25rem;
+	line-height: 1.5625rem;
 }
 
 .type-title-3,
 .type-title-3-emphasized {
-	font-size: 0.9375rem;
-	line-height: 1.25rem;
+	font-size: 1.125rem;
+	line-height: 1.4375rem;
 }
 
 .type-headline,
 .type-headline-emphasized,
 .type-body,
 .type-body-emphasized {
-	font-size: 0.8125rem;
-	line-height: 1rem;
+	font-size: 0.9375rem;
+	line-height: 1.4rem;
 }
 
 .type-callout,
 .type-callout-emphasized {
-	font-size: 0.75rem;
-	line-height: 0.9375rem;
+	font-size: 0.875rem;
+	line-height: 1.1875rem;
 }
 
 .type-subheadline,
 .type-subheadline-emphasized {
-	font-size: 0.6875rem;
-	line-height: 0.875rem;
+	font-size: 0.8125rem;
+	line-height: 1.125rem;
 }
 
 .type-footnote,
-.type-footnote-emphasized,
+.type-footnote-emphasized {
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
 .type-caption-1,
 .type-caption-1-emphasized,
 .type-caption-2,
 .type-caption-2-emphasized {
-	font-size: 0.625rem;
+	font-size: 0.6875rem;
 	line-height: 0.8125rem;
 }
 

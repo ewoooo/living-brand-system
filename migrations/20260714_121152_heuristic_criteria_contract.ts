@@ -170,6 +170,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     ('logo.package.variant', 1, 'approved-logo-variant', '승인된 보조 로고 변형을 사용했는가?', 'present'),
     ('logo.sns.placement', 1, 'approved-sns-logo-placement', 'SNS에서 로고와 이벤트 정보를 가이드대로 배치했는가?', 'present'),
     ('logo.symbol.concept', 1, 'approved-primary-logo', '승인된 프라이머리 로고의 형태와 일치하는가?', 'present'),
+    ('messaging.key.message', 1, 'core-energy-keyword', '브랜드 핵심 키워드 Energy를 올바르게 사용했는가?', 'present'),
     ('messaging.package.content.fields', 1, 'required-package-information', '패키지에 필요한 정보와 위계를 가이드대로 표현했는가?', 'present'),
     ('messaging.signature.combination', 1, 'approved-signature-combination', '승인된 시그니처 조합 형태를 사용했는가?', 'present'),
     ('messaging.stationery.content.fields', 1, 'required-stationery-information', '문구류에 필요한 정보와 위계를 가이드대로 표현했는가?', 'present'),
@@ -179,7 +180,8 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     ('typography.misuse', 3, 'unapproved-typeface', '지정되지 않은 서체를 사용한 것으로 보이는가?', 'absent'),
     ('typography.pairing', 1, 'approved-type-pairing', '국문과 영문 서체의 지정된 굵기 조합을 따르는가?', 'present'),
     ('typography.weight', 1, 'mixed-weights', '한 문장 안에서 서로 다른 굵기를 혼용했는가?', 'absent'),
-    ('typography.weight', 2, 'mixed-sizes', '한 문장 안에서 서로 다른 크기를 혼용했는가?', 'absent');
+    ('typography.weight', 2, 'mixed-sizes', '한 문장 안에서 서로 다른 크기를 혼용했는가?', 'absent'),
+    ('voice.naming.grammar', 1, 'correct-brand-name', '브랜드명 Essenherb의 철자와 대소문자를 올바르게 표기했는가?', 'present');
 
   DO $migration$
   BEGIN

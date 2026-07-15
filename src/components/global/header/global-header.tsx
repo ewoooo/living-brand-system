@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
 	GuidelineSearch,
 	type GuidelineSearchChapter,
@@ -32,6 +32,7 @@ function HeaderHead({
 	guidelineChapters: GuidelineSearchChapter[]
 }) {
 	const pathname = usePathname()
+	const router = useRouter()
 	const LOGO_SIZE = 14
 	const guidelineActive = pathname === '/guideline' || pathname.startsWith('/guideline/')
 	const reviewActive = pathname === '/review' || pathname.startsWith('/review/')
@@ -60,6 +61,7 @@ function HeaderHead({
 						<NavigationMenuItem>
 							<NavigationMenuTrigger
 								className={cn(guidelineActive && 'text-foreground')}
+								onClick={() => router.push('/guideline')}
 							>
 								Guideline
 							</NavigationMenuTrigger>
@@ -113,6 +115,7 @@ function HeaderHead({
 						<NavigationMenuItem>
 							<NavigationMenuTrigger
 								className={cn(studioActive && 'text-foreground')}
+								onClick={() => router.push('/create')}
 							>
 								Studio
 							</NavigationMenuTrigger>

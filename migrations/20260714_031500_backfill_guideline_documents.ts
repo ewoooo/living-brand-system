@@ -40,9 +40,36 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 	// 트랜잭션 안(db.execute)에서 만든 테이블은 보이지 않는다. 커밋되어 모든 커넥션에 보이도록
 	// 어댑터 pool로 직접(autocommit) 생성한다.
 	const { pool } = payload.db as unknown as { pool: { query(text: string): Promise<unknown> } }
-	// 현재 Do/Don't config가 백필 뒤에 추가된 필드를 조회하므로, Local API를 호출하기 전에
+	// 현재 이미지 블록 config가 백필 뒤에 추가된 필드를 조회하므로, Local API를 호출하기 전에
 	// 대상 테이블은 최종 타입으로 확장하고 곧 제거할 레거시 테이블은 varchar 호환 컬럼만 둔다.
 	await pool.query(`
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum_guideline_docs_blocks_column_unit_image_ratio" AS ENUM('4:3', '1:1', '16:9', '3:2', '2:3', '4:5', '5:4', '9:16');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum__guideline_docs_v_blocks_column_unit_image_ratio" AS ENUM('4:3', '1:1', '16:9', '3:2', '2:3', '4:5', '5:4', '9:16');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum_guideline_docs_blocks_media_showcase_image_ratio" AS ENUM('4:3', '1:1', '16:9', '3:2', '2:3', '4:5', '5:4', '9:16');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum__guideline_docs_v_blocks_media_showcase_image_ratio" AS ENUM('4:3', '1:1', '16:9', '3:2', '2:3', '4:5', '5:4', '9:16');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+		ALTER TABLE "guideline_docs_blocks_column_unit" ADD COLUMN IF NOT EXISTS "image_ratio" "enum_guideline_docs_blocks_column_unit_image_ratio" DEFAULT '4:3';
+		ALTER TABLE "_guideline_docs_v_blocks_column_unit" ADD COLUMN IF NOT EXISTS "image_ratio" "enum__guideline_docs_v_blocks_column_unit_image_ratio" DEFAULT '4:3';
+		ALTER TABLE "guideline_docs_blocks_media_showcase" ADD COLUMN IF NOT EXISTS "image_ratio" "enum_guideline_docs_blocks_media_showcase_image_ratio" DEFAULT '16:9';
+		ALTER TABLE "_guideline_docs_v_blocks_media_showcase" ADD COLUMN IF NOT EXISTS "image_ratio" "enum__guideline_docs_v_blocks_media_showcase_image_ratio" DEFAULT '16:9';
+
+		ALTER TABLE "section_cu" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '4:3';
+		ALTER TABLE "_section_cu_v" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '4:3';
+		ALTER TABLE "section_ms" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '16:9';
+		ALTER TABLE "_section_ms_v" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '16:9';
+		ALTER TABLE "guideline_pages_blocks_column_unit" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '4:3';
+		ALTER TABLE "_guideline_pages_v_blocks_column_unit" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '4:3';
+		ALTER TABLE "guideline_pages_blocks_media_showcase" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '16:9';
+		ALTER TABLE "_guideline_pages_v_blocks_media_showcase" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '16:9';
+
 		DO $$ BEGIN
 			CREATE TYPE "public"."enum_guideline_docs_blocks_do_dont_image_ratio" AS ENUM('4:3', '1:1', '16:9');
 		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
@@ -152,6 +179,12 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_heuristic_criterion_expected') THEN
 				CREATE TYPE "public"."enum_heuristic_criterion_expected" AS ENUM('present', 'absent');
 			END IF;
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_heuristic_criterion_kind') THEN
+				CREATE TYPE "public"."enum_heuristic_criterion_kind" AS ENUM('presence', 'measure');
+			END IF;
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_heuristic_criterion_operator') THEN
+				CREATE TYPE "public"."enum_heuristic_criterion_operator" AS ENUM('gte', 'lte', 'between');
+			END IF;
 
 			FOREACH parent IN ARRAY varchar_parents LOOP
 				child := parent || '_criteria';
@@ -161,7 +194,12 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 					|| '"_parent_id" varchar NOT NULL,'
 					|| '"id" varchar PRIMARY KEY NOT NULL,'
 					|| '"question" varchar,'
-					|| '"expected" "public"."enum_heuristic_criterion_expected")',
+					|| '"expected" "public"."enum_heuristic_criterion_expected",'
+					|| '"kind" "public"."enum_heuristic_criterion_kind" DEFAULT ''presence'','
+					|| '"operator" "public"."enum_heuristic_criterion_operator",'
+					|| '"expected_value" numeric,'
+					|| '"max" numeric,'
+					|| '"unit" varchar)',
 					child
 				);
 				BEGIN
@@ -184,6 +222,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 					|| '"id" serial PRIMARY KEY NOT NULL,'
 					|| '"question" varchar,'
 					|| '"expected" "public"."enum_heuristic_criterion_expected",'
+					|| '"kind" "public"."enum_heuristic_criterion_kind" DEFAULT ''presence'','
+					|| '"operator" "public"."enum_heuristic_criterion_operator",'
+					|| '"expected_value" numeric,'
+					|| '"max" numeric,'
+					|| '"unit" varchar,'
 					|| '"_uuid" varchar)',
 					child
 				);
