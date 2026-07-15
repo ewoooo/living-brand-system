@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
-import { buildCheckReviewView } from '@/features/asset-check/services/build-check-review-view.service'
 import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { CheckImage } from '@/features/asset-check/types'
+import { buildCheckReviewView } from '@/features/asset-check/utils/build-check-review-view'
 
 const sections: CheckSection[] = [
 	{
