@@ -121,7 +121,10 @@ const RULES: Record<string, RuleSpec> = {
 	'logo.space.clear': {
 		checker: 'ai.logo',
 		criteria: [
-			p('로고 주변에 로고 세로획(stem) 너비의 약 3배 이상 여백이 확보되어 있는가?', 'present'),
+			p(
+				'로고 주변에 로고 세로획(stem) 너비의 약 3배 이상 여백이 확보되어 있는가?',
+				'present',
+			),
 			p('다른 그래픽·텍스트 요소가 로고의 최소 여백 영역을 침범하는가?', 'absent'),
 		],
 		heuristicPrompt: null,
@@ -239,7 +242,10 @@ const RULES: Record<string, RuleSpec> = {
 	'color.combo.tonal.balance': {
 		checker: 'ai.color',
 		criteria: [
-			p('동일 색상 계열 조합에서 배경-전경 간 명도 차이가 충분히 확보되어 있는가?', 'present'),
+			p(
+				'동일 색상 계열 조합에서 배경-전경 간 명도 차이가 충분히 확보되어 있는가?',
+				'present',
+			),
 		],
 		heuristicPrompt:
 			'동일 색상 계열 조합(Tone on Tone)이 아닌 산출물은 not_applicable로 관측한다.',
@@ -265,7 +271,10 @@ const RULES: Record<string, RuleSpec> = {
 	'typography.case': {
 		checker: 'ai.typography',
 		criteria: [
-			p('Essen Flux(로고 기반 전용 서체) 텍스트가 전체 대문자로만 조판되어 있는가?', 'absent'),
+			p(
+				'Essen Flux(로고 기반 전용 서체) 텍스트가 전체 대문자로만 조판되어 있는가?',
+				'absent',
+			),
 		],
 		heuristicPrompt:
 			'Essen Flux 서체(상단 기준선 고정 구조의 전용 영문 서체)가 쓰이지 않은 산출물은 not_applicable로 관측한다.',
@@ -317,7 +326,8 @@ const RULES: Record<string, RuleSpec> = {
 	'imagery-misuse': { checker: 'ai.imagery' },
 	'photography-ingredient-textures': {
 		checker: 'ai.imagery',
-		heuristicPrompt: '재료·질감·제형 사진이 아닌 산출물은 모든 기준을 not_applicable로 관측한다.',
+		heuristicPrompt:
+			'재료·질감·제형 사진이 아닌 산출물은 모든 기준을 not_applicable로 관측한다.',
 	},
 	'imagery.ai.consistency': {
 		checker: 'ai.imagery',
@@ -325,7 +335,8 @@ const RULES: Record<string, RuleSpec> = {
 			p('피부 표현이 자연스럽고 현실적인가?', 'present'),
 			p('이미지의 톤·대비·연출이 일관적인가?', 'present'),
 		],
-		heuristicPrompt: '인물·피부가 등장하지 않는 AI 생성물은 첫 기준을 not_applicable로 관측한다.',
+		heuristicPrompt:
+			'인물·피부가 등장하지 않는 AI 생성물은 첫 기준을 not_applicable로 관측한다.',
 	},
 	'imagery.sns.classification': {
 		checker: 'ai.imagery',
@@ -340,7 +351,10 @@ const RULES: Record<string, RuleSpec> = {
 	'imagery.advertisement.classification': {
 		checker: 'ai.imagery',
 		criteria: [
-			p('광고 내 사진(제품·모델)이 브랜드 톤앤매너(밝고 선명한 연출)에 부합하는가?', 'present'),
+			p(
+				'광고 내 사진(제품·모델)이 브랜드 톤앤매너(밝고 선명한 연출)에 부합하는가?',
+				'present',
+			),
 		],
 		heuristicPrompt: null,
 	},
@@ -482,7 +496,11 @@ const RULES: Record<string, RuleSpec> = {
 	},
 	// ── advisory ──
 	'messaging.sns.copy': { checker: 'advisory.copy', criteria: [], heuristicPrompt: null },
-	'messaging.advertisement.copy': { checker: 'advisory.copy', criteria: [], heuristicPrompt: null },
+	'messaging.advertisement.copy': {
+		checker: 'advisory.copy',
+		criteria: [],
+		heuristicPrompt: null,
+	},
 	'messaging.advertisement.boilerplate': {
 		checker: 'advisory.copy',
 		criteria: [],
@@ -632,7 +650,7 @@ for (const doc of docs.docs) {
 	}
 
 	if ((doc as { slug?: string }).slug === NEW_CHECK.docSlug) {
-		const rows = (data.checks as CheckRow[]) ?? ((doc.checks as CheckRow[]) ?? [])
+		const rows = (data.checks as CheckRow[]) ?? (doc.checks as CheckRow[]) ?? []
 		if (!rows.some((row) => row.key === NEW_CHECK.key)) {
 			data.checks = [
 				...rows,

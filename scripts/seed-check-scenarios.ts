@@ -111,6 +111,7 @@ for (const scenario of SCENARIOS) {
 		title: scenario.title,
 		description: scenario.description,
 		checkKeys: scenario.checkKeys,
+		hasBeenPublished: true,
 		_status: 'published' as const,
 	}
 	if (existing.docs[0]) {
@@ -122,7 +123,7 @@ for (const scenario of SCENARIOS) {
 		})
 		console.log(`updated: ${scenario.key} (${scenario.checkKeys.length} checks)`)
 	} else {
-		await payload.create({ collection: 'check-scenarios', data, locale: 'ko' })
+		await payload.create({ collection: 'check-scenarios', data, draft: false, locale: 'ko' })
 		console.log(`created: ${scenario.key} (${scenario.checkKeys.length} checks)`)
 	}
 }

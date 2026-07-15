@@ -66,7 +66,7 @@ if (doc && Array.isArray(doc.blocks)) {
 	await payload.update({
 		collection: 'guideline-documents',
 		id: doc.id,
-		data: { blocks },
+		data: { blocks: blocks as typeof doc.blocks },
 		depth: 0,
 		draft: false,
 		locale: 'ko',
