@@ -54,7 +54,7 @@ export function GuidelineHeader({
 			<div aria-hidden="true" style={{ height: HEADER_HEIGHT - BAR_HEIGHT }} />
 			<header
 				data-variant={variant}
-				className="sticky top-0 z-20 flex items-end border-scrim/10 border-b bg-background pb-4"
+				className="sticky top-0 z-20 flex items-end border-scrim/10 border-b bg-background pb-8"
 				style={{ height: BAR_HEIGHT }}
 			>
 				{label !== undefined && (
