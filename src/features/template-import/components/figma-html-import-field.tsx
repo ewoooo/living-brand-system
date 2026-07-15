@@ -2,6 +2,7 @@
 
 import { Button, TextInput, toast, useForm, useFormFields } from '@payloadcms/ui'
 import { useState } from 'react'
+import { importFigmaHtmlFromUrl } from '@/features/template-import/services/import-figma-html.client'
 import {
 	composeTemplateHtml,
 	type TemplateOverrides,
@@ -29,38 +30,30 @@ export default function FigmaHtmlImportField() {
 		setIsLoading(true)
 
 		try {
-			const response = await fetch('/api/templates/import-figma-html', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ sourceUrl }),
-			})
-			const body = await response.json().catch(() => null)
+			const imported = await importFigmaHtmlFromUrl(sourceUrl)
 
-			if (!response.ok) {
-				toast.error(body?.message || 'Figma 가져오기에 실패했습니다.')
-				return
-			}
-
-			// body.html = 새 base. 기존 overrides를 유지한 채 재합성 → 재import에도 앱 편집이 보존된다.
+			// imported.html = 새 base. 기존 overrides를 유지한 채 재합성 → 재import에도 앱 편집이 보존된다.
 			const currentOverrides = (getData()?.overrides ?? {}) as TemplateOverrides
-			dispatchFields({ type: 'UPDATE', path: 'baseHtml', value: body.html })
+			dispatchFields({ type: 'UPDATE', path: 'baseHtml', value: imported.html })
 			dispatchFields({
 				type: 'UPDATE',
 				path: 'html',
-				value: composeTemplateHtml(body.html, currentOverrides),
+				value: composeTemplateHtml(imported.html, currentOverrides),
 			})
-			dispatchFields({ type: 'UPDATE', path: 'width', value: body.width })
-			dispatchFields({ type: 'UPDATE', path: 'height', value: body.height })
+			dispatchFields({ type: 'UPDATE', path: 'width', value: imported.width })
+			dispatchFields({ type: 'UPDATE', path: 'height', value: imported.height })
 			dispatchFields({ type: 'UPDATE', path: 'sourceUrl', value: sourceUrl })
 			// 이름이 비어 있을 때만 Figma 프레임 이름을 채운다.
-			if (!getData()?.name && body.name) {
-				dispatchFields({ type: 'UPDATE', path: 'name', value: body.name })
+			if (!getData()?.name && imported.name) {
+				dispatchFields({ type: 'UPDATE', path: 'name', value: imported.name })
 			}
 			setModified(true)
 
-			toast.success(`가져오기 완료 — ${body.width}×${body.height}. 저장해야 반영됩니다.`)
-		} catch {
-			toast.error('Figma 가져오기에 실패했습니다.')
+			toast.success(
+				`가져오기 완료 — ${imported.width}×${imported.height}. 저장해야 반영됩니다.`,
+			)
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : 'Figma 가져오기에 실패했습니다.')
 		} finally {
 			setIsLoading(false)
 		}
