@@ -42,7 +42,9 @@ export function SpecTable({
 				</table>
 			</div>
 			{caption && (
-				<figcaption className="type-callout mt-2 text-foreground-muted">{caption}</figcaption>
+				<figcaption className="type-callout mt-2 text-foreground-muted">
+					{caption}
+				</figcaption>
 			)}
 		</figure>
 	)

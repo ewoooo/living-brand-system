@@ -22,7 +22,9 @@ export function BigImage({
 				className={`${aspect} w-full rounded-sm border border-scrim/10 bg-fill-muted object-cover`}
 			/>
 			{caption && (
-				<figcaption className="type-callout mt-2 text-foreground-muted">{caption}</figcaption>
+				<figcaption className="type-callout mt-2 text-foreground-muted">
+					{caption}
+				</figcaption>
 			)}
 		</figure>
 	)

@@ -120,11 +120,7 @@ export async function listPublishedPagesBySection(sectionId: number) {
 	)
 }
 
-async function listPublishedChildren(
-	parentId: number,
-	select: Record<string, true>,
-	depth = 0,
-) {
+async function listPublishedChildren(parentId: number, select: Record<string, true>, depth = 0) {
 	const payload = await getPayload({ config })
 	const children = await payload.find({
 		collection: 'guideline-documents',

@@ -39,11 +39,41 @@ export default function GuidelineKitPage() {
 			<Demo title="Type Scale">
 				<TypeScale
 					items={[
-						{ name: 'Display', sample: 'Aa 브랜드', sizePx: 48, lineHeightPx: 56, weight: 700 },
-						{ name: 'Heading 1', sample: 'Aa 브랜드', sizePx: 32, lineHeightPx: 40, weight: 600 },
-						{ name: 'Heading 2', sample: 'Aa 브랜드', sizePx: 24, lineHeightPx: 32, weight: 600 },
-						{ name: 'Body', sample: 'Aa 브랜드 가나다 ABCabc', sizePx: 16, lineHeightPx: 26, weight: 400 },
-						{ name: 'Caption', sample: 'Aa 브랜드 가나다 ABCabc', sizePx: 13, lineHeightPx: 18, weight: 400 },
+						{
+							name: 'Display',
+							sample: 'Aa 브랜드',
+							sizePx: 48,
+							lineHeightPx: 56,
+							weight: 700,
+						},
+						{
+							name: 'Heading 1',
+							sample: 'Aa 브랜드',
+							sizePx: 32,
+							lineHeightPx: 40,
+							weight: 600,
+						},
+						{
+							name: 'Heading 2',
+							sample: 'Aa 브랜드',
+							sizePx: 24,
+							lineHeightPx: 32,
+							weight: 600,
+						},
+						{
+							name: 'Body',
+							sample: 'Aa 브랜드 가나다 ABCabc',
+							sizePx: 16,
+							lineHeightPx: 26,
+							weight: 400,
+						},
+						{
+							name: 'Caption',
+							sample: 'Aa 브랜드 가나다 ABCabc',
+							sizePx: 13,
+							lineHeightPx: 18,
+							weight: 400,
+						},
 					]}
 				/>
 			</Demo>
