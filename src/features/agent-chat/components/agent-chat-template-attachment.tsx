@@ -49,7 +49,7 @@ export function AgentChatTemplateAttachment({
 					<Download />
 				</AttachmentAction>
 			</AttachmentActions>
-			{exportError && <p className="px-1 text-destructive text-xs">{exportError}</p>}
+			{exportError && <p className="type-caption-1 px-1 text-destructive">{exportError}</p>}
 			{exportNode}
 		</Attachment>
 	)

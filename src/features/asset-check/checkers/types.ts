@@ -14,7 +14,59 @@ export interface CheckMetric {
 
 export type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
 export type CheckStatus = 'pass' | 'ok' | 'needs_review' | 'fail'
-export type CheckFactValue = string | number | string[]
+export type CheckFactValue = string | number | boolean | string[]
+export type MeasurementValue = string | number | boolean
+export type CriterionExpected = MeasurementValue | number[] | string[]
+export type CriterionOperator = 'gte' | 'lte' | 'eq' | 'in' | 'within'
+
+export interface DeterministicCriterion {
+	measurement: string
+	operator: CriterionOperator
+	expected: CriterionExpected
+	tolerance?: number
+}
+
+export interface CriterionComparison extends DeterministicCriterion {
+	actual: MeasurementValue
+	satisfied: boolean
+}
+
+export type MeasurementResult =
+	| {
+			state: 'measured'
+			measurements: Record<string, MeasurementValue>
+			facts?: Record<string, CheckFactValue>
+	  }
+	| {
+			state: 'not_measurable'
+			reasonCode: string
+			facts?: Record<string, CheckFactValue>
+	  }
+
+export type ExtractionResult<Value> =
+	| { state: 'extracted'; value: Value; confidence?: number }
+	| { state: 'not_extractable'; reasonCode: string }
+
+export interface ColorPairObservation {
+	kind: 'color-pair'
+	foreground: Rgb
+	background: Rgb
+	confidence?: number
+}
+
+export interface DeterministicEvaluationResult {
+	status: Exclude<CheckStatus, 'ok'>
+	fulfillment: number | null
+	comparisons: CriterionComparison[]
+	measurements?: Record<string, MeasurementValue>
+	facts?: Record<string, CheckFactValue>
+	reasonCode?: string
+}
+
+export type DeterministicChecker<Input> = (
+	input: Input,
+	parameters?: Record<string, unknown>,
+) => MeasurementResult
 
 interface CheckResultBase {
 	status: CheckStatus
@@ -25,6 +77,10 @@ interface CheckResultBase {
 	metric?: CheckMetric
 	/** 룰 메시지 패턴이 참조할 수 있는 checker 계산 사실. */
 	facts?: Record<string, CheckFactValue>
+	/** 정규화된 deterministic 측정과 기준 비교. 기존 결과에는 없을 수 있다. */
+	measurements?: Record<string, MeasurementValue>
+	comparisons?: CriterionComparison[]
+	reasonCode?: string
 }
 
 export interface AlgorithmCheckResult extends CheckResultBase {
@@ -33,6 +89,15 @@ export interface AlgorithmCheckResult extends CheckResultBase {
 
 export interface AiCheckResult extends CheckResultBase {
 	status: CheckStatus
+	observations?: {
+		criterionId: string
+		question: string
+		expected: 'present' | 'absent'
+		actual: 'present' | 'absent' | 'uncertain'
+		confidence: number
+		reason: string
+		satisfied: boolean | null
+	}[]
 }
 
 export interface AiUsage {

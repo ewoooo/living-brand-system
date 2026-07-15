@@ -1,5 +1,14 @@
 import { compact, relationshipId } from '../utils/block-text'
-import type { BlockBehavior, GuidelineBlock } from './types'
+import type { BlockBehavior, CheckReferenceAssetRole, GuidelineBlock } from './types'
+
+export const kindLabel = { do: '권장', ok: '허용', dont: '금지' } as const
+
+// ok는 통과 가능한 예시라 검수 참조자산에서도 positive로 취급한다.
+const kindRole: Record<keyof typeof kindLabel, CheckReferenceAssetRole> = {
+	do: 'positive',
+	ok: 'positive',
+	dont: 'negative',
+}
 
 function format(block: GuidelineBlock): string {
 	if (block.blockType !== 'doDont') return ''
@@ -8,9 +17,9 @@ function format(block: GuidelineBlock): string {
 		...(block.groups ?? []).flatMap((group) =>
 			compact([
 				group.category,
+				group.description,
 				...(group.examples ?? []).map(
-					(example) =>
-						`${example.kind === 'do' ? '권장' : '금지'}: ${example.caption ?? ''}`,
+					(example) => `${kindLabel[group.kind]}: ${example.caption ?? ''}`,
 				),
 			]),
 		),
@@ -20,13 +29,28 @@ function format(block: GuidelineBlock): string {
 export const behavior: BlockBehavior = {
 	formatForAgent: format,
 	toCheckSourceSnapshot: (block) => {
-		if (block.blockType !== 'doDont') return { evidence: '', referenceAssets: [] }
+		if (block.blockType !== 'doDont') {
+			return { evidence: { type: 'doDont', groups: [] }, referenceAssets: [] }
+		}
 		return {
-			evidence: format(block),
-			referenceAssets: (block.groups ?? [])
-				.flatMap((group) => group.examples ?? [])
-				.map((example) => relationshipId(example.image))
-				.filter((id): id is number => id != null),
+			evidence: {
+				type: 'doDont',
+				title: block.title?.trim() || undefined,
+				groups: (block.groups ?? []).map((group) => ({
+					category: group.category?.trim() || undefined,
+					description: group.description?.trim() || undefined,
+					kind: group.kind,
+					examples: (group.examples ?? []).map((example) => ({
+						caption: example.caption?.trim() || undefined,
+					})),
+				})),
+			},
+			referenceAssets: (block.groups ?? []).flatMap((group) =>
+				(group.examples ?? []).flatMap((example) => {
+					const id = relationshipId(example.image)
+					return id == null ? [] : [{ id, role: kindRole[group.kind] }]
+				}),
+			),
 		}
 	},
 }

@@ -1,3 +1,15 @@
+@font-face {
+	font-family: "Pretendard";
+	src: url("/fonts/pretendard/PretendardVariable.woff2") format("woff2");
+	font-weight: 45 920;
+	font-display: swap;
+}
+
+:root {
+	--font-body: "Pretendard", system-ui, sans-serif;
+	--font-serif: var(--font-body);
+}
+
 .dashboard-summary {
 	width: 100%;
 	aspect-ratio: 7 / 1;
@@ -71,4 +83,95 @@
 .agent-chat-messages-table__message {
 	max-width: 420px;
 	white-space: pre-wrap;
+}
+
+.guideline-document-tree {
+	padding-block: var(--base);
+
+	&__header,
+	&__row {
+		display: flex;
+		align-items: center;
+		gap: calc(var(--base) / 2);
+	}
+
+	&__header {
+		justify-content: space-between;
+		margin-bottom: var(--base);
+
+		h1,
+		p {
+			margin: 0;
+		}
+
+		p {
+			color: var(--theme-elevation-600);
+		}
+	}
+
+	&__items {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+
+		.guideline-document-tree__items {
+			border-left: 1px solid var(--theme-elevation-200);
+			margin-left: var(--base);
+			padding-left: var(--base);
+		}
+	}
+
+	&__row {
+		border-bottom: 1px solid var(--theme-elevation-150);
+		min-height: calc(var(--base) * 2.25);
+	}
+
+	&__depth {
+		background: var(--theme-elevation-100);
+		border-radius: 999px;
+		font-size: 0.75rem;
+		padding: 2px 8px;
+	}
+
+	&__title {
+		color: var(--theme-text);
+		font-weight: 600;
+		margin-right: auto;
+	}
+
+	&__empty {
+		color: var(--theme-elevation-600);
+	}
+}
+
+.guideline-document-location {
+	border-bottom: 1px solid var(--theme-elevation-150);
+	margin-bottom: var(--base);
+	padding-bottom: calc(var(--base) / 2);
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+
+		h3,
+		span {
+			margin: 0;
+		}
+
+		span {
+			background: var(--theme-elevation-100);
+			border-radius: 999px;
+			padding: 2px 8px;
+		}
+	}
+
+	p {
+		color: var(--theme-elevation-600);
+		margin: calc(var(--base) / 4) 0 0;
+	}
+}
+
+.contrast-options-field input {
+	width: 100%;
 }

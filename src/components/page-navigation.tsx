@@ -7,8 +7,7 @@ import {
 	Pagination,
 	PaginationContent,
 	PaginationItem,
-	PaginationNext,
-	PaginationPrevious,
+	PaginationLink,
 } from '@/components/ui/pagination'
 
 export interface PageNavigationItem {
@@ -16,7 +15,13 @@ export interface PageNavigationItem {
 	href: string
 }
 
-export function PageNavigation({ items }: { items: PageNavigationItem[] }) {
+export function PageNavigation({
+	items,
+	unitLabel = '페이지',
+}: {
+	items: PageNavigationItem[]
+	unitLabel?: string
+}) {
 	const pathname = usePathname()
 	const [hash, setHash] = useState('')
 
@@ -34,28 +39,21 @@ export function PageNavigation({ items }: { items: PageNavigationItem[] }) {
 	if (index < 0 || (!previous && !next)) return null
 
 	return (
-		<Pagination aria-label="페이지 이동">
-			<PaginationContent>
+		<Pagination
+			aria-label={`${unitLabel} 이동`}
+			className="min-h-48 bg-foreground text-background"
+		>
+			<PaginationContent className="grid w-full grid-cols-2 gap-0">
 				{previous ? (
-					<PaginationItem>
-						<PaginationPrevious
-							href={previous.href}
-							rel="prev"
-							text={previous.title}
-							aria-label={`이전 페이지: ${previous.title}`}
-						/>
-					</PaginationItem>
-				) : null}
+					<PageLink item={previous} direction="previous" unitLabel={unitLabel} />
+				) : (
+					<PaginationItem aria-hidden />
+				)}
 				{next ? (
-					<PaginationItem>
-						<PaginationNext
-							href={next.href}
-							rel="next"
-							text={next.title}
-							aria-label={`다음 페이지: ${next.title}`}
-						/>
-					</PaginationItem>
-				) : null}
+					<PageLink item={next} direction="next" unitLabel={unitLabel} />
+				) : (
+					<PaginationItem aria-hidden />
+				)}
 			</PaginationContent>
 		</Pagination>
 	)
@@ -68,4 +66,32 @@ export function getPageNavigationIndex(
 ) {
 	const exactIndex = items.findIndex((item) => item.href === `${pathname}${hash}`)
 	return exactIndex >= 0 ? exactIndex : items.findIndex((item) => item.href === pathname)
+}
+
+function PageLink({
+	item,
+	direction,
+	unitLabel,
+}: {
+	item: PageNavigationItem
+	direction: 'previous' | 'next'
+	unitLabel: string
+}) {
+	const isPrevious = direction === 'previous'
+	const label = isPrevious ? '이전' : '다음'
+
+	return (
+		<PaginationItem className="h-full">
+			<PaginationLink
+				href={item.href}
+				rel={isPrevious ? 'prev' : 'next'}
+				size="default"
+				aria-label={`${label} ${unitLabel}: ${item.title}`}
+				className="h-full w-full flex-col items-start justify-start gap-2 whitespace-normal rounded-none bg-foreground p-8 text-left text-background hover:bg-background/10 hover:text-background focus-visible:ring-background md:p-12"
+			>
+				<span className="text-sm opacity-70">{label}</span>
+				<span className="text-balance text-2xl md:text-3xl">{item.title}</span>
+			</PaginationLink>
+		</PaginationItem>
+	)
 }

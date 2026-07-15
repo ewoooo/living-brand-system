@@ -291,8 +291,10 @@ function materializeBlocks(
 			title: spec.title,
 			groups: spec.groups.map((group) => ({
 				category: group.category,
+				// manifest는 예시 단위 kind를 유지한다 — 그룹 kind는 첫 예시에서 유도.
+				kind: group.examples[0]?.kind ?? ('dont' as const),
 				examples: group.examples.map((example) => ({
-					...example,
+					caption: example.caption,
 					image: assertAssetId(assetIds, example.image),
 				})),
 			})),

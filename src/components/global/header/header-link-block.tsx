@@ -18,8 +18,8 @@ export function HeaderLinkBlock({
 		<Link href={href} rel={rel} target={target}>
 			<span
 				className={cn(
-					'rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-neutral-400/10 hover:text-neutral-500',
-					isActive ? 'text-foreground' : 'text-neutral-500/50',
+					'rounded-md px-2.5 py-1.5 transition-colors hover:bg-fill-hover hover:text-foreground-muted',
+					isActive ? 'text-foreground' : 'text-foreground-muted/50',
 				)}
 			>
 				{label}

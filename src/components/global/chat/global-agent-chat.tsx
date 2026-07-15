@@ -36,7 +36,7 @@ export function GlobalAgentChat() {
 			side="right"
 			collapsible="offcanvas"
 			className={cn(
-				'border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900',
+				'border-border bg-background-secondary',
 				isDraggingFile && 'ring-2 ring-primary/30',
 			)}
 			onDragEnter={(event) => {
@@ -89,7 +89,7 @@ export function GlobalAgentChat() {
 function GlobalAgentChatHeader() {
 	return (
 		<header className="p-3.5">
-			<h2 className="font-medium text-sm">채팅</h2>
+			<h2 className="type-headline">채팅</h2>
 		</header>
 	)
 }

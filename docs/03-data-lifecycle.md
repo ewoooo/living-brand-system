@@ -165,8 +165,8 @@
 | --- | --- |
 | 생성·수집 | Manager가 문서 단위 안에서 영문·한글 이름, 중요도, 실행 유형별 설정과 RuleChecker를 입력한다. CheckKey는 영문 이름에서 자동 생성하고 저장 전에 전체 Guideline에서 중복을 검사한다. |
 | 전송 | Check는 부모 Guideline 문서 편집 요청에 포함해 Payload API로 전달한다. |
-| 저장 | CheckKey, 영문·한글 Title, Tier, RuleCheckerRef와 실행 유형에 따른 Options, HeuristicPrompt, Messages를 부모 Section/Page/Block 안에 저장한다. 별도 source 필드는 두지 않는다. |
-| 처리 | 검수 시작 시 부모 문서 또는 Block의 전체 정규화 콘텐츠와 RuleChecker 실행 계약을 결합한다. HeuristicPrompt가 있으면 해당 Check의 추가 판단 기준으로 전달한다. Guideline 변경 시 별도 snapshot을 동기화하지 않는다. |
+| 저장 | CheckKey, 영문·한글 Title, Tier, RuleCheckerRef와 실행 유형에 따른 Options, HeuristicCriteria, HeuristicPrompt, Messages를 부모 Section/Page/Block 안에 저장한다. 별도 source 필드는 두지 않는다. |
+| 처리 | 검수 시작 시 부모 문서 또는 Block의 전체 정규화 콘텐츠와 RuleChecker 실행 계약을 결합한다. 휴리스틱 AI는 HeuristicCriteria별 관찰값만 반환하고, 검수 Service가 기대값과 비교해 최종 상태를 결정한다. Guideline 변경 시 별도 snapshot을 동기화하지 않는다. |
 | 활용 | Scenario는 CheckKey로 실행 범위를 선택하고, 검수 런타임은 Check options를 RuleChecker에 전달한다. |
 | 공유·제공 | Creator와 Agent에는 발행된 GuidelineVersion에 포함된 Check만 제공한다. |
 | 보관 | Check는 부모 GuidelineVersion과 Payload revision에 포함해 보관하고, 실행 당시 값은 CheckSession에 snapshot으로 저장한다. |
@@ -279,7 +279,7 @@
 | --- | --- |
 | 생성·수집 | CheckSession을 시작할 때 발행된 Guideline에서 선택된 Check와 문서 근거를 읽어 생성한다. |
 | 전송 | 검수 Service가 CheckSession 저장 Repository에 전달한다. |
-| 저장 | CheckKey, 영문·한글 Title, Tier, Options, HeuristicPrompt, Messages, RuleChecker 실행 계약, Evidence, ReferenceAssetRef를 JSON snapshot으로 저장한다. |
+| 저장 | CheckKey, 영문·한글 Title, Tier, Options, HeuristicCriteria, HeuristicPrompt, Messages, RuleChecker 실행 계약, `source.documentId`, 타입별 구조화 Evidence, 역할이 포함된 ReferenceAssetRef를 JSON snapshot으로 저장한다. Block 식별자와 문서 제목은 중복 저장하지 않는다. |
 | 처리 | 즉시 검수와 후속 AI 검수가 같은 snapshot을 사용한다. Guideline이나 RuleChecker 변경을 역으로 반영하지 않는다. |
 | 활용 | CheckRun과 결과 재현, 감사, 후속 AI 검수에 사용한다. |
 | 공유·제공 | CheckSession 조회 권한이 있는 Manager와 Admin에게 제공한다. |

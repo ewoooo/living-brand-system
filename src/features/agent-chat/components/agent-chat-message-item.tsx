@@ -74,14 +74,14 @@ export function AgentChatMessageItem({
 						isStreaming={isActive}
 					/>
 					{citations.length > 0 && (
-						<div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-neutral-500 text-xs">
+						<div className="type-caption-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-foreground-muted">
 							<span>출처</span>
 							{citations.map((citation) =>
 								citation.href ? (
 									<Link
 										key={citation.key}
 										href={citation.href}
-										className="underline underline-offset-2 hover:text-neutral-700"
+										className="underline underline-offset-2 hover:text-foreground"
 									>
 										{citation.title}
 									</Link>

@@ -53,9 +53,10 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 			status: 'running',
 			results: undefined,
 			pendingCheckKeys: undefined,
+			rulesetSnapshot: undefined,
 		}))
 		void runFullCheck(file, checkScenarioKey, {
-			onServerResult: ({ checkSessionId, results, pendingCheckKeys }) => {
+			onServerResult: ({ checkSessionId, results, pendingCheckKeys, rulesetSnapshot }) => {
 				patchImage(id, (image) => {
 					// 대기 중 시나리오가 바뀌면 이전 시나리오 판정은 버린다
 					if (image.scenarioKey !== checkScenarioKey) return {}
@@ -63,6 +64,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 						checkSessionId,
 						results,
 						pendingCheckKeys,
+						rulesetSnapshot,
 						status: pendingCheckKeys.length > 0 ? 'running' : 'completed',
 					}
 				})
@@ -113,6 +115,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 			scenarioKey: scenario.key,
 			results: undefined,
 			pendingCheckKeys: undefined,
+			rulesetSnapshot: undefined,
 			status: 'idle',
 		}))
 	}

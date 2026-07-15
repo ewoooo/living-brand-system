@@ -65,7 +65,8 @@ describe('guideline document preview', () => {
 
 		const target = await getGuidelineDocumentPreviewTarget(3, { id: 1 } as never)
 
-		expect(target?.href).toBe('/guideline/brand-system/basics?previewDocument=3#logo-usage')
+		// #앵커 금지: 동일 출처 iframe(Better Editor)에서 앵커가 부모 admin 문서까지 스크롤시킨다.
+		expect(target?.href).toBe('/guideline/brand-system/basics?previewDocument=3')
 
 		await expect(getGuidelineChapterPreview(1, { id: 1 } as never)).resolves.toMatchObject({
 			title: 'Draft Brand System',

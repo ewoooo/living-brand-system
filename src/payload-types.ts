@@ -21,9 +21,6 @@ export type GuidelineChecks =
        */
       key: string;
       tier: 'required' | 'recommended';
-      /**
-       * Checker 후보와 아래 설정 항목을 이 실행 유형에 맞춰 제한합니다.
-       */
       executor: 'deterministic' | 'heuristic' | 'manual';
       /**
        * 검수 실행 방식과 구현체를 선택합니다.
@@ -40,6 +37,16 @@ export type GuidelineChecks =
         | string
         | number
         | boolean
+        | null;
+      /**
+       * AI가 관측할 질문과 통과 기준을 행 단위로 입력합니다.
+       */
+      criteria?:
+        | {
+            question: string;
+            expected: 'present' | 'absent';
+            id?: string | null;
+          }[]
         | null;
       /**
        * AI가 이 Check를 판단할 때 추가로 적용할 기준입니다. 선택 입력, 최대 2,000자.
@@ -236,13 +243,17 @@ export interface PayloadMcpApiKeyAuthOperations {
   };
 }
 /**
- * 장·섹션·페이지를 같은 구조로 관리하는 계층형 가이드라인 문서입니다.
+ * 계층형 가이드라인 문서입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline-documents".
  */
 export interface GuidelineDocument {
   id: number;
+  /**
+   * 상위 문서가 없으면 챕터, 챕터 아래는 섹션, 섹션 아래는 페이지가 됩니다.
+   */
+  parent?: (number | null) | GuidelineDocument;
   title: string;
   /**
    * 제목 위에 표시할 선택 라벨입니다.
@@ -275,13 +286,12 @@ export interface GuidelineDocument {
    * 문서 헤더에 표시할 선택 이미지입니다.
    */
   headerImage?: (number | null) | ApplicationImage;
-  checks?: GuidelineChecks;
   blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
+  checks?: GuidelineChecks;
   /**
    * 숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.
    */
   displayOrder: number;
-  parent?: (number | null) | GuidelineDocument;
   breadcrumbs?:
     | {
         doc?: (number | null) | GuidelineDocument;
@@ -324,35 +334,6 @@ export interface ApplicationImage {
       filename?: string | null;
     };
   };
-}
-/**
- * Guideline Check를 실행할 도구와 호출 계약입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "rule-checkers".
- */
-export interface RuleChecker {
-  id: number;
-  /**
-   * 검사 도구의 안정적인 식별자입니다.
-   */
-  key: string;
-  executor: 'deterministic' | 'heuristic' | 'manual';
-  /**
-   * 결정론적 checker registry에서 사용할 키입니다.
-   */
-  checkerKey?: string | null;
-  /**
-   * 휴리스틱 검수에 사용할 Anthropic 모델입니다.
-   */
-  model?: ('claude-opus-4-8' | 'claude-sonnet-5' | 'claude-haiku-4-5') | null;
-  /**
-   * 휴리스틱 검수 프롬프트의 안정적인 키입니다.
-   */
-  promptKey?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -420,6 +401,39 @@ export interface BrandColor {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Guideline Check를 실행할 도구와 호출 계약입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rule-checkers".
+ */
+export interface RuleChecker {
+  id: number;
+  /**
+   * 목록과 Check의 checker 선택에 표시할 이름입니다.
+   */
+  name: string;
+  /**
+   * 검사 도구의 안정적인 식별자입니다.
+   */
+  key: string;
+  executor: 'deterministic' | 'heuristic' | 'manual';
+  /**
+   * 결정론적 checker registry에서 사용할 키입니다.
+   */
+  checkerKey?: string | null;
+  /**
+   * 휴리스틱 검수에 사용할 Anthropic 모델입니다.
+   */
+  model?: ('claude-opus-4-8' | 'claude-sonnet-5' | 'claude-haiku-4-5') | null;
+  /**
+   * 휴리스틱 검수 시 AI에게 전달할 관찰 지침입니다. 출력 형식과 판정 금지 규칙은 시스템이 강제하므로 자유롭게 작성해도 검수가 깨지지 않습니다.
+   */
+  prompt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "MediaShowcaseBlock".
  */
@@ -457,14 +471,26 @@ export interface ColorPaletteBlock {
 export interface DoDontBlock {
   title?: string | null;
   /**
+   * 예시 이미지의 표시 비율입니다.
+   */
+  imageRatio?: ('4:3' | '1:1' | '16:9') | null;
+  /**
+   * 가로 스택은 넓은 화면에서 그룹을 나란히 배치합니다.
+   */
+  groupLayout?: ('vertical' | 'horizontal') | null;
+  /**
    * 카테고리 단위 예시 그룹입니다.
    */
   groups?:
     | {
         category?: string | null;
+        kind: 'do' | 'ok' | 'dont';
+        /**
+         * 그룹 전체에 적용되는 설명입니다. 예시별 caption 대신 사용할 수 있습니다.
+         */
+        description?: string | null;
         examples?:
           | {
-              kind: 'do' | 'dont';
               image?: (number | null) | ApplicationImage;
               caption?: string | null;
               id?: string | null;
@@ -1245,13 +1271,13 @@ export interface PayloadMigration {
  * via the `definition` "guideline-documents_select".
  */
 export interface GuidelineDocumentsSelect<T extends boolean = true> {
+  parent?: T;
   title?: T;
   label?: T;
   generateSlug?: T;
   slug?: T;
   description?: T;
   headerImage?: T;
-  checks?: T | GuidelineChecksSelect<T>;
   blocks?:
     | T
     | {
@@ -1260,8 +1286,8 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         colorPalette?: T | ColorPaletteBlockSelect<T>;
         doDont?: T | DoDontBlockSelect<T>;
       };
+  checks?: T | GuidelineChecksSelect<T>;
   displayOrder?: T;
-  parent?: T;
   breadcrumbs?:
     | T
     | {
@@ -1273,29 +1299,6 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "GuidelineChecks_select".
- */
-export interface GuidelineChecksSelect<T extends boolean = true> {
-  title?: T;
-  titleKo?: T;
-  key?: T;
-  tier?: T;
-  executor?: T;
-  checker?: T;
-  options?: T;
-  heuristicPrompt?: T;
-  messages?:
-    | T
-    | {
-        pass?: T;
-        ok?: T;
-        needsReview?: T;
-        fail?: T;
-      };
-  id?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1315,6 +1318,36 @@ export interface ColumnUnitBlockSelect<T extends boolean = true> {
   checks?: T | GuidelineChecksSelect<T>;
   id?: T;
   blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GuidelineChecks_select".
+ */
+export interface GuidelineChecksSelect<T extends boolean = true> {
+  title?: T;
+  titleKo?: T;
+  key?: T;
+  tier?: T;
+  executor?: T;
+  checker?: T;
+  options?: T;
+  criteria?:
+    | T
+    | {
+        question?: T;
+        expected?: T;
+        id?: T;
+      };
+  heuristicPrompt?: T;
+  messages?:
+    | T
+    | {
+        pass?: T;
+        ok?: T;
+        needsReview?: T;
+        fail?: T;
+      };
+  id?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1345,14 +1378,17 @@ export interface ColorPaletteBlockSelect<T extends boolean = true> {
  */
 export interface DoDontBlockSelect<T extends boolean = true> {
   title?: T;
+  imageRatio?: T;
+  groupLayout?: T;
   groups?:
     | T
     | {
         category?: T;
+        kind?: T;
+        description?: T;
         examples?:
           | T
           | {
-              kind?: T;
               image?: T;
               caption?: T;
               id?: T;
@@ -1368,11 +1404,12 @@ export interface DoDontBlockSelect<T extends boolean = true> {
  * via the `definition` "rule-checkers_select".
  */
 export interface RuleCheckersSelect<T extends boolean = true> {
+  name?: T;
   key?: T;
   executor?: T;
   checkerKey?: T;
   model?: T;
-  promptKey?: T;
+  prompt?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

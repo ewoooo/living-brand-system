@@ -50,6 +50,10 @@ import * as migration_20260714_051528_consolidate_guideline_editor from './20260
 import * as migration_20260714_055652_cleanup_guideline_mcp_tools from './20260714_055652_cleanup_guideline_mcp_tools';
 import * as migration_20260714_061204_add_template_overrides from './20260714_061204_add_template_overrides';
 import * as migration_20260714_085554_heal_snapshot from './20260714_085554_heal_snapshot';
+import * as migration_20260714_095159_add_contrast_checker_check from './20260714_095159_add_contrast_checker_check';
+import * as migration_20260714_121152_heuristic_criteria_contract from './20260714_121152_heuristic_criteria_contract';
+import * as migration_20260715_020540_checker_name_prompt from './20260715_020540_checker_name_prompt';
+import * as migration_20260715_114800_extend_dodont_block from './20260715_114800_extend_dodont_block';
 
 export const migrations = [
   {
@@ -310,6 +314,26 @@ export const migrations = [
   {
     up: migration_20260714_085554_heal_snapshot.up,
     down: migration_20260714_085554_heal_snapshot.down,
-    name: '20260714_085554_heal_snapshot'
+    name: '20260714_085554_heal_snapshot',
+  },
+  {
+    up: migration_20260714_095159_add_contrast_checker_check.up,
+    down: migration_20260714_095159_add_contrast_checker_check.down,
+    name: '20260714_095159_add_contrast_checker_check',
+  },
+  {
+    up: migration_20260714_121152_heuristic_criteria_contract.up,
+    down: migration_20260714_121152_heuristic_criteria_contract.down,
+    name: '20260714_121152_heuristic_criteria_contract',
+  },
+  {
+    up: migration_20260715_020540_checker_name_prompt.up,
+    down: migration_20260715_020540_checker_name_prompt.down,
+    name: '20260715_020540_checker_name_prompt',
+  },
+  {
+    up: migration_20260715_114800_extend_dodont_block.up,
+    down: migration_20260715_114800_extend_dodont_block.down,
+    name: '20260715_114800_extend_dodont_block',
   },
 ];

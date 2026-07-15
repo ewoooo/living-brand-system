@@ -73,7 +73,7 @@ export function AgentChatUserInput({
 				/>
 				<Textarea
 					aria-label="무엇이든 물어보세요"
-					className="max-h-40 min-h-20 border-0 bg-transparent px-2 py-2 text-sm shadow-none focus-visible:border-transparent focus-visible:ring-0 md:text-sm"
+					className="type-callout max-h-40 min-h-20 border-0 bg-transparent px-2 py-2 shadow-none focus-visible:border-transparent focus-visible:ring-0"
 					value={value}
 					placeholder="무엇이든 물어보세요"
 					disabled={isBusy}

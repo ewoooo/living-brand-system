@@ -92,6 +92,29 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 
   ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_guideline_pages_fk";
 
+  -- 031500이 빈 체인에서 pre-create한 legacy criteria 테이블 정리.
+  -- 부모 테이블의 DROP ... CASCADE는 FK 제약만 제거하고 자식 테이블은 남기므로 명시적으로 드롭한다.
+  -- 이미 적용된 DB에는 존재하지 않을 수 있어 IF EXISTS를 사용한다. docs 계열 criteria는 유지한다.
+  DROP TABLE IF EXISTS "guideline_sections_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "section_cu_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "section_ms_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "section_cp_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "section_dd_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "guideline_pages_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "guideline_pages_blocks_column_unit_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "guideline_pages_blocks_media_showcase_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "guideline_pages_blocks_color_palette_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "guideline_pages_blocks_do_dont_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "_guideline_sections_v_version_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "_section_cu_v_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "_section_ms_v_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "_section_cp_v_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "_section_dd_v_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "_guideline_pages_v_version_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "_guideline_pages_v_blocks_column_unit_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "_guideline_pages_v_blocks_media_showcase_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "_guideline_pages_v_blocks_color_palette_checks_criteria" CASCADE;
+  DROP TABLE IF EXISTS "_guideline_pages_v_blocks_do_dont_checks_criteria" CASCADE;
   DROP TABLE "guideline_chapters" CASCADE;
   DROP TABLE "guideline_chapters_locales" CASCADE;
   DROP TABLE "_guideline_chapters_v" CASCADE;

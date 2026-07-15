@@ -12,7 +12,13 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 	{
 		key: 'quick',
 		title: '빠른 기본 검수',
-		checkKeys: ['color.palette', 'color.combination', 'logo.size.minimum', 'logo.space.clear'],
+		checkKeys: [
+			'color.palette',
+			'color.combination',
+			'color.contrast',
+			'logo.size.minimum',
+			'logo.space.clear',
+		],
 		flags: { logo: true, typography: false, illustration: false, photography: false },
 	},
 	{
@@ -21,7 +27,8 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 		checkKeys: [
 			'imagery.style',
 			'imagery.photography.classification',
-			'imagery.misuse',
+			'photography-ingredient-textures',
+			'imagery-misuse',
 			'imagery.ai.consistency',
 			'color.usage',
 		],
@@ -44,7 +51,13 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 	{
 		key: 'web-visual',
 		title: '웹/비주얼 템플릿 검수',
-		checkKeys: ['application.web', 'color.palette', 'color.combination', 'typography.usage'],
+		checkKeys: [
+			'application.web',
+			'color.palette',
+			'color.combination',
+			'color.contrast',
+			'typography.usage',
+		],
 		flags: { logo: false, typography: true, illustration: false, photography: false },
 	},
 	{
