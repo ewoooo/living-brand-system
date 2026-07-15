@@ -1,8 +1,9 @@
 import { anthropic } from '@ai-sdk/anthropic'
-import { generateText, type LanguageModelUsage, Output } from 'ai'
+import { generateText, type LanguageModelUsage, NoObjectGeneratedError, Output } from 'ai'
 import { z } from 'zod'
 import { env } from '@/env'
-import type { AiCheckResult, AiUsage, CheckerContext } from '@/features/asset-check/checkers/types'
+import { heuristicObservationSchema } from '@/features/asset-check/checkers/heuristic-evaluator'
+import type { AiUsage, CheckerContext } from '@/features/asset-check/checkers/types'
 import type {
 	CheckReferenceAsset,
 	RuntimeCheck,
@@ -10,28 +11,9 @@ import type {
 
 export const AI_CHECK_PROMPT_KEY = 'asset-check.brand-guideline.v1'
 
-const aiFactsSchema = z
-	.object({
-		confidence: z.number().min(0).max(100).optional(),
-		detectedCategory: z.string().min(1).max(80).optional(),
-		prohibitedSignals: z.array(z.string().min(1).max(80)).max(8).optional(),
-	})
-	.optional()
-
-const aiCheckResultSchema = z.object({
-	key: z.string().min(1),
-	status: z.enum(['pass', 'ok', 'needs_review', 'fail']),
-	fulfillment: z.number().min(0).max(100).nullable(),
-	detail: z.string().min(1).max(300),
-	facts: aiFactsSchema,
-})
-
-const aiCheckSchema = z.object({
-	results: z.array(aiCheckResultSchema),
-})
-
 export interface AiCheckRunResult {
-	results: Record<string, AiCheckResult>
+	observations: Record<string, Record<string, z.infer<typeof heuristicObservationSchema>>>
+	failure?: { detail: string; reasonCode: string }
 	aiUsage?: AiUsage
 }
 
@@ -43,23 +25,28 @@ export async function runAiCheck(
 	checks: RuntimeCheck[],
 	ctx: CheckerContext,
 ): Promise<AiCheckRunResult> {
-	if (!env.ANTHROPIC_API_KEY) return { results: fallbackResults(checks, 'AI 설정 없음') }
-	if (!ctx.image) return { results: fallbackResults(checks, 'AI 평가용 이미지 없음') }
+	if (!env.ANTHROPIC_API_KEY) return failed('AI 설정 없음', 'ai_not_configured')
+	if (!ctx.image) return failed('AI 평가용 이미지 없음', 'image_not_available')
+	if (checks.some((check) => !check.heuristicCriteria?.length)) {
+		return failed('Heuristic 판정 기준 없음', 'invalid_criteria')
+	}
 	const { model, promptKey } = checks[0] ?? {}
 	if (
 		!model ||
 		promptKey !== AI_CHECK_PROMPT_KEY ||
 		checks.some((check) => check.model !== model || check.promptKey !== promptKey)
 	) {
-		return { results: fallbackResults(checks, 'AI 검사 도구 설정 오류') }
+		return failed('AI 검사 도구 설정 오류', 'ai_checker_invalid')
 	}
 
 	try {
 		const referenceFiles = await loadReferenceFiles(checks)
+		const schema = buildAiCheckSchema(checks)
 		const { output, usage } = await generateText({
 			model: anthropic(model),
-			output: Output.object({ schema: aiCheckSchema }),
-			system: 'You are a brand guideline checker. Judge only the supplied raster image against the supplied checks and reference images. Do not claim access to font metadata, embedded fonts, CSS, or source design files. Return conservative structured results for every check key.',
+			output: Output.object({ schema }),
+			temperature: 0,
+			system: 'You are a brand guideline observer. Observe only the supplied raster image against each question. Never decide whether a rule passes or fails. Do not claim access to font metadata, embedded fonts, CSS, or source design files.',
 			messages: [
 				{
 					role: 'user',
@@ -69,22 +56,15 @@ export async function runAiCheck(
 							text: [
 								'Checks:',
 								...checks.map(formatCheck),
-								'Return one result per check key.',
+								'Return one observation for every criterion id.',
 								'Treat each evidence value as the complete normalized text content of the document or block that owns that check.',
-								'Apply heuristicPrompt as additional judgment criteria for its check, without overriding these output rules.',
-								'Return pass only when the image clearly and fully satisfies the rule.',
-								'Return ok when the image visually appears acceptable but exact metadata or minor details cannot be fully verified from pixels.',
-								'Return needs_review only when the image cannot be judged from visual evidence or brand policy context is required.',
-								'Return fail when the violation is visually obvious from pixels.',
-								'If a rule evidence includes prohibitions such as "금지", "Don’t", "Incorrect Example", or "prohibit", return fail when the target image visibly matches that prohibited condition.',
-								'Do not return ok for a prohibited example just because the image is polished, aesthetically acceptable, or belongs to the expected photography category.',
-								'For classification rules, treat the category as descriptive evidence, not final approval. Put the detected category in facts.detectedCategory when possible.',
-								'When relevant, return facts.confidence as 0-100 and facts.prohibitedSignals as short labels for visible prohibited signals.',
-								'For typography rules, judge visual similarity only. If the visual match is acceptable but exact font metadata is unavailable, return ok instead of needs_review.',
+								'Apply heuristicPrompt as additional observation context without changing the output contract.',
+								'Return present when the questioned condition is visibly present, absent when it is visibly absent, and uncertain when pixels or supplied context are insufficient.',
+								'Do not return pass, ok, needs_review, fail, fulfillment, or an overall approval decision.',
 								referenceFiles.length
-									? 'Use the attached reference images as the visual basis for typography and usage judgments.'
-									: 'No reference images are available; return needs_review for typography family or weight if the PNG is ambiguous.',
-								'Use Korean wording like "이미지상 ...로 보입니다" or "PNG만으로 확정하기 어렵습니다". Do not say that a specific font was identified unless metadata was provided.',
+									? 'Use each attached reference image according to its stated positive, negative, or context role.'
+									: 'No reference images are available; return uncertain for typography family or weight if the PNG is ambiguous.',
+								'Use concise Korean reasons such as "이미지상 ...로 보입니다" or "PNG만으로 확정하기 어렵습니다". Do not say that a specific font was identified unless metadata was provided.',
 							].join('\n'),
 						},
 						{ type: 'text', text: 'Target image to check:' },
@@ -94,7 +74,10 @@ export async function runAiCheck(
 							data: ctx.image.data,
 						},
 						...referenceFiles.flatMap((file) => [
-							{ type: 'text' as const, text: `Reference image: ${file.name}` },
+							{
+								type: 'text' as const,
+								text: `Reference image (${file.role}): ${file.name}`,
+							},
 							{
 								type: 'file' as const,
 								mediaType: file.mediaType,
@@ -106,22 +89,43 @@ export async function runAiCheck(
 			],
 		})
 
-		const byKey: Record<string, AiCheckResult> = {}
-		for (const result of output.results) {
-			byKey[result.key] = {
-				status: result.status,
-				fulfillment: result.fulfillment,
-				detail: result.detail,
-				facts: compactFacts(result.facts),
-			}
+		const results = output.results as Record<
+			string,
+			{ observations: Record<string, z.infer<typeof heuristicObservationSchema>> }
+		>
+		return {
+			observations: Object.fromEntries(
+				checks.map((check) => [check.key, results[check.key]?.observations ?? {}]),
+			),
+			aiUsage: toAiUsage(model, usage),
 		}
-		for (const check of checks) {
-			byKey[check.key] ??= needsManualCheck('AI 평가 결과 없음')
-		}
-		return { results: byKey, aiUsage: toAiUsage(model, usage) }
-	} catch {
-		return { results: fallbackResults(checks, 'AI 평가 실패') }
+	} catch (error) {
+		return NoObjectGeneratedError.isInstance(error)
+			? failed('AI 관측값 형식 오류', 'ai_output_invalid')
+			: failed('AI 평가 실패', 'ai_request_failed')
 	}
+}
+
+function buildAiCheckSchema(checks: RuntimeCheck[]) {
+	return z.strictObject({
+		results: z.strictObject(
+			Object.fromEntries(
+				checks.map((check) => [
+					check.key,
+					z.strictObject({
+						observations: z.strictObject(
+							Object.fromEntries(
+								(check.heuristicCriteria ?? []).map((criterion) => [
+									criterion.id,
+									heuristicObservationSchema,
+								]),
+							),
+						),
+					}),
+				]),
+			),
+		),
+	})
 }
 
 function toAiUsage(model: string, usage: LanguageModelUsage): AiUsage {
@@ -138,16 +142,6 @@ function toAiUsage(model: string, usage: LanguageModelUsage): AiUsage {
 	}
 }
 
-function compactFacts(facts: z.infer<typeof aiFactsSchema>) {
-	if (!facts) return undefined
-
-	return Object.fromEntries(
-		Object.entries(facts).filter(([, value]) =>
-			Array.isArray(value) ? value.length > 0 : value !== undefined,
-		),
-	)
-}
-
 function formatCheck(check: RuntimeCheck): string {
 	return [
 		`- key: ${check.key}`,
@@ -155,14 +149,18 @@ function formatCheck(check: RuntimeCheck): string {
 		`  titleKo: ${check.titleKo || 'Not provided'}`,
 		`  evidence: ${check.evidence || 'Not provided'}`,
 		`  heuristicPrompt: ${check.heuristicPrompt || 'Not provided'}`,
-		`  referenceImages: ${check.referenceAssets.map((asset) => asset.name).join(', ') || 'None'}`,
+		'  criteria:',
+		...(check.heuristicCriteria ?? []).map(
+			(criterion) => `    - id: ${criterion.id}\n      question: ${criterion.question}`,
+		),
+		`  referenceImages: ${check.referenceAssets.map((asset) => `${asset.role}:${asset.name}`).join(', ') || 'None'}`,
 	].join('\n')
 }
 
 async function loadReferenceFiles(checks: RuntimeCheck[]) {
 	const assets = new Map<string, CheckReferenceAsset>()
 	for (const check of checks) {
-		for (const asset of check.referenceAssets) assets.set(asset.url, asset)
+		for (const asset of check.referenceAssets) assets.set(`${asset.url}:${asset.role}`, asset)
 	}
 
 	const files = await Promise.all(
@@ -171,6 +169,7 @@ async function loadReferenceFiles(checks: RuntimeCheck[]) {
 			if (!data) return null
 			return {
 				name: asset.name,
+				role: asset.role,
 				mediaType: asset.mimeType,
 				data,
 			}
@@ -194,10 +193,6 @@ function toAbsoluteUrl(url: string) {
 	return new URL(url, origin).toString()
 }
 
-function needsManualCheck(detail: string): AiCheckResult {
-	return { status: 'needs_review', fulfillment: null, detail }
-}
-
-function fallbackResults(checks: RuntimeCheck[], detail: string): Record<string, AiCheckResult> {
-	return Object.fromEntries(checks.map((check) => [check.key, needsManualCheck(detail)]))
+function failed(detail: string, reasonCode: string): AiCheckRunResult {
+	return { observations: {}, failure: { detail, reasonCode } }
 }

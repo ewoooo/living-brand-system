@@ -2,9 +2,16 @@ import type { GuidelineDocument } from '@/payload-types'
 
 export type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 
+export type CheckReferenceAssetRole = 'positive' | 'negative' | 'context'
+
+export interface CheckReferenceAssetRef {
+	id: number
+	role: CheckReferenceAssetRole
+}
+
 export interface CheckSourceSnapshot {
 	evidence: string
-	referenceAssets: number[]
+	referenceAssets: CheckReferenceAssetRef[]
 }
 
 /**

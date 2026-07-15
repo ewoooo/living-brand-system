@@ -32,7 +32,7 @@ describe('collectGuidelineCheckSources', () => {
 		])
 		expect(sources[0]?.evidence).toContain('Logo usage')
 		expect(sources[1]?.evidence).toContain('Media showcase')
-		expect(sources[1]?.referenceAssets).toEqual([image])
+		expect(sources[1]?.referenceAssets).toEqual([{ asset: image, role: 'context' }])
 	})
 
 	it('Block Check에서 동일한 기준 이미지를 중복 제거한다', () => {
@@ -65,6 +65,6 @@ describe('collectGuidelineCheckSources', () => {
 
 		const sources = collectGuidelineCheckSources(page)
 
-		expect(sources[0]?.referenceAssets).toEqual([image])
+		expect(sources[0]?.referenceAssets).toEqual([{ asset: image, role: 'negative' }])
 	})
 })

@@ -4,6 +4,7 @@ import {
 	type GuidelineCheckDocument,
 } from '../blocks/check-source-snapshot'
 import { snapshotBlock } from '../blocks/registry'
+import type { CheckReferenceAssetRole } from '../blocks/types'
 import { relationshipId } from '../utils/block-text'
 
 type GuidelineCheck = NonNullable<GuidelineChecks>[number]
@@ -12,7 +13,7 @@ export interface GuidelineCheckSource {
 	check: GuidelineCheck
 	blockId: string | null
 	evidence: string
-	referenceAssets: ApplicationImage[]
+	referenceAssets: { asset: ApplicationImage; role: CheckReferenceAssetRole }[]
 }
 
 /** 문서와 임베디드 Block의 Check를 실행 가능한 source snapshot과 함께 수집한다. */
@@ -41,9 +42,9 @@ function toSources(
 		check,
 		blockId,
 		evidence: snapshot.evidence,
-		referenceAssets: snapshot.referenceAssets.flatMap((id) => {
-			const asset = assets.get(id)
-			return asset ? [asset] : []
+		referenceAssets: snapshot.referenceAssets.flatMap((reference) => {
+			const asset = assets.get(reference.id)
+			return asset ? [{ asset, role: reference.role }] : []
 		}),
 	}))
 }

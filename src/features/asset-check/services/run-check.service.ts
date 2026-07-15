@@ -3,6 +3,7 @@ import {
 	toDeterministicCheckResult,
 } from '@/features/asset-check/checkers/check-result.adapter'
 import { opaquePixels } from '@/features/asset-check/checkers/color-metrics'
+import { evaluateHeuristic } from '@/features/asset-check/checkers/heuristic-evaluator'
 import { getChecker, runDeterministicChecker } from '@/features/asset-check/checkers/registry'
 import type {
 	AiUsage,
@@ -84,11 +85,21 @@ export async function runHeuristicCheck(
 	})
 	return {
 		results: Object.fromEntries(
-			Object.entries(aiCheck.results).map(([key, result]) => [
-				key,
+			checks.map((check) => [
+				check.key,
 				toCheckResult(
-					result,
-					checks.find((check) => check.key === key),
+					aiCheck.failure
+						? {
+								status: 'needs_review',
+								fulfillment: null,
+								detail: aiCheck.failure.detail,
+								reasonCode: aiCheck.failure.reasonCode,
+							}
+						: evaluateHeuristic(
+								check.heuristicCriteria ?? [],
+								aiCheck.observations[check.key],
+							),
+					check,
 					{ key: 'ai', type: 'ai' },
 				),
 			]),

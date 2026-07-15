@@ -42,6 +42,16 @@ export type GuidelineChecks =
         | boolean
         | null;
       /**
+       * AI가 관측할 질문과 통과 기준을 행 단위로 입력합니다.
+       */
+      criteria?:
+        | {
+            question: string;
+            expected: 'present' | 'absent';
+            id?: string | null;
+          }[]
+        | null;
+      /**
        * AI가 이 Check를 판단할 때 추가로 적용할 기준입니다. 선택 입력, 최대 2,000자.
        */
       heuristicPrompt?: string | null;
@@ -1308,6 +1318,13 @@ export interface GuidelineChecksSelect<T extends boolean = true> {
   executor?: T;
   checker?: T;
   options?: T;
+  criteria?:
+    | T
+    | {
+        question?: T;
+        expected?: T;
+        id?: T;
+      };
   heuristicPrompt?: T;
   messages?:
     | T

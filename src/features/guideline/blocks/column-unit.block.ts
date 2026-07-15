@@ -23,7 +23,8 @@ export const behavior: BlockBehavior = {
 			evidence: format(block),
 			referenceAssets: (block.columns ?? [])
 				.map((column) => relationshipId(column.image))
-				.filter((id): id is number => id != null),
+				.filter((id): id is number => id != null)
+				.map((id) => ({ id, role: 'context' })),
 		}
 	},
 }

@@ -89,6 +89,15 @@ export interface AlgorithmCheckResult extends CheckResultBase {
 
 export interface AiCheckResult extends CheckResultBase {
 	status: CheckStatus
+	observations?: {
+		criterionId: string
+		question: string
+		expected: 'present' | 'absent'
+		actual: 'present' | 'absent' | 'uncertain'
+		confidence: number
+		reason: string
+		satisfied: boolean | null
+	}[]
 }
 
 export interface AiUsage {

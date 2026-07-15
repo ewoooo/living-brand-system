@@ -22,7 +22,7 @@ describe('buildCheckSourceSnapshot', () => {
 
 		expect(buildCheckSourceSnapshot(page, 'target')).toEqual({
 			evidence: 'Digital\nUse 24 px.',
-			referenceAssets: [7],
+			referenceAssets: [{ id: 7, role: 'context' }],
 		})
 	})
 
@@ -49,7 +49,10 @@ describe('buildCheckSourceSnapshot', () => {
 
 		expect(snapshot?.evidence).toContain('Logo usage\n\nApproved applications')
 		expect(snapshot?.evidence).toContain('권장: Clear')
-		expect(snapshot?.referenceAssets).toEqual([8])
+		expect(snapshot?.referenceAssets).toEqual([
+			{ id: 8, role: 'context' },
+			{ id: 8, role: 'positive' },
+		])
 	})
 
 	it('Section 전체 snapshot은 header image와 자체 block만 포함한다', () => {
@@ -64,7 +67,7 @@ describe('buildCheckSourceSnapshot', () => {
 
 		expect(buildCheckSourceSnapshot(section)).toEqual({
 			evidence: 'Brand Core\n\nFoundation\n\nCore visual Core\n\nMain colors',
-			referenceAssets: [3],
+			referenceAssets: [{ id: 3, role: 'context' }],
 		})
 	})
 

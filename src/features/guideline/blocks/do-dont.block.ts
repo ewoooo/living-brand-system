@@ -25,8 +25,20 @@ export const behavior: BlockBehavior = {
 			evidence: format(block),
 			referenceAssets: (block.groups ?? [])
 				.flatMap((group) => group.examples ?? [])
-				.map((example) => relationshipId(example.image))
-				.filter((id): id is number => id != null),
+				.flatMap((example) => {
+					const id = relationshipId(example.image)
+					return id == null
+						? []
+						: [
+								{
+									id,
+									role:
+										example.kind === 'do'
+											? ('positive' as const)
+											: ('negative' as const),
+								},
+							]
+				}),
 		}
 	},
 }
