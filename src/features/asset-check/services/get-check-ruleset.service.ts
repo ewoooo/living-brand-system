@@ -1,8 +1,9 @@
 import { cache } from 'react'
-import { hasChecker } from '@/features/asset-check/checkers/registry'
+import { hasChecker, hasDeterministicChecker } from '@/features/asset-check/checkers/registry'
 import type { CheckStatus } from '@/features/asset-check/checkers/types'
 import { getCheckSourceDocuments } from '@/features/asset-check/repositories/check-ruleset.payload.repository'
 import { toRuntimeCheckMessages } from '@/features/asset-check/utils/check-messages'
+import type { CheckEvidence, CheckReferenceAssetRole } from '@/features/guideline/blocks/types'
 import {
 	collectGuidelineCheckSources,
 	type GuidelineCheckSource,
@@ -13,6 +14,13 @@ export interface CheckReferenceAsset {
 	name: string
 	url: string
 	mimeType: string
+	role: CheckReferenceAssetRole
+}
+
+export interface CheckerSummary {
+	key: string
+	type: RuleChecker['executor']
+	implementationKey?: string
 }
 
 export interface RuntimeCheck {
@@ -20,15 +28,26 @@ export interface RuntimeCheck {
 	title: string
 	titleKo?: string
 	tier?: 'recommended' | 'required'
+	/** 기존 CheckSession snapshot에는 없을 수 있다. 새 snapshot은 항상 포함한다. */
+	source?: { documentId: number }
+	/** 화면에 표시할 Checker 계약이다. */
+	checker: CheckerSummary
+	/** 아래 필드는 기존 CheckSession snapshot과 런타임 실행 계약이다. */
 	executor: RuleChecker['executor']
 	checkerKey?: string
 	model?: string
-	promptKey?: string
+	prompt?: string
 	options?: unknown
+	heuristicCriteria?: {
+		id: string
+		question: string
+		expected: 'present' | 'absent'
+	}[]
 	heuristicPrompt?: string
 	/** 자동 검수 가능 여부 — deterministic인데 checker 미등록이면 false (UI 배지용). */
 	implemented: boolean
-	evidence: string
+	/** string은 기존 CheckSession snapshot 조회 호환용이다. */
+	evidence: CheckEvidence | string
 	referenceAssets: CheckReferenceAsset[]
 	messages?: Partial<Record<CheckStatus, string>>
 }
@@ -90,22 +109,45 @@ export async function getRuntimeChecks(checkKeys?: string[]): Promise<RuntimeChe
 		.sort((a, b) => (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0))
 }
 
-function toRuntimeCheck({ check, evidence, referenceAssets }: GuidelineCheckSource): RuntimeCheck {
+function toRuntimeCheck({
+	check,
+	evidence,
+	referenceAssets,
+	source,
+}: GuidelineCheckSource): RuntimeCheck {
 	const checker = typeof check.checker === 'object' ? check.checker : null
 	if (!checker) throw new Error(`RuleChecker가 연결되지 않은 Check입니다: ${check.key}`)
 	const checkerKey = checker.checkerKey ?? undefined
 	const model = checker.model ?? undefined
-	const promptKey = checker.promptKey ?? undefined
+	const prompt = checker.prompt?.trim() || undefined
 	const options = checker.executor === 'deterministic' ? (check.options ?? undefined) : undefined
+	const heuristicCriteria =
+		checker.executor === 'heuristic'
+			? (check.criteria ?? []).flatMap((criterion) => {
+					const question = criterion.question?.trim()
+					return criterion.id && question
+						? [
+								{
+									id: criterion.id,
+									question,
+									expected: criterion.expected,
+								},
+							]
+						: []
+				})
+			: undefined
 	const heuristicPrompt =
 		checker.executor === 'heuristic' && check.heuristicPrompt?.trim()
 			? check.heuristicPrompt.trim()
 			: undefined
 	const implemented =
 		checker.executor === 'deterministic'
-			? Boolean(checkerKey && hasChecker(checkerKey, options))
+			? Boolean(
+					checkerKey &&
+						(hasDeterministicChecker(checkerKey) || hasChecker(checkerKey, options)),
+				)
 			: checker.executor === 'heuristic'
-				? Boolean(model && promptKey)
+				? Boolean(model)
 				: true
 
 	return {
@@ -113,17 +155,31 @@ function toRuntimeCheck({ check, evidence, referenceAssets }: GuidelineCheckSour
 		title: check.title,
 		titleKo: check.titleKo?.trim() || undefined,
 		tier: check.tier ?? undefined,
+		source,
+		checker: {
+			key: checker.key,
+			type: checker.executor,
+			implementationKey: checker.executor === 'deterministic' ? checkerKey : undefined,
+		},
 		executor: checker.executor,
 		checkerKey,
 		model,
-		promptKey,
+		prompt,
 		options,
+		heuristicCriteria,
 		heuristicPrompt,
 		implemented,
 		evidence,
 		referenceAssets: referenceAssets.flatMap((asset) =>
-			asset.url && asset.mimeType
-				? [{ name: asset.name, url: asset.url, mimeType: asset.mimeType }]
+			asset.asset.url && asset.asset.mimeType
+				? [
+						{
+							name: asset.asset.name,
+							url: asset.asset.url,
+							mimeType: asset.asset.mimeType,
+							role: asset.role,
+						},
+					]
 				: [],
 		),
 		messages:

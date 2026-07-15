@@ -1,4 +1,4 @@
-import { hexToRgb, isValidHex } from '@/lib/color'
+import { hexToRgb, isLightColor, isValidHex } from '@/lib/color'
 import type { BrandColor, GuidelineDocument } from '@/payload-types'
 import { BlockHeading } from './children/block-heading'
 
@@ -16,26 +16,20 @@ export function ColorPaletteBlock({
 	return (
 		<section>
 			<BlockHeading title={block.title} />
-			<div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+			<div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
 				{colors.map((color) => (
 					<div
 						key={color.id}
-						className="overflow-hidden rounded-sm border border-border"
+						className="type-caption-1 aspect-square rounded-sm border border-scrim/10 p-4"
+						style={{
+							backgroundColor: color.hex,
+							color: isLightColor(color.hex) ? '#000000' : '#FFFFFF',
+						}}
 					>
-						<div
-							className="h-24 border-border border-b"
-							style={{ backgroundColor: color.hex }}
-						/>
-						<dl className="space-y-1 bg-background p-3 text-xs leading-5">
-							<dt className="font-semibold text-foreground">{color.name}</dt>
-							<dd className="text-muted-foreground">HEX {color.hex}</dd>
-							{rgbLabel(color.hex) && (
-								<dd className="text-muted-foreground">RGB {rgbLabel(color.hex)}</dd>
-							)}
-							{color.pantone && (
-								<dd className="text-muted-foreground">PMS {color.pantone}</dd>
-							)}
-						</dl>
+						<p className="type-caption-1-emphasized">{color.name}</p>
+						<p>HEX {color.hex}</p>
+						{rgbLabel(color.hex) && <p>RGB {rgbLabel(color.hex)}</p>}
+						{color.pantone && <p>PMS {color.pantone}</p>}
 					</div>
 				))}
 			</div>

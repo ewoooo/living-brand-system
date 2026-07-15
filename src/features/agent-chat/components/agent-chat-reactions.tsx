@@ -37,7 +37,7 @@ export function AgentChatReactions({
 				<span
 					role="img"
 					aria-label={`Reaction: ${reactionText[reaction]}`}
-					className="rounded-sm px-2 py-0.5 text-neutral-500 text-xs"
+					className="type-caption-1 rounded-sm px-2 py-0.5 text-foreground-muted"
 				>
 					<Icon />
 				</span>

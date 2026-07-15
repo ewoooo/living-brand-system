@@ -29,6 +29,178 @@ type LegacyDocument = {
 type LocalizedState = Record<Locale, LegacyDocument | undefined>
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
+	// Local API 기반 마이그레이션은 현재 config를 기준으로 쿼리를 만든다. 현재 config의
+	// guidelineChecksField()에는 criteria 배열 하위 필드가 있으므로 payload.find/create/update가
+	// 모든 checks 테이블에 checks_criteria 조인을 건다. 그러나 criteria 테이블은 체인 뒤쪽
+	// (121152)에서야 docs용으로만 생성되고, 레거시 컬렉션(sections/pages)용은 어떤 DDL도 만들지
+	// 않는다. 따라서 이 백필(031500)과 095159가 Local API를 호출하기 전에, 현재 config가 기대하는
+	// 모든 criteria 테이블을 IF NOT EXISTS로 미리 만들어 둔다. 레거시 criteria 테이블은
+	// 040034에서 명시적으로 드롭한다.
+	// 이때 아래 loadStates의 payload.find는 req 없이 별도 풀 커넥션에서 실행되므로, 마이그레이션
+	// 트랜잭션 안(db.execute)에서 만든 테이블은 보이지 않는다. 커밋되어 모든 커넥션에 보이도록
+	// 어댑터 pool로 직접(autocommit) 생성한다.
+	const { pool } = payload.db as unknown as { pool: { query(text: string): Promise<unknown> } }
+	// 현재 Do/Don't config가 백필 뒤에 추가된 필드를 조회하므로, Local API를 호출하기 전에
+	// 대상 테이블은 최종 타입으로 확장하고 곧 제거할 레거시 테이블은 varchar 호환 컬럼만 둔다.
+	await pool.query(`
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum_guideline_docs_blocks_do_dont_image_ratio" AS ENUM('4:3', '1:1', '16:9');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum__guideline_docs_v_blocks_do_dont_image_ratio" AS ENUM('4:3', '1:1', '16:9');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum_guideline_docs_blocks_do_dont_group_layout" AS ENUM('vertical', 'horizontal');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum__guideline_docs_v_blocks_do_dont_group_layout" AS ENUM('vertical', 'horizontal');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum_guideline_docs_blocks_do_dont_groups_kind" AS ENUM('do', 'ok', 'dont');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum__guideline_docs_v_blocks_do_dont_groups_kind" AS ENUM('do', 'ok', 'dont');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+		ALTER TABLE "guideline_docs_blocks_do_dont" ADD COLUMN IF NOT EXISTS "image_ratio" "enum_guideline_docs_blocks_do_dont_image_ratio" DEFAULT '4:3';
+		ALTER TABLE "_guideline_docs_v_blocks_do_dont" ADD COLUMN IF NOT EXISTS "image_ratio" "enum__guideline_docs_v_blocks_do_dont_image_ratio" DEFAULT '4:3';
+		ALTER TABLE "guideline_docs_blocks_do_dont" ADD COLUMN IF NOT EXISTS "group_layout" "enum_guideline_docs_blocks_do_dont_group_layout" DEFAULT 'vertical';
+		ALTER TABLE "_guideline_docs_v_blocks_do_dont" ADD COLUMN IF NOT EXISTS "group_layout" "enum__guideline_docs_v_blocks_do_dont_group_layout" DEFAULT 'vertical';
+		ALTER TABLE "guideline_docs_blocks_do_dont_groups" ADD COLUMN IF NOT EXISTS "kind" "enum_guideline_docs_blocks_do_dont_groups_kind" DEFAULT 'dont';
+		ALTER TABLE "_guideline_docs_v_blocks_do_dont_groups" ADD COLUMN IF NOT EXISTS "kind" "enum__guideline_docs_v_blocks_do_dont_groups_kind" DEFAULT 'dont';
+		ALTER TABLE "guideline_docs_blocks_do_dont_groups_locales" ADD COLUMN IF NOT EXISTS "description" varchar;
+		ALTER TABLE "_guideline_docs_v_blocks_do_dont_groups_locales" ADD COLUMN IF NOT EXISTS "description" varchar;
+
+		ALTER TABLE "section_dd" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '4:3';
+		ALTER TABLE "_section_dd_v" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '4:3';
+		ALTER TABLE "section_dd" ADD COLUMN IF NOT EXISTS "group_layout" varchar DEFAULT 'vertical';
+		ALTER TABLE "_section_dd_v" ADD COLUMN IF NOT EXISTS "group_layout" varchar DEFAULT 'vertical';
+		ALTER TABLE "section_dd_groups" ADD COLUMN IF NOT EXISTS "kind" varchar DEFAULT 'dont';
+		ALTER TABLE "_section_dd_v_groups" ADD COLUMN IF NOT EXISTS "kind" varchar DEFAULT 'dont';
+		ALTER TABLE "section_dd_groups_locales" ADD COLUMN IF NOT EXISTS "description" varchar;
+		ALTER TABLE "_section_dd_v_groups_locales" ADD COLUMN IF NOT EXISTS "description" varchar;
+
+		ALTER TABLE "guideline_pages_blocks_do_dont" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '4:3';
+		ALTER TABLE "_guideline_pages_v_blocks_do_dont" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '4:3';
+		ALTER TABLE "guideline_pages_blocks_do_dont" ADD COLUMN IF NOT EXISTS "group_layout" varchar DEFAULT 'vertical';
+		ALTER TABLE "_guideline_pages_v_blocks_do_dont" ADD COLUMN IF NOT EXISTS "group_layout" varchar DEFAULT 'vertical';
+		ALTER TABLE "guideline_pages_blocks_do_dont_groups" ADD COLUMN IF NOT EXISTS "kind" varchar DEFAULT 'dont';
+		ALTER TABLE "_guideline_pages_v_blocks_do_dont_groups" ADD COLUMN IF NOT EXISTS "kind" varchar DEFAULT 'dont';
+		ALTER TABLE "guideline_pages_blocks_do_dont_groups_locales" ADD COLUMN IF NOT EXISTS "description" varchar;
+		ALTER TABLE "_guideline_pages_v_blocks_do_dont_groups_locales" ADD COLUMN IF NOT EXISTS "description" varchar;
+
+		UPDATE "section_dd_groups" g SET "kind" = (
+			SELECT e."kind"::text FROM "section_dd_groups_examples" e
+			WHERE e."_parent_id" = g."id" ORDER BY e."_order" LIMIT 1
+		) WHERE EXISTS (SELECT 1 FROM "section_dd_groups_examples" e WHERE e."_parent_id" = g."id");
+		UPDATE "_section_dd_v_groups" g SET "kind" = (
+			SELECT e."kind"::text FROM "_section_dd_v_groups_examples" e
+			WHERE e."_parent_id" = g."id" ORDER BY e."_order" LIMIT 1
+		) WHERE EXISTS (SELECT 1 FROM "_section_dd_v_groups_examples" e WHERE e."_parent_id" = g."id");
+		UPDATE "guideline_pages_blocks_do_dont_groups" g SET "kind" = (
+			SELECT e."kind"::text FROM "guideline_pages_blocks_do_dont_groups_examples" e
+			WHERE e."_parent_id" = g."id" ORDER BY e."_order" LIMIT 1
+		) WHERE EXISTS (SELECT 1 FROM "guideline_pages_blocks_do_dont_groups_examples" e WHERE e."_parent_id" = g."id");
+		UPDATE "_guideline_pages_v_blocks_do_dont_groups" g SET "kind" = (
+			SELECT e."kind"::text FROM "_guideline_pages_v_blocks_do_dont_groups_examples" e
+			WHERE e."_parent_id" = g."id" ORDER BY e."_order" LIMIT 1
+		) WHERE EXISTS (SELECT 1 FROM "_guideline_pages_v_blocks_do_dont_groups_examples" e WHERE e."_parent_id" = g."id");
+	`)
+
+	await pool.query(`
+		DO $precreate$
+		DECLARE
+			parent text;
+			child text;
+			-- id/_parent_id가 varchar인 발행/메인 checks 테이블
+			varchar_parents text[] := ARRAY[
+				'guideline_docs_checks',
+				'guideline_docs_blocks_column_unit_checks',
+				'guideline_docs_blocks_media_showcase_checks',
+				'guideline_docs_blocks_color_palette_checks',
+				'guideline_docs_blocks_do_dont_checks',
+				'guideline_sections_checks',
+				'section_cu_checks',
+				'section_ms_checks',
+				'section_cp_checks',
+				'section_dd_checks',
+				'guideline_pages_checks',
+				'guideline_pages_blocks_column_unit_checks',
+				'guideline_pages_blocks_media_showcase_checks',
+				'guideline_pages_blocks_color_palette_checks',
+				'guideline_pages_blocks_do_dont_checks'
+			];
+			-- id가 serial, _parent_id가 integer이고 _uuid를 갖는 버전 checks 테이블
+			int_parents text[] := ARRAY[
+				'_guideline_docs_v_version_checks',
+				'_guideline_docs_v_blocks_column_unit_checks',
+				'_guideline_docs_v_blocks_media_showcase_checks',
+				'_guideline_docs_v_blocks_color_palette_checks',
+				'_guideline_docs_v_blocks_do_dont_checks',
+				'_guideline_sections_v_version_checks',
+				'_section_cu_v_checks',
+				'_section_ms_v_checks',
+				'_section_cp_v_checks',
+				'_section_dd_v_checks',
+				'_guideline_pages_v_version_checks',
+				'_guideline_pages_v_blocks_column_unit_checks',
+				'_guideline_pages_v_blocks_media_showcase_checks',
+				'_guideline_pages_v_blocks_color_palette_checks',
+				'_guideline_pages_v_blocks_do_dont_checks'
+			];
+		BEGIN
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_heuristic_criterion_expected') THEN
+				CREATE TYPE "public"."enum_heuristic_criterion_expected" AS ENUM('present', 'absent');
+			END IF;
+
+			FOREACH parent IN ARRAY varchar_parents LOOP
+				child := parent || '_criteria';
+				EXECUTE format(
+					'CREATE TABLE IF NOT EXISTS %I ('
+					|| '"_order" integer NOT NULL,'
+					|| '"_parent_id" varchar NOT NULL,'
+					|| '"id" varchar PRIMARY KEY NOT NULL,'
+					|| '"question" varchar,'
+					|| '"expected" "public"."enum_heuristic_criterion_expected")',
+					child
+				);
+				BEGIN
+					EXECUTE format(
+						'ALTER TABLE %I ADD CONSTRAINT %I FOREIGN KEY ("_parent_id") REFERENCES "public".%I("id") ON DELETE cascade ON UPDATE no action',
+						child, child || '_parent_id_fk', parent
+					);
+				EXCEPTION WHEN duplicate_object THEN NULL;
+				END;
+				EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON %I USING btree ("_order")', child || '_order_idx', child);
+				EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON %I USING btree ("_parent_id")', child || '_parent_id_idx', child);
+			END LOOP;
+
+			FOREACH parent IN ARRAY int_parents LOOP
+				child := parent || '_criteria';
+				EXECUTE format(
+					'CREATE TABLE IF NOT EXISTS %I ('
+					|| '"_order" integer NOT NULL,'
+					|| '"_parent_id" integer NOT NULL,'
+					|| '"id" serial PRIMARY KEY NOT NULL,'
+					|| '"question" varchar,'
+					|| '"expected" "public"."enum_heuristic_criterion_expected",'
+					|| '"_uuid" varchar)',
+					child
+				);
+				BEGIN
+					EXECUTE format(
+						'ALTER TABLE %I ADD CONSTRAINT %I FOREIGN KEY ("_parent_id") REFERENCES "public".%I("id") ON DELETE cascade ON UPDATE no action',
+						child, child || '_parent_id_fk', parent
+					);
+				EXCEPTION WHEN duplicate_object THEN NULL;
+				END;
+				EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON %I USING btree ("_order")', child || '_order_idx', child);
+				EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON %I USING btree ("_parent_id")', child || '_parent_id_idx', child);
+			END LOOP;
+		END
+		$precreate$;
+	`)
+
 	await db.execute(sql`DELETE FROM "search";`)
 
 	const documentIds = new Map<string, number>()

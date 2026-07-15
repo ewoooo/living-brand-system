@@ -10,7 +10,7 @@ export function ColumnUnitBlock({
 	block: Extract<GuidelineBlock, { blockType: 'columnUnit' }>
 }) {
 	const gridClassName =
-		block.columns && block.columns.length > 1 ? 'grid gap-8 md:grid-cols-2' : 'grid gap-8'
+		block.columns && block.columns.length > 1 ? 'grid gap-4 md:grid-cols-2' : 'grid gap-4'
 
 	return (
 		<section>
@@ -24,11 +24,13 @@ export function ColumnUnitBlock({
 							scale={column.imageScale}
 							className="mb-4 aspect-4/3 border border-border bg-muted/30 p-6"
 						/>
-						{column.heading && <h4 className="mb-4 font-semibold">{column.heading}</h4>}
+						{column.heading && (
+							<h4 className="type-body-emphasized mb-4">{column.heading}</h4>
+						)}
 						{column.body && (
 							<RichText
 								data={column.body}
-								className="space-y-4 leading-7 tracking-normal"
+								className="type-body flex flex-col gap-4"
 							/>
 						)}
 					</div>

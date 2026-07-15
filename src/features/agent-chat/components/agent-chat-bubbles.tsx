@@ -32,7 +32,7 @@ export function AgentChatUserBubble({ files, text }: { files: FileUIPart[]; text
 				<Bubble align="end" variant="default" className="rounded-full">
 					<BubbleContent
 						asChild
-						className="whitespace-pre-wrap text-sm [overflow-wrap:normal] [word-break:keep-all]"
+						className="type-callout whitespace-pre-wrap [overflow-wrap:normal] [word-break:keep-all]"
 					>
 						<p>{text}</p>
 					</BubbleContent>
@@ -108,7 +108,7 @@ export function AgentChatAgentBubble({
 					animated
 					controls={false}
 					isAnimating={isStreaming}
-					className="space-y-2 text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4"
+					className="type-callout flex flex-col gap-2 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4"
 				>
 					{text}
 				</Streamdown>

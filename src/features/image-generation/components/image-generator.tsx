@@ -25,8 +25,8 @@ export function ImageGenerator() {
 	return (
 		<section className="flex flex-col">
 			<hgroup className="mb-4">
-				<h2 className="text-2xl">이미지 생성</h2>
-				<p className="mt-1 text-muted-foreground text-sm">
+				<h2 className="type-title-2">이미지 생성</h2>
+				<p className="type-callout mt-1 text-foreground-muted">
 					브랜드 제품컷은 씬(환경·구성)을 고르면 브랜드 톤·조명·구도가 자동으로
 					더해집니다. 제품컷이 아닌 이미지는 자유 생성 모드로 프롬프트를 그대로
 					생성하세요. <wbr />
@@ -47,15 +47,15 @@ export function ImageGenerator() {
 					aria-label="만들 이미지 설명"
 					maxLength={500}
 					rows={3}
-					className="w-full resize-y rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
+					className="type-callout w-full resize-y rounded-md border border-input bg-transparent px-3 py-2"
 				/>
 				<div className="flex flex-wrap items-center gap-3">
-					<label className="flex items-center gap-2 text-muted-foreground text-sm">
+					<label className="type-callout flex items-center gap-2 text-foreground-muted">
 						모드
 						<select
 							value={sceneId}
 							onChange={(e) => setSceneId(e.target.value)}
-							className="rounded-md border border-neutral-300 bg-transparent px-2 py-1 dark:border-neutral-700"
+							className="rounded-md border border-input bg-background px-2 py-1 text-foreground"
 						>
 							<option value="free">자유 생성 (브랜드 스타일 없음)</option>
 							<optgroup label="브랜드 제품컷">
@@ -68,12 +68,12 @@ export function ImageGenerator() {
 							</optgroup>
 						</select>
 					</label>
-					<label className="flex items-center gap-2 text-muted-foreground text-sm">
+					<label className="type-callout flex items-center gap-2 text-foreground-muted">
 						장수
 						<select
 							value={count}
 							onChange={(e) => setCount(Number(e.target.value))}
-							className="rounded-md border border-neutral-300 bg-transparent px-2 py-1 dark:border-neutral-700"
+							className="rounded-md border border-input bg-background px-2 py-1 text-foreground"
 						>
 							{[1, 2, 4, 6].map((n) => (
 								<option key={n} value={n}>
@@ -87,12 +87,15 @@ export function ImageGenerator() {
 					</Button>
 				</div>
 				{scene && (
-					<p className="text-muted-foreground text-xs">
+					<p className="type-caption-1 text-foreground-muted">
 						씬 구성: {scene.ingredient} · {scene.moodAccent}
 					</p>
 				)}
 				{error && (
-					<p role="alert" className="flex items-center gap-2 text-red-500 text-sm">
+					<p
+						role="alert"
+						className="type-callout flex items-center gap-2 text-destructive"
+					>
 						{error}
 						<button type="button" onClick={requestGeneration} className="underline">
 							다시 시도

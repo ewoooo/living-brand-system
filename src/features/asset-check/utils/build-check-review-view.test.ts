@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
-import { buildCheckReviewView } from '@/features/asset-check/services/build-check-review-view.service'
 import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { CheckImage } from '@/features/asset-check/types'
+import { buildCheckReviewView } from '@/features/asset-check/utils/build-check-review-view'
 
 const sections: CheckSection[] = [
 	{
@@ -35,7 +35,7 @@ const sections: CheckSection[] = [
 		sectionTitle: 'Color System',
 		sectionSlug: 'color-system',
 		sectionOrder: 2,
-		checks: [check('color.palette'), check('color.combination')],
+		checks: [check('color.palette'), check('color.combination'), check('color.contrast')],
 	},
 ]
 
@@ -49,11 +49,13 @@ describe('buildCheckReviewView', () => {
 		})
 
 		expect(view.summary).toEqual({ pass: 0, ok: 0, fail: 0, pendingManualCheck: 0 })
+		expect(view.rows[0]?.guidelineHref).toBe('/guideline/brand-design-elements/brand-logo')
 		expect(view.rows.map((row) => row.check.key)).toEqual([
 			'logo.size.minimum',
 			'logo.space.clear',
 			'color.palette',
 			'color.combination',
+			'color.contrast',
 		])
 	})
 
@@ -63,6 +65,7 @@ describe('buildCheckReviewView', () => {
 			'logo.space.clear': result('logo.space.clear', 'fail'),
 			'color.palette': result('color.palette', 'fail'),
 			'color.combination': result('color.combination', 'ok'),
+			'color.contrast': result('color.contrast', 'pass'),
 		})
 
 		const view = buildCheckReviewView({
@@ -72,9 +75,41 @@ describe('buildCheckReviewView', () => {
 			showFailOnly: true,
 		})
 
-		expect(view.summary).toEqual({ pass: 1, ok: 1, fail: 2, pendingManualCheck: 0 })
+		expect(view.summary).toEqual({ pass: 2, ok: 1, fail: 2, pendingManualCheck: 0 })
 		expect(view.rows.map((row) => row.check.key)).toEqual(['logo.space.clear', 'color.palette'])
 		expect(view.rows[1]?.appliesTo).toEqual(['Brand Logo', 'Color System'])
+	})
+
+	it('uses the session ruleset snapshot for criteria and evidence', () => {
+		const selected = {
+			...image({ 'color.contrast': result('color.contrast', 'pass') }),
+			rulesetSnapshot: [
+				{
+					...check('color.contrast'),
+					evidence: '검수 당시 저장된 근거',
+					options: {
+						criteria: [
+							{ measurement: 'contrastRatio', operator: 'gte', expected: 4.5 },
+						],
+					},
+				},
+			],
+		}
+
+		const view = buildCheckReviewView({
+			sections,
+			scenarioKey: 'quick',
+			selected,
+			showFailOnly: false,
+		})
+
+		const contrastRow = view.rows.find((row) => row.check.key === 'color.contrast')
+		expect(contrastRow?.check).toMatchObject({
+			evidence: '검수 당시 저장된 근거',
+			options: {
+				criteria: [{ measurement: 'contrastRatio', operator: 'gte', expected: 4.5 }],
+			},
+		})
 	})
 
 	it('uses the selected image scenario before the global fallback scenario', () => {
@@ -98,6 +133,11 @@ function check(key: string): CheckSection['checks'][number] {
 	return {
 		key,
 		title: key,
+		checker: {
+			key: 'test-checker',
+			type: 'deterministic',
+			implementationKey: 'test-implementation',
+		},
 		executor: 'deterministic',
 		implemented: true,
 		evidence: '',

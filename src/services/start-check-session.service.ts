@@ -77,7 +77,7 @@ export async function startCheckSession(input: StartCheckSessionInput) {
 			user: input.user,
 		})
 
-		return { checkSessionId: session.id, results, pendingCheckKeys }
+		return { checkSessionId: session.id, results, pendingCheckKeys, rulesetSnapshot }
 	} catch (error) {
 		await updateCheckSessionRecord({
 			id: session.id,

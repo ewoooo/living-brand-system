@@ -11,6 +11,7 @@ describe('collectGuidelineCheckSources', () => {
 			mimeType: 'image/png',
 		}
 		const page = {
+			id: 12,
 			title: 'Logo usage',
 			description: null,
 			checks: [{ key: 'logo.page', title: 'Page Check', checker: 1 }],
@@ -26,13 +27,16 @@ describe('collectGuidelineCheckSources', () => {
 
 		const sources = collectGuidelineCheckSources(page)
 
-		expect(sources.map((source) => [source.check.key, source.blockId])).toEqual([
-			['logo.page', null],
-			['logo.block', 'logo-block'],
+		expect(sources.map(({ check, source }) => [check.key, source.documentId])).toEqual([
+			['logo.page', 12],
+			['logo.block', 12],
 		])
-		expect(sources[0]?.evidence).toContain('Logo usage')
-		expect(sources[1]?.evidence).toContain('Media showcase')
-		expect(sources[1]?.referenceAssets).toEqual([image])
+		expect(sources[0]?.evidence).toEqual({
+			type: 'document',
+			blocks: [{ type: 'mediaShowcase' }],
+		})
+		expect(sources[1]?.evidence).toEqual({ type: 'mediaShowcase' })
+		expect(sources[1]?.referenceAssets).toEqual([{ asset: image, role: 'context' }])
 	})
 
 	it('Block Check에서 동일한 기준 이미지를 중복 제거한다', () => {
@@ -43,6 +47,7 @@ describe('collectGuidelineCheckSources', () => {
 			mimeType: 'image/jpeg',
 		}
 		const page = {
+			id: 46,
 			title: 'Incorrect Usage',
 			blocks: [
 				{
@@ -50,10 +55,8 @@ describe('collectGuidelineCheckSources', () => {
 					blockType: 'doDont',
 					groups: [
 						{
-							examples: [
-								{ kind: 'dont', image },
-								{ kind: 'dont', image },
-							],
+							kind: 'dont',
+							examples: [{ image }, { image }],
 						},
 					],
 					checks: [
@@ -65,6 +68,6 @@ describe('collectGuidelineCheckSources', () => {
 
 		const sources = collectGuidelineCheckSources(page)
 
-		expect(sources[0]?.referenceAssets).toEqual([image])
+		expect(sources[0]?.referenceAssets).toEqual([{ asset: image, role: 'negative' }])
 	})
 })

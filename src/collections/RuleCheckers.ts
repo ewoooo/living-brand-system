@@ -31,18 +31,26 @@ export const RuleCheckers: CollectionConfig = {
 	dbName: 'rule_checkers',
 	access: managerManagedAccess,
 	labels: {
-		singular: 'Rule Checker',
-		plural: 'Rule Checkers',
+		singular: 'Checker',
+		plural: 'Checkers',
 	},
 	admin: {
-		group: false,
-		useAsTitle: 'key',
-		defaultColumns: ['key', 'executor', '_status', 'updatedAt'],
+		group: 'Quality',
+		useAsTitle: 'name',
+		defaultColumns: ['name', 'key', 'executor', '_status', 'updatedAt'],
 		description: 'Guideline Check를 실행할 도구와 호출 계약입니다.',
-		listSearchableFields: ['key', 'checkerKey', 'model', 'promptKey'],
+		listSearchableFields: ['name', 'key', 'checkerKey', 'model'],
 	},
 	versions: draftVersions,
 	fields: [
+		{
+			name: 'name',
+			type: 'text',
+			required: true,
+			admin: {
+				description: '목록과 Check의 checker 선택에 표시할 이름입니다.',
+			},
+		},
 		{
 			name: 'key',
 			type: 'text',
@@ -83,12 +91,12 @@ export const RuleCheckers: CollectionConfig = {
 			},
 		},
 		{
-			name: 'promptKey',
-			type: 'text',
-			validate: requiredFor('heuristic', 'Prompt Key를 입력하세요.'),
+			name: 'prompt',
+			type: 'textarea',
 			admin: {
 				condition: (_, siblingData) => siblingData?.executor === 'heuristic',
-				description: '휴리스틱 검수 프롬프트의 안정적인 키입니다.',
+				description:
+					'휴리스틱 검수 시 AI에게 전달할 관찰 지침입니다. 출력 형식과 판정 금지 규칙은 시스템이 강제하므로 자유롭게 작성해도 검수가 깨지지 않습니다.',
 			},
 		},
 	],

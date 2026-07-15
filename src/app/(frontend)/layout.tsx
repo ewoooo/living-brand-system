@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 	return {
 		description: metadata.issuedLabel || metadata.companyName,
-		icons: metadata.faviconHref ? { icon: metadata.faviconHref } : undefined,
+		icons: { icon: metadata.faviconHref ?? '/favicons/favicon.png' },
 		title: metadata.documentTitle,
 	}
 }
@@ -32,7 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
 	return (
 		<html lang="ko" style={brandColorStyle} suppressHydrationWarning>
-			<body className="h-svh overflow-hidden bg-white text-black dark:bg-black dark:text-white">
+			<body className="h-svh overflow-hidden bg-background text-foreground">
 				<ThemeProvider
 					attribute="class"
 					defaultTheme="system"

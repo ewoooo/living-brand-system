@@ -42,14 +42,14 @@ export function GuidelineSearch({ chapters }: { chapters: GuidelineSearchChapter
 		<>
 			<Button
 				aria-label="가이드라인 검색"
-				variant="secondary"
+				variant="outline"
 				className="py-4 pl-3"
 				onClick={() => setOpen((current) => !current)}
 			>
-				<span className="pr-8 text-neutral-500">가이드라인 검색...</span>
+				<span className="pr-8 text-foreground-muted">Search Guideline</span>
 				<KbdGroup>
-					<Kbd className="bg-neutral-500/10">⌘</Kbd>
-					<Kbd className="bg-neutral-500/10">K</Kbd>
+					<Kbd className="bg-fill-muted">⌘</Kbd>
+					<Kbd className="bg-fill-muted">K</Kbd>
 				</KbdGroup>
 			</Button>
 			<CommandDialog open={open} onOpenChange={setOpen} title="가이드라인 검색">

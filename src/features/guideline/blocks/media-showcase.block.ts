@@ -9,11 +9,13 @@ function format(block: GuidelineBlock): string {
 export const behavior: BlockBehavior = {
 	formatForAgent: format,
 	toCheckSourceSnapshot: (block) => {
-		if (block.blockType !== 'mediaShowcase') return { evidence: '', referenceAssets: [] }
+		if (block.blockType !== 'mediaShowcase') {
+			return { evidence: { type: 'mediaShowcase' }, referenceAssets: [] }
+		}
 		const imageId = relationshipId(block.image)
 		return {
-			evidence: format(block),
-			referenceAssets: imageId == null ? [] : [imageId],
+			evidence: { type: 'mediaShowcase' },
+			referenceAssets: imageId == null ? [] : [{ id: imageId, role: 'context' }],
 		}
 	},
 }

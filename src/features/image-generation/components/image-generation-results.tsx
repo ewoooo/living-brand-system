@@ -36,7 +36,7 @@ export function ImageGenerationResults({
 						>
 							선택한 이미지 다운로드
 						</Button>
-						<span className="text-muted-foreground text-sm">
+						<span className="type-callout text-foreground-muted">
 							{selected === null
 								? '이미지를 클릭해 선택하세요'
 								: `${selected + 1}번 선택됨`}
@@ -44,7 +44,7 @@ export function ImageGenerationResults({
 					</div>
 
 					{images.length < requested && (
-						<p className="text-muted-foreground text-sm">
+						<p className="type-callout text-foreground-muted">
 							요청 {requested}장 중 {images.length}장 생성됨 (일부는 무료 서버
 							지연으로 실패)
 						</p>
@@ -59,8 +59,8 @@ export function ImageGenerationResults({
 									aria-pressed={selected === index}
 									className={`overflow-hidden rounded-md border-2 transition-colors ${
 										selected === index
-											? 'border-blue-500'
-											: 'border-neutral-200 hover:border-neutral-400 dark:border-neutral-800'
+											? 'border-primary'
+											: 'border-border hover:border-ring'
 									}`}
 								>
 									{/* biome-ignore lint/performance/noImgElement: 미리보기, 최적화 불필요 */}
@@ -74,7 +74,7 @@ export function ImageGenerationResults({
 									href={src}
 									target="_blank"
 									rel="noreferrer"
-									className="text-muted-foreground text-xs underline"
+									className="type-caption-1 text-foreground-muted underline"
 								>
 									원본 보기
 								</a>
@@ -82,11 +82,13 @@ export function ImageGenerationResults({
 						))}
 					</div>
 
-					<div className="text-muted-foreground text-sm">
+					<div className="type-callout text-foreground-muted">
 						적용된 씬: {resultSceneLabel(result.sceneId)}
 						<details className="mt-1">
 							<summary className="cursor-pointer">생성 프롬프트 보기</summary>
-							<p className="mt-1 whitespace-pre-wrap text-xs">{result.prompt}</p>
+							<p className="type-caption-1 mt-1 whitespace-pre-wrap">
+								{result.prompt}
+							</p>
 						</details>
 					</div>
 				</div>
@@ -98,14 +100,14 @@ export function ImageGenerationResults({
 function ImageGenerationSkeleton({ count }: { count: number }) {
 	return (
 		<div className="flex flex-col gap-3">
-			<p className="text-muted-foreground text-sm">
+			<p className="type-callout text-foreground-muted">
 				생성 중… 무료 서버라 최대 1~2분 걸릴 수 있어요.
 			</p>
 			<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
 				{SKELETON_KEYS.slice(0, count).map((key) => (
 					<div
 						key={key}
-						className="aspect-[3/4] animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800"
+						className="aspect-[3/4] animate-pulse rounded-md bg-fill-muted"
 					/>
 				))}
 			</div>

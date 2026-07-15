@@ -1,12 +1,12 @@
 import type { GuidelineDocument } from '@/payload-types'
-import { compact, formatImage, relationshipId } from '../utils/block-text'
+import { relationshipId } from '../utils/block-text'
 import { extractTextFromLexical } from '../utils/lexical-text'
 import { snapshotBlock } from './registry'
 import type { CheckSourceSnapshot } from './types'
 
 export type GuidelineCheckDocument = Pick<
 	GuidelineDocument,
-	'blocks' | 'checks' | 'description' | 'headerImage' | 'title'
+	'blocks' | 'checks' | 'description' | 'headerImage' | 'id'
 >
 
 /** Section/Page 전체 또는 blockId가 가리키는 단일 Block을 Check source로 정규화한다. */
@@ -26,15 +26,19 @@ export function buildCheckSourceSnapshot(
 	const description = document.description ? extractTextFromLexical(document.description) : null
 
 	return {
-		evidence: compact([
-			document.title,
-			description,
-			formatImage(headerImage),
-			...blockSnapshots.map((snapshot) => snapshot.evidence),
-		]).join('\n\n'),
+		evidence: {
+			type: 'document',
+			description: description?.trim() || undefined,
+			blocks: blockSnapshots.map((snapshot) => snapshot.evidence),
+		},
 		referenceAssets: [
-			...(headerImageId == null ? [] : [headerImageId]),
+			...(headerImageId == null ? [] : [{ id: headerImageId, role: 'context' as const }]),
 			...blockSnapshots.flatMap((snapshot) => snapshot.referenceAssets),
-		].filter((id, index, ids) => ids.indexOf(id) === index),
+		].filter(
+			(asset, index, assets) =>
+				assets.findIndex(
+					(candidate) => candidate.id === asset.id && candidate.role === asset.role,
+				) === index,
+		),
 	}
 }

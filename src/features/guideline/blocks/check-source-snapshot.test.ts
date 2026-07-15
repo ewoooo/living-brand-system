@@ -21,8 +21,11 @@ describe('buildCheckSourceSnapshot', () => {
 		} as unknown as GuidelineDocument
 
 		expect(buildCheckSourceSnapshot(page, 'target')).toEqual({
-			evidence: 'Digital\nUse 24 px.',
-			referenceAssets: [7],
+			evidence: {
+				type: 'columnUnit',
+				columns: [{ heading: 'Digital', body: 'Use 24 px.' }],
+			},
+			referenceAssets: [{ id: 7, role: 'context' }],
 		})
 	})
 
@@ -38,7 +41,12 @@ describe('buildCheckSourceSnapshot', () => {
 					groups: [
 						{
 							category: 'Placement',
-							examples: [{ kind: 'do', caption: 'Clear', image: 8 }],
+							description: ' Keep clear space around the mark. ',
+							kind: 'do',
+							examples: [
+								{ caption: 'Clear', image: 8 },
+								{ caption: 'Acceptable', image: 9 },
+							],
 						},
 					],
 				},
@@ -47,9 +55,29 @@ describe('buildCheckSourceSnapshot', () => {
 
 		const snapshot = buildCheckSourceSnapshot(page)
 
-		expect(snapshot?.evidence).toContain('Logo usage\n\nApproved applications')
-		expect(snapshot?.evidence).toContain('권장: Clear')
-		expect(snapshot?.referenceAssets).toEqual([8])
+		expect(snapshot?.evidence).toEqual({
+			type: 'document',
+			description: 'Approved applications',
+			blocks: [
+				{ type: 'mediaShowcase' },
+				{
+					type: 'doDont',
+					groups: [
+						{
+							category: 'Placement',
+							description: 'Keep clear space around the mark.',
+							kind: 'do',
+							examples: [{ caption: 'Clear' }, { caption: 'Acceptable' }],
+						},
+					],
+				},
+			],
+		})
+		expect(snapshot?.referenceAssets).toEqual([
+			{ id: 8, role: 'context' },
+			{ id: 8, role: 'positive' },
+			{ id: 9, role: 'positive' },
+		])
 	})
 
 	it('Section 전체 snapshot은 header image와 자체 block만 포함한다', () => {
@@ -63,8 +91,12 @@ describe('buildCheckSourceSnapshot', () => {
 		} as unknown as GuidelineDocument
 
 		expect(buildCheckSourceSnapshot(section)).toEqual({
-			evidence: 'Brand Core\n\nFoundation\n\nCore visual Core\n\nMain colors',
-			referenceAssets: [3],
+			evidence: {
+				type: 'document',
+				description: 'Foundation',
+				blocks: [{ type: 'colorPalette', title: 'Main colors', colors: [] }],
+			},
+			referenceAssets: [{ id: 3, role: 'context' }],
 		})
 	})
 
