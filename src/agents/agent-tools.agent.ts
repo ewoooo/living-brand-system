@@ -278,8 +278,8 @@ function formatCheckToolResult(
 		outcome,
 		summary:
 			outcome === 'passed'
-				? `검수 결과, 통과 ${counts.pass}개 / 적합 ${counts.ok}개입니다.`
-				: `검수 결과, 통과 ${counts.pass}개 / 적합 ${counts.ok}개 / 미통과 ${counts.fail}개 / 담당자 검토 필요 ${counts.needs_review}개입니다.`,
+				? `검수 결과, 통과 ${counts.pass}개 / 적합 ${counts.ok}개${counts.advisory > 0 ? ` / 조언 ${counts.advisory}개` : ''}입니다.`
+				: `검수 결과, 통과 ${counts.pass}개 / 적합 ${counts.ok}개 / 미통과 ${counts.fail}개 / 담당자 검토 필요 ${counts.needs_review}개${counts.advisory > 0 ? ` / 조언 ${counts.advisory}개` : ''}입니다.`,
 		statusLabels: {
 			fail: '미통과',
 			needs_review: '담당자 검토 필요',
@@ -290,6 +290,7 @@ function formatCheckToolResult(
 		checkGuidance: [
 			'needs_review는 확정 실패가 아니라 담당자 확인이 필요한 항목입니다.',
 			'타이포그래피 needs_review는 폰트 파일 판정이 아니라 비전 기준 담당자 검토로 설명합니다.',
+			'advisory(조언)는 판정이 아닌 개선 조언이므로 사용자에게 내용을 전달합니다.',
 		],
 		results: entries.map(([key, value]) => {
 			const status = value.rawResult.status

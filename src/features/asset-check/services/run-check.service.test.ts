@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { runAiCheck } from '@/features/asset-check/repositories/ai-check.agent.repository'
+import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
+import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
 import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
-import { runHeuristicCheck } from './run-check.service'
+import type { ImageContentFlags } from '@/features/asset-check/types'
+import { runHeuristicCheck, runImmediateCheck } from './run-check.service'
 
 vi.mock('@/features/asset-check/repositories/ai-check.agent.repository', () => ({
 	runAiCheck: vi.fn(),
@@ -13,6 +16,10 @@ vi.mock('@/features/asset-check/services/get-check-ruleset.service', () => ({
 
 vi.mock('@/features/asset-check/services/get-check-palette.service', () => ({
 	getCheckPalette: vi.fn(),
+}))
+
+vi.mock('@/features/asset-check/repositories/image-decoder.sharp.repository', () => ({
+	extractPixelGrid: vi.fn(),
 }))
 
 const check: RuntimeCheck = {
@@ -44,6 +51,24 @@ const advisoryCheck: RuntimeCheck = {
 	implemented: true,
 	evidence: '자연스러운 일상의 순간',
 	referenceAssets: [],
+}
+
+const manualAdvisoryCheck: RuntimeCheck = {
+	key: 'manual-advice',
+	title: '수동 조언 체크',
+	checker: { key: 'design-advisor', type: 'manual' },
+	executor: 'manual',
+	model: 'model',
+	prompt: '사진 무드 관점에서 디자이너처럼 조언한다.',
+	implemented: true,
+	evidence: '자연스러운 일상의 순간',
+	referenceAssets: [],
+}
+
+const manualNoModelCheck: RuntimeCheck = {
+	...manualAdvisoryCheck,
+	key: 'manual-review',
+	model: undefined,
 }
 
 const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
@@ -214,6 +239,42 @@ describe('runHeuristicCheck', () => {
 			fulfillment: null,
 			detail: 'AI 검사 도구 설정 오류',
 			reasonCode: 'ai_checker_invalid',
+		})
+	})
+})
+
+describe('runImmediateCheck', () => {
+	const flags: ImageContentFlags = {
+		logo: false,
+		typography: false,
+		illustration: false,
+		photography: false,
+	}
+
+	beforeEach(() => {
+		vi.mocked(extractPixelGrid).mockResolvedValue({
+			width: 1,
+			height: 1,
+			pixels: [{ r: 0, g: 0, b: 0 }],
+			alpha: new Uint8Array([255]),
+		})
+		vi.mocked(getCheckPalette).mockResolvedValue([])
+	})
+
+	it('model이 설정된 manual 체크는 즉시 판정하지 않고 pendingCheckKeys로 분리한다', async () => {
+		const result = await runImmediateCheck(png, flags, [manualAdvisoryCheck])
+
+		expect(result.pendingCheckKeys).toEqual([manualAdvisoryCheck.key])
+		expect(result.results[manualAdvisoryCheck.key]).toBeUndefined()
+	})
+
+	it('model이 없는 manual 체크는 즉시 담당자 확인 필요로 판정한다', async () => {
+		const result = await runImmediateCheck(png, flags, [manualNoModelCheck])
+
+		expect(result.pendingCheckKeys).toEqual([])
+		expect(result.results[manualNoModelCheck.key]?.rawResult).toMatchObject({
+			status: 'needs_review',
+			detail: '브랜드 담당자 확인 필요',
 		})
 	})
 })
