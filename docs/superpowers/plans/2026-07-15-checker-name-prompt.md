@@ -301,7 +301,18 @@ git commit -m "feat: 휴리스틱 검수에 checker prompt 관찰 지침 삽입"
 
 ---
 
-### Task 3: 마이그레이션 생성과 name 백필
+### Task 3: 마이그레이션 생성과 name 백필 — **PR 직전으로 연기됨**
+
+> 2026-07-15 결정: CLAUDE.md Device Handoff Rules에 따라, 이 개인 브랜치는 마이그레이션을
+> 생략하고 PR 직전에 스키마 변경 브랜치들을 합친 뒤 한 머신에서 최종 마이그레이션을 한 번만
+> 생성한다. 아래 절차는 그 시점에 그대로 사용한다.
+>
+> **선행 이슈(별도 수정 필요):** 빈 DB에서 기존 마이그레이션 체인이
+> `20260714_031500_backfill_guideline_documents`에서 실패한다
+> (`relation "guideline_sections_checks_criteria" does not exist`). 원인:
+> `migrations/legacy-guideline/{sections,pages}.ts`가 live `guidelineChecksField()`를 공유해
+> 이후 추가된 `criteria` 하위 필드 테이블을 legacy 스키마가 요구하지만 생성 SQL이 없음.
+> 이 파손은 main에서 유래했고 이 브랜치와 무관하므로 별도 fix 브랜치로 처리한다.
 
 **Files:**
 - Create: `migrations/<timestamp>_checker_name_prompt.ts` + `.json` 스냅샷
