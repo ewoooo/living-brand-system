@@ -119,16 +119,26 @@ function toRuntimeCheck({
 	const options = checker.executor === 'deterministic' ? (check.options ?? undefined) : undefined
 	const heuristicCriteria =
 		checker.executor === 'heuristic'
-			? (check.criteria ?? []).flatMap((criterion) => {
+			? (check.criteria ?? []).flatMap((criterion): HeuristicCriterion[] => {
 					const question = criterion.question?.trim()
-					return criterion.id && question
-						? [
-								{
-									id: criterion.id,
-									question,
-									expected: criterion.expected,
-								},
-							]
+					if (!criterion.id || !question) return []
+					if (criterion.kind === 'measure') {
+						return criterion.operator && typeof criterion.expectedValue === 'number'
+							? [
+									{
+										id: criterion.id,
+										question,
+										kind: 'measure',
+										operator: criterion.operator,
+										expected: criterion.expectedValue,
+										max: criterion.max ?? undefined,
+										unit: criterion.unit?.trim() || undefined,
+									},
+								]
+							: []
+					}
+					return criterion.expected
+						? [{ id: criterion.id, question, expected: criterion.expected }]
 						: []
 				})
 			: undefined
