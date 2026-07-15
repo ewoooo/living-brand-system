@@ -36,12 +36,13 @@ export async function getGuidelineDocumentPreviewTarget(
 		const baseURL = level === 3 ? breadcrumbs[1]?.url : breadcrumbs.at(-1)?.url
 		if (!chapterSlug || !baseURL || (level > 1 && !sectionSlug)) return null
 
-		const anchor = level === 3 ? `#${encodeURIComponent(document.slug)}` : ''
-
+		// #앵커를 붙이지 않는다. Better Editor iframe이 동일 출처 URL의 앵커를 로드하면
+		// 부모 admin 문서까지 스크롤돼 오버레이가 헤더 높이만큼 말려 올라간다.
+		// 문서 위치 이동은 ScrollToPreviewDocument가 iframe 안에서만 수행한다.
 		return {
 			chapterSlug,
 			document,
-			href: `${baseURL}?previewDocument=${document.id}${anchor}`,
+			href: `${baseURL}?previewDocument=${document.id}`,
 			level: level as 1 | 2 | 3,
 			sectionSlug,
 		}
