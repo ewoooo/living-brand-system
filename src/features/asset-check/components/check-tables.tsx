@@ -21,7 +21,7 @@ import {
 	formatObservationActual,
 	formatObservationExpected,
 } from '@/features/asset-check/components/check-observation-format'
-import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
+import { CHECK_STATUS, checkDisplayStatus } from '@/features/asset-check/components/check-status'
 import type {
 	RuntimeCheck as Check,
 	CheckSection,
@@ -260,10 +260,10 @@ function CheckStatusBadge({
 				transition={{ duration: 0.16, ease: 'easeOut' }}
 				className={cn(
 					'type-subheadline-emphasized inline-block whitespace-nowrap rounded px-1.5 py-0.5',
-					CHECK_STATUS[outcome.rawResult.status].pill,
+					CHECK_STATUS[checkDisplayStatus(outcome.rawResult)].pill,
 				)}
 			>
-				{CHECK_STATUS[outcome.rawResult.status].label}
+				{CHECK_STATUS[checkDisplayStatus(outcome.rawResult)].label}
 			</motion.span>
 		)
 	}

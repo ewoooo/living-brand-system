@@ -132,6 +132,7 @@ describe('evaluateHeuristic - not_applicable', () => {
 		})
 		expect(result.status).toBe('pass')
 		expect(result.detail).toBe('관측 대상 없음')
+		expect(result.reasonCode).toBe('not_applicable')
 		expect(result.fulfillment).toBeNull()
 	})
 })

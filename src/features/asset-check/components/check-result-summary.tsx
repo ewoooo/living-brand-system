@@ -49,6 +49,12 @@ export function CheckResultSummary({ sections }: CheckResultSummaryProps) {
 						colorClassName={CHECK_STATUS.fail.dot}
 					/>
 					<SummaryMetric
+						label={CHECK_STATUS.not_applicable.label}
+						value={summary.notApplicable}
+						colorClassName={CHECK_STATUS.not_applicable.dot}
+						muted
+					/>
+					<SummaryMetric
 						label={CHECK_STATUS.needs_review.label}
 						value={summary.pendingManualCheck}
 						colorClassName={CHECK_STATUS.needs_review.dot}

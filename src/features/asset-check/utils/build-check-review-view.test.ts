@@ -55,6 +55,7 @@ describe('buildCheckReviewView', () => {
 			ok: 0,
 			fail: 0,
 			advisory: 0,
+			notApplicable: 0,
 			pendingManualCheck: 0,
 		})
 		expect(view.rows[0]?.scenarioLabel).toBe('빠른 기본 검수')
@@ -92,6 +93,7 @@ describe('buildCheckReviewView', () => {
 			ok: 1,
 			fail: 2,
 			advisory: 0,
+			notApplicable: 0,
 			pendingManualCheck: 0,
 		})
 		expect(view.rows.map((row) => row.check.key)).toEqual(['color.palette', 'logo.space.clear'])
@@ -117,6 +119,33 @@ describe('buildCheckReviewView', () => {
 			ok: 0,
 			fail: 0,
 			advisory: 1,
+			notApplicable: 0,
+			pendingManualCheck: 3,
+		})
+	})
+
+	it('전 기준 해당 없음 pass는 통과가 아닌 별도 카운트로 센다', () => {
+		const naResult = result('logo.space.clear', 'pass')
+		naResult.rawResult.reasonCode = 'not_applicable'
+		const selected = image({
+			'logo.size.minimum': result('logo.size.minimum', 'pass'),
+			'logo.space.clear': naResult,
+		})
+
+		const view = buildCheckReviewView({
+			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarioKey: 'quick',
+			selected,
+			showFailOnly: false,
+		})
+
+		expect(view.summary).toEqual({
+			pass: 1,
+			ok: 0,
+			fail: 0,
+			advisory: 0,
+			notApplicable: 1,
 			pendingManualCheck: 3,
 		})
 	})
