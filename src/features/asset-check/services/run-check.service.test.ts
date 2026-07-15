@@ -34,6 +34,18 @@ const check: RuntimeCheck = {
 	referenceAssets: [],
 }
 
+const advisoryCheck: RuntimeCheck = {
+	key: 'imagery.advice',
+	title: '이미지 디자인 조언',
+	checker: { key: 'design-advisor', type: 'manual' },
+	executor: 'manual',
+	model: 'model',
+	prompt: '사진 무드 관점에서 디자이너처럼 조언한다.',
+	implemented: true,
+	evidence: '자연스러운 일상의 순간',
+	referenceAssets: [],
+}
+
 const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
 
 describe('runHeuristicCheck', () => {
@@ -50,6 +62,7 @@ describe('runHeuristicCheck', () => {
 					},
 				},
 			},
+			advices: {},
 		})
 
 		const result = await runHeuristicCheck(png, [check.key], [check])
@@ -71,6 +84,7 @@ describe('runHeuristicCheck', () => {
 	it('AI 실행 실패는 판정을 만들지 않고 needs_review로 연결한다', async () => {
 		vi.mocked(runAiCheck).mockResolvedValue({
 			observations: {},
+			advices: {},
 			failure: { detail: 'AI 관측값 형식 오류', reasonCode: 'ai_output_invalid' },
 		})
 
@@ -96,6 +110,7 @@ describe('runHeuristicCheck', () => {
 					},
 				},
 			},
+			advices: {},
 		})
 
 		const result = await runHeuristicCheck(
@@ -121,5 +136,84 @@ describe('runHeuristicCheck', () => {
 
 		expect(runAiCheck).not.toHaveBeenCalled()
 		expect(result.results[invalidCheck.key]?.rawResult.reasonCode).toBe('invalid_criteria')
+	})
+
+	it('advisory 체크는 조언 문단을 advisory 상태로 반환한다', async () => {
+		vi.mocked(runAiCheck).mockResolvedValue({
+			observations: {},
+			advices: { 'imagery.advice': '자연광을 더 살리면 무드가 개선됩니다.' },
+		})
+
+		const result = await runHeuristicCheck(png, [advisoryCheck.key], [advisoryCheck])
+
+		expect(runAiCheck).toHaveBeenCalledWith([advisoryCheck], expect.any(Object))
+		expect(result.results[advisoryCheck.key]?.rawResult).toMatchObject({
+			status: 'advisory',
+			fulfillment: null,
+			detail: '자연광을 더 살리면 무드가 개선됩니다.',
+		})
+	})
+
+	it('모델이 다른 체크는 모델별로 나눠 호출하고 usage를 합산한다', async () => {
+		const otherModelCheck = { ...check, key: 'imagery.tone', model: 'other-model' }
+		vi.mocked(runAiCheck)
+			.mockResolvedValueOnce({
+				observations: {
+					'imagery-misuse': {
+						'artificial-redness': { value: 'absent', confidence: 90, reason: '없음' },
+					},
+				},
+				advices: {},
+				aiUsage: { model: 'model', callCount: 1, totalTokens: 100 },
+			})
+			.mockResolvedValueOnce({
+				observations: {
+					'imagery.tone': {
+						'artificial-redness': { value: 'absent', confidence: 90, reason: '없음' },
+					},
+				},
+				advices: {},
+				aiUsage: { model: 'other-model', callCount: 1, totalTokens: 50 },
+			})
+
+		const result = await runHeuristicCheck(
+			png,
+			[check.key, otherModelCheck.key],
+			[check, otherModelCheck],
+		)
+
+		expect(runAiCheck).toHaveBeenCalledTimes(2)
+		expect(runAiCheck).toHaveBeenCalledWith([check], expect.any(Object))
+		expect(runAiCheck).toHaveBeenCalledWith([otherModelCheck], expect.any(Object))
+		expect(result.results[check.key]?.rawResult.status).toBe('pass')
+		expect(result.results[otherModelCheck.key]?.rawResult.status).toBe('pass')
+		expect(result.aiUsage).toMatchObject({
+			model: 'model, other-model',
+			callCount: 2,
+			totalTokens: 150,
+		})
+	})
+
+	it('모델이 없는 manual 체크는 AI 대상에서 제외한다', async () => {
+		const manualCheck = { ...advisoryCheck, model: undefined }
+
+		const result = await runHeuristicCheck(png, [manualCheck.key], [manualCheck])
+
+		expect(runAiCheck).not.toHaveBeenCalled()
+		expect(result.results[manualCheck.key]).toBeUndefined()
+	})
+
+	it('모델이 없는 heuristic 체크는 설정 오류로 격리한다', async () => {
+		const noModelCheck = { ...check, key: 'imagery.nomodel', model: undefined }
+
+		const result = await runHeuristicCheck(png, [noModelCheck.key], [noModelCheck])
+
+		expect(runAiCheck).not.toHaveBeenCalled()
+		expect(result.results[noModelCheck.key]?.rawResult).toEqual({
+			status: 'needs_review',
+			fulfillment: null,
+			detail: 'AI 검사 도구 설정 오류',
+			reasonCode: 'ai_checker_invalid',
+		})
 	})
 })
