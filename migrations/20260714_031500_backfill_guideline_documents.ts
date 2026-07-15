@@ -34,8 +34,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 	// 모든 checks 테이블에 checks_criteria 조인을 건다. 그러나 criteria 테이블은 체인 뒤쪽
 	// (121152)에서야 docs용으로만 생성되고, 레거시 컬렉션(sections/pages)용은 어떤 DDL도 만들지
 	// 않는다. 따라서 이 백필(031500)과 095159가 Local API를 호출하기 전에, 현재 config가 기대하는
-	// 모든 criteria 테이블을 IF NOT EXISTS로 미리 만들어 둔다. 레거시 테이블은 040034에서 부모
-	// checks 테이블을 DROP ... CASCADE 할 때 FK를 타고 함께 정리된다.
+	// 모든 criteria 테이블을 IF NOT EXISTS로 미리 만들어 둔다. 레거시 criteria 테이블은
+	// 040034에서 명시적으로 드롭한다.
 	// 이때 아래 loadStates의 payload.find는 req 없이 별도 풀 커넥션에서 실행되므로, 마이그레이션
 	// 트랜잭션 안(db.execute)에서 만든 테이블은 보이지 않는다. 커밋되어 모든 커넥션에 보이도록
 	// 어댑터 pool로 직접(autocommit) 생성한다.
