@@ -1,3 +1,5 @@
+import { CheckmarkFilled, Misuse } from '@carbon/icons-react'
+import { cn } from '@/lib/utils'
 import type { GuidelineDocument } from '@/payload-types'
 import { BlockHeading } from './children/block-heading'
 import { GuidelineImage } from './children/guideline-image'
@@ -13,37 +15,51 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 				{block.groups?.map((group) => (
 					<div key={group.id}>
 						{group.category && (
-							<h4 className="mb-4 font-semibold text-neutral-500">
+							<h4 className="mb-4 font-semibold text-muted-foreground text-sm uppercase tracking-wide">
 								{group.category}
 							</h4>
 						)}
-						<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-							{group.examples?.map((example) => (
-								<figure key={example.id}>
-									<div className="relative">
+						<div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+							{group.examples?.map((example) => {
+								const isDo = example.kind === 'do'
+								return (
+									<figure key={example.id} className="flex flex-col">
 										<GuidelineImage
 											image={example.image}
 											alt={example.caption || ''}
-											className="aspect-4/3 bg-neutral-500/5 p-6"
+											className={cn(
+												'aspect-4/3 border border-border border-t-[3px] bg-muted/30 p-6',
+												isDo ? 'border-t-emerald-600' : 'border-t-red-600',
+											)}
 										/>
-										<span
-											aria-hidden
-											className={`absolute top-2 right-2 grid size-6 place-items-center rounded-full text-white text-xs ${
-												example.kind === 'do'
-													? 'bg-emerald-600'
-													: 'bg-red-600'
-											}`}
-										>
-											{example.kind === 'do' ? '✓' : '✕'}
-										</span>
-									</div>
-									{example.caption && (
-										<figcaption className="mt-2 text-neutral-500 text-sm leading-6">
-											{example.caption}
+										<figcaption className="mt-3 flex items-start gap-2 text-sm leading-6">
+											{isDo ? (
+												<CheckmarkFilled
+													className="mt-0.5 shrink-0 text-emerald-600"
+													size={16}
+												/>
+											) : (
+												<Misuse className="mt-0.5 shrink-0 text-red-600" size={16} />
+											)}
+											<span>
+												<span
+													className={cn(
+														'font-semibold',
+														isDo
+															? 'text-emerald-700 dark:text-emerald-500'
+															: 'text-red-700 dark:text-red-500',
+													)}
+												>
+													{isDo ? 'Do' : "Don't"}
+												</span>
+												{example.caption && (
+													<span className="text-muted-foreground"> — {example.caption}</span>
+												)}
+											</span>
 										</figcaption>
-									)}
-								</figure>
-							))}
+									</figure>
+								)
+							})}
 						</div>
 					</div>
 				))}

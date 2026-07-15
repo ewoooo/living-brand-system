@@ -9,12 +9,12 @@ export function MediaShowcaseBlock({
 	block: Extract<GuidelineBlock, { blockType: 'mediaShowcase' }>
 }) {
 	return (
-		<section className="grid aspect-video place-items-center">
+		<section>
 			<GuidelineImage
 				image={block.image}
 				backgroundColor={block.imageBackgroundColor}
 				scale={block.imageScale}
-				className="min-h-80 p-8 w-full"
+				className="aspect-video w-full border border-border bg-muted/30 p-8"
 			/>
 		</section>
 	)
