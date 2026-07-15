@@ -313,6 +313,15 @@ git commit -m "feat: 휴리스틱 검수에 checker prompt 관찰 지침 삽입"
 > `migrations/legacy-guideline/{sections,pages}.ts`가 live `guidelineChecksField()`를 공유해
 > 이후 추가된 `criteria` 하위 필드 테이블을 legacy 스키마가 요구하지만 생성 SQL이 없음.
 > 이 파손은 main에서 유래했고 이 브랜치와 무관하므로 별도 fix 브랜치로 처리한다.
+>
+> **최종 마이그레이션 작성 시 필수 처리(전체 브랜치 리뷰 Important #1):**
+> `20260714_095159_add_contrast_checker_check.ts`의 `payload.create`는 현재 config 기준으로
+> 동작하므로, 신규 `name` 컬럼이 (이 시드보다 늦은 타임스탬프의) 새 마이그레이션에서 생성되면
+> 빈 DB 체인에서 095159의 INSERT가 존재하지 않는 `name` 컬럼을 참조해 실패한다.
+> 이 브랜치에서 typecheck 때문에 추가된 `name: 'Color Contrast'`(095159:29)로는 해결되지 않는다.
+> 해결: 095159의 시드를 그 시점 체인에 존재하는 컬럼만 쓰는 raw SQL INSERT로 바꾸고,
+> contrast checker의 name은 새 마이그레이션의 backfill(`name = key`) 또는 raw UPDATE로 지정한다.
+> 타임스탬프 재정렬·스냅샷 삭제는 금지.
 
 **Files:**
 - Create: `migrations/<timestamp>_checker_name_prompt.ts` + `.json` 스냅샷
