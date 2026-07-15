@@ -2,8 +2,11 @@ import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-po
 
 export async function up({ db }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
-   CREATE TYPE "public"."enum_heuristic_criterion_expected" AS ENUM('present', 'absent');
-  CREATE TABLE "guideline_docs_checks_criteria" (
+   DO $$ BEGIN
+    CREATE TYPE "public"."enum_heuristic_criterion_expected" AS ENUM('present', 'absent');
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $$;
+  CREATE TABLE IF NOT EXISTS "guideline_docs_checks_criteria" (
     "_order" integer NOT NULL,
     "_parent_id" varchar NOT NULL,
     "id" varchar PRIMARY KEY NOT NULL,
@@ -11,7 +14,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     "expected" "enum_heuristic_criterion_expected"
   );
 
-  CREATE TABLE "guideline_docs_blocks_column_unit_checks_criteria" (
+  CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_column_unit_checks_criteria" (
     "_order" integer NOT NULL,
     "_parent_id" varchar NOT NULL,
     "id" varchar PRIMARY KEY NOT NULL,
@@ -19,7 +22,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     "expected" "enum_heuristic_criterion_expected"
   );
 
-  CREATE TABLE "guideline_docs_blocks_media_showcase_checks_criteria" (
+  CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_media_showcase_checks_criteria" (
     "_order" integer NOT NULL,
     "_parent_id" varchar NOT NULL,
     "id" varchar PRIMARY KEY NOT NULL,
@@ -27,7 +30,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     "expected" "enum_heuristic_criterion_expected"
   );
 
-  CREATE TABLE "guideline_docs_blocks_color_palette_checks_criteria" (
+  CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_color_palette_checks_criteria" (
     "_order" integer NOT NULL,
     "_parent_id" varchar NOT NULL,
     "id" varchar PRIMARY KEY NOT NULL,
@@ -35,7 +38,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     "expected" "enum_heuristic_criterion_expected"
   );
 
-  CREATE TABLE "guideline_docs_blocks_do_dont_checks_criteria" (
+  CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_do_dont_checks_criteria" (
     "_order" integer NOT NULL,
     "_parent_id" varchar NOT NULL,
     "id" varchar PRIMARY KEY NOT NULL,
@@ -43,7 +46,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     "expected" "enum_heuristic_criterion_expected"
   );
 
-  CREATE TABLE "_guideline_docs_v_version_checks_criteria" (
+  CREATE TABLE IF NOT EXISTS "_guideline_docs_v_version_checks_criteria" (
     "_order" integer NOT NULL,
     "_parent_id" integer NOT NULL,
     "id" serial PRIMARY KEY NOT NULL,
@@ -52,7 +55,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     "_uuid" varchar
   );
 
-  CREATE TABLE "_guideline_docs_v_blocks_column_unit_checks_criteria" (
+  CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_column_unit_checks_criteria" (
     "_order" integer NOT NULL,
     "_parent_id" integer NOT NULL,
     "id" serial PRIMARY KEY NOT NULL,
@@ -61,7 +64,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     "_uuid" varchar
   );
 
-  CREATE TABLE "_guideline_docs_v_blocks_media_showcase_checks_criteria" (
+  CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_media_showcase_checks_criteria" (
     "_order" integer NOT NULL,
     "_parent_id" integer NOT NULL,
     "id" serial PRIMARY KEY NOT NULL,
@@ -70,7 +73,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     "_uuid" varchar
   );
 
-  CREATE TABLE "_guideline_docs_v_blocks_color_palette_checks_criteria" (
+  CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_color_palette_checks_criteria" (
     "_order" integer NOT NULL,
     "_parent_id" integer NOT NULL,
     "id" serial PRIMARY KEY NOT NULL,
@@ -79,7 +82,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     "_uuid" varchar
   );
 
-  CREATE TABLE "_guideline_docs_v_blocks_do_dont_checks_criteria" (
+  CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_do_dont_checks_criteria" (
     "_order" integer NOT NULL,
     "_parent_id" integer NOT NULL,
     "id" serial PRIMARY KEY NOT NULL,
@@ -88,36 +91,36 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     "_uuid" varchar
   );
 
-  ALTER TABLE "guideline_docs_checks_criteria" ADD CONSTRAINT "guideline_docs_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_checks"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "guideline_docs_blocks_column_unit_checks_criteria" ADD CONSTRAINT "guideline_docs_blocks_column_unit_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_column_unit_checks"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "guideline_docs_blocks_media_showcase_checks_criteria" ADD CONSTRAINT "guideline_docs_blocks_media_showcase_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_media_showcase_checks"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "guideline_docs_blocks_color_palette_checks_criteria" ADD CONSTRAINT "guideline_docs_blocks_color_palette_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_color_palette_checks"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "guideline_docs_blocks_do_dont_checks_criteria" ADD CONSTRAINT "guideline_docs_blocks_do_dont_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_do_dont_checks"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "_guideline_docs_v_version_checks_criteria" ADD CONSTRAINT "_guideline_docs_v_version_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_version_checks"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "_guideline_docs_v_blocks_column_unit_checks_criteria" ADD CONSTRAINT "_guideline_docs_v_blocks_column_unit_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_column_unit_checks"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "_guideline_docs_v_blocks_media_showcase_checks_criteria" ADD CONSTRAINT "_guideline_docs_v_blocks_media_showcase_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_media_showcase_checks"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "_guideline_docs_v_blocks_color_palette_checks_criteria" ADD CONSTRAINT "_guideline_docs_v_blocks_color_palette_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_color_palette_checks"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "_guideline_docs_v_blocks_do_dont_checks_criteria" ADD CONSTRAINT "_guideline_docs_v_blocks_do_dont_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_do_dont_checks"("id") ON DELETE cascade ON UPDATE no action;
-  CREATE INDEX "guideline_docs_checks_criteria_order_idx" ON "guideline_docs_checks_criteria" USING btree ("_order");
-  CREATE INDEX "guideline_docs_checks_criteria_parent_id_idx" ON "guideline_docs_checks_criteria" USING btree ("_parent_id");
-  CREATE INDEX "guideline_docs_blocks_column_unit_checks_criteria_order_idx" ON "guideline_docs_blocks_column_unit_checks_criteria" USING btree ("_order");
-  CREATE INDEX "guideline_docs_blocks_column_unit_checks_criteria_parent_id_idx" ON "guideline_docs_blocks_column_unit_checks_criteria" USING btree ("_parent_id");
-  CREATE INDEX "guideline_docs_blocks_media_showcase_checks_criteria_order_idx" ON "guideline_docs_blocks_media_showcase_checks_criteria" USING btree ("_order");
-  CREATE INDEX "guideline_docs_blocks_media_showcase_checks_criteria_parent_id_idx" ON "guideline_docs_blocks_media_showcase_checks_criteria" USING btree ("_parent_id");
-  CREATE INDEX "guideline_docs_blocks_color_palette_checks_criteria_order_idx" ON "guideline_docs_blocks_color_palette_checks_criteria" USING btree ("_order");
-  CREATE INDEX "guideline_docs_blocks_color_palette_checks_criteria_parent_id_idx" ON "guideline_docs_blocks_color_palette_checks_criteria" USING btree ("_parent_id");
-  CREATE INDEX "guideline_docs_blocks_do_dont_checks_criteria_order_idx" ON "guideline_docs_blocks_do_dont_checks_criteria" USING btree ("_order");
-  CREATE INDEX "guideline_docs_blocks_do_dont_checks_criteria_parent_id_idx" ON "guideline_docs_blocks_do_dont_checks_criteria" USING btree ("_parent_id");
-  CREATE INDEX "_guideline_docs_v_version_checks_criteria_order_idx" ON "_guideline_docs_v_version_checks_criteria" USING btree ("_order");
-  CREATE INDEX "_guideline_docs_v_version_checks_criteria_parent_id_idx" ON "_guideline_docs_v_version_checks_criteria" USING btree ("_parent_id");
-  CREATE INDEX "_guideline_docs_v_blocks_column_unit_checks_criteria_order_idx" ON "_guideline_docs_v_blocks_column_unit_checks_criteria" USING btree ("_order");
-  CREATE INDEX "_guideline_docs_v_blocks_column_unit_checks_criteria_parent_id_idx" ON "_guideline_docs_v_blocks_column_unit_checks_criteria" USING btree ("_parent_id");
-  CREATE INDEX "_guideline_docs_v_blocks_media_showcase_checks_criteria_order_idx" ON "_guideline_docs_v_blocks_media_showcase_checks_criteria" USING btree ("_order");
-  CREATE INDEX "_guideline_docs_v_blocks_media_showcase_checks_criteria_parent_id_idx" ON "_guideline_docs_v_blocks_media_showcase_checks_criteria" USING btree ("_parent_id");
-  CREATE INDEX "_guideline_docs_v_blocks_color_palette_checks_criteria_order_idx" ON "_guideline_docs_v_blocks_color_palette_checks_criteria" USING btree ("_order");
-  CREATE INDEX "_guideline_docs_v_blocks_color_palette_checks_criteria_parent_id_idx" ON "_guideline_docs_v_blocks_color_palette_checks_criteria" USING btree ("_parent_id");
-  CREATE INDEX "_guideline_docs_v_blocks_do_dont_checks_criteria_order_idx" ON "_guideline_docs_v_blocks_do_dont_checks_criteria" USING btree ("_order");
-  CREATE INDEX "_guideline_docs_v_blocks_do_dont_checks_criteria_parent_id_idx" ON "_guideline_docs_v_blocks_do_dont_checks_criteria" USING btree ("_parent_id");
+  DO $$ BEGIN ALTER TABLE "guideline_docs_checks_criteria" ADD CONSTRAINT "guideline_docs_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_checks"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "guideline_docs_blocks_column_unit_checks_criteria" ADD CONSTRAINT "guideline_docs_blocks_column_unit_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_column_unit_checks"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "guideline_docs_blocks_media_showcase_checks_criteria" ADD CONSTRAINT "guideline_docs_blocks_media_showcase_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_media_showcase_checks"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "guideline_docs_blocks_color_palette_checks_criteria" ADD CONSTRAINT "guideline_docs_blocks_color_palette_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_color_palette_checks"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "guideline_docs_blocks_do_dont_checks_criteria" ADD CONSTRAINT "guideline_docs_blocks_do_dont_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_do_dont_checks"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "_guideline_docs_v_version_checks_criteria" ADD CONSTRAINT "_guideline_docs_v_version_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_version_checks"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "_guideline_docs_v_blocks_column_unit_checks_criteria" ADD CONSTRAINT "_guideline_docs_v_blocks_column_unit_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_column_unit_checks"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "_guideline_docs_v_blocks_media_showcase_checks_criteria" ADD CONSTRAINT "_guideline_docs_v_blocks_media_showcase_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_media_showcase_checks"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "_guideline_docs_v_blocks_color_palette_checks_criteria" ADD CONSTRAINT "_guideline_docs_v_blocks_color_palette_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_color_palette_checks"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "_guideline_docs_v_blocks_do_dont_checks_criteria" ADD CONSTRAINT "_guideline_docs_v_blocks_do_dont_checks_criteria_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_do_dont_checks"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  CREATE INDEX IF NOT EXISTS "guideline_docs_checks_criteria_order_idx" ON "guideline_docs_checks_criteria" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "guideline_docs_checks_criteria_parent_id_idx" ON "guideline_docs_checks_criteria" USING btree ("_parent_id");
+  CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_column_unit_checks_criteria_order_idx" ON "guideline_docs_blocks_column_unit_checks_criteria" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_column_unit_checks_criteria_parent_id_idx" ON "guideline_docs_blocks_column_unit_checks_criteria" USING btree ("_parent_id");
+  CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_media_showcase_checks_criteria_order_idx" ON "guideline_docs_blocks_media_showcase_checks_criteria" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_media_showcase_checks_criteria_parent_id_idx" ON "guideline_docs_blocks_media_showcase_checks_criteria" USING btree ("_parent_id");
+  CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_color_palette_checks_criteria_order_idx" ON "guideline_docs_blocks_color_palette_checks_criteria" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_color_palette_checks_criteria_parent_id_idx" ON "guideline_docs_blocks_color_palette_checks_criteria" USING btree ("_parent_id");
+  CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_do_dont_checks_criteria_order_idx" ON "guideline_docs_blocks_do_dont_checks_criteria" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_do_dont_checks_criteria_parent_id_idx" ON "guideline_docs_blocks_do_dont_checks_criteria" USING btree ("_parent_id");
+  CREATE INDEX IF NOT EXISTS "_guideline_docs_v_version_checks_criteria_order_idx" ON "_guideline_docs_v_version_checks_criteria" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "_guideline_docs_v_version_checks_criteria_parent_id_idx" ON "_guideline_docs_v_version_checks_criteria" USING btree ("_parent_id");
+  CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_column_unit_checks_criteria_order_idx" ON "_guideline_docs_v_blocks_column_unit_checks_criteria" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_column_unit_checks_criteria_parent_id_idx" ON "_guideline_docs_v_blocks_column_unit_checks_criteria" USING btree ("_parent_id");
+  CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_media_showcase_checks_criteria_order_idx" ON "_guideline_docs_v_blocks_media_showcase_checks_criteria" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_media_showcase_checks_criteria_parent_id_idx" ON "_guideline_docs_v_blocks_media_showcase_checks_criteria" USING btree ("_parent_id");
+  CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_color_palette_checks_criteria_order_idx" ON "_guideline_docs_v_blocks_color_palette_checks_criteria" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_color_palette_checks_criteria_parent_id_idx" ON "_guideline_docs_v_blocks_color_palette_checks_criteria" USING btree ("_parent_id");
+  CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_do_dont_checks_criteria_order_idx" ON "_guideline_docs_v_blocks_do_dont_checks_criteria" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_do_dont_checks_criteria_parent_id_idx" ON "_guideline_docs_v_blocks_do_dont_checks_criteria" USING btree ("_parent_id");
 
   CREATE TEMP TABLE "_heuristic_criteria_backfill" (
     "check_key" varchar NOT NULL,
