@@ -56,6 +56,7 @@ export function evaluateHeuristic(
 			status: 'pass',
 			fulfillment: null,
 			detail: '관측 대상 없음',
+			reasonCode: 'not_applicable',
 			observations: complete,
 		}
 	}

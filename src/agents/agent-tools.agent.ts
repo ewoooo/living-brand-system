@@ -15,6 +15,7 @@ import {
 	readAgentGuidelineDocument,
 	searchAgentGuidelines,
 } from '@/features/agent-chat/services/get-agent-guideline-context.service'
+import { checkDisplayStatus } from '@/features/asset-check/components/check-status'
 import { type CheckScenario, getCheckScenario } from '@/features/asset-check/scenarios'
 import { getCheckScenarios } from '@/features/asset-check/services/get-check-scenarios.service'
 import { IMAGE_SCENES } from '@/features/image-generation/presets'
@@ -259,10 +260,10 @@ function formatCheckToolResult(
 	const entries = Object.entries(result.results)
 	const counts = entries.reduce(
 		(acc, [, value]) => {
-			acc[value.rawResult.status] += 1
+			acc[checkDisplayStatus(value.rawResult)] += 1
 			return acc
 		},
-		{ fail: 0, needs_review: 0, ok: 0, pass: 0, advisory: 0 },
+		{ fail: 0, needs_review: 0, ok: 0, pass: 0, advisory: 0, not_applicable: 0 },
 	)
 	const outcome =
 		counts.fail > 0
@@ -278,37 +279,42 @@ function formatCheckToolResult(
 		outcome,
 		summary:
 			outcome === 'passed'
-				? `검수 결과, 통과 ${counts.pass}개 / 적합 ${counts.ok}개${counts.advisory > 0 ? ` / 조언 ${counts.advisory}개` : ''}입니다.`
-				: `검수 결과, 통과 ${counts.pass}개 / 적합 ${counts.ok}개 / 미통과 ${counts.fail}개 / 담당자 검토 필요 ${counts.needs_review}개${counts.advisory > 0 ? ` / 조언 ${counts.advisory}개` : ''}입니다.`,
+				? `검수 결과, 통과 ${counts.pass}개 / 적합 ${counts.ok}개${counts.not_applicable > 0 ? ` / 해당 없음 ${counts.not_applicable}개` : ''}${counts.advisory > 0 ? ` / 조언 ${counts.advisory}개` : ''}입니다.`
+				: `검수 결과, 통과 ${counts.pass}개 / 적합 ${counts.ok}개 / 미통과 ${counts.fail}개 / 담당자 검토 필요 ${counts.needs_review}개${counts.not_applicable > 0 ? ` / 해당 없음 ${counts.not_applicable}개` : ''}${counts.advisory > 0 ? ` / 조언 ${counts.advisory}개` : ''}입니다.`,
 		statusLabels: {
 			fail: '미통과',
 			needs_review: '담당자 검토 필요',
 			ok: '적합',
 			pass: '통과',
 			advisory: '조언',
+			not_applicable: '해당 없음',
 		},
 		checkGuidance: [
 			'needs_review는 확정 실패가 아니라 담당자 확인이 필요한 항목입니다.',
 			'타이포그래피 needs_review는 폰트 파일 판정이 아니라 비전 기준 담당자 검토로 설명합니다.',
 			'advisory(조언)는 판정이 아닌 개선 조언이므로 사용자에게 내용을 전달합니다.',
+			'not_applicable(해당 없음)은 검수 대상 요소가 이미지에 없어 판정을 생략한 것으로, 실패나 검토 필요가 아닙니다.',
 		],
 		results: entries.map(([key, value]) => {
 			const status = value.rawResult.status
+			const displayStatus = checkDisplayStatus(value.rawResult)
 			return {
 				key,
 				isFailure: status === 'fail',
 				statusLabel:
 					key.startsWith('typography.') && status === 'needs_review'
 						? '비전 기준 담당자 검토 필요'
-						: status === 'needs_review'
+						: displayStatus === 'needs_review'
 							? '담당자 검토 필요'
-							: status === 'ok'
+							: displayStatus === 'ok'
 								? '적합'
-								: status === 'pass'
-									? '통과'
-									: status === 'advisory'
-										? '조언'
-										: '미통과',
+								: displayStatus === 'not_applicable'
+									? '해당 없음'
+									: displayStatus === 'pass'
+										? '통과'
+										: displayStatus === 'advisory'
+											? '조언'
+											: '미통과',
 				status,
 				fulfillment: value.rawResult.fulfillment,
 				detail: value.message,

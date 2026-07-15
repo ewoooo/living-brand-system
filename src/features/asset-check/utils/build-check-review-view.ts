@@ -1,4 +1,5 @@
 import type { CheckResult } from '@/features/asset-check/checkers/types'
+import { checkDisplayStatus } from '@/features/asset-check/components/check-status'
 import {
 	type CheckScenario,
 	filterRulesetByScenario,
@@ -27,6 +28,7 @@ export interface CheckReviewSummary {
 	ok: number
 	fail: number
 	advisory: number
+	notApplicable: number
 	pendingManualCheck: number
 }
 
@@ -69,15 +71,23 @@ export function buildCheckReviewView({
 }
 
 function buildSummary(rows: CheckReviewRow[], results: CheckImage['results']): CheckReviewSummary {
-	const summary = { pass: 0, ok: 0, fail: 0, advisory: 0, pendingManualCheck: 0 }
+	const summary = {
+		pass: 0,
+		ok: 0,
+		fail: 0,
+		advisory: 0,
+		notApplicable: 0,
+		pendingManualCheck: 0,
+	}
 	if (!results) return summary
 
 	for (const row of rows) {
-		const status = row.outcome?.rawResult.status
+		const status = row.outcome ? checkDisplayStatus(row.outcome.rawResult) : undefined
 		if (status === 'pass') summary.pass++
 		else if (status === 'ok') summary.ok++
 		else if (status === 'fail') summary.fail++
 		else if (status === 'advisory') summary.advisory++
+		else if (status === 'not_applicable') summary.notApplicable++
 		else summary.pendingManualCheck++
 	}
 
