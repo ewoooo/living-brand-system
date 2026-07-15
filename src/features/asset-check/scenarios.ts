@@ -27,6 +27,7 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 		checkKeys: [
 			'imagery.style',
 			'imagery.photography.classification',
+			'photography-ingredient-textures',
 			'imagery.misuse',
 			'imagery.ai.consistency',
 			'color.usage',
