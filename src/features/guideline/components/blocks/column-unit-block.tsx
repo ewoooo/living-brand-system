@@ -22,7 +22,7 @@ export function ColumnUnitBlock({
 							alt={column.heading || ''}
 							backgroundColor={column.imageBackgroundColor}
 							scale={column.imageScale}
-							className="mb-4 aspect-4/3 border border-border bg-muted/30 p-6"
+							className="mb-4 aspect-4/3 p-6"
 						/>
 						{column.heading && (
 							<h4 className="type-body-emphasized mb-4">{column.heading}</h4>
