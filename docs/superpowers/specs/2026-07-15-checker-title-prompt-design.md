@@ -7,19 +7,22 @@
 ## 배경과 문제
 
 Checkers(`rule-checkers`) 컬렉션은 현재 기술 키(`model.anthropic.sonnet`)를 표시 이름으로 쓴다.
-가이드라인 Check가 checker를 relationship으로 선택할 때 드롭다운에 이 키가 그대로 노출되어
+가이드라인 Check
+가 checker를 relationship으로 선택할 때 드롭다운에 이 키가 그대로 노출되어
 비개발자가 고르기 어렵다. 또한 휴리스틱 검수 프롬프트는 코드가 소유하고 checker의
 `promptKey`는 코드 프롬프트의 버전 핀 역할만 해서, 매니저가 검수 지침을 조정할 방법이 없다.
 
 ## 결정
 
-### 1. `title` 필드 추가 (비개발자용 표시 이름)
+### 1. `name` 필드 추가 (비개발자용 표시 이름)
 
-- `rule-checkers`에 `title`(text, required) 추가.
-- `admin.useAsTitle: 'title'` — Check의 checker 드롭다운·목록에 타이틀 표시.
+- `rule-checkers`에 `name`(text, required) 추가.
+  필드명은 도구·리소스 컬렉션 관례(AgentSkills, Templates, Brand* 등이 `name` 사용)를 따르고,
+  Check의 `title`/`titleKo`와의 혼동을 피한다.
+- `admin.useAsTitle: 'name'` — Check의 checker 드롭다운·목록에 이름 표시.
 - `key`는 안정 식별자로 유지(unique, 스냅샷·런타임 사용 중).
-- 목록 컬럼: `['title', 'key', 'executor', '_status', 'updatedAt']`.
-- `listSearchableFields`: `title` 추가, `promptKey` 제거.
+- 목록 컬럼: `['name', 'key', 'executor', '_status', 'updatedAt']`.
+- `listSearchableFields`: `name` 추가, `promptKey` 제거.
 
 ### 2. `promptKey` 삭제 → `prompt` 삽입란 도입
 
@@ -48,7 +51,7 @@ Checkers(`rule-checkers`) 컬렉션은 현재 기술 키(`model.anthropic.sonnet
 
 ### 4. 마이그레이션
 
-- 단일 마이그레이션: `title` 추가(기존 행은 `key` 값으로 백필) + `prompt` 추가(nullable) +
+- 단일 마이그레이션: `name` 추가(기존 행은 `key` 값으로 백필) + `prompt` 추가(nullable) +
   `prompt_key` 삭제. 버전 테이블(`_rule_checkers_v`)도 동일 처리.
 - 배포 전 제품이므로 expand/contract를 한 파일에 담는다. 빈 DB에서 `pnpm migrate` 통과를 CI가 검증한다.
 - `pnpm generate:types`로 `payload-types.ts` 재생성, 소스와 같은 커밋에 포함.
