@@ -15,9 +15,13 @@ describe('getCheckScenario', () => {
 		expect(getCheckScenario('광고 소재').key).toBe('advertisement')
 	})
 
-	it('checks photography prohibitions in image mood scenarios', () => {
+	it('checks photography rules in image mood scenarios', () => {
 		expect(getCheckScenario('image-mood').checkKeys).toEqual(
-			expect.arrayContaining(['imagery.misuse', 'imagery.ai.consistency']),
+			expect.arrayContaining([
+				'photography-ingredient-textures',
+				'imagery.misuse',
+				'imagery.ai.consistency',
+			]),
 		)
 	})
 
