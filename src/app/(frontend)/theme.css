@@ -149,11 +149,15 @@
 	--ring: oklch(0.556 0 0);
 }
 
+.font-title {
+	font-family: var(--font-title);
+}
+
 .type-large-title,
 .type-title-1,
 .type-title-2,
 .type-title-3 {
-	font-family: var(--font-title);
+	font-family: var(--font-sans);
 	font-weight: 400;
 }
 
