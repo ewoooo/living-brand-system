@@ -1,6 +1,7 @@
 import type { ArrayField, Block, Field, FieldHook } from 'payload'
 import { validateGuidelineCheckOptions } from '@/features/guideline/checks/validate-guideline-check-options'
 import { relationshipId } from '@/features/guideline/utils/block-text'
+import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 
 type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
 
@@ -229,6 +230,13 @@ export const ColumnUnitBlock: Block = {
 	interfaceName: 'ColumnUnitBlock',
 	fields: [
 		{
+			name: 'imageRatio',
+			type: 'select',
+			defaultValue: '4:3',
+			options: [...IMAGE_RATIO_OPTIONS],
+			admin: { description: '열 이미지의 표시 비율입니다.' },
+		},
+		{
 			name: 'columns',
 			type: 'array',
 			minRows: 1,
@@ -253,6 +261,13 @@ export const MediaShowcaseBlock: Block = {
 	slug: 'mediaShowcase',
 	interfaceName: 'MediaShowcaseBlock',
 	fields: [
+		{
+			name: 'imageRatio',
+			type: 'select',
+			defaultValue: '16:9',
+			options: [...IMAGE_RATIO_OPTIONS],
+			admin: { description: '이미지의 표시 비율입니다.' },
+		},
 		{
 			name: 'image',
 			type: 'upload',
@@ -296,11 +311,7 @@ export const DoDontBlock: Block = {
 					name: 'imageRatio',
 					type: 'select',
 					defaultValue: '4:3',
-					options: [
-						{ label: '4:3', value: '4:3' },
-						{ label: '1:1', value: '1:1' },
-						{ label: '16:9', value: '16:9' },
-					],
+					options: [...IMAGE_RATIO_OPTIONS],
 					admin: { width: '50%', description: '예시 이미지의 표시 비율입니다.' },
 				},
 				{

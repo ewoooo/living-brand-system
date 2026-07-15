@@ -340,6 +340,10 @@ export interface ApplicationImage {
  * via the `definition` "ColumnUnitBlock".
  */
 export interface ColumnUnitBlock {
+  /**
+   * 열 이미지의 표시 비율입니다.
+   */
+  imageRatio?: ('4:3' | '1:1' | '16:9' | '3:2' | '2:3' | '4:5' | '5:4' | '9:16') | null;
   columns?:
     | {
         heading?: string | null;
@@ -438,6 +442,10 @@ export interface RuleChecker {
  * via the `definition` "MediaShowcaseBlock".
  */
 export interface MediaShowcaseBlock {
+  /**
+   * 이미지의 표시 비율입니다.
+   */
+  imageRatio?: ('4:3' | '1:1' | '16:9' | '3:2' | '2:3' | '4:5' | '5:4' | '9:16') | null;
   image?: (number | null) | ApplicationImage;
   /**
    * 이미지 영역 뒤에 적용할 브랜드 컬러입니다.
@@ -473,7 +481,7 @@ export interface DoDontBlock {
   /**
    * 예시 이미지의 표시 비율입니다.
    */
-  imageRatio?: ('4:3' | '1:1' | '16:9') | null;
+  imageRatio?: ('4:3' | '1:1' | '16:9' | '3:2' | '2:3' | '4:5' | '5:4' | '9:16') | null;
   /**
    * 가로 스택은 넓은 화면에서 그룹을 나란히 배치합니다.
    */
@@ -1305,6 +1313,7 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
  * via the `definition` "ColumnUnitBlock_select".
  */
 export interface ColumnUnitBlockSelect<T extends boolean = true> {
+  imageRatio?: T;
   columns?:
     | T
     | {
@@ -1354,6 +1363,7 @@ export interface GuidelineChecksSelect<T extends boolean = true> {
  * via the `definition` "MediaShowcaseBlock_select".
  */
 export interface MediaShowcaseBlockSelect<T extends boolean = true> {
+  imageRatio?: T;
   image?: T;
   imageBackgroundColor?: T;
   imageScale?: T;
