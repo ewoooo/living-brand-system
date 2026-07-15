@@ -41,7 +41,7 @@ export function PageNavigation({
 	return (
 		<Pagination
 			aria-label={`${unitLabel} 이동`}
-			className="min-h-48 bg-foreground text-background"
+			className="min-h-48 bg-foreground-muted/20 text-background"
 		>
 			<PaginationContent className="grid w-full grid-cols-2 gap-0">
 				{previous ? (
@@ -87,7 +87,7 @@ function PageLink({
 				rel={isPrevious ? 'prev' : 'next'}
 				size="default"
 				aria-label={`${label} ${unitLabel}: ${item.title}`}
-				className="h-full w-full flex-col items-start justify-start gap-2 whitespace-normal rounded-none bg-foreground p-8 text-left text-background hover:bg-background/10 hover:text-background focus-visible:ring-background md:p-12"
+				className="h-full w-full flex-col items-start justify-start gap-2 whitespace-normal rounded-none p-8 text-left text-background hover:bg-foreground/40 hover:text-background focus-visible:ring-background md:p-12"
 			>
 				<span className="text-sm opacity-70">{label}</span>
 				<span className="text-balance text-2xl md:text-3xl">{item.title}</span>
