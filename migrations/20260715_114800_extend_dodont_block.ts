@@ -38,7 +38,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
         SELECT e."kind"::text FROM "guideline_docs_blocks_do_dont_groups_examples" e
         WHERE e."_parent_id" = g."id" ORDER BY e."_order" LIMIT 1
       )::"public"."enum_guideline_docs_blocks_do_dont_groups_kind"
-      WHERE EXISTS (
+      WHERE g."kind" = 'dont' AND EXISTS (
         SELECT 1 FROM "guideline_docs_blocks_do_dont_groups_examples" e WHERE e."_parent_id" = g."id"
       );
       ALTER TABLE "guideline_docs_blocks_do_dont_groups_examples" DROP COLUMN "kind";
@@ -51,7 +51,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
         SELECT e."kind"::text FROM "_guideline_docs_v_blocks_do_dont_groups_examples" e
         WHERE e."_parent_id" = g."id" ORDER BY e."_order" LIMIT 1
       )::"public"."enum__guideline_docs_v_blocks_do_dont_groups_kind"
-      WHERE EXISTS (
+      WHERE g."kind" = 'dont' AND EXISTS (
         SELECT 1 FROM "_guideline_docs_v_blocks_do_dont_groups_examples" e WHERE e."_parent_id" = g."id"
       );
       ALTER TABLE "_guideline_docs_v_blocks_do_dont_groups_examples" DROP COLUMN "kind";

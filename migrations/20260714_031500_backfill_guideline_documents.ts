@@ -40,6 +40,73 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 	// 트랜잭션 안(db.execute)에서 만든 테이블은 보이지 않는다. 커밋되어 모든 커넥션에 보이도록
 	// 어댑터 pool로 직접(autocommit) 생성한다.
 	const { pool } = payload.db as unknown as { pool: { query(text: string): Promise<unknown> } }
+	// 현재 Do/Don't config가 백필 뒤에 추가된 필드를 조회하므로, Local API를 호출하기 전에
+	// 대상 테이블은 최종 타입으로 확장하고 곧 제거할 레거시 테이블은 varchar 호환 컬럼만 둔다.
+	await pool.query(`
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum_guideline_docs_blocks_do_dont_image_ratio" AS ENUM('4:3', '1:1', '16:9');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum__guideline_docs_v_blocks_do_dont_image_ratio" AS ENUM('4:3', '1:1', '16:9');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum_guideline_docs_blocks_do_dont_group_layout" AS ENUM('vertical', 'horizontal');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum__guideline_docs_v_blocks_do_dont_group_layout" AS ENUM('vertical', 'horizontal');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum_guideline_docs_blocks_do_dont_groups_kind" AS ENUM('do', 'ok', 'dont');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+		DO $$ BEGIN
+			CREATE TYPE "public"."enum__guideline_docs_v_blocks_do_dont_groups_kind" AS ENUM('do', 'ok', 'dont');
+		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+		ALTER TABLE "guideline_docs_blocks_do_dont" ADD COLUMN IF NOT EXISTS "image_ratio" "enum_guideline_docs_blocks_do_dont_image_ratio" DEFAULT '4:3';
+		ALTER TABLE "_guideline_docs_v_blocks_do_dont" ADD COLUMN IF NOT EXISTS "image_ratio" "enum__guideline_docs_v_blocks_do_dont_image_ratio" DEFAULT '4:3';
+		ALTER TABLE "guideline_docs_blocks_do_dont" ADD COLUMN IF NOT EXISTS "group_layout" "enum_guideline_docs_blocks_do_dont_group_layout" DEFAULT 'vertical';
+		ALTER TABLE "_guideline_docs_v_blocks_do_dont" ADD COLUMN IF NOT EXISTS "group_layout" "enum__guideline_docs_v_blocks_do_dont_group_layout" DEFAULT 'vertical';
+		ALTER TABLE "guideline_docs_blocks_do_dont_groups" ADD COLUMN IF NOT EXISTS "kind" "enum_guideline_docs_blocks_do_dont_groups_kind" DEFAULT 'dont';
+		ALTER TABLE "_guideline_docs_v_blocks_do_dont_groups" ADD COLUMN IF NOT EXISTS "kind" "enum__guideline_docs_v_blocks_do_dont_groups_kind" DEFAULT 'dont';
+		ALTER TABLE "guideline_docs_blocks_do_dont_groups_locales" ADD COLUMN IF NOT EXISTS "description" varchar;
+		ALTER TABLE "_guideline_docs_v_blocks_do_dont_groups_locales" ADD COLUMN IF NOT EXISTS "description" varchar;
+
+		ALTER TABLE "section_dd" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '4:3';
+		ALTER TABLE "_section_dd_v" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '4:3';
+		ALTER TABLE "section_dd" ADD COLUMN IF NOT EXISTS "group_layout" varchar DEFAULT 'vertical';
+		ALTER TABLE "_section_dd_v" ADD COLUMN IF NOT EXISTS "group_layout" varchar DEFAULT 'vertical';
+		ALTER TABLE "section_dd_groups" ADD COLUMN IF NOT EXISTS "kind" varchar DEFAULT 'dont';
+		ALTER TABLE "_section_dd_v_groups" ADD COLUMN IF NOT EXISTS "kind" varchar DEFAULT 'dont';
+		ALTER TABLE "section_dd_groups_locales" ADD COLUMN IF NOT EXISTS "description" varchar;
+		ALTER TABLE "_section_dd_v_groups_locales" ADD COLUMN IF NOT EXISTS "description" varchar;
+
+		ALTER TABLE "guideline_pages_blocks_do_dont" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '4:3';
+		ALTER TABLE "_guideline_pages_v_blocks_do_dont" ADD COLUMN IF NOT EXISTS "image_ratio" varchar DEFAULT '4:3';
+		ALTER TABLE "guideline_pages_blocks_do_dont" ADD COLUMN IF NOT EXISTS "group_layout" varchar DEFAULT 'vertical';
+		ALTER TABLE "_guideline_pages_v_blocks_do_dont" ADD COLUMN IF NOT EXISTS "group_layout" varchar DEFAULT 'vertical';
+		ALTER TABLE "guideline_pages_blocks_do_dont_groups" ADD COLUMN IF NOT EXISTS "kind" varchar DEFAULT 'dont';
+		ALTER TABLE "_guideline_pages_v_blocks_do_dont_groups" ADD COLUMN IF NOT EXISTS "kind" varchar DEFAULT 'dont';
+		ALTER TABLE "guideline_pages_blocks_do_dont_groups_locales" ADD COLUMN IF NOT EXISTS "description" varchar;
+		ALTER TABLE "_guideline_pages_v_blocks_do_dont_groups_locales" ADD COLUMN IF NOT EXISTS "description" varchar;
+
+		UPDATE "section_dd_groups" g SET "kind" = (
+			SELECT e."kind"::text FROM "section_dd_groups_examples" e
+			WHERE e."_parent_id" = g."id" ORDER BY e."_order" LIMIT 1
+		) WHERE EXISTS (SELECT 1 FROM "section_dd_groups_examples" e WHERE e."_parent_id" = g."id");
+		UPDATE "_section_dd_v_groups" g SET "kind" = (
+			SELECT e."kind"::text FROM "_section_dd_v_groups_examples" e
+			WHERE e."_parent_id" = g."id" ORDER BY e."_order" LIMIT 1
+		) WHERE EXISTS (SELECT 1 FROM "_section_dd_v_groups_examples" e WHERE e."_parent_id" = g."id");
+		UPDATE "guideline_pages_blocks_do_dont_groups" g SET "kind" = (
+			SELECT e."kind"::text FROM "guideline_pages_blocks_do_dont_groups_examples" e
+			WHERE e."_parent_id" = g."id" ORDER BY e."_order" LIMIT 1
+		) WHERE EXISTS (SELECT 1 FROM "guideline_pages_blocks_do_dont_groups_examples" e WHERE e."_parent_id" = g."id");
+		UPDATE "_guideline_pages_v_blocks_do_dont_groups" g SET "kind" = (
+			SELECT e."kind"::text FROM "_guideline_pages_v_blocks_do_dont_groups_examples" e
+			WHERE e."_parent_id" = g."id" ORDER BY e."_order" LIMIT 1
+		) WHERE EXISTS (SELECT 1 FROM "_guideline_pages_v_blocks_do_dont_groups_examples" e WHERE e."_parent_id" = g."id");
+	`)
+
 	await pool.query(`
 		DO $precreate$
 		DECLARE
