@@ -1,6 +1,5 @@
 import { type ToolSet, tool } from 'ai'
 import { z } from 'zod'
-
 import {
 	type AgentSkillDetail,
 	findEnabledAgentSkillByName,
@@ -16,6 +15,8 @@ import {
 	readAgentGuidelineDocument,
 	searchAgentGuidelines,
 } from '@/features/agent-chat/services/get-agent-guideline-context.service'
+import { type CheckScenario, getCheckScenario } from '@/features/asset-check/scenarios'
+import { getCheckScenarios } from '@/features/asset-check/services/get-check-scenarios.service'
 import { IMAGE_SCENES } from '@/features/image-generation/presets'
 import {
 	type AgentGeneratedImagesAttachment,
@@ -23,20 +24,12 @@ import {
 } from '@/features/image-generation/services/generate-image.service'
 import { AgentConfigurationError } from '@/lib/errors'
 import type { User } from '@/payload-types'
-import {
-	CHECK_SCENARIOS,
-	getCheckScenario,
-	startCheckSession,
-} from '@/services/start-check-session.service'
+import { startCheckSession } from '@/services/start-check-session.service'
 
 const guidelineToolContextSchema = z.object({
 	agentChatSessionId: z.number().int().positive().optional(),
 	user: z.unknown(),
 })
-
-const checkScenarioSummary = CHECK_SCENARIOS.map(
-	(scenario) => `${scenario.key} (${scenario.title})`,
-).join(', ')
 
 const imageSceneSummary = IMAGE_SCENES.map((scene) => `${scene.id} (${scene.label})`).join(', ')
 
@@ -97,7 +90,11 @@ export function getAgentTools() {
 				'List supported image quality check scenarios and their scenarioKey values.',
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
-			execute: () => CHECK_SCENARIOS.map(({ key, title }) => ({ key, title })),
+			execute: async (_input, { context }) =>
+				(await getCheckScenarios(context.user as User)).map(({ key, title }) => ({
+					key,
+					title,
+				})),
 		}),
 		findTemplatesForRequest: tool({
 			description:
@@ -154,28 +151,30 @@ export function getAgentTools() {
 			},
 		}),
 		runCheck: tool({
-			description: `Run a quality check on the latest image attached by the user in this chat. Use when the user asks to inspect, validate, or check an attached image. Supported scenarioKey values: ${checkScenarioSummary}. Use scenarioKey "stationery" for business card or 명함 checks.`,
+			description:
+				'Run a quality check on the latest image attached by the user in this chat. Use listCheckScenarios first when the matching scenarioKey is unknown.',
 			inputSchema: z.object({
 				scenarioKey: z.string().min(1).max(80).optional(),
 			}),
 			contextSchema: guidelineToolContextSchema,
 			execute: async ({ scenarioKey }, { context, messages }) => {
-				const scenario = getCheckScenario(scenarioKey)
+				const scenarios = await getCheckScenarios(context.user as User)
+				const scenario = getCheckScenario(scenarios, scenarioKey)
 				const image = findLatestImage(messages)
 
 				if (!image) {
 					return {
 						status: 'missing-image',
 						message: '검수할 이미지 첨부가 없습니다.',
-						scenarios: CHECK_SCENARIOS.map(({ key, title }) => ({ key, title })),
+						scenarios: scenarios.map(({ key, title }) => ({ key, title })),
 					}
 				}
 
 				const result = await startCheckSession({
 					agentChatSessionId: context.agentChatSessionId,
 					buffer: image.buffer,
-					flags: scenario.flags,
 					imageName: image.name,
+					scenario,
 					scenarioKey: scenario.key,
 					source: 'chat',
 					user: context.user as User,
@@ -255,7 +254,7 @@ function dataToBuffer(data: unknown): Buffer | null {
 
 function formatCheckToolResult(
 	result: Awaited<ReturnType<typeof startCheckSession>>,
-	scenarioTitle: string,
+	scenarioTitle: CheckScenario['title'],
 ) {
 	const entries = Object.entries(result.results)
 	const counts = entries.reduce(

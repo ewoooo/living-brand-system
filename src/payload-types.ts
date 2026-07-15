@@ -127,6 +127,7 @@ export interface Config {
   blocks: {};
   collections: {
     'guideline-documents': GuidelineDocument;
+    'check-scenarios': CheckScenario;
     'rule-checkers': RuleChecker;
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
@@ -155,6 +156,7 @@ export interface Config {
   };
   collectionsSelect: {
     'guideline-documents': GuidelineDocumentsSelect<false> | GuidelineDocumentsSelect<true>;
+    'check-scenarios': CheckScenariosSelect<false> | CheckScenariosSelect<true>;
     'rule-checkers': RuleCheckersSelect<false> | RuleCheckersSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
@@ -505,6 +507,41 @@ export interface DoDontBlock {
   blockType: 'doDont';
 }
 /**
+ * 검수 목적에 맞게 실행할 Check를 조립하고 발행합니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "check-scenarios".
+ */
+export interface CheckScenario {
+  id: number;
+  title: string;
+  description?: string | null;
+  /**
+   * 최초 저장 후 변경되지 않는 CheckScenario 식별자입니다.
+   */
+  key: string;
+  /**
+   * 발행된 Guideline Check 중 이 시나리오에서 실행할 항목입니다.
+   */
+  checkKeys:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * 발행된 시나리오를 신규 검수 대상에서 제외할 때 사용합니다.
+   */
+  archived?: boolean | null;
+  hasBeenPublished: boolean;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brand-logos".
  */
@@ -701,7 +738,7 @@ export interface CheckSession {
   targetType: 'uploaded-image';
   imageName?: string | null;
   /**
-   * 검수 실행 시점의 룰셋 스냅샷입니다.
+   * 검수 실행 시점의 Check Scenario 기준 Check 스냅샷입니다.
    */
   rulesetSnapshot?:
     | {
@@ -1155,6 +1192,10 @@ export interface PayloadLockedDocument {
         value: number | GuidelineDocument;
       } | null)
     | ({
+        relationTo: 'check-scenarios';
+        value: number | CheckScenario;
+      } | null)
+    | ({
         relationTo: 'rule-checkers';
         value: number | RuleChecker;
       } | null)
@@ -1398,6 +1439,21 @@ export interface DoDontBlockSelect<T extends boolean = true> {
   checks?: T | GuidelineChecksSelect<T>;
   id?: T;
   blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "check-scenarios_select".
+ */
+export interface CheckScenariosSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  key?: T;
+  checkKeys?: T;
+  archived?: T;
+  hasBeenPublished?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2006,6 +2062,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'guideline-documents';
           value: number | GuidelineDocument;
+        } | null)
+      | ({
+          relationTo: 'check-scenarios';
+          value: number | CheckScenario;
         } | null)
       | ({
           relationTo: 'rule-checkers';

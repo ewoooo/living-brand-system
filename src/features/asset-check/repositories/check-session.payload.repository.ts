@@ -53,7 +53,7 @@ export async function createCheckSessionRecord(input: CreateCheckSessionInput) {
 }
 
 /**
- * CheckSession 단건 조회 repository — 후속 AI 검수가 기존 즉시 검수 결과와 룰셋을 이어받는다.
+ * CheckSession 단건 조회 repository — 후속 AI 검수가 기존 즉시 검수 결과와 Check 스냅샷을 이어받는다.
  */
 export async function getCheckSessionRecord(id: CheckSession['id'], user: User) {
 	const payload = await getPayload({ config })

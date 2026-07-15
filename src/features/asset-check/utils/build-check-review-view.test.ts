@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
+import { INITIAL_CHECK_SCENARIOS } from '@/features/asset-check/scenarios'
 import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { CheckImage } from '@/features/asset-check/types'
 import { buildCheckReviewView } from '@/features/asset-check/utils/build-check-review-view'
@@ -43,6 +44,7 @@ describe('buildCheckReviewView', () => {
 	it('keeps summary empty before any check result exists', () => {
 		const view = buildCheckReviewView({
 			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
 			scenarioKey: 'quick',
 			selected: null,
 			showFailOnly: false,
@@ -70,6 +72,7 @@ describe('buildCheckReviewView', () => {
 
 		const view = buildCheckReviewView({
 			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
 			scenarioKey: 'quick',
 			selected,
 			showFailOnly: true,
@@ -98,6 +101,7 @@ describe('buildCheckReviewView', () => {
 
 		const view = buildCheckReviewView({
 			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
 			scenarioKey: 'quick',
 			selected,
 			showFailOnly: false,
@@ -117,6 +121,7 @@ describe('buildCheckReviewView', () => {
 
 		const view = buildCheckReviewView({
 			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
 			scenarioKey: 'quick',
 			selected,
 			showFailOnly: false,

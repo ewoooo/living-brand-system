@@ -509,10 +509,10 @@ function CheckDetailCollapse({
 }
 
 export function CheckSections({ sections }: { sections: CheckSection[] }) {
-	const { scenarioKey, selectedId, selected, showFailOnly } = useCheckImages()
+	const { scenarios, scenarioKey, selectedId, selected, showFailOnly } = useCheckImages()
 	const { rows } = useMemo(
-		() => buildCheckReviewView({ sections, scenarioKey, selected, showFailOnly }),
-		[sections, scenarioKey, selected, showFailOnly],
+		() => buildCheckReviewView({ sections, scenarios, scenarioKey, selected, showFailOnly }),
+		[sections, scenarios, scenarioKey, selected, showFailOnly],
 	)
 
 	return (

@@ -5,10 +5,9 @@ export interface CheckScenario {
 	key: string
 	title: string
 	checkKeys: string[]
-	flags: ImageContentFlags
 }
 
-export const CHECK_SCENARIOS: CheckScenario[] = [
+export const INITIAL_CHECK_SCENARIOS: CheckScenario[] = [
 	{
 		key: 'quick',
 		title: '빠른 기본 검수',
@@ -19,7 +18,6 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 			'logo.size.minimum',
 			'logo.space.clear',
 		],
-		flags: { logo: true, typography: false, illustration: false, photography: false },
 	},
 	{
 		key: 'image-mood',
@@ -32,7 +30,6 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 			'imagery.ai.consistency',
 			'color.usage',
 		],
-		flags: { logo: false, typography: false, illustration: false, photography: true },
 	},
 	{
 		key: 'sns',
@@ -46,7 +43,6 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 			'imagery.sns.classification',
 			'messaging.sns.copy',
 		],
-		flags: { logo: true, typography: false, illustration: false, photography: true },
 	},
 	{
 		key: 'web-visual',
@@ -58,7 +54,6 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 			'color.contrast',
 			'typography.usage',
 		],
-		flags: { logo: false, typography: true, illustration: false, photography: false },
 	},
 	{
 		key: 'advertisement',
@@ -74,7 +69,6 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 			'spacing.advertisement.scale',
 			'color.palette',
 		],
-		flags: { logo: false, typography: false, illustration: false, photography: true },
 	},
 	{
 		key: 'stationery',
@@ -88,13 +82,14 @@ export const CHECK_SCENARIOS: CheckScenario[] = [
 			'typography.weight',
 			'typography.misuse',
 		],
-		flags: { logo: true, typography: true, illustration: false, photography: false },
 	},
 ]
 
-export function getCheckScenario(key: string | null | undefined): CheckScenario {
+export function getCheckScenario(scenarios: CheckScenario[], key?: string | null): CheckScenario {
+	const fallback = scenarios.find((scenario) => scenario.key === 'quick') ?? scenarios[0]
+	if (!fallback) throw new Error('발행된 CheckScenario가 없습니다.')
 	const normalizedKey = normalizeCheckScenarioKey(key)
-	return CHECK_SCENARIOS.find((scenario) => scenario.key === normalizedKey) ?? CHECK_SCENARIOS[0]
+	return scenarios.find((scenario) => scenario.key === normalizedKey) ?? fallback
 }
 
 function normalizeCheckScenarioKey(key: string | null | undefined): string | undefined {
@@ -109,6 +104,17 @@ function normalizeCheckScenarioKey(key: string | null | undefined): string | und
 	if (normalized.includes('ad') || normalized.includes('advert')) return 'advertisement'
 	if (normalized.includes('광고')) return 'advertisement'
 	return normalized
+}
+
+export function getCheckScenarioFlags(scenario: CheckScenario): ImageContentFlags {
+	const has = (...prefixes: string[]) =>
+		scenario.checkKeys.some((key) => prefixes.some((prefix) => key.startsWith(prefix)))
+	return {
+		logo: has('logo.'),
+		typography: has('typography.'),
+		illustration: has('illustration.'),
+		photography: has('imagery.', 'photography'),
+	}
 }
 
 export function filterRulesetByScenario(

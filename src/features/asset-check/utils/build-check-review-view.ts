@@ -1,5 +1,9 @@
 import type { CheckResult } from '@/features/asset-check/checkers/types'
-import { filterRulesetByScenario, getCheckScenario } from '@/features/asset-check/scenarios'
+import {
+	type CheckScenario,
+	filterRulesetByScenario,
+	getCheckScenario,
+} from '@/features/asset-check/scenarios'
 import type {
 	CheckSection,
 	RuntimeCheck,
@@ -38,18 +42,23 @@ type MutableCheckRow = CheckReviewRow & { appliesToSet: Set<string> }
  */
 export function buildCheckReviewView({
 	sections,
+	scenarios,
 	scenarioKey,
 	selected,
 	showFailOnly,
 }: {
 	sections: CheckSection[]
+	scenarios: CheckScenario[]
 	scenarioKey: string
 	selected: CheckImage | null
 	showFailOnly: boolean
 }): CheckReviewView {
 	const results = selected?.results
 	const reviewScenarioKey = selected?.scenarioKey ?? scenarioKey
-	const visibleSections = filterRulesetByScenario(sections, getCheckScenario(reviewScenarioKey))
+	const visibleSections = filterRulesetByScenario(
+		sections,
+		getCheckScenario(scenarios, reviewScenarioKey),
+	)
 	const allRows = buildRows({ visibleSections, selected })
 	const summary = buildSummary(allRows, results)
 	const rows =
