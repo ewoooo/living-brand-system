@@ -5,6 +5,7 @@ import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import { generateImages } from '@/features/image-generation/services/generate-image.client'
 import {
 	composeTemplateHtml,
+	type TemplateInput,
 	type TemplateOverride,
 	type TemplateOverrides,
 } from '@/features/template-import/utils/compose-template-html'
@@ -88,7 +89,8 @@ function parseLayers(html: string): LayerRow[] {
 }
 
 // Popup 안에 뜨는 AI 생성 폼. Popup이 열릴 때만 마운트되므로 프롬프트는 열 때마다 초기화된다.
-function AiTextForm({ onApply }: { onApply: (text: string) => void }) {
+// rule은 노드의 aiInstruction — 프롬프트와 별개로 항상 지켜야 할 생성 규칙.
+function AiTextForm({ rule, onApply }: { rule?: string; onApply: (text: string) => void }) {
 	const [prompt, setPrompt] = useState('')
 	const [loading, setLoading] = useState(false)
 
@@ -97,7 +99,7 @@ function AiTextForm({ onApply }: { onApply: (text: string) => void }) {
 		if (!trimmed || loading) return
 		setLoading(true)
 		try {
-			const text = await generateOneText(trimmed)
+			const text = await generateOneText(trimmed, rule)
 			if (text) onApply(text)
 			else toast.error('생성 실패 — 프롬프트를 바꾸거나 잠시 후 다시 시도하세요.')
 		} finally {
@@ -187,6 +189,103 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 			>
 				{loading ? '생성 중...' : '생성'}
 			</Button>
+		</div>
+	)
+}
+
+// 슬롯 스펙 편집 폼 공통 필드 스타일.
+const FIELD_STYLE: CSSProperties = {
+	fontSize: 13,
+	padding: 6,
+	borderRadius: 4,
+	border: '1px solid var(--theme-elevation-150)',
+	background: 'var(--theme-input-bg)',
+	color: 'var(--theme-text)',
+}
+
+/**
+ * 선택 텍스트 노드의 입력 슬롯 스펙 편집기.
+ * input의 존재 자체가 열린 슬롯 선언 — 열면 유저(Create) 화면에 입력이 노출된다.
+ */
+function SlotSpecEditor({
+	input,
+	onChange,
+}: {
+	input: TemplateInput | undefined
+	onChange: (input: TemplateInput | undefined) => void
+}) {
+	if (!input) {
+		return (
+			<button type="button" style={TRIGGER_STYLE} onClick={() => onChange({})}>
+				입력 슬롯 열기
+			</button>
+		)
+	}
+
+	const patch = (part: Partial<TemplateInput>) => onChange({ ...input, ...part })
+	const positiveInt = (raw: string) => {
+		const parsed = Number.parseInt(raw, 10)
+		return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
+	}
+
+	return (
+		<div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: 520 }}>
+			<div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+				<input
+					value={input.label ?? ''}
+					onChange={(event) => patch({ label: event.target.value || undefined })}
+					placeholder="라벨 (예: 영문 이름)"
+					style={{ ...FIELD_STYLE, flex: 1, minWidth: 140 }}
+				/>
+				<input
+					value={input.placeholder ?? ''}
+					onChange={(event) => patch({ placeholder: event.target.value || undefined })}
+					placeholder="플레이스홀더"
+					style={{ ...FIELD_STYLE, flex: 1, minWidth: 140 }}
+				/>
+			</div>
+			<div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+				<input
+					type="number"
+					min={1}
+					value={input.maxLength ?? ''}
+					onChange={(event) => patch({ maxLength: positiveInt(event.target.value) })}
+					placeholder="최대 글자"
+					style={{ ...FIELD_STYLE, width: 96 }}
+				/>
+				<input
+					type="number"
+					min={1}
+					value={input.maxLines ?? ''}
+					onChange={(event) => patch({ maxLines: positiveInt(event.target.value) })}
+					placeholder="최대 줄"
+					style={{ ...FIELD_STYLE, width: 96 }}
+				/>
+				<select
+					value={input.inputFormat ?? 'free'}
+					onChange={(event) =>
+						patch({ inputFormat: event.target.value as TemplateInput['inputFormat'] })
+					}
+					style={FIELD_STYLE}
+				>
+					<option value="free">자유 텍스트</option>
+					<option value="number">숫자</option>
+					<option value="email">이메일</option>
+					<option value="date">날짜</option>
+				</select>
+			</div>
+			<textarea
+				value={input.aiInstruction ?? ''}
+				onChange={(event) => patch({ aiInstruction: event.target.value || undefined })}
+				rows={2}
+				placeholder="AI 지시 — 이 슬롯의 생성 규칙 (예: 영문 이름만, 성-이름 순)"
+				style={{ ...FIELD_STYLE, width: '100%' }}
+			/>
+			<div>
+				<button type="button" style={TRIGGER_STYLE} onClick={() => onChange(undefined)}>
+					슬롯 닫기
+				</button>
+			</div>
 		</div>
 	)
 }
@@ -408,12 +507,29 @@ export default function TemplateLayersField() {
 							button={<span style={TRIGGER_STYLE}>✨ AI 생성</span>}
 							render={({ close }) => (
 								<AiTextForm
+									rule={overrides[selected.id]?.input?.aiInstruction}
 									onApply={(text) => {
 										commitText(text)
 										close()
 									}}
 								/>
 							)}
+						/>
+					</div>
+					<div style={{ marginTop: 12 }}>
+						<span
+							style={{
+								display: 'block',
+								fontSize: 12,
+								marginBottom: 4,
+								color: 'var(--theme-elevation-600)',
+							}}
+						>
+							입력 슬롯 — 유저 화면에 열 입력과 규칙
+						</span>
+						<SlotSpecEditor
+							input={overrides[selected.id]?.input}
+							onChange={(input) => commitOverride({ input })}
 						/>
 					</div>
 				</div>

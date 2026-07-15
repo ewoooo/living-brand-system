@@ -11,10 +11,13 @@ import { generateOneText } from '../services/generate-text.client'
 export function GenerateTextField({
 	label = 'AI 생성',
 	defaultPrompt = '',
+	rule,
 	onGenerated,
 }: {
 	label?: string
 	defaultPrompt?: string
+	/** 슬롯의 aiInstruction — 사용자 프롬프트와 별개로 항상 지켜야 할 생성 규칙. */
+	rule?: string
 	onGenerated: (text: string) => void
 }) {
 	const [prompt, setPrompt] = useState('')
@@ -23,7 +26,7 @@ export function GenerateTextField({
 	async function run() {
 		if (loading) return
 		setLoading(true)
-		const text = await generateOneText(prompt.trim() || defaultPrompt || '짧은 텍스트')
+		const text = await generateOneText(prompt.trim() || defaultPrompt || '짧은 텍스트', rule)
 		if (text) onGenerated(text)
 		setLoading(false)
 	}
