@@ -424,11 +424,11 @@ export interface RuleChecker {
    */
   checkerKey?: string | null;
   /**
-   * 휴리스틱 검수에 사용할 Anthropic 모델입니다.
+   * AI 검수에 사용할 Anthropic 모델입니다. Advisory는 미설정 시 브랜드 담당자 확인으로 폴백합니다.
    */
   model?: ('claude-opus-4-8' | 'claude-sonnet-5' | 'claude-haiku-4-5') | null;
   /**
-   * 휴리스틱 검수 시 AI에게 전달할 관찰 지침입니다. 출력 형식과 판정 금지 규칙은 시스템이 강제하므로 자유롭게 작성해도 검수가 깨지지 않습니다.
+   * AI에게 전달할 관찰·조언 지침입니다. Advisory는 이 프롬프트가 조언 관점을 정의합니다 (예: 타이포그래피 위계 관점에서 디자이너처럼 조언). 출력 형식과 판정 금지 규칙은 시스템이 강제합니다.
    */
   prompt?: string | null;
   updatedAt: string;
