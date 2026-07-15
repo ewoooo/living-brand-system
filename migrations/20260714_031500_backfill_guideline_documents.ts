@@ -152,6 +152,12 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_heuristic_criterion_expected') THEN
 				CREATE TYPE "public"."enum_heuristic_criterion_expected" AS ENUM('present', 'absent');
 			END IF;
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_heuristic_criterion_kind') THEN
+				CREATE TYPE "public"."enum_heuristic_criterion_kind" AS ENUM('presence', 'measure');
+			END IF;
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_heuristic_criterion_operator') THEN
+				CREATE TYPE "public"."enum_heuristic_criterion_operator" AS ENUM('gte', 'lte', 'between');
+			END IF;
 
 			FOREACH parent IN ARRAY varchar_parents LOOP
 				child := parent || '_criteria';
@@ -161,7 +167,12 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 					|| '"_parent_id" varchar NOT NULL,'
 					|| '"id" varchar PRIMARY KEY NOT NULL,'
 					|| '"question" varchar,'
-					|| '"expected" "public"."enum_heuristic_criterion_expected")',
+					|| '"expected" "public"."enum_heuristic_criterion_expected",'
+					|| '"kind" "public"."enum_heuristic_criterion_kind" DEFAULT ''presence'','
+					|| '"operator" "public"."enum_heuristic_criterion_operator",'
+					|| '"expected_value" numeric,'
+					|| '"max" numeric,'
+					|| '"unit" varchar)',
 					child
 				);
 				BEGIN
@@ -184,6 +195,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 					|| '"id" serial PRIMARY KEY NOT NULL,'
 					|| '"question" varchar,'
 					|| '"expected" "public"."enum_heuristic_criterion_expected",'
+					|| '"kind" "public"."enum_heuristic_criterion_kind" DEFAULT ''presence'','
+					|| '"operator" "public"."enum_heuristic_criterion_operator",'
+					|| '"expected_value" numeric,'
+					|| '"max" numeric,'
+					|| '"unit" varchar,'
 					|| '"_uuid" varchar)',
 					child
 				);

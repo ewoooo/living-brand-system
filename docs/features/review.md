@@ -135,7 +135,7 @@ Raster Observation
 
 ## 4. 의존
 
-- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 모델과 기본 프롬프트는 Check가 참조하는 RuleChecker에서 선택하고, Check의 source·구조화 evidence·heuristicCriteria·heuristicPrompt를 JSON text part로, 검수 대상과 referenceAssets를 file part로 전달한다. 모델은 기준별 `present`/`absent`/`uncertain` 관찰값만 반환하며 최종 `pass`/`fail`/`needs_review`는 검수 Service의 Evaluator가 결정한다. 한 세션의 heuristic Check는 한 번의 AI 호출로 평가하고, 설정·호출·출력 검증 실패는 `needs_review`로 처리한다.
+- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 모델과 기본 프롬프트는 Check가 참조하는 RuleChecker에서 선택하고, Check의 source·구조화 evidence·heuristicCriteria·heuristicPrompt를 JSON text part로, 검수 대상과 referenceAssets를 file part로 전달한다. 모델은 기준별 관찰값만 반환하며(관찰형은 `present`/`absent`, 수치형은 숫자, 공통으로 `uncertain`/`not_applicable`) 최종 `pass`/`fail`/`needs_review`는 검수 Service의 Evaluator가 결정한다. 한 세션의 heuristic Check는 한 번의 AI 호출로 평가하고, 설정·호출·출력 검증 실패는 `needs_review`로 처리한다.
 - 이미지 디코딩: `sharp`(128px 픽셀 그리드 추출).
 - 결정론적 checker: palette-compliance / color-combination / spot-color / background-tone / clear-space / relative-size / canvas-format. RuleChecker의 `checkerKey`로 registry를 조회하며, 미등록 checker는 `implemented:false`로 표시.
 - Payload 컬렉션: `guideline-documents`(Check 기준), `brand-colors`(팔레트) 읽기. 세션은 `check-sessions`에 영속(CheckRulesetSnapshot을 함께 저장해 AI 후속 단계가 재사용).

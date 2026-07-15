@@ -94,7 +94,7 @@ describe('runHeuristicCheck', () => {
 
 		expect(result.results[check.key]?.rawResult).toMatchObject({
 			status: 'fail',
-			fulfillment: null,
+			fulfillment: 0,
 			observations: [
 				{
 					criterionId: 'artificial-redness',

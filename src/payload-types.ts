@@ -44,7 +44,12 @@ export type GuidelineChecks =
       criteria?:
         | {
             question: string;
-            expected: 'present' | 'absent';
+            kind: 'presence' | 'measure';
+            expected?: ('present' | 'absent') | null;
+            operator?: ('gte' | 'lte' | 'between') | null;
+            expectedValue?: number | null;
+            max?: number | null;
+            unit?: string | null;
             id?: string | null;
           }[]
         | null;
@@ -1376,7 +1381,12 @@ export interface GuidelineChecksSelect<T extends boolean = true> {
     | T
     | {
         question?: T;
+        kind?: T;
         expected?: T;
+        operator?: T;
+        expectedValue?: T;
+        max?: T;
+        unit?: T;
         id?: T;
       };
   heuristicPrompt?: T;
