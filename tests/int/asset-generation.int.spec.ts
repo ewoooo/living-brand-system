@@ -78,6 +78,7 @@ describe('getPublishedTemplate', () => {
 			id: 1,
 			name: 'Figma 템플릿',
 			html: '<div>Figma</div>',
+			overrides: { '2:1': { input: { label: '이름' } } },
 			width: 1280,
 			height: 720,
 			jsonTemplate: validJsonTemplate,
@@ -88,6 +89,7 @@ describe('getPublishedTemplate', () => {
 			id: 1,
 			name: 'Figma 템플릿',
 			html: '<div>Figma</div>',
+			overrides: { '2:1': { input: { label: '이름' } } },
 			width: 1280,
 			height: 720,
 		})

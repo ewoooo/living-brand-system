@@ -1,3 +1,4 @@
+import type { TemplateOverrides } from '@/features/template-import/utils/compose-template-html'
 import { type JsonTemplate, jsonTemplateSchema } from '@/types/json-template'
 import { findPublishedTemplate } from '../repositories/published-template.payload.repository'
 
@@ -15,6 +16,8 @@ interface PublishedTemplateBase {
 export interface PublishedHtmlTemplate extends PublishedTemplateBase {
 	kind: 'html'
 	html: string
+	// 입력 슬롯 스펙(input)이 든 노드 오버라이드 — 열린 슬롯 수집과 값 합성에 쓴다.
+	overrides: TemplateOverrides
 	width: number
 	height: number
 }
@@ -53,6 +56,7 @@ export async function getPublishedTemplate(templateId: number): Promise<Publishe
 				id: template.id,
 				name: template.name,
 				html: template.html,
+				overrides: (template.overrides ?? {}) as TemplateOverrides,
 				width: template.width,
 				height: template.height,
 			}
