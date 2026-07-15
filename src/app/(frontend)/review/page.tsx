@@ -4,7 +4,6 @@ import { ImageUploadCarousel } from '@/features/asset-check/components/image-upl
 import { getCheckRuleset } from '@/features/asset-check/services/get-check-ruleset.service'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 
-
 export default async function ReviewPage() {
 	const sections = await getCheckRuleset()
 
