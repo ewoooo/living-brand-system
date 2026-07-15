@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-	formatObservationActual,
-	formatObservationExpected,
-} from './check-observation-format'
+import { formatObservationActual, formatObservationExpected } from './check-observation-format'
 
 const base = { criterionId: 'c', question: 'q', confidence: 80, reason: 'r', satisfied: true }
 
@@ -53,7 +50,9 @@ describe('formatObservationExpected', () => {
 
 describe('formatObservationActual', () => {
 	it('관측값을 한국어로 표기한다', () => {
-		expect(formatObservationActual({ ...base, expected: 'present', actual: 'present' })).toBe('있음')
+		expect(formatObservationActual({ ...base, expected: 'present', actual: 'present' })).toBe(
+			'있음',
+		)
 		expect(formatObservationActual({ ...base, expected: 'present', actual: 'uncertain' })).toBe(
 			'판단 불가',
 		)

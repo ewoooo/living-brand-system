@@ -17,11 +17,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { contrastOptionsSchema } from '@/features/asset-check/checkers/contrast.checker'
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
-import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
 import {
 	formatObservationActual,
 	formatObservationExpected,
 } from '@/features/asset-check/components/check-observation-format'
+import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
 import type {
 	RuntimeCheck as Check,
 	CheckSection,
