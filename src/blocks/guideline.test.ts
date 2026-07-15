@@ -40,6 +40,10 @@ describe('guideline checks field', () => {
 		expect(GuidelineDocuments.admin?.components?.edit?.PublishButton).toBe(
 			'/components/admin/BetterEditorPublishButton',
 		)
+		expect(
+			GuidelineDocuments.fields.find((field) => 'name' in field && field.name === 'blocks')
+				?.admin?.components?.Field,
+		).toBeUndefined()
 	})
 
 	it('통합 문서와 모든 Block에 같은 checks[] 계약을 둔다', () => {

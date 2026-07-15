@@ -116,11 +116,6 @@ export const GuidelineDocuments: CollectionConfig = {
 			type: 'blocks',
 			label: '본문',
 			blocks: guidelineBlocks,
-			admin: {
-				components: {
-					Field: '/components/admin/GuidelineBlocksField',
-				},
-			},
 		},
 		guidelineChecksField(),
 		{
