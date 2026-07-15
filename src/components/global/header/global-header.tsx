@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
 	GuidelineSearch,
 	type GuidelineSearchChapter,
@@ -32,6 +32,7 @@ function HeaderHead({
 	guidelineChapters: GuidelineSearchChapter[]
 }) {
 	const pathname = usePathname()
+	const router = useRouter()
 	const LOGO_SIZE = 14
 	const guidelineActive = pathname === '/guideline' || pathname.startsWith('/guideline/')
 	const reviewActive = pathname === '/review' || pathname.startsWith('/review/')
@@ -57,27 +58,13 @@ function HeaderHead({
 				</Link>
 				<NavigationMenu viewport={false}>
 					<NavigationMenuList className="gap-2">
-						<NavigationMenuItem className="flex items-center">
-							<NavigationMenuLink
-								active={guidelineActive}
-								asChild
-								className={cn(
-									navigationMenuTriggerStyle(),
-									'min-w-0 rounded-r-none pr-1',
-									guidelineActive && 'text-foreground',
-								)}
-							>
-								<Link
-									aria-current={pathname === '/guideline' ? 'page' : undefined}
-									href="/guideline"
-								>
-									Guideline
-								</Link>
-							</NavigationMenuLink>
+						<NavigationMenuItem>
 							<NavigationMenuTrigger
-								aria-label="Guideline 메뉴 열기"
-								className="min-w-0 rounded-l-none px-1.5 [&_svg]:ml-0"
-							/>
+								className={cn(guidelineActive && 'text-foreground')}
+								onClick={() => router.push('/guideline')}
+							>
+								Guideline
+							</NavigationMenuTrigger>
 							<NavigationMenuContent>
 								<ul className="grid w-72 gap-1">
 									<li>
@@ -125,27 +112,13 @@ function HeaderHead({
 								</ul>
 							</NavigationMenuContent>
 						</NavigationMenuItem>
-						<NavigationMenuItem className="flex items-center">
-							<NavigationMenuLink
-								active={studioActive}
-								asChild
-								className={cn(
-									navigationMenuTriggerStyle(),
-									'min-w-0 rounded-r-none pr-1',
-									studioActive && 'text-foreground',
-								)}
-							>
-								<Link
-									aria-current={pathname === '/create' ? 'page' : undefined}
-									href="/create"
-								>
-									Studio
-								</Link>
-							</NavigationMenuLink>
+						<NavigationMenuItem>
 							<NavigationMenuTrigger
-								aria-label="Studio 메뉴 열기"
-								className="min-w-0 rounded-l-none px-1.5 [&_svg]:ml-0"
-							/>
+								className={cn(studioActive && 'text-foreground')}
+								onClick={() => router.push('/create')}
+							>
+								Studio
+							</NavigationMenuTrigger>
 							<NavigationMenuContent>
 								<ul className="grid w-48 gap-1">
 									{STUDIO_LINKS.map((item) => {

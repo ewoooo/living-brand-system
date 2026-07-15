@@ -3,8 +3,11 @@ import { createElement } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { GlobalHeader } from './global-header'
 
+const { push } = vi.hoisted(() => ({ push: vi.fn() }))
+
 vi.mock('next/navigation', () => ({
 	usePathname: () => '/guideline/foundations',
+	useRouter: () => ({ push }),
 }))
 
 vi.mock('@/components/global/search/guideline-search', () => ({
@@ -16,7 +19,7 @@ vi.mock('@/components/ui/sidebar', () => ({
 }))
 
 describe('GlobalHeader', () => {
-	it('가이드라인 챕터와 Studio 링크를 표시한다', () => {
+	it('상위 메뉴를 클릭하면 이동하고 드롭다운 링크를 표시한다', () => {
 		render(
 			createElement(GlobalHeader, {
 				guidelineChapters: [
@@ -31,13 +34,8 @@ describe('GlobalHeader', () => {
 			}),
 		)
 
-		expect(screen.getByRole('link', { name: 'Guideline' })).toHaveAttribute(
-			'href',
-			'/guideline',
-		)
-		expect(screen.getByRole('link', { name: 'Studio' })).toHaveAttribute('href', '/create')
-
-		fireEvent.click(screen.getByRole('button', { name: 'Guideline 메뉴 열기' }))
+		fireEvent.click(screen.getByRole('button', { name: /Guideline/ }))
+		expect(push).toHaveBeenLastCalledWith('/guideline')
 
 		expect(screen.getByRole('link', { name: /Foundations/ })).toHaveAttribute(
 			'href',
@@ -45,7 +43,8 @@ describe('GlobalHeader', () => {
 		)
 		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute('href', '/review')
 
-		fireEvent.click(screen.getByRole('button', { name: 'Studio 메뉴 열기' }))
+		fireEvent.click(screen.getByRole('button', { name: /Studio/ }))
+		expect(push).toHaveBeenLastCalledWith('/create')
 
 		expect(screen.getByRole('link', { name: 'Templates' })).toHaveAttribute('href', '/create')
 		expect(screen.getByRole('link', { name: 'Generate' })).toHaveAttribute('href', '/generate')
