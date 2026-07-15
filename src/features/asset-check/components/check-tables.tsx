@@ -43,7 +43,7 @@ function CheckRow({
 	check,
 	rowId,
 	rowIndex,
-	sectionLabel,
+	scenarioLabel,
 	appliesTo,
 	guidelineHref,
 	anchorId,
@@ -73,7 +73,7 @@ function CheckRow({
 				tabIndex={0}
 				className="border-0 scroll-mt-72 cursor-pointer"
 			>
-				<CheckSectionCell sectionLabel={sectionLabel} />
+				<CheckScenarioCell scenarioLabel={scenarioLabel} />
 				<TableCell className={cn('w-0 py-2.5 pr-3 align-top', CHECK_BORDER)}>
 					<CheckExecutorIcon check={check} />
 				</TableCell>
@@ -128,10 +128,10 @@ function AnimatedCheckTableRow({
 	)
 }
 
-function CheckSectionCell({ sectionLabel }: { sectionLabel: string | null }) {
+function CheckScenarioCell({ scenarioLabel }: { scenarioLabel: string | null }) {
 	return (
-		<TableCell className={cn('w-44 py-2.5 pr-4 align-top', sectionLabel && CHECK_BORDER)}>
-			{sectionLabel && <span className="type-callout-emphasized">{sectionLabel}</span>}
+		<TableCell className={cn('w-44 py-2.5 pr-4 align-top', scenarioLabel && CHECK_BORDER)}>
+			{scenarioLabel && <span className="type-callout-emphasized">{scenarioLabel}</span>}
 		</TableCell>
 	)
 }
