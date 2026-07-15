@@ -16,7 +16,7 @@ export function ColorPaletteBlock({
 	return (
 		<section>
 			<BlockHeading title={block.title} />
-			<div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+			<div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
 				{colors.map((color) => (
 					<div
 						key={color.id}

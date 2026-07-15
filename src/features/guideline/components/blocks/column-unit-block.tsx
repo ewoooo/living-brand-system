@@ -10,7 +10,7 @@ export function ColumnUnitBlock({
 	block: Extract<GuidelineBlock, { blockType: 'columnUnit' }>
 }) {
 	const gridClassName =
-		block.columns && block.columns.length > 1 ? 'grid gap-8 md:grid-cols-2' : 'grid gap-8'
+		block.columns && block.columns.length > 1 ? 'grid gap-4 md:grid-cols-2' : 'grid gap-4'
 
 	return (
 		<section>
