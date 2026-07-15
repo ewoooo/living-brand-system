@@ -262,7 +262,7 @@ function formatCheckToolResult(
 			acc[value.rawResult.status] += 1
 			return acc
 		},
-		{ fail: 0, needs_review: 0, ok: 0, pass: 0 },
+		{ fail: 0, needs_review: 0, ok: 0, pass: 0, advisory: 0 },
 	)
 	const outcome =
 		counts.fail > 0
@@ -285,6 +285,7 @@ function formatCheckToolResult(
 			needs_review: '담당자 검토 필요',
 			ok: '적합',
 			pass: '통과',
+			advisory: '조언',
 		},
 		checkGuidance: [
 			'needs_review는 확정 실패가 아니라 담당자 확인이 필요한 항목입니다.',
@@ -304,7 +305,9 @@ function formatCheckToolResult(
 								? '적합'
 								: status === 'pass'
 									? '통과'
-									: '미통과',
+									: status === 'advisory'
+										? '조언'
+										: '미통과',
 				status,
 				fulfillment: value.rawResult.fulfillment,
 				detail: value.message,
