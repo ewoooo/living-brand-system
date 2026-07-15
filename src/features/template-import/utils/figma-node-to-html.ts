@@ -13,8 +13,8 @@ import type {
  * 그건 이 파일의 버그다.
  *
  * 런타임(DB 저장 HTML)에서 그대로 떠야 하므로 Tailwind가 아니라 inline style로 굳힌다.
- * div=프레임/그룹/셰이프, p=텍스트. Figma 노드 타입은 data-figma-type으로 보존한다(레이어 패널용).
- * 아직 못 담는 것: 이미지 픽셀(승인 에셋 배선은 별도), vector path 형상.
+ * div=프레임/그룹/셰이프, p=텍스트, img=내장 SVG. Figma 노드 타입은 data-figma-type으로 보존한다(레이어 패널용).
+ * 아직 못 담는 것: 이미지 픽셀(승인 에셋 배선은 별도).
  */
 
 interface FigmaGradientPaint extends FigmaPaint {
@@ -331,7 +331,11 @@ function fixedSize(node: Node): Record<string, string | undefined> {
 }
 
 // 부모 레이아웃 종류에 따른 자식 배치.
-function childPlacement(node: Node, parent: Node | null): Record<string, string | undefined> {
+function childPlacement(
+	node: Node,
+	parent: Node | null,
+	useAbsoluteBounds = false,
+): Record<string, string | undefined> {
 	if (!parent) return {}
 
 	if (parent.layoutMode === 'GRID') {
@@ -359,7 +363,8 @@ function childPlacement(node: Node, parent: Node | null): Record<string, string 
 	const pb = parent.absoluteBoundingBox
 	const b = node.absoluteBoundingBox
 	if (pb && b) {
-		const dim = node.size ?? b
+		// Figma가 렌더한 SVG는 회전까지 포함한 결과이므로 AABB 크기를 그대로 쓴다.
+		const dim = useAbsoluteBounds ? b : (node.size ?? b)
 		return {
 			position: 'absolute',
 			left: `${round(b.x - pb.x)}px`,
@@ -376,10 +381,17 @@ const escapeHtml = (t: string) =>
 
 const escapeAttr = (t: string) => t.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 
-function renderNode(node: Node, parent: Node | null, isRoot: boolean, depth: number): string {
+function renderNode(
+	node: Node,
+	parent: Node | null,
+	isRoot: boolean,
+	depth: number,
+	vectorAssetUrls: Readonly<Record<string, string>>,
+): string {
 	if (node.visible === false) return ''
 
 	const isText = node.type === 'TEXT'
+	const vectorAssetUrl = vectorAssetUrls[node.id]
 
 	const style: Record<string, string | undefined> = {
 		'box-sizing': 'border-box',
@@ -389,15 +401,19 @@ function renderNode(node: Node, parent: Node | null, isRoot: boolean, depth: num
 					height: `${round(node.absoluteBoundingBox.height)}px`,
 				}
 			: {}),
-		...containerStyle(node),
-		...boxStyle(node),
+		...(vectorAssetUrl ? { display: 'block' } : containerStyle(node)),
+		...(vectorAssetUrl ? {} : boxStyle(node)),
 		// 컨테이너는 position:relative를 기본으로 둬 절대배치 자식의 기준 박스가 된다.
 		// childPlacement가 뒤에 병합되므로, 이 노드 자신이 절대배치면 position:absolute가 이겨 덮어쓴다.
-		...(isText ? textStyle(node) : { position: 'relative', background: backgroundValue(node) }),
-		...childPlacement(node, parent),
+		...(vectorAssetUrl
+			? {}
+			: isText
+				? textStyle(node)
+				: { position: 'relative', background: backgroundValue(node) }),
+		...childPlacement(node, parent, Boolean(vectorAssetUrl)),
 	}
 
-	const tag = isText ? 'p' : 'div'
+	const tag = vectorAssetUrl ? 'img' : isText ? 'p' : 'div'
 
 	// 개발자 확인용 pretty-print: 속성 한 줄씩, style은 선언 한 줄씩 펼친다.
 	// HTML 속성값은 개행/탭을 담을 수 있고 CSS는 선언 사이 공백을 무시하므로 렌더에 영향 없다.
@@ -411,6 +427,7 @@ function renderNode(node: Node, parent: Node | null, isRoot: boolean, depth: num
 		`data-node-id="${escapeAttr(node.id)}"`,
 		`data-figma-type="${escapeAttr(node.type)}"`,
 		`data-name="${escapeAttr(node.name ?? '')}"`,
+		...(vectorAssetUrl ? [`src="${escapeAttr(vectorAssetUrl)}"`, 'alt=""'] : []),
 	]
 		.map((a) => `${attrPad}${a}`)
 		.join('\n')
@@ -421,21 +438,25 @@ function renderNode(node: Node, parent: Node | null, isRoot: boolean, depth: num
 		.join('\n')
 
 	const open = `${pad}<${tag}\n${attrLines}\n${attrPad}style="\n${declLines}\n${attrPad}"\n${pad}>`
+	if (vectorAssetUrl) return open
 
 	// 텍스트는 내용을 여는 태그와 같은 줄에 둔다(공백/개행 보존이 white-space에 걸리므로 재들여쓰기 금지).
 	if (isText) return `${open}${escapeHtml(node.characters ?? '')}</${tag}>`
 
 	// 요소 사이 공백은 grid/flex 아이템이 되지 않고 block에선 collapse되어 렌더에 영향 없다.
 	const children = (node.children ?? [])
-		.map((c) => renderNode(c, node, false, depth + 1))
+		.map((c) => renderNode(c, node, false, depth + 1, vectorAssetUrls))
 		.filter(Boolean)
 	if (!children.length) return `${open}</${tag}>`
 	return `${open}\n${children.join('\n')}\n${pad}</${tag}>`
 }
 
-export function figmaNodeToHtml(node: Node): FigmaHtmlResult {
+export function figmaNodeToHtml(
+	node: Node,
+	vectorAssetUrls: Readonly<Record<string, string>> = {},
+): FigmaHtmlResult {
 	return {
-		html: renderNode(node, null, true, 0),
+		html: renderNode(node, null, true, 0, vectorAssetUrls),
 		width: round(node.absoluteBoundingBox?.width ?? 0),
 		height: round(node.absoluteBoundingBox?.height ?? 0),
 	}
