@@ -40,7 +40,7 @@
 
 ### 4. `src/features/asset-check/repositories/ai-check.agent.repository.ts` — AI 호출 계약
 
-- 단일 모델 강제 검증 제거 (호출자가 모델별로 그룹핑해서 넘김).
+- 단일 모델 가드는 유지한다 — 호출자(run-check)가 모델별로 그룹핑해 넘기는 것이 새 계약이고, 가드는 그 불변식 검증으로 남긴다.
 - criteria 필수 검증(`invalid_criteria`)을 heuristic 체크에만 적용.
 - `buildAiCheckSchema`: per-check 스키마 분기 —
   - heuristic → `{ observations: { [criterionId]: observation } }` (기존)
