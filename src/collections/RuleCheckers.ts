@@ -26,6 +26,9 @@ const requiredSelectFor =
 		)
 	}
 
+const aiExecutorCondition = (_data: unknown, siblingData: { executor?: RuleExecutor }) =>
+	siblingData?.executor === 'heuristic' || siblingData?.executor === 'manual'
+
 export const RuleCheckers: CollectionConfig = {
 	slug: 'rule-checkers',
 	dbName: 'rule_checkers',
@@ -65,7 +68,11 @@ export const RuleCheckers: CollectionConfig = {
 			name: 'executor',
 			type: 'select',
 			required: true,
-			options: ['deterministic', 'heuristic', 'manual'],
+			options: [
+				{ label: 'Deterministic', value: 'deterministic' },
+				{ label: 'Heuristic (AI)', value: 'heuristic' },
+				{ label: 'Advisory (AI)', value: 'manual' },
+			],
 		},
 		{
 			name: 'checkerKey',
@@ -86,17 +93,18 @@ export const RuleCheckers: CollectionConfig = {
 			],
 			validate: requiredSelectFor('heuristic', 'Model을 선택하세요.'),
 			admin: {
-				condition: (_, siblingData) => siblingData?.executor === 'heuristic',
-				description: '휴리스틱 검수에 사용할 Anthropic 모델입니다.',
+				condition: aiExecutorCondition,
+				description:
+					'AI 검수에 사용할 Anthropic 모델입니다. Advisory는 미설정 시 브랜드 담당자 확인으로 폴백합니다.',
 			},
 		},
 		{
 			name: 'prompt',
 			type: 'textarea',
 			admin: {
-				condition: (_, siblingData) => siblingData?.executor === 'heuristic',
+				condition: aiExecutorCondition,
 				description:
-					'휴리스틱 검수 시 AI에게 전달할 관찰 지침입니다. 출력 형식과 판정 금지 규칙은 시스템이 강제하므로 자유롭게 작성해도 검수가 깨지지 않습니다.',
+					'AI에게 전달할 관찰·조언 지침입니다. Advisory는 이 프롬프트가 조언 관점을 정의합니다 (예: 타이포그래피 위계 관점에서 디자이너처럼 조언). 출력 형식과 판정 금지 규칙은 시스템이 강제합니다.',
 			},
 		},
 	],

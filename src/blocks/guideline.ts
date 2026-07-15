@@ -95,7 +95,7 @@ export function guidelineChecksField(): Field {
 				options: [
 					{ label: 'Deterministic', value: 'deterministic' },
 					{ label: 'Heuristic (AI)', value: 'heuristic' },
-					{ label: 'Manual', value: 'manual' },
+					{ label: 'Advisory (AI)', value: 'manual' },
 				],
 				hooks: { beforeValidate: [populateCheckExecutor] },
 				admin: {

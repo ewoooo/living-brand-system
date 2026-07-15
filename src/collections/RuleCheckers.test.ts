@@ -60,4 +60,16 @@ describe('RuleCheckers executor binding', () => {
 			{ label: 'Haiku', value: 'claude-haiku-4-5' },
 		])
 	})
+
+	it('manual executor는 Advisory (AI) 라벨로 표시하고 model은 선택 입력이다', () => {
+		const executor = fieldNamed('executor')
+		if (executor?.type !== 'select') throw new Error('executor select is not configured')
+
+		expect(executor.options).toEqual([
+			{ label: 'Deterministic', value: 'deterministic' },
+			{ label: 'Heuristic (AI)', value: 'heuristic' },
+			{ label: 'Advisory (AI)', value: 'manual' },
+		])
+		expect(validationFor('model')('', { siblingData: { executor: 'manual' } })).toBe(true)
+	})
 })
