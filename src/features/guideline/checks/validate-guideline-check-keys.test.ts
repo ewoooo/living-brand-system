@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { collectCheckKeys, validateGuidelineCheckKeys } from './validate-guideline-check-keys'
+import { collectCheckKeys } from '../services/validate-guideline-check-keys.service'
+import { validateGuidelineCheckKeys } from './validate-guideline-check-keys'
 
 describe('validateGuidelineCheckKeys', () => {
 	it('문서와 Block의 영문 제목에서 저장 예정 key를 수집한다', () => {
