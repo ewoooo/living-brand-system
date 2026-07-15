@@ -18,6 +18,10 @@ import { contrastOptionsSchema } from '@/features/asset-check/checkers/contrast.
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
+import {
+	formatObservationActual,
+	formatObservationExpected,
+} from '@/features/asset-check/components/check-observation-format'
 import type {
 	RuntimeCheck as Check,
 	CheckSection,
@@ -421,22 +425,19 @@ function HeuristicObservations({ observations }: { observations: AiCheckResult['
 								<p className="mt-1 text-muted-foreground">{observation.reason}</p>
 							</td>
 							<td className="px-3 py-2 align-top whitespace-nowrap">
-								{observation.expected === 'present' ? '있어야 함' : '없어야 함'}
+								{formatObservationExpected(observation)}
 							</td>
 							<td className="px-3 py-2 align-top whitespace-nowrap">
-								{observation.actual === 'present'
-									? '있음'
-									: observation.actual === 'absent'
-										? '없음'
-										: '판단 불가'}{' '}
-								({observation.confidence}%)
+								{formatObservationActual(observation)} ({observation.confidence}%)
 							</td>
 							<td className="px-3 py-2 align-top whitespace-nowrap">
 								{observation.satisfied === true
 									? '충족'
 									: observation.satisfied === false
 										? '미충족'
-										: '검토 필요'}
+										: observation.actual === 'not_applicable'
+											? '해당 없음'
+											: '검토 필요'}
 							</td>
 						</tr>
 					))}
