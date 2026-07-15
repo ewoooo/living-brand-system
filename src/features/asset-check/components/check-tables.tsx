@@ -27,6 +27,7 @@ import type {
 	CheckSection,
 } from '@/features/asset-check/services/get-check-ruleset.service'
 import { cn } from '@/lib/utils'
+import { CheckEvidence } from './check-evidence'
 
 const EXECUTOR: Record<
 	string,
@@ -320,19 +321,13 @@ function CheckDetailRow({
 								적용 위치: {appliesToText}
 							</p>
 						)}
-						{check.evidence ? (
-							<blockquote className="type-caption-1 rounded-md bg-fill-muted px-3 py-2 text-foreground-muted">
-								{check.evidence}
-							</blockquote>
-						) : (
-							<span className="type-caption-1 text-foreground-muted">
-								관련 가이드라인 없음
-							</span>
-						)}
+						<CheckEvidence
+							evidence={check.evidence}
+							referenceAssets={check.referenceAssets}
+						/>
 						<CheckExecutionDetails check={check} outcome={outcome} />
 						<CheckFacts facts={facts} />
 						<HeuristicObservations observations={observations} />
-						<ReferenceAssets assets={check.referenceAssets} />
 					</div>
 				</CheckDetailCollapse>
 			</TableCell>
@@ -503,28 +498,6 @@ function CheckDetailCollapse({
 		>
 			{children}
 		</motion.div>
-	)
-}
-
-function ReferenceAssets({ assets }: { assets: Check['referenceAssets'] }) {
-	if (assets.length === 0) return null
-	const roleLabel = { positive: '권장', negative: '금지', context: '참고' }
-
-	return (
-		<div className="type-caption-1 flex flex-wrap items-center gap-1.5">
-			<span className="text-foreground-muted">기준 이미지 {assets.length}개</span>
-			{assets.map((asset) => (
-				<a
-					key={`${asset.url}-${asset.name}-${asset.role}`}
-					href={asset.url}
-					target="_blank"
-					rel="noreferrer"
-					className="rounded-md border px-2 py-1 text-foreground transition-colors hover:bg-fill-hover"
-				>
-					{roleLabel[asset.role]} · {asset.name}
-				</a>
-			))}
-		</div>
 	)
 }
 

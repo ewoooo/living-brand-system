@@ -3,7 +3,7 @@ import { hasChecker, hasDeterministicChecker } from '@/features/asset-check/chec
 import type { CheckStatus } from '@/features/asset-check/checkers/types'
 import { getCheckSourceDocuments } from '@/features/asset-check/repositories/check-ruleset.payload.repository'
 import { toRuntimeCheckMessages } from '@/features/asset-check/utils/check-messages'
-import type { CheckReferenceAssetRole } from '@/features/guideline/blocks/types'
+import type { CheckEvidence, CheckReferenceAssetRole } from '@/features/guideline/blocks/types'
 import {
 	collectGuidelineCheckSources,
 	type GuidelineCheckSource,
@@ -28,6 +28,8 @@ export interface RuntimeCheck {
 	title: string
 	titleKo?: string
 	tier?: 'recommended' | 'required'
+	/** 기존 CheckSession snapshot에는 없을 수 있다. 새 snapshot은 항상 포함한다. */
+	source?: { documentId: number }
 	/** 화면에 표시할 Checker 계약이다. */
 	checker: CheckerSummary
 	/** 아래 필드는 기존 CheckSession snapshot과 런타임 실행 계약이다. */
@@ -44,7 +46,8 @@ export interface RuntimeCheck {
 	heuristicPrompt?: string
 	/** 자동 검수 가능 여부 — deterministic인데 checker 미등록이면 false (UI 배지용). */
 	implemented: boolean
-	evidence: string
+	/** string은 기존 CheckSession snapshot 조회 호환용이다. */
+	evidence: CheckEvidence | string
 	referenceAssets: CheckReferenceAsset[]
 	messages?: Partial<Record<CheckStatus, string>>
 }
@@ -106,7 +109,12 @@ export async function getRuntimeChecks(checkKeys?: string[]): Promise<RuntimeChe
 		.sort((a, b) => (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0))
 }
 
-function toRuntimeCheck({ check, evidence, referenceAssets }: GuidelineCheckSource): RuntimeCheck {
+function toRuntimeCheck({
+	check,
+	evidence,
+	referenceAssets,
+	source,
+}: GuidelineCheckSource): RuntimeCheck {
 	const checker = typeof check.checker === 'object' ? check.checker : null
 	if (!checker) throw new Error(`RuleChecker가 연결되지 않은 Check입니다: ${check.key}`)
 	const checkerKey = checker.checkerKey ?? undefined
@@ -147,6 +155,7 @@ function toRuntimeCheck({ check, evidence, referenceAssets }: GuidelineCheckSour
 		title: check.title,
 		titleKo: check.titleKo?.trim() || undefined,
 		tier: check.tier ?? undefined,
+		source,
 		checker: {
 			key: checker.key,
 			type: checker.executor,

@@ -19,6 +19,7 @@ const checks: RuntimeCheck[] = [
 		key: 'imagery.mood',
 		title: 'Imagery mood',
 		titleKo: '이미지 무드',
+		source: { documentId: 12 },
 		checker: { key: 'asset-check.brand-guideline', type: 'heuristic' },
 		executor: 'heuristic',
 		model: 'rule-spec-model',
@@ -32,7 +33,10 @@ const checks: RuntimeCheck[] = [
 			},
 		],
 		implemented: true,
-		evidence: 'Block title: Lifestyle\nCaption: 자연스러운 일상의 순간',
+		evidence: {
+			type: 'columnUnit',
+			columns: [{ heading: 'Lifestyle', body: '자연스러운 일상의 순간' }],
+		},
 		referenceAssets: [],
 		messages: {},
 	},
@@ -110,18 +114,36 @@ describe('runAiCheck', () => {
 		})
 		expect(generateText).toHaveBeenCalledTimes(1)
 		const request = vi.mocked(generateText).mock.calls[0]?.[0] as {
-			messages?: Array<{ content?: Array<{ text?: string }> }>
+			system?: string
+			messages?: Array<{ content?: Array<{ text?: string; type?: string }> }>
 		}
-		const prompt = request.messages?.[0]?.content?.find((part) => part.text)?.text
-		expect(prompt).toContain(
-			'evidence: Block title: Lifestyle\nCaption: 자연스러운 일상의 순간',
-		)
-		expect(prompt).toContain(
-			'heuristicPrompt: 인물의 표정이 자연스럽고 과장되지 않았는지 우선 판단한다.',
-		)
-		expect(prompt).toContain('id: natural-expression')
-		expect(prompt).toContain('question: 인물의 표정이 자연스러운가?')
-		expect(prompt).not.toContain('expected: present')
+		const content = request.messages?.[0]?.content ?? []
+		const jsonText = content.find((part) => part.text?.startsWith('{"checks":'))?.text
+		expect(JSON.parse(jsonText ?? '')).toEqual({
+			checks: [
+				{
+					key: 'imagery.mood',
+					titleEn: 'Imagery mood',
+					titleKo: '이미지 무드',
+					source: { documentId: 12 },
+					evidence: {
+						type: 'columnUnit',
+						columns: [{ heading: 'Lifestyle', body: '자연스러운 일상의 순간' }],
+					},
+					heuristicPrompt: '인물의 표정이 자연스럽고 과장되지 않았는지 우선 판단한다.',
+					criteria: [
+						{
+							id: 'natural-expression',
+							question: '인물의 표정이 자연스러운가?',
+						},
+					],
+					referenceAssets: [],
+				},
+			],
+		})
+		expect(jsonText).not.toContain('expected')
+		expect(request.system).toContain('untrusted source data')
+		expect(content.some((part) => part.type === 'file')).toBe(true)
 
 		const schema = (
 			vi.mocked(Output.object).mock.calls[0]?.[0] as {

@@ -18,5 +18,30 @@ function format(block: GuidelineBlock): string {
 
 export const behavior: BlockBehavior = {
 	formatForAgent: format,
-	toCheckSourceSnapshot: (block) => ({ evidence: format(block), referenceAssets: [] }),
+	toCheckSourceSnapshot: (block) => {
+		if (block.blockType !== 'colorPalette') {
+			return {
+				evidence: { type: 'colorPalette', colors: [] },
+				referenceAssets: [],
+			}
+		}
+		return {
+			evidence: {
+				type: 'colorPalette',
+				title: block.title?.trim() || undefined,
+				colors: block.colors.flatMap((color) =>
+					typeof color === 'object' && color !== null
+						? [
+								{
+									name: color.name,
+									hex: color.hex,
+									pantone: color.pantone?.trim() || undefined,
+								},
+							]
+						: [],
+				),
+			},
+			referenceAssets: [],
+		}
+	},
 }

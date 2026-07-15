@@ -15,7 +15,7 @@
 - `CheckResult`의 판정은 `rawResult.status`(`pass`/`ok`/`needs_review`/`fail`)와 `fulfillment`(충족도 %)로 표현됩니다.
 - 2단계 계약: 결정론적 Check는 즉시 채워지고, AI(heuristic) Check는 `pendingCheckKeys`로 반환된 뒤 **`completeCheckSessionAiCheck`**로 완성합니다.
 - 기준 조회 단위: `getRuntimeChecks(checkKeys?)`(실행), `getCheckRuleset()`(페이지 뷰모델).
-- 기준 소스: published `guideline-documents`의 문서 및 Block `checks[]`. 실행 시 소유 문서 또는 Block의 전체 정규화 콘텐츠를 evidence로 만들고, heuristicCriteria·heuristicPrompt·역할이 포함된 referenceAssets·RuleChecker 계약과 함께 `CheckSession.rulesetSnapshot`에 고정합니다.
+- 기준 소스: published `guideline-documents`의 문서 및 Block `checks[]`. 실행 시 `source.documentId`와 소유 문서 또는 Block의 타입별 구조화 evidence를 만들고, heuristicCriteria·heuristicPrompt·역할이 포함된 referenceAssets·RuleChecker 계약과 함께 `CheckSession.rulesetSnapshot`에 고정합니다. Block 식별자와 문서 제목은 evidence 계약에 복사하지 않습니다.
 
 ### 용어와 식별자
 
@@ -128,14 +128,14 @@ Raster Observation
 
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
-| [Page](../surfaces/page.md) | 구현 | `/review` — 이미지 업로드 → 항목별 결과 테이블. 클라이언트가 `/api/check` → `/api/check/ai` 순으로 호출 |
+| [Page](../surfaces/page.md) | 구현 | `/review` — 이미지 업로드 → 항목별 결과 테이블. `/review/rules` — 블록 타입별 구조화 evidence 카탈로그(제목·키·근거 검색, 판정 방식 필터, 결과 개수 표시). 클라이언트가 `/api/check` → `/api/check/ai` 순으로 호출 |
 | REST | 구현 | `POST /api/check`(FormData, 20MB 제한, origin·인증 게이트), `POST /api/check/ai` |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `runCheck`(+`listCheckScenarios`)이 `startCheckSession`을 호출 |
 | MCP | 부분 | `mcp-call` 출처값은 정의됨, 전용 라우트는 없이 `/api/check` 재사용 |
 
 ## 4. 의존
 
-- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 모델과 기본 프롬프트는 Check가 참조하는 RuleChecker에서 선택하고, Check의 heuristicCriteria와 heuristicPrompt를 전달한다. 모델은 기준별 `present`/`absent`/`uncertain` 관찰값만 반환하며 최종 `pass`/`fail`/`needs_review`는 검수 Service의 Evaluator가 결정한다. 한 세션의 heuristic Check는 한 번의 AI 호출로 평가하고, 설정·호출·출력 검증 실패는 `needs_review`로 처리한다.
+- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 모델과 기본 프롬프트는 Check가 참조하는 RuleChecker에서 선택하고, Check의 source·구조화 evidence·heuristicCriteria·heuristicPrompt를 JSON text part로, 검수 대상과 referenceAssets를 file part로 전달한다. 모델은 기준별 `present`/`absent`/`uncertain` 관찰값만 반환하며 최종 `pass`/`fail`/`needs_review`는 검수 Service의 Evaluator가 결정한다. 한 세션의 heuristic Check는 한 번의 AI 호출로 평가하고, 설정·호출·출력 검증 실패는 `needs_review`로 처리한다.
 - 이미지 디코딩: `sharp`(128px 픽셀 그리드 추출).
 - 결정론적 checker: palette-compliance / color-combination / spot-color / background-tone / clear-space / relative-size / canvas-format. RuleChecker의 `checkerKey`로 registry를 조회하며, 미등록 checker는 `implemented:false`로 표시.
 - Payload 컬렉션: `guideline-documents`(룰셋), `brand-colors`(팔레트) 읽기. 세션은 `check-sessions`에 영속(룰셋 스냅샷을 함께 저장해 AI 후속 단계가 재사용).
