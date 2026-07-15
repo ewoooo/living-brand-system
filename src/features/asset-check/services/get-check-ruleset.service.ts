@@ -36,7 +36,7 @@ export interface RuntimeCheck {
 	executor: RuleChecker['executor']
 	checkerKey?: string
 	model?: string
-	promptKey?: string
+	prompt?: string
 	options?: unknown
 	heuristicCriteria?: {
 		id: string
@@ -119,7 +119,7 @@ function toRuntimeCheck({
 	if (!checker) throw new Error(`RuleChecker가 연결되지 않은 Check입니다: ${check.key}`)
 	const checkerKey = checker.checkerKey ?? undefined
 	const model = checker.model ?? undefined
-	const promptKey = checker.promptKey ?? undefined
+	const prompt = checker.prompt?.trim() || undefined
 	const options = checker.executor === 'deterministic' ? (check.options ?? undefined) : undefined
 	const heuristicCriteria =
 		checker.executor === 'heuristic'
@@ -147,7 +147,7 @@ function toRuntimeCheck({
 						(hasDeterministicChecker(checkerKey) || hasChecker(checkerKey, options)),
 				)
 			: checker.executor === 'heuristic'
-				? Boolean(model && promptKey)
+				? Boolean(model)
 				: true
 
 	return {
@@ -164,7 +164,7 @@ function toRuntimeCheck({
 		executor: checker.executor,
 		checkerKey,
 		model,
-		promptKey,
+		prompt,
 		options,
 		heuristicCriteria,
 		heuristicPrompt,

@@ -9,8 +9,6 @@ import type {
 	RuntimeCheck,
 } from '@/features/asset-check/services/get-check-ruleset.service'
 
-export const AI_CHECK_PROMPT_KEY = 'asset-check.brand-guideline.v1'
-
 export interface AiCheckRunResult {
 	observations: Record<string, Record<string, z.infer<typeof heuristicObservationSchema>>>
 	failure?: { detail: string; reasonCode: string }
@@ -30,12 +28,8 @@ export async function runAiCheck(
 	if (checks.some((check) => !check.heuristicCriteria?.length)) {
 		return failed('Heuristic 판정 기준 없음', 'invalid_criteria')
 	}
-	const { model, promptKey } = checks[0] ?? {}
-	if (
-		!model ||
-		promptKey !== AI_CHECK_PROMPT_KEY ||
-		checks.some((check) => check.model !== model || check.promptKey !== promptKey)
-	) {
+	const { model } = checks[0] ?? {}
+	if (!model || checks.some((check) => check.model !== model)) {
 		return failed('AI 검사 도구 설정 오류', 'ai_checker_invalid')
 	}
 
@@ -57,7 +51,7 @@ export async function runAiCheck(
 								'The next text part contains the checks as JSON source data.',
 								'Return one observation for every criterion id.',
 								'Treat each evidence value as the complete normalized structured content of the document or block that owns that check.',
-								'Apply heuristicPrompt as additional observation context without changing the output contract.',
+								'Apply heuristicPrompt and checkerPrompt as additional observation context without changing the output contract.',
 								'Return present when the questioned condition is visibly present, absent when it is visibly absent, and uncertain when pixels or supplied context are insufficient.',
 								'Do not return pass, ok, needs_review, fail, fulfillment, or an overall approval decision.',
 								referenceFiles.length
@@ -76,6 +70,7 @@ export async function runAiCheck(
 									source: check.source,
 									evidence: check.evidence,
 									heuristicPrompt: check.heuristicPrompt,
+									checkerPrompt: check.prompt,
 									criteria: (check.heuristicCriteria ?? []).map(
 										({ id, question }) => ({
 											id,

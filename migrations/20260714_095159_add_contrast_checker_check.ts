@@ -1,37 +1,32 @@
-import type { MigrateDownArgs, MigrateUpArgs } from '@payloadcms/db-postgres'
+import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 import type { GuidelineDocument } from '../src/payload-types'
 
 const CHECKER_KEY = 'checker.contrast'
 const CHECK_KEY = 'color.contrast'
 const DOCUMENT_SLUG = 'color-pairing'
 
-export async function up({ payload, req }: MigrateUpArgs): Promise<void> {
+export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 	const document = await findTargetDocument({ payload, req })
 	if (document.checks?.some((check) => check.key === CHECK_KEY)) {
 		throw new Error(`${CHECK_KEY} Check가 이미 존재합니다.`)
 	}
 
-	const existingChecker = await payload.find({
-		collection: 'rule-checkers',
-		depth: 0,
-		draft: true,
-		limit: 1,
-		overrideAccess: true,
-		req,
-		where: { key: { equals: CHECKER_KEY } },
-	})
-	if (existingChecker.docs.length > 0) {
+	const { rows: existingCheckers } = await db.execute(
+		sql`SELECT "id" FROM "rule_checkers" WHERE "key" = ${CHECKER_KEY} LIMIT 1`,
+	)
+	if (existingCheckers.length > 0) {
 		throw new Error(`${CHECKER_KEY} Checker가 이미 존재합니다.`)
 	}
 
-	const checker = await payload.create({
-		collection: 'rule-checkers',
-		data: { key: CHECKER_KEY, executor: 'deterministic', checkerKey: 'contrast' },
-		depth: 0,
-		draft: false,
-		overrideAccess: true,
-		req,
-	})
+	const { rows: checkers } = await db.execute(sql`
+		INSERT INTO "rule_checkers" ("key", "executor", "checker_key", "_status", "created_at", "updated_at")
+		VALUES (${CHECKER_KEY}, 'deterministic', 'contrast', 'published', NOW(), NOW())
+		RETURNING "id"
+	`)
+	const checkerId = checkers[0]?.id
+	if (typeof checkerId !== 'number') {
+		throw new Error(`${CHECKER_KEY} Checker 생성에 실패했습니다.`)
+	}
 
 	await payload.update({
 		collection: 'guideline-documents',
@@ -45,7 +40,7 @@ export async function up({ payload, req }: MigrateUpArgs): Promise<void> {
 					key: CHECK_KEY,
 					tier: 'required',
 					executor: 'deterministic',
-					checker: checker.id,
+					checker: checkerId,
 					options: {
 						criteria: [
 							{ measurement: 'contrastRatio', operator: 'gte', expected: 4.5 },
@@ -68,7 +63,7 @@ export async function up({ payload, req }: MigrateUpArgs): Promise<void> {
 	})
 }
 
-export async function down({ payload, req }: MigrateDownArgs): Promise<void> {
+export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
 	const documents = await payload.find({
 		collection: 'guideline-documents',
 		depth: 0,
@@ -95,23 +90,7 @@ export async function down({ payload, req }: MigrateDownArgs): Promise<void> {
 		})
 	}
 
-	const checkers = await payload.find({
-		collection: 'rule-checkers',
-		depth: 0,
-		draft: true,
-		limit: 1,
-		overrideAccess: true,
-		req,
-		where: { key: { equals: CHECKER_KEY } },
-	})
-	if (checkers.docs[0]) {
-		await payload.delete({
-			collection: 'rule-checkers',
-			id: checkers.docs[0].id,
-			overrideAccess: true,
-			req,
-		})
-	}
+	await db.execute(sql`DELETE FROM "rule_checkers" WHERE "key" = ${CHECKER_KEY}`)
 }
 
 async function findTargetDocument({

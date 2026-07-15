@@ -51,6 +51,7 @@ import * as migration_20260714_055652_cleanup_guideline_mcp_tools from './202607
 import * as migration_20260714_061204_add_template_overrides from './20260714_061204_add_template_overrides';
 import * as migration_20260714_095159_add_contrast_checker_check from './20260714_095159_add_contrast_checker_check';
 import * as migration_20260714_121152_heuristic_criteria_contract from './20260714_121152_heuristic_criteria_contract';
+import * as migration_20260715_020540_checker_name_prompt from './20260715_020540_checker_name_prompt';
 
 export const migrations = [
   {
@@ -311,11 +312,16 @@ export const migrations = [
   {
     up: migration_20260714_095159_add_contrast_checker_check.up,
     down: migration_20260714_095159_add_contrast_checker_check.down,
-    name: '20260714_095159_add_contrast_checker_check'
+    name: '20260714_095159_add_contrast_checker_check',
   },
   {
     up: migration_20260714_121152_heuristic_criteria_contract.up,
     down: migration_20260714_121152_heuristic_criteria_contract.down,
-    name: '20260714_121152_heuristic_criteria_contract'
+    name: '20260714_121152_heuristic_criteria_contract',
+  },
+  {
+    up: migration_20260715_020540_checker_name_prompt.up,
+    down: migration_20260715_020540_checker_name_prompt.down,
+    name: '20260715_020540_checker_name_prompt'
   },
 ];
