@@ -37,9 +37,12 @@ describe('GlobalHeader', () => {
 		fireEvent.click(screen.getByRole('button', { name: /Guideline/ }))
 		expect(push).toHaveBeenLastCalledWith('/guideline')
 
-		expect(screen.getByRole('link', { name: /Foundations/ })).toHaveAttribute(
-			'href',
-			'/guideline/foundations',
+		const foundationsLink = screen.getByRole('link', { name: /Foundations/ })
+		expect(foundationsLink).toHaveAttribute('href', '/guideline/foundations')
+		expect(foundationsLink).toHaveClass('in-data-[state=open]:animate-in')
+		expect(foundationsLink.closest('[data-slot="navigation-menu-content"]')).toHaveAttribute(
+			'data-state',
+			'open',
 		)
 		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute('href', '/review')
 
