@@ -58,3 +58,10 @@ export function evaluateHeuristic(
 function needsReview(detail: string, reasonCode: string): AiCheckResult {
 	return { status: 'needs_review', fulfillment: null, detail, reasonCode }
 }
+
+/** AI 조언 문단을 advisory 결과로 감싼다. 조언만 싣고 판정은 만들지 않는다. */
+export function evaluateAdvisory(advice: string | undefined): AiCheckResult {
+	const trimmed = advice?.trim()
+	if (!trimmed) return needsReview('AI 조언 없음', 'ai_output_invalid')
+	return { status: 'advisory', fulfillment: null, detail: trimmed }
+}

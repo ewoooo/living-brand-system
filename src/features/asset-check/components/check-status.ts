@@ -16,6 +16,11 @@ export const CHECK_STATUS: Record<CheckStatus, { label: string; pill: string; do
 		pill: 'bg-info/15 text-info',
 		dot: 'bg-info',
 	},
+	advisory: {
+		label: '조언',
+		pill: 'bg-info/15 text-info',
+		dot: 'bg-info',
+	},
 	needs_review: {
 		label: '검토',
 		pill: 'bg-warning/15 text-warning',

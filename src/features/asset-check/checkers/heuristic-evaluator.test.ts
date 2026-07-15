@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { evaluateHeuristic } from './heuristic-evaluator'
+import { evaluateAdvisory, evaluateHeuristic } from './heuristic-evaluator'
 
 const criteria = [
 	{ id: 'redness', question: '인위적인 홍조가 있는가?', expected: 'absent' as const },
@@ -36,5 +36,21 @@ describe('evaluateHeuristic', () => {
 				redness: { value: 'absent', confidence: 90, reason: '홍조 없음' },
 			}).reasonCode,
 		).toBe('ai_output_invalid')
+	})
+})
+
+describe('evaluateAdvisory', () => {
+	it('조언 문단을 advisory 상태로 감싼다', () => {
+		const result = evaluateAdvisory('로고 주변 여백을 넓히면 위계가 살아납니다.')
+
+		expect(result.status).toBe('advisory')
+		expect(result.detail).toBe('로고 주변 여백을 넓히면 위계가 살아납니다.')
+		expect(result.fulfillment).toBeNull()
+	})
+
+	it('조언이 없거나 공백이면 검토로 닫는다', () => {
+		expect(evaluateAdvisory(undefined).status).toBe('needs_review')
+		expect(evaluateAdvisory(undefined).reasonCode).toBe('ai_output_invalid')
+		expect(evaluateAdvisory('   ').reasonCode).toBe('ai_output_invalid')
 	})
 })

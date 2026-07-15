@@ -13,7 +13,7 @@ export interface CheckMetric {
 }
 
 export type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
-export type CheckStatus = 'pass' | 'ok' | 'needs_review' | 'fail'
+export type CheckStatus = 'pass' | 'ok' | 'advisory' | 'needs_review' | 'fail'
 export type CheckFactValue = string | number | boolean | string[]
 export type MeasurementValue = string | number | boolean
 export type CriterionExpected = MeasurementValue | number[] | string[]
@@ -55,7 +55,7 @@ export interface ColorPairObservation {
 }
 
 export interface DeterministicEvaluationResult {
-	status: Exclude<CheckStatus, 'ok'>
+	status: Exclude<CheckStatus, 'ok' | 'advisory'>
 	fulfillment: number | null
 	comparisons: CriterionComparison[]
 	measurements?: Record<string, MeasurementValue>
@@ -84,7 +84,7 @@ interface CheckResultBase {
 }
 
 export interface AlgorithmCheckResult extends CheckResultBase {
-	status: Exclude<CheckStatus, 'ok'>
+	status: Exclude<CheckStatus, 'ok' | 'advisory'>
 }
 
 export interface AiCheckResult extends CheckResultBase {
