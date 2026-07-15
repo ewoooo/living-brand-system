@@ -56,6 +56,8 @@ import * as migration_20260715_020540_checker_name_prompt from './20260715_02054
 import * as migration_20260715_090505_heuristic_criterion_measure from './20260715_090505_heuristic_criterion_measure';
 import * as migration_20260715_114800_extend_dodont_block from './20260715_114800_extend_dodont_block';
 import * as migration_20260715_120000_add_check_scenarios from './20260715_120000_add_check_scenarios';
+import * as migration_20260715_120000_image_ratio_contract from './20260715_120000_image_ratio_contract';
+import * as migration_20260715_120500_image_ratio_blocks from './20260715_120500_image_ratio_blocks';
 
 export const migrations = [
   {
@@ -346,6 +348,16 @@ export const migrations = [
   {
     up: migration_20260715_120000_add_check_scenarios.up,
     down: migration_20260715_120000_add_check_scenarios.down,
-    name: '20260715_120000_add_check_scenarios'
+    name: '20260715_120000_add_check_scenarios',
+  },
+  {
+    up: migration_20260715_120000_image_ratio_contract.up,
+    down: migration_20260715_120000_image_ratio_contract.down,
+    name: '20260715_120000_image_ratio_contract',
+  },
+  {
+    up: migration_20260715_120500_image_ratio_blocks.up,
+    down: migration_20260715_120500_image_ratio_blocks.down,
+    name: '20260715_120500_image_ratio_blocks',
   },
 ];

@@ -5,7 +5,15 @@ import {
 	guidelineBreadcrumbCount,
 	guidelineDocumentTypeLabel,
 } from '@/components/admin/guideline-document-tree'
-import { checkKeyFromEnglishTitle, guidelineBlocks, guidelineChecksField } from './guideline'
+import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
+import {
+	ColumnUnitBlock,
+	checkKeyFromEnglishTitle,
+	DoDontBlock,
+	guidelineBlocks,
+	guidelineChecksField,
+	MediaShowcaseBlock,
+} from './guideline'
 
 const fieldNames = (fields: Field[]) =>
 	fields.flatMap((field) =>
@@ -64,6 +72,42 @@ describe('guideline checks field', () => {
 		])
 		expect(fieldNames(GuidelineDocuments.fields)).toContain('checks')
 		for (const block of guidelineBlocks) expect(fieldNames(block.fields)).toContain('checks')
+	})
+
+	it('Do/Don’t 이미지 비율에 공용 계약을 사용한다', () => {
+		const row = DoDontBlock.fields.find((field) => field.type === 'row')
+		if (row?.type !== 'row') throw new Error('Do/Don’t option row is missing')
+		const imageRatio = row.fields.find(
+			(field) => 'name' in field && field.name === 'imageRatio',
+		)
+		if (imageRatio?.type !== 'select') throw new Error('imageRatio select is missing')
+
+		expect(imageRatio.options).toEqual(IMAGE_RATIO_OPTIONS)
+		expect(IMAGE_RATIO_OPTIONS.map(({ value }) => value)).toEqual([
+			'4:3',
+			'1:1',
+			'16:9',
+			'3:2',
+			'2:3',
+			'4:5',
+			'5:4',
+			'9:16',
+		])
+	})
+
+	it('다른 이미지 블록도 공용 비율 계약을 사용한다', () => {
+		for (const [block, defaultValue] of [
+			[ColumnUnitBlock, '4:3'],
+			[MediaShowcaseBlock, '16:9'],
+		] as const) {
+			const imageRatio = block.fields.find(
+				(field) => 'name' in field && field.name === 'imageRatio',
+			)
+			if (imageRatio?.type !== 'select') throw new Error('imageRatio select is missing')
+
+			expect(imageRatio.options).toEqual(IMAGE_RATIO_OPTIONS)
+			expect(imageRatio.defaultValue).toBe(defaultValue)
+		}
 	})
 
 	it('영문 제목에서 namespace 없는 안정적인 key를 만든다', () => {

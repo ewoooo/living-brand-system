@@ -1,16 +1,10 @@
 import type { GuidelineDocument } from '@/payload-types'
+import { IMAGE_RATIO_CLASS_NAMES } from '@/types/image-ratio'
 import { BlockHeading } from './children/block-heading'
 import { GuidelineImage } from './children/guideline-image'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type DoDont = Extract<GuidelineBlock, { blockType: 'doDont' }>
-
-// Tailwind가 정적으로 감지해야 하므로 클래스 전체 문자열을 나열한다.
-const ratioClass = {
-	'4:3': 'aspect-4/3',
-	'1:1': 'aspect-square',
-	'16:9': 'aspect-video',
-} as const
 
 // 예시가 1개인 그룹은 그리드를 풀고 전체 폭을 쓴다 — 컬럼 수는 콘텐츠에서 유도한다.
 function exampleGridClass(count: number, horizontal: boolean) {
@@ -26,7 +20,7 @@ const kindBadge = {
 
 export function DoDontBlock({ block }: { block: DoDont }) {
 	const horizontal = block.groupLayout === 'horizontal'
-	const ratio = ratioClass[block.imageRatio ?? '4:3']
+	const ratio = IMAGE_RATIO_CLASS_NAMES[block.imageRatio ?? '4:3']
 	return (
 		<section>
 			<BlockHeading title={block.title} />
