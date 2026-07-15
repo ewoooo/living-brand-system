@@ -2,7 +2,7 @@
 
 import { createContext, type ReactNode, use, useEffect, useMemo, useRef, useState } from 'react'
 import { isSupportedCheckImageMediaType } from '@/features/asset-check/image-format'
-import { CHECK_SCENARIOS, getCheckScenario } from '@/features/asset-check/scenarios'
+import { type CheckScenario, getCheckScenario } from '@/features/asset-check/scenarios'
 import { runFullCheck } from '@/features/asset-check/services/submit-check.client'
 import type { CheckImage, CheckImageContextValue } from '@/features/asset-check/types'
 import { revokeBlob } from '@/lib/object-url'
@@ -23,10 +23,16 @@ export function useCheckImages() {
  * 판정은 서버(/api/check)가, 요청 순서·폴백은 submit-check.client의 runFullCheck가 소유하고,
  * 이 프로바이더는 미리보기(object URL)와 진행 상태 반영만 담당한다.
  */
-export function CheckImageProvider({ children }: { children: ReactNode }) {
+export function CheckImageProvider({
+	children,
+	scenarios,
+}: {
+	children: ReactNode
+	scenarios: CheckScenario[]
+}) {
 	const [images, setImages] = useState<CheckImage[]>([])
 	const [selectedId, setSelectedId] = useState<string | null>(null)
-	const [scenarioKey, setScenarioKeyValue] = useState(CHECK_SCENARIOS[0].key)
+	const [scenarioKey, setScenarioKeyValue] = useState(getCheckScenario(scenarios).key)
 	const [showFailOnly, setShowFailOnly] = useState(false)
 
 	// 미리보기 object URL은 언마운트 시 일괄 해제한다(이미지는 제거 경로가 없어 세션 동안 유지됨).
@@ -106,7 +112,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 	}
 
 	function setScenarioKey(key: string) {
-		const scenario = getCheckScenario(key)
+		const scenario = getCheckScenario(scenarios, key)
 		setScenarioKeyValue(scenario.key)
 		if (!selectedId) return
 		// 시나리오가 바뀌면 진행 중 검수는 무효이므로 idle로 되돌리고 재검수를 기다린다
@@ -135,6 +141,7 @@ export function CheckImageProvider({ children }: { children: ReactNode }) {
 	)
 
 	const value: CheckImageContextValue = {
+		scenarios,
 		images,
 		selectedId,
 		selected,

@@ -22,6 +22,7 @@ import { ApplicationImages } from './collections/ApplicationImages'
 import { BrandColors } from './collections/BrandColors'
 import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
+import { CheckScenarios } from './collections/CheckScenarios'
 import { CheckSessions } from './collections/CheckSessions'
 import { GuidelineDocuments } from './collections/GuidelineDocuments'
 import { Plugins } from './collections/Plugins'
@@ -180,6 +181,7 @@ export default buildConfig({
 	collections: [
 		...legacyGuidelineCollections,
 		GuidelineDocuments,
+		CheckScenarios,
 		RuleCheckers,
 		BrandLogos,
 		BrandColors,

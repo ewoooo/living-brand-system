@@ -4,13 +4,14 @@ import { PageNavigation } from '@/components/page-navigation'
 import { CheckImageProvider } from '@/features/asset-check/components/check-image-provider'
 import { CheckSideNavigation } from '@/features/asset-check/components/check-side-navigation'
 import { getCheckRuleset } from '@/features/asset-check/services/get-check-ruleset.service'
+import { getCheckScenarios } from '@/features/asset-check/services/get-check-scenarios.service'
 import { toCheckAnchor } from '@/features/asset-check/utils/check-anchor'
 
 // Review reads Payload collections, so CI builds without migrated tables must not prerender it.
 export const dynamic = 'force-dynamic'
 
 export default async function ReviewLayout({ children }: { children: React.ReactNode }) {
-	const sections = await getCheckRuleset()
+	const [sections, scenarios] = await Promise.all([getCheckRuleset(), getCheckScenarios()])
 
 	return (
 		<SectionLayout
@@ -31,7 +32,7 @@ export default async function ReviewLayout({ children }: { children: React.React
 				/>
 			}
 		>
-			<CheckImageProvider>{children}</CheckImageProvider>
+			<CheckImageProvider scenarios={scenarios}>{children}</CheckImageProvider>
 		</SectionLayout>
 	)
 }
