@@ -412,6 +412,10 @@ export interface BrandColor {
 export interface RuleChecker {
   id: number;
   /**
+   * 목록과 Check의 checker 선택에 표시할 이름입니다.
+   */
+  name: string;
+  /**
    * 검사 도구의 안정적인 식별자입니다.
    */
   key: string;
@@ -425,9 +429,9 @@ export interface RuleChecker {
    */
   model?: ('claude-opus-4-8' | 'claude-sonnet-5' | 'claude-haiku-4-5') | null;
   /**
-   * 휴리스틱 검수 프롬프트의 안정적인 키입니다.
+   * 휴리스틱 검수 시 AI에게 전달할 관찰 지침입니다. 출력 형식과 판정 금지 규칙은 시스템이 강제하므로 자유롭게 작성해도 검수가 깨지지 않습니다.
    */
-  promptKey?: string | null;
+  prompt?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1388,11 +1392,12 @@ export interface DoDontBlockSelect<T extends boolean = true> {
  * via the `definition` "rule-checkers_select".
  */
 export interface RuleCheckersSelect<T extends boolean = true> {
+  name?: T;
   key?: T;
   executor?: T;
   checkerKey?: T;
   model?: T;
-  promptKey?: T;
+  prompt?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

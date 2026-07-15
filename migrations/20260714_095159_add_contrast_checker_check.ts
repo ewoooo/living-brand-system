@@ -26,7 +26,7 @@ export async function up({ payload, req }: MigrateUpArgs): Promise<void> {
 
 	const checker = await payload.create({
 		collection: 'rule-checkers',
-		data: { key: CHECKER_KEY, executor: 'deterministic', checkerKey: 'contrast' },
+		data: { name: 'Color Contrast', key: CHECKER_KEY, executor: 'deterministic', checkerKey: 'contrast' },
 		depth: 0,
 		draft: false,
 		overrideAccess: true,

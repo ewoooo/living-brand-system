@@ -22,7 +22,7 @@ const checks: RuntimeCheck[] = [
 		checker: { key: 'asset-check.brand-guideline', type: 'heuristic' },
 		executor: 'heuristic',
 		model: 'rule-spec-model',
-		promptKey: 'asset-check.brand-guideline.v1',
+		prompt: '브랜드 사진의 자연광 기준을 우선 적용한다.',
 		heuristicPrompt: '인물의 표정이 자연스럽고 과장되지 않았는지 우선 판단한다.',
 		heuristicCriteria: [
 			{
@@ -162,5 +162,28 @@ describe('runAiCheck', () => {
 			observations: {},
 			failure: { detail: 'AI 평가 실패', reasonCode: 'ai_request_failed' },
 		})
+	})
+
+	it('checker prompt를 관찰 컨텍스트로 메시지에 삽입한다', async () => {
+		vi.mocked(generateText).mockResolvedValue({
+			output: { results: {} },
+			usage: undefined,
+		} as unknown as Awaited<ReturnType<typeof generateText>>)
+		const { runAiCheck } = await import(
+			'@/features/asset-check/repositories/ai-check.agent.repository'
+		)
+
+		await runAiCheck(checks, {
+			image: { data: new Uint8Array([1]), mediaType: 'image/png' },
+		} as never)
+
+		const call = vi.mocked(generateText).mock.calls[0]?.[0] as {
+			messages: { content: { type: string; text?: string }[] }[]
+		}
+		const promptText = call.messages[0]?.content[0]?.text ?? ''
+		expect(promptText).toContain('checkerPrompt: 브랜드 사진의 자연광 기준을 우선 적용한다.')
+		expect(promptText).toContain(
+			'Apply heuristicPrompt and checkerPrompt as additional observation context',
+		)
 	})
 })

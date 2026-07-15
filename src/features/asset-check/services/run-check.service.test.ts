@@ -21,7 +21,7 @@ const check: RuntimeCheck = {
 	checker: { key: 'model', type: 'heuristic' },
 	executor: 'heuristic',
 	model: 'model',
-	promptKey: 'asset-check.brand-guideline.v1',
+	prompt: '브랜드 사진의 자연광 기준을 우선 적용한다.',
 	heuristicCriteria: [
 		{
 			id: 'artificial-redness',
