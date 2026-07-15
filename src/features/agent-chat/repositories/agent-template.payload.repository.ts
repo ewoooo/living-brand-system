@@ -10,7 +10,7 @@ type AgentTemplateCheckPlacement = {
 
 export type AgentTemplateDocument = Pick<
 	Template,
-	'description' | 'id' | 'jsonTemplate' | 'name'
+	'description' | 'height' | 'html' | 'id' | 'jsonTemplate' | 'name' | 'overrides' | 'width'
 > & {
 	templateChecks?: AgentTemplateCheckPlacement[] | null
 }
@@ -29,6 +29,10 @@ function publishedTemplateQuery(user: unknown) {
 			name: true,
 			description: true,
 			jsonTemplate: true,
+			html: true,
+			overrides: true,
+			width: true,
+			height: true,
 			templateChecks: true,
 		},
 	} as const
