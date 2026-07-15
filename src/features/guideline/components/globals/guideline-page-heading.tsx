@@ -3,7 +3,7 @@
 export function GuidelinePageHeading({ title, label }: { title: string; label?: string | number }) {
 	return (
 		<header className="mb-8 border-scrim/10 border-t pt-12">
-			{label !== undefined && <p className="type-body mb-2 text-foreground-muted">{label}</p>}
+			{label !== undefined && <p className="type-body text-foreground-muted">{label}</p>}
 			<h2 className="type-title-1 text-foreground">{title}</h2>
 		</header>
 	)
