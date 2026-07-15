@@ -31,6 +31,35 @@ export interface PublishedJsonTemplate extends PublishedTemplateBase {
 export type PublishedTemplate = PublishedHtmlTemplate | PublishedJsonTemplate
 
 /**
+ * "Figma HTML 우선" 읽기 계약의 단일 판정 지점 — Create 화면과 챗 agent가 공유한다.
+ * 사용 가능한 html·크기가 모두 있어야 html 템플릿으로 취급하고, 아니면 null(json 폴백)을 준다.
+ */
+export function pickHtmlTemplate(template: {
+	html?: string | null
+	overrides?: unknown
+	width?: number | null
+	height?: number | null
+}): { html: string; overrides: TemplateOverrides; width: number; height: number } | null {
+	if (
+		typeof template.html === 'string' &&
+		template.html.trim() !== '' &&
+		typeof template.width === 'number' &&
+		template.width > 0 &&
+		typeof template.height === 'number' &&
+		template.height > 0
+	) {
+		return {
+			html: template.html,
+			overrides: (template.overrides ?? {}) as TemplateOverrides,
+			width: template.width,
+			height: template.height,
+		}
+	}
+
+	return null
+}
+
+/**
  * Create 화면이 쓰는 published 템플릿 단건 read service.
  * Payload 조회는 published-template repository가 소유한다.
  * 읽기 계약: Figma HTML을 우선하고, 사용할 수 없으면 스키마가 유효한 JSON으로 폴백한다.
@@ -43,22 +72,14 @@ export async function getPublishedTemplate(templateId: number): Promise<Publishe
 			return null
 		}
 
-		if (
-			typeof template.html === 'string' &&
-			template.html.trim() !== '' &&
-			typeof template.width === 'number' &&
-			template.width > 0 &&
-			typeof template.height === 'number' &&
-			template.height > 0
-		) {
+		const html = pickHtmlTemplate(template)
+
+		if (html) {
 			return {
 				kind: 'html',
 				id: template.id,
 				name: template.name,
-				html: template.html,
-				overrides: (template.overrides ?? {}) as TemplateOverrides,
-				width: template.width,
-				height: template.height,
+				...html,
 			}
 		}
 

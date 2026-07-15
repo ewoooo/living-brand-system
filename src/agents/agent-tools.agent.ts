@@ -116,6 +116,15 @@ export function getAgentTools() {
 			contextSchema: guidelineToolContextSchema,
 			execute: ({ templateId, values }, { context }) =>
 				prepareTemplateImage(context.user, templateId, values),
+			// 렌더 페이로드(html/template 트리)는 챗 UI 전용 — 모델에는 채운 결과 요약만 돌려준다.
+			toModelOutput: ({ output }) => ({
+				type: 'json',
+				value: {
+					templateId: output.templateId,
+					name: output.name,
+					filledSlots: Object.keys(output.values),
+				},
+			}),
 		}),
 		generateImage: tool({
 			description: `Generate NEW images from a text prompt using AI image generation. Use when the user wants to create or generate a fresh image from a description (배경, 풍경, 제품컷, 헤더 이미지 등). This is DIFFERENT from prepareTemplateImage, which only fills fixed templates like 명함/카드. For a branded cosmetic PRODUCT shot, the prompt describes the hero product and sceneId picks the brand environment/composition (omit to auto-pick). For any NON-product image (backgrounds, textures, key visuals, 자유 생성), pass sceneId "free" to generate the prompt as-is without brand product styling. Scenes: ${imageSceneSummary}.`,
