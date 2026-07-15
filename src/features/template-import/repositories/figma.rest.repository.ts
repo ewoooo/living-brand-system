@@ -102,7 +102,8 @@ export async function findFigmaImageUrls(
 ): Promise<Record<string, string>> {
 	const token = getFigmaToken()
 	const imageUrls: Record<string, string> = {}
-	const formatQuery = format === 'svg' ? 'format=svg' : 'format=png&scale=2'
+	const formatQuery =
+		format === 'svg' ? 'format=svg&use_absolute_bounds=true' : 'format=png&scale=2'
 
 	for (let i = 0; i < nodeIds.length; i += IMAGE_BATCH_SIZE) {
 		const batch = nodeIds.slice(i, i + IMAGE_BATCH_SIZE)
