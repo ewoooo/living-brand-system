@@ -99,11 +99,11 @@ function HeaderHead({
 														href={chapter.href}
 													>
 														<span>{chapter.title}</span>
-														{chapter.description && (
+														{/*{chapter.description && (
 															<span className="text-muted-foreground">
 																{chapter.description}
 															</span>
-														)}
+														)}*/}
 													</Link>
 												</NavigationMenuLink>
 											</li>
