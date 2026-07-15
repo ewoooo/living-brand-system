@@ -8,6 +8,13 @@
 export interface TemplateOverride {
 	text?: string
 	backgroundImage?: string
+	vectorAsset?: {
+		collection: 'brand-logos' | 'application-images'
+		id: number
+		src: string
+	}
+	vectorFit?: 'fill' | 'contain'
+	vectorColor?: string
 }
 
 export type TemplateOverrides = Record<string, TemplateOverride>
@@ -31,6 +38,35 @@ export function composeTemplateHtml(baseHtml: string, overrides: TemplateOverrid
 			el.style.backgroundSize = 'cover'
 			el.style.backgroundPosition = 'center'
 			el.style.backgroundRepeat = 'no-repeat'
+		}
+
+		if (el.tagName.toLowerCase() === 'img' && el instanceof HTMLElement) {
+			const image = el as HTMLImageElement
+			const src = override.vectorAsset?.src ?? image.getAttribute('src')
+			const fit = override.vectorFit ?? 'fill'
+
+			if (override.vectorAsset) {
+				image.src = override.vectorAsset.src
+				image.dataset.assetCollection = override.vectorAsset.collection
+				image.dataset.assetId = String(override.vectorAsset.id)
+			}
+			image.style.objectFit = fit
+
+			if (override.vectorColor && src) {
+				const mask = doc.createElement('div')
+				for (const attribute of Array.from(image.attributes)) {
+					if (attribute.name !== 'src' && attribute.name !== 'alt') {
+						mask.setAttribute(attribute.name, attribute.value)
+					}
+				}
+				mask.style.backgroundColor = override.vectorColor
+				mask.style.maskImage = `url("${src}")`
+				mask.style.maskPosition = 'center'
+				mask.style.maskRepeat = 'no-repeat'
+				mask.style.maskSize = fit === 'contain' ? 'contain' : '100% 100%'
+				mask.style.objectFit = ''
+				image.replaceWith(mask)
+			}
 		}
 	}
 
