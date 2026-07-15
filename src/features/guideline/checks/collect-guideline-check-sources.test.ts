@@ -18,6 +18,7 @@ describe('collectGuidelineCheckSources', () => {
 			blocks: [
 				{
 					id: 'logo-block',
+					blockName: 'Logo examples',
 					blockType: 'mediaShowcase',
 					image,
 					checks: [{ key: 'logo.block', title: 'Block Check', checker: 1 }],
@@ -31,6 +32,7 @@ describe('collectGuidelineCheckSources', () => {
 			['logo.page', 12],
 			['logo.block', 12],
 		])
+		expect(sources.map(({ blockName }) => blockName)).toEqual([null, 'Logo examples'])
 		expect(sources[0]?.evidence).toEqual({
 			type: 'document',
 			blocks: [{ type: 'mediaShowcase' }],

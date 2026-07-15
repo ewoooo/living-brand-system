@@ -57,12 +57,27 @@ function HeaderHead({
 				</Link>
 				<NavigationMenu viewport={false}>
 					<NavigationMenuList className="gap-2">
-						<NavigationMenuItem>
-							<NavigationMenuTrigger
-								className={cn(guidelineActive && 'text-foreground')}
+						<NavigationMenuItem className="flex items-center">
+							<NavigationMenuLink
+								active={guidelineActive}
+								asChild
+								className={cn(
+									navigationMenuTriggerStyle(),
+									'min-w-0 rounded-r-none pr-1',
+									guidelineActive && 'text-foreground',
+								)}
 							>
-								Guideline
-							</NavigationMenuTrigger>
+								<Link
+									aria-current={pathname === '/guideline' ? 'page' : undefined}
+									href="/guideline"
+								>
+									Guideline
+								</Link>
+							</NavigationMenuLink>
+							<NavigationMenuTrigger
+								aria-label="Guideline 메뉴 열기"
+								className="min-w-0 rounded-l-none px-1.5 [&_svg]:ml-0"
+							/>
 							<NavigationMenuContent>
 								<ul className="grid w-72 gap-1">
 									<li>
@@ -110,12 +125,27 @@ function HeaderHead({
 								</ul>
 							</NavigationMenuContent>
 						</NavigationMenuItem>
-						<NavigationMenuItem>
-							<NavigationMenuTrigger
-								className={cn(studioActive && 'text-foreground')}
+						<NavigationMenuItem className="flex items-center">
+							<NavigationMenuLink
+								active={studioActive}
+								asChild
+								className={cn(
+									navigationMenuTriggerStyle(),
+									'min-w-0 rounded-r-none pr-1',
+									studioActive && 'text-foreground',
+								)}
 							>
-								Studio
-							</NavigationMenuTrigger>
+								<Link
+									aria-current={pathname === '/create' ? 'page' : undefined}
+									href="/create"
+								>
+									Studio
+								</Link>
+							</NavigationMenuLink>
+							<NavigationMenuTrigger
+								aria-label="Studio 메뉴 열기"
+								className="min-w-0 rounded-l-none px-1.5 [&_svg]:ml-0"
+							/>
 							<NavigationMenuContent>
 								<ul className="grid w-48 gap-1">
 									{STUDIO_LINKS.map((item) => {

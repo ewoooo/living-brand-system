@@ -51,13 +51,16 @@ describe('buildCheckReviewView', () => {
 		})
 
 		expect(view.summary).toEqual({ pass: 0, ok: 0, fail: 0, advisory: 0, pendingManualCheck: 0 })
+		expect(view.rows[0]?.scenarioLabel).toBe('빠른 기본 검수')
+		expect(view.rows[0]?.anchorId).toBe('quick')
+		expect(view.rows[1]?.scenarioLabel).toBeNull()
 		expect(view.rows[0]?.guidelineHref).toBe('/guideline/brand-design-elements/brand-logo')
 		expect(view.rows.map((row) => row.check.key)).toEqual([
-			'logo.size.minimum',
-			'logo.space.clear',
 			'color.palette',
 			'color.combination',
 			'color.contrast',
+			'logo.size.minimum',
+			'logo.space.clear',
 		])
 	})
 
@@ -79,8 +82,8 @@ describe('buildCheckReviewView', () => {
 		})
 
 		expect(view.summary).toEqual({ pass: 2, ok: 1, fail: 2, advisory: 0, pendingManualCheck: 0 })
-		expect(view.rows.map((row) => row.check.key)).toEqual(['logo.space.clear', 'color.palette'])
-		expect(view.rows[1]?.appliesTo).toEqual(['Brand Logo', 'Color System'])
+		expect(view.rows.map((row) => row.check.key)).toEqual(['color.palette', 'logo.space.clear'])
+		expect(view.rows[0]?.appliesTo).toEqual(['Brand Logo', 'Color System'])
 	})
 
 	it('advisory 결과는 통과/미통과가 아닌 별도 카운트로 센다', () => {
@@ -151,8 +154,8 @@ describe('buildCheckReviewView', () => {
 		})
 
 		expect(view.rows.map((row) => row.check.key)).toEqual([
-			'color.palette',
 			'application.stationery.format',
+			'color.palette',
 		])
 	})
 })

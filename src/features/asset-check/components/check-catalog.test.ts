@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { createElement } from 'react'
 import { describe, expect, it } from 'vitest'
+import type { CheckScenario } from '@/features/asset-check/scenarios'
 import type {
 	CheckSection,
 	RuntimeCheck,
@@ -9,9 +10,16 @@ import { CheckCatalog } from './check-catalog'
 
 describe('CheckCatalog', () => {
 	it('검색과 판정 방식 필터를 함께 적용하고 결과 개수를 표시한다', () => {
-		render(createElement(CheckCatalog, { sections }))
+		render(createElement(CheckCatalog, { sections, scenarios }))
 
 		expect(screen.getByText('필터 결과 3개 / 전체 3개')).toBeTruthy()
+		expect(screen.getByRole('heading', { name: '로고 기본 검수' })).toBeTruthy()
+		expect(screen.getByRole('heading', { name: '담당자 검수' })).toBeTruthy()
+		expect(
+			screen.getAllByRole('heading', { level: 3 }).map(({ textContent }) => textContent),
+		).toEqual(['Brand color usage', 'Minimum logo size', 'Logo placement'])
+		expect(screen.queryByText('검수 근거')).toBeNull()
+		expect(screen.getByText('Brand Green')).toBeTruthy()
 		expect(screen.getByRole('option', { name: '자동 측정' })).toBeTruthy()
 		expect(screen.getByRole('option', { name: 'AI 평가' })).toBeTruthy()
 		expect(screen.getByRole('option', { name: '담당자 확인' })).toBeTruthy()
@@ -64,6 +72,19 @@ const sections: CheckSection[] = [
 			}),
 			check('logo.placement', 'Logo placement', 'manual', '담당자가 배치를 확인합니다.'),
 		],
+	},
+]
+
+const scenarios: CheckScenario[] = [
+	{
+		key: 'logo-basics',
+		title: '로고 기본 검수',
+		checkKeys: ['logo.color.brand', 'logo.size.minimum'],
+	},
+	{
+		key: 'manual-review',
+		title: '담당자 검수',
+		checkKeys: ['logo.placement'],
 	},
 ]
 
