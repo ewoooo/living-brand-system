@@ -1,6 +1,8 @@
 import { BigImage } from '@/features/guideline/components/kit/big-image'
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { ColorPalette } from '@/features/guideline/components/kit/color-palette'
+import { DoDont } from '@/features/guideline/components/kit/do-dont'
+import { ImageTextGrid } from '@/features/guideline/components/kit/image-text-grid'
 import { SpecTable } from '@/features/guideline/components/kit/spec-table'
 import { TypeScale } from '@/features/guideline/components/kit/type-scale'
 
@@ -158,6 +160,66 @@ export default function GuidelineKitPage() {
 					src={placeholder('16 : 9 Media')}
 					alt="대형 미디어 예시"
 					caption="풀블리드 대형 이미지 — 로고 적용, 키 비주얼 등."
+				/>
+			</Demo>
+
+			<Demo title="Image + Text Grid">
+				<ImageTextGrid
+					columns={3}
+					items={[
+						{
+							src: placeholder('로고 활용 A'),
+							caption: '단색 배경 위 기본 로고 사용.',
+						},
+						{
+							src: placeholder('로고 활용 B'),
+							caption: '사진 위에는 반전 로고를 사용.',
+						},
+						{ src: placeholder('로고 활용 C'), caption: '최소 크기 이상으로만 노출.' },
+					]}
+				/>
+			</Demo>
+
+			<Demo title="Do / Don't">
+				<DoDont
+					columns={3}
+					groups={[
+						{
+							category: 'Spacing',
+							examples: [
+								{
+									src: placeholder('올바른 여백'),
+									caption: '충분한 여백을 확보한다.',
+									status: 'do',
+								},
+								{
+									src: placeholder('좁은 여백'),
+									caption: '여백을 임의로 좁히지 않는다.',
+									status: 'dont',
+								},
+							],
+						},
+						{
+							category: 'Color',
+							examples: [
+								{
+									src: placeholder('권장 대비'),
+									caption: '충분한 명도 대비를 사용.',
+									status: 'do',
+								},
+								{
+									src: placeholder('주의 대비'),
+									caption: '경계선상의 대비는 지양.',
+									status: 'ok',
+								},
+								{
+									src: placeholder('금지 대비'),
+									caption: '저대비 조합은 금지.',
+									status: 'dont',
+								},
+							],
+						},
+					]}
 				/>
 			</Demo>
 
