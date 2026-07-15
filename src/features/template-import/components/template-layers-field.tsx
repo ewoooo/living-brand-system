@@ -2,12 +2,13 @@
 
 import { Button, Popup, toast, useForm, useFormFields } from '@payloadcms/ui'
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
+import { generateImages } from '@/features/image-generation/services/generate-image.client'
 import {
 	composeTemplateHtml,
 	type TemplateOverride,
 	type TemplateOverrides,
 } from '@/features/template-import/utils/compose-template-html'
-import { generateOneText } from '@/features/text-generation/generate-one-text'
+import { generateOneText } from '@/features/text-generation/services/generate-text.client'
 
 /**
  * Templates 편집 폼(Admin)의 워크스페이스 — 렌더 캔버스 + 레이어 패널 + 값 편집을 한 곳에서 다룬다.
@@ -143,13 +144,8 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 		setLoading(true)
 		try {
 			// sceneId:'free' — 브랜드 제품 씬 합성 없이 프롬프트 원문대로. 배경은 제품샷이 아니라 사용자가 묘사한 그대로여야 한다.
-			const response = await fetch('/api/image', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ prompt: trimmed, count: 1, sceneId: 'free' }),
-			})
-			const data = (await response.json().catch(() => null)) as { images?: string[] } | null
-			const src = data?.images?.[0]
+			const { images } = await generateImages({ prompt: trimmed, count: 1, sceneId: 'free' })
+			const src = images[0]
 			if (src) onApply(src)
 			else toast.error('이미지 생성 실패 — 잠시 후 다시 시도하세요.')
 		} catch {

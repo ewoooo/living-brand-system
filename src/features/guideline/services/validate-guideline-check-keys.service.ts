@@ -43,6 +43,10 @@ export async function findDuplicateGuidelineCheckKey(
 	return null
 }
 
+/**
+ * 문서·블록 트리에서 check key를 전부 모으는 순수 함수. 외부 I/O 없음.
+ * 중복 key 판정과 단위 테스트가 같은 수집 규칙을 쓰도록 export한다.
+ */
 export function collectCheckKeys(value: CheckContainer): string[] {
 	const checks = Array.isArray(value.checks) ? (value.checks as CheckValue[]) : []
 	const blockChecks = Array.isArray(value.blocks)

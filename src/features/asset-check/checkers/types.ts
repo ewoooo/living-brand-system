@@ -3,7 +3,7 @@
  * rule schema나 Payload 문서 타입은 여기에 들이지 않는다.
  */
 
-import type { CheckImageMediaType } from '@/features/asset-check/image-format'
+import type { CheckImageMediaType } from '@/features/asset-check/utils/image-format'
 import type { Rgb, Swatch } from './palette-match'
 
 /** 기준(expected) 대비 측정값(actual)을 분리해 실은 구조화 필드. */
