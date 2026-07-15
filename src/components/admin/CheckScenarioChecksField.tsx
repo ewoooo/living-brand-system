@@ -13,10 +13,10 @@ import {
 } from '@/components/ui/table'
 
 interface AvailableCheck {
+	blockName: string
 	key: string
 	title: string
 	documentTitle: string
-	tier?: 'recommended' | 'required'
 	executor?: 'deterministic' | 'heuristic' | 'manual'
 }
 
@@ -51,7 +51,7 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 
 	const byKey = new Map(available.map((check) => [check.key, check]))
 	const selected = checkKeys.map(
-		(key) => byKey.get(key) ?? { key, title: key, documentTitle: '' },
+		(key) => byKey.get(key) ?? { blockName: '-', key, title: key, documentTitle: '' },
 	)
 	const selectedKeys = new Set(checkKeys)
 	const normalizedQuery = query.trim().toLowerCase()
@@ -61,6 +61,7 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 			(!normalizedQuery ||
 				check.key.toLowerCase().includes(normalizedQuery) ||
 				check.title.toLowerCase().includes(normalizedQuery) ||
+				check.blockName.toLowerCase().includes(normalizedQuery) ||
 				check.documentTitle.toLowerCase().includes(normalizedQuery)),
 	)
 
@@ -83,8 +84,8 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 					<TableRow>
 						<TableHead scope="col">순서</TableHead>
 						<TableHead scope="col">Check</TableHead>
-						<TableHead scope="col">Guideline</TableHead>
-						<TableHead scope="col">등급</TableHead>
+						<TableHead scope="col">Check Block</TableHead>
+						<TableHead scope="col">상위 문서</TableHead>
 						<TableHead scope="col">실행 방식</TableHead>
 						<TableHead scope="col">관리</TableHead>
 					</TableRow>
@@ -100,8 +101,8 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 										<code>{check.key}</code>
 									</span>
 								</TableCell>
+								<TableCell>{check.blockName}</TableCell>
 								<TableCell>{check.documentTitle || '발행된 Check 없음'}</TableCell>
-								<TableCell>{check.tier ?? '-'}</TableCell>
 								<TableCell>{check.executor ?? '-'}</TableCell>
 								<TableCell>
 									<span className="check-scenario-checks-field__actions">
@@ -163,8 +164,8 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 				<TableHeader>
 					<TableRow>
 						<TableHead scope="col">Check</TableHead>
-						<TableHead scope="col">Guideline</TableHead>
-						<TableHead scope="col">등급</TableHead>
+						<TableHead scope="col">Check Block</TableHead>
+						<TableHead scope="col">상위 문서</TableHead>
 						<TableHead scope="col">실행 방식</TableHead>
 						<TableHead scope="col">관리</TableHead>
 					</TableRow>
@@ -179,8 +180,8 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 										<code>{check.key}</code>
 									</span>
 								</TableCell>
+								<TableCell>{check.blockName}</TableCell>
 								<TableCell>{check.documentTitle}</TableCell>
-								<TableCell>{check.tier ?? '-'}</TableCell>
 								<TableCell>{check.executor ?? '-'}</TableCell>
 								<TableCell>
 									<Button

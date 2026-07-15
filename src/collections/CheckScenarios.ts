@@ -36,31 +36,32 @@ async function getAvailableChecks(payload: Payload, user: unknown, overrideAcces
 	const byKey = new Map<
 		string,
 		{
+			blockName: string
 			key: string
 			title: string
 			documentTitle: string
-			tier?: 'recommended' | 'required'
 			executor?: 'deterministic' | 'heuristic' | 'manual'
 		}
 	>()
 
 	for (const document of documents) {
-		for (const { check } of collectGuidelineCheckSources(document)) {
+		for (const { blockName, check } of collectGuidelineCheckSources(document)) {
 			const checker = typeof check.checker === 'object' ? check.checker : null
 			byKey.set(check.key, {
+				blockName: blockName ?? '문서',
 				key: check.key,
 				title: check.titleKo?.trim() || check.title,
 				documentTitle: document.title,
-				tier: check.tier ?? undefined,
 				executor: checker?.executor,
 			})
 		}
 	}
 
-	return [...byKey.values()].sort((a, b) =>
-		a.documentTitle === b.documentTitle
-			? a.title.localeCompare(b.title, 'ko')
-			: a.documentTitle.localeCompare(b.documentTitle, 'ko'),
+	return [...byKey.values()].sort(
+		(a, b) =>
+			a.documentTitle.localeCompare(b.documentTitle, 'ko') ||
+			a.blockName.localeCompare(b.blockName, 'ko') ||
+			a.title.localeCompare(b.title, 'ko'),
 	)
 }
 

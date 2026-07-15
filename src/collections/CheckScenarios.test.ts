@@ -24,6 +24,7 @@ describe('CheckScenarios', () => {
 		mocks.findPublished.mockResolvedValue({ documents: [{ title: 'Color' }] })
 		mocks.collectSources.mockReturnValue([
 			{
+				blockName: 'Main palette',
 				check: {
 					key: 'color.palette',
 					title: 'Color Palette',
@@ -33,6 +34,26 @@ describe('CheckScenarios', () => {
 				},
 			},
 		])
+	})
+
+	it('Check 목록에 Block 출처를 노출하고 중요도는 제외한다', async () => {
+		const endpoint = Array.isArray(CheckScenarios.endpoints)
+			? CheckScenarios.endpoints[0]?.handler
+			: undefined
+		if (!endpoint) throw new Error('available-checks endpoint가 없습니다.')
+
+		const response = await endpoint({ payload: {}, user: { role: 'manager' } } as never)
+		expect(await response.json()).toEqual({
+			docs: [
+				{
+					blockName: 'Main palette',
+					documentTitle: 'Color',
+					executor: 'deterministic',
+					key: 'color.palette',
+					title: '컬러 팔레트',
+				},
+			],
+		})
 	})
 
 	it('CheckScenario 관리 계약을 노출한다', () => {

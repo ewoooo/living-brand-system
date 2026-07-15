@@ -11,6 +11,7 @@ type GuidelineCheck = NonNullable<GuidelineChecks>[number]
 
 export interface GuidelineCheckSource {
 	check: GuidelineCheck
+	blockName: string | null
 	source: { documentId: number }
 	evidence: CheckEvidence
 	referenceAssets: { asset: ApplicationImage; role: CheckReferenceAssetRole }[]
@@ -22,9 +23,15 @@ export function collectGuidelineCheckSources(
 ): GuidelineCheckSource[] {
 	const assets = collectApplicationImages(document)
 	const documentSnapshot = buildCheckSourceSnapshot(document)
-	const documentChecks = toSources(document.checks, document.id, documentSnapshot, assets)
+	const documentChecks = toSources(document.checks, document.id, null, documentSnapshot, assets)
 	const blockChecks = (document.blocks ?? []).flatMap((block) =>
-		toSources(block.checks, document.id, snapshotBlock(block), assets),
+		toSources(
+			block.checks,
+			document.id,
+			block.blockName?.trim() || block.blockType,
+			snapshotBlock(block),
+			assets,
+		),
 	)
 
 	return [...documentChecks, ...blockChecks]
@@ -33,6 +40,7 @@ export function collectGuidelineCheckSources(
 function toSources(
 	checks: GuidelineChecks | undefined,
 	documentId: number,
+	blockName: string | null,
 	snapshot: ReturnType<typeof buildCheckSourceSnapshot>,
 	assets: Map<number, ApplicationImage>,
 ): GuidelineCheckSource[] {
@@ -40,6 +48,7 @@ function toSources(
 
 	return (checks ?? []).map((check) => ({
 		check,
+		blockName,
 		source: { documentId },
 		evidence: snapshot.evidence,
 		referenceAssets: snapshot.referenceAssets.flatMap((reference) => {
