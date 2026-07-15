@@ -53,6 +53,7 @@ import * as migration_20260714_085554_heal_snapshot from './20260714_085554_heal
 import * as migration_20260714_095159_add_contrast_checker_check from './20260714_095159_add_contrast_checker_check';
 import * as migration_20260714_121152_heuristic_criteria_contract from './20260714_121152_heuristic_criteria_contract';
 import * as migration_20260715_020540_checker_name_prompt from './20260715_020540_checker_name_prompt';
+import * as migration_20260715_090505_heuristic_criterion_measure from './20260715_090505_heuristic_criterion_measure';
 import * as migration_20260715_114800_extend_dodont_block from './20260715_114800_extend_dodont_block';
 import * as migration_20260715_120000_add_check_scenarios from './20260715_120000_add_check_scenarios';
 
@@ -333,6 +334,11 @@ export const migrations = [
     name: '20260715_020540_checker_name_prompt',
   },
   {
+    up: migration_20260715_090505_heuristic_criterion_measure.up,
+    down: migration_20260715_090505_heuristic_criterion_measure.down,
+    name: '20260715_090505_heuristic_criterion_measure',
+  },
+  {
     up: migration_20260715_114800_extend_dodont_block.up,
     down: migration_20260715_114800_extend_dodont_block.down,
     name: '20260715_114800_extend_dodont_block',
@@ -340,6 +346,6 @@ export const migrations = [
   {
     up: migration_20260715_120000_add_check_scenarios.up,
     down: migration_20260715_120000_add_check_scenarios.down,
-    name: '20260715_120000_add_check_scenarios',
+    name: '20260715_120000_add_check_scenarios'
   },
 ];
