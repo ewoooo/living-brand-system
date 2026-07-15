@@ -21,9 +21,6 @@ export type GuidelineChecks =
        */
       key: string;
       tier: 'required' | 'recommended';
-      /**
-       * Checker 후보와 아래 설정 항목을 이 실행 유형에 맞춰 제한합니다.
-       */
       executor: 'deterministic' | 'heuristic' | 'manual';
       /**
        * 검수 실행 방식과 구현체를 선택합니다.

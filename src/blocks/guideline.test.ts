@@ -1,5 +1,5 @@
 import type { Field } from 'payload'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { GuidelineDocuments } from '@/collections/GuidelineDocuments'
 import {
 	guidelineBreadcrumbCount,
@@ -71,7 +71,7 @@ describe('guideline checks field', () => {
 		expect(checkKeyFromEnglishTitle('  Logo / Clear Space  ')).toBe('logo-clear-space')
 	})
 
-	it('executor에 따라 Options, Heuristic Criteria, Prompt, Messages를 조건부 노출한다', async () => {
+	it('Checker에서 executor를 파생해 관련 설정만 조건부 노출한다', async () => {
 		const checks = guidelineChecksField()
 		if (checks.type !== 'array') return
 		const field = (name: string) =>
@@ -93,6 +93,24 @@ describe('guideline checks field', () => {
 		expect(condition('heuristicPrompt', 'manual')).toBe(false)
 		expect(condition('messages', 'heuristic')).toBe(false)
 		expect(condition('messages', 'manual')).toBe(true)
+
+		const executor = field('executor')
+		if (executor?.type !== 'select') throw new Error('executor select is missing')
+		expect(executor.admin?.hidden).toBe(true)
+		expect(executor.defaultValue).toBeUndefined()
+		const populateExecutor = executor.hooks?.beforeValidate?.[0]
+		if (typeof populateExecutor !== 'function') {
+			throw new Error('executor beforeValidate hook is missing')
+		}
+		const findByID = vi.fn().mockResolvedValue({ executor: 'heuristic' })
+		expect(
+			await populateExecutor({
+				req: { payload: { findByID } },
+				siblingData: { checker: 7 },
+				value: 'deterministic',
+			} as never),
+		).toBe('heuristic')
+		expect(findByID).toHaveBeenCalledWith({ collection: 'rule-checkers', id: 7, depth: 0 })
 
 		const heuristicPrompt = field('heuristicPrompt')
 		if (heuristicPrompt?.type !== 'textarea') {
@@ -117,12 +135,9 @@ describe('guideline checks field', () => {
 		).toBe(true)
 
 		const checker = field('checker')
-		if (checker?.type !== 'relationship' || typeof checker.filterOptions !== 'function') {
-			throw new Error('checker filter is missing')
-		}
-		expect(checker.filterOptions({ siblingData: { executor: 'heuristic' } } as never)).toEqual({
-			executor: { equals: 'heuristic' },
-		})
+		if (checker?.type !== 'relationship') throw new Error('checker relationship is missing')
+		expect(checker.admin?.components?.Field).toBe('/components/admin/CheckCheckerField')
+		expect(checker.filterOptions).toBeUndefined()
 	})
 
 	it('Contrast options를 전용 입력으로 편집하고 저장 전에 검증한다', async () => {
