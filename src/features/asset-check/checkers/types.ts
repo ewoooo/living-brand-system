@@ -87,13 +87,36 @@ export interface AlgorithmCheckResult extends CheckResultBase {
 	status: Exclude<CheckStatus, 'ok' | 'advisory'>
 }
 
+export type HeuristicCriterion =
+	| {
+			id: string
+			question: string
+			/** 미지정은 presence — 기존 저장 데이터·스냅샷 호환 */
+			kind?: 'presence'
+			expected: 'present' | 'absent'
+	  }
+	| {
+			id: string
+			question: string
+			kind: 'measure'
+			operator: 'gte' | 'lte' | 'between'
+			expected: number
+			/** between 상한 */
+			max?: number
+			unit?: string
+	  }
+
 export interface AiCheckResult extends CheckResultBase {
 	status: CheckStatus
 	observations?: {
 		criterionId: string
 		question: string
-		expected: 'present' | 'absent'
-		actual: 'present' | 'absent' | 'uncertain'
+		kind?: 'presence' | 'measure'
+		expected: 'present' | 'absent' | number
+		operator?: 'gte' | 'lte' | 'between'
+		max?: number
+		unit?: string
+		actual: 'present' | 'absent' | 'uncertain' | 'not_applicable' | number
 		confidence: number
 		reason: string
 		satisfied: boolean | null

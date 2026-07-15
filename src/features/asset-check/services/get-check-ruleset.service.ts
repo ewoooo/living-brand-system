@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { hasChecker, hasDeterministicChecker } from '@/features/asset-check/checkers/registry'
-import type { CheckStatus } from '@/features/asset-check/checkers/types'
+import type { CheckStatus, HeuristicCriterion } from '@/features/asset-check/checkers/types'
 import { getCheckSourceDocuments } from '@/features/asset-check/repositories/check-ruleset.payload.repository'
 import { toRuntimeCheckMessages } from '@/features/asset-check/utils/check-messages'
 import type { CheckEvidence, CheckReferenceAssetRole } from '@/features/guideline/blocks/types'
@@ -38,11 +38,7 @@ export interface RuntimeCheck {
 	model?: string
 	prompt?: string
 	options?: unknown
-	heuristicCriteria?: {
-		id: string
-		question: string
-		expected: 'present' | 'absent'
-	}[]
+	heuristicCriteria?: HeuristicCriterion[]
 	heuristicPrompt?: string
 	/** 자동 검수 가능 여부 — deterministic인데 checker 미등록이면 false (UI 배지용). */
 	implemented: boolean
