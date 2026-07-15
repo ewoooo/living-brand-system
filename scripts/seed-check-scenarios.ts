@@ -67,6 +67,20 @@ const SCENARIOS = [
 		],
 	},
 	{
+		key: 'check-model-image',
+		title: '모델 이미지 검수',
+		description:
+			'인물(모델) 사진용 — 절제된 표정·제스처, 자연스러운 피부 질감·조명 등 모델 이미지 오용 기준과 AI 생성 이미지의 현실성·톤 일관성을 검수합니다.',
+		checkKeys: ['imagery-misuse', 'imagery.ai.consistency'],
+	},
+	{
+		key: 'product-image',
+		title: '프로덕트 이미지 검수',
+		description:
+			'제품·재료 사진용 — 선명한 대비 조명, 수직·수평 앵글의 무게감 있는 구성, 밝은 무채색 배경톤 등 촬영 규정과 브랜드 톤앤매너를 검수합니다.',
+		checkKeys: ['photography-ingredient-textures', 'imagery.advertisement.classification'],
+	},
+	{
 		key: 'brand-core-quick',
 		title: '브랜드 코어 빠른 검수',
 		description:
