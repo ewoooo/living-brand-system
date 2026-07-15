@@ -84,7 +84,6 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 					<TableRow>
 						<TableHead scope="col">순서</TableHead>
 						<TableHead scope="col">Check</TableHead>
-						<TableHead scope="col">Check Block</TableHead>
 						<TableHead scope="col">상위 문서</TableHead>
 						<TableHead scope="col">실행 방식</TableHead>
 						<TableHead scope="col">관리</TableHead>
@@ -101,7 +100,6 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 										<code>{check.key}</code>
 									</span>
 								</TableCell>
-								<TableCell>{check.blockName}</TableCell>
 								<TableCell>{check.documentTitle || '발행된 Check 없음'}</TableCell>
 								<TableCell>{check.executor ?? '-'}</TableCell>
 								<TableCell>
@@ -146,7 +144,7 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 						))
 					) : (
 						<TableRow>
-							<TableCell colSpan={6}>아직 포함된 Check가 없습니다.</TableCell>
+							<TableCell colSpan={5}>아직 포함된 Check가 없습니다.</TableCell>
 						</TableRow>
 					)}
 				</TableBody>
@@ -164,7 +162,6 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 				<TableHeader>
 					<TableRow>
 						<TableHead scope="col">Check</TableHead>
-						<TableHead scope="col">Check Block</TableHead>
 						<TableHead scope="col">상위 문서</TableHead>
 						<TableHead scope="col">실행 방식</TableHead>
 						<TableHead scope="col">관리</TableHead>
@@ -180,7 +177,6 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 										<code>{check.key}</code>
 									</span>
 								</TableCell>
-								<TableCell>{check.blockName}</TableCell>
 								<TableCell>{check.documentTitle}</TableCell>
 								<TableCell>{check.executor ?? '-'}</TableCell>
 								<TableCell>
@@ -199,7 +195,7 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 						))
 					) : (
 						<TableRow>
-							<TableCell colSpan={5}>추가 가능한 Check가 없습니다.</TableCell>
+							<TableCell colSpan={4}>추가 가능한 Check가 없습니다.</TableCell>
 						</TableRow>
 					)}
 				</TableBody>
