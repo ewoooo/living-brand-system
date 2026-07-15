@@ -1,8 +1,16 @@
 'use client'
 
-import { FieldDescription, FieldError, FieldLabel, useField } from '@payloadcms/ui'
+import { Button, FieldDescription, FieldError, FieldLabel, useField } from '@payloadcms/ui'
 import type { JSONFieldClientComponent } from 'payload'
 import { useEffect, useState } from 'react'
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table'
 
 interface AvailableCheck {
 	key: string
@@ -45,10 +53,11 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 	const selected = checkKeys.map(
 		(key) => byKey.get(key) ?? { key, title: key, documentTitle: '' },
 	)
+	const selectedKeys = new Set(checkKeys)
 	const normalizedQuery = query.trim().toLowerCase()
 	const candidates = available.filter(
 		(check) =>
-			!checkKeys.includes(check.key) &&
+			!selectedKeys.has(check.key) &&
 			(!normalizedQuery ||
 				check.key.toLowerCase().includes(normalizedQuery) ||
 				check.title.toLowerCase().includes(normalizedQuery) ||
@@ -64,42 +73,83 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 	}
 
 	return (
-		<div className="field-type json">
+		<div className="field-type json check-scenario-checks-field">
 			<FieldLabel htmlFor={`${path}-search`} label="포함된 Check" path={path} required />
 			<FieldError message={errorMessage} path={path} showError={showError} />
 			{loadError ? <p role="alert">{loadError}</p> : null}
 
-			<ol>
-				{selected.map((check, index) => (
-					<li key={check.key}>
-						<strong>{check.title}</strong> <code>{check.key}</code>
-						{check.documentTitle ? ` · ${check.documentTitle}` : ' · 발행된 Check 없음'}{' '}
-						<button
-							type="button"
-							disabled={disabled || index === 0}
-							onClick={() => move(index, -1)}
-							aria-label={`${check.title} 위로 이동`}
-						>
-							↑
-						</button>{' '}
-						<button
-							type="button"
-							disabled={disabled || index === selected.length - 1}
-							onClick={() => move(index, 1)}
-							aria-label={`${check.title} 아래로 이동`}
-						>
-							↓
-						</button>{' '}
-						<button
-							type="button"
-							disabled={disabled}
-							onClick={() => update(checkKeys.filter((key) => key !== check.key))}
-						>
-							제외
-						</button>
-					</li>
-				))}
-			</ol>
+			<Table aria-label="포함된 Check">
+				<TableHeader>
+					<TableRow>
+						<TableHead scope="col">순서</TableHead>
+						<TableHead scope="col">Check</TableHead>
+						<TableHead scope="col">Guideline</TableHead>
+						<TableHead scope="col">등급</TableHead>
+						<TableHead scope="col">실행 방식</TableHead>
+						<TableHead scope="col">관리</TableHead>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
+					{selected.length > 0 ? (
+						selected.map((check, index) => (
+							<TableRow key={check.key}>
+								<TableCell>{index + 1}</TableCell>
+								<TableCell>
+									<span className="check-scenario-checks-field__check">
+										<strong>{check.title}</strong>
+										<code>{check.key}</code>
+									</span>
+								</TableCell>
+								<TableCell>{check.documentTitle || '발행된 Check 없음'}</TableCell>
+								<TableCell>{check.tier ?? '-'}</TableCell>
+								<TableCell>{check.executor ?? '-'}</TableCell>
+								<TableCell>
+									<span className="check-scenario-checks-field__actions">
+										<Button
+											type="button"
+											buttonStyle="secondary"
+											size="xsmall"
+											margin={false}
+											disabled={disabled || index === 0}
+											onClick={() => move(index, -1)}
+											aria-label={`${check.title} 위로 이동`}
+										>
+											↑
+										</Button>
+										<Button
+											type="button"
+											buttonStyle="secondary"
+											size="xsmall"
+											margin={false}
+											disabled={disabled || index === selected.length - 1}
+											onClick={() => move(index, 1)}
+											aria-label={`${check.title} 아래로 이동`}
+										>
+											↓
+										</Button>
+										<Button
+											type="button"
+											buttonStyle="secondary"
+											size="xsmall"
+											margin={false}
+											disabled={disabled}
+											onClick={() =>
+												update(checkKeys.filter((key) => key !== check.key))
+											}
+										>
+											제외
+										</Button>
+									</span>
+								</TableCell>
+							</TableRow>
+						))
+					) : (
+						<TableRow>
+							<TableCell colSpan={6}>아직 포함된 Check가 없습니다.</TableCell>
+						</TableRow>
+					)}
+				</TableBody>
+			</Table>
 
 			<label htmlFor={`${path}-search`}>Check 검색</label>
 			<input
@@ -109,23 +159,50 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 				onChange={(event) => setQuery(event.currentTarget.value)}
 				disabled={disabled}
 			/>
-			<ul>
-				{candidates.map((check) => (
-					<li key={check.key}>
-						<strong>{check.title}</strong> <code>{check.key}</code> ·{' '}
-						{check.documentTitle}
-						{check.tier ? ` · ${check.tier}` : ''}
-						{check.executor ? ` · ${check.executor}` : ''}{' '}
-						<button
-							type="button"
-							disabled={disabled}
-							onClick={() => update([...checkKeys, check.key])}
-						>
-							포함
-						</button>
-					</li>
-				))}
-			</ul>
+			<Table aria-label="추가 가능한 Check">
+				<TableHeader>
+					<TableRow>
+						<TableHead scope="col">Check</TableHead>
+						<TableHead scope="col">Guideline</TableHead>
+						<TableHead scope="col">등급</TableHead>
+						<TableHead scope="col">실행 방식</TableHead>
+						<TableHead scope="col">관리</TableHead>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
+					{candidates.length > 0 ? (
+						candidates.map((check) => (
+							<TableRow key={check.key}>
+								<TableCell>
+									<span className="check-scenario-checks-field__check">
+										<strong>{check.title}</strong>
+										<code>{check.key}</code>
+									</span>
+								</TableCell>
+								<TableCell>{check.documentTitle}</TableCell>
+								<TableCell>{check.tier ?? '-'}</TableCell>
+								<TableCell>{check.executor ?? '-'}</TableCell>
+								<TableCell>
+									<Button
+										type="button"
+										buttonStyle="secondary"
+										size="xsmall"
+										margin={false}
+										disabled={disabled}
+										onClick={() => update([...checkKeys, check.key])}
+									>
+										포함
+									</Button>
+								</TableCell>
+							</TableRow>
+						))
+					) : (
+						<TableRow>
+							<TableCell colSpan={5}>추가 가능한 Check가 없습니다.</TableCell>
+						</TableRow>
+					)}
+				</TableBody>
+			</Table>
 			<FieldDescription
 				description="발행된 Guideline Check만 선택할 수 있으며 위에서부터 실행 순서를 결정합니다."
 				path={path}
