@@ -31,7 +31,8 @@
 
 .agent-chat-messages-table,
 .agent-chat-usage-table,
-.agent-chat-counted-items-table {
+.agent-chat-counted-items-table,
+.check-scenario-checks-field {
 	margin-bottom: var(--base);
 
 	h3 {
@@ -66,8 +67,37 @@
 
 .agent-chat-messages-table [data-slot="table-container"],
 .agent-chat-usage-table [data-slot="table-container"],
-.agent-chat-counted-items-table [data-slot="table-container"] {
+.agent-chat-counted-items-table [data-slot="table-container"],
+.check-scenario-checks-field [data-slot="table-container"] {
 	overflow-x: auto;
+}
+
+.check-scenario-checks-field {
+	> label:not(:first-child) {
+		display: block;
+		margin-top: var(--base);
+	}
+
+	> input {
+		margin-bottom: calc(var(--base) / 2);
+		width: 100%;
+	}
+
+	table {
+		min-width: 760px;
+	}
+
+	&__check {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		white-space: normal;
+	}
+
+	&__actions {
+		display: flex;
+		gap: calc(var(--base) / 4);
+	}
 }
 
 .agent-chat-counted-items-table table {
