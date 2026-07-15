@@ -93,6 +93,17 @@ export async function exportHtmlToPng(html: string, css: string, fileName: strin
 	try {
 		await new Promise((resolve) => requestAnimationFrame(resolve))
 		const stage = holder.querySelector<HTMLElement>('#__stage') ?? holder
+		await Promise.all(
+			Array.from(stage.querySelectorAll('img')).map(async (image) => {
+				if (!image.complete) {
+					await new Promise<void>((resolve) => {
+						image.addEventListener('load', () => resolve(), { once: true })
+						image.addEventListener('error', () => resolve(), { once: true })
+					})
+				}
+				await image.decode().catch(() => undefined)
+			}),
+		)
 		const dataUrl = await toPng(stage, { cacheBust: true })
 		const link = document.createElement('a')
 		link.href = dataUrl

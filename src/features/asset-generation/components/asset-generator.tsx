@@ -9,7 +9,7 @@ import { GenerateTextField } from '@/features/text-generation/components/generat
 import { useTemplatePngExport } from '@/hooks/use-template-png-export'
 import { revokeBlob } from '@/lib/object-url'
 import { collectOpenSlotElements, type JsonSlotElement } from '@/types/json-template'
-import type { PublishedTemplate } from '../services/get-published-template.service'
+import type { PublishedJsonTemplate } from '../services/get-published-template.service'
 
 const PREVIEW_WIDTH = 480
 
@@ -72,7 +72,7 @@ function TextSlotInput({
  * Create 화면 본체: 선택한 published 템플릿의 열린 슬롯(locked=false)만 편집하고
  * 결과를 미리보기 그대로 PNG로 내려받는다. 서버 상태 변경은 없다.
  */
-export function AssetGenerator({ template }: { template: PublishedTemplate }) {
+export function AssetGenerator({ template }: { template: PublishedJsonTemplate }) {
 	const [values, setValues] = useState<Record<string, TemplateSlotValue>>({})
 	const { exportPng, isExporting, exportError, exportNode } = useTemplatePngExport({
 		template: template.jsonTemplate,
