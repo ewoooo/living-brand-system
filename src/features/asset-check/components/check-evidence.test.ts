@@ -24,10 +24,13 @@ describe('CheckEvidence', () => {
 						groups: [
 							{
 								category: 'Placement',
-								examples: [
-									{ kind: 'do', caption: '여백을 확보합니다.' },
-									{ kind: 'dont', caption: '가장자리에 붙이지 않습니다.' },
-								],
+								kind: 'do' as const,
+								examples: [{ caption: '여백을 확보합니다.' }],
+							},
+							{
+								category: 'Placement',
+								kind: 'dont' as const,
+								examples: [{ caption: '가장자리에 붙이지 않습니다.' }],
 							},
 						],
 					},

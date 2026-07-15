@@ -25,7 +25,9 @@ export type CheckBlockEvidence =
 			title?: string
 			groups: {
 				category?: string
-				examples: { kind: 'do' | 'dont'; caption?: string }[]
+				description?: string
+				kind: 'do' | 'ok' | 'dont'
+				examples: { caption?: string }[]
 			}[]
 	  }
 

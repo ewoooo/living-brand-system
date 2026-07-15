@@ -290,17 +290,49 @@ export const DoDontBlock: Block = {
 	fields: [
 		{ name: 'title', type: 'text', localized: true },
 		{
+			type: 'row',
+			fields: [
+				{
+					name: 'imageRatio',
+					type: 'select',
+					defaultValue: '4:3',
+					options: [
+						{ label: '4:3', value: '4:3' },
+						{ label: '1:1', value: '1:1' },
+						{ label: '16:9', value: '16:9' },
+					],
+					admin: { width: '50%', description: '예시 이미지의 표시 비율입니다.' },
+				},
+				{
+					name: 'groupLayout',
+					type: 'select',
+					defaultValue: 'vertical',
+					options: [
+						{ label: '세로 스택', value: 'vertical' },
+						{ label: '가로 스택', value: 'horizontal' },
+					],
+					admin: {
+						width: '50%',
+						description: '가로 스택은 넓은 화면에서 그룹을 나란히 배치합니다.',
+					},
+				},
+			],
+		},
+		{
 			name: 'groups',
 			type: 'array',
 			minRows: 1,
 			admin: { description: '카테고리 단위 예시 그룹입니다.' },
 			fields: [
-				{ name: 'category', type: 'text', localized: true },
 				{
-					name: 'examples',
-					type: 'array',
-					minRows: 1,
+					type: 'row',
 					fields: [
+						{
+							name: 'category',
+							type: 'text',
+							localized: true,
+							admin: { width: '50%' },
+						},
 						{
 							name: 'kind',
 							type: 'select',
@@ -308,9 +340,27 @@ export const DoDontBlock: Block = {
 							defaultValue: 'dont',
 							options: [
 								{ label: 'Do (권장)', value: 'do' },
+								{ label: 'OK (허용)', value: 'ok' },
 								{ label: "Don't (금지)", value: 'dont' },
 							],
+							admin: { width: '50%' },
 						},
+					],
+				},
+				{
+					name: 'description',
+					type: 'textarea',
+					localized: true,
+					admin: {
+						description:
+							'그룹 전체에 적용되는 설명입니다. 예시별 caption 대신 사용할 수 있습니다.',
+					},
+				},
+				{
+					name: 'examples',
+					type: 'array',
+					minRows: 1,
+					fields: [
 						{ name: 'image', type: 'upload', relationTo: 'application-images' },
 						{ name: 'caption', type: 'text', localized: true },
 					],

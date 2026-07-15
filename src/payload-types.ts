@@ -471,14 +471,26 @@ export interface ColorPaletteBlock {
 export interface DoDontBlock {
   title?: string | null;
   /**
+   * 예시 이미지의 표시 비율입니다.
+   */
+  imageRatio?: ('4:3' | '1:1' | '16:9') | null;
+  /**
+   * 가로 스택은 넓은 화면에서 그룹을 나란히 배치합니다.
+   */
+  groupLayout?: ('vertical' | 'horizontal') | null;
+  /**
    * 카테고리 단위 예시 그룹입니다.
    */
   groups?:
     | {
         category?: string | null;
+        kind: 'do' | 'ok' | 'dont';
+        /**
+         * 그룹 전체에 적용되는 설명입니다. 예시별 caption 대신 사용할 수 있습니다.
+         */
+        description?: string | null;
         examples?:
           | {
-              kind: 'do' | 'dont';
               image?: (number | null) | ApplicationImage;
               caption?: string | null;
               id?: string | null;
@@ -1366,14 +1378,17 @@ export interface ColorPaletteBlockSelect<T extends boolean = true> {
  */
 export interface DoDontBlockSelect<T extends boolean = true> {
   title?: T;
+  imageRatio?: T;
+  groupLayout?: T;
   groups?:
     | T
     | {
         category?: T;
+        kind?: T;
+        description?: T;
         examples?:
           | T
           | {
-              kind?: T;
               image?: T;
               caption?: T;
               id?: T;

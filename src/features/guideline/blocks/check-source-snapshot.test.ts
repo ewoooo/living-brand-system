@@ -41,7 +41,12 @@ describe('buildCheckSourceSnapshot', () => {
 					groups: [
 						{
 							category: 'Placement',
-							examples: [{ kind: 'do', caption: 'Clear', image: 8 }],
+							description: ' Keep clear space around the mark. ',
+							kind: 'do',
+							examples: [
+								{ caption: 'Clear', image: 8 },
+								{ caption: 'Acceptable', image: 9 },
+							],
 						},
 					],
 				},
@@ -60,7 +65,9 @@ describe('buildCheckSourceSnapshot', () => {
 					groups: [
 						{
 							category: 'Placement',
-							examples: [{ kind: 'do', caption: 'Clear' }],
+							description: 'Keep clear space around the mark.',
+							kind: 'do',
+							examples: [{ caption: 'Clear' }, { caption: 'Acceptable' }],
 						},
 					],
 				},
@@ -69,6 +76,7 @@ describe('buildCheckSourceSnapshot', () => {
 		expect(snapshot?.referenceAssets).toEqual([
 			{ id: 8, role: 'context' },
 			{ id: 8, role: 'positive' },
+			{ id: 9, role: 'positive' },
 		])
 	})
 

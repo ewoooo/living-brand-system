@@ -1,9 +1,16 @@
 // biome-ignore-all lint/suspicious/noArrayIndexKey: Evidence snapshots preserve order and intentionally omit item IDs.
 import type { CheckReferenceAsset } from '@/features/asset-check/services/get-check-ruleset.service'
+import { kindLabel } from '@/features/guideline/blocks/do-dont.block'
 import type {
 	CheckBlockEvidence,
 	CheckEvidence as Evidence,
 } from '@/features/guideline/blocks/types'
+
+const kindChipClass = {
+	do: 'bg-success text-success-foreground',
+	ok: 'bg-warning text-warning-foreground',
+	dont: 'bg-destructive text-destructive-foreground',
+} as const
 
 export function CheckEvidence({
 	evidence,
@@ -113,20 +120,21 @@ function BlockEvidence({ evidence }: { evidence: CheckBlockEvidence }) {
 										{group.category}
 									</p>
 								)}
+								{group.description && (
+									<p className="type-callout mb-1.5 text-foreground-muted">
+										{group.description}
+									</p>
+								)}
 								<ul className="grid gap-1.5">
 									{group.examples.map((example, exampleIndex) => (
 										<li
-											key={`${example.kind}-${example.caption ?? ''}-${exampleIndex}`}
+											key={`${example.caption ?? ''}-${exampleIndex}`}
 											className="grid grid-cols-[auto_1fr] items-start gap-2"
 										>
 											<span
-												className={`type-callout-emphasized rounded px-1.5 py-0.5 ${
-													example.kind === 'do'
-														? 'bg-success text-success-foreground'
-														: 'bg-destructive text-destructive-foreground'
-												}`}
+												className={`type-callout-emphasized rounded px-1.5 py-0.5 ${kindChipClass[group.kind]}`}
 											>
-												{example.kind === 'do' ? '권장' : '금지'}
+												{kindLabel[group.kind]}
 											</span>
 											{example.caption && <span>{example.caption}</span>}
 										</li>

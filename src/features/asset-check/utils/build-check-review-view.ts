@@ -11,6 +11,7 @@ export interface CheckReviewRow {
 	rowId: string
 	sectionLabel: string | null
 	appliesTo: string[]
+	guidelineHref: string
 	anchorId: string | null
 	outcome?: CheckResult
 	inProgress: boolean
@@ -111,6 +112,7 @@ function buildRows({
 				sectionLabel: first ? section.title : null,
 				appliesTo: [section.title],
 				appliesToSet: new Set([section.title]),
+				guidelineHref: toGuidelineHref(section),
 				anchorId: first ? section.slug : null,
 				outcome,
 				inProgress:
@@ -124,4 +126,12 @@ function buildRows({
 	}
 
 	return rows.map(({ appliesToSet: _appliesToSet, ...row }) => row)
+}
+
+function toGuidelineHref(section: CheckSection) {
+	const chapterHref = `/guideline/${section.chapterSlug}`
+	if (section.sectionSlug === section.chapterSlug) return chapterHref
+
+	const sectionHref = `${chapterHref}/${section.sectionSlug}`
+	return section.slug === section.sectionSlug ? sectionHref : `${sectionHref}#${section.slug}`
 }

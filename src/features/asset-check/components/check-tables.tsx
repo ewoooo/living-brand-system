@@ -27,7 +27,6 @@ import {
 	type CheckReviewRow,
 } from '@/features/asset-check/utils/build-check-review-view'
 import { cn } from '@/lib/utils'
-import { CheckEvidence } from './check-evidence'
 
 const EXECUTOR: Record<
 	string,
@@ -46,6 +45,7 @@ function CheckRow({
 	rowIndex,
 	sectionLabel,
 	appliesTo,
+	guidelineHref,
 	anchorId,
 	outcome,
 	inProgress,
@@ -96,6 +96,7 @@ function CheckRow({
 						key={`${rowId}:detail`}
 						check={check}
 						appliesTo={appliesTo}
+						guidelineHref={guidelineHref}
 						outcome={outcome}
 						shouldReduceMotion={shouldReduceMotion}
 					/>
@@ -282,11 +283,13 @@ function CheckStatusBadge({
 function CheckDetailRow({
 	check,
 	appliesTo,
+	guidelineHref,
 	outcome,
 	shouldReduceMotion,
 }: {
 	check: Check
 	appliesTo: string[]
+	guidelineHref: string
 	outcome?: CheckResult
 	shouldReduceMotion: boolean | null
 }) {
@@ -321,10 +324,14 @@ function CheckDetailRow({
 								적용 위치: {appliesToText}
 							</p>
 						)}
-						<CheckEvidence
-							evidence={check.evidence}
-							referenceAssets={check.referenceAssets}
-						/>
+						<a
+							href={guidelineHref}
+							target="_blank"
+							rel="noreferrer"
+							className="type-callout inline-flex underline underline-offset-2 hover:text-foreground"
+						>
+							관련 가이드라인 보기
+						</a>
 						<CheckExecutionDetails check={check} outcome={outcome} />
 						<CheckFacts facts={facts} />
 						<HeuristicObservations observations={observations} />

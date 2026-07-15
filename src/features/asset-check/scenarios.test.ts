@@ -19,7 +19,7 @@ describe('getCheckScenario', () => {
 		expect(getCheckScenario('image-mood').checkKeys).toEqual(
 			expect.arrayContaining([
 				'photography-ingredient-textures',
-				'imagery.misuse',
+				'imagery-misuse',
 				'imagery.ai.consistency',
 			]),
 		)

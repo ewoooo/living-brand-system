@@ -55,10 +55,8 @@ describe('collectGuidelineCheckSources', () => {
 					blockType: 'doDont',
 					groups: [
 						{
-							examples: [
-								{ kind: 'dont', image },
-								{ kind: 'dont', image },
-							],
+							kind: 'dont',
+							examples: [{ image }, { image }],
 						},
 					],
 					checks: [

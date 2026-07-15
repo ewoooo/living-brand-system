@@ -8,7 +8,7 @@ export function GuidelineImage({
 	backgroundColor,
 	scale = '100',
 	className,
-	imgClassName = 'max-h-full max-w-full',
+	imgClassName = 'max-h-full max-w-full object-contain',
 }: {
 	image?: number | ImageValue | null
 	alt?: string

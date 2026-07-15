@@ -1,3 +1,4 @@
+import { kindLabel } from '../blocks/do-dont.block'
 import type { CheckEvidence } from '../blocks/types'
 import { compact } from '../utils/block-text'
 
@@ -32,9 +33,9 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 				...evidence.groups.flatMap((group) =>
 					compact([
 						group.category,
+						group.description,
 						...group.examples.map(
-							(example) =>
-								`${example.kind === 'do' ? '권장' : '금지'}: ${example.caption ?? ''}`,
+							(example) => `${kindLabel[group.kind]}: ${example.caption ?? ''}`,
 						),
 					]),
 				),

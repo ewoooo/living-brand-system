@@ -16,7 +16,7 @@ vi.mock('@/features/asset-check/services/get-check-palette.service', () => ({
 }))
 
 const check: RuntimeCheck = {
-	key: 'imagery.misuse',
+	key: 'imagery-misuse',
 	title: '이미지 오용 금지',
 	checker: { key: 'model', type: 'heuristic' },
 	executor: 'heuristic',
@@ -42,7 +42,7 @@ describe('runHeuristicCheck', () => {
 	it('AI 관찰값은 서버 evaluator에서 최종 상태로 변환한다', async () => {
 		vi.mocked(runAiCheck).mockResolvedValue({
 			observations: {
-				'imagery.misuse': {
+				'imagery-misuse': {
 					'artificial-redness': {
 						value: 'present',
 						confidence: 85,
@@ -82,5 +82,44 @@ describe('runHeuristicCheck', () => {
 			detail: 'AI 관측값 형식 오류',
 			reasonCode: 'ai_output_invalid',
 		})
+	})
+
+	it('판정 기준이 없는 룰만 격리하고 유효한 룰은 AI로 검사한다', async () => {
+		const invalidCheck = { ...check, key: 'imagery.style', heuristicCriteria: [] }
+		vi.mocked(runAiCheck).mockResolvedValue({
+			observations: {
+				'imagery-misuse': {
+					'artificial-redness': {
+						value: 'absent',
+						confidence: 90,
+						reason: '인위적인 붉은 색조가 관찰되지 않습니다.',
+					},
+				},
+			},
+		})
+
+		const result = await runHeuristicCheck(
+			png,
+			[check.key, invalidCheck.key],
+			[check, invalidCheck],
+		)
+
+		expect(runAiCheck).toHaveBeenCalledWith([check], expect.any(Object))
+		expect(result.results[check.key]?.rawResult.status).toBe('pass')
+		expect(result.results[invalidCheck.key]?.rawResult).toEqual({
+			status: 'needs_review',
+			fulfillment: null,
+			detail: 'Heuristic 판정 기준 없음',
+			reasonCode: 'invalid_criteria',
+		})
+	})
+
+	it('판정 기준이 모두 없으면 AI를 호출하지 않는다', async () => {
+		const invalidCheck = { ...check, heuristicCriteria: [] }
+
+		const result = await runHeuristicCheck(png, [invalidCheck.key], [invalidCheck])
+
+		expect(runAiCheck).not.toHaveBeenCalled()
+		expect(result.results[invalidCheck.key]?.rawResult.reasonCode).toBe('invalid_criteria')
 	})
 })

@@ -78,33 +78,43 @@ export async function runHeuristicCheck(
 		(check) => check.executor === 'heuristic' && checkKeys.includes(check.key),
 	)
 	if (checks.length === 0) return { results: {} }
-	const aiCheck = await runAiCheck(checks, {
-		image: imageInputFrom(buffer),
-		pixels: [],
-		palette: [],
-	})
+	const validChecks = checks.filter((check) => check.heuristicCriteria?.length)
+	const aiCheck = validChecks.length
+		? await runAiCheck(validChecks, {
+				image: imageInputFrom(buffer),
+				pixels: [],
+				palette: [],
+			})
+		: null
 	return {
 		results: Object.fromEntries(
 			checks.map((check) => [
 				check.key,
 				toCheckResult(
-					aiCheck.failure
+					!check.heuristicCriteria?.length
 						? {
 								status: 'needs_review',
 								fulfillment: null,
-								detail: aiCheck.failure.detail,
-								reasonCode: aiCheck.failure.reasonCode,
+								detail: 'Heuristic 판정 기준 없음',
+								reasonCode: 'invalid_criteria',
 							}
-						: evaluateHeuristic(
-								check.heuristicCriteria ?? [],
-								aiCheck.observations[check.key],
-							),
+						: aiCheck?.failure
+							? {
+									status: 'needs_review',
+									fulfillment: null,
+									detail: aiCheck.failure.detail,
+									reasonCode: aiCheck.failure.reasonCode,
+								}
+							: evaluateHeuristic(
+									check.heuristicCriteria ?? [],
+									aiCheck?.observations[check.key],
+								),
 					check,
 					{ key: 'ai', type: 'ai' },
 				),
 			]),
 		),
-		aiUsage: aiCheck.aiUsage,
+		aiUsage: aiCheck?.aiUsage,
 	}
 }
 

@@ -113,6 +113,7 @@ describe('runAiCheck', () => {
 			},
 		})
 		expect(generateText).toHaveBeenCalledTimes(1)
+		expect(vi.mocked(generateText).mock.calls[0]?.[0]).not.toHaveProperty('temperature')
 		const request = vi.mocked(generateText).mock.calls[0]?.[0] as {
 			system?: string
 			messages?: Array<{ content?: Array<{ text?: string; type?: string }> }>

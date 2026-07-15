@@ -3,7 +3,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { HeaderLinkBlock } from '@/components/global/header/header-link-block'
 import {
 	GuidelineSearch,
 	type GuidelineSearchChapter,
@@ -19,13 +18,14 @@ import {
 } from '@/components/ui/navigation-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
+import { ArrowUpRight } from '@carbon/icons-react'
+
 
 const STUDIO_LINKS = [
 	{ href: '/create', label: 'Templates' },
 	{ href: '/generate', label: 'Generate' },
 ] as const
 
-const LOGIN = { href: '/login', label: 'Admin' } as const
 
 function HeaderHead({
 	className,
@@ -156,6 +156,24 @@ function HeaderHead({
 								</Link>
 							</NavigationMenuLink>
 						</NavigationMenuItem>
+						<NavigationMenuItem>
+							<NavigationMenuLink
+								active={reviewActive}
+								asChild
+								className={navigationMenuTriggerStyle()}
+							>
+								<Link
+									aria-current={reviewActive ? 'page' : undefined}
+									href="/admin"
+									rel="noreferrer"
+									target="_blank"
+									className='text-muted-foreground/50'
+								>
+									Admin ↗
+								</Link>
+							</NavigationMenuLink>
+						</NavigationMenuItem>
+
 					</NavigationMenuList>
 				</NavigationMenu>
 			</nav>
@@ -163,33 +181,13 @@ function HeaderHead({
 	)
 }
 
-function HeaderCenter({
-	className,
-	guidelineChapters,
-}: {
-	className?: string
-	guidelineChapters: GuidelineSearchChapter[]
-}) {
+function HeaderTail({ className, guidelineChapters }: { className?: string; guidelineChapters: GuidelineSearchChapter[] }) {
 	return (
 		<section className={className}>
 			<GuidelineSearch chapters={guidelineChapters} />
-			<SidebarTrigger variant="default" size="default">
+			<SidebarTrigger variant="outline" size="default" className="p-3 py-4 rounded-full">
 				Ask AI
 			</SidebarTrigger>
-		</section>
-	)
-}
-
-function HeaderTail({ className, login }: { className?: string; login: typeof LOGIN }) {
-	return (
-		<section className={className}>
-			<HeaderLinkBlock
-				href={login.href}
-				isActive={false}
-				label={login.label}
-				rel="noreferrer"
-				target="_blank"
-			/>
 		</section>
 	)
 }
@@ -201,12 +199,8 @@ export function GlobalHeader({
 }) {
 	return (
 		<header className="relative z-50 flex shrink-0 bg-background">
-			<HeaderHead className="flex-1" guidelineChapters={guidelineChapters} />
-			<HeaderCenter
-				className="-translate-x-1/2 absolute left-1/2 flex items-center gap-2 p-4"
-				guidelineChapters={guidelineChapters}
-			/>
-			<HeaderTail className="ml-auto flex items-center gap-2 p-4" login={LOGIN} />
+			<HeaderHead className="" guidelineChapters={guidelineChapters} />
+			<HeaderTail className="ml-auto flex items-center gap-2 p-4" guidelineChapters={guidelineChapters} />
 		</header>
 	)
 }

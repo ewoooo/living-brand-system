@@ -49,6 +49,7 @@ describe('buildCheckReviewView', () => {
 		})
 
 		expect(view.summary).toEqual({ pass: 0, ok: 0, fail: 0, pendingManualCheck: 0 })
+		expect(view.rows[0]?.guidelineHref).toBe('/guideline/brand-design-elements/brand-logo')
 		expect(view.rows.map((row) => row.check.key)).toEqual([
 			'logo.size.minimum',
 			'logo.space.clear',
