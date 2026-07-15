@@ -4,11 +4,13 @@
  * 화면 상태(진행/완료 표시)는 CheckImageProvider가 담당한다.
  */
 import type { CheckResult } from '@/features/asset-check/checkers/types'
+import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
 
 export interface SubmitCheckResult {
 	checkSessionId: number
 	results: Record<string, CheckResult>
 	pendingCheckKeys: string[]
+	rulesetSnapshot: RuntimeCheck[]
 }
 
 /** 즉시(deterministic/manual) 판정을 요청한다. AI Check는 pendingCheckKeys로 분리돼 돌아온다. */

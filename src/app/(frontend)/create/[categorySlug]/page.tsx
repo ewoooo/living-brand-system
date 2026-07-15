@@ -24,7 +24,7 @@ export default async function CreateCategoryPage({
 						<li key={template.id}>
 							<Link
 								href={template.href}
-								className="text-sm underline-offset-4 hover:underline"
+								className="type-callout underline-offset-4 hover:underline"
 							>
 								{template.name}
 							</Link>
@@ -32,7 +32,7 @@ export default async function CreateCategoryPage({
 					))}
 				</ul>
 			) : (
-				<p className="mt-6 text-muted-foreground text-sm">
+				<p className="type-callout mt-6 text-foreground-muted">
 					이 카테고리에 발행된 템플릿이 없습니다.
 				</p>
 			)}

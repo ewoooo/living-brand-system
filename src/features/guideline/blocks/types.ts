@@ -2,9 +2,51 @@ import type { GuidelineDocument } from '@/payload-types'
 
 export type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 
+export type CheckReferenceAssetRole = 'positive' | 'negative' | 'context'
+
+export interface CheckReferenceAssetRef {
+	id: number
+	role: CheckReferenceAssetRole
+}
+
+export type CheckBlockEvidence =
+	| {
+			type: 'columnUnit'
+			columns: { heading?: string; body?: string }[]
+	  }
+	| { type: 'mediaShowcase' }
+	| {
+			type: 'colorPalette'
+			title?: string
+			colors: { name: string; hex: string; pantone?: string }[]
+	  }
+	| {
+			type: 'doDont'
+			title?: string
+			groups: {
+				category?: string
+				description?: string
+				kind: 'do' | 'ok' | 'dont'
+				examples: { caption?: string }[]
+			}[]
+	  }
+
+export type CheckEvidence =
+	| CheckBlockEvidence
+	| {
+			type: 'document'
+			description?: string
+			blocks: CheckBlockEvidence[]
+	  }
+
 export interface CheckSourceSnapshot {
-	evidence: string
-	referenceAssets: number[]
+	evidence: CheckEvidence
+	referenceAssets: CheckReferenceAssetRef[]
+}
+
+export interface BlockCheckSourceSnapshot {
+	evidence: CheckBlockEvidence
+	referenceAssets: CheckReferenceAssetRef[]
 }
 
 /**
@@ -13,5 +55,5 @@ export interface CheckSourceSnapshot {
  */
 export interface BlockBehavior {
 	formatForAgent: (block: GuidelineBlock) => string
-	toCheckSourceSnapshot: (block: GuidelineBlock) => CheckSourceSnapshot
+	toCheckSourceSnapshot: (block: GuidelineBlock) => BlockCheckSourceSnapshot
 }

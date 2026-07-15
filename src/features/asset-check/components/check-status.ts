@@ -8,22 +8,22 @@ import type { CheckStatus } from '@/features/asset-check/checkers/types'
 export const CHECK_STATUS: Record<CheckStatus, { label: string; pill: string; dot: string }> = {
 	pass: {
 		label: '통과',
-		pill: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
-		dot: 'bg-emerald-500',
+		pill: 'bg-success/15 text-success',
+		dot: 'bg-success',
 	},
 	ok: {
 		label: '적합',
-		pill: 'bg-sky-500/15 text-sky-700 dark:text-sky-400',
-		dot: 'bg-sky-500',
+		pill: 'bg-info/15 text-info',
+		dot: 'bg-info',
 	},
 	needs_review: {
 		label: '검토',
-		pill: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
-		dot: 'bg-amber-500',
+		pill: 'bg-warning/15 text-warning',
+		dot: 'bg-warning',
 	},
 	fail: {
 		label: '미통과',
-		pill: 'bg-rose-500/15 text-rose-700 dark:text-rose-400',
-		dot: 'bg-rose-500',
+		pill: 'bg-destructive/15 text-destructive',
+		dot: 'bg-destructive',
 	},
 }

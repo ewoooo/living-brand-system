@@ -1,3 +1,4 @@
+import { createBreadcrumbsField, createParentField } from '@payloadcms/plugin-nested-docs'
 import { type CollectionConfig, slugField } from 'payload'
 import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
 import { validateGuidelineCheckKeys } from '@/features/guideline/checks/validate-guideline-check-keys'
@@ -25,9 +26,17 @@ export const GuidelineDocuments: CollectionConfig = {
 	admin: {
 		group: 'Guidelines',
 		useAsTitle: 'title',
-		defaultColumns: ['title', 'parent', 'slug', 'displayOrder', 'updatedAt'],
-		description: '장·섹션·페이지를 같은 구조로 관리하는 계층형 가이드라인 문서입니다.',
-		listSearchableFields: ['title', 'slug'],
+		description: '계층형 가이드라인 문서입니다.',
+		components: {
+			edit: {
+				PublishButton: '/components/admin/BetterEditorPublishButton',
+			},
+			views: {
+				list: {
+					Component: '/components/admin/GuidelineDocumentTreeList',
+				},
+			},
+		},
 		livePreview: {
 			url: ({ data }) => previewURL(data.id),
 		},
@@ -36,6 +45,23 @@ export const GuidelineDocuments: CollectionConfig = {
 	versions: guidelineDraftVersions,
 	defaultSort: 'displayOrder',
 	fields: [
+		{
+			name: 'documentLocation',
+			type: 'ui',
+			admin: {
+				components: {
+					Field: '/components/admin/GuidelineDocumentLocation',
+				},
+			},
+		},
+		createParentField('guideline-documents', {
+			label: '상위 문서',
+			admin: {
+				position: 'main',
+				description:
+					'상위 문서가 없으면 챕터, 챕터 아래는 섹션, 섹션 아래는 페이지가 됩니다.',
+			},
+		}),
 		{
 			name: 'title',
 			type: 'text',
@@ -47,6 +73,7 @@ export const GuidelineDocuments: CollectionConfig = {
 			type: 'text',
 			localized: true,
 			admin: {
+				hidden: true,
 				description: '제목 위에 표시할 선택 라벨입니다.',
 			},
 		},
@@ -82,15 +109,17 @@ export const GuidelineDocuments: CollectionConfig = {
 			type: 'upload',
 			relationTo: 'application-images',
 			admin: {
+				position: 'sidebar',
 				description: '문서 헤더에 표시할 선택 이미지입니다.',
 			},
 		},
-		guidelineChecksField(),
 		{
 			name: 'blocks',
 			type: 'blocks',
+			label: '본문',
 			blocks: guidelineBlocks,
 		},
+		guidelineChecksField(),
 		{
 			name: 'displayOrder',
 			type: 'number',
@@ -102,5 +131,10 @@ export const GuidelineDocuments: CollectionConfig = {
 				description: '숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.',
 			},
 		},
+		createBreadcrumbsField('guideline-documents', {
+			admin: {
+				hidden: true,
+			},
+		}),
 	],
 }

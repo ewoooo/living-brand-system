@@ -11,6 +11,7 @@ export interface CheckReviewRow {
 	rowId: string
 	sectionLabel: string | null
 	appliesTo: string[]
+	guidelineHref: string
 	anchorId: string | null
 	outcome?: CheckResult
 	inProgress: boolean
@@ -33,7 +34,7 @@ type MutableCheckRow = CheckReviewRow & { appliesToSet: Set<string> }
 
 /**
  * 검수 리뷰 화면 view model 생성 경계.
- * ruleset/result 조회와 외부 I/O는 호출자가 소유하고, 이 서비스는 화면 표시용 순수 계산만 담당한다.
+ * ruleset/result 조회와 외부 I/O는 호출자가 소유하고, 이 함수는 화면 표시용 순수 계산만 담당한다.
  */
 export function buildCheckReviewView({
 	sections,
@@ -82,12 +83,14 @@ function buildRows({
 	selected: CheckImage | null
 }): CheckReviewRow[] {
 	const results = selected?.results
+	const snapshotByKey = new Map(selected?.rulesetSnapshot?.map((check) => [check.key, check]))
 	const rows: MutableCheckRow[] = []
 	const rowByCheckKey = new Map<string, MutableCheckRow>()
 	const seenSections = new Set<string>()
 
 	for (const section of visibleSections) {
-		for (const check of section.checks) {
+		for (const currentCheck of section.checks) {
+			const check = snapshotByKey.get(currentCheck.key) ?? currentCheck
 			const existing = rowByCheckKey.get(check.key)
 			if (existing) {
 				if (!existing.appliesToSet.has(section.title)) {
@@ -109,6 +112,7 @@ function buildRows({
 				sectionLabel: first ? section.title : null,
 				appliesTo: [section.title],
 				appliesToSet: new Set([section.title]),
+				guidelineHref: toGuidelineHref(section),
 				anchorId: first ? section.slug : null,
 				outcome,
 				inProgress:
@@ -122,4 +126,12 @@ function buildRows({
 	}
 
 	return rows.map(({ appliesToSet: _appliesToSet, ...row }) => row)
+}
+
+function toGuidelineHref(section: CheckSection) {
+	const chapterHref = `/guideline/${section.chapterSlug}`
+	if (section.sectionSlug === section.chapterSlug) return chapterHref
+
+	const sectionHref = `${chapterHref}/${section.sectionSlug}`
+	return section.slug === section.sectionSlug ? sectionHref : `${sectionHref}#${section.slug}`
 }

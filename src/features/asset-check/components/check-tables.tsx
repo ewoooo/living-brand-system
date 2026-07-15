@@ -14,17 +14,18 @@ import { Empty, EmptyDescription } from '@/components/ui/empty'
 import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import type { CheckResult } from '@/features/asset-check/checkers/types'
+import { contrastOptionsSchema } from '@/features/asset-check/checkers/contrast.checker'
+import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
-import {
-	buildCheckReviewView,
-	type CheckReviewRow,
-} from '@/features/asset-check/services/build-check-review-view.service'
 import type {
 	RuntimeCheck as Check,
 	CheckSection,
 } from '@/features/asset-check/services/get-check-ruleset.service'
+import {
+	buildCheckReviewView,
+	type CheckReviewRow,
+} from '@/features/asset-check/utils/build-check-review-view'
 import { cn } from '@/lib/utils'
 
 const EXECUTOR: Record<
@@ -36,7 +37,7 @@ const EXECUTOR: Record<
 	manual: { label: 'manual', Icon: User, desc: '브랜드 담당자 확인이 필요한 기준' },
 }
 
-const CHECK_BORDER = 'border-neutral-200 border-t dark:border-neutral-800'
+const CHECK_BORDER = 'border-border border-t'
 
 function CheckRow({
 	check,
@@ -44,6 +45,7 @@ function CheckRow({
 	rowIndex,
 	sectionLabel,
 	appliesTo,
+	guidelineHref,
 	anchorId,
 	outcome,
 	inProgress,
@@ -94,6 +96,7 @@ function CheckRow({
 						key={`${rowId}:detail`}
 						check={check}
 						appliesTo={appliesTo}
+						guidelineHref={guidelineHref}
 						outcome={outcome}
 						shouldReduceMotion={shouldReduceMotion}
 					/>
@@ -128,14 +131,14 @@ function AnimatedCheckTableRow({
 function CheckSectionCell({ sectionLabel }: { sectionLabel: string | null }) {
 	return (
 		<TableCell className={cn('w-44 py-2.5 pr-4 align-top', sectionLabel && CHECK_BORDER)}>
-			{sectionLabel && <span className="font-medium text-sm">{sectionLabel}</span>}
+			{sectionLabel && <span className="type-callout-emphasized">{sectionLabel}</span>}
 		</TableCell>
 	)
 }
 
 function CheckTitleCell({ title }: { title: string }) {
 	return (
-		<TableCell className={cn('w-56 py-2.5 pr-4 align-top text-sm', CHECK_BORDER)}>
+		<TableCell className={cn('type-callout w-56 py-2.5 pr-4 align-top', CHECK_BORDER)}>
 			{title}
 		</TableCell>
 	)
@@ -151,7 +154,9 @@ function CheckMessageCell({
 	shouldReduceMotion: boolean | null
 }) {
 	return (
-		<TableCell className={cn('py-2.5 pr-3 align-top text-sm whitespace-normal', CHECK_BORDER)}>
+		<TableCell
+			className={cn('type-callout py-2.5 pr-3 align-top whitespace-normal', CHECK_BORDER)}
+		>
 			<AnimatePresence initial={false} mode="wait">
 				{detail && (
 					<motion.span
@@ -161,10 +166,10 @@ function CheckMessageCell({
 						exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
 						transition={{ duration: 0.16, ease: 'easeOut' }}
 						className={cn(
-							'block text-xs leading-5',
+							'type-caption-1 block',
 							outcome?.rawResult.status === 'fail'
-								? 'text-rose-600 dark:text-rose-400'
-								: 'text-muted-foreground',
+								? 'text-destructive'
+								: 'text-foreground-muted',
 						)}
 					>
 						{detail}
@@ -204,7 +209,7 @@ function CheckToggleCell({ open }: { open: boolean }) {
 			<ChevronDown
 				size={16}
 				className={cn(
-					'inline-block text-muted-foreground transition-transform',
+					'inline-block text-foreground-muted transition-transform',
 					open && 'rotate-180',
 				)}
 			/>
@@ -219,13 +224,15 @@ function CheckExecutorIcon({ check }: { check: Check }) {
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<span className="inline-flex text-muted-foreground">
+				<span className="inline-flex text-foreground-muted">
 					<ExecutorIcon size={16} />
 				</span>
 			</TooltipTrigger>
 			<TooltipContent>
-				<span className="font-medium">{executor.label}</span>
-				{executor.desc && <span className="block text-xs opacity-80">{executor.desc}</span>}
+				<span className="type-caption-1-emphasized">{executor.label}</span>
+				{executor.desc && (
+					<span className="type-caption-1 block opacity-80">{executor.desc}</span>
+				)}
 			</TooltipContent>
 		</Tooltip>
 	)
@@ -248,7 +255,7 @@ function CheckStatusBadge({
 				exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -3, scale: 0.96 }}
 				transition={{ duration: 0.16, ease: 'easeOut' }}
 				className={cn(
-					'inline-block whitespace-nowrap rounded px-1.5 py-0.5 font-medium text-[11px]',
+					'type-subheadline-emphasized inline-block whitespace-nowrap rounded px-1.5 py-0.5',
 					CHECK_STATUS[outcome.rawResult.status].pill,
 				)}
 			>
@@ -266,7 +273,7 @@ function CheckStatusBadge({
 				className="inline-flex justify-center"
 				title="검수 중"
 			>
-				<Spinner className="size-3.5 text-muted-foreground" />
+				<Spinner className="size-3.5 text-foreground-muted" />
 			</motion.span>
 		)
 	}
@@ -276,16 +283,20 @@ function CheckStatusBadge({
 function CheckDetailRow({
 	check,
 	appliesTo,
+	guidelineHref,
 	outcome,
 	shouldReduceMotion,
 }: {
 	check: Check
 	appliesTo: string[]
+	guidelineHref: string
 	outcome?: CheckResult
 	shouldReduceMotion: boolean | null
 }) {
 	const appliesToText = appliesTo.join(', ')
 	const facts = outcome?.rawResult.facts
+	const observations =
+		outcome && 'observations' in outcome.rawResult ? outcome.rawResult.observations : undefined
 
 	return (
 		<motion.tr
@@ -299,7 +310,7 @@ function CheckDetailRow({
 			<TableCell className="w-56 pt-0 pb-0 pr-4 align-top">
 				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="pb-3">
-						<code className="inline-flex items-center whitespace-nowrap rounded-md bg-secondary px-2 py-0.5 font-mono text-[11px] text-secondary-foreground">
+						<code className="type-subheadline inline-flex items-center whitespace-nowrap rounded-md bg-fill-muted px-2 py-0.5 font-mono text-foreground">
 							{check.key}
 						</code>
 					</div>
@@ -309,21 +320,21 @@ function CheckDetailRow({
 				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="space-y-2 pb-3">
 						{appliesTo.length > 1 && (
-							<p className="text-muted-foreground text-xs">
+							<p className="type-caption-1 text-foreground-muted">
 								적용 위치: {appliesToText}
 							</p>
 						)}
-						{check.evidence ? (
-							<blockquote className="rounded-md bg-white/5 px-3 py-2 text-muted-foreground text-xs leading-5">
-								{check.evidence}
-							</blockquote>
-						) : (
-							<span className="text-muted-foreground text-xs">
-								관련 가이드라인 없음
-							</span>
-						)}
+						<a
+							href={guidelineHref}
+							target="_blank"
+							rel="noreferrer"
+							className="type-callout inline-flex underline underline-offset-2 hover:text-foreground"
+						>
+							관련 가이드라인 보기
+						</a>
+						<CheckExecutionDetails check={check} outcome={outcome} />
 						<CheckFacts facts={facts} />
-						<ReferenceAssets assets={check.referenceAssets} />
+						<HeuristicObservations observations={observations} />
 					</div>
 				</CheckDetailCollapse>
 			</TableCell>
@@ -331,11 +342,121 @@ function CheckDetailRow({
 	)
 }
 
+function CheckExecutionDetails({ check, outcome }: { check: Check; outcome?: CheckResult }) {
+	const comparison = outcome?.rawResult.comparisons?.[0]
+	const configuredCriterion =
+		check.checker.implementationKey === 'contrast'
+			? contrastOptionsSchema.safeParse(check.options).data?.criteria[0]
+			: undefined
+	const criterion = comparison ?? configuredCriterion
+	const reasonCode = outcome?.rawResult.reasonCode
+
+	return (
+		<dl className="type-caption-1 grid gap-1.5 rounded-md border px-3 py-2">
+			<CheckFact
+				label="체커"
+				value={
+					check.checker.implementationKey
+						? `${check.checker.key} · ${check.checker.implementationKey}`
+						: check.checker.key
+				}
+			/>
+			<CheckFact label="판정 방식" value={executorLabel(check.executor)} />
+			{criterion?.measurement === 'contrastRatio' && (
+				<CheckFact
+					label="기준"
+					value={`대비율 ${operatorLabel(criterion.operator)} ${criterion.expected}:1`}
+				/>
+			)}
+			{comparison?.measurement === 'contrastRatio' && (
+				<CheckFact
+					label="측정 결과"
+					value={`${comparison.actual}:1 · ${comparison.satisfied ? '기준 충족' : '기준 미충족'}`}
+				/>
+			)}
+			{reasonCode && <CheckFact label="검토 사유" value={reasonLabel(reasonCode)} />}
+		</dl>
+	)
+}
+
+function executorLabel(executor: Check['executor']) {
+	if (executor === 'deterministic') return '자동 측정'
+	if (executor === 'heuristic') return 'AI 평가'
+	return '담당자 확인'
+}
+
+function operatorLabel(operator: string) {
+	if (operator === 'gte') return '≥'
+	if (operator === 'lte') return '≤'
+	if (operator === 'eq') return '='
+	return operator
+}
+
+function reasonLabel(reasonCode: string) {
+	if (reasonCode === 'color_pair_not_found') return '비교할 두 색상을 이미지에서 찾지 못했습니다.'
+	if (reasonCode === 'missing_measurement') return '판정에 필요한 측정값이 없습니다.'
+	return reasonCode
+}
+
+function HeuristicObservations({ observations }: { observations: AiCheckResult['observations'] }) {
+	if (!observations?.length) return null
+
+	return (
+		<div className="overflow-x-auto rounded-md border">
+			<table className="w-full text-left text-xs">
+				<caption className="sr-only">휴리스틱 판정 기준별 비교</caption>
+				<thead className="bg-white/5 text-muted-foreground">
+					<tr>
+						<th className="px-3 py-2 font-medium">판정 질문</th>
+						<th className="px-3 py-2 font-medium">기준값</th>
+						<th className="px-3 py-2 font-medium">관찰값</th>
+						<th className="px-3 py-2 font-medium">결과</th>
+					</tr>
+				</thead>
+				<tbody>
+					{observations.map((observation) => (
+						<tr key={observation.criterionId} className="border-t">
+							<td className="px-3 py-2 align-top">
+								{observation.question}
+								<p className="mt-1 text-muted-foreground">{observation.reason}</p>
+							</td>
+							<td className="px-3 py-2 align-top whitespace-nowrap">
+								{observation.expected === 'present' ? '있어야 함' : '없어야 함'}
+							</td>
+							<td className="px-3 py-2 align-top whitespace-nowrap">
+								{observation.actual === 'present'
+									? '있음'
+									: observation.actual === 'absent'
+										? '없음'
+										: '판단 불가'}{' '}
+								({observation.confidence}%)
+							</td>
+							<td className="px-3 py-2 align-top whitespace-nowrap">
+								{observation.satisfied === true
+									? '충족'
+									: observation.satisfied === false
+										? '미충족'
+										: '검토 필요'}
+							</td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+		</div>
+	)
+}
+
 function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 	if (!facts || Object.keys(facts).length === 0) return null
 
 	return (
-		<dl className="grid gap-1.5 rounded-md bg-white/5 px-3 py-2 text-xs">
+		<dl className="type-caption-1 grid gap-1.5 rounded-md bg-fill-muted px-3 py-2">
+			{typeof facts.foreground === 'string' && (
+				<CheckFact label="전경색" value={facts.foreground} />
+			)}
+			{typeof facts.background === 'string' && (
+				<CheckFact label="배경색" value={facts.background} />
+			)}
 			{typeof facts.detectedCategory === 'string' && (
 				<CheckFact label="검출 분류" value={facts.detectedCategory} />
 			)}
@@ -344,7 +465,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 			)}
 			{Array.isArray(facts.prohibitedSignals) && facts.prohibitedSignals.length > 0 && (
 				<div className="grid gap-1">
-					<dt className="text-muted-foreground">금지 신호</dt>
+					<dt className="text-foreground-muted">금지 신호</dt>
 					<dd>
 						<ul className="list-disc space-y-0.5 pl-4">
 							{facts.prohibitedSignals.map((signal) => (
@@ -361,7 +482,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 function CheckFact({ label, value }: { label: string; value: string }) {
 	return (
 		<div className="grid grid-cols-[5rem_1fr] gap-2">
-			<dt className="text-muted-foreground">{label}</dt>
+			<dt className="text-foreground-muted">{label}</dt>
 			<dd>{value}</dd>
 		</div>
 	)
@@ -384,27 +505,6 @@ function CheckDetailCollapse({
 		>
 			{children}
 		</motion.div>
-	)
-}
-
-function ReferenceAssets({ assets }: { assets: Check['referenceAssets'] }) {
-	if (assets.length === 0) return null
-
-	return (
-		<div className="flex flex-wrap items-center gap-1.5 text-xs">
-			<span className="text-muted-foreground">기준 이미지 {assets.length}개</span>
-			{assets.map((asset) => (
-				<a
-					key={`${asset.url}-${asset.name}`}
-					href={asset.url}
-					target="_blank"
-					rel="noreferrer"
-					className="rounded-md border px-2 py-1 text-foreground transition-colors hover:bg-accent"
-				>
-					{asset.name}
-				</a>
-			))}
-		</div>
 	)
 }
 

@@ -363,6 +363,7 @@ export interface PublishGuidelineResponse {
 | `*.tsx` | React component 파일입니다. |
 | `use-*.ts` | React custom hook 파일입니다. JSX를 반환하면 `use-*.tsx`를 허용합니다. |
 | `*.service.ts` | Use Case service 함수 파일입니다. |
+| `*.client.ts` | 클라이언트에서 Route Handler를 fetch로 호출하는 client service 파일입니다. 소유 기능의 `services` 폴더에 둡니다. |
 | `*.repository.ts` | Service가 참조하는 repository interface 파일입니다. |
 | `*.payload.repository.ts` | Payload Local API 또는 CMS SDK 기반 repository 구현 파일입니다. |
 | `*.drizzle.repository.ts` | Drizzle ORM 기반 repository 구현 파일입니다. |

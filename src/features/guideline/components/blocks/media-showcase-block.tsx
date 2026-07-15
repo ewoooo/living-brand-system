@@ -14,7 +14,7 @@ export function MediaShowcaseBlock({
 				image={block.image}
 				backgroundColor={block.imageBackgroundColor}
 				scale={block.imageScale}
-				className="min-h-80 p-8 w-full"
+				className="min-h-80 w-full py-8"
 			/>
 		</section>
 	)

@@ -9,7 +9,7 @@ import { EXPERIMENTAL_TableFeature, lexicalEditor } from '@payloadcms/richtext-l
 import { s3Storage } from '@payloadcms/storage-s3'
 import { ko } from '@payloadcms/translations/languages/ko'
 import { buildConfig, type CollectionConfig, type GlobalConfig, type PayloadRequest } from 'payload'
-import { betterEditor, betterEditorSettingsGlobal } from 'payload-better-editor'
+import { betterEditorSettingsGlobal } from 'payload-better-editor'
 import sharp from 'sharp'
 import { z } from 'zod/v3'
 import { migrations } from '../migrations'
@@ -32,6 +32,7 @@ import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
 import { env } from './env'
 import { collectGuidelineCheckSources } from './features/guideline/checks/collect-guideline-check-sources'
+import { formatCheckEvidence } from './features/guideline/checks/format-check-evidence'
 import { findPublishedUnifiedGuidelineCheckDocuments } from './features/guideline/repositories/published-guideline-checks.payload.repository'
 import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
@@ -171,6 +172,9 @@ export default buildConfig({
 		},
 		components: {
 			beforeDashboard: ['/components/admin/DashboardSummary'],
+			graphics: {
+				Logo: '/components/admin/AdminLogo',
+			},
 		},
 	},
 	collections: [
@@ -270,16 +274,12 @@ export default buildConfig({
 							const checks = documents
 								.flatMap((document) =>
 									collectGuidelineCheckSources(document).map(
-										({ blockId, check, evidence }) => ({
+										({ check, evidence, source }) => ({
 											key: check.key,
 											title: check.title,
 											tier: check.tier,
-											evidence,
-											source: {
-												collection: 'guideline-documents' as const,
-												documentId: document.id,
-												blockId,
-											},
+											evidence: formatCheckEvidence(evidence),
+											source,
 										}),
 									),
 								)
@@ -339,9 +339,6 @@ export default buildConfig({
 					secretAccessKey: env.S3_SECRET_ACCESS_KEY || '',
 				},
 			},
-		}),
-		betterEditor({
-			collections: { 'guideline-documents': { blocksField: 'blocks' } },
 		}),
 	],
 	i18n: {

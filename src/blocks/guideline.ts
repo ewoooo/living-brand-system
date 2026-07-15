@@ -1,4 +1,6 @@
-import type { Block, Field, FieldHook } from 'payload'
+import type { ArrayField, Block, Field, FieldHook } from 'payload'
+import { validateGuidelineCheckOptions } from '@/features/guideline/checks/validate-guideline-check-options'
+import { relationshipId } from '@/features/guideline/utils/block-text'
 
 type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
 
@@ -8,6 +10,15 @@ const executorCondition =
 
 const nonHeuristicCondition = (_data: unknown, siblingData: { executor?: CheckExecutor }) =>
 	siblingData?.executor !== 'heuristic'
+
+const validateHeuristicCriteria: NonNullable<ArrayField['validate']> = (value, { siblingData }) => {
+	const executor = (siblingData as { executor?: CheckExecutor })?.executor
+	if (executor !== 'heuristic') return true
+	return (
+		(Array.isArray(value) && value.length > 0) ||
+		'Heuristic Check에는 판정 기준이 1개 이상 필요합니다.'
+	)
+}
 
 export function checkKeyFromEnglishTitle(value: unknown): string {
 	if (typeof value !== 'string') return ''
@@ -22,6 +33,17 @@ export function checkKeyFromEnglishTitle(value: unknown): string {
 const populateCheckKey: FieldHook = ({ siblingData, value }) => {
 	if (typeof value === 'string' && value.trim()) return value.trim()
 	return checkKeyFromEnglishTitle(siblingData?.title)
+}
+
+const populateCheckExecutor: FieldHook = async ({ req, siblingData, value }) => {
+	const checkerId = relationshipId(siblingData?.checker)
+	if (checkerId === null) return value
+	const checker = await req.payload.findByID({
+		collection: 'rule-checkers',
+		id: checkerId,
+		depth: 0,
+	})
+	return checker.executor
 }
 
 export function guidelineChecksField(): Field {
@@ -70,14 +92,14 @@ export function guidelineChecksField(): Field {
 				name: 'executor',
 				type: 'select',
 				required: true,
-				defaultValue: 'deterministic',
 				options: [
 					{ label: 'Deterministic', value: 'deterministic' },
 					{ label: 'Heuristic (AI)', value: 'heuristic' },
 					{ label: 'Manual', value: 'manual' },
 				],
+				hooks: { beforeValidate: [populateCheckExecutor] },
 				admin: {
-					description: 'Checker 후보와 아래 설정 항목을 이 실행 유형에 맞춰 제한합니다.',
+					hidden: true,
 				},
 			},
 			{
@@ -90,19 +112,64 @@ export function guidelineChecksField(): Field {
 					allowEdit: true,
 					appearance: 'drawer',
 					description: '검수 실행 방식과 구현체를 선택합니다.',
-				},
-				filterOptions: ({ siblingData }) => {
-					const executor = (siblingData as { executor?: CheckExecutor })?.executor
-					return executor ? { executor: { equals: executor } } : true
+					components: {
+						Field: '/components/admin/CheckCheckerField',
+					},
 				},
 			},
 			{
 				name: 'options',
 				type: 'json',
+				validate: validateGuidelineCheckOptions,
 				admin: {
 					condition: executorCondition('deterministic'),
 					description: '이 Check에서 결정론적 Checker에 전달할 설정입니다.',
+					components: {
+						Field: '/components/admin/CheckOptionsField',
+					},
 				},
+			},
+			{
+				name: 'criteria',
+				type: 'array',
+				minRows: 1,
+				validate: validateHeuristicCriteria,
+				labels: {
+					singular: '판정 기준',
+					plural: '판정 기준',
+				},
+				admin: {
+					condition: executorCondition('heuristic'),
+					description: 'AI가 관측할 질문과 통과 기준을 행 단위로 입력합니다.',
+					initCollapsed: false,
+				},
+				fields: [
+					{
+						type: 'row',
+						fields: [
+							{
+								name: 'question',
+								type: 'text',
+								required: true,
+								maxLength: 300,
+								label: '판정 질문',
+								admin: { width: '70%' },
+							},
+							{
+								name: 'expected',
+								enumName: 'enum_heuristic_criterion_expected',
+								type: 'select',
+								required: true,
+								label: '적합 기준',
+								options: [
+									{ label: '있어야 함', value: 'present' },
+									{ label: '없어야 함', value: 'absent' },
+								],
+								admin: { width: '30%' },
+							},
+						],
+					},
+				],
 			},
 			{
 				name: 'heuristicPrompt',
@@ -223,17 +290,49 @@ export const DoDontBlock: Block = {
 	fields: [
 		{ name: 'title', type: 'text', localized: true },
 		{
+			type: 'row',
+			fields: [
+				{
+					name: 'imageRatio',
+					type: 'select',
+					defaultValue: '4:3',
+					options: [
+						{ label: '4:3', value: '4:3' },
+						{ label: '1:1', value: '1:1' },
+						{ label: '16:9', value: '16:9' },
+					],
+					admin: { width: '50%', description: '예시 이미지의 표시 비율입니다.' },
+				},
+				{
+					name: 'groupLayout',
+					type: 'select',
+					defaultValue: 'vertical',
+					options: [
+						{ label: '세로 스택', value: 'vertical' },
+						{ label: '가로 스택', value: 'horizontal' },
+					],
+					admin: {
+						width: '50%',
+						description: '가로 스택은 넓은 화면에서 그룹을 나란히 배치합니다.',
+					},
+				},
+			],
+		},
+		{
 			name: 'groups',
 			type: 'array',
 			minRows: 1,
 			admin: { description: '카테고리 단위 예시 그룹입니다.' },
 			fields: [
-				{ name: 'category', type: 'text', localized: true },
 				{
-					name: 'examples',
-					type: 'array',
-					minRows: 1,
+					type: 'row',
 					fields: [
+						{
+							name: 'category',
+							type: 'text',
+							localized: true,
+							admin: { width: '50%' },
+						},
 						{
 							name: 'kind',
 							type: 'select',
@@ -241,9 +340,27 @@ export const DoDontBlock: Block = {
 							defaultValue: 'dont',
 							options: [
 								{ label: 'Do (권장)', value: 'do' },
+								{ label: 'OK (허용)', value: 'ok' },
 								{ label: "Don't (금지)", value: 'dont' },
 							],
+							admin: { width: '50%' },
 						},
+					],
+				},
+				{
+					name: 'description',
+					type: 'textarea',
+					localized: true,
+					admin: {
+						description:
+							'그룹 전체에 적용되는 설명입니다. 예시별 caption 대신 사용할 수 있습니다.',
+					},
+				},
+				{
+					name: 'examples',
+					type: 'array',
+					minRows: 1,
+					fields: [
 						{ name: 'image', type: 'upload', relationTo: 'application-images' },
 						{ name: 'caption', type: 'text', localized: true },
 					],

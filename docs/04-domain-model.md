@@ -195,10 +195,10 @@ GuidelineSection과 GuidelinePage는 독립 문서입니다. GuidelineBlock은 S
 GuidelineDocument는 Section과 Page를 함께 부르는 이름입니다.
 
 Check와 RuleChecker는 책임이 다릅니다.
-Check는 사용자가 정한 검수 선언이며 부모 Section/Page/Block 안에 저장합니다. CheckKey, Title, Tier, Messages, source별 Options와 RuleCheckerRef를 보유하고 별도 source 참조는 두지 않습니다.
+Check는 사용자가 정한 검수 선언이며 부모 Section/Page/Block 안에 저장합니다. CheckKey, Title, Tier, Messages, source별 Options, 휴리스틱 판정 기준과 RuleCheckerRef를 보유하고 별도 source 참조는 두지 않습니다.
 RuleChecker는 Check를 실행할 도구 계약입니다. 하나의 RuleChecker는 하나의 ExecutorType과 결합합니다. deterministic은 CheckerKey를 사용하고, heuristic은 ModelRef와 PromptKey를 사용하며, manual은 자동 실행 binding을 갖지 않습니다.
 RuleChecker 하나는 여러 Check가 재사용할 수 있지만 source별 기준값은 Check options가 소유합니다.
-Check는 부모 GuidelineVersion에 포함하고, 검수 시점의 문서 근거와 RuleChecker 계약은 CheckSession의 CheckRulesetSnapshot으로 고정합니다.
+Check는 부모 GuidelineVersion에 포함하고, 검수 시점의 문서 근거·판정 기준·RuleChecker 계약은 CheckSession의 CheckRulesetSnapshot으로 고정합니다. 문서 근거는 `source.documentId`와 타입별 구조화 evidence로 저장하며 Block 식별자와 문서 제목은 중복 저장하지 않습니다. 휴리스틱 AI는 기준별 관찰만 담당하고 최종 상태는 품질 검수 Service가 결정합니다.
 
 ```text
 [도메인] 브랜드 운영 시스템

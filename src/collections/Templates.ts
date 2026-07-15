@@ -1,6 +1,5 @@
 import { APIError, type CollectionConfig } from 'payload'
-import { findInvalidAuthorizedRefs } from '@/features/template-import/services/validate-authorized-refs.service'
-import { validateTemplateImages } from '@/features/template-import/utils/validate-authorized-assets'
+import { findTemplatePublishBlocker } from '@/features/template-import/services/validate-authorized-refs.service'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -16,34 +15,8 @@ export const Templates: CollectionConfig = {
 				// draft(및 상태 미지정) 저장은 게이트 없이 통과. 발행 전이일 때만 인가 검증.
 				if (data?._status !== 'published') return data
 
-				const validation = validateTemplateImages(data?.jsonTemplate)
-
-				// 보안 게이트는 fail-closed — 검사할 수 없는 값은 저장하지 않는다.
-				if (validation.status === 'invalid') {
-					throw new APIError(
-						'jsonTemplate이 스키마(src/types/json-template.ts)와 맞지 않아 저장할 수 없습니다.',
-						400,
-					)
-				}
-				if (validation.unauthorizedLabels.length > 0) {
-					throw new APIError(
-						`인가된 에셋으로 교체되지 않은 이미지가 있습니다: ${validation.unauthorizedLabels.join(', ')}. 미리보기에서 각 이미지를 브랜드 에셋으로 교체한 뒤 저장하세요.`,
-						400,
-					)
-				}
-
-				// 인가 컬렉션은 자기신고 라벨이 아니라 실제 문서 참조로 검증한다.
-				const invalidRefLabels = await findInvalidAuthorizedRefs(
-					req.payload,
-					validation.authorizedRefs,
-				)
-
-				if (invalidRefLabels.length > 0) {
-					throw new APIError(
-						`인가 에셋 참조가 유효하지 않습니다: ${invalidRefLabels.join(', ')}. 미리보기에서 에셋을 다시 선택하세요.`,
-						400,
-					)
-				}
+				const blocker = await findTemplatePublishBlocker(req.payload, data?.jsonTemplate)
+				if (blocker) throw new APIError(blocker, 400)
 
 				return data
 			},
