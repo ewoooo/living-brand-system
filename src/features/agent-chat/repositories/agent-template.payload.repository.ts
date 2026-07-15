@@ -25,6 +25,8 @@ function publishedTemplateQuery(user: unknown) {
 		locale: DEFAULT_LOCALE,
 		overrideAccess: false,
 		user: user as never,
+		// ponytail: 목록 질의가 html 원문(현재 수 KB)을 함께 나른다. 템플릿이 수백 개로 늘면
+		// 저장 시점에 슬롯 요약을 별도 필드로 스냅샷해 목록에서 html을 빼는 게 업그레이드 경로.
 		select: {
 			name: true,
 			description: true,

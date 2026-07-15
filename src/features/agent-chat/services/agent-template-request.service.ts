@@ -1,10 +1,10 @@
 import { z } from 'zod'
 
+import { pickHtmlTemplate } from '@/features/asset-generation/services/get-published-template.service'
 import {
 	collectHtmlSlots,
 	type HtmlSlot,
 } from '@/features/asset-generation/utils/collect-html-slots'
-import type { TemplateOverrides } from '@/features/template-import/utils/compose-template-html'
 import { AgentConfigurationError } from '@/lib/errors'
 import {
 	AUTHORIZED_ASSET_COLLECTIONS,
@@ -113,7 +113,7 @@ export async function prepareTemplateImage(
 		throw new AgentConfigurationError('Template is not available.')
 	}
 
-	const html = getHtmlTemplate(template)
+	const html = pickHtmlTemplate(template)
 
 	if (html) {
 		return {
@@ -143,29 +143,8 @@ export async function prepareTemplateImage(
 	}
 }
 
-/** 읽기 계약: Create 화면(getPublishedTemplate)과 동일하게 Figma HTML을 우선하고 json은 폴백. */
-function getHtmlTemplate(template: AgentTemplateDocument) {
-	if (
-		typeof template.html === 'string' &&
-		template.html.trim() !== '' &&
-		typeof template.width === 'number' &&
-		template.width > 0 &&
-		typeof template.height === 'number' &&
-		template.height > 0
-	) {
-		return {
-			html: template.html,
-			overrides: (template.overrides ?? {}) as TemplateOverrides,
-			width: template.width,
-			height: template.height,
-		}
-	}
-
-	return null
-}
-
 function getTemplateSlots(template: AgentTemplateDocument): AgentSlotSummary[] | null {
-	const html = getHtmlTemplate(template)
+	const html = pickHtmlTemplate(template)
 
 	if (html) {
 		return collectHtmlSlots(html.html, html.overrides).map(toHtmlSlotSummary)
