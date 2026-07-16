@@ -101,14 +101,14 @@ export const CheckScenarios: CollectionConfig = {
 			isManager(req.user) ? { hasBeenPublished: { equals: false } } : false,
 	},
 	admin: {
-		group: 'Quality',
+		group: '검수 설정',
 		useAsTitle: 'title',
 		defaultColumns: ['title', 'key', 'archived', '_status', 'updatedAt'],
 		description: '검수 목적에 맞게 실행할 Check를 조립하고 발행합니다.',
 	},
 	labels: {
-		singular: '체크 시나리오',
-		plural: '체크 시나리오',
+		singular: '검수 시나리오',
+		plural: '검수 시나리오',
 	},
 	versions: draftVersions,
 	hooks: {

@@ -5,11 +5,11 @@ export const AgentSkills: CollectionConfig = {
 	slug: 'agent-skills',
 	access: managerManagedAccess,
 	labels: {
-		singular: 'Agent Skill',
-		plural: 'Agent Skills',
+		singular: '에이전트 스킬',
+		plural: '에이전트 스킬',
 	},
 	admin: {
-		group: 'Agent',
+		group: '에이전트',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'enabled', 'updatedAt'],
 		description: 'Agent가 선택해 실행할 SKILL.md 형태의 지시문입니다.',

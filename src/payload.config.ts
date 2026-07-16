@@ -79,6 +79,11 @@ type GetDefaultMcpAccessSettings = (overrideApiKey?: null | string) => Promise<M
 
 const BetterEditorSettings: GlobalConfig = {
 	...betterEditorSettingsGlobal,
+	label: '편집기 설정',
+	admin: {
+		...betterEditorSettingsGlobal.admin,
+		group: '시스템 관리',
+	},
 	access: { read: authenticated, update: managerOrAdmin },
 }
 
@@ -183,16 +188,16 @@ export default buildConfig({
 	collections: [
 		...legacyGuidelineCollections,
 		GuidelineDocuments,
-		CheckScenarios,
-		RuleCheckers,
 		BrandLogos,
 		BrandColors,
 		BrandTypefaces,
 		ApplicationImages,
-		TemplateCategories,
 		Templates,
+		TemplateCategories,
 		TemplateAssets,
 		Plugins,
+		CheckScenarios,
+		RuleCheckers,
 		CheckSessions,
 		AgentChatSessions,
 		AgentSkills,
@@ -244,6 +249,8 @@ export default buildConfig({
 			},
 			overrideApiKeyCollection: (collection: CollectionConfig) => ({
 				...collection,
+				labels: { singular: 'MCP API 키', plural: 'MCP API 키' },
+				admin: { ...collection.admin, group: '시스템 관리' },
 				access: {
 					create: adminOnly,
 					delete: adminOnly,
@@ -328,6 +335,7 @@ export default buildConfig({
 				'guideline-documents': 20,
 			},
 			searchOverrides: {
+				admin: { hidden: true },
 				access: {
 					read: ({ req }) => Boolean(req.user),
 				},
