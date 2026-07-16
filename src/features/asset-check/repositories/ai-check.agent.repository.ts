@@ -8,7 +8,10 @@ import {
 	measureObservationSchema,
 	presenceObservationSchema,
 } from '@/features/asset-check/domain/heuristic.evaluator'
-import { resizeForAiVision } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
+import {
+	compressForAiReference,
+	resizeForAiVision,
+} from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import type {
 	CheckReferenceAsset,
 	RuntimeCheck,
@@ -221,12 +224,13 @@ async function loadReferenceFiles(checks: RuntimeCheck[]) {
 
 	const files = await Promise.all(
 		[...assets.values()].map(async (asset) => {
-			const data = await readReferenceAsset(asset)
-			if (!data) return null
+			const raw = await readReferenceAsset(asset)
+			if (!raw) return null
+			const { data, mediaType } = await compressForAiReference(raw, asset.mimeType)
 			return {
 				name: asset.name,
 				role: asset.role,
-				mediaType: asset.mimeType,
+				mediaType,
 				data,
 			}
 		}),
@@ -238,7 +242,7 @@ async function loadReferenceFiles(checks: RuntimeCheck[]) {
 async function readReferenceAsset(asset: CheckReferenceAsset): Promise<Buffer | null> {
 	const response = await fetch(toAbsoluteUrl(asset.url)).catch(() => null)
 	if (!response?.ok) return null
-	return resizeForAiVision(Buffer.from(await response.arrayBuffer()))
+	return Buffer.from(await response.arrayBuffer())
 }
 
 function toAbsoluteUrl(url: string) {
