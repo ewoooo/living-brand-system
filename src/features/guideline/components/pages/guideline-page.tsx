@@ -21,7 +21,7 @@ export function GuidelinePage({
 				<section className="mt-8 grid gap-4 md:grid-cols-2">
 					<RichText
 						data={page.description}
-						className="type-body space-y-0.5 md:col-start-2"
+						className="typeset typeset-lbs md:col-start-2"
 					/>
 				</section>
 			) : (

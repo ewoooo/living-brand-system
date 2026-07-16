@@ -2,8 +2,18 @@
 
 import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
-import { TableCell } from '@/components/ui/table'
-import { contrastOptionsSchema } from '@/features/asset-check/checkers/contrast.checker'
+import {
+	Table,
+	TableBody,
+	TableCaption,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table'
+// deterministic 상세 표시를 재개할 때 함께 복구한다.
+// import { Badge } from '@/components/ui/badge'
+// import { contrastOptionsSchema } from '@/features/asset-check/checkers/contrast.checker'
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import {
 	formatObservationActual,
@@ -13,7 +23,7 @@ import type { RuntimeCheck as Check } from '@/features/asset-check/services/get-
 
 /**
  * 결과 행 확장 상세 — 판정 근거를 rawResult에서 읽어 표시.
- * in : { check: RuntimeCheck; appliesTo: string[]; guidelineHref: string; outcome?: CheckResult }
+ * in : { check: RuntimeCheck; appliesTo: string[]; outcome?: CheckResult }
  * 소비 필드:
  *   check.key, check.checker { key, implementationKey }, check.executor, check.options
  *   outcome.rawResult.comparisons[0] { measurement, operator, expected, actual, satisfied }
@@ -26,20 +36,18 @@ import type { RuntimeCheck as Check } from '@/features/asset-check/services/get-
  *       confidence: number, reason: string, satisfied: boolean | null }[]
  */
 export function CheckDetailRow({
-	check,
+	// check, // deterministic 상세 표시를 재개할 때 사용한다.
 	appliesTo,
-	guidelineHref,
 	outcome,
 	shouldReduceMotion,
 }: {
 	check: Check
 	appliesTo: string[]
-	guidelineHref: string
 	outcome?: CheckResult
 	shouldReduceMotion: boolean | null
 }) {
 	const appliesToText = appliesTo.join(', ')
-	const facts = outcome?.rawResult.facts
+	// const facts = outcome?.rawResult.facts
 	const observations =
 		outcome && 'observations' in outcome.rawResult ? outcome.rawResult.observations : undefined
 
@@ -49,36 +57,19 @@ export function CheckDetailRow({
 			exit={{ visibility: 'visible' }}
 			transition={{ duration: 0.18, ease: 'easeOut' }}
 		>
-			<TableCell className="p-0" colSpan={2}>
-				<span className="sr-only">상세 정보</span>
-			</TableCell>
-			<TableCell className="w-56 pt-0 pb-0 pr-4 align-top">
-				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
-					<div className="pb-3">
-						<code className="type-subheadline inline-flex items-center whitespace-nowrap rounded-md bg-fill-muted px-2 py-0.5 font-mono text-foreground">
-							{check.key}
-						</code>
-					</div>
-				</CheckDetailCollapse>
-			</TableCell>
+			<TableCell className="p-0" colSpan={3}></TableCell>
 			<TableCell className="pt-0 pb-0 pr-3 align-top whitespace-normal" colSpan={3}>
+				<span className="sr-only">상세 정보</span>
 				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="space-y-2 pb-3">
 						{appliesTo.length > 1 && (
-							<p className="type-caption-1 text-foreground-muted">
+							<p className="type-caption-1 text-muted-foreground">
 								적용 위치: {appliesToText}
 							</p>
 						)}
-						<a
-							href={guidelineHref}
-							target="_blank"
-							rel="noreferrer"
-							className="type-callout inline-flex underline underline-offset-2 hover:text-foreground"
-						>
-							관련 가이드라인 보기
-						</a>
-						<CheckExecutionDetails check={check} outcome={outcome} />
-						<CheckFacts facts={facts} />
+
+						{/* <CheckExecutionDetails check={check} outcome={outcome} /> */}
+						{/* <CheckFacts facts={facts} /> */}
 						<HeuristicObservations observations={observations} />
 					</div>
 				</CheckDetailCollapse>
@@ -87,6 +78,7 @@ export function CheckDetailRow({
 	)
 }
 
+/* deterministic 상세 표시를 재개할 때 함께 복구한다.
 function CheckExecutionDetails({ check, outcome }: { check: Check; outcome?: CheckResult }) {
 	const comparison = outcome?.rawResult.comparisons?.[0]
 	const configuredCriterion =
@@ -142,36 +134,37 @@ function reasonLabel(reasonCode: string) {
 	if (reasonCode === 'missing_measurement') return '판정에 필요한 측정값이 없습니다.'
 	return reasonCode
 }
+*/
 
 function HeuristicObservations({ observations }: { observations: AiCheckResult['observations'] }) {
 	if (!observations?.length) return null
 
 	return (
-		<div className="overflow-x-auto rounded-md border">
-			<table className="w-full text-left text-xs">
-				<caption className="sr-only">휴리스틱 판정 기준별 비교</caption>
-				<thead className="bg-white/5 text-muted-foreground">
-					<tr>
-						<th className="px-3 py-2 font-medium">판정 질문</th>
-						<th className="px-3 py-2 font-medium">기준값</th>
-						<th className="px-3 py-2 font-medium">관찰값</th>
-						<th className="px-3 py-2 font-medium">결과</th>
-					</tr>
-				</thead>
-				<tbody>
+		<div className="overflow-x-auto rounded-sm border border-neutral-200">
+			<Table className="type-caption-1">
+				<TableCaption className="sr-only">결과 비교</TableCaption>
+				<TableHeader className="bg-fill-muted/50 text-foreground-muted border-b">
+					<TableRow>
+						<TableHead className="px-3 py-2">질문</TableHead>
+						<TableHead className="px-3 py-2">기준</TableHead>
+						<TableHead className="px-3 py-2">관찰</TableHead>
+						<TableHead className="px-3 py-2">결과</TableHead>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
 					{observations.map((observation) => (
-						<tr key={observation.criterionId} className="border-t">
-							<td className="px-3 py-2 align-top">
-								{observation.question}
-								<p className="mt-1 text-muted-foreground">{observation.reason}</p>
-							</td>
-							<td className="px-3 py-2 align-top whitespace-nowrap">
+						<TableRow key={observation.criterionId}>
+							<TableCell className="px-3 py-2 align-top whitespace-normal">
+								<p className="text-neutral-400">{observation.question}</p>
+								<p className="mt-1 text-foreground-muted">{observation.reason}</p>
+							</TableCell>
+							<TableCell className="px-3 py-2 align-top">
 								{formatObservationExpected(observation)}
-							</td>
-							<td className="px-3 py-2 align-top whitespace-nowrap">
+							</TableCell>
+							<TableCell className="px-3 py-2 align-top">
 								{formatObservationActual(observation)} ({observation.confidence}%)
-							</td>
-							<td className="px-3 py-2 align-top whitespace-nowrap">
+							</TableCell>
+							<TableCell className="px-3 py-2 align-top">
 								{observation.satisfied === true
 									? '충족'
 									: observation.satisfied === false
@@ -179,20 +172,21 @@ function HeuristicObservations({ observations }: { observations: AiCheckResult['
 										: observation.actual === 'not_applicable'
 											? '해당 없음'
 											: '검토 필요'}
-							</td>
-						</tr>
+							</TableCell>
+						</TableRow>
 					))}
-				</tbody>
-			</table>
+				</TableBody>
+			</Table>
 		</div>
 	)
 }
 
+/* deterministic 상세 표시를 재개할 때 함께 복구한다.
 function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 	if (!facts || Object.keys(facts).length === 0) return null
 
 	return (
-		<dl className="type-caption-1 grid gap-1.5 rounded-md bg-fill-muted px-3 py-2">
+		<dl className="type-caption-1 grid gap-1.5 rounded-md bg-muted px-3 py-2">
 			{typeof facts.foreground === 'string' && (
 				<CheckFact label="전경색" value={facts.foreground} />
 			)}
@@ -207,7 +201,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 			)}
 			{Array.isArray(facts.prohibitedSignals) && facts.prohibitedSignals.length > 0 && (
 				<div className="grid gap-1">
-					<dt className="text-foreground-muted">금지 신호</dt>
+					<dt className="text-muted-foreground">금지 신호</dt>
 					<dd>
 						<ul className="list-disc space-y-0.5 pl-4">
 							{facts.prohibitedSignals.map((signal) => (
@@ -223,12 +217,13 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 
 function CheckFact({ label, value }: { label: string; value: string }) {
 	return (
-		<div className="grid grid-cols-[5rem_1fr] gap-2">
-			<dt className="text-foreground-muted">{label}</dt>
+		<Badge className="flex bg-accent gap-2">
+			<dt className="text-muted-foreground">{label}</dt>
 			<dd>{value}</dd>
-		</div>
+		</Badge>
 	)
 }
+*/
 
 function CheckDetailCollapse({
 	children,

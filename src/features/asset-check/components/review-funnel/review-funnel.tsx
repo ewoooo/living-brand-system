@@ -1,7 +1,6 @@
 import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
+import { ImageUploadCarousel } from '../upload/image-upload-carousel'
 import { ReviewResultDetails } from './review-result-details'
-import { ReviewResultOverview } from './review-result-overview'
-import { ReviewTargetStep } from './review-target-step'
 
 interface ReviewFunnelProps {
 	/**
@@ -15,10 +14,11 @@ interface ReviewFunnelProps {
 export function ReviewFunnel({ sections }: ReviewFunnelProps) {
 	return (
 		<>
-			<section className="grid grid-cols-1 md:grid-cols-2 top-0 z-10 pb-2">
+			<section className="grid grid-rows-1 lg:grid-cols-2 gap-4">
 				<ReviewResultDetails sections={sections} />
-				<ReviewTargetStep />
+				<ImageUploadCarousel />
 			</section>
+			{/*<ReviewResultOverview sections={sections} />*/}
 		</>
 	)
 }

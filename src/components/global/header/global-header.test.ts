@@ -41,12 +41,11 @@ describe('GlobalHeader', () => {
 			'href',
 			'/guideline/foundations',
 		)
-		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute('href', '/review')
-
 		fireEvent.click(screen.getByRole('button', { name: /Studio/ }))
 		expect(push).toHaveBeenLastCalledWith('/create')
 
 		expect(screen.getByRole('link', { name: 'Templates' })).toHaveAttribute('href', '/create')
 		expect(screen.getByRole('link', { name: 'Generate' })).toHaveAttribute('href', '/generate')
+		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute('href', '/review')
 	})
 })

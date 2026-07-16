@@ -94,6 +94,23 @@ function buildSummary(rows: CheckReviewRow[], results: CheckImage['results']): C
 	return summary
 }
 
+/** 구조화된 판정을 Review 화면의 한국어 상태 문구로 바꾼다. 기존 세션은 message로 표시한다. */
+function formatReviewDetail(outcome: CheckResult | undefined): string | null {
+	if (!outcome) return null
+	const { rawResult } = outcome
+
+	if (rawResult.reasonCode === 'not_applicable') return '관측 대상 없음'
+	if ('summary' in rawResult && rawResult.summary) {
+		if (rawResult.status === 'fail') return `기준 ${rawResult.summary.failed}개 미충족`
+		if (rawResult.status === 'needs_review') {
+			return `기준 ${rawResult.summary.uncertain}개 판단 필요`
+		}
+		if (rawResult.status === 'pass') return `기준 ${rawResult.summary.satisfied}개 충족`
+	}
+
+	return outcome.message ?? rawResult.detail ?? null
+}
+
 function buildRows({
 	visibleSections,
 	selected,
@@ -105,6 +122,7 @@ function buildRows({
 }): CheckReviewRow[] {
 	const results = selected?.results
 	const snapshotByKey = new Map(selected?.rulesetSnapshot?.map((check) => [check.key, check]))
+	const pendingCheckKeys = new Set(selected?.pendingCheckKeys)
 	const rowByCheckKey = new Map<string, MutableCheckRow>()
 
 	for (const section of visibleSections) {
@@ -120,8 +138,8 @@ function buildRows({
 			}
 
 			const outcome = results?.[check.key]
-			const status = outcome?.rawResult.status
 			if (!check.implemented) continue
+			const inProgress = selected?.status === 'running' && pendingCheckKeys.has(check.key)
 
 			const row = {
 				check,
@@ -132,10 +150,8 @@ function buildRows({
 				guidelineHref: toGuidelineHref(section),
 				anchorId: null,
 				outcome,
-				inProgress:
-					selected?.status === 'running' &&
-					selected.pendingCheckKeys?.includes(check.key) === true,
-				detail: status !== 'pass' ? (outcome?.message ?? null) : null,
+				inProgress,
+				detail: inProgress ? '검사 중...' : formatReviewDetail(outcome),
 			}
 			rowByCheckKey.set(check.key, row)
 		}

@@ -59,7 +59,7 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 					<div key={slot.nodeId} className="flex flex-col gap-1">
 						<label
 							htmlFor={`slot-${slot.nodeId}`}
-							className="type-caption-1 text-foreground-muted"
+							className="type-caption-1 text-muted-foreground"
 						>
 							{slot.input.label ?? slot.name}
 						</label>
@@ -74,7 +74,7 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 					</div>
 				))}
 				{slots.length === 0 && (
-					<p className="type-caption-1 text-foreground-muted">
+					<p className="type-caption-1 text-muted-foreground">
 						이 템플릿에는 편집 가능한 슬롯이 없습니다.
 					</p>
 				)}

@@ -65,7 +65,10 @@ export function toCheckResult(
 	}
 }
 
-function renderCheckMessage(pattern: string | undefined, result: RawCheckResult): string {
+function renderCheckMessage(
+	pattern: string | undefined,
+	result: RawCheckResult,
+): string | undefined {
 	if (!pattern) return result.detail
 	return pattern.replace(/\{([^}]+)\}/g, (_match, path: string) =>
 		String(readPath(result, path.trim()) ?? ''),

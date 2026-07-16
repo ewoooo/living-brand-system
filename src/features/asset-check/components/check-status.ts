@@ -14,28 +14,28 @@ export const CHECK_STATUS: Record<
 > = {
 	pass: {
 		label: '통과',
-		pill: 'bg-success/15 text-success',
-		dot: 'bg-success',
+		pill: 'bg-primary/15 text-primary',
+		dot: 'bg-primary',
 	},
 	ok: {
 		label: '적합',
-		pill: 'bg-info/15 text-info',
-		dot: 'bg-info',
+		pill: 'bg-secondary text-secondary-foreground',
+		dot: 'bg-secondary-foreground',
 	},
 	advisory: {
 		label: '조언',
-		pill: 'bg-info/15 text-info',
-		dot: 'bg-info',
+		pill: 'bg-secondary text-secondary-foreground',
+		dot: 'bg-secondary-foreground',
 	},
 	not_applicable: {
 		label: '해당 없음',
-		pill: 'bg-fill-muted text-foreground-muted',
-		dot: 'bg-foreground-muted',
+		pill: 'bg-muted text-muted-foreground',
+		dot: 'bg-muted-foreground',
 	},
 	needs_review: {
 		label: '검토',
-		pill: 'bg-warning/15 text-warning',
-		dot: 'bg-warning',
+		pill: 'bg-accent text-accent-foreground',
+		dot: 'bg-accent-foreground',
 	},
 	fail: {
 		label: '미통과',

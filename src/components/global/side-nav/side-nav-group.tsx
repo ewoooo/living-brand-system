@@ -14,21 +14,23 @@ export function SideNavGroup({
 }: {
 	title?: string
 	titleHref?: string
-	children: ReactNode
+	children?: ReactNode
 }) {
 	return (
 		<SidebarGroup>
 			<SideNavGroupTitle title={title} titleHref={titleHref} />
-			<SidebarGroupContent>
-				<SidebarMenu>{children}</SidebarMenu>
-			</SidebarGroupContent>
+			{children && (
+				<SidebarGroupContent>
+					<SidebarMenu>{children}</SidebarMenu>
+				</SidebarGroupContent>
+			)}
 		</SidebarGroup>
 	)
 }
 
 function SideNavGroupTitle({ title, titleHref }: { title?: string; titleHref?: string }) {
 	if (!title) return null
-	const className = 'type-callout text-foreground'
+	const className = 'text-xs font-medium text-foreground'
 
 	if (titleHref) {
 		return (

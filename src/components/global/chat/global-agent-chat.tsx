@@ -35,10 +35,7 @@ export function GlobalAgentChat() {
 		<Sidebar
 			side="right"
 			collapsible="offcanvas"
-			className={cn(
-				'border-border bg-background-secondary',
-				isDraggingFile && 'ring-2 ring-primary/30',
-			)}
+			className={cn('border-border bg-card', isDraggingFile && 'ring-2 ring-primary/30')}
 			onDragEnter={(event) => {
 				if (isBusy || !canDropFiles(event)) return
 				event.preventDefault()

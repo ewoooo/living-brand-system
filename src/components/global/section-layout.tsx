@@ -1,3 +1,4 @@
+import { SidePanelOpen } from '@carbon/icons-react'
 import type React from 'react'
 import { GlobalFooter } from '@/components/global/footer/global-footer'
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
@@ -21,11 +22,11 @@ export function SectionLayout({
 			{nav}
 			<div className="flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-y-auto motion-safe:scroll-smooth">
 				<SidebarTrigger
-					aria-label="목차 열기"
+					aria-label="목차 접기 또는 펼치기"
 					className="mx-4 mt-4 self-start md:hidden"
-					size="default"
+					size="icon"
 				>
-					목차
+					<SidePanelOpen data-icon="inline-start" />
 				</SidebarTrigger>
 				<main className="flex w-full flex-1 justify-center px-4 md:px-12">{children}</main>
 				{pageNavigation}
