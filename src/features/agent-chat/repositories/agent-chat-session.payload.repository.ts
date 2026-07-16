@@ -40,11 +40,11 @@ export async function createAgentChatSessionRecord(input: CreateAgentChatSession
 }
 
 /**
- * AgentChatSession 조회 repository — messageId를 포함하는 본인 세션 최신 1건을 돌려준다.
+ * AgentChatSession 조회 repository — messageId들 중 하나라도 포함하는 본인 세션 최신 1건을 돌려준다.
  * 백필 소스 조회 전용이라 실패해도 throw하지 않고 warn 로깅 후 null을 반환한다(best-effort).
  */
-export async function findLatestAgentChatSessionContainingMessage(
-	messageId: string,
+export async function findLatestAgentChatSessionContainingAnyMessage(
+	messageIds: string[],
 	user: User,
 ): Promise<AgentChatSessionRecord | null> {
 	const payload = await getPayload({ config })
@@ -61,7 +61,7 @@ export async function findLatestAgentChatSessionContainingMessage(
 			user,
 			where: {
 				and: [
-					{ 'messages.messageId': { equals: messageId } },
+					{ 'messages.messageId': { in: messageIds } },
 					{ createdBy: { equals: user.id } },
 				],
 			},
@@ -69,7 +69,7 @@ export async function findLatestAgentChatSessionContainingMessage(
 
 		return result.docs[0] ?? null
 	} catch (error) {
-		payload.logger.warn({ err: error, messageId }, 'agent-chat.backfill-lookup.failed')
+		payload.logger.warn({ err: error, messageIds }, 'agent-chat.backfill-lookup.failed')
 		return null
 	}
 }

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import {
 	createAgentChatSessionRecord,
-	findLatestAgentChatSessionContainingMessage,
+	findLatestAgentChatSessionContainingAnyMessage,
 	saveAgentChatSessionRecord,
 } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import { startAgentChatSession } from '@/features/agent-chat/services/start-agent-chat-session.service'
@@ -10,12 +10,12 @@ import type { User } from '@/payload-types'
 
 vi.mock('@/features/agent-chat/repositories/agent-chat-session.payload.repository', () => ({
 	createAgentChatSessionRecord: vi.fn(),
-	findLatestAgentChatSessionContainingMessage: vi.fn(),
+	findLatestAgentChatSessionContainingAnyMessage: vi.fn(),
 	saveAgentChatSessionRecord: vi.fn(),
 }))
 
 const createSession = vi.mocked(createAgentChatSessionRecord)
-const findPrevious = vi.mocked(findLatestAgentChatSessionContainingMessage)
+const findPrevious = vi.mocked(findLatestAgentChatSessionContainingAnyMessage)
 const saveSession = vi.mocked(saveAgentChatSessionRecord)
 
 const user = { id: 7 } as User
@@ -148,7 +148,7 @@ describe('startAgentChatSession', () => {
 
 		await startAgentChatSession({ messages: historyMessages, user })
 
-		expect(findPrevious).toHaveBeenCalledWith('assistant-1', user)
+		expect(findPrevious).toHaveBeenCalledWith(['assistant-1'], user)
 		const created = createSession.mock.calls[0][0]
 		expect(created.messages?.[1]).toMatchObject({
 			messageId: 'assistant-1',

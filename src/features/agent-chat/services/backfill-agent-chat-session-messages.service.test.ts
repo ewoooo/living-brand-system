@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { findLatestAgentChatSessionContainingMessage } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
+import { findLatestAgentChatSessionContainingAnyMessage } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import { backfillAgentChatSessionMessages } from '@/features/agent-chat/services/backfill-agent-chat-session-messages.service'
 import type { AgentChatSessionMessageInput } from '@/features/agent-chat/types'
 import type { AgentChatSession as AgentChatSessionRecord, User } from '@/payload-types'
 
 vi.mock('@/features/agent-chat/repositories/agent-chat-session.payload.repository', () => ({
-	findLatestAgentChatSessionContainingMessage: vi.fn(),
+	findLatestAgentChatSessionContainingAnyMessage: vi.fn(),
 }))
 
-const findPrevious = vi.mocked(findLatestAgentChatSessionContainingMessage)
+const findPrevious = vi.mocked(findLatestAgentChatSessionContainingAnyMessage)
 
 const user = { id: 7 } as User
 
@@ -54,7 +54,7 @@ describe('backfillAgentChatSessionMessages', () => {
 
 		const result = await backfillAgentChatSessionMessages(history, user)
 
-		expect(findPrevious).toHaveBeenCalledWith('a-1', user)
+		expect(findPrevious).toHaveBeenCalledWith(['a-1'], user)
 		expect(result[1]).toMatchObject({
 			messageId: 'a-1',
 			usedTools: [{ name: 'loadSkill', callCount: 1 }],
@@ -104,5 +104,27 @@ describe('backfillAgentChatSessionMessages', () => {
 		const result = await backfillAgentChatSessionMessages(history, user)
 
 		expect(result).toEqual(history)
+	})
+
+	it('미종결 턴의 assistant는 조회에 포함하되 저장되지 않아 빈칸으로 남는다', async () => {
+		const historyWithUnfinishedTurn: AgentChatSessionMessageInput[] = [
+			{ messageId: 'u-1', role: 'user', text: '가이드라인 알려줘' },
+			{ messageId: 'a-0', role: 'assistant', text: '' },
+			{ messageId: 'u-1b', role: 'user', text: '가이드라인 알려줘' },
+			{ messageId: 'a-1', role: 'assistant', text: '가이드라인입니다.', reaction: 'good' },
+			{ messageId: 'u-2', role: 'user', text: '더 자세히' },
+		]
+		findPrevious.mockResolvedValue(previousRecord)
+
+		const result = await backfillAgentChatSessionMessages(historyWithUnfinishedTurn, user)
+
+		expect(findPrevious).toHaveBeenCalledWith(['a-0', 'a-1'], user)
+		expect(result[1]).toEqual(historyWithUnfinishedTurn[1])
+		expect(result[3]).toMatchObject({
+			messageId: 'a-1',
+			usedTools: [{ name: 'loadSkill', callCount: 1 }],
+			usedSkills: [{ name: 'Guideline Curator', callCount: 1 }],
+			aiUsage: { model: 'claude-sonnet-4-6', callCount: 2, totalTokens: 120 },
+		})
 	})
 })

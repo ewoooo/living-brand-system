@@ -1,4 +1,4 @@
-import { findLatestAgentChatSessionContainingMessage } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
+import { findLatestAgentChatSessionContainingAnyMessage } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import type {
 	AgentChatAiUsage,
 	AgentChatSessionMessageInput,
@@ -11,23 +11,26 @@ type AgentChatSessionRecordMessage = NonNullable<AgentChatSessionRecord['message
 /**
  * 클라이언트 왕복으로 비는 히스토리 assistant 메시지의 실행 메타데이터(usedTools/usedSkills/aiUsage)를
  * 직전 세션 레코드에서 messageId 매칭으로 복사하는 유스케이스. 직전 레코드는 이미 백필된 합본이므로
- * 1건 조회로 충분하다. 조회 I/O와 실패 로깅은 agent-chat-session repository가 소유하고,
+ * 1건 조회로 충분하다. 미종결 턴으로 저장되지 않은 assistant가 있어도 나머지 messageId로 합본을 찾도록
+ * 전체 assistant id로 조회한다. 조회 I/O와 실패 로깅은 agent-chat-session repository가 소유하고,
  * 여기서는 실패 시 입력을 그대로 반환한다(best-effort — 백필은 채팅의 전제조건이 아니다).
  */
 export async function backfillAgentChatSessionMessages(
 	messages: AgentChatSessionMessageInput[],
 	user: User,
 ): Promise<AgentChatSessionMessageInput[]> {
-	const lastAssistant = [...messages].reverse().find((message) => message.role === 'assistant')
+	const assistantMessageIds = messages
+		.filter((message) => message.role === 'assistant')
+		.map((message) => message.messageId)
 
-	if (!lastAssistant) {
+	if (assistantMessageIds.length === 0) {
 		return messages
 	}
 
 	let previous: AgentChatSessionRecord | null = null
 
 	try {
-		previous = await findLatestAgentChatSessionContainingMessage(lastAssistant.messageId, user)
+		previous = await findLatestAgentChatSessionContainingAnyMessage(assistantMessageIds, user)
 	} catch {
 		// 조회 실패 로깅은 repository가 담당한다 — 여기서는 백필만 건너뛴다.
 	}
