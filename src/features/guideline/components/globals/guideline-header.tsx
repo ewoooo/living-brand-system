@@ -41,7 +41,9 @@ export function GuidelineHeader({
 							{label !== undefined && (
 								<p className="type-body mb-2 opacity-70">{label}</p>
 							)}
-							<Heading className="type-large-title text-6xl">{title}</Heading>
+							<Heading className="type-large-title font-semibold text-4xl">
+								{title}
+							</Heading>
 						</div>
 					</div>
 				</AspectRatio>
@@ -52,15 +54,14 @@ export function GuidelineHeader({
 	return (
 		<>
 			<div aria-hidden="true" style={{ height: HEADER_HEIGHT - BAR_HEIGHT }} />
-			<header
-				data-variant={variant}
-				className="sticky top-0 z-20 flex items-end border-scrim/10 border-b bg-background pb-8"
-				style={{ height: BAR_HEIGHT }}
-			>
+			{/* pt-8(32px) = nav 첫 줄 오프셋 → pinned 시 타이틀 top이 nav 윗선과 정렬. bg가 위 여백을 덮어 gap 없음. */}
+			<header data-variant={variant} className="sticky top-0 z-30 bg-background pt-8 pb-3">
 				{label !== undefined && (
-					<p className="type-body mr-3 text-foreground-muted">{label}</p>
+					<p className="type-body mb-1 text-foreground-muted">{label}</p>
 				)}
-				<Heading className="type-large-title text-6xl text-foreground">{title}</Heading>
+				<Heading className="type-large-title font-semibold text-4xl text-foreground leading-none">
+					{title}
+				</Heading>
 			</header>
 		</>
 	)
