@@ -1,4 +1,14 @@
-// 대량 데이터 테이블: 가로 스크롤 컨테이너 안에서 sticky 헤더 + 행 호버. 경계선 없이 배경/여백으로 구분.
+import {
+	Table,
+	TableBody,
+	TableCaption,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table'
+
+// 대량 데이터 테이블: shadcn Table 프리미티브로 구성. 세로 max-height 스크롤 + sticky 헤더로 큰 데이터를 담는다.
 export type DataTableColumn = { key: string; label: string; align?: 'left' | 'right' }
 export type DataTableRow = Record<string, string | number>
 
@@ -6,50 +16,50 @@ export function DataTable({
 	columns,
 	rows,
 	rowKey,
+	caption,
 }: {
 	columns: DataTableColumn[]
 	rows: DataTableRow[]
 	// 행을 식별할 컬럼 key. 없으면 첫 컬럼 값을 쓴다.
 	rowKey?: string
+	caption?: string
 }) {
 	const keyField = rowKey ?? columns[0]?.key
 	return (
-		<div className="max-h-[32rem] overflow-auto rounded-lg bg-background-secondary">
-			<table className="w-full border-collapse text-left">
-				<thead className="sticky top-0 z-10 bg-background-tertiary">
-					<tr>
+		<div className="max-h-[30rem] overflow-y-auto rounded-lg">
+			<Table>
+				{caption && <TableCaption>{caption}</TableCaption>}
+				<TableHeader className="sticky top-0 z-10 bg-background">
+					<TableRow>
 						{columns.map((column) => (
-							<th
+							<TableHead
 								key={column.key}
-								className={`type-caption-1-emphasized whitespace-nowrap px-4 py-3 text-foreground-muted uppercase tracking-wide ${
-									column.align === 'right' ? 'text-right' : ''
-								}`}
+								className={column.align === 'right' ? 'text-right' : undefined}
 							>
 								{column.label}
-							</th>
+							</TableHead>
 						))}
-					</tr>
-				</thead>
-				<tbody>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
 					{rows.map((row) => (
-						<tr
-							key={String(row[keyField])}
-							className="transition-colors even:bg-scrim/[0.03] hover:bg-fill-hover"
-						>
+						<TableRow key={String(row[keyField])}>
 							{columns.map((column) => (
-								<td
+								<TableCell
 									key={column.key}
-									className={`type-callout whitespace-nowrap px-4 py-2.5 text-foreground ${
-										column.align === 'right' ? 'text-right tabular-nums' : ''
-									}`}
+									className={
+										column.align === 'right'
+											? 'text-right tabular-nums'
+											: undefined
+									}
 								>
 									{row[column.key]}
-								</td>
+								</TableCell>
 							))}
-						</tr>
+						</TableRow>
 					))}
-				</tbody>
-			</table>
+				</TableBody>
+			</Table>
 		</div>
 	)
 }
@@ -302,5 +312,12 @@ const ROWS: DataTableRow[] = [
 ]
 
 export function DataTableDemo() {
-	return <DataTable columns={COLUMNS} rows={ROWS} rowKey="token" />
+	return (
+		<DataTable
+			columns={COLUMNS}
+			rows={ROWS}
+			rowKey="token"
+			caption="Essenherb 브랜드 컬러 명세 — 전체 팔레트 토큰."
+		/>
+	)
 }
