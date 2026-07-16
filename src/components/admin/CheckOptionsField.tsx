@@ -10,6 +10,7 @@ import {
 } from '@payloadcms/ui'
 import type { JSONFieldClientComponent } from 'payload'
 import { useEffect, useState } from 'react'
+import { Input } from '@/components/ui/input'
 import { contrastOptionsSchema } from '@/features/asset-check/checkers/contrast.checker'
 import { relationshipId } from '@/features/guideline/utils/block-text'
 
@@ -57,7 +58,7 @@ const CheckOptionsField: JSONFieldClientComponent = (props) => {
 		<div className="field-type number contrast-options-field">
 			<FieldLabel htmlFor={path} label="최소 대비율" path={path} required />
 			<FieldError message={errorMessage} path={path} showError={showError} />
-			<input
+			<Input
 				aria-invalid={showError}
 				disabled={disabled}
 				id={path}

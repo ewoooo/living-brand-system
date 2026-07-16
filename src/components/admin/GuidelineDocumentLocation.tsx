@@ -1,6 +1,7 @@
 'use client'
 
 import { useFormFields } from '@payloadcms/ui'
+import { Badge } from '@/components/ui/badge'
 import { fieldRowCount } from './form-fields'
 import { guidelineBreadcrumbCount, guidelineDocumentTypeLabel } from './guideline-document-tree'
 
@@ -25,7 +26,9 @@ export default function GuidelineDocumentLocation() {
 		>
 			<div className="guideline-document-location__header">
 				<h3 id="guideline-document-location-title">문서 위치</h3>
-				<span aria-live="polite">현재 유형: {typeLabel}</span>
+				<Badge aria-live="polite" variant="secondary">
+					현재 유형: {typeLabel}
+				</Badge>
 			</div>
 			<p>상위 문서를 먼저 정하면 문서의 계층과 URL 경로가 함께 결정됩니다.</p>
 		</section>

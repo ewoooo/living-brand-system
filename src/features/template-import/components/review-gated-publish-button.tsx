@@ -1,7 +1,8 @@
 'use client'
 
-import { Button, PublishButton, useFormModified } from '@payloadcms/ui'
+import { PublishButton, useFormModified } from '@payloadcms/ui'
 import type { PublishButtonClientProps } from 'payload'
+import { Button } from '@/components/ui/button'
 import { useReviewPassed } from '../hooks/use-review-gate'
 
 /**
@@ -16,7 +17,7 @@ export default function ReviewGatedPublishButton(props: PublishButtonClientProps
 	if (passed && !modified) return <PublishButton {...props} />
 
 	return (
-		<Button buttonStyle="primary" disabled>
+		<Button type="button" disabled>
 			변경사항 게시 (검수 필요)
 		</Button>
 	)

@@ -1,8 +1,11 @@
 'use client'
 
-import { Button, FieldDescription, FieldError, FieldLabel, useField } from '@payloadcms/ui'
+import { FieldDescription, FieldError, FieldLabel, useField } from '@payloadcms/ui'
 import type { JSONFieldClientComponent } from 'payload'
 import { useEffect, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
 	Table,
 	TableBody,
@@ -101,14 +104,19 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 									</span>
 								</TableCell>
 								<TableCell>{check.documentTitle || '발행된 Check 없음'}</TableCell>
-								<TableCell>{check.executor ?? '-'}</TableCell>
+								<TableCell>
+									{check.executor ? (
+										<Badge variant="outline">{check.executor}</Badge>
+									) : (
+										'-'
+									)}
+								</TableCell>
 								<TableCell>
 									<span className="check-scenario-checks-field__actions">
 										<Button
 											type="button"
-											buttonStyle="secondary"
-											size="xsmall"
-											margin={false}
+											variant="outline"
+											size="icon-xs"
 											disabled={disabled || index === 0}
 											onClick={() => move(index, -1)}
 											aria-label={`${check.title} 위로 이동`}
@@ -117,9 +125,8 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 										</Button>
 										<Button
 											type="button"
-											buttonStyle="secondary"
-											size="xsmall"
-											margin={false}
+											variant="outline"
+											size="icon-xs"
 											disabled={disabled || index === selected.length - 1}
 											onClick={() => move(index, 1)}
 											aria-label={`${check.title} 아래로 이동`}
@@ -128,9 +135,8 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 										</Button>
 										<Button
 											type="button"
-											buttonStyle="secondary"
-											size="xsmall"
-											margin={false}
+											variant="secondary"
+											size="xs"
 											disabled={disabled}
 											onClick={() =>
 												update(checkKeys.filter((key) => key !== check.key))
@@ -151,7 +157,7 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 			</Table>
 
 			<label htmlFor={`${path}-search`}>Check 검색</label>
-			<input
+			<Input
 				id={`${path}-search`}
 				type="search"
 				value={query}
@@ -178,13 +184,18 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 									</span>
 								</TableCell>
 								<TableCell>{check.documentTitle}</TableCell>
-								<TableCell>{check.executor ?? '-'}</TableCell>
+								<TableCell>
+									{check.executor ? (
+										<Badge variant="outline">{check.executor}</Badge>
+									) : (
+										'-'
+									)}
+								</TableCell>
 								<TableCell>
 									<Button
 										type="button"
-										buttonStyle="secondary"
-										size="xsmall"
-										margin={false}
+										variant="secondary"
+										size="xs"
 										disabled={disabled}
 										onClick={() => update([...checkKeys, check.key])}
 									>
