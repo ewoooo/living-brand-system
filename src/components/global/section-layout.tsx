@@ -23,7 +23,7 @@ export function SectionLayout({
 			<div className="flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-y-auto motion-safe:scroll-smooth">
 				<SidebarTrigger
 					aria-label="목차 접기 또는 펼치기"
-					className="mx-4 mt-4 self-start"
+					className="mx-4 mt-4 self-start md:hidden"
 					size="icon"
 				>
 					<SidePanelOpen data-icon="inline-start" />

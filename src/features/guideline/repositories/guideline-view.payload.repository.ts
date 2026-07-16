@@ -119,7 +119,7 @@ async function listPublishedChildren(parentId: number, select: Record<string, tr
 	const payload = await getPayload({ config })
 	const children = await payload.find({
 		collection: 'guideline-documents',
-		depth: 0,
+		depth: 1,
 		draft: false,
 		fallbackLocale: FALLBACK_LOCALE,
 		limit: 100,

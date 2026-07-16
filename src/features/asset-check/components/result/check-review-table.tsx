@@ -1,13 +1,15 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Empty, EmptyDescription } from '@/components/ui/empty'
 import { Table, TableBody } from '@/components/ui/table'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { CheckRow } from '@/features/asset-check/components/result/check-review-row'
 import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
-import { buildCheckReviewView } from '@/features/asset-check/utils/build-check-review-view'
+import {
+	buildCheckReviewView,
+	type CheckReviewRow,
+} from '@/features/asset-check/utils/build-check-review-view'
 
 /**
  * 퍼널 ④ — 검수 결과 테이블 컨테이너.
@@ -21,7 +23,7 @@ import { buildCheckReviewView } from '@/features/asset-check/utils/build-check-r
  *   anchorId: string | null       // 시나리오 첫 행에만 scenario.key
  *   outcome?: CheckResult          // 미판정이면 undefined
  *   inProgress: boolean            // status 'running' && pendingCheckKeys에 포함
- *   detail: string | null          // pass 아닐 때만 outcome.message
+ *   detail: string | null          // 화면에서 조합한 판정 또는 진행 문구
  * }
  * showFailOnly && results 존재 시 rawResult.status === 'fail' 행만 남김
  */
@@ -34,25 +36,12 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 
 	return (
 		<TooltipProvider delayDuration={150}>
-			<div className="py-8">
-				<Table className="table-fixed border-collapse">
-					<CheckTableColumns />
-					<TableBody>
-						{rows.map((row, index) => (
-							<CheckRow
-								key={`${selectedId ?? 'empty'}:${row.rowId}`}
-								{...row}
-								rowIndex={index}
-							/>
-						))}
-					</TableBody>
-				</Table>
-				{showFailOnly && rows.length === 0 && (
-					<Empty>
-						<EmptyDescription>미통과 항목이 없습니다.</EmptyDescription>
-					</Empty>
-				)}
-			</div>
+			<Table className="table-fixed border-collapse">
+				<CheckTableColumns />
+				<TableBody>
+					<TableContents rows={rows} selectedId={selectedId} />
+				</TableBody>
+			</Table>
 		</TooltipProvider>
 	)
 }
@@ -67,5 +56,21 @@ function CheckTableColumns() {
 			<col className="w-36" />
 			<col className="w-8" />
 		</colgroup>
+	)
+}
+
+function TableContents({
+	rows,
+	selectedId,
+}: {
+	rows: CheckReviewRow[]
+	selectedId: string | null
+}) {
+	return (
+		<>
+			{rows.map((row, index) => (
+				<CheckRow key={`${selectedId ?? 'empty'}:${row.rowId}`} {...row} rowIndex={index} />
+			))}
+		</>
 	)
 }

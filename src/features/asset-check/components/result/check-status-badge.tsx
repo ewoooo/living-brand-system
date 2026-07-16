@@ -47,7 +47,7 @@ export function CheckStatusBadge({
 				exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
 				transition={{ duration: 0.14, ease: 'easeOut' }}
 				className="inline-flex justify-center"
-				title="검수 중"
+				title="살펴보고 있습니다"
 			>
 				<Spinner className="size-3.5 text-muted-foreground" />
 			</motion.span>

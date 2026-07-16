@@ -47,7 +47,7 @@ export function SideNavBranch({
 	children: ReactNode
 }) {
 	const pathname = usePathname()
-	const active = pathname === activeHref
+	const active = pathname === activeHref || pathname.startsWith(`${activeHref}/`)
 	const [open, setOpen] = useState(active)
 
 	useEffect(() => {

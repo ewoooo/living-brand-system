@@ -1,5 +1,5 @@
 /**
- * 검수 영역 페이지 헤더 — /review와 /review/rules가 공유한다.
+ * 검수 화면 페이지 헤더.
  * in : { title: string; description?: string }
  */
 export function ReviewHeader({ title, description }: { title: string; description?: string }) {

@@ -14,7 +14,6 @@ import {
 	NavigationMenuLink,
 	NavigationMenuList,
 	NavigationMenuTrigger,
-	navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
@@ -22,6 +21,7 @@ import { cn } from '@/lib/utils'
 const STUDIO_LINKS = [
 	{ href: '/create', label: 'Templates' },
 	{ href: '/generate', label: 'Generate' },
+	{ href: '/review', label: 'Review' },
 ] as const
 
 function HeaderHead({
@@ -35,14 +35,13 @@ function HeaderHead({
 	const router = useRouter()
 	const LOGO_SIZE = 14
 	const guidelineActive = pathname === '/guideline' || pathname.startsWith('/guideline/')
-	const reviewActive = pathname === '/review' || pathname.startsWith('/review/')
 	const studioActive = STUDIO_LINKS.some(
 		({ href }) => pathname === href || pathname.startsWith(`${href}/`),
 	)
 
 	return (
 		<section className={className}>
-			<nav aria-label="주요 메뉴" className="type-body flex items-center gap-1 py-4 pl-5">
+			<nav aria-label="주요 메뉴" className="type-body flex items-center gap-1 py-2 pl-5">
 				<Link
 					aria-label="메인으로 이동"
 					className="flex size-8 shrink-0 items-center justify-center rounded-md transition-opacity hover:opacity-60"
@@ -143,27 +142,8 @@ function HeaderHead({
 							</NavigationMenuContent>
 						</NavigationMenuItem>
 						<NavigationMenuItem>
-							<NavigationMenuLink
-								active={reviewActive}
-								asChild
-								className={navigationMenuTriggerStyle()}
-							>
+							<NavigationMenuLink asChild>
 								<Link
-									aria-current={reviewActive ? 'page' : undefined}
-									href="/review"
-								>
-									Review
-								</Link>
-							</NavigationMenuLink>
-						</NavigationMenuItem>
-						<NavigationMenuItem>
-							<NavigationMenuLink
-								active={reviewActive}
-								asChild
-								className={navigationMenuTriggerStyle()}
-							>
-								<Link
-									aria-current={reviewActive ? 'page' : undefined}
 									href="/admin"
 									rel="noreferrer"
 									target="_blank"
@@ -203,10 +183,10 @@ export function GlobalHeader({
 	guidelineChapters: GuidelineSearchChapter[]
 }) {
 	return (
-		<header className="relative z-50 flex shrink-0 bg-background">
+		<header className="relative z-50 flex shrink-0 bg-background border-b border-neutral-200 dark:border-neutral-700">
 			<HeaderHead className="" guidelineChapters={guidelineChapters} />
 			<HeaderTail
-				className="ml-auto flex items-center gap-2 p-4"
+				className="ml-auto flex items-center gap-2 p-2 px-4"
 				guidelineChapters={guidelineChapters}
 			/>
 		</header>

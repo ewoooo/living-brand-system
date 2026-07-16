@@ -60,7 +60,7 @@ export function ImageUploadCarousel() {
 	return (
 		<section
 			aria-label="이미지 업로드 및 미리보기"
-			className="relative flex aspect-square items-center justify-center overflow-hidden border border-background-secondary"
+			className="relative flex aspect-square items-center justify-center overflow-hidden rounded-md border border-neutral-200 bg-neutral-50"
 			onDragOver={(event) => event.preventDefault()}
 			onDrop={handleDrop}
 		>
@@ -102,7 +102,7 @@ function CheckCarouselEmpty() {
 		<Empty className="gap-2 text-muted-foreground/50">
 			<EmptyTitle>이미지를 드래그해서 업로드하세요</EmptyTitle>
 			<EmptyDescription className="text-muted-foreground opacity-60">
-				PNG, JPEG, WebP 파일을 지원합니다.
+				PNG, JPEG, WebP
 			</EmptyDescription>
 		</Empty>
 	)

@@ -62,8 +62,8 @@ export function evaluateHeuristic(
 		return {
 			status: 'pass',
 			fulfillment: null,
-			detail: '관측 대상 없음',
 			reasonCode: 'not_applicable',
+			summary: { total: 0, satisfied: 0, failed: 0, uncertain: 0 },
 			observations: complete,
 		}
 	}
@@ -76,12 +76,7 @@ export function evaluateHeuristic(
 	return {
 		status,
 		fulfillment: Math.round((satisfied / applicable.length) * 100),
-		detail:
-			status === 'fail'
-				? `기준 ${failed}개 미충족`
-				: status === 'needs_review'
-					? `기준 ${uncertain}개 판단 필요`
-					: `기준 ${applicable.length}개 충족`,
+		summary: { total: applicable.length, satisfied, failed, uncertain },
 		observations: complete,
 	}
 }
