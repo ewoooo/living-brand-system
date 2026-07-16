@@ -775,6 +775,18 @@ export interface CheckSession {
     | boolean
     | null;
   /**
+   * AI 후속 검수가 남은 Check key 목록입니다.
+   */
+  pendingCheckKeys?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
    * 채팅에서 시작된 검수일 때 원본 Agent Chat Session입니다.
    */
   agentChatSession?: (number | null) | AgentChatSession;
@@ -1671,6 +1683,7 @@ export interface CheckSessionsSelect<T extends boolean = true> {
   imageName?: T;
   rulesetSnapshot?: T;
   results?: T;
+  pendingCheckKeys?: T;
   agentChatSession?: T;
   aiUsage?:
     | T
