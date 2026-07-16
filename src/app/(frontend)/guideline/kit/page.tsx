@@ -5,6 +5,7 @@ import { DoDont } from '@/features/guideline/components/kit/do-dont'
 import { ImageTextGrid } from '@/features/guideline/components/kit/image-text-grid'
 import { SpecTable } from '@/features/guideline/components/kit/spec-table'
 import { TypeScale } from '@/features/guideline/components/kit/type-scale'
+import { TypeSpecimen } from '@/features/guideline/components/kit/type-specimen'
 
 // UI 키트 갤러리(중간공유용). 데이터 비연결 — mock으로 컴포넌트만 전시한다.
 // nav 미연결. 나중에 각 컴포넌트를 Payload 블록 렌더러에 어댑터로 연결한다.
@@ -98,6 +99,31 @@ export default function GuidelineKitPage() {
 
 			<Demo title="Color Palette · Multi (6×5)">
 				<ColorPalette rows={multiColors} columns={5} />
+			</Demo>
+
+			<Demo title="Type Specimen · Live (PDF 캡쳐 대체)">
+				<div className="flex flex-col gap-4">
+					<TypeSpecimen
+						name="Pretendard"
+						usage="국문 지정 서체 · Variable"
+						fontFamily="var(--font-sans)"
+						display="에센허브 가나다 ABC"
+						specimen="에센허브는 피부의 본질에 집중하는 식물성 비건 스킨케어 브랜드입니다. 혹독한 환경에서도 생명력을 지켜낸 자연의 에너지를 찾습니다."
+						weightRange={[45, 920, 400]}
+						specs={[
+							{ label: 'Weight', value: 'Regular, Medium' },
+							{ label: 'Kerning', value: 'Metric, 0' },
+						]}
+					/>
+					<TypeSpecimen
+						name="Essen Flux"
+						usage="시그니처 서체 · Display"
+						fontFamily="var(--font-title)"
+						display="Essenherb"
+						specimen="브랜드의 조형적 개성을 담은 시그니처 디스플레이 서체. 키 비주얼과 타이틀에 제한적으로 사용합니다."
+						specs={[{ label: 'Weight', value: 'Regular' }]}
+					/>
+				</div>
 			</Demo>
 
 			<Demo title="Type Scale">
