@@ -85,8 +85,10 @@ export async function POST(req: Request) {
 				})
 				return 'Agent response failed.'
 			},
-			onEnd: async () => {
+			onEnd: async ({ isAborted }) => {
 				// 스텝 상한(tool-calls finish)으로 completed 신호 없이 끝난 턴의 기록 안전망.
+				// 클라이언트 이탈 등 중단된 스트림은 미완성 턴이므로 completed로 승격하지 않는다.
+				if (isAborted) return
 				await chatSession.finalize().catch((error) => {
 					payload.logger.error(
 						{ err: error, requestId },
