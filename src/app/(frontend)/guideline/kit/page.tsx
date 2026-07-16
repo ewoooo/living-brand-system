@@ -2,7 +2,14 @@ import { BigImage } from '@/features/guideline/components/kit/big-image'
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { ColorPalette } from '@/features/guideline/components/kit/color-palette'
 import { DoDont } from '@/features/guideline/components/kit/do-dont'
+import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
+import { GridSystemDiagramDemo } from '@/features/guideline/components/kit/grid-system-diagram'
 import { ImageTextGrid } from '@/features/guideline/components/kit/image-text-grid'
+import { LogoLockupDemo } from '@/features/guideline/components/kit/logo-lockup'
+import { MediaTextDemo } from '@/features/guideline/components/kit/media-text'
+import { RuleCalloutDemo } from '@/features/guideline/components/kit/rule-callout'
+import { SignatureDisplayDemo } from '@/features/guideline/components/kit/signature-display'
+import { SpecListDemo } from '@/features/guideline/components/kit/spec-list'
 import { SpecTable } from '@/features/guideline/components/kit/spec-table'
 import { TypeScale } from '@/features/guideline/components/kit/type-scale'
 import { TypeSpecimen } from '@/features/guideline/components/kit/type-specimen'
@@ -92,6 +99,34 @@ export default function GuidelineKitPage() {
 				</p>
 				<h1 className="type-title-2-emphasized mt-1">가이드라인 컴포넌트 키트</h1>
 			</header>
+
+			<Demo title="Media + Text · 워크호스">
+				<MediaTextDemo />
+			</Demo>
+
+			<Demo title="Signature Display · 대형 타입 시그니처">
+				<SignatureDisplayDemo />
+			</Demo>
+
+			<Demo title="Logo Lockup · 로고 배리에이션">
+				<LogoLockupDemo />
+			</Demo>
+
+			<Demo title="Rule Callout · 규정/주의 콜아웃">
+				<RuleCalloutDemo />
+			</Demo>
+
+			<Demo title="Download Card · 에셋 다운로드 타일">
+				<DownloadCardDemo />
+			</Demo>
+
+			<Demo title="Spec List · 스펙 목록">
+				<SpecListDemo />
+			</Demo>
+
+			<Demo title="Grid System · 레이아웃 그리드">
+				<GridSystemDiagramDemo />
+			</Demo>
 
 			<Demo title="Color Palette · Main (3×1)">
 				<ColorPalette rows={mainColors} columns={5} />
