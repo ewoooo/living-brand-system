@@ -98,7 +98,7 @@ export function CheckCatalog({
 					</select>
 				</label>
 			</div>
-			<p className="type-body py-4 text-foreground-muted" aria-live="polite">
+			<p className="type-body py-4 text-muted-foreground" aria-live="polite">
 				필터 결과 {filteredCount}개 / 전체 {totalCount}개
 			</p>
 			<div className="divide-y divide-border border-t">
@@ -114,7 +114,7 @@ export function CheckCatalog({
 								>
 									<div className="min-w-0">
 										<h3 className="type-body-emphasized">{check.title}</h3>
-										<code className="type-callout mt-2 block break-words text-foreground-muted">
+										<code className="type-callout mt-2 block break-words text-muted-foreground">
 											{check.key}
 										</code>
 									</div>
@@ -123,7 +123,7 @@ export function CheckCatalog({
 											evidence={check.evidence}
 											referenceAssets={check.referenceAssets}
 										/>
-										<p className="type-body text-foreground-muted">
+										<p className="type-body text-muted-foreground">
 											{executorLabels[check.executor]}
 											{check.implemented ? '' : ' / 미구현'}
 										</p>
@@ -135,7 +135,7 @@ export function CheckCatalog({
 					</section>
 				))}
 				{filteredCount === 0 && (
-					<p className="type-body py-16 text-center text-foreground-muted">
+					<p className="type-body py-16 text-center text-muted-foreground">
 						조건에 맞는 검수 항목이 없습니다.
 					</p>
 				)}
@@ -165,11 +165,11 @@ function CheckMessages({ messages }: { messages: CheckSection['checks'][number][
 	if (entries.length === 0) return null
 
 	return (
-		<dl className="type-callout grid gap-2 rounded-md bg-fill-muted/50 p-3">
+		<dl className="type-callout grid gap-2 rounded-md bg-muted/50 p-3">
 			{entries.map(([status, message]) => (
 				<div key={status} className="grid gap-2 md:grid-cols-[6rem_1fr]">
 					<dt className="type-callout-emphasized">{status}</dt>
-					<dd className="text-foreground-muted">{message}</dd>
+					<dd className="text-muted-foreground">{message}</dd>
 				</div>
 			))}
 		</dl>

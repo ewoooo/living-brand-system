@@ -20,7 +20,7 @@ export function ColorPaletteBlock({
 				{colors.map((color) => (
 					<div
 						key={color.id}
-						className="type-caption-1 aspect-square rounded-sm border border-scrim/10 p-4"
+						className="type-caption-1 aspect-square rounded-sm border border-black/10 p-4"
 						style={{
 							backgroundColor: color.hex,
 							color: isLightColor(color.hex) ? '#000000' : '#FFFFFF',

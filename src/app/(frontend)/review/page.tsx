@@ -22,7 +22,7 @@ function ReviewHeader({ title, description }: { title: string; description?: str
 	return (
 		<div className="">
 			<h1 className="type-large-title pb-4">{title}</h1>
-			<p className="type-body pl-2 text-foreground-muted">{description}</p>
+			<p className="type-body pl-2 text-muted-foreground">{description}</p>
 		</div>
 	)
 }

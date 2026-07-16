@@ -110,7 +110,7 @@ function SummaryMetric({
 		<span
 			className={cn(
 				'type-caption-1 flex items-center gap-2',
-				muted && 'text-foreground-muted',
+				muted && 'text-muted-foreground',
 			)}
 		>
 			<span aria-hidden className={cn('inline-block size-2 rounded-full', colorClassName)} />
