@@ -26,7 +26,7 @@ export function ImageGenerator() {
 		<section className="flex flex-col">
 			<hgroup className="mb-4">
 				<h2 className="type-title-2">이미지 생성</h2>
-				<p className="type-callout mt-1 text-foreground-muted">
+				<p className="type-callout mt-1 text-muted-foreground">
 					브랜드 제품컷은 씬(환경·구성)을 고르면 브랜드 톤·조명·구도가 자동으로
 					더해집니다. 제품컷이 아닌 이미지는 자유 생성 모드로 프롬프트를 그대로
 					생성하세요. <wbr />
@@ -50,7 +50,7 @@ export function ImageGenerator() {
 					className="type-callout w-full resize-y rounded-md border border-input bg-transparent px-3 py-2"
 				/>
 				<div className="flex flex-wrap items-center gap-3">
-					<label className="type-callout flex items-center gap-2 text-foreground-muted">
+					<label className="type-callout flex items-center gap-2 text-muted-foreground">
 						모드
 						<select
 							value={sceneId}
@@ -68,7 +68,7 @@ export function ImageGenerator() {
 							</optgroup>
 						</select>
 					</label>
-					<label className="type-callout flex items-center gap-2 text-foreground-muted">
+					<label className="type-callout flex items-center gap-2 text-muted-foreground">
 						장수
 						<select
 							value={count}
@@ -87,7 +87,7 @@ export function ImageGenerator() {
 					</Button>
 				</div>
 				{scene && (
-					<p className="type-caption-1 text-foreground-muted">
+					<p className="type-caption-1 text-muted-foreground">
 						씬 구성: {scene.ingredient} · {scene.moodAccent}
 					</p>
 				)}

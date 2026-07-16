@@ -15,10 +15,11 @@ interface ReviewFunnelProps {
 export function ReviewFunnel({ sections }: ReviewFunnelProps) {
 	return (
 		<>
-			<section className="grid grid-cols-1 md:grid-cols-2 top-0 z-10 pb-2">
+			<section className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
 				<ReviewResultDetails sections={sections} />
 				<ReviewTargetStep />
 			</section>
+			<ReviewResultOverview sections={sections} />
 		</>
 	)
 }

@@ -7,6 +7,7 @@ import type { ServerFunctionClient } from 'payload'
 import type React from 'react'
 
 import { importMap } from './admin/importMap.js'
+import './admin-tailwind.css'
 import './custom.scss'
 
 type Args = {

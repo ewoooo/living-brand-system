@@ -1,6 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import { type CheckScenario, filterRulesetByScenario } from '@/features/asset-check/scenarios'
 import type {
 	CheckSection,
@@ -70,35 +79,41 @@ export function CheckCatalog({
 	return (
 		<div>
 			<div className="grid gap-4 border-b pb-6 sm:grid-cols-[minmax(0,1fr)_14rem] sm:items-end">
-				<label className="type-body-emphasized grid gap-2" htmlFor="check-catalog-search">
-					검수 항목 검색
-					<input
+				<div className="grid gap-2">
+					<Label className="type-body-emphasized" htmlFor="check-catalog-search">
+						검수 항목 검색
+					</Label>
+					<Input
 						id="check-catalog-search"
 						type="search"
 						value={query}
 						onChange={(event) => setQuery(event.target.value)}
 						placeholder="제목, 키, 근거 내용 검색"
-						className="type-body w-full rounded-md border bg-background px-3 py-2.5 font-normal focus-visible:outline-2 focus-visible:outline-offset-2"
 					/>
-				</label>
-				<label className="type-body-emphasized grid gap-2" htmlFor="check-executor-filter">
-					판정 방식
-					<select
-						id="check-executor-filter"
+				</div>
+				<div className="grid gap-2">
+					<Label className="type-body-emphasized" htmlFor="check-executor-filter">
+						판정 방식
+					</Label>
+					<Select
 						value={executor}
-						onChange={(event) => setExecutor(event.target.value as ExecutorFilter)}
-						className="type-body w-full rounded-md border bg-background px-3 py-2.5 font-normal focus-visible:outline-2 focus-visible:outline-offset-2"
+						onValueChange={(value) => setExecutor(value as ExecutorFilter)}
 					>
-						<option value="all">전체 판정 방식</option>
-						{Object.entries(executorLabels).map(([value, label]) => (
-							<option key={value} value={value}>
-								{label}
-							</option>
-						))}
-					</select>
-				</label>
+						<SelectTrigger id="check-executor-filter" className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">전체 판정 방식</SelectItem>
+							{Object.entries(executorLabels).map(([value, label]) => (
+								<SelectItem key={value} value={value}>
+									{label}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
 			</div>
-			<p className="type-body py-4 text-foreground-muted" aria-live="polite">
+			<p className="type-body py-4 text-muted-foreground" aria-live="polite">
 				필터 결과 {filteredCount}개 / 전체 {totalCount}개
 			</p>
 			<div className="divide-y divide-border border-t">
@@ -114,7 +129,7 @@ export function CheckCatalog({
 								>
 									<div className="min-w-0">
 										<h3 className="type-body-emphasized">{check.title}</h3>
-										<code className="type-callout mt-2 block break-words text-foreground-muted">
+										<code className="type-callout mt-2 block break-words text-muted-foreground">
 											{check.key}
 										</code>
 									</div>
@@ -123,7 +138,7 @@ export function CheckCatalog({
 											evidence={check.evidence}
 											referenceAssets={check.referenceAssets}
 										/>
-										<p className="type-body text-foreground-muted">
+										<p className="type-body text-muted-foreground">
 											{executorLabels[check.executor]}
 											{check.implemented ? '' : ' / 미구현'}
 										</p>
@@ -135,7 +150,7 @@ export function CheckCatalog({
 					</section>
 				))}
 				{filteredCount === 0 && (
-					<p className="type-body py-16 text-center text-foreground-muted">
+					<p className="type-body py-16 text-center text-muted-foreground">
 						조건에 맞는 검수 항목이 없습니다.
 					</p>
 				)}
@@ -165,11 +180,11 @@ function CheckMessages({ messages }: { messages: CheckSection['checks'][number][
 	if (entries.length === 0) return null
 
 	return (
-		<dl className="type-callout grid gap-2 rounded-md bg-fill-muted/50 p-3">
+		<dl className="type-callout grid gap-2 rounded-md bg-muted/50 p-3">
 			{entries.map(([status, message]) => (
 				<div key={status} className="grid gap-2 md:grid-cols-[6rem_1fr]">
 					<dt className="type-callout-emphasized">{status}</dt>
-					<dd className="text-foreground-muted">{message}</dd>
+					<dd className="text-muted-foreground">{message}</dd>
 				</div>
 			))}
 		</dl>

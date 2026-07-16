@@ -20,14 +20,14 @@ export function GuidelineHeader({
 
 	return (
 		<header data-variant={variant}>
-			<AspectRatio ratio={16 / 9} className="relative overflow-hidden bg-scrim">
+			<AspectRatio ratio={16 / 9} className="relative overflow-hidden bg-black">
 				<GuidelineImage
 					image={image}
 					className="absolute inset-0 size-full"
 					imgClassName="size-full object-cover"
 				/>
-				{hasImage && <div aria-hidden="true" className="absolute inset-0 bg-scrim/25" />}
-				<div className="relative z-10 flex size-full items-end p-4 pb-8 text-scrim-foreground">
+				{hasImage && <div aria-hidden="true" className="absolute inset-0 bg-black/25" />}
+				<div className="relative z-10 flex size-full items-end p-4 pb-8 text-white">
 					<div>
 						{label !== undefined && (
 							<p className="type-body mb-2 opacity-70">{label}</p>

@@ -2,7 +2,15 @@
 
 import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
-import { TableCell } from '@/components/ui/table'
+import {
+	Table,
+	TableBody,
+	TableCaption,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table'
 import { contrastOptionsSchema } from '@/features/asset-check/checkers/contrast.checker'
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import {
@@ -55,7 +63,7 @@ export function CheckDetailRow({
 			<TableCell className="w-56 pt-0 pb-0 pr-4 align-top">
 				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="pb-3">
-						<code className="type-subheadline inline-flex items-center whitespace-nowrap rounded-md bg-fill-muted px-2 py-0.5 font-mono text-foreground">
+						<code className="type-subheadline inline-flex items-center whitespace-nowrap rounded-md bg-muted px-2 py-0.5 font-mono text-foreground">
 							{check.key}
 						</code>
 					</div>
@@ -65,7 +73,7 @@ export function CheckDetailRow({
 				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="space-y-2 pb-3">
 						{appliesTo.length > 1 && (
-							<p className="type-caption-1 text-foreground-muted">
+							<p className="type-caption-1 text-muted-foreground">
 								적용 위치: {appliesToText}
 							</p>
 						)}
@@ -148,30 +156,30 @@ function HeuristicObservations({ observations }: { observations: AiCheckResult['
 
 	return (
 		<div className="overflow-x-auto rounded-md border">
-			<table className="w-full text-left text-xs">
-				<caption className="sr-only">휴리스틱 판정 기준별 비교</caption>
-				<thead className="bg-white/5 text-muted-foreground">
-					<tr>
-						<th className="px-3 py-2 font-medium">판정 질문</th>
-						<th className="px-3 py-2 font-medium">기준값</th>
-						<th className="px-3 py-2 font-medium">관찰값</th>
-						<th className="px-3 py-2 font-medium">결과</th>
-					</tr>
-				</thead>
-				<tbody>
+			<Table className="type-caption-1">
+				<TableCaption className="sr-only">휴리스틱 판정 기준별 비교</TableCaption>
+				<TableHeader className="bg-fill-muted/50 text-foreground-muted">
+					<TableRow>
+						<TableHead className="px-3 py-2">판정 질문</TableHead>
+						<TableHead className="px-3 py-2">기준값</TableHead>
+						<TableHead className="px-3 py-2">관찰값</TableHead>
+						<TableHead className="px-3 py-2">결과</TableHead>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
 					{observations.map((observation) => (
-						<tr key={observation.criterionId} className="border-t">
-							<td className="px-3 py-2 align-top">
+						<TableRow key={observation.criterionId}>
+							<TableCell className="px-3 py-2 align-top whitespace-normal">
 								{observation.question}
-								<p className="mt-1 text-muted-foreground">{observation.reason}</p>
-							</td>
-							<td className="px-3 py-2 align-top whitespace-nowrap">
+								<p className="mt-1 text-foreground-muted">{observation.reason}</p>
+							</TableCell>
+							<TableCell className="px-3 py-2 align-top">
 								{formatObservationExpected(observation)}
-							</td>
-							<td className="px-3 py-2 align-top whitespace-nowrap">
+							</TableCell>
+							<TableCell className="px-3 py-2 align-top">
 								{formatObservationActual(observation)} ({observation.confidence}%)
-							</td>
-							<td className="px-3 py-2 align-top whitespace-nowrap">
+							</TableCell>
+							<TableCell className="px-3 py-2 align-top">
 								{observation.satisfied === true
 									? '충족'
 									: observation.satisfied === false
@@ -179,11 +187,11 @@ function HeuristicObservations({ observations }: { observations: AiCheckResult['
 										: observation.actual === 'not_applicable'
 											? '해당 없음'
 											: '검토 필요'}
-							</td>
-						</tr>
+							</TableCell>
+						</TableRow>
 					))}
-				</tbody>
-			</table>
+				</TableBody>
+			</Table>
 		</div>
 	)
 }
@@ -192,7 +200,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 	if (!facts || Object.keys(facts).length === 0) return null
 
 	return (
-		<dl className="type-caption-1 grid gap-1.5 rounded-md bg-fill-muted px-3 py-2">
+		<dl className="type-caption-1 grid gap-1.5 rounded-md bg-muted px-3 py-2">
 			{typeof facts.foreground === 'string' && (
 				<CheckFact label="전경색" value={facts.foreground} />
 			)}
@@ -207,7 +215,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 			)}
 			{Array.isArray(facts.prohibitedSignals) && facts.prohibitedSignals.length > 0 && (
 				<div className="grid gap-1">
-					<dt className="text-foreground-muted">금지 신호</dt>
+					<dt className="text-muted-foreground">금지 신호</dt>
 					<dd>
 						<ul className="list-disc space-y-0.5 pl-4">
 							{facts.prohibitedSignals.map((signal) => (
@@ -224,7 +232,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 function CheckFact({ label, value }: { label: string; value: string }) {
 	return (
 		<div className="grid grid-cols-[5rem_1fr] gap-2">
-			<dt className="text-foreground-muted">{label}</dt>
+			<dt className="text-muted-foreground">{label}</dt>
 			<dd>{value}</dd>
 		</div>
 	)

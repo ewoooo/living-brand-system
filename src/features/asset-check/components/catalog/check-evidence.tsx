@@ -7,9 +7,9 @@ import type {
 } from '@/features/guideline/blocks/types'
 
 const kindChipClass = {
-	do: 'bg-success text-success-foreground',
-	ok: 'bg-warning text-warning-foreground',
-	dont: 'bg-destructive text-destructive-foreground',
+	do: 'bg-primary text-primary-foreground',
+	ok: 'bg-secondary text-secondary-foreground',
+	dont: 'bg-destructive/10 text-destructive',
 } as const
 
 /**
@@ -27,17 +27,17 @@ export function CheckEvidence({
 	referenceAssets: CheckReferenceAsset[]
 }) {
 	if (!hasContent(evidence) && referenceAssets.length === 0) {
-		return <p className="type-body text-foreground-muted">관련 가이드라인 없음</p>
+		return <p className="type-body text-muted-foreground">관련 가이드라인 없음</p>
 	}
 
 	return (
 		<div className="type-body grid gap-3">
 			{typeof evidence === 'string' ? (
-				<p className="whitespace-pre-wrap text-foreground-muted">{evidence}</p>
+				<p className="whitespace-pre-wrap text-muted-foreground">{evidence}</p>
 			) : evidence.type === 'document' ? (
 				<>
 					{evidence.description && (
-						<p className="whitespace-pre-wrap text-foreground-muted">
+						<p className="whitespace-pre-wrap text-muted-foreground">
 							{evidence.description}
 						</p>
 					)}
@@ -68,13 +68,13 @@ function BlockEvidence({ evidence }: { evidence: CheckBlockEvidence }) {
 					{evidence.columns.map((column, index) => (
 						<section
 							key={`${column.heading ?? 'column'}-${index}`}
-							className="rounded-md bg-fill-muted px-3 py-2.5"
+							className="rounded-md bg-muted px-3 py-2.5"
 						>
 							{column.heading && (
 								<h4 className="type-body-emphasized mb-1">{column.heading}</h4>
 							)}
 							{column.body && (
-								<p className="whitespace-pre-wrap text-foreground-muted">
+								<p className="whitespace-pre-wrap text-muted-foreground">
 									{column.body}
 								</p>
 							)}
@@ -83,7 +83,7 @@ function BlockEvidence({ evidence }: { evidence: CheckBlockEvidence }) {
 				</div>
 			)
 		case 'mediaShowcase':
-			return <p className="text-foreground-muted">이미지 기준</p>
+			return <p className="text-muted-foreground">이미지 기준</p>
 		case 'colorPalette':
 			return (
 				<section>
@@ -98,12 +98,12 @@ function BlockEvidence({ evidence }: { evidence: CheckBlockEvidence }) {
 							>
 								<span
 									aria-hidden
-									className="size-8 shrink-0 rounded-sm border border-scrim/10"
+									className="size-8 shrink-0 rounded-sm border border-black/10"
 									style={{ backgroundColor: color.hex }}
 								/>
 								<div>
 									<p className="type-body-emphasized">{color.name}</p>
-									<p className="text-foreground-muted">
+									<p className="text-muted-foreground">
 										HEX {color.hex}
 										{color.pantone ? ` · PMS ${color.pantone}` : ''}
 									</p>
@@ -123,12 +123,12 @@ function BlockEvidence({ evidence }: { evidence: CheckBlockEvidence }) {
 						{evidence.groups.map((group, groupIndex) => (
 							<div key={`${group.category ?? 'group'}-${groupIndex}`}>
 								{group.category && (
-									<p className="type-body-emphasized mb-1.5 text-foreground-muted">
+									<p className="type-body-emphasized mb-1.5 text-muted-foreground">
 										{group.category}
 									</p>
 								)}
 								{group.description && (
-									<p className="type-callout mb-1.5 text-foreground-muted">
+									<p className="type-callout mb-1.5 text-muted-foreground">
 										{group.description}
 									</p>
 								)}
@@ -161,14 +161,14 @@ function ReferenceAssets({ assets }: { assets: CheckReferenceAsset[] }) {
 
 	return (
 		<div className="flex flex-wrap items-center gap-1.5 border-t pt-3">
-			<span className="text-foreground-muted">기준 이미지 {assets.length}개</span>
+			<span className="text-muted-foreground">기준 이미지 {assets.length}개</span>
 			{assets.map((asset) => (
 				<a
 					key={`${asset.url}-${asset.name}-${asset.role}`}
 					href={asset.url}
 					target="_blank"
 					rel="noreferrer"
-					className="rounded-md border px-2 py-1 text-foreground transition-colors hover:bg-fill-hover"
+					className="rounded-md border px-2 py-1 text-foreground transition-colors hover:bg-accent"
 				>
 					{roleLabel[asset.role]} · {asset.name}
 				</a>
