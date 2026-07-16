@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { createElement } from 'react'
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import type { CheckScenario } from '@/features/asset-check/scenarios'
 import type {
 	CheckSection,
@@ -8,8 +9,16 @@ import type {
 } from '@/features/asset-check/services/get-check-ruleset.service'
 import { CheckCatalog } from './check-catalog'
 
+// jsdom에 없는 포인터/스크롤 API를 Radix Select가 호출한다
+beforeAll(() => {
+	Element.prototype.scrollIntoView = vi.fn()
+	Element.prototype.hasPointerCapture = vi.fn()
+	Element.prototype.releasePointerCapture = vi.fn()
+})
+
 describe('CheckCatalog', () => {
-	it('검색과 판정 방식 필터를 함께 적용하고 결과 개수를 표시한다', () => {
+	it('검색과 판정 방식 필터를 함께 적용하고 결과 개수를 표시한다', async () => {
+		const user = userEvent.setup()
 		render(createElement(CheckCatalog, { sections, scenarios }))
 
 		expect(screen.getByText('필터 결과 3개 / 전체 3개')).toBeTruthy()
@@ -20,21 +29,19 @@ describe('CheckCatalog', () => {
 		).toEqual(['Brand color usage', 'Minimum logo size', 'Logo placement'])
 		expect(screen.queryByText('검수 근거')).toBeNull()
 		expect(screen.getByText('Brand Green')).toBeTruthy()
+
+		await user.click(screen.getByLabelText('판정 방식'))
 		expect(screen.getByRole('option', { name: '자동 측정' })).toBeTruthy()
 		expect(screen.getByRole('option', { name: 'AI 평가' })).toBeTruthy()
 		expect(screen.getByRole('option', { name: '담당자 확인' })).toBeTruthy()
-
-		fireEvent.change(screen.getByLabelText('판정 방식'), {
-			target: { value: 'heuristic' },
-		})
+		await user.click(screen.getByRole('option', { name: 'AI 평가' }))
 
 		expect(screen.getByText('필터 결과 1개 / 전체 3개')).toBeTruthy()
 		expect(screen.getByText('Brand color usage')).toBeTruthy()
 		expect(screen.queryByText('Minimum logo size')).toBeNull()
 
-		fireEvent.change(screen.getByLabelText('판정 방식'), {
-			target: { value: 'all' },
-		})
+		await user.click(screen.getByLabelText('판정 방식'))
+		await user.click(screen.getByRole('option', { name: '전체 판정 방식' }))
 		fireEvent.change(screen.getByLabelText('검수 항목 검색'), {
 			target: { value: 'Brand Green' },
 		})

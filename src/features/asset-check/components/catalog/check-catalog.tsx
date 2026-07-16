@@ -1,6 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import { type CheckScenario, filterRulesetByScenario } from '@/features/asset-check/scenarios'
 import type {
 	CheckSection,
@@ -70,33 +79,39 @@ export function CheckCatalog({
 	return (
 		<div>
 			<div className="grid gap-4 border-b pb-6 sm:grid-cols-[minmax(0,1fr)_14rem] sm:items-end">
-				<label className="type-body-emphasized grid gap-2" htmlFor="check-catalog-search">
-					검수 항목 검색
-					<input
+				<div className="grid gap-2">
+					<Label className="type-body-emphasized" htmlFor="check-catalog-search">
+						검수 항목 검색
+					</Label>
+					<Input
 						id="check-catalog-search"
 						type="search"
 						value={query}
 						onChange={(event) => setQuery(event.target.value)}
 						placeholder="제목, 키, 근거 내용 검색"
-						className="type-body w-full rounded-md border bg-background px-3 py-2.5 font-normal focus-visible:outline-2 focus-visible:outline-offset-2"
 					/>
-				</label>
-				<label className="type-body-emphasized grid gap-2" htmlFor="check-executor-filter">
-					판정 방식
-					<select
-						id="check-executor-filter"
+				</div>
+				<div className="grid gap-2">
+					<Label className="type-body-emphasized" htmlFor="check-executor-filter">
+						판정 방식
+					</Label>
+					<Select
 						value={executor}
-						onChange={(event) => setExecutor(event.target.value as ExecutorFilter)}
-						className="type-body w-full rounded-md border bg-background px-3 py-2.5 font-normal focus-visible:outline-2 focus-visible:outline-offset-2"
+						onValueChange={(value) => setExecutor(value as ExecutorFilter)}
 					>
-						<option value="all">전체 판정 방식</option>
-						{Object.entries(executorLabels).map(([value, label]) => (
-							<option key={value} value={value}>
-								{label}
-							</option>
-						))}
-					</select>
-				</label>
+						<SelectTrigger id="check-executor-filter" className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">전체 판정 방식</SelectItem>
+							{Object.entries(executorLabels).map(([value, label]) => (
+								<SelectItem key={value} value={value}>
+									{label}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
 			</div>
 			<p className="type-body py-4 text-muted-foreground" aria-live="polite">
 				필터 결과 {filteredCount}개 / 전체 {totalCount}개
