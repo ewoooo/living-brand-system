@@ -34,11 +34,11 @@ export const RuleCheckers: CollectionConfig = {
 	dbName: 'rule_checkers',
 	access: managerManagedAccess,
 	labels: {
-		singular: 'Checker',
-		plural: 'Checkers',
+		singular: '검수 도구',
+		plural: '검수 도구',
 	},
 	admin: {
-		group: 'Quality',
+		group: '검수 설정',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'key', 'executor', '_status', 'updatedAt'],
 		description: 'Guideline Check를 실행할 도구와 호출 계약입니다.',

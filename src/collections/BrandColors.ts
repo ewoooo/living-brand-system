@@ -6,11 +6,11 @@ export const BrandColors: CollectionConfig = {
 	slug: 'brand-colors',
 	access: managerManagedAccess,
 	labels: {
-		singular: 'Brand Color',
-		plural: 'Brand Colors',
+		singular: '컬러',
+		plural: '컬러',
 	},
 	admin: {
-		group: 'Brand Assets',
+		group: '브랜드 자원',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'hex', 'colorGroup', 'tone', 'updatedAt'],
 	},

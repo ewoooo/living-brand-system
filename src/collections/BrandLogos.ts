@@ -4,8 +4,8 @@ import { draftVersions } from './shared'
 export const BrandLogos: CollectionConfig = {
 	slug: 'brand-logos',
 	labels: {
-		singular: 'Brand Logo',
-		plural: 'Brand Logos',
+		singular: '로고',
+		plural: '로고',
 	},
 	access: {
 		// 발행 가이드라인 SSR과 템플릿 렌더링이 인증 없이 파일 URL을 참조하므로 의도적인 공개 읽기다.
@@ -13,7 +13,7 @@ export const BrandLogos: CollectionConfig = {
 		read: () => true,
 	},
 	admin: {
-		group: 'Brand Assets',
+		group: '브랜드 자원',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'alt', 'updatedAt'],
 	},

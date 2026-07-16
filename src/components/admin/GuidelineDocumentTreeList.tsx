@@ -80,7 +80,7 @@ export default async function GuidelineDocumentTreeList({
 			<Gutter className="guideline-document-tree">
 				<header className="guideline-document-tree__header">
 					<div>
-						<h1>Guideline Documents</h1>
+						<h1>가이드라인 문서</h1>
 						<p>장·섹션·페이지를 부모 관계와 표시 순서에 따라 보여줍니다.</p>
 					</div>
 					{hasCreatePermission && (

@@ -23,11 +23,11 @@ export const Templates: CollectionConfig = {
 		],
 	},
 	labels: {
-		singular: 'Template',
-		plural: 'Templates',
+		singular: '템플릿',
+		plural: '템플릿',
 	},
 	admin: {
-		group: 'Production',
+		group: '제작 도구',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'updatedAt'],
 		components: {
