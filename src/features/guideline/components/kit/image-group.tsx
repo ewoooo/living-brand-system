@@ -23,7 +23,7 @@ export function ImageGroup({
 
 	return (
 		<section className="flex flex-col gap-4">
-			{header && <h4 className="type-body-emphasized text-foreground">{header}</h4>}
+			{header && <h4 className="type-body-emphasized font-bold text-foreground">{header}</h4>}
 			<div className={`grid items-start gap-4 ${cols}`}>
 				{images.map((image) => (
 					// biome-ignore lint/performance/noImgElement: 임의 원격/데이터 URL이라 next/image 미사용.

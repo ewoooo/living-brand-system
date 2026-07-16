@@ -10,7 +10,7 @@ export type TypeScaleItem = {
 
 export function TypeScale({ items }: { items: TypeScaleItem[] }) {
 	return (
-		<dl className="flex flex-col divide-y divide-scrim/10 border-scrim/10 border-y">
+		<dl className="flex flex-col">
 			{items.map((item) => (
 				<div
 					key={item.name}

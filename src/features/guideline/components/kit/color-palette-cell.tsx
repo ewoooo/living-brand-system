@@ -12,7 +12,7 @@ export function ColorPaletteCell({
 }) {
 	return (
 		<div
-			className="type-caption-1 flex flex-1 flex-col rounded-sm border border-scrim/10 p-4"
+			className="type-caption-1 flex flex-1 flex-col rounded-sm p-4"
 			style={{
 				aspectRatio,
 				backgroundColor: color.hex,

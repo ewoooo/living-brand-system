@@ -36,7 +36,12 @@ export function MediaText({
 			{(heading || paragraphs.length > 0 || caption) && (
 				<figcaption className={side ? 'mt-4 md:mt-0 md:flex-1' : 'mt-4'}>
 					{heading && (
-						<h4 className="type-title-3-emphasized text-foreground">{heading}</h4>
+						<h4
+							className="type-title-3-emphasized text-foreground"
+							style={{ fontWeight: 700 }}
+						>
+							{heading}
+						</h4>
 					)}
 					{paragraphs.map((p) => (
 						<p

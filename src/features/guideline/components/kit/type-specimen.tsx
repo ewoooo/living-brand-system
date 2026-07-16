@@ -29,7 +29,7 @@ export function TypeSpecimen({
 	const [weight, setWeight] = useState(weightRange?.[2] ?? 400)
 
 	return (
-		<div className="rounded-lg border border-scrim/10 bg-background-secondary p-8">
+		<div className="rounded-lg bg-background-tertiary p-8">
 			<div className="flex items-baseline justify-between gap-4">
 				<h4 className="type-title-2-emphasized text-foreground">{name}</h4>
 				{usage && (
@@ -59,7 +59,7 @@ export function TypeSpecimen({
 						max={weightRange[1]}
 						value={weight}
 						onChange={(e) => setWeight(Number(e.target.value))}
-						className="h-1 w-full max-w-xs cursor-pointer appearance-none rounded-full bg-fill-muted accent-foreground"
+						className="h-1 w-full max-w-xs cursor-pointer appearance-none rounded-full bg-background accent-foreground"
 					/>
 					<span className="type-caption-1 w-10 shrink-0 text-right text-foreground tabular-nums">
 						{weight}
@@ -81,7 +81,7 @@ export function TypeSpecimen({
 					{specs.map((spec) => (
 						<div
 							key={spec.label}
-							className="flex items-baseline gap-1.5 rounded-full bg-fill-muted px-3 py-1"
+							className="flex items-baseline gap-1.5 rounded-full bg-background px-3 py-1"
 						>
 							<dt className="type-caption-1 text-foreground-muted">{spec.label}</dt>
 							<dd className="type-caption-1-emphasized text-foreground tabular-nums">
