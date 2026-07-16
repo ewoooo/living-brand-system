@@ -1,5 +1,7 @@
 /**
- * Checker shared types — run-check service와 개별 checker 사이의 최소 실행 계약이다.
+ * 검수 실행 공용 타입 — run-check service와 판정 경로 사이의 실행 계약이다.
+ * deterministic 계약(측정·기준 비교)과 AI 계약(AiCheckResult·HeuristicCriterion·AiUsage)을
+ * 함께 소유한다. 두 경로가 같은 CheckResult로 수렴하므로 한 파일에 둔다.
  * rule schema나 Payload 문서 타입은 여기에 들이지 않는다.
  */
 

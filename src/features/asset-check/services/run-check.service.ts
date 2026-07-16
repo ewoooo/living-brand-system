@@ -3,10 +3,6 @@ import {
 	toDeterministicCheckResult,
 } from '@/features/asset-check/checkers/check-result.adapter'
 import { opaquePixels } from '@/features/asset-check/checkers/color-metrics'
-import {
-	evaluateAdvisory,
-	evaluateHeuristic,
-} from '@/features/asset-check/checkers/heuristic-evaluator'
 import { getChecker, runDeterministicChecker } from '@/features/asset-check/checkers/registry'
 import type {
 	AiCheckResult,
@@ -16,6 +12,10 @@ import type {
 	CheckResult,
 	RawCheckResult,
 } from '@/features/asset-check/checkers/types'
+import {
+	evaluateAdvisory,
+	evaluateHeuristic,
+} from '@/features/asset-check/domain/heuristic.evaluator'
 import {
 	type AiCheckRunResult,
 	runAiCheck,

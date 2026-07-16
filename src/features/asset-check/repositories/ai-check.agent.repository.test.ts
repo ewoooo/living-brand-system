@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
 	measureObservationSchema,
 	presenceObservationSchema,
-} from '@/features/asset-check/checkers/heuristic-evaluator'
+} from '@/features/asset-check/domain/heuristic.evaluator'
 import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
 
 vi.mock('ai', () => ({
