@@ -40,7 +40,7 @@ export const agentChatAgent = new ToolLoopAgent<
 	AgentChatCallOptions,
 	ReturnType<typeof getAgentTools>
 >({
-	model: anthropic(env.ANTHROPIC_MODEL || DEFAULT_MODEL),
+	model: anthropic(env.CHAT_MODEL || DEFAULT_MODEL),
 	providerOptions: {
 		anthropic: {
 			effort: 'medium',

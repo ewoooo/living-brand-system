@@ -44,7 +44,8 @@ pnpm dev
 | `PAYLOAD_SECRET` | Payload 시크릿 (실제 값으로 변경 필수) |
 | `PAYLOAD_DB_PUSH` | 로컬 개발 전용 스키마 push. 배포 환경에서는 미설정 또는 `false` |
 | `PAYLOAD_RUN_MIGRATIONS_ON_STARTUP` | 운영 전용. 앱 시작 시 마이그레이션 실행 |
-| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Agent 기능용 Anthropic 설정 |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Anthropic 인증 및 텍스트 생성 모델 설정 |
+| `CHAT_MODEL` | Agent Chat 모델 설정 |
 | `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | 미디어 스토리지용 S3 설정 |
 
 ## 주요 스크립트
