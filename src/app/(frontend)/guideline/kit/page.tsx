@@ -5,6 +5,7 @@ import { ColorPalette } from '@/features/guideline/components/kit/color-palette'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
 import { DoDont } from '@/features/guideline/components/kit/do-dont'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
+import { GlyphGrid } from '@/features/guideline/components/kit/glyph-grid'
 import { GridSystemDiagramDemo } from '@/features/guideline/components/kit/grid-system-diagram'
 import { ImageGroupDemo } from '@/features/guideline/components/kit/image-group'
 import { ImageTextGrid } from '@/features/guideline/components/kit/image-text-grid'
@@ -179,6 +180,10 @@ export default function GuidelineKitPage() {
 
 			<Demo title="Type Tester · 라이브 입력 견본">
 				<TypeTester />
+			</Demo>
+
+			<Demo title="Glyph Grid · 글리프 인스펙터">
+				<GlyphGrid />
 			</Demo>
 
 			<Demo title="Type Scale">
