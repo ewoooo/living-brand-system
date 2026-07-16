@@ -54,10 +54,14 @@ export function Carousel({
 	const go = (next: number) => setIndex((next + count) % count)
 
 	return (
-		<div
+		<section
 			className="flex flex-col gap-4"
+			aria-roledescription="carousel"
+			aria-label="이미지 캐러셀"
 			onMouseEnter={() => setPaused(true)}
 			onMouseLeave={() => setPaused(false)}
+			onFocus={() => setPaused(true)}
+			onBlur={() => setPaused(false)}
 		>
 			<div className={`group relative overflow-hidden bg-fill-muted ${aspect}`}>
 				<div
@@ -115,7 +119,7 @@ export function Carousel({
 					))}
 				</div>
 			</div>
-		</div>
+		</section>
 	)
 }
 
