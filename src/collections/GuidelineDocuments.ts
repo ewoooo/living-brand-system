@@ -20,11 +20,11 @@ export const GuidelineDocuments: CollectionConfig = {
 		beforeValidate: [validateGuidelineDocumentDepth, validateGuidelineCheckKeys],
 	},
 	labels: {
-		singular: 'Guideline Document',
-		plural: 'Guideline Documents',
+		singular: '가이드라인 문서',
+		plural: '가이드라인 문서',
 	},
 	admin: {
-		group: 'Guidelines',
+		group: '가이드라인',
 		useAsTitle: 'title',
 		description: '계층형 가이드라인 문서입니다.',
 		components: {
