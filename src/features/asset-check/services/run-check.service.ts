@@ -39,6 +39,9 @@ export interface HeuristicCheckResult {
 	aiUsage?: AiUsage
 }
 
+/** AI 호출 1건에 싣는 최대 Check 수 — structured output 문법 컴파일 한도 이내로 유지한다. */
+const AI_CHECK_BATCH_SIZE = 4
+
 /** AI 단계로 넘길 Check — heuristic 전부, manual은 model이 설정된 advisory만. */
 function isPendingAiCheck(check: RuntimeCheck): boolean {
 	return check.executor === 'heuristic' || (check.executor === 'manual' && Boolean(check.model))
@@ -92,15 +95,24 @@ export async function runHeuristicCheck(
 	)
 	if (checks.length === 0) return { results: {} }
 
-	const groups = new Map<string, RuntimeCheck[]>()
+	const byModel = new Map<string, RuntimeCheck[]>()
 	for (const check of checks) {
 		if (!check.model) continue
 		if (check.executor === 'heuristic' && !check.heuristicCriteria?.length) continue
-		groups.set(check.model, [...(groups.get(check.model) ?? []), check])
+		byModel.set(check.model, [...(byModel.get(check.model) ?? []), check])
 	}
+	// 한 요청에 check가 많으면 structured output 문법 한도와 요청 크기(레퍼런스 이미지) 한도를
+	// 넘고, 출력이 길수록 후반부 관측 품질이 떨어진다. 모델 그룹을 배치로 나눠 병렬 호출한다.
+	const groups = [...byModel.values()].flatMap((modelChecks) => {
+		const batches: RuntimeCheck[][] = []
+		for (let i = 0; i < modelChecks.length; i += AI_CHECK_BATCH_SIZE) {
+			batches.push(modelChecks.slice(i, i + AI_CHECK_BATCH_SIZE))
+		}
+		return batches
+	})
 	const ctx: CheckerContext = { image: imageInputFrom(buffer), pixels: [], palette: [] }
 	const runs = await Promise.all(
-		[...groups.values()].map(async (group) => ({
+		groups.map(async (group) => ({
 			keys: new Set(group.map((check) => check.key)),
 			run: await runAiCheck(group, ctx),
 		})),
