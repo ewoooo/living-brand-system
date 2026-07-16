@@ -13,11 +13,18 @@ import {
 } from '@/components/ui/carousel'
 import { Empty, EmptyDescription, EmptyTitle } from '@/components/ui/empty'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
-import { ImageCheckControls } from '@/features/asset-check/components/image-check-controls'
+import { ImageCheckControls } from '@/features/asset-check/components/upload/image-check-controls'
 import type { CheckImage } from '@/features/asset-check/types'
 import { CHECK_IMAGE_ACCEPT } from '@/features/asset-check/utils/image-format'
 import { useFileInput } from '@/hooks/use-file-input'
 
+/**
+ * 퍼널 ① — 업로드·미리보기 캐러셀.
+ * in : 컨텍스트 { images: CheckImage[], selectedId, select, addFiles }
+ * out: addFiles(FileList) — 지원 타입(PNG/JPEG/WebP)만 CheckImage(idle)로 변환, 최신이 앞
+ *      캐러셀 스와이프 → select(image.id)  (선택과 스크롤 양방향 동기화)
+ * 렌더에 쓰는 필드: image.url(objectURL), image.name
+ */
 export function ImageUploadCarousel() {
 	const { images, selectedId, select, addFiles } = useCheckImages()
 	const fileInput = useFileInput()

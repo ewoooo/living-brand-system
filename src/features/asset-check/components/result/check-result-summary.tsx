@@ -14,7 +14,16 @@ interface CheckResultSummaryProps {
 	sections: CheckSection[]
 }
 
-/** 검수 결과 한눈 요약: 통과·미통과·검수 전 카운트 + 미통과만 보기 토글. */
+/**
+ * 퍼널 ④ — 상태별 카운트 요약 + 미통과만 보기 토글.
+ * in : sections: CheckSection[] (서버) + 컨텍스트 { scenarios, scenarioKey, selected, showFailOnly }
+ * 조립: buildCheckReviewView(...).summary → CheckReviewSummary {
+ *   pass: number; ok: number; fail: number; advisory: number
+ *   notApplicable: number          // display status 'not_applicable'
+ *   pendingManualCheck: number     // outcome 없음(미판정·manual 대기)
+ * }
+ * 토글 disabled: summary.fail === 0
+ */
 export function CheckResultSummary({ sections }: CheckResultSummaryProps) {
 	const { scenarios, scenarioKey, selected, showFailOnly, toggleFailOnly } = useCheckImages()
 	const failOnlyLabel = showFailOnly ? '전체 보기' : '미통과만 보기'

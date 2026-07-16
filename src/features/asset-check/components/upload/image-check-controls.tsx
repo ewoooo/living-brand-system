@@ -12,6 +12,14 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 
+/**
+ * 퍼널 ②③ — 시나리오 선택 + 검수 실행 버튼 (캐러셀 위 오버레이).
+ * in : 컨텍스트 { scenarios, selectedId, selected, scenarioKey, setScenarioKey, runCheck }
+ * out: setScenarioKey(key: CheckScenario['key'])
+ *        → 선택 이미지의 checkSessionId·results·pendingCheckKeys·rulesetSnapshot 폐기, idle 복귀
+ *      runCheck() — selected.status === 'running'이면 무시(중복 실행 방지)
+ * disabled 조건: !selectedId || selected.status === 'running'
+ */
 export function ImageCheckControls() {
 	const { scenarios, selectedId, selected, scenarioKey, setScenarioKey, runCheck } =
 		useCheckImages()
