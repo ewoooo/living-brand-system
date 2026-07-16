@@ -2,18 +2,32 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import {
 	createAgentChatSessionRecord,
-	updateAgentChatSessionRecord,
+	saveAgentChatSessionRecord,
 } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import { startAgentChatSession } from '@/features/agent-chat/services/start-agent-chat-session.service'
 import type { User } from '@/payload-types'
 
 vi.mock('@/features/agent-chat/repositories/agent-chat-session.payload.repository', () => ({
 	createAgentChatSessionRecord: vi.fn(),
-	updateAgentChatSessionRecord: vi.fn(),
+	saveAgentChatSessionRecord: vi.fn(),
 }))
 
 const createSession = vi.mocked(createAgentChatSessionRecord)
-const updateSession = vi.mocked(updateAgentChatSessionRecord)
+const saveSession = vi.mocked(saveAgentChatSessionRecord)
+
+const user = { id: 7 } as User
+const messages = [
+	{
+		id: 'user-message',
+		role: 'user',
+		parts: [{ type: 'text', text: '가이드라인을 찾아줘.' }],
+	},
+] as AgentChatMessage[]
+
+const toolStep = {
+	model: { modelId: 'test-model' },
+	toolCalls: [{ toolName: 'searchGuidelines' }],
+}
 
 describe('startAgentChatSession', () => {
 	beforeEach(() => {
@@ -21,17 +35,8 @@ describe('startAgentChatSession', () => {
 		createSession.mockResolvedValue({ id: 41 } as never)
 	})
 
-	it('stores the request and records the completed assistant step', async () => {
-		const user = { id: 7 } as User
-		const messages = [
-			{
-				id: 'user-message',
-				role: 'user',
-				parts: [{ type: 'text', text: '가이드라인을 찾아줘.' }],
-			},
-		] as AgentChatMessage[]
-
-		const session = await startAgentChatSession({ messages, pagePath: '/guidelines', user })
+	it('요청 메시지로 running 세션을 생성한다', async () => {
+		await startAgentChatSession({ messages, pagePath: '/guidelines', user })
 
 		expect(createSession).toHaveBeenCalledWith({
 			status: 'running',
@@ -46,34 +51,63 @@ describe('startAgentChatSession', () => {
 			],
 			user,
 		})
+	})
+
+	it('running 스텝은 저장하지 않고 completed 스텝에서 한 번만 저장한다', async () => {
+		const session = await startAgentChatSession({ messages, pagePath: '/guidelines', user })
+
+		await session.recordStep({ status: 'running', step: toolStep })
+		expect(saveSession).not.toHaveBeenCalled()
 
 		await session.recordStep({
 			status: 'completed',
 			text: '찾은 가이드라인입니다.',
-			step: {
-				model: { modelId: 'test-model' },
-				toolCalls: [{ toolName: 'searchGuidelines' }],
-			},
+			step: toolStep,
 		})
+		expect(saveSession).toHaveBeenCalledTimes(1)
 
-		expect(updateSession).toHaveBeenCalledWith(
-			expect.objectContaining({
-				id: 41,
-				status: 'completed',
-				messageCount: 2,
-				usedSkills: [],
-				usedTools: [{ name: 'searchGuidelines', callCount: 1 }],
-				user,
-				messages: [
-					expect.objectContaining({ messageId: 'user-message', role: 'user' }),
-					expect.objectContaining({
-						messageId: session.assistantMessageId,
-						role: 'assistant',
-						text: '찾은 가이드라인입니다.',
-						usedTools: [{ name: 'searchGuidelines', callCount: 1 }],
-					}),
-				],
-			}),
-		)
+		const [saved, savedUser] = saveSession.mock.calls[0]
+		expect(savedUser).toBe(user)
+		const data = saved.toUpdateData()
+		expect(data.status).toBe('completed')
+		expect(data.messageCount).toBe(2)
+		expect(data.usedTools).toEqual([{ name: 'searchGuidelines', callCount: 2 }])
+		expect(data.messages[1]).toMatchObject({
+			messageId: session.assistantMessageId,
+			role: 'assistant',
+			text: '찾은 가이드라인입니다.',
+		})
+	})
+
+	it('종결 후 fail은 no-op이고 완료 세션을 뒤집지 않는다', async () => {
+		const session = await startAgentChatSession({ messages, user })
+
+		await session.recordStep({ status: 'completed', text: '완료 응답', step: toolStep })
+		expect(saveSession).toHaveBeenCalledTimes(1)
+
+		await session.fail('late error')
+		expect(saveSession).toHaveBeenCalledTimes(1)
+		expect(saveSession.mock.calls[0][0].toUpdateData().status).toBe('completed')
+	})
+
+	it('finalize는 completed 신호 없이 끝난 턴을 종결 저장한다', async () => {
+		const session = await startAgentChatSession({ messages, user })
+
+		await session.recordStep({ status: 'running', step: toolStep })
+		await session.finalize()
+
+		expect(saveSession).toHaveBeenCalledTimes(1)
+		const data = saveSession.mock.calls[0][0].toUpdateData()
+		expect(data.status).toBe('completed')
+		expect(data.usedTools).toEqual([{ name: 'searchGuidelines', callCount: 1 }])
+	})
+
+	it('이미 종결된 세션에서 finalize는 no-op이다', async () => {
+		const session = await startAgentChatSession({ messages, user })
+
+		await session.recordStep({ status: 'completed', text: '완료 응답', step: toolStep })
+		await session.finalize()
+
+		expect(saveSession).toHaveBeenCalledTimes(1)
 	})
 })
