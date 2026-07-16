@@ -41,7 +41,7 @@ export function PageNavigation({
 	return (
 		<Pagination
 			aria-label={`${unitLabel} 이동`}
-			className="min-h-48 bg-foreground-muted/20 text-background"
+			className="min-h-48 bg-muted-foreground/20 text-background"
 		>
 			<PaginationContent className="grid w-full grid-cols-2 gap-0">
 				{previous ? (

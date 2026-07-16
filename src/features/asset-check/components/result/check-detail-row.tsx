@@ -55,7 +55,7 @@ export function CheckDetailRow({
 			<TableCell className="w-56 pt-0 pb-0 pr-4 align-top">
 				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="pb-3">
-						<code className="type-subheadline inline-flex items-center whitespace-nowrap rounded-md bg-fill-muted px-2 py-0.5 font-mono text-foreground">
+						<code className="type-subheadline inline-flex items-center whitespace-nowrap rounded-md bg-muted px-2 py-0.5 font-mono text-foreground">
 							{check.key}
 						</code>
 					</div>
@@ -65,7 +65,7 @@ export function CheckDetailRow({
 				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="space-y-2 pb-3">
 						{appliesTo.length > 1 && (
-							<p className="type-caption-1 text-foreground-muted">
+							<p className="type-caption-1 text-muted-foreground">
 								적용 위치: {appliesToText}
 							</p>
 						)}
@@ -192,7 +192,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 	if (!facts || Object.keys(facts).length === 0) return null
 
 	return (
-		<dl className="type-caption-1 grid gap-1.5 rounded-md bg-fill-muted px-3 py-2">
+		<dl className="type-caption-1 grid gap-1.5 rounded-md bg-muted px-3 py-2">
 			{typeof facts.foreground === 'string' && (
 				<CheckFact label="전경색" value={facts.foreground} />
 			)}
@@ -207,7 +207,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 			)}
 			{Array.isArray(facts.prohibitedSignals) && facts.prohibitedSignals.length > 0 && (
 				<div className="grid gap-1">
-					<dt className="text-foreground-muted">금지 신호</dt>
+					<dt className="text-muted-foreground">금지 신호</dt>
 					<dd>
 						<ul className="list-disc space-y-0.5 pl-4">
 							{facts.prohibitedSignals.map((signal) => (
@@ -224,7 +224,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 function CheckFact({ label, value }: { label: string; value: string }) {
 	return (
 		<div className="grid grid-cols-[5rem_1fr] gap-2">
-			<dt className="text-foreground-muted">{label}</dt>
+			<dt className="text-muted-foreground">{label}</dt>
 			<dd>{value}</dd>
 		</div>
 	)

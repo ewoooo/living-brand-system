@@ -159,7 +159,7 @@ function CheckMessageCell({
 							'type-caption-1 block',
 							outcome?.rawResult.status === 'fail'
 								? 'text-destructive'
-								: 'text-foreground-muted',
+								: 'text-muted-foreground',
 						)}
 					>
 						{detail}
@@ -199,7 +199,7 @@ function CheckToggleCell({ open }: { open: boolean }) {
 			<ChevronDown
 				size={16}
 				className={cn(
-					'inline-block text-foreground-muted transition-transform',
+					'inline-block text-muted-foreground transition-transform',
 					open && 'rotate-180',
 				)}
 			/>
@@ -214,7 +214,7 @@ function CheckExecutorIcon({ check }: { check: Check }) {
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<span className="inline-flex text-foreground-muted">
+				<span className="inline-flex text-muted-foreground">
 					<ExecutorIcon size={16} />
 				</span>
 			</TooltipTrigger>

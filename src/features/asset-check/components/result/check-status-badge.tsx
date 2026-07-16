@@ -49,7 +49,7 @@ export function CheckStatusBadge({
 				className="inline-flex justify-center"
 				title="검수 중"
 			>
-				<Spinner className="size-3.5 text-foreground-muted" />
+				<Spinner className="size-3.5 text-muted-foreground" />
 			</motion.span>
 		)
 	}

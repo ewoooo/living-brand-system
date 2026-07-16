@@ -108,7 +108,7 @@ export function AgentChatAgentBubble({
 					animated
 					controls={false}
 					isAnimating={isStreaming}
-					className="type-callout flex flex-col gap-2 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4"
+					className="typeset typeset-lbs"
 				>
 					{text}
 				</Streamdown>

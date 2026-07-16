@@ -30,10 +30,7 @@ export function ColumnUnitBlock({
 							<h4 className="type-body-emphasized mb-4">{column.heading}</h4>
 						)}
 						{column.body && (
-							<RichText
-								data={column.body}
-								className="type-body flex flex-col gap-4"
-							/>
+							<RichText data={column.body} className="typeset typeset-lbs" />
 						)}
 					</div>
 				))}
