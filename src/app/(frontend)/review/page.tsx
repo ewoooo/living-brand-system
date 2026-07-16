@@ -4,19 +4,25 @@ import { GuidelineHeader } from '@/features/guideline/components/globals/guideli
 
 export default async function ReviewPage() {
 	const sections = await getCheckRuleset()
+	const TITLE = 'Check Assets'
+	const DESCRIPTION = 'Check Your Creations'
 
 	return (
-		<div className="flex w-full max-w-[1250px] flex-col px-8 py-10">
+		<div className="flex w-full flex-col px-8 py-10">
 			<header className="mb-8">
-				<GuidelineHeader title="Check Asset" />
-
-				<p className="mb-4 text-foreground-muted">
-					제작한 디자인 산출물을 업로드하면 브랜드 가이드라인 기준에 맞는지 자동으로
-					검수합니다. <wbr /> 색·로고·명함 등 항목별로 통과·미통과를 한눈에 확인하고,
-					가이드라인에서 벗어난 부분을 빠르게 바로잡을 수 있습니다.
-				</p>
+				<ReviewHeader title={TITLE} description={DESCRIPTION} />
+				{/*<GuidelineHeader title="Check Asset" />*/}
 			</header>
 			<ReviewFunnel sections={sections} />
+		</div>
+	)
+}
+
+function ReviewHeader({ title, description }: { title: string; description?: string }) {
+	return (
+		<div className="">
+			<h1 className="type-large-title pb-4">{title}</h1>
+			<p className="type-body pl-2 text-foreground-muted">{description}</p>
 		</div>
 	)
 }
