@@ -518,3 +518,9 @@ Expected: 변경 파일은 서비스·repository·서비스 테스트 3개뿐. `
 git add src/features/agent-chat/services/start-agent-chat-session.service.ts src/features/agent-chat/services/start-agent-chat-session.service.test.ts src/features/agent-chat/repositories/agent-chat-session.payload.repository.ts
 git commit -m "refactor: AgentChatSession 전이를 Aggregate로 이관하고 스텝 저장을 종결 시 1회로 축소"
 ```
+
+---
+
+### Task 3 (최종 리뷰 후속): 스텝 상한 턴 종결 안전망
+
+최종 전체 브랜치 리뷰의 Important 발견 반영 — 스텝 상한(stopWhen 10)으로 finishReason이 'tool-calls'인 채 끝난 턴은 complete() 신호가 없어 종결 저장이 발생하지 않았다. 서비스에 `finalize()`(isTerminal이면 no-op, 아니면 complete + 저장)를 추가하고 route의 `onEnd` 훅에서 호출한다. Global Constraints 중 "route 무변경"은 이 항목에 한해 해제(onEnd 1건 추가). 서비스 테스트 +2 (전체 기대 265).

@@ -20,6 +20,7 @@ export interface StartAgentChatSessionInput {
  * 전이와 스텝 누적은 AgentChatSession Aggregate가 소유하며, DB 쓰기는 생성 1회와
  * 종결(completed/failed) 후 1회만 일어난다. 저장 I/O는 agent-chat-session repository가 소유한다.
  * 종결 후 recordStep/fail 호출은 no-op이다 — 완료된 세션을 뒤집는 레이스를 막는다.
+ * 스텝 상한처럼 completed 신호 없이 끝나는 턴은 finalize()가 스트림 종료 시점에 종결 저장한다.
  */
 export async function startAgentChatSession(input: StartAgentChatSessionInput) {
 	const assistantMessageId = crypto.randomUUID()
@@ -43,6 +44,12 @@ export async function startAgentChatSession(input: StartAgentChatSessionInput) {
 		fail: async (errorMessage: string) => {
 			if (session.isTerminal) return
 			session.fail(errorMessage)
+			await saveAgentChatSessionRecord(session, input.user)
+		},
+		/** 스트림 종료 안전망 — 스텝 상한 등으로 completed 신호 없이 끝난 턴을 종결 저장한다. */
+		finalize: async () => {
+			if (session.isTerminal) return
+			session.complete()
 			await saveAgentChatSessionRecord(session, input.user)
 		},
 		recordStep: async ({

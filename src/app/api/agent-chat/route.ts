@@ -85,6 +85,15 @@ export async function POST(req: Request) {
 				})
 				return 'Agent response failed.'
 			},
+			onEnd: async () => {
+				// 스텝 상한(tool-calls finish)으로 completed 신호 없이 끝난 턴의 기록 안전망.
+				await chatSession.finalize().catch((error) => {
+					payload.logger.error(
+						{ err: error, requestId },
+						'agent-chat.session-update.failed',
+					)
+				})
+			},
 		})
 	} catch (error) {
 		await chatSession

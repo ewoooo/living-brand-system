@@ -89,4 +89,25 @@ describe('startAgentChatSession', () => {
 		expect(saveSession).toHaveBeenCalledTimes(1)
 		expect(saveSession.mock.calls[0][0].toUpdateData().status).toBe('completed')
 	})
+
+	it('finalize는 completed 신호 없이 끝난 턴을 종결 저장한다', async () => {
+		const session = await startAgentChatSession({ messages, user })
+
+		await session.recordStep({ status: 'running', step: toolStep })
+		await session.finalize()
+
+		expect(saveSession).toHaveBeenCalledTimes(1)
+		const data = saveSession.mock.calls[0][0].toUpdateData()
+		expect(data.status).toBe('completed')
+		expect(data.usedTools).toEqual([{ name: 'searchGuidelines', callCount: 1 }])
+	})
+
+	it('이미 종결된 세션에서 finalize는 no-op이다', async () => {
+		const session = await startAgentChatSession({ messages, user })
+
+		await session.recordStep({ status: 'completed', text: '완료 응답', step: toolStep })
+		await session.finalize()
+
+		expect(saveSession).toHaveBeenCalledTimes(1)
+	})
 })

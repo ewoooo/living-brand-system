@@ -14,6 +14,7 @@ AgentChatSession은 `running → completed/failed` 생명주기를 가지며, �
 ## 결정 사항
 
 - **쓰기 정책**: 종결 시에만 저장. 턴당 create 1회 + 종결(completed/failed) update 1회 = 2회.
+  - 스텝 상한(stopWhen 10)처럼 completed 신호 없이 스트림이 끝나는 턴은 route의 onEnd 훅이 finalize()로 종결 저장한다 — 상한 턴의 기록 유실 방지(최종 리뷰 발견 반영).
   - 수용한 트레이드오프: 서버 프로세스 강제 종료(배포·OOM·kill) 시 그 턴의 어시스턴트 응답 DB 기록이 유실되고 세션은 running으로 남는다. 사용자 화면에는 스트림이 이미 전달된 상태다. 일반 에러는 `onError`가 `fail()`로 누적분까지 저장하므로 유실이 없다.
 - **구현 형태**: 클래스 Aggregate, CheckSession 패턴(`src/features/asset-check/domain/check-session.ts`) 준용.
 - **범위**: 쓰기 축소와 객체화를 한 브랜치에서 함께. 쓰기 정책이 객체 규칙("쓰기는 종결 전이에서만")으로 표현된다.
@@ -79,7 +80,7 @@ fail(message):                                       ← route의 onError·catch
 
 ### route: `src/app/api/agent-chat/route.ts`
 
-사실상 무변경 — `onStepEnd`의 `finishReason` 기반 status 계산, `onError`/`catch`의 `fail()` 호출 모두 그대로. 서비스 내부 동작만 달라진다.
+onEnd 훅 1건 추가 — 스트림 종료 시 finalize() 호출(종결 안전망). onStepEnd의 finishReason 기반 status 계산과 onError/catch의 fail() 호출은 그대로.
 
 ## 에러 처리
 
@@ -95,7 +96,7 @@ fail(message):                                       ← route의 onError·catch
   3. 어시스턴트 텍스트·usage가 전혀 없으면 assistant 메시지를 추가하지 않음
   4. 종결 세션에 `recordStep`/`complete`/`fail` → `AgentChatSessionStateError`
   5. `fail()` 후 errorMessage·completedAt 기록 + 그 시점까지 누적된 부분 텍스트 보존
-- **기존 서비스 테스트 수정** `start-agent-chat-session.service.test.ts` — 새 계약으로 갱신: running 스텝에서는 update 미호출, completed 스텝에서 한 번만 호출.
+- **기존 서비스 테스트 수정** `start-agent-chat-session.service.test.ts` — 새 계약으로 갱신: running 스텝에서는 update 미호출, completed 스텝에서 한 번만 호출. finalize 종결 저장·no-op 테스트 2건 추가.
 - 검증: `pnpm check`, `pnpm typecheck`, `pnpm vitest run` (기존 256 + 신규, 정확한 기대 개수는 구현 계획에서 확정).
 
 ## 범위 제외
