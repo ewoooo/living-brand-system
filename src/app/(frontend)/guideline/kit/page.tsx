@@ -1,6 +1,8 @@
 import { BigImage } from '@/features/guideline/components/kit/big-image'
+import { CarouselDemo } from '@/features/guideline/components/kit/carousel'
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { ColorPalette } from '@/features/guideline/components/kit/color-palette'
+import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
 import { DoDont } from '@/features/guideline/components/kit/do-dont'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
 import { GridSystemDiagramDemo } from '@/features/guideline/components/kit/grid-system-diagram'
@@ -99,6 +101,14 @@ export default function GuidelineKitPage() {
 				</p>
 				<h1 className="type-title-2-emphasized mt-1">가이드라인 컴포넌트 키트</h1>
 			</header>
+
+			<Demo title="Carousel · 캐러셀">
+				<CarouselDemo />
+			</Demo>
+
+			<Demo title="Data Table · 대량 테이블">
+				<DataTableDemo />
+			</Demo>
 
 			<Demo title="Media + Text · 워크호스">
 				<MediaTextDemo />
