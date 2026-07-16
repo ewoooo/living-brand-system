@@ -68,6 +68,10 @@ type NavigationDocument = Pick<
 	'id' | 'title' | 'slug' | 'description' | 'parent' | 'breadcrumbs'
 >
 
+/**
+ * published 문서 목록을 장→섹션 네비게이션 트리로 조립하는 순수 함수. 외부 I/O 없음
+ * (Payload 조회는 guideline-view repository 소유). 단위 테스트 재사용을 위해 export한다.
+ */
 export function buildGuidelineNavigationChapters(documents: NavigationDocument[]) {
 	const children = new Map<number | null, NavigationDocument[]>()
 	for (const document of documents) {

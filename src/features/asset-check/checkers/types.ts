@@ -3,7 +3,7 @@
  * rule schema나 Payload 문서 타입은 여기에 들이지 않는다.
  */
 
-import type { CheckImageMediaType } from '@/features/asset-check/image-format'
+import type { CheckImageMediaType } from '@/features/asset-check/utils/image-format'
 import type { Rgb, Swatch } from './palette-match'
 
 /** 기준(expected) 대비 측정값(actual)을 분리해 실은 구조화 필드. */
@@ -13,7 +13,7 @@ export interface CheckMetric {
 }
 
 export type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
-export type CheckStatus = 'pass' | 'ok' | 'needs_review' | 'fail'
+export type CheckStatus = 'pass' | 'ok' | 'advisory' | 'needs_review' | 'fail'
 export type CheckFactValue = string | number | boolean | string[]
 export type MeasurementValue = string | number | boolean
 export type CriterionExpected = MeasurementValue | number[] | string[]
@@ -55,7 +55,7 @@ export interface ColorPairObservation {
 }
 
 export interface DeterministicEvaluationResult {
-	status: Exclude<CheckStatus, 'ok'>
+	status: Exclude<CheckStatus, 'ok' | 'advisory'>
 	fulfillment: number | null
 	comparisons: CriterionComparison[]
 	measurements?: Record<string, MeasurementValue>
@@ -84,16 +84,39 @@ interface CheckResultBase {
 }
 
 export interface AlgorithmCheckResult extends CheckResultBase {
-	status: Exclude<CheckStatus, 'ok'>
+	status: Exclude<CheckStatus, 'ok' | 'advisory'>
 }
+
+export type HeuristicCriterion =
+	| {
+			id: string
+			question: string
+			/** 미지정은 presence — 기존 저장 데이터·스냅샷 호환 */
+			kind?: 'presence'
+			expected: 'present' | 'absent'
+	  }
+	| {
+			id: string
+			question: string
+			kind: 'measure'
+			operator: 'gte' | 'lte' | 'between'
+			expected: number
+			/** between 상한 */
+			max?: number
+			unit?: string
+	  }
 
 export interface AiCheckResult extends CheckResultBase {
 	status: CheckStatus
 	observations?: {
 		criterionId: string
 		question: string
-		expected: 'present' | 'absent'
-		actual: 'present' | 'absent' | 'uncertain'
+		kind?: 'presence' | 'measure'
+		expected: 'present' | 'absent' | number
+		operator?: 'gte' | 'lte' | 'between'
+		max?: number
+		unit?: string
+		actual: 'present' | 'absent' | 'uncertain' | 'not_applicable' | number
 		confidence: number
 		reason: string
 		satisfied: boolean | null

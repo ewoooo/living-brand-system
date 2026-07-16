@@ -1,4 +1,4 @@
-import { detectCheckImageMediaType } from '@/features/asset-check/image-format'
+import { detectCheckImageMediaType } from '@/features/asset-check/utils/image-format'
 
 const MAX_IMAGE_BYTES = 20_000_000
 

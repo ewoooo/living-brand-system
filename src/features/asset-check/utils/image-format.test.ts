@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
 	detectCheckImageMediaType,
 	isSupportedCheckImageMediaType,
-} from '@/features/asset-check/image-format'
+} from '@/features/asset-check/utils/image-format'
 
 describe('check image formats', () => {
 	it('accepts JPEG, PNG, and WebP while rejecting SVG', () => {

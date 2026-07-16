@@ -73,27 +73,49 @@ describe('getPublishedTemplate', () => {
 		mockedFind.mockReset()
 	})
 
-	it('스키마에 맞는 템플릿을 돌려준다', async () => {
+	it('HTML 템플릿을 JSON보다 우선해 돌려준다', async () => {
 		mockedFind.mockResolvedValue({
 			id: 1,
-			name: '정상 템플릿',
+			name: 'Figma 템플릿',
+			html: '<div>Figma</div>',
+			width: 1280,
+			height: 720,
 			jsonTemplate: validJsonTemplate,
 		} as never)
 
-		await expect(getPublishedTemplate(1)).resolves.toMatchObject({
+		await expect(getPublishedTemplate(1)).resolves.toEqual({
+			kind: 'html',
 			id: 1,
+			name: 'Figma 템플릿',
+			html: '<div>Figma</div>',
+			width: 1280,
+			height: 720,
+		})
+	})
+
+	it('사용 가능한 HTML이 없으면 JSON 템플릿으로 폴백한다', async () => {
+		mockedFind.mockResolvedValue({
+			id: 2,
+			name: '정상 템플릿',
+			html: '<div>크기 없음</div>',
+			jsonTemplate: validJsonTemplate,
+		} as never)
+
+		await expect(getPublishedTemplate(2)).resolves.toMatchObject({
+			kind: 'json',
+			id: 2,
 			name: '정상 템플릿',
 		})
 	})
 
 	it('손으로 고치다 깨진 템플릿은 없는 것으로 처리한다', async () => {
 		mockedFind.mockResolvedValue({
-			id: 2,
+			id: 3,
 			name: '깨진 템플릿',
 			jsonTemplate: { width: 'broken' },
 		} as never)
 
-		await expect(getPublishedTemplate(2)).resolves.toBeNull()
+		await expect(getPublishedTemplate(3)).resolves.toBeNull()
 	})
 
 	it('없거나 조회에 실패하면 null로 폴백한다', async () => {

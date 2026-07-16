@@ -1,7 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
+import { type CheckScenario, filterRulesetByScenario } from '@/features/asset-check/scenarios'
+import type {
+	CheckSection,
+	RuntimeCheck,
+} from '@/features/asset-check/services/get-check-ruleset.service'
 import { toCheckAnchor } from '@/features/asset-check/utils/check-anchor'
 import { formatCheckEvidence } from '@/features/guideline/checks/format-check-evidence'
 import { CheckEvidence } from './check-evidence'
@@ -14,36 +18,43 @@ const executorLabels = {
 
 type ExecutorFilter = 'all' | keyof typeof executorLabels
 
-export function CheckCatalog({ sections }: { sections: CheckSection[] }) {
+export function CheckCatalog({
+	sections,
+	scenarios,
+}: {
+	sections: CheckSection[]
+	scenarios: CheckScenario[]
+}) {
 	const [query, setQuery] = useState('')
 	const [executor, setExecutor] = useState<ExecutorFilter>('all')
 	const normalizedQuery = query.trim().toLocaleLowerCase()
-	const totalCount = sections.reduce((count, section) => count + section.checks.length, 0)
-	const filteredSections = sections
-		.map((section) => ({
-			...section,
-			checks: section.checks.filter((check) => {
-				if (executor !== 'all' && check.executor !== executor) return false
+	const scenarioGroups = scenarios.map((scenario) => ({
+		...scenario,
+		checks: scenarioChecks(filterRulesetByScenario(sections, scenario), scenario),
+	}))
+	const totalCount = scenarioGroups.reduce((count, scenario) => count + scenario.checks.length, 0)
+	const filteredScenarios: typeof scenarioGroups = []
+	for (const scenario of scenarioGroups) {
+		const checks = scenario.checks.filter((check) => {
+			if (executor !== 'all' && check.executor !== executor) return false
 
-				const searchText = [
-					section.chapterTitle,
-					section.sectionTitle,
-					section.title,
-					check.title,
-					check.titleKo,
-					check.key,
-					formatCheckEvidence(check.evidence),
-				]
-					.filter(Boolean)
-					.join(' ')
-					.toLocaleLowerCase()
+			const searchText = [
+				scenario.title,
+				check.title,
+				check.titleKo,
+				check.key,
+				formatCheckEvidence(check.evidence),
+			]
+				.filter(Boolean)
+				.join(' ')
+				.toLocaleLowerCase()
 
-				return !normalizedQuery || searchText.includes(normalizedQuery)
-			}),
-		}))
-		.filter((section) => section.checks.length > 0)
-	const filteredCount = filteredSections.reduce(
-		(count, section) => count + section.checks.length,
+			return !normalizedQuery || searchText.includes(normalizedQuery)
+		})
+		if (checks.length > 0) filteredScenarios.push({ ...scenario, checks })
+	}
+	const filteredCount = filteredScenarios.reduce(
+		(count, scenario) => count + scenario.checks.length,
 		0,
 	)
 
@@ -82,17 +93,14 @@ export function CheckCatalog({ sections }: { sections: CheckSection[] }) {
 				필터 결과 {filteredCount}개 / 전체 {totalCount}개
 			</p>
 			<div className="divide-y divide-border border-t">
-				{filteredSections.map((section) => (
-					<section key={section.slug} id={section.slug} className="scroll-mt-16 py-10">
-						<p className="type-body mb-2 text-foreground-muted">
-							{section.chapterTitle} / {section.sectionTitle}
-						</p>
-						<h2 className="type-title-1">{section.title}</h2>
+				{filteredScenarios.map((scenario) => (
+					<section key={scenario.key} id={scenario.key} className="scroll-mt-16 py-10">
+						<h2 className="type-title-1">{scenario.title}</h2>
 						<div className="mt-6 divide-y divide-border">
-							{section.checks.map((check) => (
+							{scenario.checks.map((check) => (
 								<article
-									key={`${section.slug}:${check.key}`}
-									id={toCheckAnchor(section.slug, check.key)}
+									key={`${scenario.key}:${check.key}`}
+									id={toCheckAnchor(scenario.key, check.key)}
 									className="grid scroll-mt-16 gap-4 py-6 md:grid-cols-[minmax(14rem,20rem)_minmax(0,1fr)] md:gap-8"
 								>
 									<div className="min-w-0">
@@ -102,17 +110,10 @@ export function CheckCatalog({ sections }: { sections: CheckSection[] }) {
 										</code>
 									</div>
 									<div className="type-body flex min-w-0 max-w-[80ch] flex-col gap-3 break-words">
-										<details className="rounded-md border">
-											<summary className="type-body-emphasized cursor-pointer px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2">
-												검수 근거
-											</summary>
-											<div className="border-t px-3 py-3">
-												<CheckEvidence
-													evidence={check.evidence}
-													referenceAssets={check.referenceAssets}
-												/>
-											</div>
-										</details>
+										<CheckEvidence
+											evidence={check.evidence}
+											referenceAssets={check.referenceAssets}
+										/>
 										<p className="type-body text-foreground-muted">
 											{executorLabels[check.executor]}
 											{check.implemented ? '' : ' / 미구현'}
@@ -132,6 +133,16 @@ export function CheckCatalog({ sections }: { sections: CheckSection[] }) {
 			</div>
 		</div>
 	)
+}
+
+function scenarioChecks(sections: CheckSection[], scenario: CheckScenario): RuntimeCheck[] {
+	const byKey = new Map(
+		sections.flatMap((section) => section.checks.map((check) => [check.key, check])),
+	)
+	return scenario.checkKeys.flatMap((key) => {
+		const check = byKey.get(key)
+		return check ? [check] : []
+	})
 }
 
 function CheckMessages({ messages }: { messages: CheckSection['checks'][number]['messages'] }) {

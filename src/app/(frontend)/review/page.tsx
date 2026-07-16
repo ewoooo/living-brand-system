@@ -2,6 +2,7 @@ import { CheckResultSummary } from '@/features/asset-check/components/check-resu
 import { CheckSections } from '@/features/asset-check/components/check-tables'
 import { ImageUploadCarousel } from '@/features/asset-check/components/image-upload-carousel'
 import { getCheckRuleset } from '@/features/asset-check/services/get-check-ruleset.service'
+import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 
 export default async function ReviewPage() {
 	const sections = await getCheckRuleset()
@@ -9,10 +10,8 @@ export default async function ReviewPage() {
 	return (
 		<div className="flex w-full max-w-[1250px] flex-col px-8 py-10">
 			<header className="mb-8">
-				<hgroup className="mb-4">
-					<h2 className="type-title-2 pb-1 text-foreground-muted">검사하기</h2>
-					<h1 className="type-large-title">에셋 품질 검수</h1>
-				</hgroup>
+				<GuidelineHeader title="Check Asset" />
+
 				<p className="mb-4 text-foreground-muted">
 					제작한 디자인 산출물을 업로드하면 브랜드 가이드라인 기준에 맞는지 자동으로
 					검수합니다. <wbr /> 색·로고·명함 등 항목별로 통과·미통과를 한눈에 확인하고,

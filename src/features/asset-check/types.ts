@@ -1,4 +1,5 @@
 import type { CheckResult } from '@/features/asset-check/checkers/types'
+import type { CheckScenario } from '@/features/asset-check/scenarios'
 import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { CheckSession } from '@/payload-types'
 
@@ -31,6 +32,7 @@ export interface CheckImage {
 }
 
 export interface CheckImageContextValue {
+	scenarios: CheckScenario[]
 	images: CheckImage[]
 	selectedId: string | null
 	selected: CheckImage | null

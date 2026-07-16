@@ -1,5 +1,10 @@
 import type { CheckResult } from '@/features/asset-check/checkers/types'
-import { filterRulesetByScenario, getCheckScenario } from '@/features/asset-check/scenarios'
+import { checkDisplayStatus } from '@/features/asset-check/components/check-status'
+import {
+	type CheckScenario,
+	filterRulesetByScenario,
+	getCheckScenario,
+} from '@/features/asset-check/scenarios'
 import type {
 	CheckSection,
 	RuntimeCheck,
@@ -9,7 +14,7 @@ import type { CheckImage } from '@/features/asset-check/types'
 export interface CheckReviewRow {
 	check: RuntimeCheck
 	rowId: string
-	sectionLabel: string | null
+	scenarioLabel: string | null
 	appliesTo: string[]
 	guidelineHref: string
 	anchorId: string | null
@@ -22,6 +27,8 @@ export interface CheckReviewSummary {
 	pass: number
 	ok: number
 	fail: number
+	advisory: number
+	notApplicable: number
 	pendingManualCheck: number
 }
 
@@ -38,19 +45,22 @@ type MutableCheckRow = CheckReviewRow & { appliesToSet: Set<string> }
  */
 export function buildCheckReviewView({
 	sections,
+	scenarios,
 	scenarioKey,
 	selected,
 	showFailOnly,
 }: {
 	sections: CheckSection[]
+	scenarios: CheckScenario[]
 	scenarioKey: string
 	selected: CheckImage | null
 	showFailOnly: boolean
 }): CheckReviewView {
 	const results = selected?.results
 	const reviewScenarioKey = selected?.scenarioKey ?? scenarioKey
-	const visibleSections = filterRulesetByScenario(sections, getCheckScenario(reviewScenarioKey))
-	const allRows = buildRows({ visibleSections, selected })
+	const scenario = getCheckScenario(scenarios, reviewScenarioKey)
+	const visibleSections = filterRulesetByScenario(sections, scenario)
+	const allRows = buildRows({ visibleSections, selected, scenario })
 	const summary = buildSummary(allRows, results)
 	const rows =
 		showFailOnly && results
@@ -61,14 +71,23 @@ export function buildCheckReviewView({
 }
 
 function buildSummary(rows: CheckReviewRow[], results: CheckImage['results']): CheckReviewSummary {
-	const summary = { pass: 0, ok: 0, fail: 0, pendingManualCheck: 0 }
+	const summary = {
+		pass: 0,
+		ok: 0,
+		fail: 0,
+		advisory: 0,
+		notApplicable: 0,
+		pendingManualCheck: 0,
+	}
 	if (!results) return summary
 
 	for (const row of rows) {
-		const status = row.outcome?.rawResult.status
+		const status = row.outcome ? checkDisplayStatus(row.outcome.rawResult) : undefined
 		if (status === 'pass') summary.pass++
 		else if (status === 'ok') summary.ok++
 		else if (status === 'fail') summary.fail++
+		else if (status === 'advisory') summary.advisory++
+		else if (status === 'not_applicable') summary.notApplicable++
 		else summary.pendingManualCheck++
 	}
 
@@ -78,15 +97,15 @@ function buildSummary(rows: CheckReviewRow[], results: CheckImage['results']): C
 function buildRows({
 	visibleSections,
 	selected,
+	scenario,
 }: {
 	visibleSections: CheckSection[]
 	selected: CheckImage | null
+	scenario: CheckScenario
 }): CheckReviewRow[] {
 	const results = selected?.results
 	const snapshotByKey = new Map(selected?.rulesetSnapshot?.map((check) => [check.key, check]))
-	const rows: MutableCheckRow[] = []
 	const rowByCheckKey = new Map<string, MutableCheckRow>()
-	const seenSections = new Set<string>()
 
 	for (const section of visibleSections) {
 		for (const currentCheck of section.checks) {
@@ -104,28 +123,37 @@ function buildRows({
 			const status = outcome?.rawResult.status
 			if (!check.implemented) continue
 
-			const first = !seenSections.has(section.slug)
-			seenSections.add(section.slug)
 			const row = {
 				check,
-				rowId: `${section.slug}:${check.key}`,
-				sectionLabel: first ? section.title : null,
+				rowId: `${scenario.key}:${check.key}`,
+				scenarioLabel: null,
 				appliesTo: [section.title],
 				appliesToSet: new Set([section.title]),
 				guidelineHref: toGuidelineHref(section),
-				anchorId: first ? section.slug : null,
+				anchorId: null,
 				outcome,
 				inProgress:
 					selected?.status === 'running' &&
 					selected.pendingCheckKeys?.includes(check.key) === true,
 				detail: status !== 'pass' ? (outcome?.message ?? null) : null,
 			}
-			rows.push(row)
 			rowByCheckKey.set(check.key, row)
 		}
 	}
 
-	return rows.map(({ appliesToSet: _appliesToSet, ...row }) => row)
+	const orderedRows: CheckReviewRow[] = []
+	for (const key of scenario.checkKeys) {
+		const current = rowByCheckKey.get(key)
+		if (!current) continue
+		const { appliesToSet: _appliesToSet, ...row } = current
+		const first = orderedRows.length === 0
+		orderedRows.push({
+			...row,
+			scenarioLabel: first ? scenario.title : null,
+			anchorId: first ? scenario.key : null,
+		})
+	}
+	return orderedRows
 }
 
 function toGuidelineHref(section: CheckSection) {

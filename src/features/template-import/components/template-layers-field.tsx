@@ -2,17 +2,19 @@
 
 import { Button, Popup, toast, useForm, useFormFields } from '@payloadcms/ui'
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
+import { generateImages } from '@/features/image-generation/services/generate-image.client'
 import {
 	composeTemplateHtml,
 	type TemplateOverride,
 	type TemplateOverrides,
 } from '@/features/template-import/utils/compose-template-html'
-import { generateOneText } from '@/features/text-generation/generate-one-text'
+import { generateOneText } from '@/features/text-generation/services/generate-text.client'
+import { VectorLayerEditor } from './vector-layer-editor'
 
 /**
  * Templates 편집 폼(Admin)의 워크스페이스 — 렌더 캔버스 + 레이어 패널 + 값 편집을 한 곳에서 다룬다.
  * 레이아웃: [캔버스(가변폭·중앙정렬) | 레이어 목록(고정폭)] → divider → 선택 레이어 값 편집.
- * 편집은 Figma가 아니라 "값 교체"만: 텍스트 내용·프레임 배경 이미지. 레이아웃/위치는 Figma가 소유한다.
+ * 편집은 Figma가 아니라 "값 교체"만: 텍스트·프레임 배경·벡터 자산/맞춤/색상. 레이아웃/위치는 Figma가 소유한다.
  */
 interface LayerRow {
 	id: string
@@ -20,6 +22,7 @@ interface LayerRow {
 	name: string
 	figmaType: string
 	isText: boolean
+	isVector: boolean
 	text: string
 }
 
@@ -43,6 +46,7 @@ const TYPE_LABEL: Record<string, string> = {
 	BOOLEAN_OPERATION: '불리언',
 }
 const typeLabel = (t: string) => TYPE_LABEL[t] ?? t
+const VECTOR_TYPES = new Set(['VECTOR', 'BOOLEAN_OPERATION', 'STAR', 'LINE', 'ELLIPSE', 'POLYGON'])
 
 // 배경 설정 트리거 버튼 공통 스타일(에셋 가져오기 · AI 생성).
 const TRIGGER_STYLE: CSSProperties = {
@@ -73,6 +77,7 @@ function parseLayers(html: string): LayerRow[] {
 			name: el.getAttribute('data-name') || typeLabel(figmaType),
 			figmaType,
 			isText,
+			isVector: VECTOR_TYPES.has(figmaType),
 			text: isText ? (el.textContent ?? '') : '',
 		})
 		for (const child of Array.from(el.children)) walk(child, depth + 1)
@@ -143,13 +148,8 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 		setLoading(true)
 		try {
 			// sceneId:'free' — 브랜드 제품 씬 합성 없이 프롬프트 원문대로. 배경은 제품샷이 아니라 사용자가 묘사한 그대로여야 한다.
-			const response = await fetch('/api/image', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ prompt: trimmed, count: 1, sceneId: 'free' }),
-			})
-			const data = (await response.json().catch(() => null)) as { images?: string[] } | null
-			const src = data?.images?.[0]
+			const { images } = await generateImages({ prompt: trimmed, count: 1, sceneId: 'free' })
+			const src = images[0]
 			if (src) onApply(src)
 			else toast.error('이미지 생성 실패 — 잠시 후 다시 시도하세요.')
 		} catch {
@@ -458,11 +458,22 @@ export default function TemplateLayersField() {
 				</div>
 			)}
 
-			{selected && !selected.isText && selected.figmaType !== 'FRAME' && (
-				<p style={{ fontSize: 12, color: 'var(--theme-elevation-500)' }}>
-					{typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.
-				</p>
+			{selected?.isVector && (
+				<VectorLayerEditor
+					name={selected.name}
+					override={overrides[selected.id] ?? {}}
+					onChange={commitOverride}
+				/>
 			)}
+
+			{selected &&
+				!selected.isText &&
+				!selected.isVector &&
+				selected.figmaType !== 'FRAME' && (
+					<p style={{ fontSize: 12, color: 'var(--theme-elevation-500)' }}>
+						{typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.
+					</p>
+				)}
 		</div>
 	)
 }

@@ -45,6 +45,60 @@ describe('getCheckRuleset', () => {
 			},
 		})
 	})
+
+	it('measure criterion을 HeuristicCriterion으로 매핑하고 불완전 행은 버린다', async () => {
+		vi.mocked(getCheckSourceDocuments).mockResolvedValue({
+			documents: [
+				{
+					id: 1,
+					title: 'Primary Logo',
+					slug: 'primary-logo',
+					displayOrder: 1,
+					breadcrumbs: [],
+					blocks: [],
+					checks: [
+						{
+							key: 'logo.share',
+							title: 'Logo Share',
+							checker: {
+								key: 'logo-share',
+								executor: 'heuristic',
+								model: 'gpt-4o',
+							},
+							criteria: [
+								{
+									id: 'c1',
+									question: '로고 점유율(%)은?',
+									kind: 'measure',
+									operator: 'gte',
+									expectedValue: 5,
+									unit: '%',
+								},
+								{ id: 'c2', question: '불완전 수치형', kind: 'measure' },
+								{ id: 'c3', question: '관찰형', expected: 'present' },
+							],
+						},
+					],
+				},
+			],
+		} as never)
+
+		const sections = await getCheckRuleset()
+		const check = sections[0]?.checks[0]
+
+		expect(check?.heuristicCriteria).toEqual([
+			{
+				id: 'c1',
+				question: '로고 점유율(%)은?',
+				kind: 'measure',
+				operator: 'gte',
+				expected: 5,
+				max: undefined,
+				unit: '%',
+			},
+			{ id: 'c3', question: '관찰형', expected: 'present' },
+		])
+	})
 })
 
 describe('toRuntimeCheckMessages', () => {

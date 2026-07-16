@@ -1,5 +1,9 @@
 import { generateText, Output } from 'ai'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+	measureObservationSchema,
+	presenceObservationSchema,
+} from '@/features/asset-check/checkers/heuristic-evaluator'
 import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
 
 vi.mock('ai', () => ({
@@ -41,6 +45,21 @@ const checks: RuntimeCheck[] = [
 		messages: {},
 	},
 ]
+
+const advisoryCheck: RuntimeCheck = {
+	key: 'imagery.advice',
+	title: 'Imagery advice',
+	titleKo: '이미지 디자인 조언',
+	source: { documentId: 12 },
+	checker: { key: 'design-advisor', type: 'manual' },
+	executor: 'manual',
+	model: 'rule-spec-model',
+	prompt: '사진 무드 관점에서 디자이너처럼 개선 조언을 작성한다.',
+	implemented: true,
+	evidence: '자연스러운 일상의 순간',
+	referenceAssets: [],
+	messages: {},
+}
 
 describe('runAiCheck', () => {
 	beforeEach(() => {
@@ -124,6 +143,7 @@ describe('runAiCheck', () => {
 			checks: [
 				{
 					key: 'imagery.mood',
+					kind: 'criteria',
 					titleEn: 'Imagery mood',
 					titleKo: '이미지 무드',
 					source: { documentId: 12 },
@@ -137,6 +157,7 @@ describe('runAiCheck', () => {
 						{
 							id: 'natural-expression',
 							question: '인물의 표정이 자연스러운가?',
+							kind: 'presence',
 						},
 					],
 					referenceAssets: [],
@@ -184,6 +205,7 @@ describe('runAiCheck', () => {
 
 		expect(result).toEqual({
 			observations: {},
+			advices: {},
 			failure: { detail: 'AI 평가 실패', reasonCode: 'ai_request_failed' },
 		})
 	})
@@ -212,5 +234,224 @@ describe('runAiCheck', () => {
 		expect(content[0]?.text).toContain(
 			'Apply heuristicPrompt and checkerPrompt as additional observation context',
 		)
+	})
+
+	it('advisory 체크는 advice 스키마로 조언 문단을 수집한다', async () => {
+		vi.mocked(generateText).mockResolvedValue({
+			output: {
+				results: {
+					'imagery.mood': {
+						observations: {
+							'natural-expression': {
+								value: 'present',
+								confidence: 80,
+								reason: '자연스러운 표정이 관측됩니다.',
+							},
+						},
+					},
+					'imagery.advice': { advice: '자연광을 더 살리면 무드가 개선됩니다.' },
+				},
+			},
+			usage: {
+				inputTokens: 100,
+				inputTokenDetails: { noCacheTokens: 100, cacheReadTokens: 0, cacheWriteTokens: 0 },
+				outputTokens: 20,
+				outputTokenDetails: { textTokens: 20, reasoningTokens: 0 },
+				totalTokens: 120,
+				raw: {},
+			},
+		} as unknown as Awaited<ReturnType<typeof generateText>>)
+
+		const { runAiCheck } = await import(
+			'@/features/asset-check/repositories/ai-check.agent.repository'
+		)
+		const result = await runAiCheck([...checks, advisoryCheck], {
+			image: { data: Buffer.from('png'), mediaType: 'image/png' },
+			pixels: [],
+			palette: [],
+		})
+
+		expect(result.advices).toEqual({
+			'imagery.advice': '자연광을 더 살리면 무드가 개선됩니다.',
+		})
+		expect(result.observations).toEqual({
+			'imagery.mood': {
+				'natural-expression': {
+					value: 'present',
+					confidence: 80,
+					reason: '자연스러운 표정이 관측됩니다.',
+				},
+			},
+		})
+
+		const request = vi.mocked(generateText).mock.calls[0]?.[0] as {
+			messages?: Array<{ content?: Array<{ text?: string }> }>
+		}
+		const content = request.messages?.[0]?.content ?? []
+		const jsonText = content.find((part) => part.text?.startsWith('{"checks":'))?.text
+		const serialized = JSON.parse(jsonText ?? '{}') as {
+			checks: { key: string; kind: string }[]
+		}
+		expect(serialized.checks.find((entry) => entry.key === 'imagery.advice')?.kind).toBe(
+			'advisory',
+		)
+		expect(serialized.checks.find((entry) => entry.key === 'imagery.mood')?.kind).toBe(
+			'criteria',
+		)
+
+		const schema = (
+			vi.mocked(Output.object).mock.calls.at(-1)?.[0] as {
+				schema: { safeParse: (value: unknown) => { success: boolean } }
+			}
+		).schema
+		expect(
+			schema.safeParse({
+				results: {
+					'imagery.mood': {
+						observations: {
+							'natural-expression': {
+								value: 'present',
+								confidence: 80,
+								reason: 'ok',
+							},
+						},
+					},
+					'imagery.advice': { advice: '조언 문단' },
+				},
+			}).success,
+		).toBe(true)
+		expect(
+			schema.safeParse({
+				results: {
+					'imagery.mood': {
+						observations: {
+							'natural-expression': {
+								value: 'present',
+								confidence: 80,
+								reason: 'ok',
+							},
+						},
+					},
+					'imagery.advice': { advice: '' },
+				},
+			}).success,
+		).toBe(false)
+	})
+
+	it('advisory 체크는 criteria가 없어도 invalid_criteria로 떨어지지 않는다', async () => {
+		vi.mocked(generateText).mockResolvedValue({
+			output: { results: { 'imagery.advice': { advice: '조언 문단' } } },
+			usage: {
+				inputTokens: 10,
+				inputTokenDetails: { noCacheTokens: 10, cacheReadTokens: 0, cacheWriteTokens: 0 },
+				outputTokens: 5,
+				outputTokenDetails: { textTokens: 5, reasoningTokens: 0 },
+				totalTokens: 15,
+				raw: {},
+			},
+		} as unknown as Awaited<ReturnType<typeof generateText>>)
+		const { runAiCheck } = await import(
+			'@/features/asset-check/repositories/ai-check.agent.repository'
+		)
+
+		const result = await runAiCheck([advisoryCheck], {
+			image: { data: Buffer.from('png'), mediaType: 'image/png' },
+			pixels: [],
+			palette: [],
+		})
+
+		expect(result.failure).toBeUndefined()
+		expect(result.advices['imagery.advice']).toBe('조언 문단')
+	})
+
+	it('measure criterion은 숫자 관측 스키마로, presence는 enum 스키마로 조립한다', async () => {
+		const measureCheck: RuntimeCheck = {
+			...checks[0],
+			key: 'logo.size.minimum',
+			heuristicCriteria: [
+				{
+					id: 'logo-area',
+					question: '로고 점유 면적 비율(%)은?',
+					kind: 'measure',
+					operator: 'gte',
+					expected: 5,
+					unit: '%',
+				},
+				{ id: 'legible', question: '로고가 판독 가능한가?', expected: 'present' },
+			],
+		}
+		vi.mocked(generateText).mockResolvedValue({
+			output: {
+				results: {
+					'logo.size.minimum': {
+						observations: {
+							'logo-area': { value: 12, confidence: 80, reason: '약 12%' },
+							legible: { value: 'present', confidence: 90, reason: '선명함' },
+						},
+					},
+				},
+			},
+			usage: {
+				inputTokens: 10,
+				inputTokenDetails: { noCacheTokens: 10, cacheReadTokens: 0, cacheWriteTokens: 0 },
+				outputTokens: 5,
+				outputTokenDetails: { textTokens: 5, reasoningTokens: 0 },
+				totalTokens: 15,
+				raw: {},
+			},
+		} as unknown as Awaited<ReturnType<typeof generateText>>)
+
+		const { runAiCheck } = await import(
+			'@/features/asset-check/repositories/ai-check.agent.repository'
+		)
+		const result = await runAiCheck([measureCheck], {
+			image: { data: Buffer.from('png'), mediaType: 'image/png' },
+			pixels: [],
+			palette: [],
+		})
+
+		expect(result.failure).toBeUndefined()
+		expect(result.observations['logo.size.minimum']?.['logo-area']?.value).toBe(12)
+
+		const request = vi.mocked(generateText).mock.calls[0]?.[0] as {
+			messages?: Array<{ content?: Array<{ text?: string }> }>
+		}
+		const content = request.messages?.[0]?.content ?? []
+		const jsonText = content.find((part) => part.text?.startsWith('{"checks":'))?.text
+		const serialized = JSON.parse(jsonText ?? '{}') as {
+			checks: { criteria: Record<string, unknown>[] }[]
+		}
+		// AI에 전달된 criteria JSON은 기대값·연산에 블라인드
+		expect(serialized.checks[0]?.criteria[0]).toEqual({
+			id: 'logo-area',
+			question: '로고 점유 면적 비율(%)은?',
+			kind: 'measure',
+			unit: '%',
+		})
+		expect(serialized.checks[0]?.criteria[1]).toEqual({
+			id: 'legible',
+			question: '로고가 판독 가능한가?',
+			kind: 'presence',
+		})
+	})
+})
+
+describe('heuristic observation 스키마', () => {
+	it('kind별 관측값 스키마를 강제한다', () => {
+		expect(
+			presenceObservationSchema.safeParse({
+				value: 'not_applicable',
+				confidence: 95,
+				reason: '대상 없음',
+			}).success,
+		).toBe(true)
+		expect(
+			measureObservationSchema.safeParse({ value: 12, confidence: 80, reason: '12%' })
+				.success,
+		).toBe(true)
+		expect(
+			measureObservationSchema.safeParse({ value: 'present', confidence: 80, reason: 'x' })
+				.success,
+		).toBe(false)
 	})
 })

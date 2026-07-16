@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { generateOneText } from '../generate-one-text'
+import { generateOneText } from '../services/generate-text.client'
 
 /**
  * 대상 텍스트박스 하나를 AI로 채우는 최소 위젯: 프롬프트 입력 + 생성 버튼.
