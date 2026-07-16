@@ -132,16 +132,16 @@ export interface Config {
   blocks: {};
   collections: {
     'guideline-documents': GuidelineDocument;
-    'check-scenarios': CheckScenario;
-    'rule-checkers': RuleChecker;
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
     'brand-typefaces': BrandTypeface;
     'application-images': ApplicationImage;
-    'template-categories': TemplateCategory;
     templates: Template;
+    'template-categories': TemplateCategory;
     'template-assets': TemplateAsset;
     plugins: Plugin;
+    'check-scenarios': CheckScenario;
+    'rule-checkers': RuleChecker;
     'check-sessions': CheckSession;
     'agent-chat-sessions': AgentChatSession;
     'agent-skills': AgentSkill;
@@ -161,16 +161,16 @@ export interface Config {
   };
   collectionsSelect: {
     'guideline-documents': GuidelineDocumentsSelect<false> | GuidelineDocumentsSelect<true>;
-    'check-scenarios': CheckScenariosSelect<false> | CheckScenariosSelect<true>;
-    'rule-checkers': RuleCheckersSelect<false> | RuleCheckersSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
-    'template-categories': TemplateCategoriesSelect<false> | TemplateCategoriesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
+    'template-categories': TemplateCategoriesSelect<false> | TemplateCategoriesSelect<true>;
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
     plugins: PluginsSelect<false> | PluginsSelect<true>;
+    'check-scenarios': CheckScenariosSelect<false> | CheckScenariosSelect<true>;
+    'rule-checkers': RuleCheckersSelect<false> | RuleCheckersSelect<true>;
     'check-sessions': CheckSessionsSelect<false> | CheckSessionsSelect<true>;
     'agent-chat-sessions': AgentChatSessionsSelect<false> | AgentChatSessionsSelect<true>;
     'agent-skills': AgentSkillsSelect<false> | AgentSkillsSelect<true>;
@@ -520,41 +520,6 @@ export interface DoDontBlock {
   blockType: 'doDont';
 }
 /**
- * 검수 목적에 맞게 실행할 Check를 조립하고 발행합니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "check-scenarios".
- */
-export interface CheckScenario {
-  id: number;
-  title: string;
-  description?: string | null;
-  /**
-   * 최초 저장 후 변경되지 않는 CheckScenario 식별자입니다.
-   */
-  key: string;
-  /**
-   * 발행된 Guideline Check 중 이 시나리오에서 실행할 항목입니다.
-   */
-  checkKeys:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
-   * 발행된 시나리오를 신규 검수 대상에서 제외할 때 사용합니다.
-   */
-  archived?: boolean | null;
-  hasBeenPublished: boolean;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brand-logos".
  */
@@ -596,39 +561,6 @@ export interface BrandTypeface {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
-}
-/**
- * Create 화면 사이드바에 표시할 템플릿 카테고리입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "template-categories".
- */
-export interface TemplateCategory {
-  id: number;
-  /**
-   * 사이드바 카테고리 제목으로 표시됩니다.
-   */
-  title: string;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  /**
-   * Create 화면에서 카테고리를 설명하는 짧은 문구입니다. (선택)
-   */
-  description?: string | null;
-  templates?: {
-    docs?: (number | Template)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  /**
-   * 숫자가 낮을수록 사이드바에서 먼저 표시됩니다.
-   */
-  displayOrder: number;
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -699,6 +631,39 @@ export interface Template {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Create 화면 사이드바에 표시할 템플릿 카테고리입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-categories".
+ */
+export interface TemplateCategory {
+  id: number;
+  /**
+   * 사이드바 카테고리 제목으로 표시됩니다.
+   */
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  /**
+   * Create 화면에서 카테고리를 설명하는 짧은 문구입니다. (선택)
+   */
+  description?: string | null;
+  templates?: {
+    docs?: (number | Template)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * 숫자가 낮을수록 사이드바에서 먼저 표시됩니다.
+   */
+  displayOrder: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * 템플릿 임포트 시 저장되는 이미지 조각입니다. 직접 편집하지 않습니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -731,6 +696,41 @@ export interface Plugin {
   name: string;
   description?: string | null;
   pluginType: 'generator' | 'checker';
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * 검수 목적에 맞게 실행할 Check를 조립하고 발행합니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "check-scenarios".
+ */
+export interface CheckScenario {
+  id: number;
+  title: string;
+  description?: string | null;
+  /**
+   * 최초 저장 후 변경되지 않는 CheckScenario 식별자입니다.
+   */
+  key: string;
+  /**
+   * 발행된 Guideline Check 중 이 시나리오에서 실행할 항목입니다.
+   */
+  checkKeys:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * 발행된 시나리오를 신규 검수 대상에서 제외할 때 사용합니다.
+   */
+  archived?: boolean | null;
+  hasBeenPublished: boolean;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1205,14 +1205,6 @@ export interface PayloadLockedDocument {
         value: number | GuidelineDocument;
       } | null)
     | ({
-        relationTo: 'check-scenarios';
-        value: number | CheckScenario;
-      } | null)
-    | ({
-        relationTo: 'rule-checkers';
-        value: number | RuleChecker;
-      } | null)
-    | ({
         relationTo: 'brand-logos';
         value: number | BrandLogo;
       } | null)
@@ -1229,12 +1221,12 @@ export interface PayloadLockedDocument {
         value: number | ApplicationImage;
       } | null)
     | ({
-        relationTo: 'template-categories';
-        value: number | TemplateCategory;
-      } | null)
-    | ({
         relationTo: 'templates';
         value: number | Template;
+      } | null)
+    | ({
+        relationTo: 'template-categories';
+        value: number | TemplateCategory;
       } | null)
     | ({
         relationTo: 'template-assets';
@@ -1243,6 +1235,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'plugins';
         value: number | Plugin;
+      } | null)
+    | ({
+        relationTo: 'check-scenarios';
+        value: number | CheckScenario;
+      } | null)
+    | ({
+        relationTo: 'rule-checkers';
+        value: number | RuleChecker;
       } | null)
     | ({
         relationTo: 'check-sessions';
@@ -1462,36 +1462,6 @@ export interface DoDontBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "check-scenarios_select".
- */
-export interface CheckScenariosSelect<T extends boolean = true> {
-  title?: T;
-  description?: T;
-  key?: T;
-  checkKeys?: T;
-  archived?: T;
-  hasBeenPublished?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "rule-checkers_select".
- */
-export interface RuleCheckersSelect<T extends boolean = true> {
-  name?: T;
-  key?: T;
-  executor?: T;
-  checkerKey?: T;
-  model?: T;
-  prompt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brand-logos_select".
  */
 export interface BrandLogosSelect<T extends boolean = true> {
@@ -1586,20 +1556,6 @@ export interface ApplicationImagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "template-categories_select".
- */
-export interface TemplateCategoriesSelect<T extends boolean = true> {
-  title?: T;
-  generateSlug?: T;
-  slug?: T;
-  description?: T;
-  templates?: T;
-  displayOrder?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "templates_select".
  */
 export interface TemplatesSelect<T extends boolean = true> {
@@ -1632,6 +1588,20 @@ export interface TemplatesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "template-categories_select".
+ */
+export interface TemplateCategoriesSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  description?: T;
+  templates?: T;
+  displayOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "template-assets_select".
  */
 export interface TemplateAssetsSelect<T extends boolean = true> {
@@ -1656,6 +1626,36 @@ export interface PluginsSelect<T extends boolean = true> {
   name?: T;
   description?: T;
   pluginType?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "check-scenarios_select".
+ */
+export interface CheckScenariosSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  key?: T;
+  checkKeys?: T;
+  archived?: T;
+  hasBeenPublished?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rule-checkers_select".
+ */
+export interface RuleCheckersSelect<T extends boolean = true> {
+  name?: T;
+  key?: T;
+  executor?: T;
+  checkerKey?: T;
+  model?: T;
+  prompt?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2084,14 +2084,6 @@ export interface TaskSchedulePublish {
           value: number | GuidelineDocument;
         } | null)
       | ({
-          relationTo: 'check-scenarios';
-          value: number | CheckScenario;
-        } | null)
-      | ({
-          relationTo: 'rule-checkers';
-          value: number | RuleChecker;
-        } | null)
-      | ({
           relationTo: 'brand-logos';
           value: number | BrandLogo;
         } | null)
@@ -2114,6 +2106,14 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'plugins';
           value: number | Plugin;
+        } | null)
+      | ({
+          relationTo: 'check-scenarios';
+          value: number | CheckScenario;
+        } | null)
+      | ({
+          relationTo: 'rule-checkers';
+          value: number | RuleChecker;
         } | null);
     global?: 'guideline' | null;
     user?: (number | null) | User;
