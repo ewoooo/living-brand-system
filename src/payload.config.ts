@@ -35,9 +35,11 @@ import { env } from './env'
 import { collectGuidelineCheckSources } from './features/guideline/checks/collect-guideline-check-sources'
 import { formatCheckEvidence } from './features/guideline/checks/format-check-evidence'
 import { findPublishedUnifiedGuidelineCheckDocuments } from './features/guideline/repositories/published-guideline-checks.payload.repository'
+import { buildGuidelineSearchText } from './features/guideline/utils/guideline-search-text'
 import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
 import { adminOnly, authenticated, managerOrAdmin } from './lib/auth'
+import type { GuidelineDocument } from './payload-types'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -318,6 +320,10 @@ export default buildConfig({
 		} as never),
 		searchPlugin({
 			collections: ['guideline-documents'],
+			beforeSync: ({ originalDoc, searchDoc }) => ({
+				...searchDoc,
+				searchText: buildGuidelineSearchText(originalDoc as GuidelineDocument),
+			}),
 			defaultPriorities: {
 				'guideline-documents': 20,
 			},
@@ -325,6 +331,15 @@ export default buildConfig({
 				access: {
 					read: ({ req }) => Boolean(req.user),
 				},
+				fields: ({ defaultFields }) => [
+					...defaultFields,
+					{
+						name: 'searchText',
+						type: 'textarea',
+						localized: true,
+						admin: { hidden: true },
+					},
+				],
 			},
 		}),
 		s3Storage({

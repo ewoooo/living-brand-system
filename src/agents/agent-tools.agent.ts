@@ -57,13 +57,15 @@ export function getAgentTools() {
 			},
 		}),
 		listGuidelineDocuments: tool({
-			description: 'List published brand guideline documents available to read.',
+			description:
+				'List published brand guideline documents available to read. Use after searchGuidelines still returns no useful result with shorter core terms.',
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
 			execute: (_input, { context }) => listAgentGuidelineDocuments(context.user),
 		}),
 		searchGuidelines: tool({
-			description: 'Search published brand guideline documents.',
+			description:
+				'Search published brand guideline titles, paths, descriptions, body content, and checks. Retry with shorter core terms when no useful result is returned.',
 			inputSchema: z.object({
 				query: z.string().min(1).max(120),
 			}),
@@ -71,7 +73,8 @@ export function getAgentTools() {
 			execute: ({ query }, { context }) => searchAgentGuidelines(context.user, { query }),
 		}),
 		readGuidelineDocument: tool({
-			description: 'Read a published guideline document returned by searchGuidelines.',
+			description:
+				'Read a published guideline document returned by searchGuidelines or listGuidelineDocuments.',
 			inputSchema: z.object({
 				collection: z.literal('guideline-documents'),
 				id: z.string().min(1),

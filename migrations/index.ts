@@ -58,6 +58,7 @@ import * as migration_20260715_114800_extend_dodont_block from './20260715_11480
 import * as migration_20260715_120000_add_check_scenarios from './20260715_120000_add_check_scenarios';
 import * as migration_20260715_120000_image_ratio_contract from './20260715_120000_image_ratio_contract';
 import * as migration_20260715_120500_image_ratio_blocks from './20260715_120500_image_ratio_blocks';
+import * as migration_20260716_013525_guideline_search_recall from './20260716_013525_guideline_search_recall';
 
 export const migrations = [
   {
@@ -359,5 +360,10 @@ export const migrations = [
     up: migration_20260715_120500_image_ratio_blocks.up,
     down: migration_20260715_120500_image_ratio_blocks.down,
     name: '20260715_120500_image_ratio_blocks',
+  },
+  {
+    up: migration_20260716_013525_guideline_search_recall.up,
+    down: migration_20260716_013525_guideline_search_recall.down,
+    name: '20260716_013525_guideline_search_recall',
   },
 ];

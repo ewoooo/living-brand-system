@@ -104,6 +104,7 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 	let hasToolPart = false
 	let hasPendingToolPart = false
 	let hasCheck = false
+	let hasGuidelineSearch = false
 	let hasTemplateSearch = false
 	const markers = TOOL_MARKER_RULES.map((rule) => ({ rule, count: 0 }))
 
@@ -128,6 +129,7 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 
 		hasTemplateSearch ||=
 			part.type === 'tool-findTemplatesForRequest' && Array.isArray(part.output)
+		hasGuidelineSearch ||= part.type === 'tool-searchGuidelines' && Array.isArray(part.output)
 	}
 
 	if (!hasToolPart) {
@@ -153,9 +155,11 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 				? hasPendingToolPart
 					? '템플릿을 찾고 있습니다'
 					: '템플릿 검색을 완료했습니다'
-				: hasPendingToolPart
-					? '가이드라인을 찾고 있습니다'
-					: '가이드라인 검색을 완료했습니다',
+				: hasGuidelineSearch
+					? '가이드라인 결과 0개를 찾았습니다'
+					: hasPendingToolPart
+						? '가이드라인을 찾고 있습니다'
+						: '가이드라인 검색을 완료했습니다',
 	}
 }
 
