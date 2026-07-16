@@ -16,6 +16,8 @@ Agent 채팅은 턴마다 새 세션 레코드를 만든다. 클라이언트는 
 
 **체인 원리:** 턴 N-1의 레코드는 이미 백필된 상태로 저장되므로 턴 1~N-1의 메타데이터를 전부 가진다. 따라서 매 턴 "직전 레코드 1건 조회"만으로 충분하고, 조회 비용은 대화 길이와 무관하게 고정이다.
 
+**체인 단절 방어:** 미종결 턴(네트워크 단절 등)은 assistant 메시지가 레코드에 저장되지 않지만 클라이언트는 그 messageId를 히스토리에 계속 되돌려 보낸다. 마지막 assistant id 하나로만 조회하면 이 경우 0건이 되어 체인이 영구히 끊긴다. 그래서 조회 키는 **히스토리의 모든 assistant messageId 배열(`in`)**이고, 그중 하나라도 포함하는 본인 세션 최신 1건을 잡는다. 미저장 턴의 assistant는 소스에 없으므로 자연히 빈칸으로 남는다.
+
 ## 결정 사항
 
 | 결정 | 선택 | 근거 |
@@ -29,7 +31,7 @@ Agent 채팅은 턴마다 새 세션 레코드를 만든다. 클라이언트는 
 
 | 파일 | 변경 |
 |------|------|
-| `src/features/agent-chat/repositories/agent-chat-session.payload.repository.ts` | 조회 함수 추가: `findLatestAgentChatSessionContainingMessage(messageId, user)` — `messages.messageId` 일치 + `createdBy` 본인 세션 중 최신(`-createdAt`) 1건을 `depth: 0`으로 반환 |
+| `src/features/agent-chat/repositories/agent-chat-session.payload.repository.ts` | 조회 함수 추가: `findLatestAgentChatSessionContainingAnyMessage(messageIds, user)` — `messages.messageId in` + `createdBy` 본인 세션 중 최신(`-createdAt`) 1건을 `depth: 0`으로 반환 |
 | `src/features/agent-chat/services/backfill-agent-chat-session-messages.service.ts` (신규) | 조회 + 순수 병합을 묶은 백필 서비스 |
 | `src/features/agent-chat/services/start-agent-chat-session.service.ts` | `toSessionMessages()` 직후 백필 호출 한 줄 추가 |
 
@@ -43,8 +45,8 @@ POST /api/agent-chat (턴 N)
   ├─ toSessionMessages()            클라이언트 히스토리 → 저장 형태 (메타데이터 없음)
   │
   ├─ backfillSessionMessages()      ← 신규
-  │    ① 히스토리의 마지막 assistant messageId 추출 (없으면 즉시 반환 — 첫 턴)
-  │    ② repository: 그 messageId를 포함하는 본인 세션 최신 1건 조회
+  │    ① 히스토리의 모든 assistant messageId 수집 (없으면 즉시 반환 — 첫 턴)
+  │    ② repository: 그중 하나라도 포함하는 본인 세션 최신 1건 조회 (in)
   │    ③ messageId 매칭으로 usedTools/usedSkills/aiUsage 복사
   │
   ├─ createAgentChatSessionRecord(병합본)     running 레코드부터 완비
