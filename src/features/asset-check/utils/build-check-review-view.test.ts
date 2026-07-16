@@ -124,6 +124,53 @@ describe('buildCheckReviewView', () => {
 		})
 	})
 
+	it('AI 판정 수치로 성공, 실패, 판단 필요 메시지를 만든다', () => {
+		const selected = image({
+			'logo.size.minimum': heuristicResult('logo.size.minimum', 'pass', 3),
+			'logo.space.clear': heuristicResult('logo.space.clear', 'fail', 2),
+			'color.palette': heuristicResult('color.palette', 'needs_review', 1),
+		})
+
+		const view = buildCheckReviewView({
+			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarioKey: 'quick',
+			selected,
+			showFailOnly: false,
+		})
+
+		expect(view.rows.find((row) => row.check.key === 'logo.size.minimum')?.detail).toBe(
+			'기준 3개 충족',
+		)
+		expect(view.rows.find((row) => row.check.key === 'logo.space.clear')?.detail).toBe(
+			'기준 2개 미충족',
+		)
+		expect(view.rows.find((row) => row.check.key === 'color.palette')?.detail).toBe(
+			'기준 1개 판단 필요',
+		)
+	})
+
+	it('진행 중 문구를 우선 표시하고 기존 결과는 message로 표시한다', () => {
+		const selected = {
+			...image({ 'logo.size.minimum': result('logo.size.minimum', 'pass') }),
+			status: 'running' as const,
+			pendingCheckKeys: ['logo.space.clear'],
+		}
+
+		const view = buildCheckReviewView({
+			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarioKey: 'quick',
+			selected,
+			showFailOnly: false,
+		})
+
+		expect(view.rows.find((row) => row.check.key === 'logo.size.minimum')?.detail).toBe('pass')
+		expect(view.rows.find((row) => row.check.key === 'logo.space.clear')?.detail).toBe(
+			'검사 중...',
+		)
+	})
+
 	it('전 기준 해당 없음 pass는 통과가 아닌 별도 카운트로 센다', () => {
 		const naResult = result('logo.space.clear', 'pass')
 		naResult.rawResult.reasonCode = 'not_applicable'
@@ -235,5 +282,26 @@ function result(key: string, status: CheckResult['rawResult']['status']): CheckR
 		checker: { key, type: 'algorithm' },
 		rawResult: { status, fulfillment: null, detail: status },
 		message: status,
+	}
+}
+
+function heuristicResult(
+	key: string,
+	status: 'pass' | 'fail' | 'needs_review',
+	count: number,
+): CheckResult {
+	return {
+		rule: { key, title: key, executor: 'heuristic' },
+		checker: { key: 'ai', type: 'ai' },
+		rawResult: {
+			status,
+			fulfillment: null,
+			summary: {
+				total: status === 'pass' ? count : count + 1,
+				satisfied: status === 'pass' ? count : 1,
+				failed: status === 'fail' ? count : 0,
+				uncertain: status === 'needs_review' ? count : 0,
+			},
+		},
 	}
 }

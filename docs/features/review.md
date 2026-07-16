@@ -13,6 +13,7 @@
 - 입력: 이미지 바이트(Buffer), CheckScenario Key(Check 실행 범위 선택), 콘텐츠 플래그(logo/typography/illustration/photography), 호출 출처(`review-page`/`chat`/`mcp-call`), 사용자
 - 출력: `{ checkSessionId, results(checkKey→CheckResult), pendingCheckKeys }`
 - `CheckResult`의 판정은 `rawResult.status`(`pass`/`ok`/`needs_review`/`fail`)와 `fulfillment`(충족도 %)로 표현됩니다.
+- Heuristic 판정의 기준 집계는 `rawResult.summary`(`total`/`satisfied`/`failed`/`uncertain`)로 전달합니다. Review UI와 Agent는 이 값을 각 채널의 표시 문구로 변환하며, 기존 저장 결과는 `message`를 fallback으로 사용합니다.
 - 2단계 계약: 결정론적 Check는 즉시 채워지고, AI(heuristic) Check는 `pendingCheckKeys`로 반환된 뒤 **`completeCheckSessionAiCheck`**로 완성합니다.
 - 기준 조회 단위: `getRuntimeChecks(checkKeys?)`(실행), `getCheckRuleset()`(페이지 뷰모델).
 - 기준 소스: published `guideline-documents`의 문서 및 Block `checks[]`. 실행 시 `source.documentId`와 소유 문서 또는 Block의 타입별 구조화 evidence를 만들고, heuristicCriteria·heuristicPrompt·역할이 포함된 referenceAssets·RuleChecker 계약과 함께 `CheckSession.rulesetSnapshot`에 고정합니다. Block 식별자와 문서 제목은 evidence 계약에 복사하지 않습니다.
@@ -158,7 +159,8 @@ CheckSessionRecord
 │     ├─ rule
 │     ├─ checker
 │     ├─ rawResult
-│     └─ message
+│     │  └─ summary? (total / satisfied / failed / uncertain)
+│     └─ message? (기존 결과·문구 override 호환)
 ├─ aiUsage / errorMessage
 ├─ agentChatSessionRef / createdByRef
 └─ completedAt
@@ -233,7 +235,7 @@ CheckSession
 
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
-| [Page](../surfaces/page.md) | 구현 | `/review` — 이미지 업로드 → 선택한 CheckScenario의 항목별 결과 테이블. 사이드바와 `/review/rules` 카탈로그는 발행된 CheckScenario별 Check를 표시하며 제목·키·근거 검색, 판정 방식 필터, 결과 개수를 제공합니다. 클라이언트가 `/api/check` → `/api/check/ai` 순으로 호출 |
+| [Page](../surfaces/page.md) | 구현 | Studio의 `/review` — 이미지 업로드 → 선택한 CheckScenario의 항목별 결과 테이블. Templates·Generate·Review는 공통 Studio 사이드바를 사용합니다. 클라이언트가 `/api/check` → `/api/check/ai` 순으로 호출 |
 | REST | 구현 | `POST /api/check`(FormData, 20MB 제한, origin·인증 게이트), `POST /api/check/ai` |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `runCheck`(+`listCheckScenarios`)이 `startCheckSession`을 호출 |
 | MCP | 부분 | `mcp-call` 출처값은 정의됨, 전용 라우트는 없이 `/api/check` 재사용 |

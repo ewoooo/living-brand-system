@@ -13,9 +13,9 @@ function exampleGridClass(count: number, horizontal: boolean) {
 }
 
 const kindBadge = {
-	do: { symbol: '✓', className: 'bg-success text-success-foreground' },
-	ok: { symbol: '△', className: 'bg-warning text-warning-foreground' },
-	dont: { symbol: '✕', className: 'bg-destructive text-destructive-foreground' },
+	do: { symbol: '✓', className: 'bg-primary text-primary-foreground' },
+	ok: { symbol: '△', className: 'bg-secondary text-secondary-foreground' },
+	dont: { symbol: '✕', className: 'bg-destructive/10 text-destructive' },
 } as const
 
 export function DoDontBlock({ block }: { block: DoDont }) {
@@ -43,12 +43,12 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 								className={horizontal ? 'mb-4 space-y-1 lg:mb-0' : 'mb-4 space-y-1'}
 							>
 								{group.category && (
-									<h4 className="type-body-emphasized text-foreground-muted">
+									<h4 className="type-body-emphasized text-muted-foreground">
 										{group.category}
 									</h4>
 								)}
 								{group.description && (
-									<p className="type-callout max-w-prose text-foreground-muted">
+									<p className="type-callout max-w-prose text-muted-foreground">
 										{group.description}
 									</p>
 								)}
@@ -67,8 +67,8 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 											alt={example.caption || ''}
 											className={
 												examples.length <= 1
-													? 'bg-fill-muted'
-													: `${ratio} bg-fill-muted`
+													? 'bg-muted'
+													: `${ratio} bg-muted`
 											}
 											imgClassName={
 												examples.length <= 1
@@ -84,7 +84,7 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 										</span>
 									</div>
 									{example.caption && (
-										<figcaption className="type-callout mt-2 text-foreground-muted">
+										<figcaption className="type-callout mt-2 text-muted-foreground">
 											{example.caption}
 										</figcaption>
 									)}

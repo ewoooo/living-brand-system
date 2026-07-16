@@ -32,7 +32,7 @@ export default async function CreateCategoryPage({
 					))}
 				</ul>
 			) : (
-				<p className="type-callout mt-6 text-foreground-muted">
+				<p className="type-callout mt-6 text-muted-foreground">
 					이 카테고리에 발행된 템플릿이 없습니다.
 				</p>
 			)}

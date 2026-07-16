@@ -46,10 +46,10 @@ export function GuidelineSearch({ chapters }: { chapters: GuidelineSearchChapter
 				className="py-4 pl-3"
 				onClick={() => setOpen((current) => !current)}
 			>
-				<span className="pr-8 text-foreground-muted">Search Guideline</span>
+				<span className="pr-8 text-muted-foreground">Search Guideline</span>
 				<KbdGroup>
-					<Kbd className="bg-fill-muted">⌘</Kbd>
-					<Kbd className="bg-fill-muted">K</Kbd>
+					<Kbd className="bg-muted">⌘</Kbd>
+					<Kbd className="bg-muted">K</Kbd>
 				</KbdGroup>
 			</Button>
 			<CommandDialog open={open} onOpenChange={setOpen} title="가이드라인 검색">

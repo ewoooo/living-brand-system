@@ -22,9 +22,12 @@ describe('evaluateHeuristic', () => {
 		})
 
 		expect(pass.status).toBe('pass')
+		expect(pass.summary).toEqual({ total: 2, satisfied: 2, failed: 0, uncertain: 0 })
 		expect(fail.status).toBe('fail')
+		expect(fail.summary).toEqual({ total: 2, satisfied: 1, failed: 1, uncertain: 0 })
 		expect(fail.observations?.[0]?.satisfied).toBe(false)
 		expect(review.status).toBe('needs_review')
+		expect(review.summary).toEqual({ total: 2, satisfied: 1, failed: 0, uncertain: 1 })
 		expect(review.observations?.[0]?.satisfied).toBeNull()
 	})
 
@@ -131,8 +134,8 @@ describe('evaluateHeuristic - not_applicable', () => {
 			texture: { value: 'not_applicable', confidence: 95, reason: '피부 없음' },
 		})
 		expect(result.status).toBe('pass')
-		expect(result.detail).toBe('관측 대상 없음')
 		expect(result.reasonCode).toBe('not_applicable')
+		expect(result.summary).toEqual({ total: 0, satisfied: 0, failed: 0, uncertain: 0 })
 		expect(result.fulfillment).toBeNull()
 	})
 })

@@ -18,17 +18,13 @@ export function GuidelineSection({
 	const previewedPage = section.pages.find((page) => page.id === previewDocumentId)
 
 	return (
-		<article className="grid w-full grid-rows-[auto_1fr]">
+		<article className="w-full">
 			{previewDocumentId !== undefined && <RefreshRouteOnSave />}
 			{previewedPage && <ScrollToPreviewDocument targetId={previewedPage.slug} />}
-			<div className="mb-10">
-				<GuidelineHeader
-					variant={variant}
-					title={section.title}
-					image={section.headerImage}
-				/>
+			<GuidelineHeader variant={variant} title={section.title} image={section.headerImage} />
+			<div className="mt-8 mb-10">
 				{section.description ? (
-					<section className="mt-8 grid gap-4 md:grid-cols-2">
+					<section className="grid gap-4 md:grid-cols-2">
 						<p className="type-body md:col-start-2">{section.description}</p>
 					</section>
 				) : (

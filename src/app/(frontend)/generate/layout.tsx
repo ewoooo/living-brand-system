@@ -1,19 +1,16 @@
 import type React from 'react'
 import { SectionLayout } from '@/components/global/section-layout'
-import { SideNav, SideNavGroup, SideNavItem } from '@/components/global/side-nav/side-nav'
+import { StudioSideNavigation } from '@/components/global/studio-side-navigation'
+import { getCreateNavigation } from '@/features/asset-generation/services/get-create-navigation.service'
 
-export default function GenerateLayout({ children }: { children: React.ReactNode }) {
+// Studio 사이드바의 발행 템플릿을 요청 시점에 표시한다.
+export const dynamic = 'force-dynamic'
+
+export default async function GenerateLayout({ children }: { children: React.ReactNode }) {
+	const navigation = await getCreateNavigation()
+
 	return (
-		<SectionLayout
-			nav={
-				<SideNav>
-					<SideNavGroup title="생성">
-						<SideNavItem label="이미지 생성" href="/generate#image" />
-						<SideNavItem label="텍스트 생성" href="/generate#text" />
-					</SideNavGroup>
-				</SideNav>
-			}
-		>
+		<SectionLayout nav={<StudioSideNavigation navigation={navigation} />}>
 			{children}
 		</SectionLayout>
 	)

@@ -24,7 +24,7 @@ export function GuidelineOnboard({ navigation }: { navigation: GetGuidelineNavig
 					}
 					variant={variant}
 				/>
-				<div className="mb-4 max-w-2xl text-balance text-foreground-muted">
+				<div className="mb-4 max-w-2xl text-balance text-muted-foreground">
 					<p></p>
 				</div>
 			</header>

@@ -11,7 +11,7 @@ export function AgentChatGeneratedImages({
 	const label = sceneLabel(attachment.sceneId)
 	return (
 		<div className="flex w-full flex-col gap-2">
-			{label && <p className="type-caption-1 text-foreground-muted">적용된 씬: {label}</p>}
+			{label && <p className="type-caption-1 text-muted-foreground">적용된 씬: {label}</p>}
 			<div className="grid w-full grid-cols-2 gap-2">
 				{attachment.images.map((src, index) => (
 					<div key={src} className="relative">
@@ -32,7 +32,7 @@ export function AgentChatGeneratedImages({
 				))}
 			</div>
 			{attachment.prompt && (
-				<details className="type-caption-1 text-foreground-muted">
+				<details className="type-caption-1 text-muted-foreground">
 					<summary className="cursor-pointer">생성 프롬프트</summary>
 					<p className="mt-1 whitespace-pre-wrap">{attachment.prompt}</p>
 				</details>

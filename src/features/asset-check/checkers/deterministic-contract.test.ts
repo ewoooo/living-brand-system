@@ -129,7 +129,10 @@ describe('deterministic CheckResult integration', () => {
 		})
 	})
 
-	it('runs registered Contrast extraction, measurement, evaluation, and adapter', async () => {
+	// run-check.service 동적 import(payload 의존 체인)가 무거워 병렬 부하 시 기본 5초를 넘긴다
+	it('runs registered Contrast extraction, measurement, evaluation, and adapter', {
+		timeout: 15_000,
+	}, async () => {
 		vi.stubEnv('DATABASE_URL', 'postgres://user:pass@localhost:5432/test')
 		vi.stubEnv('PAYLOAD_SECRET', 'test-secret')
 		vi.mocked(extractPixelGrid).mockResolvedValue(twoColorGrid())
@@ -155,7 +158,9 @@ describe('deterministic CheckResult integration', () => {
 		})
 	})
 
-	it('returns fail when the measured contrast is below the configured criterion', async () => {
+	it('returns fail when the measured contrast is below the configured criterion', {
+		timeout: 15_000,
+	}, async () => {
 		vi.mocked(extractPixelGrid).mockResolvedValue(lowContrastGrid())
 		vi.mocked(getCheckPalette).mockResolvedValue([])
 		const { runImmediateCheck } = await import(

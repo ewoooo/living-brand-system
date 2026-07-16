@@ -74,7 +74,8 @@ interface CheckResultBase {
 	status: CheckStatus
 	/** 충족률 % (계산 가능한 룰만, 아니면 null) */
 	fulfillment: number | null
-	detail: string
+	/** 판정 오류나 advisory처럼 원천에서 설명해야 하는 내용. 화면 요약 문구는 포함하지 않는다. */
+	detail?: string
 	/** 기준/현재값 구조화 필드 (계산된 룰만; 에러 분기는 생략) */
 	metric?: CheckMetric
 	/** 룰 메시지 패턴이 참조할 수 있는 checker 계산 사실. */
@@ -110,6 +111,13 @@ export type HeuristicCriterion =
 
 export interface AiCheckResult extends CheckResultBase {
 	status: CheckStatus
+	/** 화면과 Agent가 각 채널의 문구를 만들 때 쓰는 구조화된 기준 집계. 기존 결과에는 없을 수 있다. */
+	summary?: {
+		total: number
+		satisfied: number
+		failed: number
+		uncertain: number
+	}
 	observations?: {
 		criterionId: string
 		question: string
@@ -151,14 +159,14 @@ export interface CheckResultChecker {
 }
 
 /**
- * 룰 1건의 최종 검수 결과. rule(무엇을)·checker(누가)·rawResult(원판정)·message(사용자 문구)로
- * 나뉘며, status/fulfillment/detail 등은 rawResult 안에서만 읽는다 (평탄 사본을 두지 않는다).
+ * 룰 1건의 최종 검수 결과. rule(무엇을)·checker(누가)·rawResult(원판정)로 나뉜다.
+ * message는 기존 저장 결과 및 Check별 문구 override 호환용이며, 구조화된 summary가 있으면 소비자가 직접 표시 문구를 만든다.
  */
 export interface CheckResult {
 	rule: CheckResultRule
 	checker: CheckResultChecker
 	rawResult: RawCheckResult
-	message: string
+	message?: string
 }
 
 /**

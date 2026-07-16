@@ -1,7 +1,16 @@
 'use client'
 
+import { AnimatePresence, domAnimation, LazyMotion } from 'motion/react'
+import * as m from 'motion/react-m'
+import { usePathname } from 'next/navigation'
 import { Children, type ReactNode } from 'react'
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar'
+import {
+	Sidebar,
+	SidebarContent,
+	SidebarGroup,
+	SidebarGroupLabel,
+	useSidebar,
+} from '@/components/ui/sidebar'
 
 export { SideNavGroup } from '@/components/global/side-nav/side-nav-group'
 export {
@@ -20,17 +29,37 @@ export function SideNav({
 	children: ReactNode
 	emptyText?: string
 }) {
+	const pathname = usePathname()
+	const transitionKey = pathname.split('/')[1] || 'home'
+	const { isMobile } = useSidebar()
+
 	return (
-		<Sidebar collapsible="offcanvas" className="h-full pl-6">
-			<SidebarContent className="pt-24">
-				{Children.count(children) > 0 ? (
-					children
-				) : (
-					<SidebarGroup>
-						<SidebarGroupLabel>{emptyText}</SidebarGroupLabel>
-					</SidebarGroup>
-				)}
-			</SidebarContent>
+		<Sidebar
+			collapsible={isMobile ? 'offcanvas' : 'none'}
+			className="h-full  p-4 bg-transparent border-r  border-neutral-200 dark:border-neutral-700"
+		>
+			<LazyMotion features={domAnimation}>
+				<AnimatePresence mode="wait">
+					<m.div
+						key={transitionKey}
+						className="flex min-h-0 flex-1 flex-col"
+						initial={{ opacity: 0, translateX: -20 }}
+						animate={{ opacity: 1, translateX: 0 }}
+						exit={{ opacity: 0 }}
+						transition={{ duration: 0.25, ease: 'easeOut' }}
+					>
+						<SidebarContent className="pt-2">
+							{Children.count(children) > 0 ? (
+								children
+							) : (
+								<SidebarGroup>
+									<SidebarGroupLabel>{emptyText}</SidebarGroupLabel>
+								</SidebarGroup>
+							)}
+						</SidebarContent>
+					</m.div>
+				</AnimatePresence>
+			</LazyMotion>
 		</Sidebar>
 	)
 }

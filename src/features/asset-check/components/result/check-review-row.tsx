@@ -2,7 +2,7 @@
 
 import { AiGenerate, ChevronDown, Ruler, User } from '@carbon/icons-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { type ComponentProps, type ComponentType, Fragment, useState } from 'react'
+import { type ComponentType, useState } from 'react'
 import { TableCell } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
@@ -13,22 +13,17 @@ import type { CheckReviewRow as CheckReviewRowData } from '@/features/asset-chec
 import { cn } from '@/lib/utils'
 
 const EXECUTOR: Record<
-	string,
+	Check['executor'],
 	{ label: string; Icon: ComponentType<{ size?: number }>; desc: string }
 > = {
-	deterministic: { label: 'deterministic', Icon: Ruler, desc: '체커가 직접 판정하는 기준' },
-	heuristic: { label: 'heuristic', Icon: AiGenerate, desc: 'AI 평가를 경유하는 기준' },
-	manual: { label: 'manual', Icon: User, desc: '브랜드 담당자 확인이 필요한 기준' },
+	deterministic: { label: 'deterministic', Icon: Ruler, desc: '알고리즘' },
+	heuristic: { label: 'heuristic', Icon: AiGenerate, desc: 'AI 평가' },
+	manual: { label: 'manual', Icon: User, desc: '브랜드 담당자' },
 }
 
 const CHECK_BORDER = 'border-border border-t'
 
-/**
- * 결과 테이블 행 1개 — 셀 구성(시나리오|executor 아이콘|제목|메시지|상태|토글) + 진입 애니메이션.
- * in : CheckReviewRow & { rowIndex: number }   // 스키마는 check-review-table.tsx 참조
- * 상태 표시 근거: outcome?.rawResult.status, inProgress
- * 클릭/Enter/Space → 상세 행(CheckDetailRow) 토글
- */
+/** 검수 기준 한 건의 요약을 표시하고, 행 조작 시 판정 근거 상세를 펼친다. */
 export function CheckRow({
 	check,
 	rowId,
@@ -45,14 +40,19 @@ export function CheckRow({
 	const shouldReduceMotion = useReducedMotion()
 
 	return (
-		<Fragment>
-			<AnimatedCheckTableRow
+		<>
+			<motion.tr
 				id={anchorId ?? undefined}
 				role="button"
 				aria-expanded={open}
 				aria-label={`${check.title} 상세 보기`}
-				rowIndex={rowIndex}
-				shouldReduceMotion={shouldReduceMotion}
+				initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+				animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+				transition={{
+					duration: 0.22,
+					ease: 'easeOut',
+					delay: Math.min(rowIndex * 0.025, 0.18),
+				}}
 				onClick={() => setOpen((value) => !value)}
 				onKeyDown={(event) => {
 					if (event.key === 'Enter' || event.key === ' ') {
@@ -63,90 +63,88 @@ export function CheckRow({
 				tabIndex={0}
 				className="border-0 scroll-mt-72 cursor-pointer"
 			>
-				<CheckScenarioCell scenarioLabel={scenarioLabel} />
+				{/* 시나리오: 묶음의 첫 행에만 표시 */}
+				<TableCell
+					className={cn('w-44 py-2.5 pr-4 align-top', scenarioLabel && CHECK_BORDER)}
+				>
+					{scenarioLabel && (
+						<span className="type-callout-emphasized">{scenarioLabel}</span>
+					)}
+				</TableCell>
+				{/* 판정 주체: 자동 측정 / AI / 담당자 */}
 				<TableCell className={cn('w-0 py-2.5 pr-3 align-top', CHECK_BORDER)}>
 					<CheckExecutorIcon check={check} />
 				</TableCell>
-				<CheckTitleCell title={check.title} />
+				{/* 검사 항목명 */}
+				<TableCell className={cn('type-callout w-56 py-2.5 pr-4 align-top', CHECK_BORDER)}>
+					{check.title}
+					<a
+						href={guidelineHref}
+						target="_blank"
+						rel="noreferrer"
+						className="text-xs pl-1 text-neutral-400 dark:text-neutral-600 inline-flex underline underline-offset-1 hover:text-foreground"
+					>
+						↗
+					</a>
+				</TableCell>
+				{/* 판정 메시지: 미통과 사유 또는 진행 안내 */}
 				<CheckMessageCell
 					detail={detail}
-					outcome={outcome}
-					shouldReduceMotion={shouldReduceMotion}
-				/>
-				<CheckStatusCell
-					outcome={outcome}
 					inProgress={inProgress}
+					outcome={outcome}
 					shouldReduceMotion={shouldReduceMotion}
 				/>
-				<CheckToggleCell open={open} />
-			</AnimatedCheckTableRow>
+				{/* 판정 상태: 결과 배지 또는 검사 중 표시 */}
+				<TableCell className={cn('w-0 py-2.5 pr-3 align-top', CHECK_BORDER)}>
+					<AnimatePresence initial={false} mode="wait">
+						<CheckStatusBadge
+							key={outcome?.rawResult.status ?? (inProgress ? 'running' : 'idle')}
+							outcome={outcome}
+							inProgress={inProgress}
+							shouldReduceMotion={shouldReduceMotion}
+						/>
+					</AnimatePresence>
+				</TableCell>
+				{/* 상세 열기/닫기 */}
+				<TableCell className={cn('w-0 py-2.5 pr-1 text-right align-top', CHECK_BORDER)}>
+					<ChevronDown
+						size={16}
+						className={cn(
+							'inline-block text-muted-foreground transition-transform',
+							open && 'rotate-180',
+						)}
+					/>
+				</TableCell>
+			</motion.tr>
 			<AnimatePresence initial={false}>
 				{open && (
 					<CheckDetailRow
 						key={`${rowId}:detail`}
 						check={check}
 						appliesTo={appliesTo}
-						guidelineHref={guidelineHref}
 						outcome={outcome}
 						shouldReduceMotion={shouldReduceMotion}
 					/>
 				)}
 			</AnimatePresence>
-		</Fragment>
+		</>
 	)
 }
 
-function AnimatedCheckTableRow({
-	rowIndex,
-	shouldReduceMotion,
-	...props
-}: ComponentProps<typeof motion.tr> & {
-	rowIndex: number
-	shouldReduceMotion: boolean | null
-}) {
-	return (
-		<motion.tr
-			initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
-			animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-			transition={{
-				duration: 0.22,
-				ease: 'easeOut',
-				delay: Math.min(rowIndex * 0.025, 0.18),
-			}}
-			{...props}
-		/>
-	)
-}
-
-function CheckScenarioCell({ scenarioLabel }: { scenarioLabel: string | null }) {
-	return (
-		<TableCell className={cn('w-44 py-2.5 pr-4 align-top', scenarioLabel && CHECK_BORDER)}>
-			{scenarioLabel && <span className="type-callout-emphasized">{scenarioLabel}</span>}
-		</TableCell>
-	)
-}
-
-function CheckTitleCell({ title }: { title: string }) {
-	return (
-		<TableCell className={cn('type-callout w-56 py-2.5 pr-4 align-top', CHECK_BORDER)}>
-			{title}
-		</TableCell>
-	)
-}
-
+/** 판정 상태가 바뀔 때 미통과 사유나 진행 메시지를 전환해 표시한다. */
 function CheckMessageCell({
 	detail,
+	inProgress,
 	outcome,
 	shouldReduceMotion,
 }: {
 	detail: string | null
+	inProgress: boolean
 	outcome?: CheckResult
 	shouldReduceMotion: boolean | null
 }) {
 	return (
-		<TableCell
-			className={cn('type-callout py-2.5 pr-3 align-top whitespace-normal', CHECK_BORDER)}
-		>
+		<TableCell className={cn('py-2.5 pr-3 align-top whitespace-normal', CHECK_BORDER)}>
 			<AnimatePresence initial={false} mode="wait">
 				{detail && (
 					<motion.span
@@ -156,10 +154,11 @@ function CheckMessageCell({
 						exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
 						transition={{ duration: 0.16, ease: 'easeOut' }}
 						className={cn(
-							'type-caption-1 block',
+							'col-end-13px] block',
+							inProgress && 'shimmer',
 							outcome?.rawResult.status === 'fail'
 								? 'text-destructive'
-								: 'text-foreground-muted',
+								: 'text-muted-foreground',
 						)}
 					>
 						{detail}
@@ -170,51 +169,14 @@ function CheckMessageCell({
 	)
 }
 
-function CheckStatusCell({
-	outcome,
-	inProgress,
-	shouldReduceMotion,
-}: {
-	outcome?: CheckResult
-	inProgress: boolean
-	shouldReduceMotion: boolean | null
-}) {
-	return (
-		<TableCell className={cn('w-0 py-2.5 pr-3 align-top', CHECK_BORDER)}>
-			<AnimatePresence initial={false} mode="wait">
-				<CheckStatusBadge
-					key={outcome?.rawResult.status ?? (inProgress ? 'running' : 'idle')}
-					outcome={outcome}
-					inProgress={inProgress}
-					shouldReduceMotion={shouldReduceMotion}
-				/>
-			</AnimatePresence>
-		</TableCell>
-	)
-}
-
-function CheckToggleCell({ open }: { open: boolean }) {
-	return (
-		<TableCell className={cn('w-0 py-2.5 pr-1 text-right align-top', CHECK_BORDER)}>
-			<ChevronDown
-				size={16}
-				className={cn(
-					'inline-block text-foreground-muted transition-transform',
-					open && 'rotate-180',
-				)}
-			/>
-		</TableCell>
-	)
-}
-
 function CheckExecutorIcon({ check }: { check: Check }) {
-	const executor = EXECUTOR[check.executor] ?? { label: check.executor, Icon: User, desc: '' }
+	const executor = EXECUTOR[check.executor]
 	const ExecutorIcon = executor.Icon
 
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<span className="inline-flex text-foreground-muted">
+				<span className="inline-flex text-muted-foreground">
 					<ExecutorIcon size={16} />
 				</span>
 			</TooltipTrigger>
