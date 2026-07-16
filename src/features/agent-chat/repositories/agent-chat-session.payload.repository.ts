@@ -1,6 +1,6 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import { AgentChatSession } from '@/features/agent-chat/domain/agent-chat-session'
+import type { AgentChatSession } from '@/features/agent-chat/domain/agent-chat-session'
 import type { AgentChatReaction, AgentChatSessionMessageInput } from '@/features/agent-chat/types'
 import type { AgentChatSession as AgentChatSessionRecord, User } from '@/payload-types'
 
