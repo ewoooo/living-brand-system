@@ -4,17 +4,38 @@ import { useEffect, useId, useState } from 'react'
 
 // 이미지 슬라이드 캐러셀: prev/next + 닷 인디케이터. 인덱스 기반 translateX 트랙(경계 없음).
 // autoPlay=true면 자동 슬라이드(호버 시 정지, prefers-reduced-motion 존중).
-export type CarouselSlide = { image: string; alt?: string; caption?: string }
+export type CarouselSlide = {
+	/** 슬라이드 이미지 URL — S3·로컬·data-uri 등 무엇이든. */
+	image: string
+	/** 대체 텍스트(선택). 없으면 caption을, 그것도 없으면 빈 문자열을 alt로 쓴다. */
+	alt?: string
+	/** 슬라이드 하단 캡션(선택). 현재 슬라이드 것만 표시된다. */
+	caption?: string
+}
 
+/**
+ * 이미지 슬라이드 캐러셀 — 좌우 화살표 + 닷 인디케이터로 한 장씩 넘긴다.
+ * 같은 성격의 사용 예시가 여럿일 때(사용예시 여러 컷 등) 한 프레임에 모아 보여주는 용도.
+ *
+ * @example 정적 캐러셀 — 사용자가 직접 넘김
+ * <Carousel slides={[{ image: url, caption: '앰플 대표 컷.' }, { image: url, caption: '루틴 시리즈.' }]} />
+ *
+ * @example 자동 재생 — 호버 시 정지, prefers-reduced-motion 존중
+ * <Carousel autoPlay interval={5000} slides={[{ image: url, alt: '키 비주얼' }, { image: url }]} />
+ */
 export function Carousel({
 	slides,
 	aspect = 'aspect-video',
 	autoPlay = false,
 	interval = 4000,
 }: {
+	/** 표시할 슬라이드 배열. 0장이면 아무것도 렌더링하지 않는다. */
 	slides: CarouselSlide[]
+	/** 이미지 프레임 종횡비 Tailwind 클래스(기본 'aspect-video'). */
 	aspect?: string
+	/** true면 자동 슬라이드(호버 시 정지, prefers-reduced-motion이면 미작동). 기본 false. */
 	autoPlay?: boolean
+	/** 자동 재생 간격(ms). autoPlay=true일 때만 의미 있음. 기본 4000. */
 	interval?: number
 }) {
 	const [index, setIndex] = useState(0)

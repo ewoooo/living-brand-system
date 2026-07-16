@@ -21,6 +21,13 @@ const TIERS = {
 type Tier = keyof typeof TIERS
 type Align = 'left' | 'center' | 'right'
 
+/**
+ * 브랜드 폰트 라이브 스페시먼 — 직접 타이핑하며 폰트 느낌을 확인. props 없이 자체 상태로 동작하는 드롭인.
+ * 정렬·크기 tier(word/sentence/paragraph)·줄간격을 조절할 수 있고, tier별 편집 내용은 각각 보존된다.
+ *
+ * @example 타이포그래피 섹션에 그대로 배치
+ * <TypeSpecimen />
+ */
 export function TypeSpecimen() {
 	const [tier, setTier] = useState<Tier>('word')
 	const [align, setAlign] = useState<Align>('left')

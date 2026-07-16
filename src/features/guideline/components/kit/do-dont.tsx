@@ -10,6 +10,24 @@ export type DoDontExample = {
 }
 export type DoDontGroup = { category?: string; examples: DoDontExample[] }
 
+/**
+ * do/ok/dont 판정 + 카테고리 대조. 정체성은 "판정"이지 그리드가 아니다.
+ * 판정이 필요 없는 이미지+캡션 나열이면 ImageTextGrid를 쓴다.
+ *
+ * @example
+ * <DoDont
+ *   columns={2}
+ *   groups={[
+ *     {
+ *       category: 'Spacing',
+ *       examples: [
+ *         { src: url1, caption: '충분한 여백을 확보.', status: 'do' },
+ *         { src: url2, caption: '여백을 좁히지 않는다.', status: 'dont' },
+ *       ],
+ *     },
+ *   ]}
+ * />
+ */
 export function DoDont({ groups, columns = 3 }: { groups: DoDontGroup[]; columns?: number }) {
 	return (
 		<div className="flex flex-col gap-10">

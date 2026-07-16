@@ -4,11 +4,13 @@ import type { ReactNode } from 'react'
 // 카본 매핑: 각 타일 = $layer 타일(rounded-lg border), 라벨은 caption. 정/반전 개념을 배경 대비로 보여주는 조각.
 
 export type LogoVariant = {
+	/** 타일 아래 캡션으로 표시할 라벨(예: 'Positive · 라이트 배경'). */
 	label: string
-	// svg data-URI 문자열 또는 직접 렌더할 노드.
+	/** 렌더할 로고 — svg data-URI 문자열이면 <img>로, ReactNode면 그대로 렌더. */
 	logo: string | ReactNode
+	/** 타일 배경 종류 — light/dark는 시맨틱 토큰, brand는 아래 color hex를 사용. */
 	background: 'light' | 'dark' | 'brand'
-	// background === 'brand'일 때만 사용하는 브랜드 강조색 hex(데이터로 주입, 컴포넌트는 브랜드 무관).
+	/** background === 'brand'일 때만 사용하는 타일 배경 hex(데이터로 주입, 컴포넌트는 브랜드 무관). */
 	color?: string
 }
 
@@ -19,7 +21,23 @@ const tileClass: Record<LogoVariant['background'], string> = {
 	brand: '',
 }
 
-export function LogoLockup({ variants }: { variants: LogoVariant[] }) {
+/**
+ * 로고 배리에이션 쇼케이스 — 배경별(라이트/다크/브랜드) 타일 위에 정·반전·단색 로고를 나란히 보여준다.
+ * 로고 사용 규정 페이지에서 정/반전 대비를 한눈에 보일 때 드롭인.
+ *
+ * @example 정·반전·단색 3종 대비
+ * <LogoLockup variants={[
+ *   { label: 'Positive · 라이트 배경', logo: url, background: 'light' },
+ *   { label: 'Reversed · 다크 배경', logo: url, background: 'dark' },
+ *   { label: 'Mono · 브랜드 배경', logo: url, background: 'brand', color: '#464646' },
+ * ]} />
+ */
+export function LogoLockup({
+	variants,
+}: {
+	/** 전시할 로고 배리에이션 배열 — 각 항목이 배경 타일 하나가 된다. */
+	variants: LogoVariant[]
+}) {
 	return (
 		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
 			{variants.map((variant) => (

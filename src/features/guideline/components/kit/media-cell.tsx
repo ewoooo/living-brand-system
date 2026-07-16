@@ -8,15 +8,26 @@ const kindBadge = {
 
 export type MediaStatus = keyof typeof kindBadge
 
+/**
+ * 공유 레이아웃 원자: 이미지 위 + 캡션 아래, status를 주면 우상단에 do/ok/dont 배지.
+ * 보통 직접 쓰지 않고 ImageTextGrid·DoDont가 내부적으로 사용한다.
+ *
+ * @example
+ * <MediaCell src={url} caption="충분한 여백을 확보한다." status="do" />
+ */
 export function MediaCell({
 	src,
 	alt,
 	caption,
 	status,
 }: {
+	/** 이미지 URL. */
 	src: string
+	/** 대체 텍스트. 생략 시 caption으로 대체. */
 	alt?: string
+	/** 이미지 하단 캡션(선택). */
 	caption?: string
+	/** 판정 배지 — 'do'(✓) · 'ok'(△) · 'dont'(✕). 없으면 배지 미표시. */
 	status?: MediaStatus
 }) {
 	return (

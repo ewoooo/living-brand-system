@@ -1,14 +1,22 @@
-// Carbon 대형 예시(풀블리드 미디어) 이식: 큰 단일 이미지 + 선택 캡션.
-// 프레젠테이션 전용 — src는 임의 URL(S3/local/data-uri) 무엇이든 받는다.
+/**
+ * 단일 대형 이미지 + 선택 캡션(풀블리드 미디어). 키 비주얼·대표 컷 등 한 장을 크게 보일 때.
+ *
+ * @example
+ * <BigImage src={url} alt="키 비주얼" ratio="wide" caption="풀블리드 대형 이미지." />
+ */
 export function BigImage({
 	src,
 	alt,
 	caption,
 	ratio = 'video',
 }: {
+	/** 이미지 URL — S3·로컬·data-uri 등 무엇이든. */
 	src: string
+	/** 대체 텍스트(필수). */
 	alt: string
+	/** 하단 캡션(선택). */
 	caption?: string
+	/** 종횡비 — 'video'(16:9, 기본) · 'square'(1:1) · 'wide'(21:9). */
 	ratio?: 'video' | 'square' | 'wide'
 }) {
 	const aspect =

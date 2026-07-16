@@ -1,5 +1,18 @@
-// 가이드라인 본문 최빈 패턴: 이미지 + 설명. Carbon Tile 카드로 감싼 미디어/텍스트 블록.
-// layout='side'는 좌우 2단(md 이상), 'stack'은 이미지 위·텍스트 아래. 캡션형/제목+본문형 겸용.
+/**
+ * 이미지 + 설명 — 가이드라인 본문에서 가장 자주 쓰는 워크호스. 페이지에 그대로 드롭인.
+ * `caption`만 주면 캡션형, `heading`(+`body`)을 주면 제목+본문형.
+ *
+ * @example 캡션형 — 이미지 위, 짧은 설명 아래
+ * <MediaText image={url} alt="키 비주얼" caption="식물성 원료의 생명력을 담은 메인 이미지." />
+ *
+ * @example 제목+본문 — md↑에서 좌우 2단
+ * <MediaText
+ *   layout="side"
+ *   image={url}
+ *   heading="로고 사용 원칙"
+ *   body={['첫 문단.', '둘째 문단.']}
+ * />
+ */
 export function MediaText({
 	image,
 	alt,
@@ -8,11 +21,17 @@ export function MediaText({
 	layout = 'stack',
 	caption,
 }: {
+	/** 이미지 URL — S3·로컬·data-uri 등 무엇이든. */
 	image: string
+	/** 대체 텍스트. 생략 시 heading→caption 순으로 대체. */
 	alt?: string
+	/** 굵은 제목(선택). 주면 제목+본문형이 된다. */
 	heading?: string
+	/** 본문 — 문자열 하나 또는 문단 배열. */
 	body?: string | string[]
+	/** 'stack'=이미지 위·텍스트 아래(기본), 'side'=md↑ 좌우 2단. */
 	layout?: 'stack' | 'side'
+	/** 짧은 캡션(선택). heading 없이 이것만 주면 캡션형. */
 	caption?: string
 }) {
 	const paragraphs = typeof body === 'string' ? [body] : (body ?? [])

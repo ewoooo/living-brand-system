@@ -9,13 +9,27 @@ const colClass: Record<number, string> = {
 	4: 'grid-cols-2 md:grid-cols-4',
 }
 
+/**
+ * 헤더 + 이미지 2~4장(row) + 본문(옵션). 여러 예시를 한눈에 비교하는 개요/구성 설명용.
+ * 이미지 수(2~4)에 따라 열 수가 자동으로 정해진다. 동종 예시가 더 많으면 Carousel을 쓴다.
+ *
+ * @example
+ * <ImageGroup
+ *   header="Brand Contents"
+ *   images={[{ src: url1 }, { src: url2 }, { src: url3 }]}
+ *   body="브랜드 메시지를 전달하는 콘텐츠 예시."
+ * />
+ */
 export function ImageGroup({
 	header,
 	images,
 	body,
 }: {
+	/** 그룹 제목(선택, 굵게). */
 	header?: string
+	/** 이미지 2~4장 — 수에 따라 2·3·4열 자동. */
 	images: ImageGroupImage[]
+	/** 그룹 하단 본문 설명(선택). */
 	body?: string
 }) {
 	if (images.length === 0) return null

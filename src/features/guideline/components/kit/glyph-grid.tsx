@@ -29,6 +29,15 @@ const codepoint = (ch: string) =>
 
 type Metrics = { ascender: number; descender: number; headline: number; xLine: number }
 
+/**
+ * 글리프 인스펙터 — 브랜드 타이틀 폰트의 글자 하나하나를 크게 뜯어볼 때 쓴다.
+ * 좌측: 선택된 글자를 크게 + 폰트 메트릭 라인(ascender/headline/baseline/descender).
+ * 우측: 8열 글리프 목록. 셀에 호버(또는 포커스)하면 좌측 큰 글자가 그 글리프로 갱신된다.
+ * props 없이 그대로 드롭인하면 되고, 폰트는 --font-title 토큰을 읽어 브랜드 무관하게 동작한다.
+ *
+ * @example 페이지에 그대로
+ * <GlyphGrid />
+ */
 export function GlyphGrid() {
 	const [active, setActive] = useState('A')
 	const [metrics, setMetrics] = useState<Metrics | null>(null)

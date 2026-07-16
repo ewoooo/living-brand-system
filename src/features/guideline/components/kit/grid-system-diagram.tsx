@@ -1,6 +1,13 @@
-// 레이아웃 그리드 시각화: columns개의 컬럼 오버레이를 CSS grid로 그려 마진/거터 규격을 보여준다.
-// Carbon Tile(카드) 위에 어두운 인셋 캔버스를 얹고, 그 안에 반투명 세로 바로 컬럼을 표현한다.
-
+/**
+ * 레이아웃 그리드 규격 시각화 — columns개의 컬럼 오버레이를 CSS grid로 그려 마진/거터를 보여준다.
+ * 카드 위에 인셋 캔버스를 얹고 그 안에 반투명 세로 바로 컬럼을 표현. 반응형 규격을 나란히 보여줄 땐 2개 이상 배치.
+ *
+ * @example 데스크톱 12컬럼 규격
+ * <GridSystemDiagram label="Desktop · 12 columns" columns={12} gutter="24px" margin="64px" />
+ *
+ * @example 브랜드 강조색으로 컬럼 강조
+ * <GridSystemDiagram label="Tablet · 8 columns" columns={8} gutter="16px" margin="32px" accent="#00A19C" />
+ */
 export function GridSystemDiagram({
 	columns,
 	gutter,
@@ -8,11 +15,15 @@ export function GridSystemDiagram({
 	label,
 	accent,
 }: {
+	/** 오버레이할 컬럼 수. 세로 바 개수이자 grid 컬럼 개수. */
 	columns: number
+	/** 거터(컬럼 사이 간격) 규격. CSS 길이 문자열. 생략 시 '0.5rem'. Gutter 칩으로도 표기된다. */
 	gutter?: string
+	/** 마진(캔버스 안쪽 여백) 규격. CSS 길이 문자열. 생략 시 '1rem'. Margin 칩으로도 표기된다. */
 	margin?: string
+	/** 좌측 상단 제목(선택). 예: 'Desktop · 12 columns'. */
 	label?: string
-	// 강조색(브랜드 색). 없으면 토큰 기반 중립색으로 렌더한다.
+	/** 컬럼 강조색(브랜드 색). 없으면 토큰 기반 중립색으로 렌더한다. */
 	accent?: string
 }) {
 	const specs = [

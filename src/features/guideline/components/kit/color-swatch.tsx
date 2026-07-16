@@ -4,9 +4,30 @@ import { useState } from 'react'
 import { hexToRgb, isLightColor, isValidHex } from '@/lib/color'
 
 // 클릭하면 HEX를 클립보드에 복사하는 라이브 스와치. 캡쳐 이미지가 아니라 실제 색 데이터로 렌더한다.
-export type SwatchColor = { name: string; hex: string; pantone?: string | null }
+export type SwatchColor = {
+	/** 색 이름 — 스와치 좌상단에 굵게 표시. */
+	name: string
+	/** HEX 코드(#RRGGBB) — 배경색이자 클릭 시 복사되는 값. */
+	hex: string
+	/** 팬톤(PMS) 번호(선택) — 값이 있으면 "PMS …" 줄이 추가된다. */
+	pantone?: string | null
+}
 
-export function ColorSwatch({ color }: { color: SwatchColor }) {
+/**
+ * 클릭하면 HEX를 클립보드에 복사하는 라이브 색 스와치 — 캡쳐 이미지가 아니라 실제 색 데이터로 렌더. 컬러 팔레트 그리드의 셀로 페이지에 그대로 드롭인.
+ *
+ * @example 단일 스와치
+ * <ColorSwatch color={{ name: '브랜드 그린', hex: '#0A7D4B' }} />
+ *
+ * @example 팬톤 포함 — PMS 줄이 함께 표시
+ * <ColorSwatch color={{ name: '메인 컬러', hex: '#0A7D4B', pantone: '355 C' }} />
+ */
+export function ColorSwatch({
+	color,
+}: {
+	/** 표시할 색 한 건 — 이름·HEX·(선택)팬톤. */
+	color: SwatchColor
+}) {
 	const [copied, setCopied] = useState(false)
 	const light = isValidHex(color.hex) && isLightColor(color.hex)
 	const fg = light ? '#000000' : '#FFFFFF'

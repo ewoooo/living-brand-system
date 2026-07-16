@@ -23,13 +23,26 @@ const kindStyle = {
 
 export type RuleCalloutKind = keyof typeof kindStyle
 
+/**
+ * 규정/주의 콜아웃 — 지켜야 할 규칙을 판정별(must/recommended/dont)로 강조하는 박스. 페이지에 그대로 드롭인.
+ * items는 짧은 규칙 문장의 배열이고, title을 생략하면 판정 기본 라벨(반드시/권장/금지)이 제목이 된다.
+ *
+ * @example 반드시 지킬 것 — 규칙을 목록으로
+ * <RuleCallout kind="must" title="반드시 지킬 것" items={['규칙 하나.', '규칙 둘.']} />
+ *
+ * @example 금지 — title 생략 시 '금지'가 제목
+ * <RuleCallout kind="dont" items={['하지 말 것.']} />
+ */
 export function RuleCallout({
 	kind,
 	title,
 	items,
 }: {
+	/** 판정 — 'must'=반드시, 'recommended'=권장, 'dont'=금지. 아이콘·라벨·배지 색이 이에 따라 바뀐다. */
 	kind: RuleCalloutKind
+	/** 제목(선택). 생략하면 kind별 기본 라벨(반드시/권장/금지)이 쓰인다. */
 	title?: string
+	/** 강조할 규칙 문장들. 각 항목이 불릿 한 줄로 렌더된다. */
 	items: string[]
 }) {
 	const style = kindStyle[kind]

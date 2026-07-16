@@ -1,12 +1,23 @@
-// 브랜드 가이드 시그니처: 로고 클리어스페이스(여백=x 배수) 다이어그램.
-// 점선 경계 = 최소 여백 한계, 로고와 경계 사이 간격 = x. 프레젠테이션 전용.
+/**
+ * 로고 클리어스페이스(최소 여백=x 배수) 다이어그램 — 로고 주변에 확보해야 할 여백을 시각적으로 보여줄 때.
+ * 점선 경계 = 최소 여백 한계, 로고와 경계 사이 간격 = x. 프레젠테이션 전용.
+ *
+ * @example 기본 — 로고와 최소 여백 다이어그램
+ * <ClearSpace logoSrc={url} alt="브랜드 로고" />
+ *
+ * @example 여백 규칙 설명을 캡션으로
+ * <ClearSpace logoSrc={url} alt="브랜드 로고" note="최소 여백은 로고 높이의 절반(x)입니다." />
+ */
 export function ClearSpace({
 	logoSrc,
 	alt,
 	note,
 }: {
+	/** 로고 이미지 URL — S3·로컬·data-uri 등 무엇이든. */
 	logoSrc: string
+	/** 로고 대체 텍스트(접근성). */
 	alt: string
+	/** 다이어그램 아래 캡션(선택). 여백 규칙 등을 설명. */
 	note?: string
 }) {
 	return (

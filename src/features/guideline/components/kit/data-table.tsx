@@ -9,19 +9,46 @@ import {
 } from '@/components/ui/table'
 
 // 대량 데이터 테이블: shadcn Table 프리미티브로 구성. 세로 max-height 스크롤 + sticky 헤더로 큰 데이터를 담는다.
-export type DataTableColumn = { key: string; label: string; align?: 'left' | 'right' }
+export type DataTableColumn = {
+	/** row 객체에서 이 컬럼 값을 꺼낼 필드 key. rows의 각 행 key와 맞춘다. */
+	key: string
+	/** 헤더 셀에 표시할 컬럼 제목. */
+	label: string
+	/** 'right'면 헤더·셀을 우측 정렬하고 셀에 tabular-nums(숫자 폭 고정)를 준다. 기본은 좌측. */
+	align?: 'left' | 'right'
+}
+/** 한 행의 데이터. 컬럼 key로 값을 찾으므로 키를 columns의 key와 맞춘다. */
 export type DataTableRow = Record<string, string | number>
 
+/**
+ * 대량 데이터 테이블 — sticky 헤더 + 세로 스크롤(max-h 30rem)로 긴 명세를 한 컨테이너에 담는다.
+ * 컬러 팔레트·토큰 목록·스펙 표처럼 행이 많은 정형 데이터에 쓴다.
+ *
+ * @example 컬러 명세표 — 숫자 컬럼만 우측 정렬
+ * <DataTable
+ *   columns={[
+ *     { key: 'token', label: 'Token' },
+ *     { key: 'hex', label: 'HEX' },
+ *     { key: 'rgb', label: 'RGB', align: 'right' },
+ *   ]}
+ *   rows={[{ token: 'red-3', hex: '#EA5343', rgb: '234/83/67' }]}
+ *   rowKey="token"
+ *   caption="브랜드 컬러 명세"
+ * />
+ */
 export function DataTable({
 	columns,
 	rows,
 	rowKey,
 	caption,
 }: {
+	/** 컬럼 정의 배열. 헤더 순서·정렬·표시할 필드를 결정한다. */
 	columns: DataTableColumn[]
+	/** 행 데이터 배열. 각 행에서 columns의 key로 값을 꺼내 렌더한다. */
 	rows: DataTableRow[]
-	// 행을 식별할 컬럼 key. 없으면 첫 컬럼 값을 쓴다.
+	/** 각 행의 React key로 쓸 컬럼 key. 생략하면 첫 컬럼(columns[0].key) 값을 쓴다. */
 	rowKey?: string
+	/** 표 아래에 붙는 캡션(선택). */
 	caption?: string
 }) {
 	const keyField = rowKey ?? columns[0]?.key

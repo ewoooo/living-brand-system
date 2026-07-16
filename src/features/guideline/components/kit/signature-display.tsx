@@ -1,9 +1,35 @@
 // 브랜드 시그니처/태그라인을 대형 디스플레이 타입으로 전시. 각 문구는 Carbon Tile 위에
 // clamp 큰 글씨로 렌더하고, label(캡션)·note(부연)를 함께 보여준다. 캡쳐가 아니라 실제 웹폰트 조각.
 
-export type Signature = { label?: string; phrase: string; note?: string }
+export type Signature = {
+	/** 카드 상단 캡션(선택) — 예: 'Brand Signature', 'Tagline'. 대문자 소형 라벨로 표시. */
+	label?: string
+	/** 핵심 문구 — clamp 대형 타입으로 크게 렌더되는 주인공. key로도 쓰이니 목록 내 유일해야 함. */
+	phrase: string
+	/** 부연 설명(선택) — 문구 아래 작은 본문으로 맥락/용도를 덧붙인다. */
+	note?: string
+}
 
-export function SignatureDisplay({ signatures }: { signatures: Signature[] }) {
+/**
+ * 브랜드 시그니처/태그라인을 대형 디스플레이 타입으로 전시 — 로고 이미지가 아니라 실제 웹폰트 조각.
+ * 각 문구를 카드에 clamp 큰 글씨로 얹고 label(캡션)·note(부연)를 함께 보여준다.
+ * 이미지 위 짧은 설명이 필요하면 MediaText를, 문구 여러 개의 전시가 목적이면 이걸 쓴다.
+ *
+ * @example 시그니처 하나
+ * <SignatureDisplay signatures={[{ label: 'Brand Signature', phrase: 'Essence of Herb', note: '…' }]} />
+ *
+ * @example 여러 문구를 2단 그리드로
+ * <SignatureDisplay signatures={[
+ *   { label: 'Tagline', phrase: 'Daily Skincare Ritual' },
+ *   { label: 'Sign-off', phrase: 'Essenherb, Naturally' },
+ * ]} />
+ */
+export function SignatureDisplay({
+	signatures,
+}: {
+	/** 전시할 문구 목록 — 각 항목이 카드 하나. md↑에서 2열 그리드로 배치된다. */
+	signatures: Signature[]
+}) {
 	return (
 		<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 			{signatures.map((sig) => (

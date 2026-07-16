@@ -1,17 +1,31 @@
 'use client'
 
-// 에셋 다운로드용 카본 클릭형 Tile($layer). hover 시 $layer-hover, 우측에 다운로드 화살표.
-// 실제 다운로드 로직은 onDownload 콜백에 위임 — 카드 자체는 브랜드/에셋 무관.
-
+/**
+ * 에셋 다운로드용 클릭형 타일 — 로고 팩·팔레트·폰트 등 내려받기 항목 한 줄에 드롭인.
+ * hover 시 배경 강조, 우측에 다운로드 화살표. 실제 다운로드 로직은 onDownload 콜백에 위임하고
+ * 카드 자체는 브랜드/에셋 무관.
+ *
+ * @example 단일 카드
+ * <DownloadCard title="로고 팩 (AI · SVG · PNG)" format="ZIP" size="4.2MB" onDownload={() => download(url)} />
+ *
+ * @example 그리드로 여러 개
+ * <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+ *   <DownloadCard title="Color Palette" format="ASE" size="48KB" onDownload={() => download(url)} />
+ * </div>
+ */
 export function DownloadCard({
 	title,
 	format,
 	size,
 	onDownload,
 }: {
+	/** 에셋 이름 — 굵게 표시되는 제목. */
 	title: string
+	/** 파일 포맷 라벨(예: 'ZIP', 'OTF'). 캡션에 'format · size'로 노출. */
 	format: string
+	/** 파일 크기 표기 문자열(예: '4.2MB'). 캡션에 'format · size'로 노출. */
 	size: string
+	/** 타일 클릭 시 호출 — 실제 다운로드 트리거를 여기서 처리한다. */
 	onDownload?: () => void
 }) {
 	return (
