@@ -12,6 +12,13 @@ const kindChipClass = {
 	dont: 'bg-destructive text-destructive-foreground',
 } as const
 
+/**
+ * 검수 기준 근거 표시.
+ * in : { evidence: CheckEvidence | string; referenceAssets: CheckReferenceAsset[] }
+ *   CheckEvidence — guideline blocks 타입 (features/guideline/blocks/types)
+ *   string — 구 CheckSession 스냅샷 호환 (그대로 문단 렌더)
+ *   CheckReferenceAsset { name: string; url: string; mimeType: string; role: CheckReferenceAssetRole }
+ */
 export function CheckEvidence({
 	evidence,
 	referenceAssets,

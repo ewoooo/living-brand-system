@@ -22,6 +22,14 @@ export function useCheckImages() {
  * 검수는 업로드/시나리오 변경 시 자동 실행하지 않고 runCheck(검수 버튼)로만 트리거한다.
  * 판정은 서버(/api/check)가, 요청 순서·폴백은 submit-check.client의 runFullCheck가 소유하고,
  * 이 프로바이더는 미리보기(object URL)와 진행 상태 반영만 담당한다.
+ *
+ * in  (서버): scenarios: CheckScenario[] { key, title, checkKeys[] }
+ * out (컨텍스트): CheckImageContextValue — 스키마는 types.ts 참조
+ *
+ * CheckImage.status 전이:
+ * idle ─runCheck→ running ─서버 즉시판정→ (pendingCheckKeys 있으면 running 유지)
+ *      ─AI 후속판정/폴백→ completed   |   서버 실패→ failed
+ * 시나리오 변경 시: checkSessionId·results·pendingCheckKeys·rulesetSnapshot 폐기 → idle
  */
 export function CheckImageProvider({
 	children,
