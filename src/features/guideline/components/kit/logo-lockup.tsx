@@ -23,10 +23,7 @@ export function LogoLockup({ variants }: { variants: LogoVariant[] }) {
 	return (
 		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
 			{variants.map((variant) => (
-				<figure
-					key={variant.label}
-					className="m-0 overflow-hidden rounded-lg bg-background-secondary"
-				>
+				<figure key={variant.label} className="m-0 overflow-hidden bg-background-secondary">
 					<div
 						className={`grid min-h-40 place-items-center p-6 ${tileClass[variant.background]}`}
 						style={
@@ -64,10 +61,10 @@ export function LogoLockupDemo() {
 				{ label: 'Positive · 라이트 배경', logo: wordmark('#171717'), background: 'light' },
 				{ label: 'Reversed · 다크 배경', logo: wordmark('#ffffff'), background: 'dark' },
 				{
-					label: 'Mono · 브랜드 레드',
+					label: 'Mono · 그레이 배경',
 					logo: wordmark('#ffffff'),
 					background: 'brand',
-					color: '#EA5343',
+					color: '#464646',
 				},
 			]}
 		/>

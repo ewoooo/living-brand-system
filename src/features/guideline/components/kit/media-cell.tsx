@@ -1,9 +1,9 @@
 // 공유 레이아웃 원자: 이미지 위 + 텍스트 아래. status가 있으면 do/dont 판정 배지를 얹는다.
 // ImageTextGrid와 DoDont가 내부적으로 이걸 쓴다(개념은 각자, 레이아웃 조각만 공유).
 const kindBadge = {
-	do: { symbol: '✓', className: 'bg-success text-success-foreground' },
-	ok: { symbol: '△', className: 'bg-warning text-warning-foreground' },
-	dont: { symbol: '✕', className: 'bg-destructive text-destructive-foreground' },
+	do: { symbol: '✓', className: 'bg-foreground text-background' },
+	ok: { symbol: '△', className: 'bg-fill-selected text-foreground' },
+	dont: { symbol: '✕', className: 'bg-foreground text-background' },
 } as const
 
 export type MediaStatus = keyof typeof kindBadge
@@ -26,7 +26,7 @@ export function MediaCell({
 				<img
 					src={src}
 					alt={alt ?? caption ?? ''}
-					className="aspect-4/3 w-full rounded-sm border border-scrim/10 bg-fill-muted object-cover"
+					className="aspect-4/3 w-full border border-scrim/10 bg-fill-muted object-cover"
 				/>
 				{status && (
 					<span

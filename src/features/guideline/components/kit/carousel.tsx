@@ -20,7 +20,7 @@ export function Carousel({
 
 	return (
 		<div className="flex flex-col gap-4">
-			<div className={`group relative overflow-hidden rounded-lg bg-fill-muted ${aspect}`}>
+			<div className={`group relative overflow-hidden bg-fill-muted ${aspect}`}>
 				<div
 					className="flex h-full transition-transform duration-500 ease-out"
 					style={{ transform: `translateX(-${index * 100}%)` }}
@@ -90,12 +90,12 @@ export function CarouselDemo() {
 		<Carousel
 			slides={[
 				{
-					image: slide('Key Visual 01', '#460500'),
+					image: slide('Key Visual 01', '#262626'),
 					caption: '메인 키 비주얼 — 식물성 원료의 생명력.',
 				},
-				{ image: slide('Ampoule', '#EA5343'), caption: '앰플 제품 라인 대표 컷.' },
-				{ image: slide('Ritual', '#195F30'), caption: '데일리 스킨케어 루틴 시리즈.' },
-				{ image: slide('Seasonal', '#1E508C'), caption: '시즌 캠페인 키 비주얼.' },
+				{ image: slide('Ampoule', '#525252'), caption: '앰플 제품 라인 대표 컷.' },
+				{ image: slide('Ritual', '#404040'), caption: '데일리 스킨케어 루틴 시리즈.' },
+				{ image: slide('Seasonal', '#737373'), caption: '시즌 캠페인 키 비주얼.' },
 			]}
 		/>
 	)

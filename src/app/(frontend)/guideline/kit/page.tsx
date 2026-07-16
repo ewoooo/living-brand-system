@@ -163,7 +163,7 @@ export default function GuidelineKitPage() {
 					<TypeSpecimen
 						name="Essen Flux"
 						usage="시그니처 서체 · Display"
-						fontFamily="var(--font-title)"
+						fontFamily="var(--font-sans)"
 						display="Essenherb"
 						specimen="브랜드의 조형적 개성을 담은 시그니처 디스플레이 서체. 키 비주얼과 타이틀에 제한적으로 사용합니다."
 						specs={[{ label: 'Weight', value: 'Regular' }]}

@@ -29,7 +29,7 @@ export function MediaText({
 				<img
 					src={image}
 					alt={alt ?? heading ?? caption ?? ''}
-					className="aspect-video w-full rounded-sm bg-fill-muted object-cover"
+					className="aspect-video w-full bg-fill-muted object-cover"
 				/>
 			</div>
 
@@ -57,7 +57,7 @@ export function MediaText({
 	)
 }
 
-const placeholder = (label: string, bg = '#EA5343', fg = '#FFFFFF') =>
+const placeholder = (label: string, bg = '#737373', fg = '#FFFFFF') =>
 	`data:image/svg+xml,${encodeURIComponent(
 		`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><rect width="640" height="360" fill="${bg}"/><text x="320" y="192" font-family="sans-serif" font-size="28" fill="${fg}" text-anchor="middle">${label}</text></svg>`,
 	)}`
@@ -78,7 +78,7 @@ export function MediaTextDemo() {
 
 			<MediaText
 				layout="stack"
-				image={placeholder('Key Visual', '#460500')}
+				image={placeholder('Key Visual', '#262626')}
 				alt="브랜드 키 비주얼"
 				caption="키 비주얼 — 식물성 원료의 생명력을 담은 메인 이미지. Vegan skincare, rooted in nature."
 			/>
@@ -86,14 +86,14 @@ export function MediaTextDemo() {
 			<div className="grid gap-5 md:grid-cols-2">
 				<MediaText
 					layout="side"
-					image={placeholder('Do', '#50AE5F')}
+					image={placeholder('Do', '#525252')}
 					alt="여백 확보 예시"
 					heading="충분한 여백"
 					caption="로고 주위 최소 여백(x)을 확보한다."
 				/>
 				<MediaText
 					layout="side"
-					image={placeholder('Don’t', '#871400')}
+					image={placeholder('Don’t', '#404040')}
 					alt="여백 부족 예시"
 					heading="여백 침범"
 					caption="다른 요소가 여백을 침범하지 않도록 한다."

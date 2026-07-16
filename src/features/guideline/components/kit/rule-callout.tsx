@@ -4,20 +4,20 @@ const kindStyle = {
 	must: {
 		symbol: '✓',
 		label: '반드시',
-		tint: 'bg-success/10',
-		badge: 'bg-success text-success-foreground',
+		tint: 'bg-fill-muted',
+		badge: 'bg-foreground text-background',
 	},
 	recommended: {
 		symbol: '△',
 		label: '권장',
-		tint: 'bg-warning/10',
-		badge: 'bg-warning text-warning-foreground',
+		tint: 'bg-fill-muted',
+		badge: 'bg-fill-selected text-foreground',
 	},
 	dont: {
 		symbol: '✕',
 		label: '금지',
-		tint: 'bg-destructive/10',
-		badge: 'bg-destructive text-destructive-foreground',
+		tint: 'bg-fill-muted',
+		badge: 'bg-foreground text-background',
 	},
 } as const
 

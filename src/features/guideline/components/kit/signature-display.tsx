@@ -3,16 +3,7 @@
 
 export type Signature = { label?: string; phrase: string; note?: string }
 
-export function SignatureDisplay({
-	signatures,
-	font = 'title',
-}: {
-	signatures: Signature[]
-	// 대형 문구에 쓸 서체 계열. 시그니처 디스플레이면 'title', 국문 위주면 'sans'.
-	font?: 'sans' | 'title'
-}) {
-	const fontFamily = font === 'sans' ? 'var(--font-sans)' : 'var(--font-title)'
-
+export function SignatureDisplay({ signatures }: { signatures: Signature[] }) {
 	return (
 		<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 			{signatures.map((sig) => (
@@ -25,10 +16,7 @@ export function SignatureDisplay({
 							{sig.label}
 						</figcaption>
 					)}
-					<p
-						className="mt-4 break-keep text-foreground leading-[1.05] [font-size:clamp(1.75rem,4.5vw,3rem)]"
-						style={{ fontFamily }}
-					>
+					<p className="mt-4 break-keep text-foreground leading-[1.05] [font-size:clamp(1.75rem,4.5vw,3rem)]">
 						{sig.phrase}
 					</p>
 					{sig.note && (
@@ -45,7 +33,6 @@ export function SignatureDisplay({
 export function SignatureDisplayDemo() {
 	return (
 		<SignatureDisplay
-			font="title"
 			signatures={[
 				{
 					label: 'Brand Signature',

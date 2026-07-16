@@ -69,15 +69,8 @@ export function GridSystemDiagramDemo() {
 				columns={12}
 				gutter="24px"
 				margin="64px"
-				accent="#EA5343"
 			/>
-			<GridSystemDiagram
-				label="Tablet · 8 columns"
-				columns={8}
-				gutter="16px"
-				margin="32px"
-				accent="#EA5343"
-			/>
+			<GridSystemDiagram label="Tablet · 8 columns" columns={8} gutter="16px" margin="32px" />
 		</div>
 	)
 }
