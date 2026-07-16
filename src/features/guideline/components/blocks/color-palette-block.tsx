@@ -1,5 +1,5 @@
-import { hexToRgb, isLightColor, isValidHex } from '@/lib/color'
 import type { BrandColor, GuidelineDocument } from '@/payload-types'
+import { ColorSwatch } from '../kit/color-swatch'
 import { BlockHeading } from './children/block-heading'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
@@ -18,27 +18,9 @@ export function ColorPaletteBlock({
 			<BlockHeading title={block.title} />
 			<div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
 				{colors.map((color) => (
-					<div
-						key={color.id}
-						className="type-caption-1 aspect-square rounded-sm border border-black/10 p-4"
-						style={{
-							backgroundColor: color.hex,
-							color: isLightColor(color.hex) ? '#000000' : '#FFFFFF',
-						}}
-					>
-						<p className="type-caption-1-emphasized">{color.name}</p>
-						<p>HEX {color.hex}</p>
-						{rgbLabel(color.hex) && <p>RGB {rgbLabel(color.hex)}</p>}
-						{color.pantone && <p>PMS {color.pantone}</p>}
-					</div>
+					<ColorSwatch key={color.id} color={color} />
 				))}
 			</div>
 		</section>
 	)
-}
-
-function rgbLabel(hex: string) {
-	if (!isValidHex(hex)) return null
-	const { r, g, b } = hexToRgb(hex)
-	return `${r}/${g}/${b}`
 }

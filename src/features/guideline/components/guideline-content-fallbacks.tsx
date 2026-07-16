@@ -1,12 +1,9 @@
 import { Warning } from '@carbon/icons-react'
 import type { GuidelineVariant } from './globals/guideline-variant'
 
-export function GuidelineDescriptionFallback({ variant }: { variant: GuidelineVariant }) {
-	return (
-		<p data-variant={variant} className="text-destructive">
-			Description must be filled on purpose.
-		</p>
-	)
+// description은 optional — 비어 있으면 아무것도 렌더하지 않는다(빨간 경고 표시 안 함).
+export function GuidelineDescriptionFallback(_props: { variant: GuidelineVariant }) {
+	return null
 }
 
 export function GuidelineLabelFallback() {
