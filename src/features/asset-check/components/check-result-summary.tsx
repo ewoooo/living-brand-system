@@ -16,12 +16,12 @@ interface CheckResultSummaryProps {
 
 /** 검수 결과 한눈 요약: 통과·미통과·검수 전 카운트 + 미통과만 보기 토글. */
 export function CheckResultSummary({ sections }: CheckResultSummaryProps) {
-	const { scenarioKey, selected, showFailOnly, toggleFailOnly } = useCheckImages()
+	const { scenarios, scenarioKey, selected, showFailOnly, toggleFailOnly } = useCheckImages()
 	const failOnlyLabel = showFailOnly ? '전체 보기' : '미통과만 보기'
 	const FailOnlyIcon = showFailOnly ? ViewFilled : View
 	const { summary } = useMemo(
-		() => buildCheckReviewView({ sections, scenarioKey, selected, showFailOnly }),
-		[sections, scenarioKey, selected, showFailOnly],
+		() => buildCheckReviewView({ sections, scenarios, scenarioKey, selected, showFailOnly }),
+		[sections, scenarios, scenarioKey, selected, showFailOnly],
 	)
 
 	return (
@@ -39,9 +39,20 @@ export function CheckResultSummary({ sections }: CheckResultSummaryProps) {
 						colorClassName={CHECK_STATUS.ok.dot}
 					/>
 					<SummaryMetric
+						label={CHECK_STATUS.advisory.label}
+						value={summary.advisory}
+						colorClassName={CHECK_STATUS.advisory.dot}
+					/>
+					<SummaryMetric
 						label={CHECK_STATUS.fail.label}
 						value={summary.fail}
 						colorClassName={CHECK_STATUS.fail.dot}
+					/>
+					<SummaryMetric
+						label={CHECK_STATUS.not_applicable.label}
+						value={summary.notApplicable}
+						colorClassName={CHECK_STATUS.not_applicable.dot}
+						muted
 					/>
 					<SummaryMetric
 						label={CHECK_STATUS.needs_review.label}

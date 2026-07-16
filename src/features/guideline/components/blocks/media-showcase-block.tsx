@@ -1,4 +1,5 @@
 import type { GuidelineDocument } from '@/payload-types'
+import { IMAGE_RATIO_CLASS_NAMES } from '@/types/image-ratio'
 import { GuidelineImage } from './children/guideline-image'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
@@ -8,8 +9,10 @@ export function MediaShowcaseBlock({
 }: {
 	block: Extract<GuidelineBlock, { blockType: 'mediaShowcase' }>
 }) {
+	const ratio = IMAGE_RATIO_CLASS_NAMES[block.imageRatio ?? '16:9']
+
 	return (
-		<section className="grid aspect-video place-items-center">
+		<section className={`grid ${ratio} place-items-center`}>
 			<GuidelineImage
 				image={block.image}
 				backgroundColor={block.imageBackgroundColor}

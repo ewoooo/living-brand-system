@@ -1,5 +1,6 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { GuidelineDocument } from '@/payload-types'
+import { IMAGE_RATIO_CLASS_NAMES } from '@/types/image-ratio'
 import { GuidelineImage } from './children/guideline-image'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
@@ -11,6 +12,7 @@ export function ColumnUnitBlock({
 }) {
 	const gridClassName =
 		block.columns && block.columns.length > 1 ? 'grid gap-4 md:grid-cols-2' : 'grid gap-4'
+	const ratio = IMAGE_RATIO_CLASS_NAMES[block.imageRatio ?? '4:3']
 
 	return (
 		<section>
@@ -22,7 +24,7 @@ export function ColumnUnitBlock({
 							alt={column.heading || ''}
 							backgroundColor={column.imageBackgroundColor}
 							scale={column.imageScale}
-							className="mb-4 aspect-4/3 p-6"
+							className={`mb-4 ${ratio} p-6`}
 						/>
 						{column.heading && (
 							<h4 className="type-body-emphasized mb-4">{column.heading}</h4>

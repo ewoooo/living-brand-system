@@ -44,7 +44,12 @@ export type GuidelineChecks =
       criteria?:
         | {
             question: string;
-            expected: 'present' | 'absent';
+            kind: 'presence' | 'measure';
+            expected?: ('present' | 'absent') | null;
+            operator?: ('gte' | 'lte' | 'between') | null;
+            expectedValue?: number | null;
+            max?: number | null;
+            unit?: string | null;
             id?: string | null;
           }[]
         | null;
@@ -127,6 +132,7 @@ export interface Config {
   blocks: {};
   collections: {
     'guideline-documents': GuidelineDocument;
+    'check-scenarios': CheckScenario;
     'rule-checkers': RuleChecker;
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
@@ -155,6 +161,7 @@ export interface Config {
   };
   collectionsSelect: {
     'guideline-documents': GuidelineDocumentsSelect<false> | GuidelineDocumentsSelect<true>;
+    'check-scenarios': CheckScenariosSelect<false> | CheckScenariosSelect<true>;
     'rule-checkers': RuleCheckersSelect<false> | RuleCheckersSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
@@ -340,6 +347,10 @@ export interface ApplicationImage {
  * via the `definition` "ColumnUnitBlock".
  */
 export interface ColumnUnitBlock {
+  /**
+   * 열 이미지의 표시 비율입니다.
+   */
+  imageRatio?: ('4:3' | '1:1' | '16:9' | '3:2' | '2:3' | '4:5' | '5:4' | '9:16') | null;
   columns?:
     | {
         heading?: string | null;
@@ -422,11 +433,11 @@ export interface RuleChecker {
    */
   checkerKey?: string | null;
   /**
-   * 휴리스틱 검수에 사용할 Anthropic 모델입니다.
+   * AI 검수에 사용할 Anthropic 모델입니다. Advisory는 미설정 시 브랜드 담당자 확인으로 폴백합니다.
    */
   model?: ('claude-opus-4-8' | 'claude-sonnet-5' | 'claude-haiku-4-5') | null;
   /**
-   * 휴리스틱 검수 시 AI에게 전달할 관찰 지침입니다. 출력 형식과 판정 금지 규칙은 시스템이 강제하므로 자유롭게 작성해도 검수가 깨지지 않습니다.
+   * AI에게 전달할 관찰·조언 지침입니다. Advisory는 이 프롬프트가 조언 관점을 정의합니다 (예: 타이포그래피 위계 관점에서 디자이너처럼 조언). 출력 형식과 판정 금지 규칙은 시스템이 강제합니다.
    */
   prompt?: string | null;
   updatedAt: string;
@@ -438,6 +449,10 @@ export interface RuleChecker {
  * via the `definition` "MediaShowcaseBlock".
  */
 export interface MediaShowcaseBlock {
+  /**
+   * 이미지의 표시 비율입니다.
+   */
+  imageRatio?: ('4:3' | '1:1' | '16:9' | '3:2' | '2:3' | '4:5' | '5:4' | '9:16') | null;
   image?: (number | null) | ApplicationImage;
   /**
    * 이미지 영역 뒤에 적용할 브랜드 컬러입니다.
@@ -473,7 +488,7 @@ export interface DoDontBlock {
   /**
    * 예시 이미지의 표시 비율입니다.
    */
-  imageRatio?: ('4:3' | '1:1' | '16:9') | null;
+  imageRatio?: ('4:3' | '1:1' | '16:9' | '3:2' | '2:3' | '4:5' | '5:4' | '9:16') | null;
   /**
    * 가로 스택은 넓은 화면에서 그룹을 나란히 배치합니다.
    */
@@ -503,6 +518,41 @@ export interface DoDontBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'doDont';
+}
+/**
+ * 검수 목적에 맞게 실행할 Check를 조립하고 발행합니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "check-scenarios".
+ */
+export interface CheckScenario {
+  id: number;
+  title: string;
+  description?: string | null;
+  /**
+   * 최초 저장 후 변경되지 않는 CheckScenario 식별자입니다.
+   */
+  key: string;
+  /**
+   * 발행된 Guideline Check 중 이 시나리오에서 실행할 항목입니다.
+   */
+  checkKeys:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * 발행된 시나리오를 신규 검수 대상에서 제외할 때 사용합니다.
+   */
+  archived?: boolean | null;
+  hasBeenPublished: boolean;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -701,7 +751,7 @@ export interface CheckSession {
   targetType: 'uploaded-image';
   imageName?: string | null;
   /**
-   * 검수 실행 시점의 룰셋 스냅샷입니다.
+   * 검수 실행 시점의 Check Scenario 기준 Check 스냅샷입니다.
    */
   rulesetSnapshot?:
     | {
@@ -716,6 +766,18 @@ export interface CheckSession {
    * rule key별 검수 결과입니다.
    */
   results?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * AI 후속 검수가 남은 Check key 목록입니다.
+   */
+  pendingCheckKeys?:
     | {
         [k: string]: unknown;
       }
@@ -1155,6 +1217,10 @@ export interface PayloadLockedDocument {
         value: number | GuidelineDocument;
       } | null)
     | ({
+        relationTo: 'check-scenarios';
+        value: number | CheckScenario;
+      } | null)
+    | ({
         relationTo: 'rule-checkers';
         value: number | RuleChecker;
       } | null)
@@ -1305,6 +1371,7 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
  * via the `definition` "ColumnUnitBlock_select".
  */
 export interface ColumnUnitBlockSelect<T extends boolean = true> {
+  imageRatio?: T;
   columns?:
     | T
     | {
@@ -1335,7 +1402,12 @@ export interface GuidelineChecksSelect<T extends boolean = true> {
     | T
     | {
         question?: T;
+        kind?: T;
         expected?: T;
+        operator?: T;
+        expectedValue?: T;
+        max?: T;
+        unit?: T;
         id?: T;
       };
   heuristicPrompt?: T;
@@ -1354,6 +1426,7 @@ export interface GuidelineChecksSelect<T extends boolean = true> {
  * via the `definition` "MediaShowcaseBlock_select".
  */
 export interface MediaShowcaseBlockSelect<T extends boolean = true> {
+  imageRatio?: T;
   image?: T;
   imageBackgroundColor?: T;
   imageScale?: T;
@@ -1398,6 +1471,21 @@ export interface DoDontBlockSelect<T extends boolean = true> {
   checks?: T | GuidelineChecksSelect<T>;
   id?: T;
   blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "check-scenarios_select".
+ */
+export interface CheckScenariosSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  key?: T;
+  checkKeys?: T;
+  archived?: T;
+  hasBeenPublished?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1595,6 +1683,7 @@ export interface CheckSessionsSelect<T extends boolean = true> {
   imageName?: T;
   rulesetSnapshot?: T;
   results?: T;
+  pendingCheckKeys?: T;
   agentChatSession?: T;
   aiUsage?:
     | T
@@ -2006,6 +2095,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'guideline-documents';
           value: number | GuidelineDocument;
+        } | null)
+      | ({
+          relationTo: 'check-scenarios';
+          value: number | CheckScenario;
         } | null)
       | ({
           relationTo: 'rule-checkers';

@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { generateTexts } from '../services/generate-text.client'
 
-// 프롬프트(+선택 제약) → /api/text → 텍스트 후보 목록(복사). 생성은 라우트/서비스가 소유.
+// 프롬프트(+선택 제약) → 텍스트 후보 목록(복사). 생성·HTTP 계약은 라우트/클라이언트 서비스가 소유.
 
 export function TextGenerator() {
 	const [prompt, setPrompt] = useState('')
@@ -20,14 +21,7 @@ export function TextGenerator() {
 		setError(null)
 		setCopied(null)
 		try {
-			const res = await fetch('/api/text', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ prompt, rule: rule.trim() || undefined, count }),
-			})
-			if (!res.ok) throw new Error(`생성 실패 (${res.status})`)
-			const data = (await res.json()) as { texts: string[] }
-			setTexts(data.texts)
+			setTexts(await generateTexts({ prompt, rule: rule.trim() || undefined, count }))
 		} catch (err) {
 			console.error(err)
 			setError('텍스트 생성에 실패했어요. 잠시 후 다시 시도해 주세요.')

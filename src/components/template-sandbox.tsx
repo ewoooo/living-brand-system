@@ -4,7 +4,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { TemplateRenderer } from '@/components/template-renderer'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { GenerateTextField } from '@/features/text-generation/components/generate-text-field'
 import { exportHtmlToPng } from '@/hooks/use-template-png-export'
 import {
 	collectOpenSlotElements,
@@ -152,10 +151,6 @@ export function TemplateSandbox({
 							placeholder={s.placeholder ?? s.slotLabel}
 							value={texts[s.id] ?? ''}
 							onChange={(e) => setText(s.id, e.target.value)}
-						/>
-						<GenerateTextField
-							defaultPrompt={s.placeholder || s.slotLabel || ''}
-							onGenerated={(text) => setText(s.id, text)}
 						/>
 					</div>
 				))}

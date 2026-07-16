@@ -88,11 +88,27 @@ export function useTemplatePngExport({
 export async function exportHtmlToPng(html: string, css: string, fileName: string): Promise<void> {
 	const holder = document.createElement('div')
 	holder.style.cssText = 'position:fixed;left:-99999px;top:0'
-	holder.innerHTML = `<style>${css}</style>${html}`
+	// holder 자체를 캡처하면 안 된다 — html-to-image가 캡처 노드의 computed style을
+	// 클론에 복사해 fixed 오프셋까지 실리므로 캔버스 밖에 그려져 투명 PNG가 된다.
+	holder.innerHTML = `<style>${css}</style><div data-export-stage>${html}</div>`
 	document.body.appendChild(holder)
 	try {
 		await new Promise((resolve) => requestAnimationFrame(resolve))
-		const stage = holder.querySelector<HTMLElement>('#__stage') ?? holder
+		const stage =
+			holder.querySelector<HTMLElement>('#__stage') ??
+			holder.querySelector<HTMLElement>('[data-export-stage]') ??
+			holder
+		await Promise.all(
+			Array.from(stage.querySelectorAll('img')).map(async (image) => {
+				if (!image.complete) {
+					await new Promise<void>((resolve) => {
+						image.addEventListener('load', () => resolve(), { once: true })
+						image.addEventListener('error', () => resolve(), { once: true })
+					})
+				}
+				await image.decode().catch(() => undefined)
+			}),
+		)
 		const dataUrl = await toPng(stage, { cacheBust: true })
 		const link = document.createElement('a')
 		link.href = dataUrl

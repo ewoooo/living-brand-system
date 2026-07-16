@@ -1,18 +1,21 @@
 'use client'
 
 import { Button, Popup, toast, useForm, useFormFields } from '@payloadcms/ui'
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { generateImages } from '@/features/image-generation/services/generate-image.client'
 import {
 	composeTemplateHtml,
+	type TemplateInput,
 	type TemplateOverride,
 	type TemplateOverrides,
 } from '@/features/template-import/utils/compose-template-html'
-import { generateOneText } from '@/features/text-generation/generate-one-text'
+import { generateOneText } from '@/features/text-generation/services/generate-text.client'
+import { VectorLayerEditor } from './vector-layer-editor'
 
 /**
  * Templates 편집 폼(Admin)의 워크스페이스 — 렌더 캔버스 + 레이어 패널 + 값 편집을 한 곳에서 다룬다.
  * 레이아웃: [캔버스(가변폭·중앙정렬) | 레이어 목록(고정폭)] → divider → 선택 레이어 값 편집.
- * 편집은 Figma가 아니라 "값 교체"만: 텍스트 내용·프레임 배경 이미지. 레이아웃/위치는 Figma가 소유한다.
+ * 편집은 Figma가 아니라 "값 교체"만: 텍스트·프레임 배경·벡터 자산/맞춤/색상. 레이아웃/위치는 Figma가 소유한다.
  */
 interface LayerRow {
 	id: string
@@ -20,6 +23,7 @@ interface LayerRow {
 	name: string
 	figmaType: string
 	isText: boolean
+	isVector: boolean
 	text: string
 }
 
@@ -43,6 +47,7 @@ const TYPE_LABEL: Record<string, string> = {
 	BOOLEAN_OPERATION: '불리언',
 }
 const typeLabel = (t: string) => TYPE_LABEL[t] ?? t
+const VECTOR_TYPES = new Set(['VECTOR', 'BOOLEAN_OPERATION', 'STAR', 'LINE', 'ELLIPSE', 'POLYGON'])
 
 // 배경 설정 트리거 버튼 공통 스타일(에셋 가져오기 · AI 생성).
 const TRIGGER_STYLE: CSSProperties = {
@@ -73,6 +78,7 @@ function parseLayers(html: string): LayerRow[] {
 			name: el.getAttribute('data-name') || typeLabel(figmaType),
 			figmaType,
 			isText,
+			isVector: VECTOR_TYPES.has(figmaType),
 			text: isText ? (el.textContent ?? '') : '',
 		})
 		for (const child of Array.from(el.children)) walk(child, depth + 1)
@@ -83,7 +89,8 @@ function parseLayers(html: string): LayerRow[] {
 }
 
 // Popup 안에 뜨는 AI 생성 폼. Popup이 열릴 때만 마운트되므로 프롬프트는 열 때마다 초기화된다.
-function AiTextForm({ onApply }: { onApply: (text: string) => void }) {
+// rule은 노드의 aiInstruction — 프롬프트와 별개로 항상 지켜야 할 생성 규칙.
+function AiTextForm({ rule, onApply }: { rule?: string; onApply: (text: string) => void }) {
 	const [prompt, setPrompt] = useState('')
 	const [loading, setLoading] = useState(false)
 
@@ -92,7 +99,7 @@ function AiTextForm({ onApply }: { onApply: (text: string) => void }) {
 		if (!trimmed || loading) return
 		setLoading(true)
 		try {
-			const text = await generateOneText(trimmed)
+			const text = await generateOneText(trimmed, rule)
 			if (text) onApply(text)
 			else toast.error('생성 실패 — 프롬프트를 바꾸거나 잠시 후 다시 시도하세요.')
 		} finally {
@@ -143,13 +150,8 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 		setLoading(true)
 		try {
 			// sceneId:'free' — 브랜드 제품 씬 합성 없이 프롬프트 원문대로. 배경은 제품샷이 아니라 사용자가 묘사한 그대로여야 한다.
-			const response = await fetch('/api/image', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ prompt: trimmed, count: 1, sceneId: 'free' }),
-			})
-			const data = (await response.json().catch(() => null)) as { images?: string[] } | null
-			const src = data?.images?.[0]
+			const { images } = await generateImages({ prompt: trimmed, count: 1, sceneId: 'free' })
+			const src = images[0]
 			if (src) onApply(src)
 			else toast.error('이미지 생성 실패 — 잠시 후 다시 시도하세요.')
 		} catch {
@@ -187,6 +189,144 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 			>
 				{loading ? '생성 중...' : '생성'}
 			</Button>
+		</div>
+	)
+}
+
+// 슬롯 스펙 편집 폼 공통 필드 스타일.
+const FIELD_STYLE: CSSProperties = {
+	width: '100%',
+	fontSize: 13,
+	padding: 6,
+	borderRadius: 4,
+	border: '1px solid var(--theme-elevation-150)',
+	background: 'var(--theme-input-bg)',
+	color: 'var(--theme-text)',
+}
+
+// 슬롯 스펙 필드 한 칸 — 위 라벨 + 아래 컨트롤. span이면 그리드 전체 폭.
+function SpecField({
+	id,
+	label,
+	span,
+	children,
+}: {
+	id: string
+	label: string
+	span?: boolean
+	children: ReactNode
+}) {
+	return (
+		<div
+			style={{
+				display: 'flex',
+				flexDirection: 'column',
+				gap: 3,
+				gridColumn: span ? '1 / -1' : undefined,
+			}}
+		>
+			<label htmlFor={id} style={{ fontSize: 11, color: 'var(--theme-elevation-500)' }}>
+				{label}
+			</label>
+			{children}
+		</div>
+	)
+}
+
+/**
+ * 열린 슬롯의 스펙 편집 폼. 열기/닫기는 호출부의 자물쇠 토글이 담당한다.
+ * input의 존재 자체가 열린 슬롯 선언 — 유저(Create) 화면에 입력이 노출된다.
+ */
+function SlotSpecEditor({
+	input,
+	onChange,
+}: {
+	input: TemplateInput
+	onChange: (input: TemplateInput) => void
+}) {
+	const patch = (part: Partial<TemplateInput>) => onChange({ ...input, ...part })
+	const positiveInt = (raw: string) => {
+		const parsed = Number.parseInt(raw, 10)
+		return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
+	}
+
+	return (
+		<div
+			style={{
+				display: 'grid',
+				gridTemplateColumns: 'repeat(3, 1fr)',
+				gap: 8,
+				maxWidth: 560,
+				padding: 10,
+				borderRadius: 4,
+				border: '1px solid var(--theme-elevation-150)',
+			}}
+		>
+			<SpecField id="slot-spec-label" label="라벨">
+				<input
+					id="slot-spec-label"
+					value={input.label ?? ''}
+					onChange={(event) => patch({ label: event.target.value || undefined })}
+					placeholder="예: 영문 이름"
+					style={FIELD_STYLE}
+				/>
+			</SpecField>
+			<SpecField id="slot-spec-placeholder" label="플레이스홀더">
+				<input
+					id="slot-spec-placeholder"
+					value={input.placeholder ?? ''}
+					onChange={(event) => patch({ placeholder: event.target.value || undefined })}
+					placeholder="입력 전 안내 문구"
+					style={FIELD_STYLE}
+				/>
+			</SpecField>
+			<SpecField id="slot-spec-format" label="형식">
+				<select
+					id="slot-spec-format"
+					value={input.inputFormat ?? 'free'}
+					onChange={(event) =>
+						patch({ inputFormat: event.target.value as TemplateInput['inputFormat'] })
+					}
+					style={FIELD_STYLE}
+				>
+					<option value="free">자유 텍스트</option>
+					<option value="number">숫자</option>
+					<option value="email">이메일</option>
+					<option value="date">날짜</option>
+				</select>
+			</SpecField>
+			<SpecField id="slot-spec-max-length" label="최대 글자">
+				<input
+					type="number"
+					min={1}
+					id="slot-spec-max-length"
+					value={input.maxLength ?? ''}
+					onChange={(event) => patch({ maxLength: positiveInt(event.target.value) })}
+					placeholder="없음"
+					style={FIELD_STYLE}
+				/>
+			</SpecField>
+			<SpecField id="slot-spec-max-lines" label="최대 줄">
+				<input
+					type="number"
+					min={1}
+					id="slot-spec-max-lines"
+					value={input.maxLines ?? ''}
+					onChange={(event) => patch({ maxLines: positiveInt(event.target.value) })}
+					placeholder="없음"
+					style={FIELD_STYLE}
+				/>
+			</SpecField>
+			<SpecField id="slot-spec-ai" label="AI 지시 — 이 슬롯의 생성 규칙" span>
+				<textarea
+					id="slot-spec-ai"
+					value={input.aiInstruction ?? ''}
+					onChange={(event) => patch({ aiInstruction: event.target.value || undefined })}
+					rows={2}
+					placeholder="예: 영문 이름만, 성-이름 순"
+					style={FIELD_STYLE}
+				/>
+			</SpecField>
 		</div>
 	)
 }
@@ -408,6 +548,7 @@ export default function TemplateLayersField() {
 							button={<span style={TRIGGER_STYLE}>✨ AI 생성</span>}
 							render={({ close }) => (
 								<AiTextForm
+									rule={overrides[selected.id]?.input?.aiInstruction}
 									onApply={(text) => {
 										commitText(text)
 										close()
@@ -415,6 +556,52 @@ export default function TemplateLayersField() {
 								/>
 							)}
 						/>
+					</div>
+					<div style={{ marginTop: 12 }}>
+						<div
+							style={{
+								display: 'flex',
+								alignItems: 'center',
+								gap: 6,
+								marginBottom: 6,
+							}}
+						>
+							<span style={{ fontSize: 12, color: 'var(--theme-elevation-600)' }}>
+								입력 슬롯
+							</span>
+							<button
+								type="button"
+								onClick={() =>
+									commitOverride({
+										input: overrides[selected.id]?.input ? undefined : {},
+									})
+								}
+								title={
+									overrides[selected.id]?.input
+										? '슬롯 닫기 — 유저 화면에서 숨김'
+										: '슬롯 열기 — 유저 화면에 입력 노출'
+								}
+								style={{
+									border: 'none',
+									background: 'transparent',
+									cursor: 'pointer',
+									fontSize: 14,
+									padding: 2,
+									lineHeight: 1,
+								}}
+							>
+								{overrides[selected.id]?.input ? '🔓' : '🔒'}
+							</button>
+							<span style={{ fontSize: 11, color: 'var(--theme-elevation-500)' }}>
+								{overrides[selected.id]?.input ? '유저 화면에 열림' : '닫힘'}
+							</span>
+						</div>
+						{overrides[selected.id]?.input && (
+							<SlotSpecEditor
+								input={overrides[selected.id]?.input ?? {}}
+								onChange={(input) => commitOverride({ input })}
+							/>
+						)}
 					</div>
 				</div>
 			)}
@@ -458,11 +645,22 @@ export default function TemplateLayersField() {
 				</div>
 			)}
 
-			{selected && !selected.isText && selected.figmaType !== 'FRAME' && (
-				<p style={{ fontSize: 12, color: 'var(--theme-elevation-500)' }}>
-					{typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.
-				</p>
+			{selected?.isVector && (
+				<VectorLayerEditor
+					name={selected.name}
+					override={overrides[selected.id] ?? {}}
+					onChange={commitOverride}
+				/>
 			)}
+
+			{selected &&
+				!selected.isText &&
+				!selected.isVector &&
+				selected.figmaType !== 'FRAME' && (
+					<p style={{ fontSize: 12, color: 'var(--theme-elevation-500)' }}>
+						{typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.
+					</p>
+				)}
 		</div>
 	)
 }

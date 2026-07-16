@@ -2,7 +2,7 @@
 
 import { Button, toast, useFormModified } from '@payloadcms/ui'
 import { useEffect } from 'react'
-import { setReviewPassed, useReviewPassed } from './use-review-gate'
+import { setReviewPassed, useReviewPassed } from '../hooks/use-review-gate'
 
 /**
  * 저장 컨트롤 옆(beforeDocumentControls)의 [검수] 버튼.

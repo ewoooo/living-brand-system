@@ -39,16 +39,20 @@ async function getSubtreeLevels(req: PayloadRequest, currentId: number | string)
 	return descendants.reduce((maxLevels, descendant) => {
 		const breadcrumbs = Array.isArray(descendant.breadcrumbs) ? descendant.breadcrumbs : []
 		const currentIndex = breadcrumbs.findIndex(
-			(breadcrumb) => String(relationshipId(breadcrumb.doc)) === String(currentId),
+			(breadcrumb) => String(resolveRelationshipId(breadcrumb.doc)) === String(currentId),
 		)
 		return Math.max(maxLevels, currentIndex < 0 ? 1 : breadcrumbs.length - currentIndex)
 	}, 1)
 }
 
-export function relationshipId(value: unknown): number | string | null {
+/**
+ * Payload relationship 값(id 또는 populated 객체)에서 id를 꺼내는 순수 함수.
+ * depth 검증 훅 어댑터가 hook 입력을 Service Input으로 바꿀 때 함께 쓴다. 외부 I/O 없음.
+ */
+export function resolveRelationshipId(value: unknown): number | string | null {
 	if (typeof value === 'number' || typeof value === 'string') return value
 	if (typeof value === 'object' && value !== null && 'id' in value) {
-		return relationshipId(value.id)
+		return resolveRelationshipId(value.id)
 	}
 	return null
 }

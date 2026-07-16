@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
+import { INITIAL_CHECK_SCENARIOS } from '@/features/asset-check/scenarios'
 import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { CheckImage } from '@/features/asset-check/types'
 import { buildCheckReviewView } from '@/features/asset-check/utils/build-check-review-view'
@@ -43,19 +44,30 @@ describe('buildCheckReviewView', () => {
 	it('keeps summary empty before any check result exists', () => {
 		const view = buildCheckReviewView({
 			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
 			scenarioKey: 'quick',
 			selected: null,
 			showFailOnly: false,
 		})
 
-		expect(view.summary).toEqual({ pass: 0, ok: 0, fail: 0, pendingManualCheck: 0 })
+		expect(view.summary).toEqual({
+			pass: 0,
+			ok: 0,
+			fail: 0,
+			advisory: 0,
+			notApplicable: 0,
+			pendingManualCheck: 0,
+		})
+		expect(view.rows[0]?.scenarioLabel).toBe('빠른 기본 검수')
+		expect(view.rows[0]?.anchorId).toBe('quick')
+		expect(view.rows[1]?.scenarioLabel).toBeNull()
 		expect(view.rows[0]?.guidelineHref).toBe('/guideline/brand-design-elements/brand-logo')
 		expect(view.rows.map((row) => row.check.key)).toEqual([
-			'logo.size.minimum',
-			'logo.space.clear',
 			'color.palette',
 			'color.combination',
 			'color.contrast',
+			'logo.size.minimum',
+			'logo.space.clear',
 		])
 	})
 
@@ -70,14 +82,72 @@ describe('buildCheckReviewView', () => {
 
 		const view = buildCheckReviewView({
 			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
 			scenarioKey: 'quick',
 			selected,
 			showFailOnly: true,
 		})
 
-		expect(view.summary).toEqual({ pass: 2, ok: 1, fail: 2, pendingManualCheck: 0 })
-		expect(view.rows.map((row) => row.check.key)).toEqual(['logo.space.clear', 'color.palette'])
-		expect(view.rows[1]?.appliesTo).toEqual(['Brand Logo', 'Color System'])
+		expect(view.summary).toEqual({
+			pass: 2,
+			ok: 1,
+			fail: 2,
+			advisory: 0,
+			notApplicable: 0,
+			pendingManualCheck: 0,
+		})
+		expect(view.rows.map((row) => row.check.key)).toEqual(['color.palette', 'logo.space.clear'])
+		expect(view.rows[0]?.appliesTo).toEqual(['Brand Logo', 'Color System'])
+	})
+
+	it('advisory 결과는 통과/미통과가 아닌 별도 카운트로 센다', () => {
+		const selected = image({
+			'logo.size.minimum': result('logo.size.minimum', 'pass'),
+			'logo.space.clear': result('logo.space.clear', 'advisory'),
+		})
+
+		const view = buildCheckReviewView({
+			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarioKey: 'quick',
+			selected,
+			showFailOnly: false,
+		})
+
+		expect(view.summary).toEqual({
+			pass: 1,
+			ok: 0,
+			fail: 0,
+			advisory: 1,
+			notApplicable: 0,
+			pendingManualCheck: 3,
+		})
+	})
+
+	it('전 기준 해당 없음 pass는 통과가 아닌 별도 카운트로 센다', () => {
+		const naResult = result('logo.space.clear', 'pass')
+		naResult.rawResult.reasonCode = 'not_applicable'
+		const selected = image({
+			'logo.size.minimum': result('logo.size.minimum', 'pass'),
+			'logo.space.clear': naResult,
+		})
+
+		const view = buildCheckReviewView({
+			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarioKey: 'quick',
+			selected,
+			showFailOnly: false,
+		})
+
+		expect(view.summary).toEqual({
+			pass: 1,
+			ok: 0,
+			fail: 0,
+			advisory: 0,
+			notApplicable: 1,
+			pendingManualCheck: 3,
+		})
 	})
 
 	it('uses the session ruleset snapshot for criteria and evidence', () => {
@@ -98,6 +168,7 @@ describe('buildCheckReviewView', () => {
 
 		const view = buildCheckReviewView({
 			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
 			scenarioKey: 'quick',
 			selected,
 			showFailOnly: false,
@@ -117,14 +188,15 @@ describe('buildCheckReviewView', () => {
 
 		const view = buildCheckReviewView({
 			sections,
+			scenarios: INITIAL_CHECK_SCENARIOS,
 			scenarioKey: 'quick',
 			selected,
 			showFailOnly: false,
 		})
 
 		expect(view.rows.map((row) => row.check.key)).toEqual([
-			'color.palette',
 			'application.stationery.format',
+			'color.palette',
 		])
 	})
 })

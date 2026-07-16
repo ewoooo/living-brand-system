@@ -10,7 +10,7 @@ type AgentTemplateCheckPlacement = {
 
 export type AgentTemplateDocument = Pick<
 	Template,
-	'description' | 'id' | 'jsonTemplate' | 'name'
+	'description' | 'height' | 'html' | 'id' | 'jsonTemplate' | 'name' | 'overrides' | 'width'
 > & {
 	templateChecks?: AgentTemplateCheckPlacement[] | null
 }
@@ -25,10 +25,16 @@ function publishedTemplateQuery(user: unknown) {
 		locale: DEFAULT_LOCALE,
 		overrideAccess: false,
 		user: user as never,
+		// ponytail: 목록 질의가 html 원문(현재 수 KB)을 함께 나른다. 템플릿이 수백 개로 늘면
+		// 저장 시점에 슬롯 요약을 별도 필드로 스냅샷해 목록에서 html을 빼는 게 업그레이드 경로.
 		select: {
 			name: true,
 			description: true,
 			jsonTemplate: true,
+			html: true,
+			overrides: true,
+			width: true,
+			height: true,
 			templateChecks: true,
 		},
 	} as const

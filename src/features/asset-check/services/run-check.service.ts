@@ -3,16 +3,23 @@ import {
 	toDeterministicCheckResult,
 } from '@/features/asset-check/checkers/check-result.adapter'
 import { opaquePixels } from '@/features/asset-check/checkers/color-metrics'
-import { evaluateHeuristic } from '@/features/asset-check/checkers/heuristic-evaluator'
+import {
+	evaluateAdvisory,
+	evaluateHeuristic,
+} from '@/features/asset-check/checkers/heuristic-evaluator'
 import { getChecker, runDeterministicChecker } from '@/features/asset-check/checkers/registry'
 import type {
+	AiCheckResult,
 	AiUsage,
 	AlgorithmCheckResult,
 	CheckerContext,
 	CheckResult,
+	RawCheckResult,
 } from '@/features/asset-check/checkers/types'
-import { detectCheckImageMediaType } from '@/features/asset-check/image-format'
-import { runAiCheck } from '@/features/asset-check/repositories/ai-check.agent.repository'
+import {
+	type AiCheckRunResult,
+	runAiCheck,
+} from '@/features/asset-check/repositories/ai-check.agent.repository'
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
 import {
@@ -20,6 +27,7 @@ import {
 	type RuntimeCheck,
 } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { ImageContentFlags } from '@/features/asset-check/types'
+import { detectCheckImageMediaType } from '@/features/asset-check/utils/image-format'
 
 export interface ImmediateCheckResult {
 	results: Record<string, CheckResult>
@@ -29,6 +37,11 @@ export interface ImmediateCheckResult {
 export interface HeuristicCheckResult {
 	results: Record<string, CheckResult>
 	aiUsage?: AiUsage
+}
+
+/** AI 단계로 넘길 Check — heuristic 전부, manual은 model이 설정된 advisory만. */
+function isPendingAiCheck(check: RuntimeCheck): boolean {
+	return check.executor === 'heuristic' || (check.executor === 'manual' && Boolean(check.model))
 }
 
 /**
@@ -53,7 +66,7 @@ export async function runImmediateCheck(
 	const ctx = { pixels, palette, grid, image }
 	for (const check of checks) {
 		if (results[check.key] || !shouldRunCheck(check.key, flags)) continue
-		if (check.executor === 'heuristic') {
+		if (isPendingAiCheck(check)) {
 			pendingCheckKeys.push(check.key)
 			continue
 		}
@@ -75,46 +88,75 @@ export async function runHeuristicCheck(
 	inputChecks?: RuntimeCheck[],
 ): Promise<HeuristicCheckResult> {
 	const checks = (inputChecks ?? (await getRuntimeChecks(checkKeys))).filter(
-		(check) => check.executor === 'heuristic' && checkKeys.includes(check.key),
+		(check) => isPendingAiCheck(check) && checkKeys.includes(check.key),
 	)
 	if (checks.length === 0) return { results: {} }
-	const validChecks = checks.filter((check) => check.heuristicCriteria?.length)
-	const aiCheck = validChecks.length
-		? await runAiCheck(validChecks, {
-				image: imageInputFrom(buffer),
-				pixels: [],
-				palette: [],
-			})
-		: null
+
+	const groups = new Map<string, RuntimeCheck[]>()
+	for (const check of checks) {
+		if (!check.model) continue
+		if (check.executor === 'heuristic' && !check.heuristicCriteria?.length) continue
+		groups.set(check.model, [...(groups.get(check.model) ?? []), check])
+	}
+	const ctx: CheckerContext = { image: imageInputFrom(buffer), pixels: [], palette: [] }
+	const runs = await Promise.all(
+		[...groups.values()].map(async (group) => ({
+			keys: new Set(group.map((check) => check.key)),
+			run: await runAiCheck(group, ctx),
+		})),
+	)
+	const runByCheckKey = new Map<string, AiCheckRunResult>()
+	for (const { keys, run } of runs) {
+		for (const key of keys) runByCheckKey.set(key, run)
+	}
+
 	return {
 		results: Object.fromEntries(
 			checks.map((check) => [
 				check.key,
-				toCheckResult(
-					!check.heuristicCriteria?.length
-						? {
-								status: 'needs_review',
-								fulfillment: null,
-								detail: 'Heuristic 판정 기준 없음',
-								reasonCode: 'invalid_criteria',
-							}
-						: aiCheck?.failure
-							? {
-									status: 'needs_review',
-									fulfillment: null,
-									detail: aiCheck.failure.detail,
-									reasonCode: aiCheck.failure.reasonCode,
-								}
-							: evaluateHeuristic(
-									check.heuristicCriteria ?? [],
-									aiCheck?.observations[check.key],
-								),
-					check,
-					{ key: 'ai', type: 'ai' },
-				),
+				toCheckResult(toAiRawResult(check, runByCheckKey.get(check.key)), check, {
+					key: 'ai',
+					type: 'ai',
+				}),
 			]),
 		),
-		aiUsage: aiCheck?.aiUsage,
+		aiUsage: mergeAiUsages(runs.flatMap(({ run }) => (run.aiUsage ? [run.aiUsage] : []))),
+	}
+}
+
+/** AI 실행 결과(또는 실행 불가 사유)를 Check 1건의 원판정으로 변환한다. */
+function toAiRawResult(check: RuntimeCheck, run: AiCheckRunResult | undefined): RawCheckResult {
+	if (check.executor === 'heuristic' && !check.heuristicCriteria?.length) {
+		return aiNeedsReview('Heuristic 판정 기준 없음', 'invalid_criteria')
+	}
+	if (!check.model || !run) {
+		return aiNeedsReview('AI 검사 도구 설정 오류', 'ai_checker_invalid')
+	}
+	if (run.failure) return aiNeedsReview(run.failure.detail, run.failure.reasonCode)
+	return check.executor === 'manual'
+		? evaluateAdvisory(run.advices[check.key])
+		: evaluateHeuristic(check.heuristicCriteria ?? [], run.observations[check.key])
+}
+
+function aiNeedsReview(detail: string, reasonCode: string): AiCheckResult {
+	return { status: 'needs_review', fulfillment: null, detail, reasonCode }
+}
+
+/** 모델 그룹별 usage를 세션 저장용 단일 usage로 합산한다. */
+function mergeAiUsages(usages: AiUsage[]): AiUsage | undefined {
+	if (usages.length <= 1) return usages[0]
+	const total = (read: (usage: AiUsage) => number | undefined) =>
+		usages.reduce((sum, usage) => sum + (read(usage) ?? 0), 0)
+	return {
+		model: usages.map((usage) => usage.model).join(', '),
+		callCount: total((usage) => usage.callCount),
+		inputTokens: total((usage) => usage.inputTokens),
+		outputTokens: total((usage) => usage.outputTokens),
+		totalTokens: total((usage) => usage.totalTokens),
+		cacheReadInputTokens: total((usage) => usage.cacheReadInputTokens),
+		cacheWriteInputTokens: total((usage) => usage.cacheWriteInputTokens),
+		reasoningTokens: total((usage) => usage.reasoningTokens),
+		rawUsage: { groups: usages.map((usage) => usage.rawUsage ?? {}) },
 	}
 }
 
@@ -127,7 +169,8 @@ function shouldRunCheck(checkKey: string, flags: ImageContentFlags): boolean {
 	return true
 }
 
-// heuristic Check는 호출 전에 runAiCheck로 분기되므로 여기 오지 않는다.
+// AI로 가는 Check(heuristic, model 있는 manual)는 호출 전에 분기되므로 여기 오지 않는다.
+// model 없는 manual은 여기서 기존 담당자 확인 폴백을 유지한다.
 function runCheckByExecutor(check: RuntimeCheck, ctx: CheckerContext): CheckResult | null {
 	if (check.executor === 'manual') {
 		const rawResult: AlgorithmCheckResult = {

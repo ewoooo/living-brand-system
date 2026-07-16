@@ -62,7 +62,7 @@ export const CheckSessions: CollectionConfig = {
 			name: 'rulesetSnapshot',
 			type: 'json',
 			admin: {
-				description: '검수 실행 시점의 룰셋 스냅샷입니다.',
+				description: '검수 실행 시점의 Check Scenario 기준 Check 스냅샷입니다.',
 			},
 		},
 		{
@@ -70,6 +70,13 @@ export const CheckSessions: CollectionConfig = {
 			type: 'json',
 			admin: {
 				description: 'rule key별 검수 결과입니다.',
+			},
+		},
+		{
+			name: 'pendingCheckKeys',
+			type: 'json',
+			admin: {
+				description: 'AI 후속 검수가 남은 Check key 목록입니다.',
 			},
 		},
 		{
