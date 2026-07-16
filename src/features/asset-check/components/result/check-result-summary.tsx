@@ -3,6 +3,7 @@
 import { View, ViewFilled } from '@carbon/icons-react'
 import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
@@ -32,10 +33,24 @@ export function CheckResultSummary({ sections }: CheckResultSummaryProps) {
 		() => buildCheckReviewView({ sections, scenarios, scenarioKey, selected, showFailOnly }),
 		[sections, scenarios, scenarioKey, selected, showFailOnly],
 	)
+	// 진행률: 판정 완료(results) + AI 후속 대기(pendingCheckKeys)로 전체 분모를 만든다.
+	const doneCount = Object.keys(selected?.results ?? {}).length
+	const totalCount = doneCount + (selected?.pendingCheckKeys?.length ?? 0)
 
 	return (
 		<div className="mb-6 flex flex-wrap items-center gap-x-5 pl-2">
 			<TooltipProvider delayDuration={150}>
+				{selected?.status === 'running' && (
+					<span
+						aria-live="polite"
+						className="type-caption-1 flex items-center gap-2 text-foreground-muted"
+					>
+						<Spinner className="size-3.5" />
+						{totalCount > 0
+							? `검수 진행 중 ${doneCount}/${totalCount}`
+							: '검수 진행 중'}
+					</span>
+				)}
 				<section className="flex flex-wrap gap-4">
 					<SummaryMetric
 						label={CHECK_STATUS.pass.label}
