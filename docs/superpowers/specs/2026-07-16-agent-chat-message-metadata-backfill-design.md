@@ -23,13 +23,13 @@ Agent 채팅은 턴마다 새 세션 레코드를 만든다. 클라이언트는 
 | 소급 적용 | 앞으로 생성분만 | 기존 레코드는 테스트 데이터. 각 턴의 원본 레코드에서 여전히 확인 가능 |
 | 구현 위치 | 서비스 계층 | 컬렉션 훅은 reaction 갱신 등 무관한 update에도 발동해 조건 분기가 필요하고, 도메인 로직이 컬렉션 정의로 샘. Aggregate 전환의 소유권 방향(서비스/도메인 소유)과 일치 |
 | 실패 처리 | best-effort | 백필은 기록 보강이지 채팅의 전제조건이 아님. 실패 시 로그만 남기고 진행 |
-| 복사 필드 | `usedTools`/`usedSkills`/`aiUsage` 세 개만 | `text`/`reaction`은 클라이언트 현재값이 정답 (reaction은 이후 변경 가능) |
+| 복사 필드 | `usedTools`/`usedSkills`/`aiUsage` 세 개만 (`aiUsage.rawUsage` 제외) | `text`/`reaction`은 클라이언트 현재값이 정답 (reaction은 이후 변경 가능). rawUsage는 합본마다 복제하면 레코드가 턴 수만큼 비대해지므로 원본 턴 레코드에만 남긴다 |
 
 ## 변경 파일 (3개, 스키마 변경 없음)
 
 | 파일 | 변경 |
 |------|------|
-| `src/features/agent-chat/repositories/agent-chat-session.payload.repository.ts` | 조회 함수 추가: `findLatestAgentChatSessionContainingMessage(messageId, user)` — `messages.messageId` 일치 + `createdBy` 본인 세션 중 최신(`-createdAt`) 1건을 `depth: 0`, `overrideAccess: false`로 반환 |
+| `src/features/agent-chat/repositories/agent-chat-session.payload.repository.ts` | 조회 함수 추가: `findLatestAgentChatSessionContainingMessage(messageId, user)` — `messages.messageId` 일치 + `createdBy` 본인 세션 중 최신(`-createdAt`) 1건을 `depth: 0`으로 반환 |
 | `src/features/agent-chat/services/backfill-agent-chat-session-messages.service.ts` (신규) | 조회 + 순수 병합을 묶은 백필 서비스 |
 | `src/features/agent-chat/services/start-agent-chat-session.service.ts` | `toSessionMessages()` 직후 백필 호출 한 줄 추가 |
 
@@ -65,7 +65,7 @@ POST /api/agent-chat (턴 N)
 
 - 조회 실패(DB 오류 등): 백필만 건너뛰고 입력을 그대로 반환한다. `payload.logger.warn` 한 줄. 채팅은 정상 진행.
 - 조회 결과 0건: 에러가 아닌 정상 no-op (첫 턴, 또는 이전 레코드 삭제됨).
-- 접근 제어: 조회는 `overrideAccess: false` + 요청 사용자로 실행한다. 본인 세션만 읽는 기존 규칙(docs/07-security.md)을 그대로 타므로 다른 사용자의 세션이 백필 소스로 섞일 수 없다.
+- 접근 제어: 컬렉션 read 접근이 `managerOrAdmin`이라 사용자 컨텍스트(`overrideAccess: false`)로는 본인 기록도 읽을 수 없다. 따라서 같은 repository의 `updateAgentChatSessionReaction`과 동일한 패턴으로 `overrideAccess: true` + `createdBy: { equals: user.id }` 명시 필터를 사용한다 — 본인 세션 한정은 이 필터가 보장하며, 다른 사용자의 세션이 백필 소스로 섞일 수 없다.
 
 ## 보안
 
