@@ -15,7 +15,7 @@ export const ApplicationImages: CollectionConfig = {
 	admin: {
 		group: '브랜드 자원',
 		useAsTitle: 'name',
-		defaultColumns: ['name', 'alt', 'updatedAt'],
+		defaultColumns: ['filename', 'name', 'alt', 'updatedAt'],
 	},
 	versions: draftVersions,
 	fields: [
