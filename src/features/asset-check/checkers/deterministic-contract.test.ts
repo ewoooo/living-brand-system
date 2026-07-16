@@ -5,7 +5,7 @@ import type { RuntimeCheck } from '@/features/asset-check/services/get-check-rul
 import { toDeterministicCheckResult } from './check-result.adapter'
 import { extractDominantColorPair } from './color-pair.extractor'
 import { contrastChecker, contrastOptionsSchema } from './contrast.checker'
-import { evaluateExtraction, evaluateMeasurement } from './deterministic-evaluator'
+import { evaluateExtraction, evaluateMeasurement } from './deterministic.evaluator'
 import { hasDeterministicChecker } from './registry'
 import type { ColorPairObservation, ExtractionResult, PixelGrid } from './types'
 

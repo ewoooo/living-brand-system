@@ -2,12 +2,12 @@ import { anthropic } from '@ai-sdk/anthropic'
 import { generateText, type LanguageModelUsage, NoObjectGeneratedError, Output } from 'ai'
 import { z } from 'zod'
 import { env } from '@/env'
+import type { AiUsage, CheckerContext } from '@/features/asset-check/checkers/types'
 import {
 	type HeuristicObservation,
 	measureObservationSchema,
 	presenceObservationSchema,
-} from '@/features/asset-check/checkers/heuristic-evaluator'
-import type { AiUsage, CheckerContext } from '@/features/asset-check/checkers/types'
+} from '@/features/asset-check/domain/heuristic.evaluator'
 import type {
 	CheckReferenceAsset,
 	RuntimeCheck,
