@@ -1,6 +1,4 @@
-import { CheckResultSummary } from '@/features/asset-check/components/check-result-summary'
-import { CheckSections } from '@/features/asset-check/components/check-tables'
-import { ImageUploadCarousel } from '@/features/asset-check/components/image-upload-carousel'
+import { ReviewFunnel } from '@/features/asset-check/components/review-funnel/review-funnel'
 import { getCheckRuleset } from '@/features/asset-check/services/get-check-ruleset.service'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 
@@ -18,13 +16,7 @@ export default async function ReviewPage() {
 					가이드라인에서 벗어난 부분을 빠르게 바로잡을 수 있습니다.
 				</p>
 			</header>
-			<div className="sticky top-0 z-10 pb-2">
-				<ImageUploadCarousel />
-				<CheckResultSummary sections={sections} />
-			</div>
-			<div className="w-full">
-				<CheckSections sections={sections} />
-			</div>
+			<ReviewFunnel sections={sections} />
 		</div>
 	)
 }

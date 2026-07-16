@@ -85,6 +85,18 @@ export async function POST(req: Request) {
 				})
 				return 'Agent response failed.'
 			},
+			onEnd: async ({ isAborted, finishReason }) => {
+				// 스텝 상한(tool-calls finish)으로 completed 신호 없이 끝난 턴의 기록 안전망.
+				// 중단·미종결 스트림(finish 청크 없음 → finishReason undefined)은 미완성 턴이므로
+				// completed로 승격하지 않는다. 클라이언트 이탈은 isAborted가 아니라 이 경로로 온다.
+				if (isAborted || finishReason == null) return
+				await chatSession.finalize().catch((error) => {
+					payload.logger.error(
+						{ err: error, requestId },
+						'agent-chat.session-update.failed',
+					)
+				})
+			},
 		})
 	} catch (error) {
 		await chatSession

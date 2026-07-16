@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { evaluateAdvisory, evaluateHeuristic } from './heuristic-evaluator'
+import { evaluateAdvisory, evaluateHeuristic } from './heuristic.evaluator'
 
 const criteria = [
 	{ id: 'redness', question: '인위적인 홍조가 있는가?', expected: 'absent' as const },

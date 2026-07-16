@@ -4,8 +4,8 @@ import { draftVersions } from './shared'
 export const ApplicationImages: CollectionConfig = {
 	slug: 'application-images',
 	labels: {
-		singular: 'Application Image',
-		plural: 'Application Images',
+		singular: '브랜드 이미지',
+		plural: '브랜드 이미지',
 	},
 	access: {
 		// 발행 가이드라인 SSR과 템플릿 렌더링이 인증 없이 파일 URL을 참조하므로 의도적인 공개 읽기다.
@@ -13,9 +13,9 @@ export const ApplicationImages: CollectionConfig = {
 		read: () => true,
 	},
 	admin: {
-		group: 'Brand Assets',
+		group: '브랜드 자원',
 		useAsTitle: 'name',
-		defaultColumns: ['name', 'alt', 'updatedAt'],
+		defaultColumns: ['filename', 'name', 'alt', 'updatedAt'],
 	},
 	versions: draftVersions,
 	fields: [

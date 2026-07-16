@@ -5,9 +5,20 @@
  * 렌더/저장 시 base 위에 다시 얹는다. 그래서 Figma에서 조금 고쳐 재import해도(=base만 갱신) 앱 작업이 보존된다.
  * base에서 사라진 노드의 오버라이드는 조용히 무시한다(우아한 degrade). 브라우저 DOMParser를 쓰므로 클라이언트 전용.
  */
+/** 텍스트 노드를 유저(Create) 화면의 입력 슬롯으로 여는 저작 시점 스펙. 존재 자체가 열린 슬롯 선언이다. */
+export interface TemplateInput {
+	label?: string
+	placeholder?: string
+	maxLength?: number
+	maxLines?: number
+	inputFormat?: 'free' | 'number' | 'email' | 'date'
+	aiInstruction?: string
+}
+
 export interface TemplateOverride {
 	text?: string
 	backgroundImage?: string
+	input?: TemplateInput
 	vectorAsset?: {
 		collection: 'brand-logos' | 'application-images'
 		id: number

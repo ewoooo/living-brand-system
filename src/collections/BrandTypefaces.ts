@@ -6,11 +6,11 @@ export const BrandTypefaces: CollectionConfig = {
 	slug: 'brand-typefaces',
 	access: managerManagedAccess,
 	labels: {
-		singular: 'Brand Typeface',
-		plural: 'Brand Typefaces',
+		singular: '서체',
+		plural: '서체',
 	},
 	admin: {
-		group: 'Brand Assets',
+		group: '브랜드 자원',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'familyName', 'updatedAt'],
 	},

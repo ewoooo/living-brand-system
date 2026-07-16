@@ -1,5 +1,10 @@
+/**
+ * AI(heuristic) 검수 판정 조립 — 관측값 스키마와 기준 비교를 소유한다.
+ * AI 호출·프롬프트는 ai-check.agent.repository가, 실행 흐름은 run-check.service가 소유하고,
+ * 이 파일은 "관측값 → 판정" 순수 계산만 담당한다. deterministic 픽셀 checker(checkers/)가 아니다.
+ */
 import { z } from 'zod'
-import type { AiCheckResult, HeuristicCriterion } from './types'
+import type { AiCheckResult, HeuristicCriterion } from '@/features/asset-check/checkers/types'
 
 export const presenceObservationSchema = z.strictObject({
 	value: z.enum(['present', 'absent', 'uncertain', 'not_applicable']),

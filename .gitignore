@@ -72,6 +72,7 @@ backups/
 # Local build output
 output/
 temp/
+.superpowers
 .pnpm-store/
 .playwright-cli/
 scripts/assets/

@@ -1,3 +1,36 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "shadcn/tailwind.css";
+
+@source "../../components/admin";
+@source "../../components/ui";
+@source "../../features/template-import/components";
+
+@theme inline {
+	--font-sans: var(--font-body);
+	--color-background: var(--theme-bg);
+	--color-foreground: var(--theme-text);
+	--color-primary: var(--theme-text);
+	--color-primary-foreground: var(--theme-bg);
+	--color-secondary: var(--theme-elevation-100);
+	--color-secondary-foreground: var(--theme-text);
+	--color-muted: var(--theme-elevation-100);
+	--color-muted-foreground: var(--theme-elevation-600);
+	--color-accent: var(--theme-elevation-100);
+	--color-accent-foreground: var(--theme-text);
+	--color-card: var(--theme-elevation-50);
+	--color-card-foreground: var(--theme-text);
+	--color-popover: var(--theme-elevation-0);
+	--color-popover-foreground: var(--theme-text);
+	--color-destructive: var(--theme-error-500);
+	--color-border: var(--theme-elevation-200);
+	--color-input: var(--theme-elevation-200);
+	--color-ring: var(--theme-elevation-400);
+	--radius-sm: 4px;
+	--radius-md: 6px;
+	--radius-lg: 8px;
+}
+
 @font-face {
 	font-family: "Pretendard";
 	src: url("/fonts/pretendard/PretendardVariable.woff2") format("woff2");
@@ -8,6 +41,13 @@
 :root {
 	--font-body: "Pretendard", system-ui, sans-serif;
 	--font-serif: var(--font-body);
+}
+
+[data-slot="button"],
+[data-slot="input"],
+[data-slot="textarea"],
+[data-slot="toggle-group-item"] {
+	font-family: var(--font-body);
 }
 
 .dashboard-summary {
@@ -27,6 +67,13 @@
 		padding: 0;
 		margin: 0;
 	}
+}
+
+.color-swatch-cell__swatch {
+	border: 1px solid var(--theme-elevation-200);
+	border-radius: 4px;
+	height: 14px;
+	width: 14px;
 }
 
 .agent-chat-messages-table,
@@ -156,13 +203,6 @@
 		min-height: calc(var(--base) * 2.25);
 	}
 
-	&__depth {
-		background: var(--theme-elevation-100);
-		border-radius: 999px;
-		font-size: 0.75rem;
-		padding: 2px 8px;
-	}
-
 	&__title {
 		color: var(--theme-text);
 		font-weight: 600;
@@ -184,15 +224,8 @@
 		align-items: center;
 		justify-content: space-between;
 
-		h3,
-		span {
+		h3 {
 			margin: 0;
-		}
-
-		span {
-			background: var(--theme-elevation-100);
-			border-radius: 999px;
-			padding: 2px 8px;
 		}
 	}
 
@@ -202,6 +235,25 @@
 	}
 }
 
-.contrast-options-field input {
+.contrast-options-field [data-slot="input"] {
 	width: 100%;
+}
+
+.figma-html-import-field {
+	align-items: flex-start;
+	display: flex;
+	gap: 8px;
+	margin-bottom: var(--base);
+
+	> [data-slot="button"] {
+		margin-top: 25px;
+	}
+}
+
+.admin-sidebar-divider {
+	margin: calc(var(--base) * 0.75) 0;
+}
+
+.template-layers-field__separator {
+	margin: var(--base) 0;
 }

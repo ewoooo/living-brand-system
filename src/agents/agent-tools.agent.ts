@@ -57,13 +57,15 @@ export function getAgentTools() {
 			},
 		}),
 		listGuidelineDocuments: tool({
-			description: 'List published brand guideline documents available to read.',
+			description:
+				'List published brand guideline documents available to read. Use after searchGuidelines still returns no useful result with shorter core terms.',
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
 			execute: (_input, { context }) => listAgentGuidelineDocuments(context.user),
 		}),
 		searchGuidelines: tool({
-			description: 'Search published brand guideline documents.',
+			description:
+				'Search published brand guideline titles, paths, descriptions, body content, and checks. Retry with shorter core terms when no useful result is returned.',
 			inputSchema: z.object({
 				query: z.string().min(1).max(120),
 			}),
@@ -71,7 +73,8 @@ export function getAgentTools() {
 			execute: ({ query }, { context }) => searchAgentGuidelines(context.user, { query }),
 		}),
 		readGuidelineDocument: tool({
-			description: 'Read a published guideline document returned by searchGuidelines.',
+			description:
+				'Read a published guideline document returned by searchGuidelines or listGuidelineDocuments.',
 			inputSchema: z.object({
 				collection: z.literal('guideline-documents'),
 				id: z.string().min(1),
@@ -116,6 +119,15 @@ export function getAgentTools() {
 			contextSchema: guidelineToolContextSchema,
 			execute: ({ templateId, values }, { context }) =>
 				prepareTemplateImage(context.user, templateId, values),
+			// 렌더 페이로드(html/template 트리)는 챗 UI 전용 — 모델에는 채운 결과 요약만 돌려준다.
+			toModelOutput: ({ output }) => ({
+				type: 'json',
+				value: {
+					templateId: output.templateId,
+					name: output.name,
+					filledSlots: Object.keys(output.values),
+				},
+			}),
 		}),
 		generateImage: tool({
 			description: `Generate NEW images from a text prompt using AI image generation. Use when the user wants to create or generate a fresh image from a description (배경, 풍경, 제품컷, 헤더 이미지 등). This is DIFFERENT from prepareTemplateImage, which only fills fixed templates like 명함/카드. For a branded cosmetic PRODUCT shot, the prompt describes the hero product and sceneId picks the brand environment/composition (omit to auto-pick). For any NON-product image (backgrounds, textures, key visuals, 자유 생성), pass sceneId "free" to generate the prompt as-is without brand product styling. Scenes: ${imageSceneSummary}.`,

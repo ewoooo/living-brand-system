@@ -18,6 +18,15 @@ const executorLabels = {
 
 type ExecutorFilter = 'all' | keyof typeof executorLabels
 
+/**
+ * /review/rules — 시나리오별 검수 기준 카탈로그 (검색 + executor 필터).
+ * in : { sections: CheckSection[]; scenarios: CheckScenario[] }   // 서버에서 주입, 컨텍스트 미사용
+ * 검색 대상 텍스트: scenario.title + check.title/titleKo/key + formatCheckEvidence(check.evidence)
+ * 항목 렌더 필드: check.key, check.title, check.evidence, check.referenceAssets,
+ *   check.executor('자동 측정'|'AI 평가'|'담당자 확인'), check.implemented(미구현 배지),
+ *   check.messages { pass?, ok?, needs_review?, fail? }
+ * 앵커: section id = scenario.key, article id = toCheckAnchor(scenarioKey, checkKey)
+ */
 export function CheckCatalog({
 	sections,
 	scenarios,

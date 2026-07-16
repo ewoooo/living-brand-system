@@ -1,5 +1,5 @@
 import config from '@payload-config'
-import { getPayload } from 'payload'
+import { getPayload, type Where } from 'payload'
 import { collectGuidelineCheckSources } from '@/features/guideline/checks/collect-guideline-check-sources'
 import { formatCheckEvidence } from '@/features/guideline/checks/format-check-evidence'
 import { findPublishedUnifiedGuidelineCheckDocuments } from '@/features/guideline/repositories/published-guideline-checks.payload.repository'
@@ -53,6 +53,10 @@ type SearchDoc = {
 	} | null
 }
 
+const SEARCH_RESULT_LIMIT = 10
+const SEARCH_CANDIDATE_LIMIT = 20
+const SEARCH_TERM_LIMIT = 8
+
 /** published+ko(en fallback)+접근제어 공통 조회 옵션 — 이 repo의 가이드라인 질의 전부가 쓴다. */
 const publishedKoQuery = (user: unknown) => ({
 	draft: false,
@@ -85,21 +89,41 @@ export async function searchGuidelineDocuments(
 	query: string,
 ): Promise<AgentGuidelineSearchResult[]> {
 	const payload = await getPayload({ config })
-	const results = await payload.find({
-		collection: 'search',
-		depth: 0,
-		limit: 5,
-		overrideAccess: false,
-		sort: '-priority',
-		user: user as never,
-		where: {
-			title: {
-				like: query,
-			},
-		},
-	})
+	const terms = searchTerms(query)
+	const find = (where: Where) =>
+		payload.find({
+			collection: 'search',
+			depth: 0,
+			limit: SEARCH_CANDIDATE_LIMIT,
+			overrideAccess: false,
+			sort: '-priority',
+			user: user as never,
+			where,
+		})
 
-	return (results.docs as SearchDoc[])
+	const exactResults = await find({
+		or: [{ title: { like: query } }, { searchText: { like: query } }],
+	})
+	let candidateDocs = exactResults.docs as SearchDoc[]
+
+	if (candidateDocs.length < SEARCH_RESULT_LIMIT) {
+		const expandedResults = await find({
+			or: terms.flatMap((term): Where[] => [
+				{ title: { contains: term } },
+				{ searchText: { contains: term } },
+			]),
+		})
+		candidateDocs = [
+			...new Map(
+				[...candidateDocs, ...(expandedResults.docs as SearchDoc[])].map((result) => [
+					`${result.doc?.relationTo}:${result.doc?.value}`,
+					result,
+				]),
+			).values(),
+		]
+	}
+
+	return candidateDocs
 		.filter((result) => result.doc?.relationTo === 'guideline-documents')
 		.map((result) => ({
 			title: result.title || '',
@@ -107,6 +131,17 @@ export async function searchGuidelineDocuments(
 			id: String(result.doc?.value || ''),
 		}))
 		.filter((result) => result.title && result.id)
+		.sort((a, b) => titleMatchCount(b.title, terms) - titleMatchCount(a.title, terms))
+		.slice(0, SEARCH_RESULT_LIMIT)
+}
+
+function searchTerms(query: string): string[] {
+	return [...new Set(query.split(/\s+/).filter(Boolean))].slice(0, SEARCH_TERM_LIMIT)
+}
+
+function titleMatchCount(title: string, terms: string[]): number {
+	const normalizedTitle = title.toLocaleLowerCase()
+	return terms.filter((term) => normalizedTitle.includes(term.toLocaleLowerCase())).length
 }
 
 export async function findAgentChecks(user: unknown): Promise<AgentCheckCatalogItem[]> {

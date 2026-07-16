@@ -73,6 +73,7 @@ export async function findPublishedTemplate(templateId: number) {
 			jsonTemplate: true,
 			code: true,
 			html: true,
+			overrides: true,
 			width: true,
 			height: true,
 		},

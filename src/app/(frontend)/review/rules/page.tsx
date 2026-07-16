@@ -1,4 +1,4 @@
-import { CheckCatalog } from '@/features/asset-check/components/check-catalog'
+import { CheckCatalog } from '@/features/asset-check/components/catalog/check-catalog'
 import { getCheckRuleset } from '@/features/asset-check/services/get-check-ruleset.service'
 import { getCheckScenarios } from '@/features/asset-check/services/get-check-scenarios.service'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'

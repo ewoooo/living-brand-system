@@ -1,7 +1,7 @@
 'use client'
 
 import { Download } from '@carbon/icons-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { TemplateRenderer } from '@/components/template-renderer'
 import {
 	Attachment,
@@ -12,16 +12,95 @@ import {
 	AttachmentMedia,
 	AttachmentTitle,
 } from '@/components/ui/attachment'
-import { useTemplatePngExport } from '@/hooks/use-template-png-export'
+import { composeTemplateHtml } from '@/features/template-import/utils/compose-template-html'
+import { exportHtmlToPng, useTemplatePngExport } from '@/hooks/use-template-png-export'
 import type { AgentTemplateImageAttachment } from '../services/agent-template-request.service'
 
 const PREVIEW_WIDTH = 280
+
+type HtmlAttachment = Extract<AgentTemplateImageAttachment, { kind: 'html' }>
+type JsonAttachment = Exclude<AgentTemplateImageAttachment, { kind: 'html' }>
 
 export function AgentChatTemplateAttachment({
 	attachment,
 }: {
 	attachment: AgentTemplateImageAttachment
 }) {
+	// kind 없는 기존 저장 메시지는 json 첨부다.
+	return attachment.kind === 'html' ? (
+		<HtmlTemplateAttachment attachment={attachment} />
+	) : (
+		<JsonTemplateAttachment attachment={attachment} />
+	)
+}
+
+/** html 첨부: 슬롯 값을 base html에 합성해 미리보기·다운로드한다 (Create 화면과 동일 렌더). */
+function HtmlTemplateAttachment({ attachment }: { attachment: HtmlAttachment }) {
+	const [isExporting, setIsExporting] = useState(false)
+	const [exportError, setExportError] = useState<string | null>(null)
+
+	const composedHtml = useMemo(
+		() =>
+			composeTemplateHtml(
+				attachment.html,
+				Object.fromEntries(
+					Object.entries(attachment.values).flatMap(([nodeId, value]) =>
+						typeof value.text === 'string' ? [[nodeId, { text: value.text }]] : [],
+					),
+				),
+			),
+		[attachment.html, attachment.values],
+	)
+
+	async function exportPng() {
+		setExportError(null)
+		setIsExporting(true)
+
+		try {
+			await exportHtmlToPng(composedHtml, '', attachment.name)
+		} catch {
+			setExportError(
+				'PNG 내보내기에 실패했습니다. 이미지 원본 접근(CORS)이 막혀 있을 수 있습니다.',
+			)
+		} finally {
+			setIsExporting(false)
+		}
+	}
+
+	return (
+		<TemplateAttachmentFrame
+			name={attachment.name}
+			isExporting={isExporting}
+			exportError={exportError}
+			onExport={exportPng}
+		>
+			<ScaledMedia contentWidth={attachment.width}>
+				{(scale) => (
+					<div
+						style={{
+							width: attachment.width * scale,
+							height: attachment.height * scale,
+						}}
+					>
+						<div
+							style={{
+								width: attachment.width,
+								height: attachment.height,
+								transform: `scale(${scale})`,
+								transformOrigin: 'top left',
+							}}
+							// biome-ignore lint/security/noDangerouslySetInnerHtml: 서버 컨버터가 만든 inline-style HTML(스크립트 없음) — Create 화면과 동일 렌더
+							dangerouslySetInnerHTML={{ __html: composedHtml }}
+						/>
+					</div>
+				)}
+			</ScaledMedia>
+		</TemplateAttachmentFrame>
+	)
+}
+
+/** json 첨부 (deprecated 폴백): 기존 TemplateRenderer 경로 그대로. */
+function JsonTemplateAttachment({ attachment }: { attachment: JsonAttachment }) {
 	const { exportPng, isExporting, exportError, exportNode } = useTemplatePngExport({
 		template: attachment.template,
 		values: attachment.values,
@@ -29,40 +108,77 @@ export function AgentChatTemplateAttachment({
 	})
 
 	return (
+		<TemplateAttachmentFrame
+			name={attachment.name}
+			isExporting={isExporting}
+			exportError={exportError}
+			onExport={exportPng}
+		>
+			<ScaledMedia contentWidth={attachment.template.width}>
+				{(scale) => (
+					<TemplateRenderer
+						template={attachment.template}
+						values={attachment.values}
+						scale={scale}
+					/>
+				)}
+			</ScaledMedia>
+			{exportNode}
+		</TemplateAttachmentFrame>
+	)
+}
+
+function TemplateAttachmentFrame({
+	name,
+	isExporting,
+	exportError,
+	onExport,
+	children,
+}: {
+	name: string
+	isExporting: boolean
+	exportError: string | null
+	onExport: () => void
+	children: React.ReactNode
+}) {
+	return (
 		<Attachment orientation="vertical" className="w-full rounded-lg p-2">
 			<AttachmentMedia
 				variant="image"
 				className="aspect-auto h-auto w-full rounded-md border border-border bg-background p-0"
 			>
-				<TemplateAttachmentMedia attachment={attachment} />
+				{children}
 			</AttachmentMedia>
 			<AttachmentContent className="w-full px-1 pt-2">
-				<AttachmentTitle>{attachment.name}</AttachmentTitle>
+				<AttachmentTitle>{name}</AttachmentTitle>
 				<AttachmentDescription>템플릿 이미지</AttachmentDescription>
 			</AttachmentContent>
 			<AttachmentActions>
 				<AttachmentAction
 					aria-label="템플릿 이미지 다운로드"
 					disabled={isExporting}
-					onClick={exportPng}
+					onClick={onExport}
 				>
 					<Download />
 				</AttachmentAction>
 			</AttachmentActions>
 			{exportError && <p className="type-caption-1 px-1 text-destructive">{exportError}</p>}
-			{exportNode}
 		</Attachment>
 	)
 }
 
-function TemplateAttachmentMedia({ attachment }: { attachment: AgentTemplateImageAttachment }) {
+/** 첨부 폭에 맞춰 콘텐츠를 contain 축소한다. children은 scale을 받아 원본 크기로 그린다. */
+function ScaledMedia({
+	contentWidth,
+	children,
+}: {
+	contentWidth: number
+	children: (scale: number) => React.ReactNode
+}) {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const [containerWidth, setContainerWidth] = useState(PREVIEW_WIDTH)
-	const renderWidth = Math.max(
-		1,
-		Math.min(PREVIEW_WIDTH, containerWidth, attachment.template.width),
-	)
-	const scale = renderWidth / attachment.template.width
+	const renderWidth = Math.max(1, Math.min(PREVIEW_WIDTH, containerWidth, contentWidth))
+	const scale = renderWidth / contentWidth
 
 	useEffect(() => {
 		const element = containerRef.current
@@ -87,11 +203,7 @@ function TemplateAttachmentMedia({ attachment }: { attachment: AgentTemplateImag
 
 	return (
 		<div ref={containerRef} className="flex w-full justify-center overflow-hidden">
-			<TemplateRenderer
-				template={attachment.template}
-				values={attachment.values}
-				scale={scale}
-			/>
+			{children(scale)}
 		</div>
 	)
 }
