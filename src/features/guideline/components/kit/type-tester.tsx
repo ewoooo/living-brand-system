@@ -9,12 +9,11 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 // 자기 샘플 텍스트를 갖고, tier를 바꿔도 각자의 편집 내용이 보존된다.
 
 const TIERS = {
-	word: { label: 'Word', size: 96, rows: 1, sample: 'Essenherb' },
-	sentence: { label: 'Sentence', size: 40, rows: 2, sample: 'Vegan skincare, rooted in nature.' },
+	word: { label: 'Word', size: 96, sample: 'Essenherb' },
+	sentence: { label: 'Sentence', size: 40, sample: 'Vegan skincare, rooted in nature.' },
 	paragraph: {
 		label: 'Paragraph',
 		size: 18,
-		rows: 5,
 		sample: 'Essenherb finds the vitality of nature that endures even in harsh environments, and returns it to the skin. A vegan skincare brand focused on the essence of the skin.',
 	},
 } as const
@@ -93,8 +92,7 @@ export function TypeTester() {
 				aria-label="타입 견본 입력"
 				value={texts[tier]}
 				onChange={(e) => setTexts((prev) => ({ ...prev, [tier]: e.target.value }))}
-				rows={TIERS[tier].rows}
-				className="mt-8 w-full resize-none break-keep border-none bg-transparent text-foreground outline-none"
+				className="mt-8 h-64 w-full resize-none overflow-auto break-keep border-none bg-transparent text-foreground outline-none"
 				style={{
 					fontFamily: 'var(--font-title)',
 					fontSize: TIERS[tier].size,
