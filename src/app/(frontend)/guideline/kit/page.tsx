@@ -16,6 +16,7 @@ import { SpecListDemo } from '@/features/guideline/components/kit/spec-list'
 import { SpecTable } from '@/features/guideline/components/kit/spec-table'
 import { TypeScale } from '@/features/guideline/components/kit/type-scale'
 import { TypeSpecimen } from '@/features/guideline/components/kit/type-specimen'
+import { TypeTester } from '@/features/guideline/components/kit/type-tester'
 
 // UI 키트 갤러리(중간공유용). 데이터 비연결 — mock으로 컴포넌트만 전시한다.
 // nav 미연결. 나중에 각 컴포넌트를 Payload 블록 렌더러에 어댑터로 연결한다.
@@ -174,6 +175,10 @@ export default function GuidelineKitPage() {
 						specs={[{ label: 'Weight', value: 'Regular' }]}
 					/>
 				</div>
+			</Demo>
+
+			<Demo title="Type Tester · 라이브 입력 견본">
+				<TypeTester />
 			</Demo>
 
 			<Demo title="Type Scale">
