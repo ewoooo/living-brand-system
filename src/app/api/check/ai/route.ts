@@ -1,19 +1,10 @@
+import { CheckSessionTerminalError } from '@/features/asset-check/domain/check-session'
 import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 import { completeCheckSessionAiCheck } from '@/services/start-check-session.service'
 import { readCheckImage } from '../read-check-image'
 
 export const maxDuration = 30
-
-function parseCheckKeys(value: FormDataEntryValue | null | undefined): string[] {
-	if (typeof value !== 'string') return []
-	try {
-		const raw = JSON.parse(value)
-		return Array.isArray(raw) ? raw.filter((key) => typeof key === 'string') : []
-	} catch {
-		return []
-	}
-}
 
 function parseCheckSessionId(value: FormDataEntryValue | null | undefined): number | null {
 	const id = typeof value === 'string' ? Number(value) : NaN
@@ -32,8 +23,7 @@ export async function POST(req: Request) {
 
 	const form = await req.formData().catch(() => null)
 	const checkSessionId = parseCheckSessionId(form?.get('checkSessionId'))
-	const checkKeys = parseCheckKeys(form?.get('checkKeys'))
-	if (checkSessionId === null || checkKeys.length === 0) {
+	if (checkSessionId === null) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
 	}
 	const image = await readCheckImage(form?.get('image'))
@@ -43,12 +33,14 @@ export async function POST(req: Request) {
 		const result = await completeCheckSessionAiCheck({
 			buffer: image.buffer,
 			checkSessionId,
-			checkKeys,
 			user,
 		})
 
 		return Response.json(result)
 	} catch (error) {
+		if (error instanceof CheckSessionTerminalError) {
+			return Response.json({ message: 'Check session already finished.' }, { status: 409 })
+		}
 		payload.logger.error({ err: error }, 'asset-check.ai.failed')
 
 		return Response.json({ message: 'Check failed.' }, { status: 500 })

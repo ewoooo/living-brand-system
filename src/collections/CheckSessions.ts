@@ -73,6 +73,13 @@ export const CheckSessions: CollectionConfig = {
 			},
 		},
 		{
+			name: 'pendingCheckKeys',
+			type: 'json',
+			admin: {
+				description: 'AI 후속 검수가 남은 Check key 목록입니다.',
+			},
+		},
+		{
 			name: 'agentChatSession',
 			type: 'relationship',
 			relationTo: 'agent-chat-sessions',

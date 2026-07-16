@@ -25,9 +25,10 @@ export async function generateTexts({
 }
 
 // 텍스트박스 하나를 채울 용도의 헬퍼 — 후보 1개를 그대로 돌려준다. 슬롯 채우기(Create)가 쓴다. 실패하면 null.
-export async function generateOneText(prompt: string): Promise<string | null> {
+// rule은 슬롯의 aiInstruction("영문 이름만" 등) — 프롬프트와 별개로 생성 규칙으로 전달된다.
+export async function generateOneText(prompt: string, rule?: string): Promise<string | null> {
 	try {
-		const texts = await generateTexts({ prompt, count: 1 })
+		const texts = await generateTexts({ prompt, rule, count: 1 })
 		return texts[0] ?? null
 	} catch {
 		return null

@@ -1,5 +1,10 @@
 import { z } from 'zod'
 
+import { pickHtmlTemplate } from '@/features/asset-generation/services/get-published-template.service'
+import {
+	collectHtmlSlots,
+	type HtmlSlot,
+} from '@/features/asset-generation/utils/collect-html-slots'
 import { AgentConfigurationError } from '@/lib/errors'
 import {
 	AUTHORIZED_ASSET_COLLECTIONS,
@@ -20,14 +25,32 @@ export const templateSlotValueSchema = z.object({
 	text: z.string().max(1000).optional(),
 })
 
-/** prepareTemplateImage 툴 출력 계약 — 챗 첨부 UI가 이 타입을 그대로 소비한다 (이중 정의 금지). */
-export interface AgentTemplateImageAttachment {
-	type: 'template-image'
-	templateId: number
-	name: string
-	template: JsonTemplate
-	values: Record<string, z.infer<typeof templateSlotValueSchema>>
-}
+type TemplateSlotValues = Record<string, z.infer<typeof templateSlotValueSchema>>
+
+/**
+ * prepareTemplateImage 툴 출력 계약 — 챗 첨부 UI가 이 타입을 그대로 소비한다 (이중 정의 금지).
+ * html이 정본이고 json은 deprecated 폴백 — kind 없는 기존 저장 메시지는 json으로 읽는다.
+ * 렌더 페이로드(html/template)는 toModelOutput으로 모델 컨텍스트에서 제외된다.
+ */
+export type AgentTemplateImageAttachment =
+	| {
+			type: 'template-image'
+			kind: 'html'
+			templateId: number
+			name: string
+			html: string
+			width: number
+			height: number
+			values: TemplateSlotValues
+	  }
+	| {
+			type: 'template-image'
+			kind?: 'json'
+			templateId: number
+			name: string
+			template: JsonTemplate
+			values: TemplateSlotValues
+	  }
 
 /**
  * Agent tool의 템플릿 검색 요청을 발행 템플릿 요약 목록으로 변환한다.
@@ -40,14 +63,14 @@ export async function findTemplatesForRequest(user: unknown, query?: string) {
 
 	const summaries = templates
 		.map((template) => {
-			const parsed = jsonTemplateSchema.safeParse(template.jsonTemplate)
-			return parsed.success
+			const slots = getTemplateSlots(template)
+			return slots
 				? {
 						id: template.id,
 						name: template.name,
 						description: template.description || '',
 						checks: getTemplateChecks(template.templateChecks, checksByKey),
-						slots: getOpenSlots(parsed.data),
+						slots,
 					}
 				: null
 		})
@@ -82,12 +105,32 @@ export async function findTemplatesForRequest(user: unknown, query?: string) {
 export async function prepareTemplateImage(
 	user: unknown,
 	templateId: number,
-	values: Record<string, z.infer<typeof templateSlotValueSchema>>,
+	values: TemplateSlotValues,
 ): Promise<AgentTemplateImageAttachment> {
 	const template = await findAgentTemplate(user, templateId)
-	const parsed = jsonTemplateSchema.safeParse(template?.jsonTemplate)
 
-	if (!template || !parsed.success) {
+	if (!template) {
+		throw new AgentConfigurationError('Template is not available.')
+	}
+
+	const html = pickHtmlTemplate(template)
+
+	if (html) {
+		return {
+			type: 'template-image' as const,
+			kind: 'html' as const,
+			templateId: template.id,
+			name: template.name,
+			html: html.html,
+			width: html.width,
+			height: html.height,
+			values: filterHtmlSlotValues(collectHtmlSlots(html.html, html.overrides), values),
+		}
+	}
+
+	const parsed = jsonTemplateSchema.safeParse(template.jsonTemplate)
+
+	if (!parsed.success) {
 		throw new AgentConfigurationError('Template is not available.')
 	}
 
@@ -97,6 +140,30 @@ export async function prepareTemplateImage(
 		name: template.name,
 		template: parsed.data,
 		values: filterSlotValues(parsed.data, values),
+	}
+}
+
+function getTemplateSlots(template: AgentTemplateDocument): AgentSlotSummary[] | null {
+	const html = pickHtmlTemplate(template)
+
+	if (html) {
+		return collectHtmlSlots(html.html, html.overrides).map(toHtmlSlotSummary)
+	}
+
+	const parsed = jsonTemplateSchema.safeParse(template.jsonTemplate)
+	return parsed.success ? getOpenSlots(parsed.data) : null
+}
+
+function toHtmlSlotSummary(slot: HtmlSlot): AgentSlotSummary {
+	return {
+		id: slot.nodeId,
+		label: slot.input.label ?? slot.name,
+		type: 'text' as const,
+		defaultText: slot.text,
+		inputFormat: slot.input.inputFormat ?? 'free',
+		maxLength: slot.input.maxLength,
+		maxLines: slot.input.maxLines,
+		aiInstruction: slot.input.aiInstruction,
 	}
 }
 
@@ -129,6 +196,8 @@ type AgentSlotSummary =
 			inputFormat: 'free' | 'number' | 'email' | 'date'
 			maxLength: number | undefined
 			maxLines: number | undefined
+			// 이 슬롯을 채울 때 항상 지켜야 할 규칙 (예: "영문 이름만"). 모델이 값 작성 시 따른다.
+			aiInstruction?: string
 	  }
 	| { id: string; label: string; type: 'image' }
 
@@ -160,6 +229,25 @@ function getOpenSlots(template: JsonTemplate): AgentSlotSummary[] {
 
 		return []
 	})
+}
+
+/** HTML 슬롯은 텍스트 전용 — 선언된 슬롯의 text만 통과시키고 input 스펙(maxLength·maxLines)으로 맞춘다. */
+function filterHtmlSlotValues(slots: HtmlSlot[], values: TemplateSlotValues): TemplateSlotValues {
+	const result: TemplateSlotValues = {}
+
+	for (const slot of slots) {
+		const value = values[slot.nodeId]
+		if (typeof value?.text !== 'string') continue
+
+		const text = value.text.trim().slice(0, slot.input.maxLength ?? value.text.length)
+		result[slot.nodeId] = {
+			text: slot.input.maxLines
+				? text.split('\n').slice(0, slot.input.maxLines).join('\n')
+				: text,
+		}
+	}
+
+	return result
 }
 
 /** LLM이 준 이미지 src는 인가 에셋 컬렉션의 same-origin 경로만 허용한다 — 외부 URL은 브랜드 통제 우회이자 유출 채널이다. */

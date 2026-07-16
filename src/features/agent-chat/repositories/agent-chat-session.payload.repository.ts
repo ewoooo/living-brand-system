@@ -1,35 +1,19 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type {
-	AgentChatAiUsage,
-	AgentChatReaction,
-	AgentChatSessionMessageInput,
-	AgentChatSessionUsage,
-} from '@/features/agent-chat/types'
-import type { AgentChatSession, User } from '@/payload-types'
+import type { AgentChatSession } from '@/features/agent-chat/domain/agent-chat-session'
+import type { AgentChatReaction, AgentChatSessionMessageInput } from '@/features/agent-chat/types'
+import type { AgentChatSession as AgentChatSessionRecord, User } from '@/payload-types'
 
 interface CreateAgentChatSessionInput {
 	messages?: AgentChatSessionMessageInput[]
 	messageCount?: number
 	pagePath?: string
-	status: AgentChatSession['status']
-	user: User
-}
-
-interface UpdateAgentChatSessionInput {
-	id: AgentChatSession['id']
-	status: AgentChatSession['status']
-	messages?: AgentChatSessionMessageInput[]
-	messageCount?: number
-	usedSkills?: AgentChatSessionUsage[]
-	usedTools?: AgentChatSessionUsage[]
-	aiUsage?: AgentChatAiUsage
-	errorMessage?: string
+	status: AgentChatSessionRecord['status']
 	user: User
 }
 
 interface UpdateAgentChatSessionReactionInput {
-	id: AgentChatSession['id']
+	id: AgentChatSessionRecord['id']
 	messageId: string
 	reaction: AgentChatReaction
 	user: User
@@ -56,26 +40,20 @@ export async function createAgentChatSessionRecord(input: CreateAgentChatSession
 }
 
 /**
- * AgentChatSession 상태 갱신 repository — 실행 중 세션의 완료/실패 메타데이터만 저장한다.
+ * AgentChatSession 저장 repository — Aggregate의 종결 시점 상태를 기록한다.
+ * 저장 필드 선택은 Aggregate의 toUpdateData()가 소유한다.
  */
-export async function updateAgentChatSessionRecord(input: UpdateAgentChatSessionInput) {
+export async function saveAgentChatSessionRecord(
+	session: AgentChatSession,
+	user: User,
+): Promise<void> {
 	const payload = await getPayload({ config })
-
-	return payload.update({
+	await payload.update({
 		collection: 'agent-chat-sessions',
-		id: input.id,
-		data: {
-			status: input.status,
-			messages: input.messages,
-			messageCount: input.messageCount,
-			usedTools: input.usedTools,
-			usedSkills: input.usedSkills,
-			aiUsage: input.aiUsage,
-			errorMessage: input.errorMessage,
-			completedAt: input.status === 'running' ? undefined : new Date().toISOString(),
-		},
+		id: session.id,
+		data: session.toUpdateData(),
 		overrideAccess: true,
-		user: input.user,
+		user,
 	})
 }
 
