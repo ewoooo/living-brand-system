@@ -2,6 +2,20 @@
  * 검수 API 클라이언트 서비스 — 브라우저에서 /api/check 계열 호출의 요청/응답 계약을 소유한다.
  * 서버 판정·세션 저장은 API route 뒤의 start-check-session service가 담당하고,
  * 화면 상태(진행/완료 표시)는 CheckImageProvider가 담당한다.
+ *
+ * POST /api/check
+ *   req : FormData { image: File, scenarioKey: string, source: 'review-page' }
+ *   res : SubmitCheckResult {
+ *     checkSessionId: number
+ *     results: Record<checkKey, CheckResult>   // deterministic/manual 즉시 판정분
+ *     pendingCheckKeys: string[]               // heuristic(AI) 후속 대상
+ *     rulesetSnapshot: RuntimeCheck[]          // 검수 시점 룰 동결본
+ *   }
+ *
+ * POST /api/check/ai
+ *   req : FormData { image: File, checkSessionId: string }  // 대상 룰은 서버가 세션에서 읽음
+ *   res : { results: Record<checkKey, CheckResult> }
+ *   실패: pendingCheckKeys 전체를 status 'needs_review'("AI 평가 실패") 폴백으로 채움
  */
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
