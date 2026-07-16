@@ -6,11 +6,11 @@ export const Plugins: CollectionConfig = {
 	slug: 'plugins',
 	access: managerManagedAccess,
 	labels: {
-		singular: 'Plugin',
-		plural: 'Plugins',
+		singular: '제작 플러그인',
+		plural: '제작 플러그인',
 	},
 	admin: {
-		group: 'Production',
+		group: '제작 도구',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'pluginType', 'updatedAt'],
 	},

@@ -40,6 +40,41 @@ export async function createAgentChatSessionRecord(input: CreateAgentChatSession
 }
 
 /**
+ * AgentChatSession 조회 repository — messageId들 중 하나라도 포함하는 본인 세션 최신 1건을 돌려준다.
+ * 백필 소스 조회 전용이라 실패해도 throw하지 않고 warn 로깅 후 null을 반환한다(best-effort).
+ */
+export async function findLatestAgentChatSessionContainingAnyMessage(
+	messageIds: string[],
+	user: User,
+): Promise<AgentChatSessionRecord | null> {
+	const payload = await getPayload({ config })
+
+	try {
+		// read 접근이 managerOrAdmin이라 사용자 컨텍스트로는 본인 기록도 못 읽는다.
+		// updateAgentChatSessionReaction과 동일하게 overrideAccess + createdBy 필터로 본인 세션만 한정한다.
+		const result = await payload.find({
+			collection: 'agent-chat-sessions',
+			depth: 0,
+			limit: 1,
+			sort: '-createdAt',
+			overrideAccess: true,
+			user,
+			where: {
+				and: [
+					{ 'messages.messageId': { in: messageIds } },
+					{ createdBy: { equals: user.id } },
+				],
+			},
+		})
+
+		return result.docs[0] ?? null
+	} catch (error) {
+		payload.logger.warn({ err: error, messageIds }, 'agent-chat.backfill-lookup.failed')
+		return null
+	}
+}
+
+/**
  * AgentChatSession 저장 repository — Aggregate의 종결 시점 상태를 기록한다.
  * 저장 필드 선택은 Aggregate의 toUpdateData()가 소유한다.
  */

@@ -11,9 +11,9 @@ export const revalidateGuideline: GlobalAfterChangeHook = ({ doc, req }) => {
 
 export const Guideline: GlobalConfig = {
 	slug: 'guideline',
-	label: 'Guideline Metadata',
+	label: '가이드라인 기본 정보',
 	admin: {
-		group: 'System',
+		group: '가이드라인',
 	},
 	versions: {
 		drafts: {

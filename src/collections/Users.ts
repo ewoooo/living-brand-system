@@ -4,12 +4,12 @@ import { adminFieldOnly, adminOnly, selfOrAdmin } from '@/lib/auth'
 export const Users: CollectionConfig = {
 	slug: 'users',
 	labels: {
-		singular: 'User',
-		plural: 'Users',
+		singular: '사용자',
+		plural: '사용자',
 	},
 	admin: {
 		useAsTitle: 'email',
-		group: 'System',
+		group: '시스템 관리',
 	},
 	auth: {
 		// 운영은 30분 제한 (docs/07 #4). 로컬 dev는 자동 로그아웃이 방해되므로 30일로 늘린다(보안 규정은 운영에만 적용).

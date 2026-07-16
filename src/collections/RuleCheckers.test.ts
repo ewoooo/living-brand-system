@@ -24,7 +24,7 @@ function validationFor(name: string): Validate {
 describe('RuleCheckers executor binding', () => {
 	it('저장소 식별자는 유지하고 Admin에는 name을 표시한다', () => {
 		expect(RuleCheckers.slug).toBe('rule-checkers')
-		expect(RuleCheckers.labels).toEqual({ singular: 'Checker', plural: 'Checkers' })
+		expect(RuleCheckers.labels).toEqual({ singular: '검수 도구', plural: '검수 도구' })
 		expect(RuleCheckers.admin?.useAsTitle).toBe('name')
 
 		const name = fieldNamed('name')

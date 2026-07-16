@@ -9,12 +9,12 @@ export const TemplateCategories: CollectionConfig = {
 	slug: 'template-categories',
 	dbName: 'template_categories',
 	labels: {
-		singular: 'Template Category',
-		plural: 'Template Categories',
+		singular: '템플릿 분류',
+		plural: '템플릿 분류',
 	},
 	access: managerManagedAccess,
 	admin: {
-		group: 'Production',
+		group: '제작 도구',
 		useAsTitle: 'title',
 		defaultColumns: ['title', 'slug', 'displayOrder', 'updatedAt'],
 		description: 'Create 화면 사이드바에 표시할 템플릿 카테고리입니다.',
