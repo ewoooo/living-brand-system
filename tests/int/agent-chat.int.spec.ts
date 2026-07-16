@@ -231,7 +231,7 @@ describe('agent chat errors', () => {
 
 		expect(getAgentToolMarker(message)).toEqual({
 			isPending: false,
-			text: '가이드라인 검색을 완료했습니다',
+			text: '가이드라인 결과 0개를 찾았습니다',
 		})
 	})
 

@@ -1052,6 +1052,7 @@ export interface Search {
     relationTo: 'guideline-documents';
     value: number | GuidelineDocument;
   };
+  searchText?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1833,6 +1834,7 @@ export interface SearchSelect<T extends boolean = true> {
   title?: T;
   priority?: T;
   doc?: T;
+  searchText?: T;
   updatedAt?: T;
   createdAt?: T;
 }
