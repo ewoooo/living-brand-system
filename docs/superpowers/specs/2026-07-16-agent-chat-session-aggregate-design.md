@@ -14,7 +14,7 @@ AgentChatSession은 `running → completed/failed` 생명주기를 가지며, �
 ## 결정 사항
 
 - **쓰기 정책**: 종결 시에만 저장. 턴당 create 1회 + 종결(completed/failed) update 1회 = 2회.
-  - 스텝 상한(stopWhen 10)처럼 completed 신호 없이 스트림이 끝나는 턴은 route의 onEnd 훅이 finalize()로 종결 저장한다 — 상한 턴의 기록 유실 방지(최종 리뷰 발견 반영). 단, 중단된 스트림(`isAborted`, 예: 클라이언트 이탈)은 미완성 턴이므로 finalize를 건너뛰고 running으로 남긴다 — 강제 종료 트레이드오프와 같은 부류로 수용.
+  - 스텝 상한(stopWhen 10)처럼 completed 신호 없이 스트림이 끝나는 턴은 route의 onEnd 훅이 finalize()로 종결 저장한다 — 상한 턴의 기록 유실 방지(최종 리뷰 발견 반영). 단, 중단·미종결 스트림(`isAborted` 또는 `finishReason == null` — 클라이언트 이탈은 finish 청크 없이 취소되어 후자로 도착)은 미완성 턴이므로 finalize를 건너뛰고 running으로 남긴다 — 강제 종료 트레이드오프와 같은 부류로 수용.
   - 수용한 트레이드오프: 서버 프로세스 강제 종료(배포·OOM·kill) 시 그 턴의 어시스턴트 응답 DB 기록이 유실되고 세션은 running으로 남는다. 사용자 화면에는 스트림이 이미 전달된 상태다. 일반 에러는 `onError`가 `fail()`로 누적분까지 저장하므로 유실이 없다.
 - **구현 형태**: 클래스 Aggregate, CheckSession 패턴(`src/features/asset-check/domain/check-session.ts`) 준용.
 - **범위**: 쓰기 축소와 객체화를 한 브랜치에서 함께. 쓰기 정책이 객체 규칙("쓰기는 종결 전이에서만")으로 표현된다.
