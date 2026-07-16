@@ -1,25 +1,43 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 
 // 이미지 슬라이드 캐러셀: prev/next + 닷 인디케이터. 인덱스 기반 translateX 트랙(경계 없음).
+// autoPlay=true면 자동 슬라이드(호버 시 정지, prefers-reduced-motion 존중).
 export type CarouselSlide = { image: string; alt?: string; caption?: string }
 
 export function Carousel({
 	slides,
 	aspect = 'aspect-video',
+	autoPlay = false,
+	interval = 4000,
 }: {
 	slides: CarouselSlide[]
 	aspect?: string
+	autoPlay?: boolean
+	interval?: number
 }) {
 	const [index, setIndex] = useState(0)
+	const [paused, setPaused] = useState(false)
 	const labelId = useId()
 	const count = slides.length
+
+	useEffect(() => {
+		if (!autoPlay || paused || count <= 1) return
+		if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+		const id = window.setInterval(() => setIndex((i) => (i + 1) % count), interval)
+		return () => window.clearInterval(id)
+	}, [autoPlay, paused, count, interval])
+
 	if (count === 0) return null
 	const go = (next: number) => setIndex((next + count) % count)
 
 	return (
-		<div className="flex flex-col gap-4">
+		<div
+			className="flex flex-col gap-4"
+			onMouseEnter={() => setPaused(true)}
+			onMouseLeave={() => setPaused(false)}
+		>
 			<div className={`group relative overflow-hidden bg-fill-muted ${aspect}`}>
 				<div
 					className="flex h-full transition-transform duration-500 ease-out"
@@ -88,6 +106,7 @@ const slide = (label: string, color: string) =>
 export function CarouselDemo() {
 	return (
 		<Carousel
+			autoPlay
 			slides={[
 				{
 					image: slide('Key Visual 01', '#262626'),

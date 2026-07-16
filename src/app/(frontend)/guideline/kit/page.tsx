@@ -6,6 +6,7 @@ import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
 import { DoDont } from '@/features/guideline/components/kit/do-dont'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
 import { GridSystemDiagramDemo } from '@/features/guideline/components/kit/grid-system-diagram'
+import { ImageGroupDemo } from '@/features/guideline/components/kit/image-group'
 import { ImageTextGrid } from '@/features/guideline/components/kit/image-text-grid'
 import { LogoLockupDemo } from '@/features/guideline/components/kit/logo-lockup'
 import { MediaTextDemo } from '@/features/guideline/components/kit/media-text'
@@ -112,6 +113,10 @@ export default function GuidelineKitPage() {
 
 			<Demo title="Media + Text · 워크호스">
 				<MediaTextDemo />
+			</Demo>
+
+			<Demo title="Image Group · 이미지 세트(row)">
+				<ImageGroupDemo />
 			</Demo>
 
 			<Demo title="Signature Display · 대형 타입 시그니처">
