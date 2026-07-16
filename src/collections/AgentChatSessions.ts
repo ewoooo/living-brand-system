@@ -10,11 +10,11 @@ export const AgentChatSessions: CollectionConfig = {
 		delete: managerOrAdmin,
 	},
 	labels: {
-		singular: 'Agent Chat Session',
-		plural: 'Agent Chat Sessions',
+		singular: '에이전트 대화 기록',
+		plural: '에이전트 대화 기록',
 	},
 	admin: {
-		group: 'Quality',
+		group: '운영 기록',
 		useAsTitle: 'status',
 		defaultColumns: ['status', 'pagePath', 'createdBy', 'createdAt'],
 		description: 'Agent 채팅 실행 1회 단위의 세션 기록입니다.',

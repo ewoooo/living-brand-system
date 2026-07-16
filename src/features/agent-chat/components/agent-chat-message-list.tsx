@@ -30,7 +30,7 @@ export function AgentChatMessageList({
 	return (
 		<MessageScrollerProvider>
 			<MessageScroller className="min-h-0 flex-1">
-				<MessageScrollerViewport className="scrollbar-none">
+				<MessageScrollerViewport className="scrollbar-none scroll-smooth motion-reduce:scroll-auto">
 					<MessageScrollerContent className="gap-3 p-3">
 						{isEmpty ? (
 							<MessageScrollerItem>
@@ -40,7 +40,7 @@ export function AgentChatMessageList({
 							messages.map((message) => (
 								<MessageScrollerItem
 									key={message.id}
-									className="flex flex-col"
+									className="flex flex-col motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 motion-safe:ease-out"
 									messageId={message.id}
 									scrollAnchor={message.role === 'user'}
 								>

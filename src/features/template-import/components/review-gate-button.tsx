@@ -1,7 +1,8 @@
 'use client'
 
-import { Button, toast, useFormModified } from '@payloadcms/ui'
+import { toast, useFormModified } from '@payloadcms/ui'
 import { useEffect } from 'react'
+import { Button } from '@/components/ui/button'
 import { setReviewPassed, useReviewPassed } from '../hooks/use-review-gate'
 
 /**
@@ -32,7 +33,8 @@ export default function ReviewGateButton() {
 
 	return (
 		<Button
-			buttonStyle={passed && !modified ? 'secondary' : 'primary'}
+			type="button"
+			variant={passed && !modified ? 'secondary' : 'default'}
 			onClick={runReview}
 			disabled={passed && !modified}
 		>

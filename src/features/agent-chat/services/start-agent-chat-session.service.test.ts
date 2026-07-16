@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import {
 	createAgentChatSessionRecord,
+	findLatestAgentChatSessionContainingAnyMessage,
 	saveAgentChatSessionRecord,
 } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import { startAgentChatSession } from '@/features/agent-chat/services/start-agent-chat-session.service'
@@ -9,10 +10,12 @@ import type { User } from '@/payload-types'
 
 vi.mock('@/features/agent-chat/repositories/agent-chat-session.payload.repository', () => ({
 	createAgentChatSessionRecord: vi.fn(),
+	findLatestAgentChatSessionContainingAnyMessage: vi.fn(),
 	saveAgentChatSessionRecord: vi.fn(),
 }))
 
 const createSession = vi.mocked(createAgentChatSessionRecord)
+const findPrevious = vi.mocked(findLatestAgentChatSessionContainingAnyMessage)
 const saveSession = vi.mocked(saveAgentChatSessionRecord)
 
 const user = { id: 7 } as User
@@ -33,6 +36,7 @@ describe('startAgentChatSession', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		createSession.mockResolvedValue({ id: 41 } as never)
+		findPrevious.mockResolvedValue(null)
 	})
 
 	it('요청 메시지로 running 세션을 생성한다', async () => {
@@ -109,5 +113,47 @@ describe('startAgentChatSession', () => {
 		await session.finalize()
 
 		expect(saveSession).toHaveBeenCalledTimes(1)
+	})
+
+	it('히스토리 assistant 메시지를 백필해서 세션을 생성한다', async () => {
+		const historyMessages = [
+			{
+				id: 'user-1',
+				role: 'user',
+				parts: [{ type: 'text', text: '가이드라인을 찾아줘.' }],
+			},
+			{
+				id: 'assistant-1',
+				role: 'assistant',
+				parts: [{ type: 'text', text: '가이드라인입니다.' }],
+			},
+			{
+				id: 'user-2',
+				role: 'user',
+				parts: [{ type: 'text', text: '더 자세히.' }],
+			},
+		] as AgentChatMessage[]
+		findPrevious.mockResolvedValue({
+			id: 21,
+			messages: [
+				{
+					messageId: 'assistant-1',
+					role: 'assistant',
+					text: '가이드라인입니다.',
+					usedTools: [{ name: 'loadSkill', callCount: 1, id: 'row-1' }],
+					aiUsage: { model: 'test-model', callCount: 1, totalTokens: 120 },
+				},
+			],
+		} as never)
+
+		await startAgentChatSession({ messages: historyMessages, user })
+
+		expect(findPrevious).toHaveBeenCalledWith(['assistant-1'], user)
+		const created = createSession.mock.calls[0][0]
+		expect(created.messages?.[1]).toMatchObject({
+			messageId: 'assistant-1',
+			usedTools: [{ name: 'loadSkill', callCount: 1 }],
+			aiUsage: { model: 'test-model', callCount: 1, totalTokens: 120 },
+		})
 	})
 })

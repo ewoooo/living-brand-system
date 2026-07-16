@@ -12,11 +12,11 @@ export const CheckSessions: CollectionConfig = {
 		delete: managerOrAdmin,
 	},
 	labels: {
-		singular: 'Check Session',
-		plural: 'Check Sessions',
+		singular: '검수 기록',
+		plural: '검수 기록',
 	},
 	admin: {
-		group: 'Quality',
+		group: '운영 기록',
 		useAsTitle: 'source',
 		defaultColumns: ['source', 'status', 'imageName', 'createdBy', 'createdAt'],
 		description: '검수 실행 1회 단위의 세션 기록입니다.',

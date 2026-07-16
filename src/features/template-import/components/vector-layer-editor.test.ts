@@ -32,7 +32,7 @@ describe('VectorLayerEditor', () => {
 		fireEvent.change(screen.getByLabelText('브랜드 내부 자산'), {
 			target: { value: 'brand-logos:7' },
 		})
-		fireEvent.click(screen.getByRole('button', { name: 'Contain' }))
+		fireEvent.click(screen.getByRole('radio', { name: 'Contain' }))
 		fireEvent.click(screen.getByRole('button', { name: 'Primary #112233' }))
 
 		expect(onChange).toHaveBeenNthCalledWith(1, {

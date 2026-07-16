@@ -35,9 +35,11 @@ import { env } from './env'
 import { collectGuidelineCheckSources } from './features/guideline/checks/collect-guideline-check-sources'
 import { formatCheckEvidence } from './features/guideline/checks/format-check-evidence'
 import { findPublishedUnifiedGuidelineCheckDocuments } from './features/guideline/repositories/published-guideline-checks.payload.repository'
+import { buildGuidelineSearchText } from './features/guideline/utils/guideline-search-text'
 import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
 import { adminOnly, authenticated, managerOrAdmin } from './lib/auth'
+import type { GuidelineDocument } from './payload-types'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -77,6 +79,11 @@ type GetDefaultMcpAccessSettings = (overrideApiKey?: null | string) => Promise<M
 
 const BetterEditorSettings: GlobalConfig = {
 	...betterEditorSettingsGlobal,
+	label: '편집기 설정',
+	admin: {
+		...betterEditorSettingsGlobal.admin,
+		group: '시스템 관리',
+	},
 	access: { read: authenticated, update: managerOrAdmin },
 }
 
@@ -181,16 +188,16 @@ export default buildConfig({
 	collections: [
 		...legacyGuidelineCollections,
 		GuidelineDocuments,
-		CheckScenarios,
-		RuleCheckers,
 		BrandLogos,
 		BrandColors,
 		BrandTypefaces,
 		ApplicationImages,
-		TemplateCategories,
 		Templates,
+		TemplateCategories,
 		TemplateAssets,
 		Plugins,
+		CheckScenarios,
+		RuleCheckers,
 		CheckSessions,
 		AgentChatSessions,
 		AgentSkills,
@@ -242,6 +249,8 @@ export default buildConfig({
 			},
 			overrideApiKeyCollection: (collection: CollectionConfig) => ({
 				...collection,
+				labels: { singular: 'MCP API 키', plural: 'MCP API 키' },
+				admin: { ...collection.admin, group: '시스템 관리' },
 				access: {
 					create: adminOnly,
 					delete: adminOnly,
@@ -318,13 +327,27 @@ export default buildConfig({
 		} as never),
 		searchPlugin({
 			collections: ['guideline-documents'],
+			beforeSync: ({ originalDoc, searchDoc }) => ({
+				...searchDoc,
+				searchText: buildGuidelineSearchText(originalDoc as GuidelineDocument),
+			}),
 			defaultPriorities: {
 				'guideline-documents': 20,
 			},
 			searchOverrides: {
+				admin: { hidden: true },
 				access: {
 					read: ({ req }) => Boolean(req.user),
 				},
+				fields: ({ defaultFields }) => [
+					...defaultFields,
+					{
+						name: 'searchText',
+						type: 'textarea',
+						localized: true,
+						admin: { hidden: true },
+					},
+				],
 			},
 		}),
 		s3Storage({
