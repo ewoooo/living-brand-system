@@ -1,28 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { type ComponentProps, createElement } from 'react'
+import { createElement } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import CheckScenarioChecksField from './CheckScenarioChecksField'
 
 const { setValue } = vi.hoisted(() => ({ setValue: vi.fn() }))
 
 vi.mock('@payloadcms/ui', () => ({
-	Button: (
-		props: ComponentProps<'button'> & {
-			buttonStyle?: string
-			margin?: boolean
-			size?: string
-		},
-	) =>
-		createElement(
-			'button',
-			{
-				'aria-label': props['aria-label'],
-				disabled: props.disabled,
-				onClick: props.onClick,
-				type: props.type ?? 'button',
-			},
-			props.children,
-		),
 	FieldDescription: ({ description }: { description: string }) =>
 		createElement('p', null, description),
 	FieldError: () => null,

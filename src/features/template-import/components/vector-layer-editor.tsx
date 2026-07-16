@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { ApplicationImage, BrandColor, BrandLogo } from '@/payload-types'
 import type { TemplateOverride } from '../utils/compose-template-html'
 
@@ -67,7 +69,10 @@ export function VectorLayerEditor({
 	const fit = override.vectorFit ?? 'fill'
 
 	return (
-		<div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+		<div
+			className="vector-layer-editor"
+			style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+		>
 			<strong style={{ fontSize: 13 }}>벡터 편집 — {name}</strong>
 
 			<label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12 }}>
@@ -118,57 +123,49 @@ export function VectorLayerEditor({
 			</label>
 			<fieldset style={{ border: 0, padding: 0, margin: 0 }}>
 				<legend style={{ marginBottom: 4, fontSize: 12 }}>맞춤 방식</legend>
-				<div style={{ display: 'flex', gap: 6 }}>
+				<ToggleGroup
+					type="single"
+					value={fit}
+					variant="outline"
+					size="sm"
+					onValueChange={(value) => {
+						if (value === 'fill' || value === 'contain') onChange({ vectorFit: value })
+					}}
+				>
 					{(['fill', 'contain'] as const).map((value) => (
-						<button
-							key={value}
-							type="button"
-							aria-pressed={fit === value}
-							onClick={() => onChange({ vectorFit: value })}
-							style={{
-								...CONTROL_STYLE,
-								cursor: 'pointer',
-								background:
-									fit === value ? 'var(--theme-elevation-150)' : 'transparent',
-							}}
-						>
+						<ToggleGroupItem key={value} value={value}>
 							{value === 'fill' ? 'Fill' : 'Contain'}
-						</button>
+						</ToggleGroupItem>
 					))}
-				</div>
+				</ToggleGroup>
 			</fieldset>
 
 			<fieldset style={{ border: 0, padding: 0, margin: 0 }}>
 				<legend style={{ marginBottom: 4, fontSize: 12 }}>브랜드 컬러</legend>
 				<div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-					<button
+					<Button
 						type="button"
 						aria-pressed={!override.vectorColor}
 						onClick={() => onChange({ vectorColor: undefined })}
-						style={{ ...CONTROL_STYLE, cursor: 'pointer' }}
+						variant={!override.vectorColor ? 'secondary' : 'outline'}
+						size="sm"
 					>
 						원본
-					</button>
+					</Button>
 					{colors.map((color) => {
 						const value = /^[0-9a-f]{3,8}$/i.test(color.hex)
 							? `#${color.hex}`
 							: color.hex
 						const selected = override.vectorColor === value
 						return (
-							<button
+							<Button
 								key={color.id}
 								type="button"
 								aria-pressed={selected}
 								aria-label={`${color.name} ${value}`}
 								onClick={() => onChange({ vectorColor: value })}
-								style={{
-									...CONTROL_STYLE,
-									display: 'inline-flex',
-									alignItems: 'center',
-									gap: 5,
-									cursor: 'pointer',
-									outline: selected ? '2px solid var(--theme-text)' : undefined,
-								}}
+								variant={selected ? 'secondary' : 'outline'}
+								size="sm"
 							>
 								<span
 									aria-hidden
@@ -180,7 +177,7 @@ export function VectorLayerEditor({
 									}}
 								/>
 								{color.name}
-							</button>
+							</Button>
 						)
 					})}
 				</div>

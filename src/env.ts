@@ -5,6 +5,7 @@ export const env = createEnv({
 	server: {
 		ANTHROPIC_API_KEY: z.string().min(1).optional(),
 		ANTHROPIC_MODEL: z.string().min(1).optional(),
+		CHAT_MODEL: z.string().min(1).optional(),
 		DATABASE_URL: z.string().url(),
 		EMAIL_FROM_ADDRESS: z.string().email().optional(),
 		EMAIL_FROM_NAME: z.string().min(1).optional(),
@@ -30,6 +31,7 @@ export const env = createEnv({
 	runtimeEnv: {
 		ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
 		ANTHROPIC_MODEL: process.env.ANTHROPIC_MODEL,
+		CHAT_MODEL: process.env.CHAT_MODEL,
 		DATABASE_URL: process.env.DATABASE_URL,
 		EMAIL_FROM_ADDRESS: process.env.EMAIL_FROM_ADDRESS,
 		EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME,

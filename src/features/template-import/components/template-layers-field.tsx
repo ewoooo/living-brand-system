@@ -1,7 +1,11 @@
 'use client'
 
-import { Button, Popup, toast, useForm, useFormFields } from '@payloadcms/ui'
+import { Popup, toast, useForm, useFormFields } from '@payloadcms/ui'
 import { type CSSProperties, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
 import { generateImages } from '@/features/image-generation/services/generate-image.client'
 import {
 	composeTemplateHtml,
@@ -112,27 +116,13 @@ function AiTextForm({ rule, onApply }: { rule?: string; onApply: (text: string) 
 			<span style={{ fontSize: 12, color: 'var(--theme-elevation-600)' }}>
 				AI 텍스트 생성
 			</span>
-			<textarea
+			<Textarea
 				value={prompt}
 				onChange={(event) => setPrompt(event.target.value)}
 				rows={3}
 				placeholder="예: 12자 이내 캐치프레이즈, 존댓말"
-				style={{
-					width: '100%',
-					fontSize: 13,
-					padding: 6,
-					borderRadius: 4,
-					border: '1px solid var(--theme-elevation-150)',
-					background: 'var(--theme-input-bg)',
-					color: 'var(--theme-text)',
-				}}
 			/>
-			<Button
-				buttonStyle="primary"
-				size="small"
-				disabled={loading || !prompt.trim()}
-				onClick={run}
-			>
+			<Button type="button" size="sm" disabled={loading || !prompt.trim()} onClick={run}>
 				{loading ? '생성 중...' : '생성'}
 			</Button>
 		</div>
@@ -166,27 +156,13 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 			<span style={{ fontSize: 12, color: 'var(--theme-elevation-600)' }}>
 				AI 배경 이미지 생성
 			</span>
-			<textarea
+			<Textarea
 				value={prompt}
 				onChange={(event) => setPrompt(event.target.value)}
 				rows={3}
 				placeholder="예: 미니멀한 파스텔 그라디언트 배경"
-				style={{
-					width: '100%',
-					fontSize: 13,
-					padding: 6,
-					borderRadius: 4,
-					border: '1px solid var(--theme-elevation-150)',
-					background: 'var(--theme-input-bg)',
-					color: 'var(--theme-text)',
-				}}
 			/>
-			<Button
-				buttonStyle="primary"
-				size="small"
-				disabled={loading || !prompt.trim()}
-				onClick={run}
-			>
+			<Button type="button" size="sm" disabled={loading || !prompt.trim()} onClick={run}>
 				{loading ? '생성 중...' : '생성'}
 			</Button>
 		</div>
@@ -194,7 +170,7 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 }
 
 // 슬롯 스펙 편집 폼 공통 필드 스타일.
-const FIELD_STYLE: CSSProperties = {
+const SELECT_STYLE: CSSProperties = {
 	width: '100%',
 	fontSize: 13,
 	padding: 6,
@@ -263,21 +239,19 @@ function SlotSpecEditor({
 			}}
 		>
 			<SpecField id="slot-spec-label" label="라벨">
-				<input
+				<Input
 					id="slot-spec-label"
 					value={input.label ?? ''}
 					onChange={(event) => patch({ label: event.target.value || undefined })}
 					placeholder="예: 영문 이름"
-					style={FIELD_STYLE}
 				/>
 			</SpecField>
 			<SpecField id="slot-spec-placeholder" label="플레이스홀더">
-				<input
+				<Input
 					id="slot-spec-placeholder"
 					value={input.placeholder ?? ''}
 					onChange={(event) => patch({ placeholder: event.target.value || undefined })}
 					placeholder="입력 전 안내 문구"
-					style={FIELD_STYLE}
 				/>
 			</SpecField>
 			<SpecField id="slot-spec-format" label="형식">
@@ -287,7 +261,7 @@ function SlotSpecEditor({
 					onChange={(event) =>
 						patch({ inputFormat: event.target.value as TemplateInput['inputFormat'] })
 					}
-					style={FIELD_STYLE}
+					style={SELECT_STYLE}
 				>
 					<option value="free">자유 텍스트</option>
 					<option value="number">숫자</option>
@@ -296,35 +270,32 @@ function SlotSpecEditor({
 				</select>
 			</SpecField>
 			<SpecField id="slot-spec-max-length" label="최대 글자">
-				<input
+				<Input
 					type="number"
 					min={1}
 					id="slot-spec-max-length"
 					value={input.maxLength ?? ''}
 					onChange={(event) => patch({ maxLength: positiveInt(event.target.value) })}
 					placeholder="없음"
-					style={FIELD_STYLE}
 				/>
 			</SpecField>
 			<SpecField id="slot-spec-max-lines" label="최대 줄">
-				<input
+				<Input
 					type="number"
 					min={1}
 					id="slot-spec-max-lines"
 					value={input.maxLines ?? ''}
 					onChange={(event) => patch({ maxLines: positiveInt(event.target.value) })}
 					placeholder="없음"
-					style={FIELD_STYLE}
 				/>
 			</SpecField>
 			<SpecField id="slot-spec-ai" label="AI 지시 — 이 슬롯의 생성 규칙" span>
-				<textarea
+				<Textarea
 					id="slot-spec-ai"
 					value={input.aiInstruction ?? ''}
 					onChange={(event) => patch({ aiInstruction: event.target.value || undefined })}
 					rows={2}
 					placeholder="예: 영문 이름만, 성-이름 순"
-					style={FIELD_STYLE}
 				/>
 			</SpecField>
 		</div>
@@ -496,13 +467,7 @@ export default function TemplateLayersField() {
 				</div>
 			</div>
 
-			<hr
-				style={{
-					border: 'none',
-					borderTop: '1px solid var(--theme-elevation-150)',
-					margin: 'var(--base) 0',
-				}}
-			/>
+			<Separator className="template-layers-field__separator" />
 
 			{/* 선택 레이어 값 편집 */}
 			{!selected && (
@@ -513,7 +478,7 @@ export default function TemplateLayersField() {
 
 			{selected?.isText && (
 				<div>
-					<label style={{ display: 'block' }}>
+					<label htmlFor="template-layer-text" style={{ display: 'block' }}>
 						<span
 							style={{
 								display: 'block',
@@ -524,19 +489,11 @@ export default function TemplateLayersField() {
 						>
 							텍스트 편집 — {selected.name}
 						</span>
-						<textarea
+						<Textarea
+							id="template-layer-text"
 							value={selected.text}
 							onChange={(event) => commitText(event.target.value)}
 							rows={2}
-							style={{
-								width: '100%',
-								fontSize: 13,
-								padding: 6,
-								borderRadius: 4,
-								border: '1px solid var(--theme-elevation-150)',
-								background: 'var(--theme-input-bg)',
-								color: 'var(--theme-text)',
-							}}
 						/>
 					</label>
 					<div style={{ marginTop: 6 }}>
@@ -569,8 +526,10 @@ export default function TemplateLayersField() {
 							<span style={{ fontSize: 12, color: 'var(--theme-elevation-600)' }}>
 								입력 슬롯
 							</span>
-							<button
+							<Button
 								type="button"
+								variant="ghost"
+								size="icon-xs"
 								onClick={() =>
 									commitOverride({
 										input: overrides[selected.id]?.input ? undefined : {},
@@ -581,17 +540,14 @@ export default function TemplateLayersField() {
 										? '슬롯 닫기 — 유저 화면에서 숨김'
 										: '슬롯 열기 — 유저 화면에 입력 노출'
 								}
-								style={{
-									border: 'none',
-									background: 'transparent',
-									cursor: 'pointer',
-									fontSize: 14,
-									padding: 2,
-									lineHeight: 1,
-								}}
+								aria-label={
+									overrides[selected.id]?.input
+										? '입력 슬롯 닫기'
+										: '입력 슬롯 열기'
+								}
 							>
 								{overrides[selected.id]?.input ? '🔓' : '🔒'}
-							</button>
+							</Button>
 							<span style={{ fontSize: 11, color: 'var(--theme-elevation-500)' }}>
 								{overrides[selected.id]?.input ? '유저 화면에 열림' : '닫힘'}
 							</span>
@@ -619,13 +575,14 @@ export default function TemplateLayersField() {
 						배경 설정 — {selected.name}
 					</span>
 					<div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-						<button
+						<Button
 							type="button"
+							variant="outline"
+							size="sm"
 							onClick={() => toast.info('에셋에서 가져오기는 준비 중입니다.')}
-							style={TRIGGER_STYLE}
 						>
 							에셋에서 가져오기
-						</button>
+						</Button>
 						<Popup
 							buttonType="custom"
 							verticalAlign="top"

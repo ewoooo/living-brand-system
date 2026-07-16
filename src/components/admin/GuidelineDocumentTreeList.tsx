@@ -1,7 +1,10 @@
-import { Button, Gutter } from '@payloadcms/ui'
+import { Gutter } from '@payloadcms/ui'
 import Link from 'next/link'
 import type { ListViewServerProps } from 'payload'
 import { formatAdminURL } from 'payload/shared'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import {
 	buildGuidelineDocumentTree,
 	type GuidelineDocumentTreeNode,
@@ -25,9 +28,7 @@ function TreeItems({
 			{nodes.map((node) => (
 				<li key={node.id}>
 					<div className="guideline-document-tree__row">
-						<span className="guideline-document-tree__depth">
-							{depthLabels[depth] ?? `${depth + 1}단계`}
-						</span>
+						<Badge variant="outline">{depthLabels[depth] ?? `${depth + 1}단계`}</Badge>
 						<Link
 							className="guideline-document-tree__title"
 							href={formatAdminURL({
@@ -37,8 +38,10 @@ function TreeItems({
 						>
 							{node.title}
 						</Link>
-						<span>{node._status === 'published' ? '발행됨' : '초안'}</span>
-						<span>순서 {node.displayOrder}</span>
+						<Badge variant={node._status === 'published' ? 'default' : 'secondary'}>
+							{node._status === 'published' ? '발행됨' : '초안'}
+						</Badge>
+						<Badge variant="outline">순서 {node.displayOrder}</Badge>
 					</div>
 					{node.children.length > 0 && (
 						<TreeItems
@@ -84,8 +87,8 @@ export default async function GuidelineDocumentTreeList({
 						<p>장·섹션·페이지를 부모 관계와 표시 순서에 따라 보여줍니다.</p>
 					</div>
 					{hasCreatePermission && (
-						<Button el="link" to={newDocumentURL}>
-							새 문서
+						<Button asChild>
+							<Link href={newDocumentURL}>새 문서</Link>
 						</Button>
 					)}
 				</header>
@@ -99,7 +102,11 @@ export default async function GuidelineDocumentTreeList({
 						/>
 					</nav>
 				) : (
-					<p className="guideline-document-tree__empty">등록된 문서가 없습니다.</p>
+					<Empty className="guideline-document-tree__empty">
+						<EmptyHeader>
+							<EmptyTitle>등록된 문서가 없습니다.</EmptyTitle>
+						</EmptyHeader>
+					</Empty>
 				)}
 			</Gutter>
 		</div>

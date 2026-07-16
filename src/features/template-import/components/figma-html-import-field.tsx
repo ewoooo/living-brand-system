@@ -1,7 +1,10 @@
 'use client'
 
-import { Button, TextInput, toast, useForm, useFormFields } from '@payloadcms/ui'
+import { toast, useForm, useFormFields } from '@payloadcms/ui'
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 import { importFigmaHtmlFromUrl } from '@/features/template-import/services/import-figma-html.client'
 import {
 	composeTemplateHtml,
@@ -60,26 +63,22 @@ export default function FigmaHtmlImportField() {
 	}
 
 	return (
-		<div
-			style={{
-				marginBottom: 'var(--base)',
-				display: 'flex',
-				gap: 8,
-				alignItems: 'flex-start',
-			}}
-		>
-			<TextInput
-				path="figmaHtmlImportUrl"
-				label="Figma 소스 URL"
-				description="Dev Mode 프레임 링크(node-id 포함). 가져오기로 변환하며, 출처로도 저장됩니다."
-				placeholder="https://www.figma.com/design/...?node-id=..."
-				value={sourceUrl}
-				style={{ flex: 1 }}
-				onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-					setSourceUrl(event.target.value)
-				}
-			/>
-			<Button onClick={handleImport} disabled={isLoading} buttonStyle="secondary">
+		<div className="figma-html-import-field">
+			<Field>
+				<FieldLabel htmlFor="figmaHtmlImportUrl">Figma 소스 URL</FieldLabel>
+				<Input
+					id="figmaHtmlImportUrl"
+					placeholder="https://www.figma.com/design/...?node-id=..."
+					value={sourceUrl}
+					onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+						setSourceUrl(event.target.value)
+					}
+				/>
+				<FieldDescription>
+					Dev Mode 프레임 링크(node-id 포함). 가져오기로 변환하며, 출처로도 저장됩니다.
+				</FieldDescription>
+			</Field>
+			<Button type="button" onClick={handleImport} disabled={isLoading} variant="secondary">
 				{isLoading ? '가져오는 중...' : '가져오기'}
 			</Button>
 		</div>
