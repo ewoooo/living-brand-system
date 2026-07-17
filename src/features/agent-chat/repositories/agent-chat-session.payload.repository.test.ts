@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
 	createAgentChatSessionRecord,
 	findLatestAgentChatSessionMessagesContainingAny,
+	findOwnedAgentChatSessionMessages,
+	saveAgentChatSessionReaction,
 } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import type { User } from '@/payload-types'
 
@@ -97,6 +99,66 @@ describe('agent-chat-session Payload repository', () => {
 		expect(warn).toHaveBeenCalledWith(
 			{ err: error, messageIds: ['a-1'] },
 			'agent-chat.backfill-lookup.failed',
+		)
+	})
+
+	it('리액션 대상 세션을 소유자로 제한해 DTO로 읽고 Service 결과만 저장한다', async () => {
+		const find = vi.fn().mockResolvedValue({
+			docs: [
+				{
+					id: 41,
+					messages: [
+						{
+							id: 'row-id',
+							messageId: 'a-1',
+							role: 'assistant',
+							text: '답변',
+							reaction: null,
+							reactedAt: null,
+						},
+					],
+				},
+			],
+		})
+		const update = vi.fn().mockResolvedValue({ id: 41 })
+		vi.mocked(getPayload).mockResolvedValue({ find, update } as never)
+
+		await expect(findOwnedAgentChatSessionMessages(41, user)).resolves.toEqual({
+			id: 41,
+			messages: [{ messageId: 'a-1', role: 'assistant' }],
+		})
+		expect(find).toHaveBeenCalledWith(
+			expect.objectContaining({
+				where: { and: [{ id: { equals: 41 } }, { createdBy: { equals: 7 } }] },
+			}),
+		)
+
+		await expect(
+			saveAgentChatSessionReaction({
+				id: 41,
+				messageId: 'a-1',
+				reaction: 'good',
+				reactedAt: '2026-07-17T00:00:00.000Z',
+				user,
+			}),
+		).resolves.toBe(true)
+		expect(update).toHaveBeenCalledWith(
+			expect.objectContaining({
+				id: 41,
+				data: {
+					messages: [
+						{
+							id: 'row-id',
+							messageId: 'a-1',
+							role: 'assistant',
+							text: '답변',
+							reaction: 'good',
+							reactedAt: '2026-07-17T00:00:00.000Z',
+						},
+					],
+				},
+				user,
+			}),
 		)
 	})
 })

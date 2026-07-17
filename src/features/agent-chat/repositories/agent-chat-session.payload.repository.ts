@@ -22,13 +22,6 @@ interface CreateAgentChatSessionInput {
 	user: User
 }
 
-interface UpdateAgentChatSessionReactionInput {
-	id: number
-	messageId: string
-	reaction: AgentChatReaction
-	user: User
-}
-
 /**
  * AgentChatSession 저장 repository — 채팅 실행 기록의 Payload Local API 쓰기를 소유한다.
  */
@@ -157,10 +150,46 @@ export async function saveAgentChatSessionRecord(
 	})
 }
 
-/**
- * AgentChatSession 리액션 저장 repository — 소유 사용자의 피드백 메타데이터만 갱신한다.
- */
-export async function updateAgentChatSessionReaction(input: UpdateAgentChatSessionReactionInput) {
+/** 리액션 Use Case용 본인 세션을 조회해 Payload 메시지를 plain DTO로 변환한다. */
+export async function findOwnedAgentChatSessionMessages(
+	id: number,
+	user: User,
+): Promise<{
+	id: number
+	messages: { messageId: string; role: AgentChatSessionMessageInput['role'] }[]
+} | null> {
+	const payload = await getPayload({ config })
+	const session = await payload.find({
+		collection: 'agent-chat-sessions',
+		depth: 0,
+		limit: 1,
+		overrideAccess: true,
+		user,
+		where: {
+			and: [{ id: { equals: id } }, { createdBy: { equals: user.id } }],
+		},
+	})
+	const record = session.docs[0]
+
+	return record
+		? {
+				id: record.id,
+				messages: (record.messages ?? []).map(({ messageId, role }) => ({
+					messageId,
+					role,
+				})),
+			}
+		: null
+}
+
+/** Service가 승인한 리액션 patch를 raw Payload row ID를 보존하며 저장한다. */
+export async function saveAgentChatSessionReaction(input: {
+	id: number
+	messageId: string
+	reactedAt: string
+	reaction: AgentChatReaction
+	user: User
+}): Promise<boolean> {
 	const payload = await getPayload({ config })
 	const session = await payload.find({
 		collection: 'agent-chat-sessions',
@@ -172,30 +201,23 @@ export async function updateAgentChatSessionReaction(input: UpdateAgentChatSessi
 			and: [{ id: { equals: input.id } }, { createdBy: { equals: input.user.id } }],
 		},
 	})
+	const record = session.docs[0]
+	if (!record) return false
 
-	if (!session.docs[0]) return null
-
-	const messages = session.docs[0].messages ?? []
 	let targetFound = false
-	const reactedAt = new Date().toISOString()
-	const nextMessages = messages.map((message) => {
-		if (message.messageId !== input.messageId || message.role !== 'assistant') {
-			return message
-		}
-
+	const messages = (record.messages ?? []).map((message) => {
+		if (message.messageId !== input.messageId) return message
 		targetFound = true
-		return { ...message, reaction: input.reaction, reactedAt }
+		return { ...message, reaction: input.reaction, reactedAt: input.reactedAt }
 	})
+	if (!targetFound) return false
 
-	if (!targetFound) return null
-
-	return payload.update({
+	await payload.update({
 		collection: 'agent-chat-sessions',
-		id: session.docs[0].id,
-		data: {
-			messages: nextMessages,
-		},
+		id: record.id,
+		data: { messages },
 		overrideAccess: true,
 		user: input.user,
 	})
+	return true
 }
