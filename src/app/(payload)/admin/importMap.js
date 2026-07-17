@@ -24,8 +24,6 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
-import { default as default_ad1d969b642204b60b7dd66ef5c88f1c } from '../../../components/admin/CheckCheckerField'
-import { default as default_b2590831ecdbc846ead523de86ea1f09 } from '../../../components/admin/CheckOptionsField'
 import { default as default_3cb64f97d1dcec18a20e3bc2bf9faba7 } from '../../../components/admin/BetterEditorPublishButton'
 import { default as default_84fdfed89814d586356c708710d7da33 } from '../../../components/admin/GuidelineDocumentTreeList'
 import { default as default_36acbba7f1182725fb35765f5d4542e4 } from '../../../components/admin/ColorSwatchCell'
@@ -33,6 +31,8 @@ import { default as default_6be8a66e3aab10c58fc1605355904e1c } from '../../../fe
 import { default as default_848b517a7c9421065f54c976eeb58cfe } from '../../../features/template-import/components/sidebar-divider'
 import { default as default_d63f93338facb77edad4398230507fd4 } from '../../../features/template-import/components/figma-html-import-field'
 import { default as default_1c7bf56be35538dba4de1f5c5e377252 } from '../../../components/admin/CheckScenarioChecksField'
+import { default as default_ad1d969b642204b60b7dd66ef5c88f1c } from '../../../components/admin/CheckCheckerField'
+import { default as default_b2590831ecdbc846ead523de86ea1f09 } from '../../../components/admin/CheckOptionsField'
 import { default as default_55a6b37228c5405acd0fc7b5977e6d29 } from '../../../components/admin/AgentChatMessagesTable'
 import { default as default_fefc0aa6463fb8af4fa50c0b3a53cbba } from '../../../components/admin/AgentChatCountedItemsTable'
 import { default as default_c30c461be6387021ff789d8393e59cf0 } from '../../../components/admin/AgentChatUsageTable'
@@ -72,8 +72,6 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
-  "/components/admin/CheckCheckerField#default": default_ad1d969b642204b60b7dd66ef5c88f1c,
-  "/components/admin/CheckOptionsField#default": default_b2590831ecdbc846ead523de86ea1f09,
   "/components/admin/BetterEditorPublishButton#default": default_3cb64f97d1dcec18a20e3bc2bf9faba7,
   "/components/admin/GuidelineDocumentTreeList#default": default_84fdfed89814d586356c708710d7da33,
   "/components/admin/ColorSwatchCell#default": default_36acbba7f1182725fb35765f5d4542e4,
@@ -81,6 +79,8 @@ export const importMap = {
   "/features/template-import/components/sidebar-divider#default": default_848b517a7c9421065f54c976eeb58cfe,
   "/features/template-import/components/figma-html-import-field#default": default_d63f93338facb77edad4398230507fd4,
   "/components/admin/CheckScenarioChecksField#default": default_1c7bf56be35538dba4de1f5c5e377252,
+  "/components/admin/CheckCheckerField#default": default_ad1d969b642204b60b7dd66ef5c88f1c,
+  "/components/admin/CheckOptionsField#default": default_b2590831ecdbc846ead523de86ea1f09,
   "/components/admin/AgentChatMessagesTable#default": default_55a6b37228c5405acd0fc7b5977e6d29,
   "/components/admin/AgentChatCountedItemsTable#default": default_fefc0aa6463fb8af4fa50c0b3a53cbba,
   "/components/admin/AgentChatUsageTable#default": default_c30c461be6387021ff789d8393e59cf0,

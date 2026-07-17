@@ -18,13 +18,13 @@ describe('findPublishedScenarioCheckRecords', () => {
 		vi.clearAllMocks()
 	})
 
-	it('published Guideline Check 레코드를 Service용 DTO로 변환한다', async () => {
+	it('published Guideline Rule 레코드를 Service용 DTO로 변환한다', async () => {
 		const document = { title: 'Color' }
 		mocks.findDocuments.mockResolvedValue({ documents: [document] })
 		mocks.collectSources.mockReturnValue([
 			{
 				blockName: 'Main palette',
-				check: {
+				rule: {
 					checker: { executor: 'deterministic' },
 					key: 'color.palette',
 					title: 'Color Palette',

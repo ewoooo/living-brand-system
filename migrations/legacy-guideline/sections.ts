@@ -1,6 +1,5 @@
 import { type CollectionConfig, slugField } from 'payload'
-import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
-import { validateGuidelineCheckKeys } from '@/features/guideline/checks/validate-guideline-check-keys'
+import { legacyGuidelineBlocks, legacyGuidelineChecksField } from './blocks'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from '../../src/collections/shared'
 
@@ -11,7 +10,7 @@ const sectionBlockDbNames: Record<string, string> = {
 	doDont: 'section_dd',
 }
 
-const sectionBlocks = guidelineBlocks.map((block) => ({
+const sectionBlocks = legacyGuidelineBlocks.map((block) => ({
 	...block,
 	dbName: sectionBlockDbNames[block.slug],
 }))
@@ -20,9 +19,6 @@ export const LegacyGuidelineSections: CollectionConfig = {
 	slug: 'guideline-sections',
 	dbName: 'guideline_sections',
 	access: managerManagedAccess,
-	hooks: {
-		beforeValidate: [validateGuidelineCheckKeys],
-	},
 	labels: {
 		singular: 'Guideline Section',
 		plural: 'Guideline Sections',
@@ -79,7 +75,7 @@ export const LegacyGuidelineSections: CollectionConfig = {
 				description: '섹션 랜딩 헤더에 표시할 이미지입니다.',
 			},
 		},
-		guidelineChecksField(),
+		legacyGuidelineChecksField(),
 		{
 			name: 'pages',
 			type: 'join',

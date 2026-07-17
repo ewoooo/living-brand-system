@@ -157,12 +157,41 @@ describe('getCheckRuleset', () => {
 		expect(selected.map(({ key }) => key)).toEqual(['check.second', 'check.first'])
 	})
 
-	it('중복 Check key는 실행 snapshot 생성 전에 거부한다', async () => {
+	it('같은 Rule의 다중 배치는 근거와 참조 자산을 병합해 하나의 실행 Check로 만든다', async () => {
+		const documentPlacement = source('shared')
+		documentPlacement.evidence = {
+			type: 'document',
+			description: 'Doc A',
+			blocks: [{ type: 'mediaShowcase' }],
+		}
+		documentPlacement.referenceAssets = [
+			{ name: 'a', url: '/a.png', mimeType: 'image/png', role: 'context' },
+		]
+		const blockPlacement = source('shared')
+		blockPlacement.evidence = { type: 'colorPalette', title: 'Palette', colors: [] }
+		blockPlacement.referenceAssets = [
+			{ name: 'a', url: '/a.png', mimeType: 'image/png', role: 'context' },
+			{ name: 'b', url: '/b.png', mimeType: 'image/png', role: 'negative' },
+		]
 		vi.mocked(getCheckSourceDocuments).mockResolvedValue({
-			documents: [document(1, [source('duplicate'), source('duplicate')])],
+			documents: [document(1, [documentPlacement]), document(2, [blockPlacement])],
 		})
 
-		await expect(getRuntimeChecks()).rejects.toThrow('중복된 Check key입니다: duplicate')
+		const checks = await getRuntimeChecks()
+
+		expect(checks).toHaveLength(1)
+		expect(checks[0]?.evidence).toEqual({
+			type: 'document',
+			description: 'Doc A',
+			blocks: [
+				{ type: 'mediaShowcase' },
+				{ type: 'colorPalette', title: 'Palette', colors: [] },
+			],
+		})
+		expect(checks[0]?.referenceAssets.map(({ url, role }) => `${url}:${role}`)).toEqual([
+			'/a.png:context',
+			'/b.png:negative',
+		])
 	})
 
 	it('시나리오의 누락·미구현 Check key는 실행 전에 구성 오류로 거부한다', async () => {

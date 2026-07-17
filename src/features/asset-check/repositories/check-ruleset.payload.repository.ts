@@ -97,20 +97,19 @@ function toCheckRulesetSourceDocument(document: GuidelineDocument): CheckRuleset
 }
 
 function toCheckRulesetSource({
-	check,
+	rule,
 	evidence,
 	referenceAssets,
 	source,
 }: GuidelineCheckSource): CheckRulesetSource {
-	const checker =
-		typeof check.checker === 'object' && check.checker !== null ? check.checker : null
+	const checker = typeof rule.checker === 'object' && rule.checker !== null ? rule.checker : null
 
 	return {
 		check: {
-			key: check.key,
-			title: check.title,
-			titleKo: check.titleKo ?? undefined,
-			tier: check.tier,
+			key: rule.key,
+			title: rule.title,
+			titleKo: rule.titleKo ?? undefined,
+			tier: rule.tier,
 			checker: checker
 				? {
 						key: checker.key,
@@ -120,8 +119,8 @@ function toCheckRulesetSource({
 						prompt: checker.prompt ?? undefined,
 					}
 				: null,
-			options: check.options ?? undefined,
-			criteria: (check.criteria ?? []).map((criterion) => ({
+			options: rule.options ?? undefined,
+			criteria: (rule.criteria ?? []).map((criterion) => ({
 				id: criterion.id ?? undefined,
 				question: criterion.question,
 				kind: criterion.kind,
@@ -131,13 +130,13 @@ function toCheckRulesetSource({
 				max: criterion.max ?? undefined,
 				unit: criterion.unit ?? undefined,
 			})),
-			heuristicPrompt: check.heuristicPrompt ?? undefined,
-			messages: check.messages
+			heuristicPrompt: rule.heuristicPrompt ?? undefined,
+			messages: rule.messages
 				? {
-						pass: check.messages.pass ?? undefined,
-						ok: check.messages.ok ?? undefined,
-						needsReview: check.messages.needsReview ?? undefined,
-						fail: check.messages.fail ?? undefined,
+						pass: rule.messages.pass ?? undefined,
+						ok: rule.messages.ok ?? undefined,
+						needsReview: rule.messages.needsReview ?? undefined,
+						fail: rule.messages.fail ?? undefined,
 					}
 				: undefined,
 		},

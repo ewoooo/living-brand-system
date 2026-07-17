@@ -2,6 +2,7 @@ import type { ArrayField, CollectionConfig, FieldHook } from 'payload'
 import { checkKeyFromEnglishTitle } from '@/features/guideline/checks/check-key-from-english-title'
 import { validateGuidelineCheckOptions } from '@/features/guideline/checks/validate-guideline-check-options'
 import { getGuidelineRuleCheckerSummary } from '@/features/guideline/services/get-guideline-rule-checker-summary.service'
+import { assertRuleDeletable } from '@/features/guideline/services/guard-rule-deletion.service'
 import { relationshipId } from '@/features/guideline/utils/block-text'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
@@ -66,6 +67,9 @@ export const Rules: CollectionConfig = {
 	slug: 'rules',
 	dbName: 'rules',
 	access: managerManagedAccess,
+	hooks: {
+		beforeDelete: [({ id, req }) => assertRuleDeletable(req, Number(id))],
+	},
 	labels: {
 		singular: '검수 규칙',
 		plural: '검수 규칙',

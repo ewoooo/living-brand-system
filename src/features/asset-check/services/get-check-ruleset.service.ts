@@ -161,14 +161,50 @@ function toRuntimeCheck({
 }
 
 function uniqueChecks(checks: RuntimeCheck[]): RuntimeCheck[] {
-	const byKey = new Map<string, RuntimeCheck>()
+	const byKey = new Map<string, RuntimeCheck[]>()
 	for (const check of checks) {
-		if (byKey.has(check.key)) {
-			throw new Error(`중복된 Check key입니다: ${check.key}`)
-		}
-		byKey.set(check.key, check)
+		const placements = byKey.get(check.key)
+		if (placements) placements.push(check)
+		else byKey.set(check.key, [check])
 	}
-	return [...byKey.values()]
+	return [...byKey.values()].map(mergeCheckPlacements)
+}
+
+// 같은 Rule이 여러 문서·블록에 배치되면 정의는 공유되므로 근거와 참조 자산만 합친다.
+function mergeCheckPlacements(placements: RuntimeCheck[]): RuntimeCheck {
+	const [first] = placements
+	if (placements.length === 1) return first
+
+	const evidences = placements
+		.map(({ evidence }) => evidence)
+		.filter(
+			(evidence): evidence is Exclude<typeof evidence, string> =>
+				typeof evidence !== 'string',
+		)
+	const descriptions = [
+		...new Set(
+			evidences.flatMap((evidence) =>
+				evidence.type === 'document' && evidence.description ? [evidence.description] : [],
+			),
+		),
+	]
+	return {
+		...first,
+		evidence: {
+			type: 'document',
+			description: descriptions.length > 0 ? descriptions.join('\n') : undefined,
+			blocks: evidences.flatMap((evidence) =>
+				evidence.type === 'document' ? evidence.blocks : [evidence],
+			),
+		},
+		referenceAssets: [
+			...new Map(
+				placements
+					.flatMap((placement) => placement.referenceAssets)
+					.map((asset) => [`${asset.url}:${asset.role}`, asset] as const),
+			).values(),
+		],
+	}
 }
 
 function toCheckPlacement(

@@ -62,7 +62,8 @@ describe('Rules collection contract', () => {
 			const candidate = fieldNamed(name)
 			const adminCondition =
 				candidate && 'admin' in candidate ? candidate.admin?.condition : null
-			if (typeof adminCondition !== 'function') throw new Error(`${name} condition is missing`)
+			if (typeof adminCondition !== 'function')
+				throw new Error(`${name} condition is missing`)
 			return adminCondition({}, { executor }, {} as never)
 		}
 
@@ -117,6 +118,95 @@ describe('Rules collection contract', () => {
 				siblingData: { executor: 'heuristic' },
 			} as never),
 		).toContain('연산과 기대값')
+	})
+
+	it('Contrast options를 전용 입력으로 편집하고 저장 전에 검증한다', async () => {
+		const options = fieldNamed('options')
+		if (options?.type !== 'json' || typeof options.validate !== 'function') {
+			throw new Error('options json validation is missing')
+		}
+
+		const context = {
+			req: { payload: {} },
+			siblingData: {
+				executor: 'deterministic',
+				checker: { checkerKey: 'contrast' },
+			},
+		} as never
+		expect(
+			await options.validate(
+				{
+					criteria: [{ measurement: 'contrastRatio', operator: 'gte', expected: 4.5 }],
+				} as never,
+				context,
+			),
+		).toBe(true)
+		expect(await options.validate(null as never, context)).toBe(
+			'최소 대비율은 1 이상 21 이하의 숫자로 입력하세요.',
+		)
+	})
+
+	it('criteria row는 kind에 따라 관찰형/수치형 입력을 나눈다', () => {
+		const criteria = fieldNamed('criteria') as unknown as {
+			validate: (value: unknown, args: { siblingData: unknown }) => true | string
+			fields: { fields: { name: string }[] }[]
+		}
+		const rowFieldNames = criteria.fields.flatMap((row) =>
+			row.fields.map((field) => field.name),
+		)
+		expect(rowFieldNames).toEqual(
+			expect.arrayContaining([
+				'question',
+				'kind',
+				'expected',
+				'operator',
+				'expectedValue',
+				'max',
+				'unit',
+			]),
+		)
+
+		const heuristic = { executor: 'heuristic' }
+		// 관찰형: expected 필수
+		expect(
+			criteria.validate([{ kind: 'presence', question: 'q' }], { siblingData: heuristic }),
+		).toContain('적합 기준')
+		// between: max > expectedValue
+		expect(
+			criteria.validate(
+				[
+					{
+						kind: 'measure',
+						question: 'q',
+						operator: 'between',
+						expectedValue: 30,
+						max: 5,
+					},
+				],
+				{ siblingData: heuristic },
+			),
+		).toContain('최대값')
+		// 정상 케이스
+		expect(
+			criteria.validate(
+				[
+					{ kind: 'presence', question: 'q', expected: 'present' },
+					{
+						kind: 'measure',
+						question: 'q',
+						operator: 'between',
+						expectedValue: 5,
+						max: 30,
+						unit: '%',
+					},
+				],
+				{ siblingData: heuristic },
+			),
+		).toBe(true)
+		// kind 미지정 기존 데이터는 presence로 검증
+		expect(
+			criteria.validate([{ question: 'q', expected: 'absent' }], { siblingData: heuristic }),
+		).toBe(true)
 	})
 
 	it('checker/options는 기존 Check 전용 admin 컴포넌트를 재사용한다', () => {

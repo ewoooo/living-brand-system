@@ -105,21 +105,21 @@ describe('buildCheckSourceSnapshot', () => {
 		expect(buildCheckSourceSnapshot(page, 'missing')).toBeNull()
 	})
 
-	it('통합 문서로 옮긴 뒤에도 Check 개수와 evidence를 유지한다', () => {
-		const checks = [{ key: 'logo-size', title: 'Logo size' }]
+	it('통합 문서로 옮긴 뒤에도 Rule 배치 개수와 evidence를 유지한다', () => {
+		const rules = [{ id: 1, key: 'logo-size', title: 'Logo size' }]
 		const blocks = [
 			{
 				id: 'usage',
 				blockType: 'columnUnit',
 				columns: [{ heading: 'Minimum', body: lexical('Use 24 px.') }],
-				checks,
+				rules,
 			},
 		]
 		const legacy = {
 			title: 'Primary Logo',
 			description: lexical('Approved usage'),
 			blocks,
-			checks,
+			rules,
 		} as unknown as GuidelineDocument
 		const unified = {
 			...legacy,
@@ -130,8 +130,8 @@ describe('buildCheckSourceSnapshot', () => {
 		const unifiedSources = collectGuidelineCheckSources(unified)
 
 		expect(unifiedSources).toHaveLength(legacySources.length)
-		expect(unifiedSources.map(({ check, evidence }) => ({ key: check.key, evidence }))).toEqual(
-			legacySources.map(({ check, evidence }) => ({ key: check.key, evidence })),
+		expect(unifiedSources.map(({ rule, evidence }) => ({ key: rule.key, evidence }))).toEqual(
+			legacySources.map(({ rule, evidence }) => ({ key: rule.key, evidence })),
 		)
 	})
 })

@@ -7,7 +7,7 @@ import type { GuidelineDocument } from '@/payload-types'
 
 type AgentGuidelineDocumentData = Pick<
 	GuidelineDocument,
-	'id' | 'title' | 'slug' | 'description' | 'headerImage' | 'blocks' | 'checks'
+	'id' | 'title' | 'slug' | 'description' | 'headerImage' | 'blocks' | 'rules'
 > & {
 	breadcrumbs: { label: string | null; url: string | null }[]
 	descriptionText: string
@@ -160,7 +160,7 @@ export async function findAgentGuidelineDocument(
 			description: true,
 			headerImage: true,
 			blocks: true,
-			checks: true,
+			rules: true,
 			parent: true,
 			breadcrumbs: true,
 			_status: true,
@@ -192,7 +192,7 @@ export async function findAgentGuidelineDocument(
 			descriptionText: extractTextFromLexical(document.description),
 			headerImage: document.headerImage,
 			blocks: document.blocks,
-			checks: document.checks,
+			rules: document.rules,
 			breadcrumbs: (document.breadcrumbs ?? []).map((breadcrumb) => ({
 				label: breadcrumb.label || null,
 				url: breadcrumb.url || null,

@@ -4,6 +4,7 @@ import { RelationshipField, useForm, useFormFields } from '@payloadcms/ui'
 import type { RelationshipFieldClientComponent } from 'payload'
 import { useEffect } from 'react'
 import { relationshipId } from '@/features/guideline/utils/block-text'
+import { siblingPath } from './sibling-path'
 
 type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
 
@@ -13,7 +14,7 @@ const isCheckExecutor = (value: unknown): value is CheckExecutor =>
 const CheckCheckerField: RelationshipFieldClientComponent = (props) => {
 	const { path } = props
 	const { dispatchFields } = useForm()
-	const executorPath = `${path.slice(0, path.lastIndexOf('.'))}.executor`
+	const executorPath = siblingPath(path, 'executor')
 	const checkerValue = useFormFields(([fields]) => fields[path]?.value)
 	const executorValue = useFormFields(([fields]) => fields[executorPath]?.value)
 	const populatedExecutor =

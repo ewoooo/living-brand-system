@@ -16,7 +16,8 @@ type LegacyDocument = {
 	_status?: 'draft' | 'published' | null
 	blocks?: GuidelineDocument['blocks']
 	chapter?: number | { id: number } | null
-	checks?: GuidelineDocument['checks']
+	// 레거시 문서의 임베디드 Check. 현재 config에는 없는 필드라 create 시 무시된다.
+	checks?: unknown
 	description?: GuidelineDocument['description'] | string | null
 	displayOrder: number
 	headerImage?: GuidelineDocument['headerImage']
