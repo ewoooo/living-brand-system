@@ -1,16 +1,20 @@
-import { BigImage } from '@/features/guideline/components/kit/big-image'
+import { ColorPaletteBlock } from '@/features/guideline/components/blocks/color-palette-block'
+import { ContentColumnsBlock } from '@/features/guideline/components/blocks/content-columns-block'
+import { DoDontBlock } from '@/features/guideline/components/blocks/do-dont-block'
+import { MediaShowcaseBlock } from '@/features/guideline/components/blocks/media-showcase-block'
 import { CarouselDemo } from '@/features/guideline/components/kit/carousel'
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
-import { ColorPalette } from '@/features/guideline/components/kit/color-palette'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
-import { DoDont } from '@/features/guideline/components/kit/do-dont'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
 import { GlyphGrid } from '@/features/guideline/components/kit/glyph-grid'
 import { GridSystemDiagramDemo } from '@/features/guideline/components/kit/grid-system-diagram'
-import { ImageGroupDemo } from '@/features/guideline/components/kit/image-group'
-import { ImageTextGrid } from '@/features/guideline/components/kit/image-text-grid'
 import { LogoLockupDemo } from '@/features/guideline/components/kit/logo-lockup'
-import { MediaTextDemo } from '@/features/guideline/components/kit/media-text'
+import {
+	brandColor,
+	type GuidelineBlock,
+	placeholderImage,
+	richTextBody,
+} from '@/features/guideline/components/kit/mock-blocks'
 import { RuleCalloutDemo } from '@/features/guideline/components/kit/rule-callout'
 import { SignatureDisplayDemo } from '@/features/guideline/components/kit/signature-display'
 import { SpecListDemo } from '@/features/guideline/components/kit/spec-list'
@@ -18,71 +22,143 @@ import { SpecTable } from '@/features/guideline/components/kit/spec-table'
 import { TypeScale } from '@/features/guideline/components/kit/type-scale'
 import { TypeSpecimen } from '@/features/guideline/components/kit/type-specimen'
 
-// UI 키트 갤러리(중간공유용). 데이터 비연결 — mock으로 컴포넌트만 전시한다.
-// nav 미연결. 나중에 각 컴포넌트를 Payload 블록 렌더러에 어댑터로 연결한다.
+// UI 키트 갤러리(중간공유용). 블록화가 끝난 컴포넌트는 실제 블록 renderer + Payload 타입 mock으로
+// 전시하고, 아직 kit POC인 것만 kit 사본으로 전시한다. mock이 Payload 타입으로 강제되므로
+// 스키마가 바뀌면 이 파일이 컴파일 에러로 먼저 깨진다 — 갤러리가 블록 시각 QA 장치를 겸한다.
 // 섹션: 이미지+텍스트(최빈) / 타이포그래피 / 컬러 / 기타.
-
-const placeholder = (label: string) =>
-	`data:image/svg+xml,${encodeURIComponent(
-		`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><rect width="640" height="360" fill="#d4d4d4"/><text x="320" y="188" font-family="sans-serif" font-size="28" fill="#737373" text-anchor="middle">${label}</text></svg>`,
-	)}`
 
 const logoPlaceholder = `data:image/svg+xml,${encodeURIComponent(
 	`<svg xmlns="http://www.w3.org/2000/svg" width="220" height="80"><rect width="220" height="80" rx="12" fill="#171717"/><text x="110" y="52" font-family="sans-serif" font-size="34" font-weight="700" fill="#ffffff" text-anchor="middle">LOGO</text></svg>`,
 )}`
 
-const mainColors = [
-	[
-		{ name: 'Essenherb Red', hex: '#EA5343', pantone: 'Warm Red C' },
-		{ name: 'White', hex: '#FFFFFF' },
-		{ name: 'Black', hex: '#000000' },
-	],
-]
+// --- 블록화 완료 컴포넌트의 mock 블록 (실제 renderer로 렌더) ---
 
-const multiColors = [
-	[
-		{ name: 'Red 1', hex: '#FFF0EB', pantone: '705C' },
-		{ name: 'Red 2', hex: '#FFB4AA', pantone: '169C' },
-		{ name: 'Essenherb Red', hex: '#EA5343', pantone: 'Warm Red C' },
-		{ name: 'Red 4', hex: '#871400', pantone: '7620C' },
-		{ name: 'Red 5', hex: '#460500', pantone: '188C' },
+const mediaTextBlock: Extract<GuidelineBlock, { blockType: 'contentColumns' }> = {
+	blockType: 'contentColumns',
+	imageRatio: '4:3',
+	columns: [
+		{
+			id: 'mt-1',
+			heading: 'Brand Story',
+			body: richTextBody(
+				'식물성 원료의 생명력을 피부에 되돌리는 비건 스킨케어 — 브랜드 서사를 이미지와 함께 서술한다.',
+			),
+			image: placeholderImage('미디어 + 텍스트 A', 11),
+		},
+		{
+			id: 'mt-2',
+			heading: 'Key Ingredient',
+			body: richTextBody('혹독한 환경에서도 살아남는 허브의 회복력을 핵심 성분으로 담는다.'),
+			image: placeholderImage('미디어 + 텍스트 B', 12),
+		},
 	],
-	[
-		{ name: 'Yellow 1', hex: '#FFFAC2', pantone: '600C' },
-		{ name: 'Yellow 2', hex: '#FFF095', pantone: '602C' },
-		{ name: 'Yellow 3', hex: '#FFE65F', pantone: '7404C' },
-		{ name: 'Yellow 4', hex: '#A07D0F', pantone: '118C' },
-		{ name: 'Yellow 5', hex: '#503200', pantone: '7575C' },
+}
+
+const imageGroupBlock: Extract<GuidelineBlock, { blockType: 'contentColumns' }> = {
+	blockType: 'contentColumns',
+	imageRatio: '4:3',
+	columns: [
+		{ id: 'ig-1', heading: '적용 예시 A', image: placeholderImage('적용 예시 A', 13) },
+		{ id: 'ig-2', heading: '적용 예시 B', image: placeholderImage('적용 예시 B', 14) },
+		{ id: 'ig-3', heading: '적용 예시 C', image: placeholderImage('적용 예시 C', 15) },
 	],
-	[
-		{ name: 'Green 1', hex: '#E6FFE6', pantone: '2253C' },
-		{ name: 'Green 2', hex: '#A7F5AE', pantone: '2255C' },
-		{ name: 'Green 3', hex: '#50AE5F', pantone: '2257C' },
-		{ name: 'Green 4', hex: '#195F30', pantone: '555C' },
-		{ name: 'Green 5', hex: '#002B1E', pantone: '567C' },
+}
+
+const bigImageBlock: Extract<GuidelineBlock, { blockType: 'mediaShowcase' }> = {
+	blockType: 'mediaShowcase',
+	imageRatio: '16:9',
+	image: placeholderImage('16 : 9 Media', 16),
+}
+
+const doDontBlock: Extract<GuidelineBlock, { blockType: 'doDont' }> = {
+	blockType: 'doDont',
+	title: '로고 사용 예시',
+	imageRatio: '4:3',
+	groupLayout: 'horizontal',
+	groups: [
+		{
+			id: 'dd-1',
+			category: 'Spacing',
+			kind: 'do',
+			description: '충분한 여백을 확보한다.',
+			examples: [
+				{
+					id: 'dd-1a',
+					image: placeholderImage('올바른 여백', 17),
+					caption: '심볼 높이 이상의 여백.',
+				},
+			],
+		},
+		{
+			id: 'dd-2',
+			category: 'Spacing',
+			kind: 'dont',
+			description: '여백을 임의로 좁히지 않는다.',
+			examples: [
+				{
+					id: 'dd-2a',
+					image: placeholderImage('좁은 여백', 18),
+					caption: '최소 여백 미만 배치 금지.',
+				},
+			],
+		},
+		{
+			id: 'dd-3',
+			category: 'Color',
+			kind: 'ok',
+			description: '경계선상의 대비는 지양한다.',
+			examples: [
+				{
+					id: 'dd-3a',
+					image: placeholderImage('주의 대비', 19),
+					caption: '가급적 고대비 조합 사용.',
+				},
+			],
+		},
 	],
-	[
-		{ name: 'Blue 1', hex: '#E1F0FF', pantone: '657C' },
-		{ name: 'Blue 2', hex: '#A5CDFF', pantone: '2717C' },
-		{ name: 'Blue 3', hex: '#3C87CD', pantone: '279C' },
-		{ name: 'Blue 4', hex: '#1E508C', pantone: '2161C' },
-		{ name: 'Blue 5', hex: '#001941', pantone: '2768C' },
+}
+
+const mainPaletteBlock: Extract<GuidelineBlock, { blockType: 'colorPalette' }> = {
+	blockType: 'colorPalette',
+	title: 'Main Palette',
+	colors: [
+		brandColor('Essenherb Red', '#EA5343', 'Warm Red C', 21),
+		brandColor('White', '#FFFFFF', undefined, 22),
+		brandColor('Black', '#000000', undefined, 23),
 	],
-	[
-		{ name: 'Purple 1', hex: '#FAEBFF', pantone: '531C' },
-		{ name: 'Purple 2', hex: '#EBC8E9', pantone: '529C' },
-		{ name: 'Purple 3', hex: '#A546BE', pantone: '258C' },
-		{ name: 'Purple 4', hex: '#692373', pantone: '260C' },
-		{ name: 'Purple 5', hex: '#3C0046', pantone: '7449C' },
+}
+
+const multiPaletteBlock: Extract<GuidelineBlock, { blockType: 'colorPalette' }> = {
+	blockType: 'colorPalette',
+	title: 'Multi Palette',
+	colors: [
+		brandColor('Red 1', '#FFF0EB', '705C', 31),
+		brandColor('Red 2', '#FFB4AA', '169C', 32),
+		brandColor('Essenherb Red', '#EA5343', 'Warm Red C', 33),
+		brandColor('Red 4', '#871400', '7620C', 34),
+		brandColor('Red 5', '#460500', '188C', 35),
+		brandColor('Yellow 1', '#FFFAC2', '600C', 36),
+		brandColor('Yellow 2', '#FFF095', '602C', 37),
+		brandColor('Yellow 3', '#FFE65F', '7404C', 38),
+		brandColor('Yellow 4', '#A07D0F', '118C', 39),
+		brandColor('Yellow 5', '#503200', '7575C', 40),
+		brandColor('Green 1', '#E6FFE6', '2253C', 41),
+		brandColor('Green 2', '#A7F5AE', '2255C', 42),
+		brandColor('Green 3', '#50AE5F', '2257C', 43),
+		brandColor('Green 4', '#195F30', '555C', 44),
+		brandColor('Green 5', '#002B1E', '567C', 45),
+		brandColor('Blue 1', '#E1F0FF', '657C', 46),
+		brandColor('Blue 2', '#A5CDFF', '2717C', 47),
+		brandColor('Blue 3', '#3C87CD', '279C', 48),
+		brandColor('Blue 4', '#1E508C', '2161C', 49),
+		brandColor('Blue 5', '#001941', '2768C', 50),
+		brandColor('Gray 1', '#FAFAFA', undefined, 51),
+		brandColor('Gray 2', '#EBEBEB', undefined, 52),
+		brandColor('Gray 3', '#ACACAC', undefined, 53),
+		brandColor('Gray 4', '#464646', undefined, 54),
+		brandColor('Gray 5', '#151515', undefined, 55),
 	],
-	[
-		{ name: 'Gray 1', hex: '#FAFAFA' },
-		{ name: 'Gray 2', hex: '#EBEBEB' },
-		{ name: 'Gray 3', hex: '#ACACAC' },
-		{ name: 'Gray 4', hex: '#464646' },
-		{ name: 'Gray 5', hex: '#151515' },
-	],
-]
+}
 
 // 최상위 섹션 그룹: 제목 + 구분선 + 데모들.
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -116,84 +192,21 @@ export function GuidelineKitGallery() {
 				<h1 className="type-title-1-emphasized mt-1">가이드라인 컴포넌트 키트</h1>
 			</header>
 
-			<Section title="이미지 + 텍스트">
-				<Demo title="Media + Text · 워크호스">
-					<MediaTextDemo />
+			<Section title="이미지 + 텍스트 (실제 블록 renderer)">
+				<Demo title="Content Columns · 워크호스 (2열)">
+					<ContentColumnsBlock block={mediaTextBlock} />
 				</Demo>
 
-				<Demo title="Image Group · 이미지 세트(row)">
-					<ImageGroupDemo />
+				<Demo title="Content Columns · 이미지 세트 (3장 이상 자동 캐러셀)">
+					<ContentColumnsBlock block={imageGroupBlock} />
 				</Demo>
 
-				<Demo title="Image + Text Grid">
-					<ImageTextGrid
-						columns={3}
-						items={[
-							{
-								src: placeholder('로고 활용 A'),
-								caption: '단색 배경 위 기본 로고 사용.',
-							},
-							{
-								src: placeholder('로고 활용 B'),
-								caption: '사진 위에는 반전 로고를 사용.',
-							},
-							{
-								src: placeholder('로고 활용 C'),
-								caption: '최소 크기 이상으로만 노출.',
-							},
-						]}
-					/>
-				</Demo>
-
-				<Demo title="Big Image">
-					<BigImage
-						src={placeholder('16 : 9 Media')}
-						alt="대형 미디어 예시"
-						caption="풀블리드 대형 이미지 — 로고 적용, 키 비주얼 등."
-					/>
+				<Demo title="Media Showcase · 대형 이미지">
+					<MediaShowcaseBlock block={bigImageBlock} />
 				</Demo>
 
 				<Demo title="Do / Don't">
-					<DoDont
-						columns={3}
-						groups={[
-							{
-								category: 'Spacing',
-								examples: [
-									{
-										src: placeholder('올바른 여백'),
-										caption: '충분한 여백을 확보한다.',
-										status: 'do',
-									},
-									{
-										src: placeholder('좁은 여백'),
-										caption: '여백을 임의로 좁히지 않는다.',
-										status: 'dont',
-									},
-								],
-							},
-							{
-								category: 'Color',
-								examples: [
-									{
-										src: placeholder('권장 대비'),
-										caption: '충분한 명도 대비를 사용.',
-										status: 'do',
-									},
-									{
-										src: placeholder('주의 대비'),
-										caption: '경계선상의 대비는 지양.',
-										status: 'ok',
-									},
-									{
-										src: placeholder('금지 대비'),
-										caption: '저대비 조합은 금지.',
-										status: 'dont',
-									},
-								],
-							},
-						]}
-					/>
+					<DoDontBlock block={doDontBlock} />
 				</Demo>
 			</Section>
 
@@ -281,13 +294,13 @@ export function GuidelineKitGallery() {
 				</Demo>
 			</Section>
 
-			<Section title="컬러">
-				<Demo title="Color Palette · Main (3×1)">
-					<ColorPalette rows={mainColors} columns={5} />
+			<Section title="컬러 (실제 블록 renderer)">
+				<Demo title="Color Palette · Main (3)">
+					<ColorPaletteBlock block={mainPaletteBlock} />
 				</Demo>
 
-				<Demo title="Color Palette · Multi (6×5)">
-					<ColorPalette rows={multiColors} columns={5} />
+				<Demo title="Color Palette · Multi (25)">
+					<ColorPaletteBlock block={multiPaletteBlock} />
 				</Demo>
 			</Section>
 
