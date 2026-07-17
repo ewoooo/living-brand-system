@@ -1,6 +1,10 @@
 import { z } from 'zod'
 import { AUTHORIZED_ASSET_COLLECTIONS } from '@/types/json-template'
 import {
+	type AuthorizedAssetRepositoryContext,
+	findAuthorizedAssetsByIds,
+} from '../repositories/authorized-asset.payload.repository'
+import {
 	type AuthorizedImageRef,
 	validateTemplateImages,
 } from '../utils/validate-authorized-assets'
@@ -53,11 +57,6 @@ interface TemplatePublishCandidate {
 }
 
 type ParsedOverrides = z.infer<typeof templateOverridesSchema>
-
-type FindAuthorizedAssetsByIds = (
-	collection: (typeof AUTHORIZED_ASSET_COLLECTIONS)[number],
-	assetIds: number[],
-) => Promise<Map<number, { url?: string | null }>>
 
 function nonEmptyString(value: unknown): value is string {
 	return typeof value === 'string' && value.trim() !== ''
@@ -199,7 +198,7 @@ export function findTemplateRenderBlocker(candidate: TemplatePublishCandidate): 
  */
 export async function findTemplatePublishBlocker(
 	candidate: TemplatePublishCandidate,
-	findAuthorizedAssetsByIds: FindAuthorizedAssetsByIds,
+	repositoryContext: AuthorizedAssetRepositoryContext,
 ): Promise<string | null> {
 	const htmlValidation = htmlTemplateRefs(candidate)
 	let refs: AuthorizedImageRef[]
@@ -223,7 +222,7 @@ export async function findTemplatePublishBlocker(
 		refs = validation.authorizedRefs
 	}
 
-	const invalidRefLabels = await findInvalidAuthorizedRefs(refs, findAuthorizedAssetsByIds)
+	const invalidRefLabels = await findInvalidAuthorizedRefs(refs, repositoryContext)
 	if (invalidRefLabels.length > 0) {
 		return `인가 에셋 참조가 유효하지 않습니다: ${invalidRefLabels.join(', ')}. 미리보기에서 에셋을 다시 선택하세요.`
 	}
@@ -233,7 +232,7 @@ export async function findTemplatePublishBlocker(
 
 async function findInvalidAuthorizedRefs(
 	refs: AuthorizedImageRef[],
-	findAuthorizedAssetsByIds: FindAuthorizedAssetsByIds,
+	repositoryContext: AuthorizedAssetRepositoryContext,
 ): Promise<string[]> {
 	const invalidLabels: string[] = []
 
@@ -242,6 +241,7 @@ async function findInvalidAuthorizedRefs(
 		if (collectionRefs.length === 0) continue
 
 		const docsById = await findAuthorizedAssetsByIds(
+			repositoryContext,
 			collection,
 			collectionRefs.map((ref) => ref.assetId),
 		)

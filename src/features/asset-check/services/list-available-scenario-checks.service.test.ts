@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { findPublishedScenarioCheckRecords } from '@/features/asset-check/repositories/available-scenario-check.payload.repository'
 import {
 	listAvailableScenarioChecks,
 	validateCheckScenarioKey,
 	validateCheckScenarioKeys,
 } from './list-available-scenario-checks.service'
 
-const findRecords = vi.fn()
+vi.mock('@/features/asset-check/repositories/available-scenario-check.payload.repository', () => ({
+	findPublishedScenarioCheckRecords: vi.fn(),
+}))
+
+const repositoryContext = {} as never
 
 const record = (overrides: Record<string, unknown> = {}) => ({
 	blockName: 'Block',
@@ -21,7 +26,7 @@ describe('listAvailableScenarioChecks', () => {
 	})
 
 	it('표시 이름을 조립하고 key 중복을 제거한 뒤 문서·Block·제목 순으로 정렬한다', async () => {
-		findRecords.mockResolvedValue([
+		vi.mocked(findPublishedScenarioCheckRecords).mockResolvedValue([
 			record({ blockName: null, documentTitle: 'B', key: 'type.scale', title: 'Type Scale' }),
 			record({ blockName: 'Z', documentTitle: 'A', key: 'color.palette', title: 'Color' }),
 			record({ blockName: 'A', documentTitle: 'A', key: 'logo.clear', titleKo: '로고' }),
@@ -35,7 +40,7 @@ describe('listAvailableScenarioChecks', () => {
 			}),
 		])
 
-		await expect(listAvailableScenarioChecks(findRecords)).resolves.toEqual([
+		await expect(listAvailableScenarioChecks(repositoryContext)).resolves.toEqual([
 			{
 				blockName: 'A',
 				documentTitle: 'A',
@@ -74,21 +79,25 @@ describe('CheckScenario validation', () => {
 	})
 
 	it('선택 형식과 중복을 먼저 확인하고 published Check 존재 여부를 조회한다', async () => {
-		findRecords.mockResolvedValue([record({ key: 'color.palette' })])
+		vi.mocked(findPublishedScenarioCheckRecords).mockResolvedValue([
+			record({ key: 'color.palette' }),
+		] as never)
 
-		await expect(validateCheckScenarioKeys([], findRecords)).resolves.toBe(
+		await expect(validateCheckScenarioKeys([], repositoryContext)).resolves.toBe(
 			'Check를 1개 이상 포함하세요.',
 		)
-		await expect(validateCheckScenarioKeys([''], findRecords)).resolves.toBe(
+		await expect(validateCheckScenarioKeys([''], repositoryContext)).resolves.toBe(
 			'Check key는 비어 있지 않은 문자열이어야 합니다.',
 		)
 		await expect(
-			validateCheckScenarioKeys(['color.palette', 'color.palette'], findRecords),
+			validateCheckScenarioKeys(['color.palette', 'color.palette'], repositoryContext),
 		).resolves.toBe('중복된 Check가 있습니다.')
-		expect(findRecords).not.toHaveBeenCalled()
+		expect(findPublishedScenarioCheckRecords).not.toHaveBeenCalled()
 
-		await expect(validateCheckScenarioKeys(['color.palette'], findRecords)).resolves.toBe(true)
-		await expect(validateCheckScenarioKeys(['missing'], findRecords)).resolves.toBe(
+		await expect(validateCheckScenarioKeys(['color.palette'], repositoryContext)).resolves.toBe(
+			true,
+		)
+		await expect(validateCheckScenarioKeys(['missing'], repositoryContext)).resolves.toBe(
 			'발행된 Guideline에 없는 Check입니다: missing',
 		)
 	})

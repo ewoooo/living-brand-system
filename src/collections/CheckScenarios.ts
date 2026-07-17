@@ -6,7 +6,6 @@ import type {
 	PayloadRequest,
 	TextFieldValidation,
 } from 'payload'
-import { findPublishedScenarioCheckRecords } from '@/features/asset-check/repositories/available-scenario-check.payload.repository'
 import {
 	listAvailableScenarioChecks,
 	validateCheckScenarioKey,
@@ -30,7 +29,7 @@ const markPublished: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
 const validateScenarioKey: TextFieldValidation = validateCheckScenarioKey
 
 export const validateCheckScenarioKeys: JSONFieldValidation = async (value, { req }) => {
-	return validateCheckScenarioKeysUseCase(value, () => findPublishedScenarioCheckRecords(req))
+	return validateCheckScenarioKeysUseCase(value, req)
 }
 
 async function availableChecksEndpoint(req: PayloadRequest) {
@@ -39,7 +38,7 @@ async function availableChecksEndpoint(req: PayloadRequest) {
 	}
 
 	return Response.json({
-		docs: await listAvailableScenarioChecks(() => findPublishedScenarioCheckRecords(req)),
+		docs: await listAvailableScenarioChecks(req),
 	})
 }
 

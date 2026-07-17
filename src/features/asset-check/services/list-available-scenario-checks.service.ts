@@ -1,7 +1,8 @@
 import type { CheckExecutor } from '@/features/asset-check/checkers/types'
-import type { ScenarioCheckRecord } from '@/features/asset-check/repositories/available-scenario-check.payload.repository'
-
-type FindPublishedScenarioCheckRecords = () => Promise<ScenarioCheckRecord[]>
+import {
+	findPublishedScenarioCheckRecords,
+	type ScenarioCheckRepositoryContext,
+} from '@/features/asset-check/repositories/available-scenario-check.payload.repository'
 
 export interface AvailableScenarioCheck {
 	blockName: string
@@ -16,9 +17,9 @@ export interface AvailableScenarioCheck {
  * Payload 조회와 레코드 변환 I/O는 check-scenario repository가 소유한다.
  */
 export async function listAvailableScenarioChecks(
-	findRecords: FindPublishedScenarioCheckRecords,
+	repositoryContext: ScenarioCheckRepositoryContext,
 ): Promise<AvailableScenarioCheck[]> {
-	const records = await findRecords()
+	const records = await findPublishedScenarioCheckRecords(repositoryContext)
 	const byKey = new Map<string, AvailableScenarioCheck>()
 
 	for (const record of records) {
@@ -53,7 +54,7 @@ export function validateCheckScenarioKey(value: unknown) {
  */
 export async function validateCheckScenarioKeys(
 	value: unknown,
-	findRecords: FindPublishedScenarioCheckRecords,
+	repositoryContext: ScenarioCheckRepositoryContext,
 ) {
 	if (!Array.isArray(value) || value.length === 0) return 'Check를 1개 이상 포함하세요.'
 	if (value.some((key) => typeof key !== 'string' || !key.trim())) {
@@ -64,7 +65,7 @@ export async function validateCheckScenarioKeys(
 	if (new Set(checkKeys).size !== checkKeys.length) return '중복된 Check가 있습니다.'
 
 	const availableKeys = new Set(
-		(await listAvailableScenarioChecks(findRecords)).map(({ key }) => key),
+		(await listAvailableScenarioChecks(repositoryContext)).map(({ key }) => key),
 	)
 	const missing = checkKeys.filter((key) => !availableKeys.has(key))
 	return missing.length > 0 ? `발행된 Guideline에 없는 Check입니다: ${missing.join(', ')}` : true

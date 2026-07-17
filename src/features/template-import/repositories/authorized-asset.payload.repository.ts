@@ -1,13 +1,15 @@
 import type { PayloadRequest } from 'payload'
 import type { AUTHORIZED_ASSET_COLLECTIONS } from '@/types/json-template'
 
+export type AuthorizedAssetRepositoryContext = PayloadRequest
+
 /**
  * 인가 에셋 컬렉션(브랜드 로고 등)의 Payload 조회 경계.
  * collection hook에서 호출되므로 @payload-config를 import하지 않고
  * 호출자의 req를 받아 같은 트랜잭션을 유지한다 (payload.config와의 순환 의존 방지).
  */
 export async function findAuthorizedAssetsByIds(
-	req: PayloadRequest,
+	req: AuthorizedAssetRepositoryContext,
 	collection: (typeof AUTHORIZED_ASSET_COLLECTIONS)[number],
 	assetIds: number[],
 ): Promise<Map<number, { url?: string | null }>> {

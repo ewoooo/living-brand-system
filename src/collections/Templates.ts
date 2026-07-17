@@ -1,5 +1,4 @@
 import { APIError, type CollectionConfig } from 'payload'
-import { findAuthorizedAssetsByIds } from '@/features/template-import/repositories/authorized-asset.payload.repository'
 import {
 	findTemplateDraftBlocker,
 	findTemplatePublishBlocker,
@@ -34,10 +33,7 @@ export const Templates: CollectionConfig = {
 				const finalStatus = data?._status ?? originalDoc?._status
 				if (finalStatus !== 'published') return data
 
-				const blocker = await findTemplatePublishBlocker(
-					candidate,
-					(collection, assetIds) => findAuthorizedAssetsByIds(req, collection, assetIds),
-				)
+				const blocker = await findTemplatePublishBlocker(candidate, req)
 				if (blocker) throw new APIError(blocker, 400)
 
 				return data

@@ -1,15 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-	findRecords: vi.fn(),
 	listAvailable: vi.fn(),
 	validateKey: vi.fn(),
 	validateKeys: vi.fn(),
 }))
 
-vi.mock('@/features/asset-check/repositories/available-scenario-check.payload.repository', () => ({
-	findPublishedScenarioCheckRecords: mocks.findRecords,
-}))
 vi.mock('@/features/asset-check/services/list-available-scenario-checks.service', () => ({
 	listAvailableScenarioChecks: mocks.listAvailable,
 	validateCheckScenarioKey: mocks.validateKey,
@@ -26,7 +22,6 @@ const validateKeys = validateCheckScenarioKeys as unknown as (
 describe('CheckScenarios', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		mocks.findRecords.mockResolvedValue([])
 		mocks.listAvailable.mockResolvedValue([
 			{
 				blockName: 'Main palette',
@@ -59,11 +54,7 @@ describe('CheckScenarios', () => {
 				},
 			],
 		})
-		expect(mocks.listAvailable).toHaveBeenCalledWith(expect.any(Function))
-		const findRecords = mocks.listAvailable.mock.calls[0]?.[0]
-		if (typeof findRecords !== 'function') throw new Error('Repository adapter가 없습니다.')
-		await findRecords()
-		expect(mocks.findRecords).toHaveBeenCalledWith(req)
+		expect(mocks.listAvailable).toHaveBeenCalledWith(req)
 	})
 
 	it('CheckScenario 관리 계약을 노출한다', () => {
@@ -84,11 +75,7 @@ describe('CheckScenarios', () => {
 		const context = { req } as never
 
 		await expect(validateKeys(['color.palette'], context)).resolves.toBe(true)
-		expect(mocks.validateKeys).toHaveBeenCalledWith(['color.palette'], expect.any(Function))
-		const findRecords = mocks.validateKeys.mock.calls[0]?.[1]
-		if (typeof findRecords !== 'function') throw new Error('Repository adapter가 없습니다.')
-		await findRecords()
-		expect(mocks.findRecords).toHaveBeenCalledWith(req)
+		expect(mocks.validateKeys).toHaveBeenCalledWith(['color.palette'], req)
 	})
 
 	it('한 번 발행된 시나리오는 삭제 대신 archive하도록 표시한다', async () => {
