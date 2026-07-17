@@ -63,6 +63,7 @@ import * as migration_20260716_013525_guideline_search_recall from './20260716_0
 import * as migration_20260717_052740_add_check_session_input_snapshot from './20260717_052740_add_check_session_input_snapshot';
 import * as migration_20260717_094613_extract_rules_collection from './20260717_094613_extract_rules_collection';
 import * as migration_20260717_113849_backfill_rules_versions from './20260717_113849_backfill_rules_versions';
+import * as migration_20260717_122530_add_kit_blocks from './20260717_122530_add_kit_blocks';
 
 export const migrations = [
   {
@@ -391,5 +392,8 @@ export const migrations = [
     name: '20260717_113849_backfill_rules_versions',
   },
   {
+    up: migration_20260717_122530_add_kit_blocks.up,
+    down: migration_20260717_122530_add_kit_blocks.down,
+    name: '20260717_122530_add_kit_blocks'
   },
 ];
