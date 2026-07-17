@@ -44,6 +44,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 	// 현재 이미지 블록 config가 백필 뒤에 추가된 필드를 조회하므로, Local API를 호출하기 전에
 	// 대상 테이블은 최종 타입으로 확장하고 곧 제거할 레거시 테이블은 varchar 호환 컬럼만 둔다.
 	await pool.query(`
+		-- 현재 config의 guideline-documents는 rules 관계(체인 뒤쪽 094613에서 도입)를 조회하므로
+		-- Local API가 rels를 읽기 전에 컬럼을 미리 만든다. 094613은 IF NOT EXISTS로 이를 허용한다.
+		ALTER TABLE "guideline_docs_rels" ADD COLUMN IF NOT EXISTS "rules_id" integer;
+		ALTER TABLE "_guideline_docs_v_rels" ADD COLUMN IF NOT EXISTS "rules_id" integer;
+
 		DO $$ BEGIN
 			CREATE TYPE "public"."enum_guideline_docs_blocks_column_unit_image_ratio" AS ENUM('4:3', '1:1', '16:9', '3:2', '2:3', '4:5', '5:4', '9:16');
 		EXCEPTION WHEN duplicate_object THEN NULL; END $$;
