@@ -3,7 +3,8 @@ import { hasChecker, hasDeterministicChecker } from '@/features/asset-check/chec
 import type { CheckStatus, HeuristicCriterion } from '@/features/asset-check/checkers/types'
 import { getCheckSourceDocuments } from '@/features/asset-check/repositories/check-ruleset.payload.repository'
 import { toRuntimeCheckMessages } from '@/features/asset-check/utils/check-messages'
-import type { CheckEvidence, CheckReferenceAssetRole } from '@/features/guideline/blocks/types'
+import type { CheckEvidence } from '@/features/guideline/blocks/catalog'
+import type { CheckReferenceAssetRole } from '@/features/guideline/blocks/types'
 import {
 	collectGuidelineCheckSources,
 	type GuidelineCheckSource,

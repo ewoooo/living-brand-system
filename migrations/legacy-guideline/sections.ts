@@ -1,5 +1,6 @@
 import { type CollectionConfig, slugField } from 'payload'
-import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
+import { guidelineChecksField } from '@/blocks/guideline'
+import { guidelineBlocks } from '@/features/guideline/blocks/catalog'
 import { validateGuidelineCheckKeys } from '@/features/guideline/checks/validate-guideline-check-keys'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from '../../src/collections/shared'

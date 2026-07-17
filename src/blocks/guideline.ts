@@ -466,5 +466,3 @@ export const DoDontBlock: Block = {
 		guidelineChecksField(),
 	],
 }
-
-export const guidelineBlocks = [ColumnUnitBlock, MediaShowcaseBlock, ColorPaletteBlock, DoDontBlock]
