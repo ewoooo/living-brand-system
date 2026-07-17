@@ -34,6 +34,7 @@ export type PublishedTemplate = PublishedHtmlTemplate | PublishedJsonTemplate
 /**
  * "Figma HTML 우선" 읽기 계약의 단일 판정 지점 — Create 화면과 챗 agent가 공유한다.
  * 사용 가능한 html·크기가 모두 있어야 html 템플릿으로 취급하고, 아니면 null(json 폴백)을 준다.
+ * 외부 I/O는 없으며 템플릿 조회는 published-template repository가 소유한다.
  */
 export function pickHtmlTemplate(template: {
 	html?: string | null
@@ -67,44 +68,40 @@ export function pickHtmlTemplate(template: {
  * 읽기 계약: Figma HTML을 우선하고, 사용할 수 없으면 스키마가 유효한 JSON으로 폴백한다.
  */
 export async function getPublishedTemplate(templateId: number): Promise<PublishedTemplate | null> {
-	try {
-		const template = await findPublishedTemplate(templateId)
+	const template = await findPublishedTemplate(templateId)
 
-		if (!template) {
-			return null
-		}
+	if (!template) {
+		return null
+	}
 
-		const html = pickHtmlTemplate(template)
+	const html = pickHtmlTemplate(template)
 
-		if (html) {
-			return {
-				kind: 'html',
-				id: template.id,
-				name: template.name,
-				...html,
-			}
-		}
-
-		const parsed = jsonTemplateSchema.safeParse(template.jsonTemplate)
-
-		if (!parsed.success) {
-			return null
-		}
-
-		// 기능 코드는 별도 필드. js가 있을 때만 실행 대상으로 넘긴다(비었으면 정적 디자인).
-		const code =
-			template.code?.js != null && template.code.js !== ''
-				? { css: template.code.css ?? '', js: template.code.js }
-				: undefined
-
+	if (html) {
 		return {
-			kind: 'json',
+			kind: 'html',
 			id: template.id,
 			name: template.name,
-			jsonTemplate: parsed.data,
-			code,
+			...html,
 		}
-	} catch {
+	}
+
+	const parsed = jsonTemplateSchema.safeParse(template.jsonTemplate)
+
+	if (!parsed.success) {
 		return null
+	}
+
+	// 기능 코드는 별도 필드. js가 있을 때만 실행 대상으로 넘긴다(비었으면 정적 디자인).
+	const code =
+		template.code?.js != null && template.code.js !== ''
+			? { css: template.code.css ?? '', js: template.code.js }
+			: undefined
+
+	return {
+		kind: 'json',
+		id: template.id,
+		name: template.name,
+		jsonTemplate: parsed.data,
+		code,
 	}
 }

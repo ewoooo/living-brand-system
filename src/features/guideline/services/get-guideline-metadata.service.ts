@@ -19,34 +19,19 @@ export interface GetGuidelineMetadataOutput {
  * Payload 조회는 guideline-view repository가 소유한다.
  */
 export const getGuidelineMetadata = cache(async (): Promise<GetGuidelineMetadataOutput> => {
-	try {
-		const guideline = await findGuidelineMetadataGlobal()
-		const primaryHex = getColorHex(guideline.primaryColor)
-		const primaryDarkHex = getColorHex(guideline.primaryColorDark) ?? primaryHex
+	const guideline = await findGuidelineMetadataGlobal()
+	const primaryHex = getColorHex(guideline.primaryColor)
+	const primaryDarkHex = getColorHex(guideline.primaryColorDark) ?? primaryHex
 
-		return {
-			companyName: guideline.companyName,
-			documentTitle: guideline.documentTitle,
-			faviconHref: getUploadUrl(guideline.favicon),
-			issuedLabel: guideline.issuedLabel || null,
-			primaryDarkForegroundHex: primaryDarkHex
-				? getContrastingForeground(primaryDarkHex)
-				: null,
-			primaryDarkHex,
-			primaryForegroundHex: primaryHex ? getContrastingForeground(primaryHex) : null,
-			primaryHex,
-		}
-	} catch {
-		return {
-			companyName: 'Unconfigured Company',
-			documentTitle: 'Living Brand System',
-			faviconHref: null,
-			issuedLabel: null,
-			primaryDarkForegroundHex: null,
-			primaryDarkHex: null,
-			primaryForegroundHex: null,
-			primaryHex: null,
-		}
+	return {
+		companyName: guideline.companyName,
+		documentTitle: guideline.documentTitle,
+		faviconHref: getUploadUrl(guideline.favicon),
+		issuedLabel: guideline.issuedLabel || null,
+		primaryDarkForegroundHex: primaryDarkHex ? getContrastingForeground(primaryDarkHex) : null,
+		primaryDarkHex,
+		primaryForegroundHex: primaryHex ? getContrastingForeground(primaryHex) : null,
+		primaryHex,
 	}
 })
 

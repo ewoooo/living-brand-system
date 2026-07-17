@@ -34,32 +34,15 @@ export interface GetGuidelineNavigationOutput {
  * Payload 조회는 guideline-view repository가 소유한다.
  */
 export const getGuidelineNavigation = cache(async (): Promise<GetGuidelineNavigationOutput> => {
-	try {
-		const [metadata, documents] = await Promise.all([
-			getGuidelineMetadata(),
-			listPublishedGuidelineNavigationDocuments(),
-		])
+	const [metadata, documents] = await Promise.all([
+		getGuidelineMetadata(),
+		listPublishedGuidelineNavigationDocuments(),
+	])
 
-		return {
-			metadata,
-			title: metadata.documentTitle,
-			chapters: buildGuidelineNavigationChapters(documents),
-		}
-	} catch {
-		return {
-			metadata: {
-				companyName: 'Unconfigured Company',
-				documentTitle: 'Untitled Guideline',
-				faviconHref: null,
-				issuedLabel: null,
-				primaryDarkForegroundHex: null,
-				primaryDarkHex: null,
-				primaryForegroundHex: null,
-				primaryHex: null,
-			},
-			title: 'Untitled Guideline',
-			chapters: [],
-		}
+	return {
+		metadata,
+		title: metadata.documentTitle,
+		chapters: buildGuidelineNavigationChapters(documents),
 	}
 })
 

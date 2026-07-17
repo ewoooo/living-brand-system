@@ -10,6 +10,7 @@ export async function findDraftGuidelineDocumentById(documentId: number, user: U
 		collection: 'guideline-documents',
 		id: documentId,
 		depth: 2,
+		disableErrors: true,
 		draft: true,
 		fallbackLocale: FALLBACK_LOCALE,
 		locale: DEFAULT_LOCALE,

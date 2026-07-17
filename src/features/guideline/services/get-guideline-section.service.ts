@@ -31,36 +31,32 @@ export async function getGuidelineSection(
 	chapterSlug: string,
 	sectionSlug: string,
 ): Promise<GetGuidelineSectionOutput | null> {
-	try {
-		const chapter = await findPublishedChapterBySlug(chapterSlug)
+	const chapter = await findPublishedChapterBySlug(chapterSlug)
 
-		if (!chapter) {
-			return null
-		}
-
-		const section = await findPublishedSectionBySlug(chapter.id, sectionSlug)
-
-		if (!section) {
-			return null
-		}
-
-		const pages = await listPublishedPagesBySection(section.id)
-
-		return {
-			title: section.title,
-			headerImage: section.headerImage ?? null,
-			blocks: section.blocks ?? [],
-			description: extractTextFromLexical(section.description) || null,
-			pages: pages.map((page) => ({
-				id: page.id,
-				title: page.title,
-				slug: page.slug,
-				description: page.description || null,
-				displayOrder: page.displayOrder,
-				blocks: page.blocks || [],
-			})),
-		}
-	} catch {
+	if (!chapter) {
 		return null
+	}
+
+	const section = await findPublishedSectionBySlug(chapter.id, sectionSlug)
+
+	if (!section) {
+		return null
+	}
+
+	const pages = await listPublishedPagesBySection(section.id)
+
+	return {
+		title: section.title,
+		headerImage: section.headerImage ?? null,
+		blocks: section.blocks ?? [],
+		description: extractTextFromLexical(section.description) || null,
+		pages: pages.map((page) => ({
+			id: page.id,
+			title: page.title,
+			slug: page.slug,
+			description: page.description || null,
+			displayOrder: page.displayOrder,
+			blocks: page.blocks || [],
+		})),
 	}
 }

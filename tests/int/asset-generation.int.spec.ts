@@ -60,11 +60,11 @@ describe('getCreateNavigation', () => {
 		])
 	})
 
-	it('조회 실패 시 빈 목차로 폴백한다', async () => {
+	it('조회 실패를 빈 목차로 숨기지 않는다', async () => {
 		mockedCategories.mockRejectedValue(new Error('db down'))
 		mockedNavItems.mockResolvedValue([] as never)
 
-		await expect(getCreateNavigation()).resolves.toEqual({ categories: [] })
+		await expect(getCreateNavigation()).rejects.toThrow('db down')
 	})
 })
 
@@ -148,11 +148,11 @@ describe('getPublishedTemplate', () => {
 		await expect(getPublishedTemplate(3)).resolves.toBeNull()
 	})
 
-	it('없거나 조회에 실패하면 null로 폴백한다', async () => {
+	it('실제로 없으면 null을 돌려주고 조회 실패는 숨기지 않는다', async () => {
 		mockedFind.mockResolvedValue(null as never)
 		await expect(getPublishedTemplate(3)).resolves.toBeNull()
 
 		mockedFind.mockRejectedValue(new Error('db down'))
-		await expect(getPublishedTemplate(3)).resolves.toBeNull()
+		await expect(getPublishedTemplate(3)).rejects.toThrow('db down')
 	})
 })
