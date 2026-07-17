@@ -130,4 +130,62 @@ describe('check session service', () => {
 		).resolves.toEqual({ checkSessionId: 41, results: {} })
 		expect(runHeuristicCheck).not.toHaveBeenCalled()
 	})
+
+	it('AI 판정 실패를 failed로 저장하고 원 오류를 다시 던진다', async () => {
+		const error = new Error('Provider failed.')
+		const session = CheckSession.restore(snapshot(png, 'running'))
+		vi.mocked(getCheckSessionRecord).mockResolvedValue(session)
+		vi.mocked(runHeuristicCheck).mockRejectedValue(error)
+
+		await expect(
+			completeCheckSessionAiCheck({ buffer: png, checkSessionId: 41, user }),
+		).rejects.toBe(error)
+		expect(session.status).toBe('failed')
+		expect(saveCheckSessionRecord).toHaveBeenCalledWith(session, user)
+		expect(session.toUpdateData()).toEqual(
+			expect.objectContaining({ status: 'failed', errorMessage: 'Provider failed.' }),
+		)
+	})
+
+	it('실패 상태 저장까지 실패하면 저장 오류를 원 오류의 cause로 남긴다', async () => {
+		const error = new Error('Provider failed.')
+		const saveError = new Error('Database failed.')
+		vi.mocked(getCheckSessionRecord).mockResolvedValue(
+			CheckSession.restore(snapshot(png, 'running')),
+		)
+		vi.mocked(runHeuristicCheck).mockRejectedValue(error)
+		vi.mocked(saveCheckSessionRecord).mockRejectedValue(saveError)
+
+		await expect(
+			completeCheckSessionAiCheck({ buffer: png, checkSessionId: 41, user }),
+		).rejects.toBe(error)
+		expect(error.cause).toBe(saveError)
+	})
+
+	it('완료 상태 저장이 실패하면 DB의 running 세션을 다시 읽어 failed로 종결한다', async () => {
+		const saveError = new Error('Completed update failed.')
+		const inMemorySession = CheckSession.restore(snapshot(png, 'running'))
+		const persistedSession = CheckSession.restore(snapshot(png, 'running'))
+		vi.mocked(getCheckSessionRecord)
+			.mockResolvedValueOnce(inMemorySession)
+			.mockResolvedValueOnce(persistedSession)
+		vi.mocked(runHeuristicCheck).mockResolvedValue({
+			results: {
+				heuristic: {
+					rule: { key: 'heuristic', title: 'Heuristic', executor: 'heuristic' },
+					checker: { key: 'ai-check', type: 'ai' },
+					rawResult: { status: 'pass', fulfillment: 100 },
+				},
+			},
+		})
+		vi.mocked(saveCheckSessionRecord)
+			.mockRejectedValueOnce(saveError)
+			.mockResolvedValueOnce(undefined)
+
+		await expect(
+			completeCheckSessionAiCheck({ buffer: png, checkSessionId: 41, user }),
+		).rejects.toBe(saveError)
+		expect(persistedSession.status).toBe('failed')
+		expect(saveCheckSessionRecord).toHaveBeenNthCalledWith(2, persistedSession, user)
+	})
 })

@@ -1,4 +1,5 @@
 import {
+	type CheckSession,
 	CheckSessionInputMismatchError,
 	type CheckSessionInputSnapshot,
 	CheckSessionNotFoundError,
@@ -122,13 +123,52 @@ export async function completeCheckSessionAiCheck(input: CompleteCheckSessionAiC
 		throw new CheckSessionTerminalError('Check session already failed.')
 	}
 
-	const aiCheck = await runHeuristicCheck(
-		input.buffer,
-		session.pendingCheckKeys,
-		session.rulesetSnapshot,
-	)
-	session.applyAiResults(aiCheck)
-	await saveCheckSessionRecord(session, input.user)
+	try {
+		const aiCheck = await runHeuristicCheck(
+			input.buffer,
+			session.pendingCheckKeys,
+			session.rulesetSnapshot,
+		)
+		session.applyAiResults(aiCheck)
+		await saveCheckSessionRecord(session, input.user)
 
-	return { checkSessionId: session.id, results: aiCheck.results }
+		return { checkSessionId: session.id, results: aiCheck.results }
+	} catch (error) {
+		await persistAiCheckFailure(session, input.user, error)
+		throw error
+	}
+}
+
+async function persistAiCheckFailure(session: CheckSession, user: User, error: unknown) {
+	let runningSession: CheckSession | null = session
+
+	// 완료 상태 저장이 실패했다면 DB의 실제 상태를 다시 읽는다. 첫 update가 반영됐다면
+	// completed를 보존하고, 반영되지 않아 running인 경우에만 failed로 종결한다.
+	if (runningSession.status !== 'running') {
+		try {
+			runningSession = await getCheckSessionRecord(runningSession.id, user)
+		} catch (readError) {
+			attachPersistenceCause(error, readError)
+			return
+		}
+	}
+	if (runningSession?.status !== 'running') return
+
+	runningSession.fail(error instanceof Error ? error.message : 'Check failed.')
+	try {
+		await saveCheckSessionRecord(runningSession, user)
+	} catch (saveError) {
+		attachPersistenceCause(error, saveError)
+	}
+}
+
+function attachPersistenceCause(error: unknown, persistenceError: unknown) {
+	if (!(error instanceof Error) || !Object.isExtensible(error)) return
+	error.cause =
+		error.cause === undefined
+			? persistenceError
+			: new AggregateError(
+					[error.cause, persistenceError],
+					'Check session failure persistence failed.',
+				)
 }
