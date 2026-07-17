@@ -1,11 +1,12 @@
 import type { ApplicationImage, GuidelineChecks } from '@/payload-types'
+import type { CheckEvidence } from '../blocks/catalog'
 import {
 	buildCheckSourceSnapshot,
 	type GuidelineCheckDocument,
 } from '../blocks/check-source-snapshot'
 import { snapshotBlock } from '../blocks/registry'
+import type { CheckReferenceAssetRole } from '../blocks/types'
 import { relationshipId } from '../utils/block-text'
-import type { CheckEvidence, CheckReferenceAssetRole } from './check-source'
 
 type GuidelineCheck = NonNullable<GuidelineChecks>[number]
 
