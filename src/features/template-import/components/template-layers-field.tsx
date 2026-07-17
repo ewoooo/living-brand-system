@@ -596,14 +596,6 @@ export default function TemplateLayersField() {
 						배경 설정 — {selected.name}
 					</span>
 					<div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							onClick={() => toast.info('에셋에서 가져오기는 준비 중입니다.')}
-						>
-							에셋에서 가져오기
-						</Button>
 						<Popup
 							buttonType="custom"
 							verticalAlign="top"
