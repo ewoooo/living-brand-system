@@ -13,13 +13,14 @@ import { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { contrastOptionsSchema } from '@/features/asset-check/checkers/contrast.checker'
 import { relationshipId } from '@/features/guideline/utils/block-text'
+import { siblingPath } from './sibling-path'
 
 type ResolvedChecker = { id: number; key: string | null }
 
 const CheckOptionsField: JSONFieldClientComponent = (props) => {
 	const { path } = props
 	const { disabled, errorMessage, setValue, showError, value } = useField<unknown>({ path })
-	const checkerPath = `${path.slice(0, path.lastIndexOf('.'))}.checker`
+	const checkerPath = siblingPath(path, 'checker')
 	const checkerValue = useFormFields(([fields]) => fields[checkerPath]?.value)
 	const populatedCheckerKey =
 		checkerValue && typeof checkerValue === 'object' && 'checkerKey' in checkerValue

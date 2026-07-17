@@ -5,7 +5,7 @@ import { Table, TableBody } from '@/components/ui/table'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { CheckRow } from '@/features/asset-check/components/result/check-review-row'
-import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
+import type { CheckSection } from '@/features/asset-check/domain/runtime-check'
 import {
 	buildCheckReviewView,
 	type CheckReviewRow,

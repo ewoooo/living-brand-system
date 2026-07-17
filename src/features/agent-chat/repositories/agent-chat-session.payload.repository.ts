@@ -1,31 +1,36 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type { AgentChatSession } from '@/features/agent-chat/domain/agent-chat-session'
-import type { AgentChatReaction, AgentChatSessionMessageInput } from '@/features/agent-chat/types'
+import type {
+	AgentChatSession,
+	AgentChatSessionStatus,
+} from '@/features/agent-chat/domain/agent-chat-session'
+import type {
+	AgentChatAiUsage,
+	AgentChatReaction,
+	AgentChatSessionMessageInput,
+	AgentChatSessionUsage,
+} from '@/features/agent-chat/types'
 import type { AgentChatSession as AgentChatSessionRecord, User } from '@/payload-types'
+
+type AgentChatSessionRecordMessage = NonNullable<AgentChatSessionRecord['messages']>[number]
 
 interface CreateAgentChatSessionInput {
 	messages?: AgentChatSessionMessageInput[]
 	messageCount?: number
 	pagePath?: string
-	status: AgentChatSessionRecord['status']
-	user: User
-}
-
-interface UpdateAgentChatSessionReactionInput {
-	id: AgentChatSessionRecord['id']
-	messageId: string
-	reaction: AgentChatReaction
+	status: AgentChatSessionStatus
 	user: User
 }
 
 /**
  * AgentChatSession 저장 repository — 채팅 실행 기록의 Payload Local API 쓰기를 소유한다.
  */
-export async function createAgentChatSessionRecord(input: CreateAgentChatSessionInput) {
+export async function createAgentChatSessionRecord(
+	input: CreateAgentChatSessionInput,
+): Promise<{ id: number }> {
 	const payload = await getPayload({ config })
 
-	return payload.create({
+	const record = await payload.create({
 		collection: 'agent-chat-sessions',
 		data: {
 			status: input.status,
@@ -34,19 +39,22 @@ export async function createAgentChatSessionRecord(input: CreateAgentChatSession
 			messages: input.messages,
 			createdBy: input.user.id,
 		},
-		overrideAccess: false,
+		// 서버 use case가 상태와 createdBy를 고정한 trusted write다.
+		overrideAccess: true,
 		user: input.user,
 	})
+
+	return { id: record.id }
 }
 
 /**
- * AgentChatSession 조회 repository — messageId들 중 하나라도 포함하는 본인 세션 최신 1건을 돌려준다.
- * 백필 소스 조회 전용이라 실패해도 throw하지 않고 warn 로깅 후 null을 반환한다(best-effort).
+ * AgentChatSession 조회 repository — messageId들 중 하나라도 포함하는 본인 최신 세션의 메시지를
+ * 영속성 독립 입력으로 변환한다. 실패해도 throw하지 않고 warn 로깅 후 빈 배열을 반환한다(best-effort).
  */
-export async function findLatestAgentChatSessionContainingAnyMessage(
+export async function findLatestAgentChatSessionMessagesContainingAny(
 	messageIds: string[],
 	user: User,
-): Promise<AgentChatSessionRecord | null> {
+): Promise<AgentChatSessionMessageInput[]> {
 	const payload = await getPayload({ config })
 
 	try {
@@ -67,10 +75,60 @@ export async function findLatestAgentChatSessionContainingAnyMessage(
 			},
 		})
 
-		return result.docs[0] ?? null
+		return (result.docs[0]?.messages ?? []).map(toAgentChatSessionMessageInput)
 	} catch (error) {
 		payload.logger.warn({ err: error, messageIds }, 'agent-chat.backfill-lookup.failed')
-		return null
+		return []
+	}
+}
+
+function toAgentChatSessionMessageInput(
+	message: AgentChatSessionRecordMessage,
+): AgentChatSessionMessageInput {
+	const usedTools = toSessionUsage(message.usedTools)
+	const usedSkills = toSessionUsage(message.usedSkills)
+	const aiUsage = toAiUsage(message.aiUsage)
+
+	return {
+		messageId: message.messageId,
+		role: message.role,
+		...(message.text != null ? { text: message.text } : {}),
+		...(usedTools ? { usedTools } : {}),
+		...(usedSkills ? { usedSkills } : {}),
+		...(aiUsage ? { aiUsage } : {}),
+		...(message.reaction != null ? { reaction: message.reaction } : {}),
+		...(message.reactedAt != null ? { reactedAt: message.reactedAt } : {}),
+	}
+}
+
+function toSessionUsage(
+	rows: AgentChatSessionRecordMessage['usedTools'],
+): AgentChatSessionUsage[] | undefined {
+	if (!rows?.length) return undefined
+
+	return rows.map(({ name, callCount }) => ({
+		name,
+		...(callCount != null ? { callCount } : {}),
+	}))
+}
+
+// ponytail: rawUsage는 원본 턴 레코드에만 남긴다 — 합본마다 복제하면 레코드가 턴 수만큼 비대해진다.
+function toAiUsage(group: AgentChatSessionRecordMessage['aiUsage']): AgentChatAiUsage | undefined {
+	if (group?.callCount == null) return undefined
+
+	return {
+		...(group.model != null ? { model: group.model } : {}),
+		callCount: group.callCount,
+		...(group.inputTokens != null ? { inputTokens: group.inputTokens } : {}),
+		...(group.outputTokens != null ? { outputTokens: group.outputTokens } : {}),
+		...(group.totalTokens != null ? { totalTokens: group.totalTokens } : {}),
+		...(group.cacheReadInputTokens != null
+			? { cacheReadInputTokens: group.cacheReadInputTokens }
+			: {}),
+		...(group.cacheWriteInputTokens != null
+			? { cacheWriteInputTokens: group.cacheWriteInputTokens }
+			: {}),
+		...(group.reasoningTokens != null ? { reasoningTokens: group.reasoningTokens } : {}),
 	}
 }
 
@@ -92,10 +150,46 @@ export async function saveAgentChatSessionRecord(
 	})
 }
 
-/**
- * AgentChatSession 리액션 저장 repository — 소유 사용자의 피드백 메타데이터만 갱신한다.
- */
-export async function updateAgentChatSessionReaction(input: UpdateAgentChatSessionReactionInput) {
+/** 리액션 Use Case용 본인 세션을 조회해 Payload 메시지를 plain DTO로 변환한다. */
+export async function findOwnedAgentChatSessionMessages(
+	id: number,
+	user: User,
+): Promise<{
+	id: number
+	messages: { messageId: string; role: AgentChatSessionMessageInput['role'] }[]
+} | null> {
+	const payload = await getPayload({ config })
+	const session = await payload.find({
+		collection: 'agent-chat-sessions',
+		depth: 0,
+		limit: 1,
+		overrideAccess: true,
+		user,
+		where: {
+			and: [{ id: { equals: id } }, { createdBy: { equals: user.id } }],
+		},
+	})
+	const record = session.docs[0]
+
+	return record
+		? {
+				id: record.id,
+				messages: (record.messages ?? []).map(({ messageId, role }) => ({
+					messageId,
+					role,
+				})),
+			}
+		: null
+}
+
+/** Service가 승인한 리액션 patch를 raw Payload row ID를 보존하며 저장한다. */
+export async function saveAgentChatSessionReaction(input: {
+	id: number
+	messageId: string
+	reactedAt: string
+	reaction: AgentChatReaction
+	user: User
+}): Promise<boolean> {
 	const payload = await getPayload({ config })
 	const session = await payload.find({
 		collection: 'agent-chat-sessions',
@@ -107,30 +201,23 @@ export async function updateAgentChatSessionReaction(input: UpdateAgentChatSessi
 			and: [{ id: { equals: input.id } }, { createdBy: { equals: input.user.id } }],
 		},
 	})
+	const record = session.docs[0]
+	if (!record) return false
 
-	if (!session.docs[0]) return null
-
-	const messages = session.docs[0].messages ?? []
 	let targetFound = false
-	const reactedAt = new Date().toISOString()
-	const nextMessages = messages.map((message) => {
-		if (message.messageId !== input.messageId || message.role !== 'assistant') {
-			return message
-		}
-
+	const messages = (record.messages ?? []).map((message) => {
+		if (message.messageId !== input.messageId) return message
 		targetFound = true
-		return { ...message, reaction: input.reaction, reactedAt }
+		return { ...message, reaction: input.reaction, reactedAt: input.reactedAt }
 	})
+	if (!targetFound) return false
 
-	if (!targetFound) return null
-
-	return payload.update({
+	await payload.update({
 		collection: 'agent-chat-sessions',
-		id: session.docs[0].id,
-		data: {
-			messages: nextMessages,
-		},
+		id: record.id,
+		data: { messages },
 		overrideAccess: true,
 		user: input.user,
 	})
+	return true
 }

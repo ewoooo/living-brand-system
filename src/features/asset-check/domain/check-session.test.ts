@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
-import type { CheckSession as CheckSessionRecord } from '@/payload-types'
-import { CheckSession, CheckSessionStateError } from './check-session'
+import {
+	CheckSession,
+	CheckSessionInputMismatchError,
+	type CheckSessionSnapshot,
+	CheckSessionStateError,
+} from './check-session'
+import type { RuntimeCheck } from './runtime-check'
 
 function checkResult(key: string): CheckResult {
 	return {
@@ -12,21 +17,31 @@ function checkResult(key: string): CheckResult {
 	}
 }
 
-function record(overrides: Partial<CheckSessionRecord> = {}): CheckSessionRecord {
+function runtimeCheck(key: string): RuntimeCheck {
+	return {
+		key,
+		title: key,
+		checker: { key: 'manual', type: 'manual' },
+		executor: 'manual',
+		implemented: true,
+		evidence: '',
+		referenceAssets: [],
+	}
+}
+
+function snapshot(overrides: Partial<CheckSessionSnapshot> = {}): CheckSessionSnapshot {
 	return {
 		id: 1,
-		source: 'review-page',
 		status: 'running',
-		targetType: 'uploaded-image',
-		createdAt: '2026-07-15T00:00:00.000Z',
-		updatedAt: '2026-07-15T00:00:00.000Z',
+		results: {},
+		pendingCheckKeys: [],
 		...overrides,
 	}
 }
 
 describe('CheckSession aggregate', () => {
 	it('즉시 결과 적용 후 pending이 남으면 running을 유지한다', () => {
-		const session = CheckSession.fromRecord(record())
+		const session = CheckSession.restore(snapshot())
 		session.applyImmediateResults({
 			results: { a: checkResult('a') },
 			pendingCheckKeys: ['b'],
@@ -37,7 +52,7 @@ describe('CheckSession aggregate', () => {
 	})
 
 	it('pending이 비면 자동으로 completed가 되고 completedAt을 기록한다', () => {
-		const session = CheckSession.fromRecord(record())
+		const session = CheckSession.restore(snapshot())
 		session.applyImmediateResults({
 			results: { a: checkResult('a') },
 			pendingCheckKeys: [],
@@ -47,9 +62,23 @@ describe('CheckSession aggregate', () => {
 		expect(session.toUpdateData().completedAt).toEqual(expect.any(String))
 	})
 
+	it('ruleset의 모든 key에 종결 결과가 없으면 completed로 전이하지 않는다', () => {
+		const session = CheckSession.restore(
+			snapshot({ rulesetSnapshot: [runtimeCheck('a'), runtimeCheck('b')] }),
+		)
+
+		expect(() =>
+			session.applyImmediateResults({
+				results: { a: checkResult('a') },
+				pendingCheckKeys: [],
+			}),
+		).toThrow('Check result coverage mismatch (missing: b, unexpected: -)')
+		expect(session.status).toBe('running')
+	})
+
 	it('AI 결과 적용 시 해당 키를 pending에서 제거하고 결과를 병합한다', () => {
-		const session = CheckSession.fromRecord(
-			record({ results: { a: checkResult('a') }, pendingCheckKeys: ['b', 'c'] }),
+		const session = CheckSession.restore(
+			snapshot({ results: { a: checkResult('a') }, pendingCheckKeys: ['b', 'c'] }),
 		)
 		session.applyAiResults({ results: { b: checkResult('b') } })
 		expect(session.status).toBe('running')
@@ -62,26 +91,62 @@ describe('CheckSession aggregate', () => {
 	})
 
 	it('종결된 세션에 전이를 시도하면 CheckSessionStateError를 던진다', () => {
-		const completed = CheckSession.fromRecord(record({ status: 'completed' }))
+		const completed = CheckSession.restore(snapshot({ status: 'completed' }))
 		expect(() => completed.applyAiResults({ results: {} })).toThrow(CheckSessionStateError)
 		expect(() => completed.fail('boom')).toThrow(CheckSessionStateError)
 
-		const failed = CheckSession.fromRecord(record({ status: 'failed' }))
+		const failed = CheckSession.restore(snapshot({ status: 'failed' }))
 		expect(() => failed.applyImmediateResults({ results: {}, pendingCheckKeys: [] })).toThrow(
 			CheckSessionStateError,
 		)
 	})
 
 	it('fail은 errorMessage와 completedAt을 기록한다', () => {
-		const session = CheckSession.fromRecord(record())
+		const session = CheckSession.restore(snapshot())
 		session.fail('boom')
 		expect(session.isFailed).toBe(true)
 		expect(session.toUpdateData().errorMessage).toBe('boom')
 		expect(session.toUpdateData().completedAt).toEqual(expect.any(String))
 	})
 
-	it('fromRecord는 pendingCheckKeys가 없는 과거 레코드를 빈 배열로 복원한다', () => {
-		const session = CheckSession.fromRecord(record())
+	it('restore는 빈 pendingCheckKeys를 그대로 복원한다', () => {
+		const session = CheckSession.restore(snapshot())
 		expect(session.pendingCheckKeys).toEqual([])
+	})
+
+	it('저장된 입력 지문과 SHA-256·형식·크기가 모두 같아야 후속 검수를 허용한다', () => {
+		const inputSnapshot = {
+			sha256: 'a'.repeat(64),
+			mediaType: 'image/png' as const,
+			byteLength: 8,
+		}
+		const session = CheckSession.restore(
+			snapshot({
+				inputSnapshot,
+			}),
+		)
+
+		expect(() => session.assertInputMatches(inputSnapshot)).not.toThrow()
+		for (const mismatch of [
+			{ ...inputSnapshot, sha256: 'b'.repeat(64) },
+			{ ...inputSnapshot, mediaType: 'image/jpeg' as const },
+			{ ...inputSnapshot, byteLength: 9 },
+		]) {
+			expect(() => session.assertInputMatches(mismatch)).toThrow(
+				CheckSessionInputMismatchError,
+			)
+		}
+	})
+
+	it('입력 지문이 없는 과거 세션은 새 이미지로 추정하지 않는다', () => {
+		const session = CheckSession.restore(snapshot())
+
+		expect(() =>
+			session.assertInputMatches({
+				sha256: 'a'.repeat(64),
+				mediaType: 'image/png',
+				byteLength: 8,
+			}),
+		).toThrow(CheckSessionInputMismatchError)
 	})
 })

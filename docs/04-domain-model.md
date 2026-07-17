@@ -74,7 +74,7 @@ flowchart LR
     GuidelineSection["GuidelineSection"]
     GuidelinePage["GuidelinePage"]
     GuidelineBlock["GuidelineBlock"]
-    Check["Check"]
+    Rule["Rule"]
     PageAssetRef["PageAssetRef"]
   end
 
@@ -124,10 +124,10 @@ flowchart LR
   BrandGuideline -->|"소유"| GuidelineSection
   GuidelineSection -->|"소유"| GuidelinePage
   GuidelinePage -->|"소유"| GuidelineBlock
-  GuidelineSection -->|"소유"| Check
-  GuidelinePage -->|"소유"| Check
-  GuidelineBlock -->|"소유"| Check
-  Check -->|"실행 계약"| RuleChecker
+  GuidelineSection -->|"적용(참조)"| Rule
+  GuidelinePage -->|"적용(참조)"| Rule
+  GuidelineBlock -->|"적용(참조)"| Rule
+  Rule -->|"실행 계약"| RuleChecker
   GuidelinePage -->|"소유"| PageAssetRef
   PageAssetRef -->|"자원 사용"| BrandAsset
   GuidelinePage -->|"템플릿 사용"| Template
@@ -143,7 +143,7 @@ flowchart LR
   QASession -->|"소유"| Question
   QASession -->|"소유"| Answer
   Answer -->|"소유"| AnswerCitation
-  AnswerCitation -->|"근거"| Check
+  AnswerCitation -->|"근거"| Rule
   CheckSession -->|"소유"| CheckTarget
   CheckTarget -->|"고정"| CheckInputSnapshot
   CheckSession -->|"소유"| CheckRun
@@ -167,16 +167,16 @@ flowchart LR
   classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
   classDef record fill:#F1F3F5,stroke:#868E96,stroke-width:1.5px,color:#1F1F1F;
 
-  class BrandGuideline,RuleChecker,BrandAsset,Template,Plugin,AssetGenerationSession,QASession,CheckSession,BehaviorEventLog aggregate;
+  class BrandGuideline,Rule,RuleChecker,BrandAsset,Template,Plugin,AssetGenerationSession,QASession,CheckSession,BehaviorEventLog aggregate;
   class GuidelineSection,GuidelinePage,GuidelineBlock,AssetGenerationInput,AssetGenerationOutput,Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult entity;
-  class Check,PageAssetRef,AnswerCitation,CheckRecommendation,PageViewEvent,ClickEvent,AssetDownloadEvent,SectionDwellEvent,SearchEvent,OutboundLinkEvent,CustomEvent childEntity;
+  class PageAssetRef,AnswerCitation,CheckRecommendation,PageViewEvent,ClickEvent,AssetDownloadEvent,SectionDwellEvent,SearchEvent,OutboundLinkEvent,CustomEvent childEntity;
 ```
 
 | 관계 | 의미 |
 | --- | --- |
 | GuidelineSection -> GuidelinePage -> GuidelineBlock | Section은 Page와 자체 Block을, Page는 자체 Block을 소유합니다. Block 식별자는 부모 문서 안에서만 유효합니다. |
-| GuidelineSection / GuidelinePage / GuidelineBlock -> Check | 각 문서 단위는 자신에게 적용할 Check를 소유하므로 별도 source 참조가 필요하지 않습니다. |
-| Check -> RuleChecker | Check는 실행 유형에 따라 결정론적 options 또는 AI 추가 판단 기준을 선언하고 RuleChecker 실행 계약을 참조합니다. |
+| GuidelineSection / GuidelinePage / GuidelineBlock -> Rule | 각 문서 단위는 적용할 Rule을 관계로 선택합니다. Rule 정의는 공유 가능하며 source는 참조하는 쪽의 위치가 결정합니다. |
+| Rule -> RuleChecker | Rule은 실행 유형에 따라 결정론적 options 또는 AI 추가 판단 기준을 선언하고 RuleChecker 실행 계약을 참조합니다. |
 | GuidelinePage -> BrandAssetVersion / TemplateVersion / PluginVersion | 페이지는 브랜드가 채택한 자원을 Official Version으로 참조합니다. |
 | AssetGenerationSession -> BrandGuideline / BrandAsset / Template / Plugin | 제작은 발행 기준, 에셋, 템플릿, 플러그인을 사용하고 ResourceRef를 저장합니다. |
 | 사용 기록 -> AssetGenerationSession / QASession / CheckSession | 운영 조회는 기본 레코드를 읽어 사용 이력을 구성합니다. |
@@ -194,12 +194,12 @@ flowchart LR
 GuidelineSection과 GuidelinePage는 독립 문서입니다. GuidelineBlock은 Section 또는 Page가 소유한 임베디드 엔티티이며 식별자는 부모 문서 안에서만 유효합니다.
 GuidelineDocument는 Section과 Page를 함께 부르는 이름입니다.
 
-Check와 RuleChecker는 책임이 다릅니다.
-Check는 사용자가 정한 검수 선언이며 부모 Section/Page/Block 안에 저장합니다. CheckKey, Title, Tier, Messages, source별 Options, 휴리스틱 판정 기준과 RuleCheckerRef를 보유하고 별도 source 참조는 두지 않습니다.
-RuleChecker는 Check를 실행할 도구 계약입니다. 하나의 RuleChecker는 하나의 ExecutorType과 결합합니다. deterministic은 CheckerKey를 사용하고, heuristic은 ModelRef와 PromptKey를 사용하며, manual은 자동 실행 binding을 갖지 않습니다.
-RuleChecker 하나는 여러 Check가 재사용할 수 있지만 source별 기준값은 Check options가 소유합니다.
-CheckScenario는 Check 정의를 복제하지 않고 순서가 있는 CheckKey 목록만 소유합니다. Manager가 독립적으로 draft를 편집하고 발행하며, 검수 실행 시 해석된 Check 정의는 기존 CheckRulesetSnapshot에 고정합니다.
-Check는 부모 GuidelineVersion에 포함하고, 검수 시점의 문서 근거·판정 기준·RuleChecker 계약은 CheckSession의 CheckRulesetSnapshot으로 고정합니다. 문서 근거는 `source.documentId`와 타입별 구조화 evidence로 저장하며 Block 식별자와 문서 제목은 중복 저장하지 않습니다. 휴리스틱 AI는 기준별 관찰만 담당하고 최종 상태는 품질 검수 Service가 결정합니다.
+Rule과 RuleChecker는 책임이 다릅니다.
+Rule은 사용자가 정한 검수 규칙 정의이며 독립 컬렉션으로 관리합니다. 전역 고유 RuleKey, Title, Tier, Messages, Options, 휴리스틱 판정 기준과 RuleCheckerRef를 보유합니다. Section/Page/Block은 적용할 Rule을 관계로 선택하며 정의를 소유하지 않고, 하나의 Rule을 여러 문서 단위가 공유할 수 있습니다.
+RuleChecker는 Rule을 실행할 도구 계약입니다. 하나의 RuleChecker는 하나의 ExecutorType과 결합합니다. deterministic은 CheckerKey를 사용하고, heuristic은 ModelRef와 PromptKey를 사용하며, manual은 자동 실행 binding을 갖지 않습니다.
+RuleChecker 하나는 여러 Rule이 재사용합니다. 판정 기준값은 Rule이 소유하므로 배치 위치가 달라도 같은 기준이 적용되며, 기준이 다르면 별도 Rule로 분리합니다.
+CheckScenario는 Rule 정의를 복제하지 않고 순서가 있는 RuleKey 목록만 소유합니다. Manager가 독립적으로 draft를 편집하고 발행하며, 검수 실행 시 해석된 Check 정의는 기존 CheckRulesetSnapshot에 고정합니다.
+Rule은 자체 draft/publish 생명주기를 가지며 문서 발행과 독립적으로 수정될 수 있습니다. 검수 시점의 문서 근거·판정 기준·RuleChecker 계약은 CheckSession의 CheckRulesetSnapshot으로 고정합니다. 문서 근거는 `source.documentId`와 타입별 구조화 evidence로 저장하며 Block 식별자와 문서 제목은 중복 저장하지 않습니다. 휴리스틱 AI는 기준별 관찰만 담당하고 최종 상태는 품질 검수 Service가 결정합니다.
 
 ```text
 [도메인] 브랜드 운영 시스템
@@ -260,7 +260,7 @@ flowchart LR
     Section["GuidelineSection"]
     Page["GuidelinePage"]
     Block["GuidelineBlock"]
-    Check["Check"]
+    Rule["Rule"]
     PageAssetRefNode["PageAssetRef"]
   end
 
@@ -274,23 +274,23 @@ flowchart LR
   BrandGuideline -->|"소유"| Section
   Section -->|"소유"| Page
   Page -->|"소유"| Block
-  Section -->|"소유"| Check
-  Page -->|"소유"| Check
-  Block -->|"소유"| Check
-  Check -->|"실행 계약"| RuleChecker
+  Section -->|"적용(참조)"| Rule
+  Page -->|"적용(참조)"| Rule
+  Block -->|"적용(참조)"| Rule
+  Rule -->|"실행 계약"| RuleChecker
   Page -->|"소유"| PageAssetRefNode
   PageAssetRefNode -->|"자원 사용"| BrandAsset
   Page -->|"템플릿 사용"| Template
   Page -->|"플러그인 사용"| Plugin
-  Check -->|"참조"| BrandAsset
+  Rule -->|"참조"| BrandAsset
 
   classDef aggregate fill:#FFE8CC,stroke:#F08C00,stroke-width:2px,color:#1F1F1F;
   classDef entity fill:#E7F5FF,stroke:#1C7ED6,stroke-width:1.5px,color:#1F1F1F;
   classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
 
-  class BrandGuideline,RuleChecker,BrandAsset,Template,Plugin aggregate;
+  class BrandGuideline,Rule,RuleChecker,BrandAsset,Template,Plugin aggregate;
   class Section,Page,Block entity;
-  class Check,PageAssetRefNode childEntity;
+  class PageAssetRefNode childEntity;
 ```
 
 BrandGuideline은 사용자가 읽는 가이드라인 구조를 관리합니다.
@@ -298,11 +298,11 @@ GuidelineSection과 GuidelinePage는 문서 타입이고, GuidelineBlock은 두 
 GuidelineVersionRef는 BrandGuideline이 소유한 Official Version을 CheckBasis가 참조하기 위해 저장하는 값 객체입니다.
 
 GuidelinePage는 GuidelineBlock 목록을 소유합니다. GuidelineBlock은 column unit, media showcase처럼 화면에 렌더링되는 최소 콘텐츠 문서입니다.
-Section, Page, Block은 자신에게 적용할 Check를 직접 소유합니다. Check의 source는 부모 포함 관계로 결정하므로 별도 source 참조와 역참조를 만들지 않습니다.
+Section, Page, Block은 적용할 Rule을 관계로 선택합니다. Rule은 공유 가능한 독립 정의이고, 검수 근거(source)는 Rule을 참조하는 문서 단위의 위치가 결정합니다.
 PageAssetRef는 페이지 안에서의 표시 순서, 캡션, 예시 역할을 기록합니다.
 
-RuleChecker는 Check를 실행할 도구 계약입니다. deterministic RuleChecker는 CheckerKey와, heuristic RuleChecker는 ModelRef 및 PromptKey와 결합합니다.
-Check는 CheckKey, Tier, Options, Messages를 보유하며 부모 GuidelineVersion과 함께 버전 관리합니다. 검수 실행 당시 값은 CheckSession에 snapshot으로 보관합니다.
+RuleChecker는 Rule을 실행할 도구 계약입니다. deterministic RuleChecker는 CheckerKey와, heuristic RuleChecker는 ModelRef 및 PromptKey와 결합합니다.
+Rule은 전역 고유 RuleKey, Tier, Options, Messages를 보유하며 자체 draft/publish로 버전 관리합니다. 문서·블록·시나리오가 참조 중인 Rule은 삭제할 수 없고, 검수 실행 당시 값은 CheckSession에 snapshot으로 보관합니다.
 CheckException과 options의 검사기별 상세 UI는 현재 범위에서 제외하고 추후 고도화합니다.
 
 Official Version 전환은 별도 애그리거트를 만들지 않고, 각 원본 애그리거트가 소유한 Version 엔티티의 stage/live/archived 상태를 바꾸는 서비스 흐름으로 둡니다.
@@ -408,7 +408,7 @@ AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 Brand ass
 
 ```mermaid
 flowchart LR
-  GuidelineCheck["Check"]
+  GuidelineCheck["Rule"]
 
   subgraph QA["질의응답"]
     QASession["QASession"]

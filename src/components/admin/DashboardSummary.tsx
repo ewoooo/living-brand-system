@@ -2,12 +2,7 @@ import { Badge } from '@/components/ui/badge'
 import { getAdminGuidelineSummary } from '@/features/guideline/services/get-admin-guideline-summary.service'
 
 export default async function DashboardSummary() {
-	const { checks, chapters, sections, pages } = await getAdminGuidelineSummary().catch(() => ({
-		checks: 0,
-		chapters: 0,
-		sections: 0,
-		pages: 0,
-	}))
+	const { checks, chapters, sections, pages } = await getAdminGuidelineSummary()
 
 	return (
 		<section className="dashboard-summary">

@@ -1,6 +1,5 @@
 import { type CollectionConfig, slugField } from 'payload'
-import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
-import { validateGuidelineCheckKeys } from '@/features/guideline/checks/validate-guideline-check-keys'
+import { legacyGuidelineBlocks, legacyGuidelineChecksField } from './blocks'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from '../../src/collections/shared'
 
@@ -12,9 +11,6 @@ const previewURL = (id: unknown) =>
 export const LegacyGuidelinePages: CollectionConfig = {
 	slug: 'guideline-pages',
 	access: managerManagedAccess,
-	hooks: {
-		beforeValidate: [validateGuidelineCheckKeys],
-	},
 	labels: {
 		singular: 'Guideline Page',
 		plural: 'Guideline Pages',
@@ -55,7 +51,7 @@ export const LegacyGuidelinePages: CollectionConfig = {
 				description: '페이지 제목 아래에 표시할 선택 설명입니다.',
 			},
 		},
-		guidelineChecksField(),
+		legacyGuidelineChecksField(),
 		{
 			name: 'section',
 			type: 'relationship',
@@ -81,7 +77,7 @@ export const LegacyGuidelinePages: CollectionConfig = {
 		{
 			name: 'blocks',
 			type: 'blocks',
-			blocks: guidelineBlocks,
+			blocks: legacyGuidelineBlocks,
 		},
 	],
 }

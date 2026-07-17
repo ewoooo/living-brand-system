@@ -1,7 +1,7 @@
 import { createBreadcrumbsField, createParentField } from '@payloadcms/plugin-nested-docs'
 import { type CollectionConfig, slugField } from 'payload'
-import { guidelineBlocks, guidelineChecksField } from '@/blocks/guideline'
-import { validateGuidelineCheckKeys } from '@/features/guideline/checks/validate-guideline-check-keys'
+import { guidelineRulesField } from '@/blocks/guideline'
+import { guidelineBlocks } from '@/features/guideline/blocks/catalog'
 import { validateGuidelineDocumentDepth } from '@/features/guideline/checks/validate-guideline-document-depth'
 import { validateGuidelineDocumentSlug } from '@/features/guideline/checks/validate-guideline-document-slug'
 import { managerManagedAccess } from '@/lib/auth'
@@ -17,7 +17,7 @@ export const GuidelineDocuments: CollectionConfig = {
 	dbName: 'guideline_docs',
 	access: managerManagedAccess,
 	hooks: {
-		beforeValidate: [validateGuidelineDocumentDepth, validateGuidelineCheckKeys],
+		beforeValidate: [validateGuidelineDocumentDepth],
 	},
 	labels: {
 		singular: '가이드라인 문서',
@@ -119,7 +119,7 @@ export const GuidelineDocuments: CollectionConfig = {
 			label: '본문',
 			blocks: guidelineBlocks,
 		},
-		guidelineChecksField(),
+		guidelineRulesField(),
 		{
 			name: 'displayOrder',
 			type: 'number',

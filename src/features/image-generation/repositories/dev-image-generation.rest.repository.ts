@@ -1,4 +1,4 @@
-// ⚠️ 임시 — 정식 엔진 gpt-image-2 키(OPENAI_API_KEY) 수령 전까지만 쓰는 dev 폴백.
+// ⚠️ 임시 — development + IMAGE_DEV_FALLBACK=true에서만 쓰는 dev 폴백.
 // Pollinations FLUX(무료·키/가입 불필요). 키 오면 이 파일과 generate-image.service.ts의 폴백 분기를 통째로 삭제.
 // ⚠️ 프롬프트가 외부 무료 서비스로 전송된다 — 민감 입력 금지.
 import type { ImageSize } from '@/features/image-generation/presets'

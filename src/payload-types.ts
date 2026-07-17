@@ -7,69 +7,6 @@
  */
 
 /**
- * 이 문서 단위에 적용할 검수 선언입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "GuidelineChecks".
- */
-export type GuidelineChecks =
-  | {
-      title: string;
-      titleKo?: string | null;
-      /**
-       * 최초 저장 시 영문 제목을 기준으로 자동 생성되는 안정적인 식별자입니다.
-       */
-      key: string;
-      tier: 'required' | 'recommended';
-      executor: 'deterministic' | 'heuristic' | 'manual';
-      /**
-       * 검수 실행 방식과 구현체를 선택합니다.
-       */
-      checker: number | RuleChecker;
-      /**
-       * 이 Check에서 결정론적 Checker에 전달할 설정입니다.
-       */
-      options?:
-        | {
-            [k: string]: unknown;
-          }
-        | unknown[]
-        | string
-        | number
-        | boolean
-        | null;
-      /**
-       * AI가 관측할 질문과 통과 기준을 행 단위로 입력합니다.
-       */
-      criteria?:
-        | {
-            question: string;
-            kind: 'presence' | 'measure';
-            expected?: ('present' | 'absent') | null;
-            operator?: ('gte' | 'lte' | 'between') | null;
-            expectedValue?: number | null;
-            max?: number | null;
-            unit?: string | null;
-            id?: string | null;
-          }[]
-        | null;
-      /**
-       * AI가 이 Check를 판단할 때 추가로 적용할 기준입니다. 선택 입력, 최대 2,000자.
-       */
-      heuristicPrompt?: string | null;
-      /**
-       * 결정론적 또는 수동 검수 결과에 표시할 메시지입니다.
-       */
-      messages?: {
-        pass?: string | null;
-        ok?: string | null;
-        needsReview?: string | null;
-        fail?: string | null;
-      };
-      id?: string | null;
-    }[]
-  | null;
-/**
  * Supported timezones in IANA format.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -141,6 +78,7 @@ export interface Config {
     'template-assets': TemplateAsset;
     plugins: Plugin;
     'check-scenarios': CheckScenario;
+    rules: Rule;
     'rule-checkers': RuleChecker;
     'check-sessions': CheckSession;
     'agent-chat-sessions': AgentChatSession;
@@ -170,6 +108,7 @@ export interface Config {
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
     plugins: PluginsSelect<false> | PluginsSelect<true>;
     'check-scenarios': CheckScenariosSelect<false> | CheckScenariosSelect<true>;
+    rules: RulesSelect<false> | RulesSelect<true>;
     'rule-checkers': RuleCheckersSelect<false> | RuleCheckersSelect<true>;
     'check-sessions': CheckSessionsSelect<false> | CheckSessionsSelect<true>;
     'agent-chat-sessions': AgentChatSessionsSelect<false> | AgentChatSessionsSelect<true>;
@@ -294,7 +233,10 @@ export interface GuidelineDocument {
    */
   headerImage?: (number | null) | ApplicationImage;
   blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
-  checks?: GuidelineChecks;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
   /**
    * 숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.
    */
@@ -378,7 +320,10 @@ export interface ColumnUnitBlock {
         id?: string | null;
       }[]
     | null;
-  checks?: GuidelineChecks;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'columnUnit';
@@ -407,6 +352,70 @@ export interface BrandColor {
    * Main Color 팔레트에 포함되는 컬러인지 여부입니다.
    */
   isMain?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * 문서와 블록이 참조해 적용하는 검수 규칙 정의입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rules".
+ */
+export interface Rule {
+  id: number;
+  title: string;
+  titleKo?: string | null;
+  /**
+   * 최초 저장 시 영문 제목을 기준으로 자동 생성되는 안정적인 식별자입니다.
+   */
+  key: string;
+  tier: 'required' | 'recommended';
+  executor: 'deterministic' | 'heuristic' | 'manual';
+  /**
+   * 검수 실행 방식과 구현체를 선택합니다.
+   */
+  checker: number | RuleChecker;
+  /**
+   * 이 Rule에서 결정론적 Checker에 전달할 설정입니다.
+   */
+  options?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * AI가 관측할 질문과 통과 기준을 행 단위로 입력합니다.
+   */
+  criteria?:
+    | {
+        question: string;
+        kind: 'presence' | 'measure';
+        expected?: ('present' | 'absent') | null;
+        operator?: ('gte' | 'lte' | 'between') | null;
+        expectedValue?: number | null;
+        max?: number | null;
+        unit?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * AI가 이 Rule을 판단할 때 추가로 적용할 기준입니다. 선택 입력, 최대 2,000자.
+   */
+  heuristicPrompt?: string | null;
+  /**
+   * 결정론적 또는 수동 검수 결과에 표시할 메시지입니다.
+   */
+  messages?: {
+    pass?: string | null;
+    ok?: string | null;
+    needsReview?: string | null;
+    fail?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -459,7 +468,10 @@ export interface MediaShowcaseBlock {
    */
   imageBackgroundColor?: (number | null) | BrandColor;
   imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
-  checks?: GuidelineChecks;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaShowcase';
@@ -474,7 +486,10 @@ export interface ColorPaletteBlock {
    * 선택한 순서대로 스와치 카드가 표시됩니다.
    */
   colors: (number | BrandColor)[];
-  checks?: GuidelineChecks;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'colorPalette';
@@ -514,7 +529,10 @@ export interface DoDontBlock {
         id?: string | null;
       }[]
     | null;
-  checks?: GuidelineChecks;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'doDont';
@@ -750,6 +768,15 @@ export interface CheckSession {
   status: 'running' | 'completed' | 'failed';
   targetType: 'uploaded-image';
   imageName?: string | null;
+  /**
+   * 검수 입력 원본 바이트의 SHA-256입니다.
+   */
+  inputSha256?: string | null;
+  inputMediaType?: ('image/jpeg' | 'image/png' | 'image/webp') | null;
+  /**
+   * 검수 입력 원본의 바이트 길이입니다.
+   */
+  inputByteLength?: number | null;
   /**
    * 검수 실행 시점의 Check Scenario 기준 Check 스냅샷입니다.
    */
@@ -1078,11 +1105,11 @@ export interface PayloadMcpApiKey {
   description?: string | null;
   'payload-mcp-tool'?: {
     /**
-     * Find published guideline documents with localized content, hierarchy, blocks, and checks.
+     * Find published guideline documents with localized content, hierarchy, blocks, and applied rules.
      */
     findGuidelineDocuments?: boolean | null;
     /**
-     * Find checks declared by published guideline documents and blocks.
+     * Find rules applied by published guideline documents and blocks.
      */
     findChecks?: boolean | null;
     /**
@@ -1254,6 +1281,10 @@ export interface PayloadLockedDocument {
         value: number | CheckScenario;
       } | null)
     | ({
+        relationTo: 'rules';
+        value: number | Rule;
+      } | null)
+    | ({
         relationTo: 'rule-checkers';
         value: number | RuleChecker;
       } | null)
@@ -1353,7 +1384,7 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         colorPalette?: T | ColorPaletteBlockSelect<T>;
         doDont?: T | DoDontBlockSelect<T>;
       };
-  checks?: T | GuidelineChecksSelect<T>;
+  rules?: T;
   displayOrder?: T;
   breadcrumbs?:
     | T
@@ -1383,44 +1414,9 @@ export interface ColumnUnitBlockSelect<T extends boolean = true> {
         imageScale?: T;
         id?: T;
       };
-  checks?: T | GuidelineChecksSelect<T>;
+  rules?: T;
   id?: T;
   blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "GuidelineChecks_select".
- */
-export interface GuidelineChecksSelect<T extends boolean = true> {
-  title?: T;
-  titleKo?: T;
-  key?: T;
-  tier?: T;
-  executor?: T;
-  checker?: T;
-  options?: T;
-  criteria?:
-    | T
-    | {
-        question?: T;
-        kind?: T;
-        expected?: T;
-        operator?: T;
-        expectedValue?: T;
-        max?: T;
-        unit?: T;
-        id?: T;
-      };
-  heuristicPrompt?: T;
-  messages?:
-    | T
-    | {
-        pass?: T;
-        ok?: T;
-        needsReview?: T;
-        fail?: T;
-      };
-  id?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1431,7 +1427,7 @@ export interface MediaShowcaseBlockSelect<T extends boolean = true> {
   image?: T;
   imageBackgroundColor?: T;
   imageScale?: T;
-  checks?: T | GuidelineChecksSelect<T>;
+  rules?: T;
   id?: T;
   blockName?: T;
 }
@@ -1442,7 +1438,7 @@ export interface MediaShowcaseBlockSelect<T extends boolean = true> {
 export interface ColorPaletteBlockSelect<T extends boolean = true> {
   title?: T;
   colors?: T;
-  checks?: T | GuidelineChecksSelect<T>;
+  rules?: T;
   id?: T;
   blockName?: T;
 }
@@ -1469,7 +1465,7 @@ export interface DoDontBlockSelect<T extends boolean = true> {
             };
         id?: T;
       };
-  checks?: T | GuidelineChecksSelect<T>;
+  rules?: T;
   id?: T;
   blockName?: T;
 }
@@ -1660,6 +1656,43 @@ export interface CheckScenariosSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rules_select".
+ */
+export interface RulesSelect<T extends boolean = true> {
+  title?: T;
+  titleKo?: T;
+  key?: T;
+  tier?: T;
+  executor?: T;
+  checker?: T;
+  options?: T;
+  criteria?:
+    | T
+    | {
+        question?: T;
+        kind?: T;
+        expected?: T;
+        operator?: T;
+        expectedValue?: T;
+        max?: T;
+        unit?: T;
+        id?: T;
+      };
+  heuristicPrompt?: T;
+  messages?:
+    | T
+    | {
+        pass?: T;
+        ok?: T;
+        needsReview?: T;
+        fail?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "rule-checkers_select".
  */
 export interface RuleCheckersSelect<T extends boolean = true> {
@@ -1682,6 +1715,9 @@ export interface CheckSessionsSelect<T extends boolean = true> {
   status?: T;
   targetType?: T;
   imageName?: T;
+  inputSha256?: T;
+  inputMediaType?: T;
+  inputByteLength?: T;
   rulesetSnapshot?: T;
   results?: T;
   pendingCheckKeys?: T;
@@ -2125,6 +2161,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'check-scenarios';
           value: number | CheckScenario;
+        } | null)
+      | ({
+          relationTo: 'rules';
+          value: number | Rule;
         } | null)
       | ({
           relationTo: 'rule-checkers';

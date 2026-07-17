@@ -15,7 +15,7 @@ vi.mock('../repositories/guideline-preview.payload.repository', () => ({
 }))
 
 describe('guideline document preview', () => {
-	beforeEach(() => vi.clearAllMocks())
+	beforeEach(() => vi.resetAllMocks())
 
 	it('발행된 부모가 없는 draft chapter·section·page를 preview한다', async () => {
 		const chapter = {
@@ -23,6 +23,7 @@ describe('guideline document preview', () => {
 			title: 'Draft Brand System',
 			label: 'Draft',
 			description: null,
+			descriptionText: null,
 			slug: 'brand-system',
 			breadcrumbs: [{ url: '/guideline/brand-system' }],
 		}
@@ -31,9 +32,10 @@ describe('guideline document preview', () => {
 			title: 'Draft Basics',
 			slug: 'basics',
 			description: null,
+			descriptionText: null,
 			headerImage: null,
 			blocks: [],
-			parent: 1,
+			parentId: 1,
 			breadcrumbs: [
 				{ url: '/guideline/brand-system' },
 				{ url: '/guideline/brand-system/basics' },
@@ -44,9 +46,10 @@ describe('guideline document preview', () => {
 			title: 'Draft Logo Usage',
 			slug: 'logo-usage',
 			description: null,
+			descriptionText: null,
 			displayOrder: 1,
 			blocks: [],
-			parent: 2,
+			parentId: 2,
 			breadcrumbs: [
 				{ url: '/guideline/brand-system' },
 				{ url: '/guideline/brand-system/basics' },
@@ -76,5 +79,45 @@ describe('guideline document preview', () => {
 			title: 'Draft Basics',
 			pages: [{ title: 'Draft Logo Usage', slug: 'logo-usage' }],
 		})
+	})
+
+	it('실제 미존재·잘못된 breadcrumb만 null로 처리하고 조회 실패는 전파한다', async () => {
+		vi.mocked(findDraftGuidelineDocumentById).mockResolvedValueOnce(null)
+		await expect(getGuidelineDocumentPreviewTarget(404, { id: 1 } as never)).resolves.toBeNull()
+
+		vi.mocked(findDraftGuidelineDocumentById).mockResolvedValueOnce({
+			id: 1,
+			breadcrumbs: [],
+		} as never)
+		await expect(getGuidelineDocumentPreviewTarget(1, { id: 1 } as never)).resolves.toBeNull()
+
+		vi.mocked(findDraftGuidelineDocumentById).mockRejectedValueOnce(new Error('db down'))
+		await expect(getGuidelineDocumentPreviewTarget(1, { id: 1 } as never)).rejects.toThrow(
+			'db down',
+		)
+	})
+
+	it('chapter와 section 하위 문서 조회 실패를 null로 숨기지 않는다', async () => {
+		vi.mocked(findDraftGuidelineDocumentById).mockResolvedValueOnce({
+			id: 1,
+			title: 'Brand',
+			slug: 'brand',
+			breadcrumbs: [{ url: '/guideline/brand' }],
+		} as never)
+		vi.mocked(listDraftGuidelineChildren).mockRejectedValueOnce(new Error('chapter db down'))
+		await expect(getGuidelineChapterPreview(1, { id: 1 } as never)).rejects.toThrow(
+			'chapter db down',
+		)
+
+		vi.mocked(findDraftGuidelineDocumentById).mockResolvedValueOnce({
+			id: 2,
+			title: 'Logo',
+			slug: 'logo',
+			breadcrumbs: [{ url: '/guideline/brand' }, { url: '/guideline/brand/logo' }],
+		} as never)
+		vi.mocked(listDraftGuidelineChildren).mockRejectedValueOnce(new Error('section db down'))
+		await expect(getGuidelineSectionPreview(2, { id: 1 } as never)).rejects.toThrow(
+			'section db down',
+		)
 	})
 })

@@ -45,14 +45,14 @@
 ### 3.2 GuidelineSection
 
 데이터명: GuidelineSection
-수집 목적: 가이드라인 페이지를 장 단위로 묶고 자체 검수 선언을 소유한다.
+수집 목적: 가이드라인 페이지를 장 단위로 묶고 적용할 검수 규칙(Rule)을 참조로 선택한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 섹션 이름, 설명, 표시 순서를 입력하면 BrandGuideline 아래에 생성한다. |
 | 전송 | 섹션 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | BrandGuideline 하위 엔티티로 저장하고 표시 순서를 함께 보관한다. |
-| 처리 | GuidelinePage와 자체 GuidelineBlock을 소유하고, 자신에게 적용할 Check를 함께 관리한다. |
+| 처리 | GuidelinePage와 자체 GuidelineBlock을 소유하고, 적용할 Rule을 관계로 선택한다. Rule 정의는 rules 컬렉션이 소유한다. |
 | 활용 | Manager 편집 화면과 Creator 가이드라인 탐색 구조에 사용한다. |
 | 공유·제공 | 다른 도메인에는 직접 제공하지 않고 GuidelineVersion에 포함된 구조로 제공한다. |
 | 보관 | BrandGuideline revision과 Official Version에 포함해 보관한다. |
@@ -68,7 +68,7 @@
 | 생성·수집 | Manager가 페이지 제목, 배치 정보, 소속 섹션을 입력하면 GuidelineSection 아래에 생성한다. |
 | 전송 | 페이지 구성 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | 소속 GuidelineSection, PagePolicy, PageAssetRef, PageExample, PageComposition과 함께 저장한다. |
-| 처리 | GuidelineBlock을 소유하고, 자신에게 적용할 Check를 함께 관리한다. |
+| 처리 | GuidelineBlock을 소유하고, 적용할 Rule을 관계로 선택한다. Rule 정의는 rules 컬렉션이 소유한다. |
 | 활용 | Creator 가이드라인 화면, Agent 답변 근거, 품질 검수 기준 탐색에 사용한다. |
 | 공유·제공 | BehaviorEventLog에는 페이지 조회와 클릭 대상인 PageRef만 제공한다. |
 | 보관 | Official Version에 포함된 페이지 구조를 유지한다. |
@@ -84,7 +84,7 @@
 | 생성·수집 | Manager가 블록 유형과 콘텐츠를 입력하면 GuidelineSection 또는 GuidelinePage 아래에 생성한다. |
 | 전송 | 블록 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | 콘텐츠와 식별자는 소속 Section/Page 안에 임베디드 데이터로 저장한다. Block 식별자는 부모 문서 안에서만 유효하다. |
-| 처리 | 이미지와 컬러 같은 표시 자원을 참조하고, 자신에게 적용할 Check를 함께 관리한다. |
+| 처리 | 이미지와 컬러 같은 표시 자원을 참조하고, 적용할 Rule을 관계로 선택한다. 문서·블록·시나리오가 참조 중인 Rule은 삭제할 수 없다. |
 | 활용 | Creator 가이드라인 화면, Agent 답변 근거, 품질 검수 evidence 생성에 사용한다. |
 | 공유·제공 | 다른 도메인에는 GuidelineVersion에 포함된 읽기 모델로 제공한다. |
 | 보관 | GuidelineVersion과 Payload revision에 포함해 변경 이력을 보관한다. |
@@ -493,10 +493,10 @@ AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 아키텍
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Creator가 검수를 요청하면 System이 현재 AssetGenerationOutput을 복제하거나 참조 고정해 생성한다. |
+| 생성·수집 | Creator가 검수를 요청하면 System이 현재 입력을 참조 고정한다. 업로드 이미지는 실제 바이트에서 SHA-256·감지된 미디어 형식·바이트 크기를 만든다. |
 | 전송 | 검수 요청은 Creator UI에서 Client fetch route handler를 거쳐 Quality check service로 전달한다. |
-| 저장 | CheckSession과 연결해 저장하고 원본 AssetGenerationOutput 참조를 보관한다. |
-| 처리 | 검수 중 AssetGenerationOutput이 바뀌어도 CheckInputSnapshot은 변경하지 않는다. |
+| 저장 | 업로드 이미지는 CheckSession에 SHA-256·미디어 형식·바이트 크기를 저장하고 원본 바이트는 실행 중에만 유지한다. AssetGenerationOutput 참조 연결은 해당 입력 유형을 도입할 때 추가한다. |
+| 처리 | 후속 AI 검수는 세션 시작 시점의 지문과 실제 입력이 일치할 때만 결과를 병합한다. 지문이 없는 과거 세션은 신규 입력과 같다고 추정하지 않는다. |
 | 활용 | CheckTarget, CheckRun, Check History 조회의 기준 입력으로 사용한다. |
 | 공유·제공 | Agent에는 점검에 필요한 산출물 내용만 제공한다. |
 | 보관 | CheckSession과 CheckResult가 참조하는 동안 보관한다. |
@@ -511,7 +511,7 @@ AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 아키텍
 | --- | --- |
 | 생성·수집 | CheckInputSnapshot이 만들어지면 System이 CheckSession을 시작한다. |
 | 전송 | 검수 시작 요청은 Quality check service로 전달한다. |
-| 저장 | CheckTarget, CheckRun을 하위로 관리하고 상태와 이벤트를 저장한다. |
+| 저장 | 현재 구현은 입력 지문, ruleset snapshot, pending Check key, 결과, 상태, `createdBy`를 CheckSession에 평탄화해 저장한다. CheckTarget·CheckRun 하위 모델은 재검수 이력이 필요할 때 분리한다. |
 | 처리 | 점검 실행, 판정, 완료 상태를 같은 세션 안에서 묶는다. |
 | 활용 | Creator 검수 결과 조회와 운영자의 점검 이력 조회에 사용한다. |
 | 공유·제공 | 운영 조회에는 필요한 식별자와 상태만 제공한다. |

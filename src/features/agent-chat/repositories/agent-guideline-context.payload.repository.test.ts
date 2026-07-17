@@ -1,8 +1,10 @@
 import { getPayload } from 'payload'
 import { describe, expect, it, vi } from 'vitest'
 import {
+	findAgentGuidelineDocument,
+	findGuidelineSearchPhraseCandidates,
+	findGuidelineSearchTermCandidates,
 	listGuidelineDocuments,
-	searchGuidelineDocuments,
 } from './agent-guideline-context.payload.repository'
 
 vi.mock('@payload-config', () => ({ default: {} }))
@@ -10,10 +12,21 @@ vi.mock('payload', () => ({ getPayload: vi.fn() }))
 
 describe('listGuidelineDocuments', () => {
 	it('Agent 경로는 기존 ko → en fallback과 published 필터를 유지한다', async () => {
-		const find = vi.fn().mockResolvedValue({ docs: [] })
+		const find = vi.fn().mockResolvedValue({
+			docs: [
+				{
+					id: 7,
+					title: 'Primary Logo',
+					parent: { id: 2 },
+					breadcrumbs: [{}, {}, {}],
+				},
+			],
+		})
 		vi.mocked(getPayload).mockResolvedValue({ find } as never)
 
-		await listGuidelineDocuments({ id: 1 })
+		await expect(listGuidelineDocuments({ id: 1 })).resolves.toEqual([
+			{ id: 7, level: 3, parentId: 2, title: 'Primary Logo' },
+		])
 
 		expect(find).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -27,27 +40,21 @@ describe('listGuidelineDocuments', () => {
 	})
 })
 
-describe('searchGuidelineDocuments', () => {
-	it('정확·확장 검색 결과를 합쳐 제목 일치순으로 반환한다', async () => {
+describe('guideline search candidates', () => {
+	it('문구 검색을 Payload 조건으로 변환하고 후보 DTO를 반환한다', async () => {
 		const find = vi.fn().mockResolvedValue({
 			docs: [
 				{
-					title: 'Brand Product',
-					doc: { relationTo: 'guideline-documents', value: 54 },
-				},
-				{
 					title: 'Brand Model',
-					doc: { relationTo: 'guideline-documents', value: 55 },
+					doc: { relationTo: 'guideline-documents', value: 54 },
 				},
 			],
 		})
 		vi.mocked(getPayload).mockResolvedValue({ find } as never)
 
-		await expect(searchGuidelineDocuments({ id: 1 }, 'Brand Model')).resolves.toEqual([
-			{ title: 'Brand Model', collection: 'guideline-documents', id: '55' },
-			{ title: 'Brand Product', collection: 'guideline-documents', id: '54' },
-		])
-		expect(find).toHaveBeenCalledTimes(2)
+		await expect(
+			findGuidelineSearchPhraseCandidates({ id: 1 }, 'Brand Model'),
+		).resolves.toEqual([{ title: 'Brand Model', collection: 'guideline-documents', id: '54' }])
 		expect(find).toHaveBeenCalledWith(
 			expect.objectContaining({
 				where: {
@@ -60,33 +67,13 @@ describe('searchGuidelineDocuments', () => {
 		)
 	})
 
-	it('정확 일치가 일부 있어도 각 검색어의 부분 일치 결과를 보충한다', async () => {
-		const find = vi
-			.fn()
-			.mockResolvedValueOnce({
-				docs: [
-					{
-						title: 'Brand Contents',
-						doc: { relationTo: 'guideline-documents', value: 60 },
-					},
-				],
-			})
-			.mockResolvedValueOnce({
-				docs: [
-					{
-						title: 'Brand Model',
-						doc: { relationTo: 'guideline-documents', value: 55 },
-					},
-				],
-			})
+	it('분해된 검색어를 Payload 부분 일치 조건으로 변환한다', async () => {
+		const find = vi.fn().mockResolvedValue({ docs: [] })
 		vi.mocked(getPayload).mockResolvedValue({ find } as never)
 
-		await expect(searchGuidelineDocuments({ id: 1 }, '모델 사진')).resolves.toEqual([
-			{ title: 'Brand Contents', collection: 'guideline-documents', id: '60' },
-			{ title: 'Brand Model', collection: 'guideline-documents', id: '55' },
-		])
-		expect(find).toHaveBeenNthCalledWith(
-			2,
+		await findGuidelineSearchTermCandidates({ id: 1 }, ['모델', '사진'])
+
+		expect(find).toHaveBeenCalledWith(
 			expect.objectContaining({
 				where: {
 					or: [
@@ -98,5 +85,36 @@ describe('searchGuidelineDocuments', () => {
 				},
 			}),
 		)
+	})
+})
+
+describe('findAgentGuidelineDocument', () => {
+	it('Payload breadcrumb와 child 본문을 Agent DTO로 변환한다', async () => {
+		const findByID = vi.fn().mockResolvedValue({
+			id: 2,
+			title: 'Logo',
+			slug: 'logo',
+			description: null,
+			headerImage: null,
+			blocks: [],
+			checks: [],
+			breadcrumbs: [{ doc: 1, label: 'Brand', url: '/guideline/brand' }],
+			_status: 'published',
+		})
+		const find = vi.fn().mockResolvedValue({
+			docs: [{ id: 3, title: 'Primary', slug: 'primary', description: null }],
+		})
+		vi.mocked(getPayload).mockResolvedValue({ find, findByID } as never)
+
+		await expect(
+			findAgentGuidelineDocument({ id: 1 }, { collection: 'guideline-documents', id: '2' }),
+		).resolves.toMatchObject({
+			document: {
+				id: 2,
+				descriptionText: '',
+				breadcrumbs: [{ label: 'Brand', url: '/guideline/brand' }],
+			},
+			children: [{ id: 3, title: 'Primary', slug: 'primary', descriptionText: '' }],
+		})
 	})
 })

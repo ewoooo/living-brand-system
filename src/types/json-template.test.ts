@@ -124,4 +124,52 @@ describe('jsonTemplateSchema (stack)', () => {
 
 		expect(jsonTemplateSchema.safeParse(template).success).toBe(false)
 	})
+
+	it.each([
+		[
+			'canvas background',
+			(template: ReturnType<typeof buildStackedTemplate>) => {
+				template.background = 'url(https://attacker.example/pixel.png)'
+			},
+		],
+		[
+			'escaped rect fill',
+			(template: ReturnType<typeof buildStackedTemplate>) => {
+				const root = template.elements[0]
+				if (root?.type !== 'stack') throw new Error('expected stack root')
+				Object.assign(root, { fill: String.raw`u\72l(https://attacker.example/pixel.png)` })
+			},
+		],
+		[
+			'nested filter',
+			(template: ReturnType<typeof buildStackedTemplate>) => {
+				const root = template.elements[0]
+				if (root?.type !== 'stack') throw new Error('expected stack root')
+				const row = root.children[0]
+				if (row?.type !== 'stack') throw new Error('expected stack row')
+				const logo = row.children[0]
+				if (logo?.type !== 'image') throw new Error('expected image child')
+				Object.assign(logo, { filter: 'url(//attacker.example/filter.svg#x)' })
+			},
+		],
+	])('외부 요청 가능한 CSS를 거부한다: %s', (_label, mutate) => {
+		const template = buildStackedTemplate()
+		mutate(template)
+
+		expect(jsonTemplateSchema.safeParse(template).success).toBe(false)
+	})
+
+	it('일반 색상·그라디언트·필터 함수는 유지한다', () => {
+		const template = buildStackedTemplate()
+		template.background = 'linear-gradient(180deg, #fff 0%, rgb(0, 0, 0) 100%)'
+		const root = template.elements[0]
+		if (root?.type !== 'stack') throw new Error('expected stack root')
+		const row = root.children[0]
+		if (row?.type !== 'stack') throw new Error('expected stack row')
+		const logo = row.children[0]
+		if (logo?.type !== 'image') throw new Error('expected image child')
+		Object.assign(logo, { filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))' })
+
+		expect(jsonTemplateSchema.safeParse(template).success).toBe(true)
+	})
 })
