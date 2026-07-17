@@ -62,6 +62,7 @@ import * as migration_20260715_131314_check_session_pending_check_keys from './2
 import * as migration_20260716_013525_guideline_search_recall from './20260716_013525_guideline_search_recall';
 import * as migration_20260717_052740_add_check_session_input_snapshot from './20260717_052740_add_check_session_input_snapshot';
 import * as migration_20260717_094613_extract_rules_collection from './20260717_094613_extract_rules_collection';
+import * as migration_20260717_113849_backfill_rules_versions from './20260717_113849_backfill_rules_versions';
 
 export const migrations = [
   {
@@ -382,6 +383,11 @@ export const migrations = [
   {
     up: migration_20260717_094613_extract_rules_collection.up,
     down: migration_20260717_094613_extract_rules_collection.down,
-    name: '20260717_094613_extract_rules_collection'
+    name: '20260717_094613_extract_rules_collection',
+  },
+  {
+    up: migration_20260717_113849_backfill_rules_versions.up,
+    down: migration_20260717_113849_backfill_rules_versions.down,
+    name: '20260717_113849_backfill_rules_versions'
   },
 ];
