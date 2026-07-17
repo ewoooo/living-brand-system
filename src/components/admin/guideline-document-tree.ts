@@ -1,6 +1,10 @@
-import type { GuidelineDocument } from '@/payload-types'
-
-type TreeDocument = Pick<GuidelineDocument, '_status' | 'displayOrder' | 'id' | 'parent' | 'title'>
+type TreeDocument = {
+	_status?: 'draft' | 'published' | null
+	displayOrder: number
+	id: number
+	parent: number | { id: number } | null
+	title: string
+}
 
 export type GuidelineDocumentTreeNode = TreeDocument & {
 	children: GuidelineDocumentTreeNode[]

@@ -1,42 +1,48 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+	listGuidelineDocumentAncestorIds,
+	listGuidelineDocumentDescendantPaths,
+} from '../repositories/guideline-document.payload.repository'
 import { validateGuidelineDocumentDepth } from './validate-guideline-document-depth'
 
-const documents = {
-	1: { id: 1, parent: null },
-	2: { id: 2, parent: 1 },
-	3: { id: 3, parent: 2 },
-}
+vi.mock('../repositories/guideline-document.payload.repository', () => ({
+	listGuidelineDocumentAncestorIds: vi.fn(),
+	listGuidelineDocumentDescendantPaths: vi.fn(),
+}))
 
-const request = (descendants: { breadcrumbs: { doc: number }[] }[] = []) => ({
-	payload: {
-		findByID: vi.fn(({ id }: { id: number }) =>
-			Promise.resolve(documents[id as keyof typeof documents]),
-		),
-		find: vi.fn().mockResolvedValue({ docs: descendants }),
-	},
-})
+const listAncestorIds = vi.mocked(listGuidelineDocumentAncestorIds)
+const listDescendantPaths = vi.mocked(listGuidelineDocumentDescendantPaths)
 
 describe('validateGuidelineDocumentDepth', () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+		listAncestorIds.mockResolvedValue([])
+		listDescendantPaths.mockResolvedValue([])
+	})
+
 	it('장 아래 섹션과 페이지까지 허용한다', async () => {
 		const data = { parent: 2 }
+		listAncestorIds.mockResolvedValue([1, 2])
 
 		await expect(
 			validateGuidelineDocumentDepth({
 				collection: { slug: 'guideline-documents' },
 				data,
 				operation: 'create',
-				req: request(),
+				req: {},
 			} as never),
 		).resolves.toBe(data)
 	})
 
 	it('페이지 아래에 네 번째 단계를 만들지 못하게 한다', async () => {
+		listAncestorIds.mockResolvedValue([1, 2, 3])
+
 		await expect(
 			validateGuidelineDocumentDepth({
 				collection: { slug: 'guideline-documents' },
 				data: { parent: 3 },
 				operation: 'create',
-				req: request(),
+				req: {},
 			} as never),
 		).rejects.toMatchObject({
 			data: {
@@ -48,13 +54,15 @@ describe('validateGuidelineDocumentDepth', () => {
 	})
 
 	it('하위 문서를 부모로 지정해 순환시키지 못하게 한다', async () => {
+		listAncestorIds.mockResolvedValue([1, 2, 3])
+
 		await expect(
 			validateGuidelineDocumentDepth({
 				collection: { slug: 'guideline-documents' },
 				data: { parent: 3 },
 				operation: 'update',
 				originalDoc: { id: 1 },
-				req: request(),
+				req: {},
 			} as never),
 		).rejects.toMatchObject({
 			data: {
@@ -63,17 +71,20 @@ describe('validateGuidelineDocumentDepth', () => {
 		})
 	})
 
-	it('자식 트리가 있는 문서를 옮길 때 전체 트리가 3단계를 넘지 못하게 한다', async () => {
+	it('손상된 breadcrumb 위치가 있어도 자식 트리 깊이를 줄여 계산하지 않는다', async () => {
+		listAncestorIds.mockResolvedValue([1])
+		listDescendantPaths.mockResolvedValue([
+			[10, 11],
+			[10, -1, 12],
+		])
+
 		await expect(
 			validateGuidelineDocumentDepth({
 				collection: { slug: 'guideline-documents' },
 				data: { parent: 1 },
 				operation: 'update',
 				originalDoc: { id: 10 },
-				req: request([
-					{ breadcrumbs: [{ doc: 10 }, { doc: 11 }] },
-					{ breadcrumbs: [{ doc: 10 }, { doc: 11 }, { doc: 12 }] },
-				]),
+				req: {},
 			} as never),
 		).rejects.toMatchObject({
 			data: {

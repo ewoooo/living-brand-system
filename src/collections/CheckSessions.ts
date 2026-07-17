@@ -1,13 +1,12 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, managerOrAdmin } from '@/lib/auth'
+import { managerOrAdmin } from '@/lib/auth'
 
 export const CheckSessions: CollectionConfig = {
 	slug: 'check-sessions',
 	access: {
-		// Worker는 검수 실행(create)만 가능하고, 기록된 결과는 수정하지 못한다.
-		// 검수 완료 저장은 service repository의 trusted write만 우회한다.
+		// 실행 기록 생성과 완료 저장은 service repository의 trusted write만 우회한다.
 		read: managerOrAdmin,
-		create: authenticated,
+		create: () => false,
 		update: () => false,
 		delete: managerOrAdmin,
 	},
@@ -57,6 +56,31 @@ export const CheckSessions: CollectionConfig = {
 		{
 			name: 'imageName',
 			type: 'text',
+		},
+		{
+			name: 'inputSha256',
+			type: 'text',
+			admin: {
+				description: '검수 입력 원본 바이트의 SHA-256입니다.',
+			},
+		},
+		{
+			name: 'inputMediaType',
+			type: 'select',
+			options: [
+				{ label: 'JPEG', value: 'image/jpeg' },
+				{ label: 'PNG', value: 'image/png' },
+				{ label: 'WebP', value: 'image/webp' },
+			],
+		},
+		{
+			name: 'inputByteLength',
+			type: 'number',
+			min: 1,
+			admin: {
+				description: '검수 입력 원본의 바이트 길이입니다.',
+				step: 1,
+			},
 		},
 		{
 			name: 'rulesetSnapshot',

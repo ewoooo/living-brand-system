@@ -1,5 +1,7 @@
 import type { ArrayField, Block, Field, FieldHook } from 'payload'
+import { checkKeyFromEnglishTitle } from '@/features/guideline/checks/check-key-from-english-title'
 import { validateGuidelineCheckOptions } from '@/features/guideline/checks/validate-guideline-check-options'
+import { getGuidelineRuleCheckerSummary } from '@/features/guideline/services/get-guideline-rule-checker-summary.service'
 import { relationshipId } from '@/features/guideline/utils/block-text'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 
@@ -47,16 +49,6 @@ const validateHeuristicCriteria: NonNullable<ArrayField['validate']> = (value, {
 	return true
 }
 
-export function checkKeyFromEnglishTitle(value: unknown): string {
-	if (typeof value !== 'string') return ''
-
-	return value
-		.trim()
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-+|-+$/g, '')
-}
-
 const populateCheckKey: FieldHook = ({ siblingData, value }) => {
 	if (typeof value === 'string' && value.trim()) return value.trim()
 	return checkKeyFromEnglishTitle(siblingData?.title)
@@ -65,11 +57,7 @@ const populateCheckKey: FieldHook = ({ siblingData, value }) => {
 const populateCheckExecutor: FieldHook = async ({ req, siblingData, value }) => {
 	const checkerId = relationshipId(siblingData?.checker)
 	if (checkerId === null) return value
-	const checker = await req.payload.findByID({
-		collection: 'rule-checkers',
-		id: checkerId,
-		depth: 0,
-	})
+	const checker = await getGuidelineRuleCheckerSummary(req, checkerId)
 	return checker.executor
 }
 

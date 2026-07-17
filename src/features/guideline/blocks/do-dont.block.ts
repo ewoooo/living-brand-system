@@ -1,5 +1,6 @@
+import type { CheckReferenceAssetRole } from '../checks/check-source'
 import { compact, relationshipId } from '../utils/block-text'
-import type { BlockBehavior, CheckReferenceAssetRole, GuidelineBlock } from './types'
+import type { BlockBehavior, GuidelineBlock } from './types'
 
 export const kindLabel = { do: '권장', ok: '허용', dont: '금지' } as const
 

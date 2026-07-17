@@ -2,19 +2,20 @@ import {
 	type AgentChatSessionUsageSnapshot,
 	type AgentChatSessionUsageStep,
 	createAgentChatSessionUsageCollector,
-} from '@/features/agent-chat/services/collect-agent-chat-session-usage.service'
+} from '@/features/agent-chat/domain/agent-chat-session-usage'
 import type {
 	AgentChatAiUsage,
 	AgentChatSessionMessageInput,
 	AgentChatSessionUsage,
 } from '@/features/agent-chat/types'
-import type { AgentChatSession as AgentChatSessionRecord } from '@/payload-types'
+
+export type AgentChatSessionStatus = 'running' | 'completed' | 'failed'
 
 /** 종결(completed/failed)된 세션에 전이를 시도했을 때의 방어선. 정상 경로에서는 나오지 않는다. */
 export class AgentChatSessionStateError extends Error {}
 
 export interface AgentChatSessionUpdateData {
-	status: AgentChatSessionRecord['status']
+	status: AgentChatSessionStatus
 	messages: AgentChatSessionMessageInput[]
 	messageCount: number
 	usedTools: AgentChatSessionUsage[]
@@ -30,7 +31,7 @@ export interface AgentChatSessionUpdateData {
  * fromRecord(복원)는 두지 않는다 — 세션 생명주기가 한 요청 안에서 끝난다.
  */
 export class AgentChatSession {
-	private _status: AgentChatSessionRecord['status'] = 'running'
+	private _status: AgentChatSessionStatus = 'running'
 	private _assistantText = ''
 	private _errorMessage: string | undefined
 	private _completedAt: string | undefined

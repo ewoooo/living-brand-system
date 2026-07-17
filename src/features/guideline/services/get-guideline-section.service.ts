@@ -1,23 +1,24 @@
-import type { GuidelineDocument } from '@/payload-types'
 import {
 	findPublishedChapterBySlug,
 	findPublishedSectionBySlug,
+	type GuidelineBlocks,
+	type GuidelineDescription,
+	type GuidelineHeaderImage,
 	listPublishedPagesBySection,
 } from '../repositories/guideline-view.payload.repository'
-import { extractTextFromLexical } from '../utils/lexical-text'
 
 export interface GetGuidelineSectionOutput {
 	title: string
-	headerImage: GuidelineDocument['headerImage']
-	blocks: GuidelineDocument['blocks']
+	headerImage: GuidelineHeaderImage
+	blocks: GuidelineBlocks
 	description: string | null
 	pages: {
 		id: number
 		title: string
 		slug: string
-		description: GuidelineDocument['description']
+		description: GuidelineDescription
 		displayOrder: number
-		blocks: GuidelineDocument['blocks']
+		blocks: GuidelineBlocks
 	}[]
 }
 
@@ -31,36 +32,32 @@ export async function getGuidelineSection(
 	chapterSlug: string,
 	sectionSlug: string,
 ): Promise<GetGuidelineSectionOutput | null> {
-	try {
-		const chapter = await findPublishedChapterBySlug(chapterSlug)
+	const chapter = await findPublishedChapterBySlug(chapterSlug)
 
-		if (!chapter) {
-			return null
-		}
-
-		const section = await findPublishedSectionBySlug(chapter.id, sectionSlug)
-
-		if (!section) {
-			return null
-		}
-
-		const pages = await listPublishedPagesBySection(section.id)
-
-		return {
-			title: section.title,
-			headerImage: section.headerImage ?? null,
-			blocks: section.blocks ?? [],
-			description: extractTextFromLexical(section.description) || null,
-			pages: pages.map((page) => ({
-				id: page.id,
-				title: page.title,
-				slug: page.slug,
-				description: page.description || null,
-				displayOrder: page.displayOrder,
-				blocks: page.blocks || [],
-			})),
-		}
-	} catch {
+	if (!chapter) {
 		return null
+	}
+
+	const section = await findPublishedSectionBySlug(chapter.id, sectionSlug)
+
+	if (!section) {
+		return null
+	}
+
+	const pages = await listPublishedPagesBySection(section.id)
+
+	return {
+		title: section.title,
+		headerImage: section.headerImage ?? null,
+		blocks: section.blocks ?? [],
+		description: section.description,
+		pages: pages.map((page) => ({
+			id: page.id,
+			title: page.title,
+			slug: page.slug,
+			description: page.description,
+			displayOrder: page.displayOrder,
+			blocks: page.blocks,
+		})),
 	}
 }

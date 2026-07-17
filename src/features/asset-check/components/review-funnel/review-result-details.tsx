@@ -1,5 +1,5 @@
 import { CheckSections } from '@/features/asset-check/components/result/check-review-table'
-import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
+import type { CheckSection } from '@/features/asset-check/domain/runtime-check'
 
 /** 서버의 `CheckSection[]`에 선택 이미지의 `results[checkKey]`를 결합해 항목별 결과를 표시한다. */
 export function ReviewResultDetails({ sections }: { sections: CheckSection[] }) {

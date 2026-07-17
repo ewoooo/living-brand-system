@@ -36,4 +36,71 @@ describe('exportHtmlToPng', () => {
 		const captured = vi.mocked(toPng).mock.calls[0]?.[0] as HTMLElement
 		expect(captured.id).toBe('__stage')
 	})
+
+	it('이벤트 핸들러가 있는 샌드박스 HTML을 부모 DOM으로 옮기지 않는다', async () => {
+		await expect(
+			exportHtmlToPng(
+				'<div id="__stage"><img src="/api/brand-logos/file/logo.png" onerror="alert(1)"></div>',
+				'',
+				'결과',
+			),
+		).rejects.toThrow('event handler')
+
+		expect(toPng).not.toHaveBeenCalled()
+		expect(document.body.querySelector('img')).toBeNull()
+	})
+
+	it('외부 이미지 URL을 가진 샌드박스 HTML을 거부한다', async () => {
+		await expect(
+			exportHtmlToPng(
+				'<div id="__stage"><img src="https://attacker.example/tracker.png"></div>',
+				'',
+				'결과',
+			),
+		).rejects.toThrow('unsafe image URL')
+
+		expect(toPng).not.toHaveBeenCalled()
+	})
+
+	it('외부 I/O를 일으키는 샌드박스 CSS를 거부한다', async () => {
+		await expect(
+			exportHtmlToPng(
+				'<div id="__stage">배치 결과</div>',
+				'@import url("https://attacker.example/collect.css");',
+				'결과',
+			),
+		).rejects.toThrow('unsafe stylesheet I/O')
+
+		expect(toPng).not.toHaveBeenCalled()
+	})
+
+	it('CSS escape로 숨긴 import와 URL을 거부한다', async () => {
+		await expect(
+			exportHtmlToPng(
+				'<div id="__stage">배치 결과</div>',
+				'@\\69mport "https://attacker.example/collect.css";',
+				'결과',
+			),
+		).rejects.toThrow('unsafe stylesheet I/O')
+		await expect(
+			exportHtmlToPng(
+				'<div id="__stage">배치 결과</div>',
+				'#x{background-image:u\\72l("https://attacker.example/pixel.png")}',
+				'결과',
+			),
+		).rejects.toThrow('unsafe stylesheet I/O')
+
+		expect(toPng).not.toHaveBeenCalled()
+	})
+
+	it('CSS 태그 탈출 문자열은 스타일 텍스트로만 다룬다', async () => {
+		await exportHtmlToPng(
+			'<div id="__stage">배치 결과</div>',
+			'</style><img src="https://attacker.example/tracker.png">',
+			'결과',
+		)
+
+		expect(toPng).toHaveBeenCalledOnce()
+		expect(document.body.querySelector('img')).toBeNull()
+	})
 })

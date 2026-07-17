@@ -18,7 +18,7 @@
  *   실패: pendingCheckKeys 전체를 status 'needs_review'("AI 평가 실패") 폴백으로 채움
  */
 import type { CheckResult } from '@/features/asset-check/checkers/types'
-import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
+import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 
 export interface SubmitCheckResult {
 	checkSessionId: number

@@ -2,13 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import { getAgentTools } from '@/agents/agent-tools.agent'
 import { validateAgentChatMessages } from '@/agents/validate-agent-chat-messages.agent'
-import * as agentGuidelineRepository from '@/features/agent-chat/repositories/agent-guideline-context.payload.repository'
 import * as agentSkillRepository from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import * as agentTemplateRepository from '@/features/agent-chat/repositories/agent-template.payload.repository'
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { getAgentCitations } from '@/features/agent-chat/utils/get-agent-citations'
 import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-parts'
+import * as checkScenarioService from '@/features/asset-check/services/get-check-scenarios.service'
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
+import * as checkSessionService from '@/services/start-check-session.service'
 
 const textElement = (
 	overrides: Partial<{
@@ -46,9 +47,25 @@ const template = (...elements: ReturnType<typeof textElement>[]) => ({
 	elements,
 })
 
+const runtimeCheck = (key: string) => ({
+	key,
+	title: key,
+	checker: { key: 'manual', type: 'manual' as const },
+	executor: 'manual' as const,
+	implemented: true,
+	evidence: '',
+	referenceAssets: [],
+})
+
+const checkResult = (key: string) => ({
+	rule: { key, title: key, executor: 'manual' as const },
+	checker: { key: 'manual', type: 'manual' as const },
+	rawResult: { status: 'pass' as const, fulfillment: 100 },
+})
+
 describe('agent tools', () => {
 	beforeEach(() => {
-		vi.spyOn(agentGuidelineRepository, 'findAgentChecks').mockResolvedValue([])
+		vi.spyOn(agentGuidelineContext, 'listAgentChecks').mockResolvedValue([])
 	})
 
 	afterEach(() => {
@@ -132,7 +149,7 @@ describe('agent tools', () => {
 	})
 
 	it('gets Check catalog through the tool service', async () => {
-		const getChecks = vi.spyOn(agentGuidelineRepository, 'findAgentChecks').mockResolvedValue([
+		const getChecks = vi.spyOn(agentGuidelineContext, 'listAgentChecks').mockResolvedValue([
 			{
 				evidence: '',
 				key: 'color.palette',
@@ -155,8 +172,69 @@ describe('agent tools', () => {
 		])
 	})
 
+	it.each([
+		{
+			caseName: '빈 ruleset',
+			pendingCheckKeys: [],
+			results: {},
+			rulesetSnapshot: [],
+		},
+		{
+			caseName: '부분 결과',
+			pendingCheckKeys: [],
+			results: { first: checkResult('first') },
+			rulesetSnapshot: [runtimeCheck('first'), runtimeCheck('second')],
+		},
+		{
+			caseName: 'pending 결과',
+			pendingCheckKeys: ['second'],
+			results: { first: checkResult('first') },
+			rulesetSnapshot: [runtimeCheck('first'), runtimeCheck('second')],
+		},
+		{
+			caseName: '예상 밖 결과',
+			pendingCheckKeys: [],
+			results: { first: checkResult('first'), extra: checkResult('extra') },
+			rulesetSnapshot: [runtimeCheck('first')],
+		},
+	])('$caseName를 Agent가 passed로 요약하지 않는다', async (checkRun) => {
+		vi.spyOn(checkScenarioService, 'getCheckScenarios').mockResolvedValue([
+			{ key: 'quick', title: '빠른 검수', checkKeys: ['first', 'second'] },
+		])
+		vi.spyOn(checkSessionService, 'startCheckSession').mockResolvedValue({
+			checkSessionId: 41,
+			pendingCheckKeys: checkRun.pendingCheckKeys,
+			results: checkRun.results,
+			rulesetSnapshot: checkRun.rulesetSnapshot,
+		} as never)
+		const tools = getAgentTools()
+
+		const result = await tools.runCheck.execute?.({}, {
+			context: { user: { id: 1 } },
+			messages: [
+				{
+					role: 'user',
+					content: [
+						{
+							type: 'file',
+							mediaType: 'image/png',
+							filename: 'check.png',
+							data: Buffer.from('image'),
+						},
+					],
+				},
+			],
+		} as never)
+
+		expect(result).toMatchObject({
+			isComplete: false,
+			outcome: 'needs_manager_check',
+		})
+		expect((result as { summary: string }).summary).toContain('통과로 판단할 수 없습니다')
+	})
+
 	it('lists published templates with open slots and template Checks', async () => {
-		vi.spyOn(agentGuidelineRepository, 'findAgentChecks').mockResolvedValue([
+		vi.spyOn(agentGuidelineContext, 'listAgentChecks').mockResolvedValue([
 			{
 				evidence: 'Use the legal name.',
 				key: 'name.input',

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import {
 	createAgentChatSessionRecord,
-	findLatestAgentChatSessionContainingAnyMessage,
+	findLatestAgentChatSessionMessagesContainingAny,
 	saveAgentChatSessionRecord,
 } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import { startAgentChatSession } from '@/features/agent-chat/services/start-agent-chat-session.service'
@@ -10,12 +10,12 @@ import type { User } from '@/payload-types'
 
 vi.mock('@/features/agent-chat/repositories/agent-chat-session.payload.repository', () => ({
 	createAgentChatSessionRecord: vi.fn(),
-	findLatestAgentChatSessionContainingAnyMessage: vi.fn(),
+	findLatestAgentChatSessionMessagesContainingAny: vi.fn(),
 	saveAgentChatSessionRecord: vi.fn(),
 }))
 
 const createSession = vi.mocked(createAgentChatSessionRecord)
-const findPrevious = vi.mocked(findLatestAgentChatSessionContainingAnyMessage)
+const findPrevious = vi.mocked(findLatestAgentChatSessionMessagesContainingAny)
 const saveSession = vi.mocked(saveAgentChatSessionRecord)
 
 const user = { id: 7 } as User
@@ -35,8 +35,8 @@ const toolStep = {
 describe('startAgentChatSession', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		createSession.mockResolvedValue({ id: 41 } as never)
-		findPrevious.mockResolvedValue(null)
+		createSession.mockResolvedValue({ id: 41 })
+		findPrevious.mockResolvedValue([])
 	})
 
 	it('요청 메시지로 running 세션을 생성한다', async () => {
@@ -57,17 +57,19 @@ describe('startAgentChatSession', () => {
 		})
 	})
 
-	it('running 스텝은 저장하지 않고 completed 스텝에서 한 번만 저장한다', async () => {
+	it('스트림 스텝은 저장하지 않고 finalize에서 한 번만 저장한다', async () => {
 		const session = await startAgentChatSession({ messages, pagePath: '/guidelines', user })
 
-		await session.recordStep({ status: 'running', step: toolStep })
+		await session.recordStep({ step: toolStep })
 		expect(saveSession).not.toHaveBeenCalled()
 
 		await session.recordStep({
-			status: 'completed',
 			text: '찾은 가이드라인입니다.',
 			step: toolStep,
 		})
+		expect(saveSession).not.toHaveBeenCalled()
+
+		await session.finalize()
 		expect(saveSession).toHaveBeenCalledTimes(1)
 
 		const [saved, savedUser] = saveSession.mock.calls[0]
@@ -86,7 +88,8 @@ describe('startAgentChatSession', () => {
 	it('종결 후 fail은 no-op이고 완료 세션을 뒤집지 않는다', async () => {
 		const session = await startAgentChatSession({ messages, user })
 
-		await session.recordStep({ status: 'completed', text: '완료 응답', step: toolStep })
+		await session.recordStep({ text: '완료 응답', step: toolStep })
+		await session.finalize()
 		expect(saveSession).toHaveBeenCalledTimes(1)
 
 		await session.fail('late error')
@@ -97,7 +100,7 @@ describe('startAgentChatSession', () => {
 	it('finalize는 completed 신호 없이 끝난 턴을 종결 저장한다', async () => {
 		const session = await startAgentChatSession({ messages, user })
 
-		await session.recordStep({ status: 'running', step: toolStep })
+		await session.recordStep({ step: toolStep })
 		await session.finalize()
 
 		expect(saveSession).toHaveBeenCalledTimes(1)
@@ -109,10 +112,53 @@ describe('startAgentChatSession', () => {
 	it('이미 종결된 세션에서 finalize는 no-op이다', async () => {
 		const session = await startAgentChatSession({ messages, user })
 
-		await session.recordStep({ status: 'completed', text: '완료 응답', step: toolStep })
+		await session.recordStep({ text: '완료 응답', step: toolStep })
+		await session.finalize()
 		await session.finalize()
 
 		expect(saveSession).toHaveBeenCalledTimes(1)
+	})
+
+	it('종결 저장이 일시 실패하면 같은 terminal 상태를 재시도한다', async () => {
+		const saveError = new Error('Temporary database failure.')
+		saveSession.mockRejectedValueOnce(saveError).mockResolvedValueOnce(undefined)
+		const session = await startAgentChatSession({ messages, user })
+
+		await session.recordStep({ text: '완료 응답', step: toolStep })
+		await session.finalize()
+
+		expect(saveSession).toHaveBeenCalledTimes(2)
+		expect(saveSession.mock.calls[1][0].toUpdateData().status).toBe('completed')
+	})
+
+	it('종결 저장 재시도도 실패하면 후속 호출이 같은 terminal 상태 저장을 다시 시도한다', async () => {
+		const saveError = new Error('Database failure.')
+		const retryError = new Error('Database retry failure.')
+		saveSession.mockRejectedValueOnce(saveError).mockRejectedValueOnce(retryError)
+		const session = await startAgentChatSession({ messages, user })
+
+		await session.recordStep({ text: '완료 응답', step: toolStep })
+		await expect(session.finalize()).rejects.toBe(saveError)
+		expect(saveError.cause).toBe(retryError)
+
+		saveSession.mockResolvedValueOnce(undefined)
+		await session.fail('late error')
+
+		expect(saveSession).toHaveBeenCalledTimes(3)
+		expect(saveSession.mock.calls[2][0].toUpdateData().status).toBe('completed')
+	})
+
+	it('중단된 세션은 failed로 한 번 저장한다', async () => {
+		const session = await startAgentChatSession({ messages, user })
+
+		await session.recordStep({ text: '부분 응답', step: toolStep })
+		await session.fail('Agent response interrupted.')
+
+		expect(saveSession).toHaveBeenCalledTimes(1)
+		expect(saveSession.mock.calls[0][0].toUpdateData()).toMatchObject({
+			status: 'failed',
+			errorMessage: 'Agent response interrupted.',
+		})
 	})
 
 	it('히스토리 assistant 메시지를 백필해서 세션을 생성한다', async () => {
@@ -133,18 +179,15 @@ describe('startAgentChatSession', () => {
 				parts: [{ type: 'text', text: '더 자세히.' }],
 			},
 		] as AgentChatMessage[]
-		findPrevious.mockResolvedValue({
-			id: 21,
-			messages: [
-				{
-					messageId: 'assistant-1',
-					role: 'assistant',
-					text: '가이드라인입니다.',
-					usedTools: [{ name: 'loadSkill', callCount: 1, id: 'row-1' }],
-					aiUsage: { model: 'test-model', callCount: 1, totalTokens: 120 },
-				},
-			],
-		} as never)
+		findPrevious.mockResolvedValue([
+			{
+				messageId: 'assistant-1',
+				role: 'assistant',
+				text: '가이드라인입니다.',
+				usedTools: [{ name: 'loadSkill', callCount: 1 }],
+				aiUsage: { model: 'test-model', callCount: 1, totalTokens: 120 },
+			},
+		])
 
 		await startAgentChatSession({ messages: historyMessages, user })
 

@@ -33,9 +33,7 @@ export interface AgentChatSessionUsageSnapshot {
 	usedTools: AgentChatSessionUsage[]
 }
 
-/**
- * Agent 채팅 세션 기록용 usage collector — AI SDK step에서 token/tool/skill 이름만 모은다.
- */
+/** Agent 채팅 세션의 AI 스텝에서 token·tool·skill 사용량을 누적한다. */
 export function createAgentChatSessionUsageCollector() {
 	const toolCounts = new Map<string, number>()
 	const skillCounts = new Map<string, number>()

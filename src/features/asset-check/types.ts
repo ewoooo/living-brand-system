@@ -1,9 +1,9 @@
 import type { CheckResult } from '@/features/asset-check/checkers/types'
+import type { CheckSessionStatus } from '@/features/asset-check/domain/check-session'
+import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import type { CheckScenario } from '@/features/asset-check/scenarios'
-import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
-import type { CheckSession } from '@/payload-types'
 
-export type CheckSessionSource = CheckSession['source']
+export type { CheckSessionSource } from '@/features/asset-check/domain/check-session'
 
 export interface ImageContentFlags {
 	logo: boolean
@@ -12,7 +12,7 @@ export interface ImageContentFlags {
 	photography: boolean
 }
 
-export type CheckImageStatus = CheckSession['status'] | 'idle'
+export type CheckImageStatus = CheckSessionStatus | 'idle'
 
 export interface CheckImage {
 	id: string

@@ -37,7 +37,9 @@ export function composeTemplateHtml(baseHtml: string, overrides: TemplateOverrid
 	const doc = new DOMParser().parseFromString(baseHtml, 'text/html')
 
 	for (const [nodeId, override] of Object.entries(overrides)) {
-		const el = doc.querySelector(`[data-node-id="${nodeId}"]`)
+		const el = Array.from(doc.querySelectorAll('[data-node-id]')).find(
+			(candidate) => candidate.getAttribute('data-node-id') === nodeId,
+		)
 		if (!el) continue // 고아 오버라이드 — base에 더 이상 없는 노드. 무시.
 
 		// 텍스트는 텍스트 노드(<p>)에만. background는 요소(HTMLElement)에.

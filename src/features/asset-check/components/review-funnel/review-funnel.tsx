@@ -1,4 +1,4 @@
-import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
+import type { CheckSection } from '@/features/asset-check/domain/runtime-check'
 import { ImageUploadCarousel } from '../upload/image-upload-carousel'
 import { ReviewResultDetails } from './review-result-details'
 

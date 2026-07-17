@@ -1,21 +1,39 @@
 import { APIError, type CollectionConfig } from 'payload'
-import { findTemplatePublishBlocker } from '@/features/template-import/services/validate-authorized-refs.service'
-import { managerManagedAccess } from '@/lib/auth'
+import {
+	findTemplateDraftBlocker,
+	findTemplatePublishBlocker,
+} from '@/features/template-import/services/validate-template-publish.service'
+import { isManager, managerOrAdmin } from '@/lib/auth'
 import { draftVersions } from './shared'
 
 export const Templates: CollectionConfig = {
 	slug: 'templates',
-	access: managerManagedAccess,
+	access: {
+		read: ({ req }) =>
+			isManager(req.user) || {
+				_status: { equals: 'published' },
+			},
+		create: managerOrAdmin,
+		update: managerOrAdmin,
+		delete: managerOrAdmin,
+	},
 	hooks: {
-		// 보안/브랜드 통제: 이미지·벡터는 인가된 내부 에셋만 허용한다.
-		// 인가 검사는 발행 시에만 한다 — draft 저장은 충실 import를 위해 항상 통과하고,
-		// worker/공개 페이지는 발행본만 읽으므로 비인가 draft가 외부로 새지 않는다 (docs/07).
+		// 모든 HTML 저장은 실행 마크업과 외부 URL을 차단한다. 브랜드 에셋 published 검증은
+		// 발행 시에만 추가하고, draft의 staging 에셋은 manager/admin에게만 보인다 (docs/07).
 		beforeChange: [
-			async ({ data, req }) => {
-				// draft(및 상태 미지정) 저장은 게이트 없이 통과. 발행 전이일 때만 인가 검증.
-				if (data?._status !== 'published') return data
+			async ({ data, originalDoc, req }) => {
+				const candidate = {
+					...originalDoc,
+					...data,
+				}
+				const draftBlocker = findTemplateDraftBlocker(candidate)
+				if (draftBlocker) throw new APIError(draftBlocker, 400)
 
-				const blocker = await findTemplatePublishBlocker(req.payload, data?.jsonTemplate)
+				// Draft는 구조 안전성까지만 검사한다. live published 문서의 부분 update는 다시 발행 검증한다.
+				const finalStatus = data?._status ?? originalDoc?._status
+				if (finalStatus !== 'published') return data
+
+				const blocker = await findTemplatePublishBlocker(candidate, req)
 				if (blocker) throw new APIError(blocker, 400)
 
 				return data
@@ -30,13 +48,6 @@ export const Templates: CollectionConfig = {
 		group: '제작 도구',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'updatedAt'],
-		components: {
-			edit: {
-				// 저장 컨트롤 옆 [검수] 버튼 + (검수통과 && 수정없음)일 때만 여는 게시 버튼.
-				beforeDocumentControls: ['/features/template-import/components/review-gate-button'],
-				PublishButton: '/features/template-import/components/review-gated-publish-button',
-			},
-		},
 	},
 	versions: draftVersions,
 	fields: [
@@ -74,10 +85,20 @@ export const Templates: CollectionConfig = {
 			],
 		},
 		// 출처 URL. 입력창은 사이드바의 Figma 가져오기 필드와 통합했으므로 폼에서 숨긴다(컬럼·값 유지).
-		{ name: 'sourceUrl', type: 'text', admin: { hidden: true } },
+		{
+			name: 'sourceUrl',
+			type: 'text',
+			access: { read: ({ req }) => isManager(req.user) },
+			admin: { hidden: true },
+		},
 		// 오버라이드 레이어: Figma import 원본(baseHtml) + 앱 편집(overrides). 렌더 html은 이 둘의 합성 결과다.
 		// 재import는 baseHtml만 갱신하고 overrides를 유지 → html 재합성 → 앱 편집 보존.
-		{ name: 'baseHtml', type: 'code', admin: { hidden: true, language: 'html' } },
+		{
+			name: 'baseHtml',
+			type: 'code',
+			access: { read: ({ req }) => isManager(req.user) },
+			admin: { hidden: true, language: 'html' },
+		},
 		{ name: 'overrides', type: 'json', admin: { hidden: true } },
 
 		// ── 사이드바 (렌더 순서 = 배열 순서) ──

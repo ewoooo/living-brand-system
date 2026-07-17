@@ -19,7 +19,7 @@ import {
 	formatObservationActual,
 	formatObservationExpected,
 } from '@/features/asset-check/components/result/check-observation-format'
-import type { RuntimeCheck as Check } from '@/features/asset-check/services/get-check-ruleset.service'
+import type { RuntimeCheck as Check } from '@/features/asset-check/domain/runtime-check'
 
 /**
  * 결과 행 확장 상세 — 판정 근거를 rawResult에서 읽어 표시.

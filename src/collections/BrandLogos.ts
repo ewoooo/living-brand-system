@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { isManager, managerOrAdmin } from '@/lib/auth'
 import { draftVersions } from './shared'
 
 export const BrandLogos: CollectionConfig = {
@@ -8,9 +9,14 @@ export const BrandLogos: CollectionConfig = {
 		plural: '로고',
 	},
 	access: {
-		// 발행 가이드라인 SSR과 템플릿 렌더링이 인증 없이 파일 URL을 참조하므로 의도적인 공개 읽기다.
-		// 쓰기는 Payload 기본(인증 사용자)을 따른다 — read 외 권한을 열지 않는다.
-		read: () => true,
+		// 공개 화면은 발행본만 읽고, manager/admin은 Admin에서 draft까지 관리한다.
+		read: ({ req }) =>
+			isManager(req.user) || {
+				_status: { equals: 'published' },
+			},
+		create: managerOrAdmin,
+		update: managerOrAdmin,
+		delete: managerOrAdmin,
 	},
 	admin: {
 		group: '브랜드 자원',

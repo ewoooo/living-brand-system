@@ -1,4 +1,4 @@
-import { createAgentUIStreamResponse } from 'ai'
+import { consumeStream, createAgentUIStreamResponse } from 'ai'
 
 import { agentChatAgent, assertAgentChatProviderConfigured } from '@/agents/agent-chat.agent'
 import { validateAgentChatMessages } from '@/agents/validate-agent-chat-messages.agent'
@@ -56,6 +56,8 @@ export async function POST(req: Request) {
 		// 스트리밍 Response 생성은 HTTP adapter인 route가 소유한다 (AI SDK 공식 패턴).
 		return await createAgentUIStreamResponse({
 			agent: agentChatAgent,
+			abortSignal: req.signal,
+			consumeSseStream: consumeStream,
 			uiMessages: validatedMessages.data,
 			options: {
 				agentChatSessionId: chatSession.id,
@@ -66,7 +68,6 @@ export async function POST(req: Request) {
 				await chatSession.recordStep({
 					step,
 					text: 'text' in step && typeof step.text === 'string' ? step.text : undefined,
-					status: step.finishReason === 'tool-calls' ? 'running' : 'completed',
 				})
 			},
 			messageMetadata: ({ part }) =>
@@ -86,11 +87,11 @@ export async function POST(req: Request) {
 				return 'Agent response failed.'
 			},
 			onEnd: async ({ isAborted, finishReason }) => {
-				// 스텝 상한(tool-calls finish)으로 completed 신호 없이 끝난 턴의 기록 안전망.
-				// 중단·미종결 스트림(finish 청크 없음 → finishReason undefined)은 미완성 턴이므로
-				// completed로 승격하지 않는다. 클라이언트 이탈은 isAborted가 아니라 이 경로로 온다.
-				if (isAborted || finishReason == null) return
-				await chatSession.finalize().catch((error) => {
+				const saveEnd =
+					isAborted || finishReason == null || finishReason === 'error'
+						? chatSession.fail('Agent response interrupted.')
+						: chatSession.finalize()
+				await saveEnd.catch((error) => {
 					payload.logger.error(
 						{ err: error, requestId },
 						'agent-chat.session-update.failed',

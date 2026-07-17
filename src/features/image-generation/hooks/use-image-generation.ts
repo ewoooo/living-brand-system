@@ -7,8 +7,7 @@ import {
 	type ImageGenerationResult,
 } from '../services/generate-image.client'
 
-const GENERATION_ERROR_MESSAGE =
-	'이미지 생성에 실패했어요. 무료 엔진이 느려 그럴 수 있으니 다시 시도해 주세요.'
+const GENERATION_ERROR_MESSAGE = '이미지 생성에 실패했어요. 잠시 후 다시 시도해 주세요.'
 
 export function useImageGeneration() {
 	const [result, setResult] = useState<ImageGenerationResult | null>(null)

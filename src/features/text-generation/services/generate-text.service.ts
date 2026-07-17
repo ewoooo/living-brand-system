@@ -1,12 +1,8 @@
-import { anthropic } from '@ai-sdk/anthropic'
-import { generateText } from 'ai'
-import { env } from '@/env'
-
-const DEFAULT_MODEL = 'claude-haiku-4-5'
+import { generateTextCandidate } from '@/features/text-generation/repositories/text-generation.ai.repository'
 
 /**
  * 유스케이스 경계: 프롬프트(+선택 rule)로 텍스트 후보 N개를 생성한다.
- * 외부 I/O(Anthropic 호출)는 이 서비스가 소유하고, 상위(route·표면)는 인증·검증만 한다.
+ * 후보 병렬 실행과 부분 실패 정책은 여기서, Anthropic I/O와 응답 변환은 AI repository가 소유한다.
  * rule은 슬롯에 붙은 제약(예: "명사형 행사 제목")으로, 생성 지시문에 그대로 얹힌다.
  */
 export async function generateTextCandidates({
@@ -18,8 +14,6 @@ export async function generateTextCandidates({
 	rule?: string
 	count: number
 }): Promise<string[]> {
-	if (!env.ANTHROPIC_API_KEY) return []
-
 	const system = [
 		'너는 브랜드 콘텐츠 카피라이터다. 요청에 맞는 짧은 텍스트를 쓴다.',
 		rule ? `제약(반드시 지킬 것): ${rule}` : '',
@@ -31,14 +25,7 @@ export async function generateTextCandidates({
 	// 후보는 서로 독립이라 병렬 생성한다. 실패한 후보는 빼고 성공분만 돌려준다.
 	const results = await Promise.all(
 		Array.from({ length: count }, () =>
-			generateText({
-				model: anthropic(env.ANTHROPIC_MODEL || DEFAULT_MODEL),
-				system,
-				prompt,
-				temperature: 1,
-			})
-				.then((r) => r.text.trim())
-				.catch(() => null),
+			generateTextCandidate({ system, prompt }).catch(() => null),
 		),
 	)
 

@@ -1,33 +1,35 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { hasGuidelineDocumentSlugConflict } from '../repositories/guideline-document.payload.repository'
 import { validateGuidelineDocumentSlug } from './validate-guideline-document-slug'
 
+vi.mock('../repositories/guideline-document.payload.repository', () => ({
+	hasGuidelineDocumentSlugConflict: vi.fn(),
+}))
+
+const hasSlugConflict = vi.mocked(hasGuidelineDocumentSlugConflict)
+
 describe('validateGuidelineDocumentSlug', () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+	})
+
 	it('같은 locale·부모의 중복만 거부하고 현재 문서는 제외한다', async () => {
-		const find = vi
-			.fn()
-			.mockResolvedValueOnce({ docs: [] })
-			.mockResolvedValueOnce({ docs: [{ id: 9 }] })
+		hasSlugConflict.mockResolvedValueOnce(false).mockResolvedValueOnce(true)
+		const req = { locale: 'ko' } as never
 		const args = {
 			collection: { slug: 'guideline-documents' },
 			data: { parent: 2 },
 			originalDoc: { id: 7, slug: 'logo' },
-			req: { locale: 'ko', payload: { find } },
+			req,
 			value: 'logo',
 		} as never
 
 		await expect(validateGuidelineDocumentSlug(args)).resolves.toBe('logo')
-		expect(find).toHaveBeenLastCalledWith(
-			expect.objectContaining({
-				locale: 'ko',
-				where: {
-					and: [
-						{ slug: { equals: 'logo' } },
-						{ parent: { equals: 2 } },
-						{ id: { not_equals: 7 } },
-					],
-				},
-			}),
-		)
+		expect(hasSlugConflict).toHaveBeenLastCalledWith(req, {
+			slug: 'logo',
+			parentId: 2,
+			currentId: 7,
+		})
 		await expect(validateGuidelineDocumentSlug(args)).rejects.toMatchObject({
 			data: { errors: [{ path: 'slug' }] },
 		})

@@ -75,11 +75,8 @@ jobs:
     env:
       DATABASE_URL: postgresql://payload:payload@127.0.0.1:5432/hd_cms_prototype
       PAYLOAD_SECRET: ci-local-secret
-      # next build가 일부 프론트 페이지(/guideline 등)를 prerender하며 payload를 초기화하므로
-      # postgres 연결 자체가 필요하다. 프로덕션 빌드라 스키마 push는 실제로 일어나지 않고,
-      # 빈 스키마 조회는 실패하지만 정적 생성은 에러를 무시하고 통과한다. push 플래그는 기존
-      # 단일 잡 환경을 그대로 옮긴 것으로 빌드 단계에서는 사실상 무효과다.
-      PAYLOAD_DB_PUSH: 'true'
+      # prerender가 Payload를 조회하므로 committed migration으로 빈 DB를 먼저 준비한다.
+      PAYLOAD_DB_PUSH: 'false'
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4
@@ -88,6 +85,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run migrate
       # Next 빌드 캐시를 재사용해 재빌드를 가속한다. 소스가 바뀌면 restore-keys로 이전 캐시를 물려받는다.
       - uses: actions/cache@v4
         with:

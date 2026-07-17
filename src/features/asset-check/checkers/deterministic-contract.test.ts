@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
-import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
 import { toDeterministicCheckResult } from './check-result.adapter'
 import { extractDominantColorPair } from './color-pair.extractor'
 import { contrastChecker, contrastOptionsSchema } from './contrast.checker'

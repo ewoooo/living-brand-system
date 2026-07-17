@@ -1,4 +1,4 @@
-import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
+import type { CheckSection } from '@/features/asset-check/domain/runtime-check'
 import type { ImageContentFlags } from '@/features/asset-check/types'
 
 export interface CheckScenario {
