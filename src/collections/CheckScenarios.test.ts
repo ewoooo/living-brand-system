@@ -1,15 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-	findPublished: vi.fn(),
-	collectSources: vi.fn(),
+	findRecords: vi.fn(),
+	listAvailable: vi.fn(),
+	validateKey: vi.fn(),
+	validateKeys: vi.fn(),
 }))
 
-vi.mock('@/features/guideline/repositories/published-guideline-checks.payload.repository', () => ({
-	findPublishedUnifiedGuidelineCheckDocuments: mocks.findPublished,
+vi.mock('@/features/asset-check/repositories/available-scenario-check.payload.repository', () => ({
+	findPublishedScenarioCheckRecords: mocks.findRecords,
 }))
-vi.mock('@/features/guideline/checks/collect-guideline-check-sources', () => ({
-	collectGuidelineCheckSources: mocks.collectSources,
+vi.mock('@/features/asset-check/services/list-available-scenario-checks.service', () => ({
+	listAvailableScenarioChecks: mocks.listAvailable,
+	validateCheckScenarioKey: mocks.validateKey,
+	validateCheckScenarioKeys: mocks.validateKeys,
 }))
 
 import { CheckScenarios, validateCheckScenarioKeys } from './CheckScenarios'
@@ -21,19 +25,19 @@ const validateKeys = validateCheckScenarioKeys as unknown as (
 
 describe('CheckScenarios', () => {
 	beforeEach(() => {
-		mocks.findPublished.mockResolvedValue({ documents: [{ title: 'Color' }] })
-		mocks.collectSources.mockReturnValue([
+		vi.clearAllMocks()
+		mocks.findRecords.mockResolvedValue([])
+		mocks.listAvailable.mockResolvedValue([
 			{
 				blockName: 'Main palette',
-				check: {
-					key: 'color.palette',
-					title: 'Color Palette',
-					titleKo: '컬러 팔레트',
-					tier: 'required',
-					checker: { executor: 'deterministic' },
-				},
+				documentTitle: 'Color',
+				executor: 'deterministic',
+				key: 'color.palette',
+				title: '컬러 팔레트',
 			},
 		])
+		mocks.validateKey.mockReturnValue(true)
+		mocks.validateKeys.mockResolvedValue(true)
 	})
 
 	it('Check 목록에 Block 출처를 노출하고 중요도는 제외한다', async () => {
@@ -42,7 +46,8 @@ describe('CheckScenarios', () => {
 			: undefined
 		if (!endpoint) throw new Error('available-checks endpoint가 없습니다.')
 
-		const response = await endpoint({ payload: {}, user: { role: 'manager' } } as never)
+		const req = { payload: {}, user: { role: 'manager' } } as never
+		const response = await endpoint(req)
 		expect(await response.json()).toEqual({
 			docs: [
 				{
@@ -54,6 +59,11 @@ describe('CheckScenarios', () => {
 				},
 			],
 		})
+		expect(mocks.listAvailable).toHaveBeenCalledWith(expect.any(Function))
+		const findRecords = mocks.listAvailable.mock.calls[0]?.[0]
+		if (typeof findRecords !== 'function') throw new Error('Repository adapter가 없습니다.')
+		await findRecords()
+		expect(mocks.findRecords).toHaveBeenCalledWith(req)
 	})
 
 	it('CheckScenario 관리 계약을 노출한다', () => {
@@ -69,17 +79,16 @@ describe('CheckScenarios', () => {
 		})
 	})
 
-	it('published Guideline Check만 중복 없이 허용한다', async () => {
-		const context = { req: { payload: {}, user: { role: 'manager' } } } as never
+	it('Check key 검증을 Service에 위임한다', async () => {
+		const req = { payload: {}, user: { role: 'manager' } }
+		const context = { req } as never
 
-		await expect(validateKeys([], context)).resolves.toBe('Check를 1개 이상 포함하세요.')
-		await expect(validateKeys(['color.palette', 'color.palette'], context)).resolves.toBe(
-			'중복된 Check가 있습니다.',
-		)
 		await expect(validateKeys(['color.palette'], context)).resolves.toBe(true)
-		await expect(validateKeys(['missing'], context)).resolves.toBe(
-			'발행된 Guideline에 없는 Check입니다: missing',
-		)
+		expect(mocks.validateKeys).toHaveBeenCalledWith(['color.palette'], expect.any(Function))
+		const findRecords = mocks.validateKeys.mock.calls[0]?.[1]
+		if (typeof findRecords !== 'function') throw new Error('Repository adapter가 없습니다.')
+		await findRecords()
+		expect(mocks.findRecords).toHaveBeenCalledWith(req)
 	})
 
 	it('한 번 발행된 시나리오는 삭제 대신 archive하도록 표시한다', async () => {
