@@ -38,17 +38,38 @@ export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
 })
 
 /**
- * 검수 실행용 Check snapshot을 checkKeys 순서로 반환한다.
+ * 검수 실행용 Check snapshot을 checkKeys 순서로 반환하며 누락·미구현 실행 구성을 거부한다.
  * published source 조회는 check-ruleset repository가 소유한다.
  */
 export async function getRuntimeChecks(checkKeys?: string[]): Promise<RuntimeCheck[]> {
 	const checks = uniqueChecks((await getCheckRuleset()).flatMap((section) => section.checks))
-	if (!checkKeys) return checks
-	const order = new Map(checkKeys.map((key, index) => [key, index]))
+	const requestedKeys = checkKeys ?? checks.map((check) => check.key)
+	const byKey = new Map(checks.map((check) => [check.key, check]))
+	assertRunnableCheckKeys(requestedKeys, byKey)
 
-	return checks
-		.filter((check) => order.has(check.key))
-		.sort((a, b) => (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0))
+	return requestedKeys.map((key) => byKey.get(key) as RuntimeCheck)
+}
+
+function assertRunnableCheckKeys(requestedKeys: string[], checks: Map<string, RuntimeCheck>): void {
+	if (requestedKeys.length === 0) {
+		throw new Error('Check 실행 구성 오류: 실행할 Check key가 없습니다.')
+	}
+
+	const duplicateKeys = requestedKeys.filter((key, index) => requestedKeys.indexOf(key) !== index)
+	const missingKeys = requestedKeys.filter((key) => !checks.has(key))
+	const unimplementedKeys = requestedKeys.filter((key) => checks.get(key)?.implemented === false)
+	const problems = [
+		...formatKeyProblem('중복', duplicateKeys),
+		...formatKeyProblem('누락', missingKeys),
+		...formatKeyProblem('미구현', unimplementedKeys),
+	]
+	if (problems.length > 0) {
+		throw new Error(`Check 실행 구성 오류: ${problems.join('; ')}`)
+	}
+}
+
+function formatKeyProblem(label: string, keys: string[]): string[] {
+	return keys.length > 0 ? [`${label} [${[...new Set(keys)].join(', ')}]`] : []
 }
 
 function toRuntimeCheck({

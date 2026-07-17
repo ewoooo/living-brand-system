@@ -164,6 +164,38 @@ describe('getCheckRuleset', () => {
 
 		await expect(getRuntimeChecks()).rejects.toThrow('중복된 Check key입니다: duplicate')
 	})
+
+	it('시나리오의 누락·미구현 Check key는 실행 전에 구성 오류로 거부한다', async () => {
+		vi.mocked(getCheckSourceDocuments).mockResolvedValue({
+			documents: [
+				document(1, [
+					source('implemented'),
+					source('unimplemented', {
+						checker: {
+							key: 'unknown-checker',
+							executor: 'deterministic',
+							checkerKey: 'unknown-checker',
+						},
+					}),
+				]),
+			],
+		})
+
+		await expect(getRuntimeChecks(['implemented', 'missing', 'unimplemented'])).rejects.toThrow(
+			'Check 실행 구성 오류: 누락 [missing]; 미구현 [unimplemented]',
+		)
+	})
+
+	it('빈 시나리오와 중복 요청 key도 실행 구성 오류로 거부한다', async () => {
+		vi.mocked(getCheckSourceDocuments).mockResolvedValue({
+			documents: [document(1, [source('implemented')])],
+		})
+
+		await expect(getRuntimeChecks([])).rejects.toThrow('실행할 Check key가 없습니다.')
+		await expect(getRuntimeChecks(['implemented', 'implemented'])).rejects.toThrow(
+			'중복 [implemented]',
+		)
+	})
 })
 
 describe('toRuntimeCheckMessages', () => {

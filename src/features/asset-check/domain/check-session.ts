@@ -46,7 +46,7 @@ export interface CheckSessionSnapshot {
 
 /**
  * 검수 세션 Aggregate — running → completed/failed 전이와 결과 병합 규칙을 소유한다.
- * pending이 비는 순간 스스로 완료하며, 호출자는 완료 조건을 계산하지 않는다.
+ * pending이 비고 ruleset의 모든 key가 종결 결과를 가질 때 스스로 완료한다.
  * Payload 레코드와의 변환은 check-session repository만 수행한다.
  */
 export class CheckSession {
@@ -150,6 +150,19 @@ export class CheckSession {
 
 	private completeIfDone(): void {
 		if (this._pendingCheckKeys.length > 0) return
+		if (this.rulesetSnapshot) {
+			const expectedKeys = new Set(this.rulesetSnapshot.map((check) => check.key))
+			const resultKeys = Object.keys(this._results)
+			const missingKeys = [...expectedKeys].filter(
+				(key) => !Object.hasOwn(this._results, key),
+			)
+			const unexpectedKeys = resultKeys.filter((key) => !expectedKeys.has(key))
+			if (expectedKeys.size === 0 || missingKeys.length > 0 || unexpectedKeys.length > 0) {
+				throw new CheckSessionStateError(
+					`completeIfDone: Check result coverage mismatch (missing: ${missingKeys.join(', ') || '-'}, unexpected: ${unexpectedKeys.join(', ') || '-'})`,
+				)
+			}
+		}
 		this._status = 'completed'
 		this._completedAt = new Date().toISOString()
 	}

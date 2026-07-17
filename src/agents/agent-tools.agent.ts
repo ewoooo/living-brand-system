@@ -270,6 +270,19 @@ function formatCheckToolResult(
 	scenarioTitle: CheckScenario['title'],
 ) {
 	const entries = Object.entries(result.results)
+	const expectedKeys = result.rulesetSnapshot.map((check) => check.key)
+	const resultKeys = new Set(entries.map(([key]) => key))
+	const unresolvedCheckKeys = [
+		...new Set([
+			...expectedKeys.filter((key) => !resultKeys.has(key)),
+			...result.pendingCheckKeys,
+		]),
+	]
+	const isComplete =
+		expectedKeys.length > 0 &&
+		result.pendingCheckKeys.length === 0 &&
+		entries.length === expectedKeys.length &&
+		expectedKeys.every((key) => resultKeys.has(key))
 	const counts = entries.reduce(
 		(acc, [, value]) => {
 			acc[checkDisplayStatus(value.rawResult)] += 1
@@ -280,7 +293,7 @@ function formatCheckToolResult(
 	const outcome =
 		counts.fail > 0
 			? 'has_failed_items'
-			: counts.needs_review > 0
+			: counts.needs_review > 0 || !isComplete
 				? 'needs_manager_check'
 				: 'passed'
 
@@ -288,9 +301,16 @@ function formatCheckToolResult(
 		checkSessionId: result.checkSessionId,
 		scenario: scenarioTitle,
 		counts,
+		isComplete,
 		outcome,
-		summary:
-			outcome === 'passed'
+		unresolvedCheckKeys,
+		summary: !isComplete
+			? unresolvedCheckKeys.length > 0
+				? `검수 결과가 완결되지 않아 통과로 판단할 수 없습니다. 미완료 항목: ${unresolvedCheckKeys.join(', ')}.`
+				: expectedKeys.length === 0
+					? '검수 대상 규칙이 없어 통과로 판단할 수 없습니다.'
+					: '검수 규칙 구성과 결과가 일치하지 않아 통과로 판단할 수 없습니다.'
+			: outcome === 'passed'
 				? `검수 결과, 통과 ${counts.pass}개 / 적합 ${counts.ok}개${counts.not_applicable > 0 ? ` / 해당 없음 ${counts.not_applicable}개` : ''}${counts.advisory > 0 ? ` / 조언 ${counts.advisory}개` : ''}입니다.`
 				: `검수 결과, 통과 ${counts.pass}개 / 적합 ${counts.ok}개 / 미통과 ${counts.fail}개 / 담당자 검토 필요 ${counts.needs_review}개${counts.not_applicable > 0 ? ` / 해당 없음 ${counts.not_applicable}개` : ''}${counts.advisory > 0 ? ` / 조언 ${counts.advisory}개` : ''}입니다.`,
 		statusLabels: {
