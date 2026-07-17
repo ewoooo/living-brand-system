@@ -83,6 +83,10 @@ describe('guideline rules field', () => {
 			['mediaShowcase', 'mediaShowcase'],
 			['colorPalette', 'colorPalette'],
 			['doDont', 'doDont'],
+			['policyCallout', 'policyCallout'],
+			['specList', 'specList'],
+			['signatureShowcase', 'signatureShowcase'],
+			['typeSpecimen', 'typeSpecimen'],
 		])
 	})
 

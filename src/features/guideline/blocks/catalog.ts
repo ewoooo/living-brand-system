@@ -4,11 +4,19 @@ import {
 	ContentColumnsBlock,
 	DoDontBlock,
 	MediaShowcaseBlock,
+	PolicyCalloutBlock,
+	SignatureShowcaseBlock,
+	SpecListBlock,
+	TypeSpecimenBlock,
 } from '@/blocks/guideline'
 import { projectColorPalette } from './color-palette.block'
 import { projectContentColumns } from './content-columns.block'
 import { projectDoDont } from './do-dont.block'
 import { projectMediaShowcase } from './media-showcase.block'
+import { projectPolicyCallout } from './policy-callout.block'
+import { projectSignatureShowcase } from './signature-showcase.block'
+import { projectSpecList } from './spec-list.block'
+import { projectTypeSpecimen } from './type-specimen.block'
 import type { BlockProjection, CheckReferenceAssetRef, GuidelineBlock } from './types'
 
 type DefinitionMap = {
@@ -24,6 +32,10 @@ export const guidelineBlockCatalog = {
 	mediaShowcase: { schema: MediaShowcaseBlock, project: projectMediaShowcase },
 	colorPalette: { schema: ColorPaletteBlock, project: projectColorPalette },
 	doDont: { schema: DoDontBlock, project: projectDoDont },
+	policyCallout: { schema: PolicyCalloutBlock, project: projectPolicyCallout },
+	specList: { schema: SpecListBlock, project: projectSpecList },
+	signatureShowcase: { schema: SignatureShowcaseBlock, project: projectSignatureShowcase },
+	typeSpecimen: { schema: TypeSpecimenBlock, project: projectTypeSpecimen },
 } satisfies DefinitionMap
 
 export const guidelineBlocks = Object.values(guidelineBlockCatalog).map(({ schema }) => schema)

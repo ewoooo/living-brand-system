@@ -4,6 +4,10 @@ import { ColorPaletteBlock } from './color-palette-block'
 import { ContentColumnsBlock } from './content-columns-block'
 import { DoDontBlock } from './do-dont-block'
 import { MediaShowcaseBlock } from './media-showcase-block'
+import { PolicyCalloutBlock } from './policy-callout-block'
+import { SignatureShowcaseBlock } from './signature-showcase-block'
+import { SpecListBlock } from './spec-list-block'
+import { TypeSpecimenBlock } from './type-specimen-block'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type RendererMap = {
@@ -17,6 +21,10 @@ const blockRenderers = {
 	mediaShowcase: (block) => <MediaShowcaseBlock block={block} />,
 	colorPalette: (block) => <ColorPaletteBlock block={block} />,
 	doDont: (block) => <DoDontBlock block={block} />,
+	policyCallout: (block) => <PolicyCalloutBlock block={block} />,
+	specList: (block) => <SpecListBlock block={block} />,
+	signatureShowcase: (block) => <SignatureShowcaseBlock block={block} />,
+	typeSpecimen: (block) => <TypeSpecimenBlock block={block} />,
 } satisfies RendererMap
 
 function renderBlock(block: GuidelineBlock): ReactNode {

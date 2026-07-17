@@ -232,7 +232,18 @@ export interface GuidelineDocument {
    * 문서 헤더에 표시할 선택 이미지입니다.
    */
   headerImage?: (number | null) | ApplicationImage;
-  blocks?: (ContentColumnsBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
+  blocks?:
+    | (
+        | ContentColumnsBlock
+        | MediaShowcaseBlock
+        | ColorPaletteBlock
+        | DoDontBlock
+        | PolicyCalloutBlock
+        | SpecListBlock
+        | SignatureShowcaseBlock
+        | TypeSpecimenBlock
+      )[]
+    | null;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
    */
@@ -536,6 +547,98 @@ export interface DoDontBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'doDont';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PolicyCalloutBlock".
+ */
+export interface PolicyCalloutBlock {
+  kind: 'must' | 'recommended' | 'dont';
+  /**
+   * 생략하면 판정 기본 라벨(반드시/권장/금지)이 제목이 됩니다.
+   */
+  title?: string | null;
+  items?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'policyCallout';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SpecListBlock".
+ */
+export interface SpecListBlock {
+  groups?:
+    | {
+        label?: string | null;
+        specs?:
+          | {
+              key: string;
+              value: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'specList';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SignatureShowcaseBlock".
+ */
+export interface SignatureShowcaseBlock {
+  signatures?:
+    | {
+        label?: string | null;
+        phrase: string;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'signatureShowcase';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeSpecimenBlock".
+ */
+export interface TypeSpecimenBlock {
+  /**
+   * tier별 초기 샘플 문구입니다. 비우면 중립 기본 문구를 사용합니다.
+   */
+  samples?: {
+    word?: string | null;
+    sentence?: string | null;
+    paragraph?: string | null;
+  };
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeSpecimen';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1383,6 +1486,10 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
         colorPalette?: T | ColorPaletteBlockSelect<T>;
         doDont?: T | DoDontBlockSelect<T>;
+        policyCallout?: T | PolicyCalloutBlockSelect<T>;
+        specList?: T | SpecListBlockSelect<T>;
+        signatureShowcase?: T | SignatureShowcaseBlockSelect<T>;
+        typeSpecimen?: T | TypeSpecimenBlockSelect<T>;
       };
   rules?: T;
   displayOrder?: T;
@@ -1464,6 +1571,78 @@ export interface DoDontBlockSelect<T extends boolean = true> {
               id?: T;
             };
         id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PolicyCalloutBlock_select".
+ */
+export interface PolicyCalloutBlockSelect<T extends boolean = true> {
+  kind?: T;
+  title?: T;
+  items?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SpecListBlock_select".
+ */
+export interface SpecListBlockSelect<T extends boolean = true> {
+  groups?:
+    | T
+    | {
+        label?: T;
+        specs?:
+          | T
+          | {
+              key?: T;
+              value?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SignatureShowcaseBlock_select".
+ */
+export interface SignatureShowcaseBlockSelect<T extends boolean = true> {
+  signatures?:
+    | T
+    | {
+        label?: T;
+        phrase?: T;
+        note?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeSpecimenBlock_select".
+ */
+export interface TypeSpecimenBlockSelect<T extends boolean = true> {
+  samples?:
+    | T
+    | {
+        word?: T;
+        sentence?: T;
+        paragraph?: T;
       };
   rules?: T;
   id?: T;

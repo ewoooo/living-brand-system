@@ -118,6 +118,112 @@ export const ColorPaletteBlock: Block = {
 	],
 }
 
+// 규정 콜아웃. 지켜야 할 규칙 문장을 판정별(must/recommended/dont)로 강조한다.
+export const PolicyCalloutBlock: Block = {
+	slug: 'policyCallout',
+	interfaceName: 'PolicyCalloutBlock',
+	labels: { singular: '규정 콜아웃', plural: '규정 콜아웃' },
+	fields: [
+		{
+			name: 'kind',
+			type: 'select',
+			required: true,
+			defaultValue: 'must',
+			options: [
+				{ label: '반드시 (Must)', value: 'must' },
+				{ label: '권장 (Recommended)', value: 'recommended' },
+				{ label: '금지 (Don’t)', value: 'dont' },
+			],
+		},
+		{
+			name: 'title',
+			type: 'text',
+			localized: true,
+			admin: { description: '생략하면 판정 기본 라벨(반드시/권장/금지)이 제목이 됩니다.' },
+		},
+		{
+			name: 'items',
+			type: 'array',
+			minRows: 1,
+			labels: { singular: '규칙 문장', plural: '규칙 문장' },
+			fields: [{ name: 'text', type: 'text', required: true, localized: true }],
+		},
+		...baseBlockFields(),
+	],
+}
+
+// key-value 규격 목록. 타이포·그리드처럼 짧은 정량/정성 스펙을 그룹 카드로 구조화한다.
+export const SpecListBlock: Block = {
+	slug: 'specList',
+	interfaceName: 'SpecListBlock',
+	labels: { singular: '스펙 목록', plural: '스펙 목록' },
+	fields: [
+		{
+			name: 'groups',
+			type: 'array',
+			minRows: 1,
+			labels: { singular: '스펙 그룹', plural: '스펙 그룹' },
+			fields: [
+				{ name: 'label', type: 'text', localized: true },
+				{
+					name: 'specs',
+					type: 'array',
+					minRows: 1,
+					labels: { singular: '규격', plural: '규격' },
+					fields: [
+						{ name: 'key', type: 'text', required: true },
+						{ name: 'value', type: 'text', required: true },
+					],
+				},
+			],
+		},
+		...baseBlockFields(),
+	],
+}
+
+// 공식 시그니처·태그라인 전시. 문구 자체가 메시징 검수의 근거가 된다.
+export const SignatureShowcaseBlock: Block = {
+	slug: 'signatureShowcase',
+	interfaceName: 'SignatureShowcaseBlock',
+	labels: { singular: '시그니처 쇼케이스', plural: '시그니처 쇼케이스' },
+	fields: [
+		{
+			name: 'signatures',
+			type: 'array',
+			minRows: 1,
+			labels: { singular: '시그니처', plural: '시그니처' },
+			fields: [
+				{ name: 'label', type: 'text', localized: true },
+				{ name: 'phrase', type: 'text', required: true },
+				{ name: 'note', type: 'textarea', localized: true },
+			],
+		},
+		...baseBlockFields(),
+	],
+}
+
+// 라이브 타입 스페시먼. tier별 초기 샘플 문구만 저장하고 타이핑·정렬·행간 상태는 저장하지 않는다.
+export const TypeSpecimenBlock: Block = {
+	slug: 'typeSpecimen',
+	interfaceName: 'TypeSpecimenBlock',
+	labels: { singular: '타입 스페시먼', plural: '타입 스페시먼' },
+	fields: [
+		{
+			name: 'samples',
+			type: 'group',
+			admin: {
+				description: 'tier별 초기 샘플 문구입니다. 비우면 중립 기본 문구를 사용합니다.',
+			},
+			fields: [
+				{ name: 'word', type: 'text', localized: true },
+				{ name: 'sentence', type: 'text', localized: true },
+				{ name: 'paragraph', type: 'textarea', localized: true },
+			],
+		},
+		...baseBlockFields(),
+	],
+}
+
 // Do/Don't 그리드. 그룹은 같은 주제의 권장·금지 예시를 묶는다.
 export const DoDontBlock: Block = {
 	slug: 'doDont',

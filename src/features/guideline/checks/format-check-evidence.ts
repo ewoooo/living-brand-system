@@ -1,5 +1,6 @@
 import type { CheckEvidence } from '../blocks/catalog'
 import { kindLabel } from '../blocks/do-dont.block'
+import { policyKindLabel } from '../blocks/policy-callout.block'
 import { compact } from '../utils/block-text'
 
 /** 구조화 evidence를 기존 평문 소비 경계에 맞게 변환한다. */
@@ -44,6 +45,32 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 						),
 					]),
 				),
+			]).join('\n')
+		case 'policyCallout':
+			return compact([
+				evidence.title ?? policyKindLabel[evidence.kind],
+				...evidence.items.map((item) => `- ${item}`),
+			]).join('\n')
+		case 'specList':
+			return compact(
+				evidence.groups.map((group) =>
+					compact([
+						group.label,
+						...group.specs.map((spec) => `- ${spec.key}: ${spec.value}`),
+					]).join('\n'),
+				),
+			).join('\n\n')
+		case 'signatureShowcase':
+			return compact(
+				evidence.signatures.map((signature) =>
+					compact([signature.label, signature.phrase, signature.note]).join('\n'),
+				),
+			).join('\n\n')
+		case 'typeSpecimen':
+			return compact([
+				evidence.samples.word,
+				evidence.samples.sentence,
+				evidence.samples.paragraph,
 			]).join('\n')
 	}
 }

@@ -2,6 +2,10 @@ import { ColorPaletteBlock } from '@/features/guideline/components/blocks/color-
 import { ContentColumnsBlock } from '@/features/guideline/components/blocks/content-columns-block'
 import { DoDontBlock } from '@/features/guideline/components/blocks/do-dont-block'
 import { MediaShowcaseBlock } from '@/features/guideline/components/blocks/media-showcase-block'
+import { PolicyCalloutBlock } from '@/features/guideline/components/blocks/policy-callout-block'
+import { SignatureShowcaseBlock } from '@/features/guideline/components/blocks/signature-showcase-block'
+import { SpecListBlock } from '@/features/guideline/components/blocks/spec-list-block'
+import { TypeSpecimenBlock } from '@/features/guideline/components/blocks/type-specimen-block'
 import { CarouselDemo } from '@/features/guideline/components/kit/carousel'
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
@@ -15,12 +19,8 @@ import {
 	placeholderImage,
 	richTextBody,
 } from '@/features/guideline/components/kit/mock-blocks'
-import { RuleCalloutDemo } from '@/features/guideline/components/kit/rule-callout'
-import { SignatureDisplayDemo } from '@/features/guideline/components/kit/signature-display'
-import { SpecListDemo } from '@/features/guideline/components/kit/spec-list'
 import { SpecTable } from '@/features/guideline/components/kit/spec-table'
 import { TypeScale } from '@/features/guideline/components/kit/type-scale'
-import { TypeSpecimen } from '@/features/guideline/components/kit/type-specimen'
 
 // UI 키트 갤러리(중간공유용). 블록화가 끝난 컴포넌트는 실제 블록 renderer + Payload 타입 mock으로
 // 전시하고, 아직 kit POC인 것만 kit 사본으로 전시한다. mock이 Payload 타입으로 강제되므로
@@ -160,6 +160,101 @@ const multiPaletteBlock: Extract<GuidelineBlock, { blockType: 'colorPalette' }> 
 	],
 }
 
+const typeSpecimenBlock: Extract<GuidelineBlock, { blockType: 'typeSpecimen' }> = {
+	blockType: 'typeSpecimen',
+	samples: {
+		word: 'Essenherb',
+		sentence: 'Vegan skincare, rooted in nature.',
+		paragraph:
+			'Essenherb finds the vitality of nature that endures even in harsh environments, and returns it to the skin. A vegan skincare brand focused on the essence of the skin.',
+	},
+}
+
+const signatureShowcaseBlock: Extract<GuidelineBlock, { blockType: 'signatureShowcase' }> = {
+	blockType: 'signatureShowcase',
+	signatures: [
+		{
+			id: 'sig-1',
+			label: 'Brand Signature',
+			phrase: 'Essence of Herb',
+			note: '피부 본질에 집중하는 식물성 비건 스킨케어. 브랜드 아이덴티티의 중심 문구.',
+		},
+		{
+			id: 'sig-2',
+			label: 'Tagline',
+			phrase: 'Daily Skincare Ritual',
+			note: '매일의 루틴을 하나의 의식으로. 커뮤니케이션 전반에 쓰는 태그라인.',
+		},
+		{
+			id: 'sig-3',
+			label: 'Sign-off',
+			phrase: 'Essenherb, Naturally',
+			note: '광고·패키지 마무리 서명. 자연스러움을 강조하는 클로징 카피.',
+		},
+	],
+}
+
+const specListBlock: Extract<GuidelineBlock, { blockType: 'specList' }> = {
+	blockType: 'specList',
+	groups: [
+		{
+			id: 'sl-1',
+			label: 'Typography · Pretendard',
+			specs: [
+				{ id: 'sl-1a', key: 'Weight', value: 'Regular, Bold' },
+				{ id: 'sl-1b', key: 'Kerning', value: 'Metric, -10~0' },
+				{ id: 'sl-1c', key: 'Word Spacing', value: '55% / 70% / 95%' },
+				{ id: 'sl-1d', key: 'Leading', value: '140%' },
+			],
+		},
+		{
+			id: 'sl-2',
+			label: 'Grid · Desktop',
+			specs: [
+				{ id: 'sl-2a', key: 'Columns', value: '12' },
+				{ id: 'sl-2b', key: 'Gutter', value: '24px' },
+				{ id: 'sl-2c', key: 'Margin', value: '80px' },
+				{ id: 'sl-2d', key: 'Max width', value: '1312px' },
+			],
+		},
+	],
+}
+
+const policyCalloutBlocks: Extract<GuidelineBlock, { blockType: 'policyCallout' }>[] = [
+	{
+		blockType: 'policyCallout',
+		kind: 'must',
+		title: '반드시 지킬 것',
+		items: [
+			{
+				id: 'pc-1a',
+				text: '브랜드 시그니처(Essenherb Red #EA5343)는 지정된 원색 그대로 사용한다.',
+			},
+			{ id: 'pc-1b', text: '로고 주위 최소 여백(clear space)을 심볼 높이 이상 확보한다.' },
+			{ id: 'pc-1c', text: '국문 본문은 지정 서체 Pretendard를 사용한다.' },
+		],
+	},
+	{
+		blockType: 'policyCallout',
+		kind: 'recommended',
+		title: '권장',
+		items: [
+			{ id: 'pc-2a', text: '사진 위에는 가독성을 위해 반전(화이트) 로고 사용을 권장한다.' },
+			{ id: 'pc-2b', text: '키 비주얼에는 시그니처 서체 Essenflux를 제한적으로 활용한다.' },
+		],
+	},
+	{
+		blockType: 'policyCallout',
+		kind: 'dont',
+		title: '하지 말 것',
+		items: [
+			{ id: 'pc-3a', text: '브랜드 시그니처는 2개 이상 중복/조합해 사용하지 않는다.' },
+			{ id: 'pc-3b', text: '로고 색상을 임의로 변경하거나 그라디언트를 적용하지 않는다.' },
+			{ id: 'pc-3c', text: '저대비 배경 위에 로고를 얹지 않는다.' },
+		],
+	},
+]
+
 // 최상위 섹션 그룹: 제목 + 구분선 + 데모들.
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
 	return (
@@ -211,8 +306,8 @@ export function GuidelineKitGallery() {
 			</Section>
 
 			<Section title="타이포그래피">
-				<Demo title="Type Specimen · 라이브 입력 견본">
-					<TypeSpecimen />
+				<Demo title="Type Specimen · 라이브 입력 견본 (실제 블록 renderer)">
+					<TypeSpecimenBlock block={typeSpecimenBlock} />
 				</Demo>
 
 				<Demo title="Glyph Grid · 글리프 인스펙터">
@@ -289,8 +384,8 @@ export function GuidelineKitGallery() {
 					/>
 				</Demo>
 
-				<Demo title="Signature Display · 대형 타입 시그니처">
-					<SignatureDisplayDemo />
+				<Demo title="Signature Showcase · 대형 타입 시그니처 (실제 블록 renderer)">
+					<SignatureShowcaseBlock block={signatureShowcaseBlock} />
 				</Demo>
 			</Section>
 
@@ -309,8 +404,8 @@ export function GuidelineKitGallery() {
 					<DataTableDemo />
 				</Demo>
 
-				<Demo title="Spec List · 스펙 목록">
-					<SpecListDemo />
+				<Demo title="Spec List · 스펙 목록 (실제 블록 renderer)">
+					<SpecListBlock block={specListBlock} />
 				</Demo>
 
 				<Demo title="Spec Table">
@@ -334,8 +429,12 @@ export function GuidelineKitGallery() {
 					<LogoLockupDemo />
 				</Demo>
 
-				<Demo title="Rule Callout · 규정/주의 콜아웃">
-					<RuleCalloutDemo />
+				<Demo title="Policy Callout · 규정/주의 콜아웃 (실제 블록 renderer)">
+					<div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+						{policyCalloutBlocks.map((block) => (
+							<PolicyCalloutBlock key={block.kind} block={block} />
+						))}
+					</div>
 				</Demo>
 
 				<Demo title="Download Card · 에셋 다운로드 타일">
