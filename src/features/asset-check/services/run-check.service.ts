@@ -143,6 +143,9 @@ function toAiRawResult(check: RuntimeCheck, run: AiCheckRunResult | undefined): 
 	if (!check.model || !run) {
 		return aiNeedsReview('AI 검사 도구 설정 오류', 'ai_checker_invalid')
 	}
+	if (run.unavailableReferenceCheckKeys?.includes(check.key)) {
+		return aiNeedsReview('레퍼런스 이미지 불러오기 실패', 'reference_asset_unavailable')
+	}
 	if (run.failure) return aiNeedsReview(run.failure.detail, run.failure.reasonCode)
 	return check.executor === 'manual'
 		? evaluateAdvisory(run.advices[check.key])

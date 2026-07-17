@@ -123,6 +123,24 @@ describe('runHeuristicCheck', () => {
 		})
 	})
 
+	it('레퍼런스 fetch 실패 Check는 명시적 needs_review로 연결한다', async () => {
+		vi.mocked(runAiCheck).mockResolvedValue({
+			observations: {},
+			advices: {},
+			failure: { detail: 'AI 평가 실패', reasonCode: 'ai_request_failed' },
+			unavailableReferenceCheckKeys: [check.key],
+		})
+
+		const result = await runHeuristicCheck(png, [check.key], [check])
+
+		expect(result.results[check.key]?.rawResult).toEqual({
+			status: 'needs_review',
+			fulfillment: null,
+			detail: '레퍼런스 이미지 불러오기 실패',
+			reasonCode: 'reference_asset_unavailable',
+		})
+	})
+
 	it('판정 기준이 없는 룰만 격리하고 유효한 룰은 AI로 검사한다', async () => {
 		const invalidCheck = { ...check, key: 'imagery.style', heuristicCriteria: [] }
 		vi.mocked(runAiCheck).mockResolvedValue({

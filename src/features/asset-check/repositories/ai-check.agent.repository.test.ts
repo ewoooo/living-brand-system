@@ -1,5 +1,5 @@
 import { generateText, Output } from 'ai'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
 	measureObservationSchema,
 	presenceObservationSchema,
@@ -69,6 +69,7 @@ describe('runAiCheck', () => {
 		vi.stubEnv('PAYLOAD_SECRET', 'test-secret')
 		vi.mocked(generateText).mockReset()
 	})
+	afterEach(() => vi.unstubAllGlobals())
 
 	it('maps AI SDK token usage for cost analysis', async () => {
 		vi.mocked(generateText).mockResolvedValue({
@@ -208,6 +209,70 @@ describe('runAiCheck', () => {
 			advices: {},
 			failure: { detail: 'AI 평가 실패', reasonCode: 'ai_request_failed' },
 		})
+	})
+
+	it('레퍼런스 fetch 실패 Check만 격리하고 실패 사유를 반환한다', async () => {
+		const referenceCheck: RuntimeCheck = {
+			...checks[0],
+			referenceAssets: [
+				{
+					name: 'unavailable.png',
+					url: '/api/assets/unavailable.png',
+					mimeType: 'image/png',
+					role: 'positive',
+				},
+			],
+		}
+		const independentCheck: RuntimeCheck = {
+			...checks[0],
+			key: 'imagery.independent',
+		}
+		vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('reference unavailable')))
+		vi.mocked(generateText).mockResolvedValue({
+			output: {
+				results: {
+					'imagery.independent': {
+						observations: {
+							'natural-expression': {
+								value: 'present',
+								confidence: 80,
+								reason: '자연스러운 표정이 관측됩니다.',
+							},
+						},
+					},
+				},
+			},
+			usage: {
+				inputTokens: 10,
+				inputTokenDetails: { noCacheTokens: 10, cacheReadTokens: 0, cacheWriteTokens: 0 },
+				outputTokens: 5,
+				outputTokenDetails: { textTokens: 5, reasoningTokens: 0 },
+				totalTokens: 15,
+				raw: {},
+			},
+		} as unknown as Awaited<ReturnType<typeof generateText>>)
+		const { runAiCheck } = await import(
+			'@/features/asset-check/repositories/ai-check.agent.repository'
+		)
+
+		const result = await runAiCheck([referenceCheck, independentCheck], {
+			image: { data: Buffer.from('png'), mediaType: 'image/png' },
+			pixels: [],
+			palette: [],
+		})
+
+		expect(result.unavailableReferenceCheckKeys).toEqual(['imagery.mood'])
+		expect(result.observations).toHaveProperty('imagery.independent')
+		expect(result.observations).not.toHaveProperty('imagery.mood')
+		const request = vi.mocked(generateText).mock.calls[0]?.[0] as {
+			messages?: Array<{ content?: Array<{ text?: string }> }>
+		}
+		const jsonText = request.messages?.[0]?.content?.find((part) =>
+			part.text?.startsWith('{"checks":'),
+		)?.text
+		expect(JSON.parse(jsonText ?? '{}').checks.map(({ key }: { key: string }) => key)).toEqual([
+			'imagery.independent',
+		])
 	})
 
 	it('checker prompt를 관찰 컨텍스트로 메시지에 삽입한다', async () => {
