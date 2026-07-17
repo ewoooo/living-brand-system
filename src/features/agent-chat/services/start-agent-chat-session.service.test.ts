@@ -119,6 +119,35 @@ describe('startAgentChatSession', () => {
 		expect(saveSession).toHaveBeenCalledTimes(1)
 	})
 
+	it('종결 저장이 일시 실패하면 같은 terminal 상태를 재시도한다', async () => {
+		const saveError = new Error('Temporary database failure.')
+		saveSession.mockRejectedValueOnce(saveError).mockResolvedValueOnce(undefined)
+		const session = await startAgentChatSession({ messages, user })
+
+		await session.recordStep({ text: '완료 응답', step: toolStep })
+		await session.finalize()
+
+		expect(saveSession).toHaveBeenCalledTimes(2)
+		expect(saveSession.mock.calls[1][0].toUpdateData().status).toBe('completed')
+	})
+
+	it('종결 저장 재시도도 실패하면 후속 호출이 같은 terminal 상태 저장을 다시 시도한다', async () => {
+		const saveError = new Error('Database failure.')
+		const retryError = new Error('Database retry failure.')
+		saveSession.mockRejectedValueOnce(saveError).mockRejectedValueOnce(retryError)
+		const session = await startAgentChatSession({ messages, user })
+
+		await session.recordStep({ text: '완료 응답', step: toolStep })
+		await expect(session.finalize()).rejects.toBe(saveError)
+		expect(saveError.cause).toBe(retryError)
+
+		saveSession.mockResolvedValueOnce(undefined)
+		await session.fail('late error')
+
+		expect(saveSession).toHaveBeenCalledTimes(3)
+		expect(saveSession.mock.calls[2][0].toUpdateData().status).toBe('completed')
+	})
+
 	it('중단된 세션은 failed로 한 번 저장한다', async () => {
 		const session = await startAgentChatSession({ messages, user })
 
