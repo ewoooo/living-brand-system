@@ -388,6 +388,8 @@ export const migrations = [
   {
     up: migration_20260717_113849_backfill_rules_versions.up,
     down: migration_20260717_113849_backfill_rules_versions.down,
-    name: '20260717_113849_backfill_rules_versions'
+    name: '20260717_113849_backfill_rules_versions',
+  },
+  {
   },
 ];

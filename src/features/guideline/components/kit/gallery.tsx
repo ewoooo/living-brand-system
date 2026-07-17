@@ -16,6 +16,7 @@ import { DownloadCardDemo } from '@/features/guideline/components/kit/download-c
 import { LogoLockupDemo } from '@/features/guideline/components/kit/logo-lockup'
 import {
 	brandColor,
+	brandTypeface,
 	type GuidelineBlock,
 	placeholderImage,
 	richTextBody,
@@ -160,8 +161,24 @@ const multiPaletteBlock: Extract<GuidelineBlock, { blockType: 'colorPalette' }> 
 	],
 }
 
+const essenflux = brandTypeface(
+	'Essenflux',
+	'Essenflux',
+	'/fonts/essenflux/Essenflux-Regular.woff2',
+	'400',
+	61,
+)
+const pretendard = brandTypeface(
+	'Pretendard',
+	'Pretendard',
+	'/fonts/pretendard/PretendardVariable.woff2',
+	'45 920',
+	62,
+)
+
 const typeScaleBlock: Extract<GuidelineBlock, { blockType: 'typeScale' }> = {
 	blockType: 'typeScale',
+	typeface: pretendard,
 	items: [
 		{
 			id: 'ts-1',
@@ -249,10 +266,12 @@ const layoutGridBlock: Extract<GuidelineBlock, { blockType: 'layoutGrid' }> = {
 const glyphGridBlock: Extract<GuidelineBlock, { blockType: 'glyphGrid' }> = {
 	blockType: 'glyphGrid',
 	title: null,
+	typeface: essenflux,
 }
 
 const typeSpecimenBlock: Extract<GuidelineBlock, { blockType: 'typeSpecimen' }> = {
 	blockType: 'typeSpecimen',
+	typeface: essenflux,
 	samples: {
 		word: 'Essenherb',
 		sentence: 'Vegan skincare, rooted in nature.',

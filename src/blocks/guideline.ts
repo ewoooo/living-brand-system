@@ -38,6 +38,8 @@ function imageScaleField(): Field {
 		name: 'imageScale',
 		type: 'select',
 		defaultValue: '100',
+		// 경로 파생 enum 이름이 Postgres 63자 제한을 넘지 않도록 전역 enum을 공유한다.
+		enumName: 'enum_image_scale',
 		options: Array.from({ length: 10 }, (_, index) => String((index + 1) * 10)),
 	}
 }
@@ -116,6 +118,18 @@ export const ColorPaletteBlock: Block = {
 		},
 		...baseBlockFields(),
 	],
+}
+
+// 서체를 다루는 블록이 공유하는 관계 필드. 서체는 brand-typefaces가 폰트 파일과 함께 소유한다.
+function typefaceField(): Field {
+	return {
+		name: 'typeface',
+		type: 'relationship',
+		relationTo: 'brand-typefaces',
+		admin: {
+			description: '적용할 서체입니다. 비우면 기본 타이틀 서체를 사용합니다.',
+		},
+	}
 }
 
 // 규정 콜아웃. 지켜야 할 규칙 문장을 판정별(must/recommended/dont)로 강조한다.
@@ -208,6 +222,7 @@ export const TypeSpecimenBlock: Block = {
 	interfaceName: 'TypeSpecimenBlock',
 	labels: { singular: '타입 스페시먼', plural: '타입 스페시먼' },
 	fields: [
+		typefaceField(),
 		{
 			name: 'samples',
 			type: 'group',
@@ -230,14 +245,7 @@ export const TypeScaleBlock: Block = {
 	interfaceName: 'TypeScaleBlock',
 	labels: { singular: '타입 스케일', plural: '타입 스케일' },
 	fields: [
-		{
-			name: 'typeface',
-			type: 'relationship',
-			relationTo: 'brand-typefaces',
-			admin: {
-				description: '샘플에 적용할 서체입니다. 비우면 기본 본문 서체를 사용합니다.',
-			},
-		},
+		typefaceField(),
 		{
 			name: 'items',
 			type: 'array',
@@ -306,12 +314,16 @@ export const LayoutGridBlock: Block = {
 	],
 }
 
-// 글리프 인스펙터. 위젯형 블록 — 서체는 전역 타이틀 폰트 토큰을 쓰고 제목만 저장한다.
+// 글리프 인스펙터. 위젯형 블록 — 제목과 서체 선택만 저장한다.
 export const GlyphGridBlock: Block = {
 	slug: 'glyphGrid',
 	interfaceName: 'GlyphGridBlock',
 	labels: { singular: '글리프 그리드', plural: '글리프 그리드' },
-	fields: [{ name: 'title', type: 'text', localized: true }, ...baseBlockFields()],
+	fields: [
+		{ name: 'title', type: 'text', localized: true },
+		typefaceField(),
+		...baseBlockFields(),
+	],
 }
 
 // Do/Don't 그리드. 그룹은 같은 주제의 권장·금지 예시를 묶는다.

@@ -1,4 +1,9 @@
-import type { ApplicationImage, BrandColor, GuidelineDocument } from '@/payload-types'
+import type {
+	ApplicationImage,
+	BrandColor,
+	BrandTypeface,
+	GuidelineDocument,
+} from '@/payload-types'
 
 // 갤러리 전용 mock 빌더 — 실제 블록 renderer가 요구하는 Payload 타입을 그대로 강제해,
 // 스키마가 바뀌면 갤러리가 컴파일 에러로 먼저 깨지게 한다. 제품 코드에서 import하지 않는다.
@@ -54,4 +59,22 @@ export function richTextBody(text: string): RichTextBody {
 
 export function brandColor(name: string, hex: string, pantone?: string, id = 1): BrandColor {
 	return { id, name, hex, pantone: pantone ?? null, updatedAt: '', createdAt: '' } as BrandColor
+}
+
+export function brandTypeface(
+	name: string,
+	familyName: string,
+	url: string,
+	weightRange?: string,
+	id = 1,
+): BrandTypeface {
+	return {
+		id,
+		name,
+		familyName,
+		url,
+		weightRange: weightRange ?? null,
+		updatedAt: '',
+		createdAt: '',
+	} as BrandTypeface
 }

@@ -3,6 +3,7 @@
 import { useId, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { GuidelineDocument } from '@/payload-types'
+import { resolveTypeface, TypefaceFontFace } from './children/typeface-font-face'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type TypeSpecimen = Extract<GuidelineBlock, { blockType: 'typeSpecimen' }>
@@ -39,9 +40,14 @@ export function TypeSpecimenBlock({ block }: { block: TypeSpecimen }) {
 		paragraph: block.samples?.paragraph?.trim() || TIER_PRESETS.paragraph.fallback,
 	}))
 	const sliderId = useId()
+	const typeface = resolveTypeface(block.typeface)
+	const fontFamily = typeface
+		? `"${typeface.familyName}", var(--font-title)`
+		: 'var(--font-title)'
 
 	return (
 		<div className="rounded-lg bg-background-tertiary p-8">
+			<TypefaceFontFace typeface={block.typeface} />
 			<div className="flex flex-wrap items-end gap-x-8 gap-y-4">
 				<Field label="Size">
 					<ToggleGroup
@@ -100,7 +106,7 @@ export function TypeSpecimenBlock({ block }: { block: TypeSpecimen }) {
 				onChange={(e) => setTexts((prev) => ({ ...prev, [tier]: e.target.value }))}
 				className="mt-8 h-64 w-full resize-none overflow-auto break-keep border-none bg-transparent text-foreground outline-none"
 				style={{
-					fontFamily: 'var(--font-title)',
+					fontFamily,
 					fontSize: TIER_PRESETS[tier].size,
 					lineHeight,
 					textAlign: align,

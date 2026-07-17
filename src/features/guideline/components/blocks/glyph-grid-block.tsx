@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { GuidelineDocument } from '@/payload-types'
 import { BlockHeading } from './children/block-heading'
+import { resolveTypeface, TypefaceFontFace } from './children/typeface-font-face'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type GlyphGridType = Extract<GuidelineBlock, { blockType: 'glyphGrid' }>
@@ -15,9 +16,10 @@ type GlyphGridType = Extract<GuidelineBlock, { blockType: 'glyphGrid' }>
 //   - headline: 모든 글자가 걸리는 윗선(대문자·소문자 잉크 top의 최댓값, 픽셀 측정).
 //   - baseline: 풀높이 글자가 앉는 선.
 //   - 작은 소문자 아랫선(작은 소문자 잉크 bottom의 최솟값, 픽셀 측정): 선만 긋는다.
-// 픽셀 측정: Canvas에 글자를 그려 잉크 경계를 읽는다(별도 라이브러리 없음). 폰트는 --font-title
-// 토큰을 읽어 브랜드 무관. SVG로 글자·라인을 같은 em 좌표계(1em=100)에 그려 정렬이 정확하다.
-// 위젯형 블록 — 저장 데이터는 제목뿐이고 인터랙션 상태는 저장하지 않는다.
+// 픽셀 측정: Canvas에 글자를 그려 잉크 경계를 읽는다(별도 라이브러리 없음). 서체는 선택한
+// BrandTypeface를 쓰고, 비우면 --font-title 토큰으로 폴백해 브랜드 무관.
+// SVG로 글자·라인을 같은 em 좌표계(1em=100)에 그려 정렬이 정확하다.
+// 위젯형 블록 — 저장 데이터는 제목·서체 선택뿐이고 인터랙션 상태는 저장하지 않는다.
 
 const GLYPHS = [
 	...'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
@@ -36,12 +38,15 @@ type Metrics = { ascender: number; descender: number; headline: number; xLine: n
 export function GlyphGridBlock({ block }: { block: GlyphGridType }) {
 	const [active, setActive] = useState('A')
 	const [metrics, setMetrics] = useState<Metrics | null>(null)
+	const family = resolveTypeface(block.typeface)?.familyName ?? null
+	const fontFamily = family ? `"${family}", var(--font-title)` : 'var(--font-title)'
 
 	useEffect(() => {
 		let cancelled = false
-		const fontStack =
-			getComputedStyle(document.documentElement).getPropertyValue('--font-title').trim() ||
-			'sans-serif'
+		const fontStack = family
+			? `"${family}", sans-serif`
+			: getComputedStyle(document.documentElement).getPropertyValue('--font-title').trim() ||
+				'sans-serif'
 		document.fonts.ready.then(() => {
 			if (cancelled) return
 			const S = 200
@@ -94,21 +99,22 @@ export function GlyphGridBlock({ block }: { block: GlyphGridType }) {
 		return () => {
 			cancelled = true
 		}
-	}, [])
+	}, [family])
 
 	return (
 		<section>
+			<TypefaceFontFace typeface={block.typeface} />
 			<BlockHeading title={block.title} />
 			<div className="grid gap-6 md:grid-cols-2">
 				<div className="relative aspect-square overflow-hidden rounded-sm border border-border bg-background-tertiary">
 					{metrics && Number.isFinite(metrics.headline) ? (
-						<GlyphStage glyph={active} metrics={metrics} />
+						<GlyphStage glyph={active} metrics={metrics} fontFamily={fontFamily} />
 					) : (
 						<div className="flex size-full items-center justify-center">
 							<span
 								className="text-foreground"
 								style={{
-									fontFamily: 'var(--font-title)',
+									fontFamily,
 									fontSize: 'clamp(11rem,34vw,26rem)',
 									lineHeight: 1,
 								}}
@@ -132,7 +138,7 @@ export function GlyphGridBlock({ block }: { block: GlyphGridType }) {
 							data-active={ch === active}
 							aria-label={`${ch} (${codepoint(ch)})`}
 							className="flex aspect-square items-center justify-center border-border border-r border-b text-4xl text-foreground transition-colors hover:bg-fill-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 data-[active=true]:bg-fill-selected"
-							style={{ fontFamily: 'var(--font-title)' }}
+							style={{ fontFamily }}
 						>
 							{ch}
 						</button>
@@ -144,7 +150,15 @@ export function GlyphGridBlock({ block }: { block: GlyphGridType }) {
 }
 
 // 메트릭 라인 + 글자를 같은 em 좌표계(1em=100)에 SVG로 렌더. baseline은 y=ascender*100.
-function GlyphStage({ glyph, metrics }: { glyph: string; metrics: Metrics }) {
+function GlyphStage({
+	glyph,
+	metrics,
+	fontFamily,
+}: {
+	glyph: string
+	metrics: Metrics
+	fontFamily: string
+}) {
 	const { ascender, descender, headline, xLine } = metrics
 	const PAD = 8
 	const baseY = ascender * 100
@@ -183,7 +197,7 @@ function GlyphStage({ glyph, metrics }: { glyph: string; metrics: Metrics }) {
 				fontSize={100}
 				className="text-foreground"
 				fill="currentColor"
-				style={{ fontFamily: 'var(--font-title)' }}
+				style={{ fontFamily }}
 			>
 				{glyph}
 			</text>

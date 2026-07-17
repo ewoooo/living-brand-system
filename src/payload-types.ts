@@ -628,6 +628,10 @@ export interface SignatureShowcaseBlock {
  */
 export interface TypeSpecimenBlock {
   /**
+   * 적용할 서체입니다. 비우면 기본 타이틀 서체를 사용합니다.
+   */
+  typeface?: (number | null) | BrandTypeface;
+  /**
    * tier별 초기 샘플 문구입니다. 비우면 중립 기본 문구를 사용합니다.
    */
   samples?: {
@@ -645,11 +649,39 @@ export interface TypeSpecimenBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-typefaces".
+ */
+export interface BrandTypeface {
+  id: number;
+  name: string;
+  /**
+   * CSS font-family로 쓰는 서체 가족 이름입니다. 예: Pretendard.
+   */
+  familyName: string;
+  /**
+   * @font-face font-weight 서술자입니다. 가변 폰트는 범위로 적습니다. 예: '400', '45 920'.
+   */
+  weightRange?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "TypeScaleBlock".
  */
 export interface TypeScaleBlock {
   /**
-   * 샘플에 적용할 서체입니다. 비우면 기본 본문 서체를 사용합니다.
+   * 적용할 서체입니다. 비우면 기본 타이틀 서체를 사용합니다.
    */
   typeface?: (number | null) | BrandTypeface;
   items?:
@@ -672,18 +704,6 @@ export interface TypeScaleBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'typeScale';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brand-typefaces".
- */
-export interface BrandTypeface {
-  id: number;
-  name: string;
-  familyName: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -723,6 +743,10 @@ export interface LayoutGridBlock {
  */
 export interface GlyphGridBlock {
   title?: string | null;
+  /**
+   * 적용할 서체입니다. 비우면 기본 타이틀 서체를 사용합니다.
+   */
+  typeface?: (number | null) | BrandTypeface;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
    */
@@ -1719,6 +1743,7 @@ export interface SignatureShowcaseBlockSelect<T extends boolean = true> {
  * via the `definition` "TypeSpecimenBlock_select".
  */
 export interface TypeSpecimenBlockSelect<T extends boolean = true> {
+  typeface?: T;
   samples?:
     | T
     | {
@@ -1775,6 +1800,7 @@ export interface LayoutGridBlockSelect<T extends boolean = true> {
  */
 export interface GlyphGridBlockSelect<T extends boolean = true> {
   title?: T;
+  typeface?: T;
   rules?: T;
   id?: T;
   blockName?: T;
@@ -1835,9 +1861,19 @@ export interface BrandColorsSelect<T extends boolean = true> {
 export interface BrandTypefacesSelect<T extends boolean = true> {
   name?: T;
   familyName?: T;
+  weightRange?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -1,4 +1,5 @@
 import type { GuidelineDocument } from '@/payload-types'
+import { resolveTypeface, TypefaceFontFace } from './children/typeface-font-face'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type TypeScale = Extract<GuidelineBlock, { blockType: 'typeScale' }>
@@ -6,15 +7,14 @@ type TypeScale = Extract<GuidelineBlock, { blockType: 'typeScale' }>
 const FALLBACK_SAMPLE = 'Aa Bb Cc 가나다'
 
 // Carbon type-scale 이식: 각 타입 토큰을 실제 크기 샘플 + 스펙(size/line-height/weight)으로 나열.
-// 서체 관계가 populate되면 familyName을 CSS font-family로 사용한다(전역 로드 전제).
+// 서체 관계가 populate되면 소유한 폰트 파일로 @font-face를 구성해 familyName을 적용한다.
 export function TypeScaleBlock({ block }: { block: TypeScale }) {
-	const fontFamily =
-		typeof block.typeface === 'object' && block.typeface !== null
-			? block.typeface.familyName
-			: undefined
+	const typeface = resolveTypeface(block.typeface)
+	const fontFamily = typeface ? `"${typeface.familyName}", var(--font-sans)` : undefined
 
 	return (
 		<dl className="flex flex-col">
+			<TypefaceFontFace typeface={block.typeface} />
 			{(block.items ?? []).map((item) => (
 				<div
 					key={item.id}

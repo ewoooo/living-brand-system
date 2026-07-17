@@ -65,6 +65,18 @@ describe('guideline rules field', () => {
 		for (const block of guidelineBlocks) expect(fieldNames(block.fields)).toContain('rules')
 	})
 
+	it('서체를 다루는 블록은 같은 typeface 관계 계약을 둔다', () => {
+		for (const type of ['typeScale', 'typeSpecimen', 'glyphGrid'] as const) {
+			const definition = guidelineBlockCatalog[type]
+			const typeface = definition.schema.fields.find(
+				(field) => 'name' in field && field.name === 'typeface',
+			)
+			expect(typeface?.type).toBe('relationship')
+			if (typeface?.type !== 'relationship') continue
+			expect(typeface.relationTo).toBe('brand-typefaces')
+		}
+	})
+
 	it('문서와 블록은 Rule 정의 필드를 소유하지 않는다', () => {
 		expect(fieldNames(GuidelineDocuments.fields)).not.toContain('checks')
 		for (const block of guidelineBlocks) {

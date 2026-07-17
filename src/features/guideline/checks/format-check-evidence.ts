@@ -68,6 +68,7 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 			).join('\n\n')
 		case 'typeSpecimen':
 			return compact([
+				evidence.typeface?.name,
 				evidence.samples.word,
 				evidence.samples.sentence,
 				evidence.samples.paragraph,
@@ -92,6 +93,6 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 				),
 			).join('\n\n')
 		case 'glyphGrid':
-			return evidence.title ?? 'Glyph grid'
+			return compact([evidence.title ?? 'Glyph grid', evidence.typeface?.name]).join('\n')
 	}
 }
