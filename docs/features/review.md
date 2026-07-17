@@ -14,7 +14,7 @@
 - 출력: `{ checkSessionId, results(checkKey→CheckResult), pendingCheckKeys }`
 - `CheckResult`의 판정은 `rawResult.status`(`pass`/`ok`/`needs_review`/`fail`)와 `fulfillment`(충족도 %)로 표현됩니다.
 - Heuristic 판정의 기준 집계는 `rawResult.summary`(`total`/`satisfied`/`failed`/`uncertain`)로 전달합니다. Review UI와 Agent는 이 값을 각 채널의 표시 문구로 변환하며, 기존 저장 결과는 `message`를 fallback으로 사용합니다.
-- 2단계 계약: 결정론적 Check는 즉시 채워지고, AI(heuristic) Check는 `pendingCheckKeys`로 반환된 뒤 **`completeCheckSessionAiCheck`**로 완성합니다.
+- 2단계 계약: 결정론적 Check는 즉시 채워지고, AI(heuristic) Check는 `pendingCheckKeys`로 반환된 뒤 **`completeCheckSessionAiCheck`**로 완성합니다. 후속 요청은 같은 소유자의 세션이며 시작 시점과 같은 이미지 바이트일 때만 허용합니다.
 - 기준 조회 단위: `getRuntimeChecks(checkKeys?)`(실행), `getCheckRuleset()`(페이지 뷰모델).
 - 기준 소스: published `guideline-documents`의 문서 및 Block `checks[]`. 실행 시 `source.documentId`와 소유 문서 또는 Block의 타입별 구조화 evidence를 만들고, heuristicCriteria·heuristicPrompt·역할이 포함된 referenceAssets·RuleChecker 계약과 함께 `CheckSession.rulesetSnapshot`에 고정합니다. Block 식별자와 문서 제목은 evidence 계약에 복사하지 않습니다.
 
@@ -148,6 +148,7 @@ CheckScenario
 CheckSessionRecord
 ├─ source / status
 ├─ targetType / imageName
+├─ inputSha256 / inputMediaType / inputByteLength
 ├─ rulesetSnapshot[]
 │  └─ RuntimeCheck
 │     ├─ key / source.documentId
@@ -166,9 +167,9 @@ CheckSessionRecord
 └─ completedAt
 ```
 
-`startCheckSession`은 세션 생성, 즉시 검수, AI 검수, 결과 병합, 완료 또는 실패 상태 저장을 순서대로 수행합니다. `completeCheckSessionAiCheck`도 저장된 snapshot과 결과를 읽어 AI 결과를 병합하고 세션을 완료합니다.
+`startCheckSession`은 입력 바이트의 SHA-256·형식·크기를 고정한 뒤 세션 생성, 즉시 검수, AI 검수, 결과 병합, 완료 또는 실패 상태 저장을 순서대로 수행합니다. `completeCheckSessionAiCheck`는 `id + createdBy`로 세션을 찾고 입력 지문을 먼저 대조한 뒤, 저장된 ruleset snapshot과 결과를 사용해 AI 결과를 병합합니다.
 
-현재 `CheckTarget`, `CheckRun`, `CheckBasis`, `CheckDecision`은 독립된 런타임 객체가 아닙니다. `CheckTarget`은 `targetType`과 `imageName`으로 평탄화되어 있고, `CheckBasis`는 `rulesetSnapshot`만 구현되어 있습니다. `GuidelineVersionRef`와 `BrandAssetVersionRef`는 아직 저장하지 않습니다. `CheckRun`과 `CheckDecision`의 동작은 서비스 함수와 지역 변수에 들어 있습니다. `pendingCheckKeys`는 API 응답과 클라이언트 상태에만 존재하고 `CheckSession`에는 저장하지 않습니다.
+현재 `CheckTarget`, `CheckRun`, `CheckBasis`, `CheckDecision`은 독립된 런타임 객체가 아닙니다. `CheckTarget`은 `targetType`과 `imageName`, 입력 지문으로 평탄화되어 있고, `CheckBasis`는 `rulesetSnapshot`만 구현되어 있습니다. 업로드 원본 바이트는 세션에 저장하지 않으며, `GuidelineVersionRef`와 `BrandAssetVersionRef`는 아직 저장하지 않습니다. `CheckRun`과 `CheckDecision`의 동작은 서비스 함수와 Aggregate에 들어 있고, `pendingCheckKeys`는 두 요청 사이에 복원할 수 있도록 `CheckSession`에 저장합니다.
 
 ### 구현할 객체 모델
 
@@ -198,6 +199,7 @@ CheckSession                         ← Aggregate Root
 - 즉시 검수 결과를 적용할 때 기존 결과와 `pendingCheckKeys`를 함께 갱신합니다.
 - AI 결과를 적용하면 해당 pending Check를 제거하고, 남은 Check가 없을 때만 완료합니다.
 - 완료되거나 실패한 세션은 다시 변경하지 않습니다.
+- 후속 AI 검수는 세션 시작 시점의 입력 지문과 일치하는 이미지에만 적용합니다.
 - Repository만 Aggregate를 Payload 저장 데이터로 변환합니다.
 
 Checker, Extractor, Evaluator와 색상·기하 계산은 상태가 없는 계산이므로 순수 함수로 유지합니다. 재검수 이력, 여러 실행, 실행별 감사가 필요해지면 그때 `CheckSession.runs[]` 아래에 `CheckRun`, `CheckBasis`, `CheckDecision`을 분리합니다.

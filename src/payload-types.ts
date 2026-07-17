@@ -751,6 +751,15 @@ export interface CheckSession {
   targetType: 'uploaded-image';
   imageName?: string | null;
   /**
+   * 검수 입력 원본 바이트의 SHA-256입니다.
+   */
+  inputSha256?: string | null;
+  inputMediaType?: ('image/jpeg' | 'image/png' | 'image/webp') | null;
+  /**
+   * 검수 입력 원본의 바이트 길이입니다.
+   */
+  inputByteLength?: number | null;
+  /**
    * 검수 실행 시점의 Check Scenario 기준 Check 스냅샷입니다.
    */
   rulesetSnapshot?:
@@ -1682,6 +1691,9 @@ export interface CheckSessionsSelect<T extends boolean = true> {
   status?: T;
   targetType?: T;
   imageName?: T;
+  inputSha256?: T;
+  inputMediaType?: T;
+  inputByteLength?: T;
   rulesetSnapshot?: T;
   results?: T;
   pendingCheckKeys?: T;

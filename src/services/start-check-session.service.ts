@@ -1,4 +1,9 @@
-import { CheckSessionTerminalError } from '@/features/asset-check/domain/check-session'
+import {
+	CheckSessionInputMismatchError,
+	type CheckSessionInputSnapshot,
+	CheckSessionNotFoundError,
+	CheckSessionTerminalError,
+} from '@/features/asset-check/domain/check-session'
 import {
 	createCheckSessionRecord,
 	getCheckSessionRecord,
@@ -16,6 +21,7 @@ import {
 	runImmediateCheck,
 } from '@/features/asset-check/services/run-check.service'
 import type { CheckSessionSource, ImageContentFlags } from '@/features/asset-check/types'
+import { detectCheckImageMediaType } from '@/features/asset-check/utils/image-format'
 import type { AgentChatSession, User } from '@/payload-types'
 
 interface StartCheckSessionInput {
@@ -36,12 +42,25 @@ interface CompleteCheckSessionAiCheckInput {
 	user: User
 }
 
+async function snapshotInput(buffer: Buffer): Promise<CheckSessionInputSnapshot> {
+	const mediaType = detectCheckImageMediaType(buffer)
+	if (!mediaType) throw new CheckSessionInputMismatchError('Unsupported check image input.')
+	const digest = await globalThis.crypto.subtle.digest('SHA-256', Uint8Array.from(buffer))
+
+	return {
+		sha256: Buffer.from(digest).toString('hex'),
+		mediaType,
+		byteLength: buffer.byteLength,
+	}
+}
+
 /**
  * 검수 세션 시작 유스케이스 — 기본은 전체 판정을 저장하고, 화면 요청은 AI 룰을 후속 처리로 분리한다.
  * 상태 전이와 결과 병합은 CheckSession Aggregate가, 저장 I/O는 check-session repository가,
  * 룰 판정은 asset-check 기능의 run-check/get-check-rules service가 소유한다.
  */
 export async function startCheckSession(input: StartCheckSessionInput) {
+	const inputSnapshot = await snapshotInput(input.buffer)
 	const scenario =
 		input.scenario ?? getCheckScenario(await getCheckScenarios(input.user), input.scenarioKey)
 	const rulesetSnapshot = await getRuntimeChecks(scenario.checkKeys)
@@ -50,6 +69,7 @@ export async function startCheckSession(input: StartCheckSessionInput) {
 		source: input.source,
 		imageName: input.imageName,
 		rulesetSnapshot,
+		inputSnapshot,
 		user: input.user,
 	})
 
@@ -87,10 +107,13 @@ export async function startCheckSession(input: StartCheckSessionInput) {
 
 /**
  * 검수 세션 AI 완료 유스케이스 — 세션에 저장된 pendingCheckKeys로 heuristic 룰을 실행하고 병합한다.
- * 이미 완료된 세션은 저장된 결과를 그대로 돌려주고(멱등), 실패한 세션은 CheckSessionTerminalError를 던진다.
+ * 같은 입력으로 이미 완료된 세션은 저장 결과를 반환하고, 실패 세션은 종결 오류로 처리한다.
+ * 소유자 제한 조회와 상태 저장 외부 I/O는 check-session repository가 소유한다.
  */
 export async function completeCheckSessionAiCheck(input: CompleteCheckSessionAiCheckInput) {
 	const session = await getCheckSessionRecord(input.checkSessionId, input.user)
+	if (!session) throw new CheckSessionNotFoundError('Check session not found.')
+	session.assertInputMatches(await snapshotInput(input.buffer))
 	if (session.isCompleted) {
 		return { checkSessionId: session.id, results: session.results }
 	}

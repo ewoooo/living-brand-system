@@ -1,5 +1,9 @@
 import type { AiUsage, CheckResult } from '@/features/asset-check/checkers/types'
 import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
+import {
+	type CheckImageMediaType,
+	isSupportedCheckImageMediaType,
+} from '@/features/asset-check/utils/image-format'
 import type { CheckSession as CheckSessionRecord } from '@/payload-types'
 
 /** 종결(completed/failed)된 세션에 전이를 시도했을 때의 방어선. 정상 경로에서는 나오지 않는다. */
@@ -7,6 +11,18 @@ export class CheckSessionStateError extends Error {}
 
 /** failed 세션에 AI 후속 검수를 요청했을 때. API route가 409로 변환한다. */
 export class CheckSessionTerminalError extends Error {}
+
+/** 요청한 사용자가 소유한 CheckSession을 찾지 못했을 때. */
+export class CheckSessionNotFoundError extends Error {}
+
+/** AI 후속 요청의 이미지가 세션 시작 시점의 입력과 다를 때. */
+export class CheckSessionInputMismatchError extends Error {}
+
+export interface CheckSessionInputSnapshot {
+	sha256: string
+	mediaType: CheckImageMediaType
+	byteLength: number
+}
 
 export interface CheckSessionUpdateData {
 	status: CheckSessionRecord['status']
@@ -29,12 +45,28 @@ export class CheckSession {
 		private _results: Record<string, CheckResult>,
 		private _pendingCheckKeys: string[],
 		readonly rulesetSnapshot: RuntimeCheck[] | undefined,
+		private readonly inputSnapshot: CheckSessionInputSnapshot | undefined,
 		private _aiUsage: AiUsage | undefined,
 		private _errorMessage: string | undefined,
 		private _completedAt: string | undefined,
 	) {}
 
 	static fromRecord(record: CheckSessionRecord): CheckSession {
+		const inputMediaType = record.inputMediaType
+		let inputSnapshot: CheckSessionInputSnapshot | undefined
+		if (
+			typeof record.inputSha256 === 'string' &&
+			typeof inputMediaType === 'string' &&
+			isSupportedCheckImageMediaType(inputMediaType) &&
+			typeof record.inputByteLength === 'number'
+		) {
+			inputSnapshot = {
+				sha256: record.inputSha256,
+				mediaType: inputMediaType,
+				byteLength: record.inputByteLength,
+			}
+		}
+
 		return new CheckSession(
 			record.id,
 			record.status,
@@ -45,6 +77,7 @@ export class CheckSession {
 			Array.isArray(record.rulesetSnapshot)
 				? (record.rulesetSnapshot as RuntimeCheck[])
 				: undefined,
+			inputSnapshot,
 			(record.aiUsage ?? undefined) as AiUsage | undefined,
 			record.errorMessage ?? undefined,
 			record.completedAt ?? undefined,
@@ -69,6 +102,18 @@ export class CheckSession {
 
 	get isFailed() {
 		return this._status === 'failed'
+	}
+
+	/** 세션에 고정된 입력 지문과 후속 요청의 실제 바이트가 같은지 검증한다. */
+	assertInputMatches(actual: CheckSessionInputSnapshot): void {
+		if (
+			!this.inputSnapshot ||
+			this.inputSnapshot.sha256 !== actual.sha256 ||
+			this.inputSnapshot.mediaType !== actual.mediaType ||
+			this.inputSnapshot.byteLength !== actual.byteLength
+		) {
+			throw new CheckSessionInputMismatchError('Check session input does not match.')
+		}
 	}
 
 	/** 즉시(deterministic/manual) 판정 결과와 남은 AI Check 목록을 반영한다. */

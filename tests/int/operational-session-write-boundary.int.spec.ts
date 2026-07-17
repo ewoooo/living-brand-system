@@ -3,11 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AgentChatSessions } from '@/collections/AgentChatSessions'
 import { CheckSessions } from '@/collections/CheckSessions'
 import { createAgentChatSessionRecord } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
-import { createCheckSessionRecord } from '@/features/asset-check/repositories/check-session.payload.repository'
+import {
+	createCheckSessionRecord,
+	getCheckSessionRecord,
+} from '@/features/asset-check/repositories/check-session.payload.repository'
 import type { User } from '@/payload-types'
 
 const mocks = vi.hoisted(() => ({
 	create: vi.fn(),
+	find: vi.fn(),
 	getPayload: vi.fn(),
 }))
 
@@ -25,7 +29,7 @@ function createAccess(config: CollectionConfig) {
 describe('operational session write boundary', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		mocks.getPayload.mockResolvedValue({ create: mocks.create })
+		mocks.getPayload.mockResolvedValue({ create: mocks.create, find: mocks.find })
 		mocks.create.mockResolvedValue({
 			id: 41,
 			status: 'running',
@@ -44,13 +48,42 @@ describe('operational session write boundary', () => {
 	})
 
 	it('CheckSession은 서버가 고정한 값으로 trusted create한다', async () => {
-		await createCheckSessionRecord({ source: 'review-page', user })
+		await createCheckSessionRecord({
+			source: 'review-page',
+			inputSnapshot: {
+				sha256: 'a'.repeat(64),
+				mediaType: 'image/png',
+				byteLength: 8,
+			},
+			user,
+		})
 
 		expect(mocks.create).toHaveBeenCalledWith({
 			collection: 'check-sessions',
-			data: expect.objectContaining({ createdBy: 7, status: 'running' }),
+			data: expect.objectContaining({
+				createdBy: 7,
+				status: 'running',
+				inputSha256: 'a'.repeat(64),
+				inputMediaType: 'image/png',
+				inputByteLength: 8,
+			}),
 			overrideAccess: true,
 			user,
+		})
+	})
+
+	it('CheckSession 조회는 id와 createdBy를 함께 제한하고 없으면 null을 반환한다', async () => {
+		mocks.find.mockResolvedValue({ docs: [] })
+
+		await expect(getCheckSessionRecord(41, user)).resolves.toBeNull()
+		expect(mocks.find).toHaveBeenCalledWith({
+			collection: 'check-sessions',
+			limit: 1,
+			overrideAccess: true,
+			user,
+			where: {
+				and: [{ id: { equals: 41 } }, { createdBy: { equals: 7 } }],
+			},
 		})
 	})
 

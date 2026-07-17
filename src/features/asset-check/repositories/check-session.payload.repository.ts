@@ -1,6 +1,9 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import { CheckSession } from '@/features/asset-check/domain/check-session'
+import {
+	CheckSession,
+	type CheckSessionInputSnapshot,
+} from '@/features/asset-check/domain/check-session'
 import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { CheckSessionSource } from '@/features/asset-check/types'
 import type { AgentChatSession, User } from '@/payload-types'
@@ -10,6 +13,7 @@ interface CreateCheckSessionInput {
 	source: CheckSessionSource
 	imageName?: string
 	rulesetSnapshot?: RuntimeCheck[]
+	inputSnapshot: CheckSessionInputSnapshot
 	user: User
 }
 
@@ -28,6 +32,9 @@ export async function createCheckSessionRecord(
 			status: 'running',
 			targetType: 'uploaded-image',
 			imageName: input.imageName,
+			inputSha256: input.inputSnapshot.sha256,
+			inputMediaType: input.inputSnapshot.mediaType,
+			inputByteLength: input.inputSnapshot.byteLength,
 			rulesetSnapshot: input.rulesetSnapshot,
 			pendingCheckKeys: [],
 			agentChatSession: input.agentChatSessionId,
@@ -44,16 +51,20 @@ export async function createCheckSessionRecord(
 /**
  * CheckSession 단건 조회 repository — 저장 레코드를 Aggregate로 복원해 돌려준다.
  */
-export async function getCheckSessionRecord(id: number, user: User): Promise<CheckSession> {
+export async function getCheckSessionRecord(id: number, user: User): Promise<CheckSession | null> {
 	const payload = await getPayload({ config })
-	const record = await payload.findByID({
+	const result = await payload.find({
 		collection: 'check-sessions',
-		id,
+		limit: 1,
 		overrideAccess: true,
 		user,
+		where: {
+			and: [{ id: { equals: id } }, { createdBy: { equals: user.id } }],
+		},
 	})
+	const record = result.docs[0]
 
-	return CheckSession.fromRecord(record)
+	return record ? CheckSession.fromRecord(record) : null
 }
 
 /**

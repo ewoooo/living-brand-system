@@ -58,6 +58,31 @@ export const CheckSessions: CollectionConfig = {
 			type: 'text',
 		},
 		{
+			name: 'inputSha256',
+			type: 'text',
+			admin: {
+				description: '검수 입력 원본 바이트의 SHA-256입니다.',
+			},
+		},
+		{
+			name: 'inputMediaType',
+			type: 'select',
+			options: [
+				{ label: 'JPEG', value: 'image/jpeg' },
+				{ label: 'PNG', value: 'image/png' },
+				{ label: 'WebP', value: 'image/webp' },
+			],
+		},
+		{
+			name: 'inputByteLength',
+			type: 'number',
+			min: 1,
+			admin: {
+				description: '검수 입력 원본의 바이트 길이입니다.',
+				step: 1,
+			},
+		},
+		{
 			name: 'rulesetSnapshot',
 			type: 'json',
 			admin: {

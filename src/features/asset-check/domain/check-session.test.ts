@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import type { CheckSession as CheckSessionRecord } from '@/payload-types'
-import { CheckSession, CheckSessionStateError } from './check-session'
+import {
+	CheckSession,
+	CheckSessionInputMismatchError,
+	CheckSessionStateError,
+} from './check-session'
 
 function checkResult(key: string): CheckResult {
 	return {
@@ -83,5 +87,43 @@ describe('CheckSession aggregate', () => {
 	it('fromRecord는 pendingCheckKeys가 없는 과거 레코드를 빈 배열로 복원한다', () => {
 		const session = CheckSession.fromRecord(record())
 		expect(session.pendingCheckKeys).toEqual([])
+	})
+
+	it('저장된 입력 지문과 SHA-256·형식·크기가 모두 같아야 후속 검수를 허용한다', () => {
+		const snapshot = {
+			sha256: 'a'.repeat(64),
+			mediaType: 'image/png' as const,
+			byteLength: 8,
+		}
+		const session = CheckSession.fromRecord(
+			record({
+				inputSha256: snapshot.sha256,
+				inputMediaType: snapshot.mediaType,
+				inputByteLength: snapshot.byteLength,
+			}),
+		)
+
+		expect(() => session.assertInputMatches(snapshot)).not.toThrow()
+		for (const mismatch of [
+			{ ...snapshot, sha256: 'b'.repeat(64) },
+			{ ...snapshot, mediaType: 'image/jpeg' as const },
+			{ ...snapshot, byteLength: 9 },
+		]) {
+			expect(() => session.assertInputMatches(mismatch)).toThrow(
+				CheckSessionInputMismatchError,
+			)
+		}
+	})
+
+	it('입력 지문이 없는 과거 세션은 새 이미지로 추정하지 않는다', () => {
+		const session = CheckSession.fromRecord(record())
+
+		expect(() =>
+			session.assertInputMatches({
+				sha256: 'a'.repeat(64),
+				mediaType: 'image/png',
+				byteLength: 8,
+			}),
+		).toThrow(CheckSessionInputMismatchError)
 	})
 })
