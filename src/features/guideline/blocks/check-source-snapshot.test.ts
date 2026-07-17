@@ -13,7 +13,7 @@ describe('buildCheckSourceSnapshot', () => {
 			blocks: [
 				{
 					id: 'target',
-					blockType: 'columnUnit',
+					blockType: 'contentColumns',
 					columns: [{ heading: 'Digital', body: lexical('Use 24 px.'), image: 7 }],
 				},
 				{ id: 'other', blockType: 'mediaShowcase', image: 8 },
@@ -22,7 +22,7 @@ describe('buildCheckSourceSnapshot', () => {
 
 		expect(buildCheckSourceSnapshot(page, 'target')).toEqual({
 			evidence: {
-				type: 'columnUnit',
+				type: 'contentColumns',
 				columns: [{ heading: 'Digital', body: 'Use 24 px.' }],
 			},
 			referenceAssets: [{ id: 7, role: 'context' }],
@@ -110,7 +110,7 @@ describe('buildCheckSourceSnapshot', () => {
 		const blocks = [
 			{
 				id: 'usage',
-				blockType: 'columnUnit',
+				blockType: 'contentColumns',
 				columns: [{ heading: 'Minimum', body: lexical('Use 24 px.') }],
 				rules,
 			},

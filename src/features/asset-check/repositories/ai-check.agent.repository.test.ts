@@ -38,7 +38,7 @@ const checks: RuntimeCheck[] = [
 		],
 		implemented: true,
 		evidence: {
-			type: 'columnUnit',
+			type: 'contentColumns',
 			columns: [{ heading: 'Lifestyle', body: '자연스러운 일상의 순간' }],
 		},
 		referenceAssets: [],
@@ -149,7 +149,7 @@ describe('runAiCheck', () => {
 					titleKo: '이미지 무드',
 					source: { documentId: 12 },
 					evidence: {
-						type: 'columnUnit',
+						type: 'contentColumns',
 						columns: [{ heading: 'Lifestyle', body: '자연스러운 일상의 순간' }],
 					},
 					heuristicPrompt: '인물의 표정이 자연스럽고 과장되지 않았는지 우선 판단한다.',

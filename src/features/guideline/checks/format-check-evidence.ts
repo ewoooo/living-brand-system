@@ -6,13 +6,18 @@ import { compact } from '../utils/block-text'
 export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 	if (typeof evidence === 'string') return evidence
 
+	// 동결된 CheckSession rulesetSnapshot에는 개명 전 'columnUnit' 판별자가 남아 있다.
+	if ((evidence as { type: string }).type === 'columnUnit') {
+		return formatCheckEvidence({ ...evidence, type: 'contentColumns' } as CheckEvidence)
+	}
+
 	switch (evidence.type) {
 		case 'document':
 			return compact([
 				evidence.description,
 				...evidence.blocks.map(formatCheckEvidence),
 			]).join('\n\n')
-		case 'columnUnit':
+		case 'contentColumns':
 			return evidence.columns
 				.map((column) => compact([column.heading, column.body]).join('\n'))
 				.filter(Boolean)

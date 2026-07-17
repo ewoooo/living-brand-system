@@ -42,9 +42,10 @@ function imageScaleField(): Field {
 	}
 }
 
-export const ColumnUnitBlock: Block = {
-	slug: 'columnUnit',
-	interfaceName: 'ColumnUnitBlock',
+export const ContentColumnsBlock: Block = {
+	slug: 'contentColumns',
+	interfaceName: 'ContentColumnsBlock',
+	labels: { singular: '콘텐츠 열', plural: '콘텐츠 열' },
 	fields: [
 		{
 			name: 'imageRatio',
@@ -77,6 +78,7 @@ export const ColumnUnitBlock: Block = {
 export const MediaShowcaseBlock: Block = {
 	slug: 'mediaShowcase',
 	interfaceName: 'MediaShowcaseBlock',
+	labels: { singular: '미디어 쇼케이스', plural: '미디어 쇼케이스' },
 	fields: [
 		{
 			name: 'imageRatio',
@@ -99,6 +101,7 @@ export const MediaShowcaseBlock: Block = {
 export const ColorPaletteBlock: Block = {
 	slug: 'colorPalette',
 	interfaceName: 'ColorPaletteBlock',
+	labels: { singular: '컬러 팔레트', plural: '컬러 팔레트' },
 	fields: [
 		{ name: 'title', type: 'text', localized: true },
 		{
@@ -119,6 +122,7 @@ export const ColorPaletteBlock: Block = {
 export const DoDontBlock: Block = {
 	slug: 'doDont',
 	interfaceName: 'DoDontBlock',
+	labels: { singular: 'Do/Don’t', plural: 'Do/Don’t' },
 	fields: [
 		{ name: 'title', type: 'text', localized: true },
 		{

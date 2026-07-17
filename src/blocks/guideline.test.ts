@@ -8,7 +8,12 @@ import {
 import { guidelineBlockCatalog, guidelineBlocks } from '@/features/guideline/blocks/catalog'
 import { checkKeyFromEnglishTitle } from '@/features/guideline/checks/check-key-from-english-title'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
-import { ColumnUnitBlock, DoDontBlock, guidelineRulesField, MediaShowcaseBlock } from './guideline'
+import {
+	ContentColumnsBlock,
+	DoDontBlock,
+	guidelineRulesField,
+	MediaShowcaseBlock,
+} from './guideline'
 
 const fieldNames = (fields: Field[]) =>
 	fields.flatMap((field) =>
@@ -74,7 +79,7 @@ describe('guideline rules field', () => {
 				definition.schema.slug,
 			]),
 		).toEqual([
-			['columnUnit', 'columnUnit'],
+			['contentColumns', 'contentColumns'],
 			['mediaShowcase', 'mediaShowcase'],
 			['colorPalette', 'colorPalette'],
 			['doDont', 'doDont'],
@@ -104,7 +109,7 @@ describe('guideline rules field', () => {
 
 	it('다른 이미지 블록도 공용 비율 계약을 사용한다', () => {
 		for (const [block, defaultValue] of [
-			[ColumnUnitBlock, '4:3'],
+			[ContentColumnsBlock, '4:3'],
 			[MediaShowcaseBlock, '16:9'],
 		] as const) {
 			const imageRatio = block.fields.find(

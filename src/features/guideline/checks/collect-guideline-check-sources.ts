@@ -70,7 +70,7 @@ function collectApplicationImages(document: GuidelineCheckDocument): Map<number,
 
 	for (const block of document.blocks ?? []) {
 		switch (block.blockType) {
-			case 'columnUnit':
+			case 'contentColumns':
 				values.push(...(block.columns ?? []).map((column) => column.image))
 				break
 			case 'mediaShowcase':

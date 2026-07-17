@@ -4,13 +4,13 @@ import { Carousel, type CarouselSlide } from './children/carousel'
 import { GuidelineImage } from './children/guideline-image'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
-type ColumnUnit = Extract<GuidelineBlock, { blockType: 'columnUnit' }>
-type Column = NonNullable<ColumnUnit['columns']>[number]
+type ContentColumns = Extract<GuidelineBlock, { blockType: 'contentColumns' }>
+type Column = NonNullable<ContentColumns['columns']>[number]
 
 // 본문 워크호스: 이미지 + 텍스트 유닛. 경계선/라운드 없이(팀 규범) 깔끔한 에디토리얼 레이아웃.
 // 규칙: 한 블록 안 예시 이미지가 3장 이상이면 자동 캐러셀로 압축(규칙/스펙 텍스트는 별도 블록에서 전부 노출).
 // 그 외에는 이미지를 자연 비율로 통째 노출(placeholder 캡쳐도 레터박스 없이). 1열=스택, 2열=그리드.
-export function ColumnUnitBlock({ block }: { block: ColumnUnit }) {
+export function ContentColumnsBlock({ block }: { block: ContentColumns }) {
 	const columns = block.columns ?? []
 	if (columns.length === 0) return null
 

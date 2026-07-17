@@ -232,7 +232,7 @@ export interface GuidelineDocument {
    * 문서 헤더에 표시할 선택 이미지입니다.
    */
   headerImage?: (number | null) | ApplicationImage;
-  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
+  blocks?: (ContentColumnsBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
    */
@@ -286,9 +286,9 @@ export interface ApplicationImage {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ColumnUnitBlock".
+ * via the `definition` "ContentColumnsBlock".
  */
-export interface ColumnUnitBlock {
+export interface ContentColumnsBlock {
   /**
    * 열 이미지의 표시 비율입니다.
    */
@@ -326,7 +326,7 @@ export interface ColumnUnitBlock {
   rules?: (number | Rule)[] | null;
   id?: string | null;
   blockName?: string | null;
-  blockType: 'columnUnit';
+  blockType: 'contentColumns';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1379,7 +1379,7 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
   blocks?:
     | T
     | {
-        columnUnit?: T | ColumnUnitBlockSelect<T>;
+        contentColumns?: T | ContentColumnsBlockSelect<T>;
         mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
         colorPalette?: T | ColorPaletteBlockSelect<T>;
         doDont?: T | DoDontBlockSelect<T>;
@@ -1400,9 +1400,9 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ColumnUnitBlock_select".
+ * via the `definition` "ContentColumnsBlock_select".
  */
-export interface ColumnUnitBlockSelect<T extends boolean = true> {
+export interface ContentColumnsBlockSelect<T extends boolean = true> {
   imageRatio?: T;
   columns?:
     | T
