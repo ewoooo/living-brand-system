@@ -1,8 +1,5 @@
 import type { CheckExecutor } from '@/features/asset-check/checkers/types'
-import {
-	findPublishedScenarioCheckRecords,
-	type ScenarioCheckRepositoryContext,
-} from '@/features/asset-check/repositories/available-scenario-check.payload.repository'
+import { findPublishedScenarioCheckRecords } from '@/features/asset-check/repositories/available-scenario-check.payload.repository'
 
 export interface AvailableScenarioCheck {
 	blockName: string
@@ -17,7 +14,7 @@ export interface AvailableScenarioCheck {
  * Payload 조회와 레코드 변환 I/O는 check-scenario repository가 소유한다.
  */
 export async function listAvailableScenarioChecks(
-	repositoryContext: ScenarioCheckRepositoryContext,
+	repositoryContext: Parameters<typeof findPublishedScenarioCheckRecords>[0],
 ): Promise<AvailableScenarioCheck[]> {
 	const records = await findPublishedScenarioCheckRecords(repositoryContext)
 	const byKey = new Map<string, AvailableScenarioCheck>()
@@ -54,7 +51,7 @@ export function validateCheckScenarioKey(value: unknown) {
  */
 export async function validateCheckScenarioKeys(
 	value: unknown,
-	repositoryContext: ScenarioCheckRepositoryContext,
+	repositoryContext: Parameters<typeof findPublishedScenarioCheckRecords>[0],
 ) {
 	if (!Array.isArray(value) || value.length === 0) return 'Check를 1개 이상 포함하세요.'
 	if (value.some((key) => typeof key !== 'string' || !key.trim())) {

@@ -1,9 +1,6 @@
 import { z } from 'zod'
 import { AUTHORIZED_ASSET_COLLECTIONS } from '@/types/json-template'
-import {
-	type AuthorizedAssetRepositoryContext,
-	findAuthorizedAssetsByIds,
-} from '../repositories/authorized-asset.payload.repository'
+import { findAuthorizedAssetsByIds } from '../repositories/authorized-asset.payload.repository'
 import {
 	type AuthorizedImageRef,
 	validateTemplateImages,
@@ -198,7 +195,7 @@ export function findTemplateRenderBlocker(candidate: TemplatePublishCandidate): 
  */
 export async function findTemplatePublishBlocker(
 	candidate: TemplatePublishCandidate,
-	repositoryContext: AuthorizedAssetRepositoryContext,
+	repositoryContext: Parameters<typeof findAuthorizedAssetsByIds>[0],
 ): Promise<string | null> {
 	const htmlValidation = htmlTemplateRefs(candidate)
 	let refs: AuthorizedImageRef[]
@@ -232,7 +229,7 @@ export async function findTemplatePublishBlocker(
 
 async function findInvalidAuthorizedRefs(
 	refs: AuthorizedImageRef[],
-	repositoryContext: AuthorizedAssetRepositoryContext,
+	repositoryContext: Parameters<typeof findAuthorizedAssetsByIds>[0],
 ): Promise<string[]> {
 	const invalidLabels: string[] = []
 
