@@ -1,7 +1,5 @@
-import type { Payload } from 'payload'
 import { z } from 'zod'
 import { AUTHORIZED_ASSET_COLLECTIONS } from '@/types/json-template'
-import { findAuthorizedAssetsByIds } from '../repositories/authorized-asset.payload.repository'
 import {
 	type AuthorizedImageRef,
 	validateTemplateImages,
@@ -55,6 +53,11 @@ interface TemplatePublishCandidate {
 }
 
 type ParsedOverrides = z.infer<typeof templateOverridesSchema>
+
+type FindAuthorizedAssetsByIds = (
+	collection: (typeof AUTHORIZED_ASSET_COLLECTIONS)[number],
+	assetIds: number[],
+) => Promise<Map<number, { url?: string | null }>>
 
 function nonEmptyString(value: unknown): value is string {
 	return typeof value === 'string' && value.trim() !== ''
@@ -195,8 +198,8 @@ export function findTemplateRenderBlocker(candidate: TemplatePublishCandidate): 
  * Payload 문서 조회만 authorized-asset repository에 맡긴다.
  */
 export async function findTemplatePublishBlocker(
-	payload: Payload,
 	candidate: TemplatePublishCandidate,
+	findAuthorizedAssetsByIds: FindAuthorizedAssetsByIds,
 ): Promise<string | null> {
 	const htmlValidation = htmlTemplateRefs(candidate)
 	let refs: AuthorizedImageRef[]
@@ -220,7 +223,7 @@ export async function findTemplatePublishBlocker(
 		refs = validation.authorizedRefs
 	}
 
-	const invalidRefLabels = await findInvalidAuthorizedRefs(payload, refs)
+	const invalidRefLabels = await findInvalidAuthorizedRefs(refs, findAuthorizedAssetsByIds)
 	if (invalidRefLabels.length > 0) {
 		return `인가 에셋 참조가 유효하지 않습니다: ${invalidRefLabels.join(', ')}. 미리보기에서 에셋을 다시 선택하세요.`
 	}
@@ -229,8 +232,8 @@ export async function findTemplatePublishBlocker(
 }
 
 async function findInvalidAuthorizedRefs(
-	payload: Payload,
 	refs: AuthorizedImageRef[],
+	findAuthorizedAssetsByIds: FindAuthorizedAssetsByIds,
 ): Promise<string[]> {
 	const invalidLabels: string[] = []
 
@@ -239,7 +242,6 @@ async function findInvalidAuthorizedRefs(
 		if (collectionRefs.length === 0) continue
 
 		const docsById = await findAuthorizedAssetsByIds(
-			payload,
 			collection,
 			collectionRefs.map((ref) => ref.assetId),
 		)

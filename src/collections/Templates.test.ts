@@ -207,6 +207,7 @@ describe('Templates beforeChange hook', () => {
 			expect.objectContaining({
 				collection: 'application-images',
 				draft: false,
+				req: request.req,
 				where: {
 					and: [{ id: { in: [7] } }, { _status: { equals: 'published' } }],
 				},
