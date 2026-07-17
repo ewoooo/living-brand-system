@@ -141,6 +141,7 @@ export interface Config {
     'template-assets': TemplateAsset;
     plugins: Plugin;
     'check-scenarios': CheckScenario;
+    rules: Rule;
     'rule-checkers': RuleChecker;
     'check-sessions': CheckSession;
     'agent-chat-sessions': AgentChatSession;
@@ -170,6 +171,7 @@ export interface Config {
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
     plugins: PluginsSelect<false> | PluginsSelect<true>;
     'check-scenarios': CheckScenariosSelect<false> | CheckScenariosSelect<true>;
+    rules: RulesSelect<false> | RulesSelect<true>;
     'rule-checkers': RuleCheckersSelect<false> | RuleCheckersSelect<true>;
     'check-sessions': CheckSessionsSelect<false> | CheckSessionsSelect<true>;
     'agent-chat-sessions': AgentChatSessionsSelect<false> | AgentChatSessionsSelect<true>;
@@ -736,6 +738,70 @@ export interface CheckScenario {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * 문서와 블록이 참조해 적용하는 검수 규칙 정의입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rules".
+ */
+export interface Rule {
+  id: number;
+  title: string;
+  titleKo?: string | null;
+  /**
+   * 최초 저장 시 영문 제목을 기준으로 자동 생성되는 안정적인 식별자입니다.
+   */
+  key: string;
+  tier: 'required' | 'recommended';
+  executor: 'deterministic' | 'heuristic' | 'manual';
+  /**
+   * 검수 실행 방식과 구현체를 선택합니다.
+   */
+  checker: number | RuleChecker;
+  /**
+   * 이 Rule에서 결정론적 Checker에 전달할 설정입니다.
+   */
+  options?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * AI가 관측할 질문과 통과 기준을 행 단위로 입력합니다.
+   */
+  criteria?:
+    | {
+        question: string;
+        kind: 'presence' | 'measure';
+        expected?: ('present' | 'absent') | null;
+        operator?: ('gte' | 'lte' | 'between') | null;
+        expectedValue?: number | null;
+        max?: number | null;
+        unit?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * AI가 이 Rule을 판단할 때 추가로 적용할 기준입니다. 선택 입력, 최대 2,000자.
+   */
+  heuristicPrompt?: string | null;
+  /**
+   * 결정론적 또는 수동 검수 결과에 표시할 메시지입니다.
+   */
+  messages?: {
+    pass?: string | null;
+    ok?: string | null;
+    needsReview?: string | null;
+    fail?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * 검수 실행 1회 단위의 세션 기록입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1263,6 +1329,10 @@ export interface PayloadLockedDocument {
         value: number | CheckScenario;
       } | null)
     | ({
+        relationTo: 'rules';
+        value: number | Rule;
+      } | null)
+    | ({
         relationTo: 'rule-checkers';
         value: number | RuleChecker;
       } | null)
@@ -1663,6 +1733,43 @@ export interface CheckScenariosSelect<T extends boolean = true> {
   checkKeys?: T;
   archived?: T;
   hasBeenPublished?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rules_select".
+ */
+export interface RulesSelect<T extends boolean = true> {
+  title?: T;
+  titleKo?: T;
+  key?: T;
+  tier?: T;
+  executor?: T;
+  checker?: T;
+  options?: T;
+  criteria?:
+    | T
+    | {
+        question?: T;
+        kind?: T;
+        expected?: T;
+        operator?: T;
+        expectedValue?: T;
+        max?: T;
+        unit?: T;
+        id?: T;
+      };
+  heuristicPrompt?: T;
+  messages?:
+    | T
+    | {
+        pass?: T;
+        ok?: T;
+        needsReview?: T;
+        fail?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2137,6 +2244,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'check-scenarios';
           value: number | CheckScenario;
+        } | null)
+      | ({
+          relationTo: 'rules';
+          value: number | Rule;
         } | null)
       | ({
           relationTo: 'rule-checkers';

@@ -27,6 +27,7 @@ import { CheckSessions } from './collections/CheckSessions'
 import { GuidelineDocuments } from './collections/GuidelineDocuments'
 import { Plugins } from './collections/Plugins'
 import { RuleCheckers } from './collections/RuleCheckers'
+import { Rules } from './collections/Rules'
 import { TemplateAssets } from './collections/TemplateAssets'
 import { TemplateCategories } from './collections/TemplateCategories'
 import { Templates } from './collections/Templates'
@@ -136,6 +137,7 @@ export default buildConfig({
 		TemplateAssets,
 		Plugins,
 		CheckScenarios,
+		Rules,
 		RuleCheckers,
 		CheckSessions,
 		AgentChatSessions,
