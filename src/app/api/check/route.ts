@@ -1,15 +1,9 @@
-import type { CheckSessionSource } from '@/features/asset-check/types'
 import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 import { startCheckSession } from '@/services/start-check-session.service'
 import { readCheckImage } from './read-check-image'
 
 export const maxDuration = 30
-
-function parseSource(value: FormDataEntryValue | null | undefined): CheckSessionSource {
-	if (value === 'mcp-call') return 'mcp-call'
-	return value === 'chat' ? 'chat' : 'review-page'
-}
 
 function parseScenarioKey(value: FormDataEntryValue | null | undefined): string | undefined {
 	return typeof value === 'string' && value ? value : undefined
@@ -39,7 +33,7 @@ export async function POST(req: Request) {
 			deferHeuristic: true,
 			imageName: image.name,
 			scenarioKey: parseScenarioKey(form?.get('scenarioKey')),
-			source: parseSource(form?.get('source')),
+			source: 'review-page',
 			user,
 		})
 

@@ -493,10 +493,10 @@ AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 아키텍
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Creator가 검수를 요청하면 System이 현재 AssetGenerationOutput을 복제하거나 참조 고정해 생성한다. |
+| 생성·수집 | Creator가 검수를 요청하면 System이 현재 입력을 참조 고정한다. 업로드 이미지는 실제 바이트에서 SHA-256·감지된 미디어 형식·바이트 크기를 만든다. |
 | 전송 | 검수 요청은 Creator UI에서 Client fetch route handler를 거쳐 Quality check service로 전달한다. |
-| 저장 | CheckSession과 연결해 저장하고 원본 AssetGenerationOutput 참조를 보관한다. |
-| 처리 | 검수 중 AssetGenerationOutput이 바뀌어도 CheckInputSnapshot은 변경하지 않는다. |
+| 저장 | 업로드 이미지는 CheckSession에 SHA-256·미디어 형식·바이트 크기를 저장하고 원본 바이트는 실행 중에만 유지한다. AssetGenerationOutput 참조 연결은 해당 입력 유형을 도입할 때 추가한다. |
+| 처리 | 후속 AI 검수는 세션 시작 시점의 지문과 실제 입력이 일치할 때만 결과를 병합한다. 지문이 없는 과거 세션은 신규 입력과 같다고 추정하지 않는다. |
 | 활용 | CheckTarget, CheckRun, Check History 조회의 기준 입력으로 사용한다. |
 | 공유·제공 | Agent에는 점검에 필요한 산출물 내용만 제공한다. |
 | 보관 | CheckSession과 CheckResult가 참조하는 동안 보관한다. |
@@ -511,7 +511,7 @@ AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 아키텍
 | --- | --- |
 | 생성·수집 | CheckInputSnapshot이 만들어지면 System이 CheckSession을 시작한다. |
 | 전송 | 검수 시작 요청은 Quality check service로 전달한다. |
-| 저장 | CheckTarget, CheckRun을 하위로 관리하고 상태와 이벤트를 저장한다. |
+| 저장 | 현재 구현은 입력 지문, ruleset snapshot, pending Check key, 결과, 상태, `createdBy`를 CheckSession에 평탄화해 저장한다. CheckTarget·CheckRun 하위 모델은 재검수 이력이 필요할 때 분리한다. |
 | 처리 | 점검 실행, 판정, 완료 상태를 같은 세션 안에서 묶는다. |
 | 활용 | Creator 검수 결과 조회와 운영자의 점검 이력 조회에 사용한다. |
 | 공유·제공 | 운영 조회에는 필요한 식별자와 상태만 제공한다. |

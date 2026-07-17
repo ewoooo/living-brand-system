@@ -3,12 +3,14 @@ import type {
 	CollectionConfig,
 	FieldHook,
 	JSONFieldValidation,
-	Payload,
 	PayloadRequest,
 	TextFieldValidation,
 } from 'payload'
-import { collectGuidelineCheckSources } from '@/features/guideline/checks/collect-guideline-check-sources'
-import { findPublishedUnifiedGuidelineCheckDocuments } from '@/features/guideline/repositories/published-guideline-checks.payload.repository'
+import {
+	listAvailableScenarioChecks,
+	validateCheckScenarioKey,
+	validateCheckScenarioKeys as validateCheckScenarioKeysUseCase,
+} from '@/features/asset-check/services/list-available-scenario-checks.service'
 import { authenticated, isManager, managerOrAdmin } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -24,60 +26,10 @@ const markPublished: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
 	return data
 }
 
-const validateScenarioKey: TextFieldValidation = (value) =>
-	(typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) ||
-	'Key는 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.'
-
-async function getAvailableChecks(payload: Payload, user: unknown, overrideAccess: boolean) {
-	const { documents } = await findPublishedUnifiedGuidelineCheckDocuments(payload, {
-		overrideAccess,
-		user,
-	})
-	const byKey = new Map<
-		string,
-		{
-			blockName: string
-			key: string
-			title: string
-			documentTitle: string
-			executor?: 'deterministic' | 'heuristic' | 'manual'
-		}
-	>()
-
-	for (const document of documents) {
-		for (const { blockName, check } of collectGuidelineCheckSources(document)) {
-			const checker = typeof check.checker === 'object' ? check.checker : null
-			byKey.set(check.key, {
-				blockName: blockName ?? '문서',
-				key: check.key,
-				title: check.titleKo?.trim() || check.title,
-				documentTitle: document.title,
-				executor: checker?.executor,
-			})
-		}
-	}
-
-	return [...byKey.values()].sort(
-		(a, b) =>
-			a.documentTitle.localeCompare(b.documentTitle, 'ko') ||
-			a.blockName.localeCompare(b.blockName, 'ko') ||
-			a.title.localeCompare(b.title, 'ko'),
-	)
-}
+const validateScenarioKey: TextFieldValidation = validateCheckScenarioKey
 
 export const validateCheckScenarioKeys: JSONFieldValidation = async (value, { req }) => {
-	if (!Array.isArray(value) || value.length === 0) return 'Check를 1개 이상 포함하세요.'
-	if (value.some((key) => typeof key !== 'string' || !key.trim())) {
-		return 'Check key는 비어 있지 않은 문자열이어야 합니다.'
-	}
-
-	const checkKeys = value as string[]
-	if (new Set(checkKeys).size !== checkKeys.length) return '중복된 Check가 있습니다.'
-
-	const available = await getAvailableChecks(req.payload, req.user, !req.user)
-	const availableKeys = new Set(available.map(({ key }) => key))
-	const missing = checkKeys.filter((key) => !availableKeys.has(key))
-	return missing.length > 0 ? `발행된 Guideline에 없는 Check입니다: ${missing.join(', ')}` : true
+	return validateCheckScenarioKeysUseCase(value, req)
 }
 
 async function availableChecksEndpoint(req: PayloadRequest) {
@@ -86,7 +38,7 @@ async function availableChecksEndpoint(req: PayloadRequest) {
 	}
 
 	return Response.json({
-		docs: await getAvailableChecks(req.payload, req.user, false),
+		docs: await listAvailableScenarioChecks(req),
 	})
 }
 

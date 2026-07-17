@@ -32,9 +32,11 @@ import { TemplateCategories } from './collections/TemplateCategories'
 import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
 import { env } from './env'
-import { collectGuidelineCheckSources } from './features/guideline/checks/collect-guideline-check-sources'
-import { formatCheckEvidence } from './features/guideline/checks/format-check-evidence'
-import { findPublishedUnifiedGuidelineCheckDocuments } from './features/guideline/repositories/published-guideline-checks.payload.repository'
+import {
+	findMcpChecks,
+	findMcpGuideline,
+	findMcpGuidelineDocuments,
+} from './features/guideline/services/find-mcp-guideline.service'
 import { buildGuidelineSearchText } from './features/guideline/utils/guideline-search-text'
 import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
@@ -71,9 +73,9 @@ const mcpListParameters = {
 	locale: z.enum(['ko', 'en']).optional(),
 	page: z.number().int().min(1).optional(),
 }
-const mcpLocale = (value: unknown) => (value === 'en' ? 'en' : 'ko')
-const mcpNumber = (value: unknown, fallback: number) =>
-	typeof value === 'number' ? value : fallback
+const mcpLocale = (value: unknown) => (value === 'en' || value === 'ko' ? value : undefined)
+const mcpNumber = (value: unknown) => (typeof value === 'number' ? value : undefined)
+const mcpLevel = (value: unknown) => (value === 1 || value === 2 || value === 3 ? value : undefined)
 type McpToolArgs = Record<string, unknown>
 type GetDefaultMcpAccessSettings = (overrideApiKey?: null | string) => Promise<MCPAccessSettings>
 
@@ -102,70 +104,7 @@ const mcpTextTool = (
 	}),
 })
 
-const findMcpGuidelineDocuments = async (args: McpToolArgs, req: PayloadRequest) => {
-	const result = await req.payload.find({
-		collection: 'guideline-documents',
-		depth: 1,
-		draft: false,
-		fallbackLocale: 'en',
-		limit: 2000,
-		locale: mcpLocale(args.locale),
-		overrideAccess: false,
-		pagination: false,
-		req,
-		sort: 'displayOrder',
-		user: req.user,
-		select: {
-			title: true,
-			slug: true,
-			description: true,
-			headerImage: true,
-			checks: true,
-			blocks: true,
-			displayOrder: true,
-			parent: true,
-			breadcrumbs: true,
-		},
-	})
-	const level = args.level === 1 || args.level === 2 || args.level === 3 ? args.level : null
-	const documents = level
-		? result.docs.filter((document) => document.breadcrumbs?.length === level)
-		: result.docs
-	const limit = mcpNumber(args.limit, level === 3 ? 20 : 100)
-	const page = mcpNumber(args.page, 1)
-	const totalPages = Math.ceil(documents.length / limit)
-
-	return {
-		docs: documents.slice((page - 1) * limit, page * limit),
-		hasNextPage: page < totalPages,
-		hasPrevPage: page > 1,
-		nextPage: page < totalPages ? page + 1 : null,
-		page,
-		pagingCounter: (page - 1) * limit + 1,
-		prevPage: page > 1 ? page - 1 : null,
-		totalDocs: documents.length,
-		totalPages,
-	}
-}
-// ponytail: custom MCP tools go here; keep each handler narrow and access-checked.
-// Example:
-// const customMcpTools = [
-// 	mcpTextTool(
-// 		'findLiveTemplates',
-// 		'Find live templates available to the authenticated MCP user.',
-// 		mcpListParameters,
-// 		(args, req) =>
-// 			req.payload.find({
-// 				collection: 'templates',
-// 				limit: mcpNumber(args.limit, 20),
-// 				overrideAccess: false,
-// 				page: mcpNumber(args.page, 1),
-// 				req,
-// 				user: req.user,
-// 				where: { status: { equals: 'live' } },
-// 			}),
-// 	),
-// ]
+// ponytail: custom MCP tools only wire validated input to a feature service here.
 const customMcpTools: ReturnType<typeof mcpTextTool>[] = []
 
 export default buildConfig({
@@ -267,59 +206,30 @@ export default buildConfig({
 							...mcpListParameters,
 							level: z.number().int().min(1).max(3).optional(),
 						},
-						findMcpGuidelineDocuments,
+						(args, req) =>
+							findMcpGuidelineDocuments(req, {
+								level: mcpLevel(args.level),
+								limit: mcpNumber(args.limit),
+								locale: mcpLocale(args.locale),
+								page: mcpNumber(args.page),
+							}),
 					),
 					mcpTextTool(
 						'findChecks',
 						'Find checks declared by published guideline documents and blocks.',
 						mcpListParameters,
-						async (args, req) => {
-							const { documents } = await findPublishedUnifiedGuidelineCheckDocuments(
-								req.payload,
-								{
-									locale: mcpLocale(args.locale),
-									overrideAccess: false,
-									user: req.user,
-								},
-							)
-							const checks = documents
-								.flatMap((document) =>
-									collectGuidelineCheckSources(document).map(
-										({ check, evidence, source }) => ({
-											key: check.key,
-											title: check.title,
-											tier: check.tier,
-											evidence: formatCheckEvidence(evidence),
-											source,
-										}),
-									),
-								)
-								.sort((a, b) => a.key.localeCompare(b.key))
-							const limit = mcpNumber(args.limit, 100)
-							const page = mcpNumber(args.page, 1)
-							return {
-								docs: checks.slice((page - 1) * limit, page * limit),
-								page,
-								totalDocs: checks.length,
-								totalPages: Math.ceil(checks.length / limit),
-							}
-						},
+						(args, req) =>
+							findMcpChecks(req, {
+								limit: mcpNumber(args.limit),
+								locale: mcpLocale(args.locale),
+								page: mcpNumber(args.page),
+							}),
 					),
 					mcpTextTool(
 						'findGuideline',
 						'Find live top-level guideline document metadata.',
 						{ locale: z.enum(['ko', 'en']).optional() },
-						(args, req) =>
-							req.payload.findGlobal({
-								slug: 'guideline',
-								depth: 1,
-								draft: false,
-								fallbackLocale: 'en',
-								locale: mcpLocale(args.locale),
-								overrideAccess: false,
-								req,
-								user: req.user,
-							}),
+						(args, req) => findMcpGuideline(req, { locale: mcpLocale(args.locale) }),
 					),
 					...customMcpTools,
 				],

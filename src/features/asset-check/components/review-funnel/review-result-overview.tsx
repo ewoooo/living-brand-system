@@ -1,5 +1,5 @@
 import { CheckResultSummary } from '@/features/asset-check/components/result/check-result-summary'
-import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
+import type { CheckSection } from '@/features/asset-check/domain/runtime-check'
 
 /** 서버의 `CheckSection[]`과 선택 이미지의 `results[checkKey]`를 상태별 개수로 요약한다. */
 export function ReviewResultOverview({ sections }: { sections: CheckSection[] }) {

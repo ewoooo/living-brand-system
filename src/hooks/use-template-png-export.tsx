@@ -79,25 +79,134 @@ export function useTemplatePngExport({
 	return { exportPng, isExporting, exportError, exportNode }
 }
 
-/**
- * 샌드박스(iframe)가 반송한 최종 배치 HTML(전부 인라인 style)을 화면 밖에 심어 PNG로 저장한다.
- * 코드 실행 템플릿은 최종 좌표가 iframe DOM에만 있으므로 부모가 그 outerHTML을 재현해 캡처한다.
- * ponytail: html이 iframe(미검증 코드)에서 오므로 innerHTML은 XSS 천장이 있다 — 현재 템플릿 코드는
- * 1급(우리/manager 저작)이라 허용. 서드파티 plugin 개방 전엔 sanitize하거나 iframe 내부 캡처로 올릴 것.
- */
-export async function exportHtmlToPng(html: string, css: string, fileName: string): Promise<void> {
+const EXPORT_TAGS = new Set(['div', 'img', 'p'])
+const EXPORT_DATA_ATTRIBUTES = new Set([
+	'data-asset-collection',
+	'data-asset-id',
+	'data-figma-type',
+	'data-name',
+	'data-nimg',
+	'data-node-id',
+])
+const EXPORT_IMAGE_ATTRIBUTES = new Set(['alt', 'decoding', 'height', 'loading', 'sizes', 'width'])
+const CSS_URL_PATTERN = /url\(\s*(?:"([^"]+)"|'([^']+)'|([^"'()\s]+))\s*\)/gi
+
+function isSafeExportUrl(value: string): boolean {
+	if (
+		value.startsWith('data:image/png;base64,') ||
+		value.startsWith('data:image/jpeg;base64,') ||
+		value.startsWith('data:image/webp;base64,')
+	) {
+		return value.length <= 14 * 1024 * 1024
+	}
+
+	const url = new URL(value, window.location.origin)
+	if (url.protocol === 'blob:') return url.origin === window.location.origin
+	if (url.origin !== window.location.origin || url.search || url.hash) return false
+	return ['brand-logos', 'application-images'].some((collection) =>
+		url.pathname.startsWith(`/api/${collection}/file/`),
+	)
+}
+
+function cssUrls(value: string): string[] | null {
+	const urls: string[] = []
+	const remainder = value.replace(CSS_URL_PATTERN, (_match, double, single, bare) => {
+		urls.push(double ?? single ?? bare)
+		return ''
+	})
+	if (/url\s*\(|(?:-webkit-)?image-set\s*\(/i.test(remainder)) return null
+	return urls
+}
+
+function copySafeStyle(source: HTMLElement, target: HTMLElement) {
+	for (let index = 0; index < source.style.length; index += 1) {
+		const property = source.style.item(index)
+		const value = source.style.getPropertyValue(property)
+		if (value.includes('\\')) {
+			throw new Error('Template export contains an unsafe CSS escape.')
+		}
+		const urls = cssUrls(value)
+		if (!urls || urls.some((url) => !isSafeExportUrl(url))) {
+			throw new Error('Template export contains an unsafe CSS URL.')
+		}
+		target.style.setProperty(property, value, source.style.getPropertyPriority(property))
+	}
+}
+
+function cloneSafeExportNode(node: Node): Node | null {
+	if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent ?? '')
+	if (!(node instanceof HTMLElement)) return null
+
+	const tagName = node.tagName.toLowerCase()
+	if (!EXPORT_TAGS.has(tagName)) throw new Error('Template export contains an unsafe tag.')
+
+	const clone = document.createElement(tagName)
+	for (const attribute of node.attributes) {
+		const name = attribute.name.toLowerCase()
+		if (name.startsWith('on')) throw new Error('Template export contains an event handler.')
+		if (name === 'id' || EXPORT_DATA_ATTRIBUTES.has(name)) {
+			clone.setAttribute(name, attribute.value)
+		} else if (tagName === 'img' && name === 'src') {
+			if (!isSafeExportUrl(attribute.value)) {
+				throw new Error('Template export contains an unsafe image URL.')
+			}
+			clone.setAttribute(name, attribute.value)
+		} else if (tagName === 'img' && EXPORT_IMAGE_ATTRIBUTES.has(name)) {
+			clone.setAttribute(name, attribute.value)
+		}
+	}
+	copySafeStyle(node, clone)
+
+	for (const child of node.childNodes) {
+		const safeChild = cloneSafeExportNode(child)
+		if (safeChild) clone.appendChild(safeChild)
+	}
+	return clone
+}
+
+function createSafeExportStage(
+	html: string,
+	css: string,
+): { holder: HTMLDivElement; stage: HTMLElement } {
+	if (
+		/[\\@]/.test(css) ||
+		/\/\*|\*\//.test(css) ||
+		/url\s*\(|(?:-webkit-)?image-set\s*\(/i.test(css)
+	) {
+		throw new Error('Template export contains unsafe stylesheet I/O.')
+	}
+
+	// template.content는 inert DOM이라 script/event/resource를 실행하지 않는다. 검증한 노드만 새로 만든다.
+	const parsed = document.createElement('template')
+	parsed.innerHTML = html
 	const holder = document.createElement('div')
 	holder.style.cssText = 'position:fixed;left:-99999px;top:0'
-	// holder 자체를 캡처하면 안 된다 — html-to-image가 캡처 노드의 computed style을
-	// 클론에 복사해 fixed 오프셋까지 실리므로 캔버스 밖에 그려져 투명 PNG가 된다.
-	holder.innerHTML = `<style>${css}</style><div data-export-stage>${html}</div>`
+	const shadow = holder.attachShadow({ mode: 'closed' })
+	const style = document.createElement('style')
+	style.textContent = css
+	const wrapper = document.createElement('div')
+	wrapper.dataset.exportStage = ''
+	for (const child of parsed.content.childNodes) {
+		const safeChild = cloneSafeExportNode(child)
+		if (safeChild) wrapper.appendChild(safeChild)
+	}
+	shadow.append(style, wrapper)
+
+	return {
+		holder,
+		stage: wrapper.querySelector<HTMLElement>('#__stage') ?? wrapper,
+	}
+}
+
+/**
+ * 샌드박스가 반송한 최종 배치 HTML을 inert DOM에서 검증·복제하고 Shadow DOM 안에서 PNG로 저장한다.
+ * 외부 I/O URL, 실행 태그/속성, 전역 CSS는 부모 문서 경계를 넘지 못한다.
+ */
+export async function exportHtmlToPng(html: string, css: string, fileName: string): Promise<void> {
+	const { holder, stage } = createSafeExportStage(html, css)
 	document.body.appendChild(holder)
 	try {
 		await new Promise((resolve) => requestAnimationFrame(resolve))
-		const stage =
-			holder.querySelector<HTMLElement>('#__stage') ??
-			holder.querySelector<HTMLElement>('[data-export-stage]') ??
-			holder
 		await Promise.all(
 			Array.from(stage.querySelectorAll('img')).map(async (image) => {
 				if (!image.complete) {

@@ -8,19 +8,17 @@ import {
 	measureObservationSchema,
 	presenceObservationSchema,
 } from '@/features/asset-check/domain/heuristic.evaluator'
+import type { CheckReferenceAsset, RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
 	compressForAiReference,
 	resizeForAiVision,
 } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
-import type {
-	CheckReferenceAsset,
-	RuntimeCheck,
-} from '@/features/asset-check/services/get-check-ruleset.service'
 
 export interface AiCheckRunResult {
 	observations: Record<string, Record<string, HeuristicObservation>>
 	advices: Record<string, string>
 	failure?: { detail: string; reasonCode: string }
+	unavailableReferenceCheckKeys?: string[]
 	aiUsage?: AiUsage
 }
 
@@ -44,12 +42,33 @@ export async function runAiCheck(
 		return failed('AI 검사 도구 설정 오류', 'ai_checker_invalid')
 	}
 
+	let unavailableReferenceCheckKeys: string[] | undefined
 	try {
-		const [targetImage, referenceFiles] = await Promise.all([
+		const [targetImage, referenceFilesByKey] = await Promise.all([
 			resizeForAiVision(ctx.image.data),
 			loadReferenceFiles(checks),
 		])
-		const schema = buildAiCheckSchema(checks)
+		unavailableReferenceCheckKeys = checks
+			.filter((check) =>
+				check.referenceAssets.some(
+					(asset) => !referenceFilesByKey.get(referenceAssetKey(asset)),
+				),
+			)
+			.map((check) => check.key)
+		const runnableChecks = checks.filter(
+			(check) => !unavailableReferenceCheckKeys?.includes(check.key),
+		)
+		if (runnableChecks.length === 0) {
+			return { observations: {}, advices: {}, unavailableReferenceCheckKeys }
+		}
+		const referenceKeys = new Set(
+			runnableChecks.flatMap((check) => check.referenceAssets.map(referenceAssetKey)),
+		)
+		const referenceFiles = [...referenceKeys].flatMap((key) => {
+			const file = referenceFilesByKey.get(key)
+			return file ? [file] : []
+		})
+		const schema = buildAiCheckSchema(runnableChecks)
 		const { output, usage } = await generateText({
 			model: anthropic(model),
 			output: Output.object({ schema }),
@@ -61,7 +80,7 @@ export async function runAiCheck(
 			maxOutputTokens: Math.min(
 				64000,
 				2000 +
-					checks.reduce(
+					runnableChecks.reduce(
 						(sum, check) =>
 							sum +
 							(check.executor === 'manual'
@@ -97,7 +116,7 @@ export async function runAiCheck(
 						{
 							type: 'text',
 							text: JSON.stringify({
-								checks: checks.map((check) => ({
+								checks: runnableChecks.map((check) => ({
 									key: check.key,
 									kind: check.executor === 'manual' ? 'advisory' : 'criteria',
 									titleEn: check.title,
@@ -155,24 +174,25 @@ export async function runAiCheck(
 		>
 		return {
 			observations: Object.fromEntries(
-				checks
+				runnableChecks
 					.filter((check) => check.executor !== 'manual')
 					.map((check) => [check.key, results[check.key]?.observations ?? {}]),
 			),
 			advices: Object.fromEntries(
-				checks.flatMap((check) => {
+				runnableChecks.flatMap((check) => {
 					const advice = results[check.key]?.advice
 					return check.executor === 'manual' && advice ? [[check.key, advice]] : []
 				}),
 			),
+			...(unavailableReferenceCheckKeys.length ? { unavailableReferenceCheckKeys } : {}),
 			aiUsage: toAiUsage(model, usage),
 		}
 	} catch (error) {
 		// 실패는 needs_review로만 수렴해 원인이 숨는다. 진단용으로 사유는 남긴다.
 		console.error('[ai-check] AI 평가 실패:', error instanceof Error ? error.message : error)
 		return NoObjectGeneratedError.isInstance(error)
-			? failed('AI 관측값 형식 오류', 'ai_output_invalid')
-			: failed('AI 평가 실패', 'ai_request_failed')
+			? failed('AI 관측값 형식 오류', 'ai_output_invalid', unavailableReferenceCheckKeys)
+			: failed('AI 평가 실패', 'ai_request_failed', unavailableReferenceCheckKeys)
 	}
 }
 
@@ -219,30 +239,41 @@ function toAiUsage(model: string, usage: LanguageModelUsage): AiUsage {
 async function loadReferenceFiles(checks: RuntimeCheck[]) {
 	const assets = new Map<string, CheckReferenceAsset>()
 	for (const check of checks) {
-		for (const asset of check.referenceAssets) assets.set(`${asset.url}:${asset.role}`, asset)
+		for (const asset of check.referenceAssets) assets.set(referenceAssetKey(asset), asset)
 	}
 
 	const files = await Promise.all(
-		[...assets.values()].map(async (asset) => {
-			const raw = await readReferenceAsset(asset)
-			if (!raw) return null
-			const { data, mediaType } = await compressForAiReference(raw, asset.mimeType)
-			return {
-				name: asset.name,
-				role: asset.role,
-				mediaType,
-				data,
+		[...assets].map(async ([key, asset]) => {
+			try {
+				const raw = await readReferenceAsset(asset)
+				if (!raw) return [key, null] as const
+				const { data, mediaType } = await compressForAiReference(raw, asset.mimeType)
+				return [
+					key,
+					{
+						name: asset.name,
+						role: asset.role,
+						mediaType,
+						data,
+					},
+				] as const
+			} catch {
+				return [key, null] as const
 			}
 		}),
 	)
 
-	return files.filter((file) => file !== null)
+	return new Map(files)
 }
 
 async function readReferenceAsset(asset: CheckReferenceAsset): Promise<Buffer | null> {
-	const response = await fetch(toAbsoluteUrl(asset.url)).catch(() => null)
-	if (!response?.ok) return null
+	const response = await fetch(toAbsoluteUrl(asset.url))
+	if (!response.ok) return null
 	return Buffer.from(await response.arrayBuffer())
+}
+
+function referenceAssetKey(asset: CheckReferenceAsset) {
+	return `${asset.url}:${asset.role}`
 }
 
 function toAbsoluteUrl(url: string) {
@@ -253,6 +284,15 @@ function toAbsoluteUrl(url: string) {
 	return new URL(url, origin).toString()
 }
 
-function failed(detail: string, reasonCode: string): AiCheckRunResult {
-	return { observations: {}, advices: {}, failure: { detail, reasonCode } }
+function failed(
+	detail: string,
+	reasonCode: string,
+	unavailableReferenceCheckKeys?: string[],
+): AiCheckRunResult {
+	return {
+		observations: {},
+		advices: {},
+		failure: { detail, reasonCode },
+		...(unavailableReferenceCheckKeys?.length ? { unavailableReferenceCheckKeys } : {}),
+	}
 }

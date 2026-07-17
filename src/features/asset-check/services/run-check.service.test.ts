@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import { runAiCheck } from '@/features/asset-check/repositories/ai-check.agent.repository'
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
-import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { ImageContentFlags } from '@/features/asset-check/types'
 import { runHeuristicCheck, runImmediateCheck } from './run-check.service'
 
@@ -120,6 +120,24 @@ describe('runHeuristicCheck', () => {
 			fulfillment: null,
 			detail: 'AI 관측값 형식 오류',
 			reasonCode: 'ai_output_invalid',
+		})
+	})
+
+	it('레퍼런스 fetch 실패 Check는 명시적 needs_review로 연결한다', async () => {
+		vi.mocked(runAiCheck).mockResolvedValue({
+			observations: {},
+			advices: {},
+			failure: { detail: 'AI 평가 실패', reasonCode: 'ai_request_failed' },
+			unavailableReferenceCheckKeys: [check.key],
+		})
+
+		const result = await runHeuristicCheck(png, [check.key], [check])
+
+		expect(result.results[check.key]?.rawResult).toEqual({
+			status: 'needs_review',
+			fulfillment: null,
+			detail: '레퍼런스 이미지 불러오기 실패',
+			reasonCode: 'reference_asset_unavailable',
 		})
 	})
 

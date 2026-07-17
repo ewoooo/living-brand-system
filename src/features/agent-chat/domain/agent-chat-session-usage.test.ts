@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createAgentChatSessionUsageCollector } from '@/features/agent-chat/services/collect-agent-chat-session-usage.service'
+import { createAgentChatSessionUsageCollector } from './agent-chat-session-usage'
 
 describe('createAgentChatSessionUsageCollector', () => {
 	it('counts used tools and selected skills from agent steps', () => {

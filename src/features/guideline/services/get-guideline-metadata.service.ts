@@ -19,49 +19,23 @@ export interface GetGuidelineMetadataOutput {
  * Payload 조회는 guideline-view repository가 소유한다.
  */
 export const getGuidelineMetadata = cache(async (): Promise<GetGuidelineMetadataOutput> => {
-	try {
-		const guideline = await findGuidelineMetadataGlobal()
-		const primaryHex = getColorHex(guideline.primaryColor)
-		const primaryDarkHex = getColorHex(guideline.primaryColorDark) ?? primaryHex
+	const guideline = await findGuidelineMetadataGlobal()
+	const primaryHex = normalizeHex(guideline.primaryHex)
+	const primaryDarkHex = normalizeHex(guideline.primaryDarkHex) ?? primaryHex
 
-		return {
-			companyName: guideline.companyName,
-			documentTitle: guideline.documentTitle,
-			faviconHref: getUploadUrl(guideline.favicon),
-			issuedLabel: guideline.issuedLabel || null,
-			primaryDarkForegroundHex: primaryDarkHex
-				? getContrastingForeground(primaryDarkHex)
-				: null,
-			primaryDarkHex,
-			primaryForegroundHex: primaryHex ? getContrastingForeground(primaryHex) : null,
-			primaryHex,
-		}
-	} catch {
-		return {
-			companyName: 'Unconfigured Company',
-			documentTitle: 'Living Brand System',
-			faviconHref: null,
-			issuedLabel: null,
-			primaryDarkForegroundHex: null,
-			primaryDarkHex: null,
-			primaryForegroundHex: null,
-			primaryHex: null,
-		}
+	return {
+		companyName: guideline.companyName,
+		documentTitle: guideline.documentTitle,
+		faviconHref: guideline.faviconHref,
+		issuedLabel: guideline.issuedLabel,
+		primaryDarkForegroundHex: primaryDarkHex ? getContrastingForeground(primaryDarkHex) : null,
+		primaryDarkHex,
+		primaryForegroundHex: primaryHex ? getContrastingForeground(primaryHex) : null,
+		primaryHex,
 	}
 })
 
-function getColorHex(value: unknown): string | null {
-	if (!value || typeof value !== 'object' || !('hex' in value) || typeof value.hex !== 'string') {
-		return null
-	}
-
-	return isValidHex(value.hex) ? (value.hex.startsWith('#') ? value.hex : `#${value.hex}`) : null
-}
-
-function getUploadUrl(value: unknown): string | null {
-	if (!value || typeof value !== 'object' || !('url' in value)) {
-		return null
-	}
-
-	return typeof value.url === 'string' ? value.url : null
+function normalizeHex(value: string | null): string | null {
+	if (!value || !isValidHex(value)) return null
+	return value.startsWith('#') ? value : `#${value}`
 }

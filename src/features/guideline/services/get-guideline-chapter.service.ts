@@ -2,7 +2,6 @@ import {
 	findPublishedChapterBySlug,
 	listPublishedSectionsByChapter,
 } from '../repositories/guideline-view.payload.repository'
-import { extractTextFromLexical } from '../utils/lexical-text'
 
 export interface GetGuidelineChapterOutput {
 	title: string
@@ -24,27 +23,23 @@ export interface GetGuidelineChapterOutput {
 export async function getGuidelineChapter(
 	chapterSlug: string,
 ): Promise<GetGuidelineChapterOutput | null> {
-	try {
-		const chapter = await findPublishedChapterBySlug(chapterSlug)
+	const chapter = await findPublishedChapterBySlug(chapterSlug)
 
-		if (!chapter) {
-			return null
-		}
-
-		const sections = await listPublishedSectionsByChapter(chapter.id)
-
-		return {
-			title: chapter.title,
-			label: chapter.label || null,
-			description: extractTextFromLexical(chapter.description) || null,
-			sections: sections.map((section) => ({
-				id: section.id,
-				title: section.title,
-				slug: section.slug,
-				description: extractTextFromLexical(section.description) || null,
-			})),
-		}
-	} catch {
+	if (!chapter) {
 		return null
+	}
+
+	const sections = await listPublishedSectionsByChapter(chapter.id)
+
+	return {
+		title: chapter.title,
+		label: chapter.label,
+		description: chapter.description,
+		sections: sections.map((section) => ({
+			id: section.id,
+			title: section.title,
+			slug: section.slug,
+			description: section.description,
+		})),
 	}
 }

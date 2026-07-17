@@ -1,6 +1,9 @@
 import type { AiUsage, CheckResult } from '@/features/asset-check/checkers/types'
-import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
-import type { CheckSession as CheckSessionRecord } from '@/payload-types'
+import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
+import type { CheckImageMediaType } from '@/features/asset-check/utils/image-format'
+
+export type CheckSessionStatus = 'running' | 'completed' | 'failed'
+export type CheckSessionSource = 'mcp-call' | 'review-page' | 'chat'
 
 /** 종결(completed/failed)된 세션에 전이를 시도했을 때의 방어선. 정상 경로에서는 나오지 않는다. */
 export class CheckSessionStateError extends Error {}
@@ -8,8 +11,20 @@ export class CheckSessionStateError extends Error {}
 /** failed 세션에 AI 후속 검수를 요청했을 때. API route가 409로 변환한다. */
 export class CheckSessionTerminalError extends Error {}
 
+/** 요청한 사용자가 소유한 CheckSession을 찾지 못했을 때. */
+export class CheckSessionNotFoundError extends Error {}
+
+/** AI 후속 요청의 이미지가 세션 시작 시점의 입력과 다를 때. */
+export class CheckSessionInputMismatchError extends Error {}
+
+export interface CheckSessionInputSnapshot {
+	sha256: string
+	mediaType: CheckImageMediaType
+	byteLength: number
+}
+
 export interface CheckSessionUpdateData {
-	status: CheckSessionRecord['status']
+	status: CheckSessionStatus
 	results: Record<string, CheckResult>
 	pendingCheckKeys: string[]
 	aiUsage?: AiUsage
@@ -17,37 +32,47 @@ export interface CheckSessionUpdateData {
 	completedAt?: string
 }
 
+export interface CheckSessionSnapshot {
+	id: number
+	status: CheckSessionStatus
+	results: Record<string, CheckResult>
+	pendingCheckKeys: string[]
+	rulesetSnapshot?: RuntimeCheck[]
+	inputSnapshot?: CheckSessionInputSnapshot
+	aiUsage?: AiUsage
+	errorMessage?: string
+	completedAt?: string
+}
+
 /**
  * 검수 세션 Aggregate — running → completed/failed 전이와 결과 병합 규칙을 소유한다.
- * pending이 비는 순간 스스로 완료하며, 호출자는 완료 조건을 계산하지 않는다.
+ * pending이 비고 ruleset의 모든 key가 종결 결과를 가질 때 스스로 완료한다.
  * Payload 레코드와의 변환은 check-session repository만 수행한다.
  */
 export class CheckSession {
 	private constructor(
 		readonly id: number,
-		private _status: CheckSessionRecord['status'],
+		private _status: CheckSessionStatus,
 		private _results: Record<string, CheckResult>,
 		private _pendingCheckKeys: string[],
 		readonly rulesetSnapshot: RuntimeCheck[] | undefined,
+		private readonly inputSnapshot: CheckSessionInputSnapshot | undefined,
 		private _aiUsage: AiUsage | undefined,
 		private _errorMessage: string | undefined,
 		private _completedAt: string | undefined,
 	) {}
 
-	static fromRecord(record: CheckSessionRecord): CheckSession {
+	static restore(snapshot: CheckSessionSnapshot): CheckSession {
 		return new CheckSession(
-			record.id,
-			record.status,
-			(record.results ?? {}) as Record<string, CheckResult>,
-			Array.isArray(record.pendingCheckKeys)
-				? record.pendingCheckKeys.filter((key): key is string => typeof key === 'string')
-				: [],
-			Array.isArray(record.rulesetSnapshot)
-				? (record.rulesetSnapshot as RuntimeCheck[])
-				: undefined,
-			(record.aiUsage ?? undefined) as AiUsage | undefined,
-			record.errorMessage ?? undefined,
-			record.completedAt ?? undefined,
+			snapshot.id,
+			snapshot.status,
+			{ ...snapshot.results },
+			[...snapshot.pendingCheckKeys],
+			snapshot.rulesetSnapshot,
+			snapshot.inputSnapshot,
+			snapshot.aiUsage,
+			snapshot.errorMessage,
+			snapshot.completedAt,
 		)
 	}
 
@@ -69,6 +94,18 @@ export class CheckSession {
 
 	get isFailed() {
 		return this._status === 'failed'
+	}
+
+	/** 세션에 고정된 입력 지문과 후속 요청의 실제 바이트가 같은지 검증한다. */
+	assertInputMatches(actual: CheckSessionInputSnapshot): void {
+		if (
+			!this.inputSnapshot ||
+			this.inputSnapshot.sha256 !== actual.sha256 ||
+			this.inputSnapshot.mediaType !== actual.mediaType ||
+			this.inputSnapshot.byteLength !== actual.byteLength
+		) {
+			throw new CheckSessionInputMismatchError('Check session input does not match.')
+		}
 	}
 
 	/** 즉시(deterministic/manual) 판정 결과와 남은 AI Check 목록을 반영한다. */
@@ -113,6 +150,19 @@ export class CheckSession {
 
 	private completeIfDone(): void {
 		if (this._pendingCheckKeys.length > 0) return
+		if (this.rulesetSnapshot) {
+			const expectedKeys = new Set(this.rulesetSnapshot.map((check) => check.key))
+			const resultKeys = Object.keys(this._results)
+			const missingKeys = [...expectedKeys].filter(
+				(key) => !Object.hasOwn(this._results, key),
+			)
+			const unexpectedKeys = resultKeys.filter((key) => !expectedKeys.has(key))
+			if (expectedKeys.size === 0 || missingKeys.length > 0 || unexpectedKeys.length > 0) {
+				throw new CheckSessionStateError(
+					`completeIfDone: Check result coverage mismatch (missing: ${missingKeys.join(', ') || '-'}, unexpected: ${unexpectedKeys.join(', ') || '-'})`,
+				)
+			}
+		}
 		this._status = 'completed'
 		this._completedAt = new Date().toISOString()
 	}

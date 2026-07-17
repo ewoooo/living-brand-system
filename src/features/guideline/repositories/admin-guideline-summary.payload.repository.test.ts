@@ -1,27 +1,29 @@
 import { getPayload } from 'payload'
 import { describe, expect, it, vi } from 'vitest'
-import { findAdminGuidelineSummary } from './admin-guideline-summary.payload.repository'
+import { listAdminGuidelineSummaryDocuments } from './admin-guideline-summary.payload.repository'
 
 vi.mock('@payload-config', () => ({ default: {} }))
 vi.mock('payload', () => ({ getPayload: vi.fn() }))
 
-describe('findAdminGuidelineSummary', () => {
-	it('통합 문서를 breadcrumb 깊이별로 한 번 집계한다', async () => {
+describe('listAdminGuidelineSummaryDocuments', () => {
+	it('통합 문서를 breadcrumb ID와 평탄화된 Check key DTO로 변환한다', async () => {
 		const find = vi.fn().mockResolvedValue({
 			docs: [
-				{ breadcrumbs: [{}], checks: [{ key: 'chapter' }], blocks: [] },
-				{ breadcrumbs: [{}, {}], checks: [], blocks: [{ checks: [{ key: 'section' }] }] },
-				{ breadcrumbs: [{}, {}, {}], checks: [{ key: 'page' }], blocks: [] },
+				{
+					breadcrumbs: [{ doc: 1 }, { doc: { broken: true } }],
+					checks: [{ key: 'document-check' }],
+					blocks: [{ checks: [{ key: 'block-check' }] }],
+				},
 			],
 		})
 		vi.mocked(getPayload).mockResolvedValue({ find } as never)
 
-		await expect(findAdminGuidelineSummary()).resolves.toEqual({
-			checks: 3,
-			chapters: 1,
-			sections: 1,
-			pages: 1,
-		})
+		await expect(listAdminGuidelineSummaryDocuments()).resolves.toEqual([
+			{
+				breadcrumbDocumentIds: [1, -1],
+				checkKeys: ['document-check', 'block-check'],
+			},
+		])
 		expect(find).toHaveBeenCalledTimes(1)
 		expect(find).toHaveBeenCalledWith(
 			expect.objectContaining({ collection: 'guideline-documents' }),

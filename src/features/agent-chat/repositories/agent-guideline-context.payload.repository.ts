@@ -1,61 +1,53 @@
 import config from '@payload-config'
 import { getPayload, type Where } from 'payload'
-import { collectGuidelineCheckSources } from '@/features/guideline/checks/collect-guideline-check-sources'
-import { formatCheckEvidence } from '@/features/guideline/checks/format-check-evidence'
+import type { GuidelineCheckDocument } from '@/features/guideline/blocks/check-source-snapshot'
 import { findPublishedUnifiedGuidelineCheckDocuments } from '@/features/guideline/repositories/published-guideline-checks.payload.repository'
+import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
 import type { GuidelineDocument } from '@/payload-types'
 
 type AgentGuidelineDocumentData = Pick<
 	GuidelineDocument,
-	| 'id'
-	| 'title'
-	| 'slug'
-	| 'description'
-	| 'headerImage'
-	| 'blocks'
-	| 'checks'
-	| 'parent'
-	| 'breadcrumbs'
->
+	'id' | 'title' | 'slug' | 'description' | 'headerImage' | 'blocks' | 'checks'
+> & {
+	breadcrumbs: { label: string | null; url: string | null }[]
+	descriptionText: string
+}
 
-export type AgentGuidelineListItem = Pick<
-	GuidelineDocument,
-	'id' | 'title' | 'parent' | 'breadcrumbs'
->
-
-type AgentGuidelineChild = Pick<GuidelineDocument, 'id' | 'title' | 'slug' | 'description'>
-
-export interface AgentCheckCatalogItem {
-	evidence: string
-	key: string
-	tier: 'recommended' | 'required' | null
+export interface AgentGuidelineListItem {
+	id: number
+	level: number
+	parentId: number | null
 	title: string
 }
 
-export type AgentGuidelineSearchResult = {
+type AgentGuidelineChild = {
+	descriptionText: string
+	id: number
+	slug: string
 	title: string
-	collection: 'guideline-documents'
-	id: string
 }
 
 export type AgentGuidelineDocument = {
 	collection: 'guideline-documents'
 	document: AgentGuidelineDocumentData
 	children: AgentGuidelineChild[]
-	checks: AgentCheckCatalogItem[]
 }
 
 type SearchDoc = {
 	title?: string | null
 	doc?: {
 		relationTo?: string | null
-		value?: string | number | null
+		value?: string | number | { id: string | number } | null
 	} | null
 }
 
-const SEARCH_RESULT_LIMIT = 10
 const SEARCH_CANDIDATE_LIMIT = 20
-const SEARCH_TERM_LIMIT = 8
+
+export type AgentGuidelineSearchCandidate = {
+	collection: string
+	id: string
+	title: string
+}
 
 /** published+ko(en fallback)+접근제어 공통 조회 옵션 — 이 repo의 가이드라인 질의 전부가 쓴다. */
 const publishedKoQuery = (user: unknown) => ({
@@ -81,70 +73,67 @@ export async function listGuidelineDocuments(user: unknown): Promise<AgentGuidel
 		},
 	})
 
-	return documents.docs
+	return documents.docs.map((document) => ({
+		id: document.id,
+		level: document.breadcrumbs?.length ?? 1,
+		parentId: relationshipId(document.parent),
+		title: document.title,
+	}))
 }
 
-export async function searchGuidelineDocuments(
+export async function findGuidelineSearchPhraseCandidates(
 	user: unknown,
 	query: string,
-): Promise<AgentGuidelineSearchResult[]> {
+): Promise<AgentGuidelineSearchCandidate[]> {
 	const payload = await getPayload({ config })
-	const terms = searchTerms(query)
-	const find = (where: Where) =>
-		payload.find({
-			collection: 'search',
-			depth: 0,
-			limit: SEARCH_CANDIDATE_LIMIT,
-			overrideAccess: false,
-			sort: '-priority',
-			user: user as never,
-			where,
-		})
-
-	const exactResults = await find({
+	const results = await findSearchDocuments(payload, user, {
 		or: [{ title: { like: query } }, { searchText: { like: query } }],
 	})
-	let candidateDocs = exactResults.docs as SearchDoc[]
 
-	if (candidateDocs.length < SEARCH_RESULT_LIMIT) {
-		const expandedResults = await find({
-			or: terms.flatMap((term): Where[] => [
-				{ title: { contains: term } },
-				{ searchText: { contains: term } },
-			]),
-		})
-		candidateDocs = [
-			...new Map(
-				[...candidateDocs, ...(expandedResults.docs as SearchDoc[])].map((result) => [
-					`${result.doc?.relationTo}:${result.doc?.value}`,
-					result,
-				]),
-			).values(),
-		]
+	return results.docs.map(toSearchCandidate)
+}
+
+export async function findGuidelineSearchTermCandidates(
+	user: unknown,
+	terms: string[],
+): Promise<AgentGuidelineSearchCandidate[]> {
+	const payload = await getPayload({ config })
+	const results = await findSearchDocuments(payload, user, {
+		or: terms.flatMap((term): Where[] => [
+			{ title: { contains: term } },
+			{ searchText: { contains: term } },
+		]),
+	})
+
+	return results.docs.map(toSearchCandidate)
+}
+
+async function findSearchDocuments(
+	payload: Awaited<ReturnType<typeof getPayload>>,
+	user: unknown,
+	where: Where,
+) {
+	return payload.find({
+		collection: 'search',
+		depth: 0,
+		limit: SEARCH_CANDIDATE_LIMIT,
+		overrideAccess: false,
+		sort: '-priority',
+		user: user as never,
+		where,
+	})
+}
+
+function toSearchCandidate(result: SearchDoc): AgentGuidelineSearchCandidate {
+	const value = result.doc?.value
+	return {
+		collection: result.doc?.relationTo || '',
+		id: String(typeof value === 'object' && value ? value.id : value || ''),
+		title: result.title || '',
 	}
-
-	return candidateDocs
-		.filter((result) => result.doc?.relationTo === 'guideline-documents')
-		.map((result) => ({
-			title: result.title || '',
-			collection: 'guideline-documents' as const,
-			id: String(result.doc?.value || ''),
-		}))
-		.filter((result) => result.title && result.id)
-		.sort((a, b) => titleMatchCount(b.title, terms) - titleMatchCount(a.title, terms))
-		.slice(0, SEARCH_RESULT_LIMIT)
 }
 
-function searchTerms(query: string): string[] {
-	return [...new Set(query.split(/\s+/).filter(Boolean))].slice(0, SEARCH_TERM_LIMIT)
-}
-
-function titleMatchCount(title: string, terms: string[]): number {
-	const normalizedTitle = title.toLocaleLowerCase()
-	return terms.filter((term) => normalizedTitle.includes(term.toLocaleLowerCase())).length
-}
-
-export async function findAgentChecks(user: unknown): Promise<AgentCheckCatalogItem[]> {
+export async function findAgentCheckDocuments(user: unknown): Promise<GuidelineCheckDocument[]> {
 	const payload = await getPayload({ config })
 	const { documents } = await findPublishedUnifiedGuidelineCheckDocuments(payload, {
 		overrideAccess: false,
@@ -152,14 +141,6 @@ export async function findAgentChecks(user: unknown): Promise<AgentCheckCatalogI
 	})
 
 	return documents
-		.flatMap(collectGuidelineCheckSources)
-		.map(({ check, evidence }) => ({
-			evidence: formatCheckEvidence(evidence),
-			key: check.key,
-			tier: check.tier ?? null,
-			title: check.title,
-		}))
-		.sort((a, b) => a.key.localeCompare(b.key))
 }
 
 export async function findAgentGuidelineDocument(
@@ -203,20 +184,30 @@ export async function findAgentGuidelineDocument(
 
 	return {
 		collection: 'guideline-documents',
-		document,
-		children: children.docs,
-		checks: collectGuidelineCheckSources(document).map(toAgentCheck),
+		document: {
+			id: document.id,
+			title: document.title,
+			slug: document.slug,
+			description: document.description,
+			descriptionText: extractTextFromLexical(document.description),
+			headerImage: document.headerImage,
+			blocks: document.blocks,
+			checks: document.checks,
+			breadcrumbs: (document.breadcrumbs ?? []).map((breadcrumb) => ({
+				label: breadcrumb.label || null,
+				url: breadcrumb.url || null,
+			})),
+		},
+		children: children.docs.map((child) => ({
+			descriptionText: extractTextFromLexical(child.description),
+			id: child.id,
+			slug: child.slug,
+			title: child.title,
+		})),
 	}
 }
 
-function toAgentCheck({
-	check,
-	evidence,
-}: ReturnType<typeof collectGuidelineCheckSources>[number]): AgentCheckCatalogItem {
-	return {
-		evidence: formatCheckEvidence(evidence),
-		key: check.key,
-		tier: check.tier ?? null,
-		title: check.title,
-	}
+function relationshipId(value: GuidelineDocument['parent']): number | null {
+	if (typeof value === 'number') return value
+	return value?.id ?? null
 }

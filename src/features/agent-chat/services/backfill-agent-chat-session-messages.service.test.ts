@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { findLatestAgentChatSessionContainingAnyMessage } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
+import { findLatestAgentChatSessionMessagesContainingAny } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import { backfillAgentChatSessionMessages } from '@/features/agent-chat/services/backfill-agent-chat-session-messages.service'
 import type { AgentChatSessionMessageInput } from '@/features/agent-chat/types'
-import type { AgentChatSession as AgentChatSessionRecord, User } from '@/payload-types'
+import type { User } from '@/payload-types'
 
 vi.mock('@/features/agent-chat/repositories/agent-chat-session.payload.repository', () => ({
-	findLatestAgentChatSessionContainingAnyMessage: vi.fn(),
+	findLatestAgentChatSessionMessagesContainingAny: vi.fn(),
 }))
 
-const findPrevious = vi.mocked(findLatestAgentChatSessionContainingAnyMessage)
+const findPrevious = vi.mocked(findLatestAgentChatSessionMessagesContainingAny)
 
 const user = { id: 7 } as User
 
@@ -18,31 +18,27 @@ const history: AgentChatSessionMessageInput[] = [
 	{ messageId: 'u-2', role: 'user', text: '더 자세히' },
 ]
 
-const previousRecord = {
-	id: 21,
-	messages: [
-		{ messageId: 'u-1', role: 'user', text: '가이드라인 알려줘' },
-		{
-			messageId: 'a-1',
-			role: 'assistant',
-			text: '가이드라인입니다.',
-			reaction: 'bad',
-			usedTools: [{ name: 'loadSkill', callCount: 1, id: 'row-1' }],
-			usedSkills: [{ name: 'Guideline Curator', callCount: 1, id: 'row-2' }],
-			aiUsage: {
-				model: 'claude-sonnet-4-6',
-				callCount: 2,
-				inputTokens: 100,
-				outputTokens: 20,
-				totalTokens: 120,
-				cacheReadInputTokens: 0,
-				cacheWriteInputTokens: 0,
-				reasoningTokens: 0,
-				rawUsage: { steps: [{ raw: true }] },
-			},
+const previousMessages: AgentChatSessionMessageInput[] = [
+	{ messageId: 'u-1', role: 'user', text: '가이드라인 알려줘' },
+	{
+		messageId: 'a-1',
+		role: 'assistant',
+		text: '가이드라인입니다.',
+		reaction: 'bad',
+		usedTools: [{ name: 'loadSkill', callCount: 1 }],
+		usedSkills: [{ name: 'Guideline Curator', callCount: 1 }],
+		aiUsage: {
+			model: 'claude-sonnet-4-6',
+			callCount: 2,
+			inputTokens: 100,
+			outputTokens: 20,
+			totalTokens: 120,
+			cacheReadInputTokens: 0,
+			cacheWriteInputTokens: 0,
+			reasoningTokens: 0,
 		},
-	],
-} as unknown as AgentChatSessionRecord
+	},
+]
 
 describe('backfillAgentChatSessionMessages', () => {
 	beforeEach(() => {
@@ -50,7 +46,7 @@ describe('backfillAgentChatSessionMessages', () => {
 	})
 
 	it('히스토리 assistant 메시지에 직전 레코드의 메타데이터를 복사한다', async () => {
-		findPrevious.mockResolvedValue(previousRecord)
+		findPrevious.mockResolvedValue(previousMessages)
 
 		const result = await backfillAgentChatSessionMessages(history, user)
 
@@ -61,12 +57,10 @@ describe('backfillAgentChatSessionMessages', () => {
 			usedSkills: [{ name: 'Guideline Curator', callCount: 1 }],
 			aiUsage: { model: 'claude-sonnet-4-6', callCount: 2, totalTokens: 120 },
 		})
-		expect(result[1].usedTools?.[0]).not.toHaveProperty('id')
-		expect(result[1].aiUsage).not.toHaveProperty('rawUsage')
 	})
 
 	it('text와 reaction은 클라이언트 현재값을 유지한다', async () => {
-		findPrevious.mockResolvedValue(previousRecord)
+		findPrevious.mockResolvedValue(previousMessages)
 
 		const result = await backfillAgentChatSessionMessages(history, user)
 
@@ -88,18 +82,15 @@ describe('backfillAgentChatSessionMessages', () => {
 	})
 
 	it('직전 레코드에 없는 messageId는 빈칸 그대로 둔다', async () => {
-		findPrevious.mockResolvedValue({
-			id: 21,
-			messages: [],
-		} as unknown as AgentChatSessionRecord)
+		findPrevious.mockResolvedValue([])
 
 		const result = await backfillAgentChatSessionMessages(history, user)
 
 		expect(result[1]).toEqual(history[1])
 	})
 
-	it('조회가 실패해도 입력을 그대로 반환한다', async () => {
-		findPrevious.mockRejectedValue(new Error('db down'))
+	it('Repository 초기화까지 실패해도 입력을 그대로 반환한다', async () => {
+		findPrevious.mockRejectedValue(new Error('repository unavailable'))
 
 		const result = await backfillAgentChatSessionMessages(history, user)
 
@@ -114,7 +105,7 @@ describe('backfillAgentChatSessionMessages', () => {
 			{ messageId: 'a-1', role: 'assistant', text: '가이드라인입니다.', reaction: 'good' },
 			{ messageId: 'u-2', role: 'user', text: '더 자세히' },
 		]
-		findPrevious.mockResolvedValue(previousRecord)
+		findPrevious.mockResolvedValue(previousMessages)
 
 		const result = await backfillAgentChatSessionMessages(historyWithUnfinishedTurn, user)
 

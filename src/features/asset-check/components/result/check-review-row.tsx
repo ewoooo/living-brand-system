@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { CheckDetailRow } from '@/features/asset-check/components/result/check-detail-row'
 import { CheckStatusBadge } from '@/features/asset-check/components/result/check-status-badge'
-import type { RuntimeCheck as Check } from '@/features/asset-check/services/get-check-ruleset.service'
+import type { RuntimeCheck as Check } from '@/features/asset-check/domain/runtime-check'
 import type { CheckReviewRow as CheckReviewRowData } from '@/features/asset-check/utils/build-check-review-view'
 import { cn } from '@/lib/utils'
 

@@ -1,11 +1,12 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, managerOrAdmin } from '@/lib/auth'
+import { managerOrAdmin } from '@/lib/auth'
 
 export const AgentChatSessions: CollectionConfig = {
 	slug: 'agent-chat-sessions',
 	access: {
 		read: managerOrAdmin,
-		create: authenticated,
+		// 클라이언트가 운영 기록을 위조하지 못하도록 service repository만 생성한다.
+		create: () => false,
 		update: () => false,
 		delete: managerOrAdmin,
 	},

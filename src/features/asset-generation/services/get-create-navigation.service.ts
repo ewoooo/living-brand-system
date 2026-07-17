@@ -25,28 +25,24 @@ export interface GetCreateNavigationOutput {
  * layout과 페이지가 같은 요청에서 함께 호출하므로 cache()로 요청당 한 번만 조회한다.
  */
 export const getCreateNavigation = cache(async (): Promise<GetCreateNavigationOutput> => {
-	try {
-		const [categories, templates] = await Promise.all([
-			listTemplateCategories(),
-			listPublishedTemplateNavItems(),
-		])
+	const [categories, templates] = await Promise.all([
+		listTemplateCategories(),
+		listPublishedTemplateNavItems(),
+	])
 
-		return {
-			categories: categories.map((category) => ({
-				id: category.id,
-				title: category.title,
-				slug: category.slug,
-				href: `/create/${category.slug}`,
-				templates: templates
-					.filter((template) => template.category === category.id)
-					.map((template) => ({
-						id: template.id,
-						name: template.name,
-						href: `/create/${category.slug}/${template.id}`,
-					})),
-			})),
-		}
-	} catch {
-		return { categories: [] }
+	return {
+		categories: categories.map((category) => ({
+			id: category.id,
+			title: category.title,
+			slug: category.slug,
+			href: `/create/${category.slug}`,
+			templates: templates
+				.filter((template) => template.category === category.id)
+				.map((template) => ({
+					id: template.id,
+					name: template.name,
+					href: `/create/${category.slug}/${template.id}`,
+				})),
+		})),
 	}
 })

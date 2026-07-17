@@ -7,7 +7,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCheckImages } from '@/features/asset-check/components/check-image-provider'
 import { CHECK_STATUS } from '@/features/asset-check/components/check-status'
-import type { CheckSection } from '@/features/asset-check/services/get-check-ruleset.service'
+import type { CheckSection } from '@/features/asset-check/domain/runtime-check'
 import { buildCheckReviewView } from '@/features/asset-check/utils/build-check-review-view'
 import { cn } from '@/lib/utils'
 

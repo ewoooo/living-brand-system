@@ -34,6 +34,15 @@ interface LayerRow {
 const CANVAS_HEIGHT = 560
 const LAYER_WIDTH = 260
 
+function buildPreviewDocument(html: string, origin: string): string {
+	const imageSource = origin || "'none'"
+	return (
+		'<!doctype html><html><head><meta charset="utf-8">' +
+		`<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src ${imageSource} data: blob:; font-src data:">` +
+		`</head><body>${html}</body></html>`
+	)
+}
+
 const TYPE_LABEL: Record<string, string> = {
 	FRAME: '프레임',
 	GROUP: '그룹',
@@ -311,6 +320,9 @@ export default function TemplateLayersField() {
 	const width = useFormFields(([fields]) => fields.width?.value) as number | undefined
 	const height = useFormFields(([fields]) => fields.height?.value) as number | undefined
 	const [selectedId, setSelectedId] = useState<string | null>(null)
+	const [previewOrigin, setPreviewOrigin] = useState('')
+
+	useEffect(() => setPreviewOrigin(window.location.origin), [])
 
 	// 캔버스 가용 폭 측정 → 템플릿을 캔버스에 contain(중앙정렬)으로 축소한다.
 	const canvasRef = useRef<HTMLDivElement>(null)
@@ -331,6 +343,10 @@ export default function TemplateLayersField() {
 	)
 	const selected = layers.find((l) => l.id === selectedId) ?? null
 	const hasHtml = typeof html === 'string' && html.trim().length > 0
+	const previewDocument = useMemo(
+		() => (hasHtml ? buildPreviewDocument(html, previewOrigin) : ''),
+		[hasHtml, html, previewOrigin],
+	)
 
 	const w = typeof width === 'number' && width > 0 ? width : 0
 	const h = typeof height === 'number' && height > 0 ? height : 0
@@ -376,15 +392,20 @@ export default function TemplateLayersField() {
 				>
 					{hasHtml && w && h ? (
 						<div style={{ width: w * scale, height: h * scale }}>
-							<div
+							{/* script/forms/navigation은 열지 않고, 인증된 staging 이미지 요청에만 same-origin을 유지한다. */}
+							<iframe
+								title="템플릿 Draft 미리보기"
+								sandbox="allow-same-origin"
+								referrerPolicy="no-referrer"
+								srcDoc={previewDocument}
 								style={{
 									width: w,
 									height: h,
+									border: 0,
+									pointerEvents: 'none',
 									transform: `scale(${scale})`,
 									transformOrigin: 'top left',
 								}}
-								// biome-ignore lint/security/noDangerouslySetInnerHtml: 서버 컨버터가 만든 inline-style HTML(스크립트 없음)
-								dangerouslySetInnerHTML={{ __html: html as string }}
 							/>
 						</div>
 					) : (
@@ -575,14 +596,6 @@ export default function TemplateLayersField() {
 						배경 설정 — {selected.name}
 					</span>
 					<div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							onClick={() => toast.info('에셋에서 가져오기는 준비 중입니다.')}
-						>
-							에셋에서 가져오기
-						</Button>
 						<Popup
 							buttonType="custom"
 							verticalAlign="top"

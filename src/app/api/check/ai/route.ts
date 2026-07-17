@@ -1,4 +1,8 @@
-import { CheckSessionTerminalError } from '@/features/asset-check/domain/check-session'
+import {
+	CheckSessionInputMismatchError,
+	CheckSessionNotFoundError,
+	CheckSessionTerminalError,
+} from '@/features/asset-check/domain/check-session'
 import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 import { completeCheckSessionAiCheck } from '@/services/start-check-session.service'
@@ -38,6 +42,15 @@ export async function POST(req: Request) {
 
 		return Response.json(result)
 	} catch (error) {
+		if (error instanceof CheckSessionNotFoundError) {
+			return Response.json({ message: 'Check session not found.' }, { status: 404 })
+		}
+		if (error instanceof CheckSessionInputMismatchError) {
+			return Response.json(
+				{ message: 'Image does not match check session.' },
+				{ status: 409 },
+			)
+		}
 		if (error instanceof CheckSessionTerminalError) {
 			return Response.json({ message: 'Check session already finished.' }, { status: 409 })
 		}
