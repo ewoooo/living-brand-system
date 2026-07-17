@@ -13,8 +13,6 @@ vi.mock('@/features/asset-check/repositories/available-scenario-check.payload.re
 const repositoryContext = {} as never
 
 const record = (overrides: Record<string, unknown> = {}) => ({
-	blockName: 'Block',
-	documentTitle: 'Document',
 	key: 'check.key',
 	title: 'Check title',
 	...overrides,
@@ -25,43 +23,22 @@ describe('listAvailableScenarioChecks', () => {
 		vi.clearAllMocks()
 	})
 
-	it('표시 이름을 조립하고 key 중복을 제거한 뒤 문서·Block·제목 순으로 정렬한다', async () => {
+	it('표시 이름을 조립하고 제목 순으로 정렬한다', async () => {
 		vi.mocked(findPublishedScenarioCheckRecords).mockResolvedValue([
-			record({ blockName: null, documentTitle: 'B', key: 'type.scale', title: 'Type Scale' }),
-			record({ blockName: 'Z', documentTitle: 'A', key: 'color.palette', title: 'Color' }),
-			record({ blockName: 'A', documentTitle: 'A', key: 'logo.clear', titleKo: '로고' }),
+			record({ key: 'type.scale', title: 'Type Scale' }),
 			record({
-				blockName: 'Z',
-				documentTitle: 'A',
 				executor: 'deterministic',
 				key: 'color.palette',
 				title: 'Color',
 				titleKo: '컬러',
 			}),
+			record({ key: 'logo.clear', titleKo: '로고' }),
 		])
 
 		await expect(listAvailableScenarioChecks(repositoryContext)).resolves.toEqual([
-			{
-				blockName: 'A',
-				documentTitle: 'A',
-				executor: undefined,
-				key: 'logo.clear',
-				title: '로고',
-			},
-			{
-				blockName: 'Z',
-				documentTitle: 'A',
-				executor: 'deterministic',
-				key: 'color.palette',
-				title: '컬러',
-			},
-			{
-				blockName: '문서',
-				documentTitle: 'B',
-				executor: undefined,
-				key: 'type.scale',
-				title: 'Type Scale',
-			},
+			{ executor: undefined, key: 'logo.clear', title: '로고' },
+			{ executor: 'deterministic', key: 'color.palette', title: '컬러' },
+			{ executor: undefined, key: 'type.scale', title: 'Type Scale' },
 		])
 	})
 })
@@ -78,7 +55,7 @@ describe('CheckScenario validation', () => {
 		)
 	})
 
-	it('선택 형식과 중복을 먼저 확인하고 published Check 존재 여부를 조회한다', async () => {
+	it('선택 형식과 중복을 먼저 확인하고 published Rule 존재 여부를 조회한다', async () => {
 		vi.mocked(findPublishedScenarioCheckRecords).mockResolvedValue([
 			record({ key: 'color.palette' }),
 		] as never)
@@ -98,7 +75,7 @@ describe('CheckScenario validation', () => {
 			true,
 		)
 		await expect(validateCheckScenarioKeys(['missing'], repositoryContext)).resolves.toBe(
-			'발행된 Guideline에 없는 Check입니다: missing',
+			'발행된 검수 규칙에 없는 Check입니다: missing',
 		)
 	})
 })

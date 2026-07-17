@@ -106,7 +106,7 @@ export const CheckScenarios: CollectionConfig = {
 			validate: validateCheckScenarioKeys,
 			admin: {
 				components: { Field: '/components/admin/CheckScenarioChecksField' },
-				description: '발행된 Guideline Check 중 이 시나리오에서 실행할 항목입니다.',
+				description: '발행된 검수 규칙 중 이 시나리오에서 실행할 항목입니다.',
 			},
 		},
 		{

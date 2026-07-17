@@ -16,10 +16,8 @@ import {
 } from '@/components/ui/table'
 
 interface AvailableCheck {
-	blockName: string
 	key: string
 	title: string
-	documentTitle: string
 	executor?: 'deterministic' | 'heuristic' | 'manual'
 }
 
@@ -53,9 +51,7 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 	}, [])
 
 	const byKey = new Map(available.map((check) => [check.key, check]))
-	const selected = checkKeys.map(
-		(key) => byKey.get(key) ?? { blockName: '-', key, title: key, documentTitle: '' },
-	)
+	const selected = checkKeys.map((key) => byKey.get(key) ?? { key, title: key })
 	const selectedKeys = new Set(checkKeys)
 	const normalizedQuery = query.trim().toLowerCase()
 	const candidates = available.filter(
@@ -63,9 +59,7 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 			!selectedKeys.has(check.key) &&
 			(!normalizedQuery ||
 				check.key.toLowerCase().includes(normalizedQuery) ||
-				check.title.toLowerCase().includes(normalizedQuery) ||
-				check.blockName.toLowerCase().includes(normalizedQuery) ||
-				check.documentTitle.toLowerCase().includes(normalizedQuery)),
+				check.title.toLowerCase().includes(normalizedQuery)),
 	)
 
 	const update = (next: string[]) => setValue(next)
@@ -87,7 +81,6 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 					<TableRow>
 						<TableHead scope="col">순서</TableHead>
 						<TableHead scope="col">Check</TableHead>
-						<TableHead scope="col">상위 문서</TableHead>
 						<TableHead scope="col">실행 방식</TableHead>
 						<TableHead scope="col">관리</TableHead>
 					</TableRow>
@@ -103,7 +96,6 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 										<code>{check.key}</code>
 									</span>
 								</TableCell>
-								<TableCell>{check.documentTitle || '발행된 Check 없음'}</TableCell>
 								<TableCell>
 									{check.executor ? (
 										<Badge variant="outline">{check.executor}</Badge>
@@ -150,7 +142,7 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 						))
 					) : (
 						<TableRow>
-							<TableCell colSpan={5}>아직 포함된 Check가 없습니다.</TableCell>
+							<TableCell colSpan={4}>아직 포함된 Check가 없습니다.</TableCell>
 						</TableRow>
 					)}
 				</TableBody>
@@ -168,7 +160,6 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 				<TableHeader>
 					<TableRow>
 						<TableHead scope="col">Check</TableHead>
-						<TableHead scope="col">상위 문서</TableHead>
 						<TableHead scope="col">실행 방식</TableHead>
 						<TableHead scope="col">관리</TableHead>
 					</TableRow>
@@ -183,7 +174,6 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 										<code>{check.key}</code>
 									</span>
 								</TableCell>
-								<TableCell>{check.documentTitle}</TableCell>
 								<TableCell>
 									{check.executor ? (
 										<Badge variant="outline">{check.executor}</Badge>
@@ -206,13 +196,13 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 						))
 					) : (
 						<TableRow>
-							<TableCell colSpan={4}>추가 가능한 Check가 없습니다.</TableCell>
+							<TableCell colSpan={3}>추가 가능한 Check가 없습니다.</TableCell>
 						</TableRow>
 					)}
 				</TableBody>
 			</Table>
 			<FieldDescription
-				description="발행된 Guideline Check만 선택할 수 있으며 위에서부터 실행 순서를 결정합니다."
+				description="발행된 검수 규칙만 선택할 수 있으며 위에서부터 실행 순서를 결정합니다."
 				path={path}
 			/>
 		</div>
