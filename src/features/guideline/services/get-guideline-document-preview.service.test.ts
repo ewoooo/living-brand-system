@@ -23,6 +23,7 @@ describe('guideline document preview', () => {
 			title: 'Draft Brand System',
 			label: 'Draft',
 			description: null,
+			descriptionText: null,
 			slug: 'brand-system',
 			breadcrumbs: [{ url: '/guideline/brand-system' }],
 		}
@@ -31,9 +32,10 @@ describe('guideline document preview', () => {
 			title: 'Draft Basics',
 			slug: 'basics',
 			description: null,
+			descriptionText: null,
 			headerImage: null,
 			blocks: [],
-			parent: 1,
+			parentId: 1,
 			breadcrumbs: [
 				{ url: '/guideline/brand-system' },
 				{ url: '/guideline/brand-system/basics' },
@@ -44,9 +46,10 @@ describe('guideline document preview', () => {
 			title: 'Draft Logo Usage',
 			slug: 'logo-usage',
 			description: null,
+			descriptionText: null,
 			displayOrder: 1,
 			blocks: [],
-			parent: 2,
+			parentId: 2,
 			breadcrumbs: [
 				{ url: '/guideline/brand-system' },
 				{ url: '/guideline/brand-system/basics' },

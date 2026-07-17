@@ -43,12 +43,12 @@ describe('guideline read service failures', () => {
 		vi.mocked(findGuidelineMetadataGlobal).mockResolvedValue({
 			companyName: 'Company',
 			documentTitle: 'Guideline',
-			favicon: null,
+			faviconHref: null,
 			issuedLabel: null,
-			primaryColor: null,
-			primaryColorDark: null,
-		} as never)
-		vi.mocked(listPublishedGuidelineNavigationDocuments).mockResolvedValue([] as never)
+			primaryHex: null,
+			primaryDarkHex: null,
+		})
+		vi.mocked(listPublishedGuidelineNavigationDocuments).mockResolvedValue([])
 	})
 
 	it('chapter 미존재는 null이고 하위 목록 조회 실패는 전파한다', async () => {

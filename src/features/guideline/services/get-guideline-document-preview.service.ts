@@ -1,16 +1,15 @@
-import type { GuidelineDocument, User } from '@/payload-types'
+import type { User } from '@/payload-types'
 import {
+	type DraftGuidelineDocumentData,
 	findDraftGuidelineDocumentById,
 	listDraftGuidelineChildren,
 } from '../repositories/guideline-preview.payload.repository'
-import { relationshipId } from '../utils/block-text'
-import { extractTextFromLexical } from '../utils/lexical-text'
 import type { GetGuidelineChapterOutput } from './get-guideline-chapter.service'
 import type { GetGuidelineSectionOutput } from './get-guideline-section.service'
 
 interface GuidelineDocumentPreviewTarget {
 	chapterSlug: string
-	document: GuidelineDocument
+	document: DraftGuidelineDocumentData
 	href: string
 	level: 1 | 2 | 3
 	sectionSlug: string | null
@@ -64,12 +63,12 @@ export async function getGuidelineChapterPreview(
 	return {
 		title: target.document.title,
 		label: target.document.label || null,
-		description: extractTextFromLexical(target.document.description) || null,
+		description: target.document.descriptionText,
 		sections: sections.map((section) => ({
 			id: section.id,
 			title: section.title,
 			slug: section.slug,
-			description: extractTextFromLexical(section.description) || null,
+			description: section.descriptionText,
 		})),
 	}
 }
@@ -86,9 +85,9 @@ export async function getGuidelineSectionPreview(
 
 	if (!target?.sectionSlug || target.level === 1) return null
 
-	let section: GuidelineDocument | null = target.document
+	let section: DraftGuidelineDocumentData | null = target.document
 	if (target.level === 3) {
-		const parentId = relationshipId(target.document.parent)
+		const parentId = target.document.parentId
 		if (parentId === null) return null
 		section = await findDraftGuidelineDocumentById(parentId, user)
 	}
@@ -97,16 +96,16 @@ export async function getGuidelineSectionPreview(
 	const pages = await listDraftGuidelineChildren(section.id, user)
 	return {
 		title: section.title,
-		headerImage: section.headerImage ?? null,
-		blocks: section.blocks ?? [],
-		description: extractTextFromLexical(section.description) || null,
+		headerImage: section.headerImage,
+		blocks: section.blocks,
+		description: section.descriptionText,
 		pages: pages.map((page) => ({
 			id: page.id,
 			title: page.title,
 			slug: page.slug,
-			description: page.description || null,
+			description: page.description,
 			displayOrder: page.displayOrder,
-			blocks: page.blocks || [],
+			blocks: page.blocks,
 		})),
 	}
 }

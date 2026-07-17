@@ -1,6 +1,9 @@
 import { getPayload } from 'payload'
 import { describe, expect, it, vi } from 'vitest'
-import { findDraftGuidelineDocumentById } from './guideline-preview.payload.repository'
+import {
+	findDraftGuidelineDocumentById,
+	listDraftGuidelineChildren,
+} from './guideline-preview.payload.repository'
 
 vi.mock('@payload-config', () => ({ default: {} }))
 vi.mock('payload', () => ({ getPayload: vi.fn() }))
@@ -19,5 +22,28 @@ describe('findDraftGuidelineDocumentById', () => {
 		await expect(findDraftGuidelineDocumentById(1, { id: 1 } as never)).rejects.toThrow(
 			'db down',
 		)
+	})
+
+	it('Payload 관계와 breadcrumb를 preview DTO로 변환한다', async () => {
+		const document = {
+			id: 3,
+			title: 'Logo',
+			slug: 'logo',
+			parent: { id: 2, title: 'Basics' },
+			breadcrumbs: [{ doc: 1, url: '/guideline/brand' }, { doc: 3 }],
+			displayOrder: null,
+		}
+		const find = vi.fn().mockResolvedValue({ docs: [document] })
+		vi.mocked(getPayload).mockResolvedValue({ find } as never)
+
+		await expect(listDraftGuidelineChildren(2, { id: 1 } as never)).resolves.toEqual([
+			expect.objectContaining({
+				id: 3,
+				parentId: 2,
+				breadcrumbs: [{ url: '/guideline/brand' }, { url: null }],
+				descriptionText: null,
+				displayOrder: -1,
+			}),
+		])
 	})
 })

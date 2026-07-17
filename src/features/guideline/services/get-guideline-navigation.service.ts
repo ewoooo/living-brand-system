@@ -1,7 +1,8 @@
 import { cache } from 'react'
-import type { GuidelineDocument } from '@/payload-types'
-import { listPublishedGuidelineNavigationDocuments } from '../repositories/guideline-view.payload.repository'
-import { extractTextFromLexical } from '../utils/lexical-text'
+import {
+	type GuidelineNavigationDocumentData,
+	listPublishedGuidelineNavigationDocuments,
+} from '../repositories/guideline-view.payload.repository'
 import {
 	type GetGuidelineMetadataOutput,
 	getGuidelineMetadata,
@@ -46,26 +47,20 @@ export const getGuidelineNavigation = cache(async (): Promise<GetGuidelineNaviga
 	}
 })
 
-type NavigationDocument = Pick<
-	GuidelineDocument,
-	'id' | 'title' | 'slug' | 'description' | 'parent' | 'breadcrumbs'
->
-
 /**
  * published 문서 목록을 장→섹션 네비게이션 트리로 조립하는 순수 함수. 외부 I/O 없음
  * (Payload 조회는 guideline-view repository 소유). 단위 테스트 재사용을 위해 export한다.
  */
-export function buildGuidelineNavigationChapters(documents: NavigationDocument[]) {
-	const children = new Map<number | null, NavigationDocument[]>()
+export function buildGuidelineNavigationChapters(documents: GuidelineNavigationDocumentData[]) {
+	const children = new Map<number | null, GuidelineNavigationDocumentData[]>()
 	for (const document of documents) {
-		const parentId = relationshipId(document.parent)
-		children.set(parentId, [...(children.get(parentId) ?? []), document])
+		children.set(document.parentId, [...(children.get(document.parentId) ?? []), document])
 	}
 
 	return (children.get(null) ?? []).map((chapter) => ({
 		id: chapter.id,
 		title: chapter.title,
-		description: extractTextFromLexical(chapter.description) || null,
+		description: chapter.description,
 		href: breadcrumbURL(chapter),
 		sections: (children.get(chapter.id) ?? []).map((section) => ({
 			id: section.id,
@@ -80,11 +75,6 @@ export function buildGuidelineNavigationChapters(documents: NavigationDocument[]
 	}))
 }
 
-function breadcrumbURL(document: NavigationDocument) {
-	return document.breadcrumbs?.at(-1)?.url || `/guideline/${document.slug}`
-}
-
-function relationshipId(value: NavigationDocument['parent']): number | null {
-	if (typeof value === 'number') return value
-	return value?.id ?? null
+function breadcrumbURL(document: GuidelineNavigationDocumentData) {
+	return document.href || `/guideline/${document.slug}`
 }
