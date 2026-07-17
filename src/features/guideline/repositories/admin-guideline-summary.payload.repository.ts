@@ -1,8 +1,9 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
+import { relationshipId } from '@/features/guideline/utils/block-text'
 
-/** Admin 대시보드용 문서 깊이와 임베디드 Check 수를 현재 문서 기준으로 집계한다. */
-export async function findAdminGuidelineSummary() {
+/** Admin summary가 집계할 문서를 Payload 관계와 Block 구조에서 plain DTO로 변환한다. */
+export async function listAdminGuidelineSummaryDocuments() {
 	const payload = await getPayload({ config })
 	const { docs: documents } = await payload.find({
 		collection: 'guideline-documents',
@@ -11,18 +12,14 @@ export async function findAdminGuidelineSummary() {
 		pagination: false,
 		select: { blocks: true, breadcrumbs: true, checks: true },
 	})
-	const checks = documents.reduce(
-		(total, document) =>
-			total +
-			(document.checks?.length ?? 0) +
-			(document.blocks ?? []).reduce(
-				(count, block) => count + (block.checks?.length ?? 0),
-				0,
-			),
-		0,
-	)
-	const atDepth = (depth: number) =>
-		documents.filter((document) => document.breadcrumbs?.length === depth).length
 
-	return { checks, chapters: atDepth(1), sections: atDepth(2), pages: atDepth(3) }
+	return documents.map((document) => ({
+		breadcrumbDocumentIds: (document.breadcrumbs ?? []).map(
+			({ doc }) => relationshipId(doc) ?? -1,
+		),
+		checkKeys: [
+			...(document.checks ?? []),
+			...(document.blocks ?? []).flatMap((block) => block.checks ?? []),
+		].map(({ key }) => key),
+	}))
 }
