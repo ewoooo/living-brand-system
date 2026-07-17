@@ -235,10 +235,11 @@ export interface GuidelineDocument {
   blocks?:
     | (
         | ContentColumnsBlock
+        | CarouselBlock
         | MediaShowcaseBlock
         | ColorPaletteBlock
         | DoDontBlock
-        | PolicyCalloutBlock
+        | CalloutBlock
         | SpecListBlock
         | SignatureShowcaseBlock
         | TypeSpecimenBlock
@@ -469,6 +470,30 @@ export interface RuleChecker {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CarouselBlock".
+ */
+export interface CarouselBlock {
+  /**
+   * 슬라이드 이미지의 표시 비율입니다.
+   */
+  imageRatio?: ('4:3' | '1:1' | '16:9' | '3:2' | '2:3' | '4:5' | '5:4' | '9:16') | null;
+  slides?:
+    | {
+        image: number | ApplicationImage;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'carousel';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "MediaShowcaseBlock".
  */
 export interface MediaShowcaseBlock {
@@ -553,9 +578,9 @@ export interface DoDontBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "PolicyCalloutBlock".
+ * via the `definition` "CalloutBlock".
  */
-export interface PolicyCalloutBlock {
+export interface CalloutBlock {
   kind: 'must' | 'recommended' | 'dont';
   /**
    * 생략하면 판정 기본 라벨(반드시/권장/금지)이 제목이 됩니다.
@@ -573,7 +598,7 @@ export interface PolicyCalloutBlock {
   rules?: (number | Rule)[] | null;
   id?: string | null;
   blockName?: string | null;
-  blockType: 'policyCallout';
+  blockType: 'callout';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1586,10 +1611,11 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
     | T
     | {
         contentColumns?: T | ContentColumnsBlockSelect<T>;
+        carousel?: T | CarouselBlockSelect<T>;
         mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
         colorPalette?: T | ColorPaletteBlockSelect<T>;
         doDont?: T | DoDontBlockSelect<T>;
-        policyCallout?: T | PolicyCalloutBlockSelect<T>;
+        callout?: T | CalloutBlockSelect<T>;
         specList?: T | SpecListBlockSelect<T>;
         signatureShowcase?: T | SignatureShowcaseBlockSelect<T>;
         typeSpecimen?: T | TypeSpecimenBlockSelect<T>;
@@ -1625,6 +1651,23 @@ export interface ContentColumnsBlockSelect<T extends boolean = true> {
         image?: T;
         imageBackgroundColor?: T;
         imageScale?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CarouselBlock_select".
+ */
+export interface CarouselBlockSelect<T extends boolean = true> {
+  imageRatio?: T;
+  slides?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
         id?: T;
       };
   rules?: T;
@@ -1684,9 +1727,9 @@ export interface DoDontBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "PolicyCalloutBlock_select".
+ * via the `definition` "CalloutBlock_select".
  */
-export interface PolicyCalloutBlockSelect<T extends boolean = true> {
+export interface CalloutBlockSelect<T extends boolean = true> {
   kind?: T;
   title?: T;
   items?:

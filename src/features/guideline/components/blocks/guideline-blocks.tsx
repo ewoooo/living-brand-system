@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react'
 import type { GuidelineDocument } from '@/payload-types'
+import { CalloutBlock } from './callout-block'
+import { CarouselBlock } from './carousel-block'
 import { ColorPaletteBlock } from './color-palette-block'
 import { ContentColumnsBlock } from './content-columns-block'
 import { DoDontBlock } from './do-dont-block'
 import { GlyphGridBlock } from './glyph-grid-block'
 import { LayoutGridBlock } from './layout-grid-block'
 import { MediaShowcaseBlock } from './media-showcase-block'
-import { PolicyCalloutBlock } from './policy-callout-block'
 import { SignatureShowcaseBlock } from './signature-showcase-block'
 import { SpecListBlock } from './spec-list-block'
 import { TypeScaleBlock } from './type-scale-block'
@@ -21,10 +22,11 @@ type RendererMap = {
 
 const blockRenderers = {
 	contentColumns: (block) => <ContentColumnsBlock block={block} />,
+	carousel: (block) => <CarouselBlock block={block} />,
 	mediaShowcase: (block) => <MediaShowcaseBlock block={block} />,
 	colorPalette: (block) => <ColorPaletteBlock block={block} />,
 	doDont: (block) => <DoDontBlock block={block} />,
-	policyCallout: (block) => <PolicyCalloutBlock block={block} />,
+	callout: (block) => <CalloutBlock block={block} />,
 	specList: (block) => <SpecListBlock block={block} />,
 	signatureShowcase: (block) => <SignatureShowcaseBlock block={block} />,
 	typeSpecimen: (block) => <TypeSpecimenBlock block={block} />,

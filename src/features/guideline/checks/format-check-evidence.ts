@@ -1,6 +1,6 @@
+import { calloutKindLabel } from '../blocks/callout.block'
 import type { CheckEvidence } from '../blocks/catalog'
 import { kindLabel } from '../blocks/do-dont.block'
-import { policyKindLabel } from '../blocks/policy-callout.block'
 import { compact } from '../utils/block-text'
 
 /** 구조화 evidence를 기존 평문 소비 경계에 맞게 변환한다. */
@@ -10,6 +10,10 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 	// 동결된 CheckSession rulesetSnapshot에는 개명 전 'columnUnit' 판별자가 남아 있다.
 	if ((evidence as { type: string }).type === 'columnUnit') {
 		return formatCheckEvidence({ ...evidence, type: 'contentColumns' } as CheckEvidence)
+	}
+	// 동결된 CheckSession rulesetSnapshot에는 개명 전 'policyCallout' 판별자가 남아 있다.
+	if ((evidence as { type: string }).type === 'policyCallout') {
+		return formatCheckEvidence({ ...evidence, type: 'callout' } as CheckEvidence)
 	}
 
 	switch (evidence.type) {
@@ -23,6 +27,11 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 				.map((column) => compact([column.heading, column.body]).join('\n'))
 				.filter(Boolean)
 				.join('\n\n')
+		case 'carousel':
+			return evidence.slides
+				.map((slide) => slide.caption)
+				.filter(Boolean)
+				.join('\n')
 		case 'mediaShowcase':
 			return 'Media showcase'
 		case 'colorPalette':
@@ -46,9 +55,9 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 					]),
 				),
 			]).join('\n')
-		case 'policyCallout':
+		case 'callout':
 			return compact([
-				evidence.title ?? policyKindLabel[evidence.kind],
+				evidence.title ?? calloutKindLabel[evidence.kind],
 				...evidence.items.map((item) => `- ${item}`),
 			]).join('\n')
 		case 'specList':

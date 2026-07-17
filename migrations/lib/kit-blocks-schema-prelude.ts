@@ -1,7 +1,7 @@
 // 20260714_031500 백필이 Local API를 호출하기 전에, 현재 config가 조회하는 kit 블록 스키마
-// (contentColumns 개명 결과 + 20260717_122530에서 도입한 신규 블록)를 미리 만든다.
+// (contentColumns 개명 결과 + 20260717_130449까지의 신규 블록)를 미리 만든다.
 // 모든 구문이 멱등이라 최신 스키마가 이미 있는 DB에서는 no-op이다. 실데이터가 있는 운영 DB는
-// 이 프렐류드가 아니라 20260717_122530의 rename 경로로 스키마를 얻는다(그 시점엔 031500이 이미 적용됨).
+// 이 프렐류드가 아니라 후속 rename 마이그레이션으로 스키마를 얻는다(그 시점엔 031500이 이미 적용됨).
 export const kitBlocksPreludeSql = `
 	DO $$ BEGIN
 		CREATE TYPE "public"."enum_image_scale" AS ENUM('10', '20', '30', '40', '50', '60', '70', '80', '90', '100');
@@ -10,13 +10,19 @@ export const kitBlocksPreludeSql = `
 		CREATE TYPE "public"."enum_guideline_docs_blocks_content_columns_image_ratio" AS ENUM('4:3', '1:1', '16:9', '3:2', '2:3', '4:5', '5:4', '9:16');
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	DO $$ BEGIN
-		CREATE TYPE "public"."enum_guideline_docs_blocks_policy_callout_kind" AS ENUM('must', 'recommended', 'dont');
+		CREATE TYPE "public"."enum_guideline_docs_blocks_carousel_image_ratio" AS ENUM('4:3', '1:1', '16:9', '3:2', '2:3', '4:5', '5:4', '9:16');
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	DO $$ BEGIN
+		CREATE TYPE "public"."enum_guideline_docs_blocks_callout_kind" AS ENUM('must', 'recommended', 'dont');
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	DO $$ BEGIN
 		CREATE TYPE "public"."enum__guideline_docs_v_blocks_content_columns_image_ratio" AS ENUM('4:3', '1:1', '16:9', '3:2', '2:3', '4:5', '5:4', '9:16');
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	DO $$ BEGIN
-		CREATE TYPE "public"."enum__guideline_docs_v_blocks_policy_callout_kind" AS ENUM('must', 'recommended', 'dont');
+		CREATE TYPE "public"."enum__guideline_docs_v_blocks_carousel_image_ratio" AS ENUM('4:3', '1:1', '16:9', '3:2', '2:3', '4:5', '5:4', '9:16');
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	DO $$ BEGIN
+		CREATE TYPE "public"."enum__guideline_docs_v_blocks_callout_kind" AS ENUM('must', 'recommended', 'dont');
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_content_columns_columns" (
 		"_order" integer NOT NULL,
@@ -41,26 +47,46 @@ export const kitBlocksPreludeSql = `
 		"image_ratio" "enum_guideline_docs_blocks_content_columns_image_ratio" DEFAULT '4:3',
 		"block_name" varchar
 	  );
-	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_policy_callout_items" (
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_carousel_slides" (
+		"_order" integer NOT NULL,
+		"_parent_id" varchar NOT NULL,
+		"id" varchar PRIMARY KEY NOT NULL,
+		"image_id" integer
+	  );
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_carousel_slides_locales" (
+		"caption" varchar,
+		"id" serial PRIMARY KEY NOT NULL,
+		"_locale" "_locales" NOT NULL,
+		"_parent_id" varchar NOT NULL
+	  );
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_carousel" (
+		"_order" integer NOT NULL,
+		"_parent_id" integer NOT NULL,
+		"_path" text NOT NULL,
+		"id" varchar PRIMARY KEY NOT NULL,
+		"image_ratio" "enum_guideline_docs_blocks_carousel_image_ratio" DEFAULT '16:9',
+		"block_name" varchar
+	  );
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_callout_items" (
 		"_order" integer NOT NULL,
 		"_parent_id" varchar NOT NULL,
 		"id" varchar PRIMARY KEY NOT NULL
 	  );
-	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_policy_callout_items_locales" (
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_callout_items_locales" (
 		"text" varchar,
 		"id" serial PRIMARY KEY NOT NULL,
 		"_locale" "_locales" NOT NULL,
 		"_parent_id" varchar NOT NULL
 	  );
-	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_policy_callout" (
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_callout" (
 		"_order" integer NOT NULL,
 		"_parent_id" integer NOT NULL,
 		"_path" text NOT NULL,
 		"id" varchar PRIMARY KEY NOT NULL,
-		"kind" "enum_guideline_docs_blocks_policy_callout_kind" DEFAULT 'must',
+		"kind" "enum_guideline_docs_blocks_callout_kind" DEFAULT 'must',
 		"block_name" varchar
 	  );
-	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_policy_callout_locales" (
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_callout_locales" (
 		"title" varchar,
 		"id" serial PRIMARY KEY NOT NULL,
 		"_locale" "_locales" NOT NULL,
@@ -211,28 +237,50 @@ export const kitBlocksPreludeSql = `
 		"_uuid" varchar,
 		"block_name" varchar
 	  );
-	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_policy_callout_items" (
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_carousel_slides" (
+		"_order" integer NOT NULL,
+		"_parent_id" integer NOT NULL,
+		"id" serial PRIMARY KEY NOT NULL,
+		"image_id" integer,
+		"_uuid" varchar
+	  );
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_carousel_slides_locales" (
+		"caption" varchar,
+		"id" serial PRIMARY KEY NOT NULL,
+		"_locale" "_locales" NOT NULL,
+		"_parent_id" integer NOT NULL
+	  );
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_carousel" (
+		"_order" integer NOT NULL,
+		"_parent_id" integer NOT NULL,
+		"_path" text NOT NULL,
+		"id" serial PRIMARY KEY NOT NULL,
+		"image_ratio" "enum__guideline_docs_v_blocks_carousel_image_ratio" DEFAULT '16:9',
+		"_uuid" varchar,
+		"block_name" varchar
+	  );
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_callout_items" (
 		"_order" integer NOT NULL,
 		"_parent_id" integer NOT NULL,
 		"id" serial PRIMARY KEY NOT NULL,
 		"_uuid" varchar
 	  );
-	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_policy_callout_items_locales" (
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_callout_items_locales" (
 		"text" varchar,
 		"id" serial PRIMARY KEY NOT NULL,
 		"_locale" "_locales" NOT NULL,
 		"_parent_id" integer NOT NULL
 	  );
-	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_policy_callout" (
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_callout" (
 		"_order" integer NOT NULL,
 		"_parent_id" integer NOT NULL,
 		"_path" text NOT NULL,
 		"id" serial PRIMARY KEY NOT NULL,
-		"kind" "enum__guideline_docs_v_blocks_policy_callout_kind" DEFAULT 'must',
+		"kind" "enum__guideline_docs_v_blocks_callout_kind" DEFAULT 'must',
 		"_uuid" varchar,
 		"block_name" varchar
 	  );
-	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_policy_callout_locales" (
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_callout_locales" (
 		"title" varchar,
 		"id" serial PRIMARY KEY NOT NULL,
 		"_locale" "_locales" NOT NULL,
@@ -385,16 +433,28 @@ export const kitBlocksPreludeSql = `
 		ALTER TABLE "guideline_docs_blocks_content_columns" ADD CONSTRAINT "guideline_docs_blocks_content_columns_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs"("id") ON DELETE cascade ON UPDATE no action;
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	DO $$ BEGIN
-		ALTER TABLE "guideline_docs_blocks_policy_callout_items" ADD CONSTRAINT "guideline_docs_blocks_policy_callout_items_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_policy_callout"("id") ON DELETE cascade ON UPDATE no action;
+		ALTER TABLE "guideline_docs_blocks_carousel_slides" ADD CONSTRAINT "guideline_docs_blocks_carousel_slides_image_id_application_images_id_fk" FOREIGN KEY ("image_id") REFERENCES "public"."application_images"("id") ON DELETE set null ON UPDATE no action;
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	DO $$ BEGIN
-		ALTER TABLE "guideline_docs_blocks_policy_callout_items_locales" ADD CONSTRAINT "guideline_docs_blocks_policy_callout_items_locales_parent_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_policy_callout_items"("id") ON DELETE cascade ON UPDATE no action;
+		ALTER TABLE "guideline_docs_blocks_carousel_slides" ADD CONSTRAINT "guideline_docs_blocks_carousel_slides_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_carousel"("id") ON DELETE cascade ON UPDATE no action;
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	DO $$ BEGIN
-		ALTER TABLE "guideline_docs_blocks_policy_callout" ADD CONSTRAINT "guideline_docs_blocks_policy_callout_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs"("id") ON DELETE cascade ON UPDATE no action;
+		ALTER TABLE "guideline_docs_blocks_carousel_slides_locales" ADD CONSTRAINT "guideline_docs_blocks_carousel_slides_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_carousel_slides"("id") ON DELETE cascade ON UPDATE no action;
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	DO $$ BEGIN
-		ALTER TABLE "guideline_docs_blocks_policy_callout_locales" ADD CONSTRAINT "guideline_docs_blocks_policy_callout_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_policy_callout"("id") ON DELETE cascade ON UPDATE no action;
+		ALTER TABLE "guideline_docs_blocks_carousel" ADD CONSTRAINT "guideline_docs_blocks_carousel_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs"("id") ON DELETE cascade ON UPDATE no action;
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	DO $$ BEGIN
+		ALTER TABLE "guideline_docs_blocks_callout_items" ADD CONSTRAINT "guideline_docs_blocks_callout_items_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_callout"("id") ON DELETE cascade ON UPDATE no action;
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	DO $$ BEGIN
+		ALTER TABLE "guideline_docs_blocks_callout_items_locales" ADD CONSTRAINT "guideline_docs_blocks_callout_items_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_callout_items"("id") ON DELETE cascade ON UPDATE no action;
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	DO $$ BEGIN
+		ALTER TABLE "guideline_docs_blocks_callout" ADD CONSTRAINT "guideline_docs_blocks_callout_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs"("id") ON DELETE cascade ON UPDATE no action;
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	DO $$ BEGIN
+		ALTER TABLE "guideline_docs_blocks_callout_locales" ADD CONSTRAINT "guideline_docs_blocks_callout_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_callout"("id") ON DELETE cascade ON UPDATE no action;
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	DO $$ BEGIN
 		ALTER TABLE "guideline_docs_blocks_spec_list_groups_specs" ADD CONSTRAINT "guideline_docs_blocks_spec_list_groups_specs_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."guideline_docs_blocks_spec_list_groups"("id") ON DELETE cascade ON UPDATE no action;
@@ -475,16 +535,28 @@ export const kitBlocksPreludeSql = `
 		ALTER TABLE "_guideline_docs_v_blocks_content_columns" ADD CONSTRAINT "_guideline_docs_v_blocks_content_columns_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v"("id") ON DELETE cascade ON UPDATE no action;
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	DO $$ BEGIN
-		ALTER TABLE "_guideline_docs_v_blocks_policy_callout_items" ADD CONSTRAINT "_guideline_docs_v_blocks_policy_callout_items_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_policy_callout"("id") ON DELETE cascade ON UPDATE no action;
+		ALTER TABLE "_guideline_docs_v_blocks_carousel_slides" ADD CONSTRAINT "_guideline_docs_v_blocks_carousel_slides_image_id_application_images_id_fk" FOREIGN KEY ("image_id") REFERENCES "public"."application_images"("id") ON DELETE set null ON UPDATE no action;
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	DO $$ BEGIN
-		ALTER TABLE "_guideline_docs_v_blocks_policy_callout_items_locales" ADD CONSTRAINT "_guideline_docs_v_blocks_policy_callout_items_locales_par_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_policy_callout_items"("id") ON DELETE cascade ON UPDATE no action;
+		ALTER TABLE "_guideline_docs_v_blocks_carousel_slides" ADD CONSTRAINT "_guideline_docs_v_blocks_carousel_slides_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_carousel"("id") ON DELETE cascade ON UPDATE no action;
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	DO $$ BEGIN
-		ALTER TABLE "_guideline_docs_v_blocks_policy_callout" ADD CONSTRAINT "_guideline_docs_v_blocks_policy_callout_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v"("id") ON DELETE cascade ON UPDATE no action;
+		ALTER TABLE "_guideline_docs_v_blocks_carousel_slides_locales" ADD CONSTRAINT "_guideline_docs_v_blocks_carousel_slides_locales_parent_i_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_carousel_slides"("id") ON DELETE cascade ON UPDATE no action;
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	DO $$ BEGIN
-		ALTER TABLE "_guideline_docs_v_blocks_policy_callout_locales" ADD CONSTRAINT "_guideline_docs_v_blocks_policy_callout_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_policy_callout"("id") ON DELETE cascade ON UPDATE no action;
+		ALTER TABLE "_guideline_docs_v_blocks_carousel" ADD CONSTRAINT "_guideline_docs_v_blocks_carousel_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v"("id") ON DELETE cascade ON UPDATE no action;
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	DO $$ BEGIN
+		ALTER TABLE "_guideline_docs_v_blocks_callout_items" ADD CONSTRAINT "_guideline_docs_v_blocks_callout_items_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_callout"("id") ON DELETE cascade ON UPDATE no action;
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	DO $$ BEGIN
+		ALTER TABLE "_guideline_docs_v_blocks_callout_items_locales" ADD CONSTRAINT "_guideline_docs_v_blocks_callout_items_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_callout_items"("id") ON DELETE cascade ON UPDATE no action;
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	DO $$ BEGIN
+		ALTER TABLE "_guideline_docs_v_blocks_callout" ADD CONSTRAINT "_guideline_docs_v_blocks_callout_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v"("id") ON DELETE cascade ON UPDATE no action;
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	DO $$ BEGIN
+		ALTER TABLE "_guideline_docs_v_blocks_callout_locales" ADD CONSTRAINT "_guideline_docs_v_blocks_callout_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_callout"("id") ON DELETE cascade ON UPDATE no action;
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 	DO $$ BEGIN
 		ALTER TABLE "_guideline_docs_v_blocks_spec_list_groups_specs" ADD CONSTRAINT "_guideline_docs_v_blocks_spec_list_groups_specs_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_guideline_docs_v_blocks_spec_list_groups"("id") ON DELETE cascade ON UPDATE no action;
@@ -557,13 +629,20 @@ export const kitBlocksPreludeSql = `
 	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_content_columns_order_idx" ON "guideline_docs_blocks_content_columns" USING btree ("_order");
 	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_content_columns_parent_id_idx" ON "guideline_docs_blocks_content_columns" USING btree ("_parent_id");
 	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_content_columns_path_idx" ON "guideline_docs_blocks_content_columns" USING btree ("_path");
-	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_policy_callout_items_order_idx" ON "guideline_docs_blocks_policy_callout_items" USING btree ("_order");
-	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_policy_callout_items_parent_id_idx" ON "guideline_docs_blocks_policy_callout_items" USING btree ("_parent_id");
-	CREATE UNIQUE INDEX IF NOT EXISTS "guideline_docs_blocks_policy_callout_items_locales_locale_pa" ON "guideline_docs_blocks_policy_callout_items_locales" USING btree ("_locale","_parent_id");
-	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_policy_callout_order_idx" ON "guideline_docs_blocks_policy_callout" USING btree ("_order");
-	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_policy_callout_parent_id_idx" ON "guideline_docs_blocks_policy_callout" USING btree ("_parent_id");
-	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_policy_callout_path_idx" ON "guideline_docs_blocks_policy_callout" USING btree ("_path");
-	CREATE UNIQUE INDEX IF NOT EXISTS "guideline_docs_blocks_policy_callout_locales_locale_parent_i" ON "guideline_docs_blocks_policy_callout_locales" USING btree ("_locale","_parent_id");
+	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_carousel_slides_order_idx" ON "guideline_docs_blocks_carousel_slides" USING btree ("_order");
+	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_carousel_slides_parent_id_idx" ON "guideline_docs_blocks_carousel_slides" USING btree ("_parent_id");
+	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_carousel_slides_image_idx" ON "guideline_docs_blocks_carousel_slides" USING btree ("image_id");
+	CREATE UNIQUE INDEX IF NOT EXISTS "guideline_docs_blocks_carousel_slides_locales_locale_parent_" ON "guideline_docs_blocks_carousel_slides_locales" USING btree ("_locale","_parent_id");
+	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_carousel_order_idx" ON "guideline_docs_blocks_carousel" USING btree ("_order");
+	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_carousel_parent_id_idx" ON "guideline_docs_blocks_carousel" USING btree ("_parent_id");
+	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_carousel_path_idx" ON "guideline_docs_blocks_carousel" USING btree ("_path");
+	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_callout_items_order_idx" ON "guideline_docs_blocks_callout_items" USING btree ("_order");
+	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_callout_items_parent_id_idx" ON "guideline_docs_blocks_callout_items" USING btree ("_parent_id");
+	CREATE UNIQUE INDEX IF NOT EXISTS "guideline_docs_blocks_callout_items_locales_locale_parent_id" ON "guideline_docs_blocks_callout_items_locales" USING btree ("_locale","_parent_id");
+	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_callout_order_idx" ON "guideline_docs_blocks_callout" USING btree ("_order");
+	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_callout_parent_id_idx" ON "guideline_docs_blocks_callout" USING btree ("_parent_id");
+	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_callout_path_idx" ON "guideline_docs_blocks_callout" USING btree ("_path");
+	CREATE UNIQUE INDEX IF NOT EXISTS "guideline_docs_blocks_callout_locales_locale_parent_id_uniqu" ON "guideline_docs_blocks_callout_locales" USING btree ("_locale","_parent_id");
 	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_spec_list_groups_specs_order_idx" ON "guideline_docs_blocks_spec_list_groups_specs" USING btree ("_order");
 	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_spec_list_groups_specs_parent_id_idx" ON "guideline_docs_blocks_spec_list_groups_specs" USING btree ("_parent_id");
 	CREATE INDEX IF NOT EXISTS "guideline_docs_blocks_spec_list_groups_order_idx" ON "guideline_docs_blocks_spec_list_groups" USING btree ("_order");
@@ -610,13 +689,20 @@ export const kitBlocksPreludeSql = `
 	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_content_columns_order_idx" ON "_guideline_docs_v_blocks_content_columns" USING btree ("_order");
 	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_content_columns_parent_id_idx" ON "_guideline_docs_v_blocks_content_columns" USING btree ("_parent_id");
 	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_content_columns_path_idx" ON "_guideline_docs_v_blocks_content_columns" USING btree ("_path");
-	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_policy_callout_items_order_idx" ON "_guideline_docs_v_blocks_policy_callout_items" USING btree ("_order");
-	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_policy_callout_items_parent_id_idx" ON "_guideline_docs_v_blocks_policy_callout_items" USING btree ("_parent_id");
-	CREATE UNIQUE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_policy_callout_items_locales_locale" ON "_guideline_docs_v_blocks_policy_callout_items_locales" USING btree ("_locale","_parent_id");
-	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_policy_callout_order_idx" ON "_guideline_docs_v_blocks_policy_callout" USING btree ("_order");
-	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_policy_callout_parent_id_idx" ON "_guideline_docs_v_blocks_policy_callout" USING btree ("_parent_id");
-	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_policy_callout_path_idx" ON "_guideline_docs_v_blocks_policy_callout" USING btree ("_path");
-	CREATE UNIQUE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_policy_callout_locales_locale_paren" ON "_guideline_docs_v_blocks_policy_callout_locales" USING btree ("_locale","_parent_id");
+	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_carousel_slides_order_idx" ON "_guideline_docs_v_blocks_carousel_slides" USING btree ("_order");
+	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_carousel_slides_parent_id_idx" ON "_guideline_docs_v_blocks_carousel_slides" USING btree ("_parent_id");
+	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_carousel_slides_image_idx" ON "_guideline_docs_v_blocks_carousel_slides" USING btree ("image_id");
+	CREATE UNIQUE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_carousel_slides_locales_locale_pare" ON "_guideline_docs_v_blocks_carousel_slides_locales" USING btree ("_locale","_parent_id");
+	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_carousel_order_idx" ON "_guideline_docs_v_blocks_carousel" USING btree ("_order");
+	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_carousel_parent_id_idx" ON "_guideline_docs_v_blocks_carousel" USING btree ("_parent_id");
+	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_carousel_path_idx" ON "_guideline_docs_v_blocks_carousel" USING btree ("_path");
+	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_callout_items_order_idx" ON "_guideline_docs_v_blocks_callout_items" USING btree ("_order");
+	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_callout_items_parent_id_idx" ON "_guideline_docs_v_blocks_callout_items" USING btree ("_parent_id");
+	CREATE UNIQUE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_callout_items_locales_locale_parent" ON "_guideline_docs_v_blocks_callout_items_locales" USING btree ("_locale","_parent_id");
+	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_callout_order_idx" ON "_guideline_docs_v_blocks_callout" USING btree ("_order");
+	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_callout_parent_id_idx" ON "_guideline_docs_v_blocks_callout" USING btree ("_parent_id");
+	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_callout_path_idx" ON "_guideline_docs_v_blocks_callout" USING btree ("_path");
+	CREATE UNIQUE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_callout_locales_locale_parent_id_un" ON "_guideline_docs_v_blocks_callout_locales" USING btree ("_locale","_parent_id");
 	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_spec_list_groups_specs_order_idx" ON "_guideline_docs_v_blocks_spec_list_groups_specs" USING btree ("_order");
 	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_spec_list_groups_specs_parent_id_idx" ON "_guideline_docs_v_blocks_spec_list_groups_specs" USING btree ("_parent_id");
 	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_spec_list_groups_order_idx" ON "_guideline_docs_v_blocks_spec_list_groups" USING btree ("_order");

@@ -80,6 +80,33 @@ describe('buildCheckSourceSnapshot', () => {
 		])
 	})
 
+	it('독립 carousel block은 caption과 이미지 ID를 snapshot으로 만든다', () => {
+		const page = {
+			title: 'Campaign',
+			blocks: [
+				{
+					id: 'carousel',
+					blockType: 'carousel',
+					slides: [
+						{ image: 21, caption: 'Key visual' },
+						{ image: 22, caption: 'Application' },
+					],
+				},
+			],
+		} as unknown as GuidelineDocument
+
+		expect(buildCheckSourceSnapshot(page, 'carousel')).toEqual({
+			evidence: {
+				type: 'carousel',
+				slides: [{ caption: 'Key visual' }, { caption: 'Application' }],
+			},
+			referenceAssets: [
+				{ id: 21, role: 'context' },
+				{ id: 22, role: 'context' },
+			],
+		})
+	})
+
 	it('Section 전체 snapshot은 header image와 자체 block만 포함한다', () => {
 		const section = {
 			title: 'Brand Core',

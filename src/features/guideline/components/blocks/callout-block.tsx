@@ -1,10 +1,9 @@
 import type { GuidelineDocument } from '@/payload-types'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
-type PolicyCallout = Extract<GuidelineBlock, { blockType: 'policyCallout' }>
+type Callout = Extract<GuidelineBlock, { blockType: 'callout' }>
 
 // 규정/주의 콜아웃: 지켜야 할 규칙을 판정별(must/recommended/dont)로 강조하는 박스.
-// 카본 매핑: Notification/Inline 계열 — Tile(bg-background-secondary) 위 아이콘 배지.
 const kindStyle = {
 	must: {
 		symbol: '✓',
@@ -26,7 +25,7 @@ const kindStyle = {
 	},
 } as const
 
-export function PolicyCalloutBlock({ block }: { block: PolicyCallout }) {
+export function CalloutBlock({ block }: { block: Callout }) {
 	const style = kindStyle[block.kind]
 	const items = block.items ?? []
 

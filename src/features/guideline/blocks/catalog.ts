@@ -1,24 +1,26 @@
 import type { Block } from 'payload'
 import {
+	CalloutBlock,
+	CarouselBlock,
 	ColorPaletteBlock,
 	ContentColumnsBlock,
 	DoDontBlock,
 	GlyphGridBlock,
 	LayoutGridBlock,
 	MediaShowcaseBlock,
-	PolicyCalloutBlock,
 	SignatureShowcaseBlock,
 	SpecListBlock,
 	TypeScaleBlock,
 	TypeSpecimenBlock,
 } from '@/blocks/guideline'
+import { projectCallout } from './callout.block'
+import { projectCarousel } from './carousel.block'
 import { projectColorPalette } from './color-palette.block'
 import { projectContentColumns } from './content-columns.block'
 import { projectDoDont } from './do-dont.block'
 import { projectGlyphGrid } from './glyph-grid.block'
 import { projectLayoutGrid } from './layout-grid.block'
 import { projectMediaShowcase } from './media-showcase.block'
-import { projectPolicyCallout } from './policy-callout.block'
 import { projectSignatureShowcase } from './signature-showcase.block'
 import { projectSpecList } from './spec-list.block'
 import { projectTypeScale } from './type-scale.block'
@@ -35,10 +37,11 @@ type DefinitionMap = {
 // Payload schema와 Agent/Check projection을 한 곳에 등록한다. React renderer는 별도 경계를 쓴다.
 export const guidelineBlockCatalog = {
 	contentColumns: { schema: ContentColumnsBlock, project: projectContentColumns },
+	carousel: { schema: CarouselBlock, project: projectCarousel },
 	mediaShowcase: { schema: MediaShowcaseBlock, project: projectMediaShowcase },
 	colorPalette: { schema: ColorPaletteBlock, project: projectColorPalette },
 	doDont: { schema: DoDontBlock, project: projectDoDont },
-	policyCallout: { schema: PolicyCalloutBlock, project: projectPolicyCallout },
+	callout: { schema: CalloutBlock, project: projectCallout },
 	specList: { schema: SpecListBlock, project: projectSpecList },
 	signatureShowcase: { schema: SignatureShowcaseBlock, project: projectSignatureShowcase },
 	typeSpecimen: { schema: TypeSpecimenBlock, project: projectTypeSpecimen },

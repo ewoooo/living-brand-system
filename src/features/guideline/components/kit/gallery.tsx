@@ -1,15 +1,15 @@
+import { CalloutBlock } from '@/features/guideline/components/blocks/callout-block'
+import { CarouselBlock } from '@/features/guideline/components/blocks/carousel-block'
 import { ColorPaletteBlock } from '@/features/guideline/components/blocks/color-palette-block'
 import { ContentColumnsBlock } from '@/features/guideline/components/blocks/content-columns-block'
 import { DoDontBlock } from '@/features/guideline/components/blocks/do-dont-block'
 import { GlyphGridBlock } from '@/features/guideline/components/blocks/glyph-grid-block'
 import { LayoutGridBlock } from '@/features/guideline/components/blocks/layout-grid-block'
 import { MediaShowcaseBlock } from '@/features/guideline/components/blocks/media-showcase-block'
-import { PolicyCalloutBlock } from '@/features/guideline/components/blocks/policy-callout-block'
 import { SignatureShowcaseBlock } from '@/features/guideline/components/blocks/signature-showcase-block'
 import { SpecListBlock } from '@/features/guideline/components/blocks/spec-list-block'
 import { TypeScaleBlock } from '@/features/guideline/components/blocks/type-scale-block'
 import { TypeSpecimenBlock } from '@/features/guideline/components/blocks/type-specimen-block'
-import { CarouselDemo } from '@/features/guideline/components/kit/carousel'
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
@@ -62,6 +62,16 @@ const imageGroupBlock: Extract<GuidelineBlock, { blockType: 'contentColumns' }> 
 		{ id: 'ig-1', heading: '적용 예시 A', image: placeholderImage('적용 예시 A', 13) },
 		{ id: 'ig-2', heading: '적용 예시 B', image: placeholderImage('적용 예시 B', 14) },
 		{ id: 'ig-3', heading: '적용 예시 C', image: placeholderImage('적용 예시 C', 15) },
+	],
+}
+
+const carouselBlock: Extract<GuidelineBlock, { blockType: 'carousel' }> = {
+	blockType: 'carousel',
+	imageRatio: '16:9',
+	slides: [
+		{ id: 'cr-1', image: placeholderImage('Key Visual 01', 71), caption: '메인 키 비주얼' },
+		{ id: 'cr-2', image: placeholderImage('Ampoule', 72), caption: '앰플 제품 라인' },
+		{ id: 'cr-3', image: placeholderImage('Ritual', 73), caption: '스킨케어 루틴' },
 	],
 }
 
@@ -330,9 +340,9 @@ const specListBlock: Extract<GuidelineBlock, { blockType: 'specList' }> = {
 	],
 }
 
-const policyCalloutBlocks: Extract<GuidelineBlock, { blockType: 'policyCallout' }>[] = [
+const calloutBlocks: Extract<GuidelineBlock, { blockType: 'callout' }>[] = [
 	{
-		blockType: 'policyCallout',
+		blockType: 'callout',
 		kind: 'must',
 		title: '반드시 지킬 것',
 		items: [
@@ -345,7 +355,7 @@ const policyCalloutBlocks: Extract<GuidelineBlock, { blockType: 'policyCallout' 
 		],
 	},
 	{
-		blockType: 'policyCallout',
+		blockType: 'callout',
 		kind: 'recommended',
 		title: '권장',
 		items: [
@@ -354,7 +364,7 @@ const policyCalloutBlocks: Extract<GuidelineBlock, { blockType: 'policyCallout' 
 		],
 	},
 	{
-		blockType: 'policyCallout',
+		blockType: 'callout',
 		kind: 'dont',
 		title: '하지 말 것',
 		items: [
@@ -402,8 +412,12 @@ export function GuidelineKitGallery() {
 					<ContentColumnsBlock block={mediaTextBlock} />
 				</Demo>
 
-				<Demo title="Content Columns · 이미지 세트 (3장 이상 자동 캐러셀)">
+				<Demo title="Content Columns · 이미지 세트 (3열)">
 					<ContentColumnsBlock block={imageGroupBlock} />
+				</Demo>
+
+				<Demo title="Carousel · 독립 이미지 슬라이드">
+					<CarouselBlock block={carouselBlock} />
 				</Demo>
 
 				<Demo title="Media Showcase · 대형 이미지">
@@ -473,10 +487,10 @@ export function GuidelineKitGallery() {
 					<LogoLockupDemo />
 				</Demo>
 
-				<Demo title="Policy Callout · 규정/주의 콜아웃 (실제 블록 renderer)">
+				<Demo title="Callout · 규정/주의 콜아웃 (실제 블록 renderer)">
 					<div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-						{policyCalloutBlocks.map((block) => (
-							<PolicyCalloutBlock key={block.kind} block={block} />
+						{calloutBlocks.map((block) => (
+							<CalloutBlock key={block.kind} block={block} />
 						))}
 					</div>
 				</Demo>
@@ -491,10 +505,6 @@ export function GuidelineKitGallery() {
 						alt="로고 클리어스페이스 예시"
 						note="로고 주위 최소 여백은 x 이상 확보한다 (x = 심볼 높이 기준)."
 					/>
-				</Demo>
-
-				<Demo title="Carousel · 캐러셀">
-					<CarouselDemo />
 				</Demo>
 			</Section>
 		</article>

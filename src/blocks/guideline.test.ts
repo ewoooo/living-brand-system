@@ -9,6 +9,7 @@ import { guidelineBlockCatalog, guidelineBlocks } from '@/features/guideline/blo
 import { checkKeyFromEnglishTitle } from '@/features/guideline/checks/check-key-from-english-title'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 import {
+	CarouselBlock,
 	ContentColumnsBlock,
 	DoDontBlock,
 	guidelineRulesField,
@@ -92,10 +93,11 @@ describe('guideline rules field', () => {
 			]),
 		).toEqual([
 			['contentColumns', 'contentColumns'],
+			['carousel', 'carousel'],
 			['mediaShowcase', 'mediaShowcase'],
 			['colorPalette', 'colorPalette'],
 			['doDont', 'doDont'],
-			['policyCallout', 'policyCallout'],
+			['callout', 'callout'],
 			['specList', 'specList'],
 			['signatureShowcase', 'signatureShowcase'],
 			['typeSpecimen', 'typeSpecimen'],
@@ -129,6 +131,7 @@ describe('guideline rules field', () => {
 	it('다른 이미지 블록도 공용 비율 계약을 사용한다', () => {
 		for (const [block, defaultValue] of [
 			[ContentColumnsBlock, '4:3'],
+			[CarouselBlock, '16:9'],
 			[MediaShowcaseBlock, '16:9'],
 		] as const) {
 			const imageRatio = block.fields.find(

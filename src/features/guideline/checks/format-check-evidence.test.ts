@@ -29,4 +29,15 @@ describe('formatCheckEvidence', () => {
 			} as never),
 		).toBe('Clear space\nKeep 1x margin.')
 	})
+
+	it('동결 스냅샷의 개명 전 policyCallout 판별자를 callout으로 흡수한다', () => {
+		expect(
+			formatCheckEvidence({
+				type: 'policyCallout',
+				kind: 'must',
+				title: '필수',
+				items: ['Keep clear space.'],
+			} as never),
+		).toBe('필수\n- Keep clear space.')
+	})
 })
