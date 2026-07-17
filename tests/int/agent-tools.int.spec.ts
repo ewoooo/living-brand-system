@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import { getAgentTools } from '@/agents/agent-tools.agent'
 import { validateAgentChatMessages } from '@/agents/validate-agent-chat-messages.agent'
-import * as agentGuidelineRepository from '@/features/agent-chat/repositories/agent-guideline-context.payload.repository'
 import * as agentSkillRepository from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import * as agentTemplateRepository from '@/features/agent-chat/repositories/agent-template.payload.repository'
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
@@ -48,7 +47,7 @@ const template = (...elements: ReturnType<typeof textElement>[]) => ({
 
 describe('agent tools', () => {
 	beforeEach(() => {
-		vi.spyOn(agentGuidelineRepository, 'findAgentChecks').mockResolvedValue([])
+		vi.spyOn(agentGuidelineContext, 'listAgentChecks').mockResolvedValue([])
 	})
 
 	afterEach(() => {
@@ -132,7 +131,7 @@ describe('agent tools', () => {
 	})
 
 	it('gets Check catalog through the tool service', async () => {
-		const getChecks = vi.spyOn(agentGuidelineRepository, 'findAgentChecks').mockResolvedValue([
+		const getChecks = vi.spyOn(agentGuidelineContext, 'listAgentChecks').mockResolvedValue([
 			{
 				evidence: '',
 				key: 'color.palette',
@@ -156,7 +155,7 @@ describe('agent tools', () => {
 	})
 
 	it('lists published templates with open slots and template Checks', async () => {
-		vi.spyOn(agentGuidelineRepository, 'findAgentChecks').mockResolvedValue([
+		vi.spyOn(agentGuidelineContext, 'listAgentChecks').mockResolvedValue([
 			{
 				evidence: 'Use the legal name.',
 				key: 'name.input',
