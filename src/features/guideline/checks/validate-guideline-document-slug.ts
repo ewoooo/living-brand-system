@@ -1,5 +1,5 @@
 import { type FieldHook, ValidationError } from 'payload'
-import { hasGuidelineDocumentSlugConflict } from '../repositories/guideline-document.payload.repository'
+import { hasGuidelineDocumentSlugConflict } from '../services/validate-guideline-document-slug.service'
 import { relationshipId } from '../utils/block-text'
 
 /** Guideline Document slug가 같은 locale과 부모 아래에서만 고유하도록 검증한다. */

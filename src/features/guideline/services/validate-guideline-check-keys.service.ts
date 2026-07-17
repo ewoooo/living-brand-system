@@ -1,4 +1,6 @@
+import type { PayloadRequest } from 'payload'
 import { checkKeyFromEnglishTitle } from '../checks/check-key-from-english-title'
+import { listGuidelineCheckContainers } from '../repositories/guideline-document.payload.repository'
 
 type CheckValue = {
 	key?: unknown
@@ -13,8 +15,27 @@ export type CheckContainer = {
 type SavedCheckContainer = CheckContainer & { id: number }
 
 /**
- * Guideline 저장 게이트 Use Case — 저장할 문서와 Repository가 읽은 문서에서 첫 Check key 중복을 찾는다.
- * 저장 문서 조회와 Payload 변환은 guideline-document.payload.repository가 소유하며 이 함수는 I/O가 없다.
+ * Guideline 저장 전에 현재 문서와 저장 문서 사이의 첫 Check key 충돌을 찾는다.
+ * 저장 문서 조회와 Payload 변환 I/O는 guideline-document repository가 소유한다.
+ */
+export async function findGuidelineCheckKeyConflict(
+	req: PayloadRequest,
+	document: CheckContainer,
+	originalDocId: number | null | undefined,
+) {
+	const duplicate = findDuplicateGuidelineCheckKey(document, [], originalDocId)
+	if (duplicate || collectCheckKeys(document).length === 0) return duplicate
+
+	return findDuplicateGuidelineCheckKey(
+		document,
+		await listGuidelineCheckContainers(req),
+		originalDocId,
+	)
+}
+
+/**
+ * 저장할 문서와 이미 읽은 문서에서 첫 Check key 중복을 찾는 순수 규칙이다.
+ * 외부 I/O는 없으며 호출자가 저장 문서를 제공한다.
  */
 export function findDuplicateGuidelineCheckKey(
 	document: CheckContainer,

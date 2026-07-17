@@ -1,8 +1,49 @@
+import type { PayloadRequest, SanitizedCollectionConfig } from 'payload'
+import {
+	listGuidelineDocumentAncestorIds,
+	listGuidelineDocumentDescendantPaths,
+} from '../repositories/guideline-document.payload.repository'
+
 const MAX_GUIDELINE_LEVELS = 3
 
 /**
- * Guideline 저장 게이트 Use Case — 순환 부모 관계와 장·섹션·페이지 3단계를 넘는 배치를 판정한다.
- * 계층·breadcrumb 조회와 Payload 변환은 guideline-document.payload.repository가 소유하며 이 함수는 I/O가 없다.
+ * Guideline 저장 전에 부모 변경의 순환·최대 깊이 위반을 조회하고 판정한다.
+ * 계층과 breadcrumb 조회·Payload 변환 I/O는 guideline-document repository가 소유한다.
+ */
+export async function getGuidelineDocumentDepthViolation({
+	collection,
+	currentId,
+	parentId,
+	req,
+}: {
+	collection: SanitizedCollectionConfig
+	currentId: number | null
+	parentId: number
+	req: PayloadRequest
+}) {
+	const immediateViolation = findGuidelineDocumentDepthViolation({
+		ancestorIds: [],
+		parentId,
+		currentId,
+		descendantPaths: [],
+	})
+	if (immediateViolation) return immediateViolation
+
+	const ancestorIds = await listGuidelineDocumentAncestorIds(req, collection, parentId)
+	const descendantPaths =
+		currentId === null ? [] : await listGuidelineDocumentDescendantPaths(req, currentId)
+
+	return findGuidelineDocumentDepthViolation({
+		ancestorIds,
+		parentId,
+		currentId,
+		descendantPaths,
+	})
+}
+
+/**
+ * 순환 부모 관계와 장·섹션·페이지 3단계를 넘는 배치를 판정하는 순수 규칙이다.
+ * 외부 I/O는 없으며 호출자가 계층 경로를 제공한다.
  */
 export function findGuidelineDocumentDepthViolation({
 	ancestorIds,

@@ -1,7 +1,7 @@
 import type { ArrayField, Block, Field, FieldHook } from 'payload'
 import { checkKeyFromEnglishTitle } from '@/features/guideline/checks/check-key-from-english-title'
 import { validateGuidelineCheckOptions } from '@/features/guideline/checks/validate-guideline-check-options'
-import { getGuidelineRuleCheckerSummary } from '@/features/guideline/repositories/guideline-document.payload.repository'
+import { getGuidelineRuleCheckerSummary } from '@/features/guideline/services/get-guideline-rule-checker-summary.service'
 import { relationshipId } from '@/features/guideline/utils/block-text'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 

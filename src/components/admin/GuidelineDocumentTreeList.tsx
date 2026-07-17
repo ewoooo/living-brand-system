@@ -5,7 +5,7 @@ import { formatAdminURL } from 'payload/shared'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
-import { listEditableGuidelineDocuments } from '@/features/guideline/repositories/guideline-document.payload.repository'
+import { listEditableGuidelineDocuments } from '@/features/guideline/services/list-editable-guideline-documents.service'
 import {
 	buildGuidelineDocumentTree,
 	type GuidelineDocumentTreeNode,
