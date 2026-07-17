@@ -1,7 +1,7 @@
 /**
  * [POC] grid system 기반 Template 여러 개를 payload에 생성한다(서로 다른 그리드).
- * jsonTemplate에 grid(행/열 정수비)를 저장 → Create의 GridComposer가 이를 읽어 복원한다.
- * 텍스트는 셀 하나에 대응(셀 좌상단 배치)하고, GridComposer가 x/y를 역매핑해 셀로 복원한다.
+ * jsonTemplate에 grid(행/열 정수비)와 계산된 요소 좌표를 함께 저장한다.
+ * Create의 AssetGenerator는 계산된 좌표를 손실 없이 렌더링하고 열린 슬롯만 편집한다.
  * 실행: source ~/.nvm/nvm.sh && nvm use 22 && pnpm exec payload run scripts/seed-grid-system.ts
  */
 import config from '@payload-config'

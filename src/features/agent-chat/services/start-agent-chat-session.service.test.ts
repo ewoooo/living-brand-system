@@ -57,17 +57,19 @@ describe('startAgentChatSession', () => {
 		})
 	})
 
-	it('running 스텝은 저장하지 않고 completed 스텝에서 한 번만 저장한다', async () => {
+	it('스트림 스텝은 저장하지 않고 finalize에서 한 번만 저장한다', async () => {
 		const session = await startAgentChatSession({ messages, pagePath: '/guidelines', user })
 
-		await session.recordStep({ status: 'running', step: toolStep })
+		await session.recordStep({ step: toolStep })
 		expect(saveSession).not.toHaveBeenCalled()
 
 		await session.recordStep({
-			status: 'completed',
 			text: '찾은 가이드라인입니다.',
 			step: toolStep,
 		})
+		expect(saveSession).not.toHaveBeenCalled()
+
+		await session.finalize()
 		expect(saveSession).toHaveBeenCalledTimes(1)
 
 		const [saved, savedUser] = saveSession.mock.calls[0]
@@ -86,7 +88,8 @@ describe('startAgentChatSession', () => {
 	it('종결 후 fail은 no-op이고 완료 세션을 뒤집지 않는다', async () => {
 		const session = await startAgentChatSession({ messages, user })
 
-		await session.recordStep({ status: 'completed', text: '완료 응답', step: toolStep })
+		await session.recordStep({ text: '완료 응답', step: toolStep })
+		await session.finalize()
 		expect(saveSession).toHaveBeenCalledTimes(1)
 
 		await session.fail('late error')
@@ -97,7 +100,7 @@ describe('startAgentChatSession', () => {
 	it('finalize는 completed 신호 없이 끝난 턴을 종결 저장한다', async () => {
 		const session = await startAgentChatSession({ messages, user })
 
-		await session.recordStep({ status: 'running', step: toolStep })
+		await session.recordStep({ step: toolStep })
 		await session.finalize()
 
 		expect(saveSession).toHaveBeenCalledTimes(1)
@@ -109,10 +112,24 @@ describe('startAgentChatSession', () => {
 	it('이미 종결된 세션에서 finalize는 no-op이다', async () => {
 		const session = await startAgentChatSession({ messages, user })
 
-		await session.recordStep({ status: 'completed', text: '완료 응답', step: toolStep })
+		await session.recordStep({ text: '완료 응답', step: toolStep })
+		await session.finalize()
 		await session.finalize()
 
 		expect(saveSession).toHaveBeenCalledTimes(1)
+	})
+
+	it('중단된 세션은 failed로 한 번 저장한다', async () => {
+		const session = await startAgentChatSession({ messages, user })
+
+		await session.recordStep({ text: '부분 응답', step: toolStep })
+		await session.fail('Agent response interrupted.')
+
+		expect(saveSession).toHaveBeenCalledTimes(1)
+		expect(saveSession.mock.calls[0][0].toUpdateData()).toMatchObject({
+			status: 'failed',
+			errorMessage: 'Agent response interrupted.',
+		})
 	})
 
 	it('히스토리 assistant 메시지를 백필해서 세션을 생성한다', async () => {

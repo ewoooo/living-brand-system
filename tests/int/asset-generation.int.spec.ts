@@ -77,7 +77,7 @@ describe('getPublishedTemplate', () => {
 		mockedFind.mockResolvedValue({
 			id: 1,
 			name: 'Figma 템플릿',
-			html: '<div>Figma</div>',
+			html: '<p data-node-id="2:1">Figma</p>',
 			overrides: { '2:1': { input: { label: '이름' } } },
 			width: 1280,
 			height: 720,
@@ -88,11 +88,39 @@ describe('getPublishedTemplate', () => {
 			kind: 'html',
 			id: 1,
 			name: 'Figma 템플릿',
-			html: '<div>Figma</div>',
+			html: '<p data-node-id="2:1">Figma</p>',
 			overrides: { '2:1': { input: { label: '이름' } } },
 			width: 1280,
 			height: 720,
 		})
+	})
+
+	it('게이트 도입 전 published HTML도 렌더 직전에 fail-closed 한다', async () => {
+		mockedFind.mockResolvedValue({
+			id: 4,
+			name: '과거 템플릿',
+			html: '<img data-node-id="logo" src="x" onerror="alert(1)">',
+			overrides: {},
+			width: 1280,
+			height: 720,
+			jsonTemplate: validJsonTemplate,
+		} as never)
+
+		await expect(getPublishedTemplate(4)).resolves.toMatchObject({ kind: 'json', id: 4 })
+	})
+
+	it('과거 문서의 자기신고 에셋도 공식 내부 URL이 아니면 렌더하지 않는다', async () => {
+		mockedFind.mockResolvedValue({
+			id: 5,
+			name: '과거 외부 에셋 템플릿',
+			html: '<img data-node-id="logo" data-asset-collection="brand-logos" data-asset-id="1" src="https://attacker.example/pixel.png">',
+			overrides: {},
+			width: 1280,
+			height: 720,
+			jsonTemplate: validJsonTemplate,
+		} as never)
+
+		await expect(getPublishedTemplate(5)).resolves.toMatchObject({ kind: 'json', id: 5 })
 	})
 
 	it('사용 가능한 HTML이 없으면 JSON 템플릿으로 폴백한다', async () => {

@@ -31,7 +31,7 @@ Create가 산출물에 이미지가 필요할 때 이 기능을 호출하는 것
 | --- | --- | --- |
 | [Page](../surfaces/page.md) | 구현 | `/image` — 프롬프트 입력 → 후보 그리드 → 택1 |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `generateImage`로 대화 중 생성, 후보를 챗에 렌더 |
-| REST | 구현 | `POST /api/image`(same-origin, 유료 경로는 인증 게이트) |
+| REST | 구현 | `POST /api/image`(same-origin, 인증 필수) |
 | Slack | 계획 | — |
 
 ## 4. 의존
@@ -40,7 +40,7 @@ Create가 산출물에 이미지가 필요할 때 이 기능을 호출하는 것
 - Vercel AI SDK `generateImage`.
 - 프롬프트 합성: 외부 의존 없음. `presets.ts`의 `composeImageRequest`가 LLM 없이 결정론으로 합성하며, 이미지 경로는 Anthropic에 의존하지 않습니다.
 - Review 미사용(의도적) — 이미지 검수 성능이 아직 일부 항목에 한정되어 있어 생성 품질을 검수에 묶지 않습니다.
-- dev 폴백: `OPENAI_API_KEY`(정식 엔진 gpt-image-2 키)가 없으면 개발용으로 Pollinations FLUX(무료·키 불필요)로 임시 대체합니다(`services/dev-fallback.provider.ts`). 키 수령 후 이 폴백 분기는 삭제합니다. ⚠️ 프롬프트가 외부 무료 서비스로 전송되므로 민감 입력은 금지합니다.
+- dev 폴백: 개발 환경에서 `IMAGE_DEV_FALLBACK=true`를 명시한 경우에만 Pollinations FLUX(무료·키 불필요)를 임시 사용합니다. `OPENAI_API_KEY`가 없는 production과 명시적으로 허용하지 않은 환경은 외부 호출 없이 실패합니다. ⚠️ 프롬프트가 외부 무료 서비스로 전송되므로 민감 입력은 금지합니다.
 
 ## 5. 크로스커팅
 

@@ -1,3 +1,4 @@
+import { findTemplateRenderBlocker } from '@/features/template-import/services/validate-template-publish.service'
 import type { TemplateOverrides } from '@/features/template-import/utils/compose-template-html'
 import { type JsonTemplate, jsonTemplateSchema } from '@/types/json-template'
 import { findPublishedTemplate } from '../repositories/published-template.payload.repository'
@@ -46,7 +47,8 @@ export function pickHtmlTemplate(template: {
 		typeof template.width === 'number' &&
 		template.width > 0 &&
 		typeof template.height === 'number' &&
-		template.height > 0
+		template.height > 0 &&
+		findTemplateRenderBlocker(template) == null
 	) {
 		return {
 			html: template.html,

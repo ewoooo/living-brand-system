@@ -19,7 +19,7 @@
 - 입력: 발행된 템플릿의 `jsonTemplate` + 열린 슬롯 `values(text/src)`. 텍스트 슬롯은 `inputFormat`/`maxLength`/`maxLines`를 강제.
 - 출력: 클라이언트 PNG 다운로드. Payload에는 아무것도 쓰지 않음(생성 세션/출력 레코드 없음).
 
-⚠️ Create UI가 둘 공존합니다: **GridComposer**(템플릿 상세 페이지에 연결된 그리드 저작 POC — PNG export·저장 없음)와 **AssetGenerator**(슬롯 채우기→PNG, 현재 어디에도 마운트 안 된 dead code). 슬롯필→PNG 계약은 지금 AI Chat 표면에서만 실제로 동작합니다.
+템플릿 상세 페이지는 `AssetGenerator`로 열린 슬롯을 채우고 PNG를 내려받습니다. `grid`가 있는 템플릿도 저장된 요소 좌표를 그대로 렌더링하므로, 별도 저작 POC로 역변환하지 않습니다. 기존 `GridComposer` POC는 실행 코드에서 제거하고 `archive/deprecated/grid-composer`에 격리 보관합니다.
 
 ### 의도된 방향 (미구현)
 
@@ -32,16 +32,16 @@
 
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
-| [Page](../surfaces/page.md) | 구현(POC) | `/create` → 카테고리 → 템플릿 → GridComposer. 발행된 템플릿만 읽고 비로그인 공개 읽기 |
+| [Page](../surfaces/page.md) | 구현 | `/create` → 카테고리 → 템플릿 → AssetGenerator. 발행된 템플릿만 읽고 비로그인 공개 읽기 |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `findTemplatesForRequest` + `prepareTemplateImage`(슬롯 검증 후 첨부 PNG) |
 | REST | 부분 | 생성용 REST는 없음. import 어댑터 `POST /api/templates/convert-figma`만 |
 | Slack | 계획 | — |
 
 ## 4. 의존
 
-- 클라이언트 라이브러리: `html-to-image`(PNG 캡처), `react-moveable`(GridComposer 드래그/스냅).
+- 클라이언트 라이브러리: `html-to-image`(PNG 캡처).
 - 공유 훅: `use-template-png-export`(Create·Chat 공유).
-- Payload 컬렉션: `templates`·`template-categories`·`template-assets`. 템플릿은 임베디드 Check를 relationship으로 참조하지 않고 `templateChecks[].checkKey`를 저장합니다. import은 `brand-logos`·`application-images`를 사용. 보안 게이트: **발행(publish) 시** 템플릿의 모든 이미지가 인가된 에셋 컬렉션을 참조해야 함(fail-closed). draft 저장은 충실 import를 위해 항상 허용하고, 공개 페이지는 발행본만 읽으므로 비인가 draft가 외부로 노출되지 않음.
+- Payload 컬렉션: `templates`·`template-categories`·`template-assets`. 템플릿은 임베디드 Check를 relationship으로 참조하지 않고 `templateChecks[].checkKey`를 저장합니다. import은 `brand-logos`·`application-images`를 사용. 모든 HTML 저장은 구조 파서와 허용 목록으로 실행 가능한 마크업·외부 URL을 먼저 차단하고, **발행(publish) 시** 공개 URL을 published 공식 에셋 참조와 추가 대조합니다. `template-assets`와 magic byte가 확인된 raster AI 배경 이미지는 draft에서만 허용합니다. Draft 원본(`baseHtml`)과 staging 에셋은 manager/admin만 읽을 수 있고, Admin Draft 미리보기는 script 없는 iframe으로 격리합니다. `templates`·`brand-logos`·`application-images`의 공개/worker 읽기는 published 문서만, 쓰기는 manager/admin만 허용합니다.
 - Figma import(`src/features/template-import/`): frame → `jsonTemplate` 변환 후 이미지 fill을 `template-assets`에 저장. Template 문서를 자동 생성하지는 않고 manager가 Admin에서 저장.
 - Review 미사용, Image 미호출(현재) — 위 "의도된 방향" 참조.
 

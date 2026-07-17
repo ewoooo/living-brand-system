@@ -33,7 +33,8 @@ export async function createCheckSessionRecord(
 			agentChatSession: input.agentChatSessionId,
 			createdBy: input.user.id,
 		},
-		overrideAccess: false,
+		// 서버 use case가 상태와 createdBy를 고정한 trusted write다.
+		overrideAccess: true,
 		user: input.user,
 	})
 

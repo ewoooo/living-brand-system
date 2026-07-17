@@ -14,11 +14,14 @@ export async function findAuthorizedAssetsByIds(
 	const found = await payload.find({
 		collection,
 		depth: 0,
+		draft: false,
 		limit: assetIds.length,
-		// 저장 게이트의 서버 내부 무결성 검증이다. 대상 컬렉션은 공개 read이고
-		// 반환도 id/url뿐이라 요청 사용자 기준 access 재평가를 생략해도 안전하다.
+		// 저장 게이트의 서버 내부 무결성 검증이다. 발행본의 id/url만 읽으므로
+		// 요청 사용자 기준 access 재평가를 생략한다.
 		overrideAccess: true,
-		where: { id: { in: assetIds } },
+		where: {
+			and: [{ id: { in: assetIds } }, { _status: { equals: 'published' } }],
+		},
 	})
 
 	return new Map(

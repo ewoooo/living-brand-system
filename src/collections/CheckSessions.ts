@@ -1,13 +1,12 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, managerOrAdmin } from '@/lib/auth'
+import { managerOrAdmin } from '@/lib/auth'
 
 export const CheckSessions: CollectionConfig = {
 	slug: 'check-sessions',
 	access: {
-		// Worker는 검수 실행(create)만 가능하고, 기록된 결과는 수정하지 못한다.
-		// 검수 완료 저장은 service repository의 trusted write만 우회한다.
+		// 실행 기록 생성과 완료 저장은 service repository의 trusted write만 우회한다.
 		read: managerOrAdmin,
-		create: authenticated,
+		create: () => false,
 		update: () => false,
 		delete: managerOrAdmin,
 	},
