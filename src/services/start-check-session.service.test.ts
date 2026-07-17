@@ -89,6 +89,26 @@ describe('check session service', () => {
 		)
 	})
 
+	it('시작 검수의 완료 상태 저장이 실패하면 DB의 running 세션을 failed로 종결한다', async () => {
+		const saveError = new Error('Completed update failed.')
+		const persistedSession = CheckSession.restore(snapshot(png, 'running'))
+		vi.mocked(getCheckSessionRecord).mockResolvedValueOnce(persistedSession)
+		vi.mocked(saveCheckSessionRecord)
+			.mockRejectedValueOnce(saveError)
+			.mockResolvedValueOnce(undefined)
+
+		await expect(
+			startCheckSession({
+				buffer: png,
+				scenario,
+				source: 'review-page',
+				user,
+			}),
+		).rejects.toBe(saveError)
+		expect(persistedSession.status).toBe('failed')
+		expect(saveCheckSessionRecord).toHaveBeenNthCalledWith(2, persistedSession, user)
+	})
+
 	it('소유자 조회에서 찾지 못한 세션은 not found로 종료한다', async () => {
 		vi.mocked(getCheckSessionRecord).mockResolvedValue(null)
 

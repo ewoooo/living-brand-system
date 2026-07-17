@@ -99,10 +99,7 @@ export async function startCheckSession(input: StartCheckSessionInput) {
 			rulesetSnapshot,
 		}
 	} catch (error) {
-		if (session.status === 'running') {
-			session.fail(error instanceof Error ? error.message : 'Check failed.')
-			await saveCheckSessionRecord(session, input.user)
-		}
+		await persistCheckSessionFailure(session, input.user, error)
 		throw error
 	}
 }
@@ -134,12 +131,12 @@ export async function completeCheckSessionAiCheck(input: CompleteCheckSessionAiC
 
 		return { checkSessionId: session.id, results: aiCheck.results }
 	} catch (error) {
-		await persistAiCheckFailure(session, input.user, error)
+		await persistCheckSessionFailure(session, input.user, error)
 		throw error
 	}
 }
 
-async function persistAiCheckFailure(session: CheckSession, user: User, error: unknown) {
+async function persistCheckSessionFailure(session: CheckSession, user: User, error: unknown) {
 	let runningSession: CheckSession | null = session
 
 	// 완료 상태 저장이 실패했다면 DB의 실제 상태를 다시 읽는다. 첫 update가 반영됐다면
