@@ -27,11 +27,13 @@ import { CheckSessions } from './collections/CheckSessions'
 import { GuidelineDocuments } from './collections/GuidelineDocuments'
 import { Plugins } from './collections/Plugins'
 import { RuleCheckers } from './collections/RuleCheckers'
+import { Rules } from './collections/Rules'
 import { TemplateAssets } from './collections/TemplateAssets'
 import { TemplateCategories } from './collections/TemplateCategories'
 import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
 import { env } from './env'
+import { listGuidelineSearchRules } from './features/guideline/repositories/guideline-search-rules.payload.repository'
 import {
 	findMcpChecks,
 	findMcpGuideline,
@@ -136,6 +138,7 @@ export default buildConfig({
 		TemplateAssets,
 		Plugins,
 		CheckScenarios,
+		Rules,
 		RuleCheckers,
 		CheckSessions,
 		AgentChatSessions,
@@ -201,7 +204,7 @@ export default buildConfig({
 				tools: [
 					mcpTextTool(
 						'findGuidelineDocuments',
-						'Find published guideline documents with localized content, hierarchy, blocks, and checks.',
+						'Find published guideline documents with localized content, hierarchy, blocks, and applied rules.',
 						{
 							...mcpListParameters,
 							level: z.number().int().min(1).max(3).optional(),
@@ -216,7 +219,7 @@ export default buildConfig({
 					),
 					mcpTextTool(
 						'findChecks',
-						'Find checks declared by published guideline documents and blocks.',
+						'Find rules applied by published guideline documents and blocks.',
 						mcpListParameters,
 						(args, req) =>
 							findMcpChecks(req, {
@@ -237,10 +240,16 @@ export default buildConfig({
 		} as never),
 		searchPlugin({
 			collections: ['guideline-documents'],
-			beforeSync: ({ originalDoc, searchDoc }) => ({
-				...searchDoc,
-				searchText: buildGuidelineSearchText(originalDoc as GuidelineDocument),
-			}),
+			beforeSync: async ({ originalDoc, payload, searchDoc }) => {
+				const document = originalDoc as GuidelineDocument
+				return {
+					...searchDoc,
+					searchText: buildGuidelineSearchText(
+						document,
+						await listGuidelineSearchRules(payload, document),
+					),
+				}
+			},
 			defaultPriorities: {
 				'guideline-documents': 20,
 			},

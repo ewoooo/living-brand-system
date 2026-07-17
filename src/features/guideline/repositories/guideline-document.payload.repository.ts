@@ -33,23 +33,6 @@ export async function listEditableGuidelineDocuments(
 	}))
 }
 
-/** draft를 포함한 전체 Guideline 문서에서 Check 컨테이너(blocks·checks)만 읽는다. */
-export async function listGuidelineCheckContainers(req: PayloadRequest) {
-	const result = await req.payload.find({
-		collection: 'guideline-documents',
-		depth: 0,
-		draft: true,
-		limit: 0,
-		overrideAccess: !req.user,
-		pagination: false,
-		req,
-		select: { blocks: true, checks: true },
-		...(req.user ? { user: req.user } : {}),
-	})
-
-	return result.docs.map(({ id, blocks, checks }) => ({ id, blocks, checks }))
-}
-
 /** 상위 문서 체인을 루트까지 읽고 ID 목록으로 변환한다. */
 export async function listGuidelineDocumentAncestorIds(
 	req: PayloadRequest,

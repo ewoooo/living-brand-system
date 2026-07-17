@@ -4,7 +4,6 @@ import {
 	getGuidelineRuleCheckerSummary,
 	hasGuidelineDocumentSlugConflict,
 	listEditableGuidelineDocuments,
-	listGuidelineCheckContainers,
 	listGuidelineDocumentAncestorIds,
 	listGuidelineDocumentDescendantPaths,
 } from './guideline-document.payload.repository'
@@ -40,28 +39,6 @@ describe('guideline-document Payload repository', () => {
 		expect(find).toHaveBeenCalledWith(
 			expect.objectContaining({ overrideAccess: false, locale: 'ko', user }),
 		)
-	})
-
-	it('Check 컨테이너에서 저장 메타데이터를 제거한다', async () => {
-		const find = vi.fn().mockResolvedValue({
-			docs: [
-				{
-					id: 10,
-					blocks: [{ checks: [{ key: 'logo' }] }],
-					checks: [{ key: 'color' }],
-					createdAt: 'ignored',
-				},
-			],
-		})
-		const req = { payload: { find }, user: { id: 7 } } as never
-
-		await expect(listGuidelineCheckContainers(req)).resolves.toEqual([
-			{
-				id: 10,
-				blocks: [{ checks: [{ key: 'logo' }] }],
-				checks: [{ key: 'color' }],
-			},
-		])
 	})
 
 	it('손상된 ancestor와 breadcrumb 위치를 sentinel로 보존한다', async () => {

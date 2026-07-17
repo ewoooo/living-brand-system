@@ -61,6 +61,7 @@ import * as migration_20260715_120500_image_ratio_blocks from './20260715_120500
 import * as migration_20260715_131314_check_session_pending_check_keys from './20260715_131314_check_session_pending_check_keys';
 import * as migration_20260716_013525_guideline_search_recall from './20260716_013525_guideline_search_recall';
 import * as migration_20260717_052740_add_check_session_input_snapshot from './20260717_052740_add_check_session_input_snapshot';
+import * as migration_20260717_094613_extract_rules_collection from './20260717_094613_extract_rules_collection';
 
 export const migrations = [
   {
@@ -377,5 +378,10 @@ export const migrations = [
     up: migration_20260717_052740_add_check_session_input_snapshot.up,
     down: migration_20260717_052740_add_check_session_input_snapshot.down,
     name: '20260717_052740_add_check_session_input_snapshot',
+  },
+  {
+    up: migration_20260717_094613_extract_rules_collection.up,
+    down: migration_20260717_094613_extract_rules_collection.down,
+    name: '20260717_094613_extract_rules_collection'
   },
 ];

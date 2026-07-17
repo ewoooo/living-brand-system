@@ -29,7 +29,7 @@ describe('MCP guideline Payload repository', () => {
 					slug: 'logo',
 					description: null,
 					headerImage: 11,
-					checks: [],
+					rules: [],
 					blocks: [],
 					displayOrder: 2,
 					parent: 3,
@@ -48,7 +48,7 @@ describe('MCP guideline Payload repository', () => {
 				slug: 'logo',
 				description: null,
 				headerImage: 11,
-				checks: [],
+				rules: [],
 				blocks: [],
 				displayOrder: 2,
 				parent: 3,
@@ -67,7 +67,7 @@ describe('MCP guideline Payload repository', () => {
 		)
 	})
 
-	it('published Check source를 MCP DTO로 변환한다', async () => {
+	it('published Rule source를 MCP DTO로 변환한다', async () => {
 		const document = { id: 9 }
 		const source = { documentId: 9 }
 		vi.mocked(findPublishedUnifiedGuidelineCheckDocuments).mockResolvedValue({
@@ -75,7 +75,7 @@ describe('MCP guideline Payload repository', () => {
 		} as never)
 		vi.mocked(collectGuidelineCheckSources).mockReturnValue([
 			{
-				check: { key: 'logo.clear-space', title: 'Clear space', tier: 'required' },
+				rule: { key: 'logo.clear-space', title: 'Clear space', tier: 'required' },
 				evidence: { type: 'mediaShowcase' },
 				source,
 			},

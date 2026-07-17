@@ -10,16 +10,16 @@ export async function listAdminGuidelineSummaryDocuments() {
 		depth: 0,
 		draft: true,
 		pagination: false,
-		select: { blocks: true, breadcrumbs: true, checks: true },
+		select: { blocks: true, breadcrumbs: true, rules: true },
 	})
 
 	return documents.map((document) => ({
 		breadcrumbDocumentIds: (document.breadcrumbs ?? []).map(
 			({ doc }) => relationshipId(doc) ?? -1,
 		),
-		checkKeys: [
-			...(document.checks ?? []),
-			...(document.blocks ?? []).flatMap((block) => block.checks ?? []),
-		].map(({ key }) => key),
+		ruleCount: [
+			...(document.rules ?? []),
+			...(document.blocks ?? []).flatMap((block) => block.rules ?? []),
+		].length,
 	}))
 }

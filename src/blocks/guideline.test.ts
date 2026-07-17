@@ -1,26 +1,21 @@
 import type { Field } from 'payload'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { GuidelineDocuments } from '@/collections/GuidelineDocuments'
 import {
 	guidelineBreadcrumbCount,
 	guidelineDocumentTypeLabel,
 } from '@/components/admin/guideline-document-tree'
+import { guidelineBlockCatalog, guidelineBlocks } from '@/features/guideline/blocks/catalog'
 import { checkKeyFromEnglishTitle } from '@/features/guideline/checks/check-key-from-english-title'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
-import {
-	ColumnUnitBlock,
-	DoDontBlock,
-	guidelineBlocks,
-	guidelineChecksField,
-	MediaShowcaseBlock,
-} from './guideline'
+import { ColumnUnitBlock, DoDontBlock, guidelineRulesField, MediaShowcaseBlock } from './guideline'
 
 const fieldNames = (fields: Field[]) =>
 	fields.flatMap((field) =>
 		'name' in field && typeof field.name === 'string' ? [field.name] : [],
 	)
 
-describe('guideline checks field', () => {
+describe('guideline rules field', () => {
 	it('작성 순서와 자동 계층 필드 노출을 구성한다', () => {
 		const names = fieldNames(GuidelineDocuments.fields)
 		const field = (name: string) =>
@@ -29,7 +24,7 @@ describe('guideline checks field', () => {
 			)
 
 		expect(names.indexOf('parent')).toBeLessThan(names.indexOf('title'))
-		expect(names.indexOf('blocks')).toBeLessThan(names.indexOf('checks'))
+		expect(names.indexOf('blocks')).toBeLessThan(names.indexOf('rules'))
 		expect(field('parent')?.admin?.position).toBe('main')
 		expect(field('breadcrumbs')?.admin).toMatchObject({ hidden: true })
 	})
@@ -54,24 +49,36 @@ describe('guideline checks field', () => {
 		).toBeUndefined()
 	})
 
-	it('통합 문서와 모든 Block에 같은 checks[] 계약을 둔다', () => {
-		const checks = guidelineChecksField()
-		expect(checks.type).toBe('array')
-		if (checks.type !== 'array') return
-		expect(fieldNames(checks.fields)).toEqual([
-			'title',
-			'titleKo',
-			'key',
-			'tier',
-			'executor',
-			'checker',
-			'options',
-			'criteria',
-			'heuristicPrompt',
-			'messages',
+	it('통합 문서와 모든 Block이 같은 rules 관계 계약을 둔다', () => {
+		const rules = guidelineRulesField()
+		expect(rules.type).toBe('relationship')
+		if (rules.type !== 'relationship') return
+		expect(rules.relationTo).toBe('rules')
+		expect(rules.hasMany).toBe(true)
+
+		expect(fieldNames(GuidelineDocuments.fields)).toContain('rules')
+		for (const block of guidelineBlocks) expect(fieldNames(block.fields)).toContain('rules')
+	})
+
+	it('문서와 블록은 Rule 정의 필드를 소유하지 않는다', () => {
+		expect(fieldNames(GuidelineDocuments.fields)).not.toContain('checks')
+		for (const block of guidelineBlocks) {
+			expect(fieldNames(block.fields)).not.toContain('checks')
+		}
+	})
+
+	it('블록 카탈로그 key와 Payload slug를 같은 순서로 등록한다', () => {
+		expect(
+			Object.entries(guidelineBlockCatalog).map(([type, definition]) => [
+				type,
+				definition.schema.slug,
+			]),
+		).toEqual([
+			['columnUnit', 'columnUnit'],
+			['mediaShowcase', 'mediaShowcase'],
+			['colorPalette', 'colorPalette'],
+			['doDont', 'doDont'],
 		])
-		expect(fieldNames(GuidelineDocuments.fields)).toContain('checks')
-		for (const block of guidelineBlocks) expect(fieldNames(block.fields)).toContain('checks')
 	})
 
 	it('Do/Don’t 이미지 비율에 공용 계약을 사용한다', () => {
@@ -113,183 +120,5 @@ describe('guideline checks field', () => {
 	it('영문 제목에서 namespace 없는 안정적인 key를 만든다', () => {
 		expect(checkKeyFromEnglishTitle('Imagery Mood & Tone')).toBe('imagery-mood-tone')
 		expect(checkKeyFromEnglishTitle('  Logo / Clear Space  ')).toBe('logo-clear-space')
-	})
-
-	it('Checker에서 executor를 파생해 관련 설정만 조건부 노출한다', async () => {
-		const checks = guidelineChecksField()
-		if (checks.type !== 'array') return
-		const field = (name: string) =>
-			checks.fields.find((candidate) => 'name' in candidate && candidate.name === name)
-		const condition = (name: string, executor: 'deterministic' | 'heuristic' | 'manual') => {
-			const candidate = field(name)
-			const adminCondition =
-				candidate && 'admin' in candidate ? candidate.admin?.condition : null
-			if (typeof adminCondition !== 'function')
-				throw new Error(`${name} condition is missing`)
-			return adminCondition({}, { executor }, {} as never)
-		}
-
-		expect(condition('options', 'deterministic')).toBe(true)
-		expect(condition('options', 'heuristic')).toBe(false)
-		expect(condition('criteria', 'heuristic')).toBe(true)
-		expect(condition('criteria', 'deterministic')).toBe(false)
-		expect(condition('heuristicPrompt', 'heuristic')).toBe(true)
-		expect(condition('heuristicPrompt', 'manual')).toBe(false)
-		expect(condition('messages', 'heuristic')).toBe(false)
-		expect(condition('messages', 'manual')).toBe(true)
-
-		const executor = field('executor')
-		if (executor?.type !== 'select') throw new Error('executor select is missing')
-		expect(executor.admin?.hidden).toBe(true)
-		expect(executor.defaultValue).toBeUndefined()
-		const populateExecutor = executor.hooks?.beforeValidate?.[0]
-		if (typeof populateExecutor !== 'function') {
-			throw new Error('executor beforeValidate hook is missing')
-		}
-		const findByID = vi.fn().mockResolvedValue({ executor: 'heuristic' })
-		const req = { payload: { findByID } }
-		expect(
-			await populateExecutor({
-				req,
-				siblingData: { checker: 7 },
-				value: 'deterministic',
-			} as never),
-		).toBe('heuristic')
-		expect(findByID).toHaveBeenCalledWith({
-			collection: 'rule-checkers',
-			id: 7,
-			depth: 0,
-			draft: true,
-			overrideAccess: true,
-			req,
-		})
-
-		const heuristicPrompt = field('heuristicPrompt')
-		if (heuristicPrompt?.type !== 'textarea') {
-			throw new Error('heuristicPrompt textarea is missing')
-		}
-		expect(heuristicPrompt.maxLength).toBe(2000)
-		expect(heuristicPrompt.required).not.toBe(true)
-
-		const heuristicCriteria = field('criteria')
-		if (heuristicCriteria?.type !== 'array' || !heuristicCriteria.validate) {
-			throw new Error('heuristicCriteria array is missing')
-		}
-		expect(
-			await heuristicCriteria.validate([], {
-				siblingData: { executor: 'heuristic' },
-			} as never),
-		).toBe('Heuristic Check에는 판정 기준이 1개 이상 필요합니다.')
-		expect(
-			await heuristicCriteria.validate([], {
-				siblingData: { executor: 'deterministic' },
-			} as never),
-		).toBe(true)
-
-		const checker = field('checker')
-		if (checker?.type !== 'relationship') throw new Error('checker relationship is missing')
-		expect(checker.admin?.components?.Field).toBe('/components/admin/CheckCheckerField')
-		expect(checker.filterOptions).toBeUndefined()
-	})
-
-	it('Contrast options를 전용 입력으로 편집하고 저장 전에 검증한다', async () => {
-		const checks = guidelineChecksField()
-		if (checks.type !== 'array') throw new Error('checks array is missing')
-		const options = checks.fields.find(
-			(candidate) => 'name' in candidate && candidate.name === 'options',
-		)
-		if (options?.type !== 'json' || typeof options.validate !== 'function') {
-			throw new Error('options json validation is missing')
-		}
-
-		expect(options.admin?.components?.Field).toBe('/components/admin/CheckOptionsField')
-		const context = {
-			req: { payload: {} },
-			siblingData: {
-				executor: 'deterministic',
-				checker: { checkerKey: 'contrast' },
-			},
-		} as never
-		expect(
-			await options.validate(
-				{
-					criteria: [{ measurement: 'contrastRatio', operator: 'gte', expected: 4.5 }],
-				} as never,
-				context,
-			),
-		).toBe(true)
-		expect(await options.validate(null as never, context)).toBe(
-			'최소 대비율은 1 이상 21 이하의 숫자로 입력하세요.',
-		)
-	})
-
-	it('criteria row는 kind에 따라 관찰형/수치형 입력을 나눈다', () => {
-		const checks = guidelineChecksField() as { fields: { name?: string; fields?: unknown[] }[] }
-		const criteria = checks.fields.find(
-			(field) => 'name' in field && field.name === 'criteria',
-		) as {
-			validate: (value: unknown, args: { siblingData: unknown }) => true | string
-			fields: { fields: { name: string; required?: boolean }[] }[]
-		}
-		const rowFieldNames = criteria.fields.flatMap((row) =>
-			row.fields.map((field) => field.name),
-		)
-		expect(rowFieldNames).toEqual(
-			expect.arrayContaining([
-				'question',
-				'kind',
-				'expected',
-				'operator',
-				'expectedValue',
-				'max',
-				'unit',
-			]),
-		)
-
-		const heuristic = { executor: 'heuristic' }
-		// 관찰형: expected 필수
-		expect(
-			criteria.validate([{ kind: 'presence', question: 'q' }], { siblingData: heuristic }),
-		).toContain('적합 기준')
-		// 수치형: operator/expectedValue 필수
-		expect(
-			criteria.validate([{ kind: 'measure', question: 'q' }], { siblingData: heuristic }),
-		).toContain('연산과 기대값')
-		// between: max > expectedValue
-		expect(
-			criteria.validate(
-				[
-					{
-						kind: 'measure',
-						question: 'q',
-						operator: 'between',
-						expectedValue: 30,
-						max: 5,
-					},
-				],
-				{ siblingData: heuristic },
-			),
-		).toContain('최대값')
-		// 정상 케이스
-		expect(
-			criteria.validate(
-				[
-					{ kind: 'presence', question: 'q', expected: 'present' },
-					{
-						kind: 'measure',
-						question: 'q',
-						operator: 'between',
-						expectedValue: 5,
-						max: 30,
-						unit: '%',
-					},
-				],
-				{ siblingData: heuristic },
-			),
-		).toBe(true)
-		// kind 미지정 기존 데이터는 presence로 검증
-		expect(
-			criteria.validate([{ question: 'q', expected: 'absent' }], { siblingData: heuristic }),
-		).toBe(true)
 	})
 })

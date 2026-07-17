@@ -45,14 +45,14 @@
 ### 3.2 GuidelineSection
 
 데이터명: GuidelineSection
-수집 목적: 가이드라인 페이지를 장 단위로 묶고 자체 검수 선언을 소유한다.
+수집 목적: 가이드라인 페이지를 장 단위로 묶고 적용할 검수 규칙(Rule)을 참조로 선택한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
 | 생성·수집 | Manager가 섹션 이름, 설명, 표시 순서를 입력하면 BrandGuideline 아래에 생성한다. |
 | 전송 | 섹션 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | BrandGuideline 하위 엔티티로 저장하고 표시 순서를 함께 보관한다. |
-| 처리 | GuidelinePage와 자체 GuidelineBlock을 소유하고, 자신에게 적용할 Check를 함께 관리한다. |
+| 처리 | GuidelinePage와 자체 GuidelineBlock을 소유하고, 적용할 Rule을 관계로 선택한다. Rule 정의는 rules 컬렉션이 소유한다. |
 | 활용 | Manager 편집 화면과 Creator 가이드라인 탐색 구조에 사용한다. |
 | 공유·제공 | 다른 도메인에는 직접 제공하지 않고 GuidelineVersion에 포함된 구조로 제공한다. |
 | 보관 | BrandGuideline revision과 Official Version에 포함해 보관한다. |
@@ -68,7 +68,7 @@
 | 생성·수집 | Manager가 페이지 제목, 배치 정보, 소속 섹션을 입력하면 GuidelineSection 아래에 생성한다. |
 | 전송 | 페이지 구성 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | 소속 GuidelineSection, PagePolicy, PageAssetRef, PageExample, PageComposition과 함께 저장한다. |
-| 처리 | GuidelineBlock을 소유하고, 자신에게 적용할 Check를 함께 관리한다. |
+| 처리 | GuidelineBlock을 소유하고, 적용할 Rule을 관계로 선택한다. Rule 정의는 rules 컬렉션이 소유한다. |
 | 활용 | Creator 가이드라인 화면, Agent 답변 근거, 품질 검수 기준 탐색에 사용한다. |
 | 공유·제공 | BehaviorEventLog에는 페이지 조회와 클릭 대상인 PageRef만 제공한다. |
 | 보관 | Official Version에 포함된 페이지 구조를 유지한다. |
@@ -84,7 +84,7 @@
 | 생성·수집 | Manager가 블록 유형과 콘텐츠를 입력하면 GuidelineSection 또는 GuidelinePage 아래에 생성한다. |
 | 전송 | 블록 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
 | 저장 | 콘텐츠와 식별자는 소속 Section/Page 안에 임베디드 데이터로 저장한다. Block 식별자는 부모 문서 안에서만 유효하다. |
-| 처리 | 이미지와 컬러 같은 표시 자원을 참조하고, 자신에게 적용할 Check를 함께 관리한다. |
+| 처리 | 이미지와 컬러 같은 표시 자원을 참조하고, 적용할 Rule을 관계로 선택한다. 문서·블록·시나리오가 참조 중인 Rule은 삭제할 수 없다. |
 | 활용 | Creator 가이드라인 화면, Agent 답변 근거, 품질 검수 evidence 생성에 사용한다. |
 | 공유·제공 | 다른 도메인에는 GuidelineVersion에 포함된 읽기 모델로 제공한다. |
 | 보관 | GuidelineVersion과 Payload revision에 포함해 변경 이력을 보관한다. |

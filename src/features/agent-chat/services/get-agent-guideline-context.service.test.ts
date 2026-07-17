@@ -34,7 +34,7 @@ describe('listAgentChecks', () => {
 				description: lexical('Use the legal name.'),
 				headerImage: null,
 				blocks: [],
-				checks: [
+				rules: [
 					{
 						key: 'name.input',
 						title: 'Name input',
@@ -47,7 +47,7 @@ describe('listAgentChecks', () => {
 				description: lexical('Follow the color palette.'),
 				headerImage: null,
 				blocks: [],
-				checks: [
+				rules: [
 					{
 						key: 'color.palette',
 						title: 'Color palette',
@@ -121,7 +121,7 @@ describe('readAgentGuidelineDocument', () => {
 				description: null,
 				descriptionText: '',
 				blocks: [],
-				checks: [
+				rules: [
 					{
 						key: 'logo.size.minimum',
 						title: 'Minimum size',
@@ -159,7 +159,7 @@ describe('readAgentGuidelineDocument', () => {
 				slug: 'brand-core',
 				description: null,
 				descriptionText: '',
-				checks: [
+				rules: [
 					{
 						key: 'brand.core',
 						title: 'Brand core',

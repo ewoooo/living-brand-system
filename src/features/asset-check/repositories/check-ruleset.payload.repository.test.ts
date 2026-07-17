@@ -10,7 +10,7 @@ describe('getCheckSourceDocuments', () => {
 		vi.mocked(getPayload).mockReset()
 	})
 
-	it('published 통합 문서를 checks[] 관계가 populate되는 depth로 한 번 조회한다', async () => {
+	it('published 통합 문서를 rules 관계가 populate되는 depth로 한 번 조회한다', async () => {
 		const find = vi.fn((_query: unknown) =>
 			Promise.resolve({
 				docs: [
@@ -21,7 +21,7 @@ describe('getCheckSourceDocuments', () => {
 						displayOrder: 1,
 						breadcrumbs: [],
 						blocks: [],
-						checks: [],
+						rules: [],
 					},
 				],
 			}),
@@ -51,7 +51,7 @@ describe('getCheckSourceDocuments', () => {
 		expect(find).toHaveBeenCalledTimes(1)
 	})
 
-	it('Payload 관계와 Block Check를 persistence-free DTO로 변환한다', async () => {
+	it('Payload 관계와 Block Rule을 persistence-free DTO로 변환한다', async () => {
 		const checker = {
 			id: 9,
 			name: 'Layout checker',
@@ -81,15 +81,16 @@ describe('getCheckSourceDocuments', () => {
 						slug: 'primary-logo',
 						displayOrder: 3,
 						breadcrumbs: [{ doc: { id: 10 } }, { doc: 20 }, { doc: { id: 30 } }],
-						checks: [],
+						rules: [],
 						blocks: [
 							{
 								id: 'logo-examples',
 								blockName: 'Logo examples',
 								blockType: 'mediaShowcase',
 								image,
-								checks: [
+								rules: [
 									{
+										id: 91,
 										key: 'logo.clear-space',
 										title: 'Clear Space',
 										titleKo: '보호 공간',

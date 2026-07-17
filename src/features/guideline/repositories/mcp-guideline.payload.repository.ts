@@ -1,5 +1,5 @@
 import type { PayloadRequest } from 'payload'
-import type { Guideline, GuidelineChecks, GuidelineDocument } from '@/payload-types'
+import type { Guideline, GuidelineDocument, Rule } from '@/payload-types'
 import { collectGuidelineCheckSources } from '../checks/collect-guideline-check-sources'
 import { formatCheckEvidence } from '../checks/format-check-evidence'
 import { findPublishedUnifiedGuidelineCheckDocuments } from './published-guideline-checks.payload.repository'
@@ -11,7 +11,7 @@ export type McpGuidelineDocument = Pick<
 	| 'slug'
 	| 'description'
 	| 'headerImage'
-	| 'checks'
+	| 'rules'
 	| 'blocks'
 	| 'displayOrder'
 	| 'parent'
@@ -22,7 +22,7 @@ export interface McpGuidelineCheck {
 	evidence: string
 	key: string
 	source: { documentId: number }
-	tier: NonNullable<GuidelineChecks>[number]['tier']
+	tier: Rule['tier']
 	title: string
 }
 
@@ -48,7 +48,7 @@ export async function listPublishedMcpGuidelineDocuments(
 			slug: true,
 			description: true,
 			headerImage: true,
-			checks: true,
+			rules: true,
 			blocks: true,
 			displayOrder: true,
 			parent: true,
@@ -62,7 +62,7 @@ export async function listPublishedMcpGuidelineDocuments(
 		slug: document.slug,
 		description: document.description,
 		headerImage: document.headerImage,
-		checks: document.checks,
+		rules: document.rules,
 		blocks: document.blocks,
 		displayOrder: document.displayOrder,
 		parent: document.parent,
@@ -82,10 +82,10 @@ export async function listPublishedMcpGuidelineChecks(
 	})
 
 	return documents.flatMap((document) =>
-		collectGuidelineCheckSources(document).map(({ check, evidence, source }) => ({
-			key: check.key,
-			title: check.title,
-			tier: check.tier,
+		collectGuidelineCheckSources(document).map(({ rule, evidence, source }) => ({
+			key: rule.key,
+			title: rule.title,
+			tier: rule.tier,
 			evidence: formatCheckEvidence(evidence),
 			source,
 		})),

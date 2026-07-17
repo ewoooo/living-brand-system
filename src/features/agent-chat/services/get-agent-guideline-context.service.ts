@@ -144,7 +144,7 @@ export async function readAgentGuidelineDocument(
 
 	const document = result.document
 	const id = String(document.id)
-	const checks = collectGuidelineCheckSources(document).map(({ check }) => toDocumentCheck(check))
+	const checks = collectGuidelineCheckSources(document).map(({ rule }) => toDocumentCheck(rule))
 	return {
 		title: document.title,
 		collection: 'guideline-documents',
@@ -234,14 +234,14 @@ function toDocumentCheck(check: { key: string; title: string }): GuidelineDocume
 }
 
 function toAgentCheck({
-	check,
+	rule,
 	evidence,
 }: ReturnType<typeof collectGuidelineCheckSources>[number]): AgentCheckCatalogItem {
 	return {
 		evidence: formatCheckEvidence(evidence),
-		key: check.key,
-		tier: check.tier ?? null,
-		title: check.title,
+		key: rule.key,
+		tier: rule.tier ?? null,
+		title: rule.title,
 	}
 }
 

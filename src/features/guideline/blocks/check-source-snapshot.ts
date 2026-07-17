@@ -1,12 +1,12 @@
 import type { GuidelineDocument } from '@/payload-types'
-import type { CheckSourceSnapshot } from '../checks/check-source'
 import { relationshipId } from '../utils/block-text'
 import { extractTextFromLexical } from '../utils/lexical-text'
+import type { CheckSourceSnapshot } from './catalog'
 import { snapshotBlock } from './registry'
 
 export type GuidelineCheckDocument = Pick<
 	GuidelineDocument,
-	'blocks' | 'checks' | 'description' | 'headerImage' | 'id'
+	'blocks' | 'rules' | 'description' | 'headerImage' | 'id'
 >
 
 /** Section/Page 전체 또는 blockId가 가리키는 단일 Block을 Check source로 정규화한다. */

@@ -22,16 +22,16 @@ export async function findPublishedScenarioCheckRecords(
 	})
 
 	return documents.flatMap((document) =>
-		collectGuidelineCheckSources(document).map(({ blockName, check }) => {
-			const checker = typeof check.checker === 'object' ? check.checker : null
+		collectGuidelineCheckSources(document).map(({ blockName, rule }) => {
+			const checker = typeof rule.checker === 'object' ? rule.checker : null
 
 			return {
 				blockName,
 				documentTitle: document.title,
 				executor: checker?.executor,
-				key: check.key,
-				title: check.title,
-				titleKo: check.titleKo ?? undefined,
+				key: rule.key,
+				title: rule.title,
+				titleKo: rule.titleKo ?? undefined,
 			}
 		}),
 	)
