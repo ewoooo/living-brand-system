@@ -16,16 +16,14 @@ import {
 	evaluateAdvisory,
 	evaluateHeuristic,
 } from '@/features/asset-check/domain/heuristic.evaluator'
+import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
 	type AiCheckRunResult,
 	runAiCheck,
 } from '@/features/asset-check/repositories/ai-check.agent.repository'
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
-import {
-	getRuntimeChecks,
-	type RuntimeCheck,
-} from '@/features/asset-check/services/get-check-ruleset.service'
+import { getRuntimeChecks } from '@/features/asset-check/services/get-check-ruleset.service'
 import type { ImageContentFlags } from '@/features/asset-check/types'
 import { detectCheckImageMediaType } from '@/features/asset-check/utils/image-format'
 
@@ -50,6 +48,7 @@ function isPendingAiCheck(check: RuntimeCheck): boolean {
 /**
  * 검수 대상 이미지를 deterministic/manual 룰까지만 즉시 판정한다.
  * AI 휴리스틱 Check는 pendingCheckKeys로 분리해 후속 요청이 실행한다.
+ * 이미지 decode I/O는 image-decoder repository가, 룰·팔레트 조회 I/O는 각 조회 service의 Payload repository가 소유한다.
  */
 export async function runImmediateCheck(
 	buffer: Buffer,

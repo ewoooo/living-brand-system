@@ -1,12 +1,14 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
+import type { AiUsage, CheckResult } from '@/features/asset-check/checkers/types'
 import {
 	CheckSession,
 	type CheckSessionInputSnapshot,
+	type CheckSessionSource,
 } from '@/features/asset-check/domain/check-session'
-import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
-import type { CheckSessionSource } from '@/features/asset-check/types'
-import type { AgentChatSession, User } from '@/payload-types'
+import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
+import { isSupportedCheckImageMediaType } from '@/features/asset-check/utils/image-format'
+import type { AgentChatSession, CheckSession as CheckSessionRecord, User } from '@/payload-types'
 
 interface CreateCheckSessionInput {
 	agentChatSessionId?: AgentChatSession['id']
@@ -45,7 +47,7 @@ export async function createCheckSessionRecord(
 		user: input.user,
 	})
 
-	return CheckSession.fromRecord(record)
+	return toCheckSession(record)
 }
 
 /**
@@ -64,7 +66,7 @@ export async function getCheckSessionRecord(id: number, user: User): Promise<Che
 	})
 	const record = result.docs[0]
 
-	return record ? CheckSession.fromRecord(record) : null
+	return record ? toCheckSession(record) : null
 }
 
 /**
@@ -79,5 +81,36 @@ export async function saveCheckSessionRecord(session: CheckSession, user: User):
 		data: session.toUpdateData(),
 		overrideAccess: true,
 		user,
+	})
+}
+
+function toCheckSession(record: CheckSessionRecord): CheckSession {
+	const inputMediaType = record.inputMediaType
+	const inputSnapshot: CheckSessionInputSnapshot | undefined =
+		typeof record.inputSha256 === 'string' &&
+		typeof inputMediaType === 'string' &&
+		isSupportedCheckImageMediaType(inputMediaType) &&
+		typeof record.inputByteLength === 'number'
+			? {
+					sha256: record.inputSha256,
+					mediaType: inputMediaType,
+					byteLength: record.inputByteLength,
+				}
+			: undefined
+
+	return CheckSession.restore({
+		id: record.id,
+		status: record.status,
+		results: (record.results ?? {}) as Record<string, CheckResult>,
+		pendingCheckKeys: Array.isArray(record.pendingCheckKeys)
+			? record.pendingCheckKeys.filter((key): key is string => typeof key === 'string')
+			: [],
+		rulesetSnapshot: Array.isArray(record.rulesetSnapshot)
+			? (record.rulesetSnapshot as RuntimeCheck[])
+			: undefined,
+		inputSnapshot,
+		aiUsage: (record.aiUsage ?? undefined) as AiUsage | undefined,
+		errorMessage: record.errorMessage ?? undefined,
+		completedAt: record.completedAt ?? undefined,
 	})
 }

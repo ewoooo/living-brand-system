@@ -1,67 +1,13 @@
 import { cache } from 'react'
 import { hasChecker, hasDeterministicChecker } from '@/features/asset-check/checkers/registry'
-import type { CheckStatus, HeuristicCriterion } from '@/features/asset-check/checkers/types'
-import { getCheckSourceDocuments } from '@/features/asset-check/repositories/check-ruleset.payload.repository'
-import { toRuntimeCheckMessages } from '@/features/asset-check/utils/check-messages'
-import type { CheckEvidence, CheckReferenceAssetRole } from '@/features/guideline/blocks/types'
+import type { HeuristicCriterion } from '@/features/asset-check/checkers/types'
+import type { CheckSection, RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
-	collectGuidelineCheckSources,
-	type GuidelineCheckSource,
-} from '@/features/guideline/checks/collect-guideline-check-sources'
-import type { GuidelineDocument, RuleChecker } from '@/payload-types'
-
-export interface CheckReferenceAsset {
-	name: string
-	url: string
-	mimeType: string
-	role: CheckReferenceAssetRole
-}
-
-export interface CheckerSummary {
-	key: string
-	type: RuleChecker['executor']
-	implementationKey?: string
-}
-
-export interface RuntimeCheck {
-	key: string
-	title: string
-	titleKo?: string
-	tier?: 'recommended' | 'required'
-	/** 기존 CheckSession snapshot에는 없을 수 있다. 새 snapshot은 항상 포함한다. */
-	source?: { documentId: number }
-	/** 화면에 표시할 Checker 계약이다. */
-	checker: CheckerSummary
-	/** 아래 필드는 기존 CheckSession snapshot과 런타임 실행 계약이다. */
-	executor: RuleChecker['executor']
-	checkerKey?: string
-	model?: string
-	prompt?: string
-	options?: unknown
-	heuristicCriteria?: HeuristicCriterion[]
-	heuristicPrompt?: string
-	/** 자동 검수 가능 여부 — deterministic인데 checker 미등록이면 false (UI 배지용). */
-	implemented: boolean
-	/** string은 기존 CheckSession snapshot 조회 호환용이다. */
-	evidence: CheckEvidence | string
-	referenceAssets: CheckReferenceAsset[]
-	messages?: Partial<Record<CheckStatus, string>>
-}
-
-/** 검수 화면에서 Check 배치를 표시하는 가이드라인 문서 단위다. */
-export interface CheckSection {
-	title: string
-	slug: string
-	groupTitle: string
-	groupSlug: string
-	chapterTitle: string
-	chapterSlug: string
-	chapterOrder: number
-	sectionTitle: string
-	sectionSlug: string
-	sectionOrder: number
-	checks: RuntimeCheck[]
-}
+	type CheckRulesetSource,
+	type CheckRulesetSourceDocument,
+	getCheckSourceDocuments,
+} from '@/features/asset-check/repositories/check-ruleset.payload.repository'
+import { toRuntimeCheckMessages } from '@/features/asset-check/utils/check-messages'
 
 /**
  * 검수 화면용 Check 뷰모델을 published 통합 문서와 내부 Block에서 조립한다.
@@ -71,12 +17,12 @@ export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
 	const { documents } = await getCheckSourceDocuments()
 	const byId = new Map(documents.map((document) => [document.id, document]))
 	const items = documents.map((document) => ({
-		documentOrder: (document.breadcrumbs?.length ?? 1) < 3 ? -1 : document.displayOrder,
+		documentOrder: document.breadcrumbDocumentIds.length < 3 ? -1 : document.displayOrder,
 		item: {
 			title: document.title,
-			slug: pathSegment(document),
+			slug: document.slug,
 			...toCheckPlacement(document, byId),
-			checks: collectGuidelineCheckSources(document).map(toRuntimeCheck),
+			checks: document.checks.map(toRuntimeCheck),
 		},
 	}))
 
@@ -110,8 +56,8 @@ function toRuntimeCheck({
 	evidence,
 	referenceAssets,
 	source,
-}: GuidelineCheckSource): RuntimeCheck {
-	const checker = typeof check.checker === 'object' ? check.checker : null
+}: CheckRulesetSource): RuntimeCheck {
+	const checker = check.checker
 	if (!checker) throw new Error(`RuleChecker가 연결되지 않은 Check입니다: ${check.key}`)
 	const checkerKey = checker.checkerKey ?? undefined
 	const model = checker.model ?? undefined
@@ -177,12 +123,12 @@ function toRuntimeCheck({
 		implemented,
 		evidence,
 		referenceAssets: referenceAssets.flatMap((asset) =>
-			asset.asset.url && asset.asset.mimeType
+			asset.url && asset.mimeType
 				? [
 						{
-							name: asset.asset.name,
-							url: asset.asset.url,
-							mimeType: asset.asset.mimeType,
+							name: asset.name,
+							url: asset.url,
+							mimeType: asset.mimeType,
 							role: asset.role,
 						},
 					]
@@ -204,12 +150,14 @@ function uniqueChecks(checks: RuntimeCheck[]): RuntimeCheck[] {
 	return [...byKey.values()]
 }
 
-function toCheckPlacement(document: GuidelineDocument, documents: Map<number, GuidelineDocument>) {
-	const breadcrumbs = document.breadcrumbs ?? []
-	const chapter = documents.get(relationshipId(breadcrumbs[0]?.doc)) ?? document
-	const section = documents.get(relationshipId(breadcrumbs[1]?.doc)) ?? chapter
-	const sectionSlug = pathSegment(section)
-	const chapterSlug = pathSegment(chapter)
+function toCheckPlacement(
+	document: CheckRulesetSourceDocument,
+	documents: Map<number, CheckRulesetSourceDocument>,
+) {
+	const chapter = documents.get(document.breadcrumbDocumentIds[0] ?? -1) ?? document
+	const section = documents.get(document.breadcrumbDocumentIds[1] ?? -1) ?? chapter
+	const sectionSlug = section.slug
+	const chapterSlug = chapter.slug
 
 	return {
 		groupTitle: section.title,
@@ -221,13 +169,4 @@ function toCheckPlacement(document: GuidelineDocument, documents: Map<number, Gu
 		sectionSlug,
 		sectionOrder: section.displayOrder,
 	}
-}
-
-function pathSegment(document: GuidelineDocument) {
-	return document.slug
-}
-
-function relationshipId(value: GuidelineDocument['parent'] | undefined): number {
-	if (typeof value === 'number') return value
-	return value?.id ?? -1
 }

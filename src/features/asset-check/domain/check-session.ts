@@ -1,10 +1,9 @@
 import type { AiUsage, CheckResult } from '@/features/asset-check/checkers/types'
-import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
-import {
-	type CheckImageMediaType,
-	isSupportedCheckImageMediaType,
-} from '@/features/asset-check/utils/image-format'
-import type { CheckSession as CheckSessionRecord } from '@/payload-types'
+import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
+import type { CheckImageMediaType } from '@/features/asset-check/utils/image-format'
+
+export type CheckSessionStatus = 'running' | 'completed' | 'failed'
+export type CheckSessionSource = 'mcp-call' | 'review-page' | 'chat'
 
 /** 종결(completed/failed)된 세션에 전이를 시도했을 때의 방어선. 정상 경로에서는 나오지 않는다. */
 export class CheckSessionStateError extends Error {}
@@ -25,9 +24,21 @@ export interface CheckSessionInputSnapshot {
 }
 
 export interface CheckSessionUpdateData {
-	status: CheckSessionRecord['status']
+	status: CheckSessionStatus
 	results: Record<string, CheckResult>
 	pendingCheckKeys: string[]
+	aiUsage?: AiUsage
+	errorMessage?: string
+	completedAt?: string
+}
+
+export interface CheckSessionSnapshot {
+	id: number
+	status: CheckSessionStatus
+	results: Record<string, CheckResult>
+	pendingCheckKeys: string[]
+	rulesetSnapshot?: RuntimeCheck[]
+	inputSnapshot?: CheckSessionInputSnapshot
 	aiUsage?: AiUsage
 	errorMessage?: string
 	completedAt?: string
@@ -41,7 +52,7 @@ export interface CheckSessionUpdateData {
 export class CheckSession {
 	private constructor(
 		readonly id: number,
-		private _status: CheckSessionRecord['status'],
+		private _status: CheckSessionStatus,
 		private _results: Record<string, CheckResult>,
 		private _pendingCheckKeys: string[],
 		readonly rulesetSnapshot: RuntimeCheck[] | undefined,
@@ -51,36 +62,17 @@ export class CheckSession {
 		private _completedAt: string | undefined,
 	) {}
 
-	static fromRecord(record: CheckSessionRecord): CheckSession {
-		const inputMediaType = record.inputMediaType
-		let inputSnapshot: CheckSessionInputSnapshot | undefined
-		if (
-			typeof record.inputSha256 === 'string' &&
-			typeof inputMediaType === 'string' &&
-			isSupportedCheckImageMediaType(inputMediaType) &&
-			typeof record.inputByteLength === 'number'
-		) {
-			inputSnapshot = {
-				sha256: record.inputSha256,
-				mediaType: inputMediaType,
-				byteLength: record.inputByteLength,
-			}
-		}
-
+	static restore(snapshot: CheckSessionSnapshot): CheckSession {
 		return new CheckSession(
-			record.id,
-			record.status,
-			(record.results ?? {}) as Record<string, CheckResult>,
-			Array.isArray(record.pendingCheckKeys)
-				? record.pendingCheckKeys.filter((key): key is string => typeof key === 'string')
-				: [],
-			Array.isArray(record.rulesetSnapshot)
-				? (record.rulesetSnapshot as RuntimeCheck[])
-				: undefined,
-			inputSnapshot,
-			(record.aiUsage ?? undefined) as AiUsage | undefined,
-			record.errorMessage ?? undefined,
-			record.completedAt ?? undefined,
+			snapshot.id,
+			snapshot.status,
+			{ ...snapshot.results },
+			[...snapshot.pendingCheckKeys],
+			snapshot.rulesetSnapshot,
+			snapshot.inputSnapshot,
+			snapshot.aiUsage,
+			snapshot.errorMessage,
+			snapshot.completedAt,
 		)
 	}
 

@@ -4,7 +4,7 @@ import {
 	measureObservationSchema,
 	presenceObservationSchema,
 } from '@/features/asset-check/domain/heuristic.evaluator'
-import type { RuntimeCheck } from '@/features/asset-check/services/get-check-ruleset.service'
+import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 
 vi.mock('ai', () => ({
 	generateText: vi.fn(),

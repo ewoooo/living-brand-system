@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import {
 	createAgentChatSessionRecord,
-	findLatestAgentChatSessionContainingAnyMessage,
+	findLatestAgentChatSessionMessagesContainingAny,
 	saveAgentChatSessionRecord,
 } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import { startAgentChatSession } from '@/features/agent-chat/services/start-agent-chat-session.service'
@@ -10,12 +10,12 @@ import type { User } from '@/payload-types'
 
 vi.mock('@/features/agent-chat/repositories/agent-chat-session.payload.repository', () => ({
 	createAgentChatSessionRecord: vi.fn(),
-	findLatestAgentChatSessionContainingAnyMessage: vi.fn(),
+	findLatestAgentChatSessionMessagesContainingAny: vi.fn(),
 	saveAgentChatSessionRecord: vi.fn(),
 }))
 
 const createSession = vi.mocked(createAgentChatSessionRecord)
-const findPrevious = vi.mocked(findLatestAgentChatSessionContainingAnyMessage)
+const findPrevious = vi.mocked(findLatestAgentChatSessionMessagesContainingAny)
 const saveSession = vi.mocked(saveAgentChatSessionRecord)
 
 const user = { id: 7 } as User
@@ -35,8 +35,8 @@ const toolStep = {
 describe('startAgentChatSession', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		createSession.mockResolvedValue({ id: 41 } as never)
-		findPrevious.mockResolvedValue(null)
+		createSession.mockResolvedValue({ id: 41 })
+		findPrevious.mockResolvedValue([])
 	})
 
 	it('요청 메시지로 running 세션을 생성한다', async () => {
@@ -150,18 +150,15 @@ describe('startAgentChatSession', () => {
 				parts: [{ type: 'text', text: '더 자세히.' }],
 			},
 		] as AgentChatMessage[]
-		findPrevious.mockResolvedValue({
-			id: 21,
-			messages: [
-				{
-					messageId: 'assistant-1',
-					role: 'assistant',
-					text: '가이드라인입니다.',
-					usedTools: [{ name: 'loadSkill', callCount: 1, id: 'row-1' }],
-					aiUsage: { model: 'test-model', callCount: 1, totalTokens: 120 },
-				},
-			],
-		} as never)
+		findPrevious.mockResolvedValue([
+			{
+				messageId: 'assistant-1',
+				role: 'assistant',
+				text: '가이드라인입니다.',
+				usedTools: [{ name: 'loadSkill', callCount: 1 }],
+				aiUsage: { model: 'test-model', callCount: 1, totalTokens: 120 },
+			},
+		])
 
 		await startAgentChatSession({ messages: historyMessages, user })
 

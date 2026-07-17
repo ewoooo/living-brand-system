@@ -2,6 +2,7 @@ import {
 	CheckSessionInputMismatchError,
 	type CheckSessionInputSnapshot,
 	CheckSessionNotFoundError,
+	type CheckSessionSource,
 	CheckSessionTerminalError,
 } from '@/features/asset-check/domain/check-session'
 import {
@@ -20,7 +21,7 @@ import {
 	runHeuristicCheck,
 	runImmediateCheck,
 } from '@/features/asset-check/services/run-check.service'
-import type { CheckSessionSource, ImageContentFlags } from '@/features/asset-check/types'
+import type { ImageContentFlags } from '@/features/asset-check/types'
 import { detectCheckImageMediaType } from '@/features/asset-check/utils/image-format'
 import type { AgentChatSession, User } from '@/payload-types'
 

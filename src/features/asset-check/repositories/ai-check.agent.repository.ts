@@ -8,14 +8,11 @@ import {
 	measureObservationSchema,
 	presenceObservationSchema,
 } from '@/features/asset-check/domain/heuristic.evaluator'
+import type { CheckReferenceAsset, RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
 	compressForAiReference,
 	resizeForAiVision,
 } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
-import type {
-	CheckReferenceAsset,
-	RuntimeCheck,
-} from '@/features/asset-check/services/get-check-ruleset.service'
 
 export interface AiCheckRunResult {
 	observations: Record<string, Record<string, HeuristicObservation>>

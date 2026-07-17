@@ -14,8 +14,8 @@ export interface CheckMetric {
 	actual: string
 }
 
-export type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
 export type CheckStatus = 'pass' | 'ok' | 'advisory' | 'needs_review' | 'fail'
+export type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
 export type CheckFactValue = string | number | boolean | string[]
 export type MeasurementValue = string | number | boolean
 export type CriterionExpected = MeasurementValue | number[] | string[]

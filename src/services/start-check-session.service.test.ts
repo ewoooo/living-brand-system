@@ -4,6 +4,7 @@ import {
 	CheckSession,
 	CheckSessionInputMismatchError,
 	CheckSessionNotFoundError,
+	type CheckSessionSnapshot,
 } from '@/features/asset-check/domain/check-session'
 import {
 	createCheckSessionRecord,
@@ -15,7 +16,7 @@ import {
 	runHeuristicCheck,
 	runImmediateCheck,
 } from '@/features/asset-check/services/run-check.service'
-import type { CheckSession as CheckSessionRecord, User } from '@/payload-types'
+import type { User } from '@/payload-types'
 import { completeCheckSessionAiCheck, startCheckSession } from './start-check-session.service'
 
 vi.mock('@/features/asset-check/repositories/check-session.payload.repository', () => ({
@@ -36,25 +37,24 @@ const otherPng = Buffer.concat([png, Buffer.from([0x00])])
 const user = { id: 7 } as User
 const scenario = { key: 'quick', title: '빠른 검수', checkKeys: [] }
 
-function record(
+function snapshot(
 	buffer: Buffer | null,
-	status: CheckSessionRecord['status'] = 'running',
-): CheckSessionRecord {
+	status: CheckSessionSnapshot['status'] = 'running',
+): CheckSessionSnapshot {
 	return {
 		id: 41,
-		source: 'review-page',
 		status,
-		targetType: 'uploaded-image',
+		results: {},
 		pendingCheckKeys: ['heuristic'],
 		...(buffer
 			? {
-					inputSha256: createHash('sha256').update(buffer).digest('hex'),
-					inputMediaType: 'image/png' as const,
-					inputByteLength: buffer.byteLength,
+					inputSnapshot: {
+						sha256: createHash('sha256').update(buffer).digest('hex'),
+						mediaType: 'image/png' as const,
+						byteLength: buffer.byteLength,
+					},
 				}
 			: {}),
-		createdAt: '2026-07-17T00:00:00.000Z',
-		updatedAt: '2026-07-17T00:00:00.000Z',
 	}
 }
 
@@ -65,7 +65,7 @@ describe('check session service', () => {
 		vi.mocked(runImmediateCheck).mockResolvedValue({ results: {}, pendingCheckKeys: [] })
 		vi.mocked(runHeuristicCheck).mockResolvedValue({ results: {} })
 		vi.mocked(createCheckSessionRecord).mockImplementation(async () =>
-			CheckSession.fromRecord(record(png, 'running') satisfies CheckSessionRecord),
+			CheckSession.restore(snapshot(png, 'running')),
 		)
 	})
 
@@ -100,7 +100,7 @@ describe('check session service', () => {
 
 	it('완료된 세션도 다른 입력이면 저장 결과보다 먼저 거부한다', async () => {
 		vi.mocked(getCheckSessionRecord).mockResolvedValue(
-			CheckSession.fromRecord(record(png, 'completed')),
+			CheckSession.restore(snapshot(png, 'completed')),
 		)
 
 		await expect(
@@ -112,7 +112,7 @@ describe('check session service', () => {
 
 	it('입력 지문이 없는 과거 세션은 멱등 완료로 오인하지 않는다', async () => {
 		vi.mocked(getCheckSessionRecord).mockResolvedValue(
-			CheckSession.fromRecord(record(null, 'completed')),
+			CheckSession.restore(snapshot(null, 'completed')),
 		)
 
 		await expect(
@@ -122,7 +122,7 @@ describe('check session service', () => {
 
 	it('같은 입력의 완료 세션만 저장된 결과를 멱등 반환한다', async () => {
 		vi.mocked(getCheckSessionRecord).mockResolvedValue(
-			CheckSession.fromRecord(record(png, 'completed')),
+			CheckSession.restore(snapshot(png, 'completed')),
 		)
 
 		await expect(

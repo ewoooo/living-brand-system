@@ -1,11 +1,11 @@
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import { AgentChatSession } from '@/features/agent-chat/domain/agent-chat-session'
+import type { AgentChatSessionUsageStep } from '@/features/agent-chat/domain/agent-chat-session-usage'
 import {
 	createAgentChatSessionRecord,
 	saveAgentChatSessionRecord,
 } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import { backfillAgentChatSessionMessages } from '@/features/agent-chat/services/backfill-agent-chat-session-messages.service'
-import type { AgentChatSessionUsageStep } from '@/features/agent-chat/services/collect-agent-chat-session-usage.service'
 import type { AgentChatSessionMessageInput } from '@/features/agent-chat/types'
 import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-parts'
 import type { User } from '@/payload-types'
