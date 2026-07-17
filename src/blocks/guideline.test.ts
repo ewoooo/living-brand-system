@@ -87,6 +87,9 @@ describe('guideline rules field', () => {
 			['specList', 'specList'],
 			['signatureShowcase', 'signatureShowcase'],
 			['typeSpecimen', 'typeSpecimen'],
+			['typeScale', 'typeScale'],
+			['layoutGrid', 'layoutGrid'],
+			['glyphGrid', 'glyphGrid'],
 		])
 	})
 

@@ -3,19 +3,25 @@ import {
 	ColorPaletteBlock,
 	ContentColumnsBlock,
 	DoDontBlock,
+	GlyphGridBlock,
+	LayoutGridBlock,
 	MediaShowcaseBlock,
 	PolicyCalloutBlock,
 	SignatureShowcaseBlock,
 	SpecListBlock,
+	TypeScaleBlock,
 	TypeSpecimenBlock,
 } from '@/blocks/guideline'
 import { projectColorPalette } from './color-palette.block'
 import { projectContentColumns } from './content-columns.block'
 import { projectDoDont } from './do-dont.block'
+import { projectGlyphGrid } from './glyph-grid.block'
+import { projectLayoutGrid } from './layout-grid.block'
 import { projectMediaShowcase } from './media-showcase.block'
 import { projectPolicyCallout } from './policy-callout.block'
 import { projectSignatureShowcase } from './signature-showcase.block'
 import { projectSpecList } from './spec-list.block'
+import { projectTypeScale } from './type-scale.block'
 import { projectTypeSpecimen } from './type-specimen.block'
 import type { BlockProjection, CheckReferenceAssetRef, GuidelineBlock } from './types'
 
@@ -36,6 +42,9 @@ export const guidelineBlockCatalog = {
 	specList: { schema: SpecListBlock, project: projectSpecList },
 	signatureShowcase: { schema: SignatureShowcaseBlock, project: projectSignatureShowcase },
 	typeSpecimen: { schema: TypeSpecimenBlock, project: projectTypeSpecimen },
+	typeScale: { schema: TypeScaleBlock, project: projectTypeScale },
+	layoutGrid: { schema: LayoutGridBlock, project: projectLayoutGrid },
+	glyphGrid: { schema: GlyphGridBlock, project: projectGlyphGrid },
 } satisfies DefinitionMap
 
 export const guidelineBlocks = Object.values(guidelineBlockCatalog).map(({ schema }) => schema)

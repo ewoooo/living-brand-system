@@ -72,5 +72,26 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 				evidence.samples.sentence,
 				evidence.samples.paragraph,
 			]).join('\n')
+		case 'typeScale':
+			return compact([
+				evidence.typeface?.name,
+				...evidence.items.map(
+					(item) =>
+						`- ${item.name}: ${item.sizePx}/${item.lineHeightPx} · ${item.weight}`,
+				),
+			]).join('\n')
+		case 'layoutGrid':
+			return compact(
+				evidence.variants.map((variant) =>
+					compact([
+						variant.label,
+						`- Columns: ${variant.columns}`,
+						variant.gutter ? `- Gutter: ${variant.gutter}` : undefined,
+						variant.margin ? `- Margin: ${variant.margin}` : undefined,
+					]).join('\n'),
+				),
+			).join('\n\n')
+		case 'glyphGrid':
+			return evidence.title ?? 'Glyph grid'
 	}
 }

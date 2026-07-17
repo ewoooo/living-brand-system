@@ -224,6 +224,96 @@ export const TypeSpecimenBlock: Block = {
 	],
 }
 
+// 타입 스케일. 타입 토큰별 샘플과 수치 규격(size/line-height/weight)을 나열한다.
+export const TypeScaleBlock: Block = {
+	slug: 'typeScale',
+	interfaceName: 'TypeScaleBlock',
+	labels: { singular: '타입 스케일', plural: '타입 스케일' },
+	fields: [
+		{
+			name: 'typeface',
+			type: 'relationship',
+			relationTo: 'brand-typefaces',
+			admin: {
+				description: '샘플에 적용할 서체입니다. 비우면 기본 본문 서체를 사용합니다.',
+			},
+		},
+		{
+			name: 'items',
+			type: 'array',
+			minRows: 1,
+			labels: { singular: '타입 토큰', plural: '타입 토큰' },
+			fields: [
+				{ name: 'name', type: 'text', required: true },
+				{
+					name: 'sample',
+					type: 'text',
+					localized: true,
+					admin: { description: '비우면 중립 기본 문구를 사용합니다.' },
+				},
+				{
+					type: 'row',
+					fields: [
+						{ name: 'sizePx', type: 'number', required: true, min: 1 },
+						{ name: 'lineHeightPx', type: 'number', required: true, min: 1 },
+						{ name: 'weight', type: 'number', required: true, min: 100, max: 1000 },
+					],
+				},
+			],
+		},
+		...baseBlockFields(),
+	],
+}
+
+// 레이아웃 그리드 규격. 컬럼 수·거터·마진 수치를 evidence로 보존하고 오버레이로 시각화한다.
+export const LayoutGridBlock: Block = {
+	slug: 'layoutGrid',
+	interfaceName: 'LayoutGridBlock',
+	labels: { singular: '레이아웃 그리드', plural: '레이아웃 그리드' },
+	fields: [
+		{
+			name: 'accent',
+			type: 'relationship',
+			relationTo: 'brand-colors',
+			admin: { description: '컬럼 오버레이 강조색입니다. 비우면 중립색을 사용합니다.' },
+		},
+		{
+			name: 'variants',
+			type: 'array',
+			minRows: 1,
+			labels: { singular: '그리드 규격', plural: '그리드 규격' },
+			fields: [
+				{ name: 'label', type: 'text', localized: true },
+				{
+					type: 'row',
+					fields: [
+						{ name: 'columns', type: 'number', required: true, min: 1, max: 24 },
+						{
+							name: 'gutter',
+							type: 'text',
+							admin: { description: "CSS 길이 문자열입니다. 예: '24px'." },
+						},
+						{
+							name: 'margin',
+							type: 'text',
+							admin: { description: "CSS 길이 문자열입니다. 예: '64px'." },
+						},
+					],
+				},
+			],
+		},
+		...baseBlockFields(),
+	],
+}
+
+// 글리프 인스펙터. 위젯형 블록 — 서체는 전역 타이틀 폰트 토큰을 쓰고 제목만 저장한다.
+export const GlyphGridBlock: Block = {
+	slug: 'glyphGrid',
+	interfaceName: 'GlyphGridBlock',
+	labels: { singular: '글리프 그리드', plural: '글리프 그리드' },
+	fields: [{ name: 'title', type: 'text', localized: true }, ...baseBlockFields()],
+}
+
 // Do/Don't 그리드. 그룹은 같은 주제의 권장·금지 예시를 묶는다.
 export const DoDontBlock: Block = {
 	slug: 'doDont',

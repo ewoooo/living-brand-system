@@ -1,17 +1,18 @@
 import { ColorPaletteBlock } from '@/features/guideline/components/blocks/color-palette-block'
 import { ContentColumnsBlock } from '@/features/guideline/components/blocks/content-columns-block'
 import { DoDontBlock } from '@/features/guideline/components/blocks/do-dont-block'
+import { GlyphGridBlock } from '@/features/guideline/components/blocks/glyph-grid-block'
+import { LayoutGridBlock } from '@/features/guideline/components/blocks/layout-grid-block'
 import { MediaShowcaseBlock } from '@/features/guideline/components/blocks/media-showcase-block'
 import { PolicyCalloutBlock } from '@/features/guideline/components/blocks/policy-callout-block'
 import { SignatureShowcaseBlock } from '@/features/guideline/components/blocks/signature-showcase-block'
 import { SpecListBlock } from '@/features/guideline/components/blocks/spec-list-block'
+import { TypeScaleBlock } from '@/features/guideline/components/blocks/type-scale-block'
 import { TypeSpecimenBlock } from '@/features/guideline/components/blocks/type-specimen-block'
 import { CarouselDemo } from '@/features/guideline/components/kit/carousel'
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
-import { GlyphGrid } from '@/features/guideline/components/kit/glyph-grid'
-import { GridSystemDiagramDemo } from '@/features/guideline/components/kit/grid-system-diagram'
 import { LogoLockupDemo } from '@/features/guideline/components/kit/logo-lockup'
 import {
 	brandColor,
@@ -20,7 +21,6 @@ import {
 	richTextBody,
 } from '@/features/guideline/components/kit/mock-blocks'
 import { SpecTable } from '@/features/guideline/components/kit/spec-table'
-import { TypeScale } from '@/features/guideline/components/kit/type-scale'
 
 // UI 키트 갤러리(중간공유용). 블록화가 끝난 컴포넌트는 실제 블록 renderer + Payload 타입 mock으로
 // 전시하고, 아직 kit POC인 것만 kit 사본으로 전시한다. mock이 Payload 타입으로 강제되므로
@@ -158,6 +158,97 @@ const multiPaletteBlock: Extract<GuidelineBlock, { blockType: 'colorPalette' }> 
 		brandColor('Gray 4', '#464646', undefined, 54),
 		brandColor('Gray 5', '#151515', undefined, 55),
 	],
+}
+
+const typeScaleBlock: Extract<GuidelineBlock, { blockType: 'typeScale' }> = {
+	blockType: 'typeScale',
+	items: [
+		{
+			id: 'ts-1',
+			name: 'Display',
+			sample: 'Essenherb 에센허브',
+			sizePx: 64,
+			lineHeightPx: 72,
+			weight: 700,
+		},
+		{
+			id: 'ts-2',
+			name: 'Title 1',
+			sample: 'Essenherb 에센허브',
+			sizePx: 48,
+			lineHeightPx: 56,
+			weight: 700,
+		},
+		{
+			id: 'ts-3',
+			name: 'Title 2',
+			sample: 'Essenherb 에센허브',
+			sizePx: 36,
+			lineHeightPx: 44,
+			weight: 600,
+		},
+		{
+			id: 'ts-4',
+			name: 'Heading 1',
+			sample: 'Essenherb 에센허브',
+			sizePx: 28,
+			lineHeightPx: 36,
+			weight: 600,
+		},
+		{
+			id: 'ts-5',
+			name: 'Heading 2',
+			sample: 'Essenherb 에센허브',
+			sizePx: 22,
+			lineHeightPx: 30,
+			weight: 600,
+		},
+		{
+			id: 'ts-6',
+			name: 'Subtitle',
+			sample: 'Essenherb 에센허브',
+			sizePx: 18,
+			lineHeightPx: 26,
+			weight: 500,
+		},
+		{
+			id: 'ts-7',
+			name: 'Body',
+			sample: 'Essenherb 에센허브',
+			sizePx: 16,
+			lineHeightPx: 26,
+			weight: 400,
+		},
+		{
+			id: 'ts-8',
+			name: 'Callout',
+			sample: 'Essenherb 에센허브',
+			sizePx: 14,
+			lineHeightPx: 20,
+			weight: 400,
+		},
+		{
+			id: 'ts-9',
+			name: 'Caption',
+			sample: 'Essenherb 에센허브',
+			sizePx: 12,
+			lineHeightPx: 16,
+			weight: 400,
+		},
+	],
+}
+
+const layoutGridBlock: Extract<GuidelineBlock, { blockType: 'layoutGrid' }> = {
+	blockType: 'layoutGrid',
+	variants: [
+		{ id: 'lg-1', label: 'Desktop · 12 columns', columns: 12, gutter: '24px', margin: '64px' },
+		{ id: 'lg-2', label: 'Tablet · 8 columns', columns: 8, gutter: '16px', margin: '32px' },
+	],
+}
+
+const glyphGridBlock: Extract<GuidelineBlock, { blockType: 'glyphGrid' }> = {
+	blockType: 'glyphGrid',
+	title: null,
 }
 
 const typeSpecimenBlock: Extract<GuidelineBlock, { blockType: 'typeSpecimen' }> = {
@@ -310,78 +401,12 @@ export function GuidelineKitGallery() {
 					<TypeSpecimenBlock block={typeSpecimenBlock} />
 				</Demo>
 
-				<Demo title="Glyph Grid · 글리프 인스펙터">
-					<GlyphGrid />
+				<Demo title="Glyph Grid · 글리프 인스펙터 (실제 블록 renderer)">
+					<GlyphGridBlock block={glyphGridBlock} />
 				</Demo>
 
-				<Demo title="Type Scale">
-					<TypeScale
-						items={[
-							{
-								name: 'Display',
-								sample: 'Essenherb 에센허브',
-								sizePx: 64,
-								lineHeightPx: 72,
-								weight: 700,
-							},
-							{
-								name: 'Title 1',
-								sample: 'Essenherb 에센허브',
-								sizePx: 48,
-								lineHeightPx: 56,
-								weight: 700,
-							},
-							{
-								name: 'Title 2',
-								sample: 'Essenherb 에센허브',
-								sizePx: 36,
-								lineHeightPx: 44,
-								weight: 600,
-							},
-							{
-								name: 'Heading 1',
-								sample: 'Essenherb 에센허브',
-								sizePx: 28,
-								lineHeightPx: 36,
-								weight: 600,
-							},
-							{
-								name: 'Heading 2',
-								sample: 'Essenherb 에센허브',
-								sizePx: 22,
-								lineHeightPx: 30,
-								weight: 600,
-							},
-							{
-								name: 'Subtitle',
-								sample: 'Essenherb 에센허브',
-								sizePx: 18,
-								lineHeightPx: 26,
-								weight: 500,
-							},
-							{
-								name: 'Body',
-								sample: 'Essenherb 에센허브',
-								sizePx: 16,
-								lineHeightPx: 26,
-								weight: 400,
-							},
-							{
-								name: 'Callout',
-								sample: 'Essenherb 에센허브',
-								sizePx: 14,
-								lineHeightPx: 20,
-								weight: 400,
-							},
-							{
-								name: 'Caption',
-								sample: 'Essenherb 에센허브',
-								sizePx: 12,
-								lineHeightPx: 16,
-								weight: 400,
-							},
-						]}
-					/>
+				<Demo title="Type Scale (실제 블록 renderer)">
+					<TypeScaleBlock block={typeScaleBlock} />
 				</Demo>
 
 				<Demo title="Signature Showcase · 대형 타입 시그니처 (실제 블록 renderer)">
@@ -421,8 +446,8 @@ export function GuidelineKitGallery() {
 					/>
 				</Demo>
 
-				<Demo title="Grid System · 레이아웃 그리드">
-					<GridSystemDiagramDemo />
+				<Demo title="Layout Grid · 레이아웃 그리드 (실제 블록 renderer)">
+					<LayoutGridBlock block={layoutGridBlock} />
 				</Demo>
 
 				<Demo title="Logo Lockup · 로고 배리에이션">

@@ -3,10 +3,13 @@ import type { GuidelineDocument } from '@/payload-types'
 import { ColorPaletteBlock } from './color-palette-block'
 import { ContentColumnsBlock } from './content-columns-block'
 import { DoDontBlock } from './do-dont-block'
+import { GlyphGridBlock } from './glyph-grid-block'
+import { LayoutGridBlock } from './layout-grid-block'
 import { MediaShowcaseBlock } from './media-showcase-block'
 import { PolicyCalloutBlock } from './policy-callout-block'
 import { SignatureShowcaseBlock } from './signature-showcase-block'
 import { SpecListBlock } from './spec-list-block'
+import { TypeScaleBlock } from './type-scale-block'
 import { TypeSpecimenBlock } from './type-specimen-block'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
@@ -25,6 +28,9 @@ const blockRenderers = {
 	specList: (block) => <SpecListBlock block={block} />,
 	signatureShowcase: (block) => <SignatureShowcaseBlock block={block} />,
 	typeSpecimen: (block) => <TypeSpecimenBlock block={block} />,
+	typeScale: (block) => <TypeScaleBlock block={block} />,
+	layoutGrid: (block) => <LayoutGridBlock block={block} />,
+	glyphGrid: (block) => <GlyphGridBlock block={block} />,
 } satisfies RendererMap
 
 function renderBlock(block: GuidelineBlock): ReactNode {

@@ -242,6 +242,9 @@ export interface GuidelineDocument {
         | SpecListBlock
         | SignatureShowcaseBlock
         | TypeSpecimenBlock
+        | TypeScaleBlock
+        | LayoutGridBlock
+        | GlyphGridBlock
       )[]
     | null;
   /**
@@ -642,6 +645,94 @@ export interface TypeSpecimenBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScaleBlock".
+ */
+export interface TypeScaleBlock {
+  /**
+   * 샘플에 적용할 서체입니다. 비우면 기본 본문 서체를 사용합니다.
+   */
+  typeface?: (number | null) | BrandTypeface;
+  items?:
+    | {
+        name: string;
+        /**
+         * 비우면 중립 기본 문구를 사용합니다.
+         */
+        sample?: string | null;
+        sizePx: number;
+        lineHeightPx: number;
+        weight: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeScale';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-typefaces".
+ */
+export interface BrandTypeface {
+  id: number;
+  name: string;
+  familyName: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridBlock".
+ */
+export interface LayoutGridBlock {
+  /**
+   * 컬럼 오버레이 강조색입니다. 비우면 중립색을 사용합니다.
+   */
+  accent?: (number | null) | BrandColor;
+  variants?:
+    | {
+        label?: string | null;
+        columns: number;
+        /**
+         * CSS 길이 문자열입니다. 예: '24px'.
+         */
+        gutter?: string | null;
+        /**
+         * CSS 길이 문자열입니다. 예: '64px'.
+         */
+        margin?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'layoutGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GlyphGridBlock".
+ */
+export interface GlyphGridBlock {
+  title?: string | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'glyphGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brand-logos".
  */
 export interface BrandLogo {
@@ -670,18 +761,6 @@ export interface BrandLogo {
       filename?: string | null;
     };
   };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brand-typefaces".
- */
-export interface BrandTypeface {
-  id: number;
-  name: string;
-  familyName: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1490,6 +1569,9 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         specList?: T | SpecListBlockSelect<T>;
         signatureShowcase?: T | SignatureShowcaseBlockSelect<T>;
         typeSpecimen?: T | TypeSpecimenBlockSelect<T>;
+        typeScale?: T | TypeScaleBlockSelect<T>;
+        layoutGrid?: T | LayoutGridBlockSelect<T>;
+        glyphGrid?: T | GlyphGridBlockSelect<T>;
       };
   rules?: T;
   displayOrder?: T;
@@ -1644,6 +1726,55 @@ export interface TypeSpecimenBlockSelect<T extends boolean = true> {
         sentence?: T;
         paragraph?: T;
       };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScaleBlock_select".
+ */
+export interface TypeScaleBlockSelect<T extends boolean = true> {
+  typeface?: T;
+  items?:
+    | T
+    | {
+        name?: T;
+        sample?: T;
+        sizePx?: T;
+        lineHeightPx?: T;
+        weight?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridBlock_select".
+ */
+export interface LayoutGridBlockSelect<T extends boolean = true> {
+  accent?: T;
+  variants?:
+    | T
+    | {
+        label?: T;
+        columns?: T;
+        gutter?: T;
+        margin?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GlyphGridBlock_select".
+ */
+export interface GlyphGridBlockSelect<T extends boolean = true> {
+  title?: T;
   rules?: T;
   id?: T;
   blockName?: T;
