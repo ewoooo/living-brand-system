@@ -5,6 +5,7 @@ import { formatAdminURL } from 'payload/shared'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { listEditableGuidelineDocuments } from '@/features/guideline/repositories/guideline-document.payload.repository'
 import {
 	buildGuidelineDocumentTree,
 	type GuidelineDocumentTreeNode,
@@ -66,16 +67,7 @@ export default async function GuidelineDocumentTreeList({
 	user,
 }: ListViewServerProps) {
 	const activeLocale = locale?.code === 'ko' || locale?.code === 'en' ? locale.code : undefined
-	const { docs } = await payload.find({
-		collection: 'guideline-documents',
-		depth: 0,
-		draft: true,
-		limit: 0,
-		locale: activeLocale,
-		overrideAccess: false,
-		sort: 'displayOrder',
-		user,
-	})
+	const docs = await listEditableGuidelineDocuments(payload, { locale: activeLocale, user })
 	const tree = buildGuidelineDocumentTree(docs)
 
 	return (

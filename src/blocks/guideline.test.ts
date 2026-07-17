@@ -5,10 +5,10 @@ import {
 	guidelineBreadcrumbCount,
 	guidelineDocumentTypeLabel,
 } from '@/components/admin/guideline-document-tree'
+import { checkKeyFromEnglishTitle } from '@/features/guideline/checks/check-key-from-english-title'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 import {
 	ColumnUnitBlock,
-	checkKeyFromEnglishTitle,
 	DoDontBlock,
 	guidelineBlocks,
 	guidelineChecksField,
@@ -147,14 +147,22 @@ describe('guideline checks field', () => {
 			throw new Error('executor beforeValidate hook is missing')
 		}
 		const findByID = vi.fn().mockResolvedValue({ executor: 'heuristic' })
+		const req = { payload: { findByID } }
 		expect(
 			await populateExecutor({
-				req: { payload: { findByID } },
+				req,
 				siblingData: { checker: 7 },
 				value: 'deterministic',
 			} as never),
 		).toBe('heuristic')
-		expect(findByID).toHaveBeenCalledWith({ collection: 'rule-checkers', id: 7, depth: 0 })
+		expect(findByID).toHaveBeenCalledWith({
+			collection: 'rule-checkers',
+			id: 7,
+			depth: 0,
+			draft: true,
+			overrideAccess: true,
+			req,
+		})
 
 		const heuristicPrompt = field('heuristicPrompt')
 		if (heuristicPrompt?.type !== 'textarea') {

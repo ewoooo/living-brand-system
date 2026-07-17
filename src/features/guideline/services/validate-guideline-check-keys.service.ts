@@ -1,6 +1,4 @@
-import type { PayloadRequest } from 'payload'
-import { checkKeyFromEnglishTitle } from '@/blocks/guideline'
-import { listGuidelineCheckContainers } from '../repositories/guideline-document.payload.repository'
+import { checkKeyFromEnglishTitle } from '../checks/check-key-from-english-title'
 
 type CheckValue = {
 	key?: unknown
@@ -12,26 +10,25 @@ export type CheckContainer = {
 	checks?: unknown
 }
 
+type SavedCheckContainer = CheckContainer & { id: number }
+
 /**
- * Guideline 저장 게이트 Use Case — 저장할 문서와 저장된 전체 문서에서 첫 번째 Check key 중복을 찾는다.
- * Payload 조회는 guideline-document.payload.repository가 소유하고, 훅이 결과를 ValidationError로 바꾼다.
+ * Guideline 저장 게이트 Use Case — 저장할 문서와 Repository가 읽은 문서에서 첫 Check key 중복을 찾는다.
+ * 저장 문서 조회와 Payload 변환은 guideline-document.payload.repository가 소유하며 이 함수는 I/O가 없다.
  */
-export async function findDuplicateGuidelineCheckKey(
-	req: PayloadRequest,
+export function findDuplicateGuidelineCheckKey(
 	document: CheckContainer,
-	originalDocId: number | string | null | undefined,
-): Promise<string | null> {
+	savedDocuments: SavedCheckContainer[],
+	originalDocId: number | null | undefined,
+): string | null {
 	const currentKeys = collectCheckKeys(document)
 	const duplicateInDocument = duplicateKey(currentKeys)
 
 	if (duplicateInDocument) return duplicateInDocument
 	if (currentKeys.length === 0) return null
 
-	// ponytail: Admin 규모에서는 저장 전 전체 key 조회가 가장 작은 해법이다. 동시 쓰기 충돌이 실제 문제가 될 때만 registry table을 도입한다.
-	const savedDocuments = await listGuidelineCheckContainers(req)
-
 	for (const savedDocument of savedDocuments) {
-		if (originalDocId != null && String(savedDocument.id) === String(originalDocId)) {
+		if (originalDocId != null && savedDocument.id === originalDocId) {
 			continue
 		}
 
