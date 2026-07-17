@@ -68,6 +68,24 @@ describe('Templates beforeChange hook', () => {
 		).rejects.toThrow('스키마')
 	})
 
+	it('JSON CSS형 필드의 외부 URL과 제어 구문은 발행하지 않는다', async () => {
+		for (const background of [
+			'url(https://attacker.example/pixel.png)',
+			String.raw`u\72l(https://attacker.example/pixel.png)`,
+			'#fff; background-image: url(https://attacker.example/pixel.png)',
+		]) {
+			await expect(
+				hook({
+					data: {
+						_status: 'published',
+						jsonTemplate: { ...buildTemplate({}), background },
+					},
+					...buildRequest([{ id: 1, url: '/api/brand-logos/file/logo.svg' }]),
+				}),
+			).rejects.toThrow('스키마')
+		}
+	})
+
 	it('임포트 조각이 남아 있으면 저장을 거부한다', async () => {
 		await expect(
 			hook({

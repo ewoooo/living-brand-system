@@ -1,5 +1,35 @@
 import { z } from 'zod'
 
+const UNSAFE_CSS_FUNCTION =
+	/(^|[^a-z0-9_-])(?:-webkit-image-set|attr|element|image|image-set|paint|src|url|var)\s*\(/i
+
+/**
+ * JSON 템플릿의 문자열형 CSS 값이 네트워크 요청이나 선언 탈출 구문을 포함하지 않는지 판정한다.
+ * 발행·읽기 경계는 jsonTemplateSchema를 parse하므로 같은 fail-closed 규칙을 공유한다.
+ */
+export function isSafeJsonTemplateCssValue(value: string): boolean {
+	for (const character of value) {
+		const code = character.charCodeAt(0)
+		if (code < 32 || code === 127) return false
+	}
+
+	return (
+		!UNSAFE_CSS_FUNCTION.test(value) &&
+		!value.includes('\\') &&
+		!value.includes('/*') &&
+		!value.includes('*/') &&
+		!value.includes('@') &&
+		!value.includes(';') &&
+		!value.includes('{') &&
+		!value.includes('}') &&
+		!value.toLowerCase().includes('!important')
+	)
+}
+
+const safeCssValueSchema = z.string().refine(isSafeJsonTemplateCssValue, {
+	message: 'CSS 값에는 외부 URL 또는 제어 구문을 사용할 수 없습니다.',
+})
+
 /**
  * Templates 컬렉션 jsonTemplate 필드의 데이터 계약.
  * template-import가 쓰고 template-renderer와 asset-generation이 읽는다.
@@ -26,9 +56,9 @@ const textPropsShape = {
 	type: z.literal('text'),
 	text: z.string(),
 	fontSize: z.number(),
-	fontFamily: z.string(),
-	fontWeight: z.string(),
-	color: z.string(),
+	fontFamily: safeCssValueSchema,
+	fontWeight: safeCssValueSchema,
+	color: safeCssValueSchema,
 	lineHeight: z.number(),
 	letterSpacing: z.number(),
 	textAlign: z.enum(['left', 'center', 'right']),
@@ -43,7 +73,7 @@ const textPropsShape = {
 	maxLength: z.number().int().positive().optional(),
 	maxLines: z.number().int().positive().optional(),
 	inputFormat: z.enum(['free', 'number', 'email', 'date']).default('free'),
-	filter: z.string().optional(),
+	filter: safeCssValueSchema.optional(),
 }
 
 /** 이미지 요소가 참조할 수 있는 인가된 내부 에셋 컬렉션. */
@@ -64,18 +94,18 @@ const imagePropsShape = {
 	src: z.string().min(1),
 	objectFit: z.enum(['cover', 'contain', 'fill']),
 	borderRadius: z.number(),
-	boxShadow: z.string().optional(),
-	color: z.string().optional(),
-	filter: z.string().optional(),
+	boxShadow: safeCssValueSchema.optional(),
+	color: safeCssValueSchema.optional(),
+	filter: safeCssValueSchema.optional(),
 }
 
 const rectPropsShape = {
 	type: z.literal('rect'),
-	fill: z.string(),
+	fill: safeCssValueSchema,
 	opacity: z.number(),
 	borderRadius: z.number(),
-	boxShadow: z.string().optional(),
-	filter: z.string().optional(),
+	boxShadow: safeCssValueSchema.optional(),
+	filter: safeCssValueSchema.optional(),
 }
 
 const textElementSchema = baseElementSchema.extend(textPropsShape)
@@ -112,7 +142,7 @@ const stackLayoutShape = {
 	justify: z.enum(['start', 'center', 'end', 'space-between']).default('start'),
 	align: z.enum(['start', 'center', 'end']).default('start'),
 	// 원본 프레임의 배경 — 평탄화 경로의 rect 보존과 동일한 역할.
-	fill: z.string().optional(),
+	fill: safeCssValueSchema.optional(),
 }
 
 const flowTextSchema = z.object({ ...flowBaseSchema.shape, ...textPropsShape })
@@ -166,7 +196,7 @@ const gridSchema = z.object({
 export const jsonTemplateSchema = z.object({
 	width: z.number().positive(),
 	height: z.number().positive(),
-	background: z.string(),
+	background: safeCssValueSchema,
 	// 그리드 기반 템플릿만 가진다(optional) — 절대좌표 임포트 템플릿은 없어도 유효.
 	grid: gridSchema.optional(),
 	// 캔버스 안쪽 여백(디자인 요소) — 그리드가 이 안쪽 영역에 배치된다. 가로(x)·세로(y) 각각.
