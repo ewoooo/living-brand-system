@@ -16,7 +16,7 @@
 - Heuristic 판정의 기준 집계는 `rawResult.summary`(`total`/`satisfied`/`failed`/`uncertain`)로 전달합니다. Review UI와 Agent는 이 값을 각 채널의 표시 문구로 변환하며, 기존 저장 결과는 `message`를 fallback으로 사용합니다.
 - 2단계 계약: 결정론적 Check는 즉시 채워지고, AI(heuristic) Check는 `pendingCheckKeys`로 반환된 뒤 **`completeCheckSessionAiCheck`**로 완성합니다. 후속 요청은 같은 소유자의 세션이며 시작 시점과 같은 이미지 바이트일 때만 허용합니다.
 - 기준 조회 단위: `getRuntimeChecks(checkKeys?)`(실행), `getCheckRuleset()`(페이지 뷰모델).
-- 기준 소스: published `guideline-documents`의 문서 및 Block `checks[]`. 실행 시 `source.documentId`와 소유 문서 또는 Block의 타입별 구조화 evidence를 만들고, heuristicCriteria·heuristicPrompt·역할이 포함된 referenceAssets·RuleChecker 계약과 함께 `CheckSession.rulesetSnapshot`에 고정합니다. Block 식별자와 문서 제목은 evidence 계약에 복사하지 않습니다.
+- 기준 소스: published `guideline-documents`의 문서 및 Block이 참조하는 `rules` 관계(독립 `rules` 컬렉션의 공유 정의). 실행 시 `source.documentId`와 참조하는 문서 또는 Block의 타입별 구조화 evidence를 만들고, 같은 Rule이 여러 위치에 배치되면 근거와 참조 자산을 하나의 실행 Check로 병합하며, heuristicCriteria·heuristicPrompt·역할이 포함된 referenceAssets·RuleChecker 계약과 함께 `CheckSession.rulesetSnapshot`에 고정합니다. Block 식별자와 문서 제목은 evidence 계약에 복사하지 않습니다.
 
 ### 용어와 식별자
 
@@ -131,19 +131,21 @@ Raster Observation
 
 ### 현재 구현 관계
 
-검수 기준은 발행된 Guideline 문서의 Check에서 읽고, `CheckScenario.checkKeys`로 실행 범위를 선택합니다. 실행 시점의 Check와 Checker 계약은 `rulesetSnapshot`에 복사합니다.
+검수 기준은 발행된 Guideline 문서가 참조하는 Rule에서 읽고, `CheckScenario.checkKeys`(Rule key 목록)로 실행 범위를 선택합니다. 실행 시점의 Rule과 Checker 계약은 `rulesetSnapshot`에 복사합니다.
 
 ```text
 GuidelineDocument
-└─ checks[]
-   └─ Check
+└─ rules[] ─(참조)→ Rule (독립 컬렉션, 전역 고유 key)
+   Block
+   └─ rules[] ─(참조)→ Rule
+      Rule
       ├─ key
       ├─ options / heuristicCriteria / messages
-      ├─ evidence / referenceAssets
       └─ checkerRef → RuleChecker
+   (evidence / referenceAssets는 참조하는 문서·블록 위치에서 생성)
 
 CheckScenario
-└─ checkKeys[] → GuidelineDocument.checks[]
+└─ checkKeys[] → Rule.key
 
 CheckSessionRecord
 ├─ source / status
