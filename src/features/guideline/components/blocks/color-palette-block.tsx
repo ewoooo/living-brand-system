@@ -1,6 +1,6 @@
 import type { BrandColor, GuidelineDocument } from '@/payload-types'
-import { ColorSwatch } from '../kit/color-swatch'
 import { BlockHeading } from './children/block-heading'
+import { ColorSwatch } from './children/color-swatch'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 

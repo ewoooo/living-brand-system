@@ -1,6 +1,6 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { GuidelineDocument } from '@/payload-types'
-import { Carousel, type CarouselSlide } from '../kit/carousel'
+import { Carousel, type CarouselSlide } from './children/carousel'
 import { GuidelineImage } from './children/guideline-image'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
