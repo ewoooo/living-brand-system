@@ -1,4 +1,5 @@
 import type React from 'react'
+import { ContentFrame } from '@/components/global/content-frame'
 import { SectionLayout } from '@/components/global/section-layout'
 import { PageNavigation } from '@/components/page-navigation'
 import { GuidelineSideNavigation } from '@/features/guideline/components/globals/guideline-side-navigation'
@@ -19,7 +20,7 @@ export default async function GuidelineLayout({ children }: { children: React.Re
 				/>
 			}
 		>
-			<div className="w-full max-w-[1250px] px-4 py-8 md:px-8 md:py-10">{children}</div>
+			<ContentFrame className="py-8 md:py-10">{children}</ContentFrame>
 		</SectionLayout>
 	)
 }

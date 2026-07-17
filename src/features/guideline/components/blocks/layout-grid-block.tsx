@@ -31,7 +31,9 @@ function GridDiagram({ variant, accent }: { variant: Variant; accent?: string })
 		<div className="rounded-lg bg-background-secondary p-6">
 			<div className="flex flex-wrap items-baseline justify-between gap-3">
 				{variant.label && (
-					<h4 className="type-body-emphasized text-foreground">{variant.label}</h4>
+					<h4 className="font-body text-base font-semibold text-foreground">
+						{variant.label}
+					</h4>
 				)}
 				<dl className="flex flex-wrap gap-2">
 					{specs.map((spec) => (
@@ -39,8 +41,10 @@ function GridDiagram({ variant, accent }: { variant: Variant; accent?: string })
 							key={spec.label}
 							className="flex items-baseline gap-1.5 rounded-full bg-fill-muted px-3 py-1"
 						>
-							<dt className="type-caption-1 text-foreground-muted">{spec.label}</dt>
-							<dd className="type-caption-1-emphasized text-foreground tabular-nums">
+							<dt className="font-body text-xs font-normal text-muted-foreground">
+								{spec.label}
+							</dt>
+							<dd className="font-body text-xs font-medium text-foreground tabular-nums">
 								{spec.value}
 							</dd>
 						</div>

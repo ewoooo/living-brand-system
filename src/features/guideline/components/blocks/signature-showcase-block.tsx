@@ -14,7 +14,7 @@ export function SignatureShowcaseBlock({ block }: { block: SignatureShowcase }) 
 					className="flex flex-col rounded-lg bg-background-secondary p-6"
 				>
 					{signature.label && (
-						<figcaption className="type-caption-1-emphasized text-foreground-muted uppercase tracking-wide">
+						<figcaption className="font-body text-xs font-medium text-muted-foreground uppercase tracking-wide">
 							{signature.label}
 						</figcaption>
 					)}
@@ -22,7 +22,7 @@ export function SignatureShowcaseBlock({ block }: { block: SignatureShowcase }) 
 						{signature.phrase}
 					</p>
 					{signature.note && (
-						<p className="type-callout mt-4 break-keep text-foreground-muted leading-relaxed">
+						<p className="mt-4 break-keep font-body text-sm font-normal text-muted-foreground leading-relaxed">
 							{signature.note}
 						</p>
 					)}

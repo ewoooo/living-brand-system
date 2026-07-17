@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { TemplateSandbox } from '@/components/template-sandbox'
+import { Typography } from '@/components/ui/typography'
 import { AssetGenerator } from '@/features/asset-generation/components/asset-generator'
 import { HtmlAssetGenerator } from '@/features/asset-generation/components/html-asset-generator'
 import type { PublishedTemplate } from '@/features/asset-generation/services/get-published-template.service'
@@ -24,8 +25,10 @@ export default async function CreateTemplatePage({
 	}
 
 	return (
-		<article className="w-full max-w-[1250px] px-8 py-10">
-			<h1 className="mb-6">{template.name}</h1>
+		<article>
+			<Typography as="h1" className="mb-6" family="title" size="3xl">
+				{template.name}
+			</Typography>
 			{renderTemplateBody(template)}
 		</article>
 	)

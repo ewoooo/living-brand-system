@@ -25,7 +25,9 @@ export function GuidelineSection({
 			<div className="mt-8 mb-10">
 				{section.description ? (
 					<section className="grid gap-4 md:grid-cols-2">
-						<p className="type-body md:col-start-2">{section.description}</p>
+						<p className="font-body font-normal text-base md:col-start-2">
+							{section.description}
+						</p>
 					</section>
 				) : (
 					<GuidelineDescriptionFallback variant={variant} />

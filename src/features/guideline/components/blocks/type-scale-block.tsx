@@ -10,7 +10,7 @@ const FALLBACK_SAMPLE = 'Aa Bb Cc 가나다'
 // 서체 관계가 populate되면 소유한 폰트 파일로 @font-face를 구성해 familyName을 적용한다.
 export function TypeScaleBlock({ block }: { block: TypeScale }) {
 	const typeface = resolveTypeface(block.typeface)
-	const fontFamily = typeface ? `"${typeface.familyName}", var(--font-sans)` : undefined
+	const fontFamily = typeface ? `"${typeface.familyName}", var(--font-body)` : undefined
 
 	return (
 		<dl className="flex flex-col">
@@ -31,7 +31,7 @@ export function TypeScaleBlock({ block }: { block: TypeScale }) {
 					>
 						{item.sample || FALLBACK_SAMPLE}
 					</dd>
-					<dt className="type-caption-1 shrink-0 text-foreground-muted tabular-nums md:text-right">
+					<dt className="shrink-0 font-body text-xs font-normal text-muted-foreground tabular-nums md:text-right">
 						{item.name} · {item.sizePx}/{item.lineHeightPx} · {item.weight}
 					</dt>
 				</div>

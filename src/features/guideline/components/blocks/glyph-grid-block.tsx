@@ -123,7 +123,7 @@ export function GlyphGridBlock({ block }: { block: GlyphGridType }) {
 							</span>
 						</div>
 					)}
-					<span className="type-caption-1 absolute bottom-4 left-4 text-foreground-muted tabular-nums">
+					<span className="absolute bottom-4 left-4 font-body text-xs font-normal text-muted-foreground tabular-nums">
 						{codepoint(active)}
 					</span>
 				</div>
@@ -203,9 +203,9 @@ function GlyphStage({
 			</text>
 
 			<g
-				className="text-foreground-muted"
+				className="text-muted-foreground"
 				fill="currentColor"
-				style={{ fontFamily: 'var(--font-sans)' }}
+				style={{ fontFamily: 'var(--font-body)' }}
 			>
 				{guides.map((l) => (
 					<text key={l.label} x={99} y={l.y - 1.5} textAnchor="end" fontSize={4}>

@@ -8,7 +8,7 @@ export function GuidelineDescriptionFallback(_props: { variant: GuidelineVariant
 
 export function GuidelineLabelFallback() {
 	return (
-		<h2 className="type-title-1 mb-4 flex items-center gap-2 text-destructive">
+		<h2 className="mb-4 flex items-center gap-2 font-body font-normal text-2xl text-destructive">
 			<Warning size={36} />
 			<span>Label should be fulfilled.</span>
 		</h2>

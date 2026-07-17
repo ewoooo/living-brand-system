@@ -93,7 +93,7 @@ export function TypeSpecimenBlock({ block }: { block: TypeSpecimen }) {
 							onChange={(e) => setLineHeight(Number(e.target.value))}
 							className="h-1 w-40 cursor-pointer appearance-none rounded-full bg-background accent-foreground"
 						/>
-						<span className="type-caption-1 w-8 shrink-0 text-foreground tabular-nums">
+						<span className="w-8 shrink-0 font-body text-xs font-normal text-foreground tabular-nums">
 							{lineHeight.toFixed(2)}
 						</span>
 					</div>
@@ -119,7 +119,7 @@ export function TypeSpecimenBlock({ block }: { block: TypeSpecimen }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
 		<div className="flex flex-col gap-2">
-			<span className="type-caption-1 text-foreground-muted uppercase tracking-wide">
+			<span className="font-body text-xs font-normal text-muted-foreground uppercase tracking-wide">
 				{label}
 			</span>
 			{children}

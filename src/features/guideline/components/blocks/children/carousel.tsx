@@ -104,7 +104,7 @@ export function Carousel({
 			</div>
 
 			<div className="flex items-center justify-between gap-4">
-				<p className="type-callout text-foreground-muted" id={labelId}>
+				<p className="font-body text-sm font-normal text-muted-foreground" id={labelId}>
 					{slides[index]?.caption}
 				</p>
 				<div className="flex shrink-0 gap-2">

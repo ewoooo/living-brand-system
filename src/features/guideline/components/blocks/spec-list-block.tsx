@@ -11,7 +11,7 @@ export function SpecListBlock({ block }: { block: SpecList }) {
 			{(block.groups ?? []).map((group) => (
 				<div key={group.id} className="rounded-lg bg-background-secondary p-5">
 					{group.label && (
-						<h4 className="type-caption-1-emphasized text-foreground-muted uppercase tracking-wide">
+						<h4 className="font-body text-xs font-medium text-muted-foreground uppercase tracking-wide">
 							{group.label}
 						</h4>
 					)}
@@ -21,10 +21,10 @@ export function SpecListBlock({ block }: { block: SpecList }) {
 								key={spec.id}
 								className="flex items-baseline justify-between gap-4 py-2.5"
 							>
-								<dt className="type-callout shrink-0 text-foreground-muted">
+								<dt className="shrink-0 font-body text-sm font-normal text-muted-foreground">
 									{spec.key}
 								</dt>
-								<dd className="type-callout-emphasized text-right text-foreground tabular-nums">
+								<dd className="text-right font-body text-sm font-semibold text-foreground tabular-nums">
 									{spec.value}
 								</dd>
 							</div>

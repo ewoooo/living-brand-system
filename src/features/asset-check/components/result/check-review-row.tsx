@@ -68,7 +68,7 @@ export function CheckRow({
 					className={cn('w-44 py-2.5 pr-4 align-top', scenarioLabel && CHECK_BORDER)}
 				>
 					{scenarioLabel && (
-						<span className="type-callout-emphasized">{scenarioLabel}</span>
+						<span className="font-body text-sm font-semibold">{scenarioLabel}</span>
 					)}
 				</TableCell>
 				{/* 판정 주체: 자동 측정 / AI / 담당자 */}
@@ -76,13 +76,18 @@ export function CheckRow({
 					<CheckExecutorIcon check={check} />
 				</TableCell>
 				{/* 검사 항목명 */}
-				<TableCell className={cn('type-callout w-56 py-2.5 pr-4 align-top', CHECK_BORDER)}>
+				<TableCell
+					className={cn(
+						'w-56 py-2.5 pr-4 align-top font-body text-sm font-normal',
+						CHECK_BORDER,
+					)}
+				>
 					{check.title}
 					<a
 						href={guidelineHref}
 						target="_blank"
 						rel="noreferrer"
-						className="text-xs pl-1 text-neutral-400 dark:text-neutral-600 inline-flex underline underline-offset-1 hover:text-foreground"
+						className="inline-flex pl-1 text-xs text-muted-foreground underline underline-offset-1 hover:text-foreground"
 					>
 						↗
 					</a>
@@ -154,7 +159,7 @@ function CheckMessageCell({
 						exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
 						transition={{ duration: 0.16, ease: 'easeOut' }}
 						className={cn(
-							'col-end-13px] block',
+							'block font-body text-sm font-normal',
 							inProgress && 'shimmer',
 							outcome?.rawResult.status === 'fail'
 								? 'text-destructive'
@@ -181,9 +186,11 @@ function CheckExecutorIcon({ check }: { check: Check }) {
 				</span>
 			</TooltipTrigger>
 			<TooltipContent>
-				<span className="type-caption-1-emphasized">{executor.label}</span>
+				<span className="font-body text-xs font-medium">{executor.label}</span>
 				{executor.desc && (
-					<span className="type-caption-1 block opacity-80">{executor.desc}</span>
+					<span className="block font-body text-xs font-normal opacity-80">
+						{executor.desc}
+					</span>
 				)}
 			</TooltipContent>
 		</Tooltip>

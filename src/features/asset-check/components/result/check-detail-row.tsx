@@ -63,7 +63,7 @@ export function CheckDetailRow({
 				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="space-y-2 pb-3">
 						{appliesTo.length > 1 && (
-							<p className="type-caption-1 text-muted-foreground">
+							<p className="font-body text-xs font-normal text-muted-foreground">
 								적용 위치: {appliesToText}
 							</p>
 						)}
@@ -89,7 +89,7 @@ function CheckExecutionDetails({ check, outcome }: { check: Check; outcome?: Che
 	const reasonCode = outcome?.rawResult.reasonCode
 
 	return (
-		<dl className="type-caption-1 grid gap-1.5 rounded-md border px-3 py-2">
+		<dl className="grid gap-1.5 rounded-md border px-3 py-2 font-body text-xs font-normal">
 			<CheckFact
 				label="체커"
 				value={
@@ -140,10 +140,10 @@ function HeuristicObservations({ observations }: { observations: AiCheckResult['
 	if (!observations?.length) return null
 
 	return (
-		<div className="overflow-x-auto rounded-sm border border-neutral-200">
-			<Table className="type-caption-1">
+		<div className="overflow-x-auto rounded-sm border border-border">
+			<Table className="font-body text-xs font-normal">
 				<TableCaption className="sr-only">결과 비교</TableCaption>
-				<TableHeader className="bg-fill-muted/50 text-foreground-muted border-b">
+				<TableHeader className="border-b bg-fill-muted/50 text-muted-foreground">
 					<TableRow>
 						<TableHead className="px-3 py-2">질문</TableHead>
 						<TableHead className="px-3 py-2">기준</TableHead>
@@ -155,8 +155,8 @@ function HeuristicObservations({ observations }: { observations: AiCheckResult['
 					{observations.map((observation) => (
 						<TableRow key={observation.criterionId}>
 							<TableCell className="px-3 py-2 align-top whitespace-normal">
-								<p className="text-neutral-400">{observation.question}</p>
-								<p className="mt-1 text-foreground-muted">{observation.reason}</p>
+								<p className="text-muted-foreground">{observation.question}</p>
+								<p className="mt-1 text-muted-foreground">{observation.reason}</p>
 							</TableCell>
 							<TableCell className="px-3 py-2 align-top">
 								{formatObservationExpected(observation)}
@@ -186,7 +186,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 	if (!facts || Object.keys(facts).length === 0) return null
 
 	return (
-		<dl className="type-caption-1 grid gap-1.5 rounded-md bg-muted px-3 py-2">
+		<dl className="grid gap-1.5 rounded-md bg-muted px-3 py-2 font-body text-xs font-normal">
 			{typeof facts.foreground === 'string' && (
 				<CheckFact label="전경색" value={facts.foreground} />
 			)}

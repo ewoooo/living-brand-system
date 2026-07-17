@@ -379,7 +379,9 @@ const calloutBlocks: Extract<GuidelineBlock, { blockType: 'callout' }>[] = [
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
 	return (
 		<section className="mb-20">
-			<h2 className="type-title-2-emphasized mb-8 border-border border-b pb-4">{title}</h2>
+			<h2 className="mb-8 border-border border-b pb-4 font-body font-bold text-xl">
+				{title}
+			</h2>
 			<div className="flex flex-col gap-16">{children}</div>
 		</section>
 	)
@@ -389,7 +391,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Demo({ title, children }: { title: string; children: React.ReactNode }) {
 	return (
 		<div>
-			<h3 className="type-caption-1-emphasized mb-4 text-foreground-muted uppercase tracking-wide">
+			<h3 className="mb-4 font-body font-medium text-muted-foreground text-xs uppercase tracking-wide">
 				{title}
 			</h3>
 			{children}
@@ -401,10 +403,10 @@ export function GuidelineKitGallery() {
 	return (
 		<article className="w-full">
 			<header className="mb-12">
-				<p className="type-caption-1-emphasized text-foreground-muted uppercase tracking-wide">
+				<p className="font-body font-medium text-muted-foreground text-xs uppercase tracking-wide">
 					UI Kit
 				</p>
-				<h1 className="type-title-1-emphasized mt-1">가이드라인 컴포넌트 키트</h1>
+				<h1 className="mt-1 font-body font-bold text-2xl">가이드라인 컴포넌트 키트</h1>
 			</header>
 
 			<Section title="이미지 + 텍스트 (실제 블록 renderer)">

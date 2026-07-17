@@ -41,7 +41,10 @@ function HeaderHead({
 
 	return (
 		<section className={className}>
-			<nav aria-label="주요 메뉴" className="type-body flex items-center gap-1 py-2 pl-5">
+			<nav
+				aria-label="주요 메뉴"
+				className="flex items-center gap-1 py-2 pl-5 font-body text-base font-normal"
+			>
 				<Link
 					aria-label="메인으로 이동"
 					className="flex size-8 shrink-0 items-center justify-center rounded-md transition-opacity hover:opacity-60"

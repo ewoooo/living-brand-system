@@ -34,18 +34,21 @@ export function CalloutBlock({ block }: { block: Callout }) {
 			<div className="flex items-center gap-3">
 				<span
 					aria-hidden
-					className={`type-caption-1-emphasized grid size-6 shrink-0 place-items-center rounded-full ${style.badge}`}
+					className={`grid size-6 shrink-0 place-items-center rounded-full font-body text-xs font-medium ${style.badge}`}
 				>
 					{style.symbol}
 				</span>
-				<h4 className="type-body-emphasized text-foreground">
+				<h4 className="font-body text-base font-semibold text-foreground">
 					{block.title || style.label}
 				</h4>
 			</div>
 			<ul className="mt-4 flex flex-col gap-2">
 				{items.map((item) => (
-					<li key={item.id} className="type-callout flex gap-2 text-foreground-muted">
-						<span aria-hidden className="select-none text-foreground-muted">
+					<li
+						key={item.id}
+						className="flex gap-2 font-body text-sm font-normal text-muted-foreground"
+					>
+						<span aria-hidden className="select-none text-muted-foreground">
 							–
 						</span>
 						<span>{item.text}</span>

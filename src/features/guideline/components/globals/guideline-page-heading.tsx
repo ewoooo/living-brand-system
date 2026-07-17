@@ -4,9 +4,11 @@ export function GuidelinePageHeading({ title, label }: { title: string; label?: 
 	return (
 		<header className="sticky top-[76px] z-20 mb-6 flex items-start gap-1 bg-background pt-3 pb-3">
 			{label !== undefined && (
-				<p className="type-body -mb-1 text-foreground-muted">{label}</p>
+				<p className="-mb-1 font-body font-normal text-base text-muted-foreground">
+					{label}
+				</p>
 			)}
-			<h2 className="font text-4xl text-foreground leading-none">{title}</h2>
+			<h2 className="font-title text-4xl text-foreground leading-none">{title}</h2>
 		</header>
 	)
 }

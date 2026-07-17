@@ -41,14 +41,14 @@ function Item({ column }: { column: Column }) {
 			{(column.heading || column.body) && (
 				<div className="flex flex-col gap-3">
 					{column.heading && (
-						<h4 className="type-caption-1-emphasized text-foreground-muted uppercase tracking-wide">
+						<h4 className="font-body text-xs font-medium text-muted-foreground uppercase tracking-wide">
 							{column.heading}
 						</h4>
 					)}
 					{column.body && (
 						<RichText
 							data={column.body}
-							className="type-body flex max-w-2xl flex-col gap-3 text-foreground"
+							className="flex max-w-2xl flex-col gap-3 font-body text-base font-normal text-foreground"
 						/>
 					)}
 				</div>

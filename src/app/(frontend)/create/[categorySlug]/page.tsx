@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Typography } from '@/components/ui/typography'
 import { getCreateNavigation } from '@/features/asset-generation/services/get-create-navigation.service'
 
 export default async function CreateCategoryPage({
@@ -16,15 +17,17 @@ export default async function CreateCategoryPage({
 	}
 
 	return (
-		<article className="w-full max-w-[1250px] px-8 py-10">
-			<h1>{category.title}</h1>
+		<article>
+			<Typography as="h1" family="title" size="3xl">
+				{category.title}
+			</Typography>
 			{category.templates.length > 0 ? (
 				<ul className="mt-6 flex flex-col gap-2">
 					{category.templates.map((template) => (
 						<li key={template.id}>
 							<Link
 								href={template.href}
-								className="type-callout underline-offset-4 hover:underline"
+								className="font-body text-sm font-normal underline-offset-4 hover:underline"
 							>
 								{template.name}
 							</Link>
@@ -32,9 +35,9 @@ export default async function CreateCategoryPage({
 					))}
 				</ul>
 			) : (
-				<p className="type-callout mt-6 text-muted-foreground">
+				<Typography className="mt-6" size="sm" tone="muted">
 					이 카테고리에 발행된 템플릿이 없습니다.
-				</p>
+				</Typography>
 			)}
 		</article>
 	)
