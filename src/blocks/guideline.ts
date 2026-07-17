@@ -198,5 +198,3 @@ export const DoDontBlock: Block = {
 		guidelineRulesField(),
 	],
 }
-
-export const guidelineBlocks = [ColumnUnitBlock, MediaShowcaseBlock, ColorPaletteBlock, DoDontBlock]

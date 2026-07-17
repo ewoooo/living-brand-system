@@ -1,6 +1,5 @@
-import type { CheckReferenceAssetRole } from '../checks/check-source'
 import { compact, relationshipId } from '../utils/block-text'
-import type { BlockBehavior, GuidelineBlock } from './types'
+import type { CheckReferenceAssetRole, GuidelineBlock } from './types'
 
 export const kindLabel = { do: '권장', ok: '허용', dont: '금지' } as const
 
@@ -11,9 +10,10 @@ const kindRole: Record<keyof typeof kindLabel, CheckReferenceAssetRole> = {
 	dont: 'negative',
 }
 
-function format(block: GuidelineBlock): string {
-	if (block.blockType !== 'doDont') return ''
-	return compact([
+type DoDont = Extract<GuidelineBlock, { blockType: 'doDont' }>
+
+export function projectDoDont(block: DoDont) {
+	const text = compact([
 		block.title ?? 'Do/Don’t',
 		...(block.groups ?? []).flatMap((group) =>
 			compact([
@@ -25,33 +25,26 @@ function format(block: GuidelineBlock): string {
 			]),
 		),
 	]).join('\n')
-}
 
-export const behavior: BlockBehavior = {
-	formatForAgent: format,
-	toCheckSourceSnapshot: (block) => {
-		if (block.blockType !== 'doDont') {
-			return { evidence: { type: 'doDont', groups: [] }, referenceAssets: [] }
-		}
-		return {
-			evidence: {
-				type: 'doDont',
-				title: block.title?.trim() || undefined,
-				groups: (block.groups ?? []).map((group) => ({
-					category: group.category?.trim() || undefined,
-					description: group.description?.trim() || undefined,
-					kind: group.kind,
-					examples: (group.examples ?? []).map((example) => ({
-						caption: example.caption?.trim() || undefined,
-					})),
+	return {
+		text,
+		evidence: {
+			type: 'doDont' as const,
+			title: block.title?.trim() || undefined,
+			groups: (block.groups ?? []).map((group) => ({
+				category: group.category?.trim() || undefined,
+				description: group.description?.trim() || undefined,
+				kind: group.kind,
+				examples: (group.examples ?? []).map((example) => ({
+					caption: example.caption?.trim() || undefined,
 				})),
-			},
-			referenceAssets: (block.groups ?? []).flatMap((group) =>
-				(group.examples ?? []).flatMap((example) => {
-					const id = relationshipId(example.image)
-					return id == null ? [] : [{ id, role: kindRole[group.kind] }]
-				}),
-			),
-		}
-	},
+			})),
+		},
+		referenceAssets: (block.groups ?? []).flatMap((group) =>
+			(group.examples ?? []).flatMap((example) => {
+				const id = relationshipId(example.image)
+				return id == null ? [] : [{ id, role: kindRole[group.kind] }]
+			}),
+		),
+	}
 }

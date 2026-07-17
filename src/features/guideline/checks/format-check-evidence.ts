@@ -1,6 +1,6 @@
+import type { CheckEvidence } from '../blocks/catalog'
 import { kindLabel } from '../blocks/do-dont.block'
 import { compact } from '../utils/block-text'
-import type { CheckEvidence } from './check-source'
 
 /** 구조화 evidence를 기존 평문 소비 경계에 맞게 변환한다. */
 export function formatCheckEvidence(evidence: CheckEvidence | string): string {

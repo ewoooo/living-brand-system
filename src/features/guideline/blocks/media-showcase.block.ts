@@ -1,21 +1,13 @@
 import { compact, formatImage, relationshipId } from '../utils/block-text'
-import type { BlockBehavior, GuidelineBlock } from './types'
+import type { GuidelineBlock } from './types'
 
-function format(block: GuidelineBlock): string {
-	if (block.blockType !== 'mediaShowcase') return ''
-	return compact(['Media showcase', formatImage(block.image)]).join('\n')
-}
+type MediaShowcase = Extract<GuidelineBlock, { blockType: 'mediaShowcase' }>
 
-export const behavior: BlockBehavior = {
-	formatForAgent: format,
-	toCheckSourceSnapshot: (block) => {
-		if (block.blockType !== 'mediaShowcase') {
-			return { evidence: { type: 'mediaShowcase' }, referenceAssets: [] }
-		}
-		const imageId = relationshipId(block.image)
-		return {
-			evidence: { type: 'mediaShowcase' },
-			referenceAssets: imageId == null ? [] : [{ id: imageId, role: 'context' }],
-		}
-	},
+export function projectMediaShowcase(block: MediaShowcase) {
+	const imageId = relationshipId(block.image)
+	return {
+		text: compact(['Media showcase', formatImage(block.image)]).join('\n'),
+		evidence: { type: 'mediaShowcase' as const },
+		referenceAssets: imageId == null ? [] : [{ id: imageId, role: 'context' as const }],
+	}
 }

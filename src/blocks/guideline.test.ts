@@ -5,15 +5,10 @@ import {
 	guidelineBreadcrumbCount,
 	guidelineDocumentTypeLabel,
 } from '@/components/admin/guideline-document-tree'
+import { guidelineBlockCatalog, guidelineBlocks } from '@/features/guideline/blocks/catalog'
 import { checkKeyFromEnglishTitle } from '@/features/guideline/checks/check-key-from-english-title'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
-import {
-	ColumnUnitBlock,
-	DoDontBlock,
-	guidelineBlocks,
-	guidelineRulesField,
-	MediaShowcaseBlock,
-} from './guideline'
+import { ColumnUnitBlock, DoDontBlock, guidelineRulesField, MediaShowcaseBlock } from './guideline'
 
 const fieldNames = (fields: Field[]) =>
 	fields.flatMap((field) =>
@@ -70,6 +65,20 @@ describe('guideline rules field', () => {
 		for (const block of guidelineBlocks) {
 			expect(fieldNames(block.fields)).not.toContain('checks')
 		}
+	})
+
+	it('블록 카탈로그 key와 Payload slug를 같은 순서로 등록한다', () => {
+		expect(
+			Object.entries(guidelineBlockCatalog).map(([type, definition]) => [
+				type,
+				definition.schema.slug,
+			]),
+		).toEqual([
+			['columnUnit', 'columnUnit'],
+			['mediaShowcase', 'mediaShowcase'],
+			['colorPalette', 'colorPalette'],
+			['doDont', 'doDont'],
+		])
 	})
 
 	it('Do/Don’t 이미지 비율에 공용 계약을 사용한다', () => {
