@@ -17,6 +17,12 @@
 	font-family: var(--font-body);
 }
 
+// 어드민 Badge 글자를 text-sm 수준으로 키운다. shadcn 기본 text-[0.625rem](≈8px)는 너무 작다.
+// custom.scss는 어드민에서만 로드되므로 프론트엔드 Badge에는 영향이 없다.
+[data-slot="badge"] {
+	font-size: 0.875rem;
+}
+
 .dashboard-summary {
 	width: 100%;
 	aspect-ratio: 7 / 1;
