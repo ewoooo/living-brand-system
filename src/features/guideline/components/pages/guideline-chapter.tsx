@@ -1,3 +1,4 @@
+import { ContentFrame } from '@/components/global/content-frame'
 import type { GetGuidelineChapterOutput } from '../../services/get-guideline-chapter.service'
 import { GuidelineDescription } from '../globals/guideline-description'
 import { GuidelineHeader } from '../globals/guideline-header'
@@ -17,7 +18,7 @@ export function GuidelineChapter({
 	isPreview: boolean
 }) {
 	return (
-		<>
+		<ContentFrame>
 			{isPreview && <RefreshRouteOnSave />}
 			<GuidelineHeader variant={variant} title={chapter.title} />
 			<GuidelineDescription variant={variant} description={chapter.description} />
@@ -28,6 +29,6 @@ export function GuidelineChapter({
 					href: `/guideline/${chapterSlug}/${section.slug}`,
 				}))}
 			/>
-		</>
+		</ContentFrame>
 	)
 }
