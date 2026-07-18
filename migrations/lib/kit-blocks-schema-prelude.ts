@@ -1,5 +1,5 @@
 // 20260714_031500 백필이 Local API를 호출하기 전에, 현재 config가 조회하는 kit 블록 스키마
-// (contentColumns 개명 결과 + 20260717_130449까지의 신규 블록)를 미리 만든다.
+// (contentColumns 개명 결과 + 20260718_063009까지의 신규 블록)를 미리 만든다.
 // 모든 구문이 멱등이라 최신 스키마가 이미 있는 DB에서는 no-op이다. 실데이터가 있는 운영 DB는
 // 이 프렐류드가 아니라 후속 rename 마이그레이션으로 스키마를 얻는다(그 시점엔 031500이 이미 적용됨).
 export const kitBlocksPreludeSql = `
@@ -46,6 +46,14 @@ export const kitBlocksPreludeSql = `
 		"id" varchar PRIMARY KEY NOT NULL,
 		"image_ratio" "enum_guideline_docs_blocks_content_columns_image_ratio" DEFAULT '4:3',
 		"block_name" varchar
+	  );
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_media_showcase_images" (
+		"_order" integer NOT NULL,
+		"_parent_id" varchar NOT NULL,
+		"id" varchar PRIMARY KEY NOT NULL,
+		"image_id" integer,
+		"image_background_color_id" integer,
+		"image_scale" "enum_image_scale" DEFAULT '100'
 	  );
 	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_carousel_slides" (
 		"_order" integer NOT NULL,
@@ -236,6 +244,15 @@ export const kitBlocksPreludeSql = `
 		"image_ratio" "enum__guideline_docs_v_blocks_content_columns_image_ratio" DEFAULT '4:3',
 		"_uuid" varchar,
 		"block_name" varchar
+	  );
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_media_showcase_images" (
+		"_order" integer NOT NULL,
+		"_parent_id" integer NOT NULL,
+		"id" serial PRIMARY KEY NOT NULL,
+		"image_id" integer,
+		"image_background_color_id" integer,
+		"image_scale" "enum_image_scale" DEFAULT '100',
+		"_uuid" varchar
 	  );
 	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_carousel_slides" (
 		"_order" integer NOT NULL,

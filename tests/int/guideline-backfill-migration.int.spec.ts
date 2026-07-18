@@ -1,7 +1,40 @@
 import { describe, expect, it, vi } from 'vitest'
-import { updateLocale } from '../../migrations/20260714_031500_backfill_guideline_documents'
+import {
+	normalizeBackfillBlocks,
+	updateLocale,
+} from '../../migrations/20260714_031500_backfill_guideline_documents'
+import { kitBlocksPreludeSql } from '../../migrations/lib/kit-blocks-schema-prelude'
 
 describe('guideline document backfill migration', () => {
+	it('precreates the media showcase image tables used by the current Payload config', () => {
+		expect(kitBlocksPreludeSql).toContain(
+			'CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_media_showcase_images"',
+		)
+		expect(kitBlocksPreludeSql).toContain(
+			'CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_media_showcase_images"',
+		)
+	})
+
+	it('converts a legacy media showcase image to the current images array', () => {
+		expect(
+			normalizeBackfillBlocks([
+				{
+					blockType: 'mediaShowcase',
+					id: 'media-1',
+					image: 7,
+					imageBackgroundColor: 3,
+					imageScale: '80',
+				},
+			] as never),
+		).toEqual([
+			{
+				blockType: 'mediaShowcase',
+				id: 'media-1',
+				images: [{ image: 7, imageBackgroundColor: 3, imageScale: '80' }],
+			},
+		])
+	})
+
 	it('skips a localized draft without a slug before updating data or legacy mapping', async () => {
 		const payload = {
 			logger: { warn: vi.fn() },

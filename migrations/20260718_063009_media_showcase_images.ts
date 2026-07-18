@@ -2,7 +2,7 @@ import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
-   CREATE TABLE "guideline_docs_blocks_media_showcase_images" (
+   CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_media_showcase_images" (
 	"_order" integer NOT NULL,
 	"_parent_id" varchar NOT NULL,
 	"id" varchar PRIMARY KEY NOT NULL,
@@ -11,7 +11,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 	"image_scale" "enum_image_scale" DEFAULT '100'
   );
 
-  CREATE TABLE "_guideline_docs_v_blocks_media_showcase_images" (
+  CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_media_showcase_images" (
 	"_order" integer NOT NULL,
 	"_parent_id" integer NOT NULL,
 	"id" serial PRIMARY KEY NOT NULL,
@@ -32,9 +32,15 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
     "image_background_color_id",
     "image_scale"
   FROM "guideline_docs_blocks_media_showcase"
-  WHERE "image_id" IS NOT NULL
+  WHERE (
+    "image_id" IS NOT NULL
     OR "image_background_color_id" IS NOT NULL
-    OR "image_scale"::text IS DISTINCT FROM '100';
+    OR "image_scale"::text IS DISTINCT FROM '100'
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM "guideline_docs_blocks_media_showcase_images" image
+    WHERE image."_parent_id" = "guideline_docs_blocks_media_showcase"."id"
+  );
 
   INSERT INTO "_guideline_docs_v_blocks_media_showcase_images" (
     "_order", "_parent_id", "image_id", "image_background_color_id", "image_scale", "_uuid"
@@ -47,9 +53,15 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
     "image_scale",
     substring(md5("id"::text || ':media-showcase-image:1'), 1, 24)
   FROM "_guideline_docs_v_blocks_media_showcase"
-  WHERE "image_id" IS NOT NULL
+  WHERE (
+    "image_id" IS NOT NULL
     OR "image_background_color_id" IS NOT NULL
-    OR "image_scale"::text IS DISTINCT FROM '100';
+    OR "image_scale"::text IS DISTINCT FROM '100'
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM "_guideline_docs_v_blocks_media_showcase_images" image
+    WHERE image."_parent_id" = "_guideline_docs_v_blocks_media_showcase"."id"
+  );
 
   ALTER TABLE "guideline_docs_blocks_media_showcase" DROP CONSTRAINT "guideline_docs_blocks_media_showcase_image_id_application_images_id_fk";
 
