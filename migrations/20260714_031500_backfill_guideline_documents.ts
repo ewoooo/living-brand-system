@@ -582,10 +582,26 @@ function documentData(
 			? { headerImage: relationshipId(document.headerImage) }
 			: {}),
 		...('checks' in document ? { checks: document.checks } : {}),
-		...('blocks' in document ? { blocks: document.blocks } : {}),
+		...('blocks' in document ? { blocks: normalizeBackfillBlocks(document.blocks) } : {}),
 		displayOrder: document.displayOrder,
 		parent,
 	} as never
+}
+
+export function normalizeBackfillBlocks(blocks: LegacyDocument['blocks']) {
+	return blocks?.map((block) => {
+		const legacyBlock = block as typeof block & {
+			image?: GuidelineDocument['headerImage']
+			imageBackgroundColor?: number | null
+			imageScale?: string | null
+		}
+		if (block.blockType !== 'mediaShowcase' || !('image' in legacyBlock)) return block
+		const { image, imageBackgroundColor, imageScale, ...currentBlock } = legacyBlock
+		return {
+			...currentBlock,
+			images: [{ image, imageBackgroundColor, imageScale }],
+		}
+	}) as GuidelineDocument['blocks']
 }
 
 async function recordLegacyMapping(
