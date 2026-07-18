@@ -272,6 +272,7 @@ export default buildConfig({
 		s3Storage({
 			collections: {
 				'brand-logos': true,
+				'brand-typefaces': true,
 				'application-images': true,
 				'template-assets': true,
 			},

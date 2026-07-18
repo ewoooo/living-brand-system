@@ -2,9 +2,9 @@ import { compact, formatImage, relationshipId } from '../utils/block-text'
 import { extractTextFromLexical } from '../utils/lexical-text'
 import type { GuidelineBlock } from './types'
 
-type ColumnUnit = Extract<GuidelineBlock, { blockType: 'columnUnit' }>
+type ContentColumns = Extract<GuidelineBlock, { blockType: 'contentColumns' }>
 
-export function projectColumnUnit(block: ColumnUnit) {
+export function projectContentColumns(block: ContentColumns) {
 	const text = compact(
 		block.columns?.map((column) =>
 			compact([
@@ -18,7 +18,7 @@ export function projectColumnUnit(block: ColumnUnit) {
 	return {
 		text,
 		evidence: {
-			type: 'columnUnit' as const,
+			type: 'contentColumns' as const,
 			columns: (block.columns ?? []).map((column) => ({
 				heading: column.heading?.trim() || undefined,
 				body: extractTextFromLexical(column.body).trim() || undefined,

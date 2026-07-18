@@ -67,7 +67,7 @@ function CheckButton() {
 			{selected?.status === 'failed' && (
 				<p
 					role="alert"
-					className="type-caption-1 pointer-events-auto rounded-md bg-destructive/10 px-3 py-1.5 text-destructive"
+					className="pointer-events-auto rounded-md bg-destructive/10 px-3 py-1.5 font-body text-xs font-normal text-destructive"
 				>
 					검사 요청에 실패했습니다. 다시 검수하기를 눌러주세요.
 				</p>
@@ -85,7 +85,7 @@ function CheckButton() {
 						<span className="sr-only">검수 중</span>
 					</>
 				) : (
-					<span className="type-body">
+					<span className="font-body text-base font-normal">
 						{selected?.status === 'failed' ? '다시 검사하기' : '검사하기'}
 					</span>
 				)}

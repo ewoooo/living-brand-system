@@ -43,7 +43,7 @@ export function CheckResultSummary({ sections }: CheckResultSummaryProps) {
 				{selected?.status === 'running' && (
 					<span
 						aria-live="polite"
-						className="type-caption-1 flex items-center gap-2 text-foreground-muted"
+						className="flex items-center gap-2 font-body text-xs font-normal text-muted-foreground"
 					>
 						<Spinner className="size-3.5" />
 						{totalCount > 0
@@ -124,13 +124,13 @@ function SummaryMetric({
 	return (
 		<span
 			className={cn(
-				'type-caption-1 flex items-center gap-2',
+				'flex items-center gap-2 font-body text-xs font-normal',
 				muted && 'text-muted-foreground',
 			)}
 		>
 			<span aria-hidden className={cn('inline-block size-2 rounded-full', colorClassName)} />
 			<span>{label}</span>
-			<span className="type-caption-1-emphasized tabular-nums">{value}</span>
+			<span className="font-body text-xs font-medium tabular-nums">{value}</span>
 		</span>
 	)
 }

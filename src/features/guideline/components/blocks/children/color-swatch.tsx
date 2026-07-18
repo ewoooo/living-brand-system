@@ -47,17 +47,17 @@ export function ColorSwatch({
 			type="button"
 			onClick={copy}
 			title={`${color.hex} 복사`}
-			className="type-caption-1 group relative flex aspect-square cursor-pointer flex-col rounded-md border border-scrim/10 p-4 text-left outline-none ring-foreground/60 transition-shadow focus-visible:ring-2"
+			className="group relative flex aspect-square cursor-pointer flex-col rounded-md border border-scrim/10 p-4 text-left font-body text-xs font-normal outline-none ring-foreground/60 transition-shadow focus-visible:ring-2"
 			style={{ backgroundColor: color.hex, color: fg }}
 		>
-			<span className="type-caption-1-emphasized">{color.name}</span>
+			<span className="font-body text-xs font-medium">{color.name}</span>
 			<span className="tabular-nums">HEX {color.hex}</span>
 			{rgbLabel(color.hex) && <span className="tabular-nums">RGB {rgbLabel(color.hex)}</span>}
 			{color.pantone && <span>PMS {color.pantone}</span>}
 
 			<span
 				aria-live="polite"
-				className="type-caption-1-emphasized mt-auto self-start rounded-full px-2 py-0.5 opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
+				className="mt-auto self-start rounded-full px-2 py-0.5 font-body text-xs font-medium opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
 				style={{ backgroundColor: light ? '#00000012' : '#FFFFFF20' }}
 			>
 				{copied ? '✓ 복사됨' : '클릭해서 복사'}

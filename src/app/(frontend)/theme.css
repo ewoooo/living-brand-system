@@ -17,9 +17,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-	--font-sans: "Pretendard", system-ui, sans-serif;
+	--font-body: "Pretendard", system-ui, sans-serif;
+	--font-sans: var(--font-body);
 	--font-title: "Essenflux", "Pretendard", system-ui, sans-serif;
-	--font-title-emphasized: "Pretendard", system-ui, sans-serif;
 
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
@@ -129,8 +129,8 @@
 }
 
 .typeset-lbs {
-	--typeset-font-body: var(--font-sans);
-	--typeset-font-heading: var(--font-sans);
+	--typeset-font-body: var(--font-body);
+	--typeset-font-heading: var(--font-body);
 	--typeset-size: 15px;
 	--typeset-leading: 1.75;
 	--typeset-flow: 1.25em;
@@ -138,130 +138,4 @@
 
 .font-title {
 	font-family: var(--font-title);
-}
-
-.type-large-title,
-.type-title-1,
-.type-title-2,
-.type-title-3 {
-	font-family: var(--font-sans);
-	font-weight: 400;
-}
-
-.type-large-title-emphasized,
-.type-title-1-emphasized,
-.type-title-2-emphasized,
-.type-title-3-emphasized {
-	font-family: var(--font-title-emphasized);
-}
-
-.type-headline,
-.type-headline-emphasized,
-.type-body,
-.type-body-emphasized,
-.type-callout,
-.type-callout-emphasized,
-.type-subheadline,
-.type-subheadline-emphasized,
-.type-footnote,
-.type-footnote-emphasized,
-.type-caption-1,
-.type-caption-1-emphasized,
-.type-caption-2,
-.type-caption-2-emphasized {
-	font-family: var(--font-sans);
-}
-
-.type-large-title,
-.type-large-title-emphasized {
-	font-size: 3.625rem;
-	line-height: 2rem;
-}
-
-.type-title-1,
-.type-title-1-emphasized {
-	font-size: 1.625rem;
-	line-height: 2rem;
-}
-
-.type-title-2,
-.type-title-2-emphasized {
-	font-size: 1.25rem;
-	line-height: 1.5625rem;
-}
-
-.type-title-3,
-.type-title-3-emphasized {
-	font-size: 1.125rem;
-	line-height: 1.4375rem;
-}
-
-.type-headline,
-.type-headline-emphasized,
-.type-body,
-.type-body-emphasized {
-	font-size: 0.9375rem;
-	line-height: 1.4rem;
-}
-
-.type-callout,
-.type-callout-emphasized {
-	font-size: 0.875rem;
-	line-height: 1.1875rem;
-}
-
-.type-subheadline,
-.type-subheadline-emphasized {
-	font-size: 0.8125rem;
-	line-height: 1.125rem;
-}
-
-.type-footnote,
-.type-footnote-emphasized {
-	font-size: 0.75rem;
-	line-height: 1rem;
-}
-
-.type-caption-1,
-.type-caption-1-emphasized,
-.type-caption-2,
-.type-caption-2-emphasized {
-	font-size: 0.6875rem;
-	line-height: 0.8125rem;
-}
-
-.type-large-title-emphasized,
-.type-title-1-emphasized,
-.type-title-2-emphasized {
-	font-weight: 700;
-}
-
-.type-title-3-emphasized,
-.type-body-emphasized,
-.type-callout-emphasized,
-.type-subheadline-emphasized,
-.type-footnote-emphasized,
-.type-caption-2-emphasized {
-	font-weight: 600;
-}
-
-.type-headline {
-	font-weight: 700;
-}
-
-.type-headline-emphasized {
-	font-weight: 800;
-}
-
-.type-body,
-.type-callout,
-.type-subheadline,
-.type-footnote,
-.type-caption-1 {
-	font-weight: 400;
-}
-
-.type-caption-1-emphasized,
-.type-caption-2 {
-	font-weight: 500;
 }

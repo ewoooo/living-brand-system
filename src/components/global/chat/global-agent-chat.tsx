@@ -86,7 +86,7 @@ export function GlobalAgentChat() {
 function GlobalAgentChatHeader() {
 	return (
 		<header className="p-3.5">
-			<h2 className="type-headline">채팅</h2>
+			<h2 className="font-body text-base font-bold">채팅</h2>
 		</header>
 	)
 }

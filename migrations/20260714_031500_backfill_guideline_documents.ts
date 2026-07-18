@@ -1,4 +1,5 @@
 import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-postgres'
+import { kitBlocksPreludeSql } from './lib/kit-blocks-schema-prelude'
 import type { Payload } from 'payload'
 import type { GuidelineDocument } from '../src/payload-types'
 
@@ -139,6 +140,10 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 			WHERE e."_parent_id" = g."id" ORDER BY e."_order" LIMIT 1
 		) WHERE EXISTS (SELECT 1 FROM "_guideline_pages_v_blocks_do_dont_groups_examples" e WHERE e."_parent_id" = g."id");
 	`)
+
+	// 현재 config는 kit 블록화(20260717_122530) 이후의 블록 테이블을 조회하므로,
+	// Local API 호출 전에 해당 스키마를 멱등으로 선반영한다.
+	await pool.query(kitBlocksPreludeSql)
 
 	await pool.query(`
 		DO $precreate$

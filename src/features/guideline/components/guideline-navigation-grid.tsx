@@ -16,7 +16,7 @@ export function GuidelineNavigationGrid({
 					href={item.href}
 					className="flex aspect-square flex-col bg-background p-4 transition-colors hover:bg-accent"
 				>
-					<Heading className="type-title-1">{item.title}</Heading>
+					<Heading className="font-body font-normal text-2xl">{item.title}</Heading>
 					<div className="mt-auto p-2">
 						<ArrowRight size={24} />
 					</div>

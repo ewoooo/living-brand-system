@@ -162,7 +162,9 @@ function TemplateAttachmentFrame({
 					<Download />
 				</AttachmentAction>
 			</AttachmentActions>
-			{exportError && <p className="type-caption-1 px-1 text-destructive">{exportError}</p>}
+			{exportError && (
+				<p className="px-1 font-body text-xs font-normal text-destructive">{exportError}</p>
+			)}
 		</Attachment>
 	)
 }

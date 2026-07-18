@@ -11,7 +11,11 @@ export function AgentChatGeneratedImages({
 	const label = sceneLabel(attachment.sceneId)
 	return (
 		<div className="flex w-full flex-col gap-2">
-			{label && <p className="type-caption-1 text-muted-foreground">적용된 씬: {label}</p>}
+			{label && (
+				<p className="font-body text-xs font-normal text-muted-foreground">
+					적용된 씬: {label}
+				</p>
+			)}
 			<div className="grid w-full grid-cols-2 gap-2">
 				{attachment.images.map((src, index) => (
 					<div key={src} className="relative">
@@ -24,7 +28,7 @@ export function AgentChatGeneratedImages({
 						<a
 							href={src}
 							download={`essenherb-image-${index + 1}.${imgExt(src)}`}
-							className="type-caption-1 absolute right-1 bottom-1 rounded bg-background/80 px-1.5 py-0.5 underline"
+							className="absolute right-1 bottom-1 rounded bg-background/80 px-1.5 py-0.5 font-body text-xs font-normal underline"
 						>
 							다운로드
 						</a>
@@ -32,7 +36,7 @@ export function AgentChatGeneratedImages({
 				))}
 			</div>
 			{attachment.prompt && (
-				<details className="type-caption-1 text-muted-foreground">
+				<details className="font-body text-xs font-normal text-muted-foreground">
 					<summary className="cursor-pointer">생성 프롬프트</summary>
 					<p className="mt-1 whitespace-pre-wrap">{attachment.prompt}</p>
 				</details>

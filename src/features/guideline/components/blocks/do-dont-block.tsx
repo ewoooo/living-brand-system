@@ -43,12 +43,12 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 								className={horizontal ? 'mb-4 space-y-1 lg:mb-0' : 'mb-4 space-y-1'}
 							>
 								{group.category && (
-									<h4 className="type-body-emphasized text-muted-foreground">
+									<h4 className="font-body text-base font-semibold text-muted-foreground">
 										{group.category}
 									</h4>
 								)}
 								{group.description && (
-									<p className="type-callout max-w-prose text-muted-foreground">
+									<p className="max-w-prose font-body text-sm font-normal text-muted-foreground">
 										{group.description}
 									</p>
 								)}
@@ -78,13 +78,13 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 										/>
 										<span
 											aria-hidden
-											className={`type-caption-1-emphasized absolute top-2 right-2 grid size-6 place-items-center rounded-full ${kindBadge[group.kind].className}`}
+											className={`absolute top-2 right-2 grid size-6 place-items-center rounded-full font-body text-xs font-medium ${kindBadge[group.kind].className}`}
 										>
 											{kindBadge[group.kind].symbol}
 										</span>
 									</div>
 									{example.caption && (
-										<figcaption className="type-callout mt-2 text-muted-foreground">
+										<figcaption className="mt-2 font-body text-sm font-normal text-muted-foreground">
 											{example.caption}
 										</figcaption>
 									)}

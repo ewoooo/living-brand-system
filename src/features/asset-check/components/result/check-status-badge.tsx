@@ -31,7 +31,7 @@ export function CheckStatusBadge({
 				exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -3, scale: 0.96 }}
 				transition={{ duration: 0.16, ease: 'easeOut' }}
 				className={cn(
-					'type-subheadline-emphasized inline-block whitespace-nowrap rounded px-1.5 py-0.5',
+					'inline-block whitespace-nowrap rounded px-1.5 py-0.5 font-body text-sm font-semibold',
 					CHECK_STATUS[checkDisplayStatus(outcome.rawResult)].pill,
 				)}
 			>

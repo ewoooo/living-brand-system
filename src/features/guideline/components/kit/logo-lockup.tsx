@@ -57,7 +57,7 @@ export function LogoLockup({
 							variant.logo
 						)}
 					</div>
-					<figcaption className="type-caption-1 px-4 py-3 text-foreground-muted">
+					<figcaption className="px-4 py-3 font-body font-normal text-muted-foreground text-xs">
 						{variant.label}
 					</figcaption>
 				</figure>
