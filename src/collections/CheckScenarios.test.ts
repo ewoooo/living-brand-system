@@ -24,8 +24,6 @@ describe('CheckScenarios', () => {
 		vi.clearAllMocks()
 		mocks.listAvailable.mockResolvedValue([
 			{
-				blockName: 'Main palette',
-				documentTitle: 'Color',
 				executor: 'deterministic',
 				key: 'color.palette',
 				title: '컬러 팔레트',
@@ -35,7 +33,7 @@ describe('CheckScenarios', () => {
 		mocks.validateKeys.mockResolvedValue(true)
 	})
 
-	it('Check 목록에 Block 출처를 노출하고 중요도는 제외한다', async () => {
+	it('Check 목록에 published Rule을 노출하고 중요도는 제외한다', async () => {
 		const endpoint = Array.isArray(CheckScenarios.endpoints)
 			? CheckScenarios.endpoints[0]?.handler
 			: undefined
@@ -46,8 +44,6 @@ describe('CheckScenarios', () => {
 		expect(await response.json()).toEqual({
 			docs: [
 				{
-					blockName: 'Main palette',
-					documentTitle: 'Color',
 					executor: 'deterministic',
 					key: 'color.palette',
 					title: '컬러 팔레트',

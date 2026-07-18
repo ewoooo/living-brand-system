@@ -1,56 +1,50 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { findPublishedScenarioCheckRecords } from './available-scenario-check.payload.repository'
 
-const mocks = vi.hoisted(() => ({
-	collectSources: vi.fn(),
-	findDocuments: vi.fn(),
-}))
-
-vi.mock('@/features/guideline/checks/collect-guideline-check-sources', () => ({
-	collectGuidelineCheckSources: mocks.collectSources,
-}))
-vi.mock('@/features/guideline/repositories/published-guideline-checks.payload.repository', () => ({
-	findPublishedUnifiedGuidelineCheckDocuments: mocks.findDocuments,
-}))
-
 describe('findPublishedScenarioCheckRecords', () => {
-	beforeEach(() => {
-		vi.clearAllMocks()
-	})
-
-	it('published Guideline Rule 레코드를 Service용 DTO로 변환한다', async () => {
-		const document = { title: 'Color' }
-		mocks.findDocuments.mockResolvedValue({ documents: [document] })
-		mocks.collectSources.mockReturnValue([
-			{
-				blockName: 'Main palette',
-				rule: {
-					checker: { executor: 'deterministic' },
+	it('published Rule을 Service용 DTO로 변환한다', async () => {
+		const find = vi.fn().mockResolvedValue({
+			docs: [
+				{
+					executor: 'deterministic',
 					key: 'color.palette',
 					title: 'Color Palette',
 					titleKo: '컬러 팔레트',
 				},
-			},
-		])
-		const payload = {}
+				{
+					executor: 'heuristic',
+					key: 'imagery.style',
+					title: 'Imagery Style',
+					titleKo: null,
+				},
+			],
+		})
 		const user = { role: 'manager' }
 
 		await expect(
-			findPublishedScenarioCheckRecords({ payload, user } as never),
+			findPublishedScenarioCheckRecords({ payload: { find }, user } as never),
 		).resolves.toEqual([
 			{
-				blockName: 'Main palette',
-				documentTitle: 'Color',
 				executor: 'deterministic',
 				key: 'color.palette',
 				title: 'Color Palette',
 				titleKo: '컬러 팔레트',
 			},
+			{
+				executor: 'heuristic',
+				key: 'imagery.style',
+				title: 'Imagery Style',
+				titleKo: undefined,
+			},
 		])
-		expect(mocks.findDocuments).toHaveBeenCalledWith(payload, {
+		expect(find).toHaveBeenCalledWith({
+			collection: 'rules',
+			depth: 0,
+			draft: false,
+			limit: 2000,
 			overrideAccess: false,
 			user,
+			where: { _status: { equals: 'published' } },
 		})
-		expect(mocks.collectSources).toHaveBeenCalledWith(document)
 	})
 })
