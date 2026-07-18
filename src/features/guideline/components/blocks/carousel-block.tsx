@@ -16,6 +16,14 @@ export function CarouselBlock({ block }: { block: CarouselType }) {
 			caption: slide.caption || undefined,
 		}
 	})
+	if (slides.length === 0) return null
 
-	return <Carousel slides={slides} aspect={IMAGE_RATIO_CLASS_NAMES[block.imageRatio ?? '16:9']} />
+	return (
+		<section className="bg-neutral-100 py-6 md:py-8">
+			<Carousel
+				slides={slides}
+				aspect={IMAGE_RATIO_CLASS_NAMES[block.imageRatio ?? '16:9']}
+			/>
+		</section>
+	)
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { ContentFrame } from '@/components/global/content-frame'
 import type { GuidelineDocument } from '@/payload-types'
 import { CalloutBlock } from './callout-block'
 import { CarouselBlock } from './carousel-block'
@@ -52,10 +53,17 @@ export function GuidelineBlocks({
 			{blocks?.map((block) => {
 				const content = renderBlock(block)
 				if (!content) return null
+				const isCarousel = block.blockType === 'carousel'
 
 				return (
-					<div key={block.id} data-better-editor-id={betterEditor ? block.id : undefined}>
-						{content}
+					<div
+						key={block.id}
+						data-better-editor-id={betterEditor ? block.id : undefined}
+						className={
+							block.blockType === 'doDont' ? 'bg-neutral-100 py-6 md:py-8' : undefined
+						}
+					>
+						{isCarousel ? content : <ContentFrame>{content}</ContentFrame>}
 					</div>
 				)
 			})}

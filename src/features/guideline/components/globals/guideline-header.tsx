@@ -10,7 +10,6 @@ import type { GuidelineVariant } from './guideline-variant'
 export function GuidelineHeader({
 	title,
 	variant = 'chapter',
-	className,
 }: {
 	title?: string | null
 	variant?: GuidelineVariant
@@ -24,7 +23,7 @@ export function GuidelineHeader({
 			{variant === 'chapter' && <ChapterHeader title={title} />}
 			{variant === 'section' && <SectionHeader title={title} />}
 			{variant === 'page' && <PageHeader title={title} />}
-			{variant === 'block' && <BlockHeader title={title} className={className} />}
+			{variant === 'block' && <BlockHeader title={title} />}
 		</header>
 	)
 }
@@ -73,6 +72,6 @@ function PageHeader({ title }: { title: string }) {
 	)
 }
 
-function BlockHeader({ title, className }: { title: string; className?: string }) {
-	return <h3 className={`mb-6 font-body text-xl font-bold ${className ?? ''}`}>{title}</h3>
+function BlockHeader({ title }: { title: string }) {
+	return <h3 className={`font-body text-sm font-semibold`}>{title}</h3>
 }
