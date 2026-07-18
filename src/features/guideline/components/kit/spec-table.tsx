@@ -26,13 +26,13 @@ export function SpecTable({
 	return (
 		<figure className="m-0">
 			<div className="overflow-x-auto border-scrim/10 border-y">
-				<table className="type-body w-full border-collapse text-left">
+				<table className="w-full border-collapse text-left font-body font-normal text-base">
 					<thead>
 						<tr>
 							{columns.map((column) => (
 								<th
 									key={column}
-									className="type-caption-1-emphasized border-scrim/10 border-b px-4 py-3 text-foreground-muted uppercase tracking-wide"
+									className="border-scrim/10 border-b px-4 py-3 font-body font-medium text-muted-foreground text-xs uppercase tracking-wide"
 								>
 									{column}
 								</th>
@@ -56,7 +56,7 @@ export function SpecTable({
 				</table>
 			</div>
 			{caption && (
-				<figcaption className="type-callout mt-2 text-foreground-muted">
+				<figcaption className="mt-2 font-body font-normal text-muted-foreground text-sm">
 					{caption}
 				</figcaption>
 			)}

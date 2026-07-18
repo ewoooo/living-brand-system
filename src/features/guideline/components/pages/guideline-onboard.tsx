@@ -47,12 +47,12 @@ function GuidelineChapterDescription({
 	return (
 		<section className="px-4 py-24 text-balance">
 			{label ? (
-				<h2 className="type-title-1 mb-12 max-w-2xl">{label}</h2>
+				<h2 className="mb-12 max-w-2xl font-body font-normal text-2xl">{label}</h2>
 			) : (
 				<GuidelineLabelFallback />
 			)}
 			{description ? (
-				<p className="type-body">{description}</p>
+				<p className="font-body font-normal text-base">{description}</p>
 			) : (
 				<GuidelineDescriptionFallback variant={variant} />
 			)}

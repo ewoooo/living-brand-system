@@ -5,6 +5,8 @@ import { useEffect, useId, useState } from 'react'
 // 이미지 슬라이드 캐러셀: prev/next + 닷 인디케이터. 인덱스 기반 translateX 트랙(경계 없음).
 // autoPlay=true면 자동 슬라이드(호버 시 정지, prefers-reduced-motion 존중).
 export type CarouselSlide = {
+	/** Payload 배열 행처럼 슬라이드에 안정적인 식별자가 있으면 렌더 key로 사용한다. */
+	id?: string
 	/** 슬라이드 이미지 URL — S3·로컬·data-uri 등 무엇이든. */
 	image: string
 	/** 대체 텍스트(선택). 없으면 caption을, 그것도 없으면 빈 문자열을 alt로 쓴다. */
@@ -69,7 +71,10 @@ export function Carousel({
 					style={{ transform: `translateX(-${index * 100}%)` }}
 				>
 					{slides.map((slide) => (
-						<div key={slide.caption ?? slide.image} className="h-full w-full shrink-0">
+						<div
+							key={slide.id ?? slide.caption ?? slide.image}
+							className="h-full w-full shrink-0"
+						>
 							{/* biome-ignore lint/performance/noImgElement: 임의 원격/데이터 URL이라 next/image 미사용. */}
 							<img
 								src={slide.image}
@@ -99,13 +104,13 @@ export function Carousel({
 			</div>
 
 			<div className="flex items-center justify-between gap-4">
-				<p className="type-callout text-foreground-muted" id={labelId}>
+				<p className="font-body text-sm font-normal text-muted-foreground" id={labelId}>
 					{slides[index]?.caption}
 				</p>
 				<div className="flex shrink-0 gap-2">
 					{slides.map((slide, dotIndex) => (
 						<button
-							key={slide.caption ?? slide.image}
+							key={slide.id ?? slide.caption ?? slide.image}
 							type="button"
 							onClick={() => go(dotIndex)}
 							aria-label={`${dotIndex + 1}번째 슬라이드로 이동`}
@@ -120,27 +125,5 @@ export function Carousel({
 				</div>
 			</div>
 		</section>
-	)
-}
-
-const slide = (label: string, color: string) =>
-	`data:image/svg+xml,${encodeURIComponent(
-		`<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540"><rect width="960" height="540" fill="${color}"/><text x="480" y="290" font-family="sans-serif" font-size="40" font-weight="700" fill="#ffffff" text-anchor="middle">${label}</text></svg>`,
-	)}`
-
-export function CarouselDemo() {
-	return (
-		<Carousel
-			autoPlay
-			slides={[
-				{
-					image: slide('Key Visual 01', '#262626'),
-					caption: '메인 키 비주얼 — 식물성 원료의 생명력.',
-				},
-				{ image: slide('Ampoule', '#525252'), caption: '앰플 제품 라인 대표 컷.' },
-				{ image: slide('Ritual', '#404040'), caption: '데일리 스킨케어 루틴 시리즈.' },
-				{ image: slide('Seasonal', '#737373'), caption: '시즌 캠페인 키 비주얼.' },
-			]}
-		/>
 	)
 }

@@ -8,7 +8,13 @@ import {
 import { guidelineBlockCatalog, guidelineBlocks } from '@/features/guideline/blocks/catalog'
 import { checkKeyFromEnglishTitle } from '@/features/guideline/checks/check-key-from-english-title'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
-import { ColumnUnitBlock, DoDontBlock, guidelineRulesField, MediaShowcaseBlock } from './guideline'
+import {
+	CarouselBlock,
+	ContentColumnsBlock,
+	DoDontBlock,
+	guidelineRulesField,
+	MediaShowcaseBlock,
+} from './guideline'
 
 const fieldNames = (fields: Field[]) =>
 	fields.flatMap((field) =>
@@ -60,6 +66,18 @@ describe('guideline rules field', () => {
 		for (const block of guidelineBlocks) expect(fieldNames(block.fields)).toContain('rules')
 	})
 
+	it('서체를 다루는 블록은 같은 typeface 관계 계약을 둔다', () => {
+		for (const type of ['typeScale', 'typeSpecimen', 'glyphGrid'] as const) {
+			const definition = guidelineBlockCatalog[type]
+			const typeface = definition.schema.fields.find(
+				(field) => 'name' in field && field.name === 'typeface',
+			)
+			expect(typeface?.type).toBe('relationship')
+			if (typeface?.type !== 'relationship') continue
+			expect(typeface.relationTo).toBe('brand-typefaces')
+		}
+	})
+
 	it('문서와 블록은 Rule 정의 필드를 소유하지 않는다', () => {
 		expect(fieldNames(GuidelineDocuments.fields)).not.toContain('checks')
 		for (const block of guidelineBlocks) {
@@ -74,10 +92,18 @@ describe('guideline rules field', () => {
 				definition.schema.slug,
 			]),
 		).toEqual([
-			['columnUnit', 'columnUnit'],
+			['contentColumns', 'contentColumns'],
+			['carousel', 'carousel'],
 			['mediaShowcase', 'mediaShowcase'],
 			['colorPalette', 'colorPalette'],
 			['doDont', 'doDont'],
+			['callout', 'callout'],
+			['specList', 'specList'],
+			['signatureShowcase', 'signatureShowcase'],
+			['typeSpecimen', 'typeSpecimen'],
+			['typeScale', 'typeScale'],
+			['layoutGrid', 'layoutGrid'],
+			['glyphGrid', 'glyphGrid'],
 		])
 	})
 
@@ -104,7 +130,8 @@ describe('guideline rules field', () => {
 
 	it('다른 이미지 블록도 공용 비율 계약을 사용한다', () => {
 		for (const [block, defaultValue] of [
-			[ColumnUnitBlock, '4:3'],
+			[ContentColumnsBlock, '4:3'],
+			[CarouselBlock, '16:9'],
 			[MediaShowcaseBlock, '16:9'],
 		] as const) {
 			const imageRatio = block.fields.find(

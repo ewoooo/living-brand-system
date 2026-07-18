@@ -1,19 +1,25 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import type { GuidelineDocument } from '@/payload-types'
+import { BlockHeading } from './children/block-heading'
+import { resolveTypeface, TypefaceFontFace } from './children/typeface-font-face'
+
+type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
+type GlyphGridType = Extract<GuidelineBlock, { blockType: 'glyphGrid' }>
 
 // 폰트 글리프 인스펙터: 좌측 정사각형에 선택된 글자를 크게, 우측에 글리프 목록(정사각형 셀)을 둔다.
 // 셀에 호버(또는 포커스)하면 좌측 큰 글자가 그 글리프로 갱신된다. 우측은 고정 8열 연속 그리드.
-// 좌측 큰 글자 뒤에는 폰트 메트릭 가이드라인을 그린다. Essenflux는 모든 글자가 윗선에 걸리는
-// 빨랫줄(hanging) 글꼴이라, 일반적인 cap/x-height 대신 다음으로 정의한다:
+// 좌측 큰 글자 뒤에는 폰트 메트릭 가이드라인을 그린다. 빨랫줄(hanging) 글꼴 대응으로
+// 일반적인 cap/x-height 대신 다음으로 정의한다:
 //   - ascender / descender: 폰트 선언 메트릭(fontBoundingBox).
 //   - headline: 모든 글자가 걸리는 윗선(대문자·소문자 잉크 top의 최댓값, 픽셀 측정).
 //   - baseline: 풀높이 글자가 앉는 선.
-//   - 작은 소문자 아랫선(작은 소문자 잉크 bottom의 최솟값, 픽셀 측정): 선만 긋는다(x-height 라벨은 보류).
-// 픽셀 측정: Canvas에 글자를 그려 잉크 경계를 읽는다(별도 라이브러리 없음). 폰트는 --font-title
-// 토큰을 읽어 브랜드 무관. SVG로 글자·라인을 같은 em 좌표계(1em=100)에 그려 정렬이 정확하다.
-// 이중 border 방지: 그리드 컨테이너에 top/left, 각 셀에 right/bottom만 둬서 경계선이 겹치지 않게 한다.
-// 한글 등 Essenflux에 없는 글리프는 Pretendard로 폴백.
+//   - 작은 소문자 아랫선(작은 소문자 잉크 bottom의 최솟값, 픽셀 측정): 선만 긋는다.
+// 픽셀 측정: Canvas에 글자를 그려 잉크 경계를 읽는다(별도 라이브러리 없음). 서체는 선택한
+// BrandTypeface를 쓰고, 비우면 --font-title 토큰으로 폴백해 브랜드 무관.
+// SVG로 글자·라인을 같은 em 좌표계(1em=100)에 그려 정렬이 정확하다.
+// 위젯형 블록 — 저장 데이터는 제목·서체 선택뿐이고 인터랙션 상태는 저장하지 않는다.
 
 const GLYPHS = [
 	...'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
@@ -29,24 +35,18 @@ const codepoint = (ch: string) =>
 
 type Metrics = { ascender: number; descender: number; headline: number; xLine: number }
 
-/**
- * 글리프 인스펙터 — 브랜드 타이틀 폰트의 글자 하나하나를 크게 뜯어볼 때 쓴다.
- * 좌측: 선택된 글자를 크게 + 폰트 메트릭 라인(ascender/headline/baseline/descender).
- * 우측: 8열 글리프 목록. 셀에 호버(또는 포커스)하면 좌측 큰 글자가 그 글리프로 갱신된다.
- * props 없이 그대로 드롭인하면 되고, 폰트는 --font-title 토큰을 읽어 브랜드 무관하게 동작한다.
- *
- * @example 페이지에 그대로
- * <GlyphGrid />
- */
-export function GlyphGrid() {
+export function GlyphGridBlock({ block }: { block: GlyphGridType }) {
 	const [active, setActive] = useState('A')
 	const [metrics, setMetrics] = useState<Metrics | null>(null)
+	const family = resolveTypeface(block.typeface)?.familyName ?? null
+	const fontFamily = family ? `"${family}", var(--font-title)` : 'var(--font-title)'
 
 	useEffect(() => {
 		let cancelled = false
-		const fontStack =
-			getComputedStyle(document.documentElement).getPropertyValue('--font-title').trim() ||
-			'sans-serif'
+		const fontStack = family
+			? `"${family}", sans-serif`
+			: getComputedStyle(document.documentElement).getPropertyValue('--font-title').trim() ||
+				'sans-serif'
 		document.fonts.ready.then(() => {
 			if (cancelled) return
 			const S = 200
@@ -99,54 +99,66 @@ export function GlyphGrid() {
 		return () => {
 			cancelled = true
 		}
-	}, [])
+	}, [family])
 
 	return (
-		<div className="grid gap-6 md:grid-cols-2">
-			<div className="relative aspect-square overflow-hidden rounded-sm border border-border bg-background-tertiary">
-				{metrics && Number.isFinite(metrics.headline) ? (
-					<GlyphStage glyph={active} metrics={metrics} />
-				) : (
-					<div className="flex size-full items-center justify-center">
-						<span
-							className="text-foreground"
-							style={{
-								fontFamily: 'var(--font-title)',
-								fontSize: 'clamp(11rem,34vw,26rem)',
-								lineHeight: 1,
-							}}
-						>
-							{active}
-						</span>
-					</div>
-				)}
-				<span className="type-caption-1 absolute bottom-4 left-4 text-foreground-muted tabular-nums">
-					{codepoint(active)}
-				</span>
-			</div>
+		<section>
+			<TypefaceFontFace typeface={block.typeface} />
+			<BlockHeading title={block.title} />
+			<div className="grid gap-6 md:grid-cols-2">
+				<div className="relative aspect-square overflow-hidden rounded-sm border border-border bg-background-tertiary">
+					{metrics && Number.isFinite(metrics.headline) ? (
+						<GlyphStage glyph={active} metrics={metrics} fontFamily={fontFamily} />
+					) : (
+						<div className="flex size-full items-center justify-center">
+							<span
+								className="text-foreground"
+								style={{
+									fontFamily,
+									fontSize: 'clamp(11rem,34vw,26rem)',
+									lineHeight: 1,
+								}}
+							>
+								{active}
+							</span>
+						</div>
+					)}
+					<span className="absolute bottom-4 left-4 font-body text-xs font-normal text-muted-foreground tabular-nums">
+						{codepoint(active)}
+					</span>
+				</div>
 
-			<div className="grid grid-cols-8 self-start rounded-sm border-border border-t border-l">
-				{GLYPHS.map((ch) => (
-					<button
-						key={ch}
-						type="button"
-						onMouseEnter={() => setActive(ch)}
-						onFocus={() => setActive(ch)}
-						data-active={ch === active}
-						aria-label={`${ch} (${codepoint(ch)})`}
-						className="flex aspect-square items-center justify-center border-border border-r border-b text-4xl text-foreground transition-colors hover:bg-fill-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 data-[active=true]:bg-fill-selected"
-						style={{ fontFamily: 'var(--font-title)' }}
-					>
-						{ch}
-					</button>
-				))}
+				<div className="grid grid-cols-8 self-start rounded-sm border-border border-t border-l">
+					{GLYPHS.map((ch) => (
+						<button
+							key={ch}
+							type="button"
+							onMouseEnter={() => setActive(ch)}
+							onFocus={() => setActive(ch)}
+							data-active={ch === active}
+							aria-label={`${ch} (${codepoint(ch)})`}
+							className="flex aspect-square items-center justify-center border-border border-r border-b text-4xl text-foreground transition-colors hover:bg-fill-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 data-[active=true]:bg-fill-selected"
+							style={{ fontFamily }}
+						>
+							{ch}
+						</button>
+					))}
+				</div>
 			</div>
-		</div>
+		</section>
 	)
 }
 
 // 메트릭 라인 + 글자를 같은 em 좌표계(1em=100)에 SVG로 렌더. baseline은 y=ascender*100.
-function GlyphStage({ glyph, metrics }: { glyph: string; metrics: Metrics }) {
+function GlyphStage({
+	glyph,
+	metrics,
+	fontFamily,
+}: {
+	glyph: string
+	metrics: Metrics
+	fontFamily: string
+}) {
 	const { ascender, descender, headline, xLine } = metrics
 	const PAD = 8
 	const baseY = ascender * 100
@@ -185,15 +197,15 @@ function GlyphStage({ glyph, metrics }: { glyph: string; metrics: Metrics }) {
 				fontSize={100}
 				className="text-foreground"
 				fill="currentColor"
-				style={{ fontFamily: 'var(--font-title)' }}
+				style={{ fontFamily }}
 			>
 				{glyph}
 			</text>
 
 			<g
-				className="text-foreground-muted"
+				className="text-muted-foreground"
 				fill="currentColor"
-				style={{ fontFamily: 'var(--font-sans)' }}
+				style={{ fontFamily: 'var(--font-body)' }}
 			>
 				{guides.map((l) => (
 					<text key={l.label} x={99} y={l.y - 1.5} textAnchor="end" fontSize={4}>

@@ -39,11 +39,11 @@ export function GuidelineHeader({
 					<div className="relative z-10 flex size-full items-end p-4 pb-8 text-scrim-foreground">
 						<div>
 							{label !== undefined && (
-								<p className="type-body mb-2 opacity-70">{label}</p>
+								<p className="mb-2 font-body font-normal text-base opacity-70">
+									{label}
+								</p>
 							)}
-							<Heading className="type-large-title font-semibold text-4xl">
-								{title}
-							</Heading>
+							<Heading className="font-body font-semibold text-4xl">{title}</Heading>
 						</div>
 					</div>
 				</AspectRatio>
@@ -57,9 +57,11 @@ export function GuidelineHeader({
 			{/* pt-8(32px) = nav 첫 줄 오프셋 → pinned 시 타이틀 top이 nav 윗선과 정렬. bg가 위 여백을 덮어 gap 없음. */}
 			<header data-variant={variant} className="sticky top-0 z-30 bg-background pt-8 pb-3">
 				{label !== undefined && (
-					<p className="type-body mb-1 text-foreground-muted">{label}</p>
+					<p className="mb-1 font-body font-normal text-base text-muted-foreground">
+						{label}
+					</p>
 				)}
-				<Heading className="type-large-title font-semibold text-4xl text-foreground leading-none">
+				<Heading className="font-body font-semibold text-4xl text-foreground leading-none">
 					{title}
 				</Heading>
 			</header>

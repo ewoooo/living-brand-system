@@ -1,14 +1,30 @@
 import type { Block } from 'payload'
 import {
+	CalloutBlock,
+	CarouselBlock,
 	ColorPaletteBlock,
-	ColumnUnitBlock,
+	ContentColumnsBlock,
 	DoDontBlock,
+	GlyphGridBlock,
+	LayoutGridBlock,
 	MediaShowcaseBlock,
+	SignatureShowcaseBlock,
+	SpecListBlock,
+	TypeScaleBlock,
+	TypeSpecimenBlock,
 } from '@/blocks/guideline'
+import { projectCallout } from './callout.block'
+import { projectCarousel } from './carousel.block'
 import { projectColorPalette } from './color-palette.block'
-import { projectColumnUnit } from './column-unit.block'
+import { projectContentColumns } from './content-columns.block'
 import { projectDoDont } from './do-dont.block'
+import { projectGlyphGrid } from './glyph-grid.block'
+import { projectLayoutGrid } from './layout-grid.block'
 import { projectMediaShowcase } from './media-showcase.block'
+import { projectSignatureShowcase } from './signature-showcase.block'
+import { projectSpecList } from './spec-list.block'
+import { projectTypeScale } from './type-scale.block'
+import { projectTypeSpecimen } from './type-specimen.block'
 import type { BlockProjection, CheckReferenceAssetRef, GuidelineBlock } from './types'
 
 type DefinitionMap = {
@@ -20,10 +36,18 @@ type DefinitionMap = {
 
 // Payload schema와 Agent/Check projection을 한 곳에 등록한다. React renderer는 별도 경계를 쓴다.
 export const guidelineBlockCatalog = {
-	columnUnit: { schema: ColumnUnitBlock, project: projectColumnUnit },
+	contentColumns: { schema: ContentColumnsBlock, project: projectContentColumns },
+	carousel: { schema: CarouselBlock, project: projectCarousel },
 	mediaShowcase: { schema: MediaShowcaseBlock, project: projectMediaShowcase },
 	colorPalette: { schema: ColorPaletteBlock, project: projectColorPalette },
 	doDont: { schema: DoDontBlock, project: projectDoDont },
+	callout: { schema: CalloutBlock, project: projectCallout },
+	specList: { schema: SpecListBlock, project: projectSpecList },
+	signatureShowcase: { schema: SignatureShowcaseBlock, project: projectSignatureShowcase },
+	typeSpecimen: { schema: TypeSpecimenBlock, project: projectTypeSpecimen },
+	typeScale: { schema: TypeScaleBlock, project: projectTypeScale },
+	layoutGrid: { schema: LayoutGridBlock, project: projectLayoutGrid },
+	glyphGrid: { schema: GlyphGridBlock, project: projectGlyphGrid },
 } satisfies DefinitionMap
 
 export const guidelineBlocks = Object.values(guidelineBlockCatalog).map(({ schema }) => schema)

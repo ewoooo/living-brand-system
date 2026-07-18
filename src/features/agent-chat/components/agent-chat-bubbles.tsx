@@ -32,7 +32,7 @@ export function AgentChatUserBubble({ files, text }: { files: FileUIPart[]; text
 				<Bubble align="end" variant="default" className="rounded-full">
 					<BubbleContent
 						asChild
-						className="type-callout whitespace-pre-wrap [overflow-wrap:normal] [word-break:keep-all]"
+						className="whitespace-pre-wrap font-body text-sm font-normal [overflow-wrap:normal] [word-break:keep-all]"
 					>
 						<p>{text}</p>
 					</BubbleContent>

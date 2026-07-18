@@ -2,47 +2,52 @@
 
 import { useId, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import type { GuidelineDocument } from '@/payload-types'
+import { resolveTypeface, TypefaceFontFace } from './children/typeface-font-face'
 
-// 라이브 타입 스페시먼: 브랜드 폰트(Essenflux, 한글은 Pretendard 폴백)로 직접 타이핑하며
-// 정렬·크기·줄간격을 조절한다. textarea라 엔터/편집이 네이티브로 동작.
-// 크기는 단일 슬라이더가 아니라 word/sentence/paragraph tier로 구분 — 각 tier가 프리셋 크기와
-// 자기 샘플 텍스트를 갖고, tier를 바꿔도 각자의 편집 내용이 보존된다.
+type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
+type TypeSpecimen = Extract<GuidelineBlock, { blockType: 'typeSpecimen' }>
 
-const TIERS = {
-	word: { label: 'Word', size: 96, sample: 'Essenherb' },
-	sentence: { label: 'Sentence', size: 40, sample: 'Vegan skincare, rooted in nature.' },
+// 라이브 타입 스페시먼: 브랜드 타이틀 폰트로 직접 타이핑하며 정렬·크기·줄간격을 조절한다.
+// 초기 샘플 문구만 블록 데이터에서 오고, 타이핑·정렬·행간 상태는 클라이언트 전용(저장 안 함).
+// 크기는 word/sentence/paragraph tier로 구분 — tier를 바꿔도 각자의 편집 내용이 보존된다.
+
+const TIER_PRESETS = {
+	word: { label: 'Word', size: 96, fallback: 'Aa' },
+	sentence: {
+		label: 'Sentence',
+		size: 40,
+		fallback: 'The quick brown fox jumps over the lazy dog.',
+	},
 	paragraph: {
 		label: 'Paragraph',
 		size: 18,
-		sample: 'Essenherb finds the vitality of nature that endures even in harsh environments, and returns it to the skin. A vegan skincare brand focused on the essence of the skin.',
+		fallback:
+			'Typography gives language a durable visual form. Set a paragraph to judge rhythm, spacing, and tone at reading size.',
 	},
 } as const
 
-type Tier = keyof typeof TIERS
+type Tier = keyof typeof TIER_PRESETS
 type Align = 'left' | 'center' | 'right'
 
-/**
- * 브랜드 폰트 라이브 스페시먼 — 직접 타이핑하며 폰트 느낌을 확인. props 없이 자체 상태로 동작하는 드롭인.
- * 정렬·크기 tier(word/sentence/paragraph)·줄간격을 조절할 수 있고, tier별 편집 내용은 각각 보존된다.
- *
- * @example 타이포그래피 섹션에 그대로 배치
- * <TypeSpecimen />
- */
-export function TypeSpecimen() {
+export function TypeSpecimenBlock({ block }: { block: TypeSpecimen }) {
 	const [tier, setTier] = useState<Tier>('word')
 	const [align, setAlign] = useState<Align>('left')
 	const [lineHeight, setLineHeight] = useState(1.2)
-	const [texts, setTexts] = useState<Record<Tier, string>>(
-		() =>
-			Object.fromEntries(Object.entries(TIERS).map(([key, t]) => [key, t.sample])) as Record<
-				Tier,
-				string
-			>,
-	)
+	const [texts, setTexts] = useState<Record<Tier, string>>(() => ({
+		word: block.samples?.word?.trim() || TIER_PRESETS.word.fallback,
+		sentence: block.samples?.sentence?.trim() || TIER_PRESETS.sentence.fallback,
+		paragraph: block.samples?.paragraph?.trim() || TIER_PRESETS.paragraph.fallback,
+	}))
 	const sliderId = useId()
+	const typeface = resolveTypeface(block.typeface)
+	const fontFamily = typeface
+		? `"${typeface.familyName}", var(--font-title)`
+		: 'var(--font-title)'
 
 	return (
 		<div className="rounded-lg bg-background-tertiary p-8">
+			<TypefaceFontFace typeface={block.typeface} />
 			<div className="flex flex-wrap items-end gap-x-8 gap-y-4">
 				<Field label="Size">
 					<ToggleGroup
@@ -50,9 +55,9 @@ export function TypeSpecimen() {
 						value={tier}
 						onValueChange={(v) => v && setTier(v as Tier)}
 					>
-						{(Object.keys(TIERS) as Tier[]).map((key) => (
+						{(Object.keys(TIER_PRESETS) as Tier[]).map((key) => (
 							<ToggleGroupItem key={key} value={key} className="px-3">
-								{TIERS[key].label}
+								{TIER_PRESETS[key].label}
 							</ToggleGroupItem>
 						))}
 					</ToggleGroup>
@@ -88,7 +93,7 @@ export function TypeSpecimen() {
 							onChange={(e) => setLineHeight(Number(e.target.value))}
 							className="h-1 w-40 cursor-pointer appearance-none rounded-full bg-background accent-foreground"
 						/>
-						<span className="type-caption-1 w-8 shrink-0 text-foreground tabular-nums">
+						<span className="w-8 shrink-0 font-body text-xs font-normal text-foreground tabular-nums">
 							{lineHeight.toFixed(2)}
 						</span>
 					</div>
@@ -101,8 +106,8 @@ export function TypeSpecimen() {
 				onChange={(e) => setTexts((prev) => ({ ...prev, [tier]: e.target.value }))}
 				className="mt-8 h-64 w-full resize-none overflow-auto break-keep border-none bg-transparent text-foreground outline-none"
 				style={{
-					fontFamily: 'var(--font-title)',
-					fontSize: TIERS[tier].size,
+					fontFamily,
+					fontSize: TIER_PRESETS[tier].size,
 					lineHeight,
 					textAlign: align,
 				}}
@@ -114,7 +119,7 @@ export function TypeSpecimen() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
 		<div className="flex flex-col gap-2">
-			<span className="type-caption-1 text-foreground-muted uppercase tracking-wide">
+			<span className="font-body text-xs font-normal text-muted-foreground uppercase tracking-wide">
 				{label}
 			</span>
 			{children}

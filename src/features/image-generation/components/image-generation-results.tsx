@@ -36,7 +36,7 @@ export function ImageGenerationResults({
 						>
 							선택한 이미지 다운로드
 						</Button>
-						<span className="type-callout text-muted-foreground">
+						<span className="font-body text-sm font-normal text-muted-foreground">
 							{selected === null
 								? '이미지를 클릭해 선택하세요'
 								: `${selected + 1}번 선택됨`}
@@ -44,7 +44,7 @@ export function ImageGenerationResults({
 					</div>
 
 					{images.length < requested && (
-						<p className="type-callout text-muted-foreground">
+						<p className="font-body text-sm font-normal text-muted-foreground">
 							요청 {requested}장 중 {images.length}장 생성됨 (일부는 무료 서버
 							지연으로 실패)
 						</p>
@@ -74,7 +74,7 @@ export function ImageGenerationResults({
 									href={src}
 									target="_blank"
 									rel="noreferrer"
-									className="type-caption-1 text-muted-foreground underline"
+									className="font-body text-xs font-normal text-muted-foreground underline"
 								>
 									원본 보기
 								</a>
@@ -82,11 +82,11 @@ export function ImageGenerationResults({
 						))}
 					</div>
 
-					<div className="type-callout text-muted-foreground">
+					<div className="font-body text-sm font-normal text-muted-foreground">
 						적용된 씬: {resultSceneLabel(result.sceneId)}
 						<details className="mt-1">
 							<summary className="cursor-pointer">생성 프롬프트 보기</summary>
-							<p className="type-caption-1 mt-1 whitespace-pre-wrap">
+							<p className="mt-1 whitespace-pre-wrap font-body text-xs font-normal">
 								{result.prompt}
 							</p>
 						</details>
@@ -100,7 +100,7 @@ export function ImageGenerationResults({
 function ImageGenerationSkeleton({ count }: { count: number }) {
 	return (
 		<div className="flex flex-col gap-3">
-			<p className="type-callout text-muted-foreground">
+			<p className="font-body text-sm font-normal text-muted-foreground">
 				생성 중… 무료 서버라 최대 1~2분 걸릴 수 있어요.
 			</p>
 			<div className="grid grid-cols-2 gap-4 md:grid-cols-3">

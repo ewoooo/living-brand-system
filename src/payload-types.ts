@@ -232,7 +232,22 @@ export interface GuidelineDocument {
    * 문서 헤더에 표시할 선택 이미지입니다.
    */
   headerImage?: (number | null) | ApplicationImage;
-  blocks?: (ColumnUnitBlock | MediaShowcaseBlock | ColorPaletteBlock | DoDontBlock)[] | null;
+  blocks?:
+    | (
+        | ContentColumnsBlock
+        | CarouselBlock
+        | MediaShowcaseBlock
+        | ColorPaletteBlock
+        | DoDontBlock
+        | CalloutBlock
+        | SpecListBlock
+        | SignatureShowcaseBlock
+        | TypeSpecimenBlock
+        | TypeScaleBlock
+        | LayoutGridBlock
+        | GlyphGridBlock
+      )[]
+    | null;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
    */
@@ -286,9 +301,9 @@ export interface ApplicationImage {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ColumnUnitBlock".
+ * via the `definition` "ContentColumnsBlock".
  */
-export interface ColumnUnitBlock {
+export interface ContentColumnsBlock {
   /**
    * 열 이미지의 표시 비율입니다.
    */
@@ -326,7 +341,7 @@ export interface ColumnUnitBlock {
   rules?: (number | Rule)[] | null;
   id?: string | null;
   blockName?: string | null;
-  blockType: 'columnUnit';
+  blockType: 'contentColumns';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -455,6 +470,30 @@ export interface RuleChecker {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CarouselBlock".
+ */
+export interface CarouselBlock {
+  /**
+   * 슬라이드 이미지의 표시 비율입니다.
+   */
+  imageRatio?: ('4:3' | '1:1' | '16:9' | '3:2' | '2:3' | '4:5' | '5:4' | '9:16') | null;
+  slides?:
+    | {
+        image: number | ApplicationImage;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'carousel';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "MediaShowcaseBlock".
  */
 export interface MediaShowcaseBlock {
@@ -539,6 +578,210 @@ export interface DoDontBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CalloutBlock".
+ */
+export interface CalloutBlock {
+  kind: 'must' | 'recommended' | 'dont';
+  /**
+   * 생략하면 판정 기본 라벨(반드시/권장/금지)이 제목이 됩니다.
+   */
+  title?: string | null;
+  items?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'callout';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SpecListBlock".
+ */
+export interface SpecListBlock {
+  groups?:
+    | {
+        label?: string | null;
+        specs?:
+          | {
+              key: string;
+              value: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'specList';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SignatureShowcaseBlock".
+ */
+export interface SignatureShowcaseBlock {
+  signatures?:
+    | {
+        label?: string | null;
+        phrase: string;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'signatureShowcase';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeSpecimenBlock".
+ */
+export interface TypeSpecimenBlock {
+  /**
+   * 적용할 서체입니다. 비우면 기본 타이틀 서체를 사용합니다.
+   */
+  typeface?: (number | null) | BrandTypeface;
+  /**
+   * tier별 초기 샘플 문구입니다. 비우면 중립 기본 문구를 사용합니다.
+   */
+  samples?: {
+    word?: string | null;
+    sentence?: string | null;
+    paragraph?: string | null;
+  };
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeSpecimen';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-typefaces".
+ */
+export interface BrandTypeface {
+  id: number;
+  name: string;
+  /**
+   * CSS font-family로 쓰는 서체 가족 이름입니다. 예: Pretendard.
+   */
+  familyName: string;
+  /**
+   * @font-face font-weight 서술자입니다. 가변 폰트는 범위로 적습니다. 예: '400', '45 920'.
+   */
+  weightRange?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScaleBlock".
+ */
+export interface TypeScaleBlock {
+  /**
+   * 적용할 서체입니다. 비우면 기본 타이틀 서체를 사용합니다.
+   */
+  typeface?: (number | null) | BrandTypeface;
+  items?:
+    | {
+        name: string;
+        /**
+         * 비우면 중립 기본 문구를 사용합니다.
+         */
+        sample?: string | null;
+        sizePx: number;
+        lineHeightPx: number;
+        weight: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeScale';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridBlock".
+ */
+export interface LayoutGridBlock {
+  /**
+   * 컬럼 오버레이 강조색입니다. 비우면 중립색을 사용합니다.
+   */
+  accent?: (number | null) | BrandColor;
+  variants?:
+    | {
+        label?: string | null;
+        columns: number;
+        /**
+         * CSS 길이 문자열입니다. 예: '24px'.
+         */
+        gutter?: string | null;
+        /**
+         * CSS 길이 문자열입니다. 예: '64px'.
+         */
+        margin?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'layoutGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GlyphGridBlock".
+ */
+export interface GlyphGridBlock {
+  title?: string | null;
+  /**
+   * 적용할 서체입니다. 비우면 기본 타이틀 서체를 사용합니다.
+   */
+  typeface?: (number | null) | BrandTypeface;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'glyphGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brand-logos".
  */
 export interface BrandLogo {
@@ -567,18 +810,6 @@ export interface BrandLogo {
       filename?: string | null;
     };
   };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brand-typefaces".
- */
-export interface BrandTypeface {
-  id: number;
-  name: string;
-  familyName: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1379,10 +1610,18 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
   blocks?:
     | T
     | {
-        columnUnit?: T | ColumnUnitBlockSelect<T>;
+        contentColumns?: T | ContentColumnsBlockSelect<T>;
+        carousel?: T | CarouselBlockSelect<T>;
         mediaShowcase?: T | MediaShowcaseBlockSelect<T>;
         colorPalette?: T | ColorPaletteBlockSelect<T>;
         doDont?: T | DoDontBlockSelect<T>;
+        callout?: T | CalloutBlockSelect<T>;
+        specList?: T | SpecListBlockSelect<T>;
+        signatureShowcase?: T | SignatureShowcaseBlockSelect<T>;
+        typeSpecimen?: T | TypeSpecimenBlockSelect<T>;
+        typeScale?: T | TypeScaleBlockSelect<T>;
+        layoutGrid?: T | LayoutGridBlockSelect<T>;
+        glyphGrid?: T | GlyphGridBlockSelect<T>;
       };
   rules?: T;
   displayOrder?: T;
@@ -1400,9 +1639,9 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ColumnUnitBlock_select".
+ * via the `definition` "ContentColumnsBlock_select".
  */
-export interface ColumnUnitBlockSelect<T extends boolean = true> {
+export interface ContentColumnsBlockSelect<T extends boolean = true> {
   imageRatio?: T;
   columns?:
     | T
@@ -1412,6 +1651,23 @@ export interface ColumnUnitBlockSelect<T extends boolean = true> {
         image?: T;
         imageBackgroundColor?: T;
         imageScale?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CarouselBlock_select".
+ */
+export interface CarouselBlockSelect<T extends boolean = true> {
+  imageRatio?: T;
+  slides?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
         id?: T;
       };
   rules?: T;
@@ -1465,6 +1721,129 @@ export interface DoDontBlockSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CalloutBlock_select".
+ */
+export interface CalloutBlockSelect<T extends boolean = true> {
+  kind?: T;
+  title?: T;
+  items?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SpecListBlock_select".
+ */
+export interface SpecListBlockSelect<T extends boolean = true> {
+  groups?:
+    | T
+    | {
+        label?: T;
+        specs?:
+          | T
+          | {
+              key?: T;
+              value?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SignatureShowcaseBlock_select".
+ */
+export interface SignatureShowcaseBlockSelect<T extends boolean = true> {
+  signatures?:
+    | T
+    | {
+        label?: T;
+        phrase?: T;
+        note?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeSpecimenBlock_select".
+ */
+export interface TypeSpecimenBlockSelect<T extends boolean = true> {
+  typeface?: T;
+  samples?:
+    | T
+    | {
+        word?: T;
+        sentence?: T;
+        paragraph?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScaleBlock_select".
+ */
+export interface TypeScaleBlockSelect<T extends boolean = true> {
+  typeface?: T;
+  items?:
+    | T
+    | {
+        name?: T;
+        sample?: T;
+        sizePx?: T;
+        lineHeightPx?: T;
+        weight?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridBlock_select".
+ */
+export interface LayoutGridBlockSelect<T extends boolean = true> {
+  accent?: T;
+  variants?:
+    | T
+    | {
+        label?: T;
+        columns?: T;
+        gutter?: T;
+        margin?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GlyphGridBlock_select".
+ */
+export interface GlyphGridBlockSelect<T extends boolean = true> {
+  title?: T;
+  typeface?: T;
   rules?: T;
   id?: T;
   blockName?: T;
@@ -1525,9 +1904,19 @@ export interface BrandColorsSelect<T extends boolean = true> {
 export interface BrandTypefacesSelect<T extends boolean = true> {
   name?: T;
   familyName?: T;
+  weightRange?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
