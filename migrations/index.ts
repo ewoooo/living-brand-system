@@ -65,6 +65,7 @@ import * as migration_20260717_094613_extract_rules_collection from './20260717_
 import * as migration_20260717_113849_backfill_rules_versions from './20260717_113849_backfill_rules_versions';
 import * as migration_20260717_122530_add_kit_blocks from './20260717_122530_add_kit_blocks';
 import * as migration_20260717_130449_rename_callout_add_carousel from './20260717_130449_rename_callout_add_carousel';
+import * as migration_20260718_063009_media_showcase_images from './20260718_063009_media_showcase_images';
 
 export const migrations = [
   {
@@ -401,5 +402,10 @@ export const migrations = [
     up: migration_20260717_130449_rename_callout_add_carousel.up,
     down: migration_20260717_130449_rename_callout_add_carousel.down,
     name: '20260717_130449_rename_callout_add_carousel',
+  },
+  {
+    up: migration_20260718_063009_media_showcase_images.up,
+    down: migration_20260718_063009_media_showcase_images.down,
+    name: '20260718_063009_media_showcase_images'
   },
 ];

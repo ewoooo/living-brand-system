@@ -87,7 +87,7 @@ describe('getCheckSourceDocuments', () => {
 								id: 'logo-examples',
 								blockName: 'Logo examples',
 								blockType: 'mediaShowcase',
-								image,
+								images: [{ image }],
 								rules: [
 									{
 										id: 91,

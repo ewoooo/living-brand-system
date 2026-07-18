@@ -78,7 +78,7 @@ const carouselBlock: Extract<GuidelineBlock, { blockType: 'carousel' }> = {
 const bigImageBlock: Extract<GuidelineBlock, { blockType: 'mediaShowcase' }> = {
 	blockType: 'mediaShowcase',
 	imageRatio: '16:9',
-	image: placeholderImage('16 : 9 Media', 16),
+	images: [{ id: 'ms-1', image: placeholderImage('16 : 9 Media', 16) }],
 }
 
 const doDontBlock: Extract<GuidelineBlock, { blockType: 'doDont' }> = {

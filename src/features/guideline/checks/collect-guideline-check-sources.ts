@@ -77,7 +77,7 @@ function collectApplicationImages(document: GuidelineCheckDocument): Map<number,
 				values.push(...(block.slides ?? []).map((slide) => slide.image))
 				break
 			case 'mediaShowcase':
-				values.push(block.image)
+				values.push(...(block.images ?? []).map((item) => item.image))
 				break
 			case 'doDont':
 				values.push(

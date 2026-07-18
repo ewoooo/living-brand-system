@@ -16,7 +16,7 @@ describe('buildCheckSourceSnapshot', () => {
 					blockType: 'contentColumns',
 					columns: [{ heading: 'Digital', body: lexical('Use 24 px.'), image: 7 }],
 				},
-				{ id: 'other', blockType: 'mediaShowcase', image: 8 },
+				{ id: 'other', blockType: 'mediaShowcase', images: [{ image: 8 }] },
 			],
 		} as unknown as GuidelineDocument
 
@@ -34,7 +34,7 @@ describe('buildCheckSourceSnapshot', () => {
 			title: 'Logo usage',
 			description: lexical('Approved applications'),
 			blocks: [
-				{ id: 'one', blockType: 'mediaShowcase', image: 8 },
+				{ id: 'one', blockType: 'mediaShowcase', images: [{ image: 8 }] },
 				{
 					id: 'two',
 					blockType: 'doDont',

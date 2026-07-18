@@ -20,7 +20,7 @@ export default async function GuidelineLayout({ children }: { children: React.Re
 				/>
 			}
 		>
-			<ContentFrame className="py-8 md:py-10">{children}</ContentFrame>
+			<ContentFrame className="py-8 md:py-20">{children}</ContentFrame>
 		</SectionLayout>
 	)
 }

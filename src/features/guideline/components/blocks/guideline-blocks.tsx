@@ -48,7 +48,7 @@ export function GuidelineBlocks({
 	betterEditor?: boolean
 }) {
 	return (
-		<div className="flex flex-col gap-12">
+		<article className="flex flex-col gap-16">
 			{blocks?.map((block) => {
 				const content = renderBlock(block)
 				if (!content) return null
@@ -59,6 +59,6 @@ export function GuidelineBlocks({
 					</div>
 				)
 			})}
-		</div>
+		</article>
 	)
 }

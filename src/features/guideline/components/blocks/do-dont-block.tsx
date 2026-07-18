@@ -1,7 +1,7 @@
 import type { GuidelineDocument } from '@/payload-types'
-import { IMAGE_RATIO_CLASS_NAMES } from '@/types/image-ratio'
-import { BlockHeading } from './children/block-heading'
-import { GuidelineImage } from './children/guideline-image'
+import { GuidelineDescription } from '../globals/guideline-description'
+import { GuidelineHeader } from '../globals/guideline-header'
+import { GuidelineImage } from '../globals/guideline-image'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type DoDont = Extract<GuidelineBlock, { blockType: 'doDont' }>
@@ -20,10 +20,9 @@ const kindBadge = {
 
 export function DoDontBlock({ block }: { block: DoDont }) {
 	const horizontal = block.groupLayout === 'horizontal'
-	const ratio = IMAGE_RATIO_CLASS_NAMES[block.imageRatio ?? '4:3']
 	return (
 		<section>
-			<BlockHeading title={block.title} />
+			<GuidelineHeader variant="block" title={block.title} className="sr-only" />
 			{/* 가로 스택: 그룹을 헤더/그리드 2행 subgrid로 걸쳐 그리드 시작선을 정렬한다.
 			    같은 줄의 그룹끼리만 정렬된다 — 3개 이상이 줄바꿈되면 줄 단위로 정렬. */}
 			<div
@@ -48,9 +47,10 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 									</h4>
 								)}
 								{group.description && (
-									<p className="max-w-prose font-body text-sm font-normal text-muted-foreground">
-										{group.description}
-									</p>
+									<GuidelineDescription
+										variant="block"
+										description={group.description}
+									/>
 								)}
 							</div>
 						)}
@@ -59,22 +59,16 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 								horizontal ? ' lg:row-start-2' : ''
 							}`}
 						>
-							{group.examples?.map((example, _, examples) => (
+							{group.examples?.map((example) => (
 								<figure key={example.id}>
 									<div className="relative">
 										<GuidelineImage
+											variant="block"
 											image={example.image}
 											alt={example.caption || ''}
-											className={
-												examples.length <= 1
-													? 'bg-muted'
-													: `${ratio} bg-muted`
-											}
-											imgClassName={
-												examples.length <= 1
-													? 'w-full'
-													: 'size-full object-cover'
-											}
+											ratio={block.imageRatio}
+											className="bg-muted"
+											imgClassName="size-full object-cover"
 										/>
 										<span
 											aria-hidden

@@ -6,6 +6,22 @@ export function GuidelineDescriptionFallback(_props: { variant: GuidelineVariant
 	return null
 }
 
+export function GuidelineImageFallback({
+	variant,
+	className,
+}: {
+	variant: GuidelineVariant
+	className?: string
+}) {
+	if (variant !== 'block') return null
+
+	return (
+		<div className={`grid min-h-40 place-items-center bg-muted ${className ?? ''}`}>
+			<span className="font-body text-sm text-muted-foreground">이미지 없음</span>
+		</div>
+	)
+}
+
 export function GuidelineLabelFallback() {
 	return (
 		<h2 className="mb-4 flex items-center gap-2 font-body font-normal text-2xl text-destructive">

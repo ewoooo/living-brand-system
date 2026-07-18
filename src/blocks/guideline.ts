@@ -122,12 +122,21 @@ export const MediaShowcaseBlock: Block = {
 			admin: { description: '이미지의 표시 비율입니다.' },
 		},
 		{
-			name: 'image',
-			type: 'upload',
-			relationTo: 'application-images',
+			name: 'images',
+			type: 'array',
+			minRows: 1,
+			maxRows: 3,
+			labels: { singular: '이미지', plural: '이미지' },
+			fields: [
+				{
+					name: 'image',
+					type: 'upload',
+					relationTo: 'application-images',
+				},
+				imageBackgroundColorField(),
+				imageScaleField(),
+			],
 		},
-		imageBackgroundColorField(),
-		imageScaleField(),
 		...baseBlockFields(),
 	],
 }

@@ -7,8 +7,8 @@ import { useEffect, useId, useState } from 'react'
 export type CarouselSlide = {
 	/** Payload 배열 행처럼 슬라이드에 안정적인 식별자가 있으면 렌더 key로 사용한다. */
 	id?: string
-	/** 슬라이드 이미지 URL — S3·로컬·data-uri 등 무엇이든. */
-	image: string
+	/** 슬라이드 이미지 URL — 없으면 간이 배경을 표시한다. */
+	image?: string
 	/** 대체 텍스트(선택). 없으면 caption을, 그것도 없으면 빈 문자열을 alt로 쓴다. */
 	alt?: string
 	/** 슬라이드 하단 캡션(선택). 현재 슬라이드 것만 표시된다. */
@@ -75,12 +75,22 @@ export function Carousel({
 							key={slide.id ?? slide.caption ?? slide.image}
 							className="h-full w-full shrink-0"
 						>
-							{/* biome-ignore lint/performance/noImgElement: 임의 원격/데이터 URL이라 next/image 미사용. */}
-							<img
-								src={slide.image}
-								alt={slide.alt ?? slide.caption ?? ''}
-								className="h-full w-full object-cover"
-							/>
+							{slide.image ? (
+								<>
+									{/* biome-ignore lint/performance/noImgElement: 임의 원격/데이터 URL이라 next/image 미사용. */}
+									<img
+										src={slide.image}
+										alt={slide.alt ?? slide.caption ?? ''}
+										className="h-full w-full object-cover"
+									/>
+								</>
+							) : (
+								<div
+									role="img"
+									aria-label="이미지 없음"
+									className="size-full bg-fill-muted"
+								/>
+							)}
 						</div>
 					))}
 				</div>

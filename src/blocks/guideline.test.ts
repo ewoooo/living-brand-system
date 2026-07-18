@@ -144,6 +144,16 @@ describe('guideline rules field', () => {
 		}
 	})
 
+	it('미디어 쇼케이스는 이미지를 최대 3개까지 받는다', () => {
+		const images = MediaShowcaseBlock.fields.find(
+			(field) => 'name' in field && field.name === 'images',
+		)
+		if (images?.type !== 'array') throw new Error('images array is missing')
+
+		expect(images.minRows).toBe(1)
+		expect(images.maxRows).toBe(3)
+	})
+
 	it('영문 제목에서 namespace 없는 안정적인 key를 만든다', () => {
 		expect(checkKeyFromEnglishTitle('Imagery Mood & Tone')).toBe('imagery-mood-tone')
 		expect(checkKeyFromEnglishTitle('  Logo / Clear Space  ')).toBe('logo-clear-space')

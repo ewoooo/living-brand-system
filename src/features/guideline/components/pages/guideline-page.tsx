@@ -1,9 +1,8 @@
-import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { GetGuidelineSectionOutput } from '../../services/get-guideline-section.service'
 import { GuidelineBlocks } from '../blocks/guideline-blocks'
-import { GuidelinePageHeading } from '../globals/guideline-page-heading'
+import { GuidelineDescription } from '../globals/guideline-description'
+import { GuidelineHeader } from '../globals/guideline-header'
 import type { GuidelineVariant } from '../globals/guideline-variant'
-import { GuidelineDescriptionFallback } from '../guideline-content-fallbacks'
 
 export function GuidelinePage({
 	page,
@@ -15,18 +14,13 @@ export function GuidelinePage({
 	const variant = 'page' satisfies GuidelineVariant
 
 	return (
-		<article id={page.slug} className="mb-40">
-			<GuidelinePageHeading title={page.title} label={page.displayOrder + 1} />
-			{page.description ? (
-				<section className="mt-8 grid gap-4 md:grid-cols-2">
-					<RichText
-						data={page.description}
-						className="typeset typeset-lbs md:col-start-2"
-					/>
+		<article id={page.slug} className="mb-40 flex flex-col gap-16">
+			<div className="grid grid-cols-2">
+				<section className="flex flex-col gap-8 order-2 col-start-2">
+					<GuidelineHeader variant={variant} title={page.title} />
+					<GuidelineDescription variant={variant} description={page.description} />
 				</section>
-			) : (
-				<GuidelineDescriptionFallback variant={variant} />
-			)}
+			</div>
 			<GuidelineBlocks blocks={page.blocks} betterEditor={betterEditor} />
 		</article>
 	)

@@ -501,12 +501,17 @@ export interface MediaShowcaseBlock {
    * 이미지의 표시 비율입니다.
    */
   imageRatio?: ('4:3' | '1:1' | '16:9' | '3:2' | '2:3' | '4:5' | '5:4' | '9:16') | null;
-  image?: (number | null) | ApplicationImage;
-  /**
-   * 이미지 영역 뒤에 적용할 브랜드 컬러입니다.
-   */
-  imageBackgroundColor?: (number | null) | BrandColor;
-  imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
+  images?:
+    | {
+        image?: (number | null) | ApplicationImage;
+        /**
+         * 이미지 영역 뒤에 적용할 브랜드 컬러입니다.
+         */
+        imageBackgroundColor?: (number | null) | BrandColor;
+        imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
    */
@@ -1680,9 +1685,14 @@ export interface CarouselBlockSelect<T extends boolean = true> {
  */
 export interface MediaShowcaseBlockSelect<T extends boolean = true> {
   imageRatio?: T;
-  image?: T;
-  imageBackgroundColor?: T;
-  imageScale?: T;
+  images?:
+    | T
+    | {
+        image?: T;
+        imageBackgroundColor?: T;
+        imageScale?: T;
+        id?: T;
+      };
   rules?: T;
   id?: T;
   blockName?: T;

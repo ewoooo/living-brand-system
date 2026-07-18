@@ -20,7 +20,7 @@ describe('collectGuidelineCheckSources', () => {
 					id: 'logo-block',
 					blockName: 'Logo examples',
 					blockType: 'mediaShowcase',
-					image,
+					images: [{ image }],
 					rules: [{ id: 2, key: 'logo.block', title: 'Block Rule', checker: 1 }],
 				},
 			],

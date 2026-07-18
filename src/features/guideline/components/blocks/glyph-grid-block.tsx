@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { GuidelineDocument } from '@/payload-types'
-import { BlockHeading } from './children/block-heading'
+import { GuidelineHeader } from '../globals/guideline-header'
 import { resolveTypeface, TypefaceFontFace } from './children/typeface-font-face'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
@@ -104,7 +104,7 @@ export function GlyphGridBlock({ block }: { block: GlyphGridType }) {
 	return (
 		<section>
 			<TypefaceFontFace typeface={block.typeface} />
-			<BlockHeading title={block.title} />
+			<GuidelineHeader variant="block" title={block.title} />
 			<div className="grid gap-6 md:grid-cols-2">
 				<div className="relative aspect-square overflow-hidden rounded-sm border border-border bg-background-tertiary">
 					{metrics && Number.isFinite(metrics.headline) ? (

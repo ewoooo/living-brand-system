@@ -1,6 +1,6 @@
-import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { GuidelineDocument } from '@/payload-types'
-import { GuidelineImage } from './children/guideline-image'
+import { GuidelineDescription } from '../globals/guideline-description'
+import { GuidelineImage } from '../globals/guideline-image'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type ContentColumns = Extract<GuidelineBlock, { blockType: 'contentColumns' }>
@@ -21,20 +21,22 @@ export function ContentColumnsBlock({ block }: { block: ContentColumns }) {
 	return (
 		<section className={gridClass}>
 			{columns.map((column) => (
-				<Item key={column.id} column={column} />
+				<Item key={column.id} column={column} ratio={block.imageRatio} />
 			))}
 		</section>
 	)
 }
 
-function Item({ column }: { column: Column }) {
+function Item({ column, ratio }: { column: Column; ratio: ContentColumns['imageRatio'] }) {
 	return (
 		<figure className="m-0 flex flex-col gap-4">
 			<GuidelineImage
+				variant="block"
 				image={column.image}
 				alt={column.heading || ''}
 				backgroundColor={column.imageBackgroundColor}
 				scale={column.imageScale}
+				ratio={ratio}
 				className="w-full bg-fill-muted"
 				imgClassName="h-auto w-full object-contain"
 			/>
@@ -46,10 +48,7 @@ function Item({ column }: { column: Column }) {
 						</h4>
 					)}
 					{column.body && (
-						<RichText
-							data={column.body}
-							className="flex max-w-2xl flex-col gap-3 font-body text-base font-normal text-foreground"
-						/>
+						<GuidelineDescription variant="block" description={column.body} />
 					)}
 				</div>
 			)}
