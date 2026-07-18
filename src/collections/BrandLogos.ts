@@ -22,6 +22,14 @@ export const BrandLogos: CollectionConfig = {
 		group: '브랜드 자원',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'alt', 'updatedAt'],
+		components: {
+			// application-images와 공용 갤러리 List 뷰. slug로 컬렉션을 판별한다.
+			views: {
+				list: {
+					Component: '/components/admin/BrandImageGalleryList',
+				},
+			},
+		},
 	},
 	versions: draftVersions,
 	fields: [
