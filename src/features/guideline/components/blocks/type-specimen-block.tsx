@@ -32,7 +32,7 @@ type Align = 'left' | 'center' | 'right'
 
 export function TypeSpecimenBlock({ block }: { block: TypeSpecimen }) {
 	const [tier, setTier] = useState<Tier>('word')
-	const [align, setAlign] = useState<Align>('left')
+	const [align, setAlign] = useState<Align>('center')
 	const [lineHeight, setLineHeight] = useState(1.2)
 	const [texts, setTexts] = useState<Record<Tier, string>>(() => ({
 		word: block.samples?.word?.trim() || TIER_PRESETS.word.fallback,
@@ -46,7 +46,7 @@ export function TypeSpecimenBlock({ block }: { block: TypeSpecimen }) {
 		: 'var(--font-title)'
 
 	return (
-		<div className="rounded-lg bg-background-tertiary p-8">
+		<div className="rounded-lg bg-neutral-50 p-8">
 			<TypefaceFontFace typeface={block.typeface} />
 			<div className="flex flex-wrap items-end gap-x-8 gap-y-4">
 				<Field label="Size">
@@ -56,7 +56,12 @@ export function TypeSpecimenBlock({ block }: { block: TypeSpecimen }) {
 						onValueChange={(v) => v && setTier(v as Tier)}
 					>
 						{(Object.keys(TIER_PRESETS) as Tier[]).map((key) => (
-							<ToggleGroupItem key={key} value={key} className="px-3">
+							<ToggleGroupItem
+								key={key}
+								value={key}
+								className="px-3"
+								variant="outline"
+							>
 								{TIER_PRESETS[key].label}
 							</ToggleGroupItem>
 						))}
@@ -69,13 +74,13 @@ export function TypeSpecimenBlock({ block }: { block: TypeSpecimen }) {
 						value={align}
 						onValueChange={(v) => v && setAlign(v as Align)}
 					>
-						<ToggleGroupItem value="left" className="px-3">
+						<ToggleGroupItem value="left" className="px-3" variant="outline">
 							Left
 						</ToggleGroupItem>
-						<ToggleGroupItem value="center" className="px-3">
+						<ToggleGroupItem value="center" className="px-3" variant="outline">
 							Center
 						</ToggleGroupItem>
-						<ToggleGroupItem value="right" className="px-3">
+						<ToggleGroupItem value="right" className="px-3" variant="outline">
 							Right
 						</ToggleGroupItem>
 					</ToggleGroup>
@@ -104,7 +109,7 @@ export function TypeSpecimenBlock({ block }: { block: TypeSpecimen }) {
 				aria-label="타입 견본 입력"
 				value={texts[tier]}
 				onChange={(e) => setTexts((prev) => ({ ...prev, [tier]: e.target.value }))}
-				className="mt-8 h-64 w-full resize-none overflow-auto break-keep border-none bg-transparent text-foreground outline-none"
+				className="mt-16 h-64 w-full resize-none overflow-auto break-keep border-none bg-transparent text-foreground outline-none"
 				style={{
 					fontFamily,
 					fontSize: TIER_PRESETS[tier].size,

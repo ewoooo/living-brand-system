@@ -20,6 +20,15 @@ type MediaShowcase = Extract<
 	NonNullable<GuidelineDocument['blocks']>[number],
 	{ blockType: 'mediaShowcase' }
 >
+const layoutBlocks: GuidelineDocument['blocks'] = [
+	{ blockType: 'mediaShowcase', id: 'contained' },
+	{ blockType: 'doDont', id: 'do-dont' },
+	{
+		blockType: 'carousel',
+		id: 'carousel',
+		slides: [{ id: 'slide', image: { url: '/slide.jpg', alt: '슬라이드' } as never }],
+	},
+]
 
 describe('GuidelineBlocks', () => {
 	it('Better Editor preview에서만 블록 선택 ID를 노출한다', () => {
@@ -53,5 +62,15 @@ describe('GuidelineBlocks', () => {
 		const { container } = render(createElement(GuidelineBlocks, { blocks: carouselBlocks }))
 
 		expect(container.querySelectorAll('[role="img"][aria-label="이미지 없음"]')).toHaveLength(2)
+	})
+
+	it('배경 블록과 캐러셀만 콘텐츠 프레임을 벗어난다', () => {
+		const { container } = render(createElement(GuidelineBlocks, { blocks: layoutBlocks }))
+		const wrappers = Array.from(container.firstElementChild?.children ?? [])
+
+		expect(wrappers[0]?.firstElementChild).toHaveAttribute('data-slot', 'content-frame')
+		expect(wrappers[1]).toHaveClass('bg-neutral-100')
+		expect(wrappers[1]?.firstElementChild).toHaveAttribute('data-slot', 'content-frame')
+		expect(wrappers[2]?.firstElementChild).not.toHaveAttribute('data-slot', 'content-frame')
 	})
 })

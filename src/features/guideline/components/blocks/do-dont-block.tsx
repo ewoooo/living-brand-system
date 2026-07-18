@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import type { GuidelineDocument } from '@/payload-types'
 import { GuidelineDescription } from '../globals/guideline-description'
 import { GuidelineHeader } from '../globals/guideline-header'
@@ -5,11 +6,15 @@ import { GuidelineImage } from '../globals/guideline-image'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type DoDont = Extract<GuidelineBlock, { blockType: 'doDont' }>
+type Group = NonNullable<DoDont['groups']>[number]
+type GroupLayout = NonNullable<DoDont['groupLayout']>
 
 // 예시가 1개인 그룹은 그리드를 풀고 전체 폭을 쓴다 — 컬럼 수는 콘텐츠에서 유도한다.
-function exampleGridClass(count: number, horizontal: boolean) {
+function exampleGridClass(count: number, variant: GroupLayout) {
 	if (count <= 1) return 'grid gap-4'
-	return horizontal ? 'grid grid-cols-2 gap-4' : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+	return variant === 'horizontal'
+		? 'grid grid-cols-2 gap-4'
+		: 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
 }
 
 const kindBadge = {
@@ -19,75 +24,95 @@ const kindBadge = {
 } as const
 
 export function DoDontBlock({ block }: { block: DoDont }) {
-	const horizontal = block.groupLayout === 'horizontal'
+	const variant = block.groupLayout ?? 'vertical'
+
 	return (
-		<section>
+		<section className="bg-neutral-100">
 			<GuidelineHeader variant="block" title={block.title} className="sr-only" />
-			{/* 가로 스택: 그룹을 헤더/그리드 2행 subgrid로 걸쳐 그리드 시작선을 정렬한다.
-			    같은 줄의 그룹끼리만 정렬된다 — 3개 이상이 줄바꿈되면 줄 단위로 정렬. */}
 			<div
 				className={
-					horizontal ? 'grid gap-x-10 gap-y-4 lg:grid-cols-2' : 'flex flex-col gap-10'
+					variant === 'horizontal'
+						? 'grid gap-x-10 gap-y-4 lg:grid-cols-2'
+						: 'flex flex-col gap-10'
 				}
 			>
 				{block.groups?.map((group) => (
-					<div
+					<DoDontGroup
 						key={group.id}
-						className={
-							horizontal ? 'lg:row-span-2 lg:grid lg:grid-rows-subgrid' : undefined
-						}
-					>
-						{(group.category || group.description) && (
-							<div
-								className={horizontal ? 'mb-4 space-y-1 lg:mb-0' : 'mb-4 space-y-1'}
-							>
-								{group.category && (
-									<h4 className="font-body text-base font-semibold text-muted-foreground">
-										{group.category}
-									</h4>
-								)}
-								{group.description && (
-									<GuidelineDescription
-										variant="block"
-										description={group.description}
-									/>
-								)}
-							</div>
-						)}
-						<div
-							className={`${exampleGridClass(group.examples?.length ?? 0, horizontal)}${
-								horizontal ? ' lg:row-start-2' : ''
-							}`}
-						>
-							{group.examples?.map((example) => (
-								<figure key={example.id}>
-									<div className="relative">
-										<GuidelineImage
-											variant="block"
-											image={example.image}
-											alt={example.caption || ''}
-											ratio={block.imageRatio}
-											className="bg-muted"
-											imgClassName="size-full object-cover"
-										/>
-										<span
-											aria-hidden
-											className={`absolute top-2 right-2 grid size-6 place-items-center rounded-full font-body text-xs font-medium ${kindBadge[group.kind].className}`}
-										>
-											{kindBadge[group.kind].symbol}
-										</span>
-									</div>
-									{example.caption && (
-										<figcaption className="mt-2 font-body text-sm font-normal text-muted-foreground">
-											{example.caption}
-										</figcaption>
-									)}
-								</figure>
-							))}
-						</div>
-					</div>
+						group={group}
+						variant={variant}
+						imageRatio={block.imageRatio}
+					/>
 				))}
 			</div>
 		</section>
+	)
+}
+
+function DoDontGroup({
+	group,
+	variant,
+	imageRatio,
+}: {
+	group: Group
+	variant: GroupLayout
+	imageRatio: DoDont['imageRatio']
+}) {
+	const badge = kindBadge[group.kind]
+	const examples = group.examples ?? []
+
+	return (
+		<div
+			className={cn(variant === 'horizontal' && 'lg:row-span-2 lg:grid lg:grid-rows-subgrid')}
+		>
+			{(group.category || group.description) && (
+				<div className={cn('mb-4 space-y-1', variant === 'horizontal' && 'lg:mb-0')}>
+					{group.category && (
+						<h4 className="font-body text-base font-semibold text-muted-foreground">
+							{group.category}
+						</h4>
+					)}
+					{group.description && (
+						<GuidelineDescription variant="block" description={group.description} />
+					)}
+				</div>
+			)}
+
+			<div
+				className={cn(
+					exampleGridClass(examples.length, variant),
+					variant === 'horizontal' && 'lg:row-start-2',
+				)}
+			>
+				{examples.map((example) => (
+					<figure key={example.id}>
+						<div className="relative">
+							<GuidelineImage
+								variant="block"
+								image={example.image}
+								alt={example.caption || ''}
+								ratio={imageRatio}
+								className="bg-muted"
+								imgClassName="size-full object-cover"
+							/>
+							<span
+								aria-hidden
+								className={cn(
+									'absolute top-2 right-2 grid size-6 place-items-center rounded-full font-body text-xs font-medium',
+									badge.className,
+								)}
+							>
+								{badge.symbol}
+							</span>
+						</div>
+						{example.caption && (
+							<figcaption className="mt-2 font-body text-sm font-normal text-muted-foreground">
+								{example.caption}
+							</figcaption>
+						)}
+					</figure>
+				))}
+			</div>
+		</div>
 	)
 }

@@ -1,3 +1,4 @@
+import { ContentFrame } from '@/components/global/content-frame'
 import type { GetGuidelineSectionOutput } from '../../services/get-guideline-section.service'
 import { GuidelineBlocks } from '../blocks/guideline-blocks'
 import { GuidelineDescription } from '../globals/guideline-description'
@@ -15,12 +16,14 @@ export function GuidelinePage({
 
 	return (
 		<article id={page.slug} className="mb-40 flex flex-col gap-16">
-			<div className="grid grid-cols-2">
-				<section className="flex flex-col gap-8 order-2 col-start-2">
-					<GuidelineHeader variant={variant} title={page.title} />
-					<GuidelineDescription variant={variant} description={page.description} />
-				</section>
-			</div>
+			<ContentFrame>
+				<div className="grid grid-cols-2">
+					<section className="flex flex-col gap-8 order-2 col-start-2">
+						<GuidelineHeader variant={variant} title={page.title} />
+						<GuidelineDescription variant={variant} description={page.description} />
+					</section>
+				</div>
+			</ContentFrame>
 			<GuidelineBlocks blocks={page.blocks} betterEditor={betterEditor} />
 		</article>
 	)
