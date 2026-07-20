@@ -30,6 +30,19 @@ export interface TemplateOverride {
 
 export type TemplateOverrides = Record<string, TemplateOverride>
 
+export function pruneTemplateOverrides(
+	baseHtml: string,
+	overrides: TemplateOverrides,
+): TemplateOverrides {
+	const doc = new DOMParser().parseFromString(baseHtml, 'text/html')
+	const nodeIds = new Set(
+		Array.from(doc.querySelectorAll('[data-node-id]'), (element) =>
+			element.getAttribute('data-node-id'),
+		),
+	)
+	return Object.fromEntries(Object.entries(overrides).filter(([nodeId]) => nodeIds.has(nodeId)))
+}
+
 export function composeTemplateHtml(baseHtml: string, overrides: TemplateOverrides): string {
 	if (!baseHtml) return baseHtml
 	if (!overrides || Object.keys(overrides).length === 0) return baseHtml
