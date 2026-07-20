@@ -17,6 +17,7 @@ export interface CheckReviewRow {
 	anchorId: string | null
 	outcome?: CheckResult
 	inProgress: boolean
+	expandable: boolean
 	detail: string | null
 }
 
@@ -136,7 +137,8 @@ function buildRows({
 
 			const outcome = results?.[check.key]
 			if (!check.implemented) continue
-			const inProgress = selected?.status === 'running' && pendingCheckKeys.has(check.key)
+			const inProgress =
+				selected?.status === 'running' && (!outcome || pendingCheckKeys.has(check.key))
 
 			const row = {
 				check,
@@ -148,7 +150,14 @@ function buildRows({
 				anchorId: null,
 				outcome,
 				inProgress,
-				detail: inProgress ? '검사 중...' : formatReviewDetail(outcome),
+				expandable: Boolean(outcome) && !inProgress,
+				detail: inProgress
+					? '검사 중...'
+					: outcome
+						? formatReviewDetail(outcome)
+						: !selected || selected.status === 'idle'
+							? '검사 후 결과 확인 가능'
+							: '검사 결과 없음',
 			}
 			rowByCheckKey.set(check.key, row)
 		}

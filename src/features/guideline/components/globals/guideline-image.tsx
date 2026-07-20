@@ -42,7 +42,7 @@ export function GuidelineImage({
 		return variant ? (
 			<GuidelineImageFallback
 				variant={variant}
-				className={`${ratioClassName} ${className ?? ''}`}
+				className={`${ratioClassName || 'aspect-video'} ${className ?? ''}`}
 			/>
 		) : null
 	}

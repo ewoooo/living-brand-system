@@ -116,14 +116,29 @@ describe('guideline rules field', () => {
 		if (imageRatio?.type !== 'select') throw new Error('imageRatio select is missing')
 
 		expect(imageRatio.options).toEqual(IMAGE_RATIO_OPTIONS)
+		const exampleColumns = row.fields.find(
+			(field) => 'name' in field && field.name === 'exampleColumns',
+		)
+		if (exampleColumns?.type !== 'select') throw new Error('exampleColumns select is missing')
+
+		expect(exampleColumns.defaultValue).toBe('3')
+		expect(exampleColumns.options).toEqual([
+			{ label: '2열', value: '2' },
+			{ label: '3열', value: '3' },
+			{ label: '4열', value: '4' },
+		])
 		expect(IMAGE_RATIO_OPTIONS.map(({ value }) => value)).toEqual([
-			'4:3',
+			'original',
 			'1:1',
-			'16:9',
-			'3:2',
-			'2:3',
-			'4:5',
 			'5:4',
+			'4:3',
+			'3:2',
+			'16:9',
+			'2:1',
+			'7:3',
+			'4:5',
+			'3:4',
+			'2:3',
 			'9:16',
 		])
 	})

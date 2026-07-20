@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import type { GuidelineDocument } from '@/payload-types'
 import { GuidelineHeader } from '../globals/guideline-header'
 import { resolveTypeface, TypefaceFontFace } from './children/typeface-font-face'
+import { GuidelineBlockFrame } from './common/guideline-block-frame'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type GlyphGridType = Extract<GuidelineBlock, { blockType: 'glyphGrid' }>
@@ -36,6 +37,11 @@ const codepoint = (ch: string) =>
 type Metrics = { ascender: number; descender: number; headline: number; xLine: number }
 
 export function GlyphGridBlock({ block }: { block: GlyphGridType }) {
+	const viewProps = useGlyphGrid(block)
+	return <GlyphGridView block={block} {...viewProps} />
+}
+
+function useGlyphGrid(block: GlyphGridType) {
 	const [active, setActive] = useState('A')
 	const [metrics, setMetrics] = useState<Metrics | null>(null)
 	const family = resolveTypeface(block.typeface)?.familyName ?? null
@@ -101,51 +107,71 @@ export function GlyphGridBlock({ block }: { block: GlyphGridType }) {
 		}
 	}, [family])
 
-	return (
-		<section>
-			<TypefaceFontFace typeface={block.typeface} />
-			<GuidelineHeader variant="block" title={block.title} />
-			<div className="grid gap-6 md:grid-cols-2">
-				<div className="relative aspect-square overflow-hidden rounded-sm border border-border bg-background-tertiary">
-					{metrics && Number.isFinite(metrics.headline) ? (
-						<GlyphStage glyph={active} metrics={metrics} fontFamily={fontFamily} />
-					) : (
-						<div className="flex size-full items-center justify-center">
-							<span
-								className="text-foreground"
-								style={{
-									fontFamily,
-									fontSize: 'clamp(11rem,34vw,26rem)',
-									lineHeight: 1,
-								}}
-							>
-								{active}
-							</span>
-						</div>
-					)}
-					<span className="absolute bottom-4 left-4 font-body text-xs font-normal text-muted-foreground tabular-nums">
-						{codepoint(active)}
-					</span>
-				</div>
+	return { active, metrics, fontFamily, onGlyphActivate: setActive }
+}
 
-				<div className="grid grid-cols-8 self-start rounded-sm border-border border-t border-l">
-					{GLYPHS.map((ch) => (
-						<button
-							key={ch}
-							type="button"
-							onMouseEnter={() => setActive(ch)}
-							onFocus={() => setActive(ch)}
-							data-active={ch === active}
-							aria-label={`${ch} (${codepoint(ch)})`}
-							className="flex aspect-square items-center justify-center border-border border-r border-b text-4xl text-foreground transition-colors hover:bg-fill-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 data-[active=true]:bg-fill-selected"
-							style={{ fontFamily }}
-						>
-							{ch}
-						</button>
-					))}
+function GlyphGridView({
+	block,
+	active,
+	metrics,
+	fontFamily,
+	onGlyphActivate,
+}: {
+	block: GlyphGridType
+	active: string
+	metrics: Metrics | null
+	fontFamily: string
+	onGlyphActivate: (glyph: string) => void
+}) {
+	return (
+		<GuidelineBlockFrame layout="padded" variant="inverted" label={block.title ?? undefined}>
+			<section>
+				<div className="sr-only">
+					<TypefaceFontFace typeface={block.typeface} />
+					<GuidelineHeader variant="block" title={block.title} />
 				</div>
-			</div>
-		</section>
+				<div className="grid gap-6 md:grid-cols-2">
+					<div className="relative aspect-square overflow-hidden border border-current/50 bg-current/5">
+						{metrics && Number.isFinite(metrics.headline) ? (
+							<GlyphStage glyph={active} metrics={metrics} fontFamily={fontFamily} />
+						) : (
+							<div className="flex size-full items-center justify-center">
+								<span
+									className="text-current"
+									style={{
+										fontFamily,
+										fontSize: 'clamp(11rem,34vw,26rem)',
+										lineHeight: 1,
+									}}
+								>
+									{active}
+								</span>
+							</div>
+						)}
+						<span className="absolute bottom-4 left-4 font-body text-current/60 text-xs font-normal tabular-nums">
+							{codepoint(active)}
+						</span>
+					</div>
+
+					<div className="grid grid-cols-8 self-start rounded-sm border-current/50 border-t border-l">
+						{GLYPHS.map((ch) => (
+							<button
+								key={ch}
+								type="button"
+								onMouseEnter={() => onGlyphActivate(ch)}
+								onFocus={() => onGlyphActivate(ch)}
+								data-active={ch === active}
+								aria-label={`${ch} (${codepoint(ch)})`}
+								className="flex aspect-square items-center justify-center border-current/50 border-r border-b text-current text-4xl transition-colors hover:bg-current/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/30 data-[active=true]:bg-current/10"
+								style={{ fontFamily }}
+							>
+								{ch}
+							</button>
+						))}
+					</div>
+				</div>
+			</section>
+		</GuidelineBlockFrame>
 	)
 }
 
@@ -182,7 +208,7 @@ function GlyphStage({
 			role="img"
 			aria-label={`${glyph} 글리프와 폰트 메트릭 가이드`}
 		>
-			<g className="text-border" stroke="currentColor" strokeWidth={0.4}>
+			<g className="text-current opacity-60" stroke="currentColor" strokeWidth={0.4}>
 				{guides.map((l) => (
 					<line key={l.label} x1={0} x2={100} y1={l.y} y2={l.y} />
 				))}
@@ -195,7 +221,7 @@ function GlyphStage({
 				y={baseY}
 				textAnchor="middle"
 				fontSize={100}
-				className="text-foreground"
+				className="text-current"
 				fill="currentColor"
 				style={{ fontFamily }}
 			>
@@ -203,7 +229,7 @@ function GlyphStage({
 			</text>
 
 			<g
-				className="text-muted-foreground"
+				className="text-current opacity-60"
 				fill="currentColor"
 				style={{ fontFamily: 'var(--font-body)' }}
 			>

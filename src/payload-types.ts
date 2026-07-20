@@ -307,7 +307,9 @@ export interface ContentColumnsBlock {
   /**
    * 열 이미지의 표시 비율입니다.
    */
-  imageRatio?: ('4:3' | '1:1' | '16:9' | '3:2' | '2:3' | '4:5' | '5:4' | '9:16') | null;
+  imageRatio?:
+    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+    | null;
   columns?:
     | {
         heading?: string | null;
@@ -476,7 +478,9 @@ export interface CarouselBlock {
   /**
    * 슬라이드 이미지의 표시 비율입니다.
    */
-  imageRatio?: ('4:3' | '1:1' | '16:9' | '3:2' | '2:3' | '4:5' | '5:4' | '9:16') | null;
+  imageRatio?:
+    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+    | null;
   slides?:
     | {
         image: number | ApplicationImage;
@@ -500,7 +504,9 @@ export interface MediaShowcaseBlock {
   /**
    * 이미지의 표시 비율입니다.
    */
-  imageRatio?: ('4:3' | '1:1' | '16:9' | '3:2' | '2:3' | '4:5' | '5:4' | '9:16') | null;
+  imageRatio?:
+    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+    | null;
   images?:
     | {
         image?: (number | null) | ApplicationImage;
@@ -547,11 +553,17 @@ export interface DoDontBlock {
   /**
    * 예시 이미지의 표시 비율입니다.
    */
-  imageRatio?: ('4:3' | '1:1' | '16:9' | '3:2' | '2:3' | '4:5' | '5:4' | '9:16') | null;
+  imageRatio?:
+    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+    | null;
   /**
    * 가로 스택은 넓은 화면에서 그룹을 나란히 배치합니다.
    */
   groupLayout?: ('vertical' | 'horizontal') | null;
+  /**
+   * 세로 스택의 그룹 내부 예시를 넓은 화면에서 배치할 열 수입니다.
+   */
+  exampleColumns?: ('2' | '3' | '4') | null;
   /**
    * 카테고리 단위 예시 그룹입니다.
    */
@@ -1716,6 +1728,7 @@ export interface DoDontBlockSelect<T extends boolean = true> {
   title?: T;
   imageRatio?: T;
   groupLayout?: T;
+  exampleColumns?: T;
   groups?:
     | T
     | {

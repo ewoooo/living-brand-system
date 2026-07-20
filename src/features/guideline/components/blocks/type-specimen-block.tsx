@@ -4,6 +4,7 @@ import { useId, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { GuidelineDocument } from '@/payload-types'
 import { resolveTypeface, TypefaceFontFace } from './children/typeface-font-face'
+import { GuidelineBlockFrame } from './common/guideline-block-frame'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type TypeSpecimen = Extract<GuidelineBlock, { blockType: 'typeSpecimen' }>
@@ -46,78 +47,80 @@ export function TypeSpecimenBlock({ block }: { block: TypeSpecimen }) {
 		: 'var(--font-title)'
 
 	return (
-		<div className="rounded-lg bg-neutral-50 p-8">
-			<TypefaceFontFace typeface={block.typeface} />
-			<div className="flex flex-wrap items-end gap-x-8 gap-y-4">
-				<Field label="Size">
-					<ToggleGroup
-						type="single"
-						value={tier}
-						onValueChange={(v) => v && setTier(v as Tier)}
-					>
-						{(Object.keys(TIER_PRESETS) as Tier[]).map((key) => (
-							<ToggleGroupItem
-								key={key}
-								value={key}
-								className="px-3"
-								variant="outline"
-							>
-								{TIER_PRESETS[key].label}
+		<GuidelineBlockFrame layout="padded">
+			<div className="rounded-lg bg-neutral-50 p-8 dark:bg-neutral-950">
+				<TypefaceFontFace typeface={block.typeface} />
+				<div className="flex flex-wrap items-end gap-x-8 gap-y-4">
+					<Field label="Size">
+						<ToggleGroup
+							type="single"
+							value={tier}
+							onValueChange={(v) => v && setTier(v as Tier)}
+						>
+							{(Object.keys(TIER_PRESETS) as Tier[]).map((key) => (
+								<ToggleGroupItem
+									key={key}
+									value={key}
+									className="px-3"
+									variant="outline"
+								>
+									{TIER_PRESETS[key].label}
+								</ToggleGroupItem>
+							))}
+						</ToggleGroup>
+					</Field>
+
+					<Field label="Align">
+						<ToggleGroup
+							type="single"
+							value={align}
+							onValueChange={(v) => v && setAlign(v as Align)}
+						>
+							<ToggleGroupItem value="left" className="px-3" variant="outline">
+								Left
 							</ToggleGroupItem>
-						))}
-					</ToggleGroup>
-				</Field>
+							<ToggleGroupItem value="center" className="px-3" variant="outline">
+								Center
+							</ToggleGroupItem>
+							<ToggleGroupItem value="right" className="px-3" variant="outline">
+								Right
+							</ToggleGroupItem>
+						</ToggleGroup>
+					</Field>
 
-				<Field label="Align">
-					<ToggleGroup
-						type="single"
-						value={align}
-						onValueChange={(v) => v && setAlign(v as Align)}
-					>
-						<ToggleGroupItem value="left" className="px-3" variant="outline">
-							Left
-						</ToggleGroupItem>
-						<ToggleGroupItem value="center" className="px-3" variant="outline">
-							Center
-						</ToggleGroupItem>
-						<ToggleGroupItem value="right" className="px-3" variant="outline">
-							Right
-						</ToggleGroupItem>
-					</ToggleGroup>
-				</Field>
+					<Field label="Leading">
+						<div className="flex items-center gap-3">
+							<input
+								id={sliderId}
+								type="range"
+								min={0.9}
+								max={2}
+								step={0.05}
+								value={lineHeight}
+								onChange={(e) => setLineHeight(Number(e.target.value))}
+								className="h-1 w-40 cursor-pointer appearance-none rounded-full bg-background accent-foreground"
+							/>
+							<span className="w-8 shrink-0 font-body text-xs font-normal text-foreground tabular-nums">
+								{lineHeight.toFixed(2)}
+							</span>
+						</div>
+					</Field>
+				</div>
 
-				<Field label="Leading">
-					<div className="flex items-center gap-3">
-						<input
-							id={sliderId}
-							type="range"
-							min={0.9}
-							max={2}
-							step={0.05}
-							value={lineHeight}
-							onChange={(e) => setLineHeight(Number(e.target.value))}
-							className="h-1 w-40 cursor-pointer appearance-none rounded-full bg-background accent-foreground"
-						/>
-						<span className="w-8 shrink-0 font-body text-xs font-normal text-foreground tabular-nums">
-							{lineHeight.toFixed(2)}
-						</span>
-					</div>
-				</Field>
+				<textarea
+					aria-label="타입 견본 입력"
+					value={texts[tier]}
+					onChange={(e) => setTexts((prev) => ({ ...prev, [tier]: e.target.value }))}
+					className="mt-16 h-64 w-full resize-none overflow-auto break-keep border-none bg-transparent text-foreground outline-none"
+					style={{
+						fontFamily,
+						fontSize: TIER_PRESETS[tier].size,
+						lineHeight,
+						textAlign: align,
+					}}
+				/>
 			</div>
-
-			<textarea
-				aria-label="타입 견본 입력"
-				value={texts[tier]}
-				onChange={(e) => setTexts((prev) => ({ ...prev, [tier]: e.target.value }))}
-				className="mt-16 h-64 w-full resize-none overflow-auto break-keep border-none bg-transparent text-foreground outline-none"
-				style={{
-					fontFamily,
-					fontSize: TIER_PRESETS[tier].size,
-					lineHeight,
-					textAlign: align,
-				}}
-			/>
-		</div>
+		</GuidelineBlockFrame>
 	)
 }
 
