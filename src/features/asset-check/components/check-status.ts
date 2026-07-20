@@ -14,18 +14,18 @@ export const CHECK_STATUS: Record<
 > = {
 	pass: {
 		label: '통과',
-		pill: 'bg-primary/15 text-primary',
-		dot: 'bg-primary',
+		pill: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
+		dot: 'bg-emerald-600 dark:bg-emerald-400',
 	},
 	ok: {
 		label: '적합',
-		pill: 'bg-secondary text-secondary-foreground',
-		dot: 'bg-secondary-foreground',
+		pill: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
+		dot: 'bg-emerald-600 dark:bg-emerald-400',
 	},
 	advisory: {
 		label: '조언',
-		pill: 'bg-secondary text-secondary-foreground',
-		dot: 'bg-secondary-foreground',
+		pill: 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
+		dot: 'bg-sky-600 dark:bg-sky-400',
 	},
 	not_applicable: {
 		label: '해당 없음',
@@ -34,8 +34,8 @@ export const CHECK_STATUS: Record<
 	},
 	needs_review: {
 		label: '검토',
-		pill: 'bg-accent text-accent-foreground',
-		dot: 'bg-accent-foreground',
+		pill: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
+		dot: 'bg-amber-600 dark:bg-amber-400',
 	},
 	fail: {
 		label: '미통과',

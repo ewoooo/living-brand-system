@@ -28,12 +28,12 @@ export function CheckRow({
 	check,
 	rowId,
 	rowIndex,
-	scenarioLabel,
 	appliesTo,
 	guidelineHref,
 	anchorId,
 	outcome,
 	inProgress,
+	expandable,
 	detail,
 }: CheckReviewRowData & { rowIndex: number }) {
 	const [open, setOpen] = useState(false)
@@ -43,9 +43,9 @@ export function CheckRow({
 		<>
 			<motion.tr
 				id={anchorId ?? undefined}
-				role="button"
-				aria-expanded={open}
-				aria-label={`${check.title} 상세 보기`}
+				role={expandable ? 'button' : undefined}
+				aria-expanded={expandable ? open : undefined}
+				aria-label={expandable ? `${check.title} 상세 보기` : undefined}
 				initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
 				animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
 				transition={{
@@ -53,32 +53,28 @@ export function CheckRow({
 					ease: 'easeOut',
 					delay: Math.min(rowIndex * 0.025, 0.18),
 				}}
-				onClick={() => setOpen((value) => !value)}
-				onKeyDown={(event) => {
-					if (event.key === 'Enter' || event.key === ' ') {
-						event.preventDefault()
-						setOpen((value) => !value)
-					}
-				}}
-				tabIndex={0}
-				className="border-0 scroll-mt-72 cursor-pointer"
+				onClick={expandable ? () => setOpen((value) => !value) : undefined}
+				onKeyDown={
+					expandable
+						? (event) => {
+								if (event.key === 'Enter' || event.key === ' ') {
+									event.preventDefault()
+									setOpen((value) => !value)
+								}
+							}
+						: undefined
+				}
+				tabIndex={expandable ? 0 : undefined}
+				className={cn('border-0 scroll-mt-72', expandable && 'cursor-pointer')}
 			>
-				{/* 시나리오: 묶음의 첫 행에만 표시 */}
-				<TableCell
-					className={cn('w-44 py-2.5 pr-4 align-top', scenarioLabel && CHECK_BORDER)}
-				>
-					{scenarioLabel && (
-						<span className="font-body text-sm font-semibold">{scenarioLabel}</span>
-					)}
-				</TableCell>
 				{/* 판정 주체: 자동 측정 / AI / 담당자 */}
-				<TableCell className={cn('w-0 py-2.5 pr-3 align-top', CHECK_BORDER)}>
+				<TableCell className={cn('py-2.5 pr-3 align-top', CHECK_BORDER)}>
 					<CheckExecutorIcon check={check} />
 				</TableCell>
 				{/* 검사 항목명 */}
 				<TableCell
 					className={cn(
-						'w-56 py-2.5 pr-4 align-top font-body text-sm font-normal',
+						'py-2.5 pr-4 align-top whitespace-normal break-words font-body text-sm font-normal',
 						CHECK_BORDER,
 					)}
 				>
@@ -100,7 +96,7 @@ export function CheckRow({
 					shouldReduceMotion={shouldReduceMotion}
 				/>
 				{/* 판정 상태: 결과 배지 또는 검사 중 표시 */}
-				<TableCell className={cn('w-0 py-2.5 pr-3 align-top', CHECK_BORDER)}>
+				<TableCell className={cn('py-2.5 pr-3 align-top', CHECK_BORDER)}>
 					<AnimatePresence initial={false} mode="wait">
 						<CheckStatusBadge
 							key={outcome?.rawResult.status ?? (inProgress ? 'running' : 'idle')}
@@ -111,18 +107,20 @@ export function CheckRow({
 					</AnimatePresence>
 				</TableCell>
 				{/* 상세 열기/닫기 */}
-				<TableCell className={cn('w-0 py-2.5 pr-1 text-right align-top', CHECK_BORDER)}>
-					<ChevronDown
-						size={16}
-						className={cn(
-							'inline-block text-muted-foreground transition-transform',
-							open && 'rotate-180',
-						)}
-					/>
+				<TableCell className={cn('py-2.5 pr-1 text-right align-top', CHECK_BORDER)}>
+					{expandable && (
+						<ChevronDown
+							size={16}
+							className={cn(
+								'inline-block text-muted-foreground transition-transform',
+								open && 'rotate-180',
+							)}
+						/>
+					)}
 				</TableCell>
 			</motion.tr>
 			<AnimatePresence initial={false}>
-				{open && (
+				{expandable && open && (
 					<CheckDetailRow
 						key={`${rowId}:detail`}
 						check={check}
@@ -149,7 +147,9 @@ function CheckMessageCell({
 	shouldReduceMotion: boolean | null
 }) {
 	return (
-		<TableCell className={cn('py-2.5 pr-3 align-top whitespace-normal', CHECK_BORDER)}>
+		<TableCell
+			className={cn('py-2.5 pr-3 align-top whitespace-normal break-words', CHECK_BORDER)}
+		>
 			<AnimatePresence initial={false} mode="wait">
 				{detail && (
 					<motion.span

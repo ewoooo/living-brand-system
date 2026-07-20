@@ -10,6 +10,15 @@ function access(name: 'create' | 'delete' | 'read' | 'update'): AccessFunction {
 }
 
 describe('ApplicationImages access', () => {
+	it('기본 Admin 목록에서 파일 썸네일을 표시한다', () => {
+		const upload =
+			typeof ApplicationImages.upload === 'object' ? ApplicationImages.upload : undefined
+
+		expect(ApplicationImages.admin?.components?.views?.list).toBeUndefined()
+		expect(ApplicationImages.admin?.defaultColumns).toContain('filename')
+		expect(upload?.adminThumbnail).toBe('thumbnail')
+	})
+
 	it('공개·worker 읽기는 published로 제한하고 manager는 draft도 읽는다', () => {
 		expect(access('read')({ req: { user: null } })).toEqual({
 			_status: { equals: 'published' },

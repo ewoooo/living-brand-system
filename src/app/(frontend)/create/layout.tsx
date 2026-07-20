@@ -1,9 +1,9 @@
 import type React from 'react'
-import { ContentFrame } from '@/components/global/content-frame'
 import { SectionLayout } from '@/components/global/section-layout'
 import { StudioSideNavigation } from '@/components/global/studio-side-navigation'
 import { PageNavigation } from '@/components/page-navigation'
 import { getCreateNavigation } from '@/features/asset-generation/services/get-create-navigation.service'
+import { GuidelineContentFrame } from '@/features/guideline/components/blocks/common/guideline-content-frame'
 
 // 발행 직후의 템플릿이 재빌드 없이 보이도록 요청 시점에 렌더한다.
 export const dynamic = 'force-dynamic'
@@ -29,7 +29,7 @@ export default async function CreateLayout({ children }: { children: React.React
 				/>
 			}
 		>
-			<ContentFrame className="py-10">{children}</ContentFrame>
+			<GuidelineContentFrame className="py-10">{children}</GuidelineContentFrame>
 		</SectionLayout>
 	)
 }
