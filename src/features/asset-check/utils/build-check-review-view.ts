@@ -17,6 +17,7 @@ export interface CheckReviewRow {
 	anchorId: string | null
 	outcome?: CheckResult
 	inProgress: boolean
+	expandable: boolean
 	detail: string | null
 }
 
@@ -98,11 +99,15 @@ function formatReviewDetail(outcome: CheckResult | undefined): string | null {
 
 	if (rawResult.reasonCode === 'not_applicable') return '관측 대상 없음'
 	if ('summary' in rawResult && rawResult.summary) {
-		if (rawResult.status === 'fail') return `기준 ${rawResult.summary.failed}개 미충족`
-		if (rawResult.status === 'needs_review') {
-			return `기준 ${rawResult.summary.uncertain}개 판단 필요`
+		if (rawResult.status === 'fail') {
+			return `기준 ${rawResult.summary.failed}개를 통과하지 못했어요.`
 		}
-		if (rawResult.status === 'pass') return `기준 ${rawResult.summary.satisfied}개 충족`
+		if (rawResult.status === 'needs_review') {
+			return `기준 ${rawResult.summary.uncertain}개는 판단이 필요해요.`
+		}
+		if (rawResult.status === 'pass') {
+			return `기준 ${rawResult.summary.satisfied}개를 모두 통과했어요.`
+		}
 	}
 
 	return outcome.message ?? rawResult.detail ?? null
@@ -136,7 +141,8 @@ function buildRows({
 
 			const outcome = results?.[check.key]
 			if (!check.implemented) continue
-			const inProgress = selected?.status === 'running' && pendingCheckKeys.has(check.key)
+			const inProgress =
+				selected?.status === 'running' && (!outcome || pendingCheckKeys.has(check.key))
 
 			const row = {
 				check,
@@ -148,7 +154,8 @@ function buildRows({
 				anchorId: null,
 				outcome,
 				inProgress,
-				detail: inProgress ? '검사 중...' : formatReviewDetail(outcome),
+				expandable: Boolean(outcome) && !inProgress,
+				detail: inProgress ? '검사 중...' : outcome ? formatReviewDetail(outcome) : null,
 			}
 			rowByCheckKey.set(check.key, row)
 		}

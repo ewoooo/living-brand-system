@@ -10,6 +10,14 @@ function access(name: 'create' | 'delete' | 'read' | 'update'): AccessFunction {
 }
 
 describe('BrandLogos access', () => {
+	it('기본 Admin 목록에서 파일 썸네일을 표시한다', () => {
+		const upload = typeof BrandLogos.upload === 'object' ? BrandLogos.upload : undefined
+
+		expect(BrandLogos.admin?.components?.views?.list).toBeUndefined()
+		expect(BrandLogos.admin?.defaultColumns).toContain('filename')
+		expect(upload?.adminThumbnail).toBe('thumbnail')
+	})
+
 	it('공개·worker 읽기는 published로 제한하고 manager/admin은 draft도 읽는다', () => {
 		for (const user of [null, { role: 'worker' }]) {
 			expect(access('read')({ req: { user } })).toEqual({

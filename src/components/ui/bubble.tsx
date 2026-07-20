@@ -9,21 +9,20 @@ const bubbleVariants = cva(
 	{
 		variants: {
 			variant: {
-				default:
-					'*:data-[slot=bubble-content]:bg-primary *:data-[slot=bubble-content]:text-primary-foreground [&>[data-slot=bubble-content]:is(button,a):hover]:bg-primary/80',
-				muted: '*:data-[slot=bubble-content]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_5%)]',
+				user: '*:data-[slot=bubble-content]:bg-foreground *:data-[slot=bubble-content]:text-background [&>[data-slot=bubble-content]:is(button,a):hover]:bg-foreground/80',
+				agent: '*:data-[slot=bubble-content]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_5%)]',
 				destructive:
 					'*:data-[slot=bubble-content]:bg-destructive/10 *:data-[slot=bubble-content]:text-destructive dark:*:data-[slot=bubble-content]:bg-destructive/20 [&>[data-slot=bubble-content]:is(button,a):hover]:bg-destructive/20 dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-destructive/30',
 			},
 		},
 		defaultVariants: {
-			variant: 'default',
+			variant: 'agent',
 		},
 	},
 )
 
 function Bubble({
-	variant = 'default',
+	variant = 'agent',
 	align = 'start',
 	className,
 	...props

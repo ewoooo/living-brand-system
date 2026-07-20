@@ -57,8 +57,7 @@ export function CheckDetailRow({
 			exit={{ visibility: 'visible' }}
 			transition={{ duration: 0.18, ease: 'easeOut' }}
 		>
-			<TableCell className="p-0" colSpan={3}></TableCell>
-			<TableCell className="pt-0 pb-0 pr-3 align-top whitespace-normal" colSpan={3}>
+			<TableCell className="pt-0 pb-0 pr-3 align-top whitespace-normal" colSpan={5}>
 				<span className="sr-only">상세 정보</span>
 				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="space-y-2 pb-3">

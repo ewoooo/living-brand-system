@@ -1,7 +1,7 @@
-import { ContentFrame } from '@/components/global/content-frame'
 import { PageHeader } from '@/components/global/page-header'
 import { ReviewFunnel } from '@/features/asset-check/components/review-funnel/review-funnel'
 import { getCheckRuleset } from '@/features/asset-check/services/get-check-ruleset.service'
+import { GuidelineContentFrame } from '@/features/guideline/components/blocks/common/guideline-content-frame'
 
 export default async function ReviewPage() {
 	const sections = await getCheckRuleset()
@@ -9,9 +9,9 @@ export default async function ReviewPage() {
 	const DESCRIPTION = 'Check Your Creations'
 
 	return (
-		<ContentFrame className="flex max-w-[1440px] flex-col gap-8 py-10">
+		<GuidelineContentFrame className="flex max-w-[1440px] flex-col gap-8 py-10">
 			<PageHeader title={TITLE} description={DESCRIPTION} />
 			<ReviewFunnel sections={sections} />
-		</ContentFrame>
+		</GuidelineContentFrame>
 	)
 }

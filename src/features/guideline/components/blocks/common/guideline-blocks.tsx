@@ -1,18 +1,17 @@
 import type { ReactNode } from 'react'
-import { ContentFrame } from '@/components/global/content-frame'
 import type { GuidelineDocument } from '@/payload-types'
-import { CalloutBlock } from './callout-block'
-import { CarouselBlock } from './carousel-block'
-import { ColorPaletteBlock } from './color-palette-block'
-import { ContentColumnsBlock } from './content-columns-block'
-import { DoDontBlock } from './do-dont-block'
-import { GlyphGridBlock } from './glyph-grid-block'
-import { LayoutGridBlock } from './layout-grid-block'
-import { MediaShowcaseBlock } from './media-showcase-block'
-import { SignatureShowcaseBlock } from './signature-showcase-block'
-import { SpecListBlock } from './spec-list-block'
-import { TypeScaleBlock } from './type-scale-block'
-import { TypeSpecimenBlock } from './type-specimen-block'
+import { CalloutBlock } from '../callout-block'
+import { CarouselBlock } from '../carousel-block'
+import { ColorPaletteBlock } from '../color-palette-block'
+import { ContentColumnsBlock } from '../content-columns-block'
+import { DoDontBlock } from '../do-dont-block'
+import { GlyphGridBlock } from '../glyph-grid-block'
+import { LayoutGridBlock } from '../layout-grid-block'
+import { MediaShowcaseBlock } from '../media-showcase-block'
+import { SignatureShowcaseBlock } from '../signature-showcase-block'
+import { SpecListBlock } from '../spec-list-block'
+import { TypeScaleBlock } from '../type-scale-block'
+import { TypeSpecimenBlock } from '../type-specimen-block'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type RendererMap = {
@@ -49,21 +48,14 @@ export function GuidelineBlocks({
 	betterEditor?: boolean
 }) {
 	return (
-		<article className="flex flex-col gap-16">
+		<article className="flex flex-col">
 			{blocks?.map((block) => {
 				const content = renderBlock(block)
 				if (!content) return null
-				const isCarousel = block.blockType === 'carousel'
 
 				return (
-					<div
-						key={block.id}
-						data-better-editor-id={betterEditor ? block.id : undefined}
-						className={
-							block.blockType === 'doDont' ? 'bg-neutral-100 py-6 md:py-8' : undefined
-						}
-					>
-						{isCarousel ? content : <ContentFrame>{content}</ContentFrame>}
+					<div key={block.id} data-better-editor-id={betterEditor ? block.id : undefined}>
+						{content}
 					</div>
 				)
 			})}

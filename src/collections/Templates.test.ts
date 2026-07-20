@@ -123,6 +123,28 @@ describe('Templates beforeChange hook', () => {
 		await expect(hook({ data, ...buildRequest() })).rejects.toThrow('허용하지 않는 속성')
 	})
 
+	it('허용하지 않는 HTML style 속성명을 안내한다', async () => {
+		const data = {
+			_status: 'draft',
+			html: '<div data-node-id="frame" style="z-index: 1"></div>',
+			overrides: {},
+		}
+
+		await expect(hook({ data, ...buildRequest() })).rejects.toThrow(
+			'HTML style에서 허용하지 않는 속성입니다: z-index',
+		)
+	})
+
+	it('HTML style의 background-color를 허용한다', async () => {
+		const data = {
+			_status: 'draft',
+			html: '<div data-node-id="frame" style="background-color: #fff"></div>',
+			overrides: {},
+		}
+
+		await expect(hook({ data, ...buildRequest() })).resolves.toBe(data)
+	})
+
 	it('실제 Figma 변환의 줄바꿈 style과 instance node id를 허용한다', async () => {
 		const converted = figmaNodeToHtml({
 			id: 'I571:4018;450:1129',
