@@ -18,9 +18,9 @@ function exampleGridClass(count: number, variant: GroupLayout) {
 }
 
 const kindBadge = {
-	do: { symbol: '✓', className: 'bg-primary text-primary-foreground' },
+	do: { symbol: '✓', className: 'bg-green-500/20 text-green-800' },
 	ok: { symbol: '△', className: 'bg-secondary text-secondary-foreground' },
-	dont: { symbol: '✕', className: 'bg-destructive/10 text-destructive' },
+	dont: { symbol: '✕', className: 'bg-destructive/20 text-destructive' },
 } as const
 
 export function DoDontBlock({ block }: { block: DoDont }) {
