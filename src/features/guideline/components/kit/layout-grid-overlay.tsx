@@ -3,6 +3,7 @@
 import type { ChangeEvent } from 'react'
 import { useState } from 'react'
 import layoutBaseImage from './images/layout_base_image_1.webp'
+import layoutBaseImage2 from './images/layout_base_image_2.webp'
 
 /**
  * 레이아웃 그리드 오버레이 — 이미지 위에 "균일 섹션" 그리드 가이드를 정확히 겹쳐 레이아웃 규칙을 검수한다.
@@ -10,14 +11,15 @@ import layoutBaseImage from './images/layout_base_image_1.webp'
  * 규칙 모델(모든 섹션 동일):
  * - 이미지는 세로로 균등 분할된 동일한 섹션 여러 개로 이뤄진다.
  * - 각 섹션은 상하좌우 동일 패딩 + n개 컬럼 + 컬럼 사이 gap.
- * - 입력값(섹션 개수·패딩·갭·열·이미지 폭·높이)만 알면 나머지는 계산된다.
- * - 폭/높이 대비 %(비율)로 환산해 그리므로 단위(mm·px)는 무관 — 폭·높이·패딩·갭만 같은 단위면
- *   이미지에 정확히 맞는다(바깥/안쪽 오차 없이). 단위 셀렉터는 라벨 표기용.
+ * - 폭·높이는 입력받지 않고 이미지 고유 값(props)을 그대로 쓴다. 편집값은 섹션·패딩·갭·열뿐.
+ * - 폭/높이 대비 %(비율)로 환산해 그린다. 단위 셀렉터(mm·px)는 모든 입력값의 라벨 단위를 정하는 표기용 —
+ *   ponytail: 실제 그리기는 이미지 픽셀 대비 비율이라 값은 px 기준으로 입력해야 기하학적으로 정확.
+ *   mm 스펙을 그대로 반영하려면 이미지 DPI(또는 물리 폭)가 필요.
  *
  * 단일 토글: 켜면 가이드 표시 + 이미지 50%, 끄면 가이드 숨김 + 이미지 100%.
  *
  * @example
- * <LayoutGridOverlay image="/x.webp" defaults={{ sections: 3, columns: 4, width: 2481, height: 3509 }} />
+ * <LayoutGridOverlay image={img.src} width={img.width} height={img.height} defaults={{ sections: 3, columns: 4 }} />
  */
 export type LayoutParams = {
 	/** 세로로 쌓이는 섹션 개수(균등 높이). */
@@ -28,10 +30,6 @@ export type LayoutParams = {
 	gap: number
 	/** 섹션당 컬럼 수. */
 	columns: number
-	/** 이미지 고유 폭. */
-	width: number
-	/** 이미지 고유 높이. */
-	height: number
 }
 
 const GUIDE = '#ff2d78'
@@ -40,15 +38,19 @@ const DEFAULTS: LayoutParams = {
 	padding: 24,
 	gap: 16,
 	columns: 4,
-	width: 2481,
-	height: 3509,
 }
 
 export function LayoutGridOverlay({
 	image,
+	width,
+	height,
 	defaults,
 }: {
 	image: string
+	/** 이미지 고유 폭(px). 입력 아님 — 이미지 값을 그대로 받는다. */
+	width: number
+	/** 이미지 고유 높이(px). 입력 아님 — 이미지 값을 그대로 받는다. */
+	height: number
 	defaults?: Partial<LayoutParams>
 }) {
 	const [params, setParams] = useState<LayoutParams>({ ...DEFAULTS, ...defaults })
@@ -56,7 +58,7 @@ export function LayoutGridOverlay({
 	// 단일 토글: 가이드 표시 여부 = 이미지 50% 여부.
 	const [guidesOn, setGuidesOn] = useState(true)
 
-	const { padding, gap, width, height } = params
+	const { padding, gap } = params
 	const sections = Math.max(params.sections, 1)
 	const columns = Math.max(params.columns, 1)
 	const sectionHeight = height / sections
@@ -73,36 +75,20 @@ export function LayoutGridOverlay({
 
 	return (
 		<div className="w-full">
-			{/* 입력 칸 */}
-			<div className="mb-3 grid grid-cols-3 gap-3 sm:grid-cols-6">
+			{/* 입력 칸 — 폭·높이는 이미지 값을 그대로 쓰므로 입력받지 않는다. */}
+			<div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
 				<NumberField
 					label="섹션 개수"
 					value={params.sections}
 					onChange={set('sections')}
 					min={1}
 				/>
-				<NumberField
-					label={`섹션 패딩 (${unit})`}
-					value={params.padding}
-					onChange={set('padding')}
-				/>
-				<NumberField label={`갭 (${unit})`} value={params.gap} onChange={set('gap')} />
+				<NumberField label="섹션 패딩" value={params.padding} onChange={set('padding')} />
+				<NumberField label="갭" value={params.gap} onChange={set('gap')} />
 				<NumberField
 					label="열 개수"
 					value={params.columns}
 					onChange={set('columns')}
-					min={1}
-				/>
-				<NumberField
-					label={`이미지 폭 (${unit})`}
-					value={params.width}
-					onChange={set('width')}
-					min={1}
-				/>
-				<NumberField
-					label={`이미지 높이 (${unit})`}
-					value={params.height}
-					onChange={set('height')}
 					min={1}
 				/>
 			</div>
@@ -209,20 +195,39 @@ function NumberField({
 	)
 }
 
-// 실제 base 이미지(static import → src·width·height 자동 획득). 폭/높이는 이미지 픽셀로 시드하고,
-// 섹션·패딩·갭·열은 웹에서 라이브로 맞춘다.
+// 하나의 템플릿을 서로 다른 이미지·인자로 여러 번 배치한다. 각 인스턴스는 자기 이미지의 고유
+// 폭·높이(static import)를 그대로 쓰고, 독립 state로 라이브 튜닝된다. admin 블록으로 이관할 때
+// 이 SAMPLES가 그대로 인스턴스 인자가 된다.
+const SAMPLES: { label: string; image: typeof layoutBaseImage; defaults: Partial<LayoutParams> }[] =
+	[
+		{
+			label: '4-column grid',
+			image: layoutBaseImage,
+			defaults: { sections: 3, columns: 4, padding: 24, gap: 16 },
+		},
+		{
+			label: '12-column grid',
+			image: layoutBaseImage2,
+			defaults: { sections: 3, columns: 12, padding: 24, gap: 12 },
+		},
+	]
+
 export function LayoutGridOverlayDemo() {
 	return (
-		<LayoutGridOverlay
-			image={layoutBaseImage.src}
-			defaults={{
-				sections: 3,
-				columns: 4,
-				padding: 24,
-				gap: 16,
-				width: layoutBaseImage.width,
-				height: layoutBaseImage.height,
-			}}
-		/>
+		<div className="flex flex-col gap-8">
+			{SAMPLES.map((sample) => (
+				<div key={sample.label} className="flex flex-col gap-2">
+					<h4 className="font-body font-semibold text-foreground text-sm">
+						{sample.label}
+					</h4>
+					<LayoutGridOverlay
+						image={sample.image.src}
+						width={sample.image.width}
+						height={sample.image.height}
+						defaults={sample.defaults}
+					/>
+				</div>
+			))}
+		</div>
 	)
 }
