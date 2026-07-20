@@ -10,6 +10,7 @@ import { SignatureShowcaseBlock } from '@/features/guideline/components/blocks/s
 import { SpecListBlock } from '@/features/guideline/components/blocks/spec-list-block'
 import { TypeScaleBlock } from '@/features/guideline/components/blocks/type-scale-block'
 import { TypeSpecimenBlock } from '@/features/guideline/components/blocks/type-specimen-block'
+import { CardRowDemo } from '@/features/guideline/components/kit/card-row'
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { CollapsibleDemo } from '@/features/guideline/components/kit/collapsible-demo'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
@@ -512,6 +513,10 @@ export function GuidelineKitGallery() {
 
 			<CollapsibleDemo title="Layout Grid Overlay · 레이아웃 그리드 오버레이">
 				<LayoutGridOverlayDemo />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Card Row · 카드 4열 배치">
+				<CardRowDemo />
 			</CollapsibleDemo>
 
 			<CollapsibleDemo title="Logo Clear-space Checker · 로고 여백 체커">
