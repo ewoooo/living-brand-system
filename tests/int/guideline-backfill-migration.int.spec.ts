@@ -15,6 +15,18 @@ describe('guideline document backfill migration', () => {
 		)
 	})
 
+	it("precreates the Do/Don't example columns used by the current Payload config", () => {
+		expect(kitBlocksPreludeSql).toContain(
+			'CREATE TYPE "public"."enum_guideline_docs_blocks_do_dont_example_columns"',
+		)
+		expect(kitBlocksPreludeSql).toContain(
+			'ALTER TABLE "guideline_docs_blocks_do_dont" ADD COLUMN IF NOT EXISTS "example_columns"',
+		)
+		expect(kitBlocksPreludeSql).toContain(
+			'ALTER TABLE "_guideline_docs_v_blocks_do_dont" ADD COLUMN IF NOT EXISTS "example_columns"',
+		)
+	})
+
 	it('converts a legacy media showcase image to the current images array', () => {
 		expect(
 			normalizeBackfillBlocks([
