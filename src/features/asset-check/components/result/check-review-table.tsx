@@ -23,6 +23,7 @@ import {
  *   anchorId: string | null       // 시나리오 첫 행에만 scenario.key
  *   outcome?: CheckResult          // 미판정이면 undefined
  *   inProgress: boolean            // status 'running' && pendingCheckKeys에 포함
+ *   expandable: boolean            // 결과가 있고 검사 중이 아닐 때만 상세 열기 가능
  *   detail: string | null          // 화면에서 조합한 판정 또는 진행 문구
  * }
  * showFailOnly && results 존재 시 rawResult.status === 'fail' 행만 남김
@@ -49,11 +50,10 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 function CheckTableColumns() {
 	return (
 		<colgroup>
-			<col className="w-44" />
 			<col className="w-8" />
-			<col className="w-56" />
+			<col className="w-64" />
 			<col />
-			<col className="w-36" />
+			<col className="w-24" />
 			<col className="w-8" />
 		</colgroup>
 	)

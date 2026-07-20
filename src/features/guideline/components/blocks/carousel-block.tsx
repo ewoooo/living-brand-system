@@ -1,6 +1,7 @@
 import type { GuidelineDocument } from '@/payload-types'
 import { IMAGE_RATIO_CLASS_NAMES } from '@/types/image-ratio'
 import { Carousel, type CarouselSlide } from './children/carousel'
+import { GuidelineBlockFrame } from './common/guideline-block-frame'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type CarouselType = Extract<GuidelineBlock, { blockType: 'carousel' }>
@@ -19,11 +20,11 @@ export function CarouselBlock({ block }: { block: CarouselType }) {
 	if (slides.length === 0) return null
 
 	return (
-		<section className="bg-neutral-100 py-6 md:py-8">
+		<GuidelineBlockFrame layout="full" variant="secondary" contentClassName="py-6 md:py-8">
 			<Carousel
 				slides={slides}
 				aspect={IMAGE_RATIO_CLASS_NAMES[block.imageRatio ?? '16:9']}
 			/>
-		</section>
+		</GuidelineBlockFrame>
 	)
 }

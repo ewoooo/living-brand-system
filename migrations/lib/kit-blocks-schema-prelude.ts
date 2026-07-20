@@ -24,6 +24,14 @@ export const kitBlocksPreludeSql = `
 	DO $$ BEGIN
 		CREATE TYPE "public"."enum__guideline_docs_v_blocks_callout_kind" AS ENUM('must', 'recommended', 'dont');
 	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	DO $$ BEGIN
+		CREATE TYPE "public"."enum_guideline_docs_blocks_do_dont_example_columns" AS ENUM('2', '3', '4');
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	DO $$ BEGIN
+		CREATE TYPE "public"."enum__guideline_docs_v_blocks_do_dont_example_columns" AS ENUM('2', '3', '4');
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	ALTER TABLE "guideline_docs_blocks_do_dont" ADD COLUMN IF NOT EXISTS "example_columns" "enum_guideline_docs_blocks_do_dont_example_columns" DEFAULT '3';
+	ALTER TABLE "_guideline_docs_v_blocks_do_dont" ADD COLUMN IF NOT EXISTS "example_columns" "enum__guideline_docs_v_blocks_do_dont_example_columns" DEFAULT '3';
 	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_content_columns_columns" (
 		"_order" integer NOT NULL,
 		"_parent_id" varchar NOT NULL,

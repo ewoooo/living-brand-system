@@ -3,6 +3,15 @@ import { describe, expect, it } from 'vitest'
 import { getCheckScenario, getCheckScenarioFlags, INITIAL_CHECK_SCENARIOS } from './scenarios'
 
 describe('getCheckScenario', () => {
+	it('prefers an exact Payload key before applying aliases', () => {
+		const scenarios = [
+			{ key: 'check-model-image', title: '모델 이미지 검수', checkKeys: [] },
+			{ key: 'sns-feed', title: 'SNS 콘텐츠 검수', checkKeys: [] },
+		]
+
+		expect(getCheckScenario(scenarios, 'sns-feed').key).toBe('sns-feed')
+	})
+
 	it('maps business card aliases to the stationery scenario', () => {
 		for (const key of ['business-card', 'business card', 'name-card', '명함 시나리오']) {
 			expect(getCheckScenario(INITIAL_CHECK_SCENARIOS, key).key).toBe('stationery')

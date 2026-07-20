@@ -113,6 +113,7 @@ export default buildConfig({
 	admin: {
 		user: Users.slug,
 		meta: {
+			icons: { icon: '/favicons/favicon.png' },
 			title: 'Living Brand System',
 			titleSuffix: '- Living Brand System',
 		},
@@ -122,6 +123,7 @@ export default buildConfig({
 		components: {
 			beforeDashboard: ['/components/admin/DashboardSummary'],
 			graphics: {
+				Icon: '/components/admin/AdminIcon',
 				Logo: '/components/admin/AdminLogo',
 			},
 		},

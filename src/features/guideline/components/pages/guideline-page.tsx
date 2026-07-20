@@ -1,6 +1,6 @@
-import { ContentFrame } from '@/components/global/content-frame'
+import { GuidelineContentFrame } from '@/features/guideline/components/blocks/common/guideline-content-frame'
 import type { GetGuidelineSectionOutput } from '../../services/get-guideline-section.service'
-import { GuidelineBlocks } from '../blocks/guideline-blocks'
+import { GuidelineBlocks } from '../blocks/common/guideline-blocks'
 import { GuidelineDescription } from '../globals/guideline-description'
 import { GuidelineHeader } from '../globals/guideline-header'
 import type { GuidelineVariant } from '../globals/guideline-variant'
@@ -15,15 +15,15 @@ export function GuidelinePage({
 	const variant = 'page' satisfies GuidelineVariant
 
 	return (
-		<article id={page.slug} className="mb-40 flex flex-col gap-16">
-			<ContentFrame>
-				<div className="grid grid-cols-2">
+		<article id={page.slug} className="flex flex-col">
+			<GuidelineContentFrame>
+				<div className="grid md:grid-cols-2">
 					<section className="flex flex-col gap-8 order-2 col-start-2">
 						<GuidelineHeader variant={variant} title={page.title} />
 						<GuidelineDescription variant={variant} description={page.description} />
 					</section>
 				</div>
-			</ContentFrame>
+			</GuidelineContentFrame>
 			<GuidelineBlocks blocks={page.blocks} betterEditor={betterEditor} />
 		</article>
 	)

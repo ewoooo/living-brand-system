@@ -2,6 +2,7 @@ import type { GuidelineDocument } from '@/payload-types'
 import { GuidelineDescription } from '../globals/guideline-description'
 import { GuidelineHeader } from '../globals/guideline-header'
 import { GuidelineImage } from '../globals/guideline-image'
+import { GuidelineBlockFrame } from './common/guideline-block-frame'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type ContentColumns = Extract<GuidelineBlock, { blockType: 'contentColumns' }>
@@ -20,16 +21,26 @@ export function ContentColumnsBlock({ block }: { block: ContentColumns }) {
 	else GRID_CLASS = `grid gap-4 md:grid-cols-${variant}`
 
 	return (
-		<section className={GRID_CLASS}>
-			{variant === 1 &&
-				columns.map((column) => (
-					<SingleColumnItem key={column.id} column={column} ratio={block.imageRatio} />
-				))}
-			{variant !== 1 &&
-				columns.map((column) => (
-					<MutlipleColumnItem key={column.id} column={column} ratio={block.imageRatio} />
-				))}
-		</section>
+		<GuidelineBlockFrame layout="padded">
+			<section className={GRID_CLASS}>
+				{variant === 1 &&
+					columns.map((column) => (
+						<SingleColumnItem
+							key={column.id}
+							column={column}
+							ratio={block.imageRatio}
+						/>
+					))}
+				{variant !== 1 &&
+					columns.map((column) => (
+						<MutlipleColumnItem
+							key={column.id}
+							column={column}
+							ratio={block.imageRatio}
+						/>
+					))}
+			</section>
+		</GuidelineBlockFrame>
 	)
 }
 
@@ -84,7 +95,7 @@ function MutlipleColumnItem({
 				imgClassName="h-auto w-full object-contain"
 			/>
 			{(column.heading || column.body) && (
-				<div className="flex flex-col gap-4">
+				<div className="flex flex-col gap-1">
 					{column.heading && <GuidelineHeader variant="block" title={column.heading} />}
 					{column.body && (
 						<GuidelineDescription variant="block" description={column.body} />
