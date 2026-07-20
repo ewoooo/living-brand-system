@@ -37,7 +37,7 @@ export function ScrollCarousel({
 		<div className="w-full">
 			<div
 				ref={containerRef}
-				className="relative w-full overflow-y-auto overscroll-contain rounded-lg border border-border"
+				className="relative w-full overflow-y-auto overscroll-contain border border-border"
 				style={{ height }}
 			>
 				{/* 세로 스크롤 거리 생성용 스페이서: 슬라이드 수 × 스테이지 높이. */}
