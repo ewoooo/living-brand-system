@@ -135,6 +135,16 @@ describe('Templates beforeChange hook', () => {
 		)
 	})
 
+	it('HTML style의 background-color를 허용한다', async () => {
+		const data = {
+			_status: 'draft',
+			html: '<div data-node-id="frame" style="background-color: #fff"></div>',
+			overrides: {},
+		}
+
+		await expect(hook({ data, ...buildRequest() })).resolves.toBe(data)
+	})
+
 	it('실제 Figma 변환의 줄바꿈 style과 instance node id를 허용한다', async () => {
 		const converted = figmaNodeToHtml({
 			id: 'I571:4018;450:1129',

@@ -15,6 +15,7 @@ const ALLOWED_STYLE_PROPERTIES = new Set([
 	'align-self',
 	'backdrop-filter',
 	'background',
+	'background-color',
 	'background-image',
 	'background-position',
 	'background-repeat',
