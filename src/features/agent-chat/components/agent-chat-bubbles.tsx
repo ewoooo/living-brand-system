@@ -29,7 +29,7 @@ export function AgentChatUserBubble({ files, text }: { files: FileUIPart[]; text
 		<div className="flex w-full max-w-full flex-col items-end gap-2">
 			<AgentChatFileAttachments files={files} />
 			{text && (
-				<Bubble align="end" variant="default" className="rounded-full">
+				<Bubble align="end" variant="user" className="rounded-full">
 					<BubbleContent
 						asChild
 						className="whitespace-pre-wrap font-body text-sm font-normal [overflow-wrap:normal] [word-break:keep-all]"
@@ -100,7 +100,7 @@ export function AgentChatAgentBubble({
 	return (
 		<Bubble
 			align="start"
-			variant="muted"
+			variant="agent"
 			className={canReact ? 'mt-2 rounded-full' : 'rounded-full'}
 		>
 			<BubbleContent className="px-4 py-4">
