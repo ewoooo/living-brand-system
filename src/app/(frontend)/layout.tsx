@@ -34,7 +34,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 	}`
 
 	return (
-		<html lang="ko" suppressHydrationWarning>
+		<html lang="ko" className="scroll-pt-[53px]" suppressHydrationWarning>
 			{brandColorCss && (
 				<head>
 					<style>{brandColorCss}</style>
