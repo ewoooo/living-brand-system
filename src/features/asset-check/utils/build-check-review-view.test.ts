@@ -62,6 +62,8 @@ describe('buildCheckReviewView', () => {
 		expect(view.rows[0]?.anchorId).toBe('quick')
 		expect(view.rows[1]?.scenarioLabel).toBeNull()
 		expect(view.rows[0]?.guidelineHref).toBe('/guideline/brand-design-elements/brand-logo')
+		expect(view.rows.every((row) => !row.expandable)).toBe(true)
+		expect(view.rows.every((row) => row.detail === '검사 후 결과 확인 가능')).toBe(true)
 		expect(view.rows.map((row) => row.check.key)).toEqual([
 			'color.palette',
 			'color.combination',
@@ -154,7 +156,6 @@ describe('buildCheckReviewView', () => {
 		const selected = {
 			...image({ 'logo.size.minimum': result('logo.size.minimum', 'pass') }),
 			status: 'running' as const,
-			pendingCheckKeys: ['logo.space.clear'],
 		}
 
 		const view = buildCheckReviewView({
@@ -166,8 +167,14 @@ describe('buildCheckReviewView', () => {
 		})
 
 		expect(view.rows.find((row) => row.check.key === 'logo.size.minimum')?.detail).toBe('pass')
+		expect(view.rows.find((row) => row.check.key === 'logo.size.minimum')?.expandable).toBe(
+			true,
+		)
 		expect(view.rows.find((row) => row.check.key === 'logo.space.clear')?.detail).toBe(
 			'검사 중...',
+		)
+		expect(view.rows.find((row) => row.check.key === 'logo.space.clear')?.expandable).toBe(
+			false,
 		)
 	})
 

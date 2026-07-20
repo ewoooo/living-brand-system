@@ -117,13 +117,17 @@ describe('guideline rules field', () => {
 
 		expect(imageRatio.options).toEqual(IMAGE_RATIO_OPTIONS)
 		expect(IMAGE_RATIO_OPTIONS.map(({ value }) => value)).toEqual([
-			'4:3',
+			'original',
 			'1:1',
-			'16:9',
-			'3:2',
-			'2:3',
-			'4:5',
 			'5:4',
+			'4:3',
+			'3:2',
+			'16:9',
+			'2:1',
+			'7:3',
+			'4:5',
+			'3:4',
+			'2:3',
 			'9:16',
 		])
 	})

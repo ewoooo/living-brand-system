@@ -3,18 +3,22 @@ import type { GuidelineDocument } from '@/payload-types'
 import { GuidelineDescription } from '../globals/guideline-description'
 import { GuidelineHeader } from '../globals/guideline-header'
 import { GuidelineImage } from '../globals/guideline-image'
+import { GuidelineBlockFrame } from './common/guideline-block-frame'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type DoDont = Extract<GuidelineBlock, { blockType: 'doDont' }>
 type Group = NonNullable<DoDont['groups']>[number]
-type GroupLayout = NonNullable<DoDont['groupLayout']>
+type Example = NonNullable<Group['examples']>[number]
 
-// 예시가 1개인 그룹은 그리드를 풀고 전체 폭을 쓴다 — 컬럼 수는 콘텐츠에서 유도한다.
-function exampleGridClass(count: number, variant: GroupLayout) {
+function exampleGridClass(count: number) {
 	if (count <= 1) return 'grid gap-4'
-	return variant === 'horizontal'
-		? 'grid grid-cols-2 gap-4'
-		: 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+	return 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+}
+
+function horizontalGridClass(count: number) {
+	if (count <= 1) return 'lg:grid-cols-1'
+	if (count === 3 || count >= 5) return 'lg:grid-cols-3'
+	return 'lg:grid-cols-2'
 }
 
 const kindBadge = {
@@ -25,94 +29,154 @@ const kindBadge = {
 
 export function DoDontBlock({ block }: { block: DoDont }) {
 	const variant = block.groupLayout ?? 'vertical'
+	const groups = block.groups ?? []
+	const horizontalExamples = groups.flatMap((group) =>
+		(group.examples ?? []).map((example, index) => ({ example, group, isFirst: index === 0 })),
+	)
+	const examplesPerGroup = groups[0]?.examples?.length ?? 0
+	const stackByGroup =
+		groups.length === 3 &&
+		examplesPerGroup >= 2 &&
+		groups.every((group) => group.examples?.length === examplesPerGroup)
 
 	return (
-		<section className="bg-neutral-100">
-			<GuidelineHeader variant="block" title={block.title} className="sr-only" />
-			<div
-				className={
-					variant === 'horizontal'
-						? 'grid gap-x-10 gap-y-4 lg:grid-cols-2'
-						: 'flex flex-col gap-10'
-				}
-			>
-				{block.groups?.map((group) => (
-					<DoDontGroup
-						key={group.id}
-						group={group}
-						variant={variant}
-						imageRatio={block.imageRatio}
-					/>
-				))}
-			</div>
-		</section>
+		<GuidelineBlockFrame layout="padded" variant="secondary" contentClassName="py-6 md:py-8">
+			<section>
+				<div className="sr-only">
+					<GuidelineHeader variant="block" title={block.title} className="sr-only" />
+				</div>
+				{variant === 'horizontal' && stackByGroup ? (
+					<div className="grid gap-4 lg:grid-cols-3">
+						{groups.map((group) => (
+							<DoDontGroup
+								key={group.id}
+								group={group}
+								imageRatio={block.imageRatio}
+								stackExamples
+							/>
+						))}
+					</div>
+				) : variant === 'horizontal' ? (
+					<div
+						className={cn('grid gap-4', horizontalGridClass(horizontalExamples.length))}
+					>
+						{horizontalExamples.map(({ example, group, isFirst }) => (
+							<div
+								key={example.id}
+								className="lg:row-span-2 lg:grid lg:grid-rows-subgrid"
+							>
+								<div className="mb-4 space-y-1 lg:mb-0">
+									{isFirst && <DoDontGroupHeading group={group} />}
+								</div>
+								<DoDontExample
+									example={example}
+									kind={group.kind}
+									imageRatio={block.imageRatio}
+								/>
+							</div>
+						))}
+					</div>
+				) : (
+					<div className="flex flex-col gap-10">
+						{groups.map((group) => (
+							<DoDontGroup
+								key={group.id}
+								group={group}
+								imageRatio={block.imageRatio}
+							/>
+						))}
+					</div>
+				)}
+			</section>
+		</GuidelineBlockFrame>
 	)
 }
 
 function DoDontGroup({
 	group,
-	variant,
 	imageRatio,
+	stackExamples = false,
 }: {
 	group: Group
-	variant: GroupLayout
 	imageRatio: DoDont['imageRatio']
+	stackExamples?: boolean
 }) {
-	const badge = kindBadge[group.kind]
 	const examples = group.examples ?? []
 
 	return (
-		<div
-			className={cn(variant === 'horizontal' && 'lg:row-span-2 lg:grid lg:grid-rows-subgrid')}
-		>
+		<div>
 			{(group.category || group.description) && (
-				<div className={cn('mb-4 space-y-1', variant === 'horizontal' && 'lg:mb-0')}>
-					{group.category && (
-						<h4 className="font-body text-base font-semibold text-muted-foreground">
-							{group.category}
-						</h4>
-					)}
-					{group.description && (
-						<GuidelineDescription variant="block" description={group.description} />
-					)}
+				<div className="mb-4 space-y-1">
+					<DoDontGroupHeading group={group} />
 				</div>
 			)}
 
-			<div
-				className={cn(
-					exampleGridClass(examples.length, variant),
-					variant === 'horizontal' && 'lg:row-start-2',
-				)}
-			>
+			<div className={stackExamples ? 'grid gap-4' : exampleGridClass(examples.length)}>
 				{examples.map((example) => (
-					<figure key={example.id}>
-						<div className="relative">
-							<GuidelineImage
-								variant="block"
-								image={example.image}
-								alt={example.caption || ''}
-								ratio={imageRatio}
-								className="bg-muted"
-								imgClassName="size-full object-cover"
-							/>
-							<span
-								aria-hidden
-								className={cn(
-									'absolute top-2 right-2 grid size-6 place-items-center rounded-full font-body text-xs font-medium',
-									badge.className,
-								)}
-							>
-								{badge.symbol}
-							</span>
-						</div>
-						{example.caption && (
-							<figcaption className="mt-2 font-body text-sm font-normal text-muted-foreground">
-								{example.caption}
-							</figcaption>
-						)}
-					</figure>
+					<DoDontExample
+						key={example.id}
+						example={example}
+						kind={group.kind}
+						imageRatio={imageRatio}
+					/>
 				))}
 			</div>
 		</div>
+	)
+}
+
+function DoDontGroupHeading({ group }: { group: Group }) {
+	return (
+		<>
+			{group.category && (
+				<h4 className="font-body text-base font-semibold text-muted-foreground">
+					{group.category}
+				</h4>
+			)}
+			{group.description && (
+				<GuidelineDescription variant="block" description={group.description} />
+			)}
+		</>
+	)
+}
+
+function DoDontExample({
+	example,
+	kind,
+	imageRatio,
+}: {
+	example: Example
+	kind: Group['kind']
+	imageRatio: DoDont['imageRatio']
+}) {
+	const badge = kindBadge[kind]
+
+	return (
+		<figure>
+			<div className="relative">
+				<GuidelineImage
+					variant="block"
+					image={example.image}
+					alt={example.caption || ''}
+					ratio={imageRatio}
+					className="bg-muted"
+					imgClassName="size-full object-cover"
+				/>
+				<span
+					aria-hidden
+					className={cn(
+						'absolute top-2 right-2 grid size-6 place-items-center rounded-full font-body text-xs font-medium',
+						badge.className,
+					)}
+				>
+					{badge.symbol}
+				</span>
+			</div>
+			{example.caption && (
+				<figcaption className="mt-2 font-body text-sm font-normal text-muted-foreground">
+					{example.caption}
+				</figcaption>
+			)}
+		</figure>
 	)
 }

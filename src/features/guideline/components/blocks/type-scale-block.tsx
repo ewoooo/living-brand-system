@@ -1,5 +1,6 @@
 import type { GuidelineDocument } from '@/payload-types'
 import { resolveTypeface, TypefaceFontFace } from './children/typeface-font-face'
+import { GuidelineBlockFrame } from './common/guideline-block-frame'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type TypeScale = Extract<GuidelineBlock, { blockType: 'typeScale' }>
@@ -13,29 +14,31 @@ export function TypeScaleBlock({ block }: { block: TypeScale }) {
 	const fontFamily = typeface ? `"${typeface.familyName}", var(--font-body)` : undefined
 
 	return (
-		<dl className="flex flex-col">
-			<TypefaceFontFace typeface={block.typeface} />
-			{(block.items ?? []).map((item) => (
-				<div
-					key={item.id}
-					className="flex flex-col gap-2 py-5 md:flex-row md:items-baseline md:justify-between md:gap-6"
-				>
-					<dd
-						className="min-w-0 truncate text-foreground"
-						style={{
-							fontFamily,
-							fontSize: item.sizePx,
-							lineHeight: `${item.lineHeightPx}px`,
-							fontWeight: item.weight,
-						}}
+		<GuidelineBlockFrame layout="padded">
+			<dl className="flex flex-col">
+				<TypefaceFontFace typeface={block.typeface} />
+				{(block.items ?? []).map((item) => (
+					<div
+						key={item.id}
+						className="flex flex-col gap-2 py-5 md:flex-row md:items-baseline md:justify-between md:gap-6"
 					>
-						{item.sample || FALLBACK_SAMPLE}
-					</dd>
-					<dt className="shrink-0 font-body text-xs font-normal text-muted-foreground tabular-nums md:text-right">
-						{item.name} · {item.sizePx}/{item.lineHeightPx} · {item.weight}
-					</dt>
-				</div>
-			))}
-		</dl>
+						<dd
+							className="min-w-0 truncate text-foreground"
+							style={{
+								fontFamily,
+								fontSize: item.sizePx,
+								lineHeight: `${item.lineHeightPx}px`,
+								fontWeight: item.weight,
+							}}
+						>
+							{item.sample || FALLBACK_SAMPLE}
+						</dd>
+						<dt className="shrink-0 font-body text-xs font-normal text-muted-foreground tabular-nums md:text-right">
+							{item.name} · {item.sizePx}/{item.lineHeightPx} · {item.weight}
+						</dt>
+					</div>
+				))}
+			</dl>
+		</GuidelineBlockFrame>
 	)
 }

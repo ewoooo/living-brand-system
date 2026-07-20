@@ -1,6 +1,6 @@
-import { ContentFrame } from '@/components/global/content-frame'
+import { GuidelineContentFrame } from '@/features/guideline/components/blocks/common/guideline-content-frame'
 import type { GetGuidelineSectionOutput } from '../../services/get-guideline-section.service'
-import { GuidelineBlocks } from '../blocks/guideline-blocks'
+import { GuidelineBlocks } from '../blocks/common/guideline-blocks'
 import { GuidelineDescription } from '../globals/guideline-description'
 import { GuidelineHeader, GuidelineHeaderImage } from '../globals/guideline-header'
 import type { GuidelineVariant } from '../globals/guideline-variant'
@@ -23,16 +23,16 @@ export function GuidelineSection({
 			{/* Payload Preview Functions */}
 			{previewDocumentId !== undefined && <RefreshRouteOnSave />}
 			{previewedPage && <ScrollToPreviewDocument targetId={previewedPage.slug} />}
-			<ContentFrame>
+			<GuidelineContentFrame>
 				{/* Deprecated */}
 				<GuidelineHeaderImage image={section.headerImage} />
-			</ContentFrame>
+			</GuidelineContentFrame>
 
 			{/*Guideline Section*/}
 			<section className="flex flex-col gap-16" aria-label="guideline-section">
 				{/* Guideline Section */}
-				<section className="grid grid-rows-[auto_1fr] gap-16">
-					<ContentFrame>
+				<section className="grid grid-rows-[auto_1fr]">
+					<GuidelineContentFrame>
 						<hgroup className="grid grid-cols-2 gap-4">
 							<GuidelineHeader variant={variant} title={section.title} />
 							<GuidelineDescription
@@ -40,7 +40,7 @@ export function GuidelineSection({
 								description={section.description}
 							/>
 						</hgroup>
-					</ContentFrame>
+					</GuidelineContentFrame>
 					{/* Guideline Section Contents */}
 					<GuidelineBlocks
 						blocks={section.blocks}
@@ -48,7 +48,7 @@ export function GuidelineSection({
 					/>
 				</section>
 				{/* Guideline Page Render*/}
-				<section className="flex flex-col gap-14" aria-label="guideline-pages">
+				<section className="flex flex-col gap-14 border-t" aria-label="guideline-pages">
 					{section.pages.map((page) => (
 						<GuidelinePage
 							key={page.id}

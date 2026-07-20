@@ -44,7 +44,7 @@ export function GuidelineHeaderImage({ image }: { image?: GuidelineDocument['hea
 
 function OnboardHeader({ title }: { title: string }) {
 	return (
-		<h1 className="font-bold text-9xl text-foreground leading-none tracking-tight">{title}</h1>
+		<h1 className="font-bold text-8xl text-foreground leading-none tracking-tight">{title}</h1>
 	)
 }
 

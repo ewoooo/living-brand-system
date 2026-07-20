@@ -34,6 +34,7 @@ export function CheckRow({
 	anchorId,
 	outcome,
 	inProgress,
+	expandable,
 	detail,
 }: CheckReviewRowData & { rowIndex: number }) {
 	const [open, setOpen] = useState(false)
@@ -43,9 +44,9 @@ export function CheckRow({
 		<>
 			<motion.tr
 				id={anchorId ?? undefined}
-				role="button"
-				aria-expanded={open}
-				aria-label={`${check.title} 상세 보기`}
+				role={expandable ? 'button' : undefined}
+				aria-expanded={expandable ? open : undefined}
+				aria-label={expandable ? `${check.title} 상세 보기` : undefined}
 				initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
 				animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
 				transition={{
@@ -53,15 +54,19 @@ export function CheckRow({
 					ease: 'easeOut',
 					delay: Math.min(rowIndex * 0.025, 0.18),
 				}}
-				onClick={() => setOpen((value) => !value)}
-				onKeyDown={(event) => {
-					if (event.key === 'Enter' || event.key === ' ') {
-						event.preventDefault()
-						setOpen((value) => !value)
-					}
-				}}
-				tabIndex={0}
-				className="border-0 scroll-mt-72 cursor-pointer"
+				onClick={expandable ? () => setOpen((value) => !value) : undefined}
+				onKeyDown={
+					expandable
+						? (event) => {
+								if (event.key === 'Enter' || event.key === ' ') {
+									event.preventDefault()
+									setOpen((value) => !value)
+								}
+							}
+						: undefined
+				}
+				tabIndex={expandable ? 0 : undefined}
+				className={cn('border-0 scroll-mt-72', expandable && 'cursor-pointer')}
 			>
 				{/* 시나리오: 묶음의 첫 행에만 표시 */}
 				<TableCell
@@ -112,17 +117,19 @@ export function CheckRow({
 				</TableCell>
 				{/* 상세 열기/닫기 */}
 				<TableCell className={cn('w-0 py-2.5 pr-1 text-right align-top', CHECK_BORDER)}>
-					<ChevronDown
-						size={16}
-						className={cn(
-							'inline-block text-muted-foreground transition-transform',
-							open && 'rotate-180',
-						)}
-					/>
+					{expandable && (
+						<ChevronDown
+							size={16}
+							className={cn(
+								'inline-block text-muted-foreground transition-transform',
+								open && 'rotate-180',
+							)}
+						/>
+					)}
 				</TableCell>
 			</motion.tr>
 			<AnimatePresence initial={false}>
-				{open && (
+				{expandable && open && (
 					<CheckDetailRow
 						key={`${rowId}:detail`}
 						check={check}
