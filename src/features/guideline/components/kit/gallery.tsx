@@ -16,6 +16,7 @@ import { CollapsibleDemo } from '@/features/guideline/components/kit/collapsible
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
 import { IconGridDemo } from '@/features/guideline/components/kit/icon-grid'
+import { IllustrationGridDemo } from '@/features/guideline/components/kit/illustration-grid'
 import { LayoutGridOverlayDemo } from '@/features/guideline/components/kit/layout-grid-overlay'
 import { LogoClearSpaceCheckerDemo } from '@/features/guideline/components/kit/logo-clear-space-checker'
 import { LogoColorChangerDemo } from '@/features/guideline/components/kit/logo-color-changer'
@@ -517,6 +518,10 @@ export function GuidelineKitGallery() {
 
 			<CollapsibleDemo title="Card Row · 카드 4열 배치">
 				<CardRowDemo />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Illustration Grid · 일러스트 40종">
+				<IllustrationGridDemo />
 			</CollapsibleDemo>
 
 			<CollapsibleDemo title="Logo Clear-space Checker · 로고 여백 체커">
