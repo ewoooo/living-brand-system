@@ -50,11 +50,10 @@ export function CheckSections({ sections }: { sections: CheckSection[] }) {
 function CheckTableColumns() {
 	return (
 		<colgroup>
-			<col className="w-44" />
 			<col className="w-8" />
-			<col className="w-56" />
+			<col className="w-64" />
 			<col />
-			<col className="w-36" />
+			<col className="w-24" />
 			<col className="w-8" />
 		</colgroup>
 	)

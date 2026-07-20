@@ -14,7 +14,7 @@ interface ReviewFunnelProps {
 export function ReviewFunnel({ sections }: ReviewFunnelProps) {
 	return (
 		<>
-			<section className="grid grid-rows-1 lg:grid-cols-2 gap-4">
+			<section className="grid gap-4">
 				<ReviewResultDetails sections={sections} />
 				<ImageUploadCarousel />
 			</section>

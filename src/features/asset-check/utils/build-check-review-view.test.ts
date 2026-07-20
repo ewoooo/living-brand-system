@@ -63,7 +63,7 @@ describe('buildCheckReviewView', () => {
 		expect(view.rows[1]?.scenarioLabel).toBeNull()
 		expect(view.rows[0]?.guidelineHref).toBe('/guideline/brand-design-elements/brand-logo')
 		expect(view.rows.every((row) => !row.expandable)).toBe(true)
-		expect(view.rows.every((row) => row.detail === '검사 후 결과 확인 가능')).toBe(true)
+		expect(view.rows.every((row) => row.detail === null)).toBe(true)
 		expect(view.rows.map((row) => row.check.key)).toEqual([
 			'color.palette',
 			'color.combination',
@@ -142,13 +142,13 @@ describe('buildCheckReviewView', () => {
 		})
 
 		expect(view.rows.find((row) => row.check.key === 'logo.size.minimum')?.detail).toBe(
-			'기준 3개 충족',
+			'기준 3개를 모두 통과했어요.',
 		)
 		expect(view.rows.find((row) => row.check.key === 'logo.space.clear')?.detail).toBe(
-			'기준 2개 미충족',
+			'기준 2개를 통과하지 못했어요.',
 		)
 		expect(view.rows.find((row) => row.check.key === 'color.palette')?.detail).toBe(
-			'기준 1개 판단 필요',
+			'기준 1개는 판단이 필요해요.',
 		)
 	})
 
