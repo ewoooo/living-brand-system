@@ -561,6 +561,10 @@ export interface DoDontBlock {
    */
   groupLayout?: ('vertical' | 'horizontal') | null;
   /**
+   * 세로 스택의 그룹 내부 예시를 넓은 화면에서 배치할 열 수입니다.
+   */
+  exampleColumns?: ('2' | '3' | '4') | null;
+  /**
    * 카테고리 단위 예시 그룹입니다.
    */
   groups?:
@@ -1724,6 +1728,7 @@ export interface DoDontBlockSelect<T extends boolean = true> {
   title?: T;
   imageRatio?: T;
   groupLayout?: T;
+  exampleColumns?: T;
   groups?:
     | T
     | {

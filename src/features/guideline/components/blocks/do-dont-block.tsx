@@ -10,9 +10,15 @@ type DoDont = Extract<GuidelineBlock, { blockType: 'doDont' }>
 type Group = NonNullable<DoDont['groups']>[number]
 type Example = NonNullable<Group['examples']>[number]
 
-function exampleGridClass(count: number) {
+const exampleColumnClass = {
+	'2': 'lg:grid-cols-2',
+	'3': 'lg:grid-cols-3',
+	'4': 'lg:grid-cols-4',
+} as const
+
+function exampleGridClass(count: number, columns: keyof typeof exampleColumnClass) {
 	if (count <= 1) return 'grid gap-4'
-	return 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+	return cn('grid gap-4 sm:grid-cols-2', exampleColumnClass[columns])
 }
 
 function horizontalGridClass(count: number) {
@@ -29,6 +35,7 @@ const kindBadge = {
 
 export function DoDontBlock({ block }: { block: DoDont }) {
 	const variant = block.groupLayout ?? 'vertical'
+	const exampleColumns = block.exampleColumns ?? '3'
 	const groups = block.groups ?? []
 	const horizontalExamples = groups.flatMap((group) =>
 		(group.examples ?? []).map((example, index) => ({ example, group, isFirst: index === 0 })),
@@ -52,6 +59,7 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 								key={group.id}
 								group={group}
 								imageRatio={block.imageRatio}
+								exampleColumns={exampleColumns}
 								stackExamples
 							/>
 						))}
@@ -83,6 +91,7 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 								key={group.id}
 								group={group}
 								imageRatio={block.imageRatio}
+								exampleColumns={exampleColumns}
 							/>
 						))}
 					</div>
@@ -95,10 +104,12 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 function DoDontGroup({
 	group,
 	imageRatio,
+	exampleColumns,
 	stackExamples = false,
 }: {
 	group: Group
 	imageRatio: DoDont['imageRatio']
+	exampleColumns: NonNullable<DoDont['exampleColumns']>
 	stackExamples?: boolean
 }) {
 	const examples = group.examples ?? []
@@ -111,7 +122,11 @@ function DoDontGroup({
 				</div>
 			)}
 
-			<div className={stackExamples ? 'grid gap-4' : exampleGridClass(examples.length)}>
+			<div
+				className={
+					stackExamples ? 'grid gap-4' : exampleGridClass(examples.length, exampleColumns)
+				}
+			>
 				{examples.map((example) => (
 					<DoDontExample
 						key={example.id}

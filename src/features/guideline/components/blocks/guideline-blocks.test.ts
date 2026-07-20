@@ -110,6 +110,31 @@ describe('GuidelineBlocks', () => {
 	})
 
 	it.each([
+		['2', 'lg:grid-cols-2'],
+		['3', 'lg:grid-cols-3'],
+		['4', 'lg:grid-cols-4'],
+	] as const)('세로 Do/Don’t 그룹 내부 예시의 lg 열 수를 %s열로 지정한다', (exampleColumns, className) => {
+		const block: DoDont = {
+			blockType: 'doDont',
+			exampleColumns,
+			groups: [
+				{
+					id: 'group',
+					kind: 'dont',
+					examples: Array.from({ length: 4 }, (_, index) => ({
+						id: `example-${index}`,
+						image: index + 1,
+					})),
+				},
+			],
+		}
+		const { container } = render(createElement(DoDontBlock, { block }))
+		const grid = container.querySelector('section > div.flex > div > div.grid')
+
+		expect(grid).toHaveClass(className)
+	})
+
+	it.each([
 		2, 3,
 	])('가로 Do/Don’t의 3개 그룹에 예시가 %i개씩이면 그룹별 세로 열로 배치한다', (examplesPerGroup) => {
 		const block: DoDont = {
