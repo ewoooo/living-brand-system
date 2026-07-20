@@ -100,19 +100,18 @@ export function PaletteSwatches({
 	)
 }
 
-// 프로토타입용 mock 팔레트(브랜드 무관).
-const white = { id: 'white', name: 'White', hex: '#FFFFFF' }
-const black = { id: 'black', name: 'Black', hex: '#000000' }
-const green = { id: 'green', name: 'Herb Green', hex: '#1F6F5C' }
-const lime = { id: 'lime', name: 'Lime', hex: '#C7E86B' }
-const sand = { id: 'sand', name: 'Sand', hex: '#E7E2D6' }
+// 프로토타입용 mock 팔레트(브랜드 무관). default·mini가 같은 색을 공유한다.
+const palette: PaletteSwatch[] = [
+	{ id: 'white', name: 'White', hex: '#FFFFFF' },
+	{ id: 'black', name: 'Black', hex: '#000000' },
+]
 
-// ① 컬러 팔레트 — White/Black이 폭을 100% 균등 분할.
+// 컬러 팔레트 — 같은 색을 default(텍스트·radius·gap)와 mini(스트립) 두 스타일로 함께 전시.
 export function PaletteSwatchesDemo() {
-	return <PaletteSwatches swatches={[white, black]} />
-}
-
-// ② 컬러 팔레트 미니 — 텍스트·radius·gap 제거한 스트립.
-export function PaletteSwatchesMiniDemo() {
-	return <PaletteSwatches swatches={[white, black, green, lime, sand]} variant="mini" />
+	return (
+		<div className="flex flex-col gap-4">
+			<PaletteSwatches swatches={palette} />
+			<PaletteSwatches swatches={palette} variant="mini" />
+		</div>
+	)
 }

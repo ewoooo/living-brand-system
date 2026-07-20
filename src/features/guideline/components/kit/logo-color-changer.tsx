@@ -22,8 +22,10 @@ export function LogoColorChanger({
 	/** 전경색 hex를 받아 로고 SVG data-URI를 돌려주는 함수(색상 치환). */
 	logo: (color: string) => string
 }) {
-	const [fgId, setFgId] = useState<string | null>('green')
-	const [bgId, setBgId] = useState<string | null>('white')
+	const [fgId, setFgId] = useState<string | null>(swatches[0]?.id ?? null)
+	const [bgId, setBgId] = useState<string | null>(
+		(allowedBackgrounds[swatches[0]?.id ?? ''] ?? [])[0] ?? null,
+	)
 
 	// 재클릭 → 선택 취소, 다른 것 → 변경.
 	const toggle = (setter: typeof setFgId) => (id: string) =>
@@ -88,18 +90,12 @@ export function LogoColorChanger({
 
 // 프로토타입용 mock 팔레트·규칙·로고(브랜드 무관).
 const swatches: PaletteSwatch[] = [
-	{ id: 'green', name: 'Herb Green', hex: '#1F6F5C' },
-	{ id: 'lime', name: 'Lime', hex: '#C7E86B' },
-	{ id: 'ink', name: 'Ink', hex: '#171717' },
 	{ id: 'white', name: 'White', hex: '#FFFFFF' },
-	{ id: 'sand', name: 'Sand', hex: '#E7E2D6' },
+	{ id: 'black', name: 'Black', hex: '#000000' },
 ]
 const allowedBackgrounds: Record<string, string[]> = {
-	green: ['white', 'sand', 'lime'],
-	lime: ['ink', 'green'],
-	ink: ['white', 'sand', 'lime'],
-	white: ['ink', 'green'],
-	sand: ['ink', 'green'],
+	white: ['black'],
+	black: ['white'],
 }
 const wordmark = (color: string) =>
 	`data:image/svg+xml,${encodeURIComponent(
