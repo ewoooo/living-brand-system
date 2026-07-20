@@ -7,6 +7,11 @@ import { FigmaConfigurationError } from '@/lib/errors'
  */
 
 /** 변환기가 소비하는 Figma 노드의 최소 형태. REST 응답의 부분 집합이다. */
+export interface FigmaLayoutConstraint {
+	horizontal: 'LEFT' | 'RIGHT' | 'CENTER' | 'LEFT_RIGHT' | 'SCALE'
+	vertical: 'TOP' | 'BOTTOM' | 'CENTER' | 'TOP_BOTTOM' | 'SCALE'
+}
+
 export interface FigmaNode {
 	id: string
 	name?: string
@@ -14,6 +19,7 @@ export interface FigmaNode {
 	visible?: boolean
 	children?: FigmaNode[]
 	absoluteBoundingBox?: { x: number; y: number; width: number; height: number }
+	constraints?: FigmaLayoutConstraint
 	fills?: FigmaPaint[]
 	effects?: FigmaEffect[]
 	characters?: string
