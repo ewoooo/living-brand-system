@@ -13,7 +13,12 @@ import { TypeSpecimenBlock } from '@/features/guideline/components/blocks/type-s
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
+import { IconGridDemo } from '@/features/guideline/components/kit/icon-grid'
+import { LayoutGridOverlayDemo } from '@/features/guideline/components/kit/layout-grid-overlay'
+import { LogoClearSpaceCheckerDemo } from '@/features/guideline/components/kit/logo-clear-space-checker'
+import { LogoColorChangerDemo } from '@/features/guideline/components/kit/logo-color-changer'
 import { LogoLockupDemo } from '@/features/guideline/components/kit/logo-lockup'
+import { LogoVariantSelectorDemo } from '@/features/guideline/components/kit/logo-variant-selector'
 import {
 	brandColor,
 	brandTypeface,
@@ -21,6 +26,11 @@ import {
 	placeholderImage,
 	richTextBody,
 } from '@/features/guideline/components/kit/mock-blocks'
+import {
+	PaletteSwatchesDemo,
+	PaletteSwatchesMiniDemo,
+} from '@/features/guideline/components/kit/palette-swatches'
+import { ScrollCarouselDemo } from '@/features/guideline/components/kit/scroll-carousel'
 import { SpecTable } from '@/features/guideline/components/kit/spec-table'
 
 // UI 키트 갤러리(중간공유용). 블록화가 끝난 컴포넌트는 실제 블록 renderer + Payload 타입 mock으로
@@ -507,6 +517,40 @@ export function GuidelineKitGallery() {
 						alt="로고 클리어스페이스 예시"
 						note="로고 주위 최소 여백은 x 이상 확보한다 (x = 심볼 높이 기준)."
 					/>
+				</Demo>
+			</Section>
+
+			<Section title="프로토타입 (블록 미연결 · draft)">
+				<Demo title="Scroll Carousel · 세로 스크롤 가로 캐러셀">
+					<ScrollCarouselDemo />
+				</Demo>
+
+				<Demo title="Color Palette · 컬러 팔레트">
+					<PaletteSwatchesDemo />
+				</Demo>
+
+				<Demo title="Color Palette Mini · 미니 스트립">
+					<PaletteSwatchesMiniDemo />
+				</Demo>
+
+				<Demo title="Logo Color Changer · 로고 컬러 체인저">
+					<LogoColorChangerDemo />
+				</Demo>
+
+				<Demo title="Logo Variant Selector · 로고 배리언트 셀렉터 (cash.app식)">
+					<LogoVariantSelectorDemo />
+				</Demo>
+
+				<Demo title="Icon Grid · 아이콘 그리드">
+					<IconGridDemo />
+				</Demo>
+
+				<Demo title="Layout Grid Overlay · 레이아웃 그리드 오버레이">
+					<LayoutGridOverlayDemo />
+				</Demo>
+
+				<Demo title="Logo Clear-space Checker · 로고 여백 체커">
+					<LogoClearSpaceCheckerDemo />
 				</Demo>
 			</Section>
 		</article>
