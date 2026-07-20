@@ -1,6 +1,5 @@
 import { CalloutBlock } from '@/features/guideline/components/blocks/callout-block'
 import { CarouselBlock } from '@/features/guideline/components/blocks/carousel-block'
-import { ColorPaletteBlock } from '@/features/guideline/components/blocks/color-palette-block'
 import { ContentColumnsBlock } from '@/features/guideline/components/blocks/content-columns-block'
 import { DoDontBlock } from '@/features/guideline/components/blocks/do-dont-block'
 import { GlyphGridBlock } from '@/features/guideline/components/blocks/glyph-grid-block'
@@ -13,6 +12,7 @@ import { TypeSpecimenBlock } from '@/features/guideline/components/blocks/type-s
 import { CardRowDemo } from '@/features/guideline/components/kit/card-row'
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { CollapsibleDemo } from '@/features/guideline/components/kit/collapsible-demo'
+import { ColorPaletteDemo } from '@/features/guideline/components/kit/color-palette'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
 import { IconGridDemo } from '@/features/guideline/components/kit/icon-grid'
@@ -23,7 +23,6 @@ import { LogoColorChangerDemo } from '@/features/guideline/components/kit/logo-c
 import { LogoLockupDemo } from '@/features/guideline/components/kit/logo-lockup'
 import { LogoVariantSelectorDemo } from '@/features/guideline/components/kit/logo-variant-selector'
 import {
-	brandColor,
 	brandTypeface,
 	type GuidelineBlock,
 	placeholderImage,
@@ -136,48 +135,6 @@ const doDontBlock: Extract<GuidelineBlock, { blockType: 'doDont' }> = {
 				},
 			],
 		},
-	],
-}
-
-const mainPaletteBlock: Extract<GuidelineBlock, { blockType: 'colorPalette' }> = {
-	blockType: 'colorPalette',
-	title: 'Main Palette',
-	colors: [
-		brandColor('Essenherb Red', '#EA5343', 'Warm Red C', 21),
-		brandColor('White', '#FFFFFF', undefined, 22),
-		brandColor('Black', '#000000', undefined, 23),
-	],
-}
-
-const multiPaletteBlock: Extract<GuidelineBlock, { blockType: 'colorPalette' }> = {
-	blockType: 'colorPalette',
-	title: 'Multi Palette',
-	colors: [
-		brandColor('Red 1', '#FFF0EB', '705C', 31),
-		brandColor('Red 2', '#FFB4AA', '169C', 32),
-		brandColor('Essenherb Red', '#EA5343', 'Warm Red C', 33),
-		brandColor('Red 4', '#871400', '7620C', 34),
-		brandColor('Red 5', '#460500', '188C', 35),
-		brandColor('Yellow 1', '#FFFAC2', '600C', 36),
-		brandColor('Yellow 2', '#FFF095', '602C', 37),
-		brandColor('Yellow 3', '#FFE65F', '7404C', 38),
-		brandColor('Yellow 4', '#A07D0F', '118C', 39),
-		brandColor('Yellow 5', '#503200', '7575C', 40),
-		brandColor('Green 1', '#E6FFE6', '2253C', 41),
-		brandColor('Green 2', '#A7F5AE', '2255C', 42),
-		brandColor('Green 3', '#50AE5F', '2257C', 43),
-		brandColor('Green 4', '#195F30', '555C', 44),
-		brandColor('Green 5', '#002B1E', '567C', 45),
-		brandColor('Blue 1', '#E1F0FF', '657C', 46),
-		brandColor('Blue 2', '#A5CDFF', '2717C', 47),
-		brandColor('Blue 3', '#3C87CD', '279C', 48),
-		brandColor('Blue 4', '#1E508C', '2161C', 49),
-		brandColor('Blue 5', '#001941', '2768C', 50),
-		brandColor('Gray 1', '#FAFAFA', undefined, 51),
-		brandColor('Gray 2', '#EBEBEB', undefined, 52),
-		brandColor('Gray 3', '#ACACAC', undefined, 53),
-		brandColor('Gray 4', '#464646', undefined, 54),
-		brandColor('Gray 5', '#151515', undefined, 55),
 	],
 }
 
@@ -435,12 +392,8 @@ export function GuidelineKitGallery() {
 				<SignatureShowcaseBlock block={signatureShowcaseBlock} />
 			</CollapsibleDemo>
 
-			<CollapsibleDemo title="Color Palette · Main (3)">
-				<ColorPaletteBlock block={mainPaletteBlock} />
-			</CollapsibleDemo>
-
-			<CollapsibleDemo title="Color Palette · Multi (25)">
-				<ColorPaletteBlock block={multiPaletteBlock} />
+			<CollapsibleDemo title="Color Palette · 컬러 팔레트">
+				<ColorPaletteDemo />
 			</CollapsibleDemo>
 
 			<CollapsibleDemo title="Data Table · 대량 테이블">
