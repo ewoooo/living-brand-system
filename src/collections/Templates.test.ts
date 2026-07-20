@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { figmaNodeToHtml } from '@/features/template-import/utils/figma-node-to-html'
+import { convertFigmaNodeToHtml } from '@/features/template-import/utils/figma-node-to-html'
 import { Templates } from './Templates'
 
 type BeforeChangeHook = (args: {
@@ -123,13 +123,28 @@ describe('Templates beforeChange hook', () => {
 		await expect(hook({ data, ...buildRequest() })).rejects.toThrow('허용하지 않는 속성')
 	})
 
-	it('실제 Figma 변환의 줄바꿈 style과 instance node id를 허용한다', async () => {
-		const converted = figmaNodeToHtml({
+	it('실제 Figma 변환의 줄바꿈·constraints style과 instance node id를 허용한다', async () => {
+		const converted = convertFigmaNodeToHtml({
 			id: 'I571:4018;450:1129',
 			name: 'Instance',
 			type: 'FRAME',
 			absoluteBoundingBox: { x: 0, y: 0, width: 1200, height: 800 },
-			children: [],
+			children: [
+				{
+					id: '1:2',
+					name: 'Pinned',
+					type: 'RECTANGLE',
+					absoluteBoundingBox: { x: 1080, y: 40, width: 80, height: 40 },
+					constraints: { horizontal: 'RIGHT', vertical: 'TOP' },
+				},
+				{
+					id: '1:3',
+					name: 'Centered',
+					type: 'RECTANGLE',
+					absoluteBoundingBox: { x: 500, y: 360, width: 200, height: 80 },
+					constraints: { horizontal: 'CENTER', vertical: 'CENTER' },
+				},
+			],
 		} as never)
 		const data = {
 			_status: 'draft',

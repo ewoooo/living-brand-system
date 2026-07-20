@@ -11,8 +11,8 @@ import {
 	storeTemplateAsset,
 } from '@/features/template-import/repositories/template-asset.payload.repository'
 import {
+	convertFigmaNodeToHtml,
 	type FigmaHtmlResult,
-	figmaNodeToHtml,
 } from '@/features/template-import/utils/figma-node-to-html'
 import type { User } from '@/payload-types'
 
@@ -30,7 +30,7 @@ export async function importFigmaHtml(
 	const vectorAssetUrls = vectorNodeIds.length
 		? await storeVectorAssets(source.fileKey, vectorNodeIds, payload, user)
 		: {}
-	const result = figmaNodeToHtml(node, vectorAssetUrls)
+	const result = convertFigmaNodeToHtml(node, vectorAssetUrls)
 
 	return { ...result, name: node.name ?? 'Untitled' }
 }
