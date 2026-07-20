@@ -176,13 +176,15 @@ function inspectStyle(style: string): { blocker?: string; urls: string[] } {
 
 		const property = declaration.slice(0, separator).trim()
 		const value = declaration.slice(separator + 1).trim()
-		if (
-			property !== property.toLowerCase() ||
-			!ALLOWED_STYLE_PROPERTIES.has(property) ||
-			!value ||
-			value.toLowerCase().includes('!important')
-		) {
-			return { blocker: 'HTML style에 허용하지 않는 속성이 있습니다.', urls: [] }
+		if (property !== property.toLowerCase() || !ALLOWED_STYLE_PROPERTIES.has(property)) {
+			return { blocker: `HTML style에서 허용하지 않는 속성입니다: ${property}`, urls: [] }
+		}
+		if (!value) return { blocker: `HTML style 속성 값이 비어 있습니다: ${property}`, urls: [] }
+		if (value.toLowerCase().includes('!important')) {
+			return {
+				blocker: `HTML style에서 !important를 사용할 수 없습니다: ${property}`,
+				urls: [],
+			}
 		}
 
 		if (property === 'position' && value !== 'absolute' && value !== 'relative') {
