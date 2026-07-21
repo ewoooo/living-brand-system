@@ -1,7 +1,7 @@
 import { createBreadcrumbsField, createParentField } from '@payloadcms/plugin-nested-docs'
 import { type CollectionConfig, slugField } from 'payload'
-import { guidelineBlocks } from '@/features/guideline/catalog/schema.generated'
 import { guidelineRulesField } from '@/features/guideline/blocks/shared/fields'
+import { guidelineBlocks } from '@/features/guideline/catalog/schema.generated'
 import { validateGuidelineDocumentDepth } from '@/features/guideline/checks/validate-guideline-document-depth'
 import { validateGuidelineDocumentSlug } from '@/features/guideline/checks/validate-guideline-document-slug'
 import { managerManagedAccess } from '@/lib/auth'

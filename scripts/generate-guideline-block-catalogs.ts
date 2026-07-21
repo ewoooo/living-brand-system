@@ -79,7 +79,10 @@ export async function discoverBlockRegistrations(
 function renderSchemaCatalog(blocks: BlockRegistration[]): string {
 	const imports = [...blocks]
 		.sort((left, right) => left.directory.localeCompare(right.directory))
-		.map(({ directory, symbol }) => `import ${symbol}Schema from '../blocks/${directory}/schema'`)
+		.map(
+			({ directory, symbol }) =>
+				`import ${symbol}Schema from '../blocks/${directory}/schema'`,
+		)
 		.join('\n')
 	const entries = blocks.map(({ key, symbol }) => `\t${key}: ${symbol}Schema,`).join('\n')
 
@@ -102,7 +105,10 @@ export const guidelineBlocks = Object.values(guidelineBlockSchemas)
 function renderProjectionCatalog(blocks: BlockRegistration[]): string {
 	const imports = [...blocks]
 		.sort((left, right) => left.directory.localeCompare(right.directory))
-		.map(({ directory, symbol }) => `import project${symbol} from '../blocks/${directory}/projection'`)
+		.map(
+			({ directory, symbol }) =>
+				`import project${symbol} from '../blocks/${directory}/projection'`,
+		)
 		.join('\n')
 	const entries = blocks.map(({ key, symbol }) => `\t${key}: project${symbol},`).join('\n')
 
@@ -130,7 +136,8 @@ function renderRendererCatalog(blocks: BlockRegistration[]): string {
 	const imports = [...blocks]
 		.sort((left, right) => left.directory.localeCompare(right.directory))
 		.map(
-			({ directory, symbol }) => `import ${symbol}Component from '../blocks/${directory}/component'`,
+			({ directory, symbol }) =>
+				`import ${symbol}Component from '../blocks/${directory}/component'`,
 		)
 		.join('\n')
 	const entries = blocks

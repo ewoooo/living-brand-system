@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { GuidelineDocument } from '@/payload-types'
-import { guidelineBlockRenderers } from '../catalog/renderer.generated'
 import type { GuidelineBlock } from '../blocks/types'
+import { guidelineBlockRenderers } from '../catalog/renderer.generated'
 
 function renderBlock(block: GuidelineBlock): ReactNode {
 	const renderer = guidelineBlockRenderers[block.blockType]
