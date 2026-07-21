@@ -30,7 +30,7 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 | App | `src` | Next.js, Payload CMS, Creator UI를 포함하는 현재 실행 단위입니다. |
 | App Router | `src/app` | page, layout, route handler를 둡니다. |
 | Collections | `src/collections` | Payload collection schema, access, hook 진입점을 둡니다. |
-| Blocks | `src/blocks` | Payload block schema를 둡니다. |
+| Feature Blocks | `src/features/*/blocks/<block>` | Payload schema, projection, React component를 블록 단위로 함께 둡니다. |
 | Globals | `src/globals` | Payload global schema를 둡니다. |
 | Services | `src/features/*/services`, `src/services` | Service는 소유 기능 안에 두고, 여러 기능이 공유하는 Use Case만 `src/services`에 둡니다. |
 | Repositories | `src/features/*/repositories`, `src/repositories` | Repository는 소유 기능 안에 두고, 여러 기능이 공유할 때만 `src/repositories`로 승격합니다. |
@@ -92,8 +92,6 @@ src/
         route.ts
   collections/
     *.ts
-  blocks/
-    *.ts
   globals/
     *.ts
   services/
@@ -109,6 +107,22 @@ src/
     *.tsx
   features/
     <feature>/
+      blocks/
+        <block>/
+          schema.ts
+          projection.ts
+          component.tsx
+        catalog/
+          schema.generated.ts
+          projection.generated.ts
+          renderer.generated.tsx
+          catalog.test.ts
+        runtime/
+          project-guideline-block.ts
+          build-check-source-snapshot.ts
+          render-guideline-blocks.tsx
+        shared/
+        types.ts
       components/
       hooks/
       repositories/
@@ -127,6 +141,8 @@ tests/
   int/
   helpers/
 docs/
+scripts/
+  generate-guideline-block-catalogs.ts
 ```
 
 - `page.tsx`와 `layout.tsx`는 라우팅과 화면 조합만 담당합니다.
@@ -137,6 +153,7 @@ docs/
 - Repository Interface 파일(`*.repository.ts`)은 구현체가 2개 이상 필요해지는 시점에 만듭니다. 단일 구현 단계에서는 Service가 구현 파일을 직접 import합니다.
 - 기능 전용 read service의 Payload 접근도 같은 기능의 `src/features/*/repositories`에 둡니다.
 - 기능 안의 순수 도메인 계산 계층(예: `review/checkers`)과 정적 시나리오 데이터(예: `review/scenarios`)는 승인된 기능 하위 폴더 확장입니다. 새 하위 폴더는 표준 폴더(`components`, `hooks`, `repositories`, `services`, `utils`)로 표현할 수 없을 때만 추가합니다.
+- 기능 전용 Payload block은 `src/features/<feature>/blocks/<block>`에 schema, projection, component를 함께 둡니다. 생성된 schema/projection catalog는 서버에서 안전하게 사용하고 React renderer catalog는 별도 파일로 유지해 client component가 Payload config에 포함되지 않게 합니다.
 - Agent는 별도 사용자 역할이 아니라 서비스 모듈입니다.
 - 실제 폴더 구조를 개선할 때는 `src/features`, `src/agents`, `src/components`, `src/lib`, `src/services`, `src/repositories`, `src/types`를 이 순서로 추가합니다.
 
@@ -153,6 +170,7 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 | 구현 대상 | 위치 | 규칙 |
 | --- | --- | --- |
 | Payload collection | `src/collections` | 데이터 구조, access, hook 진입점 |
+| 기능 전용 Payload block | `src/features/*/blocks/<block>` | schema, Agent/Check projection, React component |
 | Creator 화면 | `src/app/(frontend)`, `src/features` | 화면 이동, URL 상태, view model |
 | Admin 화면 | `src/app/(payload)`, Payload Admin 기본 UI | Manager의 CMS 작업 |
 | Route Handler | `src/app/**/route.ts` | request parsing, 권한 확인, Service 호출, response 변환 |
@@ -175,6 +193,20 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 
 스캐폴딩은 새 Use Case를 만들 때 필요한 최소 파일만 생성합니다.
 생성된 파일은 바로 비즈니스 로직을 작성할 수 있는 상태여야 합니다.
+
+### 가이드라인 블록 등록
+
+새 블록은 `src/features/guideline/blocks/<kebab-case-name>` 폴더 하나를 만들고 아래 세 파일을 기본 export로 제공합니다.
+
+| 파일 | 최소 계약 |
+| --- | --- |
+| `schema.ts` | Payload `Block`을 기본 export하고 `slug`는 폴더명에서 변환한 camelCase key와 일치시킵니다. |
+| `projection.ts` | 해당 블록을 `BlockProjection`으로 변환하는 함수를 기본 export합니다. |
+| `component.tsx` | 해당 블록 데이터를 받는 React component를 기본 export합니다. |
+
+`pnpm generate:block-catalogs`는 기존 Admin 노출 순서를 보존하고 새 블록 폴더는 뒤에 이름순으로 붙여 `catalog/*.generated.*`의 정적 import와 map을 갱신합니다. 생성 파일은 커밋하되 직접 수정하지 않습니다. `pnpm check:block-catalogs`는 생성 결과가 최신인지 검사하며 CI의 정적 검사에서 실행합니다.
+
+`runtime`은 생성 map을 사용하는 동작만 소유합니다. `project-guideline-block.ts`는 Agent/Check projection, `build-check-source-snapshot.ts`는 문서 snapshot, `render-guideline-blocks.tsx`는 React 렌더링을 담당합니다. 둘 이상의 블록이 실제로 공유하는 필드나 UI만 `shared`에 둡니다.
 
 ### Use Case 스캐폴딩
 

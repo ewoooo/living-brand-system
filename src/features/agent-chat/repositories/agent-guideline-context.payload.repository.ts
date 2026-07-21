@@ -1,6 +1,6 @@
 import config from '@payload-config'
 import { getPayload, type Where } from 'payload'
-import type { GuidelineCheckDocument } from '@/features/guideline/blocks/check-source-snapshot'
+import type { GuidelineCheckDocument } from '@/features/guideline/blocks/runtime/build-check-source-snapshot'
 import { findPublishedUnifiedGuidelineCheckDocuments } from '@/features/guideline/repositories/published-guideline-checks.payload.repository'
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
 import type { GuidelineDocument } from '@/payload-types'

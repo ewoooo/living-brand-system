@@ -1,6 +1,6 @@
-import { calloutKindLabel } from '../blocks/callout.block'
-import type { CheckEvidence } from '../blocks/catalog'
-import { kindLabel } from '../blocks/do-dont.block'
+import { calloutKindLabel } from '../blocks/callout/projection'
+import { kindLabel } from '../blocks/do-dont/projection'
+import type { CheckEvidence } from '../blocks/runtime/project-guideline-block'
 import { compact } from '../utils/block-text'
 
 /** 구조화 evidence를 기존 평문 소비 경계에 맞게 변환한다. */
