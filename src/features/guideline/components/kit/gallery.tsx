@@ -14,6 +14,7 @@ import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { CollapsibleDemo } from '@/features/guideline/components/kit/collapsible-demo'
 import { ColorPaletteDemo } from '@/features/guideline/components/kit/color-palette'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
+import { DoDontCompareDemo } from '@/features/guideline/components/kit/do-dont-compare'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
 import { IconGridDemo } from '@/features/guideline/components/kit/icon-grid'
 import { IllustrationGridDemo } from '@/features/guideline/components/kit/illustration-grid'
@@ -374,6 +375,10 @@ export function GuidelineKitGallery() {
 
 			<CollapsibleDemo title="Do / Don't">
 				<DoDontBlock block={doDontBlock} />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Do / Don't Compare · 드래그 비교 슬라이더 (웹 전용)">
+				<DoDontCompareDemo />
 			</CollapsibleDemo>
 
 			<CollapsibleDemo title="Type Specimen · 라이브 입력 견본">
