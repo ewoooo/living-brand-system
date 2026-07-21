@@ -34,15 +34,15 @@
 | --- | --- | --- |
 | [Page](../surfaces/page.md) | 구현 | `/create` → 카테고리 → 템플릿 → AssetGenerator. 발행된 템플릿만 읽고 비로그인 공개 읽기 |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `findTemplatesForRequest` + `prepareTemplateImage`(슬롯 검증 후 첨부 PNG) |
-| REST | 부분 | 생성용 REST는 없음. import 어댑터 `POST /api/templates/convert-figma`만 |
+| REST | 부분 | 생성용 REST는 없음. import 어댑터 `POST /api/templates/import-figma-html`만 |
 | Slack | 계획 | — |
 
 ## 4. 의존
 
 - 클라이언트 라이브러리: `html-to-image`(PNG 캡처).
 - 공유 훅: `use-template-png-export`(Create·Chat 공유).
-- Payload 컬렉션: `templates`·`template-categories`·`template-assets`. 템플릿은 임베디드 Check를 relationship으로 참조하지 않고 `templateChecks[].checkKey`를 저장합니다. import은 `brand-logos`·`application-images`를 사용. 모든 HTML 저장은 구조 파서와 허용 목록으로 실행 가능한 마크업·외부 URL을 먼저 차단하고, **발행(publish) 시** 공개 URL을 published 공식 에셋 참조와 추가 대조합니다. `template-assets`와 magic byte가 확인된 raster AI 배경 이미지는 draft에서만 허용합니다. Draft 원본(`baseHtml`)과 staging 에셋은 manager/admin만 읽을 수 있고, Admin Draft 미리보기는 script 없는 iframe으로 격리합니다. `templates`·`brand-logos`·`application-images`의 공개/worker 읽기는 published 문서만, 쓰기는 manager/admin만 허용합니다.
-- Figma import(`src/features/template-import/`): frame → `jsonTemplate` 변환 후 이미지 fill을 `template-assets`에 저장. Template 문서를 자동 생성하지는 않고 manager가 Admin에서 저장.
+- Payload 컬렉션: `templates`·`template-categories`·`application-images`(`template-assets`는 레거시 import staging 참조만 유지). 템플릿은 임베디드 Check를 relationship으로 참조하지 않고 `templateChecks[].checkKey`를 저장합니다. 모든 HTML 저장은 구조 파서와 허용 목록으로 실행 가능한 마크업·외부 URL을 먼저 차단하고, **발행(publish) 시** 공개 URL을 published 공식 에셋 참조와 추가 대조합니다. `template-assets`와 magic byte가 확인된 raster AI 배경 이미지는 draft에서만 허용합니다. Draft 원본(`baseHtml`)과 staging 에셋은 manager/admin만 읽을 수 있고, Admin Draft 미리보기는 script 없는 iframe으로 격리합니다. `templates`·`brand-logos`·`application-images`의 공개/worker 읽기는 published 문서만, 쓰기는 manager/admin만 허용합니다.
+- Figma import(`src/features/template-import/`): frame을 `baseHtml`/`html`로 변환합니다. CSS로 보존 가능한 레이어는 편집 구조를 유지하고, 벡터는 SVG, TEXT_PATH·알 수 없는 leaf node·IMAGE/PATTERN/VIDEO fill·마스크 합성·비정상 변환·지원 밖 효과는 PNG Figma render로 고정합니다. 렌더 에셋은 `application-images` draft로 저장하며, Template publish 때 최종 HTML에도 남은 Figma import 에셋만 같은 트랜잭션에서 함께 publish합니다. Template 문서를 자동 생성하지는 않고 manager가 Admin에서 저장합니다.
 - Review 미사용, Image 미호출(현재) — 위 "의도된 방향" 참조.
 
 ## 5. 크로스커팅

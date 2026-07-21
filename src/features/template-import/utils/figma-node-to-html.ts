@@ -13,8 +13,7 @@ import type {
  * 그건 이 파일의 버그다.
  *
  * 런타임(DB 저장 HTML)에서 그대로 떠야 하므로 Tailwind가 아니라 inline style로 굳힌다.
- * div=프레임/그룹/셰이프, p=텍스트, img=내장 SVG. Figma 노드 타입은 data-figma-type으로 보존한다(레이어 패널용).
- * 아직 못 담는 것: 이미지 픽셀(승인 에셋 배선은 별도).
+ * div=프레임/그룹/셰이프, p=텍스트, img=Figma 렌더 에셋. Figma 노드 타입은 data-figma-type으로 보존한다(레이어 패널용).
  */
 
 // Figma REST 변환 모델
@@ -51,6 +50,7 @@ interface Node extends Omit<FigmaNode, 'style'> {
 	// 레이아웃 컨테이너
 	itemSpacing?: number
 	counterAxisSpacing?: number
+	counterAxisAlignContent?: string
 	layoutWrap?: string
 	gridColumnGap?: number
 	gridRowGap?: number
@@ -60,6 +60,7 @@ interface Node extends Omit<FigmaNode, 'style'> {
 	// 자식 배치
 	layoutGrow?: number
 	layoutAlign?: string
+	layoutPositioning?: string
 	gridColumnAnchorIndex?: number
 	gridRowAnchorIndex?: number
 	gridColumnSpan?: number
@@ -73,6 +74,12 @@ export interface FigmaHtmlResult {
 	html: string
 	width: number
 	height: number
+}
+
+export interface FigmaRenderedAsset {
+	collection: 'application-images'
+	id: number
+	url: string
 }
 
 // CSS 값 변환
@@ -220,10 +227,8 @@ function createBoxStyle(node: Node): Record<string, string | undefined> {
 			node.opacity != null && node.opacity < 1
 				? String(roundCssNumber(node.opacity))
 				: undefined,
-		// ponytail: Figma rotation은 라디안·반시계 양수, CSS rotate는 시계 양수라 부호 반전. 회전 노드 없는 파일이라 미검증.
-		transform: node.rotation
-			? `rotate(${roundCssNumber((-node.rotation * 180) / Math.PI)}deg)`
-			: undefined,
+		// Figma와 CSS의 양수 회전 방향이 반대이므로 degree 값의 부호만 반전한다.
+		transform: node.rotation ? `rotate(${roundCssNumber(-node.rotation)}deg)` : undefined,
 		'border-radius': resolveBorderRadius(node),
 		overflow: node.clipsContent ? 'hidden' : undefined,
 		'mix-blend-mode': node.blendMode ? BLEND[node.blendMode] : undefined,
@@ -239,6 +244,7 @@ const AXIS_ALIGN: Record<string, string> = {
 	CENTER: 'center',
 	MAX: 'flex-end',
 	SPACE_BETWEEN: 'space-between',
+	BASELINE: 'baseline',
 }
 
 // MIN/CENTER/MAX/STRETCH/AUTO만 CSS로 옮기고, INHERIT 등은 키가 없어 자연히 생략된다.
@@ -265,13 +271,19 @@ function createContainerStyle(node: Node): Record<string, string | undefined> {
 		}
 	}
 	if (node.layoutMode === 'HORIZONTAL' || node.layoutMode === 'VERTICAL') {
+		const horizontal = node.layoutMode === 'HORIZONTAL'
 		return {
 			display: 'flex',
-			'flex-direction': node.layoutMode === 'HORIZONTAL' ? 'row' : 'column',
+			'flex-direction': horizontal ? 'row' : 'column',
 			'flex-wrap': node.layoutWrap === 'WRAP' ? 'wrap' : undefined,
-			gap: `${node.itemSpacing ?? 0}px`,
+			'column-gap': `${horizontal ? (node.itemSpacing ?? 0) : (node.counterAxisSpacing ?? 0)}px`,
+			'row-gap': `${horizontal ? (node.counterAxisSpacing ?? 0) : (node.itemSpacing ?? 0)}px`,
 			'justify-content': AXIS_ALIGN[node.primaryAxisAlignItems ?? ''],
 			'align-items': AXIS_ALIGN[node.counterAxisAlignItems ?? ''],
+			'align-content':
+				node.layoutWrap === 'WRAP' && node.counterAxisAlignContent === 'SPACE_BETWEEN'
+					? 'space-between'
+					: undefined,
 			padding: pad,
 		}
 	}
@@ -501,6 +513,9 @@ function createChildPlacementStyle(
 	useAbsoluteBounds = false,
 ): Record<string, string | undefined> {
 	if (!parent) return {}
+	if (node.layoutPositioning === 'ABSOLUTE') {
+		return constraintPlacementStrategy.createStyle({ node, parent, useAbsoluteBounds })
+	}
 	// ponytail: 회전 노드는 좌표를 AABB 코너로 잡아 근사한다(정확히는 relativeTransform 분해 필요). 비회전은 정확.
 	return resolveChildPlacementStrategy(parent).createStyle({
 		node,
@@ -521,12 +536,19 @@ function serializeNodeHtml(
 	parent: Node | null,
 	isRoot: boolean,
 	depth: number,
-	vectorAssetUrls: Readonly<Record<string, string>>,
+	renderedAssets: Readonly<Record<string, FigmaRenderedAsset>>,
 ): string {
 	if (node.visible === false) return ''
 
 	const isText = node.type === 'TEXT'
-	const vectorAssetUrl = vectorAssetUrls[node.id]
+	const renderedAsset = renderedAssets[node.id]
+	const renderedBounds =
+		renderedAsset && node.absoluteBoundingBox
+			? {
+					width: `${roundCssNumber(node.absoluteBoundingBox.width)}px`,
+					height: `${roundCssNumber(node.absoluteBoundingBox.height)}px`,
+				}
+			: {}
 
 	const style: Record<string, string | undefined> = {
 		'box-sizing': 'border-box',
@@ -536,19 +558,19 @@ function serializeNodeHtml(
 					height: `${roundCssNumber(node.absoluteBoundingBox.height)}px`,
 				}
 			: {}),
-		...(vectorAssetUrl ? { display: 'block' } : createContainerStyle(node)),
-		...(vectorAssetUrl ? {} : createBoxStyle(node)),
+		...(renderedAsset ? { display: 'block', ...renderedBounds } : createContainerStyle(node)),
+		...(renderedAsset ? {} : createBoxStyle(node)),
 		// 컨테이너는 position:relative를 기본으로 둬 절대배치 자식의 기준 박스가 된다.
 		// createChildPlacementStyle이 뒤에 병합되므로, 이 노드 자신이 절대배치면 position:absolute가 이겨 덮어쓴다.
-		...(vectorAssetUrl
+		...(renderedAsset
 			? {}
 			: isText
 				? createTextStyle(node)
 				: { position: 'relative', background: resolveBackgroundValue(node) }),
-		...createChildPlacementStyle(node, parent, Boolean(vectorAssetUrl)),
+		...createChildPlacementStyle(node, parent, Boolean(renderedAsset)),
 	}
 
-	const tag = vectorAssetUrl ? 'img' : isText ? 'p' : 'div'
+	const tag = renderedAsset ? 'img' : isText ? 'p' : 'div'
 
 	// 개발자 확인용 pretty-print: 속성 한 줄씩, style은 선언 한 줄씩 펼친다.
 	// HTML 속성값은 개행/탭을 담을 수 있고 CSS는 선언 사이 공백을 무시하므로 렌더에 영향 없다.
@@ -562,7 +584,14 @@ function serializeNodeHtml(
 		`data-node-id="${escapeHtmlAttribute(node.id)}"`,
 		`data-figma-type="${escapeHtmlAttribute(node.type)}"`,
 		`data-name="${escapeHtmlAttribute(node.name ?? '')}"`,
-		...(vectorAssetUrl ? [`src="${escapeHtmlAttribute(vectorAssetUrl)}"`, 'alt=""'] : []),
+		...(renderedAsset
+			? [
+					`data-asset-collection="${renderedAsset.collection}"`,
+					`data-asset-id="${renderedAsset.id}"`,
+					`src="${escapeHtmlAttribute(renderedAsset.url)}"`,
+					'alt=""',
+				]
+			: []),
 	]
 		.map((a) => `${attrPad}${a}`)
 		.join('\n')
@@ -573,14 +602,14 @@ function serializeNodeHtml(
 		.join('\n')
 
 	const open = `${pad}<${tag}\n${attrLines}\n${attrPad}style="\n${declLines}\n${attrPad}"\n${pad}>`
-	if (vectorAssetUrl) return open
+	if (renderedAsset) return open
 
 	// 텍스트는 내용을 여는 태그와 같은 줄에 둔다(공백/개행 보존이 white-space에 걸리므로 재들여쓰기 금지).
 	if (isText) return `${open}${escapeHtmlText(node.characters ?? '')}</${tag}>`
 
 	// 요소 사이 공백은 grid/flex 아이템이 되지 않고 block에선 collapse되어 렌더에 영향 없다.
 	const children = (node.children ?? [])
-		.map((c) => serializeNodeHtml(c, node, false, depth + 1, vectorAssetUrls))
+		.map((c) => serializeNodeHtml(c, node, false, depth + 1, renderedAssets))
 		.filter(Boolean)
 	if (!children.length) return `${open}</${tag}>`
 	return `${open}\n${children.join('\n')}\n${pad}</${tag}>`
@@ -590,10 +619,10 @@ function serializeNodeHtml(
 
 export function convertFigmaNodeToHtml(
 	node: Node,
-	vectorAssetUrls: Readonly<Record<string, string>> = {},
+	renderedAssets: Readonly<Record<string, FigmaRenderedAsset>> = {},
 ): FigmaHtmlResult {
 	return {
-		html: serializeNodeHtml(node, null, true, 0, vectorAssetUrls),
+		html: serializeNodeHtml(node, null, true, 0, renderedAssets),
 		width: roundCssNumber(node.absoluteBoundingBox?.width ?? 0),
 		height: roundCssNumber(node.absoluteBoundingBox?.height ?? 0),
 	}

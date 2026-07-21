@@ -5,7 +5,7 @@ import { Templates } from './Templates'
 type BeforeChangeHook = (args: {
 	data: Record<string, unknown>
 	originalDoc?: Record<string, unknown>
-	req: { payload: { find: ReturnType<typeof vi.fn> } }
+	req: { payload: { find: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn> } }
 }) => Promise<unknown>
 
 const hook = Templates.hooks?.beforeChange?.[0] as unknown as BeforeChangeHook
@@ -18,8 +18,15 @@ function collectionAccess(name: 'create' | 'delete' | 'read' | 'update'): Access
 	return rule as unknown as AccessFunction
 }
 
-function buildRequest(docs: { id: number; url?: string }[] = []) {
-	return { req: { payload: { find: vi.fn().mockResolvedValue({ docs }) } } }
+function buildRequest(docs: { id: number; url?: string; _status?: string }[] = []) {
+	return {
+		req: {
+			payload: {
+				find: vi.fn().mockResolvedValue({ docs }),
+				update: vi.fn().mockResolvedValue({}),
+			},
+		},
+	}
 }
 
 function buildTemplate(imageOverrides: Record<string, unknown>) {
@@ -150,12 +157,19 @@ describe('Templates beforeChange hook', () => {
 			id: 'I571:4018;450:1129',
 			name: 'Instance',
 			type: 'FRAME',
+			layoutMode: 'HORIZONTAL',
+			layoutWrap: 'WRAP',
+			itemSpacing: 8,
+			counterAxisSpacing: 12,
+			counterAxisAlignItems: 'BASELINE',
+			counterAxisAlignContent: 'SPACE_BETWEEN',
 			absoluteBoundingBox: { x: 0, y: 0, width: 1200, height: 800 },
 			children: [
 				{
 					id: '1:2',
 					name: 'Pinned',
 					type: 'RECTANGLE',
+					layoutPositioning: 'ABSOLUTE',
 					absoluteBoundingBox: { x: 1080, y: 40, width: 80, height: 40 },
 					constraints: { horizontal: 'RIGHT', vertical: 'TOP' },
 				},
@@ -163,6 +177,7 @@ describe('Templates beforeChange hook', () => {
 					id: '1:3',
 					name: 'Centered',
 					type: 'RECTANGLE',
+					layoutPositioning: 'ABSOLUTE',
 					absoluteBoundingBox: { x: 500, y: 360, width: 200, height: 80 },
 					constraints: { horizontal: 'CENTER', vertical: 'CENTER' },
 				},
@@ -250,6 +265,98 @@ describe('Templates beforeChange hook', () => {
 				},
 			}),
 		)
+	})
+
+	it('Figma import가 구조화해 둔 Application Images draft는 템플릿과 함께 발행한다', async () => {
+		const assetHtml = [
+			'<img data-node-id="photo" data-figma-type="RECTANGLE" data-name="Photo"',
+			'data-asset-collection="application-images" data-asset-id="7"',
+			'src="/api/application-images/file/figma-photo.png" alt="">',
+		].join(' ')
+		const data = {
+			_status: 'published',
+			baseHtml: assetHtml,
+			html: assetHtml,
+			overrides: {},
+			width: 1200,
+			height: 800,
+		}
+		const request = buildRequest([
+			{
+				id: 7,
+				url: '/api/application-images/file/figma-photo.png',
+				_status: 'draft',
+			},
+		])
+
+		await expect(hook({ data, ...request })).resolves.toBe(data)
+		expect(request.req.payload.update).toHaveBeenCalledWith({
+			collection: 'application-images',
+			id: 7,
+			data: { _status: 'published' },
+			overrideAccess: true,
+			req: request.req,
+		})
+	})
+
+	it('이미 published인 템플릿의 재import 에셋도 다시 publish할 수 있다', async () => {
+		const assetHtml = [
+			'<img data-node-id="photo" data-figma-type="RECTANGLE" data-name="Photo"',
+			'data-asset-collection="application-images" data-asset-id="7"',
+			'src="/api/application-images/file/figma-photo.png" alt="">',
+		].join(' ')
+		const data = {
+			_status: 'published',
+			baseHtml: assetHtml,
+			html: assetHtml,
+			overrides: {},
+			width: 1200,
+			height: 800,
+		}
+		const originalDoc = {
+			_status: 'published',
+			baseHtml: '<p data-node-id="old">Old</p>',
+			html: '<p data-node-id="old">Old</p>',
+			overrides: {},
+			width: 1200,
+			height: 800,
+		}
+		const request = buildRequest([
+			{
+				id: 7,
+				url: '/api/application-images/file/figma-photo.png',
+				_status: 'draft',
+			},
+		])
+
+		await expect(hook({ data, originalDoc, ...request })).resolves.toBe(data)
+		expect(request.req.payload.update).toHaveBeenCalledWith(
+			expect.objectContaining({ collection: 'application-images', id: 7 }),
+		)
+	})
+
+	it('최종 HTML에서 override로 교체한 Figma 원본 draft는 발행하지 않는다', async () => {
+		const data = {
+			_status: 'published',
+			baseHtml:
+				'<img data-node-id="logo" data-asset-collection="application-images" data-asset-id="7" src="/api/application-images/file/figma-logo.svg" alt="">',
+			html: '<img data-node-id="logo" data-asset-collection="brand-logos" data-asset-id="8" src="/api/brand-logos/file/official.svg" alt="">',
+			overrides: {
+				logo: {
+					vectorAsset: {
+						collection: 'brand-logos',
+						id: 8,
+						src: '/api/brand-logos/file/official.svg',
+					},
+				},
+			},
+			width: 1200,
+			height: 800,
+		}
+		const request = buildRequest([{ id: 8, url: '/api/brand-logos/file/official.svg' }])
+
+		await expect(hook({ data, ...request })).resolves.toBe(data)
+		expect(request.req.payload.update).not.toHaveBeenCalled()
 	})
 
 	it('공개 HTML에 template-assets가 남아 있으면 발행을 거부한다', async () => {
