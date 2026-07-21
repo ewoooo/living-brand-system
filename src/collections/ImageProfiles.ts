@@ -79,6 +79,7 @@ export const ImageProfiles: CollectionConfig = {
 			labels: { singular: '프롬프트 필드', plural: '프롬프트 필드' },
 			validate: validateImageProfilePromptRows,
 			admin: {
+				components: { Field: '/components/admin/ImageProfilePromptTable' },
 				initCollapsed: false,
 				description:
 					'이미지 유형의 기본값입니다. 각 행은 최종 JSON의 key와 value가 됩니다.',
@@ -98,6 +99,7 @@ export const ImageProfiles: CollectionConfig = {
 			labels: { singular: '정규화 필드', plural: '정규화 필드' },
 			validate: validateImagePromptNormalizationRows,
 			admin: {
+				components: { Field: '/components/admin/ImageProfilePromptTable' },
 				initCollapsed: false,
 				description:
 					'AI가 유저 인풋을 각 키의 값 후보 중 하나로 정규화합니다. 프로파일과 같은 키면 이 값이 우선합니다.',
