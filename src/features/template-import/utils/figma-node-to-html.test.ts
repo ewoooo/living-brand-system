@@ -106,11 +106,19 @@ describe('convertFigmaNodeToHtml — 벡터', () => {
 					},
 				],
 			},
-			{ '1:2': '/api/template-assets/file/figma-1-2.svg' },
+			{
+				'1:2': {
+					collection: 'application-images',
+					id: 7,
+					url: '/api/application-images/file/figma-1-2.svg',
+				},
+			},
 		)
 
 		expect(html).toContain('<img')
-		expect(html).toContain('src="/api/template-assets/file/figma-1-2.svg"')
+		expect(html).toContain('src="/api/application-images/file/figma-1-2.svg"')
+		expect(html).toContain('data-asset-collection="application-images"')
+		expect(html).toContain('data-asset-id="7"')
 		const style = nodeStyle(html, '1:2')
 		expect(style).toContain('left:20px')
 		expect(style).toContain('top:30px')
@@ -232,6 +240,11 @@ describe('convertFigmaNodeToHtml — 박스 속성', () => {
 		expect(s).toContain('filter:blur(6px)')
 	})
 
+	it('Figma degree 회전을 CSS 회전 방향으로 옮긴다', () => {
+		const s = rootStyle(convertFigmaNodeToHtml(boxNode({ rotation: 90 })).html)
+		expect(s).toContain('transform:rotate(-90deg)')
+	})
+
 	it('linear-gradient 배경 (색 정지점 정확)', () => {
 		const s = rootStyle(
 			convertFigmaNodeToHtml(
@@ -257,7 +270,7 @@ describe('convertFigmaNodeToHtml — 박스 속성', () => {
 })
 
 describe('convertFigmaNodeToHtml — flex', () => {
-	it('WRAP·align-self·FIXED 치수', () => {
+	it('WRAP 주축·교차축 간격·baseline·align-self·FIXED 치수', () => {
 		const { html } = convertFigmaNodeToHtml({
 			id: '1:1',
 			name: 'row',
@@ -265,6 +278,9 @@ describe('convertFigmaNodeToHtml — flex', () => {
 			layoutMode: 'HORIZONTAL',
 			layoutWrap: 'WRAP',
 			itemSpacing: 8,
+			counterAxisSpacing: 12,
+			counterAxisAlignItems: 'BASELINE',
+			counterAxisAlignContent: 'SPACE_BETWEEN',
 			absoluteBoundingBox: { x: 0, y: 0, width: 300, height: 100 },
 			children: [
 				{
@@ -279,11 +295,40 @@ describe('convertFigmaNodeToHtml — flex', () => {
 			],
 		})
 		expect(html).toContain('flex-wrap:wrap')
-		expect(html).toContain('gap:8px')
+		expect(html).toContain('column-gap:8px')
+		expect(html).toContain('row-gap:12px')
+		expect(html).toContain('align-items:baseline')
+		expect(html).toContain('align-content:space-between')
 		const child = nodeStyle(html, '1:2')
 		expect(child).toContain('align-self:stretch')
 		expect(child).toContain('width:50px')
 		expect(child).not.toContain('height:40px')
+	})
+
+	it('Auto Layout의 ABSOLUTE 자식을 flex item이 아닌 절대 좌표로 배치한다', () => {
+		const { html } = convertFigmaNodeToHtml({
+			id: '1:1',
+			name: 'row',
+			type: 'FRAME',
+			layoutMode: 'HORIZONTAL',
+			absoluteBoundingBox: { x: 0, y: 0, width: 300, height: 200 },
+			children: [
+				{
+					id: '1:2',
+					name: 'overlay',
+					type: 'FRAME',
+					layoutPositioning: 'ABSOLUTE',
+					absoluteBoundingBox: { x: 20, y: 30, width: 100, height: 40 },
+				},
+			],
+		})
+
+		const child = nodeStyle(html, '1:2')
+		expect(child).toContain('position:absolute')
+		expect(child).toContain('left:20px')
+		expect(child).toContain('top:30px')
+		expect(child).toContain('width:100px')
+		expect(child).toContain('height:40px')
 	})
 })
 

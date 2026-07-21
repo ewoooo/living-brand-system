@@ -17,10 +17,14 @@ export interface FigmaNode {
 	name?: string
 	type: string
 	visible?: boolean
+	isMask?: boolean
 	children?: FigmaNode[]
 	absoluteBoundingBox?: { x: number; y: number; width: number; height: number }
+	size?: { width: number; height: number }
+	relativeTransform?: [[number, number, number], [number, number, number]]
 	constraints?: FigmaLayoutConstraint
 	fills?: FigmaPaint[]
+	strokes?: FigmaPaint[]
 	effects?: FigmaEffect[]
 	characters?: string
 	style?: {
@@ -35,6 +39,8 @@ export interface FigmaNode {
 	}
 	cornerRadius?: number
 	opacity?: number
+	rotation?: number
+	blendMode?: string
 	// auto-layout(스택 승격) 판단·매핑용 필드.
 	layoutMode?: string
 	itemSpacing?: number
@@ -78,7 +84,7 @@ function getFigmaToken(): string {
 }
 
 export async function findFigmaNodeTree(fileKey: string, nodeId: string): Promise<FigmaNode> {
-	const url = `${FIGMA_API_BASE}/files/${fileKey}/nodes?ids=${encodeURIComponent(nodeId)}`
+	const url = `${FIGMA_API_BASE}/files/${fileKey}/nodes?ids=${encodeURIComponent(nodeId)}&geometry=paths`
 	const response = await fetch(url, { headers: { 'X-Figma-Token': getFigmaToken() } })
 
 	if (!response.ok) {
