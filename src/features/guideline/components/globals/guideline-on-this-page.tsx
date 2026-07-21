@@ -31,10 +31,10 @@ export function GuidelineOnThisPage({ pages }: { pages: TocPage[] }) {
 
 	return (
 		<nav aria-label="이 페이지에서" className="font-body text-xs">
-			<p className="mb-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+			<p className="mb-3 font-medium text-[11px] text-muted-foreground uppercase tracking-wide">
 				On this page
 			</p>
-			<ul ref={listRef} className="relative border-border border-l">
+			<ul ref={listRef} className="relative ml-1 border-border border-l">
 				{seg && (
 					<span
 						aria-hidden
@@ -49,7 +49,7 @@ export function GuidelineOnThisPage({ pages }: { pages: TocPage[] }) {
 							aria-current={page.slug === activeSlug ? 'page' : undefined}
 							onClick={(event) => scrollToPage(event, page.slug)}
 							className={cn(
-								'block py-1.5 pl-4 leading-snug transition-colors',
+								'block py-1.5 pl-3 leading-snug transition-colors',
 								page.slug === activeSlug
 									? 'font-semibold text-foreground'
 									: 'font-normal text-muted-foreground hover:text-foreground',
