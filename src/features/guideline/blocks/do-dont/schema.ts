@@ -101,3 +101,5 @@ export const DoDontBlock: Block = {
 		...baseBlockFields(),
 	],
 }
+
+export default DoDontBlock

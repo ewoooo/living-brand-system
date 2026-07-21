@@ -15,3 +15,5 @@ export function projectGlyphGrid(block: GlyphGrid) {
 		referenceAssets: [],
 	}
 }
+
+export default projectGlyphGrid

@@ -29,3 +29,5 @@ export const SpecListBlock: Block = {
 		...baseBlockFields(),
 	],
 }
+
+export default SpecListBlock

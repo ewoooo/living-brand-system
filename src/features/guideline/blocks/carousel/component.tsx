@@ -28,3 +28,5 @@ export function CarouselBlock({ block }: { block: CarouselType }) {
 		</GuidelineBlockFrame>
 	)
 }
+
+export default CarouselBlock

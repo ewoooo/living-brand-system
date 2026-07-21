@@ -34,3 +34,5 @@ export function SignatureShowcaseBlock({ block }: { block: SignatureShowcase }) 
 		</GuidelineBlockFrame>
 	)
 }
+
+export default SignatureShowcaseBlock

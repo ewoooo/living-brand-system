@@ -22,3 +22,5 @@ export function projectTypeSpecimen(block: TypeSpecimen) {
 		referenceAssets: [],
 	}
 }
+
+export default projectTypeSpecimen

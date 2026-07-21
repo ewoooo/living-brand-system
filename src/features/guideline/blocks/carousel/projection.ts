@@ -19,3 +19,5 @@ export function projectCarousel(block: Carousel) {
 			.map((id) => ({ id, role: 'context' as const })),
 	}
 }
+
+export default projectCarousel

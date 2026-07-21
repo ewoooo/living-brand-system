@@ -22,3 +22,5 @@ export function projectSpecList(block: SpecList) {
 		referenceAssets: [],
 	}
 }
+
+export default projectSpecList

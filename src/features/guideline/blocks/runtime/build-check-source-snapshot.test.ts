@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { GuidelineDocument } from '@/payload-types'
-import { collectGuidelineCheckSources } from '../checks/collect-guideline-check-sources'
-import { buildCheckSourceSnapshot } from './check-source-snapshot'
+import { collectGuidelineCheckSources } from '../../checks/collect-guideline-check-sources'
+import { buildCheckSourceSnapshot } from './build-check-source-snapshot'
 
 const lexical = (text: string) =>
 	({ root: { children: [{ type: 'paragraph', children: [{ text }] }] } }) as never

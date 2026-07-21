@@ -44,6 +44,8 @@ export function ContentColumnsBlock({ block }: { block: ContentColumns }) {
 	)
 }
 
+export default ContentColumnsBlock
+
 function SingleColumnItem({
 	column,
 	ratio,

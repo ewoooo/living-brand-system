@@ -38,3 +38,5 @@ export function SpecListBlock({ block }: { block: SpecList }) {
 		</GuidelineBlockFrame>
 	)
 }
+
+export default SpecListBlock

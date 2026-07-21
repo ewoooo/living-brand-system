@@ -42,3 +42,5 @@ export function MediaShowcaseBlock({ block }: { block: MediaShowcase }) {
 		</GuidelineBlockFrame>
 	)
 }
+
+export default MediaShowcaseBlock

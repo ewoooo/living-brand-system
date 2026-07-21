@@ -42,3 +42,5 @@ export function TypeScaleBlock({ block }: { block: TypeScale }) {
 		</GuidelineBlockFrame>
 	)
 }
+
+export default TypeScaleBlock

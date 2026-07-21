@@ -35,3 +35,5 @@ export function projectColorPalette(block: ColorPalette) {
 		referenceAssets: [],
 	}
 }
+
+export default projectColorPalette

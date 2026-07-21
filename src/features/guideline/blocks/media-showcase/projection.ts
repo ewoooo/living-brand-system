@@ -17,3 +17,5 @@ export function projectMediaShowcase(block: MediaShowcase) {
 			.map((id) => ({ id, role: 'context' as const })),
 	}
 }
+
+export default projectMediaShowcase

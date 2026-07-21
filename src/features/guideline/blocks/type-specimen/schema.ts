@@ -23,3 +23,5 @@ export const TypeSpecimenBlock: Block = {
 		...baseBlockFields(),
 	],
 }
+
+export default TypeSpecimenBlock

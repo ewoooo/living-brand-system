@@ -41,3 +41,5 @@ export const LayoutGridBlock: Block = {
 		...baseBlockFields(),
 	],
 }
+
+export default LayoutGridBlock

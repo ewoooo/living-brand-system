@@ -34,3 +34,5 @@ export const CalloutBlock: Block = {
 		...baseBlockFields(),
 	],
 }
+
+export default CalloutBlock

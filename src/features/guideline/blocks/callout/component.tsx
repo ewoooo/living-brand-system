@@ -57,3 +57,5 @@ export function CalloutBlock({ block }: { block: Callout }) {
 		</GuidelineBlockFrame>
 	)
 }
+
+export default CalloutBlock

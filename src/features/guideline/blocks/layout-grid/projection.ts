@@ -26,3 +26,5 @@ export function projectLayoutGrid(block: LayoutGrid) {
 		referenceAssets: [],
 	}
 }
+
+export default projectLayoutGrid

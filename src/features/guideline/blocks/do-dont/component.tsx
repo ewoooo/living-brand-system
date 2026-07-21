@@ -101,6 +101,8 @@ export function DoDontBlock({ block }: { block: DoDont }) {
 	)
 }
 
+export default DoDontBlock
+
 function DoDontGroup({
 	group,
 	imageRatio,

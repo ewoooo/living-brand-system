@@ -33,3 +33,5 @@ export const MediaShowcaseBlock: Block = {
 		...baseBlockFields(),
 	],
 }
+
+export default MediaShowcaseBlock

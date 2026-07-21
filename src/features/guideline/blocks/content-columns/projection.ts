@@ -30,3 +30,5 @@ export function projectContentColumns(block: ContentColumns) {
 			.map((id) => ({ id, role: 'context' as const })),
 	}
 }
+
+export default projectContentColumns

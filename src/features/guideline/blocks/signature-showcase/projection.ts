@@ -20,3 +20,5 @@ export function projectSignatureShowcase(block: SignatureShowcase) {
 		referenceAssets: [],
 	}
 }
+
+export default projectSignatureShowcase

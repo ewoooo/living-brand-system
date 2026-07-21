@@ -1,8 +1,7 @@
 import type { GuidelineDocument } from '@/payload-types'
-import { relationshipId } from '../utils/block-text'
-import { extractTextFromLexical } from '../utils/lexical-text'
-import type { CheckSourceSnapshot } from './catalog'
-import { snapshotBlock } from './registry'
+import { relationshipId } from '../../utils/block-text'
+import { extractTextFromLexical } from '../../utils/lexical-text'
+import { type CheckSourceSnapshot, snapshotBlock } from './project-guideline-block'
 
 export type GuidelineCheckDocument = Pick<
 	GuidelineDocument,

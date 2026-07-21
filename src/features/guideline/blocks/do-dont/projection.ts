@@ -48,3 +48,5 @@ export function projectDoDont(block: DoDont) {
 		),
 	}
 }
+
+export default projectDoDont

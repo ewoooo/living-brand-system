@@ -124,6 +124,8 @@ export function TypeSpecimenBlock({ block }: { block: TypeSpecimen }) {
 	)
 }
 
+export default TypeSpecimenBlock
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
 		<div className="flex flex-col gap-2">

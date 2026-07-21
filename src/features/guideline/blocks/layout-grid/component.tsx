@@ -25,6 +25,8 @@ export function LayoutGridBlock({ block }: { block: LayoutGrid }) {
 	)
 }
 
+export default LayoutGridBlock
+
 function GridDiagram({ variant, accent }: { variant: Variant; accent?: string }) {
 	const specs = [
 		{ label: 'Columns', value: String(variant.columns) },

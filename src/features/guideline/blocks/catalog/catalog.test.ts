@@ -5,14 +5,16 @@ import {
 	guidelineBreadcrumbCount,
 	guidelineDocumentTypeLabel,
 } from '@/components/admin/guideline-document-tree'
-import { guidelineBlockCatalog, guidelineBlocks } from '@/features/guideline/blocks/catalog'
 import { checkKeyFromEnglishTitle } from '@/features/guideline/checks/check-key-from-english-title'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
-import { CarouselBlock } from './carousel/schema'
-import { ContentColumnsBlock } from './content-columns/schema'
-import { DoDontBlock } from './do-dont/schema'
-import { MediaShowcaseBlock } from './media-showcase/schema'
-import { guidelineRulesField } from './shared/fields'
+import { CarouselBlock } from '../carousel/schema'
+import { ContentColumnsBlock } from '../content-columns/schema'
+import { DoDontBlock } from '../do-dont/schema'
+import { MediaShowcaseBlock } from '../media-showcase/schema'
+import { guidelineRulesField } from '../shared/fields'
+import { guidelineBlockProjectors } from './projection.generated'
+import { guidelineBlockRenderers } from './renderer.generated'
+import { guidelineBlockSchemas, guidelineBlocks } from './schema.generated'
 
 const fieldNames = (fields: Field[]) =>
 	fields.flatMap((field) =>
@@ -66,8 +68,7 @@ describe('guideline rules field', () => {
 
 	it('서체를 다루는 블록은 같은 typeface 관계 계약을 둔다', () => {
 		for (const type of ['typeScale', 'typeSpecimen', 'glyphGrid'] as const) {
-			const definition = guidelineBlockCatalog[type]
-			const typeface = definition.schema.fields.find(
+			const typeface = guidelineBlockSchemas[type].fields.find(
 				(field) => 'name' in field && field.name === 'typeface',
 			)
 			expect(typeface?.type).toBe('relationship')
@@ -83,26 +84,15 @@ describe('guideline rules field', () => {
 		}
 	})
 
-	it('블록 카탈로그 key와 Payload slug를 같은 순서로 등록한다', () => {
-		expect(
-			Object.entries(guidelineBlockCatalog).map(([type, definition]) => [
-				type,
-				definition.schema.slug,
-			]),
-		).toEqual([
-			['contentColumns', 'contentColumns'],
-			['carousel', 'carousel'],
-			['mediaShowcase', 'mediaShowcase'],
-			['colorPalette', 'colorPalette'],
-			['doDont', 'doDont'],
-			['callout', 'callout'],
-			['specList', 'specList'],
-			['signatureShowcase', 'signatureShowcase'],
-			['typeSpecimen', 'typeSpecimen'],
-			['typeScale', 'typeScale'],
-			['layoutGrid', 'layoutGrid'],
-			['glyphGrid', 'glyphGrid'],
-		])
+	it('세 카탈로그 key와 Payload slug를 같은 순서로 생성한다', () => {
+		const schemaEntries = Object.entries(guidelineBlockSchemas)
+		const keys = schemaEntries.map(([key]) => key)
+
+		expect(Object.keys(guidelineBlockProjectors)).toEqual(keys)
+		expect(Object.keys(guidelineBlockRenderers)).toEqual(keys)
+		expect(schemaEntries.map(([key, schema]) => [key, schema.slug])).toEqual(
+			keys.map((key) => [key, key]),
+		)
 	})
 
 	it('Do/Don’t 이미지 비율에 공용 계약을 사용한다', () => {

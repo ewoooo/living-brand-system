@@ -34,3 +34,5 @@ export const ContentColumnsBlock: Block = {
 		...baseBlockFields(),
 	],
 }
+
+export default ContentColumnsBlock

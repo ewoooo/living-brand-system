@@ -27,3 +27,5 @@ export function ColorPaletteBlock({
 		</GuidelineBlockFrame>
 	)
 }
+
+export default ColorPaletteBlock

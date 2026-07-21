@@ -21,3 +21,5 @@ export const SignatureShowcaseBlock: Block = {
 		...baseBlockFields(),
 	],
 }
+
+export default SignatureShowcaseBlock

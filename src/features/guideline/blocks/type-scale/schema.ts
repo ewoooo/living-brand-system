@@ -34,3 +34,5 @@ export const TypeScaleBlock: Block = {
 		...baseBlockFields(),
 	],
 }
+
+export default TypeScaleBlock

@@ -41,6 +41,8 @@ export function GlyphGridBlock({ block }: { block: GlyphGridType }) {
 	return <GlyphGridView block={block} {...viewProps} />
 }
 
+export default GlyphGridBlock
+
 function useGlyphGrid(block: GlyphGridType) {
 	const [active, setActive] = useState('A')
 	const [metrics, setMetrics] = useState<Metrics | null>(null)

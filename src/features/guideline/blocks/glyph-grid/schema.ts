@@ -12,3 +12,5 @@ export const GlyphGridBlock: Block = {
 		...baseBlockFields(),
 	],
 }
+
+export default GlyphGridBlock

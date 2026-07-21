@@ -33,3 +33,5 @@ export const CarouselBlock: Block = {
 		...baseBlockFields(),
 	],
 }
+
+export default CarouselBlock

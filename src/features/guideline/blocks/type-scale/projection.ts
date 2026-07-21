@@ -26,3 +26,5 @@ export function projectTypeScale(block: TypeScale) {
 		referenceAssets: [],
 	}
 }
+
+export default projectTypeScale

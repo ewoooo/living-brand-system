@@ -20,3 +20,5 @@ export function projectCallout(block: Callout) {
 		referenceAssets: [],
 	}
 }
+
+export default projectCallout
