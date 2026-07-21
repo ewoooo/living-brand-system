@@ -1,5 +1,5 @@
 import type { GuidelineDocument } from '@/payload-types'
-import { formatBlockForAgent } from '../blocks/registry'
+import { formatBlockForAgent } from '../blocks/runtime/project-guideline-block'
 import { compact } from './block-text'
 import { extractTextFromLexical } from './lexical-text'
 

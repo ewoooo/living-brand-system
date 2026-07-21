@@ -1,7 +1,7 @@
 import { PageHeader } from '@/components/global/page-header'
 import { ReviewFunnel } from '@/features/asset-check/components/review-funnel/review-funnel'
 import { getCheckRuleset } from '@/features/asset-check/services/get-check-ruleset.service'
-import { GuidelineContentFrame } from '@/features/guideline/components/blocks/common/guideline-content-frame'
+import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
 
 export default async function ReviewPage() {
 	const sections = await getCheckRuleset()
