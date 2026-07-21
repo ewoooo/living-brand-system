@@ -19,7 +19,6 @@ import { DownloadCardDemo } from '@/features/guideline/components/kit/download-c
 import { IconGridDemo } from '@/features/guideline/components/kit/icon-grid'
 import { IllustrationGridDemo } from '@/features/guideline/components/kit/illustration-grid'
 import { LayoutGridOverlayDemo } from '@/features/guideline/components/kit/layout-grid-overlay'
-import { LogoClearSpaceCheckerDemo } from '@/features/guideline/components/kit/logo-clear-space-checker'
 import { LogoClearSpaceUnitDemo } from '@/features/guideline/components/kit/logo-clearspace-unit'
 import { LogoColorChangerDemo } from '@/features/guideline/components/kit/logo-color-changer'
 import { LogoLockupDemo } from '@/features/guideline/components/kit/logo-lockup'
@@ -481,10 +480,6 @@ export function GuidelineKitGallery() {
 
 			<CollapsibleDemo title="Illustration Grid · 일러스트 40종">
 				<IllustrationGridDemo />
-			</CollapsibleDemo>
-
-			<CollapsibleDemo title="Logo Clear-space Checker · 로고 여백 체커">
-				<LogoClearSpaceCheckerDemo />
 			</CollapsibleDemo>
 
 			<CollapsibleDemo title="Logo Clear Space · A 단위(수직 줄기) NA 여백">
