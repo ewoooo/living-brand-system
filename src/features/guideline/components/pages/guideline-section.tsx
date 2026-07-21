@@ -1,5 +1,4 @@
 import { GuidelineContentFrame } from '@/features/guideline/components/blocks/common/guideline-content-frame'
-import { cn } from '@/lib/utils'
 import type { GetGuidelineSectionOutput } from '../../services/get-guideline-section.service'
 import { GuidelineBlocks } from '../blocks/common/guideline-blocks'
 import { GuidelineDescription } from '../globals/guideline-description'
@@ -31,14 +30,9 @@ export function GuidelineSection({
 			{previewDocumentId !== undefined && <RefreshRouteOnSave />}
 			{previewedPage && <ScrollToPreviewDocument targetId={previewedPage.slug} />}
 
-			<div
-				className={cn(
-					'mx-auto w-full',
-					// 목차가 있을 때만 넓은 화면에서 2열(본문 + 우측 sticky 목차)로. 좁은 화면·목차 없으면 전체폭.
-					hasToc &&
-						'xl:grid xl:max-w-[1640px] xl:grid-cols-[minmax(0,1fr)_12rem] xl:gap-8 xl:px-6',
-				)}
-			>
+			{/* 모든 섹션 페이지가 동일 레이아웃을 갖도록 그리드를 항상 적용한다(변종 방지).
+			    ToC 컬럼(12rem)은 항상 예약되고, page가 없는 섹션은 그 자리만 비운다. */}
+			<div className="mx-auto w-full xl:grid xl:max-w-[1640px] xl:grid-cols-[minmax(0,1fr)_12rem] xl:gap-8 xl:px-6">
 				<div className="min-w-0">
 					<GuidelineContentFrame>
 						{/* Deprecated */}
