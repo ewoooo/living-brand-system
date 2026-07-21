@@ -10,12 +10,12 @@ export function GuidelineNavigationGrid({
 	headingAs?: 'h2' | 'h3'
 }) {
 	return (
-		<section className="grid grid-cols-2 gap-px border border-border bg-border">
+		<section className="grid grid-cols-2 border-border border-t border-l">
 			{items.map((item) => (
 				<Link
 					key={item.id}
 					href={item.href}
-					className="flex aspect-[2/1] flex-col justify-between bg-background p-6 transition-colors hover:bg-accent"
+					className="flex aspect-[2/1] flex-col justify-between border-border border-r border-b bg-background p-6 transition-colors hover:bg-accent"
 				>
 					<Heading className="font-body font-normal text-2xl">{item.title}</Heading>
 					{/* 하단 행: 좌=연결 아이콘(선택, 있을 때만 렌더), 우=이동 링크 어포던스 */}
