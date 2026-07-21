@@ -1,30 +1,32 @@
 'use client'
 
-import { useState } from 'react'
+import { type PointerEvent as ReactPointerEvent, useEffect, useRef, useState } from 'react'
 
 /**
  * 로고 클리어스페이스(A 단위) — 브랜딩 팀 공통 패턴을 그대로 옮긴 컴포넌트.
- * 최소 여백을 로고에서 파생된 단위 **A**의 배수(N·A)로 정의한다. A는 워드마크의 수직 줄기에서
- * 딴다(예: Essenherb는 'h', Pledis는 'd'의 수직 줄기). 여백이 A에 비례하므로 로고를 키우거나
- * 줄여도 클리어스페이스가 항상 같은 비율로 따라온다 — 그 "A에 상대적"이라는 규칙을 N 슬라이더로
- * 라이브로 늘였다 줄이며 검증하는 게 종이 대비 웹의 이점.
+ * 최소 여백을 로고에서 파생된 단위 **A**의 배수(N·A)로 정의한다. A는 워드마크의 수직 줄기 두께다.
+ *
+ * A 실측(핵심): 로고의 세로 줄기를 클릭하면 로고 SVG를 canvas에 그려 그 지점 가로 스캔라인에서
+ * 잉크(불투명 픽셀) 연속 구간의 폭을 재 A로 쓴다 — 사람 눈대중이 아니라 로고 자체에서 A를 뽑아낸다.
+ * (same-origin 에셋이라 canvas 픽셀 읽기가 막히지 않는다.)
  *
  * 렌더 모델:
- * - 상/우/하/좌 4개 padding을 각각 직사각형으로 그린다.
- * - 코너에서 겹쳐도 색이 진해지지 않게 그룹 opacity로 처리한다(불투명 단색 사각형 4개 + 컨테이너 opacity).
- * - 기준점(수직 줄기 = A)은 세로 형태의 border-only 사각형으로 표시한다.
+ * - 상/우/하/좌 4개 padding을 각각 직사각형으로 그린다. 코너에서 겹쳐도 색이 진해지지 않게
+ *   그룹 opacity로 처리한다(불투명 단색 4개 + 컨테이너 opacity).
+ * - 기준점 A는 세로 border-only 사각형(폭=A, 높이=전체 영역)으로, 좌·우 padding 등 모든
+ *   세로 사각형과 높이가 같다.
  *
- * 브랜드 무관: 로고(svg URL)·단위(A)·배수·틴트 색 전부 props.
+ * 브랜드 무관: 로고(svg URL)·초기 A·배수·틴트 색 전부 props.
  *
  * @example
- * <LogoClearSpaceUnit logo={s3Url} logoW={320} logoH={96} unit={22} multiplier={3} tint="234 83 67" />
+ * <LogoClearSpaceUnit logo={s3Url} logoW={360} logoH={75} unit={12} multiplier={3} tint="234 83 67" />
  */
 export function LogoClearSpaceUnit({
 	logo,
 	/** 표시할 로고 폭·높이(px). */
 	logoW,
 	logoH,
-	/** 단위 A의 크기(px, 표시 로고 기준). 수직 줄기에서 딴 값. */
+	/** A 초기값(px). 줄기 클릭 실측 전까지 쓰는 폴백. */
 	unit,
 	/** 여백 배수 N(N·A). 슬라이더 초기값. */
 	multiplier = 2,
@@ -40,15 +42,55 @@ export function LogoClearSpaceUnit({
 }) {
 	const [n, setN] = useState(multiplier)
 	const [show, setShow] = useState(true)
+	// 실측된 줄기 구간(로고 로컬 px). left=줄기 왼쪽, width=A. null이면 미측정.
+	const [seg, setSeg] = useState<{ left: number; width: number } | null>(null)
+	// 로고 픽셀(logoW×logoH) — 줄기 실측용.
+	const pixels = useRef<Uint8ClampedArray | null>(null)
 
-	const margin = n * unit
+	useEffect(() => {
+		const img = new Image()
+		img.crossOrigin = 'anonymous'
+		img.onload = () => {
+			const c = document.createElement('canvas')
+			c.width = logoW
+			c.height = logoH
+			const ctx = c.getContext('2d')
+			if (!ctx) return
+			ctx.drawImage(img, 0, 0, logoW, logoH)
+			try {
+				pixels.current = ctx.getImageData(0, 0, logoW, logoH).data
+			} catch {
+				pixels.current = null
+			}
+		}
+		img.src = logo
+	}, [logo, logoW, logoH])
+
+	// 클릭 지점의 세로 줄기 두께를 픽셀 스캔으로 잰다.
+	function measureAt(event: ReactPointerEvent<HTMLButtonElement>) {
+		const data = pixels.current
+		if (!data) return
+		const rect = event.currentTarget.getBoundingClientRect()
+		const x = Math.round(((event.clientX - rect.left) / rect.width) * logoW)
+		const y = Math.round(((event.clientY - rect.top) / rect.height) * logoH)
+		if (x < 0 || x >= logoW || y < 0 || y >= logoH) return
+		const ink = (px: number) => data[(y * logoW + px) * 4 + 3] > 40
+		if (!ink(x)) return // 빈 곳 클릭 — 무시
+		let left = x
+		let right = x
+		while (left - 1 >= 0 && ink(left - 1)) left--
+		while (right + 1 < logoW && ink(right + 1)) right++
+		setSeg({ left, width: Math.max(2, right - left + 1) })
+	}
+
+	const a = seg?.width ?? unit
+	const margin = n * a
 	const outerW = logoW + margin * 2
 	const outerH = logoH + margin * 2
 	const label = `rgb(${tint})`
 	const solid = `rgb(${tint})`
-
-	// A 기준 사각형(세로 형태, border-only) 치수 — 폭은 줄기 두께 느낌으로 A의 일부.
-	const refW = Math.max(6, Math.round(unit * 0.32))
+	// A 사각형 x — 측정했으면 그 줄기 위치, 아니면 로고 중앙(기본 미리보기).
+	const aLeft = seg ? margin + seg.left : margin + (logoW - a) / 2
 
 	return (
 		<div className="w-full">
@@ -80,6 +122,21 @@ export function LogoClearSpaceUnit({
 						{n}A
 					</span>
 				</label>
+				<span className="font-body text-sm">
+					<span className="text-muted-foreground">A = </span>
+					<b className="tabular-nums" style={{ color: label }}>
+						{Math.round(a)}px
+					</b>
+					{seg != null && (
+						<button
+							type="button"
+							onClick={() => setSeg(null)}
+							className="ml-2 rounded border border-border px-1.5 py-0.5 text-muted-foreground text-xs hover:bg-fill-hover"
+						>
+							초기화
+						</button>
+					)}
+				</span>
 			</div>
 
 			<div className="w-full overflow-x-auto">
@@ -129,31 +186,36 @@ export function LogoClearSpaceUnit({
 									</span>
 								))}
 
-								{/* 기준점 A — 세로 형태, border-only 사각형. 상단 여백 중앙. */}
+								{/* 기준점 A — 세로 border-only 사각형. 측정한 줄기 위치(aLeft)에 폭 A로 붙고,
+								    높이는 전체 영역(outerH) = 다른 세로 사각형과 동일. */}
 								<div
-									className="absolute left-1/2 flex -translate-x-1/2 flex-col items-center gap-1"
-									style={{ top: Math.max(2, (margin - unit) / 2 - 16) }}
+									className="absolute top-0 z-10"
+									style={{
+										left: aLeft,
+										width: a,
+										height: outerH,
+										border: `1px solid ${label}`,
+									}}
+								/>
+								<span
+									className="absolute top-1 z-10 -translate-x-1/2 px-1 font-body font-semibold text-xs leading-none"
+									style={{
+										left: aLeft + a / 2,
+										color: label,
+										background: 'var(--background)',
+									}}
 								>
-									<span
-										className="font-body font-semibold text-xs leading-none"
-										style={{ color: label }}
-									>
-										A
-									</span>
-									<div
-										style={{
-											width: refW,
-											height: unit,
-											border: `1px solid ${label}`,
-										}}
-									/>
-								</div>
+									A
+								</span>
 							</>
 						)}
 
-						{/* 로고 박스 */}
-						<div
-							className="absolute bg-background"
+						{/* 로고 박스 — 클릭하면 줄기 두께를 실측해 A로 쓴다. */}
+						<button
+							type="button"
+							onClick={measureAt}
+							title="세로 줄기를 클릭해 A를 실측"
+							className="absolute cursor-crosshair bg-background p-0"
 							style={{
 								top: margin,
 								left: margin,
@@ -163,16 +225,21 @@ export function LogoClearSpaceUnit({
 							}}
 						>
 							{/* biome-ignore lint/performance/noImgElement: S3 원격 svg라 next/image 대신 img 사용. */}
-							<img src={logo} alt="로고" className="size-full object-contain" />
-						</div>
+							<img
+								src={logo}
+								alt="로고"
+								className="pointer-events-none size-full object-contain"
+							/>
+						</button>
 					</div>
 				</div>
 			</div>
 
 			<p className="mt-3 font-body text-muted-foreground text-xs">
 				최소 여백 = <b style={{ color: label }}>{n}A</b>. 단위 <b>A</b>(세로 border
-				사각형)는 워드마크의 수직 줄기에서 딴다(Essenherb=h, Pledis=d). 상·우·하·좌 4개
-				padding은 각각 사각형이며, 겹치는 코너에서도 색이 진해지지 않는다.
+				사각형)는 워드마크의 <b>수직 줄기 두께</b>다 — 로고의 줄기를 클릭하면 픽셀 스캔으로
+				실측한다. 상·우·하·좌 4개 padding은 각각 사각형이며 겹치는 코너에서도 색이 진해지지
+				않는다.
 			</p>
 		</div>
 	)
@@ -187,7 +254,7 @@ export function LogoClearSpaceUnitDemo() {
 			logo={essenherbLogo}
 			logoW={360}
 			logoH={75}
-			unit={20}
+			unit={12}
 			multiplier={3}
 			tint="234 83 67"
 		/>
