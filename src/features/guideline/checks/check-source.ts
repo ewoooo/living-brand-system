@@ -1,4 +1,4 @@
-export type { CheckBlockEvidence } from '../blocks/catalog/projection.generated'
+export type { CheckBlockEvidence } from '../catalog/projection.generated'
 export type {
 	BlockCheckSourceSnapshot,
 	CheckEvidence,

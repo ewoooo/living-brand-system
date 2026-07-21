@@ -1,18 +1,18 @@
 // 이 파일은 scripts/generate-guideline-block-catalogs.ts로 생성됩니다. 직접 수정하지 마세요.
 
-import projectCallout from '../callout/projection'
-import projectCarousel from '../carousel/projection'
-import projectColorPalette from '../color-palette/projection'
-import projectContentColumns from '../content-columns/projection'
-import projectDoDont from '../do-dont/projection'
-import projectGlyphGrid from '../glyph-grid/projection'
-import projectLayoutGrid from '../layout-grid/projection'
-import projectMediaShowcase from '../media-showcase/projection'
-import projectSignatureShowcase from '../signature-showcase/projection'
-import projectSpecList from '../spec-list/projection'
-import projectTypeScale from '../type-scale/projection'
-import projectTypeSpecimen from '../type-specimen/projection'
-import type { BlockProjection, GuidelineBlock } from '../types'
+import projectCallout from '../blocks/callout/projection'
+import projectCarousel from '../blocks/carousel/projection'
+import projectColorPalette from '../blocks/color-palette/projection'
+import projectContentColumns from '../blocks/content-columns/projection'
+import projectDoDont from '../blocks/do-dont/projection'
+import projectGlyphGrid from '../blocks/glyph-grid/projection'
+import projectLayoutGrid from '../blocks/layout-grid/projection'
+import projectMediaShowcase from '../blocks/media-showcase/projection'
+import projectSignatureShowcase from '../blocks/signature-showcase/projection'
+import projectSpecList from '../blocks/spec-list/projection'
+import projectTypeScale from '../blocks/type-scale/projection'
+import projectTypeSpecimen from '../blocks/type-specimen/projection'
+import type { BlockProjection, GuidelineBlock } from '../blocks/types'
 
 type ProjectionMap = {
 	[Type in GuidelineBlock['blockType']]: (

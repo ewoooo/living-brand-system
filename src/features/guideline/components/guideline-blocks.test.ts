@@ -2,10 +2,10 @@ import { render, within } from '@testing-library/react'
 import { createElement } from 'react'
 import { describe, expect, it } from 'vitest'
 import type { GuidelineDocument } from '@/payload-types'
-import { DoDontBlock } from '../do-dont/component'
-import { MediaShowcaseBlock } from '../media-showcase/component'
-import { GuidelineBlockFrame } from '../shared/guideline-block-frame'
-import { GuidelineBlocks } from './render-guideline-blocks'
+import { DoDontBlock } from '../blocks/do-dont/component'
+import { MediaShowcaseBlock } from '../blocks/media-showcase/component'
+import { GuidelineBlockFrame } from '../blocks/shared/guideline-block-frame'
+import { GuidelineBlocks } from './guideline-blocks'
 
 const blocks: GuidelineDocument['blocks'] = [{ blockType: 'mediaShowcase', id: 'block-1' }]
 const carouselBlocks: GuidelineDocument['blocks'] = [

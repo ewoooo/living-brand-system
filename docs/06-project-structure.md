@@ -112,18 +112,18 @@ src/
           schema.ts
           projection.ts
           component.tsx
-        catalog/
-          schema.generated.ts
-          projection.generated.ts
-          renderer.generated.tsx
-          catalog.test.ts
         runtime/
           project-guideline-block.ts
           build-check-source-snapshot.ts
-          render-guideline-blocks.tsx
         shared/
         types.ts
+      catalog/
+        schema.generated.ts
+        projection.generated.ts
+        renderer.generated.tsx
+        catalog.test.ts
       components/
+        guideline-blocks.tsx
       hooks/
       repositories/
       services/
@@ -204,9 +204,9 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 | `projection.ts` | 해당 블록을 `BlockProjection`으로 변환하는 함수를 기본 export합니다. |
 | `component.tsx` | 해당 블록 데이터를 받는 React component를 기본 export합니다. |
 
-`pnpm generate:block-catalogs`는 기존 Admin 노출 순서를 보존하고 새 블록 폴더는 뒤에 이름순으로 붙여 `catalog/*.generated.*`의 정적 import와 map을 갱신합니다. 생성 파일은 커밋하되 직접 수정하지 않습니다. `pnpm check:block-catalogs`는 생성 결과가 최신인지 검사하며 CI의 정적 검사에서 실행합니다.
+`pnpm generate:block-catalogs`는 기존 Admin 노출 순서를 보존하고 새 블록 폴더는 뒤에 이름순으로 붙여 `src/features/guideline/catalog/*.generated.*`의 정적 import와 map을 갱신합니다. 생성 파일은 커밋하되 직접 수정하지 않습니다. `pnpm check:block-catalogs`는 생성 결과가 최신인지 검사하며 CI의 정적 검사에서 실행합니다.
 
-`runtime`은 생성 map을 사용하는 동작만 소유합니다. `project-guideline-block.ts`는 Agent/Check projection, `build-check-source-snapshot.ts`는 문서 snapshot, `render-guideline-blocks.tsx`는 React 렌더링을 담당합니다. 둘 이상의 블록이 실제로 공유하는 필드나 UI만 `shared`에 둡니다.
+`runtime`은 생성 map을 사용하는 동작만 소유합니다. `project-guideline-block.ts`는 Agent/Check projection, `build-check-source-snapshot.ts`는 문서 snapshot을 담당합니다. React 렌더 진입점은 `components/guideline-blocks.tsx`에 둡니다. 둘 이상의 블록이 실제로 공유하는 필드나 UI만 `shared`에 둡니다.
 
 ### Use Case 스캐폴딩
 

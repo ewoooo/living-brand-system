@@ -79,13 +79,13 @@ export async function discoverBlockRegistrations(
 function renderSchemaCatalog(blocks: BlockRegistration[]): string {
 	const imports = [...blocks]
 		.sort((left, right) => left.directory.localeCompare(right.directory))
-		.map(({ directory, symbol }) => `import ${symbol}Schema from '../${directory}/schema'`)
+		.map(({ directory, symbol }) => `import ${symbol}Schema from '../blocks/${directory}/schema'`)
 		.join('\n')
 	const entries = blocks.map(({ key, symbol }) => `\t${key}: ${symbol}Schema,`).join('\n')
 
 	return `${GENERATED_HEADER}import type { Block } from 'payload'
 ${imports}
-import type { GuidelineBlock } from '../types'
+import type { GuidelineBlock } from '../blocks/types'
 
 type SchemaMap = {
 	[Type in GuidelineBlock['blockType']]: Block
@@ -102,12 +102,12 @@ export const guidelineBlocks = Object.values(guidelineBlockSchemas)
 function renderProjectionCatalog(blocks: BlockRegistration[]): string {
 	const imports = [...blocks]
 		.sort((left, right) => left.directory.localeCompare(right.directory))
-		.map(({ directory, symbol }) => `import project${symbol} from '../${directory}/projection'`)
+		.map(({ directory, symbol }) => `import project${symbol} from '../blocks/${directory}/projection'`)
 		.join('\n')
 	const entries = blocks.map(({ key, symbol }) => `\t${key}: project${symbol},`).join('\n')
 
 	return `${GENERATED_HEADER}${imports}
-import type { BlockProjection, GuidelineBlock } from '../types'
+import type { BlockProjection, GuidelineBlock } from '../blocks/types'
 
 type ProjectionMap = {
 	[Type in GuidelineBlock['blockType']]: (
@@ -130,7 +130,7 @@ function renderRendererCatalog(blocks: BlockRegistration[]): string {
 	const imports = [...blocks]
 		.sort((left, right) => left.directory.localeCompare(right.directory))
 		.map(
-			({ directory, symbol }) => `import ${symbol}Component from '../${directory}/component'`,
+			({ directory, symbol }) => `import ${symbol}Component from '../blocks/${directory}/component'`,
 		)
 		.join('\n')
 	const entries = blocks
@@ -139,7 +139,7 @@ function renderRendererCatalog(blocks: BlockRegistration[]): string {
 
 	return `${GENERATED_HEADER}import type { ReactNode } from 'react'
 ${imports}
-import type { GuidelineBlock } from '../types'
+import type { GuidelineBlock } from '../blocks/types'
 
 type RendererMap = {
 	[Type in GuidelineBlock['blockType']]: (
@@ -169,7 +169,7 @@ export async function generateGuidelineBlockCatalogs({
 	check: boolean
 }): Promise<void> {
 	const blocks = await discoverBlockRegistrations(blocksDirectory)
-	const catalogDirectory = path.join(blocksDirectory, 'catalog')
+	const catalogDirectory = path.resolve(blocksDirectory, '../catalog')
 	const catalogs = renderCatalogs(blocks)
 	const staleFiles: string[] = []
 

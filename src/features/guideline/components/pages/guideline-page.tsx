@@ -1,5 +1,5 @@
 import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
-import { GuidelineBlocks } from '../../blocks/runtime/render-guideline-blocks'
+import { GuidelineBlocks } from '../guideline-blocks'
 import type { GetGuidelineSectionOutput } from '../../services/get-guideline-section.service'
 import { GuidelineDescription } from '../globals/guideline-description'
 import { GuidelineHeader } from '../globals/guideline-header'

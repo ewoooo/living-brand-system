@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { discoverBlockRegistrations } from '../../../../../scripts/generate-guideline-block-catalogs'
+import { discoverBlockRegistrations } from '../../../../scripts/generate-guideline-block-catalogs'
 
 const temporaryDirectories: string[] = []
 
@@ -28,7 +28,7 @@ afterEach(async () => {
 	)
 })
 
-describe('guideline block catalog generator', () => {
+describe('guideline catalog generator', () => {
 	it('기존 노출 순서를 보존하고 새 블록은 뒤에 이름순으로 등록한다', async () => {
 		const blocksDirectory = await createTemporaryBlocksDirectory()
 		await createBlock(blocksDirectory, 'type-scale')

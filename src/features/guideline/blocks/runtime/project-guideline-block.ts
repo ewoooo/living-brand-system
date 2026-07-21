@@ -1,4 +1,4 @@
-import { type CheckBlockEvidence, guidelineBlockProjectors } from '../catalog/projection.generated'
+import { type CheckBlockEvidence, guidelineBlockProjectors } from '../../catalog/projection.generated'
 import type { BlockProjection, CheckReferenceAssetRef, GuidelineBlock } from '../types'
 
 export type CheckEvidence =

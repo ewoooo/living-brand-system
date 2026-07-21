@@ -1,19 +1,19 @@
 // 이 파일은 scripts/generate-guideline-block-catalogs.ts로 생성됩니다. 직접 수정하지 마세요.
 
 import type { ReactNode } from 'react'
-import CalloutComponent from '../callout/component'
-import CarouselComponent from '../carousel/component'
-import ColorPaletteComponent from '../color-palette/component'
-import ContentColumnsComponent from '../content-columns/component'
-import DoDontComponent from '../do-dont/component'
-import GlyphGridComponent from '../glyph-grid/component'
-import LayoutGridComponent from '../layout-grid/component'
-import MediaShowcaseComponent from '../media-showcase/component'
-import SignatureShowcaseComponent from '../signature-showcase/component'
-import SpecListComponent from '../spec-list/component'
-import TypeScaleComponent from '../type-scale/component'
-import TypeSpecimenComponent from '../type-specimen/component'
-import type { GuidelineBlock } from '../types'
+import CalloutComponent from '../blocks/callout/component'
+import CarouselComponent from '../blocks/carousel/component'
+import ColorPaletteComponent from '../blocks/color-palette/component'
+import ContentColumnsComponent from '../blocks/content-columns/component'
+import DoDontComponent from '../blocks/do-dont/component'
+import GlyphGridComponent from '../blocks/glyph-grid/component'
+import LayoutGridComponent from '../blocks/layout-grid/component'
+import MediaShowcaseComponent from '../blocks/media-showcase/component'
+import SignatureShowcaseComponent from '../blocks/signature-showcase/component'
+import SpecListComponent from '../blocks/spec-list/component'
+import TypeScaleComponent from '../blocks/type-scale/component'
+import TypeSpecimenComponent from '../blocks/type-specimen/component'
+import type { GuidelineBlock } from '../blocks/types'
 
 type RendererMap = {
 	[Type in GuidelineBlock['blockType']]: (
