@@ -1,6 +1,6 @@
 'use client'
 
-import { FieldDescription, FieldError, FieldLabel, useField } from '@payloadcms/ui'
+import { FieldDescription, FieldError, FieldLabel, useField, useForm } from '@payloadcms/ui'
 import type { ArrayFieldClientComponent } from 'payload'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,50 +14,171 @@ import {
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 
-type PromptRow = Record<string, unknown>
-
-export function candidatesFromText(value: string) {
-	return value
-		.split('\n')
-		.map((candidate) => candidate.trim())
-		.filter(Boolean)
-		.map((candidate) => ({ value: candidate }))
+type PromptRowProps = {
+	disabled: boolean
+	onRemove: () => void
+	path: string
 }
 
-function candidateText(candidates: unknown) {
-	if (!Array.isArray(candidates)) return ''
+function ProfilePromptRow({ disabled, onRemove, path }: PromptRowProps) {
+	const key = useField<string>({ path: `${path}.key` })
+	const value = useField<string>({ path: `${path}.value` })
 
-	return candidates
-		.map((candidate) =>
-			typeof candidate === 'object' &&
-			candidate !== null &&
-			typeof candidate.value === 'string'
-				? candidate.value
-				: '',
-		)
-		.filter(Boolean)
-		.join('\n')
+	return (
+		<TableRow>
+			<TableCell>
+				<Input
+					value={key.value ?? ''}
+					disabled={disabled || key.disabled}
+					onChange={(event) => key.setValue(event.currentTarget.value)}
+				/>
+			</TableCell>
+			<TableCell>
+				<Textarea
+					value={value.value ?? ''}
+					disabled={disabled || value.disabled}
+					onChange={(event) => value.setValue(event.currentTarget.value)}
+				/>
+			</TableCell>
+			<TableCell>
+				<Button
+					type="button"
+					variant="secondary"
+					size="xs"
+					disabled={disabled}
+					onClick={onRemove}
+				>
+					삭제
+				</Button>
+			</TableCell>
+		</TableRow>
+	)
 }
 
-const ImageProfilePromptTable: ArrayFieldClientComponent = ({ field, path }) => {
-	const { disabled, errorMessage, setValue, showError, value } = useField<unknown>({ path })
-	const rows = Array.isArray(value)
-		? value.filter((row): row is PromptRow => typeof row === 'object' && row !== null)
-		: []
+function CandidateRow({ disabled, onRemove, path }: PromptRowProps) {
+	const field = useField<string>({ path })
+
+	return (
+		<div className="image-profile-prompt-table__candidate">
+			<Textarea
+				value={field.value ?? ''}
+				disabled={disabled || field.disabled}
+				onChange={(event) => field.setValue(event.currentTarget.value)}
+			/>
+			<Button
+				type="button"
+				variant="secondary"
+				size="xs"
+				disabled={disabled}
+				onClick={onRemove}
+			>
+				삭제
+			</Button>
+		</div>
+	)
+}
+
+function NormalizationPromptRow({
+	disabled,
+	onRemove,
+	path,
+	schemaPath,
+}: {
+	disabled: boolean
+	onRemove: () => void
+	path: string
+	schemaPath: string
+}) {
+	const key = useField<string>({ path: `${path}.key` })
+	const candidatesPath = `${path}.candidates`
+	const {
+		errorMessage,
+		rows = [],
+		showError,
+	} = useField({
+		hasRows: true,
+		potentiallyStalePath: candidatesPath,
+	})
+	const { addFieldRow, removeFieldRow } = useForm()
+
+	return (
+		<TableRow>
+			<TableCell>
+				<Input
+					value={key.value ?? ''}
+					disabled={disabled || key.disabled}
+					onChange={(event) => key.setValue(event.currentTarget.value)}
+				/>
+			</TableCell>
+			<TableCell>
+				<FieldError message={errorMessage} path={candidatesPath} showError={showError} />
+				<div className="image-profile-prompt-table__candidates">
+					{rows.map((row, index) => (
+						<CandidateRow
+							key={row.id}
+							disabled={disabled || Boolean(row.isLoading)}
+							onRemove={() =>
+								removeFieldRow({ path: candidatesPath, rowIndex: index })
+							}
+							path={`${candidatesPath}.${index}.value`}
+						/>
+					))}
+					<Button
+						type="button"
+						variant="outline"
+						size="xs"
+						disabled={disabled}
+						onClick={() =>
+							addFieldRow({
+								path: candidatesPath,
+								rowIndex: rows.length,
+								schemaPath,
+							})
+						}
+					>
+						값 후보 추가
+					</Button>
+				</div>
+			</TableCell>
+			<TableCell>
+				<Button
+					type="button"
+					variant="secondary"
+					size="xs"
+					disabled={disabled}
+					onClick={onRemove}
+				>
+					삭제
+				</Button>
+			</TableCell>
+		</TableRow>
+	)
+}
+
+const ImageProfilePromptTable: ArrayFieldClientComponent = ({
+	field,
+	path: pathFromProps,
+	readOnly,
+	schemaPath: schemaPathFromProps,
+}) => {
+	const { addFieldRow, removeFieldRow } = useForm()
+	const {
+		disabled,
+		errorMessage,
+		path,
+		rows = [],
+		showError,
+	} = useField({
+		hasRows: true,
+		potentiallyStalePath: pathFromProps,
+	})
+	const isDisabled = disabled || Boolean(readOnly)
 	const isNormalization = field.name === 'userPromptNormalization'
-
-	const updateRow = (index: number, next: PromptRow) => {
-		setValue(rows.map((row, rowIndex) => (rowIndex === index ? next : row)))
-	}
+	const schemaPath = schemaPathFromProps ?? field.name
 
 	return (
 		<div className="field-type array image-profile-prompt-table">
-			<FieldLabel
-				htmlFor={`${path}-key-0`}
-				label={field.label}
-				path={path}
-				required={field.required}
-			/>
+			<FieldLabel label={field.label} path={path} required={field.required} />
 			<FieldDescription description={field.admin?.description} path={path} />
 			<FieldError message={errorMessage} path={path} showError={showError} />
 
@@ -65,73 +186,33 @@ const ImageProfilePromptTable: ArrayFieldClientComponent = ({ field, path }) => 
 				<TableHeader>
 					<TableRow>
 						<TableHead scope="col">키</TableHead>
-						<TableHead scope="col">
-							{isNormalization ? '값 후보 (한 줄에 하나)' : '값'}
-						</TableHead>
+						<TableHead scope="col">{isNormalization ? '값 후보' : '값'}</TableHead>
 						<TableHead scope="col">관리</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody>
 					{rows.length > 0 ? (
-						rows.map((row, index) => (
-							<TableRow key={typeof row.id === 'string' ? row.id : index}>
-								<TableCell>
-									<Input
-										id={`${path}-key-${index}`}
-										value={typeof row.key === 'string' ? row.key : ''}
-										disabled={disabled}
-										onChange={(event) =>
-											updateRow(index, {
-												...row,
-												key: event.currentTarget.value,
-											})
-										}
-									/>
-								</TableCell>
-								<TableCell>
-									{isNormalization ? (
-										<Textarea
-											value={candidateText(row.candidates)}
-											disabled={disabled}
-											onChange={(event) =>
-												updateRow(index, {
-													...row,
-													candidates: candidatesFromText(
-														event.currentTarget.value,
-													),
-												})
-											}
-										/>
-									) : (
-										<Textarea
-											value={typeof row.value === 'string' ? row.value : ''}
-											disabled={disabled}
-											onChange={(event) =>
-												updateRow(index, {
-													...row,
-													value: event.currentTarget.value,
-												})
-											}
-										/>
-									)}
-								</TableCell>
-								<TableCell>
-									<Button
-										type="button"
-										variant="secondary"
-										size="xs"
-										disabled={disabled}
-										onClick={() =>
-											setValue(
-												rows.filter((_, rowIndex) => rowIndex !== index),
-											)
-										}
-									>
-										삭제
-									</Button>
-								</TableCell>
-							</TableRow>
-						))
+						rows.map((row, index) => {
+							const rowPath = `${path}.${index}`
+							const rowDisabled = isDisabled || Boolean(row.isLoading)
+
+							return isNormalization ? (
+								<NormalizationPromptRow
+									key={row.id}
+									disabled={rowDisabled}
+									onRemove={() => removeFieldRow({ path, rowIndex: index })}
+									path={rowPath}
+									schemaPath={`${schemaPath}.candidates`}
+								/>
+							) : (
+								<ProfilePromptRow
+									key={row.id}
+									disabled={rowDisabled}
+									onRemove={() => removeFieldRow({ path, rowIndex: index })}
+									path={rowPath}
+								/>
+							)
+						})
 					) : (
 						<TableRow>
 							<TableCell colSpan={3}>등록된 필드가 없습니다.</TableCell>
@@ -144,13 +225,8 @@ const ImageProfilePromptTable: ArrayFieldClientComponent = ({ field, path }) => 
 				type="button"
 				variant="outline"
 				size="sm"
-				disabled={disabled}
-				onClick={() =>
-					setValue([
-						...rows,
-						isNormalization ? { key: '', candidates: [] } : { key: '', value: '' },
-					])
-				}
+				disabled={isDisabled}
+				onClick={() => addFieldRow({ path, rowIndex: rows.length, schemaPath })}
 			>
 				{isNormalization ? '정규화 필드 추가' : '프롬프트 필드 추가'}
 			</Button>
