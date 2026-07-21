@@ -48,7 +48,7 @@ export function SideNav({
 						exit={{ opacity: 0 }}
 						transition={{ duration: 0.25, ease: 'easeOut' }}
 					>
-						<SidebarContent className="pt-2">
+						<SidebarContent className="gap-1 pt-2">
 							{Children.count(children) > 0 ? (
 								children
 							) : (

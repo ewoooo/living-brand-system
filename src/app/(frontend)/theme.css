@@ -61,7 +61,7 @@
 
 :root {
 	--radius: 0.625rem;
-	--background: oklch(1 0 0);
+	--background: oklch(0.9851 0 0); /* #fafafa — pure white 대신 소프트 화이트(순백 이미지 구분) */
 	--foreground: oklch(0.145 0 0);
 	--card: oklch(1 0 0);
 	--card-foreground: oklch(0.145 0 0);
@@ -95,7 +95,9 @@
 }
 
 .dark {
-	--background: oklch(0.145 0 0);
+	--background: oklch(
+		0.1822 0 0
+	); /* #121212 — pure black 대신 Material 다크 배경(순흑 이미지 구분) */
 	--foreground: oklch(0.985 0 0);
 	--card: oklch(0.205 0 0);
 	--card-foreground: oklch(0.985 0 0);
