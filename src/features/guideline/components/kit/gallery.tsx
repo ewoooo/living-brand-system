@@ -14,11 +14,12 @@ import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { CollapsibleDemo } from '@/features/guideline/components/kit/collapsible-demo'
 import { ColorPaletteDemo } from '@/features/guideline/components/kit/color-palette'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
+import { DoDontCompareDemo } from '@/features/guideline/components/kit/do-dont-compare'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
 import { IconGridDemo } from '@/features/guideline/components/kit/icon-grid'
 import { IllustrationGridDemo } from '@/features/guideline/components/kit/illustration-grid'
 import { LayoutGridOverlayDemo } from '@/features/guideline/components/kit/layout-grid-overlay'
-import { LogoClearSpaceCheckerDemo } from '@/features/guideline/components/kit/logo-clear-space-checker'
+import { LogoClearSpaceUnitDemo } from '@/features/guideline/components/kit/logo-clearspace-unit'
 import { LogoColorChangerDemo } from '@/features/guideline/components/kit/logo-color-changer'
 import { LogoLockupDemo } from '@/features/guideline/components/kit/logo-lockup'
 import { LogoVariantSelectorDemo } from '@/features/guideline/components/kit/logo-variant-selector'
@@ -376,6 +377,10 @@ export function GuidelineKitGallery() {
 				<DoDontBlock block={doDontBlock} />
 			</CollapsibleDemo>
 
+			<CollapsibleDemo title="Do / Don't Compare · 드래그 비교 슬라이더 (웹 전용)">
+				<DoDontCompareDemo />
+			</CollapsibleDemo>
+
 			<CollapsibleDemo title="Type Specimen · 라이브 입력 견본">
 				<TypeSpecimenBlock block={typeSpecimenBlock} />
 			</CollapsibleDemo>
@@ -477,8 +482,8 @@ export function GuidelineKitGallery() {
 				<IllustrationGridDemo />
 			</CollapsibleDemo>
 
-			<CollapsibleDemo title="Logo Clear-space Checker · 로고 여백 체커">
-				<LogoClearSpaceCheckerDemo />
+			<CollapsibleDemo title="Logo Clear Space · A 단위(수직 줄기) NA 여백">
+				<LogoClearSpaceUnitDemo />
 			</CollapsibleDemo>
 		</article>
 	)
