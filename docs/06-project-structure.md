@@ -30,7 +30,7 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 | App | `src` | Next.js, Payload CMS, Creator UI를 포함하는 현재 실행 단위입니다. |
 | App Router | `src/app` | page, layout, route handler를 둡니다. |
 | Collections | `src/collections` | Payload collection schema, access, hook 진입점을 둡니다. |
-| Blocks | `src/blocks` | Payload block schema를 둡니다. |
+| Feature Blocks | `src/features/*/blocks/<block>` | Payload schema, projection, React component를 블록 단위로 함께 둡니다. |
 | Globals | `src/globals` | Payload global schema를 둡니다. |
 | Services | `src/features/*/services`, `src/services` | Service는 소유 기능 안에 두고, 여러 기능이 공유하는 Use Case만 `src/services`에 둡니다. |
 | Repositories | `src/features/*/repositories`, `src/repositories` | Repository는 소유 기능 안에 두고, 여러 기능이 공유할 때만 `src/repositories`로 승격합니다. |
@@ -92,8 +92,6 @@ src/
         route.ts
   collections/
     *.ts
-  blocks/
-    *.ts
   globals/
     *.ts
   services/
@@ -109,6 +107,11 @@ src/
     *.tsx
   features/
     <feature>/
+      blocks/
+        <block>/
+          schema.ts
+          projection.ts
+          component.tsx
       components/
       hooks/
       repositories/
@@ -137,6 +140,7 @@ docs/
 - Repository Interface 파일(`*.repository.ts`)은 구현체가 2개 이상 필요해지는 시점에 만듭니다. 단일 구현 단계에서는 Service가 구현 파일을 직접 import합니다.
 - 기능 전용 read service의 Payload 접근도 같은 기능의 `src/features/*/repositories`에 둡니다.
 - 기능 안의 순수 도메인 계산 계층(예: `review/checkers`)과 정적 시나리오 데이터(예: `review/scenarios`)는 승인된 기능 하위 폴더 확장입니다. 새 하위 폴더는 표준 폴더(`components`, `hooks`, `repositories`, `services`, `utils`)로 표현할 수 없을 때만 추가합니다.
+- 기능 전용 Payload block은 `src/features/<feature>/blocks/<block>`에 schema, projection, component를 함께 둡니다. 서버용 catalog와 React renderer registry는 분리해 client component가 Payload config에 포함되지 않게 합니다.
 - Agent는 별도 사용자 역할이 아니라 서비스 모듈입니다.
 - 실제 폴더 구조를 개선할 때는 `src/features`, `src/agents`, `src/components`, `src/lib`, `src/services`, `src/repositories`, `src/types`를 이 순서로 추가합니다.
 
@@ -153,6 +157,7 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 | 구현 대상 | 위치 | 규칙 |
 | --- | --- | --- |
 | Payload collection | `src/collections` | 데이터 구조, access, hook 진입점 |
+| 기능 전용 Payload block | `src/features/*/blocks/<block>` | schema, Agent/Check projection, React component |
 | Creator 화면 | `src/app/(frontend)`, `src/features` | 화면 이동, URL 상태, view model |
 | Admin 화면 | `src/app/(payload)`, Payload Admin 기본 UI | Manager의 CMS 작업 |
 | Route Handler | `src/app/**/route.ts` | request parsing, 권한 확인, Service 호출, response 변환 |

@@ -1,30 +1,28 @@
 import type { Block } from 'payload'
-import {
-	CalloutBlock,
-	CarouselBlock,
-	ColorPaletteBlock,
-	ContentColumnsBlock,
-	DoDontBlock,
-	GlyphGridBlock,
-	LayoutGridBlock,
-	MediaShowcaseBlock,
-	SignatureShowcaseBlock,
-	SpecListBlock,
-	TypeScaleBlock,
-	TypeSpecimenBlock,
-} from '@/blocks/guideline'
-import { projectCallout } from './callout.block'
-import { projectCarousel } from './carousel.block'
-import { projectColorPalette } from './color-palette.block'
-import { projectContentColumns } from './content-columns.block'
-import { projectDoDont } from './do-dont.block'
-import { projectGlyphGrid } from './glyph-grid.block'
-import { projectLayoutGrid } from './layout-grid.block'
-import { projectMediaShowcase } from './media-showcase.block'
-import { projectSignatureShowcase } from './signature-showcase.block'
-import { projectSpecList } from './spec-list.block'
-import { projectTypeScale } from './type-scale.block'
-import { projectTypeSpecimen } from './type-specimen.block'
+import { projectCallout } from './callout/projection'
+import { CalloutBlock } from './callout/schema'
+import { projectCarousel } from './carousel/projection'
+import { CarouselBlock } from './carousel/schema'
+import { projectColorPalette } from './color-palette/projection'
+import { ColorPaletteBlock } from './color-palette/schema'
+import { projectContentColumns } from './content-columns/projection'
+import { ContentColumnsBlock } from './content-columns/schema'
+import { projectDoDont } from './do-dont/projection'
+import { DoDontBlock } from './do-dont/schema'
+import { projectGlyphGrid } from './glyph-grid/projection'
+import { GlyphGridBlock } from './glyph-grid/schema'
+import { projectLayoutGrid } from './layout-grid/projection'
+import { LayoutGridBlock } from './layout-grid/schema'
+import { projectMediaShowcase } from './media-showcase/projection'
+import { MediaShowcaseBlock } from './media-showcase/schema'
+import { projectSignatureShowcase } from './signature-showcase/projection'
+import { SignatureShowcaseBlock } from './signature-showcase/schema'
+import { projectSpecList } from './spec-list/projection'
+import { SpecListBlock } from './spec-list/schema'
+import { projectTypeScale } from './type-scale/projection'
+import { TypeScaleBlock } from './type-scale/schema'
+import { projectTypeSpecimen } from './type-specimen/projection'
+import { TypeSpecimenBlock } from './type-specimen/schema'
 import type { BlockProjection, CheckReferenceAssetRef, GuidelineBlock } from './types'
 
 type DefinitionMap = {

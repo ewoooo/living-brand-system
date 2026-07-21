@@ -1,5 +1,5 @@
 import { PageHeader } from '@/components/global/page-header'
-import { GuidelineContentFrame } from '@/features/guideline/components/blocks/common/guideline-content-frame'
+import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
 import { ImageGenerator } from '@/features/image-generation/components/image-generator'
 import { TextGenerator } from '@/features/text-generation/components/text-generator'
 
