@@ -21,7 +21,8 @@ export function SideNavGroup({
 			<SideNavGroupTitle title={title} titleHref={titleHref} />
 			{children && (
 				<SidebarGroupContent>
-					<SidebarMenu>{children}</SidebarMenu>
+					{/* 그룹 항목(section/category)을 라벨(chapter) 대비 한 단 들여써 계층을 시각화 — section→page(pl-3)와 동일 간격 */}
+					<SidebarMenu className="pl-3">{children}</SidebarMenu>
 				</SidebarGroupContent>
 			)}
 		</SidebarGroup>
