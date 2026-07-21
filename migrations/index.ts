@@ -68,6 +68,7 @@ import * as migration_20260717_130449_rename_callout_add_carousel from './202607
 import * as migration_20260718_063009_media_showcase_images from './20260718_063009_media_showcase_images';
 import * as migration_20260720_015116_extend_image_ratio_options from './20260720_015116_extend_image_ratio_options';
 import * as migration_20260720_022908_dodont_example_columns from './20260720_022908_dodont_example_columns';
+import * as migration_20260721_041541_image_prompt_profiles from './20260721_041541_image_prompt_profiles';
 
 export const migrations = [
   {
@@ -418,6 +419,11 @@ export const migrations = [
   {
     up: migration_20260720_022908_dodont_example_columns.up,
     down: migration_20260720_022908_dodont_example_columns.down,
-    name: '20260720_022908_dodont_example_columns'
+    name: '20260720_022908_dodont_example_columns',
+  },
+  {
+    up: migration_20260721_041541_image_prompt_profiles.up,
+    down: migration_20260721_041541_image_prompt_profiles.down,
+    name: '20260721_041541_image_prompt_profiles'
   },
 ];

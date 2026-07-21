@@ -73,6 +73,7 @@ export interface Config {
     'brand-colors': BrandColor;
     'brand-typefaces': BrandTypeface;
     'application-images': ApplicationImage;
+    'image-profiles': ImageProfile;
     templates: Template;
     'template-categories': TemplateCategory;
     'template-assets': TemplateAsset;
@@ -103,6 +104,7 @@ export interface Config {
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
+    'image-profiles': ImageProfilesSelect<false> | ImageProfilesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
     'template-categories': TemplateCategoriesSelect<false> | TemplateCategoriesSelect<true>;
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
@@ -829,6 +831,38 @@ export interface BrandLogo {
   };
 }
 /**
+ * 이미지 유형별 프롬프트와 유저 인풋 정규화 후보를 관리하고 테스트합니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "image-profiles".
+ */
+export interface ImageProfile {
+  id: number;
+  name: string;
+  /**
+   * 이미지 유형의 기본값입니다. 각 행은 최종 JSON의 key와 value가 됩니다.
+   */
+  profilePrompt: {
+    key: string;
+    value: string;
+    id?: string | null;
+  }[];
+  /**
+   * AI가 유저 인풋을 각 키의 값 후보 중 하나로 정규화합니다. 프로파일과 같은 키면 이 값이 우선합니다.
+   */
+  userPromptNormalization: {
+    key: string;
+    candidates: {
+      value: string;
+      id?: string | null;
+    }[];
+    id?: string | null;
+  }[];
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "templates".
  */
@@ -1509,6 +1543,10 @@ export interface PayloadLockedDocument {
         value: number | ApplicationImage;
       } | null)
     | ({
+        relationTo: 'image-profiles';
+        value: number | ImageProfile;
+      } | null)
+    | ({
         relationTo: 'templates';
         value: number | Template;
       } | null)
@@ -1974,6 +2012,35 @@ export interface ApplicationImagesSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "image-profiles_select".
+ */
+export interface ImageProfilesSelect<T extends boolean = true> {
+  name?: T;
+  profilePrompt?:
+    | T
+    | {
+        key?: T;
+        value?: T;
+        id?: T;
+      };
+  userPromptNormalization?:
+    | T
+    | {
+        key?: T;
+        candidates?:
+          | T
+          | {
+              value?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2561,6 +2628,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'application-images';
           value: number | ApplicationImage;
+        } | null)
+      | ({
+          relationTo: 'image-profiles';
+          value: number | ImageProfile;
         } | null)
       | ({
           relationTo: 'templates';

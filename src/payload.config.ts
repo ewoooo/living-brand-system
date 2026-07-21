@@ -25,6 +25,7 @@ import { BrandTypefaces } from './collections/BrandTypefaces'
 import { CheckScenarios } from './collections/CheckScenarios'
 import { CheckSessions } from './collections/CheckSessions'
 import { GuidelineDocuments } from './collections/GuidelineDocuments'
+import { ImageProfiles } from './collections/ImageProfiles'
 import { Plugins } from './collections/Plugins'
 import { RuleCheckers } from './collections/RuleCheckers'
 import { Rules } from './collections/Rules'
@@ -135,6 +136,7 @@ export default buildConfig({
 		BrandColors,
 		BrandTypefaces,
 		ApplicationImages,
+		ImageProfiles,
 		Templates,
 		TemplateCategories,
 		TemplateAssets,
