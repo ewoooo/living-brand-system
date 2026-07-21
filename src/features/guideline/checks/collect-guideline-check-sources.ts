@@ -1,10 +1,9 @@
 import type { ApplicationImage, GuidelineDocument, Rule } from '@/payload-types'
-import type { CheckEvidence } from '../blocks/catalog'
 import {
 	buildCheckSourceSnapshot,
 	type GuidelineCheckDocument,
-} from '../blocks/check-source-snapshot'
-import { snapshotBlock } from '../blocks/registry'
+} from '../blocks/runtime/build-check-source-snapshot'
+import { type CheckEvidence, snapshotBlock } from '../blocks/runtime/project-guideline-block'
 import type { CheckReferenceAssetRole } from '../blocks/types'
 import { relationshipId } from '../utils/block-text'
 

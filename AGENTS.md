@@ -155,6 +155,8 @@ Always start from `docs/README.md`, then read the smallest relevant document bef
 - Source layout, naming, comments, logging, exception handling, and coding style: `docs/06-project-structure.md`
 - Auth, access control, upload/download, logging safety, Agent context limits, and operational security: `docs/07-security.md`
 - Worker UI, custom Admin UI, user-facing copy, keyboard access, errors, and message/i18n placement: `docs/08-accessibility-i18n.md`
+- Design tokens, color/typography/radius/dark mode, runtime brand override, and shell/frame skeleton — read before changing any front-end visual surface: `docs/09-design-system.md`
+- Component authoring contract (reuse ladder, cva/data-size templates, style Do/Don't, kit→block promotion gate) — read before writing or adding any new UI component: `docs/10-component-authoring.md`
 
 When docs conflict, prefer the newer or more specific document. If a code change intentionally departs from docs, update the relevant doc in the same change unless the user asked for source-only work.
 

@@ -1,4 +1,4 @@
-import { GuidelineContentFrame } from '@/features/guideline/components/blocks/common/guideline-content-frame'
+import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
 import type { GetGuidelineNavigationOutput } from '../../services/get-guideline-navigation.service'
 import { GuidelineDescription } from '../globals/guideline-description'
 import { GuidelineHeader } from '../globals/guideline-header'

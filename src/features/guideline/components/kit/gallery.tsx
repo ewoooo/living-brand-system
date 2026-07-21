@@ -1,24 +1,25 @@
-import { CalloutBlock } from '@/features/guideline/components/blocks/callout-block'
-import { CarouselBlock } from '@/features/guideline/components/blocks/carousel-block'
-import { ContentColumnsBlock } from '@/features/guideline/components/blocks/content-columns-block'
-import { DoDontBlock } from '@/features/guideline/components/blocks/do-dont-block'
-import { GlyphGridBlock } from '@/features/guideline/components/blocks/glyph-grid-block'
-import { LayoutGridBlock } from '@/features/guideline/components/blocks/layout-grid-block'
-import { MediaShowcaseBlock } from '@/features/guideline/components/blocks/media-showcase-block'
-import { SignatureShowcaseBlock } from '@/features/guideline/components/blocks/signature-showcase-block'
-import { SpecListBlock } from '@/features/guideline/components/blocks/spec-list-block'
-import { TypeScaleBlock } from '@/features/guideline/components/blocks/type-scale-block'
-import { TypeSpecimenBlock } from '@/features/guideline/components/blocks/type-specimen-block'
+import { CalloutBlock } from '@/features/guideline/blocks/callout/component'
+import { CarouselBlock } from '@/features/guideline/blocks/carousel/component'
+import { ContentColumnsBlock } from '@/features/guideline/blocks/content-columns/component'
+import { DoDontBlock } from '@/features/guideline/blocks/do-dont/component'
+import { GlyphGridBlock } from '@/features/guideline/blocks/glyph-grid/component'
+import { LayoutGridBlock } from '@/features/guideline/blocks/layout-grid/component'
+import { MediaShowcaseBlock } from '@/features/guideline/blocks/media-showcase/component'
+import { SignatureShowcaseBlock } from '@/features/guideline/blocks/signature-showcase/component'
+import { SpecListBlock } from '@/features/guideline/blocks/spec-list/component'
+import { TypeScaleBlock } from '@/features/guideline/blocks/type-scale/component'
+import { TypeSpecimenBlock } from '@/features/guideline/blocks/type-specimen/component'
 import { CardRowDemo } from '@/features/guideline/components/kit/card-row'
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { CollapsibleDemo } from '@/features/guideline/components/kit/collapsible-demo'
 import { ColorPaletteDemo } from '@/features/guideline/components/kit/color-palette'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
+import { DoDontCompareDemo } from '@/features/guideline/components/kit/do-dont-compare'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
 import { IconGridDemo } from '@/features/guideline/components/kit/icon-grid'
 import { IllustrationGridDemo } from '@/features/guideline/components/kit/illustration-grid'
 import { LayoutGridOverlayDemo } from '@/features/guideline/components/kit/layout-grid-overlay'
-import { LogoClearSpaceCheckerDemo } from '@/features/guideline/components/kit/logo-clear-space-checker'
+import { LogoClearSpaceUnitDemo } from '@/features/guideline/components/kit/logo-clearspace-unit'
 import { LogoColorChangerDemo } from '@/features/guideline/components/kit/logo-color-changer'
 import { LogoLockupDemo } from '@/features/guideline/components/kit/logo-lockup'
 import { LogoVariantSelectorDemo } from '@/features/guideline/components/kit/logo-variant-selector'
@@ -376,6 +377,10 @@ export function GuidelineKitGallery() {
 				<DoDontBlock block={doDontBlock} />
 			</CollapsibleDemo>
 
+			<CollapsibleDemo title="Do / Don't Compare · 드래그 비교 슬라이더 (웹 전용)">
+				<DoDontCompareDemo />
+			</CollapsibleDemo>
+
 			<CollapsibleDemo title="Type Specimen · 라이브 입력 견본">
 				<TypeSpecimenBlock block={typeSpecimenBlock} />
 			</CollapsibleDemo>
@@ -477,8 +482,8 @@ export function GuidelineKitGallery() {
 				<IllustrationGridDemo />
 			</CollapsibleDemo>
 
-			<CollapsibleDemo title="Logo Clear-space Checker · 로고 여백 체커">
-				<LogoClearSpaceCheckerDemo />
+			<CollapsibleDemo title="Logo Clear Space · A 단위(수직 줄기) NA 여백">
+				<LogoClearSpaceUnitDemo />
 			</CollapsibleDemo>
 		</article>
 	)
