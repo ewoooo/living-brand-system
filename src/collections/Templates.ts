@@ -1,8 +1,13 @@
 import { APIError, type CollectionConfig } from 'payload'
+import { publishImportedFigmaAssets } from '@/features/template-import/repositories/figma-imported-asset.payload.repository'
 import {
 	findTemplateDraftBlocker,
 	findTemplatePublishBlocker,
 } from '@/features/template-import/services/validate-template-publish.service'
+import {
+	inspectBaseTemplateHtml,
+	inspectDraftTemplateAssetRefs,
+} from '@/features/template-import/utils/validate-template-html'
 import { isManager, managerOrAdmin } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -32,6 +37,32 @@ export const Templates: CollectionConfig = {
 				// Draft는 구조 안전성까지만 검사한다. live published 문서의 부분 update는 다시 발행 검증한다.
 				const finalStatus = data?._status ?? originalDoc?._status
 				if (finalStatus !== 'published') return data
+
+				// baseHtml의 Figma import refs 중 최종 html에도 남은 draft만 승인한다.
+				// 같은 req를 전달하므로 뒤의 Template 검증/저장이 실패하면 에셋 승격도 함께 롤백된다.
+				const importedRefs =
+					typeof candidate.baseHtml === 'string'
+						? inspectBaseTemplateHtml(candidate.baseHtml).refs
+						: []
+				const renderedRefs =
+					typeof candidate.html === 'string'
+						? inspectDraftTemplateAssetRefs(candidate.html).refs
+						: []
+				await publishImportedFigmaAssets(
+					req,
+					importedRefs
+						.filter(
+							(imported) =>
+								imported.collection === 'application-images' &&
+								renderedRefs.some(
+									(rendered) =>
+										rendered.collection === imported.collection &&
+										rendered.assetId === imported.assetId &&
+										rendered.src === imported.src,
+								),
+						)
+						.map((ref) => ref.assetId),
+				)
 
 				const blocker = await findTemplatePublishBlocker(candidate, req)
 				if (blocker) throw new APIError(blocker, 400)

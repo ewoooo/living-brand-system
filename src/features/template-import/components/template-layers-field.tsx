@@ -57,10 +57,19 @@ const TYPE_LABEL: Record<string, string> = {
 	VECTOR: '벡터',
 	STAR: '별',
 	POLYGON: '다각형',
+	REGULAR_POLYGON: '다각형',
 	BOOLEAN_OPERATION: '불리언',
 }
 const typeLabel = (t: string) => TYPE_LABEL[t] ?? t
-const VECTOR_TYPES = new Set(['VECTOR', 'BOOLEAN_OPERATION', 'STAR', 'LINE', 'ELLIPSE', 'POLYGON'])
+const VECTOR_TYPES = new Set([
+	'VECTOR',
+	'BOOLEAN_OPERATION',
+	'STAR',
+	'LINE',
+	'ELLIPSE',
+	'POLYGON',
+	'REGULAR_POLYGON',
+])
 
 // 배경 설정 트리거 버튼 공통 스타일(에셋 가져오기 · AI 생성).
 const TRIGGER_STYLE: CSSProperties = {

@@ -11,6 +11,7 @@ const IMAGE_ATTRIBUTES = new Set(['alt', 'src'])
 const SAFE_NODE_ID = /^[a-zA-Z0-9:;_-]+$/
 
 const ALLOWED_STYLE_PROPERTIES = new Set([
+	'align-content',
 	'align-items',
 	'align-self',
 	'backdrop-filter',
@@ -384,6 +385,12 @@ function inspectFragment(
 						) {
 							block('baseHtml에는 내부 staging 에셋 외의 URL을 사용할 수 없습니다.')
 						}
+						const fromMetadata = metadataRef(tagName, attributes, style.urls, nodeId)
+						if (fromMetadata === null) {
+							block('baseHtml의 에셋 메타데이터가 올바르지 않습니다.')
+						} else if (fromMetadata) {
+							result.refs.push(fromMetadata)
+						}
 						return
 					}
 					if (mode === 'draft') {
@@ -396,6 +403,8 @@ function inspectFragment(
 							block(
 								'Draft HTML에는 내부 에셋 또는 안전한 raster data URI만 사용할 수 있습니다.',
 							)
+						} else if (fromMetadata) {
+							result.refs.push(fromMetadata)
 						}
 						return
 					}
@@ -478,6 +487,18 @@ export function inspectTemplateHtml(input: {
 	}
 
 	return { refs: published.refs }
+}
+
+/** 안전성 검사를 통과한 baseHtml에서 Figma import가 직접 기록한 구조화 에셋 참조를 읽는다. */
+export function inspectBaseTemplateHtml(html: string): TemplateHtmlInspection {
+	const base = inspectFragment(html, 'base', new Map())
+	return { blocker: base.blocker, refs: base.refs }
+}
+
+/** 안전한 draft HTML에서 실제 렌더 결과가 사용하는 구조화 에셋 참조를 읽는다. */
+export function inspectDraftTemplateAssetRefs(html: string): TemplateHtmlInspection {
+	const draft = inspectFragment(html, 'draft', new Map())
+	return { blocker: draft.blocker, refs: draft.refs }
 }
 
 /** Draft 저장 시 실행 가능한 HTML과 외부 URL을 막되 staging 에셋은 허용한다. */
