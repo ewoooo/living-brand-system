@@ -60,7 +60,7 @@ export function ImageUploadCarousel() {
 	return (
 		<section
 			aria-label="이미지 업로드 및 미리보기"
-			className="relative flex aspect-square items-center justify-center overflow-hidden rounded-md border border-neutral-200 bg-neutral-50"
+			className="relative flex aspect-video items-center justify-center overflow-hidden rounded-md border border-neutral-200 bg-neutral-50"
 			onDragOver={(event) => event.preventDefault()}
 			onDrop={handleDrop}
 		>
@@ -120,7 +120,7 @@ function CheckCarouselActive({
 			<CarouselContent>
 				{images.map((image) => (
 					<CarouselItem key={image.id}>
-						<div className="flex h-72 items-center justify-center">
+						<div className="flex h-120 items-center justify-center">
 							{/* biome-ignore lint/performance/noImgElement: 브라우저 object URL 미리보기 */}
 							<img
 								src={image.url}

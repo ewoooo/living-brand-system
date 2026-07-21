@@ -218,7 +218,12 @@
 	gap: 8px;
 	margin-bottom: var(--base);
 
-	> [data-slot="button"] {
+	> .field-type {
+		flex: 1;
+		min-width: 0;
+	}
+
+	> .btn {
 		margin-top: 25px;
 	}
 }

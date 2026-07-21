@@ -1,4 +1,5 @@
 import type { GuidelineDocument } from '@/payload-types'
+import { GuidelineBlockFrame } from './common/guideline-block-frame'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type LayoutGrid = Extract<GuidelineBlock, { blockType: 'layoutGrid' }>
@@ -12,11 +13,15 @@ export function LayoutGridBlock({ block }: { block: LayoutGrid }) {
 	const variants = block.variants ?? []
 
 	return (
-		<div className={`grid grid-cols-1 gap-4 ${variants.length > 1 ? 'md:grid-cols-2' : ''}`}>
-			{variants.map((variant) => (
-				<GridDiagram key={variant.id} variant={variant} accent={accent} />
-			))}
-		</div>
+		<GuidelineBlockFrame layout="padded">
+			<div
+				className={`grid grid-cols-1 gap-4 ${variants.length > 1 ? 'md:grid-cols-2' : ''}`}
+			>
+				{variants.map((variant) => (
+					<GridDiagram key={variant.id} variant={variant} accent={accent} />
+				))}
+			</div>
+		</GuidelineBlockFrame>
 	)
 }
 

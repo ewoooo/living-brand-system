@@ -1,6 +1,5 @@
 import { CalloutBlock } from '@/features/guideline/components/blocks/callout-block'
 import { CarouselBlock } from '@/features/guideline/components/blocks/carousel-block'
-import { ColorPaletteBlock } from '@/features/guideline/components/blocks/color-palette-block'
 import { ContentColumnsBlock } from '@/features/guideline/components/blocks/content-columns-block'
 import { DoDontBlock } from '@/features/guideline/components/blocks/do-dont-block'
 import { GlyphGridBlock } from '@/features/guideline/components/blocks/glyph-grid-block'
@@ -10,17 +9,27 @@ import { SignatureShowcaseBlock } from '@/features/guideline/components/blocks/s
 import { SpecListBlock } from '@/features/guideline/components/blocks/spec-list-block'
 import { TypeScaleBlock } from '@/features/guideline/components/blocks/type-scale-block'
 import { TypeSpecimenBlock } from '@/features/guideline/components/blocks/type-specimen-block'
+import { CardRowDemo } from '@/features/guideline/components/kit/card-row'
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
+import { CollapsibleDemo } from '@/features/guideline/components/kit/collapsible-demo'
+import { ColorPaletteDemo } from '@/features/guideline/components/kit/color-palette'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
+import { IconGridDemo } from '@/features/guideline/components/kit/icon-grid'
+import { IllustrationGridDemo } from '@/features/guideline/components/kit/illustration-grid'
+import { LayoutGridOverlayDemo } from '@/features/guideline/components/kit/layout-grid-overlay'
+import { LogoClearSpaceCheckerDemo } from '@/features/guideline/components/kit/logo-clear-space-checker'
+import { LogoColorChangerDemo } from '@/features/guideline/components/kit/logo-color-changer'
 import { LogoLockupDemo } from '@/features/guideline/components/kit/logo-lockup'
+import { LogoVariantSelectorDemo } from '@/features/guideline/components/kit/logo-variant-selector'
 import {
-	brandColor,
 	brandTypeface,
 	type GuidelineBlock,
 	placeholderImage,
 	richTextBody,
 } from '@/features/guideline/components/kit/mock-blocks'
+import { PaletteSwatchesDemo } from '@/features/guideline/components/kit/palette-swatches'
+import { ScrollCarouselDemo } from '@/features/guideline/components/kit/scroll-carousel'
 import { SpecTable } from '@/features/guideline/components/kit/spec-table'
 
 // UI 키트 갤러리(중간공유용). 블록화가 끝난 컴포넌트는 실제 블록 renderer + Payload 타입 mock으로
@@ -126,48 +135,6 @@ const doDontBlock: Extract<GuidelineBlock, { blockType: 'doDont' }> = {
 				},
 			],
 		},
-	],
-}
-
-const mainPaletteBlock: Extract<GuidelineBlock, { blockType: 'colorPalette' }> = {
-	blockType: 'colorPalette',
-	title: 'Main Palette',
-	colors: [
-		brandColor('Essenherb Red', '#EA5343', 'Warm Red C', 21),
-		brandColor('White', '#FFFFFF', undefined, 22),
-		brandColor('Black', '#000000', undefined, 23),
-	],
-}
-
-const multiPaletteBlock: Extract<GuidelineBlock, { blockType: 'colorPalette' }> = {
-	blockType: 'colorPalette',
-	title: 'Multi Palette',
-	colors: [
-		brandColor('Red 1', '#FFF0EB', '705C', 31),
-		brandColor('Red 2', '#FFB4AA', '169C', 32),
-		brandColor('Essenherb Red', '#EA5343', 'Warm Red C', 33),
-		brandColor('Red 4', '#871400', '7620C', 34),
-		brandColor('Red 5', '#460500', '188C', 35),
-		brandColor('Yellow 1', '#FFFAC2', '600C', 36),
-		brandColor('Yellow 2', '#FFF095', '602C', 37),
-		brandColor('Yellow 3', '#FFE65F', '7404C', 38),
-		brandColor('Yellow 4', '#A07D0F', '118C', 39),
-		brandColor('Yellow 5', '#503200', '7575C', 40),
-		brandColor('Green 1', '#E6FFE6', '2253C', 41),
-		brandColor('Green 2', '#A7F5AE', '2255C', 42),
-		brandColor('Green 3', '#50AE5F', '2257C', 43),
-		brandColor('Green 4', '#195F30', '555C', 44),
-		brandColor('Green 5', '#002B1E', '567C', 45),
-		brandColor('Blue 1', '#E1F0FF', '657C', 46),
-		brandColor('Blue 2', '#A5CDFF', '2717C', 47),
-		brandColor('Blue 3', '#3C87CD', '279C', 48),
-		brandColor('Blue 4', '#1E508C', '2161C', 49),
-		brandColor('Blue 5', '#001941', '2768C', 50),
-		brandColor('Gray 1', '#FAFAFA', undefined, 51),
-		brandColor('Gray 2', '#EBEBEB', undefined, 52),
-		brandColor('Gray 3', '#ACACAC', undefined, 53),
-		brandColor('Gray 4', '#464646', undefined, 54),
-		brandColor('Gray 5', '#151515', undefined, 55),
 	],
 }
 
@@ -375,140 +342,144 @@ const calloutBlocks: Extract<GuidelineBlock, { blockType: 'callout' }>[] = [
 	},
 ]
 
-// 최상위 섹션 그룹: 제목 + 구분선 + 데모들.
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-	return (
-		<section className="mb-20">
-			<h2 className="mb-8 border-border border-b pb-4 font-body font-bold text-xl">
-				{title}
-			</h2>
-			<div className="flex flex-col gap-16">{children}</div>
-		</section>
-	)
-}
-
-// 개별 컴포넌트 데모 라벨 + 전시.
-function Demo({ title, children }: { title: string; children: React.ReactNode }) {
-	return (
-		<div>
-			<h3 className="mb-4 font-body font-medium text-muted-foreground text-xs uppercase tracking-wide">
-				{title}
-			</h3>
-			{children}
-		</div>
-	)
-}
-
 export function GuidelineKitGallery() {
 	return (
-		<article className="w-full">
-			<header className="mb-12">
+		<article className="flex w-full flex-col gap-8">
+			<header className="mb-2">
 				<p className="font-body font-medium text-muted-foreground text-xs uppercase tracking-wide">
-					UI Kit
+					UI Kit · 실험 보드
 				</p>
 				<h1 className="mt-1 font-body font-bold text-2xl">가이드라인 컴포넌트 키트</h1>
+				<p className="mt-2 font-body font-normal text-muted-foreground text-sm">
+					모든 컴포넌트를 동등하게 나열합니다. 헤더의 토글로 각 컴포넌트를 접어 원하는
+					것만 보세요.
+				</p>
 			</header>
 
-			<Section title="이미지 + 텍스트 (실제 블록 renderer)">
-				<Demo title="Content Columns · 워크호스 (2열)">
-					<ContentColumnsBlock block={mediaTextBlock} />
-				</Demo>
+			<CollapsibleDemo title="Content Columns · 워크호스 (2열)">
+				<ContentColumnsBlock block={mediaTextBlock} />
+			</CollapsibleDemo>
 
-				<Demo title="Content Columns · 이미지 세트 (3열)">
-					<ContentColumnsBlock block={imageGroupBlock} />
-				</Demo>
+			<CollapsibleDemo title="Content Columns · 이미지 세트 (3열)">
+				<ContentColumnsBlock block={imageGroupBlock} />
+			</CollapsibleDemo>
 
-				<Demo title="Carousel · 독립 이미지 슬라이드">
-					<CarouselBlock block={carouselBlock} />
-				</Demo>
+			<CollapsibleDemo title="Carousel · 독립 이미지 슬라이드">
+				<CarouselBlock block={carouselBlock} />
+			</CollapsibleDemo>
 
-				<Demo title="Media Showcase · 대형 이미지">
-					<MediaShowcaseBlock block={bigImageBlock} />
-				</Demo>
+			<CollapsibleDemo title="Media Showcase · 대형 이미지">
+				<MediaShowcaseBlock block={bigImageBlock} />
+			</CollapsibleDemo>
 
-				<Demo title="Do / Don't">
-					<DoDontBlock block={doDontBlock} />
-				</Demo>
-			</Section>
+			<CollapsibleDemo title="Do / Don't">
+				<DoDontBlock block={doDontBlock} />
+			</CollapsibleDemo>
 
-			<Section title="타이포그래피">
-				<Demo title="Type Specimen · 라이브 입력 견본 (실제 블록 renderer)">
-					<TypeSpecimenBlock block={typeSpecimenBlock} />
-				</Demo>
+			<CollapsibleDemo title="Type Specimen · 라이브 입력 견본">
+				<TypeSpecimenBlock block={typeSpecimenBlock} />
+			</CollapsibleDemo>
 
-				<Demo title="Glyph Grid · 글리프 인스펙터 (실제 블록 renderer)">
-					<GlyphGridBlock block={glyphGridBlock} />
-				</Demo>
+			<CollapsibleDemo title="Glyph Grid · 글리프 인스펙터">
+				<GlyphGridBlock block={glyphGridBlock} />
+			</CollapsibleDemo>
 
-				<Demo title="Type Scale (실제 블록 renderer)">
-					<TypeScaleBlock block={typeScaleBlock} />
-				</Demo>
+			<CollapsibleDemo title="Type Scale">
+				<TypeScaleBlock block={typeScaleBlock} />
+			</CollapsibleDemo>
 
-				<Demo title="Signature Showcase · 대형 타입 시그니처 (실제 블록 renderer)">
-					<SignatureShowcaseBlock block={signatureShowcaseBlock} />
-				</Demo>
-			</Section>
+			<CollapsibleDemo title="Signature Showcase · 대형 타입 시그니처">
+				<SignatureShowcaseBlock block={signatureShowcaseBlock} />
+			</CollapsibleDemo>
 
-			<Section title="컬러 (실제 블록 renderer)">
-				<Demo title="Color Palette · Main (3)">
-					<ColorPaletteBlock block={mainPaletteBlock} />
-				</Demo>
+			<CollapsibleDemo title="Color Palette · 컬러 팔레트">
+				<ColorPaletteDemo />
+			</CollapsibleDemo>
 
-				<Demo title="Color Palette · Multi (25)">
-					<ColorPaletteBlock block={multiPaletteBlock} />
-				</Demo>
-			</Section>
+			<CollapsibleDemo title="Data Table · 대량 테이블">
+				<DataTableDemo />
+			</CollapsibleDemo>
 
-			<Section title="기타">
-				<Demo title="Data Table · 대량 테이블">
-					<DataTableDemo />
-				</Demo>
+			<CollapsibleDemo title="Spec List · 스펙 목록">
+				<SpecListBlock block={specListBlock} />
+			</CollapsibleDemo>
 
-				<Demo title="Spec List · 스펙 목록 (실제 블록 renderer)">
-					<SpecListBlock block={specListBlock} />
-				</Demo>
+			<CollapsibleDemo title="Spec Table">
+				<SpecTable
+					columns={['Breakpoint', 'Min width', 'Columns', 'Margin']}
+					rows={[
+						['Small', '320px', 4, '16px'],
+						['Medium', '672px', 8, '16px'],
+						['Large', '1056px', 16, '16px'],
+						['X-Large', '1312px', 16, '24px'],
+					]}
+					caption="반응형 그리드 브레이크포인트 규격 예시."
+				/>
+			</CollapsibleDemo>
 
-				<Demo title="Spec Table">
-					<SpecTable
-						columns={['Breakpoint', 'Min width', 'Columns', 'Margin']}
-						rows={[
-							['Small', '320px', 4, '16px'],
-							['Medium', '672px', 8, '16px'],
-							['Large', '1056px', 16, '16px'],
-							['X-Large', '1312px', 16, '24px'],
-						]}
-						caption="반응형 그리드 브레이크포인트 규격 예시."
-					/>
-				</Demo>
+			<CollapsibleDemo title="Layout Grid · 레이아웃 그리드">
+				<LayoutGridBlock block={layoutGridBlock} />
+			</CollapsibleDemo>
 
-				<Demo title="Layout Grid · 레이아웃 그리드 (실제 블록 renderer)">
-					<LayoutGridBlock block={layoutGridBlock} />
-				</Demo>
+			<CollapsibleDemo title="Logo Lockup · 로고 배리에이션">
+				<LogoLockupDemo />
+			</CollapsibleDemo>
 
-				<Demo title="Logo Lockup · 로고 배리에이션">
-					<LogoLockupDemo />
-				</Demo>
+			<CollapsibleDemo title="Callout · 규정/주의 콜아웃">
+				<div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+					{calloutBlocks.map((block) => (
+						<CalloutBlock key={block.kind} block={block} />
+					))}
+				</div>
+			</CollapsibleDemo>
 
-				<Demo title="Callout · 규정/주의 콜아웃 (실제 블록 renderer)">
-					<div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-						{calloutBlocks.map((block) => (
-							<CalloutBlock key={block.kind} block={block} />
-						))}
-					</div>
-				</Demo>
+			<CollapsibleDemo title="Download Card · 에셋 다운로드 타일">
+				<DownloadCardDemo />
+			</CollapsibleDemo>
 
-				<Demo title="Download Card · 에셋 다운로드 타일">
-					<DownloadCardDemo />
-				</Demo>
+			<CollapsibleDemo title="Clear Space">
+				<ClearSpace
+					logoSrc={logoPlaceholder}
+					alt="로고 클리어스페이스 예시"
+					note="로고 주위 최소 여백은 x 이상 확보한다 (x = 심볼 높이 기준)."
+				/>
+			</CollapsibleDemo>
 
-				<Demo title="Clear Space">
-					<ClearSpace
-						logoSrc={logoPlaceholder}
-						alt="로고 클리어스페이스 예시"
-						note="로고 주위 최소 여백은 x 이상 확보한다 (x = 심볼 높이 기준)."
-					/>
-				</Demo>
-			</Section>
+			<CollapsibleDemo title="Scroll Carousel · 세로 스크롤 가로 캐러셀">
+				<ScrollCarouselDemo />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Color Palette · 컬러 팔레트 (default · mini)">
+				<PaletteSwatchesDemo />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Logo Color Changer · 로고 컬러 체인저">
+				<LogoColorChangerDemo />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Logo Variant Selector · 로고 배리언트 셀렉터 (cash.app식)">
+				<LogoVariantSelectorDemo />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Icon Grid · 아이콘 그리드">
+				<IconGridDemo />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Layout Grid Overlay · 레이아웃 그리드 오버레이">
+				<LayoutGridOverlayDemo />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Card Row · 카드 4열 배치">
+				<CardRowDemo />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Illustration Grid · 일러스트 40종">
+				<IllustrationGridDemo />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Logo Clear-space Checker · 로고 여백 체커">
+				<LogoClearSpaceCheckerDemo />
+			</CollapsibleDemo>
 		</article>
 	)
 }
