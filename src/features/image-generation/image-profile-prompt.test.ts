@@ -6,19 +6,21 @@ import {
 } from './image-profile-prompt'
 
 describe('image profile prompt', () => {
-	it('프로파일과 정규화 결과를 flat JSON으로 합치고 같은 키는 정규화 값이 우선한다', () => {
+	it('유저 원문을 보존하고 같은 키는 정규화 값이 우선한다', () => {
 		expect(
 			mergeImageProfilePrompt(
 				[
 					{ key: 'style', value: 'minimalist editorial cosmetic photography' },
 					{ key: 'background', value: 'pure solid white' },
 				],
-				{ background: 'warm gray', mood: 'organic' },
+				{ background: 'warm gray', mood: 'organic', subject: 'ignored' },
+				'  파란색 세럼병  ',
 			),
 		).toEqual({
 			style: 'minimalist editorial cosmetic photography',
 			background: 'warm gray',
 			mood: 'organic',
+			subject: '파란색 세럼병',
 		})
 	})
 
