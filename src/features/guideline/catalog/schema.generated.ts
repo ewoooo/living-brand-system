@@ -8,6 +8,7 @@ import ContentColumnsSchema from '../blocks/content-columns/schema'
 import DoDontSchema from '../blocks/do-dont/schema'
 import GlyphGridSchema from '../blocks/glyph-grid/schema'
 import IconGridSchema from '../blocks/icon-grid/schema'
+import ImageGridSchema from '../blocks/image-grid/schema'
 import LayoutGridSchema from '../blocks/layout-grid/schema'
 import MediaShowcaseSchema from '../blocks/media-showcase/schema'
 import SignatureShowcaseSchema from '../blocks/signature-showcase/schema'
@@ -34,6 +35,7 @@ export const guidelineBlockSchemas = {
 	layoutGrid: LayoutGridSchema,
 	glyphGrid: GlyphGridSchema,
 	iconGrid: IconGridSchema,
+	imageGrid: ImageGridSchema,
 } satisfies SchemaMap
 
 export const guidelineBlocks = Object.values(guidelineBlockSchemas)

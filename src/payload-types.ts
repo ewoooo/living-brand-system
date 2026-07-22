@@ -251,6 +251,7 @@ export interface GuidelineDocument {
         | LayoutGridBlock
         | GlyphGridBlock
         | IconGridBlock
+        | ImageGridBlock
       )[]
     | null;
   /**
@@ -831,6 +832,44 @@ export interface IconGridBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'iconGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageGridBlock".
+ */
+export interface ImageGridBlock {
+  title?: string | null;
+  /**
+   * 격자의 열 수입니다.
+   */
+  columns: number;
+  /**
+   * 격자의 행 수입니다.
+   */
+  rows: number;
+  /**
+   * 모든 셀에 공통 적용할 비율입니다.
+   */
+  imageRatio?:
+    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+    | null;
+  /**
+   * 왼쪽 위부터 행 순서대로 채워집니다. 이미지·캡션은 각각 비워도 되며(빈 셀), 행×열 수만큼만 표시됩니다.
+   */
+  cells?:
+    | {
+        image?: (number | null) | ApplicationImage;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'imageGrid';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1742,6 +1781,7 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         layoutGrid?: T | LayoutGridBlockSelect<T>;
         glyphGrid?: T | GlyphGridBlockSelect<T>;
         iconGrid?: T | IconGridBlockSelect<T>;
+        imageGrid?: T | ImageGridBlockSelect<T>;
       };
   rules?: T;
   displayOrder?: T;
@@ -1984,6 +2024,26 @@ export interface IconGridBlockSelect<T extends boolean = true> {
   cellHeightPct?: T;
   svgSizePct?: T;
   svgOffsetPct?: T;
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageGridBlock_select".
+ */
+export interface ImageGridBlockSelect<T extends boolean = true> {
+  title?: T;
+  columns?: T;
+  rows?: T;
+  imageRatio?: T;
+  cells?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
   rules?: T;
   id?: T;
   blockName?: T;
