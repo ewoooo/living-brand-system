@@ -69,6 +69,8 @@ import * as migration_20260718_063009_media_showcase_images from './20260718_063
 import * as migration_20260720_015116_extend_image_ratio_options from './20260720_015116_extend_image_ratio_options';
 import * as migration_20260720_022908_dodont_example_columns from './20260720_022908_dodont_example_columns';
 import * as migration_20260721_041541_image_prompt_profiles from './20260721_041541_image_prompt_profiles';
+import * as migration_20260722_030718_add_icon_grid_block from './20260722_030718_add_icon_grid_block';
+import * as migration_20260722_055051_add_brand_icons from './20260722_055051_add_brand_icons';
 
 export const migrations = [
   {
@@ -424,6 +426,16 @@ export const migrations = [
   {
     up: migration_20260721_041541_image_prompt_profiles.up,
     down: migration_20260721_041541_image_prompt_profiles.down,
-    name: '20260721_041541_image_prompt_profiles'
+    name: '20260721_041541_image_prompt_profiles',
+  },
+  {
+    up: migration_20260722_030718_add_icon_grid_block.up,
+    down: migration_20260722_030718_add_icon_grid_block.down,
+    name: '20260722_030718_add_icon_grid_block',
+  },
+  {
+    up: migration_20260722_055051_add_brand_icons.up,
+    down: migration_20260722_055051_add_brand_icons.down,
+    name: '20260722_055051_add_brand_icons'
   },
 ];

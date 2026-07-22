@@ -3,6 +3,7 @@ import { CarouselBlock } from '@/features/guideline/blocks/carousel/component'
 import { ContentColumnsBlock } from '@/features/guideline/blocks/content-columns/component'
 import { DoDontBlock } from '@/features/guideline/blocks/do-dont/component'
 import { GlyphGridBlock } from '@/features/guideline/blocks/glyph-grid/component'
+import { IconGridBlock } from '@/features/guideline/blocks/icon-grid/component'
 import { LayoutGridBlock } from '@/features/guideline/blocks/layout-grid/component'
 import { MediaShowcaseBlock } from '@/features/guideline/blocks/media-showcase/component'
 import { SignatureShowcaseBlock } from '@/features/guideline/blocks/signature-showcase/component'
@@ -16,7 +17,6 @@ import { ColorPaletteDemo } from '@/features/guideline/components/kit/color-pale
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
 import { DoDontCompareDemo } from '@/features/guideline/components/kit/do-dont-compare'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
-import { IconGridDemo } from '@/features/guideline/components/kit/icon-grid'
 import { LayoutGridOverlayDemo } from '@/features/guideline/components/kit/layout-grid-overlay'
 import { LogoClearSpaceUnitDemo } from '@/features/guideline/components/kit/logo-clearspace-unit'
 import { LogoColorChangerDemo } from '@/features/guideline/components/kit/logo-color-changer'
@@ -244,6 +244,14 @@ const glyphGridBlock: Extract<GuidelineBlock, { blockType: 'glyphGrid' }> = {
 	blockType: 'glyphGrid',
 	title: null,
 	typeface: essenflux,
+}
+
+const iconGridBlock: Extract<GuidelineBlock, { blockType: 'iconGrid' }> = {
+	blockType: 'iconGrid',
+	colored: false,
+	cellHeightPct: 100,
+	svgSizePct: 70,
+	svgOffsetPct: 0,
 }
 
 const typeSpecimenBlock: Extract<GuidelineBlock, { blockType: 'typeSpecimen' }> = {
@@ -474,7 +482,7 @@ export function GuidelineKitGallery() {
 			</CollapsibleDemo>
 
 			<CollapsibleDemo title="Icon Grid">
-				<IconGridDemo />
+				<IconGridBlock block={iconGridBlock} />
 			</CollapsibleDemo>
 
 			<CollapsibleDemo title="Logo Clear Space · A 단위(수직 줄기) NA 여백">

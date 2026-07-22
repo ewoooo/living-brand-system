@@ -103,5 +103,7 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 			).join('\n\n')
 		case 'glyphGrid':
 			return compact([evidence.title ?? 'Glyph grid', evidence.typeface?.name]).join('\n')
+		case 'iconGrid':
+			return evidence.title ?? 'Icon grid'
 	}
 }

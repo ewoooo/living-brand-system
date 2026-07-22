@@ -7,6 +7,7 @@ import ColorPaletteComponent from '../blocks/color-palette/component'
 import ContentColumnsComponent from '../blocks/content-columns/component'
 import DoDontComponent from '../blocks/do-dont/component'
 import GlyphGridComponent from '../blocks/glyph-grid/component'
+import IconGridComponent from '../blocks/icon-grid/component'
 import LayoutGridComponent from '../blocks/layout-grid/component'
 import MediaShowcaseComponent from '../blocks/media-showcase/component'
 import SignatureShowcaseComponent from '../blocks/signature-showcase/component'
@@ -34,4 +35,5 @@ export const guidelineBlockRenderers = {
 	typeScale: (block) => <TypeScaleComponent block={block} />,
 	layoutGrid: (block) => <LayoutGridComponent block={block} />,
 	glyphGrid: (block) => <GlyphGridComponent block={block} />,
+	iconGrid: (block) => <IconGridComponent block={block} />,
 } satisfies RendererMap

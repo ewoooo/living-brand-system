@@ -1,7 +1,11 @@
 'use client'
 
+import { Contrast, Shuffle } from '@carbon/icons-react'
 import { motion } from 'motion/react'
 import { useMemo, useState } from 'react'
+import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
+import type { GuidelineDocument } from '@/payload-types'
+import { GuidelineBlockFrame } from '../shared/guideline-block-frame'
 import i1 from './svg/1.svg'
 import i2 from './svg/2.svg'
 import i3 from './svg/3.svg'
@@ -44,12 +48,11 @@ import i48 from './svg/48.svg'
 import i363 from './svg/363.svg'
 
 /**
- * 아이콘 그리드 — Essenherb 아이콘(일러스트) 40종을 8×5 그리드로 전시한다.
- * - user 조작(뷰어): 태그(카테고리) 필터 · 색상 반전 · 랜덤 섞기.
- * - manager 설정값(prop, 추후 Payload 블록 필드로 승격): 컬러/흑백(colored) · 셀 높이 · SVG 크기 · SVG 수직 이동.
- *   → 이 값들은 뷰어 UI에 노출하지 않고 prop처럼 저장되는 값이다.
+ * 아이콘 그리드 블록 — Essenherb 아이콘 40종을 8×5 그리드로 전시한다.
+ * - 뷰어 조작: 태그(카테고리) 필터 · 색상 반전 · 랜덤 섞기.
+ * - manager 설정(블록 필드): 컬러/흑백(colored) · 셀 높이 · SVG 크기 · SVG 수직 이동.
  * - 흑백↔컬러: 같은 SVG를 CSS mask로 그려 fg(실루엣)·bg(셀)를 색칠한다.
- * - 카드 이동은 motion layout(섞기 애니메이션), 호버는 살짝 확대.
+ * - 아이콘 40종·색·카테고리는 essenherb 브랜드 자산으로 하드코딩(POC 부채)한다.
  */
 type Imported = { src: string; width: number; height: number }
 type Illustration = {
@@ -106,7 +109,7 @@ const SAMPLED: { img: Imported; bg: string; fg: string }[] = [
 	{ img: i363, bg: '#FFE65F', fg: '#503200' },
 ]
 
-// 40번(마지막)을 32번으로 옮기고 그 뒤(옛 32~39)를 하나씩 뒤로 민다. 색은 일러스트와 함께 이동.
+// 40번(마지막)을 32번으로 옮기고 그 뒤(옛 32~39)를 하나씩 뒤로 민다. 색은 아이콘과 함께 이동.
 const ORDERED = (() => {
 	const arr = [...SAMPLED]
 	const [moved] = arr.splice(39, 1)
@@ -124,7 +127,7 @@ const CATEGORY_RANGES: { label: string; from: number; to: number }[] = [
 
 // 흑백 모드 색(반전 시 서로 스왑되므로 배경도 실색으로 둔다).
 const BW = { fg: '#151515', bg: '#FFFFFF' }
-// manager가 admin에서 조정하는 배치 기본값(폭 대비 %). 추후 블록 필드의 default가 된다.
+// manager가 admin에서 조정하는 배치 기본값(폭 대비 %). 블록 필드의 default와 같다.
 const DEFAULT_LAYOUT = { heightPct: 100, svgPct: 70, offsetPct: 0 }
 
 const categoryOf = (n: number) => CATEGORY_RANGES.find((c) => n >= c.from && n <= c.to)?.label ?? ''
@@ -141,6 +144,12 @@ const ILLUSTRATIONS: Illustration[] = ORDERED.map((s, i) => ({
 	...dimOf(s.img),
 }))
 
+const CATEGORIES = [...new Set(ILLUSTRATIONS.map((x) => x.category))]
+
+// 액션 버튼(순서복원·섞기·전체) 공통 — 채운 secondary. border 없음, radius만.
+const ACTION_BUTTON_CLASS =
+	'rounded-md px-3 py-1.5 font-body font-medium text-sm bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]'
+
 // Fisher-Yates. 컴포넌트(브라우저)에서만 도니 Math.random 사용 OK.
 function shuffle<T>(list: T[]): T[] {
 	const next = [...list]
@@ -151,27 +160,18 @@ function shuffle<T>(list: T[]): T[] {
 	return next
 }
 
-export function IconGrid({
-	illustrations = ILLUSTRATIONS,
-	colored = false,
-	heightPct = DEFAULT_LAYOUT.heightPct,
-	svgPct = DEFAULT_LAYOUT.svgPct,
-	offsetPct = DEFAULT_LAYOUT.offsetPct,
+// 뷰어 인터랙션(태그·반전·섞기)을 담당하는 프레젠테이션 그리드. 배치·컬러는 block에서 받은 props.
+function IconGridView({
+	colored,
+	heightPct,
+	svgPct,
+	offsetPct,
 }: {
-	illustrations?: Illustration[]
-	/** 컬러(true)/흑백(false). 뷰어에 토글로 노출하지 않고 manager가 Payload admin에서 설정하는 값. */
-	colored?: boolean
-	/** 셀 높이(폭 대비 %). manager 설정값. */
-	heightPct?: number
-	/** SVG 크기(폭 대비 %). manager 설정값. */
-	svgPct?: number
-	/** SVG 수직 이동(폭 대비 %). manager 설정값. */
-	offsetPct?: number
+	colored: boolean
+	heightPct: number
+	svgPct: number
+	offsetPct: number
 }) {
-	const categories = useMemo(
-		() => [...new Set(illustrations.map((x) => x.category))],
-		[illustrations],
-	)
 	const [selected, setSelected] = useState<Set<string>>(new Set())
 	// 0 = 원래 순서, >0 = 클릭할 때마다 새로 섞기
 	const [shuffleSeed, setShuffleSeed] = useState(0)
@@ -188,11 +188,11 @@ export function IconGrid({
 	const visible = useMemo(() => {
 		const filtered =
 			selected.size === 0
-				? illustrations
-				: illustrations.filter((x) => selected.has(x.category))
+				? ILLUSTRATIONS
+				: ILLUSTRATIONS.filter((x) => selected.has(x.category))
 		// shuffleSeed가 dependency라 섞기 버튼 누를 때만 재계산
 		return shuffleSeed > 0 ? shuffle(filtered) : filtered
-	}, [illustrations, selected, shuffleSeed])
+	}, [selected, shuffleSeed])
 
 	// colored(manager 설정)·inverted(뷰어 조작)를 반영한 최종 전경/배경색.
 	const cellColors = (it: Illustration) => {
@@ -203,60 +203,71 @@ export function IconGrid({
 
 	return (
 		<div className="w-full">
-			{/* 뷰어 조작: 태그 필터 + 색상 반전 + 랜덤 섞기 */}
-			<div className="mb-4 flex flex-wrap items-center gap-2">
-				{categories.map((c) => {
-					const on = selected.has(c)
-					return (
+			{/* 뷰어 조작 — 필터(태그)는 왼쪽, 보기 액션(반전·섞기)은 오른쪽 도구 클러스터로 분리 */}
+			<div className="mb-4 flex flex-wrap items-start justify-between gap-x-8 gap-y-3">
+				{/* 필터: 태그 다중선택 */}
+				<div className="flex flex-wrap items-center gap-2">
+					{CATEGORIES.map((c) => {
+						const on = selected.has(c)
+						return (
+							<button
+								key={c}
+								type="button"
+								onClick={() => toggle(c)}
+								aria-pressed={on}
+								className={`rounded-md px-3 py-1.5 font-body font-medium text-sm ${
+									on
+										? 'bg-foreground text-background'
+										: 'bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]'
+								}`}
+							>
+								{c}
+							</button>
+						)
+					})}
+					{selected.size > 0 && (
 						<button
-							key={c}
 							type="button"
-							onClick={() => toggle(c)}
-							aria-pressed={on}
-							className={`px-3 py-1.5 font-body font-medium text-sm ${
-								on ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-fill-hover'
-							}`}
+							onClick={() => setSelected(new Set())}
+							className={ACTION_BUTTON_CLASS}
 						>
-							{c}
+							전체
 						</button>
-					)
-				})}
-				{selected.size > 0 && (
+					)}
+				</div>
+				{/* 보기 액션: 태그와 다른 종류라 아이콘 + 채운(secondary) 버튼으로 구분. 순서는 순서복원→섞기→반전 */}
+				<div className="flex items-center gap-2">
+					{shuffleSeed > 0 && (
+						<button
+							type="button"
+							onClick={() => setShuffleSeed(0)}
+							className={ACTION_BUTTON_CLASS}
+						>
+							순서 복원
+						</button>
+					)}
 					<button
 						type="button"
-						onClick={() => setSelected(new Set())}
-						className="px-3 py-1.5 font-body font-medium text-muted-foreground text-sm hover:bg-fill-hover"
+						onClick={() => setShuffleSeed((s) => s + 1)}
+						className={`inline-flex items-center gap-1.5 ${ACTION_BUTTON_CLASS}`}
 					>
-						전체
+						<Shuffle size={16} />
+						랜덤 섞기
 					</button>
-				)}
-				<span className="mx-1 h-5 w-px bg-border" />
-				<button
-					type="button"
-					onClick={() => setInverted((v) => !v)}
-					aria-pressed={inverted}
-					className={`px-3 py-1.5 font-body font-medium text-sm ${
-						inverted ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-fill-hover'
-					}`}
-				>
-					색상 반전
-				</button>
-				<button
-					type="button"
-					onClick={() => setShuffleSeed((s) => s + 1)}
-					className="px-3 py-1.5 font-body font-medium text-muted-foreground text-sm hover:bg-fill-hover"
-				>
-					랜덤 섞기
-				</button>
-				{shuffleSeed > 0 && (
 					<button
 						type="button"
-						onClick={() => setShuffleSeed(0)}
-						className="px-3 py-1.5 font-body font-medium text-muted-foreground text-sm hover:bg-fill-hover"
+						onClick={() => setInverted((v) => !v)}
+						aria-pressed={inverted}
+						className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-body font-medium text-sm ${
+							inverted
+								? 'bg-foreground text-background'
+								: 'bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]'
+						}`}
 					>
-						순서 복원
+						<Contrast size={16} />
+						색상 반전
 					</button>
-				)}
+				</div>
 			</div>
 
 			{/* 8열 그리드 — border/radius 없음. SVG는 CSS mask로 그려 fg(실루엣)·bg를 색칠. */}
@@ -309,6 +320,21 @@ export function IconGrid({
 	)
 }
 
-export function IconGridDemo() {
-	return <IconGrid />
+type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
+type IconGridType = Extract<GuidelineBlock, { blockType: 'iconGrid' }>
+
+export function IconGridBlock({ block }: { block: IconGridType }) {
+	return (
+		<GuidelineBlockFrame layout="padded" label={block.title ?? undefined}>
+			{block.title ? <GuidelineHeader variant="block" title={block.title} /> : null}
+			<IconGridView
+				colored={block.colored ?? false}
+				heightPct={block.cellHeightPct ?? DEFAULT_LAYOUT.heightPct}
+				svgPct={block.svgSizePct ?? DEFAULT_LAYOUT.svgPct}
+				offsetPct={block.svgOffsetPct ?? DEFAULT_LAYOUT.offsetPct}
+			/>
+		</GuidelineBlockFrame>
+	)
 }
+
+export default IconGridBlock
