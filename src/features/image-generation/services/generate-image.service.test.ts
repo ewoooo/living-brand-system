@@ -47,7 +47,7 @@ describe('generateImageCandidates', () => {
 		mocks.env.IMAGE_DEV_FALLBACK = 'true'
 
 		await expect(
-			generateImageCandidates({ userInput: 'sample', sceneId: 'free', count: 1 }),
+			generateImageCandidates({ userInput: 'sample', count: 1 }),
 		).rejects.toBeInstanceOf(ImageGenerationUnavailableError)
 		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
@@ -60,7 +60,6 @@ describe('generateImageCandidates', () => {
 
 		const result = await generateImageCandidates({
 			userInput: 'sample',
-			sceneId: 'free',
 			count: 2,
 		})
 
@@ -74,7 +73,7 @@ describe('generateImageCandidates', () => {
 		mocks.env.OPENAI_API_KEY = 'key'
 		mocks.generateBrandImages.mockResolvedValue(['data:image/png;base64,openai'])
 
-		await generateImageCandidates({ userInput: 'sample', sceneId: 'free', count: 1 })
+		await generateImageCandidates({ userInput: 'sample', count: 1 })
 
 		expect(mocks.generateBrandImages).toHaveBeenCalledWith({
 			prompt: 'sample',

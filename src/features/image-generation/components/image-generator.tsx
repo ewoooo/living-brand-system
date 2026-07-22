@@ -18,7 +18,7 @@ export function ImageGenerator({ profiles }: { profiles: { id: number; name: str
 		void generate({
 			count,
 			prompt,
-			...(profile === 'free' ? { sceneId: 'free' } : { profileId: profile }),
+			...(profile === 'free' ? {} : { profileId: profile }),
 		})
 	}
 

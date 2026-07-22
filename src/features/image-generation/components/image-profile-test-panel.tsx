@@ -69,7 +69,6 @@ export default function ImageProfileTestPanel() {
 			const generated = await generateImages({
 				count: 1,
 				prompt: JSON.stringify(finalPrompt),
-				sceneId: 'free',
 			})
 			setImage(generated.images[0] ?? null)
 		} catch (requestError) {

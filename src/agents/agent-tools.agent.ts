@@ -137,27 +137,22 @@ export function getAgentTools() {
 		}),
 		generateImage: tool({
 			description:
-				'Generate NEW images from a text prompt. For a branded product image, call listImageProfiles first and pass its profileId. For a non-product image, pass sceneId "free" to use the prompt without a brand profile.',
-			inputSchema: z
-				.object({
-					prompt: z.string().min(1).max(500),
-					profileId: z.number().int().positive().optional(),
-					sceneId: z.string().max(40).optional(),
-					count: z.number().int().min(1).max(4).optional(),
-				})
-				.refine(({ profileId, sceneId }) => !(profileId && sceneId)),
+				'Generate NEW images from a text prompt. For a branded product image, call listImageProfiles first and pass its profileId. Omit profileId for free generation without a brand profile.',
+			inputSchema: z.object({
+				prompt: z.string().min(1).max(500),
+				profileId: z.number().int().positive().optional(),
+				count: z.number().int().min(1).max(4).optional(),
+			}),
 			contextSchema: guidelineToolContextSchema,
-			execute: async ({ prompt, profileId, sceneId, count }, { context }) => {
+			execute: async ({ prompt, profileId, count }, { context }) => {
 				const {
 					images,
 					prompt: composedPrompt,
 					profileId: usedProfileId,
 					profileName,
-					sceneId: usedSceneId,
 				} = await generateImageCandidates({
 					userInput: prompt,
 					profileId,
-					sceneId,
 					user: context.user,
 					count: count ?? 2,
 				})
@@ -173,7 +168,6 @@ export function getAgentTools() {
 					prompt: composedPrompt,
 					profileId: usedProfileId,
 					profileName,
-					sceneId: usedSceneId,
 					images,
 				} satisfies AgentGeneratedImagesAttachment
 			},

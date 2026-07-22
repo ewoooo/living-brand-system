@@ -1,6 +1,5 @@
 'use client'
 
-import { IMAGE_SCENES } from '@/features/image-generation/presets'
 import type { AgentGeneratedImagesAttachment } from '@/features/image-generation/services/generate-image.service'
 
 export function AgentChatGeneratedImages({
@@ -8,14 +7,13 @@ export function AgentChatGeneratedImages({
 }: {
 	attachment: AgentGeneratedImagesAttachment
 }) {
-	const label = attachment.profileName ?? sceneLabel(attachment.sceneId)
 	return (
 		<div className="flex w-full flex-col gap-2">
-			{label && (
-				<p className="font-body text-xs font-normal text-muted-foreground">
-					{attachment.profileName ? '적용된 프로파일' : '적용된 씬'}: {label}
-				</p>
-			)}
+			<p className="font-body text-xs font-normal text-muted-foreground">
+				{attachment.profileName
+					? `적용된 프로파일: ${attachment.profileName}`
+					: '자유 생성 (브랜드 스타일 없음)'}
+			</p>
 			<div className="grid w-full grid-cols-2 gap-2">
 				{attachment.images.map((src, index) => (
 					<div key={src} className="relative">
@@ -43,12 +41,6 @@ export function AgentChatGeneratedImages({
 			)}
 		</div>
 	)
-}
-
-function sceneLabel(sceneId?: string) {
-	if (!sceneId || sceneId === 'auto') return null
-	if (sceneId === 'free') return '자유 생성'
-	return IMAGE_SCENES.find((scene) => scene.id === sceneId)?.label ?? null
 }
 
 function imgExt(src: string) {

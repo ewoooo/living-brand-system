@@ -1,6 +1,5 @@
 import { z } from 'zod'
 import { env } from '@/env'
-import { IMAGE_SCENES } from '@/features/image-generation/presets'
 import {
 	generateImageCandidates,
 	ImageGenerationUnavailableError,
@@ -11,21 +10,11 @@ import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
 export const maxDuration = 60
 
-const validSceneIds = new Set(['auto', 'free', ...IMAGE_SCENES.map((scene) => scene.id)])
-const requestSchema = z
-	.object({
-		prompt: z.string().trim().min(1).max(500),
-		count: z.number().int().min(1).max(6).default(4),
-		profileId: z.number().int().positive().optional(),
-		sceneId: z
-			.string()
-			.trim()
-			.min(1)
-			.max(40)
-			.refine((sceneId) => validSceneIds.has(sceneId))
-			.optional(),
-	})
-	.refine(({ profileId, sceneId }) => !(profileId && sceneId))
+const requestSchema = z.object({
+	prompt: z.string().trim().min(1).max(500),
+	count: z.number().int().min(1).max(6).default(4),
+	profileId: z.number().int().positive().optional(),
+})
 
 export async function POST(request: Request) {
 	if (isCrossOriginRequest(request)) {
@@ -42,12 +31,11 @@ export async function POST(request: Request) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
 	}
 
-	const { prompt: userInput, count, profileId, sceneId } = parsed.data
+	const { prompt: userInput, count, profileId } = parsed.data
 
 	try {
 		const result = await generateImageCandidates({
 			userInput,
-			sceneId,
 			profileId,
 			user,
 			count,
@@ -57,7 +45,6 @@ export async function POST(request: Request) {
 		}
 		payload.logger.info(
 			{
-				sceneId: result.sceneId,
 				profileId: result.profileId,
 				provider: env.OPENAI_API_KEY ? 'gpt-image' : 'pollinations',
 				promptLength: result.prompt.length,

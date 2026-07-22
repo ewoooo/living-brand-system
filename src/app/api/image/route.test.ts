@@ -50,7 +50,6 @@ describe('POST /api/image', () => {
 		mocks.generateImageCandidates.mockResolvedValue({
 			images: ['data:image/png;base64,result'],
 			prompt: 'sample',
-			sceneId: 'free',
 		})
 	})
 
@@ -60,7 +59,7 @@ describe('POST /api/image', () => {
 			user: null,
 		})
 
-		const response = await POST(imageRequest({ prompt: 'sample', sceneId: 'free' }))
+		const response = await POST(imageRequest({ prompt: 'sample' }))
 
 		expect(response.status).toBe(401)
 		expect(mocks.generateImageCandidates).not.toHaveBeenCalled()
@@ -71,8 +70,6 @@ describe('POST /api/image', () => {
 		{ prompt: 'sample', count: 0 },
 		{ prompt: 'sample', count: 1.5 },
 		{ prompt: 'sample', profileId: 0 },
-		{ prompt: 'sample', profileId: 5, sceneId: 'free' },
-		{ prompt: 'sample', sceneId: 'unknown' },
 	])('rejects invalid generation input: %o', async (body) => {
 		const response = await POST(imageRequest(body))
 
@@ -86,20 +83,19 @@ describe('POST /api/image', () => {
 	])('생성기나 정규화 모델을 사용할 수 없으면 503을 반환한다', async (error) => {
 		mocks.generateImageCandidates.mockRejectedValue(error)
 
-		const response = await POST(imageRequest({ prompt: 'sample', sceneId: 'free' }))
+		const response = await POST(imageRequest({ prompt: 'sample' }))
 
 		expect(response.status).toBe(503)
 	})
 
 	it('passes normalized valid input to the service', async () => {
-		const response = await POST(imageRequest({ prompt: '  sample  ', sceneId: 'free' }))
+		const response = await POST(imageRequest({ prompt: '  sample  ' }))
 
 		expect(response.status).toBe(200)
 		expect(mocks.generateImageCandidates).toHaveBeenCalledWith({
 			userInput: 'sample',
 			count: 4,
 			profileId: undefined,
-			sceneId: 'free',
 			user: { id: 1 },
 		})
 	})
@@ -112,7 +108,6 @@ describe('POST /api/image', () => {
 			userInput: 'sample',
 			count: 1,
 			profileId: 5,
-			sceneId: undefined,
 			user: { id: 1 },
 		})
 	})
