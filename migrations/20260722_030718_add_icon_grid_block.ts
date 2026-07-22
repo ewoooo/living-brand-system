@@ -2,7 +2,7 @@ import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
-   CREATE TABLE "guideline_docs_blocks_icon_grid" (
+   CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_icon_grid" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"_path" text NOT NULL,
@@ -14,14 +14,14 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"block_name" varchar
   );
   
-  CREATE TABLE "guideline_docs_blocks_icon_grid_locales" (
+  CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_icon_grid_locales" (
   	"title" varchar,
   	"id" serial PRIMARY KEY NOT NULL,
   	"_locale" "_locales" NOT NULL,
   	"_parent_id" varchar NOT NULL
   );
   
-  CREATE TABLE "_guideline_docs_v_blocks_icon_grid" (
+  CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_icon_grid" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"_path" text NOT NULL,
@@ -34,7 +34,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"block_name" varchar
   );
   
-  CREATE TABLE "_guideline_docs_v_blocks_icon_grid_locales" (
+  CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_icon_grid_locales" (
   	"title" varchar,
   	"id" serial PRIMARY KEY NOT NULL,
   	"_locale" "_locales" NOT NULL,

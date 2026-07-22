@@ -2,23 +2,27 @@ import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
+   DO $$ BEGIN
    CREATE TYPE "public"."enum_guideline_docs_blocks_image_grid_image_ratio" AS ENUM('original', '1:1', '5:4', '4:3', '3:2', '16:9', '2:1', '7:3', '4:5', '3:4', '2:3', '9:16', 'manual', 'firstImage');
+  EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN
   CREATE TYPE "public"."enum__guideline_docs_v_blocks_image_grid_image_ratio" AS ENUM('original', '1:1', '5:4', '4:3', '3:2', '16:9', '2:1', '7:3', '4:5', '3:4', '2:3', '9:16', 'manual', 'firstImage');
-  CREATE TABLE "guideline_docs_blocks_image_grid_cells" (
+  EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_image_grid_cells" (
   	"_order" integer NOT NULL,
   	"_parent_id" varchar NOT NULL,
   	"id" varchar PRIMARY KEY NOT NULL,
   	"image_id" integer
   );
   
-  CREATE TABLE "guideline_docs_blocks_image_grid_cells_locales" (
+  CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_image_grid_cells_locales" (
   	"caption" varchar,
   	"id" serial PRIMARY KEY NOT NULL,
   	"_locale" "_locales" NOT NULL,
   	"_parent_id" varchar NOT NULL
   );
   
-  CREATE TABLE "guideline_docs_blocks_image_grid" (
+  CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_image_grid" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"_path" text NOT NULL,
@@ -31,14 +35,14 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"block_name" varchar
   );
   
-  CREATE TABLE "guideline_docs_blocks_image_grid_locales" (
+  CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_image_grid_locales" (
   	"title" varchar,
   	"id" serial PRIMARY KEY NOT NULL,
   	"_locale" "_locales" NOT NULL,
   	"_parent_id" varchar NOT NULL
   );
   
-  CREATE TABLE "_guideline_docs_v_blocks_image_grid_cells" (
+  CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_image_grid_cells" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"id" serial PRIMARY KEY NOT NULL,
@@ -46,14 +50,14 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"_uuid" varchar
   );
   
-  CREATE TABLE "_guideline_docs_v_blocks_image_grid_cells_locales" (
+  CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_image_grid_cells_locales" (
   	"caption" varchar,
   	"id" serial PRIMARY KEY NOT NULL,
   	"_locale" "_locales" NOT NULL,
   	"_parent_id" integer NOT NULL
   );
   
-  CREATE TABLE "_guideline_docs_v_blocks_image_grid" (
+  CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_image_grid" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"_path" text NOT NULL,
@@ -67,7 +71,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"block_name" varchar
   );
   
-  CREATE TABLE "_guideline_docs_v_blocks_image_grid_locales" (
+  CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_image_grid_locales" (
   	"title" varchar,
   	"id" serial PRIMARY KEY NOT NULL,
   	"_locale" "_locales" NOT NULL,
