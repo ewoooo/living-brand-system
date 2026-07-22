@@ -27,7 +27,7 @@ function resolveRatio(
 				style: { aspectRatio: `${block.ratioWidth} / ${block.ratioHeight}` },
 			}
 		return { className: 'aspect-square' }
-	} 
+	}
 	if (ratio === 'firstImage') {
 		const first = cells.map(cellImage).find(Boolean)
 		if (first?.width && first?.height)
