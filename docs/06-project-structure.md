@@ -644,6 +644,19 @@ Payload collection, field, index, relationship처럼 DB 스키마에 영향을 �
 - 새 스키마가 요구하는 seed / fixture 변경은 같은 커밋에 포함합니다.
 - `migrate:down`은 롤백 수단으로 신뢰하지 않습니다. 운영 DB 롤백은 백업으로 합니다.
 
+### 기준선 압축
+
+마이그레이션 체인을 새 기준선으로 압축할 때는 기존 데이터를 migration이나 seed로 복사하지 않습니다. 공유 DB의 데이터는 그대로 두고 스키마 기준점과 `payload_migrations` 기록만 바꿉니다.
+
+1. 모든 공유 DB에 기존 pending migration을 먼저 적용합니다.
+2. 공유 DB를 백업하고, 백업을 격리된 로컬 DB에 복원해 테이블 행 수와 sequence를 비교합니다.
+3. 기존 `.ts`·`.json`과 보조 파일은 `migrations/archive/<전환일>/`로 옮깁니다. 삭제하지 않습니다.
+4. top-level `migrations/`에는 현재 config에서 생성한 전체 스키마 migration, 같은 이름의 `.json`, `index.ts`만 둡니다.
+5. 기존 DB를 인수하는 기준선은 최신 handoff migration과 핵심 테이블을 확인해야 합니다. 조건을 만족하면 스키마 DDL을 실행하지 않고 기존 `payload_migrations` 행만 지웁니다. Payload runner가 같은 트랜잭션에서 새 기준선 기록을 추가합니다.
+6. 조건이 맞지 않는 기존 DB에서는 기준선 migration을 중단합니다. 누락된 handoff migration을 적용한 뒤 다시 실행합니다.
+
+빈 DB에서는 `pnpm migrate`, `pnpm migrate:status`, `pnpm build`를 실행합니다. 기존 데이터 복제본에서는 기준선 전환 뒤 `payload_migrations`를 제외한 모든 테이블의 내용과 sequence가 원본과 같은지 확인합니다. 라이브 사용자·세션·운영 로그는 Git에 커밋하지 않습니다. 새 환경에 고정 데이터가 꼭 필요할 때만 별도 canonical fixture를 추가합니다.
+
 ### pull 이후
 
 스키마 관련 변경을 받은 뒤에는 로컬 DB 오류를 디버깅하기 전에 먼저 마이그레이션을 적용합니다.

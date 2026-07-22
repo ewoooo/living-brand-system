@@ -6,6 +6,8 @@ import projectColorPalette from '../blocks/color-palette/projection'
 import projectContentColumns from '../blocks/content-columns/projection'
 import projectDoDont from '../blocks/do-dont/projection'
 import projectGlyphGrid from '../blocks/glyph-grid/projection'
+import projectIconGrid from '../blocks/icon-grid/projection'
+import projectImageGrid from '../blocks/image-grid/projection'
 import projectLayoutGrid from '../blocks/layout-grid/projection'
 import projectMediaShowcase from '../blocks/media-showcase/projection'
 import projectSignatureShowcase from '../blocks/signature-showcase/projection'
@@ -33,6 +35,8 @@ export const guidelineBlockProjectors = {
 	typeScale: projectTypeScale,
 	layoutGrid: projectLayoutGrid,
 	glyphGrid: projectGlyphGrid,
+	iconGrid: projectIconGrid,
+	imageGrid: projectImageGrid,
 } satisfies ProjectionMap
 
 type RegisteredProjector = (typeof guidelineBlockProjectors)[GuidelineBlock['blockType']]

@@ -1,7 +1,6 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { IMAGE_SCENES } from '@/features/image-generation/presets'
 import type { ImageGenerationResult } from '@/features/image-generation/services/generate-image.client'
 
 const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
@@ -83,7 +82,9 @@ export function ImageGenerationResults({
 					</div>
 
 					<div className="font-body text-sm font-normal text-muted-foreground">
-						적용된 씬: {resultSceneLabel(result.sceneId)}
+						{result.profileName
+							? `적용된 프로파일: ${result.profileName}`
+							: '자유 생성 (브랜드 스타일 없음)'}
 						<details className="mt-1">
 							<summary className="cursor-pointer">생성 프롬프트 보기</summary>
 							<p className="mt-1 whitespace-pre-wrap font-body text-xs font-normal">
@@ -110,11 +111,6 @@ function ImageGenerationSkeleton({ count }: { count: number }) {
 			</div>
 		</div>
 	)
-}
-
-function resultSceneLabel(sceneId: string) {
-	if (sceneId === 'free') return '자유 생성 (브랜드 스타일 없음)'
-	return IMAGE_SCENES.find((scene) => scene.id === sceneId)?.label ?? '자동 선택'
 }
 
 /** data URI 이미지를 파일로 저장한다 (data:image/…;base64,… 에서 확장자 추출). */

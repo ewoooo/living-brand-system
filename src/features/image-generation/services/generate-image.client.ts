@@ -6,13 +6,14 @@
 export interface ImageGenerationRequest {
 	count: number
 	prompt: string
-	sceneId?: string
+	profileId?: number
 }
 
 export interface ImageGenerationResult {
 	images: string[]
 	prompt: string
-	sceneId: string
+	profileId?: number
+	profileName?: string
 }
 
 /** 이미지 후보 생성을 요청한다. 실패하면 status를 담아 throw하고, 호출자가 화면 메시지로 바꾼다. */

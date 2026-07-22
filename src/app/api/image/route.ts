@@ -1,25 +1,19 @@
 import { z } from 'zod'
 import { env } from '@/env'
-import { IMAGE_SCENES } from '@/features/image-generation/presets'
 import {
 	generateImageCandidates,
 	ImageGenerationUnavailableError,
+	ImageProfileNotFoundError,
+	ImagePromptNormalizationUnavailableError,
 } from '@/features/image-generation/services/generate-image.service'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
 export const maxDuration = 60
 
-const validSceneIds = new Set(['auto', 'free', ...IMAGE_SCENES.map((scene) => scene.id)])
 const requestSchema = z.object({
 	prompt: z.string().trim().min(1).max(500),
 	count: z.number().int().min(1).max(6).default(4),
-	sceneId: z
-		.string()
-		.trim()
-		.min(1)
-		.max(40)
-		.refine((sceneId) => validSceneIds.has(sceneId))
-		.optional(),
+	profileId: z.number().int().positive().optional(),
 })
 
 export async function POST(request: Request) {
@@ -37,35 +31,38 @@ export async function POST(request: Request) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
 	}
 
-	const { prompt: userInput, count, sceneId } = parsed.data
+	const { prompt: userInput, count, profileId } = parsed.data
 
 	try {
-		const {
-			images,
-			prompt,
-			sceneId: usedSceneId,
-		} = await generateImageCandidates({
+		const result = await generateImageCandidates({
 			userInput,
-			sceneId,
+			profileId,
+			user,
 			count,
 		})
-		if (images.length === 0) {
+		if (result.images.length === 0) {
 			return Response.json({ message: 'Image generation failed.' }, { status: 502 })
 		}
 		payload.logger.info(
 			{
-				sceneId: usedSceneId,
+				profileId: result.profileId,
 				provider: env.OPENAI_API_KEY ? 'gpt-image' : 'pollinations',
-				promptLength: prompt.length,
-				count: images.length,
+				promptLength: result.prompt.length,
+				count: result.images.length,
 			},
 			'image-generation.done',
 		)
-		return Response.json({ images, prompt, sceneId: usedSceneId })
+		return Response.json(result)
 	} catch (error) {
 		payload.logger.error({ err: error }, 'image-generation.failed')
-		if (error instanceof ImageGenerationUnavailableError) {
+		if (
+			error instanceof ImageGenerationUnavailableError ||
+			error instanceof ImagePromptNormalizationUnavailableError
+		) {
 			return Response.json({ message: 'Image generation is unavailable.' }, { status: 503 })
+		}
+		if (error instanceof ImageProfileNotFoundError) {
+			return Response.json({ message: 'Image profile not found.' }, { status: 404 })
 		}
 		return Response.json({ message: 'Image generation failed.' }, { status: 500 })
 	}

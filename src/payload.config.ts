@@ -13,13 +13,11 @@ import { betterEditorSettingsGlobal } from 'payload-better-editor'
 import sharp from 'sharp'
 import { z } from 'zod/v3'
 import { migrations } from '../migrations'
-import { LegacyGuidelineChapters } from '../migrations/legacy-guideline/chapters'
-import { LegacyGuidelinePages } from '../migrations/legacy-guideline/pages'
-import { LegacyGuidelineSections } from '../migrations/legacy-guideline/sections'
 import { AgentChatSessions } from './collections/AgentChatSessions'
 import { AgentSkills } from './collections/AgentSkills'
 import { ApplicationImages } from './collections/ApplicationImages'
 import { BrandColors } from './collections/BrandColors'
+import { BrandIcons } from './collections/BrandIcons'
 import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
 import { CheckScenarios } from './collections/CheckScenarios'
@@ -52,25 +50,6 @@ const shouldRunProdMigrations =
 	env.PAYLOAD_RUN_MIGRATIONS_ON_STARTUP === 'true' &&
 	env.NODE_ENV === 'production' &&
 	env.NEXT_PHASE !== 'phase-production-build'
-const isCreatingMigration = process.argv.includes('migrate:create')
-const shouldLoadLegacyGuidelineCollections =
-	!isCreatingMigration &&
-	(shouldRunProdMigrations || process.argv.some((argument) => argument.startsWith('migrate')))
-// 기존 Local API 기반 backfill을 재실행할 때만 schema를 로드한다. Admin/API에서는 항상 숨기고 쓰기를 막는다.
-const legacyGuidelineCollections: CollectionConfig[] = shouldLoadLegacyGuidelineCollections
-	? [LegacyGuidelineChapters, LegacyGuidelineSections, LegacyGuidelinePages].map(
-			(collection) => ({
-				...collection,
-				access: {
-					create: () => false,
-					delete: () => false,
-					read: () => false,
-					update: () => false,
-				},
-				admin: { ...collection.admin, hidden: true },
-			}),
-		)
-	: []
 const mcpListParameters = {
 	limit: z.number().int().min(1).max(100).optional(),
 	locale: z.enum(['ko', 'en']).optional(),
@@ -130,11 +109,11 @@ export default buildConfig({
 		},
 	},
 	collections: [
-		...legacyGuidelineCollections,
 		GuidelineDocuments,
 		BrandLogos,
 		BrandColors,
 		BrandTypefaces,
+		BrandIcons,
 		ApplicationImages,
 		ImageProfiles,
 		Templates,
@@ -277,6 +256,7 @@ export default buildConfig({
 			collections: {
 				'brand-logos': true,
 				'brand-typefaces': true,
+				'brand-icons': true,
 				'application-images': true,
 				'template-assets': true,
 			},

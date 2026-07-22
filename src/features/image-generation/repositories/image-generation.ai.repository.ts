@@ -1,7 +1,7 @@
 import { openai } from '@ai-sdk/openai'
 import { generateImage } from 'ai'
 import { env } from '@/env'
-import type { ImageSize } from '@/features/image-generation/presets'
+import type { ImageSize } from '@/features/image-generation/image-size'
 
 const DEFAULT_MODEL = 'gpt-image-2'
 

@@ -31,6 +31,6 @@ export async function normalizeImageProfilePrompt({
 
 	return {
 		normalizedInput,
-		finalPrompt: mergeImageProfilePrompt(profilePrompt, normalizedInput),
+		finalPrompt: mergeImageProfilePrompt(profilePrompt, normalizedInput, userPrompt),
 	}
 }

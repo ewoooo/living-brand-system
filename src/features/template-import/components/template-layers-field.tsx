@@ -157,8 +157,8 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 		if (!trimmed || loading) return
 		setLoading(true)
 		try {
-			// sceneId:'free' — 브랜드 제품 씬 합성 없이 프롬프트 원문대로. 배경은 제품샷이 아니라 사용자가 묘사한 그대로여야 한다.
-			const { images } = await generateImages({ prompt: trimmed, count: 1, sceneId: 'free' })
+			// 프로파일을 생략해 사용자가 묘사한 배경을 원문 그대로 생성한다.
+			const { images } = await generateImages({ prompt: trimmed, count: 1 })
 			const src = images[0]
 			if (src) onApply(src)
 			else toast.error('이미지 생성 실패 — 잠시 후 다시 시도하세요.')

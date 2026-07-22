@@ -766,4 +766,112 @@ export const kitBlocksPreludeSql = `
 	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_glyph_grid_path_idx" ON "_guideline_docs_v_blocks_glyph_grid" USING btree ("_path");
 	CREATE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_glyph_grid_typeface_idx" ON "_guideline_docs_v_blocks_glyph_grid" USING btree ("typeface_id");
 	CREATE UNIQUE INDEX IF NOT EXISTS "_guideline_docs_v_blocks_glyph_grid_locales_locale_parent_id" ON "_guideline_docs_v_blocks_glyph_grid_locales" USING btree ("_locale","_parent_id");
+
+	-- iconGrid (add_icon_grid_block 20260722_030718): backfill의 Local API가 현재 config로 guideline_docs를
+	-- 조회할 때 이 블록 테이블을 JOIN하므로, 뒤 마이그레이션이 만들기 전에 최소 스키마를 선반영한다.
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_icon_grid" (
+		"_order" integer NOT NULL,
+		"_parent_id" integer NOT NULL,
+		"_path" text NOT NULL,
+		"id" varchar PRIMARY KEY NOT NULL,
+		"colored" boolean DEFAULT false,
+		"cell_height_pct" numeric DEFAULT 100,
+		"svg_size_pct" numeric DEFAULT 70,
+		"svg_offset_pct" numeric DEFAULT 0,
+		"block_name" varchar
+	  );
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_icon_grid_locales" (
+		"title" varchar,
+		"id" serial PRIMARY KEY NOT NULL,
+		"_locale" "_locales" NOT NULL,
+		"_parent_id" varchar NOT NULL
+	  );
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_icon_grid" (
+		"_order" integer NOT NULL,
+		"_parent_id" integer NOT NULL,
+		"_path" text NOT NULL,
+		"id" serial PRIMARY KEY NOT NULL,
+		"colored" boolean DEFAULT false,
+		"cell_height_pct" numeric DEFAULT 100,
+		"svg_size_pct" numeric DEFAULT 70,
+		"svg_offset_pct" numeric DEFAULT 0,
+		"_uuid" varchar,
+		"block_name" varchar
+	  );
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_icon_grid_locales" (
+		"title" varchar,
+		"id" serial PRIMARY KEY NOT NULL,
+		"_locale" "_locales" NOT NULL,
+		"_parent_id" integer NOT NULL
+	  );
+
+	-- imageGrid (add_image_grid_block 20260722_083333): 동일 사유로 enum·테이블 선반영.
+	DO $$ BEGIN
+		CREATE TYPE "public"."enum_guideline_docs_blocks_image_grid_image_ratio" AS ENUM('original', '1:1', '5:4', '4:3', '3:2', '16:9', '2:1', '7:3', '4:5', '3:4', '2:3', '9:16', 'manual', 'firstImage');
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	DO $$ BEGIN
+		CREATE TYPE "public"."enum__guideline_docs_v_blocks_image_grid_image_ratio" AS ENUM('original', '1:1', '5:4', '4:3', '3:2', '16:9', '2:1', '7:3', '4:5', '3:4', '2:3', '9:16', 'manual', 'firstImage');
+	EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_image_grid_cells" (
+		"_order" integer NOT NULL,
+		"_parent_id" varchar NOT NULL,
+		"id" varchar PRIMARY KEY NOT NULL,
+		"image_id" integer
+	  );
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_image_grid_cells_locales" (
+		"caption" varchar,
+		"id" serial PRIMARY KEY NOT NULL,
+		"_locale" "_locales" NOT NULL,
+		"_parent_id" varchar NOT NULL
+	  );
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_image_grid" (
+		"_order" integer NOT NULL,
+		"_parent_id" integer NOT NULL,
+		"_path" text NOT NULL,
+		"id" varchar PRIMARY KEY NOT NULL,
+		"columns" numeric DEFAULT 3,
+		"rows" numeric DEFAULT 2,
+		"image_ratio" "enum_guideline_docs_blocks_image_grid_image_ratio" DEFAULT '1:1',
+		"ratio_width" numeric DEFAULT 4,
+		"ratio_height" numeric DEFAULT 3,
+		"block_name" varchar
+	  );
+	CREATE TABLE IF NOT EXISTS "guideline_docs_blocks_image_grid_locales" (
+		"title" varchar,
+		"id" serial PRIMARY KEY NOT NULL,
+		"_locale" "_locales" NOT NULL,
+		"_parent_id" varchar NOT NULL
+	  );
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_image_grid_cells" (
+		"_order" integer NOT NULL,
+		"_parent_id" integer NOT NULL,
+		"id" serial PRIMARY KEY NOT NULL,
+		"image_id" integer,
+		"_uuid" varchar
+	  );
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_image_grid_cells_locales" (
+		"caption" varchar,
+		"id" serial PRIMARY KEY NOT NULL,
+		"_locale" "_locales" NOT NULL,
+		"_parent_id" integer NOT NULL
+	  );
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_image_grid" (
+		"_order" integer NOT NULL,
+		"_parent_id" integer NOT NULL,
+		"_path" text NOT NULL,
+		"id" serial PRIMARY KEY NOT NULL,
+		"columns" numeric DEFAULT 3,
+		"rows" numeric DEFAULT 2,
+		"image_ratio" "enum__guideline_docs_v_blocks_image_grid_image_ratio" DEFAULT '1:1',
+		"ratio_width" numeric DEFAULT 4,
+		"ratio_height" numeric DEFAULT 3,
+		"_uuid" varchar,
+		"block_name" varchar
+	  );
+	CREATE TABLE IF NOT EXISTS "_guideline_docs_v_blocks_image_grid_locales" (
+		"title" varchar,
+		"id" serial PRIMARY KEY NOT NULL,
+		"_locale" "_locales" NOT NULL,
+		"_parent_id" integer NOT NULL
+	  );
 `
