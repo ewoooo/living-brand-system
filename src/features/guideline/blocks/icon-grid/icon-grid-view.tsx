@@ -151,10 +151,16 @@ export function IconGridView({
 							layout
 							whileHover={{ scale: 1.04 }}
 							transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-							className="flex flex-col gap-1 p-2"
+							className="group relative flex flex-col p-2"
 							style={{ backgroundColor: bg }}
 						>
-							<span className="font-body text-muted-foreground text-xs">{it.n}</span>
+							{/* order — 항상 좌상단. 색은 아이콘 색(fg)과 동일. */}
+							<span
+								className="absolute top-2 left-2 z-10 font-body text-xs"
+								style={{ color: fg }}
+							>
+								{it.n}
+							</span>
 							<div
 								className="relative w-full"
 								style={{
@@ -182,6 +188,13 @@ export function IconGridView({
 									}}
 								/>
 							</div>
+							{/* name — 좌하단, hover 시에만. 색은 아이콘 색(fg)과 동일. */}
+							<span
+								className="absolute bottom-2 left-2 z-10 font-body text-xs opacity-0 transition-opacity group-hover:opacity-100"
+								style={{ color: fg }}
+							>
+								{it.name}
+							</span>
 						</motion.div>
 					)
 				})}
