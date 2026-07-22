@@ -85,48 +85,6 @@
 	}
 }
 
-.image-profile-prompt-table {
-	margin-bottom: var(--base);
-
-	table {
-		font-size: 1rem;
-		min-width: 680px;
-	}
-
-	[data-slot='input'],
-	[data-slot='textarea'] {
-		font-size: 1rem;
-		min-width: 180px;
-	}
-
-	[data-slot='button'] {
-		font-size: 0.875rem;
-		min-height: 32px;
-		margin-top: calc(var(--base) / 2);
-	}
-
-	&__candidates {
-		display: flex;
-		flex-direction: column;
-		gap: calc(var(--base) / 2);
-	}
-
-	&__candidate {
-		align-items: flex-start;
-		display: grid;
-		gap: calc(var(--base) / 2);
-		grid-template-columns: minmax(180px, 1fr) auto;
-
-		[data-slot='button'] {
-			margin-top: 0;
-		}
-	}
-}
-
-.image-profile-prompt-table [data-slot='table-container'] {
-	overflow-x: auto;
-}
-
 .agent-chat-messages-table [data-slot="table-container"],
 .agent-chat-usage-table [data-slot="table-container"],
 .agent-chat-counted-items-table [data-slot="table-container"],
