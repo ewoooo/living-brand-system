@@ -13,6 +13,7 @@ const MARQUEE_ITEMS = [
 	'Design Tokens',
 	'Typography',
 ]
+const MARQUEE_COPIES = ['first', 'second', 'third', 'fourth'] as const
 
 export function HeroSection() {
 	const marqueeRef = useRef<HTMLDivElement>(null)
@@ -38,20 +39,17 @@ export function HeroSection() {
 	}, [])
 
 	return (
-		<section
-			aria-label="hero"
-			className="relative flex flex-1 flex-col overflow-hidden"
-		>
+		<section aria-label="hero" className="relative flex flex-1 flex-col overflow-hidden">
 			{/* Grid lines — decorative */}
 			<div
 				aria-hidden="true"
 				className="pointer-events-none absolute inset-0 grid grid-cols-4 opacity-[0.04] dark:opacity-[0.06]"
 			>
-				{Array.from({ length: 5 }).map((_, i) => (
+				{Array.from({ length: 5 }, (_, index) => index + 1).map((column) => (
 					<div
-						key={i}
+						key={column}
 						className="border-r border-foreground last:border-r-0"
-						style={{ gridColumn: i + 1 }}
+						style={{ gridColumn: column }}
 					/>
 				))}
 			</div>
@@ -116,16 +114,16 @@ export function HeroSection() {
 				className="relative z-10 flex h-10 shrink-0 items-center overflow-hidden border-t border-border"
 			>
 				<div ref={marqueeRef} className="flex whitespace-nowrap will-change-transform">
-					{[...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map(
-						(item, i) => (
+					{MARQUEE_COPIES.flatMap((copy) =>
+						MARQUEE_ITEMS.map((item) => (
 							<span
-								key={i}
+								key={`${copy}-${item}`}
 								className="inline-flex items-center gap-4 px-6 font-body text-xs uppercase tracking-[0.15em] text-muted-foreground/50"
 							>
 								{item}
 								<span className="h-px w-4 bg-foreground/10" />
 							</span>
-						),
+						)),
 					)}
 				</div>
 			</div>
