@@ -27,7 +27,6 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { default as default_3cb64f97d1dcec18a20e3bc2bf9faba7 } from '../../../components/admin/BetterEditorPublishButton'
 import { default as default_84fdfed89814d586356c708710d7da33 } from '../../../components/admin/GuidelineDocumentTreeList'
 import { default as default_36acbba7f1182725fb35765f5d4542e4 } from '../../../components/admin/ColorSwatchCell'
-import { default as default_437d567bbc22d85ff5dfd24bb04047bf } from '../../../components/admin/ImageProfilePromptTable'
 import { default as default_f49bc3a6ef2bcb45d5301fc0e30c8baa } from '../../../features/image-generation/components/image-profile-test-panel'
 import { default as default_6be8a66e3aab10c58fc1605355904e1c } from '../../../features/template-import/components/template-layers-field'
 import { default as default_848b517a7c9421065f54c976eeb58cfe } from '../../../features/template-import/components/sidebar-divider'
@@ -78,7 +77,6 @@ export const importMap = {
   "/components/admin/BetterEditorPublishButton#default": default_3cb64f97d1dcec18a20e3bc2bf9faba7,
   "/components/admin/GuidelineDocumentTreeList#default": default_84fdfed89814d586356c708710d7da33,
   "/components/admin/ColorSwatchCell#default": default_36acbba7f1182725fb35765f5d4542e4,
-  "/components/admin/ImageProfilePromptTable#default": default_437d567bbc22d85ff5dfd24bb04047bf,
   "/features/image-generation/components/image-profile-test-panel#default": default_f49bc3a6ef2bcb45d5301fc0e30c8baa,
   "/features/template-import/components/template-layers-field#default": default_6be8a66e3aab10c58fc1605355904e1c,
   "/features/template-import/components/sidebar-divider#default": default_848b517a7c9421065f54c976eeb58cfe,
