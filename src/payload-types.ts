@@ -831,7 +831,7 @@ export interface BrandLogo {
   };
 }
 /**
- * 이미지 유형별 프롬프트와 유저 인풋 정규화 후보를 관리하고 테스트합니다.
+ * 이미지 유형별 시스템 프롬프트와 유저 프롬프트 후보를 관리하고 테스트합니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "image-profiles".
@@ -840,7 +840,7 @@ export interface ImageProfile {
   id: number;
   name: string;
   /**
-   * 이미지 유형의 기본값입니다. 각 행은 최종 JSON의 key와 value가 됩니다.
+   * 이미지 유형의 기본값입니다. 각 행은 최종 JSON의 주제와 프롬프트가 됩니다.
    */
   profilePrompt: {
     key: string;
@@ -848,7 +848,7 @@ export interface ImageProfile {
     id?: string | null;
   }[];
   /**
-   * AI가 유저 인풋을 각 키의 값 후보 중 하나로 정규화합니다. 프로파일과 같은 키면 이 값이 우선합니다.
+   * AI가 유저 인풋을 각 주제의 프롬프트 후보 중 하나로 정규화합니다. 시스템 프롬프트와 같은 주제면 이 프롬프트가 우선합니다.
    */
   userPromptNormalization: {
     key: string;
