@@ -83,7 +83,9 @@ export function ImageGenerationResults({
 					</div>
 
 					<div className="font-body text-sm font-normal text-muted-foreground">
-						적용된 씬: {resultSceneLabel(result.sceneId)}
+						{result.profileName
+							? `적용된 프로파일: ${result.profileName}`
+							: `적용된 씬: ${resultSceneLabel(result.sceneId)}`}
 						<details className="mt-1">
 							<summary className="cursor-pointer">생성 프롬프트 보기</summary>
 							<p className="mt-1 whitespace-pre-wrap font-body text-xs font-normal">
@@ -112,7 +114,7 @@ function ImageGenerationSkeleton({ count }: { count: number }) {
 	)
 }
 
-function resultSceneLabel(sceneId: string) {
+function resultSceneLabel(sceneId?: string) {
 	if (sceneId === 'free') return '자유 생성 (브랜드 스타일 없음)'
 	return IMAGE_SCENES.find((scene) => scene.id === sceneId)?.label ?? '자동 선택'
 }

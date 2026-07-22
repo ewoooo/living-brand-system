@@ -19,11 +19,11 @@ import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { checkDisplayStatus } from '@/features/asset-check/components/check-status'
 import { type CheckScenario, getCheckScenario } from '@/features/asset-check/scenarios'
 import { getCheckScenarios } from '@/features/asset-check/services/get-check-scenarios.service'
-import { IMAGE_SCENES } from '@/features/image-generation/presets'
 import {
 	type AgentGeneratedImagesAttachment,
 	generateImageCandidates,
 } from '@/features/image-generation/services/generate-image.service'
+import { listAvailableImageProfiles } from '@/features/image-generation/services/list-image-profiles.service'
 import { AgentConfigurationError } from '@/lib/errors'
 import type { User } from '@/payload-types'
 import { startCheckSession } from '@/services/start-check-session.service'
@@ -32,8 +32,6 @@ const guidelineToolContextSchema = z.object({
 	agentChatSessionId: z.number().int().positive().optional(),
 	user: z.unknown(),
 })
-
-const imageSceneSummary = IMAGE_SCENES.map((scene) => `${scene.id} (${scene.label})`).join(', ')
 
 /**
  * Agent answer stream에 전달할 AI SDK tool set을 만든다.
@@ -130,8 +128,16 @@ export function getAgentTools() {
 				},
 			}),
 		}),
+		listImageProfiles: tool({
+			description:
+				'List published image profiles available to the current user. Call before generateImage for a branded product image.',
+			inputSchema: z.object({}),
+			contextSchema: guidelineToolContextSchema,
+			execute: (_input, { context }) => listAvailableImageProfiles(context.user),
+		}),
 		generateImage: tool({
-			description: `Generate NEW images from a text prompt using AI image generation. Use when the user wants to create or generate a fresh image from a description (배경, 풍경, 제품컷, 헤더 이미지 등). This is DIFFERENT from prepareTemplateImage, which only fills fixed templates like 명함/카드. For a branded cosmetic PRODUCT shot, the prompt describes the hero product and sceneId picks the brand environment/composition (omit to auto-pick). For any NON-product image (backgrounds, textures, key visuals, 자유 생성), pass sceneId "free" to generate the prompt as-is without brand product styling. Scenes: ${imageSceneSummary}.`,
+			description:
+				'Generate NEW images from a text prompt. For a branded product image, call listImageProfiles first and pass its profileId. For a non-product image, pass sceneId "free" to use the prompt without a brand profile.',
 			inputSchema: z
 				.object({
 					prompt: z.string().min(1).max(500),

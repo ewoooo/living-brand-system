@@ -8,12 +8,12 @@ export function AgentChatGeneratedImages({
 }: {
 	attachment: AgentGeneratedImagesAttachment
 }) {
-	const label = sceneLabel(attachment.sceneId)
+	const label = attachment.profileName ?? sceneLabel(attachment.sceneId)
 	return (
 		<div className="flex w-full flex-col gap-2">
 			{label && (
 				<p className="font-body text-xs font-normal text-muted-foreground">
-					적용된 씬: {label}
+					{attachment.profileName ? '적용된 프로파일' : '적용된 씬'}: {label}
 				</p>
 			)}
 			<div className="grid w-full grid-cols-2 gap-2">

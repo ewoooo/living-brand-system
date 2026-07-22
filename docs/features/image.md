@@ -35,7 +35,7 @@ Manager는 Payload Admin의 `이미지 프로파일` 컬렉션에서 이미지 �
 - **런타임 사용**: `profileId`가 지정되면 사용자에게 공개된 published 프로파일만 조회해 정규화하고 이미지 생성기로 전달합니다. Admin의 draft는 생성 테스트에서만 사용합니다.
 - **생성 테스트**: 현재 Admin 폼 값으로 정규화와 이미지 생성을 실행합니다. 미저장 값도 테스트할 수 있고 결과는 저장하지 않습니다.
 
-이 컬렉션은 프로파일 작성·검증 경계를 먼저 제공하며, 기존 Creator와 AI Chat의 씬 선택은 이번 단계에서 그대로 유지합니다.
+Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listImageProfiles`로 사용 가능한 프로파일을 확인한 뒤 `generateImage`에 `profileId`를 전달합니다. 자유 생성은 프로파일 없이 기존 원문 생성을 유지합니다.
 
 ## 3. 표면
 
