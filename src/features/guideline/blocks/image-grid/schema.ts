@@ -33,8 +33,32 @@ export const ImageGridBlock: Block = {
 					name: 'imageRatio',
 					type: 'select',
 					defaultValue: '1:1',
-					options: [...IMAGE_RATIO_OPTIONS],
+					options: [
+						...IMAGE_RATIO_OPTIONS,
+						{ label: '수동 입력(폭·높이)', value: 'manual' },
+						{ label: '첫 번째 이미지 기준', value: 'firstImage' },
+					],
 					admin: { width: '33.33%', description: '모든 셀에 공통 적용할 비율입니다.' },
+				},
+			],
+		},
+		{
+			type: 'row',
+			admin: { condition: (_, siblingData) => siblingData?.imageRatio === 'manual' },
+			fields: [
+				{
+					name: 'ratioWidth',
+					type: 'number',
+					defaultValue: 4,
+					min: 1,
+					admin: { width: '50%', description: '수동 비율의 폭입니다.' },
+				},
+				{
+					name: 'ratioHeight',
+					type: 'number',
+					defaultValue: 3,
+					min: 1,
+					admin: { width: '50%', description: '수동 비율의 높이입니다.' },
 				},
 			],
 		},

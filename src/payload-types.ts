@@ -851,8 +851,31 @@ export interface ImageGridBlock {
    * 모든 셀에 공통 적용할 비율입니다.
    */
   imageRatio?:
-    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+    | (
+        | 'original'
+        | '1:1'
+        | '5:4'
+        | '4:3'
+        | '3:2'
+        | '16:9'
+        | '2:1'
+        | '7:3'
+        | '4:5'
+        | '3:4'
+        | '2:3'
+        | '9:16'
+        | 'manual'
+        | 'firstImage'
+      )
     | null;
+  /**
+   * 수동 비율의 폭입니다.
+   */
+  ratioWidth?: number | null;
+  /**
+   * 수동 비율의 높이입니다.
+   */
+  ratioHeight?: number | null;
   /**
    * 왼쪽 위부터 행 순서대로 채워집니다. 이미지·캡션은 각각 비워도 되며(빈 셀), 행×열 수만큼만 표시됩니다.
    */
@@ -2037,6 +2060,8 @@ export interface ImageGridBlockSelect<T extends boolean = true> {
   columns?: T;
   rows?: T;
   imageRatio?: T;
+  ratioWidth?: T;
+  ratioHeight?: T;
   cells?:
     | T
     | {
