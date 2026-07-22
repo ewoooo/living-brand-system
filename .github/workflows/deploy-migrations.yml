@@ -2,7 +2,7 @@ name: Deploy migrations
 
 on:
   push:
-    branches: [stage, main]
+    branches: [stage]
     paths:
       - 'migrations/**'
   workflow_dispatch:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   migrate:
-    if: github.ref_name == 'stage' || github.ref_name == 'main'
+    if: github.ref_name == 'stage'
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.ref_name }}
