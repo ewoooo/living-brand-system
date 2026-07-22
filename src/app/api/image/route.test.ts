@@ -14,13 +14,21 @@ vi.mock('@/lib/request-auth', () => ({
 }))
 vi.mock('@/features/image-generation/services/generate-image.service', () => {
 	class ImageGenerationUnavailableError extends Error {}
+	class ImageProfileNotFoundError extends Error {}
+	class ImagePromptNormalizationUnavailableError extends Error {}
 	return {
 		generateImageCandidates: mocks.generateImageCandidates,
 		ImageGenerationUnavailableError,
+		ImageProfileNotFoundError,
+		ImagePromptNormalizationUnavailableError,
 	}
 })
 
-import { ImageGenerationUnavailableError } from '@/features/image-generation/services/generate-image.service'
+import {
+	ImageGenerationUnavailableError,
+	ImageProfileNotFoundError,
+	ImagePromptNormalizationUnavailableError,
+} from '@/features/image-generation/services/generate-image.service'
 import { POST } from './route'
 
 function imageRequest(body: unknown) {
@@ -62,6 +70,8 @@ describe('POST /api/image', () => {
 		{ prompt: '', count: 1 },
 		{ prompt: 'sample', count: 0 },
 		{ prompt: 'sample', count: 1.5 },
+		{ prompt: 'sample', profileId: 0 },
+		{ prompt: 'sample', profileId: 5, sceneId: 'free' },
 		{ prompt: 'sample', sceneId: 'unknown' },
 	])('rejects invalid generation input: %o', async (body) => {
 		const response = await POST(imageRequest(body))
@@ -70,8 +80,11 @@ describe('POST /api/image', () => {
 		expect(mocks.generateImageCandidates).not.toHaveBeenCalled()
 	})
 
-	it('returns 503 when the server has no enabled image provider', async () => {
-		mocks.generateImageCandidates.mockRejectedValue(new ImageGenerationUnavailableError())
+	it.each([
+		new ImageGenerationUnavailableError(),
+		new ImagePromptNormalizationUnavailableError(),
+	])('생성기나 정규화 모델을 사용할 수 없으면 503을 반환한다', async (error) => {
+		mocks.generateImageCandidates.mockRejectedValue(error)
 
 		const response = await POST(imageRequest({ prompt: 'sample', sceneId: 'free' }))
 
@@ -85,7 +98,30 @@ describe('POST /api/image', () => {
 		expect(mocks.generateImageCandidates).toHaveBeenCalledWith({
 			userInput: 'sample',
 			count: 4,
+			profileId: undefined,
 			sceneId: 'free',
+			user: { id: 1 },
 		})
+	})
+
+	it('profileId를 사용자와 함께 서비스에 전달한다', async () => {
+		const response = await POST(imageRequest({ prompt: 'sample', profileId: 5, count: 1 }))
+
+		expect(response.status).toBe(200)
+		expect(mocks.generateImageCandidates).toHaveBeenCalledWith({
+			userInput: 'sample',
+			count: 1,
+			profileId: 5,
+			sceneId: undefined,
+			user: { id: 1 },
+		})
+	})
+
+	it('published 프로파일이 없으면 404를 반환한다', async () => {
+		mocks.generateImageCandidates.mockRejectedValue(new ImageProfileNotFoundError())
+
+		const response = await POST(imageRequest({ prompt: 'sample', profileId: 404 }))
+
+		expect(response.status).toBe(404)
 	})
 })

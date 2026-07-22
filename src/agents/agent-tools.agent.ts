@@ -132,20 +132,27 @@ export function getAgentTools() {
 		}),
 		generateImage: tool({
 			description: `Generate NEW images from a text prompt using AI image generation. Use when the user wants to create or generate a fresh image from a description (배경, 풍경, 제품컷, 헤더 이미지 등). This is DIFFERENT from prepareTemplateImage, which only fills fixed templates like 명함/카드. For a branded cosmetic PRODUCT shot, the prompt describes the hero product and sceneId picks the brand environment/composition (omit to auto-pick). For any NON-product image (backgrounds, textures, key visuals, 자유 생성), pass sceneId "free" to generate the prompt as-is without brand product styling. Scenes: ${imageSceneSummary}.`,
-			inputSchema: z.object({
-				prompt: z.string().min(1).max(500),
-				sceneId: z.string().max(40).optional(),
-				count: z.number().int().min(1).max(4).optional(),
-			}),
+			inputSchema: z
+				.object({
+					prompt: z.string().min(1).max(500),
+					profileId: z.number().int().positive().optional(),
+					sceneId: z.string().max(40).optional(),
+					count: z.number().int().min(1).max(4).optional(),
+				})
+				.refine(({ profileId, sceneId }) => !(profileId && sceneId)),
 			contextSchema: guidelineToolContextSchema,
-			execute: async ({ prompt, sceneId, count }) => {
+			execute: async ({ prompt, profileId, sceneId, count }, { context }) => {
 				const {
 					images,
 					prompt: composedPrompt,
+					profileId: usedProfileId,
+					profileName,
 					sceneId: usedSceneId,
 				} = await generateImageCandidates({
 					userInput: prompt,
+					profileId,
 					sceneId,
+					user: context.user,
 					count: count ?? 2,
 				})
 				if (images.length === 0) {
@@ -158,6 +165,8 @@ export function getAgentTools() {
 				return {
 					type: 'generated-images',
 					prompt: composedPrompt,
+					profileId: usedProfileId,
+					profileName,
 					sceneId: usedSceneId,
 					images,
 				} satisfies AgentGeneratedImagesAttachment
