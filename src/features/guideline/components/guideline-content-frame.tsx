@@ -18,7 +18,7 @@ export function GuidelineContentFrame({
 			data-slot="guideline-content-frame"
 			data-variant={variant}
 			className={cn(
-				'w-full py-16',
+				'w-full py-8',
 				variant === 'padded' && 'mx-auto max-w-[1250px] px-4 md:px-8',
 				className,
 			)}

@@ -42,7 +42,7 @@ export function GuidelineSection({
 					{/*Guideline Section*/}
 					<section className="flex flex-col gap-16" aria-label="guideline-section">
 						{/* Guideline Section */}
-						<section className="grid grid-rows-[auto_1fr]">
+						<section className="grid grid-rows-[auto_1fr] gap-8">
 							<GuidelineContentFrame>
 								<hgroup className="grid grid-cols-2 gap-4">
 									<GuidelineHeader variant={variant} title={section.title} />
@@ -59,7 +59,7 @@ export function GuidelineSection({
 							/>
 						</section>
 						{/* Guideline Page Render*/}
-						<section className="flex flex-col gap-14" aria-label="guideline-pages">
+						<section className="flex flex-col gap-32" aria-label="guideline-pages">
 							{section.pages.map((page) => (
 								<GuidelinePage
 									key={page.id}
