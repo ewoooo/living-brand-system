@@ -15,7 +15,7 @@ export function GuidelinePage({
 	const variant = 'page' satisfies GuidelineVariant
 
 	return (
-		<article id={page.slug} className="flex flex-col">
+		<article id={page.slug} className="flex flex-col gap-8">
 			<GuidelineContentFrame>
 				<div className="grid md:grid-cols-2">
 					<section className="flex flex-col gap-8 order-2 col-start-2">

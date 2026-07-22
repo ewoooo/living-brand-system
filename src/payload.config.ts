@@ -20,6 +20,7 @@ import { AgentChatSessions } from './collections/AgentChatSessions'
 import { AgentSkills } from './collections/AgentSkills'
 import { ApplicationImages } from './collections/ApplicationImages'
 import { BrandColors } from './collections/BrandColors'
+import { BrandIcons } from './collections/BrandIcons'
 import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
 import { CheckScenarios } from './collections/CheckScenarios'
@@ -135,6 +136,7 @@ export default buildConfig({
 		BrandLogos,
 		BrandColors,
 		BrandTypefaces,
+		BrandIcons,
 		ApplicationImages,
 		ImageProfiles,
 		Templates,
@@ -277,6 +279,7 @@ export default buildConfig({
 			collections: {
 				'brand-logos': true,
 				'brand-typefaces': true,
+				'brand-icons': true,
 				'application-images': true,
 				'template-assets': true,
 			},

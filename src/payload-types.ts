@@ -72,6 +72,7 @@ export interface Config {
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
     'brand-typefaces': BrandTypeface;
+    'brand-icons': BrandIcon;
     'application-images': ApplicationImage;
     'image-profiles': ImageProfile;
     templates: Template;
@@ -103,6 +104,7 @@ export interface Config {
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
+    'brand-icons': BrandIconsSelect<false> | BrandIconsSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
     'image-profiles': ImageProfilesSelect<false> | ImageProfilesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
@@ -248,6 +250,8 @@ export interface GuidelineDocument {
         | TypeScaleBlock
         | LayoutGridBlock
         | GlyphGridBlock
+        | IconGridBlock
+        | ImageGridBlock
       )[]
     | null;
   /**
@@ -801,6 +805,97 @@ export interface GlyphGridBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "IconGridBlock".
+ */
+export interface IconGridBlock {
+  title?: string | null;
+  /**
+   * 켜면 컬러 팔레트, 끄면 흑백(Shape)으로 표시합니다.
+   */
+  colored?: boolean | null;
+  /**
+   * 셀 높이(셀 폭 대비 %)입니다.
+   */
+  cellHeightPct?: number | null;
+  /**
+   * 아이콘 크기(셀 폭 대비 %)입니다.
+   */
+  svgSizePct?: number | null;
+  /**
+   * 아이콘 수직 이동(셀 폭 대비 %)입니다.
+   */
+  svgOffsetPct?: number | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'iconGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageGridBlock".
+ */
+export interface ImageGridBlock {
+  title?: string | null;
+  /**
+   * 격자의 열 수입니다.
+   */
+  columns: number;
+  /**
+   * 격자의 행 수입니다.
+   */
+  rows: number;
+  /**
+   * 모든 셀에 공통 적용할 비율입니다.
+   */
+  imageRatio?:
+    | (
+        | 'original'
+        | '1:1'
+        | '5:4'
+        | '4:3'
+        | '3:2'
+        | '16:9'
+        | '2:1'
+        | '7:3'
+        | '4:5'
+        | '3:4'
+        | '2:3'
+        | '9:16'
+        | 'manual'
+        | 'firstImage'
+      )
+    | null;
+  /**
+   * 수동 비율의 폭입니다.
+   */
+  ratioWidth?: number | null;
+  /**
+   * 수동 비율의 높이입니다.
+   */
+  ratioHeight?: number | null;
+  /**
+   * 왼쪽 위부터 행 순서대로 채워집니다. 이미지·캡션은 각각 비워도 되며(빈 셀), 행×열 수만큼만 표시됩니다.
+   */
+  cells?:
+    | {
+        image?: (number | null) | ApplicationImage;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'imageGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brand-logos".
  */
 export interface BrandLogo {
@@ -829,6 +924,33 @@ export interface BrandLogo {
       filename?: string | null;
     };
   };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-icons".
+ */
+export interface BrandIcon {
+  id: number;
+  /**
+   * 아이콘 이름입니다. 스크린리더 라벨로도 쓰입니다.
+   */
+  name: string;
+  /**
+   * 태그 필터에 쓰는 아이콘 그룹입니다(예: 자연 원료).
+   */
+  group?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * 이미지 유형별 시스템 프롬프트와 유저 프롬프트 후보를 관리하고 테스트합니다.
@@ -1539,6 +1661,10 @@ export interface PayloadLockedDocument {
         value: number | BrandTypeface;
       } | null)
     | ({
+        relationTo: 'brand-icons';
+        value: number | BrandIcon;
+      } | null)
+    | ({
         relationTo: 'application-images';
         value: number | ApplicationImage;
       } | null)
@@ -1677,6 +1803,8 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         typeScale?: T | TypeScaleBlockSelect<T>;
         layoutGrid?: T | LayoutGridBlockSelect<T>;
         glyphGrid?: T | GlyphGridBlockSelect<T>;
+        iconGrid?: T | IconGridBlockSelect<T>;
+        imageGrid?: T | ImageGridBlockSelect<T>;
       };
   rules?: T;
   displayOrder?: T;
@@ -1911,6 +2039,42 @@ export interface GlyphGridBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "IconGridBlock_select".
+ */
+export interface IconGridBlockSelect<T extends boolean = true> {
+  title?: T;
+  colored?: T;
+  cellHeightPct?: T;
+  svgSizePct?: T;
+  svgOffsetPct?: T;
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageGridBlock_select".
+ */
+export interface ImageGridBlockSelect<T extends boolean = true> {
+  title?: T;
+  columns?: T;
+  rows?: T;
+  imageRatio?: T;
+  ratioWidth?: T;
+  ratioHeight?: T;
+  cells?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brand-logos_select".
  */
 export interface BrandLogosSelect<T extends boolean = true> {
@@ -1966,6 +2130,26 @@ export interface BrandTypefacesSelect<T extends boolean = true> {
   name?: T;
   familyName?: T;
   weightRange?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-icons_select".
+ */
+export interface BrandIconsSelect<T extends boolean = true> {
+  name?: T;
+  group?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2624,6 +2808,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'brand-typefaces';
           value: number | BrandTypeface;
+        } | null)
+      | ({
+          relationTo: 'brand-icons';
+          value: number | BrandIcon;
         } | null)
       | ({
           relationTo: 'application-images';

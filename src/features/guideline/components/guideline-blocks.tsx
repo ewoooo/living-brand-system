@@ -16,7 +16,7 @@ export function GuidelineBlocks({
 	betterEditor?: boolean
 }) {
 	return (
-		<article className="flex flex-col">
+		<article className="flex flex-col gap-8">
 			{blocks?.map((block) => {
 				const content = renderBlock(block)
 
