@@ -25,55 +25,51 @@ export function GuidelineSection({
 	const hasToc = tocPages.length >= 2
 
 	return (
-		<article className="w-full">
+		<article className="relative w-full">
 			{/* Payload Preview Functions */}
 			{previewDocumentId !== undefined && <RefreshRouteOnSave />}
 			{previewedPage && <ScrollToPreviewDocument targetId={previewedPage.slug} />}
 
-			{/* 모든 섹션 페이지가 동일 레이아웃을 갖도록 그리드를 항상 적용한다(변종 방지).
-			    ToC 컬럼(12rem)은 항상 예약되고, page가 없는 섹션은 그 자리만 비운다. */}
-			<div className="mx-auto w-full xl:grid xl:max-w-[1640px] xl:grid-cols-[minmax(0,1fr)_12rem] xl:gap-8 xl:px-6">
-				<div className="min-w-0">
+			<GuidelineContentFrame>
+				{/* Deprecated */}
+				<GuidelineHeaderImage image={section.headerImage} />
+			</GuidelineContentFrame>
+
+			{/*Guideline Section*/}
+			<section className="flex flex-col gap-16" aria-label="guideline-section">
+				{/* Guideline Section */}
+				<section className="grid grid-rows-[auto_1fr]">
 					<GuidelineContentFrame>
-						{/* Deprecated */}
-						<GuidelineHeaderImage image={section.headerImage} />
-					</GuidelineContentFrame>
-
-					{/*Guideline Section*/}
-					<section className="flex flex-col gap-16" aria-label="guideline-section">
-						{/* Guideline Section */}
-						<section className="grid grid-rows-[auto_1fr]">
-							<GuidelineContentFrame>
-								<hgroup className="grid grid-cols-2 gap-4">
-									<GuidelineHeader variant={variant} title={section.title} />
-									<GuidelineDescription
-										variant={variant}
-										description={section.description}
-									/>
-								</hgroup>
-							</GuidelineContentFrame>
-							{/* Guideline Section Contents */}
-							<GuidelineBlocks
-								blocks={section.blocks}
-								betterEditor={previewDocumentId !== undefined && !previewedPage}
+						<hgroup className="grid grid-cols-2 gap-4">
+							<GuidelineHeader variant={variant} title={section.title} />
+							<GuidelineDescription
+								variant={variant}
+								description={section.description}
 							/>
-						</section>
-						{/* Guideline Page Render*/}
-						<section className="flex flex-col gap-14" aria-label="guideline-pages">
-							{section.pages.map((page) => (
-								<GuidelinePage
-									key={page.id}
-									page={page}
-									betterEditor={page.id === previewDocumentId}
-								/>
-							))}
-						</section>
-					</section>
-				</div>
+						</hgroup>
+					</GuidelineContentFrame>
+					{/* Guideline Section Contents */}
+					<GuidelineBlocks
+						blocks={section.blocks}
+						betterEditor={previewDocumentId !== undefined && !previewedPage}
+					/>
+				</section>
+				{/* Guideline Page Render*/}
+				<section className="flex flex-col gap-14" aria-label="guideline-pages">
+					{section.pages.map((page) => (
+						<GuidelinePage
+							key={page.id}
+							page={page}
+							betterEditor={page.id === previewDocumentId}
+						/>
+					))}
+				</section>
+			</section>
 
-				{hasToc && (
-					<aside className="hidden xl:block">
-						<div className="sticky top-24 pt-16">
+			{hasToc && (
+				<div className="pointer-events-none absolute inset-0 mx-auto hidden w-full max-w-[1640px] px-6 xl:block">
+					<aside className="absolute inset-y-0 right-6 w-48">
+						<div className="pointer-events-auto sticky top-24 pt-16 text-background mix-blend-difference dark:text-foreground">
 							<GuidelineOnThisPage
 								pages={tocPages.map((page) => ({
 									id: page.id,
@@ -83,8 +79,8 @@ export function GuidelineSection({
 							/>
 						</div>
 					</aside>
-				)}
-			</div>
+				</div>
+			)}
 		</article>
 	)
 }
