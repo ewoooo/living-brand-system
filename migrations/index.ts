@@ -73,6 +73,7 @@ import * as migration_20260722_030718_add_icon_grid_block from './20260722_03071
 import * as migration_20260722_055051_add_brand_icons from './20260722_055051_add_brand_icons';
 import * as migration_20260722_060704_add_icon_colorway from './20260722_060704_add_icon_colorway';
 import * as migration_20260722_063702_drop_icon_colorway from './20260722_063702_drop_icon_colorway';
+import * as migration_20260722_083333_add_image_grid_block from './20260722_083333_add_image_grid_block';
 
 export const migrations = [
   {
@@ -448,6 +449,11 @@ export const migrations = [
   {
     up: migration_20260722_063702_drop_icon_colorway.up,
     down: migration_20260722_063702_drop_icon_colorway.down,
-    name: '20260722_063702_drop_icon_colorway'
+    name: '20260722_063702_drop_icon_colorway',
+  },
+  {
+    up: migration_20260722_083333_add_image_grid_block.up,
+    down: migration_20260722_083333_add_image_grid_block.down,
+    name: '20260722_083333_add_image_grid_block'
   },
 ];
