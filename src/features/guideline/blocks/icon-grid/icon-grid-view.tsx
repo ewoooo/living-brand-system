@@ -67,10 +67,11 @@ export function IconGridView({
 		return shuffleSeed > 0 ? shuffle(filtered) : filtered
 	}, [items, selected, shuffleSeed])
 
-	// 흑백 = 디자인 토큰, 컬러 = colorway 팔레트 hex. inverted면 전경/배경 스왑.
+	// 컬러 = colorway 팔레트 hex. 흑백 = 카드 서페이스 토큰(--card: 라이트 순백/다크 카드색)이라
+	// soft한 페이지 배경(--background)과 구분된다. inverted면 전경/배경 스왑.
 	const cellColors = (it: IconGridItem) => {
-		const fg = colored ? (it.fgHex ?? 'var(--foreground)') : 'var(--foreground)'
-		const bg = colored ? (it.bgHex ?? 'var(--background)') : 'var(--background)'
+		const fg = colored ? (it.fgHex ?? 'var(--card-foreground)') : 'var(--card-foreground)'
+		const bg = colored ? (it.bgHex ?? 'var(--card)') : 'var(--card)'
 		return inverted ? { fg: bg, bg: fg } : { fg, bg }
 	}
 
@@ -188,9 +189,11 @@ export function IconGridView({
 									}}
 								/>
 							</div>
-							{/* name — 좌하단, hover 시에만. 색은 아이콘 색(fg)과 동일. */}
+							{/* name — 좌하단, hover 시에만. 색은 아이콘 색(fg)과 동일.
+							    나타남은 빠르게(150ms), 사라짐은 느리게(700ms): base duration을 길게,
+							    hover 상태 duration을 짧게 둬 비대칭 트랜지션을 만든다. */}
 							<span
-								className="absolute bottom-2 left-2 z-10 font-body text-xs opacity-0 transition-opacity group-hover:opacity-100"
+								className="absolute bottom-2 left-2 z-10 font-body text-xs opacity-0 transition-opacity duration-700 group-hover:opacity-100 group-hover:duration-150"
 								style={{ color: fg }}
 							>
 								{it.name}
