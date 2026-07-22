@@ -127,7 +127,7 @@ export default function ImageProfileTestPanel() {
 			{result ? (
 				<div className="image-profile-test-panel__json">
 					<h3>최종 프롬프트 JSON</h3>
-					<p>같은 키는 정규화된 유저 인풋 값이 프로파일 기본값을 덮어씁니다.</p>
+					<p>같은 주제는 유저 프롬프트가 시스템 프롬프트를 덮어씁니다.</p>
 					<pre>{JSON.stringify(result.finalPrompt, null, 2)}</pre>
 				</div>
 			) : null}

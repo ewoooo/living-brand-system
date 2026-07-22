@@ -48,7 +48,7 @@ export const ImageProfiles: CollectionConfig = {
 		group: '제작 도구',
 		useAsTitle: 'name',
 		defaultColumns: ['name', '_status', 'updatedAt'],
-		description: '이미지 유형별 프롬프트와 유저 인풋 정규화 후보를 관리하고 테스트합니다.',
+		description: '이미지 유형별 시스템 프롬프트와 유저 프롬프트 후보를 관리하고 테스트합니다.',
 	},
 	labels: {
 		singular: '이미지 프로파일',
@@ -75,17 +75,17 @@ export const ImageProfiles: CollectionConfig = {
 			dbName: 'img_profile_prompt',
 			required: true,
 			minRows: 1,
-			label: '프로파일 프롬프트',
+			label: '시스템 프롬프트',
 			labels: { singular: '프롬프트 필드', plural: '프롬프트 필드' },
 			validate: validateImageProfilePromptRows,
 			admin: {
 				initCollapsed: false,
 				description:
-					'이미지 유형의 기본값입니다. 각 행은 최종 JSON의 key와 value가 됩니다.',
+					'이미지 유형의 기본값입니다. 각 행은 최종 JSON의 주제와 프롬프트가 됩니다.',
 			},
 			fields: [
-				{ name: 'key', type: 'text', required: true, label: '키' },
-				{ name: 'value', type: 'textarea', required: true, label: '값' },
+				{ name: 'key', type: 'text', required: true, label: '주제' },
+				{ name: 'value', type: 'textarea', required: true, label: '프롬프트' },
 			],
 		},
 		{
@@ -94,25 +94,27 @@ export const ImageProfiles: CollectionConfig = {
 			dbName: 'img_prompt_norm',
 			required: true,
 			minRows: 1,
-			label: '유저 인풋 프롬프트 정규화',
-			labels: { singular: '정규화 필드', plural: '정규화 필드' },
+			label: '유저 프롬프트',
+			labels: { singular: '유저 프롬프트', plural: '유저 프롬프트' },
 			validate: validateImagePromptNormalizationRows,
 			admin: {
 				initCollapsed: false,
 				description:
-					'AI가 유저 인풋을 각 키의 값 후보 중 하나로 정규화합니다. 프로파일과 같은 키면 이 값이 우선합니다.',
+					'AI가 유저 인풋을 각 주제의 프롬프트 후보 중 하나로 정규화합니다. 시스템 프롬프트와 같은 주제면 이 프롬프트가 우선합니다.',
 			},
 			fields: [
-				{ name: 'key', type: 'text', required: true, label: '키' },
+				{ name: 'key', type: 'text', required: true, label: '주제' },
 				{
 					name: 'candidates',
 					type: 'array',
 					dbName: 'img_prompt_choices',
 					required: true,
 					minRows: 1,
-					label: '값 후보',
-					labels: { singular: '값 후보', plural: '값 후보' },
-					fields: [{ name: 'value', type: 'textarea', required: true, label: '값' }],
+					label: '프롬프트 후보',
+					labels: { singular: '프롬프트 후보', plural: '프롬프트 후보' },
+					fields: [
+						{ name: 'value', type: 'textarea', required: true, label: '프롬프트' },
+					],
 				},
 			],
 		},
