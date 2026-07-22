@@ -16,14 +16,12 @@ export function ColorPaletteBlock({
 
 	return (
 		<GuidelineBlockFrame layout="padded">
-			<section>
-				<GuidelineHeader variant="block" title={block.title} />
-				<div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-					{colors.map((color) => (
-						<ColorSwatch key={color.id} color={color} />
-					))}
-				</div>
-			</section>
+			<GuidelineHeader variant="block" title={block.title} />
+			<div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+				{colors.map((color) => (
+					<ColorSwatch key={color.id} color={color} />
+				))}
+			</div>
 		</GuidelineBlockFrame>
 	)
 }

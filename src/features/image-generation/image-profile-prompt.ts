@@ -61,10 +61,12 @@ export function validateImagePromptNormalizationRows(value: unknown): true | str
 export function mergeImageProfilePrompt(
 	profilePrompt: ImageProfilePromptRow[],
 	normalizedInput: FlatImagePrompt,
+	userPrompt: string,
 ): FlatImagePrompt {
 	return {
 		...Object.fromEntries(profilePrompt.map(({ key, value }) => [key, value])),
 		...normalizedInput,
+		subject: userPrompt.trim(),
 	}
 }
 

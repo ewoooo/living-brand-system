@@ -11,21 +11,18 @@ describe('useImageGeneration', () => {
 		const response = {
 			images: ['data:image/png;base64,result'],
 			prompt: 'composed prompt',
-			sceneId: 'free',
 		}
 		const fetchImage = vi
 			.spyOn(globalThis, 'fetch')
 			.mockResolvedValue(new Response(JSON.stringify(response), { status: 200 }))
 		const { result } = renderHook(() => useImageGeneration())
 
-		await act(() =>
-			result.current.generate({ count: 2, prompt: 'abstract background', sceneId: 'free' }),
-		)
+		await act(() => result.current.generate({ count: 2, prompt: 'abstract background' }))
 
 		expect(fetchImage).toHaveBeenCalledWith('/api/image', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ count: 2, prompt: 'abstract background', sceneId: 'free' }),
+			body: JSON.stringify({ count: 2, prompt: 'abstract background' }),
 		})
 		expect(result.current.result).toEqual(response)
 		expect(result.current.requested).toBe(2)

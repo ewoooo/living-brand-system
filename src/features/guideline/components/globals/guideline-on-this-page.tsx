@@ -31,14 +31,14 @@ export function GuidelineOnThisPage({ pages }: { pages: TocPage[] }) {
 
 	return (
 		<nav aria-label="이 페이지에서" className="font-body text-xs">
-			<p className="mb-3 font-medium text-[11px] text-muted-foreground uppercase tracking-wide">
+			<p className="mb-3 font-medium text-[11px] text-current/60 uppercase tracking-wide">
 				On this page
 			</p>
-			<ul ref={listRef} className="relative ml-1 border-border border-l">
+			<ul ref={listRef} className="relative ml-1 border-current/40 border-l">
 				{seg && (
 					<span
 						aria-hidden
-						className="-translate-x-1/2 absolute left-0 w-0.5 rounded-full bg-foreground transition-all duration-200 ease-out"
+						className="-translate-x-1/2 absolute left-0 w-0.5 rounded-full bg-current transition-all duration-200 ease-out"
 						style={{ top: seg.top, height: seg.height }}
 					/>
 				)}
@@ -51,8 +51,8 @@ export function GuidelineOnThisPage({ pages }: { pages: TocPage[] }) {
 							className={cn(
 								'block py-1.5 pl-3 leading-snug transition-colors',
 								page.slug === activeSlug
-									? 'font-semibold text-foreground'
-									: 'font-normal text-muted-foreground hover:text-foreground',
+									? 'font-semibold text-current'
+									: 'font-normal text-current/60 hover:text-current',
 							)}
 						>
 							{page.title}
