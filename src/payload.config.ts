@@ -44,7 +44,6 @@ import {
 import { buildGuidelineSearchText } from './features/guideline/utils/guideline-search-text'
 import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
-import { IconColorway } from './globals/IconColorway'
 import { adminOnly, authenticated, managerOrAdmin } from './lib/auth'
 import type { GuidelineDocument } from './payload-types'
 
@@ -306,5 +305,5 @@ export default buildConfig({
 		// 기존 en revision은 보존하되 Admin 편집은 초기 릴리스 언어인 ko로 고정한다.
 		filterAvailableLocales: ({ locales }) => locales.filter((locale) => locale.code === 'ko'),
 	},
-	globals: [Guideline, AgentSettings, BetterEditorSettings, IconColorway],
+	globals: [Guideline, AgentSettings, BetterEditorSettings],
 })

@@ -25,10 +25,6 @@ export const BrandIcons: CollectionConfig = {
 		group: '브랜드 자원',
 		useAsTitle: 'name',
 		defaultColumns: ['filename', 'name', 'group', 'updatedAt'],
-		components: {
-			// 아이콘에 종속되는 컬러웨이(Global)를 이 컬렉션에서 진입하게 하는 링크.
-			beforeListTable: ['/components/admin/IconColorwayLink'],
-		},
 	},
 	versions: draftVersions,
 	fields: [

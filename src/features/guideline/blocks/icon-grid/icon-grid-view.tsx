@@ -32,7 +32,7 @@ function shuffle<T>(list: T[]): T[] {
 
 /**
  * 아이콘 그리드 뷰(뷰어 인터랙션: 태그 필터·색상 반전·랜덤 섞기).
- * 아이콘/색 데이터는 서버(블록)가 brand-icons·icon-colorway에서 읽어 props로 내려준다.
+ * 아이콘/색 데이터는 서버(블록)가 brand-icons + 정적 colorway로 조립해 props로 내려준다.
  * 흑백은 LBS 디자인 토큰(foreground/background), 컬러는 colorway가 준 팔레트 hex를 CSS mask로 칠한다.
  */
 export function IconGridView({

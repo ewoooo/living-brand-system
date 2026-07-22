@@ -134,13 +134,11 @@ export interface Config {
     guideline: Guideline;
     'agent-settings': AgentSetting;
     'better-editor-settings': BetterEditorSetting;
-    'icon-colorway': IconColorway;
   };
   globalsSelect: {
     guideline: GuidelineSelect<false> | GuidelineSelect<true>;
     'agent-settings': AgentSettingsSelect<false> | AgentSettingsSelect<true>;
     'better-editor-settings': BetterEditorSettingsSelect<false> | BetterEditorSettingsSelect<true>;
-    'icon-colorway': IconColorwaySelect<false> | IconColorwaySelect<true>;
   };
   locale: 'ko' | 'en';
   widgets: {
@@ -2644,32 +2642,6 @@ export interface BetterEditorSetting {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "icon-colorway".
- */
-export interface IconColorway {
-  id: number;
-  /**
-   * 아이콘별 전경/배경 색 조합입니다. 색은 브랜드 팔레트를 참조합니다.
-   */
-  entries?:
-    | {
-        icon: number | BrandIcon;
-        /**
-         * 아이콘(실루엣) 색.
-         */
-        fg: number | BrandColor;
-        /**
-         * 셀 배경 색.
-         */
-        bg: number | BrandColor;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline_select".
  */
 export interface GuidelineSelect<T extends boolean = true> {
@@ -2713,23 +2685,6 @@ export interface BetterEditorSettingsSelect<T extends boolean = true> {
   hoverOutlineWidth?: T;
   showHoverToolbar?: T;
   hoverToolbarPosition?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "icon-colorway_select".
- */
-export interface IconColorwaySelect<T extends boolean = true> {
-  entries?:
-    | T
-    | {
-        icon?: T;
-        fg?: T;
-        bg?: T;
-        id?: T;
-      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
