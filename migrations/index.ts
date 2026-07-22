@@ -71,6 +71,7 @@ import * as migration_20260720_022908_dodont_example_columns from './20260720_02
 import * as migration_20260721_041541_image_prompt_profiles from './20260721_041541_image_prompt_profiles';
 import * as migration_20260722_030718_add_icon_grid_block from './20260722_030718_add_icon_grid_block';
 import * as migration_20260722_055051_add_brand_icons from './20260722_055051_add_brand_icons';
+import * as migration_20260722_060704_add_icon_colorway from './20260722_060704_add_icon_colorway';
 
 export const migrations = [
   {
@@ -436,6 +437,11 @@ export const migrations = [
   {
     up: migration_20260722_055051_add_brand_icons.up,
     down: migration_20260722_055051_add_brand_icons.down,
-    name: '20260722_055051_add_brand_icons'
+    name: '20260722_055051_add_brand_icons',
+  },
+  {
+    up: migration_20260722_060704_add_icon_colorway.up,
+    down: migration_20260722_060704_add_icon_colorway.down,
+    name: '20260722_060704_add_icon_colorway'
   },
 ];

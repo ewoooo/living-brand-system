@@ -28,10 +28,7 @@ function groupOf(position: number): string {
 	return 'Essenherb 제품 라인업'
 }
 
-const svgDir = path.resolve(
-	process.cwd(),
-	'src/features/guideline/blocks/icon-grid/svg',
-)
+const svgDir = path.resolve(process.cwd(), 'src/features/guideline/blocks/icon-grid/svg')
 
 const payload = await getPayload({ config })
 
