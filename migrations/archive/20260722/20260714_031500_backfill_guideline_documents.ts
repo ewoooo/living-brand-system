@@ -1,7 +1,7 @@
 import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 import { kitBlocksPreludeSql } from './lib/kit-blocks-schema-prelude'
 import type { Payload } from 'payload'
-import type { GuidelineDocument } from '../src/payload-types'
+import type { GuidelineDocument } from '../../../src/payload-types'
 
 const LEGACY_COLLECTIONS = [
 	'guideline-chapters',

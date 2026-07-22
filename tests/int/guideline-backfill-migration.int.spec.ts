@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import {
 	normalizeBackfillBlocks,
 	updateLocale,
-} from '../../migrations/20260714_031500_backfill_guideline_documents'
-import { kitBlocksPreludeSql } from '../../migrations/lib/kit-blocks-schema-prelude'
+} from '../../migrations/archive/20260722/20260714_031500_backfill_guideline_documents'
+import { kitBlocksPreludeSql } from '../../migrations/archive/20260722/lib/kit-blocks-schema-prelude'
 
 describe('guideline document backfill migration', () => {
 	it('precreates the media showcase image tables used by the current Payload config', () => {
