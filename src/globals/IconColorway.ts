@@ -7,7 +7,8 @@ export const IconColorway: GlobalConfig = {
 	slug: 'icon-colorway',
 	label: '아이콘 컬러웨이',
 	admin: {
-		group: '브랜드 자원',
+		// 아이콘에 종속되는 값이라 nav 최상위에 노출하지 않고, brand-icons 컬렉션에서 링크로 진입한다.
+		hidden: true,
 	},
 	access: {
 		// 가이드 화면(뷰어)이 SSR로 읽으므로 공개, 편집은 manager/admin만.
