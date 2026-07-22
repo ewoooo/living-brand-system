@@ -2,7 +2,7 @@ name: Deploy migrations
 
 on:
   push:
-    branches: [main]
+    branches: [stage, main]
     paths:
       - 'migrations/**'
   workflow_dispatch:
@@ -11,14 +11,15 @@ permissions:
   contents: read
 
 concurrency:
-  group: deploy-migrations-stage
+  group: deploy-migrations-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
   migrate:
+    if: github.ref_name == 'stage' || github.ref_name == 'main'
     runs-on: ubuntu-latest
     environment:
-      name: stage
+      name: ${{ github.ref_name }}
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
