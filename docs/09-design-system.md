@@ -40,6 +40,7 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 | color 유틸 매핑 | 원시값 → `@theme inline`의 `--color-*` 유틸 토큰 | `theme.css:24-54` |
 | radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl` 4단 파생(`lg`는 뿌리값, `sm`/`md`/`xl`은 calc) | `theme.css:56-59`, `theme.css:63` |
 | 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(Essenflux) | `theme.css:20-22` |
+| 루트 크기 | 화면 폭에 따른 `rem` 기준 크기 | `src/app/(frontend)/styles.css`의 `html`과 media query |
 | 타이포 리듬 | `.typeset` 블록의 크기·행간·흐름(shadcn/typeset) | `src/app/(frontend)/typeset.css` |
 | base body / scrollbar / import 순서 | `body` 기본, `scrollbar-none` 유틸, CSS `@import` 체인 | `src/app/(frontend)/styles.css:1-30` |
 
@@ -84,6 +85,8 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|from|to|via)-(?:neutral|gray|z
 ## 6. 타이포그래피와 프리미티브 소재
 
 새 `H1`/`H2`/`Heading` 컴포넌트를 발명하지 않습니다. 텍스트 프리미티브는 `Typography`(`as`/`family`/`size`/`tone`/`weight`)를 재사용하고, 페이지 상위 조합은 `src/components/global`의 page-header에 둡니다.
+
+`rem`의 기준 크기는 `styles.css`의 `html` media query가 소유합니다. 컴포넌트마다 별도의 viewport 기반 폰트 크기를 선언하지 않고, 루트 크기 변화로 타이포그래피와 간격을 함께 조정합니다.
 
 현재 상태를 정직하게 기술합니다.
 

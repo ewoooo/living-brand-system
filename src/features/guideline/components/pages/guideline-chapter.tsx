@@ -62,9 +62,11 @@ export function GuidelineChapter({
 			<GuidelineHeader variant={variant} title={chapter.title} />
 			<GuidelineDescription variant={variant} description={chapter.description} />
 			<GuidelineNavigationGrid
+				variant="section"
 				items={chapter.sections.map((section) => ({
 					id: section.id,
 					title: section.title,
+					description: section.description,
 					href: `/guideline/${chapterSlug}/${section.slug}`,
 					icon: SECTION_ICONS[section.slug],
 				}))}

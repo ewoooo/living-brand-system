@@ -12,6 +12,28 @@
 	}
 }
 
+html {
+	font-size: 14px;
+}
+
+@media (min-width: 1280px) {
+	html {
+		font-size: calc(-2px + 1.25vw);
+	}
+}
+
+@media (min-width: 1440px) {
+	html {
+		font-size: calc(10px + 0.416667vw);
+	}
+}
+
+@media (min-width: 1920px) {
+	html {
+		font-size: 18px;
+	}
+}
+
 * {
 	box-sizing: border-box;
 }
