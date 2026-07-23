@@ -21,7 +21,6 @@ export function HeroSection() {
 }
 
 function GridLines({ col, gap, padding = 0 }: { col: number; gap: number; padding?: number }) {
-
 	// Constrains the number of columns to be between 3 and 12
 	const length = Math.min(12, Math.max(3, col))
 
