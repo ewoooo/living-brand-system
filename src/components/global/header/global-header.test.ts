@@ -3,11 +3,17 @@ import { createElement } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { GlobalHeader } from './global-header'
 
-const { push } = vi.hoisted(() => ({ push: vi.fn() }))
+vi.stubGlobal(
+	'ResizeObserver',
+	class {
+		disconnect() {}
+		observe() {}
+		unobserve() {}
+	},
+)
 
 vi.mock('next/navigation', () => ({
 	usePathname: () => '/guideline/foundations',
-	useRouter: () => ({ push }),
 }))
 
 vi.mock('@/components/global/search/guideline-search', () => ({
@@ -19,7 +25,7 @@ vi.mock('@/components/ui/sidebar', () => ({
 }))
 
 describe('GlobalHeader', () => {
-	it('상위 메뉴를 클릭하면 이동하고 드롭다운 링크를 표시한다', () => {
+	it('Guideline과 Studio를 같은 메가 메뉴 형식으로 표시한다', () => {
 		render(
 			createElement(GlobalHeader, {
 				guidelineChapters: [
@@ -35,17 +41,19 @@ describe('GlobalHeader', () => {
 		)
 
 		fireEvent.click(screen.getByRole('button', { name: /Guideline/ }))
-		expect(push).toHaveBeenLastCalledWith('/guideline')
-
+		expect(screen.getByText('브랜드의 원칙과 제작 기준을 탐색합니다.')).toBeVisible()
 		expect(screen.getByRole('link', { name: /Foundations/ })).toHaveAttribute(
 			'href',
 			'/guideline/foundations',
 		)
-		fireEvent.click(screen.getByRole('button', { name: /Studio/ }))
-		expect(push).toHaveBeenLastCalledWith('/create')
 
+		fireEvent.click(screen.getByRole('button', { name: /Studio/ }))
+		expect(screen.getByText('브랜드 자산을 활용해 결과물을 제작하고 검수합니다.')).toBeVisible()
 		expect(screen.getByRole('link', { name: 'Templates' })).toHaveAttribute('href', '/create')
 		expect(screen.getByRole('link', { name: 'Generate' })).toHaveAttribute('href', '/generate')
 		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute('href', '/review')
+
+		fireEvent.click(screen.getByRole('button', { name: '메뉴 닫기' }))
+		expect(screen.queryByRole('button', { name: '메뉴 닫기' })).not.toBeInTheDocument()
 	})
 })

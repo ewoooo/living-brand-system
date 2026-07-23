@@ -1,8 +1,10 @@
 'use client'
 
+import { Add } from '@carbon/icons-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import {
 	GuidelineSearch,
 	type GuidelineSearchChapter,
@@ -16,6 +18,7 @@ import {
 	NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
+import { Typography } from '@/components/ui/typography'
 import { cn } from '@/lib/utils'
 
 const STUDIO_LINKS = [
@@ -24,19 +27,82 @@ const STUDIO_LINKS = [
 	{ href: '/review', label: 'Review' },
 ] as const
 
+type MegaMenuLink = {
+	active: boolean
+	href: string
+	label: string
+}
+
+function MegaMenuContent({
+	description,
+	label,
+	links,
+}: {
+	description: string
+	label: string
+	links: MegaMenuLink[]
+}) {
+	return (
+		<div
+			data-slot="mega-menu-content"
+			className="grid min-h-80 w-full gap-10 bg-popover p-8 text-popover-foreground md:grid-cols-2 md:p-12"
+		>
+			<div className="flex flex-col gap-8">
+				<Typography as="p" size="xs" weight="semibold">
+					{label.toUpperCase()}
+				</Typography>
+				<Typography tone="muted">{description}</Typography>
+			</div>
+			<ul className="flex flex-col items-start gap-1">
+				{links.map((link) => (
+					<li className="w-full" key={link.href}>
+						<NavigationMenuLink
+							active={link.active}
+							asChild
+							className="w-full justify-start"
+						>
+							<Link aria-current={link.active ? 'page' : undefined} href={link.href}>
+								<Add aria-hidden="true" />
+								<Typography as="span" size="lg">
+									{link.label}
+								</Typography>
+							</Link>
+						</NavigationMenuLink>
+					</li>
+				))}
+			</ul>
+		</div>
+	)
+}
+
 function HeaderCenter({
+	activeMenu,
 	className,
 	guidelineChapters,
+	onActiveMenuChange,
 }: {
+	activeMenu: string
 	className?: string
 	guidelineChapters: GuidelineSearchChapter[]
+	onActiveMenuChange: (value: string) => void
 }) {
 	const pathname = usePathname()
-	const router = useRouter()
 	const guidelineActive = pathname === '/guideline' || pathname.startsWith('/guideline/')
 	const studioActive = STUDIO_LINKS.some(
 		({ href }) => pathname === href || pathname.startsWith(`${href}/`),
 	)
+	const guidelineLinks = [
+		{ active: pathname === '/guideline', href: '/guideline', label: 'Overview' },
+		...guidelineChapters.map((chapter) => ({
+			active: pathname === chapter.href || pathname.startsWith(`${chapter.href}/`),
+			href: chapter.href,
+			label: chapter.title,
+		})),
+	]
+	const studioLinks = STUDIO_LINKS.map((item) => ({
+		active: pathname === item.href || pathname.startsWith(`${item.href}/`),
+		...item,
+	}))
 
 	return (
 		<section className={className}>
@@ -44,90 +110,39 @@ function HeaderCenter({
 				aria-label="주요 메뉴"
 				className="flex items-center gap-1 py-2 font-body text-base font-normal"
 			>
-				<NavigationMenu viewport={false}>
+				<NavigationMenu
+					className="static max-w-none"
+					onValueChange={onActiveMenuChange}
+					value={activeMenu}
+					viewportClassName="mt-0 w-full rounded-none border-b border-border shadow-lg md:w-full"
+				>
 					<NavigationMenuList className="gap-2">
-						<NavigationMenuItem>
+						<NavigationMenuItem value="guideline">
 							<NavigationMenuTrigger
 								className={cn(guidelineActive && 'text-foreground')}
-								onClick={() => router.push('/guideline')}
 							>
 								Guideline
 							</NavigationMenuTrigger>
-							<NavigationMenuContent>
-								<ul className="grid w-72 gap-1">
-									<li>
-										<NavigationMenuLink
-											active={pathname === '/guideline'}
-											asChild
-										>
-											<Link
-												aria-current={
-													pathname === '/guideline' ? 'page' : undefined
-												}
-												href="/guideline"
-											>
-												Overview
-											</Link>
-										</NavigationMenuLink>
-									</li>
-									{guidelineChapters.map((chapter) => {
-										const active =
-											pathname === chapter.href ||
-											pathname.startsWith(`${chapter.href}/`)
-
-										return (
-											<li key={chapter.id}>
-												<NavigationMenuLink
-													active={active}
-													asChild
-													className="flex-col items-start gap-0.5"
-												>
-													<Link
-														aria-current={active ? 'page' : undefined}
-														href={chapter.href}
-													>
-														<span>{chapter.title}</span>
-														{/*{chapter.description && (
-															<span className="text-muted-foreground">
-																{chapter.description}
-															</span>
-														)}*/}
-													</Link>
-												</NavigationMenuLink>
-											</li>
-										)
-									})}
-								</ul>
+							<NavigationMenuContent className="p-0 md:w-full">
+								<MegaMenuContent
+									description="브랜드의 원칙과 제작 기준을 탐색합니다."
+									label="Guideline"
+									links={guidelineLinks}
+								/>
 							</NavigationMenuContent>
 						</NavigationMenuItem>
-						<NavigationMenuItem>
+						<NavigationMenuItem value="studio">
 							<NavigationMenuTrigger
 								className={cn(studioActive && 'text-foreground')}
-								onClick={() => router.push('/create')}
 							>
 								Studio
 							</NavigationMenuTrigger>
-							<NavigationMenuContent>
-								<ul className="grid w-48 gap-1">
-									{STUDIO_LINKS.map((item) => {
-										const active =
-											pathname === item.href ||
-											pathname.startsWith(`${item.href}/`)
-
-										return (
-											<li key={item.href}>
-												<NavigationMenuLink active={active} asChild>
-													<Link
-														aria-current={active ? 'page' : undefined}
-														href={item.href}
-													>
-														{item.label}
-													</Link>
-												</NavigationMenuLink>
-											</li>
-										)
-									})}
-								</ul>
+							<NavigationMenuContent className="p-0 md:w-full">
+								<MegaMenuContent
+									description="브랜드 자산을 활용해 결과물을 제작하고 검수합니다."
+									label="Studio"
+									links={studioLinks}
+								/>
 							</NavigationMenuContent>
 						</NavigationMenuItem>
 						<NavigationMenuItem>
@@ -192,17 +207,32 @@ export function GlobalHeader({
 }: {
 	guidelineChapters: GuidelineSearchChapter[]
 }) {
+	const [activeMenu, setActiveMenu] = useState('')
+
 	return (
-		<header className="relative z-50 grid shrink-0 grid-cols-3 items-center border-b border-neutral-200 bg-background dark:border-neutral-700">
-			<HeaderHead className="justify-self-start p-2 px-4" />
-			<HeaderCenter
-				className="justify-self-center grid place-items-center"
-				guidelineChapters={guidelineChapters}
-			/>
-			<HeaderTail
-				className="flex min-w-0 justify-self-end items-center gap-2 p-2 px-4"
-				guidelineChapters={guidelineChapters}
-			/>
-		</header>
+		<>
+			<header className="relative z-50 grid shrink-0 grid-cols-3 items-center border-b border-border bg-background">
+				<HeaderHead className="justify-self-start p-2 px-4" />
+				<HeaderCenter
+					activeMenu={activeMenu}
+					className="grid place-items-center justify-self-center"
+					guidelineChapters={guidelineChapters}
+					onActiveMenuChange={setActiveMenu}
+				/>
+				<HeaderTail
+					className="flex min-w-0 items-center justify-self-end gap-2 p-2 px-4"
+					guidelineChapters={guidelineChapters}
+				/>
+			</header>
+			{activeMenu && (
+				<button
+					aria-label="메뉴 닫기"
+					className="fixed inset-0 z-40 cursor-default border-0 bg-background/60 p-0 backdrop-blur-sm"
+					onClick={() => setActiveMenu('')}
+					tabIndex={-1}
+					type="button"
+				/>
+			)}
+		</>
 	)
 }
