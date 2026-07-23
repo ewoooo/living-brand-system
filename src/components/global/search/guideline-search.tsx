@@ -43,10 +43,10 @@ export function GuidelineSearch({ chapters }: { chapters: GuidelineSearchChapter
 			<Button
 				aria-label="가이드라인 검색"
 				variant="outline"
-				className="py-4 pl-3"
+				className="py-4 pl-3 rounded-none"
 				onClick={() => setOpen((current) => !current)}
 			>
-				<span className="pr-8 text-muted-foreground">Search Guideline</span>
+				<span className="pr-8 text-muted-foreground">Search</span>
 				<KbdGroup>
 					<Kbd className="bg-muted">⌘</Kbd>
 					<Kbd className="bg-muted">K</Kbd>

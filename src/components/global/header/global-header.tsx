@@ -24,7 +24,7 @@ const STUDIO_LINKS = [
 	{ href: '/review', label: 'Review' },
 ] as const
 
-function HeaderHead({
+function HeaderCenter({
 	className,
 	guidelineChapters,
 }: {
@@ -33,7 +33,6 @@ function HeaderHead({
 }) {
 	const pathname = usePathname()
 	const router = useRouter()
-	const LOGO_SIZE = 14
 	const guidelineActive = pathname === '/guideline' || pathname.startsWith('/guideline/')
 	const studioActive = STUDIO_LINKS.some(
 		({ href }) => pathname === href || pathname.startsWith(`${href}/`),
@@ -43,21 +42,8 @@ function HeaderHead({
 		<section className={className}>
 			<nav
 				aria-label="주요 메뉴"
-				className="flex items-center gap-1 py-2 pl-5 font-body text-base font-normal"
+				className="flex items-center gap-1 py-2 font-body text-base font-normal"
 			>
-				<Link
-					aria-label="메인으로 이동"
-					className="flex size-8 shrink-0 items-center justify-center rounded-md transition-opacity hover:opacity-60"
-					href="/"
-				>
-					<Image
-						alt=""
-						className="size-3.5 brightness-0 dark:invert"
-						height={LOGO_SIZE}
-						src="/logos/logo.svg"
-						width={LOGO_SIZE}
-					/>
-				</Link>
 				<NavigationMenu viewport={false}>
 					<NavigationMenuList className="gap-2">
 						<NavigationMenuItem>
@@ -180,16 +166,41 @@ function HeaderTail({
 	)
 }
 
+function HeaderHead({ className }: { className?: string }) {
+	const LOGO_SIZE = 14
+	return (
+		<section className={className}>
+			<Link
+				aria-label="메인으로 이동"
+				className="flex size-8 shrink-0 items-center justify-center rounded-md transition-opacity hover:opacity-60"
+				href="/"
+			>
+				<Image
+					alt=""
+					className="size-3.5 brightness-0 dark:invert"
+					height={LOGO_SIZE}
+					src="/logos/logo.svg"
+					width={LOGO_SIZE}
+				/>
+			</Link>
+		</section>
+	)
+}
+
 export function GlobalHeader({
 	guidelineChapters,
 }: {
 	guidelineChapters: GuidelineSearchChapter[]
 }) {
 	return (
-		<header className="relative z-50 flex shrink-0 bg-background border-b border-neutral-200 dark:border-neutral-700">
-			<HeaderHead className="" guidelineChapters={guidelineChapters} />
+		<header className="relative z-50 grid shrink-0 grid-cols-3 items-center border-b border-neutral-200 bg-background dark:border-neutral-700">
+			<HeaderHead className="justify-self-start p-2 px-4" />
+			<HeaderCenter
+				className="justify-self-center grid place-items-center"
+				guidelineChapters={guidelineChapters}
+			/>
 			<HeaderTail
-				className="ml-auto flex items-center gap-2 p-2 px-4"
+				className="flex min-w-0 justify-self-end items-center gap-2 p-2 px-4"
 				guidelineChapters={guidelineChapters}
 			/>
 		</header>

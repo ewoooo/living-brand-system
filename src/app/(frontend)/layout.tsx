@@ -53,7 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 						storageKey="lbs.agentChatSidebarOpen"
 						style={{ '--sidebar-width': '25rem' } as React.CSSProperties}
 					>
-						{/* 앱 셸(헤더 + 본문 그리드) — main 랜드마크는 각 라우트의 본문이 소유한다. */}
+						{/* 앱 셸(헤더 + 본문 그리드) main 랜드마크는 각 라우트의 본문이 소유한다. */}
 						<div className="grid min-h-0 min-w-0 flex-1 grid-rows-[auto_1fr]">
 							<GlobalHeader guidelineChapters={guidelineNavigation.chapters} />
 							{/* 남은 높이를 채우고 내부에서만 스크롤한다 (문서 전체 스크롤 아님). */}
