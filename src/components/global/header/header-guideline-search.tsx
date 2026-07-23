@@ -12,7 +12,6 @@ import {
 	CommandItem,
 	CommandList,
 } from '@/components/ui/command'
-import { Kbd, KbdGroup } from '@/components/ui/kbd'
 import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
 
 export type GuidelineSearchChapter = GetGuidelineNavigationOutput['chapters'][number]
@@ -43,14 +42,10 @@ export function GuidelineSearch({ chapters }: { chapters: GuidelineSearchChapter
 			<Button
 				aria-label="가이드라인 검색"
 				variant="outline"
-				className="py-4 pl-3 rounded-none"
+				className="py-4 pl-3 border-none rounded-none"
 				onClick={() => setOpen((current) => !current)}
 			>
-				<span className="pr-8 text-muted-foreground">Search</span>
-				<KbdGroup>
-					<Kbd className="bg-muted">⌘</Kbd>
-					<Kbd className="bg-muted">K</Kbd>
-				</KbdGroup>
+				<span className="pr-2 text-base font-normal text-muted-foreground">Search</span>
 			</Button>
 			<CommandDialog open={open} onOpenChange={setOpen} title="가이드라인 검색">
 				<Command>

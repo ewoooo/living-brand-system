@@ -3,7 +3,7 @@
 import { Add } from '@carbon/icons-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import type { GuidelineSearchChapter } from '@/components/global/search/guideline-search'
+import type { GuidelineSearchChapter } from '@/components/global/header/header-guideline-search'
 import {
 	NavigationMenu,
 	NavigationMenuContent,

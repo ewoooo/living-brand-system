@@ -6,7 +6,7 @@ import { useState } from 'react'
 import {
 	GuidelineSearch,
 	type GuidelineSearchChapter,
-} from '@/components/global/search/guideline-search'
+} from '@/components/global/header/header-guideline-search'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { HeaderPageNavigation } from './header-page-navigation'
 
@@ -20,15 +20,15 @@ function HeaderTail({
 	return (
 		<section className={className}>
 			<GuidelineSearch chapters={guidelineChapters} />
-			<SidebarTrigger variant="outline" size="default" className="p-3 py-4 rounded-full">
-				Ask AI
+			<SidebarTrigger variant="outline" size="default" className="p-4 py-4 rounded-full">
+				AI
 			</SidebarTrigger>
 		</section>
 	)
 }
 
 function HeaderHead({ className }: { className?: string }) {
-	const LOGO_SIZE = 14
+	const LOGO_SIZE = 16
 	return (
 		<section className={className}>
 			<Link

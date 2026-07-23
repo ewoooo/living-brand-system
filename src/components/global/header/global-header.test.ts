@@ -16,7 +16,7 @@ vi.mock('next/navigation', () => ({
 	usePathname: () => '/guideline/foundations',
 }))
 
-vi.mock('@/components/global/search/guideline-search', () => ({
+vi.mock('@/components/global/header/header-guideline-search', () => ({
 	GuidelineSearch: () => null,
 }))
 
@@ -46,7 +46,7 @@ describe('GlobalHeader', () => {
 		const fontSizeClass = /\btext-(?:xs|sm|base|lg|[2-9]?xl)(?:\/\S+)?\b/
 		const fontWeightClass =
 			/\bfont-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)\b/
-		const adminLink = screen.getByRole('link', { name: 'Admin ↗' })
+		const adminLink = screen.getByRole('link', { name: /Admin/ })
 
 		expect(primaryNavigation.parentElement?.className).toMatch(fontSizeClass)
 		expect(primaryNavigation.parentElement?.className).toMatch(fontWeightClass)
