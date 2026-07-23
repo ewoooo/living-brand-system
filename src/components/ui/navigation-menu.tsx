@@ -9,9 +9,11 @@ function NavigationMenu({
 	className,
 	children,
 	viewport = true,
+	viewportClassName,
 	...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Root> & {
 	viewport?: boolean
+	viewportClassName?: string
 }) {
 	return (
 		<NavigationMenuPrimitive.Root
@@ -24,7 +26,7 @@ function NavigationMenu({
 			{...props}
 		>
 			{children}
-			{viewport && <NavigationMenuViewport />}
+			{viewport && <NavigationMenuViewport className={viewportClassName} />}
 		</NavigationMenuPrimitive.Root>
 	)
 }
@@ -103,7 +105,7 @@ function NavigationMenuViewport({
 	...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Viewport>) {
 	return (
-		<div className={cn('absolute top-full left-0 isolate z-50 flex justify-center')}>
+		<div className={cn('absolute inset-x-0 top-full isolate z-50 flex justify-center')}>
 			<NavigationMenuPrimitive.Viewport
 				data-slot="navigation-menu-viewport"
 				className={cn(
