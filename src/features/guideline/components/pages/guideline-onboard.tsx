@@ -21,7 +21,7 @@ export function GuidelineOnboard({ navigation }: { navigation: GetGuidelineNavig
 
 			{/*Section Link Grids*/}
 			<section className="mb-8">
-				<GuidelineNavigationGrid items={chapters} headingAs="h3" />
+				<GuidelineNavigationGrid items={chapters} variant="onboard" />
 			</section>
 		</GuidelineContentFrame>
 	)

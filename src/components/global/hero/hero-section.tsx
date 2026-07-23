@@ -1,8 +1,8 @@
 'use client'
 
 import { AnimatePresence, motion } from 'motion/react'
-import Link from 'next/link'
 import { useState } from 'react'
+import { NavigationBlock } from '@/components/navigation-block'
 
 export function HeroSection() {
 	return (
@@ -34,8 +34,8 @@ export function HeroSection() {
 					</div>
 				</section>
 				<section className="grid min-h-256 grid-cols-2 gap-8">
-					<LinkBlock href="/guideline" label="Guideline" />
-					<LinkBlock href="/create" label="Studio" />
+					<NavigationBlock variant="hero" href="/guideline" label="Guideline" />
+					<NavigationBlock variant="hero" href="/create" label="Studio" />
 				</section>
 				<section className="-mx-4 grid min-h-256 grid-cols-2 gap-8 p-4 bg-neutral-200">
 					<div>
@@ -44,21 +44,10 @@ export function HeroSection() {
 							<p className="mt-2 text-mut">June 24</p>
 						</hgroup>
 					</div>
-					<LinkBlock href="/guideline" label="Alpha Announcement" />
+					<NavigationBlock variant="hero" href="/guideline" label="Alpha Announcement" />
 				</section>
 			</div>
 		</section>
-	)
-}
-
-function LinkBlock({ href, label }: { href: string; label: string }) {
-	return (
-		<Link
-			href={href}
-			className="block h-full bg-black p-6 text-white transition-opacity hover:opacity-60"
-		>
-			<span className="leading-none text-6xl font-light">{label}</span>
-		</Link>
 	)
 }
 
