@@ -10,9 +10,11 @@ import GlyphGridSchema from '../blocks/glyph-grid/schema'
 import IconGridSchema from '../blocks/icon-grid/schema'
 import ImageGridSchema from '../blocks/image-grid/schema'
 import LayoutGridSchema from '../blocks/layout-grid/schema'
+import LogoViewerSchema from '../blocks/logo-viewer/schema'
 import MediaShowcaseSchema from '../blocks/media-showcase/schema'
 import SignatureShowcaseSchema from '../blocks/signature-showcase/schema'
 import SpecListSchema from '../blocks/spec-list/schema'
+import StemClearSpaceSchema from '../blocks/stem-clear-space/schema'
 import TypeScaleSchema from '../blocks/type-scale/schema'
 import TypeSpecimenSchema from '../blocks/type-specimen/schema'
 import type { GuidelineBlock } from '../blocks/types'
@@ -36,6 +38,8 @@ export const guidelineBlockSchemas = {
 	glyphGrid: GlyphGridSchema,
 	iconGrid: IconGridSchema,
 	imageGrid: ImageGridSchema,
+	logoViewer: LogoViewerSchema,
+	stemClearSpace: StemClearSpaceSchema,
 } satisfies SchemaMap
 
 export const guidelineBlocks = Object.values(guidelineBlockSchemas)

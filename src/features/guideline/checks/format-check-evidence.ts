@@ -107,5 +107,12 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 			return evidence.title ?? 'Icon grid'
 		case 'imageGrid':
 			return evidence.title ?? 'Image grid'
+		case 'stemClearSpace':
+			return compact([
+				evidence.title ?? 'Logo clear space',
+				`최소 여백 ${evidence.multiplier}A`,
+			]).join('\n')
+		case 'logoViewer':
+			return evidence.title ?? 'Logo viewer'
 	}
 }

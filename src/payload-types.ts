@@ -252,6 +252,8 @@ export interface GuidelineDocument {
         | GlyphGridBlock
         | IconGridBlock
         | ImageGridBlock
+        | LogoViewerBlock
+        | StemClearSpaceBlock
       )[]
     | null;
   /**
@@ -893,6 +895,62 @@ export interface ImageGridBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'imageGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoViewerBlock".
+ */
+export interface LogoViewerBlock {
+  title?: string | null;
+  /**
+   * 순수 로고 SVG(기본 레이어).
+   */
+  logo?: (number | null) | ApplicationImage;
+  /**
+   * 등록상표(®) 오버레이 SVG. 로고와 같은 크기여야 정렬됩니다.
+   */
+  registeredMark?: (number | null) | ApplicationImage;
+  /**
+   * 클리어스페이스 가이드 오버레이 SVG. 로고와 같은 크기여야 정렬됩니다.
+   */
+  clearSpaceGuide?: (number | null) | ApplicationImage;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoViewer';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StemClearSpaceBlock".
+ */
+export interface StemClearSpaceBlock {
+  title?: string | null;
+  /**
+   * 여백 규정을 보여줄 로고입니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  /**
+   * 줄기 두께 ÷ 로고 폭(0~1). 측정값.
+   */
+  stemRatio?: number | null;
+  /**
+   * 줄기 위치(로고 폭 대비 0~1). 측정값.
+   */
+  stemX?: number | null;
+  /**
+   * 여백 배수 N (N·A).
+   */
+  multiplier?: number | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'stemClearSpace';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1805,6 +1863,8 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         glyphGrid?: T | GlyphGridBlockSelect<T>;
         iconGrid?: T | IconGridBlockSelect<T>;
         imageGrid?: T | ImageGridBlockSelect<T>;
+        logoViewer?: T | LogoViewerBlockSelect<T>;
+        stemClearSpace?: T | StemClearSpaceBlockSelect<T>;
       };
   rules?: T;
   displayOrder?: T;
@@ -2069,6 +2129,33 @@ export interface ImageGridBlockSelect<T extends boolean = true> {
         caption?: T;
         id?: T;
       };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoViewerBlock_select".
+ */
+export interface LogoViewerBlockSelect<T extends boolean = true> {
+  title?: T;
+  logo?: T;
+  registeredMark?: T;
+  clearSpaceGuide?: T;
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StemClearSpaceBlock_select".
+ */
+export interface StemClearSpaceBlockSelect<T extends boolean = true> {
+  title?: T;
+  logo?: T;
+  stemRatio?: T;
+  stemX?: T;
+  multiplier?: T;
   rules?: T;
   id?: T;
   blockName?: T;
