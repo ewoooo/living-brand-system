@@ -1,9 +1,9 @@
 'use client'
 
-import { Add } from '@carbon/icons-react'
+import { cva } from 'class-variance-authority'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import type { GuidelineSearchChapter } from '@/components/global/header/header-guideline-search'
+import type { GuidelineSearchChapter } from '@/components/global/header/header-section-tail'
 import {
 	NavigationMenu,
 	NavigationMenuContent,
@@ -22,6 +22,18 @@ const STUDIO_LINKS = [
 	{ href: '/review', label: 'Review' },
 ] as const
 
+const headerNavigationItemVariants = cva(
+	'bg-transparent opacity-20 transition-opacity hover:bg-transparent hover:opacity-100 focus:bg-transparent focus:opacity-100',
+	{
+		variants: {
+			state: {
+				active: 'data-[active=true]:bg-transparent data-[active=true]:opacity-100 data-[active=true]:hover:bg-transparent data-[active=true]:focus:bg-transparent',
+				open: 'data-popup-open:bg-transparent data-popup-open:hover:bg-transparent data-popup-open:opacity-100 data-open:bg-transparent data-open:hover:bg-transparent data-open:focus:bg-transparent data-open:opacity-100',
+			},
+		},
+	},
+)
+
 type MegaMenuLink = {
 	active: boolean
 	href: string
@@ -38,39 +50,52 @@ function HeaderNavigationContent({
 	links: MegaMenuLink[]
 }) {
 	return (
-		<div
+		<section
 			data-slot="mega-menu-content"
-			className="grid min-h-80 w-full gap-10 bg-popover p-8 text-popover-foreground md:grid-cols-2 md:p-12"
+			className="grid min-h-80 w-full max-w-256 gap-10 bg-popover p-8 text-popover-foreground mx-auto md:grid-cols-2"
 		>
-			<div className="flex flex-col gap-8">
-				<Typography as="p" size="xs" weight="semibold">
-					{label.toUpperCase()}
+			<div className="flex flex-col gap-2 md:gap-6">
+				<Typography as="p" size="xs" weight="medium">
+					{label}
 				</Typography>
-				<Typography tone="muted">{description}</Typography>
+				<Typography as="p" size="lg" weight="normal">
+					{description}
+				</Typography>
 			</div>
-			<ul className="flex flex-col items-start gap-1">
-				{links.map((link) => (
-					<li className="w-full" key={link.href}>
-						<NavigationMenuLink
-							active={link.active}
-							asChild
-							className="w-full justify-start"
-						>
-							<Link aria-current={link.active ? 'page' : undefined} href={link.href}>
-								<Add aria-hidden="true" />
-								<Typography as="span" size="lg">
-									{link.label}
-								</Typography>
-							</Link>
-						</NavigationMenuLink>
-					</li>
-				))}
-			</ul>
-		</div>
+			{/* Detail */}
+			<div className="flex flex-col gap-2 md:gap-6">
+				<Typography as="p" size="xs" weight="medium">
+					Contents
+				</Typography>
+				<ul className="flex flex-col items-start gap-2">
+					{links.map((link) => (
+						<li className="w-full" key={link.href}>
+							<NavigationMenuLink
+								active={link.active}
+								asChild
+								className={cn(
+									'w-full justify-start',
+									headerNavigationItemVariants({ state: 'active' }),
+								)}
+							>
+								<Link
+									aria-current={link.active ? 'page' : undefined}
+									href={link.href}
+								>
+									<Typography as="span" size="xl">
+										{link.label}
+									</Typography>
+								</Link>
+							</NavigationMenuLink>
+						</li>
+					))}
+				</ul>
+			</div>
+		</section>
 	)
 }
 
-export function HeaderPageNavigation({
+export function HeaderCenter({
 	activeMenu,
 	className,
 	guidelineChapters,
@@ -112,19 +137,22 @@ export function HeaderPageNavigation({
 	]
 
 	return (
-		<section className={className}>
-			<nav aria-label="주요 메뉴" className="flex items-center gap-1 py-2 font-body">
+		<section className={cn('text-sm tracking-[-0.01rem] font-medium', className)}>
+			<nav aria-label="주요 메뉴" className="flex items-center gap-1 py-2">
 				<NavigationMenu
 					className="static max-w-none"
 					onValueChange={onActiveMenuChange}
 					value={activeMenu}
-					viewportClassName="mt-0 w-full origin-top rounded-none border-b border-border shadow-lg duration-200 md:w-full data-open:fade-in-0 data-open:slide-in-from-top-2 data-open:zoom-in-100 data-closed:fade-out-0 data-closed:slide-out-to-top-2 data-closed:zoom-out-100"
+					viewportClassName="mt-0 w-full origin-top rounded-none border-b border-border shadow-sm ring-0 duration-200 md:w-full data-open:fade-in-0 data-open:slide-in-from-top-2 data-open:zoom-in-100 data-closed:fade-out-0 data-closed:slide-out-to-top-2 data-closed:zoom-out-100"
 				>
 					<NavigationMenuList className="gap-2">
 						{navigationGroups.map((group) => (
 							<NavigationMenuItem key={group.value} value={group.value}>
 								<NavigationMenuTrigger
-									className={cn(group.active && 'text-foreground')}
+									className={cn(
+										headerNavigationItemVariants({ state: 'open' }),
+										group.active && 'text-foreground opacity-100',
+									)}
 								>
 									{group.label}
 								</NavigationMenuTrigger>
@@ -141,7 +169,13 @@ export function HeaderPageNavigation({
 							</NavigationMenuItem>
 						))}
 						<NavigationMenuItem>
-							<NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+							<NavigationMenuLink
+								asChild
+								className={cn(
+									navigationMenuTriggerStyle(),
+									headerNavigationItemVariants(),
+								)}
+							>
 								<Link href="/admin" rel="noreferrer" target="_blank">
 									Admin↗
 								</Link>

@@ -1,52 +1,12 @@
 'use client'
 
-import Image from 'next/image'
-import Link from 'next/link'
 import { useState } from 'react'
+import { HeaderCenter } from '@/components/global/header/header-section-center'
+import { HeaderHead } from '@/components/global/header/header-section-head'
 import {
-	GuidelineSearch,
 	type GuidelineSearchChapter,
-} from '@/components/global/header/header-guideline-search'
-import { SidebarTrigger } from '@/components/ui/sidebar'
-import { HeaderPageNavigation } from './header-page-navigation'
-
-function HeaderTail({
-	className,
-	guidelineChapters,
-}: {
-	className?: string
-	guidelineChapters: GuidelineSearchChapter[]
-}) {
-	return (
-		<section className={className}>
-			<GuidelineSearch chapters={guidelineChapters} />
-			<SidebarTrigger variant="outline" size="default" className="p-4 py-4 rounded-full">
-				AI
-			</SidebarTrigger>
-		</section>
-	)
-}
-
-function HeaderHead({ className }: { className?: string }) {
-	const LOGO_SIZE = 16
-	return (
-		<section className={className}>
-			<Link
-				aria-label="메인으로 이동"
-				className="flex size-8 shrink-0 items-center justify-center rounded-md transition-opacity hover:opacity-60"
-				href="/"
-			>
-				<Image
-					alt=""
-					className="size-3.5 brightness-0 dark:invert"
-					height={LOGO_SIZE}
-					src="/logos/logo.svg"
-					width={LOGO_SIZE}
-				/>
-			</Link>
-		</section>
-	)
-}
+	HeaderTail,
+} from '@/components/global/header/header-section-tail'
 
 export function GlobalHeader({
 	guidelineChapters,
@@ -57,17 +17,19 @@ export function GlobalHeader({
 
 	return (
 		<>
-			<header className="relative z-50 grid shrink-0 grid-cols-3 items-center border-b border-border bg-background">
-				<HeaderHead className="justify-self-start p-2 px-4" />
-				<HeaderPageNavigation
+			<header
+				className="relative z-50 grid shrink-0 grid-cols-3 items-center border-b border-border bg-background p-1 px-6 data-[open=true]:border-transparent"
+				data-open={Boolean(activeMenu)}
+			>
+				<HeaderHead className="justify-self-start" />
+				<HeaderCenter
 					activeMenu={activeMenu}
-					// Font Size & Weight Controlled
-					className="grid place-items-center justify-self-center text-base font-normal"
+					className="grid place-items-center justify-self-center"
 					guidelineChapters={guidelineChapters}
 					onActiveMenuChange={setActiveMenu}
 				/>
 				<HeaderTail
-					className="flex min-w-0 items-center justify-self-end gap-2 p-2 px-4"
+					className="flex min-w-0 items-center justify-self-end gap-2"
 					guidelineChapters={guidelineChapters}
 				/>
 			</header>

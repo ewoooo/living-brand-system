@@ -12,11 +12,13 @@ import {
 	CommandItem,
 	CommandList,
 } from '@/components/ui/command'
+import { Kbd, KbdGroup } from '@/components/ui/kbd'
+import { SidebarTrigger } from '@/components/ui/sidebar'
 import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
 
 export type GuidelineSearchChapter = GetGuidelineNavigationOutput['chapters'][number]
 
-export function GuidelineSearch({ chapters }: { chapters: GuidelineSearchChapter[] }) {
+function HeaderGuidelineSearch({ chapters }: { chapters: GuidelineSearchChapter[] }) {
 	const router = useRouter()
 	const [open, setOpen] = useState(false)
 
@@ -42,10 +44,14 @@ export function GuidelineSearch({ chapters }: { chapters: GuidelineSearchChapter
 			<Button
 				aria-label="가이드라인 검색"
 				variant="outline"
-				className="py-4 pl-3 border-none rounded-none"
+				className="py-4 pl-3 rounded-sm"
 				onClick={() => setOpen((current) => !current)}
 			>
-				<span className="pr-2 text-base font-normal text-muted-foreground">Search</span>
+				<span className="pr-6 text-xs font-normal text-muted-foreground">Search</span>
+				<KbdGroup>
+					<Kbd className="border border-border bg-transparent">⌘</Kbd>
+					<Kbd className="border border-border bg-transparent">K</Kbd>
+				</KbdGroup>
 			</Button>
 			<CommandDialog open={open} onOpenChange={setOpen} title="가이드라인 검색">
 				<Command>
@@ -72,5 +78,22 @@ export function GuidelineSearch({ chapters }: { chapters: GuidelineSearchChapter
 				</Command>
 			</CommandDialog>
 		</>
+	)
+}
+
+export function HeaderTail({
+	className,
+	guidelineChapters,
+}: {
+	className?: string
+	guidelineChapters: GuidelineSearchChapter[]
+}) {
+	return (
+		<section className={className}>
+			<HeaderGuidelineSearch chapters={guidelineChapters} />
+			<SidebarTrigger variant="outline" size="default" className="rounded-full p-4 py-4">
+				AI
+			</SidebarTrigger>
+		</section>
 	)
 }

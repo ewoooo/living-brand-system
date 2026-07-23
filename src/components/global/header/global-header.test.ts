@@ -16,8 +16,8 @@ vi.mock('next/navigation', () => ({
 	usePathname: () => '/guideline/foundations',
 }))
 
-vi.mock('@/components/global/header/header-guideline-search', () => ({
-	GuidelineSearch: () => null,
+vi.mock('@/components/global/header/header-section-tail', () => ({
+	HeaderTail: () => null,
 }))
 
 vi.mock('@/components/ui/sidebar', () => ({
