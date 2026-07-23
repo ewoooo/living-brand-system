@@ -40,14 +40,40 @@ describe('GlobalHeader', () => {
 			}),
 		)
 
-		fireEvent.click(screen.getByRole('button', { name: /Guideline/ }))
-		expect(screen.getByText('브랜드의 원칙과 제작 기준을 탐색합니다.')).toBeVisible()
+		const guidelineTrigger = screen.getByRole('button', { name: 'Guideline' })
+		const studioTrigger = screen.getByRole('button', { name: 'Studio' })
+		const primaryNavigation = screen.getByRole('navigation', { name: '주요 메뉴' })
+		const fontSizeClass = /\btext-(?:xs|sm|base|lg|[2-9]?xl)(?:\/\S+)?\b/
+		const fontWeightClass =
+			/\bfont-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)\b/
+		const adminLink = screen.getByRole('link', { name: 'Admin ↗' })
+
+		expect(primaryNavigation.parentElement?.className).toMatch(fontSizeClass)
+		expect(primaryNavigation.parentElement?.className).toMatch(fontWeightClass)
+		expect(primaryNavigation.className).not.toMatch(fontWeightClass)
+		expect(guidelineTrigger.className).not.toMatch(fontSizeClass)
+		expect(guidelineTrigger.className).not.toMatch(fontWeightClass)
+		expect(studioTrigger.className).not.toMatch(fontSizeClass)
+		expect(studioTrigger.className).not.toMatch(fontWeightClass)
+		expect(guidelineTrigger.querySelector('svg')).toBeNull()
+		expect(studioTrigger.querySelector('svg')).toBeNull()
+		expect(adminLink.className).not.toMatch(fontSizeClass)
+		expect(adminLink.className).not.toMatch(fontWeightClass)
+
+		fireEvent.click(guidelineTrigger)
+		const guidelineContent = screen
+			.getByText('브랜드의 원칙과 제작 기준을 탐색합니다.')
+			.closest('[data-slot="navigation-menu-content"]')
+		expect(guidelineContent).toBeVisible()
+		expect(guidelineContent?.className).toContain('fade-in')
+		expect(guidelineContent?.className).not.toContain('slide-in-from')
+		expect(guidelineContent?.className).not.toContain('slide-out-to')
 		expect(screen.getByRole('link', { name: /Foundations/ })).toHaveAttribute(
 			'href',
 			'/guideline/foundations',
 		)
 
-		fireEvent.click(screen.getByRole('button', { name: /Studio/ }))
+		fireEvent.click(studioTrigger)
 		expect(screen.getByText('브랜드 자산을 활용해 결과물을 제작하고 검수합니다.')).toBeVisible()
 		expect(screen.getByRole('link', { name: 'Templates' })).toHaveAttribute('href', '/create')
 		expect(screen.getByRole('link', { name: 'Generate' })).toHaveAttribute('href', '/generate')
