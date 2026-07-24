@@ -3,6 +3,7 @@
 import type { Block } from 'payload'
 import CalloutSchema from '../blocks/callout/schema'
 import CarouselSchema from '../blocks/carousel/schema'
+import ColorPairingSchema from '../blocks/color-pairing/schema'
 import ColorPaletteSchema from '../blocks/color-palette/schema'
 import ContentColumnsSchema from '../blocks/content-columns/schema'
 import DoDontSchema from '../blocks/do-dont/schema'
@@ -37,6 +38,7 @@ export const guidelineBlockSchemas = {
 	typeScale: TypeScaleSchema,
 	layoutGrid: LayoutGridSchema,
 	glyphGrid: GlyphGridSchema,
+	colorPairing: ColorPairingSchema,
 	iconGrid: IconGridSchema,
 	imageGrid: ImageGridSchema,
 	logoGroupViewer: LogoGroupViewerSchema,

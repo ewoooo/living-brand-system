@@ -1,5 +1,6 @@
 import { CalloutBlock } from '@/features/guideline/blocks/callout/component'
 import { CarouselBlock } from '@/features/guideline/blocks/carousel/component'
+import { ColorPairingBlock } from '@/features/guideline/blocks/color-pairing/component'
 import { ContentColumnsBlock } from '@/features/guideline/blocks/content-columns/component'
 import { DoDontBlock } from '@/features/guideline/blocks/do-dont/component'
 import { GlyphGridBlock } from '@/features/guideline/blocks/glyph-grid/component'
@@ -13,11 +14,6 @@ import { TypeSpecimenBlock } from '@/features/guideline/blocks/type-specimen/com
 import { CardRowDemo } from '@/features/guideline/components/kit/card-row'
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { CollapsibleDemo } from '@/features/guideline/components/kit/collapsible-demo'
-import {
-	ColorPairingMonoToneDemo,
-	ColorPairingToneInToneDemo,
-	ColorPairingToneOnToneDemo,
-} from '@/features/guideline/components/kit/color-pairing-changer'
 import { ColorPaletteDemo } from '@/features/guideline/components/kit/color-palette'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
 import { DoDontCompareDemo } from '@/features/guideline/components/kit/do-dont-compare'
@@ -354,6 +350,13 @@ const calloutBlocks: Extract<GuidelineBlock, { blockType: 'callout' }>[] = [
 	},
 ]
 
+// 컬러 페어링 블록 mock — 실제 블록 renderer로 전시(색·매핑은 brand-colors/규칙에서 서버가 조립).
+const colorPairingBlock = (system: 'tone-in-tone' | 'tone-on-tone' | 'mono-tone') =>
+	({ blockType: 'colorPairing', system }) as Extract<
+		GuidelineBlock,
+		{ blockType: 'colorPairing' }
+	>
+
 export function GuidelineKitGallery() {
 	return (
 		<article className="flex w-full flex-col gap-8">
@@ -469,16 +472,16 @@ export function GuidelineKitGallery() {
 				<PaletteSwatchesDemo />
 			</CollapsibleDemo>
 
-			<CollapsibleDemo title="Color Pairing · Tone in Tone (배경→전경)">
-				<ColorPairingToneInToneDemo />
+			<CollapsibleDemo title="Color Pairing · Tone in Tone (블록)">
+				<ColorPairingBlock block={colorPairingBlock('tone-in-tone')} />
 			</CollapsibleDemo>
 
-			<CollapsibleDemo title="Color Pairing · Tone on Tone (배경→전경)">
-				<ColorPairingToneOnToneDemo />
+			<CollapsibleDemo title="Color Pairing · Tone on Tone (블록)">
+				<ColorPairingBlock block={colorPairingBlock('tone-on-tone')} />
 			</CollapsibleDemo>
 
-			<CollapsibleDemo title="Color Pairing · Mono Tone (배경→전경)">
-				<ColorPairingMonoToneDemo />
+			<CollapsibleDemo title="Color Pairing · Mono Tone (블록)">
+				<ColorPairingBlock block={colorPairingBlock('mono-tone')} />
 			</CollapsibleDemo>
 
 			<CollapsibleDemo title="Logo Variant Selector · 로고 배리언트 셀렉터 (cash.app식)">

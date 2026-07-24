@@ -2,6 +2,7 @@
 
 import projectCallout from '../blocks/callout/projection'
 import projectCarousel from '../blocks/carousel/projection'
+import projectColorPairing from '../blocks/color-pairing/projection'
 import projectColorPalette from '../blocks/color-palette/projection'
 import projectContentColumns from '../blocks/content-columns/projection'
 import projectDoDont from '../blocks/do-dont/projection'
@@ -38,6 +39,7 @@ export const guidelineBlockProjectors = {
 	typeScale: projectTypeScale,
 	layoutGrid: projectLayoutGrid,
 	glyphGrid: projectGlyphGrid,
+	colorPairing: projectColorPairing,
 	iconGrid: projectIconGrid,
 	imageGrid: projectImageGrid,
 	logoGroupViewer: projectLogoGroupViewer,
