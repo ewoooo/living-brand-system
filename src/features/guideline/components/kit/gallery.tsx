@@ -13,13 +13,17 @@ import { TypeSpecimenBlock } from '@/features/guideline/blocks/type-specimen/com
 import { CardRowDemo } from '@/features/guideline/components/kit/card-row'
 import { ClearSpace } from '@/features/guideline/components/kit/clear-space'
 import { CollapsibleDemo } from '@/features/guideline/components/kit/collapsible-demo'
+import {
+	ColorPairingMonoToneDemo,
+	ColorPairingToneInToneDemo,
+	ColorPairingToneOnToneDemo,
+} from '@/features/guideline/components/kit/color-pairing-changer'
 import { ColorPaletteDemo } from '@/features/guideline/components/kit/color-palette'
 import { DataTableDemo } from '@/features/guideline/components/kit/data-table'
 import { DoDontCompareDemo } from '@/features/guideline/components/kit/do-dont-compare'
 import { DownloadCardDemo } from '@/features/guideline/components/kit/download-card'
 import { LayoutGridOverlayDemo } from '@/features/guideline/components/kit/layout-grid-overlay'
 import { LogoClearSpaceUnitDemo } from '@/features/guideline/components/kit/logo-clearspace-unit'
-import { LogoColorChangerDemo } from '@/features/guideline/components/kit/logo-color-changer'
 import { LogoLockupDemo } from '@/features/guideline/components/kit/logo-lockup'
 import { LogoVariantSelectorDemo } from '@/features/guideline/components/kit/logo-variant-selector'
 import {
@@ -465,8 +469,16 @@ export function GuidelineKitGallery() {
 				<PaletteSwatchesDemo />
 			</CollapsibleDemo>
 
-			<CollapsibleDemo title="Logo Color Changer · 로고 컬러 체인저 (미니 팔레트 · 전경/배경)">
-				<LogoColorChangerDemo />
+			<CollapsibleDemo title="Color Pairing · Tone in Tone (배경→전경)">
+				<ColorPairingToneInToneDemo />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Color Pairing · Tone on Tone (배경→전경)">
+				<ColorPairingToneOnToneDemo />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Color Pairing · Mono Tone (배경→전경)">
+				<ColorPairingMonoToneDemo />
 			</CollapsibleDemo>
 
 			<CollapsibleDemo title="Logo Variant Selector · 로고 배리언트 셀렉터 (cash.app식)">
