@@ -2,13 +2,13 @@ import { isLightColor } from '@/lib/color'
 import { MAIN, MULTI } from './color-palette'
 
 /**
- * Color Pairing 시스템 = essenherb 3대 페어링(Tone in/on/Mono)의 "병용 가능 조합"을 전처리한 데이터.
+ * Color Pairing 시스템 = essenherb 3대 페어링(Tone in/on/Mono)의 병용 조합을 전처리한 데이터.
  * 세 방식 모두 BG→FG 순서. 컴포넌트는 pairs 테이블을 조회만 하고 런타임 계산을 하지 않는다.
  *
- * 원칙: 기능엔 "기술적 병용 가능 여부"만 담는다. 추천/의도(노랑 제외·톤별 흑백 대비 등)는
- * 조합기 아래 별도 추천 조합 display로 분리한다.
+ * 배경 id → { recommended: 추천(꽉 찬 사각형), usable: 사용 가능하나 비추천('그냥', 원) }.
+ * 목록에 없는 색 = 병용 불가(숨김). 세 시스템 모두 같은 컴포넌트를 쓰고, 이 데이터 구성으로만 달라진다.
  *
- * ⚠️ 지금은 repo 설정 모듈(규칙으로 테이블 생성). 모델 확정 후 이 pairs 테이블을 Payload로 승격 예정.
+ * ⚠️ 지금은 repo 설정 모듈(규칙으로 테이블 생성). 모델 확정 후 이 테이블을 Payload로 승격 예정.
  */
 
 type Swatch = { id: string; hex: string; family: string; tone: number | null }
@@ -33,39 +33,56 @@ const TONE_IN_MATRIX: Record<number, number[]> = {
 }
 const isChromatic = (s: Swatch) => s.tone != null
 
-// 병용 규칙(테이블 생성기) — 런타임엔 안 쓰이고 pairs 전처리에만 쓴다. 기술적 병용 여부만 판단.
-type Rule = { bgEligible: (s: Swatch) => boolean; compatible: (bg: Swatch, fg: Swatch) => boolean }
+// 조합 등급(테이블 생성기) — 런타임엔 안 쓰이고 pairs 전처리에만 쓴다.
+// 'recommended'=추천(사각형), 'usable'=사용 가능/비추천(원), null=병용 불가(숨김).
+type Grade = 'recommended' | 'usable' | null
+type Rule = { bgEligible: (s: Swatch) => boolean; grade: (bg: Swatch, fg: Swatch) => Grade }
 
 const toneInRule: Rule = {
 	bgEligible: isChromatic,
-	compatible: (bg, fg) =>
-		bg.tone != null &&
-		fg.tone != null &&
-		fg.family !== bg.family && // 서로 다른 계열
-		(TONE_IN_MATRIX[bg.tone]?.includes(fg.tone) ?? false),
+	grade: (bg, fg) => {
+		if (bg.tone == null || fg.tone == null) return null
+		if (fg.family === bg.family) return null // 서로 다른 계열
+		if (!TONE_IN_MATRIX[bg.tone]?.includes(fg.tone)) return null
+		// ponytail: 추천 = 핵심 톤(3) 임시 규칙. 실제 40종은 p27/28 Figma 데이터 확보 후 교체.
+		return fg.tone === 3 ? 'recommended' : 'usable'
+	},
 }
 const toneOnRule: Rule = {
 	bgEligible: isChromatic,
-	compatible: (bg, fg) =>
-		bg.tone != null && fg.tone != null && fg.family === bg.family && fg.tone !== bg.tone, // 같은 계열 다른 톤
+	// 같은 계열 다른 톤은 전부 동등 → 모두 추천(사각형), 등급 구분 없음.
+	grade: (bg, fg) =>
+		bg.tone != null && fg.tone != null && fg.family === bg.family && fg.tone !== bg.tone
+			? 'recommended'
+			: null,
 }
 const monoRule: Rule = {
-	bgEligible: () => true, // 유채·무채 모두 배경 가능
-	compatible: (bg, fg) => {
+	bgEligible: () => true,
+	grade: (bg, fg) => {
 		const bgAch = bg.tone == null
 		const fgAch = fg.tone == null
-		if (!bgAch && !fgAch) return false // 둘 다 유채 = 모노톤 아님
-		if (bgAch && fgAch) return isLightColor(bg.hex) !== isLightColor(fg.hex) // 흰↔검만
-		return true // 무채 + 유채
+		if (!bgAch && !fgAch) return null // 둘 다 유채 = 모노톤 아님
+		if (bgAch && fgAch)
+			return isLightColor(bg.hex) !== isLightColor(fg.hex) ? 'recommended' : null // 흰↔검만
+		return 'recommended' // 무채 + 유채
 	},
 }
 
-// 배경 id → 병용 가능한 전경 id[] (모듈 로드 시 1회 전처리). 배경 부적격 색은 키가 없다.
-function buildPairs(rule: Rule): Record<string, string[]> {
-	const pairs: Record<string, string[]> = {}
+export type PairingEntry = { recommended: string[]; usable: string[] }
+
+// 배경 id → { recommended, usable } (모듈 로드 시 1회 전처리). 배경 부적격 색은 키가 없다.
+function buildPairs(rule: Rule): Record<string, PairingEntry> {
+	const pairs: Record<string, PairingEntry> = {}
 	for (const bg of UNIVERSE) {
 		if (!rule.bgEligible(bg)) continue
-		pairs[bg.id] = UNIVERSE.filter((fg) => rule.compatible(bg, fg)).map((fg) => fg.id)
+		const recommended: string[] = []
+		const usable: string[] = []
+		for (const fg of UNIVERSE) {
+			const g = rule.grade(bg, fg)
+			if (g === 'recommended') recommended.push(fg.id)
+			else if (g === 'usable') usable.push(fg.id)
+		}
+		pairs[bg.id] = { recommended, usable }
 	}
 	return pairs
 }
@@ -74,8 +91,8 @@ export type PairingSystemData = {
 	key: string
 	label: string
 	description: string
-	/** 배경 id → 병용 가능한 전경 id[] (전처리 완료). 배경으로 못 고르는 색은 키 없음. */
-	pairs: Record<string, string[]>
+	/** 배경 id → { recommended, usable }. 배경으로 못 고르는 색은 키 없음. */
+	pairs: Record<string, PairingEntry>
 }
 
 export const toneInTone: PairingSystemData = {

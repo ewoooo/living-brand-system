@@ -69,14 +69,18 @@ export function ColorPairingChanger({
 	const fg = hexOf(fgId) ?? '#000000'
 	const bg = hexOf(bgId) ?? '#FFFFFF'
 
-	// 전처리 테이블 조회. 배경(Step1): 테이블 키 없는 색은 배경 불가. 전경(Step2): 선택 배경의 병용 목록.
-	const bgDisabled = flat.filter((s) => !(s.id in system.pairs)).map((s) => s.id)
-	const allowedFg = bgId ? system.pairs[bgId] : null
-	const fgDisabled = allowedFg
-		? flat.filter((s) => !allowedFg.includes(s.id)).map((s) => s.id)
+	// 전처리 테이블 조회. 배경(Step1): 키 없는 색은 배경 불가(숨김). 전경(Step2): 선택 배경의 병용 목록.
+	const bgHidden = flat.filter((s) => !(s.id in system.pairs)).map((s) => s.id)
+	const entry = bgId ? system.pairs[bgId] : undefined
+	// 전경: 병용 불가는 숨김, usable('그냥')은 원, recommended는 꽉 찬 사각형.
+	const fgHidden = entry
+		? flat
+				.filter((s) => !entry.recommended.includes(s.id) && !entry.usable.includes(s.id))
+				.map((s) => s.id)
 		: []
+	const fgCircle = entry ? entry.usable : []
 
-	// 배경(Step1)을 바꾸면 전경 후보 갱신. 기존 전경이 병용 불가면 첫 병용 가능 색으로 이동.
+	// 배경(Step1)을 바꾸면 전경 후보 갱신. 기존 전경이 병용 불가면 첫 병용 가능 색(추천 우선)으로 이동.
 	// 같은 색을 다시 누르면 선택 취소.
 	const pickBg = (id: string) => {
 		if (id === bgId) {
@@ -84,8 +88,10 @@ export function ColorPairingChanger({
 			return
 		}
 		setBgId(id)
-		const allowed = system.pairs[id] ?? []
-		if (fgId && !allowed.includes(fgId)) setFgId(allowed[0] ?? null)
+		const e = system.pairs[id]
+		if (e && fgId && !e.recommended.includes(fgId) && !e.usable.includes(fgId)) {
+			setFgId(e.recommended[0] ?? e.usable[0] ?? null)
+		}
 	}
 	const pickFg = (id: string) => {
 		setFgId((cur) => (cur === id ? null : id))
@@ -101,7 +107,8 @@ export function ColorPairingChanger({
 						rows={rows}
 						selectedId={fgId}
 						onSelect={pickFg}
-						disabledIds={fgDisabled}
+						hiddenIds={fgHidden}
+						circleIds={fgCircle}
 					/>
 				</div>
 				{/* 가운데: 배경 캔버스 — 좌상단 탭으로 로고/텍스트/아이콘 전환, 전경색으로 그린다 */}
@@ -159,14 +166,14 @@ export function ColorPairingChanger({
 						rows={rows}
 						selectedId={bgId}
 						onSelect={pickBg}
-						disabledIds={bgDisabled}
+						hiddenIds={bgHidden}
 					/>
 				</div>
 			</div>
 			<p className="mt-2 font-body font-normal text-muted-foreground text-xs">
 				<span className="font-medium text-foreground">{system.label}</span> —{' '}
-				{system.description} · ① 배경색(오른쪽) → ② 전경색(왼쪽, ⃠ 병용 불가) · 선택된 색
-				다시 누르면 취소 · 추천 조합은 아래 별도 표시(예정)
+				{system.description} · ① 배경색(오른쪽) → ② 전경색(왼쪽): 꽉 찬 칸=추천, 원=사용
+				가능, 빈 칸=병용 불가 · 선택된 색 다시 누르면 취소
 			</p>
 		</div>
 	)
