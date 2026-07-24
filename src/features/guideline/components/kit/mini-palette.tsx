@@ -55,23 +55,39 @@ export function MiniPalette({
 									boxShadow: selected ? `inset 0 0 0 2px ${contrast}` : undefined,
 								}}
 							>
-								{/* 선택 불가: 대비색 얇은 사선 */}
+								{/* 선택 불가: lucide ban 아이콘(중앙, 대비색) */}
 								{disabled && (
-									<span
-										className="pointer-events-none absolute inset-0"
-										style={{
-											backgroundImage: `linear-gradient(to top right, transparent calc(50% - 0.5px), ${contrast} calc(50% - 0.5px), ${contrast} calc(50% + 0.5px), transparent calc(50% + 0.5px))`,
-											opacity: 0.6,
-										}}
-									/>
+									<span className="pointer-events-none absolute inset-0 grid place-items-center">
+										<svg
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke={contrast}
+											strokeWidth={2}
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											className="h-4 w-4"
+											aria-hidden="true"
+										>
+											<circle cx="12" cy="12" r="10" />
+											<path d="m4.9 4.9 14.2 14.2" />
+										</svg>
+									</span>
 								)}
-								{/* 추천: 대비색 동그라미 */}
+								{/* 추천: lucide star 아이콘(중앙, 대비색) */}
 								{recommended && (
 									<span className="pointer-events-none absolute inset-0 grid place-items-center">
-										<span
-											className="h-2 w-2 rounded-full"
-											style={{ backgroundColor: contrast, opacity: 0.9 }}
-										/>
+										<svg
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke={contrast}
+											strokeWidth={2}
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											className="h-4 w-4"
+											aria-hidden="true"
+										>
+											<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26" />
+										</svg>
 									</span>
 								)}
 							</button>
