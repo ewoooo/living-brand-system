@@ -12,7 +12,7 @@ import { monoTone, type PairingSystemData, toneInTone, toneOnTone } from './pair
  * 브랜드 무관: 색·행 구성·워드마크·테이블 전부 props.
  */
 
-// 캔버스 테스트 객체: 로고 / 일반 텍스트 / 랜덤 아이콘. 로고·아이콘은 SVG 실루엣을 mask로 재색.
+// 캔버스 테스트 객체: 로고 / 일반 텍스트 / 아이콘 6종(3×2). 로고·아이콘은 SVG 실루엣을 mask로 재색.
 const CANVAS_OBJECTS = [
 	{ value: 'logo', label: '로고' },
 	{ value: 'text', label: '텍스트' },
@@ -20,20 +20,20 @@ const CANVAS_OBJECTS = [
 ] as const
 type CanvasObject = (typeof CANVAS_OBJECTS)[number]['value']
 const ICON_SRCS = [1, 2, 3, 4, 5, 7].map((n) => `/kit-sample-icons/${n}.svg`)
-const randomIcon = () => ICON_SRCS[Math.floor(Math.random() * ICON_SRCS.length)]
 
 // SVG 실루엣을 color로 재색하는 mask 스타일(icon-grid와 동일 기법: 배경색 + alpha 마스크).
-const maskStyle = (src: string, color: string) =>
+// size: 기본 contain. 아이콘 SVG는 내부 여백이 커서(글리프≈viewBox 43%) 확대해 패딩을 강제로 크롭한다.
+const maskStyle = (src: string, color: string, size = 'contain') =>
 	({
 		backgroundColor: color,
 		maskImage: `url(${src})`,
 		maskRepeat: 'no-repeat',
 		maskPosition: 'center',
-		maskSize: 'contain',
+		maskSize: size,
 		WebkitMaskImage: `url(${src})`,
 		WebkitMaskRepeat: 'no-repeat',
 		WebkitMaskPosition: 'center',
-		WebkitMaskSize: 'contain',
+		WebkitMaskSize: size,
 	}) as const
 
 export function ColorPairingChanger({
@@ -58,11 +58,6 @@ export function ColorPairingChanger({
 	const [bgId, setBgId] = useState<string | null>(defaultBgId)
 	const [fgId, setFgId] = useState<string | null>(defaultFgId)
 	const [obj, setObj] = useState<CanvasObject>('logo')
-	const [iconSrc, setIconSrc] = useState(ICON_SRCS[0])
-	const selectObj = (v: CanvasObject) => {
-		setObj(v)
-		if (v === 'icon') setIconSrc(randomIcon())
-	}
 
 	const byId = (id: string) => flat.find((s) => s.id === id)
 	const hexOf = (id: string | null) => (id ? byId(id)?.hex : undefined)
@@ -120,7 +115,7 @@ export function ColorPairingChanger({
 						<button
 							key={o.value}
 							type="button"
-							onClick={() => selectObj(o.value)}
+							onClick={() => setObj(o.value)}
 							aria-pressed={obj === o.value}
 							className={`rounded-full px-4 py-1.5 font-body font-medium text-sm transition-colors ${
 								obj === o.value
@@ -134,10 +129,11 @@ export function ColorPairingChanger({
 				</div>
 
 				{obj === 'text' && (
-					<div className="max-w-[75%] text-center" style={{ color: fg }}>
+					<div className="max-w-[80%] text-center" style={{ color: fg }}>
 						<p className="font-bold text-3xl tracking-tight">{wordmark}</p>
-						<p className="mt-1 font-body text-sm">
-							자연에서 찾은 피부 본연의 힘 · Daily Skincare
+						<p className="mt-2 font-body text-sm leading-relaxed">
+							자연에서 찾은 피부 본연의 힘. 혹독한 환경에서도 살아남는 허브의 회복력을
+							담아 매일의 루틴을 건강하게. Vegan skincare, rooted in nature.
 						</p>
 					</div>
 				)}
@@ -150,12 +146,17 @@ export function ColorPairingChanger({
 					/>
 				)}
 				{obj === 'icon' && (
-					<div
-						role="img"
-						aria-label="아이콘"
-						className="h-24 w-24"
-						style={maskStyle(iconSrc, fg)}
-					/>
+					<div className="grid grid-cols-3 gap-[3px]">
+						{ICON_SRCS.map((src, i) => (
+							<div
+								key={src}
+								role="img"
+								aria-label={`아이콘 ${i + 1}`}
+								className="size-[88px]"
+								style={maskStyle(src, fg, '167%')}
+							/>
+						))}
+					</div>
 				)}
 			</div>
 			{/* 오른쪽: 전경색(Step2, 배경에 종속) */}
