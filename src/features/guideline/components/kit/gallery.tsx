@@ -22,7 +22,6 @@ import { LogoClearSpaceUnitDemo } from '@/features/guideline/components/kit/logo
 import { LogoColorChangerDemo } from '@/features/guideline/components/kit/logo-color-changer'
 import { LogoLockupDemo } from '@/features/guideline/components/kit/logo-lockup'
 import { LogoVariantSelectorDemo } from '@/features/guideline/components/kit/logo-variant-selector'
-import { MiniPaletteDemo } from '@/features/guideline/components/kit/mini-palette'
 import {
 	brandTypeface,
 	type GuidelineBlock,
@@ -466,11 +465,7 @@ export function GuidelineKitGallery() {
 				<PaletteSwatchesDemo />
 			</CollapsibleDemo>
 
-			<CollapsibleDemo title="Mini Palette · 미니 팔레트 피커 (전경/배경)">
-				<MiniPaletteDemo />
-			</CollapsibleDemo>
-
-			<CollapsibleDemo title="Logo Color Changer · 로고 컬러 체인저">
+			<CollapsibleDemo title="Logo Color Changer · 로고 컬러 체인저 (미니 팔레트 · 전경/배경)">
 				<LogoColorChangerDemo />
 			</CollapsibleDemo>
 

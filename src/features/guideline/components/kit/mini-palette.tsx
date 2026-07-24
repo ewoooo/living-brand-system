@@ -1,8 +1,6 @@
 'use client'
 
-import { useState } from 'react'
 import { getContrastingForeground } from '@/lib/color'
-import { MAIN, MULTI } from './color-palette'
 
 /**
  * 미니 팔레트 — Color Palette와 색·그리드만 공유하고 나머지는 다 걷어낸 순수 color picker.
@@ -51,31 +49,6 @@ export function MiniPalette({
 					})}
 				</div>
 			))}
-		</div>
-	)
-}
-
-// 데모용 essenherb 행 구성: main에서 Essenherb Red 제거(red 계열에 이미 있음) → (white, black) + 6계열×5.
-const mainRow = MAIN.filter((s) => s.id !== 'main-red')
-const rows: MiniSwatch[][] = [mainRow, ...MULTI]
-
-export function MiniPaletteDemo() {
-	const [fgId, setFgId] = useState<string | null>(null)
-	const [bgId, setBgId] = useState<string | null>(null)
-	return (
-		<div className="flex gap-6">
-			<div className="w-40">
-				<p className="mb-1 font-body font-normal text-muted-foreground text-xs">
-					← 전경색 (foreground)
-				</p>
-				<MiniPalette rows={rows} selectedId={fgId} onSelect={setFgId} />
-			</div>
-			<div className="w-40">
-				<p className="mb-1 font-body font-normal text-muted-foreground text-xs">
-					배경색 (background) →
-				</p>
-				<MiniPalette rows={rows} selectedId={bgId} onSelect={setBgId} />
-			</div>
 		</div>
 	)
 }

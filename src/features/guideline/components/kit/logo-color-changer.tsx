@@ -1,113 +1,64 @@
 'use client'
 
 import { useState } from 'react'
-import { type PaletteSwatch, PaletteSwatches } from './palette-swatches'
+import { MAIN, MULTI } from './color-palette'
+import { MiniPalette, type MiniSwatch } from './mini-palette'
 
 /**
- * 로고 컬러 체인저 — 가운데 로고, 양옆 미니 컬러 팔레트(왼=전경색, 오른=배경색).
- * 전경색을 고르면 함께 쓸 수 있는 배경색만 남기고 제한한다. 선택된 칩을 다시 누르면 선택이 취소된다.
- * 브랜드 무관: 팔레트·조합 규칙·로고 전부 props.
+ * 로고 컬러 체인저 — 왼쪽 미니 팔레트(전경색) · 가운데 스테이지(배경 + 로고 텍스트) · 오른쪽 미니 팔레트(배경색)를
+ * 빈틈없이 붙인 조합 프리뷰. 양쪽 모두 자유 선택이며, 고른 색이 즉시 텍스트색·배경색에 반영된다.
+ * (BG 톤→FG 톤 페어링 제약은 후속 단계에서 얹는다 — 지금은 모두 선택 가능.)
+ * 브랜드 무관: 색·행 구성·워드마크는 props.
  *
  * @example
- * <LogoColorChanger swatches={[...]} allowedBackgrounds={{ fgId: ['bgId'] }} logo={(c) => dataUri} />
+ * <LogoColorChanger rows={[[white, black], red×5, …]} defaultFgId="red-3" defaultBgId="main-white" />
  */
 export function LogoColorChanger({
-	swatches,
-	allowedBackgrounds,
-	logo,
+	rows,
+	wordmark = 'Essenherb',
+	defaultFgId,
+	defaultBgId,
 }: {
-	swatches: PaletteSwatch[]
-	/** 전경색 id → 허용 배경색 id 목록. */
-	allowedBackgrounds: Record<string, string[]>
-	/** 전경색 hex를 받아 로고 SVG data-URI를 돌려주는 함수(색상 치환). */
-	logo: (color: string) => string
+	rows: MiniSwatch[][]
+	/** 스테이지 가운데에 그릴 로고 텍스트. */
+	wordmark?: string
+	defaultFgId?: string
+	defaultBgId?: string
 }) {
-	const [fgId, setFgId] = useState<string | null>(swatches[0]?.id ?? null)
-	const [bgId, setBgId] = useState<string | null>(
-		(allowedBackgrounds[swatches[0]?.id ?? ''] ?? [])[0] ?? null,
-	)
-
-	// 재클릭 → 선택 취소, 다른 것 → 변경.
-	const toggle = (setter: typeof setFgId) => (id: string) =>
-		setter((current) => (current === id ? null : id))
-
-	const allowedBg = fgId ? (allowedBackgrounds[fgId] ?? []) : swatches.map((s) => s.id)
-	const disabledBg = swatches.map((s) => s.id).filter((id) => !allowedBg.includes(id))
-	const effectiveBgId = bgId && allowedBg.includes(bgId) ? bgId : null
-
-	const fg = swatches.find((s) => s.id === fgId)
-	const bg = swatches.find((s) => s.id === effectiveBgId)
-	const logoColor = fg?.hex ?? '#ACACAC'
+	const flat = rows.flat()
+	const [fgId, setFgId] = useState(defaultFgId ?? flat[0]?.id)
+	const [bgId, setBgId] = useState(defaultBgId ?? flat[flat.length - 1]?.id)
+	const hexOf = (id?: string) => flat.find((s) => s.id === id)?.hex
+	const fg = hexOf(fgId) ?? '#000000'
+	const bg = hexOf(bgId) ?? '#FFFFFF'
 
 	return (
-		<div className="w-full">
-			<div className="flex h-72 items-stretch gap-4">
-				{/* 왼쪽: 전경색 */}
-				<div className="flex w-12 flex-col gap-2">
-					<PaletteSwatches
-						swatches={swatches}
-						variant="mini"
-						orientation="vertical"
-						selectedId={fgId}
-						onSelect={toggle(setFgId)}
-					/>
-				</div>
-
-				{/* 가운데: 로고 스테이지 */}
-				<div
-					className={`grid flex-1 place-items-center rounded-lg border border-border transition-colors ${
-						bg ? '' : 'bg-fill-muted'
-					}`}
-					style={bg ? { backgroundColor: bg.hex } : undefined}
-				>
-					{/* biome-ignore lint/performance/noImgElement: 색상 치환 data-URI라 next/image 미사용. */}
-					<img src={logo(logoColor)} alt="로고" className="h-14 w-auto" />
-				</div>
-
-				{/* 오른쪽: 배경색(전경색에 따라 제한) */}
-				<div className="flex w-12 flex-col gap-2">
-					<PaletteSwatches
-						swatches={swatches}
-						variant="mini"
-						orientation="vertical"
-						selectedId={effectiveBgId}
-						disabledIds={disabledBg}
-						onSelect={toggle(setBgId)}
-					/>
-				</div>
+		<div className="flex w-full items-stretch">
+			{/* 왼쪽: 전경색 */}
+			<div className="w-40 shrink-0">
+				<MiniPalette rows={rows} selectedId={fgId} onSelect={setFgId} />
 			</div>
-
-			<div className="mt-2 flex justify-between font-body font-normal text-muted-foreground text-xs">
-				<span>← 전경색 {fg ? `· ${fg.name}` : '(선택 안 됨)'}</span>
-				<span>배경색 {bg ? `· ${bg.name}` : '(선택 안 됨)'} →</span>
+			{/* 가운데: 배경 + 로고 텍스트 */}
+			<div
+				className="flex flex-1 items-center justify-center px-6"
+				style={{ backgroundColor: bg }}
+			>
+				<span className="font-bold text-3xl tracking-tight" style={{ color: fg }}>
+					{wordmark}
+				</span>
 			</div>
-			<p className="mt-1 font-body font-normal text-muted-foreground text-xs">
-				전경색을 고르면 배경색이 제한됩니다. 선택된 색을 다시 누르면 취소됩니다.
-			</p>
+			{/* 오른쪽: 배경색 */}
+			<div className="w-40 shrink-0">
+				<MiniPalette rows={rows} selectedId={bgId} onSelect={setBgId} />
+			</div>
 		</div>
 	)
 }
 
-// 프로토타입용 mock 팔레트·규칙·로고(브랜드 무관).
-const swatches: PaletteSwatch[] = [
-	{ id: 'white', name: 'White', hex: '#FFFFFF' },
-	{ id: 'black', name: 'Black', hex: '#000000' },
-]
-const allowedBackgrounds: Record<string, string[]> = {
-	white: ['black'],
-	black: ['white'],
-}
-const wordmark = (color: string) =>
-	`data:image/svg+xml,${encodeURIComponent(
-		`<svg xmlns="http://www.w3.org/2000/svg" width="240" height="56"><text x="120" y="40" font-family="sans-serif" font-size="34" font-weight="800" letter-spacing="-1" fill="${color}" text-anchor="middle">Essenherb</text></svg>`,
-	)}`
+// 데모용 essenherb 행: main에서 Essenherb Red 제거(red 계열에 이미 있음) → (white, black) + 6계열×5.
+const mainRow = MAIN.filter((s) => s.id !== 'main-red')
+const rows: MiniSwatch[][] = [mainRow, ...MULTI]
 
 export function LogoColorChangerDemo() {
-	return (
-		<LogoColorChanger
-			swatches={swatches}
-			allowedBackgrounds={allowedBackgrounds}
-			logo={wordmark}
-		/>
-	)
+	return <LogoColorChanger rows={rows} defaultFgId="red-3" defaultBgId="main-white" />
 }
