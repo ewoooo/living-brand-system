@@ -9,6 +9,7 @@ import projectGlyphGrid from '../blocks/glyph-grid/projection'
 import projectIconGrid from '../blocks/icon-grid/projection'
 import projectImageGrid from '../blocks/image-grid/projection'
 import projectLayoutGrid from '../blocks/layout-grid/projection'
+import projectLogoGroupViewer from '../blocks/logo-group-viewer/projection'
 import projectLogoViewer from '../blocks/logo-viewer/projection'
 import projectMediaShowcase from '../blocks/media-showcase/projection'
 import projectSignatureShowcase from '../blocks/signature-showcase/projection'
@@ -39,6 +40,7 @@ export const guidelineBlockProjectors = {
 	glyphGrid: projectGlyphGrid,
 	iconGrid: projectIconGrid,
 	imageGrid: projectImageGrid,
+	logoGroupViewer: projectLogoGroupViewer,
 	logoViewer: projectLogoViewer,
 	stemClearSpace: projectStemClearSpace,
 } satisfies ProjectionMap

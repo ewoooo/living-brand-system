@@ -10,6 +10,7 @@ import GlyphGridSchema from '../blocks/glyph-grid/schema'
 import IconGridSchema from '../blocks/icon-grid/schema'
 import ImageGridSchema from '../blocks/image-grid/schema'
 import LayoutGridSchema from '../blocks/layout-grid/schema'
+import LogoGroupViewerSchema from '../blocks/logo-group-viewer/schema'
 import LogoViewerSchema from '../blocks/logo-viewer/schema'
 import MediaShowcaseSchema from '../blocks/media-showcase/schema'
 import SignatureShowcaseSchema from '../blocks/signature-showcase/schema'
@@ -38,6 +39,7 @@ export const guidelineBlockSchemas = {
 	glyphGrid: GlyphGridSchema,
 	iconGrid: IconGridSchema,
 	imageGrid: ImageGridSchema,
+	logoGroupViewer: LogoGroupViewerSchema,
 	logoViewer: LogoViewerSchema,
 	stemClearSpace: StemClearSpaceSchema,
 } satisfies SchemaMap

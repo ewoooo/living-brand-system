@@ -114,5 +114,7 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 			]).join('\n')
 		case 'logoViewer':
 			return evidence.title ?? 'Logo viewer'
+		case 'logoGroupViewer':
+			return evidence.title ?? 'Logo group viewer'
 	}
 }
