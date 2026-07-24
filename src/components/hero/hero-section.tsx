@@ -1,8 +1,6 @@
-'use client'
-
-import { HeroContentSection } from '@/components/hero/hero-section-contents'
-import { HeroMainSection } from '@/components/hero/hero-section-main'
-import { HeroNewsSection } from '@/components/hero/hero-section-news'
+import { HeroFeatureSection } from '@/components/hero/hero-feature-section'
+import { HeroFooter } from '@/components/hero/hero-footer'
+import { HeroMainSection } from '@/components/hero/hero-main-section'
 
 export function HeroSection() {
 	return (
@@ -13,8 +11,8 @@ export function HeroSection() {
 			{/* Main content — vertically centered */}
 			<div className="grid grid-cols-[minmax(0,1fr)] grid-rows-auto gap-4 p-4">
 				<HeroMainSection />
-				<HeroContentSection />
-				<HeroNewsSection />
+				<HeroFeatureSection />
+				<HeroFooter />
 			</div>
 		</section>
 	)
