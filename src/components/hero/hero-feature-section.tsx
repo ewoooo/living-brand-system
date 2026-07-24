@@ -1,8 +1,12 @@
 import { NavigationBlock } from '@/components/navigation-block'
 
-export function HeroContentSection() {
+export function HeroFeatureSection() {
 	return (
-		<section aria-label="주요 메뉴" className="grid grid-cols-1 gap-4 md:grid-cols-3">
+		<section
+			aria-label="주요 기능"
+			data-slot="hero-feature-section"
+			className="grid grid-cols-1 gap-4 md:grid-cols-3"
+		>
 			<NavigationBlock variant="hero" href="/guideline" label="Guideline" />
 			<NavigationBlock variant="hero" href="/create" label="Studio" />
 			<NavigationBlock variant="hero" href="/create" label="Help" />
