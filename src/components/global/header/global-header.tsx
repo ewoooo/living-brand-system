@@ -1,197 +1,48 @@
 'use client'
 
-import Image from 'next/image'
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { HeaderCenter } from '@/components/global/header/header-section-center'
+import { HeaderHead } from '@/components/global/header/header-section-head'
 import {
-	GuidelineSearch,
 	type GuidelineSearchChapter,
-} from '@/components/global/search/guideline-search'
-import {
-	NavigationMenu,
-	NavigationMenuContent,
-	NavigationMenuItem,
-	NavigationMenuLink,
-	NavigationMenuList,
-	NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu'
-import { SidebarTrigger } from '@/components/ui/sidebar'
-import { cn } from '@/lib/utils'
-
-const STUDIO_LINKS = [
-	{ href: '/create', label: 'Templates' },
-	{ href: '/generate', label: 'Generate' },
-	{ href: '/review', label: 'Review' },
-] as const
-
-function HeaderHead({
-	className,
-	guidelineChapters,
-}: {
-	className?: string
-	guidelineChapters: GuidelineSearchChapter[]
-}) {
-	const pathname = usePathname()
-	const router = useRouter()
-	const LOGO_SIZE = 14
-	const guidelineActive = pathname === '/guideline' || pathname.startsWith('/guideline/')
-	const studioActive = STUDIO_LINKS.some(
-		({ href }) => pathname === href || pathname.startsWith(`${href}/`),
-	)
-
-	return (
-		<section className={className}>
-			<nav
-				aria-label="주요 메뉴"
-				className="flex items-center gap-1 py-2 pl-5 font-body text-base font-normal"
-			>
-				<Link
-					aria-label="메인으로 이동"
-					className="flex size-8 shrink-0 items-center justify-center rounded-md transition-opacity hover:opacity-60"
-					href="/"
-				>
-					<Image
-						alt=""
-						className="size-3.5 brightness-0 dark:invert"
-						height={LOGO_SIZE}
-						src="/logos/logo.svg"
-						width={LOGO_SIZE}
-					/>
-				</Link>
-				<NavigationMenu viewport={false}>
-					<NavigationMenuList className="gap-2">
-						<NavigationMenuItem>
-							<NavigationMenuTrigger
-								className={cn(guidelineActive && 'text-foreground')}
-								onClick={() => router.push('/guideline')}
-							>
-								Guideline
-							</NavigationMenuTrigger>
-							<NavigationMenuContent>
-								<ul className="grid w-72 gap-1">
-									<li>
-										<NavigationMenuLink
-											active={pathname === '/guideline'}
-											asChild
-										>
-											<Link
-												aria-current={
-													pathname === '/guideline' ? 'page' : undefined
-												}
-												href="/guideline"
-											>
-												Overview
-											</Link>
-										</NavigationMenuLink>
-									</li>
-									{guidelineChapters.map((chapter) => {
-										const active =
-											pathname === chapter.href ||
-											pathname.startsWith(`${chapter.href}/`)
-
-										return (
-											<li key={chapter.id}>
-												<NavigationMenuLink
-													active={active}
-													asChild
-													className="flex-col items-start gap-0.5"
-												>
-													<Link
-														aria-current={active ? 'page' : undefined}
-														href={chapter.href}
-													>
-														<span>{chapter.title}</span>
-														{/*{chapter.description && (
-															<span className="text-muted-foreground">
-																{chapter.description}
-															</span>
-														)}*/}
-													</Link>
-												</NavigationMenuLink>
-											</li>
-										)
-									})}
-								</ul>
-							</NavigationMenuContent>
-						</NavigationMenuItem>
-						<NavigationMenuItem>
-							<NavigationMenuTrigger
-								className={cn(studioActive && 'text-foreground')}
-								onClick={() => router.push('/create')}
-							>
-								Studio
-							</NavigationMenuTrigger>
-							<NavigationMenuContent>
-								<ul className="grid w-48 gap-1">
-									{STUDIO_LINKS.map((item) => {
-										const active =
-											pathname === item.href ||
-											pathname.startsWith(`${item.href}/`)
-
-										return (
-											<li key={item.href}>
-												<NavigationMenuLink active={active} asChild>
-													<Link
-														aria-current={active ? 'page' : undefined}
-														href={item.href}
-													>
-														{item.label}
-													</Link>
-												</NavigationMenuLink>
-											</li>
-										)
-									})}
-								</ul>
-							</NavigationMenuContent>
-						</NavigationMenuItem>
-						<NavigationMenuItem>
-							<NavigationMenuLink asChild>
-								<Link
-									href="/admin"
-									rel="noreferrer"
-									target="_blank"
-									className="text-muted-foreground/50"
-								>
-									Admin ↗
-								</Link>
-							</NavigationMenuLink>
-						</NavigationMenuItem>
-					</NavigationMenuList>
-				</NavigationMenu>
-			</nav>
-		</section>
-	)
-}
-
-function HeaderTail({
-	className,
-	guidelineChapters,
-}: {
-	className?: string
-	guidelineChapters: GuidelineSearchChapter[]
-}) {
-	return (
-		<section className={className}>
-			<GuidelineSearch chapters={guidelineChapters} />
-			<SidebarTrigger variant="outline" size="default" className="p-3 py-4 rounded-full">
-				Ask AI
-			</SidebarTrigger>
-		</section>
-	)
-}
+	HeaderTail,
+} from '@/components/global/header/header-section-tail'
 
 export function GlobalHeader({
 	guidelineChapters,
 }: {
 	guidelineChapters: GuidelineSearchChapter[]
 }) {
+	const [activeMenu, setActiveMenu] = useState('')
+
 	return (
-		<header className="relative z-50 flex shrink-0 bg-background border-b border-neutral-200 dark:border-neutral-700">
-			<HeaderHead className="" guidelineChapters={guidelineChapters} />
-			<HeaderTail
-				className="ml-auto flex items-center gap-2 p-2 px-4"
-				guidelineChapters={guidelineChapters}
+		<>
+			<header
+				className="relative z-50 grid shrink-0 grid-cols-3 items-center border-b border-border bg-background p-1 px-6 data-[open=true]:border-transparent"
+				data-open={Boolean(activeMenu)}
+			>
+				<HeaderHead className="justify-self-start" />
+				<HeaderCenter
+					activeMenu={activeMenu}
+					className="grid place-items-center justify-self-center"
+					guidelineChapters={guidelineChapters}
+					onActiveMenuChange={setActiveMenu}
+				/>
+				<HeaderTail
+					className="flex min-w-0 items-center justify-self-end gap-2"
+					guidelineChapters={guidelineChapters}
+				/>
+			</header>
+			<button
+				aria-hidden={!activeMenu}
+				aria-label="메뉴 닫기"
+				className="pointer-events-none fixed inset-0 z-40 cursor-default border-0 bg-background/60 p-0 opacity-0 backdrop-blur-sm transition-opacity duration-150 data-[open=true]:pointer-events-auto data-[open=true]:opacity-100"
+				data-open={Boolean(activeMenu)}
+				disabled={!activeMenu}
+				onClick={() => setActiveMenu('')}
+				tabIndex={-1}
+				type="button"
 			/>
-		</header>
+		</>
 	)
 }
