@@ -101,8 +101,8 @@ export function ColorPairingChanger({
 		<div className="w-full">
 			{/* 세 영역을 약간 분리(gap). border-radius 없음. */}
 			<div className="flex w-full items-stretch gap-3">
-				{/* 왼쪽: 전경색(Step2, 배경에 종속) */}
-				<div className="w-40 shrink-0">
+				{/* 왼쪽: 전경색(Step2, 배경에 종속) — 팔레트가 고정 크기라 폭은 콘텐츠에 맞춘다 */}
+				<div className="shrink-0">
 					<MiniPalette
 						rows={rows}
 						selectedId={fgId}
@@ -161,7 +161,7 @@ export function ColorPairingChanger({
 					)}
 				</div>
 				{/* 오른쪽: 배경색(Step1, 자유) */}
-				<div className="w-40 shrink-0">
+				<div className="shrink-0">
 					<MiniPalette
 						rows={rows}
 						selectedId={bgId}
