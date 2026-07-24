@@ -9,9 +9,12 @@ import projectGlyphGrid from '../blocks/glyph-grid/projection'
 import projectIconGrid from '../blocks/icon-grid/projection'
 import projectImageGrid from '../blocks/image-grid/projection'
 import projectLayoutGrid from '../blocks/layout-grid/projection'
+import projectLogoGroupViewer from '../blocks/logo-group-viewer/projection'
+import projectLogoViewer from '../blocks/logo-viewer/projection'
 import projectMediaShowcase from '../blocks/media-showcase/projection'
 import projectSignatureShowcase from '../blocks/signature-showcase/projection'
 import projectSpecList from '../blocks/spec-list/projection'
+import projectStemClearSpace from '../blocks/stem-clear-space/projection'
 import projectTypeScale from '../blocks/type-scale/projection'
 import projectTypeSpecimen from '../blocks/type-specimen/projection'
 import type { BlockProjection, GuidelineBlock } from '../blocks/types'
@@ -37,6 +40,9 @@ export const guidelineBlockProjectors = {
 	glyphGrid: projectGlyphGrid,
 	iconGrid: projectIconGrid,
 	imageGrid: projectImageGrid,
+	logoGroupViewer: projectLogoGroupViewer,
+	logoViewer: projectLogoViewer,
+	stemClearSpace: projectStemClearSpace,
 } satisfies ProjectionMap
 
 type RegisteredProjector = (typeof guidelineBlockProjectors)[GuidelineBlock['blockType']]

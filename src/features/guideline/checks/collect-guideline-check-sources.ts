@@ -85,6 +85,17 @@ function collectApplicationImages(document: GuidelineCheckDocument): Map<number,
 					),
 				)
 				break
+			case 'logoGroupViewer':
+				// projectLogoGroupViewer가 로고/®/클리어스페이스 이미지를 referenceAsset으로 내보내므로
+				// AI 검수에 도달하도록 여기서 application-images를 Map에 넣는다.
+				values.push(
+					...(block.logos ?? []).flatMap((row) => [
+						row.logo,
+						row.registeredMark,
+						row.clearSpaceGuide,
+					]),
+				)
+				break
 		}
 	}
 

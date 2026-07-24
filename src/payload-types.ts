@@ -252,6 +252,9 @@ export interface GuidelineDocument {
         | GlyphGridBlock
         | IconGridBlock
         | ImageGridBlock
+        | LogoGroupViewerBlock
+        | LogoViewerBlock
+        | StemClearSpaceBlock
       )[]
     | null;
   /**
@@ -893,6 +896,186 @@ export interface ImageGridBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'imageGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoGroupViewerBlock".
+ */
+export interface LogoGroupViewerBlock {
+  title?: string | null;
+  /**
+   * 1~3개. 3개면 상단 1 + 하단 2(수평)로 배치됩니다.
+   */
+  logos?:
+    | {
+        /**
+         * 로고 캡션(예: Horizontal Type).
+         */
+        label?: string | null;
+        /**
+         * 로고 SVG.
+         */
+        logo?: (number | null) | ApplicationImage;
+        /**
+         * 파일 속 실제 로고 높이(px). 클리어스페이스 여백 때문에 파일과 다를 때 입력.
+         */
+        logoRealHeightPx?: number | null;
+        /**
+         * 등록상표(®) 오버레이 SVG. 로고와 같은 크기.
+         */
+        registeredMark?: (number | null) | ApplicationImage;
+        /**
+         * 클리어스페이스 오버레이 SVG. 로고와 같은 크기.
+         */
+        clearSpaceGuide?: (number | null) | ApplicationImage;
+        /**
+         * 이 로고의 최소 크기(px). 미만이면 X 표시.
+         */
+        minSizePx?: number | null;
+        /**
+         * 이 로고에서 ®를 표시할 최소 크기(px).
+         */
+        registeredMinPx?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 탭으로 노출됩니다. 그룹 전체에 공유됩니다.
+   */
+  topics?:
+    | {
+        /**
+         * 이 탭의 동작.
+         */
+        kind: 'minSize' | 'clearSpace' | 'registeredMark';
+        /**
+         * 탭 라벨.
+         */
+        label?: string | null;
+        description?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoGroupViewer';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoViewerBlock".
+ */
+export interface LogoViewerBlock {
+  title?: string | null;
+  /**
+   * 기본 로고 SVG(공유 스테이지).
+   */
+  logo?: (number | null) | ApplicationImage;
+  /**
+   * 로고 파일 속 실제 로고 높이(px). 클리어스페이스 여백 때문에 파일 크기와 다를 때 입력. 이 가중치가 3파일 모두에 적용됩니다. 비우면 파일 크기=로고로 간주.
+   */
+  logoRealHeightPx?: number | null;
+  /**
+   * 등록상표(®) 오버레이 SVG. 로고와 같은 크기.
+   */
+  registeredMark?: (number | null) | ApplicationImage;
+  /**
+   * 클리어스페이스 오버레이 SVG. 로고와 같은 크기.
+   */
+  clearSpaceGuide?: (number | null) | ApplicationImage;
+  /**
+   * 최소 크기(px). 이 미만이면 X 표시(슬라이더 하한).
+   */
+  minSizePx?: number | null;
+  /**
+   * 이 크기(px) 이상일 때만 ® 표시.
+   */
+  registeredMinPx?: number | null;
+  /**
+   * 탭으로 노출됩니다. 순서·개수·라벨 자유.
+   */
+  topics?:
+    | {
+        /**
+         * 이 탭의 동작.
+         */
+        kind: 'minSize' | 'clearSpace' | 'registeredMark';
+        /**
+         * 탭 라벨.
+         */
+        label?: string | null;
+        description?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoViewer';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StemClearSpaceBlock".
+ */
+export interface StemClearSpaceBlock {
+  title?: string | null;
+  /**
+   * 여백 규정을 보여줄 로고입니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  /**
+   * 줄기 두께 ÷ 로고 폭(0~1). 측정값.
+   */
+  stemRatio?: number | null;
+  /**
+   * 줄기 위치(로고 폭 대비 0~1). 측정값.
+   */
+  stemX?: number | null;
+  /**
+   * 여백 배수 N (N·A).
+   */
+  multiplier?: number | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'stemClearSpace';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1805,6 +1988,9 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         glyphGrid?: T | GlyphGridBlockSelect<T>;
         iconGrid?: T | IconGridBlockSelect<T>;
         imageGrid?: T | ImageGridBlockSelect<T>;
+        logoGroupViewer?: T | LogoGroupViewerBlockSelect<T>;
+        logoViewer?: T | LogoViewerBlockSelect<T>;
+        stemClearSpace?: T | StemClearSpaceBlockSelect<T>;
       };
   rules?: T;
   displayOrder?: T;
@@ -2069,6 +2255,74 @@ export interface ImageGridBlockSelect<T extends boolean = true> {
         caption?: T;
         id?: T;
       };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoGroupViewerBlock_select".
+ */
+export interface LogoGroupViewerBlockSelect<T extends boolean = true> {
+  title?: T;
+  logos?:
+    | T
+    | {
+        label?: T;
+        logo?: T;
+        logoRealHeightPx?: T;
+        registeredMark?: T;
+        clearSpaceGuide?: T;
+        minSizePx?: T;
+        registeredMinPx?: T;
+        id?: T;
+      };
+  topics?:
+    | T
+    | {
+        kind?: T;
+        label?: T;
+        description?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoViewerBlock_select".
+ */
+export interface LogoViewerBlockSelect<T extends boolean = true> {
+  title?: T;
+  logo?: T;
+  logoRealHeightPx?: T;
+  registeredMark?: T;
+  clearSpaceGuide?: T;
+  minSizePx?: T;
+  registeredMinPx?: T;
+  topics?:
+    | T
+    | {
+        kind?: T;
+        label?: T;
+        description?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StemClearSpaceBlock_select".
+ */
+export interface StemClearSpaceBlockSelect<T extends boolean = true> {
+  title?: T;
+  logo?: T;
+  stemRatio?: T;
+  stemX?: T;
+  multiplier?: T;
   rules?: T;
   id?: T;
   blockName?: T;

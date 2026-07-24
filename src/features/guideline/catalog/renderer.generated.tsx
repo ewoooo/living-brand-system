@@ -10,9 +10,12 @@ import GlyphGridComponent from '../blocks/glyph-grid/component'
 import IconGridComponent from '../blocks/icon-grid/component'
 import ImageGridComponent from '../blocks/image-grid/component'
 import LayoutGridComponent from '../blocks/layout-grid/component'
+import LogoGroupViewerComponent from '../blocks/logo-group-viewer/component'
+import LogoViewerComponent from '../blocks/logo-viewer/component'
 import MediaShowcaseComponent from '../blocks/media-showcase/component'
 import SignatureShowcaseComponent from '../blocks/signature-showcase/component'
 import SpecListComponent from '../blocks/spec-list/component'
+import StemClearSpaceComponent from '../blocks/stem-clear-space/component'
 import TypeScaleComponent from '../blocks/type-scale/component'
 import TypeSpecimenComponent from '../blocks/type-specimen/component'
 import type { GuidelineBlock } from '../blocks/types'
@@ -38,4 +41,7 @@ export const guidelineBlockRenderers = {
 	glyphGrid: (block) => <GlyphGridComponent block={block} />,
 	iconGrid: (block) => <IconGridComponent block={block} />,
 	imageGrid: (block) => <ImageGridComponent block={block} />,
+	logoGroupViewer: (block) => <LogoGroupViewerComponent block={block} />,
+	logoViewer: (block) => <LogoViewerComponent block={block} />,
+	stemClearSpace: (block) => <StemClearSpaceComponent block={block} />,
 } satisfies RendererMap
