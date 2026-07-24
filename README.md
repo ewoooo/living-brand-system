@@ -1,12 +1,9 @@
 # Living Brand System (LBS)
 
-**Turn brand guidelines into everyday workflows.**
+![image](public/images/main.png)
 
-LBS는 브랜드 가이드라인을 구조화된 운영 기준으로 바꾸고, 제작 과정에서 탐색·활용·검수할 수 있게 만드는 디지털 브랜드 운영 시스템입니다.
+LBS는 브랜드 가이드라인을 지속 가능한 운영 체계로 바꾸고, 제작 과정에서 탐색·활용·검수할 수 있게 만드는 디지털 브랜드 운영 시스템입니다.
 
-[Documentation](docs/README.md) · [Development Setup](#development-setup)
-
-<!-- Screenshot: docs/assets/hero.webp -->
 
 ## Features
 
@@ -96,7 +93,7 @@ flowchart LR
 프로젝트 루트에 `.env.local`을 만들고 필수 변수를 설정합니다.
 
 ```dotenv
-DATABASE_URL=postgresql://payload:payload@localhost:5432/hd_cms_prototype
+DATABASE_URL=postgresql://payload:payload@localhost:5432/living-brand-system
 PAYLOAD_SECRET=replace-with-a-random-secret
 PAYLOAD_DB_PUSH=false
 ```
@@ -152,16 +149,6 @@ Payload collection, field, index, relationship을 변경할 때는 격리된 로
 ## Production Deployment
 
 LBS 애플리케이션은 하나의 Node.js 배포 단위로 운영하며 PostgreSQL 인스턴스에 연결합니다. 업로드 파일을 사용하는 환경에서는 Amazon S3도 준비합니다.
-
-프로덕션 환경에는 다음 값을 설정합니다.
-
-- `NODE_ENV=production`
-- `DATABASE_URL`
-- `PAYLOAD_SECRET`
-- `NEXT_PUBLIC_SITE_URL`
-- `PAYLOAD_DB_PUSH=false`
-- 사용하는 AI, 스토리지, 이메일 기능의 환경 변수
-
 커밋된 마이그레이션을 적용한 뒤 애플리케이션을 빌드하고 실행합니다.
 
 ```sh
