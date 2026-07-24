@@ -1,33 +1,29 @@
 import { isLightColor } from '@/lib/color'
+import { MAIN, MULTI } from './color-palette'
 
 /**
- * Color Pairing 시스템 정의 — essenherb Color System의 3대 페어링(Tone in/on/Mono)을 "데이터"로 표현한다.
- * 세 방식 모두 BG→FG 순서로 통일(PDF Step1→2). 컴포넌트는 이 서술자만 받아 동작하며 시스템별 분기를 갖지 않는다.
+ * Color Pairing 시스템 = essenherb 3대 페어링(Tone in/on/Mono)의 "병용 가능 조합"을 전처리한 데이터.
+ * 세 방식 모두 BG→FG 순서. 컴포넌트는 pairs 테이블을 조회만 하고 런타임 계산을 하지 않는다.
  *
- * ⚠️ 지금은 repo 설정 모듈(icon-grid colorway와 같은 성격). 모델 확정 후 Payload 컬렉션으로 승격 예정
- * (브랜드 자산이므로). recommended 판정 중 tone-in-tone은 임시 규칙 — 실제 40종은 p27/28 Figma 데이터로 교체.
+ * 원칙: 기능엔 "기술적 병용 가능 여부"만 담는다. 추천/의도(노랑 제외·톤별 흑백 대비 등)는
+ * 조합기 아래 별도 추천 조합 display로 분리한다.
+ *
+ * ⚠️ 지금은 repo 설정 모듈(규칙으로 테이블 생성). 모델 확정 후 이 pairs 테이블을 Payload로 승격 예정.
  */
-export type PairingSwatch = { id: string; hex: string; family: string; tone: number | null }
-export type PairingGrade = 'forbidden' | 'allowed' | 'recommended'
 
-export type PairingSystem = {
-	key: string
-	label: string
-	description: string
-	/** Step1에서 배경색으로 고를 수 있는 스와치인지. */
-	bgEligible: (s: PairingSwatch) => boolean
-	/** 주어진 배경색에 대해 전경색 후보의 등급. */
-	classify: (bg: PairingSwatch, fg: PairingSwatch) => PairingGrade
-}
+type Swatch = { id: string; hex: string; family: string; tone: number | null }
 
 // id 규약('<family>-<tone>' | 'main-<name>')에서 계열/톤 파생. 중립(white/black)은 tone=null.
-export function enrichPairing(sw: { id: string; hex: string }): PairingSwatch {
+function enrich(sw: { id: string; hex: string }): Swatch {
 	const [head, tail] = sw.id.split('-')
 	const tone = /^[1-5]$/.test(tail ?? '') ? Number(tail) : null
 	return { id: sw.id, hex: sw.hex, family: tone ? head : 'neutral', tone }
 }
 
-// Tone in Tone: BG 톤 → 허용 FG 톤 (p.26).
+// 전처리 스와치 유니버스 (컴포넌트 rows와 동일: white/black + 6계열×5).
+const UNIVERSE: Swatch[] = [...MAIN.filter((s) => s.id !== 'main-red'), ...MULTI.flat()].map(enrich)
+
+// Tone in Tone: BG 톤 → 병용 가능한 FG 톤 (p.26 명도 조합 규정).
 const TONE_IN_MATRIX: Record<number, number[]> = {
 	1: [3, 4, 5],
 	2: [4, 5],
@@ -35,56 +31,68 @@ const TONE_IN_MATRIX: Record<number, number[]> = {
 	4: [1, 2, 3],
 	5: [1, 2, 3],
 }
+const isChromatic = (s: Swatch) => s.tone != null
 
-const isChromatic = (s: PairingSwatch) => s.tone != null
+// 병용 규칙(테이블 생성기) — 런타임엔 안 쓰이고 pairs 전처리에만 쓴다. 기술적 병용 여부만 판단.
+type Rule = { bgEligible: (s: Swatch) => boolean; compatible: (bg: Swatch, fg: Swatch) => boolean }
 
-// ① Tone in Tone — 서로 다른 색상 계열 조합. 생동감/에너제틱(Level 3).
-export const toneInTone: PairingSystem = {
+const toneInRule: Rule = {
+	bgEligible: isChromatic,
+	compatible: (bg, fg) =>
+		bg.tone != null &&
+		fg.tone != null &&
+		fg.family !== bg.family && // 서로 다른 계열
+		(TONE_IN_MATRIX[bg.tone]?.includes(fg.tone) ?? false),
+}
+const toneOnRule: Rule = {
+	bgEligible: isChromatic,
+	compatible: (bg, fg) =>
+		bg.tone != null && fg.tone != null && fg.family === bg.family && fg.tone !== bg.tone, // 같은 계열 다른 톤
+}
+const monoRule: Rule = {
+	bgEligible: () => true, // 유채·무채 모두 배경 가능
+	compatible: (bg, fg) => {
+		const bgAch = bg.tone == null
+		const fgAch = fg.tone == null
+		if (!bgAch && !fgAch) return false // 둘 다 유채 = 모노톤 아님
+		if (bgAch && fgAch) return isLightColor(bg.hex) !== isLightColor(fg.hex) // 흰↔검만
+		return true // 무채 + 유채
+	},
+}
+
+// 배경 id → 병용 가능한 전경 id[] (모듈 로드 시 1회 전처리). 배경 부적격 색은 키가 없다.
+function buildPairs(rule: Rule): Record<string, string[]> {
+	const pairs: Record<string, string[]> = {}
+	for (const bg of UNIVERSE) {
+		if (!rule.bgEligible(bg)) continue
+		pairs[bg.id] = UNIVERSE.filter((fg) => rule.compatible(bg, fg)).map((fg) => fg.id)
+	}
+	return pairs
+}
+
+export type PairingSystemData = {
+	key: string
+	label: string
+	description: string
+	/** 배경 id → 병용 가능한 전경 id[] (전처리 완료). 배경으로 못 고르는 색은 키 없음. */
+	pairs: Record<string, string[]>
+}
+
+export const toneInTone: PairingSystemData = {
 	key: 'tone-in-tone',
 	label: 'Tone in Tone',
 	description: '서로 다른 색상 계열 · 생동감·에너제틱 (Level 3)',
-	bgEligible: isChromatic,
-	classify: (bg, fg) => {
-		if (bg.tone == null || fg.tone == null) return 'forbidden'
-		if (fg.family === bg.family) return 'forbidden'
-		if (!TONE_IN_MATRIX[bg.tone]?.includes(fg.tone)) return 'forbidden'
-		// ponytail: 추천 = 핵심 톤(3) 임시 규칙. 실제 40종은 p27/28 Figma 데이터 확보 후 교체.
-		return fg.tone === 3 ? 'recommended' : 'allowed'
-	},
+	pairs: buildPairs(toneInRule),
 }
-
-// ② Tone on Tone — 동일 색상 계열 내 명도 조합. 안정감/가독성(Level 2).
-export const toneOnTone: PairingSystem = {
+export const toneOnTone: PairingSystemData = {
 	key: 'tone-on-tone',
 	label: 'Tone on Tone',
 	description: '동일 색상 계열 · 시각 안정감·가독성 (Level 2)',
-	bgEligible: isChromatic,
-	classify: (bg, fg) => {
-		if (bg.tone == null || fg.tone == null) return 'forbidden'
-		if (fg.family !== bg.family) return 'forbidden'
-		if (fg.tone === bg.tone) return 'forbidden'
-		// 명도차 2단계 이상이면 가독성 확보 → 추천(고대비), 1단계는 저대비로 가능.
-		return Math.abs(fg.tone - bg.tone) >= 2 ? 'recommended' : 'allowed'
-	},
+	pairs: buildPairs(toneOnRule),
 }
-
-// ③ Mono Tone — Black/White + 유채색 조합. 선명도 강조(Level 1).
-export const monoTone: PairingSystem = {
+export const monoTone: PairingSystemData = {
 	key: 'mono-tone',
 	label: 'Mono Tone',
 	description: 'Black/White + 유채색 · 선명도 강조 (Level 1)',
-	bgEligible: () => true, // 유채색·무채색 모두 배경 가능
-	classify: (bg, fg) => {
-		const bgAch = bg.tone == null
-		const fgAch = fg.tone == null
-		if (!bgAch && !fgAch) return 'forbidden' // 둘 다 유채색 = 모노톤 아님
-		if (bgAch) return 'allowed' // 무채 배경 + 유채(또는 무채) 전경
-		// 유채 배경 + 무채 전경: 배경 명도로 흑/백 대비 판단(어두우면 White, 밝으면 Black).
-		if (bg.tone === 3) return 'recommended' // 중간 톤 → 흑·백 모두 권장
-		const darkBg = (bg.tone ?? 0) >= 4
-		const fgWhite = isLightColor(fg.hex)
-		return (darkBg && fgWhite) || (!darkBg && !fgWhite) ? 'recommended' : 'allowed'
-	},
+	pairs: buildPairs(monoRule),
 }
-
-export const PAIRING_SYSTEMS = [toneInTone, toneOnTone, monoTone]

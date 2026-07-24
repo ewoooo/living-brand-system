@@ -3,19 +3,13 @@
 import { useState } from 'react'
 import { MAIN, MULTI } from './color-palette'
 import { MiniPalette, type MiniSwatch } from './mini-palette'
-import {
-	enrichPairing,
-	monoTone,
-	type PairingSystem,
-	toneInTone,
-	toneOnTone,
-} from './pairing-systems'
+import { monoTone, type PairingSystemData, toneInTone, toneOnTone } from './pairing-systems'
 
 /**
  * 컬러 페어링 체인저 — 왼쪽 미니 팔레트(전경색) · 가운데 스테이지(배경 + 객체) · 오른쪽 미니 팔레트(배경색).
- * 배경색을 먼저 자유 선택하고(Step1), 전경색은 system 규칙으로 3그룹(선택불가/가능/추천)으로 나뉜다(Step2).
- * 시스템(Tone in/on/Mono)은 props로 주입 — 컴포넌트는 시스템별 분기가 없다(pairing-systems.ts가 규칙 소유).
- * 브랜드 무관: 색·행 구성·워드마크·규칙 전부 props.
+ * 배경색을 먼저 고르고(Step1), 전경색은 전처리된 병용 테이블로 가능/불가만 갈린다(Step2). 추천(의도)은 조합기 밖.
+ * 시스템(Tone in/on/Mono)은 props로 주입 — 컴포넌트는 시스템별 분기가 없다(pairing-systems.ts가 테이블 소유).
+ * 브랜드 무관: 색·행 구성·워드마크·테이블 전부 props.
  */
 
 // 캔버스 테스트 객체: 로고 / 일반 텍스트 / 랜덤 아이콘. 로고·아이콘은 SVG 실루엣을 mask로 재색.
@@ -51,8 +45,8 @@ export function ColorPairingChanger({
 	defaultFgId,
 }: {
 	rows: MiniSwatch[][]
-	/** 페어링 규칙(Tone in/on/Mono). pairing-systems.ts 참고. */
-	system: PairingSystem
+	/** 페어링 시스템(전처리된 병용 테이블). pairing-systems.ts 참고. */
+	system: PairingSystemData
 	/** 로고 객체로 그릴 SVG 실루엣 경로(단색, mask로 재색). */
 	logoSrc: string
 	/** 텍스트 객체로 그릴 문구. */
@@ -71,24 +65,18 @@ export function ColorPairingChanger({
 	}
 
 	const byId = (id: string) => flat.find((s) => s.id === id)
-	const swatch = (id: string) => enrichPairing(byId(id) ?? { id, hex: '#000000' })
 	const hexOf = (id: string | null) => (id ? byId(id)?.hex : undefined)
 	const fg = hexOf(fgId) ?? '#000000'
 	const bg = hexOf(bgId) ?? '#FFFFFF'
 
-	// 배경(Step1): system.bgEligible 아닌 색은 비활성. 배경은 자유 선택이라 추천 없음.
-	const bgDisabled = flat.filter((s) => !system.bgEligible(enrichPairing(s))).map((s) => s.id)
+	// 전처리 테이블 조회. 배경(Step1): 테이블 키 없는 색은 배경 불가. 전경(Step2): 선택 배경의 병용 목록.
+	const bgDisabled = flat.filter((s) => !(s.id in system.pairs)).map((s) => s.id)
+	const allowedFg = bgId ? system.pairs[bgId] : null
+	const fgDisabled = allowedFg
+		? flat.filter((s) => !allowedFg.includes(s.id)).map((s) => s.id)
+		: []
 
-	// 전경(Step2): 선택된 배경 기준으로 등급 계산.
-	const fgDisabled: string[] = []
-	const fgRecommended: string[] = []
-	for (const s of flat) {
-		const grade = bgId ? system.classify(swatch(bgId), enrichPairing(s)) : 'allowed'
-		if (grade === 'forbidden') fgDisabled.push(s.id)
-		else if (grade === 'recommended') fgRecommended.push(s.id)
-	}
-
-	// 배경(Step1)을 바꾸면 전경 후보 갱신. 기존 전경이 무효면 유효한 첫 후보(추천 우선)로 이동.
+	// 배경(Step1)을 바꾸면 전경 후보 갱신. 기존 전경이 병용 불가면 첫 병용 가능 색으로 이동.
 	// 같은 색을 다시 누르면 선택 취소.
 	const pickBg = (id: string) => {
 		if (id === bgId) {
@@ -96,13 +84,8 @@ export function ColorPairingChanger({
 			return
 		}
 		setBgId(id)
-		const bgSw = swatch(id)
-		if (fgId && system.classify(bgSw, swatch(fgId)) === 'forbidden') {
-			const rec = flat.find((s) => system.classify(bgSw, enrichPairing(s)) === 'recommended')
-			const ok = flat.find((s) => system.classify(bgSw, enrichPairing(s)) !== 'forbidden')
-			const next = (rec ?? ok)?.id
-			if (next) setFgId(next)
-		}
+		const allowed = system.pairs[id] ?? []
+		if (fgId && !allowed.includes(fgId)) setFgId(allowed[0] ?? null)
 	}
 	const pickFg = (id: string) => {
 		setFgId((cur) => (cur === id ? null : id))
@@ -119,7 +102,6 @@ export function ColorPairingChanger({
 						selectedId={fgId}
 						onSelect={pickFg}
 						disabledIds={fgDisabled}
-						recommendedIds={fgRecommended}
 					/>
 				</div>
 				{/* 가운데: 배경 캔버스 — 좌상단 탭으로 로고/텍스트/아이콘 전환, 전경색으로 그린다 */}
@@ -183,8 +165,8 @@ export function ColorPairingChanger({
 			</div>
 			<p className="mt-2 font-body font-normal text-muted-foreground text-xs">
 				<span className="font-medium text-foreground">{system.label}</span> —{' '}
-				{system.description} · ① 배경색(오른쪽) → ② 전경색(왼쪽, ★ 추천 · ⃠ 선택 불가) ·
-				선택된 색 다시 누르면 취소
+				{system.description} · ① 배경색(오른쪽) → ② 전경색(왼쪽, ⃠ 병용 불가) · 선택된 색
+				다시 누르면 취소 · 추천 조합은 아래 별도 표시(예정)
 			</p>
 		</div>
 	)
