@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { hexToRgb, isLightColor, isValidHex } from '@/lib/color'
+import { copyText } from './copy'
 
 // 컬러 팔레트 블록의 라이브 스와치. 클릭하면 HEX를 클립보드에 복사한다.
 export type SwatchColor = {
@@ -70,27 +71,4 @@ function rgbLabel(hex: string) {
 	if (!isValidHex(hex)) return null
 	const { r, g, b } = hexToRgb(hex)
 	return `${r}/${g}/${b}`
-}
-
-// Clipboard API → 레거시 execCommand 폴백. 하나라도 성공하면 true.
-async function copyText(text: string): Promise<boolean> {
-	try {
-		await navigator.clipboard.writeText(text)
-		return true
-	} catch {
-		// 폴백으로 진행
-	}
-	try {
-		const ta = document.createElement('textarea')
-		ta.value = text
-		ta.style.position = 'fixed'
-		ta.style.opacity = '0'
-		document.body.appendChild(ta)
-		ta.select()
-		const ok = document.execCommand('copy')
-		document.body.removeChild(ta)
-		return ok
-	} catch {
-		return false
-	}
 }
