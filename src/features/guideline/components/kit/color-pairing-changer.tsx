@@ -98,83 +98,77 @@ export function ColorPairingChanger({
 	}
 
 	return (
-		<div className="w-full">
-			{/* 세 영역을 약간 분리(gap). border-radius 없음. */}
-			<div className="flex w-full items-stretch gap-3">
-				{/* 왼쪽: 전경색(Step2, 배경에 종속) — 팔레트가 고정 크기라 폭은 콘텐츠에 맞춘다 */}
-				<div className="shrink-0">
-					<MiniPalette
-						rows={rows}
-						selectedId={fgId}
-						onSelect={pickFg}
-						disabledIds={fgDisabled}
-						warningIds={fgWarning}
-					/>
-				</div>
-				{/* 가운데: 배경 캔버스 — 좌상단 탭으로 로고/텍스트/아이콘 전환, 전경색으로 그린다 */}
-				<div
-					className="relative flex flex-1 items-center justify-center overflow-hidden px-6"
-					style={{ backgroundColor: bg }}
-				>
-					{/* 객체 선택 — logo-viewer의 필드 선택 탭 스타일(pill). */}
-					<div className="absolute top-2 left-2 inline-flex flex-wrap gap-1 self-start rounded-full border border-border bg-fill-muted p-1">
-						{CANVAS_OBJECTS.map((o) => (
-							<button
-								key={o.value}
-								type="button"
-								onClick={() => selectObj(o.value)}
-								aria-pressed={obj === o.value}
-								className={`rounded-full px-4 py-1.5 font-body font-medium text-sm transition-colors ${
-									obj === o.value
-										? 'bg-foreground text-background'
-										: 'text-muted-foreground hover:text-foreground'
-								}`}
-							>
-								{o.label}
-							</button>
-						))}
-					</div>
-
-					{obj === 'text' && (
-						<div className="max-w-[75%] text-center" style={{ color: fg }}>
-							<p className="font-bold text-3xl tracking-tight">{wordmark}</p>
-							<p className="mt-1 font-body text-sm">
-								자연에서 찾은 피부 본연의 힘 · Daily Skincare
-							</p>
-						</div>
-					)}
-					{obj === 'logo' && (
-						<div
-							role="img"
-							aria-label="로고"
-							className="h-14 w-64"
-							style={maskStyle(logoSrc, fg)}
-						/>
-					)}
-					{obj === 'icon' && (
-						<div
-							role="img"
-							aria-label="아이콘"
-							className="h-24 w-24"
-							style={maskStyle(iconSrc, fg)}
-						/>
-					)}
-				</div>
-				{/* 오른쪽: 배경색(Step1, 자유) */}
-				<div className="shrink-0">
-					<MiniPalette
-						rows={rows}
-						selectedId={bgId}
-						onSelect={pickBg}
-						disabledIds={bgDisabled}
-					/>
-				</div>
+		<div className="flex w-full items-stretch gap-3">
+			{/* 왼쪽: 배경색(Step1) — 팔레트가 고정 크기라 폭은 콘텐츠에 맞춘다 */}
+			<div className="shrink-0">
+				<p className="mb-1 font-body font-medium text-muted-foreground text-xs">배경색</p>
+				<MiniPalette
+					rows={rows}
+					selectedId={bgId}
+					onSelect={pickBg}
+					disabledIds={bgDisabled}
+				/>
 			</div>
-			<p className="mt-2 font-body font-normal text-muted-foreground text-xs">
-				<span className="font-medium text-foreground">{system.label}</span> —{' '}
-				{system.description} · ① 배경색(오른쪽) → ② 전경색(왼쪽): 무표시=추천,
-				⚠=주의(warning), ⊗=금지(misuse) · 선택된 색 다시 누르면 취소
-			</p>
+			{/* 가운데: 배경 캔버스 — 좌상단 탭으로 로고/텍스트/아이콘 전환, 전경색으로 그린다 */}
+			<div
+				className="relative flex flex-1 items-center justify-center overflow-hidden px-6"
+				style={{ backgroundColor: bg }}
+			>
+				{/* 객체 선택 탭 — 캔버스 색과 무관하게 판독되도록 흰 배경 고정. */}
+				<div className="absolute top-2 left-2 inline-flex flex-wrap gap-1 self-start rounded-full border border-neutral-200 bg-white p-1">
+					{CANVAS_OBJECTS.map((o) => (
+						<button
+							key={o.value}
+							type="button"
+							onClick={() => selectObj(o.value)}
+							aria-pressed={obj === o.value}
+							className={`rounded-full px-4 py-1.5 font-body font-medium text-sm transition-colors ${
+								obj === o.value
+									? 'bg-neutral-900 text-white'
+									: 'text-neutral-500 hover:text-neutral-900'
+							}`}
+						>
+							{o.label}
+						</button>
+					))}
+				</div>
+
+				{obj === 'text' && (
+					<div className="max-w-[75%] text-center" style={{ color: fg }}>
+						<p className="font-bold text-3xl tracking-tight">{wordmark}</p>
+						<p className="mt-1 font-body text-sm">
+							자연에서 찾은 피부 본연의 힘 · Daily Skincare
+						</p>
+					</div>
+				)}
+				{obj === 'logo' && (
+					<div
+						role="img"
+						aria-label="로고"
+						className="h-14 w-64"
+						style={maskStyle(logoSrc, fg)}
+					/>
+				)}
+				{obj === 'icon' && (
+					<div
+						role="img"
+						aria-label="아이콘"
+						className="h-24 w-24"
+						style={maskStyle(iconSrc, fg)}
+					/>
+				)}
+			</div>
+			{/* 오른쪽: 전경색(Step2, 배경에 종속) */}
+			<div className="shrink-0">
+				<p className="mb-1 font-body font-medium text-muted-foreground text-xs">전경색</p>
+				<MiniPalette
+					rows={rows}
+					selectedId={fgId}
+					onSelect={pickFg}
+					disabledIds={fgDisabled}
+					warningIds={fgWarning}
+				/>
+			</div>
 		</div>
 	)
 }
