@@ -55,7 +55,7 @@ if (!doc) {
 					description: col.body ?? undefined,
 					columns: 3,
 					rows: 1,
-					imageRatio: '1:1',
+					imageRatio: 'original',
 					cells: [{}, {}, {}],
 				}) as Block,
 		)
