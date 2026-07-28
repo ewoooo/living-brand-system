@@ -9,7 +9,7 @@ export function AgentChatGeneratedImages({
 }) {
 	return (
 		<div className="flex w-full flex-col gap-2">
-			<p className="font-body text-xs font-normal text-muted-foreground">
+			<p className="font-body text-sm font-normal text-muted-foreground">
 				{attachment.profileName
 					? `적용된 프로파일: ${attachment.profileName}`
 					: '자유 생성 (브랜드 스타일 없음)'}
@@ -26,7 +26,7 @@ export function AgentChatGeneratedImages({
 						<a
 							href={src}
 							download={`essenherb-image-${index + 1}.${imgExt(src)}`}
-							className="absolute right-1 bottom-1 rounded bg-background/80 px-1.5 py-0.5 font-body text-xs font-normal underline"
+							className="absolute right-1 bottom-1 rounded bg-background/80 px-1.5 py-0.5 font-body text-sm font-normal underline"
 						>
 							다운로드
 						</a>

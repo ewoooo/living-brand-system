@@ -88,3 +88,47 @@ final result: passed
 3. 수정 후 데스크톱과 모바일을 다시 캡처했으며 추가 P0/P1/P2 차이가 없습니다.
 
 final result: passed
+
+---
+
+# Studio Examples design QA
+
+- Source visual truth: `/var/folders/sv/yv7g3gc948x836bgzcfmrhnh0000gn/T/codex-clipboard-86fb7b15-573c-43c4-b53e-7569b1e1883a.png`
+- Implementation: browser-rendered `http://localhost:3012/studio/examples`
+- Viewport: 2048 × 1152 CSS px, device scale factor 1
+- Source pixels: 5684 × 3284 at 144 dpi; implementation screenshot: 2048 × 1152 at 72 dpi
+- Normalization: the source and implementation were compared in one 2048 × 2304 composite. The source was resized to the desktop viewport for composition; its surrounding product shell is intentionally not treated as a fidelity target.
+- State: dark system theme, all examples selected, Studio side navigation expanded.
+
+## Findings
+
+No actionable P0, P1, or P2 findings.
+
+- Fonts and typography: the reference uses compact sans-serif card titles; the implementation retains LBS body typography and its existing heading scale. This is an intentional product-system constraint, while preserving the title → description → tag hierarchy.
+- Spacing and layout rhythm: the content column, filter placement, three-column grid, card padding, large card radius, and bottom-aligned tags follow the reference composition. LBS’s wider card height and persistent shell are intentional to preserve the existing Studio frame.
+- Colors and visual tokens: the reference’s light neutral surface is adapted to LBS’s active dark theme using existing semantic tokens. The colored icon accents and bordered tags maintain the requested gallery rhythm without introducing a separate palette.
+- Image quality and asset fidelity: the reference has no content imagery. The implementation uses the project’s Carbon icon set for semantic card icons; no placeholder imagery or custom drawings were introduced.
+- Copy and content: Korean mock examples describe realistic brand-production starting points and use clear category/tag labels.
+
+## Interaction and console evidence
+
+- The accessible `예제 필터` combobox is rendered in the browser.
+- `filterStudioExamples('이미지')` is covered by `src/components/studio/studio-examples.test.tsx` and returns only the two image examples.
+- Browser console errors: none.
+
+## Focused comparison
+
+The filter and first two rows of cards were readable in the full desktop comparison, so a separate crop was not needed. The comparison confirmed icon placement, title/description hierarchy, and bottom tag alignment.
+
+## Comparison history
+
+1. Initial browser capture: the all-examples page rendered with a centered heading, filter, and three-column card gallery. No P0/P1/P2 differences were found after accounting for the intentional LBS shell and dark theme.
+
+## Implementation checklist
+
+- [x] Add `/studio/examples` and its Studio navigation entry.
+- [x] Render a responsive examples grid with existing LBS components.
+- [x] Provide category filtering and a focused filter-logic test.
+- [x] Check browser console errors and compare against the supplied reference.
+
+final result: passed

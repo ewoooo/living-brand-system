@@ -4,23 +4,18 @@ import { StudioSideNavigation } from '@/components/global/studio-side-navigation
 import { PageNavigation } from '@/components/page-navigation'
 import { getCreateNavigation } from '@/features/asset-generation/services/get-create-navigation.service'
 import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
-import { getImageProfileNavigation } from '@/features/image-generation/services/list-image-profiles.service'
-import { authenticateRequest } from '@/lib/request-auth'
 import { routes } from '@/lib/routes'
 
 // 발행 직후의 템플릿이 재빌드 없이 보이도록 요청 시점에 렌더한다.
 export const dynamic = 'force-dynamic'
 
 export default async function CreateLayout({ children }: { children: React.ReactNode }) {
-	const { user } = await authenticateRequest()
-	const [navigation, imageProfiles] = await Promise.all([
-		getCreateNavigation(),
-		getImageProfileNavigation(user),
-	])
+	const navigation = await getCreateNavigation()
 
 	return (
 		<SectionLayout
-			nav={<StudioSideNavigation navigation={navigation} imageProfiles={imageProfiles} />}
+			nav={<StudioSideNavigation />}
+			mobileNavigation={false}
 			pageNavigation={
 				<PageNavigation
 					items={[

@@ -186,9 +186,9 @@ function CheckExecutorIcon({ check }: { check: Check }) {
 				</span>
 			</TooltipTrigger>
 			<TooltipContent>
-				<span className="font-body text-xs font-medium">{executor.label}</span>
+				<span className="font-body text-sm font-medium">{executor.label}</span>
 				{executor.desc && (
-					<span className="block font-body text-xs font-normal opacity-80">
+					<span className="block font-body text-sm font-normal opacity-80">
 						{executor.desc}
 					</span>
 				)}

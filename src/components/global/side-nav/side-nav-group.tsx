@@ -33,7 +33,7 @@ export function SideNavGroup({
 function SideNavGroupTitle({ title, titleHref }: { title?: string; titleHref?: string }) {
 	if (!title) return null
 	const className =
-		'text-xs font-medium text-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+		'text-sm font-medium text-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
 
 	if (titleHref) {
 		return (

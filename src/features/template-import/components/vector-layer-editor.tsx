@@ -11,7 +11,6 @@ type Asset = (BrandLogo | ApplicationImage) & {
 }
 
 const CONTROL_STYLE = {
-	fontSize: 12,
 	padding: '5px 10px',
 	borderRadius: 4,
 	border: '1px solid var(--theme-elevation-150)',
@@ -73,11 +72,12 @@ export function VectorLayerEditor({
 			className="vector-layer-editor"
 			style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
 		>
-			<strong style={{ fontSize: 13 }}>벡터 편집 — {name}</strong>
+			<strong className="text-base">벡터 편집 — {name}</strong>
 
-			<label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12 }}>
+			<label className="text-sm" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
 				브랜드 내부 자산
 				<select
+					className="text-sm"
 					value={assetValue}
 					onChange={(event) => {
 						const asset = assets.find(
@@ -122,7 +122,9 @@ export function VectorLayerEditor({
 				</select>
 			</label>
 			<fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-				<legend style={{ marginBottom: 4, fontSize: 12 }}>맞춤 방식</legend>
+				<legend className="text-sm" style={{ marginBottom: 4 }}>
+					맞춤 방식
+				</legend>
 				<ToggleGroup
 					type="single"
 					value={fit}
@@ -141,7 +143,9 @@ export function VectorLayerEditor({
 			</fieldset>
 
 			<fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-				<legend style={{ marginBottom: 4, fontSize: 12 }}>브랜드 컬러</legend>
+				<legend className="text-sm" style={{ marginBottom: 4 }}>
+					브랜드 컬러
+				</legend>
 				<div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
 					<Button
 						type="button"
@@ -185,8 +189,9 @@ export function VectorLayerEditor({
 
 			{loadError && (
 				<p
+					className="text-sm"
 					role="alert"
-					style={{ margin: 0, fontSize: 12, color: 'var(--theme-error-500)' }}
+					style={{ margin: 0, color: 'var(--theme-error-500)' }}
 				>
 					브랜드 자산을 불러오지 못했습니다.
 				</p>

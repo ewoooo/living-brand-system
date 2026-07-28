@@ -21,11 +21,11 @@ export function ImageGenerationResults({
 	const images = result?.images ?? []
 
 	return (
-		<div aria-live="polite" aria-busy={loading}>
+		<div className="flex h-full min-h-0 flex-col" aria-live="polite" aria-busy={loading}>
 			{loading && <ImageGenerationSkeleton count={requested} />}
 
 			{!loading && images.length > 0 && result && (
-				<div className="flex flex-col gap-4">
+				<div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
 					<div className="flex flex-wrap items-center gap-3">
 						<Button
 							onClick={() =>
@@ -49,7 +49,7 @@ export function ImageGenerationResults({
 						</p>
 					)}
 
-					<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 						{images.map((src, index) => (
 							<div key={src} className="flex flex-col gap-1">
 								<button
@@ -73,7 +73,7 @@ export function ImageGenerationResults({
 									href={src}
 									target="_blank"
 									rel="noreferrer"
-									className="font-body text-xs font-normal text-muted-foreground underline"
+									className="font-body text-sm font-normal text-muted-foreground underline"
 								>
 									원본 보기
 								</a>
