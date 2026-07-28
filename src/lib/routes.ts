@@ -20,6 +20,10 @@ export function getStudioTemplateRoute(categorySlug: string, templateId: number)
 	return `${getStudioTemplateCategoryRoute(categorySlug)}/${templateId}`
 }
 
+export function getStudioGenerateProfileRoute(profileSlug: string) {
+	return `${routes.studio.generate}/${profileSlug}`
+}
+
 export const legacyPageRedirects = [
 	{
 		source: '/create/:path*',

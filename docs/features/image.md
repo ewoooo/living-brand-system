@@ -38,7 +38,7 @@ Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listIma
 
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
-| [Page](../surfaces/page.md) | 구현 | `/studio/generate#image` — 프롬프트 입력 → 후보 그리드 → 택1 |
+| [Page](../surfaces/page.md) | 구현 | `/studio/generate` 또는 `/studio/generate/:profileSlug` — 프롬프트 입력 → 후보 그리드 → 택1 |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `generateImage`로 대화 중 생성, 후보를 챗에 렌더 |
 | REST | 구현 | `POST /api/image`(same-origin, 인증 필수) |
 | Slack | 계획 | — |
@@ -47,7 +47,7 @@ Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listIma
 
 - 이미지 프로바이더: OpenAI `gpt-image-2`(사내 채택). 모델은 `OPENAI_IMAGE_MODEL`로 교체 가능하며, 프로바이더 교체도 코어 한 곳(service)에서 이뤄집니다.
 - Vercel AI SDK `generateImage`.
-- 프로파일 저장소: Payload CMS의 published `image-profiles` 컬렉션.
+- 프로파일 저장소: Payload CMS의 published `image-profiles` 컬렉션. `slug`가 있는 프로파일은 `displayOrder` 순서로 Studio 내비게이션과 `/studio/generate/:profileSlug` 경로에 노출됩니다.
 - 프로파일 정규화: Anthropic Haiku 구조화 출력. 자유 생성은 정규화 모델을 호출하지 않습니다.
 - Review 미사용(의도적) — 이미지 검수 성능이 아직 일부 항목에 한정되어 있어 생성 품질을 검수에 묶지 않습니다.
 - dev 폴백: 개발 환경에서 `IMAGE_DEV_FALLBACK=true`를 명시한 경우에만 Pollinations FLUX(무료·키 불필요)를 임시 사용합니다. `OPENAI_API_KEY`가 없는 production과 명시적으로 허용하지 않은 환경은 외부 호출 없이 실패합니다. ⚠️ 프롬프트가 외부 무료 서비스로 전송되므로 민감 입력은 금지합니다.

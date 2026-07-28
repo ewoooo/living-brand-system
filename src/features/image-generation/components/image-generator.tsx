@@ -7,9 +7,17 @@ import { useImageGeneration } from '@/features/image-generation/hooks/use-image-
 
 // 제품(프롬프트) + 프로파일 선택 → /api/image → 후보 그리드(택1·다운로드). 정규화·생성은 라우트/서비스 소유.
 
-export function ImageGenerator({ profiles }: { profiles: { id: number; name: string }[] }) {
+export function ImageGenerator({
+	profiles,
+	initialProfileId,
+}: {
+	profiles: { id: number; name: string }[]
+	initialProfileId?: number
+}) {
 	const [prompt, setPrompt] = useState('')
-	const [profile, setProfile] = useState<number | 'free'>(profiles[0]?.id ?? 'free')
+	const [profile, setProfile] = useState<number | 'free'>(
+		initialProfileId ?? profiles[0]?.id ?? 'free',
+	)
 	const [count, setCount] = useState(2)
 	const { error, generate, loading, requested, result, selected, setSelected } =
 		useImageGeneration()

@@ -1164,6 +1164,15 @@ export interface ImageProfile {
   id: number;
   name: string;
   /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  /**
+   * 숫자가 낮을수록 Studio 내비게이션에서 먼저 표시됩니다.
+   */
+  displayOrder: number;
+  /**
    * 이미지 유형의 기본값입니다. 각 행은 최종 JSON의 주제와 프롬프트가 됩니다.
    */
   profilePrompt: {
@@ -2488,6 +2497,9 @@ export interface ApplicationImagesSelect<T extends boolean = true> {
  */
 export interface ImageProfilesSelect<T extends boolean = true> {
   name?: T;
+  generateSlug?: T;
+  slug?: T;
+  displayOrder?: T;
   profilePrompt?:
     | T
     | {
