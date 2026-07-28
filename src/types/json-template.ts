@@ -69,7 +69,7 @@ const textPropsShape = {
 	verticalAlign: z.enum(['top', 'middle', 'bottom']).default('top'),
 	// 슬롯(locked=false)일 때 worker에게 보이는 안내 문구. manager가 요소별로 설정한다.
 	placeholder: z.string().optional(),
-	// /create 슬롯 입력 제약 — 제작자가 admin에서 요소별로 설정한다.
+	// Studio Template 슬롯 입력 제약 — 제작자가 admin에서 요소별로 설정한다.
 	maxLength: z.number().int().positive().optional(),
 	maxLines: z.number().int().positive().optional(),
 	inputFormat: z.enum(['free', 'number', 'email', 'date']).default('free'),
@@ -222,7 +222,7 @@ export type JsonSlotElement = Exclude<JsonFlowElement | JsonTemplateElement, { t
 
 /**
  * 열린 슬롯(locked=false) 요소를 스택 자식까지 재귀로 모은다. 스택 자체는 슬롯이 아니다.
- * 슬롯을 소비하는 모든 곳(/create, 에이전트 툴)이 이 하나를 쓴다 — 순회 규칙이 갈라지면 안 된다.
+ * 슬롯을 소비하는 모든 곳(Studio Template, 에이전트 툴)이 이 하나를 쓴다 — 순회 규칙이 갈라지면 안 된다.
  */
 export function collectOpenSlotElements(
 	elements: readonly (JsonFlowElement | JsonTemplateElement)[],

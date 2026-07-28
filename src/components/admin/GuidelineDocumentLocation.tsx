@@ -26,7 +26,7 @@ export default function GuidelineDocumentLocation() {
 		>
 			<div className="guideline-document-location__header">
 				<h3 id="guideline-document-location-title">문서 위치</h3>
-				<Badge aria-live="polite" variant="secondary">
+				<Badge aria-live="polite" variant="muted">
 					현재 유형: {typeLabel}
 				</Badge>
 			</div>

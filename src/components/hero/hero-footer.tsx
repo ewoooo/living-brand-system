@@ -3,24 +3,26 @@ import Link from 'next/link'
 
 import { Typography } from '@/components/ui/typography'
 import { getGuidelineMetadata } from '@/features/guideline/services/get-guideline-metadata.service'
+import { routes } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 
 const FOOTER_LINK_GROUPS = [
 	{
 		label: 'Guideline',
-		links: [{ href: '/guideline', label: 'Overview' }],
+		links: [{ href: routes.guideline, label: 'Overview' }],
 	},
 	{
 		label: 'Studio',
 		links: [
-			{ href: '/create', label: 'Templates' },
-			{ href: '/generate', label: 'Generate' },
-			{ href: '/review', label: 'Review' },
+			{ href: routes.studio.root, label: 'Overview' },
+			{ href: routes.studio.template, label: 'Templates' },
+			{ href: routes.studio.generate, label: 'Generate' },
+			{ href: routes.studio.review, label: 'Review' },
 		],
 	},
 	{
 		label: 'System',
-		links: [{ href: '/admin', label: 'Admin ↗' }],
+		links: [{ href: routes.admin, label: 'Admin ↗' }],
 	},
 ] as const
 
@@ -36,7 +38,7 @@ export async function HeroFooter() {
 	return (
 		<footer
 			data-slot="hero-footer"
-			className="relative z-10 overflow-hidden rounded-xl bg-primary text-primary-foreground"
+			className="relative z-10 overflow-hidden bg-primary text-primary-foreground"
 		>
 			<div className="grid gap-16 p-8 md:grid-cols-[minmax(0,1fr)_auto] md:p-12">
 				<div className="flex flex-col items-start">
@@ -48,17 +50,10 @@ export async function HeroFooter() {
 						src="/logos/logo.svg"
 						width={24}
 					/>
-					<Typography as="p" className="mt-6" size="2xl" weight="semibold">
-						Living Brand System
-					</Typography>
-					<Typography as="p" className="mt-2 max-w-sm" size="sm">
-						브랜드 기준을 작업 과정에 연결합니다.
-					</Typography>
 					<Typography as="p" className="mt-4 opacity-60" size="xs">
 						© {new Date().getFullYear()} {companyName}. All rights reserved.
 					</Typography>
 				</div>
-
 				<nav aria-label="푸터 메뉴" className="grid grid-cols-3 gap-8 md:gap-16">
 					{FOOTER_LINK_GROUPS.map((group) => (
 						<div key={group.label}>
@@ -84,16 +79,16 @@ export async function HeroFooter() {
 
 			<div
 				aria-hidden="true"
-				className="flex items-end justify-center gap-[3vw] overflow-hidden px-6 md:px-10"
+				className="flex items-end justify-center gap-[3vw] px-6 md:px-10 pb-8"
 			>
-				<Image
+				{/*<Image
 					alt=""
 					className={`h-auto w-[18vw] min-w-28 shrink-0 ${logoClassName}`}
 					height={715}
 					src="/logos/logo.svg"
 					width={708}
-				/>
-				<span className="translate-y-[0.06em] whitespace-nowrap font-body text-[clamp(9rem,32vw,38rem)] leading-[0.68] font-semibold tracking-[-0.08em]">
+				/>*/}
+				<span className="whitespace-nowrap font-body text-[clamp(9rem,32vw,38rem)] leading-[0.68] font-semibold tracking-[-0.08em]">
 					LBS
 				</span>
 			</div>

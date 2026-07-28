@@ -243,6 +243,7 @@ Repository Implementation: src/features/guideline/repositories/guideline.payload
 
 Client Route는 화면 이동과 URL 상태만 관리합니다.
 
+- Creator UI의 canonical page 경로와 legacy redirect 매핑은 `src/lib/routes.ts`가 소유합니다.
 - 화면 이동, URL 파라미터, navigation, redirect, 화면 진입 제어만 담당합니다.
 - 비즈니스 로직, 데이터 저장, Payload CMS 접근, Repository 호출을 하지 않습니다.
 - Service를 직접 호출하지 않습니다.

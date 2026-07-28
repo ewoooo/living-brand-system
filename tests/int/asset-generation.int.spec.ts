@@ -46,16 +46,16 @@ describe('getCreateNavigation', () => {
 		expect(navigation.categories).toMatchObject([
 			{
 				title: '배너',
-				href: '/create/banner',
+				href: '/studio/template/banner',
 				templates: [
-					{ id: 10, href: '/create/banner/10' },
-					{ id: 12, href: '/create/banner/12' },
+					{ id: 10, href: '/studio/template/banner/10' },
+					{ id: 12, href: '/studio/template/banner/12' },
 				],
 			},
 			{
 				title: '포스터',
-				href: '/create/poster',
-				templates: [{ id: 11, href: '/create/poster/11' }],
+				href: '/studio/template/poster',
+				templates: [{ id: 11, href: '/studio/template/poster/11' }],
 			},
 		])
 	})

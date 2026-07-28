@@ -9,19 +9,19 @@ vi.mock('@payload-config', () => ({ default: {} }))
 vi.mock('payload', () => ({ getPayload: vi.fn() }))
 
 describe('findPublishedImageProfile', () => {
-	it('선택 목록은 published 프로파일의 id와 이름만 반환한다', async () => {
+	it('선택 목록은 published 프로파일을 내비게이션 순서로 반환한다', async () => {
 		const find = vi.fn().mockResolvedValue({
 			docs: [
-				{ id: 5, name: '에센허브 브랜드 제품컷' },
-				{ id: 7, name: '다른 프로파일' },
+				{ id: 5, name: '일러스트레이션', slug: 'illustration' },
+				{ id: 7, name: '그라디언트', slug: 'gradient' },
 			],
 		})
 		vi.mocked(getPayload).mockResolvedValue({ find } as never)
 		const user = { id: 1 }
 
 		await expect(listPublishedImageProfiles(user)).resolves.toEqual([
-			{ id: 5, name: '에센허브 브랜드 제품컷' },
-			{ id: 7, name: '다른 프로파일' },
+			{ id: 5, name: '일러스트레이션', slug: 'illustration' },
+			{ id: 7, name: '그라디언트', slug: 'gradient' },
 		])
 		expect(find).toHaveBeenCalledWith({
 			collection: 'image-profiles',
@@ -29,8 +29,8 @@ describe('findPublishedImageProfile', () => {
 			draft: false,
 			limit: 100,
 			overrideAccess: false,
-			select: { name: true },
-			sort: 'name',
+			select: { name: true, slug: true },
+			sort: 'displayOrder',
 			user,
 			where: { _status: { equals: 'published' } },
 		})

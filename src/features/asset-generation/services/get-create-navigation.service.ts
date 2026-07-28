@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { getStudioTemplateCategoryRoute, getStudioTemplateRoute } from '@/lib/routes'
 import {
 	listPublishedTemplateNavItems,
 	listTemplateCategories,
@@ -35,13 +36,13 @@ export const getCreateNavigation = cache(async (): Promise<GetCreateNavigationOu
 			id: category.id,
 			title: category.title,
 			slug: category.slug,
-			href: `/create/${category.slug}`,
+			href: getStudioTemplateCategoryRoute(category.slug),
 			templates: templates
 				.filter((template) => template.category === category.id)
 				.map((template) => ({
 					id: template.id,
 					name: template.name,
-					href: `/create/${category.slug}/${template.id}`,
+					href: getStudioTemplateRoute(category.slug, template.id),
 				})),
 		})),
 	}

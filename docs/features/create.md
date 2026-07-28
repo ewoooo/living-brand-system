@@ -10,7 +10,7 @@
 
 ### 현재 구현
 
-조합은 전부 클라이언트에서 일어나며 서버 렌더링·이미지 생성·영속이 없습니다. 재사용 단위는 `/create`와 AI Chat이 공유하는 트리오입니다.
+조합은 전부 클라이언트에서 일어나며 서버 렌더링·이미지 생성·영속이 없습니다. 재사용 단위는 Studio의 `/studio/template`과 AI Chat이 공유하는 트리오입니다.
 
 - `TemplateRenderer`(`src/components/template-renderer.tsx`): `JsonTemplate`(+열린 슬롯 `values`)를 DOM으로 렌더. 서버/클라 공용.
 - `use-template-png-export`(`src/hooks/`): 렌더러를 원본 크기로 오프스크린 마운트 후 `html-to-image`로 PNG 캡처 → 브라우저 다운로드.
@@ -32,7 +32,7 @@
 
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
-| [Page](../surfaces/page.md) | 구현 | `/create` → 카테고리 → 템플릿 → AssetGenerator. 발행된 템플릿만 읽고 비로그인 공개 읽기 |
+| [Page](../surfaces/page.md) | 구현 | `/studio/template` → 카테고리 → 템플릿 → AssetGenerator. 발행된 템플릿만 읽고 비로그인 공개 읽기 |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `findTemplatesForRequest` + `prepareTemplateImage`(슬롯 검증 후 첨부 PNG) |
 | REST | 부분 | 생성용 REST는 없음. import 어댑터 `POST /api/templates/import-figma-html`만 |
 | Slack | 계획 | — |
