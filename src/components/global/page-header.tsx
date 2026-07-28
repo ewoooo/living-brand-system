@@ -2,6 +2,7 @@ import { Information } from '@carbon/icons-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Typography } from '@/components/ui/typography'
+import { cn } from '@/lib/utils'
 
 /**
  * Studio 최상위 화면의 문서 outline과 타이포그래피를 통일한다.
@@ -12,17 +13,19 @@ export function PageHeader({
 	title,
 	description,
 	tip,
+	className,
 }: {
 	tail?: React.ReactNode
 	title: string
 	description?: string
 	tip?: string
+	className?: string
 }) {
 	return (
-		<header className="flex justify-between gap-4">
+		<header className={cn('flex justify-between gap-4', className)}>
 			<div className="flex flex-col gap-1">
 				<div className="flex items-center gap-1">
-					<Typography as="h1" family="title" size="4xl">
+					<Typography as="h1" family="body" size="4xl">
 						{title}
 					</Typography>
 					{tip && <HeaderTip title={title} tip={tip} />}

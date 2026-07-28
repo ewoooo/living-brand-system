@@ -18,8 +18,7 @@ export default async function StudioPage() {
 		<SectionLayout nav={<StudioSideNavigation navigation={navigation} />}>
 			<GuidelineContentFrame className="grid gap-16">
 				<section>
-					<PageHeader title="Create What You Want" />
-					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<div className="grid grid-cols-1 gap-4">
 						<NavigationBlock
 							variant="md"
 							className="aspect-[2/1]"
@@ -27,17 +26,10 @@ export default async function StudioPage() {
 							href="/studio/templates"
 							tail={navigationTail}
 						/>
-						<NavigationBlock
-							variant="md"
-							className="aspect-[2/1]"
-							label="Quickstart"
-							href="/studio/quickstart"
-							tail={navigationTail}
-						/>
 					</div>
 				</section>
 				<section>
-					<PageHeader title="Images" />
+					<PageHeader title="Images" className="pb-8" />
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<NavigationBlock
 							variant="md"
@@ -56,40 +48,43 @@ export default async function StudioPage() {
 					</div>
 				</section>
 				<section>
-					<PageHeader title="Assets" tip="Browse reusable assets for brand production." />
-					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<PageHeader
+						title="Templates"
+						tip="Browse reusable assets for brand production."
+						className="pb-8"
+					/>
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 						<NavigationBlock
 							variant="md"
-							className="aspect-[2/1]"
+							className="col-span-2"
 							label="Events"
 							href="/studio/create/events"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
 							variant="md"
-							className="aspect-[2/1]"
+							className="md:aspect-auto"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}
 						/>
-					</div>
-				</section>
-				<section>
-					<PageHeader
-						title="Templates"
-						tip="Browse reusable assets for brand production."
-					/>
-					<div className="grid grid-cols-1 gap-4 md:grid-cols-[2fr_1fr]">
 						<NavigationBlock
 							variant="md"
-							className="aspect-[2/1]"
-							label="Events"
-							href="/studio/create/events"
+							className="md:aspect-auto"
+							label="Stationery"
+							href="/studio/create/stationery"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
 							variant="md"
-							className="aspect-[2/1] md:aspect-auto"
+							className="md:aspect-auto"
+							label="Stationery"
+							href="/studio/create/stationery"
+							tail={navigationTail}
+						/>
+						<NavigationBlock
+							variant="md"
+							className="md:aspect-auto"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}

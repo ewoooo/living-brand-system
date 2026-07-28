@@ -94,9 +94,9 @@ export function HeaderTail({
 			<HeaderGuidelineSearch chapters={guidelineChapters} />
 			<SidebarTrigger
 				variant="highlight"
-				shape="rounded"
+				shape="pill"
 				size="default"
-				className="p-4 py-4 min-h-6"
+				className="p-4 py-4 min-h-6 border"
 			>
 				AI
 			</SidebarTrigger>
