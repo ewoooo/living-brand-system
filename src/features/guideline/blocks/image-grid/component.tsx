@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 import { cn } from '@/lib/utils'
 import type { ApplicationImage, GuidelineDocument } from '@/payload-types'
@@ -14,7 +15,8 @@ function cellImage(cell: Cell | undefined): ApplicationImage | null {
 	return cell?.image != null && typeof cell.image === 'object' ? cell.image : null
 }
 
-// 셀 비율은 블록 단위로 하나만 정한다: 고정 비율 / 수동(폭·높이) / 첫 이미지 비율.
+// 셀 비율은 블록 단위로 하나만 정한다: 고정 비율 / 수동(폭·높이) / 셀 01(첫 셀) 원본 비율.
+// 'original'·'firstImage'는 모두 첫 셀 이미지의 원본 비율(width/height)을 그리드 전체에 적용한다.
 function resolveRatio(
 	block: ImageGrid,
 	cells: (Cell | undefined)[],
@@ -28,7 +30,7 @@ function resolveRatio(
 			}
 		return { className: 'aspect-square' }
 	}
-	if (ratio === 'firstImage') {
+	if (ratio === 'original' || ratio === 'firstImage') {
 		const first = cells.map(cellImage).find(Boolean)
 		if (first?.width && first?.height)
 			return { className: '', style: { aspectRatio: `${first.width} / ${first.height}` } }
@@ -49,10 +51,22 @@ export function ImageGridBlock({ block }: { block: ImageGrid }) {
 
 	return (
 		<GuidelineBlockFrame layout="padded">
-			<section>
-				<div className="sr-only">
-					<GuidelineHeader variant="block" title={block.title} className="sr-only" />
-				</div>
+			<section className="flex flex-col gap-6">
+				{/* 제목·설명은 콘텐츠 열(SingleColumnItem)과 동일하게 오른쪽 열(col-start-2)로 정렬해
+				    페이지 내 다른 콘텐츠 행과 시각을 통일한다. */}
+				{(block.title || block.description) && (
+					<div className="grid grid-cols-2 gap-4">
+						<div className="col-start-2">
+							{block.title && <GuidelineHeader variant="block" title={block.title} />}
+							{block.description && (
+								<GuidelineDescription
+									variant="block"
+									description={block.description}
+								/>
+							)}
+						</div>
+					</div>
+				)}
 				<div
 					className="grid gap-x-4 gap-y-12"
 					style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}

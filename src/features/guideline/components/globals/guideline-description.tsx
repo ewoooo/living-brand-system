@@ -54,10 +54,11 @@ function PageDescription({ description }: { description: Description }) {
 }
 
 function BlockDescription({ description }: { description: Description }) {
+	// whitespace-pre-line: 본문 text 노드에 들어있는 개행(\n)을 줄바꿈으로 렌더한다.
 	return (
 		<DescriptionContent
 			description={description}
-			className="font-body font-normal text-sm space-y-2 pr-8"
+			className="font-body font-normal text-sm space-y-2 whitespace-pre-line pr-8"
 		/>
 	)
 }

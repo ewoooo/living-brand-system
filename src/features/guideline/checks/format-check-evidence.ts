@@ -118,5 +118,10 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 			return evidence.title ?? 'Logo group viewer'
 		case 'colorPairing':
 			return evidence.title ?? 'Color pairing'
+		case 'colorPairingRecommendation':
+			return compact([
+				evidence.title ?? 'Color pairing recommendation',
+				evidence.variant,
+			]).join('\n')
 	}
 }
