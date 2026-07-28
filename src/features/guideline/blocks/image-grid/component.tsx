@@ -51,12 +51,19 @@ export function ImageGridBlock({ block }: { block: ImageGrid }) {
 	return (
 		<GuidelineBlockFrame layout="padded">
 			<section className="flex flex-col gap-6">
+				{/* 제목·설명은 콘텐츠 열(SingleColumnItem)과 동일하게 오른쪽 열(col-start-2)로 정렬해
+				    페이지 내 다른 콘텐츠 행과 시각을 통일한다. */}
 				{(block.title || block.description) && (
-					<div className="flex flex-col gap-1">
-						{block.title && <GuidelineHeader variant="block" title={block.title} />}
-						{block.description && (
-							<GuidelineDescription variant="block" description={block.description} />
-						)}
+					<div className="grid grid-cols-2 gap-4">
+						<div className="col-start-2">
+							{block.title && <GuidelineHeader variant="block" title={block.title} />}
+							{block.description && (
+								<GuidelineDescription
+									variant="block"
+									description={block.description}
+								/>
+							)}
+						</div>
 					</div>
 				)}
 				<div
