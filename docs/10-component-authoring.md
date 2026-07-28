@@ -61,7 +61,7 @@ const badgeVariants = cva('inline-flex items-center …', {
 			outline: 'border-foreground bg-transparent text-foreground …',
 			tint: 'border-primary/40 bg-primary/10 text-foreground …',
 			muted: 'bg-muted text-muted-foreground …',
-			highlight: 'bg-primary text-primary-foreground …',
+			highlight: 'bg-highlight text-highlight-foreground …',
 		},
 		shape: {
 			sharp: 'rounded-none',
@@ -83,6 +83,8 @@ export { Badge, badgeVariants }
 ```
 
 `badge.tsx`에서 그대로 가져오는 계약: 색은 `variant`, 모서리는 `shape`로 분리하고 각 정의와 기본값은 `cva`에 둡니다. 루트에 `data-slot`을 붙이고 상태는 `data-variant`와 `data-shape`로 노출합니다. 아이콘에는 위치에 따라 `data-icon="inline-start" | "inline-end"`, 아이콘 전용 Badge에는 `data-icon="only"`와 Badge의 `aria-label`을 함께 씁니다. 다형 렌더링은 `asChild` + `radix-ui`의 `Slot`으로 하고, 별도 `as` prop을 새로 만들지 않습니다.
+
+`button.tsx`도 같은 `variant`(`outline`/`tint`/`muted`/`highlight`)와 `shape`(`sharp`/`rounded`/`pill`) 축을 공유하며, 크기만 `size`로 따로 분리합니다. `ghost`/`destructive`/`link`는 기능성 예외로 유지합니다. `muted`는 낮은 강조도의 활성 버튼이고, 비활성 상태는 별도 variant가 아니라 네이티브 `disabled` 속성으로 표현합니다.
 
 ### 크기 분기형 컴포넌트
 

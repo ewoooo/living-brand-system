@@ -1,6 +1,7 @@
 import { PageHeader } from '@/components/global/page-header'
 import { SectionLayout } from '@/components/global/section-layout'
 import { StudioSideNavigation } from '@/components/global/studio-side-navigation'
+import { NavigationBlock } from '@/components/navigation-block'
 import { getCreateNavigation } from '@/features/asset-generation/services/get-create-navigation.service'
 import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
 
@@ -12,27 +13,70 @@ export default async function StudioPage() {
 
 	return (
 		<SectionLayout nav={<StudioSideNavigation navigation={navigation} />}>
-			<GuidelineContentFrame>
-				<section className="flex flex-col gap-4">
+			<GuidelineContentFrame className="grid grid-rows-[auto] gap-16">
+				<section>
 					<PageHeader title="Create What You Want" />
-					<div className="grid grid-cols-[2fr_1fr]">
-						<article>New Templates</article>
-						<article className="aspect-square">Quickstart</article>
+					<div className="grid grid-cols-2 gap-4">
+						<NavigationBlock
+							variant="section"
+							ratio="fill"
+							label="Quickstart"
+							href="/studio/quickstart"
+						/>
 					</div>
 				</section>
 				<section>
 					<PageHeader title="Images" />
-					<div className="grid grid-cols-3">
-						<article>HD Illustration</article>
-						<article className="aspect-square">HD Gradient</article>
-						<article className="aspect-square">HD Gradient</article>
+					<div className="grid grid-cols-2 gap-4">
+						<NavigationBlock
+							variant="section"
+							ratio="fill"
+							label="Illustrations"
+							href="/studio/create/illustrations"
+						/>
+						<NavigationBlock
+							variant="section"
+							ratio="fill"
+							label="Gradient"
+							href="/studio/create/gradients"
+						/>
 					</div>
 				</section>
-				<section className="flex flex-col gap-4">
-					<PageHeader title="Assets" />
-					<div className="grid grid-cols-[2fr_1fr]">
-						<article>New Templates</article>
-						<article className="aspect-square">Quickstart</article>
+				<section>
+					<PageHeader title="Assets" tip="Browse reusable assets for brand production." />
+					<div className="grid grid-cols-2 gap-4">
+						<NavigationBlock
+							variant="section"
+							ratio="fill"
+							label="Events"
+							href="/studio/create/events"
+						/>
+						<NavigationBlock
+							variant="section"
+							ratio="fill"
+							label="Stationery"
+							href="/studio/create/stationery"
+						/>
+					</div>
+				</section>
+				<section>
+					<PageHeader
+						title="Templates"
+						tip="Browse reusable assets for brand production."
+					/>
+					<div className="grid grid-cols-2 gap-4">
+						<NavigationBlock
+							variant="section"
+							ratio="fill"
+							label="Events"
+							href="/studio/create/events"
+						/>
+						<NavigationBlock
+							variant="section"
+							ratio="fill"
+							label="Stationery"
+							href="/studio/create/stationery"
+						/>
 					</div>
 				</section>
 			</GuidelineContentFrame>

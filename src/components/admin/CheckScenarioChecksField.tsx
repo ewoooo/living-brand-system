@@ -127,7 +127,7 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 										</Button>
 										<Button
 											type="button"
-											variant="secondary"
+											variant="muted"
 											size="xs"
 											disabled={disabled}
 											onClick={() =>
@@ -184,7 +184,7 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 								<TableCell>
 									<Button
 										type="button"
-										variant="secondary"
+										variant="muted"
 										size="xs"
 										disabled={disabled}
 										onClick={() => update([...checkKeys, check.key])}

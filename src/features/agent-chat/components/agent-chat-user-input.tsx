@@ -104,10 +104,10 @@ export function AgentChatUserInput({
 					<Button
 						aria-label="메시지 보내기"
 						type="submit"
-						variant="default"
+						variant="highlight"
+						shape="pill"
 						size="icon-lg"
 						disabled={!canSubmit}
-						className="rounded-full"
 					>
 						{isBusy ? <Spinner /> : <ArrowUp data-icon="inline-start" />}
 					</Button>

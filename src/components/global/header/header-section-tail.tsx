@@ -43,8 +43,9 @@ function HeaderGuidelineSearch({ chapters }: { chapters: GuidelineSearchChapter[
 		<>
 			<Button
 				aria-label="가이드라인 검색"
-				variant="outline"
-				className="py-4 pl-3 rounded-sm"
+				variant="muted"
+				shape="rounded"
+				className="py-4 pl-3 min-h-6"
 				onClick={() => setOpen((current) => !current)}
 			>
 				<span className="pr-6 text-xs font-normal text-muted-foreground">Search</span>
@@ -91,7 +92,12 @@ export function HeaderTail({
 	return (
 		<section className={className}>
 			<HeaderGuidelineSearch chapters={guidelineChapters} />
-			<SidebarTrigger variant="outline" size="default" className="rounded-full p-4 py-4">
+			<SidebarTrigger
+				variant="highlight"
+				shape="rounded"
+				size="default"
+				className="p-4 py-4 min-h-6"
+			>
 				AI
 			</SidebarTrigger>
 		</section>

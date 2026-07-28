@@ -147,7 +147,7 @@ export function VectorLayerEditor({
 						type="button"
 						aria-pressed={!override.vectorColor}
 						onClick={() => onChange({ vectorColor: undefined })}
-						variant={!override.vectorColor ? 'secondary' : 'outline'}
+						variant={!override.vectorColor ? 'muted' : 'outline'}
 						size="sm"
 					>
 						원본
@@ -164,7 +164,7 @@ export function VectorLayerEditor({
 								aria-pressed={selected}
 								aria-label={`${color.name} ${value}`}
 								onClick={() => onChange({ vectorColor: value })}
-								variant={selected ? 'secondary' : 'outline'}
+								variant={selected ? 'muted' : 'outline'}
 								size="sm"
 							>
 								<span
