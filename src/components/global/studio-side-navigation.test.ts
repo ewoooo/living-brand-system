@@ -55,6 +55,10 @@ describe('StudioSideNavigation', () => {
 		)
 
 		expect(screen.getByRole('link', { name: 'Studio' })).toHaveAttribute('href', '/studio')
+		expect(screen.getByRole('link', { name: 'Examples' })).toHaveAttribute(
+			'href',
+			'/studio/examples',
+		)
 		expect(screen.getByRole('link', { name: 'Template' })).toHaveAttribute(
 			'href',
 			'/studio/template',

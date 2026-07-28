@@ -20,6 +20,7 @@ export function StudioSideNavigation({
 	return (
 		<SideNav>
 			<SideNavGroup title="Studio" titleHref={routes.studio.root} />
+			<SideNavGroup title="Examples" titleHref={routes.studio.examples} />
 			<SideNavGroup title="Template" titleHref={routes.studio.template}>
 				{navigation.categories.map((category) =>
 					category.templates.length > 0 ? (
