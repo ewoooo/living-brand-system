@@ -879,7 +879,28 @@ export interface IconGridBlock {
  * via the `definition` "ImageGridBlock".
  */
 export interface ImageGridBlock {
+  /**
+   * 그리드 위에 표시할 제목입니다(비우면 표시 안 함).
+   */
   title?: string | null;
+  /**
+   * 제목 아래에 표시할 설명입니다(비우면 표시 안 함).
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   /**
    * 격자의 열 수입니다.
    */
@@ -2305,6 +2326,7 @@ export interface IconGridBlockSelect<T extends boolean = true> {
  */
 export interface ImageGridBlockSelect<T extends boolean = true> {
   title?: T;
+  description?: T;
   columns?: T;
   rows?: T;
   imageRatio?: T;

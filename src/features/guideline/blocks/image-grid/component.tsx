@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 import { cn } from '@/lib/utils'
 import type { ApplicationImage, GuidelineDocument } from '@/payload-types'
@@ -49,10 +50,15 @@ export function ImageGridBlock({ block }: { block: ImageGrid }) {
 
 	return (
 		<GuidelineBlockFrame layout="padded">
-			<section>
-				<div className="sr-only">
-					<GuidelineHeader variant="block" title={block.title} className="sr-only" />
-				</div>
+			<section className="flex flex-col gap-6">
+				{(block.title || block.description) && (
+					<div className="flex flex-col gap-1">
+						{block.title && <GuidelineHeader variant="block" title={block.title} />}
+						{block.description && (
+							<GuidelineDescription variant="block" description={block.description} />
+						)}
+					</div>
+				)}
 				<div
 					className="grid gap-x-4 gap-y-12"
 					style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}

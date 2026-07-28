@@ -9,7 +9,18 @@ export const ImageGridBlock: Block = {
 	interfaceName: 'ImageGridBlock',
 	labels: { singular: '이미지 그리드', plural: '이미지 그리드' },
 	fields: [
-		{ name: 'title', type: 'text', localized: true },
+		{
+			name: 'title',
+			type: 'text',
+			localized: true,
+			admin: { description: '그리드 위에 표시할 제목입니다(비우면 표시 안 함).' },
+		},
+		{
+			name: 'description',
+			type: 'richText',
+			localized: true,
+			admin: { description: '제목 아래에 표시할 설명입니다(비우면 표시 안 함).' },
+		},
 		{
 			type: 'row',
 			fields: [
