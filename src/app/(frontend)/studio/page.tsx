@@ -53,38 +53,34 @@ export default async function StudioPage() {
 						tip="Browse reusable assets for brand production."
 						className="pb-8"
 					/>
-					<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-3 [&>[data-slot=navigation-block]]:aspect-square">
 						<NavigationBlock
 							variant="md"
-							className="col-span-2"
+							className="md:col-span-2 md:row-span-2"
 							label="Events"
 							href="/studio/create/events"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
 							variant="md"
-							className="md:aspect-auto"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
 							variant="md"
-							className="md:aspect-auto"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
 							variant="md"
-							className="md:aspect-auto"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
 							variant="md"
-							className="md:aspect-auto"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}
