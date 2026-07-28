@@ -7,7 +7,7 @@ describe('GuidelineNavigationGrid', () => {
 	it('모든 탐색 항목을 제목 링크로 렌더링한다', () => {
 		render(
 			createElement(GuidelineNavigationGrid, {
-				variant: 'onboard',
+				variant: 'lg',
 				items: [
 					{ id: 1, title: 'Color', href: '/guideline/identity/color' },
 					{ id: 2, title: 'Typography', href: '/guideline/identity/typography' },
