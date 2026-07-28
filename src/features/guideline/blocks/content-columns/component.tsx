@@ -58,12 +58,17 @@ function SingleColumnItem({
 	column: Column
 	ratio: ContentColumns['imageRatio']
 }) {
-	// 이미지 없으면 텍스트만(빈 이미지 슬롯·오른쪽 열 오프셋 없이 전체 폭).
+	// 이미지 없으면 빈 이미지 슬롯은 안 띄우되, 텍스트 정렬은 이미지 있을 때와 동일하게
+	// 오른쪽 열(col-start-2 = 수평 가운데부터)로 맞춘다. 다른 콘텐츠 행과 같은 스타일 유지.
 	if (!hasImage(column)) {
 		return (
-			<div className="flex flex-col gap-1">
-				{column.heading && <GuidelineHeader variant="block" title={column.heading} />}
-				{column.body && <GuidelineDescription variant="block" description={column.body} />}
+			<div className="grid grid-cols-2 gap-4">
+				<div className="col-start-2">
+					{column.heading && <GuidelineHeader variant="block" title={column.heading} />}
+					{column.body && (
+						<GuidelineDescription variant="block" description={column.body} />
+					)}
+				</div>
 			</div>
 		)
 	}
