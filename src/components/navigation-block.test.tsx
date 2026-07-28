@@ -23,4 +23,22 @@ describe('NavigationBlock', () => {
 		expect(screen.getByText('브랜드 색상 기준')).toBeInTheDocument()
 		expect(container.querySelector('svg')).toBeInTheDocument()
 	})
+
+	it('부모가 전달한 layout class를 루트에 적용한다', () => {
+		render(
+			<NavigationBlock
+				variant="hero"
+				href="/guideline"
+				label="Guideline"
+				className="aspect-square"
+			/>,
+		)
+
+		expect(screen.getByRole('link', { name: 'Guideline' })).toHaveClass(
+			'h-full',
+			'aspect-square',
+		)
+		expect(screen.getByText('Guideline')).toHaveAttribute('data-size', '6xl')
+		expect(screen.getByText('Guideline')).not.toHaveClass('aspect-square')
+	})
 })

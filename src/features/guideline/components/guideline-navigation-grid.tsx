@@ -15,7 +15,7 @@ export function GuidelineNavigationGrid({
 	variant: 'onboard' | 'section'
 }) {
 	return (
-		<section className="grid grid-cols-2 border-border border-t border-l">
+		<section className="grid grid-cols-1 border-border border-t border-l md:grid-cols-2">
 			{items.map((item) => (
 				<NavigationBlock
 					key={item.id}
@@ -24,6 +24,7 @@ export function GuidelineNavigationGrid({
 					label={item.title}
 					description={item.description}
 					icon={item.icon}
+					className="md:aspect-[2/1]"
 				/>
 			))}
 		</section>

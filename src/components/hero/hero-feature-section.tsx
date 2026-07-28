@@ -8,15 +8,30 @@ export function HeroFeatureSection() {
 			data-slot="hero-feature-section"
 			className="grid grid-cols-1 gap-4 md:grid-cols-3"
 		>
-			<NavigationBlock variant="hero" href={routes.guideline} label="Guideline" />
-			<NavigationBlock variant="hero" href={routes.studio.root} label="Studio" />
-			<NavigationBlock variant="hero" href={routes.studio.template} label="Help" />
+			<NavigationBlock
+				variant="hero"
+				href={routes.guideline}
+				label="Guideline"
+				className="aspect-square"
+			/>
+			<NavigationBlock
+				variant="hero"
+				href={routes.studio.root}
+				label="Studio"
+				className="aspect-square"
+			/>
+			<NavigationBlock
+				variant="hero"
+				href={routes.studio.template}
+				label="Help"
+				className="aspect-square"
+			/>
 			<div className="md:row-span-2">
 				<NavigationBlock
 					variant="hero"
 					href={routes.studio.template}
 					label="Create"
-					ratio="portrait"
+					className="aspect-square md:aspect-auto"
 				/>
 			</div>
 			<div className="md:col-span-2">
@@ -24,11 +39,21 @@ export function HeroFeatureSection() {
 					variant="hero"
 					href={routes.studio.template}
 					label="AI"
-					ratio="landscape"
+					className="aspect-square md:aspect-[2/1]"
 				/>
 			</div>
-			<NavigationBlock variant="hero" href={routes.studio.review} label="Review" />
-			<NavigationBlock variant="hero" href={routes.studio.template} label="MCP" />
+			<NavigationBlock
+				variant="hero"
+				href={routes.studio.review}
+				label="Review"
+				className="aspect-square"
+			/>
+			<NavigationBlock
+				variant="hero"
+				href={routes.studio.template}
+				label="MCP"
+				className="aspect-square"
+			/>
 		</section>
 	)
 }

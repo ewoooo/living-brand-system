@@ -17,6 +17,7 @@ describe('GuidelineNavigationGrid', () => {
 
 		expect(screen.getAllByRole('link')).toHaveLength(2)
 		expect(screen.getByRole('heading', { level: 3, name: 'Color' })).toBeInTheDocument()
+		expect(screen.getByRole('link', { name: 'Color' })).toHaveClass('md:aspect-[2/1]')
 		expect(screen.getByRole('link', { name: 'Typography' })).toHaveAttribute(
 			'href',
 			'/guideline/identity/typography',
