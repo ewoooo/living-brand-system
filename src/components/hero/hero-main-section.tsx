@@ -8,7 +8,7 @@ export function HeroMainSection() {
 		<section
 			aria-labelledby="hero-title"
 			data-slot="hero-main-section"
-			className="flex min-h-280 flex-col items-center justify-center"
+			className="flex h-full flex-col items-center justify-center"
 		>
 			<div className="grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-[0.1em] text-[clamp(3rem,8vw,7rem)]">
 				<h1

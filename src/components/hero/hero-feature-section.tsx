@@ -6,25 +6,25 @@ export function HeroFeatureSection() {
 		<section
 			aria-label="주요 기능"
 			data-slot="hero-feature-section"
-			className="grid grid-cols-1 gap-4 md:grid-cols-3"
+			className="grid grid-cols-1 gap-4 md:h-full md:min-h-0 md:grid-cols-3 md:grid-rows-3"
 		>
 			<NavigationBlock
 				variant="hero"
 				href={routes.guideline}
 				label="Guideline"
-				className="aspect-square"
+				className="aspect-square md:aspect-auto"
 			/>
 			<NavigationBlock
 				variant="hero"
 				href={routes.studio.root}
 				label="Studio"
-				className="aspect-square"
+				className="aspect-square md:aspect-auto"
 			/>
 			<NavigationBlock
 				variant="hero"
 				href={routes.studio.template}
 				label="Help"
-				className="aspect-square"
+				className="aspect-square md:aspect-auto"
 			/>
 			<div className="md:row-span-2">
 				<NavigationBlock
@@ -39,20 +39,20 @@ export function HeroFeatureSection() {
 					variant="hero"
 					href={routes.studio.template}
 					label="AI"
-					className="aspect-square md:aspect-[2/1]"
+					className="aspect-square md:aspect-auto"
 				/>
 			</div>
 			<NavigationBlock
 				variant="hero"
 				href={routes.studio.review}
 				label="Review"
-				className="aspect-square"
+				className="aspect-square md:aspect-auto"
 			/>
 			<NavigationBlock
 				variant="hero"
 				href={routes.studio.template}
 				label="MCP"
-				className="aspect-square"
+				className="aspect-square md:aspect-auto"
 			/>
 		</section>
 	)

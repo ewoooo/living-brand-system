@@ -38,7 +38,7 @@ export async function HeroFooter() {
 	return (
 		<footer
 			data-slot="hero-footer"
-			className="relative -m-4 -mt-0 z-10 overflow-hidden bg-primary text-primary-foreground"
+			className="relative z-10 overflow-hidden bg-primary text-primary-foreground"
 		>
 			<div className="grid gap-16 p-8 md:grid-cols-[minmax(0,1fr)_auto] md:p-12">
 				<div className="flex flex-col items-start">
