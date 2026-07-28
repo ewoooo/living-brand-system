@@ -1,6 +1,7 @@
 import { CalloutBlock } from '@/features/guideline/blocks/callout/component'
 import { CarouselBlock } from '@/features/guideline/blocks/carousel/component'
 import { ColorPairingBlock } from '@/features/guideline/blocks/color-pairing/component'
+import { ColorPairingRecommendationBlock } from '@/features/guideline/blocks/color-pairing-recommendation/component'
 import { ContentColumnsBlock } from '@/features/guideline/blocks/content-columns/component'
 import { DoDontBlock } from '@/features/guideline/blocks/do-dont/component'
 import { GlyphGridBlock } from '@/features/guideline/blocks/glyph-grid/component'
@@ -357,6 +358,12 @@ const colorPairingBlock = (system: 'tone-in-tone' | 'tone-on-tone' | 'mono-tone'
 		{ blockType: 'colorPairing' }
 	>
 
+const colorPairingRecommendationBlock = (variant: 'light' | 'dark') =>
+	({ blockType: 'colorPairingRecommendation', variant }) as Extract<
+		GuidelineBlock,
+		{ blockType: 'colorPairingRecommendation' }
+	>
+
 export function GuidelineKitGallery() {
 	return (
 		<article className="flex w-full flex-col gap-8">
@@ -482,6 +489,14 @@ export function GuidelineKitGallery() {
 
 			<CollapsibleDemo title="Color Pairing · Mono Tone (블록)">
 				<ColorPairingBlock block={colorPairingBlock('mono-tone')} />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Color Pairing Recommendation · Tone in Tone (Light)">
+				<ColorPairingRecommendationBlock block={colorPairingRecommendationBlock('light')} />
+			</CollapsibleDemo>
+
+			<CollapsibleDemo title="Color Pairing Recommendation · Tone in Tone (Dark)">
+				<ColorPairingRecommendationBlock block={colorPairingRecommendationBlock('dark')} />
 			</CollapsibleDemo>
 
 			<CollapsibleDemo title="Logo Variant Selector · 로고 배리언트 셀렉터 (cash.app식)">

@@ -251,6 +251,7 @@ export interface GuidelineDocument {
         | LayoutGridBlock
         | GlyphGridBlock
         | ColorPairingBlock
+        | ColorPairingRecommendationBlock
         | IconGridBlock
         | ImageGridBlock
         | LogoGroupViewerBlock
@@ -827,6 +828,24 @@ export interface ColorPairingBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingRecommendationBlock".
+ */
+export interface ColorPairingRecommendationBlock {
+  title?: string | null;
+  /**
+   * 추천 그리드 버전입니다. Light=밝은 배경, Dark=어두운 배경.
+   */
+  variant: 'light' | 'dark';
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPairingRecommendation';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "IconGridBlock".
  */
 export interface IconGridBlock {
@@ -860,7 +879,28 @@ export interface IconGridBlock {
  * via the `definition` "ImageGridBlock".
  */
 export interface ImageGridBlock {
+  /**
+   * 그리드 위에 표시할 제목입니다(비우면 표시 안 함).
+   */
   title?: string | null;
+  /**
+   * 제목 아래에 표시할 설명입니다(비우면 표시 안 함).
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   /**
    * 격자의 열 수입니다.
    */
@@ -2015,6 +2055,7 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         layoutGrid?: T | LayoutGridBlockSelect<T>;
         glyphGrid?: T | GlyphGridBlockSelect<T>;
         colorPairing?: T | ColorPairingBlockSelect<T>;
+        colorPairingRecommendation?: T | ColorPairingRecommendationBlockSelect<T>;
         iconGrid?: T | IconGridBlockSelect<T>;
         imageGrid?: T | ImageGridBlockSelect<T>;
         logoGroupViewer?: T | LogoGroupViewerBlockSelect<T>;
@@ -2265,6 +2306,17 @@ export interface ColorPairingBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingRecommendationBlock_select".
+ */
+export interface ColorPairingRecommendationBlockSelect<T extends boolean = true> {
+  title?: T;
+  variant?: T;
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "IconGridBlock_select".
  */
 export interface IconGridBlockSelect<T extends boolean = true> {
@@ -2283,6 +2335,7 @@ export interface IconGridBlockSelect<T extends boolean = true> {
  */
 export interface ImageGridBlockSelect<T extends boolean = true> {
   title?: T;
+  description?: T;
   columns?: T;
   rows?: T;
   imageRatio?: T;

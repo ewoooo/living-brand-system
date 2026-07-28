@@ -4,6 +4,7 @@ import type { Block } from 'payload'
 import CalloutSchema from '../blocks/callout/schema'
 import CarouselSchema from '../blocks/carousel/schema'
 import ColorPairingSchema from '../blocks/color-pairing/schema'
+import ColorPairingRecommendationSchema from '../blocks/color-pairing-recommendation/schema'
 import ColorPaletteSchema from '../blocks/color-palette/schema'
 import ContentColumnsSchema from '../blocks/content-columns/schema'
 import DoDontSchema from '../blocks/do-dont/schema'
@@ -39,6 +40,7 @@ export const guidelineBlockSchemas = {
 	layoutGrid: LayoutGridSchema,
 	glyphGrid: GlyphGridSchema,
 	colorPairing: ColorPairingSchema,
+	colorPairingRecommendation: ColorPairingRecommendationSchema,
 	iconGrid: IconGridSchema,
 	imageGrid: ImageGridSchema,
 	logoGroupViewer: LogoGroupViewerSchema,
