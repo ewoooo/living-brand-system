@@ -43,6 +43,14 @@ describe('StudioSideNavigation', () => {
 						},
 					],
 				},
+				imageProfiles: [
+					{
+						id: 3,
+						name: 'Illustration',
+						slug: 'illustration',
+						href: '/studio/generate/illustration',
+					},
+				],
 			}),
 		)
 
@@ -63,6 +71,10 @@ describe('StudioSideNavigation', () => {
 		expect(screen.getByRole('link', { name: 'Business Card' })).toHaveAttribute(
 			'href',
 			'/studio/template/cards/2',
+		)
+		expect(screen.getByRole('link', { name: 'Illustration' })).toHaveAttribute(
+			'href',
+			'/studio/generate/illustration',
 		)
 	})
 })

@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { createElement } from 'react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ImageGenerator } from './image-generator'
 
 const mocks = vi.hoisted(() => ({ generate: vi.fn() }))
@@ -21,9 +22,14 @@ vi.mock('@/features/image-generation/components/image-generation-results', () =>
 
 describe('ImageGenerator', () => {
 	beforeEach(() => vi.clearAllMocks())
+	afterEach(cleanup)
 
 	it('첫 published 프로파일을 선택해 profileId로 생성한다', () => {
-		render(<ImageGenerator profiles={[{ id: 5, name: '에센허브 브랜드 제품컷' }]} />)
+		render(
+			createElement(ImageGenerator, {
+				profiles: [{ id: 5, name: '에센허브 브랜드 제품컷' }],
+			}),
+		)
 
 		fireEvent.change(screen.getByLabelText('만들 이미지 설명'), {
 			target: { value: '파란 세럼병' },
@@ -35,5 +41,19 @@ describe('ImageGenerator', () => {
 			prompt: '파란 세럼병',
 			profileId: 5,
 		})
+	})
+
+	it('라우트가 지정한 프로파일을 처음 선택한다', () => {
+		render(
+			createElement(ImageGenerator, {
+				profiles: [
+					{ id: 5, name: '일러스트레이션' },
+					{ id: 7, name: '그라디언트' },
+				],
+				initialProfileId: 7,
+			}),
+		)
+
+		expect(screen.getByLabelText('프로파일')).toHaveValue('7')
 	})
 })

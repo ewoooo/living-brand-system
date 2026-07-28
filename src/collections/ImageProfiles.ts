@@ -1,4 +1,4 @@
-import type { CollectionConfig, PayloadRequest } from 'payload'
+import { type CollectionConfig, type PayloadRequest, slugField } from 'payload'
 import {
 	imagePromptNormalizationRequestSchema,
 	validateImageProfilePromptRows,
@@ -47,9 +47,10 @@ export const ImageProfiles: CollectionConfig = {
 	admin: {
 		group: '제작 도구',
 		useAsTitle: 'name',
-		defaultColumns: ['name', '_status', 'updatedAt'],
+		defaultColumns: ['name', 'slug', 'displayOrder', '_status', 'updatedAt'],
 		description: '이미지 유형별 시스템 프롬프트와 유저 프롬프트 후보를 관리하고 테스트합니다.',
 	},
+	defaultSort: 'displayOrder',
 	labels: {
 		singular: '이미지 프로파일',
 		plural: '이미지 프로파일',
@@ -68,6 +69,21 @@ export const ImageProfiles: CollectionConfig = {
 			type: 'text',
 			required: true,
 			label: '프로파일 이름',
+		},
+		slugField({
+			useAsSlug: 'name',
+			required: true,
+		}),
+		{
+			name: 'displayOrder',
+			type: 'number',
+			required: true,
+			defaultValue: 0,
+			min: 0,
+			admin: {
+				position: 'sidebar',
+				description: '숫자가 낮을수록 Studio 내비게이션에서 먼저 표시됩니다.',
+			},
 		},
 		{
 			name: 'profilePrompt',
