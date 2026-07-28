@@ -38,7 +38,7 @@ Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listIma
 
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
-| [Page](../surfaces/page.md) | 구현 | `/image` — 프롬프트 입력 → 후보 그리드 → 택1 |
+| [Page](../surfaces/page.md) | 구현 | `/studio/generate#image` — 프롬프트 입력 → 후보 그리드 → 택1 |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `generateImage`로 대화 중 생성, 후보를 챗에 렌더 |
 | REST | 구현 | `POST /api/image`(same-origin, 인증 필수) |
 | Slack | 계획 | — |

@@ -32,21 +32,37 @@ describe('StudioSideNavigation', () => {
 							id: 1,
 							title: 'Cards',
 							slug: 'cards',
-							href: '/create/cards',
-							templates: [{ id: 2, name: 'Business Card', href: '/create/cards/2' }],
+							href: '/studio/template/cards',
+							templates: [
+								{
+									id: 2,
+									name: 'Business Card',
+									href: '/studio/template/cards/2',
+								},
+							],
 						},
 					],
 				},
 			}),
 		)
 
-		expect(screen.getByRole('link', { name: 'Template' })).toHaveAttribute('href', '/create')
-		expect(screen.getByRole('link', { name: 'Generate' })).toHaveAttribute('href', '/generate')
-		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute('href', '/review')
+		expect(screen.getByRole('link', { name: 'Studio' })).toHaveAttribute('href', '/studio')
+		expect(screen.getByRole('link', { name: 'Template' })).toHaveAttribute(
+			'href',
+			'/studio/template',
+		)
+		expect(screen.getByRole('link', { name: 'Generate' })).toHaveAttribute(
+			'href',
+			'/studio/generate',
+		)
+		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute(
+			'href',
+			'/studio/review',
+		)
 		expect(screen.getByText('Cards')).toBeTruthy()
 		expect(screen.getByRole('link', { name: 'Business Card' })).toHaveAttribute(
 			'href',
-			'/create/cards/2',
+			'/studio/template/cards/2',
 		)
 	})
 })

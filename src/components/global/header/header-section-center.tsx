@@ -2,7 +2,7 @@
 
 import { cva } from 'class-variance-authority'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import type { GuidelineSearchChapter } from '@/components/global/header/header-section-tail'
 import {
 	NavigationMenu,
@@ -14,12 +14,14 @@ import {
 	navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu'
 import { Typography } from '@/components/ui/typography'
+import { routes } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 
 const STUDIO_LINKS = [
-	{ href: '/create', label: 'Templates' },
-	{ href: '/generate', label: 'Generate' },
-	{ href: '/review', label: 'Review' },
+	{ href: routes.studio.root, label: 'Overview' },
+	{ href: routes.studio.template, label: 'Templates' },
+	{ href: routes.studio.generate, label: 'Generate' },
+	{ href: routes.studio.review, label: 'Review' },
 ] as const
 
 const headerNavigationItemVariants = cva(
@@ -107,31 +109,39 @@ export function HeaderCenter({
 	onActiveMenuChange: (value: string) => void
 }) {
 	const pathname = usePathname()
+	const router = useRouter()
 	const navigationGroups = [
 		{
-			active: pathname === '/guideline' || pathname.startsWith('/guideline/'),
+			active: pathname === routes.guideline || pathname.startsWith(`${routes.guideline}/`),
 			description: '브랜드의 원칙과 제작 기준을 탐색합니다.',
 			label: 'Guideline',
 			links: [
-				{ active: pathname === '/guideline', href: '/guideline', label: 'Overview' },
+				{
+					active: pathname === routes.guideline,
+					href: routes.guideline,
+					label: 'Overview',
+				},
 				...guidelineChapters.map((chapter) => ({
 					active: pathname === chapter.href || pathname.startsWith(`${chapter.href}/`),
 					href: chapter.href,
 					label: chapter.title,
 				})),
 			],
+			href: routes.guideline,
 			value: 'guideline',
 		},
 		{
-			active: STUDIO_LINKS.some(
-				({ href }) => pathname === href || pathname.startsWith(`${href}/`),
-			),
+			active:
+				pathname === routes.studio.root || pathname.startsWith(`${routes.studio.root}/`),
 			description: '브랜드 자산을 활용해 결과물을 제작하고 검수합니다.',
 			label: 'Studio',
 			links: STUDIO_LINKS.map((item) => ({
-				active: pathname === item.href || pathname.startsWith(`${item.href}/`),
+				active:
+					pathname === item.href ||
+					(item.href !== routes.studio.root && pathname.startsWith(`${item.href}/`)),
 				...item,
 			})),
+			href: routes.studio.root,
 			value: 'studio',
 		},
 	]
@@ -153,6 +163,7 @@ export function HeaderCenter({
 										headerNavigationItemVariants({ state: 'open' }),
 										group.active && 'text-foreground opacity-100',
 									)}
+									onClick={() => router.push(group.href)}
 								>
 									{group.label}
 								</NavigationMenuTrigger>
@@ -176,7 +187,7 @@ export function HeaderCenter({
 									headerNavigationItemVariants(),
 								)}
 							>
-								<Link href="/admin" rel="noreferrer" target="_blank">
+								<Link href={routes.admin} rel="noreferrer" target="_blank">
 									Admin↗
 								</Link>
 							</NavigationMenuLink>

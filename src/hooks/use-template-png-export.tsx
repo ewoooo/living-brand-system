@@ -6,7 +6,7 @@ import { TemplateRenderer, type TemplateSlotValue } from '@/components/template-
 import type { JsonTemplate } from '@/types/json-template'
 
 /**
- * 템플릿을 원본 크기 PNG로 내려받는 공유 훅 (/create·챗 첨부가 함께 쓴다).
+ * 템플릿을 원본 크기 PNG로 내려받는 공유 훅 (Studio Template·챗 첨부가 함께 쓴다).
  * 내보내는 동안에만 화면 밖에 원본 크기 렌더를 마운트해 캡처한다 —
  * 상시 마운트로 인한 DOM·이미지 메모리 점유를 피한다. exportNode를 소비 컴포넌트 JSX에 포함해야 한다.
  */

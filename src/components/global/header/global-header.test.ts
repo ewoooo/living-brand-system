@@ -1,7 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { createElement } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { GlobalHeader } from './global-header'
+
+let pathname = ''
+const push = vi.fn()
 
 vi.stubGlobal(
 	'ResizeObserver',
@@ -13,7 +16,8 @@ vi.stubGlobal(
 )
 
 vi.mock('next/navigation', () => ({
-	usePathname: () => '/guideline/foundations',
+	usePathname: () => pathname,
+	useRouter: () => ({ push }),
 }))
 
 vi.mock('@/components/global/header/header-section-tail', () => ({
@@ -25,6 +29,13 @@ vi.mock('@/components/ui/sidebar', () => ({
 }))
 
 describe('GlobalHeader', () => {
+	beforeEach(() => {
+		pathname = '/guideline/foundations'
+		push.mockReset()
+	})
+
+	afterEach(cleanup)
+
 	it('Guideline과 Studio를 같은 메가 메뉴 형식으로 표시한다', () => {
 		render(
 			createElement(GlobalHeader, {
@@ -61,6 +72,7 @@ describe('GlobalHeader', () => {
 		expect(adminLink.className).not.toMatch(fontWeightClass)
 
 		fireEvent.click(guidelineTrigger)
+		expect(push).toHaveBeenLastCalledWith('/guideline')
 		const guidelineContent = screen
 			.getByText('브랜드의 원칙과 제작 기준을 탐색합니다.')
 			.closest('[data-slot="navigation-menu-content"]')
@@ -74,12 +86,38 @@ describe('GlobalHeader', () => {
 		)
 
 		fireEvent.click(studioTrigger)
+		expect(push).toHaveBeenLastCalledWith('/studio')
 		expect(screen.getByText('브랜드 자산을 활용해 결과물을 제작하고 검수합니다.')).toBeVisible()
-		expect(screen.getByRole('link', { name: 'Templates' })).toHaveAttribute('href', '/create')
-		expect(screen.getByRole('link', { name: 'Generate' })).toHaveAttribute('href', '/generate')
-		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute('href', '/review')
+		expect(screen.getByRole('link', { name: 'Templates' })).toHaveAttribute(
+			'href',
+			'/studio/template',
+		)
+		expect(screen.getByRole('link', { name: 'Generate' })).toHaveAttribute(
+			'href',
+			'/studio/generate',
+		)
+		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute(
+			'href',
+			'/studio/review',
+		)
 
 		fireEvent.click(screen.getByRole('button', { name: '메뉴 닫기' }))
 		expect(screen.queryByRole('button', { name: '메뉴 닫기' })).not.toBeInTheDocument()
+	})
+
+	it('Studio 하위 화면에서는 Overview와 현재 화면을 동시에 활성화하지 않는다', () => {
+		pathname = '/studio/generate'
+
+		render(createElement(GlobalHeader, { guidelineChapters: [] }))
+		fireEvent.click(screen.getByRole('button', { name: 'Studio' }))
+
+		const studioContent = screen
+			.getByText('브랜드 자산을 활용해 결과물을 제작하고 검수합니다.')
+			.closest('[data-slot="navigation-menu-content"]')
+		const overview = studioContent?.querySelector('a[href="/studio"]')
+		const generate = studioContent?.querySelector('a[href="/studio/generate"]')
+
+		expect(overview).not.toHaveAttribute('aria-current')
+		expect(generate).toHaveAttribute('aria-current', 'page')
 	})
 })

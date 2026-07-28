@@ -3,24 +3,26 @@ import Link from 'next/link'
 
 import { Typography } from '@/components/ui/typography'
 import { getGuidelineMetadata } from '@/features/guideline/services/get-guideline-metadata.service'
+import { routes } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 
 const FOOTER_LINK_GROUPS = [
 	{
 		label: 'Guideline',
-		links: [{ href: '/guideline', label: 'Overview' }],
+		links: [{ href: routes.guideline, label: 'Overview' }],
 	},
 	{
 		label: 'Studio',
 		links: [
-			{ href: '/create', label: 'Templates' },
-			{ href: '/generate', label: 'Generate' },
-			{ href: '/review', label: 'Review' },
+			{ href: routes.studio.root, label: 'Overview' },
+			{ href: routes.studio.template, label: 'Templates' },
+			{ href: routes.studio.generate, label: 'Generate' },
+			{ href: routes.studio.review, label: 'Review' },
 		],
 	},
 	{
 		label: 'System',
-		links: [{ href: '/admin', label: 'Admin ↗' }],
+		links: [{ href: routes.admin, label: 'Admin ↗' }],
 	},
 ] as const
 
