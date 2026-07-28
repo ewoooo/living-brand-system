@@ -58,24 +58,31 @@ import { cn } from '@/lib/utils'
 const badgeVariants = cva('inline-flex items-center …', {
 	variants: {
 		variant: {
-			default: 'bg-primary text-primary-foreground …',
-			outline: 'border-border bg-input/20 text-foreground …',
+			outline: 'border-foreground bg-transparent text-foreground …',
+			tint: 'border-primary/40 bg-primary/10 text-foreground …',
+			muted: 'bg-muted text-muted-foreground …',
+			highlight: 'bg-primary text-primary-foreground …',
+		},
+		shape: {
+			sharp: 'rounded-none',
+			rounded: 'rounded-sm',
+			pill: 'rounded-full …',
 		},
 	},
-	defaultVariants: { variant: 'default' },
+	defaultVariants: { variant: 'muted', shape: 'pill' },
 })
 
-function Badge({ className, variant = 'default', asChild = false, ...props }:
+function Badge({ className, variant = 'muted', shape = 'pill', asChild = false, ...props }:
 	React.ComponentProps<'span'> & VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
 	const Comp = asChild ? Slot.Root : 'span'
-	return <Comp data-slot="badge" data-variant={variant}
-		className={cn(badgeVariants({ variant }), className)} {...props} />
+	return <Comp data-slot="badge" data-variant={variant} data-shape={shape}
+		className={cn(badgeVariants({ variant, shape }), className)} {...props} />
 }
 
 export { Badge, badgeVariants }
 ```
 
-`badge.tsx`에서 그대로 가져오는 계약: variant 정의는 `cva`의 `variants`에, 기본값은 `defaultVariants`에 둡니다. 루트에 `data-slot`을 붙이고, variant 상태는 `data-variant`로 노출합니다. 다형 렌더링은 `asChild` + `radix-ui`의 `Slot`으로 하고, 별도 `as` prop을 새로 만들지 않습니다.
+`badge.tsx`에서 그대로 가져오는 계약: 색은 `variant`, 모서리는 `shape`로 분리하고 각 정의와 기본값은 `cva`에 둡니다. 루트에 `data-slot`을 붙이고 상태는 `data-variant`와 `data-shape`로 노출합니다. 아이콘에는 위치에 따라 `data-icon="inline-start" | "inline-end"`, 아이콘 전용 Badge에는 `data-icon="only"`와 Badge의 `aria-label`을 함께 씁니다. 다형 렌더링은 `asChild` + `radix-ui`의 `Slot`으로 하고, 별도 `as` prop을 새로 만들지 않습니다.
 
 ### 크기 분기형 컴포넌트
 

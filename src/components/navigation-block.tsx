@@ -56,7 +56,7 @@ export function NavigationBlock({
 			href={href}
 			className={navigationBlockVariants({ ratio, variant })}
 		>
-			<div>
+			<hgroup>
 				<Typography
 					as={variant === 'hero' ? 'span' : 'h3'}
 					size="2xl"
@@ -76,7 +76,7 @@ export function NavigationBlock({
 						{description}
 					</Typography>
 				)}
-			</div>
+			</hgroup>
 			{hasFooter && (
 				<div className="mt-auto flex items-center pt-6">
 					{icon}

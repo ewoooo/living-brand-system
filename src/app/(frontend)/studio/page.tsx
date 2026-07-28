@@ -13,7 +13,28 @@ export default async function StudioPage() {
 	return (
 		<SectionLayout nav={<StudioSideNavigation navigation={navigation} />}>
 			<GuidelineContentFrame>
-				<PageHeader eyebrow="Studio" title="Studio" />
+				<section className="flex flex-col gap-4">
+					<PageHeader title="Create What You Want" />
+					<div className="grid grid-cols-[2fr_1fr]">
+						<article>New Templates</article>
+						<article className="aspect-square">Quickstart</article>
+					</div>
+				</section>
+				<section>
+					<PageHeader title="Images" />
+					<div className="grid grid-cols-3">
+						<article>HD Illustration</article>
+						<article className="aspect-square">HD Gradient</article>
+						<article className="aspect-square">HD Gradient</article>
+					</div>
+				</section>
+				<section className="flex flex-col gap-4">
+					<PageHeader title="Assets" />
+					<div className="grid grid-cols-[2fr_1fr]">
+						<article>New Templates</article>
+						<article className="aspect-square">Quickstart</article>
+					</div>
+				</section>
 			</GuidelineContentFrame>
 		</SectionLayout>
 	)
