@@ -35,15 +35,15 @@ export function StudioSideNavigation() {
 								<SidebarMenuButton
 									asChild
 									isActive={active}
-									className="justify-center xl:justify-start"
+									className="justify-center xl:justify-between"
 								>
 									<Link
 										href={href}
 										aria-current={active ? 'page' : undefined}
 										title={label}
 									>
-										<Icon aria-hidden data-icon="inline-start" />
 										<span className="sr-only xl:not-sr-only">{label}</span>
+										<Icon aria-hidden data-icon="inline-end" />
 									</Link>
 								</SidebarMenuButton>
 							</SidebarMenuItem>

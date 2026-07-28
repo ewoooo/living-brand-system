@@ -40,7 +40,7 @@ describe('StudioSideNavigation', () => {
 			'page',
 		)
 		expect(screen.getByRole('link', { name: 'Studio' })).not.toHaveAttribute('aria-current')
-		expect(container.querySelectorAll('[data-icon="inline-start"]')).toHaveLength(5)
+		expect(container.querySelectorAll('[data-icon="inline-end"]')).toHaveLength(5)
 		expect(screen.getAllByRole('listitem')).toHaveLength(5)
 	})
 })
