@@ -41,6 +41,7 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 | highlight gradient | 강조 배경과 전경 토큰, `bg-highlight` 유틸 | `src/app/(frontend)/theme.css` |
 | radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl` 4단 파생(`lg`는 뿌리값, `sm`/`md`/`xl`은 calc) | `theme.css:56-59`, `theme.css:63` |
 | 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(Essenflux) | `theme.css:20-22` |
+| 최소 글자 크기 | `--text-xs`가 12px 아래로 축소되지 않도록 제한 | `theme.css` |
 | 루트 크기 | 화면 폭에 따른 `rem` 기준 크기 | `src/app/(frontend)/styles.css`의 `html`과 media query |
 | 타이포 리듬 | `.typeset` 블록의 크기·행간·흐름(shadcn/typeset) | `src/app/(frontend)/typeset.css` |
 | base body / scrollbar / import 순서 | `body` 기본, `scrollbar-none` 유틸, CSS `@import` 체인 | `src/app/(frontend)/styles.css:1-30` |
