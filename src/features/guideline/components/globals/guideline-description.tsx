@@ -28,19 +28,19 @@ export function GuidelineDescription({
 
 function OnboardDescription({ description }: { description: Description }) {
 	return (
-		<DescriptionContent description={description} className="font-body font-normal text-base" />
+		<DescriptionContent description={description} className="font-body font-normal text-xl" />
 	)
 }
 
 function ChapterDescription({ description }: { description: Description }) {
 	return (
-		<DescriptionContent description={description} className="font-body font-normal text-base" />
+		<DescriptionContent description={description} className="font-body font-normal text-xl" />
 	)
 }
 
 function SectionDescription({ description }: { description: Description }) {
 	return (
-		<DescriptionContent description={description} className="font-body font-normal text-base" />
+		<DescriptionContent description={description} className="font-body font-normal text-xl" />
 	)
 }
 

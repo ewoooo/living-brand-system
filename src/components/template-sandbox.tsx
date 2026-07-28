@@ -142,7 +142,7 @@ export function TemplateSandbox({
 			<div className="flex w-full flex-col gap-3 md:w-72">
 				{textSlots.map((s) => (
 					<div key={s.id} className="flex flex-col gap-1">
-						<label htmlFor={`slot-${s.id}`} className="text-muted-foreground text-xs">
+						<label htmlFor={`slot-${s.id}`} className="text-muted-foreground text-sm">
 							{s.slotLabel ?? s.id}
 						</label>
 						<Textarea

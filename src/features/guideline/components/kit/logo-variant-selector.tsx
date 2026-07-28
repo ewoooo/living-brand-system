@@ -82,10 +82,7 @@ export function LogoVariantSelector({
 					))}
 				</div>
 
-				<p
-					className="truncate font-mono text-[11px] text-muted-foreground"
-					title={active.file}
-				>
+				<p className="truncate font-mono text-xs text-muted-foreground" title={active.file}>
 					{active.file}
 				</p>
 			</div>

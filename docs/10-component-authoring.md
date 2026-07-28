@@ -116,6 +116,8 @@ function Card({ className, size = 'default', ...props }:
 
 className과 style에는 시맨틱 토큰만 씁니다(닫힌 토큰 규칙 전문은 `docs/09-design-system.md` §4). 생 색·생 팔레트 클래스·동적 클래스는 금지입니다. 아래 ❌ 행 중 file:line이 붙은 것은 저장소에 실제로 남아 있는 위반이고, file:line이 없는 행(예: `@hugeicons/*`)은 정책 참조입니다. 새 코드는 ✅를 따릅니다.
 
+글자 크기는 `docs/09` §6의 고정 유틸리티 단계만 사용합니다. `clamp()`·`vw`·반응형 `text-*`·임의 글자 크기는 추가하지 않습니다. 크기 variant는 패딩과 높이를 바꿀 수 있지만, 일반 컨트롤은 `text-sm`/`size-4`, 큰 컨트롤은 `text-base`/`size-5` 조합을 유지합니다.
+
 | ✅ Do | ❌ Don't | repo 실측 |
 | --- | --- | --- |
 | `border-border` | `border border-neutral-200` | `callout-block.tsx:33` |
@@ -243,6 +245,7 @@ PR을 올리기 전 자기 점검용입니다.
 - [ ] 색·폰트·로고를 props로 받는다. 하드코딩은 essenherb default뿐이다.
 - [ ] 색·전경색은 저장하지 않고 `@/lib/color`로 런타임 파생한다.
 - [ ] 상태를 색만으로 구분하지 않는다. 심볼 + 텍스트를 함께 쓴다.
+- [ ] 글자 크기는 `docs/09` §6의 고정 유틸리티 단계만 사용한다.
 - [ ] focus-visible ring, 키보드 조작, label 연결이 있다.
 - [ ] 순수 조합 컴포넌트에 `use client`를 붙이지 않았다.
 - [ ] 비자명 로직에 co-located `*.test.ts` 하나가 있다. one-liner엔 없다.

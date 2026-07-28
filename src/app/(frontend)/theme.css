@@ -133,7 +133,7 @@
 .typeset-lbs {
 	--typeset-font-body: var(--font-body);
 	--typeset-font-heading: var(--font-body);
-	--typeset-size: 15px;
+	--typeset-size: 0.875rem;
 	--typeset-leading: 1.75;
 	--typeset-flow: 1.25em;
 }

@@ -59,7 +59,7 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 					<div key={slot.nodeId} className="flex flex-col gap-1">
 						<label
 							htmlFor={`slot-${slot.nodeId}`}
-							className="font-body text-xs font-normal text-muted-foreground"
+							className="font-body text-sm font-normal text-muted-foreground"
 						>
 							{slot.input.label ?? slot.name}
 						</label>
@@ -74,7 +74,7 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 					</div>
 				))}
 				{slots.length === 0 && (
-					<p className="font-body text-xs font-normal text-muted-foreground">
+					<p className="font-body text-sm font-normal text-muted-foreground">
 						이 템플릿에는 편집 가능한 슬롯이 없습니다.
 					</p>
 				)}
@@ -82,7 +82,7 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 					{isExporting ? '내보내는 중...' : 'PNG로 내보내기'}
 				</Button>
 				{exportError && (
-					<p className="font-body text-xs font-normal text-destructive">{exportError}</p>
+					<p className="font-body text-sm font-normal text-destructive">{exportError}</p>
 				)}
 			</div>
 

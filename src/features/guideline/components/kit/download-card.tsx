@@ -44,7 +44,7 @@ export function DownloadCard({
 			</div>
 			<span
 				aria-hidden
-				className="flex size-9 shrink-0 items-center justify-center rounded-full bg-fill-muted font-body font-normal text-lg text-foreground transition-colors group-hover:bg-background"
+				className="flex size-9 shrink-0 items-center justify-center rounded-full bg-fill-muted font-body font-normal text-xl text-foreground transition-colors group-hover:bg-background"
 			>
 				↓
 			</span>

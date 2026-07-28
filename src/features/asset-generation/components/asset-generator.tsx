@@ -43,7 +43,7 @@ export function AssetGenerator({ template }: { template: PublishedJsonTemplate }
 					<div key={element.id} className="flex flex-col gap-1">
 						<label
 							htmlFor={`slot-${element.id}`}
-							className="font-body text-xs font-normal text-muted-foreground"
+							className="font-body text-sm font-normal text-muted-foreground"
 						>
 							{element.slotLabel ?? element.id}
 						</label>
@@ -70,7 +70,7 @@ export function AssetGenerator({ template }: { template: PublishedJsonTemplate }
 					</div>
 				))}
 				{slots.length === 0 && (
-					<p className="font-body text-xs font-normal text-muted-foreground">
+					<p className="font-body text-sm font-normal text-muted-foreground">
 						이 템플릿에는 편집 가능한 슬롯이 없습니다.
 					</p>
 				)}
@@ -78,7 +78,7 @@ export function AssetGenerator({ template }: { template: PublishedJsonTemplate }
 					{isExporting ? '내보내는 중...' : 'PNG로 내보내기'}
 				</Button>
 				{exportError && (
-					<p className="font-body text-xs font-normal text-destructive">{exportError}</p>
+					<p className="font-body text-sm font-normal text-destructive">{exportError}</p>
 				)}
 			</div>
 

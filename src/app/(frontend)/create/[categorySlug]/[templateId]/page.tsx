@@ -26,7 +26,7 @@ export default async function CreateTemplatePage({
 
 	return (
 		<article>
-			<Typography as="h1" className="mb-6" family="title" size="3xl">
+			<Typography as="h1" className="mb-6" family="title" size="5xl">
 				{template.name}
 			</Typography>
 			{renderTemplateBody(template)}

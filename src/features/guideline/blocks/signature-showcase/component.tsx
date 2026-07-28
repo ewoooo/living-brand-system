@@ -5,7 +5,7 @@ type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type SignatureShowcase = Extract<GuidelineBlock, { blockType: 'signatureShowcase' }>
 
 // 브랜드 시그니처/태그라인을 대형 디스플레이 타입으로 전시. 각 문구는 Tile 위에
-// clamp 큰 글씨로 렌더하고, label(캡션)·note(부연)를 함께 보여준다. 캡쳐가 아니라 실제 웹폰트 조각.
+// 큰 글씨로 렌더하고, label(캡션)·note(부연)를 함께 보여준다. 캡쳐가 아니라 실제 웹폰트 조각.
 export function SignatureShowcaseBlock({ block }: { block: SignatureShowcase }) {
 	return (
 		<GuidelineBlockFrame layout="padded">
@@ -20,7 +20,7 @@ export function SignatureShowcaseBlock({ block }: { block: SignatureShowcase }) 
 								{signature.label}
 							</figcaption>
 						)}
-						<p className="mt-4 break-keep text-foreground leading-[1.05] [font-size:clamp(1.75rem,4.5vw,3rem)]">
+						<p className="mt-4 break-keep text-5xl text-foreground leading-[1.05]">
 							{signature.phrase}
 						</p>
 						{signature.note && (

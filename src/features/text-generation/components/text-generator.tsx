@@ -104,7 +104,7 @@ export function TextGenerator() {
 								<button
 									type="button"
 									onClick={() => copy(text, i)}
-									className="shrink-0 text-muted-foreground text-xs underline"
+									className="shrink-0 text-sm text-muted-foreground underline"
 								>
 									{copied === i ? '복사됨' : '복사'}
 								</button>

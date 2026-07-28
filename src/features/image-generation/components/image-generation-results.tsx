@@ -73,7 +73,7 @@ export function ImageGenerationResults({
 									href={src}
 									target="_blank"
 									rel="noreferrer"
-									className="font-body text-xs font-normal text-muted-foreground underline"
+									className="font-body text-sm font-normal text-muted-foreground underline"
 								>
 									원본 보기
 								</a>

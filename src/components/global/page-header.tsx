@@ -21,11 +21,15 @@ export function PageHeader({
 						{eyebrow}
 					</Typography>
 				)}
-				<Typography as="h1" family="title" size="4xl">
+				<Typography as="h1" family="title" size="5xl">
 					{title}
 				</Typography>
 			</div>
-			{description && <Typography tone="muted">{description}</Typography>}
+			{description && (
+				<Typography size="xl" tone="muted">
+					{description}
+				</Typography>
+			)}
 		</header>
 	)
 }
