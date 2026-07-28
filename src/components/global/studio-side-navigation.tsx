@@ -46,10 +46,10 @@ export function StudioSideNavigation({
 				)}
 			</SideNavGroup>
 			<SideNavGroup title="Generate" titleHref={routes.studio.generate}>
+				<SideNavItem label="Image" href={routes.studio.generate} />
 				{imageProfiles.map((profile) => (
 					<SideNavItem key={profile.id} label={profile.name} href={profile.href} />
 				))}
-				<SideNavItem label="Text" href={routes.studio.generateText} />
 			</SideNavGroup>
 			<SideNavGroup title="Review" titleHref={routes.studio.review} />
 		</SideNav>

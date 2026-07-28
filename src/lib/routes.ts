@@ -5,7 +5,6 @@ export const routes = {
 	studio: {
 		generate: '/studio/generate',
 		generateImage: '/studio/generate#image',
-		generateText: '/studio/generate#text',
 		review: '/studio/review',
 		root: '/studio',
 		template: '/studio/template',

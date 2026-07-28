@@ -63,6 +63,10 @@ describe('StudioSideNavigation', () => {
 			'href',
 			'/studio/generate',
 		)
+		expect(screen.getByRole('link', { name: 'Image' })).toHaveAttribute(
+			'href',
+			'/studio/generate',
+		)
 		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute(
 			'href',
 			'/studio/review',
@@ -76,5 +80,6 @@ describe('StudioSideNavigation', () => {
 			'href',
 			'/studio/generate/illustration',
 		)
+		expect(screen.queryByRole('link', { name: 'Text' })).toBeNull()
 	})
 })

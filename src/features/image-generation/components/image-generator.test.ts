@@ -31,10 +31,10 @@ describe('ImageGenerator', () => {
 			}),
 		)
 
-		fireEvent.change(screen.getByLabelText('만들 이미지 설명'), {
+		fireEvent.change(screen.getByLabelText('프롬프트'), {
 			target: { value: '파란 세럼병' },
 		})
-		fireEvent.click(screen.getByRole('button', { name: '생성' }))
+		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 
 		expect(mocks.generate).toHaveBeenCalledWith({
 			count: 2,
@@ -55,5 +55,19 @@ describe('ImageGenerator', () => {
 		)
 
 		expect(screen.getByLabelText('프로파일')).toHaveValue('7')
+	})
+
+	it('빈 캔버스의 예시를 프롬프트에 반영한다', () => {
+		render(createElement(ImageGenerator, { profiles: [] }))
+
+		fireEvent.click(
+			screen.getByRole('button', {
+				name: '신제품을 위한 깨끗한 스튜디오 제품 이미지',
+			}),
+		)
+
+		expect(screen.getByLabelText('프롬프트')).toHaveValue(
+			'신제품을 위한 깨끗한 스튜디오 제품 이미지',
+		)
 	})
 })
