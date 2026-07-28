@@ -15,14 +15,15 @@ import { getContrastingForeground, hexToRgb } from '@/lib/color'
 type Swatch = { id: string; name: string; hex: string; pantone?: string }
 
 // main 열: 에센허브 레드(fill) + white + black. multi의 red-3와 별개 칩(id 구분).
-const MAIN: Swatch[] = [
+// export: 미니 팔레트 피커(mini-palette)가 같은 essenherb 색 데이터를 재사용한다.
+export const MAIN: Swatch[] = [
 	{ id: 'main-red', name: 'Essenherb Red', hex: '#EA5343', pantone: 'Warm Red C' },
 	{ id: 'main-white', name: 'White', hex: '#FFFFFF' },
 	{ id: 'main-black', name: 'Black', hex: '#000000' },
 ]
 
 // 계열별 행. essenherb 원본 팔레트 값(HEX·Pantone). 그레이는 Pantone 없음.
-const MULTI: Swatch[][] = [
+export const MULTI: Swatch[][] = [
 	[
 		{ id: 'red-1', name: 'Red 1', hex: '#FFF0EB', pantone: '705C' },
 		{ id: 'red-2', name: 'Red 2', hex: '#FFB4AA', pantone: '169C' },

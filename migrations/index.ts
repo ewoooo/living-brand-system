@@ -3,6 +3,7 @@ import * as migration_20260723_074435_add_stem_clearspace_and_logo_viewer_blocks
 import * as migration_20260723_082743_logo_viewer_topics from './20260723_082743_logo_viewer_topics';
 import * as migration_20260723_085557_logo_viewer_real_height from './20260723_085557_logo_viewer_real_height';
 import * as migration_20260724_005136_logo_group_viewer from './20260724_005136_logo_group_viewer';
+import * as migration_20260724_074150_add_color_pairing_block from './20260724_074150_add_color_pairing_block';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20260724_005136_logo_group_viewer.up,
     down: migration_20260724_005136_logo_group_viewer.down,
-    name: '20260724_005136_logo_group_viewer'
+    name: '20260724_005136_logo_group_viewer',
+  },
+  {
+    up: migration_20260724_074150_add_color_pairing_block.up,
+    down: migration_20260724_074150_add_color_pairing_block.down,
+    name: '20260724_074150_add_color_pairing_block'
   },
 ];

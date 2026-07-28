@@ -116,5 +116,7 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 			return evidence.title ?? 'Logo viewer'
 		case 'logoGroupViewer':
 			return evidence.title ?? 'Logo group viewer'
+		case 'colorPairing':
+			return evidence.title ?? 'Color pairing'
 	}
 }

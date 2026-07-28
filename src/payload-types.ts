@@ -250,6 +250,7 @@ export interface GuidelineDocument {
         | TypeScaleBlock
         | LayoutGridBlock
         | GlyphGridBlock
+        | ColorPairingBlock
         | IconGridBlock
         | ImageGridBlock
         | LogoGroupViewerBlock
@@ -805,6 +806,24 @@ export interface GlyphGridBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'glyphGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingBlock".
+ */
+export interface ColorPairingBlock {
+  title?: string | null;
+  /**
+   * 페어링 방식입니다. 방식별 병용 규칙이 적용됩니다.
+   */
+  system: 'tone-in-tone' | 'tone-on-tone' | 'mono-tone';
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPairing';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1986,6 +2005,7 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         typeScale?: T | TypeScaleBlockSelect<T>;
         layoutGrid?: T | LayoutGridBlockSelect<T>;
         glyphGrid?: T | GlyphGridBlockSelect<T>;
+        colorPairing?: T | ColorPairingBlockSelect<T>;
         iconGrid?: T | IconGridBlockSelect<T>;
         imageGrid?: T | ImageGridBlockSelect<T>;
         logoGroupViewer?: T | LogoGroupViewerBlockSelect<T>;
@@ -2219,6 +2239,17 @@ export interface LayoutGridBlockSelect<T extends boolean = true> {
 export interface GlyphGridBlockSelect<T extends boolean = true> {
   title?: T;
   typeface?: T;
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingBlock_select".
+ */
+export interface ColorPairingBlockSelect<T extends boolean = true> {
+  title?: T;
+  system?: T;
   rules?: T;
   id?: T;
   blockName?: T;
