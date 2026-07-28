@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils'
 
 const STUDIO_LINKS = [
 	{ href: routes.studio.root, label: 'Overview' },
+	{ href: routes.studio.examples, label: 'Examples' },
 	{ href: routes.studio.template, label: 'Templates' },
 	{ href: routes.studio.generate, label: 'Generate' },
 	{ href: routes.studio.review, label: 'Review' },
