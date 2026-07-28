@@ -101,9 +101,9 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|from|to|via)-(?:neutral|gray|z
 | 페이지·챕터 제목 | `text-5xl` |
 | 최상위 H1 | `text-6xl` |
 
-14px 텍스트와 함께 쓰는 아이콘은 `size-4`, 16px 텍스트와 함께 쓰는 아이콘은 `size-5`를 기본으로 합니다. 컴포넌트마다 `clamp()`·`vw`·반응형 `text-*`·임의 글자 크기를 선언하지 않습니다.
+14px 텍스트와 함께 쓰는 아이콘은 `size-4`, 16px 텍스트와 함께 쓰는 아이콘은 `size-5`를 기본으로 합니다. 일반 컴포넌트에는 `clamp()`·`vw`·반응형 `text-*`·임의 글자 크기를 선언하지 않습니다.
 
-템플릿 캔버스와 `TypeScale`·`TypeSpecimen`이 데이터로 받은 글자 크기는 UI 타이포그래피가 아니므로 예외입니다. `GlyphGrid`나 장식용 워드마크처럼 내용을 크게 전시하는 경우에도 viewport 계산식 대신 `text-9xl` 같은 고정 유틸리티를 사용합니다. 클래스 주입이 불가능한 `.typeset` 내부 생성 HTML은 `typeset.css`에서 같은 고정 단계만 직접 선언합니다.
+메인 히어로의 제목·버전 표기와 푸터 `LBS`는 화면 비율에 맞춘 lockup을 유지해야 하므로 유일한 viewport 반응형 예외이며 기존 `clamp()` 크기를 사용합니다. 템플릿 캔버스와 `TypeScale`·`TypeSpecimen`이 데이터로 받은 글자 크기도 UI 타이포그래피가 아니므로 예외입니다. 그 밖의 `GlyphGrid` 같은 대형 표본은 viewport 계산식 대신 `text-9xl` 같은 고정 유틸리티를 사용합니다. 클래스 주입이 불가능한 `.typeset` 내부 생성 HTML은 `typeset.css`에서 같은 고정 단계만 직접 선언합니다.
 
 현재 상태를 정직하게 기술합니다.
 
