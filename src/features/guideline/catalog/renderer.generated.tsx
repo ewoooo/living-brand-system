@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import CalloutComponent from '../blocks/callout/component'
 import CarouselComponent from '../blocks/carousel/component'
 import ColorPairingComponent from '../blocks/color-pairing/component'
+import ColorPairingRecommendationComponent from '../blocks/color-pairing-recommendation/component'
 import ColorPaletteComponent from '../blocks/color-palette/component'
 import ContentColumnsComponent from '../blocks/content-columns/component'
 import DoDontComponent from '../blocks/do-dont/component'
@@ -41,6 +42,7 @@ export const guidelineBlockRenderers = {
 	layoutGrid: (block) => <LayoutGridComponent block={block} />,
 	glyphGrid: (block) => <GlyphGridComponent block={block} />,
 	colorPairing: (block) => <ColorPairingComponent block={block} />,
+	colorPairingRecommendation: (block) => <ColorPairingRecommendationComponent block={block} />,
 	iconGrid: (block) => <IconGridComponent block={block} />,
 	imageGrid: (block) => <ImageGridComponent block={block} />,
 	logoGroupViewer: (block) => <LogoGroupViewerComponent block={block} />,

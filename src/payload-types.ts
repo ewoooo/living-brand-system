@@ -251,6 +251,7 @@ export interface GuidelineDocument {
         | LayoutGridBlock
         | GlyphGridBlock
         | ColorPairingBlock
+        | ColorPairingRecommendationBlock
         | IconGridBlock
         | ImageGridBlock
         | LogoGroupViewerBlock
@@ -824,6 +825,24 @@ export interface ColorPairingBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'colorPairing';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingRecommendationBlock".
+ */
+export interface ColorPairingRecommendationBlock {
+  title?: string | null;
+  /**
+   * 추천 그리드 버전입니다. Light=밝은 배경, Dark=어두운 배경.
+   */
+  variant: 'light' | 'dark';
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPairingRecommendation';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2006,6 +2025,7 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         layoutGrid?: T | LayoutGridBlockSelect<T>;
         glyphGrid?: T | GlyphGridBlockSelect<T>;
         colorPairing?: T | ColorPairingBlockSelect<T>;
+        colorPairingRecommendation?: T | ColorPairingRecommendationBlockSelect<T>;
         iconGrid?: T | IconGridBlockSelect<T>;
         imageGrid?: T | ImageGridBlockSelect<T>;
         logoGroupViewer?: T | LogoGroupViewerBlockSelect<T>;
@@ -2250,6 +2270,17 @@ export interface GlyphGridBlockSelect<T extends boolean = true> {
 export interface ColorPairingBlockSelect<T extends boolean = true> {
   title?: T;
   system?: T;
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingRecommendationBlock_select".
+ */
+export interface ColorPairingRecommendationBlockSelect<T extends boolean = true> {
+  title?: T;
+  variant?: T;
   rules?: T;
   id?: T;
   blockName?: T;
