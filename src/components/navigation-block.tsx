@@ -7,13 +7,13 @@ import { Typography } from '@/components/ui/typography'
 import { cn } from '@/lib/utils'
 
 const navigationBlockVariants = cva(
-	'group flex h-full w-full flex-col p-6 outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset',
+	'group flex h-full w-full flex-col p-6 outline-none border transition-all focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset',
 	{
 		variants: {
 			variant: {
 				hero: 'bg-foreground text-background hover:opacity-60',
-				onboard: 'border-border border-r border-b bg-background hover:bg-accent',
-				section: 'border-border border-r border-b bg-background hover:bg-accent',
+				onboard: 'border-border bg-background hover:bg-accent',
+				section: 'border-border bg-background hover:bg-accent',
 			},
 		},
 	},

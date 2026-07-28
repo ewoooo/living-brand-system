@@ -12,7 +12,7 @@ export default async function GeneratePage() {
 
 	return (
 		<GuidelineContentFrame className="flex flex-col gap-12 py-10">
-			<PageHeader eyebrow="생성하기" title="생성" />
+			<PageHeader title="생성" />
 			<div id="image" className="scroll-mt-8">
 				<ImageGenerator profiles={imageProfiles} />
 			</div>

@@ -49,7 +49,7 @@ export default async function StudioPage() {
 					</div>
 				</section>
 				<section>
-					<PageHeader title="Assets" />
+					<PageHeader title="Assets" tip="Browse reusable assets for brand production." />
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<NavigationBlock
 							variant="section"
@@ -66,7 +66,10 @@ export default async function StudioPage() {
 					</div>
 				</section>
 				<section>
-					<PageHeader title="Templates" />
+					<PageHeader
+						title="Templates"
+						tip="Browse reusable assets for brand production."
+					/>
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-[2fr_1fr]">
 						<NavigationBlock
 							variant="section"
