@@ -15,7 +15,8 @@ function cellImage(cell: Cell | undefined): ApplicationImage | null {
 	return cell?.image != null && typeof cell.image === 'object' ? cell.image : null
 }
 
-// 셀 비율은 블록 단위로 하나만 정한다: 고정 비율 / 수동(폭·높이) / 첫 이미지 비율.
+// 셀 비율은 블록 단위로 하나만 정한다: 고정 비율 / 수동(폭·높이) / 셀 01(첫 셀) 원본 비율.
+// 'original'·'firstImage'는 모두 첫 셀 이미지의 원본 비율(width/height)을 그리드 전체에 적용한다.
 function resolveRatio(
 	block: ImageGrid,
 	cells: (Cell | undefined)[],
@@ -29,7 +30,7 @@ function resolveRatio(
 			}
 		return { className: 'aspect-square' }
 	}
-	if (ratio === 'firstImage') {
+	if (ratio === 'original' || ratio === 'firstImage') {
 		const first = cells.map(cellImage).find(Boolean)
 		if (first?.width && first?.height)
 			return { className: '', style: { aspectRatio: `${first.width} / ${first.height}` } }
