@@ -162,7 +162,7 @@ export function StudioExamples() {
 								>
 									<Icon aria-hidden className="size-5" />
 								</div>
-								<h2 className="mt-5 text-lg leading-tight font-medium tracking-[-0.02em]">
+								<h2 className="mt-5 text-xl leading-tight font-medium tracking-[-0.02em]">
 									{example.title}
 								</h2>
 								<p className="mt-2 text-xs/relaxed text-muted-foreground">
@@ -172,7 +172,7 @@ export function StudioExamples() {
 									<Badge
 										shape="sharp"
 										variant="highlight"
-										className="h-4 text-[10px]"
+										className="h-5 text-xs"
 									>
 										{example.category}
 									</Badge>
@@ -181,7 +181,7 @@ export function StudioExamples() {
 											key={tag}
 											shape="sharp"
 											variant="outline"
-											className="h-4 text-[10px]"
+											className="h-5 text-xs"
 										>
 											{tag}
 										</Badge>

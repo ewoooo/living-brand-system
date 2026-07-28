@@ -190,7 +190,7 @@ export function ColorPairingView({
 
 				{obj === 'text' && (
 					<div className="max-w-[80%] text-center" style={{ color: fg }}>
-						<p className="font-bold text-3xl tracking-tight">{wordmark}</p>
+						<p className="font-bold text-2xl tracking-tight">{wordmark}</p>
 						<p className="mt-2 font-body text-sm leading-relaxed">
 							자연에서 찾은 피부 본연의 힘. 혹독한 환경에서도 살아남는 허브의 회복력을
 							담아 매일의 루틴을 건강하게. Vegan skincare, rooted in nature.

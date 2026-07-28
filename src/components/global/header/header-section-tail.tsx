@@ -48,7 +48,7 @@ function HeaderGuidelineSearch({ chapters }: { chapters: GuidelineSearchChapter[
 				className="py-4 pl-3 min-h-6"
 				onClick={() => setOpen((current) => !current)}
 			>
-				<span className="pr-6 text-xs font-normal text-muted-foreground">Search</span>
+				<span className="pr-6 text-sm font-normal text-muted-foreground">Search</span>
 				<KbdGroup>
 					<Kbd className="border border-border bg-transparent">⌘</Kbd>
 					<Kbd className="border border-border bg-transparent">K</Kbd>

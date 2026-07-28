@@ -34,13 +34,13 @@ export function GenerateTextField({
 	return (
 		<div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
 			<input
+				className="text-sm"
 				value={prompt}
 				onChange={(e) => setPrompt(e.target.value)}
 				placeholder="AI 프롬프트 (예: 봄 세일 제목)"
 				style={{
 					flex: 1,
 					minWidth: 0,
-					fontSize: 12,
 					padding: '4px 8px',
 					border: '1px solid var(--border, #d4d4d4)',
 					borderRadius: 6,
@@ -49,11 +49,11 @@ export function GenerateTextField({
 				}}
 			/>
 			<button
+				className="text-sm"
 				type="button"
 				onClick={run}
 				disabled={loading}
 				style={{
-					fontSize: 12,
 					padding: '4px 10px',
 					border: '1px solid var(--border, #d4d4d4)',
 					borderRadius: 6,

@@ -61,7 +61,7 @@ function HeaderNavigationContent({
 				<Typography as="p" size="xs" weight="medium">
 					{label}
 				</Typography>
-				<Typography as="p" size="lg" weight="normal">
+				<Typography as="p" size="xl" weight="normal">
 					{description}
 				</Typography>
 			</div>

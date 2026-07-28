@@ -88,7 +88,7 @@ export async function HeroFooter() {
 					src="/logos/logo.svg"
 					width={708}
 				/>*/}
-				<span className="whitespace-nowrap font-body text-[clamp(9rem,32vw,38rem)] leading-[0.68] font-semibold tracking-[-0.08em]">
+				<span className="whitespace-nowrap font-body text-9xl leading-[0.68] font-semibold tracking-[-0.08em]">
 					LBS
 				</span>
 			</div>

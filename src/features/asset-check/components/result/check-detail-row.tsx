@@ -88,7 +88,7 @@ function CheckExecutionDetails({ check, outcome }: { check: Check; outcome?: Che
 	const reasonCode = outcome?.rawResult.reasonCode
 
 	return (
-		<dl className="grid gap-1.5 rounded-md border px-3 py-2 font-body text-xs font-normal">
+		<dl className="grid gap-1.5 rounded-md border px-3 py-2 font-body text-sm font-normal">
 			<CheckFact
 				label="체커"
 				value={
@@ -140,7 +140,7 @@ function HeuristicObservations({ observations }: { observations: AiCheckResult['
 
 	return (
 		<div className="overflow-x-auto rounded-sm border border-border">
-			<Table className="font-body text-xs font-normal">
+			<Table className="font-body text-sm font-normal">
 				<TableCaption className="sr-only">결과 비교</TableCaption>
 				<TableHeader className="border-b bg-fill-muted/50 text-muted-foreground">
 					<TableRow>
@@ -185,7 +185,7 @@ function CheckFacts({ facts }: { facts: CheckResult['rawResult']['facts'] }) {
 	if (!facts || Object.keys(facts).length === 0) return null
 
 	return (
-		<dl className="grid gap-1.5 rounded-md bg-muted px-3 py-2 font-body text-xs font-normal">
+		<dl className="grid gap-1.5 rounded-md bg-muted px-3 py-2 font-body text-sm font-normal">
 			{typeof facts.foreground === 'string' && (
 				<CheckFact label="전경색" value={facts.foreground} />
 			)}

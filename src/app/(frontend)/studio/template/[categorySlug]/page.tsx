@@ -18,7 +18,7 @@ export default async function CreateCategoryPage({
 
 	return (
 		<article>
-			<Typography as="h1" family="title" size="3xl">
+			<Typography as="h1" family="title" size="5xl">
 				{category.title}
 			</Typography>
 			{category.templates.length > 0 ? (
