@@ -39,7 +39,7 @@ function TreeItems({
 						>
 							{node.title}
 						</Link>
-						<Badge variant={node._status === 'published' ? 'default' : 'secondary'}>
+						<Badge variant={node._status === 'published' ? 'highlight' : 'muted'}>
 							{node._status === 'published' ? '발행됨' : '초안'}
 						</Badge>
 						<Badge variant="outline">순서 {node.displayOrder}</Badge>

@@ -1,4 +1,3 @@
-import { ArrowRight } from '@carbon/icons-react'
 import { cva } from 'class-variance-authority'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
@@ -7,63 +6,60 @@ import { Typography } from '@/components/ui/typography'
 import { cn } from '@/lib/utils'
 
 const navigationBlockVariants = cva(
-	'group w-full p-6 outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset',
+	'group flex h-full w-full flex-col border outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset',
 	{
 		variants: {
 			variant: {
-				hero: 'block bg-foreground text-background hover:opacity-60',
-				onboard:
-					'flex aspect-[2/1] flex-col border-border border-r border-b bg-background hover:bg-accent',
-				section:
-					'flex aspect-[2/1] flex-col border-border border-r border-b bg-background hover:bg-accent',
-			},
-			ratio: {
-				square: 'aspect-square',
-				portrait: 'aspect-square md:h-full md:aspect-auto',
-				landscape: 'aspect-square md:aspect-[2/1]',
-				fill: 'h-full',
+				xl: 'bg-foreground p-6 text-background hover:opacity-60',
+				lg: 'border-border bg-background p-6 hover:bg-accent',
+				md: 'border-border bg-background p-4 hover:bg-accent',
+				sm: 'border-border bg-background p-3 hover:bg-accent',
 			},
 		},
 	},
 )
+
+const labelSize = {
+	xl: '6xl',
+	lg: '4xl',
+	md: '2xl',
+	sm: 'lg',
+} as const
+
+const tailPadding = {
+	xl: 'pt-6',
+	lg: 'pt-6',
+	md: 'pt-4',
+	sm: 'pt-3',
+} as const
 
 export function NavigationBlock({
 	variant,
 	href,
 	label,
 	description,
-	showChevron = variant !== 'hero',
-	icon,
+	tail,
 	className,
-	ratio = variant === 'hero' ? 'square' : undefined,
 }: {
-	variant: 'hero' | 'onboard' | 'section'
+	variant: 'xl' | 'lg' | 'md' | 'sm'
 	href: string
 	label: string
 	description?: string | null
-	showChevron?: boolean
-	icon?: ReactNode
+	tail?: ReactNode
 	className?: string
-	ratio?: 'square' | 'portrait' | 'landscape' | 'fill'
 }) {
-	const hasFooter = icon !== undefined || showChevron
-
 	return (
 		<Link
 			data-slot="navigation-block"
 			data-variant={variant}
-			data-ratio={ratio}
 			href={href}
-			className={navigationBlockVariants({ ratio, variant })}
+			className={cn(navigationBlockVariants({ variant }), className)}
 		>
-			<div>
+			<hgroup>
 				<Typography
-					as={variant === 'hero' ? 'span' : 'h3'}
-					size="2xl"
-					className={cn(
-						variant === 'hero' && 'text-6xl leading-none font-light',
-						className,
-					)}
+					as={variant === 'xl' ? 'span' : 'h3'}
+					size={labelSize[variant]}
+					className={cn(variant === 'xl' && 'leading-none font-light')}
 				>
 					{label}
 				</Typography>
@@ -71,17 +67,14 @@ export function NavigationBlock({
 					<Typography
 						size="sm"
 						tone="muted"
-						className={cn('mt-3', variant === 'hero' && 'text-background/70')}
+						className={cn('mt-3', variant === 'xl' && 'text-background/70')}
 					>
 						{description}
 					</Typography>
 				)}
-			</div>
-			{hasFooter && (
-				<div className="mt-auto flex items-center pt-6">
-					{icon}
-					{showChevron && <ArrowRight aria-hidden className="ml-auto" size={24} />}
-				</div>
+			</hgroup>
+			{tail && (
+				<div className={cn('mt-auto flex items-center', tailPadding[variant])}>{tail}</div>
 			)}
 		</Link>
 	)

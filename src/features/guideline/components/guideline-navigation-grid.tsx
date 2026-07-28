@@ -1,3 +1,4 @@
+import { ArrowRight } from '@carbon/icons-react'
 import type { ReactNode } from 'react'
 import { NavigationBlock } from '@/components/navigation-block'
 
@@ -12,10 +13,10 @@ export function GuidelineNavigationGrid({
 		href: string
 		icon?: ReactNode
 	}[]
-	variant: 'onboard' | 'section'
+	variant: 'lg' | 'md'
 }) {
 	return (
-		<section className="grid grid-cols-2 border-border border-t border-l">
+		<section className="grid grid-cols-1 border-border border-t border-l md:grid-cols-2">
 			{items.map((item) => (
 				<NavigationBlock
 					key={item.id}
@@ -23,7 +24,13 @@ export function GuidelineNavigationGrid({
 					href={item.href}
 					label={item.title}
 					description={item.description}
-					icon={item.icon}
+					tail={
+						<>
+							{item.icon}
+							<ArrowRight aria-hidden className="ml-auto" size={24} />
+						</>
+					}
+					className="md:aspect-[2/1]"
 				/>
 			))}
 		</section>

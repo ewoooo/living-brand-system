@@ -4,17 +4,17 @@ import { HeroMainSection } from '@/components/hero/hero-main-section'
 
 export function HeroSection() {
 	return (
-		<section aria-label="hero" className="relative">
-			{/* Grid lines — decorative */}
-			<GridLines col={12} gap={16} padding={16} />
-
-			{/* Main content — vertically centered */}
-			<div className="grid grid-cols-[minmax(0,1fr)] grid-rows-auto gap-4 p-4">
+		<>
+			<section aria-label="hero" className="relative h-full p-4">
+				<GridLines col={12} gap={16} padding={16} />
 				<HeroMainSection />
+			</section>
+			<div className="relative min-h-full p-4 md:h-full">
+				<GridLines col={12} gap={16} padding={16} />
 				<HeroFeatureSection />
-				<HeroFooter />
 			</div>
-		</section>
+			<HeroFooter />
+		</>
 	)
 }
 

@@ -75,7 +75,8 @@ function CheckButton() {
 			<Button
 				type="button"
 				size="lg"
-				className="pointer-events-auto min-w-44 rounded-full p-6 px-12"
+				shape="pill"
+				className="pointer-events-auto min-w-44 p-6 px-12"
 				disabled={!selectedId || selected?.status === 'running'}
 				onClick={runCheck}
 			>

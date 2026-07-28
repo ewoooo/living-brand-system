@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { routes } from '@/lib/routes'
 
 export function HeaderHead({ className }: { className?: string }) {
 	const LOGO_SIZE = 16
@@ -9,7 +10,7 @@ export function HeaderHead({ className }: { className?: string }) {
 			<Link
 				aria-label="메인으로 이동"
 				className="flex size-8 shrink-0 items-center justify-center rounded-md transition-opacity hover:opacity-60"
-				href="/"
+				href={routes.home}
 			>
 				<Image
 					alt=""

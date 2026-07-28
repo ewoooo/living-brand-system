@@ -4,7 +4,7 @@ import type { ImageProfile } from '@/payload-types'
 
 export async function listPublishedImageProfiles(
 	user: unknown,
-): Promise<{ id: number; name: string }[]> {
+): Promise<{ id: number; name: string; slug: string | null }[]> {
 	const payload = await getPayload({ config })
 	const profiles = await payload.find({
 		collection: 'image-profiles',
@@ -12,13 +12,13 @@ export async function listPublishedImageProfiles(
 		draft: false,
 		limit: 100,
 		overrideAccess: false,
-		select: { name: true },
-		sort: 'name',
+		select: { name: true, slug: true },
+		sort: 'displayOrder',
 		user: user as never,
 		where: { _status: { equals: 'published' } },
 	})
 
-	return profiles.docs.map(({ id, name }) => ({ id, name }))
+	return profiles.docs.map(({ id, name, slug }) => ({ id, name, slug: slug || null }))
 }
 
 /** Creator와 Agent가 사용할 수 있는 published 프로파일만 사용자 권한으로 조회한다. */

@@ -38,13 +38,17 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 | --- | --- | --- |
 | color 원시값 | `:root`(라이트), `.dark`(다크)의 원시 색 정의 | `src/app/(frontend)/theme.css:62-95`, `theme.css:97-129` |
 | color 유틸 매핑 | 원시값 → `@theme inline`의 `--color-*` 유틸 토큰 | `theme.css:24-54` |
+| highlight gradient | 강조 배경과 전경 토큰, `bg-highlight` 유틸 | `src/app/(frontend)/theme.css` |
 | radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl` 4단 파생(`lg`는 뿌리값, `sm`/`md`/`xl`은 calc) | `theme.css:56-59`, `theme.css:63` |
 | 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(Essenflux) | `theme.css:20-22` |
+| 최소 글자 크기 | `--text-xs`가 12px 아래로 축소되지 않도록 제한 | `theme.css` |
 | 루트 크기 | 화면 폭에 따른 `rem` 기준 크기 | `src/app/(frontend)/styles.css`의 `html`과 media query |
 | 타이포 리듬 | `.typeset` 블록의 크기·행간·흐름(shadcn/typeset) | `src/app/(frontend)/typeset.css` |
 | base body / scrollbar / import 순서 | `body` 기본, `scrollbar-none` 유틸, CSS `@import` 체인 | `src/app/(frontend)/styles.css:1-30` |
 
 `--radius`는 뿌리 토큰 하나이고 나머지 4단은 그것을 기준으로 파생합니다(`--radius-lg`는 뿌리값 그대로, `sm`/`md`/`xl`은 `calc()`; `theme.css:56-59`). radius를 조정할 때는 파생값이 아니라 뿌리 하나만 바꿉니다.
+
+`highlight`는 Figma 강조 스타일을 옮긴 그라디언트입니다. `bg-highlight`가 가로 밴드를 2배로 늘려 왼쪽에서 오른쪽으로 반복 이동시키고, 모션 감소 설정에서는 정지합니다. Badge와 Button은 `bg-highlight`와 `text-highlight-foreground`를 함께 사용하며, 개별 컴포넌트에서 gradient stop을 다시 선언하지 않습니다.
 
 ## 4. 닫힌 토큰 규칙
 
