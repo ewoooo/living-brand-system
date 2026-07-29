@@ -1,4 +1,4 @@
-import { StudioExamples } from '@/components/studio/studio-examples'
+import { StudioExamples } from '@/components/studio/examples/studio-examples'
 import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
 
 export default function StudioExamplesPage() {

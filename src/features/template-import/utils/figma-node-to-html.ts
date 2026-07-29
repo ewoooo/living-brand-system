@@ -1,8 +1,4 @@
-import type {
-	FigmaEffect,
-	FigmaNode,
-	FigmaPaint,
-} from '@/features/template-import/repositories/figma.rest.repository'
+import type { FigmaEffect, FigmaNode, FigmaPaint } from '@/features/template-import/types'
 
 /**
  * Figma REST 노드 트리 → inline-style HTML 문자열.

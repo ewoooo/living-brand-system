@@ -1,30 +1,37 @@
+import { ContentHeading } from '@/components/shared/content-heading'
 import type { GuidelineDocument } from '@/payload-types'
 import { GuidelineImage } from './guideline-image'
 import type { GuidelineVariant } from './guideline-variant'
 
-// 최상위 헤더(section/chapter/onboard). page 헤더는 GuidelinePageHeading으로 분리됨.
-// CSS만으로 collapsing sticky: 위 spacer(스크롤하면 사라짐) + 아래 sticky 타이틀 바.
-// scrollTop을 읽지 않으므로 높이↔스크롤 피드백 루프(진동)가 없고, JS 리스너가 없어 렉도 없다.
-// sticky 바는 부모(section=article, chapter/onboard=wrapper) 전체에서 고정된다.
-// 이미지 있으면 기존 16:9 히어로 유지.
+const HEADER_STYLE = {
+	onboard: { level: 1, size: '6xl', weight: 'bold' },
+	chapter: { level: 1, size: '6xl', weight: 'semibold' },
+	section: { level: 2, size: '5xl', weight: 'medium' },
+	page: { level: 3, size: '2xl', weight: 'semibold' },
+	block: { level: 3, size: 'base', weight: 'semibold' },
+} as const
+
 export function GuidelineHeader({
 	title,
 	variant = 'chapter',
+	className,
 }: {
 	title?: string | null
 	variant?: GuidelineVariant
 	className?: string
 }) {
 	if (!title) return null
+	const style = HEADER_STYLE[variant]
 
 	return (
-		<header>
-			{variant === 'onboard' && <OnboardHeader title={title} />}
-			{variant === 'chapter' && <ChapterHeader title={title} />}
-			{variant === 'section' && <SectionHeader title={title} />}
-			{variant === 'page' && <PageHeader title={title} />}
-			{variant === 'block' && <BlockHeader title={title} />}
-		</header>
+		<ContentHeading
+			title={title}
+			level={style.level}
+			size={style.size}
+			weight={style.weight}
+			className={className}
+			titleClassName={variant === 'block' ? undefined : 'leading-none tracking-tight'}
+		/>
 	)
 }
 
@@ -40,38 +47,4 @@ export function GuidelineHeaderImage({ image }: { image?: GuidelineDocument['hea
 			imgClassName="size-full object-cover"
 		/>
 	)
-}
-
-function OnboardHeader({ title }: { title: string }) {
-	return (
-		<h1 className="font-bold text-6xl text-foreground leading-none tracking-tight">{title}</h1>
-	)
-}
-
-function ChapterHeader({ title }: { title: string }) {
-	return (
-		<h1 className="font-semibold text-6xl text-foreground leading-none tracking-tight">
-			{title}
-		</h1>
-	)
-}
-
-function SectionHeader({ title }: { title: string }) {
-	return (
-		<h2 className="font-medium text-5xl text-foreground leading-none tracking-tight">
-			{title}
-		</h2>
-	)
-}
-
-function PageHeader({ title }: { title: string }) {
-	return (
-		<h3 className="font-semibold text-2xl text-foreground leading-none tracking-tight">
-			{title}
-		</h3>
-	)
-}
-
-function BlockHeader({ title }: { title: string }) {
-	return <h3 className="font-body text-base font-semibold">{title}</h3>
 }

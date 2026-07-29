@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
-import { runAiCheck } from '@/features/asset-check/repositories/ai-check.agent.repository'
+import { runAiCheck } from '@/features/asset-check/repositories/ai-check.ai.repository'
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
 import type { ImageContentFlags } from '@/features/asset-check/types'
 import { runHeuristicCheck, runImmediateCheck } from './run-check.service'
 
-vi.mock('@/features/asset-check/repositories/ai-check.agent.repository', () => ({
+vi.mock('@/features/asset-check/repositories/ai-check.ai.repository', () => ({
 	runAiCheck: vi.fn(),
 }))
 

@@ -1,13 +1,6 @@
 import { APIError, type CollectionConfig } from 'payload'
-import { publishImportedFigmaAssets } from '@/features/template-import/repositories/figma-imported-asset.payload.repository'
-import {
-	findTemplateDraftBlocker,
-	findTemplatePublishBlocker,
-} from '@/features/template-import/services/validate-template-publish.service'
-import {
-	inspectBaseTemplateHtml,
-	inspectDraftTemplateAssetRefs,
-} from '@/features/template-import/utils/validate-template-html'
+import { MAX_PRINT_PIXELS, PRINT_PPI_OPTIONS } from '@/features/template-export/print-policy'
+import { prepareTemplateSave } from '@/features/template-import/services/prepare-template-save.service'
 import { isManager, managerOrAdmin } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -27,44 +20,7 @@ export const Templates: CollectionConfig = {
 		// 발행 시에만 추가하고, draft의 staging 에셋은 manager/admin에게만 보인다 (docs/07).
 		beforeChange: [
 			async ({ data, originalDoc, req }) => {
-				const candidate = {
-					...originalDoc,
-					...data,
-				}
-				const draftBlocker = findTemplateDraftBlocker(candidate)
-				if (draftBlocker) throw new APIError(draftBlocker, 400)
-
-				// Draft는 구조 안전성까지만 검사한다. live published 문서의 부분 update는 다시 발행 검증한다.
-				const finalStatus = data?._status ?? originalDoc?._status
-				if (finalStatus !== 'published') return data
-
-				// baseHtml의 Figma import refs 중 최종 html에도 남은 draft만 승인한다.
-				// 같은 req를 전달하므로 뒤의 Template 검증/저장이 실패하면 에셋 승격도 함께 롤백된다.
-				const importedRefs =
-					typeof candidate.baseHtml === 'string'
-						? inspectBaseTemplateHtml(candidate.baseHtml).refs
-						: []
-				const renderedRefs =
-					typeof candidate.html === 'string'
-						? inspectDraftTemplateAssetRefs(candidate.html).refs
-						: []
-				await publishImportedFigmaAssets(
-					req,
-					importedRefs
-						.filter(
-							(imported) =>
-								imported.collection === 'application-images' &&
-								renderedRefs.some(
-									(rendered) =>
-										rendered.collection === imported.collection &&
-										rendered.assetId === imported.assetId &&
-										rendered.src === imported.src,
-								),
-						)
-						.map((ref) => ref.assetId),
-				)
-
-				const blocker = await findTemplatePublishBlocker(candidate, req)
+				const blocker = await prepareTemplateSave({ data, originalDoc, req })
 				if (blocker) throw new APIError(blocker, 400)
 
 				return data
@@ -99,21 +55,9 @@ export const Templates: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				components: {
-					Field: '/features/template-import/components/template-layers-field',
+					Field: '/components/admin/template/template-layers-field',
 				},
 			},
-		},
-		// 레거시 절대좌표 모델 — 폼에서 숨김(컬럼·기존 데이터 유지). 신규 템플릿은 html을 쓴다.
-		{ name: 'jsonTemplate', type: 'json', admin: { hidden: true } },
-		// 기능 코드(css/js) — manager가 코드를 쓰지 않으므로 폼에서 숨김(컬럼·샌드박스 읽기 유지).
-		{
-			name: 'code',
-			type: 'group',
-			admin: { hidden: true },
-			fields: [
-				{ name: 'css', type: 'code', admin: { language: 'css' } },
-				{ name: 'js', type: 'code', admin: { language: 'javascript' } },
-			],
 		},
 		// 출처 URL. 입력창은 사이드바의 Figma 가져오기 필드와 통합했으므로 폼에서 숨긴다(컬럼·값 유지).
 		{
@@ -150,6 +94,15 @@ export const Templates: CollectionConfig = {
 			],
 		},
 		{
+			name: 'printPpi',
+			type: 'select',
+			options: [...PRINT_PPI_OPTIONS],
+			admin: {
+				position: 'sidebar',
+				description: `설정하면 CMYK TIFF와 RGB 벡터 PDF가 활성화됩니다. 픽셀 크기는 유지되며 TIFF는 최대 ${MAX_PRINT_PIXELS.toLocaleString('en-US')}픽셀을 지원합니다.`,
+			},
+		},
+		{
 			name: 'category',
 			type: 'relationship',
 			relationTo: 'template-categories',
@@ -165,7 +118,7 @@ export const Templates: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				position: 'sidebar',
-				components: { Field: '/features/template-import/components/sidebar-divider' },
+				components: { Field: '/components/admin/template/sidebar-divider' },
 			},
 		},
 		{
@@ -201,7 +154,7 @@ export const Templates: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				position: 'sidebar',
-				components: { Field: '/features/template-import/components/sidebar-divider' },
+				components: { Field: '/components/admin/template/sidebar-divider' },
 			},
 		},
 		{
@@ -211,7 +164,7 @@ export const Templates: CollectionConfig = {
 			admin: {
 				position: 'sidebar',
 				components: {
-					Field: '/features/template-import/components/figma-html-import-field',
+					Field: '/components/admin/template/figma-html-import-field',
 				},
 			},
 		},
