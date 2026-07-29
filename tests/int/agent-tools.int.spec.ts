@@ -113,15 +113,29 @@ describe('agent tools', () => {
 			})
 		const tools = getAgentTools()
 
-		const result = await tools.loadSkill.execute?.({ name: 'copywriter-test' }, {
-			context: { user: { id: 1 } },
-		} as never)
+		const result = await tools.loadSkill.execute?.(
+			{
+				name: 'copywriter-test',
+				responseMode: 'action',
+				risk: 'high',
+				confidence: 90,
+			},
+			{
+				context: { user: { id: 1 } },
+			} as never,
+		)
 
 		expect(findSkill).toHaveBeenCalledWith({ id: 1 }, 'copywriter-test')
 		expect(result).toEqual({
 			description: 'Copywriting test skill.',
 			instructions: 'Rewrite campaign copy.',
 			name: 'copywriter-test',
+			responseMode: 'action',
+			risk: 'high',
+			confidence: 90,
+			model: 'opus-5.0',
+			toolScope: 'read',
+			reviewRequired: true,
 		})
 	})
 
