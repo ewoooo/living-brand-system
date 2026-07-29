@@ -163,7 +163,7 @@ function TemplateAttachmentFrame({
 				</AttachmentAction>
 			</AttachmentActions>
 			{exportError && (
-				<p className="px-1 font-body text-xs font-normal text-destructive">{exportError}</p>
+				<p className="px-1 font-body text-sm font-normal text-destructive">{exportError}</p>
 			)}
 		</Attachment>
 	)

@@ -21,9 +21,9 @@ const navigationBlockVariants = cva(
 
 const labelSize = {
 	xl: '6xl',
-	lg: '4xl',
+	lg: '5xl',
 	md: '2xl',
-	sm: 'lg',
+	sm: 'base',
 } as const
 
 const tailPadding = {

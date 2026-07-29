@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils'
 
 const STUDIO_LINKS = [
 	{ href: routes.studio.root, label: 'Overview' },
+	{ href: routes.studio.examples, label: 'Examples' },
 	{ href: routes.studio.template, label: 'Templates' },
 	{ href: routes.studio.generate, label: 'Generate' },
 	{ href: routes.studio.review, label: 'Review' },
@@ -60,7 +61,7 @@ function HeaderNavigationContent({
 				<Typography as="p" size="xs" weight="medium">
 					{label}
 				</Typography>
-				<Typography as="p" size="lg" weight="normal">
+				<Typography as="p" size="xl" weight="normal">
 					{description}
 				</Typography>
 			</div>

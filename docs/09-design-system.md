@@ -41,8 +41,7 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 | highlight gradient | 강조 배경과 전경 토큰, `bg-highlight` 유틸 | `src/app/(frontend)/theme.css` |
 | radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl` 4단 파생(`lg`는 뿌리값, `sm`/`md`/`xl`은 calc) | `theme.css:56-59`, `theme.css:63` |
 | 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(Essenflux) | `theme.css:20-22` |
-| 최소 글자 크기 | `--text-xs`가 12px 아래로 축소되지 않도록 제한 | `theme.css` |
-| 루트 크기 | 화면 폭에 따른 `rem` 기준 크기 | `src/app/(frontend)/styles.css`의 `html`과 media query |
+| 루트 크기 | 모든 화면에서 고정된 16px `rem` 기준 크기 | `src/app/(frontend)/styles.css`의 `html` |
 | 타이포 리듬 | `.typeset` 블록의 크기·행간·흐름(shadcn/typeset) | `src/app/(frontend)/typeset.css` |
 | base body / scrollbar / import 순서 | `body` 기본, `scrollbar-none` 유틸, CSS `@import` 체인 | `src/app/(frontend)/styles.css:1-30` |
 
@@ -90,7 +89,21 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|from|to|via)-(?:neutral|gray|z
 
 새 `H1`/`H2`/`Heading` 컴포넌트를 발명하지 않습니다. 텍스트 프리미티브는 `Typography`(`as`/`family`/`size`/`tone`/`weight`)를 재사용하고, 페이지 상위 조합은 `src/components/global`의 page-header에 둡니다.
 
-`rem`의 기준 크기는 `styles.css`의 `html` media query가 소유합니다. 컴포넌트마다 별도의 viewport 기반 폰트 크기를 선언하지 않고, 루트 크기 변화로 타이포그래피와 간격을 함께 조정합니다.
+`rem`의 기준 크기는 `styles.css`의 `html`이 16px로 고정합니다. 폰트 크기는 커스텀 토큰 없이 아래 Tailwind 유틸리티만 사용합니다.
+
+| 역할 | 유틸리티 |
+| --- | --- |
+| Badge·비필수 메타·캡션 | `text-xs` |
+| 본문·입력·일반 버튼·메뉴 | `text-sm` |
+| 큰 버튼·카드 제목 | `text-base` |
+| H1 설명·lead | `text-xl` |
+| 섹션·로컬 페이지 제목 | `text-2xl` |
+| 페이지·챕터 제목 | `text-5xl` |
+| 최상위 H1 | `text-6xl` |
+
+14px 텍스트와 함께 쓰는 아이콘은 `size-4`, 16px 텍스트와 함께 쓰는 아이콘은 `size-5`를 기본으로 합니다. 일반 컴포넌트에는 `clamp()`·`vw`·반응형 `text-*`·임의 글자 크기를 선언하지 않습니다.
+
+메인 히어로의 제목·버전 표기와 푸터 `LBS`는 화면 비율에 맞춘 lockup을 유지해야 하므로 유일한 viewport 반응형 예외이며 기존 `clamp()` 크기를 사용합니다. 템플릿 캔버스와 `TypeScale`·`TypeSpecimen`이 데이터로 받은 글자 크기도 UI 타이포그래피가 아니므로 예외입니다. 그 밖의 `GlyphGrid` 같은 대형 표본은 viewport 계산식 대신 `text-9xl` 같은 고정 유틸리티를 사용합니다. 클래스 주입이 불가능한 `.typeset` 내부 생성 HTML은 `typeset.css`에서 같은 고정 단계만 직접 선언합니다.
 
 현재 상태를 정직하게 기술합니다.
 

@@ -76,7 +76,6 @@ const TRIGGER_STYLE: CSSProperties = {
 	display: 'inline-flex',
 	alignItems: 'center',
 	gap: 4,
-	fontSize: 12,
 	padding: '4px 10px',
 	borderRadius: 4,
 	border: '1px solid var(--theme-elevation-150)',
@@ -131,7 +130,7 @@ function AiTextForm({ rule, onApply }: { rule?: string; onApply: (text: string) 
 
 	return (
 		<div style={{ width: 260, padding: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-			<span style={{ fontSize: 12, color: 'var(--theme-elevation-600)' }}>
+			<span className="text-sm" style={{ color: 'var(--theme-elevation-600)' }}>
 				AI 텍스트 생성
 			</span>
 			<Textarea
@@ -171,7 +170,7 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 
 	return (
 		<div style={{ width: 260, padding: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-			<span style={{ fontSize: 12, color: 'var(--theme-elevation-600)' }}>
+			<span className="text-sm" style={{ color: 'var(--theme-elevation-600)' }}>
 				AI 배경 이미지 생성
 			</span>
 			<Textarea
@@ -190,7 +189,6 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 // 슬롯 스펙 편집 폼 공통 필드 스타일.
 const SELECT_STYLE: CSSProperties = {
 	width: '100%',
-	fontSize: 13,
 	padding: 6,
 	borderRadius: 4,
 	border: '1px solid var(--theme-elevation-150)',
@@ -219,7 +217,7 @@ function SpecField({
 				gridColumn: span ? '1 / -1' : undefined,
 			}}
 		>
-			<label htmlFor={id} style={{ fontSize: 11, color: 'var(--theme-elevation-500)' }}>
+			<label className="text-sm" htmlFor={id} style={{ color: 'var(--theme-elevation-500)' }}>
 				{label}
 			</label>
 			{children}
@@ -274,6 +272,7 @@ function SlotSpecEditor({
 			</SpecField>
 			<SpecField id="slot-spec-format" label="형식">
 				<select
+					className="text-sm"
 					id="slot-spec-format"
 					value={input.inputFormat ?? 'free'}
 					onChange={(event) =>
@@ -418,7 +417,7 @@ export default function TemplateLayersField() {
 							/>
 						</div>
 					) : (
-						<span style={{ fontSize: 13, color: 'var(--theme-elevation-500)' }}>
+						<span className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
 							Figma에서 가져오면 여기에 표시됩니다.
 						</span>
 					)}
@@ -435,11 +434,11 @@ export default function TemplateLayersField() {
 						overflow: 'auto',
 					}}
 				>
-					<strong style={{ display: 'block', marginBottom: 6, fontSize: 13 }}>
+					<strong className="text-base" style={{ display: 'block', marginBottom: 6 }}>
 						레이어
 					</strong>
 					{layers.length === 0 && (
-						<p style={{ fontSize: 12, color: 'var(--theme-elevation-500)' }}>
+						<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
 							레이어 없음
 						</p>
 					)}
@@ -447,6 +446,7 @@ export default function TemplateLayersField() {
 						const isSelected = layer.id === selectedId
 						return (
 							<button
+								className="text-sm"
 								key={layer.id}
 								type="button"
 								onClick={() => setSelectedId(layer.id)}
@@ -462,7 +462,6 @@ export default function TemplateLayersField() {
 									paddingLeft: layer.depth * 14 + 4,
 									paddingTop: 2,
 									paddingBottom: 2,
-									fontSize: 13,
 									lineHeight: '22px',
 									background: isSelected
 										? 'var(--theme-elevation-100)'
@@ -473,9 +472,9 @@ export default function TemplateLayersField() {
 								}}
 							>
 								<span
+									className="text-xs"
 									style={{
 										flexShrink: 0,
-										fontSize: 11,
 										color: 'var(--theme-elevation-400)',
 										minWidth: 44,
 									}}
@@ -501,7 +500,7 @@ export default function TemplateLayersField() {
 
 			{/* 선택 레이어 값 편집 */}
 			{!selected && (
-				<p style={{ fontSize: 12, color: 'var(--theme-elevation-500)' }}>
+				<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
 					{hasHtml ? '레이어를 선택하면 값을 편집할 수 있습니다.' : ''}
 				</p>
 			)}
@@ -510,9 +509,9 @@ export default function TemplateLayersField() {
 				<div>
 					<label htmlFor="template-layer-text" style={{ display: 'block' }}>
 						<span
+							className="text-sm"
 							style={{
 								display: 'block',
-								fontSize: 12,
 								marginBottom: 4,
 								color: 'var(--theme-elevation-600)',
 							}}
@@ -532,7 +531,11 @@ export default function TemplateLayersField() {
 							verticalAlign="top"
 							horizontalAlign="left"
 							size="fit-content"
-							button={<span style={TRIGGER_STYLE}>✨ AI 생성</span>}
+							button={
+								<span className="text-sm" style={TRIGGER_STYLE}>
+									✨ AI 생성
+								</span>
+							}
 							render={({ close }) => (
 								<AiTextForm
 									rule={overrides[selected.id]?.input?.aiInstruction}
@@ -553,7 +556,10 @@ export default function TemplateLayersField() {
 								marginBottom: 6,
 							}}
 						>
-							<span style={{ fontSize: 12, color: 'var(--theme-elevation-600)' }}>
+							<span
+								className="text-sm"
+								style={{ color: 'var(--theme-elevation-600)' }}
+							>
 								입력 슬롯
 							</span>
 							<Button
@@ -578,7 +584,10 @@ export default function TemplateLayersField() {
 							>
 								{overrides[selected.id]?.input ? '🔓' : '🔒'}
 							</Button>
-							<span style={{ fontSize: 11, color: 'var(--theme-elevation-500)' }}>
+							<span
+								className="text-xs"
+								style={{ color: 'var(--theme-elevation-500)' }}
+							>
 								{overrides[selected.id]?.input ? '유저 화면에 열림' : '닫힘'}
 							</span>
 						</div>
@@ -595,9 +604,9 @@ export default function TemplateLayersField() {
 			{selected?.figmaType === 'FRAME' && (
 				<div>
 					<span
+						className="text-sm"
 						style={{
 							display: 'block',
-							fontSize: 12,
 							marginBottom: 4,
 							color: 'var(--theme-elevation-600)',
 						}}
@@ -610,7 +619,11 @@ export default function TemplateLayersField() {
 							verticalAlign="top"
 							horizontalAlign="left"
 							size="fit-content"
-							button={<span style={TRIGGER_STYLE}>✨ AI 생성</span>}
+							button={
+								<span className="text-sm" style={TRIGGER_STYLE}>
+									✨ AI 생성
+								</span>
+							}
 							render={({ close }) => (
 								<AiImageForm
 									onApply={(src) => {
@@ -636,7 +649,7 @@ export default function TemplateLayersField() {
 				!selected.isText &&
 				!selected.isVector &&
 				selected.figmaType !== 'FRAME' && (
-					<p style={{ fontSize: 12, color: 'var(--theme-elevation-500)' }}>
+					<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
 						{typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.
 					</p>
 				)}

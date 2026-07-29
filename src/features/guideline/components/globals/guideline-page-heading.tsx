@@ -8,7 +8,7 @@ export function GuidelinePageHeading({ title, label }: { title: string; label?: 
 					{label}
 				</p>
 			)}
-			<h2 className="font-title text-4xl text-foreground leading-none">{title}</h2>
+			<h2 className="font-title text-2xl text-foreground leading-none">{title}</h2>
 		</header>
 	)
 }

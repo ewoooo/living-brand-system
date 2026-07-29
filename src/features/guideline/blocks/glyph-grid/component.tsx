@@ -133,10 +133,9 @@ export function GlyphGridBody({ typeface }: { typeface: GlyphGridType['typeface'
 					) : (
 						<div className="flex size-full items-center justify-center">
 							<span
-								className="text-current"
+								className="text-9xl text-current"
 								style={{
 									fontFamily,
-									fontSize: 'clamp(11rem,34vw,26rem)',
 									lineHeight: 1,
 								}}
 							>
@@ -158,7 +157,7 @@ export function GlyphGridBody({ typeface }: { typeface: GlyphGridType['typeface'
 							onFocus={() => onGlyphActivate(ch)}
 							data-active={ch === active}
 							aria-label={`${ch} (${codepoint(ch)})`}
-							className="flex aspect-square items-center justify-center border-current/50 border-r border-b text-current text-4xl transition-colors hover:bg-current/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/30 data-[active=true]:bg-current/10"
+							className="flex aspect-square items-center justify-center border-current/50 border-r border-b text-5xl text-current transition-colors hover:bg-current/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/30 data-[active=true]:bg-current/10"
 							style={{ fontFamily }}
 						>
 							{ch}

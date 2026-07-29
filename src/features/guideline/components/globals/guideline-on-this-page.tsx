@@ -30,8 +30,8 @@ export function GuidelineOnThisPage({ pages }: { pages: TocPage[] }) {
 	if (pages.length < 2) return null
 
 	return (
-		<nav aria-label="이 페이지에서" className="font-body text-xs">
-			<p className="mb-3 font-medium text-[11px] text-current/60 uppercase tracking-wide">
+		<nav aria-label="이 페이지에서" className="font-body text-sm">
+			<p className="mb-3 font-medium text-xs text-current/60 uppercase tracking-wide">
 				On this page
 			</p>
 			<ul ref={listRef} className="relative ml-1 border-current/40 border-l">

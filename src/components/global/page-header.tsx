@@ -25,12 +25,16 @@ export function PageHeader({
 		<header className={cn('flex justify-between gap-4', className)}>
 			<div className="flex flex-col gap-1">
 				<div className="flex items-center gap-1">
-					<Typography as="h1" family="body" size="4xl">
+					<Typography as="h1" family="body" size="5xl">
 						{title}
 					</Typography>
 					{tip && <HeaderTip title={title} tip={tip} />}
 				</div>
-				{description && <Typography tone="muted">{description}</Typography>}
+				{description && (
+					<Typography size="xl" tone="muted">
+						{description}
+					</Typography>
+				)}
 			</div>
 			{tail}
 		</header>

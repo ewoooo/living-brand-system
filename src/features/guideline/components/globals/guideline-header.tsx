@@ -44,13 +44,13 @@ export function GuidelineHeaderImage({ image }: { image?: GuidelineDocument['hea
 
 function OnboardHeader({ title }: { title: string }) {
 	return (
-		<h1 className="font-bold text-8xl text-foreground leading-none tracking-tight">{title}</h1>
+		<h1 className="font-bold text-6xl text-foreground leading-none tracking-tight">{title}</h1>
 	)
 }
 
 function ChapterHeader({ title }: { title: string }) {
 	return (
-		<h1 className="font-semibold text-9xl text-foreground leading-none tracking-tight">
+		<h1 className="font-semibold text-6xl text-foreground leading-none tracking-tight">
 			{title}
 		</h1>
 	)
@@ -58,7 +58,7 @@ function ChapterHeader({ title }: { title: string }) {
 
 function SectionHeader({ title }: { title: string }) {
 	return (
-		<h2 className="font-medium text-8xl text-foreground leading-none tracking-tight">
+		<h2 className="font-medium text-5xl text-foreground leading-none tracking-tight">
 			{title}
 		</h2>
 	)
@@ -66,12 +66,12 @@ function SectionHeader({ title }: { title: string }) {
 
 function PageHeader({ title }: { title: string }) {
 	return (
-		<h3 className="font-semibold text-4xl text-foreground leading-none tracking-tight">
+		<h3 className="font-semibold text-2xl text-foreground leading-none tracking-tight">
 			{title}
 		</h3>
 	)
 }
 
 function BlockHeader({ title }: { title: string }) {
-	return <h3 className={`font-body text-sm font-semibold`}>{title}</h3>
+	return <h3 className="font-body text-base font-semibold">{title}</h3>
 }
