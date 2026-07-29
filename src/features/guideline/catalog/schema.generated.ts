@@ -1,6 +1,7 @@
 // 이 파일은 scripts/generate-guideline-block-catalogs.ts로 생성됩니다. 직접 수정하지 마세요.
 
 import type { Block } from 'payload'
+import BlockSchema from '../blocks/block/schema'
 import BlockSpikeSchema from '../blocks/block-spike/schema'
 import CalloutSchema from '../blocks/callout/schema'
 import CarouselSchema from '../blocks/carousel/schema'
@@ -40,6 +41,7 @@ export const guidelineBlockSchemas = {
 	typeScale: TypeScaleSchema,
 	layoutGrid: LayoutGridSchema,
 	glyphGrid: GlyphGridSchema,
+	block: BlockSchema,
 	blockSpike: BlockSpikeSchema,
 	colorPairing: ColorPairingSchema,
 	colorPairingRecommendation: ColorPairingRecommendationSchema,
