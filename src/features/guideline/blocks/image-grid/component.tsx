@@ -88,7 +88,7 @@ export function ImageGridBlock({ block }: { block: ImageGrid }) {
 
 export default ImageGridBlock
 
-function ImageGridCell({
+export function ImageGridCell({
 	cell,
 	boxClassName,
 	boxStyle,
