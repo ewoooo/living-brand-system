@@ -1,6 +1,6 @@
 import type React from 'react'
+import { ContentFrame } from '@/components/shared/content-frame'
 import { ContentHeading } from '@/components/shared/content-heading'
-import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
 
 /** Studio 도구의 제목과 작업 영역이 화면 높이를 공유하는 공통 페이지 프레임. */
 export function StudioWorkspacePage({
@@ -13,14 +13,14 @@ export function StudioWorkspacePage({
 	children: React.ReactNode
 }) {
 	return (
-		<GuidelineContentFrame
+		<ContentFrame
 			data-slot="studio-workspace-page"
 			variant="full"
 			className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] py-0"
 		>
 			<ContentHeading title={title} description={description} className="px-4 py-6 md:px-8" />
 			{children}
-		</GuidelineContentFrame>
+		</ContentFrame>
 	)
 }
 

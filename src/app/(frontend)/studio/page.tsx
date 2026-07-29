@@ -1,16 +1,16 @@
 import { ArrowRight } from '@carbon/icons-react'
 import { SectionLayout } from '@/components/global/section-layout'
-import { NavigationBlock } from '@/components/navigation/navigation-block'
+import { ContentFrame } from '@/components/shared/content-frame'
 import { ContentHeading } from '@/components/shared/content-heading'
+import { NavigationBlock } from '@/components/shared/navigation/navigation-block'
 import { StudioSideNavigation } from '@/components/studio/shared/studio-side-navigation'
-import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
 
 const navigationTail = <ArrowRight aria-hidden className="ml-auto" size={24} />
 
 export default function StudioPage() {
 	return (
 		<SectionLayout nav={<StudioSideNavigation />} mobileNavigation={false}>
-			<GuidelineContentFrame className="grid gap-16">
+			<ContentFrame className="grid gap-16">
 				<section>
 					<div className="grid grid-cols-1 gap-4">
 						<NavigationBlock
@@ -82,7 +82,7 @@ export default function StudioPage() {
 						/>
 					</div>
 				</section>
-			</GuidelineContentFrame>
+			</ContentFrame>
 		</SectionLayout>
 	)
 }

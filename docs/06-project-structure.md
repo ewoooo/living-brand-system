@@ -70,7 +70,7 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 | Route Handler | `src/app/**/route.ts` | HTTP 요청 검증과 Service 호출만 담당합니다. |
 | ShadCN UI | `src/components/ui` | registry 기반 컴포넌트 원형을 둡니다. |
 | 표현 컴포넌트 | `src/components/<surface>` | Home, Studio, Payload Admin처럼 실제 화면 표면을 기준으로 둡니다. |
-| 전역 공유 컴포넌트 | `src/components/shared`, `src/components/global`, `src/components/navigation` | 둘 이상의 화면 표면이 공유하는 UI, app shell, 공용 탐색 UI만 둡니다. |
+| 전역 공유 컴포넌트 | `src/components/shared`, `src/components/global` | 둘 이상의 화면 표면이 공유하는 UI와 공용 탐색 UI는 `shared`, app shell은 `global`에 둡니다. |
 | 화면 상태와 비즈니스 로직 | `src/features/*` | domain, hook, service, repository, util, type을 기능 안에 둡니다. 일반 React 컴포넌트는 두지 않습니다. |
 
 의존 방향은 `app → components → features`입니다. `features`는 `components`를 import하지 않습니다. Payload block은 schema, projection, renderer를 한 단위로 등록해야 하므로 `src/features/guideline/blocks/*/component.tsx`는 예외로 둡니다. 기존 `src/features/guideline/components`도 Guideline 분류를 별도로 정리하기 전까지의 한시적 예외입니다.
@@ -108,8 +108,8 @@ src/
     admin/
     global/
     home/
-    navigation/
     shared/
+      navigation/
     studio/
       shared/
     ui/

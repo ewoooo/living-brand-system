@@ -1,4 +1,4 @@
-import { NavigationBlock } from '@/components/navigation/navigation-block'
+import { NavigationBlock } from '@/components/shared/navigation/navigation-block'
 import { routes } from '@/lib/routes'
 
 export function HeroFeatureSection() {

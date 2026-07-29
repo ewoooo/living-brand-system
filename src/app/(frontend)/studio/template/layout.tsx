@@ -1,8 +1,8 @@
 import type React from 'react'
 import { SectionLayout } from '@/components/global/section-layout'
-import { PageNavigation } from '@/components/navigation/page-navigation'
+import { ContentFrame } from '@/components/shared/content-frame'
+import { PageNavigation } from '@/components/shared/navigation/page-navigation'
 import { StudioSideNavigation } from '@/components/studio/shared/studio-side-navigation'
-import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
 import { getCreateNavigation } from '@/features/template-create/services/get-create-navigation.service'
 import { routes } from '@/lib/routes'
 
@@ -31,7 +31,7 @@ export default async function CreateLayout({ children }: { children: React.React
 				/>
 			}
 		>
-			<GuidelineContentFrame className="py-10">{children}</GuidelineContentFrame>
+			<ContentFrame className="py-10">{children}</ContentFrame>
 		</SectionLayout>
 	)
 }

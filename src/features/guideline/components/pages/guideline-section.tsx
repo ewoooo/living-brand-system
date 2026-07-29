@@ -1,4 +1,4 @@
-import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
+import { ContentFrame } from '@/components/shared/content-frame'
 import type { GetGuidelineSectionOutput } from '../../services/get-guideline-section.service'
 import { GuidelineDescription } from '../globals/guideline-description'
 import { GuidelineHeader, GuidelineHeaderImage } from '../globals/guideline-header'
@@ -30,16 +30,16 @@ export function GuidelineSection({
 			{previewDocumentId !== undefined && <RefreshRouteOnSave />}
 			{previewedPage && <ScrollToPreviewDocument targetId={previewedPage.slug} />}
 
-			<GuidelineContentFrame>
+			<ContentFrame>
 				{/* Deprecated */}
 				<GuidelineHeaderImage image={section.headerImage} />
-			</GuidelineContentFrame>
+			</ContentFrame>
 
 			{/*Guideline Section*/}
 			<section className="flex flex-col gap-16" aria-label="guideline-section">
 				{/* Guideline Section */}
 				<section className="grid grid-rows-[auto_1fr] gap-8">
-					<GuidelineContentFrame>
+					<ContentFrame>
 						<hgroup className="grid grid-cols-2 gap-4">
 							<GuidelineHeader variant={variant} title={section.title} />
 							<GuidelineDescription
@@ -47,7 +47,7 @@ export function GuidelineSection({
 								description={section.description}
 							/>
 						</hgroup>
-					</GuidelineContentFrame>
+					</ContentFrame>
 					{/* Guideline Section Contents */}
 					<GuidelineBlocks
 						blocks={section.blocks}
