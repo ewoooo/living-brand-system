@@ -1,5 +1,5 @@
 import { env } from '@/env'
-import type { ImageSize } from '@/features/image-generation/image-size'
+import { IMAGE_SIZE_BY_PRESET, type ImageSize } from '@/features/image-generation/image-size'
 import { devGenerateImages } from '@/features/image-generation/repositories/dev-image-generation.rest.repository'
 import { generateBrandImages } from '@/features/image-generation/repositories/image-generation.ai.repository'
 import { findPublishedImageProfile } from '@/features/image-generation/repositories/image-profile.payload.repository'
@@ -66,12 +66,11 @@ export async function generateImageCandidates({
 		if (!profile) throw new ImageProfileNotFoundError()
 		const normalized = await normalizeImageProfilePrompt({
 			profilePrompt: profile.profilePrompt,
-			userPromptNormalization: profile.userPromptNormalization,
+			userPromptNormalization: profile.userPromptNormalization ?? [],
 			userPrompt: userInput,
 		})
 		prompt = JSON.stringify(normalized.finalPrompt)
-		// ponytail: 현재 프로파일은 모두 세로 제품컷이다. 다른 비율이 생길 때 프로파일 필드로 올린다.
-		size = '1024x1536'
+		size = IMAGE_SIZE_BY_PRESET[profile.outputSizePreset]
 		profileName = profile.name
 	}
 	let images: string[]

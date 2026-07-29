@@ -7,6 +7,7 @@ import * as migration_20260724_074150_add_color_pairing_block from './20260724_0
 import * as migration_20260728_023011_add_color_pairing_recommendation_block from './20260728_023011_add_color_pairing_recommendation_block';
 import * as migration_20260728_052054_studio_image_profile_routes from './20260728_052054_studio_image_profile_routes';
 import * as migration_20260728_060029_add_image_grid_description from './20260728_060029_add_image_grid_description';
+import * as migration_20260729_060548_technical_illustration_profile from './20260729_060548_technical_illustration_profile';
 
 export const migrations = [
   {
@@ -53,5 +54,10 @@ export const migrations = [
     up: migration_20260728_060029_add_image_grid_description.up,
     down: migration_20260728_060029_add_image_grid_description.down,
     name: '20260728_060029_add_image_grid_description',
+  },
+  {
+    up: migration_20260729_060548_technical_illustration_profile.up,
+    down: migration_20260729_060548_technical_illustration_profile.down,
+    name: '20260729_060548_technical_illustration_profile'
   },
 ];

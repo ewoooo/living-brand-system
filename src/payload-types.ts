@@ -1213,6 +1213,10 @@ export interface ImageProfile {
    */
   displayOrder: number;
   /**
+   * 이미지 공급자와 무관한 출력 크기 프리셋입니다.
+   */
+  outputSizePreset: 'square' | 'landscape' | 'portrait';
+  /**
    * 이미지 유형의 기본값입니다. 각 행은 최종 JSON의 주제와 프롬프트가 됩니다.
    */
   profilePrompt: {
@@ -1221,16 +1225,18 @@ export interface ImageProfile {
     id?: string | null;
   }[];
   /**
-   * AI가 유저 인풋을 각 주제의 프롬프트 후보 중 하나로 정규화합니다. 시스템 프롬프트와 같은 주제면 이 프롬프트가 우선합니다.
+   * 선택사항입니다. 행이 있으면 AI가 후보 중 하나로 정규화하고, 비어 있으면 유저 인풋 원문만 subject로 사용합니다.
    */
-  userPromptNormalization: {
-    key: string;
-    candidates: {
-      value: string;
-      id?: string | null;
-    }[];
-    id?: string | null;
-  }[];
+  userPromptNormalization?:
+    | {
+        key: string;
+        candidates: {
+          value: string;
+          id?: string | null;
+        }[];
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -2553,6 +2559,7 @@ export interface ImageProfilesSelect<T extends boolean = true> {
   generateSlug?: T;
   slug?: T;
   displayOrder?: T;
+  outputSizePreset?: T;
   profilePrompt?:
     | T
     | {
