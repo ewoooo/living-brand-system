@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import type { PrintPpi } from '../print-policy'
+import { exportTemplatePdf } from '../services/export-template-pdf.client'
 import {
 	downloadTemplateTiff,
 	TemplateTiffDownloadError,
 } from '../services/export-template-tiff.client'
-import { printTemplatePdf } from '../services/print-template-pdf.client'
 import { exportHtmlToPng, renderHtmlToPngBlob } from '../services/render-template-html.client'
 
 export type TemplateExportFormat = 'png' | 'tiff' | 'pdf'
@@ -51,7 +51,14 @@ export function useTemplateExport({
 					templateVersion,
 				})
 			} else if (format === 'pdf' && printPpi) {
-				await printTemplatePdf({ fileName, height, html, ppi: printPpi, width })
+				const png = await renderHtmlToPngBlob(html, '', width, height)
+				await exportTemplatePdf({
+					fileName,
+					height,
+					png,
+					ppi: printPpi,
+					width,
+				})
 			}
 		} catch (error) {
 			if (format === 'png') {
@@ -65,9 +72,7 @@ export function useTemplateExport({
 						: 'TIFF 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.',
 				)
 			} else {
-				setExportError(
-					'PDF 인쇄창을 열지 못했습니다. 브라우저의 인쇄 기능을 확인해 주세요.',
-				)
+				setExportError('PDF 파일을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.')
 			}
 		} finally {
 			setExporting(null)

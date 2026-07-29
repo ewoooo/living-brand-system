@@ -13,7 +13,7 @@ const PREVIEW_WIDTH = 480
 
 /**
  * Figma에서 가져온 published HTML의 열린 슬롯(input이 달린 텍스트 노드)을 편집해
- * 미리보기 그대로 PNG·운영자 정책의 TIFF 또는 RGB 벡터 PDF로 내보낸다. 서버 상태 변경은 없다 —
+ * 미리보기 그대로 PNG·운영자 정책의 TIFF 또는 RGB PDF로 내보낸다. 서버 상태 변경은 없다 —
  * 입력값은 로컬 state로만 합성한다.
  * 미리보기는 어드민 캔버스와 동일한 동일-문서 렌더 — iframe(opaque origin)은 벡터 mask의
  * CORS 로드를 깨뜨린다. 임포트 HTML은 스크립트 없는 inline-style이다.
@@ -89,7 +89,7 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 							disabled={exporting !== null}
 							variant="outline"
 						>
-							{exporting === 'pdf' ? '인쇄창 여는 중...' : 'RGB 벡터 PDF로 저장'}
+							{exporting === 'pdf' ? '내보내는 중...' : 'RGB PDF로 내보내기'}
 						</Button>
 						<p className="font-body text-xs font-normal text-muted-foreground">
 							{template.printPpi}ppi ·{' '}

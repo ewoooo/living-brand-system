@@ -144,10 +144,10 @@ function TemplateAttachmentFrame({
 				)}
 				{onExportPdf && (
 					<AttachmentAction
-						aria-label="RGB 벡터 PDF로 저장"
+						aria-label="RGB PDF로 내보내기"
 						disabled={isExporting}
 						onClick={onExportPdf}
-						title="RGB 벡터 PDF로 저장"
+						title="RGB PDF로 내보내기"
 					>
 						<DocumentPdf />
 					</AttachmentAction>

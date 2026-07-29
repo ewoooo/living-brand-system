@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { exportTemplatePdf } from '../services/export-template-pdf.client'
 import {
 	downloadTemplateTiff,
 	TemplateTiffDownloadError,
 } from '../services/export-template-tiff.client'
-import { printTemplatePdf } from '../services/print-template-pdf.client'
 import { exportHtmlToPng, renderHtmlToPngBlob } from '../services/render-template-html.client'
 import { useTemplateExport } from './use-template-export'
 
@@ -13,7 +13,7 @@ vi.mock('../services/export-template-tiff.client', () => ({
 	downloadTemplateTiff: vi.fn(),
 	TemplateTiffDownloadError: class extends Error {},
 }))
-vi.mock('../services/print-template-pdf.client', () => ({ printTemplatePdf: vi.fn() }))
+vi.mock('../services/export-template-pdf.client', () => ({ exportTemplatePdf: vi.fn() }))
 vi.mock('../services/render-template-html.client', () => ({
 	exportHtmlToPng: vi.fn(),
 	renderHtmlToPngBlob: vi.fn(),
@@ -50,10 +50,10 @@ describe('useTemplateExport', () => {
 		})
 
 		await act(() => result.current.exportTemplate('pdf'))
-		expect(printTemplatePdf).toHaveBeenCalledWith({
+		expect(exportTemplatePdf).toHaveBeenCalledWith({
 			fileName: input.fileName,
 			height: input.height,
-			html: input.html,
+			png: expect.any(Blob),
 			ppi: input.printPpi,
 			width: input.width,
 		})
