@@ -1,6 +1,5 @@
 import type React from 'react'
 import { SectionLayout } from '@/components/global/section-layout'
-import { ContentFrame } from '@/components/shared/content-frame'
 import { PageNavigation } from '@/components/shared/navigation/page-navigation'
 import { StudioSideNavigation } from '@/components/studio/shared/studio-side-navigation'
 import { getCreateNavigation } from '@/features/template-create/services/get-create-navigation.service'
@@ -31,7 +30,7 @@ export default async function CreateLayout({ children }: { children: React.React
 				/>
 			}
 		>
-			<ContentFrame className="py-10">{children}</ContentFrame>
+			{children}
 		</SectionLayout>
 	)
 }

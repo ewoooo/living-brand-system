@@ -61,7 +61,7 @@ barrel과 빈 폴더는 만들지 않습니다.
 | `GlobalHeader` | 3열 grid | `HeaderHead` / `HeaderCenter` / `HeaderTail` 유지, 파일명도 공간명으로 통일 |
 | `SectionLayout` | nav 옆 `flex-1` 스크롤 영역 | 같은 파일의 `SectionBody`로 분리 |
 | `HeroSection` | 메인·기능·footer 화면 구간 | 의미가 강한 `HeroMainSection` / `HeroFeatureSection` / `HeroFooter` 유지 |
-| `HtmlAssetGenerator` | `md:w-72` 입력 열 + scale 미리보기 | `TemplateSlotControls` / `TemplatePreview`로 분리 |
+| `TemplateGenerator` | `md:w-72` 입력 열 + scale 미리보기 | `TemplateSlotControls` / `TemplatePreview`로 분리 |
 | `TemplateLayersField` | 가변 canvas + 260px layer list + 선택 편집부 | `TemplateCanvas` / `LayerList` / `SelectedLayerEditor`로 분리 |
 | `PageNavigation` | 양쪽 절반을 채우는 링크 | 기존 `PageLink` 경계 유지 |
 | `AgentChatTemplateAttachment` | 첨부 폭에 맞춘 contain scale | 기존 `ScaledMedia` 경계 유지 |

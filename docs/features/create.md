@@ -12,7 +12,7 @@
 
 조합과 HTML 렌더는 클라이언트에서 일어나며 서버 렌더링·이미지 생성·영속이 없습니다. 인쇄용 TIFF는 브라우저가 렌더한 PNG를 서버에서 변환하고, PDF는 같은 PNG를 클라이언트에서 단일 페이지 문서로 만듭니다.
 
-- `HtmlAssetGenerator`(`src/components/studio/template/html-asset-generator.tsx`): canonical HTML의 열린 텍스트 슬롯을 편집하고 미리보기를 렌더.
+- `TemplateGenerator`(`src/components/studio/template/`): canonical HTML의 열린 텍스트 슬롯을 편집하고 미리보기를 렌더.
 - `export-template.client`(`src/features/template-export/services/`): Create·Chat의 `png | tiff | pdf` 가용 조건과 Strategy Registry 실행 계약을 공유.
 - `use-template-export`(`src/features/template-export/hooks/`): export use case의 진행·오류 UI 상태를 공유.
 - `render-template-export-stage.client`(`src/features/template-export/services/`): 검증된 HTML을 Shadow DOM의 공용 export stage로 안전하게 구성.
@@ -38,7 +38,7 @@ TIFF 내보내기 때 브라우저는 화면을 렌더한 published Template의 
 
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
-| [Page](../surfaces/page.md) | 구현 | `/studio/template` → 카테고리 → 템플릿 → HtmlAssetGenerator. 발행된 canonical HTML 템플릿만 읽고 비로그인 공개 읽기 |
+| [Page](../surfaces/page.md) | 구현 | `/studio/template` → 카테고리 → 템플릿 → TemplateGenerator. 발행된 canonical HTML 템플릿만 읽고 비로그인 공개 읽기 |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `findTemplatesForRequest` + `prepareTemplateImage`(슬롯 검증 후 첨부 PNG) |
 | REST | 부분 | TIFF 변환 `POST /api/templates/export-tiff`, import 어댑터 `POST /api/templates/import-figma-html`. 둘 다 산출물 레코드를 저장하지 않음 |
 | Slack | 계획 | — |
