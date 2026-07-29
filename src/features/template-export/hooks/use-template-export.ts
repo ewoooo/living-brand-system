@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import type { PrintPpi } from '../print-policy'
+import { exportHtmlToPng, renderHtmlToPngBlob } from '../services/export-template-png.client'
 import {
 	downloadTemplateTiff,
 	TemplateTiffDownloadError,
 } from '../services/export-template-tiff.client'
 import { printTemplatePdf } from '../services/print-template-pdf.client'
-import { exportHtmlToPng, renderHtmlToPngBlob } from '../services/render-template-html.client'
 
 export type TemplateExportFormat = 'png' | 'tiff' | 'pdf'
 

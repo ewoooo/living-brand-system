@@ -1,23 +1,23 @@
 // @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { exportHtmlToPng, renderHtmlToPngBlob } from '../services/export-template-png.client'
 import {
 	downloadTemplateTiff,
 	TemplateTiffDownloadError,
 } from '../services/export-template-tiff.client'
 import { printTemplatePdf } from '../services/print-template-pdf.client'
-import { exportHtmlToPng, renderHtmlToPngBlob } from '../services/render-template-html.client'
 import { useTemplateExport } from './use-template-export'
 
 vi.mock('../services/export-template-tiff.client', () => ({
 	downloadTemplateTiff: vi.fn(),
 	TemplateTiffDownloadError: class extends Error {},
 }))
-vi.mock('../services/print-template-pdf.client', () => ({ printTemplatePdf: vi.fn() }))
-vi.mock('../services/render-template-html.client', () => ({
+vi.mock('../services/export-template-png.client', () => ({
 	exportHtmlToPng: vi.fn(),
 	renderHtmlToPngBlob: vi.fn(),
 }))
+vi.mock('../services/print-template-pdf.client', () => ({ printTemplatePdf: vi.fn() }))
 
 const input = {
 	fileName: '브랜드 카드',
