@@ -34,7 +34,7 @@ const guidelineToolContextSchema = z.object({
 })
 
 /**
- * Agent answer stream에 전달할 AI SDK tool set을 만든다.
+ * Agent chat answer stream에 전달할 AI SDK tool set을 만든다.
  * 실제 skill/guideline I/O는 tool 실행 시 주입되는 user context로 수행한다.
  */
 export function getAgentTools() {

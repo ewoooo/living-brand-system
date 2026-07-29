@@ -6,7 +6,7 @@
 
 ## 2. 어댑터 계약
 
-- agent는 `src/agents/agent-chat.agent.ts`(ToolLoopAgent)가 소유하고, 도구는 `src/features/agent-chat/services/get-agent-tools.service.ts`에 등록합니다. 진입점은 `src/app/api/agent-chat/route.ts`입니다.
+- agent는 `src/agents/agent-chat.agent.ts`(ToolLoopAgent)가 소유하고, 도구는 `src/agents/agent-chat-tools.agent.ts`에 등록합니다. 진입점은 `src/app/api/agent-chat/route.ts`입니다.
 - 새 Feature를 이 표면으로 노출하려면: 코어 service를 감싸는 tool을 정의(입력 스키마 + 코어 호출) → 도구 목록에 등록. agent가 언제 그 도구를 고를지는 도구 설명과 skill로 유도합니다.
 - 도구는 코어 service를 호출만 하며 로직을 중복 구현하지 않습니다.
 
