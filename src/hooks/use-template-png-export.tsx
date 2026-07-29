@@ -1,6 +1,6 @@
 'use client'
 
-import { toPng } from 'html-to-image'
+import { toBlob, toPng } from 'html-to-image'
 import { useEffect, useRef, useState } from 'react'
 import { TemplateRenderer, type TemplateSlotValue } from '@/components/template-renderer'
 import type { JsonTemplate } from '@/types/json-template'
@@ -203,6 +203,42 @@ function createSafeExportStage(
  * 외부 I/O URL, 실행 태그/속성, 전역 CSS는 부모 문서 경계를 넘지 못한다.
  */
 export async function exportHtmlToPng(html: string, css: string, fileName: string): Promise<void> {
+	const dataUrl = await withSafeExportStage(html, css, (stage) =>
+		toPng(stage, { cacheBust: true }),
+	)
+	const link = document.createElement('a')
+	link.href = dataUrl
+	link.download = `${fileName}.png`
+	link.click()
+}
+
+/**
+ * 서버 TIFF 변환용 PNG를 템플릿 픽셀 크기 그대로 만든다.
+ * 기존 PNG 다운로드 훅의 HiDPI 동작은 건드리지 않고 이 함수만 pixelRatio 1을 강제한다.
+ */
+export async function renderHtmlToPngBlob(
+	html: string,
+	css: string,
+	width: number,
+	height: number,
+): Promise<Blob> {
+	const blob = await withSafeExportStage(html, css, (stage) =>
+		toBlob(stage, {
+			cacheBust: true,
+			canvasHeight: height,
+			canvasWidth: width,
+			pixelRatio: 1,
+		}),
+	)
+	if (!blob) throw new Error('PNG rendering failed.')
+	return blob
+}
+
+async function withSafeExportStage<T>(
+	html: string,
+	css: string,
+	exportStage: (stage: HTMLElement) => Promise<T>,
+): Promise<T> {
 	const { holder, stage } = createSafeExportStage(html, css)
 	document.body.appendChild(holder)
 	try {
@@ -218,11 +254,7 @@ export async function exportHtmlToPng(html: string, css: string, fileName: strin
 				await image.decode().catch(() => undefined)
 			}),
 		)
-		const dataUrl = await toPng(stage, { cacheBust: true })
-		const link = document.createElement('a')
-		link.href = dataUrl
-		link.download = `${fileName}.png`
-		link.click()
+		return await exportStage(stage)
 	} finally {
 		holder.remove()
 	}

@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
-import { toPng } from 'html-to-image'
+import { toBlob, toPng } from 'html-to-image'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { exportHtmlToPng } from './use-template-png-export'
+import { exportHtmlToPng, renderHtmlToPngBlob } from './use-template-png-export'
 
-vi.mock('html-to-image', () => ({ toPng: vi.fn() }))
+vi.mock('html-to-image', () => ({ toBlob: vi.fn(), toPng: vi.fn() }))
 
 describe('exportHtmlToPng', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
+		vi.mocked(toBlob).mockResolvedValue(new Blob())
 		vi.mocked(toPng).mockResolvedValue('data:image/png;base64,')
 		vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 	})
@@ -35,6 +36,24 @@ describe('exportHtmlToPng', () => {
 
 		const captured = vi.mocked(toPng).mock.calls[0]?.[0] as HTMLElement
 		expect(captured.id).toBe('__stage')
+	})
+
+	it('TIFF 변환용 PNG는 원본 픽셀 크기와 pixelRatio 1로 렌더한다', async () => {
+		await renderHtmlToPngBlob(
+			'<div id="__stage" style="width:1200px;height:800px"></div>',
+			'',
+			1200,
+			800,
+		)
+
+		expect(toBlob).toHaveBeenCalledWith(
+			expect.any(HTMLElement),
+			expect.objectContaining({
+				canvasHeight: 800,
+				canvasWidth: 1200,
+				pixelRatio: 1,
+			}),
+		)
 	})
 
 	it('이벤트 핸들러가 있는 샌드박스 HTML을 부모 DOM으로 옮기지 않는다', async () => {

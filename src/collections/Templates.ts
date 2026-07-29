@@ -1,4 +1,9 @@
 import { APIError, type CollectionConfig } from 'payload'
+import {
+	findPrintOutputBlocker,
+	MAX_PRINT_PIXELS,
+	PRINT_PPI_OPTIONS,
+} from '@/features/asset-generation/print-output'
 import { publishImportedFigmaAssets } from '@/features/template-import/repositories/figma-imported-asset.payload.repository'
 import {
 	findTemplateDraftBlocker,
@@ -33,6 +38,8 @@ export const Templates: CollectionConfig = {
 				}
 				const draftBlocker = findTemplateDraftBlocker(candidate)
 				if (draftBlocker) throw new APIError(draftBlocker, 400)
+				const printBlocker = findPrintOutputBlocker(candidate)
+				if (printBlocker) throw new APIError(printBlocker, 400)
 
 				// Draft는 구조 안전성까지만 검사한다. live published 문서의 부분 update는 다시 발행 검증한다.
 				const finalStatus = data?._status ?? originalDoc?._status
@@ -148,6 +155,15 @@ export const Templates: CollectionConfig = {
 					admin: { width: '50%', description: 'Figma 높이(px). 가져오기가 채웁니다.' },
 				},
 			],
+		},
+		{
+			name: 'printPpi',
+			type: 'select',
+			options: [...PRINT_PPI_OPTIONS],
+			admin: {
+				position: 'sidebar',
+				description: `설정하면 CMYK TIFF 내보내기가 활성화됩니다. 픽셀 크기는 유지되며 최대 ${MAX_PRINT_PIXELS.toLocaleString('en-US')}픽셀을 지원합니다.`,
+			},
 		},
 		{
 			name: 'category',

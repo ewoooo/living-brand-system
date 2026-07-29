@@ -1,6 +1,7 @@
 import { findTemplateRenderBlocker } from '@/features/template-import/services/validate-template-publish.service'
 import type { TemplateOverrides } from '@/features/template-import/utils/compose-template-html'
 import { type JsonTemplate, jsonTemplateSchema } from '@/types/json-template'
+import { type PrintPpi, parsePrintPpi } from '../print-output'
 import { findPublishedTemplate } from '../repositories/published-template.payload.repository'
 
 /** 기능 코드 층 — 디자인(jsonTemplate)과 분리된 별도 필드. js가 있으면 샌드박스로 실행된다. */
@@ -21,6 +22,8 @@ export interface PublishedHtmlTemplate extends PublishedTemplateBase {
 	overrides: TemplateOverrides
 	width: number
 	height: number
+	printPpi?: PrintPpi
+	templateVersion: string
 }
 
 export interface PublishedJsonTemplate extends PublishedTemplateBase {
@@ -81,6 +84,8 @@ export async function getPublishedTemplate(templateId: number): Promise<Publishe
 			kind: 'html',
 			id: template.id,
 			name: template.name,
+			printPpi: parsePrintPpi(template.printPpi),
+			templateVersion: template.updatedAt,
 			...html,
 		}
 	}

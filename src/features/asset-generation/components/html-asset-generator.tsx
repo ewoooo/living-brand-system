@@ -3,7 +3,12 @@
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { composeTemplateHtml } from '@/features/template-import/utils/compose-template-html'
-import { exportHtmlToPng } from '@/hooks/use-template-png-export'
+import { exportHtmlToPng, renderHtmlToPngBlob } from '@/hooks/use-template-png-export'
+import { pixelsToMillimeters } from '../print-output'
+import {
+	downloadTemplateTiff,
+	TemplateTiffDownloadError,
+} from '../services/export-template-tiff.client'
 import type { PublishedHtmlTemplate } from '../services/get-published-template.service'
 import { collectHtmlSlots } from '../utils/collect-html-slots'
 import { TextSlotInput } from './text-slot-input'
@@ -12,13 +17,14 @@ const PREVIEW_WIDTH = 480
 
 /**
  * Figma에서 가져온 published HTML의 열린 슬롯(input이 달린 텍스트 노드)을 편집해
- * 미리보기 그대로 PNG로 내보낸다. 서버 상태 변경은 없다 — 입력값은 로컬 state로만 합성한다.
+ * 미리보기 그대로 PNG 또는 운영자 정책의 TIFF로 내보낸다. 서버 상태 변경은 없다 —
+ * 입력값은 로컬 state로만 합성한다.
  * 미리보기는 어드민 캔버스와 동일한 동일-문서 렌더 — iframe(opaque origin)은 벡터 mask의
  * CORS 로드를 깨뜨린다. 임포트 HTML은 스크립트 없는 inline-style이다.
  */
 export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTemplate }) {
 	const [values, setValues] = useState<Record<string, string>>({})
-	const [isExporting, setIsExporting] = useState(false)
+	const [exporting, setExporting] = useState<'png' | 'tiff' | null>(null)
 	const [exportError, setExportError] = useState<string | null>(null)
 	const { html, overrides, width, height } = template
 	const scale = Math.min(1, PREVIEW_WIDTH / width)
@@ -39,7 +45,7 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 
 	async function exportPng() {
 		setExportError(null)
-		setIsExporting(true)
+		setExporting('png')
 
 		try {
 			await exportHtmlToPng(composedHtml, '', template.name)
@@ -48,7 +54,30 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 				'PNG 내보내기에 실패했습니다. 이미지 원본 접근(CORS)이 막혀 있을 수 있습니다.',
 			)
 		} finally {
-			setIsExporting(false)
+			setExporting(null)
+		}
+	}
+
+	async function exportTiff() {
+		setExportError(null)
+		setExporting('tiff')
+
+		try {
+			const png = await renderHtmlToPngBlob(composedHtml, '', width, height)
+			await downloadTemplateTiff({
+				fileName: template.name,
+				png,
+				templateId: template.id,
+				templateVersion: template.templateVersion,
+			})
+		} catch (error) {
+			setExportError(
+				error instanceof TemplateTiffDownloadError
+					? error.message
+					: 'TIFF 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.',
+			)
+		} finally {
+			setExporting(null)
 		}
 	}
 
@@ -78,9 +107,25 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 						이 템플릿에는 편집 가능한 슬롯이 없습니다.
 					</p>
 				)}
-				<Button onClick={exportPng} disabled={isExporting}>
-					{isExporting ? '내보내는 중...' : 'PNG로 내보내기'}
+				<Button onClick={exportPng} disabled={exporting !== null}>
+					{exporting === 'png' ? '내보내는 중...' : 'PNG로 내보내기'}
 				</Button>
+				{template.printPpi && (
+					<>
+						<Button
+							onClick={exportTiff}
+							disabled={exporting !== null}
+							variant="outline"
+						>
+							{exporting === 'tiff' ? '내보내는 중...' : 'CMYK TIFF로 내보내기'}
+						</Button>
+						<p className="font-body text-xs font-normal text-muted-foreground">
+							{template.printPpi}ppi ·{' '}
+							{pixelsToMillimeters(width, template.printPpi).toFixed(1)} ×{' '}
+							{pixelsToMillimeters(height, template.printPpi).toFixed(1)}mm
+						</p>
+					</>
+				)}
 				{exportError && (
 					<p className="font-body text-sm font-normal text-destructive">{exportError}</p>
 				)}

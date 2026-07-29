@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { type PrintPpi, parsePrintPpi } from '@/features/asset-generation/print-output'
 import { pickHtmlTemplate } from '@/features/asset-generation/services/get-published-template.service'
 import {
 	collectHtmlSlots,
@@ -41,6 +42,8 @@ export type AgentTemplateImageAttachment =
 			html: string
 			width: number
 			height: number
+			printPpi?: PrintPpi
+			templateVersion?: string
 			values: TemplateSlotValues
 	  }
 	| {
@@ -124,6 +127,8 @@ export async function prepareTemplateImage(
 			html: html.html,
 			width: html.width,
 			height: html.height,
+			printPpi: parsePrintPpi(template.printPpi),
+			templateVersion: template.updatedAt,
 			values: filterHtmlSlotValues(collectHtmlSlots(html.html, html.overrides), values),
 		}
 	}

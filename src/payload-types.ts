@@ -1276,6 +1276,10 @@ export interface Template {
    */
   height?: number | null;
   /**
+   * 설정하면 인쇄용 CMYK TIFF 내보내기가 활성화됩니다. 픽셀 크기는 유지되고 인쇄 크기만 달라집니다.
+   */
+  printPpi?: ('72' | '150' | '300') | null;
+  /**
    * Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.
    */
   category: number | TemplateCategory;
@@ -2595,6 +2599,7 @@ export interface TemplatesSelect<T extends boolean = true> {
   overrides?: T;
   width?: T;
   height?: T;
+  printPpi?: T;
   category?: T;
   templateChecks?:
     | T
