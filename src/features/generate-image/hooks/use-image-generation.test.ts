@@ -10,6 +10,7 @@ describe('useImageGeneration', () => {
 	it('stores the generated result and requested image count', async () => {
 		const response = {
 			images: ['data:image/png;base64,result'],
+			model: 'gpt-image-2',
 			prompt: 'composed prompt',
 		}
 		const fetchImage = vi
@@ -19,7 +20,7 @@ describe('useImageGeneration', () => {
 
 		await act(() => result.current.generate({ count: 2, prompt: 'abstract background' }))
 
-		expect(fetchImage).toHaveBeenCalledWith('/api/image', {
+		expect(fetchImage).toHaveBeenCalledWith('/api/generate-image', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ count: 2, prompt: 'abstract background' }),

@@ -1,16 +1,39 @@
 import { type CollectionConfig, type PayloadRequest, slugField } from 'payload'
 import {
+	DEFAULT_IMAGE_MODEL_PRESET,
+	IMAGE_MODEL_PRESET_OPTIONS,
+	type ImageModelPreset,
+} from '@/features/generate-image/image-model'
+import {
 	imagePromptNormalizationRequestSchema,
 	validateImageProfilePromptRows,
 	validateImagePromptNormalizationRows,
 } from '@/features/generate-image/image-profile-prompt'
-import { IMAGE_OUTPUT_SIZE_PRESET_OPTIONS } from '@/features/generate-image/image-size'
+import {
+	IMAGE_ASPECT_RATIO_OPTIONS,
+	IMAGE_OUTPUT_SIZE_OPTIONS,
+	type ImageOutputSize,
+	supportsImageOutputSize,
+} from '@/features/generate-image/image-size'
 import {
 	ImagePromptNormalizationUnavailableError,
 	normalizeImageProfilePrompt,
 } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
 import { isManager, managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
+
+function validateImageSize(
+	value: null | string | undefined,
+	{ siblingData }: { siblingData: Record<string, unknown> },
+): string | true {
+	if (!value) return true
+	return (
+		supportsImageOutputSize(
+			siblingData.imageModelPreset as ImageModelPreset,
+			value as ImageOutputSize,
+		) || 'Nano Banana 2 Lite는 1K 출력만 지원합니다.'
+	)
+}
 
 async function normalizePromptEndpoint(req: PayloadRequest) {
 	if (!isManager(req.user)) {
@@ -87,15 +110,40 @@ export const ImageProfiles: CollectionConfig = {
 			},
 		},
 		{
-			name: 'outputSizePreset',
+			name: 'imageModelPreset',
 			type: 'select',
 			required: true,
-			defaultValue: 'portrait',
-			options: [...IMAGE_OUTPUT_SIZE_PRESET_OPTIONS],
-			label: '출력 크기',
+			defaultValue: DEFAULT_IMAGE_MODEL_PRESET,
+			options: [...IMAGE_MODEL_PRESET_OPTIONS],
+			label: '이미지 모델',
 			admin: {
 				position: 'sidebar',
-				description: '이미지 공급자와 무관한 출력 크기 프리셋입니다.',
+				description: '이 프로파일을 생성할 때 사용할 이미지 모델입니다.',
+			},
+		},
+		{
+			name: 'aspectRatio',
+			type: 'select',
+			required: true,
+			defaultValue: '2:3',
+			options: [...IMAGE_ASPECT_RATIO_OPTIONS],
+			label: '출력 비율',
+			admin: {
+				position: 'sidebar',
+				description: '이미지 공급자와 무관한 가로:세로 비율입니다.',
+			},
+		},
+		{
+			name: 'imageSize',
+			type: 'select',
+			required: true,
+			defaultValue: '1K',
+			options: [...IMAGE_OUTPUT_SIZE_OPTIONS],
+			label: '출력 해상도',
+			validate: validateImageSize,
+			admin: {
+				position: 'sidebar',
+				description: 'Nano Banana 2 Lite는 1K만 지원합니다.',
 			},
 		},
 		{

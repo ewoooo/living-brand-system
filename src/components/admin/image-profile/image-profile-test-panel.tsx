@@ -2,7 +2,7 @@
 
 import { Button, useForm } from '@payloadcms/ui'
 import { useState } from 'react'
-import { generateImages } from '@/features/generate-image/services/generate-image.client'
+import { requestAdminImageGeneration } from '@/features/generate-image/services/generate-image.client'
 
 type PromptResult = {
 	finalPrompt: Record<string, string>
@@ -66,8 +66,12 @@ export default function ImageProfileTestPanel() {
 		setIsGenerating(true)
 		try {
 			const { finalPrompt } = await normalizeCurrentForm()
-			const generated = await generateImages({
+			const data = getData()
+			const generated = await requestAdminImageGeneration({
+				aspectRatio: data.aspectRatio,
 				count: 1,
+				imageModelPreset: data.imageModelPreset,
+				imageSize: data.imageSize,
 				prompt: JSON.stringify(finalPrompt),
 			})
 			setImage(generated.images[0] ?? null)

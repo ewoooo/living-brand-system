@@ -10,7 +10,9 @@ const data = {
 	generateSlug: false,
 	slug: 'technical-illustration',
 	displayOrder: 10,
-	outputSizePreset: 'landscape' as const,
+	imageModelPreset: 'google-nano-banana-2-lite' as const,
+	aspectRatio: '16:9' as const,
+	imageSize: '1K' as const,
 	profilePrompt: [
 		{
 			key: 'identity',
