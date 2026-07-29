@@ -38,7 +38,7 @@ describe('exportHtmlToPng', () => {
 		expect(captured.id).toBe('__stage')
 	})
 
-	it('TIFF 변환용 PNG는 원본 픽셀 크기와 pixelRatio 1로 렌더한다', async () => {
+	it('TIFF·PDF 변환용 PNG는 흰 배경과 원본 픽셀 크기로 렌더한다', async () => {
 		await renderHtmlToPngBlob(
 			'<div id="__stage" style="width:1200px;height:800px"></div>',
 			'',
@@ -49,6 +49,7 @@ describe('exportHtmlToPng', () => {
 		expect(toBlob).toHaveBeenCalledWith(
 			expect.any(HTMLElement),
 			expect.objectContaining({
+				backgroundColor: '#fff',
 				canvasHeight: 800,
 				canvasWidth: 1200,
 				pixelRatio: 1,

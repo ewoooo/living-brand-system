@@ -18,7 +18,7 @@ export async function exportHtmlToPng(html: string, css: string, fileName: strin
 }
 
 /**
- * 서버 TIFF 변환용 PNG를 템플릿 픽셀 크기 그대로 만든다.
+ * TIFF·PDF 변환용 흰 배경 PNG를 템플릿 픽셀 크기 그대로 만든다.
  * DOM 캡처 I/O는 이 client adapter가 소유하며 pixelRatio 1을 강제한다.
  */
 export async function renderHtmlToPngBlob(
@@ -29,6 +29,7 @@ export async function renderHtmlToPngBlob(
 ): Promise<Blob> {
 	const blob = await withSafeExportStage(html, css, (stage) =>
 		toBlob(stage, {
+			backgroundColor: '#fff',
 			cacheBust: true,
 			canvasHeight: height,
 			canvasWidth: width,
