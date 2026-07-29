@@ -1,10 +1,10 @@
 import { PageHeader } from '@/components/global/page-header'
+import { ImageGenerator } from '@/features/generate-image/components/image-generator'
+import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
 import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
-import { ImageGenerator } from '@/features/image-generation/components/image-generator'
-import { listAvailableImageProfiles } from '@/features/image-generation/services/list-image-profiles.service'
 import { authenticateRequest } from '@/lib/request-auth'
 
-// 생성 표면: 컨트롤러와 결과 캔버스만 소유하고, 생성 실행은 image-generation feature가 담당한다.
+// 생성 표면: 컨트롤러와 결과 캔버스만 소유하고, 생성 실행은 generate-image feature가 담당한다.
 export default async function GeneratePage() {
 	const { user } = await authenticateRequest()
 	const imageProfiles = user ? await listAvailableImageProfiles(user) : []

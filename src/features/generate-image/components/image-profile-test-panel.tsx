@@ -2,7 +2,7 @@
 
 import { Button, useForm } from '@payloadcms/ui'
 import { useState } from 'react'
-import { generateImages } from '@/features/image-generation/services/generate-image.client'
+import { generateImages } from '@/features/generate-image/services/generate-image.client'
 
 type PromptResult = {
 	finalPrompt: Record<string, string>

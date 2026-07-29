@@ -1,4 +1,4 @@
-import { listPublishedImageProfiles } from '@/features/image-generation/repositories/image-profile.payload.repository'
+import { listPublishedImageProfiles } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import { getStudioGenerateProfileRoute } from '@/lib/routes'
 
 export interface ImageProfileNavigationItem {

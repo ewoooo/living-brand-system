@@ -3,11 +3,11 @@ import {
 	imagePromptNormalizationRequestSchema,
 	validateImageProfilePromptRows,
 	validateImagePromptNormalizationRows,
-} from '@/features/image-generation/image-profile-prompt'
+} from '@/features/generate-image/image-profile-prompt'
 import {
 	ImagePromptNormalizationUnavailableError,
 	normalizeImageProfilePrompt,
-} from '@/features/image-generation/services/normalize-image-profile-prompt.service'
+} from '@/features/generate-image/services/normalize-image-profile-prompt.service'
 import { isManager, managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -139,7 +139,7 @@ export const ImageProfiles: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				components: {
-					Field: '/features/image-generation/components/image-profile-test-panel',
+					Field: '/features/generate-image/components/image-profile-test-panel',
 				},
 			},
 		},

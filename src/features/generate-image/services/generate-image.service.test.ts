@@ -13,16 +13,16 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/env', () => ({ env: mocks.env }))
-vi.mock('@/features/image-generation/repositories/dev-image-generation.rest.repository', () => ({
+vi.mock('@/features/generate-image/repositories/dev-image-generation.rest.repository', () => ({
 	devGenerateImages: mocks.devGenerateImages,
 }))
-vi.mock('@/features/image-generation/repositories/image-generation.ai.repository', () => ({
+vi.mock('@/features/generate-image/repositories/image-generation.ai.repository', () => ({
 	generateBrandImages: mocks.generateBrandImages,
 }))
-vi.mock('@/features/image-generation/repositories/image-profile.payload.repository', () => ({
+vi.mock('@/features/generate-image/repositories/image-profile.payload.repository', () => ({
 	findPublishedImageProfile: mocks.findPublishedImageProfile,
 }))
-vi.mock('@/features/image-generation/services/normalize-image-profile-prompt.service', () => ({
+vi.mock('@/features/generate-image/services/normalize-image-profile-prompt.service', () => ({
 	ImagePromptNormalizationUnavailableError: class extends Error {},
 	normalizeImageProfilePrompt: mocks.normalizeImageProfilePrompt,
 }))

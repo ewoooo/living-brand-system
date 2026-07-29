@@ -22,8 +22,8 @@ import { getCheckScenarios } from '@/features/asset-check/services/get-check-sce
 import {
 	type AgentGeneratedImagesAttachment,
 	generateImageCandidates,
-} from '@/features/image-generation/services/generate-image.service'
-import { listAvailableImageProfiles } from '@/features/image-generation/services/list-image-profiles.service'
+} from '@/features/generate-image/services/generate-image.service'
+import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
 import { AgentConfigurationError } from '@/lib/errors'
 import type { User } from '@/payload-types'
 import { startCheckSession } from '@/services/start-check-session.service'

@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { listPublishedImageProfiles } from '@/features/image-generation/repositories/image-profile.payload.repository'
+import { listPublishedImageProfiles } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import { getImageProfileNavigation } from './list-image-profiles.service'
 
-vi.mock('@/features/image-generation/repositories/image-profile.payload.repository', () => ({
+vi.mock('@/features/generate-image/repositories/image-profile.payload.repository', () => ({
 	listPublishedImageProfiles: vi.fn(),
 }))
 

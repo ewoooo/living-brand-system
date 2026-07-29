@@ -1,4 +1,4 @@
-import { generateTextCandidates } from '@/features/text-generation/services/generate-text.service'
+import { generateTextCandidates } from '@/features/generate-text/services/generate-text.service'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
 export const maxDuration = 30

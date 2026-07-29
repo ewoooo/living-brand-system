@@ -5,7 +5,7 @@ import { ImageGenerator } from './image-generator'
 
 const mocks = vi.hoisted(() => ({ generate: vi.fn() }))
 
-vi.mock('@/features/image-generation/hooks/use-image-generation', () => ({
+vi.mock('@/features/generate-image/hooks/use-image-generation', () => ({
 	useImageGeneration: () => ({
 		error: null,
 		generate: mocks.generate,
@@ -16,7 +16,7 @@ vi.mock('@/features/image-generation/hooks/use-image-generation', () => ({
 		setSelected: vi.fn(),
 	}),
 }))
-vi.mock('@/features/image-generation/components/image-generation-results', () => ({
+vi.mock('@/features/generate-image/components/image-generation-results', () => ({
 	ImageGenerationResults: () => null,
 }))
 
