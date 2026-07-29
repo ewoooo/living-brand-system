@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { toBlob, toPng } from 'html-to-image'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { exportHtmlToPng, renderHtmlToPngBlob } from './use-template-png-export'
+import { exportHtmlToPng, renderHtmlToPngBlob } from './export-template-png.client'
 
 vi.mock('html-to-image', () => ({ toBlob: vi.fn(), toPng: vi.fn() }))
 

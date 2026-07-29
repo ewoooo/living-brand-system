@@ -11,42 +11,6 @@ import * as checkScenarioService from '@/features/asset-check/services/get-check
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
 import * as checkSessionService from '@/services/start-check-session.service'
 
-const textElement = (
-	overrides: Partial<{
-		id: string
-		locked: boolean
-		maxLength: number
-		slotLabel: string
-		text: string
-	}> = {},
-) => ({
-	id: overrides.id ?? 'name',
-	type: 'text' as const,
-	x: 0,
-	y: 0,
-	width: 200,
-	height: 40,
-	zIndex: 1,
-	locked: overrides.locked ?? false,
-	text: overrides.text ?? 'Name',
-	fontSize: 20,
-	fontFamily: 'Pretendard',
-	fontWeight: '700',
-	color: '#000000',
-	lineHeight: 1.2,
-	letterSpacing: 0,
-	textAlign: 'left' as const,
-	...(overrides.maxLength ? { maxLength: overrides.maxLength } : {}),
-	...(overrides.slotLabel ? { slotLabel: overrides.slotLabel } : {}),
-})
-
-const template = (...elements: ReturnType<typeof textElement>[]) => ({
-	width: 900,
-	height: 500,
-	background: '#ffffff',
-	elements,
-})
-
 const runtimeCheck = (key: string) => ({
 	key,
 	title: key,
@@ -253,7 +217,11 @@ describe('agent tools', () => {
 						checkKey: 'name.input',
 					},
 				],
-				jsonTemplate: template(textElement({ slotLabel: '이름' })),
+				html: '<div data-node-id="frame"><p data-node-id="name">Name</p></div>',
+				overrides: { name: { input: { label: '이름' } } },
+				width: 900,
+				height: 500,
+				updatedAt: '2026-07-29T00:00:00.000Z',
 			},
 		] as never)
 		const tools = getAgentTools()
@@ -285,7 +253,11 @@ describe('agent tools', () => {
 				name: '신규입사자 웰컴 카드',
 				description: null,
 				templateChecks: [],
-				jsonTemplate: template(textElement({ slotLabel: '이름' })),
+				html: '<div data-node-id="frame"><p data-node-id="name">Name</p></div>',
+				overrides: { name: { input: { label: '이름' } } },
+				width: 900,
+				height: 500,
+				updatedAt: '2026-07-29T00:00:00.000Z',
 			},
 		] as never)
 		const tools = getAgentTools()
@@ -305,7 +277,11 @@ describe('agent tools', () => {
 				name: '환영 카드',
 				description: '신규 입사자에게 온라인으로 배부되는 카드',
 				templateChecks: [],
-				jsonTemplate: template(textElement({ slotLabel: '이름 (한글)' })),
+				html: '<div data-node-id="frame"><p data-node-id="name">Name</p></div>',
+				overrides: { name: { input: { label: '이름 (한글)' } } },
+				width: 900,
+				height: 500,
+				updatedAt: '2026-07-29T00:00:00.000Z',
 			},
 		] as never)
 		const tools = getAgentTools()
@@ -328,11 +304,14 @@ describe('agent tools', () => {
 			id: 4,
 			name: 'Business card',
 			description: null,
-			jsonTemplate: template(
-				textElement({ maxLength: 5 }),
-				textElement({ id: 'department', slotLabel: '부서', text: 'Team' }),
-				textElement({ id: 'fixed', locked: true, text: 'Fixed' }),
-			),
+			html: '<div data-node-id="frame"><p data-node-id="name">Name</p><p data-node-id="department">Team</p><p data-node-id="fixed">Fixed</p></div>',
+			overrides: {
+				name: { input: { label: '이름', maxLength: 5 } },
+				department: { input: { label: '부서' } },
+			},
+			width: 900,
+			height: 500,
+			updatedAt: '2026-07-29T00:00:00.000Z',
 		} as never)
 		const tools = getAgentTools()
 
@@ -353,56 +332,23 @@ describe('agent tools', () => {
 			templateId: 4,
 			type: 'template-image',
 			values: {
-				department: { text: 'HX' },
+				department: { text: 'HX팀' },
 				name: { text: '홍길동입니' },
 			},
 		})
 	})
 
-	it('lists slots nested inside stack elements', async () => {
+	it('lists nested HTML slots', async () => {
 		vi.spyOn(agentTemplateRepository, 'listAgentTemplates').mockResolvedValue([
 			{
 				id: 5,
-				name: 'Stacked card',
+				name: 'Nested card',
 				description: null,
-				jsonTemplate: {
-					width: 900,
-					height: 500,
-					background: '#ffffff',
-					elements: [
-						{
-							id: 'stack_1',
-							type: 'stack',
-							x: 0,
-							y: 0,
-							width: 900,
-							height: 500,
-							zIndex: 1,
-							locked: true,
-							direction: 'vertical',
-							gap: 0,
-							padding: { top: 0, right: 0, bottom: 0, left: 0 },
-							children: [
-								{
-									id: 'nested_name',
-									type: 'text',
-									locked: false,
-									slotLabel: '이름',
-									width: 200,
-									height: 40,
-									text: 'Name',
-									fontSize: 20,
-									fontFamily: 'Pretendard',
-									fontWeight: '700',
-									color: '#000000',
-									lineHeight: 1.2,
-									letterSpacing: 0,
-									textAlign: 'left',
-								},
-							],
-						},
-					],
-				},
+				html: '<div data-node-id="frame"><div data-node-id="group"><p data-node-id="nested_name">Name</p></div></div>',
+				overrides: { nested_name: { input: { label: '이름' } } },
+				width: 900,
+				height: 500,
+				updatedAt: '2026-07-29T00:00:00.000Z',
 			},
 		] as never)
 		const tools = getAgentTools()
@@ -419,66 +365,7 @@ describe('agent tools', () => {
 		])
 	})
 
-	it('drops image slot values whose src is not an authorized asset path', async () => {
-		vi.spyOn(agentTemplateRepository, 'findAgentTemplate').mockResolvedValue({
-			id: 6,
-			name: 'Poster',
-			description: null,
-			jsonTemplate: {
-				width: 900,
-				height: 500,
-				background: '#ffffff',
-				elements: [
-					{
-						id: 'photo',
-						type: 'image',
-						x: 0,
-						y: 0,
-						width: 300,
-						height: 200,
-						zIndex: 1,
-						locked: false,
-						slotLabel: '사진',
-						assetCollection: 'application-images',
-						assetId: 11,
-						src: '/api/application-images/file/photo.png',
-						objectFit: 'cover',
-						borderRadius: 0,
-					},
-				],
-			},
-		} as never)
-		const tools = getAgentTools()
-
-		const result = await tools.prepareTemplateImage.execute?.(
-			{
-				templateId: 6,
-				values: {
-					photo: { src: 'https://attacker.example/x.png' },
-				},
-			},
-			{ context: { user: { id: 1 } } } as never,
-		)
-
-		// 외부 URL은 버려지고, 인가 경로만 통과한다.
-		expect(result).toMatchObject({ values: {} })
-
-		const allowed = await tools.prepareTemplateImage.execute?.(
-			{
-				templateId: 6,
-				values: {
-					photo: { src: '/api/brand-logos/file/logo.svg' },
-				},
-			},
-			{ context: { user: { id: 1 } } } as never,
-		)
-
-		expect(allowed).toMatchObject({
-			values: { photo: { src: '/api/brand-logos/file/logo.svg' } },
-		})
-	})
-
-	it('throws when the template is missing or has a broken jsonTemplate', async () => {
+	it('throws when the template is missing', async () => {
 		vi.spyOn(agentTemplateRepository, 'findAgentTemplate').mockResolvedValue(null as never)
 		const tools = getAgentTools()
 

@@ -1,83 +1,6 @@
 'use client'
 
 import { toBlob, toPng } from 'html-to-image'
-import { useEffect, useRef, useState } from 'react'
-import { TemplateRenderer, type TemplateSlotValue } from '@/components/template-renderer'
-import type { JsonTemplate } from '@/types/json-template'
-
-/**
- * 템플릿을 원본 크기 PNG로 내려받는 공유 훅 (Studio Template·챗 첨부가 함께 쓴다).
- * 내보내는 동안에만 화면 밖에 원본 크기 렌더를 마운트해 캡처한다 —
- * 상시 마운트로 인한 DOM·이미지 메모리 점유를 피한다. exportNode를 소비 컴포넌트 JSX에 포함해야 한다.
- */
-export function useTemplatePngExport({
-	template,
-	values,
-	fileName,
-}: {
-	template: JsonTemplate
-	values?: Record<string, TemplateSlotValue>
-	fileName: string
-}) {
-	const [isExporting, setIsExporting] = useState(false)
-	const [exportError, setExportError] = useState<string | null>(null)
-	const exportRef = useRef<HTMLDivElement>(null)
-
-	useEffect(() => {
-		if (!isExporting) {
-			return
-		}
-
-		let cancelled = false
-
-		// 마운트 후 레이아웃이 잡힌 다음 캡처한다. 이미지 원본은 toPng가 직접 받아 인라인한다.
-		const frame = requestAnimationFrame(async () => {
-			const node = exportRef.current
-
-			if (!node || cancelled) {
-				return
-			}
-
-			try {
-				const dataUrl = await toPng(node, { cacheBust: true })
-				const link = document.createElement('a')
-				link.href = dataUrl
-				link.download = `${fileName}.png`
-				link.click()
-			} catch {
-				if (!cancelled) {
-					setExportError(
-						'PNG 내보내기에 실패했습니다. 이미지 원본 접근(CORS)이 막혀 있을 수 있습니다.',
-					)
-				}
-			} finally {
-				if (!cancelled) {
-					setIsExporting(false)
-				}
-			}
-		})
-
-		return () => {
-			cancelled = true
-			cancelAnimationFrame(frame)
-		}
-	}, [isExporting, fileName])
-
-	function exportPng() {
-		setExportError(null)
-		setIsExporting(true)
-	}
-
-	const exportNode = isExporting ? (
-		<div style={{ position: 'fixed', left: -99999, top: 0 }} aria-hidden>
-			<div ref={exportRef}>
-				<TemplateRenderer template={template} values={values} />
-			</div>
-		</div>
-	) : null
-
-	return { exportPng, isExporting, exportError, exportNode }
-}
 
 const EXPORT_TAGS = new Set(['div', 'img', 'p'])
 const EXPORT_DATA_ATTRIBUTES = new Set([
@@ -199,8 +122,8 @@ function createSafeExportStage(
 }
 
 /**
- * 샌드박스가 반송한 최종 배치 HTML을 inert DOM에서 검증·복제하고 Shadow DOM 안에서 PNG로 저장한다.
- * 외부 I/O URL, 실행 태그/속성, 전역 CSS는 부모 문서 경계를 넘지 못한다.
+ * canonical HTML을 inert DOM에서 검증·복제하고 Shadow DOM 안에서 PNG로 저장하는 client use case.
+ * DOM 캡처와 브라우저 다운로드 I/O는 이 adapter가 소유한다.
  */
 export async function exportHtmlToPng(html: string, css: string, fileName: string): Promise<void> {
 	const dataUrl = await withSafeExportStage(html, css, (stage) =>
@@ -214,7 +137,7 @@ export async function exportHtmlToPng(html: string, css: string, fileName: strin
 
 /**
  * 서버 TIFF 변환용 PNG를 템플릿 픽셀 크기 그대로 만든다.
- * 기존 PNG 다운로드 훅의 HiDPI 동작은 건드리지 않고 이 함수만 pixelRatio 1을 강제한다.
+ * DOM 캡처 I/O는 이 client adapter가 소유하며 pixelRatio 1을 강제한다.
  */
 export async function renderHtmlToPngBlob(
 	html: string,

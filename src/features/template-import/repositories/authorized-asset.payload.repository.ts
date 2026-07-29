@@ -1,5 +1,5 @@
 import type { PayloadRequest } from 'payload'
-import type { AUTHORIZED_ASSET_COLLECTIONS } from '@/types/json-template'
+import type { AUTHORIZED_ASSET_COLLECTIONS } from '../utils/validate-template-html'
 
 /**
  * 인가 에셋 컬렉션(브랜드 로고 등)의 Payload 조회 경계.

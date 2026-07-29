@@ -3,7 +3,7 @@ import { managerOrAdmin } from '@/lib/auth'
 
 /**
  * 템플릿 임포트가 영속화한 이미지 조각 (배경, 아이콘 등).
- * jsonTemplate의 image 요소와 Figma HTML의 img 요소가 내부 URL로 참조한다.
+ * Figma HTML draft의 img 요소가 내부 URL로 참조한다.
  */
 export const TemplateAssets: CollectionConfig = {
 	slug: 'template-assets',

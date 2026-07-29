@@ -3,8 +3,8 @@
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { composeTemplateHtml } from '@/features/template-import/utils/compose-template-html'
-import { exportHtmlToPng, renderHtmlToPngBlob } from '@/hooks/use-template-png-export'
 import { pixelsToMillimeters } from '../print-output'
+import { exportHtmlToPng, renderHtmlToPngBlob } from '../services/export-template-png.client'
 import {
 	downloadTemplateTiff,
 	TemplateTiffDownloadError,

@@ -14,7 +14,6 @@ export type AgentTemplateDocument = Pick<
 	| 'height'
 	| 'html'
 	| 'id'
-	| 'jsonTemplate'
 	| 'name'
 	| 'overrides'
 	| 'printPpi'
@@ -39,7 +38,6 @@ function publishedTemplateQuery(user: unknown) {
 		select: {
 			name: true,
 			description: true,
-			jsonTemplate: true,
 			html: true,
 			overrides: true,
 			width: true,

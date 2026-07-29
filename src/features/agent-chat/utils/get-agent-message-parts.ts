@@ -35,7 +35,8 @@ export function getAgentTemplateAttachments(message: AgentChatMessage) {
 		}
 
 		const output = part.output
-		return output.type === 'template-image'
+		// JSON 템플릿 제거 전에 저장된 첨부는 렌더하지 않는다.
+		return output.type === 'template-image' && output.kind === 'html'
 			? [
 					{
 						attachment: output,

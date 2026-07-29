@@ -1,11 +1,8 @@
 import { z } from 'zod'
-import { AUTHORIZED_ASSET_COLLECTIONS } from '@/types/json-template'
 import { findAuthorizedAssetsByIds } from '../repositories/authorized-asset.payload.repository'
 import {
+	AUTHORIZED_ASSET_COLLECTIONS,
 	type AuthorizedImageRef,
-	validateTemplateImages,
-} from '../utils/validate-authorized-assets'
-import {
 	inspectDraftTemplateHtml,
 	inspectPublishedTemplateHtml,
 	inspectTemplateHtml,
@@ -45,7 +42,6 @@ const templateOverridesSchema = z.record(
 )
 
 interface TemplatePublishCandidate {
-	jsonTemplate?: unknown
 	baseHtml?: unknown
 	overrides?: unknown
 	html?: unknown
@@ -198,28 +194,10 @@ export async function findTemplatePublishBlocker(
 	repositoryContext: Parameters<typeof findAuthorizedAssetsByIds>[0],
 ): Promise<string | null> {
 	const htmlValidation = htmlTemplateRefs(candidate)
-	let refs: AuthorizedImageRef[]
+	if (!htmlValidation) return '발행할 HTML 템플릿이 필요합니다.'
+	if ('blocker' in htmlValidation) return htmlValidation.blocker
 
-	if (htmlValidation && 'blocker' in htmlValidation) return htmlValidation.blocker
-	if (htmlValidation) {
-		refs = htmlValidation.refs
-	} else {
-		const validation = validateTemplateImages(candidate.jsonTemplate)
-
-		if (validation.status === 'empty') {
-			return '발행할 HTML 또는 JSON 템플릿이 필요합니다.'
-		}
-		if (validation.status === 'invalid') {
-			return 'jsonTemplate이 스키마(src/types/json-template.ts)와 맞지 않아 저장할 수 없습니다.'
-		}
-		if (validation.unauthorizedLabels.length > 0) {
-			return `인가된 에셋으로 교체되지 않은 이미지가 있습니다: ${validation.unauthorizedLabels.join(', ')}. 미리보기에서 각 이미지를 브랜드 에셋으로 교체한 뒤 저장하세요.`
-		}
-
-		refs = validation.authorizedRefs
-	}
-
-	const invalidRefLabels = await findInvalidAuthorizedRefs(refs, repositoryContext)
+	const invalidRefLabels = await findInvalidAuthorizedRefs(htmlValidation.refs, repositoryContext)
 	if (invalidRefLabels.length > 0) {
 		return `인가 에셋 참조가 유효하지 않습니다: ${invalidRefLabels.join(', ')}. 미리보기에서 에셋을 다시 선택하세요.`
 	}

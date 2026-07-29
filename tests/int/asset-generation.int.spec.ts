@@ -17,13 +17,6 @@ const mockedFind = vi.mocked(findPublishedTemplate)
 const mockedNavItems = vi.mocked(listPublishedTemplateNavItems)
 const mockedCategories = vi.mocked(listTemplateCategories)
 
-const validJsonTemplate = {
-	width: 1080,
-	height: 1350,
-	background: '#ffffff',
-	elements: [],
-}
-
 describe('getCreateNavigation', () => {
 	beforeEach(() => {
 		mockedCategories.mockReset()
@@ -73,7 +66,7 @@ describe('getPublishedTemplate', () => {
 		mockedFind.mockReset()
 	})
 
-	it('HTML 템플릿을 JSON보다 우선해 돌려준다', async () => {
+	it('렌더 가능한 HTML 템플릿을 돌려준다', async () => {
 		mockedFind.mockResolvedValue({
 			id: 1,
 			name: 'Figma 템플릿',
@@ -81,7 +74,7 @@ describe('getPublishedTemplate', () => {
 			overrides: { '2:1': { input: { label: '이름' } } },
 			width: 1280,
 			height: 720,
-			jsonTemplate: validJsonTemplate,
+			updatedAt: '2026-07-29T00:00:00.000Z',
 		} as never)
 
 		await expect(getPublishedTemplate(1)).resolves.toEqual({
@@ -92,6 +85,8 @@ describe('getPublishedTemplate', () => {
 			overrides: { '2:1': { input: { label: '이름' } } },
 			width: 1280,
 			height: 720,
+			printPpi: undefined,
+			templateVersion: '2026-07-29T00:00:00.000Z',
 		})
 	})
 
@@ -103,10 +98,9 @@ describe('getPublishedTemplate', () => {
 			overrides: {},
 			width: 1280,
 			height: 720,
-			jsonTemplate: validJsonTemplate,
 		} as never)
 
-		await expect(getPublishedTemplate(4)).resolves.toMatchObject({ kind: 'json', id: 4 })
+		await expect(getPublishedTemplate(4)).resolves.toBeNull()
 	})
 
 	it('과거 문서의 자기신고 에셋도 공식 내부 URL이 아니면 렌더하지 않는다', async () => {
@@ -117,35 +111,19 @@ describe('getPublishedTemplate', () => {
 			overrides: {},
 			width: 1280,
 			height: 720,
-			jsonTemplate: validJsonTemplate,
 		} as never)
 
-		await expect(getPublishedTemplate(5)).resolves.toMatchObject({ kind: 'json', id: 5 })
+		await expect(getPublishedTemplate(5)).resolves.toBeNull()
 	})
 
-	it('사용 가능한 HTML이 없으면 JSON 템플릿으로 폴백한다', async () => {
+	it('사용 가능한 HTML이 없으면 노출하지 않는다', async () => {
 		mockedFind.mockResolvedValue({
 			id: 2,
 			name: '정상 템플릿',
 			html: '<div>크기 없음</div>',
-			jsonTemplate: validJsonTemplate,
 		} as never)
 
-		await expect(getPublishedTemplate(2)).resolves.toMatchObject({
-			kind: 'json',
-			id: 2,
-			name: '정상 템플릿',
-		})
-	})
-
-	it('손으로 고치다 깨진 템플릿은 없는 것으로 처리한다', async () => {
-		mockedFind.mockResolvedValue({
-			id: 3,
-			name: '깨진 템플릿',
-			jsonTemplate: { width: 'broken' },
-		} as never)
-
-		await expect(getPublishedTemplate(3)).resolves.toBeNull()
+		await expect(getPublishedTemplate(2)).resolves.toBeNull()
 	})
 
 	it('실제로 없으면 null을 돌려주고 조회 실패는 숨기지 않는다', async () => {

@@ -110,18 +110,6 @@ export const Templates: CollectionConfig = {
 				},
 			},
 		},
-		// 레거시 절대좌표 모델 — 폼에서 숨김(컬럼·기존 데이터 유지). 신규 템플릿은 html을 쓴다.
-		{ name: 'jsonTemplate', type: 'json', admin: { hidden: true } },
-		// 기능 코드(css/js) — manager가 코드를 쓰지 않으므로 폼에서 숨김(컬럼·샌드박스 읽기 유지).
-		{
-			name: 'code',
-			type: 'group',
-			admin: { hidden: true },
-			fields: [
-				{ name: 'css', type: 'code', admin: { language: 'css' } },
-				{ name: 'js', type: 'code', admin: { language: 'javascript' } },
-			],
-		},
 		// 출처 URL. 입력창은 사이드바의 Figma 가져오기 필드와 통합했으므로 폼에서 숨긴다(컬럼·값 유지).
 		{
 			name: 'sourceUrl',

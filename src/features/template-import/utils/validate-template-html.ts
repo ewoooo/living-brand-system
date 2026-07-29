@@ -1,6 +1,13 @@
 import { Parser } from 'htmlparser2'
-import { AUTHORIZED_ASSET_COLLECTIONS } from '@/types/json-template'
-import type { AuthorizedImageRef } from './validate-authorized-assets'
+
+export const AUTHORIZED_ASSET_COLLECTIONS = ['brand-logos', 'application-images'] as const
+
+export interface AuthorizedImageRef {
+	collection: (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
+	assetId: number
+	src: string
+	label: string
+}
 
 type AuthorizedAssetCollection = (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
 

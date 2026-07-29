@@ -8,6 +8,7 @@ import * as migration_20260728_023011_add_color_pairing_recommendation_block fro
 import * as migration_20260728_052054_studio_image_profile_routes from './20260728_052054_studio_image_profile_routes';
 import * as migration_20260728_060029_add_image_grid_description from './20260728_060029_add_image_grid_description';
 import * as migration_20260729_013432_add_template_print_ppi from './20260729_013432_add_template_print_ppi';
+import * as migration_20260729_024631_remove_json_templates from './20260729_024631_remove_json_templates';
 
 export const migrations = [
   {
@@ -59,5 +60,10 @@ export const migrations = [
     up: migration_20260729_013432_add_template_print_ppi.up,
     down: migration_20260729_013432_add_template_print_ppi.down,
     name: '20260729_013432_add_template_print_ppi',
+  },
+  {
+    up: migration_20260729_024631_remove_json_templates.up,
+    down: migration_20260729_024631_remove_json_templates.down,
+    name: '20260729_024631_remove_json_templates'
   },
 ];

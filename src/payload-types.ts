@@ -1243,19 +1243,6 @@ export interface Template {
   id: number;
   name: string;
   description?: string | null;
-  jsonTemplate?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  code?: {
-    css?: string | null;
-    js?: string | null;
-  };
   sourceUrl?: string | null;
   baseHtml?: string | null;
   overrides?:
@@ -1276,7 +1263,7 @@ export interface Template {
    */
   height?: number | null;
   /**
-   * 설정하면 인쇄용 CMYK TIFF 내보내기가 활성화됩니다. 픽셀 크기는 유지되고 인쇄 크기만 달라집니다.
+   * 설정하면 CMYK TIFF 내보내기가 활성화됩니다. 픽셀 크기는 유지되며 최대 67,108,864픽셀을 지원합니다.
    */
   printPpi?: ('72' | '150' | '300') | null;
   /**
@@ -2587,13 +2574,6 @@ export interface ImageProfilesSelect<T extends boolean = true> {
 export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
-  jsonTemplate?: T;
-  code?:
-    | T
-    | {
-        css?: T;
-        js?: T;
-      };
   sourceUrl?: T;
   baseHtml?: T;
   overrides?: T;
