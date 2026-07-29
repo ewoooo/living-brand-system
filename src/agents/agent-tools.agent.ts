@@ -16,9 +16,9 @@ import {
 	searchAgentGuidelines,
 } from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
-import { checkDisplayStatus } from '@/features/asset-check/components/check-status'
 import { type CheckScenario, getCheckScenario } from '@/features/asset-check/scenarios'
 import { getCheckScenarios } from '@/features/asset-check/services/get-check-scenarios.service'
+import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
 import {
 	type AgentGeneratedImagesAttachment,
 	generateImageCandidates,

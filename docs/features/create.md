@@ -12,7 +12,7 @@
 
 조합은 전부 클라이언트에서 일어나며 서버 렌더링·이미지 생성·영속이 없습니다. Studio의 `/studio/template`과 AI Chat은 같은 HTML 합성·내보내기 경로를 사용합니다.
 
-- `HtmlAssetGenerator`(`src/features/asset-generation/components/`): 발행된 Figma HTML의 열린 텍스트 슬롯을 편집하고 미리보기를 렌더합니다.
+- `HtmlAssetGenerator`(`src/components/studio/template/html-asset-generator.tsx`): 발행된 Figma HTML의 열린 텍스트 슬롯을 편집하고 미리보기를 렌더합니다.
 - `collectHtmlSlots()`(`src/features/asset-generation/utils/`): HTML과 override에서 열린 텍스트 슬롯을 수집합니다.
 - `composeTemplateHtml()`(`src/features/template-import/utils/`): 사용자가 바꾼 슬롯 값만 base HTML에 합성합니다.
 - `exportHtmlToPng()`(`src/features/asset-generation/utils/`): 검증한 HTML을 격리된 오프스크린 DOM에 복제하고 `html-to-image`로 PNG를 내려받습니다.

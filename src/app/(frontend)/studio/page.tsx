@@ -1,16 +1,16 @@
 import { ArrowRight } from '@carbon/icons-react'
-import { PageHeader } from '@/components/global/page-header'
 import { SectionLayout } from '@/components/global/section-layout'
-import { StudioSideNavigation } from '@/components/global/studio-side-navigation'
-import { NavigationBlock } from '@/components/navigation-block'
-import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
+import { ContentFrame } from '@/components/shared/content-frame'
+import { ContentHeading } from '@/components/shared/content-heading'
+import { NavigationBlock } from '@/components/shared/navigation/navigation-block'
+import { StudioSideNavigation } from '@/components/studio/shared/studio-side-navigation'
 
 const navigationTail = <ArrowRight aria-hidden className="ml-auto" size={24} />
 
 export default function StudioPage() {
 	return (
 		<SectionLayout nav={<StudioSideNavigation />} mobileNavigation={false}>
-			<GuidelineContentFrame className="grid gap-16">
+			<ContentFrame className="grid gap-16">
 				<section>
 					<div className="grid grid-cols-1 gap-4">
 						<NavigationBlock
@@ -23,7 +23,7 @@ export default function StudioPage() {
 					</div>
 				</section>
 				<section>
-					<PageHeader title="Images" className="pb-8" />
+					<ContentHeading level={2} title="Images" className="pb-8" />
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<NavigationBlock
 							variant="default"
@@ -42,9 +42,10 @@ export default function StudioPage() {
 					</div>
 				</section>
 				<section>
-					<PageHeader
+					<ContentHeading
+						level={2}
 						title="Templates"
-						tip="Browse reusable assets for brand production."
+						helpText="Browse reusable assets for brand production."
 						className="pb-8"
 					/>
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-3 [&>[data-slot=navigation-block]]:aspect-square">
@@ -81,7 +82,7 @@ export default function StudioPage() {
 						/>
 					</div>
 				</section>
-			</GuidelineContentFrame>
+			</ContentFrame>
 		</SectionLayout>
 	)
 }

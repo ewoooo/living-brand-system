@@ -34,10 +34,11 @@ grep -rl "Badge\|Card\|Typography" src/components src/features
 | 하려는 일 | 재사용할 것 |
 | --- | --- |
 | 헤딩·본문 텍스트 | `Typography` (`src/components/ui/typography.tsx`) |
+| 제목·설명·도움말 조합 | `ContentHeading` (`src/components/shared/content-heading.tsx`) |
 | 아이콘 | `@carbon/icons-react` |
 | className 병합 | `@/lib/utils`의 `cn` |
 | 색 파생(전경색·RGB) | `@/lib/color` (`hexToRgb`, `getContrastingForeground`) |
-| 콘텐츠 최대 폭 | `GuidelineContentFrame` |
+| 콘텐츠 최대 폭 | `ContentFrame` (`src/components/shared/content-frame.tsx`) |
 | 블록 표면색(배경) | `GuidelineBlockFrame` |
 | kit 갤러리 데모 래핑 | `CollapsibleDemo` (`src/features/guideline/components/kit/collapsible-demo.tsx`) |
 
@@ -176,9 +177,9 @@ grep -rnE '(grid-cols|col-span|gap|w|h|text)-\$\{' src
 
 ### 폭·표면색·세로 리듬은 프레임이 소유
 
-- 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `GuidelineContentFrame`에만 있습니다(`guideline-content-frame.tsx:22`의 `max-w-[1250px]`).
+- 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `ContentFrame`에만 있습니다(`content-frame.tsx:22`의 `max-w-[1250px]`).
 - 표면 배경색은 컴포넌트 안에 칠하지 않고 `GuidelineBlockFrame`의 `variant`(`normal`/`secondary`/`inverted`)로 받습니다.
-- 블록 간 세로 리듬도 프레임이 소유합니다(`guideline-content-frame.tsx:21`의 `py-16`). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
+- 블록 간 세로 리듬도 프레임이 소유합니다(`content-frame.tsx:21`의 `py-8`). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
 
 ## 5. 브랜드 무관
 
@@ -249,7 +250,7 @@ PR을 올리기 전 자기 점검용입니다.
 - [ ] `grep -rE '(bg|text|border|ring|fill)-(neutral|gray|zinc|slate|stone)-[0-9]'` 결과가 이 컴포넌트에서 0이다.
 - [ ] `grep -rE 'className=.*#[0-9a-fA-F]{6}'`에 걸리는 생 hex가 없다(색 데이터 props는 예외).
 - [ ] `grep -rE '(grid-cols|col-span|gap)-\$\{'`에 걸리는 동적 클래스가 없다. 조건부 완전 클래스로 바꿨다.
-- [ ] 자기 `max-width`가 없다. 폭은 `GuidelineContentFrame`, 표면색은 `GuidelineBlockFrame`이 소유한다.
+- [ ] 자기 `max-width`가 없다. 폭은 `ContentFrame`, 표면색은 `GuidelineBlockFrame`이 소유한다.
 - [ ] 아이콘은 `@carbon/icons-react`다. `@hugeicons`가 없다.
 - [ ] 색·폰트·로고를 props로 받는다. 하드코딩은 essenherb default뿐이다.
 - [ ] 색·전경색은 저장하지 않고 `@/lib/color`로 런타임 파생한다.
