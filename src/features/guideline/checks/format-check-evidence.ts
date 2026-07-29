@@ -123,5 +123,8 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 				evidence.title ?? 'Color pairing recommendation',
 				evidence.variant,
 			]).join('\n')
+		// ⚠️ SPIKE (임시) — block-widget-separation 검증용. 제거 시 이 case 삭제.
+		case 'blockSpike':
+			return `[spike] 위젯 ${evidence.widgetCount}개`
 	}
 }

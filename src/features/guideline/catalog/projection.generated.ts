@@ -1,5 +1,6 @@
 // 이 파일은 scripts/generate-guideline-block-catalogs.ts로 생성됩니다. 직접 수정하지 마세요.
 
+import projectBlockSpike from '../blocks/block-spike/projection'
 import projectCallout from '../blocks/callout/projection'
 import projectCarousel from '../blocks/carousel/projection'
 import projectColorPairing from '../blocks/color-pairing/projection'
@@ -40,6 +41,7 @@ export const guidelineBlockProjectors = {
 	typeScale: projectTypeScale,
 	layoutGrid: projectLayoutGrid,
 	glyphGrid: projectGlyphGrid,
+	blockSpike: projectBlockSpike,
 	colorPairing: projectColorPairing,
 	colorPairingRecommendation: projectColorPairingRecommendation,
 	iconGrid: projectIconGrid,

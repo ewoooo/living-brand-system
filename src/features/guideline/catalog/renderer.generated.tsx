@@ -1,6 +1,7 @@
 // 이 파일은 scripts/generate-guideline-block-catalogs.ts로 생성됩니다. 직접 수정하지 마세요.
 
 import type { ReactNode } from 'react'
+import BlockSpikeComponent from '../blocks/block-spike/component'
 import CalloutComponent from '../blocks/callout/component'
 import CarouselComponent from '../blocks/carousel/component'
 import ColorPairingComponent from '../blocks/color-pairing/component'
@@ -41,6 +42,7 @@ export const guidelineBlockRenderers = {
 	typeScale: (block) => <TypeScaleComponent block={block} />,
 	layoutGrid: (block) => <LayoutGridComponent block={block} />,
 	glyphGrid: (block) => <GlyphGridComponent block={block} />,
+	blockSpike: (block) => <BlockSpikeComponent block={block} />,
 	colorPairing: (block) => <ColorPairingComponent block={block} />,
 	colorPairingRecommendation: (block) => <ColorPairingRecommendationComponent block={block} />,
 	iconGrid: (block) => <IconGridComponent block={block} />,

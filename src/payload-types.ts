@@ -250,6 +250,7 @@ export interface GuidelineDocument {
         | TypeScaleBlock
         | LayoutGridBlock
         | GlyphGridBlock
+        | BlockSpikeBlock
         | ColorPairingBlock
         | ColorPairingRecommendationBlock
         | IconGridBlock
@@ -807,6 +808,36 @@ export interface GlyphGridBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'glyphGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BlockSpikeBlock".
+ */
+export interface BlockSpikeBlock {
+  /**
+   * 위젯 배치 열 수입니다.
+   */
+  columns?: number | null;
+  /**
+   * 이 블록이 호스팅할 위젯들입니다.
+   */
+  widgets?: ColorPaletteWidget[] | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'blockSpike';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPaletteWidget".
+ */
+export interface ColorPaletteWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPaletteWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2054,6 +2085,7 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         typeScale?: T | TypeScaleBlockSelect<T>;
         layoutGrid?: T | LayoutGridBlockSelect<T>;
         glyphGrid?: T | GlyphGridBlockSelect<T>;
+        blockSpike?: T | BlockSpikeBlockSelect<T>;
         colorPairing?: T | ColorPairingBlockSelect<T>;
         colorPairingRecommendation?: T | ColorPairingRecommendationBlockSelect<T>;
         iconGrid?: T | IconGridBlockSelect<T>;
@@ -2290,6 +2322,29 @@ export interface GlyphGridBlockSelect<T extends boolean = true> {
   title?: T;
   typeface?: T;
   rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BlockSpikeBlock_select".
+ */
+export interface BlockSpikeBlockSelect<T extends boolean = true> {
+  columns?: T;
+  widgets?:
+    | T
+    | {
+        colorPaletteWidget?: T | ColorPaletteWidgetSelect<T>;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPaletteWidget_select".
+ */
+export interface ColorPaletteWidgetSelect<T extends boolean = true> {
   id?: T;
   blockName?: T;
 }
