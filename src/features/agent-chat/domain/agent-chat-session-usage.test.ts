@@ -19,6 +19,7 @@ describe('createAgentChatSessionUsageCollector', () => {
 					textTokens: 4,
 					reasoningTokens: 1,
 				},
+				raw: { input_tokens: 10, output_tokens: 5 },
 				totalTokens: 15,
 			},
 			toolCalls: [
@@ -27,6 +28,7 @@ describe('createAgentChatSessionUsageCollector', () => {
 			],
 		})
 		collector.addStep({
+			model: { modelId: 'claude-opus-5' },
 			usage: {
 				inputTokens: 20,
 				inputTokenDetails: {
@@ -39,6 +41,7 @@ describe('createAgentChatSessionUsageCollector', () => {
 					textTokens: 7,
 					reasoningTokens: undefined,
 				},
+				raw: { input_tokens: 20, output_tokens: 7 },
 				totalTokens: 27,
 			},
 			toolCalls: [{ toolName: 'searchGuidelines', input: { query: 'color' } }],
@@ -46,7 +49,7 @@ describe('createAgentChatSessionUsageCollector', () => {
 
 		expect(collector.snapshot()).toEqual({
 			aiUsage: {
-				model: 'claude-sonnet-4-6',
+				model: 'claude-sonnet-4-6, claude-opus-5',
 				callCount: 2,
 				inputTokens: 30,
 				outputTokens: 12,
@@ -54,6 +57,18 @@ describe('createAgentChatSessionUsageCollector', () => {
 				cacheReadInputTokens: 1,
 				cacheWriteInputTokens: 1,
 				reasoningTokens: 1,
+				rawUsage: {
+					steps: [
+						{
+							model: 'claude-sonnet-4-6',
+							usage: { input_tokens: 10, output_tokens: 5 },
+						},
+						{
+							model: 'claude-opus-5',
+							usage: { input_tokens: 20, output_tokens: 7 },
+						},
+					],
+				},
 			},
 			usedTools: [
 				{ name: 'loadSkill', callCount: 1 },

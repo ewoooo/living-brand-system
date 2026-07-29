@@ -11,6 +11,7 @@
 - `risk: high`의 서버 결정은 Opus 5.0과 사람 검토를 강제하고 `action` 범위를 `read`로 낮춥니다. `confidence`는 결정에 보존만 하며 임계값 보정에는 사용하지 않습니다. 결정 저장은 후속 연결합니다.
 - Skill별 도구 허용 목록은 서버가 소유하며, triage의 `none/read/action` 범위와 교집합으로 결정합니다. 등록되지 않은 Skill은 어떤 도구도 허용하지 않습니다.
 - 첫 단계의 기본 모델은 Sonnet 4.6이고, 이후 단계는 서버 결정에 따라 `claude-sonnet-4-6` 또는 `claude-opus-5`로 전환하며 허용된 도구만 AI SDK `activeTools`에 전달합니다.
+- 한 턴에 여러 모델을 사용하면 실행 기록의 `model`에 사용 순서대로 중복 없이 남기고, `rawUsage.steps`에는 단계별 모델과 provider usage를 함께 저장합니다.
 - 새 Feature를 이 표면으로 노출하려면: 코어 service를 감싸는 tool을 정의(입력 스키마 + 코어 호출) → 도구 목록에 등록. agent가 언제 그 도구를 고를지는 도구 설명과 skill로 유도합니다.
 - 도구는 코어 service를 호출만 하며 로직을 중복 구현하지 않습니다.
 
