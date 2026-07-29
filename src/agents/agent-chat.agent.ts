@@ -102,7 +102,9 @@ function formatAgentSkillSelectionInstructions(
 	const lines = skills.map((skill) => `- ${skill.name}: ${skill.description}`)
 
 	return [
-		'Before answering, choose exactly one skill from the list below and call loadSkill with its name.',
+		'Before answering, classify the request and call loadSkill once with name, responseMode, risk, and confidence.',
+		'Use responseMode quick for no lookup, lookup for a focused read, research for multi-step or multi-source analysis, and action for creating or changing an output.',
+		'Use risk high when an incorrect answer or action could cause material, privacy, security, compliance, or irreversible impact; otherwise use low. confidence must be an integer from 0 to 100.',
 		'Choose by matching the user request to the skill description. Prefer template or asset skills for requests about what can be made, what should be made, creating assets, filling template slots, exporting images, or downloading results.',
 		'Prefer guideline skills only for questions about published brand rules, guideline pages, sections, or usage standards.',
 		'After loadSkill returns, follow its instructions field as the active skill instructions.',

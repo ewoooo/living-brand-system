@@ -1,6 +1,10 @@
 import { type ToolSet, tool } from 'ai'
 import { z } from 'zod'
 import {
+	agentQueryTriageSchema,
+	decideAgentQueryTriage,
+} from '@/features/agent-chat/domain/agent-query-triage'
+import {
 	type AgentSkillDetail,
 	findEnabledAgentSkillByName,
 } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
@@ -40,19 +44,22 @@ const guidelineToolContextSchema = z.object({
 export function getAgentTools() {
 	return {
 		loadSkill: tool({
-			description: 'Load the full instructions for an enabled agent skill by name.',
-			inputSchema: z.object({
-				name: z.string().min(1).max(80),
-			}),
+			description:
+				'Classify the request and load the full instructions for one enabled agent skill.',
+			inputSchema: agentQueryTriageSchema,
 			contextSchema: guidelineToolContextSchema,
-			execute: async ({ name }, { context }) => {
+			execute: async (triage, { context }) => {
+				const { name } = triage
 				const skill = await findEnabledAgentSkillByName(context.user, name)
 
 				if (!skill) {
 					throw new AgentConfigurationError('Agent skill is not configured.')
 				}
 
-				return formatLoadedSkill(skill)
+				return {
+					...formatLoadedSkill(skill),
+					...decideAgentQueryTriage(triage),
+				}
 			},
 		}),
 		listGuidelineDocuments: tool({
