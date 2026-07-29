@@ -20,7 +20,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Typography } from '@/components/ui/typography'
 import { useImageGeneration } from '@/features/generate-image/hooks/use-image-generation'
 
-// 제품(프롬프트) + 프로파일 선택 → /api/image → 후보 그리드(택1·다운로드). 정규화·생성은 라우트/서비스 소유.
+// 제품(프롬프트) + 프로파일 선택 → 생성 API → 후보 그리드(택1·다운로드). 정규화·생성은 라우트/서비스 소유.
 
 const EXAMPLE_PROMPTS = [
 	'신제품을 위한 깨끗한 스튜디오 제품 이미지',
@@ -164,9 +164,11 @@ export function ImageGenerator({
 					</CardContent>
 
 					<CardFooter className="flex-col items-stretch gap-2 border-t border-border py-4">
-						<Typography size="xs" tone="muted" className="text-right">
-							gpt-image-2
-						</Typography>
+						{result?.model && (
+							<Typography size="xs" tone="muted" className="text-right">
+								{result.model}
+							</Typography>
+						)}
 						<Button
 							type="button"
 							size="lg"

@@ -1,7 +1,6 @@
 import { z } from 'zod'
-import { env } from '@/env'
 import {
-	generateImageCandidates,
+	generateImages,
 	ImageGenerationUnavailableError,
 	ImageProfileNotFoundError,
 	ImagePromptNormalizationUnavailableError,
@@ -10,11 +9,13 @@ import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
 export const maxDuration = 60
 
-const requestSchema = z.object({
-	prompt: z.string().trim().min(1).max(500),
-	count: z.number().int().min(1).max(6).default(4),
-	profileId: z.number().int().positive().optional(),
-})
+const requestSchema = z
+	.object({
+		prompt: z.string().trim().min(1).max(500),
+		count: z.number().int().min(1).max(6).default(4),
+		profileId: z.number().int().positive().optional(),
+	})
+	.strict()
 
 export async function POST(request: Request) {
 	if (isCrossOriginRequest(request)) {
@@ -34,25 +35,22 @@ export async function POST(request: Request) {
 	const { prompt: userInput, count, profileId } = parsed.data
 
 	try {
-		const result = await generateImageCandidates({
-			userInput,
-			profileId,
-			user,
-			count,
-		})
+		const result = await generateImages({ userInput, profileId, user, count })
 		if (result.images.length === 0) {
 			return Response.json({ message: 'Image generation failed.' }, { status: 502 })
 		}
+		const { provider, ...response } = result
 		payload.logger.info(
 			{
 				profileId: result.profileId,
-				provider: env.OPENAI_API_KEY ? 'gpt-image' : 'pollinations',
+				provider,
+				model: result.model,
 				promptLength: result.prompt.length,
 				count: result.images.length,
 			},
 			'image-generation.done',
 		)
-		return Response.json(result)
+		return Response.json(response)
 	} catch (error) {
 		payload.logger.error({ err: error }, 'image-generation.failed')
 		if (

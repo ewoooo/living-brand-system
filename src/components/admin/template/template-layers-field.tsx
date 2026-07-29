@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
-import { generateImages } from '@/features/generate-image/services/generate-image.client'
+import { requestAdminImageGeneration } from '@/features/generate-image/services/generate-image.client'
 import { generateOneText } from '@/features/generate-text/services/generate-text.client'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import type { TemplateNodeConfig, TemplateNodeConfigMap, TemplateSlotSpec } from '@/types/template'
@@ -150,7 +150,7 @@ function AiTextForm({ rule, onApply }: { rule?: string; onApply: (text: string) 
 	)
 }
 
-// Popup 안에 뜨는 AI 이미지 생성 폼. 프레임 배경으로 얹는다. /api/image는 base64 data-URI를 돌려주므로 CSP 걱정 없다.
+// Popup 안에 뜨는 AI 이미지 생성 폼. 프레임 배경으로 얹는다. 생성 API는 base64 data URI를 반환한다.
 function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 	const [prompt, setPrompt] = useState('')
 	const [loading, setLoading] = useState(false)
@@ -161,7 +161,7 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 		setLoading(true)
 		try {
 			// 프로파일을 생략해 사용자가 묘사한 배경을 원문 그대로 생성한다.
-			const { images } = await generateImages({ prompt: trimmed, count: 1 })
+			const { images } = await requestAdminImageGeneration({ prompt: trimmed, count: 1 })
 			const src = images[0]
 			if (src) onApply(src)
 			else toast.error('이미지 생성 실패 — 잠시 후 다시 시도하세요.')

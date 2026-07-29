@@ -25,7 +25,7 @@ import { getCheckScenarios } from '@/features/asset-check/services/get-check-sce
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
 import {
 	type AgentGeneratedImagesAttachment,
-	generateImageCandidates,
+	generateImages,
 } from '@/features/generate-image/services/generate-image.service'
 import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
 import { AgentConfigurationError } from '@/lib/errors'
@@ -157,7 +157,7 @@ export function getAgentTools() {
 					prompt: composedPrompt,
 					profileId: usedProfileId,
 					profileName,
-				} = await generateImageCandidates({
+				} = await generateImages({
 					userInput: prompt,
 					profileId,
 					user: context.user,

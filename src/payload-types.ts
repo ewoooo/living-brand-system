@@ -1213,9 +1213,17 @@ export interface ImageProfile {
    */
   displayOrder: number;
   /**
-   * 이미지 공급자와 무관한 출력 크기 프리셋입니다.
+   * 이 프로파일을 생성할 때 사용할 이미지 모델입니다.
    */
-  outputSizePreset: 'square' | 'landscape' | 'portrait';
+  imageModelPreset: 'openai-gpt-image-2' | 'google-nano-banana-2-lite';
+  /**
+   * 이미지 공급자와 무관한 가로:세로 비율입니다.
+   */
+  aspectRatio: '1:1' | '2:3' | '3:2' | '3:4' | '4:3' | '4:5' | '5:4' | '9:16' | '16:9' | '21:9';
+  /**
+   * Nano Banana 2 Lite는 1K만 지원합니다.
+   */
+  imageSize: '1K' | '2K' | '4K';
   /**
    * 이미지 유형의 기본값입니다. 각 행은 최종 JSON의 주제와 프롬프트가 됩니다.
    */
@@ -2550,7 +2558,9 @@ export interface ImageProfilesSelect<T extends boolean = true> {
   generateSlug?: T;
   slug?: T;
   displayOrder?: T;
-  outputSizePreset?: T;
+  imageModelPreset?: T;
+  aspectRatio?: T;
+  imageSize?: T;
   profilePrompt?:
     | T
     | {
