@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto'
 import type { Payload } from 'payload'
 import {
 	downloadFigmaImage,
-	type FigmaNode,
 	findFigmaImageUrls,
 	findFigmaNodeTree,
 } from '@/features/template-import/repositories/figma.rest.repository'
@@ -10,6 +9,7 @@ import {
 	deleteDraftFigmaAsset,
 	storeDraftFigmaAsset,
 } from '@/features/template-import/repositories/figma-imported-asset.payload.repository'
+import type { FigmaNode } from '@/features/template-import/types'
 import {
 	convertFigmaNodeToHtml,
 	type FigmaHtmlResult,

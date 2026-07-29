@@ -1,45 +1,12 @@
-import { z } from 'zod'
-import { findAuthorizedAssetsByIds } from '../repositories/authorized-asset.payload.repository'
 import {
 	AUTHORIZED_ASSET_COLLECTIONS,
 	type AuthorizedImageRef,
 	inspectDraftTemplateHtml,
-	inspectPublishedTemplateHtml,
 	inspectTemplateHtml,
 	isSafeDraftTemplateAssetUrl,
-} from '../utils/validate-template-html'
-
-const templateInputSchema = z
-	.object({
-		label: z.string().optional(),
-		placeholder: z.string().optional(),
-		maxLength: z.number().int().positive().optional(),
-		maxLines: z.number().int().positive().optional(),
-		inputFormat: z.enum(['free', 'number', 'email', 'date']).optional(),
-		aiInstruction: z.string().optional(),
-	})
-	.strict()
-
-const templateOverridesSchema = z.record(
-	z.string().min(1),
-	z
-		.object({
-			text: z.string().optional(),
-			backgroundImage: z.string().optional(),
-			input: templateInputSchema.optional(),
-			vectorAsset: z
-				.object({
-					collection: z.enum(AUTHORIZED_ASSET_COLLECTIONS),
-					id: z.number().int().positive(),
-					src: z.string().min(1),
-				})
-				.strict()
-				.optional(),
-			vectorFit: z.enum(['fill', 'contain']).optional(),
-			vectorColor: z.string().optional(),
-		})
-		.strict(),
-)
+	parseTemplateNodeConfigs,
+} from '@/services/inspect-template-html.service'
+import { findAuthorizedAssetsByIds } from '../repositories/authorized-asset.payload.repository'
 
 interface TemplatePublishCandidate {
 	baseHtml?: unknown
@@ -49,36 +16,8 @@ interface TemplatePublishCandidate {
 	height?: unknown
 }
 
-type ParsedOverrides = z.infer<typeof templateOverridesSchema>
-
 function nonEmptyString(value: unknown): value is string {
 	return typeof value === 'string' && value.trim() !== ''
-}
-
-function parseOverrides(candidate: TemplatePublishCandidate):
-	| { blocker: string }
-	| {
-			data: ParsedOverrides
-			refsByNode: Map<string, AuthorizedImageRef>
-	  } {
-	const parsed = templateOverridesSchema.safeParse(candidate.overrides ?? {})
-	if (!parsed.success) {
-		return { blocker: 'HTML 템플릿의 overrides 형식이 올바르지 않습니다.' }
-	}
-
-	const refsByNode = new Map<string, AuthorizedImageRef>()
-	for (const [nodeId, override] of Object.entries(parsed.data)) {
-		if (override.vectorAsset) {
-			refsByNode.set(nodeId, {
-				collection: override.vectorAsset.collection,
-				assetId: override.vectorAsset.id,
-				src: override.vectorAsset.src,
-				label: nodeId,
-			})
-		}
-	}
-
-	return { data: parsed.data, refsByNode }
 }
 
 function htmlTemplateRefs(
@@ -100,11 +39,11 @@ function htmlTemplateRefs(
 	) {
 		return { blocker: 'HTML 템플릿의 width와 height는 0보다 큰 숫자여야 합니다.' }
 	}
-	const parsedOverrides = parseOverrides(candidate)
-	if ('blocker' in parsedOverrides) return parsedOverrides
+	const parsedNodeConfigs = parseTemplateNodeConfigs(candidate.overrides)
+	if ('blocker' in parsedNodeConfigs) return parsedNodeConfigs
 
-	for (const override of Object.values(parsedOverrides.data)) {
-		if (nonEmptyString(override.backgroundImage)) {
+	for (const config of Object.values(parsedNodeConfigs.data)) {
+		if (nonEmptyString(config.backgroundImage)) {
 			return {
 				blocker:
 					'배경 이미지는 아직 인가 에셋 참조를 저장하지 않으므로 draft에서만 사용할 수 있습니다.',
@@ -115,27 +54,28 @@ function htmlTemplateRefs(
 	return inspectTemplateHtml({
 		baseHtml: candidate.baseHtml,
 		html: candidate.html,
-		overrideNodeIds: Object.keys(parsedOverrides.data),
-		refsByNode: parsedOverrides.refsByNode,
+		overrideNodeIds: Object.keys(parsedNodeConfigs.data),
+		refsByNode: parsedNodeConfigs.refsByNode,
 	})
 }
 
 /**
  * Templates draft 저장 게이트 Use Case. 실행 가능한 HTML과 외부 URL을 차단하되
  * import staging 에셋과 magic-byte가 확인된 raster data URI는 draft에서만 허용한다.
+ * 외부 I/O는 없으며 저장 adapter가 호출 순서를 소유한다.
  */
 export function findTemplateDraftBlocker(candidate: TemplatePublishCandidate): string | null {
 	const baseHtml = nonEmptyString(candidate.baseHtml) ? candidate.baseHtml : undefined
 	const html = nonEmptyString(candidate.html) ? candidate.html : undefined
 	if (!baseHtml && !html) return null
 
-	const parsedOverrides = parseOverrides(candidate)
-	if ('blocker' in parsedOverrides) return parsedOverrides.blocker
+	const parsedNodeConfigs = parseTemplateNodeConfigs(candidate.overrides)
+	if ('blocker' in parsedNodeConfigs) return parsedNodeConfigs.blocker
 
-	for (const override of Object.values(parsedOverrides.data)) {
+	for (const config of Object.values(parsedNodeConfigs.data)) {
 		if (
-			nonEmptyString(override.backgroundImage) &&
-			!isSafeDraftTemplateAssetUrl(override.backgroundImage)
+			nonEmptyString(config.backgroundImage) &&
+			!isSafeDraftTemplateAssetUrl(config.backgroundImage)
 		) {
 			return 'Draft 배경 이미지는 내부 에셋 또는 안전한 raster data URI여야 합니다.'
 		}
@@ -145,42 +85,8 @@ export function findTemplateDraftBlocker(candidate: TemplatePublishCandidate): s
 		inspectDraftTemplateHtml({
 			baseHtml,
 			html,
-			overrideNodeIds: Object.keys(parsedOverrides.data),
-			refsByNode: parsedOverrides.refsByNode,
-		}).blocker ?? null
-	)
-}
-
-/**
- * 기존 published HTML을 Create/Agent에 넘기기 직전 다시 확인하는 읽기 경계.
- * 신규 발행뿐 아니라 게이트 도입 전 레코드도 실행 가능한 마크업이면 fail-closed 한다.
- */
-export function findTemplateRenderBlocker(candidate: TemplatePublishCandidate): string | null {
-	if (
-		!nonEmptyString(candidate.html) ||
-		typeof candidate.width !== 'number' ||
-		candidate.width <= 0 ||
-		typeof candidate.height !== 'number' ||
-		candidate.height <= 0
-	) {
-		return '렌더 가능한 HTML 모델이 아닙니다.'
-	}
-
-	const parsedOverrides = parseOverrides(candidate)
-	if ('blocker' in parsedOverrides) return parsedOverrides.blocker
-	if (
-		Object.values(parsedOverrides.data).some((override) =>
-			nonEmptyString(override.backgroundImage),
-		)
-	) {
-		return '구조화되지 않은 배경 이미지는 published HTML에서 렌더할 수 없습니다.'
-	}
-
-	return (
-		inspectPublishedTemplateHtml({
-			html: candidate.html,
-			overrideNodeIds: Object.keys(parsedOverrides.data),
-			refsByNode: parsedOverrides.refsByNode,
+			overrideNodeIds: Object.keys(parsedNodeConfigs.data),
+			refsByNode: parsedNodeConfigs.refsByNode,
 		}).blocker ?? null
 	)
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { revokeBlob } from '@/lib/object-url'
-import { MAX_PRINT_PNG_BYTES } from '../print-output'
+import { MAX_PRINT_PNG_BYTES } from '../print-policy'
 
 /** 서버 TIFF 변환이 사용자 조치가 가능한 상태로 실패했음을 UI에 전달한다. */
 export class TemplateTiffDownloadError extends Error {}

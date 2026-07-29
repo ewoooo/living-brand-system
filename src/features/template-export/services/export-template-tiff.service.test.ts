@@ -1,7 +1,7 @@
 import sharp from 'sharp'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { pixelsToMillimeters } from '../print-output'
-import { findPublishedTemplate } from '../repositories/published-template.payload.repository'
+import { findPublishedTemplate } from '@/repositories/published-template.payload.repository'
+import { pixelsToMillimeters } from '../print-policy'
 import {
 	exportTemplateTiff,
 	TemplateTiffInputError,
@@ -9,7 +9,7 @@ import {
 	TemplateTiffUnavailableError,
 } from './export-template-tiff.service'
 
-vi.mock('../repositories/published-template.payload.repository', () => ({
+vi.mock('@/repositories/published-template.payload.repository', () => ({
 	findPublishedTemplate: vi.fn(),
 }))
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { composeTemplateHtml, pruneTemplateOverrides } from './compose-template-html'
+import { composeTemplateHtml } from './compose-template-html.client'
 
 const baseHtml =
 	'<img data-node-id="vector-1" data-figma-type="VECTOR" src="/api/template-assets/file/original.svg" style="width:120px;height:40px">'
@@ -34,14 +34,5 @@ describe('composeTemplateHtml vector override', () => {
 		const image = new DOMParser().parseFromString(html, 'text/html').querySelector('img')
 
 		expect(image?.style.objectFit).toBe('fill')
-	})
-
-	it('새 base에 없는 노드의 override만 제거한다', () => {
-		expect(
-			pruneTemplateOverrides('<p data-node-id="kept"></p>', {
-				kept: { text: '유지' },
-				removed: { text: '제거' },
-			}),
-		).toEqual({ kept: { text: '유지' } })
 	})
 })

@@ -1,4 +1,6 @@
 import { Parser } from 'htmlparser2'
+import { z } from 'zod'
+import type { TemplateNodeConfigMap } from '@/types/template'
 
 export const AUTHORIZED_ASSET_COLLECTIONS = ['brand-logos', 'application-images'] as const
 
@@ -10,6 +12,38 @@ export interface AuthorizedImageRef {
 }
 
 type AuthorizedAssetCollection = (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
+
+const templateSlotSpecSchema = z
+	.object({
+		label: z.string().optional(),
+		placeholder: z.string().optional(),
+		maxLength: z.number().int().positive().optional(),
+		maxLines: z.number().int().positive().optional(),
+		inputFormat: z.enum(['free', 'number', 'email', 'date']).optional(),
+		aiInstruction: z.string().optional(),
+	})
+	.strict()
+
+const templateNodeConfigMapSchema = z.record(
+	z.string().min(1),
+	z
+		.object({
+			text: z.string().optional(),
+			backgroundImage: z.string().optional(),
+			input: templateSlotSpecSchema.optional(),
+			vectorAsset: z
+				.object({
+					collection: z.enum(AUTHORIZED_ASSET_COLLECTIONS),
+					id: z.number().int().positive(),
+					src: z.string().min(1),
+				})
+				.strict()
+				.optional(),
+			vectorFit: z.enum(['fill', 'contain']).optional(),
+			vectorColor: z.string().optional(),
+		})
+		.strict(),
+)
 
 const ALLOWED_TAGS = new Set(['div', 'img', 'p'])
 const COMMON_ATTRIBUTES = new Set(['data-figma-type', 'data-name', 'data-node-id', 'style'])
@@ -97,6 +131,36 @@ interface InspectedFragment {
 export interface TemplateHtmlInspection {
 	blocker?: string
 	refs: AuthorizedImageRef[]
+}
+
+/**
+ * DB overrides 값을 공용 node config 계약으로 검증하고 구조화 에셋 참조를 만든다.
+ * 외부 I/O는 없으며 호출 Service가 저장·조회 경계를 소유한다.
+ */
+export function parseTemplateNodeConfigs(value: unknown):
+	| { blocker: string }
+	| {
+			data: TemplateNodeConfigMap
+			refsByNode: Map<string, AuthorizedImageRef>
+	  } {
+	const parsed = templateNodeConfigMapSchema.safeParse(value ?? {})
+	if (!parsed.success) {
+		return { blocker: 'HTML 템플릿의 overrides 형식이 올바르지 않습니다.' }
+	}
+
+	const refsByNode = new Map<string, AuthorizedImageRef>()
+	for (const [nodeId, config] of Object.entries(parsed.data)) {
+		if (config.vectorAsset) {
+			refsByNode.set(nodeId, {
+				collection: config.vectorAsset.collection,
+				assetId: config.vectorAsset.id,
+				src: config.vectorAsset.src,
+				label: nodeId,
+			})
+		}
+	}
+
+	return { data: parsed.data as TemplateNodeConfigMap, refsByNode }
 }
 
 function isAuthorizedCollection(value: string): value is AuthorizedAssetCollection {
@@ -277,7 +341,10 @@ function isSafeRasterDataUrl(value: string): boolean {
 	}
 }
 
-/** Draft HTML에서 렌더해도 되는 내부 에셋 또는 제한된 raster data URI인지 판정한다. */
+/**
+ * Draft HTML에서 렌더해도 되는 내부 에셋 또는 제한된 raster data URI인지 판정한다.
+ * 외부 I/O는 없다.
+ */
 export function isSafeDraftTemplateAssetUrl(value: string): boolean {
 	return (
 		isCanonicalAssetUrl(value, ['template-assets', ...AUTHORIZED_ASSET_COLLECTIONS]) ||
@@ -471,6 +538,7 @@ function inspectFragment(
 /**
  * Figma HTML 모델의 구조와 URL 출처를 검사한다. 파서는 태그/속성을 실행하지 않고,
  * 공개 URL은 service가 전달한 구조화 에셋 참조와 정확히 일치할 때만 허용한다.
+ * 외부 I/O는 없으며 호출 Use Case가 저장·조회 경계를 소유한다.
  */
 export function inspectTemplateHtml(input: {
 	baseHtml: string
@@ -496,19 +564,28 @@ export function inspectTemplateHtml(input: {
 	return { refs: published.refs }
 }
 
-/** 안전성 검사를 통과한 baseHtml에서 Figma import가 직접 기록한 구조화 에셋 참조를 읽는다. */
+/**
+ * 안전성 검사를 통과한 baseHtml에서 Figma import가 직접 기록한 구조화 에셋 참조를 읽는다.
+ * 외부 I/O는 없다.
+ */
 export function inspectBaseTemplateHtml(html: string): TemplateHtmlInspection {
 	const base = inspectFragment(html, 'base', new Map())
 	return { blocker: base.blocker, refs: base.refs }
 }
 
-/** 안전한 draft HTML에서 실제 렌더 결과가 사용하는 구조화 에셋 참조를 읽는다. */
+/**
+ * 안전한 draft HTML에서 실제 렌더 결과가 사용하는 구조화 에셋 참조를 읽는다.
+ * 외부 I/O는 없다.
+ */
 export function inspectDraftTemplateAssetRefs(html: string): TemplateHtmlInspection {
 	const draft = inspectFragment(html, 'draft', new Map())
 	return { blocker: draft.blocker, refs: draft.refs }
 }
 
-/** Draft 저장 시 실행 가능한 HTML과 외부 URL을 막되 staging 에셋은 허용한다. */
+/**
+ * Draft 저장 시 실행 가능한 HTML과 외부 URL을 막되 staging 에셋은 허용한다.
+ * 외부 I/O는 없으며 호출 Use Case가 저장 경계를 소유한다.
+ */
 export function inspectDraftTemplateHtml(input: {
 	baseHtml?: string
 	html?: string
@@ -536,7 +613,10 @@ export function inspectDraftTemplateHtml(input: {
 	return { refs: [] }
 }
 
-/** 기존 published 문서를 렌더하기 직전 공개 HTML 구조를 다시 검사한다. */
+/**
+ * 기존 published 문서를 렌더하기 직전 공개 HTML 구조를 다시 검사한다.
+ * 외부 I/O는 없으며 호출 Use Case가 조회 경계를 소유한다.
+ */
 export function inspectPublishedTemplateHtml(input: {
 	html: string
 	overrideNodeIds: readonly string[]

@@ -1,11 +1,11 @@
 import { z } from 'zod'
-import { MAX_PRINT_PNG_BYTES } from '@/features/asset-generation/print-output'
+import { MAX_PRINT_PNG_BYTES } from '@/features/template-export/print-policy'
 import {
 	exportTemplateTiff,
 	TemplateTiffInputError,
 	TemplateTiffStaleError,
 	TemplateTiffUnavailableError,
-} from '@/features/asset-generation/services/export-template-tiff.service'
+} from '@/features/template-export/services/export-template-tiff.service'
 import { isCrossOriginRequest } from '@/lib/request-auth'
 
 export const maxDuration = 30

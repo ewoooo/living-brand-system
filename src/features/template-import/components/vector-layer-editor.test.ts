@@ -26,7 +26,7 @@ describe('VectorLayerEditor', () => {
 		)
 		const onChange = vi.fn()
 
-		render(createElement(VectorLayerEditor, { name: 'Vector', override: {}, onChange }))
+		render(createElement(VectorLayerEditor, { name: 'Vector', config: {}, onChange }))
 
 		await waitFor(() => expect(screen.getByRole('option', { name: 'Wordmark' })).toBeTruthy())
 		fireEvent.change(screen.getByLabelText('브랜드 내부 자산'), {

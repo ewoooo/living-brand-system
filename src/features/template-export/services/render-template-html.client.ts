@@ -157,7 +157,11 @@ export async function renderHtmlToPngBlob(
 	return blob
 }
 
-async function withSafeExportStage<T>(
+/**
+ * 검증된 canonical HTML을 안전한 export stage로 구성하고 리소스 로드를 기다리는 client renderer.
+ * DOM 구성과 브라우저 리소스 I/O는 이 adapter가 소유한다.
+ */
+export async function withSafeExportStage<T>(
 	html: string,
 	css: string,
 	exportStage: (stage: HTMLElement) => Promise<T>,
@@ -165,20 +169,51 @@ async function withSafeExportStage<T>(
 	const { holder, stage } = createSafeExportStage(html, css)
 	document.body.appendChild(holder)
 	try {
-		await new Promise((resolve) => requestAnimationFrame(resolve))
-		await Promise.all(
-			Array.from(stage.querySelectorAll('img')).map(async (image) => {
-				if (!image.complete) {
-					await new Promise<void>((resolve) => {
-						image.addEventListener('load', () => resolve(), { once: true })
-						image.addEventListener('error', () => resolve(), { once: true })
-					})
-				}
-				await image.decode().catch(() => undefined)
-			}),
-		)
+		await waitForExportStageAssets(stage)
 		return await exportStage(stage)
 	} finally {
 		holder.remove()
 	}
+}
+
+/** export stage의 img·inline CSS 이미지·폰트가 준비될 때까지 기다린다. */
+export async function waitForExportStageAssets(stage: HTMLElement): Promise<void> {
+	const ownerDocument = stage.ownerDocument
+	const ownerWindow = ownerDocument.defaultView ?? window
+	await new Promise((resolve) => ownerWindow.requestAnimationFrame(resolve))
+
+	const elements = [stage, ...Array.from(stage.querySelectorAll<HTMLElement>('*'))]
+	const styleUrls = new Set<string>()
+	for (const element of elements) {
+		for (let index = 0; index < element.style.length; index += 1) {
+			const urls = cssUrls(element.style.getPropertyValue(element.style.item(index)))
+			for (const url of urls ?? []) styleUrls.add(url)
+		}
+	}
+
+	await Promise.all([
+		...Array.from(stage.querySelectorAll('img'), waitForImage),
+		...Array.from(styleUrls, (url) => loadImage(ownerDocument, url)),
+		ownerDocument.fonts?.ready,
+	])
+}
+
+async function waitForImage(image: HTMLImageElement): Promise<void> {
+	if (!image.complete) {
+		await new Promise<void>((resolve, reject) => {
+			image.addEventListener('load', () => resolve(), { once: true })
+			image.addEventListener(
+				'error',
+				() => reject(new Error('Template export asset failed to load.')),
+				{ once: true },
+			)
+		})
+	}
+	await image.decode()
+}
+
+async function loadImage(ownerDocument: Document, url: string): Promise<void> {
+	const image = ownerDocument.createElement('img')
+	image.src = url
+	await waitForImage(image)
 }

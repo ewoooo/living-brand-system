@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { getCreateNavigation } from '@/features/template-create/services/get-create-navigation.service'
+import { getPublishedTemplate } from '@/features/template-create/services/get-published-template.service'
 import {
 	findPublishedTemplate,
 	listPublishedTemplateNavItems,
 	listTemplateCategories,
-} from '@/features/asset-generation/repositories/published-template.payload.repository'
-import { getCreateNavigation } from '@/features/asset-generation/services/get-create-navigation.service'
-import { getPublishedTemplate } from '@/features/asset-generation/services/get-published-template.service'
+} from '@/repositories/published-template.payload.repository'
 
-vi.mock('@/features/asset-generation/repositories/published-template.payload.repository', () => ({
+vi.mock('@/repositories/published-template.payload.repository', () => ({
 	findPublishedTemplate: vi.fn(),
 	listPublishedTemplateNavItems: vi.fn(),
 	listTemplateCategories: vi.fn(),
@@ -82,7 +82,7 @@ describe('getPublishedTemplate', () => {
 			id: 1,
 			name: 'Figma 템플릿',
 			html: '<p data-node-id="2:1">Figma</p>',
-			overrides: { '2:1': { input: { label: '이름' } } },
+			nodeConfigs: { '2:1': { input: { label: '이름' } } },
 			width: 1280,
 			height: 720,
 			printPpi: undefined,

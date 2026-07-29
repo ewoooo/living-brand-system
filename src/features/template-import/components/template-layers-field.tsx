@@ -8,12 +8,8 @@ import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { generateImages } from '@/features/generate-image/services/generate-image.client'
 import { generateOneText } from '@/features/generate-text/services/generate-text.client'
-import {
-	composeTemplateHtml,
-	type TemplateInput,
-	type TemplateOverride,
-	type TemplateOverrides,
-} from '@/features/template-import/utils/compose-template-html'
+import { composeTemplateHtml } from '@/services/compose-template-html.client'
+import type { TemplateNodeConfig, TemplateNodeConfigMap, TemplateSlotSpec } from '@/types/template'
 import { VectorLayerEditor } from './vector-layer-editor'
 
 /**
@@ -233,10 +229,10 @@ function SlotSpecEditor({
 	input,
 	onChange,
 }: {
-	input: TemplateInput
-	onChange: (input: TemplateInput) => void
+	input: TemplateSlotSpec
+	onChange: (input: TemplateSlotSpec) => void
 }) {
-	const patch = (part: Partial<TemplateInput>) => onChange({ ...input, ...part })
+	const patch = (part: Partial<TemplateSlotSpec>) => onChange({ ...input, ...part })
 	const positiveInt = (raw: string) => {
 		const parsed = Number.parseInt(raw, 10)
 		return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
@@ -276,7 +272,9 @@ function SlotSpecEditor({
 					id="slot-spec-format"
 					value={input.inputFormat ?? 'free'}
 					onChange={(event) =>
-						patch({ inputFormat: event.target.value as TemplateInput['inputFormat'] })
+						patch({
+							inputFormat: event.target.value as TemplateSlotSpec['inputFormat'],
+						})
 					}
 					style={SELECT_STYLE}
 				>
@@ -323,8 +321,8 @@ export default function TemplateLayersField() {
 	const { dispatchFields, setModified } = useForm()
 	const html = useFormFields(([fields]) => fields.html?.value) as string | undefined
 	const baseHtml = useFormFields(([fields]) => fields.baseHtml?.value) as string | undefined
-	const overrides = (useFormFields(([fields]) => fields.overrides?.value) ??
-		{}) as TemplateOverrides
+	const nodeConfigs = (useFormFields(([fields]) => fields.overrides?.value) ??
+		{}) as TemplateNodeConfigMap
 	const width = useFormFields(([fields]) => fields.width?.value) as number | undefined
 	const height = useFormFields(([fields]) => fields.height?.value) as number | undefined
 	const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -363,21 +361,21 @@ export default function TemplateLayersField() {
 
 	// 편집은 html을 직접 굽지 않고 overrides[nodeId]에 쌓은 뒤 base ⊕ overrides로 html을 재합성한다.
 	// base(=baseHtml, 없으면 현재 html)만 재import 때 갈리고 overrides는 유지되므로 앱 편집이 보존된다.
-	function commitOverride(patch: TemplateOverride) {
+	function commitNodeConfig(patch: TemplateNodeConfig) {
 		if (!selectedId) return
 		const base = baseHtml || html
 		if (typeof base !== 'string') return
-		const next: TemplateOverrides = {
-			...overrides,
-			[selectedId]: { ...overrides[selectedId], ...patch },
+		const next: TemplateNodeConfigMap = {
+			...nodeConfigs,
+			[selectedId]: { ...nodeConfigs[selectedId], ...patch },
 		}
 		dispatchFields({ type: 'UPDATE', path: 'overrides', value: next })
 		dispatchFields({ type: 'UPDATE', path: 'html', value: composeTemplateHtml(base, next) })
 		setModified(true)
 	}
 
-	const commitText = (text: string) => commitOverride({ text })
-	const commitBackground = (src: string) => commitOverride({ backgroundImage: src })
+	const commitText = (text: string) => commitNodeConfig({ text })
+	const commitBackground = (src: string) => commitNodeConfig({ backgroundImage: src })
 
 	return (
 		<div style={{ marginBottom: 'var(--base)' }}>
@@ -538,7 +536,7 @@ export default function TemplateLayersField() {
 							}
 							render={({ close }) => (
 								<AiTextForm
-									rule={overrides[selected.id]?.input?.aiInstruction}
+									rule={nodeConfigs[selected.id]?.input?.aiInstruction}
 									onApply={(text) => {
 										commitText(text)
 										close()
@@ -567,34 +565,34 @@ export default function TemplateLayersField() {
 								variant="ghost"
 								size="icon-xs"
 								onClick={() =>
-									commitOverride({
-										input: overrides[selected.id]?.input ? undefined : {},
+									commitNodeConfig({
+										input: nodeConfigs[selected.id]?.input ? undefined : {},
 									})
 								}
 								title={
-									overrides[selected.id]?.input
+									nodeConfigs[selected.id]?.input
 										? '슬롯 닫기 — 유저 화면에서 숨김'
 										: '슬롯 열기 — 유저 화면에 입력 노출'
 								}
 								aria-label={
-									overrides[selected.id]?.input
+									nodeConfigs[selected.id]?.input
 										? '입력 슬롯 닫기'
 										: '입력 슬롯 열기'
 								}
 							>
-								{overrides[selected.id]?.input ? '🔓' : '🔒'}
+								{nodeConfigs[selected.id]?.input ? '🔓' : '🔒'}
 							</Button>
 							<span
 								className="text-xs"
 								style={{ color: 'var(--theme-elevation-500)' }}
 							>
-								{overrides[selected.id]?.input ? '유저 화면에 열림' : '닫힘'}
+								{nodeConfigs[selected.id]?.input ? '유저 화면에 열림' : '닫힘'}
 							</span>
 						</div>
-						{overrides[selected.id]?.input && (
+						{nodeConfigs[selected.id]?.input && (
 							<SlotSpecEditor
-								input={overrides[selected.id]?.input ?? {}}
-								onChange={(input) => commitOverride({ input })}
+								input={nodeConfigs[selected.id]?.input ?? {}}
+								onChange={(input) => commitNodeConfig({ input })}
 							/>
 						)}
 					</div>
@@ -640,8 +638,8 @@ export default function TemplateLayersField() {
 			{selected?.isVector && (
 				<VectorLayerEditor
 					name={selected.name}
-					override={overrides[selected.id] ?? {}}
-					onChange={commitOverride}
+					config={nodeConfigs[selected.id] ?? {}}
+					onChange={commitNodeConfig}
 				/>
 			)}
 

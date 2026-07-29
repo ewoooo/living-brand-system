@@ -1,6 +1,6 @@
 'use client'
 
-import { DocumentDownload, Download } from '@carbon/icons-react'
+import { DocumentDownload, DocumentPdf, Download } from '@carbon/icons-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
 	Attachment,
@@ -11,15 +11,8 @@ import {
 	AttachmentMedia,
 	AttachmentTitle,
 } from '@/components/ui/attachment'
-import {
-	exportHtmlToPng,
-	renderHtmlToPngBlob,
-} from '@/features/asset-generation/services/export-template-png.client'
-import {
-	downloadTemplateTiff,
-	TemplateTiffDownloadError,
-} from '@/features/asset-generation/services/export-template-tiff.client'
-import { composeTemplateHtml } from '@/features/template-import/utils/compose-template-html'
+import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
+import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import type { AgentTemplateImageAttachment } from '../services/agent-template-request.service'
 
 const PREVIEW_WIDTH = 280
@@ -34,9 +27,6 @@ export function AgentChatTemplateAttachment({
 
 /** html 첨부: 슬롯 값을 base html에 합성해 미리보기·다운로드한다 (Create 화면과 동일 렌더). */
 function HtmlTemplateAttachment({ attachment }: { attachment: AgentTemplateImageAttachment }) {
-	const [exporting, setExporting] = useState<'png' | 'tiff' | null>(null)
-	const [exportError, setExportError] = useState<string | null>(null)
-
 	const composedHtml = useMemo(
 		() =>
 			composeTemplateHtml(
@@ -49,65 +39,33 @@ function HtmlTemplateAttachment({ attachment }: { attachment: AgentTemplateImage
 			),
 		[attachment.html, attachment.values],
 	)
-
-	async function exportPng() {
-		setExportError(null)
-		setExporting('png')
-
-		try {
-			await exportHtmlToPng(composedHtml, '', attachment.name)
-		} catch {
-			setExportError(
-				'PNG 내보내기에 실패했습니다. 이미지 원본 접근(CORS)이 막혀 있을 수 있습니다.',
-			)
-		} finally {
-			setExporting(null)
-		}
-	}
-
-	async function exportTiff() {
-		if (!attachment.templateVersion) return
-		setExportError(null)
-		setExporting('tiff')
-
-		try {
-			const png = await renderHtmlToPngBlob(
-				composedHtml,
-				'',
-				attachment.width,
-				attachment.height,
-			)
-			await downloadTemplateTiff({
-				fileName: attachment.name,
-				png,
-				templateId: attachment.templateId,
-				templateVersion: attachment.templateVersion,
-			})
-		} catch (error) {
-			setExportError(
-				error instanceof TemplateTiffDownloadError
-					? error.message
-					: 'TIFF 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.',
-			)
-		} finally {
-			setExporting(null)
-		}
-	}
+	const { exporting, exportError, exportTemplate } = useTemplateExport({
+		fileName: attachment.name,
+		height: attachment.height,
+		html: composedHtml,
+		printPpi: attachment.printPpi,
+		templateId: attachment.templateId,
+		templateVersion: attachment.templateVersion,
+		width: attachment.width,
+	})
 
 	return (
 		<TemplateAttachmentFrame
 			name={attachment.name}
 			description={
 				attachment.printPpi
-					? `템플릿 이미지 · CMYK TIFF ${attachment.printPpi}ppi`
+					? `인쇄 출력 ${attachment.printPpi}ppi · TIFF CMYK · PDF RGB`
 					: '템플릿 이미지'
 			}
 			isExporting={exporting !== null}
 			exportError={exportError}
-			onExport={exportPng}
+			onExport={() => exportTemplate('png')}
 			onExportTiff={
-				attachment.printPpi && attachment.templateVersion ? exportTiff : undefined
+				attachment.printPpi && attachment.templateVersion
+					? () => exportTemplate('tiff')
+					: undefined
 			}
+			onExportPdf={attachment.printPpi ? () => exportTemplate('pdf') : undefined}
 		>
 			<ScaledMedia contentWidth={attachment.width}>
 				{(scale) => (
@@ -140,6 +98,7 @@ function TemplateAttachmentFrame({
 	isExporting,
 	exportError,
 	onExport,
+	onExportPdf,
 	onExportTiff,
 	children,
 }: {
@@ -148,6 +107,7 @@ function TemplateAttachmentFrame({
 	isExporting: boolean
 	exportError: string | null
 	onExport: () => void
+	onExportPdf?: () => void
 	onExportTiff?: () => void
 	children: React.ReactNode
 }) {
@@ -180,6 +140,16 @@ function TemplateAttachmentFrame({
 						title="CMYK TIFF로 다운로드"
 					>
 						<DocumentDownload />
+					</AttachmentAction>
+				)}
+				{onExportPdf && (
+					<AttachmentAction
+						aria-label="RGB 벡터 PDF로 저장"
+						disabled={isExporting}
+						onClick={onExportPdf}
+						title="RGB 벡터 PDF로 저장"
+					>
+						<DocumentPdf />
 					</AttachmentAction>
 				)}
 			</AttachmentActions>
