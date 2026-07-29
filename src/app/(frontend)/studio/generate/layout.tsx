@@ -1,6 +1,6 @@
 import type React from 'react'
 import { SectionLayout } from '@/components/global/section-layout'
-import { StudioSideNavigation } from '@/components/global/studio-side-navigation'
+import { StudioSideNavigation } from '@/components/studio/shared/studio-side-navigation'
 
 export default function GenerateLayout({ children }: { children: React.ReactNode }) {
 	return (

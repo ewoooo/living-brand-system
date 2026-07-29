@@ -4,14 +4,14 @@ import type { TemplateNodeConfigMap } from '@/types/template'
 
 export const AUTHORIZED_ASSET_COLLECTIONS = ['brand-logos', 'application-images'] as const
 
+export type AuthorizedAssetCollection = (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
+
 export interface AuthorizedImageRef {
-	collection: (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
+	collection: AuthorizedAssetCollection
 	assetId: number
 	src: string
 	label: string
 }
-
-type AuthorizedAssetCollection = (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
 
 const templateSlotSpecSchema = z
 	.object({

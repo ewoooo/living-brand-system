@@ -11,6 +11,27 @@ import * as checkScenarioService from '@/features/asset-check/services/get-check
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
 import * as checkSessionService from '@/services/start-check-session.service'
 
+const textNode = ({
+	id = 'name',
+	name = 'Name',
+	text = 'Name',
+}: {
+	id?: string
+	name?: string
+	text?: string
+} = {}) => `<p data-node-id="${id}" data-figma-type="TEXT" data-name="${name}">${text}</p>`
+
+const htmlTemplate = (
+	overrides: Record<string, { input?: Record<string, unknown> }>,
+	...nodes: string[]
+) => ({
+	html: `<div data-node-id="frame" data-figma-type="FRAME">${nodes.join('')}</div>`,
+	overrides,
+	width: 900,
+	height: 500,
+	updatedAt: '2026-07-29T00:00:00.000Z',
+})
+
 const runtimeCheck = (key: string) => ({
 	key,
 	title: key,
@@ -231,11 +252,7 @@ describe('agent tools', () => {
 						checkKey: 'name.input',
 					},
 				],
-				html: '<div data-node-id="frame"><p data-node-id="name">Name</p></div>',
-				overrides: { name: { input: { label: '이름' } } },
-				width: 900,
-				height: 500,
-				updatedAt: '2026-07-29T00:00:00.000Z',
+				...htmlTemplate({ name: { input: { label: '이름' } } }, textNode()),
 			},
 		] as never)
 		const tools = getAgentTools()
@@ -267,11 +284,7 @@ describe('agent tools', () => {
 				name: '신규입사자 웰컴 카드',
 				description: null,
 				templateChecks: [],
-				html: '<div data-node-id="frame"><p data-node-id="name">Name</p></div>',
-				overrides: { name: { input: { label: '이름' } } },
-				width: 900,
-				height: 500,
-				updatedAt: '2026-07-29T00:00:00.000Z',
+				...htmlTemplate({ name: { input: { label: '이름' } } }, textNode()),
 			},
 		] as never)
 		const tools = getAgentTools()
@@ -291,11 +304,7 @@ describe('agent tools', () => {
 				name: '환영 카드',
 				description: '신규 입사자에게 온라인으로 배부되는 카드',
 				templateChecks: [],
-				html: '<div data-node-id="frame"><p data-node-id="name">Name</p></div>',
-				overrides: { name: { input: { label: '이름 (한글)' } } },
-				width: 900,
-				height: 500,
-				updatedAt: '2026-07-29T00:00:00.000Z',
+				...htmlTemplate({ name: { input: { label: '이름 (한글)' } } }, textNode()),
 			},
 		] as never)
 		const tools = getAgentTools()
@@ -318,14 +327,15 @@ describe('agent tools', () => {
 			id: 4,
 			name: 'Business card',
 			description: null,
-			html: '<div data-node-id="frame"><p data-node-id="name">Name</p><p data-node-id="department">Team</p><p data-node-id="fixed">Fixed</p></div>',
-			overrides: {
-				name: { input: { label: '이름', maxLength: 5 } },
-				department: { input: { label: '부서' } },
-			},
-			width: 900,
-			height: 500,
-			updatedAt: '2026-07-29T00:00:00.000Z',
+			...htmlTemplate(
+				{
+					name: { input: { label: '이름', maxLength: 5 } },
+					department: { input: { label: '부서' } },
+				},
+				textNode(),
+				textNode({ id: 'department', name: '부서', text: 'Team' }),
+				textNode({ id: 'fixed', text: 'Fixed' }),
+			),
 		} as never)
 		const tools = getAgentTools()
 
@@ -358,11 +368,10 @@ describe('agent tools', () => {
 				id: 5,
 				name: 'Nested card',
 				description: null,
-				html: '<div data-node-id="frame"><div data-node-id="group"><p data-node-id="nested_name">Name</p></div></div>',
-				overrides: { nested_name: { input: { label: '이름' } } },
-				width: 900,
-				height: 500,
-				updatedAt: '2026-07-29T00:00:00.000Z',
+				...htmlTemplate(
+					{ nested_name: { input: { label: '이름' } } },
+					`<div data-node-id="nested-frame">${textNode({ id: 'nested_name' })}</div>`,
+				),
 			},
 		] as never)
 		const tools = getAgentTools()
@@ -382,6 +391,18 @@ describe('agent tools', () => {
 	it('throws when the template is missing', async () => {
 		vi.spyOn(agentTemplateRepository, 'findAgentTemplate').mockResolvedValue(null as never)
 		const tools = getAgentTools()
+
+		await expect(
+			tools.prepareTemplateImage.execute?.({ templateId: 99, values: {} }, {
+				context: { user: { id: 1 } },
+			} as never),
+		).rejects.toThrow('Template is not available.')
+
+		vi.mocked(agentTemplateRepository.findAgentTemplate).mockResolvedValue({
+			id: 99,
+			name: 'Legacy JSON only',
+			description: null,
+		} as never)
 
 		await expect(
 			tools.prepareTemplateImage.execute?.({ templateId: 99, values: {} }, {

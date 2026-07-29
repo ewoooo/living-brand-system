@@ -55,7 +55,7 @@ export const Templates: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				components: {
-					Field: '/features/template-import/components/template-layers-field',
+					Field: '/components/admin/template/template-layers-field',
 				},
 			},
 		},
@@ -118,7 +118,7 @@ export const Templates: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				position: 'sidebar',
-				components: { Field: '/features/template-import/components/sidebar-divider' },
+				components: { Field: '/components/admin/template/sidebar-divider' },
 			},
 		},
 		{
@@ -154,7 +154,7 @@ export const Templates: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				position: 'sidebar',
-				components: { Field: '/features/template-import/components/sidebar-divider' },
+				components: { Field: '/components/admin/template/sidebar-divider' },
 			},
 		},
 		{
@@ -164,7 +164,7 @@ export const Templates: CollectionConfig = {
 			admin: {
 				position: 'sidebar',
 				components: {
-					Field: '/features/template-import/components/figma-html-import-field',
+					Field: '/components/admin/template/figma-html-import-field',
 				},
 			},
 		},

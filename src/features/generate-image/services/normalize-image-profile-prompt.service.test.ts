@@ -4,12 +4,9 @@ const mocks = vi.hoisted(() => ({
 	normalizeImagePromptWithAi: vi.fn(),
 }))
 
-vi.mock(
-	'@/features/generate-image/repositories/image-prompt-normalization.ai.repository',
-	() => ({
-		normalizeImagePromptWithAi: mocks.normalizeImagePromptWithAi,
-	}),
-)
+vi.mock('@/features/generate-image/repositories/image-prompt-normalization.ai.repository', () => ({
+	normalizeImagePromptWithAi: mocks.normalizeImagePromptWithAi,
+}))
 
 import { normalizeImageProfilePrompt } from './normalize-image-profile-prompt.service'
 

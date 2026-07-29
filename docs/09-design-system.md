@@ -87,7 +87,7 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|from|to|via)-(?:neutral|gray|z
 
 ## 6. 타이포그래피와 프리미티브 소재
 
-새 `H1`/`H2`/`Heading` 컴포넌트를 발명하지 않습니다. 텍스트 프리미티브는 `Typography`(`as`/`family`/`size`/`tone`/`weight`)를 재사용하고, 페이지 상위 조합은 `src/components/global`의 page-header에 둡니다.
+새 `H1`/`H2` 컴포넌트를 발명하지 않습니다. 텍스트 프리미티브는 `Typography`(`as`/`family`/`size`/`tone`/`weight`)를 재사용하고, 여러 화면 표면이 공유하는 제목 조합은 `src/components/shared/content-heading.tsx`의 `ContentHeading`을 사용합니다.
 
 `rem`의 기준 크기는 `styles.css`의 `html`이 16px로 고정합니다. 폰트 크기는 커스텀 토큰 없이 아래 Tailwind 유틸리티만 사용합니다.
 

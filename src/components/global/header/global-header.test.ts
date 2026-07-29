@@ -20,7 +20,7 @@ vi.mock('next/navigation', () => ({
 	useRouter: () => ({ push }),
 }))
 
-vi.mock('@/components/global/header/header-section-tail', () => ({
+vi.mock('@/components/global/header/header-tail', () => ({
 	HeaderTail: () => null,
 }))
 

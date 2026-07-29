@@ -102,7 +102,6 @@ export async function findTemplatePublishBlocker(
 	const htmlValidation = htmlTemplateRefs(candidate)
 	if (!htmlValidation) return '발행할 HTML 템플릿이 필요합니다.'
 	if ('blocker' in htmlValidation) return htmlValidation.blocker
-
 	const invalidRefLabels = await findInvalidAuthorizedRefs(htmlValidation.refs, repositoryContext)
 	if (invalidRefLabels.length > 0) {
 		return `인가 에셋 참조가 유효하지 않습니다: ${invalidRefLabels.join(', ')}. 미리보기에서 에셋을 다시 선택하세요.`

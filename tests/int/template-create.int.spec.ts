@@ -119,7 +119,7 @@ describe('getPublishedTemplate', () => {
 	it('사용 가능한 HTML이 없으면 노출하지 않는다', async () => {
 		mockedFind.mockResolvedValue({
 			id: 2,
-			name: '정상 템플릿',
+			name: '크기 없는 템플릿',
 			html: '<div>크기 없음</div>',
 		} as never)
 

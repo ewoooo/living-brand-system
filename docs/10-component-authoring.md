@@ -34,6 +34,7 @@ grep -rl "Badge\|Card\|Typography" src/components src/features
 | 하려는 일 | 재사용할 것 |
 | --- | --- |
 | 헤딩·본문 텍스트 | `Typography` (`src/components/ui/typography.tsx`) |
+| 제목·설명·도움말 조합 | `ContentHeading` (`src/components/shared/content-heading.tsx`) |
 | 아이콘 | `@carbon/icons-react` |
 | className 병합 | `@/lib/utils`의 `cn` |
 | 색 파생(전경색·RGB) | `@/lib/color` (`hexToRgb`, `getContrastingForeground`) |

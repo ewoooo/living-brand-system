@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
+import { HtmlAssetGenerator } from '@/components/studio/template/html-asset-generator'
 import { Typography } from '@/components/ui/typography'
-import { TemplateCreator } from '@/features/template-create/components/template-creator'
 import { getPublishedTemplate } from '@/features/template-create/services/get-published-template.service'
 
 export default async function CreateTemplatePage({
@@ -26,7 +26,7 @@ export default async function CreateTemplatePage({
 			<Typography as="h1" className="mb-6" family="title" size="5xl">
 				{template.name}
 			</Typography>
-			<TemplateCreator key={template.id} template={template} />
+			<HtmlAssetGenerator key={template.id} template={template} />
 		</article>
 	)
 }
