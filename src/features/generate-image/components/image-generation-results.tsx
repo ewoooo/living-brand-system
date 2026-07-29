@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import type { ImageGenerationResult } from '@/features/image-generation/services/generate-image.client'
+import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
 
 const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
 

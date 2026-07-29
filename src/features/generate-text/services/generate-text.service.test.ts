@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { generateTextCandidate } from '@/features/text-generation/repositories/text-generation.ai.repository'
+import { generateTextCandidate } from '@/features/generate-text/repositories/text-generation.ai.repository'
 import { generateTextCandidates } from './generate-text.service'
 
-vi.mock('@/features/text-generation/repositories/text-generation.ai.repository', () => ({
+vi.mock('@/features/generate-text/repositories/text-generation.ai.repository', () => ({
 	generateTextCandidate: vi.fn(),
 }))
 

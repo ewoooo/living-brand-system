@@ -12,7 +12,7 @@ vi.mock('@/lib/request-auth', () => ({
 	authenticateRequest: mocks.authenticateRequest,
 	isCrossOriginRequest: mocks.isCrossOriginRequest,
 }))
-vi.mock('@/features/image-generation/services/generate-image.service', () => {
+vi.mock('@/features/generate-image/services/generate-image.service', () => {
 	class ImageGenerationUnavailableError extends Error {}
 	class ImageProfileNotFoundError extends Error {}
 	class ImagePromptNormalizationUnavailableError extends Error {}
@@ -28,7 +28,7 @@ import {
 	ImageGenerationUnavailableError,
 	ImageProfileNotFoundError,
 	ImagePromptNormalizationUnavailableError,
-} from '@/features/image-generation/services/generate-image.service'
+} from '@/features/generate-image/services/generate-image.service'
 import { POST } from './route'
 
 function imageRequest(body: unknown) {

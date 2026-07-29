@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation'
 import { PageHeader } from '@/components/global/page-header'
+import { ImageGenerator } from '@/features/generate-image/components/image-generator'
+import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
 import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
-import { ImageGenerator } from '@/features/image-generation/components/image-generator'
-import { listAvailableImageProfiles } from '@/features/image-generation/services/list-image-profiles.service'
 import { authenticateRequest } from '@/lib/request-auth'
 
 export default async function GenerateProfilePage({

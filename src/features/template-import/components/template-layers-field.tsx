@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
-import { generateImages } from '@/features/image-generation/services/generate-image.client'
+import { generateImages } from '@/features/generate-image/services/generate-image.client'
+import { generateOneText } from '@/features/generate-text/services/generate-text.client'
 import {
 	composeTemplateHtml,
 	type TemplateInput,
 	type TemplateOverride,
 	type TemplateOverrides,
 } from '@/features/template-import/utils/compose-template-html'
-import { generateOneText } from '@/features/text-generation/services/generate-text.client'
 import { VectorLayerEditor } from './vector-layer-editor'
 
 /**

@@ -1,4 +1,4 @@
-import { generateTextCandidate } from '@/features/text-generation/repositories/text-generation.ai.repository'
+import { generateTextCandidate } from '@/features/generate-text/repositories/text-generation.ai.repository'
 
 /**
  * 유스케이스 경계: 프롬프트(+선택 rule)로 텍스트 후보 N개를 생성한다.

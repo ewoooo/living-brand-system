@@ -5,7 +5,7 @@ import { env } from '@/env'
 import type {
 	FlatImagePrompt,
 	ImagePromptNormalizationRow,
-} from '@/features/image-generation/image-profile-prompt'
+} from '@/features/generate-image/image-profile-prompt'
 
 const DEFAULT_MODEL = 'claude-haiku-4-5'
 

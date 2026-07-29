@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { useImageGeneration } from '@/features/image-generation/hooks/use-image-generation'
+import { useImageGeneration } from '@/features/generate-image/hooks/use-image-generation'
 
 describe('useImageGeneration', () => {
 	afterEach(() => {

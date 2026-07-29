@@ -1,12 +1,12 @@
 import { env } from '@/env'
-import type { ImageSize } from '@/features/image-generation/image-size'
-import { devGenerateImages } from '@/features/image-generation/repositories/dev-image-generation.rest.repository'
-import { generateBrandImages } from '@/features/image-generation/repositories/image-generation.ai.repository'
-import { findPublishedImageProfile } from '@/features/image-generation/repositories/image-profile.payload.repository'
+import type { ImageSize } from '@/features/generate-image/image-size'
+import { devGenerateImages } from '@/features/generate-image/repositories/dev-image-generation.rest.repository'
+import { generateBrandImages } from '@/features/generate-image/repositories/image-generation.ai.repository'
+import { findPublishedImageProfile } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import {
 	ImagePromptNormalizationUnavailableError,
 	normalizeImageProfilePrompt,
-} from '@/features/image-generation/services/normalize-image-profile-prompt.service'
+} from '@/features/generate-image/services/normalize-image-profile-prompt.service'
 
 export { ImagePromptNormalizationUnavailableError }
 

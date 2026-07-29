@@ -5,7 +5,7 @@ import {
 	ImageGenerationUnavailableError,
 	ImageProfileNotFoundError,
 	ImagePromptNormalizationUnavailableError,
-} from '@/features/image-generation/services/generate-image.service'
+} from '@/features/generate-image/services/generate-image.service'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
 export const maxDuration = 60

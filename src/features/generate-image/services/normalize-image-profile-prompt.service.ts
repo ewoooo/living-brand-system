@@ -3,8 +3,8 @@ import {
 	type ImageProfilePromptRow,
 	type ImagePromptNormalizationRow,
 	mergeImageProfilePrompt,
-} from '@/features/image-generation/image-profile-prompt'
-import { normalizeImagePromptWithAi } from '@/features/image-generation/repositories/image-prompt-normalization.ai.repository'
+} from '@/features/generate-image/image-profile-prompt'
+import { normalizeImagePromptWithAi } from '@/features/generate-image/repositories/image-prompt-normalization.ai.repository'
 
 export class ImagePromptNormalizationUnavailableError extends Error {
 	constructor() {

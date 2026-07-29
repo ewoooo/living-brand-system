@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
-import { getAgentTools } from '@/agents/agent-tools.agent'
+import { getAgentTools } from '@/agents/agent-chat-tools.agent'
 import { validateAgentChatMessages } from '@/agents/validate-agent-chat-messages.agent'
 import * as agentSkillRepository from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import * as agentTemplateRepository from '@/features/agent-chat/repositories/agent-template.payload.repository'

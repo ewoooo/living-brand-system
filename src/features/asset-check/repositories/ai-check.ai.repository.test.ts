@@ -104,7 +104,7 @@ describe('runAiCheck', () => {
 		} as unknown as Awaited<ReturnType<typeof generateText>>)
 
 		const { runAiCheck } = await import(
-			'@/features/asset-check/repositories/ai-check.agent.repository'
+			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
 		const result = await runAiCheck(checks, {
 			image: { data: Buffer.from('png'), mediaType: 'image/png' },
@@ -195,7 +195,7 @@ describe('runAiCheck', () => {
 	it('AI 요청 실패는 판정 대신 구조화된 실패 사유를 반환한다', async () => {
 		vi.mocked(generateText).mockRejectedValue(new Error('provider unavailable'))
 		const { runAiCheck } = await import(
-			'@/features/asset-check/repositories/ai-check.agent.repository'
+			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
 
 		const result = await runAiCheck(checks, {
@@ -252,7 +252,7 @@ describe('runAiCheck', () => {
 			},
 		} as unknown as Awaited<ReturnType<typeof generateText>>)
 		const { runAiCheck } = await import(
-			'@/features/asset-check/repositories/ai-check.agent.repository'
+			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
 
 		const result = await runAiCheck([referenceCheck, independentCheck], {
@@ -281,7 +281,7 @@ describe('runAiCheck', () => {
 			usage: undefined,
 		} as unknown as Awaited<ReturnType<typeof generateText>>)
 		const { runAiCheck } = await import(
-			'@/features/asset-check/repositories/ai-check.agent.repository'
+			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
 
 		await runAiCheck(checks, {
@@ -328,7 +328,7 @@ describe('runAiCheck', () => {
 		} as unknown as Awaited<ReturnType<typeof generateText>>)
 
 		const { runAiCheck } = await import(
-			'@/features/asset-check/repositories/ai-check.agent.repository'
+			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
 		const result = await runAiCheck([...checks, advisoryCheck], {
 			image: { data: Buffer.from('png'), mediaType: 'image/png' },
@@ -416,7 +416,7 @@ describe('runAiCheck', () => {
 			},
 		} as unknown as Awaited<ReturnType<typeof generateText>>)
 		const { runAiCheck } = await import(
-			'@/features/asset-check/repositories/ai-check.agent.repository'
+			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
 
 		const result = await runAiCheck([advisoryCheck], {
@@ -467,7 +467,7 @@ describe('runAiCheck', () => {
 		} as unknown as Awaited<ReturnType<typeof generateText>>)
 
 		const { runAiCheck } = await import(
-			'@/features/asset-check/repositories/ai-check.agent.repository'
+			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
 		const result = await runAiCheck([measureCheck], {
 			image: { data: Buffer.from('png'), mediaType: 'image/png' },

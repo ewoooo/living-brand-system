@@ -22,8 +22,8 @@ import { getCheckScenarios } from '@/features/asset-check/services/get-check-sce
 import {
 	type AgentGeneratedImagesAttachment,
 	generateImageCandidates,
-} from '@/features/image-generation/services/generate-image.service'
-import { listAvailableImageProfiles } from '@/features/image-generation/services/list-image-profiles.service'
+} from '@/features/generate-image/services/generate-image.service'
+import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
 import { AgentConfigurationError } from '@/lib/errors'
 import type { User } from '@/payload-types'
 import { startCheckSession } from '@/services/start-check-session.service'
@@ -34,7 +34,7 @@ const guidelineToolContextSchema = z.object({
 })
 
 /**
- * Agent answer stream에 전달할 AI SDK tool set을 만든다.
+ * Agent chat answer stream에 전달할 AI SDK tool set을 만든다.
  * 실제 skill/guideline I/O는 tool 실행 시 주입되는 user context로 수행한다.
  */
 export function getAgentTools() {

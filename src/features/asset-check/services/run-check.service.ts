@@ -20,7 +20,7 @@ import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
 	type AiCheckRunResult,
 	runAiCheck,
-} from '@/features/asset-check/repositories/ai-check.agent.repository'
+} from '@/features/asset-check/repositories/ai-check.ai.repository'
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
 import { getRuntimeChecks } from '@/features/asset-check/services/get-check-ruleset.service'

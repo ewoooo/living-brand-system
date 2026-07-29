@@ -23,7 +23,7 @@ export interface AiCheckRunResult {
 }
 
 /**
- * AI 기반 휴리스틱 검수 adapter.
+ * Asset check의 AI 기반 휴리스틱 검수 adapter.
  * 모델 호출(AI SDK)과 레퍼런스 이미지 fetch I/O를 소유한다.
  */
 export async function runAiCheck(
