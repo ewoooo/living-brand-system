@@ -37,15 +37,21 @@ export interface AgentChatSessionUsageSnapshot {
 export function createAgentChatSessionUsageCollector() {
 	const toolCounts = new Map<string, number>()
 	const skillCounts = new Map<string, number>()
+	const models = new Set<string>()
 	const usage = createEmptyUsage()
 	const rawUsages: unknown[] = []
-	let model: string | undefined
 
 	return {
 		addStep(step: AgentChatSessionUsageStep) {
-			model ??= step.model?.modelId
+			const model = step.model?.modelId
+			if (model) models.add(model)
 			if (step.usage) addUsage(usage, step.usage)
-			if (step.usage?.raw) rawUsages.push(step.usage.raw)
+			if (step.usage?.raw) {
+				rawUsages.push({
+					...(model ? { model } : {}),
+					usage: step.usage.raw,
+				})
+			}
 
 			for (const toolCall of step.toolCalls ?? []) {
 				const call = toolCall as ToolCallLike
@@ -58,6 +64,7 @@ export function createAgentChatSessionUsageCollector() {
 			}
 		},
 		snapshot(): AgentChatSessionUsageSnapshot {
+			const model = models.size > 0 ? [...models].join(', ') : undefined
 			const aiUsage: AgentChatAiUsage | undefined =
 				usage.callCount > 0 ? { model, ...usage } : undefined
 			if (aiUsage && rawUsages.length > 0) {
