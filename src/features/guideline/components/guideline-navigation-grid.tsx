@@ -1,6 +1,6 @@
 import { ArrowRight } from '@carbon/icons-react'
 import type { ReactNode } from 'react'
-import { NavigationBlock } from '@/components/navigation-block'
+import { NavigationBlock } from '@/components/navigation/navigation-block'
 
 export function GuidelineNavigationGrid({
 	items,

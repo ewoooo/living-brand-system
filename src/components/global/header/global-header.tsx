@@ -1,12 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { HeaderCenter } from '@/components/global/header/header-section-center'
-import { HeaderHead } from '@/components/global/header/header-section-head'
-import {
-	type GuidelineSearchChapter,
-	HeaderTail,
-} from '@/components/global/header/header-section-tail'
+import { HeaderCenter } from '@/components/global/header/header-center'
+import { HeaderHead } from '@/components/global/header/header-head'
+import { type GuidelineSearchChapter, HeaderTail } from '@/components/global/header/header-tail'
 
 export function GlobalHeader({
 	guidelineChapters,
