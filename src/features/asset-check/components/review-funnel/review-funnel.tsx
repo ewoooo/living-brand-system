@@ -13,12 +13,9 @@ interface ReviewFunnelProps {
 /** 검수 페이지의 대상 선택 → 결과 요약 → 결과 상세 배치만 소유한다. */
 export function ReviewFunnel({ sections }: ReviewFunnelProps) {
 	return (
-		<>
-			<section className="grid gap-4">
-				<ReviewResultDetails sections={sections} />
-				<ImageUploadCarousel />
-			</section>
-			{/*<ReviewResultOverview sections={sections} />*/}
-		</>
+		<section className="grid gap-4">
+			<ReviewResultDetails sections={sections} />
+			<ImageUploadCarousel />
+		</section>
 	)
 }

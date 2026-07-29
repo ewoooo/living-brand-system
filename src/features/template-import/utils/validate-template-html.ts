@@ -1,8 +1,15 @@
 import { Parser } from 'htmlparser2'
-import { AUTHORIZED_ASSET_COLLECTIONS } from '@/types/json-template'
-import type { AuthorizedImageRef } from './validate-authorized-assets'
 
-type AuthorizedAssetCollection = (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
+export const AUTHORIZED_ASSET_COLLECTIONS = ['brand-logos', 'application-images'] as const
+
+export type AuthorizedAssetCollection = (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
+
+export interface AuthorizedImageRef {
+	collection: AuthorizedAssetCollection
+	assetId: number
+	src: string
+	label: string
+}
 
 const ALLOWED_TAGS = new Set(['div', 'img', 'p'])
 const COMMON_ATTRIBUTES = new Set(['data-figma-type', 'data-name', 'data-node-id', 'style'])

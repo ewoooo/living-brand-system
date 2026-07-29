@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { toPng } from 'html-to-image'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { exportHtmlToPng } from './use-template-png-export'
+import { exportHtmlToPng } from './export-template-png'
 
 vi.mock('html-to-image', () => ({ toPng: vi.fn() }))
 

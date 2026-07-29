@@ -7,10 +7,10 @@ afterEach(cleanup)
 
 describe('NavigationBlock', () => {
 	it.each([
-		['xl', '6xl', 'p-6'],
-		['lg', '5xl', 'p-6'],
-		['md', '2xl', 'p-4'],
-		['sm', 'base', 'p-3'],
+		['featured', '6xl', 'p-6'],
+		['prominent', '5xl', 'p-6'],
+		['default', '2xl', 'p-4'],
+		['compact', 'base', 'p-3'],
 	] as const)('%s variant의 크기 체계를 적용한다', (variant, textSize, padding) => {
 		const { container } = render(
 			<NavigationBlock variant={variant} href="/guideline" label="Guideline" />,
@@ -26,7 +26,6 @@ describe('NavigationBlock', () => {
 	it('설명과 전달받은 tail을 렌더링한다', () => {
 		render(
 			<NavigationBlock
-				variant="md"
 				href="/guideline/color"
 				label="Color"
 				description="브랜드 색상 기준"
@@ -41,7 +40,7 @@ describe('NavigationBlock', () => {
 	it('부모가 전달한 layout class를 루트에 적용한다', () => {
 		const { container } = render(
 			<NavigationBlock
-				variant="xl"
+				variant="featured"
 				href="/guideline"
 				label="Guideline"
 				className="aspect-square"

@@ -14,7 +14,7 @@ export default function StudioPage() {
 				<section>
 					<div className="grid grid-cols-1 gap-4">
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							className="aspect-[2/1]"
 							label="New Templates"
 							href="/studio/templates"
@@ -26,14 +26,14 @@ export default function StudioPage() {
 					<PageHeader title="Images" className="pb-8" />
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							className="aspect-[2/1]"
 							label="Illustrations"
 							href="/studio/create/illustrations"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							className="aspect-[2/1]"
 							label="Gradient"
 							href="/studio/create/gradients"
@@ -49,32 +49,32 @@ export default function StudioPage() {
 					/>
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-3 [&>[data-slot=navigation-block]]:aspect-square">
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							className="md:col-span-2 md:row-span-2"
 							label="Events"
 							href="/studio/create/events"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}

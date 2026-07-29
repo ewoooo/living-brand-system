@@ -319,6 +319,162 @@ function SlotSpecEditor({
 	)
 }
 
+function SelectedLayerEditor({
+	selected,
+	hasHtml,
+	override,
+	onChange,
+}: {
+	selected: LayerRow | null
+	hasHtml: boolean
+	override?: TemplateOverride
+	onChange: (patch: TemplateOverride) => void
+}) {
+	if (!selected) {
+		return (
+			<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
+				{hasHtml ? '레이어를 선택하면 값을 편집할 수 있습니다.' : ''}
+			</p>
+		)
+	}
+
+	if (selected.isText) {
+		const input = override?.input
+
+		return (
+			<div>
+				<label htmlFor="template-layer-text" style={{ display: 'block' }}>
+					<span
+						className="text-sm"
+						style={{
+							display: 'block',
+							marginBottom: 4,
+							color: 'var(--theme-elevation-600)',
+						}}
+					>
+						텍스트 편집 — {selected.name}
+					</span>
+					<Textarea
+						id="template-layer-text"
+						value={selected.text}
+						onChange={(event) => onChange({ text: event.target.value })}
+						rows={2}
+					/>
+				</label>
+				<div style={{ marginTop: 6 }}>
+					<Popup
+						buttonType="custom"
+						verticalAlign="top"
+						horizontalAlign="left"
+						size="fit-content"
+						button={
+							<span className="text-sm" style={TRIGGER_STYLE}>
+								✨ AI 생성
+							</span>
+						}
+						render={({ close }) => (
+							<AiTextForm
+								rule={input?.aiInstruction}
+								onApply={(text) => {
+									onChange({ text })
+									close()
+								}}
+							/>
+						)}
+					/>
+				</div>
+				<div style={{ marginTop: 12 }}>
+					<div
+						style={{
+							display: 'flex',
+							alignItems: 'center',
+							gap: 6,
+							marginBottom: 6,
+						}}
+					>
+						<span className="text-sm" style={{ color: 'var(--theme-elevation-600)' }}>
+							입력 슬롯
+						</span>
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon-xs"
+							onClick={() => onChange({ input: input ? undefined : {} })}
+							title={
+								input
+									? '슬롯 닫기 — 유저 화면에서 숨김'
+									: '슬롯 열기 — 유저 화면에 입력 노출'
+							}
+							aria-label={input ? '입력 슬롯 닫기' : '입력 슬롯 열기'}
+						>
+							{input ? '🔓' : '🔒'}
+						</Button>
+						<span className="text-xs" style={{ color: 'var(--theme-elevation-500)' }}>
+							{input ? '유저 화면에 열림' : '닫힘'}
+						</span>
+					</div>
+					{input && (
+						<SlotSpecEditor
+							input={input}
+							onChange={(next) => onChange({ input: next })}
+						/>
+					)}
+				</div>
+			</div>
+		)
+	}
+
+	if (selected.figmaType === 'FRAME') {
+		return (
+			<div>
+				<span
+					className="text-sm"
+					style={{
+						display: 'block',
+						marginBottom: 4,
+						color: 'var(--theme-elevation-600)',
+					}}
+				>
+					배경 설정 — {selected.name}
+				</span>
+				<div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+					<Popup
+						buttonType="custom"
+						verticalAlign="top"
+						horizontalAlign="left"
+						size="fit-content"
+						button={
+							<span className="text-sm" style={TRIGGER_STYLE}>
+								✨ AI 생성
+							</span>
+						}
+						render={({ close }) => (
+							<AiImageForm
+								onApply={(src) => {
+									onChange({ backgroundImage: src })
+									close()
+								}}
+							/>
+						)}
+					/>
+				</div>
+			</div>
+		)
+	}
+
+	if (selected.isVector) {
+		return (
+			<VectorLayerEditor name={selected.name} override={override ?? {}} onChange={onChange} />
+		)
+	}
+
+	return (
+		<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
+			{typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.
+		</p>
+	)
+}
+
 export default function TemplateLayersField() {
 	const { dispatchFields, setModified } = useForm()
 	const html = useFormFields(([fields]) => fields.html?.value) as string | undefined
@@ -375,9 +531,6 @@ export default function TemplateLayersField() {
 		dispatchFields({ type: 'UPDATE', path: 'html', value: composeTemplateHtml(base, next) })
 		setModified(true)
 	}
-
-	const commitText = (text: string) => commitOverride({ text })
-	const commitBackground = (src: string) => commitOverride({ backgroundImage: src })
 
 	return (
 		<div style={{ marginBottom: 'var(--base)' }}>
@@ -498,161 +651,12 @@ export default function TemplateLayersField() {
 
 			<Separator className="template-layers-field__separator" />
 
-			{/* 선택 레이어 값 편집 */}
-			{!selected && (
-				<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
-					{hasHtml ? '레이어를 선택하면 값을 편집할 수 있습니다.' : ''}
-				</p>
-			)}
-
-			{selected?.isText && (
-				<div>
-					<label htmlFor="template-layer-text" style={{ display: 'block' }}>
-						<span
-							className="text-sm"
-							style={{
-								display: 'block',
-								marginBottom: 4,
-								color: 'var(--theme-elevation-600)',
-							}}
-						>
-							텍스트 편집 — {selected.name}
-						</span>
-						<Textarea
-							id="template-layer-text"
-							value={selected.text}
-							onChange={(event) => commitText(event.target.value)}
-							rows={2}
-						/>
-					</label>
-					<div style={{ marginTop: 6 }}>
-						<Popup
-							buttonType="custom"
-							verticalAlign="top"
-							horizontalAlign="left"
-							size="fit-content"
-							button={
-								<span className="text-sm" style={TRIGGER_STYLE}>
-									✨ AI 생성
-								</span>
-							}
-							render={({ close }) => (
-								<AiTextForm
-									rule={overrides[selected.id]?.input?.aiInstruction}
-									onApply={(text) => {
-										commitText(text)
-										close()
-									}}
-								/>
-							)}
-						/>
-					</div>
-					<div style={{ marginTop: 12 }}>
-						<div
-							style={{
-								display: 'flex',
-								alignItems: 'center',
-								gap: 6,
-								marginBottom: 6,
-							}}
-						>
-							<span
-								className="text-sm"
-								style={{ color: 'var(--theme-elevation-600)' }}
-							>
-								입력 슬롯
-							</span>
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon-xs"
-								onClick={() =>
-									commitOverride({
-										input: overrides[selected.id]?.input ? undefined : {},
-									})
-								}
-								title={
-									overrides[selected.id]?.input
-										? '슬롯 닫기 — 유저 화면에서 숨김'
-										: '슬롯 열기 — 유저 화면에 입력 노출'
-								}
-								aria-label={
-									overrides[selected.id]?.input
-										? '입력 슬롯 닫기'
-										: '입력 슬롯 열기'
-								}
-							>
-								{overrides[selected.id]?.input ? '🔓' : '🔒'}
-							</Button>
-							<span
-								className="text-xs"
-								style={{ color: 'var(--theme-elevation-500)' }}
-							>
-								{overrides[selected.id]?.input ? '유저 화면에 열림' : '닫힘'}
-							</span>
-						</div>
-						{overrides[selected.id]?.input && (
-							<SlotSpecEditor
-								input={overrides[selected.id]?.input ?? {}}
-								onChange={(input) => commitOverride({ input })}
-							/>
-						)}
-					</div>
-				</div>
-			)}
-
-			{selected?.figmaType === 'FRAME' && (
-				<div>
-					<span
-						className="text-sm"
-						style={{
-							display: 'block',
-							marginBottom: 4,
-							color: 'var(--theme-elevation-600)',
-						}}
-					>
-						배경 설정 — {selected.name}
-					</span>
-					<div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-						<Popup
-							buttonType="custom"
-							verticalAlign="top"
-							horizontalAlign="left"
-							size="fit-content"
-							button={
-								<span className="text-sm" style={TRIGGER_STYLE}>
-									✨ AI 생성
-								</span>
-							}
-							render={({ close }) => (
-								<AiImageForm
-									onApply={(src) => {
-										commitBackground(src)
-										close()
-									}}
-								/>
-							)}
-						/>
-					</div>
-				</div>
-			)}
-
-			{selected?.isVector && (
-				<VectorLayerEditor
-					name={selected.name}
-					override={overrides[selected.id] ?? {}}
-					onChange={commitOverride}
-				/>
-			)}
-
-			{selected &&
-				!selected.isText &&
-				!selected.isVector &&
-				selected.figmaType !== 'FRAME' && (
-					<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
-						{typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.
-					</p>
-				)}
+			<SelectedLayerEditor
+				selected={selected}
+				hasHtml={hasHtml}
+				override={selected ? overrides[selected.id] : undefined}
+				onChange={commitOverride}
+			/>
 		</div>
 	)
 }

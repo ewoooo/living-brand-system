@@ -70,8 +70,6 @@ export async function findPublishedTemplate(templateId: number) {
 		},
 		select: {
 			name: true,
-			jsonTemplate: true,
-			code: true,
 			html: true,
 			overrides: true,
 			width: true,

@@ -123,7 +123,6 @@ export function CheckRow({
 				{expandable && open && (
 					<CheckDetailRow
 						key={`${rowId}:detail`}
-						check={check}
 						appliesTo={appliesTo}
 						outcome={outcome}
 						shouldReduceMotion={shouldReduceMotion}

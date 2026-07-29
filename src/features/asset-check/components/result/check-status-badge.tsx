@@ -24,6 +24,8 @@ export function CheckStatusBadge({
 	shouldReduceMotion: boolean | null
 }) {
 	if (outcome) {
+		const status = CHECK_STATUS[checkDisplayStatus(outcome.rawResult)]
+
 		return (
 			<motion.span
 				initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 3, scale: 0.96 }}
@@ -32,10 +34,10 @@ export function CheckStatusBadge({
 				transition={{ duration: 0.16, ease: 'easeOut' }}
 				className={cn(
 					'inline-block whitespace-nowrap rounded px-1.5 py-0.5 font-body text-xs font-semibold',
-					CHECK_STATUS[checkDisplayStatus(outcome.rawResult)].pill,
+					status.pill,
 				)}
 			>
-				{CHECK_STATUS[checkDisplayStatus(outcome.rawResult)].label}
+				{status.label}
 			</motion.span>
 		)
 	}

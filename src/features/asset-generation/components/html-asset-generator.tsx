@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { exportHtmlToPng } from '@/features/asset-generation/utils/export-template-png'
 import { composeTemplateHtml } from '@/features/template-import/utils/compose-template-html'
-import { exportHtmlToPng } from '@/hooks/use-template-png-export'
 import type { PublishedHtmlTemplate } from '../services/get-published-template.service'
 import { collectHtmlSlots } from '../utils/collect-html-slots'
 import { TextSlotInput } from './text-slot-input'

@@ -13,7 +13,7 @@ export function GuidelineNavigationGrid({
 		href: string
 		icon?: ReactNode
 	}[]
-	variant: 'lg' | 'md'
+	variant: 'prominent' | 'default'
 }) {
 	return (
 		<section className="grid grid-cols-1 border-border border-t border-l md:grid-cols-2">

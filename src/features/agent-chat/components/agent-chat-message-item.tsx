@@ -27,24 +27,27 @@ export function AgentChatMessageItem({
 	canReact?: boolean
 	isActive: boolean
 }) {
-	const isUser = message.role === 'user'
-	const reasoningMarker = isUser ? null : getAgentReasoningMarker(message, isActive)
-	const skillMarker = isUser ? null : getAgentSkillMarker(message)
-	const marker = isUser ? null : getAgentToolMarker(message)
-	const citations = isUser ? [] : getAgentCitations(message)
 	const messageText = getAgentMessageText(message)
-	const files = message.parts.filter((part) => part.type === 'file')
-	const templateAttachments = isUser ? [] : getAgentTemplateAttachments(message)
-	const generatedImages = isUser ? [] : getAgentGeneratedImages(message)
+
+	if (message.role === 'user') {
+		const files = message.parts.filter((part) => part.type === 'file')
+
+		return (
+			<div className="flex w-full flex-col items-end gap-2">
+				<AgentChatUserBubble text={messageText} files={files} />
+			</div>
+		)
+	}
+
+	const reasoningMarker = getAgentReasoningMarker(message, isActive)
+	const skillMarker = getAgentSkillMarker(message)
+	const marker = getAgentToolMarker(message)
+	const citations = getAgentCitations(message)
+	const templateAttachments = getAgentTemplateAttachments(message)
+	const generatedImages = getAgentGeneratedImages(message)
 
 	return (
-		<div
-			className={
-				isUser
-					? 'flex w-full flex-col items-end gap-2'
-					: 'flex w-full flex-col items-start gap-2'
-			}
-		>
+		<div className="flex w-full flex-col items-start gap-2">
 			<AgentChatMarker
 				marker={reasoningMarker}
 				icon={reasoningMarker?.isPending ? <Spinner /> : <Ai />}
@@ -55,43 +58,37 @@ export function AgentChatMessageItem({
 				icon={<Search />}
 				isPending={marker?.isPending || isActive}
 			/>
-			{isUser ? (
-				<AgentChatUserBubble text={messageText} files={files} />
-			) : (
-				<>
-					{templateAttachments.map(({ attachment, key }) => (
-						<AgentChatTemplateAttachment key={key} attachment={attachment} />
-					))}
-					{generatedImages.map(({ attachment, key }) => (
-						<AgentChatGeneratedImages key={key} attachment={attachment} />
-					))}
-					<AgentChatAgentBubble
-						agentChatMessageId={message.metadata?.agentChatMessageId}
-						agentChatSessionId={message.metadata?.agentChatSessionId}
-						canReact={canReact && !isActive}
-						initialReaction={message.metadata?.reaction}
-						text={messageText}
-						isStreaming={isActive}
-					/>
-					{citations.length > 0 && (
-						<div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-body text-xs font-normal text-muted-foreground">
-							<span>출처</span>
-							{citations.map((citation) =>
-								citation.href ? (
-									<Link
-										key={citation.key}
-										href={citation.href}
-										className="underline underline-offset-2 hover:text-foreground"
-									>
-										{citation.title}
-									</Link>
-								) : (
-									<span key={citation.key}>{citation.title}</span>
-								),
-							)}
-						</div>
+			{templateAttachments.map(({ attachment, key }) => (
+				<AgentChatTemplateAttachment key={key} attachment={attachment} />
+			))}
+			{generatedImages.map(({ attachment, key }) => (
+				<AgentChatGeneratedImages key={key} attachment={attachment} />
+			))}
+			<AgentChatAgentBubble
+				agentChatMessageId={message.metadata?.agentChatMessageId}
+				agentChatSessionId={message.metadata?.agentChatSessionId}
+				canReact={canReact && !isActive}
+				initialReaction={message.metadata?.reaction}
+				text={messageText}
+				isStreaming={isActive}
+			/>
+			{citations.length > 0 && (
+				<div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-body text-xs font-normal text-muted-foreground">
+					<span>출처</span>
+					{citations.map((citation) =>
+						citation.href ? (
+							<Link
+								key={citation.key}
+								href={citation.href}
+								className="underline underline-offset-2 hover:text-foreground"
+							>
+								{citation.title}
+							</Link>
+						) : (
+							<span key={citation.key}>{citation.title}</span>
+						),
 					)}
-				</>
+				</div>
 			)}
 		</div>
 	)

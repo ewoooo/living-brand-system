@@ -1,4 +1,4 @@
-import { cva } from 'class-variance-authority'
+import { cva, type VariantProps } from 'class-variance-authority'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
@@ -10,27 +10,30 @@ const navigationBlockVariants = cva(
 	{
 		variants: {
 			variant: {
-				xl: 'bg-foreground p-6 text-background hover:opacity-60',
-				lg: 'border-border bg-background p-6 hover:bg-accent',
-				md: 'border-border bg-background p-4 hover:bg-accent',
-				sm: 'border-border bg-background p-3 hover:bg-accent',
+				featured: 'bg-foreground p-6 text-background hover:opacity-60',
+				prominent: 'border-border bg-background p-6 hover:bg-accent',
+				default: 'border-border bg-background p-4 hover:bg-accent',
+				compact: 'border-border bg-background p-3 hover:bg-accent',
 			},
+		},
+		defaultVariants: {
+			variant: 'default',
 		},
 	},
 )
 
 const labelSize = {
-	xl: '6xl',
-	lg: '5xl',
-	md: '2xl',
-	sm: 'base',
+	featured: '6xl',
+	prominent: '5xl',
+	default: '2xl',
+	compact: 'base',
 } as const
 
 const tailPadding = {
-	xl: 'pt-6',
-	lg: 'pt-6',
-	md: 'pt-4',
-	sm: 'pt-3',
+	featured: 'pt-6',
+	prominent: 'pt-6',
+	default: 'pt-4',
+	compact: 'pt-3',
 } as const
 
 export function NavigationBlock({
@@ -40,26 +43,27 @@ export function NavigationBlock({
 	description,
 	tail,
 	className,
-}: {
-	variant: 'xl' | 'lg' | 'md' | 'sm'
+}: VariantProps<typeof navigationBlockVariants> & {
 	href: string
 	label: string
 	description?: string | null
 	tail?: ReactNode
 	className?: string
 }) {
+	const resolvedVariant = variant ?? 'default'
+
 	return (
 		<Link
 			data-slot="navigation-block"
-			data-variant={variant}
+			data-variant={resolvedVariant}
 			href={href}
 			className={cn(navigationBlockVariants({ variant }), className)}
 		>
 			<hgroup>
 				<Typography
-					as={variant === 'xl' ? 'span' : 'h3'}
-					size={labelSize[variant]}
-					className={cn(variant === 'xl' && 'leading-none font-light')}
+					as={resolvedVariant === 'featured' ? 'span' : 'h3'}
+					size={labelSize[resolvedVariant]}
+					className={cn(resolvedVariant === 'featured' && 'leading-none font-light')}
 				>
 					{label}
 				</Typography>
@@ -67,14 +71,19 @@ export function NavigationBlock({
 					<Typography
 						size="sm"
 						tone="muted"
-						className={cn('mt-3', variant === 'xl' && 'text-background/70')}
+						className={cn(
+							'mt-3',
+							resolvedVariant === 'featured' && 'text-background/70',
+						)}
 					>
 						{description}
 					</Typography>
 				)}
 			</hgroup>
 			{tail && (
-				<div className={cn('mt-auto flex items-center', tailPadding[variant])}>{tail}</div>
+				<div className={cn('mt-auto flex items-center', tailPadding[resolvedVariant])}>
+					{tail}
+				</div>
 			)}
 		</Link>
 	)

@@ -105,7 +105,7 @@ export const Templates: CollectionConfig = {
 		},
 		// 레거시 절대좌표 모델 — 폼에서 숨김(컬럼·기존 데이터 유지). 신규 템플릿은 html을 쓴다.
 		{ name: 'jsonTemplate', type: 'json', admin: { hidden: true } },
-		// 기능 코드(css/js) — manager가 코드를 쓰지 않으므로 폼에서 숨김(컬럼·샌드박스 읽기 유지).
+		// 레거시 기능 코드(css/js) — 런타임에서 읽지 않으며 기존 데이터 호환을 위해 컬럼만 유지한다.
 		{
 			name: 'code',
 			type: 'group',

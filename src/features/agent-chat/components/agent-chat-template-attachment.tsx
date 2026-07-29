@@ -2,7 +2,6 @@
 
 import { Download } from '@carbon/icons-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { TemplateRenderer } from '@/components/template-renderer'
 import {
 	Attachment,
 	AttachmentAction,
@@ -12,30 +11,18 @@ import {
 	AttachmentMedia,
 	AttachmentTitle,
 } from '@/components/ui/attachment'
+import { exportHtmlToPng } from '@/features/asset-generation/utils/export-template-png'
 import { composeTemplateHtml } from '@/features/template-import/utils/compose-template-html'
-import { exportHtmlToPng, useTemplatePngExport } from '@/hooks/use-template-png-export'
 import type { AgentTemplateImageAttachment } from '../services/agent-template-request.service'
 
 const PREVIEW_WIDTH = 280
 
-type HtmlAttachment = Extract<AgentTemplateImageAttachment, { kind: 'html' }>
-type JsonAttachment = Exclude<AgentTemplateImageAttachment, { kind: 'html' }>
-
+/** HTML 슬롯 값을 합성해 챗 첨부 미리보기와 PNG 다운로드를 제공한다. */
 export function AgentChatTemplateAttachment({
 	attachment,
 }: {
 	attachment: AgentTemplateImageAttachment
 }) {
-	// kind 없는 기존 저장 메시지는 json 첨부다.
-	return attachment.kind === 'html' ? (
-		<HtmlTemplateAttachment attachment={attachment} />
-	) : (
-		<JsonTemplateAttachment attachment={attachment} />
-	)
-}
-
-/** html 첨부: 슬롯 값을 base html에 합성해 미리보기·다운로드한다 (Create 화면과 동일 렌더). */
-function HtmlTemplateAttachment({ attachment }: { attachment: HtmlAttachment }) {
 	const [isExporting, setIsExporting] = useState(false)
 	const [exportError, setExportError] = useState<string | null>(null)
 
@@ -95,35 +82,6 @@ function HtmlTemplateAttachment({ attachment }: { attachment: HtmlAttachment }) 
 					</div>
 				)}
 			</ScaledMedia>
-		</TemplateAttachmentFrame>
-	)
-}
-
-/** json 첨부 (deprecated 폴백): 기존 TemplateRenderer 경로 그대로. */
-function JsonTemplateAttachment({ attachment }: { attachment: JsonAttachment }) {
-	const { exportPng, isExporting, exportError, exportNode } = useTemplatePngExport({
-		template: attachment.template,
-		values: attachment.values,
-		fileName: attachment.name,
-	})
-
-	return (
-		<TemplateAttachmentFrame
-			name={attachment.name}
-			isExporting={isExporting}
-			exportError={exportError}
-			onExport={exportPng}
-		>
-			<ScaledMedia contentWidth={attachment.template.width}>
-				{(scale) => (
-					<TemplateRenderer
-						template={attachment.template}
-						values={attachment.values}
-						scale={scale}
-					/>
-				)}
-			</ScaledMedia>
-			{exportNode}
 		</TemplateAttachmentFrame>
 	)
 }
