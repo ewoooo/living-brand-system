@@ -17655,24 +17655,6 @@
           "primaryKey": true,
           "notNull": true
         },
-        "json_template": {
-          "name": "json_template",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "code_css": {
-          "name": "code_css",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "code_js": {
-          "name": "code_js",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
         "source_url": {
           "name": "source_url",
           "type": "varchar",
@@ -17700,6 +17682,13 @@
         "height": {
           "name": "height",
           "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "print_ppi": {
+          "name": "print_ppi",
+          "type": "enum_templates_print_ppi",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
         },
@@ -18079,24 +18068,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "version_json_template": {
-          "name": "version_json_template",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version_code_css": {
-          "name": "version_code_css",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version_code_js": {
-          "name": "version_code_js",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
         "version_source_url": {
           "name": "version_source_url",
           "type": "varchar",
@@ -18124,6 +18095,13 @@
         "version_height": {
           "name": "version_height",
           "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_print_ppi": {
+          "name": "version_print_ppi",
+          "type": "enum__templates_v_version_print_ppi",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
         },
@@ -26051,12 +26029,30 @@
         "en"
       ]
     },
+    "public.enum_templates_print_ppi": {
+      "name": "enum_templates_print_ppi",
+      "schema": "public",
+      "values": [
+        "72",
+        "150",
+        "300"
+      ]
+    },
     "public.enum_templates_status": {
       "name": "enum_templates_status",
       "schema": "public",
       "values": [
         "draft",
         "published"
+      ]
+    },
+    "public.enum__templates_v_version_print_ppi": {
+      "name": "enum__templates_v_version_print_ppi",
+      "schema": "public",
+      "values": [
+        "72",
+        "150",
+        "300"
       ]
     },
     "public.enum__templates_v_version_status": {
@@ -26428,6 +26424,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "20a96048-24b0-4a21-861e-2abfc7324ee7",
+  "id": "7e678ed0-b163-40b0-883f-5673f7b7278c",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
