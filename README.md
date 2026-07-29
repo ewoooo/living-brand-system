@@ -119,6 +119,7 @@ docker compose up -d postgres
 ### 3. 의존성과 스키마 준비
 
 ```sh
+nvm use
 corepack enable
 pnpm install
 pnpm migrate
