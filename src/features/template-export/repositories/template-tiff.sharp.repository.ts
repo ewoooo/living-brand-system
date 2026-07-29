@@ -1,5 +1,5 @@
 import sharp from 'sharp'
-import { MAX_PRINT_PIXELS, type PrintPpi } from '../print-output'
+import { MAX_PRINT_PIXELS, type PrintPpi } from '../print-policy'
 
 /**
  * 업로드 PNG의 포맷·픽셀 크기를 읽는다. 이미지 디코딩 I/O와 픽셀 상한은 Sharp 계층이 소유한다.

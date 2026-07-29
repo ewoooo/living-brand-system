@@ -2,34 +2,28 @@
 
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { composeTemplateHtml } from '@/features/template-import/utils/compose-template-html'
-import { pixelsToMillimeters } from '../print-output'
-import { exportHtmlToPng, renderHtmlToPngBlob } from '../services/export-template-png.client'
-import {
-	downloadTemplateTiff,
-	TemplateTiffDownloadError,
-} from '../services/export-template-tiff.client'
+import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
+import { pixelsToMillimeters } from '@/features/template-export/print-policy'
+import { collectTemplateSlots } from '@/services/collect-template-slots.service'
+import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import type { PublishedHtmlTemplate } from '../services/get-published-template.service'
-import { collectHtmlSlots } from '../utils/collect-html-slots'
 import { TextSlotInput } from './text-slot-input'
 
 const PREVIEW_WIDTH = 480
 
 /**
  * Figma에서 가져온 published HTML의 열린 슬롯(input이 달린 텍스트 노드)을 편집해
- * 미리보기 그대로 PNG 또는 운영자 정책의 TIFF로 내보낸다. 서버 상태 변경은 없다 —
+ * 미리보기 그대로 PNG·운영자 정책의 TIFF 또는 RGB 벡터 PDF로 내보낸다. 서버 상태 변경은 없다 —
  * 입력값은 로컬 state로만 합성한다.
  * 미리보기는 어드민 캔버스와 동일한 동일-문서 렌더 — iframe(opaque origin)은 벡터 mask의
  * CORS 로드를 깨뜨린다. 임포트 HTML은 스크립트 없는 inline-style이다.
  */
-export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTemplate }) {
+export function TemplateCreator({ template }: { template: PublishedHtmlTemplate }) {
 	const [values, setValues] = useState<Record<string, string>>({})
-	const [exporting, setExporting] = useState<'png' | 'tiff' | null>(null)
-	const [exportError, setExportError] = useState<string | null>(null)
-	const { html, overrides, width, height } = template
+	const { html, nodeConfigs, width, height } = template
 	const scale = Math.min(1, PREVIEW_WIDTH / width)
 
-	const slots = useMemo(() => collectHtmlSlots(html, overrides), [html, overrides])
+	const slots = useMemo(() => collectTemplateSlots(html, nodeConfigs), [html, nodeConfigs])
 
 	// 사용자가 만진 슬롯만 텍스트 오버라이드로 합성한다(만지지 않은 슬롯은 저작 텍스트 유지).
 	const composedHtml = useMemo(
@@ -42,44 +36,15 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 			),
 		[html, values],
 	)
-
-	async function exportPng() {
-		setExportError(null)
-		setExporting('png')
-
-		try {
-			await exportHtmlToPng(composedHtml, '', template.name)
-		} catch {
-			setExportError(
-				'PNG 내보내기에 실패했습니다. 이미지 원본 접근(CORS)이 막혀 있을 수 있습니다.',
-			)
-		} finally {
-			setExporting(null)
-		}
-	}
-
-	async function exportTiff() {
-		setExportError(null)
-		setExporting('tiff')
-
-		try {
-			const png = await renderHtmlToPngBlob(composedHtml, '', width, height)
-			await downloadTemplateTiff({
-				fileName: template.name,
-				png,
-				templateId: template.id,
-				templateVersion: template.templateVersion,
-			})
-		} catch (error) {
-			setExportError(
-				error instanceof TemplateTiffDownloadError
-					? error.message
-					: 'TIFF 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.',
-			)
-		} finally {
-			setExporting(null)
-		}
-	}
+	const { exporting, exportError, exportTemplate } = useTemplateExport({
+		fileName: template.name,
+		height,
+		html: composedHtml,
+		printPpi: template.printPpi,
+		templateId: template.id,
+		templateVersion: template.templateVersion,
+		width,
+	})
 
 	return (
 		<section className="flex w-full flex-col gap-6 md:flex-row">
@@ -107,22 +72,29 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 						이 템플릿에는 편집 가능한 슬롯이 없습니다.
 					</p>
 				)}
-				<Button onClick={exportPng} disabled={exporting !== null}>
+				<Button onClick={() => exportTemplate('png')} disabled={exporting !== null}>
 					{exporting === 'png' ? '내보내는 중...' : 'PNG로 내보내기'}
 				</Button>
 				{template.printPpi && (
 					<>
 						<Button
-							onClick={exportTiff}
+							onClick={() => exportTemplate('tiff')}
 							disabled={exporting !== null}
 							variant="outline"
 						>
 							{exporting === 'tiff' ? '내보내는 중...' : 'CMYK TIFF로 내보내기'}
 						</Button>
+						<Button
+							onClick={() => exportTemplate('pdf')}
+							disabled={exporting !== null}
+							variant="outline"
+						>
+							{exporting === 'pdf' ? '인쇄창 여는 중...' : 'RGB 벡터 PDF로 저장'}
+						</Button>
 						<p className="font-body text-xs font-normal text-muted-foreground">
 							{template.printPpi}ppi ·{' '}
 							{pixelsToMillimeters(width, template.printPpi).toFixed(1)} ×{' '}
-							{pixelsToMillimeters(height, template.printPpi).toFixed(1)}mm
+							{pixelsToMillimeters(height, template.printPpi).toFixed(1)}mm · PDF RGB
 						</p>
 					</>
 				)}

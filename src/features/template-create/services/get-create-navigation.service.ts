@@ -3,7 +3,7 @@ import { getStudioTemplateCategoryRoute, getStudioTemplateRoute } from '@/lib/ro
 import {
 	listPublishedTemplateNavItems,
 	listTemplateCategories,
-} from '../repositories/published-template.payload.repository'
+} from '@/repositories/published-template.payload.repository'
 
 export interface GetCreateNavigationOutput {
 	categories: {

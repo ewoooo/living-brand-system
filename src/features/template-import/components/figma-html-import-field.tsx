@@ -3,11 +3,9 @@
 import { Button, TextInput, toast, useForm, useFormFields } from '@payloadcms/ui'
 import { useState } from 'react'
 import { importFigmaHtmlFromUrl } from '@/features/template-import/services/import-figma-html.client'
-import {
-	composeTemplateHtml,
-	pruneTemplateOverrides,
-	type TemplateOverrides,
-} from '@/features/template-import/utils/compose-template-html'
+import { composeTemplateHtml } from '@/services/compose-template-html.client'
+import type { TemplateNodeConfigMap } from '@/types/template'
+import { pruneTemplateNodeConfigs } from '../utils/prune-template-node-configs.client'
 
 /**
  * Templates 편집 폼(Admin)의 Figma 가져오기 UI 필드.
@@ -33,16 +31,16 @@ export default function FigmaHtmlImportField() {
 		try {
 			const imported = await importFigmaHtmlFromUrl(sourceUrl)
 
-			const currentOverrides = (getData()?.overrides ?? {}) as TemplateOverrides
-			const nextOverrides = pruneTemplateOverrides(imported.html, currentOverrides)
+			const currentNodeConfigs = (getData()?.overrides ?? {}) as TemplateNodeConfigMap
+			const nextNodeConfigs = pruneTemplateNodeConfigs(imported.html, currentNodeConfigs)
 			const removedOverrideCount =
-				Object.keys(currentOverrides).length - Object.keys(nextOverrides).length
+				Object.keys(currentNodeConfigs).length - Object.keys(nextNodeConfigs).length
 			dispatchFields({ type: 'UPDATE', path: 'baseHtml', value: imported.html })
-			dispatchFields({ type: 'UPDATE', path: 'overrides', value: nextOverrides })
+			dispatchFields({ type: 'UPDATE', path: 'overrides', value: nextNodeConfigs })
 			dispatchFields({
 				type: 'UPDATE',
 				path: 'html',
-				value: composeTemplateHtml(imported.html, nextOverrides),
+				value: composeTemplateHtml(imported.html, nextNodeConfigs),
 			})
 			dispatchFields({ type: 'UPDATE', path: 'width', value: imported.width })
 			dispatchFields({ type: 'UPDATE', path: 'height', value: imported.height })

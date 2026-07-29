@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findPrintOutputBlocker, MAX_PRINT_PIXELS } from './print-output'
+import { findPrintOutputBlocker, MAX_PRINT_PIXELS } from './print-policy'
 
 describe('findPrintOutputBlocker', () => {
 	it('PPI가 설정된 템플릿의 정수 픽셀 크기와 상한을 검증한다', () => {

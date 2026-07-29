@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/lib/request-auth', () => ({
 	isCrossOriginRequest: mocks.isCrossOriginRequest,
 }))
-vi.mock('@/features/asset-generation/services/export-template-tiff.service', () => {
+vi.mock('@/features/template-export/services/export-template-tiff.service', () => {
 	class TemplateTiffInputError extends Error {}
 	class TemplateTiffStaleError extends Error {}
 	class TemplateTiffUnavailableError extends Error {}

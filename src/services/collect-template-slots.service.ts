@@ -1,13 +1,10 @@
-import type {
-	TemplateInput,
-	TemplateOverrides,
-} from '@/features/template-import/utils/compose-template-html'
+import type { TemplateNodeConfigMap, TemplateSlotSpec } from '@/types/template'
 
-export interface HtmlSlot {
+export interface TemplateSlot {
 	nodeId: string
 	name: string
 	text: string
-	input: TemplateInput
+	input: TemplateSlotSpec
 }
 
 // 서버(agent tool)와 브라우저 양쪽에서 돌도록 DOMParser 대신 정규식으로 읽는다.
@@ -31,16 +28,20 @@ function unescapeHtml(text: string): string {
  * HTML 템플릿에서 열린 입력 슬롯(input이 달린 텍스트 노드)을 문서 순서로 모은다.
  * input은 텍스트 노드에만 유효 — 다른 노드나 base에 없는 노드의 input은
  * 고아 오버라이드처럼 조용히 무시한다.
+ * 외부 I/O는 없으며 호출 Use Case가 조회·저장 경계를 소유한다.
  */
-export function collectHtmlSlots(html: string, overrides: TemplateOverrides): HtmlSlot[] {
+export function collectTemplateSlots(
+	html: string,
+	nodeConfigs: TemplateNodeConfigMap,
+): TemplateSlot[] {
 	if (!html) return []
 
-	const slots: HtmlSlot[] = []
+	const slots: TemplateSlot[] = []
 
 	for (const match of html.matchAll(TEXT_NODE_PATTERN)) {
 		const attrs = match[1] ?? ''
 		const nodeId = readAttr(attrs, 'data-node-id')
-		const input = nodeId ? overrides[nodeId]?.input : undefined
+		const input = nodeId ? nodeConfigs[nodeId]?.input : undefined
 		if (!nodeId || !input) continue
 
 		slots.push({

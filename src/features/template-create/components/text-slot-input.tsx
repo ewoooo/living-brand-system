@@ -2,15 +2,7 @@
 
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-
-/** JSON 슬롯 요소·HTML TemplateInput 공통의 입력 제약 표면. */
-export interface TextSlotSpec {
-	label?: string
-	placeholder?: string
-	maxLength?: number
-	maxLines?: number
-	inputFormat?: 'free' | 'number' | 'email' | 'date'
-}
+import type { TemplateSlotSpec } from '@/types/template'
 
 /** 제작자가 요소에 설정한 입력 제약(형식·글자수·줄수)을 적용한 텍스트 슬롯 입력. */
 export function TextSlotInput({
@@ -20,7 +12,7 @@ export function TextSlotInput({
 	onChange,
 }: {
 	id: string
-	spec: TextSlotSpec
+	spec: TemplateSlotSpec
 	value: string
 	onChange: (text: string) => void
 }) {

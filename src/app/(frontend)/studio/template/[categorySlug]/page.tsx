@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Typography } from '@/components/ui/typography'
-import { getCreateNavigation } from '@/features/asset-generation/services/get-create-navigation.service'
+import { getCreateNavigation } from '@/features/template-create/services/get-create-navigation.service'
 
 export default async function CreateCategoryPage({
 	params,

@@ -1,10 +1,10 @@
-import { parsePrintPpi } from '../print-output'
-import { findPublishedTemplate } from '../repositories/published-template.payload.repository'
+import { findPublishedTemplate } from '@/repositories/published-template.payload.repository'
+import { projectTemplateRenderModel } from '@/services/project-template-render-model.service'
+import { parsePrintPpi } from '../print-policy'
 import {
 	convertTemplatePngToTiff,
 	inspectTemplatePng,
 } from '../repositories/template-tiff.sharp.repository'
-import { pickHtmlTemplate } from './get-published-template.service'
 
 /** 발행 HTML 또는 운영자 PPI 정책이 없어 TIFF를 제공할 수 없음을 route에 알린다. */
 export class TemplateTiffUnavailableError extends Error {}
@@ -29,10 +29,10 @@ export async function exportTemplateTiff({
 	templateVersion: string
 }): Promise<Buffer> {
 	const template = await findPublishedTemplate(templateId)
-	const html = template ? pickHtmlTemplate(template) : null
+	const renderModel = template ? projectTemplateRenderModel(template) : null
 	const ppi = parsePrintPpi(template?.printPpi)
 
-	if (!html || !ppi) {
+	if (!renderModel || !ppi) {
 		throw new TemplateTiffUnavailableError()
 	}
 	if (template.updatedAt !== templateVersion) {
@@ -40,7 +40,7 @@ export async function exportTemplateTiff({
 	}
 
 	const image = await inspectTemplatePng(png)
-	if (!image || image.width !== html.width || image.height !== html.height) {
+	if (!image || image.width !== renderModel.width || image.height !== renderModel.height) {
 		throw new TemplateTiffInputError()
 	}
 

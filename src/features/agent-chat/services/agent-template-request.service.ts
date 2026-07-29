@@ -1,12 +1,8 @@
 import { z } from 'zod'
-
-import { type PrintPpi, parsePrintPpi } from '@/features/asset-generation/print-output'
-import { pickHtmlTemplate } from '@/features/asset-generation/services/get-published-template.service'
-import {
-	collectHtmlSlots,
-	type HtmlSlot,
-} from '@/features/asset-generation/utils/collect-html-slots'
+import { type PrintPpi, parsePrintPpi } from '@/features/template-export/print-policy'
 import { AgentConfigurationError } from '@/lib/errors'
+import { collectTemplateSlots, type TemplateSlot } from '@/services/collect-template-slots.service'
+import { projectTemplateRenderModel } from '@/services/project-template-render-model.service'
 import {
 	type AgentTemplateDocument,
 	findAgentTemplate,
@@ -98,30 +94,35 @@ export async function prepareTemplateImage(
 		throw new AgentConfigurationError('Template is not available.')
 	}
 
-	const html = pickHtmlTemplate(template)
+	const renderModel = projectTemplateRenderModel(template)
 
-	if (!html) throw new AgentConfigurationError('Template is not available.')
+	if (!renderModel) throw new AgentConfigurationError('Template is not available.')
 
 	return {
 		type: 'template-image' as const,
 		kind: 'html' as const,
 		templateId: template.id,
 		name: template.name,
-		html: html.html,
-		width: html.width,
-		height: html.height,
+		html: renderModel.html,
+		width: renderModel.width,
+		height: renderModel.height,
 		printPpi: parsePrintPpi(template.printPpi),
 		templateVersion: template.updatedAt,
-		values: filterHtmlSlotValues(collectHtmlSlots(html.html, html.overrides), values),
+		values: filterTemplateSlotValues(
+			collectTemplateSlots(renderModel.html, renderModel.nodeConfigs),
+			values,
+		),
 	}
 }
 
 function getTemplateSlots(template: AgentTemplateDocument): AgentSlotSummary[] | null {
-	const html = pickHtmlTemplate(template)
-	return html ? collectHtmlSlots(html.html, html.overrides).map(toHtmlSlotSummary) : null
+	const renderModel = projectTemplateRenderModel(template)
+	return renderModel
+		? collectTemplateSlots(renderModel.html, renderModel.nodeConfigs).map(toTemplateSlotSummary)
+		: null
 }
 
-function toHtmlSlotSummary(slot: HtmlSlot): AgentSlotSummary {
+function toTemplateSlotSummary(slot: TemplateSlot): AgentSlotSummary {
 	return {
 		id: slot.nodeId,
 		label: slot.input.label ?? slot.name,
@@ -167,7 +168,10 @@ type AgentSlotSummary = {
 }
 
 /** HTML 슬롯은 텍스트 전용 — 선언된 슬롯의 text만 통과시키고 input 스펙(maxLength·maxLines)으로 맞춘다. */
-function filterHtmlSlotValues(slots: HtmlSlot[], values: TemplateSlotValues): TemplateSlotValues {
+function filterTemplateSlotValues(
+	slots: TemplateSlot[],
+	values: TemplateSlotValues,
+): TemplateSlotValues {
 	const result: TemplateSlotValues = {}
 
 	for (const slot of slots) {

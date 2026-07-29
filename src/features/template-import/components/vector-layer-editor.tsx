@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { ApplicationImage, BrandColor, BrandLogo } from '@/payload-types'
-import type { TemplateOverride } from '../utils/compose-template-html'
+import type { TemplateNodeConfig } from '@/types/template'
 
 type Asset = (BrandLogo | ApplicationImage) & {
 	collection: 'brand-logos' | 'application-images'
@@ -20,12 +20,12 @@ const CONTROL_STYLE = {
 
 export function VectorLayerEditor({
 	name,
-	override,
+	config,
 	onChange,
 }: {
 	name: string
-	override: TemplateOverride
-	onChange: (patch: TemplateOverride) => void
+	config: TemplateNodeConfig
+	onChange: (patch: TemplateNodeConfig) => void
 }) {
 	const [assets, setAssets] = useState<Asset[]>([])
 	const [colors, setColors] = useState<BrandColor[]>([])
@@ -62,10 +62,10 @@ export function VectorLayerEditor({
 		return () => controller.abort()
 	}, [])
 
-	const assetValue = override.vectorAsset
-		? `${override.vectorAsset.collection}:${override.vectorAsset.id}`
+	const assetValue = config.vectorAsset
+		? `${config.vectorAsset.collection}:${config.vectorAsset.id}`
 		: ''
-	const fit = override.vectorFit ?? 'fill'
+	const fit = config.vectorFit ?? 'fill'
 
 	return (
 		<div
@@ -149,9 +149,9 @@ export function VectorLayerEditor({
 				<div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
 					<Button
 						type="button"
-						aria-pressed={!override.vectorColor}
+						aria-pressed={!config.vectorColor}
 						onClick={() => onChange({ vectorColor: undefined })}
-						variant={!override.vectorColor ? 'muted' : 'outline'}
+						variant={!config.vectorColor ? 'muted' : 'outline'}
 						size="sm"
 					>
 						원본
@@ -160,7 +160,7 @@ export function VectorLayerEditor({
 						const value = /^[0-9a-f]{3,8}$/i.test(color.hex)
 							? `#${color.hex}`
 							: color.hex
-						const selected = override.vectorColor === value
+						const selected = config.vectorColor === value
 						return (
 							<Button
 								key={color.id}
