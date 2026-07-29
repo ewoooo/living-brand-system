@@ -1,10 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { decideAgentQueryTriage } from './agent-query-triage'
-import { getAllowedAgentTools } from './agent-skill-tool-policy'
+import { getAgentExecutionPolicy, getAllowedAgentTools } from './agent-skill-tool-policy'
 
 describe('agent skill tool policy', () => {
 	it('none 범위와 등록되지 않은 skill에는 도구를 허용하지 않는다', () => {
-		expect(getAllowedAgentTools('generate-image', 'none')).toEqual([])
+		expect(
+			getAgentExecutionPolicy({
+				name: 'generate-image',
+				model: 'sonnet-4.6',
+				toolScope: 'none',
+			}),
+		).toEqual({
+			activeTools: [],
+			modelId: 'claude-sonnet-4-6',
+		})
 		expect(getAllowedAgentTools('unknown-skill', 'action')).toEqual([])
 	})
 
@@ -29,8 +38,9 @@ describe('agent skill tool policy', () => {
 			confidence: 90,
 		})
 
-		expect(getAllowedAgentTools(decision.name, decision.toolScope)).toEqual([
-			'findTemplatesForRequest',
-		])
+		expect(getAgentExecutionPolicy(decision)).toEqual({
+			activeTools: ['findTemplatesForRequest'],
+			modelId: 'claude-opus-5',
+		})
 	})
 })

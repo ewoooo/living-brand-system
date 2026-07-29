@@ -1,5 +1,10 @@
 import type { AgentQueryTriageDecision } from './agent-query-triage'
 
+const modelIdByTriageModel = {
+	'sonnet-4.6': 'claude-sonnet-4-6',
+	'opus-5.0': 'claude-opus-5',
+} satisfies Record<AgentQueryTriageDecision['model'], string>
+
 export type AgentTaskToolName =
 	| 'findTemplatesForRequest'
 	| 'generateImage'
@@ -51,4 +56,13 @@ export function getAllowedAgentTools(
 	if (!policy || toolScope === 'none') return []
 
 	return toolScope === 'read' ? [...policy.read] : [...policy.read, ...policy.action]
+}
+
+export function getAgentExecutionPolicy(
+	decision: Pick<AgentQueryTriageDecision, 'model' | 'name' | 'toolScope'>,
+) {
+	return {
+		activeTools: getAllowedAgentTools(decision.name, decision.toolScope),
+		modelId: modelIdByTriageModel[decision.model],
+	}
 }

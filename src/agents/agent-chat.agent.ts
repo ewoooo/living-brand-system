@@ -3,6 +3,7 @@ import { type InferAgentUIMessage, isStepCount, ToolLoopAgent } from 'ai'
 import { z } from 'zod'
 import { getAgentTools } from '@/agents/agent-chat-tools.agent'
 import { env } from '@/env'
+import { getAgentExecutionPolicy } from '@/features/agent-chat/domain/agent-skill-tool-policy'
 import { findEnabledAgentSkillSummaries } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import { getAgentDefaultInstructions } from '@/features/agent-chat/services/get-agent-default-instructions.service'
 import type { AgentChatReaction } from '@/features/agent-chat/types'
@@ -53,13 +54,27 @@ export const agentChatAgent = new ToolLoopAgent<
 	toolsContext: toolsContextFor({ user: null }),
 	callOptionsSchema: agentChatCallOptionsSchema,
 	stopWhen: isStepCount(10),
-	prepareStep: ({ stepNumber }) =>
-		stepNumber === 0
-			? {
-					activeTools: ['loadSkill'],
-					toolChoice: { type: 'tool', toolName: 'loadSkill' },
-				}
-			: undefined,
+	prepareStep: ({ stepNumber, steps }) => {
+		if (stepNumber === 0) {
+			return {
+				activeTools: ['loadSkill'],
+				toolChoice: { type: 'tool', toolName: 'loadSkill' },
+			}
+		}
+
+		const loadedSkill = steps[0]?.toolResults.find(
+			(result) => result.dynamic !== true && result.toolName === 'loadSkill',
+		)
+
+		if (!loadedSkill) return { activeTools: [] }
+
+		const execution = getAgentExecutionPolicy(loadedSkill.output)
+
+		return {
+			activeTools: execution.activeTools,
+			model: anthropic(execution.modelId),
+		}
+	},
 	prepareCall: async ({ options = { user: null }, ...settings }) => {
 		const [skills, defaultInstructions] = await Promise.all([
 			findEnabledAgentSkillSummaries(options.user),
