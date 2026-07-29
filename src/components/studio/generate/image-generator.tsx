@@ -3,6 +3,7 @@
 import { Image as ImageIcon } from '@carbon/icons-react'
 import { useState } from 'react'
 import { ImageGenerationResults } from '@/components/studio/generate/image-generation-results'
+import { StudioWorkspace } from '@/components/studio/studio-workspace'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -51,8 +52,8 @@ export function ImageGenerator({
 	}
 
 	return (
-		<section className="grid min-h-0 border-t border-border lg:grid-cols-[22rem_minmax(0,1fr)]">
-			<aside className="min-h-0 p-4 lg:border-r lg:border-border">
+		<StudioWorkspace
+			controller={
 				<Card className="min-h-0 gap-0 py-0 lg:h-full">
 					<CardHeader className="border-b border-border py-4">
 						<CardTitle>생성 컨트롤러</CardTitle>
@@ -177,22 +178,20 @@ export function ImageGenerator({
 						</Button>
 					</CardFooter>
 				</Card>
-			</aside>
-
-			<div className="flex min-h-96 min-w-0 flex-col bg-muted/20 p-4 md:p-6 lg:min-h-0">
-				{!loading && !result ? (
-					<EmptyCanvas onSelectExample={setPrompt} />
-				) : (
-					<ImageGenerationResults
-						loading={loading}
-						onSelect={setSelected}
-						requested={requested}
-						result={result}
-						selected={selected}
-					/>
-				)}
-			</div>
-		</section>
+			}
+		>
+			{!loading && !result ? (
+				<EmptyCanvas onSelectExample={setPrompt} />
+			) : (
+				<ImageGenerationResults
+					loading={loading}
+					onSelect={setSelected}
+					requested={requested}
+					result={result}
+					selected={selected}
+				/>
+			)}
+		</StudioWorkspace>
 	)
 }
 
