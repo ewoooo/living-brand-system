@@ -816,21 +816,62 @@ export interface GlyphGridBlock {
  */
 export interface LayoutBlock {
   /**
+   * 블록 상단에 표시할 선택 제목입니다.
+   */
+  title?: string | null;
+  /**
+   * 제목 아래에 표시할 선택 본문입니다.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
    * 컨테이너 폭입니다. 중간폭=max-w, 전체폭=main 전체.
    */
   width?: ('padded' | 'full') | null;
   /**
-   * 위젯 배치 방식입니다. 현재 grid만 구현, 나머지는 예정.
+   * 위젯 배치 방식입니다. 현재 grid/carousel/masonry 구현.
    */
   arrangement?: ('grid' | 'carousel' | 'featured' | 'masonry') | null;
   /**
-   * grid 열 수입니다(행은 위젯 개수로 자동).
+   * grid 열 수입니다(행은 자식 개수로 자동).
    */
   columns?: number | null;
   /**
    * 이 블록이 품는 leaf(이미지·위젯)들입니다.
    */
-  children?: (ImageLeaf | ColorPaletteWidget)[] | null;
+  children?:
+    | (
+        | ImageLeaf
+        | ColorPaletteWidget
+        | CarouselWidget
+        | ColorPairingWidget
+        | ColorPairingRecommendationWidget
+        | GlyphGridWidget
+        | IconGridWidget
+        | ImageGridWidget
+        | LayoutGridWidget
+        | LayoutGridOverlayWidget
+        | LogoGroupViewerWidget
+        | LogoViewerWidget
+        | MediaShowcaseWidget
+        | StemClearSpaceWidget
+        | TypeScaleWidget
+        | TypeSpecimenWidget
+      )[]
+    | null;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
    */
@@ -860,6 +901,132 @@ export interface ColorPaletteWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'colorPaletteWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CarouselWidget".
+ */
+export interface CarouselWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'carouselWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingWidget".
+ */
+export interface ColorPairingWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPairingWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingRecommendationWidget".
+ */
+export interface ColorPairingRecommendationWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPairingRecommendationWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GlyphGridWidget".
+ */
+export interface GlyphGridWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'glyphGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "IconGridWidget".
+ */
+export interface IconGridWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'iconGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageGridWidget".
+ */
+export interface ImageGridWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'imageGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridWidget".
+ */
+export interface LayoutGridWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'layoutGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridOverlayWidget".
+ */
+export interface LayoutGridOverlayWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'layoutGridOverlayWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoGroupViewerWidget".
+ */
+export interface LogoGroupViewerWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoGroupViewerWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoViewerWidget".
+ */
+export interface LogoViewerWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoViewerWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaShowcaseWidget".
+ */
+export interface MediaShowcaseWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'mediaShowcaseWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StemClearSpaceWidget".
+ */
+export interface StemClearSpaceWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'stemClearSpaceWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScaleWidget".
+ */
+export interface TypeScaleWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeScaleWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeSpecimenWidget".
+ */
+export interface TypeSpecimenWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeSpecimenWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2371,6 +2538,8 @@ export interface GlyphGridBlockSelect<T extends boolean = true> {
  * via the `definition` "LayoutBlock_select".
  */
 export interface LayoutBlockSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
   width?: T;
   arrangement?: T;
   columns?: T;
@@ -2379,6 +2548,20 @@ export interface LayoutBlockSelect<T extends boolean = true> {
     | {
         image?: T | ImageLeafSelect<T>;
         colorPaletteWidget?: T | ColorPaletteWidgetSelect<T>;
+        carouselWidget?: T | CarouselWidgetSelect<T>;
+        colorPairingWidget?: T | ColorPairingWidgetSelect<T>;
+        colorPairingRecommendationWidget?: T | ColorPairingRecommendationWidgetSelect<T>;
+        glyphGridWidget?: T | GlyphGridWidgetSelect<T>;
+        iconGridWidget?: T | IconGridWidgetSelect<T>;
+        imageGridWidget?: T | ImageGridWidgetSelect<T>;
+        layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
+        layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
+        logoGroupViewerWidget?: T | LogoGroupViewerWidgetSelect<T>;
+        logoViewerWidget?: T | LogoViewerWidgetSelect<T>;
+        mediaShowcaseWidget?: T | MediaShowcaseWidgetSelect<T>;
+        stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
+        typeScaleWidget?: T | TypeScaleWidgetSelect<T>;
+        typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
       };
   rules?: T;
   id?: T;
@@ -2398,6 +2581,118 @@ export interface ImageLeafSelect<T extends boolean = true> {
  * via the `definition` "ColorPaletteWidget_select".
  */
 export interface ColorPaletteWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CarouselWidget_select".
+ */
+export interface CarouselWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingWidget_select".
+ */
+export interface ColorPairingWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingRecommendationWidget_select".
+ */
+export interface ColorPairingRecommendationWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GlyphGridWidget_select".
+ */
+export interface GlyphGridWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "IconGridWidget_select".
+ */
+export interface IconGridWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageGridWidget_select".
+ */
+export interface ImageGridWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridWidget_select".
+ */
+export interface LayoutGridWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridOverlayWidget_select".
+ */
+export interface LayoutGridOverlayWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoGroupViewerWidget_select".
+ */
+export interface LogoGroupViewerWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoViewerWidget_select".
+ */
+export interface LogoViewerWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaShowcaseWidget_select".
+ */
+export interface MediaShowcaseWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StemClearSpaceWidget_select".
+ */
+export interface StemClearSpaceWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScaleWidget_select".
+ */
+export interface TypeScaleWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeSpecimenWidget_select".
+ */
+export interface TypeSpecimenWidgetSelect<T extends boolean = true> {
   id?: T;
   blockName?: T;
 }
