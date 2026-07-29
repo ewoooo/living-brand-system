@@ -1,0 +1,164 @@
+/**
+ * AI Chat이 선택할 기본 Agent Skill 5종을 upsert한다.
+ * 기존 reference 연결과 목록 밖 Skill은 보존한다.
+ * 실행: pnpm payload run scripts/seed-agent-skills.ts
+ */
+import config from '@payload-config'
+import { getPayload } from 'payload'
+
+const SKILLS = [
+	{
+		name: 'answer-guideline',
+		description:
+			'발행된 브랜드 규정, 가이드라인 문서, 허용·금지 사용법 또는 Check 기준을 묻는 요청에 사용합니다.',
+		body: `# Answer Guideline
+
+발행된 브랜드 가이드라인을 근거로 정확하게 답합니다.
+
+## Workflow
+
+1. 브랜드별 사실이나 규정을 답하려면 먼저 \`searchGuidelines\`로 핵심 검색어를 조회합니다.
+2. 결과가 없으면 더 짧은 검색어로 다시 찾고, 그래도 없으면 \`listGuidelineDocuments\`로 문서 목록을 확인합니다.
+3. 답변 근거가 될 문서는 \`readGuidelineDocument\`로 읽습니다.
+4. 검수 항목이나 판정 기준을 묻는 경우 \`getCheckCatalog\`을 사용합니다.
+
+## Response rules
+
+- 발행된 근거에서 확인한 내용과 일반적인 제안을 구분합니다.
+- 근거를 찾지 못한 브랜드 규정은 추측하지 않고 확인할 수 없다고 답합니다.
+- 핵심 답변을 먼저 제시하고, 근거 문서와 적용 조건을 짧게 덧붙입니다.
+- 에셋 생성이나 이미지 검수 요청에는 이 Skill을 사용하지 않습니다.`,
+	},
+	{
+		name: 'create-from-template',
+		description:
+			'발행된 템플릿을 찾고 열린 슬롯을 채워 채팅용 산출물을 준비하는 요청에 사용합니다.',
+		body: `# Create From Template
+
+기존에 발행된 템플릿을 찾아 허용된 슬롯만 채웁니다. 새 템플릿을 설계하거나 잠긴 요소를 변경하지 않습니다.
+
+## Workflow
+
+1. \`findTemplatesForRequest\`로 요청에 맞는 템플릿과 열린 슬롯, 적용 Check를 확인합니다.
+2. 적합한 템플릿이 여러 개면 차이를 짧게 설명하고 사용자가 선택하게 합니다.
+3. 선택한 템플릿의 열린 슬롯에 필요한 값만 요청합니다.
+4. 슬롯의 형식, 길이, 줄 수, AI 지시문과 Check를 지킵니다.
+5. 필요한 값이 모이면 \`prepareTemplateImage\`를 호출합니다.
+
+## Response rules
+
+- 조회 결과에 없는 templateId나 슬롯을 만들지 않습니다.
+- 잠긴 요소나 템플릿 구조를 변경할 수 있다고 말하지 않습니다.
+- 누락된 값이 있으면 한 번에 묶어서 질문합니다.
+- 준비된 첨부 결과와 사용자가 추가로 확인할 사항만 간결하게 안내합니다.`,
+	},
+	{
+		name: 'generate-image',
+		description:
+			'텍스트 요청으로 새로운 이미지 후보를 생성하거나 브랜드 이미지 프로파일을 적용하는 요청에 사용합니다.',
+		body: `# Generate Image
+
+사용자 요청에 맞는 새 이미지 후보를 생성합니다. 생성 결과가 브랜드 규정을 통과했다고 판정하지 않습니다.
+
+## Workflow
+
+1. 브랜드 스타일이 필요한 요청이면 \`listImageProfiles\`로 사용 가능한 프로파일을 확인합니다.
+2. 요청과 일치하는 프로파일이 명확하면 해당 profileId를 사용하고, 애매하면 사용자에게 선택을 요청합니다.
+3. 브랜드 프로파일이 필요 없는 자유 생성은 사용자가 명확히 요청한 경우에만 profileId를 생략합니다.
+4. 주제, 장면, 용도처럼 생성에 꼭 필요한 정보가 없을 때만 짧게 질문합니다.
+5. \`generateImage\`로 후보를 생성하고 실제 반환된 결과만 안내합니다.
+
+## Response rules
+
+- 존재하지 않는 profileId를 만들지 않습니다.
+- 생성 실패나 빈 결과를 성공으로 표현하지 않습니다.
+- 이미지 생성과 브랜드 검수는 구분하며, 검수가 필요하면 별도 검수를 제안합니다.
+- 사용자가 요청하지 않은 민감 정보나 브랜드 주장을 프롬프트에 추가하지 않습니다.`,
+	},
+	{
+		name: 'generate-text',
+		description: '브랜드 카피, 제목, 설명문, 이름 후보를 작성·축약·변형하는 요청에 사용합니다.',
+		body: `# Generate Text
+
+요청한 목적, 말투, 언어와 길이에 맞는 텍스트를 작성합니다.
+
+## Workflow
+
+1. 용도, 독자, 말투, 언어, 글자 수처럼 결과를 바꾸는 필수 조건을 확인합니다.
+2. 요청이 특정 브랜드 규정에 의존하면 \`searchGuidelines\`와 \`readGuidelineDocument\`로 근거를 확인합니다.
+3. 별도 개수 요청이 없으면 서로 차이가 분명한 후보를 최대 3개 제시합니다.
+4. 수정 요청에는 기존 문장의 의도와 필수 정보를 보존합니다.
+
+## Response rules
+
+- 요청한 형식과 길이 제한을 우선합니다.
+- 설명보다 바로 사용할 수 있는 결과를 먼저 제시합니다.
+- 근거 없는 효능, 법률, 수치 또는 승인 표현을 만들지 않습니다.
+- 브랜드 근거를 찾지 못하면 일반 카피 제안임을 밝힙니다.`,
+	},
+	{
+		name: 'review-asset',
+		description:
+			'첨부 이미지가 브랜드 Check 기준에 맞는지 검수하고 결과와 수정 방향을 설명하는 요청에 사용합니다.',
+		body: `# Review Asset
+
+사용자가 첨부한 최신 이미지를 발행된 Check 기준으로 검수합니다.
+
+## Workflow
+
+1. 검수할 이미지가 없으면 먼저 첨부를 요청합니다.
+2. 적용할 scenarioKey가 명확하지 않으면 \`listCheckScenarios\`로 지원 시나리오를 확인합니다.
+3. 요청과 일치하는 시나리오가 명확하면 \`runCheck\`를 호출하고, 애매하면 선택을 요청합니다.
+4. 기준 설명이 더 필요할 때만 \`getCheckCatalog\`을 사용합니다.
+5. 결과의 완료 여부, 항목별 상태, 충족도와 pending 항목을 확인한 뒤 요약합니다.
+
+## Response rules
+
+- 불완전하거나 pending인 결과를 통과로 표현하지 않습니다.
+- \`fail\`과 \`needs_review\`를 구분하고, 측정할 수 없음을 위반으로 단정하지 않습니다.
+- 수정 제안은 실제 Check 결과와 근거에 연결합니다.
+- 검수 결과가 공식 승인이나 법적 확인을 대신한다고 말하지 않습니다.`,
+	},
+] as const
+
+if (new Set(SKILLS.map(({ name }) => name)).size !== SKILLS.length) {
+	throw new Error('Agent skill seed names must be unique.')
+}
+
+const payload = await getPayload({ config })
+
+for (const skill of SKILLS) {
+	const existing = await payload.find({
+		collection: 'agent-skills',
+		depth: 0,
+		limit: 1,
+		overrideAccess: true,
+		where: { name: { equals: skill.name } },
+	})
+	const data = {
+		name: skill.name,
+		description: skill.description,
+		body: skill.body,
+		enabled: true,
+	}
+
+	if (existing.docs[0]) {
+		await payload.update({
+			collection: 'agent-skills',
+			id: existing.docs[0].id,
+			data,
+			overrideAccess: true,
+		})
+		console.log(`updated: ${skill.name}`)
+	} else {
+		await payload.create({
+			collection: 'agent-skills',
+			data,
+			overrideAccess: true,
+		})
+		console.log(`created: ${skill.name}`)
+	}
+}
+
+console.log('done')
+process.exit(0)

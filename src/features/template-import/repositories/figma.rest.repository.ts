@@ -1,76 +1,11 @@
 import { env } from '@/env'
+import type { FigmaNode } from '@/features/template-import/types'
 import { FigmaConfigurationError } from '@/lib/errors'
 
 /**
  * Figma REST API 경계. 임포트 파이프라인의 외부 I/O는 모두 이 파일이 소유한다.
  * 토큰은 서버 환경변수(FIGMA_API_TOKEN)에만 존재하고 응답은 가공 없이 돌려준다.
  */
-
-/** 변환기가 소비하는 Figma 노드의 최소 형태. REST 응답의 부분 집합이다. */
-export interface FigmaLayoutConstraint {
-	horizontal: 'LEFT' | 'RIGHT' | 'CENTER' | 'LEFT_RIGHT' | 'SCALE'
-	vertical: 'TOP' | 'BOTTOM' | 'CENTER' | 'TOP_BOTTOM' | 'SCALE'
-}
-
-export interface FigmaNode {
-	id: string
-	name?: string
-	type: string
-	visible?: boolean
-	isMask?: boolean
-	children?: FigmaNode[]
-	absoluteBoundingBox?: { x: number; y: number; width: number; height: number }
-	size?: { width: number; height: number }
-	relativeTransform?: [[number, number, number], [number, number, number]]
-	constraints?: FigmaLayoutConstraint
-	fills?: FigmaPaint[]
-	strokes?: FigmaPaint[]
-	effects?: FigmaEffect[]
-	characters?: string
-	style?: {
-		fontFamily?: string
-		fontSize?: number
-		fontWeight?: number
-		lineHeightPx?: number
-		letterSpacing?: number
-		textAlignHorizontal?: string
-		textAlignVertical?: string
-		textAutoResize?: string
-	}
-	cornerRadius?: number
-	opacity?: number
-	rotation?: number
-	blendMode?: string
-	// auto-layout(스택 승격) 판단·매핑용 필드.
-	layoutMode?: string
-	itemSpacing?: number
-	paddingTop?: number
-	paddingRight?: number
-	paddingBottom?: number
-	paddingLeft?: number
-	primaryAxisAlignItems?: string
-	counterAxisAlignItems?: string
-	layoutSizingHorizontal?: string
-	layoutSizingVertical?: string
-}
-
-export interface FigmaPaint {
-	type: string
-	visible?: boolean
-	opacity?: number
-	color?: { r: number; g: number; b: number; a?: number }
-	gradientStops?: { color: { r: number; g: number; b: number; a?: number }; position?: number }[]
-	gradientHandlePositions?: { x: number; y: number }[]
-}
-
-export interface FigmaEffect {
-	type: string
-	visible?: boolean
-	radius?: number
-	spread?: number
-	offset?: { x: number; y: number }
-	color?: { r: number; g: number; b: number; a?: number }
-}
 
 const FIGMA_API_BASE = 'https://api.figma.com/v1'
 const IMAGE_BATCH_SIZE = 100

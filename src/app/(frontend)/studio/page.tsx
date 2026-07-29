@@ -1,8 +1,8 @@
 import { ArrowRight } from '@carbon/icons-react'
-import { PageHeader } from '@/components/global/page-header'
 import { SectionLayout } from '@/components/global/section-layout'
-import { StudioSideNavigation } from '@/components/global/studio-side-navigation'
-import { NavigationBlock } from '@/components/navigation-block'
+import { NavigationBlock } from '@/components/navigation/navigation-block'
+import { ContentHeading } from '@/components/shared/content-heading'
+import { StudioSideNavigation } from '@/components/studio/shared/studio-side-navigation'
 import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
 
 const navigationTail = <ArrowRight aria-hidden className="ml-auto" size={24} />
@@ -14,7 +14,7 @@ export default function StudioPage() {
 				<section>
 					<div className="grid grid-cols-1 gap-4">
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							className="aspect-[2/1]"
 							label="New Templates"
 							href="/studio/templates"
@@ -23,17 +23,17 @@ export default function StudioPage() {
 					</div>
 				</section>
 				<section>
-					<PageHeader title="Images" className="pb-8" />
+					<ContentHeading level={2} title="Images" className="pb-8" />
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							className="aspect-[2/1]"
 							label="Illustrations"
 							href="/studio/create/illustrations"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							className="aspect-[2/1]"
 							label="Gradient"
 							href="/studio/create/gradients"
@@ -42,39 +42,40 @@ export default function StudioPage() {
 					</div>
 				</section>
 				<section>
-					<PageHeader
+					<ContentHeading
+						level={2}
 						title="Templates"
-						tip="Browse reusable assets for brand production."
+						helpText="Browse reusable assets for brand production."
 						className="pb-8"
 					/>
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-3 [&>[data-slot=navigation-block]]:aspect-square">
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							className="md:col-span-2 md:row-span-2"
 							label="Events"
 							href="/studio/create/events"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}
 						/>
 						<NavigationBlock
-							variant="md"
+							variant="default"
 							label="Stationery"
 							href="/studio/create/stationery"
 							tail={navigationTail}

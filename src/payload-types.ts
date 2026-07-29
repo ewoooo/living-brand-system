@@ -1213,6 +1213,10 @@ export interface ImageProfile {
    */
   displayOrder: number;
   /**
+   * 이미지 공급자와 무관한 출력 크기 프리셋입니다.
+   */
+  outputSizePreset: 'square' | 'landscape' | 'portrait';
+  /**
    * 이미지 유형의 기본값입니다. 각 행은 최종 JSON의 주제와 프롬프트가 됩니다.
    */
   profilePrompt: {
@@ -1221,16 +1225,18 @@ export interface ImageProfile {
     id?: string | null;
   }[];
   /**
-   * AI가 유저 인풋을 각 주제의 프롬프트 후보 중 하나로 정규화합니다. 시스템 프롬프트와 같은 주제면 이 프롬프트가 우선합니다.
+   * 선택사항입니다. 행이 있으면 AI가 후보 중 하나로 정규화하고, 비어 있으면 유저 인풋 원문만 subject로 사용합니다.
    */
-  userPromptNormalization: {
-    key: string;
-    candidates: {
-      value: string;
-      id?: string | null;
-    }[];
-    id?: string | null;
-  }[];
+  userPromptNormalization?:
+    | {
+        key: string;
+        candidates: {
+          value: string;
+          id?: string | null;
+        }[];
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1243,19 +1249,6 @@ export interface Template {
   id: number;
   name: string;
   description?: string | null;
-  jsonTemplate?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  code?: {
-    css?: string | null;
-    js?: string | null;
-  };
   sourceUrl?: string | null;
   baseHtml?: string | null;
   overrides?:
@@ -1275,6 +1268,10 @@ export interface Template {
    * Figma 높이(px). 가져오기가 채웁니다.
    */
   height?: number | null;
+  /**
+   * 설정하면 CMYK TIFF와 RGB 벡터 PDF가 활성화됩니다. 픽셀 크기는 유지되며 TIFF는 최대 67,108,864픽셀을 지원합니다.
+   */
+  printPpi?: ('72' | '150' | '300') | null;
   /**
    * Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.
    */
@@ -2553,6 +2550,7 @@ export interface ImageProfilesSelect<T extends boolean = true> {
   generateSlug?: T;
   slug?: T;
   displayOrder?: T;
+  outputSizePreset?: T;
   profilePrompt?:
     | T
     | {
@@ -2583,18 +2581,12 @@ export interface ImageProfilesSelect<T extends boolean = true> {
 export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
-  jsonTemplate?: T;
-  code?:
-    | T
-    | {
-        css?: T;
-        js?: T;
-      };
   sourceUrl?: T;
   baseHtml?: T;
   overrides?: T;
   width?: T;
   height?: T;
+  printPpi?: T;
   category?: T;
   templateChecks?:
     | T

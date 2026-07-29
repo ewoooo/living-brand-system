@@ -69,9 +69,11 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 | Creator UI | `src/app/(frontend)` | 내부 현장 작업자가 사용하는 화면을 둡니다. |
 | Route Handler | `src/app/**/route.ts` | HTTP 요청 검증과 Service 호출만 담당합니다. |
 | ShadCN UI | `src/components/ui` | registry 기반 컴포넌트 원형을 둡니다. |
-| 전역 공유 컴포넌트 | `src/components` | 여러 기능이 공유하는 헤더, 전역 채팅, Admin 커스텀 컴포넌트를 둡니다. |
-| 화면 컴포넌트 | `src/features/*/components` | 특정 기능에만 쓰는 컴포넌트를 둡니다. |
-| 화면 상태와 조회 서비스 | `src/features/*` | 폼 상태, client hook, view model, 기능 전용 read service를 기능 안에 둡니다. |
+| 표현 컴포넌트 | `src/components/<surface>` | Home, Studio, Payload Admin처럼 실제 화면 표면을 기준으로 둡니다. |
+| 전역 공유 컴포넌트 | `src/components/shared`, `src/components/global`, `src/components/navigation` | 둘 이상의 화면 표면이 공유하는 UI, app shell, 공용 탐색 UI만 둡니다. |
+| 화면 상태와 비즈니스 로직 | `src/features/*` | domain, hook, service, repository, util, type을 기능 안에 둡니다. 일반 React 컴포넌트는 두지 않습니다. |
+
+의존 방향은 `app → components → features`입니다. `features`는 `components`를 import하지 않습니다. Payload block은 schema, projection, renderer를 한 단위로 등록해야 하므로 `src/features/guideline/blocks/*/component.tsx`는 예외로 둡니다. 기존 `src/features/guideline/components`도 Guideline 분류를 별도로 정리하기 전까지의 한시적 예외입니다.
 
 ## 3. 전체 소스코드 폴더 구조
 
@@ -103,8 +105,14 @@ src/
   agents/
     *.agent.ts
   components/
+    admin/
+    global/
+    home/
+    navigation/
+    shared/
+    studio/
+      shared/
     ui/
-    *.tsx
   features/
     <feature>/
       blocks/
@@ -122,8 +130,6 @@ src/
         projection.generated.ts
         renderer.generated.tsx
         catalog.test.ts
-      components/
-        guideline-blocks.tsx
       hooks/
       repositories/
       services/
@@ -150,6 +156,8 @@ scripts/
 - Collection hook은 Service를 호출하고, 업무 규칙을 직접 길게 작성하지 않습니다.
 - Payload Local API, ORM, CMS SDK import는 `*.payload.repository.ts`, `*.drizzle.repository.ts` 구현 파일에만 허용합니다. Service는 기능 전용 read 조회라도 이 규칙을 따릅니다.
 - Service와 Repository는 그것을 소유하는 기능의 `src/features/<feature>` 안에 두는 것이 기본입니다. 두 번째 기능이 같은 Service나 Repository를 쓰는 시점에 `src/services`, `src/repositories`로 승격합니다.
+- 일반 React 컴포넌트는 `src/components/<surface>`에 둡니다. 컴포넌트가 기능 hook이나 client service를 사용할 수 있지만, 기능 로직이 표현 컴포넌트를 import하면 안 됩니다.
+- 둘 이상의 화면 표면이 쓰는 컴포넌트만 `src/components/shared`로 승격합니다. 한 표면 안의 여러 화면이 공유하면 `<surface>/shared`에 둡니다.
 - Repository Interface 파일(`*.repository.ts`)은 구현체가 2개 이상 필요해지는 시점에 만듭니다. 단일 구현 단계에서는 Service가 구현 파일을 직접 import합니다.
 - 기능 전용 read service의 Payload 접근도 같은 기능의 `src/features/*/repositories`에 둡니다.
 - 기능 안의 순수 도메인 계산 계층(예: `review/checkers`)과 정적 시나리오 데이터(예: `review/scenarios`)는 승인된 기능 하위 폴더 확장입니다. 새 하위 폴더는 표준 폴더(`components`, `hooks`, `repositories`, `services`, `utils`)로 표현할 수 없을 때만 추가합니다.
@@ -171,7 +179,8 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 | --- | --- | --- |
 | Payload collection | `src/collections` | 데이터 구조, access, hook 진입점 |
 | 기능 전용 Payload block | `src/features/*/blocks/<block>` | schema, Agent/Check projection, React component |
-| Creator 화면 | `src/app/(frontend)`, `src/features` | 화면 이동, URL 상태, view model |
+| Creator 화면 | `src/app/(frontend)`, `src/components` | 화면 이동, route 조합, 표현 컴포넌트 |
+| Creator 화면 상태 | `src/features/*/hooks`, `src/features/*/utils` | 화면 상태, view model, 비즈니스 계산 |
 | Admin 화면 | `src/app/(payload)`, Payload Admin 기본 UI | Manager의 CMS 작업 |
 | Route Handler | `src/app/**/route.ts` | request parsing, 권한 확인, Service 호출, response 변환 |
 | Service | `src/features/*/services`, 공유 시 `src/services` | Use Case 실행, Input / Output 계약, 상태 전이 판단, 기능 전용 published 조회 |

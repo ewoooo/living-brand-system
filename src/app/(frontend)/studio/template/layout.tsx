@@ -1,9 +1,9 @@
 import type React from 'react'
 import { SectionLayout } from '@/components/global/section-layout'
-import { StudioSideNavigation } from '@/components/global/studio-side-navigation'
-import { PageNavigation } from '@/components/page-navigation'
-import { getCreateNavigation } from '@/features/asset-generation/services/get-create-navigation.service'
+import { PageNavigation } from '@/components/navigation/page-navigation'
+import { StudioSideNavigation } from '@/components/studio/shared/studio-side-navigation'
 import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
+import { getCreateNavigation } from '@/features/template-create/services/get-create-navigation.service'
 import { routes } from '@/lib/routes'
 
 // 발행 직후의 템플릿이 재빌드 없이 보이도록 요청 시점에 렌더한다.

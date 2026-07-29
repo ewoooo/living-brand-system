@@ -2,9 +2,9 @@
 
 import { usePathname } from 'next/navigation'
 import { type DragEvent, useState } from 'react'
+import { AgentChatMessageList } from '@/components/global/chat/agent-chat-message-list'
+import { AgentChatUserInput } from '@/components/global/chat/agent-chat-user-input'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
-import { AgentChatMessageList } from '@/features/agent-chat/components/agent-chat-message-list'
-import { AgentChatUserInput } from '@/features/agent-chat/components/agent-chat-user-input'
 import { useAgentChat } from '@/features/agent-chat/hooks/use-agent-chat'
 import { cn } from '@/lib/utils'
 
