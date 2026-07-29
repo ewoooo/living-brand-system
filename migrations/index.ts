@@ -9,7 +9,7 @@ import * as migration_20260728_052054_studio_image_profile_routes from './202607
 import * as migration_20260728_060029_add_image_grid_description from './20260728_060029_add_image_grid_description';
 import * as migration_20260729_013432_add_template_print_ppi from './20260729_013432_add_template_print_ppi';
 import * as migration_20260729_024631_remove_json_templates from './20260729_024631_remove_json_templates';
-import * as migration_20260729_060548_technical_illustration_profile from './20260729_060548_technical_illustration_profile';
+import * as migration_20260729_070436_technical_illustration_profile from './20260729_070436_technical_illustration_profile';
 
 export const migrations = [
   {
@@ -65,11 +65,11 @@ export const migrations = [
   {
     up: migration_20260729_024631_remove_json_templates.up,
     down: migration_20260729_024631_remove_json_templates.down,
-    name: '20260729_024631_remove_json_templates'
+    name: '20260729_024631_remove_json_templates',
   },
   {
-    up: migration_20260729_060548_technical_illustration_profile.up,
-    down: migration_20260729_060548_technical_illustration_profile.down,
-    name: '20260729_060548_technical_illustration_profile'
+    up: migration_20260729_070436_technical_illustration_profile.up,
+    down: migration_20260729_070436_technical_illustration_profile.down,
+    name: '20260729_070436_technical_illustration_profile'
   },
 ];
