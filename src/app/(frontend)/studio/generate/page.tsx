@@ -1,5 +1,4 @@
-import { PageHeader } from '@/components/global/page-header'
-import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
+import { StudioWorkspacePage } from '@/components/studio/studio-workspace'
 import { ImageGenerator } from '@/features/image-generation/components/image-generator'
 import { listAvailableImageProfiles } from '@/features/image-generation/services/list-image-profiles.service'
 import { authenticateRequest } from '@/lib/request-auth'
@@ -10,16 +9,11 @@ export default async function GeneratePage() {
 	const imageProfiles = user ? await listAvailableImageProfiles(user) : []
 
 	return (
-		<GuidelineContentFrame
-			variant="full"
-			className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] py-0"
+		<StudioWorkspacePage
+			title="이미지 생성"
+			description="프롬프트와 이미지 프로파일을 조합해 브랜드 이미지 후보를 만듭니다."
 		>
-			<PageHeader
-				title="이미지 생성"
-				description="프롬프트와 이미지 프로파일을 조합해 브랜드 이미지 후보를 만듭니다."
-				className="px-4 py-6 md:px-8"
-			/>
 			<ImageGenerator profiles={imageProfiles} />
-		</GuidelineContentFrame>
+		</StudioWorkspacePage>
 	)
 }
