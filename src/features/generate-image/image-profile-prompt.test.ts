@@ -43,4 +43,8 @@ describe('image profile prompt', () => {
 			]),
 		).toBe('값 후보는 중복될 수 없습니다.')
 	})
+
+	it('정규화 행은 비어 있어도 유효하다', () => {
+		expect(validateImagePromptNormalizationRows(undefined)).toBe(true)
+	})
 })

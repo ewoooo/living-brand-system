@@ -35,12 +35,11 @@ export const imagePromptNormalizationRowsSchema = z
 				}),
 		}),
 	)
-	.min(1)
 	.superRefine((rows, context) => addDuplicateKeyIssues(rows, context))
 
 export const imagePromptNormalizationRequestSchema = z.object({
 	profilePrompt: imageProfilePromptRowsSchema,
-	userPromptNormalization: imagePromptNormalizationRowsSchema,
+	userPromptNormalization: imagePromptNormalizationRowsSchema.optional().default([]),
 	userPrompt: z.string().trim().min(1).max(500),
 })
 
@@ -54,7 +53,7 @@ export function validateImageProfilePromptRows(value: unknown): true | string {
 }
 
 export function validateImagePromptNormalizationRows(value: unknown): true | string {
-	const result = imagePromptNormalizationRowsSchema.safeParse(value)
+	const result = imagePromptNormalizationRowsSchema.safeParse(value ?? [])
 	return result.success ? true : firstIssue(result.error, '유저 인풋 정규화 값을 확인하세요.')
 }
 

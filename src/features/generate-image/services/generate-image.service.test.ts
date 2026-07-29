@@ -83,11 +83,12 @@ describe('generateImageCandidates', () => {
 		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
 	})
 
-	it('published 프로파일을 정규화해 세로 이미지 프롬프트로 생성한다', async () => {
+	it('published 프로파일을 정규화해 프리셋 출력 크기로 생성한다', async () => {
 		mocks.env.OPENAI_API_KEY = 'key'
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,
-			name: '에센허브 브랜드 제품컷',
+			name: 'Technical Illustration',
+			outputSizePreset: 'landscape',
 			profilePrompt: [{ key: 'style', value: 'minimalist' }],
 			userPromptNormalization: [{ key: 'mood', candidates: [{ value: 'organic' }] }],
 		})
@@ -113,7 +114,7 @@ describe('generateImageCandidates', () => {
 				subject: '파란 세럼병',
 			}),
 			profileId: 5,
-			profileName: '에센허브 브랜드 제품컷',
+			profileName: 'Technical Illustration',
 		})
 		expect(mocks.findPublishedImageProfile).toHaveBeenCalledWith(user, 5)
 		expect(mocks.normalizeImageProfilePrompt).toHaveBeenCalledWith({
@@ -128,7 +129,7 @@ describe('generateImageCandidates', () => {
 				subject: '파란 세럼병',
 			}),
 			count: 2,
-			size: '1024x1536',
+			size: '1536x1024',
 		})
 	})
 

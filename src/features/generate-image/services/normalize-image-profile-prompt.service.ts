@@ -26,7 +26,10 @@ export async function normalizeImageProfilePrompt({
 	userPromptNormalization: ImagePromptNormalizationRow[]
 	userPrompt: string
 }): Promise<{ finalPrompt: FlatImagePrompt; normalizedInput: FlatImagePrompt }> {
-	const normalizedInput = await normalizeImagePromptWithAi(userPrompt, userPromptNormalization)
+	const normalizedInput =
+		userPromptNormalization.length === 0
+			? {}
+			: await normalizeImagePromptWithAi(userPrompt, userPromptNormalization)
 	if (!normalizedInput) throw new ImagePromptNormalizationUnavailableError()
 
 	return {
