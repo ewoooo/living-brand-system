@@ -39,7 +39,7 @@ function HtmlTemplateAttachment({ attachment }: { attachment: AgentTemplateImage
 			),
 		[attachment.html, attachment.values],
 	)
-	const { exporting, exportError, exportTemplate } = useTemplateExport({
+	const { canExport, exporting, exportError, exportTemplate } = useTemplateExport({
 		fileName: attachment.name,
 		height: attachment.height,
 		html: composedHtml,
@@ -60,12 +60,8 @@ function HtmlTemplateAttachment({ attachment }: { attachment: AgentTemplateImage
 			isExporting={exporting !== null}
 			exportError={exportError}
 			onExport={() => exportTemplate('png')}
-			onExportTiff={
-				attachment.printPpi && attachment.templateVersion
-					? () => exportTemplate('tiff')
-					: undefined
-			}
-			onExportPdf={attachment.printPpi ? () => exportTemplate('pdf') : undefined}
+			onExportTiff={canExport('tiff') ? () => exportTemplate('tiff') : undefined}
+			onExportPdf={canExport('pdf') ? () => exportTemplate('pdf') : undefined}
 		>
 			<ScaledMedia contentWidth={attachment.width}>
 				{(scale) => (

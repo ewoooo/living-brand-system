@@ -13,7 +13,8 @@
 조합과 HTML 렌더는 클라이언트에서 일어나며 서버 렌더링·이미지 생성·영속이 없습니다. 인쇄용 TIFF는 브라우저가 렌더한 PNG를 서버에서 변환하고, PDF는 같은 PNG를 클라이언트에서 단일 페이지 문서로 만듭니다.
 
 - `HtmlAssetGenerator`(`src/components/studio/template/html-asset-generator.tsx`): canonical HTML의 열린 텍스트 슬롯을 편집하고 미리보기를 렌더.
-- `use-template-export`(`src/features/template-export/hooks/`): Create·Chat의 `png | tiff | pdf` 실행 계약과 진행·오류 상태를 공유.
+- `export-template.client`(`src/features/template-export/services/`): Create·Chat의 `png | tiff | pdf` 가용 조건과 Strategy Registry 실행 계약을 공유.
+- `use-template-export`(`src/features/template-export/hooks/`): export use case의 진행·오류 UI 상태를 공유.
 - `render-template-export-stage.client`(`src/features/template-export/services/`): 검증된 HTML을 Shadow DOM의 공용 export stage로 안전하게 구성.
 - `export-template-png.client`(`src/features/template-export/services/`): 공용 export stage를 `html-to-image`로 PNG 다운로드 또는 TIFF·PDF 입력용 PNG Blob으로 렌더.
 - `export-template-tiff`(`src/features/template-export/`): 발행된 canonical HTML 템플릿의 운영자 PPI 정책과 PNG 픽셀 크기를 확인한 뒤 Sharp로 CMYK TIFF 변환.

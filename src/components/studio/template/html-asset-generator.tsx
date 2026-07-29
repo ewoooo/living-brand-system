@@ -3,11 +3,9 @@
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import type { PublishedHtmlTemplate } from '@/features/template-create/services/get-published-template.service'
-import {
-	type TemplateExportFormat,
-	useTemplateExport,
-} from '@/features/template-export/hooks/use-template-export'
+import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
 import { type PrintPpi, pixelsToMillimeters } from '@/features/template-export/print-policy'
+import type { TemplateExportFormat } from '@/features/template-export/services/export-template.client'
 import { collectTemplateSlots, type TemplateSlot } from '@/services/collect-template-slots.service'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import { TextSlotInput } from './text-slot-input'
@@ -39,7 +37,7 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 			),
 		[html, values],
 	)
-	const { exporting, exportError, exportTemplate } = useTemplateExport({
+	const { canExport, exporting, exportError, exportTemplate } = useTemplateExport({
 		fileName: template.name,
 		height,
 		html: composedHtml,
@@ -52,6 +50,7 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 	return (
 		<section className="flex w-full flex-col gap-6 md:flex-row">
 			<TemplateSlotControls
+				canExport={canExport}
 				error={exportError}
 				exporting={exporting}
 				height={height}
@@ -71,6 +70,7 @@ export function HtmlAssetGenerator({ template }: { template: PublishedHtmlTempla
 
 /** 슬롯 입력 열의 고정 폭과 세로 흐름을 소유한다. */
 function TemplateSlotControls({
+	canExport,
 	error,
 	exporting,
 	height,
@@ -81,6 +81,7 @@ function TemplateSlotControls({
 	values,
 	width,
 }: {
+	canExport: (format: TemplateExportFormat) => boolean
 	error: string | null
 	exporting: TemplateExportFormat | null
 	height: number
@@ -117,27 +118,29 @@ function TemplateSlotControls({
 			<Button onClick={() => onExport('png')} disabled={exporting !== null}>
 				{exporting === 'png' ? '내보내는 중...' : 'PNG로 내보내기'}
 			</Button>
+			{canExport('tiff') && (
+				<Button
+					onClick={() => onExport('tiff')}
+					disabled={exporting !== null}
+					variant="outline"
+				>
+					{exporting === 'tiff' ? '내보내는 중...' : 'CMYK TIFF로 내보내기'}
+				</Button>
+			)}
+			{canExport('pdf') && (
+				<Button
+					onClick={() => onExport('pdf')}
+					disabled={exporting !== null}
+					variant="outline"
+				>
+					{exporting === 'pdf' ? '내보내는 중...' : 'RGB PDF로 내보내기'}
+				</Button>
+			)}
 			{printPpi && (
-				<>
-					<Button
-						onClick={() => onExport('tiff')}
-						disabled={exporting !== null}
-						variant="outline"
-					>
-						{exporting === 'tiff' ? '내보내는 중...' : 'CMYK TIFF로 내보내기'}
-					</Button>
-					<Button
-						onClick={() => onExport('pdf')}
-						disabled={exporting !== null}
-						variant="outline"
-					>
-						{exporting === 'pdf' ? '내보내는 중...' : 'RGB PDF로 내보내기'}
-					</Button>
-					<p className="font-body text-xs font-normal text-muted-foreground">
-						{printPpi}ppi · {pixelsToMillimeters(width, printPpi).toFixed(1)} ×{' '}
-						{pixelsToMillimeters(height, printPpi).toFixed(1)}mm · PDF RGB
-					</p>
-				</>
+				<p className="font-body text-xs font-normal text-muted-foreground">
+					{printPpi}ppi · {pixelsToMillimeters(width, printPpi).toFixed(1)} ×{' '}
+					{pixelsToMillimeters(height, printPpi).toFixed(1)}mm · PDF RGB
+				</p>
 			)}
 			{error && <p className="font-body text-sm font-normal text-destructive">{error}</p>}
 		</div>

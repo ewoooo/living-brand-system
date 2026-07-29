@@ -7,7 +7,7 @@ const PDF_POINTS_PER_INCH = 72
 
 /**
  * 원본 픽셀 PNG를 운영자 PPI의 흰 단일 페이지 RGB PDF로 만들어 다운로드한다.
- * PNG 렌더링은 호출 hook이, PDF 직렬화와 브라우저 다운로드 I/O는 이 client service가 소유한다.
+ * PNG 렌더링은 상위 export use case가, PDF 직렬화와 브라우저 다운로드 I/O는 이 adapter가 소유한다.
  */
 export async function exportTemplatePdf({
 	fileName,
