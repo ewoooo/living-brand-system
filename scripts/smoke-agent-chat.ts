@@ -133,6 +133,33 @@ for (const testCase of selectedCases) {
 	const execution = getAgentExecutionPolicy(loadedSkill.output)
 	const expectedModels = [...new Set(['claude-sonnet-5', execution.modelId])].join(', ')
 	assert.equal(assistant.aiUsage?.model, expectedModels, `${testCase.name}: models`)
+	assert.deepEqual(
+		{
+			skillName: session.triage?.skillName,
+			responseMode: session.triage?.responseMode,
+			risk: session.triage?.risk,
+			confidence: session.triage?.confidence,
+			executionModel: session.triage?.executionModel,
+			toolScope: session.triage?.toolScope,
+			reviewRequired: session.triage?.reviewRequired,
+		},
+		{
+			skillName: loadedSkill.output.name,
+			responseMode: loadedSkill.output.responseMode,
+			risk: loadedSkill.output.risk,
+			confidence: loadedSkill.output.confidence,
+			executionModel: loadedSkill.output.model,
+			toolScope: loadedSkill.output.toolScope,
+			reviewRequired: loadedSkill.output.reviewRequired,
+		},
+		`${testCase.name}: saved triage`,
+	)
+	assert.equal(
+		session.triage?.classifierModel,
+		'claude-sonnet-5',
+		`${testCase.name}: classifier model`,
+	)
+	assert.ok((session.triage?.totalTokens ?? 0) > 0, `${testCase.name}: triage tokens`)
 
 	const usedTools = (assistant.usedTools ?? []).map(({ name }) => name)
 	assert.ok(usedTools.includes('loadSkill'), `${testCase.name}: loadSkill was not recorded`)

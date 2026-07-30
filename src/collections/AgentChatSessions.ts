@@ -259,6 +259,99 @@ export const AgentChatSessions: CollectionConfig = {
 			],
 		},
 		{
+			name: 'triage',
+			type: 'group',
+			admin: {
+				description: 'Agent가 제안하고 서버가 확정한 분류와 최초 분류 단계 사용량입니다.',
+			},
+			fields: [
+				{
+					name: 'skillName',
+					type: 'text',
+				},
+				{
+					name: 'responseMode',
+					type: 'select',
+					options: [
+						{ label: 'Quick', value: 'quick' },
+						{ label: 'Lookup', value: 'lookup' },
+						{ label: 'Research', value: 'research' },
+						{ label: 'Action', value: 'action' },
+					],
+				},
+				{
+					name: 'risk',
+					type: 'select',
+					options: [
+						{ label: 'Low', value: 'low' },
+						{ label: 'High', value: 'high' },
+					],
+				},
+				{
+					name: 'confidence',
+					type: 'number',
+					min: 0,
+					max: 100,
+					admin: { step: 1 },
+				},
+				{
+					name: 'executionModel',
+					type: 'select',
+					options: [
+						{ label: 'Sonnet 5', value: 'sonnet-5' },
+						{ label: 'Opus 5.0', value: 'opus-5.0' },
+					],
+				},
+				{
+					name: 'toolScope',
+					type: 'select',
+					options: [
+						{ label: 'None', value: 'none' },
+						{ label: 'Read', value: 'read' },
+						{ label: 'Action', value: 'action' },
+					],
+				},
+				{
+					name: 'reviewRequired',
+					type: 'checkbox',
+				},
+				{
+					name: 'classifierModel',
+					type: 'text',
+				},
+				{
+					name: 'inputTokens',
+					type: 'number',
+					admin: { step: 1 },
+				},
+				{
+					name: 'outputTokens',
+					type: 'number',
+					admin: { step: 1 },
+				},
+				{
+					name: 'totalTokens',
+					type: 'number',
+					admin: { step: 1 },
+				},
+				{
+					name: 'cacheReadInputTokens',
+					type: 'number',
+					admin: { step: 1 },
+				},
+				{
+					name: 'cacheWriteInputTokens',
+					type: 'number',
+					admin: { step: 1 },
+				},
+				{
+					name: 'reasoningTokens',
+					type: 'number',
+					admin: { step: 1 },
+				},
+			],
+		},
+		{
 			name: 'aiUsageTable',
 			type: 'ui',
 			admin: {
