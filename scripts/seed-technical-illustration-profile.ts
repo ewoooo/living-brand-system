@@ -36,10 +36,15 @@ High contrast.`,
 		},
 		{
 			key: 'composition',
-			value: `ISO-metric view.
-Centered composition.
+			value: `Centered composition.
 Aspect ratio 16:9.
 Single object.`,
+		},
+		{
+			key: 'camera',
+			value: `Isometric three-quarter view.
+Slightly elevated camera.
+Orthographic projection.`,
 		},
 		{
 			key: 'output',

@@ -69,5 +69,7 @@ describe('ImageGenerator', () => {
 		expect(screen.getByLabelText('프롬프트')).toHaveValue(
 			'신제품을 위한 깨끗한 스튜디오 제품 이미지',
 		)
+		expect(screen.getByRole('button', { name: '이미지 생성' })).toBeDisabled()
+		expect(screen.queryByText('자유 생성 (브랜드 스타일 없음)')).not.toBeInTheDocument()
 	})
 })

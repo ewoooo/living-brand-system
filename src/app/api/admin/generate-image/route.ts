@@ -9,6 +9,8 @@ import {
 	generateImages,
 	generateImagesWithSettings,
 	ImageGenerationUnavailableError,
+	ImageProfileNotFoundError,
+	ImagePromptNormalizationUnavailableError,
 } from '@/features/generate-image/services/generate-image.service'
 import { isManager } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
@@ -30,7 +32,12 @@ const requestSchema = z.union([
 		})
 		.strict()
 		.refine((input) => supportsImageOutputSize(input.imageModelPreset, input.imageSize)),
-	z.object(baseFields).strict(),
+	z
+		.object({
+			...baseFields,
+			profileId: z.number().int().positive(),
+		})
+		.strict(),
 ])
 
 export async function POST(request: Request) {
@@ -63,7 +70,12 @@ export async function POST(request: Request) {
 						imageModelPreset: parsed.data.imageModelPreset,
 						imageSize: parsed.data.imageSize,
 					})
-				: await generateImages({ userInput, count })
+				: await generateImages({
+						userInput,
+						count,
+						profileId: parsed.data.profileId,
+						user,
+					})
 		if (result.images.length === 0) {
 			return Response.json({ message: 'Image generation failed.' }, { status: 502 })
 		}
@@ -80,8 +92,14 @@ export async function POST(request: Request) {
 		return Response.json(response)
 	} catch (error) {
 		payload.logger.error({ err: error }, 'admin-image-generation.failed')
-		if (error instanceof ImageGenerationUnavailableError) {
+		if (
+			error instanceof ImageGenerationUnavailableError ||
+			error instanceof ImagePromptNormalizationUnavailableError
+		) {
 			return Response.json({ message: 'Image generation is unavailable.' }, { status: 503 })
+		}
+		if (error instanceof ImageProfileNotFoundError) {
+			return Response.json({ message: 'Image profile not found.' }, { status: 404 })
 		}
 		return Response.json({ message: 'Image generation failed.' }, { status: 500 })
 	}

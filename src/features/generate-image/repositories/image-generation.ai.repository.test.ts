@@ -85,4 +85,33 @@ describe('generateBrandImages', () => {
 		})
 		expect(mocks.openaiImage).toHaveBeenCalledWith('gpt-image-2')
 	})
+
+	it('시드 이미지를 Google 이미지 편집 프롬프트로 전달한다', async () => {
+		const seedImage = new Uint8Array([137, 80, 78, 71])
+
+		await generateBrandImages({
+			prompt: 'change only the camera viewpoint',
+			count: 1,
+			modelPreset: 'google-nano-banana-2-lite',
+			aspectRatio: '16:9',
+			imageSize: '1K',
+			seedImage,
+		})
+
+		expect(mocks.generateImage).toHaveBeenCalledWith({
+			model: 'google-model',
+			prompt: {
+				text: 'change only the camera viewpoint',
+				images: [seedImage],
+			},
+			providerOptions: {
+				google: {
+					imageConfig: {
+						aspectRatio: '16:9',
+						imageSize: '1K',
+					},
+				},
+			},
+		})
+	})
 })

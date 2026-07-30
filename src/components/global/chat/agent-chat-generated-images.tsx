@@ -9,11 +9,11 @@ export function AgentChatGeneratedImages({
 }) {
 	return (
 		<div className="flex w-full flex-col gap-2">
-			<p className="font-body text-sm font-normal text-muted-foreground">
-				{attachment.profileName
-					? `적용된 프로파일: ${attachment.profileName}`
-					: '자유 생성 (브랜드 스타일 없음)'}
-			</p>
+			{attachment.profileName ? (
+				<p className="font-body text-sm font-normal text-muted-foreground">
+					적용된 프로파일: {attachment.profileName}
+				</p>
+			) : null}
 			<div className="grid w-full grid-cols-2 gap-2">
 				{attachment.images.map((src, index) => (
 					<div key={src} className="relative">

@@ -1,21 +1,16 @@
-import { z } from 'zod'
 import {
-	generateImages,
+	cameraAdjustmentRequestSchema,
+	MAX_CAMERA_ADJUSTMENT_REQUEST_BYTES,
+} from '@/features/generate-image/camera-control'
+import {
+	adjustImageCamera,
 	ImageGenerationUnavailableError,
 	ImageProfileNotFoundError,
-	ImagePromptNormalizationUnavailableError,
+	InvalidSeedImageError,
 } from '@/features/generate-image/services/generate-image.service'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
 export const maxDuration = 60
-
-const requestSchema = z
-	.object({
-		prompt: z.string().trim().min(1).max(500),
-		count: z.number().int().min(1).max(6).default(4),
-		profileId: z.number().int().positive(),
-	})
-	.strict()
 
 export async function POST(request: Request) {
 	if (isCrossOriginRequest(request)) {
@@ -27,40 +22,50 @@ export async function POST(request: Request) {
 		return Response.json({ message: 'Unauthorized' }, { status: 401 })
 	}
 
-	const parsed = requestSchema.safeParse(await request.json().catch(() => null))
+	const contentLength = Number(request.headers.get('content-length') ?? 0)
+	if (contentLength > MAX_CAMERA_ADJUSTMENT_REQUEST_BYTES) {
+		return Response.json({ message: 'Request too large.' }, { status: 413 })
+	}
+
+	const parsed = cameraAdjustmentRequestSchema.safeParse(await request.json().catch(() => null))
 	if (!parsed.success) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
 	}
 
-	const { prompt: userInput, count, profileId } = parsed.data
-
 	try {
-		const result = await generateImages({ userInput, profileId, user, count })
+		const result = await adjustImageCamera({ ...parsed.data, user })
 		if (result.images.length === 0) {
 			return Response.json({ message: 'Image generation failed.' }, { status: 502 })
 		}
+
 		const { provider, ...response } = result
 		payload.logger.info(
 			{
-				profileId: result.profileId,
-				provider,
-				model: result.model,
-				promptLength: result.prompt.length,
+				camera: result.camera.resolved,
 				count: result.images.length,
+				model: result.model,
+				profileId: result.profileId,
+				promptLength: result.prompt.length,
+				provider,
 			},
-			'image-generation.done',
+			'image-camera-adjustment.done',
 		)
 		return Response.json(response)
 	} catch (error) {
-		payload.logger.error({ err: error }, 'image-generation.failed')
-		if (
-			error instanceof ImageGenerationUnavailableError ||
-			error instanceof ImagePromptNormalizationUnavailableError
-		) {
+		payload.logger.error(
+			{
+				errorName: error instanceof Error ? error.name : 'UnknownError',
+			},
+			'image-camera-adjustment.failed',
+		)
+		if (error instanceof ImageGenerationUnavailableError) {
 			return Response.json({ message: 'Image generation is unavailable.' }, { status: 503 })
 		}
 		if (error instanceof ImageProfileNotFoundError) {
 			return Response.json({ message: 'Image profile not found.' }, { status: 404 })
+		}
+		if (error instanceof InvalidSeedImageError) {
+			return Response.json({ message: 'Invalid seed image.' }, { status: 400 })
 		}
 		return Response.json({ message: 'Image generation failed.' }, { status: 500 })
 	}
