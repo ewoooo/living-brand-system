@@ -110,6 +110,7 @@ if (healthyIds.length === 0) {
 		columns: number,
 		count: number,
 		width = 'padded',
+		aspectRatio = '1:1',
 	): AnyBlock => ({
 		blockType: 'block',
 		title,
@@ -117,6 +118,7 @@ if (healthyIds.length === 0) {
 		width,
 		arrangement,
 		columns,
+		aspectRatio,
 		children: imageLeaves(count),
 	})
 
@@ -173,6 +175,42 @@ if (healthyIds.length === 0) {
 			'masonry',
 			3,
 			6,
+		),
+		layout(
+			'Featured · 첫 항목 강조',
+			'첫 자식을 전폭으로 강조 + 나머지는 columns 그리드. aspectRatio=16:9.',
+			'featured',
+			3,
+			5,
+			'padded',
+			'16:9',
+		),
+		layout(
+			'aspectRatio · 16:9',
+			'모든 이미지 셀을 16:9로 크롭해 균일. (aspectRatio 직교 옵션)',
+			'grid',
+			3,
+			6,
+			'padded',
+			'16:9',
+		),
+		layout(
+			'aspectRatio · 4:3',
+			'모든 이미지 셀을 4:3으로 크롭해 균일.',
+			'grid',
+			3,
+			6,
+			'padded',
+			'4:3',
+		),
+		layout(
+			'aspectRatio · 원본(original)',
+			'크롭 없이 원본 비율(h-auto). 셀 높이 제각각 — 균일 아님.',
+			'grid',
+			3,
+			4,
+			'padded',
+			'original',
 		),
 		widgetBlock(
 			'위젯 검증 A (전폭 셀)',
