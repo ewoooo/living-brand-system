@@ -1,3 +1,5 @@
+import type { AgentQueryTriageDecision } from '@/features/agent-chat/domain/agent-query-triage'
+
 export type AgentChatReaction = 'good' | 'bad'
 
 export interface AgentChatSessionUsage {
@@ -15,6 +17,23 @@ export interface AgentChatAiUsage {
 	cacheWriteInputTokens?: number
 	reasoningTokens?: number
 	rawUsage?: Record<string, unknown>
+}
+
+export interface AgentChatTriage {
+	skillName: string
+	responseMode: AgentQueryTriageDecision['responseMode']
+	risk: AgentQueryTriageDecision['risk']
+	confidence: number
+	executionModel: AgentQueryTriageDecision['model']
+	toolScope: AgentQueryTriageDecision['toolScope']
+	reviewRequired: boolean
+	classifierModel: string
+	inputTokens: number
+	outputTokens: number
+	totalTokens: number
+	cacheReadInputTokens: number
+	cacheWriteInputTokens: number
+	reasoningTokens: number
 }
 
 export interface AgentChatSessionMessageInput {
