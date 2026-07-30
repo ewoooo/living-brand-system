@@ -13,6 +13,7 @@ import * as migration_20260729_070436_technical_illustration_profile from './202
 import * as migration_20260729_082630_technical_illustration_image_output_contract from './20260729_082630_technical_illustration_image_output_contract';
 import * as migration_20260730_020827_block_widget_separation from './20260730_020827_block_widget_separation';
 import * as migration_20260730_080926_remove_template_rule_references from './20260730_080926_remove_template_rule_references';
+import * as migration_20260730_083726_agent_chat_triage_persistence from './20260730_083726_agent_chat_triage_persistence';
 
 export const migrations = [
   {
@@ -89,5 +90,10 @@ export const migrations = [
     up: migration_20260730_080926_remove_template_rule_references.up,
     down: migration_20260730_080926_remove_template_rule_references.down,
     name: '20260730_080926_remove_template_rule_references',
+  },
+  {
+    up: migration_20260730_083726_agent_chat_triage_persistence.up,
+    down: migration_20260730_083726_agent_chat_triage_persistence.down,
+    name: '20260730_083726_agent_chat_triage_persistence',
   },
 ];
