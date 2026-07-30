@@ -9,7 +9,7 @@ import { getAgentDefaultInstructions } from '@/features/agent-chat/services/get-
 import type { AgentChatReaction } from '@/features/agent-chat/types'
 import { AgentConfigurationError } from '@/lib/errors'
 
-const DEFAULT_MODEL = 'claude-sonnet-4-6'
+const DEFAULT_MODEL = 'claude-sonnet-5'
 
 const agentChatCallOptionsSchema = z.object({
 	agentChatSessionId: z.number().int().positive().optional(),

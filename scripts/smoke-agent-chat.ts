@@ -131,7 +131,7 @@ for (const testCase of selectedCases) {
 	assert.ok(assistant, `${testCase.name}: saved assistant message is missing`)
 
 	const execution = getAgentExecutionPolicy(loadedSkill.output)
-	const expectedModels = [...new Set(['claude-sonnet-4-6', execution.modelId])].join(', ')
+	const expectedModels = [...new Set(['claude-sonnet-5', execution.modelId])].join(', ')
 	assert.equal(assistant.aiUsage?.model, expectedModels, `${testCase.name}: models`)
 
 	const usedTools = (assistant.usedTools ?? []).map(({ name }) => name)

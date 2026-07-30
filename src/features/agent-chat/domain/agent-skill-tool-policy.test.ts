@@ -7,12 +7,12 @@ describe('agent skill tool policy', () => {
 		expect(
 			getAgentExecutionPolicy({
 				name: 'generate-image',
-				model: 'sonnet-4.6',
+				model: 'sonnet-5',
 				toolScope: 'none',
 			}),
 		).toEqual({
 			activeTools: [],
-			modelId: 'claude-sonnet-4-6',
+			modelId: 'claude-sonnet-5',
 		})
 		expect(getAllowedAgentTools('unknown-skill', 'action')).toEqual([])
 	})
