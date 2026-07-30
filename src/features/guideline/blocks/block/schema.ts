@@ -15,6 +15,7 @@ import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase
 import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/schema'
 import { TypeScaleWidget } from '@/features/guideline/widgets/type-scale/schema'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/schema'
+import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 import { baseBlockFields } from '../shared/fields'
 
 // page 바로 하위의 레이아웃 컨테이너. widget/image(leaf)들을 품고 배치(width·arrangement·columns)를 소유한다.
@@ -61,7 +62,7 @@ export const LayoutBlock: Block = {
 				{ label: '피처드', value: 'featured' },
 				{ label: '메이슨리', value: 'masonry' },
 			],
-			admin: { description: '위젯 배치 방식입니다. 현재 grid/carousel/masonry 구현.' },
+			admin: { description: '위젯 배치 방식입니다. grid/carousel/masonry/featured 구현.' },
 		},
 		{
 			name: 'columns',
@@ -70,6 +71,16 @@ export const LayoutBlock: Block = {
 			min: 1,
 			max: 4,
 			admin: { description: 'grid 열 수입니다(행은 자식 개수로 자동).' },
+		},
+		{
+			name: 'aspectRatio',
+			type: 'select',
+			defaultValue: '1:1',
+			enumName: 'enum_block_aspect_ratio',
+			options: [...IMAGE_RATIO_OPTIONS],
+			admin: {
+				description: '이미지 셀 비율(모든 이미지 균일). masonry에선 무시하고 원본 비율.',
+			},
 		},
 		{
 			name: 'children',

@@ -17,6 +17,7 @@ import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-sp
 import { TypeScaleWidget } from '@/features/guideline/widgets/type-scale/component'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/component'
 import type { GuidelineDocument } from '@/payload-types'
+import { IMAGE_RATIO_CLASS_NAMES, type ImageRatio } from '@/types/image-ratio'
 import { GuidelineBlockFrame } from '../shared/guideline-block-frame'
 
 // 레이아웃 컨테이너: 프레임/폭(width)·배치(arrangement·columns)를 소유하고 자식 leaf를 dispatch 렌더한다.
@@ -63,20 +64,20 @@ function renderWidget(child: Child): ReactNode {
 	}
 }
 
-// uniform=true(grid·carousel): 고정 aspect-square 셀 + object-cover로 block 내 모든 이미지 렌더 크기 균일(넘치면 크롭).
-// uniform=false(masonry): 원본 비율(h-auto) 유지 — 높이 가변 벽돌쌓기가 목적.
-// 위젯은 인터랙티브라 aspect 박스로 감싸면 깨져 — 이미지 leaf에만 균일 적용.
-function renderChild(child: Child, uniform: boolean): ReactNode {
+// aspectClass 있음(grid·carousel·featured): 고정 비율 셀 + object-cover로 block 내 모든 이미지 렌더 크기 균일(넘치면 크롭).
+// aspectClass 빈 문자열(masonry, 또는 aspectRatio='original'): 원본 비율(h-auto) 유지.
+// 위젯은 인터랙티브라 aspect 박스로 감싸면 깨져 — 이미지 leaf에만 비율 적용.
+function renderChild(child: Child, aspectClass: string): ReactNode {
 	if (child.blockType === 'image') {
 		const image = typeof child.image === 'object' ? child.image : null
 		if (!image?.url) return null
 		const alt = image.alt ?? image.name ?? ''
-		if (!uniform) {
+		if (!aspectClass) {
 			// biome-ignore lint/performance/noImgElement: Payload upload URL(로컬·S3)이라 next/image 미사용.
 			return <img src={image.url} alt={alt} className="block h-auto w-full" />
 		}
 		return (
-			<div className="aspect-square w-full overflow-hidden">
+			<div className={`w-full overflow-hidden ${aspectClass}`}>
 				{/* biome-ignore lint/performance/noImgElement: Payload upload URL(로컬·S3)이라 next/image 미사용. */}
 				<img src={image.url} alt={alt} className="size-full object-cover" />
 			</div>
@@ -85,17 +86,21 @@ function renderChild(child: Child, uniform: boolean): ReactNode {
 	return renderWidget(child)
 }
 
-// arrangement별 배치. grid/carousel은 균일 셀, masonry는 높이 가변. featured는 grid로 fallback(세부 명세 대기).
+// arrangement별 배치. grid/carousel/featured는 균일 셀(aspectRatio), masonry는 원본 비율(높이 가변).
 function Arrange({
 	arrangement,
 	columns,
+	aspectRatio,
 	items,
 }: {
 	arrangement: LayoutBlockType['arrangement']
 	columns: number
+	aspectRatio: ImageRatio
 	items: NonNullable<LayoutBlockType['children']>
 }) {
 	const cols = Math.max(1, columns)
+	// masonry는 원본 비율(빈 문자열), 그 외는 aspectRatio 클래스(original도 빈 문자열이라 h-auto).
+	const aspectClass = arrangement === 'masonry' ? '' : IMAGE_RATIO_CLASS_NAMES[aspectRatio]
 
 	if (arrangement === 'carousel') {
 		return (
@@ -105,7 +110,7 @@ function Arrange({
 						key={child.id}
 						className="shrink-0 basis-4/5 snap-center sm:basis-1/2 lg:basis-1/3"
 					>
-						{renderChild(child, true)}
+						{renderChild(child, aspectClass)}
 					</div>
 				))}
 			</div>
@@ -117,9 +122,29 @@ function Arrange({
 			<div className="gap-4 [column-gap:1rem]" style={{ columnCount: cols }}>
 				{items.map((child) => (
 					<div key={child.id} className="mb-4 break-inside-avoid">
-						{renderChild(child, false)}
+						{renderChild(child, '')}
 					</div>
 				))}
+			</div>
+		)
+	}
+
+	if (arrangement === 'featured') {
+		// 첫 자식 전폭으로 강조 + 나머지는 columns 그리드.
+		const [first, ...rest] = items
+		return (
+			<div className="flex flex-col gap-4">
+				{first ? <div>{renderChild(first, aspectClass)}</div> : null}
+				{rest.length > 0 ? (
+					<div
+						className="grid gap-4"
+						style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+					>
+						{rest.map((child) => (
+							<div key={child.id}>{renderChild(child, aspectClass)}</div>
+						))}
+					</div>
+				) : null}
 			</div>
 		)
 	}
@@ -131,7 +156,7 @@ function Arrange({
 			style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
 		>
 			{items.map((child) => (
-				<div key={child.id}>{renderChild(child, true)}</div>
+				<div key={child.id}>{renderChild(child, aspectClass)}</div>
 			))}
 		</div>
 	)
@@ -147,6 +172,7 @@ export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 			<Arrange
 				arrangement={block.arrangement}
 				columns={block.columns ?? 2}
+				aspectRatio={block.aspectRatio ?? '1:1'}
 				items={block.children ?? []}
 			/>
 		</GuidelineBlockFrame>

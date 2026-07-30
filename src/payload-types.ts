@@ -842,13 +842,19 @@ export interface LayoutBlock {
    */
   width?: ('padded' | 'full') | null;
   /**
-   * 위젯 배치 방식입니다. 현재 grid/carousel/masonry 구현.
+   * 위젯 배치 방식입니다. grid/carousel/masonry/featured 구현.
    */
   arrangement?: ('grid' | 'carousel' | 'featured' | 'masonry') | null;
   /**
    * grid 열 수입니다(행은 자식 개수로 자동).
    */
   columns?: number | null;
+  /**
+   * 이미지 셀 비율(모든 이미지 균일). masonry에선 무시하고 원본 비율.
+   */
+  aspectRatio?:
+    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+    | null;
   /**
    * 이 블록이 품는 leaf(이미지·위젯)들입니다.
    */
@@ -2543,6 +2549,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
   width?: T;
   arrangement?: T;
   columns?: T;
+  aspectRatio?: T;
   children?:
     | T
     | {
