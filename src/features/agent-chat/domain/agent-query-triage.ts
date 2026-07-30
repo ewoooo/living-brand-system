@@ -16,11 +16,14 @@ const executionByMode = {
 	action: { model: 'opus-5.0', toolScope: 'action' },
 } as const
 
-export type AgentQueryTriageDecision = AgentQueryTriageProposal & {
-	model: 'sonnet-5' | 'opus-5.0'
-	toolScope: 'none' | 'read' | 'action'
-	reviewRequired: boolean
-}
+export const agentQueryTriageDecisionSchema = z.object({
+	...agentQueryTriageSchema.shape,
+	model: z.enum(['sonnet-5', 'opus-5.0']),
+	toolScope: z.enum(['none', 'read', 'action']),
+	reviewRequired: z.boolean(),
+})
+
+export type AgentQueryTriageDecision = z.infer<typeof agentQueryTriageDecisionSchema>
 
 export function decideAgentQueryTriage(
 	proposal: AgentQueryTriageProposal,

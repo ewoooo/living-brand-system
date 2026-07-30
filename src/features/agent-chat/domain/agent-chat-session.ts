@@ -7,6 +7,7 @@ import type {
 	AgentChatAiUsage,
 	AgentChatSessionMessageInput,
 	AgentChatSessionUsage,
+	AgentChatTriage,
 } from '@/features/agent-chat/types'
 
 export type AgentChatSessionStatus = 'running' | 'completed' | 'failed'
@@ -21,6 +22,7 @@ export interface AgentChatSessionUpdateData {
 	usedTools: AgentChatSessionUsage[]
 	usedSkills: AgentChatSessionUsage[]
 	aiUsage?: AgentChatAiUsage
+	triage?: AgentChatTriage
 	errorMessage?: string
 	completedAt?: string
 }
@@ -91,6 +93,7 @@ export class AgentChatSession {
 			usedTools: usage.usedTools,
 			usedSkills: usage.usedSkills,
 			aiUsage: usage.aiUsage,
+			triage: usage.triage,
 			errorMessage: this._errorMessage,
 			completedAt: this._completedAt,
 		}

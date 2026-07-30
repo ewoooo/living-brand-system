@@ -1601,6 +1601,25 @@ export interface AgentChatSession {
       }[]
     | null;
   /**
+   * Agent가 제안하고 서버가 확정한 분류와 최초 분류 단계 사용량입니다.
+   */
+  triage?: {
+    skillName?: string | null;
+    responseMode?: ('quick' | 'lookup' | 'research' | 'action') | null;
+    risk?: ('low' | 'high') | null;
+    confidence?: number | null;
+    executionModel?: ('sonnet-5' | 'opus-5.0') | null;
+    toolScope?: ('none' | 'read' | 'action') | null;
+    reviewRequired?: boolean | null;
+    classifierModel?: string | null;
+    inputTokens?: number | null;
+    outputTokens?: number | null;
+    totalTokens?: number | null;
+    cacheReadInputTokens?: number | null;
+    cacheWriteInputTokens?: number | null;
+    reasoningTokens?: number | null;
+  };
+  /**
    * Agent 채팅 비용 분석에 쓰는 모델과 토큰 사용량입니다.
    */
   aiUsage?: {
@@ -2814,6 +2833,24 @@ export interface AgentChatSessionsSelect<T extends boolean = true> {
         name?: T;
         callCount?: T;
         id?: T;
+      };
+  triage?:
+    | T
+    | {
+        skillName?: T;
+        responseMode?: T;
+        risk?: T;
+        confidence?: T;
+        executionModel?: T;
+        toolScope?: T;
+        reviewRequired?: T;
+        classifierModel?: T;
+        inputTokens?: T;
+        outputTokens?: T;
+        totalTokens?: T;
+        cacheReadInputTokens?: T;
+        cacheWriteInputTokens?: T;
+        reasoningTokens?: T;
       };
   aiUsage?:
     | T
