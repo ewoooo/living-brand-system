@@ -76,7 +76,7 @@ describe('POST /api/admin/generate-image', () => {
 	it('Admin 프로파일의 저장 전 설정으로 생성한다', async () => {
 		const response = await POST(
 			imageRequest({
-				prompt: 'sample',
+				prompt: 'a'.repeat(1_000),
 				count: 1,
 				aspectRatio: '16:9',
 				imageModelPreset: 'google-nano-banana-2-lite',
@@ -86,13 +86,21 @@ describe('POST /api/admin/generate-image', () => {
 
 		expect(response.status).toBe(200)
 		expect(mocks.generateImagesWithSettings).toHaveBeenCalledWith({
-			userInput: 'sample',
+			userInput: 'a'.repeat(1_000),
 			count: 1,
 			aspectRatio: '16:9',
 			imageModelPreset: 'google-nano-banana-2-lite',
 			imageSize: '1K',
 		})
 		expect(mocks.generateImages).not.toHaveBeenCalled()
+	})
+
+	it('1000자를 넘는 프롬프트를 거부한다', async () => {
+		const response = await POST(imageRequest({ prompt: 'a'.repeat(1_001), count: 1 }))
+
+		expect(response.status).toBe(400)
+		expect(mocks.generateImages).not.toHaveBeenCalled()
+		expect(mocks.generateImagesWithSettings).not.toHaveBeenCalled()
 	})
 
 	it.each([
