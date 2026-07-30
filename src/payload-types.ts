@@ -869,6 +869,8 @@ export interface LayoutBlock {
         | ImageGridWidget
         | LayoutGridWidget
         | LayoutGridOverlayWidget
+        | LogoClearSpaceWidget
+        | LogoColorVariantWidget
         | LogoGroupViewerWidget
         | LogoViewerWidget
         | MediaShowcaseWidget
@@ -978,6 +980,63 @@ export interface LayoutGridOverlayWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'layoutGridOverlayWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoClearSpaceWidget".
+ */
+export interface LogoClearSpaceWidget {
+  /**
+   * 표시할 로고입니다.
+   */
+  logo: number | BrandLogo;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoClearSpaceWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-logos".
+ */
+export interface BrandLogo {
+  id: number;
+  name: string;
+  alt: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoColorVariantWidget".
+ */
+export interface LogoColorVariantWidget {
+  /**
+   * 기본형(풀컬러) 로고입니다. WHITE·단색은 여기서 파생됩니다.
+   */
+  logo: number | BrandLogo;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoColorVariantWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1360,37 +1419,6 @@ export interface StemClearSpaceBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'stemClearSpace';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brand-logos".
- */
-export interface BrandLogo {
-  id: number;
-  name: string;
-  alt: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-  sizes?: {
-    thumbnail?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2540,6 +2568,8 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         imageGridWidget?: T | ImageGridWidgetSelect<T>;
         layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
         layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
+        logoClearSpaceWidget?: T | LogoClearSpaceWidgetSelect<T>;
+        logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
         logoGroupViewerWidget?: T | LogoGroupViewerWidgetSelect<T>;
         logoViewerWidget?: T | LogoViewerWidgetSelect<T>;
         mediaShowcaseWidget?: T | MediaShowcaseWidgetSelect<T>;
@@ -2629,6 +2659,24 @@ export interface LayoutGridWidgetSelect<T extends boolean = true> {
  * via the `definition` "LayoutGridOverlayWidget_select".
  */
 export interface LayoutGridOverlayWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoClearSpaceWidget_select".
+ */
+export interface LogoClearSpaceWidgetSelect<T extends boolean = true> {
+  logo?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoColorVariantWidget_select".
+ */
+export interface LogoColorVariantWidgetSelect<T extends boolean = true> {
+  logo?: T;
   id?: T;
   blockName?: T;
 }

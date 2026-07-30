@@ -9,6 +9,8 @@ import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/schema'
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/schema'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/schema'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/schema'
+import { LogoClearSpaceWidget } from '@/features/guideline/widgets/logo-clear-space/schema'
+import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/schema'
 import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/schema'
 import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/schema'
 import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/schema'
@@ -97,6 +99,8 @@ export const LayoutBlock: Block = {
 				ImageGridWidget,
 				LayoutGridWidget,
 				LayoutGridOverlayWidget,
+				LogoClearSpaceWidget,
+				LogoColorVariantWidget,
 				LogoGroupViewerWidget,
 				LogoViewerWidget,
 				MediaShowcaseWidget,

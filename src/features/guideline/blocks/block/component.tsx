@@ -10,6 +10,8 @@ import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
+import { LogoClearSpaceWidget } from '@/features/guideline/widgets/logo-clear-space/component'
+import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
 import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/component'
 import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/component'
 import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/component'
@@ -47,6 +49,12 @@ function renderWidget(child: Child): ReactNode {
 			return <LayoutGridWidget />
 		case 'layoutGridOverlayWidget':
 			return <LayoutGridOverlayWidget />
+		case 'logoClearSpaceWidget':
+			// logo 입력을 받는 위젯(logoColorVariant과 함께).
+			return <LogoClearSpaceWidget logo={child.logo} />
+		case 'logoColorVariantWidget':
+			// 인스턴스 입력(logo)을 받는 위젯 — 자족 렌더 위젯들과 다름.
+			return <LogoColorVariantWidget logo={child.logo} />
 		case 'logoGroupViewerWidget':
 			return <LogoGroupViewerWidget />
 		case 'logoViewerWidget':
