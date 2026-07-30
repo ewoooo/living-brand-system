@@ -4,6 +4,7 @@ import { ContentFrame } from '@/components/shared/content-frame'
 import { ContentHeading } from '@/components/shared/content-heading'
 import { NavigationBlock } from '@/components/shared/navigation/navigation-block'
 import { StudioSideNavigation } from '@/components/studio/shared/studio-side-navigation'
+import { getStudioTemplateCategoryRoute, routes } from '@/lib/routes'
 
 const navigationTail = <ArrowRight aria-hidden className="ml-auto" size={24} />
 
@@ -17,7 +18,7 @@ export default function StudioPage() {
 							variant="default"
 							className="aspect-[2/1]"
 							label="New Templates"
-							href="/studio/templates"
+							href={routes.studio.template}
 							tail={navigationTail}
 						/>
 					</div>
@@ -29,14 +30,14 @@ export default function StudioPage() {
 							variant="default"
 							className="aspect-[2/1]"
 							label="Illustrations"
-							href="/studio/create/illustrations"
+							href={getStudioTemplateCategoryRoute('illustrations')}
 							tail={navigationTail}
 						/>
 						<NavigationBlock
 							variant="default"
 							className="aspect-[2/1]"
 							label="Gradient"
-							href="/studio/create/gradients"
+							href={getStudioTemplateCategoryRoute('gradients')}
 							tail={navigationTail}
 						/>
 					</div>
@@ -53,31 +54,31 @@ export default function StudioPage() {
 							variant="default"
 							className="md:col-span-2 md:row-span-2"
 							label="Events"
-							href="/studio/create/events"
+							href={getStudioTemplateCategoryRoute('events')}
 							tail={navigationTail}
 						/>
 						<NavigationBlock
 							variant="default"
 							label="Stationery"
-							href="/studio/create/stationery"
+							href={getStudioTemplateCategoryRoute('stationery')}
 							tail={navigationTail}
 						/>
 						<NavigationBlock
 							variant="default"
 							label="Stationery"
-							href="/studio/create/stationery"
+							href={getStudioTemplateCategoryRoute('stationery')}
 							tail={navigationTail}
 						/>
 						<NavigationBlock
 							variant="default"
 							label="Stationery"
-							href="/studio/create/stationery"
+							href={getStudioTemplateCategoryRoute('stationery')}
 							tail={navigationTail}
 						/>
 						<NavigationBlock
 							variant="default"
 							label="Stationery"
-							href="/studio/create/stationery"
+							href={getStudioTemplateCategoryRoute('stationery')}
 							tail={navigationTail}
 						/>
 					</div>
