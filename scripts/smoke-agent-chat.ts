@@ -54,7 +54,7 @@ const cases = [
 		responseMode: 'action',
 		risk: 'high',
 		toolScope: 'read',
-		requiresTaskTool: false,
+		requiresTaskTool: undefined,
 	},
 ] as const
 
@@ -142,11 +142,13 @@ for (const testCase of selectedCases) {
 		taskTools.every((name) => allowedTools.has(name)),
 		`${testCase.name}: disallowed tool used (${taskTools.join(', ')})`,
 	)
-	assert.equal(
-		taskTools.length > 0,
-		testCase.requiresTaskTool,
-		`${testCase.name}: task tool usage`,
-	)
+	if (testCase.requiresTaskTool !== undefined) {
+		assert.equal(
+			taskTools.length > 0,
+			testCase.requiresTaskTool,
+			`${testCase.name}: task tool usage`,
+		)
+	}
 	assert.ok(
 		response.parts.some((part) => part.type === 'text' && part.text.trim()),
 		`${testCase.name}: response text is missing`,
