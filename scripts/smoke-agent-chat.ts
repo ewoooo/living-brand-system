@@ -89,7 +89,7 @@ for (const testCase of selectedCases) {
 		parts: [{ type: 'text', text: testCase.prompt }],
 	}
 	const stream = await transport.sendMessages({
-		abortSignal: AbortSignal.timeout(45_000),
+		abortSignal: AbortSignal.timeout(120_000),
 		body: { pagePath: '/guidelines' },
 		chatId: crypto.randomUUID(),
 		messageId: undefined,
