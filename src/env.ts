@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 export const env = createEnv({
 	server: {
+		AGENT_CHAT_TRIAGE_ENABLED: z.enum(['true', 'false']).optional(),
 		ANTHROPIC_API_KEY: z.string().min(1).optional(),
 		ANTHROPIC_MODEL: z.string().min(1).optional(),
 		CHAT_MODEL: z.string().min(1).optional(),
@@ -30,6 +31,7 @@ export const env = createEnv({
 		NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
 	},
 	runtimeEnv: {
+		AGENT_CHAT_TRIAGE_ENABLED: process.env.AGENT_CHAT_TRIAGE_ENABLED,
 		ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
 		ANTHROPIC_MODEL: process.env.ANTHROPIC_MODEL,
 		CHAT_MODEL: process.env.CHAT_MODEL,
