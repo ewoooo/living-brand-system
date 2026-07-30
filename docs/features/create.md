@@ -65,4 +65,4 @@ TIFF는 원본 가로·세로 픽셀을 리샘플링하지 않고 PPI 메타데�
 - 생성 실행 경계(Agent/Worker): [05. 시스템 아키텍처](../05-system-architecture.md)
 - 인가된 에셋·업로드·접근 제어: [07. 보안](../07-security.md)
 - 사용자 문구·접근성: [08. 접근성과 다국어](../08-accessibility-i18n.md)
-- 도메인 위치(제작 관리): [04. 도메인 모델](../04-domain-model.md) — §5의 `AssetGenerationSession`/`Output` 등 aggregate는 현재 aspirational(미구현)이며, 실제 구현이 앞설 때 문서와 맞춥니다.
+- 도메인 위치(제작 관리): [04. 도메인 모델](../04-domain-model.md) — §5의 `AssetGenerationSession`은 향후 제작 사용량 추적용 계획 모델입니다. 현재 Create에는 세션·출력 영속 요구가 없습니다.

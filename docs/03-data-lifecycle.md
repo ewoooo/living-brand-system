@@ -7,7 +7,10 @@
 
 핵심은 원천 기준, 실행 기록, 사용 기록을 섞지 않는 것입니다.
 원천 기준은 가이드라인 관리가 소유합니다.
-제작은 사용할 기준과 자원을 ResourceRef로 남기고, 품질 검수는 검수 기준을 CheckBasis의 VersionRef로 고정합니다.
+제작은 요청 범위에서 발행 기준과 자원을 사용하고, 품질 검수는 실행 기준을 CheckSession의 CheckRulesetSnapshot으로 고정합니다.
+
+현재 품질 검수 기록은 `CheckSession`, Agent 대화와 사용량 기록은 별도 `AgentChatSession`이 소유합니다.
+`AssetGenerationSession`은 아직 수집·저장하지 않으며, 향후 제작 사용량 추적 요구가 정해질 때 도입합니다.
 
 ## 2. 작성 기준
 
@@ -29,45 +32,45 @@
 ### 3.1 BrandGuideline
 
 데이터명: BrandGuideline
-수집 목적: 브랜드 가이드라인의 전체 구조와 공식 기준 발행 단위를 관리한다.
+수집 목적: 회사명, 문서 제목, 테마처럼 모든 가이드라인 문서에 적용되는 공통 표시 설정을 관리한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Manager가 가이드라인 이름, 목적, 대상 브랜드를 입력하면 System이 draft 상태로 생성한다. |
-| 전송 | Manager UI에서 입력한 값은 Payload API를 통해 Guideline publishing service로 전달한다. |
-| 저장 | Payload collection과 PostgreSQL에 저장한다. Payload revision은 CMS 내부 수정 이력으로 남긴다. |
-| 처리 | GuidelineSection, GuidelinePage, GuidelineBlock, BrandGuidelineVersion을 소유하고, 검토와 승인 상태를 관리한다. |
-| 활용 | Manager는 편집과 발행에 사용하고, Creator와 Agent는 live 상태의 Official Version만 참조한다. |
-| 공유·제공 | 제작 관리와 품질 검수에는 BrandGuideline 원본이 아니라 GuidelineVersionRef로 제공한다. |
-| 보관 | draft, in review, approved 상태와 Payload revision 이력을 보관한다. |
-| 파기 | 잘못 만든 draft는 삭제할 수 있다. live 또는 archived 상태의 Official Version이 있는 데이터는 참조 무결성을 위해 비활성화한다. |
+| 생성·수집 | Manager가 회사명, 문서 제목, 발행 표기, 파비콘과 테마 색상을 입력한다. |
+| 전송 | Manager UI에서 입력한 값은 Payload API를 통해 global 갱신 요청으로 전달한다. |
+| 저장 | Payload global과 PostgreSQL에 저장한다. Payload revision은 CMS 내부 수정 이력으로 남긴다. |
+| 처리 | 공통 표시 설정만 관리한다. GuidelineDocument의 편집·발행·삭제 생명주기를 소유하지 않는다. |
+| 활용 | Manager는 가이드라인 공통 표시를 편집하고, Creator 화면은 문서 렌더링에 이 설정을 적용한다. |
+| 공유·제공 | 가이드라인 화면에 필요한 표시 설정만 제공한다. |
+| 보관 | 현재 global 값과 변경 이력을 보관한다. |
+| 파기 | 단일 설정이므로 레코드를 삭제하지 않고 필요한 값을 수정한다. |
 
-### 3.2 GuidelineSection
+### 3.2 GuidelineDocument(섹션 역할)
 
-데이터명: GuidelineSection
+데이터명: GuidelineDocument
 수집 목적: 가이드라인 페이지를 장 단위로 묶고 적용할 검수 규칙(Rule)을 참조로 선택한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Manager가 섹션 이름, 설명, 표시 순서를 입력하면 BrandGuideline 아래에 생성한다. |
+| 생성·수집 | Manager가 섹션 이름, 설명, 표시 순서를 입력하면 `GuidelineDocument` 레코드로 생성한다. |
 | 전송 | 섹션 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
-| 저장 | BrandGuideline 하위 엔티티로 저장하고 표시 순서를 함께 보관한다. |
-| 처리 | GuidelinePage와 자체 GuidelineBlock을 소유하고, 적용할 Rule을 관계로 선택한다. Rule 정의는 rules 컬렉션이 소유한다. |
+| 저장 | 독립 `guideline-documents` 레코드로 저장하고 문서 깊이, 상위 문서 관계, 표시 순서를 함께 보관한다. |
+| 처리 | 자체 GuidelineBlock을 소유하고, 하위 GuidelineDocument와는 관계로 연결한다. 적용할 Rule은 관계로 선택하며 정의는 rules 컬렉션이 소유한다. |
 | 활용 | Manager 편집 화면과 Creator 가이드라인 탐색 구조에 사용한다. |
 | 공유·제공 | 다른 도메인에는 직접 제공하지 않고 GuidelineVersion에 포함된 구조로 제공한다. |
-| 보관 | BrandGuideline revision과 Official Version에 포함해 보관한다. |
+| 보관 | 자체 Payload revision과 발행 상태를 보관한다. |
 | 파기 | 연결된 페이지가 없을 때 삭제한다. 이미 발행된 섹션은 이후 Official Version에서 제외하는 방식으로 처리한다. |
 
-### 3.3 GuidelinePage
+### 3.3 GuidelineDocument(페이지 역할)
 
-데이터명: GuidelinePage
+데이터명: GuidelineDocument
 수집 목적: GuidelineBlock을 묶고 자체 검수 선언을 소유한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Manager가 페이지 제목, 배치 정보, 소속 섹션을 입력하면 GuidelineSection 아래에 생성한다. |
+| 생성·수집 | Manager가 페이지 제목, 배치 정보, 상위 섹션을 입력하면 `GuidelineDocument` 레코드로 생성한다. |
 | 전송 | 페이지 구성 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
-| 저장 | 소속 GuidelineSection, PagePolicy, PageAssetRef, PageExample, PageComposition과 함께 저장한다. |
+| 저장 | 독립 `guideline-documents` 레코드로 저장하고 상위 GuidelineDocument 관계, PagePolicy, PageAssetRef, PageExample, PageComposition을 함께 보관한다. |
 | 처리 | GuidelineBlock을 소유하고, 적용할 Rule을 관계로 선택한다. Rule 정의는 rules 컬렉션이 소유한다. |
 | 활용 | Creator 가이드라인 화면, Agent 답변 근거, 품질 검수 기준 탐색에 사용한다. |
 | 공유·제공 | BehaviorEventLog에는 페이지 조회와 클릭 대상인 PageRef만 제공한다. |
@@ -81,9 +84,9 @@
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Manager가 블록 유형과 콘텐츠를 입력하면 GuidelineSection 또는 GuidelinePage 아래에 생성한다. |
+| 생성·수집 | Manager가 블록 유형과 콘텐츠를 입력하면 GuidelineDocument 안에 생성한다. |
 | 전송 | 블록 편집 요청은 Payload API를 통해 Guideline publishing service로 전달한다. |
-| 저장 | 콘텐츠와 식별자는 소속 Section/Page 안에 임베디드 데이터로 저장한다. Block 식별자는 부모 문서 안에서만 유효하다. |
+| 저장 | 콘텐츠와 식별자는 소속 GuidelineDocument 안에 임베디드 데이터로 저장한다. Block 식별자는 부모 문서 안에서만 유효하다. |
 | 처리 | 이미지와 컬러 같은 표시 자원을 참조하고, 적용할 Rule을 관계로 선택한다. 문서·블록·시나리오가 참조 중인 Rule은 삭제할 수 없다. |
 | 활용 | Creator 가이드라인 화면, Agent 답변 근거, 품질 검수 evidence 생성에 사용한다. |
 | 공유·제공 | 다른 도메인에는 GuidelineVersion에 포함된 읽기 모델로 제공한다. |
@@ -102,7 +105,7 @@
 | 저장 | GuidelinePage 하위 엔티티로 저장하고 revision에 포함한다. |
 | 처리 | 관련 Rule, PageAssetRef, PageExample과 함께 페이지 기준을 구성한다. |
 | 활용 | Creator가 정책 의도를 이해하는 데 사용하고, Agent 답변의 설명 근거로 사용한다. |
-| 공유·제공 | QASession에는 AnswerCitation 근거로 필요한 범위만 제공한다. |
+| 공유·제공 | Agent 채팅에는 답변 근거로 필요한 범위만 제공한다. |
 | 보관 | Official Version에 포함된 정책 문구를 보관한다. |
 | 파기 | 페이지가 삭제되거나 다음 Official Version에서 제외될 때 함께 제외한다. 이미 발행된 Official Version의 정책은 보존한다. |
 
@@ -215,7 +218,7 @@
 | 전송 | 파일과 메타데이터는 Payload upload 흐름을 통해 전송한다. |
 | 저장 | 파일은 Uploaded file storage에 저장하고, 메타데이터는 Payload collection과 PostgreSQL에 저장한다. |
 | 처리 | AssetFile, BrandAssetVersion, UsageCondition, DownloadStatus를 함께 관리한다. |
-| 활용 | GuidelineDocument, Check, AssetGenerationSession, CheckBasis에서 공식 자원으로 참조한다. |
+| 활용 | GuidelineDocument, Check, CheckBasis에서 공식 자원으로 참조한다. 향후 AssetGenerationSession을 도입하면 제작 ResourceRef에도 사용한다. |
 | 공유·제공 | Creator에게 다운로드 가능한 live 상태의 BrandAssetVersion만 제공한다. |
 | 보관 | 파일 원본, Official Version, 사용 조건, 폐기 사유를 보관한다. |
 | 파기 | draft 파일은 삭제할 수 있다. 발행된 에셋은 archived 처리하고 실제 파일 삭제는 참조 종료 후 수행한다. |
@@ -231,10 +234,10 @@
 | 전송 | 템플릿 메타데이터는 Payload API로 전달하고, 원본은 Figma node 또는 파일 업로드 흐름으로 참조한다. |
 | 저장 | TemplateSourceRef, LayoutSpec, TextStyleSpec, EditableBlockSpec, TemplateUsageCondition, TemplateVersion을 함께 저장한다. |
 | 처리 | 지정된 레이아웃, 텍스트 스타일, 텍스트 블록, 에셋 슬롯, 컬러 토큰과 BrandAssetVersionRef를 검증한다. |
-| 활용 | AssetGenerationSession에서 산출물 제작 형식으로 사용하고, Brand asset generation service가 React 또는 HTML 편집 노드로 변환한다. |
+| 활용 | 현재 Create에서 산출물 제작 형식으로 사용한다. 향후 AssetGenerationSession을 도입하면 ResourceRef로 기록한다. |
 | 공유·제공 | Creator에게 live 상태의 TemplateVersion만 제공한다. |
 | 보관 | TemplateVersion과 사용 조건 변경 이력을 보관한다. |
-| 파기 | draft 템플릿은 삭제할 수 있다. 발행된 템플릿은 archived 처리하고 기존 AssetGenerationSession 참조는 보존한다. |
+| 파기 | draft 템플릿은 삭제할 수 있다. 발행된 템플릿은 archived 처리한다. 향후 AssetGenerationSession 참조를 도입하면 기존 참조는 보존한다. |
 
 ### 4.7 Plugin
 
@@ -247,7 +250,7 @@
 | 전송 | 플러그인 설정은 Payload API를 통해 저장하고, 테스트 실행은 Agent repository로 전달한다. |
 | 저장 | PluginEntry, PluginCapability, PluginUsageCondition, PluginVersion과 Plugin runtime 참조를 함께 저장한다. |
 | 처리 | 입력 스키마, 출력 형식, 사용 조건, 연결된 TemplateVersionRef와 CheckKey를 검증한다. |
-| 활용 | AssetGenerationSession에서 제작 기능으로 사용하고, AgentRunRef로 실행 이력을 남긴다. |
+| 활용 | 현재 제작 기능에서 사용한다. 향후 AssetGenerationSession을 도입하면 ResourceRef로 기록한다. |
 | 공유·제공 | Creator에게 live 상태의 PluginVersion만 제공한다. |
 | 보관 | PluginVersion, 테스트 결과 참조, 사용 조건 변경 이력을 보관한다. |
 | 파기 | draft 플러그인은 삭제할 수 있다. 발행된 플러그인은 archived 처리하고 기존 실행 이력은 보존한다. |
@@ -265,7 +268,7 @@
 | 전송 | 발행 요청은 Guideline publishing service로 전달한다. |
 | 저장 | VersionNumber, VersionStatus, EffectivePeriod, PayloadRevisionRef, PreviousVersionRef를 저장한다. |
 | 처리 | live 전환 시 기존 live 상태의 BrandGuidelineVersion은 archived 상태로 바꾼다. |
-| 활용 | AssetGenerationSession은 ResourceRef로 참조하고, CheckBasis는 필요한 VersionRef로 참조한다. |
+| 활용 | CheckBasis는 필요한 VersionRef로 참조한다. 향후 AssetGenerationSession을 도입하면 ResourceRef로 참조한다. |
 | 공유·제공 | Creator 화면과 Agent에는 live 상태의 BrandGuidelineVersion만 제공한다. |
 | 보관 | stage, live, archived 상태와 VersionReason을 보관한다. |
 | 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 잘못 생성된 stage 상태의 BrandGuidelineVersion만 삭제할 수 있다. |
@@ -313,7 +316,7 @@
 | 전송 | 발행 요청과 파일 참조는 Brand resource publishing service로 전달한다. |
 | 저장 | VersionStatus, AssetFile 참조, UsageCondition, DownloadStatus를 저장한다. |
 | 처리 | 대체 에셋이 발행되면 이전 BrandAssetVersion을 archived 상태로 바꾼다. |
-| 활용 | PageAssetRef와 CheckBasis에서는 BrandAssetVersionRef로 참조하고, AssetGenerationSession에서는 ResourceRef로 참조한다. |
+| 활용 | PageAssetRef와 CheckBasis에서는 BrandAssetVersionRef로 참조한다. 향후 AssetGenerationSession을 도입하면 ResourceRef로 참조한다. |
 | 공유·제공 | Creator에게 다운로드 가능한 live 상태의 BrandAssetVersion만 제공한다. |
 | 보관 | 파일 참조, 다운로드 상태, 폐기 사유를 보관한다. |
 | 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 파일은 참조 종료 후 보관 정책에 따라 삭제한다. |
@@ -329,7 +332,7 @@
 | 전송 | 발행 요청은 Brand resource publishing service로 전달한다. |
 | 저장 | TemplateSourceRef, LayoutSpec, TextStyleSpec, EditableBlockSpec, TemplateUsageCondition, VersionStatus를 저장한다. |
 | 처리 | live 전환 시 기존 live 상태의 TemplateVersion을 archived 상태로 바꾸고, Figma node 또는 파일 원본을 재해석해 제작 가능한 구조를 고정한다. |
-| 활용 | AssetGenerationSession에서는 ResourceRef로 참조한다. |
+| 활용 | 현재 제작 기능에서 사용한다. 향후 AssetGenerationSession을 도입하면 ResourceRef로 참조한다. |
 | 공유·제공 | Creator에게 live 상태의 TemplateVersion만 제공한다. |
 | 보관 | 발행된 편집 가능 영역과 사용 조건을 보관한다. |
 | 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 잘못 만든 stage 상태의 TemplateVersion만 삭제할 수 있다. |
@@ -345,151 +348,63 @@
 | 전송 | 발행 요청은 Brand resource publishing service로 전달한다. |
 | 저장 | PluginEntry, PluginCapability, PluginUsageCondition, VersionStatus를 저장한다. |
 | 처리 | live 전환 시 기존 live 상태의 PluginVersion을 archived 상태로 바꾼다. |
-| 활용 | AssetGenerationSession에서는 ResourceRef로 참조한다. |
+| 활용 | 현재 제작 기능에서 사용한다. 향후 AssetGenerationSession을 도입하면 ResourceRef로 참조한다. |
 | 공유·제공 | Creator에게 live 상태의 PluginVersion만 제공한다. |
 | 보관 | 발행된 실행 조건과 기능 정의를 보관한다. |
 | 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 잘못 만든 stage 상태의 PluginVersion만 삭제할 수 있다. |
 
-## 6. 에셋 제너레이션 기록
+## 6. 에셋 제너레이션 기록(계획)
 
-AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 아키텍처의 Brand asset generation records에 해당한다.
+현재 Create와 Image 기능은 요청 범위에서 입력과 결과를 다루며 `AssetGenerationSession`, `AssetGenerationInput`, `AssetGenerationOutput`을 저장하지 않습니다.
+이 모델은 향후 제작 사용량을 사용자·기간·기능별로 추적해야 할 때만 도입합니다.
+현재 `CheckSession`은 업로드된 이미지를 직접 입력으로 받으므로 이 계획 모델에 의존하지 않습니다.
 
 ### 6.1 AssetGenerationSession
 
 데이터명: AssetGenerationSession
-수집 목적: Creator가 산출물을 만드는 에셋 제너레이션 단위와 사용한 ResourceRef를 기록한다.
+수집 목적: 향후 Creator의 제작 사용량과 사용한 ResourceRef를 한 실행 단위로 기록한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Creator가 에셋 제너레이션을 시작하면 System이 AssetGenerationSession을 생성하고 AssetGenerationPurpose와 ApplicationTypeRef를 수집한다. |
-| 전송 | Creator UI의 에셋 제너레이션 시작 요청은 Client fetch route handler를 거쳐 Brand asset generation service로 전달한다. |
-| 저장 | AssetGenerationPurpose, ApplicationTypeRef, ResourceRef, AssetGenerationStatus를 저장한다. |
-| 처리 | 입력 변경, 미리보기 생성, 산출물 생성, 완료 상태를 AssetGenerationSession 단위로 묶는다. |
-| 활용 | 제작 화면 복원, 질의 맥락, 검수 입력 생성, 사용 기록 조회에 사용한다. |
-| 공유·제공 | 품질 검수에는 AssetGenerationOutput과 CheckInputSnapshot 생성에 필요한 범위만 제공한다. |
-| 보관 | 에셋 제너레이션 완료 후에도 검수와 운영 조회에 필요한 기간 보관한다. |
-| 파기 | 보관 기간 종료 후 삭제하거나 사용자 식별 정보를 익명화한다. 연결된 검수 기록은 참조 무결성을 확인한 뒤 처리한다. |
+| 생성·수집 | 도입 시 제작 요청 시작과 완료 시점, 사용자, 기능, ResourceRef를 수집한다. |
+| 전송 | 제작 서비스가 사용량 기록 Repository에 전달한다. |
+| 저장 | 세션 식별자, 사용자, 기능, ResourceRef, 상태와 집계에 필요한 최소 사용량만 저장한다. |
+| 처리 | 사용자·기간·기능별 사용량으로 집계한다. 제작 화면 복원이나 검수 소유권에는 사용하지 않는다. |
+| 활용 | 운영 사용량 조회와 비용 분석에만 사용한다. |
+| 공유·제공 | 운영 조회에 필요한 식별자와 집계값만 제공한다. |
+| 보관 | 도입 전에 보관 기간과 개인정보 제거 기준을 별도로 정한다. |
+| 파기 | 도입 전에 참조 무결성과 익명화 기준을 별도로 정한다. |
 
-### 6.2 AssetGenerationInput
+## 7. Agent 채팅 기록
 
-데이터명: AssetGenerationInput
-수집 목적: Template 또는 Plugin 실행에 필요한 입력값을 기록한다.
+`AgentChatSession`은 품질 검수의 `CheckSession`과 다른 애그리거트입니다.
+기존 문서의 `QASession` 표기는 `CheckSession`으로 통일하며, 별도 `Question`, `Answer` 애그리거트는 현재 저장 모델에 두지 않습니다.
 
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | Creator가 텍스트, 이미지, 선택값을 입력하면 AssetGenerationSession 아래에 저장한다. |
-| 전송 | 입력값은 Creator UI에서 Client fetch route handler를 거쳐 Brand asset generation service로 전달한다. 파일 입력은 설정된 업로드 흐름을 따른다. |
-| 저장 | AssetGenerationSession 하위 엔티티로 저장한다. |
-| 처리 | EditableBlockSpec과 PluginCapability의 입력 조건으로 검증한다. |
-| 활용 | 미리보기 생성, AssetGenerationOutput 생성, 작업 재개에 사용한다. |
-| 공유·제공 | Agent에는 답변이나 점검에 필요한 최소 입력 맥락만 제공한다. |
-| 보관 | AssetGenerationSession 보관 기간에 맞춰 보관한다. |
-| 파기 | AssetGenerationSession 파기 시 함께 삭제하거나 민감 입력은 먼저 마스킹한다. |
+### 7.1 AgentChatSession
 
-### 6.3 AssetGenerationOutput
-
-데이터명: AssetGenerationOutput
-수집 목적: Creator가 만든 최종 산출물을 보존하고 검수 입력의 원천으로 사용한다.
+데이터명: AgentChatSession
+수집 목적: Agent 대화, 도구·스킬 사용, AI 사용량과 사용자 반응을 한 요청 단위로 기록한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | Creator가 산출물 생성을 요청하면 System이 AssetGenerationInput과 선택 자원을 조합해 AssetGenerationOutput을 생성한다. |
-| 전송 | 생성 요청은 Client fetch route handler를 거쳐 Brand asset generation service로 전달하고, 서비스가 필요한 렌더링 또는 Plugin 실행 어댑터를 호출한다. |
-| 저장 | AssetGenerationSession 하위 엔티티로 저장하고 파일 또는 렌더링 결과 위치를 보관한다. |
-| 처리 | 저장 위치, 생성 시각, 사용한 ResourceRef를 연결한다. |
-| 활용 | Creator가 결과물을 확인하고, 품질 검수는 이를 CheckInputSnapshot으로 고정한다. |
-| 공유·제공 | 품질 검수에는 검수에 필요한 산출물 내용과 참조만 제공한다. |
-| 보관 | AssetGenerationSession과 CheckInputSnapshot 참조가 유지되는 동안 보관한다. |
-| 파기 | 보관 기간 종료 후 삭제한다. CheckInputSnapshot이 참조하는 경우 먼저 검수 기록 보관 정책을 확인한다. |
-
-## 7. 질의응답 기록
-
-### 7.1 QASession
-
-데이터명: QASession
-수집 목적: AssetGenerationSession 맥락에서 발생한 질문과 답변을 하나의 흐름으로 묶는다.
-
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | Creator가 질문을 시작하면 System이 AssetGenerationSession과 연결된 QASession을 생성한다. |
-| 전송 | 질문 시작 요청은 Creator UI에서 Client fetch route handler를 거쳐 Answer generation service로 전달한다. |
-| 저장 | QASession은 Question, Answer를 하위 엔티티로 보관한다. |
-| 처리 | 질문 등록, 관련 기준 검색, 답변 생성, 답변 근거 연결을 같은 세션 안에서 처리한다. |
-| 활용 | Creator 질문 이력과 Agent 품질 확인에 사용한다. |
-| 공유·제공 | 운영 조회에는 필요한 식별자와 상태만 제공한다. |
-| 보관 | AssetGenerationSession과 함께 감사 가능한 기간 동안 보관한다. |
-| 파기 | 보관 기간 종료 후 삭제하거나 사용자 식별 정보를 제거한다. |
-
-### 7.2 Question
-
-데이터명: Question
-수집 목적: Creator가 제작 중 궁금한 기준과 적용 방법을 기록한다.
-
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | Creator가 질문 원문을 입력하면 QASession 아래에 생성한다. |
-| 전송 | 질문 원문과 AssetGenerationSession 맥락은 Answer generation service로 전달한다. |
-| 저장 | QASession 하위 엔티티로 저장하고 QuestionAsked 이벤트를 남긴다. |
-| 처리 | 관련 Check, PagePolicy, GuidelineDocument를 검색하는 입력으로 사용한다. |
-| 활용 | Agent 답변 생성과 질문 이력 조회에 사용한다. |
-| 공유·제공 | Agent에는 답변 생성에 필요한 질문 원문과 최소 맥락만 제공한다. |
-| 보관 | QASession 보관 기간에 맞춰 보관한다. |
-| 파기 | 보관 기간 종료 후 삭제하거나 질문 원문에서 식별 가능한 내용을 마스킹한다. |
-
-### 7.3 Answer
-
-데이터명: Answer
-수집 목적: Agent 또는 System이 Creator 질문에 제공한 답변과 실행 참조를 기록한다.
-
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | Agent가 답변을 생성하면 System이 검증한 뒤 Answer로 저장한다. |
-| 전송 | Agent 응답은 Agent repository에서 Answer generation service로 전달되고, 서비스가 저장 가능 형태로 변환한다. |
-| 저장 | QASession 하위 엔티티로 저장하고 AgentRunRef를 남긴다. |
-| 처리 | AnswerCitation과 AnswerConfidence를 연결한다. |
-| 활용 | Creator 답변 조회와 Agent 품질 확인에 사용한다. |
-| 공유·제공 | 운영 조회에는 필요한 식별자와 상태만 제공한다. |
-| 보관 | QASession 보관 기간에 맞춰 보관한다. |
-| 파기 | 보관 기간 종료 후 삭제하거나 사용자 식별 맥락을 제거한다. |
-
-### 7.4 AnswerCitation
-
-데이터명: AnswerCitation
-수집 목적: Answer가 어떤 GuidelineDocument 또는 Check를 근거로 삼았는지 기록한다.
-
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | System이 답변에 사용한 기준을 확인하면 Answer 아래에 생성한다. |
-| 전송 | 검색 결과와 Agent 응답 근거가 Answer generation service로 전달된다. |
-| 저장 | Answer 하위 값 객체 또는 하위 기록으로 저장한다. |
-| 처리 | GuidelineDocumentRef, CheckKey, 근거 유형을 연결한다. |
-| 활용 | 답변 신뢰도 표시와 Agent 품질 확인에 사용한다. |
-| 공유·제공 | Creator 화면에는 필요한 근거 링크만 제공한다. |
-| 보관 | Answer와 같은 기간 보관한다. |
-| 파기 | Answer 파기 시 함께 삭제한다. |
-
-### 7.5 AnswerConfidence
-
-데이터명: AnswerConfidence
-수집 목적: Answer의 신뢰도와 근거 충분성을 기록한다.
-
-| 단계 | 작성 내용 |
-| --- | --- |
-| 생성·수집 | Agent 답변 생성 후 System이 근거 수, 모델 판단, 검증 결과를 바탕으로 생성한다. |
-| 전송 | Agent 응답과 검증 결과가 Answer generation service로 전달된다. |
-| 저장 | Answer 하위 값 객체 또는 하위 기록으로 저장하고 AgentRunRef를 연결한다. |
-| 처리 | 답변 신뢰도 점수, 근거 충분성, 사람 확인 필요 여부를 계산한다. |
-| 활용 | Creator에게 답변 신뢰도를 표시하고, Agent 품질 확인에 사용한다. |
-| 공유·제공 | 운영 조회에는 집계 가능한 신뢰도 값만 제공할 수 있다. |
-| 보관 | Answer와 같은 기간 보관한다. |
-| 파기 | Answer 파기 시 함께 삭제한다. |
+| 생성·수집 | 사용자가 Agent 채팅 요청을 보내면 System이 세션을 시작하고 메시지와 요청 경로를 수집한다. |
+| 전송 | Agent 채팅 route가 서비스에 전달하고, 서비스가 Agent 실행 결과를 세션에 반영한다. |
+| 저장 | 메시지, 상태, 사용한 도구·스킬, AI 사용량, 반응, 오류와 완료 시각을 `agent-chat-sessions`에 저장한다. |
+| 처리 | 실행 결과에 따라 세션을 완료 또는 실패로 전환하고 사용량을 합산한다. |
+| 활용 | 대화 이력, Agent 사용량과 품질 확인에 사용한다. 채팅에서 에셋 검수를 실행하면 CheckSession이 이 세션을 출처로 선택 참조할 수 있다. |
+| 공유·제공 | 운영 조회에는 필요한 식별자, 상태와 집계값만 제공한다. |
+| 보관 | Agent 운영 분석과 오류 조사에 필요한 기간 보관한다. |
+| 파기 | 보관 기간 종료 후 메시지를 삭제하거나 사용자 식별 정보를 제거한다. 연결된 CheckSession은 독립 생명주기를 유지한다. |
 
 ## 8. 품질 검수 기록
+
+현재 독립 저장 단위는 `CheckSession`입니다.
+아래 `CheckTarget`, `CheckRun`, `CheckBasis`, `CheckDecision`은 목표 도메인 구조를 설명하며, 현재 값은 CheckSession 레코드에 평탄화되어 있습니다.
 
 ### 8.1 CheckInputSnapshot
 
 데이터명: CheckInputSnapshot
-수집 목적: 검수 시점의 AssetGenerationOutput을 변경되지 않는 입력으로 고정한다.
+수집 목적: 검수 시점에 업로드된 이미지를 변경되지 않는 입력 지문으로 고정한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |

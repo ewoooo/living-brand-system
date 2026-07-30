@@ -25,10 +25,22 @@
  ├── [핵심 서브도메인] 가이드라인 관리
  ├── [핵심 서브도메인] 제작 관리
  ├── [핵심 서브도메인] 품질 검수
+ ├── [지원 서브도메인] Agent 채팅
  └── [지원 서브도메인] 사용 기록
 ```
 
 브랜드 운영 시스템은 가이드라인을 문서로 보관하는 시스템이 아니라, 기준을 구조화하고, 산출물 제작과 품질 검수를 거쳐, 사용 기록을 남기는 시스템입니다.
+
+### 구현 상태 기준
+
+| 상태 | 모델 |
+| --- | --- |
+| 현재 구현 | `GuidelineDocument`, `Rule`, `CheckSession`, `AgentChatSession`, `BehaviorEventLog` |
+| 계획 | `AssetGenerationSession`, `AssetGenerationInput`, `AssetGenerationOutput` |
+
+`CheckSession`은 업로드 이미지와 생성 이미지를 검사하는 품질 검수 애그리거트입니다.
+`AgentChatSession`은 대화, 도구 호출, 사용량을 기록하는 별도 운영 애그리거트이며 품질 검수 세션을 대신하지 않습니다.
+`AssetGenerationSession`은 향후 제작 사용량 추적에 필요할 때 도입합니다. 현재 제작 결과는 요청 범위에서만 다루며 세션이나 산출물 기록으로 저장하지 않습니다.
 
 ### 상위 도메인 관계도
 
@@ -40,12 +52,16 @@ flowchart LR
   Guideline["가이드라인 관리"]
   Production["제작 관리"]
   Quality["품질 검수"]
+  AgentChat["Agent 채팅"]
   UsageRecord["사용 기록"]
 
   Guideline -->|"발행 기준 / 제작 자원"| Production
   Guideline -->|"검수 기준"| Quality
+  Guideline -->|"발행 문서 맥락"| AgentChat
   Guideline -->|"화면 행동 기록"| UsageRecord
-  Production -->|"에셋 제너레이션 기록 조회"| UsageRecord
+  AgentChat -->|"에셋 검수 요청"| Quality
+  AgentChat -->|"대화·도구 사용 기록 조회"| UsageRecord
+  Production -.->|"향후 사용량 추적"| UsageRecord
   Quality -->|"품질 검수 기록 조회"| UsageRecord
 ```
 
@@ -53,14 +69,17 @@ flowchart LR
 | --- | --- | --- |
 | 가이드라인 관리 -> 제작 관리 | 제작이 발행된 기준과 자원을 참조합니다. | ResourceRef |
 | 가이드라인 관리 -> 품질 검수 | 검수가 live 상태의 Official Version과 그 안의 Check를 참조합니다. | GuidelineVersionRef, CheckRulesetSnapshot, BrandAssetVersionRef |
+| 가이드라인 관리 -> Agent 채팅 | 채팅이 발행 문서를 답변과 도구 실행 맥락으로 읽습니다. | GuidelineDocument read model |
 | 가이드라인 관리 -> 사용 기록 | 가이드라인 화면 행동을 기록합니다. | BehaviorEventLog |
-| 제작 관리 -> 사용 기록 | 운영 조회에서 에셋 제너레이션 기록을 읽습니다. | AssetGenerationSession, AssetGenerationOutput |
-| 품질 검수 -> 사용 기록 | 운영 조회에서 질의와 검수 기록을 읽습니다. | QASession, CheckSession, CheckResult |
+| Agent 채팅 -> 품질 검수 | 채팅 도구가 에셋 검수를 요청합니다. 검수 결과와 생명주기는 CheckSession이 소유합니다. | CheckSessionRef |
+| Agent 채팅 -> 사용 기록 | 운영 조회에서 대화, 도구·스킬 사용과 AI 사용량을 읽습니다. | AgentChatSession |
+| 제작 관리 -> 사용 기록 | 사용량 추적을 도입하면 에셋 제너레이션 기록을 읽습니다. 현재는 저장하지 않습니다. | AssetGenerationSession, AssetGenerationOutput(계획) |
+| 품질 검수 -> 사용 기록 | 운영 조회에서 에셋 검수 기록을 읽습니다. | CheckSession, CheckResult |
 
 ### 하위 도메인 관계도
 
 이 관계도는 바운디드 컨텍스트와 핵심 객체의 참조 방향을 함께 보여줍니다.
-제작 관리는 산출물을 만들고 Brand asset generation records를 남깁니다.
+제작 관리는 현재 요청 범위에서 산출물을 만듭니다. Brand asset generation records는 향후 사용량 추적을 위한 계획 모델입니다.
 품질 검수는 CheckTarget에 검수 입력을 고정하고, CheckRun의 CheckBasis에서 Guideline, CheckRulesetSnapshot, BrandAsset의 VersionRef를 참조합니다.
 하위 관계도의 엣지는 소유, 참조, 포함, 기록 같은 관계 동사로 표현합니다.
 `GuidelineVersionRef`, `CheckKey`, `BrandAssetVersionRef`, `TemplateVersionRef`, `PluginVersionRef`, `AgentRunRef`처럼 별도 생명주기가 없는 참조 값은 객체 노드로 표현하지 않습니다.
@@ -71,8 +90,7 @@ flowchart LR
 flowchart LR
   subgraph GuidelineEdit["브랜드 가이드라인 편집 및 발행"]
     BrandGuideline["BrandGuideline"]
-    GuidelineSection["GuidelineSection"]
-    GuidelinePage["GuidelinePage"]
+    GuidelineDocument["GuidelineDocument"]
     GuidelineBlock["GuidelineBlock"]
     PageAssetRef["PageAssetRef"]
   end
@@ -95,11 +113,8 @@ flowchart LR
     AssetGenerationOutput["AssetGenerationOutput"]
   end
 
-  subgraph QA["질의응답"]
-    QASession["QASession"]
-    Question["Question"]
-    Answer["Answer"]
-    AnswerCitation["AnswerCitation"]
+  subgraph AgentChat["Agent 채팅 기록"]
+    AgentChatSession["AgentChatSession"]
   end
 
   subgraph QualityCheck["산출물 검수"]
@@ -125,41 +140,37 @@ flowchart LR
     CustomEvent["CustomEvent"]
   end
 
-  BrandGuideline -->|"소유"| GuidelineSection
-  GuidelineSection -->|"소유"| GuidelinePage
-  GuidelinePage -->|"소유"| GuidelineBlock
-  GuidelineSection -->|"적용(참조)"| Rule
-  GuidelinePage -->|"적용(참조)"| Rule
+  BrandGuideline -.->|"공통 표시 설정"| GuidelineDocument
+  GuidelineDocument -->|"상위 문서 참조"| GuidelineDocument
+  GuidelineDocument -->|"소유"| GuidelineBlock
+  GuidelineDocument -->|"적용(참조)"| Rule
   GuidelineBlock -->|"적용(참조)"| Rule
   Rule -->|"실행 계약"| RuleChecker
   CheckScenario -->|"실행 범위"| Rule
-  GuidelinePage -->|"소유"| PageAssetRef
+  GuidelineDocument -->|"소유"| PageAssetRef
   PageAssetRef -->|"자원 사용"| BrandAsset
-  GuidelinePage -->|"템플릿 사용"| Template
-  GuidelinePage -->|"플러그인 사용"| Plugin
+  GuidelineDocument -->|"템플릿 사용"| Template
+  GuidelineDocument -->|"플러그인 사용"| Plugin
 
   AssetGenerationSession -->|"소유"| AssetGenerationInput
   AssetGenerationSession -->|"소유"| AssetGenerationOutput
-  AssetGenerationSession -->|"참조"| BrandGuideline
+  AssetGenerationSession -->|"참조"| GuidelineDocument
   AssetGenerationSession -->|"사용"| BrandAsset
   AssetGenerationSession -->|"사용"| Template
   AssetGenerationSession -->|"사용"| Plugin
 
-  QASession -->|"소유"| Question
-  QASession -->|"소유"| Answer
-  Answer -->|"소유"| AnswerCitation
-  AnswerCitation -->|"근거"| Rule
   CheckSession -->|"소유"| CheckTarget
+  CheckSession -.->|"채팅에서 시작된 경우 참조"| AgentChatSession
   CheckTarget -->|"고정"| CheckInputSnapshot
   CheckSession -->|"소유"| CheckRun
   CheckRun -->|"소유"| CheckBasis
-  CheckBasis -->|"참조"| BrandGuideline
+  CheckBasis -->|"참조"| GuidelineDocument
   CheckBasis -->|"고정"| CheckRulesetSnapshot
   CheckBasis -->|"참조"| BrandAsset
   CheckRun -->|"소유"| CheckDecision
   CheckDecision -->|"소유"| CheckResult
   CheckResult -->|"소유"| CheckRecommendation
-  GuidelinePage -->|"조회 행동"| BehaviorEventLog
+  GuidelineDocument -->|"조회 행동"| BehaviorEventLog
   BehaviorEventLog -->|"분류"| PageViewEvent
   BehaviorEventLog -->|"분류"| ClickEvent
   BehaviorEventLog -->|"분류"| AssetDownloadEvent
@@ -171,37 +182,43 @@ flowchart LR
   classDef entity fill:#E7F5FF,stroke:#1C7ED6,stroke-width:1.5px,color:#1F1F1F;
   classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
   classDef record fill:#F1F3F5,stroke:#868E96,stroke-width:1.5px,color:#1F1F1F;
+  classDef planned fill:#FFF9DB,stroke:#F59F00,stroke-width:1.5px,stroke-dasharray:5 5,color:#1F1F1F;
 
-  class BrandGuideline,Rule,RuleChecker,BrandAsset,Template,Plugin,AssetGenerationSession,QASession,CheckSession,BehaviorEventLog aggregate;
-  class GuidelineSection,GuidelinePage,GuidelineBlock,AssetGenerationInput,AssetGenerationOutput,Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult entity;
-  class PageAssetRef,AnswerCitation,CheckRecommendation,PageViewEvent,ClickEvent,AssetDownloadEvent,SectionDwellEvent,SearchEvent,OutboundLinkEvent,CustomEvent childEntity;
+  class BrandGuideline,GuidelineDocument,Rule,RuleChecker,BrandAsset,Template,Plugin,AgentChatSession,CheckSession,BehaviorEventLog aggregate;
+  class GuidelineBlock,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult entity;
+  class PageAssetRef,CheckRecommendation,PageViewEvent,ClickEvent,AssetDownloadEvent,SectionDwellEvent,SearchEvent,OutboundLinkEvent,CustomEvent childEntity;
+  class AssetGenerationSession,AssetGenerationInput,AssetGenerationOutput planned;
 ```
 
 | 관계 | 의미 |
 | --- | --- |
-| GuidelineSection -> GuidelinePage -> GuidelineBlock | Section은 Page와 자체 Block을, Page는 자체 Block을 소유합니다. Block 식별자는 부모 문서 안에서만 유효합니다. |
-| GuidelineSection / GuidelinePage / GuidelineBlock -> Rule | 각 문서 단위는 적용할 Rule을 관계로 선택합니다. Rule 정의는 공유 가능하며 source는 참조하는 쪽의 위치가 결정합니다. |
+| BrandGuideline -> GuidelineDocument | `BrandGuideline`은 공통 표시 설정만 제공합니다. 문서의 생성·발행·삭제 생명주기를 소유하지 않습니다. |
+| GuidelineDocument -> GuidelineDocument | 장·섹션·페이지 계층은 상위 문서 관계로 연결합니다. 각 문서는 독립 애그리거트입니다. |
+| GuidelineDocument -> GuidelineBlock | 문서는 Block을 임베디드 엔티티로 소유합니다. Block 식별자는 부모 문서 안에서만 유효합니다. |
+| GuidelineDocument / GuidelineBlock -> Rule | 각 문서 단위는 적용할 Rule을 관계로 선택합니다. Rule 정의는 공유 가능하며 source는 참조하는 쪽의 위치가 결정합니다. |
 | Rule -> RuleChecker | Rule은 실행 유형에 따라 결정론적 options 또는 AI 추가 판단 기준을 선언하고 RuleChecker 실행 계약을 참조합니다. |
-| GuidelinePage -> BrandAssetVersion / TemplateVersion / PluginVersion | 페이지는 브랜드가 채택한 자원을 Official Version으로 참조합니다. |
-| AssetGenerationSession -> BrandGuideline / BrandAsset / Template / Plugin | 제작은 발행 기준, 에셋, 템플릿, 플러그인을 사용하고 ResourceRef를 저장합니다. |
-| 사용 기록 -> AssetGenerationSession / QASession / CheckSession | 운영 조회는 기본 레코드를 읽어 사용 이력을 구성합니다. |
-| GuidelinePage -> BehaviorEventLog | 가이드라인 화면 조회, 클릭, 검색, 에셋 다운로드, 특정 구간 체류, 외부 링크 클릭 같은 화면 행동은 화면 행동 기록으로 남깁니다. |
+| GuidelineDocument -> BrandAssetVersion / TemplateVersion / PluginVersion | 문서는 브랜드가 채택한 자원을 Official Version으로 참조합니다. |
+| AssetGenerationSession -> GuidelineDocument / BrandAsset / Template / Plugin | 사용량 추적을 도입할 때 제작에 사용한 ResourceRef를 저장합니다. |
+| 사용 기록 -> AgentChatSession / CheckSession / BehaviorEventLog | 운영 조회는 현재 저장되는 대화, 검수, 행동 레코드를 읽어 사용 이력을 구성합니다. |
+| GuidelineDocument -> BehaviorEventLog | 가이드라인 화면 조회, 클릭, 검색, 에셋 다운로드, 특정 구간 체류, 외부 링크 클릭 같은 화면 행동은 화면 행동 기록으로 남깁니다. |
 | CheckSession -> CheckTarget | 품질 검수는 별도 실행될 때 검수 대상 값을 소유합니다. |
+| CheckSession -> AgentChatSession | 채팅 도구에서 검수를 시작한 경우에만 출처 세션을 선택적으로 참조합니다. 어느 쪽도 상대의 생명주기를 소유하지 않습니다. |
 | CheckRun -> CheckBasis | 점검 실행은 검수 시점의 기준 묶음을 소유합니다. |
-| CheckBasis -> BrandGuideline / CheckRulesetSnapshot / BrandAsset | 기준 묶음은 검수 시점의 GuidelineVersionRef, CheckRulesetSnapshot, BrandAssetVersionRef를 참조합니다. |
+| CheckBasis -> GuidelineDocument / CheckRulesetSnapshot / BrandAsset | 기준 묶음은 검수 시점의 GuidelineVersionRef, CheckRulesetSnapshot, BrandAssetVersionRef를 참조합니다. |
 | CheckDecision -> CheckResult | 최종 판정은 여러 점검 결과를 소유합니다. |
 | CheckResult -> CheckRecommendation | 점검 결과는 필요한 수정 권장 사항을 소유합니다. |
-| BrandGuideline / RuleChecker / BrandAsset / Template / Plugin -> Version | 발행 대상은 Official Version을 만들고, Version은 PreviousVersionRef와 PayloadRevisionRef를 보존합니다. |
+| GuidelineDocument / Rule / RuleChecker / BrandAsset / Template / Plugin -> Version | 발행 대상은 Official Version을 만들고, Version은 PreviousVersionRef와 PayloadRevisionRef를 보존합니다. |
 
 ## 4. 기준 정의와 가이드라인 관리
 
 품질 규칙 관리는 Rule, RuleChecker, CheckScenario의 정의와 생명주기를 소유하는 독립 바운디드 컨텍스트입니다.
 가이드라인 관리는 브랜드 가이드라인, 공식 자원, Official Version을 관리하며 Rule을 배치하고 문서 근거를 제공합니다.
-GuidelineSection과 GuidelinePage는 독립 문서입니다. GuidelineBlock은 Section 또는 Page가 소유한 임베디드 엔티티이며 식별자는 부모 문서 안에서만 유효합니다.
-GuidelineDocument는 Section과 Page를 함께 부르는 이름입니다.
+현재 구현의 편집·발행 애그리거트는 `GuidelineDocument`입니다. 문서 깊이와 상위 문서 관계로 장·섹션·페이지를 표현하며, 각 문서는 독립적으로 초안·발행·버전 생명주기를 가집니다.
+`GuidelineBlock`은 `GuidelineDocument`가 소유한 임베디드 엔티티이며 식별자는 부모 문서 안에서만 유효합니다.
+`BrandGuideline`은 회사명, 문서 제목, 테마 같은 단일 공통 설정입니다. 모든 `GuidelineDocument`를 소유하는 루트가 아닙니다.
 
 Rule과 RuleChecker는 책임이 다릅니다.
-Rule은 사용자가 정한 검수 규칙 정의이며 독립 컬렉션으로 관리합니다. 전역 고유 RuleKey, Title, Tier, Messages, Options, 휴리스틱 판정 기준과 RuleCheckerRef를 보유합니다. Section/Page/Block은 적용할 Rule을 관계로 선택하며 정의를 소유하지 않고, 하나의 Rule을 여러 문서 단위가 공유할 수 있습니다.
+Rule은 사용자가 정한 검수 규칙 정의이며 독립 컬렉션으로 관리합니다. 전역 고유 RuleKey, Title, Tier, Messages, Options, 휴리스틱 판정 기준과 RuleCheckerRef를 보유합니다. GuidelineDocument와 GuidelineBlock은 적용할 Rule을 관계로 선택하며 정의를 소유하지 않고, 하나의 Rule을 여러 문서 단위가 공유할 수 있습니다.
 RuleChecker는 Rule을 실행할 도구 계약입니다. 하나의 RuleChecker는 하나의 ExecutorType과 결합합니다. deterministic은 CheckerKey를 사용하고, heuristic은 ModelRef와 PromptKey를 사용하며, manual은 자동 실행 binding을 갖지 않습니다.
 RuleChecker 하나는 여러 Rule이 재사용합니다. 판정 기준값은 Rule이 소유하므로 배치 위치가 달라도 같은 기준이 적용되며, 기준이 다르면 별도 Rule로 분리합니다.
 CheckScenario는 Rule 정의를 복제하지 않고 순서가 있는 RuleKey 목록만 소유합니다. Manager가 독립적으로 draft를 편집하고 발행하며, 검수 실행 시 해석된 Check 정의는 기존 CheckRulesetSnapshot에 고정합니다.
@@ -223,13 +240,10 @@ Rule은 자체 draft/publish 생명주기를 가지며 문서 발행과 독립�
       ├── [바운디드 컨텍스트] 브랜드 가이드라인 편집 및 발행
       │    └── [도메인 모델]
       │         ├── 애그리거트(관리 단위): BrandGuideline
-      │         │    ├── 엔티티: BrandGuidelineVersion
-      │         │    ├── 엔티티: GuidelineSection
-      │         │    │    └── 엔티티: GuidelinePage
-      │         │    │         ├── 엔티티: GuidelineBlock
-      │         │    │         ├── 엔티티: PageAssetRef
-      │         │    │         └── 값 객체: PageBlockType, DisplayOrder
-      │         │    └── 값 객체: GuidelineStatus, EffectivePeriod
+      │         │    └── 값 객체: CompanyName, DocumentTitle, Theme
+      │         ├── 애그리거트(관리 단위): GuidelineDocument
+      │         │    ├── 엔티티: GuidelineBlock, PageAssetRef
+      │         │    └── 값 객체: DocumentDepth, ParentDocumentRef, PageBlockType, DisplayOrder
       │         ├── 도메인 서비스: GuidelinePublishService, VersionPublishService, VersionCompareService
       │         └── 도메인 이벤트
       │              ├── GuidelineDraftCreated, GuidelineSubmittedForReview, GuidelineApproved
@@ -268,8 +282,7 @@ Rule은 자체 draft/publish 생명주기를 가지며 문서 발행과 독립�
 flowchart LR
   subgraph Edit["브랜드 가이드라인 편집 및 발행"]
     BrandGuideline["BrandGuideline"]
-    Section["GuidelineSection"]
-    Page["GuidelinePage"]
+    Document["GuidelineDocument"]
     Block["GuidelineBlock"]
     PageAssetRefNode["PageAssetRef"]
   end
@@ -286,35 +299,34 @@ flowchart LR
     Plugin["Plugin"]
   end
 
-  BrandGuideline -->|"소유"| Section
-  Section -->|"소유"| Page
-  Page -->|"소유"| Block
-  Section -->|"적용(참조)"| Rule
-  Page -->|"적용(참조)"| Rule
+  BrandGuideline -.->|"공통 표시 설정"| Document
+  Document -->|"상위 문서 참조"| Document
+  Document -->|"소유"| Block
+  Document -->|"적용(참조)"| Rule
   Block -->|"적용(참조)"| Rule
   Rule -->|"실행 계약"| RuleChecker
   CheckScenario -->|"실행 범위"| Rule
-  Page -->|"소유"| PageAssetRefNode
+  Document -->|"소유"| PageAssetRefNode
   PageAssetRefNode -->|"자원 사용"| BrandAsset
-  Page -->|"템플릿 사용"| Template
-  Page -->|"플러그인 사용"| Plugin
+  Document -->|"템플릿 사용"| Template
+  Document -->|"플러그인 사용"| Plugin
   Rule -->|"참조"| BrandAsset
 
   classDef aggregate fill:#FFE8CC,stroke:#F08C00,stroke-width:2px,color:#1F1F1F;
   classDef entity fill:#E7F5FF,stroke:#1C7ED6,stroke-width:1.5px,color:#1F1F1F;
   classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
 
-  class BrandGuideline,Rule,RuleChecker,BrandAsset,Template,Plugin aggregate;
-  class Section,Page,Block entity;
+  class BrandGuideline,Document,Rule,RuleChecker,BrandAsset,Template,Plugin aggregate;
+  class Block entity;
   class PageAssetRefNode childEntity;
 ```
 
-BrandGuideline은 사용자가 읽는 가이드라인 구조를 관리합니다.
-GuidelineSection과 GuidelinePage는 문서 타입이고, GuidelineBlock은 두 문서가 소유하는 임베디드 엔티티입니다.
-GuidelineVersionRef는 BrandGuideline이 소유한 Official Version을 CheckBasis가 참조하기 위해 저장하는 값 객체입니다.
+BrandGuideline은 가이드라인 전체에 적용되는 표시 설정을 관리합니다.
+GuidelineDocument는 문서 깊이와 상위 문서 관계로 장·섹션·페이지 구조를 만들며, GuidelineBlock을 임베디드 엔티티로 소유합니다.
+GuidelineVersionRef는 발행된 GuidelineDocument revision을 CheckBasis가 참조하기 위해 저장하는 값 객체입니다.
 
-GuidelinePage는 GuidelineBlock 목록을 소유합니다. GuidelineBlock은 column unit, media showcase처럼 화면에 렌더링되는 최소 콘텐츠 문서입니다.
-Section, Page, Block은 적용할 Rule을 관계로 선택합니다. Rule은 공유 가능한 독립 정의이고, 검수 근거(source)는 Rule을 참조하는 문서 단위의 위치가 결정합니다.
+GuidelineDocument는 GuidelineBlock 목록을 소유합니다. GuidelineBlock은 column unit, media showcase처럼 화면에 렌더링되는 최소 콘텐츠 단위입니다.
+Document와 Block은 적용할 Rule을 관계로 선택합니다. Rule은 공유 가능한 독립 정의이고, 검수 근거(source)는 Rule을 참조하는 문서 단위의 위치가 결정합니다.
 PageAssetRef는 페이지 안에서의 표시 순서, 캡션, 예시 역할을 기록합니다.
 
 RuleChecker는 Rule을 실행할 도구 계약입니다. deterministic RuleChecker는 CheckerKey와, heuristic RuleChecker는 ModelRef 및 PromptKey와 결합합니다.
@@ -334,9 +346,12 @@ GuidelinePage와 Check는 BrandAsset, Template, Plugin을 참조할 수 있지�
 
 ## 5. 제작 관리
 
-제작 관리는 Creator가 내장 기능, Plugin, Template을 활용해 브랜드 에셋 산출물을 만들고 Brand asset generation records를 남기는 서브도메인입니다.
+구현 상태: **계획**.
+
+현재 제작 기능은 Creator 요청 안에서 내장 기능, Plugin, Template을 활용해 산출물을 만들며 세션이나 산출물 레코드를 저장하지 않습니다.
+`AssetGenerationSession`은 향후 제작 사용량 추적에 필요한 조회·보관 요구가 정해질 때 도입할 계획 모델입니다.
 검수 요청과 Agent/System 판정은 품질 검수에서 관리합니다.
-제작 관리는 AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput을 소유하고, 가이드라인과 브랜드 자원은 Production resource lookup을 통해 참조합니다.
+도입할 때 제작 관리는 AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput을 소유하고, 가이드라인과 브랜드 자원은 Production resource lookup을 통해 참조합니다.
 
 ```text
 [도메인] 브랜드 운영 시스템
@@ -361,12 +376,12 @@ flowchart LR
     AssetGenerationStatus["AssetGenerationStatus"]
   end
 
-  BrandGuideline["BrandGuideline"]
+  GuidelineDocument["GuidelineDocument"]
   BrandAsset["BrandAsset"]
   Template["Template"]
   Plugin["Plugin"]
 
-  AssetGenerationSession -->|"참조"| BrandGuideline
+  AssetGenerationSession -->|"참조"| GuidelineDocument
   AssetGenerationSession -->|"사용"| BrandAsset
   AssetGenerationSession -->|"사용"| Template
   AssetGenerationSession -->|"사용"| Plugin
@@ -377,31 +392,28 @@ flowchart LR
   classDef aggregate fill:#FFE8CC,stroke:#F08C00,stroke-width:2px,color:#1F1F1F;
   classDef entity fill:#E7F5FF,stroke:#1C7ED6,stroke-width:1.5px,color:#1F1F1F;
   classDef record fill:#F1F3F5,stroke:#868E96,stroke-width:1.5px,color:#1F1F1F;
+  classDef planned fill:#FFF9DB,stroke:#F59F00,stroke-width:1.5px,stroke-dasharray:5 5,color:#1F1F1F;
 
-  class AssetGenerationSession,BrandGuideline,BrandAsset,Template,Plugin aggregate;
-  class AssetGenerationInput,AssetGenerationOutput entity;
+  class GuidelineDocument,BrandAsset,Template,Plugin aggregate;
+  class AssetGenerationSession,AssetGenerationInput,AssetGenerationOutput planned;
   class AssetGenerationStatus record;
 ```
 
-AssetGenerationSession은 Creator가 산출물을 만들기 시작한 에셋 제너레이션 단위입니다.
-AssetGenerationOutput은 제작 결과물이고, 품질 검수는 필요한 시점의 검수 입력을 CheckInputSnapshot으로 고정합니다.
-AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 Brand asset generation records로 저장하고, BrandGuideline, BrandAsset, Template, Plugin은 제작에 필요한 참조 자원으로 조회합니다.
+AssetGenerationSession을 도입하면 Creator가 산출물을 만들기 시작한 단위를 사용량 기록으로 묶습니다.
+AssetGenerationOutput은 그때 저장할 제작 결과물입니다. 현재 품질 검수는 생성 세션에 의존하지 않고 업로드된 이미지를 CheckInputSnapshot으로 고정합니다.
+도입 시 AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput을 Brand asset generation records로 저장하고, GuidelineDocument, BrandAsset, Template, Plugin은 제작에 필요한 참조 자원으로 조회합니다.
 가이드라인 화면의 조회, 클릭, 검색, 에셋 다운로드, 구간 체류, 외부 링크 클릭은 제작 관리가 아니라 화면 행동 기록으로 수집합니다.
 
 ## 6. 품질 검수
 
-품질 검수는 CheckInputSnapshot에 고정된 입력이 기준에 맞는지 점검하고, 질문과 검수 결과를 기준에 연결하는 서브도메인입니다.
+품질 검수는 CheckInputSnapshot에 고정된 입력이 기준에 맞는지 점검하고 결과를 기준에 연결하는 서브도메인입니다.
+현재 품질 검수 세션은 `CheckSession` 하나입니다.
+`AgentChatSession`은 별도 Agent 채팅 애그리거트이며, 채팅에서 검수를 시작했을 때 `CheckSession`이 출처로 선택 참조할 수 있습니다.
+아래 `CheckTarget`, `CheckRun`, `CheckBasis`, `CheckDecision`은 목표 도메인 구조입니다. 현재 저장 모델은 입력 지문, ruleset snapshot, pending Check key, 결과와 상태를 `CheckSession`에 평탄화합니다.
 
 ```text
 [도메인] 브랜드 운영 시스템
  └── [서브도메인] 품질 검수
-      ├── [바운디드 컨텍스트] 질의응답
-      │    └── [도메인 모델]
-      │         ├── 애그리거트(관리 단위): QASession
-      │         │    ├── 엔티티: Question, Answer
-      │         │    └── 값 객체: AnswerCitation, AnswerConfidence, AgentRunRef
-      │         ├── 도메인 서비스: Answer generation service
-      │         └── 도메인 이벤트: QuestionAsked, AnswerProvided
       ├── [바운디드 컨텍스트] 산출물 검수
       │    └── [도메인 모델]
       │         ├── 애그리거트(관리 단위): CheckSession
@@ -424,14 +436,8 @@ AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput은 Brand ass
 
 ```mermaid
 flowchart LR
-  GuidelineCheck["Rule"]
-
-  subgraph QA["질의응답"]
-    QASession["QASession"]
-    Question["Question"]
-    Answer["Answer"]
-    AnswerCitation["AnswerCitation"]
-    AnswerConfidence["AnswerConfidence"]
+  subgraph AgentChat["별도 Agent 채팅"]
+    AgentChatSession["AgentChatSession"]
   end
 
   subgraph Check["산출물 검수"]
@@ -447,21 +453,15 @@ flowchart LR
   end
 
   AgentRun["AgentRun"]
-  BrandGuideline["BrandGuideline"]
+  GuidelineDocument["GuidelineDocument"]
   BrandAsset["BrandAsset"]
 
-  QASession -->|"소유"| Question
-  QASession -->|"소유"| Answer
-  Answer -->|"소유"| AnswerCitation
-  Answer -->|"소유"| AnswerConfidence
-  AnswerCitation -->|"근거"| GuidelineCheck
-  Answer -->|"실행 참조"| AgentRun
-
   CheckSession -->|"소유"| CheckTarget
+  CheckSession -.->|"채팅에서 시작된 경우 참조"| AgentChatSession
   CheckTarget -->|"고정"| CheckInputSnapshot
   CheckSession -->|"소유"| CheckRun
   CheckRun -->|"소유"| CheckBasis
-  CheckBasis -->|"참조"| BrandGuideline
+  CheckBasis -->|"참조"| GuidelineDocument
   CheckBasis -->|"고정"| CheckRulesetSnapshot
   CheckBasis -->|"참조"| BrandAsset
   CheckRun -->|"소유"| CheckDecision
@@ -474,29 +474,30 @@ flowchart LR
   classDef childEntity fill:#F3F0FF,stroke:#7950F2,stroke-width:1.5px,color:#1F1F1F;
   classDef record fill:#F1F3F5,stroke:#868E96,stroke-width:1.5px,color:#1F1F1F;
 
-  class QASession,CheckSession,BrandGuideline,BrandAsset aggregate;
-  class Question,Answer,CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult entity;
-  class GuidelineCheck,AnswerCitation,AnswerConfidence,CheckRecommendation childEntity;
+  class AgentChatSession,CheckSession,GuidelineDocument,BrandAsset aggregate;
+  class CheckTarget,CheckInputSnapshot,CheckRun,CheckBasis,CheckDecision,CheckResult entity;
+  class CheckRecommendation childEntity;
   class AgentRun record;
 ```
 
-Question과 Answer는 각각 독립 애그리거트(관리 단위)로 보지 않습니다.
-질문 삭제, 질문 수정, 질문 종료는 Answer와 함께 움직일 가능성이 높으므로 QASession 애그리거트(관리 단위) 안에서 관리합니다.
-품질 검수 화면에서 발생한 질문, 답변, 검수 세션, 점검 실행은 Quality session records로 남깁니다.
+품질 검수 화면과 Agent 채팅 도구에서 시작한 에셋 검수는 모두 CheckSession으로 저장합니다.
+AgentChatSession은 대화 메시지, 도구·스킬 사용, AI 사용량과 반응을 관리합니다. CheckSession을 소유하지 않으며, CheckSession도 AgentChatSession의 상태를 바꾸지 않습니다.
+기존 문서의 QASession 표기는 CheckSession으로 통일합니다. 별도 Question, Answer 애그리거트는 현재 모델에 두지 않습니다.
 가이드라인 화면의 조회, 클릭, 검색, 에셋 다운로드, 구간 체류, 외부 링크 클릭은 품질 검수가 아니라 화면 행동 기록으로 수집합니다.
 
 CheckRun은 CheckBasis를 소유하고, CheckBasis는 검수 시점의 GuidelineVersionRef, CheckRulesetSnapshot, BrandAssetVersionRef를 참조합니다.
 CheckInputSnapshot은 검수 입력을 재현하기 위한 ID를 가진 불변 엔티티입니다.
 CheckDecision은 CheckRun 안에서 최종 판정을 표현하고, 여러 CheckResult를 소유합니다.
 Agent와 System은 점검, 설명, 최종 검수 판정을 수행합니다.
-Agent 자체는 도메인 애그리거트(관리 단위)로 두지 않고, Answer, CheckResult, CheckRecommendation에 AgentRunRef를 남겨 실행 이력만 추적합니다.
+Agent 자체는 도메인 애그리거트(관리 단위)로 두지 않고, AgentChatSession과 검수 결과에 필요한 실행·사용량 정보만 남깁니다.
 AgentSkill은 Agent 실행 지시 설정으로 관리하며, 답변이나 검수 결과의 도메인 기록으로 보지 않습니다.
 AgentRunStarted, AgentRunCompleted, AgentRunFailed는 업무 도메인 이벤트가 아니라 Agent 실행 기록 이벤트입니다.
 
 ## 7. 사용 기록
 
-사용 기록은 에셋 제너레이션 기록, 품질 검수 기록, 화면 행동 기록을 운영자가 조회하는 지원 서브도메인입니다.
-업무 활동 기록은 AssetGenerationSession, QASession, CheckSession 같은 기본 레코드를 우선 조회합니다.
+사용 기록은 Agent 채팅 기록, 품질 검수 기록, 화면 행동 기록을 운영자가 조회하는 지원 서브도메인입니다.
+업무 활동 기록은 현재 AgentChatSession, CheckSession 같은 기본 레코드를 우선 조회합니다.
+AssetGenerationSession은 제작 사용량 추적을 도입한 뒤 조회 대상에 추가합니다.
 화면 행동은 업무 레코드와 성격이 달라 BehaviorEventLog로 별도 저장합니다.
 
 ```text
@@ -504,7 +505,8 @@ AgentRunStarted, AgentRunCompleted, AgentRunFailed는 업무 도메인 이벤트
  └── [서브도메인] 사용 기록
       ├── [바운디드 컨텍스트] 사용 이력 조회
       │    └── [도메인 모델]
-      │         ├── 조회 대상: AssetGenerationSession, QASession, CheckSession, BehaviorEventLog
+      │         ├── 현재 조회 대상: AgentChatSession, CheckSession, BehaviorEventLog
+      │         ├── 계획 조회 대상: AssetGenerationSession
       │         └── 도메인 서비스: Usage query service
       └── [바운디드 컨텍스트] 화면 행동 기록
            └── [도메인 모델]

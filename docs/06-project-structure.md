@@ -431,7 +431,7 @@ guideline-publish.spec.ts
 | 대상 | 규칙 | 예 |
 | --- | --- | --- |
 | React Component | `PascalCase` | `GuidelineCard` |
-| custom hook | `use` + 동작 또는 상태 | `useAssetGenerationSession` |
+| custom hook | `use` + 동작 또는 상태 | `useTemplateExport` |
 | Facade | 필요한 경우에만 `PascalCase` + `Facade` | `GuidelineFacade` |
 | Service (Use Case) | Use Case를 표현하는 동사 시작 함수 | `publishGuideline` |
 | Repository | 도메인 동작 기준 함수 | `findPublishedGuideline` |
@@ -456,7 +456,7 @@ Facade는 기본 구조로 두지 않습니다.
 | 단건 조회 | `get` + 대상 | `getGuideline` |
 | 조건 조회 | `find` + 대상 | `findPublishedRule` |
 | 목록 조회 | `list` + 대상 | `listApplicationTypes` |
-| 생성 | `create` + 대상 | `createAssetGenerationSession` |
+| 생성 | `create` + 대상 | `createCheckSession` |
 | 수정 | `update` + 대상 | `updateGuidelineSection` |
 | 삭제 | `delete` + 대상 | `deleteDraftRule` |
 | 권한 확인 | `can` + 동작 | `canPublishGuideline` |

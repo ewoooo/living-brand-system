@@ -12,6 +12,7 @@ Create가 산출물에 이미지가 필요할 때 이 기능을 호출하는 것
 
 - 입력: 프롬프트 텍스트, 선택적 이미지 프로파일(`profileId`), 후보 장수(현재 1~6)
 - 출력: 이미지 후보 목록(각 항목은 바로 표시 가능한 data URI)
+- 영속성: 후보는 요청 범위에서만 반환하며 `AssetGenerationSession`이나 산출물 레코드를 저장하지 않습니다. 해당 세션은 향후 제작 사용량 추적이 필요할 때 도입합니다.
 - 검수 미포함: 생성 결과를 그대로 돌려주며 규정 판정을 하지 않습니다.
 
 ### 프롬프트 합성
@@ -57,4 +58,4 @@ Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listIma
 
 - 유료 호출 인증·게이트: [07. 보안](../07-security.md)
 - 사용자 노출 문구·접근성: [08. 접근성과 다국어](../08-accessibility-i18n.md)
-- 도메인 위치(제작 관리 / AssetGeneration): [04. 도메인 모델](../04-domain-model.md)
+- 도메인 위치(제작 관리 / AssetGeneration): [04. 도메인 모델](../04-domain-model.md) — 현재는 요청 범위 생성이고, `AssetGenerationSession`은 사용량 추적용 계획 모델입니다.
