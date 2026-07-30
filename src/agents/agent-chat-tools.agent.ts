@@ -1,8 +1,10 @@
 import { type ToolSet, tool } from 'ai'
 import { z } from 'zod'
+import { env } from '@/env'
 import {
 	agentQueryTriageSchema,
-	decideAgentQueryTriage,
+	agentSkillSelectionSchema,
+	decideAgentQueryRouting,
 } from '@/features/agent-chat/domain/agent-query-triage'
 import {
 	type AgentSkillDetail,
@@ -42,14 +44,17 @@ const guidelineToolContextSchema = z.object({
  * 실제 skill/guideline I/O는 tool 실행 시 주입되는 user context로 수행한다.
  */
 export function getAgentTools() {
+	const triageEnabled = env.AGENT_CHAT_TRIAGE_ENABLED === 'true'
+
 	return {
 		loadSkill: tool({
-			description:
-				'Classify the request and load the full instructions for one enabled agent skill.',
-			inputSchema: agentQueryTriageSchema,
+			description: triageEnabled
+				? 'Classify the request and load the full instructions for one enabled agent skill.'
+				: 'Load the full instructions for one enabled agent skill.',
+			inputSchema: triageEnabled ? agentQueryTriageSchema : agentSkillSelectionSchema,
 			contextSchema: guidelineToolContextSchema,
-			execute: async (triage, { context }) => {
-				const { name } = triage
+			execute: async (proposal, { context }) => {
+				const { name } = proposal
 				const skill = await findEnabledAgentSkillByName(context.user, name)
 
 				if (!skill) {
@@ -58,7 +63,7 @@ export function getAgentTools() {
 
 				return {
 					...formatLoadedSkill(skill),
-					...decideAgentQueryTriage(triage),
+					...decideAgentQueryRouting(proposal, triageEnabled),
 				}
 			},
 		}),

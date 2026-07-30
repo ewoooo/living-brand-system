@@ -87,7 +87,8 @@ describe('agent tools', () => {
 		])
 	})
 
-	it('loads agent skill instructions through the tool service', async () => {
+	it('loads agent skill instructions with the configured triage mode', async () => {
+		const triageEnabled = process.env.AGENT_CHAT_TRIAGE_ENABLED === 'true'
 		const findSkill = vi
 			.spyOn(agentSkillRepository, 'findEnabledAgentSkillByName')
 			.mockResolvedValue({
@@ -99,29 +100,41 @@ describe('agent tools', () => {
 		const tools = getAgentTools()
 
 		const result = await tools.loadSkill.execute?.(
-			{
-				name: 'copywriter-test',
-				responseMode: 'action',
-				risk: 'high',
-				confidence: 90,
-			},
+			(triageEnabled
+				? {
+						name: 'copywriter-test',
+						responseMode: 'action',
+						risk: 'high',
+						confidence: 90,
+					}
+				: { name: 'copywriter-test' }) as never,
 			{
 				context: { user: { id: 1 } },
 			} as never,
 		)
 
 		expect(findSkill).toHaveBeenCalledWith({ id: 1 }, 'copywriter-test')
-		expect(result).toEqual({
-			description: 'Copywriting test skill.',
-			instructions: 'Rewrite campaign copy.',
-			name: 'copywriter-test',
-			responseMode: 'action',
-			risk: 'high',
-			confidence: 90,
-			model: 'opus-5.0',
-			toolScope: 'read',
-			reviewRequired: true,
-		})
+		expect(result).toEqual(
+			triageEnabled
+				? {
+						description: 'Copywriting test skill.',
+						instructions: 'Rewrite campaign copy.',
+						name: 'copywriter-test',
+						responseMode: 'action',
+						risk: 'high',
+						confidence: 90,
+						model: 'opus-5.0',
+						toolScope: 'read',
+						reviewRequired: true,
+					}
+				: {
+						description: 'Copywriting test skill.',
+						instructions: 'Rewrite campaign copy.',
+						name: 'copywriter-test',
+						model: 'sonnet-5',
+						toolScope: 'action',
+					},
+		)
 	})
 
 	it('reads guideline document details through the tool service', async () => {

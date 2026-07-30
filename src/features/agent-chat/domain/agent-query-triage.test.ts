@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { agentQueryTriageSchema, decideAgentQueryTriage } from './agent-query-triage'
+import {
+	agentQueryTriageSchema,
+	agentSkillSelectionSchema,
+	decideAgentQueryRouting,
+	decideAgentQueryTriage,
+} from './agent-query-triage'
 
 describe('agent query triage', () => {
 	it.each([
@@ -70,5 +75,15 @@ describe('agent query triage', () => {
 				reason: 'extra',
 			}).success,
 		).toBe(false)
+	})
+
+	it('triage가 꺼지면 skill 이름만 받아 Sonnet과 해당 skill의 전체 도구 범위를 사용한다', () => {
+		const proposal = agentSkillSelectionSchema.parse({ name: 'generate-image' })
+
+		expect(decideAgentQueryRouting(proposal, false)).toEqual({
+			name: 'generate-image',
+			model: 'sonnet-5',
+			toolScope: 'action',
+		})
 	})
 })
