@@ -23,6 +23,7 @@ interface ToolCallLike {
 
 export interface AgentChatSessionUsageStep {
 	model?: { modelId?: string }
+	response?: { modelId?: string }
 	toolCalls?: readonly unknown[]
 	usage?: LanguageModelUsageLike
 }
@@ -43,7 +44,7 @@ export function createAgentChatSessionUsageCollector() {
 
 	return {
 		addStep(step: AgentChatSessionUsageStep) {
-			const model = step.model?.modelId
+			const model = step.response?.modelId ?? step.model?.modelId
 			if (model) models.add(model)
 			if (step.usage) addUsage(usage, step.usage)
 			if (step.usage?.raw) {

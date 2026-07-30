@@ -7,6 +7,7 @@ describe('createAgentChatSessionUsageCollector', () => {
 
 		collector.addStep({
 			model: { modelId: 'claude-sonnet-4-6' },
+			response: { modelId: 'claude-sonnet-4-6' },
 			usage: {
 				inputTokens: 10,
 				inputTokenDetails: {
@@ -28,7 +29,8 @@ describe('createAgentChatSessionUsageCollector', () => {
 			],
 		})
 		collector.addStep({
-			model: { modelId: 'claude-opus-5' },
+			model: { modelId: 'claude-sonnet-4-6' },
+			response: { modelId: 'claude-opus-5' },
 			usage: {
 				inputTokens: 20,
 				inputTokenDetails: {
