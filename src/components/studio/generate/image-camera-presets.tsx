@@ -1,0 +1,173 @@
+'use client'
+
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Typography } from '@/components/ui/typography'
+import type { CameraAzimuth, CameraElevation } from '@/features/generate-image/camera-control'
+import {
+	type CameraAdjustmentResult,
+	requestCameraAdjustment,
+} from '@/features/generate-image/services/generate-image.client'
+
+const AZIMUTH_PRESETS: { degrees: number; label: string; value: CameraAzimuth }[] = [
+	{ degrees: 0, label: '정면', value: 'front' },
+	{ degrees: 45, label: '우측 3/4', value: 'front-right' },
+	{ degrees: 90, label: '우측면', value: 'right' },
+	{ degrees: 135, label: '후면 우측 3/4', value: 'rear-right' },
+	{ degrees: 180, label: '후면', value: 'rear' },
+	{ degrees: -135, label: '후면 좌측 3/4', value: 'rear-left' },
+	{ degrees: -90, label: '좌측면', value: 'left' },
+	{ degrees: -45, label: '좌측 3/4', value: 'front-left' },
+]
+
+const ELEVATION_PRESETS: {
+	degrees: number
+	label: string
+	value: CameraElevation
+}[] = [
+	{ degrees: -20, label: '로우 앵글', value: 'low' },
+	{ degrees: 0, label: '눈높이', value: 'eye-level' },
+	{ degrees: 20, label: '약간 위', value: 'elevated' },
+	{ degrees: 50, label: '하이 앵글', value: 'high' },
+	{ degrees: 80, label: '탑뷰', value: 'top-down' },
+]
+
+const SELECT_CLASS =
+	'h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30'
+
+export function ImageCameraPresets({
+	basePrompt,
+	profileId,
+	seedImage,
+}: {
+	basePrompt: string
+	profileId: number
+	seedImage: string
+}) {
+	const [azimuth, setAzimuth] = useState<CameraAzimuth>('front')
+	const [elevation, setElevation] = useState<CameraElevation>('eye-level')
+	const [result, setResult] = useState<CameraAdjustmentResult | null>(null)
+	const [loading, setLoading] = useState(false)
+	const [error, setError] = useState('')
+
+	async function applyCamera() {
+		if (loading) return
+		setLoading(true)
+		setError('')
+		setResult(null)
+		try {
+			const azimuthPreset = AZIMUTH_PRESETS.find((preset) => preset.value === azimuth)
+			const elevationPreset = ELEVATION_PRESETS.find((preset) => preset.value === elevation)
+			if (!azimuthPreset || !elevationPreset) return
+
+			setResult(
+				await requestCameraAdjustment({
+					basePrompt,
+					camera: {
+						azimuthDeg: azimuthPreset.degrees,
+						elevationDeg: elevationPreset.degrees,
+					},
+					count: 1,
+					profileId,
+					seedImage,
+				}),
+			)
+		} catch {
+			setError('시점 조정에 실패했어요. 잠시 후 다시 시도해 주세요.')
+		} finally {
+			setLoading(false)
+		}
+	}
+
+	const resultAzimuth = result
+		? AZIMUTH_PRESETS.find((preset) => preset.value === result.camera.resolved.azimuth)
+		: null
+	const resultElevation = result
+		? ELEVATION_PRESETS.find((preset) => preset.value === result.camera.resolved.elevation)
+		: null
+
+	return (
+		<section
+			data-slot="image-camera-presets"
+			className="flex flex-col gap-4 rounded-md border border-border p-4"
+			aria-busy={loading}
+		>
+			<div className="flex flex-col gap-1">
+				<Typography as="h3" size="base" weight="medium">
+					카메라 시점 조정
+				</Typography>
+				<Typography size="sm" tone="muted">
+					선택한 이미지를 시드로 사용합니다. 원본 이미지는 유지됩니다.
+				</Typography>
+			</div>
+
+			<div className="grid gap-3 sm:grid-cols-2">
+				<div className="flex flex-col gap-2">
+					<Label htmlFor="camera-azimuth">방향</Label>
+					<select
+						id="camera-azimuth"
+						value={azimuth}
+						onChange={(event) => setAzimuth(event.currentTarget.value as CameraAzimuth)}
+						className={SELECT_CLASS}
+					>
+						{AZIMUTH_PRESETS.map((preset) => (
+							<option key={preset.value} value={preset.value}>
+								{preset.label}
+							</option>
+						))}
+					</select>
+				</div>
+				<div className="flex flex-col gap-2">
+					<Label htmlFor="camera-elevation">높이</Label>
+					<select
+						id="camera-elevation"
+						value={elevation}
+						onChange={(event) =>
+							setElevation(event.currentTarget.value as CameraElevation)
+						}
+						className={SELECT_CLASS}
+					>
+						{ELEVATION_PRESETS.map((preset) => (
+							<option key={preset.value} value={preset.value}>
+								{preset.label}
+							</option>
+						))}
+					</select>
+				</div>
+			</div>
+
+			<Button type="button" disabled={loading} onClick={applyCamera}>
+				{loading ? '시점 조정 중…' : '시점 적용'}
+			</Button>
+
+			{error ? (
+				<Typography role="alert" size="sm" tone="destructive">
+					{error}
+				</Typography>
+			) : null}
+
+			{result?.images[0] ? (
+				<div className="flex flex-col gap-2" aria-live="polite">
+					<Typography size="sm" weight="medium">
+						조정 결과: {resultAzimuth?.label} · {resultElevation?.label}
+					</Typography>
+					{/* biome-ignore lint/performance/noImgElement: 생성 직후 data URI 미리보기 */}
+					<img
+						src={result.images[0]}
+						alt="카메라 시점 조정 결과"
+						className="w-full rounded-md border border-border"
+					/>
+					<a
+						href={result.images[0]}
+						target="_blank"
+						rel="noreferrer"
+						className="font-body text-sm font-normal text-muted-foreground underline"
+					>
+						조정 결과 원본 보기
+					</a>
+				</div>
+			) : null}
+		</section>
+	)
+}

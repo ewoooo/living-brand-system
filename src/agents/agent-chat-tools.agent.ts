@@ -144,10 +144,10 @@ export function getAgentTools() {
 		}),
 		generateImage: tool({
 			description:
-				'Generate NEW images from a text prompt. For a branded product image, call listImageProfiles first and pass its profileId. Omit profileId for free generation without a brand profile.',
+				'Generate NEW images from a text prompt. Call listImageProfiles first and pass the selected published profileId.',
 			inputSchema: z.object({
 				prompt: z.string().min(1).max(500),
-				profileId: z.number().int().positive().optional(),
+				profileId: z.number().int().positive(),
 				count: z.number().int().min(1).max(4).optional(),
 			}),
 			contextSchema: guidelineToolContextSchema,

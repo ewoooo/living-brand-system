@@ -70,6 +70,7 @@ describe('POST /api/generate-image', () => {
 		{ prompt: '', count: 1 },
 		{ prompt: 'sample', count: 0 },
 		{ prompt: 'sample', count: 1.5 },
+		{ prompt: 'sample' },
 		{ prompt: 'sample', profileId: 0 },
 		{ prompt: 'sample', imageModelPreset: 'openai-gpt-image-2' },
 	])('일반 생성 계약 밖의 입력을 거부한다: %o', async (body) => {
@@ -85,7 +86,7 @@ describe('POST /api/generate-image', () => {
 	])('생성기나 정규화 모델을 사용할 수 없으면 503을 반환한다', async (error) => {
 		mocks.generateImages.mockRejectedValue(error)
 
-		const response = await POST(imageRequest({ prompt: 'sample' }))
+		const response = await POST(imageRequest({ prompt: 'sample', profileId: 5 }))
 
 		expect(response.status).toBe(503)
 	})

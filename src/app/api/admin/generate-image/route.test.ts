@@ -14,13 +14,18 @@ vi.mock('@/lib/request-auth', () => ({
 }))
 vi.mock('@/features/generate-image/services/generate-image.service', () => {
 	class ImageGenerationUnavailableError extends Error {}
+	class ImageProfileNotFoundError extends Error {}
+	class ImagePromptNormalizationUnavailableError extends Error {}
 	return {
 		generateImages: mocks.generateImages,
 		generateImagesWithSettings: mocks.generateImagesWithSettings,
 		ImageGenerationUnavailableError,
+		ImageProfileNotFoundError,
+		ImagePromptNormalizationUnavailableError,
 	}
 })
 
+import { ImageProfileNotFoundError } from '@/features/generate-image/services/generate-image.service'
 import { POST } from './route'
 
 function imageRequest(body: unknown) {
@@ -62,13 +67,15 @@ describe('POST /api/admin/generate-image', () => {
 		expect(mocks.generateImagesWithSettings).not.toHaveBeenCalled()
 	})
 
-	it('Admin 템플릿의 기본 생성을 처리한다', async () => {
-		const response = await POST(imageRequest({ prompt: '  sample  ', count: 1 }))
+	it('Admin 템플릿의 프로파일 생성을 처리한다', async () => {
+		const response = await POST(imageRequest({ prompt: '  sample  ', count: 1, profileId: 5 }))
 
 		expect(response.status).toBe(200)
 		expect(mocks.generateImages).toHaveBeenCalledWith({
 			userInput: 'sample',
 			count: 1,
+			profileId: 5,
+			user: { id: 1, role: 'manager' },
 		})
 		expect(mocks.generateImagesWithSettings).not.toHaveBeenCalled()
 	})
@@ -95,8 +102,18 @@ describe('POST /api/admin/generate-image', () => {
 		expect(mocks.generateImages).not.toHaveBeenCalled()
 	})
 
+	it('published 프로파일이 없으면 404를 반환한다', async () => {
+		mocks.generateImages.mockRejectedValue(new ImageProfileNotFoundError())
+
+		const response = await POST(imageRequest({ prompt: 'sample', count: 1, profileId: 404 }))
+
+		expect(response.status).toBe(404)
+	})
+
 	it('1000자를 넘는 프롬프트를 거부한다', async () => {
-		const response = await POST(imageRequest({ prompt: 'a'.repeat(1_001), count: 1 }))
+		const response = await POST(
+			imageRequest({ prompt: 'a'.repeat(1_001), count: 1, profileId: 5 }),
+		)
 
 		expect(response.status).toBe(400)
 		expect(mocks.generateImages).not.toHaveBeenCalled()
@@ -111,7 +128,7 @@ describe('POST /api/admin/generate-image', () => {
 			imageModelPreset: 'google-nano-banana-2-lite',
 			imageSize: '2K',
 		},
-		{ prompt: 'sample', profileId: 5 },
+		{ prompt: 'sample' },
 	])('부분 설정·지원하지 않는 설정·일반 프로파일 입력을 거부한다: %o', async (body) => {
 		const response = await POST(imageRequest(body))
 

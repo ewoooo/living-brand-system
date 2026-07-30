@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
+import { ImageCameraPresets } from './image-camera-presets'
 
 const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
 
@@ -82,9 +83,7 @@ export function ImageGenerationResults({
 					</div>
 
 					<div className="font-body text-sm font-normal text-muted-foreground">
-						{result.profileName
-							? `적용된 프로파일: ${result.profileName}`
-							: '자유 생성 (브랜드 스타일 없음)'}
+						{result.profileName ? `적용된 프로파일: ${result.profileName}` : null}
 						<details className="mt-1">
 							<summary className="cursor-pointer">생성 프롬프트 보기</summary>
 							<p className="mt-1 whitespace-pre-wrap font-body text-xs font-normal">
@@ -92,6 +91,19 @@ export function ImageGenerationResults({
 							</p>
 						</details>
 					</div>
+
+					{selected !== null && result.profileId ? (
+						<ImageCameraPresets
+							key={`${result.profileId}:${selected}:${images[selected]}`}
+							basePrompt={result.prompt}
+							profileId={result.profileId}
+							seedImage={images[selected]}
+						/>
+					) : (
+						<p className="font-body text-sm font-normal text-muted-foreground">
+							이미지를 선택하면 카메라 시점을 조정할 수 있습니다.
+						</p>
+					)}
 				</div>
 			)}
 		</div>

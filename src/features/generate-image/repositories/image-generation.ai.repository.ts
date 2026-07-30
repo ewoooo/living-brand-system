@@ -20,24 +20,28 @@ export async function generateBrandImages({
 	modelPreset,
 	aspectRatio,
 	imageSize,
+	seedImage,
 }: {
 	prompt: string
 	count: number
 	modelPreset: ImageModelPreset
 	aspectRatio: ImageAspectRatio
 	imageSize: ImageOutputSize
+	seedImage?: Uint8Array
 }): Promise<{
 	images: string[]
 	model: string
 	provider: 'google' | 'openai'
 }> {
+	const imagePrompt = seedImage ? { text: prompt, images: [seedImage] } : prompt
+
 	if (modelPreset === 'google-nano-banana-2-lite') {
 		const google = createGoogle({ apiKey: env.GEMINI_API_KEY })
 		const images = await Promise.all(
 			Array.from({ length: count }, async () => {
 				const { image } = await generateImage({
 					model: google.image(GOOGLE_NANO_BANANA_2_LITE_MODEL),
-					prompt,
+					prompt: imagePrompt,
 					providerOptions: {
 						google: {
 							imageConfig: { aspectRatio, imageSize },
@@ -57,7 +61,7 @@ export async function generateBrandImages({
 
 	const { images } = await generateImage({
 		model: openai.image(OPENAI_GPT_IMAGE_2_MODEL),
-		prompt,
+		prompt: imagePrompt,
 		n: count,
 		size: toOpenAIImageSize(aspectRatio, imageSize),
 	})
