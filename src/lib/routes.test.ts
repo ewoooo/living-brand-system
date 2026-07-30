@@ -10,6 +10,7 @@ import {
 describe('routes', () => {
 	it('Studio canonical 경로와 템플릿 하위 경로를 만든다', () => {
 		expect(routes.studio.root).toBe('/studio')
+		expect(routes.studio.generateGraphic).toBe('/studio/generate/graphic')
 		expect(getStudioTemplateCategoryRoute('event')).toBe('/studio/template/event')
 		expect(getStudioTemplateCategoryRoute('stationery')).toBe('/studio/template/stationery')
 		expect(getStudioTemplateRoute('event', 2)).toBe('/studio/template/event/2')

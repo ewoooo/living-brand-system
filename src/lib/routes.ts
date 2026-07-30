@@ -5,6 +5,7 @@ export const routes = {
 	studio: {
 		examples: '/studio/examples',
 		generate: '/studio/generate',
+		generateGraphic: '/studio/generate/graphic',
 		generateImage: '/studio/generate#image',
 		review: '/studio/review',
 		root: '/studio',

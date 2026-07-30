@@ -25,18 +25,31 @@ TIFF는 원본 가로·세로 픽셀을 리샘플링하지 않고 PPI 메타데�
 
 브라우저는 화면을 렌더한 published Template의 `updatedAt`을 export version으로 함께 보냅니다. 서버의 현재 published version과 다르면 `409`로 중단하므로 운영자 변경 뒤 이전 PPI로 표시된 화면에서 다른 규격이 조용히 출력되지 않습니다. 공개 변환 Route는 프로세스당 동시 변환 1건, 전체 분당 30건, 클라이언트당 분당 6건으로 제한합니다. 다중 서버 배포 시 이 process-local 제한은 공유 edge/Redis limiter로 교체해야 합니다.
 
+### 그래픽 생성 계약
+
+`generate-graphic`은 발행된 Plugin의 구현 키로 그래픽 도구를 선택하고, 도구별 입력 계약으로 Controller와 최종 생성을 연결하는 Feature입니다.
+현재는 첫 도구인 `forward-straight-v1`의 입력 계약, 계약 기반 Studio Controller, 순수 geometry, p5 instance-mode Preview, SVG 브라우저 다운로드를 `/studio/generate/graphic`에 연결했습니다. Controller 변경과 캔버스 포인터·X/Y 슬라이더 입력은 같은 입력 상태를 갱신하며 Preview와 SVG 출력이 이를 공유합니다.
+
+- 입력 계약: `variableWeightEnabled`, `viewpoint`, `angleIntensity`, 정규화된 `origin(0~1)`
+- Controller 계약: Studio가 입력 계약의 `boolean`·`select` 항목을 자체 컴포넌트로 렌더
+- 출력 계약: 첫 형식은 `image/svg+xml`
+- 실행 계약: p5는 Page 미리보기만 담당하고, 최종 SVG는 같은 순수 geometry를 브라우저에서 직렬화해 다운로드
+- 기록 계약: Template의 PNG export처럼 Payload, DB, 오브젝트 스토리지에 기록하지 않음
+
 ### 의도된 방향 (미구현)
 
 - 가이드라인·rule 데이터 실시간 주입으로 규정 준수 유도(soft: 프롬프트 컨텍스트 / hard: Review checker 재검증) — 강도 미정.
 - Review를 검증 skill로 연결(현재 코드 미연결).
 - Image 호출로 필요한 에셋 생성(현재 미호출).
-- 컴포저 저장(cells→템플릿) 및 생성 세션/출력 영속.
+- 컴포저 저장(cells→템플릿) 및 생성 출력 영속.
+- 작업 재개나 복수 출력 관리가 필요해질 때 생성 세션 영속.
 
 ## 3. 표면
 
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
-| [Page](../surfaces/page.md) | 구현 | `/studio/template` → 카테고리 → 템플릿 → HtmlAssetGenerator. 발행된 canonical HTML 템플릿만 읽고 비로그인 공개 읽기 |
+| [Page](../surfaces/page.md) — Template | 구현 | `/studio/template` → 카테고리 → 템플릿 → HtmlAssetGenerator. 발행된 canonical HTML 템플릿만 읽고 비로그인 공개 읽기 |
+| [Page](../surfaces/page.md) — Graphic | 구현 | Generate의 `그래픽 생성` 전환 메뉴 → `/studio/generate/graphic` → 계약 기반 Controller·p5 Preview·SVG 다운로드 |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `findTemplatesForRequest` + `prepareTemplateImage`(슬롯 검증 후 첨부 PNG) |
 | REST | 부분 | TIFF 변환 `POST /api/templates/export-tiff`, import 어댑터 `POST /api/templates/import-figma-html`. 둘 다 산출물 레코드를 저장하지 않음 |
 | Slack | 계획 | — |
@@ -57,6 +70,7 @@ TIFF는 원본 가로·세로 픽셀을 리샘플링하지 않고 PPI 메타데�
 | `template-import` | 외부 템플릿을 가져와 운영자가 편집·검증·발행 가능한 상태로 준비 | 저장 가능한 Template |
 | `template-create` | published Template의 슬롯 값을 입력하고 결과를 조합 | composed HTML |
 | `template-export` | composed HTML을 출력 정책에 따라 변환 | PNG·TIFF·PDF |
+| `generate-graphic` | Plugin 구현 키와 도구별 입력 계약으로 그래픽을 계산·미리보기·출력 | SVG 브라우저 다운로드 |
 
 공용 template 타입·HTML 합성·슬롯 수집·render model projection은 `src/types`와 `src/services`가 소유합니다. `template-create`는 `template-export`의 공개 hook과 print policy를 사용할 수 있지만, `template-create`와 `template-export`는 `template-import` 내부 구현을 직접 import하지 않습니다.
 
