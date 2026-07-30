@@ -13,7 +13,7 @@
 | 유저 화면에서 벡터(로고) 미표시 | `vectorColor` 오버라이드가 `<img>`를 `mask-image` div로 교체하는데, CSS mask는 CORS 모드 fetch다. 유저 미리보기가 `<iframe sandbox="">`(opaque origin)라 ACAO 헤더 없는 `/api/brand-logos/file/*` 로드가 차단되고, 실패한 mask는 전체 투명 처리된다. 어드민은 동일-문서 렌더(same-origin)라 정상. |
 | 유저 인풋이 안 열림 | `template-creator.tsx`에 슬롯 개념 자체가 없음(“슬롯 없음” 하드코딩) |
 | 글자 제한 등 입력 스펙 미구현 | HTML 경로에 스펙 계약 없음 (JSON 경로엔 `inputFormat`/`maxLength`/`maxLines`/`placeholder` 구현됨) |
-| 노드별 AI 주석 없음 | 저장 위치·전달 경로 없음. `/api/text`에는 이미 `rule?` 계약이 있음 |
+| 노드별 AI 주석 없음 | 저장 위치·전달 경로 없음. `/api/generate-text`에는 이미 `rule?` 계약이 있음 |
 
 ## 계약 (기존 `TemplateNodeConfigMap` 확장 — 신규 계약 없음)
 

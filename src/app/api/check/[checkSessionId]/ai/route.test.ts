@@ -28,16 +28,17 @@ vi.mock('@/app/api/check/read-check-image', () => ({
 import { POST } from './route'
 
 function request() {
-	const values = new Map<string, FormDataEntryValue>([
-		['checkSessionId', '41'],
-		['image', 'image'],
-	])
+	const values = new Map<string, FormDataEntryValue>([['image', 'image']])
 	return {
 		formData: async () => ({ get: (key: string) => values.get(key) ?? null }),
 	} as Request
 }
 
-describe('POST /api/check/ai', () => {
+const params = (checkSessionId = '41') => ({
+	params: Promise.resolve({ checkSessionId }),
+})
+
+describe('POST /api/check/:checkSessionId/ai', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		mocks.isCrossOriginRequest.mockReturnValue(false)
@@ -58,10 +59,22 @@ describe('POST /api/check/ai', () => {
 	])('%s를 HTTP %i로 변환한다', async (error, status, message) => {
 		mocks.completeCheckSessionAiCheck.mockRejectedValue(error)
 
-		const response = await POST(request())
+		const response = await POST(request(), params())
 
 		expect(response.status).toBe(status)
 		await expect(response.json()).resolves.toEqual({ message })
+		expect(mocks.completeCheckSessionAiCheck).toHaveBeenCalledWith({
+			buffer: expect.any(Buffer),
+			checkSessionId: 41,
+			user: { id: 7 },
+		})
 		expect(mocks.logger.error).not.toHaveBeenCalled()
+	})
+
+	it('유효하지 않은 세션 ID를 거부한다', async () => {
+		const response = await POST(request(), params('0'))
+
+		expect(response.status).toBe(400)
+		expect(mocks.completeCheckSessionAiCheck).not.toHaveBeenCalled()
 	})
 })

@@ -9,7 +9,7 @@ import { guidelineDraftVersions } from './shared'
 
 const previewURL = (id: unknown) =>
 	typeof id === 'number' || typeof id === 'string'
-		? `/api/guideline-preview?id=${encodeURIComponent(String(id))}`
+		? `/api/guideline-documents/${encodeURIComponent(String(id))}/preview`
 		: null
 
 export const GuidelineDocuments: CollectionConfig = {
