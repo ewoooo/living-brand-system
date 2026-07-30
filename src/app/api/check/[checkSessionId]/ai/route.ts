@@ -6,16 +6,19 @@ import {
 import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 import { completeCheckSessionAiCheck } from '@/services/start-check-session.service'
-import { readCheckImage } from '../read-check-image'
+import { readCheckImage } from '../../read-check-image'
 
 export const maxDuration = 30
 
-function parseCheckSessionId(value: FormDataEntryValue | null | undefined): number | null {
-	const id = typeof value === 'string' ? Number(value) : NaN
-	return Number.isInteger(id) ? id : null
+function parseCheckSessionId(value: string): number | null {
+	const id = Number(value)
+	return Number.isSafeInteger(id) && id > 0 ? id : null
 }
 
-export async function POST(req: Request) {
+export async function POST(
+	req: Request,
+	{ params }: { params: Promise<{ checkSessionId: string }> },
+) {
 	if (isCrossOriginRequest(req)) {
 		return Response.json({ message: 'Invalid origin.' }, { status: 403 })
 	}
@@ -25,11 +28,11 @@ export async function POST(req: Request) {
 		return Response.json({ message: 'Unauthorized' }, { status: 401 })
 	}
 
-	const form = await req.formData().catch(() => null)
-	const checkSessionId = parseCheckSessionId(form?.get('checkSessionId'))
+	const checkSessionId = parseCheckSessionId((await params).checkSessionId)
 	if (checkSessionId === null) {
 		return Response.json({ message: 'Invalid request.' }, { status: 400 })
 	}
+	const form = await req.formData().catch(() => null)
 	const image = await readCheckImage(form?.get('image'))
 	if ('response' in image) return image.response
 

@@ -12,8 +12,8 @@
  *     rulesetSnapshot: RuntimeCheck[]          // 검수 시점 룰 동결본
  *   }
  *
- * POST /api/check/ai
- *   req : FormData { image: File, checkSessionId: string }  // 대상 룰은 서버가 세션에서 읽음
+ * POST /api/check/{checkSessionId}/ai
+ *   req : FormData { image: File }  // 대상 룰은 서버가 세션에서 읽음
  *   res : { results: Record<checkKey, CheckResult> }
  *   실패: pendingCheckKeys 전체를 status 'needs_review'("AI 평가 실패") 폴백으로 채움
  */
@@ -45,8 +45,7 @@ export async function submitAiCheck(
 ): Promise<Record<string, CheckResult>> {
 	const form = new FormData()
 	form.append('image', file)
-	form.append('checkSessionId', String(checkSessionId))
-	const response = await fetch('/api/check/ai', { method: 'POST', body: form })
+	const response = await fetch(`/api/check/${checkSessionId}/ai`, { method: 'POST', body: form })
 	if (!response.ok) throw new Error(`ai check failed: ${response.status}`)
 	const { results } = (await response.json()) as { results: Record<string, CheckResult> }
 	return results

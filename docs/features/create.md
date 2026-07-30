@@ -40,7 +40,7 @@ TIFF 내보내기 때 브라우저는 화면을 렌더한 published Template의 
 | --- | --- | --- |
 | [Page](../surfaces/page.md) | 구현 | `/studio/template` → 카테고리 → 템플릿 → TemplateGenerator. 발행된 canonical HTML 템플릿만 읽고 비로그인 공개 읽기 |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `findTemplatesForRequest` + `prepareTemplateImage`(슬롯 검증 후 첨부 PNG) |
-| REST | 부분 | TIFF 변환 `POST /api/templates/export-tiff`, import 어댑터 `POST /api/templates/import-figma-html`. 둘 다 산출물 레코드를 저장하지 않음 |
+| [REST](../surfaces/rest.md) | 부분 | TIFF 변환 `POST /api/templates/export-tiff`, import 어댑터 `POST /api/templates/import-figma-html`. 둘 다 산출물 레코드를 저장하지 않음 |
 | Slack | 계획 | — |
 
 ## 4. 의존
