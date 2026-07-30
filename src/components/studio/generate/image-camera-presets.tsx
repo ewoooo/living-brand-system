@@ -9,6 +9,7 @@ import {
 	type CameraAdjustmentResult,
 	requestCameraAdjustment,
 } from '@/features/generate-image/services/generate-image.client'
+import { ImageCameraOrbitControl, snapCameraAngle } from './image-camera-orbit-control'
 
 const AZIMUTH_PRESETS: { degrees: number; label: string; value: CameraAzimuth }[] = [
 	{ degrees: 0, label: '정면', value: 'front' },
@@ -33,6 +34,9 @@ const ELEVATION_PRESETS: {
 	{ degrees: 80, label: '탑뷰', value: 'top-down' },
 ]
 
+const AZIMUTH_STEPS = AZIMUTH_PRESETS.map((preset) => preset.degrees)
+const ELEVATION_STEPS = ELEVATION_PRESETS.map((preset) => preset.degrees)
+
 const SELECT_CLASS =
 	'h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30'
 
@@ -45,11 +49,19 @@ export function ImageCameraPresets({
 	profileId: number
 	seedImage: string
 }) {
-	const [azimuth, setAzimuth] = useState<CameraAzimuth>('front')
-	const [elevation, setElevation] = useState<CameraElevation>('eye-level')
+	const [azimuthDeg, setAzimuthDeg] = useState(0)
+	const [elevationDeg, setElevationDeg] = useState(0)
 	const [result, setResult] = useState<CameraAdjustmentResult | null>(null)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState('')
+	const azimuthPreset =
+		AZIMUTH_PRESETS.find(
+			(preset) => preset.degrees === snapCameraAngle(azimuthDeg, AZIMUTH_STEPS, true),
+		) ?? AZIMUTH_PRESETS[0]
+	const elevationPreset =
+		ELEVATION_PRESETS.find(
+			(preset) => preset.degrees === snapCameraAngle(elevationDeg, ELEVATION_STEPS),
+		) ?? ELEVATION_PRESETS[1]
 
 	async function applyCamera() {
 		if (loading) return
@@ -57,16 +69,12 @@ export function ImageCameraPresets({
 		setError('')
 		setResult(null)
 		try {
-			const azimuthPreset = AZIMUTH_PRESETS.find((preset) => preset.value === azimuth)
-			const elevationPreset = ELEVATION_PRESETS.find((preset) => preset.value === elevation)
-			if (!azimuthPreset || !elevationPreset) return
-
 			setResult(
 				await requestCameraAdjustment({
 					basePrompt,
 					camera: {
-						azimuthDeg: azimuthPreset.degrees,
-						elevationDeg: elevationPreset.degrees,
+						azimuthDeg,
+						elevationDeg,
 					},
 					count: 1,
 					profileId,
@@ -102,13 +110,33 @@ export function ImageCameraPresets({
 				</Typography>
 			</div>
 
+			<ImageCameraOrbitControl
+				azimuthDeg={azimuthDeg}
+				azimuthLabel={azimuthPreset.label}
+				azimuthSteps={AZIMUTH_STEPS}
+				elevationDeg={elevationDeg}
+				elevationLabel={elevationPreset.label}
+				elevationSteps={ELEVATION_STEPS}
+				seedImage={seedImage}
+				onChange={(angles) => {
+					setAzimuthDeg(angles.azimuthDeg)
+					setElevationDeg(angles.elevationDeg)
+				}}
+			/>
+
 			<div className="grid gap-3 sm:grid-cols-2">
 				<div className="flex flex-col gap-2">
 					<Label htmlFor="camera-azimuth">방향</Label>
 					<select
 						id="camera-azimuth"
-						value={azimuth}
-						onChange={(event) => setAzimuth(event.currentTarget.value as CameraAzimuth)}
+						value={azimuthPreset.value}
+						onChange={(event) => {
+							const preset = AZIMUTH_PRESETS.find(
+								(item) =>
+									item.value === (event.currentTarget.value as CameraAzimuth),
+							)
+							if (preset) setAzimuthDeg(preset.degrees)
+						}}
 						className={SELECT_CLASS}
 					>
 						{AZIMUTH_PRESETS.map((preset) => (
@@ -122,10 +150,14 @@ export function ImageCameraPresets({
 					<Label htmlFor="camera-elevation">높이</Label>
 					<select
 						id="camera-elevation"
-						value={elevation}
-						onChange={(event) =>
-							setElevation(event.currentTarget.value as CameraElevation)
-						}
+						value={elevationPreset.value}
+						onChange={(event) => {
+							const preset = ELEVATION_PRESETS.find(
+								(item) =>
+									item.value === (event.currentTarget.value as CameraElevation),
+							)
+							if (preset) setElevationDeg(preset.degrees)
+						}}
 						className={SELECT_CLASS}
 					>
 						{ELEVATION_PRESETS.map((preset) => (

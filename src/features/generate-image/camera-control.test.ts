@@ -49,7 +49,8 @@ describe('camera adjustment contract', () => {
 		const result = JSON.parse(
 			composeCameraAdjustmentPrompt(
 				JSON.stringify({
-					composition: 'ISO-metric view',
+					camera: 'Isometric three-quarter view',
+					composition: 'Centered composition',
 					style: 'technical illustration',
 					subject: '유조선',
 				}),
@@ -59,7 +60,7 @@ describe('camera adjustment contract', () => {
 
 		expect(result).toMatchObject({
 			camera: 'front-right three-quarter view, slightly elevated camera angle',
-			composition: 'ISO-metric view',
+			composition: 'Centered composition',
 			style: 'technical illustration',
 			subject: '유조선',
 		})
