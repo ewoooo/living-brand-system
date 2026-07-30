@@ -230,7 +230,7 @@
 | 생성·수집 | Manager가 템플릿 이름, 설명, Figma 노드 또는 템플릿 파일 참조를 입력하면 Template을 생성한다. |
 | 전송 | 템플릿 메타데이터는 Payload API로 전달하고, 원본은 Figma node 또는 파일 업로드 흐름으로 참조한다. |
 | 저장 | TemplateSourceRef, LayoutSpec, TextStyleSpec, EditableBlockSpec, TemplateUsageCondition, TemplateVersion을 함께 저장한다. |
-| 처리 | 지정된 레이아웃, 텍스트 스타일, 텍스트 블록, 에셋 슬롯, 컬러 토큰과 연결된 CheckKey, BrandAssetVersionRef를 검증한다. |
+| 처리 | 지정된 레이아웃, 텍스트 스타일, 텍스트 블록, 에셋 슬롯, 컬러 토큰과 BrandAssetVersionRef를 검증한다. |
 | 활용 | AssetGenerationSession에서 산출물 제작 형식으로 사용하고, Brand asset generation service가 React 또는 HTML 편집 노드로 변환한다. |
 | 공유·제공 | Creator에게 live 상태의 TemplateVersion만 제공한다. |
 | 보관 | TemplateVersion과 사용 조건 변경 이력을 보관한다. |

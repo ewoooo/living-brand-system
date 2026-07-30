@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { findPublishedScenarioCheckRecords } from '@/features/asset-check/repositories/available-scenario-check.payload.repository'
+import { findPublishedScenarioCheckRecords } from '../repositories/available-scenario-check.payload.repository'
 import {
 	listAvailableScenarioChecks,
 	validateCheckScenarioKey,
 	validateCheckScenarioKeys,
 } from './list-available-scenario-checks.service'
 
-vi.mock('@/features/asset-check/repositories/available-scenario-check.payload.repository', () => ({
+vi.mock('../repositories/available-scenario-check.payload.repository', () => ({
 	findPublishedScenarioCheckRecords: vi.fn(),
 }))
 

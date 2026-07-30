@@ -11,8 +11,8 @@ import {
 import type { JSONFieldClientComponent } from 'payload'
 import { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
-import { contrastOptionsSchema } from '@/features/asset-check/checkers/contrast.checker'
-import { relationshipId } from '@/features/guideline/utils/block-text'
+import { contrastOptionsSchema } from '@/features/quality-rule/contrast-options'
+import { relationshipId } from '@/features/quality-rule/relationship-id'
 import { siblingPath } from './sibling-path'
 
 type ResolvedChecker = { id: number; key: string | null }

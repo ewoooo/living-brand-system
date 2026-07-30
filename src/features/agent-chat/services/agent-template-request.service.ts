@@ -8,7 +8,6 @@ import {
 	findAgentTemplate,
 	listAgentTemplates,
 } from '../repositories/agent-template.payload.repository'
-import { listAgentChecks } from './get-agent-guideline-context.service'
 
 export const templateSlotValueSchema = z.object({
 	text: z.string().max(1000).optional(),
@@ -38,8 +37,7 @@ export type AgentTemplateImageAttachment = {
  * Payload 템플릿 조회는 agent template repository가 담당한다.
  */
 export async function findTemplatesForRequest(user: unknown, query?: string) {
-	const [templates, checks] = await Promise.all([listAgentTemplates(user), listAgentChecks(user)])
-	const checksByKey = new Map(checks.map((check) => [check.key, check]))
+	const templates = await listAgentTemplates(user)
 	const normalizedQuery = query?.trim().toLowerCase()
 
 	const summaries = templates
@@ -50,7 +48,6 @@ export async function findTemplatesForRequest(user: unknown, query?: string) {
 						id: template.id,
 						name: template.name,
 						description: template.description || '',
-						checks: getTemplateChecks(template.templateChecks, checksByKey),
 						slots,
 					}
 				: null
@@ -59,16 +56,7 @@ export async function findTemplatesForRequest(user: unknown, query?: string) {
 
 	const matches = normalizedQuery
 		? summaries.filter((template) =>
-				[
-					template.name,
-					template.description,
-					...template.checks.flatMap((check) => [
-						check.title,
-						check.description,
-						check.body,
-					]),
-					...template.slots.map((slot) => slot.label),
-				]
+				[template.name, template.description, ...template.slots.map((slot) => slot.label)]
 					.join(' ')
 					.toLowerCase()
 					.includes(normalizedQuery),
@@ -133,26 +121,6 @@ function toTemplateSlotSummary(slot: TemplateSlot): AgentSlotSummary {
 		maxLines: slot.input.maxLines,
 		aiInstruction: slot.input.aiInstruction,
 	}
-}
-
-function getTemplateChecks(
-	templateChecks: AgentTemplateDocument['templateChecks'],
-	checksByKey: Map<string, { evidence: string; title: string }>,
-) {
-	return (templateChecks ?? [])
-		.flatMap((placement) => {
-			if (!placement.checkKey) return []
-			const check = checksByKey.get(placement.checkKey)
-			return [
-				{
-					key: placement.checkKey,
-					title: check?.title ?? placement.checkKey,
-					description: check?.evidence ?? '',
-					body: placement.body || '',
-				},
-			]
-		})
-		.filter((check) => check.title || check.description || check.body)
 }
 
 type AgentSlotSummary = {

@@ -5,7 +5,7 @@ import {
 	guidelineBreadcrumbCount,
 	guidelineDocumentTypeLabel,
 } from '@/components/admin/guideline-document-tree'
-import { checkKeyFromEnglishTitle } from '@/features/guideline/checks/check-key-from-english-title'
+import { checkKeyFromEnglishTitle } from '@/features/quality-rule/check-key-from-english-title'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 import { CarouselBlock } from '../blocks/carousel/schema'
 import { ContentColumnsBlock } from '../blocks/content-columns/schema'

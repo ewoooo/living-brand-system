@@ -154,8 +154,9 @@ flowchart LR
   AgentAdapter["Agent adapter / tool set"]
 
   subgraph Storage["Records and files"]
-    GuidelineStore["Guideline records<br/>(BrandGuideline / GuidelineSection / GuidelinePage / Check)"]
-    BrandResourceStore["Brand resource records<br/>(RuleChecker / Asset metadata / Template metadata / Plugin ref)"]
+    GuidelineStore["Guideline records<br/>(BrandGuideline / GuidelineSection / GuidelinePage / Rule placement)"]
+    QualityRuleStore["Quality rule records<br/>(Rule / RuleChecker / CheckScenario)"]
+    BrandResourceStore["Brand resource records<br/>(Asset metadata / Template metadata / Plugin ref)"]
     BrandAssetGenerationStore["Brand asset generation records<br/>(AssetGenerationSession / AssetGenerationInput / AssetGenerationOutput)"]
     QualityStore["Quality session records<br/>(QASession / CheckSession)"]
     BehaviorEventStore["Behavior event logs<br/>(BehaviorEventLog)"]
@@ -238,7 +239,8 @@ Brand resource records는 메타데이터와 참조만 보관하고, 실제 파�
 | 서비스 | 담당 유즈케이스 | 내부 도메인 서비스 | 주요 이벤트 |
 | --- | --- | --- | --- |
 | Guideline publishing service | GL-01~13 | GuidelinePublishService | GuidelinePublished, GuidelineScheduled, GuidelineDeprecated |
-| Brand resource publishing service | RULE-01~04, RES-01~26 | RuleConflictCheckService, AssetPublishService, TemplatePublishService, PluginPublishService | Rule*, BrandAsset*, Template*, Plugin*, ResourceLinkedToGuideline |
+| Quality rule publishing service | RULE-01~04 | RuleReferenceIntegrityService, RuleOptionsValidationService | Rule*, RuleChecker*, CheckScenario* |
+| Brand resource publishing service | RES-01~26 | AssetPublishService, TemplatePublishService, PluginPublishService | BrandAsset*, Template*, Plugin*, ResourceLinkedToGuideline |
 | Usage query service | LOG-01~05 | UsageQueryService | - |
 | Behavior event service | LOG-06 | BehaviorEventIngestService, BehaviorEventQueryService | BehaviorEventCaptured |
 | Brand asset generation service | GEN-01~11 | BrandAssetGenerationService | AssetGenerationSessionStarted, AssetGenerationInputChanged, AssetGenerationPreviewGenerated, AssetGenerationOutputCreated, AssetGenerationSessionCompleted |
@@ -252,13 +254,14 @@ Brand resource records는 메타데이터와 참조만 보관하고, 실제 파�
 ##### 가이드라인 관리
 
 가이드라인 관리는 Payload CMS supported 흐름으로 처리합니다.
-가이드라인 본문, 섹션, 페이지, 정책, 자원 연결의 편집, draft/publish 상태, 예약 발행, Payload revision, diff/restore는 Payload CMS가 맡습니다.
-Guideline publishing service와 Brand resource publishing service는 같은 흐름 안에서 publish 결과 후처리, 충돌 확인, resource link 정리를 담당합니다.
+가이드라인 본문, 섹션, 페이지, Rule 배치, 자원 연결의 편집, draft/publish 상태, 예약 발행, Payload revision, diff/restore는 Payload CMS가 맡습니다.
+Rule 정의·Checker 계약·CheckScenario 발행은 Quality rule publishing service가 별도로 맡고, Guideline publishing service와 Brand resource publishing service는 가이드라인 및 자원 publish 결과 후처리를 담당합니다.
 사용자에게 보여주는 화면은 별도 서브도메인이 아니라 Server render route handler가 published guideline과 linked resource를 읽어 만든 결과입니다.
 
 | 흐름 | 담당 | 입력 | 결과 |
 | --- | --- | --- | --- |
-| CMS edit / publish | collection, access control, hooks, drafts, scheduled publish, Payload revision, diff/restore, GuidelinePublishService, RuleConflictCheckService, AssetPublishService, TemplatePublishService, PluginPublishService | Admin request | CMS 편집 상태, publish 상태, Payload revision, ResourceLinkedToGuideline |
+| Rule edit / publish | Rule·RuleChecker·CheckScenario collection, access control, hooks, drafts, QualityRuleService | Admin request | 독립 Rule 기준과 발행 상태 |
+| Guideline / resource edit / publish | collection, access control, hooks, drafts, scheduled publish, Payload revision, diff/restore, GuidelinePublishService, AssetPublishService, TemplatePublishService, PluginPublishService | Admin request | CMS 편집 상태, publish 상태, Payload revision, ResourceLinkedToGuideline |
 | Guideline render | Server render route handler | Guideline page request | Rendered guideline view |
 
 ```mermaid
@@ -267,7 +270,7 @@ flowchart TB
   GuidelineRequest["Guideline page request"]
 
   subgraph PayloadSupported["Payload CMS supported"]
-    Collections["Collections: guideline / page block / resource"]
+    Collections["Collections: guideline / page block / rule / resource"]
     Access["Access control"]
     Hooks["Hooks"]
     Draft["Guideline / resource draft"]
@@ -276,13 +279,15 @@ flowchart TB
     DiffRestore["Diff / restore"]
     EditState["CMS edit state"]
     PublishResult["Payload publish result"]
+    QualityRuleService["Quality rule publishing service"]
     GuidelineService["Guideline publishing service"]
     ResourceService["Brand resource publishing service"]
-    ConflictCheck["RuleConflictCheckService"]
+    RuleIntegrity["RuleReferenceIntegrityService"]
   end
 
   subgraph Repositories["Repositories / adapters"]
     GuidelineRepository["Guideline records repository"]
+    QualityRuleRepository["Quality rule records repository"]
     BrandResourceRepository["Brand resource records repository"]
   end
 
@@ -299,12 +304,13 @@ flowchart TB
   Revision --> EditState
 
   PublishState --> PublishResult
+  PublishResult --> QualityRuleService
   PublishResult --> GuidelineService
   PublishResult --> ResourceService
+  QualityRuleService --> RuleIntegrity
+  RuleIntegrity -->|"read Rule references"| QualityRuleRepository
   GuidelineService -->|"read / update published guideline"| GuidelineRepository
   ResourceService -->|"read / update resource links"| BrandResourceRepository
-  ResourceService --> ConflictCheck
-  ConflictCheck -->|"read checks / linked assets"| BrandResourceRepository
 
   GuidelineRequest --> ServerRender
   ServerRender -->|"read published guideline"| GuidelineRepository
@@ -493,7 +499,8 @@ flowchart TB
 | 후보 | 관리 단위 | 주요 관계 |
 | --- | --- | --- |
 | `guideline` global | BrandGuideline | 단일 가이드라인 설정 |
-| `guideline-documents` | GuidelineDocument | 계층 깊이로 장·섹션·페이지를 표현하고 blocks와 자체 checks를 소유 |
+| `guideline-documents` | GuidelineDocument | 계층 깊이로 장·섹션·페이지를 표현하고 blocks와 Rule 배치·근거를 소유 |
+| `rules` | Rule | 문서와 독립된 검수 기준, 메시지, RuleChecker 관계를 관리 |
 | `check-scenarios` | CheckScenario | 검수 목적별 이름, 설명과 순서가 있는 CheckKey 목록을 관리 |
 | `rule-checkers` | RuleChecker | executor 유형과 checker 또는 model binding을 1:1로 관리하는 검사 도구 계약 |
 | `brand-logos` | BrandLogo | guideline document, asset generation session, check basis에서 참조 |
@@ -525,7 +532,7 @@ flowchart TB
 | 표준 용어 | 의미 |
 | --- | --- |
 | Payload revision | Payload CMS가 남기는 편집 이력입니다. Admin diff와 restore에 사용합니다. |
-| Official Version | Creator와 Agent가 참조하는 발행 기준입니다. GuidelineVersion, RuleCheckerVersion, BrandAssetVersion, TemplateVersion, PluginVersion이 여기에 속합니다. Check는 GuidelineVersion에 포함됩니다. |
+| Official Version | Creator와 Agent가 참조하는 발행 기준입니다. GuidelineVersion, RuleVersion, RuleCheckerVersion, BrandAssetVersion, TemplateVersion, PluginVersion이 여기에 속합니다. Rule은 GuidelineVersion과 독립된 발행 생명주기를 가집니다. |
 | VersionStatus | Official Version의 상태입니다. `stage`, `live`, `archived`를 사용합니다. |
 | VersionRef | 실행 기록이 특정 Official Version을 가리키는 참조값입니다. |
 | ResourceRef | 에셋 제너레이션이 사용하는 published guideline, CheckKey, asset, template, plugin 참조 묶음입니다. 품질 검수는 선택된 Check를 CheckRulesetSnapshot으로 고정합니다. |

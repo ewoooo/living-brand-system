@@ -1,8 +1,8 @@
 import type { PayloadRequest } from 'payload'
-import type { CheckExecutor } from '@/features/asset-check/checkers/types'
+import type { RuleExecutor } from '../rule-executor'
 
 export interface ScenarioCheckRecord {
-	executor?: CheckExecutor
+	executor?: RuleExecutor
 	key: string
 	title: string
 	titleKo?: string

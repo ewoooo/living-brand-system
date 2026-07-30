@@ -1,13 +1,13 @@
 import type { PayloadRequest } from 'payload'
-import { contrastOptionsSchema } from '@/features/asset-check/checkers/contrast.checker'
-import { relationshipId } from '@/features/guideline/utils/block-text'
-import { getGuidelineRuleCheckerSummary } from '../repositories/guideline-document.payload.repository'
+import { contrastOptionsSchema } from '../contrast-options'
+import { relationshipId } from '../relationship-id'
+import { getRuleCheckerSummary } from '../repositories/rule-checker.payload.repository'
 
 /**
- * Deterministic Guideline Check의 Checker별 options 저장 규칙을 검증한다.
- * RuleChecker 조회와 Payload 변환 I/O는 guideline-document repository가 소유한다.
+ * Deterministic Rule의 Checker별 options 저장 규칙을 검증한다.
+ * RuleChecker 조회와 Payload 변환 I/O는 rule-checker repository가 소유한다.
  */
-export async function validateGuidelineCheckOptionsValue({
+export async function validateRuleOptionsValue({
 	checkerValue,
 	executor,
 	req,
@@ -26,7 +26,7 @@ export async function validateGuidelineCheckOptionsValue({
 			: undefined
 	const checkerId = relationshipId(checkerValue)
 	if (typeof checkerKey !== 'string' && checkerId !== null) {
-		const checker = await getGuidelineRuleCheckerSummary(req, checkerId)
+		const checker = await getRuleCheckerSummary(req, checkerId)
 		checkerKey = checker.checkerKey
 	}
 

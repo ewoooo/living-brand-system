@@ -10,7 +10,7 @@ import {
 	listAvailableScenarioChecks,
 	validateCheckScenarioKey,
 	validateCheckScenarioKeys as validateCheckScenarioKeysUseCase,
-} from '@/features/asset-check/services/list-available-scenario-checks.service'
+} from '@/features/quality-rule/services/list-available-scenario-checks.service'
 import { authenticated, isManager, managerOrAdmin } from '@/lib/auth'
 import { draftVersions } from './shared'
 

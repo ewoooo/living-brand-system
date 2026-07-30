@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import type { CheckSection } from '@/features/asset-check/domain/runtime-check'
-import { INITIAL_CHECK_SCENARIOS } from '@/features/asset-check/scenarios'
 import type { CheckImage } from '@/features/asset-check/types'
 import { buildCheckReviewView } from '@/features/asset-check/utils/build-check-review-view'
+import { INITIAL_CHECK_SCENARIOS } from '@/features/quality-rule/check-scenario'
 
 const sections: CheckSection[] = [
 	{
