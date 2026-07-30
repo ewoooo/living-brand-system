@@ -125,8 +125,5 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 			]).join('\n')
 		case 'block':
 			return `leaf ${evidence.childCount}개를 담은 블록`
-		// ⚠️ SPIKE (임시) — block-widget-separation 검증용. 제거 시 이 case 삭제.
-		case 'blockSpike':
-			return `[spike] 위젯 ${evidence.widgetCount}개`
 	}
 }

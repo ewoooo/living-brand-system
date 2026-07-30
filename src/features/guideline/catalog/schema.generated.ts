@@ -2,7 +2,6 @@
 
 import type { Block } from 'payload'
 import BlockSchema from '../blocks/block/schema'
-import BlockSpikeSchema from '../blocks/block-spike/schema'
 import CalloutSchema from '../blocks/callout/schema'
 import CarouselSchema from '../blocks/carousel/schema'
 import ColorPairingSchema from '../blocks/color-pairing/schema'
@@ -42,7 +41,6 @@ export const guidelineBlockSchemas = {
 	layoutGrid: LayoutGridSchema,
 	glyphGrid: GlyphGridSchema,
 	block: BlockSchema,
-	blockSpike: BlockSpikeSchema,
 	colorPairing: ColorPairingSchema,
 	colorPairingRecommendation: ColorPairingRecommendationSchema,
 	iconGrid: IconGridSchema,

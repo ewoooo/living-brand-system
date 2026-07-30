@@ -251,7 +251,6 @@ export interface GuidelineDocument {
         | LayoutGridBlock
         | GlyphGridBlock
         | LayoutBlock
-        | BlockSpikeBlock
         | ColorPairingBlock
         | ColorPairingRecommendationBlock
         | IconGridBlock
@@ -1033,27 +1032,6 @@ export interface TypeSpecimenWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'typeSpecimenWidget';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "BlockSpikeBlock".
- */
-export interface BlockSpikeBlock {
-  /**
-   * 위젯 배치 열 수입니다.
-   */
-  columns?: number | null;
-  /**
-   * 이 블록이 호스팅할 위젯들입니다.
-   */
-  widgets?: ColorPaletteWidget[] | null;
-  /**
-   * 이 문서 단위에 적용할 검수 규칙입니다.
-   */
-  rules?: (number | Rule)[] | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'blockSpike';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2299,7 +2277,6 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         layoutGrid?: T | LayoutGridBlockSelect<T>;
         glyphGrid?: T | GlyphGridBlockSelect<T>;
         block?: T | LayoutBlockSelect<T>;
-        blockSpike?: T | BlockSpikeBlockSelect<T>;
         colorPairing?: T | ColorPairingBlockSelect<T>;
         colorPairingRecommendation?: T | ColorPairingRecommendationBlockSelect<T>;
         iconGrid?: T | IconGridBlockSelect<T>;
@@ -2700,21 +2677,6 @@ export interface TypeScaleWidgetSelect<T extends boolean = true> {
  * via the `definition` "TypeSpecimenWidget_select".
  */
 export interface TypeSpecimenWidgetSelect<T extends boolean = true> {
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "BlockSpikeBlock_select".
- */
-export interface BlockSpikeBlockSelect<T extends boolean = true> {
-  columns?: T;
-  widgets?:
-    | T
-    | {
-        colorPaletteWidget?: T | ColorPaletteWidgetSelect<T>;
-      };
-  rules?: T;
   id?: T;
   blockName?: T;
 }
