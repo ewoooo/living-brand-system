@@ -1,21 +1,21 @@
 import type { Payload, PayloadRequest } from 'payload'
 import type { User } from '@/payload-types'
 
-export interface StoredFigmaAsset {
+export interface StoredImportedApplicationImage {
 	collection: 'application-images'
 	id: number
 	url: string
 }
 
 /**
- * Figma 렌더 결과를 공개 승인 전 Application Images draft로 저장한다.
+ * 외부 import 결과를 공개 승인 전 Application Images draft로 저장한다.
  * Payload upload/storage I/O와 filename 기반 중복 제거는 이 repository가 소유한다.
  */
-export async function storeDraftFigmaAsset(
+export async function storeDraftImportedApplicationImage(
 	payload: Payload,
 	user: User,
 	input: { data: Buffer; filename: string; mimeType: string; name: string },
-): Promise<StoredFigmaAsset & { created: boolean }> {
+): Promise<StoredImportedApplicationImage & { created: boolean }> {
 	const found = await payload.find({
 		collection: 'application-images',
 		depth: 0,
@@ -69,7 +69,7 @@ export async function storeDraftFigmaAsset(
 }
 
 /** 실패한 임포트가 이번 요청에서 만든 Application Images draft만 제거한다. 파일 삭제는 upload adapter가 소유한다. */
-export async function deleteDraftFigmaAsset(
+export async function deleteDraftImportedApplicationImage(
 	payload: Payload,
 	user: User,
 	id: number,
@@ -83,10 +83,10 @@ export async function deleteDraftFigmaAsset(
 }
 
 /**
- * Template 발행이 참조한 Figma import draft만 같은 트랜잭션에서 published로 승격한다.
+ * Template 발행이 참조한 import draft만 같은 트랜잭션에서 published로 승격한다.
  * 실제 Application Images 쓰기는 Payload Local API가 소유한다.
  */
-export async function publishImportedFigmaAssets(
+export async function publishDraftImportedApplicationImages(
 	req: PayloadRequest,
 	assetIds: readonly number[],
 ): Promise<void> {
