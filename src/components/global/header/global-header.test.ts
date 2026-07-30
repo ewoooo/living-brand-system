@@ -92,9 +92,13 @@ describe('GlobalHeader', () => {
 			'href',
 			'/studio/template',
 		)
-		expect(screen.getByRole('link', { name: 'Generate' })).toHaveAttribute(
+		expect(screen.getByRole('link', { name: 'Image' })).toHaveAttribute(
 			'href',
-			'/studio/generate',
+			'/studio/generate/image',
+		)
+		expect(screen.getByRole('link', { name: 'Graphic' })).toHaveAttribute(
+			'href',
+			'/studio/generate/graphic',
 		)
 		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute(
 			'href',
@@ -106,7 +110,7 @@ describe('GlobalHeader', () => {
 	})
 
 	it('Studio 하위 화면에서는 Overview와 현재 화면을 동시에 활성화하지 않는다', () => {
-		pathname = '/studio/generate'
+		pathname = '/studio/generate/graphic'
 
 		render(createElement(GlobalHeader, { guidelineChapters: [] }))
 		fireEvent.click(screen.getByRole('button', { name: 'Studio' }))
@@ -115,9 +119,9 @@ describe('GlobalHeader', () => {
 			.getByText('브랜드 자산을 활용해 결과물을 제작하고 검수합니다.')
 			.closest('[data-slot="navigation-menu-content"]')
 		const overview = studioContent?.querySelector('a[href="/studio"]')
-		const generate = studioContent?.querySelector('a[href="/studio/generate"]')
+		const graphic = studioContent?.querySelector('a[href="/studio/generate/graphic"]')
 
 		expect(overview).not.toHaveAttribute('aria-current')
-		expect(generate).toHaveAttribute('aria-current', 'page')
+		expect(graphic).toHaveAttribute('aria-current', 'page')
 	})
 })
