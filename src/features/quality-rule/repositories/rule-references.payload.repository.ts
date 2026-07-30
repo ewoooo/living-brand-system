@@ -1,5 +1,5 @@
 import type { PayloadRequest } from 'payload'
-import { relationshipId } from '../utils/block-text'
+import { relationshipId } from '../relationship-id'
 
 export interface RuleReferenceSources {
 	documents: { id: number; ruleIds: number[] }[]

@@ -450,7 +450,7 @@ export interface Rule {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Guideline Check를 실행할 도구와 호출 계약입니다.
+ * Rule을 실행할 도구와 호출 계약입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "rule-checkers".
@@ -1501,22 +1501,6 @@ export interface Template {
    * Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.
    */
   category: number | TemplateCategory;
-  /**
-   * Agent가 이 템플릿으로 이미지를 만들 때 함께 참고할 Check입니다.
-   */
-  templateChecks?:
-    | {
-        /**
-         * published 가이드라인 checks[]의 key를 입력합니다.
-         */
-        checkKey: string;
-        /**
-         * 이 템플릿에서 해당 Check를 적용할 때 Agent가 참고할 지침입니다.
-         */
-        body: string;
-        id?: string | null;
-      }[]
-    | null;
   /**
    * baseHtml(Figma 원본) + overrides(앱 편집)의 합성 결과입니다. 워크스페이스 편집·재import 시 자동 갱신됩니다.
    */
@@ -2978,13 +2962,6 @@ export interface TemplatesSelect<T extends boolean = true> {
   height?: T;
   printPpi?: T;
   category?: T;
-  templateChecks?:
-    | T
-    | {
-        checkKey?: T;
-        body?: T;
-        id?: T;
-      };
   html?: T;
   updatedAt?: T;
   createdAt?: T;

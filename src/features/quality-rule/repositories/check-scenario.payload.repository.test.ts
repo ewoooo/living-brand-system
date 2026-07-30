@@ -6,7 +6,7 @@ vi.mock('@payload-config', () => ({ default: {} }))
 vi.mock('payload', () => ({ getPayload: vi.fn() }))
 
 describe('findPublishedCheckScenarios', () => {
-	it('published이며 archived가 아닌 시나리오만 실행 계약으로 읽는다', async () => {
+	it('published이며 archived가 아닌 시나리오 정의만 읽는다', async () => {
 		const find = vi.fn().mockResolvedValue({
 			docs: [{ key: 'quick', title: '빠른 기본 검수', checkKeys: ['color.palette', null] }],
 		})

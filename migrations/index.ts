@@ -11,6 +11,7 @@ import * as migration_20260729_013432_add_template_print_ppi from './20260729_01
 import * as migration_20260729_024631_remove_json_templates from './20260729_024631_remove_json_templates';
 import * as migration_20260729_070436_technical_illustration_profile from './20260729_070436_technical_illustration_profile';
 import * as migration_20260730_020827_block_widget_separation from './20260730_020827_block_widget_separation';
+import * as migration_20260730_080926_remove_template_rule_references from './20260730_080926_remove_template_rule_references';
 
 export const migrations = [
   {
@@ -76,6 +77,11 @@ export const migrations = [
   {
     up: migration_20260730_020827_block_widget_separation.up,
     down: migration_20260730_020827_block_widget_separation.down,
-    name: '20260730_020827_block_widget_separation'
+    name: '20260730_020827_block_widget_separation',
+  },
+  {
+    up: migration_20260730_080926_remove_template_rule_references.up,
+    down: migration_20260730_080926_remove_template_rule_references.down,
+    name: '20260730_080926_remove_template_rule_references'
   },
 ];

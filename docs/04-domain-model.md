@@ -74,12 +74,16 @@ flowchart LR
     GuidelineSection["GuidelineSection"]
     GuidelinePage["GuidelinePage"]
     GuidelineBlock["GuidelineBlock"]
-    Rule["Rule"]
     PageAssetRef["PageAssetRef"]
   end
 
-  subgraph Resource["브랜드 자원 관리"]
+  subgraph QualityRule["품질 규칙 관리"]
+    Rule["Rule"]
     RuleChecker["RuleChecker"]
+    CheckScenario["CheckScenario"]
+  end
+
+  subgraph Resource["브랜드 자원 관리"]
     BrandAsset["BrandAsset"]
     Template["Template"]
     Plugin["Plugin"]
@@ -128,6 +132,7 @@ flowchart LR
   GuidelinePage -->|"적용(참조)"| Rule
   GuidelineBlock -->|"적용(참조)"| Rule
   Rule -->|"실행 계약"| RuleChecker
+  CheckScenario -->|"실행 범위"| Rule
   GuidelinePage -->|"소유"| PageAssetRef
   PageAssetRef -->|"자원 사용"| BrandAsset
   GuidelinePage -->|"템플릿 사용"| Template
@@ -188,9 +193,10 @@ flowchart LR
 | CheckResult -> CheckRecommendation | 점검 결과는 필요한 수정 권장 사항을 소유합니다. |
 | BrandGuideline / RuleChecker / BrandAsset / Template / Plugin -> Version | 발행 대상은 Official Version을 만들고, Version은 PreviousVersionRef와 PayloadRevisionRef를 보존합니다. |
 
-## 4. 가이드라인 관리
+## 4. 기준 정의와 가이드라인 관리
 
-가이드라인 관리는 브랜드 가이드라인, 공식 자원, Official Version을 관리하는 서브도메인입니다.
+품질 규칙 관리는 Rule, RuleChecker, CheckScenario의 정의와 생명주기를 소유하는 독립 바운디드 컨텍스트입니다.
+가이드라인 관리는 브랜드 가이드라인, 공식 자원, Official Version을 관리하며 Rule을 배치하고 문서 근거를 제공합니다.
 GuidelineSection과 GuidelinePage는 독립 문서입니다. GuidelineBlock은 Section 또는 Page가 소유한 임베디드 엔티티이며 식별자는 부모 문서 안에서만 유효합니다.
 GuidelineDocument는 Section과 Page를 함께 부르는 이름입니다.
 
@@ -203,6 +209,16 @@ Rule은 자체 draft/publish 생명주기를 가지며 문서 발행과 독립�
 
 ```text
 [도메인] 브랜드 운영 시스템
+ ├── [서브도메인] 품질 규칙 관리
+ │    └── [바운디드 컨텍스트] Rule 정의 및 발행
+ │         └── [도메인 모델]
+ │              ├── 애그리거트(관리 단위): Rule
+ │              │    └── 값 객체: RuleKey, Tier, Options, HeuristicCriteria, Messages
+ │              ├── 애그리거트(관리 단위): RuleChecker
+ │              │    └── 값 객체: RuleCheckerKey, ExecutorType, CheckerKey, ModelRef, PromptKey
+ │              ├── 애그리거트(관리 단위): CheckScenario
+ │              │    └── 값 객체: CheckScenarioKey, OrderedRuleKeyList
+ │              └── 도메인 서비스: RuleReferenceIntegrityService, RuleOptionsValidationService
  └── [서브도메인] 가이드라인 관리
       ├── [바운디드 컨텍스트] 브랜드 가이드라인 편집 및 발행
       │    └── [도메인 모델]
@@ -222,9 +238,6 @@ Rule은 자체 draft/publish 생명주기를 가지며 문서 발행과 독립�
       │              └── GuidelineVersionStaged, GuidelineVersionPublished, GuidelineVersionArchived
       ├── [바운디드 컨텍스트] 브랜드 자원 관리
       │    └── [도메인 모델]
-      │         ├── 애그리거트(관리 단위): RuleChecker
-      │         │    ├── 엔티티: RuleCheckerVersion
-      │         │    └── 값 객체: RuleCheckerKey, ExecutorType, CheckerKey, ModelRef, PromptKey
       │         ├── 애그리거트(관리 단위): BrandAsset
       │         │    ├── 엔티티: AssetFile
       │         │    ├── 엔티티: BrandAssetVersion
@@ -235,14 +248,12 @@ Rule은 자체 draft/publish 생명주기를 가지며 문서 발행과 독립�
       │         ├── 애그리거트(관리 단위): Plugin
       │         │    ├── 엔티티: PluginEntry, PluginCapability, PluginVersion
       │         │    └── 값 객체: PluginType, PluginUsageCondition
-      │         ├── 도메인 서비스: CheckKeyConflictService, AssetPublishService, TemplatePublishService, PluginPublishService, VersionPublishService, VersionCompareService
+      │         ├── 도메인 서비스: AssetPublishService, TemplatePublishService, PluginPublishService, VersionPublishService, VersionCompareService
       │         └── 도메인 이벤트
-      │              ├── GuidelineCheckAdded, GuidelineCheckUpdated
       │              ├── BrandAssetRegistered, BrandAssetPublished, BrandAssetDeprecated
       │              ├── TemplateRegistered, TemplatePublished, TemplateDeprecated
       │              ├── PluginRegistered, PluginPublished, PluginDeprecated
       │              ├── ResourceLinkedToGuideline
-      │              ├── RuleCheckerVersionStaged, RuleCheckerVersionPublished, RuleCheckerVersionArchived
       │              ├── BrandAssetVersionStaged, BrandAssetVersionPublished, BrandAssetVersionArchived
       │              ├── TemplateVersionStaged, TemplateVersionPublished, TemplateVersionArchived
       │              └── PluginVersionStaged, PluginVersionPublished, PluginVersionArchived
@@ -251,7 +262,7 @@ Rule은 자체 draft/publish 생명주기를 가지며 문서 발행과 독립�
            └── PreviousVersionRef, VersionReason, VersionResourceType
 ```
 
-### 가이드라인 관리 하위 도메인 관계도
+### 기준 정의와 가이드라인 관계도
 
 ```mermaid
 flowchart LR
@@ -260,12 +271,16 @@ flowchart LR
     Section["GuidelineSection"]
     Page["GuidelinePage"]
     Block["GuidelineBlock"]
-    Rule["Rule"]
     PageAssetRefNode["PageAssetRef"]
   end
 
-  subgraph Resource["브랜드 자원 관리"]
+  subgraph QualityRule["품질 규칙 관리"]
+    Rule["Rule"]
     RuleChecker["RuleChecker"]
+    CheckScenario["CheckScenario"]
+  end
+
+  subgraph Resource["브랜드 자원 관리"]
     BrandAsset["BrandAsset"]
     Template["Template"]
     Plugin["Plugin"]
@@ -278,6 +293,7 @@ flowchart LR
   Page -->|"적용(참조)"| Rule
   Block -->|"적용(참조)"| Rule
   Rule -->|"실행 계약"| RuleChecker
+  CheckScenario -->|"실행 범위"| Rule
   Page -->|"소유"| PageAssetRefNode
   PageAssetRefNode -->|"자원 사용"| BrandAsset
   Page -->|"템플릿 사용"| Template

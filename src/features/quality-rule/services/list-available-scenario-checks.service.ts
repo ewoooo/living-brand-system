@@ -1,8 +1,8 @@
-import type { CheckExecutor } from '@/features/asset-check/checkers/types'
-import { findPublishedScenarioCheckRecords } from '@/features/asset-check/repositories/available-scenario-check.payload.repository'
+import { findPublishedScenarioCheckRecords } from '../repositories/available-scenario-check.payload.repository'
+import type { RuleExecutor } from '../rule-executor'
 
 export interface AvailableScenarioCheck {
-	executor?: CheckExecutor
+	executor?: RuleExecutor
 	key: string
 	title: string
 }

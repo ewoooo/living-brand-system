@@ -1,7 +1,7 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type { CheckScenario } from '@/features/asset-check/scenarios'
 import type { User } from '@/payload-types'
+import type { CheckScenario } from '../check-scenario'
 
 /** published이며 archived가 아닌 CheckScenario를 Payload에서 읽는다. */
 export async function findPublishedCheckScenarios(user?: User): Promise<CheckScenario[]> {

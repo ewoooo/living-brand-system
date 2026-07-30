@@ -7,8 +7,8 @@ import * as agentTemplateRepository from '@/features/agent-chat/repositories/age
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { getAgentCitations } from '@/features/agent-chat/utils/get-agent-citations'
 import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-parts'
-import * as checkScenarioService from '@/features/asset-check/services/get-check-scenarios.service'
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
+import * as checkScenarioService from '@/features/quality-rule/services/get-check-scenarios.service'
 import * as checkSessionService from '@/services/start-check-session.service'
 
 const textNode = ({
@@ -232,46 +232,24 @@ describe('agent tools', () => {
 		expect((result as { summary: string }).summary).toContain('통과로 판단할 수 없습니다')
 	})
 
-	it('lists published templates with open slots and template Checks', async () => {
-		vi.spyOn(agentGuidelineContext, 'listAgentChecks').mockResolvedValue([
-			{
-				evidence: 'Use the legal name.',
-				key: 'name.input',
-				tier: 'required',
-				title: 'Name input',
-			},
-		])
+	it('lists published templates with open slots', async () => {
 		vi.spyOn(agentTemplateRepository, 'listAgentTemplates').mockResolvedValue([
 			{
 				id: 3,
 				name: 'Business card',
 				description: 'Name card template',
-				templateChecks: [
-					{
-						body: 'Ask only for slots returned by the template.',
-						checkKey: 'name.input',
-					},
-				],
 				...htmlTemplate({ name: { input: { label: '이름' } } }, textNode()),
 			},
 		] as never)
 		const tools = getAgentTools()
 
-		const result = await tools.findTemplatesForRequest.execute?.({ query: 'legal' }, {
+		const result = await tools.findTemplatesForRequest.execute?.({ query: 'Business' }, {
 			context: { user: { id: 1 } },
 		} as never)
 
 		expect(result).toEqual([
 			expect.objectContaining({
 				id: 3,
-				checks: [
-					{
-						key: 'name.input',
-						title: 'Name input',
-						description: 'Use the legal name.',
-						body: 'Ask only for slots returned by the template.',
-					},
-				],
 				slots: [expect.objectContaining({ id: 'name', label: '이름' })],
 			}),
 		])
@@ -283,7 +261,6 @@ describe('agent tools', () => {
 				id: 7,
 				name: '신규입사자 웰컴 카드',
 				description: null,
-				templateChecks: [],
 				...htmlTemplate({ name: { input: { label: '이름' } } }, textNode()),
 			},
 		] as never)
@@ -303,7 +280,6 @@ describe('agent tools', () => {
 				id: 7,
 				name: '환영 카드',
 				description: '신규 입사자에게 온라인으로 배부되는 카드',
-				templateChecks: [],
 				...htmlTemplate({ name: { input: { label: '이름 (한글)' } } }, textNode()),
 			},
 		] as never)

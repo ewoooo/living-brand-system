@@ -3,6 +3,8 @@
  * 새 checker는 신식 계약(측정 전용 DeterministicChecker + evaluator 기준 비교, contrast 참조)으로
  * 작성하고 deterministicCheckers에 등록한다. checkers 맵(판정 자체 소유·기준 하드코딩)은 구식 계약이다.
  */
+
+import { contrastOptionsSchema } from '@/features/quality-rule/contrast-options'
 import { backgroundToneChecker } from './background-tone.checker'
 import {
 	type CanvasFormat,
@@ -12,7 +14,7 @@ import {
 import { clearSpaceChecker } from './clear-space.checker'
 import { colorCombinationChecker } from './color-combination.checker'
 import { extractDominantColorPair } from './color-pair.extractor'
-import { contrastChecker, contrastOptionsSchema } from './contrast.checker'
+import { contrastChecker } from './contrast.checker'
 import { evaluateExtraction, evaluateMeasurement } from './deterministic.evaluator'
 import { paletteComplianceChecker } from './palette-compliance.checker'
 import { relativeSizeChecker } from './relative-size.checker'
