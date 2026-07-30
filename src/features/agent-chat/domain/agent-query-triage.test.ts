@@ -3,8 +3,8 @@ import { agentQueryTriageSchema, decideAgentQueryTriage } from './agent-query-tr
 
 describe('agent query triage', () => {
 	it.each([
-		['quick', 'sonnet-4.6', 'none'],
-		['lookup', 'sonnet-4.6', 'read'],
+		['quick', 'sonnet-5', 'none'],
+		['lookup', 'sonnet-5', 'read'],
 		['research', 'opus-5.0', 'read'],
 		['action', 'opus-5.0', 'action'],
 	] as const)('%s 요청의 실행 수준을 결정한다', (responseMode, model, toolScope) => {

@@ -10,14 +10,14 @@ export const agentQueryTriageSchema = z.strictObject({
 export type AgentQueryTriageProposal = z.infer<typeof agentQueryTriageSchema>
 
 const executionByMode = {
-	quick: { model: 'sonnet-4.6', toolScope: 'none' },
-	lookup: { model: 'sonnet-4.6', toolScope: 'read' },
+	quick: { model: 'sonnet-5', toolScope: 'none' },
+	lookup: { model: 'sonnet-5', toolScope: 'read' },
 	research: { model: 'opus-5.0', toolScope: 'read' },
 	action: { model: 'opus-5.0', toolScope: 'action' },
 } as const
 
 export type AgentQueryTriageDecision = AgentQueryTriageProposal & {
-	model: 'sonnet-4.6' | 'opus-5.0'
+	model: 'sonnet-5' | 'opus-5.0'
 	toolScope: 'none' | 'read' | 'action'
 	reviewRequired: boolean
 }
