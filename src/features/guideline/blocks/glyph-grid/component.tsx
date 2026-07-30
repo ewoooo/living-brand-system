@@ -37,16 +37,22 @@ const codepoint = (ch: string) =>
 type Metrics = { ascender: number; descender: number; headline: number; xLine: number }
 
 export function GlyphGridBlock({ block }: { block: GlyphGridType }) {
-	const viewProps = useGlyphGrid(block)
-	return <GlyphGridView block={block} {...viewProps} />
+	return (
+		<GuidelineBlockFrame layout="padded" variant="inverted" label={block.title ?? undefined}>
+			<div className="sr-only">
+				<GuidelineHeader variant="block" title={block.title} />
+			</div>
+			<GlyphGridBody typeface={block.typeface} />
+		</GuidelineBlockFrame>
+	)
 }
 
 export default GlyphGridBlock
 
-function useGlyphGrid(block: GlyphGridType) {
+function useGlyphGrid(typeface: GlyphGridType['typeface']) {
 	const [active, setActive] = useState('A')
 	const [metrics, setMetrics] = useState<Metrics | null>(null)
-	const family = resolveTypeface(block.typeface)?.familyName ?? null
+	const family = resolveTypeface(typeface)?.familyName ?? null
 	const fontFamily = family ? `"${family}", var(--font-title)` : 'var(--font-title)'
 
 	useEffect(() => {
@@ -112,67 +118,54 @@ function useGlyphGrid(block: GlyphGridType) {
 	return { active, metrics, fontFamily, onGlyphActivate: setActive }
 }
 
-function GlyphGridView({
-	block,
-	active,
-	metrics,
-	fontFamily,
-	onGlyphActivate,
-}: {
-	block: GlyphGridType
-	active: string
-	metrics: Metrics | null
-	fontFamily: string
-	onGlyphActivate: (glyph: string) => void
-}) {
+// 프레임/헤더 없는 시각 본체 — Block(컨테이너)과 dev 위젯 갤러리가 공유한다. author 인스턴스 비의존.
+export function GlyphGridBody({ typeface }: { typeface: GlyphGridType['typeface'] }) {
+	const { active, metrics, fontFamily, onGlyphActivate } = useGlyphGrid(typeface)
 	return (
-		<GuidelineBlockFrame layout="padded" variant="inverted" label={block.title ?? undefined}>
-			<section>
-				<div className="sr-only">
-					<TypefaceFontFace typeface={block.typeface} />
-					<GuidelineHeader variant="block" title={block.title} />
-				</div>
-				<div className="grid gap-6 md:grid-cols-2">
-					<div className="relative aspect-square overflow-hidden border border-current/50 bg-current/5">
-						{metrics && Number.isFinite(metrics.headline) ? (
-							<GlyphStage glyph={active} metrics={metrics} fontFamily={fontFamily} />
-						) : (
-							<div className="flex size-full items-center justify-center">
-								<span
-									className="text-9xl text-current"
-									style={{
-										fontFamily,
-										lineHeight: 1,
-									}}
-								>
-									{active}
-								</span>
-							</div>
-						)}
-						<span className="absolute bottom-4 left-4 font-body text-current/60 text-xs font-normal tabular-nums">
-							{codepoint(active)}
-						</span>
-					</div>
-
-					<div className="grid grid-cols-8 self-start rounded-sm border-current/50 border-t border-l">
-						{GLYPHS.map((ch) => (
-							<button
-								key={ch}
-								type="button"
-								onMouseEnter={() => onGlyphActivate(ch)}
-								onFocus={() => onGlyphActivate(ch)}
-								data-active={ch === active}
-								aria-label={`${ch} (${codepoint(ch)})`}
-								className="flex aspect-square items-center justify-center border-current/50 border-r border-b text-5xl text-current transition-colors hover:bg-current/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/30 data-[active=true]:bg-current/10"
-								style={{ fontFamily }}
+		<section>
+			<div className="sr-only">
+				<TypefaceFontFace typeface={typeface} />
+			</div>
+			<div className="grid gap-6 md:grid-cols-2">
+				<div className="relative aspect-square overflow-hidden border border-current/50 bg-current/5">
+					{metrics && Number.isFinite(metrics.headline) ? (
+						<GlyphStage glyph={active} metrics={metrics} fontFamily={fontFamily} />
+					) : (
+						<div className="flex size-full items-center justify-center">
+							<span
+								className="text-9xl text-current"
+								style={{
+									fontFamily,
+									lineHeight: 1,
+								}}
 							>
-								{ch}
-							</button>
-						))}
-					</div>
+								{active}
+							</span>
+						</div>
+					)}
+					<span className="absolute bottom-4 left-4 font-body text-current/60 text-xs font-normal tabular-nums">
+						{codepoint(active)}
+					</span>
 				</div>
-			</section>
-		</GuidelineBlockFrame>
+
+				<div className="grid grid-cols-8 self-start rounded-sm border-current/50 border-t border-l">
+					{GLYPHS.map((ch) => (
+						<button
+							key={ch}
+							type="button"
+							onMouseEnter={() => onGlyphActivate(ch)}
+							onFocus={() => onGlyphActivate(ch)}
+							data-active={ch === active}
+							aria-label={`${ch} (${codepoint(ch)})`}
+							className="flex aspect-square items-center justify-center border-current/50 border-r border-b text-5xl text-current transition-colors hover:bg-current/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/30 data-[active=true]:bg-current/10"
+							style={{ fontFamily }}
+						>
+							{ch}
+						</button>
+					))}
+				</div>
+			</div>
+		</section>
 	)
 }
 

@@ -48,7 +48,7 @@ TIFF 내보내기 때 브라우저는 화면을 렌더한 published Template의 
 - 클라이언트 라이브러리: `html-to-image`(PNG 캡처), `pdf-lib`(PNG를 단일 페이지 PDF로 직렬화).
 - 서버 라이브러리: 기존 `sharp`(흰 배경 평탄화, CMYK/ICC 변환, TIFF LZW 압축, PPI 메타데이터). 별도 인쇄 라이브러리는 추가하지 않습니다.
 - 공유 클라이언트 renderer: `render-template-export-stage.client`(Create·Chat·PNG·TIFF·PDF 공유).
-- Payload 컬렉션: `templates`·`template-categories`·`application-images`(`template-assets`는 레거시 import staging 참조만 유지). 템플릿은 임베디드 Check를 relationship으로 참조하지 않고 `templateChecks[].checkKey`를 저장합니다. 모든 HTML 저장은 구조 파서와 허용 목록으로 실행 가능한 마크업·외부 URL을 먼저 차단하고, **발행(publish) 시** 공개 URL을 published 공식 에셋 참조와 추가 대조합니다. `template-assets`와 magic byte가 확인된 raster AI 배경 이미지는 draft에서만 허용합니다. Draft 원본(`baseHtml`)과 staging 에셋은 manager/admin만 읽을 수 있고, Admin Draft 미리보기는 script 없는 iframe으로 격리합니다. `templates`·`brand-logos`·`application-images`의 공개/worker 읽기는 published 문서만, 쓰기는 manager/admin만 허용합니다.
+- Payload 컬렉션: `templates`·`template-categories`·`application-images`(`template-assets`는 레거시 import staging 참조만 유지). 템플릿은 Rule 또는 Check 참조를 저장하지 않습니다. 모든 HTML 저장은 구조 파서와 허용 목록으로 실행 가능한 마크업·외부 URL을 먼저 차단하고, **발행(publish) 시** 공개 URL을 published 공식 에셋 참조와 추가 대조합니다. `template-assets`와 magic byte가 확인된 raster AI 배경 이미지는 draft에서만 허용합니다. Draft 원본(`baseHtml`)과 staging 에셋은 manager/admin만 읽을 수 있고, Admin Draft 미리보기는 script 없는 iframe으로 격리합니다. `templates`·`brand-logos`·`application-images`의 공개/worker 읽기는 published 문서만, 쓰기는 manager/admin만 허용합니다.
 - Figma import(`src/features/template-import/`): frame을 `baseHtml`/`html`로 변환합니다. CSS로 보존 가능한 레이어는 편집 구조를 유지하고, 벡터는 SVG, TEXT_PATH·알 수 없는 leaf node·IMAGE/PATTERN/VIDEO fill·마스크 합성·비정상 변환·지원 밖 효과는 PNG Figma render로 고정합니다. 렌더 에셋은 `application-images` draft로 저장하며, Template publish 때 최종 HTML에도 남은 Figma import 에셋만 같은 트랜잭션에서 함께 publish합니다. Template 문서를 자동 생성하지는 않고 manager가 Admin에서 저장합니다.
 - Review 미사용, Image 미호출(현재) — 위 "의도된 방향" 참조.
 
@@ -67,4 +67,4 @@ TIFF 내보내기 때 브라우저는 화면을 렌더한 published Template의 
 - 생성 실행 경계(Agent/Worker): [05. 시스템 아키텍처](../05-system-architecture.md)
 - 인가된 에셋·업로드·접근 제어: [07. 보안](../07-security.md)
 - 사용자 문구·접근성: [08. 접근성과 다국어](../08-accessibility-i18n.md)
-- 도메인 위치(제작 관리): [04. 도메인 모델](../04-domain-model.md) — §5의 `AssetGenerationSession`/`Output` 등 aggregate는 현재 aspirational(미구현)이며, 실제 구현이 앞설 때 문서와 맞춥니다.
+- 도메인 위치(제작 관리): [04. 도메인 모델](../04-domain-model.md) — §5의 `AssetGenerationSession`은 향후 제작 사용량 추적용 계획 모델입니다. 현재 Create에는 세션·출력 영속 요구가 없습니다.

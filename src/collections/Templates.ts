@@ -122,34 +122,6 @@ export const Templates: CollectionConfig = {
 			},
 		},
 		{
-			name: 'templateChecks',
-			type: 'array',
-			admin: {
-				position: 'sidebar',
-				description: 'Agent가 이 템플릿으로 이미지를 만들 때 함께 참고할 Check입니다.',
-			},
-			fields: [
-				{
-					name: 'checkKey',
-					type: 'text',
-					required: true,
-					admin: {
-						description: 'published 가이드라인 checks[]의 key를 입력합니다.',
-					},
-				},
-				{
-					name: 'body',
-					type: 'textarea',
-					required: true,
-					localized: true,
-					admin: {
-						description:
-							'이 템플릿에서 해당 Check를 적용할 때 Agent가 참고할 지침입니다.',
-					},
-				},
-			],
-		},
-		{
 			name: 'dividerImport',
 			type: 'ui',
 			admin: {

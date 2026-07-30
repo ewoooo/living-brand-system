@@ -2,7 +2,7 @@ import type React from 'react'
 import { SectionLayout } from '@/components/global/section-layout'
 import { CheckImageProvider } from '@/components/studio/review/check-image-provider'
 import { StudioSideNavigation } from '@/components/studio/shared/studio-side-navigation'
-import { getCheckScenarios } from '@/features/asset-check/services/get-check-scenarios.service'
+import { getCheckScenarios } from '@/features/quality-rule/services/get-check-scenarios.service'
 
 // Review reads Payload collections, so CI builds without migrated tables must not prerender it.
 export const dynamic = 'force-dynamic'

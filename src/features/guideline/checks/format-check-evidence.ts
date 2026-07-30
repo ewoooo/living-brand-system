@@ -123,5 +123,7 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 				evidence.title ?? 'Color pairing recommendation',
 				evidence.variant,
 			]).join('\n')
+		case 'block':
+			return `leaf ${evidence.childCount}개를 담은 블록`
 	}
 }

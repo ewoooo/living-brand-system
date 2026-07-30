@@ -20,14 +20,14 @@ import {
 	searchAgentGuidelines,
 } from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
-import { type CheckScenario, getCheckScenario } from '@/features/asset-check/scenarios'
-import { getCheckScenarios } from '@/features/asset-check/services/get-check-scenarios.service'
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
 import {
 	type AgentGeneratedImagesAttachment,
 	generateImages,
 } from '@/features/generate-image/services/generate-image.service'
 import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
+import { type CheckScenario, getCheckScenario } from '@/features/quality-rule/check-scenario'
+import { getCheckScenarios } from '@/features/quality-rule/services/get-check-scenarios.service'
 import { AgentConfigurationError } from '@/lib/errors'
 import type { User } from '@/payload-types'
 import { startCheckSession } from '@/services/start-check-session.service'
@@ -108,7 +108,7 @@ export function getAgentTools() {
 		}),
 		findTemplatesForRequest: tool({
 			description:
-				'Find or list published production templates, their template checks, and their open slots for asset creation requests or questions about what templates/assets can be made.',
+				'Find or list published production templates and their open slots for asset creation requests or questions about what templates/assets can be made.',
 			inputSchema: z.object({
 				query: z.string().min(1).max(120).optional(),
 			}),

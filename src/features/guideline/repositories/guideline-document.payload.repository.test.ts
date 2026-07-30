@@ -1,7 +1,6 @@
 import { getParents } from '@payloadcms/plugin-nested-docs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-	getGuidelineRuleCheckerSummary,
 	hasGuidelineDocumentSlugConflict,
 	listEditableGuidelineDocuments,
 	listGuidelineDocumentAncestorIds,
@@ -55,15 +54,10 @@ describe('guideline-document Payload repository', () => {
 		await expect(listGuidelineDocumentDescendantPaths(req, 10)).resolves.toEqual([[10, -1, 12]])
 	})
 
-	it('slug 충돌 query와 Rule Checker 요약 반환을 저장소에 가둔다', async () => {
+	it('slug 충돌 query를 저장소에 가둔다', async () => {
 		const find = vi.fn().mockResolvedValue({ docs: [{ id: 9 }] })
-		const findByID = vi.fn().mockResolvedValue({
-			checkerKey: 'contrast',
-			executor: 'deterministic',
-			implementationKey: 'ignored',
-		})
 		const user = { id: 7 }
-		const req = { locale: 'ko', payload: { find, findByID }, user } as never
+		const req = { locale: 'ko', payload: { find }, user } as never
 
 		await expect(
 			hasGuidelineDocumentSlugConflict(req, {
@@ -82,13 +76,6 @@ describe('guideline-document Payload repository', () => {
 					],
 				},
 			}),
-		)
-		await expect(getGuidelineRuleCheckerSummary(req, 4)).resolves.toEqual({
-			checkerKey: 'contrast',
-			executor: 'deterministic',
-		})
-		expect(findByID).toHaveBeenCalledWith(
-			expect.objectContaining({ overrideAccess: false, req, user }),
 		)
 	})
 })

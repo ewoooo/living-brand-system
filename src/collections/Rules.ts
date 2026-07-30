@@ -1,13 +1,12 @@
 import type { ArrayField, CollectionConfig, FieldHook } from 'payload'
-import { checkKeyFromEnglishTitle } from '@/features/guideline/checks/check-key-from-english-title'
-import { validateGuidelineCheckOptions } from '@/features/guideline/checks/validate-guideline-check-options'
-import { getGuidelineRuleCheckerSummary } from '@/features/guideline/services/get-guideline-rule-checker-summary.service'
-import { assertRuleDeletable } from '@/features/guideline/services/guard-rule-deletion.service'
-import { relationshipId } from '@/features/guideline/utils/block-text'
+import { checkKeyFromEnglishTitle } from '@/features/quality-rule/check-key-from-english-title'
+import { relationshipId } from '@/features/quality-rule/relationship-id'
+import type { RuleExecutor } from '@/features/quality-rule/rule-executor'
+import { getRuleCheckerSummary } from '@/features/quality-rule/services/get-rule-checker-summary.service'
+import { assertRuleDeletable } from '@/features/quality-rule/services/guard-rule-deletion.service'
+import { validateRuleOptions } from '@/features/quality-rule/validate-rule-options'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
-
-type RuleExecutor = 'deterministic' | 'heuristic' | 'manual'
 
 const executorCondition =
 	(executor: RuleExecutor) => (_data: unknown, siblingData: { executor?: RuleExecutor }) =>
@@ -59,7 +58,7 @@ const populateRuleKey: FieldHook = ({ siblingData, value }) => {
 const populateRuleExecutor: FieldHook = async ({ req, siblingData, value }) => {
 	const checkerId = relationshipId(siblingData?.checker)
 	if (checkerId === null) return value
-	const checker = await getGuidelineRuleCheckerSummary(req, checkerId)
+	const checker = await getRuleCheckerSummary(req, checkerId)
 	return checker.executor
 }
 
@@ -145,7 +144,7 @@ export const Rules: CollectionConfig = {
 		{
 			name: 'options',
 			type: 'json',
-			validate: validateGuidelineCheckOptions,
+			validate: validateRuleOptions,
 			admin: {
 				condition: executorCondition('deterministic'),
 				description: '이 Rule에서 결정론적 Checker에 전달할 설정입니다.',
