@@ -2,10 +2,10 @@ import type { Payload, PayloadRequest } from 'payload'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { User } from '@/payload-types'
 import {
-	deleteDraftFigmaAsset,
-	publishImportedFigmaAssets,
-	storeDraftFigmaAsset,
-} from './figma-imported-asset.payload.repository'
+	deleteDraftImportedApplicationImage,
+	publishDraftImportedApplicationImages,
+	storeDraftImportedApplicationImage,
+} from './imported-application-image.payload.repository'
 
 const find = vi.fn()
 const create = vi.fn()
@@ -20,7 +20,7 @@ const input = {
 	name: 'Logo',
 }
 
-describe('Figma imported asset repository', () => {
+describe('Imported ApplicationImage repository', () => {
 	beforeEach(() => vi.resetAllMocks())
 
 	it('같은 filename의 기존 Application Images 문서는 재사용한다', async () => {
@@ -28,7 +28,7 @@ describe('Figma imported asset repository', () => {
 			docs: [{ id: 7, url: '/api/application-images/file/figma-abc123.svg' }],
 		})
 
-		await expect(storeDraftFigmaAsset(payload, user, input)).resolves.toEqual({
+		await expect(storeDraftImportedApplicationImage(payload, user, input)).resolves.toEqual({
 			collection: 'application-images',
 			id: 7,
 			url: '/api/application-images/file/figma-abc123.svg',
@@ -47,7 +47,9 @@ describe('Figma imported asset repository', () => {
 			url: '/api/application-images/file/figma-abc123.svg',
 		})
 
-		await expect(storeDraftFigmaAsset(payload, user, input)).resolves.toMatchObject({
+		await expect(
+			storeDraftImportedApplicationImage(payload, user, input),
+		).resolves.toMatchObject({
 			collection: 'application-images',
 			id: 8,
 			created: true,
@@ -71,7 +73,7 @@ describe('Figma imported asset repository', () => {
 		find.mockResolvedValue({ docs: [] })
 		create.mockResolvedValue({ id: 9, url: null })
 
-		await expect(storeDraftFigmaAsset(payload, user, input)).rejects.toThrow(
+		await expect(storeDraftImportedApplicationImage(payload, user, input)).rejects.toThrow(
 			'Stored Figma asset has no URL.',
 		)
 		expect(remove).toHaveBeenCalledWith({
@@ -83,7 +85,7 @@ describe('Figma imported asset repository', () => {
 	})
 
 	it('실패 cleanup은 지정한 draft만 삭제한다', async () => {
-		await deleteDraftFigmaAsset(payload, user, 10)
+		await deleteDraftImportedApplicationImage(payload, user, 10)
 
 		expect(remove).toHaveBeenCalledWith({
 			collection: 'application-images',
@@ -102,7 +104,7 @@ describe('Figma imported asset repository', () => {
 			],
 		})
 
-		await publishImportedFigmaAssets(req, [7, 7, 8])
+		await publishDraftImportedApplicationImages(req, [7, 7, 8])
 
 		expect(find).toHaveBeenCalledWith({
 			collection: 'application-images',

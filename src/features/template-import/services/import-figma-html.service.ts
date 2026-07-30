@@ -1,14 +1,14 @@
 import { createHash } from 'node:crypto'
 import type { Payload } from 'payload'
 import {
+	discardImportedApplicationImage,
+	stageImportedApplicationImage,
+} from '@/features/application-image/services/manage-imported-application-images.service'
+import {
 	downloadFigmaImage,
 	findFigmaImageUrls,
 	findFigmaNodeTree,
 } from '@/features/template-import/repositories/figma.rest.repository'
-import {
-	deleteDraftFigmaAsset,
-	storeDraftFigmaAsset,
-} from '@/features/template-import/repositories/figma-imported-asset.payload.repository'
 import type { FigmaNode } from '@/features/template-import/types'
 import {
 	convertFigmaNodeToHtml,
@@ -187,7 +187,7 @@ async function storeRenderedAssets(
 				}
 
 				const checksum = createHash('sha256').update(data).digest('hex')
-				const asset = await storeDraftFigmaAsset(payload, user, {
+				const asset = await stageImportedApplicationImage(payload, user, {
 					data,
 					filename: `figma-${checksum.slice(0, 24)}.${format}`,
 					mimeType: normalizedMimeType,
@@ -201,7 +201,7 @@ async function storeRenderedAssets(
 		return renderedAssets
 	} catch (error) {
 		await Promise.allSettled(
-			createdAssetIds.map((id) => deleteDraftFigmaAsset(payload, user, id)),
+			createdAssetIds.map((id) => discardImportedApplicationImage(payload, user, id)),
 		)
 		throw error
 	}
