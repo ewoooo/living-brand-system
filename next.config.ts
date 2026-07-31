@@ -9,6 +9,9 @@ const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
 	output: 'standalone',
+	outputFileTracingIncludes: {
+		'/*': ['node_modules/sharp/**/*', 'node_modules/@img/**/*'],
+	},
 	async redirects() {
 		return legacyPageRedirects.map((redirect) => ({ ...redirect }))
 	},
