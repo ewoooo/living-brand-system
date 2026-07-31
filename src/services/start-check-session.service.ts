@@ -1,3 +1,4 @@
+import { toCheckResult } from '@/features/asset-check/checkers/check-result.adapter'
 import {
 	type CheckSession,
 	CheckSessionInputMismatchError,
@@ -6,6 +7,14 @@ import {
 	type CheckSessionSource,
 	CheckSessionTerminalError,
 } from '@/features/asset-check/domain/check-session'
+import {
+	evaluateAdvisory,
+	evaluateHeuristic,
+	type HeuristicObservation,
+	measureObservationSchema,
+	presenceObservationSchema,
+} from '@/features/asset-check/domain/heuristic.evaluator'
+import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
 	createCheckSessionRecord,
 	getCheckSessionRecord,
@@ -38,6 +47,15 @@ interface StartCheckSessionInput {
 interface CompleteCheckSessionAiCheckInput {
 	buffer: Buffer
 	checkSessionId: number
+	user: User
+}
+
+export type ClientCheckObservations = Record<string, Record<string, HeuristicObservation>>
+
+interface CompleteCheckSessionObservationsInput {
+	advices?: Record<string, string>
+	checkSessionId: number
+	observations?: ClientCheckObservations
 	user: User
 }
 
@@ -130,6 +148,106 @@ export async function completeCheckSessionAiCheck(input: CompleteCheckSessionAiC
 	} catch (error) {
 		await persistCheckSessionFailure(session, input.user, error)
 		throw error
+	}
+}
+
+/**
+ * MCP 클라이언트 AI가 제출한 관측값으로 검수 세션을 완료한다.
+ * 클라이언트는 관측만 소유하고, 최종 판정·상태 전이와 저장 I/O는 기존 evaluator·Aggregate·repository가 맡는다.
+ */
+export async function completeCheckSessionObservations(
+	input: CompleteCheckSessionObservationsInput,
+) {
+	const session = await getCheckSessionRecord(input.checkSessionId, input.user)
+	if (!session) throw new CheckSessionNotFoundError('Check session not found.')
+	if (session.isCompleted) {
+		return { checkSessionId: session.id, results: session.results }
+	}
+	if (session.isFailed) {
+		throw new CheckSessionTerminalError('Check session already failed.')
+	}
+
+	const checks = getSubmittedChecks(
+		session.pendingCheckKeys,
+		session.rulesetSnapshot,
+		input.observations ?? {},
+		input.advices ?? {},
+	)
+	const results = Object.fromEntries(
+		checks.map((check) => [
+			check.key,
+			toCheckResult(
+				check.executor === 'manual'
+					? evaluateAdvisory(input.advices?.[check.key])
+					: evaluateHeuristic(
+							check.heuristicCriteria ?? [],
+							input.observations?.[check.key],
+						),
+				check,
+				{ key: 'mcp-client', type: 'ai' },
+			),
+		]),
+	)
+
+	try {
+		session.applyAiResults({ results })
+		await saveCheckSessionRecord(session, input.user)
+		return { checkSessionId: session.id, results: session.results }
+	} catch (error) {
+		await persistCheckSessionFailure(session, input.user, error)
+		throw error
+	}
+}
+
+function getSubmittedChecks(
+	pendingCheckKeys: string[],
+	rulesetSnapshot: RuntimeCheck[] | undefined,
+	observations: ClientCheckObservations,
+	advices: Record<string, string>,
+): RuntimeCheck[] {
+	const byKey = new Map((rulesetSnapshot ?? []).map((check) => [check.key, check]))
+	const checks = pendingCheckKeys.map((key) => byKey.get(key))
+	if (checks.some((check) => !check)) {
+		throw new Error('Client check submission does not match the saved ruleset.')
+	}
+	const submittedChecks = checks as RuntimeCheck[]
+	assertExactKeys(
+		Object.keys(observations),
+		submittedChecks.filter((check) => check.executor !== 'manual').map((check) => check.key),
+	)
+	assertExactKeys(
+		Object.keys(advices),
+		submittedChecks.filter((check) => check.executor === 'manual').map((check) => check.key),
+	)
+	for (const check of submittedChecks) {
+		if (check.executor === 'manual') continue
+		assertExactKeys(
+			Object.keys(observations[check.key] ?? {}),
+			(check.heuristicCriteria ?? []).map((criterion) => criterion.id),
+		)
+		for (const criterion of check.heuristicCriteria ?? []) {
+			const schema =
+				criterion.kind === 'measure' ? measureObservationSchema : presenceObservationSchema
+			if (!schema.safeParse(observations[check.key]?.[criterion.id]).success) {
+				throw new Error(
+					`Client check observation does not match criterion ${criterion.id}.`,
+				)
+			}
+		}
+	}
+	return submittedChecks
+}
+
+function assertExactKeys(actual: string[], expected: string[]) {
+	const sortedActual = [...actual].sort()
+	const sortedExpected = [...expected].sort()
+	if (
+		sortedActual.length !== sortedExpected.length ||
+		sortedActual.some((key, index) => key !== sortedExpected[index])
+	) {
+		throw new Error(
+			`Client check submission keys do not match (expected: ${sortedExpected.join(', ') || '-'}).`,
+		)
 	}
 }
 

@@ -2060,9 +2060,13 @@ export interface PayloadMcpApiKey {
      */
     listImageProfiles?: boolean | null;
     /**
-     * Run the selected brand quality check scenario on a PNG, JPEG, or WebP data URI.
+     * Run deterministic checks and return the image plus observation questions for the connected AI. Follow with submitAssetCheckObservations.
      */
     runAssetCheck?: boolean | null;
+    /**
+     * Submit observations from the connected AI after runAssetCheck. The server validates them and decides the final result.
+     */
+    submitAssetCheckObservations?: boolean | null;
     /**
      * Generate and store brand images with a published profile, then return stored original URLs and inline WebP previews.
      */
@@ -3404,6 +3408,7 @@ export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
         findTemplates?: T;
         listImageProfiles?: T;
         runAssetCheck?: T;
+        submitAssetCheckObservations?: T;
         generateBrandImage?: T;
       };
   updatedAt?: T;

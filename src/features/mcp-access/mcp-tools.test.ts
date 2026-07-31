@@ -3,10 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod/v3'
 
 const mocks = vi.hoisted(() => ({
+	completeCheckSessionObservations: vi.fn(),
 	findTemplatesForRequest: vi.fn(),
 	generateImages: vi.fn(),
 	listAvailableImageProfiles: vi.fn(),
 	loadGeneratedImage: vi.fn(),
+	resizeForAiVision: vi.fn(),
 	searchAgentGuidelines: vi.fn(),
 	startCheckSession: vi.fn(),
 }))
@@ -16,6 +18,9 @@ vi.mock('@/features/agent-chat/services/agent-template-request.service', () => (
 }))
 vi.mock('@/features/agent-chat/services/get-agent-guideline-context.service', () => ({
 	searchAgentGuidelines: mocks.searchAgentGuidelines,
+}))
+vi.mock('@/features/asset-check/repositories/image-decoder.sharp.repository', () => ({
+	resizeForAiVision: mocks.resizeForAiVision,
 }))
 vi.mock('@/features/generate-image/repositories/generated-image.payload.repository', () => ({
 	loadGeneratedImage: mocks.loadGeneratedImage,
@@ -27,6 +32,7 @@ vi.mock('@/features/generate-image/services/list-image-profiles.service', () => 
 	listAvailableImageProfiles: mocks.listAvailableImageProfiles,
 }))
 vi.mock('@/services/start-check-session.service', () => ({
+	completeCheckSessionObservations: mocks.completeCheckSessionObservations,
 	startCheckSession: mocks.startCheckSession,
 }))
 
@@ -49,49 +55,69 @@ function getTool(name: string) {
 describe('custom MCP tools', () => {
 	beforeEach(() => vi.clearAllMocks())
 
-	it('요청한 다섯 도구를 노출한다', () => {
+	it('MCP 제작 기능 도구를 노출한다', () => {
 		expect(customMcpTools.map(({ name }) => name)).toEqual([
 			'searchGuidelines',
 			'findTemplates',
 			'listImageProfiles',
 			'runAssetCheck',
+			'submitAssetCheckObservations',
 			'generateBrandImage',
 		])
 	})
 
-	it('검증된 data URI를 공통 검수 세션에 전달한다', async () => {
+	it('검증 대상 이미지와 기대값 없는 관측 질문을 연결된 AI에 반환한다', async () => {
+		const image = Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64')
 		mocks.startCheckSession.mockResolvedValue({
 			checkSessionId: 9,
-			pendingCheckKeys: [],
+			pendingCheckKeys: ['logo.visible'],
 			results: { 'logo.clear-space': { rawResult: { status: 'pass' } } },
-			rulesetSnapshot: [],
-		})
-		const tool = getTool('runAssetCheck')
-
-		await expect(
-			tool.handler(
-				{ imageData: ONE_PIXEL_PNG, imageName: 'logo.png', scenarioKey: 'logo' },
-				request,
-			),
-		).resolves.toEqual({
-			content: [
+			rulesetSnapshot: [
 				{
-					type: 'text',
-					text: JSON.stringify({
-						checkSessionId: 9,
-						pendingCheckKeys: [],
-						results: { 'logo.clear-space': { rawResult: { status: 'pass' } } },
-					}),
+					key: 'logo.visible',
+					title: 'Logo visible',
+					titleKo: '로고 노출',
+					executor: 'heuristic',
+					heuristicCriteria: [
+						{
+							id: 'visible',
+							question: 'Is the logo visible?',
+							expected: 'present',
+						},
+					],
 				},
 			],
 		})
+		mocks.resizeForAiVision.mockResolvedValue(image)
+		const tool = getTool('runAssetCheck')
+
+		const result = await tool.handler(
+			{ imageData: ONE_PIXEL_PNG, imageName: 'logo.png', scenarioKey: 'logo' },
+			request,
+		)
+
+		expect(result.content).toHaveLength(3)
+		expect(result.content[0]).toMatchObject({
+			type: 'text',
+			text: expect.stringContaining('"nextTool":"submitAssetCheckObservations"'),
+		})
+		expect(result.content[0]).toMatchObject({
+			text: expect.not.stringContaining('"expected"'),
+		})
+		expect(result.content[2]).toMatchObject({
+			type: 'image',
+			data: expect.any(String),
+			mimeType: 'image/png',
+		})
 		expect(mocks.startCheckSession).toHaveBeenCalledWith({
 			buffer: expect.any(Buffer),
+			deferHeuristic: true,
 			imageName: 'logo.png',
 			scenarioKey: 'logo',
 			source: 'mcp-call',
 			user: requestUser,
 		})
+		expect(mocks.resizeForAiVision).toHaveBeenCalledWith(expect.any(Buffer))
 	})
 
 	it('검수 입력으로 외부 URL을 받지 않는다', async () => {
@@ -101,6 +127,34 @@ describe('custom MCP tools', () => {
 			tool.handler({ imageData: 'https://example.com/logo.png' }, request),
 		).rejects.toThrow('Invalid image data URI.')
 		expect(mocks.startCheckSession).not.toHaveBeenCalled()
+	})
+
+	it('연결된 AI의 관측값을 서버 판정 서비스에 제출한다', async () => {
+		const observations = {
+			'logo.visible': {
+				visible: {
+					value: 'present',
+					confidence: 95,
+					reason: '로고가 보입니다.',
+				},
+			},
+		}
+		mocks.completeCheckSessionObservations.mockResolvedValue({
+			checkSessionId: 9,
+			results: { 'logo.visible': { rawResult: { status: 'pass' } } },
+		})
+
+		await getTool('submitAssetCheckObservations').handler(
+			{ checkSessionId: 9, observations },
+			request,
+		)
+
+		expect(mocks.completeCheckSessionObservations).toHaveBeenCalledWith({
+			advices: undefined,
+			checkSessionId: 9,
+			observations,
+			user: requestUser,
+		})
 	})
 
 	it('생성 원본 메타데이터와 실제 이미지 미리보기를 함께 반환한다', async () => {
@@ -157,7 +211,7 @@ describe('custom MCP tools', () => {
 
 	it('이미지 생성 수를 두 장 이하로 제한한다', () => {
 		const tool = getTool('generateBrandImage')
-		const schema = z.object(tool.parameters)
+		const schema = z.object(tool.parameters as Record<string, z.ZodTypeAny>)
 
 		expect(schema.safeParse({ count: 2, profileId: 5, prompt: '제품 사진' }).success).toBe(true)
 		expect(schema.safeParse({ count: 3, profileId: 5, prompt: '제품 사진' }).success).toBe(

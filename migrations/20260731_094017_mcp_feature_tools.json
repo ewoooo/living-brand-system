@@ -27439,6 +27439,13 @@
           "notNull": false,
           "default": true
         },
+        "payload_mcp_tool_submit_asset_check_observations": {
+          "name": "payload_mcp_tool_submit_asset_check_observations",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
         "payload_mcp_tool_generate_brand_image": {
           "name": "payload_mcp_tool_generate_brand_image",
           "type": "boolean",
@@ -31048,6 +31055,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "877e7672-05fa-4c06-ab5b-a809acd3fea9",
+  "id": "00263119-7da3-4d96-81de-cbd273cecbb0",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

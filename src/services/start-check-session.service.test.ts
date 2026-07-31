@@ -6,6 +6,7 @@ import {
 	CheckSessionNotFoundError,
 	type CheckSessionSnapshot,
 } from '@/features/asset-check/domain/check-session'
+import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
 	createCheckSessionRecord,
 	getCheckSessionRecord,
@@ -17,7 +18,11 @@ import {
 	runImmediateCheck,
 } from '@/features/asset-check/services/run-check.service'
 import type { User } from '@/payload-types'
-import { completeCheckSessionAiCheck, startCheckSession } from './start-check-session.service'
+import {
+	completeCheckSessionAiCheck,
+	completeCheckSessionObservations,
+	startCheckSession,
+} from './start-check-session.service'
 
 vi.mock('@/features/asset-check/repositories/check-session.payload.repository', () => ({
 	createCheckSessionRecord: vi.fn(),
@@ -36,6 +41,22 @@ const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
 const otherPng = Buffer.concat([png, Buffer.from([0x00])])
 const user = { id: 7 } as User
 const scenario = { key: 'quick', title: '빠른 검수', checkKeys: [] }
+const heuristicCheck: RuntimeCheck = {
+	key: 'heuristic',
+	title: 'Logo present',
+	checker: { key: 'ai-check', type: 'heuristic' },
+	executor: 'heuristic',
+	heuristicCriteria: [
+		{
+			id: 'logo-visible',
+			question: 'Is the logo visible?',
+			expected: 'present',
+		},
+	],
+	implemented: true,
+	evidence: '',
+	referenceAssets: [],
+}
 
 function snapshot(
 	buffer: Buffer | null,
@@ -149,6 +170,82 @@ describe('check session service', () => {
 			completeCheckSessionAiCheck({ buffer: png, checkSessionId: 41, user }),
 		).resolves.toEqual({ checkSessionId: 41, results: {} })
 		expect(runHeuristicCheck).not.toHaveBeenCalled()
+	})
+
+	it('MCP 클라이언트 관측값은 서버 evaluator로 판정해 완료한다', async () => {
+		const session = CheckSession.restore({
+			...snapshot(png),
+			rulesetSnapshot: [heuristicCheck],
+		})
+		vi.mocked(getCheckSessionRecord).mockResolvedValue(session)
+
+		await expect(
+			completeCheckSessionObservations({
+				checkSessionId: 41,
+				observations: {
+					heuristic: {
+						'logo-visible': {
+							value: 'present',
+							confidence: 95,
+							reason: '로고가 보입니다.',
+						},
+					},
+				},
+				user,
+			}),
+		).resolves.toMatchObject({
+			checkSessionId: 41,
+			results: {
+				heuristic: {
+					checker: { key: 'mcp-client', type: 'ai' },
+					rawResult: { status: 'pass', fulfillment: 100 },
+				},
+			},
+		})
+		expect(session.status).toBe('completed')
+		expect(runHeuristicCheck).not.toHaveBeenCalled()
+		expect(saveCheckSessionRecord).toHaveBeenCalledWith(session, user)
+	})
+
+	it('저장된 룰셋과 다른 MCP 관측 키는 판정·저장하지 않는다', async () => {
+		const session = CheckSession.restore({
+			...snapshot(png),
+			rulesetSnapshot: [heuristicCheck],
+		})
+		vi.mocked(getCheckSessionRecord).mockResolvedValue(session)
+
+		await expect(
+			completeCheckSessionObservations({
+				checkSessionId: 41,
+				observations: {
+					heuristic: {
+						'unexpected-criterion': {
+							value: 'present',
+							confidence: 95,
+							reason: '로고가 보입니다.',
+						},
+					},
+				},
+				user,
+			}),
+		).rejects.toThrow('Client check submission keys do not match')
+		await expect(
+			completeCheckSessionObservations({
+				checkSessionId: 41,
+				observations: {
+					heuristic: {
+						'logo-visible': {
+							value: 1,
+							confidence: 95,
+							reason: '잘못된 관측 형식입니다.',
+						},
+					},
+				},
+				user,
+			}),
+		).rejects.toThrow('Client check observation does not match criterion logo-visible')
+		expect(session.status).toBe('running')
+		expect(saveCheckSessionRecord).not.toHaveBeenCalled()
 	})
 
 	it('AI 판정 실패를 failed로 저장하고 원 오류를 다시 던진다', async () => {

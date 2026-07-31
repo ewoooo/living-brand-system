@@ -3,12 +3,17 @@ import sharp from 'sharp'
 import { z } from 'zod/v3'
 import { findTemplatesForRequest } from '@/features/agent-chat/services/agent-template-request.service'
 import { searchAgentGuidelines } from '@/features/agent-chat/services/get-agent-guideline-context.service'
+import { resizeForAiVision } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { decodeImageDataUri } from '@/features/generate-image/image-data-uri'
 import { loadGeneratedImage } from '@/features/generate-image/repositories/generated-image.payload.repository'
 import { generateImages } from '@/features/generate-image/services/generate-image.service'
 import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
 import { isPayloadUser } from '@/lib/auth'
-import { startCheckSession } from '@/services/start-check-session.service'
+import {
+	type ClientCheckObservations,
+	completeCheckSessionObservations,
+	startCheckSession,
+} from '@/services/start-check-session.service'
 
 type McpToolArgs = Record<string, unknown>
 
@@ -29,6 +34,11 @@ export const mcpTextTool = (
 
 const text = (value: unknown) => (typeof value === 'string' ? value : undefined)
 const number = (value: unknown) => (typeof value === 'number' ? value : undefined)
+const clientObservationSchema = z.strictObject({
+	value: z.union([z.number(), z.enum(['present', 'absent', 'uncertain', 'not_applicable'])]),
+	confidence: z.number().min(0).max(100),
+	reason: z.string().trim().min(1).max(300),
+})
 const user = (req: PayloadRequest) => {
 	if (!isPayloadUser(req.user)) throw new Error('Authentication required.')
 	return req.user
@@ -54,25 +64,88 @@ export const customMcpTools = [
 		{},
 		(_args, req) => listAvailableImageProfiles(user(req)),
 	),
-	mcpTextTool(
-		'runAssetCheck',
-		'Run the selected brand quality check scenario on a PNG, JPEG, or WebP data URI.',
-		{
+	{
+		name: 'runAssetCheck',
+		description:
+			'Run deterministic checks and return the image plus observation questions for the connected AI. Follow with submitAssetCheckObservations.',
+		parameters: {
 			imageData: z.string().max(4_000_000),
 			imageName: z.string().trim().min(1).max(120).optional(),
 			scenarioKey: z.string().trim().min(1).max(80).optional(),
 		},
-		async (args, req) => {
+		handler: async (args: McpToolArgs, req: PayloadRequest) => {
 			const image = await decodeImageDataUri(text(args.imageData) ?? '')
-			const { checkSessionId, pendingCheckKeys, results } = await startCheckSession({
-				buffer: image.data,
-				imageName: text(args.imageName) ?? 'mcp-image',
-				scenarioKey: text(args.scenarioKey),
-				source: 'mcp-call',
-				user: user(req),
-			})
-			return { checkSessionId, pendingCheckKeys, results }
+			const { checkSessionId, pendingCheckKeys, results, rulesetSnapshot } =
+				await startCheckSession({
+					buffer: image.data,
+					deferHeuristic: true,
+					imageName: text(args.imageName) ?? 'mcp-image',
+					scenarioKey: text(args.scenarioKey),
+					source: 'mcp-call',
+					user: user(req),
+				})
+			const pending = rulesetSnapshot.filter((check) => pendingCheckKeys.includes(check.key))
+			const task = {
+				checkSessionId,
+				status: pending.length ? 'awaiting_client_observations' : 'completed',
+				results,
+				pendingCheckKeys,
+				nextTool: pending.length ? 'submitAssetCheckObservations' : null,
+				instructions: pending.length
+					? [
+							'Observe only the supplied target image against every question.',
+							'Return exactly one value, confidence, and short reason per criterion. For advisory checks, return one concise Korean advice paragraph.',
+							'Never decide or submit pass, fail, needs_review, fulfillment, or overall approval.',
+						]
+					: [],
+				checks: pending.map((check) => ({
+					key: check.key,
+					kind: check.executor === 'manual' ? 'advisory' : 'criteria',
+					titleEn: check.title,
+					titleKo: check.titleKo,
+					criteria: (check.heuristicCriteria ?? []).map((criterion) => ({
+						id: criterion.id,
+						question: criterion.question,
+						kind: criterion.kind ?? 'presence',
+						unit: criterion.kind === 'measure' ? criterion.unit : undefined,
+					})),
+				})),
+			}
+			const content: (
+				| { type: 'text'; text: string }
+				| { type: 'image'; data: string; mimeType: string }
+			)[] = [{ type: 'text', text: JSON.stringify(task) }]
+			if (pending.length) {
+				content.push(
+					{ type: 'text' as const, text: 'Target image to check:' },
+					{
+						type: 'image' as const,
+						data: (await resizeForAiVision(image.data)).toString('base64'),
+						mimeType: image.mimeType,
+					},
+				)
+			}
+
+			return { content, structuredContent: task }
 		},
+	},
+	mcpTextTool(
+		'submitAssetCheckObservations',
+		'Submit observations from the connected AI after runAssetCheck. The server validates them and decides the final result.',
+		{
+			checkSessionId: z.number().int().positive(),
+			observations: z
+				.record(z.string(), z.record(z.string(), clientObservationSchema))
+				.optional(),
+			advices: z.record(z.string(), z.string().trim().min(1).max(2000)).optional(),
+		},
+		(args, req) =>
+			completeCheckSessionObservations({
+				advices: args.advices as Record<string, string> | undefined,
+				checkSessionId: number(args.checkSessionId) ?? 0,
+				observations: args.observations as ClientCheckObservations | undefined,
+				user: user(req),
+			}),
 	),
 	{
 		name: 'generateBrandImage',

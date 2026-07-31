@@ -21,6 +21,7 @@ export async function createMcpApiKeyRecord(user: User, apiKey: string): Promise
 				listImageProfiles: true,
 				runAssetCheck: true,
 				searchGuidelines: true,
+				submitAssetCheckObservations: true,
 			},
 		},
 		depth: 0,

@@ -242,11 +242,11 @@ CheckSession
 | [Page](../surfaces/page.md) | 구현 | Studio의 `/studio/review` — 이미지 업로드 → 선택한 CheckScenario의 항목별 결과 테이블. Template·Image·Graphic·Review는 공통 Studio 사이드바를 사용합니다. 클라이언트가 `/api/check` → `/api/check/{checkSessionId}/ai` 순으로 호출 |
 | [REST](../surfaces/rest.md) | 구현 | `POST /api/check`(FormData, 20MB 제한, origin·인증 게이트), `POST /api/check/{checkSessionId}/ai` |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `runCheck`(+`listCheckScenarios`)이 `startCheckSession`을 호출 |
-| MCP | 구현 | `runAssetCheck`가 PNG/JPEG/WebP data URI를 받아 `mcp-call` 출처로 `startCheckSession` 호출 |
+| MCP | 구현 | `runAssetCheck`가 PNG/JPEG/WebP data URI의 결정론적 검수를 실행하고 관측 질문·이미지를 연결된 AI에 반환합니다. `submitAssetCheckObservations`가 관측값을 저장된 룰셋과 대조해 서버에서 최종 판정·저장합니다. |
 
 ## 5. 의존
 
-- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 모델과 기본 프롬프트는 Check가 참조하는 RuleChecker에서 선택하고, Check의 source·구조화 evidence·heuristicCriteria·heuristicPrompt를 JSON text part로, 검수 대상과 referenceAssets를 file part로 전달한다. 모델은 기준별 관찰값만 반환하며(관찰형은 `present`/`absent`, 수치형은 숫자, 공통으로 `uncertain`/`not_applicable`) 최종 `pass`/`fail`/`needs_review`는 검수 Service의 Evaluator가 결정한다. 한 세션의 heuristic Check는 한 번의 AI 호출로 평가하고, 설정·호출·출력 검증 실패는 `needs_review`로 처리한다.
+- AI 프로바이더: Page·AI Chat은 Anthropic(Vercel AI SDK `generateText`+`Output.object`)을 사용합니다. MCP는 LBS의 AI 키를 쓰지 않고 연결된 클라이언트 AI에 검수 대상 이미지와 기대값 없는 관측 질문만 반환합니다. 두 경로 모두 모델은 기준별 관찰값만 반환하며(관찰형은 `present`/`absent`, 수치형은 숫자, 공통으로 `uncertain`/`not_applicable`) 최종 `pass`/`fail`/`needs_review`는 검수 Service의 Evaluator가 결정합니다.
 - 이미지 디코딩: `sharp`(128px 픽셀 그리드 추출).
 - 결정론적 checker: palette-compliance / color-combination / spot-color / background-tone / clear-space / relative-size / canvas-format. RuleChecker의 `checkerKey`로 registry를 조회하며, 미등록 checker는 `implemented:false`로 표시.
 - Payload 컬렉션: `guideline-documents`(Check 기준), `brand-colors`(팔레트) 읽기. 세션은 `check-sessions`에 영속(CheckRulesetSnapshot을 함께 저장해 AI 후속 단계가 재사용).

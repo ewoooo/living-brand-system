@@ -28,6 +28,7 @@ describe('MCP API key repository', () => {
 					listImageProfiles: true,
 					runAssetCheck: true,
 					searchGuidelines: true,
+					submitAssetCheckObservations: true,
 				},
 			},
 			depth: 0,
