@@ -3,6 +3,7 @@ import { GuidelineDescription } from '@/features/guideline/components/globals/gu
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 import { CarouselWidget } from '@/features/guideline/widgets/carousel/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
+import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/component'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/component'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/component'
@@ -43,6 +44,17 @@ function renderWidget(child: Child): ReactNode {
 					logoLayer={child.logoLayer}
 					gridLayer={child.gridLayer}
 					scalePercent={child.scalePercent}
+				/>
+			)
+		case 'clearspaceViewerWidget':
+			return (
+				<ClearspaceViewerWidget
+					horizontalLogo={child.horizontalLogo}
+					horizontalGrid={child.horizontalGrid}
+					horizontalMinHeightPx={child.horizontalMinHeightPx}
+					verticalLogo={child.verticalLogo}
+					verticalGrid={child.verticalGrid}
+					verticalMinHeightPx={child.verticalMinHeightPx}
 				/>
 			)
 		case 'colorPairingWidget':

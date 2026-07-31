@@ -871,6 +871,7 @@ export interface LayoutBlock {
         | ColorPaletteWidget
         | CarouselWidget
         | ClearspaceOverlayWidget
+        | ClearspaceViewerWidget
         | ColorPairingWidget
         | ColorPairingRecommendationWidget
         | GlyphGridWidget
@@ -979,6 +980,39 @@ export interface BrandLogo {
       filename?: string | null;
     };
   };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ClearspaceViewerWidget".
+ */
+export interface ClearspaceViewerWidget {
+  /**
+   * 가로형 로고 레이어(logoSpace).
+   */
+  horizontalLogo: number | BrandLogo;
+  /**
+   * 가로형 그리드 레이어(clearSpace). 같은 canvas.
+   */
+  horizontalGrid?: (number | null) | BrandLogo;
+  /**
+   * 가로형 최소 높이(px). 렌더 높이가 이 값 미만이면 금지(빨강).
+   */
+  horizontalMinHeightPx?: number | null;
+  /**
+   * 세로형 로고 레이어(logoSpace). 없으면 세로 패널 생략.
+   */
+  verticalLogo?: (number | null) | BrandLogo;
+  /**
+   * 세로형 그리드 레이어(clearSpace).
+   */
+  verticalGrid?: (number | null) | BrandLogo;
+  /**
+   * 세로형 최소 높이(px). 미만이면 금지(빨강).
+   */
+  verticalMinHeightPx?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'clearspaceViewerWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2627,6 +2661,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         colorPaletteWidget?: T | ColorPaletteWidgetSelect<T>;
         carouselWidget?: T | CarouselWidgetSelect<T>;
         clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
+        clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
         colorPairingWidget?: T | ColorPairingWidgetSelect<T>;
         colorPairingRecommendationWidget?: T | ColorPairingRecommendationWidgetSelect<T>;
         glyphGridWidget?: T | GlyphGridWidgetSelect<T>;
@@ -2681,6 +2716,20 @@ export interface ClearspaceOverlayWidgetSelect<T extends boolean = true> {
   logoLayer?: T;
   gridLayer?: T;
   scalePercent?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ClearspaceViewerWidget_select".
+ */
+export interface ClearspaceViewerWidgetSelect<T extends boolean = true> {
+  horizontalLogo?: T;
+  horizontalGrid?: T;
+  horizontalMinHeightPx?: T;
+  verticalLogo?: T;
+  verticalGrid?: T;
+  verticalMinHeightPx?: T;
   id?: T;
   blockName?: T;
 }
