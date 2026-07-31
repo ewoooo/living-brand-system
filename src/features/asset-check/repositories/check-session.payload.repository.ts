@@ -1,4 +1,5 @@
 import config from '@payload-config'
+import { and, eq } from '@payloadcms/db-postgres/drizzle'
 import { getPayload } from 'payload'
 import type { AiUsage, CheckResult } from '@/features/asset-check/checkers/types'
 import {
@@ -82,6 +83,42 @@ export async function saveCheckSessionRecord(session: CheckSession, user: User):
 		overrideAccess: true,
 		user,
 	})
+}
+
+/**
+ * MCP 관측 완료 저장 repository — running 세션의 첫 완료만 단일 Drizzle update로 반영한다.
+ * 외부 I/O와 경쟁 상태 제어는 이 repository가 소유하고, 결과 병합은 CheckSession이 소유한다.
+ */
+export async function completeRunningCheckSessionRecord(
+	session: CheckSession,
+	user: User,
+): Promise<boolean> {
+	const data = session.toUpdateData()
+	if (data.status !== 'completed') {
+		throw new Error('Only a completed check session can use conditional completion.')
+	}
+
+	const payload = await getPayload({ config })
+	const table = payload.db.tables.check_sessions
+	const updated = await payload.db.drizzle
+		.update(table)
+		.set({
+			status: data.status,
+			results: data.results,
+			pendingCheckKeys: data.pendingCheckKeys,
+			completedAt: data.completedAt,
+			updatedAt: new Date().toISOString(),
+		})
+		.where(
+			and(
+				eq(table.id, session.id),
+				eq(table.createdBy, user.id),
+				eq(table.status, 'running'),
+			),
+		)
+		.returning({ id: table.id })
+
+	return updated.length === 1
 }
 
 function toCheckSession(record: CheckSessionRecord): CheckSession {

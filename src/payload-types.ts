@@ -1996,16 +1996,18 @@ export interface AgentChatSession {
       }[]
     | null;
   /**
-   * Agent가 제안하고 서버가 확정한 분류와 최초 분류 단계 사용량입니다.
+   * Agent가 제안하고 서버가 확정한 분류와 전체 분류 단계 사용량입니다.
    */
   triage?: {
     skillName?: string | null;
-    responseMode?: ('quick' | 'lookup' | 'research' | 'action') | null;
+    responseLevel?: ('fast' | 'standard' | 'deep') | null;
+    taskType?: ('answer' | 'lookup' | 'action') | null;
     risk?: ('low' | 'high') | null;
     confidence?: number | null;
-    executionModel?: ('sonnet-5' | 'opus-5.0') | null;
+    executionModel?: ('haiku-4.5' | 'sonnet-5' | 'opus-5.0') | null;
     toolScope?: ('none' | 'read' | 'action') | null;
     reviewRequired?: boolean | null;
+    clarificationRequired?: boolean | null;
     classifierModel?: string | null;
     inputTokens?: number | null;
     outputTokens?: number | null;
@@ -2161,6 +2163,30 @@ export interface PayloadMcpApiKey {
      * Find live top-level guideline document metadata.
      */
     findGuideline?: boolean | null;
+    /**
+     * Search published brand guideline titles, paths, descriptions, body content, and checks.
+     */
+    searchGuidelines?: boolean | null;
+    /**
+     * Find or list published production templates and their open text slots.
+     */
+    findTemplates?: boolean | null;
+    /**
+     * List published brand image profiles available to the current user.
+     */
+    listImageProfiles?: boolean | null;
+    /**
+     * Run deterministic checks and return the image plus observation questions for the connected AI. Follow with submitAssetCheckObservations.
+     */
+    runAssetCheck?: boolean | null;
+    /**
+     * Submit observations from the connected AI after runAssetCheck. The server validates them and decides the final result.
+     */
+    submitAssetCheckObservations?: boolean | null;
+    /**
+     * Generate and store brand images with a published profile, then return stored original URLs and inline WebP previews.
+     */
+    generateBrandImage?: boolean | null;
   };
   updatedAt: string;
   createdAt: string;
@@ -3453,12 +3479,14 @@ export interface AgentChatSessionsSelect<T extends boolean = true> {
     | T
     | {
         skillName?: T;
-        responseMode?: T;
+        responseLevel?: T;
+        taskType?: T;
         risk?: T;
         confidence?: T;
         executionModel?: T;
         toolScope?: T;
         reviewRequired?: T;
+        clarificationRequired?: T;
         classifierModel?: T;
         inputTokens?: T;
         outputTokens?: T;
@@ -3555,6 +3583,12 @@ export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
         findGuidelineDocuments?: T;
         findChecks?: T;
         findGuideline?: T;
+        searchGuidelines?: T;
+        findTemplates?: T;
+        listImageProfiles?: T;
+        runAssetCheck?: T;
+        submitAssetCheckObservations?: T;
+        generateBrandImage?: T;
       };
   updatedAt?: T;
   createdAt?: T;

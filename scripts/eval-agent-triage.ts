@@ -1,5 +1,5 @@
 /**
- * Production Agent의 첫 loadSkill 단계만 실행해 triage 정확도와 분류 token을 측정한다.
+ * Production Agent의 loadSkill 분류 단계만 실행해 triage 정확도와 token을 측정한다.
  * 실행: PAYLOAD_DB_PUSH=false AGENT_CHAT_TRIAGE_ENABLED=true
  *   AGENT_TRIAGE_EVAL_COOKIE=... pnpm payload run scripts/eval-agent-triage.ts
  * 선택 실행: AGENT_TRIAGE_EVAL_CASE=guideline-logo-clearspace-lookup
@@ -13,13 +13,12 @@ import { isPayloadUser } from '@/lib/auth'
 import { agentTriageEvaluationCases } from './fixtures/agent-triage-evaluation'
 
 type AgentChatStep = Awaited<ReturnType<typeof agentChatAgent.generate>>['steps'][number]
-type EvaluationCheck = 'name' | 'responseMode' | 'risk'
+type EvaluationCheck = 'name' | 'responseLevel' | 'taskType' | 'risk'
 
 interface EvaluationResult {
 	checks: Record<EvaluationCheck, boolean>
 	confidence: number
 	expectedRisk: 'high' | 'low'
-	id: string
 	passed: boolean
 	totalTokens: number
 }
@@ -58,10 +57,11 @@ try {
 	const results: EvaluationResult[] = []
 
 	for (const testCase of selectedCases) {
-		const { decision, step } = await classify(testCase.input, user)
+		const { decision, totalTokens } = await classify(testCase.input, user)
 		const checks = {
 			name: decision.name === testCase.expected.name,
-			responseMode: decision.responseMode === testCase.expected.responseMode,
+			responseLevel: decision.responseLevel === testCase.expected.responseLevel,
+			taskType: decision.taskType === testCase.expected.taskType,
 			risk: decision.risk === testCase.expected.risk,
 		}
 		const passed = Object.values(checks).every(Boolean)
@@ -70,15 +70,14 @@ try {
 			checks,
 			confidence: decision.confidence,
 			expectedRisk: testCase.expected.risk,
-			id: testCase.id,
 			passed,
-			totalTokens: step.usage.totalTokens ?? 0,
+			totalTokens,
 		})
 
 		console.log(
 			`${passed ? 'passed' : 'failed'}: ${testCase.id} ` +
-				`(${decision.name}, ${decision.responseMode}, ${decision.risk}, ` +
-				`${step.usage.totalTokens} tokens)`,
+				`(${decision.name}, ${decision.responseLevel}/${decision.taskType}, ` +
+				`${decision.risk}, ${totalTokens} tokens)`,
 		)
 	}
 
@@ -92,7 +91,8 @@ try {
 	console.log('\nAgent triage evaluation')
 	console.log(`exact: ${results.filter(({ passed }) => passed).length}/${count}`)
 	console.log(`skill: ${correct('name')}/${count}`)
-	console.log(`responseMode: ${correct('responseMode')}/${count}`)
+	console.log(`responseLevel: ${correct('responseLevel')}/${count}`)
+	console.log(`taskType: ${correct('taskType')}/${count}`)
 	console.log(`risk: ${correct('risk')}/${count}`)
 	console.log(`high-risk recall: ${highRiskDetected}/${highRiskCases.length}`)
 	console.log(`average confidence: ${average(results.map(({ confidence }) => confidence))}`)
@@ -110,7 +110,8 @@ async function classify(
 	user: NonNullable<Awaited<ReturnType<typeof payload.auth>>['user']>,
 ) {
 	const controller = new AbortController()
-	let firstStep: AgentChatStep | undefined
+	const classifierSteps: AgentChatStep[] = []
+	let decision: ReturnType<typeof agentQueryTriageDecisionSchema.parse> | undefined
 
 	try {
 		await agentChatAgent.generate({
@@ -119,8 +120,14 @@ async function classify(
 			prompt: input,
 			timeout: 120_000,
 			onStepEnd: (step) => {
-				if (firstStep) return
-				firstStep = step
+				const loadSkill = step.toolResults.find(
+					(result) => result.dynamic !== true && result.toolName === 'loadSkill',
+				)
+				if (!loadSkill) return
+				classifierSteps.push(step)
+				const parsedDecision = agentQueryTriageDecisionSchema.safeParse(loadSkill.output)
+				if (!parsedDecision.success) return
+				decision = parsedDecision.data
 				controller.abort()
 			},
 		})
@@ -128,15 +135,11 @@ async function classify(
 		if (!controller.signal.aborted) throw error
 	}
 
-	if (!firstStep) throw new Error('Agent triage evaluation did not receive a first step.')
-	const loadSkill = firstStep.toolResults.find(
-		(result) => result.dynamic !== true && result.toolName === 'loadSkill',
-	)
-	if (!loadSkill) throw new Error('Agent triage evaluation did not receive loadSkill output.')
+	if (!decision) throw new Error('Agent triage evaluation did not receive a final decision.')
 
 	return {
-		decision: agentQueryTriageDecisionSchema.parse(loadSkill.output),
-		step: firstStep,
+		decision,
+		totalTokens: classifierSteps.reduce((sum, step) => sum + (step.usage.totalTokens ?? 0), 0),
 	}
 }
 
