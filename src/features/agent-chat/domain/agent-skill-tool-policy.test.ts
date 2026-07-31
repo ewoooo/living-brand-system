@@ -7,12 +7,12 @@ describe('agent skill tool policy', () => {
 		expect(
 			getAgentExecutionPolicy({
 				name: 'generate-image',
-				model: 'sonnet-5',
+				model: 'haiku-4.5',
 				toolScope: 'none',
 			}),
 		).toEqual({
 			activeTools: [],
-			modelId: 'claude-sonnet-5',
+			modelId: 'claude-haiku-4-5',
 		})
 		expect(getAllowedAgentTools('unknown-skill', 'action')).toEqual([])
 	})
@@ -33,7 +33,8 @@ describe('agent skill tool policy', () => {
 	it('고위험 action 요청은 실행 도구를 허용하지 않는다', () => {
 		const decision = decideAgentQueryTriage({
 			name: 'create-from-template',
-			responseMode: 'action',
+			responseLevel: 'standard',
+			taskType: 'action',
 			risk: 'high',
 			confidence: 90,
 		})

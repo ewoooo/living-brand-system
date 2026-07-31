@@ -262,7 +262,7 @@ export const AgentChatSessions: CollectionConfig = {
 			name: 'triage',
 			type: 'group',
 			admin: {
-				description: 'Agent가 제안하고 서버가 확정한 분류와 최초 분류 단계 사용량입니다.',
+				description: 'Agent가 제안하고 서버가 확정한 분류와 전체 분류 단계 사용량입니다.',
 			},
 			fields: [
 				{
@@ -270,12 +270,20 @@ export const AgentChatSessions: CollectionConfig = {
 					type: 'text',
 				},
 				{
-					name: 'responseMode',
+					name: 'responseLevel',
 					type: 'select',
 					options: [
-						{ label: 'Quick', value: 'quick' },
+						{ label: 'Fast · Haiku 4.5', value: 'fast' },
+						{ label: 'Standard · Sonnet 5', value: 'standard' },
+						{ label: 'Deep · Opus 5.0', value: 'deep' },
+					],
+				},
+				{
+					name: 'taskType',
+					type: 'select',
+					options: [
+						{ label: 'Answer', value: 'answer' },
 						{ label: 'Lookup', value: 'lookup' },
-						{ label: 'Research', value: 'research' },
 						{ label: 'Action', value: 'action' },
 					],
 				},
@@ -298,6 +306,7 @@ export const AgentChatSessions: CollectionConfig = {
 					name: 'executionModel',
 					type: 'select',
 					options: [
+						{ label: 'Haiku 4.5', value: 'haiku-4.5' },
 						{ label: 'Sonnet 5', value: 'sonnet-5' },
 						{ label: 'Opus 5.0', value: 'opus-5.0' },
 					],
@@ -313,6 +322,10 @@ export const AgentChatSessions: CollectionConfig = {
 				},
 				{
 					name: 'reviewRequired',
+					type: 'checkbox',
+				},
+				{
+					name: 'clarificationRequired',
 					type: 'checkbox',
 				},
 				{

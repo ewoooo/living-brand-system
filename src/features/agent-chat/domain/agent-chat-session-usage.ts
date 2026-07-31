@@ -22,7 +22,6 @@ interface LanguageModelUsageLike {
 }
 
 interface ToolCallLike {
-	input?: unknown
 	toolName?: unknown
 }
 
@@ -53,6 +52,8 @@ export function createAgentChatSessionUsageCollector() {
 	const models = new Set<string>()
 	const usage = createEmptyUsage()
 	const rawUsages: unknown[] = []
+	const triageModels = new Set<string>()
+	const triageUsage = createEmptyUsage()
 	let triage: AgentChatTriage | undefined
 
 	return {
@@ -66,30 +67,38 @@ export function createAgentChatSessionUsageCollector() {
 					usage: step.usage.raw,
 				})
 			}
-			if (!triage) {
-				for (const toolResult of step.toolResults ?? []) {
-					const result = toolResult as ToolResultLike
-					if (result.toolName !== 'loadSkill') continue
-					const decision = agentQueryTriageDecisionSchema.safeParse(result.output)
-					if (!decision.success) continue
+			const loadSkillResults = (step.toolResults ?? [])
+				.map((toolResult) => toolResult as ToolResultLike)
+				.filter((result) => result.toolName === 'loadSkill')
+			if (loadSkillResults.length > 0) {
+				if (model) triageModels.add(model)
+				if (step.usage) addUsage(triageUsage, step.usage)
+			}
 
-					triage = {
-						skillName: decision.data.name,
-						responseMode: decision.data.responseMode,
-						risk: decision.data.risk,
-						confidence: decision.data.confidence,
-						executionModel: decision.data.model,
-						toolScope: decision.data.toolScope,
-						reviewRequired: decision.data.reviewRequired,
-						classifierModel: model,
-						inputTokens: step.usage?.inputTokens ?? 0,
-						outputTokens: step.usage?.outputTokens ?? 0,
-						totalTokens: step.usage?.totalTokens ?? 0,
-						cacheReadInputTokens: step.usage?.inputTokenDetails.cacheReadTokens ?? 0,
-						cacheWriteInputTokens: step.usage?.inputTokenDetails.cacheWriteTokens ?? 0,
-						reasoningTokens: step.usage?.outputTokenDetails.reasoningTokens ?? 0,
-					}
-					break
+			for (const result of loadSkillResults) {
+				const skillName = readSkillName(result.output)
+				if (skillName) increment(skillCounts, skillName)
+				if (triage) continue
+				const decision = agentQueryTriageDecisionSchema.safeParse(result.output)
+				if (!decision.success) continue
+
+				triage = {
+					skillName: decision.data.name,
+					responseLevel: decision.data.responseLevel,
+					taskType: decision.data.taskType,
+					risk: decision.data.risk,
+					confidence: decision.data.confidence,
+					executionModel: decision.data.model,
+					toolScope: decision.data.toolScope,
+					reviewRequired: decision.data.reviewRequired,
+					clarificationRequired: decision.data.clarificationRequired,
+					classifierModel: [...triageModels].join(', '),
+					inputTokens: triageUsage.inputTokens,
+					outputTokens: triageUsage.outputTokens,
+					totalTokens: triageUsage.totalTokens,
+					cacheReadInputTokens: triageUsage.cacheReadInputTokens,
+					cacheWriteInputTokens: triageUsage.cacheWriteInputTokens,
+					reasoningTokens: triageUsage.reasoningTokens,
 				}
 			}
 
@@ -97,10 +106,6 @@ export function createAgentChatSessionUsageCollector() {
 				const call = toolCall as ToolCallLike
 				if (typeof call.toolName !== 'string') continue
 				increment(toolCounts, call.toolName)
-				const skillName = readSkillName(call.input)
-				if (call.toolName === 'loadSkill' && skillName) {
-					increment(skillCounts, skillName)
-				}
 			}
 		},
 		snapshot(): AgentChatSessionUsageSnapshot {

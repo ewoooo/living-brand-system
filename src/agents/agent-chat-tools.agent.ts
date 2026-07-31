@@ -2,9 +2,11 @@ import { type ToolSet, tool } from 'ai'
 import { z } from 'zod'
 import { env } from '@/env'
 import {
+	type AgentQueryTriageState,
 	agentQueryTriageSchema,
 	agentSkillSelectionSchema,
 	decideAgentQueryRouting,
+	isAgentQueryTriageVerification,
 } from '@/features/agent-chat/domain/agent-query-triage'
 import {
 	type AgentSkillDetail,
@@ -36,6 +38,7 @@ import { startCheckSession } from '@/services/start-check-session.service'
 
 const guidelineToolContextSchema = z.object({
 	agentChatSessionId: z.number().int().positive().optional(),
+	triageState: z.custom<AgentQueryTriageState>(),
 	user: z.unknown(),
 })
 
@@ -54,8 +57,17 @@ export function getAgentTools() {
 			inputSchema: triageEnabled ? agentQueryTriageSchema : agentSkillSelectionSchema,
 			contextSchema: guidelineToolContextSchema,
 			execute: async (proposal, { context }) => {
-				const { name } = proposal
-				const skill = await findEnabledAgentSkillByName(context.user, name)
+				const decision = decideAgentQueryRouting(
+					proposal,
+					triageEnabled,
+					context.triageState.firstProposal,
+				)
+				if (isAgentQueryTriageVerification(decision)) {
+					context.triageState.firstProposal = agentQueryTriageSchema.parse(proposal)
+					return decision
+				}
+
+				const skill = await findEnabledAgentSkillByName(context.user, proposal.name)
 
 				if (!skill) {
 					throw new AgentConfigurationError('Agent skill is not configured.')
@@ -63,7 +75,7 @@ export function getAgentTools() {
 
 				return {
 					...formatLoadedSkill(skill),
-					...decideAgentQueryRouting(proposal, triageEnabled),
+					...decision,
 				}
 			},
 		}),

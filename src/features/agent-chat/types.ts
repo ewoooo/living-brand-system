@@ -21,12 +21,14 @@ export interface AgentChatAiUsage {
 
 export interface AgentChatTriage {
 	skillName: string
-	responseMode: AgentQueryTriageDecision['responseMode']
+	responseLevel: AgentQueryTriageDecision['responseLevel']
+	taskType: AgentQueryTriageDecision['taskType']
 	risk: AgentQueryTriageDecision['risk']
 	confidence: number
 	executionModel: AgentQueryTriageDecision['model']
 	toolScope: AgentQueryTriageDecision['toolScope']
 	reviewRequired: boolean
+	clarificationRequired: boolean
 	classifierModel: string
 	inputTokens: number
 	outputTokens: number

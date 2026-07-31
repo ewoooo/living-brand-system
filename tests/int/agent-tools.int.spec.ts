@@ -103,13 +103,14 @@ describe('agent tools', () => {
 			(triageEnabled
 				? {
 						name: 'copywriter-test',
-						responseMode: 'action',
+						responseLevel: 'standard',
+						taskType: 'action',
 						risk: 'high',
 						confidence: 90,
 					}
 				: { name: 'copywriter-test' }) as never,
 			{
-				context: { user: { id: 1 } },
+				context: { triageState: {}, user: { id: 1 } },
 			} as never,
 		)
 
@@ -120,12 +121,14 @@ describe('agent tools', () => {
 						description: 'Copywriting test skill.',
 						instructions: 'Rewrite campaign copy.',
 						name: 'copywriter-test',
-						responseMode: 'action',
+						responseLevel: 'deep',
+						taskType: 'action',
 						risk: 'high',
 						confidence: 90,
 						model: 'opus-5.0',
 						toolScope: 'read',
 						reviewRequired: true,
+						clarificationRequired: false,
 					}
 				: {
 						description: 'Copywriting test skill.',
@@ -136,6 +139,56 @@ describe('agent tools', () => {
 					},
 		)
 	})
+
+	it.runIf(process.env.AGENT_CHAT_TRIAGE_ENABLED === 'true')(
+		'reclassifies one low-confidence proposal before loading the skill',
+		async () => {
+			const findSkill = vi
+				.spyOn(agentSkillRepository, 'findEnabledAgentSkillByName')
+				.mockResolvedValue({
+					body: 'Answer from published guidelines.',
+					description: 'Guideline answer skill.',
+					name: 'answer-guideline',
+					references: [],
+				})
+			const tools = getAgentTools()
+			const triageState = {}
+			const first = await tools.loadSkill.execute?.(
+				{
+					name: 'answer-guideline',
+					responseLevel: 'fast',
+					taskType: 'answer',
+					risk: 'low',
+					confidence: 60,
+				} as never,
+				{ context: { triageState, user: { id: 1 } } } as never,
+			)
+
+			expect(first).toEqual({ verificationRequired: true })
+			expect(findSkill).not.toHaveBeenCalled()
+
+			const second = await tools.loadSkill.execute?.(
+				{
+					name: 'answer-guideline',
+					responseLevel: 'standard',
+					taskType: 'answer',
+					risk: 'low',
+					confidence: 90,
+				} as never,
+				{ context: { triageState, user: { id: 1 } } } as never,
+			)
+
+			expect(second).toMatchObject({
+				name: 'answer-guideline',
+				responseLevel: 'standard',
+				taskType: 'answer',
+				clarificationRequired: false,
+				model: 'sonnet-5',
+				toolScope: 'none',
+			})
+			expect(findSkill).toHaveBeenCalledTimes(1)
+		},
+	)
 
 	it('reads guideline document details through the tool service', async () => {
 		const readDocument = vi

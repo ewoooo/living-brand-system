@@ -1810,16 +1810,18 @@ export interface AgentChatSession {
       }[]
     | null;
   /**
-   * Agent가 제안하고 서버가 확정한 분류와 최초 분류 단계 사용량입니다.
+   * Agent가 제안하고 서버가 확정한 분류와 전체 분류 단계 사용량입니다.
    */
   triage?: {
     skillName?: string | null;
-    responseMode?: ('quick' | 'lookup' | 'research' | 'action') | null;
+    responseLevel?: ('fast' | 'standard' | 'deep') | null;
+    taskType?: ('answer' | 'lookup' | 'action') | null;
     risk?: ('low' | 'high') | null;
     confidence?: number | null;
-    executionModel?: ('sonnet-5' | 'opus-5.0') | null;
+    executionModel?: ('haiku-4.5' | 'sonnet-5' | 'opus-5.0') | null;
     toolScope?: ('none' | 'read' | 'action') | null;
     reviewRequired?: boolean | null;
+    clarificationRequired?: boolean | null;
     classifierModel?: string | null;
     inputTokens?: number | null;
     outputTokens?: number | null;
@@ -3205,12 +3207,14 @@ export interface AgentChatSessionsSelect<T extends boolean = true> {
     | T
     | {
         skillName?: T;
-        responseMode?: T;
+        responseLevel?: T;
+        taskType?: T;
         risk?: T;
         confidence?: T;
         executionModel?: T;
         toolScope?: T;
         reviewRequired?: T;
+        clarificationRequired?: T;
         classifierModel?: T;
         inputTokens?: T;
         outputTokens?: T;
