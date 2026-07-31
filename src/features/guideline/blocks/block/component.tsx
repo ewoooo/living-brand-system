@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 import { CarouselWidget } from '@/features/guideline/widgets/carousel/component'
+import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/component'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/component'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/component'
@@ -11,8 +12,8 @@ import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/compone
 import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
-import { LogoClearSpaceWidget } from '@/features/guideline/widgets/logo-clear-space/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
+import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
 import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/component'
 import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/component'
 import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/component'
@@ -36,6 +37,14 @@ function renderWidget(child: Child): ReactNode {
 			return <ColorPaletteWidget />
 		case 'carouselWidget':
 			return <CarouselWidget />
+		case 'clearspaceOverlayWidget':
+			return (
+				<ClearspaceOverlayWidget
+					logoLayer={child.logoLayer}
+					gridLayer={child.gridLayer}
+					scalePercent={child.scalePercent}
+				/>
+			)
 		case 'colorPairingWidget':
 			return <ColorPairingWidget />
 		case 'colorPairingRecommendationWidget':
@@ -52,12 +61,19 @@ function renderWidget(child: Child): ReactNode {
 			return <LayoutGridWidget />
 		case 'layoutGridOverlayWidget':
 			return <LayoutGridOverlayWidget />
-		case 'logoClearSpaceWidget':
-			// logo 입력을 받는 위젯(logoColorVariant과 함께).
-			return <LogoClearSpaceWidget logo={child.logo} />
 		case 'logoColorVariantWidget':
 			// 인스턴스 입력(logo)을 받는 위젯 — 자족 렌더 위젯들과 다름.
 			return <LogoColorVariantWidget logo={child.logo} />
+		case 'logoDisplayWidget':
+			// logo를 pin해서 받는 위젯(fishing 없음) + 유한 사이징(width/height/padding).
+			return (
+				<LogoDisplayWidget
+					logo={child.logo}
+					width={child.width}
+					height={child.height}
+					padding={child.padding}
+				/>
+			)
 		case 'logoGroupViewerWidget':
 			return <LogoGroupViewerWidget />
 		case 'logoViewerWidget':
@@ -173,19 +189,31 @@ function Arrange({
 	)
 }
 
+// brand-colors 참조에서 hex를 뽑는다(데이터 색 → inline style, 닫힌 토큰 규칙의 색-데이터 예외).
+function bgHex(color: LayoutBlockType['background']): string | undefined {
+	return color && typeof color === 'object' && color.hex ? color.hex : undefined
+}
+
 export function LayoutBlock({ block }: { block: LayoutBlockType }) {
+	const outerBg = bgHex(block.background)
+	const innerBg = bgHex(block.innerBackground)
 	return (
-		<GuidelineBlockFrame layout={block.width ?? 'padded'}>
+		<GuidelineBlockFrame
+			layout={block.width ?? 'padded'}
+			style={outerBg ? { background: outerBg } : undefined}
+		>
 			{block.title ? <GuidelineHeader variant="block" title={block.title} /> : null}
 			{block.description ? (
 				<GuidelineDescription variant="block" description={block.description} />
 			) : null}
-			<Arrange
-				arrangement={block.arrangement}
-				columns={block.columns ?? 2}
-				aspectRatio={block.aspectRatio ?? '1:1'}
-				items={block.children ?? []}
-			/>
+			<div style={innerBg ? { background: innerBg } : undefined}>
+				<Arrange
+					arrangement={block.arrangement}
+					columns={block.columns ?? 2}
+					aspectRatio={block.aspectRatio ?? '1:1'}
+					items={block.children ?? []}
+				/>
+			</div>
 		</GuidelineBlockFrame>
 	)
 }

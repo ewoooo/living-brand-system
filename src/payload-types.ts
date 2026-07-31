@@ -841,6 +841,14 @@ export interface LayoutBlock {
    */
   width?: ('padded' | 'full') | null;
   /**
+   * 블록 전체(전체 폭) 배경색입니다. 비우면 기본.
+   */
+  background?: (number | null) | BrandColor;
+  /**
+   * 자식 레이아웃(그리드/캐러셀 등) 영역 배경색입니다. 비우면 없음.
+   */
+  innerBackground?: (number | null) | BrandColor;
+  /**
    * 위젯 배치 방식입니다. grid/carousel/masonry/featured 구현.
    */
   arrangement?: ('grid' | 'carousel' | 'featured' | 'masonry') | null;
@@ -862,6 +870,7 @@ export interface LayoutBlock {
         | ImageLeaf
         | ColorPaletteWidget
         | CarouselWidget
+        | ClearspaceOverlayWidget
         | ColorPairingWidget
         | ColorPairingRecommendationWidget
         | GlyphGridWidget
@@ -870,8 +879,8 @@ export interface LayoutBlock {
         | IncorrectUsageWidget
         | LayoutGridWidget
         | LayoutGridOverlayWidget
-        | LogoClearSpaceWidget
         | LogoColorVariantWidget
+        | LogoDisplayWidget
         | LogoGroupViewerWidget
         | LogoViewerWidget
         | MediaShowcaseWidget
@@ -918,6 +927,58 @@ export interface CarouselWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'carouselWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ClearspaceOverlayWidget".
+ */
+export interface ClearspaceOverlayWidget {
+  /**
+   * 로고 레이어(logoSpace). 그리드와 같은 canvas로 파싱된 SVG.
+   */
+  logoLayer: number | BrandLogo;
+  /**
+   * 그리드 레이어(clearSpace). 로고와 같은 canvas.
+   */
+  gridLayer: number | BrandLogo;
+  /**
+   * 표시 배율(%). 100 = 자기 크기 그대로. 자기 크기 × (값/100).
+   */
+  scalePercent?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'clearspaceOverlayWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-logos".
+ */
+export interface BrandLogo {
+  id: number;
+  name: string;
+  alt: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -993,50 +1054,6 @@ export interface LayoutGridOverlayWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "LogoClearSpaceWidget".
- */
-export interface LogoClearSpaceWidget {
-  /**
-   * 표시할 로고입니다.
-   */
-  logo: number | BrandLogo;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'logoClearSpaceWidget';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brand-logos".
- */
-export interface BrandLogo {
-  id: number;
-  name: string;
-  alt: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-  sizes?: {
-    thumbnail?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-  };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "LogoColorVariantWidget".
  */
 export interface LogoColorVariantWidget {
@@ -1047,6 +1064,31 @@ export interface LogoColorVariantWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'logoColorVariantWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoDisplayWidget".
+ */
+export interface LogoDisplayWidget {
+  /**
+   * 표시할 이미지입니다.
+   */
+  logo: number | BrandLogo;
+  /**
+   * 폭(px). 비우면 본연 크기.
+   */
+  width?: number | null;
+  /**
+   * 높이(px). 비우면 본연 크기.
+   */
+  height?: number | null;
+  /**
+   * 이미지 주변 여백(px).
+   */
+  padding?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoDisplayWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2573,6 +2615,8 @@ export interface LayoutBlockSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   width?: T;
+  background?: T;
+  innerBackground?: T;
   arrangement?: T;
   columns?: T;
   aspectRatio?: T;
@@ -2582,6 +2626,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         image?: T | ImageLeafSelect<T>;
         colorPaletteWidget?: T | ColorPaletteWidgetSelect<T>;
         carouselWidget?: T | CarouselWidgetSelect<T>;
+        clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
         colorPairingWidget?: T | ColorPairingWidgetSelect<T>;
         colorPairingRecommendationWidget?: T | ColorPairingRecommendationWidgetSelect<T>;
         glyphGridWidget?: T | GlyphGridWidgetSelect<T>;
@@ -2590,8 +2635,8 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         incorrectUsageWidget?: T | IncorrectUsageWidgetSelect<T>;
         layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
         layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
-        logoClearSpaceWidget?: T | LogoClearSpaceWidgetSelect<T>;
         logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
+        logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
         logoGroupViewerWidget?: T | LogoGroupViewerWidgetSelect<T>;
         logoViewerWidget?: T | LogoViewerWidgetSelect<T>;
         mediaShowcaseWidget?: T | MediaShowcaseWidgetSelect<T>;
@@ -2625,6 +2670,17 @@ export interface ColorPaletteWidgetSelect<T extends boolean = true> {
  * via the `definition` "CarouselWidget_select".
  */
 export interface CarouselWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ClearspaceOverlayWidget_select".
+ */
+export interface ClearspaceOverlayWidgetSelect<T extends boolean = true> {
+  logoLayer?: T;
+  gridLayer?: T;
+  scalePercent?: T;
   id?: T;
   blockName?: T;
 }
@@ -2694,19 +2750,22 @@ export interface LayoutGridOverlayWidgetSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "LogoClearSpaceWidget_select".
+ * via the `definition` "LogoColorVariantWidget_select".
  */
-export interface LogoClearSpaceWidgetSelect<T extends boolean = true> {
+export interface LogoColorVariantWidgetSelect<T extends boolean = true> {
   logo?: T;
   id?: T;
   blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "LogoColorVariantWidget_select".
+ * via the `definition` "LogoDisplayWidget_select".
  */
-export interface LogoColorVariantWidgetSelect<T extends boolean = true> {
+export interface LogoDisplayWidgetSelect<T extends boolean = true> {
   logo?: T;
+  width?: T;
+  height?: T;
+  padding?: T;
   id?: T;
   blockName?: T;
 }
