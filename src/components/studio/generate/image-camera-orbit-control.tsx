@@ -58,7 +58,10 @@ export function ImageCameraOrbitControl({
 	const onChangeRef = useRef(onChange)
 	const initialAnglesRef = useRef({ azimuthDeg, elevationDeg })
 	const [unsupported, setUnsupported] = useState(false)
-	onChangeRef.current = onChange
+
+	useEffect(() => {
+		onChangeRef.current = onChange
+	}, [onChange])
 
 	useEffect(() => {
 		controllerRef.current?.update({ azimuthDeg, elevationDeg })

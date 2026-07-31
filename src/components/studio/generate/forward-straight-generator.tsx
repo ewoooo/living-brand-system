@@ -23,11 +23,9 @@ export function ForwardStraightGenerator() {
 	const inputRef = useRef(input)
 	const previewContainerRef = useRef<HTMLDivElement>(null)
 	const previewRef = useRef<ForwardStraightPreview>(null)
-	inputRef.current = input
 
 	useEffect(() => {
 		let preview: ForwardStraightPreview | undefined
-		let resizeObserver: ResizeObserver | undefined
 		let disposed = false
 
 		async function mountPreview() {
@@ -46,23 +44,30 @@ export function ForwardStraightGenerator() {
 			})
 			previewRef.current = preview
 			setPreviewReady(true)
-			resizeObserver = new ResizeObserver(([entry]) => {
-				if (entry) preview?.resize(entry.contentRect.width, entry.contentRect.height)
-			})
-			resizeObserver.observe(container)
 		}
 
 		void mountPreview()
 
 		return () => {
 			disposed = true
-			resizeObserver?.disconnect()
 			preview?.destroy()
 			previewRef.current = null
 		}
 	}, [])
 
 	useEffect(() => {
+		const container = previewContainerRef.current
+		if (!container) return
+
+		const resizeObserver = new ResizeObserver(([entry]) => {
+			if (entry) previewRef.current?.resize(entry.contentRect.width, entry.contentRect.height)
+		})
+		resizeObserver.observe(container)
+		return () => resizeObserver.disconnect()
+	}, [])
+
+	useEffect(() => {
+		inputRef.current = input
 		previewRef.current?.update(input)
 	}, [input])
 
