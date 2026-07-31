@@ -10,7 +10,9 @@ const mocks = vi.hoisted(() => ({
 	devGenerateImages: vi.fn(),
 	findPublishedImageProfile: vi.fn(),
 	generateBrandImages: vi.fn(),
+	loadGeneratedImage: vi.fn(),
 	normalizeImageProfilePrompt: vi.fn(),
+	storeGeneratedImages: vi.fn(),
 }))
 
 const ONE_PIXEL_PNG =
@@ -25,6 +27,10 @@ vi.mock('@/features/generate-image/repositories/image-generation.ai.repository',
 }))
 vi.mock('@/features/generate-image/repositories/image-profile.payload.repository', () => ({
 	findPublishedImageProfile: mocks.findPublishedImageProfile,
+}))
+vi.mock('@/features/generate-image/repositories/generated-image.payload.repository', () => ({
+	loadGeneratedImage: mocks.loadGeneratedImage,
+	storeGeneratedImages: mocks.storeGeneratedImages,
 }))
 vi.mock('@/features/generate-image/services/normalize-image-profile-prompt.service', () => ({
 	ImagePromptNormalizationUnavailableError: class extends Error {},
@@ -48,6 +54,15 @@ describe('generateImages', () => {
 		mocks.env.GEMINI_API_KEY = undefined
 		mocks.env.OPENAI_API_KEY = undefined
 		mocks.findPublishedImageProfile.mockResolvedValue(null)
+		mocks.loadGeneratedImage.mockResolvedValue(null)
+		mocks.storeGeneratedImages.mockResolvedValue([
+			{
+				collection: 'generated-images',
+				createdAt: '2026-07-31T03:00:00.000Z',
+				id: 8,
+				url: '/api/generated-images/file/generated.png',
+			},
+		])
 	})
 
 	it('fails closed when no image provider is configured', async () => {
@@ -142,7 +157,17 @@ describe('generateImages', () => {
 				count: 2,
 			}),
 		).resolves.toEqual({
-			images: ['data:image/png;base64,profile'],
+			aspectRatio: '3:2',
+			generatedImages: [
+				{
+					collection: 'generated-images',
+					createdAt: '2026-07-31T03:00:00.000Z',
+					id: 8,
+					url: '/api/generated-images/file/generated.png',
+				},
+			],
+			images: ['/api/generated-images/file/generated.png'],
+			imageSize: '2K',
 			model: 'gpt-image-2',
 			prompt: JSON.stringify({
 				style: 'minimalist',
@@ -169,6 +194,23 @@ describe('generateImages', () => {
 			modelPreset: 'openai-gpt-image-2',
 			aspectRatio: '3:2',
 			imageSize: '2K',
+		})
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith({
+			createdBy: 1,
+			effectivePrompt: JSON.stringify({
+				style: 'minimalist',
+				mood: 'organic',
+				subject: '파란 세럼병',
+			}),
+			images: ['data:image/png;base64,profile'],
+			inputPrompt: '파란 세럼병',
+			model: 'gpt-image-2',
+			profile: expect.objectContaining({
+				aspectRatio: '3:2',
+				id: 5,
+				imageSize: '2K',
+				name: 'Technical Illustration',
+			}),
 		})
 	})
 
@@ -295,6 +337,9 @@ describe('generateImages', () => {
 
 	it('시드 이미지와 해석된 카메라 프롬프트로 시점을 조정한다', async () => {
 		mocks.env.GEMINI_API_KEY = 'key'
+		mocks.loadGeneratedImage.mockResolvedValue(
+			Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
+		)
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,
 			name: 'Technical Illustration',
@@ -315,8 +360,9 @@ describe('generateImages', () => {
 			}),
 			camera: { azimuthDeg: 45, elevationDeg: 20 },
 			count: 1,
+			generatedImageId: 8,
 			profileId: 5,
-			seedImage: ONE_PIXEL_PNG,
+			requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
 			user: { id: 1 },
 		})
 
@@ -332,9 +378,15 @@ describe('generateImages', () => {
 		expect([...generationInput.seedImage].slice(0, 8)).toEqual([
 			0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
 		])
+		expect(mocks.loadGeneratedImage).toHaveBeenCalledWith({
+			generatedImageId: 8,
+			profileId: 5,
+			requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
+			user: { id: 1 },
+		})
 	})
 
-	it('MIME과 실제 시그니처가 다른 시드 이미지를 거부한다', async () => {
+	it('조회할 수 없는 생성 이미지 ID를 거부한다', async () => {
 		mocks.env.GEMINI_API_KEY = 'key'
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,
@@ -349,8 +401,9 @@ describe('generateImages', () => {
 				basePrompt: '{"subject":"유조선"}',
 				camera: { azimuthDeg: 0, elevationDeg: 0 },
 				count: 1,
+				generatedImageId: 404,
 				profileId: 5,
-				seedImage: 'data:image/png;base64,aGVsbG8=',
+				requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
 				user: { id: 1 },
 			}),
 		).rejects.toBeInstanceOf(InvalidSeedImageError)
@@ -360,6 +413,9 @@ describe('generateImages', () => {
 	it('시드 이미지 편집은 Pollinations 개발 폴백을 사용하지 않는다', async () => {
 		mocks.env.NODE_ENV = 'development'
 		mocks.env.IMAGE_DEV_FALLBACK = 'true'
+		mocks.loadGeneratedImage.mockResolvedValue(
+			Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
+		)
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,
 			name: 'Technical Illustration',
@@ -373,8 +429,9 @@ describe('generateImages', () => {
 				basePrompt: '{"subject":"유조선"}',
 				camera: { azimuthDeg: 0, elevationDeg: 0 },
 				count: 1,
+				generatedImageId: 8,
 				profileId: 5,
-				seedImage: ONE_PIXEL_PNG,
+				requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
 				user: { id: 1 },
 			}),
 		).rejects.toBeInstanceOf(ImageGenerationUnavailableError)

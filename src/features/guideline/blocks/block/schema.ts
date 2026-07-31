@@ -1,14 +1,19 @@
 import type { Block } from 'payload'
 import { ImageLeaf } from '@/features/guideline/leaves/image/schema'
 import { CarouselWidget } from '@/features/guideline/widgets/carousel/schema'
+import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/schema'
+import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/schema'
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/schema'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/schema'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/schema'
 import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/schema'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/schema'
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/schema'
+import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/schema'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/schema'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/schema'
+import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/schema'
+import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/schema'
 import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/schema'
 import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/schema'
 import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/schema'
@@ -51,6 +56,21 @@ export const LayoutBlock: Block = {
 			],
 			admin: { description: '컨테이너 폭입니다. 중간폭=max-w, 전체폭=main 전체.' },
 		},
+		// 배경색 = block 소관(위젯은 배경 안 가짐). 전체폭 배경 + 자식 레이아웃(arrangement) 배경 별도.
+		{
+			name: 'background',
+			type: 'relationship',
+			relationTo: 'brand-colors',
+			admin: { description: '블록 전체(전체 폭) 배경색입니다. 비우면 기본.' },
+		},
+		{
+			name: 'innerBackground',
+			type: 'relationship',
+			relationTo: 'brand-colors',
+			admin: {
+				description: '자식 레이아웃(그리드/캐러셀 등) 영역 배경색입니다. 비우면 없음.',
+			},
+		},
 		{
 			name: 'arrangement',
 			type: 'select',
@@ -90,13 +110,18 @@ export const LayoutBlock: Block = {
 				ImageLeaf,
 				ColorPaletteWidget,
 				CarouselWidget,
+				ClearspaceOverlayWidget,
+				ClearspaceViewerWidget,
 				ColorPairingWidget,
 				ColorPairingRecommendationWidget,
 				GlyphGridWidget,
 				IconGridWidget,
 				ImageGridWidget,
+				IncorrectUsageWidget,
 				LayoutGridWidget,
 				LayoutGridOverlayWidget,
+				LogoColorVariantWidget,
+				LogoDisplayWidget,
 				LogoGroupViewerWidget,
 				LogoViewerWidget,
 				MediaShowcaseWidget,

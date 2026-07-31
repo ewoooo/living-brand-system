@@ -2,7 +2,12 @@ import { Parser } from 'htmlparser2'
 import { z } from 'zod'
 import type { TemplateNodeConfigMap } from '@/types/template'
 
-export const AUTHORIZED_ASSET_COLLECTIONS = ['brand-logos', 'application-images'] as const
+const VECTOR_ASSET_COLLECTIONS = ['brand-logos', 'application-images'] as const
+
+export const AUTHORIZED_ASSET_COLLECTIONS = [
+	...VECTOR_ASSET_COLLECTIONS,
+	'generated-images',
+] as const
 
 export type AuthorizedAssetCollection = (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
 
@@ -30,10 +35,11 @@ const templateNodeConfigMapSchema = z.record(
 		.object({
 			text: z.string().optional(),
 			backgroundImage: z.string().optional(),
+			generatedImageId: z.number().int().positive().optional(),
 			input: templateSlotSpecSchema.optional(),
 			vectorAsset: z
 				.object({
-					collection: z.enum(AUTHORIZED_ASSET_COLLECTIONS),
+					collection: z.enum(VECTOR_ASSET_COLLECTIONS),
 					id: z.number().int().positive(),
 					src: z.string().min(1),
 				})
@@ -150,6 +156,18 @@ export function parseTemplateNodeConfigs(value: unknown):
 
 	const refsByNode = new Map<string, AuthorizedImageRef>()
 	for (const [nodeId, config] of Object.entries(parsed.data)) {
+		if (config.generatedImageId) {
+			if (!config.backgroundImage?.trim() || config.vectorAsset) {
+				return { blocker: 'HTML 템플릿의 생성 이미지 참조가 올바르지 않습니다.' }
+			}
+			refsByNode.set(nodeId, {
+				collection: 'generated-images',
+				assetId: config.generatedImageId,
+				src: config.backgroundImage,
+				label: nodeId,
+			})
+			continue
+		}
 		if (config.vectorAsset) {
 			refsByNode.set(nodeId, {
 				collection: config.vectorAsset.collection,

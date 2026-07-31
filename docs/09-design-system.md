@@ -11,7 +11,6 @@
 | --- | --- | --- |
 | Creator UI | `src/app/(frontend)` | 셸, 헤더, 전역 컴포넌트의 색·타이포·간격 |
 | guideline 렌더링 계층 | `src/features/guideline/components` | 블록·프레임·헤더가 토큰을 소비하는 방식 |
-| kit 실험 갤러리 | `/guideline/kit` (dev 전용) | 승격 전 컴포넌트가 같은 토큰 규칙을 따르는지 확인 |
 
 Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 제공하는 기본 스타일과 접근성을 우선하며, `docs/08-accessibility-i18n.md`의 적용 범위와 동일하게 프로젝트가 직접 추가한 Admin 확장 화면에만 이 문서를 참고합니다.
 

@@ -47,7 +47,17 @@ describe('POST /api/generate-image', () => {
 			user: { id: 1 },
 		})
 		mocks.generateImages.mockResolvedValue({
-			images: ['data:image/png;base64,result'],
+			aspectRatio: '1:1',
+			generatedImages: [
+				{
+					collection: 'generated-images',
+					createdAt: '2026-07-31T03:00:00.000Z',
+					id: 8,
+					url: '/api/generated-images/file/generated.png',
+				},
+			],
+			images: ['/api/generated-images/file/generated.png'],
+			imageSize: '1K',
 			model: 'gpt-image-2',
 			prompt: 'sample',
 			provider: 'openai',
@@ -96,7 +106,17 @@ describe('POST /api/generate-image', () => {
 
 		expect(response.status).toBe(200)
 		expect(await response.json()).toEqual({
-			images: ['data:image/png;base64,result'],
+			aspectRatio: '1:1',
+			generatedImages: [
+				{
+					collection: 'generated-images',
+					createdAt: '2026-07-31T03:00:00.000Z',
+					id: 8,
+					url: '/api/generated-images/file/generated.png',
+				},
+			],
+			images: ['/api/generated-images/file/generated.png'],
+			imageSize: '1K',
 			model: 'gpt-image-2',
 			prompt: 'sample',
 		})

@@ -42,10 +42,12 @@ const SELECT_CLASS =
 
 export function ImageCameraPresets({
 	basePrompt,
+	generatedImageId,
 	profileId,
 	seedImage,
 }: {
 	basePrompt: string
+	generatedImageId: number
 	profileId: number
 	seedImage: string
 }) {
@@ -77,8 +79,8 @@ export function ImageCameraPresets({
 						elevationDeg,
 					},
 					count: 1,
+					generatedImageId,
 					profileId,
-					seedImage,
 				}),
 			)
 		} catch {
@@ -184,7 +186,7 @@ export function ImageCameraPresets({
 					<Typography size="sm" weight="medium">
 						조정 결과: {resultAzimuth?.label} · {resultElevation?.label}
 					</Typography>
-					{/* biome-ignore lint/performance/noImgElement: 생성 직후 data URI 미리보기 */}
+					{/* biome-ignore lint/performance/noImgElement: 생성 결과 저장 URL 미리보기 */}
 					<img
 						src={result.images[0]}
 						alt="카메라 시점 조정 결과"

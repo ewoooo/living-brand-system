@@ -14,7 +14,9 @@ import * as migration_20260729_082630_technical_illustration_image_output_contra
 import * as migration_20260730_020827_block_widget_separation from './20260730_020827_block_widget_separation';
 import * as migration_20260730_080926_remove_template_rule_references from './20260730_080926_remove_template_rule_references';
 import * as migration_20260730_083726_agent_chat_triage_persistence from './20260730_083726_agent_chat_triage_persistence';
+import * as migration_20260731_023412_generated_images_collection from './20260731_023412_generated_images_collection';
 import * as migration_20260731_024329_agent_response_levels from './20260731_024329_agent_response_levels';
+import * as migration_20260731_085028_add_ci_widget_blocks from './20260731_085028_add_ci_widget_blocks';
 
 export const migrations = [
   {
@@ -98,8 +100,18 @@ export const migrations = [
     name: '20260730_083726_agent_chat_triage_persistence',
   },
   {
+    up: migration_20260731_023412_generated_images_collection.up,
+    down: migration_20260731_023412_generated_images_collection.down,
+    name: '20260731_023412_generated_images_collection',
+  },
+  {
     up: migration_20260731_024329_agent_response_levels.up,
     down: migration_20260731_024329_agent_response_levels.down,
     name: '20260731_024329_agent_response_levels',
+  },
+  {
+    up: migration_20260731_085028_add_ci_widget_blocks.up,
+    down: migration_20260731_085028_add_ci_widget_blocks.down,
+    name: '20260731_085028_add_ci_widget_blocks'
   },
 ];

@@ -19,7 +19,7 @@ describe('ImageCameraPresets', () => {
 				input: { azimuthDeg: 45, elevationDeg: 20 },
 				resolved: { azimuth: 'front-right', elevation: 'elevated' },
 			},
-			images: ['data:image/png;base64,adjusted'],
+			images: ['/api/generated-images/file/adjusted.png'],
 			model: 'gemini-3.1-flash-lite-image',
 			profileId: 5,
 			profileName: 'Technical Illustration',
@@ -28,12 +28,13 @@ describe('ImageCameraPresets', () => {
 	})
 	afterEach(cleanup)
 
-	it('고정 프리셋을 각도로 변환해 선택한 이미지를 시드로 전달한다', async () => {
+	it('고정 프리셋을 각도로 변환해 생성 이미지 ID로 조정을 요청한다', async () => {
 		render(
 			createElement(ImageCameraPresets, {
 				basePrompt: '{"subject":"유조선"}',
+				generatedImageId: 8,
 				profileId: 5,
-				seedImage: 'data:image/png;base64,seed',
+				seedImage: '/api/generated-images/file/generated.png',
 			}),
 		)
 
@@ -49,12 +50,12 @@ describe('ImageCameraPresets', () => {
 			basePrompt: '{"subject":"유조선"}',
 			camera: { azimuthDeg: 45, elevationDeg: 20 },
 			count: 1,
+			generatedImageId: 8,
 			profileId: 5,
-			seedImage: 'data:image/png;base64,seed',
 		})
 		expect(await screen.findByAltText('카메라 시점 조정 결과')).toHaveAttribute(
 			'src',
-			'data:image/png;base64,adjusted',
+			'/api/generated-images/file/adjusted.png',
 		)
 		expect(screen.getByText('조정 결과: 우측 3/4 · 약간 위')).toBeInTheDocument()
 	})

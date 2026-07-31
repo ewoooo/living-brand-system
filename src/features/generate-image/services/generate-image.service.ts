@@ -1,4 +1,3 @@
-import sharp from 'sharp'
 import { env } from '@/env'
 import {
 	type CameraControlInput,
@@ -14,6 +13,11 @@ import {
 	toOpenAIImageSize,
 } from '@/features/generate-image/image-size'
 import { devGenerateImages } from '@/features/generate-image/repositories/dev-image-generation.rest.repository'
+import {
+	loadGeneratedImage,
+	type StoredGeneratedImage,
+	storeGeneratedImages,
+} from '@/features/generate-image/repositories/generated-image.payload.repository'
 import { generateBrandImages } from '@/features/generate-image/repositories/image-generation.ai.repository'
 import { findPublishedImageProfile } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import {
@@ -48,7 +52,7 @@ export class ImageProfileNotFoundError extends Error {
 	}
 }
 
-/** 카메라 조정 경계가 외부 모델 호출 전에 손상되거나 위장된 시드 이미지를 거부할 때 사용한다. */
+/** 카메라 조정 경계가 조회할 수 없는 생성 이미지 참조를 거부할 때 사용한다. */
 export class InvalidSeedImageError extends Error {
 	constructor() {
 		super('Seed image data is invalid.')
@@ -57,7 +61,10 @@ export class InvalidSeedImageError extends Error {
 }
 
 interface GeneratedImages {
+	aspectRatio: ImageAspectRatio
+	generatedImages?: StoredGeneratedImage[]
 	images: string[]
+	imageSize: ImageOutputSize
 	prompt: string
 	profileId?: number
 	profileName?: string
@@ -74,7 +81,7 @@ interface CameraAdjustedImages extends GeneratedImages {
 
 /**
  * 유스케이스 경계: 사용자 입력과 선택한 published 프로파일로 이미지를 생성한다.
- * Payload 프로파일 조회·모델 호출 I/O는 각 repository가 소유하고 상위 route·agent tool은 인증·검증만 담당한다.
+ * 프로파일 조회·모델 호출·생성 파일 저장 I/O는 각 repository가 소유한다.
  */
 export async function generateImages({
 	userInput,
@@ -95,7 +102,7 @@ export async function generateImages({
 		userPrompt: userInput,
 	})
 
-	return runImageGeneration({
+	const generated = await runImageGeneration({
 		prompt: JSON.stringify(normalized.finalPrompt),
 		count,
 		modelPreset: profile.imageModelPreset,
@@ -103,6 +110,11 @@ export async function generateImages({
 		imageSize: profile.imageSize,
 		profileId,
 		profileName: profile.name,
+	})
+	return storeProfileGeneration(generated, {
+		inputPrompt: userInput,
+		profile,
+		user,
 	})
 }
 
@@ -134,25 +146,34 @@ export async function generateImagesWithSettings({
 
 /**
  * 유스케이스 경계: published 프로파일의 모델·출력 계약으로 시드 이미지의 카메라 시점을 조정한다.
- * 프로파일 조회와 외부 이미지 편집 I/O는 각 repository가 소유한다.
+ * 프로파일 조회·외부 이미지 편집·생성 파일 저장 I/O는 각 repository가 소유한다.
  */
 export async function adjustImageCamera({
 	basePrompt,
 	camera,
 	count,
+	generatedImageId,
 	profileId,
-	seedImage,
+	requestUrl,
 	user,
 }: {
 	basePrompt: string
 	camera: CameraControlInput
 	count: number
+	generatedImageId: number
 	profileId: number
-	seedImage: string
+	requestUrl: string
 	user: unknown
 }): Promise<CameraAdjustedImages> {
 	const profile = await findPublishedImageProfile(user, profileId)
 	if (!profile) throw new ImageProfileNotFoundError()
+	const seedImage = await loadGeneratedImage({
+		generatedImageId,
+		profileId,
+		requestUrl,
+		user,
+	})
+	if (!seedImage) throw new InvalidSeedImageError()
 
 	const resolved = resolveCameraControl(camera)
 	const prompt = composeCameraAdjustmentPrompt(basePrompt, resolved)
@@ -164,11 +185,16 @@ export async function adjustImageCamera({
 		imageSize: profile.imageSize,
 		profileId,
 		profileName: profile.name,
-		seedImage: await decodeSeedImage(seedImage),
+		seedImage,
+	})
+	const stored = await storeProfileGeneration(result, {
+		inputPrompt: basePrompt,
+		profile,
+		user,
 	})
 
 	return {
-		...result,
+		...stored,
 		camera: { input: camera, resolved },
 	}
 }
@@ -240,36 +266,50 @@ async function runImageGeneration({
 	}
 	return {
 		...generation,
+		aspectRatio,
+		imageSize,
 		prompt,
 		...(profileId ? { profileId, profileName } : {}),
 	}
 }
 
-async function decodeSeedImage(dataUri: string): Promise<Uint8Array> {
-	const match = /^data:image\/(jpeg|png|webp);base64,(.+)$/.exec(dataUri)
-	if (!match) throw new InvalidSeedImageError()
-
-	const bytes = Buffer.from(match[2], 'base64')
-	const mediaType = match[1]
-	const valid =
-		(mediaType === 'png' &&
-			startsWith(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) ||
-		(mediaType === 'jpeg' && startsWith(bytes, [0xff, 0xd8, 0xff])) ||
-		(mediaType === 'webp' &&
-			startsWith(bytes, [0x52, 0x49, 0x46, 0x46]) &&
-			startsWith(bytes.subarray(8), [0x57, 0x45, 0x42, 0x50]))
-
-	if (!valid) throw new InvalidSeedImageError()
-
-	try {
-		const metadata = await sharp(bytes, { limitInputPixels: 16_777_216 }).metadata()
-		if (metadata.format !== mediaType) throw new InvalidSeedImageError()
-		return bytes
-	} catch {
-		throw new InvalidSeedImageError()
+async function storeProfileGeneration(
+	generated: GeneratedImages,
+	{
+		inputPrompt,
+		profile,
+		user,
+	}: {
+		inputPrompt: string
+		profile: {
+			aspectRatio: ImageAspectRatio
+			id: number
+			imageSize: ImageOutputSize
+			name: string
+		}
+		user: unknown
+	},
+): Promise<GeneratedImages> {
+	const createdBy = getAuthenticatedUserId(user)
+	const generatedImages = await storeGeneratedImages({
+		createdBy,
+		effectivePrompt: generated.prompt,
+		images: generated.images,
+		inputPrompt,
+		model: generated.model,
+		profile,
+	})
+	return {
+		...generated,
+		generatedImages,
+		images: generatedImages.map(({ url }) => url),
 	}
 }
 
-function startsWith(bytes: Uint8Array, signature: number[]): boolean {
-	return signature.every((byte, index) => bytes[index] === byte)
+function getAuthenticatedUserId(user: unknown): number {
+	const id = typeof user === 'object' && user !== null && 'id' in user ? user.id : undefined
+	if (typeof id !== 'number' || !Number.isInteger(id) || id <= 0) {
+		throw new Error('Authenticated user ID is required.')
+	}
+	return id
 }

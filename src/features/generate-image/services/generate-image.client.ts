@@ -41,8 +41,18 @@ export interface ImageProfileOption {
 	name: string
 }
 
+export interface GeneratedImageReference {
+	collection: 'generated-images'
+	createdAt: string
+	id: number
+	url: string
+}
+
 export interface ImageGenerationResult {
+	aspectRatio?: ImageAspectRatio
+	generatedImages?: GeneratedImageReference[]
 	images: string[]
+	imageSize?: ImageOutputSize
 	model: string
 	prompt: string
 	profileId?: number

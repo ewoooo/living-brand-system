@@ -11,6 +11,13 @@ Start with `.agents/skills/payload/SKILL.md` for a quick reference, then see `.a
 - Do not use Context7 for business logic debugging, code review, refactoring that does not require external docs, or project-specific docs under `docs/`.
 - Service files must include a short comment above the exported service function or class explaining the use case boundary and what lower layer owns external I/O.
 
+## Scratch / Temp Files
+
+- Put every intermediate work artifact — planning/handoff notes, analysis dumps, PDF/text parsing output, one-off diagnose or migration-style scripts, throwaway SQL — under the repo-root `.scratch/` bin (git-excluded via `.git/info/exclude`). Do not scatter them across the repo root, `scripts/`, or `docs/`.
+- Suggested layout: `.scratch/plans/`, `.scratch/hd-pdf/`, `.scratch/scripts/`; anything else loose at `.scratch/`.
+- `.scratch/` is outside tsconfig/biome, so it never touches typecheck or CI. Run one-off scripts with their path, e.g. `pnpm payload run .scratch/scripts/<name>.ts`.
+- Exceptions stay in their real homes: committed seed scripts in `scripts/` (see Content Provisioning), real docs in `docs/`. `.scratch/` is only for disposable personal work-in-progress.
+
 ## Database Schema Collaboration
 
 When changing Payload collections, fields, indexes, relationships, or other database-backed model behavior:
