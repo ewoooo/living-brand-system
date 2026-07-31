@@ -11,19 +11,16 @@ import {
 	getCheckSessionRecord,
 	saveCheckSessionRecord,
 } from '@/features/asset-check/repositories/check-session.payload.repository'
-import {
-	type CheckScenario,
-	getCheckScenario,
-	getCheckScenarioFlags,
-} from '@/features/asset-check/scenarios'
+import { getCheckScenarioFlags } from '@/features/asset-check/scenarios'
 import { getRuntimeChecks } from '@/features/asset-check/services/get-check-ruleset.service'
-import { getCheckScenarios } from '@/features/asset-check/services/get-check-scenarios.service'
 import {
 	runHeuristicCheck,
 	runImmediateCheck,
 } from '@/features/asset-check/services/run-check.service'
 import type { ImageContentFlags } from '@/features/asset-check/types'
 import { detectCheckImageMediaType } from '@/features/asset-check/utils/image-format'
+import { type CheckScenario, getCheckScenario } from '@/features/quality-rule/check-scenario'
+import { getCheckScenarios } from '@/features/quality-rule/services/get-check-scenarios.service'
 import type { AgentChatSession, User } from '@/payload-types'
 
 interface StartCheckSessionInput {

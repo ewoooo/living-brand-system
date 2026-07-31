@@ -1,8 +1,7 @@
 import type { CollectionConfig, SelectFieldValidation, TextFieldValidation } from 'payload'
+import type { RuleExecutor } from '@/features/quality-rule/rule-executor'
 import { managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
-
-type RuleExecutor = 'deterministic' | 'heuristic' | 'manual'
 
 const requiredFor =
 	(executor: RuleExecutor, message: string): TextFieldValidation =>
@@ -41,7 +40,7 @@ export const RuleCheckers: CollectionConfig = {
 		group: '검수 설정',
 		useAsTitle: 'name',
 		defaultColumns: ['name', 'key', 'executor', '_status', 'updatedAt'],
-		description: 'Guideline Check를 실행할 도구와 호출 계약입니다.',
+		description: 'Rule을 실행할 도구와 호출 계약입니다.',
 		listSearchableFields: ['name', 'key', 'checkerKey', 'model'],
 	},
 	versions: draftVersions,

@@ -1,96 +1,167 @@
 # Living Brand System (LBS)
 
-디지털 브랜드 가이드라인 운영 시스템 프로토타입입니다.
+![image](public/images/main.png)
 
-브랜드 기준(정책과 규칙)을 작업 과정에서 적시에 안내하고, 에셋 제너레이션 기록과 검수 기록을 운영자가 확인할 수 있게 만드는 것이 목표입니다. 가이드라인은 문서에서 끝나지 않고 Agent를 통해 실제 제작 과정에서 활용되며, Manager · System · Agent · Creator 네 참여자가 함께 운영하는 구조를 가집니다. 자세한 배경은 [docs/01-product.md](docs/01-product.md)를 참고하세요.
+LBS는 브랜드 가이드라인을 지속 가능한 운영 체계로 바꾸고, 제작 과정에서 탐색·활용·검수할 수 있게 만드는 디지털 브랜드 운영 시스템입니다.
 
-## 기술 스택
 
-- **CMS**: Payload CMS 3 (PostgreSQL 어댑터, Lexical 에디터, MCP/Search 플러그인)
-- **프레임워크**: Next.js 16 (App Router), React 19
-- **AI**: AI SDK + Anthropic 기반 Agent
-- **스토리지/메일**: S3, Resend
-- **UI**: Tailwind CSS 4, shadcn/ui, Radix UI
-- **품질 도구**: Biome, TypeScript, Vitest(통합 테스트), Playwright(E2E)
-- **패키지 매니저**: pnpm
+## Features
 
-## 시작하기
+### Explore Guidelines
 
-요구사항: Node 20 (`.nvmrc`), pnpm, Docker
+발행된 브랜드 가이드라인을 대화형 화면에서 탐색하고 필요한 기준을 검색합니다.
+
+<!-- Screenshot: docs/assets/features/explore-guidelines.webp -->
+
+### Download Resources
+
+발행된 로고, 이미지, 아이콘, 서체 등 공식 브랜드 리소스를 찾아 다운로드합니다.
+
+<!-- Screenshot: docs/assets/features/download-resources.webp -->
+
+### Check Quality
+
+이미지를 업로드해 브랜드 기준 충족 여부를 항목별로 확인하고 수정 권장사항을 받습니다.
+
+<!-- Screenshot: docs/assets/features/check-quality.webp -->
+
+### Create from Templates
+
+발행된 템플릿의 편집 가능 영역을 채워 브랜드 산출물을 만들고 PNG로 다운로드합니다.
+
+<!-- Screenshot: docs/assets/features/create-from-templates.webp -->
+
+### Work with AI
+
+AI Chat에서 질문, 템플릿 탐색, 이미지 생성, 품질 검수를 사용합니다. MCP 호환 AI 도구에서는 발행된 가이드라인과 검수 기준을 조회할 수 있습니다.
+
+<!-- Screenshot: docs/assets/features/work-with-ai.webp -->
+
+## Documentation
+
+| Topic | Description |
+| --- | --- |
+| [Product Overview](docs/01-product.md) | 제품이 해결하는 문제와 제공 가치 |
+| [Use Cases](docs/02-usecases.md) | 사용자와 시스템의 주요 작업 흐름 |
+| [Data Lifecycle](docs/03-data-lifecycle.md) | 데이터 상태, 전이, 보존과 삭제 기준 |
+| [Domain Model](docs/04-domain-model.md) | 핵심 개념, 경계, 소유권 |
+| [Feature Specifications](docs/features/README.md) | 기능별 입력, 출력, 지원 Surface |
+| [Development Guide](docs/06-project-structure.md) | 프로젝트 구조와 개발 규칙 |
+| [All Documentation](docs/README.md) | 전체 문서 목록 |
+
+## Architecture
+
+LBS는 Next.js와 Payload CMS를 하나의 애플리케이션으로 배포하는 모듈러 모놀리스입니다. Page, AI Chat, MCP는 같은 Feature Service를 호출하고, Payload CMS는 별도 서비스가 아닌 애플리케이션 내부 실행 계층으로 동작합니다.
+
+```mermaid
+flowchart LR
+  Page["Page"] --> App["Next.js + Payload"]
+  Chat["AI Chat"] --> App
+  MCP["MCP"] --> App
+  App --> Features["Guideline · Resource · Create · Review"]
+  Features --> DB["PostgreSQL"]
+  Features --> Storage["Amazon S3"]
+  Features --> AI["Anthropic · OpenAI"]
+```
+
+계층별 책임과 데이터 흐름은 [System Architecture](docs/05-system-architecture.md)에서 확인할 수 있습니다.
+
+## Tech Stack
+
+| Area | Technology |
+| --- | --- |
+| Application | Next.js 16, React 19, TypeScript |
+| CMS | Payload CMS 3, Lexical |
+| Database | PostgreSQL 17 |
+| Storage | Amazon S3 |
+| AI | Vercel AI SDK, Anthropic, OpenAI |
+| UI | Tailwind CSS 4, shadcn/ui, Radix UI |
+| Testing | Vitest, Playwright |
+| Code Quality | Biome |
+| Package Manager | pnpm 10 |
+
+## Development Setup
+
+### Prerequisites
+
+- Node.js 22
+- pnpm 10 via Corepack
+- Docker
+
+### 1. 환경 변수 설정
+
+프로젝트 루트에 `.env.local`을 만들고 필수 변수를 설정합니다.
+
+```dotenv
+DATABASE_URL=postgresql://payload:payload@localhost:5432/living-brand-system
+PAYLOAD_SECRET=replace-with-a-random-secret
+PAYLOAD_DB_PUSH=false
+```
+
+`PAYLOAD_SECRET`에는 `openssl rand -hex 32`처럼 안전한 난수 생성기로 만든 값을 사용하세요. `.env.local`은 Git에 커밋하지 않습니다.
+
+선택 기능을 사용할 때만 관련 변수를 추가합니다.
+
+| Feature | Environment variables |
+| --- | --- |
+| AI Chat | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `CHAT_MODEL`, `AGENT_CHAT_TRIAGE_ENABLED` |
+| Image Generation | `OPENAI_API_KEY`, `GEMINI_API_KEY`, `IMAGE_DEV_FALLBACK` |
+| Figma Import | `FIGMA_API_TOKEN` |
+| Object Storage | `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` |
+| Email | `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME` |
+
+### 2. PostgreSQL 실행
 
 ```sh
-# 1. 환경변수 준비
-cp .env.example .env   # PAYLOAD_SECRET 등 값 설정
-
-# 2. PostgreSQL 실행
 docker compose up -d postgres
+```
 
-# 3. 의존성 설치 및 개발 서버 실행
+### 3. 의존성과 스키마 준비
+
+```sh
+nvm use
+corepack enable
 pnpm install
+pnpm migrate
+```
+
+### 4. 개발 서버 실행
+
+```sh
 pnpm dev
 ```
 
-`http://localhost:3000` 접속 후 화면 안내에 따라 첫 관리자 계정을 생성합니다. 관리자 UI는 `/admin`에서 열립니다.
+`http://localhost:3000`에 접속해 첫 관리자 계정을 만듭니다. 관리자 화면은 `http://localhost:3000/admin`에서 열립니다.
 
-앱과 DB를 모두 Docker로 실행하려면 `docker compose up`을 사용합니다.
+Payload collection, field, index, relationship을 변경할 때는 격리된 로컬 데이터베이스에서만 `PAYLOAD_DB_PUSH=true`를 사용하세요. 작업을 마치면 최종 마이그레이션을 생성하고 새로운 `PAYLOAD_DB_PUSH=false` 데이터베이스에서 검증합니다. 자세한 절차는 [스키마 변경과 마이그레이션 워크플로](docs/06-project-structure.md#16-스키마-변경과-마이그레이션-워크플로)를 따릅니다.
 
-### 환경변수
+### Development Commands
 
-`.env.example` 기준 주요 변수:
-
-| 변수 | 설명 |
-| --- | --- |
-| `DATABASE_URL` | PostgreSQL 연결 문자열 |
-| `PAYLOAD_SECRET` | Payload 시크릿 (실제 값으로 변경 필수) |
-| `PAYLOAD_DB_PUSH` | 로컬 개발 전용 스키마 push. 배포 환경에서는 미설정 또는 `false` |
-| `PAYLOAD_RUN_MIGRATIONS_ON_STARTUP` | 운영 전용. 앱 시작 시 마이그레이션 실행 |
-| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Anthropic 인증 및 텍스트 생성 모델 설정 |
-| `CHAT_MODEL` | Agent Chat 모델 설정 |
-| `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | 미디어 스토리지용 S3 설정 |
-
-## 주요 스크립트
-
-| 명령 | 설명 |
+| Command | Description |
 | --- | --- |
 | `pnpm dev` | 개발 서버 실행 |
-| `pnpm build` / `pnpm start` | 프로덕션 빌드 / 실행 |
-| `pnpm generate:types` | Payload 컬렉션 타입 생성 (`src/payload-types.ts`) |
-| `pnpm migrate` / `migrate:create` / `migrate:status` | DB 마이그레이션 실행 / 생성 / 상태 확인 |
-| `pnpm test:int` / `pnpm test:e2e` | Vitest 통합 테스트 / Playwright E2E 테스트 |
-| `pnpm doctor` | 타입 생성 + Biome 검사 + 타입체크 일괄 실행 |
-| `pnpm ci` | 검사 + 타입체크 + 통합 테스트 + 빌드 |
+| `pnpm doctor` | 블록 카탈로그와 타입 생성, 자동 수정, 정적·타입 검사 |
+| `pnpm test:int` | 통합 테스트 실행 |
+| `pnpm test:e2e` | E2E 테스트 실행 |
+| `pnpm build` | 프로덕션 빌드 생성 |
+| `pnpm migrate:status` | 데이터베이스 마이그레이션 상태 확인 |
+| `pnpm ci` | 정적 검사, 타입 검사, 통합 테스트, 빌드 실행 |
 
-> **스키마 변경 시:** collection·field·index를 바꾸면 `pnpm migrate:create <이름>`으로 마이그레이션을 만들고, 생성된 `.ts`·`.json`·`index.ts`와 재생성된 `payload-types.ts`를 수정한 소스와 **한 커밋**에 담습니다. `.json` 스냅샷은 삭제하지 않습니다(다음 `migrate:create`의 diff 기준). 자세한 절차는 [docs/06-project-structure.md](docs/06-project-structure.md)의 "스키마 변경과 마이그레이션 워크플로"를 참고하세요.
+## Production Deployment
 
-## 프로젝트 구조
+LBS 애플리케이션은 하나의 Node.js 배포 단위로 운영하며 PostgreSQL 인스턴스에 연결합니다. 업로드 파일을 사용하는 환경에서는 Amazon S3도 준비합니다.
+커밋된 마이그레이션을 적용한 뒤 애플리케이션을 빌드하고 실행합니다.
 
-```
-src/
-├── collections/   # Payload 컬렉션 (가이드라인, 규칙, 브랜드 리소스, 템플릿 등)
-├── globals/       # Payload 글로벌 (Guideline, AgentSettings)
-├── app/           # Next.js App Router — (frontend) 사용자 화면, (payload) 관리자, api
-├── features/      # 기능 단위 모듈 (agent-chat, review, template-import 등)
-├── agents/        # Anthropic 기반 Agent 정의
-├── services/      # 유즈케이스 경계 서비스 계층
-└── payload.config.ts
-migrations/        # DB 마이그레이션
-scripts/           # 시드 스크립트
-docs/              # 기획·아키텍처 문서
+```sh
+corepack enable
+pnpm install --frozen-lockfile
+pnpm migrate
+pnpm build
+pnpm start
 ```
 
-상세 구조와 개발 규칙은 [docs/06-project-structure.md](docs/06-project-structure.md)를 참고하세요.
+배포 후 다음 항목을 확인합니다.
 
-## 문서
-
-기획부터 구현 방향까지 [docs/README.md](docs/README.md)에서 순서대로 안내합니다.
-
-| 문서 | 역할 |
-| --- | --- |
-| [01. 제품](docs/01-product.md) | 제품 정의, 문제, 사용자, 가설, 제공 가치 |
-| [02. 유즈케이스](docs/02-usecases.md) | 사용 흐름, 주요 유즈케이스, 입력과 결과 |
-| [03. 데이터 생명주기](docs/03-data-lifecycle.md) | 데이터 상태, 전이, 연결 이벤트 |
-| [04. 도메인 모델](docs/04-domain-model.md) | 시스템 안에 존재하는 핵심 개념 |
-| [05. 시스템 아키텍처](docs/05-system-architecture.md) | 구현 경계, 기술 스택, 책임 분리 |
-| [06. 프로젝트 구조와 개발 규칙](docs/06-project-structure.md) | 런타임 구성, 소스 디렉터리, 구현 위치, 개발 규칙 |
-| [07. 보안](docs/07-security.md) | 보안 점검 항목, 문제 예시, 해결 방안 |
-| [08. 접근성과 다국어](docs/08-accessibility-i18n.md) | 접근성, 사용자 노출 문구, 다국어 대응 기준 |
+- `/`에서 사용자 화면이 열립니다.
+- `/admin`에서 인증된 사용자만 관리자 화면에 접근할 수 있습니다.
+- `pnpm migrate:status`에 적용되지 않은 마이그레이션이 없습니다.

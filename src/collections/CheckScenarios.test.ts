@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
 	validateKeys: vi.fn(),
 }))
 
-vi.mock('@/features/asset-check/services/list-available-scenario-checks.service', () => ({
+vi.mock('@/features/quality-rule/services/list-available-scenario-checks.service', () => ({
 	listAvailableScenarioChecks: mocks.listAvailable,
 	validateCheckScenarioKey: mocks.validateKey,
 	validateCheckScenarioKeys: mocks.validateKeys,

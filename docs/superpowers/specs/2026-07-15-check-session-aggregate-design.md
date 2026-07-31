@@ -7,14 +7,14 @@ CheckSession의 상태 전이와 결과 병합 규칙을 Transaction Script(서�
 
 상태(`running → completed/failed`)를 가진 CheckSession의 전이 규칙이 지금은 서비스 함수와 repository에 흩어져 있다.
 
-1. **완료 세션 재변경 미차단** — `completeCheckSessionAiCheck`(`src/services/start-check-session.service.ts`)는 세션 status를 확인하지 않고 무조건 `completed`로 덮어쓴다. 이미 종결된 세션에 `/api/check/ai`를 다시 호출하면 결과가 덮어써진다.
+1. **완료 세션 재변경 미차단** — `completeCheckSessionAiCheck`(`src/services/start-check-session.service.ts`)는 세션 status를 확인하지 않고 무조건 `completed`로 덮어쓴다. 이미 종결된 세션에 `/api/check/{checkSessionId}/ai`를 다시 호출하면 결과가 덮어써진다.
 2. **completedAt 규칙 중복** — `status === 'running' ? undefined : now` 판정이 `check-session.payload.repository.ts`의 create·update 두 곳에 복사되어 있다. "종결 시각은 종결 전이가 찍는다"는 도메인 규칙이 repository로 새어 있다.
 3. **pendingCheckKeys 미영속** — AI가 판정해야 할 Check 키 목록이 API 응답과 클라이언트 상태에만 존재한다. 서버는 후속 AI 검수에서 클라이언트가 보내는 `checkKeys`를 검증 없이 신뢰한다.
 
 ## 결정 사항
 
 - **Aggregate 형태**: 클래스. 상태를 private으로 닫고 전이 메서드만 공개한다.
-- **`/api/check/ai` 계약**: 클라이언트의 `checkKeys` 파라미터를 제거하고 세션에 저장된 `pendingCheckKeys`를 사용한다.
+- **`/api/check/{checkSessionId}/ai` 계약**: 클라이언트의 `checkKeys` 파라미터를 제거하고 세션에 저장된 `pendingCheckKeys`를 사용한다.
 - **종결 세션 재호출**: completed면 저장된 결과를 200으로 그대로 반환(멱등, AI 재실행 없음). failed면 409.
 
 ## 컴포넌트
@@ -89,7 +89,7 @@ running    →  runHeuristicCheck(buffer, session.pendingCheckKeys, session.rule
 
 ### 변경: API·클라이언트
 
-- `src/app/api/check/ai/route.ts` — `parseCheckKeys` 삭제, `CheckSessionTerminalError` → 409 응답.
+- `src/app/api/check/[checkSessionId]/ai/route.ts` — `parseCheckKeys` 삭제, `CheckSessionTerminalError` → 409 응답.
 - `src/features/asset-check/services/submit-check.client.ts` — `submitAiCheck`에서 `checkKeys` form 필드와 파라미터 제거. `runFullCheck`의 AI 실패 폴백은 `serverResult.pendingCheckKeys`를 그대로 쓰므로 변화 없음.
 - `src/agents/agent-tools.agent.ts`(runCheck tool) — `deferHeuristic` 없이 한 번에 끝나는 경로라 무변경 예상. 구현 계획에서 재확인한다.
 

@@ -17,7 +17,7 @@ import {
 	TextFont,
 } from '@carbon/icons-react'
 import type { ReactNode } from 'react'
-import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
+import { ContentFrame } from '@/components/shared/content-frame'
 import type { GetGuidelineChapterOutput } from '../../services/get-guideline-chapter.service'
 import { GuidelineDescription } from '../globals/guideline-description'
 import { GuidelineHeader } from '../globals/guideline-header'
@@ -57,18 +57,20 @@ export function GuidelineChapter({
 	isPreview: boolean
 }) {
 	return (
-		<GuidelineContentFrame>
+		<ContentFrame>
 			{isPreview && <RefreshRouteOnSave />}
 			<GuidelineHeader variant={variant} title={chapter.title} />
 			<GuidelineDescription variant={variant} description={chapter.description} />
 			<GuidelineNavigationGrid
+				variant="default"
 				items={chapter.sections.map((section) => ({
 					id: section.id,
 					title: section.title,
+					description: section.description,
 					href: `/guideline/${chapterSlug}/${section.slug}`,
 					icon: SECTION_ICONS[section.slug],
 				}))}
 			/>
-		</GuidelineContentFrame>
+		</ContentFrame>
 	)
 }

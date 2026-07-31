@@ -1,12 +1,9 @@
 import type { CheckResult } from '@/features/asset-check/checkers/types'
-import { checkDisplayStatus } from '@/features/asset-check/components/check-status'
 import type { CheckSection, RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
-import {
-	type CheckScenario,
-	filterRulesetByScenario,
-	getCheckScenario,
-} from '@/features/asset-check/scenarios'
+import { filterRulesetByScenario } from '@/features/asset-check/scenarios'
 import type { CheckImage } from '@/features/asset-check/types'
+import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
+import { type CheckScenario, getCheckScenario } from '@/features/quality-rule/check-scenario'
 
 export interface CheckReviewRow {
 	check: RuntimeCheck

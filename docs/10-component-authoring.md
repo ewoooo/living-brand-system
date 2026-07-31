@@ -34,10 +34,11 @@ grep -rl "Badge\|Card\|Typography" src/components src/features
 | 하려는 일 | 재사용할 것 |
 | --- | --- |
 | 헤딩·본문 텍스트 | `Typography` (`src/components/ui/typography.tsx`) |
+| 제목·설명·도움말 조합 | `ContentHeading` (`src/components/shared/content-heading.tsx`) |
 | 아이콘 | `@carbon/icons-react` |
 | className 병합 | `@/lib/utils`의 `cn` |
 | 색 파생(전경색·RGB) | `@/lib/color` (`hexToRgb`, `getContrastingForeground`) |
-| 콘텐츠 최대 폭 | `GuidelineContentFrame` |
+| 콘텐츠 최대 폭 | `ContentFrame` (`src/components/shared/content-frame.tsx`) |
 | 블록 표면색(배경) | `GuidelineBlockFrame` |
 | kit 갤러리 데모 래핑 | `CollapsibleDemo` (`src/features/guideline/components/kit/collapsible-demo.tsx`) |
 
@@ -58,24 +59,33 @@ import { cn } from '@/lib/utils'
 const badgeVariants = cva('inline-flex items-center …', {
 	variants: {
 		variant: {
-			default: 'bg-primary text-primary-foreground …',
-			outline: 'border-border bg-input/20 text-foreground …',
+			outline: 'border-foreground bg-transparent text-foreground …',
+			tint: 'border-primary/40 bg-primary/10 text-foreground …',
+			muted: 'bg-muted text-muted-foreground …',
+			highlight: 'bg-highlight text-highlight-foreground …',
+		},
+		shape: {
+			sharp: 'rounded-none',
+			rounded: 'rounded-sm',
+			pill: 'rounded-full …',
 		},
 	},
-	defaultVariants: { variant: 'default' },
+	defaultVariants: { variant: 'muted', shape: 'pill' },
 })
 
-function Badge({ className, variant = 'default', asChild = false, ...props }:
+function Badge({ className, variant = 'muted', shape = 'pill', asChild = false, ...props }:
 	React.ComponentProps<'span'> & VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
 	const Comp = asChild ? Slot.Root : 'span'
-	return <Comp data-slot="badge" data-variant={variant}
-		className={cn(badgeVariants({ variant }), className)} {...props} />
+	return <Comp data-slot="badge" data-variant={variant} data-shape={shape}
+		className={cn(badgeVariants({ variant, shape }), className)} {...props} />
 }
 
 export { Badge, badgeVariants }
 ```
 
-`badge.tsx`에서 그대로 가져오는 계약: variant 정의는 `cva`의 `variants`에, 기본값은 `defaultVariants`에 둡니다. 루트에 `data-slot`을 붙이고, variant 상태는 `data-variant`로 노출합니다. 다형 렌더링은 `asChild` + `radix-ui`의 `Slot`으로 하고, 별도 `as` prop을 새로 만들지 않습니다.
+`badge.tsx`에서 그대로 가져오는 계약: 색은 `variant`, 모서리는 `shape`로 분리하고 각 정의와 기본값은 `cva`에 둡니다. 루트에 `data-slot`을 붙이고 상태는 `data-variant`와 `data-shape`로 노출합니다. 아이콘에는 위치에 따라 `data-icon="inline-start" | "inline-end"`, 아이콘 전용 Badge에는 `data-icon="only"`와 Badge의 `aria-label`을 함께 씁니다. 다형 렌더링은 `asChild` + `radix-ui`의 `Slot`으로 하고, 별도 `as` prop을 새로 만들지 않습니다.
+
+`button.tsx`도 같은 `variant`(`outline`/`tint`/`muted`/`highlight`)와 `shape`(`sharp`/`rounded`/`pill`) 축을 공유하며, 크기만 `size`로 따로 분리합니다. `ghost`/`destructive`/`link`는 기능성 예외로 유지합니다. `muted`는 낮은 강조도의 활성 버튼이고, 비활성 상태는 별도 variant가 아니라 네이티브 `disabled` 속성으로 표현합니다.
 
 ### 크기 분기형 컴포넌트
 
@@ -115,6 +125,8 @@ function Card({ className, size = 'default', ...props }:
 ## 4. 스타일 계약 Do/Don't
 
 className과 style에는 시맨틱 토큰만 씁니다(닫힌 토큰 규칙 전문은 `docs/09-design-system.md` §4). 생 색·생 팔레트 클래스·동적 클래스는 금지입니다. 아래 ❌ 행 중 file:line이 붙은 것은 저장소에 실제로 남아 있는 위반이고, file:line이 없는 행(예: `@hugeicons/*`)은 정책 참조입니다. 새 코드는 ✅를 따릅니다.
+
+글자 크기는 `docs/09` §6의 고정 유틸리티 단계만 사용합니다. `clamp()`·`vw`·반응형 `text-*`·임의 글자 크기는 추가하지 않습니다. 크기 variant는 패딩과 높이를 바꿀 수 있지만, 일반 컨트롤은 `text-sm`/`size-4`, 큰 컨트롤은 `text-base`/`size-5` 조합을 유지합니다.
 
 | ✅ Do | ❌ Don't | repo 실측 |
 | --- | --- | --- |
@@ -165,9 +177,9 @@ grep -rnE '(grid-cols|col-span|gap|w|h|text)-\$\{' src
 
 ### 폭·표면색·세로 리듬은 프레임이 소유
 
-- 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `GuidelineContentFrame`에만 있습니다(`guideline-content-frame.tsx:22`의 `max-w-[1250px]`).
+- 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `ContentFrame`에만 있습니다(`content-frame.tsx:22`의 `max-w-[1250px]`).
 - 표면 배경색은 컴포넌트 안에 칠하지 않고 `GuidelineBlockFrame`의 `variant`(`normal`/`secondary`/`inverted`)로 받습니다.
-- 블록 간 세로 리듬도 프레임이 소유합니다(`guideline-content-frame.tsx:21`의 `py-16`). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
+- 블록 간 세로 리듬도 프레임이 소유합니다(`content-frame.tsx:21`의 `py-8`). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
 
 ## 5. 브랜드 무관
 
@@ -238,11 +250,12 @@ PR을 올리기 전 자기 점검용입니다.
 - [ ] `grep -rE '(bg|text|border|ring|fill)-(neutral|gray|zinc|slate|stone)-[0-9]'` 결과가 이 컴포넌트에서 0이다.
 - [ ] `grep -rE 'className=.*#[0-9a-fA-F]{6}'`에 걸리는 생 hex가 없다(색 데이터 props는 예외).
 - [ ] `grep -rE '(grid-cols|col-span|gap)-\$\{'`에 걸리는 동적 클래스가 없다. 조건부 완전 클래스로 바꿨다.
-- [ ] 자기 `max-width`가 없다. 폭은 `GuidelineContentFrame`, 표면색은 `GuidelineBlockFrame`이 소유한다.
+- [ ] 자기 `max-width`가 없다. 폭은 `ContentFrame`, 표면색은 `GuidelineBlockFrame`이 소유한다.
 - [ ] 아이콘은 `@carbon/icons-react`다. `@hugeicons`가 없다.
 - [ ] 색·폰트·로고를 props로 받는다. 하드코딩은 essenherb default뿐이다.
 - [ ] 색·전경색은 저장하지 않고 `@/lib/color`로 런타임 파생한다.
 - [ ] 상태를 색만으로 구분하지 않는다. 심볼 + 텍스트를 함께 쓴다.
+- [ ] 글자 크기는 `docs/09` §6의 고정 유틸리티 단계만 사용한다.
 - [ ] focus-visible ring, 키보드 조작, label 연결이 있다.
 - [ ] 순수 조합 컴포넌트에 `use client`를 붙이지 않았다.
 - [ ] 비자명 로직에 co-located `*.test.ts` 하나가 있다. one-liner엔 없다.

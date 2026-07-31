@@ -41,26 +41,23 @@
 
 ### 5.1 가이드라인 관리
 
-가이드라인 관리는 브랜드 가이드라인, 공식 자원, Official Version을 관리합니다.
+가이드라인 관리는 공통 표시 설정인 BrandGuideline과 독립 편집·발행 단위인 GuidelineDocument, 공식 자원을 관리합니다.
 Creator가 사용하는 기준과 자원은 이 도메인에서 발행된 것만 사용합니다.
 
 #### 브랜드 가이드라인 편집 및 발행
 
 | ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| GL-01 | 가이드라인 초안 생성 | Manager, System | 가이드라인 이름, 목적, 대상 브랜드 | Manager가 새 가이드라인 생성을 요청하면 System이 BrandGuideline을 draft 상태로 만듭니다. | Draft BrandGuideline | BrandGuideline, GuidelineDraftCreated | 가이드라인 섹션 등록 |
-| GL-02 | 가이드라인 섹션 등록 | Manager, System | 섹션 이름, 설명, 표시 순서 | Manager가 섹션을 입력하면 System이 GuidelineSection을 가이드라인에 추가합니다. | GuidelineSection | GuidelineSection, DisplayOrder, GuidelinePageUpdated | 가이드라인 페이지 구성 |
-| GL-03 | 가이드라인 페이지 구성 | Manager, System | 섹션, 페이지 제목, 설명 | Manager가 페이지 기본 정보를 입력하면 System이 GuidelinePage를 저장합니다. | GuidelinePage | GuidelinePage, GuidelinePageUpdated | 페이지 블록 작성 |
-| GL-04 | 페이지 블록 작성 | Manager, System | GuidelinePage, 블록 유형, 이미지, 본문, 표시 순서 | Manager가 페이지 본문 블록을 작성하면 System이 PageContentBlock 목록을 저장합니다. | PageContentBlock | PageContentBlock, PageBlockUpdated | 규칙을 페이지에 연결 |
-| GL-05 | 규칙을 페이지에 연결 | Manager, System | GuidelinePage, BrandRuleVersion, 표시 순서, 강조 여부 | Manager가 페이지에 발행 규칙을 연결하면 System이 PageRuleRef를 생성합니다. | PageRuleRef | PageRuleRef, BrandRuleVersionRef, PageRuleLinked | 가이드라인 검토 요청 |
-| GL-06 | 에셋을 페이지에 연결 | Manager, System | GuidelinePage, BrandAssetVersion, 캡션, 예시 역할 | Manager가 페이지에 에셋을 연결하면 System이 PageAssetRef 또는 PageExample을 생성합니다. | PageAssetRef | PageAssetRef, PageExample, PageAssetLinked | 가이드라인 검토 요청 |
-| GL-07 | 템플릿을 페이지에 연결 | Manager, System | GuidelinePage, TemplateVersion, 사용 조건 | Manager가 페이지에 템플릿을 연결하면 System이 페이지의 TemplateVersion 참조를 저장합니다. | TemplateVersionRef | TemplateVersionRef, GuidelinePageUpdated | 가이드라인 검토 요청 |
-| GL-08 | 플러그인을 페이지에 연결 | Manager, System | GuidelinePage, PluginVersion, 사용 조건 | Manager가 페이지에 플러그인을 연결하면 System이 페이지의 PluginVersion 참조를 저장합니다. | PluginVersionRef | PluginVersionRef, GuidelinePageUpdated | 가이드라인 검토 요청 |
-| GL-09 | 가이드라인 검토 요청 | Manager, System | Draft BrandGuideline | Manager가 검토를 요청하면 System이 가이드라인 상태를 in review로 변경합니다. | Review Requested Guideline | BrandGuideline, GuidelineStatus, GuidelineSubmittedForReview | 가이드라인 승인 |
-| GL-10 | 가이드라인 승인 | Manager, System | 검토 중인 가이드라인, 승인자 | Manager가 승인하면 System이 가이드라인을 approved 상태로 변경합니다. | Approved Guideline | BrandGuideline, GuidelineStatus, GuidelineApproved | 가이드라인 발행 |
-| GL-11 | 가이드라인 발행 | Manager, System | Approved BrandGuideline, 적용 시작일 | Manager가 발행하면 System이 BrandGuidelineVersion을 live 상태로 전환합니다. | Live Guideline | GuidelineVersionRef, EffectivePeriod, GuidelinePublished | Official Version 전환 |
-| GL-12 | 가이드라인 예약 발행 | Manager, System | Approved BrandGuideline, 예약 적용일 | Manager가 적용일을 예약하면 System이 stage 상태의 BrandGuidelineVersion과 EffectivePeriod를 저장합니다. | Scheduled Guideline | GuidelineVersionRef, EffectivePeriod, GuidelineScheduled | live 전환 |
-| GL-13 | 가이드라인 폐기 | Manager, System | live 상태의 BrandGuidelineVersion, 폐기 사유, 대체 기준 | Manager가 폐기하면 System이 기존 BrandGuidelineVersion을 archived 상태로 변경하고 대체 기준을 연결합니다. | Archived Guideline | VersionStatus, VersionReason, GuidelineDeprecated | Official Version 전환 |
+| GL-01 | 가이드라인 기본 정보 편집 | Manager, System | 회사명, 문서 제목, 발행 표기, 테마 | Manager가 공통 표시 정보를 수정하면 System이 BrandGuideline global을 갱신합니다. | Updated BrandGuideline | BrandGuideline | 가이드라인 문서 초안 생성 |
+| GL-02 | 가이드라인 문서 초안 생성 | Manager, System | 제목, 설명, slug, 표시 순서 | Manager가 문서를 만들면 System이 독립 GuidelineDocument draft를 저장합니다. | Draft GuidelineDocument | GuidelineDocument, Payload revision | 문서 계층 구성 |
+| GL-03 | 문서 계층 구성 | Manager, System | GuidelineDocument, 상위 문서 | Manager가 상위 문서를 선택하면 System이 깊이 제한과 slug 중복을 확인해 관계를 저장합니다. | Hierarchical GuidelineDocument | ParentDocumentRef, Breadcrumbs | 문서 블록 작성 |
+| GL-04 | 문서 블록 작성 | Manager, System | GuidelineDocument, 블록 유형, 콘텐츠 | Manager가 본문 블록을 작성하면 System이 GuidelineBlock 목록을 문서에 임베드합니다. | GuidelineBlock | GuidelineBlock, Payload revision | 규칙을 문서에 연결 |
+| GL-05 | 규칙을 문서에 연결 | Manager, System | GuidelineDocument 또는 GuidelineBlock, Rule | Manager가 발행 규칙을 선택하면 System이 Rule 관계를 저장합니다. Rule 정의는 변경하지 않습니다. | Rule reference | RuleRef, Payload revision | 문서 초안 미리보기 |
+| GL-06 | 에셋을 문서에 연결 | Manager, System | GuidelineDocument 또는 GuidelineBlock, 공식 에셋 | Manager가 헤더나 블록 에셋을 선택하면 System이 공식 에셋 관계를 저장합니다. | Asset reference | ApplicationImageRef 또는 BrandAssetRef, Payload revision | 문서 초안 미리보기 |
+| GL-07 | 문서 초안 미리보기 | Manager, System | Draft GuidelineDocument | Manager가 미리보기를 열면 System이 draft 문서와 하위 문서를 읽어 실제 화면 구조로 렌더합니다. | Draft preview | - | 가이드라인 문서 발행 |
+| GL-08 | 가이드라인 문서 발행 | Manager, System | Draft GuidelineDocument | Manager가 발행하면 System이 해당 GuidelineDocument revision을 published 상태로 전환합니다. | Published GuidelineDocument | Payload revision, GuidelinePublished | 발행 가이드라인 조회 |
+| GL-09 | 가이드라인 문서 예약 발행 | Manager, System | Draft GuidelineDocument, 예약 시각 | Manager가 예약하면 Payload가 해당 문서 revision의 예약 발행을 실행합니다. | Scheduled GuidelineDocument | Payload revision | 발행 가이드라인 조회 |
+| GL-10 | 발행 가이드라인 조회 | Creator, Agent, System | locale, 문서 경로 | System이 published GuidelineDocument 계층과 BrandGuideline 표시 설정을 조합해 제공합니다. | Published guideline view | - | 검수 또는 Agent 답변 |
 
 #### 브랜드 자원 관리
 
@@ -108,10 +105,13 @@ Creator가 사용하는 기준과 자원은 이 도메인에서 발행된 것만
 
 ### 5.2 제작 관리
 
-제작 관리는 Creator가 발행된 Template과 Plugin을 사용해 AssetGenerationSession을 만들고 AssetGenerationOutput을 생성하는 흐름입니다.
+현재 제작 관리는 Creator가 발행된 Template과 Plugin을 사용해 요청 범위에서 결과를 생성합니다.
+`AssetGenerationSession`과 `AssetGenerationOutput`은 저장하지 않습니다.
 검수 요청과 Agent/System 판정은 품질 검수가 담당합니다.
 
-#### 산출물 제작
+#### 산출물 제작 기록(계획)
+
+아래 유즈케이스는 향후 제작 사용량 추적을 도입할 때 적용합니다. 현재 Create와 Image 기능의 구현 요구사항이 아닙니다.
 
 | ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -129,26 +129,20 @@ Creator가 사용하는 기준과 자원은 이 도메인에서 발행된 것만
 
 ### 5.3 품질 검수
 
-품질 검수는 CheckInputSnapshot에 고정된 검수 입력을 대상으로 질문, Agent/System 점검과 최종 판정을 수행합니다.
+품질 검수는 CheckInputSnapshot에 고정된 이미지 입력을 대상으로 Agent/System 점검과 최종 판정을 수행합니다.
 Agent 자체는 도메인 애그리거트가 아니며 결과에 `AgentRunRef`만 남깁니다.
 
-#### 질의응답
-
-| ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| QA-01 | 질의 세션 시작 | Creator, System | AssetGenerationSession, 질문 맥락 | Creator가 질문을 시작하면 System이 AssetGenerationSession과 연결된 QASession을 만듭니다. | QASession | QASession | 질문 등록 |
-| QA-02 | 질문 등록 | Creator, System | 질문 원문, AssetGenerationSession 맥락 | Creator가 질문을 입력하면 System이 Question을 QASession에 추가합니다. | Question | Question, QuestionAsked | 관련 기준 검색 |
-| QA-03 | 관련 기준 검색 | System | 질문 원문, GuidelineVersionRef | System이 GuidelineVersionRef가 가리키는 Official Version에서 질문과 관련된 기준을 검색합니다. | Related BrandRules | BrandRuleVersionRef, GuidelineVersionRef | Agent 답변 생성 |
-| QA-04 | Agent 답변 생성 | Agent, System | Question, Related BrandRules, AssetGenerationSession 맥락 | Agent가 관련 기준을 바탕으로 답변을 생성하고 System이 Answer를 저장합니다. | Answer | Answer, AgentRunRef, AnswerProvided | 답변 근거 연결 |
-| QA-05 | 답변 근거 연결 | Agent, System | Answer, Related BrandRules | System이 답변에 사용한 BrandRuleVersion과 PageContentBlock을 AnswerCitation으로 연결합니다. | Answer Citation | AnswerCitation, BrandRuleVersionRef, AnswerProvided | 답변 신뢰도 기록 |
-| QA-06 | 답변 신뢰도 기록 | Agent, System | Answer, 근거 수, 모델 판단 | System이 답변의 신뢰도를 AnswerConfidence로 저장합니다. | Answer Confidence | AnswerConfidence, AgentRunRef | 질의 세션 종료 |
-| QA-07 | 질의 세션 종료 | Creator, System | QASession | Creator가 질의를 종료하면 System이 세션을 닫고 필요한 기간 동안 보존합니다. | Closed QASession | QASession | 사용 이력 조회 |
+Agent 채팅은 별도 `AgentChatSession`으로 대화와 사용량을 기록합니다.
+기존 문서에서 `QASession`이라고 표기했던 품질 세션은 `CheckSession`으로 통일합니다. `AgentChatSession`은 이를 구현한 모델이 아닙니다.
+채팅에서 검수 도구를 실행하면 생성된 `CheckSession`이 `AgentChatSession`을 출처로 선택 참조합니다.
 
 #### 산출물 검수
 
+아래 `CheckTarget`, `CheckRun`, `CheckBasis`, `CheckDecision`은 도메인 역할을 설명하는 이름입니다. 현재 저장 모델은 해당 값을 `CheckSession`에 평탄화합니다.
+
 | ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| QC-01 | 검수 세션 시작 | Creator, System | AssetGenerationOutput | Creator가 검수를 요청하면 System이 CheckInputSnapshot을 만들고 CheckTarget으로 고정한 뒤 CheckSession을 시작합니다. | CheckSession | CheckInputSnapshot, CheckTarget, CheckSession, CheckSessionStarted | 점검 실행 |
+| QC-01 | 검수 세션 시작 | Creator, System | 업로드 이미지 | Creator가 검수를 요청하면 System이 이미지 지문을 CheckInputSnapshot으로 고정한 뒤 CheckSession을 시작합니다. | CheckSession | CheckInputSnapshot, CheckSession, CheckSessionStarted | 점검 실행 |
 | QC-02 | 점검 실행 | System, Agent | CheckSession, CheckTarget, ResourceRef | System이 ResourceRef에서 검수에 필요한 VersionRef를 추출해 CheckBasis로 묶고 Agent가 해당 기준으로 산출물을 검사합니다. | CheckRun | CheckRun, CheckBasis, GuidelineVersionRef, BrandRuleVersionRef, BrandAssetVersionRef, AgentRunRef | 규칙 위반 확인 |
 | QC-03 | 규칙 위반 확인 | System, Agent | CheckRun, CheckBasis, CheckTarget | System이 CheckBasis 기준으로 위반 항목을 정리하고 Agent가 설명 가능한 위반 내용을 보강합니다. | Violation List | CheckDecision, CheckResult, Violation, CheckRunCompleted | Agent 추천 생성 |
 | QC-04 | Agent 추천 생성 | Agent, System | CheckResult, Violation, CheckTarget | Agent가 위반 항목별 수정 방향을 생성하고 System이 CheckResult 아래에 CheckRecommendation으로 저장합니다. | CheckRecommendation | CheckRecommendation, AgentRunRef | 검수 판정 기록 |
@@ -163,9 +157,9 @@ Agent 자체는 도메인 애그리거트가 아니며 결과에 `AgentRunRef`�
 
 | ID | 유즈케이스 | 액터 | 입력 | 프로세스 | 아웃풋 | 생성 데이터 | 다음 연결 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOG-01 | 사용 이력 조회 | Manager, System | 사용자 또는 기간, 조회 범위 | Manager가 조건을 입력하면 System이 AssetGenerationSession, QASession, CheckSession, BehaviorEventLog를 조합해 보여줍니다. | Usage History | AssetGenerationSession, QASession, CheckSession, BehaviorEventLog | - |
-| LOG-02 | 에셋 제너레이션 기록 조회 | Manager, System | AssetGenerationSession, 기간 | Manager가 AssetGenerationSession을 선택하면 System이 에셋 제너레이션 입력, 산출물, 상태 전이를 보여줍니다. | Asset Generation History | AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput, AssetGenerationStatus | 에셋 제너레이션 병목 확인 |
-| LOG-03 | Agent 실행 로그 조회 | Manager, System | AgentRunRef, 기간, 실행 유형 | Manager가 Agent 실행 조건을 입력하면 System이 답변과 점검 실행 기록을 보여줍니다. | Agent Run Log | AgentRunRef, AgentRunStarted, AgentRunCompleted, AgentRunFailed | Agent 품질 확인 |
-| LOG-04 | 점검 이력 조회 | Manager, System | CheckInputSnapshot, 기간 | Manager가 CheckInputSnapshot을 선택하면 System이 CheckSession, CheckRun, CheckResult 이력을 보여줍니다. | Check History | CheckSession, CheckRun, CheckResult | - |
-| LOG-05 | 검수 입력 기록 조회 | Manager, System | AssetGenerationSession, 기간 | Manager가 AssetGenerationSession을 선택하면 System이 생성된 CheckInputSnapshot 목록을 보여줍니다. | CheckInputSnapshot List | CheckInputSnapshot | 점검 이력 조회 |
+| LOG-01 | 사용 이력 조회 | Manager, System | 사용자 또는 기간, 조회 범위 | Manager가 조건을 입력하면 System이 AgentChatSession, CheckSession, BehaviorEventLog를 조합해 보여줍니다. | Usage History | AgentChatSession, CheckSession, BehaviorEventLog | - |
+| LOG-02 | 에셋 제너레이션 기록 조회(계획) | Manager, System | AssetGenerationSession, 기간 | 향후 사용량 추적을 도입하면 System이 제작 기능과 ResourceRef 사용 이력을 보여줍니다. | Asset Generation History | AssetGenerationSession | 제작 사용량 확인 |
+| LOG-03 | Agent 채팅 사용량 조회 | Manager, System | 사용자, 기간, 도구 또는 스킬 | Manager가 조건을 입력하면 System이 AgentChatSession의 대화 상태, 도구·스킬 사용과 AI 사용량을 보여줍니다. | Agent Chat Usage | AgentChatSession | Agent 품질 확인 |
+| LOG-04 | 점검 이력 조회 | Manager, System | 사용자, 기간 | Manager가 조건을 입력하면 System이 CheckSession의 입력 지문, ruleset snapshot, 상태와 결과를 보여줍니다. | Check History | CheckSession | - |
+| LOG-05 | 검수 입력 기록 조회 | Manager, System | 사용자, 기간 | Manager가 조건을 입력하면 System이 업로드 이미지 지문으로 생성된 CheckInputSnapshot 목록을 보여줍니다. | CheckInputSnapshot List | CheckInputSnapshot | 점검 이력 조회 |
 | LOG-06 | 화면 행동 기록 조회 | Manager, System | 기간, 화면, 이벤트 이름, 공통 이벤트 속성 | Manager가 조건을 입력하면 System이 페이지 조회, 클릭, 검색, 구간 체류, 에셋 다운로드, 외부 링크 클릭 흐름을 보여줍니다. | Behavior Event Log | BehaviorEventLog, PageViewEvent, ClickEvent, SearchEvent, AssetDownloadEvent, SectionDwellEvent, OutboundLinkEvent, CustomEvent | - |

@@ -38,12 +38,16 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 | --- | --- | --- |
 | color 원시값 | `:root`(라이트), `.dark`(다크)의 원시 색 정의 | `src/app/(frontend)/theme.css:62-95`, `theme.css:97-129` |
 | color 유틸 매핑 | 원시값 → `@theme inline`의 `--color-*` 유틸 토큰 | `theme.css:24-54` |
+| highlight gradient | 강조 배경과 전경 토큰, `bg-highlight` 유틸 | `src/app/(frontend)/theme.css` |
 | radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl` 4단 파생(`lg`는 뿌리값, `sm`/`md`/`xl`은 calc) | `theme.css:56-59`, `theme.css:63` |
 | 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(Essenflux) | `theme.css:20-22` |
+| 루트 크기 | 모든 화면에서 고정된 16px `rem` 기준 크기 | `src/app/(frontend)/styles.css`의 `html` |
 | 타이포 리듬 | `.typeset` 블록의 크기·행간·흐름(shadcn/typeset) | `src/app/(frontend)/typeset.css` |
 | base body / scrollbar / import 순서 | `body` 기본, `scrollbar-none` 유틸, CSS `@import` 체인 | `src/app/(frontend)/styles.css:1-30` |
 
 `--radius`는 뿌리 토큰 하나이고 나머지 4단은 그것을 기준으로 파생합니다(`--radius-lg`는 뿌리값 그대로, `sm`/`md`/`xl`은 `calc()`; `theme.css:56-59`). radius를 조정할 때는 파생값이 아니라 뿌리 하나만 바꿉니다.
+
+`highlight`는 Figma 강조 스타일을 옮긴 그라디언트입니다. `bg-highlight`가 가로 밴드를 2배로 늘려 왼쪽에서 오른쪽으로 반복 이동시키고, 모션 감소 설정에서는 정지합니다. Badge와 Button은 `bg-highlight`와 `text-highlight-foreground`를 함께 사용하며, 개별 컴포넌트에서 gradient stop을 다시 선언하지 않습니다.
 
 ## 4. 닫힌 토큰 규칙
 
@@ -83,7 +87,23 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|from|to|via)-(?:neutral|gray|z
 
 ## 6. 타이포그래피와 프리미티브 소재
 
-새 `H1`/`H2`/`Heading` 컴포넌트를 발명하지 않습니다. 텍스트 프리미티브는 `Typography`(`as`/`family`/`size`/`tone`/`weight`)를 재사용하고, 페이지 상위 조합은 `src/components/global`의 page-header에 둡니다.
+새 `H1`/`H2` 컴포넌트를 발명하지 않습니다. 텍스트 프리미티브는 `Typography`(`as`/`family`/`size`/`tone`/`weight`)를 재사용하고, 여러 화면 표면이 공유하는 제목 조합은 `src/components/shared/content-heading.tsx`의 `ContentHeading`을 사용합니다.
+
+`rem`의 기준 크기는 `styles.css`의 `html`이 16px로 고정합니다. 폰트 크기는 커스텀 토큰 없이 아래 Tailwind 유틸리티만 사용합니다.
+
+| 역할 | 유틸리티 |
+| --- | --- |
+| Badge·비필수 메타·캡션 | `text-xs` |
+| 본문·입력·일반 버튼·메뉴 | `text-sm` |
+| 큰 버튼·카드 제목 | `text-base` |
+| H1 설명·lead | `text-xl` |
+| 섹션·로컬 페이지 제목 | `text-2xl` |
+| 페이지·챕터 제목 | `text-5xl` |
+| 최상위 H1 | `text-6xl` |
+
+14px 텍스트와 함께 쓰는 아이콘은 `size-4`, 16px 텍스트와 함께 쓰는 아이콘은 `size-5`를 기본으로 합니다. 일반 컴포넌트에는 `clamp()`·`vw`·반응형 `text-*`·임의 글자 크기를 선언하지 않습니다.
+
+메인 히어로의 제목·버전 표기와 푸터 `LBS`는 화면 비율에 맞춘 lockup을 유지해야 하므로 유일한 viewport 반응형 예외이며 기존 `clamp()` 크기를 사용합니다. 템플릿 캔버스와 `TypeScale`·`TypeSpecimen`이 데이터로 받은 글자 크기도 UI 타이포그래피가 아니므로 예외입니다. 그 밖의 `GlyphGrid` 같은 대형 표본은 viewport 계산식 대신 `text-9xl` 같은 고정 유틸리티를 사용합니다. 클래스 주입이 불가능한 `.typeset` 내부 생성 HTML은 `typeset.css`에서 같은 고정 단계만 직접 선언합니다.
 
 현재 상태를 정직하게 기술합니다.
 
@@ -103,11 +123,11 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 | 겹 | 컴포넌트 | 소유 책임 |
 | --- | --- | --- |
 | 표면색 껍질 | `GuidelineBlockFrame`(`<section>`) | 전체 폭 배경/전경(`normal`/`secondary`/`inverted`) |
-| 폭 프레임 | `GuidelineContentFrame` | 최대 폭과 가로 여백(`max-w-[1250px] px-4 md:px-8`) |
+| 폭 프레임 | `ContentFrame` | 최대 폭과 가로 여백(`max-w-[1250px] px-4 md:px-8`) |
 
-`GuidelineBlockFrame`(`guideline-block-frame.tsx:24-46`)은 표면색만 정하고 즉시 `GuidelineContentFrame`을 감쌉니다. 폭과 가로 여백은 `GuidelineContentFrame`의 `padded` variant 한 곳만 소유합니다(`guideline-content-frame.tsx:22`). 개별 블록은 자기 `max-width`를 선언하지 않습니다 — 폭을 바꾸려면 프레임 한 곳만 고칩니다.
+`GuidelineBlockFrame`(`guideline-block-frame.tsx:24-46`)은 표면색만 정하고 즉시 `ContentFrame`을 감쌉니다. 폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx:22`). 개별 블록은 자기 `max-width`를 선언하지 않습니다 — 폭을 바꾸려면 프레임 한 곳만 고칩니다.
 
-세로 리듬은 프레임의 self-padding(`guideline-content-frame.tsx:21`의 `py-8`)과 스택 컨테이너의 `gap`이 함께 담당합니다. 요소 사이 실제 간격은 `패딩 + gap + 패딩`의 합입니다. "블록마다 마진을 흩뿌리지 않는다"의 뜻은 *바꾸지 않는다*가 아니라 *요소마다 제각각 다르게 주지 않는다*이며, 다음 세 불변식으로 리듬을 통일합니다:
+세로 리듬은 프레임의 self-padding(`content-frame.tsx:21`의 `py-8`)과 스택 컨테이너의 `gap`이 함께 담당합니다. 요소 사이 실제 간격은 `패딩 + gap + 패딩`의 합입니다. "블록마다 마진을 흩뿌리지 않는다"의 뜻은 *바꾸지 않는다*가 아니라 *요소마다 제각각 다르게 주지 않는다*이며, 다음 세 불변식으로 리듬을 통일합니다:
 
 1. 한 요소의 상하 패딩은 대칭이다(`py-*` 하나로).
 2. 모든 요소의 패딩은 동일하다(프레임 한 곳에서 소유).

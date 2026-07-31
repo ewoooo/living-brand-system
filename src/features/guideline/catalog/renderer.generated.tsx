@@ -1,8 +1,11 @@
 // 이 파일은 scripts/generate-guideline-block-catalogs.ts로 생성됩니다. 직접 수정하지 마세요.
 
 import type { ReactNode } from 'react'
+import BlockComponent from '../blocks/block/component'
 import CalloutComponent from '../blocks/callout/component'
 import CarouselComponent from '../blocks/carousel/component'
+import ColorPairingComponent from '../blocks/color-pairing/component'
+import ColorPairingRecommendationComponent from '../blocks/color-pairing-recommendation/component'
 import ColorPaletteComponent from '../blocks/color-palette/component'
 import ContentColumnsComponent from '../blocks/content-columns/component'
 import DoDontComponent from '../blocks/do-dont/component'
@@ -10,9 +13,12 @@ import GlyphGridComponent from '../blocks/glyph-grid/component'
 import IconGridComponent from '../blocks/icon-grid/component'
 import ImageGridComponent from '../blocks/image-grid/component'
 import LayoutGridComponent from '../blocks/layout-grid/component'
+import LogoGroupViewerComponent from '../blocks/logo-group-viewer/component'
+import LogoViewerComponent from '../blocks/logo-viewer/component'
 import MediaShowcaseComponent from '../blocks/media-showcase/component'
 import SignatureShowcaseComponent from '../blocks/signature-showcase/component'
 import SpecListComponent from '../blocks/spec-list/component'
+import StemClearSpaceComponent from '../blocks/stem-clear-space/component'
 import TypeScaleComponent from '../blocks/type-scale/component'
 import TypeSpecimenComponent from '../blocks/type-specimen/component'
 import type { GuidelineBlock } from '../blocks/types'
@@ -36,6 +42,12 @@ export const guidelineBlockRenderers = {
 	typeScale: (block) => <TypeScaleComponent block={block} />,
 	layoutGrid: (block) => <LayoutGridComponent block={block} />,
 	glyphGrid: (block) => <GlyphGridComponent block={block} />,
+	block: (block) => <BlockComponent block={block} />,
+	colorPairing: (block) => <ColorPairingComponent block={block} />,
+	colorPairingRecommendation: (block) => <ColorPairingRecommendationComponent block={block} />,
 	iconGrid: (block) => <IconGridComponent block={block} />,
 	imageGrid: (block) => <ImageGridComponent block={block} />,
+	logoGroupViewer: (block) => <LogoGroupViewerComponent block={block} />,
+	logoViewer: (block) => <LogoViewerComponent block={block} />,
+	stemClearSpace: (block) => <StemClearSpaceComponent block={block} />,
 } satisfies RendererMap

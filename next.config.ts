@@ -2,12 +2,16 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { withPayload } from '@payloadcms/next/withPayload'
 import type { NextConfig } from 'next'
+import { legacyPageRedirects } from './src/lib/routes'
 
 const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
 	output: 'standalone',
+	async redirects() {
+		return legacyPageRedirects.map((redirect) => ({ ...redirect }))
+	},
 	// 응답 보안 헤더 (docs/07 #31). CSP는 Payload admin 인라인 스크립트 영향 검증 후 별도 도입한다.
 	async headers() {
 		return [

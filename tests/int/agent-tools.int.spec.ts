@@ -1,50 +1,35 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
-import { getAgentTools } from '@/agents/agent-tools.agent'
+import { getAgentTools } from '@/agents/agent-chat-tools.agent'
 import { validateAgentChatMessages } from '@/agents/validate-agent-chat-messages.agent'
 import * as agentSkillRepository from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import * as agentTemplateRepository from '@/features/agent-chat/repositories/agent-template.payload.repository'
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import { getAgentCitations } from '@/features/agent-chat/utils/get-agent-citations'
 import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-parts'
-import * as checkScenarioService from '@/features/asset-check/services/get-check-scenarios.service'
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
+import * as checkScenarioService from '@/features/quality-rule/services/get-check-scenarios.service'
 import * as checkSessionService from '@/services/start-check-session.service'
 
-const textElement = (
-	overrides: Partial<{
-		id: string
-		locked: boolean
-		maxLength: number
-		slotLabel: string
-		text: string
-	}> = {},
-) => ({
-	id: overrides.id ?? 'name',
-	type: 'text' as const,
-	x: 0,
-	y: 0,
-	width: 200,
-	height: 40,
-	zIndex: 1,
-	locked: overrides.locked ?? false,
-	text: overrides.text ?? 'Name',
-	fontSize: 20,
-	fontFamily: 'Pretendard',
-	fontWeight: '700',
-	color: '#000000',
-	lineHeight: 1.2,
-	letterSpacing: 0,
-	textAlign: 'left' as const,
-	...(overrides.maxLength ? { maxLength: overrides.maxLength } : {}),
-	...(overrides.slotLabel ? { slotLabel: overrides.slotLabel } : {}),
-})
+const textNode = ({
+	id = 'name',
+	name = 'Name',
+	text = 'Name',
+}: {
+	id?: string
+	name?: string
+	text?: string
+} = {}) => `<p data-node-id="${id}" data-figma-type="TEXT" data-name="${name}">${text}</p>`
 
-const template = (...elements: ReturnType<typeof textElement>[]) => ({
+const htmlTemplate = (
+	overrides: Record<string, { input?: Record<string, unknown> }>,
+	...nodes: string[]
+) => ({
+	html: `<div data-node-id="frame" data-figma-type="FRAME">${nodes.join('')}</div>`,
+	overrides,
 	width: 900,
 	height: 500,
-	background: '#ffffff',
-	elements,
+	updatedAt: '2026-07-29T00:00:00.000Z',
 })
 
 const runtimeCheck = (key: string) => ({
@@ -102,7 +87,8 @@ describe('agent tools', () => {
 		])
 	})
 
-	it('loads agent skill instructions through the tool service', async () => {
+	it('loads agent skill instructions with the configured triage mode', async () => {
+		const triageEnabled = process.env.AGENT_CHAT_TRIAGE_ENABLED === 'true'
 		const findSkill = vi
 			.spyOn(agentSkillRepository, 'findEnabledAgentSkillByName')
 			.mockResolvedValue({
@@ -113,16 +99,42 @@ describe('agent tools', () => {
 			})
 		const tools = getAgentTools()
 
-		const result = await tools.loadSkill.execute?.({ name: 'copywriter-test' }, {
-			context: { user: { id: 1 } },
-		} as never)
+		const result = await tools.loadSkill.execute?.(
+			(triageEnabled
+				? {
+						name: 'copywriter-test',
+						responseMode: 'action',
+						risk: 'high',
+						confidence: 90,
+					}
+				: { name: 'copywriter-test' }) as never,
+			{
+				context: { user: { id: 1 } },
+			} as never,
+		)
 
 		expect(findSkill).toHaveBeenCalledWith({ id: 1 }, 'copywriter-test')
-		expect(result).toEqual({
-			description: 'Copywriting test skill.',
-			instructions: 'Rewrite campaign copy.',
-			name: 'copywriter-test',
-		})
+		expect(result).toEqual(
+			triageEnabled
+				? {
+						description: 'Copywriting test skill.',
+						instructions: 'Rewrite campaign copy.',
+						name: 'copywriter-test',
+						responseMode: 'action',
+						risk: 'high',
+						confidence: 90,
+						model: 'opus-5.0',
+						toolScope: 'read',
+						reviewRequired: true,
+					}
+				: {
+						description: 'Copywriting test skill.',
+						instructions: 'Rewrite campaign copy.',
+						name: 'copywriter-test',
+						model: 'sonnet-5',
+						toolScope: 'action',
+					},
+		)
 	})
 
 	it('reads guideline document details through the tool service', async () => {
@@ -233,46 +245,24 @@ describe('agent tools', () => {
 		expect((result as { summary: string }).summary).toContain('통과로 판단할 수 없습니다')
 	})
 
-	it('lists published templates with open slots and template Checks', async () => {
-		vi.spyOn(agentGuidelineContext, 'listAgentChecks').mockResolvedValue([
-			{
-				evidence: 'Use the legal name.',
-				key: 'name.input',
-				tier: 'required',
-				title: 'Name input',
-			},
-		])
+	it('lists published templates with open slots', async () => {
 		vi.spyOn(agentTemplateRepository, 'listAgentTemplates').mockResolvedValue([
 			{
 				id: 3,
 				name: 'Business card',
 				description: 'Name card template',
-				templateChecks: [
-					{
-						body: 'Ask only for slots returned by the template.',
-						checkKey: 'name.input',
-					},
-				],
-				jsonTemplate: template(textElement({ slotLabel: '이름' })),
+				...htmlTemplate({ name: { input: { label: '이름' } } }, textNode()),
 			},
 		] as never)
 		const tools = getAgentTools()
 
-		const result = await tools.findTemplatesForRequest.execute?.({ query: 'legal' }, {
+		const result = await tools.findTemplatesForRequest.execute?.({ query: 'Business' }, {
 			context: { user: { id: 1 } },
 		} as never)
 
 		expect(result).toEqual([
 			expect.objectContaining({
 				id: 3,
-				checks: [
-					{
-						key: 'name.input',
-						title: 'Name input',
-						description: 'Use the legal name.',
-						body: 'Ask only for slots returned by the template.',
-					},
-				],
 				slots: [expect.objectContaining({ id: 'name', label: '이름' })],
 			}),
 		])
@@ -284,8 +274,7 @@ describe('agent tools', () => {
 				id: 7,
 				name: '신규입사자 웰컴 카드',
 				description: null,
-				templateChecks: [],
-				jsonTemplate: template(textElement({ slotLabel: '이름' })),
+				...htmlTemplate({ name: { input: { label: '이름' } } }, textNode()),
 			},
 		] as never)
 		const tools = getAgentTools()
@@ -304,8 +293,7 @@ describe('agent tools', () => {
 				id: 7,
 				name: '환영 카드',
 				description: '신규 입사자에게 온라인으로 배부되는 카드',
-				templateChecks: [],
-				jsonTemplate: template(textElement({ slotLabel: '이름 (한글)' })),
+				...htmlTemplate({ name: { input: { label: '이름 (한글)' } } }, textNode()),
 			},
 		] as never)
 		const tools = getAgentTools()
@@ -328,10 +316,14 @@ describe('agent tools', () => {
 			id: 4,
 			name: 'Business card',
 			description: null,
-			jsonTemplate: template(
-				textElement({ maxLength: 5 }),
-				textElement({ id: 'department', slotLabel: '부서', text: 'Team' }),
-				textElement({ id: 'fixed', locked: true, text: 'Fixed' }),
+			...htmlTemplate(
+				{
+					name: { input: { label: '이름', maxLength: 5 } },
+					department: { input: { label: '부서' } },
+				},
+				textNode(),
+				textNode({ id: 'department', name: '부서', text: 'Team' }),
+				textNode({ id: 'fixed', text: 'Fixed' }),
 			),
 		} as never)
 		const tools = getAgentTools()
@@ -353,56 +345,22 @@ describe('agent tools', () => {
 			templateId: 4,
 			type: 'template-image',
 			values: {
-				department: { text: 'HX' },
+				department: { text: 'HX팀' },
 				name: { text: '홍길동입니' },
 			},
 		})
 	})
 
-	it('lists slots nested inside stack elements', async () => {
+	it('lists nested HTML slots', async () => {
 		vi.spyOn(agentTemplateRepository, 'listAgentTemplates').mockResolvedValue([
 			{
 				id: 5,
-				name: 'Stacked card',
+				name: 'Nested card',
 				description: null,
-				jsonTemplate: {
-					width: 900,
-					height: 500,
-					background: '#ffffff',
-					elements: [
-						{
-							id: 'stack_1',
-							type: 'stack',
-							x: 0,
-							y: 0,
-							width: 900,
-							height: 500,
-							zIndex: 1,
-							locked: true,
-							direction: 'vertical',
-							gap: 0,
-							padding: { top: 0, right: 0, bottom: 0, left: 0 },
-							children: [
-								{
-									id: 'nested_name',
-									type: 'text',
-									locked: false,
-									slotLabel: '이름',
-									width: 200,
-									height: 40,
-									text: 'Name',
-									fontSize: 20,
-									fontFamily: 'Pretendard',
-									fontWeight: '700',
-									color: '#000000',
-									lineHeight: 1.2,
-									letterSpacing: 0,
-									textAlign: 'left',
-								},
-							],
-						},
-					],
-				},
+				...htmlTemplate(
+					{ nested_name: { input: { label: '이름' } } },
+					`<div data-node-id="nested-frame">${textNode({ id: 'nested_name' })}</div>`,
+				),
 			},
 		] as never)
 		const tools = getAgentTools()
@@ -419,68 +377,21 @@ describe('agent tools', () => {
 		])
 	})
 
-	it('drops image slot values whose src is not an authorized asset path', async () => {
-		vi.spyOn(agentTemplateRepository, 'findAgentTemplate').mockResolvedValue({
-			id: 6,
-			name: 'Poster',
-			description: null,
-			jsonTemplate: {
-				width: 900,
-				height: 500,
-				background: '#ffffff',
-				elements: [
-					{
-						id: 'photo',
-						type: 'image',
-						x: 0,
-						y: 0,
-						width: 300,
-						height: 200,
-						zIndex: 1,
-						locked: false,
-						slotLabel: '사진',
-						assetCollection: 'application-images',
-						assetId: 11,
-						src: '/api/application-images/file/photo.png',
-						objectFit: 'cover',
-						borderRadius: 0,
-					},
-				],
-			},
-		} as never)
-		const tools = getAgentTools()
-
-		const result = await tools.prepareTemplateImage.execute?.(
-			{
-				templateId: 6,
-				values: {
-					photo: { src: 'https://attacker.example/x.png' },
-				},
-			},
-			{ context: { user: { id: 1 } } } as never,
-		)
-
-		// 외부 URL은 버려지고, 인가 경로만 통과한다.
-		expect(result).toMatchObject({ values: {} })
-
-		const allowed = await tools.prepareTemplateImage.execute?.(
-			{
-				templateId: 6,
-				values: {
-					photo: { src: '/api/brand-logos/file/logo.svg' },
-				},
-			},
-			{ context: { user: { id: 1 } } } as never,
-		)
-
-		expect(allowed).toMatchObject({
-			values: { photo: { src: '/api/brand-logos/file/logo.svg' } },
-		})
-	})
-
-	it('throws when the template is missing or has a broken jsonTemplate', async () => {
+	it('throws when the template is missing', async () => {
 		vi.spyOn(agentTemplateRepository, 'findAgentTemplate').mockResolvedValue(null as never)
 		const tools = getAgentTools()
+
+		await expect(
+			tools.prepareTemplateImage.execute?.({ templateId: 99, values: {} }, {
+				context: { user: { id: 1 } },
+			} as never),
+		).rejects.toThrow('Template is not available.')
+
+		vi.mocked(agentTemplateRepository.findAgentTemplate).mockResolvedValue({
+			id: 99,
+			name: 'Legacy JSON only',
+			description: null,
+		} as never)
 
 		await expect(
 			tools.prepareTemplateImage.execute?.({ templateId: 99, values: {} }, {

@@ -29,95 +29,14 @@ function buildRequest(docs: { id: number; url?: string; _status?: string }[] = [
 	}
 }
 
-function buildTemplate(imageOverrides: Record<string, unknown>) {
-	return {
-		width: 100,
-		height: 100,
-		background: '#ffffff',
-		elements: [
-			{
-				id: 'image_1',
-				type: 'image',
-				x: 0,
-				y: 0,
-				width: 50,
-				height: 50,
-				zIndex: 1,
-				locked: false,
-				slotLabel: '로고',
-				assetId: 1,
-				src: '/api/brand-logos/file/logo.svg',
-				objectFit: 'contain',
-				borderRadius: 0,
-				assetCollection: 'brand-logos',
-				...imageOverrides,
-			},
-		],
-	}
-}
-
 describe('Templates beforeChange hook', () => {
 	// HTML 구조 안전성은 모든 저장에서, 공식 에셋 인가 검사는 발행 시에 추가로 검사한다.
-	it('발행 가능한 HTML이나 JSON 모델이 없으면 거부한다', async () => {
+	it('발행 가능한 HTML 모델이 없으면 거부한다', async () => {
 		const data = { name: 'no template', _status: 'published' }
 
 		await expect(hook({ data, ...buildRequest() })).rejects.toThrow(
-			'발행할 HTML 또는 JSON 템플릿이 필요합니다',
+			'발행할 HTML 템플릿이 필요합니다',
 		)
-	})
-
-	it('스키마가 깨진 jsonTemplate은 저장을 거부한다 (fail-closed)', async () => {
-		await expect(
-			hook({
-				data: { _status: 'published', jsonTemplate: { width: 'broken' } },
-				...buildRequest(),
-			}),
-		).rejects.toThrow('스키마')
-	})
-
-	it('JSON CSS형 필드의 외부 URL과 제어 구문은 발행하지 않는다', async () => {
-		for (const background of [
-			'url(https://attacker.example/pixel.png)',
-			String.raw`u\72l(https://attacker.example/pixel.png)`,
-			'#fff; background-image: url(https://attacker.example/pixel.png)',
-		]) {
-			await expect(
-				hook({
-					data: {
-						_status: 'published',
-						jsonTemplate: { ...buildTemplate({}), background },
-					},
-					...buildRequest([{ id: 1, url: '/api/brand-logos/file/logo.svg' }]),
-				}),
-			).rejects.toThrow('스키마')
-		}
-	})
-
-	it('임포트 조각이 남아 있으면 저장을 거부한다', async () => {
-		await expect(
-			hook({
-				data: {
-					_status: 'published',
-					jsonTemplate: buildTemplate({ assetCollection: 'template-assets' }),
-				},
-				...buildRequest(),
-			}),
-		).rejects.toThrow('인가된 에셋으로 교체되지 않은 이미지')
-	})
-
-	it('인가 참조가 실제 문서를 가리키면 통과한다', async () => {
-		const data = { _status: 'published', jsonTemplate: buildTemplate({}) }
-
-		await expect(
-			hook({ data, ...buildRequest([{ id: 1, url: '/api/brand-logos/file/logo.svg' }]) }),
-		).resolves.toBe(data)
-	})
-
-	it('HTML이 없는 draft는 깨진 레거시 JSON도 보존한다', async () => {
-		// JSON 발행 검증은 publish에서만 한다 — 진행 중인 import 충실도 우선.
-		const data = { jsonTemplate: { width: 'broken' } }
-
-		await expect(hook({ data, ...buildRequest() })).resolves.toBe(data)
 	})
 
 	it('draft도 실행 가능한 HTML과 외부 URL은 거부한다', async () => {
@@ -212,27 +131,6 @@ describe('Templates beforeChange hook', () => {
 		await expect(
 			hook({ data: { ...base, _status: 'published' }, ...buildRequest() }),
 		).rejects.toThrow('draft에서만 사용할 수 있습니다')
-	})
-
-	it('자기신고 라벨만 인가 컬렉션인 위장 참조는 거부한다', async () => {
-		// 존재하지 않는 assetId
-		await expect(
-			hook({
-				data: { _status: 'published', jsonTemplate: buildTemplate({ assetId: 999 }) },
-				...buildRequest(),
-			}),
-		).rejects.toThrow('인가 에셋 참조가 유효하지 않습니다')
-
-		// 실제 문서는 있지만 src가 외부 URL
-		await expect(
-			hook({
-				data: {
-					_status: 'published',
-					jsonTemplate: buildTemplate({ src: 'https://attacker.example/x.png' }),
-				},
-				...buildRequest([{ id: 1, url: '/api/brand-logos/file/logo.svg' }]),
-			}),
-		).rejects.toThrow('인가 에셋 참조가 유효하지 않습니다')
 	})
 
 	it('유효한 HTML 모델은 발행하고 비공개 원본 에셋은 baseHtml에만 보관한다', async () => {

@@ -18,15 +18,15 @@
 - 기준 조회 단위: `getRuntimeChecks(checkKeys?)`(실행), `getCheckRuleset()`(페이지 뷰모델).
 - 기준 소스: published `guideline-documents`의 문서 및 Block이 참조하는 `rules` 관계(독립 `rules` 컬렉션의 공유 정의). 실행 시 `source.documentId`와 참조하는 문서 또는 Block의 타입별 구조화 evidence를 만들고, 같은 Rule이 여러 위치에 배치되면 근거와 참조 자산을 하나의 실행 Check로 병합하며, heuristicCriteria·heuristicPrompt·역할이 포함된 referenceAssets·RuleChecker 계약과 함께 `CheckSession.rulesetSnapshot`에 고정합니다. Block 식별자와 문서 제목은 evidence 계약에 복사하지 않습니다.
 
-### 용어와 식별자
+### 기능 소유권과 식별자
 
-| 용어 | 책임 | 식별자 |
+| 기능 | 책임 | 주요 객체 |
 | --- | --- | --- |
-| Check | 문서 작성자가 선언한 검수 항목과 기준값을 소유 | `Check.key` |
-| Checker | 여러 Check가 재사용하는 실행 도구 계약 | `Checker.key` |
-| Deterministic implementation | 코드 registry에 등록된 결정론적 구현 | 런타임 `Checker.implementationKey`·저장 모델 `RuleChecker.checkerKey` |
+| `quality-rule` | 문서와 독립된 검수 기준, Checker 계약, 시나리오 정의와 발행 생명주기 | `Rule`, `RuleChecker`, `CheckScenario` |
+| `guideline` | Rule을 문서·Block에 배치하고 evidence와 reference asset을 만든다 | Rule placement, evidence |
+| `asset-check` | 발행 Rule을 런타임 Check로 해석해 실행하고 세션·결과를 저장한다 | `RuntimeCheck`, `CheckSession`, `CheckResult` |
 
-`RuleChecker`는 Payload collection과 저장 모델의 내부 이름으로만 유지합니다. Admin과 실행·표시 계약에서는 `Checker`를 사용하며, `Checker.key`와 구현 키를 혼용하지 않습니다.
+Rule 식별자는 전역 고유 `Rule.key`이며 CheckScenario는 이 key 목록만 참조합니다. `RuleChecker`는 저장 모델 이름이고 실행·표시 계약에서는 `Checker`를 사용하며, `Checker.key`와 구현 키를 혼용하지 않습니다.
 
 ### 결정론적 실행 계약
 
@@ -239,8 +239,8 @@ CheckSession
 
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
-| [Page](../surfaces/page.md) | 구현 | Studio의 `/review` — 이미지 업로드 → 선택한 CheckScenario의 항목별 결과 테이블. Templates·Generate·Review는 공통 Studio 사이드바를 사용합니다. 클라이언트가 `/api/check` → `/api/check/ai` 순으로 호출 |
-| REST | 구현 | `POST /api/check`(FormData, 20MB 제한, origin·인증 게이트), `POST /api/check/ai` |
+| [Page](../surfaces/page.md) | 구현 | Studio의 `/studio/review` — 이미지 업로드 → 선택한 CheckScenario의 항목별 결과 테이블. Template·Image·Graphic·Review는 공통 Studio 사이드바를 사용합니다. 클라이언트가 `/api/check` → `/api/check/{checkSessionId}/ai` 순으로 호출 |
+| [REST](../surfaces/rest.md) | 구현 | `POST /api/check`(FormData, 20MB 제한, origin·인증 게이트), `POST /api/check/{checkSessionId}/ai` |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `runCheck`(+`listCheckScenarios`)이 `startCheckSession`을 호출 |
 | MCP | 부분 | `mcp-call` 출처값은 정의됨, 전용 라우트는 없이 `/api/check` 재사용 |
 

@@ -107,5 +107,23 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 			return evidence.title ?? 'Icon grid'
 		case 'imageGrid':
 			return evidence.title ?? 'Image grid'
+		case 'stemClearSpace':
+			return compact([
+				evidence.title ?? 'Logo clear space',
+				`최소 여백 ${evidence.multiplier}A`,
+			]).join('\n')
+		case 'logoViewer':
+			return evidence.title ?? 'Logo viewer'
+		case 'logoGroupViewer':
+			return evidence.title ?? 'Logo group viewer'
+		case 'colorPairing':
+			return evidence.title ?? 'Color pairing'
+		case 'colorPairingRecommendation':
+			return compact([
+				evidence.title ?? 'Color pairing recommendation',
+				evidence.variant,
+			]).join('\n')
+		case 'block':
+			return `leaf ${evidence.childCount}개를 담은 블록`
 	}
 }

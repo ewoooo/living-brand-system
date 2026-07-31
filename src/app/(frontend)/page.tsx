@@ -1,11 +1,9 @@
-import { GlobalFooter } from '@/components/global/footer/global-footer'
-import { HeroSection } from '@/components/global/hero/hero-section'
+import { HeroSection } from '@/components/home/hero-section'
 
 export default function HomePage() {
 	return (
-		<main className="flex h-full flex-col">
+		<main className="h-full overflow-y-auto">
 			<HeroSection />
-			<GlobalFooter />
 		</main>
 	)
 }

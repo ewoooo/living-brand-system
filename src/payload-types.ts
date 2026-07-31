@@ -250,8 +250,14 @@ export interface GuidelineDocument {
         | TypeScaleBlock
         | LayoutGridBlock
         | GlyphGridBlock
+        | LayoutBlock
+        | ColorPairingBlock
+        | ColorPairingRecommendationBlock
         | IconGridBlock
         | ImageGridBlock
+        | LogoGroupViewerBlock
+        | LogoViewerBlock
+        | StemClearSpaceBlock
       )[]
     | null;
   /**
@@ -444,7 +450,7 @@ export interface Rule {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Guideline Check를 실행할 도구와 호출 계약입니다.
+ * Rule을 실행할 도구와 호출 계약입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "rule-checkers".
@@ -805,6 +811,266 @@ export interface GlyphGridBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutBlock".
+ */
+export interface LayoutBlock {
+  /**
+   * 블록 상단에 표시할 선택 제목입니다.
+   */
+  title?: string | null;
+  /**
+   * 제목 아래에 표시할 선택 본문입니다.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * 컨테이너 폭입니다. 중간폭=max-w, 전체폭=main 전체.
+   */
+  width?: ('padded' | 'full') | null;
+  /**
+   * 위젯 배치 방식입니다. grid/carousel/masonry/featured 구현.
+   */
+  arrangement?: ('grid' | 'carousel' | 'featured' | 'masonry') | null;
+  /**
+   * grid 열 수입니다(행은 자식 개수로 자동).
+   */
+  columns?: number | null;
+  /**
+   * 이미지 셀 비율(모든 이미지 균일). masonry에선 무시하고 원본 비율.
+   */
+  aspectRatio?:
+    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+    | null;
+  /**
+   * 이 블록이 품는 leaf(이미지·위젯)들입니다.
+   */
+  children?:
+    | (
+        | ImageLeaf
+        | ColorPaletteWidget
+        | CarouselWidget
+        | ColorPairingWidget
+        | ColorPairingRecommendationWidget
+        | GlyphGridWidget
+        | IconGridWidget
+        | ImageGridWidget
+        | LayoutGridWidget
+        | LayoutGridOverlayWidget
+        | LogoGroupViewerWidget
+        | LogoViewerWidget
+        | MediaShowcaseWidget
+        | StemClearSpaceWidget
+        | TypeScaleWidget
+        | TypeSpecimenWidget
+      )[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'block';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageLeaf".
+ */
+export interface ImageLeaf {
+  /**
+   * 표시할 이미지입니다.
+   */
+  image?: (number | null) | ApplicationImage;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'image';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPaletteWidget".
+ */
+export interface ColorPaletteWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPaletteWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CarouselWidget".
+ */
+export interface CarouselWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'carouselWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingWidget".
+ */
+export interface ColorPairingWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPairingWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingRecommendationWidget".
+ */
+export interface ColorPairingRecommendationWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPairingRecommendationWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GlyphGridWidget".
+ */
+export interface GlyphGridWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'glyphGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "IconGridWidget".
+ */
+export interface IconGridWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'iconGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageGridWidget".
+ */
+export interface ImageGridWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'imageGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridWidget".
+ */
+export interface LayoutGridWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'layoutGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridOverlayWidget".
+ */
+export interface LayoutGridOverlayWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'layoutGridOverlayWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoGroupViewerWidget".
+ */
+export interface LogoGroupViewerWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoGroupViewerWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoViewerWidget".
+ */
+export interface LogoViewerWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoViewerWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaShowcaseWidget".
+ */
+export interface MediaShowcaseWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'mediaShowcaseWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StemClearSpaceWidget".
+ */
+export interface StemClearSpaceWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'stemClearSpaceWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScaleWidget".
+ */
+export interface TypeScaleWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeScaleWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeSpecimenWidget".
+ */
+export interface TypeSpecimenWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeSpecimenWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingBlock".
+ */
+export interface ColorPairingBlock {
+  title?: string | null;
+  /**
+   * 페어링 방식입니다. 방식별 병용 규칙이 적용됩니다.
+   */
+  system: 'tone-in-tone' | 'tone-on-tone' | 'mono-tone';
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPairing';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingRecommendationBlock".
+ */
+export interface ColorPairingRecommendationBlock {
+  title?: string | null;
+  /**
+   * 추천 그리드 버전입니다. Light=밝은 배경, Dark=어두운 배경.
+   */
+  variant: 'light' | 'dark';
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorPairingRecommendation';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "IconGridBlock".
  */
 export interface IconGridBlock {
@@ -838,7 +1104,28 @@ export interface IconGridBlock {
  * via the `definition` "ImageGridBlock".
  */
 export interface ImageGridBlock {
+  /**
+   * 그리드 위에 표시할 제목입니다(비우면 표시 안 함).
+   */
   title?: string | null;
+  /**
+   * 제목 아래에 표시할 설명입니다(비우면 표시 안 함).
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   /**
    * 격자의 열 수입니다.
    */
@@ -893,6 +1180,186 @@ export interface ImageGridBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'imageGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoGroupViewerBlock".
+ */
+export interface LogoGroupViewerBlock {
+  title?: string | null;
+  /**
+   * 1~3개. 3개면 상단 1 + 하단 2(수평)로 배치됩니다.
+   */
+  logos?:
+    | {
+        /**
+         * 로고 캡션(예: Horizontal Type).
+         */
+        label?: string | null;
+        /**
+         * 로고 SVG.
+         */
+        logo?: (number | null) | ApplicationImage;
+        /**
+         * 파일 속 실제 로고 높이(px). 클리어스페이스 여백 때문에 파일과 다를 때 입력.
+         */
+        logoRealHeightPx?: number | null;
+        /**
+         * 등록상표(®) 오버레이 SVG. 로고와 같은 크기.
+         */
+        registeredMark?: (number | null) | ApplicationImage;
+        /**
+         * 클리어스페이스 오버레이 SVG. 로고와 같은 크기.
+         */
+        clearSpaceGuide?: (number | null) | ApplicationImage;
+        /**
+         * 이 로고의 최소 크기(px). 미만이면 X 표시.
+         */
+        minSizePx?: number | null;
+        /**
+         * 이 로고에서 ®를 표시할 최소 크기(px).
+         */
+        registeredMinPx?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 탭으로 노출됩니다. 그룹 전체에 공유됩니다.
+   */
+  topics?:
+    | {
+        /**
+         * 이 탭의 동작.
+         */
+        kind: 'minSize' | 'clearSpace' | 'registeredMark';
+        /**
+         * 탭 라벨.
+         */
+        label?: string | null;
+        description?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoGroupViewer';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoViewerBlock".
+ */
+export interface LogoViewerBlock {
+  title?: string | null;
+  /**
+   * 기본 로고 SVG(공유 스테이지).
+   */
+  logo?: (number | null) | ApplicationImage;
+  /**
+   * 로고 파일 속 실제 로고 높이(px). 클리어스페이스 여백 때문에 파일 크기와 다를 때 입력. 이 가중치가 3파일 모두에 적용됩니다. 비우면 파일 크기=로고로 간주.
+   */
+  logoRealHeightPx?: number | null;
+  /**
+   * 등록상표(®) 오버레이 SVG. 로고와 같은 크기.
+   */
+  registeredMark?: (number | null) | ApplicationImage;
+  /**
+   * 클리어스페이스 오버레이 SVG. 로고와 같은 크기.
+   */
+  clearSpaceGuide?: (number | null) | ApplicationImage;
+  /**
+   * 최소 크기(px). 이 미만이면 X 표시(슬라이더 하한).
+   */
+  minSizePx?: number | null;
+  /**
+   * 이 크기(px) 이상일 때만 ® 표시.
+   */
+  registeredMinPx?: number | null;
+  /**
+   * 탭으로 노출됩니다. 순서·개수·라벨 자유.
+   */
+  topics?:
+    | {
+        /**
+         * 이 탭의 동작.
+         */
+        kind: 'minSize' | 'clearSpace' | 'registeredMark';
+        /**
+         * 탭 라벨.
+         */
+        label?: string | null;
+        description?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoViewer';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StemClearSpaceBlock".
+ */
+export interface StemClearSpaceBlock {
+  title?: string | null;
+  /**
+   * 여백 규정을 보여줄 로고입니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  /**
+   * 줄기 두께 ÷ 로고 폭(0~1). 측정값.
+   */
+  stemRatio?: number | null;
+  /**
+   * 줄기 위치(로고 폭 대비 0~1). 측정값.
+   */
+  stemX?: number | null;
+  /**
+   * 여백 배수 N (N·A).
+   */
+  multiplier?: number | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'stemClearSpace';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -962,6 +1429,27 @@ export interface ImageProfile {
   id: number;
   name: string;
   /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  /**
+   * 숫자가 낮을수록 Studio 내비게이션에서 먼저 표시됩니다.
+   */
+  displayOrder: number;
+  /**
+   * 이 프로파일을 생성할 때 사용할 이미지 모델입니다.
+   */
+  imageModelPreset: 'openai-gpt-image-2' | 'google-nano-banana-2-lite';
+  /**
+   * 이미지 공급자와 무관한 가로:세로 비율입니다.
+   */
+  aspectRatio: '1:1' | '2:3' | '3:2' | '3:4' | '4:3' | '4:5' | '5:4' | '9:16' | '16:9' | '21:9';
+  /**
+   * Nano Banana 2 Lite는 1K만 지원합니다.
+   */
+  imageSize: '1K' | '2K' | '4K';
+  /**
    * 이미지 유형의 기본값입니다. 각 행은 최종 JSON의 주제와 프롬프트가 됩니다.
    */
   profilePrompt: {
@@ -970,16 +1458,18 @@ export interface ImageProfile {
     id?: string | null;
   }[];
   /**
-   * AI가 유저 인풋을 각 주제의 프롬프트 후보 중 하나로 정규화합니다. 시스템 프롬프트와 같은 주제면 이 프롬프트가 우선합니다.
+   * 선택사항입니다. 행이 있으면 AI가 후보 중 하나로 정규화하고, 비어 있으면 유저 인풋 원문만 subject로 사용합니다.
    */
-  userPromptNormalization: {
-    key: string;
-    candidates: {
-      value: string;
-      id?: string | null;
-    }[];
-    id?: string | null;
-  }[];
+  userPromptNormalization?:
+    | {
+        key: string;
+        candidates: {
+          value: string;
+          id?: string | null;
+        }[];
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -992,19 +1482,6 @@ export interface Template {
   id: number;
   name: string;
   description?: string | null;
-  jsonTemplate?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  code?: {
-    css?: string | null;
-    js?: string | null;
-  };
   sourceUrl?: string | null;
   baseHtml?: string | null;
   overrides?:
@@ -1025,25 +1502,13 @@ export interface Template {
    */
   height?: number | null;
   /**
+   * 설정하면 CMYK TIFF와 RGB PDF가 활성화됩니다. 픽셀 크기는 유지되며 TIFF는 최대 67,108,864픽셀을 지원합니다.
+   */
+  printPpi?: ('72' | '150' | '300') | null;
+  /**
    * Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.
    */
   category: number | TemplateCategory;
-  /**
-   * Agent가 이 템플릿으로 이미지를 만들 때 함께 참고할 Check입니다.
-   */
-  templateChecks?:
-    | {
-        /**
-         * published 가이드라인 checks[]의 key를 입력합니다.
-         */
-        checkKey: string;
-        /**
-         * 이 템플릿에서 해당 Check를 적용할 때 Agent가 참고할 지침입니다.
-         */
-        body: string;
-        id?: string | null;
-      }[]
-    | null;
   /**
    * baseHtml(Figma 원본) + overrides(앱 편집)의 합성 결과입니다. 워크스페이스 편집·재import 시 자동 갱신됩니다.
    */
@@ -1344,6 +1809,25 @@ export interface AgentChatSession {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Agent가 제안하고 서버가 확정한 분류와 최초 분류 단계 사용량입니다.
+   */
+  triage?: {
+    skillName?: string | null;
+    responseMode?: ('quick' | 'lookup' | 'research' | 'action') | null;
+    risk?: ('low' | 'high') | null;
+    confidence?: number | null;
+    executionModel?: ('sonnet-5' | 'opus-5.0') | null;
+    toolScope?: ('none' | 'read' | 'action') | null;
+    reviewRequired?: boolean | null;
+    classifierModel?: string | null;
+    inputTokens?: number | null;
+    outputTokens?: number | null;
+    totalTokens?: number | null;
+    cacheReadInputTokens?: number | null;
+    cacheWriteInputTokens?: number | null;
+    reasoningTokens?: number | null;
+  };
   /**
    * Agent 채팅 비용 분석에 쓰는 모델과 토큰 사용량입니다.
    */
@@ -1803,8 +2287,14 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         typeScale?: T | TypeScaleBlockSelect<T>;
         layoutGrid?: T | LayoutGridBlockSelect<T>;
         glyphGrid?: T | GlyphGridBlockSelect<T>;
+        block?: T | LayoutBlockSelect<T>;
+        colorPairing?: T | ColorPairingBlockSelect<T>;
+        colorPairingRecommendation?: T | ColorPairingRecommendationBlockSelect<T>;
         iconGrid?: T | IconGridBlockSelect<T>;
         imageGrid?: T | ImageGridBlockSelect<T>;
+        logoGroupViewer?: T | LogoGroupViewerBlockSelect<T>;
+        logoViewer?: T | LogoViewerBlockSelect<T>;
+        stemClearSpace?: T | StemClearSpaceBlockSelect<T>;
       };
   rules?: T;
   displayOrder?: T;
@@ -2039,6 +2529,192 @@ export interface GlyphGridBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutBlock_select".
+ */
+export interface LayoutBlockSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  width?: T;
+  arrangement?: T;
+  columns?: T;
+  aspectRatio?: T;
+  children?:
+    | T
+    | {
+        image?: T | ImageLeafSelect<T>;
+        colorPaletteWidget?: T | ColorPaletteWidgetSelect<T>;
+        carouselWidget?: T | CarouselWidgetSelect<T>;
+        colorPairingWidget?: T | ColorPairingWidgetSelect<T>;
+        colorPairingRecommendationWidget?: T | ColorPairingRecommendationWidgetSelect<T>;
+        glyphGridWidget?: T | GlyphGridWidgetSelect<T>;
+        iconGridWidget?: T | IconGridWidgetSelect<T>;
+        imageGridWidget?: T | ImageGridWidgetSelect<T>;
+        layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
+        layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
+        logoGroupViewerWidget?: T | LogoGroupViewerWidgetSelect<T>;
+        logoViewerWidget?: T | LogoViewerWidgetSelect<T>;
+        mediaShowcaseWidget?: T | MediaShowcaseWidgetSelect<T>;
+        stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
+        typeScaleWidget?: T | TypeScaleWidgetSelect<T>;
+        typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageLeaf_select".
+ */
+export interface ImageLeafSelect<T extends boolean = true> {
+  image?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPaletteWidget_select".
+ */
+export interface ColorPaletteWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CarouselWidget_select".
+ */
+export interface CarouselWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingWidget_select".
+ */
+export interface ColorPairingWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingRecommendationWidget_select".
+ */
+export interface ColorPairingRecommendationWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GlyphGridWidget_select".
+ */
+export interface GlyphGridWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "IconGridWidget_select".
+ */
+export interface IconGridWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageGridWidget_select".
+ */
+export interface ImageGridWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridWidget_select".
+ */
+export interface LayoutGridWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridOverlayWidget_select".
+ */
+export interface LayoutGridOverlayWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoGroupViewerWidget_select".
+ */
+export interface LogoGroupViewerWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoViewerWidget_select".
+ */
+export interface LogoViewerWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaShowcaseWidget_select".
+ */
+export interface MediaShowcaseWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StemClearSpaceWidget_select".
+ */
+export interface StemClearSpaceWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScaleWidget_select".
+ */
+export interface TypeScaleWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeSpecimenWidget_select".
+ */
+export interface TypeSpecimenWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingBlock_select".
+ */
+export interface ColorPairingBlockSelect<T extends boolean = true> {
+  title?: T;
+  system?: T;
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorPairingRecommendationBlock_select".
+ */
+export interface ColorPairingRecommendationBlockSelect<T extends boolean = true> {
+  title?: T;
+  variant?: T;
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "IconGridBlock_select".
  */
 export interface IconGridBlockSelect<T extends boolean = true> {
@@ -2057,6 +2733,7 @@ export interface IconGridBlockSelect<T extends boolean = true> {
  */
 export interface ImageGridBlockSelect<T extends boolean = true> {
   title?: T;
+  description?: T;
   columns?: T;
   rows?: T;
   imageRatio?: T;
@@ -2069,6 +2746,74 @@ export interface ImageGridBlockSelect<T extends boolean = true> {
         caption?: T;
         id?: T;
       };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoGroupViewerBlock_select".
+ */
+export interface LogoGroupViewerBlockSelect<T extends boolean = true> {
+  title?: T;
+  logos?:
+    | T
+    | {
+        label?: T;
+        logo?: T;
+        logoRealHeightPx?: T;
+        registeredMark?: T;
+        clearSpaceGuide?: T;
+        minSizePx?: T;
+        registeredMinPx?: T;
+        id?: T;
+      };
+  topics?:
+    | T
+    | {
+        kind?: T;
+        label?: T;
+        description?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoViewerBlock_select".
+ */
+export interface LogoViewerBlockSelect<T extends boolean = true> {
+  title?: T;
+  logo?: T;
+  logoRealHeightPx?: T;
+  registeredMark?: T;
+  clearSpaceGuide?: T;
+  minSizePx?: T;
+  registeredMinPx?: T;
+  topics?:
+    | T
+    | {
+        kind?: T;
+        label?: T;
+        description?: T;
+        id?: T;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StemClearSpaceBlock_select".
+ */
+export interface StemClearSpaceBlockSelect<T extends boolean = true> {
+  title?: T;
+  logo?: T;
+  stemRatio?: T;
+  stemX?: T;
+  multiplier?: T;
   rules?: T;
   id?: T;
   blockName?: T;
@@ -2203,6 +2948,12 @@ export interface ApplicationImagesSelect<T extends boolean = true> {
  */
 export interface ImageProfilesSelect<T extends boolean = true> {
   name?: T;
+  generateSlug?: T;
+  slug?: T;
+  displayOrder?: T;
+  imageModelPreset?: T;
+  aspectRatio?: T;
+  imageSize?: T;
   profilePrompt?:
     | T
     | {
@@ -2233,26 +2984,13 @@ export interface ImageProfilesSelect<T extends boolean = true> {
 export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
-  jsonTemplate?: T;
-  code?:
-    | T
-    | {
-        css?: T;
-        js?: T;
-      };
   sourceUrl?: T;
   baseHtml?: T;
   overrides?: T;
   width?: T;
   height?: T;
+  printPpi?: T;
   category?: T;
-  templateChecks?:
-    | T
-    | {
-        checkKey?: T;
-        body?: T;
-        id?: T;
-      };
   html?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2462,6 +3200,24 @@ export interface AgentChatSessionsSelect<T extends boolean = true> {
         name?: T;
         callCount?: T;
         id?: T;
+      };
+  triage?:
+    | T
+    | {
+        skillName?: T;
+        responseMode?: T;
+        risk?: T;
+        confidence?: T;
+        executionModel?: T;
+        toolScope?: T;
+        reviewRequired?: T;
+        classifierModel?: T;
+        inputTokens?: T;
+        outputTokens?: T;
+        totalTokens?: T;
+        cacheReadInputTokens?: T;
+        cacheWriteInputTokens?: T;
+        reasoningTokens?: T;
       };
   aiUsage?:
     | T

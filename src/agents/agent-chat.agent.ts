@@ -1,14 +1,15 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { type InferAgentUIMessage, isStepCount, ToolLoopAgent } from 'ai'
 import { z } from 'zod'
-import { getAgentTools } from '@/agents/agent-tools.agent'
+import { getAgentTools } from '@/agents/agent-chat-tools.agent'
 import { env } from '@/env'
+import { getAgentExecutionPolicy } from '@/features/agent-chat/domain/agent-skill-tool-policy'
 import { findEnabledAgentSkillSummaries } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import { getAgentDefaultInstructions } from '@/features/agent-chat/services/get-agent-default-instructions.service'
 import type { AgentChatReaction } from '@/features/agent-chat/types'
 import { AgentConfigurationError } from '@/lib/errors'
 
-const DEFAULT_MODEL = 'claude-sonnet-4-6'
+const DEFAULT_MODEL = 'claude-sonnet-5'
 
 const agentChatCallOptionsSchema = z.object({
 	agentChatSessionId: z.number().int().positive().optional(),
@@ -53,13 +54,27 @@ export const agentChatAgent = new ToolLoopAgent<
 	toolsContext: toolsContextFor({ user: null }),
 	callOptionsSchema: agentChatCallOptionsSchema,
 	stopWhen: isStepCount(10),
-	prepareStep: ({ stepNumber }) =>
-		stepNumber === 0
-			? {
-					activeTools: ['loadSkill'],
-					toolChoice: { type: 'tool', toolName: 'loadSkill' },
-				}
-			: undefined,
+	prepareStep: ({ stepNumber, steps }) => {
+		if (stepNumber === 0) {
+			return {
+				activeTools: ['loadSkill'],
+				toolChoice: { type: 'tool', toolName: 'loadSkill' },
+			}
+		}
+
+		const loadedSkill = steps[0]?.toolResults.find(
+			(result) => result.dynamic !== true && result.toolName === 'loadSkill',
+		)
+
+		if (!loadedSkill) return { activeTools: [] }
+
+		const execution = getAgentExecutionPolicy(loadedSkill.output)
+
+		return {
+			activeTools: execution.activeTools,
+			model: anthropic(execution.modelId),
+		}
+	},
 	prepareCall: async ({ options = { user: null }, ...settings }) => {
 		const [skills, defaultInstructions] = await Promise.all([
 			findEnabledAgentSkillSummaries(options.user),
@@ -100,9 +115,17 @@ function formatAgentSkillSelectionInstructions(
 	skills: Awaited<ReturnType<typeof findEnabledAgentSkillSummaries>>,
 ) {
 	const lines = skills.map((skill) => `- ${skill.name}: ${skill.description}`)
+	const triageInstructions =
+		env.AGENT_CHAT_TRIAGE_ENABLED === 'true'
+			? [
+					'Before answering, classify the request and call loadSkill once with name, responseMode, risk, and confidence.',
+					'Use responseMode quick for no lookup, lookup for a focused read, research for multi-step or multi-source analysis, and action for creating or changing an output.',
+					'Use risk high when an incorrect answer or action could cause material, privacy, security, compliance, or irreversible impact; otherwise use low. confidence must be an integer from 0 to 100.',
+				]
+			: ['Before answering, call loadSkill once with the matching skill name.']
 
 	return [
-		'Before answering, choose exactly one skill from the list below and call loadSkill with its name.',
+		...triageInstructions,
 		'Choose by matching the user request to the skill description. Prefer template or asset skills for requests about what can be made, what should be made, creating assets, filling template slots, exporting images, or downloading results.',
 		'Prefer guideline skills only for questions about published brand rules, guideline pages, sections, or usage standards.',
 		'After loadSkill returns, follow its instructions field as the active skill instructions.',

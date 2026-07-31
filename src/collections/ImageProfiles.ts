@@ -1,15 +1,39 @@
-import type { CollectionConfig, PayloadRequest } from 'payload'
+import { type CollectionConfig, type PayloadRequest, slugField } from 'payload'
+import {
+	DEFAULT_IMAGE_MODEL_PRESET,
+	IMAGE_MODEL_PRESET_OPTIONS,
+	type ImageModelPreset,
+} from '@/features/generate-image/image-model'
 import {
 	imagePromptNormalizationRequestSchema,
 	validateImageProfilePromptRows,
 	validateImagePromptNormalizationRows,
-} from '@/features/image-generation/image-profile-prompt'
+} from '@/features/generate-image/image-profile-prompt'
+import {
+	IMAGE_ASPECT_RATIO_OPTIONS,
+	IMAGE_OUTPUT_SIZE_OPTIONS,
+	type ImageOutputSize,
+	supportsImageOutputSize,
+} from '@/features/generate-image/image-size'
 import {
 	ImagePromptNormalizationUnavailableError,
 	normalizeImageProfilePrompt,
-} from '@/features/image-generation/services/normalize-image-profile-prompt.service'
+} from '@/features/generate-image/services/normalize-image-profile-prompt.service'
 import { isManager, managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
+
+function validateImageSize(
+	value: null | string | undefined,
+	{ siblingData }: { siblingData: Record<string, unknown> },
+): string | true {
+	if (!value) return true
+	return (
+		supportsImageOutputSize(
+			siblingData.imageModelPreset as ImageModelPreset,
+			value as ImageOutputSize,
+		) || 'Nano Banana 2 Lite는 1K 출력만 지원합니다.'
+	)
+}
 
 async function normalizePromptEndpoint(req: PayloadRequest) {
 	if (!isManager(req.user)) {
@@ -47,9 +71,10 @@ export const ImageProfiles: CollectionConfig = {
 	admin: {
 		group: '제작 도구',
 		useAsTitle: 'name',
-		defaultColumns: ['name', '_status', 'updatedAt'],
+		defaultColumns: ['name', 'slug', 'displayOrder', '_status', 'updatedAt'],
 		description: '이미지 유형별 시스템 프롬프트와 유저 프롬프트 후보를 관리하고 테스트합니다.',
 	},
+	defaultSort: 'displayOrder',
 	labels: {
 		singular: '이미지 프로파일',
 		plural: '이미지 프로파일',
@@ -68,6 +93,58 @@ export const ImageProfiles: CollectionConfig = {
 			type: 'text',
 			required: true,
 			label: '프로파일 이름',
+		},
+		slugField({
+			useAsSlug: 'name',
+			required: true,
+		}),
+		{
+			name: 'displayOrder',
+			type: 'number',
+			required: true,
+			defaultValue: 0,
+			min: 0,
+			admin: {
+				position: 'sidebar',
+				description: '숫자가 낮을수록 Studio 내비게이션에서 먼저 표시됩니다.',
+			},
+		},
+		{
+			name: 'imageModelPreset',
+			type: 'select',
+			required: true,
+			defaultValue: DEFAULT_IMAGE_MODEL_PRESET,
+			options: [...IMAGE_MODEL_PRESET_OPTIONS],
+			label: '이미지 모델',
+			admin: {
+				position: 'sidebar',
+				description: '이 프로파일을 생성할 때 사용할 이미지 모델입니다.',
+			},
+		},
+		{
+			name: 'aspectRatio',
+			type: 'select',
+			required: true,
+			defaultValue: '2:3',
+			options: [...IMAGE_ASPECT_RATIO_OPTIONS],
+			label: '출력 비율',
+			admin: {
+				position: 'sidebar',
+				description: '이미지 공급자와 무관한 가로:세로 비율입니다.',
+			},
+		},
+		{
+			name: 'imageSize',
+			type: 'select',
+			required: true,
+			defaultValue: '1K',
+			options: [...IMAGE_OUTPUT_SIZE_OPTIONS],
+			label: '출력 해상도',
+			validate: validateImageSize,
+			admin: {
+				position: 'sidebar',
+				description: 'Nano Banana 2 Lite는 1K만 지원합니다.',
+			},
 		},
 		{
 			name: 'profilePrompt',
@@ -92,15 +169,13 @@ export const ImageProfiles: CollectionConfig = {
 			name: 'userPromptNormalization',
 			type: 'array',
 			dbName: 'img_prompt_norm',
-			required: true,
-			minRows: 1,
 			label: '유저 프롬프트',
 			labels: { singular: '유저 프롬프트', plural: '유저 프롬프트' },
 			validate: validateImagePromptNormalizationRows,
 			admin: {
 				initCollapsed: false,
 				description:
-					'AI가 유저 인풋을 각 주제의 프롬프트 후보 중 하나로 정규화합니다. 시스템 프롬프트와 같은 주제면 이 프롬프트가 우선합니다.',
+					'선택사항입니다. 행이 있으면 AI가 후보 중 하나로 정규화하고, 비어 있으면 유저 인풋 원문만 subject로 사용합니다.',
 			},
 			fields: [
 				{ name: 'key', type: 'text', required: true, label: '주제' },
@@ -123,7 +198,7 @@ export const ImageProfiles: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				components: {
-					Field: '/features/image-generation/components/image-profile-test-panel',
+					Field: '/components/admin/image-profile/image-profile-test-panel',
 				},
 			},
 		},

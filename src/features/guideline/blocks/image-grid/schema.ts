@@ -9,7 +9,18 @@ export const ImageGridBlock: Block = {
 	interfaceName: 'ImageGridBlock',
 	labels: { singular: '이미지 그리드', plural: '이미지 그리드' },
 	fields: [
-		{ name: 'title', type: 'text', localized: true },
+		{
+			name: 'title',
+			type: 'text',
+			localized: true,
+			admin: { description: '그리드 위에 표시할 제목입니다(비우면 표시 안 함).' },
+		},
+		{
+			name: 'description',
+			type: 'richText',
+			localized: true,
+			admin: { description: '제목 아래에 표시할 설명입니다(비우면 표시 안 함).' },
+		},
 		{
 			type: 'row',
 			fields: [
@@ -33,8 +44,13 @@ export const ImageGridBlock: Block = {
 					name: 'imageRatio',
 					type: 'select',
 					defaultValue: '1:1',
+					// imageGrid에서 'original'은 "셀 01(첫 셀) 이미지의 원본 비율"을 그리드 전체에 적용한다(로컬 라벨).
 					options: [
-						...IMAGE_RATIO_OPTIONS,
+						...IMAGE_RATIO_OPTIONS.map((option) =>
+							option.value === 'original'
+								? { label: '셀 01 원본 비율', value: 'original' }
+								: option,
+						),
 						{ label: '수동 입력(폭·높이)', value: 'manual' },
 						{ label: '첫 번째 이미지 기준', value: 'firstImage' },
 					],
