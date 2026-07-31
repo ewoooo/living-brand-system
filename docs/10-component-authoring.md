@@ -8,7 +8,7 @@
 
 - 값·토큰(oklch, radius, hex 등)은 CSS 원천(`src/app/(frontend)/theme.css`·`typeset.css`)만 소유합니다. 그 토큰 지도와 닫힌 토큰 규칙은 `docs/09-design-system.md` §3~4가 소유합니다. 이 문서에 값을 복제하지 않습니다.
 - 파일 배치, `use client` 경계, 네이밍은 `docs/06-project-structure.md`가 소유합니다. 여기서는 링크하고 최소한만 재서술합니다.
-- 이 문서가 소유하는 것은 "컴포넌트를 만들 때 매번 따르는 계약"뿐입니다: 재사용 사다리, 템플릿, 스타일 Do/Don't, 브랜드 무관, 접근성 최소선, 자기 검증, kit→block 승격 게이트입니다.
+- 이 문서가 소유하는 것은 "컴포넌트를 만들 때 매번 따르는 계약"뿐입니다: 재사용 사다리, 템플릿, 스타일 Do/Don't, 브랜드 무관, 접근성 최소선, 자기 검증입니다.
 
 ## 2. 시작 전 재사용 사다리
 
@@ -40,7 +40,6 @@ grep -rl "Badge\|Card\|Typography" src/components src/features
 | 색 파생(전경색·RGB) | `@/lib/color` (`hexToRgb`, `getContrastingForeground`) |
 | 콘텐츠 최대 폭 | `ContentFrame` (`src/components/shared/content-frame.tsx`) |
 | 블록 표면색(배경) | `GuidelineBlockFrame` |
-| kit 갤러리 데모 래핑 | `CollapsibleDemo` (`src/features/guideline/components/kit/collapsible-demo.tsx`) |
 
 ## 3. 새 컴포넌트 템플릿
 
@@ -186,7 +185,7 @@ grep -rnE '(grid-cols|col-span|gap|w|h|text)-\$\{' src
 색·폰트·로고는 props로 주입받습니다. 코드에 브랜드를 하드코딩하지 않습니다. 하드코딩은 개발용 default 값(essenherb 샘플)으로만 허용합니다.
 
 - 컴포넌트가 받는 색은 hex string props입니다. RGB·전경색 같은 파생값은 저장하지 않고 런타임에 `@/lib/color`로 파생합니다: `hexToRgb`로 0–255 RGB를, `getContrastingForeground`로 배경 대비가 더 높은 흑/백 전경색을 얻습니다.
-- 원형은 `src/features/guideline/components/kit/color-palette.tsx`입니다. Swatch는 `{ id, name, hex, pantone? }` 형태로 받고, RGB는 hex에서 파생하며, 기본값만 essenherb 팔레트입니다("브랜드 무관: 색은 props. 기본값은 essenherb. RGB는 HEX에서 파생").
+- 원형은 `src/features/guideline/blocks/color-palette/component.tsx`입니다. Swatch는 `{ id, name, hex, pantone? }` 형태로 받고, RGB는 hex에서 파생하며, 기본값만 essenherb 팔레트입니다("브랜드 무관: 색은 props. 기본값은 essenherb. RGB는 HEX에서 파생").
 
 ```tsx
 import { getContrastingForeground, hexToRgb } from '@/lib/color'
@@ -218,27 +217,7 @@ const MAIN: Swatch[] = [
 - 참고: `src/components/ui/typography.test.ts`, `src/lib/color.test.ts`(`hexToRgb('#fff')` → `{ r: 255, g: 255, b: 255 }`, `getContrastingForeground('#FFFFFF')` → `'#000000'`).
 - 자명한 one-liner(단순 wrapper, 순수 조합)에는 테스트를 만들지 않습니다. YAGNI는 테스트에도 적용됩니다.
 
-## 8. kit→block 승격 게이트
-
-`src/features/guideline/components/kit`은 dev 전용 스크래치 공간입니다. `/guideline/kit`은 `NODE_ENV=development`에서만 로드되고 production에서는 404입니다. 여기 있는 실험물은 언제든 정리·삭제 대상이며, 제품 데이터 흐름의 일부가 아닙니다.
-
-kit 컴포넌트를 제품 경로(`../blocks`, `../blocks/children`)로 옮기려면 **아래를 모두 만족**해야 합니다.
-
-- Payload block renderer에 실제로 연결된다.
-- default props를 데이터(props/CMS)로 전환했다(§5).
-- 접근성 최소선을 통과한다(§6).
-- 비자명 로직에 self-check가 존재한다(§7).
-- 시맨틱 토큰만 쓴다(§4).
-
-승격 절차:
-
-1. 파일을 `kit`에서 `blocks/` 또는 `blocks/children`으로 이동한다.
-2. 갤러리 데모 래퍼(`~Demo`, `CollapsibleDemo`)를 제거한다.
-3. block renderer 맵에 등록한다.
-
-검증되지 않은 kit 실험을 `blocks`/`children`으로 직행시키지 않습니다. 블록화 로드맵은 kit README(`src/features/guideline/components/kit/README.md`)를 따릅니다.
-
-## 9. 복붙용 체크리스트
+## 8. 복붙용 체크리스트
 
 PR을 올리기 전 자기 점검용입니다.
 
@@ -259,4 +238,3 @@ PR을 올리기 전 자기 점검용입니다.
 - [ ] focus-visible ring, 키보드 조작, label 연결이 있다.
 - [ ] 순수 조합 컴포넌트에 `use client`를 붙이지 않았다.
 - [ ] 비자명 로직에 co-located `*.test.ts` 하나가 있다. one-liner엔 없다.
-- [ ] (kit→제품 이동 시) §8 게이트를 모두 통과했고 `~Demo` 래퍼를 제거했다.

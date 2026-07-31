@@ -6,7 +6,7 @@ import { useState } from 'react'
 /**
  * 레이아웃 그리드 오버레이 — 이미지 위에 "균일 섹션" 그리드 가이드를 겹쳐 레이아웃 규칙을 검수한다.
  * 하나의 규칙(params·크기)을 여러 이미지에 병렬 적용. 토글로 가이드 표시(이미지 50%)/숨김(100%) 전환.
- * (kit LayoutGridOverlay 이식 — GUIDE 리터럴 → accent prop, localStorage 임시저장/SAMPLES/Demo 제거)
+ * (GUIDE 리터럴 → accent prop, localStorage 임시저장/SAMPLES/Demo 제거)
  */
 export type LayoutParams = {
 	/** 세로로 쌓이는 섹션 개수(균등 높이). */
