@@ -14,7 +14,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
-import { generateImages } from '@/features/generate-image/services/generate-image.client'
+import {
+	type ImageProfileOption,
+	requestAdminImageGeneration,
+	requestPublishedImageProfiles,
+} from '@/features/generate-image/services/generate-image.client'
 import { generateOneText } from '@/features/generate-text/services/generate-text.client'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import type { TemplateNodeConfig, TemplateNodeConfigMap, TemplateSlotSpec } from '@/types/template'
@@ -150,18 +154,35 @@ function AiTextForm({ rule, onApply }: { rule?: string; onApply: (text: string) 
 	)
 }
 
-// Popup 안에 뜨는 AI 이미지 생성 폼. 프레임 배경으로 얹는다. /api/image는 base64 data-URI를 돌려주므로 CSP 걱정 없다.
+// Popup 안에 뜨는 AI 이미지 생성 폼. 프레임 배경으로 얹는다. 생성 API는 base64 data URI를 반환한다.
 function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 	const [prompt, setPrompt] = useState('')
 	const [loading, setLoading] = useState(false)
+	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
+	const [profileId, setProfileId] = useState<number>()
+
+	useEffect(() => {
+		void requestPublishedImageProfiles()
+			.then((nextProfiles) => {
+				setProfiles(nextProfiles)
+				setProfileId(nextProfiles[0]?.id)
+			})
+			.catch(() => {
+				setProfiles([])
+				toast.error('이미지 프로파일을 불러오지 못했습니다.')
+			})
+	}, [])
 
 	async function run() {
 		const trimmed = prompt.trim()
-		if (!trimmed || loading) return
+		if (!trimmed || !profileId || loading) return
 		setLoading(true)
 		try {
-			// 프로파일을 생략해 사용자가 묘사한 배경을 원문 그대로 생성한다.
-			const { images } = await generateImages({ prompt: trimmed, count: 1 })
+			const { images } = await requestAdminImageGeneration({
+				prompt: trimmed,
+				count: 1,
+				profileId,
+			})
 			const src = images[0]
 			if (src) onApply(src)
 			else toast.error('이미지 생성 실패 — 잠시 후 다시 시도하세요.')
@@ -177,13 +198,39 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 			<span className="text-sm" style={{ color: 'var(--theme-elevation-600)' }}>
 				AI 배경 이미지 생성
 			</span>
+			<label className="text-sm" htmlFor="template-ai-image-profile">
+				이미지 프로파일
+			</label>
+			<select
+				id="template-ai-image-profile"
+				value={profileId ?? ''}
+				onChange={(event) => setProfileId(Number(event.currentTarget.value))}
+				style={SELECT_STYLE}
+			>
+				{profiles?.length ? (
+					profiles.map((profile) => (
+						<option key={profile.id} value={profile.id}>
+							{profile.name}
+						</option>
+					))
+				) : (
+					<option value="" disabled>
+						{profiles ? '발행된 프로파일 없음' : '프로파일 불러오는 중'}
+					</option>
+				)}
+			</select>
 			<Textarea
 				value={prompt}
 				onChange={(event) => setPrompt(event.target.value)}
 				rows={3}
 				placeholder="예: 미니멀한 파스텔 그라디언트 배경"
 			/>
-			<Button type="button" size="sm" disabled={loading || !prompt.trim()} onClick={run}>
+			<Button
+				type="button"
+				size="sm"
+				disabled={loading || !profileId || !prompt.trim()}
+				onClick={run}
+			>
 				{loading ? '생성 중...' : '생성'}
 			</Button>
 		</div>

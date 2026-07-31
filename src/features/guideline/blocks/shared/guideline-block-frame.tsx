@@ -1,8 +1,5 @@
 import type * as React from 'react'
-import {
-	GuidelineContentFrame,
-	type GuidelineContentFrameVariant,
-} from '@/features/guideline/components/guideline-content-frame'
+import { ContentFrame, type ContentFrameVariant } from '@/components/shared/content-frame'
 import { cn } from '@/lib/utils'
 
 type GuidelineBlockFrameVariant = 'normal' | 'secondary' | 'inverted'
@@ -14,7 +11,7 @@ const variantClassNames: Record<GuidelineBlockFrameVariant, string> = {
 }
 
 type GuidelineBlockFrameProps = React.ComponentProps<'div'> & {
-	layout: GuidelineContentFrameVariant
+	layout: ContentFrameVariant
 	variant?: GuidelineBlockFrameVariant
 	contentClassName?: string
 	label?: string
@@ -38,9 +35,9 @@ export function GuidelineBlockFrame({
 			aria-label={label}
 			{...props}
 		>
-			<GuidelineContentFrame variant={layout} className={contentClassName}>
+			<ContentFrame variant={layout} className={contentClassName}>
 				{children}
-			</GuidelineContentFrame>
+			</ContentFrame>
 		</section>
 	)
 }

@@ -20,7 +20,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Typography } from '@/components/ui/typography'
 import { useImageGeneration } from '@/features/generate-image/hooks/use-image-generation'
 
-// 제품(프롬프트) + 프로파일 선택 → /api/image → 후보 그리드(택1·다운로드). 정규화·생성은 라우트/서비스 소유.
+// 제품(프롬프트) + 프로파일 선택 → 생성 API → 후보 그리드(택1·다운로드). 정규화·생성은 라우트/서비스 소유.
 
 const EXAMPLE_PROMPTS = [
 	'신제품을 위한 깨끗한 스튜디오 제품 이미지',
@@ -36,18 +36,17 @@ export function ImageGenerator({
 	initialProfileId?: number
 }) {
 	const [prompt, setPrompt] = useState('')
-	const [profile, setProfile] = useState<number | 'free'>(
-		initialProfileId ?? profiles[0]?.id ?? 'free',
-	)
+	const [profile, setProfile] = useState<number | undefined>(initialProfileId ?? profiles[0]?.id)
 	const [count, setCount] = useState(2)
 	const { error, generate, loading, requested, result, selected, setSelected } =
 		useImageGeneration()
 
 	function requestGeneration() {
+		if (!profile) return
 		void generate({
 			count,
 			prompt,
-			...(profile === 'free' ? {} : { profileId: profile }),
+			profileId: profile,
 		})
 	}
 
@@ -74,11 +73,7 @@ export function ImageGenerator({
 								id="image-prompt"
 								value={prompt}
 								onChange={(event) => setPrompt(event.target.value)}
-								placeholder={
-									profile === 'free'
-										? '만들 이미지를 설명하세요'
-										: '만들 제품이나 장면을 설명하세요'
-								}
+								placeholder="만들 제품이나 장면을 설명하세요"
 								aria-label="프롬프트"
 								aria-describedby="image-prompt-description"
 								maxLength={500}
@@ -100,20 +95,17 @@ export function ImageGenerator({
 								<Label htmlFor="image-profile">프로파일</Label>
 								<select
 									id="image-profile"
-									value={profile}
-									onChange={(event) => {
-										setProfile(
-											event.currentTarget.value === 'free'
-												? 'free'
-												: Number(event.currentTarget.value),
-										)
-									}}
+									value={profile ?? ''}
+									onChange={(event) =>
+										setProfile(Number(event.currentTarget.value))
+									}
 									className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
 								>
-									<option value="free">자유 생성 (브랜드 스타일 없음)</option>
 									<optgroup label="브랜드 제품컷 프로파일">
 										{profiles.length === 0 ? (
-											<option disabled>발행된 프로파일 없음</option>
+											<option value="" disabled>
+												발행된 프로파일 없음
+											</option>
 										) : (
 											profiles.map(({ id, name }) => (
 												<option key={id} value={id}>
@@ -164,15 +156,17 @@ export function ImageGenerator({
 					</CardContent>
 
 					<CardFooter className="flex-col items-stretch gap-2 border-t border-border py-4">
-						<Typography size="xs" tone="muted" className="text-right">
-							gpt-image-2
-						</Typography>
+						{result?.model && (
+							<Typography size="xs" tone="muted" className="text-right">
+								{result.model}
+							</Typography>
+						)}
 						<Button
 							type="button"
 							size="lg"
 							className="w-full"
 							onClick={requestGeneration}
-							disabled={loading || !prompt.trim()}
+							disabled={loading || !profile || !prompt.trim()}
 						>
 							{loading ? '생성 중…' : '이미지 생성'}
 						</Button>

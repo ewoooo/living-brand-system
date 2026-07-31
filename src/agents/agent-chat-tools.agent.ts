@@ -1,8 +1,10 @@
 import { type ToolSet, tool } from 'ai'
 import { z } from 'zod'
+import { env } from '@/env'
 import {
 	agentQueryTriageSchema,
-	decideAgentQueryTriage,
+	agentSkillSelectionSchema,
+	decideAgentQueryRouting,
 } from '@/features/agent-chat/domain/agent-query-triage'
 import {
 	type AgentSkillDetail,
@@ -23,7 +25,7 @@ import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
 import {
 	type AgentGeneratedImagesAttachment,
-	generateImageCandidates,
+	generateImages,
 } from '@/features/generate-image/services/generate-image.service'
 import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
 import { type CheckScenario, getCheckScenario } from '@/features/quality-rule/check-scenario'
@@ -42,14 +44,17 @@ const guidelineToolContextSchema = z.object({
  * 실제 skill/guideline I/O는 tool 실행 시 주입되는 user context로 수행한다.
  */
 export function getAgentTools() {
+	const triageEnabled = env.AGENT_CHAT_TRIAGE_ENABLED === 'true'
+
 	return {
 		loadSkill: tool({
-			description:
-				'Classify the request and load the full instructions for one enabled agent skill.',
-			inputSchema: agentQueryTriageSchema,
+			description: triageEnabled
+				? 'Classify the request and load the full instructions for one enabled agent skill.'
+				: 'Load the full instructions for one enabled agent skill.',
+			inputSchema: triageEnabled ? agentQueryTriageSchema : agentSkillSelectionSchema,
 			contextSchema: guidelineToolContextSchema,
-			execute: async (triage, { context }) => {
-				const { name } = triage
+			execute: async (proposal, { context }) => {
+				const { name } = proposal
 				const skill = await findEnabledAgentSkillByName(context.user, name)
 
 				if (!skill) {
@@ -58,7 +63,7 @@ export function getAgentTools() {
 
 				return {
 					...formatLoadedSkill(skill),
-					...decideAgentQueryTriage(triage),
+					...decideAgentQueryRouting(proposal, triageEnabled),
 				}
 			},
 		}),
@@ -144,10 +149,10 @@ export function getAgentTools() {
 		}),
 		generateImage: tool({
 			description:
-				'Generate NEW images from a text prompt. For a branded product image, call listImageProfiles first and pass its profileId. Omit profileId for free generation without a brand profile.',
+				'Generate NEW images from a text prompt. Call listImageProfiles first and pass the selected published profileId.',
 			inputSchema: z.object({
 				prompt: z.string().min(1).max(500),
-				profileId: z.number().int().positive().optional(),
+				profileId: z.number().int().positive(),
 				count: z.number().int().min(1).max(4).optional(),
 			}),
 			contextSchema: guidelineToolContextSchema,
@@ -157,7 +162,7 @@ export function getAgentTools() {
 					prompt: composedPrompt,
 					profileId: usedProfileId,
 					profileName,
-				} = await generateImageCandidates({
+				} = await generateImages({
 					userInput: prompt,
 					profileId,
 					user: context.user,

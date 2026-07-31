@@ -29,9 +29,34 @@ describe('getCreateNavigation', () => {
 			{ id: 2, title: '포스터', slug: 'poster' },
 		] as never)
 		mockedNavItems.mockResolvedValue([
-			{ id: 10, name: '인스타 배너', category: 1 },
-			{ id: 11, name: 'A4 포스터', category: 2 },
-			{ id: 12, name: '세로 배너', category: 1 },
+			{
+				id: 10,
+				name: '인스타 배너',
+				category: 1,
+				html: '<div data-node-id="10">인스타 배너</div>',
+				overrides: {},
+				width: 1080,
+				height: 1080,
+			},
+			{
+				id: 11,
+				name: 'A4 포스터',
+				category: 2,
+				html: '<div data-node-id="11">A4 포스터</div>',
+				overrides: {},
+				width: 2480,
+				height: 3508,
+			},
+			{
+				id: 12,
+				name: '세로 배너',
+				category: 1,
+				html: '<div data-node-id="12">세로 배너</div>',
+				overrides: {},
+				width: 1080,
+				height: 1920,
+			},
+			{ id: 13, name: '과거 템플릿', category: 1, html: null, width: null, height: null },
 		] as never)
 
 		const navigation = await getCreateNavigation()

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { GuidelineContentFrame } from '@/features/guideline/components/guideline-content-frame'
+import { ContentFrame } from '@/components/shared/content-frame'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,8 +9,8 @@ export default async function GuidelineWidgetsPage() {
 		'@/features/guideline/components/widgets/gallery'
 	)
 	return (
-		<GuidelineContentFrame>
+		<ContentFrame>
 			<GuidelineWidgetGallery />
-		</GuidelineContentFrame>
+		</ContentFrame>
 	)
 }

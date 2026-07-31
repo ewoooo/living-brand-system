@@ -62,11 +62,21 @@ export function mergeImageProfilePrompt(
 	normalizedInput: FlatImagePrompt,
 	userPrompt: string,
 ): FlatImagePrompt {
-	return {
+	const prompt = {
 		...Object.fromEntries(profilePrompt.map(({ key, value }) => [key, value])),
 		...normalizedInput,
 		subject: userPrompt.trim(),
 	}
+	return Object.fromEntries(
+		Object.entries(prompt).map(([key, value]) => [
+			key,
+			value
+				.split(/\r?\n/)
+				.map((line) => line.trim())
+				.filter(Boolean)
+				.join(', '),
+		]),
+	)
 }
 
 function addDuplicateKeyIssues(rows: { key: string }[], context: z.RefinementCtx): void {

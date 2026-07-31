@@ -6,7 +6,6 @@
 
 @source "../../components/admin";
 @source "../../components/ui";
-@source "../../features/template-import/components";
 @source not inline("table");
 
 @theme inline {

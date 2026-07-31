@@ -123,11 +123,11 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 | 겹 | 컴포넌트 | 소유 책임 |
 | --- | --- | --- |
 | 표면색 껍질 | `GuidelineBlockFrame`(`<section>`) | 전체 폭 배경/전경(`normal`/`secondary`/`inverted`) |
-| 폭 프레임 | `GuidelineContentFrame` | 최대 폭과 가로 여백(`max-w-[1250px] px-4 md:px-8`) |
+| 폭 프레임 | `ContentFrame` | 최대 폭과 가로 여백(`max-w-[1250px] px-4 md:px-8`) |
 
-`GuidelineBlockFrame`(`guideline-block-frame.tsx:24-46`)은 표면색만 정하고 즉시 `GuidelineContentFrame`을 감쌉니다. 폭과 가로 여백은 `GuidelineContentFrame`의 `padded` variant 한 곳만 소유합니다(`guideline-content-frame.tsx:22`). 개별 블록은 자기 `max-width`를 선언하지 않습니다 — 폭을 바꾸려면 프레임 한 곳만 고칩니다.
+`GuidelineBlockFrame`(`guideline-block-frame.tsx:24-46`)은 표면색만 정하고 즉시 `ContentFrame`을 감쌉니다. 폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx:22`). 개별 블록은 자기 `max-width`를 선언하지 않습니다 — 폭을 바꾸려면 프레임 한 곳만 고칩니다.
 
-세로 리듬은 프레임의 self-padding(`guideline-content-frame.tsx:21`의 `py-8`)과 스택 컨테이너의 `gap`이 함께 담당합니다. 요소 사이 실제 간격은 `패딩 + gap + 패딩`의 합입니다. "블록마다 마진을 흩뿌리지 않는다"의 뜻은 *바꾸지 않는다*가 아니라 *요소마다 제각각 다르게 주지 않는다*이며, 다음 세 불변식으로 리듬을 통일합니다:
+세로 리듬은 프레임의 self-padding(`content-frame.tsx:21`의 `py-8`)과 스택 컨테이너의 `gap`이 함께 담당합니다. 요소 사이 실제 간격은 `패딩 + gap + 패딩`의 합입니다. "블록마다 마진을 흩뿌리지 않는다"의 뜻은 *바꾸지 않는다*가 아니라 *요소마다 제각각 다르게 주지 않는다*이며, 다음 세 불변식으로 리듬을 통일합니다:
 
 1. 한 요소의 상하 패딩은 대칭이다(`py-*` 하나로).
 2. 모든 요소의 패딩은 동일하다(프레임 한 곳에서 소유).

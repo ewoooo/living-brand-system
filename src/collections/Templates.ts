@@ -99,7 +99,7 @@ export const Templates: CollectionConfig = {
 			options: [...PRINT_PPI_OPTIONS],
 			admin: {
 				position: 'sidebar',
-				description: `설정하면 CMYK TIFF와 RGB 벡터 PDF가 활성화됩니다. 픽셀 크기는 유지되며 TIFF는 최대 ${MAX_PRINT_PIXELS.toLocaleString('en-US')}픽셀을 지원합니다.`,
+				description: `설정하면 CMYK TIFF와 RGB PDF가 활성화됩니다. 픽셀 크기는 유지되며 TIFF는 최대 ${MAX_PRINT_PIXELS.toLocaleString('en-US')}픽셀을 지원합니다.`,
 			},
 		},
 		{

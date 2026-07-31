@@ -45,6 +45,10 @@ export async function listPublishedTemplateNavItems() {
 		select: {
 			name: true,
 			category: true,
+			html: true,
+			overrides: true,
+			width: true,
+			height: true,
 		},
 	})
 

@@ -126,8 +126,8 @@ flowchart LR
     end
 
     subgraph ExternalServices["External services"]
-      BrandAssetGenerationModule["Brand asset generation service"]
-      AnswerGenerationModule["Answer generation service"]
+      BrandAssetGenerationModule["Asset generation service<br/>(현재: 요청 범위)"]
+      AgentChatModule["Agent chat service"]
       QualityModule["Quality check service"]
     end
   end
@@ -136,7 +136,8 @@ flowchart LR
     subgraph PayloadRepositories["Payload CMS supported"]
       GuidelineRepository["Guideline records repository"]
       BrandResourceRepository["Brand resource records repository"]
-      BrandAssetGenerationRepository["Brand asset generation records repository"]
+      BrandAssetGenerationRepository["Brand asset generation records repository<br/>(계획)"]
+      AgentChatRepository["Agent chat session records repository"]
       QualityRepository["Quality session records repository"]
       BehaviorEventRepository["Behavior event logs repository"]
     end
@@ -154,11 +155,12 @@ flowchart LR
   AgentAdapter["Agent adapter / tool set"]
 
   subgraph Storage["Records and files"]
-    GuidelineStore["Guideline records<br/>(BrandGuideline / GuidelineSection / GuidelinePage / Rule placement)"]
+    GuidelineStore["Guideline records<br/>(BrandGuideline / GuidelineDocument / Rule placement)"]
     QualityRuleStore["Quality rule records<br/>(Rule / RuleChecker / CheckScenario)"]
     BrandResourceStore["Brand resource records<br/>(Asset metadata / Template metadata / Plugin ref)"]
-    BrandAssetGenerationStore["Brand asset generation records<br/>(AssetGenerationSession / AssetGenerationInput / AssetGenerationOutput)"]
-    QualityStore["Quality session records<br/>(QASession / CheckSession)"]
+    BrandAssetGenerationStore["Brand asset generation records<br/>(계획: AssetGenerationSession)"]
+    AgentChatStore["Agent chat session records<br/>(AgentChatSession)"]
+    QualityStore["Quality session records<br/>(CheckSession)"]
     BehaviorEventStore["Behavior event logs<br/>(BehaviorEventLog)"]
     FileStorage["Uploaded file storage<br/>(AWS S3)"]
   end
@@ -186,20 +188,21 @@ flowchart LR
   ServerRenderRouteHandler -->|"guideline content"| GuidelineRepository
   ServerRenderRouteHandler -->|"linked resources"| BrandResourceRepository
   ServerRenderRouteHandler -->|"asset tool state"| BrandAssetGenerationModule
-  ServerRenderRouteHandler -->|"answer tool state"| AnswerGenerationModule
+  ServerRenderRouteHandler -->|"agent chat state"| AgentChatModule
   ServerRenderRouteHandler -->|"quality tool state"| QualityModule
   ClientFetchRouteHandler -->|"request"| BrandAssetGenerationModule
-  ClientFetchRouteHandler -->|"request"| AnswerGenerationModule
+  ClientFetchRouteHandler -->|"request"| AgentChatModule
   ClientFetchRouteHandler -->|"request"| QualityModule
   GuidelinePublishingModule -->|"read / write"| GuidelineRepository
   BrandResourcePublishingModule -->|"read / write"| BrandResourceRepository
-  BrandAssetGenerationModule -->|"write session/output"| BrandAssetGenerationRepository
+  BrandAssetGenerationModule -.->|"향후 사용량 기록"| BrandAssetGenerationRepository
   BrandAssetGenerationModule -->|"read resources"| ProductionResourceRepository
-  AnswerGenerationModule -->|"write QA session"| QualityRepository
-  AnswerGenerationModule -->|"agent request"| AgentRepository
+  AgentChatModule -->|"write chat session"| AgentChatRepository
+  AgentChatModule -->|"agent request"| AgentRepository
   QualityModule -->|"write check session"| QualityRepository
   QualityModule -->|"agent request"| AgentRepository
-  UsageQueryModule -->|"read generation records"| BrandAssetGenerationRepository
+  UsageQueryModule -.->|"향후 제작 사용량 조회"| BrandAssetGenerationRepository
+  UsageQueryModule -->|"read agent chat records"| AgentChatRepository
   UsageQueryModule -->|"read quality records"| QualityRepository
   UsageQueryModule -->|"read behavior records"| BehaviorEventRepository
   BehaviorEventModule -->|"read / write"| BehaviorEventRepository
@@ -220,6 +223,7 @@ flowchart LR
   GuidelineRepository --> GuidelineStore
   BrandResourceRepository --> BrandResourceStore
   BrandAssetGenerationRepository --> BrandAssetGenerationStore
+  AgentChatRepository --> AgentChatStore
   QualityRepository --> QualityStore
   BehaviorEventRepository --> BehaviorEventStore
   StorageRepository --> FileStorage
@@ -238,13 +242,13 @@ Brand resource records는 메타데이터와 참조만 보관하고, 실제 파�
 
 | 서비스 | 담당 유즈케이스 | 내부 도메인 서비스 | 주요 이벤트 |
 | --- | --- | --- | --- |
-| Guideline publishing service | GL-01~13 | GuidelinePublishService | GuidelinePublished, GuidelineScheduled, GuidelineDeprecated |
+| Guideline publishing service | GL-01~10 | GuidelinePublishService | GuidelinePublished |
 | Quality rule publishing service | RULE-01~04 | RuleReferenceIntegrityService, RuleOptionsValidationService | Rule*, RuleChecker*, CheckScenario* |
 | Brand resource publishing service | RES-01~26 | AssetPublishService, TemplatePublishService, PluginPublishService | BrandAsset*, Template*, Plugin*, ResourceLinkedToGuideline |
 | Usage query service | LOG-01~05 | UsageQueryService | - |
 | Behavior event service | LOG-06 | BehaviorEventIngestService, BehaviorEventQueryService | BehaviorEventCaptured |
-| Brand asset generation service | GEN-01~11 | BrandAssetGenerationService | AssetGenerationSessionStarted, AssetGenerationInputChanged, AssetGenerationPreviewGenerated, AssetGenerationOutputCreated, AssetGenerationSessionCompleted |
-| Answer generation service | QA-01~07 | AnswerGenerationService | QuestionAsked, AnswerProvided |
+| Asset generation service | Create, Image | 요청 범위 생성 서비스 | - |
+| Agent chat service | Agent 채팅 | AgentChatService | - |
 | Quality check service | QC-01~05 | QualityCheckService | CheckSessionStarted, CheckRunCompleted, CheckCompleted |
 
 #### 서브도메인 구조
@@ -320,8 +324,8 @@ flowchart TB
 
 ##### 제작 관리
 
-제작 관리는 Creator 요청을 받아 ResourceRef를 조회하고, 산출물은 서버 저장소에 남긴 뒤 클라이언트에는 참조와 미리보기 응답만 돌려줍니다.
-클라이언트는 제작 결과의 원본 저장 위치가 아니라 입력, 미리보기, 다운로드 요청을 다루는 화면입니다.
+현재 제작 관리는 Creator 요청 안에서 ResourceRef를 조회하고 결과를 반환하며, `AssetGenerationSession`이나 `AssetGenerationOutput`을 저장하지 않습니다.
+아래 구조는 향후 제작 사용량 추적을 도입할 때 적용할 계획입니다.
 
 | 흐름 | 담당 | 입력 | 결과 |
 | --- | --- | --- | --- |
@@ -503,25 +507,25 @@ flowchart TB
 | `rules` | Rule | 문서와 독립된 검수 기준, 메시지, RuleChecker 관계를 관리 |
 | `check-scenarios` | CheckScenario | 검수 목적별 이름, 설명과 순서가 있는 CheckKey 목록을 관리 |
 | `rule-checkers` | RuleChecker | executor 유형과 checker 또는 model binding을 1:1로 관리하는 검사 도구 계약 |
-| `brand-logos` | BrandLogo | guideline document, asset generation session, check basis에서 참조 |
+| `brand-logos` | BrandLogo | guideline document와 check basis에서 참조. 향후 asset generation session에도 사용 가능 |
 | `brand-colors` | BrandColor | guideline document, Check, template, plugin에서 참조 |
 | `brand-typefaces` | BrandTypeface | guideline document, Check, template에서 참조 |
-| `application-images` | ApplicationImage | page, asset generation session, check basis에서 참조 |
-| `templates` | Template | page, plugin, asset generation session에서 참조 |
-| `plugins` | Plugin | page, template, asset generation session에서 참조 |
+| `application-images` | ApplicationImage | page와 check basis에서 참조. 향후 asset generation session에도 사용 가능 |
+| `templates` | Template | page와 plugin에서 참조. 향후 asset generation session에도 사용 가능 |
+| `plugins` | Plugin | page와 template에서 참조. 향후 asset generation session에도 사용 가능 |
 
 ### 런타임 객체
 
-런타임 객체는 사용자 제작, 질문, 검수, 탐색 과정에서 System이 생성하는 기록입니다.
-이 객체는 실제 조회, 보관, 권한, 성능 요구가 분명해진 뒤 저장 방식을 결정합니다.
+런타임 객체는 사용자 제작, Agent 채팅, 검수, 탐색 과정에서 System이 생성하는 기록입니다.
+현재 저장되는 객체와 계획 객체를 구분합니다.
 
-| 영역 | 런타임 객체 |
-| --- | --- |
-| 에셋 제너레이션 기록 | AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput |
-| 질의응답 기록 | QASession, Question, Answer, AnswerCitation, AnswerConfidence |
-| 품질 검수 기록 | CheckInputSnapshot, CheckSession, CheckTarget, CheckRun, CheckBasis, CheckDecision, CheckResult, CheckRecommendation |
-| 화면 행동 기록 | BehaviorEventLog, PageViewEvent, ClickEvent, AssetDownloadEvent, SectionDwellEvent, SearchEvent, OutboundLinkEvent, CustomEvent |
-| Agent 실행 기록 | AgentRunRef, AgentRunStarted, AgentRunCompleted, AgentRunFailed |
+| 영역 | 상태 | 런타임 객체 |
+| --- | --- | --- |
+| Agent 채팅 기록 | 현재 | AgentChatSession |
+| 품질 검수 기록 | 현재 | CheckSession(입력 지문, CheckRulesetSnapshot, pending Check key, 결과와 상태를 평탄화) |
+| 화면 행동 기록 | 현재 | BehaviorEventLog, PageViewEvent, ClickEvent, AssetDownloadEvent, SectionDwellEvent, SearchEvent, OutboundLinkEvent, CustomEvent |
+| 에셋 제너레이션 사용량 기록 | 계획 | AssetGenerationSession, AssetGenerationInput, AssetGenerationOutput |
+| Agent 실행 기록 | 계획 | AgentRunRef, AgentRunStarted, AgentRunCompleted, AgentRunFailed |
 
 ### 버전 컨트롤
 
@@ -535,13 +539,13 @@ flowchart TB
 | Official Version | Creator와 Agent가 참조하는 발행 기준입니다. GuidelineVersion, RuleVersion, RuleCheckerVersion, BrandAssetVersion, TemplateVersion, PluginVersion이 여기에 속합니다. Rule은 GuidelineVersion과 독립된 발행 생명주기를 가집니다. |
 | VersionStatus | Official Version의 상태입니다. `stage`, `live`, `archived`를 사용합니다. |
 | VersionRef | 실행 기록이 특정 Official Version을 가리키는 참조값입니다. |
-| ResourceRef | 에셋 제너레이션이 사용하는 published guideline, CheckKey, asset, template, plugin 참조 묶음입니다. 품질 검수는 선택된 Check를 CheckRulesetSnapshot으로 고정합니다. |
+| ResourceRef | 제작 요청이 사용하는 published guideline, Rule, asset, template, plugin 참조 묶음입니다. 향후 AssetGenerationSession을 도입하면 사용량 기록에 저장합니다. 품질 검수는 선택된 Rule을 CheckRulesetSnapshot으로 고정합니다. |
 | Snapshot | 실행 당시 입력값 자체를 재현해야 할 때만 복사해 고정한 값입니다. |
 
 Payload revision은 CMS 편집 이력과 draft/publish 흐름에 사용합니다.
 Admin UI의 diff, restore, draft 상태 관리는 Payload revision을 우선 사용합니다.
-새 에셋 제너레이션과 새 Agent 실행은 기본적으로 `live` 상태의 Official Version을 조회합니다.
-에셋 제너레이션에는 ResourceRef를 저장하고, 품질 검수는 ResourceRef에서 필요한 VersionRef를 CheckBasis로 고정합니다.
+새 제작 요청과 새 Agent 실행은 기본적으로 `live` 상태의 Official Version을 조회합니다.
+현재 제작 요청은 ResourceRef를 저장하지 않습니다. 향후 AssetGenerationSession을 도입하면 사용한 ResourceRef를 기록하고, 품질 검수는 필요한 VersionRef를 CheckBasis로 고정합니다.
 Agent 실행 기록에는 필요한 VersionRef를 저장합니다.
 Snapshot은 검수 입력처럼 나중에 같은 조건으로 다시 봐야 하는 값이 있을 때만 만듭니다.
 
@@ -558,7 +562,8 @@ Payload revision, Official Version, Snapshot으로 재현할 수 있는 변경�
 - 다른 도메인이 알아야 하는 확정된 결과
 - 비동기 후속 작업을 시작해야 하는 결과
 
-예를 들어 `GuidelinePublished`, `RuleCheckerVersionPublished`, `AssetGenerationSessionCompleted`, `CheckCompleted`는 저장할 수 있습니다.
+예를 들어 `GuidelinePublished`, `RuleCheckerVersionPublished`, `CheckCompleted`는 저장할 수 있습니다.
+`AssetGenerationSessionCompleted`는 향후 제작 사용량 기록을 도입할 때만 추가합니다.
 반면 단순 문구 수정, 내부 계산값, 장애 로그는 도메인 이벤트로 저장하지 않습니다.
 
 #### 저장하는 이벤트 예시
@@ -596,24 +601,24 @@ flowchart TD
 Agent와 Creator는 도메인 상태를 직접 변경하지 않습니다.
 외부 요청은 Request Layer로 들어오고, Domain Service Layer가 기준 VersionRef와 실행 입력을 정한 뒤 Agent 실행을 요청합니다.
 Agent adapter는 실행 전에 enabled/default AgentSkill을 조회해 지시문을 구성할 수 있습니다.
-Agent 실행 결과는 Domain Service Layer가 검증한 뒤 Answer, CheckResult, CheckRecommendation 같은 도메인 객체에 저장합니다.
+Agent 실행 결과는 Domain Service Layer가 검증한 뒤 AgentChatSession 메시지 또는 CheckResult, CheckRecommendation에 저장합니다.
 
 #### 호출 경로
 
-Answer generation service와 Quality check service는 모델 SDK나 Agent tool을 직접 호출하지 않습니다.
+Agent chat service와 Quality check service는 모델 SDK나 Agent tool을 직접 호출하지 않습니다.
 두 서비스는 Agent repository를 통해 AI SDK 기반 adapter 실행을 요청합니다.
 
 ```mermaid
 flowchart TD
   A["Creator UI / API request"]
   B["Request Layer"]
-  C["Answer / Quality service"]
+  C["Agent chat / Quality service"]
   D["Resolve live Official Version"]
   E["Store VersionRef and input"]
   F["Agent repository"]
   G["Agent adapter / tool set"]
   H["AgentRunRef"]
-  I["Answer / CheckResult"]
+  I["AgentChatSession / CheckResult"]
 
   A --> B
   B --> C

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
-import { HtmlAssetGenerator } from '@/components/studio/template/html-asset-generator'
-import { Typography } from '@/components/ui/typography'
+import { StudioWorkspacePage } from '@/components/studio/studio-workspace'
+import { TemplateGenerator } from '@/components/studio/template/template-generator'
+import { getCreateNavigation } from '@/features/template-create/services/get-create-navigation.service'
 import { getPublishedTemplate } from '@/features/template-create/services/get-published-template.service'
 
 export default async function CreateTemplatePage({
@@ -15,18 +16,21 @@ export default async function CreateTemplatePage({
 		notFound()
 	}
 
-	const template = await getPublishedTemplate(parsedId)
+	const [navigation, template] = await Promise.all([
+		getCreateNavigation(),
+		getPublishedTemplate(parsedId),
+	])
 
 	if (!template) {
 		notFound()
 	}
 
 	return (
-		<article>
-			<Typography as="h1" className="mb-6" family="title" size="5xl">
-				{template.name}
-			</Typography>
-			<HtmlAssetGenerator key={template.id} template={template} />
-		</article>
+		<StudioWorkspacePage
+			title={template.name}
+			description="열린 텍스트 슬롯을 편집하고 미리보기를 확인한 뒤 원하는 형식으로 내보냅니다."
+		>
+			<TemplateGenerator key={template.id} navigation={navigation} template={template} />
+		</StudioWorkspacePage>
 	)
 }
