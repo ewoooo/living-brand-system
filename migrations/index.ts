@@ -15,6 +15,7 @@ import * as migration_20260730_020827_block_widget_separation from './20260730_0
 import * as migration_20260730_080926_remove_template_rule_references from './20260730_080926_remove_template_rule_references';
 import * as migration_20260730_083726_agent_chat_triage_persistence from './20260730_083726_agent_chat_triage_persistence';
 import * as migration_20260731_023412_generated_images_collection from './20260731_023412_generated_images_collection';
+import * as migration_20260731_082720_mcp_feature_tools from './20260731_082720_mcp_feature_tools';
 
 export const migrations = [
   {
@@ -100,6 +101,11 @@ export const migrations = [
   {
     up: migration_20260731_023412_generated_images_collection.up,
     down: migration_20260731_023412_generated_images_collection.down,
-    name: '20260731_023412_generated_images_collection'
+    name: '20260731_023412_generated_images_collection',
+  },
+  {
+    up: migration_20260731_082720_mcp_feature_tools.up,
+    down: migration_20260731_082720_mcp_feature_tools.down,
+    name: '20260731_082720_mcp_feature_tools'
   },
 ];

@@ -46,6 +46,7 @@ import {
 	findMcpGuidelineDocuments,
 } from './features/guideline/services/find-mcp-guideline.service'
 import { buildGuidelineSearchText } from './features/guideline/utils/guideline-search-text'
+import { customMcpTools, mcpTextTool } from './features/mcp-access/mcp-tools'
 import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
 import { adminOnly, authenticated, isAdmin, managerOrAdmin } from './lib/auth'
@@ -65,7 +66,6 @@ const mcpListParameters = {
 const mcpLocale = (value: unknown) => (value === 'en' || value === 'ko' ? value : undefined)
 const mcpNumber = (value: unknown) => (typeof value === 'number' ? value : undefined)
 const mcpLevel = (value: unknown) => (value === 1 || value === 2 || value === 3 ? value : undefined)
-type McpToolArgs = Record<string, unknown>
 type GetDefaultMcpAccessSettings = (overrideApiKey?: null | string) => Promise<MCPAccessSettings>
 const createOwnMcpApiKey: Access = ({ data, req }) =>
 	isAdmin(req.user) ||
@@ -80,24 +80,6 @@ const BetterEditorSettings: GlobalConfig = {
 	},
 	access: { read: authenticated, update: managerOrAdmin },
 }
-
-/** MCP 툴 공통 골격 — 조회 결과를 text 콘텐츠(JSON 문자열)로 감싼다. */
-const mcpTextTool = (
-	name: string,
-	description: string,
-	parameters: Record<string, z.ZodTypeAny>,
-	run: (args: McpToolArgs, req: PayloadRequest) => Promise<unknown>,
-) => ({
-	name,
-	description,
-	parameters,
-	handler: async (args: McpToolArgs, req: PayloadRequest) => ({
-		content: [{ type: 'text' as const, text: JSON.stringify(await run(args, req)) }],
-	}),
-})
-
-// ponytail: custom MCP tools only wire validated input to a feature service here.
-const customMcpTools: ReturnType<typeof mcpTextTool>[] = []
 
 export default buildConfig({
 	admin: {

@@ -48,6 +48,7 @@ Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listIma
 | --- | --- | --- |
 | [Page](../surfaces/page.md) | 구현 | `/studio/generate/image` 또는 `/studio/generate/image/:profileSlug` — 프롬프트 입력 → 후보 그리드 → 택1 |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `generateImage`로 대화 중 생성, 후보를 챗에 렌더 |
+| MCP | 구현 | `generateBrandImage`가 published 프로파일로 원본을 저장하고 MCP 이미지 미리보기와 원본 URL을 반환 |
 | [REST](../surfaces/rest.md) | 구현 | `POST /api/generate-image`(same-origin, 인증 필수), `POST /api/admin/generate-image`(Manager 전용) |
 | Slack | 계획 | — |
 

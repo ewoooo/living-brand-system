@@ -242,7 +242,7 @@ CheckSession
 | [Page](../surfaces/page.md) | 구현 | Studio의 `/studio/review` — 이미지 업로드 → 선택한 CheckScenario의 항목별 결과 테이블. Template·Image·Graphic·Review는 공통 Studio 사이드바를 사용합니다. 클라이언트가 `/api/check` → `/api/check/{checkSessionId}/ai` 순으로 호출 |
 | [REST](../surfaces/rest.md) | 구현 | `POST /api/check`(FormData, 20MB 제한, origin·인증 게이트), `POST /api/check/{checkSessionId}/ai` |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `runCheck`(+`listCheckScenarios`)이 `startCheckSession`을 호출 |
-| MCP | 부분 | `mcp-call` 출처값은 정의됨, 전용 라우트는 없이 `/api/check` 재사용 |
+| MCP | 구현 | `runAssetCheck`가 PNG/JPEG/WebP data URI를 받아 `mcp-call` 출처로 `startCheckSession` 호출 |
 
 ## 5. 의존
 

@@ -2047,6 +2047,26 @@ export interface PayloadMcpApiKey {
      * Find live top-level guideline document metadata.
      */
     findGuideline?: boolean | null;
+    /**
+     * Search published brand guideline titles, paths, descriptions, body content, and checks.
+     */
+    searchGuidelines?: boolean | null;
+    /**
+     * Find or list published production templates and their open text slots.
+     */
+    findTemplates?: boolean | null;
+    /**
+     * List published brand image profiles available to the current user.
+     */
+    listImageProfiles?: boolean | null;
+    /**
+     * Run the selected brand quality check scenario on a PNG, JPEG, or WebP data URI.
+     */
+    runAssetCheck?: boolean | null;
+    /**
+     * Generate and store brand images with a published profile, then return stored original URLs and inline WebP previews.
+     */
+    generateBrandImage?: boolean | null;
   };
   updatedAt: string;
   createdAt: string;
@@ -3380,6 +3400,11 @@ export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
         findGuidelineDocuments?: T;
         findChecks?: T;
         findGuideline?: T;
+        searchGuidelines?: T;
+        findTemplates?: T;
+        listImageProfiles?: T;
+        runAssetCheck?: T;
+        generateBrandImage?: T;
       };
   updatedAt?: T;
   createdAt?: T;
