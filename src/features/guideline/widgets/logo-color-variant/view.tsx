@@ -37,19 +37,31 @@ export function LogoColorVariantView({ map }: Props) {
 				{colors.default ? (
 					<div className="row-span-2 flex items-center justify-center bg-neutral-100">
 						{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
-						<img src={colors.default} alt="기본형" className="h-[30%] w-auto max-w-full object-contain" />
+						<img
+							src={colors.default}
+							alt="기본형"
+							className="h-[30%] w-auto max-w-full object-contain"
+						/>
 					</div>
 				) : null}
 				{colors.white ? (
 					<div className="flex items-center justify-center bg-neutral-900">
 						{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
-						<img src={colors.white} alt="WHITE" className="h-[30%] w-auto max-w-full object-contain" />
+						<img
+							src={colors.white}
+							alt="WHITE"
+							className="h-[30%] w-auto max-w-full object-contain"
+						/>
 					</div>
 				) : null}
 				{colors.mono ? (
 					<div className="flex items-center justify-center bg-neutral-100">
 						{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
-						<img src={colors.mono} alt="단색" className="h-[30%] w-auto max-w-full object-contain" />
+						<img
+							src={colors.mono}
+							alt="단색"
+							className="h-[30%] w-auto max-w-full object-contain"
+						/>
 					</div>
 				) : null}
 			</div>
