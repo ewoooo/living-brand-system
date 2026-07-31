@@ -17,6 +17,7 @@ import * as migration_20260730_083726_agent_chat_triage_persistence from './2026
 import * as migration_20260731_023412_generated_images_collection from './20260731_023412_generated_images_collection';
 import * as migration_20260731_024329_agent_response_levels from './20260731_024329_agent_response_levels';
 import * as migration_20260731_085028_add_ci_widget_blocks from './20260731_085028_add_ci_widget_blocks';
+import * as migration_20260731_094017_mcp_feature_tools from './20260731_094017_mcp_feature_tools';
 
 export const migrations = [
   {
@@ -113,5 +114,10 @@ export const migrations = [
     up: migration_20260731_085028_add_ci_widget_blocks.up,
     down: migration_20260731_085028_add_ci_widget_blocks.down,
     name: '20260731_085028_add_ci_widget_blocks'
+  },
+  {
+    up: migration_20260731_094017_mcp_feature_tools.up,
+    down: migration_20260731_094017_mcp_feature_tools.down,
+    name: '20260731_094017_mcp_feature_tools'
   },
 ];
