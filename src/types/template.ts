@@ -12,6 +12,7 @@ export interface TemplateSlotSpec {
 export interface TemplateNodeConfig {
 	text?: string
 	backgroundImage?: string
+	generatedImageId?: number
 	input?: TemplateSlotSpec
 	vectorAsset?: {
 		collection: 'brand-logos' | 'application-images'

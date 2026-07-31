@@ -11,8 +11,8 @@ Create가 산출물에 이미지가 필요할 때 이 기능을 호출하는 것
 표면과 무관한 재사용 단위입니다. 코어 로직은 `src/features/generate-image/`이 소유하고, 표면은 이를 호출만 합니다.
 
 - 입력: 프롬프트 텍스트, 선택적 이미지 프로파일(`profileId`), 후보 장수(현재 1~6)
-- 출력: 이미지 후보 목록(각 항목은 바로 표시 가능한 data URI)
-- 영속성: 후보는 요청 범위에서만 반환하며 `AssetGenerationSession`이나 산출물 레코드를 저장하지 않습니다. 해당 세션은 향후 제작 사용량 추적이 필요할 때 도입합니다.
+- 출력: 프로파일 기반 생성은 `generated-images` 문서 참조와 저장 URL 목록을 반환합니다. 저장 전 Admin 테스트만 data URI를 반환합니다.
+- 영속성: 프로파일 기반 생성과 카메라 조정 결과는 `generated-images`에 파일·프로파일·원본/최종 프롬프트·모델·출력 조건·생성 사용자를 저장합니다. `AssetGenerationSession`은 향후 제작 사용량 추적이 필요할 때만 도입합니다.
 - 검수 미포함: 생성 결과를 그대로 돌려주며 규정 판정을 하지 않습니다.
 
 ### 프롬프트 합성
@@ -37,6 +37,8 @@ Manager는 Payload Admin의 `이미지 프로파일` 컬렉션에서 이미지 �
 - **런타임 사용**: `profileId`가 지정되면 사용자에게 공개된 published 프로파일만 조회해 정규화하고 이미지 생성기로 전달합니다. Admin의 draft는 생성 테스트에서만 사용합니다.
 - **생성 테스트**: 현재 Admin 폼 값으로 정규화와 이미지 생성을 실행합니다. 테스트 화면에서는 유저 프롬프트 후보 정규화를 끌 수 있으며, 이때도 시스템 프롬프트와 `subject` 합성은 유지됩니다. 미저장 값도 테스트할 수 있고 결과는 저장하지 않습니다.
 - **Admin 생성 API**: 프로파일 생성 테스트는 모델과 출력 계약을 모두 명시하고, 템플릿의 AI 배경 생성은 서버 기본 계약을 사용합니다. 두 요청 모두 Manager 전용 `POST /api/admin/generate-image`를 사용합니다.
+
+프로파일 기반 응답의 `images`는 저장 URL이며 `generatedImages`에는 각 문서의 `id`, `url`, `createdAt`이 포함됩니다. 카메라 조정 요청은 원본 data URI를 재전송하지 않고 `generatedImageId`를 전달하며, 서버가 같은 published 프로파일의 `generated-images` 원본을 조회·검증해 사용합니다.
 
 Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listImageProfiles`로 사용 가능한 프로파일을 확인한 뒤 `generateImage`에 `profileId`를 전달합니다. 자유 생성은 프로파일 없이 기존 원문 생성을 유지합니다.
 

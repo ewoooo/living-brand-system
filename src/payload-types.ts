@@ -75,6 +75,7 @@ export interface Config {
     'brand-icons': BrandIcon;
     'application-images': ApplicationImage;
     'image-profiles': ImageProfile;
+    'generated-images': GeneratedImage;
     templates: Template;
     'template-categories': TemplateCategory;
     'template-assets': TemplateAsset;
@@ -107,6 +108,7 @@ export interface Config {
     'brand-icons': BrandIconsSelect<false> | BrandIconsSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
     'image-profiles': ImageProfilesSelect<false> | ImageProfilesSelect<true>;
+    'generated-images': GeneratedImagesSelect<false> | GeneratedImagesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
     'template-categories': TemplateCategoriesSelect<false> | TemplateCategoriesSelect<true>;
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
@@ -1475,6 +1477,76 @@ export interface ImageProfile {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Studio 이미지 생성 결과와 생성 당시 입력·실행 조건을 보관합니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "generated-images".
+ */
+export interface GeneratedImage {
+  id: number;
+  scenario: number | ImageProfile;
+  /**
+   * 생성 당시 이미지 프로파일 이름입니다.
+   */
+  scenarioName: string;
+  /**
+   * 사용자가 입력한 원본 프롬프트입니다.
+   */
+  inputPrompt: string;
+  /**
+   * 정규화 후 이미지 모델에 전달한 최종 프롬프트입니다.
+   */
+  effectivePrompt: string;
+  model: string;
+  aspectRatio: '1:1' | '2:3' | '3:2' | '3:4' | '4:3' | '4:5' | '5:4' | '9:16' | '16:9' | '21:9';
+  imageSize: '1K' | '2K' | '4K';
+  /**
+   * 생성 요청 당시 인증된 사용자 ID입니다.
+   */
+  createdBy: number | User;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  /**
+   * admin(전체)·manager(기준 관리)·worker(사용)
+   */
+  role: 'admin' | 'manager' | 'worker';
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "templates".
  */
@@ -1857,35 +1929,6 @@ export interface AgentChatSession {
   createdAt: string;
 }
 /**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  /**
-   * admin(전체)·manager(기준 관리)·worker(사용)
-   */
-  role: 'admin' | 'manager' | 'worker';
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
-}
-/**
  * Agent가 선택해 실행할 SKILL.md 형태의 지시문입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2155,6 +2198,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'image-profiles';
         value: number | ImageProfile;
+      } | null)
+    | ({
+        relationTo: 'generated-images';
+        value: number | GeneratedImage;
       } | null)
     | ({
         relationTo: 'templates';
@@ -2979,6 +3026,32 @@ export interface ImageProfilesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "generated-images_select".
+ */
+export interface GeneratedImagesSelect<T extends boolean = true> {
+  scenario?: T;
+  scenarioName?: T;
+  inputPrompt?: T;
+  effectivePrompt?: T;
+  model?: T;
+  aspectRatio?: T;
+  imageSize?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "templates_select".
  */
 export interface TemplatesSelect<T extends boolean = true> {
@@ -3576,6 +3649,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'image-profiles';
           value: number | ImageProfile;
+        } | null)
+      | ({
+          relationTo: 'generated-images';
+          value: number | GeneratedImage;
         } | null)
       | ({
           relationTo: 'templates';

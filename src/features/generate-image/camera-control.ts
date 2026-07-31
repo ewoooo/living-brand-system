@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const MAX_CAMERA_ADJUSTMENT_REQUEST_BYTES = 8_100_000
+export const MAX_CAMERA_ADJUSTMENT_REQUEST_BYTES = 100_000
 
 /** 시드 이미지에 적용할 절대 시점. 0°는 정면이고 양의 방위각은 피사체 우측으로 회전한다. */
 export const cameraControlSchema = z
@@ -17,18 +17,13 @@ const basePromptSchema = z
 	.max(20_000)
 	.refine(isFlatPromptJson, 'basePrompt must be a JSON object with string values.')
 
-const seedImageSchema = z
-	.string()
-	.max(8_000_000)
-	.regex(/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/)
-
 export const cameraAdjustmentRequestSchema = z
 	.object({
 		basePrompt: basePromptSchema,
 		camera: cameraControlSchema,
 		count: z.number().int().min(1).max(4).default(1),
+		generatedImageId: z.number().int().positive(),
 		profileId: z.number().int().positive(),
-		seedImage: seedImageSchema,
 	})
 	.strict()
 
