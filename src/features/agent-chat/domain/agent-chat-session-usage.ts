@@ -1,4 +1,9 @@
-import type { AgentChatAiUsage, AgentChatSessionUsage } from '@/features/agent-chat/types'
+import { agentQueryTriageDecisionSchema } from '@/features/agent-chat/domain/agent-query-triage'
+import type {
+	AgentChatAiUsage,
+	AgentChatSessionUsage,
+	AgentChatTriage,
+} from '@/features/agent-chat/types'
 
 interface LanguageModelUsageLike {
 	inputTokenDetails: {
@@ -21,14 +26,22 @@ interface ToolCallLike {
 	toolName?: unknown
 }
 
+interface ToolResultLike {
+	output?: unknown
+	toolName?: unknown
+}
+
 export interface AgentChatSessionUsageStep {
-	model?: { modelId?: string }
+	model: { modelId: string }
+	response?: { modelId?: string }
 	toolCalls?: readonly unknown[]
+	toolResults?: readonly unknown[]
 	usage?: LanguageModelUsageLike
 }
 
 export interface AgentChatSessionUsageSnapshot {
 	aiUsage?: AgentChatAiUsage
+	triage?: AgentChatTriage
 	usedSkills: AgentChatSessionUsage[]
 	usedTools: AgentChatSessionUsage[]
 }
@@ -37,15 +50,48 @@ export interface AgentChatSessionUsageSnapshot {
 export function createAgentChatSessionUsageCollector() {
 	const toolCounts = new Map<string, number>()
 	const skillCounts = new Map<string, number>()
+	const models = new Set<string>()
 	const usage = createEmptyUsage()
 	const rawUsages: unknown[] = []
-	let model: string | undefined
+	let triage: AgentChatTriage | undefined
 
 	return {
 		addStep(step: AgentChatSessionUsageStep) {
-			model ??= step.model?.modelId
+			const model = step.response?.modelId ?? step.model?.modelId
+			if (model) models.add(model)
 			if (step.usage) addUsage(usage, step.usage)
-			if (step.usage?.raw) rawUsages.push(step.usage.raw)
+			if (step.usage?.raw) {
+				rawUsages.push({
+					...(model ? { model } : {}),
+					usage: step.usage.raw,
+				})
+			}
+			if (!triage) {
+				for (const toolResult of step.toolResults ?? []) {
+					const result = toolResult as ToolResultLike
+					if (result.toolName !== 'loadSkill') continue
+					const decision = agentQueryTriageDecisionSchema.safeParse(result.output)
+					if (!decision.success) continue
+
+					triage = {
+						skillName: decision.data.name,
+						responseMode: decision.data.responseMode,
+						risk: decision.data.risk,
+						confidence: decision.data.confidence,
+						executionModel: decision.data.model,
+						toolScope: decision.data.toolScope,
+						reviewRequired: decision.data.reviewRequired,
+						classifierModel: model,
+						inputTokens: step.usage?.inputTokens ?? 0,
+						outputTokens: step.usage?.outputTokens ?? 0,
+						totalTokens: step.usage?.totalTokens ?? 0,
+						cacheReadInputTokens: step.usage?.inputTokenDetails.cacheReadTokens ?? 0,
+						cacheWriteInputTokens: step.usage?.inputTokenDetails.cacheWriteTokens ?? 0,
+						reasoningTokens: step.usage?.outputTokenDetails.reasoningTokens ?? 0,
+					}
+					break
+				}
+			}
 
 			for (const toolCall of step.toolCalls ?? []) {
 				const call = toolCall as ToolCallLike
@@ -58,6 +104,7 @@ export function createAgentChatSessionUsageCollector() {
 			}
 		},
 		snapshot(): AgentChatSessionUsageSnapshot {
+			const model = models.size > 0 ? [...models].join(', ') : undefined
 			const aiUsage: AgentChatAiUsage | undefined =
 				usage.callCount > 0 ? { model, ...usage } : undefined
 			if (aiUsage && rawUsages.length > 0) {
@@ -66,6 +113,7 @@ export function createAgentChatSessionUsageCollector() {
 
 			return {
 				aiUsage,
+				triage,
 				usedTools: toUsage(toolCounts),
 				usedSkills: toUsage(skillCounts),
 			}

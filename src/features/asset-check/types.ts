@@ -1,7 +1,7 @@
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import type { CheckSessionStatus } from '@/features/asset-check/domain/check-session'
 import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
-import type { CheckScenario } from '@/features/asset-check/scenarios'
+import type { CheckScenario } from '@/features/quality-rule/check-scenario'
 
 export type { CheckSessionSource } from '@/features/asset-check/domain/check-session'
 

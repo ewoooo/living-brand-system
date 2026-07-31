@@ -7,8 +7,13 @@
 ## 2. 어댑터 계약
 
 - agent는 `src/agents/agent-chat.agent.ts`(ToolLoopAgent)가 소유하고, 도구는 `src/agents/agent-chat-tools.agent.ts`에 등록합니다. 진입점은 `src/app/api/agent-chat/route.ts`입니다.
-- 첫 `loadSkill` 호출은 `name`, `responseMode`, `risk`, `confidence`를 제안합니다. 서버는 `quick/lookup`을 Sonnet 4.6, `research/action`을 Opus 5.0으로 결정합니다.
-- `risk: high`의 서버 결정은 Opus 5.0과 사람 검토를 강제하고 `action` 범위를 `read`로 낮춥니다. `confidence`는 결정에 보존만 하며 임계값 보정에는 사용하지 않습니다. 실제 model/tool 적용과 저장은 후속 연결합니다.
+- 첫 `loadSkill` 호출은 `name`, `responseMode`, `risk`, `confidence`를 제안합니다. 서버는 `quick/lookup`을 Sonnet 5, `research/action`을 Opus 5.0으로 결정합니다.
+- `risk: high`의 서버 결정은 Opus 5.0과 사람 검토를 강제하고 `action` 범위를 `read`로 낮춥니다. `confidence`는 결정에 보존만 하며 임계값 보정에는 사용하지 않습니다.
+- 확정된 triage와 최초 분류 단계의 모델·token 사용량은 `agent-chat-sessions.triage`에 저장합니다. 분류 전에 실패한 세션에는 triage가 없을 수 있습니다.
+- Skill별 도구 허용 목록은 서버가 소유하며, triage의 `none/read/action` 범위와 교집합으로 결정합니다. 등록되지 않은 Skill은 어떤 도구도 허용하지 않습니다.
+- 첫 단계의 기본 모델은 Sonnet 5이고, 이후 단계는 서버 결정에 따라 `claude-sonnet-5` 또는 `claude-opus-5`로 전환하며 허용된 도구만 AI SDK `activeTools`에 전달합니다.
+- 한 턴에 여러 모델을 사용하면 실행 기록의 `model`에 사용 순서대로 중복 없이 남기고, `rawUsage.steps`에는 단계별 모델과 provider usage를 함께 저장합니다.
+- 실제 API 경계는 `scripts/smoke-agent-chat.ts`로 확인합니다. 실행 중인 앱과 동일한 DB를 `PAYLOAD_DB_PUSH=false`로 연결하고 인증 쿠키를 `AGENT_CHAT_SMOKE_COOKIE`에 전달합니다. 특정 케이스만 확인하려면 `AGENT_CHAT_SMOKE_CASE`에 `quick`, `lookup`, `research`, `action`, `high-risk-action` 중 하나를 지정합니다.
 - 새 Feature를 이 표면으로 노출하려면: 코어 service를 감싸는 tool을 정의(입력 스키마 + 코어 호출) → 도구 목록에 등록. agent가 언제 그 도구를 고를지는 도구 설명과 skill로 유도합니다.
 - 도구는 코어 service를 호출만 하며 로직을 중복 구현하지 않습니다.
 

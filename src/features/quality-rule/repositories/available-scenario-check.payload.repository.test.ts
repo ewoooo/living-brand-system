@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { findPublishedScenarioCheckRecords } from './available-scenario-check.payload.repository'
 
 describe('findPublishedScenarioCheckRecords', () => {
-	it('published Rule을 Service용 DTO로 변환한다', async () => {
+	it('published Rule을 시나리오 편집용 DTO로 변환한다', async () => {
 		const find = vi.fn().mockResolvedValue({
 			docs: [
 				{

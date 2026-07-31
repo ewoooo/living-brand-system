@@ -3,11 +3,6 @@ import { getPayload } from 'payload'
 import { DEFAULT_LOCALE, FALLBACK_LOCALE } from '@/lib/locale'
 import type { Template } from '@/payload-types'
 
-type AgentTemplateCheckPlacement = {
-	body?: null | string
-	checkKey?: null | string
-}
-
 export type AgentTemplateDocument = Pick<
 	Template,
 	| 'description'
@@ -19,9 +14,7 @@ export type AgentTemplateDocument = Pick<
 	| 'printPpi'
 	| 'updatedAt'
 	| 'width'
-> & {
-	templateChecks?: AgentTemplateCheckPlacement[] | null
-}
+>
 
 /** 두 조회가 공유하는 published 템플릿 질의 기본값 — user 컨텍스트로 access를 강제한다. */
 function publishedTemplateQuery(user: unknown) {
@@ -44,7 +37,6 @@ function publishedTemplateQuery(user: unknown) {
 			height: true,
 			printPpi: true,
 			updatedAt: true,
-			templateChecks: true,
 		},
 	} as const
 }

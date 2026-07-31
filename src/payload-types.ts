@@ -450,7 +450,7 @@ export interface Rule {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Guideline Check를 실행할 도구와 호출 계약입니다.
+ * Rule을 실행할 도구와 호출 계약입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "rule-checkers".
@@ -1530,22 +1530,6 @@ export interface Template {
    */
   category: number | TemplateCategory;
   /**
-   * Agent가 이 템플릿으로 이미지를 만들 때 함께 참고할 Check입니다.
-   */
-  templateChecks?:
-    | {
-        /**
-         * published 가이드라인 checks[]의 key를 입력합니다.
-         */
-        checkKey: string;
-        /**
-         * 이 템플릿에서 해당 Check를 적용할 때 Agent가 참고할 지침입니다.
-         */
-        body: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
    * baseHtml(Figma 원본) + overrides(앱 편집)의 합성 결과입니다. 워크스페이스 편집·재import 시 자동 갱신됩니다.
    */
   html?: string | null;
@@ -1845,6 +1829,25 @@ export interface AgentChatSession {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Agent가 제안하고 서버가 확정한 분류와 최초 분류 단계 사용량입니다.
+   */
+  triage?: {
+    skillName?: string | null;
+    responseMode?: ('quick' | 'lookup' | 'research' | 'action') | null;
+    risk?: ('low' | 'high') | null;
+    confidence?: number | null;
+    executionModel?: ('sonnet-5' | 'opus-5.0') | null;
+    toolScope?: ('none' | 'read' | 'action') | null;
+    reviewRequired?: boolean | null;
+    classifierModel?: string | null;
+    inputTokens?: number | null;
+    outputTokens?: number | null;
+    totalTokens?: number | null;
+    cacheReadInputTokens?: number | null;
+    cacheWriteInputTokens?: number | null;
+    reasoningTokens?: number | null;
+  };
   /**
    * Agent 채팅 비용 분석에 쓰는 모델과 토큰 사용량입니다.
    */
@@ -3026,13 +3029,6 @@ export interface TemplatesSelect<T extends boolean = true> {
   height?: T;
   printPpi?: T;
   category?: T;
-  templateChecks?:
-    | T
-    | {
-        checkKey?: T;
-        body?: T;
-        id?: T;
-      };
   html?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -3242,6 +3238,24 @@ export interface AgentChatSessionsSelect<T extends boolean = true> {
         name?: T;
         callCount?: T;
         id?: T;
+      };
+  triage?:
+    | T
+    | {
+        skillName?: T;
+        responseMode?: T;
+        risk?: T;
+        confidence?: T;
+        executionModel?: T;
+        toolScope?: T;
+        reviewRequired?: T;
+        classifierModel?: T;
+        inputTokens?: T;
+        outputTokens?: T;
+        totalTokens?: T;
+        cacheReadInputTokens?: T;
+        cacheWriteInputTokens?: T;
+        reasoningTokens?: T;
       };
   aiUsage?:
     | T

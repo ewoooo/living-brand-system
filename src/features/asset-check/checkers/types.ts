@@ -6,6 +6,7 @@
  */
 
 import type { CheckImageMediaType } from '@/features/asset-check/utils/image-format'
+import type { RuleExecutor } from '@/features/quality-rule/rule-executor'
 import type { Rgb, Swatch } from './palette-match'
 
 /** 기준(expected) 대비 측정값(actual)을 분리해 실은 구조화 필드. */
@@ -15,7 +16,7 @@ export interface CheckMetric {
 }
 
 export type CheckStatus = 'pass' | 'ok' | 'advisory' | 'needs_review' | 'fail'
-export type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
+export type CheckExecutor = RuleExecutor
 export type CheckFactValue = string | number | boolean | string[]
 export type MeasurementValue = string | number | boolean
 export type CriterionExpected = MeasurementValue | number[] | string[]

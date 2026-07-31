@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getGuidelineRuleCheckerSummary } from '../repositories/guideline-document.payload.repository'
-import { validateGuidelineCheckOptions } from './validate-guideline-check-options'
+import { getRuleCheckerSummary } from './repositories/rule-checker.payload.repository'
+import { validateRuleOptions } from './validate-rule-options'
 
-vi.mock('../repositories/guideline-document.payload.repository', () => ({
-	getGuidelineRuleCheckerSummary: vi.fn(),
+vi.mock('./repositories/rule-checker.payload.repository', () => ({
+	getRuleCheckerSummary: vi.fn(),
 }))
 
-const getChecker = vi.mocked(getGuidelineRuleCheckerSummary)
+const getChecker = vi.mocked(getRuleCheckerSummary)
 
-describe('validateGuidelineCheckOptions', () => {
+describe('validateRuleOptions', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 	})
@@ -18,7 +18,7 @@ describe('validateGuidelineCheckOptions', () => {
 		const req = {} as never
 
 		await expect(
-			validateGuidelineCheckOptions(null, {
+			validateRuleOptions(null, {
 				req,
 				siblingData: { executor: 'deterministic', checker: 7 },
 			} as never),
