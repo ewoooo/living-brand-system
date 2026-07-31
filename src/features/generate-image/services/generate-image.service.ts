@@ -5,7 +5,6 @@ import {
 	type ResolvedCameraControl,
 	resolveCameraControl,
 } from '@/features/generate-image/camera-control'
-import { decodeImageDataUri } from '@/features/generate-image/image-data-uri'
 import type { ImageModelPreset } from '@/features/generate-image/image-model'
 import {
 	type ImageAspectRatio,
@@ -15,6 +14,7 @@ import {
 } from '@/features/generate-image/image-size'
 import { devGenerateImages } from '@/features/generate-image/repositories/dev-image-generation.rest.repository'
 import {
+	loadGeneratedImage,
 	type StoredGeneratedImage,
 	storeGeneratedImages,
 } from '@/features/generate-image/repositories/generated-image.payload.repository'
@@ -52,7 +52,7 @@ export class ImageProfileNotFoundError extends Error {
 	}
 }
 
-/** 카메라 조정 경계가 외부 모델 호출 전에 손상되거나 위장된 시드 이미지를 거부할 때 사용한다. */
+/** 카메라 조정 경계가 조회할 수 없는 생성 이미지 참조를 거부할 때 사용한다. */
 export class InvalidSeedImageError extends Error {
 	constructor() {
 		super('Seed image data is invalid.')
@@ -68,7 +68,6 @@ interface GeneratedImages {
 	prompt: string
 	profileId?: number
 	profileName?: string
-	seedImages?: string[]
 	model: string
 	provider: 'google' | 'openai' | 'pollinations'
 }
@@ -153,19 +152,28 @@ export async function adjustImageCamera({
 	basePrompt,
 	camera,
 	count,
+	generatedImageId,
 	profileId,
-	seedImage,
+	requestUrl,
 	user,
 }: {
 	basePrompt: string
 	camera: CameraControlInput
 	count: number
+	generatedImageId: number
 	profileId: number
-	seedImage: string
+	requestUrl: string
 	user: unknown
 }): Promise<CameraAdjustedImages> {
 	const profile = await findPublishedImageProfile(user, profileId)
 	if (!profile) throw new ImageProfileNotFoundError()
+	const seedImage = await loadGeneratedImage({
+		generatedImageId,
+		profileId,
+		requestUrl,
+		user,
+	})
+	if (!seedImage) throw new InvalidSeedImageError()
 
 	const resolved = resolveCameraControl(camera)
 	const prompt = composeCameraAdjustmentPrompt(basePrompt, resolved)
@@ -177,7 +185,7 @@ export async function adjustImageCamera({
 		imageSize: profile.imageSize,
 		profileId,
 		profileName: profile.name,
-		seedImage: await decodeSeedImage(seedImage),
+		seedImage,
 	})
 	const stored = await storeProfileGeneration(result, {
 		inputPrompt: basePrompt,
@@ -295,15 +303,6 @@ async function storeProfileGeneration(
 		...generated,
 		generatedImages,
 		images: generatedImages.map(({ url }) => url),
-		seedImages: generated.images,
-	}
-}
-
-async function decodeSeedImage(dataUri: string): Promise<Uint8Array> {
-	try {
-		return (await decodeImageDataUri(dataUri)).data
-	} catch {
-		throw new InvalidSeedImageError()
 	}
 }
 

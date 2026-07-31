@@ -2,13 +2,72 @@ import { randomUUID } from 'node:crypto'
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import type { ImageProfile } from '@/payload-types'
-import { decodeImageDataUri } from '../image-data-uri'
+import { decodeImageDataUri, MAX_IMAGE_BYTES, validateRasterImage } from '../image-data-uri'
 
 export interface StoredGeneratedImage {
 	collection: 'generated-images'
 	createdAt: string
 	id: number
 	url: string
+}
+
+/**
+ * 카메라 조정에 사용할 published Generated Image를 사용자 권한으로 찾고 원본 파일을 읽는다.
+ * Payload 조회와 저장 URL 다운로드 I/O는 이 repository가 소유한다.
+ */
+export async function loadGeneratedImage(input: {
+	generatedImageId: number
+	profileId: number
+	requestUrl: string
+	user: unknown
+}): Promise<Buffer | null> {
+	const payload = await getPayload({ config })
+	const found = await payload.find({
+		collection: 'generated-images',
+		depth: 0,
+		draft: false,
+		limit: 1,
+		overrideAccess: false,
+		select: { filesize: true, url: true },
+		user: input.user as never,
+		where: {
+			and: [
+				{ id: { equals: input.generatedImageId } },
+				{ scenario: { equals: input.profileId } },
+				{ _status: { equals: 'published' } },
+			],
+		},
+	})
+	const image = found.docs[0]
+	if (
+		!image?.url ||
+		typeof image.filesize !== 'number' ||
+		image.filesize <= 0 ||
+		image.filesize > MAX_IMAGE_BYTES
+	) {
+		return null
+	}
+
+	const response = await fetch(new URL(image.url, input.requestUrl))
+	if (!response.ok || !response.body) throw new Error('Stored generated image is unavailable.')
+
+	const chunks: Uint8Array[] = []
+	let size = 0
+	const reader = response.body.getReader()
+	while (true) {
+		const { done, value } = await reader.read()
+		if (done) break
+		size += value.byteLength
+		if (size > MAX_IMAGE_BYTES) {
+			await reader.cancel()
+			throw new Error('Stored generated image is too large.')
+		}
+		chunks.push(value)
+	}
+
+	return (
+		await validateRasterImage(Buffer.concat(chunks, size), response.headers.get('content-type'))
+	).data
 }
 
 /**

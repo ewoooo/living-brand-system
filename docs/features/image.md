@@ -38,7 +38,7 @@ Manager는 Payload Admin의 `이미지 프로파일` 컬렉션에서 이미지 �
 - **생성 테스트**: 현재 Admin 폼 값으로 정규화와 이미지 생성을 실행합니다. 테스트 화면에서는 유저 프롬프트 후보 정규화를 끌 수 있으며, 이때도 시스템 프롬프트와 `subject` 합성은 유지됩니다. 미저장 값도 테스트할 수 있고 결과는 저장하지 않습니다.
 - **Admin 생성 API**: 프로파일 생성 테스트는 모델과 출력 계약을 모두 명시하고, 템플릿의 AI 배경 생성은 서버 기본 계약을 사용합니다. 두 요청 모두 Manager 전용 `POST /api/admin/generate-image`를 사용합니다.
 
-프로파일 기반 응답의 `images`는 저장 URL이며 `generatedImages`에는 각 문서의 `id`, `url`, `createdAt`이 포함됩니다. 카메라 조정 호환을 위한 원본 data URI는 `seedImages`로만 반환합니다.
+프로파일 기반 응답의 `images`는 저장 URL이며 `generatedImages`에는 각 문서의 `id`, `url`, `createdAt`이 포함됩니다. 카메라 조정 요청은 원본 data URI를 재전송하지 않고 `generatedImageId`를 전달하며, 서버가 같은 published 프로파일의 `generated-images` 원본을 조회·검증해 사용합니다.
 
 Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listImageProfiles`로 사용 가능한 프로파일을 확인한 뒤 `generateImage`에 `profileId`를 전달합니다. 자유 생성은 프로파일 없이 기존 원문 생성을 유지합니다.
 

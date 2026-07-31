@@ -57,7 +57,6 @@ export interface ImageGenerationResult {
 	prompt: string
 	profileId?: number
 	profileName?: string
-	seedImages?: string[]
 }
 
 export interface CameraAdjustmentResult extends ImageGenerationResult {

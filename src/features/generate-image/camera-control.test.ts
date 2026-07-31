@@ -38,8 +38,8 @@ describe('camera adjustment contract', () => {
 		const result = cameraAdjustmentRequestSchema.parse({
 			basePrompt: '{"subject":"유조선"}',
 			camera: { azimuthDeg: 0, elevationDeg: 0 },
+			generatedImageId: 8,
 			profileId: 5,
-			seedImage: 'data:image/png;base64,iVBORw0KGgo=',
 		})
 
 		expect(result.count).toBe(1)
@@ -71,15 +71,15 @@ describe('camera adjustment contract', () => {
 		{ camera: { azimuthDeg: 181, elevationDeg: 0 } },
 		{ camera: { azimuthDeg: 0, elevationDeg: 91 } },
 		{ basePrompt: 'not json' },
-		{ seedImage: 'data:image/svg+xml;base64,PHN2Zz4=' },
+		{ generatedImageId: 0 },
 	])('계약 밖의 요청을 거부한다: %o', (patch) => {
 		expect(
 			cameraAdjustmentRequestSchema.safeParse({
 				basePrompt: '{"subject":"유조선"}',
 				camera: { azimuthDeg: 0, elevationDeg: 0 },
 				count: 1,
+				generatedImageId: 8,
 				profileId: 5,
-				seedImage: 'data:image/png;base64,iVBORw0KGgo=',
 				...patch,
 			}).success,
 		).toBe(false)

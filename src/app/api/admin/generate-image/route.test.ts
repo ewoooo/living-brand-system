@@ -59,7 +59,6 @@ describe('POST /api/admin/generate-image', () => {
 			model: 'gpt-image-2',
 			prompt: 'sample',
 			provider: 'openai',
-			seedImages: ['data:image/png;base64,result'],
 		})
 		mocks.generateImagesWithSettings.mockResolvedValue({
 			aspectRatio: '16:9',

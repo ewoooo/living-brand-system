@@ -3,8 +3,20 @@ import { createElement } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('./image-camera-presets', () => ({
-	ImageCameraPresets: ({ profileId, seedImage }: { profileId: number; seedImage: string }) =>
-		createElement('div', { 'data-testid': 'camera-presets' }, `${profileId}:${seedImage}`),
+	ImageCameraPresets: ({
+		generatedImageId,
+		profileId,
+		seedImage,
+	}: {
+		generatedImageId: number
+		profileId: number
+		seedImage: string
+	}) =>
+		createElement(
+			'div',
+			{ 'data-testid': 'camera-presets' },
+			`${profileId}:${generatedImageId}:${seedImage}`,
+		),
 }))
 
 import { ImageGenerationResults } from './image-generation-results'
@@ -19,12 +31,19 @@ describe('ImageGenerationResults', () => {
 			onSelect,
 			requested: 1,
 			result: {
+				generatedImages: [
+					{
+						collection: 'generated-images' as const,
+						createdAt: '2026-07-31T03:00:00.000Z',
+						id: 8,
+						url: '/api/generated-images/file/generated.png',
+					},
+				],
 				images: ['/api/generated-images/file/generated.png'],
 				model: 'gemini-3.1-flash-lite-image',
 				profileId: 5,
 				profileName: 'Technical Illustration',
 				prompt: '{"subject":"유조선"}',
-				seedImages: ['data:image/png;base64,seed'],
 			},
 			selected: null,
 		}
@@ -36,7 +55,7 @@ describe('ImageGenerationResults', () => {
 
 		view.rerender(createElement(ImageGenerationResults, { ...props, selected: 0 }))
 		expect(screen.getByTestId('camera-presets')).toHaveTextContent(
-			'5:data:image/png;base64,seed',
+			'5:8:/api/generated-images/file/generated.png',
 		)
 	})
 })

@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
 	devGenerateImages: vi.fn(),
 	findPublishedImageProfile: vi.fn(),
 	generateBrandImages: vi.fn(),
+	loadGeneratedImage: vi.fn(),
 	normalizeImageProfilePrompt: vi.fn(),
 	storeGeneratedImages: vi.fn(),
 }))
@@ -28,6 +29,7 @@ vi.mock('@/features/generate-image/repositories/image-profile.payload.repository
 	findPublishedImageProfile: mocks.findPublishedImageProfile,
 }))
 vi.mock('@/features/generate-image/repositories/generated-image.payload.repository', () => ({
+	loadGeneratedImage: mocks.loadGeneratedImage,
 	storeGeneratedImages: mocks.storeGeneratedImages,
 }))
 vi.mock('@/features/generate-image/services/normalize-image-profile-prompt.service', () => ({
@@ -52,6 +54,7 @@ describe('generateImages', () => {
 		mocks.env.GEMINI_API_KEY = undefined
 		mocks.env.OPENAI_API_KEY = undefined
 		mocks.findPublishedImageProfile.mockResolvedValue(null)
+		mocks.loadGeneratedImage.mockResolvedValue(null)
 		mocks.storeGeneratedImages.mockResolvedValue([
 			{
 				collection: 'generated-images',
@@ -174,7 +177,6 @@ describe('generateImages', () => {
 			profileId: 5,
 			profileName: 'Technical Illustration',
 			provider: 'openai',
-			seedImages: ['data:image/png;base64,profile'],
 		})
 		expect(mocks.findPublishedImageProfile).toHaveBeenCalledWith(user, 5)
 		expect(mocks.normalizeImageProfilePrompt).toHaveBeenCalledWith({
@@ -335,6 +337,9 @@ describe('generateImages', () => {
 
 	it('시드 이미지와 해석된 카메라 프롬프트로 시점을 조정한다', async () => {
 		mocks.env.GEMINI_API_KEY = 'key'
+		mocks.loadGeneratedImage.mockResolvedValue(
+			Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
+		)
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,
 			name: 'Technical Illustration',
@@ -355,8 +360,9 @@ describe('generateImages', () => {
 			}),
 			camera: { azimuthDeg: 45, elevationDeg: 20 },
 			count: 1,
+			generatedImageId: 8,
 			profileId: 5,
-			seedImage: ONE_PIXEL_PNG,
+			requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
 			user: { id: 1 },
 		})
 
@@ -372,9 +378,15 @@ describe('generateImages', () => {
 		expect([...generationInput.seedImage].slice(0, 8)).toEqual([
 			0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
 		])
+		expect(mocks.loadGeneratedImage).toHaveBeenCalledWith({
+			generatedImageId: 8,
+			profileId: 5,
+			requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
+			user: { id: 1 },
+		})
 	})
 
-	it('MIME과 실제 시그니처가 다른 시드 이미지를 거부한다', async () => {
+	it('조회할 수 없는 생성 이미지 ID를 거부한다', async () => {
 		mocks.env.GEMINI_API_KEY = 'key'
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,
@@ -389,8 +401,9 @@ describe('generateImages', () => {
 				basePrompt: '{"subject":"유조선"}',
 				camera: { azimuthDeg: 0, elevationDeg: 0 },
 				count: 1,
+				generatedImageId: 404,
 				profileId: 5,
-				seedImage: 'data:image/png;base64,aGVsbG8=',
+				requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
 				user: { id: 1 },
 			}),
 		).rejects.toBeInstanceOf(InvalidSeedImageError)
@@ -400,6 +413,9 @@ describe('generateImages', () => {
 	it('시드 이미지 편집은 Pollinations 개발 폴백을 사용하지 않는다', async () => {
 		mocks.env.NODE_ENV = 'development'
 		mocks.env.IMAGE_DEV_FALLBACK = 'true'
+		mocks.loadGeneratedImage.mockResolvedValue(
+			Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
+		)
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,
 			name: 'Technical Illustration',
@@ -413,8 +429,9 @@ describe('generateImages', () => {
 				basePrompt: '{"subject":"유조선"}',
 				camera: { azimuthDeg: 0, elevationDeg: 0 },
 				count: 1,
+				generatedImageId: 8,
 				profileId: 5,
-				seedImage: ONE_PIXEL_PNG,
+				requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
 				user: { id: 1 },
 			}),
 		).rejects.toBeInstanceOf(ImageGenerationUnavailableError)

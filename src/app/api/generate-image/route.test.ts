@@ -61,7 +61,6 @@ describe('POST /api/generate-image', () => {
 			model: 'gpt-image-2',
 			prompt: 'sample',
 			provider: 'openai',
-			seedImages: ['data:image/png;base64,result'],
 		})
 	})
 
@@ -120,7 +119,6 @@ describe('POST /api/generate-image', () => {
 			imageSize: '1K',
 			model: 'gpt-image-2',
 			prompt: 'sample',
-			seedImages: ['data:image/png;base64,result'],
 		})
 		expect(mocks.generateImages).toHaveBeenCalledWith({
 			userInput: 'sample',

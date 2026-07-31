@@ -20,6 +20,7 @@ export function ImageGenerationResults({
 	selected: number | null
 }) {
 	const images = result?.images ?? []
+	const generatedImages = result?.generatedImages ?? []
 
 	return (
 		<div className="flex h-full min-h-0 flex-col" aria-live="polite" aria-busy={loading}>
@@ -92,12 +93,13 @@ export function ImageGenerationResults({
 						</details>
 					</div>
 
-					{selected !== null && result.profileId ? (
+					{selected !== null && result.profileId && generatedImages[selected] ? (
 						<ImageCameraPresets
 							key={`${result.profileId}:${selected}:${images[selected]}`}
 							basePrompt={result.prompt}
+							generatedImageId={generatedImages[selected].id}
 							profileId={result.profileId}
-							seedImage={result.seedImages?.[selected] ?? images[selected]}
+							seedImage={images[selected]}
 						/>
 					) : (
 						<p className="font-body text-sm font-normal text-muted-foreground">
