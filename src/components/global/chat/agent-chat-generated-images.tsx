@@ -44,5 +44,7 @@ export function AgentChatGeneratedImages({
 }
 
 function imgExt(src: string) {
-	return src.slice(5, src.indexOf(';')).split('/')[1] || 'png'
+	return src.startsWith('data:image/')
+		? src.slice(11, src.indexOf(';')).replace('jpeg', 'jpg')
+		: new URL(src, window.location.href).pathname.split('.').pop() || 'png'
 }

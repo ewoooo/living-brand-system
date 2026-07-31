@@ -35,12 +35,12 @@
 
 | 상태 | 모델 |
 | --- | --- |
-| 현재 구현 | `GuidelineDocument`, `Rule`, `CheckSession`, `AgentChatSession`, `BehaviorEventLog` |
+| 현재 구현 | `GuidelineDocument`, `Rule`, `GeneratedImage`, `CheckSession`, `AgentChatSession`, `BehaviorEventLog` |
 | 계획 | `AssetGenerationSession`, `AssetGenerationInput`, `AssetGenerationOutput` |
 
 `CheckSession`은 업로드 이미지와 생성 이미지를 검사하는 품질 검수 애그리거트입니다.
 `AgentChatSession`은 대화, 도구 호출, 사용량을 기록하는 별도 운영 애그리거트이며 품질 검수 세션을 대신하지 않습니다.
-`AssetGenerationSession`은 향후 제작 사용량 추적에 필요할 때 도입합니다. 현재 제작 결과는 요청 범위에서만 다루며 세션이나 산출물 기록으로 저장하지 않습니다.
+`AssetGenerationSession`은 향후 제작 사용량 추적에 필요할 때 도입합니다. 현재 프로파일 기반 이미지 파일은 `GeneratedImage`로 저장하지만 제작 세션이나 범용 `AssetGenerationOutput`은 저장하지 않습니다.
 
 ### 상위 도메인 관계도
 

@@ -154,8 +154,8 @@ function AiTextForm({ rule, onApply }: { rule?: string; onApply: (text: string) 
 	)
 }
 
-// Popup 안에 뜨는 AI 이미지 생성 폼. 프레임 배경으로 얹는다. 생성 API는 base64 data URI를 반환한다.
-function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
+// Popup 안에 뜨는 AI 이미지 생성 폼. 프레임 배경으로 얹는다.
+function AiImageForm({ onApply }: { onApply: (image: { id: number; src: string }) => void }) {
 	const [prompt, setPrompt] = useState('')
 	const [loading, setLoading] = useState(false)
 	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
@@ -178,13 +178,13 @@ function AiImageForm({ onApply }: { onApply: (src: string) => void }) {
 		if (!trimmed || !profileId || loading) return
 		setLoading(true)
 		try {
-			const { images } = await requestAdminImageGeneration({
+			const result = await requestAdminImageGeneration({
 				prompt: trimmed,
 				count: 1,
 				profileId,
 			})
-			const src = images[0]
-			if (src) onApply(src)
+			const generated = result.generatedImages?.[0]
+			if (generated) onApply({ id: generated.id, src: generated.url })
 			else toast.error('이미지 생성 실패 — 잠시 후 다시 시도하세요.')
 		} catch {
 			toast.error('이미지 생성 실패 — 잠시 후 다시 시도하세요.')
@@ -572,7 +572,8 @@ export default function TemplateLayersField() {
 	}
 
 	const commitText = (text: string) => commitNodeConfig({ text })
-	const commitBackground = (src: string) => commitNodeConfig({ backgroundImage: src })
+	const commitBackground = ({ id, src }: { id: number; src: string }) =>
+		commitNodeConfig({ backgroundImage: src, generatedImageId: id })
 	return (
 		<div style={{ marginBottom: 'var(--base)' }}>
 			{/* 캔버스(가변폭·중앙정렬) + 레이어 목록(고정폭) */}
@@ -718,8 +719,8 @@ export default function TemplateLayersField() {
 							}
 							render={({ close }) => (
 								<AiImageForm
-									onApply={(src) => {
-										commitBackground(src)
+									onApply={(image) => {
+										commitBackground(image)
 										close()
 									}}
 								/>

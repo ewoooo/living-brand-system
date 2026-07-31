@@ -19,11 +19,12 @@ describe('ImageGenerationResults', () => {
 			onSelect,
 			requested: 1,
 			result: {
-				images: ['data:image/png;base64,seed'],
+				images: ['/api/generated-images/file/generated.png'],
 				model: 'gemini-3.1-flash-lite-image',
 				profileId: 5,
 				profileName: 'Technical Illustration',
 				prompt: '{"subject":"유조선"}',
+				seedImages: ['data:image/png;base64,seed'],
 			},
 			selected: null,
 		}

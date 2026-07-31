@@ -44,14 +44,31 @@ describe('POST /api/admin/generate-image', () => {
 			payload: { logger: mocks.logger },
 			user: { id: 1, role: 'manager' },
 		})
-		const result = {
-			images: ['data:image/png;base64,result'],
+		mocks.generateImages.mockResolvedValue({
+			aspectRatio: '1:1',
+			generatedImages: [
+				{
+					collection: 'generated-images',
+					createdAt: '2026-07-31T03:00:00.000Z',
+					id: 8,
+					url: '/api/generated-images/file/generated.png',
+				},
+			],
+			images: ['/api/generated-images/file/generated.png'],
+			imageSize: '1K',
 			model: 'gpt-image-2',
 			prompt: 'sample',
 			provider: 'openai',
-		}
-		mocks.generateImages.mockResolvedValue(result)
-		mocks.generateImagesWithSettings.mockResolvedValue(result)
+			seedImages: ['data:image/png;base64,result'],
+		})
+		mocks.generateImagesWithSettings.mockResolvedValue({
+			aspectRatio: '16:9',
+			images: ['data:image/png;base64,result'],
+			imageSize: '1K',
+			model: 'gemini-3.1-flash-lite-image',
+			prompt: 'sample',
+			provider: 'google',
+		})
 	})
 
 	it('worker 요청을 거부한다', async () => {
@@ -71,6 +88,10 @@ describe('POST /api/admin/generate-image', () => {
 		const response = await POST(imageRequest({ prompt: '  sample  ', count: 1, profileId: 5 }))
 
 		expect(response.status).toBe(200)
+		expect(await response.json()).toMatchObject({
+			generatedImages: [{ id: 8, url: '/api/generated-images/file/generated.png' }],
+			images: ['/api/generated-images/file/generated.png'],
+		})
 		expect(mocks.generateImages).toHaveBeenCalledWith({
 			userInput: 'sample',
 			count: 1,
@@ -92,6 +113,9 @@ describe('POST /api/admin/generate-image', () => {
 		)
 
 		expect(response.status).toBe(200)
+		expect(await response.json()).toMatchObject({
+			images: ['data:image/png;base64,result'],
+		})
 		expect(mocks.generateImagesWithSettings).toHaveBeenCalledWith({
 			userInput: 'a'.repeat(1_000),
 			count: 1,

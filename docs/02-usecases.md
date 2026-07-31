@@ -106,7 +106,7 @@ Creator가 사용하는 기준과 자원은 이 도메인에서 발행된 것만
 ### 5.2 제작 관리
 
 현재 제작 관리는 Creator가 발행된 Template과 Plugin을 사용해 요청 범위에서 결과를 생성합니다.
-`AssetGenerationSession`과 `AssetGenerationOutput`은 저장하지 않습니다.
+`AssetGenerationSession`과 `AssetGenerationOutput`은 저장하지 않습니다. 프로파일 기반 Image 결과 파일과 실행 조건만 별도 `GeneratedImage`로 저장합니다.
 검수 요청과 Agent/System 판정은 품질 검수가 담당합니다.
 
 #### 산출물 제작 기록(계획)

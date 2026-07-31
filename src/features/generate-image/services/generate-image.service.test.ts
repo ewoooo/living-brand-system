@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
 	findPublishedImageProfile: vi.fn(),
 	generateBrandImages: vi.fn(),
 	normalizeImageProfilePrompt: vi.fn(),
+	storeGeneratedImages: vi.fn(),
 }))
 
 const ONE_PIXEL_PNG =
@@ -25,6 +26,9 @@ vi.mock('@/features/generate-image/repositories/image-generation.ai.repository',
 }))
 vi.mock('@/features/generate-image/repositories/image-profile.payload.repository', () => ({
 	findPublishedImageProfile: mocks.findPublishedImageProfile,
+}))
+vi.mock('@/features/generate-image/repositories/generated-image.payload.repository', () => ({
+	storeGeneratedImages: mocks.storeGeneratedImages,
 }))
 vi.mock('@/features/generate-image/services/normalize-image-profile-prompt.service', () => ({
 	ImagePromptNormalizationUnavailableError: class extends Error {},
@@ -48,6 +52,14 @@ describe('generateImages', () => {
 		mocks.env.GEMINI_API_KEY = undefined
 		mocks.env.OPENAI_API_KEY = undefined
 		mocks.findPublishedImageProfile.mockResolvedValue(null)
+		mocks.storeGeneratedImages.mockResolvedValue([
+			{
+				collection: 'generated-images',
+				createdAt: '2026-07-31T03:00:00.000Z',
+				id: 8,
+				url: '/api/generated-images/file/generated.png',
+			},
+		])
 	})
 
 	it('fails closed when no image provider is configured', async () => {
@@ -142,7 +154,17 @@ describe('generateImages', () => {
 				count: 2,
 			}),
 		).resolves.toEqual({
-			images: ['data:image/png;base64,profile'],
+			aspectRatio: '3:2',
+			generatedImages: [
+				{
+					collection: 'generated-images',
+					createdAt: '2026-07-31T03:00:00.000Z',
+					id: 8,
+					url: '/api/generated-images/file/generated.png',
+				},
+			],
+			images: ['/api/generated-images/file/generated.png'],
+			imageSize: '2K',
 			model: 'gpt-image-2',
 			prompt: JSON.stringify({
 				style: 'minimalist',
@@ -152,6 +174,7 @@ describe('generateImages', () => {
 			profileId: 5,
 			profileName: 'Technical Illustration',
 			provider: 'openai',
+			seedImages: ['data:image/png;base64,profile'],
 		})
 		expect(mocks.findPublishedImageProfile).toHaveBeenCalledWith(user, 5)
 		expect(mocks.normalizeImageProfilePrompt).toHaveBeenCalledWith({
@@ -169,6 +192,23 @@ describe('generateImages', () => {
 			modelPreset: 'openai-gpt-image-2',
 			aspectRatio: '3:2',
 			imageSize: '2K',
+		})
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith({
+			createdBy: 1,
+			effectivePrompt: JSON.stringify({
+				style: 'minimalist',
+				mood: 'organic',
+				subject: '파란 세럼병',
+			}),
+			images: ['data:image/png;base64,profile'],
+			inputPrompt: '파란 세럼병',
+			model: 'gpt-image-2',
+			profile: expect.objectContaining({
+				aspectRatio: '3:2',
+				id: 5,
+				imageSize: '2K',
+				name: 'Technical Illustration',
+			}),
 		})
 	})
 

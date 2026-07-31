@@ -60,12 +60,23 @@ describe('POST /api/generate-image/camera-adjustment', () => {
 				input: validBody.camera,
 				resolved: { azimuth: 'front-right', elevation: 'elevated' },
 			},
-			images: ['data:image/png;base64,result'],
+			aspectRatio: '16:9',
+			generatedImages: [
+				{
+					collection: 'generated-images',
+					createdAt: '2026-07-31T03:00:00.000Z',
+					id: 9,
+					url: '/api/generated-images/file/adjusted.png',
+				},
+			],
+			images: ['/api/generated-images/file/adjusted.png'],
+			imageSize: '1K',
 			model: 'gemini-3.1-flash-lite-image',
 			profileId: 5,
 			profileName: 'Technical Illustration',
 			prompt: '{"camera":"front-right three-quarter view"}',
 			provider: 'google',
+			seedImages: ['data:image/png;base64,result'],
 		})
 	})
 
@@ -115,11 +126,22 @@ describe('POST /api/generate-image/camera-adjustment', () => {
 				input: validBody.camera,
 				resolved: { azimuth: 'front-right', elevation: 'elevated' },
 			},
-			images: ['data:image/png;base64,result'],
+			aspectRatio: '16:9',
+			generatedImages: [
+				{
+					collection: 'generated-images',
+					createdAt: '2026-07-31T03:00:00.000Z',
+					id: 9,
+					url: '/api/generated-images/file/adjusted.png',
+				},
+			],
+			images: ['/api/generated-images/file/adjusted.png'],
+			imageSize: '1K',
 			model: 'gemini-3.1-flash-lite-image',
 			profileId: 5,
 			profileName: 'Technical Illustration',
 			prompt: '{"camera":"front-right three-quarter view"}',
+			seedImages: ['data:image/png;base64,result'],
 		})
 		expect(mocks.adjustImageCamera).toHaveBeenCalledWith({
 			...validBody,

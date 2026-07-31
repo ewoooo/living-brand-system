@@ -97,7 +97,7 @@ export function ImageGenerationResults({
 							key={`${result.profileId}:${selected}:${images[selected]}`}
 							basePrompt={result.prompt}
 							profileId={result.profileId}
-							seedImage={images[selected]}
+							seedImage={result.seedImages?.[selected] ?? images[selected]}
 						/>
 					) : (
 						<p className="font-body text-sm font-normal text-muted-foreground">
@@ -125,9 +125,11 @@ function ImageGenerationSkeleton({ count }: { count: number }) {
 	)
 }
 
-/** data URI 이미지를 파일로 저장한다 (data:image/…;base64,… 에서 확장자 추출). */
+/** 생성 이미지 URL 또는 data URI를 파일로 저장한다. */
 function downloadImage(src: string, index: number) {
-	const ext = src.slice(5, src.indexOf(';')).split('/')[1] || 'png'
+	const ext = src.startsWith('data:image/')
+		? src.slice(11, src.indexOf(';')).replace('jpeg', 'jpg')
+		: new URL(src, window.location.href).pathname.split('.').pop() || 'png'
 	const anchor = document.createElement('a')
 	anchor.href = src
 	anchor.download = `essenherb-image-${index + 1}.${ext}`

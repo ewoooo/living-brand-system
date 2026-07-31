@@ -28,6 +28,7 @@ import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
 import { CheckScenarios } from './collections/CheckScenarios'
 import { CheckSessions } from './collections/CheckSessions'
+import { GeneratedImages } from './collections/GeneratedImages'
 import { GuidelineDocuments } from './collections/GuidelineDocuments'
 import { ImageProfiles } from './collections/ImageProfiles'
 import { Plugins } from './collections/Plugins'
@@ -125,6 +126,7 @@ export default buildConfig({
 		BrandIcons,
 		ApplicationImages,
 		ImageProfiles,
+		GeneratedImages,
 		Templates,
 		TemplateCategories,
 		TemplateAssets,
@@ -275,6 +277,7 @@ export default buildConfig({
 				'brand-typefaces': true,
 				'brand-icons': true,
 				'application-images': true,
+				'generated-images': true,
 				'template-assets': true,
 			},
 			bucket: env.S3_BUCKET || '',
