@@ -8,6 +8,7 @@ import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/c
 import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/component'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
+import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
 import { LogoClearSpaceWidget } from '@/features/guideline/widgets/logo-clear-space/component'
@@ -45,6 +46,8 @@ function renderWidget(child: Child): ReactNode {
 			return <IconGridWidget />
 		case 'imageGridWidget':
 			return <ImageGridWidget />
+		case 'incorrectUsageWidget':
+			return <IncorrectUsageWidget />
 		case 'layoutGridWidget':
 			return <LayoutGridWidget />
 		case 'layoutGridOverlayWidget':

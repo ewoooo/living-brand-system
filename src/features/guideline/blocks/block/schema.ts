@@ -7,6 +7,7 @@ import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/s
 import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/schema'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/schema'
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/schema'
+import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/schema'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/schema'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/schema'
 import { LogoClearSpaceWidget } from '@/features/guideline/widgets/logo-clear-space/schema'
@@ -97,6 +98,7 @@ export const LayoutBlock: Block = {
 				GlyphGridWidget,
 				IconGridWidget,
 				ImageGridWidget,
+				IncorrectUsageWidget,
 				LayoutGridWidget,
 				LayoutGridOverlayWidget,
 				LogoClearSpaceWidget,

@@ -867,6 +867,7 @@ export interface LayoutBlock {
         | GlyphGridWidget
         | IconGridWidget
         | ImageGridWidget
+        | IncorrectUsageWidget
         | LayoutGridWidget
         | LayoutGridOverlayWidget
         | LogoClearSpaceWidget
@@ -962,6 +963,15 @@ export interface ImageGridWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'imageGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "IncorrectUsageWidget".
+ */
+export interface IncorrectUsageWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'incorrectUsageWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2569,6 +2579,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         glyphGridWidget?: T | GlyphGridWidgetSelect<T>;
         iconGridWidget?: T | IconGridWidgetSelect<T>;
         imageGridWidget?: T | ImageGridWidgetSelect<T>;
+        incorrectUsageWidget?: T | IncorrectUsageWidgetSelect<T>;
         layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
         layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
         logoClearSpaceWidget?: T | LogoClearSpaceWidgetSelect<T>;
@@ -2646,6 +2657,14 @@ export interface IconGridWidgetSelect<T extends boolean = true> {
  * via the `definition` "ImageGridWidget_select".
  */
 export interface ImageGridWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "IncorrectUsageWidget_select".
+ */
+export interface IncorrectUsageWidgetSelect<T extends boolean = true> {
   id?: T;
   blockName?: T;
 }
