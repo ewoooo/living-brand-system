@@ -16,7 +16,8 @@ const FOOTER_LINK_GROUPS = [
 		links: [
 			{ href: routes.studio.root, label: 'Overview' },
 			{ href: routes.studio.template, label: 'Templates' },
-			{ href: routes.studio.generate, label: 'Generate' },
+			{ href: routes.studio.generateImage, label: 'Image' },
+			{ href: routes.studio.generateGraphic, label: 'Graphic' },
 			{ href: routes.studio.review, label: 'Review' },
 		],
 	},

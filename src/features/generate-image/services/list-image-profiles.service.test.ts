@@ -18,7 +18,7 @@ describe('getImageProfileNavigation', () => {
 				id: 1,
 				name: 'Illustration',
 				slug: 'illustration',
-				href: '/studio/generate/illustration',
+				href: '/studio/generate/image/illustration',
 			},
 		])
 	})

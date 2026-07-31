@@ -5,7 +5,8 @@ export const routes = {
 	studio: {
 		examples: '/studio/examples',
 		generate: '/studio/generate',
-		generateImage: '/studio/generate#image',
+		generateGraphic: '/studio/generate/graphic',
+		generateImage: '/studio/generate/image',
 		review: '/studio/review',
 		root: '/studio',
 		template: '/studio/template',
@@ -21,7 +22,7 @@ export function getStudioTemplateRoute(categorySlug: string, templateId: number)
 }
 
 export function getStudioGenerateProfileRoute(profileSlug: string) {
-	return `${routes.studio.generate}/${profileSlug}`
+	return `${routes.studio.generateImage}/${profileSlug}`
 }
 
 export const legacyPageRedirects = [
@@ -32,7 +33,7 @@ export const legacyPageRedirects = [
 	},
 	{
 		source: '/generate',
-		destination: routes.studio.generate,
+		destination: routes.studio.generateImage,
 		permanent: true,
 	},
 	{

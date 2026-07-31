@@ -33,6 +33,7 @@
 	},
 	"dependencies": {
 		"@ai-sdk/anthropic": "^4.0.0",
+		"@ai-sdk/google": "^4.0.21",
 		"@ai-sdk/openai": "^4.0.4",
 		"@ai-sdk/react": "^4.0.0",
 		"@carbon/icons-react": "^11.82.0",
@@ -62,17 +63,20 @@
 		"html-to-image": "^1.11.13",
 		"htmlparser2": "^10.0.0",
 		"motion": "^12.42.0",
-		"next": "16.2.9",
+		"next": "16.2.11",
 		"next-themes": "^0.4.6",
+		"p5": "1.11.10",
 		"payload": "3.85.1",
 		"payload-better-editor": "^1.3.0",
+		"pdf-lib": "^1.17.1",
 		"radix-ui": "^1.6.0",
 		"react": "19.2.7",
 		"react-dom": "19.2.7",
-		"sharp": "0.34.2",
+		"sharp": "0.35.0",
 		"streamdown": "^2.5.0",
 		"tailwind-merge": "^3.6.0",
 		"tailwindcss": "^4.3.1",
+		"three": "0.185.1",
 		"zod": "^4.4.3"
 	},
 	"devDependencies": {
@@ -83,8 +87,10 @@
 		"@testing-library/user-event": "^14.6.1",
 		"@types/culori": "^4.0.1",
 		"@types/node": "22.19.9",
+		"@types/p5": "^1.7.7",
 		"@types/react": "19.2.17",
 		"@types/react-dom": "19.2.3",
+		"@types/three": "0.185.1",
 		"@vitejs/plugin-react": "4.5.2",
 		"jsdom": "28.0.0",
 		"shadcn": "^4.12.0",
@@ -100,17 +106,26 @@
 	},
 	"pnpm": {
 		"overrides": {
-			"dompurify@<3.4.11": "3.4.11",
+			"@hono/node-server@<2.0.10": "2.0.10",
+			"brace-expansion@>=3.0.0 <=5.0.7": "5.0.8",
+			"dompurify@<=3.4.11": "3.4.12",
 			"esbuild@<=0.24.2": "0.25.12",
 			"esbuild@>=0.27.3 <0.28.1": "0.28.1",
-			"postcss@<8.5.10": "8.5.15",
+			"fast-uri@>=3.0.0 <=3.1.3": "3.1.4",
+			"immutable@>=4.0.0 <4.3.9": "4.3.9",
+			"js-yaml@>=4.0.0 <4.3.0": "4.3.0",
+			"postcss@<8.5.18": "8.5.18",
+			"sharp@<0.35.0": "0.35.0",
 			"undici@<7.28.0": "7.28.0"
 		},
 		"onlyBuiltDependencies": [
 			"sharp",
 			"esbuild",
 			"unrs-resolver"
-		]
+		],
+		"patchedDependencies": {
+			"sharp@0.35.0": "patches/sharp@0.35.0.patch"
+		}
 	},
 	"packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be"
 }

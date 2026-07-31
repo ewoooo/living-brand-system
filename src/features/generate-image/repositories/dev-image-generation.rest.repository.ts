@@ -1,12 +1,10 @@
 // ⚠️ 임시 — development + IMAGE_DEV_FALLBACK=true에서만 쓰는 dev 폴백.
 // Pollinations FLUX(무료·키/가입 불필요). 키 오면 이 파일과 generate-image.service.ts의 폴백 분기를 통째로 삭제.
 // ⚠️ 프롬프트가 외부 무료 서비스로 전송된다 — 민감 입력 금지.
-import type { ImageSize } from '@/features/generate-image/image-size'
-
 /** Pollinations REST 후보를 병렬 요청해 성공분만 data URI로 반환한다. */
 export async function devGenerateImages(
 	prompt: string,
-	size: ImageSize,
+	size: `${number}x${number}`,
 	n: number,
 ): Promise<string[]> {
 	const [width, height] = size.split('x')

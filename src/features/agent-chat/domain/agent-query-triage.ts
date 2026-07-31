@@ -8,6 +8,8 @@ export const agentQueryTriageSchema = z.strictObject({
 })
 
 export type AgentQueryTriageProposal = z.infer<typeof agentQueryTriageSchema>
+export const agentSkillSelectionSchema = agentQueryTriageSchema.pick({ name: true })
+export type AgentSkillSelection = z.infer<typeof agentSkillSelectionSchema>
 
 const executionByMode = {
 	quick: { model: 'sonnet-5', toolScope: 'none' },
@@ -24,6 +26,10 @@ export const agentQueryTriageDecisionSchema = z.object({
 })
 
 export type AgentQueryTriageDecision = z.infer<typeof agentQueryTriageDecisionSchema>
+export type AgentQueryRoutingDecision = Pick<
+	AgentQueryTriageDecision,
+	'name' | 'model' | 'toolScope'
+>
 
 export function decideAgentQueryTriage(
 	proposal: AgentQueryTriageProposal,
@@ -37,5 +43,18 @@ export function decideAgentQueryTriage(
 		toolScope:
 			reviewRequired && execution.toolScope === 'action' ? 'read' : execution.toolScope,
 		reviewRequired,
+	}
+}
+
+export function decideAgentQueryRouting(
+	proposal: AgentSkillSelection | AgentQueryTriageProposal,
+	triageEnabled: boolean,
+): AgentQueryRoutingDecision | AgentQueryTriageDecision {
+	if (triageEnabled) return decideAgentQueryTriage(agentQueryTriageSchema.parse(proposal))
+
+	return {
+		name: proposal.name,
+		model: 'sonnet-5',
+		toolScope: 'action',
 	}
 }

@@ -1,0 +1,79 @@
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { type ButtonHTMLAttributes, createElement } from 'react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import ImageProfileTestPanel from './image-profile-test-panel'
+
+const mocks = vi.hoisted(() => ({
+	getData: vi.fn(),
+	getDataByPath: vi.fn(),
+	requestAdminImageGeneration: vi.fn(),
+}))
+
+vi.mock('@payloadcms/ui', () => ({
+	Button: ({ children, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) =>
+		createElement('button', { type: 'button', ...props }, children),
+	useForm: () => ({
+		getData: mocks.getData,
+		getDataByPath: mocks.getDataByPath,
+	}),
+}))
+vi.mock('@/features/generate-image/services/generate-image.client', () => ({
+	requestAdminImageGeneration: mocks.requestAdminImageGeneration,
+}))
+
+describe('ImageProfileTestPanel', () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+		mocks.getData.mockReturnValue({
+			aspectRatio: '16:9',
+			imageModelPreset: 'google-nano-banana-2-lite',
+			imageSize: '1K',
+		})
+		mocks.getDataByPath.mockImplementation((path: string) => {
+			if (path === 'profilePrompt') return [{ key: 'style', value: 'technical line art' }]
+			if (path === 'userPromptNormalization') {
+				return [{ key: 'view', candidates: [{ value: 'isometric' }] }]
+			}
+		})
+		vi.stubGlobal(
+			'fetch',
+			vi.fn().mockResolvedValue({
+				ok: true,
+				json: async () => ({
+					finalPrompt: { style: 'technical line art', subject: '굴착기' },
+					normalizedInput: {},
+				}),
+			}),
+		)
+		mocks.requestAdminImageGeneration.mockResolvedValue({
+			images: ['data:image/png;base64,test'],
+		})
+	})
+
+	afterEach(() => {
+		cleanup()
+		vi.unstubAllGlobals()
+	})
+
+	it('정규화를 끄면 후보는 제외하고 현재 배열 폼 값으로 생성한다', async () => {
+		render(createElement(ImageProfileTestPanel))
+
+		fireEvent.change(screen.getByLabelText('유저 인풋 프롬프트'), {
+			target: { value: '굴착기' },
+		})
+		fireEvent.click(screen.getByLabelText('유저 프롬프트 후보 정규화'))
+		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
+
+		await waitFor(() => expect(mocks.requestAdminImageGeneration).toHaveBeenCalledOnce())
+		expect(fetch).toHaveBeenCalledWith(
+			'/api/image-profiles/normalize',
+			expect.objectContaining({
+				body: JSON.stringify({
+					profilePrompt: [{ key: 'style', value: 'technical line art' }],
+					userPromptNormalization: [],
+					userPrompt: '굴착기',
+				}),
+			}),
+		)
+	})
+})

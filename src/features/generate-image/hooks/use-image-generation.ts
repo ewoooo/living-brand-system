@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import {
-	generateImages,
 	type ImageGenerationRequest,
 	type ImageGenerationResult,
+	requestImageGeneration,
 } from '../services/generate-image.client'
 
 const GENERATION_ERROR_MESSAGE = '이미지 생성에 실패했어요. 잠시 후 다시 시도해 주세요.'
@@ -25,7 +25,7 @@ export function useImageGeneration() {
 		setRequested(input.count)
 
 		try {
-			setResult(await generateImages(input))
+			setResult(await requestImageGeneration(input))
 		} catch (requestError) {
 			console.error(requestError)
 			setError(GENERATION_ERROR_MESSAGE)

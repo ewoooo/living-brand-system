@@ -8,7 +8,7 @@ export class TemplateTiffDownloadError extends Error {}
 
 /**
  * 브라우저 PNG를 서버의 템플릿 인쇄 정책으로 변환해 TIFF 파일로 내려받는 client use case.
- * PNG 렌더링은 export hook, HTTP·브라우저 다운로드 I/O는 이 adapter가 소유한다.
+ * PNG 렌더링은 상위 export use case가, HTTP·브라우저 다운로드 I/O는 이 adapter가 소유한다.
  */
 export async function downloadTemplateTiff({
 	fileName,

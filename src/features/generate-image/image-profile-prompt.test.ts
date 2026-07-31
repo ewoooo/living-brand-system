@@ -10,17 +10,17 @@ describe('image profile prompt', () => {
 		expect(
 			mergeImageProfilePrompt(
 				[
-					{ key: 'style', value: 'minimalist editorial cosmetic photography' },
+					{ key: 'style', value: 'minimalist editorial\ncosmetic photography' },
 					{ key: 'background', value: 'pure solid white' },
 				],
-				{ background: 'warm gray', mood: 'organic', subject: 'ignored' },
-				'  파란색 세럼병  ',
+				{ background: 'warm gray\r\nsolid', mood: 'organic', subject: 'ignored' },
+				'  파란색\n\n세럼병  ',
 			),
 		).toEqual({
-			style: 'minimalist editorial cosmetic photography',
-			background: 'warm gray',
+			style: 'minimalist editorial, cosmetic photography',
+			background: 'warm gray, solid',
 			mood: 'organic',
-			subject: '파란색 세럼병',
+			subject: '파란색, 세럼병',
 		})
 	})
 

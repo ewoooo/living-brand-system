@@ -1,6 +1,6 @@
 /**
  * 실행 중인 앱의 Agent Chat API를 실제 호출해 triage·모델·tool 경계를 확인한다.
- * 실행: PAYLOAD_DB_PUSH=false AGENT_CHAT_SMOKE_COOKIE=... pnpm payload run scripts/smoke-agent-chat.ts
+ * 실행: AGENT_CHAT_TRIAGE_ENABLED=true PAYLOAD_DB_PUSH=false AGENT_CHAT_SMOKE_COOKIE=... pnpm payload run scripts/smoke-agent-chat.ts
  * 선택 실행: AGENT_CHAT_SMOKE_CASE=lookup
  */
 import assert from 'node:assert/strict'
@@ -8,6 +8,7 @@ import config from '@payload-config'
 import { DefaultChatTransport, readUIMessageStream } from 'ai'
 import { getPayload } from 'payload'
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
+import { agentQueryTriageDecisionSchema } from '@/features/agent-chat/domain/agent-query-triage'
 import { getAgentExecutionPolicy } from '@/features/agent-chat/domain/agent-skill-tool-policy'
 
 const cases = [
@@ -61,6 +62,9 @@ const cases = [
 if (process.env.PAYLOAD_DB_PUSH !== 'false') {
 	throw new Error('Agent chat smoke test requires PAYLOAD_DB_PUSH=false.')
 }
+if (process.env.AGENT_CHAT_TRIAGE_ENABLED !== 'true') {
+	throw new Error('Agent chat triage smoke test requires AGENT_CHAT_TRIAGE_ENABLED=true.')
+}
 
 const baseUrl = new URL(process.env.AGENT_CHAT_SMOKE_URL ?? 'http://localhost:3000')
 const cookie = requiredEnv('AGENT_CHAT_SMOKE_COOKIE')
@@ -111,14 +115,11 @@ for (const testCase of selectedCases) {
 		loadedSkill?.state === 'output-available',
 		`${testCase.name}: loadSkill result is missing`,
 	)
-	assert.equal(loadedSkill.output.name, testCase.skill, `${testCase.name}: skill`)
-	assert.equal(
-		loadedSkill.output.responseMode,
-		testCase.responseMode,
-		`${testCase.name}: responseMode`,
-	)
-	assert.equal(loadedSkill.output.risk, testCase.risk, `${testCase.name}: risk`)
-	assert.equal(loadedSkill.output.toolScope, testCase.toolScope, `${testCase.name}: toolScope`)
+	const triage = agentQueryTriageDecisionSchema.parse(loadedSkill.output)
+	assert.equal(triage.name, testCase.skill, `${testCase.name}: skill`)
+	assert.equal(triage.responseMode, testCase.responseMode, `${testCase.name}: responseMode`)
+	assert.equal(triage.risk, testCase.risk, `${testCase.name}: risk`)
+	assert.equal(triage.toolScope, testCase.toolScope, `${testCase.name}: toolScope`)
 
 	const sessionId = response.metadata?.agentChatSessionId
 	const assistantMessageId = response.metadata?.agentChatMessageId
@@ -130,7 +131,7 @@ for (const testCase of selectedCases) {
 	const assistant = session.messages?.find((message) => message.messageId === assistantMessageId)
 	assert.ok(assistant, `${testCase.name}: saved assistant message is missing`)
 
-	const execution = getAgentExecutionPolicy(loadedSkill.output)
+	const execution = getAgentExecutionPolicy(triage)
 	const expectedModels = [...new Set(['claude-sonnet-5', execution.modelId])].join(', ')
 	assert.equal(assistant.aiUsage?.model, expectedModels, `${testCase.name}: models`)
 	assert.deepEqual(
@@ -144,13 +145,13 @@ for (const testCase of selectedCases) {
 			reviewRequired: session.triage?.reviewRequired,
 		},
 		{
-			skillName: loadedSkill.output.name,
-			responseMode: loadedSkill.output.responseMode,
-			risk: loadedSkill.output.risk,
-			confidence: loadedSkill.output.confidence,
-			executionModel: loadedSkill.output.model,
-			toolScope: loadedSkill.output.toolScope,
-			reviewRequired: loadedSkill.output.reviewRequired,
+			skillName: triage.name,
+			responseMode: triage.responseMode,
+			risk: triage.risk,
+			confidence: triage.confidence,
+			executionModel: triage.model,
+			toolScope: triage.toolScope,
+			reviewRequired: triage.reviewRequired,
 		},
 		`${testCase.name}: saved triage`,
 	)
@@ -181,9 +182,7 @@ for (const testCase of selectedCases) {
 		`${testCase.name}: response text is missing`,
 	)
 
-	console.log(
-		`passed: ${testCase.name} (${loadedSkill.output.responseMode}, ${assistant.aiUsage?.model})`,
-	)
+	console.log(`passed: ${testCase.name} (${triage.responseMode}, ${assistant.aiUsage?.model})`)
 }
 
 async function waitForCompletedSession(id: number) {

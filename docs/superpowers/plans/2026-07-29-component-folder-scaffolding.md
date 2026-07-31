@@ -42,8 +42,8 @@
 | `src/components/ui` | 유지 | shadcn 프리미티브 원형 |
 | `src/components/admin` | 유지 | Payload Admin이라는 강한 표면 의미와 문자열 import 경계 |
 | `src/components/global` | app shell로 한정 | layout·header·footer·chat·provider만 소유 |
-| `src/components/navigation` | shared | Home·Studio·Guideline 중 둘 이상이 실제 사용 |
-| `src/components/shared` | cross-surface shared | Studio·Guideline이 함께 쓰는 `ContentHeading` |
+| `src/components/shared/navigation` | cross-surface shared | Home·Studio·Guideline 중 둘 이상이 실제 사용 |
+| `src/components/shared` | cross-surface shared | 여러 화면이 함께 쓰는 `ContentHeading`, `ContentFrame`, navigation |
 | `src/components/home` | home surface | 홈에서만 쓰는 hero 조합 |
 | `src/components/studio` | studio surface | shared·generate·review·template·examples UI |
 | `src/components/studio/shared` | studio shared | 둘 이상의 Studio 하위 화면이 쓰는 navigation |
@@ -61,7 +61,7 @@ barrel과 빈 폴더는 만들지 않습니다.
 | `GlobalHeader` | 3열 grid | `HeaderHead` / `HeaderCenter` / `HeaderTail` 유지, 파일명도 공간명으로 통일 |
 | `SectionLayout` | nav 옆 `flex-1` 스크롤 영역 | 같은 파일의 `SectionBody`로 분리 |
 | `HeroSection` | 메인·기능·footer 화면 구간 | 의미가 강한 `HeroMainSection` / `HeroFeatureSection` / `HeroFooter` 유지 |
-| `HtmlAssetGenerator` | `md:w-72` 입력 열 + scale 미리보기 | `TemplateSlotControls` / `TemplatePreview`로 분리 |
+| `TemplateGenerator` | `md:w-72` 입력 열 + scale 미리보기 | `TemplateSlotControls` / `TemplatePreview`로 분리 |
 | `TemplateLayersField` | 가변 canvas + 260px layer list + 선택 편집부 | `TemplateCanvas` / `LayerList` / `SelectedLayerEditor`로 분리 |
 | `PageNavigation` | 양쪽 절반을 채우는 링크 | 기존 `PageLink` 경계 유지 |
 | `AgentChatTemplateAttachment` | 첨부 폭에 맞춘 contain scale | 기존 `ScaledMedia` 경계 유지 |
@@ -72,7 +72,7 @@ barrel과 빈 폴더는 만들지 않습니다.
 
 1. Home·Studio·Global Chat·Payload Admin UI를 `src/components/<surface>`로 이동합니다.
 2. `features/*/components`의 비-React 로직은 기능의 domain 또는 util로 옮깁니다.
-3. 여러 화면이 공유하는 navigation만 `src/components/navigation`으로 묶습니다.
+3. 여러 화면이 공유하는 navigation만 `src/components/shared/navigation`으로 묶습니다.
 4. 둘 이상의 화면 표면이 쓰는 UI는 `src/components/shared`, 한 표면의 여러 화면이 쓰는 UI는 `<surface>/shared`로 묶습니다.
 5. Studio·Guideline 제목은 `ContentHeading`을 공통 사용합니다.
 6. Header 공간 파일명을 `header-head/center/tail`로 통일합니다.

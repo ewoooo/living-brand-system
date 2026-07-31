@@ -1,0 +1,64 @@
+import {
+	CheckSessionInputMismatchError,
+	CheckSessionNotFoundError,
+	CheckSessionTerminalError,
+} from '@/features/asset-check/domain/check-session'
+import { isPayloadUser } from '@/lib/auth'
+import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
+import { completeCheckSessionAiCheck } from '@/services/start-check-session.service'
+import { readCheckImage } from '../../read-check-image'
+
+export const maxDuration = 30
+
+function parseCheckSessionId(value: string): number | null {
+	const id = Number(value)
+	return Number.isSafeInteger(id) && id > 0 ? id : null
+}
+
+export async function POST(
+	req: Request,
+	{ params }: { params: Promise<{ checkSessionId: string }> },
+) {
+	if (isCrossOriginRequest(req)) {
+		return Response.json({ message: 'Invalid origin.' }, { status: 403 })
+	}
+
+	const { payload, user } = await authenticateRequest()
+	if (!isPayloadUser(user)) {
+		return Response.json({ message: 'Unauthorized' }, { status: 401 })
+	}
+
+	const checkSessionId = parseCheckSessionId((await params).checkSessionId)
+	if (checkSessionId === null) {
+		return Response.json({ message: 'Invalid request.' }, { status: 400 })
+	}
+	const form = await req.formData().catch(() => null)
+	const image = await readCheckImage(form?.get('image'))
+	if ('response' in image) return image.response
+
+	try {
+		const result = await completeCheckSessionAiCheck({
+			buffer: image.buffer,
+			checkSessionId,
+			user,
+		})
+
+		return Response.json(result)
+	} catch (error) {
+		if (error instanceof CheckSessionNotFoundError) {
+			return Response.json({ message: 'Check session not found.' }, { status: 404 })
+		}
+		if (error instanceof CheckSessionInputMismatchError) {
+			return Response.json(
+				{ message: 'Image does not match check session.' },
+				{ status: 409 },
+			)
+		}
+		if (error instanceof CheckSessionTerminalError) {
+			return Response.json({ message: 'Check session already finished.' }, { status: 409 })
+		}
+		payload.logger.error({ err: error }, 'asset-check.ai.failed')
+
+		return Response.json({ message: 'Check failed.' }, { status: 500 })
+	}
+}

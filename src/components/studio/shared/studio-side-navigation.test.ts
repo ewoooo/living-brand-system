@@ -27,9 +27,13 @@ describe('StudioSideNavigation', () => {
 			'href',
 			'/studio/template',
 		)
-		expect(screen.getByRole('link', { name: 'Generate' })).toHaveAttribute(
+		expect(screen.getByRole('link', { name: 'Image' })).toHaveAttribute(
 			'href',
-			'/studio/generate',
+			'/studio/generate/image',
+		)
+		expect(screen.getByRole('link', { name: 'Graphic' })).toHaveAttribute(
+			'href',
+			'/studio/generate/graphic',
 		)
 		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute(
 			'href',
@@ -40,7 +44,7 @@ describe('StudioSideNavigation', () => {
 			'page',
 		)
 		expect(screen.getByRole('link', { name: 'Studio' })).not.toHaveAttribute('aria-current')
-		expect(container.querySelectorAll('[data-icon="inline-end"]')).toHaveLength(5)
-		expect(screen.getAllByRole('listitem')).toHaveLength(5)
+		expect(container.querySelectorAll('[data-icon="inline-end"]')).toHaveLength(6)
+		expect(screen.getAllByRole('listitem')).toHaveLength(6)
 	})
 })

@@ -10,7 +10,9 @@ const data = {
 	generateSlug: false,
 	slug: 'technical-illustration',
 	displayOrder: 10,
-	outputSizePreset: 'landscape' as const,
+	imageModelPreset: 'google-nano-banana-2-lite' as const,
+	aspectRatio: '16:9' as const,
+	imageSize: '1K' as const,
 	profilePrompt: [
 		{
 			key: 'identity',
@@ -34,10 +36,15 @@ High contrast.`,
 		},
 		{
 			key: 'composition',
-			value: `ISO-metric view.
-Centered composition.
+			value: `Centered composition.
 Aspect ratio 16:9.
 Single object.`,
+		},
+		{
+			key: 'camera',
+			value: `Isometric three-quarter view.
+Slightly elevated camera.
+Orthographic projection.`,
 		},
 		{
 			key: 'output',

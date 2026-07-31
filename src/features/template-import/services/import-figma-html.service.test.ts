@@ -1,14 +1,14 @@
 import type { Payload } from 'payload'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+	discardImportedApplicationImage,
+	stageImportedApplicationImage,
+} from '@/features/application-image/services/manage-imported-application-images.service'
+import {
 	downloadFigmaImage,
 	findFigmaImageUrls,
 	findFigmaNodeTree,
 } from '@/features/template-import/repositories/figma.rest.repository'
-import {
-	deleteDraftFigmaAsset,
-	storeDraftFigmaAsset,
-} from '@/features/template-import/repositories/figma-imported-asset.payload.repository'
 import type { User } from '@/payload-types'
 import { importFigmaHtml } from './import-figma-html.service'
 
@@ -18,9 +18,9 @@ vi.mock('@/features/template-import/repositories/figma.rest.repository', () => (
 	findFigmaNodeTree: vi.fn(),
 }))
 
-vi.mock('@/features/template-import/repositories/figma-imported-asset.payload.repository', () => ({
-	deleteDraftFigmaAsset: vi.fn(),
-	storeDraftFigmaAsset: vi.fn(),
+vi.mock('@/features/application-image/services/manage-imported-application-images.service', () => ({
+	discardImportedApplicationImage: vi.fn(),
+	stageImportedApplicationImage: vi.fn(),
 }))
 
 const payload = {} as Payload
@@ -53,7 +53,7 @@ describe('importFigmaHtml', () => {
 			data: Buffer.from('<svg viewBox="0 0 80 40"/>'),
 			mimeType: 'image/svg+xml',
 		})
-		vi.mocked(storeDraftFigmaAsset).mockResolvedValue({
+		vi.mocked(stageImportedApplicationImage).mockResolvedValue({
 			collection: 'application-images',
 			id: 10,
 			url: '/api/application-images/file/figma-vector.svg',
@@ -63,7 +63,7 @@ describe('importFigmaHtml', () => {
 		const result = await importFigmaHtml({ fileKey: 'file', nodeId: '1:1' }, payload, user)
 
 		expect(findFigmaImageUrls).toHaveBeenCalledWith('file', ['1:2'], 'svg')
-		expect(storeDraftFigmaAsset).toHaveBeenCalledWith(
+		expect(stageImportedApplicationImage).toHaveBeenCalledWith(
 			payload,
 			user,
 			expect.objectContaining({
@@ -87,7 +87,7 @@ describe('importFigmaHtml', () => {
 		await expect(
 			importFigmaHtml({ fileKey: 'file', nodeId: '1:1' }, payload, user),
 		).rejects.toThrow('Figma SVG render failed for node "1:2".')
-		expect(storeDraftFigmaAsset).not.toHaveBeenCalled()
+		expect(stageImportedApplicationImage).not.toHaveBeenCalled()
 	})
 
 	it('뒤 벡터 처리에 실패하면 이번 요청에서 앞서 생성한 에셋을 제거한다', async () => {
@@ -102,7 +102,7 @@ describe('importFigmaHtml', () => {
 			data: Buffer.from('<svg/>'),
 			mimeType: 'image/svg+xml',
 		})
-		vi.mocked(storeDraftFigmaAsset).mockResolvedValue({
+		vi.mocked(stageImportedApplicationImage).mockResolvedValue({
 			collection: 'application-images',
 			id: 10,
 			url: '/api/application-images/file/logo.svg',
@@ -112,7 +112,7 @@ describe('importFigmaHtml', () => {
 		await expect(
 			importFigmaHtml({ fileKey: 'file', nodeId: '1:1' }, payload, user),
 		).rejects.toThrow('Figma SVG render failed for node "1:3".')
-		expect(deleteDraftFigmaAsset).toHaveBeenCalledWith(payload, user, 10)
+		expect(discardImportedApplicationImage).toHaveBeenCalledWith(payload, user, 10)
 	})
 
 	it('보이지 않는 VECTOR는 Figma 렌더와 저장을 요청하지 않는다', async () => {
@@ -124,7 +124,7 @@ describe('importFigmaHtml', () => {
 		await importFigmaHtml({ fileKey: 'file', nodeId: '1:1' }, payload, user)
 
 		expect(findFigmaImageUrls).not.toHaveBeenCalled()
-		expect(storeDraftFigmaAsset).not.toHaveBeenCalled()
+		expect(stageImportedApplicationImage).not.toHaveBeenCalled()
 	})
 
 	it('IMAGE fill은 PNG로 렌더해 픽셀을 보존한다', async () => {
@@ -147,7 +147,7 @@ describe('importFigmaHtml', () => {
 			data: Buffer.from([0x89, 0x50, 0x4e, 0x47]),
 			mimeType: 'image/png',
 		})
-		vi.mocked(storeDraftFigmaAsset).mockResolvedValue({
+		vi.mocked(stageImportedApplicationImage).mockResolvedValue({
 			collection: 'application-images',
 			id: 11,
 			url: '/api/application-images/file/photo.png',
@@ -192,7 +192,7 @@ describe('importFigmaHtml', () => {
 			data: Buffer.from([0x89, 0x50, 0x4e, 0x47]),
 			mimeType: 'image/png',
 		})
-		vi.mocked(storeDraftFigmaAsset)
+		vi.mocked(stageImportedApplicationImage)
 			.mockResolvedValueOnce({
 				collection: 'application-images',
 				id: 15,
@@ -257,7 +257,7 @@ describe('importFigmaHtml', () => {
 			data: Buffer.from([0x89, 0x50, 0x4e, 0x47]),
 			mimeType: 'image/png',
 		})
-		vi.mocked(storeDraftFigmaAsset)
+		vi.mocked(stageImportedApplicationImage)
 			.mockResolvedValueOnce({
 				collection: 'application-images',
 				id: 12,

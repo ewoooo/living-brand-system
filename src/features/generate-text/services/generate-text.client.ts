@@ -1,5 +1,5 @@
 /**
- * 텍스트 생성 클라이언트 서비스 — 브라우저에서 /api/text 호출의 요청/응답 계약을 소유한다.
+ * 텍스트 생성 클라이언트 서비스 — 브라우저에서 /api/generate-text 호출의 요청/응답 계약을 소유한다.
  * 생성 실행은 route 뒤의 generate-text service가 담당하고, 화면 상태는 호출자가 담당한다.
  */
 export interface GenerateTextsInput {
@@ -14,7 +14,7 @@ export async function generateTexts({
 	rule,
 	count,
 }: GenerateTextsInput): Promise<string[]> {
-	const res = await fetch('/api/text', {
+	const res = await fetch('/api/generate-text', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ prompt, rule, count }),

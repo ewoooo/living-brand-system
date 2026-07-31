@@ -1,10 +1,10 @@
 import type { PayloadRequest } from 'payload'
+import { publishImportedApplicationImages } from '@/features/application-image/services/manage-imported-application-images.service'
 import { findPrintOutputBlocker } from '@/features/template-export/print-policy'
 import {
 	inspectBaseTemplateHtml,
 	inspectDraftTemplateAssetRefs,
 } from '@/services/inspect-template-html.service'
-import { publishImportedFigmaAssets } from '../repositories/figma-imported-asset.payload.repository'
 import {
 	findTemplateDraftBlocker,
 	findTemplatePublishBlocker,
@@ -50,7 +50,7 @@ export async function prepareTemplateSave({
 	const renderedRefs =
 		typeof candidate.html === 'string' ? inspectDraftTemplateAssetRefs(candidate.html).refs : []
 
-	await publishImportedFigmaAssets(
+	await publishImportedApplicationImages(
 		req,
 		importedRefs
 			.filter(

@@ -1,22 +1,12 @@
 // @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-	downloadTemplateTiff,
-	TemplateTiffDownloadError,
-} from '../services/export-template-tiff.client'
-import { printTemplatePdf } from '../services/print-template-pdf.client'
-import { exportHtmlToPng, renderHtmlToPngBlob } from '../services/render-template-html.client'
+import { canExportTemplate, exportTemplate } from '../services/export-template.client'
 import { useTemplateExport } from './use-template-export'
 
-vi.mock('../services/export-template-tiff.client', () => ({
-	downloadTemplateTiff: vi.fn(),
-	TemplateTiffDownloadError: class extends Error {},
-}))
-vi.mock('../services/print-template-pdf.client', () => ({ printTemplatePdf: vi.fn() }))
-vi.mock('../services/render-template-html.client', () => ({
-	exportHtmlToPng: vi.fn(),
-	renderHtmlToPngBlob: vi.fn(),
+vi.mock('../services/export-template.client', () => ({
+	canExportTemplate: vi.fn(),
+	exportTemplate: vi.fn(),
 }))
 
 const input = {
@@ -32,39 +22,22 @@ const input = {
 describe('useTemplateExport', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		vi.mocked(renderHtmlToPngBlob).mockResolvedValue(new Blob(['png']))
+		vi.mocked(canExportTemplate).mockReturnValue(true)
 	})
 
-	it('png | tiff | pdf 형식을 각 export service로 전달한다', async () => {
+	it('가용 조건과 실행을 export use case에 위임한다', async () => {
 		const { result } = renderHook(() => useTemplateExport(input))
 
-		await act(() => result.current.exportTemplate('png'))
-		expect(exportHtmlToPng).toHaveBeenCalledWith(input.html, '', input.fileName)
-
-		await act(() => result.current.exportTemplate('tiff'))
-		expect(downloadTemplateTiff).toHaveBeenCalledWith({
-			fileName: input.fileName,
-			png: expect.any(Blob),
-			templateId: input.templateId,
-			templateVersion: input.templateVersion,
-		})
-
 		await act(() => result.current.exportTemplate('pdf'))
-		expect(printTemplatePdf).toHaveBeenCalledWith({
-			fileName: input.fileName,
-			height: input.height,
-			html: input.html,
-			ppi: input.printPpi,
-			width: input.width,
-		})
+		expect(exportTemplate).toHaveBeenCalledWith('pdf', input)
+		expect(result.current.canExport('tiff')).toBe(true)
+		expect(canExportTemplate).toHaveBeenCalledWith('tiff', input)
 		expect(result.current.exporting).toBeNull()
 		expect(result.current.exportError).toBeNull()
 	})
 
 	it('형식별 오류를 공통 계약으로 반환한다', async () => {
-		vi.mocked(downloadTemplateTiff).mockRejectedValue(
-			new TemplateTiffDownloadError('템플릿이 변경되었습니다.'),
-		)
+		vi.mocked(exportTemplate).mockRejectedValue(new Error('템플릿이 변경되었습니다.'))
 		const { result } = renderHook(() => useTemplateExport(input))
 
 		await act(() => result.current.exportTemplate('tiff'))

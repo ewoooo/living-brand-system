@@ -2,7 +2,7 @@
 
 import { Button, useForm } from '@payloadcms/ui'
 import { useState } from 'react'
-import { generateImages } from '@/features/generate-image/services/generate-image.client'
+import { requestAdminImageGeneration } from '@/features/generate-image/services/generate-image.client'
 
 type PromptResult = {
 	finalPrompt: Record<string, string>
@@ -10,8 +10,9 @@ type PromptResult = {
 }
 
 export default function ImageProfileTestPanel() {
-	const { getData } = useForm()
+	const { getData, getDataByPath } = useForm()
 	const [userPrompt, setUserPrompt] = useState('')
+	const [normalizeUserPrompt, setNormalizeUserPrompt] = useState(true)
 	const [result, setResult] = useState<PromptResult | null>(null)
 	const [image, setImage] = useState<string | null>(null)
 	const [error, setError] = useState('')
@@ -19,13 +20,14 @@ export default function ImageProfileTestPanel() {
 	const [isGenerating, setIsGenerating] = useState(false)
 
 	async function normalizeCurrentForm(): Promise<PromptResult> {
-		const data = getData()
 		const response = await fetch('/api/image-profiles/normalize', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				profilePrompt: data.profilePrompt,
-				userPromptNormalization: data.userPromptNormalization ?? [],
+				profilePrompt: getDataByPath('profilePrompt'),
+				userPromptNormalization: normalizeUserPrompt
+					? (getDataByPath('userPromptNormalization') ?? [])
+					: [],
 				userPrompt,
 			}),
 		})
@@ -66,8 +68,12 @@ export default function ImageProfileTestPanel() {
 		setIsGenerating(true)
 		try {
 			const { finalPrompt } = await normalizeCurrentForm()
-			const generated = await generateImages({
+			const data = getData()
+			const generated = await requestAdminImageGeneration({
+				aspectRatio: data.aspectRatio,
 				count: 1,
+				imageModelPreset: data.imageModelPreset,
+				imageSize: data.imageSize,
 				prompt: JSON.stringify(finalPrompt),
 			})
 			setImage(generated.images[0] ?? null)
@@ -103,6 +109,15 @@ export default function ImageProfileTestPanel() {
 				maxLength={500}
 				rows={4}
 			/>
+			<label>
+				<input
+					type="checkbox"
+					checked={normalizeUserPrompt}
+					onChange={(event) => setNormalizeUserPrompt(event.currentTarget.checked)}
+				/>
+				유저 프롬프트 후보 정규화
+			</label>
+			<p>끄면 후보 선택만 건너뛰며, 시스템 프롬프트와 subject 합성은 유지됩니다.</p>
 			<div className="image-profile-test-panel__actions">
 				<Button
 					buttonStyle="secondary"

@@ -1,6 +1,6 @@
 import type React from 'react'
 import { SectionLayout } from '@/components/global/section-layout'
-import { PageNavigation } from '@/components/navigation/page-navigation'
+import { PageNavigation } from '@/components/shared/navigation/page-navigation'
 import { GuidelineSideNavigation } from '@/features/guideline/components/globals/guideline-side-navigation'
 import { getGuidelineNavigation } from '@/features/guideline/services/get-guideline-navigation.service'
 

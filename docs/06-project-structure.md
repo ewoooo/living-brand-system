@@ -70,7 +70,7 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 | Route Handler | `src/app/**/route.ts` | HTTP 요청 검증과 Service 호출만 담당합니다. |
 | ShadCN UI | `src/components/ui` | registry 기반 컴포넌트 원형을 둡니다. |
 | 표현 컴포넌트 | `src/components/<surface>` | Home, Studio, Payload Admin처럼 실제 화면 표면을 기준으로 둡니다. |
-| 전역 공유 컴포넌트 | `src/components/shared`, `src/components/global`, `src/components/navigation` | 둘 이상의 화면 표면이 공유하는 UI, app shell, 공용 탐색 UI만 둡니다. |
+| 전역 공유 컴포넌트 | `src/components/shared`, `src/components/global` | 둘 이상의 화면 표면이 공유하는 UI와 공용 탐색 UI는 `shared`, app shell은 `global`에 둡니다. |
 | 화면 상태와 비즈니스 로직 | `src/features/*` | domain, hook, service, repository, util, type을 기능 안에 둡니다. 일반 React 컴포넌트는 두지 않습니다. |
 
 의존 방향은 `app → components → features`입니다. `features`는 `components`를 import하지 않습니다. Payload block은 schema, projection, renderer를 한 단위로 등록해야 하므로 `src/features/guideline/blocks/*/component.tsx`는 예외로 둡니다. 기존 `src/features/guideline/components`도 Guideline 분류를 별도로 정리하기 전까지의 한시적 예외입니다.
@@ -108,8 +108,8 @@ src/
     admin/
     global/
     home/
-    navigation/
     shared/
+      navigation/
     studio/
       shared/
     ui/
@@ -405,7 +405,7 @@ export interface PublishGuidelineResponse {
 | `*.tsx` | React component 파일입니다. |
 | `use-*.ts` | React custom hook 파일입니다. JSX를 반환하면 `use-*.tsx`를 허용합니다. |
 | `*.service.ts` | Use Case service 함수 파일입니다. |
-| `*.client.ts` | 클라이언트에서 Route Handler를 fetch로 호출하는 client service 파일입니다. 소유 기능의 `services` 폴더에 둡니다. |
+| `*.client.ts` | Route Handler fetch, DOM, 다운로드처럼 브라우저 I/O를 소유하는 client service 파일입니다. 소유 기능의 `services` 폴더에 둡니다. |
 | `*.repository.ts` | Service가 참조하는 repository interface 파일입니다. |
 | `*.payload.repository.ts` | Payload Local API 또는 CMS SDK 기반 repository 구현 파일입니다. |
 | `*.drizzle.repository.ts` | Drizzle ORM 기반 repository 구현 파일입니다. |
@@ -431,7 +431,7 @@ guideline-publish.spec.ts
 | 대상 | 규칙 | 예 |
 | --- | --- | --- |
 | React Component | `PascalCase` | `GuidelineCard` |
-| custom hook | `use` + 동작 또는 상태 | `useAssetGenerationSession` |
+| custom hook | `use` + 동작 또는 상태 | `useTemplateExport` |
 | Facade | 필요한 경우에만 `PascalCase` + `Facade` | `GuidelineFacade` |
 | Service (Use Case) | Use Case를 표현하는 동사 시작 함수 | `publishGuideline` |
 | Repository | 도메인 동작 기준 함수 | `findPublishedGuideline` |
@@ -456,7 +456,7 @@ Facade는 기본 구조로 두지 않습니다.
 | 단건 조회 | `get` + 대상 | `getGuideline` |
 | 조건 조회 | `find` + 대상 | `findPublishedRule` |
 | 목록 조회 | `list` + 대상 | `listApplicationTypes` |
-| 생성 | `create` + 대상 | `createAssetGenerationSession` |
+| 생성 | `create` + 대상 | `createCheckSession` |
 | 수정 | `update` + 대상 | `updateGuidelineSection` |
 | 삭제 | `delete` + 대상 | `deleteDraftRule` |
 | 권한 확인 | `can` + 동작 | `canPublishGuideline` |

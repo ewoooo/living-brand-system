@@ -1,10 +1,12 @@
 /**
  * AI Chat이 선택할 기본 Agent Skill 5종을 upsert한다.
- * 기존 reference 연결과 목록 밖 Skill은 보존한다.
+ * 기존 reference 연결과 목록 밖 Skill은 보존하고, 이전 표시명 Skill은 비활성화한다.
  * 실행: pnpm payload run scripts/seed-agent-skills.ts
  */
 import config from '@payload-config'
 import { getPayload } from 'payload'
+
+const LEGACY_SKILL_NAMES = ['Template Asset Creator', 'Guideline Curator', 'Image Check']
 
 const SKILLS = [
 	{
@@ -158,6 +160,26 @@ for (const skill of SKILLS) {
 		})
 		console.log(`created: ${skill.name}`)
 	}
+}
+
+const legacySkills = await payload.find({
+	collection: 'agent-skills',
+	depth: 0,
+	limit: LEGACY_SKILL_NAMES.length,
+	overrideAccess: true,
+	where: {
+		and: [{ name: { in: LEGACY_SKILL_NAMES } }, { enabled: { equals: true } }],
+	},
+})
+
+for (const skill of legacySkills.docs) {
+	await payload.update({
+		collection: 'agent-skills',
+		id: skill.id,
+		data: { enabled: false },
+		overrideAccess: true,
+	})
+	console.log(`disabled: ${skill.name}`)
 }
 
 console.log('done')
