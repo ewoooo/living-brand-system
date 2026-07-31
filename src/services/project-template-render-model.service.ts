@@ -38,9 +38,6 @@ export function projectTemplateRenderModel(
 
 	const nodeConfigs = parseTemplateNodeConfigs(template.overrides)
 	if ('blocker' in nodeConfigs) return null
-	if (Object.values(nodeConfigs.data).some((config) => config.backgroundImage?.trim())) {
-		return null
-	}
 
 	const inspection = inspectPublishedTemplateHtml({
 		html: template.html,

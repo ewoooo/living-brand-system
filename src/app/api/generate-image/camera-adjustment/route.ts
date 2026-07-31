@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 	}
 
 	try {
-		const result = await adjustImageCamera({ ...parsed.data, user })
+		const result = await adjustImageCamera({ ...parsed.data, requestUrl: request.url, user })
 		if (result.images.length === 0) {
 			return Response.json({ message: 'Image generation failed.' }, { status: 502 })
 		}

@@ -7,6 +7,7 @@ export const routes = {
 		generate: '/studio/generate',
 		generateGraphic: '/studio/generate/graphic',
 		generateImage: '/studio/generate/image',
+		mcp: '/studio/mcp',
 		review: '/studio/review',
 		root: '/studio',
 		template: '/studio/template',
@@ -39,6 +40,11 @@ export const legacyPageRedirects = [
 	{
 		source: '/review',
 		destination: routes.studio.review,
+		permanent: true,
+	},
+	{
+		source: '/settings/mcp',
+		destination: routes.studio.mcp,
 		permanent: true,
 	},
 ] as const

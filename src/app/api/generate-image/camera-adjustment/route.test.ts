@@ -35,8 +35,8 @@ const validBody = {
 	basePrompt: '{"style":"technical illustration","subject":"유조선"}',
 	camera: { azimuthDeg: 45, elevationDeg: 20 },
 	count: 1,
+	generatedImageId: 8,
 	profileId: 5,
-	seedImage: 'data:image/png;base64,iVBORw0KGgo=',
 }
 
 function cameraRequest(body: unknown, headers?: Record<string, string>) {
@@ -60,7 +60,17 @@ describe('POST /api/generate-image/camera-adjustment', () => {
 				input: validBody.camera,
 				resolved: { azimuth: 'front-right', elevation: 'elevated' },
 			},
-			images: ['data:image/png;base64,result'],
+			aspectRatio: '16:9',
+			generatedImages: [
+				{
+					collection: 'generated-images',
+					createdAt: '2026-07-31T03:00:00.000Z',
+					id: 9,
+					url: '/api/generated-images/file/adjusted.png',
+				},
+			],
+			images: ['/api/generated-images/file/adjusted.png'],
+			imageSize: '1K',
 			model: 'gemini-3.1-flash-lite-image',
 			profileId: 5,
 			profileName: 'Technical Illustration',
@@ -85,8 +95,8 @@ describe('POST /api/generate-image/camera-adjustment', () => {
 		{ ...validBody, basePrompt: 'not json' },
 		{ ...validBody, camera: { azimuthDeg: 181, elevationDeg: 0 } },
 		{ ...validBody, camera: { azimuthDeg: 0, elevationDeg: 91 } },
+		{ ...validBody, generatedImageId: 0 },
 		{ ...validBody, profileId: 0 },
-		{ ...validBody, seedImage: 'data:image/svg+xml;base64,PHN2Zz4=' },
 		{ ...validBody, count: 0 },
 	])('계약 밖의 입력을 거부한다: %o', async (body) => {
 		const response = await POST(cameraRequest(body))
@@ -106,7 +116,7 @@ describe('POST /api/generate-image/camera-adjustment', () => {
 		expect(mocks.adjustImageCamera).not.toHaveBeenCalled()
 	})
 
-	it('카메라 입력과 시드 이미지를 서비스에 전달한다', async () => {
+	it('카메라 입력과 생성 이미지 ID를 서비스에 전달한다', async () => {
 		const response = await POST(cameraRequest(validBody))
 
 		expect(response.status).toBe(200)
@@ -115,7 +125,17 @@ describe('POST /api/generate-image/camera-adjustment', () => {
 				input: validBody.camera,
 				resolved: { azimuth: 'front-right', elevation: 'elevated' },
 			},
-			images: ['data:image/png;base64,result'],
+			aspectRatio: '16:9',
+			generatedImages: [
+				{
+					collection: 'generated-images',
+					createdAt: '2026-07-31T03:00:00.000Z',
+					id: 9,
+					url: '/api/generated-images/file/adjusted.png',
+				},
+			],
+			images: ['/api/generated-images/file/adjusted.png'],
+			imageSize: '1K',
 			model: 'gemini-3.1-flash-lite-image',
 			profileId: 5,
 			profileName: 'Technical Illustration',
@@ -123,6 +143,7 @@ describe('POST /api/generate-image/camera-adjustment', () => {
 		})
 		expect(mocks.adjustImageCamera).toHaveBeenCalledWith({
 			...validBody,
+			requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
 			user: { id: 1 },
 		})
 	})

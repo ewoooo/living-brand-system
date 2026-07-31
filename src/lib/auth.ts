@@ -17,7 +17,7 @@ const roleOf = (user: unknown): Role | null => {
 	return null
 }
 
-const isAdmin = (user: unknown): boolean => roleOf(user) === 'admin'
+export const isAdmin = (user: unknown): boolean => roleOf(user) === 'admin'
 
 /** 컬렉션 access 밖(커스텀 라우트 핸들러)에서도 쓰는 사용자 단위 역할 검사. */
 export const isManager = (user: unknown): boolean => {

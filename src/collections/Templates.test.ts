@@ -133,6 +133,34 @@ describe('Templates beforeChange hook', () => {
 		).rejects.toThrow('draft에서만 사용할 수 있습니다')
 	})
 
+	it('생성 이미지 ID와 URL이 일치하는 배경만 발행한다', async () => {
+		const url = '/api/generated-images/file/background.png'
+		const data = {
+			_status: 'published',
+			baseHtml: '<div data-node-id="frame"></div>',
+			html: `<div data-node-id="frame" style='background-image:url("${url}")'></div>`,
+			overrides: { frame: { backgroundImage: url, generatedImageId: 42 } },
+			width: 1200,
+			height: 800,
+		}
+		const request = buildRequest([{ id: 42, url }])
+
+		await expect(hook({ data, ...request })).resolves.toBe(data)
+		expect(request.req.payload.find).toHaveBeenCalledWith(
+			expect.objectContaining({
+				collection: 'generated-images',
+				draft: false,
+				req: request.req,
+			}),
+		)
+		await expect(
+			hook({
+				data,
+				...buildRequest([{ id: 42, url: '/api/generated-images/file/other.png' }]),
+			}),
+		).rejects.toThrow('인가 에셋 참조가 유효하지 않습니다')
+	})
+
 	it('유효한 HTML 모델은 발행하고 비공개 원본 에셋은 baseHtml에만 보관한다', async () => {
 		const data = {
 			_status: 'published',

@@ -43,10 +43,9 @@ function htmlTemplateRefs(
 	if ('blocker' in parsedNodeConfigs) return parsedNodeConfigs
 
 	for (const config of Object.values(parsedNodeConfigs.data)) {
-		if (nonEmptyString(config.backgroundImage)) {
+		if (nonEmptyString(config.backgroundImage) && !config.generatedImageId) {
 			return {
-				blocker:
-					'배경 이미지는 아직 인가 에셋 참조를 저장하지 않으므로 draft에서만 사용할 수 있습니다.',
+				blocker: '구조화 참조가 없는 배경 이미지는 draft에서만 사용할 수 있습니다.',
 			}
 		}
 	}
