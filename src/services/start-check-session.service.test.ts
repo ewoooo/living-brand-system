@@ -8,6 +8,11 @@ import {
 } from '@/features/asset-check/domain/check-session'
 import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
+	findUnavailableAiReferenceCheckKeys,
+	loadAiReferenceFiles,
+} from '@/features/asset-check/repositories/ai-check.ai.repository'
+import {
+	completeRunningCheckSessionRecord,
 	createCheckSessionRecord,
 	getCheckSessionRecord,
 	saveCheckSessionRecord,
@@ -25,9 +30,14 @@ import {
 } from './start-check-session.service'
 
 vi.mock('@/features/asset-check/repositories/check-session.payload.repository', () => ({
+	completeRunningCheckSessionRecord: vi.fn(),
 	createCheckSessionRecord: vi.fn(),
 	getCheckSessionRecord: vi.fn(),
 	saveCheckSessionRecord: vi.fn(),
+}))
+vi.mock('@/features/asset-check/repositories/ai-check.ai.repository', () => ({
+	findUnavailableAiReferenceCheckKeys: vi.fn(),
+	loadAiReferenceFiles: vi.fn(),
 }))
 vi.mock('@/features/asset-check/services/get-check-ruleset.service', () => ({
 	getRuntimeChecks: vi.fn(),
@@ -85,6 +95,9 @@ describe('check session service', () => {
 		vi.mocked(getRuntimeChecks).mockResolvedValue([])
 		vi.mocked(runImmediateCheck).mockResolvedValue({ results: {}, pendingCheckKeys: [] })
 		vi.mocked(runHeuristicCheck).mockResolvedValue({ results: {} })
+		vi.mocked(completeRunningCheckSessionRecord).mockResolvedValue(true)
+		vi.mocked(loadAiReferenceFiles).mockResolvedValue(new Map())
+		vi.mocked(findUnavailableAiReferenceCheckKeys).mockReturnValue([])
 		vi.mocked(createCheckSessionRecord).mockImplementation(async () =>
 			CheckSession.restore(snapshot(png, 'running')),
 		)
@@ -204,7 +217,97 @@ describe('check session service', () => {
 		})
 		expect(session.status).toBe('completed')
 		expect(runHeuristicCheck).not.toHaveBeenCalled()
-		expect(saveCheckSessionRecord).toHaveBeenCalledWith(session, user)
+		expect(completeRunningCheckSessionRecord).toHaveBeenCalledWith(session, user)
+		expect(saveCheckSessionRecord).not.toHaveBeenCalled()
+	})
+
+	it('동시 MCP 제출은 먼저 저장된 완료 결과를 멱등 반환한다', async () => {
+		const losingSession = CheckSession.restore({
+			...snapshot(png),
+			rulesetSnapshot: [heuristicCheck],
+		})
+		const winningSession = CheckSession.restore({
+			...snapshot(png, 'completed'),
+			results: {
+				heuristic: {
+					rule: { key: 'heuristic', title: 'Logo present', executor: 'heuristic' },
+					checker: { key: 'mcp-client', type: 'ai' },
+					rawResult: { status: 'fail', fulfillment: 0 },
+				},
+			},
+			pendingCheckKeys: [],
+		})
+		vi.mocked(getCheckSessionRecord)
+			.mockResolvedValueOnce(losingSession)
+			.mockResolvedValueOnce(winningSession)
+		vi.mocked(completeRunningCheckSessionRecord).mockResolvedValue(false)
+
+		await expect(
+			completeCheckSessionObservations({
+				checkSessionId: 41,
+				observations: {
+					heuristic: {
+						'logo-visible': {
+							value: 'present',
+							confidence: 95,
+							reason: '로고가 보입니다.',
+						},
+					},
+				},
+				user,
+			}),
+		).resolves.toEqual({
+			checkSessionId: 41,
+			results: winningSession.results,
+		})
+		expect(completeRunningCheckSessionRecord).toHaveBeenCalledTimes(1)
+		expect(saveCheckSessionRecord).not.toHaveBeenCalled()
+	})
+
+	it('레퍼런스 로딩 실패 Check는 클라이언트 관측과 무관하게 needs_review로 저장한다', async () => {
+		const referenceCheck: RuntimeCheck = {
+			...heuristicCheck,
+			referenceAssets: [
+				{
+					name: 'logo-master.png',
+					url: '/logo-master.png',
+					mimeType: 'image/png',
+					role: 'positive',
+				},
+			],
+		}
+		const session = CheckSession.restore({
+			...snapshot(png),
+			rulesetSnapshot: [referenceCheck],
+		})
+		vi.mocked(getCheckSessionRecord).mockResolvedValue(session)
+		vi.mocked(findUnavailableAiReferenceCheckKeys).mockReturnValue(['heuristic'])
+
+		await expect(
+			completeCheckSessionObservations({
+				checkSessionId: 41,
+				observations: {
+					heuristic: {
+						'logo-visible': {
+							value: 'present',
+							confidence: 95,
+							reason: '로고가 보입니다.',
+						},
+					},
+				},
+				user,
+			}),
+		).resolves.toMatchObject({
+			results: {
+				heuristic: {
+					rawResult: {
+						status: 'needs_review',
+						reasonCode: 'reference_asset_unavailable',
+					},
+				},
+			},
+		})
+		expect(loadAiReferenceFiles).toHaveBeenCalledWith([referenceCheck])
 	})
 
 	it('저장된 룰셋과 다른 MCP 관측 키는 판정·저장하지 않는다', async () => {

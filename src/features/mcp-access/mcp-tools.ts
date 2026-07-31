@@ -6,6 +6,7 @@ import { searchAgentGuidelines } from '@/features/agent-chat/services/get-agent-
 import { buildAiObservationTask } from '@/features/asset-check/domain/ai-observation-task'
 import {
 	aiReferenceAssetKey,
+	findUnavailableAiReferenceCheckKeys,
 	loadAiReferenceFiles,
 } from '@/features/asset-check/repositories/ai-check.ai.repository'
 import { resizeForAiVision } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
@@ -104,6 +105,10 @@ export const customMcpTools = [
 				status: pending.length ? 'awaiting_client_observations' : 'completed',
 				results,
 				pendingCheckKeys,
+				unavailableReferenceCheckKeys: findUnavailableAiReferenceCheckKeys(
+					pending,
+					referenceFilesByKey,
+				),
 				nextTool: pending.length ? 'submitAssetCheckObservations' : null,
 				...observationTask,
 			}

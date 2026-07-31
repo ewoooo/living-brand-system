@@ -49,13 +49,10 @@ export async function runAiCheck(
 			resizeForAiVision(ctx.image.data),
 			loadAiReferenceFiles(checks),
 		])
-		unavailableReferenceCheckKeys = checks
-			.filter((check) =>
-				check.referenceAssets.some(
-					(asset) => !referenceFilesByKey.get(aiReferenceAssetKey(asset)),
-				),
-			)
-			.map((check) => check.key)
+		unavailableReferenceCheckKeys = findUnavailableAiReferenceCheckKeys(
+			checks,
+			referenceFilesByKey,
+		)
 		const runnableChecks = checks.filter(
 			(check) => !unavailableReferenceCheckKeys?.includes(check.key),
 		)
@@ -228,6 +225,19 @@ export async function loadAiReferenceFiles(checks: RuntimeCheck[]) {
 	)
 
 	return new Map(files)
+}
+
+export function findUnavailableAiReferenceCheckKeys(
+	checks: RuntimeCheck[],
+	referenceFilesByKey: Awaited<ReturnType<typeof loadAiReferenceFiles>>,
+) {
+	return checks
+		.filter((check) =>
+			check.referenceAssets.some(
+				(asset) => !referenceFilesByKey.get(aiReferenceAssetKey(asset)),
+			),
+		)
+		.map((check) => check.key)
 }
 
 async function readReferenceAsset(asset: CheckReferenceAsset): Promise<Buffer | null> {

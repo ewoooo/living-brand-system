@@ -5,6 +5,7 @@ import {
 	type CheckSessionInputSnapshot,
 	CheckSessionNotFoundError,
 	type CheckSessionSource,
+	CheckSessionStateError,
 	CheckSessionTerminalError,
 } from '@/features/asset-check/domain/check-session'
 import {
@@ -16,6 +17,11 @@ import {
 } from '@/features/asset-check/domain/heuristic.evaluator'
 import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
+	findUnavailableAiReferenceCheckKeys,
+	loadAiReferenceFiles,
+} from '@/features/asset-check/repositories/ai-check.ai.repository'
+import {
+	completeRunningCheckSessionRecord,
 	createCheckSessionRecord,
 	getCheckSessionRecord,
 	saveCheckSessionRecord,
@@ -153,7 +159,8 @@ export async function completeCheckSessionAiCheck(input: CompleteCheckSessionAiC
 
 /**
  * MCP 클라이언트 AI가 제출한 관측값으로 검수 세션을 완료한다.
- * 클라이언트는 관측만 소유하고, 최종 판정·상태 전이와 저장 I/O는 기존 evaluator·Aggregate·repository가 맡는다.
+ * 클라이언트는 관측만 소유하고, 최종 판정·상태 전이는 evaluator·Aggregate가 맡는다.
+ * 레퍼런스 조회와 첫 완료 조건부 저장 외부 I/O는 각 repository가 맡는다.
  */
 export async function completeCheckSessionObservations(
 	input: CompleteCheckSessionObservationsInput,
@@ -173,16 +180,27 @@ export async function completeCheckSessionObservations(
 		input.observations ?? {},
 		input.advices ?? {},
 	)
+	const referenceFilesByKey = await loadAiReferenceFiles(checks)
+	const unavailableReferenceCheckKeys = new Set(
+		findUnavailableAiReferenceCheckKeys(checks, referenceFilesByKey),
+	)
 	const results = Object.fromEntries(
 		checks.map((check) => [
 			check.key,
 			toCheckResult(
-				check.executor === 'manual'
-					? evaluateAdvisory(input.advices?.[check.key])
-					: evaluateHeuristic(
-							check.heuristicCriteria ?? [],
-							input.observations?.[check.key],
-						),
+				unavailableReferenceCheckKeys.has(check.key)
+					? {
+							status: 'needs_review',
+							fulfillment: null,
+							detail: '레퍼런스 이미지 불러오기 실패',
+							reasonCode: 'reference_asset_unavailable',
+						}
+					: check.executor === 'manual'
+						? evaluateAdvisory(input.advices?.[check.key])
+						: evaluateHeuristic(
+								check.heuristicCriteria ?? [],
+								input.observations?.[check.key],
+							),
 				check,
 				{ key: 'mcp-client', type: 'ai' },
 			),
@@ -191,7 +209,17 @@ export async function completeCheckSessionObservations(
 
 	try {
 		session.applyAiResults({ results })
-		await saveCheckSessionRecord(session, input.user)
+		if (!(await completeRunningCheckSessionRecord(session, input.user))) {
+			const storedSession = await getCheckSessionRecord(session.id, input.user)
+			if (!storedSession) throw new CheckSessionNotFoundError('Check session not found.')
+			if (storedSession.isCompleted) {
+				return { checkSessionId: storedSession.id, results: storedSession.results }
+			}
+			if (storedSession.isFailed) {
+				throw new CheckSessionTerminalError('Check session already failed.')
+			}
+			throw new CheckSessionStateError('Check session completion was not persisted.')
+		}
 		return { checkSessionId: session.id, results: session.results }
 	} catch (error) {
 		await persistCheckSessionFailure(session, input.user, error)

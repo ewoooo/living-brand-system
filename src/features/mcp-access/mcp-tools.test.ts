@@ -4,6 +4,7 @@ import { z } from 'zod/v3'
 
 const mocks = vi.hoisted(() => ({
 	completeCheckSessionObservations: vi.fn(),
+	findUnavailableAiReferenceCheckKeys: vi.fn(),
 	findTemplatesForRequest: vi.fn(),
 	generateImages: vi.fn(),
 	listAvailableImageProfiles: vi.fn(),
@@ -25,6 +26,7 @@ vi.mock('@/features/asset-check/repositories/image-decoder.sharp.repository', ()
 }))
 vi.mock('@/features/asset-check/repositories/ai-check.ai.repository', () => ({
 	aiReferenceAssetKey: (asset: { role: string; url: string }) => `${asset.url}:${asset.role}`,
+	findUnavailableAiReferenceCheckKeys: mocks.findUnavailableAiReferenceCheckKeys,
 	loadAiReferenceFiles: mocks.loadAiReferenceFiles,
 }))
 vi.mock('@/features/generate-image/repositories/generated-image.payload.repository', () => ({
@@ -61,6 +63,7 @@ describe('custom MCP tools', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		mocks.loadAiReferenceFiles.mockResolvedValue(new Map())
+		mocks.findUnavailableAiReferenceCheckKeys.mockReturnValue([])
 	})
 
 	it('MCP 제작 기능 도구를 노출한다', () => {
@@ -127,6 +130,9 @@ describe('custom MCP tools', () => {
 		})
 		expect(result.content[0]).toMatchObject({
 			text: expect.stringContaining('"evidence":{"type":"textColumns"'),
+		})
+		expect(result.content[0]).toMatchObject({
+			text: expect.stringContaining('"unavailableReferenceCheckKeys":[]'),
 		})
 		expect(result.content[2]).toMatchObject({
 			type: 'image',

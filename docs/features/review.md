@@ -242,7 +242,7 @@ CheckSession
 | [Page](../surfaces/page.md) | 구현 | Studio의 `/studio/review` — 이미지 업로드 → 선택한 CheckScenario의 항목별 결과 테이블. Template·Image·Graphic·Review는 공통 Studio 사이드바를 사용합니다. 클라이언트가 `/api/check` → `/api/check/{checkSessionId}/ai` 순으로 호출 |
 | [REST](../surfaces/rest.md) | 구현 | `POST /api/check`(FormData, 20MB 제한, origin·인증 게이트), `POST /api/check/{checkSessionId}/ai` |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `runCheck`(+`listCheckScenarios`)이 `startCheckSession`을 호출 |
-| MCP | 구현 | `runAssetCheck`가 PNG/JPEG/WebP data URI의 결정론적 검수를 실행하고 내부 AI와 같은 관찰 프롬프트·문서 근거·레퍼런스 이미지·검사 이미지를 연결된 AI에 반환합니다. `submitAssetCheckObservations`가 관측값을 저장된 룰셋과 대조해 서버에서 최종 판정·저장합니다. |
+| MCP | 구현 | `runAssetCheck`가 PNG/JPEG/WebP data URI의 결정론적 검수를 실행하고 내부 AI와 같은 관찰 프롬프트·문서 근거·레퍼런스 이미지·검사 이미지를 연결된 AI에 반환합니다. `submitAssetCheckObservations`가 관측값을 저장된 룰셋과 대조해 서버에서 최종 판정·저장합니다. 레퍼런스를 불러오지 못한 Check는 `needs_review`로 처리하고, 동시 제출은 먼저 완료된 결과를 유지합니다. |
 
 ## 5. 의존
 
