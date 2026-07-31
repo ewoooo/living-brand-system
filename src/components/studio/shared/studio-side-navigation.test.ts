@@ -39,12 +39,13 @@ describe('StudioSideNavigation', () => {
 			'href',
 			'/studio/review',
 		)
+		expect(screen.getByRole('link', { name: 'MCP' })).toHaveAttribute('href', '/studio/mcp')
 		expect(screen.getByRole('link', { name: 'Template' })).toHaveAttribute(
 			'aria-current',
 			'page',
 		)
 		expect(screen.getByRole('link', { name: 'Studio' })).not.toHaveAttribute('aria-current')
-		expect(container.querySelectorAll('[data-icon="inline-end"]')).toHaveLength(6)
-		expect(screen.getAllByRole('listitem')).toHaveLength(6)
+		expect(container.querySelectorAll('[data-icon="inline-end"]')).toHaveLength(7)
+		expect(screen.getAllByRole('listitem')).toHaveLength(7)
 	})
 })

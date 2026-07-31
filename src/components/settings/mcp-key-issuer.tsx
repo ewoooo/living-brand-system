@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { routes } from '@/lib/routes'
 
 interface McpCredential {
@@ -16,7 +17,13 @@ export function McpKeyIssuer() {
 	const [credential, setCredential] = useState<McpCredential | null>(null)
 	const [error, setError] = useState('')
 	const [loading, setLoading] = useState(false)
-	const [copied, setCopied] = useState(false)
+	const [copyMessage, setCopyMessage] = useState('')
+	const codexCommand = credential
+		? `export LBS_MCP_API_KEY='${credential.apiKey}'\ncodex mcp add living-brand-system --url '${credential.endpoint}' --bearer-token-env-var LBS_MCP_API_KEY`
+		: ''
+	const claudeCommand = credential
+		? `claude mcp add --transport http living-brand-system --scope user '${credential.endpoint}' --header "Authorization: Bearer ${credential.apiKey}"`
+		: ''
 
 	async function issueKey() {
 		setError('')
@@ -25,9 +32,7 @@ export function McpKeyIssuer() {
 		setLoading(false)
 
 		if (response?.status === 401) {
-			window.location.assign(
-				`/admin/login?redirect=${encodeURIComponent(routes.mcpSettings)}`,
-			)
+			window.location.assign(`/admin/login?redirect=${encodeURIComponent(routes.studio.mcp)}`)
 			return
 		}
 		if (!response?.ok) {
@@ -38,10 +43,9 @@ export function McpKeyIssuer() {
 		setCredential((await response.json()) as McpCredential)
 	}
 
-	async function copyKey() {
-		if (!credential) return
-		await navigator.clipboard.writeText(credential.apiKey)
-		setCopied(true)
+	async function copyText(value: string, message: string) {
+		await navigator.clipboard.writeText(value)
+		setCopyMessage(message)
 	}
 
 	return (
@@ -68,14 +72,68 @@ export function McpKeyIssuer() {
 							</label>
 							<div className="flex gap-2">
 								<Input id="mcp-api-key" readOnly value={credential.apiKey} />
-								<Button type="button" variant="outline" onClick={copyKey}>
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() =>
+										copyText(credential.apiKey, '키를 복사했습니다.')
+									}
+								>
 									복사
 								</Button>
 							</div>
-							<p aria-live="polite" className="text-sm text-muted-foreground">
-								{copied ? '복사했습니다.' : ''}
-							</p>
 						</div>
+						<div className="grid gap-2">
+							<div>
+								<h3 className="font-medium">Codex CLI</h3>
+								<p className="text-sm text-muted-foreground">
+									붙여넣은 터미널에서 Codex를 실행하세요. 새 터미널에서는
+									LBS_MCP_API_KEY를 다시 설정해야 합니다.
+								</p>
+							</div>
+							<label className="sr-only" htmlFor="codex-mcp-command">
+								Codex 등록 명령
+							</label>
+							<Textarea id="codex-mcp-command" readOnly value={codexCommand} />
+							<Button
+								type="button"
+								variant="outline"
+								className="justify-self-start"
+								onClick={() =>
+									copyText(codexCommand, 'Codex 등록 명령을 복사했습니다.')
+								}
+							>
+								Codex 명령 복사
+							</Button>
+						</div>
+						<div className="grid gap-2">
+							<div>
+								<h3 className="font-medium">Claude Code</h3>
+								<p className="text-sm text-muted-foreground">
+									사용자 범위에 등록되어 모든 프로젝트에서 사용할 수 있습니다.
+								</p>
+							</div>
+							<label className="sr-only" htmlFor="claude-mcp-command">
+								Claude Code 등록 명령
+							</label>
+							<Textarea id="claude-mcp-command" readOnly value={claudeCommand} />
+							<Button
+								type="button"
+								variant="outline"
+								className="justify-self-start"
+								onClick={() =>
+									copyText(claudeCommand, 'Claude Code 등록 명령을 복사했습니다.')
+								}
+							>
+								Claude Code 명령 복사
+							</Button>
+						</div>
+						<p className="text-sm text-muted-foreground">
+							명령에는 비밀 키가 포함됩니다. 공유 저장소나 문서에 붙여넣지 마세요.
+						</p>
+						<p aria-live="polite" className="text-sm text-muted-foreground">
+							{copyMessage}
+						</p>
 					</>
 				) : (
 					<Button type="button" disabled={loading} onClick={issueKey}>

@@ -50,7 +50,7 @@ export function HeroFeatureSection() {
 			/>
 			<NavigationBlock
 				variant="featured"
-				href={routes.studio.template}
+				href={routes.studio.mcp}
 				label="MCP"
 				className="aspect-square md:aspect-auto"
 			/>

@@ -12,6 +12,7 @@ describe('routes', () => {
 		expect(routes.studio.root).toBe('/studio')
 		expect(routes.studio.generateImage).toBe('/studio/generate/image')
 		expect(routes.studio.generateGraphic).toBe('/studio/generate/graphic')
+		expect(routes.studio.mcp).toBe('/studio/mcp')
 		expect(getStudioTemplateCategoryRoute('event')).toBe('/studio/template/event')
 		expect(getStudioTemplateCategoryRoute('stationery')).toBe('/studio/template/stationery')
 		expect(getStudioTemplateRoute('event', 2)).toBe('/studio/template/event/2')
@@ -35,6 +36,11 @@ describe('routes', () => {
 			{
 				source: '/review',
 				destination: '/studio/review',
+				permanent: true,
+			},
+			{
+				source: '/settings/mcp',
+				destination: '/studio/mcp',
 				permanent: true,
 			},
 		])
