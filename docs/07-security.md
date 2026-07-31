@@ -123,6 +123,7 @@
 - Agent 질의에는 rate limit을 적용합니다.
 - Agent 질의 Route Handler는 인증된 내부 사용자만 허용하고, 요청 본문은 서버에서 schema로 다시 검증합니다.
 - Agent guideline 검색은 Payload access control을 우회하지 않도록 `user`와 `overrideAccess: false`를 함께 사용합니다.
+- MCP 외부 AI 검수는 인증된 사용자의 요청에만 검사 이미지, 구조화 Evidence, HeuristicPrompt, RuleChecker 프롬프트와 레퍼런스 이미지를 반환합니다. 기대값·연산자, 인증 정보와 내부 URL은 반환하지 않으며, 연결된 MCP 클라이언트와 AI 제공자가 해당 내용을 열람할 수 있음을 사용자에게 안내합니다.
 
 ### 운영 보안
 

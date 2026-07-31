@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
 	findTemplatesForRequest: vi.fn(),
 	generateImages: vi.fn(),
 	listAvailableImageProfiles: vi.fn(),
+	loadAiReferenceFiles: vi.fn(),
 	loadGeneratedImage: vi.fn(),
 	resizeForAiVision: vi.fn(),
 	searchAgentGuidelines: vi.fn(),
@@ -21,6 +22,10 @@ vi.mock('@/features/agent-chat/services/get-agent-guideline-context.service', ()
 }))
 vi.mock('@/features/asset-check/repositories/image-decoder.sharp.repository', () => ({
 	resizeForAiVision: mocks.resizeForAiVision,
+}))
+vi.mock('@/features/asset-check/repositories/ai-check.ai.repository', () => ({
+	aiReferenceAssetKey: (asset: { role: string; url: string }) => `${asset.url}:${asset.role}`,
+	loadAiReferenceFiles: mocks.loadAiReferenceFiles,
 }))
 vi.mock('@/features/generate-image/repositories/generated-image.payload.repository', () => ({
 	loadGeneratedImage: mocks.loadGeneratedImage,
@@ -53,7 +58,10 @@ function getTool(name: string) {
 }
 
 describe('custom MCP tools', () => {
-	beforeEach(() => vi.clearAllMocks())
+	beforeEach(() => {
+		vi.clearAllMocks()
+		mocks.loadAiReferenceFiles.mockResolvedValue(new Map())
+	})
 
 	it('MCP 제작 기능 도구를 노출한다', () => {
 		expect(customMcpTools.map(({ name }) => name)).toEqual([
@@ -77,7 +85,11 @@ describe('custom MCP tools', () => {
 					key: 'logo.visible',
 					title: 'Logo visible',
 					titleKo: '로고 노출',
+					source: { documentId: 12 },
+					checker: { key: 'asset-check.brand-guideline', type: 'heuristic' },
 					executor: 'heuristic',
+					prompt: '브랜드 로고 형태를 우선 관찰한다.',
+					heuristicPrompt: '원본 비율이 유지되었는지 관찰한다.',
 					heuristicCriteria: [
 						{
 							id: 'visible',
@@ -85,6 +97,9 @@ describe('custom MCP tools', () => {
 							expected: 'present',
 						},
 					],
+					implemented: true,
+					evidence: { type: 'textColumns', columns: [{ body: '로고 원본을 유지한다.' }] },
+					referenceAssets: [],
 				},
 			],
 		})
@@ -104,6 +119,15 @@ describe('custom MCP tools', () => {
 		expect(result.content[0]).toMatchObject({
 			text: expect.not.stringContaining('"expected"'),
 		})
+		expect(result.content[0]).toMatchObject({
+			text: expect.stringContaining('"checkerPrompt":"브랜드 로고 형태를 우선 관찰한다."'),
+		})
+		expect(result.content[0]).toMatchObject({
+			text: expect.stringContaining('"heuristicPrompt":"원본 비율이 유지되었는지 관찰한다."'),
+		})
+		expect(result.content[0]).toMatchObject({
+			text: expect.stringContaining('"evidence":{"type":"textColumns"'),
+		})
 		expect(result.content[2]).toMatchObject({
 			type: 'image',
 			data: expect.any(String),
@@ -118,6 +142,66 @@ describe('custom MCP tools', () => {
 			user: requestUser,
 		})
 		expect(mocks.resizeForAiVision).toHaveBeenCalledWith(expect.any(Buffer))
+	})
+
+	it('내부 AI와 같은 레퍼런스 이미지를 연결된 AI에 반환한다', async () => {
+		const image = Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64')
+		mocks.startCheckSession.mockResolvedValue({
+			checkSessionId: 10,
+			pendingCheckKeys: ['logo.shape'],
+			results: {},
+			rulesetSnapshot: [
+				{
+					key: 'logo.shape',
+					title: 'Logo shape',
+					checker: { key: 'asset-check.brand-guideline', type: 'heuristic' },
+					executor: 'heuristic',
+					heuristicCriteria: [
+						{ id: 'shape', question: '원본 형태와 일치하는가?', expected: 'present' },
+					],
+					implemented: true,
+					evidence: '원본 형태를 유지한다.',
+					referenceAssets: [
+						{
+							name: 'logo-master.png',
+							url: '/logo-master.png',
+							mimeType: 'image/png',
+							role: 'positive',
+						},
+					],
+				},
+			],
+		})
+		mocks.resizeForAiVision.mockResolvedValue(image)
+		mocks.loadAiReferenceFiles.mockResolvedValue(
+			new Map([
+				[
+					'/logo-master.png:positive',
+					{
+						name: 'logo-master.png',
+						role: 'positive',
+						mediaType: 'image/webp',
+						data: Buffer.from('reference'),
+					},
+				],
+			]),
+		)
+
+		const result = await getTool('runAssetCheck').handler(
+			{ imageData: ONE_PIXEL_PNG, imageName: 'logo.png' },
+			request,
+		)
+
+		expect(result.content).toHaveLength(5)
+		expect(result.content[3]).toEqual({
+			type: 'text',
+			text: 'Reference image (positive): logo-master.png',
+		})
+		expect(result.content[4]).toEqual({
+			type: 'image',
+			data: Buffer.from('reference').toString('base64'),
+			mimeType: 'image/webp',
+		})
 	})
 
 	it('검수 입력으로 외부 URL을 받지 않는다', async () => {

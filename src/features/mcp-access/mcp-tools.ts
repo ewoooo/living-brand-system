@@ -3,6 +3,11 @@ import sharp from 'sharp'
 import { z } from 'zod/v3'
 import { findTemplatesForRequest } from '@/features/agent-chat/services/agent-template-request.service'
 import { searchAgentGuidelines } from '@/features/agent-chat/services/get-agent-guideline-context.service'
+import { buildAiObservationTask } from '@/features/asset-check/domain/ai-observation-task'
+import {
+	aiReferenceAssetKey,
+	loadAiReferenceFiles,
+} from '@/features/asset-check/repositories/ai-check.ai.repository'
 import { resizeForAiVision } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { decodeImageDataUri } from '@/features/generate-image/image-data-uri'
 import { loadGeneratedImage } from '@/features/generate-image/repositories/generated-image.payload.repository'
@@ -85,31 +90,22 @@ export const customMcpTools = [
 					user: user(req),
 				})
 			const pending = rulesetSnapshot.filter((check) => pendingCheckKeys.includes(check.key))
+			const referenceFilesByKey = await loadAiReferenceFiles(pending)
+			const referenceKeys = new Set(
+				pending.flatMap((check) => check.referenceAssets.map(aiReferenceAssetKey)),
+			)
+			const referenceFiles = [...referenceKeys].flatMap((key) => {
+				const file = referenceFilesByKey.get(key)
+				return file ? [file] : []
+			})
+			const observationTask = buildAiObservationTask(pending, referenceFiles.length > 0)
 			const task = {
 				checkSessionId,
 				status: pending.length ? 'awaiting_client_observations' : 'completed',
 				results,
 				pendingCheckKeys,
 				nextTool: pending.length ? 'submitAssetCheckObservations' : null,
-				instructions: pending.length
-					? [
-							'Observe only the supplied target image against every question.',
-							'Return exactly one value, confidence, and short reason per criterion. For advisory checks, return one concise Korean advice paragraph.',
-							'Never decide or submit pass, fail, needs_review, fulfillment, or overall approval.',
-						]
-					: [],
-				checks: pending.map((check) => ({
-					key: check.key,
-					kind: check.executor === 'manual' ? 'advisory' : 'criteria',
-					titleEn: check.title,
-					titleKo: check.titleKo,
-					criteria: (check.heuristicCriteria ?? []).map((criterion) => ({
-						id: criterion.id,
-						question: criterion.question,
-						kind: criterion.kind ?? 'presence',
-						unit: criterion.kind === 'measure' ? criterion.unit : undefined,
-					})),
-				})),
+				...observationTask,
 			}
 			const content: (
 				| { type: 'text'; text: string }
@@ -123,6 +119,17 @@ export const customMcpTools = [
 						data: (await resizeForAiVision(image.data)).toString('base64'),
 						mimeType: image.mimeType,
 					},
+					...referenceFiles.flatMap((file) => [
+						{
+							type: 'text' as const,
+							text: `Reference image (${file.role}): ${file.name}`,
+						},
+						{
+							type: 'image' as const,
+							data: file.data.toString('base64'),
+							mimeType: file.mediaType,
+						},
+					]),
 				)
 			}
 
