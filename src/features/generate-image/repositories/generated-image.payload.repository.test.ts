@@ -56,7 +56,7 @@ describe('GeneratedImage repository', () => {
 			draft: false,
 			limit: 1,
 			overrideAccess: false,
-			select: { filesize: true, url: true },
+			select: { filename: true, filesize: true, url: true },
 			user,
 			where: {
 				and: [

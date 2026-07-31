@@ -28,7 +28,7 @@ export async function loadGeneratedImage(input: {
 		draft: false,
 		limit: 1,
 		overrideAccess: false,
-		select: { filesize: true, url: true },
+		select: { filename: true, filesize: true, url: true },
 		user: input.user as never,
 		where: {
 			and: [
