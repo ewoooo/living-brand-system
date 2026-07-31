@@ -1,9 +1,10 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { GetCreateNavigationOutput } from '@/features/template-create/services/get-create-navigation.service'
 import type { PublishedHtmlTemplate } from '@/features/template-create/services/get-published-template.service'
 import { TemplateGenerator } from './template-generator'
 
-const mocks = vi.hoisted(() => ({ exportTemplate: vi.fn() }))
+const mocks = vi.hoisted(() => ({ exportTemplate: vi.fn(), push: vi.fn() }))
 
 vi.mock('@/features/template-export/hooks/use-template-export', () => ({
 	useTemplateExport: () => ({
@@ -12,6 +13,9 @@ vi.mock('@/features/template-export/hooks/use-template-export', () => ({
 		exportError: null,
 		exportTemplate: mocks.exportTemplate,
 	}),
+}))
+vi.mock('next/navigation', () => ({
+	useRouter: () => ({ push: mocks.push }),
 }))
 
 const template: PublishedHtmlTemplate = {
@@ -25,11 +29,29 @@ const template: PublishedHtmlTemplate = {
 	templateVersion: '2026-07-29T00:00:00.000Z',
 }
 
+const navigation: GetCreateNavigationOutput = {
+	categories: [
+		{
+			id: 1,
+			title: '카드',
+			slug: 'cards',
+			href: '/studio/template/cards',
+			templates: [
+				{ id: 1, name: '테스트 템플릿', href: '/studio/template/cards/1' },
+				{ id: 2, name: '두 번째 템플릿', href: '/studio/template/cards/2' },
+			],
+		},
+	],
+}
+
 describe('TemplateGenerator', () => {
+	beforeEach(() => vi.clearAllMocks())
 	afterEach(cleanup)
 
 	it('공통 Studio 작업대에서 템플릿을 내보낸다', () => {
-		const { container } = render(<TemplateGenerator template={template} />)
+		const { container } = render(
+			<TemplateGenerator navigation={navigation} template={template} />,
+		)
 
 		expect(container.querySelector('[data-slot="studio-workspace"]')).not.toBeNull()
 		expect(container.querySelector('[data-slot="studio-workspace-controller"]')).not.toBeNull()
@@ -38,5 +60,16 @@ describe('TemplateGenerator', () => {
 		fireEvent.click(screen.getByRole('button', { name: 'PNG로 내보내기' }))
 
 		expect(mocks.exportTemplate).toHaveBeenCalledWith('png')
+	})
+
+	it('드롭다운에서 선택한 템플릿 작업대로 이동한다', () => {
+		render(<TemplateGenerator navigation={navigation} template={template} />)
+
+		expect(screen.getByLabelText('템플릿')).toHaveValue('/studio/template/cards/1')
+		fireEvent.change(screen.getByLabelText('템플릿'), {
+			target: { value: '/studio/template/cards/2' },
+		})
+
+		expect(mocks.push).toHaveBeenCalledWith('/studio/template/cards/2')
 	})
 })

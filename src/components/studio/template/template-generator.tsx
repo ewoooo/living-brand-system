@@ -1,10 +1,13 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { StudioWorkspace } from '@/components/studio/studio-workspace'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 import { Typography } from '@/components/ui/typography'
+import type { GetCreateNavigationOutput } from '@/features/template-create/services/get-create-navigation.service'
 import type { PublishedHtmlTemplate } from '@/features/template-create/services/get-published-template.service'
 import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
 import { pixelsToMillimeters } from '@/features/template-export/print-policy'
@@ -21,10 +24,21 @@ const PREVIEW_WIDTH = 480
  * 미리보기는 어드민 캔버스와 동일한 동일-문서 렌더 — iframe(opaque origin)은 벡터 mask의
  * CORS 로드를 깨뜨린다. 임포트 HTML은 스크립트 없는 inline-style이다.
  */
-export function TemplateGenerator({ template }: { template: PublishedHtmlTemplate }) {
+export function TemplateGenerator({
+	navigation,
+	template,
+}: {
+	navigation: GetCreateNavigationOutput
+	template: PublishedHtmlTemplate
+}) {
+	const router = useRouter()
 	const [values, setValues] = useState<Record<string, string>>({})
 	const { html, nodeConfigs, width, height } = template
 	const scale = Math.min(1, PREVIEW_WIDTH / width)
+	const selectedTemplateHref =
+		navigation.categories
+			.flatMap((category) => category.templates)
+			.find((item) => item.id === template.id)?.href ?? ''
 
 	const slots = useMemo(() => collectTemplateSlots(html, nodeConfigs), [html, nodeConfigs])
 
@@ -60,6 +74,29 @@ export function TemplateGenerator({ template }: { template: PublishedHtmlTemplat
 						</Typography>
 					</CardHeader>
 					<CardContent className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto py-4">
+						<div className="flex flex-col gap-2">
+							<Label htmlFor="template-select">템플릿</Label>
+							<select
+								id="template-select"
+								value={selectedTemplateHref}
+								onChange={(event) => router.push(event.currentTarget.value)}
+								className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+							>
+								{navigation.categories.map(
+									(category) =>
+										category.templates.length > 0 && (
+											<optgroup key={category.id} label={category.title}>
+												{category.templates.map((item) => (
+													<option key={item.id} value={item.href}>
+														{item.name}
+													</option>
+												))}
+											</optgroup>
+										),
+								)}
+							</select>
+						</div>
+
 						{slots.map((slot) => (
 							<div key={slot.nodeId} className="flex flex-col gap-1">
 								<label
