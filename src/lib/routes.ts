@@ -2,6 +2,7 @@ export const routes = {
 	admin: '/admin',
 	guideline: '/guideline',
 	home: '/',
+	mcpSettings: '/settings/mcp',
 	studio: {
 		examples: '/studio/examples',
 		generate: '/studio/generate',

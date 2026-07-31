@@ -8,7 +8,13 @@ import { searchPlugin } from '@payloadcms/plugin-search'
 import { EXPERIMENTAL_TableFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { ko } from '@payloadcms/translations/languages/ko'
-import { buildConfig, type CollectionConfig, type GlobalConfig, type PayloadRequest } from 'payload'
+import {
+	type Access,
+	buildConfig,
+	type CollectionConfig,
+	type GlobalConfig,
+	type PayloadRequest,
+} from 'payload'
 import { betterEditorSettingsGlobal } from 'payload-better-editor'
 import sharp from 'sharp'
 import { z } from 'zod/v3'
@@ -41,7 +47,7 @@ import {
 import { buildGuidelineSearchText } from './features/guideline/utils/guideline-search-text'
 import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
-import { adminOnly, authenticated, managerOrAdmin } from './lib/auth'
+import { adminOnly, authenticated, isAdmin, managerOrAdmin } from './lib/auth'
 import type { GuidelineDocument } from './payload-types'
 
 const filename = fileURLToPath(import.meta.url)
@@ -60,6 +66,9 @@ const mcpNumber = (value: unknown) => (typeof value === 'number' ? value : undef
 const mcpLevel = (value: unknown) => (value === 1 || value === 2 || value === 3 ? value : undefined)
 type McpToolArgs = Record<string, unknown>
 type GetDefaultMcpAccessSettings = (overrideApiKey?: null | string) => Promise<MCPAccessSettings>
+const createOwnMcpApiKey: Access = ({ data, req }) =>
+	isAdmin(req.user) ||
+	Boolean(req.user?.id != null && data?.user != null && String(req.user.id) === String(data.user))
 
 const BetterEditorSettings: GlobalConfig = {
 	...betterEditorSettingsGlobal,
@@ -176,8 +185,16 @@ export default buildConfig({
 				...collection,
 				labels: { singular: 'MCP API 키', plural: 'MCP API 키' },
 				admin: { ...collection.admin, group: '시스템 관리' },
+				fields: [
+					...(collection.fields ?? []),
+					{
+						name: 'apiKey',
+						type: 'text',
+						access: { read: () => false },
+					},
+				],
 				access: {
-					create: adminOnly,
+					create: createOwnMcpApiKey,
 					delete: adminOnly,
 					read: adminOnly,
 					update: adminOnly,
