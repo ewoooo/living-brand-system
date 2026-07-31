@@ -3,7 +3,7 @@ import { isLightColor } from '@/lib/color'
 /**
  * Color Pairing 규칙 = essenherb 3대 페어링(Tone in/on/Mono)의 병용 등급을 계산하는 단일 소스.
  * 세 방식 모두 BG→FG. 실제 색 유니버스(brand-colors)에 규칙을 적용해 `배경 key → { recommended, usable }`
- * 테이블을 만든다. 목록에 없는 key = 병용 불가(숨김). block(서버)·kit(클라)가 함께 쓴다(순수 TS).
+ * 테이블을 만든다. 목록에 없는 key = 병용 불가(숨김). block(서버)·view(클라)가 함께 쓴다(순수 TS).
  *
  * 원칙: 여기엔 "기술적 병용 여부"만. 추천/의도(노랑 제외·톤별 흑백 등)는 후속 추천 데이터로 분리.
  * ⚠️ Phase 2에서 이 rule-derived 테이블을 Payload `color-pairings` 컬렉션(브랜드 자산)으로 이관 예정.

@@ -35,7 +35,7 @@
 
 ### 1-5. 저작 계약 (Widget은 새 계층이 아님)
 - "Widget"이라 부를 것 = **이미 존재하는 인터랙티브 블록의 4파일 서브패턴**(schema/projection/component/**view**, 서버 조립 + 클라 인터랙션). 발명이 아니라 명명·문서화.
-- 계약 핵심: 서버 component가 `brand-*` 조회→순수 props로 클라 view에 주입(단방향), 브랜드 무관(색·로고 props), 정적 큐레이션은 폴더 내 `.ts`(예: `pairings.ts`·`colorway.ts`, 재-CMS화 금지), projection은 최소 evidence. docs/09·10의 닫힌 토큰·프레임 소유·kit→block 승격 게이트 준수.
+- 계약 핵심: 서버 component가 `brand-*` 조회→순수 props로 클라 view에 주입(단방향), 브랜드 무관(색·로고 props), 정적 큐레이션은 폴더 내 `.ts`(예: `pairings.ts`·`colorway.ts`, 재-CMS화 금지), projection은 최소 evidence. docs/09·10의 닫힌 토큰·프레임 소유 준수.
 
 ---
 
@@ -61,7 +61,7 @@
 
 ### Phase 1 — 수직 슬라이스 (값 큼 · 비용 작음 · 스키마 격변 없음)
 1. **통일 Text**: `GuidelineHeader`/`Description`(block variant) 재사용하는 얇은 `BlockText`(title+body, 정렬 규약 1곳) 도입 → callout/layout-grid/spec-list의 자체 `h4` 교체, `col-start-2` 중복 흡수. (렌더 레벨만, 스키마 불변)
-2. **Widget 개념 확립 + 파일럿**: `layout-grid-overlay`를 **첫 Widget(인터랙티브 블록)** 으로 kit→block 승격. docs/10에 "Widget = 4파일 인터랙티브 블록" 소절 추가.
+2. **Widget 개념 확립 + 파일럿**: `layout-grid-overlay`를 **첫 Widget(인터랙티브 블록)** 으로 block 승격. docs/10에 "Widget = 4파일 인터랙티브 블록" 소절 추가.
 3. **검수 gap 정리**: `collectApplicationImages`에 `imageGrid`/`logoViewer`/`stemClearSpace` case 추가(기존 버그) + `default` exhaustive 가드.
 - 산출: 텍스트 시각 통일(사용자 실제 통증 해소) + Layout Grid Widget + 검수 정합. 큰 마이그레이션·파이프라인 재작성 없음.
 
@@ -89,7 +89,7 @@
 - ⚠️ **네이밍 충돌**: `blocks/layout-grid`(slug `layoutGrid`)가 **이미 존재**(정적 columns/gutter/margin 시각화, 다른 물건). 파일럿 slug는 **`layoutGridOverlay`**로.
 - `blocks/layout-grid-overlay/` 생성:
   - `schema.ts`: `title` + `images`(array upload→application-images) + `sections`/`padding`/`gap`/`columns`(number, essenherb default) + `accent`(relationship→brand-colors) + `...baseBlockFields()`.
-  - `view.tsx`: kit `components/kit/layout-grid-overlay.tsx`의 `LayoutGridOverlay`/`GridStage`/`NumberField` 이식. **`GUIDE='#ff2d78'` 리터럴 → `accent` prop(hex)** (docs 닫힌 토큰 위반 수정). `SAMPLES`/`Demo` 제거.
+  - `view.tsx`: 기존 `LayoutGridOverlay`/`GridStage`/`NumberField` 이식. **`GUIDE='#ff2d78'` 리터럴 → `accent` prop(hex)** (docs 닫힌 토큰 위반 수정). `SAMPLES`/`Demo` 제거.
   - `component.tsx`(서버): 이미지 URL·accent hex 조립 → view 주입.
   - `projection.ts`: evidence 스칼라(sections/columns/padding/gap) + 이미지 `referenceAssets`(role context).
   - `GridStage` 좌표 % 환산 수학에 `*.test.ts` 하나.
