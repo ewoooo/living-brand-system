@@ -154,13 +154,23 @@ const PROHIBITIONS: string[] = [
 	'컬러 심볼을 분리형 심볼 형태로 사용할 수 없습니다.',
 	'CI에 스트로크 효과를 적용할 수 없습니다.',
 ]
+// legacy top-level `doDont` 블록을 그대로 사용한다(essenherb typography-incorrect-usage 선례).
+// widget화는 나중 — 그래서 Block+children이 아니라 페이지 blocks에 직접 들어간다.
+// 카테고리가 없는 평면 12종이라 그룹 1개에 예시를 모두 담고 category/description은 비운다.
 async function incorrectUsage(): Promise<AnyData> {
 	const examples = []
 	for (const [i, caption] of PROHIBITIONS.entries()) {
 		const file = `ci-incorrect-${String(i + 1).padStart(2, '0')}.webp`
-		examples.push({ kind: 'dont', caption, image: await uploadExampleImage(file) })
+		examples.push({ caption, image: await uploadExampleImage(file) })
 	}
-	return { blockType: 'doDontWidget', imageRatio: '4:3', columns: '3', examples }
+	return {
+		blockType: 'doDont',
+		title: '사용 금지 규정',
+		imageRatio: '4:3',
+		groupLayout: 'vertical',
+		exampleColumns: '3',
+		groups: [{ kind: 'dont', examples }],
+	}
 }
 
 async function upsertPage(opts: { slug: string; title: string; order: number; blocks: AnyData[] }) {
@@ -263,7 +273,8 @@ await upsertPage({
 	slug: 'ci-incorrect-usage',
 	title: '사용 금지',
 	order: 4,
-	blocks: [block({ title: '사용 금지 규정', width: 'full', children: [await incorrectUsage()] })],
+	// legacy `doDont`는 top-level 블록이라 Block(children)으로 감싸지 않는다.
+	blocks: [await incorrectUsage()],
 })
 
 console.log('✅ CI 섹션 프로비저닝 완료')
