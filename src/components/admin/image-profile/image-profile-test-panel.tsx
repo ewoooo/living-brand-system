@@ -117,7 +117,7 @@ export default function ImageProfileTestPanel() {
 				/>
 				유저 프롬프트 후보 정규화
 			</label>
-			<p>끄면 후보 선택만 건너뛰며, 시스템 프롬프트와 subject 합성은 유지됩니다.</p>
+			<p>켜면 유저 원문은 후보 선택에만 사용하고, 끄면 원문을 subject로 합성합니다.</p>
 			<div className="image-profile-test-panel__actions">
 				<Button
 					buttonStyle="secondary"
