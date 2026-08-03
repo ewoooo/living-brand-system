@@ -18,7 +18,7 @@ import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 export const maxDuration = 60
 
 const baseFields = {
-	prompt: z.string().trim().min(1).max(1_000),
+	prompt: z.string().trim().min(1).max(2_500),
 	count: z.number().int().min(1).max(6).default(1),
 }
 

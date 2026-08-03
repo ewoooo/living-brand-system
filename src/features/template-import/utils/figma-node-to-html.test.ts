@@ -102,7 +102,7 @@ describe('convertFigmaNodeToHtml — 벡터', () => {
 						name: 'logo',
 						type: 'VECTOR',
 						absoluteBoundingBox: { x: 20, y: 30, width: 80, height: 40 },
-						size: { width: 60, height: 20 },
+						size: { x: 60, y: 20 },
 					},
 				],
 			},
@@ -396,6 +396,53 @@ describe('convertFigmaNodeToHtml — constraints', () => {
 		expect(style).toContain('top:15%')
 		expect(style).toContain('width:33.33%')
 		expect(style).toContain('height:20%')
+	})
+
+	it('REST Vector 치수와 HUG 앵커를 Figma처럼 유지한다', () => {
+		const { html } = convertFigmaNodeToHtml({
+			id: '109:53',
+			name: '4',
+			type: 'FRAME',
+			absoluteBoundingBox: { x: 0, y: 0, width: 1024, height: 1024 },
+			children: [
+				{
+					id: '110:70',
+					name: 'Names',
+					type: 'FRAME',
+					layoutMode: 'VERTICAL',
+					layoutSizingHorizontal: 'HUG',
+					layoutSizingVertical: 'HUG',
+					constraints: { horizontal: 'CENTER', vertical: 'CENTER' },
+					absoluteBoundingBox: { x: 379, y: 454, width: 266, height: 116 },
+					size: { x: 266, y: 116 },
+				},
+				{
+					id: '419:23',
+					name: 'Message',
+					type: 'FRAME',
+					layoutMode: 'HORIZONTAL',
+					layoutSizingHorizontal: 'HUG',
+					layoutSizingVertical: 'HUG',
+					constraints: { horizontal: 'LEFT', vertical: 'TOP' },
+					absoluteBoundingBox: { x: 421, y: 916, width: 182, height: 50 },
+					size: { x: 182, y: 50 },
+				},
+			],
+		})
+
+		const names = nodeStyle(html, '110:70')
+		expect(names).toContain('left:50%')
+		expect(names).toContain('top:50%')
+		expect(names).toContain('transform:translate(-50%,-50%)')
+		expect(names).not.toContain('width:')
+		expect(names).not.toContain('height:')
+
+		const message = nodeStyle(html, '419:23')
+		expect(message).toContain('left:421px')
+		expect(message).toContain('top:916px')
+		expect(message).not.toContain('width:')
+		expect(message).not.toContain('height:')
+		expect(html).not.toContain('NaN')
 	})
 })
 
