@@ -181,7 +181,7 @@ export function ForwardStraightGenerator() {
 				/>
 				<figcaption className="grid gap-2 pt-2">
 					<Typography size="xs" tone="muted">
-						캔버스에서 포인터를 움직이거나 슬라이더로 기준점을 조정할 수 있습니다.
+						캔버스의 레드 닷을 드래그하거나 슬라이더로 기준점을 조정할 수 있습니다.
 					</Typography>
 					<div className="grid gap-2 md:grid-cols-2">
 						{(['x', 'y'] as const).map((axis) => (
