@@ -41,6 +41,11 @@ for (const f of (await readdir(ASSETS)).filter((f) => f.endsWith('.svg')).sort()
 
 // 사용 금지 예시 이미지(application-images). 로고가 아니라 "잘못 쓴 예시" 래스터라 컬렉션이 다르다.
 const DO_DONT_ASSETS = path.join(process.cwd(), 'scripts/assets/do-dont')
+// filename 기준 upsert(존재하면 건너뜀).
+// 🔴 파일 내용만 갱신할 때 payload.update(file)을 쓰면 안 된다 — Payload가 파일명을 재부여해서
+//    ci-incorrect-01.webp가 ci-incorrect-2.webp로 바뀌고, 다음 실행에서 못 찾아 중복이 생긴다.
+//    filesize 비교도 무의미하다(Payload가 재인코딩하므로 원본 바이트수와 절대 일치하지 않음).
+//    이미지를 교체하려면 해당 application-images 레코드를 먼저 삭제하고 이 시드를 다시 실행한다.
 async function uploadExampleImage(file: string): Promise<number> {
 	const name = file.replace('.webp', '')
 	const existing = await findId('application-images', { filename: { equals: file } })
