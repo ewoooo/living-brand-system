@@ -145,6 +145,7 @@ export default buildConfig({
 		migrationDir: './migrations',
 		pool: {
 			connectionString: env.DATABASE_URL,
+			max: 2,
 		},
 		prodMigrations: shouldRunProdMigrations ? migrations : undefined,
 		push: env.PAYLOAD_DB_PUSH === 'true',
