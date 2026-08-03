@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import config from '@payload-config'
-import { getPayload } from 'payload'
+import { type CollectionSlug, getPayload } from 'payload'
 
 // CI 섹션 콘텐츠 프로비저닝 (idempotent). 대상 DB에 실행: pnpm payload run scripts/seed-ci-section.ts
 //  1) scripts/assets/ci 의 SVG를 brand-logos에 업로드(이름 기준 upsert)
@@ -14,12 +14,14 @@ type AnyData = any
 const payload = await getPayload({ config })
 const ASSETS = path.join(process.cwd(), 'scripts/assets/ci')
 
-// ── 1) 에셋 업로드 (name = 파일명 without .svg, 존재하면 건너뜀) ──
+// ── 1) 에셋 업로드 (filename 기준 upsert, 존재하면 건너뜀) ──
+// 🔑 중복검사는 filename으로. name은 사람이 admin에서 바꿀 수 있고 localized라 기준이 못 된다
+// (실제로 옛 스크립트가 "HD현대 가로 기본형" 식으로 올린 로고를 name으로는 못 찾아 중복 업로드됐다).
 async function uploadAsset(file: string): Promise<void> {
 	const name = file.replace('.svg', '')
 	const existing = await payload.find({
 		collection: 'brand-logos',
-		where: { name: { equals: name } },
+		where: { filename: { equals: file } },
 		limit: 1,
 		overrideAccess: true,
 	})
@@ -37,7 +39,7 @@ for (const f of (await readdir(ASSETS)).filter((f) => f.endsWith('.svg')).sort()
 	await uploadAsset(f)
 }
 
-async function findId(collection: string, where: AnyData): Promise<number | null> {
+async function findId(collection: CollectionSlug, where: AnyData): Promise<number | null> {
 	const { docs } = await payload.find({
 		collection,
 		where,
@@ -211,6 +213,9 @@ await upsertPage({
 			horizontalLogo: await logoId('hd-horizontal-default-logoSpace.svg'),
 			horizontalGrid: await logoId('hd-horizontal-default-clearSpace.svg'),
 			horizontalMinHeightPx: 60,
+			verticalLogo: await logoId('hd-vertical-default-logoSpace.svg'),
+			verticalGrid: await logoId('hd-vertical-default-clearSpace.svg'),
+			verticalMinHeightPx: 120,
 		}),
 	),
 })
