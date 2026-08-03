@@ -17,18 +17,22 @@ export type ClearspacePanel = {
 }
 type Props = { panels: ClearspacePanel[] }
 
-// 박스 높이(px). 로고 크기와 무관한 표시 영역 — 넘치면 잘린다.
-const BASE_H = 480
+// 뷰포트 높이(px). 로고 크기와 무관한 고정 표시 영역 — 넘치면 잘린다.
+const BASE_H = 640
+// 슬라이더 표시값 대비 실제 배율. 슬라이더 눈금은 그대로 10~100%로 두고 실제 배율만 여기서 정한다
+// (표시 100% = 원본의 75%). 눈금을 바꾸지 않는 건 사용자에게 보이는 범위를 유지하기 위함.
+// 최소크기 경고는 이 값으로 계산된 실제 렌더 높이를 minHeightPx와 비교하므로 배율을 바꿔도 유효하다.
+const SCALE_FACTOR = 0.75
 
 export function ClearspaceViewerView({ panels }: Props) {
 	const [scale, setScale] = useState(100)
 	const [nat, setNat] = useState<(readonly [number, number] | null)[]>([])
 
-	// 원본 높이 × 슬라이더 배율 = 실제 렌더 높이(모든 패널 공통 배율).
+	// 원본 높이 × 슬라이더 배율 × SCALE_FACTOR = 실제 렌더 높이(모든 패널 공통 배율).
 	const renderedH = (i: number): number | null => {
 		const n = nat[i]
 		if (!n) return null
-		return (n[1] * scale) / 100
+		return (n[1] * scale * SCALE_FACTOR) / 100
 	}
 	const forbidden = (i: number, min: number | null) => {
 		const h = renderedH(i)
@@ -52,53 +56,55 @@ export function ClearspaceViewerView({ panels }: Props) {
 
 	return (
 		<div className="flex flex-col gap-6">
-			{/* row: 고정 높이 + 폭 100%. 패널이 flex-1로 폭 균등 양분. */}
+			{/* 뷰포트 = 박스 하나(고정 높이 · 폭 100%). 넘치면 자른다.
+			    그 안에 로고 전체를 한 그룹으로 묶어 가운데 정렬한다(패널별로 폭을 나눠 갖지 않는다). */}
 			<div
-				className="flex items-end justify-center gap-12 overflow-x-auto"
+				className="flex w-full items-center justify-center overflow-hidden"
 				style={{ height: BASE_H }}
 			>
+				<div className="flex shrink-0 items-center gap-6">
+					{panels.map((p, i) => {
+						const h = renderedH(i)
+						return (
+							// shrink-0 + max-w-none = 박스보다 커져도 폭이 clamp되지 않게(Tailwind preflight의
+							// img{max-width:100%}가 걸리면 SVG가 폭 기준으로 축소돼 높이만 자란다).
+							<div key={p.label} className="group relative shrink-0">
+								{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
+								<img
+									ref={captureNat(i)}
+									src={p.logo}
+									alt={p.label}
+									style={{ height: h ?? undefined }}
+									className="block w-auto max-w-none"
+								/>
+								{p.grid ? (
+									// biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용.
+									<img
+										src={p.grid}
+										alt=""
+										style={{ height: h ?? undefined }}
+										className="absolute top-0 left-0 w-auto max-w-none transition-opacity duration-200 group-hover:opacity-0"
+									/>
+								) : null}
+							</div>
+						)
+					})}
+				</div>
+			</div>
+
+			{/* 캡션은 박스 밖 — 로고가 뷰포트를 넘겨도 px·금지 표시가 잘리지 않게. */}
+			<div className="flex justify-center gap-12">
 				{panels.map((p, i) => {
 					const h = renderedH(i)
 					const bad = forbidden(i, p.minHeightPx)
 					return (
-						<div
+						<span
 							key={p.label}
-							className="flex min-w-0 flex-1 flex-col items-center gap-2"
+							className={`text-xs ${bad ? 'font-semibold text-red-600' : 'text-neutral-500'}`}
 						>
-							{/* 박스: 50%폭 × 고정높이. 슬라이더 불변. 로고는 이 안에서 가운데 스케일. */}
-							<div
-								className="flex w-full items-center justify-center overflow-hidden"
-								style={{ height: BASE_H }}
-							>
-								{/* shrink-0 + max-w-none = 박스보다 커져도 폭이 clamp되지 않게(Tailwind preflight의
-								    img{max-width:100%}가 걸리면 SVG가 폭 기준으로 축소돼 높이만 자란다). 넘치면 박스가 자름. */}
-								<div className="group relative inline-block shrink-0">
-									{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
-									<img
-										ref={captureNat(i)}
-										src={p.logo}
-										alt={p.label}
-										style={{ height: h ?? undefined }}
-										className="block w-auto max-w-none"
-									/>
-									{p.grid ? (
-										// biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용.
-										<img
-											src={p.grid}
-											alt=""
-											style={{ height: h ?? undefined }}
-											className="absolute top-0 left-0 w-auto max-w-none transition-opacity duration-200 group-hover:opacity-0"
-										/>
-									) : null}
-								</div>
-							</div>
-							<span
-								className={`text-xs ${bad ? 'font-semibold text-red-600' : 'text-neutral-500'}`}
-							>
-								{p.label} · {h != null ? `${Math.round(h)}px` : '…'}
-								{bad ? ' · 최소크기 미만(금지)' : ''}
-							</span>
-						</div>
+							{p.label} · {h != null ? `${Math.round(h)}px` : '…'}
+							{bad ? ' · 최소크기 미만(금지)' : ''}
+						</span>
 					)
 				})}
 			</div>

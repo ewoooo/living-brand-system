@@ -145,7 +145,13 @@ export default buildConfig({
 		migrationDir: './migrations',
 		pool: {
 			connectionString: env.DATABASE_URL,
-			max: 2,
+			// max가 너무 작으면 트랜잭션 안에서 추가 커넥션을 얻지 못해 자기를 기다리는 데드락이 난다.
+			// admin의 2초 autosave(guidelineDraftVersions)로 저장이 겹치면 max:2에선 풀이 즉시 고갈돼
+			// 무한로딩 + 앱 전체 라우트 정지로 번졌다.
+			max: 10,
+			// 데드락 대신 빠르게 실패시켜 커넥션을 반납한다(무한 대기 방지).
+			connectionTimeoutMillis: 10_000,
+			idleTimeoutMillis: 30_000,
 		},
 		prodMigrations: shouldRunProdMigrations ? migrations : undefined,
 		push: env.PAYLOAD_DB_PUSH === 'true',
