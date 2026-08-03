@@ -19,16 +19,19 @@ type Props = { panels: ClearspacePanel[] }
 
 // 뷰포트 높이(px). 로고 크기와 무관한 고정 표시 영역 — 넘치면 잘린다.
 const BASE_H = 640
+// 슬라이더 표시값 대비 실제 배율. 슬라이더 눈금은 그대로 10~100%로 두고 실제로는 그 절반까지만 키운다
+// (표시 100% = 원본의 50%). 눈금을 바꾸지 않는 건 사용자에게 보이는 범위를 유지하기 위함.
+const SCALE_FACTOR = 0.5
 
 export function ClearspaceViewerView({ panels }: Props) {
 	const [scale, setScale] = useState(100)
 	const [nat, setNat] = useState<(readonly [number, number] | null)[]>([])
 
-	// 원본 높이 × 슬라이더 배율 = 실제 렌더 높이(모든 패널 공통 배율).
+	// 원본 높이 × 슬라이더 배율 × SCALE_FACTOR = 실제 렌더 높이(모든 패널 공통 배율).
 	const renderedH = (i: number): number | null => {
 		const n = nat[i]
 		if (!n) return null
-		return (n[1] * scale) / 100
+		return (n[1] * scale * SCALE_FACTOR) / 100
 	}
 	const forbidden = (i: number, min: number | null) => {
 		const h = renderedH(i)
@@ -58,7 +61,7 @@ export function ClearspaceViewerView({ panels }: Props) {
 				className="flex w-full items-center justify-center overflow-hidden"
 				style={{ height: BASE_H }}
 			>
-				<div className="flex shrink-0 items-center gap-12">
+				<div className="flex shrink-0 items-center gap-6">
 					{panels.map((p, i) => {
 						const h = renderedH(i)
 						return (
