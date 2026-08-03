@@ -1,4 +1,5 @@
 import { CarouselWidget } from '@/features/guideline/widgets/carousel/component'
+import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/component'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/component'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/component'
@@ -18,6 +19,7 @@ import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/c
 // 위젯이 늘면 이 배열을 자동 카탈로그로 대체. 지금은 수동으로 충분.
 // ponytail: registry = 배열 하나, 제너레이터는 반복이 지겨워질 때.
 const WIDGETS: { name: string; Component: React.ComponentType }[] = [
+	{ name: 'ci-lockup', Component: CiLockupWidget },
 	{ name: 'color-palette', Component: ColorPaletteWidget },
 	{ name: 'color-pairing', Component: ColorPairingWidget },
 	{ name: 'color-pairing-recommendation', Component: ColorPairingRecommendationWidget },
