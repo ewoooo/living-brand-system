@@ -82,17 +82,19 @@ export function ClearspaceViewerView({ panels }: Props) {
 								ref={(el) => {
 									boxes.current[i] = el
 								}}
-								className="flex w-full items-center justify-center"
+								className="flex w-full items-center justify-center overflow-hidden"
 								style={{ height: BASE_H }}
 							>
-								<div className="group relative inline-block">
+								{/* shrink-0 + max-w-none = 박스보다 커져도 폭이 clamp되지 않게(Tailwind preflight의
+								    img{max-width:100%}가 걸리면 SVG가 폭 기준으로 축소돼 높이만 자란다). 넘치면 박스가 자름. */}
+								<div className="group relative inline-block shrink-0">
 									{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
 									<img
 										ref={captureNat(i)}
 										src={p.logo}
 										alt={p.label}
 										style={{ height: h ?? undefined }}
-										className="block w-auto"
+										className="block w-auto max-w-none"
 									/>
 									{p.grid ? (
 										// biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용.
@@ -100,7 +102,7 @@ export function ClearspaceViewerView({ panels }: Props) {
 											src={p.grid}
 											alt=""
 											style={{ height: h ?? undefined }}
-											className="absolute top-0 left-0 w-auto transition-opacity duration-200 group-hover:opacity-0"
+											className="absolute top-0 left-0 w-auto max-w-none transition-opacity duration-200 group-hover:opacity-0"
 										/>
 									) : null}
 								</div>
