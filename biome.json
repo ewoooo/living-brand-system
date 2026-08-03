@@ -21,6 +21,7 @@
 			"!src/app/(payload)/admin",
 			"!scripts/assets/essenherb-b3",
 			"!src/features/guideline/blocks/icon-grid/svg",
+			"!public/**/*.svg",
 			"!migrations"
 		]
 	},

@@ -14,6 +14,25 @@
 	font-display: swap;
 }
 
+/* HD체 (HD현대 공개 배포). CI 락업 조립에 쓰는 워드마크 폰트 — 로고 글자만 서브셋했다.
+   정본 락업 SVG가 참조하는 폰트는 HDOTF-Md(Medium)이지만 CI에 실제로 쓰인 웨이트는
+   아웃라인화돼 있어 확정할 수 없다. 두 웨이트를 모두 두고 브랜드팀 확인을 받는다. */
+@font-face {
+	font-family: "HD";
+	src: url("/fonts/hd/HD-Medium.woff2") format("woff2");
+	font-weight: 500;
+	font-style: normal;
+	font-display: block;
+}
+
+@font-face {
+	font-family: "HD";
+	src: url("/fonts/hd/HD-Bold.woff2") format("woff2");
+	font-weight: 700;
+	font-style: normal;
+	font-display: block;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
