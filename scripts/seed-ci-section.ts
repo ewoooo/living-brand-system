@@ -39,6 +39,23 @@ for (const f of (await readdir(ASSETS)).filter((f) => f.endsWith('.svg')).sort()
 	await uploadAsset(f)
 }
 
+// 사용 금지 예시 이미지(application-images). 로고가 아니라 "잘못 쓴 예시" 래스터라 컬렉션이 다르다.
+const DO_DONT_ASSETS = path.join(process.cwd(), 'scripts/assets/do-dont')
+async function uploadExampleImage(file: string): Promise<number> {
+	const name = file.replace('.webp', '')
+	const existing = await findId('application-images', { filename: { equals: file } })
+	if (existing) return existing
+	const buffer = await readFile(path.join(DO_DONT_ASSETS, file))
+	const created = await payload.create({
+		collection: 'application-images',
+		data: { name, alt: name, _status: 'published' },
+		file: { data: buffer, mimetype: 'image/webp', name: file, size: buffer.byteLength },
+		overrideAccess: true,
+	})
+	console.log(`example image: ${name}`)
+	return created.id as number
+}
+
 async function findId(collection: CollectionSlug, where: AnyData): Promise<number | null> {
 	const { docs } = await payload.find({
 		collection,
@@ -122,7 +139,29 @@ const clearspaceViewer = (cfg: AnyData): AnyData => ({
 	blockType: 'clearspaceViewerWidget',
 	...cfg,
 })
-const incorrectUsage = (): AnyData => ({ blockType: 'incorrectUsageWidget' })
+// 사용 금지 12종(01-specs E, PDF p15~16). 캡션 순서 = 예시 이미지 ci-incorrect-01~12 순서.
+const PROHIBITIONS: string[] = [
+	'CI의 형태를 임의로 변경할 수 없습니다.',
+	'어떠한 형태로든 CI를 변경할 수 없습니다.',
+	'CI의 비율을 변경할 수 없습니다.',
+	'CI의 간격을 임의로 조정할 수 없습니다.',
+	'CI의 가시성을 해치는 배경 이미지와 함께 사용할 수 없습니다.',
+	'CI의 가시성을 해치는 배경 컬러와 함께 사용할 수 없습니다.',
+	'CI에 별도의 시각효과를 적용할 수 없습니다.',
+	'CI의 색상을 임의대로 변경할 수 없습니다.',
+	'심볼을 단독 표기할 수 없습니다.',
+	'심볼과 텍스트를 조합하여 사용할 수 없습니다.',
+	'컬러 심볼을 분리형 심볼 형태로 사용할 수 없습니다.',
+	'CI에 스트로크 효과를 적용할 수 없습니다.',
+]
+async function incorrectUsage(): Promise<AnyData> {
+	const examples = []
+	for (const [i, caption] of PROHIBITIONS.entries()) {
+		const file = `ci-incorrect-${String(i + 1).padStart(2, '0')}.webp`
+		examples.push({ kind: 'dont', caption, image: await uploadExampleImage(file) })
+	}
+	return { blockType: 'doDontWidget', imageRatio: '4:3', columns: '3', examples }
+}
 
 async function upsertPage(opts: { slug: string; title: string; order: number; blocks: AnyData[] }) {
 	const existing = await findId('guideline-documents', { slug: { equals: opts.slug } })
@@ -223,7 +262,7 @@ await upsertPage({
 	slug: 'ci-incorrect-usage',
 	title: '사용 금지',
 	order: 4,
-	blocks: [block({ title: '사용 금지 규정', width: 'full', children: [incorrectUsage()] })],
+	blocks: [block({ title: '사용 금지 규정', width: 'full', children: [await incorrectUsage()] })],
 })
 
 console.log('✅ CI 섹션 프로비저닝 완료')
