@@ -58,7 +58,7 @@ export function ClearspaceViewerView({ panels }: Props) {
 				className="flex w-full items-center justify-center overflow-hidden"
 				style={{ height: BASE_H }}
 			>
-				<div className="flex shrink-0 items-end gap-12">
+				<div className="flex shrink-0 items-center gap-12">
 					{panels.map((p, i) => {
 						const h = renderedH(i)
 						return (
