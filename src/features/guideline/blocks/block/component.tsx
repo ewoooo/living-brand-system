@@ -77,6 +77,9 @@ function renderWidget(child: Child): ReactNode {
 			return <IconGridWidget />
 		case 'imageGridWidget':
 			return <ImageGridWidget />
+		case 'incorrectUsageWidget':
+			// legacy doDont 블록으로 대체됐지만 스키마에 남아 있어 렌더 경로를 유지한다.
+			return <IncorrectUsageWidget />
 		case 'layoutGridWidget':
 			return <LayoutGridWidget />
 		case 'layoutGridOverlayWidget':
