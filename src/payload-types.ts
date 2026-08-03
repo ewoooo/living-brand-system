@@ -876,6 +876,7 @@ export interface LayoutBlock {
         | ClearspaceViewerWidget
         | ColorPairingWidget
         | ColorPairingRecommendationWidget
+        | DoDontWidget
         | GlyphGridWidget
         | IconGridWidget
         | ImageGridWidget
@@ -1033,6 +1034,36 @@ export interface ColorPairingRecommendationWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'colorPairingRecommendationWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DoDontWidget".
+ */
+export interface DoDontWidget {
+  /**
+   * 예시 이미지의 표시 비율입니다.
+   */
+  imageRatio?:
+    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+    | null;
+  /**
+   * 넓은 화면에서 예시를 배치할 열 수입니다.
+   */
+  columns?: ('2' | '3' | '4') | null;
+  /**
+   * 예시 이미지와 캡션입니다. 세트 헤딩은 없습니다.
+   */
+  examples?:
+    | {
+        image?: (number | null) | ApplicationImage;
+        kind: 'do' | 'ok' | 'dont';
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'doDontWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2737,6 +2768,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
         colorPairingWidget?: T | ColorPairingWidgetSelect<T>;
         colorPairingRecommendationWidget?: T | ColorPairingRecommendationWidgetSelect<T>;
+        doDontWidget?: T | DoDontWidgetSelect<T>;
         glyphGridWidget?: T | GlyphGridWidgetSelect<T>;
         iconGridWidget?: T | IconGridWidgetSelect<T>;
         imageGridWidget?: T | ImageGridWidgetSelect<T>;
@@ -2819,6 +2851,24 @@ export interface ColorPairingWidgetSelect<T extends boolean = true> {
  * via the `definition` "ColorPairingRecommendationWidget_select".
  */
 export interface ColorPairingRecommendationWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DoDontWidget_select".
+ */
+export interface DoDontWidgetSelect<T extends boolean = true> {
+  imageRatio?: T;
+  columns?: T;
+  examples?:
+    | T
+    | {
+        image?: T;
+        kind?: T;
+        caption?: T;
+        id?: T;
+      };
   id?: T;
   blockName?: T;
 }
