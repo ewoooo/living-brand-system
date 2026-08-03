@@ -144,8 +144,9 @@ export default buildConfig({
 	db: postgresAdapter({
 		migrationDir: './migrations',
 		pool: {
+			connectionTimeoutMillis: 5_000,
 			connectionString: env.DATABASE_URL,
-			max: 2,
+			max: 3,
 		},
 		prodMigrations: shouldRunProdMigrations ? migrations : undefined,
 		push: env.PAYLOAD_DB_PUSH === 'true',
