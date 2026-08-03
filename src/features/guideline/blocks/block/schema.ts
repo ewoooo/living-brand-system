@@ -6,6 +6,7 @@ import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/schema'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/schema'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/schema'
+import { DoDontWidget } from '@/features/guideline/widgets/do-dont/schema'
 import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/schema'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/schema'
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/schema'
@@ -114,6 +115,7 @@ export const LayoutBlock: Block = {
 				ClearspaceViewerWidget,
 				ColorPairingWidget,
 				ColorPairingRecommendationWidget,
+				DoDontWidget,
 				GlyphGridWidget,
 				IconGridWidget,
 				ImageGridWidget,

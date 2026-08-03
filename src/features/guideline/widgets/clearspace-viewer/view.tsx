@@ -1,10 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 
 // 클리어스페이스 뷰어(클라). 레이아웃 규칙:
-//  - 바깥 row = 고정 높이 + 폭 100%. 패널 2개가 그 폭을 flex-1로 균등 양분(각 박스는 슬라이더에 불변, 창 폭에만 반응).
-//  - 로고는 자기 박스(50%폭 × 고정높이)에 fit된 크기가 기준(=슬라이더 100%, 창폭 보정된 값), 슬라이더로 그 높이를 배율.
+//  - 바깥 row = 고정 높이 + 폭 100%. 패널 2개가 그 폭을 flex-1로 균등 양분(박스는 슬라이더에 불변, 창 폭에만 반응).
+//  - 🔑 슬라이더 % = 원본(viewBox) 대비 배율. 렌더 높이 = 원본 높이 × %/100, 100% = 원본 1:1.
+//    박스 크기를 기준으로 삼으면 패널마다 100%가 다른 배율을 뜻하게 되고, 원본에서 같은 10px였던
+//    SVG 내부 치수 텍스트가 패널 간에 다른 크기로 보인다(가로형은 박스 폭에, 세로형은 높이에 걸림).
+//    같은 %면 모든 패널이 같은 배율 → 텍스트 크기 일치. 박스보다 커지면 잘린다.
 //  - px = 실제 렌더 높이. 파일별 minHeightPx 미만이면 빨강(금지). hover 시 그리드 숨김(CSS).
 export type ClearspacePanel = {
 	label: string
@@ -14,33 +17,18 @@ export type ClearspacePanel = {
 }
 type Props = { panels: ClearspacePanel[] }
 
-// 고정 기준높이(px). 박스 높이 = 이 값. 로고는 이 높이와 박스폭 중 작은 쪽에 맞춰 fit.
+// 박스 높이(px). 로고 크기와 무관한 표시 영역 — 넘치면 잘린다.
 const BASE_H = 480
 
 export function ClearspaceViewerView({ panels }: Props) {
 	const [scale, setScale] = useState(100)
-	const [boxW, setBoxW] = useState<number[]>([])
 	const [nat, setNat] = useState<(readonly [number, number] | null)[]>([])
-	const boxes = useRef<(HTMLDivElement | null)[]>([])
 
-	// 박스 실폭 측정(창 리사이즈에 반응). 슬라이더 변경엔 재측정 불필요(박스 불변).
-	const measure = useCallback(() => {
-		setBoxW(boxes.current.map((b) => b?.clientWidth ?? 0))
-	}, [])
-	useEffect(() => {
-		measure()
-		window.addEventListener('resize', measure)
-		return () => window.removeEventListener('resize', measure)
-	}, [measure])
-
-	// 박스에 fit된 로고 높이(창폭 보정 기준) × 슬라이더 배율 = 실제 렌더 높이.
+	// 원본 높이 × 슬라이더 배율 = 실제 렌더 높이(모든 패널 공통 배율).
 	const renderedH = (i: number): number | null => {
 		const n = nat[i]
-		const w = boxW[i]
-		if (!n || !w) return null
-		const [nw, nh] = n
-		const fit = Math.min(BASE_H, (w * nh) / nw) // 높이·폭 중 작은 쪽에 맞춤
-		return (fit * scale) / 100
+		if (!n) return null
+		return (n[1] * scale) / 100
 	}
 	const forbidden = (i: number, min: number | null) => {
 		const h = renderedH(i)
@@ -79,20 +67,19 @@ export function ClearspaceViewerView({ panels }: Props) {
 						>
 							{/* 박스: 50%폭 × 고정높이. 슬라이더 불변. 로고는 이 안에서 가운데 스케일. */}
 							<div
-								ref={(el) => {
-									boxes.current[i] = el
-								}}
-								className="flex w-full items-center justify-center"
+								className="flex w-full items-center justify-center overflow-hidden"
 								style={{ height: BASE_H }}
 							>
-								<div className="group relative inline-block">
+								{/* shrink-0 + max-w-none = 박스보다 커져도 폭이 clamp되지 않게(Tailwind preflight의
+								    img{max-width:100%}가 걸리면 SVG가 폭 기준으로 축소돼 높이만 자란다). 넘치면 박스가 자름. */}
+								<div className="group relative inline-block shrink-0">
 									{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
 									<img
 										ref={captureNat(i)}
 										src={p.logo}
 										alt={p.label}
 										style={{ height: h ?? undefined }}
-										className="block w-auto"
+										className="block w-auto max-w-none"
 									/>
 									{p.grid ? (
 										// biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용.
@@ -100,7 +87,7 @@ export function ClearspaceViewerView({ panels }: Props) {
 											src={p.grid}
 											alt=""
 											style={{ height: h ?? undefined }}
-											className="absolute top-0 left-0 w-auto transition-opacity duration-200 group-hover:opacity-0"
+											className="absolute top-0 left-0 w-auto max-w-none transition-opacity duration-200 group-hover:opacity-0"
 										/>
 									) : null}
 								</div>
@@ -116,12 +103,12 @@ export function ClearspaceViewerView({ panels }: Props) {
 				})}
 			</div>
 
-			{/* 공유 스케일 슬라이더 — 100%에서 시작(박스 fit 기준). */}
+			{/* 공유 스케일 슬라이더 — 100%(원본 1:1)에서 시작해 10%까지 축소. */}
 			<div className="mx-auto flex w-full max-w-xs items-center gap-3">
 				<input
 					type="range"
-					min={20}
-					max={200}
+					min={10}
+					max={100}
 					value={scale}
 					onChange={(e) => setScale(Number(e.target.value))}
 					className={`w-full ${anyForbidden ? 'accent-red-600' : 'accent-neutral-800'}`}

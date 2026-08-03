@@ -26,7 +26,11 @@ export async function LogoColorVariantWidget({ logo }: { logo: LogoRef }) {
 	const map: Record<string, Record<string, string>> = {}
 	for (const d of docs) {
 		const base = d.filename?.replace('.svg', '') ?? ''
-		const [l, orientation, color] = base.split('-')
+		// 정확히 3조각({lang}-{orientation}-{color})만 채택. `-logoSpace`/`-clearSpace` 같은
+		// 클리어스페이스 레이어 파일도 color=default로 잡혀 기본형 칸을 덮어쓴다(조회 순서에 좌우됨).
+		const parts = base.split('-')
+		if (parts.length !== 3) continue
+		const [l, orientation, color] = parts
 		if (l !== lang || !orientation || !color) continue
 		const url = d.url ?? (d.filename ? `/api/brand-logos/file/${d.filename}` : null)
 		if (!url) continue
