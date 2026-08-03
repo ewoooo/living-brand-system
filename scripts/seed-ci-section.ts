@@ -200,7 +200,8 @@ const hd = await logoId('hd-horizontal-default.svg')
 
 function langBlocks(colorLogo: number, viewer: AnyData): AnyData[] {
 	return [
-		block({ title: '로고', width: 'padded', children: [viewer] }),
+		// 클리어스페이스 뷰어는 뷰포트가 넓어야 로고 그룹이 잘리지 않으므로 전체폭 블록에 담는다.
+		block({ title: '로고', width: 'full', children: [viewer] }),
 		block({ title: '색상 변형', width: 'padded', children: [colorVariant(colorLogo)] }),
 	]
 }
