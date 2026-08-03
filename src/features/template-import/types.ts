@@ -12,7 +12,8 @@ export interface FigmaNode {
 	isMask?: boolean
 	children?: FigmaNode[]
 	absoluteBoundingBox?: { x: number; y: number; width: number; height: number }
-	size?: { width: number; height: number }
+	/** HasLayoutTrait.size는 폭/높이를 x/y에 담는 REST Vector다. */
+	size?: { x: number; y: number }
 	relativeTransform?: [[number, number, number], [number, number, number]]
 	constraints?: FigmaLayoutConstraint
 	fills?: FigmaPaint[]
@@ -41,8 +42,11 @@ export interface FigmaNode {
 	paddingLeft?: number
 	primaryAxisAlignItems?: string
 	counterAxisAlignItems?: string
-	layoutSizingHorizontal?: string
-	layoutSizingVertical?: string
+	layoutSizingHorizontal?: 'FIXED' | 'HUG' | 'FILL'
+	layoutSizingVertical?: 'FIXED' | 'HUG' | 'FILL'
+	layoutGrow?: 0 | 1
+	layoutAlign?: 'INHERIT' | 'STRETCH' | 'MIN' | 'CENTER' | 'MAX'
+	layoutPositioning?: 'AUTO' | 'ABSOLUTE'
 }
 
 export interface FigmaPaint {

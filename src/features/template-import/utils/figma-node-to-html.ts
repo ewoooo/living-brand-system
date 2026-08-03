@@ -32,8 +32,6 @@ interface Node extends Omit<FigmaNode, 'style'> {
 	style?: TextStyle
 	background?: FigmaPaint[]
 	backgroundColor?: { r: number; g: number; b: number; a?: number }
-	// 회전/스케일 이전의 실제 치수. absoluteBoundingBox(AABB)는 회전 시 커지므로 치수는 size를 우선한다.
-	size?: { width: number; height: number }
 	opacity?: number
 	rotation?: number
 	blendMode?: string
@@ -54,9 +52,6 @@ interface Node extends Omit<FigmaNode, 'style'> {
 	gridRowsSizing?: string
 	gridItemsPositioning?: string
 	// 자식 배치
-	layoutGrow?: number
-	layoutAlign?: string
-	layoutPositioning?: string
 	gridColumnAnchorIndex?: number
 	gridRowAnchorIndex?: number
 	gridColumnSpan?: number
@@ -406,6 +401,7 @@ type AxisConstraint =
 
 interface ConstraintAxis {
 	constraint?: AxisConstraint
+	sizing?: FigmaNode['layoutSizingHorizontal']
 	start: number
 	size: number
 	parentSize: number
@@ -424,6 +420,7 @@ function formatCenteredPosition(start: number, parentSize: number): string {
 
 function createConstraintAxisStyle({
 	constraint,
+	sizing,
 	start,
 	size,
 	parentSize,
@@ -432,15 +429,18 @@ function createConstraintAxisStyle({
 	sizeProperty,
 }: ConstraintAxis): Record<string, string> {
 	const end = parentSize - start - size
+	const hug = sizing === 'HUG'
 
 	switch (constraint) {
 		case 'RIGHT':
 		case 'BOTTOM':
-			return { [endProperty]: formatPx(end), [sizeProperty]: formatPx(size) }
+			return hug
+				? { [endProperty]: formatPx(end) }
+				: { [endProperty]: formatPx(end), [sizeProperty]: formatPx(size) }
 		case 'CENTER':
 			return {
-				[startProperty]: formatCenteredPosition(start, parentSize),
-				[sizeProperty]: formatPx(size),
+				[startProperty]: formatCenteredPosition(hug ? start + size / 2 : start, parentSize),
+				...(hug ? {} : { [sizeProperty]: formatPx(size) }),
 			}
 		case 'LEFT_RIGHT':
 		case 'TOP_BOTTOM':
@@ -454,7 +454,9 @@ function createConstraintAxisStyle({
 			}
 	}
 
-	return { [startProperty]: formatPx(start), [sizeProperty]: formatPx(size) }
+	return hug
+		? { [startProperty]: formatPx(start) }
+		: { [startProperty]: formatPx(start), [sizeProperty]: formatPx(size) }
 }
 
 class ConstraintPlacementStrategy implements ChildPlacementStrategy {
@@ -465,11 +467,21 @@ class ConstraintPlacementStrategy implements ChildPlacementStrategy {
 		if (!pb || !b) return {}
 
 		// Figma가 렌더한 SVG는 회전까지 포함한 결과이므로 AABB 크기를 그대로 쓴다.
-		const dim = useAbsoluteBounds ? b : (node.size ?? b)
+		const dim =
+			useAbsoluteBounds || !node.size ? b : { width: node.size.x, height: node.size.y }
+		const hugCenterX =
+			!useAbsoluteBounds &&
+			node.layoutSizingHorizontal === 'HUG' &&
+			node.constraints?.horizontal === 'CENTER'
+		const hugCenterY =
+			!useAbsoluteBounds &&
+			node.layoutSizingVertical === 'HUG' &&
+			node.constraints?.vertical === 'CENTER'
 		return {
 			position: 'absolute',
 			...createConstraintAxisStyle({
 				constraint: node.constraints?.horizontal,
+				sizing: useAbsoluteBounds ? undefined : node.layoutSizingHorizontal,
 				start: b.x - pb.x,
 				size: dim.width,
 				parentSize: pb.width,
@@ -479,6 +491,7 @@ class ConstraintPlacementStrategy implements ChildPlacementStrategy {
 			}),
 			...createConstraintAxisStyle({
 				constraint: node.constraints?.vertical,
+				sizing: useAbsoluteBounds ? undefined : node.layoutSizingVertical,
 				start: b.y - pb.y,
 				size: dim.height,
 				parentSize: pb.height,
@@ -486,6 +499,14 @@ class ConstraintPlacementStrategy implements ChildPlacementStrategy {
 				endProperty: 'bottom',
 				sizeProperty: 'height',
 			}),
+			transform:
+				hugCenterX && hugCenterY
+					? 'translate(-50%,-50%)'
+					: hugCenterX
+						? 'translateX(-50%)'
+						: hugCenterY
+							? 'translateY(-50%)'
+							: undefined,
 		}
 	}
 }
