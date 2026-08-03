@@ -33,7 +33,7 @@ export function LogoColorVariantView({ map }: Props) {
 			</div>
 			{/* 2×2: 기본형(좌 2행) · WHITE(우상) · 단색(우하).
 			    컨테이너 height 고정 + width 반응형 + gap → 셀 박스 결정. 로고는 셀 height의 30%. */}
-			<div className="grid h-[400px] w-full grid-cols-2 grid-rows-2 gap-3">
+			<div className="grid h-[600px] w-full grid-cols-2 grid-rows-2 gap-3">
 				{colors.default ? (
 					<div className="row-span-2 flex items-center justify-center bg-neutral-100">
 						{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}

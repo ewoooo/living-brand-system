@@ -19,9 +19,10 @@ type Props = { panels: ClearspacePanel[] }
 
 // 뷰포트 높이(px). 로고 크기와 무관한 고정 표시 영역 — 넘치면 잘린다.
 const BASE_H = 640
-// 슬라이더 표시값 대비 실제 배율. 슬라이더 눈금은 그대로 10~100%로 두고 실제로는 그 절반까지만 키운다
-// (표시 100% = 원본의 50%). 눈금을 바꾸지 않는 건 사용자에게 보이는 범위를 유지하기 위함.
-const SCALE_FACTOR = 0.5
+// 슬라이더 표시값 대비 실제 배율. 슬라이더 눈금은 그대로 10~100%로 두고 실제 배율만 여기서 정한다
+// (표시 100% = 원본의 75%). 눈금을 바꾸지 않는 건 사용자에게 보이는 범위를 유지하기 위함.
+// 최소크기 경고는 이 값으로 계산된 실제 렌더 높이를 minHeightPx와 비교하므로 배율을 바꿔도 유효하다.
+const SCALE_FACTOR = 0.75
 
 export function ClearspaceViewerView({ panels }: Props) {
 	const [scale, setScale] = useState(100)
