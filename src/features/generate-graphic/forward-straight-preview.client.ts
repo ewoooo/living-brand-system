@@ -4,6 +4,8 @@ import p5 from 'p5'
 import type { ForwardStraightInput } from './forward-straight'
 import { createForwardStraightScene } from './forward-straight-geometry'
 
+const ORIGIN_DRAG_HIT_RADIUS = 12
+
 export type ForwardStraightPreview = {
 	update(input: ForwardStraightInput): void
 	resize(width: number, height: number): void
@@ -25,6 +27,7 @@ export function createForwardStraightPreview({
 	onInputChange?: (input: ForwardStraightInput) => void
 }): ForwardStraightPreview {
 	let currentInput = input
+	let draggingOrigin = false
 	const initialSize = getCanvasSize(container.clientWidth, container.clientHeight)
 	const instance = new p5((preview) => {
 		preview.setup = () => {
@@ -52,7 +55,21 @@ export function createForwardStraightPreview({
 			preview.circle(scene.origin.x, scene.origin.y, scene.originRadius * 2)
 		}
 
-		preview.mouseMoved = () => {
+		preview.mousePressed = () => {
+			const scene = createForwardStraightScene(currentInput, {
+				width: preview.width,
+				height: preview.height,
+			})
+			draggingOrigin = isOriginHandleHit(
+				{ x: preview.mouseX, y: preview.mouseY },
+				scene.origin,
+				scene.originRadius,
+			)
+			if (draggingOrigin) return false
+		}
+
+		preview.mouseDragged = () => {
+			if (!draggingOrigin) return
 			if (
 				preview.mouseX < 0 ||
 				preview.mouseX > preview.width ||
@@ -70,6 +87,11 @@ export function createForwardStraightPreview({
 			}
 			onInputChange?.(currentInput)
 			preview.redraw()
+			return false
+		}
+
+		preview.mouseReleased = () => {
+			draggingOrigin = false
 		}
 	}, container)
 
@@ -90,6 +112,17 @@ export function createForwardStraightPreview({
 			instance.remove()
 		},
 	}
+}
+
+export function isOriginHandleHit(
+	pointer: { x: number; y: number },
+	origin: { x: number; y: number },
+	originRadius: number,
+) {
+	return (
+		Math.hypot(pointer.x - origin.x, pointer.y - origin.y) <=
+		Math.max(originRadius, ORIGIN_DRAG_HIT_RADIUS)
+	)
 }
 
 function getCanvasSize(width: number, height: number) {
