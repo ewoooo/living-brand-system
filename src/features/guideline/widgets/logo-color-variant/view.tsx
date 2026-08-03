@@ -13,8 +13,6 @@ export function LogoColorVariantView({ map }: Props) {
 	const orientations = Object.keys(map).sort((a) => (a === 'horizontal' ? -1 : 1)) // 가로 우선
 	const [orient, setOrient] = useState(orientations[0])
 	const colors = map[orient] ?? {}
-	// 로고 높이 = 셀 높이 비율. 가로형은 워드마크가 옆으로 길어 같은 높이에서 훨씬 작게 보이므로 더 키운다.
-	const logoSize = orient === 'horizontal' ? 'h-[70%]' : 'h-[30%]'
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -34,35 +32,37 @@ export function LogoColorVariantView({ map }: Props) {
 				))}
 			</div>
 			{/* 2×2: 기본형(좌 2행) · WHITE(우상) · 단색(우하).
-			    컨테이너 height 고정 + width 반응형 + gap → 셀 박스 결정. 로고는 셀 height 비율(logoSize). */}
+			    컨테이너 height 고정 + width 반응형 + gap → 셀 박스 결정.
+			    로고는 셀 패딩 안쪽에 object-contain — 높이 %로 재면 종횡비에 따라 폭이 셀을 넘겨 여백이 사라진다.
+			    좌우 패딩은 각각 셀 폭의 1/3 → 좌패딩:본체:우패딩 = 1:1:1. */}
 			<div className="grid h-[600px] w-full grid-cols-2 grid-rows-2 gap-3">
 				{colors.default ? (
-					<div className="row-span-2 flex items-center justify-center bg-neutral-100">
+					<div className="row-span-2 flex items-center justify-center bg-neutral-100 px-[33.3333%] py-10">
 						{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
 						<img
 							src={colors.default}
 							alt="기본형"
-							className={`${logoSize} w-auto max-w-full object-contain`}
+							className="h-full w-full object-contain"
 						/>
 					</div>
 				) : null}
 				{colors.white ? (
-					<div className="flex items-center justify-center bg-neutral-900">
+					<div className="flex items-center justify-center bg-neutral-900 px-[33.3333%] py-10">
 						{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
 						<img
 							src={colors.white}
 							alt="WHITE"
-							className={`${logoSize} w-auto max-w-full object-contain`}
+							className="h-full w-full object-contain"
 						/>
 					</div>
 				) : null}
 				{colors.mono ? (
-					<div className="flex items-center justify-center bg-neutral-100">
+					<div className="flex items-center justify-center bg-neutral-100 px-[33.3333%] py-10">
 						{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
 						<img
 							src={colors.mono}
 							alt="단색"
-							className={`${logoSize} w-auto max-w-full object-contain`}
+							className="h-full w-full object-contain"
 						/>
 					</div>
 				) : null}
