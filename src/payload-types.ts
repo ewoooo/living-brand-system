@@ -1112,9 +1112,25 @@ export interface LayoutGridWidget {
    */
   sample?: ('a' | 'b' | 'c' | 'grid-labels') | null;
   /**
+   * 판형 아래에 표시할 선택 캡션입니다.
+   */
+  caption?: string | null;
+  /**
    * 그리드 표시입니다. 같은 페이지의 판형끼리 다르게 두려면 켜짐·꺼짐으로 고정합니다.
    */
   guides?: ('shared' | 'on' | 'off') | null;
+  /**
+   * 마진을 이 판형만 고정합니다(3~6). 비우면 패널을 따릅니다.
+   */
+  marginPct?: number | null;
+  /**
+   * 수평 거터를 이 판형만 고정합니다(0~100). 비우면 패널을 따릅니다.
+   */
+  gutterX?: number | null;
+  /**
+   * 수직 거터를 이 판형만 고정합니다(0~100). 비우면 패널을 따릅니다.
+   */
+  gutterY?: number | null;
   /**
    * 마진을 패널에서 분리해 초기값에 고정합니다.
    */
@@ -2973,7 +2989,11 @@ export interface IncorrectUsageWidgetSelect<T extends boolean = true> {
  */
 export interface LayoutGridWidgetSelect<T extends boolean = true> {
   sample?: T;
+  caption?: T;
   guides?: T;
+  marginPct?: T;
+  gutterX?: T;
+  gutterY?: T;
   lockMargin?: T;
   lockGutterX?: T;
   lockGutterY?: T;

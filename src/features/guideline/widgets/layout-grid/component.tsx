@@ -44,24 +44,38 @@ export type GuidesMode = 'shared' | 'on' | 'off'
 
 export function LayoutGridWidget({
 	sample,
+	caption,
 	guides,
+	marginPct: marginOverride,
+	gutterX: gutterXOverride,
+	gutterY: gutterYOverride,
 	lockMargin,
 	lockGutterX,
 	lockGutterY,
 }: {
 	sample?: LayoutGridSample | null
+	caption?: string | null
 	guides?: GuidesMode | null
-	/** 패널을 따르지 않고 초기값에 고정한다 — 한 슬라이더가 일부 판형만 움직이게 하려는 것. */
+	/** 판형별 값. 넣으면 이 판형만 그 값으로 고정된다(패널이 없는 페이지의 유일한 입구). */
+	marginPct?: number | null
+	gutterX?: number | null
+	gutterY?: number | null
+	/** 값을 적지 않고 패널 초기값에 붙여 고정한다 — 한 슬라이더가 일부 판형만 움직이게 하려는 것. */
 	lockMargin?: boolean | null
 	lockGutterX?: boolean | null
 	lockGutterY?: boolean | null
 }) {
 	const { initial, values } = useLayoutGridScope()
 
-	// lock한 값은 초기값에 머물고 나머지는 슬라이더를 따른다.
-	const marginPct = lockMargin ? initial.marginPct : values.marginPct
-	const gutterX = lockGutterX ? initial.gutterX : values.gutterX
-	const gutterY = lockGutterY ? initial.gutterY : values.gutterY
+	// 판형에 값이 있으면 그것이 이기고, 없으면 lock은 초기값·아니면 슬라이더 현재값을 따른다.
+	const resolve = (
+		override: number | null | undefined,
+		locked: boolean | null | undefined,
+		key: 'marginPct' | 'gutterX' | 'gutterY',
+	) => override ?? (locked ? initial[key] : values[key])
+	const marginPct = resolve(marginOverride, lockMargin, 'marginPct')
+	const gutterX = resolve(gutterXOverride, lockGutterX, 'gutterX')
+	const gutterY = resolve(gutterYOverride, lockGutterY, 'gutterY')
 
 	// 같은 블록의 판형이 서로 다른 그리드 상태를 가질 수 있어야 한다.
 	const guidesOn = guides === 'on' ? true : guides === 'off' ? false : values.guidesOn
@@ -70,42 +84,49 @@ export function LayoutGridWidget({
 	const gutterHalf = { x: (marginPct * gutterX) / 100 / 2, y: (marginPct * gutterY) / 100 / 2 }
 
 	return (
-		// 판형 — 폭은 컨테이너를 채우고 높이는 A4 비율로 파생. cq 단위의 기준 컨테이너다.
-		<div
-			className="relative w-full overflow-hidden"
-			style={{
-				aspectRatio: ARTBOARD_ASPECT,
-				containerType: 'size',
-				background: composition.background,
-				color: composition.color,
-			}}
-		>
-			{/* 그리드가 대지 전체를 덮는다 — 양끝 마진 트랙 덕에 문서 경계도 그리드 선이 된다. */}
+		<figure className="flex w-full flex-col gap-2">
+			{/* 판형 — 폭은 컨테이너를 채우고 높이는 A4 비율로 파생. cq 단위의 기준 컨테이너다. */}
 			<div
-				className="absolute inset-0 grid"
-				style={{ ...gridTemplate(marginPct), opacity: guidesOn ? CONTENT_DIMMED : 1 }}
+				className="relative w-full overflow-hidden"
+				style={{
+					aspectRatio: ARTBOARD_ASPECT,
+					containerType: 'size',
+					background: composition.background,
+					color: composition.color,
+				}}
 			>
-				{composition.items.map((item, index) => (
-					<div
-						// biome-ignore lint/suspicious/noArrayIndexKey: 정적 조합 배열, 재정렬 없음.
-						key={index}
-						style={{
-							...placement(item),
-							...cellPadding(item, gutterHalf),
-							...alignment(item),
-							background: item.background,
-							// 텍스트·CI는 이미지 위에 온다(behind만 이미지 레이어).
-							position: 'relative',
-							zIndex: item.behind ? 0 : 1,
-						}}
-					>
-						{item.element ? renderElement(item.element) : null}
-					</div>
-				))}
+				{/* 그리드가 대지 전체를 덮는다 — 양끝 마진 트랙 덕에 문서 경계도 그리드 선이 된다. */}
+				<div
+					className="absolute inset-0 grid"
+					style={{ ...gridTemplate(marginPct), opacity: guidesOn ? CONTENT_DIMMED : 1 }}
+				>
+					{composition.items.map((item, index) => (
+						<div
+							// biome-ignore lint/suspicious/noArrayIndexKey: 정적 조합 배열, 재정렬 없음.
+							key={index}
+							style={{
+								...placement(item),
+								...cellPadding(item, gutterHalf),
+								...alignment(item),
+								background: item.background,
+								// 텍스트·CI는 이미지 위에 온다(behind만 이미지 레이어).
+								position: 'relative',
+								zIndex: item.behind ? 0 : 1,
+							}}
+						>
+							{item.element ? renderElement(item.element) : null}
+						</div>
+					))}
+				</div>
+
+				{guidesOn && <Guides marginPct={marginPct} gutterHalf={gutterHalf} />}
 			</div>
 
-			{guidesOn && <Guides marginPct={marginPct} gutterHalf={gutterHalf} />}
-		</div>
+			{/* 캡션 — 판형이 어두운 영역(innerBackground) 안에 놓이는 전제라 밝은 색이다. */}
+			{caption ? (
+				<figcaption className="font-body text-white/70 text-xs">{caption}</figcaption>
+			) : null}
+		</figure>
 	)
 }
 

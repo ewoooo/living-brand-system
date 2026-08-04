@@ -1,4 +1,5 @@
 import type { Block } from 'payload'
+import { GUTTER_RATIO, MARGIN_PCT } from './rules'
 import { SAMPLE_OPTIONS } from './samples'
 
 // 레이아웃 그리드 위젯 — Block children에 등록되는 인터랙티브 leaf.
@@ -21,6 +22,12 @@ export const LayoutGridWidget: Block = {
 			admin: { description: '코드에 정의된 조합 중 하나입니다.' },
 		},
 		{
+			name: 'caption',
+			type: 'text',
+			localized: true,
+			admin: { description: '판형 아래에 표시할 선택 캡션입니다.' },
+		},
+		{
 			name: 'guides',
 			type: 'select',
 			defaultValue: 'shared',
@@ -35,7 +42,36 @@ export const LayoutGridWidget: Block = {
 					'그리드 표시입니다. 같은 페이지의 판형끼리 다르게 두려면 켜짐·꺼짐으로 고정합니다.',
 			},
 		},
-		// 🔑 한 슬라이더가 일부 판형만 움직이게 하려는 것 — lock한 값은 패널을 따르지 않고 초기값에 머문다.
+		// 🔑 판형별 값. 비우면 패널을 따르고, 넣으면 이 판형만 그 값으로 고정된다.
+		//    패널이 없는 페이지에서도 값을 지정할 수 있는 유일한 입구다.
+		{
+			name: 'marginPct',
+			type: 'number',
+			min: MARGIN_PCT.min,
+			max: MARGIN_PCT.max,
+			admin: {
+				description: `마진을 이 판형만 고정합니다(${MARGIN_PCT.min}~${MARGIN_PCT.max}). 비우면 패널을 따릅니다.`,
+			},
+		},
+		{
+			name: 'gutterX',
+			type: 'number',
+			min: GUTTER_RATIO.min,
+			max: GUTTER_RATIO.max,
+			admin: {
+				description: `수평 거터를 이 판형만 고정합니다(${GUTTER_RATIO.min}~${GUTTER_RATIO.max}). 비우면 패널을 따릅니다.`,
+			},
+		},
+		{
+			name: 'gutterY',
+			type: 'number',
+			min: GUTTER_RATIO.min,
+			max: GUTTER_RATIO.max,
+			admin: {
+				description: `수직 거터를 이 판형만 고정합니다(${GUTTER_RATIO.min}~${GUTTER_RATIO.max}). 비우면 패널을 따릅니다.`,
+			},
+		},
+		// lock = 값을 직접 적지 않고 "패널 초기값에 붙어 있어라"로 고정하는 방법.
 		{
 			name: 'lockMargin',
 			type: 'checkbox',

@@ -87,7 +87,11 @@ function renderWidget(child: Child): ReactNode {
 			return (
 				<LayoutGridWidget
 					sample={child.sample}
+					caption={child.caption}
 					guides={child.guides}
+					marginPct={child.marginPct}
+					gutterX={child.gutterX}
+					gutterY={child.gutterY}
 					lockMargin={child.lockMargin}
 					lockGutterX={child.lockGutterX}
 					lockGutterY={child.lockGutterY}
@@ -243,23 +247,39 @@ function bgHex(color: LayoutBlockType['background']): string | undefined {
 	return color && typeof color === 'object' && color.hex ? color.hex : undefined
 }
 
-// 레이아웃 그리드 위젯의 값 스코프는 **블록 단위**다 — 모듈 스토어로 두면 섹션 라우트가 여러 Page를
-// 한 화면에 렌더할 때 페이지마다 놓인 컨트롤 패널이 서로 간섭한다. 해당 위젯이 있을 때만 감싼다.
-function withLayoutGridScope(
-	children: NonNullable<LayoutBlockType['children']>,
-	arranged: ReactNode,
-): ReactNode {
-	const needsScope = children.some(
-		(child) =>
-			child.blockType === 'layoutGridWidget' ||
-			child.blockType === 'layoutGridControlsWidget',
-	)
-	return needsScope ? <LayoutGridScope>{arranged}</LayoutGridScope> : arranged
+// 레이아웃 그리드 컨트롤 패널은 배치 영역이 아니라 **헤더(제목·설명 아래)**에 온다 —
+// innerBackground 안에 두면 판형과 같은 어두운 면에 얹혀 읽기 어렵고, 배치 셀 하나를 차지한다.
+// 값 스코프는 **블록 단위**다: 모듈 스토어로 두면 섹션 라우트가 여러 Page를 한 화면에 렌더할 때
+// 페이지마다 놓인 패널이 서로 간섭한다. 그래서 패널과 배치를 한 provider로 함께 감싼다.
+function splitControls(children: NonNullable<LayoutBlockType['children']>) {
+	const controls = children.filter((child) => child.blockType === 'layoutGridControlsWidget')
+	const arranged = children.filter((child) => child.blockType !== 'layoutGridControlsWidget')
+	const needsScope =
+		controls.length > 0 || arranged.some((c) => c.blockType === 'layoutGridWidget')
+	return { controls, arranged, needsScope }
 }
 
 export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 	const outerBg = bgHex(block.background)
 	const innerBg = bgHex(block.innerBackground)
+	const { controls, arranged, needsScope } = splitControls(block.children ?? [])
+
+	const body = (
+		<>
+			{controls.map((child) => (
+				<div key={child.id}>{renderWidget(child)}</div>
+			))}
+			<div style={innerBg ? { background: innerBg } : undefined}>
+				<Arrange
+					arrangement={block.arrangement}
+					columns={block.columns ?? 2}
+					aspectRatio={block.aspectRatio ?? '1:1'}
+					items={arranged}
+				/>
+			</div>
+		</>
+	)
+
 	return (
 		<GuidelineBlockFrame
 			layout={block.width ?? 'padded'}
@@ -269,17 +289,7 @@ export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 			{block.description ? (
 				<GuidelineDescription variant="block" description={block.description} />
 			) : null}
-			<div style={innerBg ? { background: innerBg } : undefined}>
-				{withLayoutGridScope(
-					block.children ?? [],
-					<Arrange
-						arrangement={block.arrangement}
-						columns={block.columns ?? 2}
-						aspectRatio={block.aspectRatio ?? '1:1'}
-						items={block.children ?? []}
-					/>,
-				)}
-			</div>
+			{needsScope ? <LayoutGridScope>{body}</LayoutGridScope> : body}
 		</GuidelineBlockFrame>
 	)
 }

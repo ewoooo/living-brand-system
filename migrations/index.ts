@@ -24,6 +24,8 @@ import * as migration_20260804_053103_add_layout_grid_controls from './20260804_
 import * as migration_20260804_073352_add_layout_grid_controls_config from './20260804_073352_add_layout_grid_controls_config';
 import * as migration_20260804_080321_add_grid_labels_and_guides from './20260804_080321_add_grid_labels_and_guides';
 import * as migration_20260804_082132_add_layout_grid_locks from './20260804_082132_add_layout_grid_locks';
+import * as migration_20260804_083406_add_layout_grid_caption from './20260804_083406_add_layout_grid_caption';
+import * as migration_20260804_085424_add_layout_grid_widget_values from './20260804_085424_add_layout_grid_widget_values';
 
 export const migrations = [
   {
@@ -154,6 +156,16 @@ export const migrations = [
   {
     up: migration_20260804_082132_add_layout_grid_locks.up,
     down: migration_20260804_082132_add_layout_grid_locks.down,
-    name: '20260804_082132_add_layout_grid_locks'
+    name: '20260804_082132_add_layout_grid_locks',
+  },
+  {
+    up: migration_20260804_083406_add_layout_grid_caption.up,
+    down: migration_20260804_083406_add_layout_grid_caption.down,
+    name: '20260804_083406_add_layout_grid_caption',
+  },
+  {
+    up: migration_20260804_085424_add_layout_grid_widget_values.up,
+    down: migration_20260804_085424_add_layout_grid_widget_values.down,
+    name: '20260804_085424_add_layout_grid_widget_values'
   },
 ];
