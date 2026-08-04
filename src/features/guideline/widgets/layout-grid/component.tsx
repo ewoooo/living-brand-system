@@ -26,6 +26,16 @@ const TRACKS = [1, 2, 3]
 /** 판형 = A4 세로. 폭은 컨테이너가 주고 높이는 이 비율로 나온다. */
 const ARTBOARD_ASPECT = '210 / 297'
 
+/** 그리드 표시 색. 🔴 임시 리터럴 — brand-colors의 값으로 교체될 자리다. */
+const GRID_COLOR = '#007332'
+/** 마진·거터 영역 채움(같은 색 10%). */
+const GRID_FILL = `${GRID_COLOR}1a`
+/** 그리드가 보일 때 콘텐츠 투명도 — 선과 영역이 읽히도록 죽인다. */
+const CONTENT_DIMMED = 0.3
+
+/** 표 내부 구분선의 그리드 선 번호(1/6·1/2). 콘텐츠 트랙 사이 경계라 트랙 수에서 파생된다. */
+const INTERIOR_LINES = TRACKS.slice(1).map((_, index) => index + 3)
+
 const spanStart = (span: Span) => (Array.isArray(span) ? span[0] : span)
 const spanEnd = (span: Span) => (Array.isArray(span) ? span[1] : span)
 
@@ -48,7 +58,10 @@ export function LayoutGridWidget({ sample }: { sample?: LayoutGridSample | null 
 			}}
 		>
 			{/* 그리드가 대지 전체를 덮는다 — 양끝 마진 트랙 덕에 문서 경계도 그리드 선이 된다. */}
-			<div className="absolute inset-0 grid" style={gridTemplate(marginPct)}>
+			<div
+				className="absolute inset-0 grid"
+				style={{ ...gridTemplate(marginPct), opacity: guidesOn ? CONTENT_DIMMED : 1 }}
+			>
 				{composition.items.map((item, index) => (
 					<div
 						// biome-ignore lint/suspicious/noArrayIndexKey: 정적 조합 배열, 재정렬 없음.
@@ -67,7 +80,7 @@ export function LayoutGridWidget({ sample }: { sample?: LayoutGridSample | null 
 				))}
 			</div>
 
-			{guidesOn && <Guides marginPct={marginPct} />}
+			{guidesOn && <Guides marginPct={marginPct} gutterHalf={gutterHalf} />}
 		</div>
 	)
 }
@@ -141,13 +154,50 @@ function renderElement(element: Element): ReactNode {
 	}
 }
 
-/** 마진 프레임 + 1:2:3 분할선. 콘텐츠 셀 9개에 테두리를 그려 얻는다 — 위치 계산이 없다. */
-function Guides({ marginPct }: { marginPct: number }) {
+/**
+ * 그리드 표시 = 마진 영역 채움 + 거터 밴드 채움 + 1:2:3 분할선.
+ * 같은 5×5 트랙 위에 그려서 위치 계산이 없다.
+ * 거터는 실제 트랙이 아니라 셀 padding이라, 구분선에 걸친 밴드로 그린다 —
+ * 구분선이 왼변인 셀에 붙여 절반만큼 밀고 거터 폭만큼 채우면 선을 가운데 두고 정확히 덮는다.
+ */
+function Guides({ marginPct, gutterHalf }: { marginPct: number; gutterHalf: Offsets }) {
 	return (
-		<div
-			className="pointer-events-none absolute inset-0 grid"
-			style={{ ...gridTemplate(marginPct), mixBlendMode: 'difference' }}
-		>
+		<div className="pointer-events-none absolute inset-0 grid" style={gridTemplate(marginPct)}>
+			{/* 마진 영역 — 바깥 링 4개 밴드. 트랙이라 좌표를 계산하지 않는다. */}
+			<div style={{ gridColumn: '1 / -1', gridRow: 1, background: GRID_FILL }} />
+			<div style={{ gridColumn: '1 / -1', gridRow: -2, background: GRID_FILL }} />
+			<div style={{ gridColumn: 1, gridRow: '2 / -2', background: GRID_FILL }} />
+			<div style={{ gridColumn: -2, gridRow: '2 / -2', background: GRID_FILL }} />
+
+			{/* 수직 거터 — 표 높이 전체를 지나는 세로 밴드. */}
+			{INTERIOR_LINES.map((line) => (
+				<div
+					key={`gutter-v-${line}`}
+					style={{
+						gridColumn: line,
+						gridRow: '2 / -2',
+						marginLeft: `-${gutterHalf.x}cqmax`,
+						width: `${gutterHalf.x * 2}cqmax`,
+						background: GRID_FILL,
+					}}
+				/>
+			))}
+
+			{/* 수평 거터 — 표 폭 전체를 지나는 가로 밴드. */}
+			{INTERIOR_LINES.map((line) => (
+				<div
+					key={`gutter-h-${line}`}
+					style={{
+						gridColumn: '2 / -2',
+						gridRow: line,
+						marginTop: `-${gutterHalf.y}cqmax`,
+						height: `${gutterHalf.y * 2}cqmax`,
+						background: GRID_FILL,
+					}}
+				/>
+			))}
+
+			{/* 분할선 — 콘텐츠 셀 9개의 테두리로 얻는다. */}
 			{TRACKS.flatMap((_, rowIndex) =>
 				TRACKS.map((__, colIndex) => (
 					<div
@@ -158,7 +208,7 @@ function Guides({ marginPct }: { marginPct: number }) {
 							gridRow: rowIndex + 2,
 							// 🔴 outline-offset -0.5px — 선이 셀 경계를 안·밖 0.5px씩 걸치게 해서 이웃 셀의
 							// 선과 정확히 겹쳐 1px로 보인다(0이면 경계마다 2px로 두꺼워진다).
-							outline: '1px solid #ffffff',
+							outline: `1px solid ${GRID_COLOR}`,
 							outlineOffset: '-0.5px',
 						}}
 					/>
