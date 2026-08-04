@@ -876,6 +876,7 @@ export interface LayoutBlock {
         | ClearspaceViewerWidget
         | ColorPairingWidget
         | ColorPairingRecommendationWidget
+        | DoDontWidget
         | GlyphGridWidget
         | IconGridWidget
         | ImageGridWidget
@@ -1033,6 +1034,36 @@ export interface ColorPairingRecommendationWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'colorPairingRecommendationWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DoDontWidget".
+ */
+export interface DoDontWidget {
+  /**
+   * 예시 이미지의 표시 비율입니다.
+   */
+  imageRatio?:
+    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+    | null;
+  /**
+   * 넓은 화면에서 예시를 배치할 열 수입니다.
+   */
+  columns?: ('2' | '3' | '4') | null;
+  /**
+   * 예시 이미지와 캡션입니다. 세트 헤딩은 없습니다.
+   */
+  examples?:
+    | {
+        image?: (number | null) | ApplicationImage;
+        kind: 'do' | 'ok' | 'dont';
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'doDontWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1574,7 +1605,7 @@ export interface ImageProfile {
     id?: string | null;
   }[];
   /**
-   * 선택사항입니다. 행이 있으면 AI가 후보 중 하나로 정규화하고, 비어 있으면 유저 인풋 원문만 subject로 사용합니다.
+   * 선택사항입니다. 행이 있으면 AI가 후보 중 하나로 정규화하고 유저 인풋 원문은 최종 프롬프트에서 제외합니다. 비어 있으면 원문을 subject로 사용합니다.
    */
   userPromptNormalization?:
     | {
@@ -1688,7 +1719,7 @@ export interface Template {
    */
   height?: number | null;
   /**
-   * 설정하면 CMYK TIFF와 RGB PDF가 활성화됩니다. 픽셀 크기는 유지되며 TIFF는 최대 67,108,864픽셀을 지원합니다.
+   * 설정하면 CMYK TIFF와 mm 단위 CMYK PDF가 활성화됩니다. 픽셀 크기는 유지되며 인쇄 출력은 최대 67,108,864픽셀을 지원합니다.
    */
   printPpi?: ('72' | '150' | '300') | null;
   /**
@@ -2737,6 +2768,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
         colorPairingWidget?: T | ColorPairingWidgetSelect<T>;
         colorPairingRecommendationWidget?: T | ColorPairingRecommendationWidgetSelect<T>;
+        doDontWidget?: T | DoDontWidgetSelect<T>;
         glyphGridWidget?: T | GlyphGridWidgetSelect<T>;
         iconGridWidget?: T | IconGridWidgetSelect<T>;
         imageGridWidget?: T | ImageGridWidgetSelect<T>;
@@ -2819,6 +2851,24 @@ export interface ColorPairingWidgetSelect<T extends boolean = true> {
  * via the `definition` "ColorPairingRecommendationWidget_select".
  */
 export interface ColorPairingRecommendationWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DoDontWidget_select".
+ */
+export interface DoDontWidgetSelect<T extends boolean = true> {
+  imageRatio?: T;
+  columns?: T;
+  examples?:
+    | T
+    | {
+        image?: T;
+        kind?: T;
+        caption?: T;
+        id?: T;
+      };
   id?: T;
   blockName?: T;
 }

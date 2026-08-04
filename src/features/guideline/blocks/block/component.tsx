@@ -7,6 +7,7 @@ import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/component'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/component'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/component'
+import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
 import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/component'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
@@ -61,14 +62,21 @@ function renderWidget(child: Child): ReactNode {
 			return <ColorPairingWidget />
 		case 'colorPairingRecommendationWidget':
 			return <ColorPairingRecommendationWidget />
+		case 'doDontWidget':
+			// 예시(이미지+캡션+kind)를 인스턴스 입력으로 받는 위젯.
+			return (
+				<DoDontWidget
+					imageRatio={child.imageRatio}
+					columns={child.columns}
+					examples={child.examples}
+				/>
+			)
 		case 'glyphGridWidget':
 			return <GlyphGridWidget />
 		case 'iconGridWidget':
 			return <IconGridWidget />
 		case 'imageGridWidget':
 			return <ImageGridWidget />
-		case 'incorrectUsageWidget':
-			return <IncorrectUsageWidget />
 		case 'layoutGridWidget':
 			return <LayoutGridWidget />
 		case 'layoutGridOverlayWidget':

@@ -6,14 +6,14 @@ import {
 } from './image-profile-prompt'
 
 describe('image profile prompt', () => {
-	it('유저 원문을 보존하고 같은 키는 정규화 값이 우선한다', () => {
+	it('유저 원문을 subject로 추가하고 같은 키는 정규화 값이 우선한다', () => {
 		expect(
 			mergeImageProfilePrompt(
 				[
 					{ key: 'style', value: 'minimalist editorial\ncosmetic photography' },
 					{ key: 'background', value: 'pure solid white' },
 				],
-				{ background: 'warm gray\r\nsolid', mood: 'organic', subject: 'ignored' },
+				{ background: 'warm gray\r\nsolid', mood: 'organic' },
 				'  파란색\n\n세럼병  ',
 			),
 		).toEqual({

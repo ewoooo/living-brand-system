@@ -1,55 +1,12 @@
 import { Parser } from 'htmlparser2'
-import { z } from 'zod'
-import type { TemplateNodeConfigMap } from '@/types/template'
-
-const VECTOR_ASSET_COLLECTIONS = ['brand-logos', 'application-images'] as const
-
-export const AUTHORIZED_ASSET_COLLECTIONS = [
-	...VECTOR_ASSET_COLLECTIONS,
-	'generated-images',
-] as const
-
-export type AuthorizedAssetCollection = (typeof AUTHORIZED_ASSET_COLLECTIONS)[number]
-
-export interface AuthorizedImageRef {
-	collection: AuthorizedAssetCollection
-	assetId: number
-	src: string
-	label: string
-}
-
-const templateSlotSpecSchema = z
-	.object({
-		label: z.string().optional(),
-		placeholder: z.string().optional(),
-		maxLength: z.number().int().positive().optional(),
-		maxLines: z.number().int().positive().optional(),
-		inputFormat: z.enum(['free', 'number', 'email', 'date']).optional(),
-		aiInstruction: z.string().optional(),
-	})
-	.strict()
-
-const templateNodeConfigMapSchema = z.record(
-	z.string().min(1),
-	z
-		.object({
-			text: z.string().optional(),
-			backgroundImage: z.string().optional(),
-			generatedImageId: z.number().int().positive().optional(),
-			input: templateSlotSpecSchema.optional(),
-			vectorAsset: z
-				.object({
-					collection: z.enum(VECTOR_ASSET_COLLECTIONS),
-					id: z.number().int().positive(),
-					src: z.string().min(1),
-				})
-				.strict()
-				.optional(),
-			vectorFit: z.enum(['fill', 'contain']).optional(),
-			vectorColor: z.string().optional(),
-		})
-		.strict(),
-)
+import { inspectTemplateStyle } from '@/services/inspect-template-style.service'
+import {
+	AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS,
+	type AuthorizedTemplateImageRef,
+	isAuthorizedTemplateAssetCollection,
+	isCanonicalTemplateAssetUrl,
+	isSafeDraftTemplateAssetUrl,
+} from '@/services/template-asset-policy.service'
 
 const ALLOWED_TAGS = new Set(['div', 'img', 'p'])
 const COMMON_ATTRIBUTES = new Set(['data-figma-type', 'data-name', 'data-node-id', 'style'])
@@ -57,317 +14,15 @@ const ASSET_ATTRIBUTES = new Set(['data-asset-collection', 'data-asset-id'])
 const IMAGE_ATTRIBUTES = new Set(['alt', 'src'])
 const SAFE_NODE_ID = /^[a-zA-Z0-9:;_-]+$/
 
-const ALLOWED_STYLE_PROPERTIES = new Set([
-	'align-content',
-	'align-items',
-	'align-self',
-	'backdrop-filter',
-	'background',
-	'background-color',
-	'background-image',
-	'background-position',
-	'background-repeat',
-	'background-size',
-	'border',
-	'border-bottom-width',
-	'border-color',
-	'border-left-width',
-	'border-radius',
-	'border-right-width',
-	'border-style',
-	'border-top-width',
-	'bottom',
-	'box-shadow',
-	'box-sizing',
-	'color',
-	'column-gap',
-	'display',
-	'filter',
-	'flex-direction',
-	'flex-grow',
-	'flex-wrap',
-	'font-family',
-	'font-size',
-	'font-style',
-	'font-weight',
-	'gap',
-	'grid-auto-flow',
-	'grid-column',
-	'grid-row',
-	'grid-template-columns',
-	'grid-template-rows',
-	'height',
-	'justify-content',
-	'justify-self',
-	'left',
-	'letter-spacing',
-	'line-height',
-	'margin',
-	'mask-image',
-	'mask-position',
-	'mask-repeat',
-	'mask-size',
-	'mix-blend-mode',
-	'object-fit',
-	'opacity',
-	'overflow',
-	'padding',
-	'position',
-	'right',
-	'row-gap',
-	'text-align',
-	'text-decoration',
-	'text-transform',
-	'top',
-	'transform',
-	'white-space',
-	'width',
-])
-const URL_STYLE_PROPERTIES = new Set(['background-image', 'mask-image'])
-const MAX_RASTER_BYTES = 10 * 1024 * 1024
-const MAX_RASTER_DATA_URL_LENGTH =
-	'data:image/jpeg;base64,'.length + 4 * Math.ceil(MAX_RASTER_BYTES / 3)
-
 interface InspectedFragment {
 	blocker?: string
 	nodeIds: Set<string>
-	refs: AuthorizedImageRef[]
+	refs: AuthorizedTemplateImageRef[]
 }
 
 export interface TemplateHtmlInspection {
 	blocker?: string
-	refs: AuthorizedImageRef[]
-}
-
-/**
- * DB overrides 값을 공용 node config 계약으로 검증하고 구조화 에셋 참조를 만든다.
- * 외부 I/O는 없으며 호출 Service가 저장·조회 경계를 소유한다.
- */
-export function parseTemplateNodeConfigs(value: unknown):
-	| { blocker: string }
-	| {
-			data: TemplateNodeConfigMap
-			refsByNode: Map<string, AuthorizedImageRef>
-	  } {
-	const parsed = templateNodeConfigMapSchema.safeParse(value ?? {})
-	if (!parsed.success) {
-		return { blocker: 'HTML 템플릿의 overrides 형식이 올바르지 않습니다.' }
-	}
-
-	const refsByNode = new Map<string, AuthorizedImageRef>()
-	for (const [nodeId, config] of Object.entries(parsed.data)) {
-		if (config.generatedImageId) {
-			if (!config.backgroundImage?.trim() || config.vectorAsset) {
-				return { blocker: 'HTML 템플릿의 생성 이미지 참조가 올바르지 않습니다.' }
-			}
-			refsByNode.set(nodeId, {
-				collection: 'generated-images',
-				assetId: config.generatedImageId,
-				src: config.backgroundImage,
-				label: nodeId,
-			})
-			continue
-		}
-		if (config.vectorAsset) {
-			refsByNode.set(nodeId, {
-				collection: config.vectorAsset.collection,
-				assetId: config.vectorAsset.id,
-				src: config.vectorAsset.src,
-				label: nodeId,
-			})
-		}
-	}
-
-	return { data: parsed.data as TemplateNodeConfigMap, refsByNode }
-}
-
-function isAuthorizedCollection(value: string): value is AuthorizedAssetCollection {
-	return (AUTHORIZED_ASSET_COLLECTIONS as readonly string[]).includes(value)
-}
-
-function hasUnsafeControlCharacter(value: string, allowWhitespace = false): boolean {
-	for (const character of value) {
-		const code = character.charCodeAt(0)
-		if (code === 127 || (code < 32 && (!allowWhitespace || ![9, 10, 13].includes(code)))) {
-			return true
-		}
-	}
-	return false
-}
-
-function containsCssFunction(value: string, name: string): boolean {
-	const lower = value.toLowerCase()
-	let cursor = 0
-
-	while (cursor < lower.length) {
-		const index = lower.indexOf(name, cursor)
-		if (index < 0) return false
-		const before = index === 0 ? '' : lower[index - 1]
-		let after = index + name.length
-		while (after < lower.length && /\s/.test(lower[after] ?? '')) after += 1
-		if ((!before || !/[a-z0-9_-]/.test(before)) && lower[after] === '(') return true
-		cursor = index + name.length
-	}
-
-	return false
-}
-
-function splitStyleDeclarations(style: string): string[] | null {
-	const declarations: string[] = []
-	let start = 0
-	let quote = ''
-	let parentheses = 0
-
-	for (let index = 0; index < style.length; index += 1) {
-		const character = style[index] ?? ''
-		if (quote) {
-			if (character === quote) quote = ''
-			continue
-		}
-		if (character === '"' || character === "'") {
-			quote = character
-			continue
-		}
-		if (character === '(') parentheses += 1
-		else if (character === ')') {
-			if (parentheses === 0) return null
-			parentheses -= 1
-		} else if (character === ';' && parentheses === 0) {
-			declarations.push(style.slice(start, index))
-			start = index + 1
-		}
-	}
-
-	if (quote || parentheses !== 0) return null
-	declarations.push(style.slice(start))
-	return declarations
-}
-
-function inspectStyle(style: string): { blocker?: string; urls: string[] } {
-	if (
-		hasUnsafeControlCharacter(style, true) ||
-		style.includes('\\') ||
-		style.includes('/*') ||
-		style.includes('*/') ||
-		style.includes('@')
-	) {
-		return { blocker: 'HTML style에 허용하지 않는 CSS 구문이 있습니다.', urls: [] }
-	}
-
-	const declarations = splitStyleDeclarations(style)
-	if (!declarations) return { blocker: 'HTML style 선언 형식이 올바르지 않습니다.', urls: [] }
-
-	const urls: string[] = []
-	for (const rawDeclaration of declarations) {
-		const declaration = rawDeclaration.trim()
-		if (!declaration) continue
-
-		const separator = declaration.indexOf(':')
-		if (separator <= 0) {
-			return { blocker: 'HTML style 선언 형식이 올바르지 않습니다.', urls: [] }
-		}
-
-		const property = declaration.slice(0, separator).trim()
-		const value = declaration.slice(separator + 1).trim()
-		if (property !== property.toLowerCase() || !ALLOWED_STYLE_PROPERTIES.has(property)) {
-			return { blocker: `HTML style에서 허용하지 않는 속성입니다: ${property}`, urls: [] }
-		}
-		if (!value) return { blocker: `HTML style 속성 값이 비어 있습니다: ${property}`, urls: [] }
-		if (value.toLowerCase().includes('!important')) {
-			return {
-				blocker: `HTML style에서 !important를 사용할 수 없습니다: ${property}`,
-				urls: [],
-			}
-		}
-
-		if (property === 'position' && value !== 'absolute' && value !== 'relative') {
-			return { blocker: 'HTML style의 position 값이 허용 범위를 벗어났습니다.', urls: [] }
-		}
-		if (property === 'display' && !['block', 'flex', 'grid'].includes(value)) {
-			return { blocker: 'HTML style의 display 값이 허용 범위를 벗어났습니다.', urls: [] }
-		}
-
-		const hasUrl = containsCssFunction(value, 'url')
-		const hasIndirectImage = [
-			'-webkit-image-set',
-			'element',
-			'image',
-			'image-set',
-			'paint',
-			'src',
-		].some((name) => containsCssFunction(value, name))
-		if (hasIndirectImage) {
-			return { blocker: 'HTML style의 동적 이미지 함수는 사용할 수 없습니다.', urls: [] }
-		}
-
-		if (!URL_STYLE_PROPERTIES.has(property)) {
-			if (hasUrl) return { blocker: 'HTML style URL 위치가 허용되지 않습니다.', urls: [] }
-			continue
-		}
-
-		const match = value.match(/^url\(\s*(?:"([^"]+)"|'([^']+)'|([^"'()\s]+))\s*\)$/i)
-		const url = match?.[1] ?? match?.[2] ?? match?.[3]
-		if (!hasUrl || !url || hasUnsafeControlCharacter(url)) {
-			return { blocker: 'HTML style URL 형식이 올바르지 않습니다.', urls: [] }
-		}
-		urls.push(url)
-	}
-
-	return { urls }
-}
-
-function isCanonicalAssetUrl(value: string, collections: readonly string[]): boolean {
-	if (
-		!value.startsWith('/') ||
-		value.startsWith('//') ||
-		value.includes('?') ||
-		value.includes('#') ||
-		value.includes('\\') ||
-		hasUnsafeControlCharacter(value)
-	) {
-		return false
-	}
-
-	const url = new URL(value, 'http://template.local')
-	if (url.pathname !== value) return false
-	return collections.some((collection) => value.startsWith(`/api/${collection}/file/`))
-}
-
-function isSafeRasterDataUrl(value: string): boolean {
-	if (value.length > MAX_RASTER_DATA_URL_LENGTH) return false
-	const match = value.match(/^data:image\/(png|jpeg|webp);base64,([a-zA-Z0-9+/]+={0,2})$/)
-	const encoded = match?.[2]
-	if (!encoded || encoded.length % 4 !== 0) return false
-
-	const data = Buffer.from(encoded, 'base64')
-	if (data.byteLength === 0 || data.byteLength > MAX_RASTER_BYTES) return false
-
-	switch (match[1]) {
-		case 'png':
-			return data
-				.subarray(0, 8)
-				.equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
-		case 'jpeg':
-			return data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff
-		case 'webp':
-			return (
-				data.subarray(0, 4).toString('ascii') === 'RIFF' &&
-				data.subarray(8, 12).toString('ascii') === 'WEBP'
-			)
-		default:
-			return false
-	}
-}
-
-/**
- * Draft HTML에서 렌더해도 되는 내부 에셋 또는 제한된 raster data URI인지 판정한다.
- * 외부 I/O는 없다.
- */
-export function isSafeDraftTemplateAssetUrl(value: string): boolean {
-	return (
-		isCanonicalAssetUrl(value, ['template-assets', ...AUTHORIZED_ASSET_COLLECTIONS]) ||
-		isSafeRasterDataUrl(value)
-	)
+	refs: AuthorizedTemplateImageRef[]
 }
 
 function allowedAttributes(tagName: string): Set<string> {
@@ -386,11 +41,16 @@ function metadataRef(
 	attributes: Record<string, string>,
 	styleUrls: string[],
 	nodeId: string,
-): AuthorizedImageRef | null | undefined {
+): AuthorizedTemplateImageRef | null | undefined {
 	const collection = attributes['data-asset-collection']
 	const rawId = attributes['data-asset-id']
 	if (!collection && !rawId) return undefined
-	if (!collection || !rawId || !isAuthorizedCollection(collection) || !/^\d+$/.test(rawId)) {
+	if (
+		!collection ||
+		!rawId ||
+		!isAuthorizedTemplateAssetCollection(collection) ||
+		!/^\d+$/.test(rawId)
+	) {
 		return null
 	}
 
@@ -403,7 +63,7 @@ function metadataRef(
 	return { collection, assetId, src, label: nodeId }
 }
 
-function sameRef(left: AuthorizedImageRef, right: AuthorizedImageRef): boolean {
+function sameRef(left: AuthorizedTemplateImageRef, right: AuthorizedTemplateImageRef): boolean {
 	return (
 		left.collection === right.collection &&
 		left.assetId === right.assetId &&
@@ -414,7 +74,7 @@ function sameRef(left: AuthorizedImageRef, right: AuthorizedImageRef): boolean {
 function inspectFragment(
 	html: string,
 	mode: 'base' | 'draft' | 'public',
-	expectedRefsByNode: ReadonlyMap<string, AuthorizedImageRef>,
+	expectedRefsByNode: ReadonlyMap<string, AuthorizedTemplateImageRef>,
 ): InspectedFragment {
 	const result: InspectedFragment = { nodeIds: new Set(), refs: [] }
 	let currentAttributes = new Set<string>()
@@ -459,7 +119,7 @@ function inspectFragment(
 					}
 					result.nodeIds.add(nodeId)
 
-					const style = inspectStyle(attributes.style ?? '')
+					const style = inspectTemplateStyle(attributes.style ?? '')
 					if (style.blocker) {
 						block(style.blocker)
 						return
@@ -470,9 +130,9 @@ function inspectFragment(
 						if (
 							style.urls.length > 0 ||
 							(src &&
-								!isCanonicalAssetUrl(src, [
+								!isCanonicalTemplateAssetUrl(src, [
 									'template-assets',
-									...AUTHORIZED_ASSET_COLLECTIONS,
+									...AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS,
 								]))
 						) {
 							block('baseHtml에는 내부 staging 에셋 외의 URL을 사용할 수 없습니다.')
@@ -520,7 +180,10 @@ function inspectFragment(
 							usedUrls.some(
 								(url) =>
 									url !== ref.src ||
-									!isCanonicalAssetUrl(url, AUTHORIZED_ASSET_COLLECTIONS),
+									!isCanonicalTemplateAssetUrl(
+										url,
+										AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS,
+									),
 							))
 					) {
 						block('공개 HTML의 모든 URL은 인가 에셋 참조와 일치해야 합니다.')
@@ -553,16 +216,12 @@ function inspectFragment(
 	return result
 }
 
-/**
- * Figma HTML 모델의 구조와 URL 출처를 검사한다. 파서는 태그/속성을 실행하지 않고,
- * 공개 URL은 service가 전달한 구조화 에셋 참조와 정확히 일치할 때만 허용한다.
- * 외부 I/O는 없으며 호출 Use Case가 저장·조회 경계를 소유한다.
- */
+/** Figma HTML 모델의 구조와 URL 출처를 검사한다. */
 export function inspectTemplateHtml(input: {
 	baseHtml: string
 	html: string
 	overrideNodeIds: readonly string[]
-	refsByNode: ReadonlyMap<string, AuthorizedImageRef>
+	refsByNode: ReadonlyMap<string, AuthorizedTemplateImageRef>
 }): TemplateHtmlInspection {
 	const base = inspectFragment(input.baseHtml, 'base', input.refsByNode)
 	if (base.blocker) return { blocker: base.blocker, refs: [] }
@@ -582,33 +241,24 @@ export function inspectTemplateHtml(input: {
 	return { refs: published.refs }
 }
 
-/**
- * 안전성 검사를 통과한 baseHtml에서 Figma import가 직접 기록한 구조화 에셋 참조를 읽는다.
- * 외부 I/O는 없다.
- */
+/** 안전성 검사를 통과한 baseHtml에서 Figma import 에셋 참조를 읽는다. */
 export function inspectBaseTemplateHtml(html: string): TemplateHtmlInspection {
 	const base = inspectFragment(html, 'base', new Map())
 	return { blocker: base.blocker, refs: base.refs }
 }
 
-/**
- * 안전한 draft HTML에서 실제 렌더 결과가 사용하는 구조화 에셋 참조를 읽는다.
- * 외부 I/O는 없다.
- */
+/** 안전한 draft HTML에서 실제 렌더 결과가 사용하는 에셋 참조를 읽는다. */
 export function inspectDraftTemplateAssetRefs(html: string): TemplateHtmlInspection {
 	const draft = inspectFragment(html, 'draft', new Map())
 	return { blocker: draft.blocker, refs: draft.refs }
 }
 
-/**
- * Draft 저장 시 실행 가능한 HTML과 외부 URL을 막되 staging 에셋은 허용한다.
- * 외부 I/O는 없으며 호출 Use Case가 저장 경계를 소유한다.
- */
+/** Draft 저장 시 실행 가능한 HTML과 외부 URL을 막되 staging 에셋은 허용한다. */
 export function inspectDraftTemplateHtml(input: {
 	baseHtml?: string
 	html?: string
 	overrideNodeIds: readonly string[]
-	refsByNode: ReadonlyMap<string, AuthorizedImageRef>
+	refsByNode: ReadonlyMap<string, AuthorizedTemplateImageRef>
 }): TemplateHtmlInspection {
 	const base = input.baseHtml
 		? inspectFragment(input.baseHtml, 'base', input.refsByNode)
@@ -631,14 +281,11 @@ export function inspectDraftTemplateHtml(input: {
 	return { refs: [] }
 }
 
-/**
- * 기존 published 문서를 렌더하기 직전 공개 HTML 구조를 다시 검사한다.
- * 외부 I/O는 없으며 호출 Use Case가 조회 경계를 소유한다.
- */
+/** 기존 published 문서를 렌더하기 직전 공개 HTML 구조를 다시 검사한다. */
 export function inspectPublishedTemplateHtml(input: {
 	html: string
 	overrideNodeIds: readonly string[]
-	refsByNode: ReadonlyMap<string, AuthorizedImageRef>
+	refsByNode: ReadonlyMap<string, AuthorizedTemplateImageRef>
 }): TemplateHtmlInspection {
 	const published = inspectFragment(input.html, 'public', input.refsByNode)
 	if (published.blocker) return { blocker: published.blocker, refs: [] }

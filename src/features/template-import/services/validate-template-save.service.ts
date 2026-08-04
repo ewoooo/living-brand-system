@@ -1,14 +1,16 @@
 import {
-	AUTHORIZED_ASSET_COLLECTIONS,
-	type AuthorizedImageRef,
 	inspectDraftTemplateHtml,
 	inspectTemplateHtml,
-	isSafeDraftTemplateAssetUrl,
-	parseTemplateNodeConfigs,
 } from '@/services/inspect-template-html.service'
+import { parseTemplateNodeConfigs } from '@/services/parse-template-node-configs.service'
+import {
+	AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS,
+	type AuthorizedTemplateImageRef,
+	isSafeDraftTemplateAssetUrl,
+} from '@/services/template-asset-policy.service'
 import { findAuthorizedAssetsByIds } from '../repositories/authorized-asset.payload.repository'
 
-interface TemplatePublishCandidate {
+interface TemplateSaveCandidate {
 	baseHtml?: unknown
 	overrides?: unknown
 	html?: unknown
@@ -21,8 +23,8 @@ function nonEmptyString(value: unknown): value is string {
 }
 
 function htmlTemplateRefs(
-	candidate: TemplatePublishCandidate,
-): { blocker: string } | { refs: AuthorizedImageRef[] } | null {
+	candidate: TemplateSaveCandidate,
+): { blocker: string } | { refs: AuthorizedTemplateImageRef[] } | null {
 	const active = nonEmptyString(candidate.baseHtml) || nonEmptyString(candidate.html)
 	if (!active) return null
 
@@ -58,12 +60,8 @@ function htmlTemplateRefs(
 	})
 }
 
-/**
- * Templates draft 저장 게이트 Use Case. 실행 가능한 HTML과 외부 URL을 차단하되
- * import staging 에셋과 magic-byte가 확인된 raster data URI는 draft에서만 허용한다.
- * 외부 I/O는 없으며 저장 adapter가 호출 순서를 소유한다.
- */
-export function findTemplateDraftBlocker(candidate: TemplatePublishCandidate): string | null {
+/** Draft 저장 시 실행 가능한 HTML과 외부 URL을 차단하고 staging 에셋만 허용한다. */
+export function findTemplateDraftBlocker(candidate: TemplateSaveCandidate): string | null {
 	const baseHtml = nonEmptyString(candidate.baseHtml) ? candidate.baseHtml : undefined
 	const html = nonEmptyString(candidate.html) ? candidate.html : undefined
 	if (!baseHtml && !html) return null
@@ -90,12 +88,9 @@ export function findTemplateDraftBlocker(candidate: TemplatePublishCandidate): s
 	)
 }
 
-/**
- * Templates 발행 게이트 Use Case. Service가 발행 가능한 모델과 에셋 규칙을 판정하고,
- * Payload 문서 조회만 authorized-asset repository에 맡긴다.
- */
+/** 발행 가능한 HTML 모델과 published 에셋 참조를 검증한다. */
 export async function findTemplatePublishBlocker(
-	candidate: TemplatePublishCandidate,
+	candidate: TemplateSaveCandidate,
 	repositoryContext: Parameters<typeof findAuthorizedAssetsByIds>[0],
 ): Promise<string | null> {
 	const htmlValidation = htmlTemplateRefs(candidate)
@@ -110,12 +105,12 @@ export async function findTemplatePublishBlocker(
 }
 
 async function findInvalidAuthorizedRefs(
-	refs: AuthorizedImageRef[],
+	refs: AuthorizedTemplateImageRef[],
 	repositoryContext: Parameters<typeof findAuthorizedAssetsByIds>[0],
 ): Promise<string[]> {
 	const invalidLabels: string[] = []
 
-	for (const collection of AUTHORIZED_ASSET_COLLECTIONS) {
+	for (const collection of AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS) {
 		const collectionRefs = refs.filter((ref) => ref.collection === collection)
 		if (collectionRefs.length === 0) continue
 

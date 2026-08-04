@@ -1,9 +1,8 @@
 'use client'
 
-import type { PrintPpi } from '../print-policy'
-import { exportTemplatePdf } from './export-template-pdf.client'
+import type { PrintPpi, TemplatePrintFormat } from '../print-policy'
 import { exportHtmlToPng, renderHtmlToPngBlob } from './export-template-png.client'
-import { downloadTemplateTiff, TemplateTiffDownloadError } from './export-template-tiff.client'
+import { downloadTemplatePrint, TemplatePrintDownloadError } from './export-template-print.client'
 
 export type TemplateExportFormat = 'png' | 'tiff' | 'pdf'
 
@@ -32,27 +31,18 @@ async function exportTemplateAsPng(context: TemplateExportContext): Promise<void
 	await exportHtmlToPng(context.html, '', context.fileName)
 }
 
-async function exportTemplateAsPdf(context: TemplateExportContext): Promise<void> {
-	if (!context.printPpi) throw new Error('PDF export requires print PPI.')
-
-	const png = await renderHtmlToPngBlob(context.html, '', context.width, context.height)
-	await exportTemplatePdf({
-		fileName: context.fileName,
-		height: context.height,
-		png,
-		ppi: context.printPpi,
-		width: context.width,
-	})
-}
-
-async function exportTemplateAsTiff(context: TemplateExportContext): Promise<void> {
+async function exportTemplateAsPrint(
+	context: TemplateExportContext,
+	format: TemplatePrintFormat,
+): Promise<void> {
 	if (!context.printPpi || !context.templateVersion) {
-		throw new Error('TIFF export requires print PPI and template version.')
+		throw new Error(`${format.toUpperCase()} export requires print PPI and template version.`)
 	}
 
 	const png = await renderHtmlToPngBlob(context.html, '', context.width, context.height)
-	await downloadTemplateTiff({
+	await downloadTemplatePrint({
 		fileName: context.fileName,
+		format,
 		png,
 		templateId: context.templateId,
 		templateVersion: context.templateVersion,
@@ -65,12 +55,12 @@ const exporters = {
 		run: exportTemplateAsPng,
 	},
 	pdf: {
-		isAvailable: ({ printPpi }) => Boolean(printPpi),
-		run: exportTemplateAsPdf,
+		isAvailable: ({ printPpi, templateVersion }) => Boolean(printPpi && templateVersion),
+		run: (context) => exportTemplateAsPrint(context, 'pdf'),
 	},
 	tiff: {
 		isAvailable: ({ printPpi, templateVersion }) => Boolean(printPpi && templateVersion),
-		run: exportTemplateAsTiff,
+		run: (context) => exportTemplateAsPrint(context, 'tiff'),
 	},
 } satisfies Record<TemplateExportFormat, TemplateExporter>
 
@@ -100,7 +90,7 @@ export async function exportTemplate(
 	try {
 		await exporter.run(context)
 	} catch (error) {
-		if (format === 'tiff' && error instanceof TemplateTiffDownloadError) throw error
+		if (error instanceof TemplatePrintDownloadError) throw error
 		throw new Error(exportErrorMessages[format], { cause: error })
 	}
 }

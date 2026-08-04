@@ -32,36 +32,44 @@ export function LogoColorVariantView({ map }: Props) {
 				))}
 			</div>
 			{/* 2×2: 기본형(좌 2행) · WHITE(우상) · 단색(우하).
-			    컨테이너 height 고정 + width 반응형 + gap → 셀 박스 결정. 로고는 셀 height의 30%. */}
-			<div className="grid h-[400px] w-full grid-cols-2 grid-rows-2 gap-3">
+			    컨테이너 height 고정 + width 반응형 + gap → 셀 박스 결정.
+			    로고 박스는 셀의 40%(=1/2.5)이고 그 안에서 object-contain — 폭도 높이도 셀의 1/2.5를 넘지 않는다.
+			    (높이 %만 지정하면 종횡비에 따라 폭이 셀을 넘겨 여백이 사라진다.) */}
+			<div className="grid h-[600px] w-full grid-cols-2 grid-rows-2 gap-3">
 				{colors.default ? (
 					<div className="row-span-2 flex items-center justify-center bg-neutral-100">
-						{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
-						<img
-							src={colors.default}
-							alt="기본형"
-							className="h-[30%] w-auto max-w-full object-contain"
-						/>
+						<div className="h-[40%] w-[40%]">
+							{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
+							<img
+								src={colors.default}
+								alt="기본형"
+								className="h-full w-full object-contain"
+							/>
+						</div>
 					</div>
 				) : null}
 				{colors.white ? (
 					<div className="flex items-center justify-center bg-neutral-900">
-						{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
-						<img
-							src={colors.white}
-							alt="WHITE"
-							className="h-[30%] w-auto max-w-full object-contain"
-						/>
+						<div className="h-[40%] w-[40%]">
+							{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
+							<img
+								src={colors.white}
+								alt="WHITE"
+								className="h-full w-full object-contain"
+							/>
+						</div>
 					</div>
 				) : null}
 				{colors.mono ? (
 					<div className="flex items-center justify-center bg-neutral-100">
-						{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
-						<img
-							src={colors.mono}
-							alt="단색"
-							className="h-[30%] w-auto max-w-full object-contain"
-						/>
+						<div className="h-[40%] w-[40%]">
+							{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
+							<img
+								src={colors.mono}
+								alt="단색"
+								className="h-full w-full object-contain"
+							/>
+						</div>
 					</div>
 				) : null}
 			</div>
