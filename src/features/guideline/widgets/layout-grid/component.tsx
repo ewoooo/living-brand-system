@@ -2,7 +2,7 @@
 
 import type { StaticImageData } from 'next/image'
 import { type CSSProperties, type ReactNode, useEffect, useState } from 'react'
-import ciHdHorizontalWhite from './images/ci-hd-horizontal-white.svg'
+import ciHdHorizontalMono from './images/ci-hd-horizontal-mono.svg'
 import ciKoHorizontal from './images/ci-ko-horizontal.svg'
 import sampleA1 from './images/sample-a1.webp'
 import sampleA2 from './images/sample-a2.webp'
@@ -55,12 +55,12 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 		background: '#ffffff',
 		color: '#1a1a1a',
 		items: [
-			// CI 국문 가로형 — 셀 높이의 20%, 셀 밖으로 넘치게 둔다.
-			{ col: 1, row: 1, node: <Ci src={ciKoHorizontal} height="20%" /> },
+			// CI 국문 가로형 — 크기는 텍스트처럼 대지 기준(cqmax)이라 거터·셀 크기에 흔들리지 않는다.
+			{ col: 1, row: 1, node: <Ci src={ciKoHorizontal} height="3cqmax" /> },
 			// 녹색 그라디언트 — 3A 열 × 1A 행 셀을 채운다.
 			{ col: 3, row: 1, behind: true, node: <Img src={sampleA1} /> },
-			// 캡션도 셀 밖으로 넘치게 둔다(1A 열이 좁아 줄바꿈되는 것을 막는다).
-			{ col: 1, row: 2, node: <Caption overflow>FUTURE CLOSER TO HUMANITY</Caption> },
+			// 캡션은 1A 열 폭을 채우고 그 안에서 줄바꿈된다.
+			{ col: 1, row: 2, node: <Caption>FUTURE CLOSER TO HUMANITY</Caption> },
 			// 선박 선수 — 2번 칸 왼변부터 3번 칸 오른변까지.
 			{ col: [2, 3], row: 2, behind: true, node: <Img src={sampleA2} /> },
 			// 탱커 — 위는 1/2 구분선, 나머지 세 변은 문서 끝.
@@ -85,8 +85,8 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 				behind: true,
 				node: <Img src={sampleB1} />,
 			},
-			// CI HD형 가로형(WHITE 워드마크 — 어두운 배경 규정) — 셀 높이의 20%, 넘침 허용.
-			{ col: 1, row: 1, node: <Ci src={ciHdHorizontalWhite} height="20%" /> },
+			// CI HD형 가로형 단색 — 어두운 배경이라 흰색으로 렌더한다(C절 단색·WHITE 규정).
+			{ col: 1, row: 1, node: <Ci src={ciHdHorizontalMono} height="3cqmax" mono /> },
 			{
 				col: 2,
 				row: 2,
@@ -134,7 +134,7 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 				row: 2,
 				node: (
 					<div className="flex h-full flex-col items-end justify-end">
-						<Ci src={ciKoHorizontal} height="2.5cqh" />
+						<Ci src={ciKoHorizontal} height="2.5cqmax" />
 					</div>
 				),
 			},
@@ -268,9 +268,12 @@ function Guides({ marginPct }: { marginPct: number }) {
 
 /**
  * CI 락업. 높이만 주고 폭은 원본 비율대로 두므로 가로형은 셀 밖으로 넘친다(overflow 허용).
- * 🔴 CI는 마스터 아트워크 그대로 쓴다 — 비율·색을 CSS로 바꾸지 않는다(금지 6·7).
+ * 크기는 텍스트와 같은 대지 기준 단위(cqmax)로 준다 — 셀 크기·거터에 따라 변하지 않는 불변 크기다.
+ * 🔴 CI는 마스터 아트워크 그대로 쓴다 — 비율을 CSS로 바꾸지 않는다(금지 7).
+ * mono = 단색 파일(fill이 없어 기본 검정)을 어두운 배경용 흰색으로 렌더한다. 색을 임의로 고르는 게
+ * 아니라 C절의 단색·WHITE 규정을 적용하는 것 — 브랜드팀 확인 항목이다.
  */
-function Ci({ src, height }: { src: StaticImageData; height: string }) {
+function Ci({ src, height, mono }: { src: StaticImageData; height: string; mono?: boolean }) {
 	return (
 		// biome-ignore lint/performance/noImgElement: 정적 SVG라 next/image 미사용.
 		<img
@@ -280,7 +283,7 @@ function Ci({ src, height }: { src: StaticImageData; height: string }) {
 			alt=""
 			// max-w-none 필수 — preflight의 img{max-width:100%}가 넘치는 폭을 셀 폭으로 되돌린다.
 			className="block w-auto max-w-none"
-			style={{ height }}
+			style={{ height, filter: mono ? 'brightness(0) invert(1)' : undefined }}
 		/>
 	)
 }
@@ -318,9 +321,10 @@ function Caption({ children, overflow }: { children: ReactNode; overflow?: boole
 	)
 }
 
+/** 큰 타이틀. line-height 100% — 행간 여백 없이 글자 높이만 차지한다. */
 function Title({ children }: { children: ReactNode }) {
 	return (
-		<p className="uppercase leading-none" style={{ ...HD_BOLD, fontSize: '7cqw' }}>
+		<p className="uppercase" style={{ ...HD_BOLD, fontSize: '3.5cqw', lineHeight: '100%' }}>
 			{children}
 		</p>
 	)
@@ -331,20 +335,27 @@ function Title({ children }: { children: ReactNode }) {
  * 문자열을 한 번 실측해 그 비율로 viewBox를 잡으면, 이후 스케일은 SVG가 폭 100%에 맞춰 처리한다.
  * 실측은 문자열에만 의존하므로 컨테이너가 바뀌어도 다시 재지 않는다.
  * 🔴 글자 모양·자간은 그대로 늘어난다(scaleX 왜곡 없음).
+ * 🔴 cap height를 높이로 가정하면 안 된다 — 둥근 대문자(U·D·B)는 베이스라인 아래로 오버슈트가
+ *    있어 글자 아래가 잘린다. actualBoundingBox로 실제 잉크 상·하·좌·우를 받아 그만큼만 잡는다.
  */
 function FillTitle({ children }: { children: string }) {
-	// em 1000 기준 cap height(HD체 실측 680)만큼만 높이로 잡아 대문자 상단이 0에 맞는다.
-	const CAP = 680
-	const [advance, setAdvance] = useState<number | null>(null)
+	const [ink, setInk] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
 
 	useEffect(() => {
 		let alive = true
-		// 폰트가 로드된 뒤 재야 폴백 폰트 폭으로 잘못 잡히지 않는다.
+		// 폰트가 로드된 뒤 재야 폴백 폰트 지표로 잘못 잡히지 않는다.
 		document.fonts.ready.then(() => {
 			const ctx = document.createElement('canvas').getContext('2d')
 			if (!ctx || !alive) return
 			ctx.font = '700 1000px HD, sans-serif'
-			setAdvance(ctx.measureText(children).width)
+			const m = ctx.measureText(children)
+			// 기준점은 (0, 베이스라인). left는 기준점 왼쪽 방향이 양수라 부호를 뒤집는다.
+			setInk({
+				x: -m.actualBoundingBoxLeft,
+				y: -m.actualBoundingBoxAscent,
+				w: m.actualBoundingBoxLeft + m.actualBoundingBoxRight,
+				h: m.actualBoundingBoxAscent + m.actualBoundingBoxDescent,
+			})
 		})
 		return () => {
 			alive = false
@@ -352,18 +363,18 @@ function FillTitle({ children }: { children: string }) {
 	}, [children])
 
 	// 실측 전에는 그리지 않는다 — 잘못된 크기로 한 프레임 튀는 것을 막는다.
-	if (advance == null) return null
+	if (!ink) return null
 
 	return (
 		<svg
-			viewBox={`0 0 ${advance} ${CAP}`}
+			viewBox={`${ink.x} ${ink.y} ${ink.w} ${ink.h}`}
 			preserveAspectRatio="xMinYMin meet"
 			style={{ width: '100%', display: 'block' }}
 		>
 			<title>{children}</title>
 			<text
 				x={0}
-				y={CAP}
+				y={0}
 				fontFamily="HD, sans-serif"
 				fontWeight={700}
 				fontSize={1000}
