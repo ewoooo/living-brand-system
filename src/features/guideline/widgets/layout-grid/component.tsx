@@ -1,6 +1,13 @@
 'use client'
 
+import type { StaticImageData } from 'next/image'
 import type { CSSProperties, ReactNode } from 'react'
+import sampleA1 from './images/sample-a1.webp'
+import sampleA2 from './images/sample-a2.webp'
+import sampleA3 from './images/sample-a3.webp'
+import sampleB1 from './images/sample-b1.webp'
+import sampleC1 from './images/sample-c1.webp'
+import sampleC2 from './images/sample-c2.webp'
 import { useLayoutGridControls } from './store'
 
 // 위젯: HD현대 Key Layout 그리드(정본 규칙) 체험. 판형을 축별로 1:2:3으로 나눈 9셀에 콘텐츠를 스냅한다.
@@ -23,7 +30,8 @@ export type LayoutGridSample = 'a' | 'b' | 'c'
 
 /** 셀 하나에 놓이는 콘텐츠. 셀 밖으로 넘치는 건 병합이 아니라 overflow다(판형 경계에서만 잘림). */
 type Item = { col: number; row: number; node: ReactNode }
-type Sample = { background: string; color: string; items: Item[] }
+/** backdrop = 그리드 뒤에 판형 전체를 덮는 배경(풀블리드 사진). 셀에 속하지 않는다. */
+type Sample = { background: string; color: string; backdrop?: ReactNode; items: Item[] }
 
 // ─────────────────────────────────────────────────────────────
 // 샘플 콘텐츠 — 여기만 고치면 된다. 이미지는 이 폴더에 넣고 static import.
@@ -36,17 +44,18 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 		color: '#1a1a1a',
 		items: [
 			{ col: 1, row: 1, node: <Logo /> },
-			{ col: 3, row: 1, node: <Box color="#00af41" /> },
+			// 녹색 그라디언트 — 3A 열 × 1A 행 셀을 채운다.
+			{ col: 3, row: 1, node: <Img src={sampleA1} /> },
 			{ col: 1, row: 2, node: <Caption>FUTURE CLOSER TO HUMANITY</Caption> },
-			// overflow 예시: 셀보다 넓게 잡아 오른쪽으로 넘긴다(병합이 아니다).
-			{ col: 2, row: 2, node: <Box color="#1f4e9c" style={{ width: '200%' }} /> },
-			// 풀블리드 예시: 마진 밖으로 넘겨 판형 경계에서 잘리게 한다.
+			// 선박 선수 — 셀보다 넓게 잡아 오른쪽으로 넘긴다(병합이 아니라 overflow).
+			{ col: 2, row: 2, node: <Img src={sampleA2} style={{ width: '200%' }} /> },
+			// 탱커 — 마진 밖으로 넘겨 판형 경계에서 잘리는 풀블리드.
 			{
 				col: 1,
 				row: 3,
 				node: (
-					<Box
-						color="#0f6b45"
+					<Img
+						src={sampleA3}
 						style={{ width: '320%', marginLeft: '-6cqw', marginBottom: '-8cqh' }}
 					/>
 				),
@@ -56,6 +65,8 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 	b: {
 		background: '#12202e',
 		color: '#ffffff',
+		// 풍력 터빈 — 판형 전체를 덮는 배경. 셀에 속하지 않는다.
+		backdrop: <Img src={sampleB1} />,
 		items: [
 			{ col: 1, row: 1, node: <Logo mono /> },
 			{
@@ -68,38 +79,48 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 					</Caption>
 				),
 			},
-			// 풀블리드 배경 이미지 자리 — 판형 전체를 덮되 마진 밖까지 넘긴다.
-			{
-				col: 2,
-				row: 3,
-				node: (
-					<Box
-						color="#24405a"
-						style={{ width: '260%', height: '130%', marginLeft: '-30cqw' }}
-					/>
-				),
-			},
 		],
 	},
 	c: {
 		background: '#ffffff',
 		color: '#1a1a1a',
 		items: [
-			// 상단 사진 밴드: 마진 위쪽으로 넘겨 판형 상단에 붙인다.
+			// 항만 밴드 — 마진 위쪽으로 넘겨 판형 상단에 붙인다.
 			{
 				col: 1,
 				row: 1,
 				node: (
-					<Box
-						color="#6d7b86"
+					<Img
+						src={sampleC1}
 						style={{ width: '320%', marginLeft: '-6cqw', marginTop: '-8cqh' }}
 					/>
 				),
 			},
 			{ col: 1, row: 2, node: <Title>2026</Title> },
 			{ col: 2, row: 2, node: <Title>FUTURE BUILDER</Title> },
-			{ col: 1, row: 3, node: <Caption>WE BRING THE FUTURE CLOSER TO HUMANITY</Caption> },
-			{ col: 3, row: 3, node: <Logo /> },
+			{
+				col: 3,
+				row: 2,
+				node: (
+					<div className="flex h-full flex-col justify-end gap-[2cqh]">
+						<Caption>WE BRING THE FUTURE CLOSER TO HUMANITY</Caption>
+						<div style={{ height: '5cqh' }}>
+							<Logo />
+						</div>
+					</div>
+				),
+			},
+			// 잠수함 — 하단 3A 행을 채우고 마진 밖으로 넘긴다.
+			{
+				col: 1,
+				row: 3,
+				node: (
+					<Img
+						src={sampleC2}
+						style={{ width: '320%', marginLeft: '-6cqw', marginBottom: '-8cqh' }}
+					/>
+				),
+			},
 		],
 	},
 }
@@ -122,6 +143,8 @@ export function LayoutGridWidget({ sample }: { sample?: LayoutGridSample | null 
 				color: design.color,
 			}}
 		>
+			{design.backdrop ? <div className="absolute inset-0">{design.backdrop}</div> : null}
+
 			{/* 표(9셀 전체) — 마진은 여기까지만 적용된다. 셀은 자기 마진이 없고 거터로만 벌어진다. */}
 			<div
 				className="absolute grid"
@@ -213,9 +236,18 @@ function Logo({ mono = false }: { mono?: boolean }) {
 	)
 }
 
-/** 색 박스 = 이미지 자리. style로 셀 밖으로 넘기거나 크기를 조절한다. */
-function Box({ color, style }: { color: string; style?: CSSProperties }) {
-	return <div style={{ background: color, width: '100%', height: '100%', ...style }} />
+/** 사진. 기본은 놓인 영역을 꽉 채우고(cover), style로 셀 밖으로 넘기거나 크기를 조절한다. */
+function Img({ src, style }: { src: StaticImageData; style?: CSSProperties }) {
+	return (
+		// biome-ignore lint/performance/noImgElement: 위젯 내부 정적 에셋이라 next/image 미사용(기존 위젯 선례).
+		<img
+			src={src.src}
+			alt=""
+			// max-w-none 필수 — preflight의 img{max-width:100%}가 셀 밖으로 넘기는 width를 100%로 되돌린다.
+			className="block max-w-none"
+			style={{ width: '100%', height: '100%', objectFit: 'cover', ...style }}
+		/>
+	)
 }
 
 function Caption({ children }: { children: ReactNode }) {
