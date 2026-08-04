@@ -147,6 +147,28 @@ describe('convertFigmaNodeToHtml — 텍스트', () => {
 		expect(s).not.toContain('white-space:nowrap')
 	})
 
+	it('textAlignVertical CENTER/BOTTOM을 flex 세로 배치로 옮기고 TOP은 생략한다', () => {
+		const textNode = (vertical?: string) => ({
+			id: '1:1',
+			name: 't',
+			type: 'TEXT',
+			characters: 'hi',
+			absoluteBoundingBox: { x: 0, y: 0, width: 100, height: 60 },
+			style: { fontFamily: 'Inter', fontSize: 16, textAlignVertical: vertical },
+		})
+
+		const centered = rootStyle(convertFigmaNodeToHtml(textNode('CENTER')).html)
+		expect(centered).toContain('display:flex')
+		expect(centered).toContain('flex-direction:column')
+		expect(centered).toContain('justify-content:center')
+
+		const bottom = rootStyle(convertFigmaNodeToHtml(textNode('BOTTOM')).html)
+		expect(bottom).toContain('justify-content:flex-end')
+
+		const top = rootStyle(convertFigmaNodeToHtml(textNode('TOP')).html)
+		expect(top).not.toContain('display:flex')
+	})
+
 	it('textCase/textDecoration/italic/letterSpacing를 옮긴다', () => {
 		const node = {
 			id: '1:1',
@@ -505,6 +527,42 @@ describe('convertFigmaNodeToHtml — constraints', () => {
 		expect(style).toContain('top:15%')
 		expect(style).toContain('width:33.33%')
 		expect(style).toContain('height:20%')
+	})
+
+	it('border를 방출하는 부모의 절대배치 자식은 border 두께만큼 좌표를 되돌린다', () => {
+		// CSS absolute는 padding box(border 안쪽) 기준이지만 Figma 좌표는 노드 외곽 기준이다.
+		const { html } = convertFigmaNodeToHtml({
+			id: '1:1',
+			name: 'card',
+			type: 'FRAME',
+			strokes: [{ type: 'SOLID', color: { r: 0, g: 0, b: 0, a: 1 } }],
+			strokeWeight: 4,
+			absoluteBoundingBox: { x: 0, y: 0, width: 300, height: 200 },
+			children: [
+				{
+					id: '1:2',
+					name: 'pin',
+					type: 'RECTANGLE',
+					constraints: { horizontal: 'LEFT', vertical: 'TOP' },
+					absoluteBoundingBox: { x: 20, y: 30, width: 100, height: 40 },
+				},
+				{
+					id: '1:3',
+					name: 'anchor',
+					type: 'RECTANGLE',
+					constraints: { horizontal: 'RIGHT', vertical: 'BOTTOM' },
+					absoluteBoundingBox: { x: 20, y: 30, width: 100, height: 40 },
+				},
+			],
+		})
+
+		const pin = nodeStyle(html, '1:2')
+		expect(pin).toContain('left:16px')
+		expect(pin).toContain('top:26px')
+		// padding box 기준: (300-8) - 16 - 100 = 176, (200-8) - 26 - 40 = 126
+		const anchor = nodeStyle(html, '1:3')
+		expect(anchor).toContain('right:176px')
+		expect(anchor).toContain('bottom:126px')
 	})
 
 	it('REST Vector 치수와 HUG 앵커를 Figma처럼 유지한다', () => {

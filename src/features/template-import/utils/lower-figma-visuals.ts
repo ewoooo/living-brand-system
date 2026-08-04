@@ -154,6 +154,24 @@ export function lowerNodeBackground(
 	return { style: { background: layers.join(',') } }
 }
 
+/**
+ * 노드가 CSS border로 방출하는 네 변의 두께. border가 없으면 0.
+ * CSS absolute 자식은 부모의 padding box(border 안쪽) 기준으로 배치되지만 Figma의 INSIDE stroke는
+ * 자식 좌표에 영향을 주지 않으므로, 자식 배치가 이 두께만큼 좌표계를 되돌리는 데 쓴다.
+ */
+function findBorderInsets(node: Node): {
+	top: number
+	right: number
+	bottom: number
+	left: number
+} {
+	if (!findSolidColor(node.strokes)) return { top: 0, right: 0, bottom: 0, left: 0 }
+	const iw = node.individualStrokeWeights
+	if (iw) return iw
+	const weight = node.strokeWeight ?? 1
+	return { top: weight, right: weight, bottom: weight, left: weight }
+}
+
 // strokes → border. 개별 두께가 있으면 변별 두께로.
 // ponytail: strokeAlign(INSIDE/OUTSIDE/CENTER)은 무시하고 border-box border(=INSIDE)로 근사. OUTSIDE/CENTER는 CSS border로 충실 표현 불가.
 function createBorderStyle(node: Node): IrCssStyle {
@@ -326,6 +344,10 @@ export function createTextStyle(node: Node): IrCssStyle {
 		UNDERLINE: 'underline',
 		STRIKETHROUGH: 'line-through',
 	}
+	// 세로 정렬: 고정 높이 박스의 CENTER/BOTTOM을 flex 세로 배치로 옮긴다(익명 텍스트가 flex item이 된다).
+	// TOP은 기본 흐름과 같아 생략하고, 높이가 내용에 맞는(HUG) 박스에서는 세 값 모두 결과가 같다.
+	const verticalAlign: Record<string, string> = { CENTER: 'center', BOTTOM: 'flex-end' }
+	const justify = s.textAlignVertical ? verticalAlign[s.textAlignVertical] : undefined
 
 	return {
 		margin: '0',
@@ -342,6 +364,9 @@ export function createTextStyle(node: Node): IrCssStyle {
 		'text-decoration': s.textDecoration ? textDeco[s.textDecoration] : undefined,
 		// HUG(WIDTH_AND_HEIGHT)=자동 줄바꿈 없이 명시 줄바꿈만(pre), 그 외=자동 줄바꿈 허용(pre-wrap). 둘 다 공백/개행 보존.
 		'white-space': s.textAutoResize === 'WIDTH_AND_HEIGHT' ? 'pre' : 'pre-wrap',
+		...(justify
+			? { display: 'flex', 'flex-direction': 'column', 'justify-content': justify }
+			: {}),
 	}
 }
 
@@ -513,14 +538,17 @@ class ConstraintPlacementStrategy implements ChildPlacementStrategy {
 			!useAbsoluteBounds &&
 			node.layoutSizingVertical === 'HUG' &&
 			node.constraints?.vertical === 'CENTER'
+		// CSS absolute는 부모의 padding box(border 안쪽) 기준인데 Figma 좌표는 노드 외곽 기준이라,
+		// 부모가 border를 방출하면 그 두께만큼 좌표계를 되돌린다(시작점·부모 크기 모두).
+		const insets = findBorderInsets(parent)
 		return {
 			position: 'absolute',
 			...createConstraintAxisStyle({
 				constraint: node.constraints?.horizontal,
 				sizing: useAbsoluteBounds ? undefined : node.layoutSizingHorizontal,
-				start: b.x - pb.x + rotationOffset.x,
+				start: b.x - pb.x - insets.left + rotationOffset.x,
 				size: dim.width,
-				parentSize: pb.width,
+				parentSize: pb.width - insets.left - insets.right,
 				startProperty: 'left',
 				endProperty: 'right',
 				sizeProperty: 'width',
@@ -528,9 +556,9 @@ class ConstraintPlacementStrategy implements ChildPlacementStrategy {
 			...createConstraintAxisStyle({
 				constraint: node.constraints?.vertical,
 				sizing: useAbsoluteBounds ? undefined : node.layoutSizingVertical,
-				start: b.y - pb.y + rotationOffset.y,
+				start: b.y - pb.y - insets.top + rotationOffset.y,
 				size: dim.height,
-				parentSize: pb.height,
+				parentSize: pb.height - insets.top - insets.bottom,
 				startProperty: 'top',
 				endProperty: 'bottom',
 				sizeProperty: 'height',
