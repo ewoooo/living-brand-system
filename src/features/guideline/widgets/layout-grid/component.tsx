@@ -28,8 +28,8 @@ const ARTBOARD_ASPECT = '210 / 297'
 
 /** 그리드 표시 색. 🔴 임시 리터럴 — brand-colors의 값으로 교체될 자리다. */
 const GRID_COLOR = '#007332'
-/** 마진·거터 영역 채움(같은 색 30%). */
-const GRID_FILL = `${GRID_COLOR}4d`
+/** 마진·거터 영역 채움의 투명도. 밴드가 아니라 **그룹**에 적용해야 교차부가 진해지지 않는다. */
+const GRID_AREA_OPACITY = 0.3
 /** 그리드가 보일 때 콘텐츠 투명도 — 선과 영역이 읽히도록 죽인다. */
 const CONTENT_DIMMED = 0.3
 
@@ -155,66 +155,77 @@ function renderElement(element: Element): ReactNode {
 }
 
 /**
- * 그리드 표시 = 마진 영역 채움 + 거터 밴드 채움 + 1:2:3 분할선.
- * 같은 5×5 트랙 위에 그려서 위치 계산이 없다.
- * 거터는 실제 트랙이 아니라 셀 padding이라, 구분선에 걸친 밴드로 그린다 —
- * 구분선이 왼변인 셀에 붙여 절반만큼 밀고 거터 폭만큼 채우면 선을 가운데 두고 정확히 덮는다.
+ * 그리드 표시 = 영역 채움 그룹 + 분할선 그룹. 둘 다 같은 5×5 트랙 위에 그려 위치 계산이 없다.
+ *
+ * 🔴 두 그룹으로 나누는 이유: 영역 안에서는 밴드를 **불투명하게** 그리고 그룹째로 한 번만 투명하게
+ *    만든다. 밴드에 직접 알파를 주면 거터 교차부에서 알파가 누적돼 그 네 곳만 진해진다.
+ *    선을 같은 그룹에 넣으면 채움과 같은 색·같은 투명도가 되어 보이지 않으므로 별 그룹으로 올린다.
  */
 function Guides({ marginPct, gutterHalf }: { marginPct: number; gutterHalf: Offsets }) {
 	return (
-		<div className="pointer-events-none absolute inset-0 grid" style={gridTemplate(marginPct)}>
-			{/* 마진 영역 — 바깥 링 4개 밴드. 트랙이라 좌표를 계산하지 않는다. */}
-			<div style={{ gridColumn: '1 / -1', gridRow: 1, background: GRID_FILL }} />
-			<div style={{ gridColumn: '1 / -1', gridRow: -2, background: GRID_FILL }} />
-			<div style={{ gridColumn: 1, gridRow: '2 / -2', background: GRID_FILL }} />
-			<div style={{ gridColumn: -2, gridRow: '2 / -2', background: GRID_FILL }} />
+		<>
+			{/* 영역 그룹 — 마진 링 + 거터 밴드. 겹쳐도 같은 불투명 색이라 색이 누적되지 않는다. */}
+			<div
+				className="pointer-events-none absolute inset-0 grid"
+				style={{ ...gridTemplate(marginPct), opacity: GRID_AREA_OPACITY }}
+			>
+				{/* 마진 영역 — 바깥 링 4개 밴드. 트랙이라 좌표를 계산하지 않는다. */}
+				<div style={{ gridColumn: '1 / -1', gridRow: 1, background: GRID_COLOR }} />
+				<div style={{ gridColumn: '1 / -1', gridRow: -2, background: GRID_COLOR }} />
+				<div style={{ gridColumn: 1, gridRow: '2 / -2', background: GRID_COLOR }} />
+				<div style={{ gridColumn: -2, gridRow: '2 / -2', background: GRID_COLOR }} />
 
-			{/* 수직 거터 — 표 높이 전체를 지나는 세로 밴드. */}
-			{INTERIOR_LINES.map((line) => (
-				<div
-					key={`gutter-v-${line}`}
-					style={{
-						gridColumn: line,
-						gridRow: '2 / -2',
-						marginLeft: `-${gutterHalf.x}cqmax`,
-						width: `${gutterHalf.x * 2}cqmax`,
-						background: GRID_FILL,
-					}}
-				/>
-			))}
-
-			{/* 수평 거터 — 표 폭 전체를 지나는 가로 밴드. */}
-			{INTERIOR_LINES.map((line) => (
-				<div
-					key={`gutter-h-${line}`}
-					style={{
-						gridColumn: '2 / -2',
-						gridRow: line,
-						marginTop: `-${gutterHalf.y}cqmax`,
-						height: `${gutterHalf.y * 2}cqmax`,
-						background: GRID_FILL,
-					}}
-				/>
-			))}
-
-			{/* 분할선 — 콘텐츠 셀 9개의 테두리로 얻는다. */}
-			{TRACKS.flatMap((_, rowIndex) =>
-				TRACKS.map((__, colIndex) => (
+				{/* 거터 — 구분선은 실제 트랙이 아니라 셀 padding이라, 구분선이 왼변(위변)인 셀에 붙여
+				    절반만큼 밀고 거터 폭만큼 채워 선을 가운데 두고 덮는다. */}
+				{INTERIOR_LINES.map((line) => (
 					<div
-						// biome-ignore lint/suspicious/noArrayIndexKey: 고정 3×3 좌표, 재정렬 없음.
-						key={`${colIndex}-${rowIndex}`}
+						key={`gutter-v-${line}`}
 						style={{
-							gridColumn: colIndex + 2,
-							gridRow: rowIndex + 2,
-							// 🔴 outline-offset -0.5px — 선이 셀 경계를 안·밖 0.5px씩 걸치게 해서 이웃 셀의
-							// 선과 정확히 겹쳐 1px로 보인다(0이면 경계마다 2px로 두꺼워진다).
-							outline: `1px solid ${GRID_COLOR}`,
-							outlineOffset: '-0.5px',
+							gridColumn: line,
+							gridRow: '2 / -2',
+							marginLeft: `-${gutterHalf.x}cqmax`,
+							width: `${gutterHalf.x * 2}cqmax`,
+							background: GRID_COLOR,
 						}}
 					/>
-				)),
-			)}
-		</div>
+				))}
+				{INTERIOR_LINES.map((line) => (
+					<div
+						key={`gutter-h-${line}`}
+						style={{
+							gridColumn: '2 / -2',
+							gridRow: line,
+							marginTop: `-${gutterHalf.y}cqmax`,
+							height: `${gutterHalf.y * 2}cqmax`,
+							background: GRID_COLOR,
+						}}
+					/>
+				))}
+			</div>
+
+			{/* 선 그룹 — 채움 위에 100%로 올라간다. 콘텐츠 셀 9개의 테두리로 얻는다. */}
+			<div
+				className="pointer-events-none absolute inset-0 grid"
+				style={gridTemplate(marginPct)}
+			>
+				{TRACKS.flatMap((_, rowIndex) =>
+					TRACKS.map((__, colIndex) => (
+						<div
+							// biome-ignore lint/suspicious/noArrayIndexKey: 고정 3×3 좌표, 재정렬 없음.
+							key={`${colIndex}-${rowIndex}`}
+							style={{
+								gridColumn: colIndex + 2,
+								gridRow: rowIndex + 2,
+								// 🔴 outline-offset -0.5px — 선이 셀 경계를 안·밖 0.5px씩 걸치게 해서 이웃 셀의
+								// 선과 정확히 겹쳐 1px로 보인다(0이면 경계마다 2px로 두꺼워진다).
+								outline: `1px solid ${GRID_COLOR}`,
+								outlineOffset: '-0.5px',
+							}}
+						/>
+					)),
+				)}
+			</div>
+		</>
 	)
 }
 
