@@ -550,3 +550,176 @@ describe('convertFigmaNodeToHtml — 리뷰 수정 회귀', () => {
 		expect(html).toContain('data-node-id="1:2&quot; onmouseover=&quot;x"')
 	})
 })
+
+// IR 파이프라인 재배선의 기준선: 주요 경로(오토레이아웃/constraints/grid/텍스트/벡터 에셋/박스 효과)를
+// 한 트리에 모두 담아 출력 HTML 전체를 그대로 고정한다. 이 스냅샷이 바뀌면 변환 동작이 바뀐 것이다.
+describe('convertFigmaNodeToHtml — 골든 스냅샷', () => {
+	const GOLDEN_FRAME = {
+		id: '9:0',
+		name: 'Golden',
+		type: 'FRAME',
+		fills: [{ type: 'SOLID', color: { r: 1, g: 1, b: 1, a: 1 } }],
+		layoutMode: 'VERTICAL',
+		itemSpacing: 16,
+		paddingTop: 24,
+		paddingRight: 24,
+		paddingBottom: 24,
+		paddingLeft: 24,
+		primaryAxisAlignItems: 'CENTER',
+		counterAxisAlignItems: 'MIN',
+		clipsContent: true,
+		absoluteBoundingBox: { x: 0, y: 0, width: 800, height: 600 },
+		children: [
+			{
+				id: '9:1',
+				name: 'title',
+				type: 'TEXT',
+				fills: [{ type: 'SOLID', color: { r: 0.1, g: 0.2, b: 0.3, a: 1 } }],
+				characters: 'Hello\n"World"',
+				layoutSizingHorizontal: 'FIXED',
+				layoutSizingVertical: 'HUG',
+				absoluteBoundingBox: { x: 24, y: 24, width: 752, height: 58 },
+				style: {
+					fontFamily: 'Inter',
+					fontWeight: 700,
+					fontSize: 48,
+					italic: true,
+					textAlignHorizontal: 'CENTER',
+					textAutoResize: 'HEIGHT',
+					textCase: 'UPPER',
+					textDecoration: 'UNDERLINE',
+					letterSpacing: 1.5,
+					lineHeightUnit: 'PIXELS',
+					lineHeightPx: 58,
+				},
+			},
+			{
+				id: '9:2',
+				name: 'hero',
+				type: 'FRAME',
+				fills: [
+					{
+						type: 'GRADIENT_LINEAR',
+						gradientHandlePositions: [
+							{ x: 0, y: 0 },
+							{ x: 1, y: 1 },
+						],
+						gradientStops: [
+							{ color: { r: 1, g: 0, b: 0, a: 1 }, position: 0 },
+							{ color: { r: 0, g: 0, b: 1, a: 0.5 }, position: 1 },
+						],
+					},
+				],
+				strokes: [{ type: 'SOLID', color: { r: 0, g: 0, b: 0, a: 1 } }],
+				strokeWeight: 2,
+				rectangleCornerRadii: [4, 8, 12, 16],
+				blendMode: 'MULTIPLY',
+				opacity: 0.9,
+				effects: [
+					{
+						type: 'DROP_SHADOW',
+						radius: 4,
+						spread: 1,
+						offset: { x: 0, y: 2 },
+						color: { r: 0, g: 0, b: 0, a: 0.25 },
+					},
+					{ type: 'BACKGROUND_BLUR', radius: 10 },
+				],
+				layoutSizingHorizontal: 'FILL',
+				layoutSizingVertical: 'FIXED',
+				layoutGrow: 1,
+				layoutAlign: 'STRETCH',
+				absoluteBoundingBox: { x: 24, y: 98, width: 752, height: 300 },
+				children: [
+					{
+						id: '9:3',
+						name: 'badge',
+						type: 'RECTANGLE',
+						fills: [{ type: 'SOLID', color: { r: 0, g: 1, b: 0, a: 1 } }],
+						constraints: { horizontal: 'RIGHT', vertical: 'BOTTOM' },
+						absoluteBoundingBox: { x: 700, y: 350, width: 60, height: 30 },
+					},
+					{
+						id: '9:4',
+						name: 'center-hug',
+						type: 'FRAME',
+						layoutMode: 'HORIZONTAL',
+						layoutSizingHorizontal: 'HUG',
+						layoutSizingVertical: 'HUG',
+						constraints: { horizontal: 'CENTER', vertical: 'CENTER' },
+						absoluteBoundingBox: { x: 350, y: 230, width: 100, height: 36 },
+						size: { x: 100, y: 36 },
+					},
+					{
+						id: '9:5',
+						name: 'logo',
+						type: 'VECTOR',
+						constraints: { horizontal: 'SCALE', vertical: 'SCALE' },
+						absoluteBoundingBox: { x: 60, y: 120, width: 150, height: 60 },
+						size: { x: 150, y: 60 },
+					},
+				],
+			},
+			{
+				id: '9:6',
+				name: 'table',
+				type: 'FRAME',
+				layoutMode: 'GRID',
+				gridColumnsSizing: 'minmax(0,1fr) minmax(0,2fr)',
+				gridRowsSizing: 'minmax(0,1fr)',
+				gridColumnGap: 8,
+				gridRowGap: 4,
+				gridItemsPositioning: 'ROW_AUTO_FLOW',
+				absoluteBoundingBox: { x: 24, y: 414, width: 752, height: 120 },
+				children: [
+					{
+						id: '9:7',
+						name: 'cell',
+						type: 'TEXT',
+						characters: 'cell',
+						gridColumnAnchorIndex: 1,
+						gridRowAnchorIndex: 0,
+						gridColumnSpan: 1,
+						gridRowSpan: 1,
+						gridChildHorizontalAlign: 'CENTER',
+						layoutSizingHorizontal: 'FILL',
+						style: { fontFamily: 'Inter', fontSize: 14, textAlignHorizontal: 'LEFT' },
+					},
+				],
+			},
+			{
+				id: '9:8',
+				name: 'overlay',
+				type: 'FRAME',
+				layoutPositioning: 'ABSOLUTE',
+				fills: [{ type: 'SOLID', color: { r: 0, g: 0, b: 0, a: 0.4 } }],
+				constraints: { horizontal: 'LEFT_RIGHT', vertical: 'TOP' },
+				absoluteBoundingBox: { x: 100, y: 500, width: 600, height: 40 },
+				children: [
+					{
+						id: '9:9',
+						name: 'hidden',
+						type: 'RECTANGLE',
+						visible: false,
+						absoluteBoundingBox: { x: 0, y: 0, width: 1, height: 1 },
+					},
+				],
+			},
+		],
+	}
+
+	const GOLDEN_ASSETS = {
+		'9:5': {
+			collection: 'application-images' as const,
+			id: 42,
+			url: '/api/application-images/file/figma-logo.svg',
+		},
+	}
+
+	it('대표 트리의 출력 HTML 전체를 고정한다', () => {
+		const result = convertFigmaNodeToHtml(GOLDEN_FRAME, GOLDEN_ASSETS)
+		expect(result.width).toBe(800)
+		expect(result.height).toBe(600)
+		expect(result.html).toMatchSnapshot()
+	})
+})
