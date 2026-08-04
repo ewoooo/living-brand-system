@@ -13,6 +13,7 @@ import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
 import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
+import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
@@ -83,6 +84,9 @@ function renderWidget(child: Child): ReactNode {
 		case 'layoutGridWidget':
 			// 샘플 디자인은 코드에 있고 인스턴스는 그중 하나를 고른다.
 			return <LayoutGridWidget sample={child.sample} />
+		case 'layoutGridControlsWidget':
+			// 같은 페이지의 layoutGridWidget 전부를 통제하는 단일 패널(모듈 스토어 공유).
+			return <LayoutGridControlsWidget />
 		case 'layoutGridOverlayWidget':
 			return <LayoutGridOverlayWidget />
 		case 'logoColorVariantWidget':

@@ -7,6 +7,7 @@ import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/compone
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
+import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
 import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/component'
 import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/component'
@@ -34,6 +35,7 @@ const WIDGETS: { name: string; Component: React.ComponentType }[] = [
 	{ name: 'image-grid', Component: ImageGridWidget },
 	{ name: 'media-showcase', Component: MediaShowcaseWidget },
 	{ name: 'layout-grid', Component: LayoutGridWidget },
+	{ name: 'layout-grid-controls', Component: LayoutGridControlsWidget },
 	{ name: 'layout-grid-overlay', Component: LayoutGridOverlayWidget },
 ]
 

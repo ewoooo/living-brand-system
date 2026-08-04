@@ -882,6 +882,7 @@ export interface LayoutBlock {
         | ImageGridWidget
         | IncorrectUsageWidget
         | LayoutGridWidget
+        | LayoutGridControlsWidget
         | LayoutGridOverlayWidget
         | LogoColorVariantWidget
         | LogoDisplayWidget
@@ -1113,6 +1114,15 @@ export interface LayoutGridWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'layoutGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridControlsWidget".
+ */
+export interface LayoutGridControlsWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'layoutGridControlsWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2778,6 +2788,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         imageGridWidget?: T | ImageGridWidgetSelect<T>;
         incorrectUsageWidget?: T | IncorrectUsageWidgetSelect<T>;
         layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
+        layoutGridControlsWidget?: T | LayoutGridControlsWidgetSelect<T>;
         layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
         logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
         logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
@@ -2914,6 +2925,14 @@ export interface IncorrectUsageWidgetSelect<T extends boolean = true> {
  */
 export interface LayoutGridWidgetSelect<T extends boolean = true> {
   sample?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridControlsWidget_select".
+ */
+export interface LayoutGridControlsWidgetSelect<T extends boolean = true> {
   id?: T;
   blockName?: T;
 }
