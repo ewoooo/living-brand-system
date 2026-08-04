@@ -1,6 +1,13 @@
 {
 	"documents": [
 		{
+			"slug": "layout-blank",
+			"title": "빈 페이지",
+			"parent": "layout",
+			"order": 0,
+			"blocks": []
+		},
+		{
 			"slug": null,
 			"title": null,
 			"parent": null,
@@ -2069,6 +2076,39 @@
 			"parent": null,
 			"order": 0,
 			"blocks": []
+		},
+		{
+			"slug": "layout-three",
+			"title": "위젯 3개",
+			"parent": "layout",
+			"order": 1,
+			"blocks": [
+				{
+					"width": "full",
+					"background": {
+						"color": "#000000"
+					},
+					"arrangement": "grid",
+					"columns": 3,
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"children": [
+						{
+							"sample": "a",
+							"blockType": "layoutGridWidget"
+						},
+						{
+							"sample": "b",
+							"blockType": "layoutGridWidget"
+						},
+						{
+							"sample": "c",
+							"blockType": "layoutGridWidget"
+						}
+					],
+					"rules": []
+				}
+			]
 		},
 		{
 			"slug": "ci-ko",
@@ -4162,6 +4202,35 @@
 			"parent": "essenherb-design-elements",
 			"order": 1,
 			"blocks": []
+		},
+		{
+			"slug": "layout-b-two",
+			"title": "B 위젯 2개",
+			"parent": "layout",
+			"order": 2,
+			"blocks": [
+				{
+					"width": "full",
+					"background": {
+						"color": "#000000"
+					},
+					"arrangement": "grid",
+					"columns": 2,
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"children": [
+						{
+							"sample": "b",
+							"blockType": "layoutGridWidget"
+						},
+						{
+							"sample": "b",
+							"blockType": "layoutGridWidget"
+						}
+					],
+					"rules": []
+				}
+			]
 		},
 		{
 			"slug": "ci-en",
@@ -6528,6 +6597,35 @@
 			]
 		},
 		{
+			"slug": "layout-a-two",
+			"title": "A 위젯 2개",
+			"parent": "layout",
+			"order": 3,
+			"blocks": [
+				{
+					"width": "full",
+					"background": {
+						"color": "#000000"
+					},
+					"arrangement": "grid",
+					"columns": 2,
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"children": [
+						{
+							"sample": "a",
+							"blockType": "layoutGridWidget"
+						},
+						{
+							"sample": "a",
+							"blockType": "layoutGridWidget"
+						}
+					],
+					"rules": []
+				}
+			]
+		},
+		{
 			"slug": "ci-hd",
 			"title": "HD형",
 			"parent": "ci",
@@ -8134,6 +8232,35 @@
 			"blocks": []
 		},
 		{
+			"slug": "layout-c-two",
+			"title": "C 위젯 2개",
+			"parent": "layout",
+			"order": 4,
+			"blocks": [
+				{
+					"width": "full",
+					"background": {
+						"color": "#000000"
+					},
+					"arrangement": "grid",
+					"columns": 2,
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"children": [
+						{
+							"sample": "c",
+							"blockType": "layoutGridWidget"
+						},
+						{
+							"sample": "c",
+							"blockType": "layoutGridWidget"
+						}
+					],
+					"rules": []
+				}
+			]
+		},
+		{
 			"slug": "ci-incorrect-usage",
 			"title": "사용 금지",
 			"parent": "ci",
@@ -8233,74 +8360,7 @@
 			"title": "Layout",
 			"parent": "brand-elements",
 			"order": 4,
-			"blocks": [
-				{
-					"width": "padded",
-					"background": {
-						"color": "#000000"
-					},
-					"arrangement": "grid",
-					"columns": 3,
-					"aspectRatio": "1:1",
-					"blockType": "block",
-					"title": "Key Layout 그리드",
-					"description": {
-						"root": {
-							"type": "root",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [
-								{
-									"type": "paragraph",
-									"format": "",
-									"indent": 0,
-									"version": 1,
-									"children": [
-										{
-											"mode": "normal",
-											"text": "판형을 축별로 1:2:3으로 나눈 9개 셀에 요소를 스냅한다. 마진은 해당 축 길이의 3~6%, 거터는 마진의 50~100%다. 값을 조절해도 1:2:3 분할선은 제자리에 있다.",
-											"type": "text",
-											"style": "",
-											"detail": 0,
-											"format": 0,
-											"version": 1
-										}
-									],
-									"direction": "ltr"
-								}
-							],
-							"direction": "ltr"
-						}
-					},
-					"children": [
-						{
-							"sample": "a",
-							"blockType": "layoutGridWidget"
-						},
-						{
-							"sample": "b",
-							"blockType": "layoutGridWidget"
-						},
-						{
-							"sample": "c",
-							"blockType": "layoutGridWidget"
-						},
-						{
-							"marginPct": 4.5,
-							"marginAdjustable": true,
-							"gutterX": 75,
-							"gutterXAdjustable": true,
-							"gutterY": 75,
-							"gutterYAdjustable": true,
-							"guidesOn": true,
-							"guidesAdjustable": true,
-							"blockType": "layoutGridControlsWidget"
-						}
-					],
-					"rules": []
-				}
-			]
+			"blocks": []
 		},
 		{
 			"slug": "design-applications",
@@ -9046,6 +9106,80 @@
 			"parent": "essenherb-design-elements",
 			"order": 4,
 			"blocks": []
+		},
+		{
+			"slug": "key-layout",
+			"title": "Key Layout",
+			"parent": "layout",
+			"order": 5,
+			"blocks": [
+				{
+					"width": "padded",
+					"background": {
+						"color": "#000000"
+					},
+					"arrangement": "grid",
+					"columns": 3,
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "Key Layout 그리드",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "판형을 축별로 1:2:3으로 나눈 9개 셀에 요소를 스냅한다. 마진은 해당 축 길이의 3~6%, 거터는 마진의 50~100%다. 값을 조절해도 1:2:3 분할선은 제자리에 있다.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"direction": "ltr"
+								}
+							],
+							"direction": "ltr"
+						}
+					},
+					"children": [
+						{
+							"sample": "a",
+							"blockType": "layoutGridWidget"
+						},
+						{
+							"sample": "b",
+							"blockType": "layoutGridWidget"
+						},
+						{
+							"sample": "c",
+							"blockType": "layoutGridWidget"
+						},
+						{
+							"marginPct": 4.5,
+							"marginAdjustable": true,
+							"gutterX": 75,
+							"gutterXAdjustable": true,
+							"gutterY": 75,
+							"gutterYAdjustable": true,
+							"guidesOn": true,
+							"guidesAdjustable": true,
+							"blockType": "layoutGridControlsWidget"
+						}
+					],
+					"rules": []
+				}
+			]
 		},
 		{
 			"slug": "color",
