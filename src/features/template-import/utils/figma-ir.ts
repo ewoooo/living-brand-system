@@ -77,5 +77,7 @@ export interface IrNode {
 	style: IrCssStyle
 	text?: string
 	asset?: FigmaRenderedAsset
+	/** IMAGE fill을 background-image로 낮춘 노드의 에셋 참조 — div에 data-asset-* 속성으로 방출돼 발행 승격 대상이 된다. */
+	fillAsset?: FigmaRenderedAsset
 	children: IrNode[]
 }

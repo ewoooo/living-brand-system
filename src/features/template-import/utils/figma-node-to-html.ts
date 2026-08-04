@@ -19,12 +19,13 @@ export interface FigmaHtmlResult {
 	height: number
 }
 
-/** 소스 트리와 렌더 에셋 맵을 받아 저장 가능한 HTML과 루트 크기를 돌려준다. */
+/** 소스 트리와 렌더 에셋 맵(노드 렌더·IMAGE fill)을 받아 저장 가능한 HTML과 루트 크기를 돌려준다. */
 export function convertFigmaNodeToHtml(
 	node: FigmaSourceNode,
 	renderedAssets: Readonly<Record<string, FigmaRenderedAsset>> = {},
+	imageFillAssets: Readonly<Record<string, FigmaRenderedAsset>> = {},
 ): FigmaHtmlResult {
-	const ir = normalizeFigmaNode(node, renderedAssets)
+	const ir = normalizeFigmaNode(node, renderedAssets, imageFillAssets)
 	return {
 		html: ir ? emitTemplateHtml(ir) : '',
 		width: roundCssNumber(node.absoluteBoundingBox?.width ?? 0),

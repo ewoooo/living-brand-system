@@ -94,4 +94,27 @@ describe('template HTML inspection', () => {
 
 		expect(result.blocker).toContain('허용하지 않는 속성')
 	})
+
+	it('baseHtml의 내부 에셋 background-image는 허용하고 외부 URL은 거부한다', () => {
+		const internal =
+			'<div data-node-id="hero" data-asset-collection="application-images" data-asset-id="11"' +
+			' style="background-image:url(/api/application-images/file/fill.png);background-size:cover;"></div>'
+		expect(
+			inspectDraftTemplateHtml({
+				baseHtml: internal,
+				overrideNodeIds: [],
+				refsByNode: new Map(),
+			}).blocker,
+		).toBeUndefined()
+
+		const external =
+			'<div data-node-id="hero" style="background-image:url(https://attacker.example/x.png);"></div>'
+		expect(
+			inspectDraftTemplateHtml({
+				baseHtml: external,
+				overrideNodeIds: [],
+				refsByNode: new Map(),
+			}).blocker,
+		).toContain('baseHtml에는 내부 staging 에셋')
+	})
 })

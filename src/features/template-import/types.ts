@@ -56,6 +56,10 @@ export interface FigmaPaint {
 	color?: { r: number; g: number; b: number; a?: number }
 	gradientStops?: { color: { r: number; g: number; b: number; a?: number }; position?: number }[]
 	gradientHandlePositions?: { x: number; y: number }[]
+	/** IMAGE paint의 파일 내 이미지 참조 — GET /v1/files/:key/images로 URL을 얻는다. */
+	imageRef?: string
+	/** IMAGE paint의 맞춤 방식: FILL/FIT/TILE/STRETCH. */
+	scaleMode?: string
 }
 
 export interface FigmaEffect {

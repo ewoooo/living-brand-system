@@ -127,13 +127,16 @@ function inspectFragment(
 
 					const src = attributes.src
 					if (mode === 'base') {
+						// style url은 import가 IMAGE fill을 background-image로 낮출 때만 생긴다 — src와 같은 내부 출처 규칙을 적용한다.
+						const baseCollections = [
+							'template-assets' as const,
+							...AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS,
+						]
 						if (
-							style.urls.length > 0 ||
-							(src &&
-								!isCanonicalTemplateAssetUrl(src, [
-									'template-assets',
-									...AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS,
-								]))
+							style.urls.some(
+								(url) => !isCanonicalTemplateAssetUrl(url, baseCollections),
+							) ||
+							(src && !isCanonicalTemplateAssetUrl(src, baseCollections))
 						) {
 							block('baseHtml에는 내부 staging 에셋 외의 URL을 사용할 수 없습니다.')
 						}

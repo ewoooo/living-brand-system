@@ -6,6 +6,7 @@ import {
 } from '@/features/application-image/repositories/imported-application-image.payload.repository'
 import {
 	downloadFigmaImage,
+	findFigmaImageFillUrls,
 	findFigmaImageUrls,
 	findFigmaNodeTree,
 } from '@/features/template-import/repositories/figma.rest.repository'
@@ -14,6 +15,7 @@ import { importFigmaHtml } from './import-figma-html.service'
 
 vi.mock('@/features/template-import/repositories/figma.rest.repository', () => ({
 	downloadFigmaImage: vi.fn(),
+	findFigmaImageFillUrls: vi.fn(),
 	findFigmaImageUrls: vi.fn(),
 	findFigmaNodeTree: vi.fn(),
 }))
@@ -93,7 +95,7 @@ describe('importFigmaHtml', () => {
 		expect(storeDraftImportedApplicationImage).not.toHaveBeenCalled()
 	})
 
-	it('뒤 벡터 처리에 실패하면 이번 요청에서 앞서 생성한 에셋을 제거한다', async () => {
+	it('렌더 URL이 일부 누락되면 다운로드 전에 실패한다', async () => {
 		vi.mocked(findFigmaNodeTree).mockResolvedValue({
 			...node,
 			children: [node.children[0], { ...node.children[0], id: '1:3' }],
@@ -101,10 +103,25 @@ describe('importFigmaHtml', () => {
 		vi.mocked(findFigmaImageUrls).mockResolvedValue({
 			'1:2': 'https://figma.example/logo.svg',
 		})
-		vi.mocked(downloadFigmaImage).mockResolvedValue({
-			data: Buffer.from('<svg/>'),
-			mimeType: 'image/svg+xml',
+
+		await expect(
+			importFigmaHtml({ fileKey: 'file', nodeId: '1:1' }, payload, user),
+		).rejects.toThrow('Figma SVG render failed for node "1:3".')
+		expect(storeDraftImportedApplicationImage).not.toHaveBeenCalled()
+	})
+
+	it('뒤 에셋 처리에 실패하면 이번 요청에서 앞서 생성한 에셋을 제거한다', async () => {
+		vi.mocked(findFigmaNodeTree).mockResolvedValue({
+			...node,
+			children: [node.children[0], { ...node.children[0], id: '1:3' }],
 		})
+		vi.mocked(findFigmaImageUrls).mockResolvedValue({
+			'1:2': 'https://figma.example/logo.svg',
+			'1:3': 'https://figma.example/logo-2.svg',
+		})
+		vi.mocked(downloadFigmaImage)
+			.mockResolvedValueOnce({ data: Buffer.from('<svg/>'), mimeType: 'image/svg+xml' })
+			.mockRejectedValueOnce(new Error('Figma image download failed (500)'))
 		vi.mocked(storeDraftImportedApplicationImage).mockResolvedValue({
 			collection: 'application-images',
 			id: 10,
@@ -114,7 +131,7 @@ describe('importFigmaHtml', () => {
 
 		await expect(
 			importFigmaHtml({ fileKey: 'file', nodeId: '1:1' }, payload, user),
-		).rejects.toThrow('Figma SVG render failed for node "1:3".')
+		).rejects.toThrow('Figma image download failed (500)')
 		expect(deleteDraftImportedApplicationImage).toHaveBeenCalledWith(payload, user, 10)
 	})
 
@@ -130,21 +147,94 @@ describe('importFigmaHtml', () => {
 		expect(storeDraftImportedApplicationImage).not.toHaveBeenCalled()
 	})
 
-	it('IMAGE fill은 PNG로 렌더해 픽셀을 보존한다', async () => {
+	it('단일 IMAGE fill은 원본을 background-image로 낮추고 자식 구조를 보존한다', async () => {
 		vi.mocked(findFigmaNodeTree).mockResolvedValue({
 			...node,
 			children: [
 				{
 					id: '1:4',
-					name: 'photo',
-					type: 'RECTANGLE',
-					fills: [{ type: 'IMAGE' }],
+					name: 'photo frame',
+					type: 'FRAME',
+					fills: [{ type: 'IMAGE', imageRef: 'ref-1', scaleMode: 'FILL' }],
 					absoluteBoundingBox: { x: 10, y: 10, width: 120, height: 80 },
+					children: [
+						{
+							id: '1:5',
+							name: 'caption',
+							type: 'TEXT',
+							characters: 'hello',
+							absoluteBoundingBox: { x: 20, y: 20, width: 80, height: 20 },
+						},
+					],
+				},
+			],
+		})
+		vi.mocked(findFigmaImageFillUrls).mockResolvedValue({
+			'ref-1': 'https://figma.example/fill-1.png',
+		})
+		vi.mocked(downloadFigmaImage).mockResolvedValue({
+			data: Buffer.from([0x89, 0x50, 0x4e, 0x47]),
+			mimeType: 'image/jpeg',
+		})
+		vi.mocked(storeDraftImportedApplicationImage).mockResolvedValue({
+			collection: 'application-images',
+			id: 11,
+			url: '/api/application-images/file/photo.jpeg',
+			created: true,
+		})
+
+		const result = await importFigmaHtml({ fileKey: 'file', nodeId: '1:1' }, payload, user)
+
+		// 노드 렌더가 아니라 파일 단위 fill 원본을 쓴다.
+		expect(findFigmaImageUrls).not.toHaveBeenCalled()
+		expect(findFigmaImageFillUrls).toHaveBeenCalledWith('file')
+		expect(storeDraftImportedApplicationImage).toHaveBeenCalledWith(
+			payload,
+			user,
+			expect.objectContaining({
+				filename: expect.stringMatching(/^figma-[a-f0-9]{24}\.jpeg$/),
+				mimeType: 'image/jpeg',
+				name: 'photo frame',
+			}),
+		)
+		expect(result.html).toContain(
+			'background-image:url(/api/application-images/file/photo.jpeg)',
+		)
+		expect(result.html).toContain('background-size:cover')
+		// IMAGE fill 프레임이 이미지로 구워지지 않고 자식 텍스트가 살아남는다.
+		expect(result.html).toContain('data-node-id="1:5"')
+		expect(result.html).toContain('>hello</p>')
+		// 발행 승격을 위한 에셋 메타데이터가 div에 실린다.
+		expect(result.html).toContain('data-asset-id="11"')
+	})
+
+	it('IMAGE fill이 다른 fill과 겹치거나 텍스트에 걸리면 기존처럼 PNG로 렌더한다', async () => {
+		vi.mocked(findFigmaNodeTree).mockResolvedValue({
+			...node,
+			children: [
+				{
+					id: '1:6',
+					name: 'layered',
+					type: 'RECTANGLE',
+					fills: [
+						{ type: 'IMAGE', imageRef: 'ref-2' },
+						{ type: 'SOLID', color: { r: 0, g: 0, b: 0, a: 0.4 } },
+					],
+					absoluteBoundingBox: { x: 0, y: 0, width: 100, height: 100 },
+				},
+				{
+					id: '1:7',
+					name: 'image text',
+					type: 'TEXT',
+					characters: 'hi',
+					fills: [{ type: 'IMAGE', imageRef: 'ref-3' }],
+					absoluteBoundingBox: { x: 0, y: 100, width: 100, height: 30 },
 				},
 			],
 		})
 		vi.mocked(findFigmaImageUrls).mockResolvedValue({
-			'1:4': 'https://figma.example/photo.png',
+			'1:6': 'https://figma.example/layered.png',
+			'1:7': 'https://figma.example/image-text.png',
 		})
 		vi.mocked(downloadFigmaImage).mockResolvedValue({
 			data: Buffer.from([0x89, 0x50, 0x4e, 0x47]),
@@ -152,15 +242,15 @@ describe('importFigmaHtml', () => {
 		})
 		vi.mocked(storeDraftImportedApplicationImage).mockResolvedValue({
 			collection: 'application-images',
-			id: 11,
-			url: '/api/application-images/file/photo.png',
+			id: 12,
+			url: '/api/application-images/file/layered.png',
 			created: true,
 		})
 
-		const result = await importFigmaHtml({ fileKey: 'file', nodeId: '1:1' }, payload, user)
+		await importFigmaHtml({ fileKey: 'file', nodeId: '1:1' }, payload, user)
 
-		expect(findFigmaImageUrls).toHaveBeenCalledWith('file', ['1:4'], 'png')
-		expect(result.html).toContain('src="/api/application-images/file/photo.png"')
+		expect(findFigmaImageUrls).toHaveBeenCalledWith('file', ['1:6', '1:7'], 'png')
+		expect(findFigmaImageFillUrls).not.toHaveBeenCalled()
 	})
 
 	it('TEXT_PATH와 알 수 없는 leaf node만 PNG fallback하고 SLICE는 기존 동작을 유지한다', async () => {

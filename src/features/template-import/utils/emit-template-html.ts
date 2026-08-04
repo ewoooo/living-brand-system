@@ -40,6 +40,13 @@ export function emitTemplateHtml(node: IrNode, depth = 0): string {
 					'alt=""',
 				]
 			: []),
+		// background-image로 낮춘 IMAGE fill의 에셋 참조 — div의 단일 style url과 짝을 이뤄 발행 승격 대상이 된다.
+		...(node.fillAsset && !node.asset
+			? [
+					`data-asset-collection="${node.fillAsset.collection}"`,
+					`data-asset-id="${node.fillAsset.id}"`,
+				]
+			: []),
 	]
 		.map((a) => `${attrPad}${a}`)
 		.join('\n')

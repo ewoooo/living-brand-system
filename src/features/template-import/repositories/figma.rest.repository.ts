@@ -73,6 +73,22 @@ export async function findFigmaImageUrls(
 	return imageUrls
 }
 
+/**
+ * 파일의 IMAGE fill 원본(imageRef → 임시 다운로드 URL) 맵을 돌려준다.
+ * 파일 단위 단일 호출이며 nodeId가 아닌 imageRef가 키다. URL은 곧 만료되므로 임포트 중에만 쓴다.
+ */
+export async function findFigmaImageFillUrls(fileKey: string): Promise<Record<string, string>> {
+	const url = `${FIGMA_API_BASE}/files/${fileKey}/images`
+	const response = await fetch(url, { headers: { 'X-Figma-Token': getFigmaToken() } })
+
+	if (!response.ok) {
+		throw new Error(`Figma image fills API failed (${response.status})`)
+	}
+
+	const data = (await response.json()) as { meta?: { images?: Record<string, string> } }
+	return data.meta?.images ?? {}
+}
+
 /** 이미지 조각 하나의 최대 크기 — 폭주한 렌더 결과가 메모리·S3를 잠식하지 않게 막는다. */
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024
 

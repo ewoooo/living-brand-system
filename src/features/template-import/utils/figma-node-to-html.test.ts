@@ -246,6 +246,61 @@ describe('convertFigmaNodeToHtml — 박스 속성', () => {
 		expect(s).toContain('transform:rotate(-90deg)')
 	})
 
+	it('SOLID+GRADIENT 스택을 background 다중 레이어(위→아래 = fills 역순)로 옮긴다', () => {
+		const s = rootStyle(
+			convertFigmaNodeToHtml(
+				boxNode({
+					fills: [
+						{ type: 'SOLID', color: { r: 1, g: 1, b: 1, a: 1 } },
+						{
+							type: 'GRADIENT_LINEAR',
+							gradientHandlePositions: [
+								{ x: 0, y: 0 },
+								{ x: 0, y: 1 },
+							],
+							gradientStops: [
+								{ color: { r: 0, g: 0, b: 0, a: 0.5 }, position: 0 },
+								{ color: { r: 0, g: 0, b: 0, a: 0 }, position: 1 },
+							],
+						},
+					],
+				}),
+			).html,
+		)
+		// gradient(위 fill)가 CSS 첫 레이어, 흰색 단색(아래 fill)이 마지막 레이어.
+		expect(s).toContain(
+			'background:linear-gradient(180deg,rgba(0,0,0,0.5) 0%,rgba(0,0,0,0) 100%),linear-gradient(rgb(255,255,255),rgb(255,255,255))',
+		)
+	})
+
+	it('단일 IMAGE fill을 background-image longhand와 에셋 메타데이터로 낮춘다', () => {
+		const { html } = convertFigmaNodeToHtml(
+			boxNode({ fills: [{ type: 'IMAGE', imageRef: 'ref-9', scaleMode: 'TILE' }] }),
+			{},
+			{
+				'ref-9': {
+					collection: 'application-images',
+					id: 21,
+					url: '/api/application-images/file/fill.png',
+				},
+			},
+		)
+		const s = rootStyle(html)
+		expect(s).toContain('background-image:url(/api/application-images/file/fill.png)')
+		expect(s).toContain('background-repeat:repeat')
+		expect(html).toContain('data-asset-collection="application-images"')
+		expect(html).toContain('data-asset-id="21"')
+	})
+
+	it('해석되지 않은 IMAGE fill은 배경 없이 구조만 유지한다', () => {
+		const { html } = convertFigmaNodeToHtml(
+			boxNode({ fills: [{ type: 'IMAGE', imageRef: 'ref-9' }] }),
+		)
+		expect(html).not.toContain('url(')
+		expect(html).not.toContain('data-asset-id')
+		expect(html).toContain('data-node-id="1:1"')
+	})
+
 	it('linear-gradient 배경 (색 정지점 정확)', () => {
 		const s = rootStyle(
 			convertFigmaNodeToHtml(

@@ -1,5 +1,5 @@
 import type { FigmaEffect, FigmaPaint } from '@/features/template-import/types'
-import type { IrCssStyle, FigmaSourceNode as Node } from './figma-ir'
+import type { FigmaRenderedAsset, IrCssStyle, FigmaSourceNode as Node } from './figma-ir'
 
 /**
  * 시각/레이아웃 속성 lowering: Figma 노드의 개별 속성을 CSS 선언으로 옮기는 순수 함수 모음.
@@ -69,16 +69,89 @@ function createGradientCss(paint: FigmaGradientPaint): string | undefined {
 
 // 시각 스타일 변환
 
-// 컨테이너 배경: fills(모던) → background(레거시) → backgroundColor 순. gradient도 지원.
-// ponytail: 첫 번째 보이는 paint만 쓴다(스택된 fill 미합성). IMAGE fill은 픽셀이라 배경 없이 남긴다(에셋 배선은 별도 슬라이스).
-export function resolveBackgroundValue(node: Node): string | undefined {
+/** 노드가 소비하는 fill 목록: fills(모던) → background(레거시) 순으로 고르고 보이는 paint만 남긴다. */
+function findVisibleFills(node: Node): FigmaPaint[] {
 	const paints = node.fills?.length ? node.fills : node.background
-	const paint = paints?.find(isVisible)
-	if (paint) {
-		if (paint.type === 'SOLID') return formatRgba(paint.color, paint.opacity ?? 1)
-		if (paint.type.startsWith('GRADIENT')) return createGradientCss(paint)
+	return paints?.filter(isVisible) ?? []
+}
+
+/**
+ * CSS background-image로 낮출 수 있는 IMAGE fill을 돌려준다 — 조건: 비텍스트 노드 + 보이는 fill이
+ * imageRef 있는 IMAGE 하나뿐. plan(에셋 수집)과 lowering(스타일 생성)이 같은 판정을 공유해야
+ * "수집했는데 못 그리는" 또는 "그리려는데 수집 안 된" 어긋남이 생기지 않는다.
+ * (TEXT의 IMAGE fill은 글리프 색이라 배경으로 표현 불가 → 제외. 다중 fill+IMAGE는 검증기가
+ * background-image에 단일 url만 허용해 표현 불가 → 제외. 둘 다 plan에서 래스터로 남는다.)
+ */
+export function findCssLowerableImageFill(node: Node): FigmaPaint | undefined {
+	if (node.type === 'TEXT') return undefined
+	const fills = findVisibleFills(node)
+	const paint = fills.length === 1 ? fills[0] : undefined
+	return paint?.type === 'IMAGE' && paint.imageRef ? paint : undefined
+}
+
+/** SOLID paint를 다중 배경 레이어에 끼울 수 있는 단색 gradient로 바꾼다(background 레이어는 이미지만 허용). */
+function solidAsLayer(paint: FigmaPaint): string | undefined {
+	const color = formatRgba(paint.color, paint.opacity ?? 1)
+	return color ? `linear-gradient(${color},${color})` : undefined
+}
+
+/** IMAGE fill의 scaleMode → background 크기/반복. FILL=cover, FIT=contain, STRETCH=늘림, TILE=반복. */
+// ponytail: TILE의 scalingFactor, imageTransform(CROP), filters(노출 등)는 무시 — 편차 나면 여기 보정.
+function createImageFillStyle(paint: FigmaPaint, url: string): IrCssStyle {
+	const size: Record<string, string> = {
+		FILL: 'cover',
+		FIT: 'contain',
+		STRETCH: '100% 100%',
+		TILE: 'auto',
 	}
-	return formatRgba(node.backgroundColor)
+	return {
+		'background-image': `url(${url})`,
+		'background-size': size[paint.scaleMode ?? 'FILL'] ?? 'cover',
+		'background-position': 'center',
+		'background-repeat': paint.scaleMode === 'TILE' ? 'repeat' : 'no-repeat',
+	}
+}
+
+/**
+ * 노드 배경 lowering 체인: 각 fill 구성을 반드시 렌더 가능한 CSS 하나로 떨어뜨린다.
+ * - fill 없음 → 레거시 backgroundColor
+ * - SOLID/GRADIENT 하나 → background 단일 값 (기존 출력과 동일)
+ * - IMAGE 하나(해석된 에셋) → background-image 4종 longhand + 발행 승격용 fillAsset 참조
+ * - SOLID/GRADIENT 스택 → background 다중 레이어 (fills는 아래→위, CSS는 위→아래라 역순)
+ * - 그 외(IMAGE 미해석·PATTERN 등)는 plan이 래스터로 보내므로 여기 도달 시 backgroundColor로 방어
+ */
+export function lowerNodeBackground(
+	node: Node,
+	imageFillAssets: Readonly<Record<string, FigmaRenderedAsset>> = {},
+): { style: IrCssStyle; fillAsset?: FigmaRenderedAsset } {
+	const fills = findVisibleFills(node)
+	if (fills.length === 0) return { style: { background: formatRgba(node.backgroundColor) } }
+
+	if (fills.length === 1) {
+		const paint = fills[0]
+		if (paint.type === 'SOLID') {
+			return { style: { background: formatRgba(paint.color, paint.opacity ?? 1) } }
+		}
+		if (paint.type.startsWith('GRADIENT')) {
+			return { style: { background: createGradientCss(paint) } }
+		}
+		const imageFill = findCssLowerableImageFill(node)
+		const asset = imageFill?.imageRef ? imageFillAssets[imageFill.imageRef] : undefined
+		if (imageFill && asset) {
+			return { style: createImageFillStyle(imageFill, asset.url), fillAsset: asset }
+		}
+		return { style: { background: formatRgba(node.backgroundColor) } }
+	}
+
+	const layers = [...fills].reverse().map((paint) => {
+		if (paint.type === 'SOLID') return solidAsLayer(paint)
+		if (paint.type.startsWith('GRADIENT')) return createGradientCss(paint)
+		return undefined
+	})
+	if (layers.some((layer) => !layer)) {
+		return { style: { background: formatRgba(node.backgroundColor) } }
+	}
+	return { style: { background: layers.join(',') } }
 }
 
 // strokes → border. 개별 두께가 있으면 변별 두께로.
