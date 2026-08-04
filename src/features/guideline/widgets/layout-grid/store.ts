@@ -1,22 +1,15 @@
 'use client'
 
 import { useSyncExternalStore } from 'react'
+import { GUTTER_RATIO, MARGIN_PCT } from './rules'
 
-// 한 페이지의 layoutGridWidget들이 슬라이더 패널 하나를 공유하기 위한 모듈 스토어.
+// 한 페이지의 layoutGridWidget들이 값 하나를 공유하기 위한 모듈 스토어.
 // 형제 위젯은 각자 독립 React 트리라 props·context로는 상태를 못 넘기지만, 같은 모듈을 import하므로
 // 모듈 스코프는 공유된다. 그래서 컨트롤을 별도 위젯(layout-grid-controls)으로 떼어낼 수 있다.
 //
-// 🔴 규칙 범위(MARGIN_PCT·GUTTER_RATIO)는 정본이다. 슬라이더가 이 범위를 벗어날 수 없게 하는 게 규칙 인코딩이다.
-
-/**
- * 마진 = 판형 **긴 축**의 3~6%. 짧은 축에도 같은 길이를 쓰므로 수직·수평 마진은 항상 같다.
- * 🔴 마진은 대지 → 표(9셀 전체)의 여백일 뿐이다. 개별 셀은 자기 마진을 갖지 않는다 —
- * 셀 사이를 벌리는 것은 거터뿐이고, 거터 0%면 셀 경계에서 콘텐츠가 맞닿는다.
- */
-export const MARGIN_PCT = { min: 3, max: 6, default: 4.5 }
-
-/** 거터 = 마진의 0~100%. 수직·수평 따로. 0%면 셀 사이 간격이 없다. */
-export const GUTTER_RATIO = { min: 0, max: 100, default: 75 }
+// 🔴 여기 값은 "현재 값"일 뿐이고, 무엇을 조절할 수 있는지는 컨트롤 위젯이 결정한다.
+//    조절 불허 = 슬라이더를 그리지 않는 것이고, 그러면 admin이 넣은 값이 그대로 고정값이 된다.
+// 🔴 마진은 대지 → 표(9셀 전체)의 여백일 뿐이다. 셀 사이를 벌리는 것은 거터뿐이다.
 
 export type LayoutGridControls = {
 	marginPct: number
