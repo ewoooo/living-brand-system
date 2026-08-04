@@ -372,5 +372,10 @@ describe('importFigmaHtml', () => {
 		// 순수 회전 텍스트는 이미지가 아니라 편집 가능한 <p> + CSS rotate로 남는다.
 		expect(result.html).toContain('>Title</p>')
 		expect(result.html).toContain('transform:rotate(-12deg)')
+		// 구워진 레이어마다 이유가 진단으로 남는다.
+		expect(result.diagnostics).toEqual([
+			expect.objectContaining({ nodeId: '2:1', reason: '마스크 합성', textLayerCount: 0 }),
+			expect.objectContaining({ nodeId: '4:1', reason: '스케일·기울임 변형' }),
+		])
 	})
 })

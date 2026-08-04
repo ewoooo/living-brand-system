@@ -66,15 +66,25 @@ const CSS_BLEND_MODES = new Set([
 	'LUMINOSITY',
 ])
 
+/** PNG 폴백으로 서브트리가 이미지에 구워진 레이어의 진단 — 어드민이 Figma 쪽 수정 지점을 찾는 데 쓴다. */
+export interface FigmaRasterDiagnostic {
+	nodeId: string
+	name: string
+	reason: string
+	/** 함께 구워져 편집 불가가 된 하위 텍스트 레이어 수. */
+	textLayerCount: number
+}
+
 /** Figma 렌더 API로 구워야 하는 노드(서브트리째 이미지가 된다)와 별도 해석이 필요한 IMAGE fill 목록. */
 export interface FigmaAssetPlan {
 	renders: { nodeId: string; name: string; format: 'png' | 'svg' }[]
 	imageFills: { imageRef: string; name: string }[]
+	diagnostics: FigmaRasterDiagnostic[]
 }
 
 /** 트리를 훑어 에셋 계획을 만든다. 순수 함수 — 실제 렌더/다운로드 I/O는 서비스가 수행한다. */
 export function planFigmaAssets(node: FigmaSourceNode): FigmaAssetPlan {
-	const plan: FigmaAssetPlan = { renders: [], imageFills: [] }
+	const plan: FigmaAssetPlan = { renders: [], imageFills: [], diagnostics: [] }
 	const seenImageRefs = new Set<string>()
 	collectAssetRequests(node, plan, seenImageRefs)
 	return plan
@@ -82,7 +92,8 @@ export function planFigmaAssets(node: FigmaSourceNode): FigmaAssetPlan {
 
 /**
  * 노드 하나의 에셋 필요를 판정한다.
- * 래스터 폴백 노드는 그 노드만 계획에 넣고 자식으로 내려가지 않는다(자식 픽셀이 렌더에 포함).
+ * 래스터 폴백 노드는 그 노드만 계획에 넣고 자식으로 내려가지 않는다(자식 픽셀이 렌더에 포함) —
+ * 이때 왜 구워졌고 무엇을 삼켰는지 진단을 남긴다.
  * CSS로 그릴 수 있는 노드는 IMAGE fill의 imageRef만 수집하고 자식으로 재귀한다.
  */
 function collectAssetRequests(
@@ -92,8 +103,15 @@ function collectAssetRequests(
 ): void {
 	if (node.visible === false || node.opacity === 0) return
 
-	if (requiresRasterFallback(node)) {
+	const rasterReason = findRasterFallbackReason(node)
+	if (rasterReason) {
 		plan.renders.push({ nodeId: node.id, name: node.name ?? node.id, format: 'png' })
+		plan.diagnostics.push({
+			nodeId: node.id,
+			name: node.name ?? node.id,
+			reason: rasterReason,
+			textLayerCount: countVisibleTextLayers(node),
+		})
 		return
 	}
 	if (VECTOR_NODE_TYPES.has(node.type)) {
@@ -112,30 +130,39 @@ function collectAssetRequests(
 	}
 }
 
+/** 서브트리에서 보이는 TEXT 레이어 수 — 래스터 폴백이 삼키는 편집 가능성의 크기를 진단에 싣는다. */
+function countVisibleTextLayers(node: FigmaSourceNode): number {
+	if (node.visible === false) return 0
+	const own = node.type === 'TEXT' ? 1 : 0
+	return (node.children ?? []).reduce((sum, child) => sum + countVisibleTextLayers(child), own)
+}
+
 /**
- * CSS로 충실히 표현할 수 없어 Figma 렌더(PNG)로 폴백해야 하는 노드인지 판정한다.
+ * CSS로 충실히 표현할 수 없어 Figma 렌더(PNG)로 폴백해야 하는 이유를 돌려준다(없으면 undefined).
  * 단일 IMAGE fill은 background-image lowering이 담당하므로 여기서 걸리지 않는다 —
  * IMAGE가 있는데 lowering 불가(TEXT/다중 fill/imageRef 없음)인 조합만 래스터로 남는다.
  */
-function requiresRasterFallback(node: FigmaSourceNode): boolean {
+function findRasterFallbackReason(node: FigmaSourceNode): string | undefined {
 	if (
 		node.type === 'TEXT_PATH' ||
 		(!KNOWN_HTML_NODE_TYPES.has(node.type) &&
 			!VECTOR_NODE_TYPES.has(node.type) &&
 			!node.children?.length)
 	) {
-		return true
+		return '지원하지 않는 노드 타입'
 	}
-	if (node.isMask || node.children?.some((child) => child.isMask)) return true
+	if (node.isMask || node.children?.some((child) => child.isMask)) return '마스크 합성'
 
 	const fills = (node.fills ?? []).filter((paint) => paint.visible !== false)
 	const strokes = (node.strokes ?? []).filter((paint) => paint.visible !== false)
 	if (strokes.length > 1 || strokes.some((paint) => RASTER_STROKE_PAINT_TYPES.has(paint.type))) {
-		return true
+		return '표현할 수 없는 테두리'
 	}
-	if (fills.some((paint) => RASTER_FILL_PAINT_TYPES.has(paint.type))) return true
+	if (fills.some((paint) => RASTER_FILL_PAINT_TYPES.has(paint.type))) {
+		return '지원하지 않는 fill 종류'
+	}
 	if (fills.some((paint) => paint.type === 'IMAGE') && !findCssLowerableImageFill(node)) {
-		return true
+		return node.type === 'TEXT' ? '텍스트 IMAGE fill' : '다른 fill과 겹친 IMAGE fill'
 	}
 
 	if (
@@ -143,11 +170,14 @@ function requiresRasterFallback(node: FigmaSourceNode): boolean {
 			(effect) => effect.visible !== false && !CSS_EFFECT_TYPES.has(effect.type),
 		)
 	) {
-		return true
+		return '지원하지 않는 효과'
 	}
-	if (node.blendMode && !CSS_BLEND_MODES.has(node.blendMode)) return true
+	if (node.blendMode && !CSS_BLEND_MODES.has(node.blendMode)) return '지원하지 않는 블렌드 모드'
 
-	return !VECTOR_NODE_TYPES.has(node.type) && hasCssInexpressibleTransform(node)
+	if (!VECTOR_NODE_TYPES.has(node.type) && hasCssInexpressibleTransform(node)) {
+		return '스케일·기울임 변형'
+	}
+	return undefined
 }
 
 /**
