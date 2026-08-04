@@ -2084,7 +2084,7 @@
 			"order": 1,
 			"blocks": [
 				{
-					"width": "full",
+					"width": "padded",
 					"background": {
 						"color": "#000000"
 					},
@@ -2094,15 +2094,18 @@
 					"blockType": "block",
 					"children": [
 						{
-							"sample": "a",
+							"sample": "grid-labels",
+							"guides": "shared",
 							"blockType": "layoutGridWidget"
 						},
 						{
-							"sample": "b",
+							"sample": "grid-labels",
+							"guides": "shared",
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "c",
+							"guides": "shared",
 							"blockType": "layoutGridWidget"
 						}
 					],
@@ -4221,10 +4224,12 @@
 					"children": [
 						{
 							"sample": "b",
+							"guides": "on",
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "b",
+							"guides": "off",
 							"blockType": "layoutGridWidget"
 						}
 					],
@@ -6614,10 +6619,12 @@
 					"children": [
 						{
 							"sample": "a",
+							"guides": "on",
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "a",
+							"guides": "off",
 							"blockType": "layoutGridWidget"
 						}
 					],
@@ -8249,10 +8256,12 @@
 					"children": [
 						{
 							"sample": "c",
+							"guides": "on",
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "c",
+							"guides": "off",
 							"blockType": "layoutGridWidget"
 						}
 					],
@@ -9155,14 +9164,17 @@
 					"children": [
 						{
 							"sample": "a",
+							"guides": "shared",
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "b",
+							"guides": "shared",
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "c",
+							"guides": "shared",
 							"blockType": "layoutGridWidget"
 						},
 						{
