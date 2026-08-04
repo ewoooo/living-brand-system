@@ -147,23 +147,25 @@ function requiresRasterFallback(node: FigmaSourceNode): boolean {
 	}
 	if (node.blendMode && !CSS_BLEND_MODES.has(node.blendMode)) return true
 
-	return !VECTOR_NODE_TYPES.has(node.type) && hasNonAxisAlignedTransform(node)
+	return !VECTOR_NODE_TYPES.has(node.type) && hasCssInexpressibleTransform(node)
 }
 
-/** 회전·기울임이 섞인 노드인지 — CSS 좌표 근사가 깨지므로 래스터 판정에 쓴다. */
-function hasNonAxisAlignedTransform(node: FigmaSourceNode): boolean {
-	if (node.rotation) return true
+/**
+ * CSS로 옮길 수 없는 변형(스케일·기울임)인지 판정한다.
+ * 순수 회전(항등 포함)은 rotate lowering이 표현하므로 래스터로 보내지 않는다 —
+ * 회전 행렬은 a=d, b=-c, a²+b²=1을 만족하고, 그 밖의 행렬만 CSS 근사가 깨진다.
+ */
+function hasCssInexpressibleTransform(node: FigmaSourceNode): boolean {
 	const transform = node.relativeTransform
 	if (!transform) return false
 
 	const [[a, b], [c, d]] = transform
 	const epsilon = 0.000001
-	return (
-		Math.abs(a - 1) > epsilon ||
-		Math.abs(b) > epsilon ||
-		Math.abs(c) > epsilon ||
-		Math.abs(d - 1) > epsilon
-	)
+	const pureRotation =
+		Math.abs(a - d) < epsilon &&
+		Math.abs(b + c) < epsilon &&
+		Math.abs(a * a + b * b - 1) < epsilon
+	return !pureRotation
 }
 
 // IR 정규화
@@ -203,6 +205,8 @@ function normalizeNode(
 			: {}
 	const background =
 		renderedAsset || isText ? undefined : lowerNodeBackground(node, imageFillAssets)
+	const box = renderedAsset ? {} : createBoxStyle(node)
+	const placement = createChildPlacementStyle(node, parent, Boolean(renderedAsset))
 
 	const style: IrNode['style'] = {
 		'box-sizing': 'border-box',
@@ -213,7 +217,7 @@ function normalizeNode(
 				}
 			: {}),
 		...(renderedAsset ? { display: 'block', ...renderedBounds } : createContainerStyle(node)),
-		...(renderedAsset ? {} : createBoxStyle(node)),
+		...box,
 		// 컨테이너는 position:relative를 기본으로 둬 절대배치 자식의 기준 박스가 된다.
 		// createChildPlacementStyle이 뒤에 병합되므로, 이 노드 자신이 절대배치면 position:absolute가 이겨 덮어쓴다.
 		...(renderedAsset
@@ -221,7 +225,10 @@ function normalizeNode(
 			: isText
 				? createTextStyle(node)
 				: { position: 'relative', ...background?.style }),
-		...createChildPlacementStyle(node, parent, Boolean(renderedAsset)),
+		...placement,
+		// transform은 배치(translate 앵커)와 박스(rotate)가 각자 만들 수 있어 마지막에 합성한다 —
+		// 스프레드 병합에 맡기면 한쪽이 다른 쪽을 undefined로 덮어쓴다.
+		transform: [placement.transform, box.transform].filter(Boolean).join(' ') || undefined,
 	}
 
 	const children = renderedAsset

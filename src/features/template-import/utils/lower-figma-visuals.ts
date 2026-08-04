@@ -364,8 +364,12 @@ function resolveGridSelfAlign(
 }
 
 // FIXED 축은 명시 치수를 준다(HUG는 auto, FILL은 grow/stretch가 처리). flex·grid 자식 공통.
+// 회전 노드의 AABB는 회전 결과의 외곽이므로 회전 전 크기(size)를 쓴다 — CSS rotate가 레이아웃 크기를 바꾸지 않아서다.
 function createFixedSizeStyle(node: Node): IrCssStyle {
-	const b = node.absoluteBoundingBox
+	const b =
+		node.rotation && node.size
+			? { width: node.size.x, height: node.size.y }
+			: node.absoluteBoundingBox
 	if (!b) return {}
 	return {
 		width: node.layoutSizingHorizontal === 'FIXED' ? `${roundCssNumber(b.width)}px` : undefined,
@@ -495,6 +499,12 @@ class ConstraintPlacementStrategy implements ChildPlacementStrategy {
 		// Figma가 렌더한 SVG는 회전까지 포함한 결과이므로 AABB 크기를 그대로 쓴다.
 		const dim =
 			useAbsoluteBounds || !node.size ? b : { width: node.size.x, height: node.size.y }
+		// 회전 노드는 회전 전 크기 박스를 AABB 중심에 맞춰 배치한다 — CSS rotate는 중심 기준이라
+		// 중심만 맞으면 순수 회전의 최종 위치가 Figma와 일치한다. size가 없으면 AABB 코너 근사(기존 동작).
+		const rotationOffset =
+			!useAbsoluteBounds && node.rotation && node.size
+				? { x: (b.width - node.size.x) / 2, y: (b.height - node.size.y) / 2 }
+				: { x: 0, y: 0 }
 		const hugCenterX =
 			!useAbsoluteBounds &&
 			node.layoutSizingHorizontal === 'HUG' &&
@@ -508,7 +518,7 @@ class ConstraintPlacementStrategy implements ChildPlacementStrategy {
 			...createConstraintAxisStyle({
 				constraint: node.constraints?.horizontal,
 				sizing: useAbsoluteBounds ? undefined : node.layoutSizingHorizontal,
-				start: b.x - pb.x,
+				start: b.x - pb.x + rotationOffset.x,
 				size: dim.width,
 				parentSize: pb.width,
 				startProperty: 'left',
@@ -518,7 +528,7 @@ class ConstraintPlacementStrategy implements ChildPlacementStrategy {
 			...createConstraintAxisStyle({
 				constraint: node.constraints?.vertical,
 				sizing: useAbsoluteBounds ? undefined : node.layoutSizingVertical,
-				start: b.y - pb.y,
+				start: b.y - pb.y + rotationOffset.y,
 				size: dim.height,
 				parentSize: pb.height,
 				startProperty: 'top',

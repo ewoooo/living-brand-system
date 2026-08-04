@@ -246,6 +246,59 @@ describe('convertFigmaNodeToHtml — 박스 속성', () => {
 		expect(s).toContain('transform:rotate(-90deg)')
 	})
 
+	it('회전 자식은 회전 전 크기 박스를 AABB 중심에 맞추고 rotate를 유지한다', () => {
+		const { html } = convertFigmaNodeToHtml({
+			id: '1:1',
+			name: 'frame',
+			type: 'FRAME',
+			absoluteBoundingBox: { x: 0, y: 0, width: 300, height: 200 },
+			children: [
+				{
+					id: '1:2',
+					name: 'sticker',
+					type: 'RECTANGLE',
+					rotation: 15,
+					constraints: { horizontal: 'LEFT', vertical: 'TOP' },
+					// 회전 전 80×20 박스가 회전해 AABB 100×40을 차지하는 상황.
+					absoluteBoundingBox: { x: 20, y: 30, width: 100, height: 40 },
+					size: { x: 80, y: 20 },
+				},
+			],
+		})
+		const style = nodeStyle(html, '1:2')
+		// 중심 정합: left = 20 + (100-80)/2, top = 30 + (40-20)/2
+		expect(style).toContain('left:30px')
+		expect(style).toContain('top:40px')
+		expect(style).toContain('width:80px')
+		expect(style).toContain('height:20px')
+		expect(style).toContain('transform:rotate(-15deg)')
+	})
+
+	it('HUG CENTER 앵커와 회전이 겹치면 translate와 rotate를 합성한다', () => {
+		const { html } = convertFigmaNodeToHtml({
+			id: '1:1',
+			name: 'frame',
+			type: 'FRAME',
+			absoluteBoundingBox: { x: 0, y: 0, width: 300, height: 200 },
+			children: [
+				{
+					id: '1:2',
+					name: 'badge',
+					type: 'FRAME',
+					layoutMode: 'HORIZONTAL',
+					layoutSizingHorizontal: 'HUG',
+					layoutSizingVertical: 'HUG',
+					rotation: 10,
+					constraints: { horizontal: 'CENTER', vertical: 'CENTER' },
+					absoluteBoundingBox: { x: 100, y: 80, width: 100, height: 40 },
+					size: { x: 96, y: 36 },
+				},
+			],
+		})
+		const style = nodeStyle(html, '1:2')
+		expect(style).toContain('transform:translate(-50%,-50%) rotate(-10deg)')
+	})
+
 	it('SOLID+GRADIENT 스택을 background 다중 레이어(위→아래 = fills 역순)로 옮긴다', () => {
 		const s = rootStyle(
 			convertFigmaNodeToHtml(

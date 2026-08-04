@@ -307,7 +307,7 @@ describe('importFigmaHtml', () => {
 		expect(result.html).toContain('data-node-id="7:1"')
 	})
 
-	it('mask 합성과 회전·scale 레이어는 가장 가까운 레이어를 PNG fallback으로 고정한다', async () => {
+	it('mask 합성과 scale 레이어는 PNG로 고정하고, 순수 회전은 CSS transform으로 살린다', async () => {
 		vi.mocked(findFigmaNodeTree).mockResolvedValue({
 			...node,
 			children: [
@@ -343,7 +343,6 @@ describe('importFigmaHtml', () => {
 		})
 		vi.mocked(findFigmaImageUrls).mockResolvedValue({
 			'2:1': 'https://figma.example/mask.png',
-			'3:1': 'https://figma.example/title.png',
 			'4:1': 'https://figma.example/scaled.png',
 		})
 		vi.mocked(downloadFigmaImage).mockResolvedValue({
@@ -359,12 +358,6 @@ describe('importFigmaHtml', () => {
 			})
 			.mockResolvedValueOnce({
 				collection: 'application-images',
-				id: 13,
-				url: '/api/application-images/file/title.png',
-				created: true,
-			})
-			.mockResolvedValueOnce({
-				collection: 'application-images',
 				id: 14,
 				url: '/api/application-images/file/scaled.png',
 				created: true,
@@ -372,10 +365,12 @@ describe('importFigmaHtml', () => {
 
 		const result = await importFigmaHtml({ fileKey: 'file', nodeId: '1:1' }, payload, user)
 
-		expect(findFigmaImageUrls).toHaveBeenCalledWith('file', ['2:1', '3:1', '4:1'], 'png')
+		expect(findFigmaImageUrls).toHaveBeenCalledWith('file', ['2:1', '4:1'], 'png')
 		expect(result.html).not.toContain('data-node-id="2:2"')
 		expect(result.html).toContain('src="/api/application-images/file/mask.png"')
-		expect(result.html).toContain('src="/api/application-images/file/title.png"')
 		expect(result.html).toContain('src="/api/application-images/file/scaled.png"')
+		// 순수 회전 텍스트는 이미지가 아니라 편집 가능한 <p> + CSS rotate로 남는다.
+		expect(result.html).toContain('>Title</p>')
+		expect(result.html).toContain('transform:rotate(-12deg)')
 	})
 })
