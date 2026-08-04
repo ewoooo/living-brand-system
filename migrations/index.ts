@@ -23,6 +23,7 @@ import * as migration_20260804_051328_add_layout_grid_sample from './20260804_05
 import * as migration_20260804_053103_add_layout_grid_controls from './20260804_053103_add_layout_grid_controls';
 import * as migration_20260804_073352_add_layout_grid_controls_config from './20260804_073352_add_layout_grid_controls_config';
 import * as migration_20260804_080321_add_grid_labels_and_guides from './20260804_080321_add_grid_labels_and_guides';
+import * as migration_20260804_082132_add_layout_grid_locks from './20260804_082132_add_layout_grid_locks';
 
 export const migrations = [
   {
@@ -148,6 +149,11 @@ export const migrations = [
   {
     up: migration_20260804_080321_add_grid_labels_and_guides.up,
     down: migration_20260804_080321_add_grid_labels_and_guides.down,
-    name: '20260804_080321_add_grid_labels_and_guides'
+    name: '20260804_080321_add_grid_labels_and_guides',
+  },
+  {
+    up: migration_20260804_082132_add_layout_grid_locks.up,
+    down: migration_20260804_082132_add_layout_grid_locks.down,
+    name: '20260804_082132_add_layout_grid_locks'
   },
 ];

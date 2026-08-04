@@ -45,16 +45,26 @@ export type GuidesMode = 'shared' | 'on' | 'off'
 export function LayoutGridWidget({
 	sample,
 	guides,
+	lockMargin,
+	lockGutterX,
+	lockGutterY,
 }: {
 	sample?: LayoutGridSample | null
 	guides?: GuidesMode | null
+	/** 패널을 따르지 않고 초기값에 고정한다 — 한 슬라이더가 일부 판형만 움직이게 하려는 것. */
+	lockMargin?: boolean | null
+	lockGutterX?: boolean | null
+	lockGutterY?: boolean | null
 }) {
-	const {
-		values: { marginPct, gutterX, gutterY, guidesOn: sharedGuides },
-	} = useLayoutGridScope()
+	const { initial, values } = useLayoutGridScope()
 
-	// 같은 페이지의 판형이 서로 다른 그리드 상태를 가질 수 있어야 한다(스토어는 페이지 단위 하나뿐).
-	const guidesOn = guides === 'on' ? true : guides === 'off' ? false : sharedGuides
+	// lock한 값은 초기값에 머물고 나머지는 슬라이더를 따른다.
+	const marginPct = lockMargin ? initial.marginPct : values.marginPct
+	const gutterX = lockGutterX ? initial.gutterX : values.gutterX
+	const gutterY = lockGutterY ? initial.gutterY : values.gutterY
+
+	// 같은 블록의 판형이 서로 다른 그리드 상태를 가질 수 있어야 한다.
+	const guidesOn = guides === 'on' ? true : guides === 'off' ? false : values.guidesOn
 	const composition = COMPOSITIONS[sample ?? 'a']
 	// 거터의 절반을 셀 안쪽 경계에 넣는다. 마진의 %라서 단위도 마진과 같은 cqmax(긴 축의 1%).
 	const gutterHalf = { x: (marginPct * gutterX) / 100 / 2, y: (marginPct * gutterY) / 100 / 2 }

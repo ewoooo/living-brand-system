@@ -35,6 +35,25 @@ export const LayoutGridWidget: Block = {
 					'그리드 표시입니다. 같은 페이지의 판형끼리 다르게 두려면 켜짐·꺼짐으로 고정합니다.',
 			},
 		},
+		// 🔑 한 슬라이더가 일부 판형만 움직이게 하려는 것 — lock한 값은 패널을 따르지 않고 초기값에 머문다.
+		{
+			name: 'lockMargin',
+			type: 'checkbox',
+			defaultValue: false,
+			admin: { description: '마진을 패널에서 분리해 초기값에 고정합니다.' },
+		},
+		{
+			name: 'lockGutterX',
+			type: 'checkbox',
+			defaultValue: false,
+			admin: { description: '수평 거터를 패널에서 분리해 초기값에 고정합니다.' },
+		},
+		{
+			name: 'lockGutterY',
+			type: 'checkbox',
+			defaultValue: false,
+			admin: { description: '수직 거터를 패널에서 분리해 초기값에 고정합니다.' },
+		},
 	],
 }
 

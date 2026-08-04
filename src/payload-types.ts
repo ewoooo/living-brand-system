@@ -1115,6 +1115,18 @@ export interface LayoutGridWidget {
    * 그리드 표시입니다. 같은 페이지의 판형끼리 다르게 두려면 켜짐·꺼짐으로 고정합니다.
    */
   guides?: ('shared' | 'on' | 'off') | null;
+  /**
+   * 마진을 패널에서 분리해 초기값에 고정합니다.
+   */
+  lockMargin?: boolean | null;
+  /**
+   * 수평 거터를 패널에서 분리해 초기값에 고정합니다.
+   */
+  lockGutterX?: boolean | null;
+  /**
+   * 수직 거터를 패널에서 분리해 초기값에 고정합니다.
+   */
+  lockGutterY?: boolean | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'layoutGridWidget';
@@ -2962,6 +2974,9 @@ export interface IncorrectUsageWidgetSelect<T extends boolean = true> {
 export interface LayoutGridWidgetSelect<T extends boolean = true> {
   sample?: T;
   guides?: T;
+  lockMargin?: T;
+  lockGutterX?: T;
+  lockGutterY?: T;
   id?: T;
   blockName?: T;
 }
