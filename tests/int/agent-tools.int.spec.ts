@@ -8,7 +8,7 @@ import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent
 import { getAgentCitations } from '@/features/agent-chat/utils/get-agent-citations'
 import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-parts'
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
-import * as checkScenarioService from '@/features/quality-rule/services/get-check-scenarios.service'
+import * as checkScenarioRepository from '@/features/quality-rule/repositories/check-scenario.payload.repository'
 import * as checkSessionService from '@/services/start-check-session.service'
 
 const textNode = ({
@@ -263,7 +263,7 @@ describe('agent tools', () => {
 			rulesetSnapshot: [runtimeCheck('first')],
 		},
 	])('$caseName를 Agent가 passed로 요약하지 않는다', async (checkRun) => {
-		vi.spyOn(checkScenarioService, 'getCheckScenarios').mockResolvedValue([
+		vi.spyOn(checkScenarioRepository, 'findPublishedCheckScenarios').mockResolvedValue([
 			{ key: 'quick', title: '빠른 검수', checkKeys: ['first', 'second'] },
 		])
 		vi.spyOn(checkSessionService, 'startCheckSession').mockResolvedValue({

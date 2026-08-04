@@ -51,7 +51,7 @@ describe('getCheckSourceDocuments', () => {
 		expect(find).toHaveBeenCalledTimes(1)
 	})
 
-	it('Payload 관계와 Block Rule을 persistence-free DTO로 변환한다', async () => {
+	it('Payload 관계와 Block Rule을 실행 가능한 Check source로 수집한다', async () => {
 		const checker = {
 			id: 9,
 			name: 'Layout checker',
@@ -117,7 +117,7 @@ describe('getCheckSourceDocuments', () => {
 			breadcrumbDocumentIds: [10, 20, 30],
 			checks: [
 				{
-					check: {
+					rule: {
 						key: 'logo.clear-space',
 						titleKo: '보호 공간',
 						checker: {
@@ -132,17 +132,17 @@ describe('getCheckSourceDocuments', () => {
 					evidence: { type: 'mediaShowcase' },
 					referenceAssets: [
 						{
-							name: 'Logo reference',
-							url: '/api/application-images/file/logo.png',
-							mimeType: 'image/png',
+							asset: {
+								name: 'Logo reference',
+								url: '/api/application-images/file/logo.png',
+								mimeType: 'image/png',
+							},
 							role: 'context',
 						},
 					],
 				},
 			],
 		})
-		expect(documents[0]?.checks[0]?.check.checker).not.toHaveProperty('id')
-		expect(documents[0]?.checks[0]?.referenceAssets[0]).not.toHaveProperty('alt')
 	})
 
 	it('손상된 breadcrumb 관계도 위치를 당기지 않고 sentinel로 보존한다', async () => {

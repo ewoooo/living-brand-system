@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
-	type CheckRulesetSource,
 	type CheckRulesetSourceDocument,
 	getCheckSourceDocuments,
 } from '@/features/asset-check/repositories/check-ruleset.payload.repository'
@@ -9,21 +8,47 @@ import {
 	getRuntimeChecks,
 } from '@/features/asset-check/services/get-check-ruleset.service'
 import { toRuntimeCheckMessages } from '@/features/asset-check/utils/check-messages'
+import type { GuidelineCheckSource } from '@/features/guideline/checks/collect-guideline-check-sources'
+import type { ApplicationImage, Rule, RuleChecker } from '@/payload-types'
 
 vi.mock('@/features/asset-check/repositories/check-ruleset.payload.repository', () => ({
 	getCheckSourceDocuments: vi.fn(),
 }))
 
-function source(key: string, check: Partial<CheckRulesetSource['check']> = {}): CheckRulesetSource {
+function ruleChecker(overrides: Partial<RuleChecker> = {}): RuleChecker {
 	return {
-		check: {
+		id: 1,
+		name: 'Manual',
+		key: 'manual',
+		executor: 'manual',
+		updatedAt: '',
+		createdAt: '',
+		...overrides,
+	}
+}
+
+function referenceAsset(name: string, url: string, role: 'context' | 'negative') {
+	return {
+		asset: { id: 1, name, alt: name, url, mimeType: 'image/png' } as ApplicationImage,
+		role,
+	}
+}
+
+function source(key: string, rule: Partial<Rule> = {}): GuidelineCheckSource {
+	return {
+		rule: {
+			id: 1,
 			key,
 			title: key,
 			tier: 'required',
-			checker: { key: 'manual', executor: 'manual' },
+			executor: 'manual',
+			checker: ruleChecker(),
 			criteria: [],
-			...check,
+			updatedAt: '',
+			createdAt: '',
+			...rule,
 		},
+		blockName: null,
 		source: { documentId: 1 },
 		evidence: { type: 'document', blocks: [] },
 		referenceAssets: [],
@@ -32,7 +57,7 @@ function source(key: string, check: Partial<CheckRulesetSource['check']> = {}): 
 
 function document(
 	id: number,
-	checks: CheckRulesetSource[],
+	checks: GuidelineCheckSource[],
 	overrides: Partial<CheckRulesetSourceDocument> = {},
 ): CheckRulesetSourceDocument {
 	return {
@@ -55,11 +80,11 @@ describe('getCheckRuleset', () => {
 					[
 						source('logo.clear-space', {
 							title: 'Clear Space',
-							checker: {
+							checker: ruleChecker({
 								key: 'logo-layout',
 								executor: 'deterministic',
 								checkerKey: 'clear-space',
-							},
+							}),
 						}),
 					],
 					{ title: 'Primary Logo', slug: 'primary-logo' },
@@ -86,11 +111,11 @@ describe('getCheckRuleset', () => {
 				document(1, [
 					source('logo.share', {
 						title: 'Logo Share',
-						checker: {
+						checker: ruleChecker({
 							key: 'logo-share',
 							executor: 'heuristic',
-							model: 'gpt-4o',
-						},
+							model: 'claude-sonnet-5',
+						}),
 						criteria: [
 							{
 								id: 'c1',
@@ -164,14 +189,12 @@ describe('getCheckRuleset', () => {
 			description: 'Doc A',
 			blocks: [{ type: 'mediaShowcase' }],
 		}
-		documentPlacement.referenceAssets = [
-			{ name: 'a', url: '/a.png', mimeType: 'image/png', role: 'context' },
-		]
+		documentPlacement.referenceAssets = [referenceAsset('a', '/a.png', 'context')]
 		const blockPlacement = source('shared')
 		blockPlacement.evidence = { type: 'colorPalette', title: 'Palette', colors: [] }
 		blockPlacement.referenceAssets = [
-			{ name: 'a', url: '/a.png', mimeType: 'image/png', role: 'context' },
-			{ name: 'b', url: '/b.png', mimeType: 'image/png', role: 'negative' },
+			referenceAsset('a', '/a.png', 'context'),
+			referenceAsset('b', '/b.png', 'negative'),
 		]
 		vi.mocked(getCheckSourceDocuments).mockResolvedValue({
 			documents: [document(1, [documentPlacement]), document(2, [blockPlacement])],
@@ -200,11 +223,11 @@ describe('getCheckRuleset', () => {
 				document(1, [
 					source('implemented'),
 					source('unimplemented', {
-						checker: {
+						checker: ruleChecker({
 							key: 'unknown-checker',
 							executor: 'deterministic',
 							checkerKey: 'unknown-checker',
-						},
+						}),
 					}),
 				]),
 			],

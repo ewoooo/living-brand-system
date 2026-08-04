@@ -1,13 +1,13 @@
 import { cache } from 'react'
-import { hasChecker, hasDeterministicChecker } from '@/features/asset-check/checkers/registry'
+import { hasChecker } from '@/features/asset-check/checkers/registry'
 import type { HeuristicCriterion } from '@/features/asset-check/checkers/types'
 import type { CheckSection, RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
-	type CheckRulesetSource,
 	type CheckRulesetSourceDocument,
 	getCheckSourceDocuments,
 } from '@/features/asset-check/repositories/check-ruleset.payload.repository'
 import { toRuntimeCheckMessages } from '@/features/asset-check/utils/check-messages'
+import type { GuidelineCheckSource } from '@/features/guideline/checks/collect-guideline-check-sources'
 
 /**
  * 검수 화면용 Check 뷰모델을 published 통합 문서와 내부 Block에서 조립한다.
@@ -73,20 +73,20 @@ function formatKeyProblem(label: string, keys: string[]): string[] {
 }
 
 function toRuntimeCheck({
-	check,
+	rule,
 	evidence,
 	referenceAssets,
 	source,
-}: CheckRulesetSource): RuntimeCheck {
-	const checker = check.checker
-	if (!checker) throw new Error(`RuleChecker가 연결되지 않은 Check입니다: ${check.key}`)
+}: GuidelineCheckSource): RuntimeCheck {
+	const checker = typeof rule.checker === 'object' && rule.checker !== null ? rule.checker : null
+	if (!checker) throw new Error(`RuleChecker가 연결되지 않은 Check입니다: ${rule.key}`)
 	const checkerKey = checker.checkerKey ?? undefined
 	const model = checker.model ?? undefined
 	const prompt = checker.prompt?.trim() || undefined
-	const options = checker.executor === 'deterministic' ? (check.options ?? undefined) : undefined
+	const options = checker.executor === 'deterministic' ? (rule.options ?? undefined) : undefined
 	const heuristicCriteria =
 		checker.executor === 'heuristic'
-			? (check.criteria ?? []).flatMap((criterion): HeuristicCriterion[] => {
+			? (rule.criteria ?? []).flatMap((criterion): HeuristicCriterion[] => {
 					const question = criterion.question?.trim()
 					if (!criterion.id || !question) return []
 					if (criterion.kind === 'measure') {
@@ -110,24 +110,21 @@ function toRuntimeCheck({
 				})
 			: undefined
 	const heuristicPrompt =
-		checker.executor === 'heuristic' && check.heuristicPrompt?.trim()
-			? check.heuristicPrompt.trim()
+		checker.executor === 'heuristic' && rule.heuristicPrompt?.trim()
+			? rule.heuristicPrompt.trim()
 			: undefined
 	const implemented =
 		checker.executor === 'deterministic'
-			? Boolean(
-					checkerKey &&
-						(hasDeterministicChecker(checkerKey) || hasChecker(checkerKey, options)),
-				)
+			? Boolean(checkerKey && hasChecker(checkerKey, options))
 			: checker.executor === 'heuristic'
 				? Boolean(model)
 				: true
 
 	return {
-		key: check.key,
-		title: check.title,
-		titleKo: check.titleKo?.trim() || undefined,
-		tier: check.tier ?? undefined,
+		key: rule.key,
+		title: rule.title,
+		titleKo: rule.titleKo?.trim() || undefined,
+		tier: rule.tier,
 		source,
 		checker: {
 			key: checker.key,
@@ -143,20 +140,13 @@ function toRuntimeCheck({
 		heuristicPrompt,
 		implemented,
 		evidence,
-		referenceAssets: referenceAssets.flatMap((asset) =>
+		referenceAssets: referenceAssets.flatMap(({ asset, role }) =>
 			asset.url && asset.mimeType
-				? [
-						{
-							name: asset.name,
-							url: asset.url,
-							mimeType: asset.mimeType,
-							role: asset.role,
-						},
-					]
+				? [{ name: asset.name, url: asset.url, mimeType: asset.mimeType, role }]
 				: [],
 		),
 		messages:
-			checker.executor === 'heuristic' ? undefined : toRuntimeCheckMessages(check.messages),
+			checker.executor === 'heuristic' ? undefined : toRuntimeCheckMessages(rule.messages),
 	}
 }
 

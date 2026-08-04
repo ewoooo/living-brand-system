@@ -7,7 +7,7 @@ import { toDeterministicCheckResult } from './check-result.adapter'
 import { extractDominantColorPair } from './color-pair.extractor'
 import { contrastChecker } from './contrast.checker'
 import { evaluateExtraction, evaluateMeasurement } from './deterministic.evaluator'
-import { hasDeterministicChecker } from './registry'
+import { getChecker } from './registry'
 import type { ColorPairObservation, ExtractionResult, PixelGrid } from './types'
 
 vi.mock('@/features/asset-check/repositories/image-decoder.sharp.repository', () => ({
@@ -148,7 +148,7 @@ describe('deterministic CheckResult integration', () => {
 			[runtimeCheck()],
 		)
 
-		expect(hasDeterministicChecker('contrast')).toBe(true)
+		expect(getChecker('contrast')?.executor).toBe('deterministic')
 		expect(result.results['typography.contrast']).toMatchObject({
 			rawResult: {
 				status: 'pass',

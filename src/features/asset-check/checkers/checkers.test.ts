@@ -92,8 +92,10 @@ const CHECKER_OPTIONS: Record<string, unknown> = {
 function checkerFor(checkKey: string) {
 	const checkerKey = CHECKER_KEYS[checkKey]
 	const checker = checkerKey ? getChecker(checkerKey, CHECKER_OPTIONS[checkKey]) : null
-	if (!checker) throw new Error(`checker not registered: ${checkKey}`)
-	return checker
+	if (checker?.executor !== 'algorithm') {
+		throw new Error(`checker not registered: ${checkKey}`)
+	}
+	return checker.run
 }
 
 describe('checker options', () => {
