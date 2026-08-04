@@ -15,13 +15,11 @@ vi.mock('@/lib/request-auth', () => ({
 vi.mock('@/features/generate-image/services/generate-image.service', () => {
 	class ImageGenerationUnavailableError extends Error {}
 	class ImageProfileNotFoundError extends Error {}
-	class ImagePromptNormalizationUnavailableError extends Error {}
 	return {
 		generateImages: mocks.generateImages,
 		generateImagesWithSettings: mocks.generateImagesWithSettings,
 		ImageGenerationUnavailableError,
 		ImageProfileNotFoundError,
-		ImagePromptNormalizationUnavailableError,
 	}
 })
 

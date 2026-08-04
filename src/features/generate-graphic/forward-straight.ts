@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import type { GraphicToolContract } from './graphic-tool'
 
 export const forwardStraightInputSchema = z.strictObject({
 	variableWeightEnabled: z.boolean(),
@@ -14,8 +13,6 @@ export const forwardStraightInputSchema = z.strictObject({
 export type ForwardStraightInput = z.infer<typeof forwardStraightInputSchema>
 
 export const forwardStraightToolContract = {
-	implementationKey: 'forward-straight-v1',
-	inputSchema: forwardStraightInputSchema,
 	defaultInput: {
 		variableWeightEnabled: false,
 		viewpoint: 'flat',
@@ -48,5 +45,4 @@ export const forwardStraightToolContract = {
 			],
 		},
 	],
-	outputFormats: [{ format: 'svg', mimeType: 'image/svg+xml' }],
-} satisfies GraphicToolContract<ForwardStraightInput>
+} as const

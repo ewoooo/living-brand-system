@@ -7,13 +7,17 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Typography } from '@/components/ui/typography'
-import { exportForwardStraightSvg } from '@/features/generate-graphic/export-forward-straight-svg.client'
 import {
 	type ForwardStraightInput,
 	forwardStraightInputSchema,
 	forwardStraightToolContract,
 } from '@/features/generate-graphic/forward-straight'
+import {
+	createForwardStraightScene,
+	createForwardStraightSvg,
+} from '@/features/generate-graphic/forward-straight-geometry'
 import type { ForwardStraightPreview } from '@/features/generate-graphic/forward-straight-preview.client'
+import { revokeBlob } from '@/lib/object-url'
 
 export function ForwardStraightGenerator() {
 	const [input, setInput] = useState<ForwardStraightInput>(
@@ -94,11 +98,16 @@ export function ForwardStraightGenerator() {
 		const viewport = previewRef.current?.getViewport()
 		if (!viewport) return
 
-		exportForwardStraightSvg({
-			fileName: 'forward-straight',
-			input,
-			viewport,
-		})
+		const svg = createForwardStraightSvg(createForwardStraightScene(input, viewport))
+		const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }))
+		try {
+			const link = document.createElement('a')
+			link.href = url
+			link.download = 'forward-straight.svg'
+			link.click()
+		} finally {
+			revokeBlob(url)
+		}
 	}
 
 	return (

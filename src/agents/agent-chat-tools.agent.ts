@@ -25,13 +25,13 @@ import {
 } from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
+import { listPublishedImageProfiles } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import {
 	type AgentGeneratedImagesAttachment,
 	generateImages,
 } from '@/features/generate-image/services/generate-image.service'
-import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
 import { type CheckScenario, getCheckScenario } from '@/features/quality-rule/check-scenario'
-import { getCheckScenarios } from '@/features/quality-rule/services/get-check-scenarios.service'
+import { findPublishedCheckScenarios } from '@/features/quality-rule/repositories/check-scenario.payload.repository'
 import { AgentConfigurationError } from '@/lib/errors'
 import type { User } from '@/payload-types'
 import { startCheckSession } from '@/services/start-check-session.service'
@@ -118,7 +118,7 @@ export function getAgentTools() {
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
 			execute: async (_input, { context }) =>
-				(await getCheckScenarios(context.user as User)).map(({ key, title }) => ({
+				(await findPublishedCheckScenarios(context.user as User)).map(({ key, title }) => ({
 					key,
 					title,
 				})),
@@ -157,7 +157,7 @@ export function getAgentTools() {
 				'List published image profiles available to the current user. Call before generateImage for a branded product image.',
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
-			execute: (_input, { context }) => listAvailableImageProfiles(context.user),
+			execute: (_input, { context }) => listPublishedImageProfiles(context.user),
 		}),
 		generateImage: tool({
 			description:
@@ -204,7 +204,7 @@ export function getAgentTools() {
 			}),
 			contextSchema: guidelineToolContextSchema,
 			execute: async ({ scenarioKey }, { context, messages }) => {
-				const scenarios = await getCheckScenarios(context.user as User)
+				const scenarios = await findPublishedCheckScenarios(context.user as User)
 				const scenario = getCheckScenario(scenarios, scenarioKey)
 				const image = findLatestImage(messages)
 

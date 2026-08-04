@@ -16,7 +16,7 @@ import {
 	supportsImageOutputSize,
 } from '@/features/generate-image/image-size'
 import {
-	ImagePromptNormalizationUnavailableError,
+	ImageGenerationUnavailableError,
 	normalizeImageProfilePrompt,
 } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
 import { isManager, managerManagedAccess } from '@/lib/auth'
@@ -54,7 +54,7 @@ async function normalizePromptEndpoint(req: PayloadRequest) {
 		return Response.json(await normalizeImageProfilePrompt(parsed.data))
 	} catch (error) {
 		req.payload.logger.error({ err: error }, 'image-prompt-normalization.failed')
-		if (error instanceof ImagePromptNormalizationUnavailableError) {
+		if (error instanceof ImageGenerationUnavailableError) {
 			return Response.json(
 				{ message: 'AI 프롬프트 정규화가 설정되지 않았습니다.' },
 				{ status: 503 },

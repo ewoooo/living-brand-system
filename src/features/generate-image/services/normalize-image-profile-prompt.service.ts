@@ -6,10 +6,11 @@ import {
 } from '@/features/generate-image/image-profile-prompt'
 import { normalizeImagePromptWithAi } from '@/features/generate-image/repositories/image-prompt-normalization.ai.repository'
 
-export class ImagePromptNormalizationUnavailableError extends Error {
+/** Provider·정규화 모델 미설정을 route/agent 표면이 일반 생성 실패와 구분하기 위한 서비스 오류. */
+export class ImageGenerationUnavailableError extends Error {
 	constructor() {
-		super('Image prompt normalization is not configured.')
-		this.name = 'ImagePromptNormalizationUnavailableError'
+		super('Image generation is not configured.')
+		this.name = 'ImageGenerationUnavailableError'
 	}
 }
 
@@ -30,7 +31,7 @@ export async function normalizeImageProfilePrompt({
 		userPromptNormalization.length === 0
 			? {}
 			: await normalizeImagePromptWithAi(userPrompt, userPromptNormalization)
-	if (!normalizedInput) throw new ImagePromptNormalizationUnavailableError()
+	if (!normalizedInput) throw new ImageGenerationUnavailableError()
 
 	return {
 		normalizedInput,
