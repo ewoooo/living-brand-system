@@ -4213,7 +4213,7 @@
 			"order": 2,
 			"blocks": [
 				{
-					"width": "full",
+					"width": "padded",
 					"background": {
 						"color": "#000000"
 					},
@@ -4231,6 +4231,17 @@
 							"sample": "b",
 							"guides": "off",
 							"blockType": "layoutGridWidget"
+						},
+						{
+							"marginPct": 4.5,
+							"marginAdjustable": true,
+							"gutterX": 75,
+							"gutterXAdjustable": false,
+							"gutterY": 75,
+							"gutterYAdjustable": false,
+							"guidesOn": true,
+							"guidesAdjustable": false,
+							"blockType": "layoutGridControlsWidget"
 						}
 					],
 					"rules": []
@@ -6608,7 +6619,7 @@
 			"order": 3,
 			"blocks": [
 				{
-					"width": "full",
+					"width": "padded",
 					"background": {
 						"color": "#000000"
 					},
@@ -6626,6 +6637,17 @@
 							"sample": "a",
 							"guides": "off",
 							"blockType": "layoutGridWidget"
+						},
+						{
+							"marginPct": 4.5,
+							"marginAdjustable": true,
+							"gutterX": 75,
+							"gutterXAdjustable": true,
+							"gutterY": 75,
+							"gutterYAdjustable": true,
+							"guidesOn": true,
+							"guidesAdjustable": false,
+							"blockType": "layoutGridControlsWidget"
 						}
 					],
 					"rules": []
@@ -8245,7 +8267,7 @@
 			"order": 4,
 			"blocks": [
 				{
-					"width": "full",
+					"width": "padded",
 					"background": {
 						"color": "#000000"
 					},
@@ -8263,6 +8285,17 @@
 							"sample": "c",
 							"guides": "off",
 							"blockType": "layoutGridWidget"
+						},
+						{
+							"marginPct": 4.5,
+							"marginAdjustable": true,
+							"gutterX": 75,
+							"gutterXAdjustable": true,
+							"gutterY": 75,
+							"gutterYAdjustable": false,
+							"guidesOn": true,
+							"guidesAdjustable": false,
+							"blockType": "layoutGridControlsWidget"
 						}
 					],
 					"rules": []
