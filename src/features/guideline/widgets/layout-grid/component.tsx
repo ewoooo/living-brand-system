@@ -11,12 +11,12 @@ import {
 	type Span,
 } from './compositions'
 import type { LayoutGridSample } from './samples'
-import { useLayoutGridControls } from './store'
+import { useLayoutGridScope } from './store'
 
 // 템플릿: HD현대 Key Layout 그리드(정본 규칙). 판형을 축별로 1:2:3으로 나눈 9셀에 개체를 스냅한다.
 // 이 파일은 레이아웃 시스템만 소유한다 — 그리드·마진·거터·가이드·개체 종류별 렌더.
 // 무엇을 어디에 놓는가(조합)는 compositions.ts의 순수 데이터다. 조합을 늘려도 이 파일은 안 바뀐다.
-// 마진·거터 값은 layoutGridControlsWidget이 소유한다(store.ts) — 페이지의 판형 전체가 한 패널로 움직인다.
+// 마진·거터 값은 블록 단위 스코프(store.tsx)에 있다 — 한 블록의 판형들이 그 블록 패널로 함께 움직인다.
 //
 // 🔴 규칙 상수(TRACKS)는 정본이다. 눈대중으로 고치지 말 것.
 
@@ -49,7 +49,9 @@ export function LayoutGridWidget({
 	sample?: LayoutGridSample | null
 	guides?: GuidesMode | null
 }) {
-	const { marginPct, gutterX, gutterY, guidesOn: sharedGuides } = useLayoutGridControls()
+	const {
+		values: { marginPct, gutterX, gutterY, guidesOn: sharedGuides },
+	} = useLayoutGridScope()
 
 	// 같은 페이지의 판형이 서로 다른 그리드 상태를 가질 수 있어야 한다(스토어는 페이지 단위 하나뿐).
 	const guidesOn = guides === 'on' ? true : guides === 'off' ? false : sharedGuides

@@ -13,6 +13,7 @@ import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
 import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
+import { LayoutGridScope } from '@/features/guideline/widgets/layout-grid/store'
 import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
@@ -234,6 +235,20 @@ function bgHex(color: LayoutBlockType['background']): string | undefined {
 	return color && typeof color === 'object' && color.hex ? color.hex : undefined
 }
 
+// 레이아웃 그리드 위젯의 값 스코프는 **블록 단위**다 — 모듈 스토어로 두면 섹션 라우트가 여러 Page를
+// 한 화면에 렌더할 때 페이지마다 놓인 컨트롤 패널이 서로 간섭한다. 해당 위젯이 있을 때만 감싼다.
+function withLayoutGridScope(
+	children: NonNullable<LayoutBlockType['children']>,
+	arranged: ReactNode,
+): ReactNode {
+	const needsScope = children.some(
+		(child) =>
+			child.blockType === 'layoutGridWidget' ||
+			child.blockType === 'layoutGridControlsWidget',
+	)
+	return needsScope ? <LayoutGridScope>{arranged}</LayoutGridScope> : arranged
+}
+
 export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 	const outerBg = bgHex(block.background)
 	const innerBg = bgHex(block.innerBackground)
@@ -247,12 +262,15 @@ export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 				<GuidelineDescription variant="block" description={block.description} />
 			) : null}
 			<div style={innerBg ? { background: innerBg } : undefined}>
-				<Arrange
-					arrangement={block.arrangement}
-					columns={block.columns ?? 2}
-					aspectRatio={block.aspectRatio ?? '1:1'}
-					items={block.children ?? []}
-				/>
+				{withLayoutGridScope(
+					block.children ?? [],
+					<Arrange
+						arrangement={block.arrangement}
+						columns={block.columns ?? 2}
+						aspectRatio={block.aspectRatio ?? '1:1'}
+						items={block.children ?? []}
+					/>,
+				)}
 			</div>
 		</GuidelineBlockFrame>
 	)
