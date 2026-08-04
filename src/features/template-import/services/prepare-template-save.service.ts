@@ -8,7 +8,7 @@ import {
 import {
 	findTemplateDraftBlocker,
 	findTemplatePublishBlocker,
-} from './validate-template-publish.service'
+} from './validate-template-save.service'
 
 interface TemplateSaveCandidate {
 	_status?: unknown

@@ -16,6 +16,20 @@ export async function inspectTemplatePng(
 	}
 }
 
+/** PNG를 흰 배경의 기본 CMYK 프로파일 JPEG로 변환한다. 픽셀 크기는 유지한다. */
+export async function convertTemplatePngToCmykJpeg(buffer: Buffer): Promise<Buffer | null> {
+	try {
+		return await sharp(buffer, { limitInputPixels: MAX_PRINT_PIXELS })
+			.flatten({ background: '#ffffff' })
+			.toColourspace('cmyk')
+			.withIccProfile('cmyk')
+			.jpeg({ chromaSubsampling: '4:4:4', quality: 100 })
+			.toBuffer()
+	} catch {
+		return null
+	}
+}
+
 /**
  * PNG를 흰 배경의 기본 CMYK 프로파일 TIFF로 변환한다. 리사이즈는 하지 않고 PPI 메타데이터만 쓴다.
  */

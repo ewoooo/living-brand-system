@@ -1,7 +1,5 @@
-import {
-	inspectPublishedTemplateHtml,
-	parseTemplateNodeConfigs,
-} from '@/services/inspect-template-html.service'
+import { inspectPublishedTemplateHtml } from '@/services/inspect-template-html.service'
+import { parseTemplateNodeConfigs } from '@/services/parse-template-node-configs.service'
 import type { TemplateNodeConfigMap } from '@/types/template'
 
 interface TemplateRenderCandidate {
