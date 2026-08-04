@@ -54,8 +54,8 @@ export function LayoutGridControlsWidget(config: LayoutGridControlsConfig) {
 	if (!showMargin && !showGutterX && !showGutterY && !showGuides) return null
 
 	return (
-		// 어두운 블록 배경 전제로 밝은 패널. Block이 배경을 소유하므로 위젯은 반투명만 얹는다.
-		<div className="flex w-full flex-col gap-2 rounded-md bg-white/10 p-3 text-white">
+		// 블록 헤더(제목·설명 영역)에 놓이므로 페이지 배경 위다 — 텍스트는 전경색 토큰을 쓴다.
+		<div className="flex w-fit flex-col gap-2 text-foreground">
 			{showMargin && (
 				<Slider
 					label="마진 (대지 → 표)"
@@ -95,14 +95,14 @@ export function LayoutGridControlsWidget(config: LayoutGridControlsConfig) {
 						type="button"
 						onClick={() => set({ guidesOn: !guidesOn })}
 						aria-pressed={guidesOn}
-						className="inline-flex items-center gap-2 rounded border border-white/30 px-2 py-1 font-body text-xs hover:bg-white/10"
+						className="inline-flex items-center gap-2 rounded border border-border px-2 py-1 font-body text-xs hover:bg-fill-hover"
 					>
 						<span
-							className={`h-2 w-2 rounded-full ${guidesOn ? 'bg-white' : 'bg-white/30'}`}
+							className={`h-2 w-2 rounded-full ${guidesOn ? 'bg-foreground' : 'bg-border'}`}
 						/>
 						그리드 {guidesOn ? '보임' : '숨김'}
 					</button>
-					<p className="font-body text-white/60 text-xs">
+					<p className="font-body text-muted-foreground text-xs">
 						거터를 끝까지 밀어도 1:2:3 분할선은 제자리에 있다.
 					</p>
 				</div>
@@ -131,9 +131,10 @@ function Slider({
 	suffix: string
 }) {
 	return (
-		<label className="flex flex-col gap-0.5">
+		// 🔴 슬라이더 폭은 고정이다(fill 아님) — 블록 폭이 바뀌어도 조작감이 같아야 한다.
+		<label className="flex w-[240px] flex-col gap-0.5">
 			<span className="flex items-baseline justify-between font-body text-xs">
-				<span className="opacity-70">{label}</span>
+				<span className="text-muted-foreground">{label}</span>
 				<span className="tabular-nums">
 					{value}
 					{suffix}
@@ -146,7 +147,7 @@ function Slider({
 				max={max}
 				step={step}
 				onChange={(event) => onChange(Number(event.target.value))}
-				className="w-full"
+				className="w-[240px]"
 			/>
 		</label>
 	)
