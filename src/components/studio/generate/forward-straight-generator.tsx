@@ -17,7 +17,7 @@ import {
 	createForwardStraightSvg,
 } from '@/features/generate-graphic/forward-straight-geometry'
 import type { ForwardStraightPreview } from '@/features/generate-graphic/forward-straight-preview.client'
-import { revokeBlob } from '@/lib/object-url'
+import { downloadBlob } from '@/lib/object-url'
 
 export function ForwardStraightGenerator() {
 	const [input, setInput] = useState<ForwardStraightInput>(
@@ -99,15 +99,7 @@ export function ForwardStraightGenerator() {
 		if (!viewport) return
 
 		const svg = createForwardStraightSvg(createForwardStraightScene(input, viewport))
-		const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }))
-		try {
-			const link = document.createElement('a')
-			link.href = url
-			link.download = 'forward-straight.svg'
-			link.click()
-		} finally {
-			revokeBlob(url)
-		}
+		downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), 'forward-straight.svg')
 	}
 
 	return (

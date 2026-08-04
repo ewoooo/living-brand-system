@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
 	authenticateRequest: vi.fn(),
 	isCrossOriginRequest: vi.fn(),
-	issueMcpApiKey: vi.fn(),
+	createMcpApiKeyRecord: vi.fn(),
 	logger: { error: vi.fn(), info: vi.fn() },
 }))
 
@@ -11,8 +11,8 @@ vi.mock('@/lib/request-auth', () => ({
 	authenticateRequest: mocks.authenticateRequest,
 	isCrossOriginRequest: mocks.isCrossOriginRequest,
 }))
-vi.mock('@/features/mcp-access/services/issue-mcp-api-key.service', () => ({
-	issueMcpApiKey: mocks.issueMcpApiKey,
+vi.mock('@/features/mcp-access/repositories/mcp-api-key.payload.repository', () => ({
+	createMcpApiKeyRecord: mocks.createMcpApiKeyRecord,
 }))
 
 import { POST } from './route'
@@ -25,7 +25,7 @@ describe('POST /api/mcp-key', () => {
 			payload: { logger: mocks.logger },
 			user: { email: 'worker@example.com', id: 1, role: 'worker' },
 		})
-		mocks.issueMcpApiKey.mockResolvedValue({ apiKey: 'one-time-key', id: 7 })
+		mocks.createMcpApiKeyRecord.mockResolvedValue({ apiKey: 'one-time-key', id: 7 })
 	})
 
 	it('로그인 사용자에게 외부 연결 정보를 한 번 반환한다', async () => {
@@ -39,7 +39,7 @@ describe('POST /api/mcp-key', () => {
 			endpoint: 'https://lbs.example/api/mcp',
 			id: 7,
 		})
-		expect(mocks.issueMcpApiKey).toHaveBeenCalledWith({
+		expect(mocks.createMcpApiKeyRecord).toHaveBeenCalledWith({
 			email: 'worker@example.com',
 			id: 1,
 			role: 'worker',
@@ -57,6 +57,6 @@ describe('POST /api/mcp-key', () => {
 		)
 
 		expect(response.status).toBe(401)
-		expect(mocks.issueMcpApiKey).not.toHaveBeenCalled()
+		expect(mocks.createMcpApiKeyRecord).not.toHaveBeenCalled()
 	})
 })

@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getCreateNavigation } from '@/features/template-create/services/get-create-navigation.service'
-import { getPublishedTemplate } from '@/features/template-create/services/get-published-template.service'
 import {
 	findPublishedTemplate,
 	listPublishedTemplateNavItems,
 	listTemplateCategories,
 } from '@/repositories/published-template.payload.repository'
+import { getCreateNavigation } from '@/services/get-create-navigation.service'
+import { getPublishedTemplate } from '@/services/get-published-template.service'
 
 vi.mock('@/repositories/published-template.payload.repository', () => ({
 	findPublishedTemplate: vi.fn(),
