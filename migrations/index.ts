@@ -21,6 +21,7 @@ import * as migration_20260731_094017_mcp_feature_tools from './20260731_094017_
 import * as migration_20260803_025030_do_dont_widget from './20260803_025030_do_dont_widget';
 import * as migration_20260804_051328_add_layout_grid_sample from './20260804_051328_add_layout_grid_sample';
 import * as migration_20260804_053103_add_layout_grid_controls from './20260804_053103_add_layout_grid_controls';
+import * as migration_20260804_073352_add_layout_grid_controls_config from './20260804_073352_add_layout_grid_controls_config';
 
 export const migrations = [
   {
@@ -136,6 +137,11 @@ export const migrations = [
   {
     up: migration_20260804_053103_add_layout_grid_controls.up,
     down: migration_20260804_053103_add_layout_grid_controls.down,
-    name: '20260804_053103_add_layout_grid_controls'
+    name: '20260804_053103_add_layout_grid_controls',
+  },
+  {
+    up: migration_20260804_073352_add_layout_grid_controls_config.up,
+    down: migration_20260804_073352_add_layout_grid_controls_config.down,
+    name: '20260804_073352_add_layout_grid_controls_config'
   },
 ];

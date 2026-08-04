@@ -8287,6 +8287,14 @@
 							"blockType": "layoutGridWidget"
 						},
 						{
+							"marginPct": 4.5,
+							"marginAdjustable": true,
+							"gutterX": 75,
+							"gutterXAdjustable": true,
+							"gutterY": 75,
+							"gutterYAdjustable": true,
+							"guidesOn": true,
+							"guidesAdjustable": true,
 							"blockType": "layoutGridControlsWidget"
 						}
 					],

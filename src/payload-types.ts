@@ -1120,6 +1120,38 @@ export interface LayoutGridWidget {
  * via the `definition` "LayoutGridControlsWidget".
  */
 export interface LayoutGridControlsWidget {
+  /**
+   * 마진(판형 긴 축의 %). 3~6.
+   */
+  marginPct?: number | null;
+  /**
+   * 뷰어가 마진을 조절할 수 있게 합니다. 끄면 위 값으로 고정됩니다.
+   */
+  marginAdjustable?: boolean | null;
+  /**
+   * 수평 거터(마진의 %). 0~100.
+   */
+  gutterX?: number | null;
+  /**
+   * 뷰어가 수평 거터를 조절할 수 있게 합니다.
+   */
+  gutterXAdjustable?: boolean | null;
+  /**
+   * 수직 거터(마진의 %). 0~100.
+   */
+  gutterY?: number | null;
+  /**
+   * 뷰어가 수직 거터를 조절할 수 있게 합니다.
+   */
+  gutterYAdjustable?: boolean | null;
+  /**
+   * 그리드(마진·거터 영역과 분할선)를 처음부터 보여줍니다.
+   */
+  guidesOn?: boolean | null;
+  /**
+   * 뷰어가 그리드를 켜고 끌 수 있게 합니다.
+   */
+  guidesAdjustable?: boolean | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'layoutGridControlsWidget';
@@ -2933,6 +2965,14 @@ export interface LayoutGridWidgetSelect<T extends boolean = true> {
  * via the `definition` "LayoutGridControlsWidget_select".
  */
 export interface LayoutGridControlsWidgetSelect<T extends boolean = true> {
+  marginPct?: T;
+  marginAdjustable?: T;
+  gutterX?: T;
+  gutterXAdjustable?: T;
+  gutterY?: T;
+  gutterYAdjustable?: T;
+  guidesOn?: T;
+  guidesAdjustable?: T;
   id?: T;
   blockName?: T;
 }

@@ -86,7 +86,19 @@ function renderWidget(child: Child): ReactNode {
 			return <LayoutGridWidget sample={child.sample} />
 		case 'layoutGridControlsWidget':
 			// 같은 페이지의 layoutGridWidget 전부를 통제하는 단일 패널(모듈 스토어 공유).
-			return <LayoutGridControlsWidget />
+			// 조절 허용 여부가 페이지별 템플릿을 만든다 — 불허한 값은 admin 값으로 고정된다.
+			return (
+				<LayoutGridControlsWidget
+					marginPct={child.marginPct}
+					marginAdjustable={child.marginAdjustable}
+					gutterX={child.gutterX}
+					gutterXAdjustable={child.gutterXAdjustable}
+					gutterY={child.gutterY}
+					gutterYAdjustable={child.gutterYAdjustable}
+					guidesOn={child.guidesOn}
+					guidesAdjustable={child.guidesAdjustable}
+				/>
+			)
 		case 'layoutGridOverlayWidget':
 			return <LayoutGridOverlayWidget />
 		case 'logoColorVariantWidget':
