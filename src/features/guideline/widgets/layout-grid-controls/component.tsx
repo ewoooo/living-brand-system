@@ -26,6 +26,7 @@ export function LayoutGridControlsWidget(config: LayoutGridControlsConfig) {
 	const {
 		values: { marginPct, gutterX, gutterY, guidesOn },
 		set,
+		seed,
 	} = useLayoutGridScope()
 
 	const initialMargin = config.marginPct ?? MARGIN_PCT.default
@@ -36,13 +37,13 @@ export function LayoutGridControlsWidget(config: LayoutGridControlsConfig) {
 	// admin 값을 스토어에 심는다. 조절 불허인 값은 여기서 들어간 뒤 바뀌지 않아 고정값이 된다.
 	// 판형들이 이 위젯보다 먼저 렌더되므로 첫 프레임은 기본값으로 그려지고 곧바로 이 값으로 정착한다.
 	useEffect(() => {
-		set({
+		seed({
 			marginPct: initialMargin,
 			gutterX: initialGutterX,
 			gutterY: initialGutterY,
 			guidesOn: initialGuides,
 		})
-	}, [set, initialMargin, initialGutterX, initialGutterY, initialGuides])
+	}, [seed, initialMargin, initialGutterX, initialGutterY, initialGuides])
 
 	const showMargin = config.marginAdjustable ?? true
 	const showGutterX = config.gutterXAdjustable ?? true

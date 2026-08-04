@@ -26,25 +26,38 @@ const DEFAULTS: LayoutGridControls = {
 }
 
 type Scope = {
+	/** 컨트롤 위젯이 admin에서 심은 값. 패널을 따르지 않는(lock) 판형이 이 값에 머문다. */
+	initial: LayoutGridControls
+	/** 슬라이더로 움직인 현재 값. */
 	values: LayoutGridControls
 	set: (patch: Partial<LayoutGridControls>) => void
+	/** admin 초기값을 심는다 — 초기값과 현재값을 함께 세팅한다. */
+	seed: (next: LayoutGridControls) => void
 }
 
 const LayoutGridContext = createContext<Scope | null>(null)
 
 export function LayoutGridScope({ children }: { children: ReactNode }) {
-	const [values, setValues] = useState(DEFAULTS)
-	// set은 값이 바뀌어도 같은 참조여야 한다 — 소비자가 effect 의존에 넣을 수 있게.
+	const [state, setState] = useState({ initial: DEFAULTS, values: DEFAULTS })
+	// set·seed는 값이 바뀌어도 같은 참조여야 한다 — 소비자가 effect 의존에 넣을 수 있게.
 	const set = useCallback(
-		(patch: Partial<LayoutGridControls>) => setValues((prev) => ({ ...prev, ...patch })),
+		(patch: Partial<LayoutGridControls>) =>
+			setState((prev) => ({ ...prev, values: { ...prev.values, ...patch } })),
 		[],
 	)
-	const scope = useMemo<Scope>(() => ({ values, set }), [values, set])
+	const seed = useCallback(
+		(next: LayoutGridControls) => setState({ initial: next, values: next }),
+		[],
+	)
+	const scope = useMemo<Scope>(
+		() => ({ initial: state.initial, values: state.values, set, seed }),
+		[state, set, seed],
+	)
 	return <LayoutGridContext.Provider value={scope}>{children}</LayoutGridContext.Provider>
 }
 
 /** 스코프 밖(컨트롤 없이 판형만 둔 경우)이면 기본값을 읽기 전용으로 준다. */
-const READ_ONLY: Scope = { values: DEFAULTS, set: () => {} }
+const READ_ONLY: Scope = { initial: DEFAULTS, values: DEFAULTS, set: () => {}, seed: () => {} }
 
 export function useLayoutGridScope(): Scope {
 	return useContext(LayoutGridContext) ?? READ_ONLY
