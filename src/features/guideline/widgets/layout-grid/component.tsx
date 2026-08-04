@@ -2,6 +2,8 @@
 
 import type { StaticImageData } from 'next/image'
 import type { CSSProperties, ReactNode } from 'react'
+import ciHdHorizontalWhite from './images/ci-hd-horizontal-white.svg'
+import ciKoHorizontal from './images/ci-ko-horizontal.svg'
 import sampleA1 from './images/sample-a1.webp'
 import sampleA2 from './images/sample-a2.webp'
 import sampleA3 from './images/sample-a3.webp'
@@ -44,17 +46,19 @@ const spanEnd = (span: Span) => (Array.isArray(span) ? span[1] : span)
 // ─────────────────────────────────────────────────────────────
 // 샘플 콘텐츠 — 여기만 고치면 된다. 이미지는 이 폴더에 넣고 static import.
 // 크기 단위는 cqw/cqh(판형 폭·높이의 1%)를 쓴다 — 판형이 커지든 작아지든 같은 그림이 나온다.
-// 텍스트에 HD체를 쓰지 않는다: 서브셋 폰트라 CI 글자 외에는 글리프가 없다.
+// 텍스트는 HD체 Bold다. 서브셋에 라틴 대문자·숫자가 다 들어 있어 대문자 문구면 안전하다(소문자는 없다).
 // ─────────────────────────────────────────────────────────────
 const SAMPLES: Record<LayoutGridSample, Sample> = {
 	a: {
 		background: '#ffffff',
 		color: '#1a1a1a',
 		items: [
-			{ col: 1, row: 1, node: <Logo /> },
+			// CI 국문 가로형 — 셀 높이의 1/3, 셀 밖으로 넘치게 둔다.
+			{ col: 1, row: 1, node: <Ci src={ciKoHorizontal} height="33.333%" /> },
 			// 녹색 그라디언트 — 3A 열 × 1A 행 셀을 채운다.
 			{ col: 3, row: 1, node: <Img src={sampleA1} /> },
-			{ col: 1, row: 2, node: <Caption>FUTURE CLOSER TO HUMANITY</Caption> },
+			// 캡션도 셀 밖으로 넘치게 둔다(1A 열이 좁아 줄바꿈되는 것을 막는다).
+			{ col: 1, row: 2, node: <Caption overflow>FUTURE CLOSER TO HUMANITY</Caption> },
 			// 선박 선수 — 2번 칸 왼변부터 3번 칸 오른변까지.
 			{ col: [2, 3], row: 2, node: <Img src={sampleA2} /> },
 			// 탱커 — 위는 1/2 구분선, 나머지 세 변은 문서 끝.
@@ -79,9 +83,10 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 				flush: true,
 				node: <Img src={sampleB1} />,
 			},
-			{ col: 1, row: 1, node: <Logo mono /> },
+			// CI HD형 가로형(WHITE 워드마크 — 어두운 배경 규정) — 셀 높이의 1/3, 넘침 허용.
+			{ col: 1, row: 1, node: <Ci src={ciHdHorizontalWhite} height="33.333%" /> },
 			{
-				col: 1,
+				col: 2,
 				row: 2,
 				node: (
 					<Caption>
@@ -105,16 +110,25 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 				node: <Img src={sampleC1} />,
 			},
 			{ col: 1, row: 2, node: <Title>2026</Title> },
-			{ col: 2, row: 2, node: <Title>FUTURE BUILDER</Title> },
+			// 타이틀 — 1/2열 구분선(선 3)부터 3열 오른변(선 5)까지 채운다.
+			{ col: [2, 3], row: 2, node: <Title fill>FUTURE BUILDER</Title> },
+			// 본문 — 2열, 행 아래쪽. 타이틀과 같은 행이지만 세로 정렬이 달라 겹치지 않는다.
+			{
+				col: 2,
+				row: 2,
+				node: (
+					<div className="flex h-full flex-col justify-end">
+						<Caption>WE BRING THE FUTURE CLOSER TO HUMANITY</Caption>
+					</div>
+				),
+			},
+			// CI 국문 가로형(a와 동일) — 우하단 정렬, 기존 크기의 1/2.
 			{
 				col: 3,
 				row: 2,
 				node: (
-					<div className="flex h-full flex-col justify-end gap-[2cqh]">
-						<Caption>WE BRING THE FUTURE CLOSER TO HUMANITY</Caption>
-						<div style={{ height: '5cqh' }}>
-							<Logo />
-						</div>
+					<div className="flex h-full flex-col items-end justify-end">
+						<Ci src={ciKoHorizontal} height="2.5cqh" />
 					</div>
 				),
 			},
@@ -241,14 +255,21 @@ function Guides({ marginPct }: { marginPct: number }) {
 
 // ── 샘플 콘텐츠 조각 ────────────────────────────────────────
 
-function Logo({ mono = false }: { mono?: boolean }) {
+/**
+ * CI 락업. 높이만 주고 폭은 원본 비율대로 두므로 가로형은 셀 밖으로 넘친다(overflow 허용).
+ * 🔴 CI는 마스터 아트워크 그대로 쓴다 — 비율·색을 CSS로 바꾸지 않는다(금지 6·7).
+ */
+function Ci({ src, height }: { src: StaticImageData; height: string }) {
 	return (
 		// biome-ignore lint/performance/noImgElement: 정적 SVG라 next/image 미사용.
 		<img
-			src={mono ? '/symbols/symbol-mono.svg' : '/symbols/symbol-default.svg'}
+			// 🔴 .src를 써야 한다 — svg import는 StaticImageData 객체이고 타입이 any라
+			//    객체를 그대로 넘겨도 typecheck를 통과한 뒤 런타임에 src="[object Object]"가 된다.
+			src={src.src}
 			alt=""
-			className="h-full w-auto"
-			style={mono ? { filter: 'brightness(0) invert(1)' } : undefined}
+			// max-w-none 필수 — preflight의 img{max-width:100%}가 넘치는 폭을 셀 폭으로 되돌린다.
+			className="block w-auto max-w-none"
+			style={{ height }}
 		/>
 	)
 }
@@ -267,20 +288,32 @@ function Img({ src, style }: { src: StaticImageData; style?: CSSProperties }) {
 	)
 }
 
-function Caption({ children }: { children: ReactNode }) {
+/** 위젯 텍스트는 전부 HD체 Bold. 서브셋에 소문자가 없어 대문자로 조판한다. */
+const HD_BOLD: CSSProperties = { fontFamily: 'HD, sans-serif', fontWeight: 700 }
+
+/** overflow면 줄바꿈 없이 셀 밖으로 넘긴다. */
+function Caption({ children, overflow }: { children: ReactNode; overflow?: boolean }) {
 	return (
 		<p
-			className="font-body font-semibold uppercase leading-tight"
-			style={{ fontSize: '2.6cqw' }}
+			className="uppercase leading-tight"
+			style={{ ...HD_BOLD, fontSize: '2.6cqw', whiteSpace: overflow ? 'nowrap' : undefined }}
 		>
 			{children}
 		</p>
 	)
 }
 
-function Title({ children }: { children: ReactNode }) {
+/** fill이면 놓인 영역 폭을 채우고 한 줄로 조판한다. */
+function Title({ children, fill }: { children: ReactNode; fill?: boolean }) {
 	return (
-		<p className="font-body font-bold uppercase leading-none" style={{ fontSize: '7cqw' }}>
+		<p
+			className="uppercase leading-none"
+			style={{
+				...HD_BOLD,
+				fontSize: '7cqw',
+				...(fill ? { width: '100%', whiteSpace: 'nowrap' } : null),
+			}}
+		>
 			{children}
 		</p>
 	)
