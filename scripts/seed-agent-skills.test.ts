@@ -29,7 +29,7 @@ describe('seed agent skills', () => {
 		vi.spyOn(console, 'log').mockImplementation(() => {})
 		vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never)
 
-		await import('../../../../scripts/seed-agent-skills')
+		await import('./seed-agent-skills')
 
 		expect(mocks.find).toHaveBeenLastCalledWith({
 			collection: 'agent-skills',

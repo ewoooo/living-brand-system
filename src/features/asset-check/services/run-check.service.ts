@@ -3,7 +3,7 @@ import {
 	toDeterministicCheckResult,
 } from '@/features/asset-check/checkers/check-result.adapter'
 import { opaquePixels } from '@/features/asset-check/checkers/color-metrics'
-import { getChecker, runDeterministicChecker } from '@/features/asset-check/checkers/registry'
+import { getChecker } from '@/features/asset-check/checkers/registry'
 import type {
 	AiCheckResult,
 	AiUsage,
@@ -194,17 +194,14 @@ function runCheckByExecutor(check: RuntimeCheck, ctx: CheckerContext): CheckResu
 		}
 		return toCheckResult(rawResult, check, { key: 'manual', type: 'manual' })
 	}
-	const evaluation = check.checkerKey
-		? runDeterministicChecker(check.checkerKey, check.options, ctx)
-		: null
-	if (evaluation && check.checkerKey) {
-		return toDeterministicCheckResult(evaluation, check, check.checkerKey)
-	}
 	const checker = check.checkerKey ? getChecker(check.checkerKey, check.options) : null
-	if (!checker) return null
-	const result = checker(ctx)
+	if (!checker || !check.checkerKey) return null
+	if (checker.executor === 'deterministic') {
+		return toDeterministicCheckResult(checker.run(ctx, check.options), check, check.checkerKey)
+	}
+	const result = checker.run(ctx)
 	return result
-		? toCheckResult(result, check, { key: check.checkerKey ?? check.key, type: 'algorithm' })
+		? toCheckResult(result, check, { key: check.checkerKey, type: 'algorithm' })
 		: null
 }
 function imageInputFrom(buffer: Buffer): CheckerContext['image'] {

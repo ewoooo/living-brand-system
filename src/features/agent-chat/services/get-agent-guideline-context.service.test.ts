@@ -1,78 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-	findAgentCheckDocuments,
 	findAgentGuidelineDocument,
 	findGuidelineSearchPhraseCandidates,
 	findGuidelineSearchTermCandidates,
 	listGuidelineDocuments,
 } from '../repositories/agent-guideline-context.payload.repository'
 import {
-	listAgentChecks,
 	listAgentGuidelineDocuments,
 	readAgentGuidelineDocument,
 	searchAgentGuidelines,
 } from './get-agent-guideline-context.service'
 
 vi.mock('../repositories/agent-guideline-context.payload.repository', () => ({
-	findAgentCheckDocuments: vi.fn(),
 	findAgentGuidelineDocument: vi.fn(),
 	findGuidelineSearchPhraseCandidates: vi.fn(),
 	findGuidelineSearchTermCandidates: vi.fn(),
 	listGuidelineDocuments: vi.fn(),
 }))
-
-const lexical = (text: string) =>
-	({ root: { children: [{ type: 'paragraph', children: [{ text }] }] } }) as never
-
-describe('listAgentChecks', () => {
-	beforeEach(() => vi.clearAllMocks())
-
-	it('구조화 evidence를 평문화하고 Check key 순서로 조립한다', async () => {
-		vi.mocked(findAgentCheckDocuments).mockResolvedValue([
-			{
-				id: 7,
-				description: lexical('Use the legal name.'),
-				headerImage: null,
-				blocks: [],
-				rules: [
-					{
-						key: 'name.input',
-						title: 'Name input',
-						tier: 'required',
-					},
-				],
-			},
-			{
-				id: 8,
-				description: lexical('Follow the color palette.'),
-				headerImage: null,
-				blocks: [],
-				rules: [
-					{
-						key: 'color.palette',
-						title: 'Color palette',
-						tier: 'recommended',
-					},
-				],
-			},
-		] as never)
-
-		await expect(listAgentChecks({ id: 1 })).resolves.toEqual([
-			{
-				evidence: 'Follow the color palette.',
-				key: 'color.palette',
-				tier: 'recommended',
-				title: 'Color palette',
-			},
-			{
-				evidence: 'Use the legal name.',
-				key: 'name.input',
-				tier: 'required',
-				title: 'Name input',
-			},
-		])
-	})
-})
 
 describe('searchAgentGuidelines', () => {
 	beforeEach(() => vi.clearAllMocks())

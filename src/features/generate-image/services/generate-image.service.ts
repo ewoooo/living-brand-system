@@ -21,11 +21,11 @@ import {
 import { generateBrandImages } from '@/features/generate-image/repositories/image-generation.ai.repository'
 import { findPublishedImageProfile } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import {
-	ImagePromptNormalizationUnavailableError,
+	ImageGenerationUnavailableError,
 	normalizeImageProfilePrompt,
 } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
 
-export { ImagePromptNormalizationUnavailableError }
+export { ImageGenerationUnavailableError }
 
 /** generateImage 도구/route가 챗에 붙이는 생성 결과 첨부 계약 (이중 정의 금지). */
 export interface AgentGeneratedImagesAttachment {
@@ -35,14 +35,6 @@ export interface AgentGeneratedImagesAttachment {
 	profileId?: number
 	profileName?: string
 	images: string[]
-}
-
-/** Provider 미설정을 route/agent 표면이 일반 생성 실패와 구분하기 위한 서비스 오류. */
-export class ImageGenerationUnavailableError extends Error {
-	constructor() {
-		super('Image generation provider is not configured.')
-		this.name = 'ImageGenerationUnavailableError'
-	}
 }
 
 export class ImageProfileNotFoundError extends Error {
@@ -222,22 +214,14 @@ async function runImageGeneration({
 	if (!supportsImageOutputSize(modelPreset, imageSize)) {
 		throw new Error(`${modelPreset} does not support ${imageSize} output.`)
 	}
+	const apiKey =
+		modelPreset === 'google-nano-banana-2-lite' ? env.GEMINI_API_KEY : env.OPENAI_API_KEY
 	let generation: {
 		images: string[]
 		model: string
 		provider: 'google' | 'openai' | 'pollinations'
 	}
-	if (modelPreset === 'google-nano-banana-2-lite') {
-		if (!env.GEMINI_API_KEY) throw new ImageGenerationUnavailableError()
-		generation = await generateBrandImages({
-			prompt,
-			count,
-			modelPreset,
-			aspectRatio,
-			imageSize,
-			...(seedImage ? { seedImage } : {}),
-		})
-	} else if (modelPreset === 'openai-gpt-image-2' && env.OPENAI_API_KEY) {
+	if (apiKey) {
 		generation = await generateBrandImages({
 			prompt,
 			count,

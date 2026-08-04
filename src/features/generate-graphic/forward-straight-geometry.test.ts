@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { forwardStraightToolContract } from './forward-straight'
-import { createForwardStraightScene } from './forward-straight-geometry'
+import { createForwardStraightScene, createForwardStraightSvg } from './forward-straight-geometry'
 
 describe('createForwardStraightScene', () => {
 	it('builds a flat grid and applies perspective depth without p5', () => {
@@ -35,5 +35,24 @@ describe('createForwardStraightScene', () => {
 
 		expect(perspectiveLength).toBeLessThan(flatLength)
 		expect(perspective.dashes[0].weight).not.toBe(1)
+	})
+})
+
+describe('createForwardStraightSvg', () => {
+	it('serializes the shared geometry as SVG', () => {
+		const svg = createForwardStraightSvg(
+			createForwardStraightScene(forwardStraightToolContract.defaultInput, {
+				width: 100,
+				height: 100,
+			}),
+		)
+
+		expect(svg).toContain('width="100" height="100" viewBox="0 0 100 100"')
+		expect(svg).toContain('<rect width="100" height="100" fill="#030402" />')
+		expect(svg.match(/<line /g)).toHaveLength(4)
+		expect(svg).toContain(
+			'<line x1="40.61" y1="40.61" x2="19.39" y2="19.39" stroke="#ffffff" stroke-width="1.00" stroke-linecap="square" />',
+		)
+		expect(svg).toContain('<circle cx="50.00" cy="50.00" r="2.50" fill="#ff2a2a" />')
 	})
 })

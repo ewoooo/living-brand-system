@@ -1,5 +1,5 @@
 import type { PayloadRequest } from 'payload'
-import { publishImportedApplicationImages } from '@/features/application-image/services/manage-imported-application-images.service'
+import { publishDraftImportedApplicationImages } from '@/features/application-image/repositories/imported-application-image.payload.repository'
 import { findPrintOutputBlocker } from '@/features/template-export/print-policy'
 import {
 	inspectBaseTemplateHtml,
@@ -50,7 +50,7 @@ export async function prepareTemplateSave({
 	const renderedRefs =
 		typeof candidate.html === 'string' ? inspectDraftTemplateAssetRefs(candidate.html).refs : []
 
-	await publishImportedApplicationImages(
+	await publishDraftImportedApplicationImages(
 		req,
 		importedRefs
 			.filter(

@@ -1,6 +1,6 @@
+import type { RuleExecutor } from '@/features/quality-rule/rule-executor'
 import type {
 	AlgorithmCheckResult,
-	CheckExecutor,
 	CheckResult,
 	CheckResultChecker,
 	CheckStatus,
@@ -11,7 +11,7 @@ import type {
 interface CheckResultRuleInput {
 	key: string
 	title: string
-	executor: CheckExecutor
+	executor: RuleExecutor
 	messages?: Partial<Record<CheckStatus, string>>
 }
 

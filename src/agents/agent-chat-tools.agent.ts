@@ -1,13 +1,8 @@
+import config from '@payload-config'
 import { type ToolSet, tool } from 'ai'
+import { getPayload, type PayloadRequest } from 'payload'
 import { z } from 'zod'
-import { env } from '@/env'
-import {
-	type AgentQueryTriageState,
-	agentQueryTriageSchema,
-	agentSkillSelectionSchema,
-	decideAgentQueryRouting,
-	isAgentQueryTriageVerification,
-} from '@/features/agent-chat/domain/agent-query-triage'
+import { agentSkillSelectionSchema } from '@/features/agent-chat/domain/agent-skill-tool-policy'
 import {
 	type AgentSkillDetail,
 	findEnabledAgentSkillByName,
@@ -18,27 +13,26 @@ import {
 	templateSlotValueSchema,
 } from '@/features/agent-chat/services/agent-template-request.service'
 import {
-	listAgentChecks,
 	listAgentGuidelineDocuments,
 	readAgentGuidelineDocument,
 	searchAgentGuidelines,
 } from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
+import { listPublishedImageProfiles } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import {
 	type AgentGeneratedImagesAttachment,
 	generateImages,
 } from '@/features/generate-image/services/generate-image.service'
-import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
+import { listPublishedMcpGuidelineChecks } from '@/features/guideline/repositories/mcp-guideline.payload.repository'
 import { type CheckScenario, getCheckScenario } from '@/features/quality-rule/check-scenario'
-import { getCheckScenarios } from '@/features/quality-rule/services/get-check-scenarios.service'
+import { findPublishedCheckScenarios } from '@/features/quality-rule/repositories/check-scenario.payload.repository'
 import { AgentConfigurationError } from '@/lib/errors'
 import type { User } from '@/payload-types'
 import { startCheckSession } from '@/services/start-check-session.service'
 
 const guidelineToolContextSchema = z.object({
 	agentChatSessionId: z.number().int().positive().optional(),
-	triageState: z.custom<AgentQueryTriageState>(),
 	user: z.unknown(),
 })
 
@@ -47,35 +41,24 @@ const guidelineToolContextSchema = z.object({
  * 실제 skill/guideline I/O는 tool 실행 시 주입되는 user context로 수행한다.
  */
 export function getAgentTools() {
-	const triageEnabled = env.AGENT_CHAT_TRIAGE_ENABLED === 'true'
-
 	return {
 		loadSkill: tool({
-			description: triageEnabled
-				? 'Classify the request and load the full instructions for one enabled agent skill.'
-				: 'Load the full instructions for one enabled agent skill.',
-			inputSchema: triageEnabled ? agentQueryTriageSchema : agentSkillSelectionSchema,
+			description: 'Load the full instructions for one enabled agent skill.',
+			inputSchema: agentSkillSelectionSchema,
 			contextSchema: guidelineToolContextSchema,
 			execute: async (proposal, { context }) => {
-				const decision = decideAgentQueryRouting(
-					proposal,
-					triageEnabled,
-					context.triageState.firstProposal,
-				)
-				if (isAgentQueryTriageVerification(decision)) {
-					context.triageState.firstProposal = agentQueryTriageSchema.parse(proposal)
-					return decision
-				}
-
 				const skill = await findEnabledAgentSkillByName(context.user, proposal.name)
 
 				if (!skill) {
 					throw new AgentConfigurationError('Agent skill is not configured.')
 				}
 
+				// 출력은 모델 컨텍스트에 그대로 들어간다 — 기존 응답 필드를 유지한다.
 				return {
 					...formatLoadedSkill(skill),
-					...decision,
+					name: proposal.name,
+					model: 'sonnet-5',
+					toolScope: 'action',
 				}
 			},
 		}),
@@ -110,7 +93,23 @@ export function getAgentTools() {
 			description: 'Get checks declared by published brand guideline documents.',
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
-			execute: (_input, { context }) => listAgentChecks(context.user),
+			// guideline MCP check 조회를 재사용하고, Agent에는 source를 뺀 DTO를 key 순으로 준다.
+			execute: async (_input, { context }) => {
+				const payload = await getPayload({ config })
+				const checks = await listPublishedMcpGuidelineChecks(
+					{ payload, user: context.user } as PayloadRequest,
+					'ko',
+				)
+
+				return checks
+					.map(({ evidence, key, tier, title }) => ({
+						evidence,
+						key,
+						tier: tier ?? null,
+						title,
+					}))
+					.sort((a, b) => a.key.localeCompare(b.key))
+			},
 		}),
 		listCheckScenarios: tool({
 			description:
@@ -118,7 +117,7 @@ export function getAgentTools() {
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
 			execute: async (_input, { context }) =>
-				(await getCheckScenarios(context.user as User)).map(({ key, title }) => ({
+				(await findPublishedCheckScenarios(context.user as User)).map(({ key, title }) => ({
 					key,
 					title,
 				})),
@@ -157,7 +156,7 @@ export function getAgentTools() {
 				'List published image profiles available to the current user. Call before generateImage for a branded product image.',
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
-			execute: (_input, { context }) => listAvailableImageProfiles(context.user),
+			execute: (_input, { context }) => listPublishedImageProfiles(context.user),
 		}),
 		generateImage: tool({
 			description:
@@ -204,7 +203,7 @@ export function getAgentTools() {
 			}),
 			contextSchema: guidelineToolContextSchema,
 			execute: async ({ scenarioKey }, { context, messages }) => {
-				const scenarios = await getCheckScenarios(context.user as User)
+				const scenarios = await findPublishedCheckScenarios(context.user as User)
 				const scenario = getCheckScenario(scenarios, scenarioKey)
 				const image = findLatestImage(messages)
 

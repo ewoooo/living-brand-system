@@ -139,7 +139,7 @@ export async function withSafeExportStage<T>(
 }
 
 /** export stage의 img·inline CSS 이미지·폰트가 준비될 때까지 기다린다. */
-export async function waitForExportStageAssets(stage: HTMLElement): Promise<void> {
+async function waitForExportStageAssets(stage: HTMLElement): Promise<void> {
 	const ownerDocument = stage.ownerDocument
 	const ownerWindow = ownerDocument.defaultView ?? window
 	await new Promise((resolve) => ownerWindow.requestAnimationFrame(resolve))

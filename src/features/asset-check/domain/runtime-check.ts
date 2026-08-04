@@ -1,12 +1,9 @@
-import type {
-	CheckExecutor,
-	CheckStatus,
-	HeuristicCriterion,
-} from '@/features/asset-check/checkers/types'
+import type { CheckStatus, HeuristicCriterion } from '@/features/asset-check/checkers/types'
 import type {
 	CheckEvidence,
 	CheckReferenceAssetRole,
 } from '@/features/guideline/checks/check-source'
+import type { RuleExecutor } from '@/features/quality-rule/rule-executor'
 
 export interface CheckReferenceAsset {
 	name: string
@@ -17,7 +14,7 @@ export interface CheckReferenceAsset {
 
 export interface CheckerSummary {
 	key: string
-	type: CheckExecutor
+	type: RuleExecutor
 	implementationKey?: string
 }
 
@@ -31,7 +28,7 @@ export interface RuntimeCheck {
 	/** 화면에 표시할 Checker 계약이다. */
 	checker: CheckerSummary
 	/** 아래 필드는 기존 CheckSession snapshot과 런타임 실행 계약이다. */
-	executor: CheckExecutor
+	executor: RuleExecutor
 	checkerKey?: string
 	model?: string
 	prompt?: string

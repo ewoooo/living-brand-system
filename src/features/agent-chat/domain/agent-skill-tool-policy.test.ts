@@ -1,47 +1,52 @@
 import { describe, expect, it } from 'vitest'
-import { decideAgentQueryTriage } from './agent-query-triage'
-import { getAgentExecutionPolicy, getAllowedAgentTools } from './agent-skill-tool-policy'
+import {
+	agentSkillSelectionSchema,
+	getAgentExecutionPolicy,
+	readSkillName,
+} from './agent-skill-tool-policy'
 
 describe('agent skill tool policy', () => {
-	it('none 범위와 등록되지 않은 skill에는 도구를 허용하지 않는다', () => {
-		expect(
-			getAgentExecutionPolicy({
-				name: 'generate-image',
-				model: 'haiku-4.5',
-				toolScope: 'none',
-			}),
-		).toEqual({
+	it('등록된 skill에는 해당 skill의 도구 전체를 허용한다', () => {
+		expect(getAgentExecutionPolicy({ name: 'generate-image' })).toEqual({
+			activeTools: ['listImageProfiles', 'generateImage'],
+			modelId: 'claude-sonnet-5',
+		})
+		expect(getAgentExecutionPolicy({ name: 'answer-guideline' }).activeTools).toEqual([
+			'listGuidelineDocuments',
+			'searchGuidelines',
+			'readGuidelineDocument',
+			'getCheckCatalog',
+		])
+	})
+
+	it('등록되지 않은 skill에는 도구를 허용하지 않는다', () => {
+		expect(getAgentExecutionPolicy({ name: 'unknown-skill' })).toEqual({
 			activeTools: [],
-			modelId: 'claude-haiku-4-5',
+			modelId: 'claude-sonnet-5',
 		})
-		expect(getAllowedAgentTools('unknown-skill', 'action')).toEqual([])
 	})
+})
 
-	it('read 범위에서는 skill의 조회 도구만 허용한다', () => {
-		expect(getAllowedAgentTools('create-from-template', 'read')).toEqual([
-			'findTemplatesForRequest',
-		])
-	})
-
-	it('action 범위에서는 skill의 조회와 실행 도구를 허용한다', () => {
-		expect(getAllowedAgentTools('generate-image', 'action')).toEqual([
-			'listImageProfiles',
-			'generateImage',
-		])
-	})
-
-	it('고위험 action 요청은 실행 도구를 허용하지 않는다', () => {
-		const decision = decideAgentQueryTriage({
-			name: 'create-from-template',
-			responseLevel: 'standard',
-			taskType: 'action',
-			risk: 'high',
-			confidence: 90,
+describe('agentSkillSelectionSchema', () => {
+	it('skill 이름만 허용하고 추가 필드는 거부한다', () => {
+		expect(agentSkillSelectionSchema.parse({ name: ' generate-image ' })).toEqual({
+			name: 'generate-image',
 		})
+		expect(agentSkillSelectionSchema.safeParse({ name: '' }).success).toBe(false)
+		expect(
+			agentSkillSelectionSchema.safeParse({ name: 'generate-image', extra: true }).success,
+		).toBe(false)
+	})
+})
 
-		expect(getAgentExecutionPolicy(decision)).toEqual({
-			activeTools: ['findTemplatesForRequest'],
-			modelId: 'claude-opus-5',
-		})
+describe('readSkillName', () => {
+	it('문자열 name이 있는 객체에서만 이름을 읽는다', () => {
+		expect(readSkillName({ name: 'generate-image', description: '설명' })).toBe(
+			'generate-image',
+		)
+		expect(readSkillName({ name: 7 })).toBeNull()
+		expect(readSkillName({})).toBeNull()
+		expect(readSkillName(null)).toBeNull()
+		expect(readSkillName('generate-image')).toBeNull()
 	})
 })

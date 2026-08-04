@@ -4,11 +4,10 @@ import { RelationshipField, useForm, useFormFields } from '@payloadcms/ui'
 import type { RelationshipFieldClientComponent } from 'payload'
 import { useEffect } from 'react'
 import { relationshipId } from '@/features/guideline/utils/block-text'
+import type { RuleExecutor } from '@/features/quality-rule/rule-executor'
 import { siblingPath } from './sibling-path'
 
-type CheckExecutor = 'deterministic' | 'heuristic' | 'manual'
-
-const isCheckExecutor = (value: unknown): value is CheckExecutor =>
+const isCheckExecutor = (value: unknown): value is RuleExecutor =>
 	value === 'deterministic' || value === 'heuristic' || value === 'manual'
 
 const CheckCheckerField: RelationshipFieldClientComponent = (props) => {
