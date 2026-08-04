@@ -44,6 +44,64 @@ describe('template HTML inspection', () => {
 		).toBeUndefined()
 	})
 
+	// 변환기(emit)의 출력 어휘와 저장 허용 목록의 드리프트를 잡는 대조 테스트 —
+	// 새 lowering(배경 fill·다중 배경 레이어·회전 transform 합성)이 저장 검증을 통과해야 한다.
+	it('lowering이 만드는 새 CSS 출력도 저장 검증을 통과한다', () => {
+		const converted = convertFigmaNodeToHtml(
+			{
+				id: '1:1',
+				name: 'hero',
+				type: 'FRAME',
+				fills: [{ type: 'IMAGE', imageRef: 'ref-1', scaleMode: 'FILL' }],
+				absoluteBoundingBox: { x: 0, y: 0, width: 800, height: 600 },
+				children: [
+					{
+						id: '1:2',
+						name: 'overlay',
+						type: 'RECTANGLE',
+						fills: [
+							{ type: 'SOLID', color: { r: 0, g: 0, b: 0, a: 0.4 } },
+							{
+								type: 'GRADIENT_LINEAR',
+								gradientHandlePositions: [
+									{ x: 0, y: 0 },
+									{ x: 0, y: 1 },
+								],
+								gradientStops: [
+									{ color: { r: 0, g: 0, b: 0, a: 0.5 }, position: 0 },
+									{ color: { r: 0, g: 0, b: 0, a: 0 }, position: 1 },
+								],
+							},
+						],
+						rotation: 10,
+						constraints: { horizontal: 'CENTER', vertical: 'CENTER' },
+						absoluteBoundingBox: { x: 100, y: 100, width: 200, height: 100 },
+						size: { x: 180, y: 80 },
+					},
+				],
+			} as never,
+			{},
+			{
+				'ref-1': {
+					collection: 'application-images',
+					id: 31,
+					url: '/api/application-images/file/hero-fill.png',
+				},
+			},
+		)
+
+		expect(converted.html).toContain('background-image:url(')
+		expect(converted.html).toContain('transform:')
+		expect(
+			inspectDraftTemplateHtml({
+				baseHtml: converted.html,
+				html: converted.html,
+				overrideNodeIds: [],
+				refsByNode: new Map(),
+			}).blocker,
+		).toBeUndefined()
+	})
+
 	it('공개 HTML의 staging URL을 거부한다', () => {
 		const html = '<img data-node-id="logo" src="/api/template-assets/file/imported.svg">'
 		const result = inspectTemplateHtml({
