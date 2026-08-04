@@ -1106,6 +1106,10 @@ export interface IncorrectUsageWidget {
  * via the `definition` "LayoutGridWidget".
  */
 export interface LayoutGridWidget {
+  /**
+   * 코드에 정의된 샘플 디자인 중 하나입니다.
+   */
+  sample?: ('a' | 'b' | 'c') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'layoutGridWidget';
@@ -2909,6 +2913,7 @@ export interface IncorrectUsageWidgetSelect<T extends boolean = true> {
  * via the `definition` "LayoutGridWidget_select".
  */
 export interface LayoutGridWidgetSelect<T extends boolean = true> {
+  sample?: T;
   id?: T;
   blockName?: T;
 }

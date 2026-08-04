@@ -19,6 +19,7 @@ import * as migration_20260731_024329_agent_response_levels from './20260731_024
 import * as migration_20260731_085028_add_ci_widget_blocks from './20260731_085028_add_ci_widget_blocks';
 import * as migration_20260731_094017_mcp_feature_tools from './20260731_094017_mcp_feature_tools';
 import * as migration_20260803_025030_do_dont_widget from './20260803_025030_do_dont_widget';
+import * as migration_20260804_051328_add_layout_grid_sample from './20260804_051328_add_layout_grid_sample';
 
 export const migrations = [
   {
@@ -124,6 +125,11 @@ export const migrations = [
   {
     up: migration_20260803_025030_do_dont_widget.up,
     down: migration_20260803_025030_do_dont_widget.down,
-    name: '20260803_025030_do_dont_widget'
+    name: '20260803_025030_do_dont_widget',
+  },
+  {
+    up: migration_20260804_051328_add_layout_grid_sample.up,
+    down: migration_20260804_051328_add_layout_grid_sample.down,
+    name: '20260804_051328_add_layout_grid_sample'
   },
 ];

@@ -81,7 +81,8 @@ function renderWidget(child: Child): ReactNode {
 			// legacy doDont 블록으로 대체됐지만 스키마에 남아 있어 렌더 경로를 유지한다.
 			return <IncorrectUsageWidget />
 		case 'layoutGridWidget':
-			return <LayoutGridWidget />
+			// 샘플 디자인은 코드에 있고 인스턴스는 그중 하나를 고른다.
+			return <LayoutGridWidget sample={child.sample} />
 		case 'layoutGridOverlayWidget':
 			return <LayoutGridOverlayWidget />
 		case 'logoColorVariantWidget':
