@@ -1,46 +1,15 @@
-import { agentQueryTriageDecisionSchema } from '@/features/agent-chat/domain/agent-query-triage'
-import type {
-	AgentChatAiUsage,
-	AgentChatSessionUsage,
-	AgentChatTriage,
-} from '@/features/agent-chat/types'
+import type { LanguageModelResponseMetadata, LanguageModelUsage, StepResult, ToolSet } from 'ai'
+import { readSkillName } from '@/features/agent-chat/domain/agent-skill-tool-policy'
+import type { AgentChatAiUsage, AgentChatSessionUsage } from '@/features/agent-chat/types'
 
-interface LanguageModelUsageLike {
-	inputTokenDetails: {
-		[key: string]: number | undefined
-		cacheReadTokens?: number
-		cacheWriteTokens?: number
-	}
-	inputTokens?: number
-	outputTokenDetails: {
-		[key: string]: number | undefined
-		reasoningTokens?: number
-	}
-	outputTokens?: number
-	raw?: unknown
-	totalTokens?: number
-}
-
-interface ToolCallLike {
-	toolName?: unknown
-}
-
-interface ToolResultLike {
-	output?: unknown
-	toolName?: unknown
-}
-
-export interface AgentChatSessionUsageStep {
-	model: { modelId: string }
-	response?: { modelId?: string }
-	toolCalls?: readonly unknown[]
-	toolResults?: readonly unknown[]
-	usage?: LanguageModelUsageLike
-}
+/** onStepEnd가 주는 AI SDK StepResult 중 사용량 수집에 쓰는 필드만 받는다. */
+export type AgentChatSessionUsageStep = Pick<
+	StepResult<ToolSet>,
+	'model' | 'toolCalls' | 'toolResults' | 'usage'
+> & { response?: Pick<LanguageModelResponseMetadata, 'modelId'> }
 
 export interface AgentChatSessionUsageSnapshot {
 	aiUsage?: AgentChatAiUsage
-	triage?: AgentChatTriage
 	usedSkills: AgentChatSessionUsage[]
 	usedTools: AgentChatSessionUsage[]
 }
@@ -52,60 +21,27 @@ export function createAgentChatSessionUsageCollector() {
 	const models = new Set<string>()
 	const usage = createEmptyUsage()
 	const rawUsages: unknown[] = []
-	const triageModels = new Set<string>()
-	const triageUsage = createEmptyUsage()
-	let triage: AgentChatTriage | undefined
 
 	return {
 		addStep(step: AgentChatSessionUsageStep) {
-			const model = step.response?.modelId ?? step.model?.modelId
+			const model = step.response?.modelId ?? step.model.modelId
 			if (model) models.add(model)
-			if (step.usage) addUsage(usage, step.usage)
-			if (step.usage?.raw) {
+			addUsage(usage, step.usage)
+			if (step.usage.raw) {
 				rawUsages.push({
 					...(model ? { model } : {}),
 					usage: step.usage.raw,
 				})
 			}
-			const loadSkillResults = (step.toolResults ?? [])
-				.map((toolResult) => toolResult as ToolResultLike)
-				.filter((result) => result.toolName === 'loadSkill')
-			if (loadSkillResults.length > 0) {
-				if (model) triageModels.add(model)
-				if (step.usage) addUsage(triageUsage, step.usage)
-			}
 
-			for (const result of loadSkillResults) {
+			for (const result of step.toolResults) {
+				if (result.toolName !== 'loadSkill') continue
 				const skillName = readSkillName(result.output)
 				if (skillName) increment(skillCounts, skillName)
-				if (triage) continue
-				const decision = agentQueryTriageDecisionSchema.safeParse(result.output)
-				if (!decision.success) continue
-
-				triage = {
-					skillName: decision.data.name,
-					responseLevel: decision.data.responseLevel,
-					taskType: decision.data.taskType,
-					risk: decision.data.risk,
-					confidence: decision.data.confidence,
-					executionModel: decision.data.model,
-					toolScope: decision.data.toolScope,
-					reviewRequired: decision.data.reviewRequired,
-					clarificationRequired: decision.data.clarificationRequired,
-					classifierModel: [...triageModels].join(', '),
-					inputTokens: triageUsage.inputTokens,
-					outputTokens: triageUsage.outputTokens,
-					totalTokens: triageUsage.totalTokens,
-					cacheReadInputTokens: triageUsage.cacheReadInputTokens,
-					cacheWriteInputTokens: triageUsage.cacheWriteInputTokens,
-					reasoningTokens: triageUsage.reasoningTokens,
-				}
 			}
 
-			for (const toolCall of step.toolCalls ?? []) {
-				const call = toolCall as ToolCallLike
-				if (typeof call.toolName !== 'string') continue
-				increment(toolCounts, call.toolName)
+			for (const toolCall of step.toolCalls) {
+				increment(toolCounts, toolCall.toolName)
 			}
 		},
 		snapshot(): AgentChatSessionUsageSnapshot {
@@ -118,7 +54,6 @@ export function createAgentChatSessionUsageCollector() {
 
 			return {
 				aiUsage,
-				triage,
 				usedTools: toUsage(toolCounts),
 				usedSkills: toUsage(skillCounts),
 			}
@@ -134,12 +69,6 @@ function toUsage(counts: Map<string, number>) {
 	return [...counts.entries()].map(([name, callCount]) => ({ name, callCount }))
 }
 
-function readSkillName(input: unknown) {
-	if (!input || typeof input !== 'object' || !('name' in input)) return null
-	const name = (input as { name?: unknown }).name
-	return typeof name === 'string' ? name : null
-}
-
 function createEmptyUsage(): Required<Omit<AgentChatAiUsage, 'model' | 'rawUsage'>> {
 	return {
 		callCount: 0,
@@ -152,7 +81,7 @@ function createEmptyUsage(): Required<Omit<AgentChatAiUsage, 'model' | 'rawUsage
 	}
 }
 
-function addUsage(target: ReturnType<typeof createEmptyUsage>, usage: LanguageModelUsageLike) {
+function addUsage(target: ReturnType<typeof createEmptyUsage>, usage: LanguageModelUsage) {
 	target.callCount += 1
 	target.inputTokens += usage.inputTokens ?? 0
 	target.outputTokens += usage.outputTokens ?? 0
