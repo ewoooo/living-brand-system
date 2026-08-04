@@ -1108,7 +1108,7 @@ export interface IncorrectUsageWidget {
  */
 export interface LayoutGridWidget {
   /**
-   * 코드에 정의된 샘플 디자인 중 하나입니다.
+   * 코드에 정의된 조합 중 하나입니다.
    */
   sample?: ('a' | 'b' | 'c') | null;
   id?: string | null;
