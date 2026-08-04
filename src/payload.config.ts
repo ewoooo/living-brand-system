@@ -231,13 +231,15 @@ export default buildConfig({
 		} as never),
 		searchPlugin({
 			collections: ['guideline-documents'],
-			beforeSync: async ({ originalDoc, payload, searchDoc }) => {
+			// beforeSync는 문서 저장 트랜잭션 안에서 돈다 — req를 넘겨 같은 트랜잭션으로 조회해야 한다.
+			// 넘기지 않으면 풀에서 커넥션을 하나 더 요구해 저장이 자기를 기다리는 교착이 생긴다.
+			beforeSync: async ({ originalDoc, payload, req, searchDoc }) => {
 				const document = originalDoc as GuidelineDocument
 				return {
 					...searchDoc,
 					searchText: buildGuidelineSearchText(
 						document,
-						await listGuidelineSearchRules(payload, document),
+						await listGuidelineSearchRules(payload, document, req),
 					),
 				}
 			},
