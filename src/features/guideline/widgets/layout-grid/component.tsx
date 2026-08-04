@@ -1,7 +1,7 @@
 'use client'
 
 import type { StaticImageData } from 'next/image'
-import type { CSSProperties, ReactNode } from 'react'
+import { type CSSProperties, type ReactNode, useEffect, useState } from 'react'
 import ciHdHorizontalWhite from './images/ci-hd-horizontal-white.svg'
 import ciKoHorizontal from './images/ci-ko-horizontal.svg'
 import sampleA1 from './images/sample-a1.webp'
@@ -33,9 +33,11 @@ export type LayoutGridSample = 'a' | 'b' | 'c'
  * (예: col [2,3] = 2번 칸 왼변부터 3번 칸 오른변까지).
  * bleed에 준 변은 셀 경계 대신 **문서(대지) 끝**까지 뻗는다 — 마진이 그리드 트랙이라
  * 수치 계산 없이 선으로 지정된다. 예: 하단 풀블리드 = bleed ['left','right','bottom'].
- * flush면 거터를 무시하고 지정 영역을 여백 없이 채운다(사진은 구분선에 딱 붙는다).
+ * 🔴 bleed한 변만 여백이 0이다. 표 내부 구분선에 닿는 변은 문서 끝까지 뻗는 이미지라도 거터를 받는다
+ *    — 그리드 선에만 정렬되는 게 아니라 거터 슬라이더에 같이 반응해야 한다.
+ * behind면 이미지 레이어(z-index 0)로 내려가 텍스트·CI 아래에 깔린다.
  */
-type Item = { col: Span; row: Span; bleed?: Side[]; flush?: boolean; node: ReactNode }
+type Item = { col: Span; row: Span; bleed?: Side[]; behind?: boolean; node: ReactNode }
 type Span = number | [number, number]
 type Side = 'top' | 'right' | 'bottom' | 'left'
 type Sample = { background: string; color: string; items: Item[] }
@@ -53,20 +55,20 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 		background: '#ffffff',
 		color: '#1a1a1a',
 		items: [
-			// CI 국문 가로형 — 셀 높이의 1/3, 셀 밖으로 넘치게 둔다.
-			{ col: 1, row: 1, node: <Ci src={ciKoHorizontal} height="33.333%" /> },
+			// CI 국문 가로형 — 셀 높이의 20%, 셀 밖으로 넘치게 둔다.
+			{ col: 1, row: 1, node: <Ci src={ciKoHorizontal} height="20%" /> },
 			// 녹색 그라디언트 — 3A 열 × 1A 행 셀을 채운다.
-			{ col: 3, row: 1, node: <Img src={sampleA1} /> },
+			{ col: 3, row: 1, behind: true, node: <Img src={sampleA1} /> },
 			// 캡션도 셀 밖으로 넘치게 둔다(1A 열이 좁아 줄바꿈되는 것을 막는다).
 			{ col: 1, row: 2, node: <Caption overflow>FUTURE CLOSER TO HUMANITY</Caption> },
 			// 선박 선수 — 2번 칸 왼변부터 3번 칸 오른변까지.
-			{ col: [2, 3], row: 2, node: <Img src={sampleA2} /> },
+			{ col: [2, 3], row: 2, behind: true, node: <Img src={sampleA2} /> },
 			// 탱커 — 위는 1/2 구분선, 나머지 세 변은 문서 끝.
 			{
 				col: 1,
 				row: 3,
 				bleed: ['left', 'right', 'bottom'],
-				flush: true,
+				behind: true,
 				node: <Img src={sampleA3} />,
 			},
 		],
@@ -80,11 +82,11 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 				col: 1,
 				row: 1,
 				bleed: ['top', 'right', 'bottom', 'left'],
-				flush: true,
+				behind: true,
 				node: <Img src={sampleB1} />,
 			},
-			// CI HD형 가로형(WHITE 워드마크 — 어두운 배경 규정) — 셀 높이의 1/3, 넘침 허용.
-			{ col: 1, row: 1, node: <Ci src={ciHdHorizontalWhite} height="33.333%" /> },
+			// CI HD형 가로형(WHITE 워드마크 — 어두운 배경 규정) — 셀 높이의 20%, 넘침 허용.
+			{ col: 1, row: 1, node: <Ci src={ciHdHorizontalWhite} height="20%" /> },
 			{
 				col: 2,
 				row: 2,
@@ -106,19 +108,23 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 				col: 1,
 				row: 1,
 				bleed: ['top', 'left', 'right'],
-				flush: true,
+				behind: true,
 				node: <Img src={sampleC1} />,
 			},
 			{ col: 1, row: 2, node: <Title>2026</Title> },
 			// 타이틀 — 1/2열 구분선(선 3)부터 3열 오른변(선 5)까지 채운다.
-			{ col: [2, 3], row: 2, node: <Title fill>FUTURE BUILDER</Title> },
+			{ col: [2, 3], row: 2, node: <FillTitle>FUTURE BUILDER</FillTitle> },
 			// 본문 — 2열, 행 아래쪽. 타이틀과 같은 행이지만 세로 정렬이 달라 겹치지 않는다.
 			{
 				col: 2,
 				row: 2,
 				node: (
 					<div className="flex h-full flex-col justify-end">
-						<Caption>WE BRING THE FUTURE CLOSER TO HUMANITY</Caption>
+						<Caption>
+							{
+								'WE BRING THE FUTURE CLOSER TO\nHUMANITY BY STEERING INNOVATION\nAND DEFYING OUR LIMITS'
+							}
+						</Caption>
 					</div>
 				),
 			},
@@ -137,7 +143,7 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 				col: 1,
 				row: 3,
 				bleed: ['left', 'right', 'bottom'],
-				flush: true,
+				behind: true,
 				node: <Img src={sampleC2} />,
 			},
 		],
@@ -168,7 +174,13 @@ export function LayoutGridWidget({ sample }: { sample?: LayoutGridSample | null 
 					<div
 						// biome-ignore lint/suspicious/noArrayIndexKey: 정적 샘플 배열, 재정렬 없음.
 						key={index}
-						style={{ ...placement(item), ...cellPadding(item, gutterHalf) }}
+						// 텍스트·CI는 이미지 위에 온다(behind만 이미지 레이어).
+						style={{
+							...placement(item),
+							...cellPadding(item, gutterHalf),
+							position: 'relative',
+							zIndex: item.behind ? 0 : 1,
+						}}
 					>
 						{item.node}
 					</div>
@@ -211,10 +223,9 @@ function placement({ col, row, bleed = [] }: Item): CSSProperties {
 	}
 }
 
-/** 거터의 절반씩을 셀 내부 경계에 넣는다. 표 바깥쪽 변·bleed한 변·flush 요소는 거터가 없다. */
-function cellPadding({ col, row, bleed = [], flush }: Item, half: Offsets): CSSProperties {
+/** 거터의 절반씩을 셀 내부 경계에 넣는다. 표 바깥쪽 변과 문서 끝으로 bleed한 변만 거터가 없다. */
+function cellPadding({ col, row, bleed = [] }: Item, half: Offsets): CSSProperties {
 	const last = TRACKS.length
-	if (flush) return {}
 	return {
 		paddingLeft: spanStart(col) > 1 && !bleed.includes('left') ? `${half.x}cqmax` : 0,
 		paddingRight: spanEnd(col) < last && !bleed.includes('right') ? `${half.x}cqmax` : 0,
@@ -291,30 +302,75 @@ function Img({ src, style }: { src: StaticImageData; style?: CSSProperties }) {
 /** 위젯 텍스트는 전부 HD체 Bold. 서브셋에 소문자가 없어 대문자로 조판한다. */
 const HD_BOLD: CSSProperties = { fontFamily: 'HD, sans-serif', fontWeight: 700 }
 
-/** overflow면 줄바꿈 없이 셀 밖으로 넘긴다. */
+/** overflow면 줄바꿈 없이 셀 밖으로 넘긴다. 그 외에는 문자열의 개행을 그대로 지킨다. */
 function Caption({ children, overflow }: { children: ReactNode; overflow?: boolean }) {
 	return (
 		<p
 			className="uppercase leading-tight"
-			style={{ ...HD_BOLD, fontSize: '2.6cqw', whiteSpace: overflow ? 'nowrap' : undefined }}
+			style={{
+				...HD_BOLD,
+				fontSize: '1.3cqw',
+				whiteSpace: overflow ? 'nowrap' : 'pre-line',
+			}}
 		>
 			{children}
 		</p>
 	)
 }
 
-/** fill이면 놓인 영역 폭을 채우고 한 줄로 조판한다. */
-function Title({ children, fill }: { children: ReactNode; fill?: boolean }) {
+function Title({ children }: { children: ReactNode }) {
 	return (
-		<p
-			className="uppercase leading-none"
-			style={{
-				...HD_BOLD,
-				fontSize: '7cqw',
-				...(fill ? { width: '100%', whiteSpace: 'nowrap' } : null),
-			}}
-		>
+		<p className="uppercase leading-none" style={{ ...HD_BOLD, fontSize: '7cqw' }}>
 			{children}
 		</p>
+	)
+}
+
+/**
+ * 놓인 영역의 폭을 정확히 채우는 타이틀. 폰트 크기를 계산하지 않는다 —
+ * 문자열을 한 번 실측해 그 비율로 viewBox를 잡으면, 이후 스케일은 SVG가 폭 100%에 맞춰 처리한다.
+ * 실측은 문자열에만 의존하므로 컨테이너가 바뀌어도 다시 재지 않는다.
+ * 🔴 글자 모양·자간은 그대로 늘어난다(scaleX 왜곡 없음).
+ */
+function FillTitle({ children }: { children: string }) {
+	// em 1000 기준 cap height(HD체 실측 680)만큼만 높이로 잡아 대문자 상단이 0에 맞는다.
+	const CAP = 680
+	const [advance, setAdvance] = useState<number | null>(null)
+
+	useEffect(() => {
+		let alive = true
+		// 폰트가 로드된 뒤 재야 폴백 폰트 폭으로 잘못 잡히지 않는다.
+		document.fonts.ready.then(() => {
+			const ctx = document.createElement('canvas').getContext('2d')
+			if (!ctx || !alive) return
+			ctx.font = '700 1000px HD, sans-serif'
+			setAdvance(ctx.measureText(children).width)
+		})
+		return () => {
+			alive = false
+		}
+	}, [children])
+
+	// 실측 전에는 그리지 않는다 — 잘못된 크기로 한 프레임 튀는 것을 막는다.
+	if (advance == null) return null
+
+	return (
+		<svg
+			viewBox={`0 0 ${advance} ${CAP}`}
+			preserveAspectRatio="xMinYMin meet"
+			style={{ width: '100%', display: 'block' }}
+		>
+			<title>{children}</title>
+			<text
+				x={0}
+				y={CAP}
+				fontFamily="HD, sans-serif"
+				fontWeight={700}
+				fontSize={1000}
+				fill="currentColor"
+			>
+				{children}
+			</text>
+		</svg>
 	)
 }
