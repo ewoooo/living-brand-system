@@ -20,6 +20,21 @@ export const LayoutGridWidget: Block = {
 			options: SAMPLE_OPTIONS.map(({ value, label }) => ({ value, label })),
 			admin: { description: '코드에 정의된 조합 중 하나입니다.' },
 		},
+		{
+			name: 'guides',
+			type: 'select',
+			defaultValue: 'shared',
+			enumName: 'enum_lgw_guides',
+			options: [
+				{ label: '컨트롤 패널을 따름', value: 'shared' },
+				{ label: '항상 켜짐', value: 'on' },
+				{ label: '항상 꺼짐', value: 'off' },
+			],
+			admin: {
+				description:
+					'그리드 표시입니다. 같은 페이지의 판형끼리 다르게 두려면 켜짐·꺼짐으로 고정합니다.',
+			},
+		},
 	],
 }
 

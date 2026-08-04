@@ -22,6 +22,7 @@ import * as migration_20260803_025030_do_dont_widget from './20260803_025030_do_
 import * as migration_20260804_051328_add_layout_grid_sample from './20260804_051328_add_layout_grid_sample';
 import * as migration_20260804_053103_add_layout_grid_controls from './20260804_053103_add_layout_grid_controls';
 import * as migration_20260804_073352_add_layout_grid_controls_config from './20260804_073352_add_layout_grid_controls_config';
+import * as migration_20260804_080321_add_grid_labels_and_guides from './20260804_080321_add_grid_labels_and_guides';
 
 export const migrations = [
   {
@@ -142,6 +143,11 @@ export const migrations = [
   {
     up: migration_20260804_073352_add_layout_grid_controls_config.up,
     down: migration_20260804_073352_add_layout_grid_controls_config.down,
-    name: '20260804_073352_add_layout_grid_controls_config'
+    name: '20260804_073352_add_layout_grid_controls_config',
+  },
+  {
+    up: migration_20260804_080321_add_grid_labels_and_guides.up,
+    down: migration_20260804_080321_add_grid_labels_and_guides.down,
+    name: '20260804_080321_add_grid_labels_and_guides'
   },
 ];

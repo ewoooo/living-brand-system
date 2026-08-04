@@ -51,18 +51,31 @@ export type Side = 'top' | 'right' | 'bottom' | 'left'
  * 🔴 bleed한 변만 여백이 0이다. 표 내부 구분선에 닿는 변은 문서까지 뻗는 이미지라도 거터를 받는다.
  * behind = 이미지 레이어(z-index 0). 텍스트·CI는 항상 그 위에 온다.
  * alignX·alignY = 셀 안에서의 정렬. 기본은 좌상단.
+ * background = 셀 배경색(이미지 대신 색으로 채울 때). element 없이 배경만 둘 수도 있다.
  */
 export type Placement = {
 	col: Span
 	row: Span
 	bleed?: Side[]
 	behind?: boolean
-	alignX?: 'end'
-	alignY?: 'end'
+	alignX?: 'center' | 'end'
+	alignY?: 'center' | 'end'
 }
 
-export type Item = Placement & { element: Element }
+export type Item = Placement & { background?: string; element?: Element }
 export type Composition = { background: string; color: string; items: Item[] }
+
+/** 콘텐츠 셀 인덱스 1~3. 9셀을 순회할 때 쓴다. */
+const TRACKS_INDEX = [1, 2, 3]
+
+/** 그리드 설명용 라벨 위치 — 1행 전체와 1열 전체에 트랙 배수를 적는다(빈 칸은 배경만). */
+const GRID_LABELS: { col: number; row: number; text: string }[] = [
+	{ col: 1, row: 1, text: '1A' },
+	{ col: 2, row: 1, text: '2A' },
+	{ col: 3, row: 1, text: '3A' },
+	{ col: 1, row: 2, text: '2A' },
+	{ col: 1, row: 3, text: '3A' },
+]
 
 export const COMPOSITIONS: Record<LayoutGridSample, Composition> = {
 	a: {
@@ -149,6 +162,25 @@ export const COMPOSITIONS: Record<LayoutGridSample, Composition> = {
 				behind: true,
 				element: { kind: 'photo', asset: 'c2' },
 			},
+		],
+	},
+	// 그리드 자체를 설명하는 조합 — 9셀을 옅은 회색으로 채우고 트랙 배수를 적는다.
+	'grid-labels': {
+		background: '#ffffff',
+		color: '#007332',
+		items: [
+			// 모든 셀에 배경색. element 없이 배경만 두는 항목이다.
+			...TRACKS_INDEX.flatMap((row) =>
+				TRACKS_INDEX.map((col) => ({ col, row, behind: true, background: '#f2f2f2' })),
+			),
+			// 라벨 — 셀 가운데.
+			...GRID_LABELS.map(({ col, row, text }) => ({
+				col,
+				row,
+				alignX: 'center' as const,
+				alignY: 'center' as const,
+				element: { kind: 'title' as const, text },
+			})),
 		],
 	},
 }

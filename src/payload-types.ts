@@ -1110,7 +1110,11 @@ export interface LayoutGridWidget {
   /**
    * 코드에 정의된 조합 중 하나입니다.
    */
-  sample?: ('a' | 'b' | 'c') | null;
+  sample?: ('a' | 'b' | 'c' | 'grid-labels') | null;
+  /**
+   * 그리드 표시입니다. 같은 페이지의 판형끼리 다르게 두려면 켜짐·꺼짐으로 고정합니다.
+   */
+  guides?: ('shared' | 'on' | 'off') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'layoutGridWidget';
@@ -2957,6 +2961,7 @@ export interface IncorrectUsageWidgetSelect<T extends boolean = true> {
  */
 export interface LayoutGridWidgetSelect<T extends boolean = true> {
   sample?: T;
+  guides?: T;
   id?: T;
   blockName?: T;
 }

@@ -6,6 +6,7 @@ export const SAMPLE_OPTIONS = [
 	{ value: 'a', label: '예시 A — 밝은 배경' },
 	{ value: 'b', label: '예시 B — 어두운 배경' },
 	{ value: 'c', label: '예시 C — 타이틀형' },
+	{ value: 'grid-labels', label: '그리드 설명 — 1A·2A·3A' },
 ] as const
 
 export type LayoutGridSample = (typeof SAMPLE_OPTIONS)[number]['value']

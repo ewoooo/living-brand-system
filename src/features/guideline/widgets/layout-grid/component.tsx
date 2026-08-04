@@ -39,9 +39,20 @@ const INTERIOR_LINES = TRACKS.slice(1).map((_, index) => index + 3)
 const spanStart = (span: Span) => (Array.isArray(span) ? span[0] : span)
 const spanEnd = (span: Span) => (Array.isArray(span) ? span[1] : span)
 
-export function LayoutGridWidget({ sample }: { sample?: LayoutGridSample | null }) {
-	const { marginPct, gutterX, gutterY, guidesOn } = useLayoutGridControls()
+/** 그리드 표시 — shared면 컨트롤 패널을 따르고, on·off면 이 판형만 고정한다. */
+export type GuidesMode = 'shared' | 'on' | 'off'
 
+export function LayoutGridWidget({
+	sample,
+	guides,
+}: {
+	sample?: LayoutGridSample | null
+	guides?: GuidesMode | null
+}) {
+	const { marginPct, gutterX, gutterY, guidesOn: sharedGuides } = useLayoutGridControls()
+
+	// 같은 페이지의 판형이 서로 다른 그리드 상태를 가질 수 있어야 한다(스토어는 페이지 단위 하나뿐).
+	const guidesOn = guides === 'on' ? true : guides === 'off' ? false : sharedGuides
 	const composition = COMPOSITIONS[sample ?? 'a']
 	// 거터의 절반을 셀 안쪽 경계에 넣는다. 마진의 %라서 단위도 마진과 같은 cqmax(긴 축의 1%).
 	const gutterHalf = { x: (marginPct * gutterX) / 100 / 2, y: (marginPct * gutterY) / 100 / 2 }
@@ -70,12 +81,13 @@ export function LayoutGridWidget({ sample }: { sample?: LayoutGridSample | null 
 							...placement(item),
 							...cellPadding(item, gutterHalf),
 							...alignment(item),
+							background: item.background,
 							// 텍스트·CI는 이미지 위에 온다(behind만 이미지 레이어).
 							position: 'relative',
 							zIndex: item.behind ? 0 : 1,
 						}}
 					>
-						{renderElement(item.element)}
+						{item.element ? renderElement(item.element) : null}
 					</div>
 				))}
 			</div>
@@ -130,11 +142,13 @@ function cellPadding({ col, row, bleed = [] }: Placement, half: Offsets): CSSPro
 /** 셀 안에서의 정렬. 지정이 없으면 좌상단이라 flex를 쓰지 않는다(개체가 셀을 그대로 채운다). */
 function alignment({ alignX, alignY }: Placement): CSSProperties {
 	if (!alignX && !alignY) return {}
+	const flex = (value?: 'center' | 'end') =>
+		value === 'center' ? 'center' : value === 'end' ? 'flex-end' : 'flex-start'
 	return {
 		display: 'flex',
 		flexDirection: 'column',
-		alignItems: alignX === 'end' ? 'flex-end' : 'flex-start',
-		justifyContent: alignY === 'end' ? 'flex-end' : 'flex-start',
+		alignItems: flex(alignX),
+		justifyContent: flex(alignY),
 	}
 }
 
