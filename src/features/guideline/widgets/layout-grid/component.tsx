@@ -28,8 +28,8 @@ const ARTBOARD_ASPECT = '210 / 297'
 
 /** 그리드 표시 색. 🔴 임시 리터럴 — brand-colors의 값으로 교체될 자리다. */
 const GRID_COLOR = '#007332'
-/** 마진·거터 영역 채움(같은 색 10%). */
-const GRID_FILL = `${GRID_COLOR}1a`
+/** 마진·거터 영역 채움(같은 색 30%). */
+const GRID_FILL = `${GRID_COLOR}4d`
 /** 그리드가 보일 때 콘텐츠 투명도 — 선과 영역이 읽히도록 죽인다. */
 const CONTENT_DIMMED = 0.3
 
