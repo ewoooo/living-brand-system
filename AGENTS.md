@@ -48,6 +48,19 @@ When changing Payload collections, fields, indexes, relationships, or other data
 - seed 스크립트는 재실행 안전해야 하며(존재하면 건너뜀 또는 목표 상태로 수렴), 스키마가 필요하면 대상 DB에 마이그레이션을 먼저 적용한다.
 - 공유(stage) DB를 admin으로 직접 편집해 콘텐츠를 만들지 않는다. 로컬 disposable DB에서 편집·검증한 뒤 seed 스크립트로 승격한다.
 
+#### 🔴 admin 편집을 덮지 않는다 (양방향 규약)
+
+가이드라인 문서·블록은 **JSON이 정본**이고 방향이 둘 다 있다:
+
+```
+admin 편집 → export(DB → JSON) → 커밋 → 다른 환경에 seed(JSON → DB)
+```
+
+- 콘텐츠를 **쓰는** 스크립트는 첫 줄에서 `assertExported()`(`scripts/lib/guideline-content.ts`)를 호출해야 한다. DB가 정본 JSON보다 최신이면(= export하지 않은 admin 편집이 있으면) 쓰기를 거부한다. 의도적으로 덮을 때만 `FORCE=true`.
+- export/seed는 **섹션별로 만들지 않는다.** 문서 전체를 다루는 `scripts/export-guideline-content.ts` / `scripts/seed-guideline-content.ts` 한 쌍에 태우고, 필요하면 slug를 인자로 좁힌다. 섹션 전용 스크립트를 새로 만드는 것이 이 사고의 원인이었다.
+- seed를 돌리기 전에 **사용자에게 확인**한다. admin에서 작업 중이면 편집이 날아간다.
+- 실수로 덮었으면 Payload 버전 이력으로 복구한다: `_guideline_docs_v`에서 해당 시각의 버전 id를 찾아 `payload.restoreVersion({ collection, id })`.
+
 ### Local Machine Database Rules
 
 - Treat every personal local Postgres database that uses `PAYLOAD_DB_PUSH=true` as disposable.

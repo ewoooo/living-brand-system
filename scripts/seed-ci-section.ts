@@ -2,6 +2,7 @@ import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import config from '@payload-config'
 import { type CollectionSlug, getPayload } from 'payload'
+import { assertExported } from './lib/guideline-content'
 
 // CI 섹션 콘텐츠 프로비저닝 (idempotent). 대상 DB에 실행: pnpm payload run scripts/seed-ci-section.ts
 //  1) scripts/assets/{ci,do-dont} 의 에셋 업로드(filename 기준 upsert)
@@ -133,6 +134,13 @@ async function upsertDoc(opts: {
 }
 
 const content = JSON.parse(await readFile(CONTENT_PATH, 'utf8'))
+
+// 🔴 쓰기 전 방어선 — DB가 정본보다 최신이면(export 안 한 admin 편집) 여기서 멈춘다.
+await assertExported(
+	payload,
+	CONTENT_PATH,
+	content.pages.map((page: AnyData) => page.slug),
+)
 
 const chapterId = await upsertDoc({
 	slug: content.chapter.slug,
