@@ -2,10 +2,39 @@
 
 import { Button, TextInput, toast, useForm, useFormFields } from '@payloadcms/ui'
 import { useState } from 'react'
-import { importFigmaHtmlFromUrl } from '@/features/template-import/services/import-figma-html.client'
-import { pruneTemplateNodeConfigs } from '@/features/template-import/utils/prune-template-node-configs.client'
+import type { FigmaHtmlResult } from '@/features/template-import/utils/figma-node-to-html'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import type { TemplateNodeConfigMap } from '@/types/template'
+
+/** Figma URL의 프레임을 HTML로 변환 요청한다. 실패하면 서버 메시지를 담아 throw한다. */
+async function importFigmaHtmlFromUrl(
+	sourceUrl: string,
+): Promise<FigmaHtmlResult & { name: string }> {
+	const response = await fetch('/api/templates/import-figma-html', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ sourceUrl }),
+	})
+	const body = await response.json().catch(() => null)
+	if (!response.ok) {
+		throw new Error(body?.message || 'Figma 가져오기에 실패했습니다.')
+	}
+	return body as FigmaHtmlResult & { name: string }
+}
+
+/** 재import한 base HTML에 남아 있는 nodeId의 설정만 보존한다. 외부 I/O는 없다. */
+function pruneTemplateNodeConfigs(
+	baseHtml: string,
+	nodeConfigs: TemplateNodeConfigMap,
+): TemplateNodeConfigMap {
+	const doc = new DOMParser().parseFromString(baseHtml, 'text/html')
+	const nodeIds = new Set(
+		Array.from(doc.querySelectorAll('[data-node-id]'), (element) =>
+			element.getAttribute('data-node-id'),
+		),
+	)
+	return Object.fromEntries(Object.entries(nodeConfigs).filter(([nodeId]) => nodeIds.has(nodeId)))
+}
 
 /**
  * Templates 편집 폼(Admin)의 Figma 가져오기 UI 필드.

@@ -33,7 +33,7 @@ vi.mock('@/features/generate-image/repositories/generated-image.payload.reposito
 	storeGeneratedImages: mocks.storeGeneratedImages,
 }))
 vi.mock('@/features/generate-image/services/normalize-image-profile-prompt.service', () => ({
-	ImagePromptNormalizationUnavailableError: class extends Error {},
+	ImageGenerationUnavailableError: class extends Error {},
 	normalizeImageProfilePrompt: mocks.normalizeImageProfilePrompt,
 }))
 

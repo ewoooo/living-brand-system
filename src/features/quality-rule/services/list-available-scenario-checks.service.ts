@@ -1,4 +1,4 @@
-import { findPublishedScenarioCheckRecords } from '../repositories/available-scenario-check.payload.repository'
+import type { PayloadRequest } from 'payload'
 import type { RuleExecutor } from '../rule-executor'
 
 export interface AvailableScenarioCheck {
@@ -9,18 +9,26 @@ export interface AvailableScenarioCheck {
 
 /**
  * CheckScenario 편집용 published Rule 목록을 표시 순서로 조립한다.
- * Payload 조회와 레코드 변환 I/O는 check-scenario repository가 소유한다.
+ * published Rule 조회 Payload I/O도 이 service가 직접 소유한다.
  */
 export async function listAvailableScenarioChecks(
-	repositoryContext: Parameters<typeof findPublishedScenarioCheckRecords>[0],
+	req: PayloadRequest,
 ): Promise<AvailableScenarioCheck[]> {
-	const records = await findPublishedScenarioCheckRecords(repositoryContext)
+	const { docs } = await req.payload.find({
+		collection: 'rules',
+		depth: 0,
+		draft: false,
+		limit: 2000,
+		overrideAccess: !req.user,
+		user: req.user,
+		where: { _status: { equals: 'published' } },
+	})
 
-	return records
-		.map((record) => ({
-			executor: record.executor,
-			key: record.key,
-			title: record.titleKo?.trim() || record.title,
+	return docs
+		.map((rule) => ({
+			executor: rule.executor,
+			key: rule.key,
+			title: rule.titleKo?.trim() || rule.title,
 		}))
 		.sort((a, b) => a.title.localeCompare(b.title, 'ko'))
 }
@@ -35,12 +43,9 @@ export function validateCheckScenarioKey(value: unknown) {
 
 /**
  * CheckScenario가 선택한 key의 형식·중복·published Rule 존재 여부를 검증한다.
- * Payload 조회와 레코드 변환 I/O는 check-scenario repository가 소유한다.
+ * published Rule 조회 Payload I/O는 listAvailableScenarioChecks가 소유한다.
  */
-export async function validateCheckScenarioKeys(
-	value: unknown,
-	repositoryContext: Parameters<typeof findPublishedScenarioCheckRecords>[0],
-) {
+export async function validateCheckScenarioKeys(value: unknown, req: PayloadRequest) {
 	if (!Array.isArray(value) || value.length === 0) return 'Check를 1개 이상 포함하세요.'
 	if (value.some((key) => typeof key !== 'string' || !key.trim())) {
 		return 'Check key는 비어 있지 않은 문자열이어야 합니다.'
@@ -49,9 +54,7 @@ export async function validateCheckScenarioKeys(
 	const checkKeys = value as string[]
 	if (new Set(checkKeys).size !== checkKeys.length) return '중복된 Check가 있습니다.'
 
-	const availableKeys = new Set(
-		(await listAvailableScenarioChecks(repositoryContext)).map(({ key }) => key),
-	)
+	const availableKeys = new Set((await listAvailableScenarioChecks(req)).map(({ key }) => key))
 	const missing = checkKeys.filter((key) => !availableKeys.has(key))
 	return missing.length > 0 ? `발행된 검수 규칙에 없는 Check입니다: ${missing.join(', ')}` : true
 }

@@ -1,11 +1,9 @@
 import { formatBlockForAgent } from '@/features/guideline/blocks/runtime/project-guideline-block'
 import { collectGuidelineCheckSources } from '@/features/guideline/checks/collect-guideline-check-sources'
-import { formatCheckEvidence } from '@/features/guideline/checks/format-check-evidence'
 import { compact } from '@/features/guideline/utils/block-text'
 import {
 	type AgentGuidelineDocument,
 	type AgentGuidelineSearchCandidate,
-	findAgentCheckDocuments,
 	findAgentGuidelineDocument,
 	findGuidelineSearchPhraseCandidates,
 	findGuidelineSearchTermCandidates,
@@ -16,13 +14,6 @@ const MAX_DOCUMENT_CONTENT_LENGTH = 6000
 const SEARCH_RESULT_LIMIT = 10
 const SEARCH_TERM_LIMIT = 8
 
-export interface AgentCheckCatalogItem {
-	evidence: string
-	key: string
-	tier: 'recommended' | 'required' | null
-	title: string
-}
-
 export type AgentGuidelineSearchResult = {
 	title: string
 	collection: 'guideline-documents'
@@ -30,67 +21,13 @@ export type AgentGuidelineSearchResult = {
 }
 
 /**
- * Agent가 읽을 수 있는 발행 Check 카탈로그를 조립한다.
- * Payload 문서 조회는 agent-guideline-context repository가 소유한다.
- */
-export async function listAgentChecks(user: unknown): Promise<AgentCheckCatalogItem[]> {
-	const documents = await findAgentCheckDocuments(user)
-
-	return documents
-		.flatMap(collectGuidelineCheckSources)
-		.map(toAgentCheck)
-		.sort((a, b) => a.key.localeCompare(b.key))
-}
-
-interface GuidelineSearchInput {
-	query: string
-}
-
-interface GuidelineDocumentListResult {
-	collection: 'guideline-documents'
-	id: string
-	level: number
-	parentId: string | null
-	title: string
-}
-
-interface GuidelineDocumentInput {
-	collection: 'guideline-documents'
-	id: string
-}
-
-interface GuidelineDocumentResult {
-	title: string
-	collection: 'guideline-documents'
-	id: string
-	source: GuidelineDocumentSource
-	checks: GuidelineDocumentCheck[]
-	content: string
-	relatedDocuments?: GuidelineDocumentRelatedDocument[]
-}
-
-interface GuidelineDocumentSource {
-	collection: 'guideline-documents'
-	id: string
-	title: string
-	href: string | null
-}
-
-interface GuidelineDocumentCheck {
-	key: string
-	title: string
-}
-
-/**
  * Agent tool에 제공할 published guideline 문서 목록을 조립한다.
  * Payload Local API 호출과 접근 제어는 agent guideline context repository가 담당한다.
  */
-export async function listAgentGuidelineDocuments(
-	user: unknown,
-): Promise<GuidelineDocumentListResult[]> {
+export async function listAgentGuidelineDocuments(user: unknown) {
 	const documents = await listGuidelineDocuments(user)
 	return documents.map((document) => ({
-		collection: 'guideline-documents',
+		collection: 'guideline-documents' as const,
 		id: String(document.id),
 		level: document.level,
 		parentId: document.parentId?.toString() ?? null,
@@ -104,7 +41,7 @@ export async function listAgentGuidelineDocuments(
  */
 export async function searchAgentGuidelines(
 	user: unknown,
-	input: GuidelineSearchInput,
+	input: { query: string },
 ): Promise<AgentGuidelineSearchResult[]> {
 	const query = input.query.trim()
 	if (!query) return []
@@ -137,20 +74,23 @@ export async function searchAgentGuidelines(
  */
 export async function readAgentGuidelineDocument(
 	user: unknown,
-	input: GuidelineDocumentInput,
-): Promise<GuidelineDocumentResult | null> {
+	input: { collection: 'guideline-documents'; id: string },
+) {
 	const result = await findAgentGuidelineDocument(user, input)
 	if (!result) return null
 
 	const document = result.document
 	const id = String(document.id)
-	const checks = collectGuidelineCheckSources(document).map(({ rule }) => toDocumentCheck(rule))
+	const checks = collectGuidelineCheckSources(document).map(({ rule }) => ({
+		key: rule.key,
+		title: rule.title,
+	}))
 	return {
 		title: document.title,
-		collection: 'guideline-documents',
+		collection: 'guideline-documents' as const,
 		id,
 		source: {
-			collection: 'guideline-documents',
+			collection: 'guideline-documents' as const,
 			id,
 			title: document.title,
 			href: documentHref(document),
@@ -170,7 +110,7 @@ export async function readAgentGuidelineDocument(
 
 function formatGuidelineDocument(
 	result: AgentGuidelineDocument,
-	checks: GuidelineDocumentCheck[],
+	checks: { key: string; title: string }[],
 ): string {
 	const document = result.document
 	const breadcrumbs = document.breadcrumbs ?? []
@@ -180,7 +120,7 @@ function formatGuidelineDocument(
 	const childSummaries = result.children.map((child) =>
 		compact([child.title, child.descriptionText]).join('\n'),
 	)
-	const formattedChecks = checks.map(formatCheck)
+	const formattedChecks = checks.map((check) => `- ${check.key}: ${check.title}`)
 
 	return compact([
 		parentTitle ? `Parent: ${parentTitle}` : null,
@@ -218,31 +158,6 @@ function documentHref(document: AgentGuidelineDocument['document']): string | nu
 		return sectionURL ? `${sectionURL}#${document.slug}` : null
 	}
 	return breadcrumbs.at(-1)?.url ?? null
-}
-
-type GuidelineDocumentRelatedDocument = {
-	id: string
-	title: string
-}
-
-function formatCheck(value: GuidelineDocumentCheck): string {
-	return `- ${value.key}: ${value.title}`
-}
-
-function toDocumentCheck(check: { key: string; title: string }): GuidelineDocumentCheck {
-	return { key: check.key, title: check.title }
-}
-
-function toAgentCheck({
-	rule,
-	evidence,
-}: ReturnType<typeof collectGuidelineCheckSources>[number]): AgentCheckCatalogItem {
-	return {
-		evidence: formatCheckEvidence(evidence),
-		key: rule.key,
-		tier: rule.tier ?? null,
-		title: rule.title,
-	}
 }
 
 function limitContent(value: string): string {

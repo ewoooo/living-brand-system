@@ -7,7 +7,7 @@ export default defineConfig({
 	test: {
 		environment: 'jsdom',
 		setupFiles: ['./vitest.setup.ts'],
-		include: ['tests/int/**/*.int.spec.ts', 'src/**/*.test.{ts,tsx}'],
+		include: ['tests/int/**/*.int.spec.ts', 'src/**/*.test.{ts,tsx}', 'scripts/**/*.test.ts'],
 		server: { deps: { inline: ['payload-better-editor'] } },
 	},
 })

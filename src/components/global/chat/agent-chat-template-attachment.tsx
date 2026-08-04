@@ -54,7 +54,7 @@ function HtmlTemplateAttachment({ attachment }: { attachment: AgentTemplateImage
 			name={attachment.name}
 			description={
 				attachment.printPpi
-					? `인쇄 출력 ${attachment.printPpi}ppi · TIFF CMYK · PDF RGB`
+					? `인쇄 출력 ${attachment.printPpi}ppi · TIFF CMYK · PDF CMYK`
 					: '템플릿 이미지'
 			}
 			isExporting={exporting !== null}
@@ -140,10 +140,10 @@ function TemplateAttachmentFrame({
 				)}
 				{onExportPdf && (
 					<AttachmentAction
-						aria-label="RGB PDF로 내보내기"
+						aria-label="CMYK PDF로 내보내기"
 						disabled={isExporting}
 						onClick={onExportPdf}
-						title="RGB PDF로 내보내기"
+						title="CMYK PDF로 내보내기"
 					>
 						<DocumentPdf />
 					</AttachmentAction>

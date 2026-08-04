@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { createAgentChatSessionUsageCollector } from './agent-chat-session-usage'
+import {
+	type AgentChatSessionUsageStep,
+	createAgentChatSessionUsageCollector,
+} from './agent-chat-session-usage'
 
 describe('createAgentChatSessionUsageCollector', () => {
 	it('counts used tools and selected skills from agent steps', () => {
 		const collector = createAgentChatSessionUsageCollector()
 
 		collector.addStep({
-			model: { modelId: 'claude-haiku-4-5' },
-			response: { modelId: 'claude-haiku-4-5' },
+			model: { modelId: 'claude-sonnet-5' },
+			response: { modelId: 'claude-sonnet-5' },
 			usage: {
 				inputTokens: 10,
 				inputTokenDetails: {
@@ -27,10 +30,16 @@ describe('createAgentChatSessionUsageCollector', () => {
 			toolResults: [
 				{
 					toolName: 'loadSkill',
-					output: { verificationRequired: true },
+					output: {
+						name: 'guideline-qa',
+						description: 'Guideline answer skill',
+						instructions: 'Answer from published guidelines.',
+						model: 'sonnet-5',
+						toolScope: 'action',
+					},
 				},
 			],
-		})
+		} as unknown as AgentChatSessionUsageStep)
 		collector.addStep({
 			model: { modelId: 'claude-sonnet-5' },
 			response: { modelId: 'claude-sonnet-5' },
@@ -49,53 +58,24 @@ describe('createAgentChatSessionUsageCollector', () => {
 				raw: { input_tokens: 20, output_tokens: 7 },
 				totalTokens: 27,
 			},
-			toolCalls: [{ toolName: 'loadSkill', input: { name: 'guideline-qa' } }],
-			toolResults: [
-				{
-					toolName: 'loadSkill',
-					output: {
-						name: 'guideline-qa',
-						description: 'Guideline answer skill',
-						instructions: 'Answer from published guidelines.',
-						responseLevel: 'deep',
-						taskType: 'lookup',
-						risk: 'low',
-						confidence: 80,
-						model: 'opus-5.0',
-						toolScope: 'read',
-						reviewRequired: false,
-						clarificationRequired: false,
-					},
-				},
-			],
-		})
-		collector.addStep({
-			model: { modelId: 'claude-opus-5' },
-			response: { modelId: 'claude-opus-5' },
-			usage: {
-				inputTokens: 5,
-				inputTokenDetails: {},
-				outputTokens: 2,
-				outputTokenDetails: {},
-				totalTokens: 7,
-			},
 			toolCalls: [{ toolName: 'searchGuidelines', input: { query: 'color' } }],
-		})
+			toolResults: [],
+		} as unknown as AgentChatSessionUsageStep)
 
 		expect(collector.snapshot()).toEqual({
 			aiUsage: {
-				model: 'claude-haiku-4-5, claude-sonnet-5, claude-opus-5',
-				callCount: 3,
-				inputTokens: 35,
-				outputTokens: 14,
-				totalTokens: 49,
+				model: 'claude-sonnet-5',
+				callCount: 2,
+				inputTokens: 30,
+				outputTokens: 12,
+				totalTokens: 42,
 				cacheReadInputTokens: 1,
 				cacheWriteInputTokens: 1,
 				reasoningTokens: 1,
 				rawUsage: {
 					steps: [
 						{
-							model: 'claude-haiku-4-5',
+							model: 'claude-sonnet-5',
 							usage: { input_tokens: 10, output_tokens: 5 },
 						},
 						{
@@ -105,29 +85,43 @@ describe('createAgentChatSessionUsageCollector', () => {
 					],
 				},
 			},
-			triage: {
-				skillName: 'guideline-qa',
-				responseLevel: 'deep',
-				taskType: 'lookup',
-				risk: 'low',
-				confidence: 80,
-				executionModel: 'opus-5.0',
-				toolScope: 'read',
-				reviewRequired: false,
-				clarificationRequired: false,
-				classifierModel: 'claude-haiku-4-5, claude-sonnet-5',
-				inputTokens: 30,
-				outputTokens: 12,
-				totalTokens: 42,
-				cacheReadInputTokens: 1,
-				cacheWriteInputTokens: 1,
-				reasoningTokens: 1,
-			},
 			usedTools: [
-				{ name: 'loadSkill', callCount: 2 },
+				{ name: 'loadSkill', callCount: 1 },
 				{ name: 'searchGuidelines', callCount: 1 },
 			],
 			usedSkills: [{ name: 'guideline-qa', callCount: 1 }],
+		})
+	})
+
+	it('이름 없는 loadSkill 결과는 skill로 세지 않고 스텝이 없으면 aiUsage를 만들지 않는다', () => {
+		const collector = createAgentChatSessionUsageCollector()
+		expect(collector.snapshot()).toEqual({
+			aiUsage: undefined,
+			usedTools: [],
+			usedSkills: [],
+		})
+
+		collector.addStep({
+			model: { modelId: 'claude-sonnet-5' },
+			usage: {
+				inputTokens: 5,
+				inputTokenDetails: {
+					noCacheTokens: 5,
+					cacheReadTokens: undefined,
+					cacheWriteTokens: undefined,
+				},
+				outputTokens: 2,
+				outputTokenDetails: { textTokens: 2, reasoningTokens: undefined },
+				totalTokens: 7,
+			},
+			toolCalls: [{ toolName: 'loadSkill', input: {} }],
+			toolResults: [{ toolName: 'loadSkill', output: { error: 'missing' } }],
+		} as unknown as AgentChatSessionUsageStep)
+
+		expect(collector.snapshot()).toMatchObject({
+			aiUsage: { model: 'claude-sonnet-5', callCount: 1, totalTokens: 7 },
+			usedTools: [{ name: 'loadSkill', callCount: 1 }],
+			usedSkills: [],
 		})
 	})
 })

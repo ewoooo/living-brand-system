@@ -6,16 +6,17 @@ vi.mock('@payload-config', () => ({ default: {} }))
 vi.mock('payload', () => ({ getPayload: vi.fn() }))
 
 describe('MCP API key repository', () => {
-	it('새 키에 사용자용 MCP 도구를 모두 활성화한다', async () => {
+	it('새 키를 발급하고 사용자용 MCP 도구를 모두 활성화한다', async () => {
 		const create = vi.fn().mockResolvedValue({ id: 7 })
 		vi.mocked(getPayload).mockResolvedValue({ create } as never)
 		const user = { email: 'worker@example.com', id: 1, role: 'worker' } as const
 
-		await expect(createMcpApiKeyRecord(user as never, 'one-time-key')).resolves.toBe(7)
+		const credential = await createMcpApiKeyRecord(user as never)
+		expect(credential).toEqual({ apiKey: expect.stringMatching(/^[0-9a-f-]{36}$/), id: 7 })
 		expect(create).toHaveBeenCalledWith({
 			collection: 'payload-mcp-api-keys',
 			data: {
-				apiKey: 'one-time-key',
+				apiKey: credential.apiKey,
 				enableAPIKey: true,
 				label: 'Frontend MCP key',
 				user: 1,

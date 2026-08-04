@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { ImageGenerator } from '@/components/studio/generate/image-generator'
 import { StudioWorkspacePage } from '@/components/studio/studio-workspace'
-import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
+import { listPublishedImageProfiles } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import { authenticateRequest } from '@/lib/request-auth'
 
 export default async function GenerateImageProfilePage({
@@ -14,7 +14,7 @@ export default async function GenerateImageProfilePage({
 
 	if (!user) notFound()
 
-	const profiles = await listAvailableImageProfiles(user)
+	const profiles = await listPublishedImageProfiles(user)
 	const profile = profiles.find((item) => item.slug === profileSlug)
 
 	if (!profile) notFound()

@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto'
 import type { Payload } from 'payload'
 import {
-	discardImportedApplicationImage,
-	stageImportedApplicationImage,
-} from '@/features/application-image/services/manage-imported-application-images.service'
+	deleteDraftImportedApplicationImage,
+	storeDraftImportedApplicationImage,
+} from '@/features/application-image/repositories/imported-application-image.payload.repository'
 import {
 	downloadFigmaImage,
 	findFigmaImageUrls,
@@ -187,7 +187,7 @@ async function storeRenderedAssets(
 				}
 
 				const checksum = createHash('sha256').update(data).digest('hex')
-				const asset = await stageImportedApplicationImage(payload, user, {
+				const asset = await storeDraftImportedApplicationImage(payload, user, {
 					data,
 					filename: `figma-${checksum.slice(0, 24)}.${format}`,
 					mimeType: normalizedMimeType,
@@ -201,7 +201,7 @@ async function storeRenderedAssets(
 		return renderedAssets
 	} catch (error) {
 		await Promise.allSettled(
-			createdAssetIds.map((id) => discardImportedApplicationImage(payload, user, id)),
+			createdAssetIds.map((id) => deleteDraftImportedApplicationImage(payload, user, id)),
 		)
 		throw error
 	}

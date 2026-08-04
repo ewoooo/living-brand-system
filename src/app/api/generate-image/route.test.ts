@@ -14,19 +14,16 @@ vi.mock('@/lib/request-auth', () => ({
 vi.mock('@/features/generate-image/services/generate-image.service', () => {
 	class ImageGenerationUnavailableError extends Error {}
 	class ImageProfileNotFoundError extends Error {}
-	class ImagePromptNormalizationUnavailableError extends Error {}
 	return {
 		generateImages: mocks.generateImages,
 		ImageGenerationUnavailableError,
 		ImageProfileNotFoundError,
-		ImagePromptNormalizationUnavailableError,
 	}
 })
 
 import {
 	ImageGenerationUnavailableError,
 	ImageProfileNotFoundError,
-	ImagePromptNormalizationUnavailableError,
 } from '@/features/generate-image/services/generate-image.service'
 import { POST } from './route'
 
@@ -90,11 +87,8 @@ describe('POST /api/generate-image', () => {
 		expect(mocks.generateImages).not.toHaveBeenCalled()
 	})
 
-	it.each([
-		new ImageGenerationUnavailableError(),
-		new ImagePromptNormalizationUnavailableError(),
-	])('생성기나 정규화 모델을 사용할 수 없으면 503을 반환한다', async (error) => {
-		mocks.generateImages.mockRejectedValue(error)
+	it('생성기나 정규화 모델을 사용할 수 없으면 503을 반환한다', async () => {
+		mocks.generateImages.mockRejectedValue(new ImageGenerationUnavailableError())
 
 		const response = await POST(imageRequest({ prompt: 'sample', profileId: 5 }))
 
