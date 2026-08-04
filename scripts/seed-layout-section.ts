@@ -21,7 +21,7 @@ const BLACK_HEX = '#000000'
 
 const TITLE = 'Key Layout 그리드'
 const DESCRIPTION =
-	'판형을 축별로 1:2:3으로 나눈 9개 셀에 요소를 스냅한다. 마진은 해당 축 길이의 3~6%, 거터는 마진의 50~100%다. 값을 조절해도 1:2:3 분할선은 제자리에 있다.'
+	'판형을 축별로 1:2:3으로 나눈 9개 셀에 요소를 스냅한다. 마진은 긴 축의 3~6%(수직·수평 동일), 거터는 마진의 0~100%다. 값을 조절해도 1:2:3 분할선은 제자리에 있다.'
 
 // 단문 → lexical richText(description 필드용).
 const rt = (text: string): AnyBlock => ({

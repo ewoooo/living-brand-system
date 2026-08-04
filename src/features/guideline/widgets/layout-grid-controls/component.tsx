@@ -9,7 +9,7 @@ import {
 
 // 위젯: 같은 페이지의 layoutGridWidget 전부를 한 패널로 통제한다.
 // 값은 layout-grid/store.ts(모듈 스토어)에 있어 형제 위젯끼리 공유된다 — 이 위젯이 유일한 쓰기 주체다.
-// 🔴 슬라이더 범위가 정본 규칙(마진 3~6%·거터 마진의 0~100%)이다. 범위를 넓히면 규칙이 깨진다.
+// 🔴 슬라이더 범위가 정본 규칙(마진 = 긴 축의 3~6% · 거터 = 마진의 0~100%)이다. 넓히면 규칙이 깨진다.
 
 export function LayoutGridControlsWidget() {
 	const { marginPct, gutterX, gutterY, guidesOn } = useLayoutGridControls()
@@ -24,7 +24,7 @@ export function LayoutGridControlsWidget() {
 				min={MARGIN_PCT.min}
 				max={MARGIN_PCT.max}
 				step={0.1}
-				suffix="% (축 길이)"
+				suffix="% (긴 축)"
 			/>
 			<Slider
 				label="수평 거터"

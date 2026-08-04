@@ -134,7 +134,7 @@ export function LayoutGridWidget({ sample }: { sample?: LayoutGridSample | null 
 	const { marginPct, gutterX, gutterY, guidesOn } = useLayoutGridControls()
 
 	const design = SAMPLES[sample ?? 'a']
-	// 거터의 절반을 셀 안쪽 경계에 넣는다. 마진의 %라서 단위는 축별 cq(1cqw=판형 폭의 1%).
+	// 거터의 절반을 셀 안쪽 경계에 넣는다. 마진의 %라서 단위도 마진과 같은 cqmax(긴 축의 1%).
 	const gutterHalf = { x: (marginPct * gutterX) / 100 / 2, y: (marginPct * gutterY) / 100 / 2 }
 
 	return (
@@ -176,9 +176,12 @@ type Offsets = { x: number; y: number }
  * 마진을 트랙으로 두면 문서 경계까지 뻗는 요소를 수치 계산 없이 그리드 선으로 지정할 수 있다.
  */
 function gridTemplate(marginPct: number): CSSProperties {
+	// 마진 단위는 cqmax(= 판형 긴 축의 1%)다. 축마다 % 기준이 달라지지 않으니
+	// 수직·수평 마진이 언제나 같은 길이가 된다 — 판형 종횡비가 뭐든.
 	// 🔴 minmax(0, Nfr) 필수 — 맨 `Nfr`은 minmax(auto, Nfr)이라 사진의 intrinsic 크기가
 	// 트랙을 밀어내 1:2:3이 깨진다(하한을 0으로 못 박아야 비율이 보존된다).
-	const tracks = `${marginPct}% ${TRACKS.map((t) => `minmax(0, ${t}fr)`).join(' ')} ${marginPct}%`
+	const margin = `${marginPct}cqmax`
+	const tracks = `${margin} ${TRACKS.map((t) => `minmax(0, ${t}fr)`).join(' ')} ${margin}`
 	// 거터를 grid gap으로 주지 않는다 — gap은 남는 폭을 나눠 분할선을 밀어낸다.
 	// 대신 셀 안쪽 padding으로 넣어 분할선을 1/6·1/2에 고정한다.
 	return { gridTemplateColumns: tracks, gridTemplateRows: tracks }
@@ -199,10 +202,10 @@ function cellPadding({ col, row, bleed = [], flush }: Item, half: Offsets): CSSP
 	const last = TRACKS.length
 	if (flush) return {}
 	return {
-		paddingLeft: spanStart(col) > 1 && !bleed.includes('left') ? `${half.x}cqw` : 0,
-		paddingRight: spanEnd(col) < last && !bleed.includes('right') ? `${half.x}cqw` : 0,
-		paddingTop: spanStart(row) > 1 && !bleed.includes('top') ? `${half.y}cqh` : 0,
-		paddingBottom: spanEnd(row) < last && !bleed.includes('bottom') ? `${half.y}cqh` : 0,
+		paddingLeft: spanStart(col) > 1 && !bleed.includes('left') ? `${half.x}cqmax` : 0,
+		paddingRight: spanEnd(col) < last && !bleed.includes('right') ? `${half.x}cqmax` : 0,
+		paddingTop: spanStart(row) > 1 && !bleed.includes('top') ? `${half.y}cqmax` : 0,
+		paddingBottom: spanEnd(row) < last && !bleed.includes('bottom') ? `${half.y}cqmax` : 0,
 	}
 }
 
