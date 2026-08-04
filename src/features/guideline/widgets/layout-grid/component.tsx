@@ -209,12 +209,17 @@ function cellPadding({ col, row, bleed = [], flush }: Item, half: Offsets): CSSP
 	}
 }
 
-/** 표 프레임 + 1:2:3 분할선. 콘텐츠 셀 9개에 테두리를 그려 얻는다 — 위치 계산이 없다. */
+/**
+ * 표 프레임 + 1:2:3 분할선. 콘텐츠 셀 9개에 테두리를 그려 얻는다 — 위치 계산이 없다.
+ * 색은 흰 선 + mix-blend-mode: difference = 배경 색상 반전이라 흰 대지에서도 사진 위에서도 보인다.
+ * 🔴 outline-offset: -0.5px — 선이 셀 경계를 0.5px씩 안·밖으로 걸치게 해서, 이웃 셀의 선과
+ *    정확히 겹쳐 1px로 보인다(offset 0이면 경계마다 0.5+0.5가 어긋나 2px로 두꺼워진다).
+ */
 function Guides({ marginPct }: { marginPct: number }) {
 	return (
 		<div
-			className="pointer-events-none absolute inset-0 grid opacity-40"
-			style={gridTemplate(marginPct)}
+			className="pointer-events-none absolute inset-0 grid"
+			style={{ ...gridTemplate(marginPct), mixBlendMode: 'difference' }}
 		>
 			{TRACKS.flatMap((_, rowIndex) =>
 				TRACKS.map((__, colIndex) => (
@@ -224,7 +229,8 @@ function Guides({ marginPct }: { marginPct: number }) {
 						style={{
 							gridColumn: colIndex + 2,
 							gridRow: rowIndex + 2,
-							outline: '1px solid currentColor',
+							outline: '1px solid #ffffff',
+							outlineOffset: '-0.5px',
 						}}
 					/>
 				)),
