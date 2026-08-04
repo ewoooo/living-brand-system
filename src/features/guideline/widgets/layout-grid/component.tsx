@@ -63,14 +63,8 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 			{ col: 1, row: 2, node: <Caption>FUTURE CLOSER TO HUMANITY</Caption> },
 			// 선박 선수 — 2번 칸 왼변부터 3번 칸 오른변까지.
 			{ col: [2, 3], row: 2, behind: true, node: <Img src={sampleA2} /> },
-			// 탱커 — 위는 1/2 구분선, 나머지 세 변은 문서 끝.
-			{
-				col: 1,
-				row: 3,
-				bleed: ['left', 'right', 'bottom'],
-				behind: true,
-				node: <Img src={sampleA3} />,
-			},
+			// 탱커 — 문서가 아니라 표 안이다. 3행의 1~3열을 채운다(위 변만 1/2 구분선이라 거터를 받는다).
+			{ col: [1, 3], row: 3, behind: true, node: <Img src={sampleA3} /> },
 		],
 	},
 	b: {
@@ -85,8 +79,8 @@ const SAMPLES: Record<LayoutGridSample, Sample> = {
 				behind: true,
 				node: <Img src={sampleB1} />,
 			},
-			// CI HD형 가로형 단색 — 마스터 아트워크 그대로 넣는다(단색 파일은 fill이 없어 검정으로 렌더된다).
-			{ col: 1, row: 1, node: <Ci src={ciHdHorizontalMono} height="3cqmax" /> },
+			// CI HD형 가로형 단색 — 어두운 배경이라 흰색으로 렌더한다(단색은 색을 입혀 쓰는 아트워크).
+			{ col: 1, row: 1, node: <Ci src={ciHdHorizontalMono} height="3cqmax" mono /> },
 			{
 				col: 2,
 				row: 2,
@@ -269,11 +263,11 @@ function Guides({ marginPct }: { marginPct: number }) {
 /**
  * CI 락업. 높이만 주고 폭은 원본 비율대로 두므로 가로형은 셀 밖으로 넘친다(overflow 허용).
  * 크기는 텍스트와 같은 대지 기준 단위(cqmax)로 준다 — 셀 크기·거터에 따라 변하지 않는 불변 크기다.
- * 🔴 CI는 마스터 아트워크 그대로 쓴다 — 비율도 색도 CSS로 바꾸지 않는다(금지 6·7).
- *    단색 파일은 fill 선언이 없어 SVG 기본값인 검정으로 렌더된다. 다른 색이 필요하면 그 색이 박힌
- *    파일을 브랜드팀에서 받는다(CSS filter로 만들지 않는다).
+ * 🔴 비율은 CSS로 바꾸지 않는다(금지 7).
+ * mono = 단색 락업. 이 파일은 fill 선언이 없어(= 색을 입혀 쓰라고 비워둔 아트워크) 그대로 두면
+ * SVG 기본값인 검정이다. 색을 넣는 것이 정상 사용이며, 여기서는 어두운 배경용 흰색으로 렌더한다.
  */
-function Ci({ src, height }: { src: StaticImageData; height: string }) {
+function Ci({ src, height, mono }: { src: StaticImageData; height: string; mono?: boolean }) {
 	return (
 		// biome-ignore lint/performance/noImgElement: 정적 SVG라 next/image 미사용.
 		<img
@@ -283,7 +277,7 @@ function Ci({ src, height }: { src: StaticImageData; height: string }) {
 			alt=""
 			// max-w-none 필수 — preflight의 img{max-width:100%}가 넘치는 폭을 셀 폭으로 되돌린다.
 			className="block w-auto max-w-none"
-			style={{ height }}
+			style={{ height, filter: mono ? 'brightness(0) invert(1)' : undefined }}
 		/>
 	)
 }
