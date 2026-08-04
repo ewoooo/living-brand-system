@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { FigmaSourceNode } from './figma-ir'
 import { convertFigmaNodeToHtml } from './figma-node-to-html'
 
 // 실제 REST /nodes 응답 형태의 최소 fixture (169:84 3×3 1:2:3 그리드).
@@ -554,7 +555,7 @@ describe('convertFigmaNodeToHtml — 리뷰 수정 회귀', () => {
 // IR 파이프라인 재배선의 기준선: 주요 경로(오토레이아웃/constraints/grid/텍스트/벡터 에셋/박스 효과)를
 // 한 트리에 모두 담아 출력 HTML 전체를 그대로 고정한다. 이 스냅샷이 바뀌면 변환 동작이 바뀐 것이다.
 describe('convertFigmaNodeToHtml — 골든 스냅샷', () => {
-	const GOLDEN_FRAME = {
+	const GOLDEN_FRAME: FigmaSourceNode = {
 		id: '9:0',
 		name: 'Golden',
 		type: 'FRAME',
