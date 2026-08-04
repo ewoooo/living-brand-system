@@ -30,33 +30,70 @@ await assertExported(
 	targets.map((doc) => doc.slug),
 )
 
-let applied = 0
-for (const doc of targets) {
+const findBySlug = async (slug: string) => {
 	const { docs } = await payload.find({
 		collection: 'guideline-documents',
-		where: { slug: { equals: doc.slug } },
+		where: { slug: { equals: slug } },
 		limit: 1,
 		locale: 'ko',
 		draft: false,
 		depth: 0,
 		overrideAccess: true,
 	})
-	const existing = docs[0]
-	if (!existing) {
-		console.warn(`⚠️  문서 없음(건너뜀): ${doc.slug}`)
+	return docs[0] ?? null
+}
+
+// 정본은 부모를 slug로 적으므로 얕은 문서부터 처리해야 부모가 먼저 생긴다.
+const depthOf = (doc: AnyData): number => {
+	let depth = 0
+	let cursor: AnyData | undefined = doc
+	while (cursor?.parent) {
+		depth += 1
+		cursor = content.documents.find((d: AnyData) => d.slug === cursor?.parent)
+	}
+	return depth
+}
+targets.sort((a, b) => depthOf(a) - depthOf(b) || (a.order ?? 0) - (b.order ?? 0))
+
+let applied = 0
+for (const doc of targets) {
+	// 문서 자체가 없으면 만든다 — 정본만으로 구조(제목·부모·순서)까지 재현되어야 한다.
+	const parent = doc.parent ? await findBySlug(doc.parent) : null
+	if (doc.parent && !parent) {
+		console.warn(`⚠️  부모 없음(건너뜀): ${doc.slug} → parent ${doc.parent}`)
 		continue
 	}
 
-	await payload.update({
-		collection: 'guideline-documents',
-		id: existing.id,
-		locale: 'ko',
-		draft: false,
-		overrideAccess: true,
-		data: { _status: 'published', blocks: await fromPortable(doc.blocks) },
-	})
+	const data: AnyData = {
+		title: doc.title,
+		slug: doc.slug,
+		displayOrder: doc.order ?? 0,
+		blocks: await fromPortable(doc.blocks),
+		_status: 'published',
+	}
+	if (parent) data.parent = parent.id
+
+	const existing = await findBySlug(doc.slug)
+	if (existing) {
+		await payload.update({
+			collection: 'guideline-documents',
+			id: existing.id,
+			locale: 'ko',
+			draft: false,
+			overrideAccess: true,
+			data,
+		})
+	} else {
+		await payload.create({
+			collection: 'guideline-documents',
+			locale: 'ko',
+			draft: false,
+			overrideAccess: true,
+			data,
+		})
+	}
 	applied += 1
-	console.log(`  ${doc.slug}: 블록 ${doc.blocks.length}개 적용`)
+	console.log(`  ${existing ? 'update' : 'create'} ${doc.slug}: 블록 ${doc.blocks.length}개`)
 }
 
 console.log(`✅ seed 완료 — 문서 ${applied}개`)
