@@ -2,10 +2,32 @@
 	"documents": [
 		{
 			"slug": "layout-blank",
-			"title": "빈 페이지",
+			"title": "Margin Size",
 			"parent": "layout",
 			"order": 0,
-			"blocks": []
+			"blocks": [
+				{
+					"columns": 2,
+					"rows": 1,
+					"imageRatio": "original",
+					"ratioWidth": 4,
+					"ratioHeight": 3,
+					"cells": [
+						{
+							"image": {
+								"file": "자산 49.svg"
+							}
+						},
+						{
+							"image": {
+								"file": "자산 50.svg"
+							}
+						}
+					],
+					"blockType": "imageGrid",
+					"rules": []
+				}
+			]
 		},
 		{
 			"slug": null,
@@ -2079,33 +2101,63 @@
 		},
 		{
 			"slug": "layout-three",
-			"title": "위젯 3개",
+			"title": "Grid System Overview",
 			"parent": "layout",
 			"order": 1,
 			"blocks": [
 				{
 					"width": "padded",
-					"background": {
-						"color": "#000000"
-					},
 					"arrangement": "grid",
 					"columns": 3,
 					"aspectRatio": "1:1",
 					"blockType": "block",
+					"title": "",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [],
+									"textStyle": "",
+									"textFormat": 0
+								}
+							]
+						}
+					},
 					"children": [
 						{
 							"sample": "grid-labels",
 							"guides": "shared",
-							"blockType": "layoutGridWidget"
+							"gutterX": 0,
+							"gutterY": 0,
+							"lockMargin": false,
+							"lockGutterX": true,
+							"lockGutterY": true,
+							"blockType": "layoutGridWidget",
+							"caption": ""
 						},
 						{
 							"sample": "grid-labels",
 							"guides": "shared",
+							"lockMargin": false,
+							"lockGutterX": false,
+							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "c",
 							"guides": "shared",
+							"gutterX": 0,
+							"lockMargin": false,
+							"lockGutterX": true,
+							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						}
 					],
@@ -4208,14 +4260,14 @@
 		},
 		{
 			"slug": "layout-b-two",
-			"title": "B 위젯 2개",
+			"title": "Layout Type 1",
 			"parent": "layout",
 			"order": 2,
 			"blocks": [
 				{
 					"width": "padded",
 					"background": {
-						"color": "#000000"
+						"color": "#EBEBEB"
 					},
 					"arrangement": "grid",
 					"columns": 2,
@@ -4225,19 +4277,25 @@
 						{
 							"sample": "b",
 							"guides": "on",
+							"lockMargin": false,
+							"lockGutterX": false,
+							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "b",
 							"guides": "off",
+							"lockMargin": false,
+							"lockGutterX": false,
+							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"marginPct": 4.5,
 							"marginAdjustable": true,
-							"gutterX": 75,
+							"gutterX": 0,
 							"gutterXAdjustable": false,
-							"gutterY": 75,
+							"gutterY": 0,
 							"gutterYAdjustable": false,
 							"guidesOn": true,
 							"guidesAdjustable": false,
@@ -6614,14 +6672,14 @@
 		},
 		{
 			"slug": "layout-a-two",
-			"title": "A 위젯 2개",
+			"title": "Layout Type 2",
 			"parent": "layout",
 			"order": 3,
 			"blocks": [
 				{
 					"width": "padded",
 					"background": {
-						"color": "#000000"
+						"color": "#EBEBEB"
 					},
 					"arrangement": "grid",
 					"columns": 2,
@@ -6631,11 +6689,17 @@
 						{
 							"sample": "a",
 							"guides": "on",
+							"lockMargin": false,
+							"lockGutterX": false,
+							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "a",
 							"guides": "off",
+							"lockMargin": false,
+							"lockGutterX": false,
+							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
@@ -8262,14 +8326,14 @@
 		},
 		{
 			"slug": "layout-c-two",
-			"title": "C 위젯 2개",
+			"title": "Layout Type 3",
 			"parent": "layout",
 			"order": 4,
 			"blocks": [
 				{
 					"width": "padded",
 					"background": {
-						"color": "#000000"
+						"color": "#EBEBEB"
 					},
 					"arrangement": "grid",
 					"columns": 2,
@@ -8279,20 +8343,26 @@
 						{
 							"sample": "c",
 							"guides": "on",
+							"lockMargin": false,
+							"lockGutterX": false,
+							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "c",
 							"guides": "off",
+							"lockMargin": false,
+							"lockGutterX": false,
+							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"marginPct": 4.5,
 							"marginAdjustable": true,
-							"gutterX": 75,
-							"gutterXAdjustable": true,
+							"gutterX": 0,
+							"gutterXAdjustable": false,
 							"gutterY": 75,
-							"gutterYAdjustable": false,
+							"gutterYAdjustable": true,
 							"guidesOn": true,
 							"guidesAdjustable": false,
 							"blockType": "layoutGridControlsWidget"
@@ -9158,7 +9228,7 @@
 				{
 					"width": "padded",
 					"background": {
-						"color": "#000000"
+						"color": "#151515"
 					},
 					"arrangement": "grid",
 					"columns": 3,
@@ -9196,18 +9266,31 @@
 					},
 					"children": [
 						{
-							"sample": "a",
+							"sample": "b",
 							"guides": "shared",
+							"gutterX": 0,
+							"gutterY": 0,
+							"lockMargin": false,
+							"lockGutterX": true,
+							"lockGutterY": true,
 							"blockType": "layoutGridWidget"
 						},
 						{
-							"sample": "b",
+							"sample": "a",
 							"guides": "shared",
-							"blockType": "layoutGridWidget"
+							"lockMargin": false,
+							"lockGutterX": false,
+							"lockGutterY": false,
+							"blockType": "layoutGridWidget",
+							"caption": "검증용 캡션 — 국문 가로형"
 						},
 						{
 							"sample": "c",
 							"guides": "shared",
+							"gutterX": 0,
+							"lockMargin": false,
+							"lockGutterX": true,
+							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
