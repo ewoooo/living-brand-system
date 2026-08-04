@@ -37,7 +37,7 @@ function TreeItems({
 								path: `/collections/${collectionSlug}/${node.id}`,
 							})}
 						>
-							{node.title}
+							{node.title ?? '(제목 없음)'}
 						</Link>
 						<Badge variant={node._status === 'published' ? 'highlight' : 'muted'}>
 							{node._status === 'published' ? '발행됨' : '초안'}
