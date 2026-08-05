@@ -93,6 +93,79 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(image?.getAttribute('data-asset-id')).toBe('9')
 	})
 
+	it('imageTransform을 캐리어의 transform으로 적용한다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: generated,
+				imageTransform: { x: 12, y: -30, scale: 1.5, rotate: 15 },
+			},
+		})
+		const carrier = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-image-carrier]') as HTMLElement
+
+		expect(carrier.style.transform).toBe('translate(12px, -30px) scale(1.5) rotate(15deg)')
+	})
+
+	it('캐리어의 기존 base transform 앞에 편집 transform을 붙여 보존한다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' style="transform:rotate(-10deg)"></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: generated,
+				imageTransform: { x: 5, y: 0, scale: 2, rotate: 0 },
+			},
+		})
+		const carrier = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-image-carrier]') as HTMLElement
+
+		expect(carrier.style.transform).toBe(
+			'translate(5px, 0px) scale(2) rotate(0deg) rotate(-10deg)',
+		)
+	})
+
+	it('identity imageTransform은 아무것도 쓰지 않는다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: generated,
+				imageTransform: { x: 0, y: 0, scale: 1, rotate: 0 },
+			},
+		})
+		const carrier = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-image-carrier]') as HTMLElement
+
+		expect(carrier.style.transform).toBe('')
+	})
+
+	it('캐리어가 없으면 imageTransform을 무시하고 프레임 배경 동작을 유지한다', () => {
+		const frameHtml = '<div data-node-id="frame-1" data-figma-type="FRAME"></div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: generated,
+				imageTransform: { x: 12, y: 0, scale: 1.5, rotate: 15 },
+			},
+		})
+		const frame = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-node-id="frame-1"]') as HTMLElement
+
+		expect(frame.style.transform).toBe('')
+		expect(frame.style.backgroundImage).toContain(generated)
+	})
+
 	it('마커가 없으면 기존 프레임 배경 동작을 유지한다', () => {
 		const frameHtml = '<div data-node-id="frame-1" data-figma-type="FRAME"></div>'
 		const html = composeTemplateHtml(frameHtml, { 'frame-1': { backgroundImage: generated } })
