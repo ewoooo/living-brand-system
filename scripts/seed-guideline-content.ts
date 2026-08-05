@@ -19,6 +19,16 @@ const payload = await getPayload({ config })
 const fromPortable = makeFromPortable(payload)
 
 const content: AnyData = JSON.parse(await readFile(CONTENT_PATH, 'utf8'))
+
+// 🔴 slug 없는 항목이 정본에 있으면 멈춘다 — export가 초안을 걸러내지 못하던 시절의 산물이고,
+//    그대로 쓰면 slug null로 문서를 만들려다 required 검증에서 터진다. 정본을 다시 export할 신호다.
+const slugless = content.documents.filter((doc: AnyData) => !doc.slug)
+if (slugless.length > 0) {
+	throw new Error(
+		`정본에 slug 없는 문서 ${slugless.length}건이 있다 — export를 다시 실행해 정본을 갱신할 것.`,
+	)
+}
+
 const targets: AnyData[] = content.documents.filter(
 	(doc: AnyData) => only.length === 0 || only.includes(doc.slug),
 )

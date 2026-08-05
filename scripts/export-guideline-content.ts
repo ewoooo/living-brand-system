@@ -16,12 +16,16 @@ const only = process.argv.slice(2).filter((a) => !a.startsWith('-'))
 
 const payload = await getPayload({ config })
 
+// 🔴 draft:false만으로는 초안이 걸러지지 않는다 — "초안 버전을 우선하지 않는다"는 뜻일 뿐이고
+//    초안 문서 자체는 그대로 반환된다. _status로 명시해야 게시된 것만 정본이 된다.
+//    (걸러내지 않으면 seed가 초안을 published로 올려버리고, slug 없는 빈 초안에서 터진다.)
 const { docs } = await payload.find({
 	collection: 'guideline-documents',
+	where: { _status: { equals: 'published' } },
 	limit: 1000,
 	locale: 'ko',
 	depth: 1, // 관계를 filename·hex까지 populate
-	draft: false, // 게시된 상태만 정본으로 삼는다
+	draft: false,
 	sort: 'displayOrder',
 	overrideAccess: true,
 })
