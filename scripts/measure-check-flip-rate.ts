@@ -3,11 +3,13 @@
  * 같은 이미지를 N회 검수해 check status와 criterion 관측값이 실행 간 얼마나 일치하는지 리포트한다.
  * 어떤 criterion이 흔들리는지 찾아 재작성·deterministic 이관 대상을 고르는 용도다.
  * 실행: PAYLOAD_DB_PUSH=false pnpm exec payload run scripts/measure-check-flip-rate.ts -- --image <path> [--runs 5] [--flags logo,typography] [--out <json path>]
- * --flags: 검수 시나리오의 요소 플래그(logo|typography|illustration|photography). 전부 켜면
- * 레퍼런스 이미지가 한 요청에 몰려 413이 나므로 실제 시나리오와 같은 조합으로 지정한다.
+ * --flags: 요소 플래그(logo|typography|illustration|photography)로 검수 대상 check 목록을
+ * 호출 전에 좁힌다. 전부 켜면 레퍼런스 이미지가 한 요청에 몰려 413이 나므로 실제 시나리오와
+ * 같은 조합으로 지정한다.
  */
 import { readFile, writeFile } from 'node:fs/promises'
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
+import { getRuntimeChecks } from '@/features/asset-check/services/get-check-ruleset.service'
 import {
 	runHeuristicCheck,
 	runImmediateCheck,
@@ -37,7 +39,15 @@ const flags = {
 	illustration: enabledFlags.includes('illustration'),
 	photography: enabledFlags.includes('photography'),
 }
-const { pendingCheckKeys } = await runImmediateCheck(buffer, flags)
+function isEnabledCheckKey(key: string): boolean {
+	if (key.startsWith('logo.')) return flags.logo
+	if (key.startsWith('typography.')) return flags.typography
+	if (key.startsWith('illustration.')) return flags.illustration
+	if (key.startsWith('imagery.')) return flags.photography
+	return true
+}
+const checks = (await getRuntimeChecks()).filter((check) => isEnabledCheckKey(check.key))
+const { pendingCheckKeys } = await runImmediateCheck(buffer, checks)
 console.log(`AI check ${pendingCheckKeys.length}건 × ${runs}회 실행: ${imagePath}`)
 
 const allRuns: Record<string, CheckResult>[] = []

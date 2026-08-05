@@ -26,13 +26,11 @@ import {
 	getCheckSessionRecord,
 	saveCheckSessionRecord,
 } from '@/features/asset-check/repositories/check-session.payload.repository'
-import { getCheckScenarioFlags } from '@/features/asset-check/scenarios'
 import { getRuntimeChecks } from '@/features/asset-check/services/get-check-ruleset.service'
 import {
 	runHeuristicCheck,
 	runImmediateCheck,
 } from '@/features/asset-check/services/run-check.service'
-import type { ImageContentFlags } from '@/features/asset-check/types'
 import { detectCheckImageMediaType } from '@/features/asset-check/utils/image-format'
 import { type CheckScenario, getCheckScenario } from '@/features/quality-rule/check-scenario'
 import { findPublishedCheckScenarios } from '@/features/quality-rule/repositories/check-scenario.payload.repository'
@@ -42,7 +40,6 @@ interface StartCheckSessionInput {
 	agentChatSessionId?: AgentChatSession['id']
 	buffer: Buffer
 	deferHeuristic?: boolean
-	flags?: ImageContentFlags
 	imageName?: string
 	scenario?: CheckScenario
 	scenarioKey?: string
@@ -98,11 +95,7 @@ export async function startCheckSession(input: StartCheckSessionInput) {
 	})
 
 	try {
-		const immediate = await runImmediateCheck(
-			input.buffer,
-			input.flags ?? getCheckScenarioFlags(scenario),
-			rulesetSnapshot,
-		)
+		const immediate = await runImmediateCheck(input.buffer, rulesetSnapshot)
 		session.applyImmediateResults(immediate)
 		if (!input.deferHeuristic && session.pendingCheckKeys.length > 0) {
 			const aiCheck = await runHeuristicCheck(

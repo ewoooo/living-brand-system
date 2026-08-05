@@ -142,11 +142,7 @@ describe('deterministic CheckResult integration', () => {
 			'@/features/asset-check/services/run-check.service'
 		)
 
-		const result = await runImmediateCheck(
-			Buffer.from('test-image'),
-			{ logo: false, typography: true, illustration: false, photography: false },
-			[runtimeCheck()],
-		)
+		const result = await runImmediateCheck(Buffer.from('test-image'), [runtimeCheck()])
 
 		expect(getChecker('contrast')?.executor).toBe('deterministic')
 		expect(result.results['typography.contrast']).toMatchObject({
@@ -168,11 +164,7 @@ describe('deterministic CheckResult integration', () => {
 			'@/features/asset-check/services/run-check.service'
 		)
 
-		const result = await runImmediateCheck(
-			Buffer.from('low-contrast-image'),
-			{ logo: false, typography: true, illustration: false, photography: false },
-			[runtimeCheck()],
-		)
+		const result = await runImmediateCheck(Buffer.from('low-contrast-image'), [runtimeCheck()])
 
 		expect(result.results['typography.contrast']).toMatchObject({
 			rawResult: {
@@ -190,11 +182,7 @@ describe('deterministic CheckResult integration', () => {
 			'@/features/asset-check/services/run-check.service'
 		)
 
-		const result = await runImmediateCheck(
-			Buffer.from('single-color-image'),
-			{ logo: false, typography: true, illustration: false, photography: false },
-			[runtimeCheck()],
-		)
+		const result = await runImmediateCheck(Buffer.from('single-color-image'), [runtimeCheck()])
 
 		expect(result.results['typography.contrast']).toMatchObject({
 			rawResult: {

@@ -24,7 +24,6 @@ import {
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
 import { getRuntimeChecks } from '@/features/asset-check/services/get-check-ruleset.service'
-import type { ImageContentFlags } from '@/features/asset-check/types'
 import { detectCheckImageMediaType } from '@/features/asset-check/utils/image-format'
 
 export interface ImmediateCheckResult {
@@ -52,7 +51,6 @@ function isPendingAiCheck(check: RuntimeCheck): boolean {
  */
 export async function runImmediateCheck(
 	buffer: Buffer,
-	flags: ImageContentFlags,
 	inputChecks?: RuntimeCheck[],
 ): Promise<ImmediateCheckResult> {
 	const [grid, checks, palette] = await Promise.all([
@@ -67,7 +65,7 @@ export async function runImmediateCheck(
 	const pendingCheckKeys: string[] = []
 	const ctx = { pixels, palette, grid, image }
 	for (const check of checks) {
-		if (results[check.key] || !shouldRunCheck(check.key, flags)) continue
+		if (results[check.key]) continue
 		if (isPendingAiCheck(check)) {
 			pendingCheckKeys.push(check.key)
 			continue
@@ -172,15 +170,6 @@ function mergeAiUsages(usages: AiUsage[]): AiUsage | undefined {
 		reasoningTokens: total((usage) => usage.reasoningTokens),
 		rawUsage: { groups: usages.map((usage) => usage.rawUsage ?? {}) },
 	}
-}
-
-/** Check가 요소 종속이면 시나리오 플래그가 켜져 있을 때만 검수한다. */
-function shouldRunCheck(checkKey: string, flags: ImageContentFlags): boolean {
-	if (checkKey.startsWith('logo.')) return flags.logo
-	if (checkKey.startsWith('typography.')) return flags.typography
-	if (checkKey.startsWith('illustration.')) return flags.illustration
-	if (checkKey.startsWith('imagery.')) return flags.photography
-	return true
 }
 
 // AI로 가는 Check(heuristic, model 있는 manual)는 호출 전에 분기되므로 여기 오지 않는다.
