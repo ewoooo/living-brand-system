@@ -12,24 +12,18 @@ vi.mock('@/lib/request-auth', () => ({
 	authenticateRequest: mocks.authenticateRequest,
 	isCrossOriginRequest: mocks.isCrossOriginRequest,
 }))
-vi.mock('@/features/generate-image/services/generate-image.service', () => {
-	class ImageGenerationUnavailableError extends Error {}
-	class ImageProfileNotFoundError extends Error {}
-	class InvalidSeedImageError extends Error {}
-	return {
-		adjustImageCamera: mocks.adjustImageCamera,
-		ImageGenerationUnavailableError,
-		ImageProfileNotFoundError,
-		InvalidSeedImageError,
-	}
-})
+vi.mock('@/features/generate-image/services/generate-image.service', () => ({
+	adjustImageCamera: mocks.adjustImageCamera,
+}))
 
-import {
-	ImageGenerationUnavailableError,
-	ImageProfileNotFoundError,
-	InvalidSeedImageError,
-} from '@/features/generate-image/services/generate-image.service'
 import { POST } from './route'
+
+// route는 error.name으로 매핑하므로 실제 클래스 대신 이름만 맞춘 오류로 검증한다.
+function namedError(name: string) {
+	const error = new Error(name)
+	error.name = name
+	return error
+}
 
 const validBody = {
 	basePrompt: '{"style":"technical illustration","subject":"유조선"}',
@@ -149,9 +143,10 @@ describe('POST /api/generate-image/camera-adjustment', () => {
 	})
 
 	it.each([
-		[new ImageGenerationUnavailableError(), 503],
-		[new ImageProfileNotFoundError(), 404],
-		[new InvalidSeedImageError(), 400],
+		[namedError('ImageGenerationUnavailableError'), 503],
+		[namedError('ImageProfileNotFoundError'), 404],
+		[namedError('InvalidSeedImageError'), 400],
+		[namedError('UnsupportedImageOutputSizeError'), 400],
 	] as const)('서비스 오류를 안전한 상태 코드로 변환한다', async (error, status) => {
 		mocks.adjustImageCamera.mockRejectedValue(error)
 

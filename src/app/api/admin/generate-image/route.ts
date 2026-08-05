@@ -5,11 +5,10 @@ import {
 	IMAGE_OUTPUT_SIZES,
 	supportsImageOutputSize,
 } from '@/features/generate-image/image-size'
+import { respondImageGeneration } from '@/features/generate-image/respond-image-generation'
 import {
 	generateImages,
 	generateImagesWithSettings,
-	ImageGenerationUnavailableError,
-	ImageProfileNotFoundError,
 } from '@/features/generate-image/services/generate-image.service'
 import { isManager } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
@@ -58,45 +57,31 @@ export async function POST(request: Request) {
 	}
 
 	const { prompt: userInput, count } = parsed.data
+	const input = parsed.data
 
-	try {
-		const result =
-			'imageModelPreset' in parsed.data
-				? await generateImagesWithSettings({
+	return respondImageGeneration({
+		run: () =>
+			'imageModelPreset' in input
+				? generateImagesWithSettings({
 						userInput,
 						count,
-						aspectRatio: parsed.data.aspectRatio,
-						imageModelPreset: parsed.data.imageModelPreset,
-						imageSize: parsed.data.imageSize,
+						aspectRatio: input.aspectRatio,
+						imageModelPreset: input.imageModelPreset,
+						imageSize: input.imageSize,
 					})
-				: await generateImages({
+				: generateImages({
 						userInput,
 						count,
-						profileId: parsed.data.profileId,
+						profileId: input.profileId,
 						user,
-					})
-		if (result.images.length === 0) {
-			return Response.json({ message: 'Image generation failed.' }, { status: 502 })
-		}
-		const { provider, ...response } = result
-		payload.logger.info(
-			{
-				provider,
-				model: result.model,
-				promptLength: result.prompt.length,
-				count: result.images.length,
-			},
-			'admin-image-generation.done',
-		)
-		return Response.json(response)
-	} catch (error) {
-		payload.logger.error({ err: error }, 'admin-image-generation.failed')
-		if (error instanceof ImageGenerationUnavailableError) {
-			return Response.json({ message: 'Image generation is unavailable.' }, { status: 503 })
-		}
-		if (error instanceof ImageProfileNotFoundError) {
-			return Response.json({ message: 'Image profile not found.' }, { status: 404 })
-		}
-		return Response.json({ message: 'Image generation failed.' }, { status: 500 })
-	}
+					}),
+		logger: payload.logger,
+		event: 'admin-image-generation',
+		doneLog: (result) => ({
+			provider: result.provider,
+			model: result.model,
+			promptLength: result.prompt.length,
+			count: result.images.length,
+		}),
+	})
 }

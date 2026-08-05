@@ -15,10 +15,8 @@ import {
 	type ImageOutputSize,
 	supportsImageOutputSize,
 } from '@/features/generate-image/image-size'
-import {
-	ImageGenerationUnavailableError,
-	normalizeImageProfilePrompt,
-} from '@/features/generate-image/services/normalize-image-profile-prompt.service'
+import { imageGenerationErrorResponse } from '@/features/generate-image/respond-image-generation'
+import { normalizeImageProfilePrompt } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
 import { isManager, managerManagedAccess } from '@/lib/auth'
 import { draftVersions } from './shared'
 
@@ -54,13 +52,11 @@ async function normalizePromptEndpoint(req: PayloadRequest) {
 		return Response.json(await normalizeImageProfilePrompt(parsed.data))
 	} catch (error) {
 		req.payload.logger.error({ err: error }, 'image-prompt-normalization.failed')
-		if (error instanceof ImageGenerationUnavailableError) {
-			return Response.json(
-				{ message: 'AI 프롬프트 정규화가 설정되지 않았습니다.' },
-				{ status: 503 },
-			)
-		}
-		return Response.json({ message: '프롬프트 정규화에 실패했습니다.' }, { status: 500 })
+		return (
+			imageGenerationErrorResponse(error, {
+				ImageGenerationUnavailableError: 'AI 프롬프트 정규화가 설정되지 않았습니다.',
+			}) ?? Response.json({ message: '프롬프트 정규화에 실패했습니다.' }, { status: 500 })
+		)
 	}
 }
 

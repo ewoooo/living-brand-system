@@ -11,21 +11,18 @@ vi.mock('@/lib/request-auth', () => ({
 	authenticateRequest: mocks.authenticateRequest,
 	isCrossOriginRequest: mocks.isCrossOriginRequest,
 }))
-vi.mock('@/features/generate-image/services/generate-image.service', () => {
-	class ImageGenerationUnavailableError extends Error {}
-	class ImageProfileNotFoundError extends Error {}
-	return {
-		generateImages: mocks.generateImages,
-		ImageGenerationUnavailableError,
-		ImageProfileNotFoundError,
-	}
-})
+vi.mock('@/features/generate-image/services/generate-image.service', () => ({
+	generateImages: mocks.generateImages,
+}))
 
-import {
-	ImageGenerationUnavailableError,
-	ImageProfileNotFoundError,
-} from '@/features/generate-image/services/generate-image.service'
 import { POST } from './route'
+
+// route는 error.name으로 매핑하므로 실제 클래스 대신 이름만 맞춘 오류로 검증한다.
+function namedError(name: string) {
+	const error = new Error(name)
+	error.name = name
+	return error
+}
 
 function imageRequest(body: unknown) {
 	return new Request('http://localhost/api/generate-image', {
@@ -88,7 +85,7 @@ describe('POST /api/generate-image', () => {
 	})
 
 	it('생성기나 정규화 모델을 사용할 수 없으면 503을 반환한다', async () => {
-		mocks.generateImages.mockRejectedValue(new ImageGenerationUnavailableError())
+		mocks.generateImages.mockRejectedValue(namedError('ImageGenerationUnavailableError'))
 
 		const response = await POST(imageRequest({ prompt: 'sample', profileId: 5 }))
 
@@ -123,10 +120,19 @@ describe('POST /api/generate-image', () => {
 	})
 
 	it('published 프로파일이 없으면 404를 반환한다', async () => {
-		mocks.generateImages.mockRejectedValue(new ImageProfileNotFoundError())
+		mocks.generateImages.mockRejectedValue(namedError('ImageProfileNotFoundError'))
 
 		const response = await POST(imageRequest({ prompt: 'sample', profileId: 404 }))
 
 		expect(response.status).toBe(404)
+	})
+
+	it('시드 이미지 오류를 카메라 route가 아니어도 400으로 매핑한다', async () => {
+		mocks.generateImages.mockRejectedValue(namedError('InvalidSeedImageError'))
+
+		const response = await POST(imageRequest({ prompt: 'sample', profileId: 5 }))
+
+		expect(response.status).toBe(400)
+		expect(await response.json()).toEqual({ message: 'Invalid seed image.' })
 	})
 })

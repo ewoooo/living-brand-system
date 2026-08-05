@@ -12,19 +12,19 @@ vi.mock('@/lib/request-auth', () => ({
 	authenticateRequest: mocks.authenticateRequest,
 	isCrossOriginRequest: mocks.isCrossOriginRequest,
 }))
-vi.mock('@/features/generate-image/services/generate-image.service', () => {
-	class ImageGenerationUnavailableError extends Error {}
-	class ImageProfileNotFoundError extends Error {}
-	return {
-		generateImages: mocks.generateImages,
-		generateImagesWithSettings: mocks.generateImagesWithSettings,
-		ImageGenerationUnavailableError,
-		ImageProfileNotFoundError,
-	}
-})
+vi.mock('@/features/generate-image/services/generate-image.service', () => ({
+	generateImages: mocks.generateImages,
+	generateImagesWithSettings: mocks.generateImagesWithSettings,
+}))
 
-import { ImageProfileNotFoundError } from '@/features/generate-image/services/generate-image.service'
 import { POST } from './route'
+
+// route는 error.name으로 매핑하므로 실제 클래스 대신 이름만 맞춘 오류로 검증한다.
+function namedError(name: string) {
+	const error = new Error(name)
+	error.name = name
+	return error
+}
 
 function imageRequest(body: unknown) {
 	return new Request('http://localhost/api/admin/generate-image', {
@@ -124,11 +124,20 @@ describe('POST /api/admin/generate-image', () => {
 	})
 
 	it('published 프로파일이 없으면 404를 반환한다', async () => {
-		mocks.generateImages.mockRejectedValue(new ImageProfileNotFoundError())
+		mocks.generateImages.mockRejectedValue(namedError('ImageProfileNotFoundError'))
 
 		const response = await POST(imageRequest({ prompt: 'sample', count: 1, profileId: 404 }))
 
 		expect(response.status).toBe(404)
+	})
+
+	it('지원하지 않는 출력 해상도 오류를 400으로 매핑한다', async () => {
+		mocks.generateImages.mockRejectedValue(namedError('UnsupportedImageOutputSizeError'))
+
+		const response = await POST(imageRequest({ prompt: 'sample', count: 1, profileId: 5 }))
+
+		expect(response.status).toBe(400)
+		expect(await response.json()).toEqual({ message: '지원하지 않는 출력 해상도입니다.' })
 	})
 
 	it('2500자를 넘는 프롬프트를 거부한다', async () => {
