@@ -190,6 +190,7 @@ Always start from `docs/README.md`, then read the smallest relevant document bef
 - Worker UI, custom Admin UI, user-facing copy, keyboard access, errors, and message/i18n placement: `docs/08-accessibility-i18n.md`
 - Design tokens, color/typography/radius/dark mode, runtime brand override, and shell/frame skeleton — read before changing any front-end visual surface: `docs/09-design-system.md`
 - Component authoring contract (reuse ladder, cva/data-size templates, style Do/Don't, kit→block promotion gate) — read before writing or adding any new UI component: `docs/10-component-authoring.md`
+- 가이드라인 위젯 저작 계약(폴더 계약·손으로 하는 등록 3곳·Block/Widget 책임 경계·provenance 불변식·함정) — **위젯을 새로 만들거나 고치기 전에 읽을 것**: `docs/11-widget-authoring.md`
 
 When docs conflict, prefer the newer or more specific document. If a code change intentionally departs from docs, update the relevant doc in the same change unless the user asked for source-only work.
 
