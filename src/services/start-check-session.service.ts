@@ -1,4 +1,5 @@
 import { toCheckResult } from '@/features/asset-check/checkers/check-result.adapter'
+import { needsReview, planChecks } from '@/features/asset-check/domain/check-plan'
 import {
 	type CheckSession,
 	CheckSessionInputMismatchError,
@@ -26,13 +27,11 @@ import {
 	getCheckSessionRecord,
 	saveCheckSessionRecord,
 } from '@/features/asset-check/repositories/check-session.payload.repository'
-import { getCheckScenarioFlags } from '@/features/asset-check/scenarios'
 import { getRuntimeChecks } from '@/features/asset-check/services/get-check-ruleset.service'
 import {
 	runHeuristicCheck,
 	runImmediateCheck,
 } from '@/features/asset-check/services/run-check.service'
-import type { ImageContentFlags } from '@/features/asset-check/types'
 import { detectCheckImageMediaType } from '@/features/asset-check/utils/image-format'
 import { type CheckScenario, getCheckScenario } from '@/features/quality-rule/check-scenario'
 import { findPublishedCheckScenarios } from '@/features/quality-rule/repositories/check-scenario.payload.repository'
@@ -42,7 +41,6 @@ interface StartCheckSessionInput {
 	agentChatSessionId?: AgentChatSession['id']
 	buffer: Buffer
 	deferHeuristic?: boolean
-	flags?: ImageContentFlags
 	imageName?: string
 	scenario?: CheckScenario
 	scenarioKey?: string
@@ -98,11 +96,7 @@ export async function startCheckSession(input: StartCheckSessionInput) {
 	})
 
 	try {
-		const immediate = await runImmediateCheck(
-			input.buffer,
-			input.flags ?? getCheckScenarioFlags(scenario),
-			rulesetSnapshot,
-		)
+		const immediate = await runImmediateCheck(input.buffer, rulesetSnapshot)
 		session.applyImmediateResults(immediate)
 		if (!input.deferHeuristic && session.pendingCheckKeys.length > 0) {
 			const aiCheck = await runHeuristicCheck(
@@ -185,24 +179,21 @@ export async function completeCheckSessionObservations(
 	const unavailableReferenceCheckKeys = new Set(
 		findUnavailableAiReferenceCheckKeys(checks, referenceFilesByKey),
 	)
+	// 실행 방식 판단은 planChecks 한 곳이 소유한다. 관측은 MCP 클라이언트가 제공하므로
+	// 서버 model이 없는 heuristic(unrunnable plan)도 여기서는 evaluator로 그대로 판정한다.
 	const results = Object.fromEntries(
-		checks.map((check) => [
-			check.key,
+		planChecks(checks).map((plan) => [
+			plan.check.key,
 			toCheckResult(
-				unavailableReferenceCheckKeys.has(check.key)
-					? {
-							status: 'needs_review',
-							fulfillment: null,
-							detail: '레퍼런스 이미지 불러오기 실패',
-							reasonCode: 'reference_asset_unavailable',
-						}
-					: check.executor === 'manual'
-						? evaluateAdvisory(input.advices?.[check.key])
+				unavailableReferenceCheckKeys.has(plan.check.key)
+					? needsReview('reference_asset_unavailable')
+					: plan.kind === 'ai-advisory' || plan.kind === 'manual-review'
+						? evaluateAdvisory(input.advices?.[plan.check.key])
 						: evaluateHeuristic(
-								check.heuristicCriteria ?? [],
-								input.observations?.[check.key],
+								plan.check.heuristicCriteria ?? [],
+								input.observations?.[plan.check.key],
 							),
-				check,
+				plan.check,
 				{ key: 'mcp-client', type: 'ai' },
 			),
 		]),

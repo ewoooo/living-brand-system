@@ -3,7 +3,6 @@ import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import { runAiCheck } from '@/features/asset-check/repositories/ai-check.ai.repository'
 import { extractPixelGrid } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { getCheckPalette } from '@/features/asset-check/services/get-check-palette.service'
-import type { ImageContentFlags } from '@/features/asset-check/types'
 import { runHeuristicCheck, runImmediateCheck } from './run-check.service'
 
 vi.mock('@/features/asset-check/repositories/ai-check.ai.repository', () => ({
@@ -162,7 +161,11 @@ describe('runHeuristicCheck', () => {
 			[check, invalidCheck],
 		)
 
-		expect(runAiCheck).toHaveBeenCalledWith([check], expect.any(Object))
+		expect(runAiCheck).toHaveBeenCalledWith(
+			[expect.objectContaining({ kind: 'ai-criteria', check })],
+			'model',
+			expect.any(Object),
+		)
 		expect(result.results[check.key]?.rawResult.status).toBe('pass')
 		expect(result.results[invalidCheck.key]?.rawResult).toEqual({
 			status: 'needs_review',
@@ -189,7 +192,11 @@ describe('runHeuristicCheck', () => {
 
 		const result = await runHeuristicCheck(png, [advisoryCheck.key], [advisoryCheck])
 
-		expect(runAiCheck).toHaveBeenCalledWith([advisoryCheck], expect.any(Object))
+		expect(runAiCheck).toHaveBeenCalledWith(
+			[expect.objectContaining({ kind: 'ai-advisory', check: advisoryCheck })],
+			'model',
+			expect.any(Object),
+		)
 		expect(result.results[advisoryCheck.key]?.rawResult).toMatchObject({
 			status: 'advisory',
 			fulfillment: null,
@@ -226,8 +233,16 @@ describe('runHeuristicCheck', () => {
 		)
 
 		expect(runAiCheck).toHaveBeenCalledTimes(2)
-		expect(runAiCheck).toHaveBeenCalledWith([check], expect.any(Object))
-		expect(runAiCheck).toHaveBeenCalledWith([otherModelCheck], expect.any(Object))
+		expect(runAiCheck).toHaveBeenCalledWith(
+			[expect.objectContaining({ check })],
+			'model',
+			expect.any(Object),
+		)
+		expect(runAiCheck).toHaveBeenCalledWith(
+			[expect.objectContaining({ check: otherModelCheck })],
+			'other-model',
+			expect.any(Object),
+		)
 		expect(result.results[check.key]?.rawResult.status).toBe('pass')
 		expect(result.results[otherModelCheck.key]?.rawResult.status).toBe('pass')
 		expect(result.aiUsage).toMatchObject({
@@ -262,13 +277,6 @@ describe('runHeuristicCheck', () => {
 })
 
 describe('runImmediateCheck', () => {
-	const flags: ImageContentFlags = {
-		logo: false,
-		typography: false,
-		illustration: false,
-		photography: false,
-	}
-
 	beforeEach(() => {
 		vi.mocked(extractPixelGrid).mockResolvedValue({
 			width: 1,
@@ -280,19 +288,40 @@ describe('runImmediateCheck', () => {
 	})
 
 	it('model이 설정된 manual 체크는 즉시 판정하지 않고 pendingCheckKeys로 분리한다', async () => {
-		const result = await runImmediateCheck(png, flags, [manualAdvisoryCheck])
+		const result = await runImmediateCheck(png, [manualAdvisoryCheck])
 
 		expect(result.pendingCheckKeys).toEqual([manualAdvisoryCheck.key])
 		expect(result.results[manualAdvisoryCheck.key]).toBeUndefined()
 	})
 
 	it('model이 없는 manual 체크는 즉시 담당자 확인 필요로 판정한다', async () => {
-		const result = await runImmediateCheck(png, flags, [manualNoModelCheck])
+		const result = await runImmediateCheck(png, [manualNoModelCheck])
 
 		expect(result.pendingCheckKeys).toEqual([])
 		expect(result.results[manualNoModelCheck.key]?.rawResult).toMatchObject({
 			status: 'needs_review',
 			detail: '브랜드 담당자 확인 필요',
+		})
+	})
+
+	it('checker 미등록 deterministic 체크는 조용히 탈락하지 않고 needs_review로 판정한다', async () => {
+		const unregisteredCheck: RuntimeCheck = {
+			...check,
+			key: 'deterministic.unregistered',
+			checker: { key: 'no-such-checker', type: 'deterministic' },
+			executor: 'deterministic',
+			model: undefined,
+			heuristicCriteria: undefined,
+			checkerKey: 'no-such-checker',
+		}
+
+		const result = await runImmediateCheck(png, [unregisteredCheck])
+
+		expect(result.pendingCheckKeys).toEqual([])
+		expect(result.results[unregisteredCheck.key]?.rawResult).toMatchObject({
+			status: 'needs_review',
+			detail: 'Checker 미등록',
+			reasonCode: 'checker_not_registered',
 		})
 	})
 })

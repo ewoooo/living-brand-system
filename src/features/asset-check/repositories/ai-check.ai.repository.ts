@@ -5,6 +5,11 @@ import { env } from '@/env'
 import type { AiUsage, CheckerContext } from '@/features/asset-check/checkers/types'
 import { buildAiObservationTask } from '@/features/asset-check/domain/ai-observation-task'
 import {
+	type AiCheckPlan,
+	NEEDS_REVIEW_DETAILS,
+	type NeedsReviewReasonCode,
+} from '@/features/asset-check/domain/check-plan'
+import {
 	type HeuristicObservation,
 	measureObservationSchema,
 	presenceObservationSchema,
@@ -18,7 +23,7 @@ import {
 export interface AiCheckRunResult {
 	observations: Record<string, Record<string, HeuristicObservation>>
 	advices: Record<string, string>
-	failure?: { detail: string; reasonCode: string }
+	failure?: { detail: string; reasonCode: NeedsReviewReasonCode }
 	unavailableReferenceCheckKeys?: string[]
 	aiUsage?: AiUsage
 }
@@ -26,22 +31,16 @@ export interface AiCheckRunResult {
 /**
  * Asset check의 AI 기반 휴리스틱 검수 adapter.
  * 모델 호출(AI SDK)과 레퍼런스 이미지 fetch I/O를 소유한다.
+ * 실행 가능 여부 판단은 CheckPlan 타입이 보증하므로, 여기서는 환경 실패(키·이미지·호출)만 failure로 남긴다.
  */
 export async function runAiCheck(
-	checks: RuntimeCheck[],
+	plans: AiCheckPlan[],
+	model: string,
 	ctx: CheckerContext,
 ): Promise<AiCheckRunResult> {
-	if (!env.ANTHROPIC_API_KEY) return failed('AI 설정 없음', 'ai_not_configured')
-	if (!ctx.image) return failed('AI 평가용 이미지 없음', 'image_not_available')
-	if (
-		checks.some((check) => check.executor === 'heuristic' && !check.heuristicCriteria?.length)
-	) {
-		return failed('Heuristic 판정 기준 없음', 'invalid_criteria')
-	}
-	const { model } = checks[0] ?? {}
-	if (!model || checks.some((check) => check.model !== model)) {
-		return failed('AI 검사 도구 설정 오류', 'ai_checker_invalid')
-	}
+	if (!env.ANTHROPIC_API_KEY) return failed('ai_not_configured')
+	if (!ctx.image) return failed('image_not_available')
+	const checks = plans.map((plan) => plan.check)
 
 	let unavailableReferenceCheckKeys: string[] | undefined
 	try {
@@ -152,8 +151,8 @@ export async function runAiCheck(
 		// 실패는 needs_review로만 수렴해 원인이 숨는다. 진단용으로 사유는 남긴다.
 		console.error('[ai-check] AI 평가 실패:', error instanceof Error ? error.message : error)
 		return NoObjectGeneratedError.isInstance(error)
-			? failed('AI 관측값 형식 오류', 'ai_output_invalid', unavailableReferenceCheckKeys)
-			: failed('AI 평가 실패', 'ai_request_failed', unavailableReferenceCheckKeys)
+			? failed('ai_output_invalid', unavailableReferenceCheckKeys)
+			: failed('ai_request_failed', unavailableReferenceCheckKeys)
 	}
 }
 
@@ -259,14 +258,13 @@ function toAbsoluteUrl(url: string) {
 }
 
 function failed(
-	detail: string,
-	reasonCode: string,
+	reasonCode: NeedsReviewReasonCode,
 	unavailableReferenceCheckKeys?: string[],
 ): AiCheckRunResult {
 	return {
 		observations: {},
 		advices: {},
-		failure: { detail, reasonCode },
+		failure: { detail: NEEDS_REVIEW_DETAILS[reasonCode], reasonCode },
 		...(unavailableReferenceCheckKeys?.length ? { unavailableReferenceCheckKeys } : {}),
 	}
 }

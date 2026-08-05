@@ -5,13 +5,6 @@ import type { CheckScenario } from '@/features/quality-rule/check-scenario'
 
 export type { CheckSessionSource } from '@/features/asset-check/domain/check-session'
 
-export interface ImageContentFlags {
-	logo: boolean
-	typography: boolean
-	illustration: boolean
-	photography: boolean
-}
-
 export type CheckImageStatus = CheckSessionStatus | 'idle'
 
 export interface CheckImage {
