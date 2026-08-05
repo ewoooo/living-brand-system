@@ -154,6 +154,8 @@ const toolMarkerTexts: Record<string, (outputs: unknown[]) => string | null> = {
 		markerText(sumArrayLengths(outputs), (count) => `가이드라인 결과 ${count}개를 찾았습니다`),
 	'tool-getCheckCatalog': (outputs) =>
 		markerText(sumArrayLengths(outputs), (count) => `Check 카탈로그 ${count}개를 확인했습니다`),
+	'tool-listCheckScenarios': (outputs) =>
+		markerText(sumArrayLengths(outputs), (count) => `검수 시나리오 ${count}개를 확인했습니다`),
 	'tool-prepareTemplateImage': (outputs) =>
 		markerText(countPresent(outputs), (count) => `템플릿 이미지 ${count}개를 준비했습니다`),
 	'tool-runCheck': (outputs) =>
@@ -164,6 +166,23 @@ const toolMarkerTexts: Record<string, (outputs: unknown[]) => string | null> = {
 			).length,
 			(count) => `이미지 검수 ${count}건을 완료했습니다`,
 		),
+	'tool-generateImage': (outputs) =>
+		markerText(
+			outputs.reduce<number>(
+				(sum, output) =>
+					sum +
+					(typeof output === 'object' &&
+					output !== null &&
+					'images' in output &&
+					Array.isArray(output.images)
+						? output.images.length
+						: 0),
+				0,
+			),
+			(count) => `이미지 ${count}개를 생성했습니다`,
+		),
+	'tool-listImageProfiles': (outputs) =>
+		markerText(sumArrayLengths(outputs), (count) => `이미지 프로필 ${count}개를 확인했습니다`),
 	'tool-findTemplatesForRequest': (outputs) =>
 		markerText(sumArrayLengths(outputs), (count) => `템플릿 ${count}개를 확인했습니다`),
 }
@@ -201,11 +220,17 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 		}
 	}
 
-	// 결과 문구가 없을 때의 진행/완료 fallback — 검수 > 템플릿 검색 > 가이드라인 순.
+	// 결과 문구가 없을 때의 진행/완료 fallback — 검수 > 이미지 생성 > 템플릿 검색 > 가이드라인 순.
 	if (seenTypes.has('tool-runCheck')) {
 		return {
 			isPending,
 			text: isPending ? '이미지를 검수하고 있습니다' : '이미지 검수를 완료했습니다',
+		}
+	}
+	if (seenTypes.has('tool-generateImage')) {
+		return {
+			isPending,
+			text: isPending ? '이미지를 생성하고 있습니다' : '이미지 생성을 완료했습니다',
 		}
 	}
 	if ((outputsByType.get('tool-findTemplatesForRequest') ?? []).some(Array.isArray)) {

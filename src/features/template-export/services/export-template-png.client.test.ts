@@ -70,6 +70,20 @@ describe('exportHtmlToPng', () => {
 		expect(document.body.querySelector('img')).toBeNull()
 	})
 
+	it('발행 자산 컬렉션 generated-images의 CSS 배경 이미지 URL을 허용한다', async () => {
+		// jsdom은 리소스를 로드하지 않으므로 배경 이미지 로드 완료 상태를 흉내 낸다.
+		vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true)
+		HTMLImageElement.prototype.decode = () => Promise.resolve()
+
+		await exportHtmlToPng(
+			'<div id="__stage" style="background-image:url(/api/generated-images/file/bg.png)">배치 결과</div>',
+			'',
+			'결과',
+		)
+
+		expect(toPng).toHaveBeenCalledOnce()
+	})
+
 	it('외부 이미지 URL을 가진 샌드박스 HTML을 거부한다', async () => {
 		await expect(
 			exportHtmlToPng(
