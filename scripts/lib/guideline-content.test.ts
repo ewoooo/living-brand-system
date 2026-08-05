@@ -22,6 +22,13 @@ describe('toPortable', () => {
 		expect(toPortable({ rules: [rule] })).toEqual({ rules: [{ rule: 'typography-english' }] })
 	})
 
+	it('tier·executor가 비어 있는 초안 rule도 접는다', () => {
+		// 🔴 rules는 초안 저장 시 검증을 건너뛰므로 required 필드가 null일 수 있다. 값으로 판정하면
+		//    그 초안이 객체째로 정본에 들어가 대상 DB에서 seed가 죽는다.
+		const draft = { title: 'WIP', key: 'wip-rule', tier: null, executor: null, checker: 51 }
+		expect(toPortable({ rules: [draft] })).toEqual({ rules: [{ rule: 'wip-rule' }] })
+	})
+
 	it('key가 있어도 rules 필수 필드가 없으면 접지 않는다', () => {
 		expect(toPortable({ meta: { key: 'a', label: 'b' } })).toEqual({
 			meta: { key: 'a', label: 'b' },

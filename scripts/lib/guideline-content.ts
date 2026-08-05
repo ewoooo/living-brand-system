@@ -36,12 +36,9 @@ export function toPortable(value: AnyData): AnyData {
 		if (typeof value.hex === 'string') return { color: value.hex }
 		// 🔴 rules를 populate된 정의째로 담으면 안 된다 — 안에 든 checker가 환경별 id라 대상 DB에서
 		//    relationship 검증이 실패한다(id 없는 객체 → isValidID false). 자연키 key만 남긴다.
-		//    key·tier·executor는 rules의 required 필드다(src/collections/Rules.ts).
-		if (
-			typeof value.key === 'string' &&
-			typeof value.tier === 'string' &&
-			typeof value.executor === 'string'
-		) {
+		//    🔴 값이 아니라 키의 존재로 판정한다 — rules는 초안 저장 시 검증을 건너뛰므로 required인
+		//    tier·executor가 null인 행이 있을 수 있고, 값으로 보면 그 초안이 객체째로 정본에 들어간다.
+		if (typeof value.key === 'string' && 'tier' in value && 'executor' in value) {
 			return { rule: value.key }
 		}
 		const out: AnyData = {}
@@ -83,8 +80,10 @@ export function makeFromPortable(payload: BasePayload) {
 			const out: AnyData[] = []
 			for (const v of value) {
 				const resolved = await fromPortable(v)
-				// 대상 DB에 없는 rules 참조는 배열에서 빠진다(아래 rule 분기가 undefined를 낸다).
-				if (resolved !== undefined) out.push(resolved)
+				// 🔴 대상 DB에 없는 참조는 배열에서 빠진다. null까지 걸러야 한다 — hasMany 관계 배열에
+				//    null이 들어가면 그 문서 전체가 relationship 검증에서 죽는다(brand-colors 누락 경로).
+				//    단일 값 필드의 null은 배열이 아니므로 그대로 남는다(= 값만 생략).
+				if (resolved != null) out.push(resolved)
 			}
 			return out
 		}
