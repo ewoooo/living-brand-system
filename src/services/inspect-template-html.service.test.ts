@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { convertFigmaNodeToHtml } from '@/features/template-import/utils/figma-node-to-html'
+import { composeTemplateHtml } from './compose-template-html.client'
 import { inspectDraftTemplateHtml, inspectTemplateHtml } from './inspect-template-html.service'
 import { parseTemplateNodeConfigs } from './parse-template-node-configs.service'
 
@@ -98,6 +99,51 @@ describe('template HTML inspection', () => {
 				html: converted.html,
 				overrideNodeIds: [],
 				refsByNode: new Map(),
+			}).blocker,
+		).toBeUndefined()
+	})
+
+	it('캐리어 마커가 있는 import·합성 HTML이 발행 검사를 통과한다', () => {
+		// clipsContent 프레임 + 유일한 IMAGE fill 자식 → 자식이 data-image-carrier로 방출된다.
+		const converted = convertFigmaNodeToHtml(
+			{
+				id: '2:1',
+				name: 'Image Area',
+				type: 'FRAME',
+				clipsContent: true,
+				absoluteBoundingBox: { x: 0, y: 0, width: 911, height: 492 },
+				children: [
+					{
+						id: '2:2',
+						name: 'placeholder',
+						type: 'RECTANGLE',
+						fills: [{ type: 'IMAGE', imageRef: 'ref-1', scaleMode: 'FILL' }],
+						absoluteBoundingBox: { x: 0, y: -38, width: 1036, height: 578 },
+					},
+				],
+			} as never,
+			{},
+			{
+				'ref-1': {
+					collection: 'application-images',
+					id: 3,
+					url: '/api/application-images/file/ph.png',
+				},
+			},
+		)
+		const parsed = parsedConfigs({
+			'2:1': { backgroundImage: '/api/generated-images/file/gen.png', generatedImageId: 9 },
+		})
+		const composed = composeTemplateHtml(converted.html, parsed.data)
+
+		expect(converted.html).toContain('data-image-carrier')
+		expect(composed).toContain('data-image-carrier')
+		expect(
+			inspectTemplateHtml({
+				baseHtml: converted.html,
+				html: composed,
+				overrideNodeIds: Object.keys(parsed.data),
+				refsByNode: parsed.refsByNode,
 			}).blocker,
 		).toBeUndefined()
 	})

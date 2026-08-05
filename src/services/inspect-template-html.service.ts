@@ -29,6 +29,8 @@ function allowedAttributes(tagName: string): Set<string> {
 	const attributes = new Set(COMMON_ATTRIBUTES)
 	if (tagName === 'div' || tagName === 'img') {
 		for (const attribute of ASSET_ATTRIBUTES) attributes.add(attribute)
+		// import가 이미지 슬롯 캐리어로 표시하는 마커 — compose의 생성 이미지 교체 대상.
+		attributes.add('data-image-carrier')
 	}
 	if (tagName === 'img') {
 		for (const attribute of IMAGE_ATTRIBUTES) attributes.add(attribute)

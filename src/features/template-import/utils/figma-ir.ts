@@ -79,5 +79,7 @@ export interface IrNode {
 	asset?: FigmaRenderedAsset
 	/** IMAGE fill을 background-image로 낮춘 노드의 에셋 참조 — div에 data-asset-* 속성으로 방출돼 발행 승격 대상이 된다. */
 	fillAsset?: FigmaRenderedAsset
+	/** clipsContent 프레임의 유일한 가시 이미지 자식 — data-image-carrier로 방출돼 compose의 생성 이미지 교체 대상이 된다. */
+	imageCarrier?: true
 	children: IrNode[]
 }
