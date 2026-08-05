@@ -16,6 +16,15 @@ describe('inspectTemplateStyle', () => {
 		)
 	})
 
+	it('텍스트 말줄임 line-clamp 세트를 허용한다', () => {
+		expect(
+			inspectTemplateStyle(
+				'display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden',
+			),
+		).toEqual({ urls: [] })
+		expect(inspectTemplateStyle('display:inline').blocker).toContain('display')
+	})
+
 	it('동적 이미지 함수와 URL 이외의 함수 위치를 거부한다', () => {
 		expect(inspectTemplateStyle('background-image: image-set(url(a) 1x)').blocker).toContain(
 			'동적 이미지 함수',
