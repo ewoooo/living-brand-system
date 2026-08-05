@@ -44,7 +44,7 @@ When changing Payload collections, fields, indexes, relationships, or other data
 ### Content Provisioning (data, not schema)
 
 - CMS 콘텐츠(가이드라인 문서, 블록 인스턴스 등)는 git·마이그레이션으로 이동하지 않는다. 스키마만 마이그레이션으로 옮겨진다.
-- stage 공유 DB나 다른 환경에 재현돼야 하는 콘텐츠는 `scripts/`에 idempotent seed 스크립트로 커밋하고 대상 DB에 `pnpm payload run scripts/<name>.ts`로 적용한다(예: `seed-brand-icons.ts`, `seed-color-pairing-instances.ts`).
+- stage 공유 DB나 다른 환경에 재현돼야 하는 콘텐츠는 `scripts/`에 idempotent seed 스크립트로 커밋하고 대상 DB에 `pnpm payload run scripts/<name>.ts`로 적용한다(예: `seed-brand-icons.ts`, `seed-agent-skills.ts`).
 - seed 스크립트는 재실행 안전해야 하며(존재하면 건너뜀 또는 목표 상태로 수렴), 스키마가 필요하면 대상 DB에 마이그레이션을 먼저 적용한다.
 - 공유(stage) DB를 admin으로 직접 편집해 콘텐츠를 만들지 않는다. 로컬 disposable DB에서 편집·검증한 뒤 seed 스크립트로 승격한다.
 
