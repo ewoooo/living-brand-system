@@ -19,7 +19,6 @@
 			"!src/payload-types.ts",
 			"!src/payload-generated-schema.ts",
 			"!src/app/(payload)/admin",
-			"!scripts/assets/essenherb-b3",
 			"!**/*.svg",
 			"!migrations"
 		]
