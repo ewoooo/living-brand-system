@@ -93,7 +93,7 @@ flowchart LR
 프로젝트 루트에 `.env.local`을 만들고 필수 변수를 설정합니다.
 
 ```dotenv
-DATABASE_URL=postgresql://payload:payload@localhost:5432/living-brand-system
+DATABASE_URL=postgresql://payload:payload@localhost:5432/hd_cms_prototype
 PAYLOAD_SECRET=replace-with-a-random-secret
 PAYLOAD_DB_PUSH=false
 ```

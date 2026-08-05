@@ -203,7 +203,7 @@ When docs conflict, prefer the newer or more specific document. If a code change
 - Flow: merge normal work branches into `stage`, then promote verified `stage` to `main`.
 - Base: branch from `stage` for normal product work. Branch from `main` only for urgent production fixes.
 - Requirement: create or switch to a purpose branch before changing source code, product behavior, refactors, tests, tooling, dependencies, or non-trivial docs.
-- Worktree default: when creating or opening a branch, create a new git worktree for it unless the user explicitly asks to use the current worktree.
+- 🔴 Worktree는 만들지 않는다 — GitHub Desktop이 worktree를 publish하지 못한다. 메인 작업 트리에서 일반 브랜치로 작업한다(worktree마다 별도 DB를 요구하는 아래 Local Machine Database Rules도 그래서 실제로는 적용되지 않는다).
 - Protected branches: do not commit directly to `main` or `stage`; use them only as merge targets or promotion branches.
 - Exception: trivial local-only edits may stay unbranched only when the user explicitly asks not to create a branch.
 - Format: use `<type>/<short-kebab-purpose>`.
