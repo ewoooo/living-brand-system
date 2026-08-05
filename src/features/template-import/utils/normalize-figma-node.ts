@@ -267,6 +267,18 @@ function normalizeNode(
 				.map((child) => normalizeNode(child, node, false, renderedAssets, imageFillAssets))
 				.filter((child): child is IrNode => child !== null)
 
+	// 이미지 캐리어 판정(임포트 시 1회 확정): clipsContent 프레임의 유일한 가시 자식이 이미지로
+	// 렌더되면(CSS로 낮춘 단일 IMAGE fill 또는 래스터 폴백 img) 캐리어로 표시한다 — compose가
+	// 생성 이미지를 프레임 배경 대신 이 자식에 갈아끼운다. 자식이 둘 이상인 장식 조합은 표시하지 않는다.
+	if (node.clipsContent && children.length === 1) {
+		const only = children[0]
+		const source = node.children?.find((child) => child.id === only.id)
+		const isRasterImage = only.tag === 'img' && source && !VECTOR_NODE_TYPES.has(source.type)
+		if (source && (findCssLowerableImageFill(source) || isRasterImage)) {
+			only.imageCarrier = true
+		}
+	}
+
 	return {
 		id: node.id,
 		name: node.name ?? '',

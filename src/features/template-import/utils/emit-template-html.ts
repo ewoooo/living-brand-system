@@ -47,6 +47,8 @@ export function emitTemplateHtml(node: IrNode, depth = 0): string {
 					`data-asset-id="${node.fillAsset.id}"`,
 				]
 			: []),
+		// normalize가 이미지 캐리어로 판정한 자식 — compose가 생성 이미지를 여기 갈아끼운다.
+		...(node.imageCarrier ? ['data-image-carrier=""'] : []),
 	]
 		.map((a) => `${attrPad}${a}`)
 		.join('\n')

@@ -23,10 +23,35 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 			el.textContent = config.text
 		}
 		if (config.backgroundImage && el instanceof HTMLElement) {
-			el.style.backgroundImage = `url("${config.backgroundImage}")`
-			el.style.backgroundSize = 'cover'
-			el.style.backgroundPosition = 'center'
-			el.style.backgroundRepeat = 'no-repeat'
+			// import가 캐리어(data-image-carrier)로 표시한 자식이 있으면 프레임 배경 대신 캐리어의
+			// 이미지를 갈아끼운다 — 프레임 배경에 쓰면 위에 얹힌 placeholder 자식이 이미지를 가린다.
+			const carrier = el.querySelector('[data-image-carrier]')
+			if (carrier instanceof HTMLElement) {
+				if (carrier instanceof HTMLImageElement) {
+					carrier.src = config.backgroundImage
+					carrier.removeAttribute('srcset')
+				} else {
+					carrier.style.backgroundImage = `url("${config.backgroundImage}")`
+					// import가 scaleMode에서 굳힌 background-size/position은 보존하고 없을 때만 기본값.
+					if (!carrier.style.backgroundSize) carrier.style.backgroundSize = 'cover'
+					if (!carrier.style.backgroundPosition) {
+						carrier.style.backgroundPosition = 'center'
+					}
+					if (!carrier.style.backgroundRepeat)
+						carrier.style.backgroundRepeat = 'no-repeat'
+				}
+				if (config.generatedImageId) {
+					// 발행 검증(metadataRef)이 요소의 data-asset-*와 실제 URL의 일치를 요구하므로
+					// placeholder 에셋 참조를 생성 이미지 참조로 바꾼다.
+					carrier.setAttribute('data-asset-collection', 'generated-images')
+					carrier.setAttribute('data-asset-id', String(config.generatedImageId))
+				}
+			} else {
+				el.style.backgroundImage = `url("${config.backgroundImage}")`
+				el.style.backgroundSize = 'cover'
+				el.style.backgroundPosition = 'center'
+				el.style.backgroundRepeat = 'no-repeat'
+			}
 		}
 
 		if (el.tagName.toLowerCase() === 'img' && el instanceof HTMLElement) {
