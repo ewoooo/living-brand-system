@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
 	env: {
 		GEMINI_API_KEY: 'google-key',
+		OPENAI_API_KEY: 'openai-key',
 	},
 	createGoogle: vi.fn(),
 	generateImage: vi.fn(),
@@ -19,7 +20,14 @@ vi.mock('@ai-sdk/openai', () => ({
 	openai: { image: mocks.openaiImage },
 }))
 
-import { generateBrandImages } from './image-generation.ai.repository'
+import { generateBrandImages, getImageModelApiKey } from './image-generation.ai.repository'
+
+describe('getImageModelApiKey', () => {
+	it('프리셋 표에서 해당 공급자의 환경 API 키를 조회한다', () => {
+		expect(getImageModelApiKey('google-nano-banana-2-lite')).toBe('google-key')
+		expect(getImageModelApiKey('openai-gpt-image-2')).toBe('openai-key')
+	})
+})
 
 describe('generateBrandImages', () => {
 	beforeEach(() => {

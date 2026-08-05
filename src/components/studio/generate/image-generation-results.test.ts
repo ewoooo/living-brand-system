@@ -31,6 +31,8 @@ describe('ImageGenerationResults', () => {
 			onSelect,
 			requested: 1,
 			result: {
+				aspectRatio: '16:9' as const,
+				imageSize: '1K' as const,
 				generatedImages: [
 					{
 						collection: 'generated-images' as const,
