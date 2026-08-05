@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import type { ImageAspectRatio } from '@/features/generate-image/image-size'
 import {
 	type ImageProfileOption,
 	requestImageGeneration,
@@ -18,10 +19,13 @@ const GENERATION_ERROR_MESSAGE = '이미지 생성에 실패했어요. 잠시 �
 export function ImageSlotInput({
 	id,
 	pinnedProfileId,
+	aspectRatio,
 	onGenerated,
 }: {
 	id: string
 	pinnedProfileId?: number
+	/** 슬롯 박스에서 유도한 생성 비율 — 없으면 프로파일 비율로 생성한다. */
+	aspectRatio?: ImageAspectRatio
 	onGenerated: (image: { backgroundImage: string; generatedImageId: number }) => void
 }) {
 	const [prompt, setPrompt] = useState('')
@@ -49,7 +53,12 @@ export function ImageSlotInput({
 		setLoading(true)
 		setError(null)
 		try {
-			const result = await requestImageGeneration({ prompt: trimmed, count: 1, profileId })
+			const result = await requestImageGeneration({
+				prompt: trimmed,
+				count: 1,
+				profileId,
+				aspectRatio,
+			})
 			const generated = result.generatedImages?.[0]
 			if (generated) {
 				onGenerated({ backgroundImage: generated.url, generatedImageId: generated.id })
@@ -85,6 +94,11 @@ export function ImageSlotInput({
 						</option>
 					)}
 				</select>
+			)}
+			{aspectRatio && (
+				<p className="font-body text-xs font-normal text-muted-foreground">
+					슬롯 비율 {aspectRatio}로 생성
+				</p>
 			)}
 			<Textarea
 				id={id}

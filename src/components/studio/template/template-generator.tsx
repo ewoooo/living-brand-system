@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Typography } from '@/components/ui/typography'
+import { nearestImageAspectRatio } from '@/features/generate-image/image-size'
 import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
 import { pixelsToMillimeters } from '@/features/template-export/print-policy'
 import {
@@ -142,6 +143,10 @@ export function TemplateGenerator({
 								<ImageSlotInput
 									id={`image-slot-${slot.nodeId}`}
 									pinnedProfileId={slot.profileId}
+									aspectRatio={nearestImageAspectRatio(
+										slot.boxWidth ?? Number.NaN,
+										slot.boxHeight ?? Number.NaN,
+									)}
 									onGenerated={(image) =>
 										setImageValues((current) => ({
 											...current,

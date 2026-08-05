@@ -64,6 +64,34 @@ describe('collectTemplateImageSlots', () => {
 		expect(slots).toEqual([{ nodeId: '1:1', name: 'Card' }])
 	})
 
+	it('슬롯 요소 자신의 inline width/height(px)를 박스로 읽는다 — emit의 여러 줄 style 그대로', () => {
+		const boxedHtml = [
+			'<div data-node-id="1:1" data-figma-type="FRAME" data-name="Image Area" style="',
+			'\tbox-sizing:border-box;',
+			'\tmin-width:100px;',
+			'\twidth:911.5px;',
+			'\theight:492px;',
+			'">',
+			'<div data-node-id="1:2" data-image-carrier="" style="width:2000px;height:2000px;"></div>',
+			'</div>',
+		].join('\n')
+
+		const slots = collectTemplateImageSlots(boxedHtml, { '1:1': { imageInput: {} } })
+
+		expect(slots).toEqual([
+			{ nodeId: '1:1', name: 'Image Area', boxWidth: 911.5, boxHeight: 492 },
+		])
+	})
+
+	it('inline px 치수가 없으면 박스를 남기지 않는다', () => {
+		const slots = collectTemplateImageSlots(
+			'<div data-node-id="1:1" data-name="Fluid" style="width:100%;height:auto;"></div>',
+			{ '1:1': { imageInput: {} } },
+		)
+
+		expect(slots).toEqual([{ nodeId: '1:1', name: 'Fluid' }])
+	})
+
 	it('텍스트 노드의 imageInput·고아 노드·imageInput 없는 오버라이드는 무시한다', () => {
 		const slots = collectTemplateImageSlots(html, {
 			'2:1': { imageInput: {} }, // 텍스트 노드에 붙은 잘못된 스펙

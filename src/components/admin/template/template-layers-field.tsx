@@ -15,6 +15,10 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import {
+	type ImageAspectRatio,
+	nearestImageAspectRatio,
+} from '@/features/generate-image/image-size'
+import {
 	type ImageProfileOption,
 	requestAdminImageGeneration,
 	requestPublishedImageProfiles,
@@ -38,6 +42,9 @@ interface LayerRow {
 	isVector: boolean
 	/** 직계 자식에 data-image-carrier가 있는 프레임 — 이미지 자유 편집(transform) 대상. */
 	hasImageCarrier: boolean
+	/** 요소 자신의 inline width/height(px) — clipsContent 프레임의 가시 박스. AI 생성 비율 유도에 쓴다. */
+	boxWidth?: number
+	boxHeight?: number
 	text: string
 }
 
@@ -96,6 +103,15 @@ const TRIGGER_STYLE: CSSProperties = {
 	color: 'var(--theme-text)',
 }
 
+// inline style의 px 치수만 읽는다 — px가 아니거나 0 이하면 undefined.
+function stylePx(el: Element, property: 'width' | 'height'): number | undefined {
+	if (!(el instanceof HTMLElement)) return undefined
+	const value = el.style[property]
+	if (!value.endsWith('px')) return undefined
+	const parsed = Number.parseFloat(value)
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
+}
+
 function parseLayers(html: string): LayerRow[] {
 	const rows: LayerRow[] = []
 	const doc = new DOMParser().parseFromString(html, 'text/html')
@@ -115,6 +131,8 @@ function parseLayers(html: string): LayerRow[] {
 			hasImageCarrier: Array.from(el.children).some((child) =>
 				child.hasAttribute('data-image-carrier'),
 			),
+			boxWidth: stylePx(el, 'width'),
+			boxHeight: stylePx(el, 'height'),
 			text: isText ? (el.textContent ?? '') : '',
 		})
 		for (const child of Array.from(el.children)) walk(child, depth + 1)
@@ -162,7 +180,14 @@ function AiTextForm({ rule, onApply }: { rule?: string; onApply: (text: string) 
 }
 
 // Popup 안에 뜨는 AI 이미지 생성 폼. 프레임 배경으로 얹는다.
-function AiImageForm({ onApply }: { onApply: (image: { id: number; src: string }) => void }) {
+// aspectRatio는 선택 프레임 박스에서 유도한 비율 — 있으면 프로파일 비율 대신 그 비율로 생성한다.
+function AiImageForm({
+	aspectRatio,
+	onApply,
+}: {
+	aspectRatio?: ImageAspectRatio
+	onApply: (image: { id: number; src: string }) => void
+}) {
 	const [prompt, setPrompt] = useState('')
 	const [loading, setLoading] = useState(false)
 	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
@@ -189,6 +214,7 @@ function AiImageForm({ onApply }: { onApply: (image: { id: number; src: string }
 				prompt: trimmed,
 				count: 1,
 				profileId,
+				aspectRatio,
 			})
 			const generated = result.generatedImages?.[0]
 			if (generated) onApply({ id: generated.id, src: generated.url })
@@ -226,6 +252,11 @@ function AiImageForm({ onApply }: { onApply: (image: { id: number; src: string }
 					</option>
 				)}
 			</select>
+			{aspectRatio && (
+				<span className="text-xs" style={{ color: 'var(--theme-elevation-500)' }}>
+					슬롯 비율 {aspectRatio}로 생성
+				</span>
+			)}
 			<Textarea
 				value={prompt}
 				onChange={(event) => setPrompt(event.target.value)}
@@ -882,6 +913,10 @@ export default function TemplateLayersField() {
 							}
 							render={({ close }) => (
 								<AiImageForm
+									aspectRatio={nearestImageAspectRatio(
+										selected.boxWidth ?? Number.NaN,
+										selected.boxHeight ?? Number.NaN,
+									)}
 									onApply={(image) => {
 										commitBackground(image)
 										close()

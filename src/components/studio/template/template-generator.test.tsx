@@ -103,9 +103,35 @@ describe('TemplateGenerator', () => {
 			prompt: '파스텔 배경',
 			count: 1,
 			profileId: 7,
+			aspectRatio: undefined, // 박스 없는 슬롯은 프로파일 비율 그대로
 		})
 		await waitFor(() =>
 			expect(container.innerHTML).toContain('/api/generated-images/file/bg.png'),
 		)
+	})
+
+	it('슬롯 박스가 있으면 가장 가까운 지원 비율을 생성 요청에 싣는다', () => {
+		mocks.requestImageGeneration.mockResolvedValue({ generatedImages: [] })
+		render(
+			<TemplateGenerator
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" style="width:911px;height:492px;"></div>',
+					nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
+				}}
+			/>,
+		)
+
+		expect(screen.getByText('슬롯 비율 16:9로 생성')).toBeInTheDocument()
+		fireEvent.change(screen.getByLabelText('배경'), { target: { value: '파스텔 배경' } })
+		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
+
+		expect(mocks.requestImageGeneration).toHaveBeenCalledWith({
+			prompt: '파스텔 배경',
+			count: 1,
+			profileId: 7,
+			aspectRatio: '16:9',
+		})
 	})
 })
