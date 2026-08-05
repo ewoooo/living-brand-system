@@ -19,6 +19,16 @@ const payload = await getPayload({ config })
 const fromPortable = makeFromPortable(payload)
 
 const content: AnyData = JSON.parse(await readFile(CONTENT_PATH, 'utf8'))
+
+// 🔴 slug 없는 항목이 정본에 있으면 멈춘다 — export가 초안을 걸러내지 못하던 시절의 산물이고,
+//    그대로 쓰면 slug null로 문서를 만들려다 required 검증에서 터진다. 정본을 다시 export할 신호다.
+const slugless = content.documents.filter((doc: AnyData) => !doc.slug)
+if (slugless.length > 0) {
+	throw new Error(
+		`정본에 slug 없는 문서 ${slugless.length}건이 있다 — export를 다시 실행해 정본을 갱신할 것.`,
+	)
+}
+
 const targets: AnyData[] = content.documents.filter(
 	(doc: AnyData) => only.length === 0 || only.includes(doc.slug),
 )
@@ -30,10 +40,18 @@ await assertExported(
 	targets.map((doc) => doc.slug),
 )
 
-const findBySlug = async (slug: string) => {
+// 🔴 slug는 전역 유일하지 않다 — 정본에 typography·illustration·photography가 부모만 다르게 각각 2건씩 있다.
+//    slug만으로 찾으면 두 문서가 하나로 접혀 나중 항목이 앞 항목의 부모·순서·블록을 덮는다.
+//    유일 키는 (slug, parent)다. seed-ci-section.ts:108-111도 같은 스코프를 쓴다.
+const findDoc = async (slug: string, parentId: number | string | null) => {
 	const { docs } = await payload.find({
 		collection: 'guideline-documents',
-		where: { slug: { equals: slug } },
+		where: {
+			and: [
+				{ slug: { equals: slug } },
+				parentId == null ? { parent: { exists: false } } : { parent: { equals: parentId } },
+			],
+		},
 		limit: 1,
 		locale: 'ko',
 		draft: false,
@@ -41,6 +59,15 @@ const findBySlug = async (slug: string) => {
 		overrideAccess: true,
 	})
 	return docs[0] ?? null
+}
+
+/** 부모를 찾을 때는 정본의 부모 사슬을 따라 올라가며 (slug, parent)로 좁힌다. */
+const resolveBySlugPath = async (slug: string): Promise<AnyData | null> => {
+	const canonical = content.documents.find((d: AnyData) => d.slug === slug)
+	if (!canonical) return null
+	const parent = canonical.parent ? await resolveBySlugPath(canonical.parent) : null
+	if (canonical.parent && !parent) return null
+	return findDoc(slug, parent?.id ?? null)
 }
 
 // 정본은 부모를 slug로 적으므로 얕은 문서부터 처리해야 부모가 먼저 생긴다.
@@ -58,7 +85,7 @@ targets.sort((a, b) => depthOf(a) - depthOf(b) || (a.order ?? 0) - (b.order ?? 0
 let applied = 0
 for (const doc of targets) {
 	// 문서 자체가 없으면 만든다 — 정본만으로 구조(제목·부모·순서)까지 재현되어야 한다.
-	const parent = doc.parent ? await findBySlug(doc.parent) : null
+	const parent = doc.parent ? await resolveBySlugPath(doc.parent) : null
 	if (doc.parent && !parent) {
 		console.warn(`⚠️  부모 없음(건너뜀): ${doc.slug} → parent ${doc.parent}`)
 		continue
@@ -73,7 +100,7 @@ for (const doc of targets) {
 	}
 	if (parent) data.parent = parent.id
 
-	const existing = await findBySlug(doc.slug)
+	const existing = await findDoc(doc.slug, parent?.id ?? null)
 	if (existing) {
 		await payload.update({
 			collection: 'guideline-documents',
