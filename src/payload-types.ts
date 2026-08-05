@@ -882,6 +882,7 @@ export interface LayoutBlock {
         | ImageGridWidget
         | IncorrectUsageWidget
         | LayoutGridWidget
+        | LayoutGridControlsWidget
         | LayoutGridOverlayWidget
         | LogoColorVariantWidget
         | LogoDisplayWidget
@@ -1106,9 +1107,86 @@ export interface IncorrectUsageWidget {
  * via the `definition` "LayoutGridWidget".
  */
 export interface LayoutGridWidget {
+  /**
+   * 코드에 정의된 조합 중 하나입니다.
+   */
+  sample?: ('a' | 'b' | 'c' | 'grid-labels') | null;
+  /**
+   * 판형 아래에 표시할 선택 캡션입니다.
+   */
+  caption?: string | null;
+  /**
+   * 그리드 표시입니다. 같은 페이지의 판형끼리 다르게 두려면 켜짐·꺼짐으로 고정합니다.
+   */
+  guides?: ('shared' | 'on' | 'off') | null;
+  /**
+   * 마진을 이 판형만 고정합니다(3~6). 비우면 패널을 따릅니다.
+   */
+  marginPct?: number | null;
+  /**
+   * 수평 거터를 이 판형만 고정합니다(0~100). 비우면 패널을 따릅니다.
+   */
+  gutterX?: number | null;
+  /**
+   * 수직 거터를 이 판형만 고정합니다(0~100). 비우면 패널을 따릅니다.
+   */
+  gutterY?: number | null;
+  /**
+   * 마진을 패널에서 분리해 초기값에 고정합니다.
+   */
+  lockMargin?: boolean | null;
+  /**
+   * 수평 거터를 패널에서 분리해 초기값에 고정합니다.
+   */
+  lockGutterX?: boolean | null;
+  /**
+   * 수직 거터를 패널에서 분리해 초기값에 고정합니다.
+   */
+  lockGutterY?: boolean | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'layoutGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridControlsWidget".
+ */
+export interface LayoutGridControlsWidget {
+  /**
+   * 마진(판형 긴 축의 %). 3~6.
+   */
+  marginPct?: number | null;
+  /**
+   * 뷰어가 마진을 조절할 수 있게 합니다. 끄면 위 값으로 고정됩니다.
+   */
+  marginAdjustable?: boolean | null;
+  /**
+   * 수평 거터(마진의 %). 0~100.
+   */
+  gutterX?: number | null;
+  /**
+   * 뷰어가 수평 거터를 조절할 수 있게 합니다.
+   */
+  gutterXAdjustable?: boolean | null;
+  /**
+   * 수직 거터(마진의 %). 0~100.
+   */
+  gutterY?: number | null;
+  /**
+   * 뷰어가 수직 거터를 조절할 수 있게 합니다.
+   */
+  gutterYAdjustable?: boolean | null;
+  /**
+   * 그리드(마진·거터 영역과 분할선)를 처음부터 보여줍니다.
+   */
+  guidesOn?: boolean | null;
+  /**
+   * 뷰어가 그리드를 켜고 끌 수 있게 합니다.
+   */
+  guidesAdjustable?: boolean | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'layoutGridControlsWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2774,6 +2852,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         imageGridWidget?: T | ImageGridWidgetSelect<T>;
         incorrectUsageWidget?: T | IncorrectUsageWidgetSelect<T>;
         layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
+        layoutGridControlsWidget?: T | LayoutGridControlsWidgetSelect<T>;
         layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
         logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
         logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
@@ -2909,6 +2988,31 @@ export interface IncorrectUsageWidgetSelect<T extends boolean = true> {
  * via the `definition` "LayoutGridWidget_select".
  */
 export interface LayoutGridWidgetSelect<T extends boolean = true> {
+  sample?: T;
+  caption?: T;
+  guides?: T;
+  marginPct?: T;
+  gutterX?: T;
+  gutterY?: T;
+  lockMargin?: T;
+  lockGutterX?: T;
+  lockGutterY?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridControlsWidget_select".
+ */
+export interface LayoutGridControlsWidgetSelect<T extends boolean = true> {
+  marginPct?: T;
+  marginAdjustable?: T;
+  gutterX?: T;
+  gutterXAdjustable?: T;
+  gutterY?: T;
+  gutterYAdjustable?: T;
+  guidesOn?: T;
+  guidesAdjustable?: T;
   id?: T;
   blockName?: T;
 }

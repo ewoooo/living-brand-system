@@ -13,6 +13,8 @@ import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
 import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
+import { LayoutGridScope } from '@/features/guideline/widgets/layout-grid/store'
+import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
@@ -77,8 +79,39 @@ function renderWidget(child: Child): ReactNode {
 			return <IconGridWidget />
 		case 'imageGridWidget':
 			return <ImageGridWidget />
+		case 'incorrectUsageWidget':
+			// legacy doDont 블록으로 대체됐지만 스키마에 남아 있어 렌더 경로를 유지한다.
+			return <IncorrectUsageWidget />
 		case 'layoutGridWidget':
-			return <LayoutGridWidget />
+			// 샘플 디자인은 코드에 있고 인스턴스는 그중 하나를 고른다.
+			return (
+				<LayoutGridWidget
+					sample={child.sample}
+					caption={child.caption}
+					guides={child.guides}
+					marginPct={child.marginPct}
+					gutterX={child.gutterX}
+					gutterY={child.gutterY}
+					lockMargin={child.lockMargin}
+					lockGutterX={child.lockGutterX}
+					lockGutterY={child.lockGutterY}
+				/>
+			)
+		case 'layoutGridControlsWidget':
+			// 같은 페이지의 layoutGridWidget 전부를 통제하는 단일 패널(모듈 스토어 공유).
+			// 조절 허용 여부가 페이지별 템플릿을 만든다 — 불허한 값은 admin 값으로 고정된다.
+			return (
+				<LayoutGridControlsWidget
+					marginPct={child.marginPct}
+					marginAdjustable={child.marginAdjustable}
+					gutterX={child.gutterX}
+					gutterXAdjustable={child.gutterXAdjustable}
+					gutterY={child.gutterY}
+					gutterYAdjustable={child.gutterYAdjustable}
+					guidesOn={child.guidesOn}
+					guidesAdjustable={child.guidesAdjustable}
+				/>
+			)
 		case 'layoutGridOverlayWidget':
 			return <LayoutGridOverlayWidget />
 		case 'logoColorVariantWidget':
@@ -214,9 +247,39 @@ function bgHex(color: LayoutBlockType['background']): string | undefined {
 	return color && typeof color === 'object' && color.hex ? color.hex : undefined
 }
 
+// 레이아웃 그리드 컨트롤 패널은 배치 영역이 아니라 **헤더(제목·설명 아래)**에 온다 —
+// innerBackground 안에 두면 판형과 같은 어두운 면에 얹혀 읽기 어렵고, 배치 셀 하나를 차지한다.
+// 값 스코프는 **블록 단위**다: 모듈 스토어로 두면 섹션 라우트가 여러 Page를 한 화면에 렌더할 때
+// 페이지마다 놓인 패널이 서로 간섭한다. 그래서 패널과 배치를 한 provider로 함께 감싼다.
+function splitControls(children: NonNullable<LayoutBlockType['children']>) {
+	const controls = children.filter((child) => child.blockType === 'layoutGridControlsWidget')
+	const arranged = children.filter((child) => child.blockType !== 'layoutGridControlsWidget')
+	const needsScope =
+		controls.length > 0 || arranged.some((c) => c.blockType === 'layoutGridWidget')
+	return { controls, arranged, needsScope }
+}
+
 export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 	const outerBg = bgHex(block.background)
 	const innerBg = bgHex(block.innerBackground)
+	const { controls, arranged, needsScope } = splitControls(block.children ?? [])
+
+	const body = (
+		<>
+			{controls.map((child) => (
+				<div key={child.id}>{renderWidget(child)}</div>
+			))}
+			<div style={innerBg ? { background: innerBg } : undefined}>
+				<Arrange
+					arrangement={block.arrangement}
+					columns={block.columns ?? 2}
+					aspectRatio={block.aspectRatio ?? '1:1'}
+					items={arranged}
+				/>
+			</div>
+		</>
+	)
+
 	return (
 		<GuidelineBlockFrame
 			layout={block.width ?? 'padded'}
@@ -226,14 +289,7 @@ export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 			{block.description ? (
 				<GuidelineDescription variant="block" description={block.description} />
 			) : null}
-			<div style={innerBg ? { background: innerBg } : undefined}>
-				<Arrange
-					arrangement={block.arrangement}
-					columns={block.columns ?? 2}
-					aspectRatio={block.aspectRatio ?? '1:1'}
-					items={block.children ?? []}
-				/>
-			</div>
+			{needsScope ? <LayoutGridScope>{body}</LayoutGridScope> : body}
 		</GuidelineBlockFrame>
 	)
 }

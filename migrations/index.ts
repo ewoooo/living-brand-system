@@ -19,6 +19,13 @@ import * as migration_20260731_024329_agent_response_levels from './20260731_024
 import * as migration_20260731_085028_add_ci_widget_blocks from './20260731_085028_add_ci_widget_blocks';
 import * as migration_20260731_094017_mcp_feature_tools from './20260731_094017_mcp_feature_tools';
 import * as migration_20260803_025030_do_dont_widget from './20260803_025030_do_dont_widget';
+import * as migration_20260804_051328_add_layout_grid_sample from './20260804_051328_add_layout_grid_sample';
+import * as migration_20260804_053103_add_layout_grid_controls from './20260804_053103_add_layout_grid_controls';
+import * as migration_20260804_073352_add_layout_grid_controls_config from './20260804_073352_add_layout_grid_controls_config';
+import * as migration_20260804_080321_add_grid_labels_and_guides from './20260804_080321_add_grid_labels_and_guides';
+import * as migration_20260804_082132_add_layout_grid_locks from './20260804_082132_add_layout_grid_locks';
+import * as migration_20260804_083406_add_layout_grid_caption from './20260804_083406_add_layout_grid_caption';
+import * as migration_20260804_085424_add_layout_grid_widget_values from './20260804_085424_add_layout_grid_widget_values';
 
 export const migrations = [
   {
@@ -124,6 +131,41 @@ export const migrations = [
   {
     up: migration_20260803_025030_do_dont_widget.up,
     down: migration_20260803_025030_do_dont_widget.down,
-    name: '20260803_025030_do_dont_widget'
+    name: '20260803_025030_do_dont_widget',
+  },
+  {
+    up: migration_20260804_051328_add_layout_grid_sample.up,
+    down: migration_20260804_051328_add_layout_grid_sample.down,
+    name: '20260804_051328_add_layout_grid_sample',
+  },
+  {
+    up: migration_20260804_053103_add_layout_grid_controls.up,
+    down: migration_20260804_053103_add_layout_grid_controls.down,
+    name: '20260804_053103_add_layout_grid_controls',
+  },
+  {
+    up: migration_20260804_073352_add_layout_grid_controls_config.up,
+    down: migration_20260804_073352_add_layout_grid_controls_config.down,
+    name: '20260804_073352_add_layout_grid_controls_config',
+  },
+  {
+    up: migration_20260804_080321_add_grid_labels_and_guides.up,
+    down: migration_20260804_080321_add_grid_labels_and_guides.down,
+    name: '20260804_080321_add_grid_labels_and_guides',
+  },
+  {
+    up: migration_20260804_082132_add_layout_grid_locks.up,
+    down: migration_20260804_082132_add_layout_grid_locks.down,
+    name: '20260804_082132_add_layout_grid_locks',
+  },
+  {
+    up: migration_20260804_083406_add_layout_grid_caption.up,
+    down: migration_20260804_083406_add_layout_grid_caption.down,
+    name: '20260804_083406_add_layout_grid_caption',
+  },
+  {
+    up: migration_20260804_085424_add_layout_grid_widget_values.up,
+    down: migration_20260804_085424_add_layout_grid_widget_values.down,
+    name: '20260804_085424_add_layout_grid_widget_values'
   },
 ];

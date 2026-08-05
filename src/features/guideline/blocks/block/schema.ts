@@ -12,6 +12,7 @@ import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/schema'
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/schema'
 import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/schema'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/schema'
+import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/schema'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/schema'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/schema'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/schema'
@@ -121,6 +122,7 @@ export const LayoutBlock: Block = {
 				ImageGridWidget,
 				IncorrectUsageWidget,
 				LayoutGridWidget,
+				LayoutGridControlsWidget,
 				LayoutGridOverlayWidget,
 				LogoColorVariantWidget,
 				LogoDisplayWidget,
