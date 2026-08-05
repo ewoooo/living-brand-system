@@ -58,11 +58,20 @@ for (const [key, canon] of canonByKey) {
 		onlyCanon.push(`${key} (블록 ${canon.blocks.length}개)`)
 		continue
 	}
+	// 🔴 정본이 담는 필드는 전부 비교해야 한다 — 비교에서 빠진 필드는 승격 때 조용히 사라지고
+	//    이 도구가 '격차 없음'으로 덮어버린다(description이 실제로 그랬다).
+	const portableFields = (doc: AnyData, order: number) => [
+		doc.title,
+		doc.label ?? null,
+		order,
+		JSON.stringify(doc.description ?? null),
+		JSON.stringify(toPortable(doc.headerImage ?? null)),
+		JSON.stringify(toPortable(doc.rules ?? [])),
+		JSON.stringify(toPortable(doc.blocks ?? [])),
+	]
 	const same =
-		JSON.stringify(toPortable(db.blocks ?? [])) === JSON.stringify(canon.blocks) &&
-		JSON.stringify(toPortable(db.rules ?? [])) === JSON.stringify(canon.rules ?? []) &&
-		db.title === canon.title &&
-		(db.displayOrder ?? 0) === (canon.order ?? 0)
+		JSON.stringify(portableFields(db, db.displayOrder ?? 0)) ===
+		JSON.stringify(portableFields(canon, canon.order ?? 0))
 	if (same) continue
 	const dbNewer = db.updatedAt ? new Date(db.updatedAt) > exportedAt : false
 	changed.push(
