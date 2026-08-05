@@ -43,23 +43,27 @@ When changing Payload collections, fields, indexes, relationships, or other data
 
 ### Content Provisioning (data, not schema)
 
-- CMS 콘텐츠(가이드라인 문서, 블록 인스턴스 등)는 git·마이그레이션으로 이동하지 않는다. 스키마만 마이그레이션으로 옮겨진다.
-- stage 공유 DB나 다른 환경에 재현돼야 하는 콘텐츠는 `scripts/`에 idempotent seed 스크립트로 커밋하고 대상 DB에 `pnpm payload run scripts/<name>.ts`로 적용한다(예: `seed-brand-icons.ts`, `seed-color-pairing-instances.ts`).
-- seed 스크립트는 재실행 안전해야 하며(존재하면 건너뜀 또는 목표 상태로 수렴), 스키마가 필요하면 대상 DB에 마이그레이션을 먼저 적용한다.
-- 공유(stage) DB를 admin으로 직접 편집해 콘텐츠를 만들지 않는다. 로컬 disposable DB에서 편집·검증한 뒤 seed 스크립트로 승격한다.
+**콘텐츠의 정본은 DB다.** 가이드라인 문서·블록은 admin에서 고치면 그게 반영이고, 코드가 콘텐츠를 되돌려 쓰지 않는다. 옮겨야 할 것은 세 가지고 경로가 각각 다르다.
 
-#### 🔴 admin 편집을 덮지 않는다 (양방향 규약)
+| | 누가 옮기나 | 확인 방법 |
+|---|---|---|
+| 스키마 | 마이그레이션(배포가 적용) | 배포 로그 · `migrate:status` |
+| 레퍼런스 데이터 (`rules`·`brand-colors`처럼 코드가 요구하는 고정 데이터) | `scripts/`의 idempotent seed를 사람이 실행 | 실행 결과 |
+| 콘텐츠 (문서·블록) | 🔴 **아무도 옮기지 않는다 — admin에서 직접 만든다** | 배포된 화면 |
 
-가이드라인 문서·블록은 **JSON이 정본**이고 방향이 둘 다 있다:
+- 콘텐츠를 코드로 되돌려 쓰는 seed를 **다시 만들지 말 것.** 2026-08-05에 삭제했다. 이유: 그 파이프라인의 목적("빈 DB에 콘텐츠 재현")이 애초에 성립하지 않았다 — 참조하는 업로드 170종 중 리포 보유가 27종이라 빈 DB에서는 어차피 못 만든다. 대신 양방향 덮어쓰기 위험·가드·모호성 처리를 전부 떠안고 있었다.
+- 레퍼런스 데이터 seed는 계속 쓴다(예: `seed-brand-icons.ts`, `seed-agent-skills.ts`). 재실행 안전해야 하고(존재하면 건너뜀 또는 목표 상태로 수렴), 스키마가 필요하면 대상 DB에 마이그레이션을 먼저 적용한다.
+- 🔴 **DB에 데이터를 쓰는 작업을 했으면 "어느 환경에 넣었고 어디엔 아직 안 넣었나"를 반드시 명시한다.** 데이터는 배포를 따라가지 않으므로 화면·PR·git 어디에도 안 나타난다. 이 명시가 유일한 기록이다.
+- 실수로 덮었으면 Payload 버전 이력으로 복구한다: `_guideline_docs_v`에서 해당 시각의 버전 id를 찾아 `payload.restoreVersion({ collection, id })`. 환경 단위 복구는 Supabase PITR.
+- 🔴 **문서의 부모를 바꾸거나 상태를 건드리는 update에는 `_status`를 명시한다.** autosave 초안 버전이 있는 문서는 update가 그 최신 버전 위에 얹혀 `_status=draft`를 따라 쓴다 → 게시 문서가 초안이 되어 사이트에서 사라진다(2026-08-05 실제 사고 2건).
 
-```
-admin 편집 → export(DB → JSON) → 커밋 → 다른 환경에 seed(JSON → DB)
-```
+#### 스냅샷 (읽기 전용, 한 방향)
 
-- 콘텐츠를 **쓰는** 스크립트는 첫 줄에서 `assertExported()`(`scripts/lib/guideline-content.ts`)를 호출해야 한다. DB가 정본 JSON보다 최신이면(= export하지 않은 admin 편집이 있으면) 쓰기를 거부한다. 의도적으로 덮을 때만 `FORCE=true`.
-- export/seed는 **섹션별로 만들지 않는다.** 문서 전체를 다루는 `scripts/export-guideline-content.ts` / `scripts/seed-guideline-content.ts` 한 쌍에 태우고, 필요하면 slug를 인자로 좁힌다. 섹션 전용 스크립트를 새로 만드는 것이 이 사고의 원인이었다.
-- seed를 돌리기 전에 **사용자에게 확인**한다. admin에서 작업 중이면 편집이 날아간다.
-- 실수로 덮었으면 Payload 버전 이력으로 복구한다: `_guideline_docs_v`에서 해당 시각의 버전 id를 찾아 `payload.restoreVersion({ collection, id })`.
+`pnpm content:snapshot`(`scripts/export-guideline-content.ts`)이 `DATABASE_URL` 대상 DB의 게시 문서를 `scripts/data/guideline-content.json`으로 덮어쓴다. **DB → 코드 한 방향뿐이고 되돌려 쓰는 경로는 없다.**
+
+- 목적은 복구가 아니라 **콘텐츠가 Postgres 한 곳에만 존재하지 않게 하고, 무엇이 언제 바뀌었는지 git으로 읽히게 하는 것**이다. 복구 수단은 PITR과 버전 이력이다.
+- 관계는 사람이 읽을 수 있는 키로 적는다 — 업로드는 `{file: filename}`, `brand-colors`는 `{color: hex}`, `rules`는 `{rule: key}`. 원시 id는 환경마다 달라 스냅샷을 무의미하게 만든다.
+- 부분 export는 없다(파일을 통째로 덮으므로 slug 인자를 거부한다). **엉뚱한 DB에 대고 돌렸는지는 `git diff`가 알려준다** — 문서가 대량으로 사라져 보이면 커밋하지 않는다.
 
 ### Local Machine Database Rules
 
@@ -227,6 +231,35 @@ When docs conflict, prefer the newer or more specific document. If a code change
 - Scope: keep each commit focused on one purpose.
 - Hygiene: do not include unrelated dirty worktree changes in a commit.
 - Language: write commit messages in Korean unless an external tool requires English.
+
+### 커밋 단위 — 상한과 하한이 둘 다 있다
+
+**커밋 = 그 커밋만 체크아웃해도 리포가 일관된 최소 덩어리.** 성격이 다른 것을 몰아넣지도 말고(상한), 혼자서는 의미가 없는 조각으로 쪼개지도 말 것(하한).
+
+세 가지로 판별한다.
+
+1. **체크아웃 테스트** — 그 커밋에서 빌드·테스트가 통과하나? 코드와 그 코드가 만든 산출물(생성 파일·스냅샷·마이그레이션)이 어긋나면 실패다. **어긋나는 것들은 같은 커밋에 넣는다.**
+2. **revert 테스트** — 이 커밋만 되돌리면 의미 있는 무엇이 원상복구되나? "아무 일도 안 일어난다" 또는 "다른 커밋도 같이 되돌려야 한다"면 잘못 쪼갠 것이다.
+3. **설명 테스트** — 제목을 읽고 "그래서 이걸 왜 했다는 거지?"가 남으면 덩어리가 덜 찼거나 본문이 필요하다.
+
+같은 커밋에 넣어야 하는 조합(하한을 어기기 쉬운 자리):
+- 도구·기능 추가와 **그 실행 경로**(`package.json` 스크립트, 라우트 등록) — 후자는 단독으로 아무 의미가 없다.
+- 코드 변경과 **그 코드가 생성한 산출물**(재생성된 스냅샷, 스키마 스냅샷) — 따로 두면 그 사이 커밋에서 코드와 데이터가 어긋난다.
+- 한 사태를 정리하는 삭제·문서 갱신·데이터 재생성 — 셋이 한 결정의 결과라면 한 커밋이다.
+- 같은 파일의 같은 성격 수정 여러 건 — 왜 여러 번 고쳤는지 이력에서 읽히지 않는다.
+
+### 메시지는 "무엇"이 아니라 "왜"가 읽혀야 한다
+
+제목은 무엇을 바꿨는지 쓰고, **왜 필요했는지가 제목만으로 자명하지 않으면 빈 줄 뒤 본문에 한두 줄 적는다.** 증상과 방치했을 때의 결과를 쓴다.
+
+```
+fix: 정본 이식 키에서 rules와 업로드 컬렉션 누락 수정
+
+rules를 populate된 정의 객체째로 담고 있어 안의 checker가 환경별 id로 박혔다.
+그 상태로 다른 환경에 적용하면 relationship 검증에서 죽는다(39개 해당).
+```
+
+포맷·오타·의미가 자명한 변경은 제목만으로 끝낸다. 본문에 변경 목록을 나열하지 말 것 — diff가 이미 말한다.
 
 ## Pull Request Rules
 

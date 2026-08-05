@@ -4,15 +4,22 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import { toPortable } from './lib/guideline-content'
 
-// 가이드라인 문서 전체를 DB에서 읽어 JSON 정본으로 덮어쓴다(DB → 코드). DB는 읽기만 한다.
-//   pnpm payload run scripts/export-guideline-content.ts            # 전부
-//   pnpm payload run scripts/export-guideline-content.ts layout ci  # 특정 slug만
+// 가이드라인 문서 전체를 DB에서 읽어 JSON 스냅샷으로 덮어쓴다(DB → 코드 한 방향). DB는 읽기만 한다.
+//   pnpm content:snapshot
 //
-// 🔴 admin에서 편집했으면 시드 전에 이걸 돌려야 한다. 안 돌리면 시드가 가드에서 멈춘다(assertExported).
-// 섹션 전용 export를 새로 만들지 말 것 — 모든 문서가 이 한 스크립트로 처리된다.
+// 콘텐츠의 정본은 **DB**다. 이 파일은 그 시점의 읽기 전용 사본일 뿐이고, 되돌려 쓰는 경로는 없다.
+// 목적은 콘텐츠가 Postgres 한 곳에만 존재하지 않게 하고, 무엇이 언제 바뀌었는지 git으로 읽히게 하는 것.
+// 복구 수단은 이 파일이 아니라 Supabase PITR과 Payload 버전 이력이다.
+//
+// 🔴 부분 export는 없다. 파일을 통째로 덮어쓰므로 일부 문서만 뽑으면 나머지가 스냅샷에서 사라진다.
+// 🔴 엉뚱한 DB에 대고 돌렸는지는 `git diff`가 알려준다 — 문서가 대량으로 사라져 보이면 커밋하지 말 것.
 
 const CONTENT_PATH = path.join(process.cwd(), 'scripts/data/guideline-content.json')
-const only = process.argv.slice(2).filter((a) => !a.startsWith('-'))
+if (process.argv.slice(2).filter((a) => !a.startsWith('-')).length > 0) {
+	throw new Error(
+		'export는 slug 인자를 받지 않는다 — 스냅샷 파일을 통째로 덮어쓰므로 일부만 뽑으면 나머지가 사라진다.',
+	)
+}
 
 const payload = await getPayload({ config })
 
@@ -39,14 +46,21 @@ const parentSlug = (parent: unknown): string | null => {
 	return id == null ? null : (slugById.get(id) ?? null)
 }
 
-const selected = docs.filter((doc) => only.length === 0 || only.includes(doc.slug as string))
+// 🔴 개발용 픽스처(seed-block-widget-test.ts)는 published라도 스냅샷 대상이 아니다.
+//    slug를 바꾸면 이 필터도 같이 바꿀 것.
+const selected = docs.filter((doc) => !String(doc.slug).startsWith('block-widget-test'))
 
 const content = {
 	documents: selected.map((doc) => ({
 		slug: doc.slug,
 		title: doc.title,
+		label: doc.label ?? null,
 		parent: parentSlug(doc.parent),
 		order: doc.displayOrder ?? 0,
+		// 문서 본문 설명. 관계 노드가 없는 richText라 그대로 옮긴다.
+		description: doc.description ?? null,
+		headerImage: toPortable(doc.headerImage ?? null),
+		rules: toPortable(doc.rules ?? []),
 		blocks: toPortable(doc.blocks ?? []),
 	})),
 }

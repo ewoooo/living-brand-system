@@ -11,6 +11,9 @@ import type { GuidelineDocument } from '@/payload-types'
  * 내부 이미지는 application-images에서 랜덤 선택(임의 생성 안 함). 재실행 안전(slug upsert).
  *
  * 실행: pnpm payload run scripts/seed-block-widget-test.ts
+ *
+ * 🔴 개발용 픽스처다. 정본(scripts/data/guideline-content.json)에 넣지 않는다 —
+ *    export-guideline-content.ts가 slug prefix(block-widget-test)로 걸러낸다. slug를 바꾸면 그 필터도 바꿀 것.
  */
 type Block = NonNullable<GuidelineDocument['blocks']>[number]
 // biome-ignore lint/suspicious/noExplicitAny: 시드에서 블록 필드를 느슨하게 다룬다.
