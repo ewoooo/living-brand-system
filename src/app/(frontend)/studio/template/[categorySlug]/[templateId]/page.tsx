@@ -28,7 +28,7 @@ export default async function CreateTemplatePage({
 	return (
 		<StudioWorkspacePage
 			title={template.name}
-			description="열린 텍스트 슬롯을 편집하고 미리보기를 확인한 뒤 원하는 형식으로 내보냅니다."
+			description="열린 슬롯을 편집하고 미리보기를 확인한 뒤 원하는 형식으로 내보냅니다."
 		>
 			<TemplateGenerator key={template.id} navigation={navigation} template={template} />
 		</StudioWorkspacePage>

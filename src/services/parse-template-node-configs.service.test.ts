@@ -39,3 +39,28 @@ describe('parseTemplateNodeConfigs imageTransform', () => {
 		expect('blocker' in parsed).toBe(true)
 	})
 })
+
+describe('parseTemplateNodeConfigs imageInput', () => {
+	it.each([
+		['빈 스펙(개방 선언만)', {}],
+		['profileId 고정', { profileId: 3 }],
+	] as const)('%s을 허용한다', (_label, imageInput) => {
+		const parsed = parseTemplateNodeConfigs({ 'frame-1': { imageInput } })
+
+		expect('blocker' in parsed).toBe(false)
+		if (!('blocker' in parsed)) {
+			expect(parsed.data['frame-1']?.imageInput).toEqual(imageInput)
+		}
+	})
+
+	it.each([
+		['profileId가 숫자가 아님', { profileId: '3' }],
+		['profileId 0 이하', { profileId: 0 }],
+		['profileId 소수', { profileId: 1.5 }],
+		['알 수 없는 필드', { prompt: '금지' }],
+	])('%s은 거부한다', (_label, imageInput) => {
+		const parsed = parseTemplateNodeConfigs({ 'frame-1': { imageInput } })
+
+		expect('blocker' in parsed).toBe(true)
+	})
+})

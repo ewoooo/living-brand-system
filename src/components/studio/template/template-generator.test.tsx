@@ -1,10 +1,14 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GetCreateNavigationOutput } from '@/services/get-create-navigation.service'
 import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
 import { TemplateGenerator } from './template-generator'
 
-const mocks = vi.hoisted(() => ({ exportTemplate: vi.fn(), push: vi.fn() }))
+const mocks = vi.hoisted(() => ({
+	exportTemplate: vi.fn(),
+	push: vi.fn(),
+	requestImageGeneration: vi.fn(),
+}))
 
 vi.mock('@/features/template-export/hooks/use-template-export', () => ({
 	useTemplateExport: () => ({
@@ -16,6 +20,10 @@ vi.mock('@/features/template-export/hooks/use-template-export', () => ({
 }))
 vi.mock('next/navigation', () => ({
 	useRouter: () => ({ push: mocks.push }),
+}))
+vi.mock('@/features/generate-image/services/generate-image.client', () => ({
+	requestImageGeneration: mocks.requestImageGeneration,
+	requestPublishedImageProfiles: vi.fn().mockResolvedValue([]),
 }))
 
 const template: PublishedHtmlTemplate = {
@@ -71,5 +79,33 @@ describe('TemplateGenerator', () => {
 		})
 
 		expect(mocks.push).toHaveBeenCalledWith('/studio/template/cards/2')
+	})
+
+	it('개방된 이미지 슬롯에서 생성한 이미지를 미리보기에 합성한다', async () => {
+		mocks.requestImageGeneration.mockResolvedValue({
+			generatedImages: [{ id: 5, url: '/api/generated-images/file/bg.png' }],
+		})
+		const { container } = render(
+			<TemplateGenerator
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경"></div>',
+					nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
+				}}
+			/>,
+		)
+
+		fireEvent.change(screen.getByLabelText('배경'), { target: { value: '파스텔 배경' } })
+		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
+
+		expect(mocks.requestImageGeneration).toHaveBeenCalledWith({
+			prompt: '파스텔 배경',
+			count: 1,
+			profileId: 7,
+		})
+		await waitFor(() =>
+			expect(container.innerHTML).toContain('/api/generated-images/file/bg.png'),
+		)
 	})
 })

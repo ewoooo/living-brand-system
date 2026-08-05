@@ -35,6 +35,10 @@ const templateNodeConfigMapSchema = z.record(
 			generatedImageId: z.number().int().positive().optional(),
 			imageTransform: templateImageTransformSchema.optional(),
 			input: templateSlotSpecSchema.optional(),
+			imageInput: z
+				.object({ profileId: z.number().int().positive().optional() })
+				.strict()
+				.optional(),
 			vectorAsset: z
 				.object({
 					collection: z.enum(TEMPLATE_VECTOR_ASSET_COLLECTIONS),
