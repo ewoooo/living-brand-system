@@ -80,6 +80,8 @@ const VECTOR_TYPES = new Set([
 	'POLYGON',
 	'REGULAR_POLYGON',
 ])
+// 배경 이미지 할당(AI 생성) 대상. Figma REST는 둥근 사각형도 RECTANGLE(+cornerRadius)로 내보내므로 두 타입이면 충분하다.
+const IMAGE_ASSIGN_TYPES = new Set(['FRAME', 'RECTANGLE'])
 
 // 배경 설정 트리거 버튼 공통 스타일(에셋 가져오기 · AI 생성).
 const TRIGGER_STYLE: CSSProperties = {
@@ -799,7 +801,7 @@ export default function TemplateLayersField() {
 				</div>
 			)}
 
-			{selected?.figmaType === 'FRAME' && (
+			{selected && IMAGE_ASSIGN_TYPES.has(selected.figmaType) && (
 				<div>
 					<span
 						className="text-sm"
@@ -866,7 +868,7 @@ export default function TemplateLayersField() {
 			{selected &&
 				!selected.isText &&
 				!selected.isVector &&
-				selected.figmaType !== 'FRAME' && (
+				!IMAGE_ASSIGN_TYPES.has(selected.figmaType) && (
 					<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
 						{typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.
 					</p>
