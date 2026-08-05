@@ -4,6 +4,9 @@ import { z } from 'zod/v3'
 
 const mocks = vi.hoisted(() => ({
 	completeCheckSessionObservations: vi.fn(),
+	findMcpChecks: vi.fn(),
+	findMcpGuideline: vi.fn(),
+	findMcpGuidelineDocuments: vi.fn(),
 	findUnavailableAiReferenceCheckKeys: vi.fn(),
 	findTemplatesForRequest: vi.fn(),
 	generateImages: vi.fn(),
@@ -42,7 +45,13 @@ vi.mock('@/services/start-check-session.service', () => ({
 	completeCheckSessionObservations: mocks.completeCheckSessionObservations,
 	startCheckSession: mocks.startCheckSession,
 }))
+vi.mock('@/features/guideline/services/find-mcp-guideline.service', () => ({
+	findMcpChecks: mocks.findMcpChecks,
+	findMcpGuideline: mocks.findMcpGuideline,
+	findMcpGuidelineDocuments: mocks.findMcpGuidelineDocuments,
+}))
 
+import { mcpToolNames } from './mcp-tool-names'
 import { customMcpTools } from './mcp-tools'
 
 const ONE_PIXEL_PNG =
@@ -68,6 +77,9 @@ describe('custom MCP tools', () => {
 
 	it('MCP 제작 기능 도구를 노출한다', () => {
 		expect(customMcpTools.map(({ name }) => name)).toEqual([
+			'findGuidelineDocuments',
+			'findChecks',
+			'findGuideline',
 			'searchGuidelines',
 			'findTemplates',
 			'listImageProfiles',
@@ -75,6 +87,28 @@ describe('custom MCP tools', () => {
 			'submitAssetCheckObservations',
 			'generateBrandImage',
 		])
+	})
+
+	it('도구 이름과 키 발급 grant 원본이 같은 목록을 공유한다', () => {
+		expect(customMcpTools.map(({ name }) => name)).toEqual([...mcpToolNames])
+	})
+
+	it('가이드라인 조회 도구가 파싱된 인자를 서비스에 전달한다', async () => {
+		mocks.findMcpGuidelineDocuments.mockResolvedValue({ documents: [] })
+
+		await getTool('findGuidelineDocuments').handler({ level: 2, locale: 'ko' }, request)
+
+		expect(mocks.findMcpGuidelineDocuments).toHaveBeenCalledWith(request, {
+			level: 2,
+			locale: 'ko',
+		})
+	})
+
+	it('스키마에 어긋난 인자는 코어션 없이 검증 오류로 실패한다', async () => {
+		await expect(
+			getTool('generateBrandImage').handler({ prompt: '제품 사진', profileId: '5' }, request),
+		).rejects.toThrow()
+		expect(mocks.generateImages).not.toHaveBeenCalled()
 	})
 
 	it('검증 대상 이미지와 기대값 없는 관측 질문을 연결된 AI에 반환한다', async () => {

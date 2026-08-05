@@ -14,32 +14,49 @@ import { decodeImageDataUri } from '@/features/generate-image/image-data-uri'
 import { loadGeneratedImage } from '@/features/generate-image/repositories/generated-image.payload.repository'
 import { listPublishedImageProfiles } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import { generateImages } from '@/features/generate-image/services/generate-image.service'
+import {
+	findMcpChecks,
+	findMcpGuideline,
+	findMcpGuidelineDocuments,
+} from '@/features/guideline/services/find-mcp-guideline.service'
 import { isPayloadUser } from '@/lib/auth'
 import {
 	type ClientCheckObservations,
 	completeCheckSessionObservations,
 	startCheckSession,
 } from '@/services/start-check-session.service'
+import { type McpToolName, mcpToolNames } from './mcp-tool-names'
 
-type McpToolArgs = Record<string, unknown>
-
-/** MCP 조회 도구가 기능 서비스 결과를 공통 text 콘텐츠로 반환하게 한다. */
-export const mcpTextTool = (
-	name: string,
+/** MCP 도구 인자를 zod 스키마로 한 번 파싱해 타입이 보장된 핸들러에 넘긴다. 스키마에 어긋나면 즉시 실패한다. */
+const mcpTool = <P extends z.ZodRawShape, R>(
+	name: McpToolName,
 	description: string,
-	parameters: Record<string, z.ZodTypeAny>,
-	run: (args: McpToolArgs, req: PayloadRequest) => Promise<unknown>,
+	parameters: P,
+	run: (args: z.infer<z.ZodObject<P>>, req: PayloadRequest) => Promise<R>,
 ) => ({
 	name,
 	description,
 	parameters,
-	handler: async (args: McpToolArgs, req: PayloadRequest) => ({
-		content: [{ type: 'text' as const, text: JSON.stringify(await run(args, req)) }],
-	}),
+	handler: async (args: Record<string, unknown>, req: PayloadRequest) =>
+		run(z.object(parameters).parse(args), req),
 })
 
-const text = (value: unknown) => (typeof value === 'string' ? value : undefined)
-const number = (value: unknown) => (typeof value === 'number' ? value : undefined)
+/** MCP 조회 도구가 기능 서비스 결과를 공통 text 콘텐츠로 반환하게 한다. */
+const mcpTextTool = <P extends z.ZodRawShape>(
+	name: McpToolName,
+	description: string,
+	parameters: P,
+	run: (args: z.infer<z.ZodObject<P>>, req: PayloadRequest) => Promise<unknown>,
+) =>
+	mcpTool(name, description, parameters, async (args, req) => ({
+		content: [{ type: 'text' as const, text: JSON.stringify(await run(args, req)) }],
+	}))
+
+const mcpListParameters = {
+	limit: z.number().int().min(1).max(100).optional(),
+	locale: z.enum(['ko', 'en']).optional(),
+	page: z.number().int().min(1).optional(),
+}
 const clientObservationSchema = z.strictObject({
 	value: z.union([z.number(), z.enum(['present', 'absent', 'uncertain', 'not_applicable'])]),
 	confidence: z.number().min(0).max(100),
@@ -51,18 +68,42 @@ const user = (req: PayloadRequest) => {
 }
 
 // ponytail: MCP tools only validate transport input and reuse the existing feature services.
+// 노출 순서와 grant 키의 단일 원본은 mcp-tool-names.ts — 도구 추가 시 그 목록부터 늘린다.
 export const customMcpTools = [
+	mcpTextTool(
+		'findGuidelineDocuments',
+		'Find published guideline documents with localized content, hierarchy, blocks, and applied rules.',
+		{
+			...mcpListParameters,
+			level: z.number().int().min(1).max(3).optional(),
+		},
+		// level은 스키마가 1~3 정수로 검증하므로 리터럴 유니온으로 좁혀도 안전하다.
+		(args, req) =>
+			findMcpGuidelineDocuments(req, { ...args, level: args.level as 1 | 2 | 3 | undefined }),
+	),
+	mcpTextTool(
+		'findChecks',
+		'Find rules applied by published guideline documents and blocks.',
+		mcpListParameters,
+		(args, req) => findMcpChecks(req, args),
+	),
+	mcpTextTool(
+		'findGuideline',
+		'Find live top-level guideline document metadata.',
+		{ locale: z.enum(['ko', 'en']).optional() },
+		(args, req) => findMcpGuideline(req, args),
+	),
 	mcpTextTool(
 		'searchGuidelines',
 		'Search published brand guideline titles, paths, descriptions, body content, and checks.',
 		{ query: z.string().trim().min(1).max(120) },
-		(args, req) => searchAgentGuidelines(user(req), { query: text(args.query) ?? '' }),
+		(args, req) => searchAgentGuidelines(user(req), { query: args.query }),
 	),
 	mcpTextTool(
 		'findTemplates',
 		'Find or list published production templates and their open text slots.',
 		{ query: z.string().trim().min(1).max(120).optional() },
-		(args, req) => findTemplatesForRequest(user(req), text(args.query)),
+		(args, req) => findTemplatesForRequest(user(req), args.query),
 	),
 	mcpTextTool(
 		'listImageProfiles',
@@ -70,23 +111,22 @@ export const customMcpTools = [
 		{},
 		(_args, req) => listPublishedImageProfiles(user(req)),
 	),
-	{
-		name: 'runAssetCheck',
-		description:
-			'Run deterministic checks and return the image plus observation questions for the connected AI. Follow with submitAssetCheckObservations.',
-		parameters: {
+	mcpTool(
+		'runAssetCheck',
+		'Run deterministic checks and return the image plus observation questions for the connected AI. Follow with submitAssetCheckObservations.',
+		{
 			imageData: z.string().max(4_000_000),
 			imageName: z.string().trim().min(1).max(120).optional(),
 			scenarioKey: z.string().trim().min(1).max(80).optional(),
 		},
-		handler: async (args: McpToolArgs, req: PayloadRequest) => {
-			const image = await decodeImageDataUri(text(args.imageData) ?? '')
+		async (args, req) => {
+			const image = await decodeImageDataUri(args.imageData)
 			const { checkSessionId, pendingCheckKeys, results, rulesetSnapshot } =
 				await startCheckSession({
 					buffer: image.data,
 					deferHeuristic: true,
-					imageName: text(args.imageName) ?? 'mcp-image',
-					scenarioKey: text(args.scenarioKey),
+					imageName: args.imageName ?? 'mcp-image',
+					scenarioKey: args.scenarioKey,
 					source: 'mcp-call',
 					user: user(req),
 				})
@@ -140,7 +180,7 @@ export const customMcpTools = [
 
 			return { content, structuredContent: task }
 		},
-	},
+	),
 	mcpTextTool(
 		'submitAssetCheckObservations',
 		'Submit observations from the connected AI after runAssetCheck. The server validates them and decides the final result.',
@@ -153,30 +193,29 @@ export const customMcpTools = [
 		},
 		(args, req) =>
 			completeCheckSessionObservations({
-				advices: args.advices as Record<string, string> | undefined,
-				checkSessionId: number(args.checkSessionId) ?? 0,
+				advices: args.advices,
+				checkSessionId: args.checkSessionId,
 				observations: args.observations as ClientCheckObservations | undefined,
 				user: user(req),
 			}),
 	),
-	{
-		name: 'generateBrandImage',
-		description:
-			'Generate and store brand images with a published profile, then return stored original URLs and inline WebP previews.',
-		parameters: {
+	mcpTool(
+		'generateBrandImage',
+		'Generate and store brand images with a published profile, then return stored original URLs and inline WebP previews.',
+		{
 			prompt: z.string().trim().min(1).max(500),
 			profileId: z.number().int().positive(),
 			count: z.number().int().min(1).max(2).optional(),
 		},
-		handler: async (args: McpToolArgs, req: PayloadRequest) => {
+		async (args, req) => {
 			const authenticatedUser = user(req)
 			const requestUrl = req.url
 			if (!requestUrl) throw new Error('Request URL is required.')
 			const result = await generateImages({
-				count: number(args.count) ?? 1,
-				profileId: number(args.profileId) ?? 0,
+				count: args.count ?? 1,
+				profileId: args.profileId,
 				user: authenticatedUser,
-				userInput: text(args.prompt) ?? '',
+				userInput: args.prompt,
 			})
 			const generatedImages = result.generatedImages ?? []
 			const previews = await Promise.all(
@@ -221,5 +260,10 @@ export const customMcpTools = [
 				],
 			}
 		},
-	},
+	),
 ]
+
+// 정의된 도구와 이름 목록이 어긋나면 모듈 로드 시점에 바로 실패시킨다(테스트·부팅 모두에서 잡힘).
+if (customMcpTools.map(({ name }) => name).join() !== mcpToolNames.join()) {
+	throw new Error('customMcpTools must match mcpToolNames exactly.')
+}

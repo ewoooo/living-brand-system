@@ -17,7 +17,6 @@ import {
 } from 'payload'
 import { betterEditorSettingsGlobal } from 'payload-better-editor'
 import sharp from 'sharp'
-import { z } from 'zod/v3'
 import { migrations } from '../migrations'
 import { AgentChatSessions } from './collections/AgentChatSessions'
 import { AgentSkills } from './collections/AgentSkills'
@@ -40,13 +39,8 @@ import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
 import { env } from './env'
 import { listGuidelineSearchRules } from './features/guideline/repositories/guideline-search-rules.payload.repository'
-import {
-	findMcpChecks,
-	findMcpGuideline,
-	findMcpGuidelineDocuments,
-} from './features/guideline/services/find-mcp-guideline.service'
 import { buildGuidelineSearchText } from './features/guideline/utils/guideline-search-text'
-import { customMcpTools, mcpTextTool } from './features/mcp-access/mcp-tools'
+import { customMcpTools } from './features/mcp-access/mcp-tools'
 import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
 import { adminOnly, authenticated, isAdmin, managerOrAdmin } from './lib/auth'
@@ -58,14 +52,6 @@ const shouldRunProdMigrations =
 	env.PAYLOAD_RUN_MIGRATIONS_ON_STARTUP === 'true' &&
 	env.NODE_ENV === 'production' &&
 	env.NEXT_PHASE !== 'phase-production-build'
-const mcpListParameters = {
-	limit: z.number().int().min(1).max(100).optional(),
-	locale: z.enum(['ko', 'en']).optional(),
-	page: z.number().int().min(1).optional(),
-}
-const mcpLocale = (value: unknown) => (value === 'en' || value === 'ko' ? value : undefined)
-const mcpNumber = (value: unknown) => (typeof value === 'number' ? value : undefined)
-const mcpLevel = (value: unknown) => (value === 1 || value === 2 || value === 3 ? value : undefined)
 type GetDefaultMcpAccessSettings = (overrideApiKey?: null | string) => Promise<MCPAccessSettings>
 const createOwnMcpApiKey: Access = ({ data, req }) =>
 	isAdmin(req.user) ||
@@ -192,41 +178,7 @@ export default buildConfig({
 				},
 			}),
 			mcp: {
-				tools: [
-					mcpTextTool(
-						'findGuidelineDocuments',
-						'Find published guideline documents with localized content, hierarchy, blocks, and applied rules.',
-						{
-							...mcpListParameters,
-							level: z.number().int().min(1).max(3).optional(),
-						},
-						(args, req) =>
-							findMcpGuidelineDocuments(req, {
-								level: mcpLevel(args.level),
-								limit: mcpNumber(args.limit),
-								locale: mcpLocale(args.locale),
-								page: mcpNumber(args.page),
-							}),
-					),
-					mcpTextTool(
-						'findChecks',
-						'Find rules applied by published guideline documents and blocks.',
-						mcpListParameters,
-						(args, req) =>
-							findMcpChecks(req, {
-								limit: mcpNumber(args.limit),
-								locale: mcpLocale(args.locale),
-								page: mcpNumber(args.page),
-							}),
-					),
-					mcpTextTool(
-						'findGuideline',
-						'Find live top-level guideline document metadata.',
-						{ locale: z.enum(['ko', 'en']).optional() },
-						(args, req) => findMcpGuideline(req, { locale: mcpLocale(args.locale) }),
-					),
-					...customMcpTools,
-				],
+				tools: customMcpTools,
 			},
 		} as never),
 		searchPlugin({
