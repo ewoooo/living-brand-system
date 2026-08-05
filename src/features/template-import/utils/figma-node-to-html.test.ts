@@ -718,6 +718,105 @@ describe('convertFigmaNodeToHtml — 리뷰 수정 회귀', () => {
 	})
 })
 
+describe('convertFigmaNodeToHtml — 이미지 캐리어', () => {
+	// 실사례 형태: 클리핑 프레임(911×492) 안에 크게 깔린 placeholder(1036×578, 프레임 위로 -38px).
+	const clipFrame = (children: unknown[], clipsContent = true) =>
+		({
+			id: '2:1',
+			name: 'Image Area',
+			type: 'FRAME',
+			clipsContent,
+			absoluteBoundingBox: { x: 0, y: 0, width: 911, height: 492 },
+			children,
+		}) as FigmaSourceNode
+	const imageChild = {
+		id: '2:2',
+		name: 'placeholder',
+		type: 'RECTANGLE',
+		fills: [{ type: 'IMAGE', imageRef: 'ref-1', scaleMode: 'FILL' }],
+		constraints: { horizontal: 'LEFT', vertical: 'TOP' },
+		absoluteBoundingBox: { x: 0, y: -38, width: 1036, height: 578 },
+	}
+	const FILL_ASSETS = {
+		'ref-1': {
+			collection: 'application-images' as const,
+			id: 3,
+			url: '/api/application-images/file/ph.png',
+		},
+	}
+
+	it('clipsContent 프레임의 유일한 IMAGE fill 자식을 캐리어로 표시한다', () => {
+		const { html } = convertFigmaNodeToHtml(clipFrame([imageChild]), {}, FILL_ASSETS)
+		expect(html.match(/data-image-carrier/g)).toHaveLength(1)
+		// 마커는 프레임이 아니라 자식(placeholder)에 붙는다.
+		expect(html.indexOf('data-image-carrier')).toBeGreaterThan(
+			html.indexOf('data-node-id="2:2"'),
+		)
+	})
+
+	it('가시 자식이 둘 이상이면 표시하지 않는다(장식 조합 보호)', () => {
+		const { html } = convertFigmaNodeToHtml(
+			clipFrame([
+				imageChild,
+				{
+					id: '2:3',
+					name: 'deco',
+					type: 'RECTANGLE',
+					fills: [{ type: 'SOLID', color: { r: 0, g: 0, b: 0, a: 1 } }],
+					absoluteBoundingBox: { x: 0, y: 0, width: 10, height: 10 },
+				},
+			]),
+			{},
+			FILL_ASSETS,
+		)
+		expect(html).not.toContain('data-image-carrier')
+	})
+
+	it('직접 IMAGE fill 프레임(자식 없음)은 표시하지 않는다(폴백 분기가 담당)', () => {
+		const { html } = convertFigmaNodeToHtml(
+			{
+				...clipFrame([]),
+				fills: [{ type: 'IMAGE', imageRef: 'ref-1', scaleMode: 'FILL' }],
+			},
+			{},
+			FILL_ASSETS,
+		)
+		expect(html).not.toContain('data-image-carrier')
+	})
+
+	it('래스터 폴백 img 자식은 캐리어, 벡터 SVG 자식은 아니다', () => {
+		const rasterChild = {
+			id: '2:4',
+			name: 'baked',
+			type: 'RECTANGLE',
+			absoluteBoundingBox: { x: 0, y: 0, width: 911, height: 492 },
+		}
+		const raster = convertFigmaNodeToHtml(clipFrame([rasterChild]), {
+			'2:4': {
+				collection: 'application-images',
+				id: 5,
+				url: '/api/application-images/file/baked.png',
+			},
+		})
+		expect(raster.html).toContain('data-image-carrier')
+
+		const vectorChild = {
+			id: '2:5',
+			name: 'logo',
+			type: 'VECTOR',
+			absoluteBoundingBox: { x: 0, y: 0, width: 100, height: 40 },
+		}
+		const vector = convertFigmaNodeToHtml(clipFrame([vectorChild]), {
+			'2:5': {
+				collection: 'application-images',
+				id: 6,
+				url: '/api/application-images/file/logo.svg',
+			},
+		})
+		expect(vector.html).not.toContain('data-image-carrier')
+	})
+})
+
 // IR 파이프라인 재배선의 기준선: 주요 경로(오토레이아웃/constraints/grid/텍스트/벡터 에셋/박스 효과)를
 // 한 트리에 모두 담아 출력 HTML 전체를 그대로 고정한다. 이 스냅샷이 바뀌면 변환 동작이 바뀐 것이다.
 describe('convertFigmaNodeToHtml — 골든 스냅샷', () => {

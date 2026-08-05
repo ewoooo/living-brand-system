@@ -16,6 +16,16 @@ const templateSlotSpecSchema = z
 	})
 	.strict()
 
+// 자유 편집 값의 신뢰 경계 — 유한수 + 상식적 범위 밖은 저장을 거부한다(클램프하지 않음).
+const templateImageTransformSchema = z
+	.object({
+		x: z.number().finite().min(-10000).max(10000),
+		y: z.number().finite().min(-10000).max(10000),
+		scale: z.number().finite().gt(0).max(20),
+		rotate: z.number().finite().min(-360).max(360),
+	})
+	.strict()
+
 const templateNodeConfigMapSchema = z.record(
 	z.string().min(1),
 	z
@@ -23,6 +33,7 @@ const templateNodeConfigMapSchema = z.record(
 			text: z.string().optional(),
 			backgroundImage: z.string().optional(),
 			generatedImageId: z.number().int().positive().optional(),
+			imageTransform: templateImageTransformSchema.optional(),
 			input: templateSlotSpecSchema.optional(),
 			vectorAsset: z
 				.object({

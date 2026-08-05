@@ -15,6 +15,8 @@ export interface TemplateNodeConfig {
 	text?: string
 	backgroundImage?: string
 	generatedImageId?: number
+	/** 프레임에 할당한 이미지의 자유 편집 — 이동(px)·확대(배율)·회전(deg). 캐리어에만 적용된다. */
+	imageTransform?: { x: number; y: number; scale: number; rotate: number }
 	input?: TemplateSlotSpec
 	vectorAsset?: {
 		collection: TemplateVectorAssetCollection

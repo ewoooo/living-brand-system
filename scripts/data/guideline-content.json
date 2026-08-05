@@ -1,39 +1,273 @@
 {
 	"documents": [
 		{
-			"slug": "layout-blank",
-			"title": "Margin Size",
-			"parent": "layout",
+			"slug": "sns",
+			"title": "SNS",
+			"label": null,
+			"parent": "essenherb-applications",
 			"order": 0,
-			"blocks": [
-				{
-					"columns": 2,
-					"rows": 1,
-					"imageRatio": "original",
-					"ratioWidth": 4,
-					"ratioHeight": 3,
-					"cells": [
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "brand-core",
+			"title": "Brand Core",
+			"label": null,
+			"parent": "essenherb-brand-strategy",
+			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
 						{
-							"image": {
-								"file": "자산 49.svg"
-							}
-						},
-						{
-							"image": {
-								"file": "자산 50.svg"
-							}
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Our philosophy, principles and practices govern and guide every experience designed by IBM.\nIBMers believe in progress—that the application of intelligence, reason and science can improve business, society and the human condition.\nGiven our scale and scope, ‘good design’ is not only a requirement, it’s a deeper responsibility to relationships we seek to serve.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
 						}
 					],
-					"blockType": "imageGrid",
-					"rules": []
+					"direction": "ltr"
 				}
-			]
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "brand-logo",
+			"title": "Brand Logo",
+			"label": null,
+			"parent": "essenherb-design-elements",
+			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 로고는 자연의 본질에 집중하고자하는 브랜드 태도와 전문적인 제품성이라는 Essenherb만의 복합적 특성을 유려한 곡선과 단단한 직선의 조화를 통해 표현합니다. 좁은 자폭을 기반으로 정밀하게 조형된 형태는 Essenherb가 추구하는 재료의 응집과 정밀한 배합, 그를 통한 탁월한 품질을 상징합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "the-signature",
+			"title": "The Signature",
+			"label": null,
+			"parent": "essenherb-brand-strategy",
+			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "브랜드 시그니처는 브랜드의 철학과 태도를 가장 압축된 언어로 표현하는 서명과 같은 문구입니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 세 가지 타입 시그니처는 브랜드 코어와 제품의 일상성을 강조하거나, 브랜드명의 각인력을 높이는 목적으로 다양한 커뮤니케이션에 사용할 수 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "브랜드 시그니처는 2개 이상의 중복/조합 사용을 금합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [
+				{
+					"rule": "messaging-signature-combination"
+				}
+			],
+			"blocks": []
+		},
+		{
+			"slug": "brand-purpose-commitment",
+			"title": "Brand purpose & Commitment",
+			"label": null,
+			"parent": "brand-strategy",
+			"order": 0,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
 		},
 		{
 			"slug": "ci-design-concept",
 			"title": "디자인 컨셉",
+			"label": null,
 			"parent": "ci",
 			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "CI는 HD현대를 나타내는 대표적이며 핵심적인 시각 상징 요소입니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "앞으로 뻗어 나가는 화살표 형태의 \"Forward Mark\"는 녹색 계열 컬러로 다채롭게 이루어져 HD현대의 다양한 비즈니스를 하나로 결속시키며, 두려움을 모르는 혁신가이자 따뜻함을 나누는 지도자, 믿을 수 있는 전문가로서 산업 전반과 인류 사회의 지속가능한 미래를 펼쳐나가고자 하는 끊임없는 도전 의지를 담았습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "full",
@@ -62,22 +296,23 @@
 		{
 			"slug": "ci",
 			"title": "CI",
+			"label": null,
 			"parent": "brand-elements",
 			"order": 0,
-			"blocks": []
-		},
-		{
-			"slug": "brand-purpose-commitment",
-			"title": "Brand purpose & Commitment",
-			"parent": "brand-strategy",
-			"order": 0,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "visual-example",
 			"title": "Visual Example",
+			"label": null,
 			"parent": "etc",
 			"order": 0,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "16:9",
@@ -175,8 +410,42 @@
 		{
 			"slug": "illustration-overview",
 			"title": "Shape",
+			"label": null,
 			"parent": "illustration",
 			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일러스트레이션은 필요에 따라 추가 개발이 가능합니다. 일러스트레이션 추가 개발 시,  제공된 에셋의 시각 인상 (e.g. 둥근 윤곽 처리, 단순화된 표현의 수위)을 참고하여, 일관된 브랜드 아이덴티티를 유지할 수 있도록 해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"colored": false,
@@ -191,8 +460,92 @@
 		{
 			"slug": "english-version",
 			"title": "English Version",
+			"label": null,
 			"parent": "the-narrative",
 			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "브랜드 내러티브는 브랜드의 철학과 주요 개념을 하나의 \r흐름으로 연결해, 브랜드가 왜 존재하며 어떤 가치를 만들어가는지를 설명하는 이야기입니다. \r\r",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 내러티브는 순수하고 강인한 자연의 힘에서 출발해, 도시의 일상 속 피부에 생명력과 활기를 전달하는 \r과정을 담습니다. \r\r",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "영문 브랜드 내러티브는 브랜드명을 쉽게 이해하고 기억할 수 있도록 브랜드 철학과 연결하여 설명하며, 한국에서 탄생한 브랜드로서의 정체성과 가치를 강조합니다.  국문 브랜드 내러티브는 축적된 Essenherb의 브랜드 이미지를 자연스럽게 계승하고, 핵심 키워드 Energy를 통해 영문과의 일관성을 유지하여 브랜드 가치를 표현합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -229,14 +582,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "브랜드 본질·철학 문구",
-							"key": "messaging.narrative.statement",
-							"tier": "recommended",
-							"executor": "manual",
-							"checker": 52,
-							"criteria": [],
-							"messages": {},
-							"_status": "published"
+							"rule": "messaging.narrative.statement"
 						}
 					]
 				}
@@ -245,8 +591,62 @@
 		{
 			"slug": "primary-typeface",
 			"title": "Primary Typeface",
+			"label": null,
 			"parent": "typography",
 			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb는 브랜드 로고의 조형적 특성을 반영하는 영문 서체 AgfaRotis Semi Serif와, 높은 가독성을 바탕으로 다양한 환경에서 폭 넓게 활용할 수 있는 국문 서체 Pretendard를 지정 서체로 활용합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "5:4",
@@ -341,26 +741,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "Typography English",
-							"titleKo": "영문 타이포그래피 준수",
-							"key": "typography-english",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "영문 텍스트가 획 끝 삐침이 절제된 세미 세리프(AgfaRotis Semi Serif) 인상인가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "영문 타이포그래피가 Regular/Bold 웨이트 범위 안에서 위계를 형성하는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "typography-english"
 						}
 					]
 				},
@@ -473,8 +854,12 @@
 		{
 			"slug": "business-card",
 			"title": "Business Card",
+			"label": null,
 			"parent": "stationery",
 			"order": 0,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -661,60 +1046,10 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "광고 적용 규격·비율",
-							"key": "application.stationery.format",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"options": {
-								"formats": [
-									{
-										"label": "명함 90×50mm",
-										"width": 90,
-										"height": 50
-									},
-									{
-										"label": "리플렛 A4 210×297mm",
-										"width": 210,
-										"height": 297
-									},
-									{
-										"label": "제품 정보 카드 A5 148×210mm",
-										"width": 148,
-										"height": 210
-									}
-								],
-								"tolerance": 0.05,
-								"ignoreOrientation": true
-							},
-							"criteria": [
-								{
-									"question": "캔버스가 스테이셔너리 규격(명함 90×50 / 리플렛 A4 210×297 / 정보 카드 A5 148×210) 중 하나의 비율(방향 무관)에 부합하는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {
-								"pass": "{facts.closestFormat} 규격 비율에 맞습니다.",
-								"fail": "캔버스가 스테이셔너리 규격과 다릅니다. {facts.allowedFormats} 중 선택한 산출물 규격에 맞춰 조정하세요."
-							},
-							"_status": "published"
+							"rule": "application.stationery.format"
 						},
 						{
-							"title": "인쇄 방식·별색·잉크 사양",
-							"key": "application.print.spec",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "명함의 색 구성이 레드 계열 별색 1도(Pantone Warm Red C)로 표현 가능한 단색 구성인가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "application.print.spec"
 						}
 					]
 				}
@@ -723,8 +1058,94 @@
 		{
 			"slug": "color-palette",
 			"title": "Color Palette",
+			"label": null,
 			"parent": "color-system",
 			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "메인 컬러인 Essenherb Red는 피부의 본질에 대한 해답을 자연의 강인한 에너지로부터 발견해나가고자 하는 우리의 신념과 태도를 상징하는 핵심 컬러입니다. 이와 함께 활용할 수 있는 White와 Black은 Essenherb Red의 사용을 보조하여 선명하고 대담한 브랜드 인상을 강화할 수 있는 컬러입니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr"
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "멀티 컬러는 메인 컬러 Essenherb Red의 강렬한 인상을 다양한 색조로 변주한 5개의 Core Color Tone과 그레이 컬러를 기반으로 구성됩니다. 이는 Light Tone~Dark Tone의 명도 스펙트럼으로 확장되어 일반적인 스킨케어 브랜드의 문법을 깨는 Essenherb만의 볼드한 태도를 드러냄과 동시에, 컬러의 활용성을 높입니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr"
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티를 유지하기 위해 본 가이드에 규정된 지정 컬러를 우선적으로 사용합니다. 오프라인 구현시 정확한 색상 재현을 위해 Pantone 색상 견본과 대조하여 시각적 동일 여부를 판단해야 합니다. 인쇄 방법 및 잉크의 농도, 종이의 재질 등에 따라 발색이 달라질 수 있으니, 작업자는 감리 과정을 통해 컬러 구현율을 세심하게 검토해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr"
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr"
+						}
+					],
+					"direction": "ltr"
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"blockType": "colorPalette",
@@ -829,28 +1250,7 @@
 					],
 					"rules": [
 						{
-							"title": "브랜드 컬러 팔레트",
-							"key": "color.palette",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 48,
-							"criteria": [
-								{
-									"question": "화면의 주요 그래픽·배경·텍스트 색상이 브랜드 팔레트(Essenherb Red #EA5343, White, Black 및 가이드 수록 컬러) 내에 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "브랜드 팔레트에 속하지 않는 색상이 그래픽 요소에서 차지하는 비율(%)은?",
-									"kind": "measure",
-									"operator": "lte",
-									"expectedValue": 10,
-									"unit": "%"
-								}
-							],
-							"heuristicPrompt": "포토그래피·일러스트 내부의 자연색은 팔레트 위반으로 세지 않는다. 그래픽 요소·배경·텍스트 컬러만 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "color.palette"
 						}
 					]
 				},
@@ -858,6 +1258,9 @@
 					"imageRatio": "4:3",
 					"columns": [
 						{
+							"image": {
+								"file": "page-24.jpg"
+							},
 							"imageScale": "100",
 							"heading": "PDF p.24 · Color Palette",
 							"body": {
@@ -875,7 +1278,7 @@
 											"children": [
 												{
 													"mode": "normal",
-													"text": "Color Palette\nOverview\n메인 컬러인 Essenherb Red는 피부의 본질에 대한 해답을 자연의 강인한 에너지로부터 발견해나가고자 하는 우리의 신념과 태도를 상징하는 핵심 컬러입니다. 이와 함께 활용할 수 있는 White와 Black은 Essenherb Red의 사용을 보조하여 선명하고 대담한 브랜드 인상을 강화할 수 있는 컬러입니다.",
+													"text": "B. Brand Design Elements Main Color\nB.2 Color System",
 													"type": "text",
 													"style": "",
 													"detail": 0,
@@ -895,7 +1298,7 @@
 											"children": [
 												{
 													"mode": "normal",
-													"text": "멀티 컬러는 메인 컬러 Essenherb Red의 강렬한 인상을 다양한 색조로 변주한 5개의 Core Color Tone과 그레이 컬러를 기반으로 구성됩니다. 이는 Light Tone~Dark Tone의 명도 스펙트럼으로 확장되어 일반적인 스킨케어 브랜드의 문법을 깨는 Essenherb만의 볼드한 태도를 드러냄과 동시에, 컬러의 활용성을 높입니다.",
+													"text": "Color Palette\nOverview\nEssenherb Red\n메인 컬러인 Essenherb Red는 피부의 본질에 대한 해답을\nRGB 234 83 67\n자연의 강인한 에너지로부터 발견해나가고자 하는 우리의\nHEX EA5343\n신념과 태도를 상징하는 핵심 컬러입니다. 이와 함께 활용할 수\nPantone Warm Red C\n있는 White와 Black은 Essenherb Red의 사용을 보조하여\n선명하고 대담한 브랜드 인상을 강화할 수 있는 컬러입니다.",
 													"type": "text",
 													"style": "",
 													"detail": 0,
@@ -915,7 +1318,7 @@
 											"children": [
 												{
 													"mode": "normal",
-													"text": "일관된 브랜드 아이덴티티를 유지하기 위해 본 가이드에 규정된 지정 컬러를 우선적으로 사용합니다. 오프라인 구현시 정확한 색상 재현을 위해 Pantone 색상 견본과 대조하여 시각적 동일 여부를 판단해야 합니다. 인쇄 방법 및 잉크의 농도, 종이의 재질 등에 따라 발색이 달라질 수 있으니, 작업자는 감리 과정을 통해 컬러 구현율을 세심하게 검토해야 합니다.",
+													"text": "멀티 컬러는 메인 컬러 Essenherb Red의 강렬한 인상을\n다양한 색조로 변주한 5개의 Core Color Tone과 그레이 컬러를\n기반으로 구성됩니다. 이는 Light Tone~Dark Tone의 명도\n스펙트럼으로 확장되어 일반적인 스킨케어 브랜드의 문법을 깨는\nEssenherb만의 볼드한 태도를 드러냄과 동시에, 컬러의\n활용성을 높입니다.",
 													"type": "text",
 													"style": "",
 													"detail": 0,
@@ -935,7 +1338,67 @@
 											"children": [
 												{
 													"mode": "normal",
-													"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다.",
+													"text": "일관된 브랜드 아이덴티티를 유지하기 위해 본 가이드에 규정된\n지정 컬러를 우선적으로 사용합니다. 오프라인 구현시 정확한\n색상 재현을 위해 Pantone 색상 견본과 대조하여 시각적 동일\n여부를 판단해야 합니다. 인쇄 방법 및 잉크의 농도, 종이의 재질\n등에 따라 발색이 달라질 수 있으니, 작업자는 감리 과정을 통해\n컬러 구현율을 세심하게 검토해야 합니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히\n준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이\n필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "White\nRGB 255 255 255\nHEX FFFFFF",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "Black\nRGB 0 0 0\nHEX 000000",
 													"type": "text",
 													"style": "",
 													"detail": 0,
@@ -959,17 +1422,34 @@
 			]
 		},
 		{
-			"slug": "the-signature",
-			"title": "The Signature",
-			"parent": "essenherb-brand-strategy",
-			"order": 0,
-			"blocks": []
-		},
-		{
 			"slug": "primary-logo",
 			"title": "Primary Logo",
+			"label": null,
 			"parent": "brand-logo",
 			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -1179,8 +1659,16 @@
 		{
 			"slug": "sns-contents",
 			"title": "SNS Contents",
+			"label": null,
 			"parent": "sns",
 			"order": 0,
+			"description": null,
+			"headerImage": null,
+			"rules": [
+				{
+					"rule": "application.sns.format"
+				}
+			],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -1847,64 +2335,307 @@
 		{
 			"slug": "the-core",
 			"title": "The Core",
+			"label": null,
 			"parent": "brand-core",
 			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "브랜드 코어는 브랜드를 둘러싼 환경 - 원료, 제품, 효능, \r가치 등을 잇는 핵심 개념으로서 브랜드 아이덴티티의 \r중심이 됩니다.  \r",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "에너지Energy는 순수하고 강인한 자연의 에너지를 통해\r피부를 보호하고 회복하는 에너지를 만드는 Essenherb의 브랜드 핵심 키워드입니다. ",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "the-name",
 			"title": "The Name",
+			"label": null,
 			"parent": "brand-core",
 			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "브랜드명은 브랜드의 철학과 가치를 함축하여 표현하는 메시지이자 모든 브랜드 커뮤니케이션의 기반이 되는 \r핵심 언어 자산입니다. \r\r",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb는 피부의 본질Essence에 집중하는\r식물성Herb 비건 스킨케어 브랜드로서, 모든 사람들의\r건강하고 아름다운 피부를 위한 제품을 만듭니다. ",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": "ltr"
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "instroduction",
 			"title": "Introduction",
+			"label": "",
 			"parent": "build-our-brand",
 			"order": 0,
-			"blocks": []
-		},
-		{
-			"slug": "brand-logo",
-			"title": "Brand Logo",
-			"parent": "essenherb-design-elements",
-			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "에센허브의 브랜드 경험을 만드는 것은 에센허브다움을 올바르게 정의하는 것에서부터 시작합니다. 에센허브다움이란 우리가 고객들에게 전달하려는 핵심 가치와 메시지 및 시각적 언어 등 포괄적인 브랜드 정체성을 의미합니다. 에센허브다움은 로고, 컬러, 서체, 포토그래피, 비주얼 시스템 등 디자인 자산에 자연스럽게 묻어나 고객들에게 전달됩니다. \n브랜드 경험은 에센허브다움을 고객들에게 전달하는 온/오프라인 접점 전반에서 정교하게 만들어집니다. 우리는 수많은 경험 접점에 에센허브의 태도를 녹여낼 수 있는 다양한 방법과 일관된 브랜드 경험을 가능하게 만들어주는 브랜드 디자인 가이드라인을 만들었습니다. 에센허브 브랜드 가이드라인에 수록된 내용과 디자인 요소는 에센허브 브랜드를 나타내는 기본 원칙과 디자인 자산의 적용에 관한 세부 지침으로 에센허브의 브랜드 이미지를 지속해서 유지하고 대내외적으로 전달하는데 길잡이가 됩니다. ",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": "ltr"
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "instruction",
 			"title": "Instruction",
+			"label": null,
 			"parent": "build-our-brand",
 			"order": 0,
-			"blocks": []
-		},
-		{
-			"slug": "brand-core",
-			"title": "Brand Core",
-			"parent": "essenherb-brand-strategy",
-			"order": 0,
-			"blocks": []
-		},
-		{
-			"slug": "sns",
-			"title": "SNS",
-			"parent": "essenherb-applications",
-			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "브랜드 가이드라인은 에센허브 브랜드의 언어적 자산과 시각적 자산을 구체적으로 사용하는 방법 및 관리 지침을 제공합니다. 다양한 고객 경험의 접점에서 일관성 있는 표현, 유지 및 관리를 위해 가이드라인에서 제시하는 세부적인 사항을 따를 것을 권장합니다. 또한, 가이드라인에 수록된 내용은 임의로 변경해 사용하지 않는 것을 원칙으로 합니다. 단, 모든 내용은 필요에 따라 수정과 보완이 가능하며, 이 경우 그 내용과 실행은 반드시 브랜드 디자인 부서 담당자와의 협의를 통해 면밀한 검토를 거쳐 결정되어야 합니다. 또한, 모든 브랜드 자산은 허가 없는 사외 반출을 엄격히 금지합니다. ",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": "ltr"
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "build-our-brand",
 			"title": "Build Our Brand",
+			"label": null,
 			"parent": null,
 			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "가이드라인은 브랜드 기준을 구축하기 위한 운영 문서입니다. 이를 사용해 브랜드 원칙을 이해하고, 제작 기준을 계획하고 적용하고, 결과물을 검수하고, 이미 사용 중인 도구와 함께 일관된 산출물을 만들 수 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": "ltr"
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "layout-three",
 			"title": "Grid System Overview",
+			"label": null,
 			"parent": "layout",
 			"order": 1,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "HD현대의 키 레이아웃은 다양한 종횡비의 판형에서 유연하게 적용할 수 있는 레이아웃 확보가 가능합니다. 로고, 텍스트, 이미지, 그래픽 등 레이아웃과 결합하여 운용할 수 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "padded",
@@ -1967,10 +2698,200 @@
 			]
 		},
 		{
+			"slug": "color-system",
+			"title": "Color System",
+			"label": null,
+			"parent": "essenherb-design-elements",
+			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "the-narrative",
+			"title": "The Narrative",
+			"label": null,
+			"parent": "essenherb-brand-strategy",
+			"order": 1,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "브랜드 내러티브는 브랜드의 철학과 주요 개념을 하나의 \r흐름으로 연결해, 브랜드가 왜 존재하며 어떤 가치를 만들어가는지를 설명하는 이야기입니다. \r\rEssenherb의 내러티브는 순수하고 강인한 자연의 힘에서 출발해, 도시의 일상 속 피부에 생명력과 활기를 전달하는 \r과정을 담습니다. \r",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "영문 브랜드 내러티브는 브랜드명을 쉽게 이해하고 기억할 수 있도록 브랜드 철학과 연결하여 설명하며, 한국에서 탄생한 브랜드로서의 정체성과 가치를 강조합니다. ",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "advertisement",
+			"title": "Advertisement",
+			"label": null,
+			"parent": "essenherb-applications",
+			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "brand-personality-design-principle",
+			"title": "Brand personality & Design principle",
+			"label": null,
+			"parent": "brand-strategy",
+			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "subsidiary-ci",
+			"title": "자회사 CI",
+			"label": null,
+			"parent": "brand-elements",
+			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "group-hd",
+			"title": "--- HD현대 ---",
+			"label": null,
+			"parent": null,
+			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
 			"slug": "ci-ko",
 			"title": "국문형",
+			"label": null,
 			"parent": "ci",
 			"order": 1,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "HD현대 로고의 최소 크기 규정과 최소 여백 규정은 다음과 같습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "모든 브랜드 접점에서 로고의 명료성을 확보하기 위해 시각적 혼란을 유발할 수 있는 기타 요소로부터 충분한 공간을 확보하는 것을 권장합니다.\u0003\u0003로고의 가독성을 보장하기 위해 로고를 직접 둘러싸는\u0003영역을 보호해야 하며, 포워드마크 높이의 1/2 규격\u0003정사각형 박스를 로고 최소 영역의 모듈로 설정합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "모든 형태의 CI응용형에 대해서 본 가이드에 기술된 여백과 최소크기 규정을 준수해야합니다.\u0003일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "full",
@@ -2023,31 +2944,14 @@
 			]
 		},
 		{
-			"slug": "subsidiary-ci",
-			"title": "자회사 CI",
-			"parent": "brand-elements",
-			"order": 1,
-			"blocks": []
-		},
-		{
-			"slug": "brand-personality-design-principle",
-			"title": "Brand personality & Design principle",
-			"parent": "brand-strategy",
-			"order": 1,
-			"blocks": []
-		},
-		{
-			"slug": "group-hd",
-			"title": "--- HD현대 ---",
-			"parent": null,
-			"order": 1,
-			"blocks": []
-		},
-		{
 			"slug": "brand-contents",
 			"title": "Brand Contents",
+			"label": null,
 			"parent": "sns",
 			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -2194,30 +3098,10 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "콘텐츠 브랜드 스토리 카피",
-							"key": "messaging.sns.copy",
-							"tier": "recommended",
-							"executor": "manual",
-							"checker": 52,
-							"criteria": [],
-							"messages": {},
-							"_status": "published"
+							"rule": "messaging.sns.copy"
 						},
 						{
-							"title": "사진 분류·무드 기준",
-							"key": "imagery.sns.classification",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 50,
-							"criteria": [
-								{
-									"question": "브랜드 자산 이미지(모델·브랜드 어플리케이션·자연 재료 이미지 등)가 콘텐츠에 활용되었는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "imagery.sns.classification"
 						}
 					]
 				}
@@ -2226,8 +3110,42 @@
 		{
 			"slug": "type-a-message",
 			"title": "Type A (Message)",
+			"label": null,
 			"parent": "visual-system",
 			"order": 1,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Type A (Message)는 로고, 타이포그래피 등을 활용하여 브랜드가 전달하고자 하는 메시지를 중심으로 비주얼을 전개합니다. 모듈형 그리드를 바탕으로 다양한 종횡비의 판형에 유연하게 대응하여 다양한 브랜드 경험 접점에서 Essenherb다움을 일관되게 표현할 수 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -2274,84 +3192,10 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "템플릿 크기·비율",
-							"key": "layout.visual.template",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"options": {
-								"formats": [
-									{
-										"label": "1:1 1080×1080px",
-										"width": 1,
-										"height": 1
-									},
-									{
-										"label": "3:5(SNS) 1080×1440px",
-										"width": 1080,
-										"height": 1440
-									},
-									{
-										"label": "A4 210×297mm",
-										"width": 210,
-										"height": 297
-									},
-									{
-										"label": "3:1 1920×640px",
-										"width": 3,
-										"height": 1
-									},
-									{
-										"label": "16:9 1920×1080px",
-										"width": 16,
-										"height": 9
-									}
-								]
-							},
-							"criteria": [
-								{
-									"question": "캔버스가 규정 판형(1:1 / 3:4 / A4 / 3:1 / 16:9) 중 하나의 비율인가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "로고·타이포그래피가 비주얼의 중심 요소로 상단 정렬 전개되는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "layout.visual.template"
 						},
 						{
-							"title": "웹·가로 광고 규격",
-							"key": "application.web",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"options": {
-								"formats": [
-									{
-										"label": "16:9 1920x1080px",
-										"width": 16,
-										"height": 9
-									},
-									{
-										"label": "3:1 1920x640px",
-										"width": 3,
-										"height": 1
-									}
-								]
-							},
-							"criteria": [
-								{
-									"question": "캔버스가 웹 규격(16:9 또는 3:1) 비율인가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "application.web"
 						}
 					]
 				}
@@ -2360,8 +3204,72 @@
 		{
 			"slug": "ingredients-texture",
 			"title": "Ingredients & Texture",
+			"label": null,
 			"parent": "photography",
 			"order": 1,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 Ingredients & Texture 포토그래피는 제품에 사용되는 재료 및 제형의 이미지를 통해 제품의 특성뿐만 아니라\nEssenherb의 핵심이 되는 자연 본연의 강인한 에너지를 직관적으로 전달합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "현재 Essenherb의 Ingredients & Texture 포토그래피는 제품별 구성 재료 및 제형의 정보를 명확히 전달하고 있으나,\n재료와 제형 고유의 질감과 입체감을 극대화하는 선명한 대비감의 조명과 수직·수평 앵글 기반의 무게감 있는 화면\n구성 방식을 활용하여 Essenherb가 추구하는 자연 본연의 에너지와 생동감을 보다 강렬하게 표현할 수 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -2459,32 +3367,7 @@
 					"title": "Do/Don't",
 					"rules": [
 						{
-							"title": "Photography Ingredients Textures",
-							"titleKo": "사진 질감 규칙",
-							"key": "photography-ingredient-textures",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 50,
-							"criteria": [
-								{
-									"question": "피사체 고유의 질감과 입체감을 강조하기 용이한 선명한 대비감의 조명을 사용했는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "수직·수평 앵글 기반의 무게감 있는 화면 구성을 사용했는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "백색~연회색 계열의 밝은 무채색 배경톤을 사용했는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"heuristicPrompt": "재료·질감·제형 사진이 아닌 산출물은 모든 기준을 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "photography-ingredient-textures"
 						}
 					]
 				}
@@ -2493,8 +3376,12 @@
 		{
 			"slug": "illustration-color-usage",
 			"title": "Color Usage",
+			"label": null,
 			"parent": "illustration",
 			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"colored": true,
@@ -2509,8 +3396,52 @@
 		{
 			"slug": "micro-typography",
 			"title": "Micro Typography",
+			"label": null,
 			"parent": "typography",
 			"order": 1,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "국·영문 지정 서체 병용을 위한 마이크로 타이포그래피 규정은 다음과 같습니다. 가이드라인에 제시된 국·영문 지정 서체 웨이트를 적용하며, 균일한 회색도를 유지할 수 있도록 정해진 설정 값을 준수하여 사용해야 합니다.\n일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "16:9",
@@ -2554,21 +3485,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "다국어 서체 조합 (국문+영문)",
-							"key": "typography.pairing",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "국문·영문 병용 텍스트가 지정 웨이트 조합(Kor-Medium & Eng-Bold)으로 균일한 회색도를 유지하는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"heuristicPrompt": "국문과 영문이 병용된 텍스트가 없으면 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.pairing"
 						}
 					]
 				},
@@ -2590,16 +3507,47 @@
 		{
 			"slug": "color-pairing",
 			"title": "Color Pairing",
+			"label": null,
 			"parent": "color-system",
 			"order": 1,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 컬러 시스템은 32개 색상으로 구성된 컬러 팔레트를 기반으로 세 가지 Color Pairing 방식을 활용해 무한한 시각적 변주를 만들어냅니다. 표현의 목적과 적용 환경 등을 고려해 아래 세 가지 Color Pairing 방식 중 적절한 컬러 조합 방식을 선택해야 하며, 가시성, 표현 맥락 및 의도, 브랜드 적합성 등을 필수적으로 검토해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
 					"columns": [
 						{
-							"image": {
-								"file": "image-63.png"
-							},
 							"imageScale": "100",
 							"heading": "Tone in Tone",
 							"body": {
@@ -2634,9 +3582,6 @@
 							}
 						},
 						{
-							"image": {
-								"file": "image-64.png"
-							},
 							"imageScale": "100",
 							"heading": "Tone on Tone",
 							"body": {
@@ -2670,9 +3615,6 @@
 							}
 						},
 						{
-							"image": {
-								"file": "image-65.png"
-							},
 							"imageScale": "100",
 							"heading": "Mono Tone",
 							"body": {
@@ -2709,41 +3651,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "Color Acceptions",
-							"titleKo": "승인된 색 조합",
-							"key": "color.combination",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 48,
-							"options": {
-								"criteria": [
-									{
-										"expected": 4.5,
-										"operator": "gte",
-										"measurement": "contrastRatio"
-									}
-								]
-							},
-							"criteria": [
-								{
-									"question": "색 조합이 3대 페어링(Tone in Tone / Tone on Tone / Mono Tone) 중 하나를 따르는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "본문 텍스트와 배경 간 대비비(contrast ratio)는?",
-									"kind": "measure",
-									"operator": "gte",
-									"expectedValue": 4.5
-								}
-							],
-							"messages": {
-								"pass": "Pass",
-								"ok": "2",
-								"needsReview": "3",
-								"fail": "4"
-							},
-							"_status": "published"
+							"rule": "color.combination"
 						}
 					]
 				}
@@ -2752,15 +3660,53 @@
 		{
 			"slug": "korean-version",
 			"title": "Korean Version",
+			"label": null,
 			"parent": "the-narrative",
 			"order": 1,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "국문 브랜드 내러티브는 축적된 Essenherb의 브랜드 이미지를 자연스럽게 계승하고, 핵심 키워드 Energy를 통해 영문과의 일관성을 유지하여 브랜드 가치를 표현합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "primary-logo-type",
 			"title": "Primary Logo Type",
+			"label": null,
 			"parent": "package",
 			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -2947,20 +3893,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "콘텐츠 내 로고 배치",
-							"key": "logo.package.placement",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 47,
-							"criteria": [
-								{
-									"question": "패키지 전면에 브랜드 로고가 레이아웃 규정(Standard Ratio·Margin·Gutter 체계)에 맞게 배치되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "logo.package.placement"
 						}
 					]
 				},
@@ -3299,8 +4232,12 @@
 		{
 			"slug": "brand-leaflet",
 			"title": "Brand Leaflet",
+			"label": null,
 			"parent": "stationery",
 			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -3467,20 +4404,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "인쇄물 필수 기재 항목",
-							"key": "messaging.stationery.content.fields",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "제품의 정보·특징·효능 등 필수 전달 요소가 포함되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "messaging.stationery.content.fields"
 						}
 					]
 				},
@@ -3634,8 +4558,12 @@
 		{
 			"slug": "offline-ad-vertical",
 			"title": "Offline AD (Vertical)",
+			"label": null,
 			"parent": "advertisement",
 			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -3762,30 +4690,10 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "브랜드 시그니처 문구",
-							"key": "messaging.advertisement.tagline",
-							"tier": "recommended",
-							"executor": "manual",
-							"checker": 52,
-							"criteria": [],
-							"messages": {},
-							"_status": "published"
+							"rule": "messaging.advertisement.tagline"
 						},
 						{
-							"title": "사진 분류·무드 기준",
-							"key": "imagery.advertisement.classification",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 50,
-							"criteria": [
-								{
-									"question": "광고 내 사진(제품·모델)이 브랜드 톤앤매너(밝고 선명한 연출)에 부합하는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "imagery.advertisement.classification"
 						}
 					]
 				},
@@ -3899,8 +4807,46 @@
 		{
 			"slug": "secondary-logo",
 			"title": "Secondary Logo (Vertical Type)",
+			"label": null,
 			"parent": "brand-logo",
 			"order": 1,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [
+				{
+					"rule": "logo.secondary.usage"
+				}
+			],
 			"blocks": [
 				{
 					"logo": {
@@ -4039,31 +4985,64 @@
 			]
 		},
 		{
-			"slug": "advertisement",
-			"title": "Advertisement",
-			"parent": "essenherb-applications",
-			"order": 1,
-			"blocks": []
-		},
-		{
-			"slug": "the-narrative",
-			"title": "The Narrative",
-			"parent": "essenherb-brand-strategy",
-			"order": 1,
-			"blocks": []
-		},
-		{
-			"slug": "color-system",
-			"title": "Color System",
-			"parent": "essenherb-design-elements",
-			"order": 1,
-			"blocks": []
-		},
-		{
 			"slug": "layout-b-two",
 			"title": "Layout Type 1",
+			"label": null,
 			"parent": "layout",
 			"order": 2,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "HD현대의 키 레이아웃은 다양한 종횡비의 판형에서\r 유연하게 적용할 수 있는 레이아웃 확보가 가능합니다. \r로고, 텍스트, 이미지, 그래픽 등 레이아웃과 결합하여\r 운용할 수 있습니다. ",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을\r 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다.\r추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여\r 정의해야 합니다.\r",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "padded",
@@ -4108,10 +5087,182 @@
 			]
 		},
 		{
+			"slug": "typography",
+			"title": "Typography",
+			"label": null,
+			"parent": "essenherb-design-elements",
+			"order": 2,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb는 브랜드 로고의 조형적 특성을 반영하는 영문 서체 AgfaRotis Semi Serif와, 높은 가독성을 바탕으로 다양한 환경에서 폭 넓게 활용할 수 있는 국문 서체 Pretendard를 지정 서체로 활용합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"imageRatio": "16:9",
+					"images": [
+						{
+							"image": {
+								"file": "Typography Hero-1.png"
+							},
+							"imageScale": "100"
+						}
+					],
+					"blockType": "mediaShowcase",
+					"rules": []
+				}
+			]
+		},
+		{
+			"slug": "stationery",
+			"title": "Stationery",
+			"label": null,
+			"parent": "essenherb-applications",
+			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "brand-identity-system",
+			"title": "Brand identity system",
+			"label": null,
+			"parent": "brand-strategy",
+			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "overseas-ci",
+			"title": "해외지사 CI",
+			"label": null,
+			"parent": "brand-elements",
+			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
 			"slug": "ci-en",
 			"title": "영문형",
+			"label": null,
 			"parent": "ci",
 			"order": 2,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "HD현대 로고의 최소 크기 규정과 최소 여백 규정은 다음과 같습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "모든 브랜드 접점에서 로고의 명료성을 확보하기 위해 시각적 혼란을 유발할 수 있는 기타 요소로부터 충분한 공간을 확보하는 것을 권장합니다.\u0003\u0003로고의 가독성을 보장하기 위해 로고를 직접 둘러싸는\u0003영역을 보호해야 하며, 포워드마크 높이의 1/2 규격\u0003정사각형 박스를 로고 최소 영역의 모듈로 설정합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "모든 형태의 CI응용형에 대해서 본 가이드에 기술된 여백과 최소크기 규정을 준수해야합니다.\u0003일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "full",
@@ -4164,31 +5315,14 @@
 			]
 		},
 		{
-			"slug": "overseas-ci",
-			"title": "해외지사 CI",
-			"parent": "brand-elements",
-			"order": 2,
-			"blocks": []
-		},
-		{
-			"slug": "brand-identity-system",
-			"title": "Brand identity system",
-			"parent": "brand-strategy",
-			"order": 2,
-			"blocks": []
-		},
-		{
-			"slug": "brand-strategy",
-			"title": "Brand Strategy",
-			"parent": null,
-			"order": 2,
-			"blocks": []
-		},
-		{
 			"slug": "product-information-card",
 			"title": "Product Information Card",
+			"label": null,
 			"parent": "stationery",
 			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -4380,8 +5514,12 @@
 		{
 			"slug": "product-contents",
 			"title": "Product Contents",
+			"label": null,
 			"parent": "sns",
 			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -4508,39 +5646,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "템플릿 크기·비율",
-							"key": "layout.sns.template",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"options": {
-								"formats": [
-									{
-										"label": "Feed 1080×1440px",
-										"width": 1080,
-										"height": 1440
-									},
-									{
-										"label": "Reels 1080×1920px",
-										"width": 1080,
-										"height": 1920
-									}
-								]
-							},
-							"criteria": [
-								{
-									"question": "캔버스가 Feed(3:4) 또는 Reels(9:16) 규격 비율인가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "제품 이미지가 콘텐츠의 중심 요소로 배치되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "layout.sns.template"
 						}
 					]
 				}
@@ -4549,8 +5655,42 @@
 		{
 			"slug": "type-b-contents",
 			"title": "Type B",
+			"label": null,
 			"parent": "visual-system",
 			"order": 2,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Type B (Contents)는 그래픽, 포토그래피 등 브랜드의 비주얼 콘텐츠를 중심으로 비주얼을 전개합니다.\n모듈형 그리드를 바탕으로 다양한 종횡비의 판형에 유연하게 대응하여 다양한 브랜드 경험 접점에서 Essenherb다움을 일관되게 표현할 수 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -4587,25 +5727,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "모듈러 그리드 시스템",
-							"key": "grid.visual.system",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "그래픽·포토그래피 등 비주얼 콘텐츠가 중심 요소로 전개되는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "상단 정렬 기반의 정돈된 정보 위계가 유지되는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "grid.visual.system"
 						}
 					]
 				}
@@ -4614,8 +5736,62 @@
 		{
 			"slug": "brand-product",
 			"title": "Brand Product",
+			"label": null,
 			"parent": "photography",
 			"order": 2,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 Brand Product 포토그래피는 제품의 형태와 색상을 보여주는 기능적 역할을 수행함과 동시에 제품별 고유한\n특성을 시각화하여 각 제품의 매력도를 높이고, Essenherb의 브랜드 아이덴티티를 효과적으로 전달하는 중요한 이미지입니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "현재 Essenherb의 Brand Product 포토그래피는 제품별 특성 및 컬러를 중심으로 연출하여 각 제품의 정보와 기능을 명료하게\n전달하고 있으나, 제품 정체성의 핵심이 되는 재료 또는 제형을 단순 배경 요소가 아닌 제품과 상호작용하는 주체적인 구성\n요소로 활용해 Essenherb다운 에너지와 자연 본연의 생동감을 보다 직관적으로 표현할 수 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -4708,8 +5884,12 @@
 		{
 			"slug": "typography-incorrect-usage",
 			"title": "Incorrect Usage",
+			"label": null,
 			"parent": "typography",
 			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -4775,67 +5955,13 @@
 					"title": "Incorrect Usage",
 					"rules": [
 						{
-							"title": "서체 굵기·위계",
-							"key": "typography.weight",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "한 문장 안에 서로 다른 굵기가 혼용되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "한 문장 안에 서로 다른 글자 크기가 혼용되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.weight"
 						},
 						{
-							"title": "자간·커닝",
-							"key": "typography.spacing",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "글자 사이 간격이 지나치게 좁혀져 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "글자 사이 간격이 지나치게 넓혀져 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.spacing"
 						},
 						{
-							"title": "타이포그래피 오용 금지",
-							"key": "typography.misuse",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "글자의 형태가 임의 변형(비틀기·기울이기·늘리기)되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "지정 서체(AgfaRotis Semi Serif / Pretendard / Essen Flux) 이외의 서체가 사용되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.misuse"
 						}
 					]
 				}
@@ -4844,8 +5970,42 @@
 		{
 			"slug": "tone-in-tone",
 			"title": "Tone in Tone",
+			"label": null,
 			"parent": "color-system",
 			"order": 2,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Tone in Tone 페어링 방식은 서로 다른 색상 계열의 컬러들을 조합하여 Essenherb의 생동감 있고 에너제틱한 브랜드 무드를\n가장 극명하게 드러내는 컬러 조합 방식입니다. 고채도 컬러들이 충돌하며 발생하는 시각적 피로감 및 가시성, 브랜드 적합성에\n유의하여 사용해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"system": "tone-in-tone",
@@ -5011,8 +6171,12 @@
 		{
 			"slug": "illustration-usage-example",
 			"title": "Usage Example",
+			"label": null,
 			"parent": "illustration",
 			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"columns": 3,
@@ -5066,8 +6230,12 @@
 		{
 			"slug": "secondary-logo-type",
 			"title": "Secondary Logo Type",
+			"label": null,
 			"parent": "package",
 			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -5274,25 +6442,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "승인된 로고 변형",
-							"key": "logo.package.variant",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 47,
-							"criteria": [
-								{
-									"question": "패키지에 사용된 로고가 Primary 또는 Secondary Logo Type 중 하나인가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "사용된 로고 타입이 임의 변형 없이 원형대로 사용되었는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "logo.package.variant"
 						}
 					]
 				},
@@ -5631,8 +6781,12 @@
 		{
 			"slug": "offline-ad-horizontal",
 			"title": "Offline AD (Horizontal)",
+			"label": null,
 			"parent": "advertisement",
 			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -5759,35 +6913,10 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "콘텐츠 영역 지정 (인물·텍스트)",
-							"key": "layout.advertisement.zones",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "캔버스가 가로형 광고 판형(2400×1600 또는 8600×2100) 비율에 부합하는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "로고가 규정 로고 영역(Logo Area)에 배치되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "layout.advertisement.zones"
 						},
 						{
-							"title": "반복 서술·보일러플레이트",
-							"key": "messaging.advertisement.boilerplate",
-							"tier": "recommended",
-							"executor": "manual",
-							"checker": 52,
-							"criteria": [],
-							"messages": {},
-							"_status": "published"
+							"rule": "messaging.advertisement.boilerplate"
 						}
 					]
 				},
@@ -6041,14 +7170,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "광고 A-unit 간격 체계",
-							"key": "spacing.advertisement.scale",
-							"tier": "required",
-							"executor": "manual",
-							"checker": 53,
-							"criteria": [],
-							"messages": {},
-							"_status": "published"
+							"rule": "spacing.advertisement.scale"
 						}
 					]
 				},
@@ -6162,8 +7284,12 @@
 		{
 			"slug": "service-logo",
 			"title": "Service Logo (Horizontal Type)",
+			"label": null,
 			"parent": "brand-logo",
 			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"blockName": "",
@@ -6444,38 +7570,75 @@
 			]
 		},
 		{
-			"slug": "stationery",
-			"title": "Stationery",
-			"parent": "essenherb-applications",
+			"slug": "brand-strategy",
+			"title": "Brand Strategy",
+			"label": null,
+			"parent": null,
 			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
-		},
-		{
-			"slug": "typography",
-			"title": "Typography",
-			"parent": "essenherb-design-elements",
-			"order": 2,
-			"blocks": [
-				{
-					"imageRatio": "16:9",
-					"images": [
-						{
-							"image": {
-								"file": "Typography Hero-1.png"
-							},
-							"imageScale": "100"
-						}
-					],
-					"blockType": "mediaShowcase",
-					"rules": []
-				}
-			]
 		},
 		{
 			"slug": "layout-a-two",
 			"title": "Layout Type 2",
+			"label": null,
 			"parent": "layout",
 			"order": 3,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "HD현대의 키 레이아웃은 다양한 종횡비의 판형에서\r 유연하게 적용할 수 있는 레이아웃 확보가 가능합니다. \r로고, 텍스트, 이미지, 그래픽 등 레이아웃과 결합하여\r 운용할 수 있습니다. ",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을\r 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다.\r추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여\r 정의해야 합니다.\r",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "padded",
@@ -6520,10 +7683,237 @@
 			]
 		},
 		{
+			"slug": "package",
+			"title": "Package",
+			"label": null,
+			"parent": "essenherb-applications",
+			"order": 3,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 패키지는 다양한 판형에 브랜드 로고를 적극적으로 활용하여 브랜드 인지를 강화할 수 있도록 에센허브\n설계되었습니다. Primary Logo Type 및 Secondary Logo Type으로 구분하여 일관된 브랜드 아이덴티티를 구축할 수 있습니다. ",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "illustration",
+			"title": "Illustration",
+			"label": null,
+			"parent": "essenherb-design-elements",
+			"order": 3,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb가 전달하고자 하는 브랜드 가치와 다채로운 커뮤니케이션 메시지, 제품 연관 콘텐츠 등을 일관된 그래픽 스타일으로 표현하여 다양한 브랜드 경험 접점에서 생동감 있는 브랜드 메시지를 전달할 수 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일러스트레이션은 필요에 따라 추가 개발이 가능합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일러스트레이션 추가 개발 시, 우측에 제공된 에셋의 시각 인상 (e.g. 둥근 윤곽 처리, 단순화된 표현의 수위)을 참고하여, 일관된 브랜드 아이덴티티를 유지할 수 있도록 해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "typography",
+			"title": "Typography",
+			"label": null,
+			"parent": "brand-elements",
+			"order": 3,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
 			"slug": "ci-hd",
 			"title": "HD형",
+			"label": null,
 			"parent": "ci",
 			"order": 3,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "HD현대 로고의 최소 크기 규정과 최소 여백 규정은 다음과 같습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "모든 브랜드 접점에서 로고의 명료성을 확보하기 위해 시각적 혼란을 유발할 수 있는 기타 요소로부터 충분한 공간을 확보하는 것을 권장합니다.\u0003\u0003로고의 가독성을 보장하기 위해 로고를 직접 둘러싸는\u0003영역을 보호해야 하며, 포워드마크 높이의 1/2 규격\u0003정사각형 박스를 로고 최소 영역의 모듈로 설정합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "모든 형태의 CI응용형에 대해서 본 가이드에 기술된 여백과 최소크기 규정을 준수해야합니다.\u0003일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "full",
@@ -6576,24 +7966,25 @@
 			]
 		},
 		{
-			"slug": "typography",
-			"title": "Typography",
-			"parent": "brand-elements",
-			"order": 3,
-			"blocks": []
-		},
-		{
 			"slug": "brand-elements",
 			"title": "Brand Elements",
+			"label": null,
 			"parent": null,
 			"order": 3,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "package-box-usage-example",
 			"title": "Package Box Usage Example",
+			"label": null,
 			"parent": "package",
 			"order": 3,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -7095,8 +8486,12 @@
 		{
 			"slug": "communication-contents",
 			"title": "Communication Contents",
+			"label": null,
 			"parent": "sns",
 			"order": 3,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -7428,41 +8823,10 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "콘텐츠 영역 지정 (인물·텍스트)",
-							"key": "layout.sns.zones",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "인물 이미지가 전면에 배치되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "텍스트가 상단에 고정 배치되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "layout.sns.zones"
 						},
 						{
-							"title": "배경 위 로고 가독성",
-							"key": "application.sns.caption.legibility",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "배경 위 텍스트가 충분한 대비로 명확히 판독되는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "application.sns.caption.legibility"
 						}
 					]
 				},
@@ -7631,25 +8995,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "콘텐츠 내 로고 배치",
-							"key": "logo.sns.placement",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 47,
-							"criteria": [
-								{
-									"question": "로고가 콘텐츠 레이아웃 시스템이 정한 로고 영역에 배치되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "로고가 다른 요소와 겹쳐 가독성이 저하되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "logo.sns.placement"
 						}
 					]
 				}
@@ -7658,8 +9004,62 @@
 		{
 			"slug": "brand-model",
 			"title": "Brand Model",
+			"label": null,
 			"parent": "photography",
 			"order": 3,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 Brand Model 포토그래피는 브랜드를 대표하는 얼굴로서, Essenherb다움을 결정짓는 핵심 이미지입니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "깨끗한 피부의 연출을 통해 스킨케어 브랜드다운 시각 인상을 유지하는 동시에, 선명한 대비감의 촬영 기법을 기반으로\n자연스러운 피부 질감을 연출하여 Essenherb가 추구하는 자연 본연의 에너지와 생동감을 차별화된 방식으로 전달합니다. 또한,\n다양한 인종·연령·성별의 모델 포토그래피를 통해 글로벌 뷰티 브랜드로서의 면모를 강화하며, 절제된 표정 및 제스처 연출을\n통해 보편적인 스킨케어 브랜드 인상과 차별화된 Essenherb다움을 자신감 있고 볼드한 방식으로 표현할 수 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:5",
@@ -7707,37 +9107,7 @@
 					"title": "Examples",
 					"rules": [
 						{
-							"title": "Imagery Misuse",
-							"titleKo": "이미지 오사용",
-							"key": "imagery-misuse",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 50,
-							"criteria": [
-								{
-									"question": "자신감을 드러내기 용이한 절제된 표정 및 제스처를 사용했는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "피부 고유의 자연스러운 질감을 드러내기 용이한 선명한 대비감의 조명을 사용했는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "백색~연회색 계열의 밝은 무채색 배경톤을 사용했는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "피부에 집중을 방해하는 과도한 복장 연출을 사용했는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"heuristicPrompt": "이 Check는 인물과 피부가 포함된 Brand Model 사진을 대상으로 한다.\n피부가 식별되지 않는 제품·재료·제형 사진에서는 모든 기준을 uncertain으로 관측한다.\n참고 이미지는 오용 유형을 설명하는 예시이며 동일한 모델이나 구도를 요구하지 않는다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "imagery-misuse"
 						}
 					]
 				}
@@ -7746,8 +9116,52 @@
 		{
 			"slug": "essen-flux",
 			"title": "Signature Typeface: Essen Flux",
+			"label": null,
 			"parent": "typography",
 			"order": 3,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essen Flux는 Essenherb의 로고를 기반으로 개발된 영문 전용 서체입니다. 브랜드 아이덴티티의 조형적 특징을 계승함과 동시에 실험적이고 상징적인 표현이 가능하도록 설계되었습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "16:9",
@@ -7794,21 +9208,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "서체 사용 정책·맥락",
-							"key": "typography.usage",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "Essen Flux 서체가 영문 이외의 문자(국문 등)에 적용되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"heuristicPrompt": "Essen Flux 서체(상단 기준선 고정 구조의 전용 영문 서체)가 쓰이지 않은 산출물은 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.usage"
 						}
 					]
 				},
@@ -7819,21 +9219,7 @@
 					"blockType": "glyphGrid",
 					"rules": [
 						{
-							"title": "서체 사용 정책·맥락",
-							"key": "typography.usage",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "Essen Flux 서체가 영문 이외의 문자(국문 등)에 적용되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"heuristicPrompt": "Essen Flux 서체(상단 기준선 고정 구조의 전용 영문 서체)가 쓰이지 않은 산출물은 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.usage"
 						}
 					]
 				},
@@ -7889,22 +9275,7 @@
 					"title": "Example",
 					"rules": [
 						{
-							"title": "Typograhpy All Capital",
-							"titleKo": "대소문자 정책 (All Caps 금지)",
-							"key": "typography.case",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "Essen Flux(로고 기반 전용 서체) 텍스트가 전체 대문자로만 조판되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"heuristicPrompt": "Essen Flux 서체(상단 기준선 고정 구조의 전용 영문 서체)가 쓰이지 않은 산출물은 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.case"
 						}
 					]
 				}
@@ -7913,21 +9284,123 @@
 		{
 			"slug": "tone-on-tone",
 			"title": "Tone on Tone",
+			"label": null,
 			"parent": "color-system",
 			"order": 3,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Tone on Tone 페어링 방식은 동일한 색상 계열 내 서로 다른 명도의 컬러들을 조합하여 정보를 전달하거나 시각적 안정감이\n필요한 접점에 기능적으로 활용하기 용이한 컬러 조합 방식입니다. 컬러 간의 명도 차이가 표현의 맥락과 의도에 맞게 확보되었는지\n확인해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"system": "tone-on-tone",
 					"blockType": "colorPairing",
-					"rules": []
+					"rules": [
+						{
+							"rule": "color.combo.tonal.balance"
+						}
+					]
 				}
 			]
 		},
 		{
 			"slug": "incorrect-usage",
 			"title": "Incorrect Usage",
+			"label": null,
 			"parent": "brand-logo",
 			"order": 3,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "사용 금지 규정은 브랜드 아이덴티티를 철저하게 관리하기\r위한 규정입니다. 로고의 색상, 형태, 비례의 변형은 불가하며\r잘못 사용하기 쉬운 예를 수록하였습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "\r\r본 가이드의 규정에 어긋난 사용은 일관된 브랜드 아이덴티티\r형성을 저해하고 브랜드 이미지를 손상시킬 수 있으니 유념하여\r사용합니다. 사용에 대한 의문은 유관 부서로 문의바랍니다.\r\r 일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히\r준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이\r필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다. ",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "16:9",
@@ -8035,101 +9508,77 @@
 					"title": "Examples",
 					"rules": [
 						{
-							"title": "Logotype construction geometry (proportion lock)",
-							"key": "logo.geometry",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 47,
-							"criteria": [
-								{
-									"question": "로고의 글자 간격·비례·기울기가 원형에서 임의 변형되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "로고 일부 요소의 형태나 획 두께가 변형되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "로고가 윤곽선(아웃라인)만으로 표현되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "logo.geometry"
 						},
 						{
-							"title": "로고 색상 오용 (그라디언트·규정 외)",
-							"key": "logo.color.misuse",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 47,
-							"criteria": [
-								{
-									"question": "로고에 그라디언트 효과가 적용되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "로고가 규정 외 컬러로 변형되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "로고 내 일부 요소만 다른 컬러로 변형되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "logo.color.misuse"
 						},
 						{
-							"title": "배경 위 로고 가독성",
-							"key": "logo.background.legibility",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 47,
-							"criteria": [
-								{
-									"question": "로고와 배경 간 명도 대비가 충분해 로고가 명확히 식별되는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "복잡한 배경 이미지·패턴이 로고의 가독성을 해치고 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "logo.background.legibility"
 						}
 					]
 				}
 			]
 		},
 		{
-			"slug": "illustration",
-			"title": "Illustration",
-			"parent": "essenherb-design-elements",
-			"order": 3,
-			"blocks": []
-		},
-		{
-			"slug": "package",
-			"title": "Package",
-			"parent": "essenherb-applications",
-			"order": 3,
-			"blocks": []
-		},
-		{
 			"slug": "layout-c-two",
 			"title": "Layout Type 3",
+			"label": null,
 			"parent": "layout",
 			"order": 4,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "HD현대의 키 레이아웃은 다양한 종횡비의 판형에서\r 유연하게 적용할 수 있는 레이아웃 확보가 가능합니다. \r로고, 텍스트, 이미지, 그래픽 등 레이아웃과 결합하여\r 운용할 수 있습니다. ",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을\r 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다.\r추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여\r 정의해야 합니다.\r",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "padded",
@@ -8174,10 +9623,208 @@
 			]
 		},
 		{
+			"slug": "photography",
+			"title": "Photography",
+			"label": null,
+			"parent": "essenherb-design-elements",
+			"order": 4,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 포토그래피는 제품을 구성하는 재료 및 제형의\n이미지, 제품을 소개하는 연출 이미지, 브랜드의 무드를\n대표하는 모델 이미지를 통해 브랜드다움을 표현합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "본 가이드는 포토그래피를 활용하는 모든 브랜드 경험 접점에서\nEssenherb다움이 일관되게 유지될 수 있도록 돕는 길잡이가\n됩니다. 일관된 브랜드 아이덴티티 형성을 위해 가이드에 수록된\n포토그래피의 시각 인상을 적극적으로 참조하는 것을 권장합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "이미지는 AI 생성한 이미지로  자유로운 사용이 가능합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 2,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 2
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "etc",
+			"title": "Etc.",
+			"label": null,
+			"parent": "essenherb-applications",
+			"order": 4,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "layout",
+			"title": "Layout",
+			"label": null,
+			"parent": "brand-elements",
+			"order": 4,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "design-applications",
+			"title": "Design Applications",
+			"label": null,
+			"parent": null,
+			"order": 4,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
 			"slug": "ci-incorrect-usage",
 			"title": "사용 금지",
+			"label": null,
 			"parent": "ci",
 			"order": 4,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "사용 금지 규정은 브랜드 아이덴티티를 더욱더 철저하게\r관리하기 위한 규정입니다. 로고의 색상, 형태, 비례의\u0003변형은 불가하며, 잘못 사용하기 쉬운 예를 수록하였습니다.\r\u0003",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "본 가이드의 규정에 어긋나게 사용할 경우, 브랜드 이미지가 손상되고 아이덴티티에 혼란이 생길 수 있으니 유념하여\r사용합니다. 만약 사용에 대한 의문이 생길 경우 유관 부서로\r 문의해 주시기 바랍니다.\r\r",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을\r 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다.\r 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여\r 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -8269,24 +9916,104 @@
 			]
 		},
 		{
-			"slug": "layout",
-			"title": "Layout",
-			"parent": "brand-elements",
-			"order": 4,
-			"blocks": []
-		},
-		{
-			"slug": "design-applications",
-			"title": "Design Applications",
-			"parent": null,
-			"order": 4,
-			"blocks": []
-		},
-		{
 			"slug": "ai-image",
 			"title": "AI Image",
+			"label": null,
 			"parent": "photography",
 			"order": 4,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 포토그래피를 AI 생성하여 활용하는 경우, 일관된 브랜드 아이덴티티의 형성을 저해하지 않도록 생성된 이미지의 시각 인상과 표현적 디테일을 면밀히 검토하여 사용해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "\r\r현재 Essenherb는 일부 포토그래피 활용 접점에서 AI 이미지를 효율적으로 활용하고 있으나, 비현실적인 피부 질감 표현, 실사 이미지와의 톤앤매너 단절 등 일관된 브랜드 아이덴티티 형성을 저해하는 이미지 사용 현황을 일부 확인할 수 있습니다. ",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "본 가이드에 수록된 AI 이미지의 좋은 사용 예시와 아닌 예시를 포함하고 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "\r\r",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"kind": "must",
@@ -8299,27 +10026,7 @@
 					"title": "AI 이미지 품질 개선",
 					"rules": [
 						{
-							"title": "AI Image Consistency",
-							"titleKo": "AI 생성 사진 품질·일관성",
-							"key": "imagery.ai.consistency",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 50,
-							"criteria": [
-								{
-									"question": "피부 표현이 자연스럽고 현실적인가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "이미지의 톤·대비·연출이 일관적인가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"heuristicPrompt": "인물·피부가 등장하지 않는 AI 생성물은 첫 기준을 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "imagery.ai.consistency"
 						}
 					]
 				},
@@ -8387,27 +10094,7 @@
 					"title": "Examples",
 					"rules": [
 						{
-							"title": "AI Image Consistency",
-							"titleKo": "AI 생성 사진 품질·일관성",
-							"key": "imagery.ai.consistency",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 50,
-							"criteria": [
-								{
-									"question": "피부 표현이 자연스럽고 현실적인가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "이미지의 톤·대비·연출이 일관적인가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"heuristicPrompt": "인물·피부가 등장하지 않는 AI 생성물은 첫 기준을 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "imagery.ai.consistency"
 						}
 					]
 				}
@@ -8416,21 +10103,63 @@
 		{
 			"slug": "mono-tone",
 			"title": "Mono Tone",
+			"label": null,
 			"parent": "color-system",
 			"order": 4,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Mono Tone 페어링 방식은 Black, White 컬러에 유채색 컬러들을 조합하여 브랜드 컬러의 선명도를 강조하기에 용이한\n컬러 조합 방식입니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"system": "mono-tone",
 					"blockType": "colorPairing",
-					"rules": []
+					"rules": [
+						{
+							"rule": "color.roles"
+						}
+					]
 				}
 			]
 		},
 		{
 			"slug": "product-usage-example",
 			"title": "Product Usage Example",
+			"label": null,
 			"parent": "package",
 			"order": 4,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -8637,20 +10366,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "인쇄물 필수 기재 항목",
-							"key": "messaging.package.content.fields",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "제품명·제품 설명 등 패키지 필수 기재 요소가 포함되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "messaging.package.content.fields"
 						}
 					]
 				},
@@ -9007,24 +10723,14 @@
 			]
 		},
 		{
-			"slug": "etc",
-			"title": "Etc.",
-			"parent": "essenherb-applications",
-			"order": 4,
-			"blocks": []
-		},
-		{
-			"slug": "photography",
-			"title": "Photography",
-			"parent": "essenherb-design-elements",
-			"order": 4,
-			"blocks": []
-		},
-		{
 			"slug": "key-layout",
 			"title": "Key Layout",
+			"label": null,
 			"parent": "layout",
 			"order": 5,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "padded",
@@ -9111,24 +10817,127 @@
 			]
 		},
 		{
+			"slug": "visual-system",
+			"title": "Visual System",
+			"label": null,
+			"parent": "essenherb-design-elements",
+			"order": 5,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 비주얼 시스템은 상단 정렬 용법을 기반으로 크게 두 가지 타입으로 구분되어 운영됩니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "로고,타이포그래피 등을 활용하여 브랜드가 전달하고자 하는 메시지를 중심으로 비주얼을 전개하는 Type A(Message),\n그래픽, 포토그래피 등 브랜드의 비주얼 콘텐츠를 중심으로 비주얼을 전개하는 Type B(Contents)로 구성되어 다양한\n브랜드 경험 접점에서 Essenherb다움을 일관되게 표현합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
 			"slug": "color",
 			"title": "Color",
+			"label": null,
 			"parent": "brand-elements",
 			"order": 5,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "group-essenherb",
 			"title": "--- Essenherb(legacy) ---",
+			"label": null,
 			"parent": null,
 			"order": 5,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "color-usage",
 			"title": "Color Usage",
+			"label": null,
 			"parent": "color-system",
 			"order": 5,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 컬러는 제작물의 특성 및 타깃, 의도와 맥락,\n전달하는 정보의 양 등을 고려해 세 단계의 적용 수위(Level)로\n구분되어 운영될 수 있습니다. 우측은 컬러의 수위 별 운영\n예시로, Essenherb의 컬러를 활용하는 모든 상황에서 적절한\n컬러 조합 방식과 시각 인상의 수위를 판단하는 길잡이가 됩니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
 			"blocks": [
 				{
 					"columns": 3,
@@ -9187,15 +10996,7 @@
 					},
 					"rules": [
 						{
-							"title": "Color Usage Context",
-							"titleKo": "컬러 사용 맥락·감성",
-							"key": "color.usage",
-							"tier": "recommended",
-							"executor": "manual",
-							"checker": 53,
-							"criteria": [],
-							"messages": {},
-							"_status": "published"
+							"rule": "color.usage"
 						}
 					]
 				},
@@ -9327,66 +11128,91 @@
 			]
 		},
 		{
-			"slug": "visual-system",
-			"title": "Visual System",
-			"parent": "essenherb-design-elements",
-			"order": 5,
-			"blocks": []
-		},
-		{
 			"slug": "key-visual",
 			"title": "Key Visual",
+			"label": null,
 			"parent": "brand-elements",
 			"order": 6,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "essenherb-brand-strategy",
 			"title": "Brand Strategy",
+			"label": null,
 			"parent": null,
 			"order": 6,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "iconography",
 			"title": "Iconography",
+			"label": null,
 			"parent": "brand-elements",
 			"order": 7,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "essenherb-design-elements",
 			"title": "Design Elements",
+			"label": null,
 			"parent": null,
 			"order": 7,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "illustration",
 			"title": "Illustration",
+			"label": null,
 			"parent": "brand-elements",
 			"order": 8,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "essenherb-applications",
 			"title": "Applications",
+			"label": null,
 			"parent": null,
 			"order": 8,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "infographic",
 			"title": "Infographic",
+			"label": null,
 			"parent": "brand-elements",
 			"order": 9,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		},
 		{
 			"slug": "photography",
 			"title": "Photography",
+			"label": null,
 			"parent": "brand-elements",
 			"order": 10,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
 			"blocks": []
 		}
 	]
