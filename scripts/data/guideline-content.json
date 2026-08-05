@@ -1,10 +1,21 @@
 {
 	"documents": [
 		{
-			"slug": "layout-blank",
-			"title": "Margin Size",
+			"slug": "sns",
+			"title": "SNS",
 			"label": null,
-			"parent": "layout",
+			"parent": "essenherb-applications",
+			"order": 0,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "brand-core",
+			"title": "Brand Core",
+			"label": null,
+			"parent": "essenherb-brand-strategy",
 			"order": 0,
 			"description": {
 				"root": {
@@ -21,7 +32,7 @@
 							"children": [
 								{
 									"mode": "normal",
-									"text": "HD현대의 키 레이아웃은 다양한 종횡비의 판형에서 유연하게 적용할 수 있는 레이아웃 확보가 가능합니다. 로고, 텍스트, 이미지, 그래픽 등 레이아웃과 결합하여 운용할 수 있습니다.",
+									"text": "Our philosophy, principles and practices govern and guide every experience designed by IBM.\nIBMers believe in progress—that the application of intelligence, reason and science can improve business, society and the human condition.\nGiven our scale and scope, ‘good design’ is not only a requirement, it’s a deeper responsibility to relationships we seek to serve.",
 									"type": "text",
 									"style": "",
 									"detail": 0,
@@ -29,10 +40,31 @@
 									"version": 1
 								}
 							],
-							"direction": null,
+							"direction": "ltr",
 							"textStyle": "",
 							"textFormat": 0
-						},
+						}
+					],
+					"direction": "ltr"
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "brand-logo",
+			"title": "Brand Logo",
+			"label": null,
+			"parent": "essenherb-design-elements",
+			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
 						{
 							"type": "paragraph",
 							"format": "",
@@ -41,7 +73,7 @@
 							"children": [
 								{
 									"mode": "normal",
-									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다.",
+									"text": "Essenherb의 로고는 자연의 본질에 집중하고자하는 브랜드 태도와 전문적인 제품성이라는 Essenherb만의 복합적 특성을 유려한 곡선과 단단한 직선의 조화를 통해 표현합니다. 좁은 자폭을 기반으로 정밀하게 조형된 형태는 Essenherb가 추구하는 재료의 응집과 정밀한 배합, 그를 통한 탁월한 품질을 상징합니다.",
 									"type": "text",
 									"style": "",
 									"detail": 0,
@@ -59,29 +91,123 @@
 			},
 			"headerImage": null,
 			"rules": [],
-			"blocks": [
-				{
-					"columns": 2,
-					"rows": 1,
-					"imageRatio": "original",
-					"ratioWidth": 4,
-					"ratioHeight": 3,
-					"cells": [
+			"blocks": []
+		},
+		{
+			"slug": "the-signature",
+			"title": "The Signature",
+			"label": null,
+			"parent": "essenherb-brand-strategy",
+			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
 						{
-							"image": {
-								"file": "자산 49.svg"
-							}
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "브랜드 시그니처는 브랜드의 철학과 태도를 가장 압축된 언어로 표현하는 서명과 같은 문구입니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
 						},
 						{
-							"image": {
-								"file": "자산 50.svg"
-							}
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 세 가지 타입 시그니처는 브랜드 코어와 제품의 일상성을 강조하거나, 브랜드명의 각인력을 높이는 목적으로 다양한 커뮤니케이션에 사용할 수 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "브랜드 시그니처는 2개 이상의 중복/조합 사용을 금합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
 						}
 					],
-					"blockType": "imageGrid",
-					"rules": []
+					"direction": null
 				}
-			]
+			},
+			"headerImage": null,
+			"rules": [
+				{
+					"rule": "messaging-signature-combination"
+				}
+			],
+			"blocks": []
+		},
+		{
+			"slug": "brand-purpose-commitment",
+			"title": "Brand purpose & Commitment",
+			"label": null,
+			"parent": "brand-strategy",
+			"order": 0,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
 		},
 		{
 			"slug": "ci-design-concept",
@@ -172,17 +298,6 @@
 			"title": "CI",
 			"label": null,
 			"parent": "brand-elements",
-			"order": 0,
-			"description": null,
-			"headerImage": null,
-			"rules": [],
-			"blocks": []
-		},
-		{
-			"slug": "brand-purpose-commitment",
-			"title": "Brand purpose & Commitment",
-			"label": null,
-			"parent": "brand-strategy",
 			"order": 0,
 			"description": null,
 			"headerImage": null,
@@ -333,11 +448,38 @@
 			"rules": [],
 			"blocks": [
 				{
-					"colored": false,
-					"cellHeightPct": 100,
-					"svgSizePct": 70,
-					"svgOffsetPct": 0,
-					"blockType": "iconGrid",
+					"imageRatio": "4:3",
+					"columns": [
+						{
+							"image": {
+								"file": "page-43.jpg"
+							},
+							"imageScale": "100",
+							"heading": "Illustration",
+							"body": {
+								"root": {
+									"type": "root",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										}
+									],
+									"direction": "ltr"
+								}
+							}
+						}
+					],
+					"blockType": "contentColumns",
 					"rules": []
 				}
 			]
@@ -1143,6 +1285,9 @@
 					"imageRatio": "4:3",
 					"columns": [
 						{
+							"image": {
+								"file": "page-24.jpg"
+							},
 							"imageScale": "100",
 							"heading": "PDF p.24 · Color Palette",
 							"body": {
@@ -1160,7 +1305,7 @@
 											"children": [
 												{
 													"mode": "normal",
-													"text": "Color Palette\nOverview\n메인 컬러인 Essenherb Red는 피부의 본질에 대한 해답을 자연의 강인한 에너지로부터 발견해나가고자 하는 우리의 신념과 태도를 상징하는 핵심 컬러입니다. 이와 함께 활용할 수 있는 White와 Black은 Essenherb Red의 사용을 보조하여 선명하고 대담한 브랜드 인상을 강화할 수 있는 컬러입니다.",
+													"text": "B. Brand Design Elements Main Color\nB.2 Color System",
 													"type": "text",
 													"style": "",
 													"detail": 0,
@@ -1180,7 +1325,7 @@
 											"children": [
 												{
 													"mode": "normal",
-													"text": "멀티 컬러는 메인 컬러 Essenherb Red의 강렬한 인상을 다양한 색조로 변주한 5개의 Core Color Tone과 그레이 컬러를 기반으로 구성됩니다. 이는 Light Tone~Dark Tone의 명도 스펙트럼으로 확장되어 일반적인 스킨케어 브랜드의 문법을 깨는 Essenherb만의 볼드한 태도를 드러냄과 동시에, 컬러의 활용성을 높입니다.",
+													"text": "Color Palette\nOverview\nEssenherb Red\n메인 컬러인 Essenherb Red는 피부의 본질에 대한 해답을\nRGB 234 83 67\n자연의 강인한 에너지로부터 발견해나가고자 하는 우리의\nHEX EA5343\n신념과 태도를 상징하는 핵심 컬러입니다. 이와 함께 활용할 수\nPantone Warm Red C\n있는 White와 Black은 Essenherb Red의 사용을 보조하여\n선명하고 대담한 브랜드 인상을 강화할 수 있는 컬러입니다.",
 													"type": "text",
 													"style": "",
 													"detail": 0,
@@ -1200,7 +1345,7 @@
 											"children": [
 												{
 													"mode": "normal",
-													"text": "일관된 브랜드 아이덴티티를 유지하기 위해 본 가이드에 규정된 지정 컬러를 우선적으로 사용합니다. 오프라인 구현시 정확한 색상 재현을 위해 Pantone 색상 견본과 대조하여 시각적 동일 여부를 판단해야 합니다. 인쇄 방법 및 잉크의 농도, 종이의 재질 등에 따라 발색이 달라질 수 있으니, 작업자는 감리 과정을 통해 컬러 구현율을 세심하게 검토해야 합니다.",
+													"text": "멀티 컬러는 메인 컬러 Essenherb Red의 강렬한 인상을\n다양한 색조로 변주한 5개의 Core Color Tone과 그레이 컬러를\n기반으로 구성됩니다. 이는 Light Tone~Dark Tone의 명도\n스펙트럼으로 확장되어 일반적인 스킨케어 브랜드의 문법을 깨는\nEssenherb만의 볼드한 태도를 드러냄과 동시에, 컬러의\n활용성을 높입니다.",
 													"type": "text",
 													"style": "",
 													"detail": 0,
@@ -1220,7 +1365,67 @@
 											"children": [
 												{
 													"mode": "normal",
-													"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다.",
+													"text": "일관된 브랜드 아이덴티티를 유지하기 위해 본 가이드에 규정된\n지정 컬러를 우선적으로 사용합니다. 오프라인 구현시 정확한\n색상 재현을 위해 Pantone 색상 견본과 대조하여 시각적 동일\n여부를 판단해야 합니다. 인쇄 방법 및 잉크의 농도, 종이의 재질\n등에 따라 발색이 달라질 수 있으니, 작업자는 감리 과정을 통해\n컬러 구현율을 세심하게 검토해야 합니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히\n준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이\n필요한 경우에는 관련된 부서에 의뢰하여 정의해야 합니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "White\nRGB 255 255 255\nHEX FFFFFF",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "Black\nRGB 0 0 0\nHEX 000000",
 													"type": "text",
 													"style": "",
 													"detail": 0,
@@ -1247,7 +1452,7 @@
 			"slug": "the-signature",
 			"title": "The Signature",
 			"label": null,
-			"parent": "essenherb-brand-strategy",
+			"parent": "brand-strategy",
 			"order": 0,
 			"description": {
 				"root": {
@@ -1383,7 +1588,7 @@
 					"columns": [
 						{
 							"image": {
-								"file": "Essenherb_logo-horizontal.svg"
+								"file": "page-12.jpg"
 							},
 							"imageScale": "100",
 							"heading": "Primary Logo",
@@ -1424,23 +1629,15 @@
 					"rules": []
 				},
 				{
-					"logo": {
-						"file": "Essenherb_logo-horizontal.svg"
-					},
-					"logoRealHeightPx": 190,
-					"registeredMark": {
-						"file": "Essenherb_logo-horizontal-trademark.svg"
-					},
-					"clearSpaceGuide": {
-						"file": "Essenherb_logo-horizontal-clearSpace.svg"
-					},
-					"minSizePx": 20,
-					"registeredMinPx": 45,
-					"topics": [
+					"imageRatio": "4:3",
+					"columns": [
 						{
-							"kind": "minSize",
-							"label": "Minimum Size",
-							"description": {
+							"image": {
+								"file": "page-13.jpg"
+							},
+							"imageScale": "100",
+							"heading": "Minimum Size",
+							"body": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -1507,79 +1704,196 @@
 											"textStyle": "",
 											"textFormat": 0
 										}
-									]
-								}
-							}
-						},
-						{
-							"kind": "clearSpace",
-							"label": "Clear Space",
-							"description": {
-								"root": {
-									"type": "root",
-									"format": "",
-									"indent": 0,
-									"version": 1,
-									"children": [
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "Essenherb 프라이머리 로고의 최소 공간 규정은 다음과 같습니다. 로고의 가독성을 보장하기 위해 로고 주변에 충분한 공간을 확보해야 하며, Essenherb 로고 세로획(stem) 너비 기준 3배 규격의 정사각형 박스를 최소 영역의 모듈로 설정합니다. 모든 브랜드 접점에서 로고의 명료성을 확보하기 위해 시각적 혼란을 유발할 수 있는 기타 요소로부터 충분한 공간을 확보하는 것을 권장합니다. 일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"textStyle": "",
-											"textFormat": 0
-										}
-									]
-								}
-							}
-						},
-						{
-							"kind": "registeredMark",
-							"label": "Registered Trademark",
-							"description": {
-								"root": {
-									"type": "root",
-									"format": "",
-									"indent": 0,
-									"version": 1,
-									"children": [
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "Registered Trademark는 특허청에 적법한 절차에 의해 상표 등록을 마친 상표에만 표시할 수 있는 기호입니다. 등록되지 않은 상표에 Registered Trademark를 사용하게 될 경우, 지식재산권 허위 표시에 대한 처벌을 받을 수 있으므로 상표 등록이 완료된 이후 사용을 권장합니다. Registered Trademark가 지나치게 작은 사이즈로 활용될 경우 뭉침 현상이 발생하게 되어 가시성이 떨어지게 됩니다. 프라이머리 로고의 높이값 45px/15mm 이하의 크기에서는 Registered Trademark를 사용할 수 없습니다. 일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"textStyle": "",
-											"textFormat": 0
-										}
-									]
+									],
+									"direction": "ltr"
 								}
 							}
 						}
 					],
-					"blockType": "logoViewer",
-					"rules": []
+					"blockType": "contentColumns",
+					"rules": [
+						{
+							"rule": "logo.size.minimum"
+						}
+					]
+				},
+				{
+					"imageRatio": "4:3",
+					"columns": [
+						{
+							"image": {
+								"file": "page-14.jpg"
+							},
+							"imageScale": "100",
+							"heading": "Grids & Clear Space",
+							"body": {
+								"root": {
+									"type": "root",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "Essenherb 프라이머리 로고의 최소 공간 규정은 다음과 같습니다. 로고의 가독성을 보장하기 위해 로고 주변에 충분한 공간을 확보해야 하며, Essenherb 로고 세로획(stem) 너비 기준 3배 규격의 정사각형 박스를 최소 영역의 모듈로 설정합니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "모든 브랜드 접점에서 로고의 명료성을 확보하기 위해 시각적 혼란을 유발할 수 있는 기타 요소로부터 충분한 공간을 확보하는 것을 권장합니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										}
+									],
+									"direction": "ltr"
+								}
+							}
+						}
+					],
+					"blockType": "contentColumns",
+					"rules": [
+						{
+							"rule": "logo.space.clear"
+						}
+					]
+				},
+				{
+					"imageRatio": "4:3",
+					"columns": [
+						{
+							"image": {
+								"file": "page-15.jpg"
+							},
+							"imageScale": "100",
+							"heading": "Registered Trademark",
+							"body": {
+								"root": {
+									"type": "root",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "Registered Trademark는 특허청에 적법한 절차에 의해 상표 등록을 마친 상표에만 표시할 수 있는 기호입니다. 등록되지 않은 상표에 Registered Trademark를 사용하게 될 경우, 지식재산권 허위 표시에 대한 처벌을 받을 수 있으므로 상표 등록이 완료된 이후 사용을 권장합니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "Registered Trademark가 지나치게 작은 사이즈로 활용될 경우 뭉침 현상이 발생하게 되어 가시성이 떨어지게 됩니다. 프라이머리 로고의 높이값 45px/15mm 이하의 크기에서는 Registered Trademark를 사용할 수 없습니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										}
+									],
+									"direction": "ltr"
+								}
+							}
+						}
+					],
+					"blockType": "contentColumns",
+					"rules": [
+						{
+							"rule": "logo.trademark"
+						}
+					]
 				}
 			]
 		},
@@ -2426,39 +2740,9 @@
 			"slug": "brand-logo",
 			"title": "Brand Logo",
 			"label": null,
-			"parent": "essenherb-design-elements",
+			"parent": "design-elements",
 			"order": 0,
-			"description": {
-				"root": {
-					"type": "root",
-					"format": "",
-					"indent": 0,
-					"version": 1,
-					"children": [
-						{
-							"type": "paragraph",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [
-								{
-									"mode": "normal",
-									"text": "Essenherb의 로고는 자연의 본질에 집중하고자하는 브랜드 태도와 전문적인 제품성이라는 Essenherb만의 복합적 특성을 유려한 곡선과 단단한 직선의 조화를 통해 표현합니다. 좁은 자폭을 기반으로 정밀하게 조형된 형태는 Essenherb가 추구하는 재료의 응집과 정밀한 배합, 그를 통한 탁월한 품질을 상징합니다.",
-									"type": "text",
-									"style": "",
-									"detail": 0,
-									"format": 0,
-									"version": 1
-								}
-							],
-							"direction": null,
-							"textStyle": "",
-							"textFormat": 0
-						}
-					],
-					"direction": null
-				}
-			},
+			"description": null,
 			"headerImage": null,
 			"rules": [],
 			"blocks": []
@@ -2508,7 +2792,7 @@
 			"slug": "brand-core",
 			"title": "Brand Core",
 			"label": null,
-			"parent": "essenherb-brand-strategy",
+			"parent": "brand-strategy",
 			"order": 0,
 			"description": {
 				"root": {
@@ -2525,7 +2809,7 @@
 							"children": [
 								{
 									"mode": "normal",
-									"text": "Our philosophy, principles and practices govern and guide every experience designed by IBM.\nIBMers believe in progress—that the application of intelligence, reason and science can improve business, society and the human condition.\nGiven our scale and scope, ‘good design’ is not only a requirement, it’s a deeper responsibility to relationships we seek to serve.",
+									"text": "Our philosophy, principles and practices govern and guide every experience designed by IBM.\n\nIBMers believe in progress—that the application of intelligence, reason and science can improve business, society and the human condition.\n\nGiven our scale and scope, ‘good design’ is not only a requirement, it’s a deeper responsibility to relationships we seek to serve.",
 									"type": "text",
 									"style": "",
 									"detail": 0,
@@ -2549,7 +2833,7 @@
 			"slug": "sns",
 			"title": "SNS",
 			"label": null,
-			"parent": "essenherb-applications",
+			"parent": "applications",
 			"order": 0,
 			"description": null,
 			"headerImage": null,
@@ -2718,6 +3002,122 @@
 			]
 		},
 		{
+			"slug": "color-system",
+			"title": "Color System",
+			"label": null,
+			"parent": "essenherb-design-elements",
+			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "the-narrative",
+			"title": "The Narrative",
+			"label": null,
+			"parent": "essenherb-brand-strategy",
+			"order": 1,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "브랜드 내러티브는 브랜드의 철학과 주요 개념을 하나의 \r흐름으로 연결해, 브랜드가 왜 존재하며 어떤 가치를 만들어가는지를 설명하는 이야기입니다. \r\rEssenherb의 내러티브는 순수하고 강인한 자연의 힘에서 출발해, 도시의 일상 속 피부에 생명력과 활기를 전달하는 \r과정을 담습니다. \r",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "영문 브랜드 내러티브는 브랜드명을 쉽게 이해하고 기억할 수 있도록 브랜드 철학과 연결하여 설명하며, 한국에서 탄생한 브랜드로서의 정체성과 가치를 강조합니다. ",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "advertisement",
+			"title": "Advertisement",
+			"label": null,
+			"parent": "essenherb-applications",
+			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "brand-personality-design-principle",
+			"title": "Brand personality & Design principle",
+			"label": null,
+			"parent": "brand-strategy",
+			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "subsidiary-ci",
+			"title": "자회사 CI",
+			"label": null,
+			"parent": "brand-elements",
+			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "group-hd",
+			"title": "--- HD현대 ---",
+			"label": null,
+			"parent": null,
+			"order": 1,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
 			"slug": "ci-ko",
 			"title": "국문형",
 			"label": null,
@@ -2846,39 +3246,6 @@
 					"rules": []
 				}
 			]
-		},
-		{
-			"slug": "subsidiary-ci",
-			"title": "자회사 CI",
-			"label": null,
-			"parent": "brand-elements",
-			"order": 1,
-			"description": null,
-			"headerImage": null,
-			"rules": [],
-			"blocks": []
-		},
-		{
-			"slug": "brand-personality-design-principle",
-			"title": "Brand personality & Design principle",
-			"label": null,
-			"parent": "brand-strategy",
-			"order": 1,
-			"description": null,
-			"headerImage": null,
-			"rules": [],
-			"blocks": []
-		},
-		{
-			"slug": "group-hd",
-			"title": "--- HD현대 ---",
-			"label": null,
-			"parent": null,
-			"order": 1,
-			"description": null,
-			"headerImage": null,
-			"rules": [],
-			"blocks": []
 		},
 		{
 			"slug": "brand-contents",
@@ -3316,67 +3683,118 @@
 			"label": null,
 			"parent": "illustration",
 			"order": 1,
-			"description": {
-				"root": {
-					"type": "root",
-					"format": "",
-					"indent": 0,
-					"version": 1,
-					"children": [
-						{
-							"type": "paragraph",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [
-								{
-									"mode": "normal",
-									"text": "Essenherb 컬러 팔레트를 일러스트레이션에 적용하여 다양한\n브랜드 경험 접점에서 생동감 있는 브랜드 메시지를 전달하고\n에너제틱한 브랜드 인상을 구축할 수 있습니다.",
-									"type": "text",
-									"style": "",
-									"detail": 0,
-									"format": 0,
-									"version": 1
-								}
-							],
-							"direction": "ltr",
-							"textStyle": "",
-							"textFormat": 0
-						},
-						{
-							"type": "paragraph",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [
-								{
-									"mode": "normal",
-									"text": "가이드에 수록된 Color System을 참고하여 컬러를\n적용해야 하며, 표현의 의도 및 맥락에 맞는 Color Pairing\n전략을 활용하여 일관된 브랜드 아이덴티티를 유지할 수\n있도록 해야 합니다.",
-									"type": "text",
-									"style": "",
-									"detail": 0,
-									"format": 0,
-									"version": 1
-								}
-							],
-							"direction": "ltr",
-							"textStyle": "",
-							"textFormat": 0
-						}
-					],
-					"direction": null
-				}
-			},
+			"description": null,
 			"headerImage": null,
 			"rules": [],
 			"blocks": [
 				{
-					"colored": true,
-					"cellHeightPct": 100,
-					"svgSizePct": 70,
-					"svgOffsetPct": 0,
-					"blockType": "iconGrid",
-					"rules": []
+					"imageRatio": "4:3",
+					"columns": [
+						{
+							"image": {
+								"file": "page-44.jpg"
+							},
+							"imageScale": "100",
+							"heading": "PDF p.44 · Color Usage",
+							"body": {
+								"root": {
+									"type": "root",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "B. Brand Design Elements\nB.4 Illustration",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "Illustration\nColor Usage",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "Essenherb 컬러 팔레트를 일러스트레이션에 적용하여 다양한\n브랜드 경험 접점에서 생동감 있는 브랜드 메시지를 전달하고\n에너제틱한 브랜드 인상을 구축할 수 있습니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "가이드에 수록된 Color System을 참고하여 컬러를\n적용해야 하며, 표현의 의도 및 맥락에 맞는 Color Pairing\n전략을 활용하여 일관된 브랜드 아이덴티티를 유지할 수\n있도록 해야 합니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										}
+									],
+									"direction": "ltr"
+								}
+							}
+						}
+					],
+					"blockType": "contentColumns",
+					"rules": [
+						{
+							"rule": "illustration.color.usage"
+						}
+					]
 				}
 			]
 		},
@@ -3535,9 +3953,6 @@
 					"imageRatio": "4:3",
 					"columns": [
 						{
-							"image": {
-								"file": "image-63.png"
-							},
 							"imageScale": "100",
 							"heading": "Tone in Tone",
 							"body": {
@@ -3572,9 +3987,6 @@
 							}
 						},
 						{
-							"image": {
-								"file": "image-64.png"
-							},
 							"imageScale": "100",
 							"heading": "Tone on Tone",
 							"body": {
@@ -3608,9 +4020,6 @@
 							}
 						},
 						{
-							"image": {
-								"file": "image-65.png"
-							},
 							"imageScale": "100",
 							"heading": "Mono Tone",
 							"body": {
@@ -4845,22 +5254,15 @@
 			],
 			"blocks": [
 				{
-					"logo": {
-						"file": "Essenherb_logo-vertical.svg"
-					},
-					"logoRealHeightPx": 100,
-					"registeredMark": {
-						"file": "Essenherb_logo-vertical-trademark.svg"
-					},
-					"clearSpaceGuide": {
-						"file": "Essenherb_logo-vertical-clearSpace.svg"
-					},
-					"minSizePx": 35,
-					"registeredMinPx": 85,
-					"topics": [
+					"imageRatio": "4:3",
+					"columns": [
 						{
-							"kind": "minSize",
-							"description": {
+							"image": {
+								"file": "page-16.jpg"
+							},
+							"imageScale": "100",
+							"heading": "Minimum Size",
+							"body": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -4875,7 +5277,7 @@
 											"children": [
 												{
 													"mode": "normal",
-													"text": "Essenherb 세로형 로고의 최소 사이즈 규정은 다음과 같습니다.",
+													"text": "Essenherb 세로형 로고의 최소 사이즈 규정은 다음과 같습니다.\n가장 직관적인 로고의 높이를 기준으로 높이 35px(screen), 8mm(print) 보다 작아지지 않도록 해야 합니다.",
 													"type": "text",
 													"style": "",
 													"detail": 0,
@@ -4883,6 +5285,7 @@
 													"version": 1
 												}
 											],
+											"direction": "ltr",
 											"textStyle": "",
 											"textFormat": 0
 										},
@@ -4891,27 +5294,23 @@
 											"format": "",
 											"indent": 0,
 											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "가장 직관적인 로고의 높이를 기준으로 높이 35px(screen), 8mm(print) 보다 작아지지 않도록 해야 합니다.",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
+											"children": [],
+											"direction": "ltr",
 											"textStyle": "",
 											"textFormat": 0
 										}
-									]
+									],
+									"direction": "ltr"
 								}
 							}
 						},
 						{
-							"kind": "clearSpace",
-							"description": {
+							"image": {
+								"file": "page-17.jpg"
+							},
+							"imageScale": "100",
+							"heading": "Grids & Clear Space",
+							"body": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -4934,16 +5333,22 @@
 													"version": 1
 												}
 											],
+											"direction": "ltr",
 											"textStyle": "",
 											"textFormat": 0
 										}
-									]
+									],
+									"direction": "ltr"
 								}
 							}
 						},
 						{
-							"kind": "registeredMark",
-							"description": {
+							"image": {
+								"file": "page-18.jpg"
+							},
+							"imageScale": "100",
+							"heading": "Registered Trademark",
+							"body": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -4966,16 +5371,17 @@
 													"version": 1
 												}
 											],
+											"direction": "ltr",
 											"textStyle": "",
 											"textFormat": 0
 										}
-									]
+									],
+									"direction": "ltr"
 								}
 							}
 						}
 					],
-					"blockType": "logoViewer",
-					"title": "Vertical",
+					"blockType": "contentColumns",
 					"rules": []
 				}
 			]
@@ -4984,7 +5390,7 @@
 			"slug": "advertisement",
 			"title": "Advertisement",
 			"label": null,
-			"parent": "essenherb-applications",
+			"parent": "applications",
 			"order": 1,
 			"description": null,
 			"headerImage": null,
@@ -4995,7 +5401,7 @@
 			"slug": "the-narrative",
 			"title": "The Narrative",
 			"label": null,
-			"parent": "essenherb-brand-strategy",
+			"parent": "brand-strategy",
 			"order": 1,
 			"description": {
 				"root": {
@@ -5056,7 +5462,7 @@
 			"slug": "color-system",
 			"title": "Color System",
 			"label": null,
-			"parent": "essenherb-design-elements",
+			"parent": "design-elements",
 			"order": 1,
 			"description": null,
 			"headerImage": null,
@@ -5164,6 +5570,94 @@
 					"rules": []
 				}
 			]
+		},
+		{
+			"slug": "typography",
+			"title": "Typography",
+			"label": null,
+			"parent": "essenherb-design-elements",
+			"order": 2,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb는 브랜드 로고의 조형적 특성을 반영하는 영문 서체 AgfaRotis Semi Serif와, 높은 가독성을 바탕으로 다양한 환경에서 폭 넓게 활용할 수 있는 국문 서체 Pretendard를 지정 서체로 활용합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"imageRatio": "16:9",
+					"images": [
+						{
+							"image": {
+								"file": "Typography Hero-1.png"
+							},
+							"imageScale": "100"
+						}
+					],
+					"blockType": "mediaShowcase",
+					"rules": []
+				}
+			]
+		},
+		{
+			"slug": "stationery",
+			"title": "Stationery",
+			"label": null,
+			"parent": "essenherb-applications",
+			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "brand-identity-system",
+			"title": "Brand identity system",
+			"label": null,
+			"parent": "brand-strategy",
+			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "overseas-ci",
+			"title": "해외지사 CI",
+			"label": null,
+			"parent": "brand-elements",
+			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
 		},
 		{
 			"slug": "ci-en",
@@ -5304,39 +5798,6 @@
 					"rules": []
 				}
 			]
-		},
-		{
-			"slug": "overseas-ci",
-			"title": "해외지사 CI",
-			"label": null,
-			"parent": "brand-elements",
-			"order": 2,
-			"description": null,
-			"headerImage": null,
-			"rules": [],
-			"blocks": []
-		},
-		{
-			"slug": "brand-identity-system",
-			"title": "Brand identity system",
-			"label": null,
-			"parent": "brand-strategy",
-			"order": 2,
-			"description": null,
-			"headerImage": null,
-			"rules": [],
-			"blocks": []
-		},
-		{
-			"slug": "brand-strategy",
-			"title": "Brand Strategy",
-			"label": null,
-			"parent": null,
-			"order": 2,
-			"description": null,
-			"headerImage": null,
-			"rules": [],
-			"blocks": []
 		},
 		{
 			"slug": "product-information-card",
@@ -6034,12 +6495,19 @@
 				{
 					"system": "tone-in-tone",
 					"blockType": "colorPairing",
-					"rules": []
+					"rules": [
+						{
+							"rule": "color.combination.examples"
+						}
+					]
 				},
 				{
 					"imageRatio": "4:3",
 					"columns": [
 						{
+							"image": {
+								"file": "page-27.jpg"
+							},
 							"imageScale": "100",
 							"heading": "Pairing Recommendation (Light)",
 							"body": {
@@ -6119,14 +6587,12 @@
 					"rules": []
 				},
 				{
-					"variant": "light",
-					"blockType": "colorPairingRecommendation",
-					"rules": []
-				},
-				{
 					"imageRatio": "4:3",
 					"columns": [
 						{
+							"image": {
+								"file": "page-28.jpg"
+							},
 							"imageScale": "100",
 							"heading": "PDF p.28 · Pairing Recommendation (Dark)",
 							"body": {
@@ -6184,11 +6650,6 @@
 					],
 					"blockType": "contentColumns",
 					"rules": []
-				},
-				{
-					"variant": "dark",
-					"blockType": "colorPairingRecommendation",
-					"rules": []
 				}
 			]
 		},
@@ -6198,86 +6659,158 @@
 			"label": null,
 			"parent": "illustration",
 			"order": 2,
-			"description": {
-				"root": {
-					"type": "root",
-					"format": "",
-					"indent": 0,
-					"version": 1,
-					"children": [
-						{
-							"type": "paragraph",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [
-								{
-									"mode": "normal",
-									"text": "Essenherb 일러스트레이션의 사용 예시는 다음과 같습니다.\n다음의 사용 예시를 참고하여, 다양한 브랜드 경험 접점에서\n생동감 있는 브랜드 메시지를 전달하는 시각 요소로서\n일러스트레이션을 활용할 수 있습니다.",
-									"type": "text",
-									"style": "",
-									"detail": 0,
-									"format": 0,
-									"version": 1
-								}
-							],
-							"direction": null,
-							"textStyle": "",
-							"textFormat": 0
-						}
-					],
-					"direction": null
-				}
-			},
+			"description": null,
 			"headerImage": null,
 			"rules": [],
 			"blocks": [
 				{
-					"columns": 3,
-					"rows": 2,
-					"imageRatio": "1:1",
-					"ratioWidth": 4,
-					"ratioHeight": 3,
-					"cells": [
+					"imageRatio": "4:3",
+					"columns": [
 						{
 							"image": {
-								"file": "Illustration Usage Example 1.png"
+								"file": "page-45.jpg"
 							},
-							"caption": "1. 일러스트레이션을 단독으로 사용"
-						},
-						{
-							"image": {
-								"file": "Illustration Usage Example 2.png"
-							},
-							"caption": "2. 일러스트레이션을 레이아웃 상의 포인트 요소로 사용"
-						},
-						{
-							"image": {
-								"file": "Illustration Usage Example 3.png"
-							},
-							"caption": "3. 일러스트레이션과 텍스트를 혼합하여 사용"
-						},
-						{
-							"image": {
-								"file": "Illustration Usage Example 4.png"
-							},
-							"caption": "4. 일러스트레이션을 배경 그래픽으로 사용"
-						},
-						{
-							"image": {
-								"file": "Illustration Usage Example 5.png"
-							},
-							"caption": "5. 일러스트레이션을 레이어링해 사용"
-						},
-						{
-							"image": {
-								"file": "Illustration Usage Example 6.png"
-							},
-							"caption": "6. 일러스트레이션을 후가공 요소로 사용"
+							"imageScale": "100",
+							"heading": "PDF p.45 · Usage Example",
+							"body": {
+								"root": {
+									"type": "root",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "B. Brand Design Elements Usage Example 1\nB.4 Illustration",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "Illustration\nUsage Example",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "Essenherb 일러스트레이션의 사용 예시는 다음과 같습니다.\n다음의 사용 예시를 참고하여, 다양한 브랜드 경험 접점에서\n생동감 있는 브랜드 메시지를 전달하는 시각 요소로서\n일러스트레이션을 활용할 수 있습니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "1. 일러스트레이션을 단독으로 사용\n2. 일러스트레이션을 레이아웃 상의 포인트 요소로 사용\n3. 일러스트레이션과 텍스트를 혼합하여 사용\n4. 일러스트레이션을 배경 그래픽으로 사용\n5. 일러스트레이션을 레이어링해 사용\n6. 일러스트레이션을 후가공 요소로 사용",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "Usage Example 4",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										},
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "Essence for Energy\nDiscover more at essenherb.global",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"direction": "ltr",
+											"textStyle": "",
+											"textFormat": 0
+										}
+									],
+									"direction": "ltr"
+								}
+							}
 						}
 					],
-					"blockType": "imageGrid",
-					"rules": []
+					"blockType": "contentColumns",
+					"rules": [
+						{
+							"rule": "illustration.style"
+						}
+					]
 				}
 			]
 		},
@@ -7346,56 +7879,15 @@
 			"rules": [],
 			"blocks": [
 				{
-					"blockName": "",
-					"logos": [
+					"imageRatio": "4:3",
+					"columns": [
 						{
-							"logo": {
-								"file": "EssenherbCoffee_logo-horizontal.svg"
+							"image": {
+								"file": "page-19.jpg"
 							},
-							"registeredMark": {
-								"file": "EssenherbCoffee_logo-horizontal-trademark.svg"
-							},
-							"clearSpaceGuide": {
-								"file": "EssenherbCoffee_logo-horizontal-clearSpace.svg"
-							},
-							"minSizePx": 20,
-							"registeredMinPx": 45,
-							"label": "Horizontal Type"
-						},
-						{
-							"logo": {
-								"file": "EssenherbCoffee_logo-vertical_1.svg"
-							},
-							"registeredMark": {
-								"file": "EssenherbCoffee_logo-vertical_1-trademark.svg"
-							},
-							"clearSpaceGuide": {
-								"file": "EssenherbCoffee_logo-vertical_1-clearSpace.svg"
-							},
-							"minSizePx": 45,
-							"registeredMinPx": 90,
-							"label": "Vertical Type A"
-						},
-						{
-							"logo": {
-								"file": "EssenherbCoffee_logo-vertical_2.svg"
-							},
-							"registeredMark": {
-								"file": "EssenherbCoffee_logo-vertical_2-trademark.svg"
-							},
-							"clearSpaceGuide": {
-								"file": "EssenherbCoffee_logo-vertical_2-clearSpace.svg"
-							},
-							"minSizePx": 60,
-							"registeredMinPx": 120,
-							"label": "Vertical Type B"
-						}
-					],
-					"topics": [
-						{
-							"kind": "minSize",
-							"label": "Minimum Size",
-							"description": {
+							"imageScale": "100",
+							"heading": "Minimum Size",
+							"body": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -7486,11 +7978,25 @@
 									"direction": "ltr"
 								}
 							}
-						},
+						}
+					],
+					"blockType": "contentColumns",
+					"rules": [
 						{
-							"kind": "clearSpace",
-							"label": "Clear Space",
-							"description": {
+							"rule": "logo.lockup.modifier"
+						}
+					]
+				},
+				{
+					"imageRatio": "4:3",
+					"columns": [
+						{
+							"image": {
+								"file": "page-20.jpg"
+							},
+							"imageScale": "100",
+							"heading": "Grids & Clear Space",
+							"body": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -7521,11 +8027,21 @@
 									"direction": "ltr"
 								}
 							}
-						},
+						}
+					],
+					"blockType": "contentColumns",
+					"rules": []
+				},
+				{
+					"imageRatio": "4:3",
+					"columns": [
 						{
-							"kind": "registeredMark",
-							"label": "Registered Trademark",
-							"description": {
+							"image": {
+								"file": "page-21.jpg"
+							},
+							"imageScale": "100",
+							"heading": "PDF p.21 · Registered Trademark",
+							"body": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -7618,7 +8134,7 @@
 							}
 						}
 					],
-					"blockType": "logoGroupViewer",
+					"blockType": "contentColumns",
 					"rules": []
 				}
 			]
@@ -7627,7 +8143,7 @@
 			"slug": "stationery",
 			"title": "Stationery",
 			"label": null,
-			"parent": "essenherb-applications",
+			"parent": "applications",
 			"order": 2,
 			"description": null,
 			"headerImage": null,
@@ -7638,7 +8154,7 @@
 			"slug": "typography",
 			"title": "Typography",
 			"label": null,
-			"parent": "essenherb-design-elements",
+			"parent": "design-elements",
 			"order": 2,
 			"description": {
 				"root": {
@@ -7688,6 +8204,28 @@
 					"rules": []
 				}
 			]
+		},
+		{
+			"slug": "design-elements",
+			"title": "Design Elements",
+			"label": null,
+			"parent": null,
+			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "brand-strategy",
+			"title": "Brand Strategy",
+			"label": null,
+			"parent": null,
+			"order": 2,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
 		},
 		{
 			"slug": "layout-a-two",
@@ -7790,6 +8328,159 @@
 					"rules": []
 				}
 			]
+		},
+		{
+			"slug": "package",
+			"title": "Package",
+			"label": null,
+			"parent": "essenherb-applications",
+			"order": 3,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 패키지는 다양한 판형에 브랜드 로고를 적극적으로 활용하여 브랜드 인지를 강화할 수 있도록 에센허브\n설계되었습니다. Primary Logo Type 및 Secondary Logo Type으로 구분하여 일관된 브랜드 아이덴티티를 구축할 수 있습니다. ",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "illustration",
+			"title": "Illustration",
+			"label": null,
+			"parent": "essenherb-design-elements",
+			"order": 3,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb가 전달하고자 하는 브랜드 가치와 다채로운 커뮤니케이션 메시지, 제품 연관 콘텐츠 등을 일관된 그래픽 스타일으로 표현하여 다양한 브랜드 경험 접점에서 생동감 있는 브랜드 메시지를 전달할 수 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일러스트레이션은 필요에 따라 추가 개발이 가능합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일러스트레이션 추가 개발 시, 우측에 제공된 에셋의 시각 인상 (e.g. 둥근 윤곽 처리, 단순화된 표현의 수위)을 참고하여, 일관된 브랜드 아이덴티티를 유지할 수 있도록 해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "typography",
+			"title": "Typography",
+			"label": null,
+			"parent": "brand-elements",
+			"order": 3,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
 		},
 		{
 			"slug": "ci-hd",
@@ -7920,17 +8611,6 @@
 					"rules": []
 				}
 			]
-		},
-		{
-			"slug": "typography",
-			"title": "Typography",
-			"label": null,
-			"parent": "brand-elements",
-			"order": 3,
-			"description": null,
-			"headerImage": null,
-			"rules": [],
-			"blocks": []
 		},
 		{
 			"slug": "brand-elements",
@@ -9291,7 +9971,11 @@
 				{
 					"system": "tone-on-tone",
 					"blockType": "colorPairing",
-					"rules": []
+					"rules": [
+						{
+							"rule": "color.combo.tonal.balance"
+						}
+					]
 				}
 			]
 		},
@@ -9487,7 +10171,7 @@
 			"slug": "illustration",
 			"title": "Illustration",
 			"label": null,
-			"parent": "essenherb-design-elements",
+			"parent": "design-elements",
 			"order": 3,
 			"description": {
 				"root": {
@@ -9504,7 +10188,27 @@
 							"children": [
 								{
 									"mode": "normal",
-									"text": "Essenherb가 전달하고자 하는 브랜드 가치와 다채로운 커뮤니케이션 메시지, 제품 연관 콘텐츠 등을 일관된 그래픽 스타일으로 표현하여 다양한 브랜드 경험 접점에서 생동감 있는 브랜드 메시지를 전달할 수 있습니다.",
+									"text": "Essenherb가 전달하고자 하는 브랜드 가치와 다채로운 커뮤니케이션 메시지, 제품 연관 콘텐츠 등을 일관된 그래픽",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "스타일으로 표현하여 다양한 브랜드 경험 접점에서 생동감 있는 브랜드 메시지를 전달할 수 있습니다.",
 									"type": "text",
 									"style": "",
 									"detail": 0,
@@ -9588,7 +10292,7 @@
 			"slug": "package",
 			"title": "Package",
 			"label": null,
-			"parent": "essenherb-applications",
+			"parent": "applications",
 			"order": 3,
 			"description": {
 				"root": {
@@ -9621,6 +10325,17 @@
 					"direction": null
 				}
 			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "applications",
+			"title": "Applications",
+			"label": null,
+			"parent": null,
+			"order": 3,
+			"description": null,
 			"headerImage": null,
 			"rules": [],
 			"blocks": []
@@ -9726,6 +10441,130 @@
 					"rules": []
 				}
 			]
+		},
+		{
+			"slug": "photography",
+			"title": "Photography",
+			"label": null,
+			"parent": "essenherb-design-elements",
+			"order": 4,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 포토그래피는 제품을 구성하는 재료 및 제형의\n이미지, 제품을 소개하는 연출 이미지, 브랜드의 무드를\n대표하는 모델 이미지를 통해 브랜드다움을 표현합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "본 가이드는 포토그래피를 활용하는 모든 브랜드 경험 접점에서\nEssenherb다움이 일관되게 유지될 수 있도록 돕는 길잡이가\n됩니다. 일관된 브랜드 아이덴티티 형성을 위해 가이드에 수록된\n포토그래피의 시각 인상을 적극적으로 참조하는 것을 권장합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "이미지는 AI 생성한 이미지로  자유로운 사용이 가능합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 2,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 2
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "etc",
+			"title": "Etc.",
+			"label": null,
+			"parent": "essenherb-applications",
+			"order": 4,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "layout",
+			"title": "Layout",
+			"label": null,
+			"parent": "brand-elements",
+			"order": 4,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
+			"slug": "design-applications",
+			"title": "Design Applications",
+			"label": null,
+			"parent": null,
+			"order": 4,
+			"description": null,
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
 		},
 		{
 			"slug": "ci-incorrect-usage",
@@ -9895,28 +10734,6 @@
 					"rules": []
 				}
 			]
-		},
-		{
-			"slug": "layout",
-			"title": "Layout",
-			"label": null,
-			"parent": "brand-elements",
-			"order": 4,
-			"description": null,
-			"headerImage": null,
-			"rules": [],
-			"blocks": []
-		},
-		{
-			"slug": "design-applications",
-			"title": "Design Applications",
-			"label": null,
-			"parent": null,
-			"order": 4,
-			"description": null,
-			"headerImage": null,
-			"rules": [],
-			"blocks": []
 		},
 		{
 			"slug": "ai-image",
@@ -10146,7 +10963,11 @@
 				{
 					"system": "mono-tone",
 					"blockType": "colorPairing",
-					"rules": []
+					"rules": [
+						{
+							"rule": "color.roles"
+						}
+					]
 				}
 			]
 		},
@@ -10725,7 +11546,7 @@
 			"slug": "etc",
 			"title": "Etc.",
 			"label": null,
-			"parent": "essenherb-applications",
+			"parent": "applications",
 			"order": 4,
 			"description": null,
 			"headerImage": null,
@@ -10736,89 +11557,9 @@
 			"slug": "photography",
 			"title": "Photography",
 			"label": null,
-			"parent": "essenherb-design-elements",
+			"parent": "design-elements",
 			"order": 4,
-			"description": {
-				"root": {
-					"type": "root",
-					"format": "",
-					"indent": 0,
-					"version": 1,
-					"children": [
-						{
-							"type": "paragraph",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [
-								{
-									"mode": "normal",
-									"text": "Essenherb의 포토그래피는 제품을 구성하는 재료 및 제형의\n이미지, 제품을 소개하는 연출 이미지, 브랜드의 무드를\n대표하는 모델 이미지를 통해 브랜드다움을 표현합니다.",
-									"type": "text",
-									"style": "",
-									"detail": 0,
-									"format": 0,
-									"version": 1
-								}
-							],
-							"direction": "ltr",
-							"textStyle": "",
-							"textFormat": 0
-						},
-						{
-							"type": "paragraph",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [
-								{
-									"mode": "normal",
-									"text": "본 가이드는 포토그래피를 활용하는 모든 브랜드 경험 접점에서\nEssenherb다움이 일관되게 유지될 수 있도록 돕는 길잡이가\n됩니다. 일관된 브랜드 아이덴티티 형성을 위해 가이드에 수록된\n포토그래피의 시각 인상을 적극적으로 참조하는 것을 권장합니다.",
-									"type": "text",
-									"style": "",
-									"detail": 0,
-									"format": 0,
-									"version": 1
-								}
-							],
-							"direction": "ltr",
-							"textStyle": "",
-							"textFormat": 0
-						},
-						{
-							"type": "paragraph",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [],
-							"direction": "ltr",
-							"textStyle": "",
-							"textFormat": 0
-						},
-						{
-							"type": "paragraph",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [
-								{
-									"mode": "normal",
-									"text": "이미지는 AI 생성한 이미지로  자유로운 사용이 가능합니다.",
-									"type": "text",
-									"style": "",
-									"detail": 0,
-									"format": 2,
-									"version": 1
-								}
-							],
-							"direction": "ltr",
-							"textStyle": "",
-							"textFormat": 2
-						}
-					],
-					"direction": null
-				}
-			},
+			"description": null,
 			"headerImage": null,
 			"rules": [],
 			"blocks": []
@@ -10918,6 +11659,67 @@
 			]
 		},
 		{
+			"slug": "visual-system",
+			"title": "Visual System",
+			"label": null,
+			"parent": "essenherb-design-elements",
+			"order": 5,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "Essenherb의 비주얼 시스템은 상단 정렬 용법을 기반으로 크게 두 가지 타입으로 구분되어 운영됩니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "로고,타이포그래피 등을 활용하여 브랜드가 전달하고자 하는 메시지를 중심으로 비주얼을 전개하는 Type A(Message),\n그래픽, 포토그래피 등 브랜드의 비주얼 콘텐츠를 중심으로 비주얼을 전개하는 Type B(Contents)로 구성되어 다양한\n브랜드 경험 접점에서 Essenherb다움을 일관되게 표현합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": []
+		},
+		{
 			"slug": "color",
 			"title": "Color",
 			"label": null,
@@ -10980,190 +11782,151 @@
 			"rules": [],
 			"blocks": [
 				{
-					"columns": 3,
-					"rows": 1,
-					"imageRatio": "original",
-					"ratioWidth": 4,
-					"ratioHeight": 3,
-					"cells": [
+					"imageRatio": "4:3",
+					"columns": [
 						{
-							"image": {
-								"file": "image-66.png"
-							}
-						},
-						{
-							"image": {
-								"file": "image-67.png"
-							}
-						},
-						{
-							"image": {
-								"file": "image-68.png"
-							}
-						}
-					],
-					"blockType": "imageGrid",
-					"title": "Level 1",
-					"description": {
-						"root": {
-							"type": "root",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [
-								{
-									"type": "paragraph",
+							"imageScale": "100",
+							"heading": "Level 1",
+							"body": {
+								"root": {
+									"type": "root",
 									"format": "",
 									"indent": 0,
 									"version": 1,
 									"children": [
 										{
-											"mode": "normal",
-											"text": "Main Color + Mono Tone Pairing\n브랜드를 즉각적으로 인지시켜야 하는경험 접점\n",
-											"type": "text",
-											"style": "",
-											"detail": 0,
-											"format": 0,
-											"version": 1
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "메인 컬러 + 모노톤 페어링 중심\n브랜드를 즉각적으로 인지시켜야 하는경험 접점\n",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												},
+												{
+													"mode": "normal",
+													"text": "e.g. 명함, 공식 서식류, 브랜드 대표 콘텐츠",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 2,
+													"version": 1
+												},
+												{
+													"mode": "normal",
+													"text": "\n",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
+											"textStyle": "",
+											"textFormat": 0
 										}
 									],
-									"textStyle": "",
-									"textFormat": 0
+									"direction": "ltr"
 								}
-							],
-							"direction": "ltr"
+							}
+						},
+						{
+							"imageScale": "100",
+							"heading": "Level 2",
+							"body": {
+								"root": {
+									"type": "root",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "전체 컬러 + 톤온톤 페어링 중심\n정보 전달을 위한 안정적 화면 구성이 필요한 경험 접점\n",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												},
+												{
+													"mode": "normal",
+													"text": "e.g. 제품 설명서, 온라인 배너",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 2,
+													"version": 1
+												}
+											],
+											"textStyle": "",
+											"textFormat": 0
+										}
+									]
+								}
+							}
+						},
+						{
+							"imageScale": "100",
+							"heading": "Level 3",
+							"body": {
+								"root": {
+									"type": "root",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"type": "paragraph",
+											"format": "",
+											"indent": 0,
+											"version": 1,
+											"children": [
+												{
+													"mode": "normal",
+													"text": "전체 컬러 + 톤인톤 페어링 중심\n생동감 있는 브랜드 에너지를 전달하는 경험 접점\n",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												},
+												{
+													"mode": "normal",
+													"text": "e.g. 프로모션 키 비주얼, 이벤트성 패키지, 시즌별 굿즈",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 2,
+													"version": 1
+												}
+											],
+											"textStyle": "",
+											"textFormat": 0
+										}
+									]
+								}
+							}
 						}
-					},
+					],
+					"blockType": "contentColumns",
 					"rules": [
 						{
 							"rule": "color.usage"
 						}
 					]
-				},
-				{
-					"columns": 3,
-					"rows": 1,
-					"imageRatio": "firstImage",
-					"ratioWidth": 4,
-					"ratioHeight": 3,
-					"cells": [
-						{
-							"image": {
-								"file": "image-72.png"
-							}
-						},
-						{
-							"image": {
-								"file": "image-73.png"
-							}
-						},
-						{
-							"image": {
-								"file": "image-74.png"
-							}
-						}
-					],
-					"blockType": "imageGrid",
-					"title": "Level 2",
-					"description": {
-						"root": {
-							"type": "root",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [
-								{
-									"type": "paragraph",
-									"format": "",
-									"indent": 0,
-									"version": 1,
-									"children": [
-										{
-											"mode": "normal",
-											"text": "Main/Multi Color + Tone on Tone Pairing",
-											"type": "text",
-											"style": "",
-											"detail": 0,
-											"format": 0,
-											"version": 1
-										},
-										{
-											"type": "linebreak",
-											"version": 1
-										},
-										{
-											"mode": "normal",
-											"text": "정보 전달을 위한 안정적 화면 구성이 필요한 경험 접점\n",
-											"type": "text",
-											"style": "",
-											"detail": 0,
-											"format": 0,
-											"version": 1
-										}
-									],
-									"textStyle": "",
-									"textFormat": 0
-								}
-							]
-						}
-					},
-					"rules": []
-				},
-				{
-					"columns": 3,
-					"rows": 1,
-					"imageRatio": "firstImage",
-					"ratioWidth": 4,
-					"ratioHeight": 3,
-					"cells": [
-						{
-							"image": {
-								"file": "image-69.png"
-							}
-						},
-						{
-							"image": {
-								"file": "image-70.png"
-							}
-						},
-						{
-							"image": {
-								"file": "image-71.png"
-							}
-						}
-					],
-					"blockType": "imageGrid",
-					"title": "Level 3",
-					"description": {
-						"root": {
-							"type": "root",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [
-								{
-									"type": "paragraph",
-									"format": "",
-									"indent": 0,
-									"version": 1,
-									"children": [
-										{
-											"mode": "normal",
-											"text": "Main/Multi Color + Tone in Tone Pairing\n생동감 있는 브랜드 에너지를 전달하는 경험 접점\n",
-											"type": "text",
-											"style": "",
-											"detail": 0,
-											"format": 0,
-											"version": 1
-										}
-									],
-									"textStyle": "",
-									"textFormat": 0
-								}
-							]
-						}
-					},
-					"rules": []
 				}
 			]
 		},
@@ -11171,59 +11934,9 @@
 			"slug": "visual-system",
 			"title": "Visual System",
 			"label": null,
-			"parent": "essenherb-design-elements",
+			"parent": "design-elements",
 			"order": 5,
-			"description": {
-				"root": {
-					"type": "root",
-					"format": "",
-					"indent": 0,
-					"version": 1,
-					"children": [
-						{
-							"type": "paragraph",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [
-								{
-									"mode": "normal",
-									"text": "Essenherb의 비주얼 시스템은 상단 정렬 용법을 기반으로 크게 두 가지 타입으로 구분되어 운영됩니다.",
-									"type": "text",
-									"style": "",
-									"detail": 0,
-									"format": 0,
-									"version": 1
-								}
-							],
-							"direction": "ltr",
-							"textStyle": "",
-							"textFormat": 0
-						},
-						{
-							"type": "paragraph",
-							"format": "",
-							"indent": 0,
-							"version": 1,
-							"children": [
-								{
-									"mode": "normal",
-									"text": "로고,타이포그래피 등을 활용하여 브랜드가 전달하고자 하는 메시지를 중심으로 비주얼을 전개하는 Type A(Message),\n그래픽, 포토그래피 등 브랜드의 비주얼 콘텐츠를 중심으로 비주얼을 전개하는 Type B(Contents)로 구성되어 다양한\n브랜드 경험 접점에서 Essenherb다움을 일관되게 표현합니다.",
-									"type": "text",
-									"style": "",
-									"detail": 0,
-									"format": 0,
-									"version": 1
-								}
-							],
-							"direction": "ltr",
-							"textStyle": "",
-							"textFormat": 0
-						}
-					],
-					"direction": null
-				}
-			},
+			"description": null,
 			"headerImage": null,
 			"rules": [],
 			"blocks": []
