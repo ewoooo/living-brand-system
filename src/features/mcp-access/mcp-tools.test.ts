@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
 	findUnavailableAiReferenceCheckKeys: vi.fn(),
 	findTemplatesForRequest: vi.fn(),
 	generateImages: vi.fn(),
-	listPublishedImageProfiles: vi.fn(),
+	listAvailableImageProfiles: vi.fn(),
 	loadAiReferenceFiles: vi.fn(),
 	loadGeneratedImage: vi.fn(),
 	resizeForAiVision: vi.fn(),
@@ -38,8 +38,8 @@ vi.mock('@/features/generate-image/repositories/generated-image.payload.reposito
 vi.mock('@/features/generate-image/services/generate-image.service', () => ({
 	generateImages: mocks.generateImages,
 }))
-vi.mock('@/features/generate-image/repositories/image-profile.payload.repository', () => ({
-	listPublishedImageProfiles: mocks.listPublishedImageProfiles,
+vi.mock('@/features/generate-image/services/list-image-profiles.service', () => ({
+	listAvailableImageProfiles: mocks.listAvailableImageProfiles,
 }))
 vi.mock('@/services/start-check-session.service', () => ({
 	completeCheckSessionObservations: mocks.completeCheckSessionObservations,

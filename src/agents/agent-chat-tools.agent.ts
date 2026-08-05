@@ -19,11 +19,12 @@ import {
 } from '@/features/agent-chat/services/get-agent-guideline-context.service'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
-import { listPublishedImageProfiles } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import {
 	type AgentGeneratedImagesAttachment,
 	generateImages,
+	ImageGenerationLimitError,
 } from '@/features/generate-image/services/generate-image.service'
+import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
 import { listPublishedMcpGuidelineChecks } from '@/features/guideline/repositories/mcp-guideline.payload.repository'
 import { type CheckScenario, getCheckScenario } from '@/features/quality-rule/check-scenario'
 import { findPublishedCheckScenarios } from '@/features/quality-rule/repositories/check-scenario.payload.repository'
@@ -154,7 +155,7 @@ export function getAgentTools() {
 				'List published image profiles available to the current user. Call before generateImage for a branded product image.',
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
-			execute: (_input, { context }) => listPublishedImageProfiles(context.user),
+			execute: (_input, { context }) => listAvailableImageProfiles(context.user),
 		}),
 		generateImage: tool({
 			description:
@@ -166,17 +167,30 @@ export function getAgentTools() {
 			}),
 			contextSchema: guidelineToolContextSchema,
 			execute: async ({ prompt, profileId, count }, { context }) => {
+				let generated: Awaited<ReturnType<typeof generateImages>>
+				try {
+					generated = await generateImages({
+						userInput: prompt,
+						profileId,
+						user: context.user,
+						count: count ?? 2,
+					})
+				} catch (error) {
+					// 한도 초과는 크래시 대신 기존 실패 계약({status, message})으로 모델에 알린다.
+					if (error instanceof ImageGenerationLimitError) {
+						return {
+							status: 'failed',
+							message: `이미지 생성 요청이 많아요. ${error.retryAfterSeconds}초 후 다시 시도해 주세요.`,
+						}
+					}
+					throw error
+				}
 				const {
 					images,
 					prompt: composedPrompt,
 					profileId: usedProfileId,
 					profileName,
-				} = await generateImages({
-					userInput: prompt,
-					profileId,
-					user: context.user,
-					count: count ?? 2,
-				})
+				} = generated
 				if (images.length === 0) {
 					// 실패를 모델에 명시적으로 알린다 — 안 그러면 빈 결과에도 "만들었어"라고 답한다.
 					return {
