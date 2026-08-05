@@ -5,6 +5,7 @@
  */
 import { z } from 'zod'
 import type { AiCheckResult, HeuristicCriterion } from '@/features/asset-check/checkers/types'
+import { needsReview } from '@/features/asset-check/domain/check-plan'
 
 // 길이 상한·숫자 범위 제약은 structured output 문법 컴파일 크기를 폭발시켜 뺀다.
 // 길이·범위 안내는 프롬프트가 담당하고, 판정은 value(enum·숫자)만 사용한다.
@@ -29,8 +30,8 @@ export function evaluateHeuristic(
 	criteria: readonly HeuristicCriterion[],
 	observations: Record<string, HeuristicObservation> | undefined,
 ): AiCheckResult {
-	if (criteria.length === 0) return needsReview('판정 기준 없음', 'invalid_criteria')
-	if (!observations) return needsReview('AI 관측 결과 없음', 'ai_output_invalid')
+	if (criteria.length === 0) return needsReview('invalid_criteria')
+	if (!observations) return needsReview('ai_output_invalid')
 
 	const comparisons = criteria.map((criterion) => {
 		const observation = observations[criterion.id]
@@ -53,7 +54,7 @@ export function evaluateHeuristic(
 		}
 	})
 	if (comparisons.some((comparison) => comparison === null)) {
-		return needsReview('AI 관측 결과 누락', 'ai_output_invalid')
+		return needsReview('ai_output_invalid')
 	}
 
 	const complete = comparisons.filter((comparison) => comparison !== null)
@@ -95,13 +96,9 @@ function compare(
 	return typeof value === 'number' ? null : value === criterion.expected
 }
 
-function needsReview(detail: string, reasonCode: string): AiCheckResult {
-	return { status: 'needs_review', fulfillment: null, detail, reasonCode }
-}
-
 /** AI 조언 문단을 advisory 결과로 감싼다. 조언만 싣고 판정은 만들지 않는다. */
 export function evaluateAdvisory(advice: string | undefined): AiCheckResult {
 	const trimmed = advice?.trim()
-	if (!trimmed) return needsReview('AI 조언 없음', 'ai_output_invalid')
+	if (!trimmed) return needsReview('ai_output_invalid')
 	return { status: 'advisory', fulfillment: null, detail: trimmed }
 }

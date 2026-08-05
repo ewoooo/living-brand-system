@@ -4,7 +4,11 @@ import { z } from 'zod'
 import { env } from '@/env'
 import type { AiUsage, CheckerContext } from '@/features/asset-check/checkers/types'
 import { buildAiObservationTask } from '@/features/asset-check/domain/ai-observation-task'
-import type { AiCheckPlan } from '@/features/asset-check/domain/check-plan'
+import {
+	type AiCheckPlan,
+	NEEDS_REVIEW_DETAILS,
+	type NeedsReviewReasonCode,
+} from '@/features/asset-check/domain/check-plan'
 import {
 	type HeuristicObservation,
 	measureObservationSchema,
@@ -19,7 +23,7 @@ import {
 export interface AiCheckRunResult {
 	observations: Record<string, Record<string, HeuristicObservation>>
 	advices: Record<string, string>
-	failure?: { detail: string; reasonCode: string }
+	failure?: { detail: string; reasonCode: NeedsReviewReasonCode }
 	unavailableReferenceCheckKeys?: string[]
 	aiUsage?: AiUsage
 }
@@ -34,8 +38,8 @@ export async function runAiCheck(
 	model: string,
 	ctx: CheckerContext,
 ): Promise<AiCheckRunResult> {
-	if (!env.ANTHROPIC_API_KEY) return failed('AI 설정 없음', 'ai_not_configured')
-	if (!ctx.image) return failed('AI 평가용 이미지 없음', 'image_not_available')
+	if (!env.ANTHROPIC_API_KEY) return failed('ai_not_configured')
+	if (!ctx.image) return failed('image_not_available')
 	const checks = plans.map((plan) => plan.check)
 
 	let unavailableReferenceCheckKeys: string[] | undefined
@@ -147,8 +151,8 @@ export async function runAiCheck(
 		// 실패는 needs_review로만 수렴해 원인이 숨는다. 진단용으로 사유는 남긴다.
 		console.error('[ai-check] AI 평가 실패:', error instanceof Error ? error.message : error)
 		return NoObjectGeneratedError.isInstance(error)
-			? failed('AI 관측값 형식 오류', 'ai_output_invalid', unavailableReferenceCheckKeys)
-			: failed('AI 평가 실패', 'ai_request_failed', unavailableReferenceCheckKeys)
+			? failed('ai_output_invalid', unavailableReferenceCheckKeys)
+			: failed('ai_request_failed', unavailableReferenceCheckKeys)
 	}
 }
 
@@ -254,14 +258,13 @@ function toAbsoluteUrl(url: string) {
 }
 
 function failed(
-	detail: string,
-	reasonCode: string,
+	reasonCode: NeedsReviewReasonCode,
 	unavailableReferenceCheckKeys?: string[],
 ): AiCheckRunResult {
 	return {
 		observations: {},
 		advices: {},
-		failure: { detail, reasonCode },
+		failure: { detail: NEEDS_REVIEW_DETAILS[reasonCode], reasonCode },
 		...(unavailableReferenceCheckKeys?.length ? { unavailableReferenceCheckKeys } : {}),
 	}
 }

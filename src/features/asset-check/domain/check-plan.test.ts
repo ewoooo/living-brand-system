@@ -58,12 +58,7 @@ describe('planChecks', () => {
 		const check = { ...heuristicCheck, heuristicCriteria: [], model: undefined }
 
 		expect(planChecks([check])).toEqual([
-			{
-				kind: 'unrunnable',
-				check,
-				reasonCode: 'invalid_criteria',
-				detail: 'Heuristic 판정 기준 없음',
-			},
+			{ kind: 'unrunnable', check, reasonCode: 'invalid_criteria' },
 		])
 	})
 
@@ -71,12 +66,7 @@ describe('planChecks', () => {
 		const check = { ...heuristicCheck, model: undefined }
 
 		expect(planChecks([check])).toEqual([
-			{
-				kind: 'unrunnable',
-				check,
-				reasonCode: 'ai_checker_invalid',
-				detail: 'AI 검사 도구 설정 오류',
-			},
+			{ kind: 'unrunnable', check, reasonCode: 'ai_checker_invalid' },
 		])
 	})
 
@@ -96,18 +86,8 @@ describe('planChecks', () => {
 		const noChecker = { ...deterministicCheck, checkerKey: undefined }
 
 		expect(planChecks([unknownChecker, noChecker])).toEqual([
-			{
-				kind: 'unrunnable',
-				check: unknownChecker,
-				reasonCode: 'checker_not_registered',
-				detail: 'Checker 미등록',
-			},
-			{
-				kind: 'unrunnable',
-				check: noChecker,
-				reasonCode: 'checker_not_registered',
-				detail: 'Checker 미등록',
-			},
+			{ kind: 'unrunnable', check: unknownChecker, reasonCode: 'checker_not_registered' },
+			{ kind: 'unrunnable', check: noChecker, reasonCode: 'checker_not_registered' },
 		])
 	})
 

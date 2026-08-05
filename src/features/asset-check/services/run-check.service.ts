@@ -4,7 +4,6 @@ import {
 } from '@/features/asset-check/checkers/check-result.adapter'
 import { opaquePixels } from '@/features/asset-check/checkers/color-metrics'
 import type {
-	AiCheckResult,
 	AiUsage,
 	CheckerContext,
 	CheckResult,
@@ -13,6 +12,7 @@ import type {
 import {
 	type AiCheckPlan,
 	type CheckPlan,
+	needsReview,
 	planChecks,
 } from '@/features/asset-check/domain/check-plan'
 import {
@@ -87,16 +87,10 @@ export async function runImmediateCheck(
 				if (plan.reasonCode === 'checker_not_registered') {
 					// 기존엔 결과 없이 조용히 탈락하던 경로(신규 세션에선 도달 불가).
 					// 전수 분류 원칙에 따라 needs_review로 명시한다 — 유일한 의도적 동작 변화.
-					results[check.key] = toCheckResult(
-						{
-							status: 'needs_review',
-							fulfillment: null,
-							detail: plan.detail,
-							reasonCode: plan.reasonCode,
-						},
-						check,
-						{ key: check.checkerKey ?? 'unregistered', type: 'algorithm' },
-					)
+					results[check.key] = toCheckResult(needsReview(plan.reasonCode), check, {
+						key: check.checkerKey ?? 'unregistered',
+						type: 'algorithm',
+					})
 				} else {
 					// AI 계열 실행 불가는 기존처럼 pending으로 남겨 후속 AI 단계가 needs_review로 확정한다.
 					pendingCheckKeys.push(check.key)
@@ -130,11 +124,10 @@ export async function runHeuristicCheck(
 	const results: Record<string, CheckResult> = {}
 	for (const plan of plans) {
 		if (plan.kind !== 'unrunnable' || plan.reasonCode === 'checker_not_registered') continue
-		results[plan.check.key] = toCheckResult(
-			aiNeedsReview(plan.detail, plan.reasonCode),
-			plan.check,
-			{ key: 'ai', type: 'ai' },
-		)
+		results[plan.check.key] = toCheckResult(needsReview(plan.reasonCode), plan.check, {
+			key: 'ai',
+			type: 'ai',
+		})
 	}
 
 	const byModel = new Map<string, AiCheckPlan[]>()
@@ -178,16 +171,12 @@ export async function runHeuristicCheck(
 /** AI 실행 결과를 plan kind에 따라 Check 1건의 원판정으로 변환한다. 실행 가능 여부 판단은 plan 단계에서 끝났다. */
 function toAiRawResult(plan: AiCheckPlan, run: AiCheckRunResult): RawCheckResult {
 	if (run.unavailableReferenceCheckKeys?.includes(plan.check.key)) {
-		return aiNeedsReview('레퍼런스 이미지 불러오기 실패', 'reference_asset_unavailable')
+		return needsReview('reference_asset_unavailable')
 	}
-	if (run.failure) return aiNeedsReview(run.failure.detail, run.failure.reasonCode)
+	if (run.failure) return needsReview(run.failure.reasonCode)
 	return plan.kind === 'ai-advisory'
 		? evaluateAdvisory(run.advices[plan.check.key])
 		: evaluateHeuristic(plan.criteria, run.observations[plan.check.key])
-}
-
-function aiNeedsReview(detail: string, reasonCode: string): AiCheckResult {
-	return { status: 'needs_review', fulfillment: null, detail, reasonCode }
 }
 
 /** 모델 그룹별 usage를 세션 저장용 단일 usage로 합산한다. */

@@ -1,5 +1,5 @@
 import { toCheckResult } from '@/features/asset-check/checkers/check-result.adapter'
-import { planChecks } from '@/features/asset-check/domain/check-plan'
+import { needsReview, planChecks } from '@/features/asset-check/domain/check-plan'
 import {
 	type CheckSession,
 	CheckSessionInputMismatchError,
@@ -186,12 +186,7 @@ export async function completeCheckSessionObservations(
 			plan.check.key,
 			toCheckResult(
 				unavailableReferenceCheckKeys.has(plan.check.key)
-					? {
-							status: 'needs_review',
-							fulfillment: null,
-							detail: '레퍼런스 이미지 불러오기 실패',
-							reasonCode: 'reference_asset_unavailable',
-						}
+					? needsReview('reference_asset_unavailable')
 					: plan.kind === 'ai-advisory' || plan.kind === 'manual-review'
 						? evaluateAdvisory(input.advices?.[plan.check.key])
 						: evaluateHeuristic(
