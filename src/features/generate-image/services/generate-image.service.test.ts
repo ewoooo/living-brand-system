@@ -22,9 +22,16 @@ vi.mock('@/env', () => ({ env: mocks.env }))
 vi.mock('@/features/generate-image/repositories/dev-image-generation.rest.repository', () => ({
 	devGenerateImages: mocks.devGenerateImages,
 }))
-vi.mock('@/features/generate-image/repositories/image-generation.ai.repository', () => ({
-	generateBrandImages: mocks.generateBrandImages,
-}))
+vi.mock(
+	'@/features/generate-image/repositories/image-generation.ai.repository',
+	async (importOriginal) => ({
+		// 프리셋 표의 실제 API 키 조회(getImageModelApiKey)는 그대로 두고 모델 호출만 대체한다.
+		...(await importOriginal<
+			typeof import('@/features/generate-image/repositories/image-generation.ai.repository')
+		>()),
+		generateBrandImages: mocks.generateBrandImages,
+	}),
+)
 vi.mock('@/features/generate-image/repositories/image-profile.payload.repository', () => ({
 	findPublishedImageProfile: mocks.findPublishedImageProfile,
 }))
@@ -44,6 +51,9 @@ import {
 	ImageGenerationUnavailableError,
 	ImageProfileNotFoundError,
 	InvalidSeedImageError,
+	planImageGenerationFromProfile,
+	planImageGenerationFromSettings,
+	UnsupportedImageOutputSizeError,
 } from './generate-image.service'
 
 describe('generateImages', () => {
@@ -277,18 +287,18 @@ describe('generateImages', () => {
 		})
 	})
 
-	it('Nano Banana 2 Lite의 2K 출력을 호출 전에 거부한다', async () => {
+	it('Nano Banana 2 Lite의 2K 출력을 호출 전에 타입 있는 오류로 거부한다', async () => {
 		mocks.env.GEMINI_API_KEY = 'key'
 
-		await expect(
-			generateImagesWithSettings({
-				userInput: 'technical excavator',
-				count: 1,
-				aspectRatio: '16:9',
-				imageModelPreset: 'google-nano-banana-2-lite',
-				imageSize: '2K',
-			}),
-		).rejects.toThrow('does not support 2K')
+		const generation = generateImagesWithSettings({
+			userInput: 'technical excavator',
+			count: 1,
+			aspectRatio: '16:9',
+			imageModelPreset: 'google-nano-banana-2-lite',
+			imageSize: '2K',
+		})
+		await expect(generation).rejects.toBeInstanceOf(UnsupportedImageOutputSizeError)
+		await expect(generation).rejects.toThrow('does not support 2K')
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
 	})
 
@@ -436,5 +446,51 @@ describe('generateImages', () => {
 			}),
 		).rejects.toBeInstanceOf(ImageGenerationUnavailableError)
 		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
+	})
+})
+
+describe('image generation plan resolvers', () => {
+	it('published 프로파일의 모델·출력 계약을 생성 플랜으로 해석한다', () => {
+		const seedImage = new Uint8Array([137, 80, 78, 71])
+
+		expect(
+			planImageGenerationFromProfile(
+				{
+					aspectRatio: '16:9',
+					id: 5,
+					imageModelPreset: 'google-nano-banana-2-lite',
+					imageSize: '1K',
+					name: 'Technical Illustration',
+				},
+				{ prompt: '{"subject":"굴착기"}', count: 2, seedImage },
+			),
+		).toEqual({
+			prompt: '{"subject":"굴착기"}',
+			count: 2,
+			modelPreset: 'google-nano-banana-2-lite',
+			aspectRatio: '16:9',
+			imageSize: '1K',
+			profileId: 5,
+			profileName: 'Technical Illustration',
+			seedImage,
+		})
+	})
+
+	it('명시 설정은 프롬프트를 trim해 프로파일 없는 플랜으로 해석한다', () => {
+		expect(
+			planImageGenerationFromSettings({
+				userInput: '  technical excavator  ',
+				count: 1,
+				imageModelPreset: 'openai-gpt-image-2',
+				aspectRatio: '1:1',
+				imageSize: '2K',
+			}),
+		).toEqual({
+			prompt: 'technical excavator',
+			count: 1,
+			modelPreset: 'openai-gpt-image-2',
+			aspectRatio: '1:1',
+			imageSize: '2K',
+		})
 	})
 })

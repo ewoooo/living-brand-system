@@ -4,35 +4,46 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Typography } from '@/components/ui/typography'
-import type { CameraAzimuth, CameraElevation } from '@/features/generate-image/camera-control'
+import {
+	type CameraAzimuth,
+	type CameraElevation,
+	resolveCameraControl,
+} from '@/features/generate-image/camera-control'
 import {
 	type CameraAdjustmentResult,
 	requestCameraAdjustment,
 } from '@/features/generate-image/services/generate-image.client'
 import { ImageCameraOrbitControl, snapCameraAngle } from './image-camera-orbit-control'
 
+// 각 프리셋의 버킷(value)은 도메인 임계값과 어긋나지 않도록 resolveCameraControl로 도출한다.
 const AZIMUTH_PRESETS: { degrees: number; label: string; value: CameraAzimuth }[] = [
-	{ degrees: 0, label: '정면', value: 'front' },
-	{ degrees: 45, label: '우측 3/4', value: 'front-right' },
-	{ degrees: 90, label: '우측면', value: 'right' },
-	{ degrees: 135, label: '후면 우측 3/4', value: 'rear-right' },
-	{ degrees: 180, label: '후면', value: 'rear' },
-	{ degrees: -135, label: '후면 좌측 3/4', value: 'rear-left' },
-	{ degrees: -90, label: '좌측면', value: 'left' },
-	{ degrees: -45, label: '좌측 3/4', value: 'front-left' },
-]
+	{ degrees: 0, label: '정면' },
+	{ degrees: 45, label: '우측 3/4' },
+	{ degrees: 90, label: '우측면' },
+	{ degrees: 135, label: '후면 우측 3/4' },
+	{ degrees: 180, label: '후면' },
+	{ degrees: -135, label: '후면 좌측 3/4' },
+	{ degrees: -90, label: '좌측면' },
+	{ degrees: -45, label: '좌측 3/4' },
+].map((preset) => ({
+	...preset,
+	value: resolveCameraControl({ azimuthDeg: preset.degrees, elevationDeg: 0 }).azimuth,
+}))
 
 const ELEVATION_PRESETS: {
 	degrees: number
 	label: string
 	value: CameraElevation
 }[] = [
-	{ degrees: -20, label: '로우 앵글', value: 'low' },
-	{ degrees: 0, label: '눈높이', value: 'eye-level' },
-	{ degrees: 20, label: '약간 위', value: 'elevated' },
-	{ degrees: 50, label: '하이 앵글', value: 'high' },
-	{ degrees: 80, label: '탑뷰', value: 'top-down' },
-]
+	{ degrees: -20, label: '로우 앵글' },
+	{ degrees: 0, label: '눈높이' },
+	{ degrees: 20, label: '약간 위' },
+	{ degrees: 50, label: '하이 앵글' },
+	{ degrees: 80, label: '탑뷰' },
+].map((preset) => ({
+	...preset,
+	value: resolveCameraControl({ azimuthDeg: 0, elevationDeg: preset.degrees }).elevation,
+}))
 
 const AZIMUTH_STEPS = AZIMUTH_PRESETS.map((preset) => preset.degrees)
 const ELEVATION_STEPS = ELEVATION_PRESETS.map((preset) => preset.degrees)

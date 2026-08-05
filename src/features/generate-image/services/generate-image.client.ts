@@ -48,11 +48,12 @@ export interface GeneratedImageReference {
 	url: string
 }
 
+/** 생성 API 응답 계약 — 서버 서비스도 이 타입에 provider만 더해 쓴다(이중 정의 금지). */
 export interface ImageGenerationResult {
-	aspectRatio?: ImageAspectRatio
+	aspectRatio: ImageAspectRatio
 	generatedImages?: GeneratedImageReference[]
 	images: string[]
-	imageSize?: ImageOutputSize
+	imageSize: ImageOutputSize
 	model: string
 	prompt: string
 	profileId?: number
