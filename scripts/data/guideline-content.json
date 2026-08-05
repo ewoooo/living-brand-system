@@ -448,38 +448,11 @@
 			"rules": [],
 			"blocks": [
 				{
-					"imageRatio": "4:3",
-					"columns": [
-						{
-							"image": {
-								"file": "page-43.jpg"
-							},
-							"imageScale": "100",
-							"heading": "Illustration",
-							"body": {
-								"root": {
-									"type": "root",
-									"format": "",
-									"indent": 0,
-									"version": 1,
-									"children": [
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										}
-									],
-									"direction": "ltr"
-								}
-							}
-						}
-					],
-					"blockType": "contentColumns",
+					"colored": false,
+					"cellHeightPct": 100,
+					"svgSizePct": 70,
+					"svgOffsetPct": 0,
+					"blockType": "iconGrid",
 					"rules": []
 				}
 			]
@@ -1483,7 +1456,7 @@
 					"columns": [
 						{
 							"image": {
-								"file": "page-12.jpg"
+								"file": "Essenherb_logo-horizontal.svg"
 							},
 							"imageScale": "100",
 							"heading": "Primary Logo",
@@ -1524,15 +1497,23 @@
 					"rules": []
 				},
 				{
-					"imageRatio": "4:3",
-					"columns": [
+					"logo": {
+						"file": "Essenherb_logo-horizontal.svg"
+					},
+					"logoRealHeightPx": 190,
+					"registeredMark": {
+						"file": "Essenherb_logo-horizontal-trademark.svg"
+					},
+					"clearSpaceGuide": {
+						"file": "Essenherb_logo-horizontal-clearSpace.svg"
+					},
+					"minSizePx": 20,
+					"registeredMinPx": 45,
+					"topics": [
 						{
-							"image": {
-								"file": "page-13.jpg"
-							},
-							"imageScale": "100",
-							"heading": "Minimum Size",
-							"body": {
+							"kind": "minSize",
+							"label": "Minimum Size",
+							"description": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -1599,29 +1580,14 @@
 											"textStyle": "",
 											"textFormat": 0
 										}
-									],
-									"direction": "ltr"
+									]
 								}
 							}
-						}
-					],
-					"blockType": "contentColumns",
-					"rules": [
+						},
 						{
-							"rule": "logo.size.minimum"
-						}
-					]
-				},
-				{
-					"imageRatio": "4:3",
-					"columns": [
-						{
-							"image": {
-								"file": "page-14.jpg"
-							},
-							"imageScale": "100",
-							"heading": "Grids & Clear Space",
-							"body": {
+							"kind": "clearSpace",
+							"label": "Clear Space",
+							"description": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -1636,7 +1602,7 @@
 											"children": [
 												{
 													"mode": "normal",
-													"text": "Essenherb 프라이머리 로고의 최소 공간 규정은 다음과 같습니다. 로고의 가독성을 보장하기 위해 로고 주변에 충분한 공간을 확보해야 하며, Essenherb 로고 세로획(stem) 너비 기준 3배 규격의 정사각형 박스를 최소 영역의 모듈로 설정합니다.",
+													"text": "Essenherb 프라이머리 로고의 최소 공간 규정은 다음과 같습니다. 로고의 가독성을 보장하기 위해 로고 주변에 충분한 공간을 확보해야 하며, Essenherb 로고 세로획(stem) 너비 기준 3배 규격의 정사각형 박스를 최소 영역의 모듈로 설정합니다. 모든 브랜드 접점에서 로고의 명료성을 확보하기 위해 시각적 혼란을 유발할 수 있는 기타 요소로부터 충분한 공간을 확보하는 것을 권장합니다. 일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
 													"type": "text",
 													"style": "",
 													"detail": 0,
@@ -1644,73 +1610,17 @@
 													"version": 1
 												}
 											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										},
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "모든 브랜드 접점에서 로고의 명료성을 확보하기 위해 시각적 혼란을 유발할 수 있는 기타 요소로부터 충분한 공간을 확보하는 것을 권장합니다.",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										},
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
 											"textStyle": "",
 											"textFormat": 0
 										}
-									],
-									"direction": "ltr"
+									]
 								}
 							}
-						}
-					],
-					"blockType": "contentColumns",
-					"rules": [
+						},
 						{
-							"rule": "logo.space.clear"
-						}
-					]
-				},
-				{
-					"imageRatio": "4:3",
-					"columns": [
-						{
-							"image": {
-								"file": "page-15.jpg"
-							},
-							"imageScale": "100",
-							"heading": "Registered Trademark",
-							"body": {
+							"kind": "registeredMark",
+							"label": "Registered Trademark",
+							"description": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -1725,7 +1635,7 @@
 											"children": [
 												{
 													"mode": "normal",
-													"text": "Registered Trademark는 특허청에 적법한 절차에 의해 상표 등록을 마친 상표에만 표시할 수 있는 기호입니다. 등록되지 않은 상표에 Registered Trademark를 사용하게 될 경우, 지식재산권 허위 표시에 대한 처벌을 받을 수 있으므로 상표 등록이 완료된 이후 사용을 권장합니다.",
+													"text": "Registered Trademark는 특허청에 적법한 절차에 의해 상표 등록을 마친 상표에만 표시할 수 있는 기호입니다. 등록되지 않은 상표에 Registered Trademark를 사용하게 될 경우, 지식재산권 허위 표시에 대한 처벌을 받을 수 있으므로 상표 등록이 완료된 이후 사용을 권장합니다. Registered Trademark가 지나치게 작은 사이즈로 활용될 경우 뭉침 현상이 발생하게 되어 가시성이 떨어지게 됩니다. 프라이머리 로고의 높이값 45px/15mm 이하의 크기에서는 Registered Trademark를 사용할 수 없습니다. 일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
 													"type": "text",
 													"style": "",
 													"detail": 0,
@@ -1733,62 +1643,16 @@
 													"version": 1
 												}
 											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										},
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "Registered Trademark가 지나치게 작은 사이즈로 활용될 경우 뭉침 현상이 발생하게 되어 가시성이 떨어지게 됩니다. 프라이머리 로고의 높이값 45px/15mm 이하의 크기에서는 Registered Trademark를 사용할 수 없습니다.",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										},
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
 											"textStyle": "",
 											"textFormat": 0
 										}
-									],
-									"direction": "ltr"
+									]
 								}
 							}
 						}
 					],
-					"blockType": "contentColumns",
-					"rules": [
-						{
-							"rule": "logo.trademark"
-						}
-					]
+					"blockType": "logoViewer",
+					"rules": []
 				}
 			]
 		},
@@ -3520,113 +3384,12 @@
 			"rules": [],
 			"blocks": [
 				{
-					"imageRatio": "4:3",
-					"columns": [
-						{
-							"image": {
-								"file": "page-44.jpg"
-							},
-							"imageScale": "100",
-							"heading": "PDF p.44 · Color Usage",
-							"body": {
-								"root": {
-									"type": "root",
-									"format": "",
-									"indent": 0,
-									"version": 1,
-									"children": [
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "B. Brand Design Elements\nB.4 Illustration",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										},
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "Illustration\nColor Usage",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										},
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "Essenherb 컬러 팔레트를 일러스트레이션에 적용하여 다양한\n브랜드 경험 접점에서 생동감 있는 브랜드 메시지를 전달하고\n에너제틱한 브랜드 인상을 구축할 수 있습니다.",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										},
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "가이드에 수록된 Color System을 참고하여 컬러를\n적용해야 하며, 표현의 의도 및 맥락에 맞는 Color Pairing\n전략을 활용하여 일관된 브랜드 아이덴티티를 유지할 수\n있도록 해야 합니다.",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										}
-									],
-									"direction": "ltr"
-								}
-							}
-						}
-					],
-					"blockType": "contentColumns",
-					"rules": [
-						{
-							"rule": "illustration.color.usage"
-						}
-					]
+					"colored": true,
+					"cellHeightPct": 100,
+					"svgSizePct": 70,
+					"svgOffsetPct": 0,
+					"blockType": "iconGrid",
+					"rules": []
 				}
 			]
 		},
@@ -5086,15 +4849,22 @@
 			],
 			"blocks": [
 				{
-					"imageRatio": "4:3",
-					"columns": [
+					"logo": {
+						"file": "Essenherb_logo-vertical.svg"
+					},
+					"logoRealHeightPx": 100,
+					"registeredMark": {
+						"file": "Essenherb_logo-vertical-trademark.svg"
+					},
+					"clearSpaceGuide": {
+						"file": "Essenherb_logo-vertical-clearSpace.svg"
+					},
+					"minSizePx": 35,
+					"registeredMinPx": 85,
+					"topics": [
 						{
-							"image": {
-								"file": "page-16.jpg"
-							},
-							"imageScale": "100",
-							"heading": "Minimum Size",
-							"body": {
+							"kind": "minSize",
+							"description": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -5109,7 +4879,7 @@
 											"children": [
 												{
 													"mode": "normal",
-													"text": "Essenherb 세로형 로고의 최소 사이즈 규정은 다음과 같습니다.\n가장 직관적인 로고의 높이를 기준으로 높이 35px(screen), 8mm(print) 보다 작아지지 않도록 해야 합니다.",
+													"text": "Essenherb 세로형 로고의 최소 사이즈 규정은 다음과 같습니다.",
 													"type": "text",
 													"style": "",
 													"detail": 0,
@@ -5117,7 +4887,6 @@
 													"version": 1
 												}
 											],
-											"direction": "ltr",
 											"textStyle": "",
 											"textFormat": 0
 										},
@@ -5126,23 +4895,27 @@
 											"format": "",
 											"indent": 0,
 											"version": 1,
-											"children": [],
-											"direction": "ltr",
+											"children": [
+												{
+													"mode": "normal",
+													"text": "가장 직관적인 로고의 높이를 기준으로 높이 35px(screen), 8mm(print) 보다 작아지지 않도록 해야 합니다.",
+													"type": "text",
+													"style": "",
+													"detail": 0,
+													"format": 0,
+													"version": 1
+												}
+											],
 											"textStyle": "",
 											"textFormat": 0
 										}
-									],
-									"direction": "ltr"
+									]
 								}
 							}
 						},
 						{
-							"image": {
-								"file": "page-17.jpg"
-							},
-							"imageScale": "100",
-							"heading": "Grids & Clear Space",
-							"body": {
+							"kind": "clearSpace",
+							"description": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -5165,22 +4938,16 @@
 													"version": 1
 												}
 											],
-											"direction": "ltr",
 											"textStyle": "",
 											"textFormat": 0
 										}
-									],
-									"direction": "ltr"
+									]
 								}
 							}
 						},
 						{
-							"image": {
-								"file": "page-18.jpg"
-							},
-							"imageScale": "100",
-							"heading": "Registered Trademark",
-							"body": {
+							"kind": "registeredMark",
+							"description": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -5203,17 +4970,16 @@
 													"version": 1
 												}
 											],
-											"direction": "ltr",
 											"textStyle": "",
 											"textFormat": 0
 										}
-									],
-									"direction": "ltr"
+									]
 								}
 							}
 						}
 					],
-					"blockType": "contentColumns",
+					"blockType": "logoViewer",
+					"title": "Vertical",
 					"rules": []
 				}
 			]
@@ -6244,19 +6010,12 @@
 				{
 					"system": "tone-in-tone",
 					"blockType": "colorPairing",
-					"rules": [
-						{
-							"rule": "color.combination.examples"
-						}
-					]
+					"rules": []
 				},
 				{
 					"imageRatio": "4:3",
 					"columns": [
 						{
-							"image": {
-								"file": "page-27.jpg"
-							},
 							"imageScale": "100",
 							"heading": "Pairing Recommendation (Light)",
 							"body": {
@@ -6336,12 +6095,14 @@
 					"rules": []
 				},
 				{
+					"variant": "light",
+					"blockType": "colorPairingRecommendation",
+					"rules": []
+				},
+				{
 					"imageRatio": "4:3",
 					"columns": [
 						{
-							"image": {
-								"file": "page-28.jpg"
-							},
 							"imageScale": "100",
 							"heading": "PDF p.28 · Pairing Recommendation (Dark)",
 							"body": {
@@ -6399,6 +6160,11 @@
 					],
 					"blockType": "contentColumns",
 					"rules": []
+				},
+				{
+					"variant": "dark",
+					"blockType": "colorPairingRecommendation",
+					"rules": []
 				}
 			]
 		},
@@ -6413,153 +6179,51 @@
 			"rules": [],
 			"blocks": [
 				{
-					"imageRatio": "4:3",
-					"columns": [
+					"columns": 3,
+					"rows": 2,
+					"imageRatio": "1:1",
+					"ratioWidth": 4,
+					"ratioHeight": 3,
+					"cells": [
 						{
 							"image": {
-								"file": "page-45.jpg"
+								"file": "Illustration Usage Example 1.png"
 							},
-							"imageScale": "100",
-							"heading": "PDF p.45 · Usage Example",
-							"body": {
-								"root": {
-									"type": "root",
-									"format": "",
-									"indent": 0,
-									"version": 1,
-									"children": [
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "B. Brand Design Elements Usage Example 1\nB.4 Illustration",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										},
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "Illustration\nUsage Example",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										},
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "Essenherb 일러스트레이션의 사용 예시는 다음과 같습니다.\n다음의 사용 예시를 참고하여, 다양한 브랜드 경험 접점에서\n생동감 있는 브랜드 메시지를 전달하는 시각 요소로서\n일러스트레이션을 활용할 수 있습니다.",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										},
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "1. 일러스트레이션을 단독으로 사용\n2. 일러스트레이션을 레이아웃 상의 포인트 요소로 사용\n3. 일러스트레이션과 텍스트를 혼합하여 사용\n4. 일러스트레이션을 배경 그래픽으로 사용\n5. 일러스트레이션을 레이어링해 사용\n6. 일러스트레이션을 후가공 요소로 사용",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										},
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "Usage Example 4",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										},
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "Essence for Energy\nDiscover more at essenherb.global",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"direction": "ltr",
-											"textStyle": "",
-											"textFormat": 0
-										}
-									],
-									"direction": "ltr"
-								}
-							}
+							"caption": "1. 일러스트레이션을 단독으로 사용"
+						},
+						{
+							"image": {
+								"file": "Illustration Usage Example 2.png"
+							},
+							"caption": "2. 일러스트레이션을 레이아웃 상의 포인트 요소로 사용"
+						},
+						{
+							"image": {
+								"file": "Illustration Usage Example 3.png"
+							},
+							"caption": "3. 일러스트레이션과 텍스트를 혼합하여 사용"
+						},
+						{
+							"image": {
+								"file": "Illustration Usage Example 4.png"
+							},
+							"caption": "4. 일러스트레이션을 배경 그래픽으로 사용"
+						},
+						{
+							"image": {
+								"file": "Illustration Usage Example 5.png"
+							},
+							"caption": "5. 일러스트레이션을 레이어링해 사용"
+						},
+						{
+							"image": {
+								"file": "Illustration Usage Example 6.png"
+							},
+							"caption": "6. 일러스트레이션을 후가공 요소로 사용"
 						}
 					],
-					"blockType": "contentColumns",
-					"rules": [
-						{
-							"rule": "illustration.style"
-						}
-					]
+					"blockType": "imageGrid",
+					"rules": []
 				}
 			]
 		},
@@ -7628,15 +7292,56 @@
 			"rules": [],
 			"blocks": [
 				{
-					"imageRatio": "4:3",
-					"columns": [
+					"blockName": "",
+					"logos": [
 						{
-							"image": {
-								"file": "page-19.jpg"
+							"logo": {
+								"file": "EssenherbCoffee_logo-horizontal.svg"
 							},
-							"imageScale": "100",
-							"heading": "Minimum Size",
-							"body": {
+							"registeredMark": {
+								"file": "EssenherbCoffee_logo-horizontal-trademark.svg"
+							},
+							"clearSpaceGuide": {
+								"file": "EssenherbCoffee_logo-horizontal-clearSpace.svg"
+							},
+							"minSizePx": 20,
+							"registeredMinPx": 45,
+							"label": "Horizontal Type"
+						},
+						{
+							"logo": {
+								"file": "EssenherbCoffee_logo-vertical_1.svg"
+							},
+							"registeredMark": {
+								"file": "EssenherbCoffee_logo-vertical_1-trademark.svg"
+							},
+							"clearSpaceGuide": {
+								"file": "EssenherbCoffee_logo-vertical_1-clearSpace.svg"
+							},
+							"minSizePx": 45,
+							"registeredMinPx": 90,
+							"label": "Vertical Type A"
+						},
+						{
+							"logo": {
+								"file": "EssenherbCoffee_logo-vertical_2.svg"
+							},
+							"registeredMark": {
+								"file": "EssenherbCoffee_logo-vertical_2-trademark.svg"
+							},
+							"clearSpaceGuide": {
+								"file": "EssenherbCoffee_logo-vertical_2-clearSpace.svg"
+							},
+							"minSizePx": 60,
+							"registeredMinPx": 120,
+							"label": "Vertical Type B"
+						}
+					],
+					"topics": [
+						{
+							"kind": "minSize",
+							"label": "Minimum Size",
+							"description": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -7727,25 +7432,11 @@
 									"direction": "ltr"
 								}
 							}
-						}
-					],
-					"blockType": "contentColumns",
-					"rules": [
+						},
 						{
-							"rule": "logo.lockup.modifier"
-						}
-					]
-				},
-				{
-					"imageRatio": "4:3",
-					"columns": [
-						{
-							"image": {
-								"file": "page-20.jpg"
-							},
-							"imageScale": "100",
-							"heading": "Grids & Clear Space",
-							"body": {
+							"kind": "clearSpace",
+							"label": "Clear Space",
+							"description": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -7776,21 +7467,11 @@
 									"direction": "ltr"
 								}
 							}
-						}
-					],
-					"blockType": "contentColumns",
-					"rules": []
-				},
-				{
-					"imageRatio": "4:3",
-					"columns": [
+						},
 						{
-							"image": {
-								"file": "page-21.jpg"
-							},
-							"imageScale": "100",
-							"heading": "PDF p.21 · Registered Trademark",
-							"body": {
+							"kind": "registeredMark",
+							"label": "Registered Trademark",
+							"description": {
 								"root": {
 									"type": "root",
 									"format": "",
@@ -7883,7 +7564,7 @@
 							}
 						}
 					],
-					"blockType": "contentColumns",
+					"blockType": "logoGroupViewer",
 					"rules": []
 				}
 			]
@@ -11259,151 +10940,190 @@
 			"rules": [],
 			"blocks": [
 				{
-					"imageRatio": "4:3",
-					"columns": [
+					"columns": 3,
+					"rows": 1,
+					"imageRatio": "original",
+					"ratioWidth": 4,
+					"ratioHeight": 3,
+					"cells": [
 						{
-							"imageScale": "100",
-							"heading": "Level 1",
-							"body": {
-								"root": {
-									"type": "root",
-									"format": "",
-									"indent": 0,
-									"version": 1,
-									"children": [
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "메인 컬러 + 모노톤 페어링 중심\n브랜드를 즉각적으로 인지시켜야 하는경험 접점\n",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												},
-												{
-													"mode": "normal",
-													"text": "e.g. 명함, 공식 서식류, 브랜드 대표 콘텐츠",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 2,
-													"version": 1
-												},
-												{
-													"mode": "normal",
-													"text": "\n",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												}
-											],
-											"textStyle": "",
-											"textFormat": 0
-										}
-									],
-									"direction": "ltr"
-								}
+							"image": {
+								"file": "image-66.png"
 							}
 						},
 						{
-							"imageScale": "100",
-							"heading": "Level 2",
-							"body": {
-								"root": {
-									"type": "root",
-									"format": "",
-									"indent": 0,
-									"version": 1,
-									"children": [
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "전체 컬러 + 톤온톤 페어링 중심\n정보 전달을 위한 안정적 화면 구성이 필요한 경험 접점\n",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												},
-												{
-													"mode": "normal",
-													"text": "e.g. 제품 설명서, 온라인 배너",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 2,
-													"version": 1
-												}
-											],
-											"textStyle": "",
-											"textFormat": 0
-										}
-									]
-								}
+							"image": {
+								"file": "image-67.png"
 							}
 						},
 						{
-							"imageScale": "100",
-							"heading": "Level 3",
-							"body": {
-								"root": {
-									"type": "root",
-									"format": "",
-									"indent": 0,
-									"version": 1,
-									"children": [
-										{
-											"type": "paragraph",
-											"format": "",
-											"indent": 0,
-											"version": 1,
-											"children": [
-												{
-													"mode": "normal",
-													"text": "전체 컬러 + 톤인톤 페어링 중심\n생동감 있는 브랜드 에너지를 전달하는 경험 접점\n",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 0,
-													"version": 1
-												},
-												{
-													"mode": "normal",
-													"text": "e.g. 프로모션 키 비주얼, 이벤트성 패키지, 시즌별 굿즈",
-													"type": "text",
-													"style": "",
-													"detail": 0,
-													"format": 2,
-													"version": 1
-												}
-											],
-											"textStyle": "",
-											"textFormat": 0
-										}
-									]
-								}
+							"image": {
+								"file": "image-68.png"
 							}
 						}
 					],
-					"blockType": "contentColumns",
+					"blockType": "imageGrid",
+					"title": "Level 1",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "Main Color + Mono Tone Pairing\n브랜드를 즉각적으로 인지시켜야 하는경험 접점\n",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								}
+							],
+							"direction": "ltr"
+						}
+					},
 					"rules": [
 						{
 							"rule": "color.usage"
 						}
 					]
+				},
+				{
+					"columns": 3,
+					"rows": 1,
+					"imageRatio": "firstImage",
+					"ratioWidth": 4,
+					"ratioHeight": 3,
+					"cells": [
+						{
+							"image": {
+								"file": "image-72.png"
+							}
+						},
+						{
+							"image": {
+								"file": "image-73.png"
+							}
+						},
+						{
+							"image": {
+								"file": "image-74.png"
+							}
+						}
+					],
+					"blockType": "imageGrid",
+					"title": "Level 2",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "Main/Multi Color + Tone on Tone Pairing",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										},
+										{
+											"type": "linebreak",
+											"version": 1
+										},
+										{
+											"mode": "normal",
+											"text": "정보 전달을 위한 안정적 화면 구성이 필요한 경험 접점\n",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								}
+							]
+						}
+					},
+					"rules": []
+				},
+				{
+					"columns": 3,
+					"rows": 1,
+					"imageRatio": "firstImage",
+					"ratioWidth": 4,
+					"ratioHeight": 3,
+					"cells": [
+						{
+							"image": {
+								"file": "image-69.png"
+							}
+						},
+						{
+							"image": {
+								"file": "image-70.png"
+							}
+						},
+						{
+							"image": {
+								"file": "image-71.png"
+							}
+						}
+					],
+					"blockType": "imageGrid",
+					"title": "Level 3",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "Main/Multi Color + Tone in Tone Pairing\n생동감 있는 브랜드 에너지를 전달하는 경험 접점\n",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								}
+							]
+						}
+					},
+					"rules": []
 				}
 			]
 		},
