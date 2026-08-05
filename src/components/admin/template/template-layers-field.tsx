@@ -377,6 +377,62 @@ function SlotSpecEditor({
 	)
 }
 
+type ImageSlotInput = NonNullable<TemplateNodeConfig['imageInput']>
+
+/**
+ * 스튜디오에 개방한 이미지 슬롯의 스펙 편집 폼. 열기/닫기는 호출부의 자물쇠 토글이 담당한다.
+ * imageInput의 존재 자체가 개방 선언 — 프로파일을 고정하면 유저 화면에서 선택이 사라진다.
+ */
+function ImageSlotSpecEditor({
+	imageInput,
+	onChange,
+}: {
+	imageInput: ImageSlotInput
+	onChange: (imageInput: ImageSlotInput) => void
+}) {
+	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
+
+	useEffect(() => {
+		void requestPublishedImageProfiles()
+			.then(setProfiles)
+			.catch(() => {
+				setProfiles([])
+				toast.error('이미지 프로파일을 불러오지 못했습니다.')
+			})
+	}, [])
+
+	return (
+		<div
+			style={{
+				maxWidth: 280,
+				padding: 10,
+				borderRadius: 4,
+				border: '1px solid var(--theme-elevation-150)',
+			}}
+		>
+			<SpecField id="image-slot-profile" label="프로파일 고정 — 없으면 유저가 선택">
+				<select
+					className="text-sm"
+					id="image-slot-profile"
+					value={imageInput.profileId ?? ''}
+					onChange={(event) => {
+						const value = Number(event.currentTarget.value)
+						onChange(value > 0 ? { profileId: value } : {})
+					}}
+					style={SELECT_STYLE}
+				>
+					<option value="">스튜디오에서 선택</option>
+					{profiles?.map((profile) => (
+						<option key={profile.id} value={profile.id}>
+							{profile.name}
+						</option>
+					))}
+				</select>
+			</SpecField>
+		</div>
+	)
+}
+
 type ImageTransform = NonNullable<TemplateNodeConfig['imageTransform']>
 
 const IDENTITY_TRANSFORM: ImageTransform = { x: 0, y: 0, scale: 1, rotate: 0 }
@@ -831,6 +887,59 @@ export default function TemplateLayersField() {
 								/>
 							)}
 						/>
+					</div>
+					<div style={{ marginTop: 12 }}>
+						<div
+							style={{
+								display: 'flex',
+								alignItems: 'center',
+								gap: 6,
+								marginBottom: 6,
+							}}
+						>
+							<span
+								className="text-sm"
+								style={{ color: 'var(--theme-elevation-600)' }}
+							>
+								스튜디오 개방
+							</span>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-xs"
+								onClick={() =>
+									commitNodeConfig({
+										imageInput: nodeConfigs[selected.id]?.imageInput
+											? undefined
+											: {},
+									})
+								}
+								title={
+									nodeConfigs[selected.id]?.imageInput
+										? '이미지 슬롯 닫기 — 유저 화면에서 숨김'
+										: '이미지 슬롯 열기 — 유저 화면에 이미지 생성 노출'
+								}
+								aria-label={
+									nodeConfigs[selected.id]?.imageInput
+										? '이미지 슬롯 닫기'
+										: '이미지 슬롯 열기'
+								}
+							>
+								{nodeConfigs[selected.id]?.imageInput ? '🔓' : '🔒'}
+							</Button>
+							<span
+								className="text-xs"
+								style={{ color: 'var(--theme-elevation-500)' }}
+							>
+								{nodeConfigs[selected.id]?.imageInput ? '유저 화면에 열림' : '닫힘'}
+							</span>
+						</div>
+						{nodeConfigs[selected.id]?.imageInput && (
+							<ImageSlotSpecEditor
+								imageInput={nodeConfigs[selected.id]?.imageInput ?? {}}
+								onChange={(imageInput) => commitNodeConfig({ imageInput })}
+							/>
+						)}
 					</div>
 					{/* 캐리어가 있어야 transform을 받을 수 있다 — 레거시 프레임 배경 경로는 compose가 무시. */}
 					{nodeConfigs[selected.id]?.backgroundImage && selected.hasImageCarrier && (

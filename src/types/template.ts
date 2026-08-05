@@ -18,6 +18,8 @@ export interface TemplateNodeConfig {
 	/** 프레임에 할당한 이미지의 자유 편집 — 이동(px)·확대(배율)·회전(deg). 캐리어에만 적용된다. */
 	imageTransform?: { x: number; y: number; scale: number; rotate: number }
 	input?: TemplateSlotSpec
+	/** 존재 자체가 스튜디오 개방 선언 — 유저가 이 프레임의 이미지를 생성해 채울 수 있다. profileId는 사용할 프로파일 고정(없으면 유저가 선택). */
+	imageInput?: { profileId?: number }
 	vectorAsset?: {
 		collection: TemplateVectorAssetCollection
 		id: number
