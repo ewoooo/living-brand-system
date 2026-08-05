@@ -99,6 +99,23 @@ const findDoc = async (slug: string, parentId: number | string | null) => {
 	return docs[0] ?? null
 }
 
+// 🔴 정본의 parent는 slug 하나뿐이라 동명 부모를 구분하지 못한다. 아래 resolveBySlugPath는 정본 배열의
+//    첫 매치를 고르므로, 같은 slug의 문서가 둘 이상이면서 그게 다른 문서의 부모로 쓰이면 자식이 엉뚱한
+//    부모에 붙을 수 있다(지금 데이터에서는 왕복이 바이트 동일해 맞게 풀리지만 배열 순서에 의존한다).
+//    제대로 고치려면 정본의 parent를 루트부터의 slug 경로로 적어야 한다 — 그때까지는 경고만 한다.
+const parentSlugs = new Set(
+	content.documents.map((doc: AnyData) => doc.parent).filter((p: string | null) => p),
+)
+const ambiguous = [...parentSlugs].filter(
+	(slug) => content.documents.filter((doc: AnyData) => doc.slug === slug).length > 1,
+)
+if (ambiguous.length > 0) {
+	console.warn(
+		`⚠️  부모로 쓰이는 slug가 정본에 중복이다(첫 매치를 쓴다): ${ambiguous.join(', ')}` +
+			' — 자식이 엉뚱한 부모에 붙었는지 seed 후 content:status로 확인할 것.',
+	)
+}
+
 /** 부모를 찾을 때는 정본의 부모 사슬을 따라 올라가며 (slug, parent)로 좁힌다. */
 const resolveBySlugPath = async (slug: string): Promise<AnyData | null> => {
 	const canonical = content.documents.find((d: AnyData) => d.slug === slug)
