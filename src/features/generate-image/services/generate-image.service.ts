@@ -5,6 +5,10 @@ import {
 	type ResolvedCameraControl,
 	resolveCameraControl,
 } from '@/features/generate-image/camera-control'
+import {
+	acquireImageGenerationSlot,
+	ImageGenerationLimitError,
+} from '@/features/generate-image/image-generation-gate'
 import type { ImageModelPreset } from '@/features/generate-image/image-model'
 import {
 	type ImageAspectRatio,
@@ -29,7 +33,7 @@ import {
 	normalizeImageProfilePrompt,
 } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
 
-export { ImageGenerationUnavailableError }
+export { ImageGenerationLimitError, ImageGenerationUnavailableError }
 
 /** generateImage 도구/route가 챗에 붙이는 생성 결과 첨부 계약 (이중 정의 금지). */
 export interface AgentGeneratedImagesAttachment {
@@ -156,6 +160,7 @@ export async function generateImages({
 			prompt: JSON.stringify(normalized.finalPrompt),
 			count,
 		}),
+		user,
 	)
 	return storeProfileGeneration(generated, {
 		inputPrompt: userInput,
@@ -168,14 +173,18 @@ export async function generateImages({
  * 관리자 유스케이스 경계: 저장 전 폼처럼 명시된 모델과 출력 설정으로 이미지를 생성한다.
  * 외부 모델 I/O는 image-generation repository가 담당한다.
  */
-export async function generateImagesWithSettings(input: {
+export async function generateImagesWithSettings({
+	user,
+	...input
+}: {
 	userInput: string
 	count: number
 	imageModelPreset: ImageModelPreset
 	aspectRatio: ImageAspectRatio
 	imageSize: ImageOutputSize
+	user: unknown
 }): Promise<GeneratedImages> {
-	return runImageGeneration(planImageGenerationFromSettings(input))
+	return runImageGeneration(planImageGenerationFromSettings(input), user)
 }
 
 /**
@@ -216,6 +225,7 @@ export async function adjustImageCamera({
 			count,
 			seedImage,
 		}),
+		user,
 	)
 	const stored = await storeProfileGeneration(result, {
 		inputPrompt: basePrompt,
@@ -229,8 +239,14 @@ export async function adjustImageCamera({
 	}
 }
 
-/** 해석이 끝난 생성 플랜을 실제 공급자 호출로 연결한다. 키가 없으면 dev 폴백 또는 불가로 종료한다. */
-async function runImageGeneration(plan: ImageGenerationPlan): Promise<GeneratedImages> {
+/**
+ * 해석이 끝난 생성 플랜을 실제 공급자 호출로 연결한다. 키가 없으면 dev 폴백 또는 불가로 종료한다.
+ * 모델 호출 직전에만 공용 생성 게이트를 통과시킨다 — 호출 전에 거부된 요청은 사용자 한도를 소모하지 않는다.
+ */
+async function runImageGeneration(
+	plan: ImageGenerationPlan,
+	user: unknown,
+): Promise<GeneratedImages> {
 	const {
 		prompt,
 		count,
@@ -244,45 +260,54 @@ async function runImageGeneration(plan: ImageGenerationPlan): Promise<GeneratedI
 	if (!supportsImageOutputSize(modelPreset, imageSize)) {
 		throw new UnsupportedImageOutputSizeError(modelPreset, imageSize)
 	}
-	const generation = getImageModelApiKey(modelPreset)
-		? await generateBrandImages({
-				prompt,
-				count,
-				modelPreset,
-				aspectRatio,
-				imageSize,
-				...(seedImage ? { seedImage } : {}),
-			})
-		: await generateDevFallbackImages(plan)
-	return {
-		...generation,
-		aspectRatio,
-		imageSize,
-		prompt,
-		...(profileId ? { profileId, profileName } : {}),
+	const useDevFallback = !getImageModelApiKey(modelPreset)
+	if (useDevFallback) assertDevFallbackAllowed(plan)
+
+	const release = acquireImageGenerationSlot(getAuthenticatedUserId(user))
+	try {
+		const generation = useDevFallback
+			? await generateDevFallbackImages(plan)
+			: await generateBrandImages({
+					prompt,
+					count,
+					modelPreset,
+					aspectRatio,
+					imageSize,
+					...(seedImage ? { seedImage } : {}),
+				})
+		return {
+			...generation,
+			aspectRatio,
+			imageSize,
+			prompt,
+			...(profileId ? { profileId, profileName } : {}),
+		}
+	} finally {
+		release()
 	}
 }
 
 // ⚠️ 임시 — API 키가 없을 때의 마지막 결정. development + IMAGE_DEV_FALLBACK=true의
 // 텍스트 생성(openai 프리셋, 시드 없음)만 Pollinations로 보내고, 그 외에는 불가로 닫는다.
-async function generateDevFallbackImages({
-	prompt,
-	count,
-	modelPreset,
-	aspectRatio,
-	imageSize,
-	seedImage,
-}: ImageGenerationPlan): Promise<{
-	images: string[]
-	model: string
-	provider: ImageGenerationProvider
-}> {
+function assertDevFallbackAllowed({ modelPreset, seedImage }: ImageGenerationPlan) {
 	const devFallbackAllowed =
 		!seedImage &&
 		modelPreset === 'openai-gpt-image-2' &&
 		env.NODE_ENV === 'development' &&
 		env.IMAGE_DEV_FALLBACK === 'true'
 	if (!devFallbackAllowed) throw new ImageGenerationUnavailableError()
+}
+
+async function generateDevFallbackImages({
+	prompt,
+	count,
+	aspectRatio,
+	imageSize,
+}: ImageGenerationPlan): Promise<{
+	images: string[]
+	model: string
+	provider: ImageGenerationProvider
+}> {
 	return {
 		images: await devGenerateImages(prompt, toOpenAIImageSize(aspectRatio, imageSize), count),
 		model: 'flux',

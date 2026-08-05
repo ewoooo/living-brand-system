@@ -119,8 +119,20 @@ describe('POST /api/admin/generate-image', () => {
 			aspectRatio: '16:9',
 			imageModelPreset: 'google-nano-banana-2-lite',
 			imageSize: '1K',
+			user: { id: 1, role: 'manager' },
 		})
 		expect(mocks.generateImages).not.toHaveBeenCalled()
+	})
+
+	it('공통 생성 한도를 넘으면 재시도 시간을 포함한 429를 반환한다', async () => {
+		mocks.generateImages.mockRejectedValue(
+			Object.assign(namedError('ImageGenerationLimitError'), { retryAfterSeconds: 8 }),
+		)
+
+		const response = await POST(imageRequest({ prompt: 'sample', count: 1, profileId: 5 }))
+
+		expect(response.status).toBe(429)
+		expect(response.headers.get('Retry-After')).toBe('8')
 	})
 
 	it('published 프로파일이 없으면 404를 반환한다', async () => {
