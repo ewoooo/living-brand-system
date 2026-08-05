@@ -127,7 +127,7 @@ Raster Observation
 
 ## 3. 객체 모델 전환 방향
 
-현재 Review는 `CheckSession` 레코드와 여러 순수 함수로 검수 흐름을 구현합니다. 계산 자체는 단순하지만, 세션 상태 전이와 결과 병합 규칙은 유스케이스 서비스가 직접 관리합니다. 검수 단계와 재실행 조건이 늘어날 때 이 규칙이 여러 호출 경로로 흩어지지 않도록 `CheckSession`을 Aggregate 객체로 전환합니다.
+현재 Review는 `CheckSession` 레코드와 여러 순수 함수로 검수 흐름을 구현합니다. 계산 자체는 단순하지만, 세션 상태 전이와 결과 병합 규칙은 유스케이스 서비스가 직접 관리합니다. 검수 단계와 재실행 조건이 늘어날 때 이 규칙이 여러 호출 경로로 흩어지지 않도록 `CheckSession`을 Aggregate 객체로 전환했습니다(`src/features/asset-check/domain/check-session.ts`).
 
 ### 현재 구현 관계
 
