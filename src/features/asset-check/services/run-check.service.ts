@@ -67,11 +67,9 @@ export async function runImmediateCheck(
 		const { check } = plan
 		if (results[check.key]) continue
 		switch (plan.kind) {
-			case 'deterministic': {
-				const result = runDeterministicPlan(plan, ctx)
-				if (result) results[check.key] = result
+			case 'deterministic':
+				results[check.key] = runDeterministicPlan(plan, ctx)
 				break
-			}
 			case 'manual-review':
 				results[check.key] = toCheckResult(
 					{
@@ -197,17 +195,16 @@ function mergeAiUsages(usages: AiUsage[]): AiUsage | undefined {
 	}
 }
 
-// checker 등록 확인은 plan 단계에서 끝났다. algorithm checker의 null 결과(판정 대상 아님)는 기존대로 결과 없이 둔다.
+// checker 등록 확인은 plan 단계에서 끝났다. 두 계약 모두 항상 결과를 돌려 plan 실행이 전수 결과를 보장한다.
 function runDeterministicPlan(
 	plan: Extract<CheckPlan, { kind: 'deterministic' }>,
 	ctx: CheckerContext,
-): CheckResult | null {
+): CheckResult {
 	const { check, checker, checkerKey } = plan
 	if (checker.executor === 'deterministic') {
 		return toDeterministicCheckResult(checker.run(ctx, check.options), check, checkerKey)
 	}
-	const result = checker.run(ctx)
-	return result ? toCheckResult(result, check, { key: checkerKey, type: 'algorithm' }) : null
+	return toCheckResult(checker.run(ctx), check, { key: checkerKey, type: 'algorithm' })
 }
 function imageInputFrom(buffer: Buffer): CheckerContext['image'] {
 	const mediaType = detectCheckImageMediaType(buffer)
