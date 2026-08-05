@@ -145,6 +145,21 @@ describe('getAgentToolMarker', () => {
 				'템플릿 이미지 1개를 준비했습니다',
 			],
 			['tool-runCheck', { checkSessionId: 3 }, '이미지 검수 1건을 완료했습니다'],
+			[
+				'tool-listCheckScenarios',
+				[{ key: 'logo', title: '로고' }],
+				'검수 시나리오 1개를 확인했습니다',
+			],
+			[
+				'tool-generateImage',
+				{ type: 'generated-images', images: [{ url: 'a' }, { url: 'b' }] },
+				'이미지 2개를 생성했습니다',
+			],
+			[
+				'tool-listImageProfiles',
+				[{ id: 1, name: '제품', slug: 'product' }],
+				'이미지 프로필 1개를 확인했습니다',
+			],
 			['tool-findTemplatesForRequest', [{ id: 1 }, { id: 2 }], '템플릿 2개를 확인했습니다'],
 		]
 
@@ -170,12 +185,28 @@ describe('getAgentToolMarker', () => {
 		).toEqual({ isPending: true, text: '가이드라인 결과 1개를 찾았습니다' })
 	})
 
-	it('결과 문구가 없으면 검수 > 템플릿 > 가이드라인 순 fallback 문구를 쓴다', () => {
+	it('결과 문구가 없으면 검수 > 이미지 생성 > 템플릿 > 가이드라인 순 fallback 문구를 쓴다', () => {
 		expect(
 			getAgentToolMarker(
 				message([{ type: 'tool-runCheck', state: 'input-available', input: {} }]),
 			),
 		).toEqual({ isPending: true, text: '이미지를 검수하고 있습니다' })
+		expect(
+			getAgentToolMarker(
+				message([{ type: 'tool-generateImage', state: 'input-available', input: {} }]),
+			),
+		).toEqual({ isPending: true, text: '이미지를 생성하고 있습니다' })
+		expect(
+			getAgentToolMarker(
+				message([
+					{
+						type: 'tool-generateImage',
+						state: 'output-available',
+						output: { status: 'failed', message: '실패' },
+					},
+				]),
+			),
+		).toEqual({ isPending: false, text: '이미지 생성을 완료했습니다' })
 		expect(
 			getAgentToolMarker(
 				message([
