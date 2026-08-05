@@ -4,8 +4,25 @@ import { ThumbsDown, ThumbsDownFilled, ThumbsUp, ThumbsUpFilled } from '@carbon/
 import { useState } from 'react'
 import { BubbleReactions } from '@/components/ui/bubble'
 import { Button } from '@/components/ui/button'
-import { saveAgentChatReaction } from '@/features/agent-chat/services/save-agent-chat-reaction.client'
 import type { AgentChatReaction } from '@/features/agent-chat/types'
+
+/** 리액션 클릭을 세션 피드백 저장 API로 보낸다 — 이 컴포넌트가 유일한 호출자다. */
+async function saveAgentChatReaction(input: {
+	agentChatSessionId: number
+	messageId: string
+	reaction: AgentChatReaction
+}) {
+	const response = await fetch('/api/agent-chat/reaction', {
+		method: 'POST',
+		credentials: 'same-origin',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify(input),
+	})
+
+	if (!response.ok) {
+		throw new Error('Reaction failed.')
+	}
+}
 
 const reactionText: Record<AgentChatReaction, string> = {
 	good: 'Good',

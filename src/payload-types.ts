@@ -1797,7 +1797,7 @@ export interface Template {
    */
   height?: number | null;
   /**
-   * 설정하면 CMYK TIFF와 RGB PDF가 활성화됩니다. 픽셀 크기는 유지되며 TIFF는 최대 67,108,864픽셀을 지원합니다.
+   * 설정하면 CMYK TIFF와 mm 단위 CMYK PDF가 활성화됩니다. 픽셀 크기는 유지되며 인쇄 출력은 최대 67,108,864픽셀을 지원합니다.
    */
   printPpi?: ('72' | '150' | '300') | null;
   /**

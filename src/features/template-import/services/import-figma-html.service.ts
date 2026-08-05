@@ -1,208 +1,203 @@
 import { createHash } from 'node:crypto'
 import type { Payload } from 'payload'
 import {
-	discardImportedApplicationImage,
-	stageImportedApplicationImage,
-} from '@/features/application-image/services/manage-imported-application-images.service'
+	deleteDraftImportedApplicationImage,
+	storeDraftImportedApplicationImage,
+} from '@/features/application-image/repositories/imported-application-image.payload.repository'
 import {
 	downloadFigmaImage,
+	findFigmaImageFillUrls,
 	findFigmaImageUrls,
 	findFigmaNodeTree,
 } from '@/features/template-import/repositories/figma.rest.repository'
-import type { FigmaNode } from '@/features/template-import/types'
 import {
 	convertFigmaNodeToHtml,
 	type FigmaHtmlResult,
 	type FigmaRenderedAsset,
 } from '@/features/template-import/utils/figma-node-to-html'
+import {
+	type FigmaAssetPlan,
+	type FigmaRasterDiagnostic,
+	planFigmaAssets,
+} from '@/features/template-import/utils/normalize-figma-node'
 import type { User } from '@/payload-types'
 
-interface RenderRequest {
-	format: 'png' | 'svg'
-	nodeId: string
+export type { FigmaRasterDiagnostic } from '@/features/template-import/utils/normalize-figma-node'
+
+/** 임시 URL 하나를 내려받아 draft 에셋으로 저장하기 위한 작업 단위. */
+interface AssetDownloadJob {
+	/** 결과 맵의 키 — 노드 렌더는 nodeId, IMAGE fill은 imageRef. */
+	key: string
+	target: 'render' | 'fill'
 	name: string
+	url: string
+	/** 렌더는 요청 포맷과 응답 MIME이 일치해야 한다. fill 원본은 임의 이미지 MIME을 허용한다. */
+	expectedMimeType?: 'image/svg+xml' | 'image/png'
+}
+
+interface ResolvedFigmaAssets {
+	renders: Record<string, FigmaRenderedAsset>
+	imageFills: Record<string, FigmaRenderedAsset>
 }
 
 /**
  * Figma 프레임(fileKey+nodeId)을 inline-style HTML로 변환해 돌려준다. Admin의 Templates 가져오기 필드가 호출한다.
- * 외부 I/O는 Figma/Application Images repository가 소유하고, 이 서비스는 fetch→렌더 판정→저장→변환 순서만 조율한다.
+ * 외부 I/O는 Figma/Application Images repository가 소유하고, 이 서비스는 fetch→에셋 해석→변환 순서만 조율한다.
+ * 무엇을 에셋으로 구울지는 utils의 planFigmaAssets(순수)가 판정하고, 여기서는 그 계획을 해석(I/O)만 한다.
  */
 export async function importFigmaHtml(
 	source: { fileKey: string; nodeId: string },
 	payload: Payload,
 	user: User,
-): Promise<FigmaHtmlResult & { name: string }> {
+): Promise<FigmaHtmlResult & { name: string; diagnostics: FigmaRasterDiagnostic[] }> {
 	const node = await findFigmaNodeTree(source.fileKey, source.nodeId)
-	const renderRequests = collectRenderRequests(node)
-	const renderedAssets = renderRequests.length
-		? await storeRenderedAssets(source.fileKey, renderRequests, payload, user)
-		: {}
-	const result = convertFigmaNodeToHtml(node, renderedAssets)
+	const plan = planFigmaAssets(node)
+	const assets = await storePlannedAssets(source.fileKey, plan, payload, user)
+	const result = convertFigmaNodeToHtml(node, assets.renders, assets.imageFills)
 
-	return { ...result, name: node.name ?? 'Untitled' }
+	return { ...result, name: node.name ?? 'Untitled', diagnostics: plan.diagnostics }
 }
 
-const VECTOR_NODE_TYPES = new Set([
-	'VECTOR',
-	'BOOLEAN_OPERATION',
-	'STAR',
-	'LINE',
-	'ELLIPSE',
-	'REGULAR_POLYGON',
-])
-const KNOWN_HTML_NODE_TYPES = new Set([
-	'DOCUMENT',
-	'CANVAS',
-	'FRAME',
-	'GROUP',
-	'SECTION',
-	'COMPONENT',
-	'COMPONENT_SET',
-	'INSTANCE',
-	'RECTANGLE',
-	'TEXT',
-	'TRANSFORM_GROUP',
-	// SLICE는 이번 범위에서 기존 동작을 유지한다.
-	'SLICE',
-])
-const RASTER_PAINT_TYPES = new Set(['IMAGE', 'PATTERN', 'VIDEO', 'GRADIENT_ANGULAR'])
-const CSS_EFFECT_TYPES = new Set(['DROP_SHADOW', 'INNER_SHADOW', 'LAYER_BLUR', 'BACKGROUND_BLUR'])
-const CSS_BLEND_MODES = new Set([
-	'NORMAL',
-	'PASS_THROUGH',
-	'MULTIPLY',
-	'SCREEN',
-	'OVERLAY',
-	'DARKEN',
-	'LIGHTEN',
-	'COLOR_DODGE',
-	'COLOR_BURN',
-	'HARD_LIGHT',
-	'SOFT_LIGHT',
-	'DIFFERENCE',
-	'EXCLUSION',
-	'HUE',
-	'SATURATION',
-	'COLOR',
-	'LUMINOSITY',
-])
+/** 임시 URL 만료 전에 끝내되 메모리에 동시에 잡는 Buffer 수를 제한하는 다운로드 동시성. */
+const DOWNLOAD_CONCURRENCY = 6
 
-function collectRenderRequests(node: FigmaNode): RenderRequest[] {
-	if (node.visible === false || node.opacity === 0) return []
-
-	if (requiresRasterFallback(node)) {
-		return [{ nodeId: node.id, name: node.name ?? node.id, format: 'png' }]
-	}
-	if (VECTOR_NODE_TYPES.has(node.type)) {
-		return [{ nodeId: node.id, name: node.name ?? node.id, format: 'svg' }]
-	}
-
-	return (node.children ?? []).flatMap(collectRenderRequests)
-}
-
-function requiresRasterFallback(node: FigmaNode): boolean {
-	if (
-		node.type === 'TEXT_PATH' ||
-		(!KNOWN_HTML_NODE_TYPES.has(node.type) &&
-			!VECTOR_NODE_TYPES.has(node.type) &&
-			!node.children?.length)
-	) {
-		return true
-	}
-	if (node.isMask || node.children?.some((child) => child.isMask)) return true
-
-	const fills = (node.fills ?? []).filter((paint) => paint.visible !== false)
-	const strokes = (node.strokes ?? []).filter((paint) => paint.visible !== false)
-	if (
-		fills.length > 1 ||
-		strokes.length > 1 ||
-		[...fills, ...strokes].some((paint) => RASTER_PAINT_TYPES.has(paint.type))
-	) {
-		return true
-	}
-
-	if (
-		node.effects?.some(
-			(effect) => effect.visible !== false && !CSS_EFFECT_TYPES.has(effect.type),
-		)
-	) {
-		return true
-	}
-	if (node.blendMode && !CSS_BLEND_MODES.has(node.blendMode)) return true
-
-	return !VECTOR_NODE_TYPES.has(node.type) && hasNonAxisAlignedTransform(node)
-}
-
-function hasNonAxisAlignedTransform(node: FigmaNode): boolean {
-	if (node.rotation) return true
-	const transform = node.relativeTransform
-	if (!transform) return false
-
-	const [[a, b], [c, d]] = transform
-	const epsilon = 0.000001
-	return (
-		Math.abs(a - 1) > epsilon ||
-		Math.abs(b) > epsilon ||
-		Math.abs(c) > epsilon ||
-		Math.abs(d - 1) > epsilon
-	)
-}
-
-async function storeRenderedAssets(
+/**
+ * 에셋 계획을 해석해 draft Application Images로 저장하고 키→에셋 맵을 돌려준다.
+ * 하나라도 실패하면 이번 요청에서 새로 만든 draft를 모두 제거하고 첫 오류를 던진다.
+ */
+async function storePlannedAssets(
 	fileKey: string,
-	requests: RenderRequest[],
+	plan: FigmaAssetPlan,
 	payload: Payload,
 	user: User,
-): Promise<Record<string, FigmaRenderedAsset>> {
-	const renderedAssets: Record<string, FigmaRenderedAsset> = {}
+): Promise<ResolvedFigmaAssets> {
+	const resolved: ResolvedFigmaAssets = { renders: {}, imageFills: {} }
+	if (plan.renders.length === 0 && plan.imageFills.length === 0) return resolved
+
 	const createdAssetIds: number[] = []
 
 	try {
-		for (const format of ['svg', 'png'] as const) {
-			const formatRequests = requests.filter((request) => request.format === format)
-			if (formatRequests.length === 0) continue
-
-			const urls = await findFigmaImageUrls(
-				fileKey,
-				formatRequests.map((request) => request.nodeId),
-				format,
-			)
-
-			// 모든 Buffer를 한 번에 잡지 않도록 하나씩 내려받아 바로 upload adapter에 넘긴다.
-			for (const request of formatRequests) {
-				const url = urls[request.nodeId]
-				if (!url) {
-					throw new Error(
-						`Figma ${format.toUpperCase()} render failed for node "${request.nodeId}".`,
-					)
-				}
-
-				const { data, mimeType } = await downloadFigmaImage(url)
-				const normalizedMimeType = mimeType.split(';', 1)[0]?.trim()
-				const expectedMimeType = format === 'svg' ? 'image/svg+xml' : 'image/png'
-				if (normalizedMimeType !== expectedMimeType) {
-					throw new Error(
-						`Figma ${format.toUpperCase()} download returned "${mimeType}" for node "${request.nodeId}".`,
-					)
-				}
-
-				const checksum = createHash('sha256').update(data).digest('hex')
-				const asset = await stageImportedApplicationImage(payload, user, {
-					data,
-					filename: `figma-${checksum.slice(0, 24)}.${format}`,
-					mimeType: normalizedMimeType,
-					name: request.name,
-				})
-				renderedAssets[request.nodeId] = asset
-				if (asset.created) createdAssetIds.push(asset.id)
-			}
-		}
-
-		return renderedAssets
+		const jobs = await collectDownloadJobs(fileKey, plan)
+		await runWithConcurrency(jobs, DOWNLOAD_CONCURRENCY, async (job) => {
+			const asset = await storeDownloadedAsset(job, payload, user)
+			resolved[job.target === 'render' ? 'renders' : 'imageFills'][job.key] = asset
+			if (asset.created) createdAssetIds.push(asset.id)
+		})
+		return resolved
 	} catch (error) {
 		await Promise.allSettled(
-			createdAssetIds.map((id) => discardImportedApplicationImage(payload, user, id)),
+			createdAssetIds.map((id) => deleteDraftImportedApplicationImage(payload, user, id)),
 		)
 		throw error
 	}
+}
+
+/** 계획의 렌더(포맷별 배치)·IMAGE fill(파일 단위 1회) 임시 URL을 모아 다운로드 작업 목록으로 만든다. */
+async function collectDownloadJobs(
+	fileKey: string,
+	plan: FigmaAssetPlan,
+): Promise<AssetDownloadJob[]> {
+	const jobs: AssetDownloadJob[] = []
+
+	for (const format of ['svg', 'png'] as const) {
+		const formatRequests = plan.renders.filter((request) => request.format === format)
+		if (formatRequests.length === 0) continue
+
+		const urls = await findFigmaImageUrls(
+			fileKey,
+			formatRequests.map((request) => request.nodeId),
+			format,
+		)
+		for (const request of formatRequests) {
+			const url = urls[request.nodeId]
+			if (!url) {
+				throw new Error(
+					`Figma ${format.toUpperCase()} render failed for node "${request.nodeId}".`,
+				)
+			}
+			jobs.push({
+				key: request.nodeId,
+				target: 'render',
+				name: request.name,
+				url,
+				expectedMimeType: format === 'svg' ? 'image/svg+xml' : 'image/png',
+			})
+		}
+	}
+
+	if (plan.imageFills.length > 0) {
+		const fillUrls = await findFigmaImageFillUrls(fileKey)
+		for (const fill of plan.imageFills) {
+			const url = fillUrls[fill.imageRef]
+			if (!url) {
+				throw new Error(
+					`Figma image fill "${fill.imageRef}" not found in file "${fileKey}".`,
+				)
+			}
+			jobs.push({ key: fill.imageRef, target: 'fill', name: fill.name, url })
+		}
+	}
+
+	return jobs
+}
+
+/** 작업 하나: 다운로드 → MIME 검증 → checksum 파일명으로 draft 저장. */
+async function storeDownloadedAsset(
+	job: AssetDownloadJob,
+	payload: Payload,
+	user: User,
+): Promise<FigmaRenderedAsset & { created: boolean }> {
+	const { data, mimeType } = await downloadFigmaImage(job.url)
+	const normalizedMimeType = mimeType.split(';', 1)[0]?.trim() ?? ''
+
+	if (job.expectedMimeType) {
+		if (normalizedMimeType !== job.expectedMimeType) {
+			throw new Error(
+				`Figma ${job.expectedMimeType === 'image/svg+xml' ? 'SVG' : 'PNG'} download returned "${mimeType}" for node "${job.key}".`,
+			)
+		}
+	} else if (!normalizedMimeType.startsWith('image/')) {
+		throw new Error(`Figma image fill download returned "${mimeType}" for "${job.key}".`)
+	}
+
+	const extension =
+		normalizedMimeType === 'image/svg+xml' ? 'svg' : (normalizedMimeType.split('/')[1] ?? 'png')
+	const checksum = createHash('sha256').update(data).digest('hex')
+
+	return storeDraftImportedApplicationImage(payload, user, {
+		data,
+		filename: `figma-${checksum.slice(0, 24)}.${extension}`,
+		mimeType: normalizedMimeType,
+		name: job.name,
+	})
+}
+
+/**
+ * 고정 개수의 워커로 작업 목록을 소비한다. 실패해도 진행 중인 작업을 끝까지 기다린 뒤 첫 오류를 던진다 —
+ * 정리(cleanup)가 아직 저장 중인 에셋을 놓치지 않게 하기 위해서다.
+ * ponytail: 큐·재시도 없는 최소 동시성. 대형 파일에서 모자라면 DOWNLOAD_CONCURRENCY만 조정.
+ */
+async function runWithConcurrency<T>(
+	items: readonly T[],
+	limit: number,
+	run: (item: T) => Promise<void>,
+): Promise<void> {
+	let cursor = 0
+	const errors: unknown[] = []
+
+	await Promise.all(
+		Array.from({ length: Math.min(limit, items.length) }, async () => {
+			while (cursor < items.length && errors.length === 0) {
+				const item = items[cursor]
+				cursor += 1
+				try {
+					await run(item)
+				} catch (error) {
+					errors.push(error)
+				}
+			}
+		}),
+	)
+
+	if (errors.length > 0) throw errors[0]
 }

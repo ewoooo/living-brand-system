@@ -1,12 +1,19 @@
-import type { AgentQueryTriageDecision } from './agent-query-triage'
+import { z } from 'zod'
 
-const modelIdByTriageModel = {
-	'haiku-4.5': 'claude-haiku-4-5',
-	'sonnet-5': 'claude-sonnet-5',
-	'opus-5.0': 'claude-opus-5',
-} satisfies Record<AgentQueryTriageDecision['model'], string>
+/** loadSkill 입력 — Agent가 선택하는 skill 이름. */
+export const agentSkillSelectionSchema = z.strictObject({
+	name: z.string().trim().min(1).max(80),
+})
 
-export type AgentTaskToolName =
+const skillNameSchema = z.object({ name: z.string() })
+
+/** tool 입력/출력에서 skill 이름만 느슨하게 읽는다. 이름이 없거나 문자열이 아니면 null. */
+export function readSkillName(value: unknown): string | null {
+	const parsed = skillNameSchema.safeParse(value)
+	return parsed.success ? parsed.data.name : null
+}
+
+type AgentTaskToolName =
 	| 'findTemplatesForRequest'
 	| 'generateImage'
 	| 'getCheckCatalog'
@@ -19,51 +26,23 @@ export type AgentTaskToolName =
 	| 'searchGuidelines'
 
 const toolsBySkill = {
-	'answer-guideline': {
-		read: [
-			'listGuidelineDocuments',
-			'searchGuidelines',
-			'readGuidelineDocument',
-			'getCheckCatalog',
-		],
-		action: [],
-	},
-	'create-from-template': {
-		read: ['findTemplatesForRequest'],
-		action: ['prepareTemplateImage'],
-	},
-	'generate-image': {
-		read: ['listImageProfiles'],
-		action: ['generateImage'],
-	},
-	'generate-text': {
-		read: ['searchGuidelines', 'readGuidelineDocument'],
-		action: [],
-	},
-	'review-asset': {
-		read: ['listCheckScenarios', 'getCheckCatalog', 'runCheck'],
-		action: [],
-	},
-} as const satisfies Record<
-	string,
-	{ read: readonly AgentTaskToolName[]; action: readonly AgentTaskToolName[] }
->
+	'answer-guideline': [
+		'listGuidelineDocuments',
+		'searchGuidelines',
+		'readGuidelineDocument',
+		'getCheckCatalog',
+	],
+	'create-from-template': ['findTemplatesForRequest', 'prepareTemplateImage'],
+	'generate-image': ['listImageProfiles', 'generateImage'],
+	'generate-text': ['searchGuidelines', 'readGuidelineDocument'],
+	'review-asset': ['listCheckScenarios', 'getCheckCatalog', 'runCheck'],
+} as const satisfies Record<string, readonly AgentTaskToolName[]>
 
-export function getAllowedAgentTools(
-	skillName: string,
-	toolScope: AgentQueryTriageDecision['toolScope'],
-): AgentTaskToolName[] {
-	const policy = toolsBySkill[skillName as keyof typeof toolsBySkill]
-	if (!policy || toolScope === 'none') return []
+export function getAgentExecutionPolicy(decision: { name: string }) {
+	const tools = toolsBySkill[decision.name as keyof typeof toolsBySkill]
 
-	return toolScope === 'read' ? [...policy.read] : [...policy.read, ...policy.action]
-}
-
-export function getAgentExecutionPolicy(
-	decision: Pick<AgentQueryTriageDecision, 'model' | 'name' | 'toolScope'>,
-) {
 	return {
-		activeTools: getAllowedAgentTools(decision.name, decision.toolScope),
-		modelId: modelIdByTriageModel[decision.model],
+		activeTools: tools ? [...tools] : ([] as AgentTaskToolName[]),
+		modelId: 'claude-sonnet-5',
 	}
 }

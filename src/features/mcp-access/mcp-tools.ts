@@ -12,8 +12,8 @@ import {
 import { resizeForAiVision } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
 import { decodeImageDataUri } from '@/features/generate-image/image-data-uri'
 import { loadGeneratedImage } from '@/features/generate-image/repositories/generated-image.payload.repository'
+import { listPublishedImageProfiles } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import { generateImages } from '@/features/generate-image/services/generate-image.service'
-import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
 import { isPayloadUser } from '@/lib/auth'
 import {
 	type ClientCheckObservations,
@@ -68,7 +68,7 @@ export const customMcpTools = [
 		'listImageProfiles',
 		'List published brand image profiles available to the current user.',
 		{},
-		(_args, req) => listAvailableImageProfiles(user(req)),
+		(_args, req) => listPublishedImageProfiles(user(req)),
 	),
 	{
 		name: 'runAssetCheck',

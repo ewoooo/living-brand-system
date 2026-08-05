@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { GetCreateNavigationOutput } from '@/features/template-create/services/get-create-navigation.service'
-import type { PublishedHtmlTemplate } from '@/features/template-create/services/get-published-template.service'
+import type { GetCreateNavigationOutput } from '@/services/get-create-navigation.service'
+import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
 import { TemplateGenerator } from './template-generator'
 
 const mocks = vi.hoisted(() => ({ exportTemplate: vi.fn(), push: vi.fn() }))

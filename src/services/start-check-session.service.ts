@@ -35,7 +35,7 @@ import {
 import type { ImageContentFlags } from '@/features/asset-check/types'
 import { detectCheckImageMediaType } from '@/features/asset-check/utils/image-format'
 import { type CheckScenario, getCheckScenario } from '@/features/quality-rule/check-scenario'
-import { getCheckScenarios } from '@/features/quality-rule/services/get-check-scenarios.service'
+import { findPublishedCheckScenarios } from '@/features/quality-rule/repositories/check-scenario.payload.repository'
 import type { AgentChatSession, User } from '@/payload-types'
 
 interface StartCheckSessionInput {
@@ -85,7 +85,8 @@ async function snapshotInput(buffer: Buffer): Promise<CheckSessionInputSnapshot>
 export async function startCheckSession(input: StartCheckSessionInput) {
 	const inputSnapshot = await snapshotInput(input.buffer)
 	const scenario =
-		input.scenario ?? getCheckScenario(await getCheckScenarios(input.user), input.scenarioKey)
+		input.scenario ??
+		getCheckScenario(await findPublishedCheckScenarios(input.user), input.scenarioKey)
 	const rulesetSnapshot = await getRuntimeChecks(scenario.checkKeys)
 	const session = await createCheckSessionRecord({
 		agentChatSessionId: input.agentChatSessionId,

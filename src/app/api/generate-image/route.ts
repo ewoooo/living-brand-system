@@ -3,7 +3,6 @@ import {
 	generateImages,
 	ImageGenerationUnavailableError,
 	ImageProfileNotFoundError,
-	ImagePromptNormalizationUnavailableError,
 } from '@/features/generate-image/services/generate-image.service'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
@@ -53,10 +52,7 @@ export async function POST(request: Request) {
 		return Response.json(response)
 	} catch (error) {
 		payload.logger.error({ err: error }, 'image-generation.failed')
-		if (
-			error instanceof ImageGenerationUnavailableError ||
-			error instanceof ImagePromptNormalizationUnavailableError
-		) {
+		if (error instanceof ImageGenerationUnavailableError) {
 			return Response.json({ message: 'Image generation is unavailable.' }, { status: 503 })
 		}
 		if (error instanceof ImageProfileNotFoundError) {

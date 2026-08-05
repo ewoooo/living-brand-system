@@ -7,7 +7,11 @@ export const PRINT_PPI_OPTIONS = [
 export const MAX_PRINT_PIXELS = 67_108_864
 export const MAX_PRINT_PNG_BYTES = 20_000_000
 
+const MILLIMETERS_PER_INCH = 25.4
+const PDF_POINTS_PER_INCH = 72
+
 export type PrintPpi = 72 | 150 | 300
+export type TemplatePrintFormat = 'pdf' | 'tiff'
 
 export function parsePrintPpi(value: unknown): PrintPpi | undefined {
 	const ppi = Number(value)
@@ -15,7 +19,11 @@ export function parsePrintPpi(value: unknown): PrintPpi | undefined {
 }
 
 export function pixelsToMillimeters(pixels: number, ppi: PrintPpi): number {
-	return (pixels / ppi) * 25.4
+	return (pixels / ppi) * MILLIMETERS_PER_INCH
+}
+
+export function millimetersToPdfPoints(millimeters: number): number {
+	return (millimeters / MILLIMETERS_PER_INCH) * PDF_POINTS_PER_INCH
 }
 
 export function findPrintOutputBlocker(candidate: {

@@ -1,10 +1,6 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import type {
-	AgentChatSession,
-	AgentChatSessionStatus,
-} from '@/features/agent-chat/domain/agent-chat-session'
-import type {
 	AgentChatAiUsage,
 	AgentChatReaction,
 	AgentChatSessionMessageInput,
@@ -13,6 +9,20 @@ import type {
 import type { AgentChatSession as AgentChatSessionRecord, User } from '@/payload-types'
 
 type AgentChatSessionRecordMessage = NonNullable<AgentChatSessionRecord['messages']>[number]
+
+export type AgentChatSessionStatus = 'running' | 'completed' | 'failed'
+
+/** Service가 종결 시점에 확정해 넘기는 저장 필드 계약. */
+export interface AgentChatSessionUpdateData {
+	status: AgentChatSessionStatus
+	messages: AgentChatSessionMessageInput[]
+	messageCount: number
+	usedTools: AgentChatSessionUsage[]
+	usedSkills: AgentChatSessionUsage[]
+	aiUsage?: AgentChatAiUsage
+	errorMessage?: string
+	completedAt?: string
+}
 
 interface CreateAgentChatSessionInput {
 	messages?: AgentChatSessionMessageInput[]
@@ -133,18 +143,19 @@ function toAiUsage(group: AgentChatSessionRecordMessage['aiUsage']): AgentChatAi
 }
 
 /**
- * AgentChatSession 저장 repository — Aggregate의 종결 시점 상태를 기록한다.
- * 저장 필드 선택은 Aggregate의 toUpdateData()가 소유한다.
+ * AgentChatSession 저장 repository — 세션의 종결 시점 상태를 기록한다.
+ * 저장 필드 선택은 start-agent-chat-session service가 소유한다.
  */
 export async function saveAgentChatSessionRecord(
-	session: AgentChatSession,
+	id: number,
+	data: AgentChatSessionUpdateData,
 	user: User,
 ): Promise<void> {
 	const payload = await getPayload({ config })
 	await payload.update({
 		collection: 'agent-chat-sessions',
-		id: session.id,
-		data: session.toUpdateData(),
+		id,
+		data,
 		overrideAccess: true,
 		user,
 	})

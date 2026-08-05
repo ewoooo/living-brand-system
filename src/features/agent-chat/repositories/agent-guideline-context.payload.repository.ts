@@ -1,7 +1,5 @@
 import config from '@payload-config'
 import { getPayload, type Where } from 'payload'
-import type { GuidelineCheckDocument } from '@/features/guideline/blocks/runtime/build-check-source-snapshot'
-import { findPublishedUnifiedGuidelineCheckDocuments } from '@/features/guideline/repositories/published-guideline-checks.payload.repository'
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
 import type { GuidelineDocument } from '@/payload-types'
 
@@ -131,16 +129,6 @@ function toSearchCandidate(result: SearchDoc): AgentGuidelineSearchCandidate {
 		id: String(typeof value === 'object' && value ? value.id : value || ''),
 		title: result.title || '',
 	}
-}
-
-export async function findAgentCheckDocuments(user: unknown): Promise<GuidelineCheckDocument[]> {
-	const payload = await getPayload({ config })
-	const { documents } = await findPublishedUnifiedGuidelineCheckDocuments(payload, {
-		overrideAccess: false,
-		user,
-	})
-
-	return documents
 }
 
 export async function findAgentGuidelineDocument(

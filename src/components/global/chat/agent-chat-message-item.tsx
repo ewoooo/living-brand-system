@@ -2,17 +2,15 @@ import { Ai, Catalog, Search } from '@carbon/icons-react'
 import Link from 'next/link'
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import { Spinner } from '@/components/ui/spinner'
-import { getAgentCitations } from '@/features/agent-chat/utils/get-agent-citations'
 import {
+	getAgentCitations,
 	getAgentGeneratedImages,
 	getAgentMessageText,
-	getAgentTemplateAttachments,
-} from '@/features/agent-chat/utils/get-agent-message-parts'
-import {
 	getAgentReasoningMarker,
 	getAgentSkillMarker,
+	getAgentTemplateAttachments,
 	getAgentToolMarker,
-} from '@/features/agent-chat/utils/get-agent-tool-marker'
+} from '@/features/agent-chat/utils/derive-agent-message'
 import { AgentChatAgentBubble, AgentChatUserBubble } from './agent-chat-bubbles'
 import { AgentChatGeneratedImages } from './agent-chat-generated-images'
 import { AgentChatTemplateAttachment } from './agent-chat-template-attachment'
