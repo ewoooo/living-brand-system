@@ -39,7 +39,13 @@ const parentSlug = (parent: unknown): string | null => {
 	return id == null ? null : (slugById.get(id) ?? null)
 }
 
-const selected = docs.filter((doc) => only.length === 0 || only.includes(doc.slug as string))
+// 🔴 개발용 픽스처(seed-block-widget-test.ts)는 published라도 정본이 아니다 — 안 걸러내면
+//    테스트 문서가 정본에 섞여 seed로 stage까지 나간다.
+const selected = docs.filter(
+	(doc) =>
+		!String(doc.slug).startsWith('block-widget-test') &&
+		(only.length === 0 || only.includes(doc.slug as string)),
+)
 
 const content = {
 	documents: selected.map((doc) => ({
@@ -47,6 +53,7 @@ const content = {
 		title: doc.title,
 		parent: parentSlug(doc.parent),
 		order: doc.displayOrder ?? 0,
+		rules: toPortable(doc.rules ?? []),
 		blocks: toPortable(doc.blocks ?? []),
 	})),
 }

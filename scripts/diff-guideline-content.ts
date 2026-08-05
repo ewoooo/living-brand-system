@@ -2,7 +2,12 @@ import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import { type AnyData, toPortable } from './lib/guideline-content'
+import {
+	type AnyData,
+	collectFileRefs,
+	toPortable,
+	UPLOAD_COLLECTIONS,
+} from './lib/guideline-content'
 
 // 정본 JSON과 대상 DB의 가이드라인 콘텐츠 격차를 읽기 전용으로 비교한다(DB는 조회만 한다).
 //   pnpm payload run scripts/diff-guideline-content.ts            # DATABASE_URL이 가리키는 DB
@@ -13,14 +18,6 @@ import { type AnyData, toPortable } from './lib/guideline-content'
 // 에셋은 S3 버킷을 환경이 공유하므로 파일이 아니라 대상 DB의 업로드 행이 없는 것을 격차로 본다.
 
 const CONTENT_PATH = path.join(process.cwd(), 'scripts/data/guideline-content.json')
-const UPLOAD_COLLECTIONS = [
-	'brand-logos',
-	'brand-typefaces',
-	'brand-icons',
-	'application-images',
-	'generated-images',
-	'template-assets',
-] as const
 
 const payload = await getPayload({ config })
 const content: AnyData = JSON.parse(await readFile(CONTENT_PATH, 'utf8'))
@@ -63,6 +60,7 @@ for (const [key, canon] of canonByKey) {
 	}
 	const same =
 		JSON.stringify(toPortable(db.blocks ?? [])) === JSON.stringify(canon.blocks) &&
+		JSON.stringify(toPortable(db.rules ?? [])) === JSON.stringify(canon.rules ?? []) &&
 		db.title === canon.title &&
 		(db.displayOrder ?? 0) === (canon.order ?? 0)
 	if (same) continue
@@ -75,15 +73,7 @@ for (const [key, canon] of canonByKey) {
 for (const key of dbByKey.keys()) if (!canonByKey.has(key)) onlyDb.push(key)
 
 // 정본이 참조하는 업로드 파일이 대상 DB에 행으로 있는지 본다(없으면 seed가 그 참조에서 멈춘다).
-const referenced = new Set<string>()
-const collectFiles = (value: AnyData): void => {
-	if (Array.isArray(value)) return void value.forEach(collectFiles)
-	if (value && typeof value === 'object') {
-		if (typeof value.file === 'string') referenced.add(value.file)
-		for (const v of Object.values(value)) collectFiles(v)
-	}
-}
-collectFiles(content.documents)
+const referenced = collectFileRefs(content.documents)
 
 const found = new Map<string, string>()
 for (const collection of UPLOAD_COLLECTIONS) {
