@@ -114,7 +114,7 @@ function Card({ className, size = 'default', ...props }:
 | 루트 식별 | 루트 요소에 `data-slot="<name>"` | `badge.tsx`, `card.tsx`, `typography.tsx` |
 | 다형 렌더링 | `asChild` + `radix-ui` `Slot`, 별도 `as` prop 금지 | `badge.tsx` |
 | 아이콘 | `@carbon/icons-react` | repo 컨벤션(저장소 24개 파일 채택) |
-| 파일명 | kebab-case (`type-specimen-block.tsx`) | `docs/06` §10 |
+| 파일명 | kebab-case (`blocks/type-specimen/component.tsx`) | `docs/06` §10 |
 | export | PascalCase named export, `default` export 금지 | `badge.tsx`, `card.tsx`, `typography.tsx` |
 | 타입 import | `import type … from 'react'` | `card.tsx`, `typography.tsx` |
 | `use client` | 상태·이벤트가 있을 때만 조건부. 순수 조합엔 붙이지 않음 | `docs/06` |
@@ -129,10 +129,10 @@ className과 style에는 시맨틱 토큰만 씁니다(닫힌 토큰 규칙 전�
 
 | ✅ Do | ❌ Don't | repo 실측 |
 | --- | --- | --- |
-| `border-border` | `border border-neutral-200` | `callout-block.tsx:33` |
-| `bg-muted` / `bg-fill-muted` | `bg-neutral-50 … dark:bg-neutral-950` | `type-specimen-block.tsx:51` |
-| 조건부 완전 클래스 룩업 | `` `grid gap-4 md:grid-cols-${variant}` `` | `content-columns-block.tsx:21` |
-| 심볼 + 텍스트로 상태 구분 | 색만으로 판정 구분 | `callout-block.tsx` (kind별 badge) |
+| `border-border` | `border border-neutral-200` | `blocks/callout/component.tsx:33` |
+| `bg-muted` / `bg-fill-muted` | `bg-neutral-50 … dark:bg-neutral-950` | `blocks/type-specimen/component.tsx:51` |
+| 조건부 완전 클래스 룩업 | `` `grid gap-4 md:grid-cols-${variant}` `` | `blocks/content-columns/component.tsx:21` |
+| 심볼 + 텍스트로 상태 구분 | 색만으로 판정 구분 | `blocks/callout/component.tsx` (kind별 badge) |
 | `@carbon/icons-react` | `@hugeicons/*` | repo 컨벤션(정책) |
 
 ### 생 색·생 팔레트 금지
@@ -154,10 +154,10 @@ grep -rn 'oklch(' src --include='*.tsx'
 
 ### 동적 Tailwind 클래스 금지
 
-`grid-cols-${n}`처럼 문자열 보간으로 클래스를 만들면 Tailwind가 빌드 타임에 그 클래스를 인식하지 못해 스타일이 유실됩니다. `content-columns-block.tsx:21`이 이 위반입니다. 조건부로 완전한 클래스를 룩업합니다.
+`grid-cols-${n}`처럼 문자열 보간으로 클래스를 만들면 Tailwind가 빌드 타임에 그 클래스를 인식하지 못해 스타일이 유실됩니다. `blocks/content-columns/component.tsx:21`이 이 위반입니다. 조건부로 완전한 클래스를 룩업합니다.
 
 ```tsx
-// ❌ content-columns-block.tsx:21
+// ❌ blocks/content-columns/component.tsx:21
 GRID_CLASS = `grid gap-4 md:grid-cols-${variant}`
 
 // ✅ 완전 클래스 룩업
@@ -198,7 +198,7 @@ const MAIN: Swatch[] = [
 ]
 ```
 
-`src/features/*/essenherb-palette.ts` 같은 기존 하드코딩은 POC를 위한 **의도적 부채**이며 이 규칙과 별개입니다. 새 컴포넌트가 그 부채를 늘리지 않습니다.
+기존에 남아 있는 생 팔레트 클래스(위젯 5종 · `blocks/content-columns/component.tsx`의 동적 클래스 1건)는 POC를 위한 **의도적 부채**이며 이 규칙과 별개입니다. 새 컴포넌트가 그 부채를 늘리지 않습니다.
 
 ## 6. 접근성
 
@@ -206,8 +206,8 @@ const MAIN: Swatch[] = [
 
 - **키보드 조작**: 커스텀 인터랙션 요소는 `role`과 `aria-*`, 화살표 키 이동을 갖춥니다. 슬라이더면 `role="slider"` + `aria-valuenow`처럼 역할에 맞는 속성을 붙입니다.
 - **focus 가시성**: `focus-visible:ring` 계열로 포커스를 시각적으로 드러냅니다. `badge.tsx`의 `focus-visible:ring-[3px] focus-visible:ring-ring/50`이 참고입니다.
-- **색만으로 상태 구분 금지**: 판정·상태는 심볼 + 텍스트를 함께 씁니다. `callout-block.tsx`는 kind별로 심볼(`✓`/`△`/`✕`)과 라벨(`반드시`/`권장`/`금지`)을 같이 노출합니다.
-- **label 연결**: 입력 요소는 `label`/`aria-label`/`aria-labelledby`로 접근 가능한 이름을 갖습니다. `type-specimen-block.tsx`의 textarea는 `aria-label="타입 견본 입력"`을 답니다.
+- **색만으로 상태 구분 금지**: 판정·상태는 심볼 + 텍스트를 함께 씁니다. `blocks/callout/component.tsx`는 kind별로 심볼(`✓`/`△`/`✕`)과 라벨(`반드시`/`권장`/`금지`)을 같이 노출합니다.
+- **label 연결**: 입력 요소는 `label`/`aria-label`/`aria-labelledby`로 접근 가능한 이름을 갖습니다. `blocks/type-specimen/component.tsx`의 textarea는 `aria-label="타입 견본 입력"`을 답니다.
 - **실패 상태 텍스트 설명**: 검수 실패·저장 실패 같은 조치가 필요한 상태는 텍스트로 원인과 다음 행동을 설명합니다(`docs/08` §2).
 
 ## 7. 자기 검증
