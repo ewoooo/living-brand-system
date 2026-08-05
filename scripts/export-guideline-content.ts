@@ -1,21 +1,23 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import { toPortable } from './lib/guideline-content'
 
-// 가이드라인 문서 전체를 DB에서 읽어 JSON 정본으로 덮어쓴다(DB → 코드). DB는 읽기만 한다.
-//   pnpm payload run scripts/export-guideline-content.ts
+// 가이드라인 문서 전체를 DB에서 읽어 JSON 스냅샷으로 덮어쓴다(DB → 코드 한 방향). DB는 읽기만 한다.
+//   pnpm content:snapshot
 //
-// 🔴 admin에서 편집했으면 시드 전에 이걸 돌려야 한다. 안 돌리면 시드가 가드에서 멈춘다(assertExported).
-// 섹션 전용 export를 새로 만들지 말 것 — 모든 문서가 이 한 스크립트로 처리된다.
-// 🔴 부분 export는 없다. 이 스크립트는 파일을 통째로 덮어쓰므로 일부 문서만 뽑으면 나머지가 정본에서
-//    사라진다(seed는 slug 인자를 받지만 export는 안 받는다 — 방향이 반대라 위험도 반대다).
+// 콘텐츠의 정본은 **DB**다. 이 파일은 그 시점의 읽기 전용 사본일 뿐이고, 되돌려 쓰는 경로는 없다.
+// 목적은 콘텐츠가 Postgres 한 곳에만 존재하지 않게 하고, 무엇이 언제 바뀌었는지 git으로 읽히게 하는 것.
+// 복구 수단은 이 파일이 아니라 Supabase PITR과 Payload 버전 이력이다.
+//
+// 🔴 부분 export는 없다. 파일을 통째로 덮어쓰므로 일부 문서만 뽑으면 나머지가 스냅샷에서 사라진다.
+// 🔴 엉뚱한 DB에 대고 돌렸는지는 `git diff`가 알려준다 — 문서가 대량으로 사라져 보이면 커밋하지 말 것.
 
 const CONTENT_PATH = path.join(process.cwd(), 'scripts/data/guideline-content.json')
 if (process.argv.slice(2).filter((a) => !a.startsWith('-')).length > 0) {
 	throw new Error(
-		'export는 slug 인자를 받지 않는다 — 정본 파일을 통째로 덮어쓰므로 일부만 뽑으면 나머지가 사라진다.',
+		'export는 slug 인자를 받지 않는다 — 스냅샷 파일을 통째로 덮어쓰므로 일부만 뽑으면 나머지가 사라진다.',
 	)
 }
 
@@ -44,8 +46,8 @@ const parentSlug = (parent: unknown): string | null => {
 	return id == null ? null : (slugById.get(id) ?? null)
 }
 
-// 🔴 개발용 픽스처(seed-block-widget-test.ts)는 published라도 정본이 아니다 — 안 걸러내면
-//    테스트 문서가 정본에 섞여 seed로 stage까지 나간다.
+// 🔴 개발용 픽스처(seed-block-widget-test.ts)는 published라도 스냅샷 대상이 아니다.
+//    slug를 바꾸면 이 필터도 같이 바꿀 것.
 const selected = docs.filter((doc) => !String(doc.slug).startsWith('block-widget-test'))
 
 const content = {
@@ -63,25 +65,8 @@ const content = {
 	})),
 }
 
-// 🔴 참조가 줄어든 export는 정본을 파괴한다. rules·brand-colors는 커밋된 마이그레이션에 없어서 새 DB에는
-//    0건이고, 그런 DB에 seed하면 fromPortable이 warn만 하고 참조를 뺀다. 그 상태를 export하면 정본에
-//    빈 배열로 확정돼 연결이 영구 소실된다. 그래서 이전 정본보다 참조 수가 줄면 멈춘다.
-const countRefs = (json: string, key: string) => json.split(`"${key}":`).length - 1
-const next = `${JSON.stringify(content, null, '\t')}\n`
-const previous = await readFile(CONTENT_PATH, 'utf8').catch(() => '')
-for (const key of ['rule', 'file', 'color'] as const) {
-	const before = countRefs(previous, key)
-	const after = countRefs(next, key)
-	if (after < before && process.env.FORCE !== 'true') {
-		throw new Error(
-			`export가 ${key} 참조를 ${before}→${after}로 줄인다 — 대상 DB에 참조 대상이 없는 상태로 보인다.` +
-				' 정본을 덮지 않고 멈춘다(의도한 삭제라면 FORCE=true).',
-		)
-	}
-}
-
 await mkdir(path.dirname(CONTENT_PATH), { recursive: true })
-await writeFile(CONTENT_PATH, next, 'utf8')
+await writeFile(CONTENT_PATH, `${JSON.stringify(content, null, '\t')}\n`, 'utf8')
 
 console.log(`✅ export 완료 → ${path.relative(process.cwd(), CONTENT_PATH)}`)
 for (const doc of content.documents.filter((d) => d.blocks.length > 0)) {

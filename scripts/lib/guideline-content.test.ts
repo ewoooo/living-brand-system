@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { collectFileRefs, toPortable } from './guideline-content'
+import { toPortable } from './guideline-content'
 
-// 정본 변환의 이식 키만 검증한다(DB가 필요한 fromPortable·assertExported는 제외).
+// 스냅샷 변환의 키 규약을 검증한다.
 describe('toPortable', () => {
 	it('업로드는 filename, brand-colors는 hex로 접는다', () => {
 		expect(toPortable({ image: { id: 7, filename: 'a.webp', url: '/x' } })).toEqual({
@@ -29,6 +29,13 @@ describe('toPortable', () => {
 		expect(toPortable({ rules: [draft] })).toEqual({ rules: [{ rule: 'wip-rule' }] })
 	})
 
+	it('null 값은 버리므로 초안 rule의 tier·executor가 남지 않는다', () => {
+		// 위 케이스의 보강 — 접힌 결과에 null 필드가 새지 않는지 본다.
+		expect(toPortable({ rules: [{ key: 'k', tier: null, executor: null }] })).toEqual({
+			rules: [{ rule: 'k' }],
+		})
+	})
+
 	it('key가 있어도 rules 필수 필드가 없으면 접지 않는다', () => {
 		expect(toPortable({ meta: { key: 'a', label: 'b' } })).toEqual({
 			meta: { key: 'a', label: 'b' },
@@ -41,15 +48,5 @@ describe('toPortable', () => {
 		).toEqual({
 			keep: 'z',
 		})
-	})
-})
-
-describe('collectFileRefs', () => {
-	it('중첩된 곳의 file 참조를 중복 없이 모은다', () => {
-		const refs = collectFileRefs([
-			{ blocks: [{ cells: [{ image: { file: 'a.webp' } }, { image: { file: 'b.svg' } }] }] },
-			{ blocks: [{ image: { file: 'a.webp' } }] },
-		])
-		expect([...refs].sort()).toEqual(['a.webp', 'b.svg'])
 	})
 })
