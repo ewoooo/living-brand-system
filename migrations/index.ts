@@ -26,6 +26,8 @@ import * as migration_20260804_080321_add_grid_labels_and_guides from './2026080
 import * as migration_20260804_082132_add_layout_grid_locks from './20260804_082132_add_layout_grid_locks';
 import * as migration_20260804_083406_add_layout_grid_caption from './20260804_083406_add_layout_grid_caption';
 import * as migration_20260804_085424_add_layout_grid_widget_values from './20260804_085424_add_layout_grid_widget_values';
+import * as migration_20260805_031410_drop_agent_chat_triage from './20260805_031410_drop_agent_chat_triage';
+import * as migration_20260805_042818_add_check_scenario_aliases from './20260805_042818_add_check_scenario_aliases';
 
 export const migrations = [
   {
@@ -166,6 +168,16 @@ export const migrations = [
   {
     up: migration_20260804_085424_add_layout_grid_widget_values.up,
     down: migration_20260804_085424_add_layout_grid_widget_values.down,
-    name: '20260804_085424_add_layout_grid_widget_values'
+    name: '20260804_085424_add_layout_grid_widget_values',
+  },
+  {
+    up: migration_20260805_031410_drop_agent_chat_triage.up,
+    down: migration_20260805_031410_drop_agent_chat_triage.down,
+    name: '20260805_031410_drop_agent_chat_triage',
+  },
+  {
+    up: migration_20260805_042818_add_check_scenario_aliases.up,
+    down: migration_20260805_042818_add_check_scenario_aliases.down,
+    name: '20260805_042818_add_check_scenario_aliases'
   },
 ];

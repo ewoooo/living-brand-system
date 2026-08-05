@@ -112,8 +112,6 @@ describe('agent tools', () => {
 			description: 'Copywriting test skill.',
 			instructions: 'Rewrite campaign copy.',
 			name: 'copywriter-test',
-			model: 'sonnet-5',
-			toolScope: 'action',
 		})
 	})
 

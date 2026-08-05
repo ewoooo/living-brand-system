@@ -1,3 +1,5 @@
+import type { TemplateVectorAssetCollection } from '@/services/template-asset-policy.service'
+
 /** Creator가 편집할 수 있는 텍스트 슬롯의 제약과 작성 지침. */
 export interface TemplateSlotSpec {
 	label?: string
@@ -15,7 +17,7 @@ export interface TemplateNodeConfig {
 	generatedImageId?: number
 	input?: TemplateSlotSpec
 	vectorAsset?: {
-		collection: 'brand-logos' | 'application-images'
+		collection: TemplateVectorAssetCollection
 		id: number
 		src: string
 	}

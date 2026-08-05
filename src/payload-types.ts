@@ -1909,6 +1909,10 @@ export interface CheckScenario {
     | boolean
     | null;
   /**
+   * 이 시나리오로 연결할 별칭입니다. 대소문자를 무시하고, 별칭의 공백으로 구분된 각 단어가 입력 키에 모두 포함되면 매칭됩니다.
+   */
+  aliases?: string[] | null;
+  /**
    * 발행된 시나리오를 신규 검수 대상에서 제외할 때 사용합니다.
    */
   archived?: boolean | null;
@@ -2104,27 +2108,6 @@ export interface AgentChatSession {
         id?: string | null;
       }[]
     | null;
-  /**
-   * Agent가 제안하고 서버가 확정한 분류와 전체 분류 단계 사용량입니다.
-   */
-  triage?: {
-    skillName?: string | null;
-    responseLevel?: ('fast' | 'standard' | 'deep') | null;
-    taskType?: ('answer' | 'lookup' | 'action') | null;
-    risk?: ('low' | 'high') | null;
-    confidence?: number | null;
-    executionModel?: ('haiku-4.5' | 'sonnet-5' | 'opus-5.0') | null;
-    toolScope?: ('none' | 'read' | 'action') | null;
-    reviewRequired?: boolean | null;
-    clarificationRequired?: boolean | null;
-    classifierModel?: string | null;
-    inputTokens?: number | null;
-    outputTokens?: number | null;
-    totalTokens?: number | null;
-    cacheReadInputTokens?: number | null;
-    cacheWriteInputTokens?: number | null;
-    reasoningTokens?: number | null;
-  };
   /**
    * Agent 채팅 비용 분석에 쓰는 모델과 토큰 사용량입니다.
    */
@@ -3477,6 +3460,7 @@ export interface CheckScenariosSelect<T extends boolean = true> {
   description?: T;
   key?: T;
   checkKeys?: T;
+  aliases?: T;
   archived?: T;
   hasBeenPublished?: T;
   updatedAt?: T;
@@ -3628,26 +3612,6 @@ export interface AgentChatSessionsSelect<T extends boolean = true> {
         name?: T;
         callCount?: T;
         id?: T;
-      };
-  triage?:
-    | T
-    | {
-        skillName?: T;
-        responseLevel?: T;
-        taskType?: T;
-        risk?: T;
-        confidence?: T;
-        executionModel?: T;
-        toolScope?: T;
-        reviewRequired?: T;
-        clarificationRequired?: T;
-        classifierModel?: T;
-        inputTokens?: T;
-        outputTokens?: T;
-        totalTokens?: T;
-        cacheReadInputTokens?: T;
-        cacheWriteInputTokens?: T;
-        reasoningTokens?: T;
       };
   aiUsage?:
     | T

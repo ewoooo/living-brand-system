@@ -4,10 +4,20 @@ import { getCheckScenario } from './check-scenario'
 
 const scenarios = [
 	{ key: 'quick', title: '빠른 기본 검수', checkKeys: [] },
-	{ key: 'sns', title: 'SNS 콘텐츠 검수', checkKeys: [] },
-	{ key: 'web-visual', title: '웹/비주얼 템플릿 검수', checkKeys: [] },
-	{ key: 'advertisement', title: '광고 검수', checkKeys: [] },
-	{ key: 'stationery', title: '명함/스테이셔너리 검수', checkKeys: [] },
+	{ key: 'sns', title: 'SNS 콘텐츠 검수', checkKeys: [], aliases: ['sns', 'social'] },
+	{
+		key: 'web-visual',
+		title: '웹/비주얼 템플릿 검수',
+		checkKeys: [],
+		aliases: ['web', 'visual'],
+	},
+	{ key: 'advertisement', title: '광고 검수', checkKeys: [], aliases: ['ad', '광고'] },
+	{
+		key: 'stationery',
+		title: '명함/스테이셔너리 검수',
+		checkKeys: [],
+		aliases: ['stationary', '명함', 'business card', 'name card'],
+	},
 ]
 
 describe('getCheckScenario', () => {

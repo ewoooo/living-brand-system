@@ -53,12 +53,10 @@ export function getAgentTools() {
 					throw new AgentConfigurationError('Agent skill is not configured.')
 				}
 
-				// 출력은 모델 컨텍스트에 그대로 들어간다 — 기존 응답 필드를 유지한다.
+				// 출력은 모델 컨텍스트에 그대로 들어간다.
 				return {
 					...formatLoadedSkill(skill),
 					name: proposal.name,
-					model: 'sonnet-5',
-					toolScope: 'action',
 				}
 			},
 		}),
