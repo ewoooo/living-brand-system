@@ -5,6 +5,7 @@
 			"title": "Margin Size",
 			"parent": "layout",
 			"order": 0,
+			"rules": [],
 			"blocks": [
 				{
 					"columns": 2,
@@ -34,6 +35,7 @@
 			"title": "디자인 컨셉",
 			"parent": "ci",
 			"order": 0,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "full",
@@ -64,6 +66,7 @@
 			"title": "CI",
 			"parent": "brand-elements",
 			"order": 0,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -71,6 +74,7 @@
 			"title": "Brand purpose & Commitment",
 			"parent": "brand-strategy",
 			"order": 0,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -78,6 +82,7 @@
 			"title": "Visual Example",
 			"parent": "etc",
 			"order": 0,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "16:9",
@@ -177,6 +182,7 @@
 			"title": "Shape",
 			"parent": "illustration",
 			"order": 0,
+			"rules": [],
 			"blocks": [
 				{
 					"colored": false,
@@ -193,6 +199,7 @@
 			"title": "English Version",
 			"parent": "the-narrative",
 			"order": 0,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -229,14 +236,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "브랜드 본질·철학 문구",
-							"key": "messaging.narrative.statement",
-							"tier": "recommended",
-							"executor": "manual",
-							"checker": 52,
-							"criteria": [],
-							"messages": {},
-							"_status": "published"
+							"rule": "messaging.narrative.statement"
 						}
 					]
 				}
@@ -247,6 +247,7 @@
 			"title": "Primary Typeface",
 			"parent": "typography",
 			"order": 0,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "5:4",
@@ -341,26 +342,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "Typography English",
-							"titleKo": "영문 타이포그래피 준수",
-							"key": "typography-english",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "영문 텍스트가 획 끝 삐침이 절제된 세미 세리프(AgfaRotis Semi Serif) 인상인가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "영문 타이포그래피가 Regular/Bold 웨이트 범위 안에서 위계를 형성하는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "typography-english"
 						}
 					]
 				},
@@ -475,6 +457,7 @@
 			"title": "Business Card",
 			"parent": "stationery",
 			"order": 0,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -661,60 +644,10 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "광고 적용 규격·비율",
-							"key": "application.stationery.format",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"options": {
-								"formats": [
-									{
-										"label": "명함 90×50mm",
-										"width": 90,
-										"height": 50
-									},
-									{
-										"label": "리플렛 A4 210×297mm",
-										"width": 210,
-										"height": 297
-									},
-									{
-										"label": "제품 정보 카드 A5 148×210mm",
-										"width": 148,
-										"height": 210
-									}
-								],
-								"tolerance": 0.05,
-								"ignoreOrientation": true
-							},
-							"criteria": [
-								{
-									"question": "캔버스가 스테이셔너리 규격(명함 90×50 / 리플렛 A4 210×297 / 정보 카드 A5 148×210) 중 하나의 비율(방향 무관)에 부합하는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {
-								"pass": "{facts.closestFormat} 규격 비율에 맞습니다.",
-								"fail": "캔버스가 스테이셔너리 규격과 다릅니다. {facts.allowedFormats} 중 선택한 산출물 규격에 맞춰 조정하세요."
-							},
-							"_status": "published"
+							"rule": "application.stationery.format"
 						},
 						{
-							"title": "인쇄 방식·별색·잉크 사양",
-							"key": "application.print.spec",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "명함의 색 구성이 레드 계열 별색 1도(Pantone Warm Red C)로 표현 가능한 단색 구성인가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "application.print.spec"
 						}
 					]
 				}
@@ -725,6 +658,7 @@
 			"title": "Color Palette",
 			"parent": "color-system",
 			"order": 0,
+			"rules": [],
 			"blocks": [
 				{
 					"blockType": "colorPalette",
@@ -829,28 +763,7 @@
 					],
 					"rules": [
 						{
-							"title": "브랜드 컬러 팔레트",
-							"key": "color.palette",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 48,
-							"criteria": [
-								{
-									"question": "화면의 주요 그래픽·배경·텍스트 색상이 브랜드 팔레트(Essenherb Red #EA5343, White, Black 및 가이드 수록 컬러) 내에 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "브랜드 팔레트에 속하지 않는 색상이 그래픽 요소에서 차지하는 비율(%)은?",
-									"kind": "measure",
-									"operator": "lte",
-									"expectedValue": 10,
-									"unit": "%"
-								}
-							],
-							"heuristicPrompt": "포토그래피·일러스트 내부의 자연색은 팔레트 위반으로 세지 않는다. 그래픽 요소·배경·텍스트 컬러만 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "color.palette"
 						}
 					]
 				},
@@ -963,6 +876,11 @@
 			"title": "The Signature",
 			"parent": "essenherb-brand-strategy",
 			"order": 0,
+			"rules": [
+				{
+					"rule": "messaging-signature-combination"
+				}
+			],
 			"blocks": []
 		},
 		{
@@ -970,6 +888,7 @@
 			"title": "Primary Logo",
 			"parent": "brand-logo",
 			"order": 0,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -1181,6 +1100,11 @@
 			"title": "SNS Contents",
 			"parent": "sns",
 			"order": 0,
+			"rules": [
+				{
+					"rule": "application.sns.format"
+				}
+			],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -1849,6 +1773,7 @@
 			"title": "The Core",
 			"parent": "brand-core",
 			"order": 0,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -1856,6 +1781,7 @@
 			"title": "The Name",
 			"parent": "brand-core",
 			"order": 0,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -1863,6 +1789,7 @@
 			"title": "Introduction",
 			"parent": "build-our-brand",
 			"order": 0,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -1870,6 +1797,7 @@
 			"title": "Brand Logo",
 			"parent": "essenherb-design-elements",
 			"order": 0,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -1877,6 +1805,7 @@
 			"title": "Instruction",
 			"parent": "build-our-brand",
 			"order": 0,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -1884,6 +1813,7 @@
 			"title": "Brand Core",
 			"parent": "essenherb-brand-strategy",
 			"order": 0,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -1891,6 +1821,7 @@
 			"title": "SNS",
 			"parent": "essenherb-applications",
 			"order": 0,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -1898,6 +1829,7 @@
 			"title": "Build Our Brand",
 			"parent": null,
 			"order": 0,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -1905,6 +1837,7 @@
 			"title": "Grid System Overview",
 			"parent": "layout",
 			"order": 1,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "padded",
@@ -1971,6 +1904,7 @@
 			"title": "국문형",
 			"parent": "ci",
 			"order": 1,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "full",
@@ -2027,6 +1961,7 @@
 			"title": "자회사 CI",
 			"parent": "brand-elements",
 			"order": 1,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -2034,6 +1969,7 @@
 			"title": "Brand personality & Design principle",
 			"parent": "brand-strategy",
 			"order": 1,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -2041,6 +1977,7 @@
 			"title": "--- HD현대 ---",
 			"parent": null,
 			"order": 1,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -2048,6 +1985,7 @@
 			"title": "Brand Contents",
 			"parent": "sns",
 			"order": 1,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -2194,30 +2132,10 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "콘텐츠 브랜드 스토리 카피",
-							"key": "messaging.sns.copy",
-							"tier": "recommended",
-							"executor": "manual",
-							"checker": 52,
-							"criteria": [],
-							"messages": {},
-							"_status": "published"
+							"rule": "messaging.sns.copy"
 						},
 						{
-							"title": "사진 분류·무드 기준",
-							"key": "imagery.sns.classification",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 50,
-							"criteria": [
-								{
-									"question": "브랜드 자산 이미지(모델·브랜드 어플리케이션·자연 재료 이미지 등)가 콘텐츠에 활용되었는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "imagery.sns.classification"
 						}
 					]
 				}
@@ -2228,6 +2146,7 @@
 			"title": "Type A (Message)",
 			"parent": "visual-system",
 			"order": 1,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -2274,84 +2193,10 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "템플릿 크기·비율",
-							"key": "layout.visual.template",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"options": {
-								"formats": [
-									{
-										"label": "1:1 1080×1080px",
-										"width": 1,
-										"height": 1
-									},
-									{
-										"label": "3:5(SNS) 1080×1440px",
-										"width": 1080,
-										"height": 1440
-									},
-									{
-										"label": "A4 210×297mm",
-										"width": 210,
-										"height": 297
-									},
-									{
-										"label": "3:1 1920×640px",
-										"width": 3,
-										"height": 1
-									},
-									{
-										"label": "16:9 1920×1080px",
-										"width": 16,
-										"height": 9
-									}
-								]
-							},
-							"criteria": [
-								{
-									"question": "캔버스가 규정 판형(1:1 / 3:4 / A4 / 3:1 / 16:9) 중 하나의 비율인가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "로고·타이포그래피가 비주얼의 중심 요소로 상단 정렬 전개되는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "layout.visual.template"
 						},
 						{
-							"title": "웹·가로 광고 규격",
-							"key": "application.web",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"options": {
-								"formats": [
-									{
-										"label": "16:9 1920x1080px",
-										"width": 16,
-										"height": 9
-									},
-									{
-										"label": "3:1 1920x640px",
-										"width": 3,
-										"height": 1
-									}
-								]
-							},
-							"criteria": [
-								{
-									"question": "캔버스가 웹 규격(16:9 또는 3:1) 비율인가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "application.web"
 						}
 					]
 				}
@@ -2362,6 +2207,7 @@
 			"title": "Ingredients & Texture",
 			"parent": "photography",
 			"order": 1,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -2459,32 +2305,7 @@
 					"title": "Do/Don't",
 					"rules": [
 						{
-							"title": "Photography Ingredients Textures",
-							"titleKo": "사진 질감 규칙",
-							"key": "photography-ingredient-textures",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 50,
-							"criteria": [
-								{
-									"question": "피사체 고유의 질감과 입체감을 강조하기 용이한 선명한 대비감의 조명을 사용했는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "수직·수평 앵글 기반의 무게감 있는 화면 구성을 사용했는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "백색~연회색 계열의 밝은 무채색 배경톤을 사용했는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"heuristicPrompt": "재료·질감·제형 사진이 아닌 산출물은 모든 기준을 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "photography-ingredient-textures"
 						}
 					]
 				}
@@ -2495,6 +2316,7 @@
 			"title": "Color Usage",
 			"parent": "illustration",
 			"order": 1,
+			"rules": [],
 			"blocks": [
 				{
 					"colored": true,
@@ -2511,6 +2333,7 @@
 			"title": "Micro Typography",
 			"parent": "typography",
 			"order": 1,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "16:9",
@@ -2554,21 +2377,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "다국어 서체 조합 (국문+영문)",
-							"key": "typography.pairing",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "국문·영문 병용 텍스트가 지정 웨이트 조합(Kor-Medium & Eng-Bold)으로 균일한 회색도를 유지하는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"heuristicPrompt": "국문과 영문이 병용된 텍스트가 없으면 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.pairing"
 						}
 					]
 				},
@@ -2592,6 +2401,7 @@
 			"title": "Color Pairing",
 			"parent": "color-system",
 			"order": 1,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -2709,41 +2519,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "Color Acceptions",
-							"titleKo": "승인된 색 조합",
-							"key": "color.combination",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 48,
-							"options": {
-								"criteria": [
-									{
-										"expected": 4.5,
-										"operator": "gte",
-										"measurement": "contrastRatio"
-									}
-								]
-							},
-							"criteria": [
-								{
-									"question": "색 조합이 3대 페어링(Tone in Tone / Tone on Tone / Mono Tone) 중 하나를 따르는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "본문 텍스트와 배경 간 대비비(contrast ratio)는?",
-									"kind": "measure",
-									"operator": "gte",
-									"expectedValue": 4.5
-								}
-							],
-							"messages": {
-								"pass": "Pass",
-								"ok": "2",
-								"needsReview": "3",
-								"fail": "4"
-							},
-							"_status": "published"
+							"rule": "color.combination"
 						}
 					]
 				}
@@ -2754,6 +2530,7 @@
 			"title": "Korean Version",
 			"parent": "the-narrative",
 			"order": 1,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -2761,6 +2538,7 @@
 			"title": "Primary Logo Type",
 			"parent": "package",
 			"order": 1,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -2947,20 +2725,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "콘텐츠 내 로고 배치",
-							"key": "logo.package.placement",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 47,
-							"criteria": [
-								{
-									"question": "패키지 전면에 브랜드 로고가 레이아웃 규정(Standard Ratio·Margin·Gutter 체계)에 맞게 배치되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "logo.package.placement"
 						}
 					]
 				},
@@ -3301,6 +3066,7 @@
 			"title": "Brand Leaflet",
 			"parent": "stationery",
 			"order": 1,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -3467,20 +3233,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "인쇄물 필수 기재 항목",
-							"key": "messaging.stationery.content.fields",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "제품의 정보·특징·효능 등 필수 전달 요소가 포함되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "messaging.stationery.content.fields"
 						}
 					]
 				},
@@ -3636,6 +3389,7 @@
 			"title": "Offline AD (Vertical)",
 			"parent": "advertisement",
 			"order": 1,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -3762,30 +3516,10 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "브랜드 시그니처 문구",
-							"key": "messaging.advertisement.tagline",
-							"tier": "recommended",
-							"executor": "manual",
-							"checker": 52,
-							"criteria": [],
-							"messages": {},
-							"_status": "published"
+							"rule": "messaging.advertisement.tagline"
 						},
 						{
-							"title": "사진 분류·무드 기준",
-							"key": "imagery.advertisement.classification",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 50,
-							"criteria": [
-								{
-									"question": "광고 내 사진(제품·모델)이 브랜드 톤앤매너(밝고 선명한 연출)에 부합하는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "imagery.advertisement.classification"
 						}
 					]
 				},
@@ -3901,6 +3635,11 @@
 			"title": "Secondary Logo (Vertical Type)",
 			"parent": "brand-logo",
 			"order": 1,
+			"rules": [
+				{
+					"rule": "logo.secondary.usage"
+				}
+			],
 			"blocks": [
 				{
 					"logo": {
@@ -4043,6 +3782,7 @@
 			"title": "Advertisement",
 			"parent": "essenherb-applications",
 			"order": 1,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -4050,6 +3790,7 @@
 			"title": "The Narrative",
 			"parent": "essenherb-brand-strategy",
 			"order": 1,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -4057,6 +3798,7 @@
 			"title": "Color System",
 			"parent": "essenherb-design-elements",
 			"order": 1,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -4064,6 +3806,7 @@
 			"title": "Layout Type 1",
 			"parent": "layout",
 			"order": 2,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "padded",
@@ -4112,6 +3855,7 @@
 			"title": "영문형",
 			"parent": "ci",
 			"order": 2,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "full",
@@ -4168,6 +3912,7 @@
 			"title": "해외지사 CI",
 			"parent": "brand-elements",
 			"order": 2,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -4175,6 +3920,7 @@
 			"title": "Brand identity system",
 			"parent": "brand-strategy",
 			"order": 2,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -4182,6 +3928,7 @@
 			"title": "Brand Strategy",
 			"parent": null,
 			"order": 2,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -4189,6 +3936,7 @@
 			"title": "Product Information Card",
 			"parent": "stationery",
 			"order": 2,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -4382,6 +4130,7 @@
 			"title": "Product Contents",
 			"parent": "sns",
 			"order": 2,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -4508,39 +4257,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "템플릿 크기·비율",
-							"key": "layout.sns.template",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"options": {
-								"formats": [
-									{
-										"label": "Feed 1080×1440px",
-										"width": 1080,
-										"height": 1440
-									},
-									{
-										"label": "Reels 1080×1920px",
-										"width": 1080,
-										"height": 1920
-									}
-								]
-							},
-							"criteria": [
-								{
-									"question": "캔버스가 Feed(3:4) 또는 Reels(9:16) 규격 비율인가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "제품 이미지가 콘텐츠의 중심 요소로 배치되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "layout.sns.template"
 						}
 					]
 				}
@@ -4551,6 +4268,7 @@
 			"title": "Type B",
 			"parent": "visual-system",
 			"order": 2,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -4587,25 +4305,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "모듈러 그리드 시스템",
-							"key": "grid.visual.system",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "그래픽·포토그래피 등 비주얼 콘텐츠가 중심 요소로 전개되는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "상단 정렬 기반의 정돈된 정보 위계가 유지되는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "grid.visual.system"
 						}
 					]
 				}
@@ -4616,6 +4316,7 @@
 			"title": "Brand Product",
 			"parent": "photography",
 			"order": 2,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -4710,6 +4411,7 @@
 			"title": "Incorrect Usage",
 			"parent": "typography",
 			"order": 2,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -4775,67 +4477,13 @@
 					"title": "Incorrect Usage",
 					"rules": [
 						{
-							"title": "서체 굵기·위계",
-							"key": "typography.weight",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "한 문장 안에 서로 다른 굵기가 혼용되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "한 문장 안에 서로 다른 글자 크기가 혼용되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.weight"
 						},
 						{
-							"title": "자간·커닝",
-							"key": "typography.spacing",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "글자 사이 간격이 지나치게 좁혀져 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "글자 사이 간격이 지나치게 넓혀져 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.spacing"
 						},
 						{
-							"title": "타이포그래피 오용 금지",
-							"key": "typography.misuse",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "글자의 형태가 임의 변형(비틀기·기울이기·늘리기)되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "지정 서체(AgfaRotis Semi Serif / Pretendard / Essen Flux) 이외의 서체가 사용되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.misuse"
 						}
 					]
 				}
@@ -4846,6 +4494,7 @@
 			"title": "Tone in Tone",
 			"parent": "color-system",
 			"order": 2,
+			"rules": [],
 			"blocks": [
 				{
 					"system": "tone-in-tone",
@@ -5013,6 +4662,7 @@
 			"title": "Usage Example",
 			"parent": "illustration",
 			"order": 2,
+			"rules": [],
 			"blocks": [
 				{
 					"columns": 3,
@@ -5068,6 +4718,7 @@
 			"title": "Secondary Logo Type",
 			"parent": "package",
 			"order": 2,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -5274,25 +4925,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "승인된 로고 변형",
-							"key": "logo.package.variant",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 47,
-							"criteria": [
-								{
-									"question": "패키지에 사용된 로고가 Primary 또는 Secondary Logo Type 중 하나인가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "사용된 로고 타입이 임의 변형 없이 원형대로 사용되었는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "logo.package.variant"
 						}
 					]
 				},
@@ -5633,6 +5266,7 @@
 			"title": "Offline AD (Horizontal)",
 			"parent": "advertisement",
 			"order": 2,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -5759,35 +5393,10 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "콘텐츠 영역 지정 (인물·텍스트)",
-							"key": "layout.advertisement.zones",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "캔버스가 가로형 광고 판형(2400×1600 또는 8600×2100) 비율에 부합하는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "로고가 규정 로고 영역(Logo Area)에 배치되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "layout.advertisement.zones"
 						},
 						{
-							"title": "반복 서술·보일러플레이트",
-							"key": "messaging.advertisement.boilerplate",
-							"tier": "recommended",
-							"executor": "manual",
-							"checker": 52,
-							"criteria": [],
-							"messages": {},
-							"_status": "published"
+							"rule": "messaging.advertisement.boilerplate"
 						}
 					]
 				},
@@ -6041,14 +5650,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "광고 A-unit 간격 체계",
-							"key": "spacing.advertisement.scale",
-							"tier": "required",
-							"executor": "manual",
-							"checker": 53,
-							"criteria": [],
-							"messages": {},
-							"_status": "published"
+							"rule": "spacing.advertisement.scale"
 						}
 					]
 				},
@@ -6164,6 +5766,7 @@
 			"title": "Service Logo (Horizontal Type)",
 			"parent": "brand-logo",
 			"order": 2,
+			"rules": [],
 			"blocks": [
 				{
 					"blockName": "",
@@ -6448,6 +6051,7 @@
 			"title": "Stationery",
 			"parent": "essenherb-applications",
 			"order": 2,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -6455,6 +6059,7 @@
 			"title": "Typography",
 			"parent": "essenherb-design-elements",
 			"order": 2,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "16:9",
@@ -6476,6 +6081,7 @@
 			"title": "Layout Type 2",
 			"parent": "layout",
 			"order": 3,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "padded",
@@ -6524,6 +6130,7 @@
 			"title": "HD형",
 			"parent": "ci",
 			"order": 3,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "full",
@@ -6580,6 +6187,7 @@
 			"title": "Typography",
 			"parent": "brand-elements",
 			"order": 3,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -6587,6 +6195,7 @@
 			"title": "Brand Elements",
 			"parent": null,
 			"order": 3,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -6594,6 +6203,7 @@
 			"title": "Package Box Usage Example",
 			"parent": "package",
 			"order": 3,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -7097,6 +6707,7 @@
 			"title": "Communication Contents",
 			"parent": "sns",
 			"order": 3,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -7428,41 +7039,10 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "콘텐츠 영역 지정 (인물·텍스트)",
-							"key": "layout.sns.zones",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "인물 이미지가 전면에 배치되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "텍스트가 상단에 고정 배치되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "layout.sns.zones"
 						},
 						{
-							"title": "배경 위 로고 가독성",
-							"key": "application.sns.caption.legibility",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "배경 위 텍스트가 충분한 대비로 명확히 판독되는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "application.sns.caption.legibility"
 						}
 					]
 				},
@@ -7631,25 +7211,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "콘텐츠 내 로고 배치",
-							"key": "logo.sns.placement",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 47,
-							"criteria": [
-								{
-									"question": "로고가 콘텐츠 레이아웃 시스템이 정한 로고 영역에 배치되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "로고가 다른 요소와 겹쳐 가독성이 저하되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "logo.sns.placement"
 						}
 					]
 				}
@@ -7660,6 +7222,7 @@
 			"title": "Brand Model",
 			"parent": "photography",
 			"order": 3,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:5",
@@ -7707,37 +7270,7 @@
 					"title": "Examples",
 					"rules": [
 						{
-							"title": "Imagery Misuse",
-							"titleKo": "이미지 오사용",
-							"key": "imagery-misuse",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 50,
-							"criteria": [
-								{
-									"question": "자신감을 드러내기 용이한 절제된 표정 및 제스처를 사용했는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "피부 고유의 자연스러운 질감을 드러내기 용이한 선명한 대비감의 조명을 사용했는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "백색~연회색 계열의 밝은 무채색 배경톤을 사용했는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "피부에 집중을 방해하는 과도한 복장 연출을 사용했는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"heuristicPrompt": "이 Check는 인물과 피부가 포함된 Brand Model 사진을 대상으로 한다.\n피부가 식별되지 않는 제품·재료·제형 사진에서는 모든 기준을 uncertain으로 관측한다.\n참고 이미지는 오용 유형을 설명하는 예시이며 동일한 모델이나 구도를 요구하지 않는다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "imagery-misuse"
 						}
 					]
 				}
@@ -7748,6 +7281,7 @@
 			"title": "Signature Typeface: Essen Flux",
 			"parent": "typography",
 			"order": 3,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "16:9",
@@ -7794,21 +7328,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "서체 사용 정책·맥락",
-							"key": "typography.usage",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "Essen Flux 서체가 영문 이외의 문자(국문 등)에 적용되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"heuristicPrompt": "Essen Flux 서체(상단 기준선 고정 구조의 전용 영문 서체)가 쓰이지 않은 산출물은 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.usage"
 						}
 					]
 				},
@@ -7819,21 +7339,7 @@
 					"blockType": "glyphGrid",
 					"rules": [
 						{
-							"title": "서체 사용 정책·맥락",
-							"key": "typography.usage",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "Essen Flux 서체가 영문 이외의 문자(국문 등)에 적용되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"heuristicPrompt": "Essen Flux 서체(상단 기준선 고정 구조의 전용 영문 서체)가 쓰이지 않은 산출물은 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.usage"
 						}
 					]
 				},
@@ -7889,22 +7395,7 @@
 					"title": "Example",
 					"rules": [
 						{
-							"title": "Typograhpy All Capital",
-							"titleKo": "대소문자 정책 (All Caps 금지)",
-							"key": "typography.case",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 49,
-							"criteria": [
-								{
-									"question": "Essen Flux(로고 기반 전용 서체) 텍스트가 전체 대문자로만 조판되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"heuristicPrompt": "Essen Flux 서체(상단 기준선 고정 구조의 전용 영문 서체)가 쓰이지 않은 산출물은 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "typography.case"
 						}
 					]
 				}
@@ -7915,6 +7406,7 @@
 			"title": "Tone on Tone",
 			"parent": "color-system",
 			"order": 3,
+			"rules": [],
 			"blocks": [
 				{
 					"system": "tone-on-tone",
@@ -7928,6 +7420,7 @@
 			"title": "Incorrect Usage",
 			"parent": "brand-logo",
 			"order": 3,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "16:9",
@@ -8035,77 +7528,13 @@
 					"title": "Examples",
 					"rules": [
 						{
-							"title": "Logotype construction geometry (proportion lock)",
-							"key": "logo.geometry",
-							"tier": "required",
-							"executor": "heuristic",
-							"checker": 47,
-							"criteria": [
-								{
-									"question": "로고의 글자 간격·비례·기울기가 원형에서 임의 변형되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "로고 일부 요소의 형태나 획 두께가 변형되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "로고가 윤곽선(아웃라인)만으로 표현되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "logo.geometry"
 						},
 						{
-							"title": "로고 색상 오용 (그라디언트·규정 외)",
-							"key": "logo.color.misuse",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 47,
-							"criteria": [
-								{
-									"question": "로고에 그라디언트 효과가 적용되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "로고가 규정 외 컬러로 변형되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								},
-								{
-									"question": "로고 내 일부 요소만 다른 컬러로 변형되어 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "logo.color.misuse"
 						},
 						{
-							"title": "배경 위 로고 가독성",
-							"key": "logo.background.legibility",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 47,
-							"criteria": [
-								{
-									"question": "로고와 배경 간 명도 대비가 충분해 로고가 명확히 식별되는가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "복잡한 배경 이미지·패턴이 로고의 가독성을 해치고 있는가?",
-									"kind": "presence",
-									"expected": "absent"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "logo.background.legibility"
 						}
 					]
 				}
@@ -8116,6 +7545,7 @@
 			"title": "Illustration",
 			"parent": "essenherb-design-elements",
 			"order": 3,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -8123,6 +7553,7 @@
 			"title": "Package",
 			"parent": "essenherb-applications",
 			"order": 3,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -8130,6 +7561,7 @@
 			"title": "Layout Type 3",
 			"parent": "layout",
 			"order": 4,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "padded",
@@ -8178,6 +7610,7 @@
 			"title": "사용 금지",
 			"parent": "ci",
 			"order": 4,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -8273,6 +7706,7 @@
 			"title": "Layout",
 			"parent": "brand-elements",
 			"order": 4,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -8280,6 +7714,7 @@
 			"title": "Design Applications",
 			"parent": null,
 			"order": 4,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -8287,6 +7722,7 @@
 			"title": "AI Image",
 			"parent": "photography",
 			"order": 4,
+			"rules": [],
 			"blocks": [
 				{
 					"kind": "must",
@@ -8299,27 +7735,7 @@
 					"title": "AI 이미지 품질 개선",
 					"rules": [
 						{
-							"title": "AI Image Consistency",
-							"titleKo": "AI 생성 사진 품질·일관성",
-							"key": "imagery.ai.consistency",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 50,
-							"criteria": [
-								{
-									"question": "피부 표현이 자연스럽고 현실적인가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "이미지의 톤·대비·연출이 일관적인가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"heuristicPrompt": "인물·피부가 등장하지 않는 AI 생성물은 첫 기준을 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "imagery.ai.consistency"
 						}
 					]
 				},
@@ -8387,27 +7803,7 @@
 					"title": "Examples",
 					"rules": [
 						{
-							"title": "AI Image Consistency",
-							"titleKo": "AI 생성 사진 품질·일관성",
-							"key": "imagery.ai.consistency",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 50,
-							"criteria": [
-								{
-									"question": "피부 표현이 자연스럽고 현실적인가?",
-									"kind": "presence",
-									"expected": "present"
-								},
-								{
-									"question": "이미지의 톤·대비·연출이 일관적인가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"heuristicPrompt": "인물·피부가 등장하지 않는 AI 생성물은 첫 기준을 not_applicable로 관측한다.",
-							"messages": {},
-							"_status": "published"
+							"rule": "imagery.ai.consistency"
 						}
 					]
 				}
@@ -8418,6 +7814,7 @@
 			"title": "Mono Tone",
 			"parent": "color-system",
 			"order": 4,
+			"rules": [],
 			"blocks": [
 				{
 					"system": "mono-tone",
@@ -8431,6 +7828,7 @@
 			"title": "Product Usage Example",
 			"parent": "package",
 			"order": 4,
+			"rules": [],
 			"blocks": [
 				{
 					"imageRatio": "4:3",
@@ -8637,20 +8035,7 @@
 					"blockType": "contentColumns",
 					"rules": [
 						{
-							"title": "인쇄물 필수 기재 항목",
-							"key": "messaging.package.content.fields",
-							"tier": "recommended",
-							"executor": "heuristic",
-							"checker": 51,
-							"criteria": [
-								{
-									"question": "제품명·제품 설명 등 패키지 필수 기재 요소가 포함되어 있는가?",
-									"kind": "presence",
-									"expected": "present"
-								}
-							],
-							"messages": {},
-							"_status": "published"
+							"rule": "messaging.package.content.fields"
 						}
 					]
 				},
@@ -9011,6 +8396,7 @@
 			"title": "Etc.",
 			"parent": "essenherb-applications",
 			"order": 4,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -9018,6 +8404,7 @@
 			"title": "Photography",
 			"parent": "essenherb-design-elements",
 			"order": 4,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -9025,6 +8412,7 @@
 			"title": "Key Layout",
 			"parent": "layout",
 			"order": 5,
+			"rules": [],
 			"blocks": [
 				{
 					"width": "padded",
@@ -9115,6 +8503,7 @@
 			"title": "Color",
 			"parent": "brand-elements",
 			"order": 5,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -9122,6 +8511,7 @@
 			"title": "--- Essenherb(legacy) ---",
 			"parent": null,
 			"order": 5,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -9129,6 +8519,7 @@
 			"title": "Color Usage",
 			"parent": "color-system",
 			"order": 5,
+			"rules": [],
 			"blocks": [
 				{
 					"columns": 3,
@@ -9187,15 +8578,7 @@
 					},
 					"rules": [
 						{
-							"title": "Color Usage Context",
-							"titleKo": "컬러 사용 맥락·감성",
-							"key": "color.usage",
-							"tier": "recommended",
-							"executor": "manual",
-							"checker": 53,
-							"criteria": [],
-							"messages": {},
-							"_status": "published"
+							"rule": "color.usage"
 						}
 					]
 				},
@@ -9331,6 +8714,7 @@
 			"title": "Visual System",
 			"parent": "essenherb-design-elements",
 			"order": 5,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -9338,6 +8722,7 @@
 			"title": "Key Visual",
 			"parent": "brand-elements",
 			"order": 6,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -9345,6 +8730,7 @@
 			"title": "Brand Strategy",
 			"parent": null,
 			"order": 6,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -9352,6 +8738,7 @@
 			"title": "Iconography",
 			"parent": "brand-elements",
 			"order": 7,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -9359,6 +8746,7 @@
 			"title": "Design Elements",
 			"parent": null,
 			"order": 7,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -9366,6 +8754,7 @@
 			"title": "Illustration",
 			"parent": "brand-elements",
 			"order": 8,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -9373,6 +8762,7 @@
 			"title": "Applications",
 			"parent": null,
 			"order": 8,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -9380,6 +8770,7 @@
 			"title": "Infographic",
 			"parent": "brand-elements",
 			"order": 9,
+			"rules": [],
 			"blocks": []
 		},
 		{
@@ -9387,6 +8778,7 @@
 			"title": "Photography",
 			"parent": "brand-elements",
 			"order": 10,
+			"rules": [],
 			"blocks": []
 		}
 	]
