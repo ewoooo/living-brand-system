@@ -196,6 +196,73 @@ describe('convertFigmaNodeToHtml — 텍스트', () => {
 		expect(s).toContain('line-height:24px')
 		expect(s).toContain('white-space:pre-wrap')
 	})
+
+	it('textTruncation ENDING + maxLines를 -webkit-line-clamp 말줄임으로 옮긴다', () => {
+		const node = {
+			id: '1:1',
+			name: 't',
+			type: 'TEXT',
+			characters: '아주 긴 텍스트',
+			absoluteBoundingBox: { x: 0, y: 0, width: 100, height: 40 },
+			style: {
+				fontFamily: 'Inter',
+				fontSize: 16,
+				textAutoResize: 'NONE',
+				textTruncation: 'ENDING',
+				maxLines: 2,
+				textAlignVertical: 'CENTER',
+			},
+		}
+		const s = rootStyle(convertFigmaNodeToHtml(node).html)
+		expect(s).toContain('display:-webkit-box')
+		expect(s).toContain('-webkit-box-orient:vertical')
+		expect(s).toContain('-webkit-line-clamp:2')
+		expect(s).toContain('overflow:hidden')
+		// clamp의 -webkit-box가 flex 세로 정렬을 대체한다(공존 불가 — clamp가 이긴다).
+		expect(s).not.toContain('display:flex')
+	})
+
+	it('레거시 TRUNCATE는 maxLines 없이 박스 높이·줄높이로 줄 수를 유도한다', () => {
+		const node = {
+			id: '1:1',
+			name: 't',
+			type: 'TEXT',
+			characters: '아주 긴 텍스트',
+			absoluteBoundingBox: { x: 0, y: 0, width: 100, height: 60 },
+			style: {
+				fontFamily: 'Inter',
+				fontSize: 16,
+				textAutoResize: 'TRUNCATE',
+				lineHeightUnit: 'PIXELS',
+				lineHeightPx: 20,
+			},
+		}
+		const s = rootStyle(convertFigmaNodeToHtml(node).html)
+		// floor(60 / 20) = 3줄
+		expect(s).toContain('-webkit-line-clamp:3')
+	})
+
+	it('말줄임 없는 고정 박스(NONE/생략) 텍스트는 박스에서 잘리고, HEIGHT/HUG는 잘리지 않는다', () => {
+		const node = (autoResize?: string) => ({
+			id: '1:1',
+			name: 't',
+			type: 'TEXT',
+			characters: 'hi',
+			absoluteBoundingBox: { x: 0, y: 0, width: 100, height: 20 },
+			style: { fontFamily: 'Inter', fontSize: 16, textAutoResize: autoResize },
+		})
+
+		const fixed = rootStyle(convertFigmaNodeToHtml(node('NONE')).html)
+		expect(fixed).toContain('overflow:hidden')
+		expect(fixed).not.toContain('-webkit-line-clamp')
+		// textAutoResize 생략 = Figma 기본값(auto-resize 없음) = 고정 박스.
+		expect(rootStyle(convertFigmaNodeToHtml(node(undefined)).html)).toContain('overflow:hidden')
+
+		expect(rootStyle(convertFigmaNodeToHtml(node('HEIGHT')).html)).not.toContain('overflow')
+		expect(rootStyle(convertFigmaNodeToHtml(node('WIDTH_AND_HEIGHT')).html)).not.toContain(
+			'overflow',
+		)
+	})
 })
 
 describe('convertFigmaNodeToHtml — 박스 속성', () => {

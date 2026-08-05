@@ -17,6 +17,10 @@ export type FigmaTextStyle = NonNullable<FigmaNode['style']> & {
 	textDecoration?: string
 	lineHeightUnit?: string
 	lineHeightPercentFontSize?: number
+	/** 말줄임 여부: 'DISABLED' | 'ENDING'. 레거시 textAutoResize 'TRUNCATE'가 ENDING과 같은 뜻. */
+	textTruncation?: string
+	/** textTruncation ENDING일 때 잘리기 전까지 허용하는 최대 줄 수. */
+	maxLines?: number
 }
 
 /** 소스 모델: FigmaNode에 변환이 소비하는 시각/레이아웃 필드를 확장한 형태. 트리 전체가 이 타입으로 흐른다. */
