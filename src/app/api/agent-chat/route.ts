@@ -49,6 +49,12 @@ export async function POST(req: Request) {
 		user,
 	})
 
+	// 세션 종료 저장 실패는 응답 흐름을 막지 않고 동일한 키로 로깅만 한다.
+	const endSession = (save: Promise<unknown>) =>
+		save.catch((error) => {
+			payload.logger.error({ err: error, requestId }, 'agent-chat.session-update.failed')
+		})
+
 	try {
 		// stream 시작 전에 동기로 검증해야 설정 오류를 HTTP 상태로 매핑할 수 있다.
 		assertAgentChatProviderConfigured()
@@ -78,36 +84,21 @@ export async function POST(req: Request) {
 						}
 					: undefined,
 			onError: () => {
-				void chatSession.fail('Agent response failed.').catch((error) => {
-					payload.logger.error(
-						{ err: error, requestId },
-						'agent-chat.session-update.failed',
-					)
-				})
+				void endSession(chatSession.fail('Agent response failed.'))
 				return 'Agent response failed.'
 			},
 			onEnd: async ({ isAborted, finishReason }) => {
-				const saveEnd =
+				await endSession(
 					isAborted || finishReason == null || finishReason === 'error'
 						? chatSession.fail('Agent response interrupted.')
-						: chatSession.finalize()
-				await saveEnd.catch((error) => {
-					payload.logger.error(
-						{ err: error, requestId },
-						'agent-chat.session-update.failed',
-					)
-				})
+						: chatSession.finalize(),
+				)
 			},
 		})
 	} catch (error) {
-		await chatSession
-			.fail(error instanceof Error ? error.message : 'Agent response failed.')
-			.catch((updateError) => {
-				payload.logger.error(
-					{ err: updateError, requestId },
-					'agent-chat.session-update.failed',
-				)
-			})
+		await endSession(
+			chatSession.fail(error instanceof Error ? error.message : 'Agent response failed.'),
+		)
 		payload.logger.error({ err: error, requestId }, 'agent-chat.request.failed')
 
 		if (error instanceof AgentConfigurationError) {
