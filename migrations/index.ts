@@ -27,6 +27,7 @@ import * as migration_20260804_082132_add_layout_grid_locks from './20260804_082
 import * as migration_20260804_083406_add_layout_grid_caption from './20260804_083406_add_layout_grid_caption';
 import * as migration_20260804_085424_add_layout_grid_widget_values from './20260804_085424_add_layout_grid_widget_values';
 import * as migration_20260805_031410_drop_agent_chat_triage from './20260805_031410_drop_agent_chat_triage';
+import * as migration_20260805_042818_add_check_scenario_aliases from './20260805_042818_add_check_scenario_aliases';
 
 export const migrations = [
   {
@@ -172,6 +173,11 @@ export const migrations = [
   {
     up: migration_20260805_031410_drop_agent_chat_triage.up,
     down: migration_20260805_031410_drop_agent_chat_triage.down,
-    name: '20260805_031410_drop_agent_chat_triage'
+    name: '20260805_031410_drop_agent_chat_triage',
+  },
+  {
+    up: migration_20260805_042818_add_check_scenario_aliases.up,
+    down: migration_20260805_042818_add_check_scenario_aliases.down,
+    name: '20260805_042818_add_check_scenario_aliases'
   },
 ];

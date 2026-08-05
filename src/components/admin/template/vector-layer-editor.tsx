@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { ApplicationImage, BrandColor, BrandLogo } from '@/payload-types'
+import type { TemplateVectorAssetCollection } from '@/services/template-asset-policy.service'
 import type { TemplateNodeConfig } from '@/types/template'
 
 type Asset = (BrandLogo | ApplicationImage) & {
-	collection: 'brand-logos' | 'application-images'
+	collection: TemplateVectorAssetCollection
 }
 
 const CONTROL_STYLE = {

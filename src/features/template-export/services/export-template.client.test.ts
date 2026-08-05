@@ -43,7 +43,7 @@ describe('template export registry', () => {
 
 	it('선택한 exporter에 실행을 위임한다', async () => {
 		await exportTemplate('png', context)
-		expect(exportHtmlToPng).toHaveBeenCalledWith(context.html, '', context.fileName)
+		expect(exportHtmlToPng).toHaveBeenCalledWith(context.html, context.fileName)
 
 		await exportTemplate('pdf', context)
 		expect(downloadTemplatePrint).toHaveBeenCalledWith({
