@@ -7,10 +7,8 @@ import { withSafeExportStage } from './render-template-export-stage.client'
  * canonical HTML을 안전한 export stage에서 PNG로 저장하는 client use case.
  * DOM 캡처와 브라우저 다운로드 I/O는 이 adapter가 소유한다.
  */
-export async function exportHtmlToPng(html: string, css: string, fileName: string): Promise<void> {
-	const dataUrl = await withSafeExportStage(html, css, (stage) =>
-		toPng(stage, { cacheBust: true }),
-	)
+export async function exportHtmlToPng(html: string, fileName: string): Promise<void> {
+	const dataUrl = await withSafeExportStage(html, (stage) => toPng(stage, { cacheBust: true }))
 	const link = document.createElement('a')
 	link.href = dataUrl
 	link.download = `${fileName}.png`
@@ -23,11 +21,10 @@ export async function exportHtmlToPng(html: string, css: string, fileName: strin
  */
 export async function renderHtmlToPngBlob(
 	html: string,
-	css: string,
 	width: number,
 	height: number,
 ): Promise<Blob> {
-	const blob = await withSafeExportStage(html, css, (stage) =>
+	const blob = await withSafeExportStage(html, (stage) =>
 		toBlob(stage, {
 			backgroundColor: '#fff',
 			cacheBust: true,

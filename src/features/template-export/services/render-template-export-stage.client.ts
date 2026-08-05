@@ -88,33 +88,20 @@ function cloneSafeExportNode(node: Node): Node | null {
 	return clone
 }
 
-function createSafeExportStage(
-	html: string,
-	css: string,
-): { holder: HTMLDivElement; stage: HTMLElement } {
-	if (
-		/[\\@]/.test(css) ||
-		/\/\*|\*\//.test(css) ||
-		/url\s*\(|(?:-webkit-)?image-set\s*\(/i.test(css)
-	) {
-		throw new Error('Template export contains unsafe stylesheet I/O.')
-	}
-
+function createSafeExportStage(html: string): { holder: HTMLDivElement; stage: HTMLElement } {
 	// template.content는 inert DOM이라 script/event/resource를 실행하지 않는다. 검증한 노드만 새로 만든다.
 	const parsed = document.createElement('template')
 	parsed.innerHTML = html
 	const holder = document.createElement('div')
 	holder.style.cssText = 'position:fixed;left:-99999px;top:0'
 	const shadow = holder.attachShadow({ mode: 'closed' })
-	const style = document.createElement('style')
-	style.textContent = css
 	const wrapper = document.createElement('div')
 	wrapper.dataset.exportStage = ''
 	for (const child of parsed.content.childNodes) {
 		const safeChild = cloneSafeExportNode(child)
 		if (safeChild) wrapper.appendChild(safeChild)
 	}
-	shadow.append(style, wrapper)
+	shadow.append(wrapper)
 
 	return {
 		holder,
@@ -128,10 +115,9 @@ function createSafeExportStage(
  */
 export async function withSafeExportStage<T>(
 	html: string,
-	css: string,
 	exportStage: (stage: HTMLElement) => Promise<T>,
 ): Promise<T> {
-	const { holder, stage } = createSafeExportStage(html, css)
+	const { holder, stage } = createSafeExportStage(html)
 	document.body.appendChild(holder)
 	try {
 		await waitForExportStageAssets(stage)

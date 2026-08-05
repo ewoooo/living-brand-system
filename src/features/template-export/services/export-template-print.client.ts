@@ -1,6 +1,6 @@
 'use client'
 
-import { revokeBlob } from '@/lib/object-url'
+import { downloadBlob } from '@/lib/object-url'
 import { MAX_PRINT_PNG_BYTES, type TemplatePrintFormat } from '../print-policy'
 
 /** 서버 인쇄 변환이 사용자 조치가 가능한 상태로 실패했음을 UI에 전달한다. */
@@ -25,7 +25,7 @@ export async function downloadTemplatePrint({
 }): Promise<void> {
 	if (png.size > MAX_PRINT_PNG_BYTES) {
 		throw new TemplatePrintDownloadError(
-			'렌더된 PNG가 20MB를 초과합니다. 더 작은 템플릿을 사용해 주세요.',
+			`렌더된 PNG가 ${MAX_PRINT_PNG_BYTES / 1_000_000}MB를 초과합니다. 더 작은 템플릿을 사용해 주세요.`,
 		)
 	}
 
@@ -53,13 +53,5 @@ export async function downloadTemplatePrint({
 		)
 	}
 
-	const url = URL.createObjectURL(await response.blob())
-	try {
-		const link = document.createElement('a')
-		link.href = url
-		link.download = `${fileName}.${format}`
-		link.click()
-	} finally {
-		revokeBlob(url)
-	}
+	downloadBlob(await response.blob(), `${fileName}.${format}`)
 }
