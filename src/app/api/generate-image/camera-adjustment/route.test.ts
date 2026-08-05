@@ -143,6 +143,7 @@ describe('POST /api/generate-image/camera-adjustment', () => {
 	})
 
 	it.each([
+		[namedError('ImageGenerationLimitError'), 429],
 		[namedError('ImageGenerationUnavailableError'), 503],
 		[namedError('ImageProfileNotFoundError'), 404],
 		[namedError('InvalidSeedImageError'), 400],

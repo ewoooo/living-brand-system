@@ -68,6 +68,7 @@ export async function POST(request: Request) {
 						aspectRatio: input.aspectRatio,
 						imageModelPreset: input.imageModelPreset,
 						imageSize: input.imageSize,
+						user,
 					})
 				: generateImages({
 						userInput,

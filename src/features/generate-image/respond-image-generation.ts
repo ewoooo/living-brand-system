@@ -5,6 +5,16 @@
 
 // 오류 이름 → HTTP 응답 표. 번들·모의 등 모듈 인스턴스가 갈려도 동작하도록 instanceof 대신 error.name으로 매핑한다.
 const IMAGE_GENERATION_ERROR_TABLE = {
+	ImageGenerationLimitError: {
+		status: 429,
+		message: '이미지 생성 요청이 많아요. 잠시 후 다시 시도해 주세요.',
+		// name 매핑이라 필드도 구조로 읽는다 — retryAfterSeconds가 없으면 창 길이(60초)로 안내한다.
+		headers: (error: Error) => ({
+			'Retry-After': String(
+				(error as { retryAfterSeconds?: number }).retryAfterSeconds ?? 60,
+			),
+		}),
+	},
 	ImageGenerationUnavailableError: {
 		status: 503,
 		message: 'Image generation is unavailable.',
@@ -30,7 +40,7 @@ export function imageGenerationErrorResponse(
 	if (!entry) return null
 	return Response.json(
 		{ message: messageOverrides?.[name] ?? entry.message },
-		{ status: entry.status },
+		{ status: entry.status, ...('headers' in entry ? { headers: entry.headers(error) } : {}) },
 	)
 }
 
