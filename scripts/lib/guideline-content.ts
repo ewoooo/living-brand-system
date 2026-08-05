@@ -94,18 +94,23 @@ export async function assertExported(
 
 	const stale: string[] = []
 	for (const slug of slugs) {
+		// 🔴 limit을 걸면 안 된다 — slug는 전역 유일하지 않아(부모만 다른 동명 문서가 있다) 한 건만 보면
+		//    다른 쪽의 미export 편집이 가드를 조용히 통과한다. 같은 slug의 모든 문서를 검사한다.
 		const { docs } = await payload.find({
 			collection: 'guideline-documents',
 			where: { slug: { equals: slug } },
-			limit: 1,
+			limit: 0,
 			depth: 0,
 			locale: 'ko',
 			draft: false,
 			overrideAccess: true,
 		})
-		const doc = docs[0]
-		if (!doc?.updatedAt) continue
-		if (new Date(doc.updatedAt) > exportedAt) stale.push(`${slug} (${doc.updatedAt})`)
+		for (const doc of docs) {
+			if (!doc?.updatedAt) continue
+			if (new Date(doc.updatedAt) > exportedAt) {
+				stale.push(`${slug}#${doc.id} (${doc.updatedAt})`)
+			}
+		}
 	}
 
 	if (stale.length === 0) return
