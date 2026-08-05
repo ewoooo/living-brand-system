@@ -59,6 +59,7 @@ admin 편집 → export(DB → JSON) → 커밋 → 다른 환경에 seed(JSON �
 - 콘텐츠를 **쓰는** 스크립트는 첫 줄에서 `assertExported()`(`scripts/lib/guideline-content.ts`)를 호출해야 한다. DB가 정본 JSON보다 최신이면(= export하지 않은 admin 편집이 있으면) 쓰기를 거부한다. 의도적으로 덮을 때만 `FORCE=true`.
 - export/seed는 **섹션별로 만들지 않는다.** 문서 전체를 다루는 `scripts/export-guideline-content.ts` / `scripts/seed-guideline-content.ts` 한 쌍에 태우고, 필요하면 slug를 인자로 좁힌다. 섹션 전용 스크립트를 새로 만드는 것이 이 사고의 원인이었다.
 - seed를 돌리기 전에 **사용자에게 확인**한다. admin에서 작업 중이면 편집이 날아간다.
+- 🔴 **다른 환경으로 승격할 때는 `assertExported()`를 믿지 말고 `pnpm content:status`를 먼저 본다.** 가드는 DB `updatedAt`을 정본 파일 mtime과 비교하므로 **같은 DB 안에서만** 유효하다. 로컬에서 export한 정본을 공유 DB에 seed할 때는 공유 쪽 편집이 더 오래돼 보여 가드를 그냥 통과한다. `scripts/diff-guideline-content.ts`(읽기 전용)가 문서별로 "정본에만 / DB에만 / 내용 다름 / 업로드 행 없는 에셋"을 뽑아준다.
 - 실수로 덮었으면 Payload 버전 이력으로 복구한다: `_guideline_docs_v`에서 해당 시각의 버전 id를 찾아 `payload.restoreVersion({ collection, id })`.
 
 ### Local Machine Database Rules
