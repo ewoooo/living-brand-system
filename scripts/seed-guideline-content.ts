@@ -1,8 +1,13 @@
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import { type AnyData, assertExported, makeFromPortable } from './lib/guideline-content'
+import {
+	type AnyData,
+	assertExported,
+	collectFileRefs,
+	makeFromPortable,
+} from './lib/guideline-content'
 
 // JSON 정본의 가이드라인 문서·블록을 대상 DB에 적용한다(코드 → DB, idempotent).
 //   pnpm payload run scripts/seed-guideline-content.ts            # 정본 전체
@@ -10,7 +15,9 @@ import { type AnyData, assertExported, makeFromPortable } from './lib/guideline-
 //
 // 🔴 쓰기 전에 assertExported가 DB와 정본의 최신성을 비교한다. export하지 않은 admin 편집이
 //    있으면 멈춘다. 의도적으로 덮어쓸 때만 FORCE=true.
-// 문서 자체(제목·부모·순서)가 없으면 만들지 않고 건너뛴다 — 구조는 별도 시드가 소유한다.
+// 🔴 가드의 mtime 비교는 같은 DB 안에서만 유효하다 — 다른 환경으로 승격할 때는 먼저
+//    diff-guideline-content.ts로 격차를 확인할 것(대상 DB가 정본보다 최신인데도 통과할 수 있다).
+// 문서가 없으면 만든다 — 정본만으로 구조(제목·부모·순서)까지 재현되어야 한다.
 
 const CONTENT_PATH = path.join(process.cwd(), 'scripts/data/guideline-content.json')
 const only = process.argv.slice(2).filter((a) => !a.startsWith('-'))
@@ -40,9 +47,45 @@ await assertExported(
 	targets.map((doc) => doc.slug),
 )
 
+// 정본이 참조하는 에셋 중 리포에 원본이 있는 것을 filename 기준으로 upsert한다(옛 seed-ci-section.ts에서 이관).
+// S3 버킷은 환경이 공유하지만 업로드 **행**은 환경마다 없으므로, 행이 없으면 문서 seed가 그 참조에서 멈춘다.
+// 🔴 리포에 없는 에셋(essenherb 계열 143종)은 여기서 못 만든다 — 그 격차는 diff-guideline-content.ts가 드러낸다.
+const ASSET_SOURCES = [
+	['scripts/assets/ci', 'brand-logos', '.svg', 'image/svg+xml'],
+	['scripts/assets/do-dont', 'application-images', '.webp', 'image/webp'],
+] as const
+
+const referenced = collectFileRefs(targets)
+
+for (const [dir, collection, ext, mimetype] of ASSET_SOURCES) {
+	const absolute = path.join(process.cwd(), dir)
+	const files = await readdir(absolute).catch(() => [])
+	let created = 0
+	for (const file of files.filter((f) => f.endsWith(ext) && referenced.has(f))) {
+		const { totalDocs } = await payload.find({
+			collection,
+			where: { filename: { equals: file } },
+			limit: 0,
+			depth: 0,
+			overrideAccess: true,
+		})
+		if (totalDocs > 0) continue
+		const buffer = await readFile(path.join(absolute, file))
+		const name = file.replace(ext, '')
+		await payload.create({
+			collection,
+			data: { name, alt: name, _status: 'published' },
+			file: { data: buffer, mimetype, name: file, size: buffer.byteLength },
+			overrideAccess: true,
+		})
+		created += 1
+	}
+	if (created > 0) console.log(`  에셋 업로드 ${dir}: ${created}건`)
+}
+
 // 🔴 slug는 전역 유일하지 않다 — 정본에 typography·illustration·photography가 부모만 다르게 각각 2건씩 있다.
 //    slug만으로 찾으면 두 문서가 하나로 접혀 나중 항목이 앞 항목의 부모·순서·블록을 덮는다.
-//    유일 키는 (slug, parent)다. seed-ci-section.ts:108-111도 같은 스코프를 쓴다.
+//    유일 키는 (slug, parent)다.
 const findDoc = async (slug: string, parentId: number | string | null) => {
 	const { docs } = await payload.find({
 		collection: 'guideline-documents',
@@ -94,7 +137,10 @@ for (const doc of targets) {
 	const data: AnyData = {
 		title: doc.title,
 		slug: doc.slug,
+		// 🔴 안 넘기면 slug 자동생성 체크가 켜진 문서에서 slug가 slugify(title)로 덮인다(라우트가 깨진다).
+		generateSlug: false,
 		displayOrder: doc.order ?? 0,
+		rules: await fromPortable(doc.rules ?? []),
 		blocks: await fromPortable(doc.blocks),
 		_status: 'published',
 	}
