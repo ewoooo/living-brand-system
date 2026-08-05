@@ -1,4 +1,5 @@
 import { toCheckResult } from '@/features/asset-check/checkers/check-result.adapter'
+import { planChecks } from '@/features/asset-check/domain/check-plan'
 import {
 	type CheckSession,
 	CheckSessionInputMismatchError,
@@ -178,24 +179,26 @@ export async function completeCheckSessionObservations(
 	const unavailableReferenceCheckKeys = new Set(
 		findUnavailableAiReferenceCheckKeys(checks, referenceFilesByKey),
 	)
+	// 실행 방식 판단은 planChecks 한 곳이 소유한다. 관측은 MCP 클라이언트가 제공하므로
+	// 서버 model이 없는 heuristic(unrunnable plan)도 여기서는 evaluator로 그대로 판정한다.
 	const results = Object.fromEntries(
-		checks.map((check) => [
-			check.key,
+		planChecks(checks).map((plan) => [
+			plan.check.key,
 			toCheckResult(
-				unavailableReferenceCheckKeys.has(check.key)
+				unavailableReferenceCheckKeys.has(plan.check.key)
 					? {
 							status: 'needs_review',
 							fulfillment: null,
 							detail: '레퍼런스 이미지 불러오기 실패',
 							reasonCode: 'reference_asset_unavailable',
 						}
-					: check.executor === 'manual'
-						? evaluateAdvisory(input.advices?.[check.key])
+					: plan.kind === 'ai-advisory' || plan.kind === 'manual-review'
+						? evaluateAdvisory(input.advices?.[plan.check.key])
 						: evaluateHeuristic(
-								check.heuristicCriteria ?? [],
-								input.observations?.[check.key],
+								plan.check.heuristicCriteria ?? [],
+								input.observations?.[plan.check.key],
 							),
-				check,
+				plan.check,
 				{ key: 'mcp-client', type: 'ai' },
 			),
 		]),
