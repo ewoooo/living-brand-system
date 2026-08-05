@@ -20,6 +20,7 @@ import {
 	type FigmaRasterDiagnostic,
 	planFigmaAssets,
 } from '@/features/template-import/utils/normalize-figma-node'
+import { FigmaImportError } from '@/lib/errors'
 import type { User } from '@/payload-types'
 
 export type { FigmaRasterDiagnostic } from '@/features/template-import/utils/normalize-figma-node'
@@ -111,8 +112,9 @@ async function collectDownloadJobs(
 		for (const request of formatRequests) {
 			const url = urls[request.nodeId]
 			if (!url) {
-				throw new Error(
+				throw new FigmaImportError(
 					`Figma ${format.toUpperCase()} render failed for node "${request.nodeId}".`,
+					`Figma가 일부 레이어를 ${format.toUpperCase()}로 렌더링하지 못했습니다. 원본 레이어를 확인하세요.`,
 				)
 			}
 			jobs.push({
@@ -130,8 +132,9 @@ async function collectDownloadJobs(
 		for (const fill of plan.imageFills) {
 			const url = fillUrls[fill.imageRef]
 			if (!url) {
-				throw new Error(
+				throw new FigmaImportError(
 					`Figma image fill "${fill.imageRef}" not found in file "${fileKey}".`,
+					'Figma 이미지 채우기를 찾을 수 없습니다. 원본 레이어를 확인하세요.',
 				)
 			}
 			jobs.push({ key: fill.imageRef, target: 'fill', name: fill.name, url })
@@ -152,24 +155,37 @@ async function storeDownloadedAsset(
 
 	if (job.expectedMimeType) {
 		if (normalizedMimeType !== job.expectedMimeType) {
-			throw new Error(
+			throw new FigmaImportError(
 				`Figma ${job.expectedMimeType === 'image/svg+xml' ? 'SVG' : 'PNG'} download returned "${mimeType}" for node "${job.key}".`,
+				'Figma 렌더 결과의 이미지 형식이 올바르지 않습니다. 잠시 후 다시 가져오세요.',
 			)
 		}
 	} else if (!normalizedMimeType.startsWith('image/')) {
-		throw new Error(`Figma image fill download returned "${mimeType}" for "${job.key}".`)
+		throw new FigmaImportError(
+			`Figma image fill download returned "${mimeType}" for "${job.key}".`,
+			'Figma 이미지 채우기의 파일 형식이 올바르지 않습니다. 원본 레이어를 확인하세요.',
+		)
 	}
 
 	const extension =
 		normalizedMimeType === 'image/svg+xml' ? 'svg' : (normalizedMimeType.split('/')[1] ?? 'png')
 	const checksum = createHash('sha256').update(data).digest('hex')
 
-	return storeDraftImportedApplicationImage(payload, user, {
-		data,
-		filename: `figma-${checksum.slice(0, 24)}.${extension}`,
-		mimeType: normalizedMimeType,
-		name: job.name,
-	})
+	try {
+		return await storeDraftImportedApplicationImage(payload, user, {
+			data,
+			filename: `figma-${checksum.slice(0, 24)}.${extension}`,
+			mimeType: normalizedMimeType,
+			name: job.name,
+		})
+	} catch (cause) {
+		throw new FigmaImportError(
+			'Failed to store imported Figma asset.',
+			'Figma에서 가져온 이미지를 저장하지 못했습니다. 서버 로그를 확인하세요.',
+			500,
+			{ cause },
+		)
+	}
 }
 
 /**
