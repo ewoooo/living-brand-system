@@ -24,5 +24,6 @@ export async function findPublishedCheckScenarios(user?: User): Promise<CheckSce
 		checkKeys: Array.isArray(scenario.checkKeys)
 			? scenario.checkKeys.filter((key): key is string => typeof key === 'string')
 			: [],
+		aliases: scenario.aliases ?? [],
 	}))
 }

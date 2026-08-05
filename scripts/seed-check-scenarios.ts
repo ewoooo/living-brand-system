@@ -25,6 +25,7 @@ const SCENARIOS = [
 	{
 		key: 'sns-feed',
 		title: 'SNS 콘텐츠 검수',
+		aliases: ['sns', 'social'],
 		description:
 			'피드·릴스 콘텐츠용 — 규격(3:4/9:16), 콘텐츠 존, 텍스트 가독성, 로고 배치, 브랜드 자산 활용에 카피 조언까지 포함합니다.',
 		checkKeys: [
@@ -42,6 +43,7 @@ const SCENARIOS = [
 	{
 		key: 'stationery-print',
 		title: '인쇄물 검수',
+		aliases: ['stationery', 'stationary', '명함', 'business card', 'name card'],
 		description:
 			'명함·리플렛·정보 카드용 — 규격, 별색 1도 인쇄 사양, 필수 기재 항목, 국·영문 타이포그래피를 검수합니다.',
 		checkKeys: [
@@ -111,6 +113,7 @@ for (const scenario of SCENARIOS) {
 		title: scenario.title,
 		description: scenario.description,
 		checkKeys: scenario.checkKeys,
+		aliases: scenario.aliases ?? [],
 		hasBeenPublished: true,
 		_status: 'published' as const,
 	}
