@@ -1,5 +1,7 @@
 'use client'
 
+import { AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS } from '@/services/template-asset-policy.service'
+
 const EXPORT_TAGS = new Set(['div', 'img', 'p'])
 const EXPORT_DATA_ATTRIBUTES = new Set([
 	'data-asset-collection',
@@ -24,7 +26,8 @@ function isSafeExportUrl(value: string): boolean {
 	const url = new URL(value, window.location.origin)
 	if (url.protocol === 'blob:') return url.origin === window.location.origin
 	if (url.origin !== window.location.origin || url.search || url.hash) return false
-	return ['brand-logos', 'application-images'].some((collection) =>
+	// 발행 템플릿 자산 계약은 template-asset-policy.service가 소유한다.
+	return AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS.some((collection) =>
 		url.pathname.startsWith(`/api/${collection}/file/`),
 	)
 }
