@@ -46,7 +46,24 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 					carrier.setAttribute('data-asset-collection', 'generated-images')
 					carrier.setAttribute('data-asset-id', String(config.generatedImageId))
 				}
+				const edit = config.imageTransform
+				if (
+					edit &&
+					!(edit.x === 0 && edit.y === 0 && edit.scale === 1 && edit.rotate === 0)
+				) {
+					// 합성 규칙: 편집 transform을 import가 만든 base transform 앞에 붙인다(prepend).
+					// 맨 왼쪽 CSS transform이 부모(프레임) 좌표계에서 적용되므로 pan이 프레임 안에서
+					// 이미지를 옮기는 느낌이 되고, Figma 소유의 base transform(rotate 등)은 보존된다.
+					// transform-origin은 기본값(center) 유지. identity(0,0,1,0)면 아무것도 쓰지 않는다.
+					const editTransform = `translate(${edit.x}px, ${edit.y}px) scale(${edit.scale}) rotate(${edit.rotate}deg)`
+					const baseTransform = carrier.style.transform
+					carrier.style.transform = baseTransform
+						? `${editTransform} ${baseTransform}`
+						: editTransform
+				}
 			} else {
+				// ponytail: 캐리어 없는 레거시 프레임 배경 경로에서는 imageTransform을 무시한다 —
+				// background-image는 회전할 수 없으므로 이 변형은 설계상 캐리어 전용이다.
 				el.style.backgroundImage = `url("${config.backgroundImage}")`
 				el.style.backgroundSize = 'cover'
 				el.style.backgroundPosition = 'center'

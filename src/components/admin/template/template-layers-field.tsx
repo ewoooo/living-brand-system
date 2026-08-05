@@ -36,6 +36,8 @@ interface LayerRow {
 	figmaType: string
 	isText: boolean
 	isVector: boolean
+	/** 직계 자식에 data-image-carrier가 있는 프레임 — 이미지 자유 편집(transform) 대상. */
+	hasImageCarrier: boolean
 	text: string
 }
 
@@ -108,6 +110,9 @@ function parseLayers(html: string): LayerRow[] {
 			figmaType,
 			isText,
 			isVector: VECTOR_TYPES.has(figmaType),
+			hasImageCarrier: Array.from(el.children).some((child) =>
+				child.hasAttribute('data-image-carrier'),
+			),
 			text: isText ? (el.textContent ?? '') : '',
 		})
 		for (const child of Array.from(el.children)) walk(child, depth + 1)
@@ -368,6 +373,106 @@ function SlotSpecEditor({
 					placeholder="예: 영문 이름만, 성-이름 순"
 				/>
 			</SpecField>
+		</div>
+	)
+}
+
+type ImageTransform = NonNullable<TemplateNodeConfig['imageTransform']>
+
+const IDENTITY_TRANSFORM: ImageTransform = { x: 0, y: 0, scale: 1, rotate: 0 }
+
+const isIdentityTransform = (t: ImageTransform) =>
+	t.x === 0 && t.y === 0 && t.scale === 1 && t.rotate === 0
+
+/**
+ * 프레임에 할당한 이미지의 자유 편집(이동·확대·회전) 폼. 값은 override로만 저장되고
+ * compose가 캐리어의 CSS transform으로 적용한다 — baseHtml은 건드리지 않는다.
+ * 슬라이더는 드래그 중 draft만 갱신하고 놓을 때 commit해 재합성 thrash를 막는다.
+ */
+function ImageTransformEditor({
+	value,
+	onChange,
+}: {
+	value?: ImageTransform
+	onChange: (next?: ImageTransform) => void
+}) {
+	const [draft, setDraft] = useState<ImageTransform>(value ?? IDENTITY_TRANSFORM)
+	const commit = (next: ImageTransform) => onChange(isIdentityTransform(next) ? undefined : next)
+
+	const fields: {
+		key: keyof ImageTransform
+		label: string
+		min: number
+		max: number
+		step: number
+	}[] = [
+		{ key: 'x', label: '이동 X (px)', min: -1000, max: 1000, step: 1 },
+		{ key: 'y', label: '이동 Y (px)', min: -1000, max: 1000, step: 1 },
+		{ key: 'scale', label: '확대', min: 0.2, max: 5, step: 0.05 },
+		{ key: 'rotate', label: '회전 (deg)', min: -180, max: 180, step: 1 },
+	]
+
+	return (
+		<div
+			style={{
+				display: 'grid',
+				gridTemplateColumns: 'repeat(2, 1fr)',
+				gap: 8,
+				maxWidth: 560,
+				padding: 10,
+				borderRadius: 4,
+				border: '1px solid var(--theme-elevation-150)',
+			}}
+		>
+			{fields.map(({ key, label, min, max, step }) => (
+				<SpecField key={key} id={`image-transform-${key}`} label={label}>
+					<div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+						<input
+							type="range"
+							min={min}
+							max={max}
+							step={step}
+							value={draft[key]}
+							aria-label={label}
+							style={{ flex: 1, minWidth: 0 }}
+							onChange={(event) =>
+								setDraft({ ...draft, [key]: Number(event.target.value) })
+							}
+							onPointerUp={() => commit(draft)}
+							onBlur={() => commit(draft)} // 키보드(화살표) 조작 커버
+						/>
+						<Input
+							type="number"
+							id={`image-transform-${key}`}
+							min={min}
+							max={max}
+							step={step}
+							value={draft[key]}
+							style={{ width: 80, flexShrink: 0 }}
+							onChange={(event) => {
+								const parsed = Number(event.target.value)
+								if (!Number.isFinite(parsed)) return
+								const next = { ...draft, [key]: parsed }
+								setDraft(next)
+								commit(next)
+							}}
+						/>
+					</div>
+				</SpecField>
+			))}
+			<div style={{ gridColumn: '1 / -1' }}>
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					onClick={() => {
+						setDraft(IDENTITY_TRANSFORM)
+						onChange(undefined)
+					}}
+				>
+					초기화
+				</Button>
+			</div>
 		</div>
 	)
 }
@@ -727,6 +832,26 @@ export default function TemplateLayersField() {
 							)}
 						/>
 					</div>
+					{/* 캐리어가 있어야 transform을 받을 수 있다 — 레거시 프레임 배경 경로는 compose가 무시. */}
+					{nodeConfigs[selected.id]?.backgroundImage && selected.hasImageCarrier && (
+						<div style={{ marginTop: 12 }}>
+							<span
+								className="text-sm"
+								style={{
+									display: 'block',
+									marginBottom: 6,
+									color: 'var(--theme-elevation-600)',
+								}}
+							>
+								이미지 편집 — 이동·확대·회전
+							</span>
+							<ImageTransformEditor
+								key={selected.id}
+								value={nodeConfigs[selected.id]?.imageTransform}
+								onChange={(imageTransform) => commitNodeConfig({ imageTransform })}
+							/>
+						</div>
+					)}
 				</div>
 			)}
 
