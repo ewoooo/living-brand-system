@@ -34,6 +34,8 @@ const requestSchema = z.union([
 		.object({
 			...baseFields,
 			profileId: z.number().int().positive(),
+			// 선택한 프레임 박스에서 유도한 비율 오버라이드 — 없으면 프로파일 비율로 생성한다.
+			aspectRatio: z.enum(IMAGE_ASPECT_RATIOS).optional(),
 		})
 		.strict(),
 ])
@@ -74,6 +76,7 @@ export async function POST(request: Request) {
 						userInput,
 						count,
 						profileId: input.profileId,
+						aspectRatio: input.aspectRatio,
 						user,
 					}),
 		logger: payload.logger,

@@ -236,6 +236,47 @@ describe('generateImages', () => {
 		})
 	})
 
+	it('슬롯 비율 오버라이드는 프로파일 비율 대신 모델 호출에 반영된다', async () => {
+		mocks.env.OPENAI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '2:3',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.normalizeImageProfilePrompt.mockResolvedValue({
+			finalPrompt: { subject: '파란 세럼병' },
+			normalizedInput: {},
+		})
+		mocks.generateBrandImages.mockResolvedValue({
+			images: ['data:image/png;base64,profile'],
+			model: 'gpt-image-2',
+			provider: 'openai',
+		})
+
+		const result = await generateImages({
+			userInput: '파란 세럼병',
+			profileId: 5,
+			user: { id: 1 },
+			count: 1,
+			aspectRatio: '16:9',
+		})
+
+		expect(mocks.generateBrandImages).toHaveBeenCalledWith(
+			expect.objectContaining({ aspectRatio: '16:9', imageSize: '1K' }),
+		)
+		expect(result.aspectRatio).toBe('16:9')
+		// 저장 메타데이터도 프로파일 비율(2:3)이 아니라 실제 생성 비율을 기록해야 한다.
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
+			expect.objectContaining({
+				profile: expect.objectContaining({ aspectRatio: '16:9' }),
+			}),
+		)
+	})
+
 	it('Nano Banana 프로파일은 Google 키와 16:9 계약을 사용한다', async () => {
 		mocks.env.GEMINI_API_KEY = 'key'
 		mocks.findPublishedImageProfile.mockResolvedValue({
@@ -549,6 +590,21 @@ describe('image generation plan resolvers', () => {
 			profileName: 'Technical Illustration',
 			seedImage,
 		})
+	})
+
+	it('슬롯 비율 오버라이드가 있으면 프로파일 비율 대신 플랜에 쓴다', () => {
+		expect(
+			planImageGenerationFromProfile(
+				{
+					aspectRatio: '2:3',
+					id: 5,
+					imageModelPreset: 'openai-gpt-image-2',
+					imageSize: '1K',
+					name: 'Technical Illustration',
+				},
+				{ prompt: '{"subject":"굴착기"}', count: 1, aspectRatio: '16:9' },
+			),
+		).toMatchObject({ aspectRatio: '16:9', imageSize: '1K' })
 	})
 
 	it('명시 설정은 프롬프트를 trim해 프로파일 없는 플랜으로 해석한다', () => {

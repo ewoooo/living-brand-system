@@ -12,6 +12,9 @@ export interface TemplateImageSlot {
 	name: string
 	/** 제작자가 고정한 이미지 프로파일 — 없으면 유저가 스튜디오에서 선택한다. */
 	profileId?: number
+	/** 슬롯 요소 자신의 inline width/height(px) — 캐리어는 정규식으로 서브트리 판별이 불안정해 clipsContent 프레임의 가시 박스인 자신을 쓴다. */
+	boxWidth?: number
+	boxHeight?: number
 }
 
 // 서버(agent tool)와 브라우저 양쪽에서 돌도록 DOMParser 대신 정규식으로 읽는다.
@@ -24,6 +27,14 @@ const OPEN_TAG_PATTERN = /<([a-z]+)\b([^>]*)>/g
 
 function readAttr(attrs: string, name: string): string | undefined {
 	return new RegExp(`${name}="([^"]*)"`).exec(attrs)?.[1]
+}
+
+// emit이 굳힌 inline style에서 px 치수만 읽는다 — min-width 등 접두 속성은 경계 문자로 걸러진다.
+function readPxDimension(style: string | undefined, property: string): number | undefined {
+	if (!style) return undefined
+	const raw = new RegExp(`(?:^|[;\\s"])${property}:\\s*(\\d*\\.?\\d+)px`).exec(style)?.[1]
+	const parsed = raw ? Number(raw) : Number.NaN
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
 }
 
 function unescapeHtml(text: string): string {
@@ -85,10 +96,13 @@ export function collectTemplateImageSlots(
 		const imageInput = nodeId ? nodeConfigs[nodeId]?.imageInput : undefined
 		if (!nodeId || !imageInput) continue
 
+		const style = readAttr(attrs, 'style')
 		slots.push({
 			nodeId,
 			name: unescapeHtml(readAttr(attrs, 'data-name') || nodeId),
 			profileId: imageInput.profileId,
+			boxWidth: readPxDimension(style, 'width'),
+			boxHeight: readPxDimension(style, 'height'),
 		})
 	}
 
