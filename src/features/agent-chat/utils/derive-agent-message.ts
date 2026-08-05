@@ -1,5 +1,5 @@
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
-import { readSkillName } from '@/features/agent-chat/domain/agent-skill-tool-policy'
+import { agentToolTable, readSkillName } from '@/features/agent-chat/domain/agent-skill-tool-policy'
 
 export function getAgentMessageText(message: AgentChatMessage) {
 	return message.parts.reduce(
@@ -135,58 +135,6 @@ export function getAgentSkillMarker(message: AgentChatMessage): AgentToolMarker 
 	return null
 }
 
-const sumArrayLengths = (outputs: unknown[]) =>
-	outputs.reduce<number>((sum, output) => sum + (Array.isArray(output) ? output.length : 0), 0)
-const countPresent = (outputs: unknown[]) => outputs.filter(Boolean).length
-const markerText = (count: number, text: (count: number) => string) =>
-	count > 0 ? text(count) : null
-
-/** 우선순위 순서(위가 먼저) — 처음으로 결과 문구를 만든 tool의 문구를 쓴다. */
-const toolMarkerTexts: Record<string, (outputs: unknown[]) => string | null> = {
-	'tool-listGuidelineDocuments': (outputs) =>
-		markerText(
-			sumArrayLengths(outputs),
-			(count) => `가이드라인 문서 ${count}개를 확인했습니다`,
-		),
-	'tool-readGuidelineDocument': (outputs) =>
-		markerText(countPresent(outputs), (count) => `가이드라인 문서 ${count}개를 읽었습니다`),
-	'tool-searchGuidelines': (outputs) =>
-		markerText(sumArrayLengths(outputs), (count) => `가이드라인 결과 ${count}개를 찾았습니다`),
-	'tool-getCheckCatalog': (outputs) =>
-		markerText(sumArrayLengths(outputs), (count) => `Check 카탈로그 ${count}개를 확인했습니다`),
-	'tool-listCheckScenarios': (outputs) =>
-		markerText(sumArrayLengths(outputs), (count) => `검수 시나리오 ${count}개를 확인했습니다`),
-	'tool-prepareTemplateImage': (outputs) =>
-		markerText(countPresent(outputs), (count) => `템플릿 이미지 ${count}개를 준비했습니다`),
-	'tool-runCheck': (outputs) =>
-		markerText(
-			outputs.filter(
-				(output) =>
-					typeof output === 'object' && output !== null && 'checkSessionId' in output,
-			).length,
-			(count) => `이미지 검수 ${count}건을 완료했습니다`,
-		),
-	'tool-generateImage': (outputs) =>
-		markerText(
-			outputs.reduce<number>(
-				(sum, output) =>
-					sum +
-					(typeof output === 'object' &&
-					output !== null &&
-					'images' in output &&
-					Array.isArray(output.images)
-						? output.images.length
-						: 0),
-				0,
-			),
-			(count) => `이미지 ${count}개를 생성했습니다`,
-		),
-	'tool-listImageProfiles': (outputs) =>
-		markerText(sumArrayLengths(outputs), (count) => `이미지 프로필 ${count}개를 확인했습니다`),
-	'tool-findTemplatesForRequest': (outputs) =>
-		markerText(sumArrayLengths(outputs), (count) => `템플릿 ${count}개를 확인했습니다`),
-}
-
 export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker | null {
 	const seenTypes = new Set<string>()
 	const outputsByType = new Map<string, unknown[]>()
@@ -213,34 +161,27 @@ export function getAgentToolMarker(message: AgentChatMessage): AgentToolMarker |
 		return null
 	}
 
-	for (const [type, toText] of Object.entries(toolMarkerTexts)) {
-		const text = toText(outputsByType.get(type) ?? [])
+	// 결과 문구 — 테이블 행 순서가 우선순위다(위가 먼저).
+	for (const [name, row] of Object.entries(agentToolTable)) {
+		const text = row.resultText(outputsByType.get(`tool-${name}`) ?? [])
 		if (text) {
 			return { isPending, text }
 		}
 	}
 
-	// 결과 문구가 없을 때의 진행/완료 fallback — 검수 > 이미지 생성 > 템플릿 검색 > 가이드라인 순.
-	if (seenTypes.has('tool-runCheck')) {
-		return {
-			isPending,
-			text: isPending ? '이미지를 검수하고 있습니다' : '이미지 검수를 완료했습니다',
+	// 결과 문구가 없을 때의 진행/완료 fallback — 테이블 행의 fallback 문구를 같은 순서로 쓴다.
+	for (const [name, row] of Object.entries(agentToolTable)) {
+		const fallback = 'fallback' in row ? row.fallback : undefined
+		if (!fallback) {
+			continue
 		}
-	}
-	if (seenTypes.has('tool-generateImage')) {
-		return {
-			isPending,
-			text: isPending ? '이미지를 생성하고 있습니다' : '이미지 생성을 완료했습니다',
+		const triggered =
+			fallback.when === 'seen'
+				? seenTypes.has(`tool-${name}`)
+				: (outputsByType.get(`tool-${name}`) ?? []).some(Array.isArray)
+		if (triggered) {
+			return { isPending, text: isPending ? fallback.pending : fallback.done }
 		}
-	}
-	if ((outputsByType.get('tool-findTemplatesForRequest') ?? []).some(Array.isArray)) {
-		return {
-			isPending,
-			text: isPending ? '템플릿을 찾고 있습니다' : '템플릿 검색을 완료했습니다',
-		}
-	}
-	if ((outputsByType.get('tool-searchGuidelines') ?? []).some(Array.isArray)) {
-		return { isPending, text: '가이드라인 결과 0개를 찾았습니다' }
 	}
 	return {
 		isPending,

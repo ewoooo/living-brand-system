@@ -34,8 +34,6 @@ describe('createAgentChatSessionUsageCollector', () => {
 						name: 'guideline-qa',
 						description: 'Guideline answer skill',
 						instructions: 'Answer from published guidelines.',
-						model: 'sonnet-5',
-						toolScope: 'action',
 					},
 				},
 			],
