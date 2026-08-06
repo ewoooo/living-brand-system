@@ -17,6 +17,11 @@ export interface TemplateNodeConfig {
 	generatedImageId?: number
 	/** 프레임에 할당한 이미지의 자유 편집 — 이동(px)·확대(배율)·회전(deg). 캐리어에만 적용된다. */
 	imageTransform?: { x: number; y: number; scale: number; rotate: number }
+	/**
+	 * 생성 이미지(단색 라인 아트)의 브랜드 컬러 치환 — 이미지가 luminance 마스크가 되어
+	 * 밝은 영역=background, 어두운 선=line으로 칠해진다. backgroundImage 없이는 compose가 무시한다.
+	 */
+	imageColorize?: { line: string; background: string }
 	input?: TemplateSlotSpec
 	/** 존재 자체가 스튜디오 개방 선언 — 유저가 이 프레임의 이미지를 생성해 채울 수 있다. profileId는 사용할 프로파일 고정(없으면 유저가 선택). */
 	imageInput?: { profileId?: number }

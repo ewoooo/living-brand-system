@@ -26,6 +26,15 @@ const templateImageTransformSchema = z
 	})
 	.strict()
 
+// 컬러 치환 값의 신뢰 경계 — CSS로 그대로 나가는 값이므로 hex 리터럴만 허용한다.
+const templateHexColorSchema = z.string().regex(/^#[0-9a-fA-F]{3,8}$/)
+const templateImageColorizeSchema = z
+	.object({
+		line: templateHexColorSchema,
+		background: templateHexColorSchema,
+	})
+	.strict()
+
 const templateNodeConfigMapSchema = z.record(
 	z.string().min(1),
 	z
@@ -34,6 +43,7 @@ const templateNodeConfigMapSchema = z.record(
 			backgroundImage: z.string().optional(),
 			generatedImageId: z.number().int().positive().optional(),
 			imageTransform: templateImageTransformSchema.optional(),
+			imageColorize: templateImageColorizeSchema.optional(),
 			input: templateSlotSpecSchema.optional(),
 			imageInput: z
 				.object({ profileId: z.number().int().positive().optional() })

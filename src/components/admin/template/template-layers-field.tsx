@@ -24,7 +24,11 @@ import {
 	requestPublishedImageProfiles,
 } from '@/features/generate-image/services/generate-image.client'
 import { generateOneText } from '@/features/generate-text/services/generate-text.client'
-import { composeTemplateHtml } from '@/services/compose-template-html.client'
+import type { BrandColor } from '@/payload-types'
+import {
+	composeTemplateHtml,
+	isImageColorizeOverlayId,
+} from '@/services/compose-template-html.client'
 import type { TemplateNodeConfig, TemplateNodeConfigMap, TemplateSlotSpec } from '@/types/template'
 import {
 	IDENTITY_TRANSFORM,
@@ -134,6 +138,9 @@ function parseLayers(html: string): LayerRow[] {
 	const doc = new DOMParser().parseFromString(html, 'text/html')
 
 	const walk = (el: Element, depth: number) => {
+		// compose가 만든 컬러 치환 오버레이는 편집 대상이 아니다 — 선택해 편집하면 base에 없는
+		// 노드로 override가 생겨 발행이 막히므로 레이어 패널에서 숨긴다.
+		if (isImageColorizeOverlayId(el.getAttribute('data-node-id') ?? '')) return
 		const tag = el.tagName.toLowerCase()
 		const figmaType = el.getAttribute('data-figma-type') || (tag === 'p' ? 'TEXT' : 'FRAME')
 		// 래스터화된 TEXT는 figmaType이 TEXT여도 img로 남는다 — 실제 <p>만 텍스트 편집 대상.
@@ -577,6 +584,117 @@ function ImageTransformEditor({
 					초기화
 				</Button>
 			</div>
+		</div>
+	)
+}
+
+/**
+ * 컬러 치환 폼 — 생성 이미지(단색 라인 아트)의 선·배경을 브랜드 컬러로 다시 칠한다.
+ * 값은 override로만 저장되고 compose가 luminance 마스크 2겹으로 적용한다.
+ * 스와치 소스·UI는 VectorLayerEditor의 브랜드 컬러와 동일(published brand-colors).
+ */
+function ImageColorizeEditor({
+	value,
+	onChange,
+}: {
+	value?: { line: string; background: string }
+	onChange: (next?: { line: string; background: string }) => void
+}) {
+	const [colors, setColors] = useState<BrandColor[]>([])
+	const [loadError, setLoadError] = useState(false)
+	// 두 값이 모두 골라져야 유효한 override — 한쪽만 고른 상태는 draft로만 들고 있는다.
+	const [draft, setDraft] = useState<{ line?: string; background?: string }>(value ?? {})
+
+	useEffect(() => setDraft(value ?? {}), [value])
+
+	useEffect(() => {
+		const controller = new AbortController()
+		const query = 'depth=0&limit=100&where[_status][equals]=published&sort=name'
+		void fetch(`/api/brand-colors?${query}`, { signal: controller.signal })
+			.then(async (response) => {
+				if (!response.ok) throw new Error('Failed to load brand colors')
+				setColors(((await response.json()) as { docs: BrandColor[] }).docs)
+			})
+			.catch((error: unknown) => {
+				if ((error as { name?: string }).name !== 'AbortError') setLoadError(true)
+			})
+		return () => controller.abort()
+	}, [])
+
+	const pick = (field: 'line' | 'background', hex: string) => {
+		const next = { ...draft, [field]: hex }
+		setDraft(next)
+		if (next.line && next.background) {
+			onChange({ line: next.line, background: next.background })
+		}
+	}
+
+	return (
+		<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+			{(
+				[
+					['line', '선 색'],
+					['background', '배경 색'],
+				] as const
+			).map(([field, label]) => (
+				<fieldset key={field} style={{ border: 0, padding: 0, margin: 0 }}>
+					<legend className="text-sm" style={{ marginBottom: 4 }}>
+						{label}
+					</legend>
+					<div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+						{colors.map((color) => {
+							const hex = /^[0-9a-f]{3,8}$/i.test(color.hex)
+								? `#${color.hex}`
+								: color.hex
+							const selected = draft[field] === hex
+							return (
+								<Button
+									key={color.id}
+									type="button"
+									aria-pressed={selected}
+									aria-label={`${color.name} ${hex}`}
+									onClick={() => pick(field, hex)}
+									variant={selected ? 'muted' : 'outline'}
+									size="sm"
+								>
+									<span
+										aria-hidden
+										style={{
+											width: 14,
+											height: 14,
+											borderRadius: 2,
+											background: hex,
+										}}
+									/>
+									{color.name}
+								</Button>
+							)
+						})}
+					</div>
+				</fieldset>
+			))}
+			<div>
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					onClick={() => {
+						setDraft({})
+						onChange(undefined)
+					}}
+				>
+					해제
+				</Button>
+			</div>
+			{loadError && (
+				<p
+					className="text-sm"
+					role="alert"
+					style={{ margin: 0, color: 'var(--theme-error-500)' }}
+				>
+					브랜드 컬러를 불러오지 못했습니다.
+				</p>
+			)}
 		</div>
 	)
 }
@@ -1037,6 +1155,21 @@ export default function TemplateLayersField() {
 								key={selected.id}
 								value={nodeConfigs[selected.id]?.imageTransform}
 								onChange={(imageTransform) => commitNodeConfig({ imageTransform })}
+							/>
+							<span
+								className="text-sm"
+								style={{
+									display: 'block',
+									margin: '12px 0 6px',
+									color: 'var(--theme-elevation-600)',
+								}}
+							>
+								컬러 치환 — 선·배경 브랜드 컬러
+							</span>
+							<ImageColorizeEditor
+								key={`colorize-${selected.id}`}
+								value={nodeConfigs[selected.id]?.imageColorize}
+								onChange={(imageColorize) => commitNodeConfig({ imageColorize })}
 							/>
 						</div>
 					)}
