@@ -10,8 +10,9 @@ Create가 산출물에 이미지가 필요할 때 이 기능을 호출하는 것
 
 표면과 무관한 재사용 단위입니다. 코어 로직은 `src/features/generate-image/`이 소유하고, 표면은 이를 호출만 합니다.
 
-- 입력: 프롬프트 텍스트, 선택적 이미지 프로파일(`profileId`), 후보 장수(현재 1~6)
+- 입력: 프롬프트 텍스트, published 이미지 프로파일(`profileId`), 후보 장수(현재 1~6). Admin 저장 전 테스트만 프로파일 대신 모델·비율·크기를 직접 지정합니다.
 - 출력: 프로파일 기반 생성은 `generated-images` 문서 참조와 저장 URL 목록을 반환합니다. 저장 전 Admin 테스트만 data URI를 반환합니다.
+- 처리 한도: Studio·Admin·Agent·MCP의 이미지 모델 호출은 공통으로 프로세스당 동시 2건·사용자당 분당 6건으로 제한합니다(REST는 429 + `Retry-After`). 모델 호출 전에 거부된 요청은 한도를 소모하지 않습니다. 다중 서버 배포 시 이 process-local 제한은 공유 edge/Redis limiter로 교체해야 합니다.
 - 영속성: 프로파일 기반 생성과 카메라 조정 결과는 `generated-images`에 파일·프로파일·원본/최종 프롬프트·모델·출력 조건·생성 사용자를 저장합니다. `AssetGenerationSession`은 향후 제작 사용량 추적이 필요할 때만 도입합니다.
 - 검수 미포함: 생성 결과를 그대로 돌려주며 규정 판정을 하지 않습니다.
 
@@ -20,7 +21,6 @@ Create가 산출물에 이미지가 필요할 때 이 기능을 호출하는 것
 브랜드 프롬프트의 유일한 런타임 원천은 Payload의 published 이미지 프로파일입니다. 소스 코드에는 브랜드 base나 씬 목록을 두지 않습니다.
 
 - **프로파일 생성**: `profileId`가 있으면 published 프로파일의 시스템 프롬프트와 선택적 유저 프롬프트 후보를 읽습니다. 후보가 있으면 Haiku가 각 주제에서 하나를 선택하고 유저 인풋 원문은 최종 프롬프트에서 제외합니다. 후보가 없으면 AI 정규화를 생략하고 원문을 `subject`로 보존합니다.
-- **자유 생성**: `profileId`가 없으면 브랜드 규칙을 적용하지 않고 입력 프롬프트 원문을 그대로 사용합니다.
 - **프로파일 상태**: 일반 생성은 published 프로파일만 사용합니다. Admin의 생성 테스트만 저장하지 않은 현재 폼 값을 직접 사용합니다.
 
 ### 이미지 프로파일 Admin
@@ -40,7 +40,7 @@ Manager는 Payload Admin의 `이미지 프로파일` 컬렉션에서 이미지 �
 
 프로파일 기반 응답의 `images`는 저장 URL이며 `generatedImages`에는 각 문서의 `id`, `url`, `createdAt`이 포함됩니다. 카메라 조정 요청은 원본 data URI를 재전송하지 않고 `generatedImageId`를 전달하며, 서버가 같은 published 프로파일의 `generated-images` 원본을 조회·검증해 사용합니다.
 
-Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listImageProfiles`로 사용 가능한 프로파일을 확인한 뒤 `generateImage`에 `profileId`를 전달합니다. 자유 생성은 프로파일 없이 기존 원문 생성을 유지합니다.
+Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listImageProfiles`로 사용 가능한 프로파일을 확인한 뒤 `generateImage`에 `profileId`를 전달합니다.
 
 ## 3. 표면
 
@@ -54,11 +54,11 @@ Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listIma
 
 ## 4. 의존
 
-- 이미지 프로바이더: 자유 생성과 기존 프로파일은 OpenAI `gpt-image-2`, Technical Illustration은 Google `gemini-3.1-flash-lite-image`를 사용합니다. 프로파일이 모델 프리셋을 선택하고 코어 생성 서비스가 공급자를 결정합니다.
+- 이미지 프로바이더: 기존 프로파일은 OpenAI `gpt-image-2`, Technical Illustration은 Google `gemini-3.1-flash-lite-image`를 사용합니다. 프로파일이 모델 프리셋을 선택하고 코어 생성 서비스가 공급자를 결정합니다.
 - Vercel AI SDK `generateImage`. Google은 provider options의 `imageConfig`, OpenAI는 Images API의 `size`를 사용합니다.
 - Google 직접 호출은 `@ai-sdk/google`과 서버의 `GEMINI_API_KEY`를 사용하며 AI Gateway를 거치지 않습니다.
 - 프로파일 저장소: Payload CMS의 published `image-profiles` 컬렉션. `slug`가 있는 프로파일은 `displayOrder` 순서로 Studio 내비게이션과 `/studio/generate/image/:profileSlug` 경로에 노출됩니다.
-- 프로파일 정규화: 유저 프롬프트 후보가 있는 프로파일만 Anthropic Haiku 구조화 출력을 사용합니다. 정적 프로파일과 자유 생성은 정규화 모델을 호출하지 않습니다.
+- 프로파일 정규화: 유저 프롬프트 후보가 있는 프로파일만 Anthropic Haiku 구조화 출력을 사용합니다. 후보가 없는 정적 프로파일은 정규화 모델을 호출하지 않습니다.
 - Review 미사용(의도적) — 이미지 검수 성능이 아직 일부 항목에 한정되어 있어 생성 품질을 검수에 묶지 않습니다.
 - dev 폴백: OpenAI 경로는 개발 환경에서 `IMAGE_DEV_FALLBACK=true`를 명시한 경우에만 Pollinations FLUX(무료·키 불필요)를 임시 사용합니다. Google 모델을 선택한 프로파일은 `GEMINI_API_KEY`가 없으면 대체 모델로 보내지 않고 실패합니다. ⚠️ Pollinations에는 민감 입력을 보내지 않습니다.
 

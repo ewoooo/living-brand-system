@@ -5,6 +5,10 @@ import {
 	type ResolvedCameraControl,
 	resolveCameraControl,
 } from '@/features/generate-image/camera-control'
+import {
+	acquireImageGenerationSlot,
+	ImageGenerationLimitError,
+} from '@/features/generate-image/image-generation-gate'
 import type { ImageModelPreset } from '@/features/generate-image/image-model'
 import {
 	type ImageAspectRatio,
@@ -29,7 +33,7 @@ import {
 	normalizeImageProfilePrompt,
 } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
 
-export { ImageGenerationUnavailableError }
+export { ImageGenerationLimitError, ImageGenerationUnavailableError }
 
 /** generateImage 도구/route가 챗에 붙이는 생성 결과 첨부 계약 (이중 정의 금지). */
 export interface AgentGeneratedImagesAttachment {
@@ -88,7 +92,7 @@ export interface ImageGenerationPlan {
 	seedImage?: Uint8Array
 }
 
-/** published 프로파일의 모델·출력 계약을 생성 플랜으로 해석한다. 순수 함수. */
+/** published 프로파일의 모델·출력 계약을 생성 플랜으로 해석한다. 슬롯 비율 오버라이드는 여기서만 판단한다. 순수 함수. */
 export function planImageGenerationFromProfile(
 	profile: {
 		aspectRatio: ImageAspectRatio
@@ -97,13 +101,19 @@ export function planImageGenerationFromProfile(
 		imageSize: ImageOutputSize
 		name: string
 	},
-	input: { prompt: string; count: number; seedImage?: Uint8Array },
+	input: {
+		prompt: string
+		count: number
+		seedImage?: Uint8Array
+		/** 템플릿 이미지 슬롯 박스에서 유도한 비율 — 있으면 프로파일 비율 대신 쓴다(크롭 손실 최소화). */
+		aspectRatio?: ImageAspectRatio
+	},
 ): ImageGenerationPlan {
 	return {
 		prompt: input.prompt,
 		count: input.count,
 		modelPreset: profile.imageModelPreset,
-		aspectRatio: profile.aspectRatio,
+		aspectRatio: input.aspectRatio ?? profile.aspectRatio,
 		imageSize: profile.imageSize,
 		profileId: profile.id,
 		profileName: profile.name,
@@ -137,11 +147,14 @@ export async function generateImages({
 	profileId,
 	user,
 	count,
+	aspectRatio,
 }: {
 	userInput: string
 	profileId: number
 	user: unknown
 	count: number
+	/** 템플릿 이미지 슬롯 박스에서 유도한 비율 오버라이드 — 없으면 프로파일 비율. */
+	aspectRatio?: ImageAspectRatio
 }): Promise<GeneratedImages> {
 	const profile = await findPublishedImageProfile(user, profileId)
 	if (!profile) throw new ImageProfileNotFoundError()
@@ -151,15 +164,16 @@ export async function generateImages({
 		userPrompt: userInput,
 	})
 
-	const generated = await runImageGeneration(
-		planImageGenerationFromProfile(profile, {
-			prompt: JSON.stringify(normalized.finalPrompt),
-			count,
-		}),
-	)
+	const plan = planImageGenerationFromProfile(profile, {
+		prompt: JSON.stringify(normalized.finalPrompt),
+		count,
+		aspectRatio,
+	})
+	const generated = await runImageGeneration(plan, user)
 	return storeProfileGeneration(generated, {
 		inputPrompt: userInput,
-		profile,
+		// 저장 메타데이터의 비율은 실제 생성에 쓴 plan이 정본 — 오버라이드 시 프로파일 비율과 다르다.
+		profile: { ...profile, aspectRatio: plan.aspectRatio },
 		user,
 	})
 }
@@ -168,14 +182,18 @@ export async function generateImages({
  * 관리자 유스케이스 경계: 저장 전 폼처럼 명시된 모델과 출력 설정으로 이미지를 생성한다.
  * 외부 모델 I/O는 image-generation repository가 담당한다.
  */
-export async function generateImagesWithSettings(input: {
+export async function generateImagesWithSettings({
+	user,
+	...input
+}: {
 	userInput: string
 	count: number
 	imageModelPreset: ImageModelPreset
 	aspectRatio: ImageAspectRatio
 	imageSize: ImageOutputSize
+	user: unknown
 }): Promise<GeneratedImages> {
-	return runImageGeneration(planImageGenerationFromSettings(input))
+	return runImageGeneration(planImageGenerationFromSettings(input), user)
 }
 
 /**
@@ -216,6 +234,7 @@ export async function adjustImageCamera({
 			count,
 			seedImage,
 		}),
+		user,
 	)
 	const stored = await storeProfileGeneration(result, {
 		inputPrompt: basePrompt,
@@ -229,8 +248,14 @@ export async function adjustImageCamera({
 	}
 }
 
-/** 해석이 끝난 생성 플랜을 실제 공급자 호출로 연결한다. 키가 없으면 dev 폴백 또는 불가로 종료한다. */
-async function runImageGeneration(plan: ImageGenerationPlan): Promise<GeneratedImages> {
+/**
+ * 해석이 끝난 생성 플랜을 실제 공급자 호출로 연결한다. 키가 없으면 dev 폴백 또는 불가로 종료한다.
+ * 모델 호출 직전에만 공용 생성 게이트를 통과시킨다 — 호출 전에 거부된 요청은 사용자 한도를 소모하지 않는다.
+ */
+async function runImageGeneration(
+	plan: ImageGenerationPlan,
+	user: unknown,
+): Promise<GeneratedImages> {
 	const {
 		prompt,
 		count,
@@ -244,45 +269,54 @@ async function runImageGeneration(plan: ImageGenerationPlan): Promise<GeneratedI
 	if (!supportsImageOutputSize(modelPreset, imageSize)) {
 		throw new UnsupportedImageOutputSizeError(modelPreset, imageSize)
 	}
-	const generation = getImageModelApiKey(modelPreset)
-		? await generateBrandImages({
-				prompt,
-				count,
-				modelPreset,
-				aspectRatio,
-				imageSize,
-				...(seedImage ? { seedImage } : {}),
-			})
-		: await generateDevFallbackImages(plan)
-	return {
-		...generation,
-		aspectRatio,
-		imageSize,
-		prompt,
-		...(profileId ? { profileId, profileName } : {}),
+	const useDevFallback = !getImageModelApiKey(modelPreset)
+	if (useDevFallback) assertDevFallbackAllowed(plan)
+
+	const release = acquireImageGenerationSlot(getAuthenticatedUserId(user))
+	try {
+		const generation = useDevFallback
+			? await generateDevFallbackImages(plan)
+			: await generateBrandImages({
+					prompt,
+					count,
+					modelPreset,
+					aspectRatio,
+					imageSize,
+					...(seedImage ? { seedImage } : {}),
+				})
+		return {
+			...generation,
+			aspectRatio,
+			imageSize,
+			prompt,
+			...(profileId ? { profileId, profileName } : {}),
+		}
+	} finally {
+		release()
 	}
 }
 
 // ⚠️ 임시 — API 키가 없을 때의 마지막 결정. development + IMAGE_DEV_FALLBACK=true의
 // 텍스트 생성(openai 프리셋, 시드 없음)만 Pollinations로 보내고, 그 외에는 불가로 닫는다.
-async function generateDevFallbackImages({
-	prompt,
-	count,
-	modelPreset,
-	aspectRatio,
-	imageSize,
-	seedImage,
-}: ImageGenerationPlan): Promise<{
-	images: string[]
-	model: string
-	provider: ImageGenerationProvider
-}> {
+function assertDevFallbackAllowed({ modelPreset, seedImage }: ImageGenerationPlan) {
 	const devFallbackAllowed =
 		!seedImage &&
 		modelPreset === 'openai-gpt-image-2' &&
 		env.NODE_ENV === 'development' &&
 		env.IMAGE_DEV_FALLBACK === 'true'
 	if (!devFallbackAllowed) throw new ImageGenerationUnavailableError()
+}
+
+async function generateDevFallbackImages({
+	prompt,
+	count,
+	aspectRatio,
+	imageSize,
+}: ImageGenerationPlan): Promise<{
+	images: string[]
+	model: string
+	provider: ImageGenerationProvider
+}> {
 	return {
 		images: await devGenerateImages(prompt, toOpenAIImageSize(aspectRatio, imageSize), count),
 		model: 'flux',

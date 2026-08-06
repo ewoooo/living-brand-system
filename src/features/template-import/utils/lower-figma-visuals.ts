@@ -349,6 +349,21 @@ export function createTextStyle(node: Node): IrCssStyle {
 	const verticalAlign: Record<string, string> = { CENTER: 'center', BOTTOM: 'flex-end' }
 	const justify = s.textAlignVertical ? verticalAlign[s.textAlignVertical] : undefined
 
+	// Figma 텍스트 박스의 넘침 재현: auto-resize가 꺼진(NONE/생략/레거시 TRUNCATE) 고정 박스는 박스에서 잘리고,
+	// textTruncation ENDING(레거시 TRUNCATE 포함)은 -webkit-line-clamp로 「…」 말줄임을 그린다.
+	// 줄 수는 maxLines 우선, 없으면 고정 박스 높이 ÷ Figma가 계산한 줄높이(px)로 유도한다.
+	const fixedBox =
+		!s.textAutoResize || s.textAutoResize === 'NONE' || s.textAutoResize === 'TRUNCATE'
+	const truncates = s.textTruncation === 'ENDING' || s.textAutoResize === 'TRUNCATE'
+	let lineClamp: number | undefined
+	if (truncates) {
+		if (s.maxLines) lineClamp = s.maxLines
+		else if (fixedBox && s.lineHeightPx && node.absoluteBoundingBox) {
+			lineClamp = Math.max(1, Math.floor(node.absoluteBoundingBox.height / s.lineHeightPx))
+		}
+		// ponytail: 줄높이 px가 없으면 줄 수 유도 불가 → clamp 없이 아래 overflow:hidden clip만 남는다.
+	}
+
 	return {
 		margin: '0',
 		// ponytail: 텍스트 색은 SOLID fill만. gradient/image 텍스트 fill은 색 없이 상속(background-clip:text 미구현).
@@ -364,9 +379,25 @@ export function createTextStyle(node: Node): IrCssStyle {
 		'text-decoration': s.textDecoration ? textDeco[s.textDecoration] : undefined,
 		// HUG(WIDTH_AND_HEIGHT)=자동 줄바꿈 없이 명시 줄바꿈만(pre), 그 외=자동 줄바꿈 허용(pre-wrap). 둘 다 공백/개행 보존.
 		'white-space': s.textAutoResize === 'WIDTH_AND_HEIGHT' ? 'pre' : 'pre-wrap',
-		...(justify
-			? { display: 'flex', 'flex-direction': 'column', 'justify-content': justify }
-			: {}),
+		...(lineClamp
+			? {
+					// clamp의 -webkit-box는 flex 세로 정렬과 공존할 수 없어 clamp가 이긴다 —
+					// 잘릴 만큼 넘친 텍스트는 어차피 박스를 가득 채워 세로 정렬이 무의미하다.
+					display: '-webkit-box',
+					'-webkit-box-orient': 'vertical',
+					'-webkit-line-clamp': String(lineClamp),
+					overflow: 'hidden',
+				}
+			: {
+					...(fixedBox ? { overflow: 'hidden' } : {}),
+					...(justify
+						? {
+								display: 'flex',
+								'flex-direction': 'column',
+								'justify-content': justify,
+							}
+						: {}),
+				}),
 	}
 }
 

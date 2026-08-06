@@ -7,18 +7,24 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Typography } from '@/components/ui/typography'
+import { nearestImageAspectRatio } from '@/features/generate-image/image-size'
 import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
 import { pixelsToMillimeters } from '@/features/template-export/print-policy'
-import { collectTemplateSlots } from '@/services/collect-template-slots.service'
+import {
+	collectTemplateImageSlots,
+	collectTemplateSlots,
+} from '@/services/collect-template-slots.service'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import type { GetCreateNavigationOutput } from '@/services/get-create-navigation.service'
 import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
+import { ImageSlotInput } from './image-slot-input'
 import { TextSlotInput } from './text-slot-input'
 
 const PREVIEW_WIDTH = 480
 
 /**
- * Figma에서 가져온 published HTML의 열린 슬롯(input이 달린 텍스트 노드)을 편집해
+ * Figma에서 가져온 published HTML의 열린 슬롯(input이 달린 텍스트 노드,
+ * imageInput이 달린 프레임 이미지 슬롯)을 편집해
  * 미리보기 그대로 PNG·운영자 정책의 CMYK TIFF 또는 mm 단위 CMYK PDF로 내보낸다. 서버 상태 변경은 없다 —
  * 입력값은 로컬 state로만 합성한다.
  * 미리보기는 어드민 캔버스와 동일한 동일-문서 렌더 — iframe(opaque origin)은 벡터 mask의
@@ -33,6 +39,9 @@ export function TemplateGenerator({
 }) {
 	const router = useRouter()
 	const [values, setValues] = useState<Record<string, string>>({})
+	const [imageValues, setImageValues] = useState<
+		Record<string, { backgroundImage: string; generatedImageId: number }>
+	>({})
 	const { html, nodeConfigs, width, height } = template
 	const scale = Math.min(1, PREVIEW_WIDTH / width)
 	const selectedTemplateHref =
@@ -41,17 +50,22 @@ export function TemplateGenerator({
 			.find((item) => item.id === template.id)?.href ?? ''
 
 	const slots = useMemo(() => collectTemplateSlots(html, nodeConfigs), [html, nodeConfigs])
+	const imageSlots = useMemo(
+		() => collectTemplateImageSlots(html, nodeConfigs),
+		[html, nodeConfigs],
+	)
 
-	// 사용자가 만진 슬롯만 텍스트 오버라이드로 합성한다(만지지 않은 슬롯은 저작 텍스트 유지).
+	// 사용자가 만진 슬롯만 오버라이드로 합성한다(만지지 않은 슬롯은 저작 값 유지).
+	// 텍스트 슬롯(<p>)과 이미지 슬롯(프레임)은 노드가 겹치지 않아 그대로 합친다.
 	const composedHtml = useMemo(
 		() =>
-			composeTemplateHtml(
-				html,
-				Object.fromEntries(
+			composeTemplateHtml(html, {
+				...Object.fromEntries(
 					Object.entries(values).map(([nodeId, text]) => [nodeId, { text }]),
 				),
-			),
-		[html, values],
+				...imageValues,
+			}),
+		[html, values, imageValues],
 	)
 	const { canExport, exporting, exportError, exportTemplate } = useTemplateExport({
 		fileName: template.name,
@@ -70,7 +84,7 @@ export function TemplateGenerator({
 					<CardHeader className="border-b border-border py-4">
 						<CardTitle>템플릿 컨트롤러</CardTitle>
 						<Typography size="xs" tone="muted">
-							열린 텍스트 슬롯을 편집하세요.
+							열린 슬롯을 편집하세요.
 						</Typography>
 					</CardHeader>
 					<CardContent className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto py-4">
@@ -118,7 +132,31 @@ export function TemplateGenerator({
 								/>
 							</div>
 						))}
-						{slots.length === 0 && (
+						{imageSlots.map((slot) => (
+							<div key={slot.nodeId} className="flex flex-col gap-1">
+								<label
+									htmlFor={`image-slot-${slot.nodeId}`}
+									className="font-body text-sm font-normal text-muted-foreground"
+								>
+									{slot.name}
+								</label>
+								<ImageSlotInput
+									id={`image-slot-${slot.nodeId}`}
+									pinnedProfileId={slot.profileId}
+									aspectRatio={nearestImageAspectRatio(
+										slot.boxWidth ?? Number.NaN,
+										slot.boxHeight ?? Number.NaN,
+									)}
+									onGenerated={(image) =>
+										setImageValues((current) => ({
+											...current,
+											[slot.nodeId]: image,
+										}))
+									}
+								/>
+							</div>
+						))}
+						{slots.length === 0 && imageSlots.length === 0 && (
 							<Typography size="sm" tone="muted">
 								이 템플릿에는 편집 가능한 슬롯이 없습니다.
 							</Typography>

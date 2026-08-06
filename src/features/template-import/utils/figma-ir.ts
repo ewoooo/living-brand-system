@@ -17,6 +17,10 @@ export type FigmaTextStyle = NonNullable<FigmaNode['style']> & {
 	textDecoration?: string
 	lineHeightUnit?: string
 	lineHeightPercentFontSize?: number
+	/** 말줄임 여부: 'DISABLED' | 'ENDING'. 레거시 textAutoResize 'TRUNCATE'가 ENDING과 같은 뜻. */
+	textTruncation?: string
+	/** textTruncation ENDING일 때 잘리기 전까지 허용하는 최대 줄 수. */
+	maxLines?: number
 }
 
 /** 소스 모델: FigmaNode에 변환이 소비하는 시각/레이아웃 필드를 확장한 형태. 트리 전체가 이 타입으로 흐른다. */
@@ -79,5 +83,7 @@ export interface IrNode {
 	asset?: FigmaRenderedAsset
 	/** IMAGE fill을 background-image로 낮춘 노드의 에셋 참조 — div에 data-asset-* 속성으로 방출돼 발행 승격 대상이 된다. */
 	fillAsset?: FigmaRenderedAsset
+	/** clipsContent 프레임의 유일한 가시 이미지 자식 — data-image-carrier로 방출돼 compose의 생성 이미지 교체 대상이 된다. */
+	imageCarrier?: true
 	children: IrNode[]
 }

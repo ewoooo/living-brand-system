@@ -77,6 +77,7 @@ describe('POST /api/generate-image', () => {
 		{ prompt: 'sample' },
 		{ prompt: 'sample', profileId: 0 },
 		{ prompt: 'sample', imageModelPreset: 'openai-gpt-image-2' },
+		{ prompt: 'sample', profileId: 5, aspectRatio: '7:5' },
 	])('일반 생성 계약 밖의 입력을 거부한다: %o', async (body) => {
 		const response = await POST(imageRequest(body))
 
@@ -90,6 +91,17 @@ describe('POST /api/generate-image', () => {
 		const response = await POST(imageRequest({ prompt: 'sample', profileId: 5 }))
 
 		expect(response.status).toBe(503)
+	})
+
+	it('공통 생성 한도를 넘으면 재시도 시간을 포함한 429를 반환한다', async () => {
+		mocks.generateImages.mockRejectedValue(
+			Object.assign(namedError('ImageGenerationLimitError'), { retryAfterSeconds: 12 }),
+		)
+
+		const response = await POST(imageRequest({ prompt: 'sample', profileId: 5 }))
+
+		expect(response.status).toBe(429)
+		expect(response.headers.get('Retry-After')).toBe('12')
 	})
 
 	it('유효한 입력과 사용자를 서비스에 전달하고 실제 모델을 반환한다', async () => {
@@ -115,6 +127,21 @@ describe('POST /api/generate-image', () => {
 			userInput: 'sample',
 			count: 1,
 			profileId: 5,
+			user: { id: 1 },
+		})
+	})
+
+	it('슬롯 비율 오버라이드를 서비스에 그대로 전달한다', async () => {
+		const response = await POST(
+			imageRequest({ prompt: 'sample', profileId: 5, count: 1, aspectRatio: '16:9' }),
+		)
+
+		expect(response.status).toBe(200)
+		expect(mocks.generateImages).toHaveBeenCalledWith({
+			userInput: 'sample',
+			count: 1,
+			profileId: 5,
+			aspectRatio: '16:9',
 			user: { id: 1 },
 		})
 	})

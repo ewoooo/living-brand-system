@@ -1,6 +1,9 @@
 import { hasUnsafeTemplateControlCharacter } from '@/services/template-asset-policy.service'
 
 const ALLOWED_STYLE_PROPERTIES = new Set([
+	// Figma 텍스트 말줄임(textTruncation ENDING) lowering이 방출하는 line-clamp 3종 세트의 일부.
+	'-webkit-box-orient',
+	'-webkit-line-clamp',
 	'align-content',
 	'align-items',
 	'align-self',
@@ -157,7 +160,7 @@ export function inspectTemplateStyle(style: string): { blocker?: string; urls: s
 		if (property === 'position' && value !== 'absolute' && value !== 'relative') {
 			return { blocker: 'HTML style의 position 값이 허용 범위를 벗어났습니다.', urls: [] }
 		}
-		if (property === 'display' && !['block', 'flex', 'grid'].includes(value)) {
+		if (property === 'display' && !['-webkit-box', 'block', 'flex', 'grid'].includes(value)) {
 			return { blocker: 'HTML style의 display 값이 허용 범위를 벗어났습니다.', urls: [] }
 		}
 

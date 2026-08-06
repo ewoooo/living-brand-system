@@ -7,11 +7,13 @@ const mocks = vi.hoisted(() => ({
 		NODE_ENV: 'test' as 'development' | 'production' | 'test',
 		OPENAI_API_KEY: undefined as string | undefined,
 	},
+	acquireImageGenerationSlot: vi.fn(),
 	devGenerateImages: vi.fn(),
 	findPublishedImageProfile: vi.fn(),
 	generateBrandImages: vi.fn(),
 	loadGeneratedImage: vi.fn(),
 	normalizeImageProfilePrompt: vi.fn(),
+	releaseImageGenerationSlot: vi.fn(),
 	storeGeneratedImages: vi.fn(),
 }))
 
@@ -19,6 +21,11 @@ const ONE_PIXEL_PNG =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
 
 vi.mock('@/env', () => ({ env: mocks.env }))
+vi.mock('@/features/generate-image/image-generation-gate', () => ({
+	// 게이트 창 상태는 게이트 단위 테스트가 검증한다 — 여기서는 서비스 연결(획득·해제 순서)만 본다.
+	acquireImageGenerationSlot: mocks.acquireImageGenerationSlot,
+	ImageGenerationLimitError: class extends Error {},
+}))
 vi.mock('@/features/generate-image/repositories/dev-image-generation.rest.repository', () => ({
 	devGenerateImages: mocks.devGenerateImages,
 }))
@@ -63,6 +70,7 @@ describe('generateImages', () => {
 		mocks.env.IMAGE_DEV_FALLBACK = undefined
 		mocks.env.GEMINI_API_KEY = undefined
 		mocks.env.OPENAI_API_KEY = undefined
+		mocks.acquireImageGenerationSlot.mockReturnValue(mocks.releaseImageGenerationSlot)
 		mocks.findPublishedImageProfile.mockResolvedValue(null)
 		mocks.loadGeneratedImage.mockResolvedValue(null)
 		mocks.storeGeneratedImages.mockResolvedValue([
@@ -86,10 +94,12 @@ describe('generateImages', () => {
 				aspectRatio: '1:1',
 				imageModelPreset: 'openai-gpt-image-2',
 				imageSize: '1K',
+				user: { id: 1 },
 			}),
 		).rejects.toBeInstanceOf(ImageGenerationUnavailableError)
 		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+		expect(mocks.acquireImageGenerationSlot).not.toHaveBeenCalled()
 	})
 
 	it('uses Pollinations only when development explicitly enables it', async () => {
@@ -103,6 +113,7 @@ describe('generateImages', () => {
 			aspectRatio: '1:1',
 			imageModelPreset: 'openai-gpt-image-2',
 			imageSize: '1K',
+			user: { id: 1 },
 		})
 
 		expect(mocks.devGenerateImages).toHaveBeenCalledWith('sample', '1024x1024', 2)
@@ -125,6 +136,7 @@ describe('generateImages', () => {
 			aspectRatio: '1:1',
 			imageModelPreset: 'openai-gpt-image-2',
 			imageSize: '1K',
+			user: { id: 1 },
 		})
 
 		expect(mocks.generateBrandImages).toHaveBeenCalledWith({
@@ -224,6 +236,47 @@ describe('generateImages', () => {
 		})
 	})
 
+	it('슬롯 비율 오버라이드는 프로파일 비율 대신 모델 호출에 반영된다', async () => {
+		mocks.env.OPENAI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '2:3',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.normalizeImageProfilePrompt.mockResolvedValue({
+			finalPrompt: { subject: '파란 세럼병' },
+			normalizedInput: {},
+		})
+		mocks.generateBrandImages.mockResolvedValue({
+			images: ['data:image/png;base64,profile'],
+			model: 'gpt-image-2',
+			provider: 'openai',
+		})
+
+		const result = await generateImages({
+			userInput: '파란 세럼병',
+			profileId: 5,
+			user: { id: 1 },
+			count: 1,
+			aspectRatio: '16:9',
+		})
+
+		expect(mocks.generateBrandImages).toHaveBeenCalledWith(
+			expect.objectContaining({ aspectRatio: '16:9', imageSize: '1K' }),
+		)
+		expect(result.aspectRatio).toBe('16:9')
+		// 저장 메타데이터도 프로파일 비율(2:3)이 아니라 실제 생성 비율을 기록해야 한다.
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
+			expect.objectContaining({
+				profile: expect.objectContaining({ aspectRatio: '16:9' }),
+			}),
+		)
+	})
+
 	it('Nano Banana 프로파일은 Google 키와 16:9 계약을 사용한다', async () => {
 		mocks.env.GEMINI_API_KEY = 'key'
 		mocks.findPublishedImageProfile.mockResolvedValue({
@@ -275,6 +328,7 @@ describe('generateImages', () => {
 			aspectRatio: '16:9',
 			imageModelPreset: 'google-nano-banana-2-lite',
 			imageSize: '1K',
+			user: { id: 1 },
 		})
 
 		expect(mocks.findPublishedImageProfile).not.toHaveBeenCalled()
@@ -296,10 +350,12 @@ describe('generateImages', () => {
 			aspectRatio: '16:9',
 			imageModelPreset: 'google-nano-banana-2-lite',
 			imageSize: '2K',
+			user: { id: 1 },
 		})
 		await expect(generation).rejects.toBeInstanceOf(UnsupportedImageOutputSizeError)
 		await expect(generation).rejects.toThrow('does not support 2K')
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+		expect(mocks.acquireImageGenerationSlot).not.toHaveBeenCalled()
 	})
 
 	it('Google 키가 없는 Nano Banana 프로파일은 dev 폴백으로 보내지 않는다', async () => {
@@ -447,6 +503,66 @@ describe('generateImages', () => {
 		).rejects.toBeInstanceOf(ImageGenerationUnavailableError)
 		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
 	})
+
+	it('모델 호출 전에 사용자 ID로 생성 게이트를 획득하고 성공 후 해제한다', async () => {
+		mocks.env.OPENAI_API_KEY = 'key'
+		mocks.generateBrandImages.mockResolvedValue({
+			images: ['data:image/png;base64,openai'],
+			model: 'gpt-image-2',
+			provider: 'openai',
+		})
+
+		await generateImagesWithSettings({
+			userInput: 'sample',
+			count: 1,
+			aspectRatio: '1:1',
+			imageModelPreset: 'openai-gpt-image-2',
+			imageSize: '1K',
+			user: { id: 7 },
+		})
+
+		expect(mocks.acquireImageGenerationSlot).toHaveBeenCalledWith(7)
+		expect(mocks.acquireImageGenerationSlot.mock.invocationCallOrder[0]).toBeLessThan(
+			mocks.generateBrandImages.mock.invocationCallOrder[0] ?? 0,
+		)
+		expect(mocks.releaseImageGenerationSlot).toHaveBeenCalledOnce()
+	})
+
+	it('모델 호출이 실패해도 동시 실행 슬롯을 해제한다', async () => {
+		mocks.env.OPENAI_API_KEY = 'key'
+		mocks.generateBrandImages.mockRejectedValue(new Error('provider down'))
+
+		await expect(
+			generateImagesWithSettings({
+				userInput: 'sample',
+				count: 1,
+				aspectRatio: '1:1',
+				imageModelPreset: 'openai-gpt-image-2',
+				imageSize: '1K',
+				user: { id: 1 },
+			}),
+		).rejects.toThrow('provider down')
+		expect(mocks.releaseImageGenerationSlot).toHaveBeenCalledOnce()
+	})
+
+	it('게이트가 한도 초과를 던지면 모델을 호출하지 않고 그대로 전파한다', async () => {
+		mocks.env.OPENAI_API_KEY = 'key'
+		mocks.acquireImageGenerationSlot.mockImplementation(() => {
+			throw new Error('limit reached')
+		})
+
+		await expect(
+			generateImagesWithSettings({
+				userInput: 'sample',
+				count: 1,
+				aspectRatio: '1:1',
+				imageModelPreset: 'openai-gpt-image-2',
+				imageSize: '1K',
+				user: { id: 1 },
+			}),
+		).rejects.toThrow('limit reached')
+		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+	})
 })
 
 describe('image generation plan resolvers', () => {
@@ -474,6 +590,21 @@ describe('image generation plan resolvers', () => {
 			profileName: 'Technical Illustration',
 			seedImage,
 		})
+	})
+
+	it('슬롯 비율 오버라이드가 있으면 프로파일 비율 대신 플랜에 쓴다', () => {
+		expect(
+			planImageGenerationFromProfile(
+				{
+					aspectRatio: '2:3',
+					id: 5,
+					imageModelPreset: 'openai-gpt-image-2',
+					imageSize: '1K',
+					name: 'Technical Illustration',
+				},
+				{ prompt: '{"subject":"굴착기"}', count: 1, aspectRatio: '16:9' },
+			),
+		).toMatchObject({ aspectRatio: '16:9', imageSize: '1K' })
 	})
 
 	it('명시 설정은 프롬프트를 trim해 프로파일 없는 플랜으로 해석한다', () => {

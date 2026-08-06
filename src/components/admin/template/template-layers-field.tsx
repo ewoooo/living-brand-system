@@ -15,6 +15,10 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import {
+	type ImageAspectRatio,
+	nearestImageAspectRatio,
+} from '@/features/generate-image/image-size'
+import {
 	type ImageProfileOption,
 	requestAdminImageGeneration,
 	requestPublishedImageProfiles,
@@ -36,6 +40,11 @@ interface LayerRow {
 	figmaType: string
 	isText: boolean
 	isVector: boolean
+	/** 직계 자식에 data-image-carrier가 있는 프레임 — 이미지 자유 편집(transform) 대상. */
+	hasImageCarrier: boolean
+	/** 요소 자신의 inline width/height(px) — clipsContent 프레임의 가시 박스. AI 생성 비율 유도에 쓴다. */
+	boxWidth?: number
+	boxHeight?: number
 	text: string
 }
 
@@ -78,6 +87,8 @@ const VECTOR_TYPES = new Set([
 	'POLYGON',
 	'REGULAR_POLYGON',
 ])
+// 배경 이미지 할당(AI 생성) 대상. Figma REST는 둥근 사각형도 RECTANGLE(+cornerRadius)로 내보내므로 두 타입이면 충분하다.
+const IMAGE_ASSIGN_TYPES = new Set(['FRAME', 'RECTANGLE'])
 
 // 배경 설정 트리거 버튼 공통 스타일(에셋 가져오기 · AI 생성).
 const TRIGGER_STYLE: CSSProperties = {
@@ -90,6 +101,15 @@ const TRIGGER_STYLE: CSSProperties = {
 	background: 'transparent',
 	cursor: 'pointer',
 	color: 'var(--theme-text)',
+}
+
+// inline style의 px 치수만 읽는다 — px가 아니거나 0 이하면 undefined.
+function stylePx(el: Element, property: 'width' | 'height'): number | undefined {
+	if (!(el instanceof HTMLElement)) return undefined
+	const value = el.style[property]
+	if (!value.endsWith('px')) return undefined
+	const parsed = Number.parseFloat(value)
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
 }
 
 function parseLayers(html: string): LayerRow[] {
@@ -108,6 +128,11 @@ function parseLayers(html: string): LayerRow[] {
 			figmaType,
 			isText,
 			isVector: VECTOR_TYPES.has(figmaType),
+			hasImageCarrier: Array.from(el.children).some((child) =>
+				child.hasAttribute('data-image-carrier'),
+			),
+			boxWidth: stylePx(el, 'width'),
+			boxHeight: stylePx(el, 'height'),
 			text: isText ? (el.textContent ?? '') : '',
 		})
 		for (const child of Array.from(el.children)) walk(child, depth + 1)
@@ -155,7 +180,14 @@ function AiTextForm({ rule, onApply }: { rule?: string; onApply: (text: string) 
 }
 
 // Popup 안에 뜨는 AI 이미지 생성 폼. 프레임 배경으로 얹는다.
-function AiImageForm({ onApply }: { onApply: (image: { id: number; src: string }) => void }) {
+// aspectRatio는 선택 프레임 박스에서 유도한 비율 — 있으면 프로파일 비율 대신 그 비율로 생성한다.
+function AiImageForm({
+	aspectRatio,
+	onApply,
+}: {
+	aspectRatio?: ImageAspectRatio
+	onApply: (image: { id: number; src: string }) => void
+}) {
 	const [prompt, setPrompt] = useState('')
 	const [loading, setLoading] = useState(false)
 	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
@@ -182,6 +214,7 @@ function AiImageForm({ onApply }: { onApply: (image: { id: number; src: string }
 				prompt: trimmed,
 				count: 1,
 				profileId,
+				aspectRatio,
 			})
 			const generated = result.generatedImages?.[0]
 			if (generated) onApply({ id: generated.id, src: generated.url })
@@ -219,6 +252,11 @@ function AiImageForm({ onApply }: { onApply: (image: { id: number; src: string }
 					</option>
 				)}
 			</select>
+			{aspectRatio && (
+				<span className="text-xs" style={{ color: 'var(--theme-elevation-500)' }}>
+					슬롯 비율 {aspectRatio}로 생성
+				</span>
+			)}
 			<Textarea
 				value={prompt}
 				onChange={(event) => setPrompt(event.target.value)}
@@ -368,6 +406,162 @@ function SlotSpecEditor({
 					placeholder="예: 영문 이름만, 성-이름 순"
 				/>
 			</SpecField>
+		</div>
+	)
+}
+
+type ImageSlotInput = NonNullable<TemplateNodeConfig['imageInput']>
+
+/**
+ * 스튜디오에 개방한 이미지 슬롯의 스펙 편집 폼. 열기/닫기는 호출부의 자물쇠 토글이 담당한다.
+ * imageInput의 존재 자체가 개방 선언 — 프로파일을 고정하면 유저 화면에서 선택이 사라진다.
+ */
+function ImageSlotSpecEditor({
+	imageInput,
+	onChange,
+}: {
+	imageInput: ImageSlotInput
+	onChange: (imageInput: ImageSlotInput) => void
+}) {
+	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
+
+	useEffect(() => {
+		void requestPublishedImageProfiles()
+			.then(setProfiles)
+			.catch(() => {
+				setProfiles([])
+				toast.error('이미지 프로파일을 불러오지 못했습니다.')
+			})
+	}, [])
+
+	return (
+		<div
+			style={{
+				maxWidth: 280,
+				padding: 10,
+				borderRadius: 4,
+				border: '1px solid var(--theme-elevation-150)',
+			}}
+		>
+			<SpecField id="image-slot-profile" label="프로파일 고정 — 없으면 유저가 선택">
+				<select
+					className="text-sm"
+					id="image-slot-profile"
+					value={imageInput.profileId ?? ''}
+					onChange={(event) => {
+						const value = Number(event.currentTarget.value)
+						onChange(value > 0 ? { profileId: value } : {})
+					}}
+					style={SELECT_STYLE}
+				>
+					<option value="">스튜디오에서 선택</option>
+					{profiles?.map((profile) => (
+						<option key={profile.id} value={profile.id}>
+							{profile.name}
+						</option>
+					))}
+				</select>
+			</SpecField>
+		</div>
+	)
+}
+
+type ImageTransform = NonNullable<TemplateNodeConfig['imageTransform']>
+
+const IDENTITY_TRANSFORM: ImageTransform = { x: 0, y: 0, scale: 1, rotate: 0 }
+
+const isIdentityTransform = (t: ImageTransform) =>
+	t.x === 0 && t.y === 0 && t.scale === 1 && t.rotate === 0
+
+/**
+ * 프레임에 할당한 이미지의 자유 편집(이동·확대·회전) 폼. 값은 override로만 저장되고
+ * compose가 캐리어의 CSS transform으로 적용한다 — baseHtml은 건드리지 않는다.
+ * 슬라이더는 드래그 중 draft만 갱신하고 놓을 때 commit해 재합성 thrash를 막는다.
+ */
+function ImageTransformEditor({
+	value,
+	onChange,
+}: {
+	value?: ImageTransform
+	onChange: (next?: ImageTransform) => void
+}) {
+	const [draft, setDraft] = useState<ImageTransform>(value ?? IDENTITY_TRANSFORM)
+	const commit = (next: ImageTransform) => onChange(isIdentityTransform(next) ? undefined : next)
+
+	const fields: {
+		key: keyof ImageTransform
+		label: string
+		min: number
+		max: number
+		step: number
+	}[] = [
+		{ key: 'x', label: '이동 X (px)', min: -1000, max: 1000, step: 1 },
+		{ key: 'y', label: '이동 Y (px)', min: -1000, max: 1000, step: 1 },
+		{ key: 'scale', label: '확대', min: 0.2, max: 5, step: 0.05 },
+		{ key: 'rotate', label: '회전 (deg)', min: -180, max: 180, step: 1 },
+	]
+
+	return (
+		<div
+			style={{
+				display: 'grid',
+				gridTemplateColumns: 'repeat(2, 1fr)',
+				gap: 8,
+				maxWidth: 560,
+				padding: 10,
+				borderRadius: 4,
+				border: '1px solid var(--theme-elevation-150)',
+			}}
+		>
+			{fields.map(({ key, label, min, max, step }) => (
+				<SpecField key={key} id={`image-transform-${key}`} label={label}>
+					<div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+						<input
+							type="range"
+							min={min}
+							max={max}
+							step={step}
+							value={draft[key]}
+							aria-label={label}
+							style={{ flex: 1, minWidth: 0 }}
+							onChange={(event) =>
+								setDraft({ ...draft, [key]: Number(event.target.value) })
+							}
+							onPointerUp={() => commit(draft)}
+							onBlur={() => commit(draft)} // 키보드(화살표) 조작 커버
+						/>
+						<Input
+							type="number"
+							id={`image-transform-${key}`}
+							min={min}
+							max={max}
+							step={step}
+							value={draft[key]}
+							style={{ width: 80, flexShrink: 0 }}
+							onChange={(event) => {
+								const parsed = Number(event.target.value)
+								if (!Number.isFinite(parsed)) return
+								const next = { ...draft, [key]: parsed }
+								setDraft(next)
+								commit(next)
+							}}
+						/>
+					</div>
+				</SpecField>
+			))}
+			<div style={{ gridColumn: '1 / -1' }}>
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					onClick={() => {
+						setDraft(IDENTITY_TRANSFORM)
+						onChange(undefined)
+					}}
+				>
+					초기화
+				</Button>
+			</div>
 		</div>
 	)
 }
@@ -694,7 +888,7 @@ export default function TemplateLayersField() {
 				</div>
 			)}
 
-			{selected?.figmaType === 'FRAME' && (
+			{selected && IMAGE_ASSIGN_TYPES.has(selected.figmaType) && (
 				<div>
 					<span
 						className="text-sm"
@@ -719,6 +913,10 @@ export default function TemplateLayersField() {
 							}
 							render={({ close }) => (
 								<AiImageForm
+									aspectRatio={nearestImageAspectRatio(
+										selected.boxWidth ?? Number.NaN,
+										selected.boxHeight ?? Number.NaN,
+									)}
 									onApply={(image) => {
 										commitBackground(image)
 										close()
@@ -727,6 +925,79 @@ export default function TemplateLayersField() {
 							)}
 						/>
 					</div>
+					<div style={{ marginTop: 12 }}>
+						<div
+							style={{
+								display: 'flex',
+								alignItems: 'center',
+								gap: 6,
+								marginBottom: 6,
+							}}
+						>
+							<span
+								className="text-sm"
+								style={{ color: 'var(--theme-elevation-600)' }}
+							>
+								스튜디오 개방
+							</span>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-xs"
+								onClick={() =>
+									commitNodeConfig({
+										imageInput: nodeConfigs[selected.id]?.imageInput
+											? undefined
+											: {},
+									})
+								}
+								title={
+									nodeConfigs[selected.id]?.imageInput
+										? '이미지 슬롯 닫기 — 유저 화면에서 숨김'
+										: '이미지 슬롯 열기 — 유저 화면에 이미지 생성 노출'
+								}
+								aria-label={
+									nodeConfigs[selected.id]?.imageInput
+										? '이미지 슬롯 닫기'
+										: '이미지 슬롯 열기'
+								}
+							>
+								{nodeConfigs[selected.id]?.imageInput ? '🔓' : '🔒'}
+							</Button>
+							<span
+								className="text-xs"
+								style={{ color: 'var(--theme-elevation-500)' }}
+							>
+								{nodeConfigs[selected.id]?.imageInput ? '유저 화면에 열림' : '닫힘'}
+							</span>
+						</div>
+						{nodeConfigs[selected.id]?.imageInput && (
+							<ImageSlotSpecEditor
+								imageInput={nodeConfigs[selected.id]?.imageInput ?? {}}
+								onChange={(imageInput) => commitNodeConfig({ imageInput })}
+							/>
+						)}
+					</div>
+					{/* 캐리어가 있어야 transform을 받을 수 있다 — 레거시 프레임 배경 경로는 compose가 무시. */}
+					{nodeConfigs[selected.id]?.backgroundImage && selected.hasImageCarrier && (
+						<div style={{ marginTop: 12 }}>
+							<span
+								className="text-sm"
+								style={{
+									display: 'block',
+									marginBottom: 6,
+									color: 'var(--theme-elevation-600)',
+								}}
+							>
+								이미지 편집 — 이동·확대·회전
+							</span>
+							<ImageTransformEditor
+								key={selected.id}
+								value={nodeConfigs[selected.id]?.imageTransform}
+								onChange={(imageTransform) => commitNodeConfig({ imageTransform })}
+							/>
+						</div>
+					)}
 				</div>
 			)}
 
@@ -741,7 +1012,7 @@ export default function TemplateLayersField() {
 			{selected &&
 				!selected.isText &&
 				!selected.isVector &&
-				selected.figmaType !== 'FRAME' && (
+				!IMAGE_ASSIGN_TYPES.has(selected.figmaType) && (
 					<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
 						{typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.
 					</p>

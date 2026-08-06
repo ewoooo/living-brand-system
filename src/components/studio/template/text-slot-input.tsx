@@ -50,7 +50,8 @@ export function TextSlotInput({
 			onChange={(event) => {
 				const next = event.target.value
 
-				// 명시적 줄 수 제한 — 폭에 의한 자동 줄바꿈 초과분은 렌더가 잘라낸다.
+				// 명시적 줄 수 제한 — 자동 줄바꿈 초과분은 렌더가 Figma 텍스트 박스 규칙대로 처리한다
+				// (고정 박스는 overflow:hidden clip, 말줄임 설정은 -webkit-line-clamp 「…」).
 				if (spec.maxLines && next.split('\n').length > spec.maxLines) {
 					return
 				}
