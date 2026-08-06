@@ -75,9 +75,28 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 						? `${editTransform} ${baseTransform}`
 						: editTransform
 				}
+			} else if (el instanceof HTMLImageElement) {
+				// 캐리어 아닌 래스터 폴백 img에 background-*를 칠하면 불투명한 src 뒤에 가려
+				// 보이지 않고, 발행 검증(metadataRef)은 img의 src를 읽어 data-asset-*와
+				// 어긋난다 — 캐리어 img와 동일하게 src 자체를 갈아끼운다.
+				el.src = config.backgroundImage
+				el.removeAttribute('srcset')
+				if (config.generatedImageId) {
+					el.setAttribute('data-asset-collection', 'generated-images')
+					el.setAttribute('data-asset-id', String(config.generatedImageId))
+				}
 			} else {
 				// ponytail: 캐리어 없는 레거시 프레임 배경 경로에서는 imageTransform을 무시한다 —
 				// background-image는 회전할 수 없으므로 이 변형은 설계상 캐리어 전용이다.
+				// base가 background: 쇼트핸드(import가 단색·그라데이션 fill에 방출)면 Chrome이
+				// 아래 롱핸드 세팅을 쇼트핸드 하나로 재직렬화해 `background: url(...) ... rgb(...)`를
+				// 만들고, 스타일 검증은 background 쇼트핸드의 url()을 차단해 저장이 막힌다
+				// (jsdom은 이 재직렬화를 재현하지 못한다 — 실제 Chromium에서 검증된 동작).
+				// 쇼트핸드를 지우고 색만 롱핸드로 보존한다 — 그라데이션 레이어는 cover 이미지가
+				// 어차피 덮으므로 시각 손실이 없다.
+				const keptColor = el.style.backgroundColor
+				el.style.background = ''
+				if (keptColor) el.style.backgroundColor = keptColor
 				el.style.backgroundImage = `url("${config.backgroundImage}")`
 				el.style.backgroundSize = 'cover'
 				el.style.backgroundPosition = 'center'

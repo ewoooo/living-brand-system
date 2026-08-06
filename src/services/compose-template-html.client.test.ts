@@ -208,6 +208,60 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(frame.style.backgroundImage).toContain(generated)
 	})
 
+	// Chrome은 base가 background: 쇼트핸드일 때 롱핸드 세팅을 url() 포함 쇼트핸드 하나로
+	// 재직렬화해 스타일 검증(url은 background-image/mask-image만 허용)에 걸린다.
+	// jsdom은 그 재직렬화를 재현하지 못하므로 여기서는 고칠 수 있는 사실만 고정한다:
+	// 쇼트핸드 제거 + 색 롱핸드 보존 + 이미지 4종 롱핸드 세팅.
+	it('background 쇼트핸드 base는 색만 남기고 지운 뒤 롱핸드로 세팅한다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="background:rgb(0,40,10)"></div>'
+		const html = composeTemplateHtml(frameHtml, { 'frame-1': { backgroundImage: generated } })
+		const frame = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-node-id="frame-1"]') as HTMLElement
+
+		expect(frame.getAttribute('style')).not.toMatch(/background:/)
+		expect(frame.style.backgroundColor).toBe('rgb(0, 40, 10)')
+		expect(frame.style.backgroundImage).toContain(generated)
+		expect(frame.style.backgroundSize).toBe('cover')
+		expect(frame.style.backgroundPosition).toBe('center center')
+		expect(frame.style.backgroundRepeat).toBe('no-repeat')
+	})
+
+	it('그라데이션 다중 레이어 쇼트핸드도 지운다 — cover 이미지가 덮으므로 시각 손실 없음', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME"' +
+			' style="background:linear-gradient(180deg,rgba(0,0,0,0.5) 0%,rgba(0,0,0,0) 100%),linear-gradient(rgb(1,2,3),rgb(1,2,3))"></div>'
+		const html = composeTemplateHtml(frameHtml, { 'frame-1': { backgroundImage: generated } })
+		const frame = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-node-id="frame-1"]') as HTMLElement
+
+		expect(frame.getAttribute('style')).not.toContain('gradient')
+		expect(frame.getAttribute('style')).not.toMatch(/background:/)
+		expect(frame.style.backgroundImage).toContain(generated)
+	})
+
+	it('캐리어 아닌 래스터 img는 배경을 칠하지 않고 src를 갈아끼운다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
+			'<img data-node-id="rect-1" data-figma-type="RECTANGLE"' +
+			' data-asset-collection="application-images" data-asset-id="5"' +
+			' src="/api/application-images/file/baked.png" srcset="/x 2x" alt="">' +
+			'<div data-node-id="deco-1" data-figma-type="RECTANGLE"></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'rect-1': { backgroundImage: generated, generatedImageId: 9 },
+		})
+		const image = new DOMParser().parseFromString(html, 'text/html').querySelector('img')
+
+		expect(image?.getAttribute('src')).toBe(generated)
+		expect(image?.hasAttribute('srcset')).toBe(false)
+		expect(image?.getAttribute('data-asset-collection')).toBe('generated-images')
+		expect(image?.getAttribute('data-asset-id')).toBe('9')
+		expect(image?.style.backgroundImage).toBe('')
+	})
+
 	it('마커가 없으면 기존 프레임 배경 동작을 유지한다', () => {
 		const frameHtml = '<div data-node-id="frame-1" data-figma-type="FRAME"></div>'
 		const html = composeTemplateHtml(frameHtml, { 'frame-1': { backgroundImage: generated } })
