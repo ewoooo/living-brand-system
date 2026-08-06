@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { composeTemplateHtml } from './compose-template-html.client'
+import { composeTemplateHtml, formatImageEditTransform } from './compose-template-html.client'
 
 const baseHtml =
 	'<img data-node-id="vector-1" data-figma-type="VECTOR" src="/api/template-assets/file/original.svg" style="width:120px;height:40px">'
@@ -91,6 +91,12 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(image?.getAttribute('src')).toBe(generated)
 		expect(image?.hasAttribute('srcset')).toBe(false)
 		expect(image?.getAttribute('data-asset-id')).toBe('9')
+	})
+
+	it('formatImageEditTransform이 compose가 쓰는 문자열과 같은 포맷을 만든다 — 오버레이의 prefix strip 계약', () => {
+		expect(formatImageEditTransform({ x: 12, y: -30, scale: 1.5, rotate: 15 })).toBe(
+			'translate(12px, -30px) scale(1.5) rotate(15deg)',
+		)
 	})
 
 	it('imageTransform을 캐리어의 transform으로 적용한다', () => {

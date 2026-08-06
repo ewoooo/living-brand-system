@@ -26,6 +26,12 @@ import {
 import { generateOneText } from '@/features/generate-text/services/generate-text.client'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import type { TemplateNodeConfig, TemplateNodeConfigMap, TemplateSlotSpec } from '@/types/template'
+import {
+	IDENTITY_TRANSFORM,
+	type ImageTransform,
+	isIdentityTransform,
+} from './image-transform-gestures'
+import { ImageTransformOverlay } from './image-transform-overlay'
 import { VectorLayerEditor } from './vector-layer-editor'
 
 /**
@@ -466,13 +472,6 @@ function ImageSlotSpecEditor({
 	)
 }
 
-type ImageTransform = NonNullable<TemplateNodeConfig['imageTransform']>
-
-const IDENTITY_TRANSFORM: ImageTransform = { x: 0, y: 0, scale: 1, rotate: 0 }
-
-const isIdentityTransform = (t: ImageTransform) =>
-	t.x === 0 && t.y === 0 && t.scale === 1 && t.rotate === 0
-
 /**
  * 프레임에 할당한 이미지의 자유 편집(이동·확대·회전) 폼. 값은 override로만 저장되고
  * compose가 캐리어의 CSS transform으로 적용한다 — baseHtml은 건드리지 않는다.
@@ -487,6 +486,10 @@ function ImageTransformEditor({
 }) {
 	const [draft, setDraft] = useState<ImageTransform>(value ?? IDENTITY_TRANSFORM)
 	const commit = (next: ImageTransform) => onChange(isIdentityTransform(next) ? undefined : next)
+
+	// 캔버스 오버레이가 commit한 값을 반영한다 — key(selected.id)는 안 바뀌므로 effect로 동기화.
+	// 슬라이더 드래그 중에는 value가 변하지 않아(놓을 때만 commit) draft를 덮지 않는다.
+	useEffect(() => setDraft(value ?? IDENTITY_TRANSFORM), [value])
 
 	const fields: {
 		key: keyof ImageTransform
@@ -571,6 +574,8 @@ function TemplateCanvas({
 	canvasRef,
 	hasHtml,
 	height,
+	iframeRef,
+	overlay,
 	previewDocument,
 	scale,
 	width,
@@ -578,6 +583,8 @@ function TemplateCanvas({
 	canvasRef: RefObject<HTMLDivElement | null>
 	hasHtml: boolean
 	height: number
+	iframeRef: RefObject<HTMLIFrameElement | null>
+	overlay?: ReactNode
 	previewDocument: string
 	scale: number
 	width: number
@@ -599,9 +606,11 @@ function TemplateCanvas({
 			}}
 		>
 			{hasHtml && width && height ? (
-				<div style={{ width: width * scale, height: height * scale }}>
+				// relative: 이미지 편집 오버레이가 iframe의 시각적 박스 위에 절대 배치된다.
+				<div style={{ width: width * scale, height: height * scale, position: 'relative' }}>
 					{/* script/forms/navigation은 열지 않고, 인증된 staging 이미지 요청에만 same-origin을 유지한다. */}
 					<iframe
+						ref={iframeRef}
 						title="템플릿 Draft 미리보기"
 						sandbox="allow-same-origin"
 						referrerPolicy="no-referrer"
@@ -615,6 +624,7 @@ function TemplateCanvas({
 							transformOrigin: 'top left',
 						}}
 					/>
+					{overlay}
 				</div>
 			) : (
 				<span className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
@@ -768,6 +778,14 @@ export default function TemplateLayersField() {
 	const commitText = (text: string) => commitNodeConfig({ text })
 	const commitBackground = ({ id, src }: { id: number; src: string }) =>
 		commitNodeConfig({ backgroundImage: src, generatedImageId: id })
+
+	// 이미지 편집 오버레이 게이트 — 아래 슬라이더 섹션과 동일 조건(이미지 할당 대상 + 배경 + 캐리어).
+	const iframeRef = useRef<HTMLIFrameElement>(null)
+	const canEditImage =
+		!!selected &&
+		IMAGE_ASSIGN_TYPES.has(selected.figmaType) &&
+		!!nodeConfigs[selected.id]?.backgroundImage &&
+		selected.hasImageCarrier
 	return (
 		<div style={{ marginBottom: 'var(--base)' }}>
 			{/* 캔버스(가변폭·중앙정렬) + 레이어 목록(고정폭) */}
@@ -776,6 +794,18 @@ export default function TemplateLayersField() {
 					canvasRef={canvasRef}
 					hasHtml={hasHtml}
 					height={h}
+					iframeRef={iframeRef}
+					overlay={
+						canEditImage && selected ? (
+							<ImageTransformOverlay
+								iframeRef={iframeRef}
+								nodeId={selected.id}
+								scale={scale}
+								value={nodeConfigs[selected.id]?.imageTransform}
+								onCommit={(imageTransform) => commitNodeConfig({ imageTransform })}
+							/>
+						) : null
+					}
 					previewDocument={previewDocument}
 					scale={scale}
 					width={w}
@@ -979,7 +1009,7 @@ export default function TemplateLayersField() {
 						)}
 					</div>
 					{/* 캐리어가 있어야 transform을 받을 수 있다 — 레거시 프레임 배경 경로는 compose가 무시. */}
-					{nodeConfigs[selected.id]?.backgroundImage && selected.hasImageCarrier && (
+					{canEditImage && (
 						<div style={{ marginTop: 12 }}>
 							<span
 								className="text-sm"
