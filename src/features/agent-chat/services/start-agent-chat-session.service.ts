@@ -80,7 +80,6 @@ export async function startAgentChatSession(input: StartAgentChatSessionInput) {
 			messageCount: messages.length,
 			usedTools: snapshot.usedTools,
 			usedSkills: snapshot.usedSkills,
-			aiUsage: snapshot.aiUsage,
 			errorMessage,
 			completedAt,
 		}

@@ -105,7 +105,10 @@ describe('startAgentChatSession', () => {
 			role: 'assistant',
 			text: '찾은 가이드라인입니다.',
 			usedTools: [{ name: 'searchGuidelines', callCount: 2 }],
+			aiUsage: expect.objectContaining({ callCount: 2, totalTokens: 30 }),
 		})
+		// 토큰 사용량은 assistant 메시지에만 남긴다 — 세션 상단 그룹 이중 저장은 제거됐다.
+		expect(data).not.toHaveProperty('aiUsage')
 	})
 
 	it('텍스트와 usage가 전혀 없으면 assistant 메시지를 추가하지 않는다', async () => {
