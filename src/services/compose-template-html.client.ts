@@ -22,6 +22,7 @@ export function isImageColorizeOverlayId(nodeId: string): boolean {
  * 컬러 치환: 생성 이미지(단색 라인 아트)를 luminance 마스크로 써서 캐리어를 2겹으로 재구성한다.
  * 바닥(캐리어)=line 색, 오버레이(자식)=background 색 — 마스크의 밝은 영역만 배경색이 남고
  * 어두운 선 부분은 바닥의 line 색이 비친다(안티앨리어싱 경계는 luminance 비율로 혼합).
+ * background 생략 시 캔버스(루트) 배경색으로 자동 유도한다(폴백 #ffffff).
  * 발행 검증(metadataRef)이 style URL과 data-asset-*의 동일 요소 짝을 요구하므로 에셋 참조를
  * 마스크 URL을 가진 오버레이로 옮기고, URL을 잃은 캐리어에서는 제거한다.
  * 반환값은 박스·transform을 소유하는 요소 — img 캐리어는 div로 치환돼 캐리어가 바뀐다.
@@ -45,6 +46,16 @@ function applyImageColorize(
 		base = replaced
 	}
 
+	// 배경색 자동 유도: background 생략 시 캔버스(템플릿 루트) 배경색을 따른다. Image Area
+	// 프레임은 자체 흰 fill을 갖는 경우가 많지만 오버사이즈 캐리어가 프레임을 통째로 덮으므로
+	// 매끄럽게 녹아들 대상은 가장 가까운 조상이 아니라 캔버스다. import가 루트에 background:
+	// 쇼트핸드로 방출한 색을 CSSOM이 backgroundColor로 노출한다.
+	// ponytail: 섹션별 배경이 다른 템플릿은 루트 근사 — 필요 시 background를 직접 지정한다.
+	const root = doc.body.firstElementChild
+	const background =
+		colorize.background ??
+		((root instanceof HTMLElement && root.style.backgroundColor) || '#ffffff')
+
 	const overlay = doc.createElement('div')
 	// 검증이 모든 요소에 유일한 data-node-id를 요구한다 — 캐리어 id에서 파생한 합성 id를 준다.
 	overlay.setAttribute('data-node-id', `${base.getAttribute('data-node-id')}-colorize`)
@@ -54,7 +65,7 @@ function applyImageColorize(
 	overlay.style.top = '0'
 	overlay.style.width = '100%'
 	overlay.style.height = '100%'
-	overlay.style.backgroundColor = colorize.background
+	overlay.style.backgroundColor = background
 	overlay.style.maskImage = `url("${imageUrl}")`
 	overlay.style.maskMode = 'luminance'
 	// 프레이밍은 치환 전 렌더와 동일하게 — background-*를 mask-*로 옮긴다(img는 기본 fill 상당).
