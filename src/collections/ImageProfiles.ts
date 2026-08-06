@@ -18,6 +18,10 @@ import {
 import { imageGenerationErrorResponse } from '@/features/generate-image/respond-image-generation'
 import { normalizeImageProfilePrompt } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
 import { isManager, managerManagedAccess } from '@/lib/auth'
+import {
+	assertImageProfileUnpinned,
+	isUnpublishTransition,
+} from '@/services/guard-template-references.service'
 import { draftVersions } from './shared'
 
 function validateImageSize(
@@ -64,6 +68,18 @@ export const ImageProfiles: CollectionConfig = {
 	slug: 'image-profiles',
 	dbName: 'image_profiles',
 	access: managerManagedAccess,
+	hooks: {
+		// 발행 템플릿의 overrides가 imageInput.profileId로 고정한 프로파일은 삭제·발행 해제를 거부한다.
+		beforeChange: [
+			async ({ data, originalDoc, req }) => {
+				if (isUnpublishTransition({ data, originalDoc, req })) {
+					await assertImageProfileUnpinned(req, Number(originalDoc?.id), '발행 해제')
+				}
+				return data
+			},
+		],
+		beforeDelete: [({ id, req }) => assertImageProfileUnpinned(req, Number(id), '삭제')],
+	},
 	admin: {
 		group: '제작 도구',
 		useAsTitle: 'name',

@@ -4,6 +4,7 @@ import {
 	IMAGE_OUTPUT_SIZE_OPTIONS,
 } from '@/features/generate-image/image-size'
 import { isManager } from '@/lib/auth'
+import { templateAssetReferenceGuardHooks } from '@/services/guard-template-references.service'
 import { draftVersions } from './shared'
 
 const managerFieldRead: FieldAccess = ({ req }) => isManager(req.user)
@@ -24,6 +25,9 @@ export const GeneratedImages: CollectionConfig = {
 		update: () => false,
 		delete: ({ req }) => isManager(req.user) && { _status: { equals: 'draft' } },
 	},
+	// 발행 템플릿이 파일 URL을 참조 중이면 삭제·발행 해제를 거부한다.
+	// delete access가 draft만 허용해도 trusted write(overrideAccess) 경로가 있어 훅으로도 막는다.
+	hooks: templateAssetReferenceGuardHooks('generated-images'),
 	admin: {
 		group: '운영 기록',
 		useAsTitle: 'filename',
