@@ -50,6 +50,8 @@ const ALLOWED_STYLE_PROPERTIES = new Set([
 	'line-height',
 	'margin',
 	'mask-image',
+	// compose 컬러 치환(imageColorize)이 생성 이미지 마스크에 쓰는 luminance 모드.
+	'mask-mode',
 	'mask-position',
 	'mask-repeat',
 	'mask-size',

@@ -129,6 +129,105 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(image?.getAttribute('data-asset-id')).toBe('9')
 	})
 
+	it('imageColorize가 캐리어 div를 luminance 마스크 2겹으로 재구성한다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' data-asset-collection="application-images" data-asset-id="3"' +
+			' style="background-image:url(/api/application-images/file/ph.png);background-size:contain;background-position:left top;background-repeat:no-repeat"></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: generated,
+				generatedImageId: 9,
+				imageColorize: { line: '#112233', background: '#aabbcc' },
+			},
+		})
+		const carrier = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-image-carrier]') as HTMLElement
+		const overlay = carrier.firstElementChild as HTMLElement
+
+		// 바닥(캐리어) = 라인색. 이미지 URL과 에셋 참조는 마스크를 가진 오버레이로 옮겨진다.
+		expect(carrier.style.backgroundImage).toBe('')
+		expect(carrier.style.backgroundColor).toBe('rgb(17, 34, 51)')
+		expect(carrier.hasAttribute('data-asset-collection')).toBe(false)
+		expect(carrier.hasAttribute('data-asset-id')).toBe(false)
+		// 오버레이 = 배경색 + 생성 이미지 luminance 마스크. 프레이밍은 기존 background-*를 물려받는다.
+		expect(overlay.getAttribute('data-node-id')).toBe('rect-1-colorize')
+		expect(overlay.style.backgroundColor).toBe('rgb(170, 187, 204)')
+		expect(overlay.style.maskImage).toContain(generated)
+		expect(overlay.style.getPropertyValue('mask-mode')).toBe('luminance')
+		expect(overlay.style.maskSize).toBe('contain')
+		expect(overlay.style.maskPosition).toBe('left top')
+		expect(overlay.getAttribute('data-asset-collection')).toBe('generated-images')
+		expect(overlay.getAttribute('data-asset-id')).toBe('9')
+	})
+
+	it('imageColorize와 imageTransform이 함께 적용된다 — transform은 캐리어, 마스크는 자식', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: generated,
+				imageColorize: { line: '#112233', background: '#aabbcc' },
+				imageTransform: { x: 12, y: -30, scale: 1.5, rotate: 15 },
+			},
+		})
+		const carrier = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-image-carrier]') as HTMLElement
+
+		expect(carrier.style.transform).toBe('translate(12px, -30px) scale(1.5) rotate(15deg)')
+		expect((carrier.firstElementChild as HTMLElement).style.maskImage).toContain(generated)
+	})
+
+	it('imageColorize가 없으면 캐리어에 오버레이를 만들지 않는다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': { backgroundImage: generated, generatedImageId: 9 },
+		})
+		const carrier = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-image-carrier]') as HTMLElement
+
+		expect(carrier.childElementCount).toBe(0)
+		expect(carrier.style.backgroundImage).toContain(generated)
+	})
+
+	it('캐리어 img는 imageColorize 시 vectorColor처럼 div 2겹으로 치환된다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
+			'<img data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' data-asset-collection="application-images" data-asset-id="3"' +
+			' src="/api/application-images/file/baked.png" alt="" style="width:100px;height:80px">' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: generated,
+				generatedImageId: 9,
+				imageColorize: { line: '#112233', background: '#aabbcc' },
+			},
+		})
+		const doc = new DOMParser().parseFromString(html, 'text/html')
+		const carrier = doc.querySelector('[data-image-carrier]') as HTMLElement
+		const overlay = carrier.firstElementChild as HTMLElement
+
+		expect(doc.querySelector('img')).toBeNull()
+		expect(carrier.tagName).toBe('DIV')
+		expect(carrier.style.width).toBe('100px') // img의 박스 스타일 승계
+		expect(carrier.style.backgroundColor).toBe('rgb(17, 34, 51)')
+		expect(overlay.style.maskImage).toContain(generated)
+		expect(overlay.style.maskSize).toBe('100% 100%') // img 기본 fill 상당
+		expect(overlay.getAttribute('data-asset-collection')).toBe('generated-images')
+		expect(overlay.getAttribute('data-asset-id')).toBe('9')
+	})
+
 	it('formatImageEditTransform이 compose가 쓰는 문자열과 같은 포맷을 만든다 — 오버레이의 prefix strip 계약', () => {
 		expect(formatImageEditTransform({ x: 12, y: -30, scale: 1.5, rotate: 15 })).toBe(
 			'translate(12px, -30px) scale(1.5) rotate(15deg)',

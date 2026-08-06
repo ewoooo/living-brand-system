@@ -13,6 +13,69 @@ export function formatImageEditTransform(
 	return `translate(${edit.x}px, ${edit.y}px) scale(${edit.scale}) rotate(${edit.rotate}deg)`
 }
 
+/** compose가 컬러 치환용으로 만든 오버레이 노드 id — 편집 UI(레이어 패널)에서 숨기는 판별 계약. */
+export function isImageColorizeOverlayId(nodeId: string): boolean {
+	return nodeId.endsWith('-colorize')
+}
+
+/**
+ * 컬러 치환: 생성 이미지(단색 라인 아트)를 luminance 마스크로 써서 캐리어를 2겹으로 재구성한다.
+ * 바닥(캐리어)=line 색, 오버레이(자식)=background 색 — 마스크의 밝은 영역만 배경색이 남고
+ * 어두운 선 부분은 바닥의 line 색이 비친다(안티앨리어싱 경계는 luminance 비율로 혼합).
+ * 발행 검증(metadataRef)이 style URL과 data-asset-*의 동일 요소 짝을 요구하므로 에셋 참조를
+ * 마스크 URL을 가진 오버레이로 옮기고, URL을 잃은 캐리어에서는 제거한다.
+ * 반환값은 박스·transform을 소유하는 요소 — img 캐리어는 div로 치환돼 캐리어가 바뀐다.
+ */
+function applyImageColorize(
+	doc: Document,
+	carrier: HTMLElement,
+	colorize: NonNullable<TemplateNodeConfig['imageColorize']>,
+	imageUrl: string,
+): HTMLElement {
+	let base = carrier
+	if (carrier instanceof HTMLImageElement) {
+		// 래스터 폴백 img 캐리어는 vectorColor와 같은 방식으로 div 치환 — mask는 img 콘텐츠에 못 얹는다.
+		const replaced = doc.createElement('div')
+		for (const attribute of Array.from(carrier.attributes)) {
+			if (!['alt', 'src', 'srcset'].includes(attribute.name)) {
+				replaced.setAttribute(attribute.name, attribute.value)
+			}
+		}
+		carrier.replaceWith(replaced)
+		base = replaced
+	}
+
+	const overlay = doc.createElement('div')
+	// 검증이 모든 요소에 유일한 data-node-id를 요구한다 — 캐리어 id에서 파생한 합성 id를 준다.
+	overlay.setAttribute('data-node-id', `${base.getAttribute('data-node-id')}-colorize`)
+	// 캐리어(임포트가 절대배치·크기를 굳힘)를 기준 박스로 꽉 채운다 — inset은 허용 목록에 없다.
+	overlay.style.position = 'absolute'
+	overlay.style.left = '0'
+	overlay.style.top = '0'
+	overlay.style.width = '100%'
+	overlay.style.height = '100%'
+	overlay.style.backgroundColor = colorize.background
+	overlay.style.maskImage = `url("${imageUrl}")`
+	overlay.style.maskMode = 'luminance'
+	// 프레이밍은 치환 전 렌더와 동일하게 — background-*를 mask-*로 옮긴다(img는 기본 fill 상당).
+	overlay.style.maskSize = base.style.backgroundSize || '100% 100%'
+	overlay.style.maskPosition = base.style.backgroundPosition || 'center'
+	overlay.style.maskRepeat = base.style.backgroundRepeat || 'no-repeat'
+	for (const name of ['data-asset-collection', 'data-asset-id']) {
+		const value = base.getAttribute(name)
+		if (value !== null) overlay.setAttribute(name, value)
+		base.removeAttribute(name)
+	}
+
+	base.style.backgroundImage = ''
+	base.style.backgroundSize = ''
+	base.style.backgroundPosition = ''
+	base.style.backgroundRepeat = ''
+	base.style.backgroundColor = colorize.line
+	base.appendChild(overlay)
+	return base
+}
+
 /**
  * base HTML에 nodeId별 앱 설정을 적용해 Create·Chat·Import가 렌더할 HTML을 만든다.
  * 외부 I/O는 없으며 브라우저 DOMParser만 사용한다.
@@ -60,6 +123,11 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 					carrier.setAttribute('data-asset-collection', 'generated-images')
 					carrier.setAttribute('data-asset-id', String(config.generatedImageId))
 				}
+				// 컬러 치환은 transform보다 먼저 — img 캐리어가 div로 치환될 수 있고, transform은
+				// 치환 결과(2겹 전체)의 캐리어에 붙어야 이동·회전이 컬러 결과를 통째로 움직인다.
+				const visual = config.imageColorize
+					? applyImageColorize(doc, carrier, config.imageColorize, config.backgroundImage)
+					: carrier
 				const edit = config.imageTransform
 				if (
 					edit &&
@@ -70,8 +138,8 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 					// 이미지를 옮기는 느낌이 되고, Figma 소유의 base transform(rotate 등)은 보존된다.
 					// transform-origin은 기본값(center) 유지. identity(0,0,1,0)면 아무것도 쓰지 않는다.
 					const editTransform = formatImageEditTransform(edit)
-					const baseTransform = carrier.style.transform
-					carrier.style.transform = baseTransform
+					const baseTransform = visual.style.transform
+					visual.style.transform = baseTransform
 						? `${editTransform} ${baseTransform}`
 						: editTransform
 				}
@@ -86,8 +154,9 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 					el.setAttribute('data-asset-id', String(config.generatedImageId))
 				}
 			} else {
-				// ponytail: 캐리어 없는 레거시 프레임 배경 경로에서는 imageTransform을 무시한다 —
-				// background-image는 회전할 수 없으므로 이 변형은 설계상 캐리어 전용이다.
+				// ponytail: 캐리어 없는 레거시 프레임 배경 경로에서는 imageTransform·imageColorize를
+				// 무시한다 — background-image는 회전할 수 없고 자식을 얹으면 기존 자식(placeholder)을
+				// 가리므로 두 변형 모두 설계상 캐리어 전용이다.
 				// base가 background: 쇼트핸드(import가 단색·그라데이션 fill에 방출)면 Chrome이
 				// 아래 롱핸드 세팅을 쇼트핸드 하나로 재직렬화해 `background: url(...) ... rgb(...)`를
 				// 만들고, 스타일 검증은 background 쇼트핸드의 url()을 차단해 저장이 막힌다
