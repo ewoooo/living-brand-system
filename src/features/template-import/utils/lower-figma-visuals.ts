@@ -387,7 +387,11 @@ export function createTextStyle(node: Node): IrCssStyle {
 		'font-weight': s.fontWeight ? String(s.fontWeight) : undefined,
 		'font-style': italic ? 'italic' : undefined,
 		'line-height': lineHeight,
-		'text-align': s.textAlignHorizontal?.toLowerCase(),
+		// Figma JUSTIFIED의 CSS 값은 justify — 소문자화만으로는 무효 값(justified)이 된다.
+		'text-align':
+			s.textAlignHorizontal === 'JUSTIFIED'
+				? 'justify'
+				: s.textAlignHorizontal?.toLowerCase(),
 		'letter-spacing': s.letterSpacing ? `${roundCssNumber(s.letterSpacing)}px` : undefined,
 		'text-transform': s.textCase ? textCase[s.textCase] : undefined,
 		'text-decoration': s.textDecoration ? textDeco[s.textDecoration] : undefined,
