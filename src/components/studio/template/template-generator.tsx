@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { StudioWorkspace } from '@/components/studio/studio-workspace'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -38,7 +38,9 @@ export function TemplateGenerator({
 	template: PublishedHtmlTemplate
 }) {
 	const router = useRouter()
+	const previewRef = useRef<HTMLDivElement>(null)
 	const [values, setValues] = useState<Record<string, string>>({})
+	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
 	const [imageValues, setImageValues] = useState<
 		Record<string, { backgroundImage: string; generatedImageId: number }>
 	>({})
@@ -67,6 +69,21 @@ export function TemplateGenerator({
 			}),
 		[html, values, imageValues],
 	)
+	// 합성 결과가 그려진 뒤 텍스트 슬롯의 실제 렌더 박스를 재서 잘림을 알린다 —
+	// scrollHeight는 overflow:hidden clip과 -webkit-line-clamp 말줄임 양쪽에서 잘린 내용까지 세고,
+	// 미리보기 축소(transform scale)는 이 두 값에 영향을 주지 않는다.
+	// biome-ignore lint/correctness/useExhaustiveDependencies(composedHtml): 측정 대상 DOM이 composedHtml로 그려진다 — 값 참조는 없지만 합성이 바뀔 때마다 다시 재야 한다
+	useEffect(() => {
+		const container = previewRef.current
+		if (!container) return
+		const clipped = new Set<string>()
+		for (const slot of slots) {
+			const element = container.querySelector(`[data-node-id="${slot.nodeId}"]`)
+			if (element && element.scrollHeight > element.clientHeight + 1) clipped.add(slot.nodeId)
+		}
+		setClippedSlotIds(clipped)
+	}, [composedHtml, slots])
+
 	const { canExport, exporting, exportError, exportTemplate } = useTemplateExport({
 		fileName: template.name,
 		height,
@@ -130,6 +147,11 @@ export function TemplateGenerator({
 										}))
 									}
 								/>
+								{clippedSlotIds.has(slot.nodeId) && (
+									<Typography size="xs" tone="muted">
+										입력한 텍스트가 박스를 넘어 일부가 잘려 보여요.
+									</Typography>
+								)}
 							</div>
 						))}
 						{imageSlots.map((slot) => (
@@ -206,6 +228,7 @@ export function TemplateGenerator({
 					style={{ width: width * scale, height: height * scale }}
 				>
 					<div
+						ref={previewRef}
 						style={{
 							width,
 							height,
