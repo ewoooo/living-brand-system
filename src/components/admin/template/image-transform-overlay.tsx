@@ -134,7 +134,10 @@ export function ImageTransformOverlay({
 	function startGesture(event: React.PointerEvent, mode: Gesture['mode']) {
 		if (event.button !== 0 || gestureRef.current) return
 		const frame = findNode(iframeRef.current?.contentDocument, nodeId)
-		const carrier = frame?.querySelector('[data-image-carrier]')
+		// 캐리어 사각형을 직접 선택한 경우 자신이 캐리어다 — compose와 같은 해석 규칙.
+		const carrier = frame?.matches('[data-image-carrier]')
+			? frame
+			: frame?.querySelector('[data-image-carrier]')
 		if (!(carrier instanceof HTMLElement)) return
 		event.preventDefault()
 		containerRef.current?.setPointerCapture(event.pointerId)

@@ -63,6 +63,42 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(carrier.getAttribute('data-asset-id')).toBe('9')
 	})
 
+	it('요소 자신이 캐리어면(사각형 직접 선택) 그 요소에서 교체·재바인딩한다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' data-asset-collection="application-images" data-asset-id="3"' +
+			' style="background-image:url(/api/application-images/file/ph.png);background-size:contain"></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'rect-1': { backgroundImage: generated, generatedImageId: 9 },
+		})
+		const carrier = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-node-id="rect-1"]') as HTMLElement
+
+		expect(carrier.style.backgroundImage).toContain(generated)
+		expect(carrier.style.backgroundSize).toBe('contain')
+		expect(carrier.getAttribute('data-asset-collection')).toBe('generated-images')
+		expect(carrier.getAttribute('data-asset-id')).toBe('9')
+	})
+
+	it('캐리어 아닌 IMAGE fill 요소(placeholder 참조 보유)도 생성 이미지 참조로 재바인딩한다', () => {
+		const html = composeTemplateHtml(
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE"' +
+				' data-asset-collection="application-images" data-asset-id="3"' +
+				' style="background-image:url(/api/application-images/file/ph.png)"></div>',
+			{ 'rect-1': { backgroundImage: generated, generatedImageId: 9 } },
+		)
+		const rect = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-node-id="rect-1"]') as HTMLElement
+
+		expect(rect.style.backgroundImage).toContain(generated)
+		expect(rect.getAttribute('data-asset-collection')).toBe('generated-images')
+		expect(rect.getAttribute('data-asset-id')).toBe('9')
+	})
+
 	it('배경 스타일이 없는 캐리어 div에는 cover·center 기본값을 준다', () => {
 		const frameHtml =
 			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
