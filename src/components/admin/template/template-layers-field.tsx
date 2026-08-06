@@ -46,7 +46,7 @@ interface LayerRow {
 	figmaType: string
 	isText: boolean
 	isVector: boolean
-	/** 직계 자식에 data-image-carrier가 있는 프레임 — 이미지 자유 편집(transform) 대상. */
+	/** 자신 또는 직계 자식이 data-image-carrier인 레이어 — 이미지 자유 편집(transform) 대상. */
 	hasImageCarrier: boolean
 	/** 요소 자신의 inline width/height(px) — clipsContent 프레임의 가시 박스. AI 생성 비율 유도에 쓴다. */
 	boxWidth?: number
@@ -134,9 +134,9 @@ function parseLayers(html: string): LayerRow[] {
 			figmaType,
 			isText,
 			isVector: VECTOR_TYPES.has(figmaType),
-			hasImageCarrier: Array.from(el.children).some((child) =>
-				child.hasAttribute('data-image-carrier'),
-			),
+			hasImageCarrier:
+				el.hasAttribute('data-image-carrier') ||
+				Array.from(el.children).some((child) => child.hasAttribute('data-image-carrier')),
 			boxWidth: stylePx(el, 'width'),
 			boxHeight: stylePx(el, 'height'),
 			text: isText ? (el.textContent ?? '') : '',
