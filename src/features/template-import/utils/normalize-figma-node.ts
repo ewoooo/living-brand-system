@@ -6,6 +6,7 @@ import {
 	createTextStyle,
 	findCssLowerableImageFill,
 	lowerNodeBackground,
+	resolveTextTruncation,
 	roundCssNumber,
 } from './lower-figma-visuals'
 
@@ -75,16 +76,28 @@ export interface FigmaRasterDiagnostic {
 	textLayerCount: number
 }
 
+/** 말줄임(…) 의도가 있는데 줄 수를 유도하지 못해 잘림(clip)만 적용된 텍스트 레이어의 진단. */
+export interface FigmaTruncationDiagnostic {
+	nodeId: string
+	name: string
+}
+
 /** Figma 렌더 API로 구워야 하는 노드(서브트리째 이미지가 된다)와 별도 해석이 필요한 IMAGE fill 목록. */
 export interface FigmaAssetPlan {
 	renders: { nodeId: string; name: string; format: 'png' | 'svg' }[]
 	imageFills: { imageRef: string; name: string }[]
 	diagnostics: FigmaRasterDiagnostic[]
+	truncationDiagnostics: FigmaTruncationDiagnostic[]
 }
 
 /** 트리를 훑어 에셋 계획을 만든다. 순수 함수 — 실제 렌더/다운로드 I/O는 서비스가 수행한다. */
 export function planFigmaAssets(node: FigmaSourceNode): FigmaAssetPlan {
-	const plan: FigmaAssetPlan = { renders: [], imageFills: [], diagnostics: [] }
+	const plan: FigmaAssetPlan = {
+		renders: [],
+		imageFills: [],
+		diagnostics: [],
+		truncationDiagnostics: [],
+	}
 	const seenImageRefs = new Set<string>()
 	collectAssetRequests(node, plan, seenImageRefs)
 	return plan
@@ -117,6 +130,14 @@ function collectAssetRequests(
 	if (VECTOR_NODE_TYPES.has(node.type)) {
 		plan.renders.push({ nodeId: node.id, name: node.name ?? node.id, format: 'svg' })
 		return
+	}
+
+	// 말줄임 의도가 clip으로 강등되는 텍스트 — 판단은 resolveTextTruncation(단일 소유자)이 한다.
+	if (node.type === 'TEXT') {
+		const { truncates, lineClamp } = resolveTextTruncation(node)
+		if (truncates && lineClamp === undefined) {
+			plan.truncationDiagnostics.push({ nodeId: node.id, name: node.name ?? node.id })
+		}
 	}
 
 	const imageFill = findCssLowerableImageFill(node)
