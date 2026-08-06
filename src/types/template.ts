@@ -20,8 +20,9 @@ export interface TemplateNodeConfig {
 	/**
 	 * 생성 이미지(단색 라인 아트)의 브랜드 컬러 치환 — 이미지가 luminance 마스크가 되어
 	 * 밝은 영역=background, 어두운 선=line으로 칠해진다. backgroundImage 없이는 compose가 무시한다.
+	 * background 생략 = 캔버스(템플릿 루트) 배경색 자동.
 	 */
-	imageColorize?: { line: string; background: string }
+	imageColorize?: { line: string; background?: string }
 	input?: TemplateSlotSpec
 	/** 존재 자체가 스튜디오 개방 선언 — 유저가 이 프레임의 이미지를 생성해 채울 수 있다. profileId는 사용할 프로파일 고정(없으면 유저가 선택). */
 	imageInput?: { profileId?: number }

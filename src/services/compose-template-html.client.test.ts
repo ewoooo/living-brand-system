@@ -184,6 +184,58 @@ describe('composeTemplateHtml image carrier', () => {
 		expect((carrier.firstElementChild as HTMLElement).style.maskImage).toContain(generated)
 	})
 
+	it('background 생략 시 오버레이가 캔버스(루트) 배경색을 따른다 — 프레임 자체 fill이 아니라', () => {
+		const frameHtml =
+			'<div data-node-id="root-1" data-figma-type="FRAME" style="background: rgb(0,40,10)">' +
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="background: rgb(255,255,255)">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+			'</div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': { backgroundImage: generated, imageColorize: { line: '#112233' } },
+		})
+		const carrier = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-image-carrier]') as HTMLElement
+		const overlay = carrier.firstElementChild as HTMLElement
+
+		expect(carrier.style.backgroundColor).toBe('rgb(17, 34, 51)')
+		expect(overlay.style.backgroundColor).toBe('rgb(0, 40, 10)')
+	})
+
+	it('명시한 background가 루트 배경색보다 우선한다', () => {
+		const frameHtml =
+			'<div data-node-id="root-1" data-figma-type="FRAME" style="background: rgb(0,40,10)">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'root-1': {
+				backgroundImage: generated,
+				imageColorize: { line: '#112233', background: '#aabbcc' },
+			},
+		})
+		const overlay = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-image-carrier]')?.firstElementChild as HTMLElement
+
+		expect(overlay.style.backgroundColor).toBe('rgb(170, 187, 204)')
+	})
+
+	it('루트에 배경색이 없으면 background가 #ffffff로 폴백한다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': { backgroundImage: generated, imageColorize: { line: '#112233' } },
+		})
+		const overlay = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-image-carrier]')?.firstElementChild as HTMLElement
+
+		expect(overlay.style.backgroundColor).toBe('rgb(255, 255, 255)')
+	})
+
 	it('imageColorize가 없으면 캐리어에 오버레이를 만들지 않는다', () => {
 		const frameHtml =
 			'<div data-node-id="frame-1" data-figma-type="FRAME">' +

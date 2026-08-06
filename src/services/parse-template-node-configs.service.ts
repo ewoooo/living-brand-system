@@ -31,7 +31,8 @@ const templateHexColorSchema = z.string().regex(/^#[0-9a-fA-F]{3,8}$/)
 const templateImageColorizeSchema = z
 	.object({
 		line: templateHexColorSchema,
-		background: templateHexColorSchema,
+		// 생략 시 compose가 캔버스(템플릿 루트) 배경색으로 자동 유도한다.
+		background: templateHexColorSchema.optional(),
 	})
 	.strict()
 
