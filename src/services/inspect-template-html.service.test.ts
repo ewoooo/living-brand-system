@@ -192,6 +192,58 @@ describe('template HTML inspection', () => {
 		).toBeUndefined()
 	})
 
+	it('캐리어 아닌 래스터 img에 이미지를 할당해도 발행 검사를 통과한다', () => {
+		// 회귀: 예전 compose는 래스터 img에 background-image를 칠하고 src를 남겨
+		// "HTML과 overrides의 에셋 참조 불일치"로 발행이 막혔다 — 지금은 src를 갈아끼운다.
+		// 자식이 둘이라 캐리어 판정이 되지 않는 프레임 + 래스터 폴백(renderedAssets) 자식.
+		const converted = convertFigmaNodeToHtml(
+			{
+				id: '3:1',
+				name: 'Card',
+				type: 'FRAME',
+				clipsContent: true,
+				absoluteBoundingBox: { x: 0, y: 0, width: 911, height: 492 },
+				children: [
+					{
+						id: '3:2',
+						name: 'baked',
+						type: 'RECTANGLE',
+						absoluteBoundingBox: { x: 0, y: 0, width: 911, height: 492 },
+					},
+					{
+						id: '3:3',
+						name: 'deco',
+						type: 'RECTANGLE',
+						fills: [{ type: 'SOLID', color: { r: 0, g: 0, b: 0, a: 1 } }],
+						absoluteBoundingBox: { x: 0, y: 0, width: 10, height: 10 },
+					},
+				],
+			} as never,
+			{
+				'3:2': {
+					collection: 'application-images',
+					id: 5,
+					url: '/api/application-images/file/baked.png',
+				},
+			},
+		)
+		const parsed = parsedConfigs({
+			'3:2': { backgroundImage: '/api/generated-images/file/gen.png', generatedImageId: 9 },
+		})
+		const composed = composeTemplateHtml(converted.html, parsed.data)
+
+		expect(converted.html).not.toContain('data-image-carrier')
+		expect(composed).toContain('/api/generated-images/file/gen.png')
+		expect(
+			inspectTemplateHtml({
+				baseHtml: converted.html,
+				html: composed,
+				overrideNodeIds: Object.keys(parsed.data),
+				refsByNode: parsed.refsByNode,
+			}).blocker,
+		).toBeUndefined()
+	})
+
 	it('imageTransform이 적용된 합성 HTML도 발행 검사를 통과한다', () => {
 		// transform은 저장 허용 목록에 이미 있다(inspect-template-style) — 여기서 회귀를 고정한다.
 		const converted = convertFigmaNodeToHtml(

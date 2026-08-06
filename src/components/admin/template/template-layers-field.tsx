@@ -44,6 +44,8 @@ interface LayerRow {
 	depth: number
 	name: string
 	figmaType: string
+	/** 요소의 실제 태그(p·img·div) — data-figma-type이 아니라 렌더 실체로 편집기를 고른다. */
+	tag: string
 	isText: boolean
 	isVector: boolean
 	/** 자신 또는 직계 자식이 data-image-carrier인 레이어 — 이미지 자유 편집(transform) 대상. */
@@ -96,6 +98,15 @@ const VECTOR_TYPES = new Set([
 // 배경 이미지 할당(AI 생성) 대상. Figma REST는 둥근 사각형도 RECTANGLE(+cornerRadius)로 내보내므로 두 타입이면 충분하다.
 const IMAGE_ASSIGN_TYPES = new Set(['FRAME', 'RECTANGLE'])
 
+// 배경 설정 개방 판정 — 타입 목록이 아니라 compose가 실제로 지원하는 능력으로 결정한다.
+// - 캐리어 보유(자신·직계 자식) → 타입 무관 허용(INSTANCE/COMPONENT/SECTION 프레임 포함)
+// - FRAME/RECTANGLE → div(레거시 배경 경로)든 래스터 img(src 교체)든 허용
+// - 벡터 img는 VectorLayerEditor가, 실제 <p>는 텍스트 편집이 소유하므로 제외
+const canAssignImage = (layer: LayerRow) =>
+	!layer.isText &&
+	!layer.isVector &&
+	(layer.hasImageCarrier || IMAGE_ASSIGN_TYPES.has(layer.figmaType))
+
 // 배경 설정 트리거 버튼 공통 스타일(에셋 가져오기 · AI 생성).
 const TRIGGER_STYLE: CSSProperties = {
 	display: 'inline-flex',
@@ -123,15 +134,16 @@ function parseLayers(html: string): LayerRow[] {
 	const doc = new DOMParser().parseFromString(html, 'text/html')
 
 	const walk = (el: Element, depth: number) => {
-		const figmaType =
-			el.getAttribute('data-figma-type') ||
-			(el.tagName.toLowerCase() === 'p' ? 'TEXT' : 'FRAME')
-		const isText = figmaType === 'TEXT'
+		const tag = el.tagName.toLowerCase()
+		const figmaType = el.getAttribute('data-figma-type') || (tag === 'p' ? 'TEXT' : 'FRAME')
+		// 래스터화된 TEXT는 figmaType이 TEXT여도 img로 남는다 — 실제 <p>만 텍스트 편집 대상.
+		const isText = tag === 'p'
 		rows.push({
 			id: el.getAttribute('data-node-id') || `${depth}-${rows.length}`,
 			depth,
 			name: el.getAttribute('data-name') || typeLabel(figmaType),
 			figmaType,
+			tag,
 			isText,
 			isVector: VECTOR_TYPES.has(figmaType),
 			hasImageCarrier:
@@ -783,7 +795,7 @@ export default function TemplateLayersField() {
 	const iframeRef = useRef<HTMLIFrameElement>(null)
 	const canEditImage =
 		!!selected &&
-		IMAGE_ASSIGN_TYPES.has(selected.figmaType) &&
+		canAssignImage(selected) &&
 		!!nodeConfigs[selected.id]?.backgroundImage &&
 		selected.hasImageCarrier
 	return (
@@ -918,7 +930,7 @@ export default function TemplateLayersField() {
 				</div>
 			)}
 
-			{selected && IMAGE_ASSIGN_TYPES.has(selected.figmaType) && (
+			{selected && canAssignImage(selected) && (
 				<div>
 					<span
 						className="text-sm"
@@ -1039,14 +1051,13 @@ export default function TemplateLayersField() {
 				/>
 			)}
 
-			{selected &&
-				!selected.isText &&
-				!selected.isVector &&
-				!IMAGE_ASSIGN_TYPES.has(selected.figmaType) && (
-					<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
-						{typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.
-					</p>
-				)}
+			{selected && !selected.isText && !selected.isVector && !canAssignImage(selected) && (
+				<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
+					{selected.tag === 'img'
+						? '이미지로 고정된 레이어입니다 — Figma에서 해당 속성을 정리하면 편집 가능하게 가져올 수 있습니다.'
+						: `${typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.`}
+				</p>
+			)}
 		</div>
 	)
 }
