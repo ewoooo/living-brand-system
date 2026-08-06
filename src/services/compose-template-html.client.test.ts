@@ -184,12 +184,11 @@ describe('composeTemplateHtml image carrier', () => {
 		expect((carrier.firstElementChild as HTMLElement).style.maskImage).toContain(generated)
 	})
 
-	it('background 생략 시 오버레이가 캔버스(루트) 배경색을 따른다 — 프레임 자체 fill이 아니라', () => {
+	it('background 생략 시 단일 레이어 반전 마스크 — 배경은 칠하지 않고 선만 line 색', () => {
 		const frameHtml =
-			'<div data-node-id="root-1" data-figma-type="FRAME" style="background: rgb(0,40,10)">' +
-			'<div data-node-id="frame-1" data-figma-type="FRAME" style="background: rgb(255,255,255)">' +
-			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
-			'</div>' +
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden;background-color:rgb(255,255,255)">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' style="background-size:contain"></div>' +
 			'</div>'
 		const html = composeTemplateHtml(frameHtml, {
 			'frame-1': { backgroundImage: generated, imageColorize: { line: '#112233' } },
@@ -199,41 +198,69 @@ describe('composeTemplateHtml image carrier', () => {
 			.querySelector('[data-image-carrier]') as HTMLElement
 		const overlay = carrier.firstElementChild as HTMLElement
 
-		expect(carrier.style.backgroundColor).toBe('rgb(17, 34, 51)')
-		expect(overlay.style.backgroundColor).toBe('rgb(0, 40, 10)')
+		// 바닥은 아무것도 칠하지 않는다 — 배경이 투명해야 캔버스가 그대로 비친다.
+		expect(carrier.style.backgroundColor).toBe('')
+		// 오버레이 = line 색 + 반전 마스크(백색 기준층에서 이미지 luminance를 빼 선만 불투명).
+		expect(overlay.style.backgroundColor).toBe('rgb(17, 34, 51)')
+		expect(overlay.style.maskImage).toContain('linear-gradient')
+		expect(overlay.style.maskImage).toContain(generated)
+		expect(overlay.style.getPropertyValue('mask-mode')).toBe('alpha, luminance')
+		expect(overlay.style.getPropertyValue('mask-composite')).toBe('subtract')
+		// 기준층은 4px 인셋(가장자리 AA 잔선 방지), 이미지 레이어는 기존 background-size 승계.
+		expect(overlay.style.maskSize).toBe('calc(100% - 4px) calc(100% - 4px), contain')
 	})
 
-	it('명시한 background가 루트 배경색보다 우선한다', () => {
+	it('부모 clip 프레임의 fill을 투명화한다 — 캐리어가 못 덮는 노출 영역으로 새는 것 방지', () => {
 		const frameHtml =
-			'<div data-node-id="root-1" data-figma-type="FRAME" style="background: rgb(0,40,10)">' +
+			'<div data-node-id="root-1" data-figma-type="FRAME" style="background-color:rgb(0,40,10)">' +
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden;background-color:rgb(255,255,255)">' +
 			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+			'</div>' +
 			'</div>'
 		const html = composeTemplateHtml(frameHtml, {
-			'root-1': {
+			'frame-1': {
 				backgroundImage: generated,
 				imageColorize: { line: '#112233', background: '#aabbcc' },
 			},
 		})
-		const overlay = new DOMParser()
+		const frame = new DOMParser()
 			.parseFromString(html, 'text/html')
-			.querySelector('[data-image-carrier]')?.firstElementChild as HTMLElement
+			.querySelector('[data-node-id="frame-1"]') as HTMLElement
 
-		expect(overlay.style.backgroundColor).toBe('rgb(170, 187, 204)')
+		expect(frame.style.backgroundColor).toBe('transparent')
 	})
 
-	it('루트에 배경색이 없으면 background가 #ffffff로 폴백한다', () => {
+	it('프레임에 url( 배경이 있으면 fill을 건드리지 않는다', () => {
 		const frameHtml =
-			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
+			'<div data-node-id="root-1" data-figma-type="FRAME" style="background-color:rgb(0,40,10)">' +
+			'<div data-node-id="frame-1" data-figma-type="FRAME"' +
+			' style="overflow:hidden;background-image:url(/api/application-images/file/bg.png);background-color:rgb(255,255,255)">' +
 			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+			'</div>' +
 			'</div>'
 		const html = composeTemplateHtml(frameHtml, {
 			'frame-1': { backgroundImage: generated, imageColorize: { line: '#112233' } },
 		})
-		const overlay = new DOMParser()
+		const frame = new DOMParser()
 			.parseFromString(html, 'text/html')
-			.querySelector('[data-image-carrier]')?.firstElementChild as HTMLElement
+			.querySelector('[data-node-id="frame-1"]') as HTMLElement
 
-		expect(overlay.style.backgroundColor).toBe('rgb(255, 255, 255)')
+		expect(frame.style.backgroundColor).toBe('rgb(255, 255, 255)')
+	})
+
+	it('프레임이 템플릿 루트(캔버스)면 fill을 건드리지 않는다', () => {
+		const frameHtml =
+			'<div data-node-id="root-1" data-figma-type="FRAME" style="overflow:hidden;background-color:rgb(0,40,10)">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'root-1': { backgroundImage: generated, imageColorize: { line: '#112233' } },
+		})
+		const root = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-node-id="root-1"]') as HTMLElement
+
+		expect(root.style.backgroundColor).toBe('rgb(0, 40, 10)')
 	})
 
 	it('imageColorize가 없으면 캐리어에 오버레이를 만들지 않는다', () => {

@@ -51,7 +51,7 @@ describe('parseTemplateNodeConfigs imageColorize', () => {
 		}
 	})
 
-	it('line만 있는 값을 허용한다 — background 생략 = 캔버스 배경색 자동', () => {
+	it('line만 있는 값을 허용한다 — background 생략 = 배경 투명(선만 칠함)', () => {
 		const imageColorize = { line: '#8fd6b8' }
 		const parsed = parseTemplateNodeConfigs({ 'frame-1': { imageColorize } })
 
