@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { convertFigmaNodeToHtml } from '@/features/template-import/utils/figma-node-to-html'
 import { collectTemplateImageSlots, collectTemplateSlots } from './collect-template-slots.service'
 
 const html = [
@@ -90,6 +91,39 @@ describe('collectTemplateImageSlots', () => {
 		)
 
 		expect(slots).toEqual([{ nodeId: '1:1', name: 'Fluid' }])
+	})
+
+	it('> 가 든 레이어 이름의 실제 emit 출력에서도 이름·텍스트·박스를 정확히 읽는다', () => {
+		const { html: emitted } = convertFigmaNodeToHtml({
+			id: '1:1',
+			name: 'Root',
+			type: 'FRAME',
+			absoluteBoundingBox: { x: 0, y: 0, width: 400, height: 300 },
+			children: [
+				{
+					id: '2:1',
+					name: 'Header > Title',
+					type: 'TEXT',
+					characters: '홍길동',
+					absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 40 },
+					style: { fontFamily: 'Inter', fontSize: 16 },
+				},
+				{
+					id: '3:1',
+					name: 'Image > Area',
+					type: 'FRAME',
+					clipsContent: true,
+					absoluteBoundingBox: { x: 0, y: 100, width: 300, height: 150 },
+				},
+			],
+		})
+
+		expect(collectTemplateSlots(emitted, { '2:1': { input: {} } })).toEqual([
+			{ nodeId: '2:1', name: 'Header > Title', text: '홍길동', input: {} },
+		])
+		expect(collectTemplateImageSlots(emitted, { '3:1': { imageInput: {} } })).toEqual([
+			{ nodeId: '3:1', name: 'Image > Area', boxWidth: 300, boxHeight: 150 },
+		])
 	})
 
 	it('텍스트 노드의 imageInput·고아 노드·imageInput 없는 오버라이드는 무시한다', () => {
