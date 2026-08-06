@@ -21,8 +21,13 @@ type HdColor = {
 }
 
 // 출처: 0730_HD_Guidlines_All-51.svg (COLOR OVERVIEW 페이지) 아트워크에서 직접 추출, 2026-08-06.
-// 🔴 CMYK·PMS는 한 건도 넣지 않는다. 브랜드팀 표의 14칸이 전부 `C 0 M 100 Y 90 K 0` / `485 C`로
-//    동일한 템플릿 플레이스홀더였다. 계산해서 채우지도 않는다(CMYK는 장치 의존).
+// 🔴 CMYK·PMS는 가이드라인 표기를 그대로 옮긴다(사용자 지시, 2026-08-06). 다만 14칸이 전부 같은 값이라
+//    브랜드팀이 템플릿 스와치를 아직 안 채운 것으로 보인다 — 실값이 오면 아래 상수만 색별로 가르면 된다.
+//    표에 함께 적힌 RGB·HEX는 옮기지 않는다. 확정된 hex와 어긋나기 때문이다
+//    (표의 HEX는 14칸 모두 #F00F0F, DISCOVERY BLUE·grey 4종은 RGB도 같은 플레이스홀더다).
+//    화면의 RGB는 저장값이 아니라 hex에서 파생한다.
+const CMYK = 'C 0 M 100 Y 90 K 0'
+const PANTONE = '485 C'
 // 🔴 오버뷰 페이지와 배경 예시 페이지의 값이 어긋나는 색이 둘 있다. 오버뷰를 정본으로 채택했다.
 //    HD DISCOVERY BLUE #003087(오버뷰) vs #002F87(배경 예시)
 //    HD LIGHT BLUE     #DCF0F5(오버뷰) vs #DFE4F4(배경 예시)
@@ -52,6 +57,38 @@ const GROUPS: { name: string; colors: HdColor[] }[] = [
 	},
 	{
 		name: 'Mono Color',
+		colors: [
+			{ name: 'WHITE', hex: '#FFFFFF' },
+			{ name: 'LIGHT GREY', hex: '#D3D2D2' },
+			{ name: 'MIDDLE GREY', hex: '#A7A6A6' },
+			{ name: 'MIDDLE GREY', hex: '#7B7979' },
+			{ name: 'DARK GREY', hex: '#4F4C4D' },
+			{ name: 'BLACK', hex: '#000000' },
+		],
+	},
+	// 같은 14색을 계열로 다시 묶은 것. 용도별(Primary/Secondary/Mono) 묶음과 공존한다 —
+	// 색과 그룹이 별개라 한 색이 두 묶음에 동시에 들어갈 수 있고, 색 문서는 하나뿐이다.
+	// 행 안의 순서는 밝은 색 → 어두운 색. Mono가 원래 그 순서라 나머지도 맞췄다.
+	{
+		name: '초록 계열',
+		colors: [
+			{ name: 'HD LIGHT GREEN', hex: '#DCF5D2' },
+			{ name: 'HD ECO GREEN', hex: '#73D75A' },
+			{ name: 'HD HERITAGE GREEN', hex: '#00AF41' },
+			{ name: 'HD PROSPERITY GREEN', hex: '#007332' },
+			{ name: 'HD DEEP GREEN', hex: '#00280A' },
+		],
+	},
+	{
+		name: '파랑 계열',
+		colors: [
+			{ name: 'HD LIGHT BLUE', hex: '#DCF0F5' },
+			{ name: 'HD DISCOVERY BLUE', hex: '#003087' },
+			{ name: 'HD DEEP BLUE', hex: '#000A32' },
+		],
+	},
+	{
+		name: '검정 계열',
 		colors: [
 			{ name: 'WHITE', hex: '#FFFFFF' },
 			{ name: 'LIGHT GREY', hex: '#D3D2D2' },
@@ -92,38 +129,46 @@ for (const doc of existing.docs) {
 let created = 0
 let updated = 0
 
+// 🔴 색은 그룹마다가 아니라 딱 한 번만 만든다. 같은 색이 여러 그룹에 들어가므로(용도별·계열별)
+//    그룹 루프 안에서 upsert하면 같은 색 문서가 묶음 수만큼 복제된다.
+//    키는 이름+hex다 — MIDDLE GREY가 hex만 다른 두 건이라 이름만으로는 못 가른다.
+const colorKey = (c: HdColor) => `${c.name.toUpperCase()}|${c.hex.toUpperCase()}`
+const uniqueColors = new Map<string, HdColor>()
 for (const group of GROUPS) {
-	const colorIds: number[] = []
+	for (const color of group.colors) uniqueColors.set(colorKey(color), color)
+}
 
-	for (const color of group.colors) {
-		const data = {
-			name: color.name,
-			hex: color.hex,
-			// 그룹은 이제 brand-color-groups가 소유한다. 색에 남아 있던 옛 그룹 문자열을 지운다.
-			colorGroup: null,
-			// cmyk·pantone은 아예 쓰지 않는다. 이 스크립트가 그 값을 갖고 있지 않으므로 null로 덮으면
-			// 브랜드팀이 Admin에 채워 넣은 값을 재실행 때마다 지우게 된다.
-			// 🔴 명시하지 않으면 최신 초안 버전을 따라가 게시분이 초안으로 내려간다.
-			_status: 'published' as const,
-		}
-
-		const id = unclaimed.get(color.name.toUpperCase())?.shift()
-		if (id) {
-			await payload.update({ collection: 'brand-colors', id, data, overrideAccess: true })
-			colorIds.push(id)
-			updated++
-			console.log(`updated  ${color.name.padEnd(22)} ${color.hex}`)
-		} else {
-			const doc = await payload.create({
-				collection: 'brand-colors',
-				data,
-				overrideAccess: true,
-			})
-			colorIds.push(doc.id)
-			created++
-			console.log(`created  ${color.name.padEnd(22)} ${color.hex}`)
-		}
+const idByColor = new Map<string, number>()
+for (const [key, color] of uniqueColors) {
+	const data = {
+		name: color.name,
+		hex: color.hex,
+		// 그룹은 이제 brand-color-groups가 소유한다. 색에 남아 있던 옛 그룹 문자열을 지운다.
+		colorGroup: null,
+		cmyk: CMYK,
+		pantone: PANTONE,
+		// 🔴 명시하지 않으면 최신 초안 버전을 따라가 게시분이 초안으로 내려간다.
+		_status: 'published' as const,
 	}
+
+	const id = unclaimed.get(color.name.toUpperCase())?.shift()
+	if (id) {
+		await payload.update({ collection: 'brand-colors', id, data, overrideAccess: true })
+		idByColor.set(key, id)
+		updated++
+		console.log(`updated  ${color.name.padEnd(22)} ${color.hex}`)
+	} else {
+		const doc = await payload.create({ collection: 'brand-colors', data, overrideAccess: true })
+		idByColor.set(key, doc.id)
+		created++
+		console.log(`created  ${color.name.padEnd(22)} ${color.hex}`)
+	}
+}
+
+for (const group of GROUPS) {
+	const colorIds = group.colors
+		.map((c) => idByColor.get(colorKey(c)))
+		.filter((id): id is number => id != null)
 
 	const groupData = { name: group.name, colors: colorIds, _status: 'published' as const }
 	const found = await payload.find({
