@@ -39,6 +39,15 @@ export const BrandColors: CollectionConfig = {
 				description: 'PMS 표기입니다. 예: 705C, Warm Red C',
 			},
 		},
+		// RGB는 저장하지 않는다 — hex에서 무손실로 나오므로 두 곳에 적으면 어긋나기만 한다.
+		// CMYK는 장치 의존이라 hex에서 계산되지 않는다. 브랜드팀이 지정한 값만 여기 담는다.
+		{
+			name: 'cmyk',
+			type: 'text',
+			admin: {
+				description: '인쇄 CMYK 표기입니다. 예: C 0 M 100 Y 90 K 0',
+			},
+		},
 		{
 			name: 'colorGroup',
 			type: 'text',

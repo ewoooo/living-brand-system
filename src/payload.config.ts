@@ -21,6 +21,7 @@ import { migrations } from '../migrations'
 import { AgentChatSessions } from './collections/AgentChatSessions'
 import { AgentSkills } from './collections/AgentSkills'
 import { ApplicationImages } from './collections/ApplicationImages'
+import { BrandColorGroups } from './collections/BrandColorGroups'
 import { BrandColors } from './collections/BrandColors'
 import { BrandIcons } from './collections/BrandIcons'
 import { BrandLogos } from './collections/BrandLogos'
@@ -90,6 +91,7 @@ export default buildConfig({
 		GuidelineDocuments,
 		BrandLogos,
 		BrandColors,
+		BrandColorGroups,
 		BrandTypefaces,
 		BrandIcons,
 		ApplicationImages,
