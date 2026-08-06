@@ -7,8 +7,10 @@ import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/component'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/component'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/component'
+import { ConceptIntroWidget } from '@/features/guideline/widgets/concept-intro/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
 import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/component'
+import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
 import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/component'
@@ -18,9 +20,12 @@ import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-gr
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
+import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/component'
 import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/component'
 import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/component'
 import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/component'
+import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/component'
+import { SeparatedLogoApplicationWidget } from '@/features/guideline/widgets/separated-logo-application/component'
 import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/component'
 import { TypeScaleWidget } from '@/features/guideline/widgets/type-scale/component'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/component'
@@ -62,6 +67,10 @@ function renderWidget(child: Child): ReactNode {
 			)
 		case 'colorPairingWidget':
 			return <ColorPairingWidget />
+		case 'conceptIntroWidget':
+			return <ConceptIntroWidget lead={child.lead} body={child.body} logo={child.logo} />
+		case 'hdColorPaletteWidget':
+			return <HdColorPaletteWidget />
 		case 'colorPairingRecommendationWidget':
 			return <ColorPairingRecommendationWidget />
 		case 'doDontWidget':
@@ -127,12 +136,27 @@ function renderWidget(child: Child): ReactNode {
 					padding={child.padding}
 				/>
 			)
+		case 'logoGridSpecWidget':
+			return (
+				<LogoGridSpecWidget form={child.form} nameKo={child.nameKo} nameEn={child.nameEn} />
+			)
 		case 'logoGroupViewerWidget':
 			return <LogoGroupViewerWidget />
 		case 'logoViewerWidget':
 			return <LogoViewerWidget />
 		case 'mediaShowcaseWidget':
 			return <MediaShowcaseWidget />
+		case 'sectionDividerWidget':
+			return (
+				<SectionDividerWidget
+					chapterCode={child.chapterCode}
+					chapterTitle={child.chapterTitle}
+					sectionCode={child.sectionCode}
+					sectionTitle={child.sectionTitle}
+				/>
+			)
+		case 'sepLogoAppWidget':
+			return <SeparatedLogoApplicationWidget variants={child.variants} apps={child.apps} />
 		case 'stemClearSpaceWidget':
 			return <StemClearSpaceWidget />
 		case 'typeScaleWidget':
