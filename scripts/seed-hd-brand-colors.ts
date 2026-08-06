@@ -18,7 +18,23 @@ type HdColor = {
 	name: string
 	/** 대문자 hex. SVG 아트워크에서 직접 뽑은 값이다. */
 	hex: string
+	/** 이 배경 위에 CI 기본형(Full Color)을 올릴 수 있는가. */
+	full?: boolean
+	/** 이 배경 위에 CI WHITE 워드마크를 올릴 수 있는가. */
+	white?: boolean
+	/** 이 배경 위 CI 단색분리형의 색. 단색형은 모든 배경에서 쓸 수 있고 색만 갈린다. */
+	mono: 'black' | 'white'
 }
+
+// 로고 사용 규칙을 짧게 쓰기 위한 헬퍼. `full`·`white`는 생략하면 false다.
+const light = (name: string, hex: string): HdColor => ({ name, hex, full: true, mono: 'black' })
+const dark = (name: string, hex: string): HdColor => ({ name, hex, white: true, mono: 'white' })
+/** 기본형도 WHITE 워드마크도 못 올리는 배경(Primary 4색). 단색형만 가능하다. */
+const logoless = (name: string, hex: string, mono: 'black' | 'white'): HdColor => ({
+	name,
+	hex,
+	mono,
+})
 
 // 출처: 0730_HD_Guidlines_All-51.svg (COLOR OVERVIEW 페이지) 아트워크에서 직접 추출, 2026-08-06.
 // 🔴 CMYK·PMS는 가이드라인 표기를 그대로 옮긴다(사용자 지시, 2026-08-06). 다만 14칸이 전부 같은 값이라
@@ -36,66 +52,104 @@ const PANTONE = '485 C'
 // 색과 그룹은 별개다. 같은 색이 여러 그룹에 속할 수 있고 팔레트 순서는 그룹이 소유하므로,
 // 색 문서에는 그룹 이름을 쓰지 않고 그룹이 색을 순서 있는 관계로 참조한다.
 // ponytail: 그래서 여기 배열 순서가 곧 팔레트 순서다. 별도 정렬 필드를 두지 않는다.
+// 색은 여기 한 번만 정의하고 그룹은 참조만 한다. 같은 색이 여러 그룹에 들어가는데
+// 로고 사용 규칙은 배경색에 딸린 것이라, 그룹마다 다시 적으면 값이 갈릴 수 있다.
+//
+// 🔴 Brightness Variation 11단 중 5단(10/30/50/70/90%)은 브랜드팀 팔레트 표에 없다.
+//    SVG-53 아트워크가 `#FFFFFF → #393636` 선형 블렌드로 그려낸 값이라 이름도 퍼센트뿐이다.
+//    나머지 6단은 Mono Color와 같은 색이라 문서를 공유한다(20%=LIGHT GREY, 40%·60%=MIDDLE GREY, 80%=DARK GREY).
+const COLORS = {
+	ecoGreen: logoless('HD ECO GREEN', '#73D75A', 'black'),
+	heritageGreen: logoless('HD HERITAGE GREEN', '#00AF41', 'black'),
+	prosperityGreen: logoless('HD PROSPERITY GREEN', '#007332', 'white'),
+	discoveryBlue: logoless('HD DISCOVERY BLUE', '#003087', 'white'),
+	lightGreen: light('HD LIGHT GREEN', '#DCF5D2'),
+	lightBlue: light('HD LIGHT BLUE', '#DCF0F5'),
+	deepGreen: dark('HD DEEP GREEN', '#00280A'),
+	deepBlue: dark('HD DEEP BLUE', '#000A32'),
+	white: light('WHITE', '#FFFFFF'),
+	grey10: light('GREY 10%', '#E9E9E9'),
+	lightGrey: light('LIGHT GREY', '#D3D2D2'),
+	grey30: light('GREY 30%', '#BDBCBC'),
+	middleGreyLight: light('MIDDLE GREY', '#A7A6A6'),
+	grey50: light('GREY 50%', '#918F90'),
+	middleGreyDark: dark('MIDDLE GREY', '#7B7979'),
+	grey70: dark('GREY 70%', '#656263'),
+	darkGrey: dark('DARK GREY', '#4F4C4D'),
+	grey90: dark('GREY 90%', '#393636'),
+	black: dark('BLACK', '#000000'),
+} satisfies Record<string, HdColor>
+
 const GROUPS: { name: string; colors: HdColor[] }[] = [
 	{
 		name: 'Primary Color',
 		colors: [
-			{ name: 'HD ECO GREEN', hex: '#73D75A' },
-			{ name: 'HD HERITAGE GREEN', hex: '#00AF41' },
-			{ name: 'HD PROSPERITY GREEN', hex: '#007332' },
-			{ name: 'HD DISCOVERY BLUE', hex: '#003087' },
+			COLORS.ecoGreen,
+			COLORS.heritageGreen,
+			COLORS.prosperityGreen,
+			COLORS.discoveryBlue,
 		],
 	},
 	{
 		name: 'Secondary Color',
-		colors: [
-			{ name: 'HD LIGHT GREEN', hex: '#DCF5D2' },
-			{ name: 'HD DEEP GREEN', hex: '#00280A' },
-			{ name: 'HD LIGHT BLUE', hex: '#DCF0F5' },
-			{ name: 'HD DEEP BLUE', hex: '#000A32' },
-		],
+		colors: [COLORS.lightGreen, COLORS.deepGreen, COLORS.lightBlue, COLORS.deepBlue],
 	},
 	{
 		name: 'Mono Color',
 		colors: [
-			{ name: 'WHITE', hex: '#FFFFFF' },
-			{ name: 'LIGHT GREY', hex: '#D3D2D2' },
-			{ name: 'MIDDLE GREY', hex: '#A7A6A6' },
-			{ name: 'MIDDLE GREY', hex: '#7B7979' },
-			{ name: 'DARK GREY', hex: '#4F4C4D' },
-			{ name: 'BLACK', hex: '#000000' },
+			COLORS.white,
+			COLORS.lightGrey,
+			COLORS.middleGreyLight,
+			COLORS.middleGreyDark,
+			COLORS.darkGrey,
+			COLORS.black,
 		],
 	},
-	// 같은 14색을 계열로 다시 묶은 것. 용도별(Primary/Secondary/Mono) 묶음과 공존한다 —
+	// 같은 색을 계열로 다시 묶은 것. 용도별(Primary/Secondary/Mono) 묶음과 공존한다 —
 	// 색과 그룹이 별개라 한 색이 두 묶음에 동시에 들어갈 수 있고, 색 문서는 하나뿐이다.
 	// 행 안의 순서는 밝은 색 → 어두운 색. Mono가 원래 그 순서라 나머지도 맞췄다.
 	{
 		name: '초록 계열',
 		colors: [
-			{ name: 'HD LIGHT GREEN', hex: '#DCF5D2' },
-			{ name: 'HD ECO GREEN', hex: '#73D75A' },
-			{ name: 'HD HERITAGE GREEN', hex: '#00AF41' },
-			{ name: 'HD PROSPERITY GREEN', hex: '#007332' },
-			{ name: 'HD DEEP GREEN', hex: '#00280A' },
+			COLORS.lightGreen,
+			COLORS.ecoGreen,
+			COLORS.heritageGreen,
+			COLORS.prosperityGreen,
+			COLORS.deepGreen,
 		],
 	},
 	{
 		name: '파랑 계열',
-		colors: [
-			{ name: 'HD LIGHT BLUE', hex: '#DCF0F5' },
-			{ name: 'HD DISCOVERY BLUE', hex: '#003087' },
-			{ name: 'HD DEEP BLUE', hex: '#000A32' },
-		],
+		colors: [COLORS.lightBlue, COLORS.discoveryBlue, COLORS.deepBlue],
 	},
 	{
 		name: '검정 계열',
 		colors: [
-			{ name: 'WHITE', hex: '#FFFFFF' },
-			{ name: 'LIGHT GREY', hex: '#D3D2D2' },
-			{ name: 'MIDDLE GREY', hex: '#A7A6A6' },
-			{ name: 'MIDDLE GREY', hex: '#7B7979' },
-			{ name: 'DARK GREY', hex: '#4F4C4D' },
-			{ name: 'BLACK', hex: '#000000' },
+			COLORS.white,
+			COLORS.lightGrey,
+			COLORS.middleGreyLight,
+			COLORS.middleGreyDark,
+			COLORS.darkGrey,
+			COLORS.black,
+		],
+	},
+	// SVG-53의 흰색→검정 11단. 가이드라인 본문이 이걸 "Brightness Variation"이라고 부른다
+	// (사용 금지 규정 6번: "Brightness Variation중 명도 대비가 낮은 배색을 사용할 수 없습니다").
+	// 로고 전환 경계는 50%/60% — 여기까지가 기본형·검정 단색형, 여기부터가 WHITE 워드마크·흰 단색형이다.
+	{
+		name: 'Brightness Variation',
+		colors: [
+			COLORS.white,
+			COLORS.grey10,
+			COLORS.lightGrey,
+			COLORS.grey30,
+			COLORS.middleGreyLight,
+			COLORS.grey50,
+			COLORS.middleGreyDark,
+			COLORS.grey70,
+			COLORS.darkGrey,
+			COLORS.grey90,
+			COLORS.black,
 		],
 	},
 ]
@@ -147,6 +201,10 @@ for (const [key, color] of uniqueColors) {
 		colorGroup: null,
 		cmyk: CMYK,
 		pantone: PANTONE,
+		// 배경으로 썼을 때의 로고 사용 규칙. 규정이라 계산하지 않고 정본을 그대로 담는다.
+		allowsFullColorLogo: color.full ?? false,
+		allowsWhiteWordmark: color.white ?? false,
+		monoLogoFill: color.mono,
 		// 🔴 명시하지 않으면 최신 초안 버전을 따라가 게시분이 초안으로 내려간다.
 		_status: 'published' as const,
 	}

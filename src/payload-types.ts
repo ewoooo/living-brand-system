@@ -378,6 +378,18 @@ export interface BrandColor {
    */
   cmyk?: string | null;
   /**
+   * 이 배경 위에 CI 기본형(Full Color)을 쓸 수 있는지 여부입니다.
+   */
+  allowsFullColorLogo?: boolean | null;
+  /**
+   * 이 배경 위에 CI WHITE 워드마크를 쓸 수 있는지 여부입니다.
+   */
+  allowsWhiteWordmark?: boolean | null;
+  /**
+   * 이 배경 위에 올리는 CI 단색분리형의 색입니다. 단색형은 모든 배경에서 쓸 수 있고 색만 갈립니다.
+   */
+  monoLogoFill?: ('black' | 'white') | null;
+  /**
    * 팔레트 색상군입니다. 예: red, yellow, neutral
    */
   colorGroup?: string | null;
@@ -3446,6 +3458,9 @@ export interface BrandColorsSelect<T extends boolean = true> {
   hex?: T;
   pantone?: T;
   cmyk?: T;
+  allowsFullColorLogo?: T;
+  allowsWhiteWordmark?: T;
+  monoLogoFill?: T;
   colorGroup?: T;
   tone?: T;
   isMain?: T;

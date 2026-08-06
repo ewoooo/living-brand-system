@@ -32,6 +32,7 @@ import * as migration_20260806_052358_drop_agent_chat_session_ai_usage from './2
 import * as migration_20260806_065844_add_hd_color_groups_and_widgets from './20260806_065844_add_hd_color_groups_and_widgets';
 import * as migration_20260806_074622_add_hd_color_palette_group from './20260806_074622_add_hd_color_palette_group';
 import * as migration_20260806_081710_hd_color_palette_groups_many from './20260806_081710_hd_color_palette_groups_many';
+import * as migration_20260806_090323_brand_color_logo_rules from './20260806_090323_brand_color_logo_rules';
 
 export const migrations = [
   {
@@ -202,6 +203,11 @@ export const migrations = [
   {
     up: migration_20260806_081710_hd_color_palette_groups_many.up,
     down: migration_20260806_081710_hd_color_palette_groups_many.down,
-    name: '20260806_081710_hd_color_palette_groups_many'
+    name: '20260806_081710_hd_color_palette_groups_many',
+  },
+  {
+    up: migration_20260806_090323_brand_color_logo_rules.up,
+    down: migration_20260806_090323_brand_color_logo_rules.down,
+    name: '20260806_090323_brand_color_logo_rules'
   },
 ];
