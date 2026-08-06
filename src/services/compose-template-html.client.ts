@@ -1,6 +1,17 @@
 'use client'
 
-import type { TemplateNodeConfigMap } from '@/types/template'
+import type { TemplateNodeConfig, TemplateNodeConfigMap } from '@/types/template'
+
+/**
+ * 편집 transform 문자열의 단일 소유자 — compose(커밋 반영)와 캔버스 오버레이의 라이브
+ * 피드백이 같은 포맷을 써야 오버레이가 캐리어 inline transform에서 커밋된 편집 prefix를
+ * 결정적으로 벗겨내 base transform을 복원할 수 있다.
+ */
+export function formatImageEditTransform(
+	edit: NonNullable<TemplateNodeConfig['imageTransform']>,
+): string {
+	return `translate(${edit.x}px, ${edit.y}px) scale(${edit.scale}) rotate(${edit.rotate}deg)`
+}
 
 /**
  * base HTML에 nodeId별 앱 설정을 적용해 Create·Chat·Import가 렌더할 HTML을 만든다.
@@ -55,7 +66,7 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 					// 맨 왼쪽 CSS transform이 부모(프레임) 좌표계에서 적용되므로 pan이 프레임 안에서
 					// 이미지를 옮기는 느낌이 되고, Figma 소유의 base transform(rotate 등)은 보존된다.
 					// transform-origin은 기본값(center) 유지. identity(0,0,1,0)면 아무것도 쓰지 않는다.
-					const editTransform = `translate(${edit.x}px, ${edit.y}px) scale(${edit.scale}) rotate(${edit.rotate}deg)`
+					const editTransform = formatImageEditTransform(edit)
 					const baseTransform = carrier.style.transform
 					carrier.style.transform = baseTransform
 						? `${editTransform} ${baseTransform}`
