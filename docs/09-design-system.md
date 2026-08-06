@@ -5,7 +5,7 @@
 
 ## 1. 적용 범위
 
-이 문서는 시각 스타일을 다루는 세 표면에만 적용합니다.
+이 문서는 시각 스타일을 다루는 두 표면에만 적용합니다.
 
 | 대상 | 위치 | 기준 |
 | --- | --- | --- |
@@ -35,16 +35,16 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 
 | 토큰군 | 의미 | 소유 파일(SoT) |
 | --- | --- | --- |
-| color 원시값 | `:root`(라이트), `.dark`(다크)의 원시 색 정의 | `src/app/(frontend)/theme.css:62-95`, `theme.css:97-129` |
-| color 유틸 매핑 | 원시값 → `@theme inline`의 `--color-*` 유틸 토큰 | `theme.css:24-54` |
+| color 원시값 | `:root`(라이트), `.dark`(다크)의 원시 색 정의 | `src/app/(frontend)/theme.css`, `theme.css` |
+| color 유틸 매핑 | 원시값 → `@theme inline`의 `--color-*` 유틸 토큰 | `theme.css` |
 | highlight gradient | 강조 배경과 전경 토큰, `bg-highlight` 유틸 | `src/app/(frontend)/theme.css` |
-| radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl` 4단 파생(`lg`는 뿌리값, `sm`/`md`/`xl`은 calc) | `theme.css:56-59`, `theme.css:63` |
-| 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(Essenflux) | `theme.css:20-22` |
+| radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl` 4단 파생(`lg`는 뿌리값, `sm`/`md`/`xl`은 calc) | `theme.css`, `theme.css` |
+| 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(Essenflux), `HD`(CI 락업 워드마크 전용 @font-face) | `theme.css` |
 | 루트 크기 | 모든 화면에서 고정된 16px `rem` 기준 크기 | `src/app/(frontend)/styles.css`의 `html` |
 | 타이포 리듬 | `.typeset` 블록의 크기·행간·흐름(shadcn/typeset) | `src/app/(frontend)/typeset.css` |
-| base body / scrollbar / import 순서 | `body` 기본, `scrollbar-none` 유틸, CSS `@import` 체인 | `src/app/(frontend)/styles.css:1-30` |
+| base body / scrollbar / import 순서 | `body` 기본, `scrollbar-none` 유틸, CSS `@import` 체인 | `src/app/(frontend)/styles.css` |
 
-`--radius`는 뿌리 토큰 하나이고 나머지 4단은 그것을 기준으로 파생합니다(`--radius-lg`는 뿌리값 그대로, `sm`/`md`/`xl`은 `calc()`; `theme.css:56-59`). radius를 조정할 때는 파생값이 아니라 뿌리 하나만 바꿉니다.
+`--radius`는 뿌리 토큰 하나이고 나머지 4단은 그것을 기준으로 파생합니다(`--radius-lg`는 뿌리값 그대로, `sm`/`md`/`xl`은 `calc()`; `theme.css`). radius를 조정할 때는 파생값이 아니라 뿌리 하나만 바꿉니다.
 
 `highlight`는 Figma 강조 스타일을 옮긴 그라디언트입니다. `bg-highlight`가 가로 밴드를 2배로 늘려 왼쪽에서 오른쪽으로 반복 이동시키고, 모션 감소 설정에서는 정지합니다. Badge와 Button은 `bg-highlight`와 `text-highlight-foreground`를 함께 사용하며, 개별 컴포넌트에서 gradient stop을 다시 선언하지 않습니다.
 
@@ -56,7 +56,7 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 
 ```text
 원시 oklch (theme.css :root / .dark)
-  → @theme inline --color-* (theme.css:24-54)
+  → @theme inline --color-* (theme.css)
     → Tailwind 유틸 (bg-primary, text-foreground, ...)
 ```
 
@@ -78,9 +78,9 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|from|to|via)-(?:neutral|gray|z
 
 ## 5. 다크 모드와 브랜드 오버라이드
 
-다크 모드는 `.dark` **클래스** 방식입니다. `prefers-color-scheme` 미디어 쿼리가 아니라, `@custom-variant dark (&:where(.dark, .dark *))`(`theme.css:17`)로 정의하고, `next-themes`의 `ThemeProvider`를 `attribute="class"` + `defaultTheme="system"` + `enableSystem`(`layout.tsx:44-49`)으로 구동합니다. 시스템 설정은 `next-themes`가 읽어 `.dark` 클래스로 변환하므로, 원시값은 라이트가 `:root`(`theme.css:62-95`), 다크가 `.dark`(`theme.css:97-129`) 한 곳에서만 갈립니다.
+다크 모드는 `.dark` **클래스** 방식입니다. `prefers-color-scheme` 미디어 쿼리가 아니라, `@custom-variant dark (&:where(.dark, .dark *))`(`theme.css`)로 정의하고, `next-themes`의 `ThemeProvider`를 `attribute="class"` + `defaultTheme="system"` + `enableSystem`(`layout.tsx`)으로 구동합니다. 시스템 설정은 `next-themes`가 읽어 `.dark` 클래스로 변환하므로, 원시값은 라이트가 `:root`(`theme.css`), 다크가 `.dark`(`theme.css`) 한 곳에서만 갈립니다.
 
-런타임 브랜드 색은 CMS 메타데이터에서 옵니다. `layout.tsx:26-34`가 `metadata.primaryHex` 등으로 문자열을 만들고 `layout.tsx:38-42`가 `<style>`로 주입해 `--primary`와 `--primary-foreground` **2개 토큰만** 오버라이드합니다(라이트는 `:root`, 다크는 `.dark`). 코드에는 브랜드 색이 없고 데이터만 흐르므로 브랜드 어그노스틱이 유지됩니다.
+런타임 브랜드 색은 CMS 메타데이터에서 옵니다. `layout.tsx`가 `metadata.primaryHex` 등으로 문자열을 만들고 `layout.tsx`가 `<style>`로 주입해 `--primary`와 `--primary-foreground` **2개 토큰만** 오버라이드합니다(라이트는 `:root`, 다크는 `.dark`). 코드에는 브랜드 색이 없고 데이터만 흐르므로 브랜드 어그노스틱이 유지됩니다.
 
 주입 대상이 `--primary` 계열 2개뿐이라는 것은 현실의 제약을 만듭니다. `accent`, `secondary`, `ring`은 채도(chroma) 0의 뉴트럴로 고정되어 있고, `chart-1`~`chart-5`는 0이 아닌 채도의 고정된 다색 팔레트를 갖습니다(둘 다 `theme.css` 원시값). 어느 쪽도 브랜드 주입을 받지 않으므로, 브랜드 강조색은 `primary`를 쓰는 표면(예: `bg-primary`, `text-primary`)에만 반영되고 그 밖의 강조 토큰은 원래 값으로 남습니다.
 
@@ -108,10 +108,10 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|from|to|via)-(?:neutral|gray|z
 
 | 사실 | 근거 |
 | --- | --- |
-| `--font-body`(Pretendard)는 `body`에 배선되어 기본 폰트로 동작 | `theme.css:20`, `styles.css:23` |
-| `--font-title`(Essenflux)과 `.font-title` 클래스는 정의되어 있으나 상위 guideline 헤더에 미배선 | `theme.css:22`, `theme.css:139-141` |
+| `--font-body`(Pretendard)는 `body`에 배선되어 기본 폰트로 동작 | `theme.css`, `styles.css` |
+| `--font-title`(Essenflux)과 `.font-title` 클래스는 정의되어 있으나 상위 guideline 헤더에 미배선 | `theme.css`, `theme.css` |
 | 그래서 `GuidelineHeader`의 `ChapterHeader`/`SectionHeader` 등은 `font-title` 없이 렌더되어 기본 body 폰트로 폴백 | `guideline-header.tsx:51-73` |
-| `--font-heading`/`--font-mono`는 어디에도 정의되지 않아 `.typeset`의 `code`/`pre`는 브라우저 monospace로 폴백 | `typeset.css:9-10` (참조만, 정의 없음) |
+| `--font-heading`/`--font-mono`는 어디에도 정의되지 않아 `.typeset`의 `code`/`pre`는 브라우저 monospace로 폴백 | `typeset.css` (참조만, 정의 없음) |
 
 `font-title`을 헤더에 붙이거나 `--font-mono`를 정의하는 것은 파운데이션 변경(09)이지 컴포넌트 작업이 아닙니다. 상세한 텍스트 저작 규칙은 `docs/10`이 소유합니다.
 
@@ -134,7 +134,7 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 
 값을 바꿀 때도 이 세 불변식만 유지하면 됩니다. 개별 블록이 자기 패딩·마진을 오버라이드하는 것은 이 통일을 깨므로 지양합니다.
 
-최상위 헤더 계층은 `GuidelineHeader`가 `variant`(`onboard`/`chapter`/`section`/`page`/`block`)로 분기해 소유합니다(`guideline-header.tsx:10-29`). page 헤더는 `GuidelinePageHeading`으로 분리되어 있습니다. 앱 셸의 `main` 랜드마크는 layout이 아니라 각 라우트 본문이 소유합니다(`layout.tsx:56`).
+최상위 헤더 계층은 `GuidelineHeader`가 `variant`(`onboard`/`chapter`/`section`/`page`/`block`)로 분기해 소유합니다(`guideline-header.tsx:10-29`). page 헤더는 `GuidelinePageHeading`으로 분리되어 있습니다. 앱 셸의 `main` 랜드마크는 layout이 아니라 각 라우트 본문이 소유합니다(`layout.tsx`).
 
 ## 8. 크로스커팅 참조
 
@@ -144,5 +144,5 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 | --- | --- | --- |
 | 접근성·다국어 | `docs/08-accessibility-i18n.md` | 색만으로 상태를 구분하지 않는 규칙 등은 08이 소유 |
 | 소스 위치·네이밍·`use client` 경계 | `docs/06-project-structure.md` | 컴포넌트 배치와 명명은 06 기준 |
-| 보안 | `docs/07-security.md` | 런타임 브랜드 hex는 `<style>`로 미새니타이즈 주입(`layout.tsx:38-42`)되므로 입력 신뢰 경계는 07이 다룸 |
+| 보안 | `docs/07-security.md` | 런타임 브랜드 hex는 `<style>`로 미새니타이즈 주입(`layout.tsx`)되므로 입력 신뢰 경계는 07이 다룸 |
 | 브랜드 자산 데이터 모델 | `docs/05-system-architecture.md` | 색·폰트·로고가 데이터로 흐르는 소유 구조는 05가 정의 |
