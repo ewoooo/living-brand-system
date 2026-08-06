@@ -1112,9 +1112,31 @@ export interface GlyphGridWidget {
  * via the `definition` "HdColorPaletteWidget".
  */
 export interface HdColorPaletteWidget {
+  /**
+   * 표시할 컬러 그룹입니다. 고른 순서대로 한 행씩 그립니다. 비우면 모든 그룹을 표시합니다.
+   */
+  groups?: (number | BrandColorGroup)[] | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'hdColorPaletteWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-color-groups".
+ */
+export interface BrandColorGroup {
+  id: number;
+  /**
+   * 팔레트에 표시할 그룹 이름입니다. 예: Primary Color
+   */
+  name: string;
+  /**
+   * 선택한 순서대로 팔레트에 표시됩니다. 드래그로 순서를 바꿉니다.
+   */
+  colors?: (number | BrandColor)[] | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1740,24 +1762,6 @@ export interface StemClearSpaceBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'stemClearSpace';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brand-color-groups".
- */
-export interface BrandColorGroup {
-  id: number;
-  /**
-   * 팔레트에 표시할 그룹 이름입니다. 예: Primary Color
-   */
-  name: string;
-  /**
-   * 선택한 순서대로 팔레트에 표시됩니다. 드래그로 순서를 바꿉니다.
-   */
-  colors?: (number | BrandColor)[] | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3109,6 +3113,7 @@ export interface GlyphGridWidgetSelect<T extends boolean = true> {
  * via the `definition` "HdColorPaletteWidget_select".
  */
 export interface HdColorPaletteWidgetSelect<T extends boolean = true> {
+  groups?: T;
   id?: T;
   blockName?: T;
 }

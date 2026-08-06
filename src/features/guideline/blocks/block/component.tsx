@@ -70,7 +70,8 @@ function renderWidget(child: Child): ReactNode {
 		case 'conceptIntroWidget':
 			return <ConceptIntroWidget lead={child.lead} body={child.body} logo={child.logo} />
 		case 'hdColorPaletteWidget':
-			return <HdColorPaletteWidget />
+			// 고른 그룹을 고른 순서대로 한 행씩, 비우면 전체를 그린다.
+			return <HdColorPaletteWidget groups={child.groups} />
 		case 'colorPairingRecommendationWidget':
 			return <ColorPairingRecommendationWidget />
 		case 'doDontWidget':

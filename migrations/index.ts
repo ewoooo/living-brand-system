@@ -29,6 +29,8 @@ import * as migration_20260804_085424_add_layout_grid_widget_values from './2026
 import * as migration_20260805_031410_drop_agent_chat_triage from './20260805_031410_drop_agent_chat_triage';
 import * as migration_20260805_042818_add_check_scenario_aliases from './20260805_042818_add_check_scenario_aliases';
 import * as migration_20260806_065844_add_hd_color_groups_and_widgets from './20260806_065844_add_hd_color_groups_and_widgets';
+import * as migration_20260806_074622_add_hd_color_palette_group from './20260806_074622_add_hd_color_palette_group';
+import * as migration_20260806_081710_hd_color_palette_groups_many from './20260806_081710_hd_color_palette_groups_many';
 
 export const migrations = [
   {
@@ -184,6 +186,16 @@ export const migrations = [
   {
     up: migration_20260806_065844_add_hd_color_groups_and_widgets.up,
     down: migration_20260806_065844_add_hd_color_groups_and_widgets.down,
-    name: '20260806_065844_add_hd_color_groups_and_widgets'
+    name: '20260806_065844_add_hd_color_groups_and_widgets',
+  },
+  {
+    up: migration_20260806_074622_add_hd_color_palette_group.up,
+    down: migration_20260806_074622_add_hd_color_palette_group.down,
+    name: '20260806_074622_add_hd_color_palette_group',
+  },
+  {
+    up: migration_20260806_081710_hd_color_palette_groups_many.up,
+    down: migration_20260806_081710_hd_color_palette_groups_many.down,
+    name: '20260806_081710_hd_color_palette_groups_many'
   },
 ];

@@ -1,79 +1,77 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import { Typography } from '@/components/ui/typography'
-import { getContrastingForeground, hexToRgb, isValidHex } from '@/lib/color'
-import type { BrandColor } from '@/payload-types'
+import type { BrandColor, BrandColorGroup } from '@/payload-types'
+import { HdColorPaletteView, type PaletteSwatch } from './view'
 
-// 위젯(서버): brand-color-groups를 조회해 그룹당 한 행씩 스와치를 그린다.
-// 정렬 로직이 없다 — 행 순서는 컬렉션 defaultSort, 행 안의 순서는 그룹이 가진 관계 배열 순서다.
+// 위젯(서버): brand-color-groups를 조회해 색을 한 줄로 늘어놓는다. 인터랙션(복사·hover)은 클라 뷰가 맡는다.
+// 정렬 로직이 없다 — 줄 안의 순서는 그룹이 가진 관계 배열 순서 그대로다.
 // essenherb 레거시 색은 어느 그룹에도 연결돼 있지 않아 여기 걸러낼 것이 없다.
 // RGB는 저장값이 아니라 hex에서 파생한다(BrandColors가 RGB를 저장하지 않는 이유와 같다).
-export async function HdColorPaletteWidget() {
+type GroupRef = number | BrandColorGroup | null | undefined
+
+const toSwatches = (group: BrandColorGroup): PaletteSwatch[] =>
+	(group.colors ?? [])
+		.filter((c): c is BrandColor => typeof c === 'object' && c !== null)
+		.map((c) => ({
+			id: String(c.id),
+			name: c.name,
+			hex: c.hex,
+			cmyk: c.cmyk,
+			pantone: c.pantone,
+		}))
+
+/** 삭제된 그룹을 가리키고 있으면 null — 위젯 하나가 페이지 전체를 죽이지 않게 한다. */
+async function resolveGroup(
+	payload: Awaited<ReturnType<typeof getPayload>>,
+	id: number,
+): Promise<BrandColorGroup | null> {
+	try {
+		return await payload.findByID({ collection: 'brand-color-groups', id, depth: 1 })
+	} catch {
+		return null
+	}
+}
+
+export async function HdColorPaletteWidget({ groups: picks }: { groups?: GroupRef[] | null } = {}) {
 	const payload = await getPayload({ config })
-	const { docs: groups } = await payload.find({
-		collection: 'brand-color-groups',
-		limit: 50,
-		depth: 1,
-	})
+
+	// 🔴 넘어온 그룹을 그대로 쓰지 않고 id로 다시 조회한다. 페이지 조회가 depth:1이라
+	//    그룹 자체는 populate돼도 그 안의 colors는 id 배열로 남는다(colors를 채우려면 depth:2).
+	//    depth를 페이지 쪽에서 올리면 문서 전체 조회가 무거워지므로 위젯이 자기 것만 채운다.
+	const ids = (picks ?? [])
+		.map((g) => (typeof g === 'object' && g ? g.id : g))
+		.filter((id): id is number => id != null)
+
+	// 고르면 고른 순서대로, 비우면 전체를 그린다(갤러리가 props 없이 렌더한다).
+	const groups: BrandColorGroup[] = ids.length
+		? (await Promise.all(ids.map((id) => resolveGroup(payload, id)))).filter(
+				(g): g is BrandColorGroup => g !== null,
+			)
+		: (await payload.find({ collection: 'brand-color-groups', limit: 50, depth: 1 })).docs
+
+	const sections = groups
+		.map((g) => ({ id: g.id, name: g.name, swatches: toSwatches(g) }))
+		.filter((s) => s.swatches.length > 0)
 
 	return (
-		<div className="flex w-full flex-col gap-8">
-			{groups.map((group) => {
-				const colors = (group.colors ?? []).filter((c) => typeof c === 'object')
-				if (colors.length === 0) return null
-				return (
-					<section key={group.id} className="flex flex-col gap-3">
-						<Typography as="h3" size="sm" tone="muted" weight="medium">
-							{group.name}
-						</Typography>
-						{/* auto-fit: 한 행에 든 색 수만큼 균등 분할하고, 좁아지면 알아서 접힌다(열 수 계산 불필요). */}
-						<div className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-2">
-							{colors.map((color) => (
-								<Swatch key={color.id} color={color} />
-							))}
-						</div>
-					</section>
-				)
-			})}
+		// 행 사이 간격 없이 붙여 한 덩어리로 읽히게 한다(그룹 구분은 행 위 라벨이 한다).
+		<div className="flex w-full flex-col">
+			{sections.map((section) => (
+				<section key={section.id} className="flex flex-col">
+					<Typography
+						as="h3"
+						size="sm"
+						tone="muted"
+						weight="medium"
+						className="px-4 py-2"
+					>
+						{section.name}
+					</Typography>
+					<HdColorPaletteView swatches={section.swatches} />
+				</section>
+			))}
 		</div>
-	)
-}
-
-function Swatch({ color }: { color: BrandColor }) {
-	// hex가 깨진 데이터면 파생 계산이 던지므로 색면을 포기하고 텍스트만 남긴다.
-	const valid = isValidHex(color.hex)
-	const rgb = valid ? hexToRgb(color.hex) : null
-
-	return (
-		<div
-			className="flex aspect-square flex-col justify-between rounded-md border border-border p-3 font-body text-xs"
-			style={
-				valid
-					? {
-							backgroundColor: color.hex,
-							color: getContrastingForeground(color.hex),
-						}
-					: undefined
-			}
-		>
-			<span className="font-medium">{color.name}</span>
-			{/* 값이 없는 줄도 라벨을 남긴다 — 브랜드팀에서 아직 안 온 항목이 화면에서 보이게. */}
-			<dl className="grid grid-cols-[2.75rem_1fr] tabular-nums">
-				<Spec label="HEX" value={color.hex} />
-				<Spec label="RGB" value={rgb && `${rgb.r} ${rgb.g} ${rgb.b}`} />
-				<Spec label="CMYK" value={color.cmyk} />
-				<Spec label="PMS" value={color.pantone} />
-			</dl>
-		</div>
-	)
-}
-
-function Spec({ label, value }: { label: string; value?: string | null }) {
-	return (
-		<>
-			<dt className="opacity-70">{label}</dt>
-			<dd>{value ?? ''}</dd>
-		</>
 	)
 }
 
