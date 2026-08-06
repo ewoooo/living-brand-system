@@ -148,6 +148,50 @@ describe('template HTML inspection', () => {
 		).toBeUndefined()
 	})
 
+	it('캐리어 사각형을 직접 선택해 설정해도 발행 검사를 통과한다', () => {
+		// 회귀: override가 프레임이 아니라 캐리어 자신에 키됐을 때(#185로 열린 경로) compose가
+		// 자신-캐리어를 놓치면 placeholder 참조가 남아 "HTML과 overrides의 에셋 참조 불일치"로 발행이 막혔다.
+		const converted = convertFigmaNodeToHtml(
+			{
+				id: '2:1',
+				name: 'Image Area',
+				type: 'FRAME',
+				clipsContent: true,
+				absoluteBoundingBox: { x: 0, y: 0, width: 911, height: 492 },
+				children: [
+					{
+						id: '2:2',
+						name: 'placeholder',
+						type: 'RECTANGLE',
+						fills: [{ type: 'IMAGE', imageRef: 'ref-1', scaleMode: 'FILL' }],
+						absoluteBoundingBox: { x: 0, y: -38, width: 1036, height: 578 },
+					},
+				],
+			} as never,
+			{},
+			{
+				'ref-1': {
+					collection: 'application-images',
+					id: 3,
+					url: '/api/application-images/file/ph.png',
+				},
+			},
+		)
+		const parsed = parsedConfigs({
+			'2:2': { backgroundImage: '/api/generated-images/file/gen.png', generatedImageId: 9 },
+		})
+		const composed = composeTemplateHtml(converted.html, parsed.data)
+
+		expect(
+			inspectTemplateHtml({
+				baseHtml: converted.html,
+				html: composed,
+				overrideNodeIds: Object.keys(parsed.data),
+				refsByNode: parsed.refsByNode,
+			}).blocker,
+		).toBeUndefined()
+	})
+
 	it('imageTransform이 적용된 합성 HTML도 발행 검사를 통과한다', () => {
 		// transform은 저장 허용 목록에 이미 있다(inspect-template-style) — 여기서 회귀를 고정한다.
 		const converted = convertFigmaNodeToHtml(

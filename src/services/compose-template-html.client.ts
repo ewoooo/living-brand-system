@@ -34,9 +34,12 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 			el.textContent = config.text
 		}
 		if (config.backgroundImage && el instanceof HTMLElement) {
-			// import가 캐리어(data-image-carrier)로 표시한 자식이 있으면 프레임 배경 대신 캐리어의
-			// 이미지를 갈아끼운다 — 프레임 배경에 쓰면 위에 얹힌 placeholder 자식이 이미지를 가린다.
-			const carrier = el.querySelector('[data-image-carrier]')
+			// import가 캐리어(data-image-carrier)로 표시한 요소의 이미지를 갈아끼운다 — 프레임 배경에
+			// 쓰면 위에 얹힌 placeholder 자식이 이미지를 가린다. 캐리어 사각형을 직접 선택해 설정한
+			// 경우 요소 자신이 캐리어다(querySelector는 자손만 봐서 자신을 놓친다).
+			const carrier = el.matches('[data-image-carrier]')
+				? el
+				: el.querySelector('[data-image-carrier]')
 			if (carrier instanceof HTMLElement) {
 				if (carrier instanceof HTMLImageElement) {
 					carrier.src = config.backgroundImage
@@ -79,6 +82,12 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 				el.style.backgroundSize = 'cover'
 				el.style.backgroundPosition = 'center'
 				el.style.backgroundRepeat = 'no-repeat'
+				if (config.generatedImageId && el.hasAttribute('data-asset-collection')) {
+					// IMAGE fill을 직접 가진 요소(placeholder 참조 보유)에 생성 이미지를 얹는 경우 —
+					// 발행 검증이 요소의 data-asset-*와 URL 일치를 요구하므로 참조를 함께 바꾼다.
+					el.setAttribute('data-asset-collection', 'generated-images')
+					el.setAttribute('data-asset-id', String(config.generatedImageId))
+				}
 			}
 		}
 
