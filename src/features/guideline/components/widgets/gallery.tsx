@@ -22,6 +22,7 @@ import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
 import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/component'
 import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/component'
+import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/component'
 import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/component'
 import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/component'
 import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/component'
@@ -74,6 +75,7 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 		{ name: 'logo-group-viewer', node: <LogoGroupViewerWidget /> },
 		{ name: 'logo-display', node: <LogoDisplayWidget logo={koLogo} /> },
 		{ name: 'logo-color-variant', node: <LogoColorVariantWidget logo={koLogo} /> },
+		{ name: 'logo-on-background', node: <LogoOnBackgroundWidget /> },
 		{ name: 'stem-clear-space', node: <StemClearSpaceWidget /> },
 		{
 			name: 'clearspace-overlay',

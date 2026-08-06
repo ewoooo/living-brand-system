@@ -133,6 +133,23 @@ const GROUPS: { name: string; colors: HdColor[] }[] = [
 			COLORS.black,
 		],
 	},
+	// SVG-52의 배경 예시 10색. 로고를 얹어 보이는 순서가 그대로 정본이라 계열 묶음과 순서가 다르다
+	// (밝기순이 아니라 Primary → Secondary → 무채색). 그래서 별도 그룹으로 둔다.
+	{
+		name: 'Background Color',
+		colors: [
+			COLORS.ecoGreen,
+			COLORS.heritageGreen,
+			COLORS.prosperityGreen,
+			COLORS.discoveryBlue,
+			COLORS.lightGreen,
+			COLORS.lightBlue,
+			COLORS.white,
+			COLORS.deepGreen,
+			COLORS.deepBlue,
+			COLORS.black,
+		],
+	},
 	// SVG-53의 흰색→검정 11단. 가이드라인 본문이 이걸 "Brightness Variation"이라고 부른다
 	// (사용 금지 규정 6번: "Brightness Variation중 명도 대비가 낮은 배색을 사용할 수 없습니다").
 	// 로고 전환 경계는 50%/60% — 여기까지가 기본형·검정 단색형, 여기부터가 WHITE 워드마크·흰 단색형이다.

@@ -33,6 +33,7 @@ import * as migration_20260806_065844_add_hd_color_groups_and_widgets from './20
 import * as migration_20260806_074622_add_hd_color_palette_group from './20260806_074622_add_hd_color_palette_group';
 import * as migration_20260806_081710_hd_color_palette_groups_many from './20260806_081710_hd_color_palette_groups_many';
 import * as migration_20260806_090323_brand_color_logo_rules from './20260806_090323_brand_color_logo_rules';
+import * as migration_20260806_091021_logo_on_background_widget from './20260806_091021_logo_on_background_widget';
 
 export const migrations = [
   {
@@ -208,6 +209,11 @@ export const migrations = [
   {
     up: migration_20260806_090323_brand_color_logo_rules.up,
     down: migration_20260806_090323_brand_color_logo_rules.down,
-    name: '20260806_090323_brand_color_logo_rules'
+    name: '20260806_090323_brand_color_logo_rules',
+  },
+  {
+    up: migration_20260806_091021_logo_on_background_widget.up,
+    down: migration_20260806_091021_logo_on_background_widget.down,
+    name: '20260806_091021_logo_on_background_widget'
   },
 ];

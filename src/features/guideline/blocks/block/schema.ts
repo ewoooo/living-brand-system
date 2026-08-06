@@ -20,6 +20,7 @@ import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/schema'
 import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/schema'
 import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/schema'
+import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/schema'
 import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/schema'
 import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/schema'
 import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/schema'
@@ -135,6 +136,7 @@ export const LayoutBlock: Block = {
 				LogoDisplayWidget,
 				LogoGridSpecWidget,
 				LogoGroupViewerWidget,
+				LogoOnBackgroundWidget,
 				LogoViewerWidget,
 				MediaShowcaseWidget,
 				SectionDividerWidget,

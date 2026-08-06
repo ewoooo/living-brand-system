@@ -22,6 +22,7 @@ import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
 import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/component'
 import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/component'
+import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/component'
 import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/component'
 import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/component'
 import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/component'
@@ -143,6 +144,14 @@ function renderWidget(child: Child): ReactNode {
 			)
 		case 'logoGroupViewerWidget':
 			return <LogoGroupViewerWidget />
+		case 'logoOnBgWidget':
+			return (
+				<LogoOnBackgroundWidget
+					group={child.group}
+					logo={child.logo}
+					column={child.column}
+				/>
+			)
 		case 'logoViewerWidget':
 			return <LogoViewerWidget />
 		case 'mediaShowcaseWidget':

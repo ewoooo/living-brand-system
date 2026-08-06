@@ -908,6 +908,7 @@ export interface LayoutBlock {
         | LogoDisplayWidget
         | LogoGridSpecWidget
         | LogoGroupViewerWidget
+        | LogoOnBackgroundWidget
         | LogoViewerWidget
         | MediaShowcaseWidget
         | SectionDividerWidget
@@ -1339,6 +1340,27 @@ export interface LogoGroupViewerWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'logoGroupViewerWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoOnBackgroundWidget".
+ */
+export interface LogoOnBackgroundWidget {
+  /**
+   * 배경으로 쌓을 컬러 그룹입니다. 그룹이 가진 순서대로 위에서부터 쌓습니다.
+   */
+  group?: (number | null) | BrandColorGroup;
+  /**
+   * 기준 로고입니다. 같은 언어·방향의 기본형/WHITE/단색형을 파일명 규약으로 함께 찾습니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  /**
+   * 이 위젯이 보여줄 로고 계열입니다. 기본형 계열은 배경에 따라 파일이 바뀌고, 단색형은 색만 바뀝니다.
+   */
+  column?: ('fullColor' | 'mono') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoOnBgWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2983,6 +3005,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
         logoGridSpecWidget?: T | LogoGridSpecWidgetSelect<T>;
         logoGroupViewerWidget?: T | LogoGroupViewerWidgetSelect<T>;
+        logoOnBgWidget?: T | LogoOnBackgroundWidgetSelect<T>;
         logoViewerWidget?: T | LogoViewerWidgetSelect<T>;
         mediaShowcaseWidget?: T | MediaShowcaseWidgetSelect<T>;
         sectionDividerWidget?: T | SectionDividerWidgetSelect<T>;
@@ -3209,6 +3232,17 @@ export interface LogoGridSpecWidgetSelect<T extends boolean = true> {
  * via the `definition` "LogoGroupViewerWidget_select".
  */
 export interface LogoGroupViewerWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoOnBackgroundWidget_select".
+ */
+export interface LogoOnBackgroundWidgetSelect<T extends boolean = true> {
+  group?: T;
+  logo?: T;
+  column?: T;
   id?: T;
   blockName?: T;
 }
