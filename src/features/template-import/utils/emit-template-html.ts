@@ -12,8 +12,9 @@ import type { IrNode } from './figma-ir'
 const escapeHtmlText = (t: string) =>
 	t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-/** 속성값 이스케이프 — " 가 속성을 끊고 핸들러를 주입하는 것을 막는다. */
-const escapeHtmlAttribute = (t: string) => t.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+/** 속성값 이스케이프 — " 가 속성을 끊는 것과, 정규식 슬롯 수집기([^>]*)가 값 속 > 에서 태그를 조기 종료하는 것을 막는다. */
+const escapeHtmlAttribute = (t: string) =>
+	t.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 /**
  * IrNode 하나(와 그 서브트리)를 HTML 문자열로 방출한다.

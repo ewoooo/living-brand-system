@@ -1,5 +1,6 @@
 import { type CollectionConfig, slugField } from 'payload'
 import { managerManagedAccess } from '@/lib/auth'
+import { assertTemplateCategoryDeletable } from '@/services/guard-template-references.service'
 
 /**
  * Create 화면 사이드바의 템플릿 분류 단위.
@@ -13,6 +14,10 @@ export const TemplateCategories: CollectionConfig = {
 		plural: '템플릿 분류',
 	},
 	access: managerManagedAccess,
+	hooks: {
+		// category는 Templates에서 required — 참조 템플릿이 있으면 삭제 대신 분류 변경을 안내한다.
+		beforeDelete: [({ id, req }) => assertTemplateCategoryDeletable(req, Number(id))],
+	},
 	admin: {
 		group: '제작 도구',
 		useAsTitle: 'title',
