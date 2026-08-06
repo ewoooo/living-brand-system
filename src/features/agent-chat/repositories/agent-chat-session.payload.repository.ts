@@ -19,7 +19,6 @@ export interface AgentChatSessionUpdateData {
 	messageCount: number
 	usedTools: AgentChatSessionUsage[]
 	usedSkills: AgentChatSessionUsage[]
-	aiUsage?: AgentChatAiUsage
 	errorMessage?: string
 	completedAt?: string
 }

@@ -17,8 +17,8 @@ import {
 	readAgentGuidelineDocument,
 	searchAgentGuidelines,
 } from '@/features/agent-chat/services/get-agent-guideline-context.service'
-import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
+import { formatCheckDetail } from '@/features/asset-check/utils/format-check-detail'
 import {
 	type AgentGeneratedImagesAttachment,
 	generateImages,
@@ -393,22 +393,8 @@ function formatCheckToolResult(
 											: '미통과',
 				status,
 				fulfillment: value.rawResult.fulfillment,
-				detail: formatAgentCheckDetail(value),
+				detail: formatCheckDetail(value) ?? undefined,
 			}
 		}),
 	}
-}
-
-/** 구조화된 판정을 Agent가 설명할 한국어 문구로 바꾼다. 기존 세션은 message로 전달한다. */
-function formatAgentCheckDetail(result: CheckResult): string | undefined {
-	const { rawResult } = result
-	if (rawResult.reasonCode === 'not_applicable') return '관측 대상 없음'
-	if ('summary' in rawResult && rawResult.summary) {
-		if (rawResult.status === 'fail') return `기준 ${rawResult.summary.failed}개 미충족`
-		if (rawResult.status === 'needs_review') {
-			return `기준 ${rawResult.summary.uncertain}개 판단 필요`
-		}
-		if (rawResult.status === 'pass') return `기준 ${rawResult.summary.satisfied}개 충족`
-	}
-	return result.message ?? rawResult.detail
 }

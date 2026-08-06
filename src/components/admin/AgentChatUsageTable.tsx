@@ -10,7 +10,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import { fieldNumber, fieldString, formatNumber } from './form-fields'
+import { fieldNumber, fieldRowCount, fieldString, formatNumber } from './form-fields'
 
 type UsageRow = {
 	cacheReadInputTokens?: number | null
@@ -24,15 +24,18 @@ type UsageRow = {
 }
 
 function buildUsage(fields: FormState): UsageRow {
+	// 세션 사용량은 종결 시 추가된 마지막 assistant 메시지의 aiUsage와 같다(별도 컬럼 저장 없음).
+	const path = `messages.${fieldRowCount(fields, 'messages') - 1}.aiUsage`
+
 	return {
-		cacheReadInputTokens: fieldNumber(fields, 'aiUsage.cacheReadInputTokens'),
-		cacheWriteInputTokens: fieldNumber(fields, 'aiUsage.cacheWriteInputTokens'),
-		callCount: fieldNumber(fields, 'aiUsage.callCount'),
-		inputTokens: fieldNumber(fields, 'aiUsage.inputTokens'),
-		model: fieldString(fields, 'aiUsage.model'),
-		outputTokens: fieldNumber(fields, 'aiUsage.outputTokens'),
-		reasoningTokens: fieldNumber(fields, 'aiUsage.reasoningTokens'),
-		totalTokens: fieldNumber(fields, 'aiUsage.totalTokens'),
+		cacheReadInputTokens: fieldNumber(fields, `${path}.cacheReadInputTokens`),
+		cacheWriteInputTokens: fieldNumber(fields, `${path}.cacheWriteInputTokens`),
+		callCount: fieldNumber(fields, `${path}.callCount`),
+		inputTokens: fieldNumber(fields, `${path}.inputTokens`),
+		model: fieldString(fields, `${path}.model`),
+		outputTokens: fieldNumber(fields, `${path}.outputTokens`),
+		reasoningTokens: fieldNumber(fields, `${path}.reasoningTokens`),
+		totalTokens: fieldNumber(fields, `${path}.totalTokens`),
 	}
 }
 
