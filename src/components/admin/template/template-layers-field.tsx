@@ -590,8 +590,8 @@ function ImageTransformEditor({
 
 /**
  * 컬러 치환 폼 — 생성 이미지(단색 라인 아트)의 선 색을 브랜드 컬러로 고른다.
- * 배경은 기본 캔버스(루트) 배경색 자동이며 '배경 직접 지정'으로만 opt-in한다.
- * 값은 override로만 저장되고 compose가 luminance 마스크 2겹으로 적용한다.
+ * 배경은 기본 투명(선만 칠해짐)이며 '배경 직접 지정'으로만 opt-in한다.
+ * 값은 override로만 저장되고 compose가 luminance 마스크로 적용한다.
  * 스와치 소스·UI는 VectorLayerEditor의 브랜드 컬러와 동일(published brand-colors).
  */
 function ImageColorizeEditor({
@@ -603,7 +603,7 @@ function ImageColorizeEditor({
 }) {
 	const [colors, setColors] = useState<BrandColor[]>([])
 	const [loadError, setLoadError] = useState(false)
-	// 선 색만으로 유효한 override — background 생략 시 compose가 캔버스 배경색을 자동 적용한다.
+	// 선 색만으로 유효한 override — background 생략 시 compose가 배경 없이 선만 칠한다.
 	const [draft, setDraft] = useState<{ line?: string; background?: string }>(value ?? {})
 	// 배경 직접 지정은 opt-in — 기존 설정에 background가 있으면 열린 채로 시작한다(노드별 key 리마운트).
 	const [showBackground, setShowBackground] = useState(Boolean(value?.background))
@@ -683,7 +683,7 @@ function ImageColorizeEditor({
 			))}
 			{!showBackground && (
 				<p className="text-sm" style={{ margin: 0, color: 'var(--theme-elevation-500)' }}>
-					배경: 캔버스 배경색 자동
+					배경 없이 선만 칠합니다(캔버스가 그대로 비칩니다)
 				</p>
 			)}
 			<label
@@ -697,7 +697,7 @@ function ImageColorizeEditor({
 						const checked = event.target.checked
 						setShowBackground(checked)
 						if (!checked) {
-							// 체크 해제 = 자동 복귀 — 저장된 background를 지우고 선 색만 남긴다.
+							// 체크 해제 = 투명 기본 복귀 — 저장된 background를 지우고 선 색만 남긴다.
 							const next = { line: draft.line }
 							setDraft(next)
 							if (next.line) onChange({ line: next.line })

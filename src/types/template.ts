@@ -20,7 +20,7 @@ export interface TemplateNodeConfig {
 	/**
 	 * 생성 이미지(단색 라인 아트)의 브랜드 컬러 치환 — 이미지가 luminance 마스크가 되어
 	 * 밝은 영역=background, 어두운 선=line으로 칠해진다. backgroundImage 없이는 compose가 무시한다.
-	 * background 생략 = 캔버스(템플릿 루트) 배경색 자동.
+	 * background 생략 = 배경 투명(선만 칠해지고 캔버스가 비침).
 	 */
 	imageColorize?: { line: string; background?: string }
 	input?: TemplateSlotSpec

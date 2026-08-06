@@ -351,7 +351,8 @@ describe('template HTML inspection', () => {
 	})
 
 	it('배경 생략(line만) imageColorize도 draft·발행 검사를 통과한다', () => {
-		// background 생략 시 compose가 캔버스(루트) 배경색으로 자동 유도한다 — 검사 계약은 동일하다.
+		// background 생략 시 compose가 단일 레이어 반전 마스크(linear-gradient 기준층 +
+		// mask-composite: subtract)로 선만 칠한다 — 검사 계약은 동일하다.
 		const converted = convertFigmaNodeToHtml(
 			{
 				id: '2:1',
@@ -387,7 +388,8 @@ describe('template HTML inspection', () => {
 		})
 		const composed = composeTemplateHtml(converted.html, parsed.data)
 
-		expect(composed).toContain('mask-mode: luminance')
+		expect(composed).toContain('mask-composite: subtract')
+		expect(composed).toContain('linear-gradient')
 		expect(
 			inspectDraftTemplateHtml({
 				baseHtml: converted.html,
