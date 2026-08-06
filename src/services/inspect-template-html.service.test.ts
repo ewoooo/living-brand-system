@@ -148,6 +148,102 @@ describe('template HTML inspection', () => {
 		).toBeUndefined()
 	})
 
+	it('캐리어 사각형을 직접 선택해 설정해도 발행 검사를 통과한다', () => {
+		// 회귀: override가 프레임이 아니라 캐리어 자신에 키됐을 때(#185로 열린 경로) compose가
+		// 자신-캐리어를 놓치면 placeholder 참조가 남아 "HTML과 overrides의 에셋 참조 불일치"로 발행이 막혔다.
+		const converted = convertFigmaNodeToHtml(
+			{
+				id: '2:1',
+				name: 'Image Area',
+				type: 'FRAME',
+				clipsContent: true,
+				absoluteBoundingBox: { x: 0, y: 0, width: 911, height: 492 },
+				children: [
+					{
+						id: '2:2',
+						name: 'placeholder',
+						type: 'RECTANGLE',
+						fills: [{ type: 'IMAGE', imageRef: 'ref-1', scaleMode: 'FILL' }],
+						absoluteBoundingBox: { x: 0, y: -38, width: 1036, height: 578 },
+					},
+				],
+			} as never,
+			{},
+			{
+				'ref-1': {
+					collection: 'application-images',
+					id: 3,
+					url: '/api/application-images/file/ph.png',
+				},
+			},
+		)
+		const parsed = parsedConfigs({
+			'2:2': { backgroundImage: '/api/generated-images/file/gen.png', generatedImageId: 9 },
+		})
+		const composed = composeTemplateHtml(converted.html, parsed.data)
+
+		expect(
+			inspectTemplateHtml({
+				baseHtml: converted.html,
+				html: composed,
+				overrideNodeIds: Object.keys(parsed.data),
+				refsByNode: parsed.refsByNode,
+			}).blocker,
+		).toBeUndefined()
+	})
+
+	it('캐리어 아닌 래스터 img에 이미지를 할당해도 발행 검사를 통과한다', () => {
+		// 회귀: 예전 compose는 래스터 img에 background-image를 칠하고 src를 남겨
+		// "HTML과 overrides의 에셋 참조 불일치"로 발행이 막혔다 — 지금은 src를 갈아끼운다.
+		// 자식이 둘이라 캐리어 판정이 되지 않는 프레임 + 래스터 폴백(renderedAssets) 자식.
+		const converted = convertFigmaNodeToHtml(
+			{
+				id: '3:1',
+				name: 'Card',
+				type: 'FRAME',
+				clipsContent: true,
+				absoluteBoundingBox: { x: 0, y: 0, width: 911, height: 492 },
+				children: [
+					{
+						id: '3:2',
+						name: 'baked',
+						type: 'RECTANGLE',
+						absoluteBoundingBox: { x: 0, y: 0, width: 911, height: 492 },
+					},
+					{
+						id: '3:3',
+						name: 'deco',
+						type: 'RECTANGLE',
+						fills: [{ type: 'SOLID', color: { r: 0, g: 0, b: 0, a: 1 } }],
+						absoluteBoundingBox: { x: 0, y: 0, width: 10, height: 10 },
+					},
+				],
+			} as never,
+			{
+				'3:2': {
+					collection: 'application-images',
+					id: 5,
+					url: '/api/application-images/file/baked.png',
+				},
+			},
+		)
+		const parsed = parsedConfigs({
+			'3:2': { backgroundImage: '/api/generated-images/file/gen.png', generatedImageId: 9 },
+		})
+		const composed = composeTemplateHtml(converted.html, parsed.data)
+
+		expect(converted.html).not.toContain('data-image-carrier')
+		expect(composed).toContain('/api/generated-images/file/gen.png')
+		expect(
+			inspectTemplateHtml({
+				baseHtml: converted.html,
+				html: composed,
+				overrideNodeIds: Object.keys(parsed.data),
+				refsByNode: parsed.refsByNode,
+			}).blocker,
+		).toBeUndefined()
+	})
+
 	it('imageTransform이 적용된 합성 HTML도 발행 검사를 통과한다', () => {
 		// transform은 저장 허용 목록에 이미 있다(inspect-template-style) — 여기서 회귀를 고정한다.
 		const converted = convertFigmaNodeToHtml(
@@ -186,6 +282,112 @@ describe('template HTML inspection', () => {
 		const composed = composeTemplateHtml(converted.html, parsed.data)
 
 		expect(composed).toContain('transform:')
+		expect(
+			inspectTemplateHtml({
+				baseHtml: converted.html,
+				html: composed,
+				overrideNodeIds: Object.keys(parsed.data),
+				refsByNode: parsed.refsByNode,
+			}).blocker,
+		).toBeUndefined()
+	})
+
+	it('imageColorize가 적용된 합성 HTML이 draft·발행 검사를 통과한다', () => {
+		// 컬러 치환은 캐리어를 2겹(바닥=라인색 + 마스크 오버레이)으로 재구성하고 에셋 참조를
+		// 마스크 URL을 가진 오버레이로 옮긴다 — metadataRef의 동일 요소 URL·참조 짝 규칙을 고정한다.
+		const converted = convertFigmaNodeToHtml(
+			{
+				id: '2:1',
+				name: 'Image Area',
+				type: 'FRAME',
+				clipsContent: true,
+				absoluteBoundingBox: { x: 0, y: 0, width: 911, height: 492 },
+				children: [
+					{
+						id: '2:2',
+						name: 'placeholder',
+						type: 'RECTANGLE',
+						fills: [{ type: 'IMAGE', imageRef: 'ref-1', scaleMode: 'FILL' }],
+						absoluteBoundingBox: { x: 0, y: -38, width: 1036, height: 578 },
+					},
+				],
+			} as never,
+			{},
+			{
+				'ref-1': {
+					collection: 'application-images',
+					id: 3,
+					url: '/api/application-images/file/ph.png',
+				},
+			},
+		)
+		const parsed = parsedConfigs({
+			'2:1': {
+				backgroundImage: '/api/generated-images/file/gen.png',
+				generatedImageId: 9,
+				imageColorize: { line: '#112233', background: '#aabbcc' },
+				imageTransform: { x: 40, y: -20, scale: 1.3, rotate: 12 },
+			},
+		})
+		const composed = composeTemplateHtml(converted.html, parsed.data)
+
+		expect(composed).toContain('mask-mode: luminance')
+		expect(
+			inspectDraftTemplateHtml({
+				baseHtml: converted.html,
+				html: composed,
+				overrideNodeIds: Object.keys(parsed.data),
+				refsByNode: parsed.refsByNode,
+			}).blocker,
+		).toBeUndefined()
+		expect(
+			inspectTemplateHtml({
+				baseHtml: converted.html,
+				html: composed,
+				overrideNodeIds: Object.keys(parsed.data),
+				refsByNode: parsed.refsByNode,
+			}).blocker,
+		).toBeUndefined()
+	})
+
+	it('캐리어 사각형을 직접 선택한 imageColorize도 발행 검사를 통과한다', () => {
+		// override가 캐리어 자신에 키된 경우(#193 경로): 캐리어는 참조 없이 expected로만 남고
+		// 오버레이가 합성 node-id로 마스크 URL과 참조를 가진다.
+		const converted = convertFigmaNodeToHtml(
+			{
+				id: '2:1',
+				name: 'Image Area',
+				type: 'FRAME',
+				clipsContent: true,
+				absoluteBoundingBox: { x: 0, y: 0, width: 911, height: 492 },
+				children: [
+					{
+						id: '2:2',
+						name: 'placeholder',
+						type: 'RECTANGLE',
+						fills: [{ type: 'IMAGE', imageRef: 'ref-1', scaleMode: 'FILL' }],
+						absoluteBoundingBox: { x: 0, y: -38, width: 1036, height: 578 },
+					},
+				],
+			} as never,
+			{},
+			{
+				'ref-1': {
+					collection: 'application-images',
+					id: 3,
+					url: '/api/application-images/file/ph.png',
+				},
+			},
+		)
+		const parsed = parsedConfigs({
+			'2:2': {
+				backgroundImage: '/api/generated-images/file/gen.png',
+				generatedImageId: 9,
+				imageColorize: { line: '#112233', background: '#aabbcc' },
+			},
+		})
+		const composed = composeTemplateHtml(converted.html, parsed.data)
+
 		expect(
 			inspectTemplateHtml({
 				baseHtml: converted.html,

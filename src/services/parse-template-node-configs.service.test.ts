@@ -40,6 +40,31 @@ describe('parseTemplateNodeConfigs imageTransform', () => {
 	})
 })
 
+describe('parseTemplateNodeConfigs imageColorize', () => {
+	it('line·background hex 쌍을 허용한다', () => {
+		const imageColorize = { line: '#8FD6B8', background: '#0a3d2e' }
+		const parsed = parseTemplateNodeConfigs({ 'frame-1': { imageColorize } })
+
+		expect('blocker' in parsed).toBe(false)
+		if (!('blocker' in parsed)) {
+			expect(parsed.data['frame-1']?.imageColorize).toEqual(imageColorize)
+		}
+	})
+
+	it.each([
+		['line 누락', { background: '#0a3d2e' }],
+		['background 누락', { line: '#8fd6b8' }],
+		['# 없는 값', { line: '8fd6b8', background: '#0a3d2e' }],
+		['hex가 아닌 값', { line: '#zzzzzz', background: '#0a3d2e' }],
+		['CSS 함수 값', { line: 'url(x)', background: '#0a3d2e' }],
+		['알 수 없는 필드', { line: '#8fd6b8', background: '#0a3d2e', alpha: 1 }],
+	])('%s은 거부한다', (_label, imageColorize) => {
+		const parsed = parseTemplateNodeConfigs({ 'frame-1': { imageColorize } })
+
+		expect('blocker' in parsed).toBe(true)
+	})
+})
+
 describe('parseTemplateNodeConfigs imageInput', () => {
 	it.each([
 		['빈 스펙(개방 선언만)', {}],

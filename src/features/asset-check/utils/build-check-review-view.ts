@@ -3,6 +3,7 @@ import type { CheckSection, RuntimeCheck } from '@/features/asset-check/domain/r
 import { filterRulesetByScenario } from '@/features/asset-check/scenarios'
 import type { CheckImage } from '@/features/asset-check/types'
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
+import { formatCheckDetail } from '@/features/asset-check/utils/format-check-detail'
 import { type CheckScenario, getCheckScenario } from '@/features/quality-rule/check-scenario'
 
 export interface CheckReviewRow {
@@ -89,27 +90,6 @@ function buildSummary(rows: CheckReviewRow[], results: CheckImage['results']): C
 	return summary
 }
 
-/** 구조화된 판정을 Review 화면의 한국어 상태 문구로 바꾼다. 기존 세션은 message로 표시한다. */
-function formatReviewDetail(outcome: CheckResult | undefined): string | null {
-	if (!outcome) return null
-	const { rawResult } = outcome
-
-	if (rawResult.reasonCode === 'not_applicable') return '관측 대상 없음'
-	if ('summary' in rawResult && rawResult.summary) {
-		if (rawResult.status === 'fail') {
-			return `기준 ${rawResult.summary.failed}개를 통과하지 못했어요.`
-		}
-		if (rawResult.status === 'needs_review') {
-			return `기준 ${rawResult.summary.uncertain}개는 판단이 필요해요.`
-		}
-		if (rawResult.status === 'pass') {
-			return `기준 ${rawResult.summary.satisfied}개를 모두 통과했어요.`
-		}
-	}
-
-	return outcome.message ?? rawResult.detail ?? null
-}
-
 function buildRows({
 	visibleSections,
 	selected,
@@ -152,7 +132,7 @@ function buildRows({
 				outcome,
 				inProgress,
 				expandable: Boolean(outcome) && !inProgress,
-				detail: inProgress ? '검사 중...' : outcome ? formatReviewDetail(outcome) : null,
+				detail: inProgress ? '검사 중...' : outcome ? formatCheckDetail(outcome) : null,
 			}
 			rowByCheckKey.set(check.key, row)
 		}

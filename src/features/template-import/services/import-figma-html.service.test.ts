@@ -10,6 +10,7 @@ import {
 	findFigmaImageUrls,
 	findFigmaNodeTree,
 } from '@/features/template-import/repositories/figma.rest.repository'
+import type { FigmaTextStyle } from '@/features/template-import/utils/figma-ir'
 import type { User } from '@/payload-types'
 import { importFigmaHtml } from './import-figma-html.service'
 
@@ -377,5 +378,36 @@ describe('importFigmaHtml', () => {
 			expect.objectContaining({ nodeId: '2:1', reason: '마스크 합성', textLayerCount: 0 }),
 			expect.objectContaining({ nodeId: '4:1', reason: '스케일·기울임 변형' }),
 		])
+	})
+
+	it('말줄임 줄 수를 유도하지 못한 텍스트만 truncationDiagnostics로 남긴다', async () => {
+		const textNode = (id: string, name: string, style: FigmaTextStyle) => ({
+			id,
+			name,
+			type: 'TEXT',
+			characters: '아주 긴 텍스트',
+			absoluteBoundingBox: { x: 0, y: 0, width: 100, height: 40 },
+			style: { fontFamily: 'Inter', fontSize: 16, ...style },
+		})
+		vi.mocked(findFigmaNodeTree).mockResolvedValue({
+			...node,
+			children: [
+				// ENDING인데 maxLines도 줄높이(px)도 없어 clip으로 강등 → 진단.
+				textNode('2:1', 'degraded', { textAutoResize: 'NONE', textTruncation: 'ENDING' }),
+				// 줄높이(px)로 clamp 줄 수가 유도되므로 진단 없음.
+				textNode('2:2', 'clamped', {
+					textAutoResize: 'NONE',
+					textTruncation: 'ENDING',
+					lineHeightUnit: 'PIXELS',
+					lineHeightPx: 20,
+				}),
+				// 말줄임 의도 자체가 없으면 진단 없음.
+				textNode('2:3', 'plain', { textAutoResize: 'NONE', textTruncation: 'DISABLED' }),
+			],
+		})
+
+		const result = await importFigmaHtml({ fileKey: 'file', nodeId: '1:1' }, payload, user)
+
+		expect(result.truncationDiagnostics).toEqual([{ nodeId: '2:1', name: 'degraded' }])
 	})
 })

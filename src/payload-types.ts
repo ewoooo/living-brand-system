@@ -2254,28 +2254,6 @@ export interface AgentChatSession {
         id?: string | null;
       }[]
     | null;
-  /**
-   * Agent 채팅 비용 분석에 쓰는 모델과 토큰 사용량입니다.
-   */
-  aiUsage?: {
-    model?: string | null;
-    callCount?: number | null;
-    inputTokens?: number | null;
-    outputTokens?: number | null;
-    totalTokens?: number | null;
-    cacheReadInputTokens?: number | null;
-    cacheWriteInputTokens?: number | null;
-    reasoningTokens?: number | null;
-    rawUsage?:
-      | {
-          [k: string]: unknown;
-        }
-      | unknown[]
-      | string
-      | number
-      | boolean
-      | null;
-  };
   errorMessage?: string | null;
   completedAt?: string | null;
   createdBy?: (number | null) | User;
@@ -3846,19 +3824,6 @@ export interface AgentChatSessionsSelect<T extends boolean = true> {
         name?: T;
         callCount?: T;
         id?: T;
-      };
-  aiUsage?:
-    | T
-    | {
-        model?: T;
-        callCount?: T;
-        inputTokens?: T;
-        outputTokens?: T;
-        totalTokens?: T;
-        cacheReadInputTokens?: T;
-        cacheWriteInputTokens?: T;
-        reasoningTokens?: T;
-        rawUsage?: T;
       };
   errorMessage?: T;
   completedAt?: T;

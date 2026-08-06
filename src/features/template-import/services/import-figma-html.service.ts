@@ -18,12 +18,16 @@ import {
 import {
 	type FigmaAssetPlan,
 	type FigmaRasterDiagnostic,
+	type FigmaTruncationDiagnostic,
 	planFigmaAssets,
 } from '@/features/template-import/utils/normalize-figma-node'
 import { FigmaImportError } from '@/lib/errors'
 import type { User } from '@/payload-types'
 
-export type { FigmaRasterDiagnostic } from '@/features/template-import/utils/normalize-figma-node'
+export type {
+	FigmaRasterDiagnostic,
+	FigmaTruncationDiagnostic,
+} from '@/features/template-import/utils/normalize-figma-node'
 
 /** 임시 URL 하나를 내려받아 draft 에셋으로 저장하기 위한 작업 단위. */
 interface AssetDownloadJob {
@@ -50,13 +54,24 @@ export async function importFigmaHtml(
 	source: { fileKey: string; nodeId: string },
 	payload: Payload,
 	user: User,
-): Promise<FigmaHtmlResult & { name: string; diagnostics: FigmaRasterDiagnostic[] }> {
+): Promise<
+	FigmaHtmlResult & {
+		name: string
+		diagnostics: FigmaRasterDiagnostic[]
+		truncationDiagnostics: FigmaTruncationDiagnostic[]
+	}
+> {
 	const node = await findFigmaNodeTree(source.fileKey, source.nodeId)
 	const plan = planFigmaAssets(node)
 	const assets = await storePlannedAssets(source.fileKey, plan, payload, user)
 	const result = convertFigmaNodeToHtml(node, assets.renders, assets.imageFills)
 
-	return { ...result, name: node.name ?? 'Untitled', diagnostics: plan.diagnostics }
+	return {
+		...result,
+		name: node.name ?? 'Untitled',
+		diagnostics: plan.diagnostics,
+		truncationDiagnostics: plan.truncationDiagnostics,
+	}
 }
 
 /** 임시 URL 만료 전에 끝내되 메모리에 동시에 잡는 Buffer 수를 제한하는 다운로드 동시성. */

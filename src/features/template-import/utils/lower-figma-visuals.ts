@@ -321,6 +321,29 @@ export function createContainerStyle(node: Node): IrCssStyle {
 	return {} // layoutMode 없음 → 자식이 절대배치
 }
 
+/**
+ * 텍스트 노드의 말줄임(…) 의도와 -webkit-line-clamp 줄 수 유도 — 이 판단의 단일 소유자.
+ * 줄 수는 maxLines 우선, 없으면 고정 박스 높이 ÷ Figma가 계산한 줄높이(px)로 유도한다.
+ * truncates인데 lineClamp가 없으면 말줄임 의도가 overflow:hidden clip으로만 강등된다는 뜻 —
+ * createTextStyle은 그대로 clip을 남기고, planFigmaAssets는 이를 진단으로 알린다.
+ */
+export function resolveTextTruncation(node: Node): { truncates: boolean; lineClamp?: number } {
+	const s = node.style ?? {}
+	const truncates = s.textTruncation === 'ENDING' || s.textAutoResize === 'TRUNCATE'
+	if (!truncates) return { truncates }
+	if (s.maxLines) return { truncates, lineClamp: s.maxLines }
+	const fixedBox =
+		!s.textAutoResize || s.textAutoResize === 'NONE' || s.textAutoResize === 'TRUNCATE'
+	if (fixedBox && s.lineHeightPx && node.absoluteBoundingBox) {
+		return {
+			truncates,
+			lineClamp: Math.max(1, Math.floor(node.absoluteBoundingBox.height / s.lineHeightPx)),
+		}
+	}
+	// ponytail: 줄높이 px가 없으면 줄 수 유도 불가 → clamp 없이 overflow:hidden clip만 남는다.
+	return { truncates }
+}
+
 /** 텍스트 노드의 타이포 속성(폰트/색/정렬/줄높이/장식) → CSS. */
 export function createTextStyle(node: Node): IrCssStyle {
 	const s = node.style ?? {}
@@ -351,18 +374,9 @@ export function createTextStyle(node: Node): IrCssStyle {
 
 	// Figma 텍스트 박스의 넘침 재현: auto-resize가 꺼진(NONE/생략/레거시 TRUNCATE) 고정 박스는 박스에서 잘리고,
 	// textTruncation ENDING(레거시 TRUNCATE 포함)은 -webkit-line-clamp로 「…」 말줄임을 그린다.
-	// 줄 수는 maxLines 우선, 없으면 고정 박스 높이 ÷ Figma가 계산한 줄높이(px)로 유도한다.
 	const fixedBox =
 		!s.textAutoResize || s.textAutoResize === 'NONE' || s.textAutoResize === 'TRUNCATE'
-	const truncates = s.textTruncation === 'ENDING' || s.textAutoResize === 'TRUNCATE'
-	let lineClamp: number | undefined
-	if (truncates) {
-		if (s.maxLines) lineClamp = s.maxLines
-		else if (fixedBox && s.lineHeightPx && node.absoluteBoundingBox) {
-			lineClamp = Math.max(1, Math.floor(node.absoluteBoundingBox.height / s.lineHeightPx))
-		}
-		// ponytail: 줄높이 px가 없으면 줄 수 유도 불가 → clamp 없이 아래 overflow:hidden clip만 남는다.
-	}
+	const { lineClamp } = resolveTextTruncation(node)
 
 	return {
 		margin: '0',

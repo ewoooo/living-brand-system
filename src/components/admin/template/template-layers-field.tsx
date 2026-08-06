@@ -24,8 +24,18 @@ import {
 	requestPublishedImageProfiles,
 } from '@/features/generate-image/services/generate-image.client'
 import { generateOneText } from '@/features/generate-text/services/generate-text.client'
-import { composeTemplateHtml } from '@/services/compose-template-html.client'
+import type { BrandColor } from '@/payload-types'
+import {
+	composeTemplateHtml,
+	isImageColorizeOverlayId,
+} from '@/services/compose-template-html.client'
 import type { TemplateNodeConfig, TemplateNodeConfigMap, TemplateSlotSpec } from '@/types/template'
+import {
+	IDENTITY_TRANSFORM,
+	type ImageTransform,
+	isIdentityTransform,
+} from './image-transform-gestures'
+import { ImageTransformOverlay } from './image-transform-overlay'
 import { VectorLayerEditor } from './vector-layer-editor'
 
 /**
@@ -38,9 +48,11 @@ interface LayerRow {
 	depth: number
 	name: string
 	figmaType: string
+	/** 요소의 실제 태그(p·img·div) — data-figma-type이 아니라 렌더 실체로 편집기를 고른다. */
+	tag: string
 	isText: boolean
 	isVector: boolean
-	/** 직계 자식에 data-image-carrier가 있는 프레임 — 이미지 자유 편집(transform) 대상. */
+	/** 자신 또는 직계 자식이 data-image-carrier인 레이어 — 이미지 자유 편집(transform) 대상. */
 	hasImageCarrier: boolean
 	/** 요소 자신의 inline width/height(px) — clipsContent 프레임의 가시 박스. AI 생성 비율 유도에 쓴다. */
 	boxWidth?: number
@@ -90,6 +102,15 @@ const VECTOR_TYPES = new Set([
 // 배경 이미지 할당(AI 생성) 대상. Figma REST는 둥근 사각형도 RECTANGLE(+cornerRadius)로 내보내므로 두 타입이면 충분하다.
 const IMAGE_ASSIGN_TYPES = new Set(['FRAME', 'RECTANGLE'])
 
+// 배경 설정 개방 판정 — 타입 목록이 아니라 compose가 실제로 지원하는 능력으로 결정한다.
+// - 캐리어 보유(자신·직계 자식) → 타입 무관 허용(INSTANCE/COMPONENT/SECTION 프레임 포함)
+// - FRAME/RECTANGLE → div(레거시 배경 경로)든 래스터 img(src 교체)든 허용
+// - 벡터 img는 VectorLayerEditor가, 실제 <p>는 텍스트 편집이 소유하므로 제외
+const canAssignImage = (layer: LayerRow) =>
+	!layer.isText &&
+	!layer.isVector &&
+	(layer.hasImageCarrier || IMAGE_ASSIGN_TYPES.has(layer.figmaType))
+
 // 배경 설정 트리거 버튼 공통 스타일(에셋 가져오기 · AI 생성).
 const TRIGGER_STYLE: CSSProperties = {
 	display: 'inline-flex',
@@ -117,20 +138,24 @@ function parseLayers(html: string): LayerRow[] {
 	const doc = new DOMParser().parseFromString(html, 'text/html')
 
 	const walk = (el: Element, depth: number) => {
-		const figmaType =
-			el.getAttribute('data-figma-type') ||
-			(el.tagName.toLowerCase() === 'p' ? 'TEXT' : 'FRAME')
-		const isText = figmaType === 'TEXT'
+		// compose가 만든 컬러 치환 오버레이는 편집 대상이 아니다 — 선택해 편집하면 base에 없는
+		// 노드로 override가 생겨 발행이 막히므로 레이어 패널에서 숨긴다.
+		if (isImageColorizeOverlayId(el.getAttribute('data-node-id') ?? '')) return
+		const tag = el.tagName.toLowerCase()
+		const figmaType = el.getAttribute('data-figma-type') || (tag === 'p' ? 'TEXT' : 'FRAME')
+		// 래스터화된 TEXT는 figmaType이 TEXT여도 img로 남는다 — 실제 <p>만 텍스트 편집 대상.
+		const isText = tag === 'p'
 		rows.push({
 			id: el.getAttribute('data-node-id') || `${depth}-${rows.length}`,
 			depth,
 			name: el.getAttribute('data-name') || typeLabel(figmaType),
 			figmaType,
+			tag,
 			isText,
 			isVector: VECTOR_TYPES.has(figmaType),
-			hasImageCarrier: Array.from(el.children).some((child) =>
-				child.hasAttribute('data-image-carrier'),
-			),
+			hasImageCarrier:
+				el.hasAttribute('data-image-carrier') ||
+				Array.from(el.children).some((child) => child.hasAttribute('data-image-carrier')),
 			boxWidth: stylePx(el, 'width'),
 			boxHeight: stylePx(el, 'height'),
 			text: isText ? (el.textContent ?? '') : '',
@@ -466,13 +491,6 @@ function ImageSlotSpecEditor({
 	)
 }
 
-type ImageTransform = NonNullable<TemplateNodeConfig['imageTransform']>
-
-const IDENTITY_TRANSFORM: ImageTransform = { x: 0, y: 0, scale: 1, rotate: 0 }
-
-const isIdentityTransform = (t: ImageTransform) =>
-	t.x === 0 && t.y === 0 && t.scale === 1 && t.rotate === 0
-
 /**
  * 프레임에 할당한 이미지의 자유 편집(이동·확대·회전) 폼. 값은 override로만 저장되고
  * compose가 캐리어의 CSS transform으로 적용한다 — baseHtml은 건드리지 않는다.
@@ -487,6 +505,10 @@ function ImageTransformEditor({
 }) {
 	const [draft, setDraft] = useState<ImageTransform>(value ?? IDENTITY_TRANSFORM)
 	const commit = (next: ImageTransform) => onChange(isIdentityTransform(next) ? undefined : next)
+
+	// 캔버스 오버레이가 commit한 값을 반영한다 — key(selected.id)는 안 바뀌므로 effect로 동기화.
+	// 슬라이더 드래그 중에는 value가 변하지 않아(놓을 때만 commit) draft를 덮지 않는다.
+	useEffect(() => setDraft(value ?? IDENTITY_TRANSFORM), [value])
 
 	const fields: {
 		key: keyof ImageTransform
@@ -566,11 +588,124 @@ function ImageTransformEditor({
 	)
 }
 
+/**
+ * 컬러 치환 폼 — 생성 이미지(단색 라인 아트)의 선·배경을 브랜드 컬러로 다시 칠한다.
+ * 값은 override로만 저장되고 compose가 luminance 마스크 2겹으로 적용한다.
+ * 스와치 소스·UI는 VectorLayerEditor의 브랜드 컬러와 동일(published brand-colors).
+ */
+function ImageColorizeEditor({
+	value,
+	onChange,
+}: {
+	value?: { line: string; background: string }
+	onChange: (next?: { line: string; background: string }) => void
+}) {
+	const [colors, setColors] = useState<BrandColor[]>([])
+	const [loadError, setLoadError] = useState(false)
+	// 두 값이 모두 골라져야 유효한 override — 한쪽만 고른 상태는 draft로만 들고 있는다.
+	const [draft, setDraft] = useState<{ line?: string; background?: string }>(value ?? {})
+
+	useEffect(() => setDraft(value ?? {}), [value])
+
+	useEffect(() => {
+		const controller = new AbortController()
+		const query = 'depth=0&limit=100&where[_status][equals]=published&sort=name'
+		void fetch(`/api/brand-colors?${query}`, { signal: controller.signal })
+			.then(async (response) => {
+				if (!response.ok) throw new Error('Failed to load brand colors')
+				setColors(((await response.json()) as { docs: BrandColor[] }).docs)
+			})
+			.catch((error: unknown) => {
+				if ((error as { name?: string }).name !== 'AbortError') setLoadError(true)
+			})
+		return () => controller.abort()
+	}, [])
+
+	const pick = (field: 'line' | 'background', hex: string) => {
+		const next = { ...draft, [field]: hex }
+		setDraft(next)
+		if (next.line && next.background) {
+			onChange({ line: next.line, background: next.background })
+		}
+	}
+
+	return (
+		<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+			{(
+				[
+					['line', '선 색'],
+					['background', '배경 색'],
+				] as const
+			).map(([field, label]) => (
+				<fieldset key={field} style={{ border: 0, padding: 0, margin: 0 }}>
+					<legend className="text-sm" style={{ marginBottom: 4 }}>
+						{label}
+					</legend>
+					<div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+						{colors.map((color) => {
+							const hex = /^[0-9a-f]{3,8}$/i.test(color.hex)
+								? `#${color.hex}`
+								: color.hex
+							const selected = draft[field] === hex
+							return (
+								<Button
+									key={color.id}
+									type="button"
+									aria-pressed={selected}
+									aria-label={`${color.name} ${hex}`}
+									onClick={() => pick(field, hex)}
+									variant={selected ? 'muted' : 'outline'}
+									size="sm"
+								>
+									<span
+										aria-hidden
+										style={{
+											width: 14,
+											height: 14,
+											borderRadius: 2,
+											background: hex,
+										}}
+									/>
+									{color.name}
+								</Button>
+							)
+						})}
+					</div>
+				</fieldset>
+			))}
+			<div>
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					onClick={() => {
+						setDraft({})
+						onChange(undefined)
+					}}
+				>
+					해제
+				</Button>
+			</div>
+			{loadError && (
+				<p
+					className="text-sm"
+					role="alert"
+					style={{ margin: 0, color: 'var(--theme-error-500)' }}
+				>
+					브랜드 컬러를 불러오지 못했습니다.
+				</p>
+			)}
+		</div>
+	)
+}
+
 /** 워크스페이스의 가변 폭 미리보기 영역과 contain scale을 소유한다. */
 function TemplateCanvas({
 	canvasRef,
 	hasHtml,
 	height,
+	iframeRef,
+	overlay,
 	previewDocument,
 	scale,
 	width,
@@ -578,6 +713,8 @@ function TemplateCanvas({
 	canvasRef: RefObject<HTMLDivElement | null>
 	hasHtml: boolean
 	height: number
+	iframeRef: RefObject<HTMLIFrameElement | null>
+	overlay?: ReactNode
 	previewDocument: string
 	scale: number
 	width: number
@@ -599,9 +736,11 @@ function TemplateCanvas({
 			}}
 		>
 			{hasHtml && width && height ? (
-				<div style={{ width: width * scale, height: height * scale }}>
+				// relative: 이미지 편집 오버레이가 iframe의 시각적 박스 위에 절대 배치된다.
+				<div style={{ width: width * scale, height: height * scale, position: 'relative' }}>
 					{/* script/forms/navigation은 열지 않고, 인증된 staging 이미지 요청에만 same-origin을 유지한다. */}
 					<iframe
+						ref={iframeRef}
 						title="템플릿 Draft 미리보기"
 						sandbox="allow-same-origin"
 						referrerPolicy="no-referrer"
@@ -615,6 +754,7 @@ function TemplateCanvas({
 							transformOrigin: 'top left',
 						}}
 					/>
+					{overlay}
 				</div>
 			) : (
 				<span className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
@@ -768,6 +908,14 @@ export default function TemplateLayersField() {
 	const commitText = (text: string) => commitNodeConfig({ text })
 	const commitBackground = ({ id, src }: { id: number; src: string }) =>
 		commitNodeConfig({ backgroundImage: src, generatedImageId: id })
+
+	// 이미지 편집 오버레이 게이트 — 아래 슬라이더 섹션과 동일 조건(이미지 할당 대상 + 배경 + 캐리어).
+	const iframeRef = useRef<HTMLIFrameElement>(null)
+	const canEditImage =
+		!!selected &&
+		canAssignImage(selected) &&
+		!!nodeConfigs[selected.id]?.backgroundImage &&
+		selected.hasImageCarrier
 	return (
 		<div style={{ marginBottom: 'var(--base)' }}>
 			{/* 캔버스(가변폭·중앙정렬) + 레이어 목록(고정폭) */}
@@ -776,6 +924,18 @@ export default function TemplateLayersField() {
 					canvasRef={canvasRef}
 					hasHtml={hasHtml}
 					height={h}
+					iframeRef={iframeRef}
+					overlay={
+						canEditImage && selected ? (
+							<ImageTransformOverlay
+								iframeRef={iframeRef}
+								nodeId={selected.id}
+								scale={scale}
+								value={nodeConfigs[selected.id]?.imageTransform}
+								onCommit={(imageTransform) => commitNodeConfig({ imageTransform })}
+							/>
+						) : null
+					}
 					previewDocument={previewDocument}
 					scale={scale}
 					width={w}
@@ -888,7 +1048,7 @@ export default function TemplateLayersField() {
 				</div>
 			)}
 
-			{selected && IMAGE_ASSIGN_TYPES.has(selected.figmaType) && (
+			{selected && canAssignImage(selected) && (
 				<div>
 					<span
 						className="text-sm"
@@ -979,7 +1139,7 @@ export default function TemplateLayersField() {
 						)}
 					</div>
 					{/* 캐리어가 있어야 transform을 받을 수 있다 — 레거시 프레임 배경 경로는 compose가 무시. */}
-					{nodeConfigs[selected.id]?.backgroundImage && selected.hasImageCarrier && (
+					{canEditImage && (
 						<div style={{ marginTop: 12 }}>
 							<span
 								className="text-sm"
@@ -996,6 +1156,21 @@ export default function TemplateLayersField() {
 								value={nodeConfigs[selected.id]?.imageTransform}
 								onChange={(imageTransform) => commitNodeConfig({ imageTransform })}
 							/>
+							<span
+								className="text-sm"
+								style={{
+									display: 'block',
+									margin: '12px 0 6px',
+									color: 'var(--theme-elevation-600)',
+								}}
+							>
+								컬러 치환 — 선·배경 브랜드 컬러
+							</span>
+							<ImageColorizeEditor
+								key={`colorize-${selected.id}`}
+								value={nodeConfigs[selected.id]?.imageColorize}
+								onChange={(imageColorize) => commitNodeConfig({ imageColorize })}
+							/>
 						</div>
 					)}
 				</div>
@@ -1009,14 +1184,13 @@ export default function TemplateLayersField() {
 				/>
 			)}
 
-			{selected &&
-				!selected.isText &&
-				!selected.isVector &&
-				!IMAGE_ASSIGN_TYPES.has(selected.figmaType) && (
-					<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
-						{typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.
-					</p>
-				)}
+			{selected && !selected.isText && !selected.isVector && !canAssignImage(selected) && (
+				<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
+					{selected.tag === 'img'
+						? '이미지로 고정된 레이어입니다 — Figma에서 해당 속성을 정리하면 편집 가능하게 가져올 수 있습니다.'
+						: `${typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.`}
+				</p>
+			)}
 		</div>
 	)
 }

@@ -25,6 +25,10 @@ describe('inspectTemplateStyle', () => {
 		expect(inspectTemplateStyle('display:inline').blocker).toContain('display')
 	})
 
+	it('컬러 치환이 쓰는 mask-mode를 허용한다', () => {
+		expect(inspectTemplateStyle('mask-mode: luminance')).toEqual({ urls: [] })
+	})
+
 	it('동적 이미지 함수와 URL 이외의 함수 위치를 거부한다', () => {
 		expect(inspectTemplateStyle('background-image: image-set(url(a) 1x)').blocker).toContain(
 			'동적 이미지 함수',

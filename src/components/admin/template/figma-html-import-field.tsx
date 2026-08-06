@@ -3,13 +3,17 @@
 import { Button, TextInput, toast, useForm, useFormFields } from '@payloadcms/ui'
 import { useState } from 'react'
 import type { FigmaHtmlResult } from '@/features/template-import/utils/figma-node-to-html'
-import type { FigmaRasterDiagnostic } from '@/features/template-import/utils/normalize-figma-node'
+import type {
+	FigmaRasterDiagnostic,
+	FigmaTruncationDiagnostic,
+} from '@/features/template-import/utils/normalize-figma-node'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import type { TemplateNodeConfigMap } from '@/types/template'
 
 type ImportedFigmaHtml = FigmaHtmlResult & {
 	name: string
 	diagnostics?: FigmaRasterDiagnostic[]
+	truncationDiagnostics?: FigmaTruncationDiagnostic[]
 }
 
 /** Figma URL의 프레임을 HTML로 변환 요청한다. 실패하면 서버 메시지를 담아 throw한다. */
@@ -36,6 +40,13 @@ function formatRasterWarning(diagnostics: FigmaRasterDiagnostic[]): string {
 	})
 	const rest = diagnostics.length - lines.length
 	return `이미지로 고정된 레이어: ${lines.join(', ')}${rest > 0 ? ` 외 ${rest}개` : ''}. Figma에서 해당 속성을 정리하면 편집 가능한 레이어로 가져올 수 있습니다.`
+}
+
+/** 말줄임(…) 줄 수를 유도하지 못해 잘림만 적용된 텍스트 진단을 어드민 경고 문구로 요약한다. */
+function formatTruncationWarning(diagnostics: FigmaTruncationDiagnostic[]): string {
+	const names = diagnostics.slice(0, 3).map((diagnostic) => `'${diagnostic.name}'`)
+	const rest = diagnostics.length - names.length
+	return `말줄임(…) 줄 수를 정하지 못해 잘림만 적용된 텍스트 ${diagnostics.length}개: ${names.join(', ')}${rest > 0 ? ` 외 ${rest}개` : ''}. Figma에서 최대 줄 수나 고정 줄 높이(px)를 지정하면 말줄임으로 가져올 수 있습니다.`
 }
 
 /** 재import한 base HTML에 남아 있는 nodeId의 설정만 보존한다. 외부 I/O는 없다. */
@@ -101,6 +112,9 @@ export default function FigmaHtmlImportField() {
 			)
 			if (imported.diagnostics?.length) {
 				toast.warning(formatRasterWarning(imported.diagnostics))
+			}
+			if (imported.truncationDiagnostics?.length) {
+				toast.warning(formatTruncationWarning(imported.truncationDiagnostics))
 			}
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : 'Figma 가져오기에 실패했습니다.')

@@ -268,59 +268,6 @@ export const AgentChatSessions: CollectionConfig = {
 			},
 		},
 		{
-			name: 'aiUsage',
-			type: 'group',
-			admin: {
-				description: 'Agent 채팅 비용 분석에 쓰는 모델과 토큰 사용량입니다.',
-				hidden: true,
-			},
-			fields: [
-				{
-					name: 'model',
-					type: 'text',
-				},
-				{
-					name: 'callCount',
-					type: 'number',
-					admin: { step: 1 },
-				},
-				{
-					name: 'inputTokens',
-					type: 'number',
-					admin: { step: 1 },
-				},
-				{
-					name: 'outputTokens',
-					type: 'number',
-					admin: { step: 1 },
-				},
-				{
-					name: 'totalTokens',
-					type: 'number',
-					admin: { step: 1 },
-				},
-				{
-					name: 'cacheReadInputTokens',
-					type: 'number',
-					admin: { step: 1 },
-				},
-				{
-					name: 'cacheWriteInputTokens',
-					type: 'number',
-					admin: { step: 1 },
-				},
-				{
-					name: 'reasoningTokens',
-					type: 'number',
-					admin: { step: 1 },
-				},
-				{
-					name: 'rawUsage',
-					type: 'json',
-				},
-			],
-		},
-		{
 			name: 'errorMessage',
 			type: 'textarea',
 			admin: {
