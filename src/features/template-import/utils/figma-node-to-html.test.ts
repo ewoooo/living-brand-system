@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { FigmaSourceNode } from './figma-ir'
 import { convertFigmaNodeToHtml } from './figma-node-to-html'
+import { planFigmaAssets } from './normalize-figma-node'
 
 // 실제 REST /nodes 응답 형태의 최소 fixture (169:84 3×3 1:2:3 그리드).
 const GRID_FRAME = {
@@ -90,6 +91,12 @@ describe('convertFigmaNodeToHtml — 레이아웃', () => {
 })
 
 describe('convertFigmaNodeToHtml — 벡터', () => {
+	it('POLYGON은 기존 임포터 계약대로 SVG가 아닌 PNG 폴백으로 계획한다', () => {
+		expect(planFigmaAssets({ id: '1:1', name: 'polygon', type: 'POLYGON' }).renders).toEqual([
+			{ nodeId: '1:1', name: 'polygon', format: 'png' },
+		])
+	})
+
 	it('내부 SVG URL을 원본 bounding box 크기·위치의 img로 렌더링한다', () => {
 		const { html } = convertFigmaNodeToHtml(
 			{
