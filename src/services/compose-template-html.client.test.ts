@@ -438,6 +438,57 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(image?.style.backgroundImage).toBe('')
 	})
 
+	it('캐리어가 손자면 무시하고 레거시 프레임 배경 경로로 동작한다 — 탐색은 자신·직계 자식만', () => {
+		const frameHtml =
+			'<div data-node-id="wrap-1" data-figma-type="FRAME">' +
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' style="background-image:url(/api/application-images/file/ph.png)"></div>' +
+			'</div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, { 'wrap-1': { backgroundImage: generated } })
+		const doc = new DOMParser().parseFromString(html, 'text/html')
+		const wrap = doc.querySelector('[data-node-id="wrap-1"]') as HTMLElement
+		const carrier = doc.querySelector('[data-image-carrier]') as HTMLElement
+
+		// 손자 캐리어는 건드리지 않는다 — 생산자(직계 자식만 마킹)와 소비자의 탐색 범위 일치.
+		expect(carrier.style.backgroundImage).toContain('ph.png')
+		expect(wrap.style.backgroundImage).toContain(generated)
+	})
+
+	it('colorize 합성 결과를 다시 compose해도 오버레이는 1개 — 마스크·에셋 참조가 새 이미지를 가리킨다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' data-asset-collection="application-images" data-asset-id="3"' +
+			' style="background-image:url(/api/application-images/file/ph.png)"></div>' +
+			'</div>'
+		const first = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: generated,
+				generatedImageId: 9,
+				imageColorize: { line: '#112233' },
+			},
+		})
+		const replaced = '/api/generated-images/file/gen2.png'
+		const html = composeTemplateHtml(first, {
+			'frame-1': {
+				backgroundImage: replaced,
+				generatedImageId: 10,
+				imageColorize: { line: '#112233' },
+			},
+		})
+		const doc = new DOMParser().parseFromString(html, 'text/html')
+		const overlays = doc.querySelectorAll('[data-node-id="rect-1-colorize"]')
+		const overlay = overlays[0] as HTMLElement
+
+		expect(overlays.length).toBe(1)
+		expect(overlay.style.maskImage).toContain(replaced)
+		expect(overlay.style.maskImage).not.toContain(generated)
+		expect(overlay.getAttribute('data-asset-collection')).toBe('generated-images')
+		expect(overlay.getAttribute('data-asset-id')).toBe('10')
+	})
+
 	it('마커가 없으면 기존 프레임 배경 동작을 유지한다', () => {
 		const frameHtml = '<div data-node-id="frame-1" data-figma-type="FRAME"></div>'
 		const html = composeTemplateHtml(frameHtml, { 'frame-1': { backgroundImage: generated } })

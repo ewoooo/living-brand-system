@@ -45,6 +45,15 @@ export function isImageColorizeOverlayId(nodeId: string): boolean {
 	return nodeId.endsWith('-colorize')
 }
 
+/** 캐리어 탐색 계약의 단일 소유자 — 생산자(import)가 clip 프레임의 직계 자식에만 마킹하므로 자신 또는 직계 자식만 본다. */
+export function findImageCarrier(el: Element): HTMLElement | null {
+	if (el instanceof HTMLElement && el.hasAttribute('data-image-carrier')) return el
+	for (const child of Array.from(el.children)) {
+		if (child instanceof HTMLElement && child.hasAttribute('data-image-carrier')) return child
+	}
+	return null
+}
+
 /**
  * 컬러 치환: 생성 이미지(단색 라인 아트)를 luminance 마스크로 써서 캐리어를 재구성한다.
  * background 명시 시 2겹 — 바닥(캐리어)=line 색, 오버레이(자식)=background 색. 마스크의 밝은
@@ -67,20 +76,28 @@ function applyImageColorize(
 	// 캐리어가 프레임을 못 덮는 영역(축소·회전, 서브픽셀 틈)에 부모 clip 프레임 자체의 fill이
 	// 새어 보이므로 편집 대상 슬롯의 프레임 fill은 투명이 기본이다. backgroundImage는 shorthand
 	// background: rgb(...) 선언 시 'initial'/'none'을 반환할 수 있어 url( 존재 여부로 검사한다.
-	// 프레임이 템플릿 루트(캔버스)면 건드리지 않는다 — 캔버스 배경이 사라지면 안 된다.
+	// 프레임이 템플릿 루트(캔버스, 부모가 body)면 건드리지 않는다 — 캔버스 배경이 사라지면 안 된다.
 	const frame = base.parentElement
 	if (
 		frame instanceof HTMLElement &&
-		frame !== doc.body.firstElementChild &&
+		frame.parentElement !== doc.body &&
 		frame.style.overflow === 'hidden' &&
 		!/url\(/.test(frame.style.backgroundImage)
 	) {
 		frame.style.backgroundColor = 'transparent'
 	}
 
+	// 재합성 멱등성: published html을 base로 2차 compose하는 스튜디오 경로에서 이전 합성
+	// 오버레이(옛 마스크·옛 에셋 참조)가 남아 있다 — 지우고 새로 만든다. nodeId에 콜론이
+	// 섞여 selector 조립 대신 직계 자식(오버레이는 항상 직계) 순회로 찾는다.
+	const overlayId = `${base.getAttribute('data-node-id')}-colorize`
+	for (const child of Array.from(base.children)) {
+		if (child.getAttribute('data-node-id') === overlayId) child.remove()
+	}
+
 	const overlay = doc.createElement('div')
 	// 검증이 모든 요소에 유일한 data-node-id를 요구한다 — 캐리어 id에서 파생한 합성 id를 준다.
-	overlay.setAttribute('data-node-id', `${base.getAttribute('data-node-id')}-colorize`)
+	overlay.setAttribute('data-node-id', overlayId)
 	// 캐리어(임포트가 절대배치·크기를 굳힘)를 기준 박스로 꽉 채운다 — inset은 허용 목록에 없다.
 	overlay.style.position = 'absolute'
 	overlay.style.left = '0'
@@ -150,11 +167,9 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 		if (config.backgroundImage && el instanceof HTMLElement) {
 			// import가 캐리어(data-image-carrier)로 표시한 요소의 이미지를 갈아끼운다 — 프레임 배경에
 			// 쓰면 위에 얹힌 placeholder 자식이 이미지를 가린다. 캐리어 사각형을 직접 선택해 설정한
-			// 경우 요소 자신이 캐리어다(querySelector는 자손만 봐서 자신을 놓친다).
-			const carrier = el.matches('[data-image-carrier]')
-				? el
-				: el.querySelector('[data-image-carrier]')
-			if (carrier instanceof HTMLElement) {
+			// 경우 요소 자신이 캐리어다.
+			const carrier = findImageCarrier(el)
+			if (carrier) {
 				if (carrier instanceof HTMLImageElement) {
 					carrier.src = config.backgroundImage
 				} else {
@@ -223,9 +238,9 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 					el.setAttribute('data-asset-id', String(config.generatedImageId))
 				}
 			}
-		}
-
-		if (el instanceof HTMLImageElement) {
+			// backgroundImage 블록과 상호배타 — 위에서 img 캐리어가 div로 치환(replaceWith)됐으면
+			// el은 detached라 아래 벡터 경로가 조용히 no-op하는 대신 아예 진입하지 않는다.
+		} else if (el instanceof HTMLImageElement) {
 			if (config.vectorAsset) {
 				el.src = config.vectorAsset.src
 				el.dataset.assetCollection = config.vectorAsset.collection
