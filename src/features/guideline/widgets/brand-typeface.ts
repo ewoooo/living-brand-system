@@ -73,5 +73,12 @@ export const WEIGHT_SAMPLE: Record<LanguageKey, string> = {
 	enCaps: 'A FUTURE BUILDER,\nPIONEERING\nTHE FUTURE OF HUMANITY',
 }
 
-/** 스크램블 뷰어의 기본 목표 문자열(Artboard 42의 대표 문구). */
-export const SCRAMBLE_DEFAULT = 'A FUTURE BUILDER'
+/**
+ * 스크램블 뷰어의 기본 표본(Artboard 45 "FONT SAMPLE TEXT").
+ * 국문·영문·숫자·기호를 한 덩어리에 섞어 서체의 성격을 한 번에 보게 하는 문구다.
+ * 🔴 줄바꿈이 내용의 일부다 — 줄을 합치거나 재배열하지 말 것. 브랜드팀 표기를 그대로 옮겼다.
+ */
+export const SCRAMBLE_DEFAULT = `도전을 멈추지 않는 empowering a sustainble future
+1234567890#→뜨거운 열정과 원칙을 지키는 HD HYUNDAI
+<강한 신념으로>지속가능한 FUTURE 열어가겠습니다. @HD현대
+함께 나아갈 #인재를 찾습니다! We Bring The [future]`

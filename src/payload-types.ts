@@ -1543,9 +1543,29 @@ export interface TypeLanguageWidget {
  */
 export interface TypeScrambleWidget {
   /**
-   * 한 줄에 문자열 하나입니다. 여러 줄을 넣으면 차례로 순환합니다. 비우면 기본 문구를 씁니다.
+   * 표시할 문구입니다. 줄바꿈을 그대로 살려 한 덩어리로 보여줍니다. 비우면 기본 표본을 씁니다.
    */
   text?: string | null;
+  /**
+   * 글자 크기(px)입니다. 줄 수와 판 높이에 맞춰 정합니다.
+   */
+  fontSize?: number | null;
+  /**
+   * 글자 위아래 여백(px)입니다. 판은 글자와 이 여백을 합친 만큼 커집니다.
+   */
+  paddingY?: number | null;
+  /**
+   * 판 높이(px)입니다. 고정이라 스크램블 중에도 판형이 흔들리지 않습니다.
+   */
+  panelHeight?: number | null;
+  /**
+   * 글자 색입니다. 비우면 기본 전경색을 씁니다.
+   */
+  color?: (number | null) | BrandColor;
+  /**
+   * 판 배경색입니다. 비우면 배경 없이 글자만 보입니다.
+   */
+  background?: (number | null) | BrandColor;
   /**
    * 표시 굵기입니다. 배포된 서체 파일에 없는 굵기를 고르면 브라우저 합성이라는 안내가 함께 나옵니다.
    */
@@ -3470,6 +3490,11 @@ export interface TypeLanguageWidgetSelect<T extends boolean = true> {
  */
 export interface TypeScrambleWidgetSelect<T extends boolean = true> {
   text?: T;
+  fontSize?: T;
+  paddingY?: T;
+  panelHeight?: T;
+  color?: T;
+  background?: T;
   weight?: T;
   id?: T;
   blockName?: T;

@@ -39,6 +39,10 @@ import * as migration_20260807_012350_dodont_widget_unify from './20260807_01235
 import * as migration_20260807_020833_hd_color_palette_layout from './20260807_020833_hd_color_palette_layout';
 import * as migration_20260807_030110_logo_bg_picker_widget from './20260807_030110_logo_bg_picker_widget';
 import * as migration_20260807_064100_typography_widgets from './20260807_064100_typography_widgets';
+import * as migration_20260807_074528_scramble_size_fields from './20260807_074528_scramble_size_fields';
+import * as migration_20260807_075125_scramble_color from './20260807_075125_scramble_color';
+import * as migration_20260807_075440_scramble_background from './20260807_075440_scramble_background';
+import * as migration_20260807_075931_scramble_padding from './20260807_075931_scramble_padding';
 
 export const migrations = [
   {
@@ -244,6 +248,26 @@ export const migrations = [
   {
     up: migration_20260807_064100_typography_widgets.up,
     down: migration_20260807_064100_typography_widgets.down,
-    name: '20260807_064100_typography_widgets'
+    name: '20260807_064100_typography_widgets',
+  },
+  {
+    up: migration_20260807_074528_scramble_size_fields.up,
+    down: migration_20260807_074528_scramble_size_fields.down,
+    name: '20260807_074528_scramble_size_fields',
+  },
+  {
+    up: migration_20260807_075125_scramble_color.up,
+    down: migration_20260807_075125_scramble_color.down,
+    name: '20260807_075125_scramble_color',
+  },
+  {
+    up: migration_20260807_075440_scramble_background.up,
+    down: migration_20260807_075440_scramble_background.down,
+    name: '20260807_075440_scramble_background',
+  },
+  {
+    up: migration_20260807_075931_scramble_padding.up,
+    down: migration_20260807_075931_scramble_padding.down,
+    name: '20260807_075931_scramble_padding'
   },
 ];

@@ -188,7 +188,17 @@ function renderWidget(child: Child): ReactNode {
 				<TypeLanguageWidget initialLanguage={child.initialLanguage} layout={child.layout} />
 			)
 		case 'typeScrambleWidget':
-			return <TypeScrambleWidget text={child.text} weight={child.weight} />
+			return (
+				<TypeScrambleWidget
+					text={child.text}
+					fontSize={child.fontSize}
+					panelHeight={child.panelHeight}
+					paddingY={child.paddingY}
+					color={child.color}
+					background={child.background}
+					weight={child.weight}
+				/>
+			)
 		case 'typeWeightWidget':
 			return (
 				<TypeWeightWidget language={child.language} initialWeight={child.initialWeight} />
