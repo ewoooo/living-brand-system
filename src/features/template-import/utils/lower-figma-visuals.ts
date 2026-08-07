@@ -1,5 +1,10 @@
-import type { FigmaEffect, FigmaPaint } from '@/features/template-import/types'
-import type { FigmaRenderedAsset, IrCssStyle, FigmaSourceNode as Node } from './figma-ir'
+import type {
+	FigmaEffect,
+	FigmaPaint,
+	FigmaRenderedAsset,
+	IrCssStyle,
+	FigmaSourceNode as Node,
+} from './figma-ir'
 
 /**
  * 시각/레이아웃 속성 lowering: Figma 노드의 개별 속성을 CSS 선언으로 옮기는 순수 함수 모음.
@@ -451,48 +456,26 @@ function createFixedSizeStyle(node: Node): IrCssStyle {
 	}
 }
 
-interface ChildPlacementContext {
-	node: Node
-	parent: Node
-	useAbsoluteBounds: boolean
-}
-
-/**
- * Strategy 패턴으로 부모 레이아웃별 자식 배치 규칙을 분리한다.
- * Grid, Auto Layout, Constraints의 선택 분기와 스타일 계산이 한 함수에 섞여
- * 규칙을 추가하거나 수정할 때 다른 배치 방식까지 건드려야 하는 문제를 해결한다.
- */
-interface ChildPlacementStrategy {
-	createStyle(context: ChildPlacementContext): IrCssStyle
-}
-
 /** GRID 부모의 자식: 앵커 셀 + span + 셀 내부 정렬 + FIXED 치수. */
-class GridPlacementStrategy implements ChildPlacementStrategy {
-	createStyle({ node }: ChildPlacementContext): IrCssStyle {
-		return {
-			'grid-column': formatGridLine(node.gridColumnAnchorIndex, node.gridColumnSpan ?? 1),
-			'grid-row': formatGridLine(node.gridRowAnchorIndex, node.gridRowSpan ?? 1),
-			'justify-self': resolveGridSelfAlign(
-				node.gridChildHorizontalAlign,
-				node.layoutSizingHorizontal,
-			),
-			'align-self': resolveGridSelfAlign(
-				node.gridChildVerticalAlign,
-				node.layoutSizingVertical,
-			),
-			...createFixedSizeStyle(node),
-		}
+function createGridChildStyle(node: Node): IrCssStyle {
+	return {
+		'grid-column': formatGridLine(node.gridColumnAnchorIndex, node.gridColumnSpan ?? 1),
+		'grid-row': formatGridLine(node.gridRowAnchorIndex, node.gridRowSpan ?? 1),
+		'justify-self': resolveGridSelfAlign(
+			node.gridChildHorizontalAlign,
+			node.layoutSizingHorizontal,
+		),
+		'align-self': resolveGridSelfAlign(node.gridChildVerticalAlign, node.layoutSizingVertical),
+		...createFixedSizeStyle(node),
 	}
 }
 
 /** Auto Layout 부모의 자식: flex-grow(FILL 주축) + align-self + FIXED 치수. */
-class AutoLayoutPlacementStrategy implements ChildPlacementStrategy {
-	createStyle({ node }: ChildPlacementContext): IrCssStyle {
-		return {
-			'flex-grow': node.layoutGrow ? String(node.layoutGrow) : undefined,
-			'align-self': node.layoutAlign ? SELF_ALIGN[node.layoutAlign] : undefined,
-			...createFixedSizeStyle(node),
-		}
+function createAutoLayoutChildStyle(node: Node): IrCssStyle {
+	return {
+		'flex-grow': node.layoutGrow ? String(node.layoutGrow) : undefined,
+		'align-self': node.layoutAlign ? SELF_ALIGN[node.layoutAlign] : undefined,
+		...createFixedSizeStyle(node),
 	}
 }
 
@@ -563,94 +546,83 @@ function createConstraintAxisStyle({
 		: { [startProperty]: formatPx(start), [sizeProperty]: formatPx(size) }
 }
 
-class ConstraintPlacementStrategy implements ChildPlacementStrategy {
-	// 비 Grid/Auto Layout 자식의 Figma Constraints를 부모 기준 CSS 배치로 옮긴다.
-	createStyle({ node, parent, useAbsoluteBounds }: ChildPlacementContext): IrCssStyle {
-		const pb = parent.absoluteBoundingBox
-		const b = node.absoluteBoundingBox
-		if (!pb || !b) return {}
+// 비 Grid/Auto Layout 자식의 Figma Constraints를 부모 기준 CSS 배치로 옮긴다.
+function createConstraintChildStyle(
+	node: Node,
+	parent: Node,
+	useAbsoluteBounds: boolean,
+): IrCssStyle {
+	const pb = parent.absoluteBoundingBox
+	const b = node.absoluteBoundingBox
+	if (!pb || !b) return {}
 
-		// Figma가 렌더한 SVG는 회전까지 포함한 결과이므로 AABB 크기를 그대로 쓴다.
-		const dim =
-			useAbsoluteBounds || !node.size ? b : { width: node.size.x, height: node.size.y }
-		// 회전 노드는 회전 전 크기 박스를 AABB 중심에 맞춰 배치한다 — CSS rotate는 중심 기준이라
-		// 중심만 맞으면 순수 회전의 최종 위치가 Figma와 일치한다. size가 없으면 AABB 코너 근사(기존 동작).
-		const rotationOffset =
-			!useAbsoluteBounds && node.rotation && node.size
-				? { x: (b.width - node.size.x) / 2, y: (b.height - node.size.y) / 2 }
-				: { x: 0, y: 0 }
-		const hugCenterX =
-			!useAbsoluteBounds &&
-			node.layoutSizingHorizontal === 'HUG' &&
-			node.constraints?.horizontal === 'CENTER'
-		const hugCenterY =
-			!useAbsoluteBounds &&
-			node.layoutSizingVertical === 'HUG' &&
-			node.constraints?.vertical === 'CENTER'
-		// CSS absolute는 부모의 padding box(border 안쪽) 기준인데 Figma 좌표는 노드 외곽 기준이라,
-		// 부모가 border를 방출하면 그 두께만큼 좌표계를 되돌린다(시작점·부모 크기 모두).
-		const insets = findBorderInsets(parent)
-		return {
-			position: 'absolute',
-			...createConstraintAxisStyle({
-				constraint: node.constraints?.horizontal,
-				sizing: useAbsoluteBounds ? undefined : node.layoutSizingHorizontal,
-				start: b.x - pb.x - insets.left + rotationOffset.x,
-				size: dim.width,
-				parentSize: pb.width - insets.left - insets.right,
-				startProperty: 'left',
-				endProperty: 'right',
-				sizeProperty: 'width',
-			}),
-			...createConstraintAxisStyle({
-				constraint: node.constraints?.vertical,
-				sizing: useAbsoluteBounds ? undefined : node.layoutSizingVertical,
-				start: b.y - pb.y - insets.top + rotationOffset.y,
-				size: dim.height,
-				parentSize: pb.height - insets.top - insets.bottom,
-				startProperty: 'top',
-				endProperty: 'bottom',
-				sizeProperty: 'height',
-			}),
-			transform:
-				hugCenterX && hugCenterY
-					? 'translate(-50%,-50%)'
-					: hugCenterX
-						? 'translateX(-50%)'
-						: hugCenterY
-							? 'translateY(-50%)'
-							: undefined,
-		}
+	// Figma가 렌더한 SVG는 회전까지 포함한 결과이므로 AABB 크기를 그대로 쓴다.
+	const dim = useAbsoluteBounds || !node.size ? b : { width: node.size.x, height: node.size.y }
+	// 회전 노드는 회전 전 크기 박스를 AABB 중심에 맞춰 배치한다 — CSS rotate는 중심 기준이라
+	// 중심만 맞으면 순수 회전의 최종 위치가 Figma와 일치한다. size가 없으면 AABB 코너 근사(기존 동작).
+	const rotationOffset =
+		!useAbsoluteBounds && node.rotation && node.size
+			? { x: (b.width - node.size.x) / 2, y: (b.height - node.size.y) / 2 }
+			: { x: 0, y: 0 }
+	const hugCenterX =
+		!useAbsoluteBounds &&
+		node.layoutSizingHorizontal === 'HUG' &&
+		node.constraints?.horizontal === 'CENTER'
+	const hugCenterY =
+		!useAbsoluteBounds &&
+		node.layoutSizingVertical === 'HUG' &&
+		node.constraints?.vertical === 'CENTER'
+	// CSS absolute는 부모의 padding box(border 안쪽) 기준인데 Figma 좌표는 노드 외곽 기준이라,
+	// 부모가 border를 방출하면 그 두께만큼 좌표계를 되돌린다(시작점·부모 크기 모두).
+	const insets = findBorderInsets(parent)
+	return {
+		position: 'absolute',
+		...createConstraintAxisStyle({
+			constraint: node.constraints?.horizontal,
+			sizing: useAbsoluteBounds ? undefined : node.layoutSizingHorizontal,
+			start: b.x - pb.x - insets.left + rotationOffset.x,
+			size: dim.width,
+			parentSize: pb.width - insets.left - insets.right,
+			startProperty: 'left',
+			endProperty: 'right',
+			sizeProperty: 'width',
+		}),
+		...createConstraintAxisStyle({
+			constraint: node.constraints?.vertical,
+			sizing: useAbsoluteBounds ? undefined : node.layoutSizingVertical,
+			start: b.y - pb.y - insets.top + rotationOffset.y,
+			size: dim.height,
+			parentSize: pb.height - insets.top - insets.bottom,
+			startProperty: 'top',
+			endProperty: 'bottom',
+			sizeProperty: 'height',
+		}),
+		transform:
+			hugCenterX && hugCenterY
+				? 'translate(-50%,-50%)'
+				: hugCenterX
+					? 'translateX(-50%)'
+					: hugCenterY
+						? 'translateY(-50%)'
+						: undefined,
 	}
-}
-
-const gridPlacementStrategy = new GridPlacementStrategy()
-const autoLayoutPlacementStrategy = new AutoLayoutPlacementStrategy()
-const constraintPlacementStrategy = new ConstraintPlacementStrategy()
-
-/** 부모의 레이아웃 모드에 맞는 배치 Strategy를 고른다. */
-function resolveChildPlacementStrategy(parent: Node): ChildPlacementStrategy {
-	if (parent.layoutMode === 'GRID') return gridPlacementStrategy
-	if (parent.layoutMode === 'HORIZONTAL' || parent.layoutMode === 'VERTICAL') {
-		return autoLayoutPlacementStrategy
-	}
-	return constraintPlacementStrategy
 }
 
 // 부모 레이아웃 종류에 따른 자식 배치.
+// ponytail: 회전 노드는 좌표를 AABB 코너로 잡아 근사한다(정확히는 relativeTransform 분해 필요). 비회전은 정확.
 export function createChildPlacementStyle(
 	node: Node,
 	parent: Node | null,
 	useAbsoluteBounds = false,
 ): IrCssStyle {
 	if (!parent) return {}
+	// ABSOLUTE 자식은 부모 레이아웃 모드와 무관하게 constraints로 배치된다.
 	if (node.layoutPositioning === 'ABSOLUTE') {
-		return constraintPlacementStrategy.createStyle({ node, parent, useAbsoluteBounds })
+		return createConstraintChildStyle(node, parent, useAbsoluteBounds)
 	}
-	// ponytail: 회전 노드는 좌표를 AABB 코너로 잡아 근사한다(정확히는 relativeTransform 분해 필요). 비회전은 정확.
-	return resolveChildPlacementStrategy(parent).createStyle({
-		node,
-		parent,
-		useAbsoluteBounds,
-	})
+	if (parent.layoutMode === 'GRID') return createGridChildStyle(node)
+	if (parent.layoutMode === 'HORIZONTAL' || parent.layoutMode === 'VERTICAL') {
+		return createAutoLayoutChildStyle(node)
+	}
+	return createConstraintChildStyle(node, parent, useAbsoluteBounds)
 }
