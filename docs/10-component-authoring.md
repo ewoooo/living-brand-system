@@ -1,6 +1,6 @@
 # 10. 컴포넌트 저작 규칙
 
-이 문서는 Creator UI와 guideline 화면에 새 React 컴포넌트를 추가할 때 지켜야 할 저작 계약을 정리합니다. 컴포넌트는 반복해서 늘어나고, 매번 조금씩 다르게 만들면 드리프트가 쌓입니다. 여기서는 "매번 같은 계약"을 강제해 발명과 드리프트를 막습니다. 파운데이션(토큰 지도·닫힌 토큰 규칙·프레임 골격)은 `docs/09-design-system.md`가 소유하며 이 문서는 그 위에서 컴포넌트 저작만 다룹니다. 배치·네이밍·계층 경계는 `docs/06-project-structure.md`, 접근성 기준은 `docs/08-accessibility-i18n.md`, 토큰 값은 CSS 원천(`src/app/(frontend)/theme.css`·`typeset.css`)이 소유합니다. 이 문서는 그 원천을 링크만 하고 값을 다시 쓰지 않습니다.
+이 문서는 Creator UI와 guideline 화면, 그리고 프로젝트가 직접 추가한 Payload Admin 확장 화면에 새 React 컴포넌트를 추가할 때 지켜야 할 저작 계약을 정리합니다(Admin에서 달라지는 항목만 §8이 따로 정의합니다). 이 계약은 `src/components/ui` 프리미티브 전용이 아니라 **화면 컴포넌트를 포함한 모든 표현 컴포넌트**에 적용됩니다. 컴포넌트는 반복해서 늘어나고, 매번 조금씩 다르게 만들면 드리프트가 쌓입니다. 여기서는 "매번 같은 계약"을 강제해 발명과 드리프트를 막습니다. 파운데이션(토큰 지도·닫힌 토큰 규칙·프레임 골격)은 `docs/09-design-system.md`가 소유하며 이 문서는 그 위에서 컴포넌트 저작만 다룹니다. 배치·네이밍·계층 경계는 `docs/06-project-structure.md`, 접근성 기준은 `docs/08-accessibility-i18n.md`, 토큰 값은 CSS 원천(`src/app/(frontend)/theme.css`·`typeset.css`)이 소유합니다. 이 문서는 그 원천을 링크만 하고 값을 다시 쓰지 않습니다.
 
 ## 1. 목적
 
@@ -110,16 +110,27 @@ function Card({ className, size = 'default', ...props }:
 
 | 항목 | 규칙 | 원천 |
 | --- | --- | --- |
-| className 병합 | `@/lib/utils`의 `cn`만 사용 | `utils.ts`: `twMerge(clsx(inputs))` |
-| 루트 식별 | 루트 요소에 `data-slot="<name>"` | `badge.tsx`, `card.tsx`, `typography.tsx` |
+| className 병합 | `@/lib/utils`의 `cn`만 사용. 문자열 결합·템플릿 리터럴 금지 | `utils.ts`: `twMerge(clsx(inputs))` |
+| 루트 식별 | 루트 요소에 `data-slot="<name>"` — **화면 컴포넌트 포함**(프리미티브 전용이 아님, §3.5) | `badge.tsx`, `card.tsx`, `studio-workspace.tsx` |
 | 다형 렌더링 | `asChild` + `radix-ui` `Slot`, 별도 `as` prop 금지 | `badge.tsx` |
 | 아이콘 | `@carbon/icons-react` | repo 컨벤션(저장소 24개 파일 채택) |
+| 이미지 | `next/image` 기본. 생성 이미지·데이터 URL 미리보기처럼 최적화가 성립하지 않는 곳만 생 `<img>` + biome-ignore 사유 주석 | `agent-chat-generated-images.tsx` |
 | 파일명 | kebab-case (`blocks/type-specimen/component.tsx`) | `docs/06` §10 |
 | export | PascalCase named export, `default` export 금지 | `badge.tsx`, `card.tsx`, `typography.tsx` |
 | 타입 import | `import type … from 'react'` | `card.tsx`, `typography.tsx` |
-| `use client` | 상태·이벤트가 있을 때만 조건부. 순수 조합엔 붙이지 않음 | `docs/06` |
+| `use client` | 자기 코드에 상태·이벤트·브라우저 API가 있거나, client 전용 의존성(radix 프리미티브, `motion`, `next-themes`)을 직접 감쌀 때만. 둘 다 아닌 순수 조합엔 금지 | `docs/06` |
 
 `Typography`는 cva·`data-slot`·named export 계약을 따르는 참고 구현입니다. `cva('', { variants: { family, size, tone, weight } })`에 `data-slot="typography"`, `data-size`를 붙이고 named export만 합니다. 단, 다형 렌더링은 `asChild`가 아니라 `as` prop으로 처리합니다 — HTML 요소(`h1`~`p`/`span`)만 교체하고 컴포넌트 합성이 필요 없는 경우의 기존 예외이며, 새 컴포넌트는 위 표대로 `asChild` + `Slot`을 씁니다.
+
+### 화면 컴포넌트 계약 (§3.5)
+
+studio·global·home 같은 표면의 화면 컴포넌트도 위 계약을 그대로 따릅니다. 원형 예시가 전부 `ui/*`라고 해서 "프리미티브 전용"으로 읽지 않습니다.
+
+- **`data-slot`**: 모든 표현 컴포넌트의 루트에 붙입니다. 테스트가 DOM을 잡는 공식 훅이고(`studio-workspace.tsx`의 슬롯을 `template-generator.test.tsx`가 검증하는 것이 원형), 내부 클래스 구조가 바뀌어도 셀렉터가 살아남습니다.
+- **props 형태**: DOM 요소를 감싸는 컴포넌트는 `React.ComponentProps<'...'>` 확장이 기본입니다. 도메인 데이터를 받는 화면 컴포넌트는 인라인 익명 객체 타입 대신 **명명된 Props 타입**을 선언합니다. 외부 스타일 조정을 허용하려면 `className`을 받아 `cn`으로 병합합니다 — 받지 않는 컴포넌트에 `cn`은 필요 없지만, 받는 순간 문자열 결합이 아니라 `cn`입니다.
+- **상태 소유**: 서버 데이터 fetch와 그 loading/error 3종 세트를 컴포넌트 `useState`로 복제하지 않습니다. HTTP I/O는 소유 기능의 `*.client.ts`가(`docs/06` §10), 화면 상태 묶음은 `src/features/*/hooks`의 `use-*` 훅이 소유합니다. 원형은 `use-agent-chat` + `global-agent-chat.tsx` — 훅이 상태를 소유하고 나머지 컴포넌트는 props만 받는 표현 계층으로 남습니다. `src/components` 안에 도메인 상태 `createContext`를 만들지 않습니다 — Provider가 필요하면 features의 훅으로 내립니다.
+- **variant 수단 단일화**: 시각 variant(색·모양·상태별 스타일)는 언제나 `cva`입니다. 완전 클래스 룩업 테이블은 §4의 동적 클래스 대책, 즉 **레이아웃 매핑**(`grid-cols` 등 구조 분기)에만 씁니다 — 상태→색 매핑을 `.ts` 룩업 테이블이나 클래스 문자열을 반환하는 헬퍼 함수로 풀면 cva 자리를 우회한 것입니다.
+- **motion**: 애니메이션 라이브러리는 `motion/react` 하나만, `LazyMotion` + `motion/react-m` 조합(`side-nav.tsx` 원형)으로 씁니다. 모션 감소는 그 모션을 소유한 컴포넌트 안에서 `useReducedMotion()`으로 처리하고, `shouldReduceMotion`을 props로 내려보내지 않습니다.
 
 ## 4. 스타일 계약 Do/Don't
 
@@ -133,17 +144,19 @@ className과 style에는 시맨틱 토큰만 씁니다(닫힌 토큰 규칙 전�
 | `bg-muted` / `bg-fill-muted` | `bg-neutral-50 … dark:bg-neutral-950` | `blocks/type-specimen/component.tsx:51` |
 | 조건부 완전 클래스 룩업 | `` `grid gap-4 md:grid-cols-${variant}` `` | `blocks/content-columns/component.tsx:21` |
 | 심볼 + 텍스트로 상태 구분 | 색만으로 판정 구분 | `blocks/callout/component.tsx` (kind별 badge) |
+| 상태 토큰 `bg-success/15 text-success` | 유채 팔레트 `bg-emerald-500/15 text-emerald-700 …` | `studio/review/result/check-status.ts:14` |
+| `Typography` 재사용 | `font-body text-sm font-normal` 수기 반복 | studio 10개 파일 25회 실측 |
 | `@carbon/icons-react` | `@hugeicons/*` | repo 컨벤션(정책) |
 
 ### 생 색·생 팔레트 금지
 
-className·style 리터럴에 생 hex(`#a1b2c3`), 생 Tailwind 팔레트(`-neutral-`/`-gray-`/`-zinc-`/`-slate-`/`-stone-` + 숫자), `oklch()`를 직접 쓰지 않습니다. `border-border`, `bg-muted`, `text-foreground` 같은 시맨틱 토큰만 씁니다. 예외는 §5의 색 데이터 컴포넌트가 props/CMS로 받는 hex뿐입니다(스타일이 아니라 데이터).
+className·style 리터럴에 생 hex(`#a1b2c3`), 생 Tailwind 팔레트, `oklch()`를 직접 쓰지 않습니다. 팔레트 금지는 무채색(`neutral`/`gray`/`zinc`/`slate`/`stone`)만이 아니라 **유채색 전체**(`emerald`/`sky`/`amber`/`orange` 등)입니다. `border-border`, `bg-muted`, `text-foreground` 같은 시맨틱 토큰만 쓰고, 성공/정보/경고/실패 같은 판정·상태 표시는 상태 토큰(`success`/`info`/`warning`/`destructive`, `docs/09` §4)을 씁니다 — 상태 토큰으로 표현이 안 되면 팔레트로 우회하지 말고 `docs/09`와 `theme.css`에 토큰을 추가합니다. 예외는 §5의 색 데이터 컴포넌트가 props/CMS로 받는 hex뿐입니다(스타일이 아니라 데이터).
 
 탐지 grep:
 
 ```bash
-# 생 팔레트 클래스
-grep -rnE '(bg|text|border|ring|fill|from|to|via)-(neutral|gray|zinc|slate|stone)-[0-9]' src
+# 생 팔레트 클래스 (무채 + 유채 전체)
+grep -rnE '(bg|text|border|ring|fill|from|to|via)-(red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|neutral|gray|zinc|slate|stone)-[0-9]' src
 
 # className/style 안의 생 hex
 grep -rnE 'className=.*#[0-9a-fA-F]{6}' src
@@ -176,7 +189,7 @@ grep -rnE '(grid-cols|col-span|gap|w|h|text)-\$\{' src
 
 ### 폭·표면색·세로 리듬은 프레임이 소유
 
-- 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `ContentFrame`에만 있습니다(`content-frame.tsx:22`의 `max-w-[1250px]`).
+- 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `ContentFrame`에만 있습니다(`content-frame.tsx:22`의 `max-w-[1250px]`). 예외는 프리미티브의 **내재 콘텐츠 폭**뿐입니다 — `dialog`의 `max-w-sm`, `tooltip`의 `max-w-xs`, `bubble`의 `max-w-[80%]`처럼 오버레이·말풍선이 자기 판형을 갖는 것은 페이지 폭 소유가 아닙니다. 금지 대상은 화면·블록 컴포넌트가 페이지 폭을 스스로 좁히는 것(`<Card className="max-w-2xl">` 등)입니다.
 - 표면 배경색은 컴포넌트 안에 칠하지 않고 `GuidelineBlockFrame`의 `variant`(`normal`/`secondary`/`inverted`)로 받습니다.
 - 블록 간 세로 리듬도 프레임이 소유합니다(`content-frame.tsx:21`의 `py-8`). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
 
@@ -217,16 +230,30 @@ const MAIN: Swatch[] = [
 - 참고: `src/components/ui/typography.test.ts`, `src/lib/color.test.ts`(`hexToRgb('#fff')` → `{ r: 255, g: 255, b: 255 }`, `getContrastingForeground('#FFFFFF')` → `'#000000'`).
 - 자명한 one-liner(단순 wrapper, 순수 조합)에는 테스트를 만들지 않습니다. YAGNI는 테스트에도 적용됩니다.
 
-## 8. 복붙용 체크리스트
+## 8. Payload Admin 표면 예외
+
+`src/components/admin`은 Payload Admin 런타임 위에서 돌므로 아래 항목만 계약과 다릅니다. 여기 명시되지 않은 나머지(재사용 사다리, 시맨틱 토큰, `cn`, named export, kebab-case, carbon 아이콘, 자기 검증)는 그대로 적용합니다. 원형은 `src/components/admin/template/`(shadcn 재구축 그룹)입니다.
+
+- **`use client`**: Payload form 컨텍스트(`useField`/`useForm`/`useFormFields`)에 접속하는 필드 컴포넌트는 무조건 client입니다. "조건부" 규칙의 예외가 아니라 client 의존성 기준을 충족하는 경우입니다. RSC로 남길 수 있는 것은 폼 밖 조회 화면(`DashboardSummary` 등)뿐입니다.
+- **`@payloadcms/ui` 유지 목록**: 동작을 소유한 컴포넌트는 shadcn으로 갈아끼우지 않습니다 — `RelationshipField`(관계 검색·페이지네이션), `PublishButton`(저장 파이프라인), `Gutter`(admin 폭), `Popup`(admin 포털·z-index), `toast`. 그 밖의 표현은 `src/components/ui` 프리미티브를 씁니다(`template-layer-editors.tsx` 원형).
+- **토큰 원천**: admin의 라이트/다크는 Payload가 `--theme-*`로 소유하고, `src/app/(payload)/admin-tailwind.css`의 `@theme inline`이 시맨틱 토큰을 `--theme-*`에 재매핑합니다. 따라서 admin 컴포넌트도 `bg-muted`/`border-border` 같은 **시맨틱 토큰 클래스를 그대로** 씁니다. 새 코드가 `--theme-elevation-*`를 인라인으로 직접 참조하지 않습니다.
+- **`data-slot` 미부여**: admin 컴포넌트 루트에는 자체 `data-slot`을 붙이지 않습니다. `custom.scss`가 `[data-slot=…]` 셀렉터를 프리미티브 외부 스타일링 훅으로 쓰고 있어, 화면 컴포넌트까지 부여하면 SCSS 축소 방향과 상충합니다.
+- **프레임 계약 미적용**: 폭·표면색은 Payload 레이아웃이 소유하므로 `ContentFrame`/`GuidelineBlockFrame`을 쓰지 않습니다.
+- **cva·`asChild` 해당 없음**: admin 에디터는 시각 variant가 없는 일회성 화면이라 적용 대상이 없습니다. 억지로 만들지 않습니다.
+- **기하 계산 inline style 허용**: iframe scale, 오버레이 핸들 좌표, depth 인덴트, CSS mask처럼 런타임 계산값은 inline `style`이 정당합니다. 색·간격 상수는 여기 넣지 않습니다.
+- **dialkit**: 레이아웃 수치 튜닝 노브는 `useDialKit` + `admin-dialkit-provider`로 admin에만 둡니다. Creator UI에 들이지 않습니다.
+
+## 9. 복붙용 체크리스트
 
 PR을 올리기 전 자기 점검용입니다.
 
 - [ ] 사다리를 내려갔다. `ls src/components/ui`로 기존 프리미티브를 먼저 확인했고, 조합으로 안 될 때만 새로 만들었다.
 - [ ] variant형은 `badge.tsx`(cva), 크기 분기형은 `card.tsx`(data-size + CSS 변수) 원형을 복제했다.
-- [ ] 루트에 `data-slot`을 붙였고, className 병합은 `@/lib/utils`의 `cn`만 썼다.
+- [ ] 루트에 `data-slot`을 붙였고(화면 컴포넌트 포함, admin 표면 제외 — §8), className 병합은 `@/lib/utils`의 `cn`만 썼다. 문자열 결합이 없다.
+- [ ] 도메인 데이터를 받는 화면 컴포넌트는 명명된 Props 타입이고, DOM 래퍼는 `React.ComponentProps` 확장이다.
 - [ ] PascalCase named export만 있다. `default` export가 없다.
 - [ ] 다형 렌더링은 `asChild` + `radix-ui` `Slot`이다. 새 `as` prop이 없다.
-- [ ] `grep -rE '(bg|text|border|ring|fill)-(neutral|gray|zinc|slate|stone)-[0-9]'` 결과가 이 컴포넌트에서 0이다.
+- [ ] §4의 팔레트 탐지 grep(무채 + 유채 전체) 결과가 이 컴포넌트에서 0이다. 판정·상태 색은 상태 토큰(`success`/`info`/`warning`/`destructive`)이다.
 - [ ] `grep -rE 'className=.*#[0-9a-fA-F]{6}'`에 걸리는 생 hex가 없다(색 데이터 props는 예외).
 - [ ] `grep -rE '(grid-cols|col-span|gap)-\$\{'`에 걸리는 동적 클래스가 없다. 조건부 완전 클래스로 바꿨다.
 - [ ] 자기 `max-width`가 없다. 폭은 `ContentFrame`, 표면색은 `GuidelineBlockFrame`이 소유한다.
@@ -237,4 +264,7 @@ PR을 올리기 전 자기 점검용입니다.
 - [ ] 글자 크기는 `docs/09` §6의 고정 유틸리티 단계만 사용한다.
 - [ ] focus-visible ring, 키보드 조작, label 연결이 있다.
 - [ ] 순수 조합 컴포넌트에 `use client`를 붙이지 않았다.
+- [ ] fetch·loading·error를 컴포넌트 `useState`로 복제하지 않았다 — HTTP I/O는 `*.client.ts`, 화면 상태 묶음은 feature 훅이 소유한다. `src/components` 안에 도메인 Context를 만들지 않았다.
+- [ ] 시각 variant는 cva다. 상태→색 룩업 테이블이나 클래스 반환 헬퍼 함수가 없다.
+- [ ] motion은 `motion/react`의 `LazyMotion` + `m`이고, `shouldReduceMotion`을 props로 내리지 않았다.
 - [ ] 비자명 로직에 co-located `*.test.ts` 하나가 있다. one-liner엔 없다.
