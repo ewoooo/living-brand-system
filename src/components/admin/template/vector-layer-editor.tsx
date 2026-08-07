@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import type { ApplicationImage, BrandColor, BrandLogo } from '@/payload-types'
+import type { ApplicationImage, BrandLogo } from '@/payload-types'
 import type { TemplateVectorAssetCollection } from '@/services/template-asset-policy.service'
 import type { TemplateNodeConfig } from '@/types/template'
+import { BrandColorSwatches } from './brand-color-swatches'
 
 type Asset = (BrandLogo | ApplicationImage) & {
 	collection: TemplateVectorAssetCollection
@@ -29,7 +30,6 @@ export function VectorLayerEditor({
 	onChange: (patch: TemplateNodeConfig) => void
 }) {
 	const [assets, setAssets] = useState<Asset[]>([])
-	const [colors, setColors] = useState<BrandColor[]>([])
 	const [loadError, setLoadError] = useState(false)
 
 	useEffect(() => {
@@ -44,9 +44,8 @@ export function VectorLayerEditor({
 		void Promise.all([
 			read<BrandLogo>('brand-logos'),
 			read<ApplicationImage>('application-images'),
-			read<BrandColor>('brand-colors'),
 		])
-			.then(([logos, images, brandColors]) => {
+			.then(([logos, images]) => {
 				setAssets([
 					...logos.map((asset) => ({ ...asset, collection: 'brand-logos' as const })),
 					...images.map((asset) => ({
@@ -54,7 +53,6 @@ export function VectorLayerEditor({
 						collection: 'application-images' as const,
 					})),
 				])
-				setColors(brandColors)
 			})
 			.catch((error: unknown) => {
 				if ((error as { name?: string }).name !== 'AbortError') setLoadError(true)
@@ -143,50 +141,21 @@ export function VectorLayerEditor({
 				</ToggleGroup>
 			</fieldset>
 
-			<fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-				<legend className="text-sm" style={{ marginBottom: 4 }}>
-					브랜드 컬러
-				</legend>
-				<div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-					<Button
-						type="button"
-						aria-pressed={!config.vectorColor}
-						onClick={() => onChange({ vectorColor: undefined })}
-						variant={!config.vectorColor ? 'muted' : 'outline'}
-						size="sm"
-					>
-						원본
-					</Button>
-					{colors.map((color) => {
-						const value = /^[0-9a-f]{3,8}$/i.test(color.hex)
-							? `#${color.hex}`
-							: color.hex
-						const selected = config.vectorColor === value
-						return (
-							<Button
-								key={color.id}
-								type="button"
-								aria-pressed={selected}
-								aria-label={`${color.name} ${value}`}
-								onClick={() => onChange({ vectorColor: value })}
-								variant={selected ? 'muted' : 'outline'}
-								size="sm"
-							>
-								<span
-									aria-hidden
-									style={{
-										width: 14,
-										height: 14,
-										borderRadius: 2,
-										background: value,
-									}}
-								/>
-								{color.name}
-							</Button>
-						)
-					})}
-				</div>
-			</fieldset>
+			<BrandColorSwatches
+				legend="브랜드 컬러"
+				value={config.vectorColor}
+				onPick={(hex) => onChange({ vectorColor: hex })}
+			>
+				<Button
+					type="button"
+					aria-pressed={!config.vectorColor}
+					onClick={() => onChange({ vectorColor: undefined })}
+					variant={!config.vectorColor ? 'muted' : 'outline'}
+					size="sm"
+				>
+					원본
+				</Button>
+			</BrandColorSwatches>
 
 			{loadError && (
 				<p
