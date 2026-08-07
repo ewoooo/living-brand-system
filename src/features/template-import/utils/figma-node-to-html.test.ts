@@ -845,7 +845,7 @@ describe('convertFigmaNodeToHtml — 이미지 캐리어', () => {
 		)
 	})
 
-	it('가시 자식이 둘 이상이면 표시하지 않는다(장식 조합 보호)', () => {
+	it('가시 자식이 둘 이상이면 프레임 주도 마킹은 없지만 이미지 fill 자식은 자기 마킹된다', () => {
 		const { html } = convertFigmaNodeToHtml(
 			clipFrame([
 				imageChild,
@@ -860,10 +860,14 @@ describe('convertFigmaNodeToHtml — 이미지 캐리어', () => {
 			{},
 			FILL_ASSETS,
 		)
-		expect(html).not.toContain('data-image-carrier')
+		// 스탠드얼론 이미지 fill 사각형(자식 없음)은 자기 자신을 캐리어로 마킹한다.
+		expect(html.match(/data-image-carrier/g)).toHaveLength(1)
+		expect(html.indexOf('data-image-carrier')).toBeGreaterThan(
+			html.indexOf('data-node-id="2:2"'),
+		)
 	})
 
-	it('직접 IMAGE fill 프레임(자식 없음)은 표시하지 않는다(폴백 분기가 담당)', () => {
+	it('직접 IMAGE fill 프레임(자식 없음)은 자기 자신을 캐리어로 마킹한다', () => {
 		const { html } = convertFigmaNodeToHtml(
 			{
 				...clipFrame([]),
@@ -872,7 +876,59 @@ describe('convertFigmaNodeToHtml — 이미지 캐리어', () => {
 			{},
 			FILL_ASSETS,
 		)
+		expect(html).toContain('data-image-carrier')
+	})
+
+	it('자식 있는 이미지 fill 프레임은 마킹하지 않는다 — 배정 시 자식이 이미지를 가린다', () => {
+		const { html } = convertFigmaNodeToHtml(
+			{
+				...clipFrame([
+					{
+						id: '2:3',
+						name: 'content',
+						type: 'RECTANGLE',
+						fills: [{ type: 'SOLID', color: { r: 0, g: 0, b: 0, a: 1 } }],
+						absoluteBoundingBox: { x: 0, y: 0, width: 10, height: 10 },
+					},
+				]),
+				fills: [{ type: 'IMAGE', imageRef: 'ref-1', scaleMode: 'FILL' }],
+			},
+			{},
+			FILL_ASSETS,
+		)
 		expect(html).not.toContain('data-image-carrier')
+	})
+
+	it('클립 외동 조건 밖의 래스터 폴백 img도 자기 마킹된다', () => {
+		const { html } = convertFigmaNodeToHtml(
+			clipFrame([
+				{
+					id: '2:4',
+					name: 'baked',
+					type: 'RECTANGLE',
+					isMask: true, // 래스터 폴백 사유
+					absoluteBoundingBox: { x: 0, y: 0, width: 100, height: 100 },
+				},
+				{
+					id: '2:3',
+					name: 'deco',
+					type: 'RECTANGLE',
+					fills: [{ type: 'SOLID', color: { r: 0, g: 0, b: 0, a: 1 } }],
+					absoluteBoundingBox: { x: 0, y: 0, width: 10, height: 10 },
+				},
+			]),
+			{
+				'2:4': {
+					collection: 'application-images',
+					id: 5,
+					url: '/api/application-images/file/baked.png',
+				},
+			},
+		)
+		expect(html.match(/data-image-carrier/g)).toHaveLength(1)
+		expect(html.indexOf('data-image-carrier')).toBeGreaterThan(
+			html.indexOf('data-node-id="2:4"'),
+		)
 	})
 
 	it('래스터 폴백 img 자식은 캐리어, 벡터 SVG 자식은 아니다', () => {

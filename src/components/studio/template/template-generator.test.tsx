@@ -90,7 +90,8 @@ describe('TemplateGenerator', () => {
 				navigation={navigation}
 				template={{
 					...template,
-					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경"></div>',
+					// 이미지 슬롯 노드는 임포트가 캐리어로 마킹한 표면이다 — compose는 캐리어 전용.
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
 					nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
 				}}
 			/>,

@@ -100,17 +100,11 @@ const VECTOR_TYPES = new Set([
 	'POLYGON',
 	'REGULAR_POLYGON',
 ])
-// 배경 이미지 할당(AI 생성) 대상. Figma REST는 둥근 사각형도 RECTANGLE(+cornerRadius)로 내보내므로 두 타입이면 충분하다.
-const IMAGE_ASSIGN_TYPES = new Set(['FRAME', 'RECTANGLE'])
-
-// 배경 설정 개방 판정 — 타입 목록이 아니라 compose가 실제로 지원하는 능력으로 결정한다.
-// - 캐리어 보유(자신·직계 자식) → 타입 무관 허용(INSTANCE/COMPONENT/SECTION 프레임 포함)
-// - FRAME/RECTANGLE → div(레거시 배경 경로)든 래스터 img(src 교체)든 허용
-// - 벡터 img는 VectorLayerEditor가, 실제 <p>는 텍스트 편집이 소유하므로 제외
+// 배경 설정 개방 판정 — 이미지 배정 가능한 표면은 임포트가 전부 data-image-carrier로 확정하므로
+// 캐리어 보유(자신·직계 자식)만 본다. compose도 같은 계약으로 캐리어 없는 배정을 무시한다.
+// 벡터 img는 VectorLayerEditor가, 실제 <p>는 텍스트 편집이 소유하므로 제외.
 export const canAssignImage = (layer: LayerRow) =>
-	!layer.isText &&
-	!layer.isVector &&
-	(layer.hasImageCarrier || IMAGE_ASSIGN_TYPES.has(layer.figmaType))
+	!layer.isText && !layer.isVector && layer.hasImageCarrier
 
 // 배경 설정 트리거 버튼 공통 스타일(에셋 가져오기 · AI 생성).
 const TRIGGER_STYLE: CSSProperties = {
@@ -957,13 +951,10 @@ export default function TemplateLayersField() {
 	const commitBackground = ({ id, src }: { id: number; src: string }) =>
 		commitNodeConfig({ backgroundImage: src, generatedImageId: id })
 
-	// 이미지 편집 오버레이 게이트 — 아래 슬라이더 섹션과 동일 조건(이미지 할당 대상 + 배경 + 캐리어).
+	// 이미지 편집 오버레이 게이트 — 아래 슬라이더 섹션과 동일 조건(배정 대상 = 캐리어 보유 + 배경 할당됨).
 	const iframeRef = useRef<HTMLIFrameElement>(null)
 	const canEditImage =
-		!!selected &&
-		canAssignImage(selected) &&
-		!!nodeConfigs[selected.id]?.backgroundImage &&
-		selected.hasImageCarrier
+		!!selected && canAssignImage(selected) && !!nodeConfigs[selected.id]?.backgroundImage
 	return (
 		<div style={{ marginBottom: 'var(--base)' }}>
 			{/* 캔버스(가변폭·중앙정렬) + 레이어 목록(고정폭) */}
@@ -1096,7 +1087,7 @@ export default function TemplateLayersField() {
 							onChange={(imageInput) => commitNodeConfig({ imageInput })}
 						/>
 					</SlotLockToggle>
-					{/* 캐리어가 있어야 transform을 받을 수 있다 — 레거시 프레임 배경 경로는 compose가 무시. */}
+					{/* 배정 대상은 항상 캐리어 보유 — 배경이 실제로 할당된 뒤에만 transform·컬러 치환을 연다. */}
 					{canEditImage && (
 						<div style={{ marginTop: 12 }}>
 							<span

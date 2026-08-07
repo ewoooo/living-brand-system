@@ -291,9 +291,20 @@ function normalizeNode(
 				.map((child) => normalizeNode(child, node, false, renderedAssets, imageFillAssets))
 				.filter((child): child is IrNode => child !== null)
 
-	// 이미지 캐리어 판정(임포트 시 1회 확정): clipsContent 프레임의 유일한 가시 자식이 이미지로
-	// 렌더되면(CSS로 낮춘 단일 IMAGE fill 또는 래스터 폴백 img) 캐리어로 표시한다 — compose가
-	// 생성 이미지를 프레임 배경 대신 이 자식에 갈아끼운다. 자식이 둘 이상인 장식 조합은 표시하지 않는다.
+	// 이미지 캐리어 계약(임포트 시 1회 확정): 이미지 배정 가능한 표면은 임포트가 전부 여기서
+	// 확정한다 — compose와 admin UI는 data-image-carrier 마킹만 보고, 마킹 없는 노드의 이미지
+	// 배정은 무시된다.
+	// 자기 마킹 두 경우:
+	// ① 래스터 폴백 img(벡터 제외 — 벡터 img는 VectorLayerEditor 영역이라 절대 마킹하지 않는다)
+	// ② 자식 없는 CSS-lowerable 이미지 fill 노드(스탠드얼론 이미지 사각형 등).
+	//    자식 있는 이미지 fill 프레임은 배정 시 자식이 이미지를 가리므로 의도적으로 마킹하지 않는다.
+	const selfCarrier = renderedAsset
+		? !VECTOR_NODE_TYPES.has(node.type)
+		: children.length === 0 && Boolean(findCssLowerableImageFill(node))
+
+	// 부모 주도 마킹: clipsContent 프레임의 유일한 가시 자식이 이미지로 렌더되면(CSS로 낮춘 단일
+	// IMAGE fill 또는 래스터 폴백 img) 캐리어로 표시한다 — compose가 생성 이미지를 프레임 배경
+	// 대신 이 자식에 갈아끼운다. 자식이 둘 이상인 장식 조합은 표시하지 않는다.
 	if (node.clipsContent && children.length === 1) {
 		const only = children[0]
 		const source = node.children?.find((child) => child.id === only.id)
@@ -310,6 +321,7 @@ function normalizeNode(
 		tag: renderedAsset ? 'img' : isText ? 'p' : 'div',
 		style,
 		text: !renderedAsset && isText ? (node.characters ?? '') : undefined,
+		imageCarrier: selfCarrier ? true : undefined,
 		asset: renderedAsset,
 		fillAsset: background?.fillAsset,
 		children,
