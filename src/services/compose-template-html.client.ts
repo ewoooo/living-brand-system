@@ -45,13 +45,21 @@ export function isImageColorizeOverlayId(nodeId: string): boolean {
 	return nodeId.endsWith('-colorize')
 }
 
-/** 캐리어 탐색 계약의 단일 소유자 — 생산자(import)가 표면 자신 또는 clip 프레임의 직계 자식에 마킹하므로 자신 또는 직계 자식만 본다. */
+/**
+ * 캐리어 탐색 계약의 단일 소유자 — 생산자(import)가 표면 자신 또는 clip 프레임의 직계 자식에
+ * 마킹하므로 자신 또는 직계 자식만 본다. 마킹된 직계 자식이 2개 이상이면 null — 추측하지
+ * 않는다(각 자식이 자기 주소로 배정된다).
+ */
 export function findImageCarrier(el: Element): HTMLElement | null {
 	if (el instanceof HTMLElement && el.hasAttribute('data-image-carrier')) return el
+	let found: HTMLElement | null = null
 	for (const child of Array.from(el.children)) {
-		if (child instanceof HTMLElement && child.hasAttribute('data-image-carrier')) return child
+		if (child instanceof HTMLElement && child.hasAttribute('data-image-carrier')) {
+			if (found) return null
+			found = child
+		}
 	}
-	return null
+	return found
 }
 
 /**
@@ -77,6 +85,8 @@ function applyImageColorize(
 	// 새어 보이므로 편집 대상 슬롯의 프레임 fill은 투명이 기본이다. backgroundImage는 shorthand
 	// background: rgb(...) 선언 시 'initial'/'none'을 반환할 수 있어 url( 존재 여부로 검사한다.
 	// 프레임이 템플릿 루트(캔버스, 부모가 body)면 건드리지 않는다 — 캔버스 배경이 사라지면 안 된다.
+	// ponytail: solid fill만 무력화 — gradient 쇼트핸드 fill은 background-color만 지워져 그대로
+	// 샌다(천장). 필요 시 프레임 배경을 직접 지정해 회피.
 	const frame = base.parentElement
 	if (
 		frame instanceof HTMLElement &&
@@ -134,10 +144,9 @@ function applyImageColorize(
 		base.removeAttribute(name)
 	}
 
+	// 프레이밍(background-size/position/repeat)은 남긴다 — 재합성 시 위 배정 분기의 "없을 때만
+	// 기본값" 가드가 원본 프레이밍(contain/tile 등)을 보존해 마스크가 그대로 물려받는다(멱등성).
 	base.style.backgroundImage = ''
-	base.style.backgroundSize = ''
-	base.style.backgroundPosition = ''
-	base.style.backgroundRepeat = ''
 	// 배경 명시 시에만 바닥=line 색. 생략 시 바닥은 투명이어야 캔버스가 그대로 비친다.
 	base.style.backgroundColor = colorize.background ? colorize.line : ''
 	base.appendChild(overlay)
@@ -195,6 +204,8 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 				: carrier
 			const edit = config.imageTransform
 			if (edit && !isIdentityTransform(edit)) {
+				// 재합성 비멱등 — transform이 있는 config는 항상 baseHtml에서 합성해야 한다
+				// (이전 출력에 다시 적용하면 prefix가 누적된다).
 				// 합성 규칙: 편집 transform을 import가 만든 base transform 앞에 붙인다(prepend).
 				// 맨 왼쪽 CSS transform이 부모(프레임) 좌표계에서 적용되므로 pan이 프레임 안에서
 				// 이미지를 옮기는 느낌이 되고, Figma 소유의 base transform(rotate 등)은 보존된다.
@@ -223,9 +234,11 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 				mask.style.maskImage = `url("${src}")`
 				mask.style.maskPosition = 'center'
 				mask.style.maskRepeat = 'no-repeat'
+				// mask-size는 기본값이 없어 태생적으로 명시가 필요하다 — vectorFit 미지정이면 fill 상당.
 				mask.style.maskSize = fit === 'contain' ? 'contain' : '100% 100%'
-			} else {
-				el.style.objectFit = fit
+			} else if (config.vectorFit) {
+				// 명시된 vectorFit만 기록한다 — 무조건 기록하면 base의 object-fit을 덮어쓴다.
+				el.style.objectFit = config.vectorFit
 			}
 		}
 	}

@@ -35,6 +35,21 @@ describe('composeTemplateHtml vector override', () => {
 
 		expect(image?.style.objectFit).toBe('fill')
 	})
+
+	it('vectorFit이 없으면 objectFit을 기록하지 않는다 — base의 맞춤 유지', () => {
+		const html = composeTemplateHtml(baseHtml, {
+			'vector-1': {
+				vectorAsset: {
+					collection: 'brand-logos',
+					id: 7,
+					src: '/api/brand-logos/file/logo.svg',
+				},
+			},
+		})
+		const image = new DOMParser().parseFromString(html, 'text/html').querySelector('img')
+
+		expect(image?.style.objectFit).toBe('')
+	})
 })
 
 describe('composeTemplateHtml image carrier', () => {
@@ -439,6 +454,55 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(overlay.style.maskImage).not.toContain(generated)
 		expect(overlay.getAttribute('data-asset-collection')).toBe('generated-images')
 		expect(overlay.getAttribute('data-asset-id')).toBe('10')
+	})
+
+	it('마킹된 직계 자식이 2개면 프레임 키 배정은 아무것도 바꾸지 않는다 — 추측하지 않는다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' style="background-image:url(/api/application-images/file/a.png)"></div>' +
+			'<div data-node-id="rect-2" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' style="background-image:url(/api/application-images/file/b.png)"></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': { backgroundImage: generated, generatedImageId: 9 },
+		})
+		const doc = new DOMParser().parseFromString(html, 'text/html')
+
+		expect(doc.body.innerHTML).not.toContain(generated)
+		for (const id of ['rect-1', 'rect-2']) {
+			const carrier = doc.querySelector(`[data-node-id="${id}"]`) as HTMLElement
+			expect(carrier.getAttribute('data-asset-collection')).toBeNull()
+		}
+	})
+
+	it('재합성 멱등성 — transform 없는 config는 published 출력에 다시 적용해도 같다', () => {
+		// B-1 검증 겸함: colorize가 캐리어 프레이밍을 지우지 않아 2차 compose의 마스크가 원본
+		// background-size/position을 그대로 물려받는다. imageTransform은 설계상 비멱등이라 뺀다.
+		const base =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden;background-color:rgb(255,255,255)">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' data-asset-collection="application-images" data-asset-id="3"' +
+			' style="background-image:url(/api/application-images/file/ph.png);background-size:contain;background-position:left top"></div>' +
+			'</div>' +
+			'<p data-node-id="text-1" data-figma-type="TEXT">원본</p>'
+		const config = {
+			'frame-1': {
+				backgroundImage: generated,
+				generatedImageId: 9,
+				imageColorize: { line: '#112233' },
+			},
+			'text-1': { text: '바뀐 문구' },
+		}
+		const once = composeTemplateHtml(base, config)
+
+		expect(composeTemplateHtml(once, config)).toBe(once)
+		// 프레이밍 보존 확인 — 마스크가 cover/center 기본값으로 강등되지 않는다.
+		const overlay = new DOMParser()
+			.parseFromString(once, 'text/html')
+			.querySelector('[data-node-id="rect-1-colorize"]') as HTMLElement
+		expect(overlay.style.maskSize).toContain('contain')
+		expect(overlay.style.maskPosition).toContain('left top')
 	})
 
 	it('캐리어 없는 노드의 backgroundImage는 무시된다 — 원본 그대로', () => {
