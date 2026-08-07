@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { isValidHex } from '@/lib/color'
 import {
 	type AuthorizedTemplateImageRef,
 	TEMPLATE_VECTOR_ASSET_COLLECTIONS,
@@ -27,7 +28,9 @@ const templateImageTransformSchema = z
 	.strict()
 
 // 컬러 치환 값의 신뢰 경계 — CSS로 그대로 나가는 값이므로 hex 리터럴만 허용한다.
-const templateHexColorSchema = z.string().regex(/^#[0-9a-fA-F]{3,8}$/)
+const templateHexColorSchema = z
+	.string()
+	.refine((value) => value.startsWith('#') && isValidHex(value))
 const templateImageColorizeSchema = z
 	.object({
 		line: templateHexColorSchema,
@@ -59,7 +62,7 @@ const templateNodeConfigMapSchema = z.record(
 				.strict()
 				.optional(),
 			vectorFit: z.enum(['fill', 'contain']).optional(),
-			vectorColor: z.string().optional(),
+			vectorColor: templateHexColorSchema.optional(),
 		})
 		.strict(),
 )
