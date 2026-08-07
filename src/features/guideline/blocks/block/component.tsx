@@ -7,8 +7,10 @@ import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/component'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/component'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/component'
+import { ConceptIntroWidget } from '@/features/guideline/widgets/concept-intro/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
 import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/component'
+import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
 import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/component'
@@ -16,11 +18,16 @@ import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/compo
 import { LayoutGridScope } from '@/features/guideline/widgets/layout-grid/store'
 import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
+import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
+import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/component'
 import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/component'
+import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/component'
 import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/component'
 import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/component'
+import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/component'
+import { SeparatedLogoApplicationWidget } from '@/features/guideline/widgets/separated-logo-application/component'
 import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/component'
 import { TypeScaleWidget } from '@/features/guideline/widgets/type-scale/component'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/component'
@@ -62,14 +69,23 @@ function renderWidget(child: Child): ReactNode {
 			)
 		case 'colorPairingWidget':
 			return <ColorPairingWidget />
+		case 'conceptIntroWidget':
+			return <ConceptIntroWidget lead={child.lead} body={child.body} logo={child.logo} />
+		case 'hdColorPaletteWidget':
+			// 고른 그룹을 고른 순서대로 한 행씩, 비우면 전체를 그린다.
+			// layout은 그룹 간 우열 유무를 말한다(균일 정사각형 / 순위별 높이).
+			return <HdColorPaletteWidget groups={child.groups} layout={child.layout} />
 		case 'colorPairingRecommendationWidget':
 			return <ColorPairingRecommendationWidget />
 		case 'doDontWidget':
-			// 예시(이미지+캡션+kind)를 인스턴스 입력으로 받는 위젯.
+			// 예시(이미지 또는 컬러 프리셋 + 캡션 + kind)를 인스턴스 입력으로 받는 위젯.
+			// logo는 컬러 프리셋에만 쓰인다 — 이미지 예시만 있으면 조회조차 하지 않는다.
 			return (
 				<DoDontWidget
 					imageRatio={child.imageRatio}
 					columns={child.columns}
+					itemLabel={child.itemLabel}
+					logo={child.logo}
 					examples={child.examples}
 				/>
 			)
@@ -117,6 +133,9 @@ function renderWidget(child: Child): ReactNode {
 		case 'logoColorVariantWidget':
 			// 인스턴스 입력(logo)을 받는 위젯 — 자족 렌더 위젯들과 다름.
 			return <LogoColorVariantWidget logo={child.logo} />
+		case 'logoBgPickerWidget':
+			// 배경 하나 위에 CI 두 표현을 동시에 놓고 picker로 배경만 바꾼다(블록당 하나).
+			return <LogoBgPickerWidget group={child.group} logo={child.logo} />
 		case 'logoDisplayWidget':
 			// logo를 pin해서 받는 위젯(fishing 없음) + 유한 사이징(width/height/padding).
 			return (
@@ -127,12 +146,35 @@ function renderWidget(child: Child): ReactNode {
 					padding={child.padding}
 				/>
 			)
+		case 'logoGridSpecWidget':
+			return (
+				<LogoGridSpecWidget form={child.form} nameKo={child.nameKo} nameEn={child.nameEn} />
+			)
 		case 'logoGroupViewerWidget':
 			return <LogoGroupViewerWidget />
+		case 'logoOnBgWidget':
+			return (
+				<LogoOnBackgroundWidget
+					group={child.group}
+					logo={child.logo}
+					column={child.column}
+				/>
+			)
 		case 'logoViewerWidget':
 			return <LogoViewerWidget />
 		case 'mediaShowcaseWidget':
 			return <MediaShowcaseWidget />
+		case 'sectionDividerWidget':
+			return (
+				<SectionDividerWidget
+					chapterCode={child.chapterCode}
+					chapterTitle={child.chapterTitle}
+					sectionCode={child.sectionCode}
+					sectionTitle={child.sectionTitle}
+				/>
+			)
+		case 'sepLogoAppWidget':
+			return <SeparatedLogoApplicationWidget variants={child.variants} apps={child.apps} />
 		case 'stemClearSpaceWidget':
 			return <StemClearSpaceWidget />
 		case 'typeScaleWidget':

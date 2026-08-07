@@ -1,7 +1,7 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
-import { isLightColor } from '@/lib/color'
+import { isLegacyEssenherbColor, isLightColor } from '@/lib/color'
 import type { BrandColor, GuidelineDocument } from '@/payload-types'
 import { GuidelineBlockFrame } from '../shared/guideline-block-frame'
 import { buildPairs, type PairingSwatch, type PairingSystemKey } from './pairings'
@@ -36,7 +36,9 @@ export async function ColorPairingBlock({ block }: { block: ColorPairing }) {
 		payload.find({ collection: 'brand-logos', limit: 10, depth: 0 }),
 		payload.find({ collection: 'brand-icons', limit: 6, depth: 0, sort: 'createdAt' }),
 	])
-	const colors = colorsRes.docs
+	// 🔴 essenherb 팔레트로 스코프를 좁힌다. brand-colors에는 HD현대 색도 같이 사는데
+	//    HD 색은 tone이 없어 아래 분류에서 전부 무채색으로 뭉쳐 이 표를 오염시킨다.
+	const colors = colorsRes.docs.filter(isLegacyEssenherbColor)
 
 	// 페어링 규칙 입력(전체 색 유니버스).
 	const pairingSwatches: PairingSwatch[] = colors.map((c) => ({

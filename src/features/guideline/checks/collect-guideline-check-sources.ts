@@ -96,6 +96,24 @@ function collectApplicationImages(document: GuidelineCheckDocument): Map<number,
 					]),
 				)
 				break
+			case 'block':
+				// 컨테이너 블록의 자식 위젯이 가진 이미지를 id→이미지 조회 맵에 넣는다.
+				//
+				// 🔴 이것만으로는 AI 검수 커버리지가 복구되지 않는다. 이 맵은 조회용이고, 실제로
+				//    어떤 이미지를 참조하는지 지목하는 건 `blocks/block/projection.ts`의 projectBlock인데
+				//    그게 아직 `referenceAssets: []`를 반환한다(evidence도 childCount 자리표시자다).
+				//    즉 rules를 가진 컨테이너 블록은 지금도 참조 이미지를 못 내보낸다.
+				//    위젯별 evidence 설계가 그 파일에 미뤄져 있고, 그게 끝나야 이 case가 실제로 쓰인다.
+				values.push(
+					...(block.children ?? []).flatMap((child) =>
+						child.blockType === 'doDontWidget'
+							? (child.examples ?? []).map((example) => example.image)
+							: child.blockType === 'image'
+								? [child.image]
+								: [],
+					),
+				)
+				break
 		}
 	}
 

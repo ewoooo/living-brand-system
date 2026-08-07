@@ -29,6 +29,15 @@ import * as migration_20260804_085424_add_layout_grid_widget_values from './2026
 import * as migration_20260805_031410_drop_agent_chat_triage from './20260805_031410_drop_agent_chat_triage';
 import * as migration_20260805_042818_add_check_scenario_aliases from './20260805_042818_add_check_scenario_aliases';
 import * as migration_20260806_052358_drop_agent_chat_session_ai_usage from './20260806_052358_drop_agent_chat_session_ai_usage';
+import * as migration_20260806_065844_add_hd_color_groups_and_widgets from './20260806_065844_add_hd_color_groups_and_widgets';
+import * as migration_20260806_074622_add_hd_color_palette_group from './20260806_074622_add_hd_color_palette_group';
+import * as migration_20260806_081710_hd_color_palette_groups_many from './20260806_081710_hd_color_palette_groups_many';
+import * as migration_20260806_090323_brand_color_logo_rules from './20260806_090323_brand_color_logo_rules';
+import * as migration_20260806_091021_logo_on_background_widget from './20260806_091021_logo_on_background_widget';
+import * as migration_20260807_010007_color_incorrect_usage_widget from './20260807_010007_color_incorrect_usage_widget';
+import * as migration_20260807_012350_dodont_widget_unify from './20260807_012350_dodont_widget_unify';
+import * as migration_20260807_020833_hd_color_palette_layout from './20260807_020833_hd_color_palette_layout';
+import * as migration_20260807_030110_logo_bg_picker_widget from './20260807_030110_logo_bg_picker_widget';
 
 export const migrations = [
   {
@@ -184,6 +193,51 @@ export const migrations = [
   {
     up: migration_20260806_052358_drop_agent_chat_session_ai_usage.up,
     down: migration_20260806_052358_drop_agent_chat_session_ai_usage.down,
-    name: '20260806_052358_drop_agent_chat_session_ai_usage'
+    name: '20260806_052358_drop_agent_chat_session_ai_usage',
+  },
+  {
+    up: migration_20260806_065844_add_hd_color_groups_and_widgets.up,
+    down: migration_20260806_065844_add_hd_color_groups_and_widgets.down,
+    name: '20260806_065844_add_hd_color_groups_and_widgets',
+  },
+  {
+    up: migration_20260806_074622_add_hd_color_palette_group.up,
+    down: migration_20260806_074622_add_hd_color_palette_group.down,
+    name: '20260806_074622_add_hd_color_palette_group',
+  },
+  {
+    up: migration_20260806_081710_hd_color_palette_groups_many.up,
+    down: migration_20260806_081710_hd_color_palette_groups_many.down,
+    name: '20260806_081710_hd_color_palette_groups_many',
+  },
+  {
+    up: migration_20260806_090323_brand_color_logo_rules.up,
+    down: migration_20260806_090323_brand_color_logo_rules.down,
+    name: '20260806_090323_brand_color_logo_rules',
+  },
+  {
+    up: migration_20260806_091021_logo_on_background_widget.up,
+    down: migration_20260806_091021_logo_on_background_widget.down,
+    name: '20260806_091021_logo_on_background_widget',
+  },
+  {
+    up: migration_20260807_010007_color_incorrect_usage_widget.up,
+    down: migration_20260807_010007_color_incorrect_usage_widget.down,
+    name: '20260807_010007_color_incorrect_usage_widget',
+  },
+  {
+    up: migration_20260807_012350_dodont_widget_unify.up,
+    down: migration_20260807_012350_dodont_widget_unify.down,
+    name: '20260807_012350_dodont_widget_unify',
+  },
+  {
+    up: migration_20260807_020833_hd_color_palette_layout.up,
+    down: migration_20260807_020833_hd_color_palette_layout.down,
+    name: '20260807_020833_hd_color_palette_layout',
+  },
+  {
+    up: migration_20260807_030110_logo_bg_picker_widget.up,
+    down: migration_20260807_030110_logo_bg_picker_widget.down,
+    name: '20260807_030110_logo_bg_picker_widget'
   },
 ];

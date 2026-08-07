@@ -71,6 +71,7 @@ export interface Config {
     'guideline-documents': GuidelineDocument;
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
+    'brand-color-groups': BrandColorGroup;
     'brand-typefaces': BrandTypeface;
     'brand-icons': BrandIcon;
     'application-images': ApplicationImage;
@@ -104,6 +105,7 @@ export interface Config {
     'guideline-documents': GuidelineDocumentsSelect<false> | GuidelineDocumentsSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
+    'brand-color-groups': BrandColorGroupsSelect<false> | BrandColorGroupsSelect<true>;
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
     'brand-icons': BrandIconsSelect<false> | BrandIconsSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
@@ -371,6 +373,22 @@ export interface BrandColor {
    * PMS 표기입니다. 예: 705C, Warm Red C
    */
   pantone?: string | null;
+  /**
+   * 인쇄 CMYK 표기입니다. 예: C 0 M 100 Y 90 K 0
+   */
+  cmyk?: string | null;
+  /**
+   * 이 배경 위에 CI 기본형(Full Color)을 쓸 수 있는지 여부입니다.
+   */
+  allowsFullColorLogo?: boolean | null;
+  /**
+   * 이 배경 위에 CI WHITE 워드마크를 쓸 수 있는지 여부입니다.
+   */
+  allowsWhiteWordmark?: boolean | null;
+  /**
+   * 이 배경 위에 올리는 CI 단색분리형의 색입니다. 단색형은 모든 배경에서 쓸 수 있고 색만 갈립니다.
+   */
+  monoLogoFill?: ('black' | 'white') | null;
   /**
    * 팔레트 색상군입니다. 예: red, yellow, neutral
    */
@@ -876,8 +894,10 @@ export interface LayoutBlock {
         | ClearspaceViewerWidget
         | ColorPairingWidget
         | ColorPairingRecommendationWidget
+        | ConceptIntroWidget
         | DoDontWidget
         | GlyphGridWidget
+        | HdColorPaletteWidget
         | IconGridWidget
         | ImageGridWidget
         | IncorrectUsageWidget
@@ -885,10 +905,15 @@ export interface LayoutBlock {
         | LayoutGridControlsWidget
         | LayoutGridOverlayWidget
         | LogoColorVariantWidget
+        | LogoBgPickerWidget
         | LogoDisplayWidget
+        | LogoGridSpecWidget
         | LogoGroupViewerWidget
+        | LogoOnBackgroundWidget
         | LogoViewerWidget
         | MediaShowcaseWidget
+        | SectionDividerWidget
+        | SeparatedLogoApplicationWidget
         | StemClearSpaceWidget
         | TypeScaleWidget
         | TypeSpecimenWidget
@@ -1038,11 +1063,32 @@ export interface ColorPairingRecommendationWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ConceptIntroWidget".
+ */
+export interface ConceptIntroWidget {
+  /**
+   * 좌측 컬럼 첫 줄(리드 문장)입니다.
+   */
+  lead?: string | null;
+  /**
+   * 리드 아래 본문 단락입니다.
+   */
+  body?: string | null;
+  /**
+   * 우측에 크게 표시할 로고입니다. 비우면 기본 심볼을 보여줍니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'conceptIntroWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "DoDontWidget".
  */
 export interface DoDontWidget {
   /**
-   * 예시 이미지의 표시 비율입니다.
+   * 예시 판형의 표시 비율입니다.
    */
   imageRatio?:
     | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
@@ -1052,12 +1098,29 @@ export interface DoDontWidget {
    */
   columns?: ('2' | '3' | '4') | null;
   /**
-   * 예시 이미지와 캡션입니다. 세트 헤딩은 없습니다.
+   * 예시마다 붙는 제목입니다. 뒤에 순번이 자동으로 붙습니다(INCORRECT USAGE 1, 2 …). 비우면 제목 없이 그림만 나옵니다.
+   */
+  itemLabel?: string | null;
+  /**
+   * 컬러 패널 프리셋에 올릴 기준 로고입니다. 같은 언어·방향의 기본형/WHITE/단색형을 파일명 규약으로 함께 찾습니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  /**
+   * 예시입니다. 세트 헤딩은 없습니다.
    */
   examples?:
     | {
+        /**
+         * 예시 이미지입니다.
+         */
         image?: (number | null) | ApplicationImage;
         kind: 'do' | 'ok' | 'dont';
+        /**
+         * 이미지 대신 쓸 컬러 패널입니다. 색·그라디언트·투명도 중첩처럼 이미지로 만들면 원본 값이 사라지는 예시에 씁니다. 이미지를 함께 지정하면 이미지가 이깁니다.
+         */
+        preset?:
+          | ('off-palette' | 'gradient' | 'low-contrast' | 'unpaired-combo' | 'overlay-stack' | 'brightness-opacity')
+          | null;
         caption?: string | null;
         id?: string | null;
       }[]
@@ -1074,6 +1137,41 @@ export interface GlyphGridWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'glyphGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HdColorPaletteWidget".
+ */
+export interface HdColorPaletteWidget {
+  /**
+   * 표시할 컬러 그룹입니다. 고른 순서대로 한 행씩 그립니다. 비우면 모든 그룹을 표시합니다.
+   */
+  groups?: (number | BrandColorGroup)[] | null;
+  /**
+   * 균일: 색 수와 무관하게 모든 칸이 같은 크기입니다 — 계열 분류처럼 그룹 간 우열이 없을 때 씁니다. 위계: 고른 순서대로 행 높이가 줄어듭니다(3그룹이면 3:2:1) — Primary/Secondary/Mono처럼 중요도가 있을 때 씁니다.
+   */
+  layout?: ('uniform' | 'ranked') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'hdColorPaletteWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-color-groups".
+ */
+export interface BrandColorGroup {
+  id: number;
+  /**
+   * 팔레트에 표시할 그룹 이름입니다. 예: Primary Color
+   */
+  name: string;
+  /**
+   * 선택한 순서대로 팔레트에 표시됩니다. 드래그로 순서를 바꿉니다.
+   */
+  colors?: (number | BrandColor)[] | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1212,6 +1310,23 @@ export interface LogoColorVariantWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoBgPickerWidget".
+ */
+export interface LogoBgPickerWidget {
+  /**
+   * picker에 올릴 컬러 그룹입니다. 그룹이 가진 순서대로 스와치를 늘어놓습니다.
+   */
+  group?: (number | null) | BrandColorGroup;
+  /**
+   * 기준 로고입니다. 같은 언어·방향의 기본형/WHITE/단색형을 파일명 규약으로 함께 찾습니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoBgPickerWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "LogoDisplayWidget".
  */
 export interface LogoDisplayWidget {
@@ -1237,12 +1352,54 @@ export interface LogoDisplayWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoGridSpecWidget".
+ */
+export interface LogoGridSpecWidget {
+  /**
+   * 어느 그리드 규격인지 고릅니다. 치수 값은 규정 상수라 편집할 수 없습니다.
+   */
+  form?: ('horizontalA' | 'horizontalB' | 'vertical') | null;
+  /**
+   * 국문 조합에 넣을 자회사명입니다.
+   */
+  nameKo?: string | null;
+  /**
+   * 영문 상하조합의 아래 블록입니다. 한 줄이 한 행이 됩니다(상단 HD는 그룹 공통이라 고정).
+   */
+  nameEn?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoGridSpecWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "LogoGroupViewerWidget".
  */
 export interface LogoGroupViewerWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'logoGroupViewerWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoOnBackgroundWidget".
+ */
+export interface LogoOnBackgroundWidget {
+  /**
+   * 배경으로 쌓을 컬러 그룹입니다. 그룹이 가진 순서대로 위에서부터 쌓습니다.
+   */
+  group?: (number | null) | BrandColorGroup;
+  /**
+   * 기준 로고입니다. 같은 언어·방향의 기본형/WHITE/단색형을 파일명 규약으로 함께 찾습니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  /**
+   * 이 위젯이 보여줄 로고 계열입니다. 기본형 계열은 배경에 따라 파일이 바뀌고, 단색형은 색만 바뀝니다.
+   */
+  column?: ('fullColor' | 'mono') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoOnBgWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1261,6 +1418,68 @@ export interface MediaShowcaseWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaShowcaseWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionDividerWidget".
+ */
+export interface SectionDividerWidget {
+  /**
+   * 챕터 코드입니다(예: B).
+   */
+  chapterCode?: string | null;
+  /**
+   * 챕터 제목입니다(예: BRAND DESIGN ELEMENTS).
+   */
+  chapterTitle?: string | null;
+  /**
+   * 섹션 코드입니다(예: B.1).
+   */
+  sectionCode?: string | null;
+  /**
+   * 섹션 제목입니다(예: CI, 자회사 CI, KEY VISUAL).
+   */
+  sectionTitle?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'sectionDividerWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SeparatedLogoApplicationWidget".
+ */
+export interface SeparatedLogoApplicationWidget {
+  /**
+   * 단색 분리형 배리언트입니다.
+   */
+  variants?:
+    | {
+        logo?: (number | null) | BrandLogo;
+        /**
+         * 예: CI 국문 - 가로형
+         */
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 실사 적용 예시입니다. 이미지가 없으면 안내 문구를 넣은 자리표시자로 표시됩니다.
+   */
+  apps?:
+    | {
+        type: 'sign' | 'effect';
+        image?: (number | null) | ApplicationImage;
+        caption?: string | null;
+        /**
+         * 이미지가 아직 없을 때 자리표시자에 표시할 문구입니다(예: 후가공 예시 추가 예정).
+         */
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'sepLogoAppWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2394,6 +2613,10 @@ export interface PayloadLockedDocument {
         value: number | BrandColor;
       } | null)
     | ({
+        relationTo: 'brand-color-groups';
+        value: number | BrandColorGroup;
+      } | null)
+    | ({
         relationTo: 'brand-typefaces';
         value: number | BrandTypeface;
       } | null)
@@ -2807,8 +3030,10 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
         colorPairingWidget?: T | ColorPairingWidgetSelect<T>;
         colorPairingRecommendationWidget?: T | ColorPairingRecommendationWidgetSelect<T>;
+        conceptIntroWidget?: T | ConceptIntroWidgetSelect<T>;
         doDontWidget?: T | DoDontWidgetSelect<T>;
         glyphGridWidget?: T | GlyphGridWidgetSelect<T>;
+        hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
         iconGridWidget?: T | IconGridWidgetSelect<T>;
         imageGridWidget?: T | ImageGridWidgetSelect<T>;
         incorrectUsageWidget?: T | IncorrectUsageWidgetSelect<T>;
@@ -2816,10 +3041,15 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         layoutGridControlsWidget?: T | LayoutGridControlsWidgetSelect<T>;
         layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
         logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
+        logoBgPickerWidget?: T | LogoBgPickerWidgetSelect<T>;
         logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
+        logoGridSpecWidget?: T | LogoGridSpecWidgetSelect<T>;
         logoGroupViewerWidget?: T | LogoGroupViewerWidgetSelect<T>;
+        logoOnBgWidget?: T | LogoOnBackgroundWidgetSelect<T>;
         logoViewerWidget?: T | LogoViewerWidgetSelect<T>;
         mediaShowcaseWidget?: T | MediaShowcaseWidgetSelect<T>;
+        sectionDividerWidget?: T | SectionDividerWidgetSelect<T>;
+        sepLogoAppWidget?: T | SeparatedLogoApplicationWidgetSelect<T>;
         stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
         typeScaleWidget?: T | TypeScaleWidgetSelect<T>;
         typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
@@ -2896,16 +3126,30 @@ export interface ColorPairingRecommendationWidgetSelect<T extends boolean = true
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ConceptIntroWidget_select".
+ */
+export interface ConceptIntroWidgetSelect<T extends boolean = true> {
+  lead?: T;
+  body?: T;
+  logo?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "DoDontWidget_select".
  */
 export interface DoDontWidgetSelect<T extends boolean = true> {
   imageRatio?: T;
   columns?: T;
+  itemLabel?: T;
+  logo?: T;
   examples?:
     | T
     | {
         image?: T;
         kind?: T;
+        preset?: T;
         caption?: T;
         id?: T;
       };
@@ -2917,6 +3161,16 @@ export interface DoDontWidgetSelect<T extends boolean = true> {
  * via the `definition` "GlyphGridWidget_select".
  */
 export interface GlyphGridWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HdColorPaletteWidget_select".
+ */
+export interface HdColorPaletteWidgetSelect<T extends boolean = true> {
+  groups?: T;
+  layout?: T;
   id?: T;
   blockName?: T;
 }
@@ -2996,6 +3250,16 @@ export interface LogoColorVariantWidgetSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoBgPickerWidget_select".
+ */
+export interface LogoBgPickerWidgetSelect<T extends boolean = true> {
+  group?: T;
+  logo?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "LogoDisplayWidget_select".
  */
 export interface LogoDisplayWidgetSelect<T extends boolean = true> {
@@ -3008,9 +3272,31 @@ export interface LogoDisplayWidgetSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoGridSpecWidget_select".
+ */
+export interface LogoGridSpecWidgetSelect<T extends boolean = true> {
+  form?: T;
+  nameKo?: T;
+  nameEn?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "LogoGroupViewerWidget_select".
  */
 export interface LogoGroupViewerWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoOnBackgroundWidget_select".
+ */
+export interface LogoOnBackgroundWidgetSelect<T extends boolean = true> {
+  group?: T;
+  logo?: T;
+  column?: T;
   id?: T;
   blockName?: T;
 }
@@ -3027,6 +3313,42 @@ export interface LogoViewerWidgetSelect<T extends boolean = true> {
  * via the `definition` "MediaShowcaseWidget_select".
  */
 export interface MediaShowcaseWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionDividerWidget_select".
+ */
+export interface SectionDividerWidgetSelect<T extends boolean = true> {
+  chapterCode?: T;
+  chapterTitle?: T;
+  sectionCode?: T;
+  sectionTitle?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SeparatedLogoApplicationWidget_select".
+ */
+export interface SeparatedLogoApplicationWidgetSelect<T extends boolean = true> {
+  variants?:
+    | T
+    | {
+        logo?: T;
+        label?: T;
+        id?: T;
+      };
+  apps?:
+    | T
+    | {
+        type?: T;
+        image?: T;
+        caption?: T;
+        note?: T;
+        id?: T;
+      };
   id?: T;
   blockName?: T;
 }
@@ -3223,9 +3545,24 @@ export interface BrandColorsSelect<T extends boolean = true> {
   name?: T;
   hex?: T;
   pantone?: T;
+  cmyk?: T;
+  allowsFullColorLogo?: T;
+  allowsWhiteWordmark?: T;
+  monoLogoFill?: T;
   colorGroup?: T;
   tone?: T;
   isMain?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-color-groups_select".
+ */
+export interface BrandColorGroupsSelect<T extends boolean = true> {
+  name?: T;
+  colors?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -3925,6 +4262,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'brand-colors';
           value: number | BrandColor;
+        } | null)
+      | ({
+          relationTo: 'brand-color-groups';
+          value: number | BrandColorGroup;
         } | null)
       | ({
           relationTo: 'brand-typefaces';

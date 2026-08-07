@@ -6,19 +6,26 @@ import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/schema'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/schema'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/schema'
+import { ConceptIntroWidget } from '@/features/guideline/widgets/concept-intro/schema'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/schema'
 import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/schema'
+import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/schema'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/schema'
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/schema'
 import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/schema'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/schema'
 import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/schema'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/schema'
+import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/schema'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/schema'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/schema'
+import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/schema'
 import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/schema'
+import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/schema'
 import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/schema'
 import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/schema'
+import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/schema'
+import { SeparatedLogoApplicationWidget } from '@/features/guideline/widgets/separated-logo-application/schema'
 import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/schema'
 import { TypeScaleWidget } from '@/features/guideline/widgets/type-scale/schema'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/schema'
@@ -116,8 +123,10 @@ export const LayoutBlock: Block = {
 				ClearspaceViewerWidget,
 				ColorPairingWidget,
 				ColorPairingRecommendationWidget,
+				ConceptIntroWidget,
 				DoDontWidget,
 				GlyphGridWidget,
+				HdColorPaletteWidget,
 				IconGridWidget,
 				ImageGridWidget,
 				IncorrectUsageWidget,
@@ -125,10 +134,15 @@ export const LayoutBlock: Block = {
 				LayoutGridControlsWidget,
 				LayoutGridOverlayWidget,
 				LogoColorVariantWidget,
+				LogoBgPickerWidget,
 				LogoDisplayWidget,
+				LogoGridSpecWidget,
 				LogoGroupViewerWidget,
+				LogoOnBackgroundWidget,
 				LogoViewerWidget,
 				MediaShowcaseWidget,
+				SectionDividerWidget,
+				SeparatedLogoApplicationWidget,
 				StemClearSpaceWidget,
 				TypeScaleWidget,
 				TypeSpecimenWidget,
