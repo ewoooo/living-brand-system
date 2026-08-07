@@ -85,6 +85,7 @@ export default buildConfig({
 				Icon: '/components/admin/AdminIcon',
 				Logo: '/components/admin/AdminLogo',
 			},
+			providers: ['/components/admin/admin-dialkit-provider'],
 		},
 	},
 	collections: [
