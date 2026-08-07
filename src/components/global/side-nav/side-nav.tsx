@@ -36,7 +36,7 @@ export function SideNav({
 	return (
 		<Sidebar
 			collapsible={isMobile ? 'offcanvas' : 'none'}
-			className="h-full  p-4 bg-transparent border-r  border-neutral-200 dark:border-neutral-700"
+			className="h-full p-4 bg-transparent border-r border-border"
 		>
 			<LazyMotion features={domAnimation}>
 				<AnimatePresence mode="wait">
