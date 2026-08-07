@@ -27,8 +27,12 @@ import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase
 import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/schema'
 import { SeparatedLogoApplicationWidget } from '@/features/guideline/widgets/separated-logo-application/schema'
 import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/schema'
+import { TypeHierarchyWidget } from '@/features/guideline/widgets/type-hierarchy/schema'
+import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/schema'
 import { TypeScaleWidget } from '@/features/guideline/widgets/type-scale/schema'
+import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/schema'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/schema'
+import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/schema'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 import { baseBlockFields } from '../shared/fields'
 
@@ -144,6 +148,10 @@ export const LayoutBlock: Block = {
 				SectionDividerWidget,
 				SeparatedLogoApplicationWidget,
 				StemClearSpaceWidget,
+				TypeHierarchyWidget,
+				TypeLanguageWidget,
+				TypeScrambleWidget,
+				TypeWeightWidget,
 				TypeScaleWidget,
 				TypeSpecimenWidget,
 			],

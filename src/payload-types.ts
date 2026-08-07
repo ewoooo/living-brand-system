@@ -915,6 +915,10 @@ export interface LayoutBlock {
         | SectionDividerWidget
         | SeparatedLogoApplicationWidget
         | StemClearSpaceWidget
+        | TypeHierarchyWidget
+        | TypeLanguageWidget
+        | TypeScrambleWidget
+        | TypeWeightWidget
         | TypeScaleWidget
         | TypeSpecimenWidget
       )[]
@@ -1119,7 +1123,20 @@ export interface DoDontWidget {
          * 이미지 대신 쓸 컬러 패널입니다. 색·그라디언트·투명도 중첩처럼 이미지로 만들면 원본 값이 사라지는 예시에 씁니다. 이미지를 함께 지정하면 이미지가 이깁니다.
          */
         preset?:
-          | ('off-palette' | 'gradient' | 'low-contrast' | 'unpaired-combo' | 'overlay-stack' | 'brightness-opacity')
+          | (
+              | 'off-palette'
+              | 'gradient'
+              | 'low-contrast'
+              | 'unpaired-combo'
+              | 'overlay-stack'
+              | 'brightness-opacity'
+              | 'tight-tracking'
+              | 'loose-tracking'
+              | 'wrong-typeface'
+              | 'mixed-size'
+              | 'distorted'
+              | 'slanted'
+            )
           | null;
         caption?: string | null;
         id?: string | null;
@@ -1489,6 +1506,70 @@ export interface StemClearSpaceWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'stemClearSpaceWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeHierarchyWidget".
+ */
+export interface TypeHierarchyWidget {
+  /**
+   * 행간 규정과 예시 문구가 언어마다 다릅니다. 화면에는 컨트롤로 노출되지 않습니다.
+   */
+  language?: ('ko' | 'en' | 'enCaps') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeHierarchyWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeLanguageWidget".
+ */
+export interface TypeLanguageWidget {
+  /**
+   * 처음 보여줄 언어입니다. 독자가 화면에서 바꿀 수 있습니다.
+   */
+  initialLanguage?: ('ko' | 'en' | 'enCaps') | null;
+  /**
+   * 나란히 두면 세 언어를 한 화면에서 비교합니다(원본은 국문·영문을 좌우로 놓았습니다). 좁은 자리에서는 전환이 낫습니다.
+   */
+  layout?: ('single' | 'compare') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeLanguageWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScrambleWidget".
+ */
+export interface TypeScrambleWidget {
+  /**
+   * 한 줄에 문자열 하나입니다. 여러 줄을 넣으면 차례로 순환합니다. 비우면 기본 문구를 씁니다.
+   */
+  text?: string | null;
+  /**
+   * 표시 굵기입니다. 배포된 서체 파일에 없는 굵기를 고르면 브라우저 합성이라는 안내가 함께 나옵니다.
+   */
+  weight?: ('light' | 'medium' | 'bold') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeScrambleWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeWeightWidget".
+ */
+export interface TypeWeightWidget {
+  /**
+   * 표본 문구의 언어입니다. 문구와 행간은 그 언어의 규정을 따라 고정되고, 화면에서는 굵기만 바뀝니다.
+   */
+  language?: ('ko' | 'en' | 'enCaps') | null;
+  /**
+   * 처음 보여줄 굵기입니다. 보는 사람이 컨트롤로 3단 사이를 옮겨 다닐 수 있습니다.
+   */
+  initialWeight?: ('light' | 'medium' | 'bold') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeWeightWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3051,6 +3132,10 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         sectionDividerWidget?: T | SectionDividerWidgetSelect<T>;
         sepLogoAppWidget?: T | SeparatedLogoApplicationWidgetSelect<T>;
         stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
+        typeHierarchyWidget?: T | TypeHierarchyWidgetSelect<T>;
+        typeLanguageWidget?: T | TypeLanguageWidgetSelect<T>;
+        typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
+        typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
         typeScaleWidget?: T | TypeScaleWidgetSelect<T>;
         typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
       };
@@ -3357,6 +3442,45 @@ export interface SeparatedLogoApplicationWidgetSelect<T extends boolean = true> 
  * via the `definition` "StemClearSpaceWidget_select".
  */
 export interface StemClearSpaceWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeHierarchyWidget_select".
+ */
+export interface TypeHierarchyWidgetSelect<T extends boolean = true> {
+  language?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeLanguageWidget_select".
+ */
+export interface TypeLanguageWidgetSelect<T extends boolean = true> {
+  initialLanguage?: T;
+  layout?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScrambleWidget_select".
+ */
+export interface TypeScrambleWidgetSelect<T extends boolean = true> {
+  text?: T;
+  weight?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeWeightWidget_select".
+ */
+export interface TypeWeightWidgetSelect<T extends boolean = true> {
+  language?: T;
+  initialWeight?: T;
   id?: T;
   blockName?: T;
 }

@@ -29,8 +29,12 @@ import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase
 import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/component'
 import { SeparatedLogoApplicationWidget } from '@/features/guideline/widgets/separated-logo-application/component'
 import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/component'
+import { TypeHierarchyWidget } from '@/features/guideline/widgets/type-hierarchy/component'
+import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/component'
 import { TypeScaleWidget } from '@/features/guideline/widgets/type-scale/component'
+import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/component'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/component'
+import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/component'
 import type { GuidelineDocument } from '@/payload-types'
 import { IMAGE_RATIO_CLASS_NAMES, type ImageRatio } from '@/types/image-ratio'
 import { GuidelineBlockFrame } from '../shared/guideline-block-frame'
@@ -177,6 +181,18 @@ function renderWidget(child: Child): ReactNode {
 			return <SeparatedLogoApplicationWidget variants={child.variants} apps={child.apps} />
 		case 'stemClearSpaceWidget':
 			return <StemClearSpaceWidget />
+		case 'typeHierarchyWidget':
+			return <TypeHierarchyWidget language={child.language} />
+		case 'typeLanguageWidget':
+			return (
+				<TypeLanguageWidget initialLanguage={child.initialLanguage} layout={child.layout} />
+			)
+		case 'typeScrambleWidget':
+			return <TypeScrambleWidget text={child.text} weight={child.weight} />
+		case 'typeWeightWidget':
+			return (
+				<TypeWeightWidget language={child.language} initialWeight={child.initialWeight} />
+			)
 		case 'typeScaleWidget':
 			return <TypeScaleWidget />
 		case 'typeSpecimenWidget':

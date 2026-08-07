@@ -38,6 +38,7 @@ import * as migration_20260807_010007_color_incorrect_usage_widget from './20260
 import * as migration_20260807_012350_dodont_widget_unify from './20260807_012350_dodont_widget_unify';
 import * as migration_20260807_020833_hd_color_palette_layout from './20260807_020833_hd_color_palette_layout';
 import * as migration_20260807_030110_logo_bg_picker_widget from './20260807_030110_logo_bg_picker_widget';
+import * as migration_20260807_064100_typography_widgets from './20260807_064100_typography_widgets';
 
 export const migrations = [
   {
@@ -238,6 +239,11 @@ export const migrations = [
   {
     up: migration_20260807_030110_logo_bg_picker_widget.up,
     down: migration_20260807_030110_logo_bg_picker_widget.down,
-    name: '20260807_030110_logo_bg_picker_widget'
+    name: '20260807_030110_logo_bg_picker_widget',
+  },
+  {
+    up: migration_20260807_064100_typography_widgets.up,
+    down: migration_20260807_064100_typography_widgets.down,
+    name: '20260807_064100_typography_widgets'
   },
 ];
