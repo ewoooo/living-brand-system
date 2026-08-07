@@ -161,7 +161,7 @@ export function TemplateGenerator({
 									}
 								/>
 								{clippedSlotIds.has(slot.nodeId) && (
-									<Typography size="xs" tone="muted">
+									<Typography role="status" size="xs" tone="muted">
 										입력한 텍스트가 박스를 넘어 일부가 잘려 보여요.
 									</Typography>
 								)}
