@@ -6,6 +6,7 @@ import {
 	isAuthorizedTemplateAssetCollection,
 	isCanonicalTemplateAssetUrl,
 	isSafeDraftTemplateAssetUrl,
+	sameRef,
 } from '@/services/template-asset-policy.service'
 
 const ALLOWED_TAGS = new Set(['div', 'img', 'p'])
@@ -63,14 +64,6 @@ function metadataRef(
 	if (tagName !== 'img' && uniqueStyleUrls.length !== 1) return null
 
 	return { collection, assetId, src, label: nodeId }
-}
-
-function sameRef(left: AuthorizedTemplateImageRef, right: AuthorizedTemplateImageRef): boolean {
-	return (
-		left.collection === right.collection &&
-		left.assetId === right.assetId &&
-		left.src === right.src
-	)
 }
 
 function inspectFragment(

@@ -5,6 +5,7 @@ import {
 	inspectBaseTemplateHtml,
 	inspectDraftTemplateAssetRefs,
 } from '@/services/inspect-template-html.service'
+import { sameRef } from '@/services/template-asset-policy.service'
 import {
 	findTemplateDraftBlocker,
 	findTemplatePublishBlocker,
@@ -56,12 +57,7 @@ export async function prepareTemplateSave({
 			.filter(
 				(imported) =>
 					imported.collection === 'application-images' &&
-					renderedRefs.some(
-						(rendered) =>
-							rendered.collection === imported.collection &&
-							rendered.assetId === imported.assetId &&
-							rendered.src === imported.src,
-					),
+					renderedRefs.some((rendered) => sameRef(rendered, imported)),
 			)
 			.map((ref) => ref.assetId),
 	)
