@@ -27,7 +27,7 @@ const context: TemplateExportContext = {
 	width: 600,
 }
 
-describe('template export registry', () => {
+describe('exportTemplate', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		vi.mocked(renderHtmlToPngBlob).mockResolvedValue(new Blob(['png']))
@@ -41,7 +41,7 @@ describe('template export registry', () => {
 		expect(canExportTemplate('tiff', context)).toBe(true)
 	})
 
-	it('선택한 exporter에 실행을 위임한다', async () => {
+	it('형식별 adapter에 실행을 위임한다', async () => {
 		await exportTemplate('png', context)
 		expect(exportHtmlToPng).toHaveBeenCalledWith(context.html, context.fileName)
 

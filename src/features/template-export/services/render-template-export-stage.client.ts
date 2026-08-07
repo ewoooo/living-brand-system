@@ -8,10 +8,8 @@ const EXPORT_DATA_ATTRIBUTES = new Set([
 	'data-asset-id',
 	'data-figma-type',
 	'data-name',
-	'data-nimg',
 	'data-node-id',
 ])
-const EXPORT_IMAGE_ATTRIBUTES = new Set(['alt', 'decoding', 'height', 'loading', 'sizes', 'width'])
 const CSS_URL_PATTERN = /url\(\s*(?:"([^"]+)"|'([^']+)'|([^"'()\s]+))\s*\)/gi
 
 function isSafeExportUrl(value: string): boolean {
@@ -75,7 +73,7 @@ function cloneSafeExportNode(node: Node): Node | null {
 				throw new Error('Template export contains an unsafe image URL.')
 			}
 			clone.setAttribute(name, attribute.value)
-		} else if (tagName === 'img' && EXPORT_IMAGE_ATTRIBUTES.has(name)) {
+		} else if (tagName === 'img' && name === 'alt') {
 			clone.setAttribute(name, attribute.value)
 		}
 	}
