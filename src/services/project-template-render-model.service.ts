@@ -1,4 +1,7 @@
-import { inspectPublishedTemplateHtml } from '@/services/inspect-template-html.service'
+import {
+	findMissingOverrideNodeBlocker,
+	inspectTemplateFragment,
+} from '@/services/inspect-template-html.service'
 import { parseTemplateNodeConfigs } from '@/services/parse-template-node-configs.service'
 import type { TemplateNodeConfigMap } from '@/types/template'
 
@@ -37,12 +40,11 @@ export function projectTemplateRenderModel(
 	const nodeConfigs = parseTemplateNodeConfigs(template.overrides)
 	if ('blocker' in nodeConfigs) return null
 
-	const inspection = inspectPublishedTemplateHtml({
-		html: template.html,
-		overrideNodeIds: Object.keys(nodeConfigs.data),
-		refsByNode: nodeConfigs.refsByNode,
-	})
-	if (inspection.blocker) return null
+	const published = inspectTemplateFragment(template.html, 'public', nodeConfigs.refsByNode)
+	if (published.blocker) return null
+	if (findMissingOverrideNodeBlocker(Object.keys(nodeConfigs.data), [published.nodeIds])) {
+		return null
+	}
 
 	return {
 		html: template.html,
