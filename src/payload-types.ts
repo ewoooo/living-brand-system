@@ -1146,6 +1146,10 @@ export interface HdColorPaletteWidget {
    * 표시할 컬러 그룹입니다. 고른 순서대로 한 행씩 그립니다. 비우면 모든 그룹을 표시합니다.
    */
   groups?: (number | BrandColorGroup)[] | null;
+  /**
+   * 균일: 색 수와 무관하게 모든 칸이 같은 크기입니다 — 계열 분류처럼 그룹 간 우열이 없을 때 씁니다. 위계: 고른 순서대로 행 높이가 줄어듭니다(3그룹이면 3:2:1) — Primary/Secondary/Mono처럼 중요도가 있을 때 씁니다.
+   */
+  layout?: ('uniform' | 'ranked') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'hdColorPaletteWidget';
@@ -3147,6 +3151,7 @@ export interface GlyphGridWidgetSelect<T extends boolean = true> {
  */
 export interface HdColorPaletteWidgetSelect<T extends boolean = true> {
   groups?: T;
+  layout?: T;
   id?: T;
   blockName?: T;
 }

@@ -72,7 +72,8 @@ function renderWidget(child: Child): ReactNode {
 			return <ConceptIntroWidget lead={child.lead} body={child.body} logo={child.logo} />
 		case 'hdColorPaletteWidget':
 			// 고른 그룹을 고른 순서대로 한 행씩, 비우면 전체를 그린다.
-			return <HdColorPaletteWidget groups={child.groups} />
+			// layout은 그룹 간 우열 유무를 말한다(균일 정사각형 / 순위별 높이).
+			return <HdColorPaletteWidget groups={child.groups} layout={child.layout} />
 		case 'colorPairingRecommendationWidget':
 			return <ColorPairingRecommendationWidget />
 		case 'doDontWidget':

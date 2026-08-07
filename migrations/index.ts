@@ -36,6 +36,7 @@ import * as migration_20260806_090323_brand_color_logo_rules from './20260806_09
 import * as migration_20260806_091021_logo_on_background_widget from './20260806_091021_logo_on_background_widget';
 import * as migration_20260807_010007_color_incorrect_usage_widget from './20260807_010007_color_incorrect_usage_widget';
 import * as migration_20260807_012350_dodont_widget_unify from './20260807_012350_dodont_widget_unify';
+import * as migration_20260807_020833_hd_color_palette_layout from './20260807_020833_hd_color_palette_layout';
 
 export const migrations = [
   {
@@ -226,6 +227,11 @@ export const migrations = [
   {
     up: migration_20260807_012350_dodont_widget_unify.up,
     down: migration_20260807_012350_dodont_widget_unify.down,
-    name: '20260807_012350_dodont_widget_unify'
+    name: '20260807_012350_dodont_widget_unify',
+  },
+  {
+    up: migration_20260807_020833_hd_color_palette_layout.up,
+    down: migration_20260807_020833_hd_color_palette_layout.down,
+    name: '20260807_020833_hd_color_palette_layout'
   },
 ];

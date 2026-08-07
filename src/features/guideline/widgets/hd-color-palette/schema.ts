@@ -21,6 +21,21 @@ export const HdColorPaletteWidget: Block = {
 					'표시할 컬러 그룹입니다. 고른 순서대로 한 행씩 그립니다. 비우면 모든 그룹을 표시합니다.',
 			},
 		},
+		{
+			// 그룹 사이에 우열이 있느냐가 판형을 가른다. 위계가 있으면 높이로, 없으면 균일 정사각형으로.
+			name: 'layout',
+			type: 'select',
+			defaultValue: 'uniform',
+			enumName: 'enum_hcp_layout',
+			options: [
+				{ label: '균일 (모든 칸이 같은 크기 정사각형)', value: 'uniform' },
+				{ label: '위계 (앞 그룹일수록 높다)', value: 'ranked' },
+			],
+			admin: {
+				description:
+					'균일: 색 수와 무관하게 모든 칸이 같은 크기입니다 — 계열 분류처럼 그룹 간 우열이 없을 때 씁니다. 위계: 고른 순서대로 행 높이가 줄어듭니다(3그룹이면 3:2:1) — Primary/Secondary/Mono처럼 중요도가 있을 때 씁니다.',
+			},
+		},
 	],
 }
 

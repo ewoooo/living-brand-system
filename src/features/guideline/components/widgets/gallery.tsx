@@ -63,7 +63,8 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 
 	return [
 		{ name: 'ci-lockup', node: <CiLockupWidget /> },
-		{ name: 'hd-color-palette', node: <HdColorPaletteWidget /> },
+		{ name: 'hd-color-palette (균일)', node: <HdColorPaletteWidget layout="uniform" /> },
+		{ name: 'hd-color-palette (위계)', node: <HdColorPaletteWidget layout="ranked" /> },
 		{ name: 'color-palette', node: <ColorPaletteWidget /> },
 		{ name: 'color-pairing', node: <ColorPairingWidget /> },
 		{ name: 'color-pairing-recommendation', node: <ColorPairingRecommendationWidget /> },

@@ -2,7 +2,7 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import { Typography } from '@/components/ui/typography'
 import type { BrandColor, BrandColorGroup } from '@/payload-types'
-import { HdColorPaletteView, type PaletteSwatch } from './view'
+import { HdColorPaletteView, type PaletteLayout, type PaletteSwatch } from './view'
 
 // 위젯(서버): brand-color-groups를 조회해 색을 한 줄로 늘어놓는다. 인터랙션(복사·hover)은 클라 뷰가 맡는다.
 // 정렬 로직이 없다 — 줄 안의 순서는 그룹이 가진 관계 배열 순서 그대로다.
@@ -33,7 +33,13 @@ async function resolveGroup(
 	}
 }
 
-export async function HdColorPaletteWidget({ groups: picks }: { groups?: GroupRef[] | null } = {}) {
+export async function HdColorPaletteWidget({
+	groups: picks,
+	layout,
+}: {
+	groups?: GroupRef[] | null
+	layout?: PaletteLayout | null
+} = {}) {
 	const payload = await getPayload({ config })
 
 	// 🔴 넘어온 그룹을 그대로 쓰지 않고 id로 다시 조회한다. 페이지 조회가 depth:1이라
@@ -54,10 +60,15 @@ export async function HdColorPaletteWidget({ groups: picks }: { groups?: GroupRe
 		.map((g) => ({ id: g.id, name: g.name, swatches: toSwatches(g) }))
 		.filter((s) => s.swatches.length > 0)
 
+	// 균일 판형의 열 수. 위젯 안에서 가장 색이 많은 행에 맞춰야 모든 칸이 같은 크기가 된다.
+	const columnCount = Math.max(1, ...sections.map((s) => s.swatches.length))
+	// 위계 판형의 가중치는 순위에서 나온다 — 3그룹이면 3:2:1. 그룹 수가 달라져도 규칙이 유지된다.
+	const weightOf = (index: number) => sections.length - index
+
 	return (
 		// 행 사이 간격 없이 붙여 한 덩어리로 읽히게 한다(그룹 구분은 행 위 라벨이 한다).
 		<div className="flex w-full flex-col">
-			{sections.map((section) => (
+			{sections.map((section, index) => (
 				<section key={section.id} className="flex flex-col">
 					<Typography
 						as="h3"
@@ -68,7 +79,12 @@ export async function HdColorPaletteWidget({ groups: picks }: { groups?: GroupRe
 					>
 						{section.name}
 					</Typography>
-					<HdColorPaletteView swatches={section.swatches} />
+					<HdColorPaletteView
+						swatches={section.swatches}
+						layout={layout ?? 'uniform'}
+						columnCount={columnCount}
+						rankWeight={weightOf(index)}
+					/>
 				</section>
 			))}
 		</div>
