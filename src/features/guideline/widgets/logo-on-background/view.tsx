@@ -79,7 +79,6 @@ export function LogoOnBackgroundView({
 				))}
 
 				{/* 로고 — 띠 위에 절대배치하고 세로로만 끌린다. */}
-				{/* biome-ignore lint/a11y/useKeyWithMouseEvents: 아래 키보드 조작을 별도 컨트롤로 제공한다. */}
 				<div
 					role="slider"
 					tabIndex={0}
@@ -179,6 +178,9 @@ function LogoMark({
 function Forbidden() {
 	return (
 		<span
+			// ✕는 장식이 아니라 "쓸 수 없다"는 정보라 라벨이 필요하다. 라벨을 붙이려면 role이 있어야 한다
+			// (span은 aria-label을 지원하지 않는다) — 같은 표식을 쓰는 logo-bg-picker와 맞춘다.
+			role="img"
 			aria-label="이 배경에는 사용할 수 없습니다"
 			className="grid size-9 place-items-center bg-destructive/15 font-body text-destructive text-lg"
 		>
