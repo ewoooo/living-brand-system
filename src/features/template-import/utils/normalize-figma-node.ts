@@ -67,6 +67,9 @@ const CSS_BLEND_MODES = new Set([
 	'LUMINOSITY',
 ])
 
+/** 가시성 판정의 단일 소유자 — plan(에셋 수집)과 normalize(IR 생성)가 같은 서브트리를 제외해야 한다. */
+const isRenderable = (node: FigmaSourceNode) => node.visible !== false && node.opacity !== 0
+
 /** PNG 폴백으로 서브트리가 이미지에 구워진 레이어의 진단 — 어드민이 Figma 쪽 수정 지점을 찾는 데 쓴다. */
 export interface FigmaRasterDiagnostic {
 	nodeId: string
@@ -114,7 +117,7 @@ function collectAssetRequests(
 	plan: FigmaAssetPlan,
 	seenImageRefs: Set<string>,
 ): void {
-	if (node.visible === false || node.opacity === 0) return
+	if (!isRenderable(node)) return
 
 	const rasterReason = findRasterFallbackReason(node)
 	if (rasterReason) {
@@ -243,7 +246,7 @@ function normalizeNode(
 	renderedAssets: Readonly<Record<string, FigmaRenderedAsset>>,
 	imageFillAssets: Readonly<Record<string, FigmaRenderedAsset>>,
 ): IrNode | null {
-	if (node.visible === false) return null
+	if (!isRenderable(node)) return null
 
 	const isText = node.type === 'TEXT'
 	const renderedAsset = renderedAssets[node.id]
