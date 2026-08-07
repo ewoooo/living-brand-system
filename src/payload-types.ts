@@ -905,6 +905,7 @@ export interface LayoutBlock {
         | LayoutGridControlsWidget
         | LayoutGridOverlayWidget
         | LogoColorVariantWidget
+        | LogoBgPickerWidget
         | LogoDisplayWidget
         | LogoGridSpecWidget
         | LogoGroupViewerWidget
@@ -1306,6 +1307,23 @@ export interface LogoColorVariantWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'logoColorVariantWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoBgPickerWidget".
+ */
+export interface LogoBgPickerWidget {
+  /**
+   * picker에 올릴 컬러 그룹입니다. 그룹이 가진 순서대로 스와치를 늘어놓습니다.
+   */
+  group?: (number | null) | BrandColorGroup;
+  /**
+   * 기준 로고입니다. 같은 언어·방향의 기본형/WHITE/단색형을 파일명 규약으로 함께 찾습니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoBgPickerWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3023,6 +3041,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         layoutGridControlsWidget?: T | LayoutGridControlsWidgetSelect<T>;
         layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
         logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
+        logoBgPickerWidget?: T | LogoBgPickerWidgetSelect<T>;
         logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
         logoGridSpecWidget?: T | LogoGridSpecWidgetSelect<T>;
         logoGroupViewerWidget?: T | LogoGroupViewerWidgetSelect<T>;
@@ -3225,6 +3244,16 @@ export interface LayoutGridOverlayWidgetSelect<T extends boolean = true> {
  * via the `definition` "LogoColorVariantWidget_select".
  */
 export interface LogoColorVariantWidgetSelect<T extends boolean = true> {
+  logo?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoBgPickerWidget_select".
+ */
+export interface LogoBgPickerWidgetSelect<T extends boolean = true> {
+  group?: T;
   logo?: T;
   id?: T;
   blockName?: T;

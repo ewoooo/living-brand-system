@@ -18,6 +18,7 @@ import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/compo
 import { LayoutGridScope } from '@/features/guideline/widgets/layout-grid/store'
 import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
+import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
 import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/component'
@@ -132,6 +133,9 @@ function renderWidget(child: Child): ReactNode {
 		case 'logoColorVariantWidget':
 			// 인스턴스 입력(logo)을 받는 위젯 — 자족 렌더 위젯들과 다름.
 			return <LogoColorVariantWidget logo={child.logo} />
+		case 'logoBgPickerWidget':
+			// 배경 하나 위에 CI 두 표현을 동시에 놓고 picker로 배경만 바꾼다(블록당 하나).
+			return <LogoBgPickerWidget group={child.group} logo={child.logo} />
 		case 'logoDisplayWidget':
 			// logo를 pin해서 받는 위젯(fishing 없음) + 유한 사이징(width/height/padding).
 			return (

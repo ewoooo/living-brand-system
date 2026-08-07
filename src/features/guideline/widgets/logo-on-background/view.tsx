@@ -1,20 +1,8 @@
 'use client'
 
 import { type PointerEvent as ReactPointerEvent, useRef, useState } from 'react'
+import type { BrandBackground as Band } from '../brand-background'
 import type { LogoSources } from '../logo-set'
-
-/** 배경 띠 한 칸. 어떤 로고를 올릴 수 있는지는 brand-colors가 정한 값 그대로다. */
-export type Band = {
-	id: string
-	name: string
-	hex: string
-	/** CI 기본형(Full Color) 사용 가능 */
-	allowsFullColor: boolean
-	/** CI WHITE 워드마크 사용 가능 */
-	allowsWhiteWordmark: boolean
-	/** 단색분리형의 색 */
-	monoFill: 'black' | 'white'
-}
 
 const BAND_HEIGHT = 76
 

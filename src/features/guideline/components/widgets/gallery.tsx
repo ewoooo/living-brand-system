@@ -18,6 +18,7 @@ import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usa
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
 import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
+import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
 import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/component'
@@ -61,6 +62,16 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 	// logo-color-variant는 파일명 앞 조각으로 언어를 파싱해 같은 언어의 색상 변형을 조회한다.
 	const koLogo = pick(logos, 'ko-horizontal-default.svg')
 
+	// 배경색 위젯은 그룹을 안 주면 첫 그룹(Primary)을 잡는데, Primary 4색은 규정상 기본형·WHITE가
+	// 전부 불가라 미리보기가 ✕만 나온다. 결과가 갈리는 그룹을 집어 위젯이 뭘 하는지 보이게 한다.
+	const { docs: colorGroups } = await payload.find({
+		collection: 'brand-color-groups',
+		limit: 50,
+		depth: 0,
+		overrideAccess: true,
+	})
+	const bgGroup = colorGroups.find((g) => g.name === 'Background Color') ?? colorGroups[0] ?? null
+
 	return [
 		{ name: 'ci-lockup', node: <CiLockupWidget /> },
 		{ name: 'hd-color-palette (균일)', node: <HdColorPaletteWidget layout="uniform" /> },
@@ -77,6 +88,7 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 		{ name: 'logo-display', node: <LogoDisplayWidget logo={koLogo} /> },
 		{ name: 'logo-color-variant', node: <LogoColorVariantWidget logo={koLogo} /> },
 		{ name: 'logo-on-background', node: <LogoOnBackgroundWidget /> },
+		{ name: 'logo-bg-picker', node: <LogoBgPickerWidget group={bgGroup} /> },
 		{ name: 'stem-clear-space', node: <StemClearSpaceWidget /> },
 		{
 			name: 'clearspace-overlay',

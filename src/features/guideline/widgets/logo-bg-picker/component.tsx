@@ -3,38 +3,35 @@ import { getPayload } from 'payload'
 import type { BrandColorGroup } from '@/payload-types'
 import { toBrandBackgrounds } from '../brand-background'
 import { type LogoRef, resolveLogoSet } from '../logo-set'
-import { LogoOnBackgroundView } from './view'
+import { LogoBgPickerView } from './view'
 
-// 위젯(서버): 배경 그룹의 색과 로고 3종 URL을 뽑아 클라 뷰에 넘긴다. 드래그·판정 표시는 뷰가 맡는다.
+// 위젯(서버): 그룹의 색·규정과 로고 3종 URL을 뽑아 클라 뷰에 넘긴다. 선택·표시는 뷰가 맡는다.
 // 🔴 로고 사용 규칙은 brand-colors가 소유한다 — 여기서 대비로 유도하지 않고 저장값을 그대로 옮긴다.
 type GroupRef = number | BrandColorGroup | null | undefined
 
-export async function LogoOnBackgroundWidget({
+export async function LogoBgPickerWidget({
 	group,
 	logo,
-	column,
 }: {
 	group?: GroupRef
 	logo?: LogoRef
-	column?: 'fullColor' | 'mono' | null
 } = {}) {
 	const payload = await getPayload({ config })
 
 	// 🔴 group을 그대로 쓰지 않고 id로 다시 조회한다. 페이지 조회가 depth:1이라 group은 populate돼도
-	//    그 안의 colors는 id 배열로 남는다(hd-color-palette와 같은 이유).
+	//    그 안의 colors는 id 배열로 남는다(logo-on-background와 같은 이유).
 	const groupId = typeof group === 'object' && group ? group.id : group
 	const resolved = groupId != null ? await findGroup(payload, groupId) : await firstGroup(payload)
 	if (!resolved) return null
 
-	const bands = toBrandBackgrounds(resolved)
-	if (bands.length === 0) return null
+	const backgrounds = toBrandBackgrounds(resolved)
+	if (backgrounds.length === 0) return null
 
 	const logos = await resolveLogoSet(payload, logo)
-	return <LogoOnBackgroundView bands={bands} logos={logos} column={column ?? 'fullColor'} />
+	return <LogoBgPickerView backgrounds={backgrounds} logos={logos} />
 }
 
 /** 삭제된 그룹을 가리키면 null — 위젯 하나가 페이지 전체를 죽이지 않게 한다. */
-// (로고 세트 조회는 ../logo-set.ts로 옮겼다 — color-incorrect-usage가 같은 규약을 쓴다.)
 async function findGroup(
 	payload: Awaited<ReturnType<typeof getPayload>>,
 	id: number,
@@ -54,4 +51,4 @@ async function firstGroup(
 	return docs[0] ?? null
 }
 
-export default LogoOnBackgroundWidget
+export default LogoBgPickerWidget

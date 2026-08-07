@@ -16,6 +16,7 @@ import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usa
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/schema'
 import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/schema'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/schema'
+import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/schema'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/schema'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/schema'
 import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/schema'
@@ -133,6 +134,7 @@ export const LayoutBlock: Block = {
 				LayoutGridControlsWidget,
 				LayoutGridOverlayWidget,
 				LogoColorVariantWidget,
+				LogoBgPickerWidget,
 				LogoDisplayWidget,
 				LogoGridSpecWidget,
 				LogoGroupViewerWidget,
