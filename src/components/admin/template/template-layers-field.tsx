@@ -53,8 +53,14 @@ interface LayerRow {
 	tag: string
 	isText: boolean
 	isVector: boolean
-	/** 자신 또는 직계 자식이 data-image-carrier인 레이어 — 이미지 자유 편집(transform) 대상. */
-	hasImageCarrier: boolean
+	/**
+	 * 이미지 배정 주소 판정 — 'self'면 이 레이어가 배정·편집의 주소(캐리어 외동인 클립 프레임
+	 * 또는 스탠드얼론 캐리어), 'parent'면 주소가 부모 프레임으로 넘어간 캐리어 자식(배정 UI 대신
+	 * 안내만 노출), undefined면 배정 불가.
+	 */
+	imageAddress?: 'self' | 'parent'
+	/** 주소가 프레임일 때 해석된 캐리어 자식 nodeId — 자식 키에 남은 이미지 override 정리에 쓴다. */
+	carrierChildId?: string
 	/** 요소 자신의 inline width/height(px) — clipsContent 프레임의 가시 박스. AI 생성 비율 유도에 쓴다. */
 	boxWidth?: number
 	boxHeight?: number
@@ -91,6 +97,14 @@ const TYPE_LABEL: Record<string, string> = {
 	BOOLEAN_OPERATION: '불리언',
 }
 const typeLabel = (t: string) => TYPE_LABEL[t] ?? t
+/** 이미지 배정이 노드 config에 남기는 필드들 — 프레임 주소 커밋 시 캐리어 자식 키에서 지운다. */
+const IMAGE_CONFIG_KEYS = [
+	'backgroundImage',
+	'generatedImageId',
+	'imageTransform',
+	'imageColorize',
+	'imageInput',
+] as const
 const VECTOR_TYPES = new Set([
 	'VECTOR',
 	'BOOLEAN_OPERATION',
@@ -100,11 +114,12 @@ const VECTOR_TYPES = new Set([
 	'POLYGON',
 	'REGULAR_POLYGON',
 ])
-// 배경 설정 개방 판정 — 이미지 배정 가능한 표면은 임포트가 전부 data-image-carrier로 확정하므로
-// 캐리어 보유(자신·직계 자식)만 본다. compose도 같은 계약으로 캐리어 없는 배정을 무시한다.
+// 배경 설정 개방 판정 — 주소 노드에서만 연다: (a) 마킹 없는 클립 프레임이면서 마킹 직계 자식이
+// 정확히 1개(루트 제외), (b) 마킹된 캐리어인데 부모가 (a)에 해당하지 않는 경우. 같은 캐리어가
+// 프레임·자식 두 nodeId로 이중 주소지정되는 것을 막는다(compose의 findImageCarrier와 짝 계약).
 // 벡터 img는 VectorLayerEditor가, 실제 <p>는 텍스트 편집이 소유하므로 제외.
 export const canAssignImage = (layer: LayerRow) =>
-	!layer.isText && !layer.isVector && layer.hasImageCarrier
+	!layer.isText && !layer.isVector && layer.imageAddress === 'self'
 
 // 배경 설정 트리거 버튼 공통 스타일(에셋 가져오기 · AI 생성).
 const TRIGGER_STYLE: CSSProperties = {
@@ -128,6 +143,18 @@ function stylePx(el: Element, property: 'width' | 'height'): number | undefined 
 	return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
 }
 
+/**
+ * 주소 규칙 (a) — 마킹 없는 클립(overflow:hidden) 프레임이면서 마킹 직계 자식이 정확히 1개고
+ * 루트(depth 0, 부모가 body)가 아닌 노드. 이 프레임이 캐리어의 배정 주소를 대신 소유한다.
+ * findImageCarrier는 자신 마킹이 아니면 "정확히 1개"일 때만 자식을 돌려준다(2개 이상이면 null).
+ */
+const isCarrierFrameAddress = (node: Element | null, nodeDepth: number): boolean =>
+	nodeDepth > 0 &&
+	node instanceof HTMLElement &&
+	!node.hasAttribute('data-image-carrier') &&
+	node.style.overflow === 'hidden' &&
+	findImageCarrier(node) !== null
+
 export function parseLayers(html: string): LayerRow[] {
 	const rows: LayerRow[] = []
 	const doc = new DOMParser().parseFromString(html, 'text/html')
@@ -140,6 +167,10 @@ export function parseLayers(html: string): LayerRow[] {
 		const figmaType = el.getAttribute('data-figma-type') || (tag === 'p' ? 'TEXT' : 'FRAME')
 		// 래스터화된 TEXT는 figmaType이 TEXT여도 img로 남는다 — 실제 <p>만 텍스트 편집 대상.
 		const isText = tag === 'p'
+		// 주소는 캐리어의 가시 창 하나로 고정한다 — 부모가 주소 프레임(a)이면 캐리어 자신은
+		// 'parent'(배정 UI 숨김), 그 외 마킹 캐리어와 주소 프레임 자신은 'self'.
+		const selfMarked = el instanceof HTMLElement && el.hasAttribute('data-image-carrier')
+		const frameAddress = isCarrierFrameAddress(el, depth)
 		rows.push({
 			id: el.getAttribute('data-node-id') || `${depth}-${rows.length}`,
 			depth,
@@ -151,7 +182,16 @@ export function parseLayers(html: string): LayerRow[] {
 			isVector:
 				VECTOR_TYPES.has(figmaType) &&
 				(tag === 'img' || (el instanceof HTMLElement && Boolean(el.style.maskImage))),
-			hasImageCarrier: Boolean(findImageCarrier(el)),
+			imageAddress: selfMarked
+				? isCarrierFrameAddress(el.parentElement, depth - 1)
+					? 'parent'
+					: 'self'
+				: frameAddress
+					? 'self'
+					: undefined,
+			carrierChildId: frameAddress
+				? (findImageCarrier(el)?.getAttribute('data-node-id') ?? undefined)
+				: undefined,
 			boxWidth: stylePx(el, 'width'),
 			boxHeight: stylePx(el, 'height'),
 			text: isText ? (el.textContent ?? '') : '',
@@ -942,6 +982,15 @@ export default function TemplateLayersField() {
 			...nodeConfigs,
 			[selectedId]: { ...nodeConfigs[selectedId], ...patch },
 		}
+		// 커밋 정규화: 프레임 주소에서 이미지 커밋이 일어나면 해석된 캐리어 자식 키에 남은 이미지
+		// 필드(과거 자식 키로 저작된 override)를 지운다 — 같은 캐리어가 두 주소로 이중 적용되는 것 방지.
+		const childId = selected?.carrierChildId
+		if (childId && next[childId] && IMAGE_CONFIG_KEYS.some((key) => key in patch)) {
+			const child = { ...next[childId] }
+			for (const key of IMAGE_CONFIG_KEYS) delete child[key]
+			if (Object.keys(child).length === 0) delete next[childId]
+			else next[childId] = child
+		}
 		dispatchFields({ type: 'UPDATE', path: 'overrides', value: next })
 		dispatchFields({ type: 'UPDATE', path: 'html', value: composeTemplateHtml(base, next) })
 		setModified(true)
@@ -951,7 +1000,7 @@ export default function TemplateLayersField() {
 	const commitBackground = ({ id, src }: { id: number; src: string }) =>
 		commitNodeConfig({ backgroundImage: src, generatedImageId: id })
 
-	// 이미지 편집 오버레이 게이트 — 아래 슬라이더 섹션과 동일 조건(배정 대상 = 캐리어 보유 + 배경 할당됨).
+	// 이미지 편집 오버레이 게이트 — 아래 슬라이더 섹션과 동일 조건(배정 대상 = 주소 노드 + 배경 할당됨).
 	const iframeRef = useRef<HTMLIFrameElement>(null)
 	const canEditImage =
 		!!selected && canAssignImage(selected) && !!nodeConfigs[selected.id]?.backgroundImage
@@ -1087,7 +1136,7 @@ export default function TemplateLayersField() {
 							onChange={(imageInput) => commitNodeConfig({ imageInput })}
 						/>
 					</SlotLockToggle>
-					{/* 배정 대상은 항상 캐리어 보유 — 배경이 실제로 할당된 뒤에만 transform·컬러 치환을 연다. */}
+					{/* 배정 대상은 항상 주소 노드 — 배경이 실제로 할당된 뒤에만 transform·컬러 치환을 연다. */}
 					{canEditImage && (
 						<div style={{ marginTop: 12 }}>
 							<span
@@ -1133,13 +1182,24 @@ export default function TemplateLayersField() {
 				/>
 			)}
 
-			{selected && !selected.isText && !selected.isVector && !canAssignImage(selected) && (
+			{/* 주소가 부모 프레임으로 넘어간 캐리어 — 배정 UI 대신 주소를 안내한다. */}
+			{selected?.imageAddress === 'parent' && (
 				<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
-					{selected.tag === 'img'
-						? '이미지로 고정된 레이어입니다 — Figma에서 해당 속성을 정리하면 편집 가능하게 가져올 수 있습니다.'
-						: `${typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.`}
+					이미지 배정은 부모 프레임에서 합니다 — 프레임 레이어를 선택하세요.
 				</p>
 			)}
+
+			{selected &&
+				!selected.isText &&
+				!selected.isVector &&
+				!canAssignImage(selected) &&
+				selected.imageAddress !== 'parent' && (
+					<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
+						{selected.tag === 'img'
+							? '이미지로 고정된 레이어입니다 — Figma에서 해당 속성을 정리하면 편집 가능하게 가져올 수 있습니다.'
+							: `${typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.`}
+					</p>
+				)}
 		</div>
 	)
 }

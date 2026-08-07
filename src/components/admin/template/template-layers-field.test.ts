@@ -17,14 +17,17 @@ describe('parseLayers', () => {
 		expect(rows.map((row) => row.id)).toEqual(['1:1'])
 	})
 
-	it('캐리어가 자신·직계 자식일 때만 hasImageCarrier로 판정한다', () => {
+	it('주소가 프레임이면 carrierChildId에 해석된 캐리어 자식을 담는다', () => {
 		const rows = parseLayers(
-			'<div data-node-id="direct"><div data-image-carrier data-node-id="carrier"></div></div>' +
-				'<div data-node-id="grand"><div data-node-id="mid"><div data-image-carrier data-node-id="deep"></div></div></div>',
+			'<div data-node-id="root">' +
+				'<div data-node-id="clip" style="overflow:hidden">' +
+				'<div data-node-id="clip-child" data-image-carrier=""></div>' +
+				'</div>' +
+				'</div>',
 		)
 		const byId = new Map(rows.map((row) => [row.id, row]))
-		expect(byId.get('direct')?.hasImageCarrier).toBe(true)
-		expect(byId.get('grand')?.hasImageCarrier).toBe(false)
+		expect(byId.get('clip')?.carrierChildId).toBe('clip-child')
+		expect(byId.get('clip-child')?.imageAddress).toBe('parent')
 	})
 
 	it('<p>만 텍스트 편집 대상으로 textContent를 담는다', () => {
@@ -33,24 +36,47 @@ describe('parseLayers', () => {
 	})
 })
 
-describe('canAssignImage', () => {
-	it('캐리어 보유만 허용한다 — RECTANGLE 타입만으로는 거부, 텍스트·벡터도 거부', () => {
+describe('canAssignImage — 주소 매트릭스', () => {
+	it('배정 주소는 가시 창 하나 — 클립 프레임 또는 캐리어 자신, 둘 다는 아니다', () => {
 		const rows = parseLayers(
-			'<div data-node-id="r" data-figma-type="RECTANGLE"></div>' +
-				'<div data-node-id="s" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
-				'<div data-node-id="f" data-figma-type="INSTANCE">' +
-				'<div data-node-id="c" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+			'<div data-node-id="root">' +
+				// 클립 프레임 + 마킹 자식 1 → 주소는 프레임, 자식은 숨김.
+				'<div data-node-id="clip" style="overflow:hidden">' +
+				'<div data-node-id="clip-child" data-image-carrier=""></div>' +
 				'</div>' +
-				'<p data-node-id="t" data-figma-type="TEXT">텍스트</p>' +
-				'<img data-node-id="v" data-figma-type="VECTOR">',
+				// 스탠드얼론 캐리어 → 자신이 주소.
+				'<div data-node-id="standalone" data-image-carrier=""></div>' +
+				// 비클립 GROUP 부모 → 부모는 주소가 아니고 마킹 자식이 주소.
+				'<div data-node-id="group" data-figma-type="GROUP">' +
+				'<div data-node-id="group-child" data-image-carrier=""></div>' +
+				'</div>' +
+				// 형제 캐리어 2개 → 프레임은 주소가 아니고 각 자식이 자기 주소.
+				'<div data-node-id="twins" style="overflow:hidden">' +
+				'<div data-node-id="twin-a" data-image-carrier=""></div>' +
+				'<div data-node-id="twin-b" data-image-carrier=""></div>' +
+				'</div>' +
+				'</div>' +
+				// 루트 클립 프레임은 주소가 될 수 없다(캔버스) — 캐리어 자식이 주소.
+				'<div data-node-id="root-clip" style="overflow:hidden">' +
+				'<div data-node-id="root-clip-child" data-image-carrier=""></div>' +
+				'</div>' +
+				'<p data-node-id="text" data-figma-type="TEXT">텍스트</p>' +
+				'<img data-node-id="vector" data-figma-type="VECTOR">',
 		)
 		const byId = new Map(rows.map((row) => [row.id, row]))
 		const allows = (id: string) => canAssignImage(byId.get(id) as (typeof rows)[number])
 
-		expect(allows('r')).toBe(false) // 마킹 없는 사각형 — 타입 추측으로 열지 않는다
-		expect(allows('s')).toBe(true) // 자기 캐리어
-		expect(allows('f')).toBe(true) // 직계 자식 캐리어 — 타입 무관
-		expect(allows('t')).toBe(false)
-		expect(allows('v')).toBe(false)
+		expect(allows('clip')).toBe(true)
+		expect(allows('clip-child')).toBe(false)
+		expect(allows('standalone')).toBe(true)
+		expect(allows('group')).toBe(false)
+		expect(allows('group-child')).toBe(true)
+		expect(allows('twins')).toBe(false)
+		expect(allows('twin-a')).toBe(true)
+		expect(allows('twin-b')).toBe(true)
+		expect(allows('root-clip')).toBe(false)
+		expect(allows('root-clip-child')).toBe(true)
+		expect(allows('text')).toBe(false)
+		expect(allows('vector')).toBe(false)
 	})
 })

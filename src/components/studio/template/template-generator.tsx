@@ -61,6 +61,7 @@ export function TemplateGenerator({
 	// 텍스트 슬롯(<p>)과 이미지 슬롯(프레임)은 노드가 겹치지 않아 그대로 합친다.
 	// 이미지 교체에는 저작 config의 imageColorize만 깔아 재적용한다 — published html의 옛
 	// colorize 오버레이는 compose가 멱등 제거하므로, 안 깔면 컬러 치환이 사라진다.
+	// imageTransform은 published html에 이미 구워져 있어 절대 다시 넘기지 말 것(prepend 누적).
 	const composedHtml = useMemo(
 		() =>
 			composeTemplateHtml(html, {

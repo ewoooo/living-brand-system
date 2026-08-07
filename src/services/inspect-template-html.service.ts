@@ -164,6 +164,9 @@ export function inspectTemplateFragment(
 						return
 					}
 
+					// compose가 에셋 참조를 캐리어/오버레이 요소로 옮기므로 프레임 키의 기대 참조는
+					// 이 대조에서 비활성(요소가 안 맞아 걸리지 않는다) — 실질 보장은
+					// findInvalidAuthorizedRefs(모든 URL의 published 대조)가 진다.
 					const expected = refsByNode.get(nodeId)
 					const fromMetadata = metadataRef(tagName, attributes, style.urls, nodeId)
 					if (fromMetadata === null) {

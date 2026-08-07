@@ -879,6 +879,28 @@ describe('convertFigmaNodeToHtml — 이미지 캐리어', () => {
 		expect(html).toContain('data-image-carrier')
 	})
 
+	it('자식 딸린 이미지 fill 자식은 프레임 주도 마킹하지 않는다 — 배정 이미지가 자식에 가려진다', () => {
+		const { html } = convertFigmaNodeToHtml(
+			clipFrame([
+				{
+					...imageChild,
+					children: [
+						{
+							id: '2:9',
+							name: 'caption',
+							type: 'TEXT',
+							characters: '캡션',
+							absoluteBoundingBox: { x: 10, y: 10, width: 100, height: 20 },
+						},
+					],
+				},
+			]),
+			{},
+			FILL_ASSETS,
+		)
+		expect(html).not.toContain('data-image-carrier')
+	})
+
 	it('자식 있는 이미지 fill 프레임은 마킹하지 않는다 — 배정 시 자식이 이미지를 가린다', () => {
 		const { html } = convertFigmaNodeToHtml(
 			{
