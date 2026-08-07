@@ -4,7 +4,6 @@ import { GuidelineHeader } from '@/features/guideline/components/globals/guideli
 import { CarouselWidget } from '@/features/guideline/widgets/carousel/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
-import { ColorIncorrectUsageWidget } from '@/features/guideline/widgets/color-incorrect-usage/component'
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/component'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/component'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/component'
@@ -77,11 +76,14 @@ function renderWidget(child: Child): ReactNode {
 		case 'colorPairingRecommendationWidget':
 			return <ColorPairingRecommendationWidget />
 		case 'doDontWidget':
-			// 예시(이미지+캡션+kind)를 인스턴스 입력으로 받는 위젯.
+			// 예시(이미지 또는 컬러 프리셋 + 캡션 + kind)를 인스턴스 입력으로 받는 위젯.
+			// logo는 컬러 프리셋에만 쓰인다 — 이미지 예시만 있으면 조회조차 하지 않는다.
 			return (
 				<DoDontWidget
 					imageRatio={child.imageRatio}
 					columns={child.columns}
+					itemLabel={child.itemLabel}
+					logo={child.logo}
 					examples={child.examples}
 				/>
 			)
@@ -91,9 +93,6 @@ function renderWidget(child: Child): ReactNode {
 			return <IconGridWidget />
 		case 'imageGridWidget':
 			return <ImageGridWidget />
-		case 'colorIncorrectUsageWidget':
-			// COLOR 금지 6종. CI 금지(incorrectUsageWidget)와 다른 위젯이다.
-			return <ColorIncorrectUsageWidget logo={child.logo} />
 		case 'incorrectUsageWidget':
 			// legacy doDont 블록으로 대체됐지만 스키마에 남아 있어 렌더 경로를 유지한다.
 			return <IncorrectUsageWidget />

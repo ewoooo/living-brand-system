@@ -5,7 +5,6 @@ import { CarouselWidget } from '@/features/guideline/widgets/carousel/component'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
-import { ColorIncorrectUsageWidget } from '@/features/guideline/widgets/color-incorrect-usage/component'
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/component'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/component'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/component'
@@ -96,13 +95,14 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 			),
 		},
 		{ name: 'incorrect-usage', node: <IncorrectUsageWidget /> },
-		{ name: 'color-incorrect-usage', node: <ColorIncorrectUsageWidget /> },
 		{
-			name: 'do-dont',
+			// 이미지 예시(제목 없음)와 컬러 프리셋 예시(순번 제목)를 둘 다 걸어 두 경로를 함께 본다.
+			name: 'do-dont (이미지 예시)',
 			node: (
 				<DoDontWidget
 					imageRatio="1:1"
 					columns="3"
+					itemLabel=""
 					examples={[
 						{
 							id: 'do',
@@ -116,6 +116,36 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 							kind: 'dont',
 							image: koLogo,
 							caption: '비율을 변경할 수 없습니다.',
+						},
+					]}
+				/>
+			),
+		},
+		{
+			name: 'do-dont (컬러 프리셋)',
+			node: (
+				<DoDontWidget
+					imageRatio="16:9"
+					columns="3"
+					itemLabel="INCORRECT USAGE"
+					examples={[
+						{
+							id: 'p1',
+							kind: 'dont',
+							preset: 'off-palette',
+							caption: '지정 컬러 외 컬러를 사용할 수 없습니다.',
+						},
+						{
+							id: 'p2',
+							kind: 'dont',
+							preset: 'gradient',
+							caption: '지정 컬러를 그라디언트로 적용할 수 없습니다.',
+						},
+						{
+							id: 'p3',
+							kind: 'dont',
+							preset: 'overlay-stack',
+							caption: '투명도 효과 적용 및 컬러 중첩을 사용할 수 없습니다.',
 						},
 					]}
 				/>

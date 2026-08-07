@@ -894,7 +894,6 @@ export interface LayoutBlock {
         | ClearspaceViewerWidget
         | ColorPairingWidget
         | ColorPairingRecommendationWidget
-        | ColorIncorrectUsageWidget
         | ConceptIntroWidget
         | DoDontWidget
         | GlyphGridWidget
@@ -1063,19 +1062,6 @@ export interface ColorPairingRecommendationWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ColorIncorrectUsageWidget".
- */
-export interface ColorIncorrectUsageWidget {
-  /**
-   * 기준 로고입니다. 같은 언어·방향의 기본형/WHITE/단색형을 파일명 규약으로 함께 찾습니다.
-   */
-  logo?: (number | null) | BrandLogo;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'colorIncorrectUsageWidget';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ConceptIntroWidget".
  */
 export interface ConceptIntroWidget {
@@ -1101,7 +1087,7 @@ export interface ConceptIntroWidget {
  */
 export interface DoDontWidget {
   /**
-   * 예시 이미지의 표시 비율입니다.
+   * 예시 판형의 표시 비율입니다.
    */
   imageRatio?:
     | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
@@ -1111,12 +1097,29 @@ export interface DoDontWidget {
    */
   columns?: ('2' | '3' | '4') | null;
   /**
-   * 예시 이미지와 캡션입니다. 세트 헤딩은 없습니다.
+   * 예시마다 붙는 제목입니다. 뒤에 순번이 자동으로 붙습니다(INCORRECT USAGE 1, 2 …). 비우면 제목 없이 그림만 나옵니다.
+   */
+  itemLabel?: string | null;
+  /**
+   * 컬러 패널 프리셋에 올릴 기준 로고입니다. 같은 언어·방향의 기본형/WHITE/단색형을 파일명 규약으로 함께 찾습니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  /**
+   * 예시입니다. 세트 헤딩은 없습니다.
    */
   examples?:
     | {
+        /**
+         * 예시 이미지입니다.
+         */
         image?: (number | null) | ApplicationImage;
         kind: 'do' | 'ok' | 'dont';
+        /**
+         * 이미지 대신 쓸 컬러 패널입니다. 색·그라디언트·투명도 중첩처럼 이미지로 만들면 원본 값이 사라지는 예시에 씁니다. 이미지를 함께 지정하면 이미지가 이깁니다.
+         */
+        preset?:
+          | ('off-palette' | 'gradient' | 'low-contrast' | 'unpaired-combo' | 'overlay-stack' | 'brightness-opacity')
+          | null;
         caption?: string | null;
         id?: string | null;
       }[]
@@ -3005,7 +3008,6 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
         colorPairingWidget?: T | ColorPairingWidgetSelect<T>;
         colorPairingRecommendationWidget?: T | ColorPairingRecommendationWidgetSelect<T>;
-        colorIncorrectUsageWidget?: T | ColorIncorrectUsageWidgetSelect<T>;
         conceptIntroWidget?: T | ConceptIntroWidgetSelect<T>;
         doDontWidget?: T | DoDontWidgetSelect<T>;
         glyphGridWidget?: T | GlyphGridWidgetSelect<T>;
@@ -3101,15 +3103,6 @@ export interface ColorPairingRecommendationWidgetSelect<T extends boolean = true
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ColorIncorrectUsageWidget_select".
- */
-export interface ColorIncorrectUsageWidgetSelect<T extends boolean = true> {
-  logo?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ConceptIntroWidget_select".
  */
 export interface ConceptIntroWidgetSelect<T extends boolean = true> {
@@ -3126,11 +3119,14 @@ export interface ConceptIntroWidgetSelect<T extends boolean = true> {
 export interface DoDontWidgetSelect<T extends boolean = true> {
   imageRatio?: T;
   columns?: T;
+  itemLabel?: T;
+  logo?: T;
   examples?:
     | T
     | {
         image?: T;
         kind?: T;
+        preset?: T;
         caption?: T;
         id?: T;
       };

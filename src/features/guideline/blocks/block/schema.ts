@@ -3,7 +3,6 @@ import { ImageLeaf } from '@/features/guideline/leaves/image/schema'
 import { CarouselWidget } from '@/features/guideline/widgets/carousel/schema'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/schema'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/schema'
-import { ColorIncorrectUsageWidget } from '@/features/guideline/widgets/color-incorrect-usage/schema'
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/schema'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/schema'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/schema'
@@ -123,7 +122,6 @@ export const LayoutBlock: Block = {
 				ClearspaceViewerWidget,
 				ColorPairingWidget,
 				ColorPairingRecommendationWidget,
-				ColorIncorrectUsageWidget,
 				ConceptIntroWidget,
 				DoDontWidget,
 				GlyphGridWidget,
