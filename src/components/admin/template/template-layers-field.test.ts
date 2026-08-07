@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { canAssignImage, parseLayers } from './template-layers-field'
+import { canAssignImage, parseLayers, pruneCarrierChildImageKeys } from './template-layers-field'
 
 // 컴포넌트 렌더 없이 parseLayers·canAssignImage만 검증한다 — Admin 런타임 의존성은 스텁.
 vi.mock('@payloadcms/ui', () => ({
@@ -33,6 +33,54 @@ describe('parseLayers', () => {
 	it('<p>만 텍스트 편집 대상으로 textContent를 담는다', () => {
 		const rows = parseLayers('<p data-node-id="t" data-figma-type="TEXT">안녕</p>')
 		expect(rows[0]).toMatchObject({ isText: true, text: '안녕' })
+	})
+})
+
+describe('pruneCarrierChildImageKeys', () => {
+	it('이미지 커밋 시 캐리어 자식 키의 이미지 필드를 지우고 나머지 필드는 남긴다', () => {
+		const next = pruneCarrierChildImageKeys(
+			{
+				clip: { backgroundImage: '/api/generated-images/file/new.png' },
+				'clip-child': {
+					backgroundImage: '/api/generated-images/file/old.png',
+					generatedImageId: 3,
+					text: '캡션',
+				},
+			},
+			'clip-child',
+			{ backgroundImage: '/api/generated-images/file/new.png' },
+		)
+		expect(next['clip-child']).toEqual({ text: '캡션' })
+	})
+
+	it('정리 후 빈 엔트리가 되면 키째 삭제한다', () => {
+		const next = pruneCarrierChildImageKeys(
+			{
+				clip: { backgroundImage: '/api/generated-images/file/new.png' },
+				'clip-child': { imageColorize: { line: '#112233' } },
+			},
+			'clip-child',
+			{ imageColorize: { line: '#445566' } },
+		)
+		expect('clip-child' in next).toBe(false)
+		expect(next.clip).toEqual({ backgroundImage: '/api/generated-images/file/new.png' })
+	})
+
+	it('자식 키에 이미지 필드가 없거나 이미지 커밋이 아니면 map을 그대로 돌려준다', () => {
+		const map = {
+			clip: { backgroundImage: '/api/generated-images/file/new.png' },
+			'clip-child': { text: '캡션' },
+		}
+		// 자식에 이미지 필드 없음 — 엔트리 유지.
+		expect(
+			pruneCarrierChildImageKeys(map, 'clip-child', { backgroundImage: '/x.png' })[
+				'clip-child'
+			],
+		).toEqual({ text: '캡션' })
+		// 이미지 키가 없는 patch(텍스트 커밋)는 아무것도 지우지 않는다.
+		expect(pruneCarrierChildImageKeys(map, 'clip-child', { text: '새 텍스트' })).toBe(map)
+		// childId 없음(프레임 주소가 아님) — 그대로.
+		expect(pruneCarrierChildImageKeys(map, undefined, { backgroundImage: '/x.png' })).toBe(map)
 	})
 })
 

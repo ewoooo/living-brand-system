@@ -28,6 +28,8 @@ export interface PublishedHtmlTemplate {
 
 // 노출 경계: 스튜디오가 쓰는 input(aiInstruction 제외)·imageInput·imageColorize만 남긴다.
 // aiInstruction·vectorAsset·generatedImageId 등 저작 내부 정보는 SSR 페이로드에 싣지 않는다.
+// agent/MCP 경로(projectTemplateRenderModel 직행)는 의도적으로 전체 config를 쓴다 — 이 프로젝션을
+// "안전한 투영"으로 오독해 새 공개 표면에 renderModel을 그대로 태우지 말 것.
 function projectStudioNodeConfigs(
 	nodeConfigs: TemplateNodeConfigMap,
 ): Record<string, PublishedTemplateNodeConfig> {

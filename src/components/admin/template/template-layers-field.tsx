@@ -105,6 +105,25 @@ const IMAGE_CONFIG_KEYS = [
 	'imageColorize',
 	'imageInput',
 ] as const
+
+/**
+ * 커밋 정규화(순수 함수): 프레임 주소에서 이미지 커밋이 일어나면 해석된 캐리어 자식 키에 남은
+ * 이미지 필드(과거 자식 키로 저작된 override)를 지운다 — 같은 캐리어가 두 주소로 이중 적용되는
+ * 것 방지. 이미지 필드가 빠져 빈 엔트리가 되면 키째 삭제한다.
+ */
+export function pruneCarrierChildImageKeys(
+	map: TemplateNodeConfigMap,
+	childId: string | undefined,
+	patch: TemplateNodeConfig,
+): TemplateNodeConfigMap {
+	if (!childId || !map[childId] || !IMAGE_CONFIG_KEYS.some((key) => key in patch)) return map
+	const child = { ...map[childId] }
+	for (const key of IMAGE_CONFIG_KEYS) delete child[key]
+	const next = { ...map }
+	if (Object.keys(child).length === 0) delete next[childId]
+	else next[childId] = child
+	return next
+}
 const VECTOR_TYPES = new Set([
 	'VECTOR',
 	'BOOLEAN_OPERATION',
@@ -978,19 +997,11 @@ export default function TemplateLayersField() {
 		if (!selectedId) return
 		const base = baseHtml || html
 		if (typeof base !== 'string') return
-		const next: TemplateNodeConfigMap = {
-			...nodeConfigs,
-			[selectedId]: { ...nodeConfigs[selectedId], ...patch },
-		}
-		// 커밋 정규화: 프레임 주소에서 이미지 커밋이 일어나면 해석된 캐리어 자식 키에 남은 이미지
-		// 필드(과거 자식 키로 저작된 override)를 지운다 — 같은 캐리어가 두 주소로 이중 적용되는 것 방지.
-		const childId = selected?.carrierChildId
-		if (childId && next[childId] && IMAGE_CONFIG_KEYS.some((key) => key in patch)) {
-			const child = { ...next[childId] }
-			for (const key of IMAGE_CONFIG_KEYS) delete child[key]
-			if (Object.keys(child).length === 0) delete next[childId]
-			else next[childId] = child
-		}
+		const next = pruneCarrierChildImageKeys(
+			{ ...nodeConfigs, [selectedId]: { ...nodeConfigs[selectedId], ...patch } },
+			selected?.carrierChildId,
+			patch,
+		)
 		dispatchFields({ type: 'UPDATE', path: 'overrides', value: next })
 		dispatchFields({ type: 'UPDATE', path: 'html', value: composeTemplateHtml(base, next) })
 		setModified(true)
@@ -1186,6 +1197,8 @@ export default function TemplateLayersField() {
 			{selected?.imageAddress === 'parent' && (
 				<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
 					이미지 배정은 부모 프레임에서 합니다 — 프레임 레이어를 선택하세요.
+					{IMAGE_CONFIG_KEYS.some((key) => key in (nodeConfigs[selected.id] ?? {})) &&
+						' 이 레이어에 남은 이전 배정이 있습니다 — 부모 프레임에서 다시 배정하면 정리됩니다.'}
 				</p>
 			)}
 

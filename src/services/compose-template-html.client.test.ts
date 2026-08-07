@@ -245,6 +245,27 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(frame.style.backgroundColor).toBe('transparent')
 	})
 
+	it('캐리어에 형제가 있으면 프레임 fill을 투명화하지 않는다 — 형제 콘텐츠의 배경 보존', () => {
+		const frameHtml =
+			'<div data-node-id="root-1" data-figma-type="FRAME" style="background-color:rgb(0,40,10)">' +
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden;background-color:rgb(255,255,255)">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+			'<p data-node-id="caption-1" data-figma-type="TEXT">캡션</p>' +
+			'</div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: generated,
+				imageColorize: { line: '#112233', background: '#aabbcc' },
+			},
+		})
+		const frame = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-node-id="frame-1"]') as HTMLElement
+
+		expect(frame.style.backgroundColor).toBe('rgb(255, 255, 255)')
+	})
+
 	it('프레임에 url( 배경이 있으면 fill을 건드리지 않는다', () => {
 		const frameHtml =
 			'<div data-node-id="root-1" data-figma-type="FRAME" style="background-color:rgb(0,40,10)">' +
@@ -503,6 +524,34 @@ describe('composeTemplateHtml image carrier', () => {
 			.querySelector('[data-node-id="rect-1-colorize"]') as HTMLElement
 		expect(overlay.style.maskSize).toContain('contain')
 		expect(overlay.style.maskPosition).toContain('left top')
+	})
+
+	it('재합성 멱등성 — img 캐리어도 published 출력에 다시 적용해도 같다', () => {
+		// 1차에서 img→div 치환이 프레이밍('100% 100%'/center/no-repeat)을 명시 고정하므로
+		// 2차 배정 분기의 "없을 때만 기본값" 가드가 이 값을 보존해 maskSize가 cover로 드리프트하지 않는다.
+		const base =
+			'<div data-node-id="root-1" data-figma-type="FRAME" style="background-color:rgb(0,40,10)">' +
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden;background-color:rgb(255,255,255)">' +
+			'<img data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' data-asset-collection="application-images" data-asset-id="3"' +
+			' src="/api/application-images/file/baked.png" alt="" style="width:100px;height:80px">' +
+			'</div>' +
+			'</div>'
+		const config = {
+			'frame-1': {
+				backgroundImage: generated,
+				generatedImageId: 9,
+				imageColorize: { line: '#112233' },
+			},
+		}
+		const once = composeTemplateHtml(base, config)
+
+		expect(composeTemplateHtml(once, config)).toBe(once)
+		// 치환 div에 img 렌더 상당 프레이밍이 명시돼 있어야 2차 배정이 cover로 덮지 않는다.
+		const carrier = new DOMParser()
+			.parseFromString(once, 'text/html')
+			.querySelector('[data-image-carrier]') as HTMLElement
+		expect(carrier.style.backgroundSize).toBe('100% 100%')
 	})
 
 	it('캐리어 없는 노드의 backgroundImage는 무시된다 — 원본 그대로', () => {

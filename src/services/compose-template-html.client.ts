@@ -80,17 +80,29 @@ function applyImageColorize(
 ): HTMLElement {
 	// 래스터 폴백 img 캐리어는 vectorColor와 같은 방식으로 div 치환 — mask는 img 콘텐츠에 못 얹는다.
 	const base = carrier instanceof HTMLImageElement ? replaceImageWithDiv(doc, carrier) : carrier
+	if (base !== carrier) {
+		// img는 background-*가 없어 아래 maskSize 읽기가 폴백('100% 100%')을 쓴다. 치환 div에 같은
+		// 값(img 렌더 상당)을 명시해 두면, 2차 합성에서 배정 분기의 "없을 때만 기본값" 가드가 이
+		// 값을 보존해 maskSize가 1차와 같아진다 — 명시하지 않으면 2차에 'cover'를 받아 드리프트.
+		base.style.backgroundSize = '100% 100%'
+		base.style.backgroundPosition = 'center'
+		base.style.backgroundRepeat = 'no-repeat'
+	}
 
 	// 캐리어가 프레임을 못 덮는 영역(축소·회전, 서브픽셀 틈)에 부모 clip 프레임 자체의 fill이
 	// 새어 보이므로 편집 대상 슬롯의 프레임 fill은 투명이 기본이다. backgroundImage는 shorthand
 	// background: rgb(...) 선언 시 'initial'/'none'을 반환할 수 있어 url( 존재 여부로 검사한다.
 	// 프레임이 템플릿 루트(캔버스, 부모가 body)면 건드리지 않는다 — 캔버스 배경이 사라지면 안 된다.
+	// 전제: 캐리어가 프레임의 유일한 요소 자식이어야 한다 — 형제(캡션 등)가 있으면 캐리어가
+	// 프레임을 덮는다는 전제가 깨지고, 투명화가 형제 콘텐츠의 배경(프레임 fill)을 날린다.
+	// (재합성 시 colorize 오버레이는 캐리어 안에 들어가므로 프레임 자식 수는 불변 — 멱등 유지.)
 	// ponytail: solid fill만 무력화 — gradient 쇼트핸드 fill은 background-color만 지워져 그대로
 	// 샌다(천장). 필요 시 프레임 배경을 직접 지정해 회피.
 	const frame = base.parentElement
 	if (
 		frame instanceof HTMLElement &&
 		frame.parentElement !== doc.body &&
+		frame.children.length === 1 &&
 		frame.style.overflow === 'hidden' &&
 		!/url\(/.test(frame.style.backgroundImage)
 	) {
