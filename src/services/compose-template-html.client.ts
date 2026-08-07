@@ -45,7 +45,7 @@ export function isImageColorizeOverlayId(nodeId: string): boolean {
 	return nodeId.endsWith('-colorize')
 }
 
-/** 캐리어 탐색 계약의 단일 소유자 — 생산자(import)가 clip 프레임의 직계 자식에만 마킹하므로 자신 또는 직계 자식만 본다. */
+/** 캐리어 탐색 계약의 단일 소유자 — 생산자(import)가 표면 자신 또는 clip 프레임의 직계 자식에 마킹하므로 자신 또는 직계 자식만 본다. */
 export function findImageCarrier(el: Element): HTMLElement | null {
 	if (el instanceof HTMLElement && el.hasAttribute('data-image-carrier')) return el
 	for (const child of Array.from(el.children)) {
@@ -164,82 +164,50 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 		if (typeof config.text === 'string' && el.tagName.toLowerCase() === 'p') {
 			el.textContent = config.text
 		}
-		if (config.backgroundImage && el instanceof HTMLElement) {
-			// import가 캐리어(data-image-carrier)로 표시한 요소의 이미지를 갈아끼운다 — 프레임 배경에
-			// 쓰면 위에 얹힌 placeholder 자식이 이미지를 가린다. 캐리어 사각형을 직접 선택해 설정한
-			// 경우 요소 자신이 캐리어다.
-			const carrier = findImageCarrier(el)
-			if (carrier) {
-				if (carrier instanceof HTMLImageElement) {
-					carrier.src = config.backgroundImage
-				} else {
-					carrier.style.backgroundImage = `url("${config.backgroundImage}")`
-					// import가 scaleMode에서 굳힌 background-size/position은 보존하고 없을 때만 기본값.
-					if (!carrier.style.backgroundSize) carrier.style.backgroundSize = 'cover'
-					if (!carrier.style.backgroundPosition) {
-						carrier.style.backgroundPosition = 'center'
-					}
-					if (!carrier.style.backgroundRepeat)
-						carrier.style.backgroundRepeat = 'no-repeat'
-				}
-				if (config.generatedImageId) {
-					// 발행 검증(metadataRef)이 요소의 data-asset-*와 실제 URL의 일치를 요구하므로
-					// placeholder 에셋 참조를 생성 이미지 참조로 바꾼다.
-					carrier.setAttribute('data-asset-collection', 'generated-images')
-					carrier.setAttribute('data-asset-id', String(config.generatedImageId))
-				}
-				// 컬러 치환은 transform보다 먼저 — img 캐리어가 div로 치환될 수 있고, transform은
-				// 치환 결과(2겹 전체)의 캐리어에 붙어야 이동·회전이 컬러 결과를 통째로 움직인다.
-				const visual = config.imageColorize
-					? applyImageColorize(doc, carrier, config.imageColorize, config.backgroundImage)
-					: carrier
-				const edit = config.imageTransform
-				if (edit && !isIdentityTransform(edit)) {
-					// 합성 규칙: 편집 transform을 import가 만든 base transform 앞에 붙인다(prepend).
-					// 맨 왼쪽 CSS transform이 부모(프레임) 좌표계에서 적용되므로 pan이 프레임 안에서
-					// 이미지를 옮기는 느낌이 되고, Figma 소유의 base transform(rotate 등)은 보존된다.
-					// transform-origin은 기본값(center) 유지. identity(0,0,1,0)면 아무것도 쓰지 않는다.
-					const editTransform = formatImageEditTransform(edit)
-					const baseTransform = visual.style.transform
-					visual.style.transform = baseTransform
-						? `${editTransform} ${baseTransform}`
-						: editTransform
-				}
-			} else if (el instanceof HTMLImageElement) {
-				// 캐리어 아닌 래스터 폴백 img에 background-*를 칠하면 불투명한 src 뒤에 가려
-				// 보이지 않고, 발행 검증(metadataRef)은 img의 src를 읽어 data-asset-*와
-				// 어긋난다 — 캐리어 img와 동일하게 src 자체를 갈아끼운다.
-				el.src = config.backgroundImage
-				if (config.generatedImageId) {
-					el.setAttribute('data-asset-collection', 'generated-images')
-					el.setAttribute('data-asset-id', String(config.generatedImageId))
-				}
+		// 이미지 배정은 캐리어 전용 — 임포트가 이미지 표면(클립 프레임의 외동 이미지 자식·자식 없는
+		// 이미지 fill·래스터 폴백 img)을 전부 data-image-carrier로 마킹하며, 마킹하지 않은 노드의
+		// backgroundImage는 무시된다. 프레임 배경에 직접 쓰면 위에 얹힌 자식이 이미지를 가린다.
+		// 캐리어 사각형을 직접 선택해 설정한 경우 요소 자신이 캐리어다.
+		const carrier =
+			config.backgroundImage && el instanceof HTMLElement ? findImageCarrier(el) : null
+		if (config.backgroundImage && carrier) {
+			if (carrier instanceof HTMLImageElement) {
+				carrier.src = config.backgroundImage
 			} else {
-				// ponytail: 캐리어 없는 레거시 프레임 배경 경로에서는 imageTransform·imageColorize를
-				// 무시한다 — background-image는 회전할 수 없고 자식을 얹으면 기존 자식(placeholder)을
-				// 가리므로 두 변형 모두 설계상 캐리어 전용이다.
-				// base가 background: 쇼트핸드(import가 단색·그라데이션 fill에 방출)면 Chrome이
-				// 아래 롱핸드 세팅을 쇼트핸드 하나로 재직렬화해 `background: url(...) ... rgb(...)`를
-				// 만들고, 스타일 검증은 background 쇼트핸드의 url()을 차단해 저장이 막힌다
-				// (jsdom은 이 재직렬화를 재현하지 못한다 — 실제 Chromium에서 검증된 동작).
-				// 쇼트핸드를 지우고 색만 롱핸드로 보존한다 — 그라데이션 레이어는 cover 이미지가
-				// 어차피 덮으므로 시각 손실이 없다.
-				const keptColor = el.style.backgroundColor
-				el.style.background = ''
-				if (keptColor) el.style.backgroundColor = keptColor
-				el.style.backgroundImage = `url("${config.backgroundImage}")`
-				el.style.backgroundSize = 'cover'
-				el.style.backgroundPosition = 'center'
-				el.style.backgroundRepeat = 'no-repeat'
-				if (config.generatedImageId && el.hasAttribute('data-asset-collection')) {
-					// IMAGE fill을 직접 가진 요소(placeholder 참조 보유)에 생성 이미지를 얹는 경우 —
-					// 발행 검증이 요소의 data-asset-*와 URL 일치를 요구하므로 참조를 함께 바꾼다.
-					el.setAttribute('data-asset-collection', 'generated-images')
-					el.setAttribute('data-asset-id', String(config.generatedImageId))
+				carrier.style.backgroundImage = `url("${config.backgroundImage}")`
+				// import가 scaleMode에서 굳힌 background-size/position은 보존하고 없을 때만 기본값.
+				if (!carrier.style.backgroundSize) carrier.style.backgroundSize = 'cover'
+				if (!carrier.style.backgroundPosition) {
+					carrier.style.backgroundPosition = 'center'
 				}
+				if (!carrier.style.backgroundRepeat) carrier.style.backgroundRepeat = 'no-repeat'
 			}
-			// backgroundImage 블록과 상호배타 — 위에서 img 캐리어가 div로 치환(replaceWith)됐으면
-			// el은 detached라 아래 벡터 경로가 조용히 no-op하는 대신 아예 진입하지 않는다.
+			if (config.generatedImageId) {
+				// 발행 검증(metadataRef)이 요소의 data-asset-*와 실제 URL의 일치를 요구하므로
+				// placeholder 에셋 참조를 생성 이미지 참조로 바꾼다.
+				carrier.setAttribute('data-asset-collection', 'generated-images')
+				carrier.setAttribute('data-asset-id', String(config.generatedImageId))
+			}
+			// 컬러 치환은 transform보다 먼저 — img 캐리어가 div로 치환될 수 있고, transform은
+			// 치환 결과(2겹 전체)의 캐리어에 붙어야 이동·회전이 컬러 결과를 통째로 움직인다.
+			const visual = config.imageColorize
+				? applyImageColorize(doc, carrier, config.imageColorize, config.backgroundImage)
+				: carrier
+			const edit = config.imageTransform
+			if (edit && !isIdentityTransform(edit)) {
+				// 합성 규칙: 편집 transform을 import가 만든 base transform 앞에 붙인다(prepend).
+				// 맨 왼쪽 CSS transform이 부모(프레임) 좌표계에서 적용되므로 pan이 프레임 안에서
+				// 이미지를 옮기는 느낌이 되고, Figma 소유의 base transform(rotate 등)은 보존된다.
+				// transform-origin은 기본값(center) 유지. identity(0,0,1,0)면 아무것도 쓰지 않는다.
+				const editTransform = formatImageEditTransform(edit)
+				const baseTransform = visual.style.transform
+				visual.style.transform = baseTransform
+					? `${editTransform} ${baseTransform}`
+					: editTransform
+			}
+			// img 캐리어가 div로 치환(replaceWith)됐어도 아래 벡터 경로에 진입하지 않는다.
+			// 캐리어 없는 img에 backgroundImage가 와도(UI상 불가능한 조합) 벡터 경로는
+			// vectorAsset·vectorColor·vectorFit만 보므로 이미지 배정 없이 무해하다.
 		} else if (el instanceof HTMLImageElement) {
 			if (config.vectorAsset) {
 				el.src = config.vectorAsset.src

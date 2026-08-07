@@ -34,14 +34,23 @@ describe('parseLayers', () => {
 })
 
 describe('canAssignImage', () => {
-	it('RECTANGLE은 허용하고 텍스트·벡터는 거부한다', () => {
-		const [rect, text, vector] = parseLayers(
+	it('캐리어 보유만 허용한다 — RECTANGLE 타입만으로는 거부, 텍스트·벡터도 거부', () => {
+		const rows = parseLayers(
 			'<div data-node-id="r" data-figma-type="RECTANGLE"></div>' +
+				'<div data-node-id="s" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+				'<div data-node-id="f" data-figma-type="INSTANCE">' +
+				'<div data-node-id="c" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+				'</div>' +
 				'<p data-node-id="t" data-figma-type="TEXT">텍스트</p>' +
 				'<img data-node-id="v" data-figma-type="VECTOR">',
 		)
-		expect(canAssignImage(rect)).toBe(true)
-		expect(canAssignImage(text)).toBe(false)
-		expect(canAssignImage(vector)).toBe(false)
+		const byId = new Map(rows.map((row) => [row.id, row]))
+		const allows = (id: string) => canAssignImage(byId.get(id) as (typeof rows)[number])
+
+		expect(allows('r')).toBe(false) // 마킹 없는 사각형 — 타입 추측으로 열지 않는다
+		expect(allows('s')).toBe(true) // 자기 캐리어
+		expect(allows('f')).toBe(true) // 직계 자식 캐리어 — 타입 무관
+		expect(allows('t')).toBe(false)
+		expect(allows('v')).toBe(false)
 	})
 })

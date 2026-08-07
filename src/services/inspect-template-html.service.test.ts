@@ -211,10 +211,9 @@ describe('template HTML inspection', () => {
 		).toBeUndefined()
 	})
 
-	it('캐리어 아닌 래스터 img에 이미지를 할당해도 발행 검사를 통과한다', () => {
-		// 회귀: 예전 compose는 래스터 img에 background-image를 칠하고 src를 남겨
-		// "HTML과 overrides의 에셋 참조 불일치"로 발행이 막혔다 — 지금은 src를 갈아끼운다.
-		// 자식이 둘이라 캐리어 판정이 되지 않는 프레임 + 래스터 폴백(renderedAssets) 자식.
+	it('클립 외동 조건 밖의 래스터 img에 이미지를 할당해도 발행 검사를 통과한다', () => {
+		// 래스터 폴백 img(비벡터)는 임포트가 자기 캐리어로 마킹한다 — 자식이 둘이라 프레임 주도
+		// 마킹이 없는 조합에서도 compose가 캐리어 경로로 src를 갈아끼운다.
 		const converted = convertFigmaNodeToHtml(
 			{
 				id: '3:1',
@@ -251,7 +250,7 @@ describe('template HTML inspection', () => {
 		})
 		const composed = composeTemplateHtml(converted.html, parsed.data)
 
-		expect(converted.html).not.toContain('data-image-carrier')
+		expect(converted.html).toContain('data-image-carrier')
 		expect(composed).toContain('/api/generated-images/file/gen.png')
 		expect(
 			publishBlocker({
