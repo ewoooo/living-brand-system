@@ -27,6 +27,7 @@ import { generateOneText } from '@/features/generate-text/services/generate-text
 import type { BrandColor } from '@/payload-types'
 import {
 	composeTemplateHtml,
+	findImageCarrier,
 	IDENTITY_TRANSFORM,
 	isIdentityTransform,
 	isImageColorizeOverlayId,
@@ -150,10 +151,11 @@ function parseLayers(html: string): LayerRow[] {
 			figmaType,
 			tag,
 			isText,
-			isVector: VECTOR_TYPES.has(figmaType),
-			hasImageCarrier:
-				el.hasAttribute('data-image-carrier') ||
-				Array.from(el.children).some((child) => child.hasAttribute('data-image-carrier')),
+			// 렌더 실체 기준: 벡터는 img(원본) 또는 compose의 vectorColor 마스크 div로만 편집 가능 — 에셋 누락으로 일반 div가 된 벡터는 폴백 메시지로.
+			isVector:
+				VECTOR_TYPES.has(figmaType) &&
+				(tag === 'img' || (el instanceof HTMLElement && Boolean(el.style.maskImage))),
+			hasImageCarrier: Boolean(findImageCarrier(el)),
 			boxWidth: stylePx(el, 'width'),
 			boxHeight: stylePx(el, 'height'),
 			text: isText ? (el.textContent ?? '') : '',

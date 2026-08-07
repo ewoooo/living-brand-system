@@ -59,15 +59,27 @@ export function TemplateGenerator({
 
 	// 사용자가 만진 슬롯만 오버라이드로 합성한다(만지지 않은 슬롯은 저작 값 유지).
 	// 텍스트 슬롯(<p>)과 이미지 슬롯(프레임)은 노드가 겹치지 않아 그대로 합친다.
+	// 이미지 교체에는 저작 config의 imageColorize만 깔아 재적용한다 — published html의 옛
+	// colorize 오버레이는 compose가 멱등 제거하므로, 안 깔면 컬러 치환이 사라진다.
 	const composedHtml = useMemo(
 		() =>
 			composeTemplateHtml(html, {
 				...Object.fromEntries(
 					Object.entries(values).map(([nodeId, text]) => [nodeId, { text }]),
 				),
-				...imageValues,
+				...Object.fromEntries(
+					Object.entries(imageValues).map(([nodeId, imageValue]) => [
+						nodeId,
+						{
+							...(nodeConfigs[nodeId]?.imageColorize
+								? { imageColorize: nodeConfigs[nodeId].imageColorize }
+								: {}),
+							...imageValue,
+						},
+					]),
+				),
 			}),
-		[html, values, imageValues],
+		[html, values, imageValues, nodeConfigs],
 	)
 	// 합성 결과가 그려진 뒤 텍스트 슬롯의 실제 렌더 박스를 재서 잘림을 알린다 —
 	// scrollHeight는 overflow:hidden clip과 -webkit-line-clamp 말줄임 양쪽에서 잘린 내용까지 세고,
