@@ -38,6 +38,15 @@ describe('collectTemplateSlots', () => {
 		expect(slots).toEqual([])
 	})
 
+	it('compose 왕복으로 속성값에 raw > 가 남은 HTML에서도 이름·텍스트를 정확히 읽는다', () => {
+		const composed =
+			'<p data-node-id="2:1" data-name="A > B" style="width:100px;height:50px">hi</p>'
+
+		expect(collectTemplateSlots(composed, { '2:1': { input: {} } })).toEqual([
+			{ nodeId: '2:1', name: 'A > B', text: 'hi', input: {} },
+		])
+	})
+
 	it('imageInput 오버라이드는 텍스트 슬롯에 영향을 주지 않는다', () => {
 		const slots = collectTemplateSlots(html, {
 			'1:1': { imageInput: {} },
@@ -123,6 +132,15 @@ describe('collectTemplateImageSlots', () => {
 		])
 		expect(collectTemplateImageSlots(emitted, { '3:1': { imageInput: {} } })).toEqual([
 			{ nodeId: '3:1', name: 'Image > Area', boxWidth: 300, boxHeight: 150 },
+		])
+	})
+
+	it('compose 왕복으로 속성값에 raw > 가 남은 HTML에서도 이름·박스를 정확히 읽는다', () => {
+		const composed =
+			'<div data-node-id="1:1" data-name="Image > Area" style="width:300px;height:150px"></div>'
+
+		expect(collectTemplateImageSlots(composed, { '1:1': { imageInput: {} } })).toEqual([
+			{ nodeId: '1:1', name: 'Image > Area', boxWidth: 300, boxHeight: 150 },
 		])
 	})
 
