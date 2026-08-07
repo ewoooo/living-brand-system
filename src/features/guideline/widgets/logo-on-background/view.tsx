@@ -62,7 +62,7 @@ export function LogoOnBackgroundView({
 		<div className="flex w-full flex-col gap-2">
 			<div
 				ref={trackRef}
-				className="relative w-full select-none overflow-hidden rounded-md border border-border"
+				className="relative w-full select-none overflow-hidden border border-border"
 			>
 				{bands.map((b) => (
 					<div
@@ -180,7 +180,7 @@ function Forbidden() {
 	return (
 		<span
 			aria-label="이 배경에는 사용할 수 없습니다"
-			className="grid size-9 place-items-center rounded-full bg-destructive/15 font-body text-destructive text-lg"
+			className="grid size-9 place-items-center bg-destructive/15 font-body text-destructive text-lg"
 		>
 			✕
 		</span>

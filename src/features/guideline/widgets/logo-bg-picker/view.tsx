@@ -75,7 +75,7 @@ export function LogoBgPickerView({
 	return (
 		<div className="flex w-full flex-col gap-2">
 			<div
-				className="relative w-full overflow-hidden rounded-md border border-border transition-colors"
+				className="relative w-full overflow-hidden border border-border transition-colors"
 				style={{
 					height: PANEL_HEIGHT,
 					backgroundColor: background.hex,
@@ -148,7 +148,7 @@ export function LogoBgPickerView({
 					onPointerCancel={() => {
 						draggingRef.current = false
 					}}
-					className="absolute right-3 bottom-3 flex cursor-grab overflow-hidden rounded-[3px] active:cursor-grabbing"
+					className="absolute right-3 bottom-3 flex cursor-grab overflow-hidden active:cursor-grabbing"
 					// 터치에서 가로 스크롤에 뺏기지 않게 한다.
 					style={{ touchAction: 'none', boxShadow: `0 0 0 1px ${foreground}33` }}
 				>
@@ -196,7 +196,7 @@ function Forbidden({ foreground }: { foreground: string }) {
 		<span
 			role="img"
 			aria-label="이 배경에는 사용할 수 없습니다"
-			className="grid size-16 place-items-center rounded-full font-body text-2xl"
+			className="grid size-16 place-items-center font-body text-2xl"
 			style={{ color: foreground, boxShadow: `inset 0 0 0 1px ${foreground}` }}
 		>
 			✕

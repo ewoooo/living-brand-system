@@ -115,7 +115,7 @@ function Figure({
 				image={example.image}
 				alt={example.caption || ''}
 				ratio={ratio}
-				className="rounded-md bg-muted"
+				className="bg-muted"
 				imgClassName="size-full object-cover"
 			/>
 		)
@@ -139,7 +139,7 @@ function ColorPanel({
 	return (
 		<div
 			className={cn(
-				'relative w-full overflow-hidden rounded-md border border-border',
+				'relative w-full overflow-hidden border border-border',
 				IMAGE_RATIO_CLASS_NAMES[ratio],
 			)}
 			style={{ background: preset.panel }}
