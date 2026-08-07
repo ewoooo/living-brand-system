@@ -1,20 +1,14 @@
 # farnext.md — DB·환경 구조의 살아있는 진단
 
-이 리포의 DB·환경·협업 구조에서 **아직 해결되지 않은 것**만 남긴 문서입니다. 2026-08-05에 2663줄에서 재작성했습니다. 지운 것은 업계 도구 비교(Flyway·Prisma·Neon 등), 이미 적용된 처방의 서술, 학습 서적 목록, 적대적 검증 전사입니다 — 판단의 근거가 필요하면 git 이력의 이전 판을 보십시오.
+이 리포의 DB·환경·협업 구조에서 **아직 해결되지 않은 것**만 남긴 문서입니다. 2026-08-05에 2663줄에서 재작성했고, 2026-08-07에 해소분과 실제로 터진 것을 반영했습니다. 판단의 근거가 필요하면 git 이력의 이전 판을 보십시오.
 
-우선순위는 낮습니다. 아래 P0가 위젯 작업을 막는 순간에만 착수하십시오.
+## ✅ 해소 — 로컬 DB 교착 (구 P0)
 
-## P0 — 로컬 DB가 migrate도 push도 못 받는 교착
+공유 DB 덤프로 로컬을 재생성해 원장·스키마가 공유와 일치합니다. `pnpm payload migrate`가 정상 동작하며, 2026-08-06에 마이그레이션 6건을 실제로 적용했습니다. 재발하면 `.scratch/plans/my-db-workflow.md`의 방법을 씁니다.
 
-**증상**: `pnpm payload migrate`가 로컬에서 아무것도 적용하지 못하고, `.env.local`이 `PAYLOAD_DB_PUSH=false`라 push도 안 됩니다. **위젯에 필드를 하나 추가하는 순간 이 벽에 부딪힙니다.**
+🔴 **다만 push 부산물은 여전히 생깁니다.** 워크플로 에이전트가 `PAYLOAD_DB_PUSH=true`로 부팅한 뒤 로컬 `payload_migrations`에 `name='dev', batch=-1` 행이 다시 심겼습니다(2026-08-06 실측). `@payloadcms/drizzle`의 migrate가 `batch === -1`을 보면 대화형 confirm을 띄워 비대화형에서 멈춥니다 — **트리거는 이름이 아니라 `batch === -1`입니다.** 그 행을 지우면 풀립니다.
 
-**기전** (둘 다 실재):
-- `migrations/20260722_105137_baseline_v2.ts:23-57`의 인수 가드가 `20260722_*` 마이그레이션 5건의 이름을 요구하는데 로컬 보유는 0/5입니다(마지막 기록이 `20260721_041541_image_prompt_profiles`). DDL 전 SELECT 두 방만 하고 throw하므로 **DB는 망가지지 않고 30건이 영구 pending으로 고정**됩니다.
-- 로컬 `payload_migrations`에 `name='dev', batch=-1` 행(id 96)이 있습니다. `@payloadcms/drizzle@3.85.1/dist/migrate.js:30-40`이 `m.batch === -1`이면 대화형 confirm을 띄워 비대화형에서 멈춥니다(심는 곳은 `utilities/pushDevSchema.js:64-73`). 🔴 **트리거 조건은 이름이 아니라 `batch === -1`입니다.**
-
-**실측**(2026-08-05): 로컬 `payload_migrations` 95행, 커밋된 마이그레이션 30건, 파일명 교집합 **0**.
-
-**해법**: stamp보다 **DB 재생성이 더 쌉니다.** 단 🔴 **로컬 콘텐츠는 영구 소실됩니다** — 콘텐츠에 JSON→DB 경로가 없기 때문입니다(2026-08-05에 seed를 삭제했습니다). 복구 경로는 공유 DB `pg_dump` → 로컬 restore 하나뿐입니다.
+또한 push로 만든 객체와 마이그레이션이 겹치면 `CREATE TABLE`/`ADD COLUMN`이 "already exists"로 죽습니다. 🔴 **enum 타입은 `DROP TABLE`로 안 사라지므로** 정리할 때 `DROP TYPE`까지 해야 합니다(이것 때문에 한 번 더 헛돌았습니다).
 
 ## P1 — 기본 DATABASE_URL이 공유 DB다
 
@@ -24,13 +18,23 @@
 
 그래서 DB를 건드리는 스크립트는 `DATABASE_URL`을 항상 명시적으로 앞에 붙입니다.
 
-## 🔴 63자 식별자 한계 — 위젯 작업에 직접 걸린다
+## 🔴 63자 식별자 한계 — 2026-08-06에 실제로 터졌습니다
 
-Postgres 식별자 63자 한계를 **이미 긁고 있습니다.** 정확히 63자인 인덱스명 11개·제약명 45개(총 56개)가 존재하고, 가장 긴 테이블명은 62자입니다(`_guideline_docs_v_blocks_signature_showcase_signatures_locales`).
+예고했던 대로 터졌는데, **예상한 자리가 아니었습니다.** 테이블명이 아니라 **조회 SQL의 별칭**이었습니다.
 
-- 위젯 `dbName`을 `blk`·`ddw`·`cvw`·`lcv` 같은 3자로 줄인 이유가 이것입니다.
-- **블록 중첩이 한 단만 깊어지면** 서로 다른 논리명이 같은 63자로 절단돼 migrate가 죽습니다. **강제 장치는 없습니다.**
-- 테이블 수는 `1블록 × (배열수+1) × locales × (live+version)`으로 곱해집니다 — `logo_group_viewer` 12테이블/65컬럼, `do_dont` 12/61이 최대치입니다. 로컬 public 테이블 271개 중 126개가 `guideline_docs*` 계열이고 117개가 행 0입니다. **새 위젯에 중첩 배열을 넣는 비용이 이 곱셈입니다.**
+별칭은 `dbName`이 아니라 **slug**로 짜입니다:
+```
+_guideline_docs_v__blocks_<slug>[_<배열필드>][__locales]
+```
+`separatedLogoApplicationWidget`(30자)이 이걸 78자로 만들었고, Postgres가 **에러 없이 63자로 자르자** 배열 별칭과 그 locales 별칭이 같은 이름이 됐습니다. 조인이 엉뚱한 테이블을 물어 조회가 `operator does not exist: character varying = integer`로 죽었습니다.
+
+**dbName을 3자로 줄여둔 게 소용없었습니다** — 테이블명은 짧았지만 별칭이 slug에서 나왔기 때문입니다.
+
+🔴 **마이그레이션도, 빈 DB 전체 체인 검증도, typecheck도 전부 통과한 뒤 조회할 때만 터졌습니다.** 정적 검사로는 안 잡힙니다.
+
+**이제 강제 장치가 있습니다**: `src/features/guideline/blocks/block/alias-length.test.ts`가 등록된 위젯 전부의 별칭 길이를 재고 63자 초과를 막습니다(현재 29종). 만들 때 localized 필드가 있는 레벨에만 `__locales` 별칭이 생긴다는 점을 반영했습니다 — 그러지 않으면 `colorPairingRecommendationWidget`이 오탐으로 걸립니다.
+
+테이블 수는 여전히 `1블록 × (배열수+1) × locales × (live+version)`으로 곱해집니다. **새 위젯에 중첩 배열을 넣는 비용이 이 곱셈입니다.**
 
 계약은 [docs/11-widget-authoring.md](docs/11-widget-authoring.md)에 있습니다.
 
@@ -38,6 +42,7 @@ Postgres 식별자 63자 한계를 **이미 긁고 있습니다.** 정확히 63�
 
 1. `migrate`는 `payload_migrations.name` 문자열 **완전 일치만** 봅니다. stamp 명령이 없으므로 squash로 파일명을 새로 만들면 옛 기록이 전부 고아가 됩니다.
 2. `migrate:create`는 DB에 접속하지 않고(`disableDBConnect: true`) before 상태를 `migrations/*.json` 문자열 정렬 마지막 파일에서만 읽습니다. **스냅샷을 지우면 전체 스키마가 재생성됩니다.**
+   🔴 **2026-08-06에 이걸로 한 번 당했습니다** — stage를 머지한 직후 만든 마이그레이션에 stage의 `agent_chat_sessions` DROP 9건이 중복으로 섞였습니다. 내 브랜치의 스냅샷이 파일명상 뒤였고 머지 이전 상태였기 때문입니다. 그대로 뒀으면 빈 DB에서 같은 컬럼을 두 번 지우려다 죽었을 겁니다. **머지 직후 생성한 마이그레이션은 반드시 눈으로 훑고 목표 구문만 남기십시오.** `.json` 스냅샷은 config 전체를 반영하므로 손대지 않습니다.
 3. 업로드는 `docWithFilenameExists`가 자기 문서를 제외하지 않고, `incrementName`이 `-01`을 `Number()+1`로 처리해 `-2`로 재부여합니다.
 4. drizzle-kit `promptNamedConflict`의 기본 선택이 index 0이라 **slug rename은 비대화형에서 hang합니다.** 스키마 변경은 `migrate:create`로 파일을 만들고 같은 SQL을 psql로 적용하는 우회를 씁니다.
 
