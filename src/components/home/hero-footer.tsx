@@ -46,7 +46,7 @@ export async function HeroFooter() {
 					<Image
 						alt=""
 						aria-hidden="true"
-						className={`size-6 ${logoClassName}`}
+						className={cn('size-6', logoClassName)}
 						height={24}
 						src="/logos/logo.svg"
 						width={24}

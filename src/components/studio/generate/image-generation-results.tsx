@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
+import { cn } from '@/lib/utils'
 import { ImageCameraPresets } from './image-camera-presets'
 
 const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
@@ -58,11 +59,12 @@ export function ImageGenerationResults({
 									type="button"
 									onClick={() => onSelect(index)}
 									aria-pressed={selected === index}
-									className={`overflow-hidden rounded-md border-2 transition-colors ${
+									className={cn(
+										'overflow-hidden rounded-md border-2 transition-colors',
 										selected === index
 											? 'border-primary'
-											: 'border-border hover:border-ring'
-									}`}
+											: 'border-border hover:border-ring',
+									)}
 								>
 									{/* biome-ignore lint/performance/noImgElement: 미리보기, 최적화 불필요 */}
 									<img
