@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getContrastingForeground, hexToRgb, isLightColor } from './color'
+import { getContrastingForeground, hexToRgb, isLightColor, isValidHex } from './color'
 
 describe('hexToRgb', () => {
 	it('parses shorthand hex through the color parser', () => {
@@ -9,6 +9,13 @@ describe('hexToRgb', () => {
 
 	it('rejects invalid hex instead of returning a misleading color', () => {
 		expect(() => hexToRgb('not-a-color')).toThrow('Invalid hex color')
+	})
+
+	it('accepts only six-digit hex with an optional hash', () => {
+		expect(isValidHex('#112233')).toBe(true)
+		expect(isValidHex('112233')).toBe(true)
+		expect(isValidHex('#12345')).toBe(false)
+		expect(isValidHex('url(https://example.com/pixel)')).toBe(false)
 	})
 
 	it('chooses the black or white foreground with greater WCAG contrast', () => {

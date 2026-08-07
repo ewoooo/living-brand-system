@@ -1,4 +1,5 @@
 import type { FigmaRenderedAsset, FigmaSourceNode, IrNode } from './figma-ir'
+import { isFigmaVectorNodeType } from './figma-node-types'
 import {
 	createBoxStyle,
 	createChildPlacementStyle,
@@ -20,14 +21,6 @@ import {
 
 // 에셋 계획 — 노드별 "CSS로 표현 가능한가" 판정
 
-const VECTOR_NODE_TYPES = new Set([
-	'VECTOR',
-	'BOOLEAN_OPERATION',
-	'STAR',
-	'LINE',
-	'ELLIPSE',
-	'REGULAR_POLYGON',
-])
 const KNOWN_HTML_NODE_TYPES = new Set([
 	'DOCUMENT',
 	'CANVAS',
@@ -130,7 +123,7 @@ function collectAssetRequests(
 		})
 		return
 	}
-	if (VECTOR_NODE_TYPES.has(node.type)) {
+	if (isFigmaVectorNodeType(node.type)) {
 		plan.renders.push({ nodeId: node.id, name: node.name ?? node.id, format: 'svg' })
 		return
 	}
@@ -170,7 +163,7 @@ function findRasterFallbackReason(node: FigmaSourceNode): string | undefined {
 	if (
 		node.type === 'TEXT_PATH' ||
 		(!KNOWN_HTML_NODE_TYPES.has(node.type) &&
-			!VECTOR_NODE_TYPES.has(node.type) &&
+			!isFigmaVectorNodeType(node.type) &&
 			!node.children?.length)
 	) {
 		return '지원하지 않는 노드 타입'
@@ -198,7 +191,7 @@ function findRasterFallbackReason(node: FigmaSourceNode): string | undefined {
 	}
 	if (node.blendMode && !CSS_BLEND_MODES.has(node.blendMode)) return '지원하지 않는 블렌드 모드'
 
-	if (!VECTOR_NODE_TYPES.has(node.type) && hasCssInexpressibleTransform(node)) {
+	if (!isFigmaVectorNodeType(node.type) && hasCssInexpressibleTransform(node)) {
 		return '스케일·기울임 변형'
 	}
 	return undefined
@@ -299,7 +292,7 @@ function normalizeNode(
 	// ② 자식 없는 CSS-lowerable 이미지 fill 노드(스탠드얼론 이미지 사각형 등).
 	//    자식 있는 이미지 fill 프레임은 배정 시 자식이 이미지를 가리므로 의도적으로 마킹하지 않는다.
 	const selfCarrier = renderedAsset
-		? !VECTOR_NODE_TYPES.has(node.type)
+		? !isFigmaVectorNodeType(node.type)
 		: children.length === 0 && Boolean(findCssLowerableImageFill(node))
 
 	return {

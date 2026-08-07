@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { managerManagedAccess } from '@/lib/auth'
+import { isValidHex } from '@/lib/color'
 import { draftVersions } from './shared'
 
 export const BrandColors: CollectionConfig = {
@@ -26,6 +27,10 @@ export const BrandColors: CollectionConfig = {
 			name: 'hex',
 			type: 'text',
 			required: true,
+			validate: (value: string | null | undefined) =>
+				typeof value === 'string' && isValidHex(value)
+					? true
+					: '6자리 HEX 컬러를 입력하세요. 예: #RRGGBB',
 			admin: {
 				components: {
 					Cell: '/components/admin/ColorSwatchCell',

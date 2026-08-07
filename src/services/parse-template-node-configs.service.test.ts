@@ -64,12 +64,27 @@ describe('parseTemplateNodeConfigs imageColorize', () => {
 	it.each([
 		['line 누락', { background: '#0a3d2e' }],
 		['# 없는 값', { line: '8fd6b8', background: '#0a3d2e' }],
+		['8자리 hex', { line: '#8fd6b8ff' }],
 		['background가 hex가 아닌 값', { line: '#8fd6b8', background: 'url(x)' }],
 		['hex가 아닌 값', { line: '#zzzzzz', background: '#0a3d2e' }],
 		['CSS 함수 값', { line: 'url(x)', background: '#0a3d2e' }],
 		['알 수 없는 필드', { line: '#8fd6b8', background: '#0a3d2e', alpha: 1 }],
 	])('%s은 거부한다', (_label, imageColorize) => {
 		const parsed = parseTemplateNodeConfigs({ 'frame-1': { imageColorize } })
+
+		expect('blocker' in parsed).toBe(true)
+	})
+})
+
+describe('parseTemplateNodeConfigs vectorColor', () => {
+	it('6자리 hex를 허용한다', () => {
+		const parsed = parseTemplateNodeConfigs({ 'vector-1': { vectorColor: '#8FD6B8' } })
+
+		expect('blocker' in parsed).toBe(false)
+	})
+
+	it.each(['8fd6b8', '#abc', '#8fd6b8ff', 'url(x)'])('%s은 거부한다', (vectorColor) => {
+		const parsed = parseTemplateNodeConfigs({ 'vector-1': { vectorColor } })
 
 		expect('blocker' in parsed).toBe(true)
 	})
