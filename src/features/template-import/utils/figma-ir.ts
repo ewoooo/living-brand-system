@@ -1,5 +1,3 @@
-import type { FigmaNode, FigmaPaint } from '@/features/template-import/types'
-
 /**
  * Figma 변환 파이프라인의 공유 어휘.
  *
@@ -9,8 +7,43 @@ import type { FigmaNode, FigmaPaint } from '@/features/template-import/types'
  * 이 파일은 타입만 소유한다 — 로직은 normalize(판단)·lower(스타일 변환)·emit(방출)이 나눠 갖는다.
  */
 
-/** 텍스트 노드 style 필드의 확장 — types.ts의 최소 형태에 변환이 추가로 읽는 타이포 필드를 더한다. */
-export type FigmaTextStyle = NonNullable<FigmaNode['style']> & {
+export interface FigmaLayoutConstraint {
+	horizontal: 'LEFT' | 'RIGHT' | 'CENTER' | 'LEFT_RIGHT' | 'SCALE'
+	vertical: 'TOP' | 'BOTTOM' | 'CENTER' | 'TOP_BOTTOM' | 'SCALE'
+}
+
+export interface FigmaPaint {
+	type: string
+	visible?: boolean
+	opacity?: number
+	color?: { r: number; g: number; b: number; a?: number }
+	gradientStops?: { color: { r: number; g: number; b: number; a?: number }; position?: number }[]
+	gradientHandlePositions?: { x: number; y: number }[]
+	/** IMAGE paint의 파일 내 이미지 참조 — GET /v1/files/:key/images로 URL을 얻는다. */
+	imageRef?: string
+	/** IMAGE paint의 맞춤 방식: FILL/FIT/TILE/STRETCH. */
+	scaleMode?: string
+}
+
+export interface FigmaEffect {
+	type: string
+	visible?: boolean
+	radius?: number
+	spread?: number
+	offset?: { x: number; y: number }
+	color?: { r: number; g: number; b: number; a?: number }
+}
+
+/** 텍스트 노드 style 필드 — REST 응답의 타이포 필드 중 변환이 읽는 것들. */
+export interface FigmaTextStyle {
+	fontFamily?: string
+	fontSize?: number
+	fontWeight?: number
+	lineHeightPx?: number
+	letterSpacing?: number
+	textAlignHorizontal?: string
+	textAlignVertical?: string
+	textAutoResize?: string
 	italic?: boolean
 	fontStyle?: string
 	textCase?: string
@@ -23,38 +56,64 @@ export type FigmaTextStyle = NonNullable<FigmaNode['style']> & {
 	maxLines?: number
 }
 
-/** 소스 모델: FigmaNode에 변환이 소비하는 시각/레이아웃 필드를 확장한 형태. 트리 전체가 이 타입으로 흐른다. */
-export interface FigmaSourceNode extends Omit<FigmaNode, 'style'> {
+/** 소스 모델: REST /nodes 응답에서 변환이 소비하는 필드의 실질적 명세. 트리 전체가 이 타입으로 흐른다. */
+export interface FigmaSourceNode {
+	id: string
+	name?: string
+	type: string
+	visible?: boolean
+	isMask?: boolean
+	children?: FigmaSourceNode[]
+	absoluteBoundingBox?: { x: number; y: number; width: number; height: number }
+	/** HasLayoutTrait.size는 폭/높이를 x/y에 담는 REST Vector다. */
+	size?: { x: number; y: number }
+	relativeTransform?: [[number, number, number], [number, number, number]]
+	constraints?: FigmaLayoutConstraint
+	characters?: string
 	style?: FigmaTextStyle
+	// 시각 속성
+	fills?: FigmaPaint[]
 	background?: FigmaPaint[]
 	backgroundColor?: { r: number; g: number; b: number; a?: number }
+	strokes?: FigmaPaint[]
+	strokeWeight?: number
+	individualStrokeWeights?: { top: number; right: number; bottom: number; left: number }
+	effects?: FigmaEffect[]
+	cornerRadius?: number
+	rectangleCornerRadii?: number[]
 	opacity?: number
 	rotation?: number
 	blendMode?: string
 	clipsContent?: boolean
-	cornerRadius?: number
-	rectangleCornerRadii?: number[]
-	strokes?: FigmaPaint[]
-	strokeWeight?: number
-	individualStrokeWeights?: { top: number; right: number; bottom: number; left: number }
 	// 레이아웃 컨테이너
+	layoutMode?: string
 	itemSpacing?: number
 	counterAxisSpacing?: number
 	counterAxisAlignContent?: string
 	layoutWrap?: string
+	paddingTop?: number
+	paddingRight?: number
+	paddingBottom?: number
+	paddingLeft?: number
+	primaryAxisAlignItems?: string
+	counterAxisAlignItems?: string
 	gridColumnGap?: number
 	gridRowGap?: number
 	gridColumnsSizing?: string
 	gridRowsSizing?: string
 	gridItemsPositioning?: string
 	// 자식 배치
+	layoutSizingHorizontal?: 'FIXED' | 'HUG' | 'FILL'
+	layoutSizingVertical?: 'FIXED' | 'HUG' | 'FILL'
+	layoutGrow?: 0 | 1
+	layoutAlign?: 'INHERIT' | 'STRETCH' | 'MIN' | 'CENTER' | 'MAX'
+	layoutPositioning?: 'AUTO' | 'ABSOLUTE'
 	gridColumnAnchorIndex?: number
 	gridRowAnchorIndex?: number
 	gridColumnSpan?: number
 	gridRowSpan?: number
 	gridChildHorizontalAlign?: string
 	gridChildVerticalAlign?: string
-	children?: FigmaSourceNode[]
 }
 
 /** CSS 선언 묶음. 값이 undefined/빈 문자열인 키는 방출 시 걸러진다. */
@@ -83,7 +142,7 @@ export interface IrNode {
 	asset?: FigmaRenderedAsset
 	/** IMAGE fill을 background-image로 낮춘 노드의 에셋 참조 — div에 data-asset-* 속성으로 방출돼 발행 승격 대상이 된다. */
 	fillAsset?: FigmaRenderedAsset
-	/** clipsContent 프레임의 유일한 가시 이미지 자식 — data-image-carrier로 방출돼 compose의 생성 이미지 교체 대상이 된다. */
+	/** 이미지 배정 가능한 표면(클립 프레임의 외동 이미지 자식·자식 없는 이미지 fill·래스터 폴백 img) — data-image-carrier로 방출되며 compose의 이미지 배정은 캐리어 전용이다. */
 	imageCarrier?: true
 	children: IrNode[]
 }

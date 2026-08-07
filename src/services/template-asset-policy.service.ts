@@ -16,6 +16,18 @@ export interface AuthorizedTemplateImageRef {
 	label: string
 }
 
+/** 두 에셋 참조가 같은 에셋의 같은 URL을 가리키는지 판정한다(label은 노드 위치라 비교하지 않는다). */
+export function sameRef(
+	left: AuthorizedTemplateImageRef,
+	right: AuthorizedTemplateImageRef,
+): boolean {
+	return (
+		left.collection === right.collection &&
+		left.assetId === right.assetId &&
+		left.src === right.src
+	)
+}
+
 const MAX_RASTER_BYTES = 10 * 1024 * 1024
 const MAX_RASTER_DATA_URL_LENGTH =
 	'data:image/jpeg;base64,'.length + 4 * Math.ceil(MAX_RASTER_BYTES / 3)

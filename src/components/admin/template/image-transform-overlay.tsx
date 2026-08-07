@@ -1,11 +1,14 @@
 'use client'
 
 import { type RefObject, useCallback, useEffect, useRef, useState } from 'react'
-import { formatImageEditTransform } from '@/services/compose-template-html.client'
 import {
+	findImageCarrier,
+	formatImageEditTransform,
 	IDENTITY_TRANSFORM,
-	type ImageTransform,
 	isIdentityTransform,
+} from '@/services/compose-template-html.client'
+import {
+	type ImageTransform,
 	type Point,
 	panTransform,
 	rotateTransform,
@@ -134,11 +137,9 @@ export function ImageTransformOverlay({
 	function startGesture(event: React.PointerEvent, mode: Gesture['mode']) {
 		if (event.button !== 0 || gestureRef.current) return
 		const frame = findNode(iframeRef.current?.contentDocument, nodeId)
-		// 캐리어 사각형을 직접 선택한 경우 자신이 캐리어다 — compose와 같은 해석 규칙.
-		const carrier = frame?.matches('[data-image-carrier]')
-			? frame
-			: frame?.querySelector('[data-image-carrier]')
-		if (!(carrier instanceof HTMLElement)) return
+		// 캐리어 해석은 compose의 findImageCarrier(자신 또는 직계 자식)와 같은 규칙.
+		const carrier = frame ? findImageCarrier(frame) : null
+		if (!carrier) return
 		event.preventDefault()
 		containerRef.current?.setPointerCapture(event.pointerId)
 

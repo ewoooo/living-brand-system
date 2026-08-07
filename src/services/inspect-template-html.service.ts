@@ -6,6 +6,7 @@ import {
 	isAuthorizedTemplateAssetCollection,
 	isCanonicalTemplateAssetUrl,
 	isSafeDraftTemplateAssetUrl,
+	sameRef,
 } from '@/services/template-asset-policy.service'
 
 const ALLOWED_TAGS = new Set(['div', 'img', 'p'])
@@ -14,14 +15,9 @@ const ASSET_ATTRIBUTES = new Set(['data-asset-collection', 'data-asset-id'])
 const IMAGE_ATTRIBUTES = new Set(['alt', 'src'])
 const SAFE_NODE_ID = /^[a-zA-Z0-9:;_-]+$/
 
-interface InspectedFragment {
+export interface TemplateFragmentInspection {
 	blocker?: string
-	nodeIds: Set<string>
-	refs: AuthorizedTemplateImageRef[]
-}
-
-export interface TemplateHtmlInspection {
-	blocker?: string
+	nodeIds: ReadonlySet<string>
 	refs: AuthorizedTemplateImageRef[]
 }
 
@@ -65,20 +61,22 @@ function metadataRef(
 	return { collection, assetId, src, label: nodeId }
 }
 
-function sameRef(left: AuthorizedTemplateImageRef, right: AuthorizedTemplateImageRef): boolean {
-	return (
-		left.collection === right.collection &&
-		left.assetId === right.assetId &&
-		left.src === right.src
-	)
-}
-
-function inspectFragment(
+/**
+ * HTML fragment 하나를 mode 규칙으로 1회 파싱해 blocker·노드 id 집합·에셋 참조를 읽는다.
+ * base=내부 staging 에셋만, draft=내부 에셋+안전한 raster data URI,
+ * public=모든 URL이 인가 에셋 참조(refsByNode의 기대 참조 포함)와 일치해야 한다.
+ * ⚠️ 같은 html이라도 mode가 다르면 refs 집합이 다르다 — 같은 mode끼리만 결과를 재사용할 것.
+ * refsByNode는 public mode에서만 쓰인다. 외부 I/O 없음 — 조회·저장은 호출 Use Case가 소유한다.
+ */
+export function inspectTemplateFragment(
 	html: string,
 	mode: 'base' | 'draft' | 'public',
-	expectedRefsByNode: ReadonlyMap<string, AuthorizedTemplateImageRef>,
-): InspectedFragment {
-	const result: InspectedFragment = { nodeIds: new Set(), refs: [] }
+	refsByNode: ReadonlyMap<string, AuthorizedTemplateImageRef> = new Map(),
+): TemplateFragmentInspection {
+	const result: { blocker?: string; nodeIds: Set<string>; refs: AuthorizedTemplateImageRef[] } = {
+		nodeIds: new Set(),
+		refs: [],
+	}
 	let currentAttributes = new Set<string>()
 	let duplicateAttribute = false
 
@@ -166,7 +164,10 @@ function inspectFragment(
 						return
 					}
 
-					const expected = expectedRefsByNode.get(nodeId)
+					// compose가 에셋 참조를 캐리어/오버레이 요소로 옮기므로 프레임 키의 기대 참조는
+					// 이 대조에서 비활성(요소가 안 맞아 걸리지 않는다) — 실질 보장은
+					// findInvalidAuthorizedRefs(모든 URL의 published 대조)가 진다.
+					const expected = refsByNode.get(nodeId)
 					const fromMetadata = metadataRef(tagName, attributes, style.urls, nodeId)
 					if (fromMetadata === null) {
 						block('HTML의 에셋 메타데이터가 올바르지 않습니다.')
@@ -221,88 +222,18 @@ function inspectFragment(
 	return result
 }
 
-/** Figma HTML 모델의 구조와 URL 출처를 검사한다. */
-export function inspectTemplateHtml(input: {
-	baseHtml: string
-	html: string
-	overrideNodeIds: readonly string[]
-	refsByNode: ReadonlyMap<string, AuthorizedTemplateImageRef>
-}): TemplateHtmlInspection {
-	const base = inspectFragment(input.baseHtml, 'base', input.refsByNode)
-	if (base.blocker) return { blocker: base.blocker, refs: [] }
-
-	const published = inspectFragment(input.html, 'public', input.refsByNode)
-	if (published.blocker) return { blocker: published.blocker, refs: [] }
-
-	for (const nodeId of input.overrideNodeIds) {
-		if (!base.nodeIds.has(nodeId) || !published.nodeIds.has(nodeId)) {
-			return {
-				blocker: `HTML overrides가 존재하지 않는 노드를 참조합니다: ${nodeId}`,
-				refs: [],
-			}
+/**
+ * overrides가 참조하는 노드가 주어진 모든 fragment 노드 집합에 존재하는지 검사한다.
+ * 파싱·외부 I/O 없음 — fragment는 호출자가 inspectTemplateFragment로 만든다.
+ */
+export function findMissingOverrideNodeBlocker(
+	overrideNodeIds: readonly string[],
+	nodeIdSets: readonly ReadonlySet<string>[],
+): string | null {
+	for (const nodeId of overrideNodeIds) {
+		if (nodeIdSets.some((nodeIds) => !nodeIds.has(nodeId))) {
+			return `HTML overrides가 존재하지 않는 노드를 참조합니다: ${nodeId}`
 		}
 	}
-
-	return { refs: published.refs }
-}
-
-/** 안전성 검사를 통과한 baseHtml에서 Figma import 에셋 참조를 읽는다. */
-export function inspectBaseTemplateHtml(html: string): TemplateHtmlInspection {
-	const base = inspectFragment(html, 'base', new Map())
-	return { blocker: base.blocker, refs: base.refs }
-}
-
-/** 안전한 draft HTML에서 실제 렌더 결과가 사용하는 에셋 참조를 읽는다. */
-export function inspectDraftTemplateAssetRefs(html: string): TemplateHtmlInspection {
-	const draft = inspectFragment(html, 'draft', new Map())
-	return { blocker: draft.blocker, refs: draft.refs }
-}
-
-/** Draft 저장 시 실행 가능한 HTML과 외부 URL을 막되 staging 에셋은 허용한다. */
-export function inspectDraftTemplateHtml(input: {
-	baseHtml?: string
-	html?: string
-	overrideNodeIds: readonly string[]
-	refsByNode: ReadonlyMap<string, AuthorizedTemplateImageRef>
-}): TemplateHtmlInspection {
-	const base = input.baseHtml
-		? inspectFragment(input.baseHtml, 'base', input.refsByNode)
-		: undefined
-	if (base?.blocker) return { blocker: base.blocker, refs: [] }
-
-	const draft = input.html ? inspectFragment(input.html, 'draft', input.refsByNode) : undefined
-	if (draft?.blocker) return { blocker: draft.blocker, refs: [] }
-
-	const nodeIds = draft?.nodeIds ?? base?.nodeIds ?? new Set<string>()
-	for (const nodeId of input.overrideNodeIds) {
-		if (!nodeIds.has(nodeId)) {
-			return {
-				blocker: `HTML overrides가 존재하지 않는 노드를 참조합니다: ${nodeId}`,
-				refs: [],
-			}
-		}
-	}
-
-	return { refs: [] }
-}
-
-/** 기존 published 문서를 렌더하기 직전 공개 HTML 구조를 다시 검사한다. */
-export function inspectPublishedTemplateHtml(input: {
-	html: string
-	overrideNodeIds: readonly string[]
-	refsByNode: ReadonlyMap<string, AuthorizedTemplateImageRef>
-}): TemplateHtmlInspection {
-	const published = inspectFragment(input.html, 'public', input.refsByNode)
-	if (published.blocker) return { blocker: published.blocker, refs: [] }
-
-	for (const nodeId of input.overrideNodeIds) {
-		if (!published.nodeIds.has(nodeId)) {
-			return {
-				blocker: `HTML overrides가 존재하지 않는 노드를 참조합니다: ${nodeId}`,
-				refs: [],
-			}
-		}
-	}
-
-	return { refs: published.refs }
+	return null
 }

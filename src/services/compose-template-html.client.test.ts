@@ -35,6 +35,21 @@ describe('composeTemplateHtml vector override', () => {
 
 		expect(image?.style.objectFit).toBe('fill')
 	})
+
+	it('vectorFit이 없으면 objectFit을 기록하지 않는다 — base의 맞춤 유지', () => {
+		const html = composeTemplateHtml(baseHtml, {
+			'vector-1': {
+				vectorAsset: {
+					collection: 'brand-logos',
+					id: 7,
+					src: '/api/brand-logos/file/logo.svg',
+				},
+			},
+		})
+		const image = new DOMParser().parseFromString(html, 'text/html').querySelector('img')
+
+		expect(image?.style.objectFit).toBe('')
+	})
 })
 
 describe('composeTemplateHtml image carrier', () => {
@@ -83,9 +98,10 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(carrier.getAttribute('data-asset-id')).toBe('9')
 	})
 
-	it('캐리어 아닌 IMAGE fill 요소(placeholder 참조 보유)도 생성 이미지 참조로 재바인딩한다', () => {
+	it('스탠드얼론 이미지 fill 사각형(자기 캐리어)도 생성 이미지 참조로 재바인딩한다', () => {
+		// 임포트가 자식 없는 이미지 fill 노드를 자기 캐리어로 마킹한다 — 프레임 없이도 통일 경로.
 		const html = composeTemplateHtml(
-			'<div data-node-id="rect-1" data-figma-type="RECTANGLE"' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
 				' data-asset-collection="application-images" data-asset-id="3"' +
 				' style="background-image:url(/api/application-images/file/ph.png)"></div>',
 			{ 'rect-1': { backgroundImage: generated, generatedImageId: 9 } },
@@ -117,7 +133,7 @@ describe('composeTemplateHtml image carrier', () => {
 		const frameHtml =
 			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
 			'<img data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
-			' src="/api/application-images/file/baked.png" srcset="/x 2x" alt="">' +
+			' src="/api/application-images/file/baked.png" alt="">' +
 			'</div>'
 		const html = composeTemplateHtml(frameHtml, {
 			'frame-1': { backgroundImage: generated, generatedImageId: 9 },
@@ -125,7 +141,6 @@ describe('composeTemplateHtml image carrier', () => {
 		const image = new DOMParser().parseFromString(html, 'text/html').querySelector('img')
 
 		expect(image?.getAttribute('src')).toBe(generated)
-		expect(image?.hasAttribute('srcset')).toBe(false)
 		expect(image?.getAttribute('data-asset-id')).toBe('9')
 	})
 
@@ -228,6 +243,27 @@ describe('composeTemplateHtml image carrier', () => {
 			.querySelector('[data-node-id="frame-1"]') as HTMLElement
 
 		expect(frame.style.backgroundColor).toBe('transparent')
+	})
+
+	it('캐리어에 형제가 있으면 프레임 fill을 투명화하지 않는다 — 형제 콘텐츠의 배경 보존', () => {
+		const frameHtml =
+			'<div data-node-id="root-1" data-figma-type="FRAME" style="background-color:rgb(0,40,10)">' +
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden;background-color:rgb(255,255,255)">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""></div>' +
+			'<p data-node-id="caption-1" data-figma-type="TEXT">캡션</p>' +
+			'</div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: generated,
+				imageColorize: { line: '#112233', background: '#aabbcc' },
+			},
+		})
+		const frame = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-node-id="frame-1"]') as HTMLElement
+
+		expect(frame.style.backgroundColor).toBe('rgb(255, 255, 255)')
 	})
 
 	it('프레임에 url( 배경이 있으면 fill을 건드리지 않는다', () => {
@@ -370,62 +406,13 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(carrier.style.transform).toBe('')
 	})
 
-	it('캐리어가 없으면 imageTransform을 무시하고 프레임 배경 동작을 유지한다', () => {
-		const frameHtml = '<div data-node-id="frame-1" data-figma-type="FRAME"></div>'
-		const html = composeTemplateHtml(frameHtml, {
-			'frame-1': {
-				backgroundImage: generated,
-				imageTransform: { x: 12, y: 0, scale: 1.5, rotate: 15 },
-			},
-		})
-		const frame = new DOMParser()
-			.parseFromString(html, 'text/html')
-			.querySelector('[data-node-id="frame-1"]') as HTMLElement
-
-		expect(frame.style.transform).toBe('')
-		expect(frame.style.backgroundImage).toContain(generated)
-	})
-
-	// Chrome은 base가 background: 쇼트핸드일 때 롱핸드 세팅을 url() 포함 쇼트핸드 하나로
-	// 재직렬화해 스타일 검증(url은 background-image/mask-image만 허용)에 걸린다.
-	// jsdom은 그 재직렬화를 재현하지 못하므로 여기서는 고칠 수 있는 사실만 고정한다:
-	// 쇼트핸드 제거 + 색 롱핸드 보존 + 이미지 4종 롱핸드 세팅.
-	it('background 쇼트핸드 base는 색만 남기고 지운 뒤 롱핸드로 세팅한다', () => {
-		const frameHtml =
-			'<div data-node-id="frame-1" data-figma-type="FRAME" style="background:rgb(0,40,10)"></div>'
-		const html = composeTemplateHtml(frameHtml, { 'frame-1': { backgroundImage: generated } })
-		const frame = new DOMParser()
-			.parseFromString(html, 'text/html')
-			.querySelector('[data-node-id="frame-1"]') as HTMLElement
-
-		expect(frame.getAttribute('style')).not.toMatch(/background:/)
-		expect(frame.style.backgroundColor).toBe('rgb(0, 40, 10)')
-		expect(frame.style.backgroundImage).toContain(generated)
-		expect(frame.style.backgroundSize).toBe('cover')
-		expect(frame.style.backgroundPosition).toBe('center center')
-		expect(frame.style.backgroundRepeat).toBe('no-repeat')
-	})
-
-	it('그라데이션 다중 레이어 쇼트핸드도 지운다 — cover 이미지가 덮으므로 시각 손실 없음', () => {
-		const frameHtml =
-			'<div data-node-id="frame-1" data-figma-type="FRAME"' +
-			' style="background:linear-gradient(180deg,rgba(0,0,0,0.5) 0%,rgba(0,0,0,0) 100%),linear-gradient(rgb(1,2,3),rgb(1,2,3))"></div>'
-		const html = composeTemplateHtml(frameHtml, { 'frame-1': { backgroundImage: generated } })
-		const frame = new DOMParser()
-			.parseFromString(html, 'text/html')
-			.querySelector('[data-node-id="frame-1"]') as HTMLElement
-
-		expect(frame.getAttribute('style')).not.toContain('gradient')
-		expect(frame.getAttribute('style')).not.toMatch(/background:/)
-		expect(frame.style.backgroundImage).toContain(generated)
-	})
-
-	it('캐리어 아닌 래스터 img는 배경을 칠하지 않고 src를 갈아끼운다', () => {
+	it('자기 캐리어 래스터 img는 배경을 칠하지 않고 src를 갈아끼운다', () => {
+		// 임포트가 래스터 폴백 img(비벡터)를 자기 캐리어로 마킹한다 — 형제가 있어도 통일 경로.
 		const frameHtml =
 			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
-			'<img data-node-id="rect-1" data-figma-type="RECTANGLE"' +
+			'<img data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
 			' data-asset-collection="application-images" data-asset-id="5"' +
-			' src="/api/application-images/file/baked.png" srcset="/x 2x" alt="">' +
+			' src="/api/application-images/file/baked.png" alt="">' +
 			'<div data-node-id="deco-1" data-figma-type="RECTANGLE"></div>' +
 			'</div>'
 		const html = composeTemplateHtml(frameHtml, {
@@ -434,22 +421,158 @@ describe('composeTemplateHtml image carrier', () => {
 		const image = new DOMParser().parseFromString(html, 'text/html').querySelector('img')
 
 		expect(image?.getAttribute('src')).toBe(generated)
-		expect(image?.hasAttribute('srcset')).toBe(false)
 		expect(image?.getAttribute('data-asset-collection')).toBe('generated-images')
 		expect(image?.getAttribute('data-asset-id')).toBe('9')
 		expect(image?.style.backgroundImage).toBe('')
 	})
 
-	it('마커가 없으면 기존 프레임 배경 동작을 유지한다', () => {
-		const frameHtml = '<div data-node-id="frame-1" data-figma-type="FRAME"></div>'
-		const html = composeTemplateHtml(frameHtml, { 'frame-1': { backgroundImage: generated } })
+	it('손자 캐리어는 무시된다 — 탐색은 자신·직계 자식만, 프레임 배경으로도 흘리지 않는다', () => {
+		const frameHtml =
+			'<div data-node-id="wrap-1" data-figma-type="FRAME">' +
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' style="background-image:url(/api/application-images/file/ph.png)"></div>' +
+			'</div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, { 'wrap-1': { backgroundImage: generated } })
+		const doc = new DOMParser().parseFromString(html, 'text/html')
+		const wrap = doc.querySelector('[data-node-id="wrap-1"]') as HTMLElement
+		const carrier = doc.querySelector('[data-image-carrier]') as HTMLElement
+
+		// 손자 캐리어는 건드리지 않는다 — 생산자(자신·직계 자식만 마킹)와 소비자의 탐색 범위 일치.
+		expect(carrier.style.backgroundImage).toContain('ph.png')
+		expect(wrap.style.backgroundImage).toBe('')
+	})
+
+	it('colorize 합성 결과를 다시 compose해도 오버레이는 1개 — 마스크·에셋 참조가 새 이미지를 가리킨다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' data-asset-collection="application-images" data-asset-id="3"' +
+			' style="background-image:url(/api/application-images/file/ph.png)"></div>' +
+			'</div>'
+		const first = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: generated,
+				generatedImageId: 9,
+				imageColorize: { line: '#112233' },
+			},
+		})
+		const replaced = '/api/generated-images/file/gen2.png'
+		const html = composeTemplateHtml(first, {
+			'frame-1': {
+				backgroundImage: replaced,
+				generatedImageId: 10,
+				imageColorize: { line: '#112233' },
+			},
+		})
+		const doc = new DOMParser().parseFromString(html, 'text/html')
+		const overlays = doc.querySelectorAll('[data-node-id="rect-1-colorize"]')
+		const overlay = overlays[0] as HTMLElement
+
+		expect(overlays.length).toBe(1)
+		expect(overlay.style.maskImage).toContain(replaced)
+		expect(overlay.style.maskImage).not.toContain(generated)
+		expect(overlay.getAttribute('data-asset-collection')).toBe('generated-images')
+		expect(overlay.getAttribute('data-asset-id')).toBe('10')
+	})
+
+	it('마킹된 직계 자식이 2개면 프레임 키 배정은 아무것도 바꾸지 않는다 — 추측하지 않는다', () => {
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' style="background-image:url(/api/application-images/file/a.png)"></div>' +
+			'<div data-node-id="rect-2" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' style="background-image:url(/api/application-images/file/b.png)"></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': { backgroundImage: generated, generatedImageId: 9 },
+		})
+		const doc = new DOMParser().parseFromString(html, 'text/html')
+
+		expect(doc.body.innerHTML).not.toContain(generated)
+		for (const id of ['rect-1', 'rect-2']) {
+			const carrier = doc.querySelector(`[data-node-id="${id}"]`) as HTMLElement
+			expect(carrier.getAttribute('data-asset-collection')).toBeNull()
+		}
+	})
+
+	it('재합성 멱등성 — transform 없는 config는 published 출력에 다시 적용해도 같다', () => {
+		// B-1 검증 겸함: colorize가 캐리어 프레이밍을 지우지 않아 2차 compose의 마스크가 원본
+		// background-size/position을 그대로 물려받는다. imageTransform은 설계상 비멱등이라 뺀다.
+		const base =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden;background-color:rgb(255,255,255)">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' data-asset-collection="application-images" data-asset-id="3"' +
+			' style="background-image:url(/api/application-images/file/ph.png);background-size:contain;background-position:left top"></div>' +
+			'</div>' +
+			'<p data-node-id="text-1" data-figma-type="TEXT">원본</p>'
+		const config = {
+			'frame-1': {
+				backgroundImage: generated,
+				generatedImageId: 9,
+				imageColorize: { line: '#112233' },
+			},
+			'text-1': { text: '바뀐 문구' },
+		}
+		const once = composeTemplateHtml(base, config)
+
+		expect(composeTemplateHtml(once, config)).toBe(once)
+		// 프레이밍 보존 확인 — 마스크가 cover/center 기본값으로 강등되지 않는다.
+		const overlay = new DOMParser()
+			.parseFromString(once, 'text/html')
+			.querySelector('[data-node-id="rect-1-colorize"]') as HTMLElement
+		expect(overlay.style.maskSize).toContain('contain')
+		expect(overlay.style.maskPosition).toContain('left top')
+	})
+
+	it('재합성 멱등성 — img 캐리어도 published 출력에 다시 적용해도 같다', () => {
+		// 1차에서 img→div 치환이 프레이밍('100% 100%'/center/no-repeat)을 명시 고정하므로
+		// 2차 배정 분기의 "없을 때만 기본값" 가드가 이 값을 보존해 maskSize가 cover로 드리프트하지 않는다.
+		const base =
+			'<div data-node-id="root-1" data-figma-type="FRAME" style="background-color:rgb(0,40,10)">' +
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden;background-color:rgb(255,255,255)">' +
+			'<img data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' data-asset-collection="application-images" data-asset-id="3"' +
+			' src="/api/application-images/file/baked.png" alt="" style="width:100px;height:80px">' +
+			'</div>' +
+			'</div>'
+		const config = {
+			'frame-1': {
+				backgroundImage: generated,
+				generatedImageId: 9,
+				imageColorize: { line: '#112233' },
+			},
+		}
+		const once = composeTemplateHtml(base, config)
+
+		expect(composeTemplateHtml(once, config)).toBe(once)
+		// 치환 div에 img 렌더 상당 프레이밍이 명시돼 있어야 2차 배정이 cover로 덮지 않는다.
+		const carrier = new DOMParser()
+			.parseFromString(once, 'text/html')
+			.querySelector('[data-image-carrier]') as HTMLElement
+		expect(carrier.style.backgroundSize).toBe('100% 100%')
+	})
+
+	it('캐리어 없는 노드의 backgroundImage는 무시된다 — 원본 그대로', () => {
+		// 이미지 배정은 캐리어 전용 계약 — 임포트가 마킹하지 않은 노드(구 임포트 산출물 포함)에는
+		// 배경도, transform도, 에셋 참조도 쓰지 않는다.
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="background:rgb(0,40,10)"></div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: generated,
+				generatedImageId: 9,
+				imageTransform: { x: 12, y: 0, scale: 1.5, rotate: 15 },
+			},
+		})
 		const frame = new DOMParser()
 			.parseFromString(html, 'text/html')
 			.querySelector('[data-node-id="frame-1"]') as HTMLElement
 
-		expect(frame.style.backgroundImage).toContain(generated)
-		expect(frame.style.backgroundSize).toBe('cover')
-		expect(frame.style.backgroundPosition).toBe('center center')
-		expect(frame.style.backgroundRepeat).toBe('no-repeat')
+		expect(frame.style.backgroundImage).not.toContain(generated)
+		expect(frame.style.backgroundColor).toBe('rgb(0, 40, 10)')
+		expect(frame.style.transform).toBe('')
+		expect(frame.getAttribute('data-asset-collection')).toBeNull()
 	})
 })

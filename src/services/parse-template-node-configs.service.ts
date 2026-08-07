@@ -64,13 +64,16 @@ const templateNodeConfigMapSchema = z.record(
 		.strict(),
 )
 
+/** parseTemplateNodeConfigs가 성공했을 때의 결과 — 검증된 config map과 노드별 에셋 참조. */
+export interface ParsedTemplateNodeConfigs {
+	data: TemplateNodeConfigMap
+	refsByNode: Map<string, AuthorizedTemplateImageRef>
+}
+
 /** DB overrides를 공용 node config 계약으로 검증하고 노드별 에셋 참조를 만든다. */
-export function parseTemplateNodeConfigs(value: unknown):
-	| { blocker: string }
-	| {
-			data: TemplateNodeConfigMap
-			refsByNode: Map<string, AuthorizedTemplateImageRef>
-	  } {
+export function parseTemplateNodeConfigs(
+	value: unknown,
+): { blocker: string } | ParsedTemplateNodeConfigs {
 	const parsed = templateNodeConfigMapSchema.safeParse(value ?? {})
 	if (!parsed.success) {
 		return { blocker: 'HTML 템플릿의 overrides 형식이 올바르지 않습니다.' }

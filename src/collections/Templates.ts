@@ -78,7 +78,15 @@ export const Templates: CollectionConfig = {
 			access: { read: ({ req }) => isManager(req.user) },
 			admin: { hidden: true, language: 'html' },
 		},
-		{ name: 'overrides', type: 'json', admin: { hidden: true } },
+		{
+			// 저작 내부값(input.aiInstruction·generatedImageId·vectorAsset 등)을 담으므로 공개
+			// REST(published read)에서 감춘다. 서버 신뢰 경로(published-template·agent-template
+			// repository)는 overrideAccess: true의 local API로 읽어 영향이 없다.
+			name: 'overrides',
+			type: 'json',
+			access: { read: ({ req }) => isManager(req.user) },
+			admin: { hidden: true },
+		},
 
 		// ── 사이드바 (렌더 순서 = 배열 순서) ──
 		{

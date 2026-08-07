@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { convertFigmaNodeToHtml } from '@/features/template-import/utils/figma-node-to-html'
 import { composeTemplateHtml } from './compose-template-html.client'
-import { inspectDraftTemplateHtml, inspectTemplateHtml } from './inspect-template-html.service'
+import {
+	findMissingOverrideNodeBlocker,
+	inspectTemplateFragment,
+} from './inspect-template-html.service'
 import { parseTemplateNodeConfigs } from './parse-template-node-configs.service'
+import type { AuthorizedTemplateImageRef } from './template-asset-policy.service'
 
 function parsedConfigs(value: unknown) {
 	const parsed = parseTemplateNodeConfigs(value)
@@ -10,15 +14,44 @@ function parsedConfigs(value: unknown) {
 	return parsed
 }
 
+// draft 저장 검사와 같은 조합: base fragment → draft fragment → override 노드 존재.
+function draftBlocker(input: {
+	baseHtml?: string
+	html?: string
+	overrideNodeIds?: readonly string[]
+}) {
+	const base = input.baseHtml ? inspectTemplateFragment(input.baseHtml, 'base') : undefined
+	if (base?.blocker) return base.blocker
+	const draft = input.html ? inspectTemplateFragment(input.html, 'draft') : undefined
+	if (draft?.blocker) return draft.blocker
+	const nodeIds = draft?.nodeIds ?? base?.nodeIds ?? new Set<string>()
+	return findMissingOverrideNodeBlocker(input.overrideNodeIds ?? [], [nodeIds]) ?? undefined
+}
+
+// 발행 검사와 같은 조합: base fragment → public fragment → override 노드 존재(양쪽 모두).
+function publishBlocker(input: {
+	baseHtml: string
+	html: string
+	overrideNodeIds: readonly string[]
+	refsByNode: ReadonlyMap<string, AuthorizedTemplateImageRef>
+}) {
+	const base = inspectTemplateFragment(input.baseHtml, 'base')
+	if (base.blocker) return base.blocker
+	const published = inspectTemplateFragment(input.html, 'public', input.refsByNode)
+	if (published.blocker) return published.blocker
+	return (
+		findMissingOverrideNodeBlocker(input.overrideNodeIds, [base.nodeIds, published.nodeIds]) ??
+		undefined
+	)
+}
+
 describe('template HTML inspection', () => {
 	it('실행 속성과 외부 URL을 draft에서 거부한다', () => {
-		const result = inspectDraftTemplateHtml({
+		const result = draftBlocker({
 			html: '<img data-node-id="logo" src="https://attacker.example/x" onerror="alert(1)">',
-			overrideNodeIds: [],
-			refsByNode: new Map(),
 		})
 
-		expect(result.blocker).toContain('허용하지 않는 속성')
+		expect(result).toContain('허용하지 않는 속성')
 	})
 
 	it('실제 Figma 변환 구조를 허용한다', () => {
@@ -35,14 +68,7 @@ describe('template HTML inspection', () => {
 			absoluteBoundingBox: { x: 0, y: 0, width: 1200, height: 800 },
 		} as never)
 
-		expect(
-			inspectDraftTemplateHtml({
-				baseHtml: converted.html,
-				html: converted.html,
-				overrideNodeIds: [],
-				refsByNode: new Map(),
-			}).blocker,
-		).toBeUndefined()
+		expect(draftBlocker({ baseHtml: converted.html, html: converted.html })).toBeUndefined()
 	})
 
 	// 변환기(emit)의 출력 어휘와 저장 허용 목록의 드리프트를 잡는 대조 테스트 —
@@ -93,14 +119,7 @@ describe('template HTML inspection', () => {
 
 		expect(converted.html).toContain('background-image:url(')
 		expect(converted.html).toContain('transform:')
-		expect(
-			inspectDraftTemplateHtml({
-				baseHtml: converted.html,
-				html: converted.html,
-				overrideNodeIds: [],
-				refsByNode: new Map(),
-			}).blocker,
-		).toBeUndefined()
+		expect(draftBlocker({ baseHtml: converted.html, html: converted.html })).toBeUndefined()
 	})
 
 	it('캐리어 마커가 있는 import·합성 HTML이 발행 검사를 통과한다', () => {
@@ -139,12 +158,12 @@ describe('template HTML inspection', () => {
 		expect(converted.html).toContain('data-image-carrier')
 		expect(composed).toContain('data-image-carrier')
 		expect(
-			inspectTemplateHtml({
+			publishBlocker({
 				baseHtml: converted.html,
 				html: composed,
 				overrideNodeIds: Object.keys(parsed.data),
 				refsByNode: parsed.refsByNode,
-			}).blocker,
+			}),
 		).toBeUndefined()
 	})
 
@@ -183,19 +202,18 @@ describe('template HTML inspection', () => {
 		const composed = composeTemplateHtml(converted.html, parsed.data)
 
 		expect(
-			inspectTemplateHtml({
+			publishBlocker({
 				baseHtml: converted.html,
 				html: composed,
 				overrideNodeIds: Object.keys(parsed.data),
 				refsByNode: parsed.refsByNode,
-			}).blocker,
+			}),
 		).toBeUndefined()
 	})
 
-	it('캐리어 아닌 래스터 img에 이미지를 할당해도 발행 검사를 통과한다', () => {
-		// 회귀: 예전 compose는 래스터 img에 background-image를 칠하고 src를 남겨
-		// "HTML과 overrides의 에셋 참조 불일치"로 발행이 막혔다 — 지금은 src를 갈아끼운다.
-		// 자식이 둘이라 캐리어 판정이 되지 않는 프레임 + 래스터 폴백(renderedAssets) 자식.
+	it('클립 외동 조건 밖의 래스터 img에 이미지를 할당해도 발행 검사를 통과한다', () => {
+		// 래스터 폴백 img(비벡터)는 임포트가 자기 캐리어로 마킹한다 — 자식이 둘이라 프레임 주도
+		// 마킹이 없는 조합에서도 compose가 캐리어 경로로 src를 갈아끼운다.
 		const converted = convertFigmaNodeToHtml(
 			{
 				id: '3:1',
@@ -232,15 +250,15 @@ describe('template HTML inspection', () => {
 		})
 		const composed = composeTemplateHtml(converted.html, parsed.data)
 
-		expect(converted.html).not.toContain('data-image-carrier')
+		expect(converted.html).toContain('data-image-carrier')
 		expect(composed).toContain('/api/generated-images/file/gen.png')
 		expect(
-			inspectTemplateHtml({
+			publishBlocker({
 				baseHtml: converted.html,
 				html: composed,
 				overrideNodeIds: Object.keys(parsed.data),
 				refsByNode: parsed.refsByNode,
-			}).blocker,
+			}),
 		).toBeUndefined()
 	})
 
@@ -283,12 +301,12 @@ describe('template HTML inspection', () => {
 
 		expect(composed).toContain('transform:')
 		expect(
-			inspectTemplateHtml({
+			publishBlocker({
 				baseHtml: converted.html,
 				html: composed,
 				overrideNodeIds: Object.keys(parsed.data),
 				refsByNode: parsed.refsByNode,
-			}).blocker,
+			}),
 		).toBeUndefined()
 	})
 
@@ -333,20 +351,19 @@ describe('template HTML inspection', () => {
 
 		expect(composed).toContain('mask-mode: luminance')
 		expect(
-			inspectDraftTemplateHtml({
+			draftBlocker({
 				baseHtml: converted.html,
 				html: composed,
 				overrideNodeIds: Object.keys(parsed.data),
-				refsByNode: parsed.refsByNode,
-			}).blocker,
+			}),
 		).toBeUndefined()
 		expect(
-			inspectTemplateHtml({
+			publishBlocker({
 				baseHtml: converted.html,
 				html: composed,
 				overrideNodeIds: Object.keys(parsed.data),
 				refsByNode: parsed.refsByNode,
-			}).blocker,
+			}),
 		).toBeUndefined()
 	})
 
@@ -391,20 +408,19 @@ describe('template HTML inspection', () => {
 		expect(composed).toContain('mask-composite: subtract')
 		expect(composed).toContain('linear-gradient')
 		expect(
-			inspectDraftTemplateHtml({
+			draftBlocker({
 				baseHtml: converted.html,
 				html: composed,
 				overrideNodeIds: Object.keys(parsed.data),
-				refsByNode: parsed.refsByNode,
-			}).blocker,
+			}),
 		).toBeUndefined()
 		expect(
-			inspectTemplateHtml({
+			publishBlocker({
 				baseHtml: converted.html,
 				html: composed,
 				overrideNodeIds: Object.keys(parsed.data),
 				refsByNode: parsed.refsByNode,
-			}).blocker,
+			}),
 		).toBeUndefined()
 	})
 
@@ -447,25 +463,25 @@ describe('template HTML inspection', () => {
 		const composed = composeTemplateHtml(converted.html, parsed.data)
 
 		expect(
-			inspectTemplateHtml({
+			publishBlocker({
 				baseHtml: converted.html,
 				html: composed,
 				overrideNodeIds: Object.keys(parsed.data),
 				refsByNode: parsed.refsByNode,
-			}).blocker,
+			}),
 		).toBeUndefined()
 	})
 
 	it('공개 HTML의 staging URL을 거부한다', () => {
 		const html = '<img data-node-id="logo" src="/api/template-assets/file/imported.svg">'
-		const result = inspectTemplateHtml({
+		const result = publishBlocker({
 			baseHtml: html,
 			html,
 			overrideNodeIds: [],
 			refsByNode: new Map(),
 		})
 
-		expect(result.blocker).toContain('모든 URL은 인가 에셋')
+		expect(result).toContain('모든 URL은 인가 에셋')
 	})
 
 	it('공개 HTML과 override의 구조화 참조가 같아야 한다', () => {
@@ -477,56 +493,41 @@ describe('template HTML inspection', () => {
 		const html = `<img data-node-id="logo" data-asset-collection="brand-logos" data-asset-id="8" src="${url}" alt="">`
 
 		expect(
-			inspectTemplateHtml({
+			publishBlocker({
 				baseHtml,
 				html,
 				overrideNodeIds: Object.keys(parsed.data),
 				refsByNode: parsed.refsByNode,
-			}).blocker,
+			}),
 		).toBeUndefined()
 	})
 
 	it('존재하지 않는 노드의 override를 거부한다', () => {
 		const parsed = parsedConfigs({ missing: { text: 'x' } })
-		const result = inspectDraftTemplateHtml({
+		const result = draftBlocker({
 			html: '<div data-node-id="frame"></div>',
 			overrideNodeIds: Object.keys(parsed.data),
-			refsByNode: parsed.refsByNode,
 		})
 
-		expect(result.blocker).toContain('존재하지 않는 노드')
+		expect(result).toContain('존재하지 않는 노드')
 	})
 
 	it('slash로 구분한 이벤트 속성도 거부한다', () => {
-		const result = inspectDraftTemplateHtml({
+		const result = draftBlocker({
 			html: '<img data-node-id="logo"/src="x"/onerror="alert(1)">',
-			overrideNodeIds: [],
-			refsByNode: new Map(),
 		})
 
-		expect(result.blocker).toContain('허용하지 않는 속성')
+		expect(result).toContain('허용하지 않는 속성')
 	})
 
 	it('baseHtml의 내부 에셋 background-image는 허용하고 외부 URL은 거부한다', () => {
 		const internal =
 			'<div data-node-id="hero" data-asset-collection="application-images" data-asset-id="11"' +
 			' style="background-image:url(/api/application-images/file/fill.png);background-size:cover;"></div>'
-		expect(
-			inspectDraftTemplateHtml({
-				baseHtml: internal,
-				overrideNodeIds: [],
-				refsByNode: new Map(),
-			}).blocker,
-		).toBeUndefined()
+		expect(draftBlocker({ baseHtml: internal })).toBeUndefined()
 
 		const external =
 			'<div data-node-id="hero" style="background-image:url(https://attacker.example/x.png);"></div>'
-		expect(
-			inspectDraftTemplateHtml({
-				baseHtml: external,
-				overrideNodeIds: [],
-				refsByNode: new Map(),
-			}).blocker,
-		).toContain('baseHtml에는 내부 staging 에셋')
+		expect(draftBlocker({ baseHtml: external })).toContain('baseHtml에는 내부 staging 에셋')
 	})
 })

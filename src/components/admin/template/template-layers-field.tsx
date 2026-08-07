@@ -1,7 +1,9 @@
 'use client'
 
+import { Locked, MagicWand, Unlocked } from '@carbon/icons-react'
 import { Popup, toast, useForm, useFormFields } from '@payloadcms/ui'
 import {
+	type ComponentProps,
 	type CSSProperties,
 	type ReactNode,
 	type RefObject,
@@ -24,17 +26,16 @@ import {
 	requestPublishedImageProfiles,
 } from '@/features/generate-image/services/generate-image.client'
 import { generateOneText } from '@/features/generate-text/services/generate-text.client'
-import type { BrandColor } from '@/payload-types'
 import {
 	composeTemplateHtml,
+	findImageCarrier,
+	IDENTITY_TRANSFORM,
+	isIdentityTransform,
 	isImageColorizeOverlayId,
 } from '@/services/compose-template-html.client'
 import type { TemplateNodeConfig, TemplateNodeConfigMap, TemplateSlotSpec } from '@/types/template'
-import {
-	IDENTITY_TRANSFORM,
-	type ImageTransform,
-	isIdentityTransform,
-} from './image-transform-gestures'
+import { BrandColorSwatches } from './brand-color-swatches'
+import type { ImageTransform } from './image-transform-gestures'
 import { ImageTransformOverlay } from './image-transform-overlay'
 import { VectorLayerEditor } from './vector-layer-editor'
 
@@ -52,8 +53,14 @@ interface LayerRow {
 	tag: string
 	isText: boolean
 	isVector: boolean
-	/** 자신 또는 직계 자식이 data-image-carrier인 레이어 — 이미지 자유 편집(transform) 대상. */
-	hasImageCarrier: boolean
+	/**
+	 * 이미지 배정 주소 판정 — 'self'면 이 레이어가 배정·편집의 주소(캐리어 외동인 클립 프레임
+	 * 또는 스탠드얼론 캐리어), 'parent'면 주소가 부모 프레임으로 넘어간 캐리어 자식(배정 UI 대신
+	 * 안내만 노출), undefined면 배정 불가.
+	 */
+	imageAddress?: 'self' | 'parent'
+	/** 주소가 프레임일 때 해석된 캐리어 자식 nodeId — 자식 키에 남은 이미지 override 정리에 쓴다. */
+	carrierChildId?: string
 	/** 요소 자신의 inline width/height(px) — clipsContent 프레임의 가시 박스. AI 생성 비율 유도에 쓴다. */
 	boxWidth?: number
 	boxHeight?: number
@@ -90,6 +97,33 @@ const TYPE_LABEL: Record<string, string> = {
 	BOOLEAN_OPERATION: '불리언',
 }
 const typeLabel = (t: string) => TYPE_LABEL[t] ?? t
+/** 이미지 배정이 노드 config에 남기는 필드들 — 프레임 주소 커밋 시 캐리어 자식 키에서 지운다. */
+const IMAGE_CONFIG_KEYS = [
+	'backgroundImage',
+	'generatedImageId',
+	'imageTransform',
+	'imageColorize',
+	'imageInput',
+] as const
+
+/**
+ * 커밋 정규화(순수 함수): 프레임 주소에서 이미지 커밋이 일어나면 해석된 캐리어 자식 키에 남은
+ * 이미지 필드(과거 자식 키로 저작된 override)를 지운다 — 같은 캐리어가 두 주소로 이중 적용되는
+ * 것 방지. 이미지 필드가 빠져 빈 엔트리가 되면 키째 삭제한다.
+ */
+export function pruneCarrierChildImageKeys(
+	map: TemplateNodeConfigMap,
+	childId: string | undefined,
+	patch: TemplateNodeConfig,
+): TemplateNodeConfigMap {
+	if (!childId || !map[childId] || !IMAGE_CONFIG_KEYS.some((key) => key in patch)) return map
+	const child = { ...map[childId] }
+	for (const key of IMAGE_CONFIG_KEYS) delete child[key]
+	const next = { ...map }
+	if (Object.keys(child).length === 0) delete next[childId]
+	else next[childId] = child
+	return next
+}
 const VECTOR_TYPES = new Set([
 	'VECTOR',
 	'BOOLEAN_OPERATION',
@@ -99,17 +133,12 @@ const VECTOR_TYPES = new Set([
 	'POLYGON',
 	'REGULAR_POLYGON',
 ])
-// 배경 이미지 할당(AI 생성) 대상. Figma REST는 둥근 사각형도 RECTANGLE(+cornerRadius)로 내보내므로 두 타입이면 충분하다.
-const IMAGE_ASSIGN_TYPES = new Set(['FRAME', 'RECTANGLE'])
-
-// 배경 설정 개방 판정 — 타입 목록이 아니라 compose가 실제로 지원하는 능력으로 결정한다.
-// - 캐리어 보유(자신·직계 자식) → 타입 무관 허용(INSTANCE/COMPONENT/SECTION 프레임 포함)
-// - FRAME/RECTANGLE → div(레거시 배경 경로)든 래스터 img(src 교체)든 허용
-// - 벡터 img는 VectorLayerEditor가, 실제 <p>는 텍스트 편집이 소유하므로 제외
-const canAssignImage = (layer: LayerRow) =>
-	!layer.isText &&
-	!layer.isVector &&
-	(layer.hasImageCarrier || IMAGE_ASSIGN_TYPES.has(layer.figmaType))
+// 배경 설정 개방 판정 — 주소 노드에서만 연다: (a) 마킹 없는 클립 프레임이면서 마킹 직계 자식이
+// 정확히 1개(루트 제외), (b) 마킹된 캐리어인데 부모가 (a)에 해당하지 않는 경우. 같은 캐리어가
+// 프레임·자식 두 nodeId로 이중 주소지정되는 것을 막는다(compose의 findImageCarrier와 짝 계약).
+// 벡터 img는 VectorLayerEditor가, 실제 <p>는 텍스트 편집이 소유하므로 제외.
+export const canAssignImage = (layer: LayerRow) =>
+	!layer.isText && !layer.isVector && layer.imageAddress === 'self'
 
 // 배경 설정 트리거 버튼 공통 스타일(에셋 가져오기 · AI 생성).
 const TRIGGER_STYLE: CSSProperties = {
@@ -133,7 +162,19 @@ function stylePx(el: Element, property: 'width' | 'height'): number | undefined 
 	return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
 }
 
-function parseLayers(html: string): LayerRow[] {
+/**
+ * 주소 규칙 (a) — 마킹 없는 클립(overflow:hidden) 프레임이면서 마킹 직계 자식이 정확히 1개고
+ * 루트(depth 0, 부모가 body)가 아닌 노드. 이 프레임이 캐리어의 배정 주소를 대신 소유한다.
+ * findImageCarrier는 자신 마킹이 아니면 "정확히 1개"일 때만 자식을 돌려준다(2개 이상이면 null).
+ */
+const isCarrierFrameAddress = (node: Element | null, nodeDepth: number): boolean =>
+	nodeDepth > 0 &&
+	node instanceof HTMLElement &&
+	!node.hasAttribute('data-image-carrier') &&
+	node.style.overflow === 'hidden' &&
+	findImageCarrier(node) !== null
+
+export function parseLayers(html: string): LayerRow[] {
 	const rows: LayerRow[] = []
 	const doc = new DOMParser().parseFromString(html, 'text/html')
 
@@ -145,6 +186,10 @@ function parseLayers(html: string): LayerRow[] {
 		const figmaType = el.getAttribute('data-figma-type') || (tag === 'p' ? 'TEXT' : 'FRAME')
 		// 래스터화된 TEXT는 figmaType이 TEXT여도 img로 남는다 — 실제 <p>만 텍스트 편집 대상.
 		const isText = tag === 'p'
+		// 주소는 캐리어의 가시 창 하나로 고정한다 — 부모가 주소 프레임(a)이면 캐리어 자신은
+		// 'parent'(배정 UI 숨김), 그 외 마킹 캐리어와 주소 프레임 자신은 'self'.
+		const selfMarked = el instanceof HTMLElement && el.hasAttribute('data-image-carrier')
+		const frameAddress = isCarrierFrameAddress(el, depth)
 		rows.push({
 			id: el.getAttribute('data-node-id') || `${depth}-${rows.length}`,
 			depth,
@@ -152,10 +197,20 @@ function parseLayers(html: string): LayerRow[] {
 			figmaType,
 			tag,
 			isText,
-			isVector: VECTOR_TYPES.has(figmaType),
-			hasImageCarrier:
-				el.hasAttribute('data-image-carrier') ||
-				Array.from(el.children).some((child) => child.hasAttribute('data-image-carrier')),
+			// 렌더 실체 기준: 벡터는 img(원본) 또는 compose의 vectorColor 마스크 div로만 편집 가능 — 에셋 누락으로 일반 div가 된 벡터는 폴백 메시지로.
+			isVector:
+				VECTOR_TYPES.has(figmaType) &&
+				(tag === 'img' || (el instanceof HTMLElement && Boolean(el.style.maskImage))),
+			imageAddress: selfMarked
+				? isCarrierFrameAddress(el.parentElement, depth - 1)
+					? 'parent'
+					: 'self'
+				: frameAddress
+					? 'self'
+					: undefined,
+			carrierChildId: frameAddress
+				? (findImageCarrier(el)?.getAttribute('data-node-id') ?? undefined)
+				: undefined,
 			boxWidth: stylePx(el, 'width'),
 			boxHeight: stylePx(el, 'height'),
 			text: isText ? (el.textContent ?? '') : '',
@@ -165,6 +220,38 @@ function parseLayers(html: string): LayerRow[] {
 
 	for (const root of Array.from(doc.body.children)) walk(root, 0)
 	return rows
+}
+
+// published 이미지 프로파일 로드 — 로딩 중 null, 실패 시 빈 목록 + toast. AiImageForm·ImageSlotSpecEditor 공용.
+function usePublishedImageProfiles() {
+	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
+	useEffect(() => {
+		void requestPublishedImageProfiles()
+			.then(setProfiles)
+			.catch(() => {
+				setProfiles([])
+				toast.error('이미지 프로파일을 불러오지 못했습니다.')
+			})
+	}, [])
+	return profiles
+}
+
+// AI 생성 Popup 트리거 공통 — 커스텀 버튼 모양과 팝업 위치 설정을 소유한다.
+function AiPopupTrigger({ render }: { render: ComponentProps<typeof Popup>['render'] }) {
+	return (
+		<Popup
+			buttonType="custom"
+			verticalAlign="top"
+			horizontalAlign="left"
+			size="fit-content"
+			button={
+				<span className="text-sm" style={TRIGGER_STYLE}>
+					<MagicWand aria-hidden /> AI 생성
+				</span>
+			}
+			render={render}
+		/>
+	)
 }
 
 // Popup 안에 뜨는 AI 생성 폼. Popup이 열릴 때만 마운트되므로 프롬프트는 열 때마다 초기화된다.
@@ -215,20 +302,9 @@ function AiImageForm({
 }) {
 	const [prompt, setPrompt] = useState('')
 	const [loading, setLoading] = useState(false)
-	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
-	const [profileId, setProfileId] = useState<number>()
-
-	useEffect(() => {
-		void requestPublishedImageProfiles()
-			.then((nextProfiles) => {
-				setProfiles(nextProfiles)
-				setProfileId(nextProfiles[0]?.id)
-			})
-			.catch(() => {
-				setProfiles([])
-				toast.error('이미지 프로파일을 불러오지 못했습니다.')
-			})
-	}, [])
+	const profiles = usePublishedImageProfiles()
+	const [pickedProfileId, setPickedProfileId] = useState<number>()
+	const profileId = pickedProfileId ?? profiles?.[0]?.id
 
 	async function run() {
 		const trimmed = prompt.trim()
@@ -262,7 +338,7 @@ function AiImageForm({
 			<select
 				id="template-ai-image-profile"
 				value={profileId ?? ''}
-				onChange={(event) => setProfileId(Number(event.currentTarget.value))}
+				onChange={(event) => setPickedProfileId(Number(event.currentTarget.value))}
 				style={SELECT_STYLE}
 			>
 				{profiles?.length ? (
@@ -335,6 +411,55 @@ function SpecField({
 				{label}
 			</label>
 			{children}
+		</div>
+	)
+}
+
+/**
+ * 슬롯 개방 자물쇠 토글 — 헤딩·자물쇠 버튼·상태 힌트를 그리고 열렸을 때만 children(스펙 폼)을 노출한다.
+ * 열림 여부는 config 키의 존재가 결정하므로 opened로 받고, 라벨은 slot 명사와 openHint로 만든다.
+ */
+function SlotLockToggle({
+	heading,
+	slot,
+	openHint,
+	opened,
+	onToggle,
+	children,
+}: {
+	/** 좌측 헤딩 — 예: 입력 슬롯, 스튜디오 개방 */
+	heading: string
+	/** title·aria-label의 슬롯 명사 — 예: 입력 슬롯, 이미지 슬롯 */
+	slot: string
+	/** 닫힘 상태 title에 붙는 열기 결과 설명 — 예: 유저 화면에 입력 노출 */
+	openHint: string
+	opened: boolean
+	onToggle: () => void
+	children: ReactNode
+}) {
+	return (
+		<div style={{ marginTop: 12 }}>
+			<div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+				<span className="text-sm" style={{ color: 'var(--theme-elevation-600)' }}>
+					{heading}
+				</span>
+				<Button
+					type="button"
+					variant="ghost"
+					size="icon-xs"
+					onClick={onToggle}
+					title={
+						opened ? `${slot} 닫기 — 유저 화면에서 숨김` : `${slot} 열기 — ${openHint}`
+					}
+					aria-label={opened ? `${slot} 닫기` : `${slot} 열기`}
+				>
+					{opened ? <Unlocked aria-hidden /> : <Locked aria-hidden />}
+				</Button>
+				<span className="text-xs" style={{ color: 'var(--theme-elevation-500)' }}>
+					{opened ? '유저 화면에 열림' : '닫힘'}
+				</span>
+			</div>
+			{opened && children}
 		</div>
 	)
 }
@@ -448,16 +573,7 @@ function ImageSlotSpecEditor({
 	imageInput: ImageSlotInput
 	onChange: (imageInput: ImageSlotInput) => void
 }) {
-	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
-
-	useEffect(() => {
-		void requestPublishedImageProfiles()
-			.then(setProfiles)
-			.catch(() => {
-				setProfiles([])
-				toast.error('이미지 프로파일을 불러오지 못했습니다.')
-			})
-	}, [])
+	const profiles = usePublishedImageProfiles()
 
 	return (
 		<div
@@ -601,28 +717,12 @@ function ImageColorizeEditor({
 	value?: { line: string; background?: string }
 	onChange: (next?: { line: string; background?: string }) => void
 }) {
-	const [colors, setColors] = useState<BrandColor[]>([])
-	const [loadError, setLoadError] = useState(false)
 	// 선 색만으로 유효한 override — background 생략 시 compose가 배경 없이 선만 칠한다.
 	const [draft, setDraft] = useState<{ line?: string; background?: string }>(value ?? {})
 	// 배경 직접 지정은 opt-in — 기존 설정에 background가 있으면 열린 채로 시작한다(노드별 key 리마운트).
 	const [showBackground, setShowBackground] = useState(Boolean(value?.background))
 
 	useEffect(() => setDraft(value ?? {}), [value])
-
-	useEffect(() => {
-		const controller = new AbortController()
-		const query = 'depth=0&limit=100&where[_status][equals]=published&sort=name'
-		void fetch(`/api/brand-colors?${query}`, { signal: controller.signal })
-			.then(async (response) => {
-				if (!response.ok) throw new Error('Failed to load brand colors')
-				setColors(((await response.json()) as { docs: BrandColor[] }).docs)
-			})
-			.catch((error: unknown) => {
-				if ((error as { name?: string }).name !== 'AbortError') setLoadError(true)
-			})
-		return () => controller.abort()
-	}, [])
 
 	const pick = (field: 'line' | 'background', hex: string) => {
 		const next = { ...draft, [field]: hex }
@@ -644,43 +744,19 @@ function ImageColorizeEditor({
 						['background', '배경 색'],
 					] as const)
 				: ([['line', '선 색']] as const)
-			).map(([field, label]) => (
-				<fieldset key={field} style={{ border: 0, padding: 0, margin: 0 }}>
-					<legend className="text-sm" style={{ marginBottom: 4 }}>
-						{label}
-					</legend>
-					<div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-						{colors.map((color) => {
-							const hex = /^[0-9a-f]{3,8}$/i.test(color.hex)
-								? `#${color.hex}`
-								: color.hex
-							const selected = draft[field] === hex
-							return (
-								<Button
-									key={color.id}
-									type="button"
-									aria-pressed={selected}
-									aria-label={`${color.name} ${hex}`}
-									onClick={() => pick(field, hex)}
-									variant={selected ? 'muted' : 'outline'}
-									size="sm"
-								>
-									<span
-										aria-hidden
-										style={{
-											width: 14,
-											height: 14,
-											borderRadius: 2,
-											background: hex,
-										}}
-									/>
-									{color.name}
-								</Button>
-							)
-						})}
-					</div>
-				</fieldset>
-			))}
+			).map(([field, label]) => {
+				// 선 색 없이는 유효한 override가 못 되므로 배경 선선택은 막고 순서를 안내한다.
+				const needsLine = field === 'background' && !draft.line
+				return (
+					<BrandColorSwatches
+						key={field}
+						legend={needsLine ? `${label} — 선 색을 먼저 고르세요` : label}
+						value={draft[field]}
+						onPick={(hex) => pick(field, hex)}
+						disabled={needsLine}
+					/>
+				)
+			})}
 			{!showBackground && (
 				<p className="text-sm" style={{ margin: 0, color: 'var(--theme-elevation-500)' }}>
 					배경 없이 선만 칠합니다(캔버스가 그대로 비칩니다)
@@ -720,15 +796,6 @@ function ImageColorizeEditor({
 					해제
 				</Button>
 			</div>
-			{loadError && (
-				<p
-					className="text-sm"
-					role="alert"
-					style={{ margin: 0, color: 'var(--theme-error-500)' }}
-				>
-					브랜드 컬러를 불러오지 못했습니다.
-				</p>
-			)}
 		</div>
 	)
 }
@@ -930,10 +997,11 @@ export default function TemplateLayersField() {
 		if (!selectedId) return
 		const base = baseHtml || html
 		if (typeof base !== 'string') return
-		const next: TemplateNodeConfigMap = {
-			...nodeConfigs,
-			[selectedId]: { ...nodeConfigs[selectedId], ...patch },
-		}
+		const next = pruneCarrierChildImageKeys(
+			{ ...nodeConfigs, [selectedId]: { ...nodeConfigs[selectedId], ...patch } },
+			selected?.carrierChildId,
+			patch,
+		)
 		dispatchFields({ type: 'UPDATE', path: 'overrides', value: next })
 		dispatchFields({ type: 'UPDATE', path: 'html', value: composeTemplateHtml(base, next) })
 		setModified(true)
@@ -943,13 +1011,10 @@ export default function TemplateLayersField() {
 	const commitBackground = ({ id, src }: { id: number; src: string }) =>
 		commitNodeConfig({ backgroundImage: src, generatedImageId: id })
 
-	// 이미지 편집 오버레이 게이트 — 아래 슬라이더 섹션과 동일 조건(이미지 할당 대상 + 배경 + 캐리어).
+	// 이미지 편집 오버레이 게이트 — 아래 슬라이더 섹션과 동일 조건(배정 대상 = 주소 노드 + 배경 할당됨).
 	const iframeRef = useRef<HTMLIFrameElement>(null)
 	const canEditImage =
-		!!selected &&
-		canAssignImage(selected) &&
-		!!nodeConfigs[selected.id]?.backgroundImage &&
-		selected.hasImageCarrier
+		!!selected && canAssignImage(selected) && !!nodeConfigs[selected.id]?.backgroundImage
 	return (
 		<div style={{ marginBottom: 'var(--base)' }}>
 			{/* 캔버스(가변폭·중앙정렬) + 레이어 목록(고정폭) */}
@@ -1007,16 +1072,7 @@ export default function TemplateLayersField() {
 						/>
 					</label>
 					<div style={{ marginTop: 6 }}>
-						<Popup
-							buttonType="custom"
-							verticalAlign="top"
-							horizontalAlign="left"
-							size="fit-content"
-							button={
-								<span className="text-sm" style={TRIGGER_STYLE}>
-									✨ AI 생성
-								</span>
-							}
+						<AiPopupTrigger
 							render={({ close }) => (
 								<AiTextForm
 									rule={nodeConfigs[selected.id]?.input?.aiInstruction}
@@ -1028,57 +1084,22 @@ export default function TemplateLayersField() {
 							)}
 						/>
 					</div>
-					<div style={{ marginTop: 12 }}>
-						<div
-							style={{
-								display: 'flex',
-								alignItems: 'center',
-								gap: 6,
-								marginBottom: 6,
-							}}
-						>
-							<span
-								className="text-sm"
-								style={{ color: 'var(--theme-elevation-600)' }}
-							>
-								입력 슬롯
-							</span>
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon-xs"
-								onClick={() =>
-									commitNodeConfig({
-										input: nodeConfigs[selected.id]?.input ? undefined : {},
-									})
-								}
-								title={
-									nodeConfigs[selected.id]?.input
-										? '슬롯 닫기 — 유저 화면에서 숨김'
-										: '슬롯 열기 — 유저 화면에 입력 노출'
-								}
-								aria-label={
-									nodeConfigs[selected.id]?.input
-										? '입력 슬롯 닫기'
-										: '입력 슬롯 열기'
-								}
-							>
-								{nodeConfigs[selected.id]?.input ? '🔓' : '🔒'}
-							</Button>
-							<span
-								className="text-xs"
-								style={{ color: 'var(--theme-elevation-500)' }}
-							>
-								{nodeConfigs[selected.id]?.input ? '유저 화면에 열림' : '닫힘'}
-							</span>
-						</div>
-						{nodeConfigs[selected.id]?.input && (
-							<SlotSpecEditor
-								input={nodeConfigs[selected.id]?.input ?? {}}
-								onChange={(input) => commitNodeConfig({ input })}
-							/>
-						)}
-					</div>
+					<SlotLockToggle
+						heading="입력 슬롯"
+						slot="입력 슬롯"
+						openHint="유저 화면에 입력 노출"
+						opened={Boolean(nodeConfigs[selected.id]?.input)}
+						onToggle={() =>
+							commitNodeConfig({
+								input: nodeConfigs[selected.id]?.input ? undefined : {},
+							})
+						}
+					>
+						<SlotSpecEditor
+							input={nodeConfigs[selected.id]?.input ?? {}}
+							onChange={(input) => commitNodeConfig({ input })}
+						/>
+					</SlotLockToggle>
 				</div>
 			)}
 
@@ -1095,16 +1116,7 @@ export default function TemplateLayersField() {
 						배경 설정 — {selected.name}
 					</span>
 					<div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-						<Popup
-							buttonType="custom"
-							verticalAlign="top"
-							horizontalAlign="left"
-							size="fit-content"
-							button={
-								<span className="text-sm" style={TRIGGER_STYLE}>
-									✨ AI 생성
-								</span>
-							}
+						<AiPopupTrigger
 							render={({ close }) => (
 								<AiImageForm
 									aspectRatio={nearestImageAspectRatio(
@@ -1119,60 +1131,23 @@ export default function TemplateLayersField() {
 							)}
 						/>
 					</div>
-					<div style={{ marginTop: 12 }}>
-						<div
-							style={{
-								display: 'flex',
-								alignItems: 'center',
-								gap: 6,
-								marginBottom: 6,
-							}}
-						>
-							<span
-								className="text-sm"
-								style={{ color: 'var(--theme-elevation-600)' }}
-							>
-								스튜디오 개방
-							</span>
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon-xs"
-								onClick={() =>
-									commitNodeConfig({
-										imageInput: nodeConfigs[selected.id]?.imageInput
-											? undefined
-											: {},
-									})
-								}
-								title={
-									nodeConfigs[selected.id]?.imageInput
-										? '이미지 슬롯 닫기 — 유저 화면에서 숨김'
-										: '이미지 슬롯 열기 — 유저 화면에 이미지 생성 노출'
-								}
-								aria-label={
-									nodeConfigs[selected.id]?.imageInput
-										? '이미지 슬롯 닫기'
-										: '이미지 슬롯 열기'
-								}
-							>
-								{nodeConfigs[selected.id]?.imageInput ? '🔓' : '🔒'}
-							</Button>
-							<span
-								className="text-xs"
-								style={{ color: 'var(--theme-elevation-500)' }}
-							>
-								{nodeConfigs[selected.id]?.imageInput ? '유저 화면에 열림' : '닫힘'}
-							</span>
-						</div>
-						{nodeConfigs[selected.id]?.imageInput && (
-							<ImageSlotSpecEditor
-								imageInput={nodeConfigs[selected.id]?.imageInput ?? {}}
-								onChange={(imageInput) => commitNodeConfig({ imageInput })}
-							/>
-						)}
-					</div>
-					{/* 캐리어가 있어야 transform을 받을 수 있다 — 레거시 프레임 배경 경로는 compose가 무시. */}
+					<SlotLockToggle
+						heading="스튜디오 개방"
+						slot="이미지 슬롯"
+						openHint="유저 화면에 이미지 생성 노출"
+						opened={Boolean(nodeConfigs[selected.id]?.imageInput)}
+						onToggle={() =>
+							commitNodeConfig({
+								imageInput: nodeConfigs[selected.id]?.imageInput ? undefined : {},
+							})
+						}
+					>
+						<ImageSlotSpecEditor
+							imageInput={nodeConfigs[selected.id]?.imageInput ?? {}}
+							onChange={(imageInput) => commitNodeConfig({ imageInput })}
+						/>
+					</SlotLockToggle>
+					{/* 배정 대상은 항상 주소 노드 — 배경이 실제로 할당된 뒤에만 transform·컬러 치환을 연다. */}
 					{canEditImage && (
 						<div style={{ marginTop: 12 }}>
 							<span
@@ -1218,13 +1193,26 @@ export default function TemplateLayersField() {
 				/>
 			)}
 
-			{selected && !selected.isText && !selected.isVector && !canAssignImage(selected) && (
+			{/* 주소가 부모 프레임으로 넘어간 캐리어 — 배정 UI 대신 주소를 안내한다. */}
+			{selected?.imageAddress === 'parent' && (
 				<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
-					{selected.tag === 'img'
-						? '이미지로 고정된 레이어입니다 — Figma에서 해당 속성을 정리하면 편집 가능하게 가져올 수 있습니다.'
-						: `${typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.`}
+					이미지 배정은 부모 프레임에서 합니다 — 프레임 레이어를 선택하세요.
+					{IMAGE_CONFIG_KEYS.some((key) => key in (nodeConfigs[selected.id] ?? {})) &&
+						' 이 레이어에 남은 이전 배정이 있습니다 — 부모 프레임에서 다시 배정하면 정리됩니다.'}
 				</p>
 			)}
+
+			{selected &&
+				!selected.isText &&
+				!selected.isVector &&
+				!canAssignImage(selected) &&
+				selected.imageAddress !== 'parent' && (
+					<p className="text-sm" style={{ color: 'var(--theme-elevation-500)' }}>
+						{selected.tag === 'img'
+							? '이미지로 고정된 레이어입니다 — Figma에서 해당 속성을 정리하면 편집 가능하게 가져올 수 있습니다.'
+							: `${typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.`}
+					</p>
+				)}
 		</div>
 	)
 }

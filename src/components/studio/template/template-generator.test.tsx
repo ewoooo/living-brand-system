@@ -90,7 +90,8 @@ describe('TemplateGenerator', () => {
 				navigation={navigation}
 				template={{
 					...template,
-					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경"></div>',
+					// 이미지 슬롯 노드는 임포트가 캐리어로 마킹한 표면이다 — compose는 캐리어 전용.
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
 					nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
 				}}
 			/>,
@@ -108,6 +109,33 @@ describe('TemplateGenerator', () => {
 		await waitFor(() =>
 			expect(container.innerHTML).toContain('/api/generated-images/file/bg.png'),
 		)
+	})
+
+	it('저작 config의 imageColorize를 이미지 교체 시 재적용한다', async () => {
+		mocks.requestImageGeneration.mockResolvedValue({
+			generatedImages: [{ id: 5, url: '/api/generated-images/file/bg.png' }],
+		})
+		const { container } = render(
+			<TemplateGenerator
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: {
+						'1:1': { imageInput: { profileId: 7 }, imageColorize: { line: '#ff0000' } },
+					},
+				}}
+			/>,
+		)
+
+		fireEvent.change(screen.getByLabelText('배경'), { target: { value: '파스텔 배경' } })
+		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
+
+		// 호출부가 imageColorize를 깔지 않으면 컬러 치환(마스크 오버레이)이 사라진다 — 그 스프레드를 잡는다.
+		await waitFor(() => {
+			expect(container.innerHTML).toContain('mask-image')
+			expect(container.innerHTML).toContain('rgb(255, 0, 0)')
+		})
 	})
 
 	it('슬롯 박스가 있으면 가장 가까운 지원 비율을 생성 요청에 싣는다', () => {

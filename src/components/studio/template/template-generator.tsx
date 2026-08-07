@@ -27,7 +27,7 @@ const PREVIEW_WIDTH = 480
  * imageInput이 달린 프레임 이미지 슬롯)을 편집해
  * 미리보기 그대로 PNG·운영자 정책의 CMYK TIFF 또는 mm 단위 CMYK PDF로 내보낸다. 서버 상태 변경은 없다 —
  * 입력값은 로컬 state로만 합성한다.
- * 미리보기는 어드민 캔버스와 동일한 동일-문서 렌더 — iframe(opaque origin)은 벡터 mask의
+ * 미리보기는 동일-문서 렌더(어드민 캔버스는 same-origin iframe) — opaque origin iframe은 벡터 mask의
  * CORS 로드를 깨뜨린다. 임포트 HTML은 스크립트 없는 inline-style이다.
  */
 export function TemplateGenerator({
@@ -59,15 +59,28 @@ export function TemplateGenerator({
 
 	// 사용자가 만진 슬롯만 오버라이드로 합성한다(만지지 않은 슬롯은 저작 값 유지).
 	// 텍스트 슬롯(<p>)과 이미지 슬롯(프레임)은 노드가 겹치지 않아 그대로 합친다.
+	// 이미지 교체에는 저작 config의 imageColorize만 깔아 재적용한다 — published html의 옛
+	// colorize 오버레이는 compose가 멱등 제거하므로, 안 깔면 컬러 치환이 사라진다.
+	// imageTransform은 published html에 이미 구워져 있어 절대 다시 넘기지 말 것(prepend 누적).
 	const composedHtml = useMemo(
 		() =>
 			composeTemplateHtml(html, {
 				...Object.fromEntries(
 					Object.entries(values).map(([nodeId, text]) => [nodeId, { text }]),
 				),
-				...imageValues,
+				...Object.fromEntries(
+					Object.entries(imageValues).map(([nodeId, imageValue]) => [
+						nodeId,
+						{
+							...(nodeConfigs[nodeId]?.imageColorize
+								? { imageColorize: nodeConfigs[nodeId].imageColorize }
+								: {}),
+							...imageValue,
+						},
+					]),
+				),
 			}),
-		[html, values, imageValues],
+		[html, values, imageValues, nodeConfigs],
 	)
 	// 합성 결과가 그려진 뒤 텍스트 슬롯의 실제 렌더 박스를 재서 잘림을 알린다 —
 	// scrollHeight는 overflow:hidden clip과 -webkit-line-clamp 말줄임 양쪽에서 잘린 내용까지 세고,
@@ -148,7 +161,7 @@ export function TemplateGenerator({
 									}
 								/>
 								{clippedSlotIds.has(slot.nodeId) && (
-									<Typography size="xs" tone="muted">
+									<Typography role="status" size="xs" tone="muted">
 										입력한 텍스트가 박스를 넘어 일부가 잘려 보여요.
 									</Typography>
 								)}

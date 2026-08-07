@@ -32,8 +32,8 @@ export function TextSlotInput({
 					onChange={(event) => onChange(event.target.value)}
 				/>
 				{isInvalidEmail && (
-					<p className="font-body text-sm font-normal text-destructive">
-						이메일 형식이 아닙니다.
+					<p role="alert" className="font-body text-sm font-normal text-destructive">
+						이메일 형식이 아니에요.
 					</p>
 				)}
 			</>

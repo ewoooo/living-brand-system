@@ -67,6 +67,9 @@ const CSS_BLEND_MODES = new Set([
 	'LUMINOSITY',
 ])
 
+/** 가시성 판정의 단일 소유자 — plan(에셋 수집)과 normalize(IR 생성)가 같은 서브트리를 제외해야 한다. */
+const isRenderable = (node: FigmaSourceNode) => node.visible !== false && node.opacity !== 0
+
 /** PNG 폴백으로 서브트리가 이미지에 구워진 레이어의 진단 — 어드민이 Figma 쪽 수정 지점을 찾는 데 쓴다. */
 export interface FigmaRasterDiagnostic {
 	nodeId: string
@@ -114,7 +117,7 @@ function collectAssetRequests(
 	plan: FigmaAssetPlan,
 	seenImageRefs: Set<string>,
 ): void {
-	if (node.visible === false || node.opacity === 0) return
+	if (!isRenderable(node)) return
 
 	const rasterReason = findRasterFallbackReason(node)
 	if (rasterReason) {
@@ -243,7 +246,7 @@ function normalizeNode(
 	renderedAssets: Readonly<Record<string, FigmaRenderedAsset>>,
 	imageFillAssets: Readonly<Record<string, FigmaRenderedAsset>>,
 ): IrNode | null {
-	if (node.visible === false) return null
+	if (!isRenderable(node)) return null
 
 	const isText = node.type === 'TEXT'
 	const renderedAsset = renderedAssets[node.id]
@@ -288,17 +291,16 @@ function normalizeNode(
 				.map((child) => normalizeNode(child, node, false, renderedAssets, imageFillAssets))
 				.filter((child): child is IrNode => child !== null)
 
-	// 이미지 캐리어 판정(임포트 시 1회 확정): clipsContent 프레임의 유일한 가시 자식이 이미지로
-	// 렌더되면(CSS로 낮춘 단일 IMAGE fill 또는 래스터 폴백 img) 캐리어로 표시한다 — compose가
-	// 생성 이미지를 프레임 배경 대신 이 자식에 갈아끼운다. 자식이 둘 이상인 장식 조합은 표시하지 않는다.
-	if (node.clipsContent && children.length === 1) {
-		const only = children[0]
-		const source = node.children?.find((child) => child.id === only.id)
-		const isRasterImage = only.tag === 'img' && source && !VECTOR_NODE_TYPES.has(source.type)
-		if (source && (findCssLowerableImageFill(source) || isRasterImage)) {
-			only.imageCarrier = true
-		}
-	}
+	// 이미지 캐리어 계약(임포트 시 1회 확정): 이미지 배정 가능한 표면은 임포트가 전부 여기서
+	// 확정한다 — compose와 admin UI는 data-image-carrier 마킹만 보고, 마킹 없는 노드의 이미지
+	// 배정은 무시된다.
+	// 자기 마킹 두 경우:
+	// ① 래스터 폴백 img(벡터 제외 — 벡터 img는 VectorLayerEditor 영역이라 절대 마킹하지 않는다)
+	// ② 자식 없는 CSS-lowerable 이미지 fill 노드(스탠드얼론 이미지 사각형 등).
+	//    자식 있는 이미지 fill 프레임은 배정 시 자식이 이미지를 가리므로 의도적으로 마킹하지 않는다.
+	const selfCarrier = renderedAsset
+		? !VECTOR_NODE_TYPES.has(node.type)
+		: children.length === 0 && Boolean(findCssLowerableImageFill(node))
 
 	return {
 		id: node.id,
@@ -307,6 +309,7 @@ function normalizeNode(
 		tag: renderedAsset ? 'img' : isText ? 'p' : 'div',
 		style,
 		text: !renderedAsset && isText ? (node.characters ?? '') : undefined,
+		imageCarrier: selfCarrier ? true : undefined,
 		asset: renderedAsset,
 		fillAsset: background?.fillAsset,
 		children,
