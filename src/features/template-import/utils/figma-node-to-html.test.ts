@@ -984,6 +984,29 @@ describe('convertFigmaNodeToHtml — 이미지 캐리어', () => {
 		})
 		expect(vector.html).not.toContain('data-image-carrier')
 	})
+
+	it('IMAGE fill을 가진 벡터(ELLIPSE) 외동 자식은 캐리어가 아니다 — 벡터 img는 VectorLayerEditor 영역', () => {
+		const { html } = convertFigmaNodeToHtml(
+			clipFrame([
+				{
+					id: '2:6',
+					name: 'photo circle',
+					type: 'ELLIPSE',
+					fills: [{ type: 'IMAGE', imageRef: 'ref-1', scaleMode: 'FILL' }],
+					absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 200 },
+				},
+			]),
+			{
+				'2:6': {
+					collection: 'application-images',
+					id: 7,
+					url: '/api/application-images/file/circle.svg',
+				},
+			},
+			FILL_ASSETS,
+		)
+		expect(html).not.toContain('data-image-carrier')
+	})
 })
 
 // IR 파이프라인 재배선의 기준선: 주요 경로(오토레이아웃/constraints/grid/텍스트/벡터 에셋/박스 효과)를
