@@ -350,6 +350,64 @@ describe('template HTML inspection', () => {
 		).toBeUndefined()
 	})
 
+	it('배경 생략(line만) imageColorize도 draft·발행 검사를 통과한다', () => {
+		// background 생략 시 compose가 단일 레이어 반전 마스크(linear-gradient 기준층 +
+		// mask-composite: subtract)로 선만 칠한다 — 검사 계약은 동일하다.
+		const converted = convertFigmaNodeToHtml(
+			{
+				id: '2:1',
+				name: 'Image Area',
+				type: 'FRAME',
+				clipsContent: true,
+				absoluteBoundingBox: { x: 0, y: 0, width: 911, height: 492 },
+				children: [
+					{
+						id: '2:2',
+						name: 'placeholder',
+						type: 'RECTANGLE',
+						fills: [{ type: 'IMAGE', imageRef: 'ref-1', scaleMode: 'FILL' }],
+						absoluteBoundingBox: { x: 0, y: -38, width: 1036, height: 578 },
+					},
+				],
+			} as never,
+			{},
+			{
+				'ref-1': {
+					collection: 'application-images',
+					id: 3,
+					url: '/api/application-images/file/ph.png',
+				},
+			},
+		)
+		const parsed = parsedConfigs({
+			'2:1': {
+				backgroundImage: '/api/generated-images/file/gen.png',
+				generatedImageId: 9,
+				imageColorize: { line: '#112233' },
+			},
+		})
+		const composed = composeTemplateHtml(converted.html, parsed.data)
+
+		expect(composed).toContain('mask-composite: subtract')
+		expect(composed).toContain('linear-gradient')
+		expect(
+			inspectDraftTemplateHtml({
+				baseHtml: converted.html,
+				html: composed,
+				overrideNodeIds: Object.keys(parsed.data),
+				refsByNode: parsed.refsByNode,
+			}).blocker,
+		).toBeUndefined()
+		expect(
+			inspectTemplateHtml({
+				baseHtml: converted.html,
+				html: composed,
+				overrideNodeIds: Object.keys(parsed.data),
+				refsByNode: parsed.refsByNode,
+			}).blocker,
+		).toBeUndefined()
+	})
+
 	it('캐리어 사각형을 직접 선택한 imageColorize도 발행 검사를 통과한다', () => {
 		// override가 캐리어 자신에 키된 경우(#193 경로): 캐리어는 참조 없이 expected로만 남고
 		// 오버레이가 합성 node-id로 마스크 URL과 참조를 가진다.

@@ -139,6 +139,19 @@ describe('convertFigmaNodeToHtml — 텍스트', () => {
 		expect(convertFigmaNodeToHtml(GRID_FRAME).html).not.toContain('font-family:"Inter"')
 	})
 
+	it('JUSTIFIED를 유효한 CSS 값 justify로 옮긴다(justified는 무효)', () => {
+		const { html } = convertFigmaNodeToHtml({
+			id: '1:1',
+			name: 't',
+			type: 'TEXT',
+			characters: 'hi',
+			absoluteBoundingBox: { x: 0, y: 0, width: 100, height: 20 },
+			style: { fontFamily: 'Inter', fontSize: 16, textAlignHorizontal: 'JUSTIFIED' },
+		})
+		expect(html).toContain('text-align:justify')
+		expect(html).not.toContain('text-align:justified')
+	})
+
 	it('lineHeightUnit INTRINSIC_%는 normal, WIDTH_AND_HEIGHT는 pre(줄바꿈 보존)', () => {
 		const s = firstTextStyle(convertFigmaNodeToHtml(GRID_FRAME).html)
 		expect(s).toContain('line-height:normal')
@@ -782,6 +795,17 @@ describe('convertFigmaNodeToHtml — 리뷰 수정 회귀', () => {
 		})
 		expect(html).not.toContain('onmouseover="x"')
 		expect(html).toContain('data-node-id="1:2&quot; onmouseover=&quot;x"')
+	})
+
+	it('레이어 이름의 <>를 이스케이프해 정규식 슬롯 수집기의 태그 조기 종료를 막는다', () => {
+		const { html } = convertFigmaNodeToHtml({
+			id: '1:1',
+			name: 'A > B',
+			type: 'FRAME',
+			absoluteBoundingBox: { x: 0, y: 0, width: 10, height: 10 },
+		})
+		expect(html).toContain('data-name="A &gt; B"')
+		expect(html).not.toContain('data-name="A > B"')
 	})
 })
 

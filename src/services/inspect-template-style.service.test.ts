@@ -29,6 +29,23 @@ describe('inspectTemplateStyle', () => {
 		expect(inspectTemplateStyle('mask-mode: luminance')).toEqual({ urls: [] })
 	})
 
+	it('컬러 치환 반전 마스크의 gradient 기준층·mask-composite·calc 크기를 허용한다', () => {
+		// Chromium이 재직렬화한 형태(색은 rgb(), 레이어는 쉼표 목록) 기준으로 고정한다.
+		expect(
+			inspectTemplateStyle(
+				'mask-image: linear-gradient(rgb(255, 255, 255), rgb(255, 255, 255)), url("/api/generated-images/file/gen.png"); mask-mode: alpha, luminance; mask-composite: subtract; mask-size: calc(100% - 4px) calc(100% - 4px), 100% 100%',
+			),
+		).toEqual({ urls: ['/api/generated-images/file/gen.png'] })
+	})
+
+	it('linear-gradient 안에 url이 섞인 mask-image는 거부한다', () => {
+		expect(
+			inspectTemplateStyle(
+				'mask-image: linear-gradient(url(/x)), url("/api/generated-images/file/gen.png")',
+			).blocker,
+		).toContain('URL 형식')
+	})
+
 	it('동적 이미지 함수와 URL 이외의 함수 위치를 거부한다', () => {
 		expect(inspectTemplateStyle('background-image: image-set(url(a) 1x)').blocker).toContain(
 			'동적 이미지 함수',

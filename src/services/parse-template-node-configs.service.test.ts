@@ -51,10 +51,20 @@ describe('parseTemplateNodeConfigs imageColorize', () => {
 		}
 	})
 
+	it('line만 있는 값을 허용한다 — background 생략 = 배경 투명(선만 칠함)', () => {
+		const imageColorize = { line: '#8fd6b8' }
+		const parsed = parseTemplateNodeConfigs({ 'frame-1': { imageColorize } })
+
+		expect('blocker' in parsed).toBe(false)
+		if (!('blocker' in parsed)) {
+			expect(parsed.data['frame-1']?.imageColorize).toEqual(imageColorize)
+		}
+	})
+
 	it.each([
 		['line 누락', { background: '#0a3d2e' }],
-		['background 누락', { line: '#8fd6b8' }],
 		['# 없는 값', { line: '8fd6b8', background: '#0a3d2e' }],
+		['background가 hex가 아닌 값', { line: '#8fd6b8', background: 'url(x)' }],
 		['hex가 아닌 값', { line: '#zzzzzz', background: '#0a3d2e' }],
 		['CSS 함수 값', { line: 'url(x)', background: '#0a3d2e' }],
 		['알 수 없는 필드', { line: '#8fd6b8', background: '#0a3d2e', alpha: 1 }],

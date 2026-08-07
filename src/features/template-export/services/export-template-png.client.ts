@@ -8,7 +8,10 @@ import { withSafeExportStage } from './render-template-export-stage.client'
  * DOM 캡처와 브라우저 다운로드 I/O는 이 adapter가 소유한다.
  */
 export async function exportHtmlToPng(html: string, fileName: string): Promise<void> {
-	const dataUrl = await withSafeExportStage(html, (stage) => toPng(stage, { cacheBust: true }))
+	// 템플릿은 픽셀 정의 매체 — devicePixelRatio를 상속하지 않고 기기 무관 동일 산출물을 만든다.
+	const dataUrl = await withSafeExportStage(html, (stage) =>
+		toPng(stage, { cacheBust: true, pixelRatio: 1 }),
+	)
 	const link = document.createElement('a')
 	link.href = dataUrl
 	link.download = `${fileName}.png`

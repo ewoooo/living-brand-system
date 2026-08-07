@@ -49,6 +49,8 @@ const ALLOWED_STYLE_PROPERTIES = new Set([
 	'letter-spacing',
 	'line-height',
 	'margin',
+	// compose 컬러 치환(imageColorize) 배경 생략 시 반전 마스크가 쓰는 subtract 합성.
+	'mask-composite',
 	'mask-image',
 	// compose 컬러 치환(imageColorize)이 생성 이미지 마스크에 쓰는 luminance 모드.
 	'mask-mode',
@@ -184,7 +186,19 @@ export function inspectTemplateStyle(style: string): { blocker?: string; urls: s
 			continue
 		}
 
-		const match = value.match(/^url\(\s*(?:"([^"]+)"|'([^']+)'|([^"'()\s]+))\s*\)$/i)
+		// compose 반전 마스크(imageColorize 배경 생략)의 기준층 linear-gradient는 URL 레이어가
+		// 아니다 — 벗겨내고 남은 url 레이어만 검사한다(CSSOM이 색을 rgb()로 재직렬화해도 매치).
+		// gradient 안에 url(이 섞이면 벗기지 않아 아래 단일 url 검사에서 막힌다.
+		let urlValue = value
+		if (property === 'mask-image') {
+			const gradientPrefix = value.match(
+				/^linear-gradient\((?:[^()]|\([^()]*\))*\)\s*,\s*/i,
+			)?.[0]
+			if (gradientPrefix && !containsCssFunction(gradientPrefix, 'url')) {
+				urlValue = value.slice(gradientPrefix.length)
+			}
+		}
+		const match = urlValue.match(/^url\(\s*(?:"([^"]+)"|'([^']+)'|([^"'()\s]+))\s*\)$/i)
 		const url = match?.[1] ?? match?.[2] ?? match?.[3]
 		if (!hasUrl || !url || hasUnsafeTemplateControlCharacter(url)) {
 			return { blocker: 'HTML style URL 형식이 올바르지 않습니다.', urls: [] }

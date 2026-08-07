@@ -589,21 +589,24 @@ function ImageTransformEditor({
 }
 
 /**
- * 컬러 치환 폼 — 생성 이미지(단색 라인 아트)의 선·배경을 브랜드 컬러로 다시 칠한다.
- * 값은 override로만 저장되고 compose가 luminance 마스크 2겹으로 적용한다.
+ * 컬러 치환 폼 — 생성 이미지(단색 라인 아트)의 선 색을 브랜드 컬러로 고른다.
+ * 배경은 기본 투명(선만 칠해짐)이며 '배경 직접 지정'으로만 opt-in한다.
+ * 값은 override로만 저장되고 compose가 luminance 마스크로 적용한다.
  * 스와치 소스·UI는 VectorLayerEditor의 브랜드 컬러와 동일(published brand-colors).
  */
 function ImageColorizeEditor({
 	value,
 	onChange,
 }: {
-	value?: { line: string; background: string }
-	onChange: (next?: { line: string; background: string }) => void
+	value?: { line: string; background?: string }
+	onChange: (next?: { line: string; background?: string }) => void
 }) {
 	const [colors, setColors] = useState<BrandColor[]>([])
 	const [loadError, setLoadError] = useState(false)
-	// 두 값이 모두 골라져야 유효한 override — 한쪽만 고른 상태는 draft로만 들고 있는다.
+	// 선 색만으로 유효한 override — background 생략 시 compose가 배경 없이 선만 칠한다.
 	const [draft, setDraft] = useState<{ line?: string; background?: string }>(value ?? {})
+	// 배경 직접 지정은 opt-in — 기존 설정에 background가 있으면 열린 채로 시작한다(노드별 key 리마운트).
+	const [showBackground, setShowBackground] = useState(Boolean(value?.background))
 
 	useEffect(() => setDraft(value ?? {}), [value])
 
@@ -624,18 +627,23 @@ function ImageColorizeEditor({
 	const pick = (field: 'line' | 'background', hex: string) => {
 		const next = { ...draft, [field]: hex }
 		setDraft(next)
-		if (next.line && next.background) {
-			onChange({ line: next.line, background: next.background })
+		if (next.line) {
+			onChange(
+				next.background
+					? { line: next.line, background: next.background }
+					: { line: next.line },
+			)
 		}
 	}
 
 	return (
 		<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-			{(
-				[
-					['line', '선 색'],
-					['background', '배경 색'],
-				] as const
+			{(showBackground
+				? ([
+						['line', '선 색'],
+						['background', '배경 색'],
+					] as const)
+				: ([['line', '선 색']] as const)
 			).map(([field, label]) => (
 				<fieldset key={field} style={{ border: 0, padding: 0, margin: 0 }}>
 					<legend className="text-sm" style={{ marginBottom: 4 }}>
@@ -673,6 +681,31 @@ function ImageColorizeEditor({
 					</div>
 				</fieldset>
 			))}
+			{!showBackground && (
+				<p className="text-sm" style={{ margin: 0, color: 'var(--theme-elevation-500)' }}>
+					배경 없이 선만 칠합니다(캔버스가 그대로 비칩니다)
+				</p>
+			)}
+			<label
+				className="text-sm"
+				style={{ display: 'flex', alignItems: 'center', gap: 6, width: 'fit-content' }}
+			>
+				<input
+					type="checkbox"
+					checked={showBackground}
+					onChange={(event) => {
+						const checked = event.target.checked
+						setShowBackground(checked)
+						if (!checked) {
+							// 체크 해제 = 투명 기본 복귀 — 저장된 background를 지우고 선 색만 남긴다.
+							const next = { line: draft.line }
+							setDraft(next)
+							if (next.line) onChange({ line: next.line })
+						}
+					}}
+				/>
+				배경 직접 지정
+			</label>
 			<div>
 				<Button
 					type="button"
@@ -680,6 +713,7 @@ function ImageColorizeEditor({
 					size="sm"
 					onClick={() => {
 						setDraft({})
+						setShowBackground(false)
 						onChange(undefined)
 					}}
 				>

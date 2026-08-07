@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isManager, managerOrAdmin } from '@/lib/auth'
+import { templateAssetReferenceGuardHooks } from '@/services/guard-template-references.service'
 import { draftVersions } from './shared'
 
 export const BrandLogos: CollectionConfig = {
@@ -8,6 +9,8 @@ export const BrandLogos: CollectionConfig = {
 		singular: '로고',
 		plural: '로고',
 	},
+	// 발행 템플릿이 파일 URL을 참조 중이면 삭제·발행 해제를 거부한다.
+	hooks: templateAssetReferenceGuardHooks('brand-logos'),
 	access: {
 		// 공개 화면은 발행본만 읽고, manager/admin은 Admin에서 draft까지 관리한다.
 		read: ({ req }) =>

@@ -19,9 +19,11 @@ export function isImageColorizeOverlayId(nodeId: string): boolean {
 }
 
 /**
- * 컬러 치환: 생성 이미지(단색 라인 아트)를 luminance 마스크로 써서 캐리어를 2겹으로 재구성한다.
- * 바닥(캐리어)=line 색, 오버레이(자식)=background 색 — 마스크의 밝은 영역만 배경색이 남고
- * 어두운 선 부분은 바닥의 line 색이 비친다(안티앨리어싱 경계는 luminance 비율로 혼합).
+ * 컬러 치환: 생성 이미지(단색 라인 아트)를 luminance 마스크로 써서 캐리어를 재구성한다.
+ * background 명시 시 2겹 — 바닥(캐리어)=line 색, 오버레이(자식)=background 색. 마스크의 밝은
+ * 영역만 배경색이 남고 어두운 선 부분은 바닥의 line 색이 비친다(AA 경계는 luminance 비율 혼합).
+ * background 생략 시(기본) 단일 레이어 반전 마스크 — 선만 line 색으로 칠하고 나머지는 완전
+ * 투명이라 캔버스가 그대로 비친다. 바닥에는 아무것도 칠하지 않는다.
  * 발행 검증(metadataRef)이 style URL과 data-asset-*의 동일 요소 짝을 요구하므로 에셋 참조를
  * 마스크 URL을 가진 오버레이로 옮기고, URL을 잃은 캐리어에서는 제거한다.
  * 반환값은 박스·transform을 소유하는 요소 — img 캐리어는 div로 치환돼 캐리어가 바뀐다.
@@ -45,6 +47,20 @@ function applyImageColorize(
 		base = replaced
 	}
 
+	// 캐리어가 프레임을 못 덮는 영역(축소·회전, 서브픽셀 틈)에 부모 clip 프레임 자체의 fill이
+	// 새어 보이므로 편집 대상 슬롯의 프레임 fill은 투명이 기본이다. backgroundImage는 shorthand
+	// background: rgb(...) 선언 시 'initial'/'none'을 반환할 수 있어 url( 존재 여부로 검사한다.
+	// 프레임이 템플릿 루트(캔버스)면 건드리지 않는다 — 캔버스 배경이 사라지면 안 된다.
+	const frame = base.parentElement
+	if (
+		frame instanceof HTMLElement &&
+		frame !== doc.body.firstElementChild &&
+		frame.style.overflow === 'hidden' &&
+		!/url\(/.test(frame.style.backgroundImage)
+	) {
+		frame.style.backgroundColor = 'transparent'
+	}
+
 	const overlay = doc.createElement('div')
 	// 검증이 모든 요소에 유일한 data-node-id를 요구한다 — 캐리어 id에서 파생한 합성 id를 준다.
 	overlay.setAttribute('data-node-id', `${base.getAttribute('data-node-id')}-colorize`)
@@ -54,13 +70,30 @@ function applyImageColorize(
 	overlay.style.top = '0'
 	overlay.style.width = '100%'
 	overlay.style.height = '100%'
-	overlay.style.backgroundColor = colorize.background
-	overlay.style.maskImage = `url("${imageUrl}")`
-	overlay.style.maskMode = 'luminance'
 	// 프레이밍은 치환 전 렌더와 동일하게 — background-*를 mask-*로 옮긴다(img는 기본 fill 상당).
-	overlay.style.maskSize = base.style.backgroundSize || '100% 100%'
-	overlay.style.maskPosition = base.style.backgroundPosition || 'center'
-	overlay.style.maskRepeat = base.style.backgroundRepeat || 'no-repeat'
+	const maskSize = base.style.backgroundSize || '100% 100%'
+	const maskPosition = base.style.backgroundPosition || 'center'
+	const maskRepeat = base.style.backgroundRepeat || 'no-repeat'
+	if (colorize.background) {
+		// 2겹: 오버레이=배경색 + luminance 마스크(밝은 영역만 배경색, 어두운 선은 바닥이 비침).
+		overlay.style.backgroundColor = colorize.background
+		overlay.style.maskImage = `url("${imageUrl}")`
+		overlay.style.maskMode = 'luminance'
+		overlay.style.maskSize = maskSize
+		overlay.style.maskPosition = maskPosition
+		overlay.style.maskRepeat = maskRepeat
+	} else {
+		// 단일 레이어 반전 마스크: 기준층(백색 gradient)에서 이미지 luminance를 빼면(subtract)
+		// 어두운 선 영역만 불투명 — 선만 line 색으로 칠해지고 나머지는 완전 투명(캔버스가 비침).
+		// 기준층은 4px 인셋 — 박스 가장자리 AA 픽셀에 선 색이 남는 잔선을 막는다.
+		overlay.style.backgroundColor = colorize.line
+		overlay.style.maskImage = `linear-gradient(#ffffff,#ffffff), url("${imageUrl}")`
+		overlay.style.maskMode = 'alpha, luminance'
+		overlay.style.maskComposite = 'subtract'
+		overlay.style.maskSize = `calc(100% - 4px) calc(100% - 4px), ${maskSize}`
+		overlay.style.maskPosition = `center, ${maskPosition}`
+		overlay.style.maskRepeat = `no-repeat, ${maskRepeat}`
+	}
 	for (const name of ['data-asset-collection', 'data-asset-id']) {
 		const value = base.getAttribute(name)
 		if (value !== null) overlay.setAttribute(name, value)
@@ -71,7 +104,8 @@ function applyImageColorize(
 	base.style.backgroundSize = ''
 	base.style.backgroundPosition = ''
 	base.style.backgroundRepeat = ''
-	base.style.backgroundColor = colorize.line
+	// 배경 명시 시에만 바닥=line 색. 생략 시 바닥은 투명이어야 캔버스가 그대로 비친다.
+	base.style.backgroundColor = colorize.background ? colorize.line : ''
 	base.appendChild(overlay)
 	return base
 }
