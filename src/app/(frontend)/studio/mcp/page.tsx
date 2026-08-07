@@ -20,7 +20,10 @@ export default async function StudioMcpPage() {
 					title="MCP 설정"
 					description="로그인 계정을 외부 도구와 연결합니다."
 				/>
-				<McpKeyIssuer />
+				{/* 폭은 화면 조합(페이지)이 소유한다 — docs/10 §4. */}
+				<div className="max-w-2xl">
+					<McpKeyIssuer />
+				</div>
 			</ContentFrame>
 		</SectionLayout>
 	)
