@@ -12,11 +12,6 @@ export interface Point {
 	y: number
 }
 
-export const IDENTITY_TRANSFORM: ImageTransform = { x: 0, y: 0, scale: 1, rotate: 0 }
-
-export const isIdentityTransform = (t: ImageTransform) =>
-	t.x === 0 && t.y === 0 && t.scale === 1 && t.rotate === 0
-
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 const roundTo = (value: number, factor: number) => Math.round(value * factor) / factor
 

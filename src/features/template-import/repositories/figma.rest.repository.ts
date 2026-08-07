@@ -1,5 +1,5 @@
 import { env } from '@/env'
-import type { FigmaNode } from '@/features/template-import/types'
+import type { FigmaSourceNode } from '@/features/template-import/utils/figma-ir'
 import {
 	FigmaApiError,
 	type FigmaApiStage,
@@ -37,7 +37,7 @@ function throwFigmaApiError(response: Response, stage: FigmaApiStage): never {
 	)
 }
 
-export async function findFigmaNodeTree(fileKey: string, nodeId: string): Promise<FigmaNode> {
+export async function findFigmaNodeTree(fileKey: string, nodeId: string): Promise<FigmaSourceNode> {
 	const url = `${FIGMA_API_BASE}/files/${fileKey}/nodes?ids=${encodeURIComponent(nodeId)}&geometry=paths`
 	const response = await fetch(url, { headers: { 'X-Figma-Token': getFigmaToken() } })
 
@@ -46,7 +46,7 @@ export async function findFigmaNodeTree(fileKey: string, nodeId: string): Promis
 	}
 
 	const data = (await response.json()) as {
-		nodes?: Record<string, { document?: FigmaNode }>
+		nodes?: Record<string, { document?: FigmaSourceNode }>
 	}
 	const rootNode = data.nodes?.[nodeId]?.document
 

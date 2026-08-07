@@ -27,14 +27,12 @@ import { generateOneText } from '@/features/generate-text/services/generate-text
 import type { BrandColor } from '@/payload-types'
 import {
 	composeTemplateHtml,
+	IDENTITY_TRANSFORM,
+	isIdentityTransform,
 	isImageColorizeOverlayId,
 } from '@/services/compose-template-html.client'
 import type { TemplateNodeConfig, TemplateNodeConfigMap, TemplateSlotSpec } from '@/types/template'
-import {
-	IDENTITY_TRANSFORM,
-	type ImageTransform,
-	isIdentityTransform,
-} from './image-transform-gestures'
+import type { ImageTransform } from './image-transform-gestures'
 import { ImageTransformOverlay } from './image-transform-overlay'
 import { VectorLayerEditor } from './vector-layer-editor'
 

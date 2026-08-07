@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { IDENTITY_TRANSFORM, isIdentityTransform } from '@/services/compose-template-html.client'
 import {
 	clampTransform,
-	IDENTITY_TRANSFORM,
-	isIdentityTransform,
 	normalizeAngle,
 	panTransform,
 	rotateTransform,

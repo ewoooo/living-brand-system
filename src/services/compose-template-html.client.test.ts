@@ -117,7 +117,7 @@ describe('composeTemplateHtml image carrier', () => {
 		const frameHtml =
 			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
 			'<img data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
-			' src="/api/application-images/file/baked.png" srcset="/x 2x" alt="">' +
+			' src="/api/application-images/file/baked.png" alt="">' +
 			'</div>'
 		const html = composeTemplateHtml(frameHtml, {
 			'frame-1': { backgroundImage: generated, generatedImageId: 9 },
@@ -125,7 +125,6 @@ describe('composeTemplateHtml image carrier', () => {
 		const image = new DOMParser().parseFromString(html, 'text/html').querySelector('img')
 
 		expect(image?.getAttribute('src')).toBe(generated)
-		expect(image?.hasAttribute('srcset')).toBe(false)
 		expect(image?.getAttribute('data-asset-id')).toBe('9')
 	})
 
@@ -425,7 +424,7 @@ describe('composeTemplateHtml image carrier', () => {
 			'<div data-node-id="frame-1" data-figma-type="FRAME">' +
 			'<img data-node-id="rect-1" data-figma-type="RECTANGLE"' +
 			' data-asset-collection="application-images" data-asset-id="5"' +
-			' src="/api/application-images/file/baked.png" srcset="/x 2x" alt="">' +
+			' src="/api/application-images/file/baked.png" alt="">' +
 			'<div data-node-id="deco-1" data-figma-type="RECTANGLE"></div>' +
 			'</div>'
 		const html = composeTemplateHtml(frameHtml, {
@@ -434,7 +433,6 @@ describe('composeTemplateHtml image carrier', () => {
 		const image = new DOMParser().parseFromString(html, 'text/html').querySelector('img')
 
 		expect(image?.getAttribute('src')).toBe(generated)
-		expect(image?.hasAttribute('srcset')).toBe(false)
 		expect(image?.getAttribute('data-asset-collection')).toBe('generated-images')
 		expect(image?.getAttribute('data-asset-id')).toBe('9')
 		expect(image?.style.backgroundImage).toBe('')

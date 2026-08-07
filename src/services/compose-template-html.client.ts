@@ -13,6 +13,33 @@ export function formatImageEditTransform(
 	return `translate(${edit.x}px, ${edit.y}px) scale(${edit.scale}) rotate(${edit.rotate}deg)`
 }
 
+export const IDENTITY_TRANSFORM: NonNullable<TemplateNodeConfig['imageTransform']> = {
+	x: 0,
+	y: 0,
+	scale: 1,
+	rotate: 0,
+}
+
+/**
+ * 편집 transform의 identity 판정 — formatImageEditTransform과 짝 계약. compose는 identity면
+ * transform을 아예 쓰지 않으므로, 오버레이가 캐리어 inline transform에서 커밋된 편집 prefix를
+ * 벗겨내는 로직은 이 판정과 compose의 기록 여부가 일치하는 데 의존한다.
+ */
+export const isIdentityTransform = (t: NonNullable<TemplateNodeConfig['imageTransform']>) =>
+	t.x === 0 && t.y === 0 && t.scale === 1 && t.rotate === 0
+
+/** 래스터 img를 같은 속성(alt·src 제외)의 div로 치환한다 — mask·배경 재구성은 img 콘텐츠에 못 얹는다. */
+function replaceImageWithDiv(doc: Document, image: HTMLImageElement): HTMLElement {
+	const replaced = doc.createElement('div')
+	for (const attribute of Array.from(image.attributes)) {
+		if (!['alt', 'src'].includes(attribute.name)) {
+			replaced.setAttribute(attribute.name, attribute.value)
+		}
+	}
+	image.replaceWith(replaced)
+	return replaced
+}
+
 /** compose가 컬러 치환용으로 만든 오버레이 노드 id — 편집 UI(레이어 패널)에서 숨기는 판별 계약. */
 export function isImageColorizeOverlayId(nodeId: string): boolean {
 	return nodeId.endsWith('-colorize')
@@ -34,18 +61,8 @@ function applyImageColorize(
 	colorize: NonNullable<TemplateNodeConfig['imageColorize']>,
 	imageUrl: string,
 ): HTMLElement {
-	let base = carrier
-	if (carrier instanceof HTMLImageElement) {
-		// 래스터 폴백 img 캐리어는 vectorColor와 같은 방식으로 div 치환 — mask는 img 콘텐츠에 못 얹는다.
-		const replaced = doc.createElement('div')
-		for (const attribute of Array.from(carrier.attributes)) {
-			if (!['alt', 'src', 'srcset'].includes(attribute.name)) {
-				replaced.setAttribute(attribute.name, attribute.value)
-			}
-		}
-		carrier.replaceWith(replaced)
-		base = replaced
-	}
+	// 래스터 폴백 img 캐리어는 vectorColor와 같은 방식으로 div 치환 — mask는 img 콘텐츠에 못 얹는다.
+	const base = carrier instanceof HTMLImageElement ? replaceImageWithDiv(doc, carrier) : carrier
 
 	// 캐리어가 프레임을 못 덮는 영역(축소·회전, 서브픽셀 틈)에 부모 clip 프레임 자체의 fill이
 	// 새어 보이므로 편집 대상 슬롯의 프레임 fill은 투명이 기본이다. backgroundImage는 shorthand
@@ -140,7 +157,6 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 			if (carrier instanceof HTMLElement) {
 				if (carrier instanceof HTMLImageElement) {
 					carrier.src = config.backgroundImage
-					carrier.removeAttribute('srcset')
 				} else {
 					carrier.style.backgroundImage = `url("${config.backgroundImage}")`
 					// import가 scaleMode에서 굳힌 background-size/position은 보존하고 없을 때만 기본값.
@@ -163,10 +179,7 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 					? applyImageColorize(doc, carrier, config.imageColorize, config.backgroundImage)
 					: carrier
 				const edit = config.imageTransform
-				if (
-					edit &&
-					!(edit.x === 0 && edit.y === 0 && edit.scale === 1 && edit.rotate === 0)
-				) {
+				if (edit && !isIdentityTransform(edit)) {
 					// 합성 규칙: 편집 transform을 import가 만든 base transform 앞에 붙인다(prepend).
 					// 맨 왼쪽 CSS transform이 부모(프레임) 좌표계에서 적용되므로 pan이 프레임 안에서
 					// 이미지를 옮기는 느낌이 되고, Figma 소유의 base transform(rotate 등)은 보존된다.
@@ -182,7 +195,6 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 				// 보이지 않고, 발행 검증(metadataRef)은 img의 src를 읽어 data-asset-*와
 				// 어긋난다 — 캐리어 img와 동일하게 src 자체를 갈아끼운다.
 				el.src = config.backgroundImage
-				el.removeAttribute('srcset')
 				if (config.generatedImageId) {
 					el.setAttribute('data-asset-collection', 'generated-images')
 					el.setAttribute('data-asset-id', String(config.generatedImageId))
@@ -213,32 +225,24 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 			}
 		}
 
-		if (el.tagName.toLowerCase() === 'img' && el instanceof HTMLElement) {
-			const image = el as HTMLImageElement
-			const src = config.vectorAsset?.src ?? image.getAttribute('src')
+		if (el instanceof HTMLImageElement) {
+			if (config.vectorAsset) {
+				el.src = config.vectorAsset.src
+				el.dataset.assetCollection = config.vectorAsset.collection
+				el.dataset.assetId = String(config.vectorAsset.id)
+			}
+			const src = el.getAttribute('src')
 			const fit = config.vectorFit ?? 'fill'
 
-			if (config.vectorAsset) {
-				image.src = config.vectorAsset.src
-				image.dataset.assetCollection = config.vectorAsset.collection
-				image.dataset.assetId = String(config.vectorAsset.id)
-			}
-			image.style.objectFit = fit
-
 			if (config.vectorColor && src) {
-				const mask = doc.createElement('div')
-				for (const attribute of Array.from(image.attributes)) {
-					if (attribute.name !== 'src' && attribute.name !== 'alt') {
-						mask.setAttribute(attribute.name, attribute.value)
-					}
-				}
+				const mask = replaceImageWithDiv(doc, el)
 				mask.style.backgroundColor = config.vectorColor
 				mask.style.maskImage = `url("${src}")`
 				mask.style.maskPosition = 'center'
 				mask.style.maskRepeat = 'no-repeat'
 				mask.style.maskSize = fit === 'contain' ? 'contain' : '100% 100%'
-				mask.style.objectFit = ''
-				image.replaceWith(mask)
+			} else {
+				el.style.objectFit = fit
 			}
 		}
 	}
