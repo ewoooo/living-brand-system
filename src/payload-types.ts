@@ -894,6 +894,7 @@ export interface LayoutBlock {
         | ClearspaceViewerWidget
         | ColorPairingWidget
         | ColorPairingRecommendationWidget
+        | ColorIncorrectUsageWidget
         | ConceptIntroWidget
         | DoDontWidget
         | GlyphGridWidget
@@ -1059,6 +1060,19 @@ export interface ColorPairingRecommendationWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'colorPairingRecommendationWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorIncorrectUsageWidget".
+ */
+export interface ColorIncorrectUsageWidget {
+  /**
+   * 기준 로고입니다. 같은 언어·방향의 기본형/WHITE/단색형을 파일명 규약으로 함께 찾습니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorIncorrectUsageWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2991,6 +3005,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
         colorPairingWidget?: T | ColorPairingWidgetSelect<T>;
         colorPairingRecommendationWidget?: T | ColorPairingRecommendationWidgetSelect<T>;
+        colorIncorrectUsageWidget?: T | ColorIncorrectUsageWidgetSelect<T>;
         conceptIntroWidget?: T | ConceptIntroWidgetSelect<T>;
         doDontWidget?: T | DoDontWidgetSelect<T>;
         glyphGridWidget?: T | GlyphGridWidgetSelect<T>;
@@ -3081,6 +3096,15 @@ export interface ColorPairingWidgetSelect<T extends boolean = true> {
  * via the `definition` "ColorPairingRecommendationWidget_select".
  */
 export interface ColorPairingRecommendationWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColorIncorrectUsageWidget_select".
+ */
+export interface ColorIncorrectUsageWidgetSelect<T extends boolean = true> {
+  logo?: T;
   id?: T;
   blockName?: T;
 }

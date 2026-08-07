@@ -5,6 +5,7 @@ import { CarouselWidget } from '@/features/guideline/widgets/carousel/component'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
+import { ColorIncorrectUsageWidget } from '@/features/guideline/widgets/color-incorrect-usage/component'
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/component'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/component'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/component'
@@ -95,6 +96,7 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 			),
 		},
 		{ name: 'incorrect-usage', node: <IncorrectUsageWidget /> },
+		{ name: 'color-incorrect-usage', node: <ColorIncorrectUsageWidget /> },
 		{
 			name: 'do-dont',
 			node: (
