@@ -11,20 +11,21 @@ const PREVIEW_WIDTH = 480
  * CORS 로드를 깨뜨린다. 임포트 HTML은 스크립트 없는 inline-style이다.
  */
 export function TemplateCanvas() {
-	const { canvas } = useTemplateStudio()
-	const scale = Math.min(1, PREVIEW_WIDTH / canvas.width)
+	const { config, canvas } = useTemplateStudio()
+	const { width, height } = config.exportOption.canvas
+	const scale = Math.min(1, PREVIEW_WIDTH / width)
 
 	return (
 		<div className="grid h-full min-h-0 min-w-0 overflow-auto">
 			<div
 				className="m-auto shrink-0 overflow-hidden shadow-lg"
-				style={{ width: canvas.width * scale, height: canvas.height * scale }}
+				style={{ width: width * scale, height: height * scale }}
 			>
 				<div
 					ref={canvas.previewRef}
 					style={{
-						width: canvas.width,
-						height: canvas.height,
+						width,
+						height,
 						transform: `scale(${scale})`,
 						transformOrigin: 'top left',
 					}}

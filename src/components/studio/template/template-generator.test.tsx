@@ -243,10 +243,11 @@ describe('TemplateGenerator', () => {
 		)
 	})
 
-	it('선택한 포맷으로 내보낸다 — canExport가 허용한 포맷만 목록에 오른다', async () => {
-		mocks.canExport.mockImplementation(() => true)
+	it('선택한 포맷으로 내보낸다 — 편집 계약(printPpi 정책)이 허용한 포맷만 목록에 오른다', async () => {
 		const user = userEvent.setup()
-		render(<TemplateGenerator navigation={navigation} template={template} />)
+		render(
+			<TemplateGenerator navigation={navigation} template={{ ...template, printPpi: 150 }} />,
+		)
 
 		screen.getByRole('combobox', { name: 'Format' }).focus()
 		await user.keyboard('{ArrowDown}')

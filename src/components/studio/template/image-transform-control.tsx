@@ -12,10 +12,6 @@ import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/services/compose-template-html.cl
 // 값 계약과 환산은 features가 소유한다 — 기존 소비자·테스트의 import 경로를 유지하는 재export.
 export { IMAGE_TRANSFORM_DEFAULT, type ImageTransformValue, toImageEditTransform }
 
-// 어드민과 같은 compose 계약 범위를 소비한다 — step만 이 컨트롤의 UI 밀도다.
-const SCALE_RANGE = { ...IMAGE_EDIT_TRANSFORM_LIMITS.scale, step: 0.05 }
-const ROTATE_RANGE = { ...IMAGE_EDIT_TRANSFORM_LIMITS.rotate, step: 1 }
-
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
 /**
@@ -71,6 +67,8 @@ type ImageTransformControlProps = {
 	disabled?: boolean
 	/** 대상 슬롯 박스의 종횡비(w/h) — 패드가 같은 비율로 그려진다. */
 	aspectRatio?: number
+	/** 슬롯별 조작 레인지(편집 계약 소유) — 생략하면 compose 전역 계약. 최종 clamp는 compose가 한다. */
+	limits?: typeof IMAGE_EDIT_TRANSFORM_LIMITS
 }
 
 /**
@@ -82,7 +80,11 @@ export function ImageTransformControl({
 	onChange,
 	disabled,
 	aspectRatio,
+	limits = IMAGE_EDIT_TRANSFORM_LIMITS,
 }: ImageTransformControlProps) {
+	// step은 이 컨트롤의 UI 밀도이고, min/max는 계약이 소유한다.
+	const scaleRange = { ...limits.scale, step: 0.05 }
+	const rotateRange = { ...limits.rotate, step: 1 }
 	return (
 		<div
 			data-slot="image-transform-control"
@@ -101,7 +103,7 @@ export function ImageTransformControl({
 			<SliderRow
 				label="Scale"
 				value={value.scale}
-				range={SCALE_RANGE}
+				range={scaleRange}
 				disabled={disabled}
 				format={(scale) => scale.toFixed(2).replace(/\.?0+$/, '')}
 				onChange={(scale) => onChange({ ...value, scale })}
@@ -109,7 +111,7 @@ export function ImageTransformControl({
 			<SliderRow
 				label="Rotate"
 				value={value.rotate}
-				range={ROTATE_RANGE}
+				range={rotateRange}
 				disabled={disabled}
 				format={(rotate) => `${Math.round(rotate)}deg`}
 				onChange={(rotate) => onChange({ ...value, rotate })}
