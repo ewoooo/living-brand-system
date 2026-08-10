@@ -40,7 +40,7 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 | 상태색 | 판정·상태 표시 전용 `--success`/`--info`/`--warning`(실패는 기존 `--destructive`, 해당 없음은 `--muted`). Admin 확장은 같은 이름을 Payload 테마에 매핑 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
 | highlight | 강조 배경과 전경 토큰, `bg-highlight` 유틸. Frontend는 gradient, Admin은 Payload success 색에 매핑 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
 | radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl` 4단 파생(`lg`는 뿌리값, `sm`/`md`/`xl`은 calc) | `theme.css`, `theme.css` |
-| 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(Essenflux — 🔴 essenherb 사유 서체. 브랜드 무관 토큰 자리에 앉아 있는 잔재이고 HD 서체로 교체 대기 중이다. 새 화면에서 쓰지 말 것), `HD`(CI 락업 워드마크 전용 @font-face) | `theme.css` |
+| 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(**미정 — Pretendard로 폴백.** 토큰과 `.font-title`은 자리를 지키고 있으니 서체가 정해지면 값만 바꿉니다), `HD`(CI 락업 워드마크 전용 @font-face) | `theme.css` |
 | 루트 크기 | 모든 화면에서 고정된 16px `rem` 기준 크기 | `src/app/(frontend)/styles.css`의 `html` |
 | 타이포 리듬 | `.typeset` 블록의 크기·행간·흐름(shadcn/typeset) | `src/app/(frontend)/typeset.css` |
 | base body / scrollbar / import 순서 | `body` 기본, `scrollbar-none` 유틸, CSS `@import` 체인 | `src/app/(frontend)/styles.css` |
@@ -114,7 +114,7 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:red|orang
 | 사실 | 근거 |
 | --- | --- |
 | `--font-body`(Pretendard)는 `body`에 배선되어 기본 폰트로 동작 | `theme.css`, `styles.css` |
-| `--font-title`(Essenflux)과 `.font-title` 클래스는 정의되어 있으나 상위 guideline 헤더에 미배선 | `theme.css`, `theme.css` |
+| `--font-title`은 값이 정해지지 않아 Pretendard로 폴백하며, `.font-title` 클래스는 정의되어 있으나 상위 guideline 헤더에 미배선 | `theme.css`, `theme.css` |
 | 그래서 `GuidelineHeader`의 `ChapterHeader`/`SectionHeader` 등은 `font-title` 없이 렌더되어 기본 body 폰트로 폴백 | `guideline-header.tsx:51-73` |
 | `--font-heading`/`--font-mono`는 어디에도 정의되지 않아 `.typeset`의 `code`/`pre`는 브라우저 monospace로 폴백 | `typeset.css` (참조만, 정의 없음) |
 

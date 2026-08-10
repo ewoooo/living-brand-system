@@ -6,14 +6,6 @@
 	font-display: swap;
 }
 
-@font-face {
-	font-family: "Essenflux";
-	src: url("/fonts/essenflux/Essenflux-Regular.woff2") format("woff2");
-	font-weight: 400;
-	font-style: normal;
-	font-display: swap;
-}
-
 /* HD체 (HD현대 공개 배포, Sandoll 제작). Light·Medium·Bold 3종 전부, 한글 11,172자 전부.
    웨이트마다 라틴/한글을 unicode-range로 갈라 둔다 — CI 락업은 워드마크(영문)만 쓰므로
    10KB짜리 라틴 조각만 받고, 한글 조각(약 500KB)은 한글이 실제로 그려지는 화면에서만 받는다.
@@ -77,7 +69,9 @@
 @theme inline {
 	--font-body: "Pretendard", system-ui, sans-serif;
 	--font-sans: var(--font-body);
-	--font-title: "Essenflux", "Pretendard", system-ui, sans-serif;
+	/* 제목 서체는 아직 정해지지 않았다 — body와 같은 Pretendard로 떨어진다.
+	   `.font-title`과 typography의 title 변형은 자리를 지키고 있으니, 서체가 정해지면 여기만 바꾼다. */
+	--font-title: "Pretendard", system-ui, sans-serif;
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-card: var(--card);
