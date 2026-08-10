@@ -37,6 +37,7 @@ import {
 	IMAGE_TRANSFORM_DEFAULT,
 	ImageTransformControl,
 	type ImageTransformValue,
+	toImageEditTransform,
 } from './image-transform-control'
 import { TextSlotInput } from './text-slot-input'
 
@@ -71,9 +72,9 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 		Record<string, { backgroundImage: string; generatedImageId: number }>
 	>({})
 	const [format, setFormat] = useState<TemplateExportFormat>('png')
-	// ponytail: 아래 둘은 디자인 SSOT의 UI-first 컨트롤 — 아직 compose에 연결되지 않는다.
-	// 텍스트 일괄 색·이미지 transform은 2단계(구워진 transform 누적 처리)에서 배선한다.
-	const [textColor, setTextColor] = useState('#000000')
+	// null = 사용자가 만지지 않음 — 저작 텍스트 색을 그대로 둔다(일괄 검정으로 덮지 않도록).
+	const [textColor, setTextColor] = useState<string | null>(null)
+	const [lineColors, setLineColors] = useState<Record<string, string>>({})
 	const [imageTransforms, setImageTransforms] = useState<Record<string, ImageTransformValue>>({})
 	const { html, nodeConfigs, width, height } = template
 	const scale = Math.min(1, PREVIEW_WIDTH / width)
@@ -91,29 +92,67 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 
 	// 사용자가 만진 슬롯만 오버라이드로 합성한다(만지지 않은 슬롯은 저작 값 유지).
 	// 텍스트 슬롯(<p>)과 이미지 슬롯(프레임)은 노드가 겹치지 않아 그대로 합친다.
-	// 이미지 교체에는 저작 config의 imageColorize만 깔아 재적용한다 — published html의 옛
-	// colorize 오버레이는 compose가 멱등 제거하므로, 안 깔면 컬러 치환이 사라진다.
-	// imageTransform은 published html에 이미 구워져 있어 절대 다시 넘기지 말 것(prepend 누적).
-	const composedHtml = useMemo(
-		() =>
-			composeTemplateHtml(html, {
-				...Object.fromEntries(
-					Object.entries(values).map(([nodeId, text]) => [nodeId, { text }]),
-				),
-				...Object.fromEntries(
-					Object.entries(imageValues).map(([nodeId, imageValue]) => [
-						nodeId,
-						{
-							...(nodeConfigs[nodeId]?.imageColorize
-								? { imageColorize: nodeConfigs[nodeId].imageColorize }
-								: {}),
-							...imageValue,
-						},
-					]),
-				),
+	// 일괄 텍스트 색은 사용자가 만졌을 때만 모든 텍스트 슬롯에 싣는다.
+	// 이미지 교체에는 저작 config의 imageColorize를 깔아 재적용하고(published html의 옛 colorize
+	// 오버레이는 compose가 멱등 제거), 사용자가 Line Color를 바꿨으면 그 line만 갈아끼운다.
+	// 사용자 imageTransform은 생성 이미지가 있는 슬롯에만 싣는다 — compose는 매번 published html
+	// (불변 base)에서 새로 합성하므로 어드민과 같은 base-재합성 패턴이라 prepend가 누적되지 않는다.
+	const composedHtml = useMemo(() => {
+		const textOverrides = Object.fromEntries(
+			slots
+				.map((slot) => {
+					const override: { text?: string; color?: string } = {}
+					const text = values[slot.nodeId]
+					if (text !== undefined) override.text = text
+					if (textColor) override.color = textColor
+					return [slot.nodeId, override] as const
+				})
+				.filter(([, override]) => Object.keys(override).length > 0),
+		)
+		const imageOverrides = Object.fromEntries(
+			Object.entries(imageValues).map(([nodeId, imageValue]) => {
+				const colorize = nodeConfigs[nodeId]?.imageColorize
+				const userLine = lineColors[nodeId]
+				const transform = imageTransforms[nodeId]
+				const slot = imageSlots.find((candidate) => candidate.nodeId === nodeId)
+				return [
+					nodeId,
+					{
+						...(colorize
+							? {
+									imageColorize: userLine
+										? { ...colorize, line: userLine }
+										: colorize,
+								}
+							: {}),
+						...(transform
+							? {
+									imageTransform: toImageEditTransform(
+										transform,
+										slot?.boxWidth ?? width,
+										slot?.boxHeight ?? height,
+									),
+								}
+							: {}),
+						...imageValue,
+					},
+				]
 			}),
-		[html, values, imageValues, nodeConfigs],
-	)
+		)
+		return composeTemplateHtml(html, { ...textOverrides, ...imageOverrides })
+	}, [
+		html,
+		slots,
+		values,
+		textColor,
+		imageValues,
+		lineColors,
+		imageTransforms,
+		imageSlots,
+		nodeConfigs,
+		width,
+		height,
+	])
 	// 합성 결과가 그려진 뒤 텍스트 슬롯의 실제 렌더 박스를 재서 잘림을 알린다 —
 	// scrollHeight는 overflow:hidden clip과 -webkit-line-clamp 말줄임 양쪽에서 잘린 내용까지 세고,
 	// 미리보기 축소(transform scale)는 이 두 값에 영향을 주지 않는다.
@@ -285,7 +324,7 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 							))}
 							<InspectorColorRow
 								label="Color"
-								value={textColor}
+								value={textColor ?? '#000000'}
 								onChange={setTextColor}
 							/>
 						</InspectorSection>
@@ -302,8 +341,16 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 											slot.boxWidth ?? Number.NaN,
 											slot.boxHeight ?? Number.NaN,
 										)}
-										defaultLineColor={
-											nodeConfigs[slot.nodeId]?.imageColorize?.line
+										lineColor={
+											lineColors[slot.nodeId] ??
+											nodeConfigs[slot.nodeId]?.imageColorize?.line ??
+											'#000000'
+										}
+										onLineColorChange={(hex) =>
+											setLineColors((current) => ({
+												...current,
+												[slot.nodeId]: hex,
+											}))
 										}
 										onGenerated={(image) =>
 											setImageValues((current) => ({
@@ -322,6 +369,8 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 										value={
 											imageTransforms[slot.nodeId] ?? IMAGE_TRANSFORM_DEFAULT
 										}
+										// compose는 배정된 이미지에만 transform을 적용한다 — 생성 전에는 비활성.
+										disabled={!imageValues[slot.nodeId]}
 										onChange={(transform) =>
 											setImageTransforms((current) => ({
 												...current,

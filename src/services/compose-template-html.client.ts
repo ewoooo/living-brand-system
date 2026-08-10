@@ -185,6 +185,14 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 		if (typeof config.text === 'string' && el.tagName.toLowerCase() === 'p') {
 			el.textContent = config.text
 		}
+		// 텍스트 색 오버라이드 — import가 만든 inline color 위에 그대로 덮는다.
+		if (
+			typeof config.color === 'string' &&
+			el.tagName.toLowerCase() === 'p' &&
+			el instanceof HTMLElement
+		) {
+			el.style.color = config.color
+		}
 		// 이미지 배정은 캐리어 전용 — 임포트가 이미지 표면(클립 프레임의 외동 이미지 자식·자식 없는
 		// 이미지 fill·래스터 폴백 img)을 전부 data-image-carrier로 마킹하며, 마킹하지 않은 노드의
 		// backgroundImage는 무시된다. 프레임 배경에 직접 쓰면 위에 얹힌 자식이 이미지를 가린다.

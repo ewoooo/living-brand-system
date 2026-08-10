@@ -33,8 +33,9 @@ type ImageSlotInputProps = {
 	pinnedProfileId?: number
 	/** 슬롯 박스에서 유도한 생성 비율 — 없으면 프로파일 비율로 생성한다. */
 	aspectRatio?: ImageAspectRatio
-	/** 저작 config(imageColorize)의 선화 색 — Line Color 행의 초기값. */
-	defaultLineColor?: string
+	/** Line Color 행의 표시 값 — 소유는 generator(합성 오버라이드에 쓴다). */
+	lineColor: string
+	onLineColorChange: (hex: string) => void
 	onGenerated: (image: { backgroundImage: string; generatedImageId: number }) => void
 }
 
@@ -46,14 +47,13 @@ export function ImageSlotInput({
 	id,
 	pinnedProfileId,
 	aspectRatio,
-	defaultLineColor,
+	lineColor,
+	onLineColorChange,
 	onGenerated,
 }: ImageSlotInputProps) {
 	const [prompt, setPrompt] = useState('')
 	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
 	const [profileId, setProfileId] = useState<number | undefined>(pinnedProfileId)
-	// ponytail: UI-first 컨트롤 — 아직 compose의 imageColorize 오버라이드에 연결되지 않는다(2단계).
-	const [lineColor, setLineColor] = useState(defaultLineColor ?? '#000000')
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 
@@ -145,7 +145,7 @@ export function ImageSlotInput({
 					</Select>
 				</InspectorRow>
 			)}
-			<InspectorColorRow label="Line Color" value={lineColor} onChange={setLineColor} />
+			<InspectorColorRow label="Line Color" value={lineColor} onChange={onLineColorChange} />
 			<InspectorField label="Prompt" htmlFor={id} className="min-h-24">
 				<Textarea
 					id={id}

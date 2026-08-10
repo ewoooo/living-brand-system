@@ -1,6 +1,7 @@
 'use client'
 
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react'
+import { cn } from '@/lib/utils'
 
 export type ImageTransformValue = {
 	/** 슬롯 중심 기준 오프셋, -1(왼/위) ~ 1(오른/아래). */
@@ -12,33 +13,60 @@ export type ImageTransformValue = {
 
 export const IMAGE_TRANSFORM_DEFAULT: ImageTransformValue = { x: 0, y: 0, scale: 1, rotate: 0 }
 
-const SCALE_RANGE = { min: 0.5, max: 2, step: 0.05 }
-const ROTATE_RANGE = { min: 0, max: 360, step: 1 }
+// 어드민 ImageTransformEditor·오버레이 제스처와 같은 범위 — 두 화면이 같은 compose 계약을 쓴다.
+const SCALE_RANGE = { min: 0.2, max: 5, step: 0.05 }
+const ROTATE_RANGE = { min: -180, max: 180, step: 1 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
+
+/**
+ * 패드 정규 좌표(-1~1)를 compose의 imageTransform(템플릿 px) 값으로 바꾼다.
+ * 패드 한끝 = 슬롯 박스 절반 이동. clamp ±1000은 어드민 제스처(clampTransform)와 같은 상한.
+ */
+export function toImageEditTransform(
+	value: ImageTransformValue,
+	boxWidth: number,
+	boxHeight: number,
+): ImageTransformValue {
+	return {
+		x: clamp(Math.round((value.x * boxWidth) / 2), -1000, 1000),
+		y: clamp(Math.round((value.y * boxHeight) / 2), -1000, 1000),
+		scale: value.scale,
+		rotate: value.rotate,
+	}
+}
 
 type ImageTransformControlProps = {
 	value: ImageTransformValue
 	onChange: (value: ImageTransformValue) => void
+	/** compose가 transform을 배정된 이미지에만 적용하므로, 생성 전에는 비활성으로 둔다. */
+	disabled?: boolean
 }
 
 /**
  * 디자인 SSOT(1:1838)의 Image Transform 컨트롤 — 포지션 패드 + Scale·Rotate 슬라이더 행.
- * ponytail: 아직 미리보기 합성에 연결되지 않은 UI-first 컨트롤이다 — 2단계에서 compose의
- * imageTransform 오버라이드에 배선한다(published html에 구워진 transform과의 누적 처리 포함).
+ * 값은 compose의 imageTransform 오버라이드로 미리보기에 합성된다(패드는 toImageEditTransform으로 px 환산).
  */
-export function ImageTransformControl({ value, onChange }: ImageTransformControlProps) {
+export function ImageTransformControl({ value, onChange, disabled }: ImageTransformControlProps) {
 	return (
-		<div data-slot="image-transform-control" className="flex flex-col gap-1 pb-2.5">
+		<div
+			data-slot="image-transform-control"
+			className={cn(
+				'flex flex-col gap-1 pb-2.5',
+				disabled && 'pointer-events-none opacity-50',
+			)}
+		>
 			<TransformPad
 				x={value.x}
 				y={value.y}
+				disabled={disabled}
 				onChange={(x, y) => onChange({ ...value, x, y })}
 			/>
 			<SliderRow
 				label="Scale"
 				value={value.scale}
 				range={SCALE_RANGE}
+				disabled={disabled}
 				format={(scale) => scale.toFixed(2).replace(/\.?0+$/, '')}
 				onChange={(scale) => onChange({ ...value, scale })}
 			/>
@@ -46,6 +74,7 @@ export function ImageTransformControl({ value, onChange }: ImageTransformControl
 				label="Rotate"
 				value={value.rotate}
 				range={ROTATE_RANGE}
+				disabled={disabled}
 				format={(rotate) => `${Math.round(rotate)}deg`}
 				onChange={(rotate) => onChange({ ...value, rotate })}
 			/>
@@ -59,16 +88,23 @@ type TransformPadProps = {
 	y: number
 	onChange: (x: number, y: number) => void
 	ariaLabel?: string
+	disabled?: boolean
 }
 
 /** 2축 포지션 패드 — 드래그와 화살표 키로 위치를 옮긴다. 이미지·그래픽 transform이 공유한다. */
-export function TransformPad({ x, y, onChange, ariaLabel = '이미지 위치' }: TransformPadProps) {
+export function TransformPad({
+	x,
+	y,
+	onChange,
+	ariaLabel = '이미지 위치',
+	disabled,
+}: TransformPadProps) {
 	const padRef = useRef<HTMLDivElement>(null)
 	const [dragging, setDragging] = useState(false)
 
 	function moveToPointer(event: PointerEvent<HTMLDivElement>) {
 		const pad = padRef.current
-		if (!pad) return
+		if (!pad || disabled) return
 		const bounds = pad.getBoundingClientRect()
 		onChange(
 			clamp(((event.clientX - bounds.left) / bounds.width) * 2 - 1, -1, 1),
@@ -77,6 +113,7 @@ export function TransformPad({ x, y, onChange, ariaLabel = '이미지 위치' }:
 	}
 
 	function nudge(event: KeyboardEvent<HTMLDivElement>) {
+		if (disabled) return
 		const step = 0.05
 		const deltas: Record<string, [number, number]> = {
 			ArrowLeft: [-step, 0],
@@ -98,7 +135,8 @@ export function TransformPad({ x, y, onChange, ariaLabel = '이미지 위치' }:
 			aria-label={ariaLabel}
 			aria-valuenow={Math.round(x * 100)}
 			aria-valuetext={`가로 ${Math.round(x * 100)}%, 세로 ${Math.round(y * 100)}%`}
-			tabIndex={0}
+			aria-disabled={disabled || undefined}
+			tabIndex={disabled ? -1 : 0}
 			onKeyDown={nudge}
 			onPointerDown={(event) => {
 				event.currentTarget.setPointerCapture(event.pointerId)
@@ -130,17 +168,18 @@ type SliderRowProps = {
 	range: { min: number; max: number; step: number }
 	format: (value: number) => string
 	onChange: (value: number) => void
+	disabled?: boolean
 }
 
 /** dialkit 슬라이더 행 — 채움 폭이 값이고, 드래그·화살표 키로 조절한다. */
-function SliderRow({ label, value, range, format, onChange }: SliderRowProps) {
+function SliderRow({ label, value, range, format, onChange, disabled }: SliderRowProps) {
 	const rowRef = useRef<HTMLDivElement>(null)
 	const [dragging, setDragging] = useState(false)
 	const ratio = (value - range.min) / (range.max - range.min)
 
 	function moveToPointer(event: PointerEvent<HTMLDivElement>) {
 		const row = rowRef.current
-		if (!row) return
+		if (!row || disabled) return
 		const bounds = row.getBoundingClientRect()
 		const nextRatio = clamp((event.clientX - bounds.left) / bounds.width, 0, 1)
 		const raw = range.min + nextRatio * (range.max - range.min)
@@ -148,6 +187,7 @@ function SliderRow({ label, value, range, format, onChange }: SliderRowProps) {
 	}
 
 	function nudge(event: KeyboardEvent<HTMLDivElement>) {
+		if (disabled) return
 		const direction =
 			event.key === 'ArrowRight' || event.key === 'ArrowUp'
 				? 1
@@ -169,7 +209,8 @@ function SliderRow({ label, value, range, format, onChange }: SliderRowProps) {
 			aria-valuemax={range.max}
 			aria-valuenow={value}
 			aria-valuetext={format(value)}
-			tabIndex={0}
+			aria-disabled={disabled || undefined}
+			tabIndex={disabled ? -1 : 0}
 			onKeyDown={nudge}
 			onPointerDown={(event) => {
 				event.currentTarget.setPointerCapture(event.pointerId)
