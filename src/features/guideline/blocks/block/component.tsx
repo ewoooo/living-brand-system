@@ -193,7 +193,6 @@ function renderWidget(child: Child): ReactNode {
 					text={child.text}
 					fontSize={child.fontSize}
 					panelHeight={child.panelHeight}
-					paddingY={child.paddingY}
 					color={child.color}
 					background={child.background}
 					weight={child.weight}

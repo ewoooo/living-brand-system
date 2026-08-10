@@ -7,6 +7,8 @@ import type { Block } from 'payload'
 //    줄을 쪼개면 표본이 깨진다.
 // 🔴 글자 크기와 판 높이는 **author가 정한다**. 예전에는 판을 채우도록 런타임에 맞췄는데, 줄이 늘면
 //    글자가 과하게 커지고 스크램블 중 크기가 출렁였다.
+// 🔴 높이 손잡이는 하나뿐이다. 예전에는 최소 높이 + 위아래 여백 둘로 받았는데, 글자가 가운데 서는 판이라
+//    여백을 올려도 판만 커지고 여백은 그대로여서 두 값이 서로를 무의미하게 만들었다.
 //
 // dbName 짧게(tsc)로 중첩 테이블명 63자 방어. enum은 전역 이름 공유라 enumName 명시.
 // 🔴 배열 필드를 두지 않는다 — 배열은 조회 SQL 별칭에 레벨을 하나 더 얹어 63자를 넘기면 조인이 조용히
@@ -34,25 +36,14 @@ export const TypeScrambleWidget: Block = {
 			admin: { description: '글자 크기(px)입니다. 줄 수와 판 높이에 맞춰 정합니다.' },
 		},
 		{
-			name: 'paddingY',
-			type: 'number',
-			defaultValue: 96,
-			min: 0,
-			max: 400,
-			admin: {
-				description:
-					'글자 위아래 여백(px)입니다. 판은 글자와 이 여백을 합친 만큼 커집니다.',
-			},
-		},
-		{
 			name: 'panelHeight',
 			type: 'number',
-			defaultValue: 360,
+			defaultValue: 480,
 			min: 80,
 			max: 1200,
 			admin: {
 				description:
-					'판 높이(px)입니다. 고정이라 스크램블 중에도 판형이 흔들리지 않습니다.',
+					'판 높이(px)입니다. 고정이라 스크램블 중에도 판형이 흔들리지 않습니다. 글자는 가운데 서므로 위아래 여백은 이 높이에서 글자 높이를 뺀 만큼입니다.',
 			},
 		},
 		{

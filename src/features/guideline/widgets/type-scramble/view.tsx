@@ -9,7 +9,8 @@ import { BRAND_FONT_STACK, LEADING } from '../brand-typeface'
 //
 // 🔴 글자 크기는 **고정**이다(author가 정한다). 예전에는 글자가 판을 채우도록 런타임에 맞췄는데,
 //    줄이 늘면 과하게 커지고 스크램블 중 글자 폭이 바뀔 때마다 크기가 출렁였다.
-// 🔴 판 높이는 **최소 높이 + 위아래 여백**으로 정해진다. 글자 크기를 키우면 판이 알아서 따라 커진다.
+// 🔴 판 높이는 **author가 정한 고정 값**이다. 글자가 가운데 서므로 위아래 여백은 그 높이에서 글자를 뺀
+//    만큼이고, 손잡이는 높이 하나뿐이다 — 여백을 따로 받으면 판만 커지고 여백은 그대로라 서로 무의미해진다.
 
 /** 글자 하나가 굳고 그다음 글자가 굳기까지. 왼쪽부터 차례로 잠기는 느낌을 이 간격이 만든다. */
 const STAGGER_MS = 11
@@ -27,7 +28,6 @@ export function TypeScrambleView({
 	text,
 	fontSize,
 	panelHeight,
-	paddingY,
 	color,
 	background,
 	weight,
@@ -37,8 +37,6 @@ export function TypeScrambleView({
 	text: string
 	fontSize: number
 	panelHeight: number
-	/** 글자 위아래 여백(px). 판은 글자 + 이 여백만큼 커진다. */
-	paddingY: number
 	/** brand-colors에서 온 글자 색. 없으면 기본 전경색. */
 	color: string | null
 	/** brand-colors에서 온 판 배경색. 없으면 배경 없음. */
@@ -99,11 +97,9 @@ export function TypeScrambleView({
 			<div
 				className="grid w-full place-items-center overflow-hidden text-center"
 				style={{
-					// 🔴 고정 높이가 아니라 **최소 높이 + 위아래 여백**이다. 글자 크기를 키워도 판이
-					//    알아서 따라 커지므로 높이를 매번 손으로 맞출 필요가 없다. 스크램블은 글자 수와
-					//    줄바꿈을 보존하므로 도는 동안 높이가 흔들리지는 않는다.
-					minHeight: panelHeight,
-					paddingBlock: paddingY,
+					// 🔴 고정 높이다. 스크램블은 글자 수와 줄바꿈을 보존하므로 도는 동안에도 흔들리지 않고,
+					//    글자를 키우면 판이 아니라 여백이 줄어든다.
+					height: panelHeight,
 					// 배경도 brand-colors가 준다. 안 고르면 배경 없음.
 					backgroundColor: background ?? undefined,
 				}}

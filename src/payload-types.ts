@@ -1551,11 +1551,7 @@ export interface TypeScrambleWidget {
    */
   fontSize?: number | null;
   /**
-   * 글자 위아래 여백(px)입니다. 판은 글자와 이 여백을 합친 만큼 커집니다.
-   */
-  paddingY?: number | null;
-  /**
-   * 판 높이(px)입니다. 고정이라 스크램블 중에도 판형이 흔들리지 않습니다.
+   * 판 높이(px)입니다. 고정이라 스크램블 중에도 판형이 흔들리지 않습니다. 글자는 가운데 서므로 위아래 여백은 이 높이에서 글자 높이를 뺀 만큼입니다.
    */
   panelHeight?: number | null;
   /**
@@ -3495,7 +3491,6 @@ export interface TypeLanguageWidgetSelect<T extends boolean = true> {
 export interface TypeScrambleWidgetSelect<T extends boolean = true> {
   text?: T;
   fontSize?: T;
-  paddingY?: T;
   panelHeight?: T;
   color?: T;
   background?: T;

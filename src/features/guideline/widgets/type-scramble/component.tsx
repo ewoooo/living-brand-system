@@ -9,14 +9,12 @@ import { TypeScrambleView } from './view'
 // props 타입을 손으로 적는다 — payload-types.ts는 상위가 이 위젯을 등록한 뒤에야 생성된다.
 /** 판 크기·글자 크기 기본값. schema의 defaultValue와 같은 값이어야 화면과 admin이 어긋나지 않는다. */
 const DEFAULT_FONT_SIZE = 48
-const DEFAULT_PANEL_HEIGHT = 360
-const DEFAULT_PADDING_Y = 96
+const DEFAULT_PANEL_HEIGHT = 480
 
 export async function TypeScrambleWidget({
 	text,
 	fontSize,
 	panelHeight,
-	paddingY,
 	color,
 	background,
 	weight,
@@ -24,7 +22,6 @@ export async function TypeScrambleWidget({
 	text?: string | null
 	fontSize?: number | null
 	panelHeight?: number | null
-	paddingY?: number | null
 	color?: number | BrandColor | null
 	background?: number | BrandColor | null
 	weight?: WeightKey | null
@@ -45,7 +42,6 @@ export async function TypeScrambleWidget({
 			background={bgHex}
 			fontSize={fontSize ?? DEFAULT_FONT_SIZE}
 			panelHeight={panelHeight ?? DEFAULT_PANEL_HEIGHT}
-			paddingY={paddingY ?? DEFAULT_PADDING_Y}
 			weight={chosen.value}
 			// 🔴 지금 붙은 서체 파일에 없는 굵기는 브라우저가 합성한다 — 원본과 다르게 보이므로
 			//    "이건 진짜 그 굵기가 아니다"를 화면에 알린다. 서체가 교체되면 저절로 사라진다.
