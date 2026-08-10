@@ -41,16 +41,22 @@ export function InspectorPanel({ footer, className, children }: InspectorPanelPr
 type InspectorSectionProps = {
 	title: string
 	defaultOpen?: boolean
+	className?: string
 	children: React.ReactNode
 }
 
 /** 접이식 섹션 — 상단 구분선 + 제목 행 + 행 스택. */
-export function InspectorSection({ title, defaultOpen = true, children }: InspectorSectionProps) {
+export function InspectorSection({
+	title,
+	defaultOpen = true,
+	className,
+	children,
+}: InspectorSectionProps) {
 	return (
 		<Collapsible
 			data-slot="inspector-section"
 			defaultOpen={defaultOpen}
-			className="flex shrink-0 flex-col border-t border-border pt-1"
+			className={cn('flex shrink-0 flex-col border-t border-border pt-1', className)}
 		>
 			<CollapsibleTrigger className="group flex h-9 w-full items-center justify-between gap-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/30">
 				<span className="text-sm font-semibold text-muted-foreground">{title}</span>
@@ -87,6 +93,40 @@ export function InspectorRow({ label, htmlFor, className, children, ...props }: 
 			</label>
 			{children}
 		</div>
+	)
+}
+
+type InspectorColorRowProps = {
+	label: string
+	/** hex 색상 데이터(#rrggbb). 스타일이 아니라 props로 흐르는 데이터다(docs/09 §4 예외). */
+	value: string
+	onChange?: (hex: string) => void
+	disabled?: boolean
+	className?: string
+}
+
+/** 색상 행 — hex 표기 + 네이티브 컬러 피커 스와치. */
+export function InspectorColorRow({
+	label,
+	value,
+	onChange,
+	disabled,
+	className,
+}: InspectorColorRowProps) {
+	return (
+		<InspectorRow label={label} className={className}>
+			<span className="flex shrink-0 items-center gap-2">
+				<span className="font-mono text-sm text-muted-foreground lowercase">{value}</span>
+				<input
+					type="color"
+					aria-label={`${label} 색상 선택`}
+					value={value}
+					disabled={disabled}
+					onChange={(event) => onChange?.(event.target.value)}
+					className="size-5 shrink-0 cursor-pointer appearance-none rounded-sm border border-border bg-transparent p-0 disabled:cursor-not-allowed [&::-webkit-color-swatch]:rounded-[inherit] [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0"
+				/>
+			</span>
+		</InspectorRow>
 	)
 }
 
