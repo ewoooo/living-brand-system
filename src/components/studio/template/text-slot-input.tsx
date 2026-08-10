@@ -16,14 +16,15 @@ type TextSlotInputProps = {
 export function TextSlotInput({ id, spec, value, onChange }: TextSlotInputProps) {
 	const format = spec.inputFormat ?? 'free'
 
-	if (format !== 'free') {
+	// 한 줄 제약(maxLines 1)의 자유 텍스트는 여러 줄 입력 UI가 성립하지 않는다 — 단일행 Input으로 렌더.
+	if (format !== 'free' || spec.maxLines === 1) {
 		const isInvalidEmail = format === 'email' && value !== '' && !/^\S+@\S+\.\S+$/.test(value)
 
 		return (
 			<>
 				<Input
 					id={id}
-					type={format}
+					type={format === 'free' ? 'text' : format}
 					maxLength={spec.maxLength}
 					placeholder={spec.placeholder ?? spec.label}
 					value={value}
