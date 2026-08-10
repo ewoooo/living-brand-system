@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+	InspectorColorRow,
 	InspectorPanel,
 	InspectorRow,
 	InspectorSection,
@@ -31,6 +32,11 @@ import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import type { GetCreateNavigationOutput } from '@/services/get-create-navigation.service'
 import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
 import { ImageSlotInput } from './image-slot-input'
+import {
+	IMAGE_TRANSFORM_DEFAULT,
+	ImageTransformControl,
+	type ImageTransformValue,
+} from './image-transform-control'
 import { TextSlotInput } from './text-slot-input'
 
 const PREVIEW_WIDTH = 480
@@ -64,6 +70,12 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 		Record<string, { backgroundImage: string; generatedImageId: number }>
 	>({})
 	const [format, setFormat] = useState<TemplateExportFormat>('png')
+	// ponytail: 아래 셋은 디자인 SSOT의 UI-first 컨트롤 — 아직 compose에 연결되지 않는다.
+	// 텍스트 일괄 색은 2단계, 이미지 transform은 2단계(구워진 transform 누적 처리), 배경은 3단계에서 배선한다.
+	const [textColor, setTextColor] = useState('#000000')
+	const [imageTransforms, setImageTransforms] = useState<Record<string, ImageTransformValue>>({})
+	const [backgroundType, setBackgroundType] = useState<'color' | 'image' | 'graphic'>('color')
+	const [backgroundColor, setBackgroundColor] = useState('#ffffff')
 	const { html, nodeConfigs, width, height } = template
 	const scale = Math.min(1, PREVIEW_WIDTH / width)
 	const currentCategory = navigation.categories.find((category) =>
@@ -272,29 +284,86 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 									)}
 								</div>
 							))}
-						</InspectorSection>
-					)}
-					{imageSlots.map((slot, index) => (
-						<InspectorSection
-							key={slot.nodeId}
-							title={imageSlots.length > 1 ? `Image ${index + 1}` : 'Image'}
-						>
-							<ImageSlotInput
-								id={`image-slot-${slot.nodeId}`}
-								pinnedProfileId={slot.profileId}
-								aspectRatio={nearestImageAspectRatio(
-									slot.boxWidth ?? Number.NaN,
-									slot.boxHeight ?? Number.NaN,
-								)}
-								onGenerated={(image) =>
-									setImageValues((current) => ({
-										...current,
-										[slot.nodeId]: image,
-									}))
-								}
+							<InspectorColorRow
+								label="Color"
+								value={textColor}
+								onChange={setTextColor}
 							/>
 						</InspectorSection>
-					))}
+					)}
+					{imageSlots.map((slot, index) => {
+						const sectionTitle = imageSlots.length > 1 ? `Image ${index + 1}` : 'Image'
+						return (
+							<div key={slot.nodeId} className="flex flex-col gap-3">
+								<InspectorSection title={sectionTitle}>
+									<ImageSlotInput
+										id={`image-slot-${slot.nodeId}`}
+										pinnedProfileId={slot.profileId}
+										aspectRatio={nearestImageAspectRatio(
+											slot.boxWidth ?? Number.NaN,
+											slot.boxHeight ?? Number.NaN,
+										)}
+										defaultLineColor={
+											nodeConfigs[slot.nodeId]?.imageColorize?.line
+										}
+										onGenerated={(image) =>
+											setImageValues((current) => ({
+												...current,
+												[slot.nodeId]: image,
+											}))
+										}
+									/>
+								</InspectorSection>
+								{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 별도 섹션이다. */}
+								<InspectorSection
+									title={`${sectionTitle} Transform`}
+									className="border-t-0 pt-0"
+								>
+									<ImageTransformControl
+										value={
+											imageTransforms[slot.nodeId] ?? IMAGE_TRANSFORM_DEFAULT
+										}
+										onChange={(transform) =>
+											setImageTransforms((current) => ({
+												...current,
+												[slot.nodeId]: transform,
+											}))
+										}
+									/>
+								</InspectorSection>
+							</div>
+						)
+					})}
+					<InspectorSection title="Background">
+						<InspectorRow label="Type" htmlFor="background-type">
+							<Select
+								value={backgroundType}
+								onValueChange={(value) =>
+									setBackgroundType(value as 'color' | 'image' | 'graphic')
+								}
+							>
+								<SelectTrigger
+									id="background-type"
+									size="sm"
+									className="h-auto border-transparent bg-transparent p-0 text-muted-foreground focus-visible:ring-0 dark:bg-transparent"
+								>
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent align="end">
+									<SelectItem value="color">Color</SelectItem>
+									<SelectItem value="image">Image</SelectItem>
+									<SelectItem value="graphic">Graphic</SelectItem>
+								</SelectContent>
+							</Select>
+						</InspectorRow>
+						{backgroundType === 'color' && (
+							<InspectorColorRow
+								label="Background Color"
+								value={backgroundColor}
+								onChange={setBackgroundColor}
+							/>
+						)}
+					</InspectorSection>
 					{slots.length === 0 && imageSlots.length === 0 && (
 						<Typography size="sm" tone="muted">
 							이 템플릿에는 편집 가능한 슬롯이 없습니다.

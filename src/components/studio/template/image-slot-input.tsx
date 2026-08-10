@@ -1,7 +1,12 @@
 'use client'
 
+import { ChevronDown } from '@carbon/icons-react'
 import { useEffect, useState } from 'react'
-import { InspectorField, InspectorRow } from '@/components/studio/shared/inspector'
+import {
+	InspectorColorRow,
+	InspectorField,
+	InspectorRow,
+} from '@/components/studio/shared/inspector'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
 import {
@@ -28,6 +33,8 @@ type ImageSlotInputProps = {
 	pinnedProfileId?: number
 	/** 슬롯 박스에서 유도한 생성 비율 — 없으면 프로파일 비율로 생성한다. */
 	aspectRatio?: ImageAspectRatio
+	/** 저작 config(imageColorize)의 선화 색 — Line Color 행의 초기값. */
+	defaultLineColor?: string
 	onGenerated: (image: { backgroundImage: string; generatedImageId: number }) => void
 }
 
@@ -39,11 +46,14 @@ export function ImageSlotInput({
 	id,
 	pinnedProfileId,
 	aspectRatio,
+	defaultLineColor,
 	onGenerated,
 }: ImageSlotInputProps) {
 	const [prompt, setPrompt] = useState('')
 	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
 	const [profileId, setProfileId] = useState<number | undefined>(pinnedProfileId)
+	// ponytail: UI-first 컨트롤 — 아직 compose의 imageColorize 오버라이드에 연결되지 않는다(2단계).
+	const [lineColor, setLineColor] = useState(defaultLineColor ?? '#000000')
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 
@@ -92,13 +102,17 @@ export function ImageSlotInput({
 	return (
 		<div data-slot="image-slot-input" className="flex flex-col gap-1">
 			{pinnedProfileId ? (
-				pinnedProfileName && (
-					<InspectorRow label="Type" className="opacity-50">
+				<InspectorRow label="Type" className="opacity-50">
+					<span className="flex min-w-0 items-center gap-2">
 						<span className="truncate text-sm text-muted-foreground">
-							{pinnedProfileName}
+							{pinnedProfileName ?? '—'}
 						</span>
-					</InspectorRow>
-				)
+						<ChevronDown
+							aria-hidden
+							className="size-4 shrink-0 text-muted-foreground"
+						/>
+					</span>
+				</InspectorRow>
 			) : (
 				<InspectorRow label="Type" htmlFor={`${id}-profile`}>
 					<Select
@@ -131,6 +145,7 @@ export function ImageSlotInput({
 					</Select>
 				</InspectorRow>
 			)}
+			<InspectorColorRow label="Line Color" value={lineColor} onChange={setLineColor} />
 			<InspectorField label="Prompt" htmlFor={id} className="min-h-24">
 				<Textarea
 					id={id}

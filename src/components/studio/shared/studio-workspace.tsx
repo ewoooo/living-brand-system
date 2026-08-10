@@ -21,8 +21,11 @@ export function StudioWorkspacePage({
 		<ContentFrame
 			data-slot="studio-workspace-page"
 			variant="full"
+			// 도구 페이지는 앱처럼 뷰포트 높이를 차지하고 내부(패널·캔버스)에서만 스크롤한다.
+			// 부모 main이 auto 높이라 h-full이 성립하지 않아 뷰포트에서 직접 파생한다.
+			// ponytail: 61px = GlobalHeader 실측 고정값 — 셸이 높이 토큰을 제공하면 그걸로 교체.
 			// sr-only 헤딩은 absolute라 grid 행을 차지하지 않는다 — 숨김이면 본문 단일 행으로 구성한다.
-			className={`grid h-full min-h-0 py-0 ${
+			className={`grid h-[calc(100svh-61px)] min-h-0 py-0 ${
 				hideHeading ? 'grid-rows-[minmax(0,1fr)]' : 'grid-rows-[auto_minmax(0,1fr)]'
 			}`}
 		>
@@ -44,9 +47,10 @@ type StudioWorkspaceProps = {
 /** Studio 도구의 컨트롤러와 결과 캔버스 배치만 소유한다. 디자인 SSOT에 따라 컨트롤러는 오른쪽 플로팅 패널이다. */
 export function StudioWorkspace({ controller, children }: StudioWorkspaceProps) {
 	return (
+		// lg 행을 1fr로 못 박아야 컨트롤러가 길어져도 페이지 대신 패널 내부가 스크롤된다.
 		<section
 			data-slot="studio-workspace"
-			className="grid min-h-0 border-t border-border lg:grid-cols-[minmax(0,1fr)_22rem]"
+			className="grid min-h-0 border-t border-border lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[minmax(0,1fr)]"
 		>
 			<aside data-slot="studio-workspace-controller" className="min-h-0 p-4 lg:order-2">
 				{controller}
