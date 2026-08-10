@@ -1,9 +1,14 @@
 'use client'
 
-import { InspectorField, InspectorRow } from '@/components/studio/shared/inspector'
+import {
+	INSPECTOR_BARE_INPUT,
+	InspectorField,
+	InspectorRow,
+} from '@/components/studio/shared/inspector'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Typography } from '@/components/ui/typography'
+import { cn } from '@/lib/utils'
 import type { TemplateSlotSpec } from '@/types/template'
 
 type TextSlotInputProps = {
@@ -13,10 +18,6 @@ type TextSlotInputProps = {
 	value: string
 	onChange: (text: string) => void
 }
-
-/** 입력 컨트롤을 투명하게 깔아 인스펙터 행 채움만 보이게 한다 — 포커스 링은 행이 소유. */
-const BARE_INPUT =
-	'h-auto min-h-0 rounded-none border-0 bg-transparent p-0 focus-visible:ring-0 dark:bg-transparent'
 
 /** 제작자가 요소에 설정한 입력 제약(형식·글자수·줄수)을 적용한 텍스트 슬롯 인스펙터 행. */
 export function TextSlotInput({ id, label, spec, value, onChange }: TextSlotInputProps) {
@@ -36,7 +37,7 @@ export function TextSlotInput({ id, label, spec, value, onChange }: TextSlotInpu
 						placeholder={spec.placeholder ?? spec.label}
 						value={value}
 						onChange={(event) => onChange(event.target.value)}
-						className={`${BARE_INPUT} text-right`}
+						className={cn(INSPECTOR_BARE_INPUT, 'text-right')}
 					/>
 				</InspectorRow>
 				{isInvalidEmail && (
@@ -66,7 +67,7 @@ export function TextSlotInput({ id, label, spec, value, onChange }: TextSlotInpu
 					}
 					onChange(next)
 				}}
-				className={`${BARE_INPUT} min-h-12`}
+				className={cn(INSPECTOR_BARE_INPUT, 'min-h-12')}
 			/>
 		</InspectorField>
 	)

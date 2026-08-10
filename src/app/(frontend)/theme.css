@@ -83,6 +83,8 @@
 
 :root {
 	--radius: 0.625rem;
+	/* 앱 셸 헤더 높이 — GlobalHeader가 이 값으로 고정되고, 뷰포트 파생 레이아웃(스튜디오 작업대)이 같은 값을 뺀다. */
+	--global-header-height: 3.8125rem;
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.145 0 0);
 	--card: oklch(1 0 0);

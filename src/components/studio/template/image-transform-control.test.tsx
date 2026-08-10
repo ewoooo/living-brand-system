@@ -28,6 +28,35 @@ describe('ImageTransformControl', () => {
 		expect(onChange).toHaveBeenLastCalledWith({ ...IMAGE_TRANSFORM_DEFAULT, y: 0.05 })
 	})
 
+	it('포인터 다운이 정규 좌표로 환산되고, 좌클릭만 드래그를 시작한다', () => {
+		const onChange = vi.fn()
+		render(<ImageTransformControl value={IMAGE_TRANSFORM_DEFAULT} onChange={onChange} />)
+		const pad = screen.getByRole('slider', { name: '이미지 위치' })
+		vi.spyOn(pad, 'getBoundingClientRect').mockReturnValue({
+			left: 0,
+			top: 0,
+			width: 100,
+			height: 100,
+			right: 100,
+			bottom: 100,
+			x: 0,
+			y: 0,
+			toJSON: () => ({}),
+		} as DOMRect)
+
+		// 우클릭은 무시 — 컨텍스트 메뉴로 빠지면 pointerup이 안 와 드래그가 낀다.
+		fireEvent.pointerDown(pad, { clientX: 75, clientY: 50, button: 2 })
+		expect(onChange).not.toHaveBeenCalled()
+
+		// 좌클릭 (75, 50) → 가로 0.5, 세로 0 (중심 기준).
+		fireEvent.pointerDown(pad, { clientX: 75, clientY: 50, button: 0 })
+		expect(onChange).toHaveBeenLastCalledWith({ ...IMAGE_TRANSFORM_DEFAULT, x: 0.5, y: 0 })
+
+		// 경계 밖 포인터는 -1~1로 clamp된다.
+		fireEvent.pointerMove(pad, { clientX: 500, clientY: -50 })
+		expect(onChange).toHaveBeenLastCalledWith({ ...IMAGE_TRANSFORM_DEFAULT, x: 1, y: -1 })
+	})
+
 	it('toImageEditTransform은 패드 좌표를 슬롯 절반 단위 px로 환산하고 ±1000에 고정한다', () => {
 		expect(toImageEditTransform({ x: 0.5, y: -1, scale: 1.1, rotate: 60 }, 400, 300)).toEqual({
 			x: 100,

@@ -14,6 +14,14 @@ import { cn } from '@/lib/utils'
  * 템플릿 컨트롤러가 첫 소비자이고, 나머지 스튜디오 화면 컨트롤러가 같은 킷을 쓴다.
  */
 
+/** 행 안에 투명하게 앉는 셀렉트 트리거 공통 클래스 — 인스펙터 행 언어의 일부라 여기서 소유한다. */
+export const INSPECTOR_ROW_SELECT_TRIGGER =
+	'h-auto border-transparent bg-transparent p-0 text-muted-foreground focus-visible:ring-0 dark:bg-transparent'
+
+/** InspectorRow/Field 안에 투명하게 앉는 입력 공통 클래스 — 포커스 링은 행이 소유한다. */
+export const INSPECTOR_BARE_INPUT =
+	'h-auto min-h-0 rounded-none border-0 bg-transparent p-0 focus-visible:ring-0 dark:bg-transparent'
+
 type InspectorPanelProps = {
 	/** 스크롤 영역 아래 고정되는 꼬리(설정·CTA). */
 	footer?: React.ReactNode
@@ -90,6 +98,8 @@ type InspectorRowProps = React.ComponentProps<'div'> & {
 
 /** 한 줄 행 — 왼쪽 라벨, 오른쪽 값/컨트롤. dialkit의 36px 행 대응. */
 export function InspectorRow({ label, htmlFor, className, children, ...props }: InspectorRowProps) {
+	// 연결할 컨트롤 id가 없으면 label을 쓰지 않는다 — 아무것도 가리키지 않는 label은 클릭이 죽은 거짓 어포던스다.
+	const LabelTag = htmlFor ? 'label' : 'span'
 	return (
 		<div
 			data-slot="inspector-row"
@@ -99,9 +109,9 @@ export function InspectorRow({ label, htmlFor, className, children, ...props }: 
 			)}
 			{...props}
 		>
-			<label htmlFor={htmlFor} className="shrink-0 text-sm text-muted-foreground">
+			<LabelTag htmlFor={htmlFor} className="shrink-0 text-sm text-muted-foreground">
 				{label}
-			</label>
+			</LabelTag>
 			{children}
 		</div>
 	)
@@ -170,7 +180,7 @@ export function InspectorSegmented<T extends string>({
 						key={option.value}
 						value={option.value}
 						size="sm"
-						className="h-full rounded-sm bg-transparent px-2 text-muted-foreground/70 text-sm transition-colors hover:bg-transparent data-[state=on]:bg-transparent data-[state=on]:text-foreground"
+						className="h-full rounded-sm bg-transparent px-2 text-muted-foreground text-sm transition-colors hover:bg-transparent data-[state=on]:bg-transparent data-[state=on]:text-foreground"
 					>
 						{option.label}
 					</ToggleGroupItem>
@@ -222,6 +232,10 @@ type InspectorColorRowProps = {
 	/** hex 색상 데이터(#rrggbb). 스타일이 아니라 props로 흐르는 데이터다(docs/09 §4 예외). */
 	value: string
 	onChange?: (hex: string) => void
+	/** 아직 사용자가 정하지 않은 상태 — hex 대신 —를 보여 원본 값을 사칭하지 않는다. */
+	unset?: boolean
+	/** 값이 정해진 뒤 원본으로 되돌리는 어포던스. unset이 아닐 때만 그려진다. */
+	onReset?: () => void
 	disabled?: boolean
 	className?: string
 }
@@ -231,20 +245,41 @@ export function InspectorColorRow({
 	label,
 	value,
 	onChange,
+	unset = false,
+	onReset,
 	disabled,
 	className,
 }: InspectorColorRowProps) {
+	const inputId = React.useId()
 	return (
-		<InspectorRow label={label} className={className}>
+		// 라벨 클릭이 피커를 열도록 행 라벨을 input에 연결한다 — 가시 라벨이 곧 접근 가능한 이름.
+		<InspectorRow label={label} htmlFor={inputId} className={className}>
 			<span className="flex shrink-0 items-center gap-2">
-				<span className="font-mono text-sm text-muted-foreground lowercase">{value}</span>
+				{!unset && onReset && (
+					<button
+						type="button"
+						aria-label={`${label} 원래 색으로 되돌리기`}
+						onClick={onReset}
+						className="rounded-sm text-muted-foreground text-xs outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/30"
+					>
+						초기화
+					</button>
+				)}
+				<span className="font-mono text-sm text-muted-foreground lowercase">
+					{unset ? '—' : value}
+				</span>
 				<input
+					id={inputId}
 					type="color"
 					aria-label={`${label} 색상 선택`}
 					value={value}
 					disabled={disabled}
 					onChange={(event) => onChange?.(event.target.value)}
-					className="size-5 shrink-0 cursor-pointer appearance-none rounded-sm border border-border bg-transparent p-0 disabled:cursor-not-allowed [&::-webkit-color-swatch]:rounded-[inherit] [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0"
+					className={cn(
+						'size-5 shrink-0 cursor-pointer appearance-none rounded-sm border border-border bg-transparent p-0 disabled:cursor-not-allowed [&::-webkit-color-swatch]:rounded-[inherit] [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0',
+						// 미설정 스와치는 비워 보인다 — 검정을 사칭하지 않기 위해서다.
+						unset && 'opacity-30',
+					)}
 				/>
 			</span>
 		</InspectorRow>
@@ -264,6 +299,7 @@ export function InspectorField({
 	children,
 	...props
 }: InspectorFieldProps) {
+	const LabelTag = htmlFor ? 'label' : 'span'
 	return (
 		<div
 			data-slot="inspector-field"
@@ -273,9 +309,9 @@ export function InspectorField({
 			)}
 			{...props}
 		>
-			<label htmlFor={htmlFor} className="text-sm text-muted-foreground">
+			<LabelTag htmlFor={htmlFor} className="text-sm text-muted-foreground">
 				{label}
-			</label>
+			</LabelTag>
 			{children}
 		</div>
 	)

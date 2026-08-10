@@ -71,6 +71,16 @@ describe('composeTemplateHtml text color override', () => {
 		expect(p?.style.color).toBe('rgb(26, 26, 26)')
 		expect(p?.textContent).toBe('NEW')
 	})
+
+	it('color 오버라이드는 텍스트 노드(<p>)가 아니면 아무것도 바꾸지 않는다', () => {
+		const html = composeTemplateHtml(
+			'<div data-node-id="frame-1" style="color:#111111"></div>',
+			{ 'frame-1': { color: '#ff0000' } },
+		)
+		const frame = new DOMParser().parseFromString(html, 'text/html').querySelector('div')
+
+		expect(frame?.style.color).toBe('rgb(17, 17, 17)')
+	})
 })
 
 describe('composeTemplateHtml image carrier', () => {

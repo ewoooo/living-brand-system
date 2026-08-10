@@ -9,11 +9,13 @@ const mocks = vi.hoisted(() => ({
 	exportTemplate: vi.fn(),
 	push: vi.fn(),
 	requestImageGeneration: vi.fn(),
+	canExport: vi.fn(() => false),
+	requestPublishedImageProfiles: vi.fn(async (): Promise<{ id: number; name: string }[]> => []),
 }))
 
 vi.mock('@/features/template-export/hooks/use-template-export', () => ({
 	useTemplateExport: () => ({
-		canExport: () => false,
+		canExport: mocks.canExport,
 		exporting: null,
 		exportError: null,
 		exportTemplate: mocks.exportTemplate,
@@ -24,7 +26,7 @@ vi.mock('next/navigation', () => ({
 }))
 vi.mock('@/features/generate-image/services/generate-image.client', () => ({
 	requestImageGeneration: mocks.requestImageGeneration,
-	requestPublishedImageProfiles: vi.fn().mockResolvedValue([]),
+	requestPublishedImageProfiles: mocks.requestPublishedImageProfiles,
 }))
 
 const template: PublishedHtmlTemplate = {
@@ -54,7 +56,12 @@ const navigation: GetCreateNavigationOutput = {
 }
 
 describe('TemplateGenerator', () => {
-	beforeEach(() => vi.clearAllMocks())
+	beforeEach(() => {
+		vi.clearAllMocks()
+		// clearAllMocks는 mockReturnValue로 심은 구현도 지운다 — 기본 구현을 매 테스트 복원한다.
+		mocks.canExport.mockImplementation(() => false)
+		mocks.requestPublishedImageProfiles.mockResolvedValue([])
+	})
 	afterEach(cleanup)
 
 	it('공통 Studio 작업대에서 템플릿을 내보낸다', () => {
@@ -234,6 +241,53 @@ describe('TemplateGenerator', () => {
 		await waitFor(() =>
 			expect(container.innerHTML).toContain('translate(10px, 0px) scale(1) rotate(0deg)'),
 		)
+	})
+
+	it('선택한 포맷으로 내보낸다 — canExport가 허용한 포맷만 목록에 오른다', async () => {
+		mocks.canExport.mockImplementation(() => true)
+		const user = userEvent.setup()
+		render(<TemplateGenerator navigation={navigation} template={template} />)
+
+		screen.getByRole('combobox', { name: 'Format' }).focus()
+		await user.keyboard('{ArrowDown}')
+		await user.click(screen.getByRole('option', { name: 'CMYK PDF' }))
+		fireEvent.click(screen.getByRole('button', { name: '내보내기' }))
+
+		expect(mocks.exportTemplate).toHaveBeenCalledWith('pdf')
+	})
+
+	it('프로파일 로드 실패: 고정 슬롯은 오류 없이 —, 미고정 슬롯만 오류를 보여준다', async () => {
+		mocks.requestPublishedImageProfiles.mockRejectedValue(new Error('down'))
+
+		// 고정 슬롯 — 이름만 못 보여줄 뿐 생성은 가능하므로 오류를 올리지 않는다.
+		const pinned = render(
+			<TemplateGenerator
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
+				}}
+			/>,
+		)
+		expect(await screen.findByText('—')).toBeInTheDocument()
+		expect(screen.queryByText('이미지 프로파일을 불러오지 못했습니다.')).toBeNull()
+		pinned.unmount()
+
+		// 미고정 슬롯 — 목록 없이는 생성 자체가 불가능하므로 오류를 보여준다.
+		render(
+			<TemplateGenerator
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: { '1:1': { imageInput: {} } },
+				}}
+			/>,
+		)
+		expect(
+			await screen.findByText('이미지 프로파일을 불러오지 못했습니다.'),
+		).toBeInTheDocument()
 	})
 
 	it('슬롯 박스가 있으면 가장 가까운 지원 비율을 생성 요청에 싣는다', () => {

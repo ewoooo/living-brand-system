@@ -35,6 +35,16 @@ describe('BackgroundSection', () => {
 		expect(screen.getByRole('button', { name: '이미지 생성' })).toBeDisabled()
 	})
 
+	it('활성 세그먼트 재클릭은 선택을 비우지 않는다', async () => {
+		const user = userEvent.setup()
+		render(<BackgroundSection />)
+		await selectBackgroundType(user, 'Image')
+
+		// radix ToggleGroup은 재클릭에 빈 값을 내보낸다 — 가드가 없으면 두 탭 패널이 모두 사라진다.
+		await user.click(screen.getByRole('radio', { name: 'Preset' }))
+		expect(screen.getByText('이미지를 선택하세요')).toBeInTheDocument()
+	})
+
 	it('Graphic 타입은 forward-straight가 지원하는 컨트롤만 노출한다', async () => {
 		const user = userEvent.setup()
 		render(<BackgroundSection />)
