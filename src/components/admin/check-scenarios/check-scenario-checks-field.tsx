@@ -21,6 +21,9 @@ interface AvailableCheck {
 	executor?: 'deterministic' | 'heuristic' | 'manual'
 }
 
+const HEAD_CLASS = 'align-top text-sm font-semibold text-muted-foreground'
+const CELL_CLASS = 'align-top'
+
 export const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 	const { disabled, errorMessage, setValue, showError, value } = useField<unknown>({ path })
 	const checkKeys = Array.isArray(value)
@@ -71,40 +74,48 @@ export const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => 
 	}
 
 	return (
-		<div className="field-type json check-scenario-checks-field">
+		<div className="field-type json mb-5">
 			<FieldLabel htmlFor={`${path}-search`} label="포함된 Check" path={path} required />
 			<FieldError message={errorMessage} path={path} showError={showError} />
 			{loadError ? <p role="alert">{loadError}</p> : null}
 
-			<Table aria-label="포함된 Check">
+			<Table aria-label="포함된 Check" className="min-w-[760px] border-collapse">
 				<TableHeader>
 					<TableRow>
-						<TableHead scope="col">순서</TableHead>
-						<TableHead scope="col">Check</TableHead>
-						<TableHead scope="col">실행 방식</TableHead>
-						<TableHead scope="col">관리</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							순서
+						</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							Check
+						</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							실행 방식
+						</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							관리
+						</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody>
 					{selected.length > 0 ? (
 						selected.map((check, index) => (
 							<TableRow key={check.key}>
-								<TableCell>{index + 1}</TableCell>
-								<TableCell>
-									<span className="check-scenario-checks-field__check">
+								<TableCell className={CELL_CLASS}>{index + 1}</TableCell>
+								<TableCell className={CELL_CLASS}>
+									<span className="flex flex-col gap-0.5 whitespace-normal">
 										<strong>{check.title}</strong>
 										<code>{check.key}</code>
 									</span>
 								</TableCell>
-								<TableCell>
+								<TableCell className={CELL_CLASS}>
 									{check.executor ? (
 										<Badge variant="outline">{check.executor}</Badge>
 									) : (
 										'-'
 									)}
 								</TableCell>
-								<TableCell>
-									<span className="check-scenario-checks-field__actions">
+								<TableCell className={CELL_CLASS}>
+									<span className="flex gap-1.25">
 										<Button
 											type="button"
 											variant="outline"
@@ -142,46 +153,57 @@ export const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => 
 						))
 					) : (
 						<TableRow>
-							<TableCell colSpan={4}>아직 포함된 Check가 없습니다.</TableCell>
+							<TableCell colSpan={4} className={CELL_CLASS}>
+								아직 포함된 Check가 없습니다.
+							</TableCell>
 						</TableRow>
 					)}
 				</TableBody>
 			</Table>
 
-			<label htmlFor={`${path}-search`}>Check 검색</label>
+			<label htmlFor={`${path}-search`} className="mt-5 block">
+				Check 검색
+			</label>
 			<Input
 				id={`${path}-search`}
 				type="search"
 				value={query}
 				onChange={(event) => setQuery(event.currentTarget.value)}
 				disabled={disabled}
+				className="mb-2.5 w-full"
 			/>
-			<Table aria-label="추가 가능한 Check">
+			<Table aria-label="추가 가능한 Check" className="min-w-[760px] border-collapse">
 				<TableHeader>
 					<TableRow>
-						<TableHead scope="col">Check</TableHead>
-						<TableHead scope="col">실행 방식</TableHead>
-						<TableHead scope="col">관리</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							Check
+						</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							실행 방식
+						</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							관리
+						</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody>
 					{candidates.length > 0 ? (
 						candidates.map((check) => (
 							<TableRow key={check.key}>
-								<TableCell>
-									<span className="check-scenario-checks-field__check">
+								<TableCell className={CELL_CLASS}>
+									<span className="flex flex-col gap-0.5 whitespace-normal">
 										<strong>{check.title}</strong>
 										<code>{check.key}</code>
 									</span>
 								</TableCell>
-								<TableCell>
+								<TableCell className={CELL_CLASS}>
 									{check.executor ? (
 										<Badge variant="outline">{check.executor}</Badge>
 									) : (
 										'-'
 									)}
 								</TableCell>
-								<TableCell>
+								<TableCell className={CELL_CLASS}>
 									<Button
 										type="button"
 										variant="muted"
@@ -196,7 +218,9 @@ export const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => 
 						))
 					) : (
 						<TableRow>
-							<TableCell colSpan={3}>추가 가능한 Check가 없습니다.</TableCell>
+							<TableCell colSpan={3} className={CELL_CLASS}>
+								추가 가능한 Check가 없습니다.
+							</TableCell>
 						</TableRow>
 					)}
 				</TableBody>

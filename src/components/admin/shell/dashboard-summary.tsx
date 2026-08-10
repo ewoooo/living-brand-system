@@ -5,9 +5,9 @@ export async function DashboardSummary() {
 	const { checks, chapters, sections, pages } = await getAdminGuidelineSummary()
 
 	return (
-		<section className="dashboard-summary">
+		<section className="flex aspect-[7/1] w-full flex-col items-center justify-center rounded-3xl border border-border">
 			<h2>대시보드 요약</h2>
-			<ul>
+			<ul className="m-0 flex list-none gap-4 p-0">
 				<li>
 					<Badge variant="outline">Check: {checks.toLocaleString('ko-KR')}</Badge>
 				</li>

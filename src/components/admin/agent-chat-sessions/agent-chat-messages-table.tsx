@@ -10,6 +10,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
+import { cn } from '@/lib/utils'
 import { fieldNumber, fieldRowCount, fieldString } from '../shared/form-fields'
 
 type CountedItem = {
@@ -76,6 +77,9 @@ function formatItems(items?: CountedItem[] | null) {
 	return labels?.length ? labels.join(', ') : '-'
 }
 
+const HEAD_CLASS = 'align-top text-sm font-semibold text-muted-foreground'
+const CELL_CLASS = 'align-top'
+
 function formatTokens(usage?: MessageRow['aiUsage']) {
 	const total =
 		usage?.totalTokens ??
@@ -91,42 +95,68 @@ export function AgentChatMessagesTable() {
 
 	if (messages.length === 0) {
 		return (
-			<section className="agent-chat-messages-table">
-				<h3>대화 메시지</h3>
-				<p>기록된 메시지가 없습니다.</p>
+			<section className="mb-5">
+				<h3 className="m-0 mb-2.5">대화 메시지</h3>
+				<p className="m-0 text-muted-foreground">기록된 메시지가 없습니다.</p>
 			</section>
 		)
 	}
 
 	return (
-		<section className="agent-chat-messages-table">
-			<h3>대화 메시지</h3>
-			<Table>
+		<section className="mb-5">
+			<h3 className="m-0 mb-2.5">대화 메시지</h3>
+			<Table className="min-w-[960px] border-collapse">
 				<TableHeader>
 					<TableRow>
-						<TableHead scope="col">#</TableHead>
-						<TableHead scope="col">Role</TableHead>
-						<TableHead scope="col">Message</TableHead>
-						<TableHead scope="col">Model</TableHead>
-						<TableHead scope="col">Reaction</TableHead>
-						<TableHead scope="col">Tools</TableHead>
-						<TableHead scope="col">Skills</TableHead>
-						<TableHead scope="col">Tokens</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							#
+						</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							Role
+						</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							Message
+						</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							Model
+						</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							Reaction
+						</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							Tools
+						</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							Skills
+						</TableHead>
+						<TableHead scope="col" className={HEAD_CLASS}>
+							Tokens
+						</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody>
 					{messages.map((message, index) => (
 						<TableRow key={message.messageId ?? index}>
-							<TableCell>{index + 1}</TableCell>
-							<TableCell>{message.role ?? '-'}</TableCell>
-							<TableCell className="agent-chat-messages-table__message">
+							<TableCell className={CELL_CLASS}>{index + 1}</TableCell>
+							<TableCell className={CELL_CLASS}>{message.role ?? '-'}</TableCell>
+							<TableCell
+								className={cn(CELL_CLASS, 'max-w-[420px] whitespace-pre-wrap')}
+							>
 								{message.text || '-'}
 							</TableCell>
-							<TableCell>{message.aiUsage?.model ?? '-'}</TableCell>
-							<TableCell>{message.reaction ?? '-'}</TableCell>
-							<TableCell>{formatItems(message.usedTools)}</TableCell>
-							<TableCell>{formatItems(message.usedSkills)}</TableCell>
-							<TableCell>{formatTokens(message.aiUsage)}</TableCell>
+							<TableCell className={CELL_CLASS}>
+								{message.aiUsage?.model ?? '-'}
+							</TableCell>
+							<TableCell className={CELL_CLASS}>{message.reaction ?? '-'}</TableCell>
+							<TableCell className={CELL_CLASS}>
+								{formatItems(message.usedTools)}
+							</TableCell>
+							<TableCell className={CELL_CLASS}>
+								{formatItems(message.usedSkills)}
+							</TableCell>
+							<TableCell className={CELL_CLASS}>
+								{formatTokens(message.aiUsage)}
+							</TableCell>
 						</TableRow>
 					))}
 				</TableBody>

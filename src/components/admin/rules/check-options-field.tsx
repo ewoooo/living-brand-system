@@ -56,11 +56,12 @@ export const CheckOptionsField: JSONFieldClientComponent = (props) => {
 	const threshold = parsed.success ? parsed.data.criteria[0].expected : ''
 
 	return (
-		<div className="field-type number contrast-options-field">
+		<div className="field-type number">
 			<FieldLabel htmlFor={path} label="최소 대비율" path={path} required />
 			<FieldError message={errorMessage} path={path} showError={showError} />
 			<Input
 				aria-invalid={showError}
+				className="w-full"
 				disabled={disabled}
 				id={path}
 				max={21}

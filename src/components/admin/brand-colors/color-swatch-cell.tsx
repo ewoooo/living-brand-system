@@ -11,7 +11,7 @@ export function ColorSwatchCell({ cellData }: Props) {
 		<Badge variant="outline">
 			<span
 				aria-hidden="true"
-				className="color-swatch-cell__swatch"
+				className="size-3.5 rounded-sm border border-border"
 				style={{
 					backgroundColor: hex,
 				}}
