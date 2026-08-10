@@ -3,6 +3,8 @@
 import { ChevronDown } from '@carbon/icons-react'
 import { useEffect, useState } from 'react'
 import {
+	INSPECTOR_BARE_INPUT,
+	INSPECTOR_ROW_SELECT_TRIGGER,
 	InspectorColorRow,
 	InspectorField,
 	InspectorRow,
@@ -23,8 +25,8 @@ import type { ImageAspectRatio } from '@/features/generate-image/image-size'
 import {
 	type ImageProfileOption,
 	requestImageGeneration,
-	requestPublishedImageProfiles,
 } from '@/features/generate-image/services/generate-image.client'
+import { cn } from '@/lib/utils'
 
 const GENERATION_ERROR_MESSAGE = '이미지 생성에 실패했어요. 잠시 후 다시 시도해 주세요.'
 
@@ -33,6 +35,12 @@ type ImageSlotInputProps = {
 	pinnedProfileId?: number
 	/** 슬롯 박스에서 유도한 생성 비율 — 없으면 프로파일 비율로 생성한다. */
 	aspectRatio?: ImageAspectRatio
+	/** 발행 프로파일 목록 — generator가 1회 조회해 모든 슬롯이 공유한다. null = 로드 중. */
+	profiles: ImageProfileOption[] | null
+	/** 목록 로드 실패 — 고정 슬롯은 목록 없이도 생성 가능하므로 미고정 슬롯에서만 오류로 보여준다. */
+	profilesFailed?: boolean
+	/** 저작 colorize가 있는 슬롯만 Line Color가 실제로 반영된다 — 없으면 행을 그리지 않는다. */
+	colorizeEnabled?: boolean
 	/** Line Color 행의 표시 값 — 소유는 generator(합성 오버라이드에 쓴다). */
 	lineColor: string
 	onLineColorChange: (hex: string) => void
@@ -47,29 +55,24 @@ export function ImageSlotInput({
 	id,
 	pinnedProfileId,
 	aspectRatio,
+	profiles,
+	profilesFailed,
+	colorizeEnabled,
 	lineColor,
 	onLineColorChange,
 	onGenerated,
 }: ImageSlotInputProps) {
 	const [prompt, setPrompt] = useState('')
-	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
 	const [profileId, setProfileId] = useState<number | undefined>(pinnedProfileId)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 
-	// 고정 슬롯도 목록을 불러온다 — Type 행에 프로파일 이름을 보여주기 위해서다.
-	// 고정 슬롯은 목록 없이도 생성이 가능하므로 로드 실패를 오류로 올리지 않는다.
+	// 미고정 슬롯은 목록이 도착하면 첫 프로파일을 기본 선택한다.
 	useEffect(() => {
-		void requestPublishedImageProfiles()
-			.then((nextProfiles) => {
-				setProfiles(nextProfiles)
-				if (!pinnedProfileId) setProfileId((current) => current ?? nextProfiles[0]?.id)
-			})
-			.catch(() => {
-				setProfiles([])
-				if (!pinnedProfileId) setError('이미지 프로파일을 불러오지 못했습니다.')
-			})
-	}, [pinnedProfileId])
+		if (!pinnedProfileId && profiles?.length) {
+			setProfileId((current) => current ?? profiles[0]?.id)
+		}
+	}, [pinnedProfileId, profiles])
 
 	async function run() {
 		const trimmed = prompt.trim()
@@ -98,11 +101,14 @@ export function ImageSlotInput({
 	}
 
 	const pinnedProfileName = profiles?.find((profile) => profile.id === pinnedProfileId)?.name
+	const visibleError =
+		error ??
+		(!pinnedProfileId && profilesFailed ? '이미지 프로파일을 불러오지 못했습니다.' : null)
 
 	return (
 		<div data-slot="image-slot-input" className="flex flex-col gap-1">
 			{pinnedProfileId ? (
-				<InspectorRow label="Type" className="opacity-50">
+				<InspectorRow label="Type">
 					<span className="flex min-w-0 items-center gap-2">
 						<span className="truncate text-sm text-muted-foreground">
 							{pinnedProfileName ?? '—'}
@@ -123,7 +129,7 @@ export function ImageSlotInput({
 						<SelectTrigger
 							id={`${id}-profile`}
 							size="sm"
-							className="h-auto border-transparent bg-transparent p-0 text-muted-foreground focus-visible:ring-0 dark:bg-transparent"
+							className={INSPECTOR_ROW_SELECT_TRIGGER}
 						>
 							<SelectValue
 								placeholder={
@@ -145,7 +151,13 @@ export function ImageSlotInput({
 					</Select>
 				</InspectorRow>
 			)}
-			<InspectorColorRow label="Line Color" value={lineColor} onChange={onLineColorChange} />
+			{colorizeEnabled && (
+				<InspectorColorRow
+					label="Line Color"
+					value={lineColor}
+					onChange={onLineColorChange}
+				/>
+			)}
 			<InspectorField label="Prompt" htmlFor={id} className="min-h-24">
 				<Textarea
 					id={id}
@@ -154,7 +166,7 @@ export function ImageSlotInput({
 					placeholder="만들 이미지를 설명하세요"
 					maxLength={500}
 					rows={2}
-					className="h-auto min-h-12 rounded-none border-0 bg-transparent p-0 focus-visible:ring-0 dark:bg-transparent"
+					className={cn(INSPECTOR_BARE_INPUT, 'min-h-12')}
 				/>
 				{aspectRatio && (
 					<Typography size="xs" tone="muted">
@@ -171,7 +183,7 @@ export function ImageSlotInput({
 			>
 				{loading ? '생성 중…' : '이미지 생성'}
 			</Button>
-			{error && <FieldError>{error}</FieldError>}
+			{visibleError && <FieldError>{visibleError}</FieldError>}
 		</div>
 	)
 }

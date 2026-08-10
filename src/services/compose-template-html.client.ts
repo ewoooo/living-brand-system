@@ -20,6 +20,13 @@ export const IDENTITY_TRANSFORM: NonNullable<TemplateNodeConfig['imageTransform'
 	rotate: 0,
 }
 
+/** 편집 transform의 값 영역 — 어드민 제스처·스튜디오 컨트롤이 같은 범위를 소비한다(한쪽만 바꾸면 갈라진다). */
+export const IMAGE_EDIT_TRANSFORM_LIMITS = {
+	translate: { min: -1000, max: 1000 },
+	scale: { min: 0.2, max: 5 },
+	rotate: { min: -180, max: 180 },
+} as const
+
 /**
  * 편집 transform의 identity 판정 — formatImageEditTransform과 짝 계약. compose는 identity면
  * transform을 아예 쓰지 않으므로, 오버레이가 캐리어 inline transform에서 커밋된 편집 prefix를

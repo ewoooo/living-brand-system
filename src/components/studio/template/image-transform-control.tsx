@@ -2,6 +2,7 @@
 
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/services/compose-template-html.client'
 
 export type ImageTransformValue = {
 	/** 슬롯 중심 기준 오프셋, -1(왼/위) ~ 1(오른/아래). */
@@ -13,9 +14,9 @@ export type ImageTransformValue = {
 
 export const IMAGE_TRANSFORM_DEFAULT: ImageTransformValue = { x: 0, y: 0, scale: 1, rotate: 0 }
 
-// 어드민 ImageTransformEditor·오버레이 제스처와 같은 범위 — 두 화면이 같은 compose 계약을 쓴다.
-const SCALE_RANGE = { min: 0.2, max: 5, step: 0.05 }
-const ROTATE_RANGE = { min: -180, max: 180, step: 1 }
+// 어드민과 같은 compose 계약 범위를 소비한다 — step만 이 컨트롤의 UI 밀도다.
+const SCALE_RANGE = { ...IMAGE_EDIT_TRANSFORM_LIMITS.scale, step: 0.05 }
+const ROTATE_RANGE = { ...IMAGE_EDIT_TRANSFORM_LIMITS.rotate, step: 1 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
@@ -28,11 +29,58 @@ export function toImageEditTransform(
 	boxWidth: number,
 	boxHeight: number,
 ): ImageTransformValue {
+	const { translate } = IMAGE_EDIT_TRANSFORM_LIMITS
 	return {
-		x: clamp(Math.round((value.x * boxWidth) / 2), -1000, 1000),
-		y: clamp(Math.round((value.y * boxHeight) / 2), -1000, 1000),
+		x: clamp(Math.round((value.x * boxWidth) / 2), translate.min, translate.max),
+		y: clamp(Math.round((value.y * boxHeight) / 2), translate.min, translate.max),
 		scale: value.scale,
 		rotate: value.rotate,
+	}
+}
+
+/**
+ * 패드·슬라이더가 공유하는 드래그 배선의 단일 소유자.
+ * 좌클릭(주 버튼)만 드래그를 시작한다 — 우클릭은 컨텍스트 메뉴로 빠져 pointerup이 안 와
+ * dragging이 끼면 이후 맨 호버가 값을 계속 바꾼다. 같은 이유로 cancel·캡처 유실도 종료로 처리한다.
+ * rect는 다운 시점 1회 실측을 재사용한다(드래그 중 요소는 움직이지 않고, 매 move 실측은 강제 layout).
+ */
+function usePointerDrag(
+	disabled: boolean | undefined,
+	onPoint: (ratioX: number, ratioY: number) => void,
+) {
+	const [dragging, setDragging] = useState(false)
+	const rectRef = useRef<DOMRect | null>(null)
+
+	const point = (event: PointerEvent<HTMLDivElement>) => {
+		const bounds = rectRef.current
+		// 0 크기 실측(접힘·전환 중)은 나눗셈에서 NaN을 만들어 상태·compose를 오염시킨다 — 버린다.
+		if (!bounds?.width || !bounds?.height) return
+		onPoint(
+			clamp((event.clientX - bounds.left) / bounds.width, 0, 1),
+			clamp((event.clientY - bounds.top) / bounds.height, 0, 1),
+		)
+	}
+
+	const stop = () => setDragging(false)
+
+	return {
+		onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
+			if (disabled || event.button !== 0) return
+			rectRef.current = event.currentTarget.getBoundingClientRect()
+			try {
+				event.currentTarget.setPointerCapture(event.pointerId)
+			} catch {
+				// 이미 비활성인 포인터 — 캡처 없이 다운 시점 값만 반영한다.
+			}
+			setDragging(true)
+			point(event)
+		},
+		onPointerMove: (event: PointerEvent<HTMLDivElement>) => {
+			if (dragging) point(event)
+		},
+		onPointerUp: stop,
+		onPointerCancel: stop,
+		onLostPointerCapture: stop,
 	}
 }
 
@@ -99,18 +147,9 @@ export function TransformPad({
 	ariaLabel = '이미지 위치',
 	disabled,
 }: TransformPadProps) {
-	const padRef = useRef<HTMLDivElement>(null)
-	const [dragging, setDragging] = useState(false)
-
-	function moveToPointer(event: PointerEvent<HTMLDivElement>) {
-		const pad = padRef.current
-		if (!pad || disabled) return
-		const bounds = pad.getBoundingClientRect()
-		onChange(
-			clamp(((event.clientX - bounds.left) / bounds.width) * 2 - 1, -1, 1),
-			clamp(((event.clientY - bounds.top) / bounds.height) * 2 - 1, -1, 1),
-		)
-	}
+	const drag = usePointerDrag(disabled, (ratioX, ratioY) =>
+		onChange(ratioX * 2 - 1, ratioY * 2 - 1),
+	)
 
 	function nudge(event: KeyboardEvent<HTMLDivElement>) {
 		if (disabled) return
@@ -130,21 +169,16 @@ export function TransformPad({
 	return (
 		// 2축 패드는 단일 값 input range로 표현할 수 없다 — slider role + valuetext로 노출.
 		<div
-			ref={padRef}
 			role="slider"
 			aria-label={ariaLabel}
+			aria-valuemin={-100}
+			aria-valuemax={100}
 			aria-valuenow={Math.round(x * 100)}
 			aria-valuetext={`가로 ${Math.round(x * 100)}%, 세로 ${Math.round(y * 100)}%`}
 			aria-disabled={disabled || undefined}
 			tabIndex={disabled ? -1 : 0}
 			onKeyDown={nudge}
-			onPointerDown={(event) => {
-				event.currentTarget.setPointerCapture(event.pointerId)
-				setDragging(true)
-				moveToPointer(event)
-			}}
-			onPointerMove={(event) => dragging && moveToPointer(event)}
-			onPointerUp={() => setDragging(false)}
+			{...drag}
 			className="relative h-36 w-full shrink-0 touch-none rounded-md bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
 		>
 			{/* 십자선 — 중심 기준 좌표계 표시. */}
@@ -173,18 +207,11 @@ type SliderRowProps = {
 
 /** dialkit 슬라이더 행 — 채움 폭이 값이고, 드래그·화살표 키로 조절한다. */
 function SliderRow({ label, value, range, format, onChange, disabled }: SliderRowProps) {
-	const rowRef = useRef<HTMLDivElement>(null)
-	const [dragging, setDragging] = useState(false)
 	const ratio = (value - range.min) / (range.max - range.min)
-
-	function moveToPointer(event: PointerEvent<HTMLDivElement>) {
-		const row = rowRef.current
-		if (!row || disabled) return
-		const bounds = row.getBoundingClientRect()
-		const nextRatio = clamp((event.clientX - bounds.left) / bounds.width, 0, 1)
-		const raw = range.min + nextRatio * (range.max - range.min)
+	const drag = usePointerDrag(disabled, (ratioX) => {
+		const raw = range.min + ratioX * (range.max - range.min)
 		onChange(clamp(Math.round(raw / range.step) * range.step, range.min, range.max))
-	}
+	})
 
 	function nudge(event: KeyboardEvent<HTMLDivElement>) {
 		if (disabled) return
@@ -202,7 +229,6 @@ function SliderRow({ label, value, range, format, onChange, disabled }: SliderRo
 	return (
 		// 채움 폭이 곧 값인 dialkit 행 — 시각을 유지하려 input range 대신 slider role.
 		<div
-			ref={rowRef}
 			role="slider"
 			aria-label={label}
 			aria-valuemin={range.min}
@@ -212,13 +238,7 @@ function SliderRow({ label, value, range, format, onChange, disabled }: SliderRo
 			aria-disabled={disabled || undefined}
 			tabIndex={disabled ? -1 : 0}
 			onKeyDown={nudge}
-			onPointerDown={(event) => {
-				event.currentTarget.setPointerCapture(event.pointerId)
-				setDragging(true)
-				moveToPointer(event)
-			}}
-			onPointerMove={(event) => dragging && moveToPointer(event)}
-			onPointerUp={() => setDragging(false)}
+			{...drag}
 			className="relative h-9 w-full shrink-0 cursor-ew-resize touch-none select-none overflow-hidden rounded-md bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
 		>
 			<div

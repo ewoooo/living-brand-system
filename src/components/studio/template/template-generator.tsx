@@ -1,8 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import {
+	INSPECTOR_ROW_SELECT_TRIGGER,
 	InspectorColorRow,
 	InspectorPanel,
 	InspectorRow,
@@ -21,6 +22,10 @@ import {
 } from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
 import { nearestImageAspectRatio } from '@/features/generate-image/image-size'
+import {
+	type ImageProfileOption,
+	requestPublishedImageProfiles,
+} from '@/features/generate-image/services/generate-image.client'
 import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
 import { pixelsToMillimeters } from '@/features/template-export/print-policy'
 import type { TemplateExportFormat } from '@/features/template-export/services/export-template.client'
@@ -90,6 +95,30 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 		[html, nodeConfigs],
 	)
 
+	// 발행 프로파일은 여기서 1회만 조회해 모든 이미지 슬롯이 공유한다(슬롯별 중복 요청 방지).
+	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
+	const [profilesFailed, setProfilesFailed] = useState(false)
+	useEffect(() => {
+		if (imageSlots.length === 0) return
+		let alive = true
+		requestPublishedImageProfiles()
+			.then((list) => alive && setProfiles(list))
+			.catch(() => {
+				if (!alive) return
+				setProfiles([])
+				setProfilesFailed(true)
+			})
+		return () => {
+			alive = false
+		}
+	}, [imageSlots])
+
+	// 드래그 빈도(60~120hz)로 바뀌는 입력은 deferred로 합성한다 — 컨트롤은 매 프레임 반응하고,
+	// 전체 재합성(DOMParser + innerHTML 교체)은 브라우저가 여유 있는 프레임에 따라온다.
+	const deferredTextColor = useDeferredValue(textColor)
+	const deferredLineColors = useDeferredValue(lineColors)
+	const deferredImageTransforms = useDeferredValue(imageTransforms)
+
 	// 사용자가 만진 슬롯만 오버라이드로 합성한다(만지지 않은 슬롯은 저작 값 유지).
 	// 텍스트 슬롯(<p>)과 이미지 슬롯(프레임)은 노드가 겹치지 않아 그대로 합친다.
 	// 일괄 텍스트 색은 사용자가 만졌을 때만 모든 텍스트 슬롯에 싣는다.
@@ -104,7 +133,7 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 					const override: { text?: string; color?: string } = {}
 					const text = values[slot.nodeId]
 					if (text !== undefined) override.text = text
-					if (textColor) override.color = textColor
+					if (deferredTextColor) override.color = deferredTextColor
 					return [slot.nodeId, override] as const
 				})
 				.filter(([, override]) => Object.keys(override).length > 0),
@@ -112,8 +141,8 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 		const imageOverrides = Object.fromEntries(
 			Object.entries(imageValues).map(([nodeId, imageValue]) => {
 				const colorize = nodeConfigs[nodeId]?.imageColorize
-				const userLine = lineColors[nodeId]
-				const transform = imageTransforms[nodeId]
+				const userLine = deferredLineColors[nodeId]
+				const transform = deferredImageTransforms[nodeId]
 				const slot = imageSlots.find((candidate) => candidate.nodeId === nodeId)
 				return [
 					nodeId,
@@ -144,10 +173,10 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 		html,
 		slots,
 		values,
-		textColor,
+		deferredTextColor,
 		imageValues,
-		lineColors,
-		imageTransforms,
+		deferredLineColors,
+		deferredImageTransforms,
 		imageSlots,
 		nodeConfigs,
 		width,
@@ -156,7 +185,9 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 	// 합성 결과가 그려진 뒤 텍스트 슬롯의 실제 렌더 박스를 재서 잘림을 알린다 —
 	// scrollHeight는 overflow:hidden clip과 -webkit-line-clamp 말줄임 양쪽에서 잘린 내용까지 세고,
 	// 미리보기 축소(transform scale)는 이 두 값에 영향을 주지 않는다.
-	// biome-ignore lint/correctness/useExhaustiveDependencies(composedHtml): 측정 대상 DOM이 composedHtml로 그려진다 — 값 참조는 없지만 합성이 바뀔 때마다 다시 재야 한다
+	// 텍스트 배치를 바꾸는 입력(html·slots·values)에만 반응한다 — transform·색 드래그마다
+	// innerHTML 교체 직후 강제 layout(scrollHeight)을 다시 밟지 않기 위해서다.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: 측정 대상 DOM이 html·values로 합성된 composedHtml로 그려진다 — 직접 참조는 없지만 텍스트가 바뀔 때마다 다시 재야 한다
 	useEffect(() => {
 		const container = previewRef.current
 		if (!container) return
@@ -166,7 +197,7 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 			if (element && element.scrollHeight > element.clientHeight + 1) clipped.add(slot.nodeId)
 		}
 		setClippedSlotIds(clipped)
-	}, [composedHtml, slots])
+	}, [html, slots, values])
 
 	const { canExport, exporting, exportError, exportTemplate } = useTemplateExport({
 		fileName: template.name,
@@ -193,7 +224,7 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 										Setting
 									</span>
 								</div>
-								<InspectorRow label="Size" className="opacity-50">
+								<InspectorRow label="Size">
 									<span className="text-sm text-muted-foreground">
 										{template.printPpi
 											? `${pixelsToMillimeters(width, template.printPpi).toFixed(1)} × ${pixelsToMillimeters(height, template.printPpi).toFixed(1)}mm`
@@ -201,14 +232,14 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 									</span>
 								</InspectorRow>
 								{template.printPpi && (
-									<InspectorRow label="Resolution" className="opacity-50">
+									<InspectorRow label="Resolution">
 										<span className="text-sm text-muted-foreground">
 											{template.printPpi}ppi
 										</span>
 									</InspectorRow>
 								)}
 								{template.printPpi && (
-									<InspectorRow label="Color Profile" className="opacity-50">
+									<InspectorRow label="Color Profile">
 										<span className="text-sm text-muted-foreground">CMYK</span>
 									</InspectorRow>
 								)}
@@ -222,7 +253,7 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 										<SelectTrigger
 											id="export-format"
 											size="sm"
-											className="h-auto border-transparent bg-transparent p-0 text-muted-foreground focus-visible:ring-0 dark:bg-transparent"
+											className={INSPECTOR_ROW_SELECT_TRIGGER}
 										>
 											<SelectValue />
 										</SelectTrigger>
@@ -325,6 +356,8 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 							<InspectorColorRow
 								label="Color"
 								value={textColor ?? '#000000'}
+								unset={textColor === null}
+								onReset={() => setTextColor(null)}
 								onChange={setTextColor}
 							/>
 						</InspectorSection>
@@ -337,6 +370,11 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 									<ImageSlotInput
 										id={`image-slot-${slot.nodeId}`}
 										pinnedProfileId={slot.profileId}
+										profiles={profiles}
+										profilesFailed={profilesFailed}
+										colorizeEnabled={Boolean(
+											nodeConfigs[slot.nodeId]?.imageColorize,
+										)}
 										aspectRatio={nearestImageAspectRatio(
 											slot.boxWidth ?? Number.NaN,
 											slot.boxHeight ?? Number.NaN,

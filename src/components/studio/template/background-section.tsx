@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import {
+	INSPECTOR_BARE_INPUT,
+	INSPECTOR_ROW_SELECT_TRIGGER,
 	InspectorColorRow,
 	InspectorField,
 	InspectorRow,
@@ -19,6 +21,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Typography } from '@/components/ui/typography'
+import { cn } from '@/lib/utils'
 import {
 	IMAGE_TRANSFORM_DEFAULT,
 	ImageTransformControl,
@@ -28,10 +31,6 @@ import {
 
 type BackgroundType = 'color' | 'image' | 'graphic'
 type BackgroundImageMode = 'preset' | 'generate'
-
-/** 행 안에 투명하게 앉는 셀렉트 트리거 공통 클래스. */
-const ROW_SELECT_TRIGGER =
-	'h-auto border-transparent bg-transparent p-0 text-muted-foreground focus-visible:ring-0 dark:bg-transparent'
 
 /**
  * 디자인 SSOT(2:2071 Sidebar State)의 Background 상태 분기 — Type이 하위 컨트롤 세트를 갈아끼운다.
@@ -64,7 +63,7 @@ export function BackgroundSection() {
 						<SelectTrigger
 							id="background-type"
 							size="sm"
-							className={ROW_SELECT_TRIGGER}
+							className={INSPECTOR_ROW_SELECT_TRIGGER}
 						>
 							<SelectValue />
 						</SelectTrigger>
@@ -150,7 +149,7 @@ export function BackgroundSection() {
 											placeholder="이미지를 설명하세요"
 											maxLength={500}
 											rows={2}
-											className="h-auto min-h-12 rounded-none border-0 bg-transparent p-0 focus-visible:ring-0 dark:bg-transparent"
+											className={cn(INSPECTOR_BARE_INPUT, 'min-h-12')}
 										/>
 									</InspectorField>
 									{/* ponytail: 배경 생성 요청은 3단계 배선 — 프롬프트 없으면 비활성만 유지한다. */}
@@ -175,7 +174,7 @@ export function BackgroundSection() {
 								<SelectTrigger
 									id="background-graphic-type"
 									size="sm"
-									className={ROW_SELECT_TRIGGER}
+									className={INSPECTOR_ROW_SELECT_TRIGGER}
 								>
 									<SelectValue />
 								</SelectTrigger>
@@ -233,7 +232,7 @@ export function BackgroundSection() {
 								<SelectTrigger
 									id="background-perspective"
 									size="sm"
-									className={ROW_SELECT_TRIGGER}
+									className={INSPECTOR_ROW_SELECT_TRIGGER}
 								>
 									<SelectValue />
 								</SelectTrigger>
@@ -253,7 +252,7 @@ export function BackgroundSection() {
 								<SelectTrigger
 									id="background-angle"
 									size="sm"
-									className={ROW_SELECT_TRIGGER}
+									className={INSPECTOR_ROW_SELECT_TRIGGER}
 								>
 									<SelectValue />
 								</SelectTrigger>
