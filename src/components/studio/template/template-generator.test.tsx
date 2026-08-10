@@ -99,7 +99,7 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
-		fireEvent.change(screen.getByLabelText('배경'), { target: { value: '파스텔 배경' } })
+		fireEvent.change(screen.getByLabelText('이미지'), { target: { value: '파스텔 배경' } })
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 
 		expect(mocks.requestImageGeneration).toHaveBeenCalledWith({
@@ -130,7 +130,7 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
-		fireEvent.change(screen.getByLabelText('배경'), { target: { value: '파스텔 배경' } })
+		fireEvent.change(screen.getByLabelText('이미지'), { target: { value: '파스텔 배경' } })
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 
 		// 호출부가 imageColorize를 깔지 않으면 컬러 치환(마스크 오버레이)이 사라진다 — 그 스프레드를 잡는다.
@@ -154,7 +154,7 @@ describe('TemplateGenerator', () => {
 		)
 
 		expect(screen.getByText('슬롯 비율 16:9로 생성')).toBeInTheDocument()
-		fireEvent.change(screen.getByLabelText('배경'), { target: { value: '파스텔 배경' } })
+		fireEvent.change(screen.getByLabelText('이미지'), { target: { value: '파스텔 배경' } })
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 
 		expect(mocks.requestImageGeneration).toHaveBeenCalledWith({

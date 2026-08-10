@@ -26,12 +26,15 @@ export default async function CreateCategoryPage({
 				{category.templates.length > 0 ? (
 					<ul className="mt-8 border-border border-y">
 						{category.templates.map((template) => (
-							<li key={template.id} className="border-border border-b last:border-b-0">
+							<li
+								key={template.id}
+								className="border-border border-b last:border-b-0"
+							>
 								<Link
 									href={template.href}
 									className="group flex items-center justify-between gap-4 py-5 transition-colors hover:bg-muted"
 								>
-									<Typography size="lg">{template.name}</Typography>
+									<Typography size="xl">{template.name}</Typography>
 									<ArrowRight
 										aria-hidden
 										className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1"
