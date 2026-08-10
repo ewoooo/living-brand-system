@@ -32,13 +32,20 @@ import {
 type BackgroundType = 'color' | 'image' | 'graphic'
 type BackgroundImageMode = 'preset' | 'generate'
 
+const PROMPT_MAX_LENGTH = 500
+
+type BackgroundSectionProps = {
+	/** 템플릿 캔버스 종횡비(w/h) — 배경 transform 패드가 같은 비율로 그려진다. */
+	canvasAspectRatio?: number
+}
+
 /**
  * 디자인 SSOT(2:2071 Sidebar State)의 Background 상태 분기 — Type이 하위 컨트롤 세트를 갈아끼운다.
  * Color: 배경색 / Image: Preset(브랜드 이미지 선택)·Generate(프롬프트 생성) + Image Transform /
  * Graphic: 그래픽 종류·색 + Graphic Transform(포지션·가변 두께·시점·각도 — forward-straight 계약과 1:1).
  * ponytail: UI-first — 전부 로컬 state이고 compose·생성·브라우즈 배선은 3단계에서 한다.
  */
-export function BackgroundSection() {
+export function BackgroundSection({ canvasAspectRatio }: BackgroundSectionProps) {
 	const [type, setType] = useState<BackgroundType>('color')
 	const [imageMode, setImageMode] = useState<BackgroundImageMode>('preset')
 	const [lineColor, setLineColor] = useState('#000000')
@@ -141,13 +148,17 @@ export function BackgroundSection() {
 										value={backgroundColor}
 										onChange={setBackgroundColor}
 									/>
-									<InspectorField label="Prompt" htmlFor="background-prompt">
+									<InspectorField
+										label="Prompt"
+										htmlFor="background-prompt"
+										counter={`${prompt.length}/${PROMPT_MAX_LENGTH}`}
+									>
 										<Textarea
 											id="background-prompt"
 											value={prompt}
 											onChange={(event) => setPrompt(event.target.value)}
 											placeholder="이미지를 설명하세요"
-											maxLength={500}
+											maxLength={PROMPT_MAX_LENGTH}
 											rows={2}
 											className={cn(INSPECTOR_BARE_INPUT, 'min-h-12')}
 										/>
@@ -201,7 +212,11 @@ export function BackgroundSection() {
 			    ponytail: 배경 이미지 배정이 아직 없어(3단계 배선) 생성 전 규칙대로 닫힌 채 잠근다. */}
 			{type === 'image' && (
 				<InspectorSection title="Image Transform" disabled className="border-t-0 pt-0">
-					<ImageTransformControl value={imageTransform} onChange={setImageTransform} />
+					<ImageTransformControl
+						value={imageTransform}
+						aspectRatio={canvasAspectRatio}
+						onChange={setImageTransform}
+					/>
 				</InspectorSection>
 			)}
 			{type === 'graphic' && (
@@ -211,6 +226,7 @@ export function BackgroundSection() {
 							ariaLabel="그래픽 위치"
 							x={graphicOrigin.x}
 							y={graphicOrigin.y}
+							aspectRatio={canvasAspectRatio}
 							onChange={(x, y) => setGraphicOrigin({ x, y })}
 						/>
 						<InspectorRow label="Dynamic Thickness">

@@ -29,6 +29,7 @@ import {
 import { cn } from '@/lib/utils'
 
 const GENERATION_ERROR_MESSAGE = '이미지 생성에 실패했어요. 잠시 후 다시 시도해 주세요.'
+const PROMPT_MAX_LENGTH = 500
 
 type ImageSlotInputProps = {
 	id: string
@@ -158,13 +159,18 @@ export function ImageSlotInput({
 					onChange={onLineColorChange}
 				/>
 			)}
-			<InspectorField label="Prompt" htmlFor={id} className="min-h-24">
+			<InspectorField
+				label="Prompt"
+				htmlFor={id}
+				counter={`${prompt.length}/${PROMPT_MAX_LENGTH}`}
+				className="min-h-24"
+			>
 				<Textarea
 					id={id}
 					value={prompt}
 					onChange={(event) => setPrompt(event.target.value)}
 					placeholder="만들 이미지를 설명하세요"
-					maxLength={500}
+					maxLength={PROMPT_MAX_LENGTH}
 					rows={2}
 					className={cn(INSPECTOR_BARE_INPUT, 'min-h-12')}
 				/>
