@@ -201,7 +201,11 @@ function renderWidget(child: Child): ReactNode {
 			)
 		case 'typeWeightWidget':
 			return (
-				<TypeWeightWidget language={child.language} initialWeight={child.initialWeight} />
+				<TypeWeightWidget
+					layout={child.layout}
+					language={child.language}
+					initialWeight={child.initialWeight}
+				/>
 			)
 		case 'typeScaleWidget':
 			return <TypeScaleWidget />

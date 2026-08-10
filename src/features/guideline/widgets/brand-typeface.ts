@@ -73,6 +73,27 @@ export const WEIGHT_SAMPLE: Record<LanguageKey, string> = {
 }
 
 /**
+ * 굵기 슬라이더가 쓰는 표본. 국문·영문을 한 덩어리에 섞어 둔다 — 굵기 하나가 두 문자 체계에
+ * 어떻게 걸리는지가 이 화면의 요점이라 언어를 갈라 놓으면 그게 안 보인다.
+ * 🔴 줄바꿈이 내용의 일부다. 국문 "인류를위해"의 붙임도 브랜드팀 표기 그대로다.
+ */
+export const WEIGHT_SLIDER_SAMPLE = {
+	title: '인류의 미래를 개척하는 Future Builder',
+	body: 'HD현대는 세계 1위 조선회사를 넘어 인류를위해\n새로운 가치를 만들어가는 퓨처빌더로 거듭나고자 합니다.\nHD Hyundai aims to go beyond being a global\nno.1 Shipbuilder to a Future Builder that\ncreates a new value and foundation for humanity.',
+} as const
+
+/**
+ * 굵기 표본의 작은 본문(Artboard 43). 큰 문구 아래에 딸려 같은 굵기로 조판된다 —
+ * 굵기는 큰 글자보다 작은 글자에서 인상이 갈리므로 두 크기를 함께 보여 준다.
+ * 🔴 브랜드팀 표기를 그대로 옮겼다(국문 "인류를위해"의 붙임 포함). 줄바꿈도 원본이다.
+ */
+export const WEIGHT_SAMPLE_BODY: Record<LanguageKey, string> = {
+	ko: 'HD현대는 세계 1위 조선회사를 넘어\n인류를위해 새로운 가치를 만들어가는\n퓨처빌더로 거듭나고자 합니다.',
+	en: 'HD HYUNDAI Aims to go beyond being\na global no.1 Shipbuilder to a Future\nBuilder that creates a new value\nand foundation for humanity.',
+	enCaps: 'HD HYUNDAI Aims to go beyond being\na global no.1 Shipbuilder to a Future\nBuilder that creates a new value\nand foundation for humanity.',
+}
+
+/**
  * 스크램블 뷰어의 기본 표본(Artboard 45 "FONT SAMPLE TEXT").
  * 국문·영문·숫자·기호를 한 덩어리에 섞어 서체의 성격을 한 번에 보게 하는 문구다.
  * 🔴 줄바꿈이 내용의 일부다 — 줄을 합치거나 재배열하지 말 것. 브랜드팀 표기를 그대로 옮겼다.

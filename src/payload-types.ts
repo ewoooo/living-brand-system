@@ -1580,6 +1580,10 @@ export interface TypeScrambleWidget {
  */
 export interface TypeWeightWidget {
   /**
+   * 표본은 컨트롤 없이 고른 굵기 하나만 큰 문구 + 작은 본문으로 보여 줍니다. 원본(Artboard 43)처럼 3종을 늘어놓으려면 블록을 3열로 두고 이 위젯을 굵기·언어별로 여섯 개 넣습니다.
+   */
+  layout?: ('slider' | 'specimen') | null;
+  /**
    * 표본 문구의 언어입니다. 문구와 행간은 그 언어의 규정을 따라 고정되고, 화면에서는 굵기만 바뀝니다.
    */
   language?: ('ko' | 'en' | 'enCaps') | null;
@@ -3504,6 +3508,7 @@ export interface TypeScrambleWidgetSelect<T extends boolean = true> {
  * via the `definition` "TypeWeightWidget_select".
  */
 export interface TypeWeightWidgetSelect<T extends boolean = true> {
+  layout?: T;
   language?: T;
   initialWeight?: T;
   id?: T;

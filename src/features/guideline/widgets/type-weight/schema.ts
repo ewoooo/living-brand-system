@@ -17,6 +17,20 @@ export const TypeWeightWidget: Block = {
 	labels: { singular: '서체 굵기 컨트롤', plural: '서체 굵기 컨트롤' },
 	fields: [
 		{
+			name: 'layout',
+			type: 'select',
+			defaultValue: 'slider',
+			enumName: 'enum_twt_layout',
+			options: [
+				{ label: '슬라이더로 전환', value: 'slider' },
+				{ label: '표본 한 칸(고정)', value: 'specimen' },
+			],
+			admin: {
+				description:
+					'표본은 컨트롤 없이 고른 굵기 하나만 큰 문구 + 작은 본문으로 보여 줍니다. 원본(Artboard 43)처럼 3종을 늘어놓으려면 블록을 3열로 두고 이 위젯을 굵기·언어별로 여섯 개 넣습니다.',
+			},
+		},
+		{
 			name: 'language',
 			type: 'select',
 			defaultValue: 'ko',
