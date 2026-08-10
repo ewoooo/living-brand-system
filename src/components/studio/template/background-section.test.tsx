@@ -30,7 +30,8 @@ describe('BackgroundSection', () => {
 		expect(screen.queryByLabelText('Prompt')).toBeNull()
 
 		await user.click(screen.getByRole('radio', { name: 'Generate' }))
-		expect(screen.getByLabelText('Prompt')).toBeInTheDocument()
+		// 탭 전환은 exit 애니메이션 후 콘텐츠가 들어온다(InspectorTabPanel mode="wait").
+		expect(await screen.findByLabelText('Prompt')).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: '이미지 생성' })).toBeDisabled()
 	})
 

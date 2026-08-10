@@ -1,6 +1,8 @@
 'use client'
 
 import { ChevronDown } from '@carbon/icons-react'
+import { AnimatePresence, domAnimation, LazyMotion, useReducedMotion } from 'motion/react'
+import * as m from 'motion/react-m'
 import * as React from 'react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
@@ -126,6 +128,7 @@ export function InspectorSegmented<T extends string>({
 }: InspectorSegmentedProps<T>) {
 	const trackRef = React.useRef<HTMLDivElement>(null)
 	const [pill, setPill] = React.useState<{ left: number; width: number } | null>(null)
+	const reducedMotion = useReducedMotion()
 
 	// pill은 활성 버튼의 실측 위치를 따라간다 — 버튼 폭이 라벨마다 달라 CSS만으로는 못 놓는다.
 	// ponytail: 측정은 value 변경 시점뿐 — 폰트 로드로 폭이 미세하게 변하면 다음 전환에서 맞춰진다.
@@ -138,11 +141,20 @@ export function InspectorSegmented<T extends string>({
 	return (
 		<div ref={trackRef} className="-mr-2.5 relative flex h-9 shrink-0 items-center py-0.5">
 			{pill && (
-				<div
-					aria-hidden
-					className="absolute inset-y-0.5 rounded-sm bg-foreground/10 transition-[left,width] duration-150 motion-reduce:transition-none"
-					style={{ left: pill.left, width: pill.width }}
-				/>
+				<LazyMotion features={domAnimation}>
+					{/* dialkit segmented pill — 활성 탭으로 스프링 이동. */}
+					<m.div
+						aria-hidden
+						className="absolute inset-y-0.5 rounded-sm bg-foreground/10"
+						initial={false}
+						animate={{ left: pill.left, width: pill.width }}
+						transition={
+							reducedMotion
+								? { duration: 0 }
+								: { type: 'spring', visualDuration: 0.2, bounce: 0.15 }
+						}
+					/>
+				</LazyMotion>
 			)}
 			<ToggleGroup
 				type="single"
@@ -165,6 +177,43 @@ export function InspectorSegmented<T extends string>({
 				))}
 			</ToggleGroup>
 		</div>
+	)
+}
+
+type InspectorTabPanelProps = {
+	/** 활성 탭 식별자 — 바뀔 때마다 이전 콘텐츠가 빠지고 새 콘텐츠가 들어온다. */
+	tabKey: string
+	className?: string
+	children: React.ReactNode
+}
+
+/**
+ * 세그먼트(탭) 전환에 따르는 콘텐츠 스왑 — dialkit 드롭다운 전환(fade + y + scale)을 옮겼다.
+ * mode="wait"라 이전 콘텐츠가 빠진 뒤 새 콘텐츠가 들어와 높이가 겹치지 않는다.
+ */
+export function InspectorTabPanel({ tabKey, className, children }: InspectorTabPanelProps) {
+	const reducedMotion = useReducedMotion()
+
+	return (
+		<LazyMotion features={domAnimation}>
+			<AnimatePresence mode="wait" initial={false}>
+				<m.div
+					key={tabKey}
+					data-slot="inspector-tab-panel"
+					className={cn('flex flex-col gap-1', className)}
+					initial={reducedMotion ? false : { opacity: 0, y: 4, scale: 0.97 }}
+					animate={{ opacity: 1, y: 0, scale: 1 }}
+					exit={
+						reducedMotion
+							? undefined
+							: { opacity: 0, y: 4, scale: 0.97, pointerEvents: 'none' }
+					}
+					transition={{ duration: 0.15, ease: 'easeOut' }}
+				>
+					{children}
+				</m.div>
+			</AnimatePresence>
+		</LazyMotion>
 	)
 }
 
