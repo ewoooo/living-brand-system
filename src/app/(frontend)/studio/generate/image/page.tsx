@@ -1,5 +1,5 @@
 import { ImageGenerator } from '@/components/studio/generate/image-generator'
-import { StudioWorkspacePage } from '@/components/studio/studio-workspace'
+import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
 import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
 import { authenticateRequest } from '@/lib/request-auth'
 

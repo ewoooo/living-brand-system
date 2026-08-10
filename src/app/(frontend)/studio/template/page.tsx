@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { StudioWorkspacePage } from '@/components/studio/studio-workspace'
+import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { getCreateNavigation } from '@/services/get-create-navigation.service'
 
