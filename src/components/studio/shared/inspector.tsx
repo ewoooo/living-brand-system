@@ -3,6 +3,7 @@
 import { ChevronDown } from '@carbon/icons-react'
 import type * as React from 'react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
 
 /**
@@ -60,10 +61,10 @@ export function InspectorSection({
 		>
 			<CollapsibleTrigger className="group flex h-9 w-full items-center justify-between gap-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/30">
 				<span className="text-sm font-semibold text-muted-foreground">{title}</span>
-				{/* 디자인 SSOT: 펼침 = ˅, 접힘 = ˃ (dialkit 폴더 캐럿). */}
+				{/* 디자인 SSOT(2:2071): 펼침 = ˅, 접힘 = ˄. */}
 				<ChevronDown
 					aria-hidden
-					className="size-4 text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90"
+					className="size-4 text-muted-foreground transition-transform group-data-[state=closed]:rotate-180"
 				/>
 			</CollapsibleTrigger>
 			<CollapsibleContent className="flex flex-col gap-1">{children}</CollapsibleContent>
@@ -93,6 +94,44 @@ export function InspectorRow({ label, htmlFor, className, children, ...props }: 
 			</label>
 			{children}
 		</div>
+	)
+}
+
+type InspectorSegmentedProps<T extends string> = {
+	options: readonly { value: T; label: string }[]
+	value: T
+	onChange: (value: T) => void
+	'aria-label': string
+}
+
+/** 세그먼트 토글 — 행 오른쪽에 놓이는 칩 묶음(Preset|Generate, Off|On). 선택 칩은 어두운 면. */
+export function InspectorSegmented<T extends string>({
+	options,
+	value,
+	onChange,
+	'aria-label': ariaLabel,
+}: InspectorSegmentedProps<T>) {
+	return (
+		<ToggleGroup
+			type="single"
+			value={value}
+			// 세그먼트는 항상 하나가 선택돼 있다 — 같은 칩 재클릭(빈 값)은 무시.
+			onValueChange={(next) => next && onChange(next as T)}
+			aria-label={ariaLabel}
+			spacing={1}
+			className="shrink-0"
+		>
+			{options.map((option) => (
+				<ToggleGroupItem
+					key={option.value}
+					value={option.value}
+					size="sm"
+					className="h-6 rounded-md px-2.5 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+				>
+					{option.label}
+				</ToggleGroupItem>
+			))}
+		</ToggleGroup>
 	)
 }
 

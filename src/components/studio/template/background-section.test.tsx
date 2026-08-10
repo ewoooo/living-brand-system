@@ -1,0 +1,47 @@
+import { cleanup, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { afterEach, describe, expect, it } from 'vitest'
+import { BackgroundSection } from './background-section'
+
+/** Type 셀렉트를 키보드로 열어 옵션을 고른다 — jsdom엔 pointer capture가 없어 클릭으로 못 연다. */
+async function selectBackgroundType(user: ReturnType<typeof userEvent.setup>, option: string) {
+	screen.getByRole('combobox', { name: 'Type' }).focus()
+	await user.keyboard('{ArrowDown}')
+	await user.click(screen.getByRole('option', { name: option }))
+}
+
+describe('BackgroundSection', () => {
+	afterEach(cleanup)
+
+	it('기본 Color 타입은 배경색 행만 보여준다', () => {
+		render(<BackgroundSection />)
+
+		expect(screen.getByLabelText('Background Color 색상 선택')).toBeInTheDocument()
+		expect(screen.queryByRole('radio', { name: 'Preset' })).toBeNull()
+	})
+
+	it('Image 타입은 Preset·Generate 세그먼트로 하위 컨트롤을 갈아끼운다', async () => {
+		const user = userEvent.setup()
+		render(<BackgroundSection />)
+		await selectBackgroundType(user, 'Image')
+
+		// Preset 기본: 브라우즈 카드가 보이고 프롬프트는 없다.
+		expect(screen.getByText('이미지를 선택하세요')).toBeInTheDocument()
+		expect(screen.queryByLabelText('Prompt')).toBeNull()
+
+		await user.click(screen.getByRole('radio', { name: 'Generate' }))
+		expect(screen.getByLabelText('Prompt')).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: '이미지 생성' })).toBeDisabled()
+	})
+
+	it('Graphic 타입은 forward-straight가 지원하는 컨트롤만 노출한다', async () => {
+		const user = userEvent.setup()
+		render(<BackgroundSection />)
+		await selectBackgroundType(user, 'Graphic')
+
+		expect(screen.getByRole('radio', { name: 'Off' })).toBeInTheDocument()
+		expect(screen.getByRole('slider', { name: '그래픽 위치' })).toBeInTheDocument()
+		expect(screen.getByRole('combobox', { name: 'Perspective' })).toBeInTheDocument()
+		expect(screen.getByRole('combobox', { name: 'Angle' })).toBeInTheDocument()
+	})
+})
