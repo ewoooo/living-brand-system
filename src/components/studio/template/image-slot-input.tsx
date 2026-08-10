@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { InspectorField, InspectorRow } from '@/components/studio/shared/inspector'
 import { Button } from '@/components/ui/button'
-import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field'
+import { FieldError } from '@/components/ui/field'
 import {
 	Select,
 	SelectContent,
@@ -12,6 +13,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Typography } from '@/components/ui/typography'
 import type { ImageAspectRatio } from '@/features/generate-image/image-size'
 import {
 	type ImageProfileOption,
@@ -31,7 +33,7 @@ type ImageSlotInputProps = {
 
 /**
  * 제작자가 스튜디오에 개방한 프레임 이미지 슬롯 — 프롬프트로 생성해 프레임 이미지를 교체한다.
- * 프로파일이 고정되지 않은 슬롯만 발행된 프로파일 목록을 불러와 선택을 노출한다.
+ * 프로파일이 고정된 슬롯은 Type 행을 읽기 전용으로 보여주고, 아니면 발행 프로파일 선택을 노출한다.
  */
 export function ImageSlotInput({
 	id,
@@ -45,16 +47,17 @@ export function ImageSlotInput({
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 
+	// 고정 슬롯도 목록을 불러온다 — Type 행에 프로파일 이름을 보여주기 위해서다.
+	// 고정 슬롯은 목록 없이도 생성이 가능하므로 로드 실패를 오류로 올리지 않는다.
 	useEffect(() => {
-		if (pinnedProfileId) return
 		void requestPublishedImageProfiles()
 			.then((nextProfiles) => {
 				setProfiles(nextProfiles)
-				setProfileId((current) => current ?? nextProfiles[0]?.id)
+				if (!pinnedProfileId) setProfileId((current) => current ?? nextProfiles[0]?.id)
 			})
 			.catch(() => {
 				setProfiles([])
-				setError('이미지 프로파일을 불러오지 못했습니다.')
+				if (!pinnedProfileId) setError('이미지 프로파일을 불러오지 못했습니다.')
 			})
 	}, [pinnedProfileId])
 
@@ -84,19 +87,30 @@ export function ImageSlotInput({
 		}
 	}
 
+	const pinnedProfileName = profiles?.find((profile) => profile.id === pinnedProfileId)?.name
+
 	return (
-		<div data-slot="image-slot-input" className="flex flex-col gap-2">
-			{!pinnedProfileId && (
-				<Field data-disabled={!profiles?.length}>
-					<FieldLabel className="sr-only" htmlFor={`${id}-profile`}>
-						이미지 프로파일
-					</FieldLabel>
+		<div data-slot="image-slot-input" className="flex flex-col gap-1">
+			{pinnedProfileId ? (
+				pinnedProfileName && (
+					<InspectorRow label="Type" className="opacity-50">
+						<span className="truncate text-sm text-muted-foreground">
+							{pinnedProfileName}
+						</span>
+					</InspectorRow>
+				)
+			) : (
+				<InspectorRow label="Type" htmlFor={`${id}-profile`}>
 					<Select
 						value={profileId ? String(profileId) : undefined}
 						onValueChange={(value) => setProfileId(Number(value))}
 						disabled={!profiles?.length}
 					>
-						<SelectTrigger id={`${id}-profile`} className="w-full">
+						<SelectTrigger
+							id={`${id}-profile`}
+							size="sm"
+							className="h-auto border-transparent bg-transparent p-0 text-muted-foreground focus-visible:ring-0 dark:bg-transparent"
+						>
 							<SelectValue
 								placeholder={
 									profiles ? '발행된 프로파일 없음' : '프로파일 불러오는 중'
@@ -104,7 +118,7 @@ export function ImageSlotInput({
 							/>
 						</SelectTrigger>
 						{profiles?.length ? (
-							<SelectContent>
+							<SelectContent align="end">
 								<SelectGroup>
 									{profiles.map(({ id: optionId, name }) => (
 										<SelectItem key={optionId} value={String(optionId)}>
@@ -115,24 +129,28 @@ export function ImageSlotInput({
 							</SelectContent>
 						) : null}
 					</Select>
-				</Field>
+				</InspectorRow>
 			)}
-			{aspectRatio && (
-				<FieldDescription className="text-xs">
-					슬롯 비율 {aspectRatio}로 생성
-				</FieldDescription>
-			)}
-			<Textarea
-				id={id}
-				value={prompt}
-				onChange={(event) => setPrompt(event.target.value)}
-				placeholder="만들 이미지를 설명하세요"
-				maxLength={500}
-				rows={2}
-			/>
+			<InspectorField label="Prompt" htmlFor={id} className="min-h-24">
+				<Textarea
+					id={id}
+					value={prompt}
+					onChange={(event) => setPrompt(event.target.value)}
+					placeholder="만들 이미지를 설명하세요"
+					maxLength={500}
+					rows={2}
+					className="h-auto min-h-12 rounded-none border-0 bg-transparent p-0 focus-visible:ring-0 dark:bg-transparent"
+				/>
+				{aspectRatio && (
+					<Typography size="xs" tone="muted">
+						슬롯 비율 {aspectRatio}로 생성
+					</Typography>
+				)}
+			</InspectorField>
 			<Button
 				type="button"
-				size="sm"
+				variant="muted"
+				className="mt-0.5 h-11 w-full text-sm font-semibold"
 				onClick={run}
 				disabled={loading || !profileId || !prompt.trim()}
 			>

@@ -5,18 +5,32 @@ import { ContentHeading } from '@/components/shared/content-heading'
 type StudioWorkspacePageProps = {
 	title: string
 	description?: string
+	/** 디자인 SSOT에서 제목이 컨트롤러(아이덴티티 카드)로 옮겨간 화면은 헤딩을 스크린리더 전용으로 숨긴다. */
+	hideHeading?: boolean
 	children: React.ReactNode
 }
 
 /** Studio 도구의 제목과 작업 영역이 화면 높이를 공유하는 공통 페이지 프레임. */
-export function StudioWorkspacePage({ title, description, children }: StudioWorkspacePageProps) {
+export function StudioWorkspacePage({
+	title,
+	description,
+	hideHeading = false,
+	children,
+}: StudioWorkspacePageProps) {
 	return (
 		<ContentFrame
 			data-slot="studio-workspace-page"
 			variant="full"
-			className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] py-0"
+			// sr-only 헤딩은 absolute라 grid 행을 차지하지 않는다 — 숨김이면 본문 단일 행으로 구성한다.
+			className={`grid h-full min-h-0 py-0 ${
+				hideHeading ? 'grid-rows-[minmax(0,1fr)]' : 'grid-rows-[auto_minmax(0,1fr)]'
+			}`}
 		>
-			<ContentHeading title={title} description={description} className="px-4 py-6 md:px-8" />
+			<ContentHeading
+				title={title}
+				description={description}
+				className={hideHeading ? 'sr-only' : 'px-4 py-6 md:px-8'}
+			/>
 			{children}
 		</ContentFrame>
 	)
@@ -27,22 +41,19 @@ type StudioWorkspaceProps = {
 	children: React.ReactNode
 }
 
-/** Studio 도구의 컨트롤러와 결과 캔버스 배치만 소유한다. */
+/** Studio 도구의 컨트롤러와 결과 캔버스 배치만 소유한다. 디자인 SSOT에 따라 컨트롤러는 오른쪽 플로팅 패널이다. */
 export function StudioWorkspace({ controller, children }: StudioWorkspaceProps) {
 	return (
 		<section
 			data-slot="studio-workspace"
-			className="grid min-h-0 border-t border-border lg:grid-cols-[22rem_minmax(0,1fr)]"
+			className="grid min-h-0 border-t border-border lg:grid-cols-[minmax(0,1fr)_22rem]"
 		>
-			<aside
-				data-slot="studio-workspace-controller"
-				className="min-h-0 p-4 lg:border-r lg:border-border"
-			>
+			<aside data-slot="studio-workspace-controller" className="min-h-0 p-4 lg:order-2">
 				{controller}
 			</aside>
 			<div
 				data-slot="studio-workspace-canvas"
-				className="flex min-h-96 min-w-0 flex-col bg-muted/20 p-4 md:p-6 lg:min-h-0"
+				className="flex min-h-96 min-w-0 flex-col p-4 md:p-6 lg:order-1 lg:min-h-0"
 			>
 				{children}
 			</div>
