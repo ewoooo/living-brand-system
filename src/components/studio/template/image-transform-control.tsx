@@ -30,7 +30,11 @@ type ImageTransformControlProps = {
 export function ImageTransformControl({ value, onChange }: ImageTransformControlProps) {
 	return (
 		<div data-slot="image-transform-control" className="flex flex-col gap-1 pb-2.5">
-			<PositionPad value={value} onChange={onChange} />
+			<TransformPad
+				x={value.x}
+				y={value.y}
+				onChange={(x, y) => onChange({ ...value, x, y })}
+			/>
 			<SliderRow
 				label="Scale"
 				value={value.scale}
@@ -49,8 +53,16 @@ export function ImageTransformControl({ value, onChange }: ImageTransformControl
 	)
 }
 
-/** 2축 포지션 패드 — 드래그와 화살표 키로 슬롯 안 이미지 위치를 옮긴다. */
-function PositionPad({ value, onChange }: ImageTransformControlProps) {
+type TransformPadProps = {
+	/** 중심 기준 오프셋, -1(왼/위) ~ 1(오른/아래). */
+	x: number
+	y: number
+	onChange: (x: number, y: number) => void
+	ariaLabel?: string
+}
+
+/** 2축 포지션 패드 — 드래그와 화살표 키로 위치를 옮긴다. 이미지·그래픽 transform이 공유한다. */
+export function TransformPad({ x, y, onChange, ariaLabel = '이미지 위치' }: TransformPadProps) {
 	const padRef = useRef<HTMLDivElement>(null)
 	const [dragging, setDragging] = useState(false)
 
@@ -58,11 +70,10 @@ function PositionPad({ value, onChange }: ImageTransformControlProps) {
 		const pad = padRef.current
 		if (!pad) return
 		const bounds = pad.getBoundingClientRect()
-		onChange({
-			...value,
-			x: clamp(((event.clientX - bounds.left) / bounds.width) * 2 - 1, -1, 1),
-			y: clamp(((event.clientY - bounds.top) / bounds.height) * 2 - 1, -1, 1),
-		})
+		onChange(
+			clamp(((event.clientX - bounds.left) / bounds.width) * 2 - 1, -1, 1),
+			clamp(((event.clientY - bounds.top) / bounds.height) * 2 - 1, -1, 1),
+		)
 	}
 
 	function nudge(event: KeyboardEvent<HTMLDivElement>) {
@@ -76,11 +87,7 @@ function PositionPad({ value, onChange }: ImageTransformControlProps) {
 		const delta = deltas[event.key]
 		if (!delta) return
 		event.preventDefault()
-		onChange({
-			...value,
-			x: clamp(value.x + delta[0], -1, 1),
-			y: clamp(value.y + delta[1], -1, 1),
-		})
+		onChange(clamp(x + delta[0], -1, 1), clamp(y + delta[1], -1, 1))
 	}
 
 	return (
@@ -88,9 +95,9 @@ function PositionPad({ value, onChange }: ImageTransformControlProps) {
 		<div
 			ref={padRef}
 			role="slider"
-			aria-label="이미지 위치"
-			aria-valuenow={Math.round(value.x * 100)}
-			aria-valuetext={`가로 ${Math.round(value.x * 100)}%, 세로 ${Math.round(value.y * 100)}%`}
+			aria-label={ariaLabel}
+			aria-valuenow={Math.round(x * 100)}
+			aria-valuetext={`가로 ${Math.round(x * 100)}%, 세로 ${Math.round(y * 100)}%`}
 			tabIndex={0}
 			onKeyDown={nudge}
 			onPointerDown={(event) => {
@@ -109,8 +116,8 @@ function PositionPad({ value, onChange }: ImageTransformControlProps) {
 				aria-hidden
 				className="-translate-x-1/2 -translate-y-1/2 absolute size-3.5 rounded-full bg-foreground shadow-sm"
 				style={{
-					left: `${((value.x + 1) / 2) * 100}%`,
-					top: `${((value.y + 1) / 2) * 100}%`,
+					left: `${((x + 1) / 2) * 100}%`,
+					top: `${((y + 1) / 2) * 100}%`,
 				}}
 			/>
 		</div>
