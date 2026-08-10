@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { type ButtonHTMLAttributes, createElement } from 'react'
+import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ImageProfileTestPanel } from './image-profile-test-panel'
 
@@ -10,14 +10,13 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@payloadcms/ui', () => ({
-	Button: ({ children, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) =>
-		createElement('button', { type: 'button', ...props }, children),
 	useForm: () => ({
 		getData: mocks.getData,
 		getDataByPath: mocks.getDataByPath,
 	}),
 }))
-vi.mock('@/features/generate-image/services/generate-image.client', () => ({
+vi.mock('@/features/generate-image/services/generate-image.client', async (importOriginal) => ({
+	...(await importOriginal<object>()),
 	requestAdminImageGeneration: mocks.requestAdminImageGeneration,
 }))
 
