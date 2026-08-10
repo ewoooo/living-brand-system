@@ -23,22 +23,46 @@ import { HAIRLINE_CELL, HAIRLINE_GRID } from '../hairline'
 //    조건이 성립하지 않는다(빠진 것은 Light 300인데 어느 단도 쓰지 않는다). 규정이 300을 쓰는 단을
 //    갖게 되면 그때 넣는다.
 
-/** 선택되지 않은 단의 투명도. 지우지 않고 죽이기만 한다 — 위계는 나머지 단이 있어야 보인다. */
+/** 다른 단을 만지는 동안 나머지 단의 투명도. 지우지 않고 죽이기만 한다 — 위계는 나머지 단이 있어야 보인다. */
 const DIMMED = 0.3
+
+/**
+ * 이 폭부터 규정 크기가 실물 그대로 나온다. 더 넓어져도 규정값을 넘지 않고, 좁아질 때만 줄어든다.
+ * 🔴 규정값 자체는 TIER_SIZE(원본 Artboard 46~48의 60 / 30 / 17)가 소유한다 — 여기서 고치지 말 것.
+ * 🔴 지금 판형의 실제 폭(약 740)보다 넉넉히 낮게 잡는다. 딱 맞춰 두면 판의 padding만 바뀌어도
+ *    규정값에 못 닿아, 옆 패널이 적어 둔 "Size 60px"이 화면과 어긋난다.
+ */
+const FULL_SIZE_WIDTH = 640
+
+/**
+ * 규정 크기를 넘지 않으면서 좁은 판에서만 줄어드는 크기.
+ * 🔴 상한이 규정값이다 — 넓은 화면에서 규정보다 커지면 옆 패널이 적어 둔 "Size 60px"이 거짓말이 된다.
+ *    반대로 하한이 없으면 좁은 칸에서 Head가 판을 깨뜨린다(px 고정이던 시절의 문제).
+ */
+function tierFontSize(key: TierKey) {
+	const spec = TIER_SIZE[key]
+	const floor = Math.max(Math.round(spec * 0.45), 12)
+	return `clamp(${floor}px, ${((spec / FULL_SIZE_WIDTH) * 100).toFixed(2)}cqi, ${spec}px)`
+}
 
 export function TypeHierarchyView({ language }: { language: LanguageKey }) {
 	// 언어가 정해 주는 것: 예시 문구와 행간 규정. 초기값은 공유 상수를 그대로 쓰고,
 	// 편집은 새 객체를 만들므로 상수는 변형되지 않는다.
 	const [texts, setTexts] = useState<Record<TierKey, string>>(SAMPLE_PARAGRAPH[language])
-	// 처음부터 하나가 선택돼 있어야 편집 칸이 보이고, 좌측의 강조가 무엇을 뜻하는지 읽힌다.
-	const [selected, setSelected] = useState<TierKey>('head')
+	// 🔴 선택 상태가 아니라 **지금 만지고 있는 단**이다. 세 단이 늘 함께 편집되므로 아무것도 안 만지는
+	//    동안에는 셋 다 살아 있어야 한다 — 그게 이 위젯이 보여 주려는 완성된 문단이다.
+	const [editing, setEditing] = useState<TierKey | null>(null)
 
 	const leading = LEADING[language]
 
 	return (
 		<div className={`grid w-full md:grid-cols-3 ${HAIRLINE_GRID}`}>
 			{/* 좌 — 실제 렌더. 세 단이 한 문단으로 붙어 있어야 크기·행간 차이가 위계로 읽힌다. */}
-			<div className={`flex flex-col gap-5 p-6 md:col-span-2 ${HAIRLINE_CELL}`}>
+			<div
+				className={`flex flex-col gap-5 p-6 md:col-span-2 ${HAIRLINE_CELL}`}
+				// 글자 크기를 그리드 셀이 아니라 이 판 기준으로 잰다(tierFontSize 주석 참고).
+				style={{ containerType: 'inline-size' }}
+			>
 				{TIERS.map((tier) => (
 					<p
 						key={tier.key}
@@ -48,11 +72,11 @@ export function TypeHierarchyView({ language }: { language: LanguageKey }) {
 						style={{
 							fontFamily: BRAND_FONT_STACK,
 							fontWeight: tier.weight,
-							fontSize: `${TIER_SIZE[tier.key]}px`,
+							fontSize: tierFontSize(tier.key),
 							// 규정은 범위다. 렌더는 하한을 쓰고, 범위 전체는 패널이 보여 준다.
 							lineHeight: `${leading[tier.key][0]}%`,
 							whiteSpace: 'pre-wrap',
-							opacity: tier.key === selected ? 1 : DIMMED,
+							opacity: editing && editing !== tier.key ? DIMMED : 1,
 						}}
 					>
 						{texts[tier.key]}
@@ -64,59 +88,56 @@ export function TypeHierarchyView({ language }: { language: LanguageKey }) {
 			<div className={`flex flex-col gap-3 p-4 ${HAIRLINE_CELL}`}>
 				<ul className="flex flex-col gap-2">
 					{TIERS.map((tier) => {
-						const on = tier.key === selected
 						const [min, max] = leading[tier.key]
+						const on = editing === tier.key
 						return (
 							<li
 								key={tier.key}
 								className={`flex flex-col border ${on ? 'border-foreground' : 'border-border'}`}
 							>
-								{/* 선택을 색만으로 구분하지 않는다 — 굵기가 같이 바뀌고 편집 칸이 열린다. */}
-								<button
-									type="button"
-									aria-pressed={on}
-									onClick={() => setSelected(tier.key)}
-									className={`flex flex-col gap-1 p-3 text-left font-body focus-visible:outline-2 ${
-										on
-											? 'bg-muted font-semibold text-foreground'
-											: 'font-normal text-muted-foreground hover:bg-muted'
-									}`}
-								>
-									<span className="text-sm">{tier.label}</span>
-									<span className="font-mono font-normal text-xs tabular-nums">
+								{/*
+									🔴 버튼이 아니라 라벨이다. 세 칸이 늘 열려 있어 고를 것이 없고,
+									투명도만 바꾸는 가짜 버튼은 키보드에 잡히기만 하고 하는 일이 없다.
+								*/}
+								<div className="flex flex-col gap-1 p-3 font-body">
+									<span className="text-foreground text-sm">{tier.label}</span>
+									<span className="font-mono text-muted-foreground text-xs tabular-nums">
 										Weight {tier.weight} · Size {TIER_SIZE[tier.key]}px ·
 										Leading {min}~{max}%
 									</span>
-								</button>
+								</div>
 
 								{/*
 									🔴 contentEditable이 아니라 textarea다. 값이 state 한 곳에만 있어야
 									좌측 렌더와 어긋나지 않고, 개행도 그대로 들어온다.
+									🔴 세 칸이 동시에 열려 있다 — 이 위젯의 질문이 "문단이 어떻게 구성되는가"라
+									한 단씩만 만질 수 있으면 세 단의 관계를 만들어 볼 수가 없다.
 								*/}
-								{on ? (
-									<textarea
-										value={texts[tier.key]}
-										onChange={(event) =>
-											setTexts((prev) => ({
-												...prev,
-												[tier.key]: event.target.value,
-											}))
-										}
-										rows={3}
-										aria-label={`${tier.label} 문구`}
-										// 🔴 outline-none을 같이 주면 안 된다 — Tailwind v4의 outline-2는
-										// `outline-style: var(--tw-outline-style)`인데 outline-none이 그 변수를
-										// none으로 박아 포커스 링이 아예 안 그려진다(키보드로 이 칸을 못 찾는다).
-										className="w-full resize-y border-border border-t bg-background p-3 font-body text-foreground text-sm focus-visible:outline-2"
-									/>
-								) : null}
+								<textarea
+									value={texts[tier.key]}
+									onChange={(event) =>
+										setTexts((prev) => ({
+											...prev,
+											[tier.key]: event.target.value,
+										}))
+									}
+									onFocus={() => setEditing(tier.key)}
+									onBlur={() => setEditing(null)}
+									rows={3}
+									aria-label={`${tier.label} 문구`}
+									// 🔴 outline-none을 같이 주면 안 된다 — Tailwind v4의 outline-2는
+									// `outline-style: var(--tw-outline-style)`인데 outline-none이 그 변수를
+									// none으로 박아 포커스 링이 아예 안 그려진다(키보드로 이 칸을 못 찾는다).
+									className="w-full resize-y border-border border-t bg-background p-3 font-body text-foreground text-sm focus-visible:outline-2"
+								/>
 							</li>
 						)
 					})}
 				</ul>
 
 				<p className="font-body text-muted-foreground text-xs">
-					단을 골라 문구를 바꿔 보세요. 크기·굵기·행간은 규정이라 고정입니다.
+					세 단의 문구를 바꿔 보세요. 굵기·행간은 규정이라 고정이고, 크기는 규정값을 넘지
+					않는 선에서 판 폭을 따릅니다.
 				</p>
 			</div>
 		</div>
