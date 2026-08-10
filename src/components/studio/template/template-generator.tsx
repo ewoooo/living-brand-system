@@ -179,13 +179,14 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 								)}
 							</Field>
 						))}
-						{imageSlots.map((slot) => (
+						{imageSlots.map((slot, index) => (
 							<Field key={slot.nodeId} className="gap-1">
 								<FieldLabel
 									htmlFor={`image-slot-${slot.nodeId}`}
 									className="font-normal text-muted-foreground"
 								>
-									{slot.name}
+									{/* Figma 노드명은 이미지 파일명이라 사용자에게 무의미하다 — 라벨 저작 필드가 생기기 전까지 일반명으로 표기 */}
+									{imageSlots.length > 1 ? `이미지 ${index + 1}` : '이미지'}
 								</FieldLabel>
 								<ImageSlotInput
 									id={`image-slot-${slot.nodeId}`}
