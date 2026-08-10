@@ -13,6 +13,10 @@ const badgeVariants = cva(
 				tint: 'border-primary/40 bg-primary/10 text-foreground [a&]:hover:bg-primary/15',
 				muted: 'bg-muted text-muted-foreground [a&]:hover:bg-muted/80',
 				highlight: 'bg-highlight text-highlight-foreground [a&]:hover:brightness-95',
+				success: 'bg-success/15 text-success [a&]:hover:bg-success/20',
+				info: 'bg-info/15 text-info [a&]:hover:bg-info/20',
+				warning: 'bg-warning/15 text-warning [a&]:hover:bg-warning/20',
+				destructive: 'bg-destructive/15 text-destructive [a&]:hover:bg-destructive/20',
 			},
 			shape: {
 				sharp: 'rounded-none',

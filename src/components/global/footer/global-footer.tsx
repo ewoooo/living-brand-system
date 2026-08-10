@@ -6,7 +6,10 @@ export async function GlobalFooter() {
 	const { companyName } = await getGuidelineMetadata()
 
 	return (
-		<footer className="mx-auto w-full px-4 font-body text-sm font-normal text-muted-foreground">
+		<footer
+			data-slot="global-footer"
+			className="mx-auto w-full px-4 font-body text-sm font-normal text-muted-foreground"
+		>
 			<section className="flex w-full items-center justify-between py-2">
 				<Typography as="p" size="xs">
 					© {companyName}. All rights reserved.

@@ -5,6 +5,7 @@ import { type DragEvent, useState } from 'react'
 import { AgentChatMessageList } from '@/components/global/chat/agent-chat-message-list'
 import { AgentChatUserInput } from '@/components/global/chat/agent-chat-user-input'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
+import { Typography } from '@/components/ui/typography'
 import { useAgentChat } from '@/features/agent-chat/hooks/use-agent-chat'
 import { cn } from '@/lib/utils'
 
@@ -85,8 +86,10 @@ export function GlobalAgentChat() {
 
 function GlobalAgentChatHeader() {
 	return (
-		<header className="p-3.5">
-			<h2 className="font-body text-base font-bold">채팅</h2>
+		<header data-slot="global-agent-chat-header" className="p-3.5">
+			<Typography as="h2" weight="bold">
+				채팅
+			</Typography>
 		</header>
 	)
 }

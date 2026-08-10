@@ -11,8 +11,15 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
+import { Typography } from '@/components/ui/typography'
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import { formatObservationActual, formatObservationExpected } from './check-observation-format'
+
+type CheckDetailRowProps = {
+	appliesTo: string[]
+	outcome?: CheckResult
+	shouldReduceMotion: boolean | null
+}
 
 /**
  * 결과 행 확장 상세 — 판정 근거를 rawResult에서 읽어 표시.
@@ -24,21 +31,14 @@ import { formatObservationActual, formatObservationExpected } from './check-obse
  *       actual: 'present'|'absent'|'uncertain'|'not_applicable'|number,
  *       confidence: number, reason: string, satisfied: boolean | null }[]
  */
-export function CheckDetailRow({
-	appliesTo,
-	outcome,
-	shouldReduceMotion,
-}: {
-	appliesTo: string[]
-	outcome?: CheckResult
-	shouldReduceMotion: boolean | null
-}) {
+export function CheckDetailRow({ appliesTo, outcome, shouldReduceMotion }: CheckDetailRowProps) {
 	const appliesToText = appliesTo.join(', ')
 	const observations =
 		outcome && 'observations' in outcome.rawResult ? outcome.rawResult.observations : undefined
 
 	return (
 		<motion.tr
+			data-slot="check-detail-row"
 			className="border-0"
 			exit={{ visibility: 'visible' }}
 			transition={{ duration: 0.18, ease: 'easeOut' }}
@@ -48,9 +48,9 @@ export function CheckDetailRow({
 				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="space-y-2 pb-3">
 						{appliesTo.length > 1 && (
-							<p className="font-body text-xs font-normal text-muted-foreground">
+							<Typography size="xs" tone="muted">
 								적용 위치: {appliesToText}
-							</p>
+							</Typography>
 						)}
 
 						<HeuristicObservations observations={observations} />
@@ -65,7 +65,10 @@ function HeuristicObservations({ observations }: { observations: AiCheckResult['
 	if (!observations?.length) return null
 
 	return (
-		<div className="overflow-x-auto rounded-sm border border-border">
+		<div
+			data-slot="heuristic-observations"
+			className="overflow-x-auto rounded-sm border border-border"
+		>
 			<Table className="font-body text-sm font-normal">
 				<TableCaption className="sr-only">결과 비교</TableCaption>
 				<TableHeader className="border-b bg-fill-muted/50 text-muted-foreground">
@@ -80,8 +83,12 @@ function HeuristicObservations({ observations }: { observations: AiCheckResult['
 					{observations.map((observation) => (
 						<TableRow key={observation.criterionId}>
 							<TableCell className="px-3 py-2 align-top whitespace-normal">
-								<p className="text-muted-foreground">{observation.question}</p>
-								<p className="mt-1 text-muted-foreground">{observation.reason}</p>
+								<Typography size="sm" tone="muted">
+									{observation.question}
+								</Typography>
+								<Typography size="sm" tone="muted" className="mt-1">
+									{observation.reason}
+								</Typography>
 							</TableCell>
 							<TableCell className="px-3 py-2 align-top">
 								{formatObservationExpected(observation)}
@@ -115,6 +122,7 @@ function CheckDetailCollapse({
 }) {
 	return (
 		<motion.div
+			data-slot="check-detail-collapse"
 			className="overflow-hidden"
 			initial={shouldReduceMotion ? false : { height: 0 }}
 			animate={shouldReduceMotion ? {} : { height: 'auto' }}

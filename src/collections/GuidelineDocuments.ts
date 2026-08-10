@@ -29,11 +29,13 @@ export const GuidelineDocuments: CollectionConfig = {
 		description: '계층형 가이드라인 문서입니다.',
 		components: {
 			edit: {
-				PublishButton: '/components/admin/BetterEditorPublishButton',
+				PublishButton:
+					'/components/admin/guideline-documents/better-editor-publish-button#BetterEditorPublishButton',
 			},
 			views: {
 				list: {
-					Component: '/components/admin/GuidelineDocumentTreeList',
+					Component:
+						'/components/admin/guideline-documents/guideline-document-tree-list#GuidelineDocumentTreeList',
 				},
 			},
 		},
@@ -50,7 +52,7 @@ export const GuidelineDocuments: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				components: {
-					Field: '/components/admin/GuidelineDocumentLocation',
+					Field: '/components/admin/guideline-documents/guideline-document-location#GuidelineDocumentLocation',
 				},
 			},
 		},

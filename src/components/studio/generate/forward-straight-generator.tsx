@@ -1,11 +1,19 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { StudioWorkspace } from '@/components/studio/studio-workspace'
+import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
 import {
 	type ForwardStraightInput,
@@ -118,47 +126,54 @@ export function ForwardStraightGenerator() {
 							설정
 						</Typography>
 
-						{forwardStraightToolContract.controls.map((control) => {
-							const id = `forward-straight-${control.key}`
+						<FieldGroup>
+							{forwardStraightToolContract.controls.map((control) => {
+								const id = `forward-straight-${control.key}`
 
-							if (control.type === 'boolean') {
+								if (control.type === 'boolean') {
+									return (
+										<Field key={control.key} orientation="horizontal">
+											<FieldLabel htmlFor={id}>{control.label}</FieldLabel>
+											<Checkbox
+												id={id}
+												checked={input[control.key] === true}
+												onCheckedChange={(checked) =>
+													updateControl(control.key, checked === true)
+												}
+											/>
+										</Field>
+									)
+								}
+
 								return (
-									<div
-										key={control.key}
-										className="flex items-center justify-between gap-3"
-									>
-										<Label htmlFor={id}>{control.label}</Label>
-										<Checkbox
-											id={id}
-											checked={input[control.key] === true}
-											onCheckedChange={(checked) =>
-												updateControl(control.key, checked === true)
+									<Field key={control.key}>
+										<FieldLabel htmlFor={id}>{control.label}</FieldLabel>
+										<Select
+											value={String(input[control.key])}
+											onValueChange={(value) =>
+												updateControl(control.key, value)
 											}
-										/>
-									</div>
+										>
+											<SelectTrigger id={id} className="w-full">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectGroup>
+													{control.options.map((option) => (
+														<SelectItem
+															key={option.value}
+															value={option.value}
+														>
+															{option.label}
+														</SelectItem>
+													))}
+												</SelectGroup>
+											</SelectContent>
+										</Select>
+									</Field>
 								)
-							}
-
-							return (
-								<div key={control.key} className="flex flex-col gap-2">
-									<Label htmlFor={id}>{control.label}</Label>
-									<select
-										id={id}
-										value={String(input[control.key])}
-										onChange={(event) =>
-											updateControl(control.key, event.currentTarget.value)
-										}
-										className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
-									>
-										{control.options.map((option) => (
-											<option key={option.value} value={option.value}>
-												{option.label}
-											</option>
-										))}
-									</select>
-								</div>
-							)
-						})}
+							})}
+						</FieldGroup>
 					</CardContent>
 
 					<CardFooter className="border-t border-border py-4">

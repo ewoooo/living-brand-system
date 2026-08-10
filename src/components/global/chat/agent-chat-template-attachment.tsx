@@ -11,18 +11,19 @@ import {
 	AttachmentMedia,
 	AttachmentTitle,
 } from '@/components/ui/attachment'
+import { Typography } from '@/components/ui/typography'
 import type { AgentTemplateImageAttachment } from '@/features/agent-chat/services/agent-template-request.service'
 import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
 
 const PREVIEW_WIDTH = 280
 
-/** html 첨부: 슬롯 값을 base html에 합성해 미리보기·다운로드한다 (Create 화면과 동일 렌더). */
-export function AgentChatTemplateAttachment({
-	attachment,
-}: {
+type AgentChatTemplateAttachmentProps = {
 	attachment: AgentTemplateImageAttachment
-}) {
+}
+
+/** html 첨부: 슬롯 값을 base html에 합성해 미리보기·다운로드한다 (Create 화면과 동일 렌더). */
+export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAttachmentProps) {
 	const composedHtml = useMemo(
 		() =>
 			composeTemplateHtml(
@@ -146,7 +147,9 @@ function TemplateAttachmentFrame({
 				)}
 			</AttachmentActions>
 			{exportError && (
-				<p className="px-1 font-body text-sm font-normal text-destructive">{exportError}</p>
+				<Typography size="sm" tone="destructive" className="px-1">
+					{exportError}
+				</Typography>
 			)}
 		</Attachment>
 	)
@@ -187,7 +190,11 @@ function ScaledMedia({
 	}, [])
 
 	return (
-		<div ref={containerRef} className="flex w-full justify-center overflow-hidden">
+		<div
+			ref={containerRef}
+			data-slot="scaled-media"
+			className="flex w-full justify-center overflow-hidden"
+		>
 			{children(scale)}
 		</div>
 	)

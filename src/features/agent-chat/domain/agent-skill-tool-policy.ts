@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import type { getAgentTools } from '@/agents/agent-chat-tools.agent'
 
 /** loadSkill 입력 — Agent가 선택하는 skill 이름. */
 export const agentSkillSelectionSchema = z.strictObject({
@@ -13,9 +12,6 @@ export function readSkillName(value: unknown): string | null {
 	const parsed = skillNameSchema.safeParse(value)
 	return parsed.success ? parsed.data.name : null
 }
-
-/** getAgentTools에 등록된 task tool 이름 — loadSkill은 skill 선택 전용이라 제외한다. */
-type RegisteredTaskToolName = Exclude<keyof ReturnType<typeof getAgentTools>, 'loadSkill'>
 
 /** 배열 output들의 항목 수 합. */
 const sumArrayLengths = (outputs: unknown[]) =>
@@ -46,7 +42,7 @@ interface AgentToolRow {
  * Task tool 단일 테이블 — tool 이름(키)·skill 허용·마커 문구를 한 곳이 소유한다.
  * 행 순서가 결과 문구 우선순위다(위가 먼저). fallback도 같은 순서로 훑지만
  * fallback을 가진 tool들은 서로 같은 skill에 없어 순서가 충돌하지 않는다.
- * getAgentTools에 task tool을 추가하면 여기 행이 없는 한 컴파일 에러가 난다.
+ * getAgentTools와의 정확한 키 일치는 colocated test가 타입으로 검증한다.
  */
 export const agentToolTable = {
 	listGuidelineDocuments: {
@@ -153,7 +149,7 @@ export const agentToolTable = {
 			done: '템플릿 검색을 완료했습니다',
 		},
 	},
-} satisfies Record<RegisteredTaskToolName, AgentToolRow>
+} satisfies Record<string, AgentToolRow>
 
 export type AgentTaskToolName = keyof typeof agentToolTable
 

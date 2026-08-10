@@ -1,4 +1,4 @@
-import { createMcpApiKeyRecord } from '@/features/mcp-access/repositories/mcp-api-key.payload.repository'
+import { issueMcpApiKey } from '@/features/mcp-access/services/issue-mcp-api-key.service'
 import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 	}
 
 	try {
-		const credential = await createMcpApiKeyRecord(user)
+		const credential = await issueMcpApiKey(user)
 		payload.logger.info({ keyId: credential.id, userId: user.id }, 'mcp-api-key.issued')
 		return Response.json(
 			{

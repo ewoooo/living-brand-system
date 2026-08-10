@@ -1,3 +1,4 @@
+import { cva } from 'class-variance-authority'
 import Link from 'next/link'
 import { SidebarMenuButton, SidebarMenuSubButton } from '@/components/ui/sidebar'
 
@@ -5,25 +6,28 @@ function isAnchor(href: string) {
 	return href.startsWith('#')
 }
 
-export function getSideNavLinkClassName(nested: boolean) {
-	return nested
-		? 'text-foreground/40 data-active:text-foreground'
-		: 'text-foreground/65 data-active:text-foreground'
-}
+export const sideNavLinkVariants = cva('data-active:text-foreground', {
+	variants: {
+		nested: {
+			true: 'text-foreground/40',
+			false: 'text-foreground/65',
+		},
+	},
+	defaultVariants: {
+		nested: false,
+	},
+})
 
-export function SideNavLink({
-	label,
-	href,
-	active,
-	nested,
-}: {
+type SideNavLinkProps = {
 	label: string
 	href: string
 	active: boolean
 	nested: boolean
-}) {
+}
+
+export function SideNavLink({ label, href, active, nested }: SideNavLinkProps) {
 	const Button = nested ? SidebarMenuSubButton : SidebarMenuButton
-	const className = getSideNavLinkClassName(nested)
+	const className = sideNavLinkVariants({ nested })
 
 	if (isAnchor(href)) {
 		return (

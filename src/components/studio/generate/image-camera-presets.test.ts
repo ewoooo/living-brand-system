@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ImageCameraPresets } from './image-camera-presets'
@@ -29,6 +30,7 @@ describe('ImageCameraPresets', () => {
 	afterEach(cleanup)
 
 	it('고정 프리셋을 각도로 변환해 생성 이미지 ID로 조정을 요청한다', async () => {
+		const user = userEvent.setup()
 		render(
 			createElement(ImageCameraPresets, {
 				basePrompt: '{"subject":"유조선"}',
@@ -38,12 +40,12 @@ describe('ImageCameraPresets', () => {
 			}),
 		)
 
-		fireEvent.change(screen.getByLabelText('방향'), {
-			target: { value: 'front-right' },
-		})
-		fireEvent.change(screen.getByLabelText('높이'), {
-			target: { value: 'elevated' },
-		})
+		const azimuth = screen.getByRole('combobox', { name: '방향' })
+		azimuth.focus()
+		await user.keyboard('{ArrowDown}{ArrowDown}{Enter}')
+		const elevation = screen.getByRole('combobox', { name: '높이' })
+		elevation.focus()
+		await user.keyboard('{ArrowDown}{ArrowDown}{Enter}')
 		fireEvent.click(screen.getByRole('button', { name: '시점 적용' }))
 
 		expect(mocks.requestCameraAdjustment).toHaveBeenCalledWith({

@@ -2,10 +2,19 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { StudioWorkspace } from '@/components/studio/studio-workspace'
+import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
+import { Field, FieldLabel } from '@/components/ui/field'
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
 import { nearestImageAspectRatio } from '@/features/generate-image/image-size'
 import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
@@ -22,6 +31,11 @@ import { TextSlotInput } from './text-slot-input'
 
 const PREVIEW_WIDTH = 480
 
+type TemplateGeneratorProps = {
+	navigation: GetCreateNavigationOutput
+	template: PublishedHtmlTemplate
+}
+
 /**
  * Figma에서 가져온 published HTML의 열린 슬롯(input이 달린 텍스트 노드,
  * imageInput이 달린 프레임 이미지 슬롯)을 편집해
@@ -30,13 +44,7 @@ const PREVIEW_WIDTH = 480
  * 미리보기는 동일-문서 렌더(어드민 캔버스는 same-origin iframe) — opaque origin iframe은 벡터 mask의
  * CORS 로드를 깨뜨린다. 임포트 HTML은 스크립트 없는 inline-style이다.
  */
-export function TemplateGenerator({
-	navigation,
-	template,
-}: {
-	navigation: GetCreateNavigationOutput
-	template: PublishedHtmlTemplate
-}) {
+export function TemplateGenerator({ navigation, template }: TemplateGeneratorProps) {
 	const router = useRouter()
 	const previewRef = useRef<HTMLDivElement>(null)
 	const [values, setValues] = useState<Record<string, string>>({})
@@ -118,37 +126,41 @@ export function TemplateGenerator({
 						</Typography>
 					</CardHeader>
 					<CardContent className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto py-4">
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="template-select">템플릿</Label>
-							<select
-								id="template-select"
+						<Field>
+							<FieldLabel htmlFor="template-select">템플릿</FieldLabel>
+							<Select
 								value={selectedTemplateHref}
-								onChange={(event) => router.push(event.currentTarget.value)}
-								className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+								onValueChange={(value) => router.push(value)}
 							>
-								{navigation.categories.map(
-									(category) =>
-										category.templates.length > 0 && (
-											<optgroup key={category.id} label={category.title}>
-												{category.templates.map((item) => (
-													<option key={item.id} value={item.href}>
-														{item.name}
-													</option>
-												))}
-											</optgroup>
-										),
-								)}
-							</select>
-						</div>
+								<SelectTrigger id="template-select" className="w-full">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{navigation.categories.map(
+										(category) =>
+											category.templates.length > 0 && (
+												<SelectGroup key={category.id}>
+													<SelectLabel>{category.title}</SelectLabel>
+													{category.templates.map((item) => (
+														<SelectItem key={item.id} value={item.href}>
+															{item.name}
+														</SelectItem>
+													))}
+												</SelectGroup>
+											),
+									)}
+								</SelectContent>
+							</Select>
+						</Field>
 
 						{slots.map((slot) => (
-							<div key={slot.nodeId} className="flex flex-col gap-1">
-								<label
+							<Field key={slot.nodeId} className="gap-1">
+								<FieldLabel
 									htmlFor={`slot-${slot.nodeId}`}
-									className="font-body text-sm font-normal text-muted-foreground"
+									className="font-normal text-muted-foreground"
 								>
 									{slot.input.label ?? slot.name}
-								</label>
+								</FieldLabel>
 								<TextSlotInput
 									id={`slot-${slot.nodeId}`}
 									spec={slot.input}
@@ -165,16 +177,16 @@ export function TemplateGenerator({
 										입력한 텍스트가 박스를 넘어 일부가 잘려 보여요.
 									</Typography>
 								)}
-							</div>
+							</Field>
 						))}
 						{imageSlots.map((slot) => (
-							<div key={slot.nodeId} className="flex flex-col gap-1">
-								<label
+							<Field key={slot.nodeId} className="gap-1">
+								<FieldLabel
 									htmlFor={`image-slot-${slot.nodeId}`}
-									className="font-body text-sm font-normal text-muted-foreground"
+									className="font-normal text-muted-foreground"
 								>
 									{slot.name}
-								</label>
+								</FieldLabel>
 								<ImageSlotInput
 									id={`image-slot-${slot.nodeId}`}
 									pinnedProfileId={slot.profileId}
@@ -189,7 +201,7 @@ export function TemplateGenerator({
 										}))
 									}
 								/>
-							</div>
+							</Field>
 						))}
 						{slots.length === 0 && imageSlots.length === 0 && (
 							<Typography size="sm" tone="muted">

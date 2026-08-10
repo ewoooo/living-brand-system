@@ -3,7 +3,7 @@
 import { Image as ImageIcon } from '@carbon/icons-react'
 import { useState } from 'react'
 import { ImageGenerationResults } from '@/components/studio/generate/image-generation-results'
-import { StudioWorkspace } from '@/components/studio/studio-workspace'
+import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -14,7 +14,16 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from '@/components/ui/empty'
-import { Label } from '@/components/ui/label'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { Typography } from '@/components/ui/typography'
@@ -28,13 +37,12 @@ const EXAMPLE_PROMPTS = [
 	'가이드 배경에 사용할 추상적인 자연 텍스처',
 ] as const
 
-export function ImageGenerator({
-	profiles,
-	initialProfileId,
-}: {
+type ImageGeneratorProps = {
 	profiles: { id: number; name: string }[]
 	initialProfileId?: number
-}) {
+}
+
+export function ImageGenerator({ profiles, initialProfileId }: ImageGeneratorProps) {
 	const [prompt, setPrompt] = useState('')
 	const [profile, setProfile] = useState<number | undefined>(initialProfileId ?? profiles[0]?.id)
 	const [count, setCount] = useState(2)
@@ -62,28 +70,27 @@ export function ImageGenerator({
 					</CardHeader>
 
 					<CardContent className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto py-4">
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="image-prompt">
+						<Field>
+							<FieldLabel htmlFor="image-prompt">
 								프롬프트{' '}
 								<span className="text-destructive" aria-hidden>
 									*
 								</span>
-							</Label>
+							</FieldLabel>
 							<Textarea
 								id="image-prompt"
 								value={prompt}
 								onChange={(event) => setPrompt(event.target.value)}
 								placeholder="만들 제품이나 장면을 설명하세요"
-								aria-label="프롬프트"
 								aria-describedby="image-prompt-description"
 								maxLength={500}
 								rows={5}
 								className="min-h-28 resize-y"
 							/>
-							<Typography id="image-prompt-description" size="xs" tone="muted">
+							<FieldDescription id="image-prompt-description" className="text-xs">
 								프로파일을 선택하면 브랜드 설정과 프롬프트가 자동으로 조합됩니다.
-							</Typography>
-						</div>
+							</FieldDescription>
+						</Field>
 
 						<Separator />
 
@@ -91,47 +98,55 @@ export function ImageGenerator({
 							<Typography as="h3" size="sm" weight="medium">
 								설정
 							</Typography>
-							<div className="flex flex-col gap-2">
-								<Label htmlFor="image-profile">프로파일</Label>
-								<select
-									id="image-profile"
-									value={profile ?? ''}
-									onChange={(event) =>
-										setProfile(Number(event.currentTarget.value))
-									}
-									className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
-								>
-									<optgroup label="브랜드 제품컷 프로파일">
-										{profiles.length === 0 ? (
-											<option value="" disabled>
-												발행된 프로파일 없음
-											</option>
-										) : (
-											profiles.map(({ id, name }) => (
-												<option key={id} value={id}>
-													{name}
-												</option>
-											))
+							<FieldGroup>
+								<Field data-disabled={profiles.length === 0}>
+									<FieldLabel htmlFor="image-profile">프로파일</FieldLabel>
+									<Select
+										value={profile ? String(profile) : undefined}
+										onValueChange={(value) => setProfile(Number(value))}
+										disabled={profiles.length === 0}
+									>
+										<SelectTrigger id="image-profile" className="w-full">
+											<SelectValue placeholder="발행된 프로파일 없음" />
+										</SelectTrigger>
+										{profiles.length > 0 && (
+											<SelectContent>
+												<SelectGroup>
+													<SelectLabel>
+														브랜드 제품컷 프로파일
+													</SelectLabel>
+													{profiles.map(({ id, name }) => (
+														<SelectItem key={id} value={String(id)}>
+															{name}
+														</SelectItem>
+													))}
+												</SelectGroup>
+											</SelectContent>
 										)}
-									</optgroup>
-								</select>
-							</div>
+									</Select>
+								</Field>
 
-							<div className="flex flex-col gap-2">
-								<Label htmlFor="image-count">생성 장수</Label>
-								<select
-									id="image-count"
-									value={count}
-									onChange={(event) => setCount(Number(event.target.value))}
-									className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
-								>
-									{[1, 2, 4, 6].map((amount) => (
-										<option key={amount} value={amount}>
-											{amount}
-										</option>
-									))}
-								</select>
-							</div>
+								<Field>
+									<FieldLabel htmlFor="image-count">생성 장수</FieldLabel>
+									<Select
+										value={String(count)}
+										onValueChange={(value) => setCount(Number(value))}
+									>
+										<SelectTrigger id="image-count" className="w-full">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectGroup>
+												{[1, 2, 4, 6].map((amount) => (
+													<SelectItem key={amount} value={String(amount)}>
+														{amount}
+													</SelectItem>
+												))}
+											</SelectGroup>
+										</SelectContent>
+									</Select>
+								</Field>
+							</FieldGroup>
 						</div>
 
 						<Typography size="xs" tone="muted">
@@ -144,13 +159,15 @@ export function ImageGenerator({
 								className="flex flex-wrap items-center gap-2 text-xs text-destructive"
 							>
 								{error}
-								<button
+								<Button
 									type="button"
+									variant="link"
+									size="xs"
 									onClick={requestGeneration}
-									className="underline"
+									className="px-0"
 								>
 									다시 시도
-								</button>
+								</Button>
 							</div>
 						)}
 					</CardContent>

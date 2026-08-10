@@ -3,6 +3,13 @@ import type React from 'react'
 import { GlobalFooter } from '@/components/global/footer/global-footer'
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 
+type SectionLayoutProps = {
+	nav: React.ReactNode
+	children: React.ReactNode
+	pageNavigation?: React.ReactNode
+	mobileNavigation?: boolean
+}
+
 /**
  * 섹션(가이드라인·검수·제작) 공통 레이아웃 셸 — 사이드 nav + 스크롤 main.
  * 이 셸은 nav·스크롤·랜드마크·footer만 소유하고, 본문 폭과 여백은 ContentFrame이 맡는다.
@@ -12,12 +19,7 @@ export function SectionLayout({
 	children,
 	pageNavigation,
 	mobileNavigation = true,
-}: {
-	nav: React.ReactNode
-	children: React.ReactNode
-	pageNavigation?: React.ReactNode
-	mobileNavigation?: boolean
-}) {
+}: SectionLayoutProps) {
 	return (
 		<SidebarProvider className="h-full min-h-0">
 			{nav}

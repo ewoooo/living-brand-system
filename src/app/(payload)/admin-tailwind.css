@@ -25,6 +25,11 @@
 	--color-popover: var(--theme-elevation-0);
 	--color-popover-foreground: var(--theme-text);
 	--color-destructive: var(--theme-error-500);
+	--color-highlight: var(--theme-success-100);
+	--color-highlight-foreground: var(--theme-success-700);
+	--color-success: var(--theme-success-700);
+	--color-info: var(--theme-success-600);
+	--color-warning: var(--theme-warning-600);
 	--color-border: var(--theme-elevation-200);
 	--color-input: var(--theme-elevation-200);
 	--color-ring: var(--theme-elevation-400);
