@@ -3,7 +3,7 @@
 import { Image as ImageIcon } from '@carbon/icons-react'
 import { useState } from 'react'
 import { ImageGenerationResults } from '@/components/studio/generate/image-generation-results'
-import { StudioWorkspace } from '@/components/studio/studio-workspace'
+import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import {

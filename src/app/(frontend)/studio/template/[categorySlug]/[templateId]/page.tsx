@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { StudioWorkspacePage } from '@/components/studio/studio-workspace'
+import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
 import { TemplateGenerator } from '@/components/studio/template/template-generator'
 import { getCreateNavigation } from '@/services/get-create-navigation.service'
 import { getPublishedTemplate } from '@/services/get-published-template.service'

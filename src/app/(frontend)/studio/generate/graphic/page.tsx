@@ -1,5 +1,5 @@
 import { ForwardStraightGenerator } from '@/components/studio/generate/forward-straight-generator'
-import { StudioWorkspacePage } from '@/components/studio/studio-workspace'
+import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
 
 export default function GenerateGraphicPage() {
 	return (
