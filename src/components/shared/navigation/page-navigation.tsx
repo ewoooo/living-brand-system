@@ -15,13 +15,12 @@ export interface PageNavigationItem {
 	href: string
 }
 
-export function PageNavigation({
-	items,
-	unitLabel = '페이지',
-}: {
+type PageNavigationProps = {
 	items: PageNavigationItem[]
 	unitLabel?: string
-}) {
+}
+
+export function PageNavigation({ items, unitLabel = '페이지' }: PageNavigationProps) {
 	const pathname = usePathname()
 	const [hash, setHash] = useState('')
 

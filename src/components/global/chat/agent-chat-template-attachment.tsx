@@ -18,12 +18,12 @@ import { composeTemplateHtml } from '@/services/compose-template-html.client'
 
 const PREVIEW_WIDTH = 280
 
-/** html 첨부: 슬롯 값을 base html에 합성해 미리보기·다운로드한다 (Create 화면과 동일 렌더). */
-export function AgentChatTemplateAttachment({
-	attachment,
-}: {
+type AgentChatTemplateAttachmentProps = {
 	attachment: AgentTemplateImageAttachment
-}) {
+}
+
+/** html 첨부: 슬롯 값을 base html에 합성해 미리보기·다운로드한다 (Create 화면과 동일 렌더). */
+export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAttachmentProps) {
 	const composedHtml = useMemo(
 		() =>
 			composeTemplateHtml(
@@ -190,7 +190,11 @@ function ScaledMedia({
 	}, [])
 
 	return (
-		<div ref={containerRef} className="flex w-full justify-center overflow-hidden">
+		<div
+			ref={containerRef}
+			data-slot="scaled-media"
+			className="flex w-full justify-center overflow-hidden"
+		>
 			{children(scale)}
 		</div>
 	)

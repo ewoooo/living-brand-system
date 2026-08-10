@@ -11,15 +11,17 @@ import {
 import { AgentChatErrorBubble } from './agent-chat-bubbles'
 import { AgentChatMessageItem } from './agent-chat-message-item'
 
+type AgentChatMessageListProps = {
+	messages: AgentChatMessage[]
+	error?: Error
+	isBusy?: boolean
+}
+
 export function AgentChatMessageList({
 	messages,
 	error,
 	isBusy = false,
-}: {
-	messages: AgentChatMessage[]
-	error?: Error
-	isBusy?: boolean
-}) {
+}: AgentChatMessageListProps) {
 	const isEmpty = messages.length === 0 && !error
 	const activeMessageId = isBusy ? messages.at(-1)?.id : undefined
 	let lastAssistantMessageId: string | undefined

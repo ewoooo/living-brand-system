@@ -16,22 +16,27 @@ import { AgentChatGeneratedImages } from './agent-chat-generated-images'
 import { AgentChatTemplateAttachment } from './agent-chat-template-attachment'
 import { AgentChatMarker } from './agent-chat-tool-marker'
 
+type AgentChatMessageItemProps = {
+	message: AgentChatMessage
+	canReact?: boolean
+	isActive: boolean
+}
+
 export function AgentChatMessageItem({
 	message,
 	canReact = false,
 	isActive,
-}: {
-	message: AgentChatMessage
-	canReact?: boolean
-	isActive: boolean
-}) {
+}: AgentChatMessageItemProps) {
 	const messageText = getAgentMessageText(message)
 
 	if (message.role === 'user') {
 		const files = message.parts.filter((part) => part.type === 'file')
 
 		return (
-			<div className="flex w-full flex-col items-end gap-2">
+			<div
+				data-slot="agent-chat-message-item"
+				className="flex w-full flex-col items-end gap-2"
+			>
 				<AgentChatUserBubble text={messageText} files={files} />
 			</div>
 		)
@@ -45,7 +50,7 @@ export function AgentChatMessageItem({
 	const generatedImages = getAgentGeneratedImages(message)
 
 	return (
-		<div className="flex w-full flex-col items-start gap-2">
+		<div data-slot="agent-chat-message-item" className="flex w-full flex-col items-start gap-2">
 			<AgentChatMarker
 				marker={reasoningMarker}
 				icon={reasoningMarker?.isPending ? <Spinner /> : <Ai />}

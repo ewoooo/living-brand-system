@@ -62,7 +62,11 @@ describe('CheckScenarios', () => {
 		).toMatchObject({
 			type: 'json',
 			required: true,
-			admin: { components: { Field: '/components/admin/CheckScenarioChecksField' } },
+			admin: {
+				components: {
+					Field: '/components/admin/check-scenarios/check-scenario-checks-field#CheckScenarioChecksField',
+				},
+			},
 		})
 	})
 

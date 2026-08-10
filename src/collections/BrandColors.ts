@@ -33,7 +33,7 @@ export const BrandColors: CollectionConfig = {
 					: '6자리 HEX 컬러를 입력하세요. 예: #RRGGBB',
 			admin: {
 				components: {
-					Cell: '/components/admin/ColorSwatchCell',
+					Cell: '/components/admin/brand-colors/color-swatch-cell#ColorSwatchCell',
 				},
 			},
 		},

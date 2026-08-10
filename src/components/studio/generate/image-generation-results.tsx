@@ -9,24 +9,31 @@ import { ImageCameraPresets } from './image-camera-presets'
 
 const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
 
+type ImageGenerationResultsProps = {
+	loading: boolean
+	onSelect: (index: number) => void
+	requested: number
+	result: ImageGenerationResult | null
+	selected: number | null
+}
+
 export function ImageGenerationResults({
 	loading,
 	onSelect,
 	requested,
 	result,
 	selected,
-}: {
-	loading: boolean
-	onSelect: (index: number) => void
-	requested: number
-	result: ImageGenerationResult | null
-	selected: number | null
-}) {
+}: ImageGenerationResultsProps) {
 	const images = result?.images ?? []
 	const generatedImages = result?.generatedImages ?? []
 
 	return (
-		<div className="flex h-full min-h-0 flex-col" aria-live="polite" aria-busy={loading}>
+		<div
+			data-slot="image-generation-results"
+			className="flex h-full min-h-0 flex-col"
+			aria-live="polite"
+			aria-busy={loading}
+		>
 			{loading && <ImageGenerationSkeleton count={requested} />}
 
 			{!loading && images.length > 0 && result && (
@@ -118,7 +125,7 @@ export function ImageGenerationResults({
 
 function ImageGenerationSkeleton({ count }: { count: number }) {
 	return (
-		<div className="flex flex-col gap-3">
+		<div data-slot="image-generation-skeleton" className="flex flex-col gap-3">
 			<Typography size="sm" tone="muted">
 				생성 중… 무료 서버라 최대 1~2분 걸릴 수 있어요.
 			</Typography>

@@ -10,6 +10,11 @@ import type {
 	ResolvedCameraControl,
 } from '@/features/generate-image/camera-control'
 import type { ImageModelPreset } from '@/features/generate-image/image-model'
+import type {
+	FlatImagePrompt,
+	ImageProfilePromptRow,
+	ImagePromptNormalizationRow,
+} from '@/features/generate-image/image-profile-prompt'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/generate-image/image-size'
 
 export interface ImageGenerationRequest {
@@ -42,6 +47,17 @@ type AdminImageGenerationRequest = {
 export interface ImageProfileOption {
 	id: number
 	name: string
+}
+
+export interface ImagePromptNormalizationRequest {
+	profilePrompt: ImageProfilePromptRow[]
+	userPromptNormalization: ImagePromptNormalizationRow[]
+	userPrompt: string
+}
+
+export interface ImagePromptNormalizationResult {
+	finalPrompt: FlatImagePrompt
+	normalizedInput: FlatImagePrompt
 }
 
 export interface GeneratedImageReference {
@@ -102,6 +118,24 @@ export async function requestPublishedImageProfiles(): Promise<ImageProfileOptio
 	if (!response.ok) throw new Error('이미지 프로파일을 불러오지 못했습니다.')
 	const body = (await response.json()) as { docs?: ImageProfileOption[] }
 	return Array.isArray(body.docs) ? body.docs : []
+}
+
+/** Admin 이미지 프로파일 테스트 패널의 프롬프트 정규화를 요청한다. */
+export async function requestImagePromptNormalization(
+	input: ImagePromptNormalizationRequest,
+): Promise<ImagePromptNormalizationResult> {
+	const response = await fetch('/api/image-profiles/normalize', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(input),
+	})
+	const body = (await response.json().catch(() => null)) as
+		| (ImagePromptNormalizationResult & { message?: string })
+		| null
+	if (!response.ok || !body?.finalPrompt) {
+		throw new Error(body?.message || '프롬프트 정규화에 실패했습니다.')
+	}
+	return { finalPrompt: body.finalPrompt, normalizedInput: body.normalizedInput }
 }
 
 async function postImageGeneration<Result extends ImageGenerationResult>(

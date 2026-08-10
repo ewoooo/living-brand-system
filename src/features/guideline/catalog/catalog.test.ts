@@ -4,7 +4,7 @@ import { GuidelineDocuments } from '@/collections/GuidelineDocuments'
 import {
 	guidelineBreadcrumbCount,
 	guidelineDocumentTypeLabel,
-} from '@/components/admin/guideline-document-tree'
+} from '@/components/admin/guideline-documents/guideline-document-tree'
 import { checkKeyFromEnglishTitle } from '@/features/quality-rule/check-key-from-english-title'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 import { CarouselBlock } from '../blocks/carousel/schema'
@@ -47,7 +47,7 @@ describe('guideline rules field', () => {
 
 	it('Better Editor 버튼을 게시 컨트롤 앞에 둔다', () => {
 		expect(GuidelineDocuments.admin?.components?.edit?.PublishButton).toBe(
-			'/components/admin/BetterEditorPublishButton',
+			'/components/admin/guideline-documents/better-editor-publish-button#BetterEditorPublishButton',
 		)
 		expect(
 			GuidelineDocuments.fields.find((field) => 'name' in field && field.name === 'blocks')

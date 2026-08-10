@@ -37,13 +37,12 @@ const EXAMPLE_PROMPTS = [
 	'가이드 배경에 사용할 추상적인 자연 텍스처',
 ] as const
 
-export function ImageGenerator({
-	profiles,
-	initialProfileId,
-}: {
+type ImageGeneratorProps = {
 	profiles: { id: number; name: string }[]
 	initialProfileId?: number
-}) {
+}
+
+export function ImageGenerator({ profiles, initialProfileId }: ImageGeneratorProps) {
 	const [prompt, setPrompt] = useState('')
 	const [profile, setProfile] = useState<number | undefined>(initialProfileId ?? profiles[0]?.id)
 	const [count, setCount] = useState(2)

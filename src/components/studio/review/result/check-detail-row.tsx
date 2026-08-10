@@ -15,6 +15,12 @@ import { Typography } from '@/components/ui/typography'
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import { formatObservationActual, formatObservationExpected } from './check-observation-format'
 
+type CheckDetailRowProps = {
+	appliesTo: string[]
+	outcome?: CheckResult
+	shouldReduceMotion: boolean | null
+}
+
 /**
  * 결과 행 확장 상세 — 판정 근거를 rawResult에서 읽어 표시.
  * in : { appliesTo: string[]; outcome?: CheckResult }
@@ -25,21 +31,14 @@ import { formatObservationActual, formatObservationExpected } from './check-obse
  *       actual: 'present'|'absent'|'uncertain'|'not_applicable'|number,
  *       confidence: number, reason: string, satisfied: boolean | null }[]
  */
-export function CheckDetailRow({
-	appliesTo,
-	outcome,
-	shouldReduceMotion,
-}: {
-	appliesTo: string[]
-	outcome?: CheckResult
-	shouldReduceMotion: boolean | null
-}) {
+export function CheckDetailRow({ appliesTo, outcome, shouldReduceMotion }: CheckDetailRowProps) {
 	const appliesToText = appliesTo.join(', ')
 	const observations =
 		outcome && 'observations' in outcome.rawResult ? outcome.rawResult.observations : undefined
 
 	return (
 		<motion.tr
+			data-slot="check-detail-row"
 			className="border-0"
 			exit={{ visibility: 'visible' }}
 			transition={{ duration: 0.18, ease: 'easeOut' }}
@@ -66,7 +65,10 @@ function HeuristicObservations({ observations }: { observations: AiCheckResult['
 	if (!observations?.length) return null
 
 	return (
-		<div className="overflow-x-auto rounded-sm border border-border">
+		<div
+			data-slot="heuristic-observations"
+			className="overflow-x-auto rounded-sm border border-border"
+		>
 			<Table className="font-body text-sm font-normal">
 				<TableCaption className="sr-only">결과 비교</TableCaption>
 				<TableHeader className="border-b bg-fill-muted/50 text-muted-foreground">
@@ -120,6 +122,7 @@ function CheckDetailCollapse({
 }) {
 	return (
 		<motion.div
+			data-slot="check-detail-collapse"
 			className="overflow-hidden"
 			initial={shouldReduceMotion ? false : { height: 0 }}
 			animate={shouldReduceMotion ? {} : { height: 'auto' }}

@@ -2,15 +2,17 @@ import type { ReactNode } from 'react'
 import { Marker, MarkerContent, MarkerIcon } from '@/components/ui/marker'
 import type { AgentToolMarker } from '@/features/agent-chat/utils/derive-agent-message'
 
+type AgentChatMarkerProps = {
+	marker: AgentToolMarker | null
+	icon: ReactNode
+	isPending?: boolean
+}
+
 export function AgentChatMarker({
 	marker,
 	icon,
 	isPending = marker?.isPending,
-}: {
-	marker: AgentToolMarker | null
-	icon: ReactNode
-	isPending?: boolean
-}) {
+}: AgentChatMarkerProps) {
 	if (!marker) {
 		return null
 	}

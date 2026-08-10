@@ -19,7 +19,11 @@ export const StemClearSpaceBlock: Block = {
 			// 로고 위 줄기를 클릭해 A(두께)·위치를 측정하고 아래 stemRatio·stemX에 기록하는 UI.
 			name: 'stemPicker',
 			type: 'ui',
-			admin: { components: { Field: '/components/admin/StemPickerField' } },
+			admin: {
+				components: {
+					Field: '/components/admin/guideline-documents/stem-picker-field#StemPickerField',
+				},
+			},
 		},
 		{
 			type: 'row',

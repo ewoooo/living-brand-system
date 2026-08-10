@@ -80,12 +80,12 @@ export default buildConfig({
 			baseDir: path.resolve(dirname),
 		},
 		components: {
-			beforeDashboard: ['/components/admin/DashboardSummary'],
+			beforeDashboard: ['/components/admin/shell/dashboard-summary#DashboardSummary'],
 			graphics: {
-				Icon: '/components/admin/AdminIcon',
-				Logo: '/components/admin/AdminLogo',
+				Icon: '/components/admin/shell/admin-icon#AdminIcon',
+				Logo: '/components/admin/shell/admin-logo#AdminLogo',
 			},
-			providers: ['/components/admin/admin-dialkit-provider'],
+			providers: ['/components/admin/shell/admin-dialkit-provider#AdminDialKitProvider'],
 		},
 	},
 	collections: [

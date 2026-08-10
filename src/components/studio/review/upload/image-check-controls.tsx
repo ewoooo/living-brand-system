@@ -1,6 +1,5 @@
 'use client'
 
-import { useCheckImages } from '@/components/studio/review/check-image-provider'
 import { Button } from '@/components/ui/button'
 import {
 	Select,
@@ -11,6 +10,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
+import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
 
 /**
  * 퍼널 ②③ — 시나리오 선택 + 검수 실행 버튼 (캐러셀 위 오버레이).
@@ -23,7 +23,10 @@ import { Spinner } from '@/components/ui/spinner'
  */
 export function ImageCheckControls() {
 	return (
-		<section className="pointer-events-none absolute inset-x-4 top-4 bottom-4 z-10 flex flex-col items-center justify-between">
+		<section
+			data-slot="image-check-controls"
+			className="pointer-events-none absolute inset-x-4 top-4 bottom-4 z-10 flex flex-col items-center justify-between"
+		>
 			<CheckChangeScenario />
 			<div className="flex flex-col items-center gap-2">
 				<CheckButton />

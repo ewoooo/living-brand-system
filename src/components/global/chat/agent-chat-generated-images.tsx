@@ -3,13 +3,13 @@
 import { Typography } from '@/components/ui/typography'
 import type { AgentGeneratedImagesAttachment } from '@/features/generate-image/services/generate-image.service'
 
-export function AgentChatGeneratedImages({
-	attachment,
-}: {
+type AgentChatGeneratedImagesProps = {
 	attachment: AgentGeneratedImagesAttachment
-}) {
+}
+
+export function AgentChatGeneratedImages({ attachment }: AgentChatGeneratedImagesProps) {
 	return (
-		<div className="flex w-full flex-col gap-2">
+		<div data-slot="agent-chat-generated-images" className="flex w-full flex-col gap-2">
 			{attachment.profileName ? (
 				<Typography size="sm" tone="muted">
 					적용된 프로파일: {attachment.profileName}

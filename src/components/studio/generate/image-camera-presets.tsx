@@ -56,17 +56,19 @@ const ELEVATION_PRESETS: {
 const AZIMUTH_STEPS = AZIMUTH_PRESETS.map((preset) => preset.degrees)
 const ELEVATION_STEPS = ELEVATION_PRESETS.map((preset) => preset.degrees)
 
+type ImageCameraPresetsProps = {
+	basePrompt: string
+	generatedImageId: number
+	profileId: number
+	seedImage: string
+}
+
 export function ImageCameraPresets({
 	basePrompt,
 	generatedImageId,
 	profileId,
 	seedImage,
-}: {
-	basePrompt: string
-	generatedImageId: number
-	profileId: number
-	seedImage: string
-}) {
+}: ImageCameraPresetsProps) {
 	const [azimuthDeg, setAzimuthDeg] = useState(0)
 	const [elevationDeg, setElevationDeg] = useState(0)
 	const [result, setResult] = useState<CameraAdjustmentResult | null>(null)

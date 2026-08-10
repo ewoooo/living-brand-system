@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -13,48 +12,16 @@ import {
 } from '@/components/ui/input-group'
 import { Textarea } from '@/components/ui/textarea'
 import { Typography } from '@/components/ui/typography'
-import { routes } from '@/lib/routes'
-
-interface McpCredential {
-	apiKey: string
-	endpoint: string
-	id: number
-}
+import { useMcpKeyIssuance } from '@/features/mcp-access/hooks/use-mcp-key-issuance'
 
 export function McpKeyIssuer() {
-	const [credential, setCredential] = useState<McpCredential | null>(null)
-	const [error, setError] = useState('')
-	const [loading, setLoading] = useState(false)
-	const [copyMessage, setCopyMessage] = useState('')
+	const { copyMessage, copyText, credential, error, issueKey, loading } = useMcpKeyIssuance()
 	const codexCommand = credential
 		? `export LBS_MCP_API_KEY='${credential.apiKey}'\ncodex mcp add living-brand-system --url '${credential.endpoint}' --bearer-token-env-var LBS_MCP_API_KEY`
 		: ''
 	const claudeCommand = credential
 		? `claude mcp add --transport http living-brand-system --scope user '${credential.endpoint}' --header "Authorization: Bearer ${credential.apiKey}"`
 		: ''
-
-	async function issueKey() {
-		setError('')
-		setLoading(true)
-		const response = await fetch('/api/mcp-key', { method: 'POST' }).catch(() => null)
-		setLoading(false)
-
-		if (response?.status === 401) {
-			window.location.assign(`/admin/login?redirect=${encodeURIComponent(routes.studio.mcp)}`)
-			return
-		}
-		if (!response?.ok) {
-			setError('MCP 키를 발급하지 못했습니다.')
-			return
-		}
-
-		setCredential((await response.json()) as McpCredential)
-	}
-
-	async function copyText(value: string, message: string) {
-		await navigator.clipboard.writeText(value)
-		setCopyMessage(message)
-	}
 
 	return (
 		<Card>
