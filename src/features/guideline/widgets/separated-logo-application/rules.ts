@@ -1,4 +1,4 @@
-import { LAYOUT, SYMBOL } from '@/features/guideline/widgets/ci-lockup/rules'
+import { fontSizeFor, LAYOUT, SYMBOL } from '@/features/guideline/widgets/ci-lockup/rules'
 
 // p14 'CI 단색 분리형' 규정 데이터. 출처: .scratch/hd-reference/02-copy.md p14 · 01-specs.md A·D.
 // 🔴 react·에셋을 import하지 않는다 — Payload schema(Node)와 위젯(Next) 양쪽에서 참조된다.
@@ -38,7 +38,9 @@ export const SAMPLE_LOCKUP = {
 	symbolSrc: SYMBOL.mono,
 	symbolHeight: H,
 	symbolWidth: H * SYMBOL.aspect,
-	wordmarkSize: H * LAYOUT.horizontal.wordmark,
+	// 🔴 font-size가 아니라 cap 높이가 0.65H다 — 그대로 font-size로 쓰면 글자가 규정보다 작다.
+	//    환산은 ci-lockup/rules.ts의 fontSizeFor 하나가 소유한다.
+	wordmarkSize: fontSizeFor(LAYOUT.horizontal.wordmark, H),
 	gap: H * LAYOUT.horizontal.gap,
 	/** 단색 분리형 원본은 검정 잉크다(symbol-mono.svg에 fill이 없어 black) — 워드마크도 같은 잉크로 맞춘다. */
 	ink: '#000',
