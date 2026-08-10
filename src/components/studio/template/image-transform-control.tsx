@@ -1,42 +1,22 @@
 'use client'
 
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react'
+import {
+	IMAGE_TRANSFORM_DEFAULT,
+	type ImageTransformValue,
+	toImageEditTransform,
+} from '@/features/template-studio/image-edit-transform'
 import { cn } from '@/lib/utils'
 import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/services/compose-template-html.client'
 
-export type ImageTransformValue = {
-	/** 슬롯 중심 기준 오프셋, -1(왼/위) ~ 1(오른/아래). */
-	x: number
-	y: number
-	scale: number
-	rotate: number
-}
-
-export const IMAGE_TRANSFORM_DEFAULT: ImageTransformValue = { x: 0, y: 0, scale: 1, rotate: 0 }
+// 값 계약과 환산은 features가 소유한다 — 기존 소비자·테스트의 import 경로를 유지하는 재export.
+export { IMAGE_TRANSFORM_DEFAULT, type ImageTransformValue, toImageEditTransform }
 
 // 어드민과 같은 compose 계약 범위를 소비한다 — step만 이 컨트롤의 UI 밀도다.
 const SCALE_RANGE = { ...IMAGE_EDIT_TRANSFORM_LIMITS.scale, step: 0.05 }
 const ROTATE_RANGE = { ...IMAGE_EDIT_TRANSFORM_LIMITS.rotate, step: 1 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
-
-/**
- * 패드 정규 좌표(-1~1)를 compose의 imageTransform(템플릿 px) 값으로 바꾼다.
- * 패드 한끝 = 슬롯 박스 절반 이동. clamp ±1000은 어드민 제스처(clampTransform)와 같은 상한.
- */
-export function toImageEditTransform(
-	value: ImageTransformValue,
-	boxWidth: number,
-	boxHeight: number,
-): ImageTransformValue {
-	const { translate } = IMAGE_EDIT_TRANSFORM_LIMITS
-	return {
-		x: clamp(Math.round((value.x * boxWidth) / 2), translate.min, translate.max),
-		y: clamp(Math.round((value.y * boxHeight) / 2), translate.min, translate.max),
-		scale: value.scale,
-		rotate: value.rotate,
-	}
-}
 
 /**
  * 패드·슬라이더가 공유하는 드래그 배선의 단일 소유자.
