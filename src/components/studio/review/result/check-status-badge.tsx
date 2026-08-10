@@ -12,7 +12,7 @@ import { CHECK_STATUS } from './check-status'
  * in : { outcome?: CheckResult; inProgress: boolean }
  * 매핑: checkDisplayStatus(outcome.rawResult)
  *       → 'pass'|'ok'|'advisory'|'needs_review'|'fail'|'not_applicable'
- *       → CHECK_STATUS[status] { label, variant, dot }  (check-status.ts 소유)
+ *       → CHECK_STATUS[status] { label, variant }  (check-status.ts 소유)
  * outcome 없음 && inProgress → 스피너, 둘 다 없으면 null
  */
 export function CheckStatusBadge({
