@@ -1,6 +1,5 @@
 'use client'
 
-import { useCheckImages } from '@/components/studio/review/check-image-provider'
 import { Button } from '@/components/ui/button'
 import {
 	Select,
@@ -11,6 +10,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
+import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
 
 /**
  * 퍼널 ②③ — 시나리오 선택 + 검수 실행 버튼 (캐러셀 위 오버레이).

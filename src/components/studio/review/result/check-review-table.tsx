@@ -1,10 +1,10 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useCheckImages } from '@/components/studio/review/check-image-provider'
 import { Table, TableBody } from '@/components/ui/table'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import type { CheckSection } from '@/features/asset-check/domain/runtime-check'
+import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
 import {
 	buildCheckReviewView,
 	type CheckReviewRow,
