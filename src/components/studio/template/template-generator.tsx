@@ -356,7 +356,7 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 							<InspectorColorRow
 								label="Color"
 								value={textColor ?? '#000000'}
-								unset={textColor === null}
+								isEmpty={textColor === null}
 								onReset={() => setTextColor(null)}
 								onChange={setTextColor}
 							/>
@@ -411,6 +411,12 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 										}
 										// compose는 배정된 이미지에만 transform을 적용한다 — 생성 전에는 비활성.
 										disabled={!imageValues[slot.nodeId]}
+										// 패드는 대상 슬롯 박스와 같은 비율로 그려진다(디자인 Wide/Portrait/Square).
+										aspectRatio={
+											slot.boxWidth && slot.boxHeight
+												? slot.boxWidth / slot.boxHeight
+												: undefined
+										}
 										onChange={(transform) =>
 											setImageTransforms((current) => ({
 												...current,
@@ -422,7 +428,9 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 							</div>
 						)
 					})}
-					<BackgroundSection />
+					<BackgroundSection
+						canvasAspectRatio={width && height ? width / height : undefined}
+					/>
 					{slots.length === 0 && imageSlots.length === 0 && (
 						<Typography size="sm" tone="muted">
 							이 템플릿에는 편집 가능한 슬롯이 없습니다.

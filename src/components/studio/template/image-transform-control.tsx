@@ -89,13 +89,20 @@ type ImageTransformControlProps = {
 	onChange: (value: ImageTransformValue) => void
 	/** compose가 transform을 배정된 이미지에만 적용하므로, 생성 전에는 비활성으로 둔다. */
 	disabled?: boolean
+	/** 대상 슬롯 박스의 종횡비(w/h) — 패드가 같은 비율로 그려진다. */
+	aspectRatio?: number
 }
 
 /**
  * 디자인 SSOT(1:1838)의 Image Transform 컨트롤 — 포지션 패드 + Scale·Rotate 슬라이더 행.
  * 값은 compose의 imageTransform 오버라이드로 미리보기에 합성된다(패드는 toImageEditTransform으로 px 환산).
  */
-export function ImageTransformControl({ value, onChange, disabled }: ImageTransformControlProps) {
+export function ImageTransformControl({
+	value,
+	onChange,
+	disabled,
+	aspectRatio,
+}: ImageTransformControlProps) {
 	return (
 		<div
 			data-slot="image-transform-control"
@@ -108,6 +115,7 @@ export function ImageTransformControl({ value, onChange, disabled }: ImageTransf
 				x={value.x}
 				y={value.y}
 				disabled={disabled}
+				aspectRatio={aspectRatio}
 				onChange={(x, y) => onChange({ ...value, x, y })}
 			/>
 			<SliderRow
@@ -137,6 +145,8 @@ type TransformPadProps = {
 	onChange: (x: number, y: number) => void
 	ariaLabel?: string
 	disabled?: boolean
+	/** 대상 박스의 종횡비(w/h) — 패드가 같은 비율로 그려진다(디자인 4:5578의 Wide/Portrait/Square). */
+	aspectRatio?: number
 }
 
 /** 2축 포지션 패드 — 드래그와 화살표 키로 위치를 옮긴다. 이미지·그래픽 transform이 공유한다. */
@@ -146,6 +156,7 @@ export function TransformPad({
 	onChange,
 	ariaLabel = '이미지 위치',
 	disabled,
+	aspectRatio,
 }: TransformPadProps) {
 	const drag = usePointerDrag(disabled, (ratioX, ratioY) =>
 		onChange(ratioX * 2 - 1, ratioY * 2 - 1),
@@ -179,7 +190,20 @@ export function TransformPad({
 			tabIndex={disabled ? -1 : 0}
 			onKeyDown={nudge}
 			{...drag}
-			className="relative h-36 w-full shrink-0 touch-none rounded-md bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+			className={cn(
+				'relative shrink-0 touch-none rounded-md bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
+				!aspectRatio && 'h-36 w-full',
+			)}
+			// 세로 상한 18rem(≈디자인 Portrait 283px) — 세로형 박스는 너비를 줄여 비율을 지킨다.
+			style={
+				aspectRatio
+					? {
+							aspectRatio,
+							marginInline: 'auto',
+							width: `min(100%, calc(18rem * ${aspectRatio}))`,
+						}
+					: undefined
+			}
 		>
 			{/* 십자선 — 중심 기준 좌표계 표시. */}
 			<div aria-hidden className="absolute inset-y-0 left-1/2 w-px bg-border" />

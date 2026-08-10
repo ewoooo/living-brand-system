@@ -57,6 +57,24 @@ describe('ImageTransformControl', () => {
 		expect(onChange).toHaveBeenLastCalledWith({ ...IMAGE_TRANSFORM_DEFAULT, x: 1, y: -1 })
 	})
 
+	it('aspectRatio가 있으면 고정 높이 대신 대상 박스 비율로 그려진다', () => {
+		const { rerender } = render(
+			<ImageTransformControl value={IMAGE_TRANSFORM_DEFAULT} onChange={vi.fn()} />,
+		)
+		const pad = () => screen.getByRole('slider', { name: '이미지 위치' })
+		expect(pad().className).toContain('h-36')
+
+		rerender(
+			<ImageTransformControl
+				value={IMAGE_TRANSFORM_DEFAULT}
+				onChange={vi.fn()}
+				aspectRatio={0.75}
+			/>,
+		)
+		expect(pad().className).not.toContain('h-36')
+		expect(pad().getAttribute('style')).toContain('aspect-ratio: 0.75')
+	})
+
 	it('toImageEditTransform은 패드 좌표를 슬롯 절반 단위 px로 환산하고 ±1000에 고정한다', () => {
 		expect(toImageEditTransform({ x: 0.5, y: -1, scale: 1.1, rotate: 60 }, 400, 300)).toEqual({
 			x: 100,
