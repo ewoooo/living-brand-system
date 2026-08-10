@@ -1,27 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import {
-	INSPECTOR_BARE_INPUT,
-	INSPECTOR_ROW_SELECT_TRIGGER,
-	InspectorColorRow,
-	InspectorField,
-	InspectorRow,
-	InspectorSection,
-	InspectorSegmented,
-	InspectorTabPanel,
-} from '@/components/studio/shared/inspector'
+import { Controller } from '@/components/studio/shared/controller'
 import { Button } from '@/components/ui/button'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import { Typography } from '@/components/ui/typography'
-import { cn } from '@/lib/utils'
 import {
 	IMAGE_TRANSFORM_DEFAULT,
 	ImageTransformControl,
@@ -61,29 +43,21 @@ export function BackgroundSection({ canvasAspectRatio }: BackgroundSectionProps)
 
 	return (
 		<>
-			<InspectorSection title="Background">
-				<InspectorRow label="Type" htmlFor="background-type">
-					<Select
+			<Controller.Section title="Background">
+				<Controller.Row label="Type">
+					<Controller.Select
+						options={[
+							{ value: 'color', label: 'Color' },
+							{ value: 'image', label: 'Image' },
+							{ value: 'graphic', label: 'Graphic' },
+						]}
 						value={type}
-						onValueChange={(value) => setType(value as BackgroundType)}
-					>
-						<SelectTrigger
-							id="background-type"
-							size="sm"
-							className={INSPECTOR_ROW_SELECT_TRIGGER}
-						>
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent align="end">
-							<SelectItem value="color">Color</SelectItem>
-							<SelectItem value="image">Image</SelectItem>
-							<SelectItem value="graphic">Graphic</SelectItem>
-						</SelectContent>
-					</Select>
-				</InspectorRow>
+						onChange={(value) => setType(value as BackgroundType)}
+					/>
+				</Controller.Row>
 
 				{type === 'color' && (
-					<InspectorColorRow
+					<Controller.ColorRow
 						label="Background Color"
 						value={backgroundColor}
 						onChange={setBackgroundColor}
@@ -92,8 +66,8 @@ export function BackgroundSection({ canvasAspectRatio }: BackgroundSectionProps)
 
 				{type === 'image' && (
 					<>
-						<InspectorRow label="Image Type">
-							<InspectorSegmented
+						<Controller.Row label="Image Type">
+							<Controller.Segmented
 								aria-label="배경 이미지 방식"
 								options={[
 									{ value: 'preset', label: 'Preset' },
@@ -102,8 +76,8 @@ export function BackgroundSection({ canvasAspectRatio }: BackgroundSectionProps)
 								value={imageMode}
 								onChange={setImageMode}
 							/>
-						</InspectorRow>
-						<InspectorTabPanel tabKey={imageMode}>
+						</Controller.Row>
+						<Controller.TabPanel tabKey={imageMode}>
 							{imageMode === 'preset' ? (
 								// ponytail: 브랜드 이미지 피커는 3단계 배선 — 지금은 선택 카드 UI만 세운다.
 								<div
@@ -138,31 +112,28 @@ export function BackgroundSection({ canvasAspectRatio }: BackgroundSectionProps)
 								</div>
 							) : (
 								<>
-									<InspectorColorRow
+									<Controller.ColorRow
 										label="Line Color"
 										value={lineColor}
 										onChange={setLineColor}
 									/>
-									<InspectorColorRow
+									<Controller.ColorRow
 										label="Background Color"
 										value={backgroundColor}
 										onChange={setBackgroundColor}
 									/>
-									<InspectorField
+									<Controller.Field
 										label="Prompt"
-										htmlFor="background-prompt"
 										counter={`${prompt.length}/${PROMPT_MAX_LENGTH}`}
 									>
-										<Textarea
-											id="background-prompt"
+										<Controller.Textarea
 											value={prompt}
 											onChange={(event) => setPrompt(event.target.value)}
 											placeholder="이미지를 설명하세요"
 											maxLength={PROMPT_MAX_LENGTH}
 											rows={2}
-											className={cn(INSPECTOR_BARE_INPUT, 'min-h-12')}
 										/>
-									</InspectorField>
+									</Controller.Field>
 									{/* ponytail: 배경 생성 요청은 3단계 배선 — 프롬프트 없으면 비활성만 유지한다. */}
 									<Button
 										type="button"
@@ -174,53 +145,45 @@ export function BackgroundSection({ canvasAspectRatio }: BackgroundSectionProps)
 									</Button>
 								</>
 							)}
-						</InspectorTabPanel>
+						</Controller.TabPanel>
 					</>
 				)}
 
 				{type === 'graphic' && (
 					<>
-						<InspectorRow label="Graphic Type" htmlFor="background-graphic-type">
-							<Select value="line">
-								<SelectTrigger
-									id="background-graphic-type"
-									size="sm"
-									className={INSPECTOR_ROW_SELECT_TRIGGER}
-								>
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent align="end">
-									<SelectItem value="line">Line</SelectItem>
-								</SelectContent>
-							</Select>
-						</InspectorRow>
-						<InspectorColorRow
+						<Controller.Row label="Graphic Type">
+							<Controller.Select
+								options={[{ value: 'line', label: 'Line' }]}
+								value="line"
+							/>
+						</Controller.Row>
+						<Controller.ColorRow
 							label="Line Color"
 							value={lineColor}
 							onChange={setLineColor}
 						/>
-						<InspectorColorRow
+						<Controller.ColorRow
 							label="Background Color"
 							value={backgroundColor}
 							onChange={setBackgroundColor}
 						/>
 					</>
 				)}
-			</InspectorSection>
+			</Controller.Section>
 
 			{/* 디자인 SSOT: transform은 Background의 형제 섹션이고 구분선이 없다.
 			    ponytail: 배경 이미지 배정이 아직 없어(3단계 배선) 생성 전 규칙대로 닫힌 채 잠근다. */}
 			{type === 'image' && (
-				<InspectorSection title="Image Transform" disabled className="border-t-0 pt-0">
+				<Controller.Section title="Image Transform" disabled className="border-t-0 pt-0">
 					<ImageTransformControl
 						value={imageTransform}
 						aspectRatio={canvasAspectRatio}
 						onChange={setImageTransform}
 					/>
-				</InspectorSection>
+				</Controller.Section>
 			)}
 			{type === 'graphic' && (
-				<InspectorSection title="Graphic Transform" className="border-t-0 pt-0">
+				<Controller.Section title="Graphic Transform" className="border-t-0 pt-0">
 					<div className="flex flex-col gap-1 pb-2.5">
 						<TransformPad
 							ariaLabel="그래픽 위치"
@@ -229,8 +192,8 @@ export function BackgroundSection({ canvasAspectRatio }: BackgroundSectionProps)
 							aspectRatio={canvasAspectRatio}
 							onChange={(x, y) => setGraphicOrigin({ x, y })}
 						/>
-						<InspectorRow label="Dynamic Thickness">
-							<InspectorSegmented
+						<Controller.Row label="Dynamic Thickness">
+							<Controller.Segmented
 								aria-label="가변 두께"
 								options={[
 									{ value: 'off', label: 'Off' },
@@ -239,48 +202,32 @@ export function BackgroundSection({ canvasAspectRatio }: BackgroundSectionProps)
 								value={variableWeight}
 								onChange={setVariableWeight}
 							/>
-						</InspectorRow>
-						<InspectorRow label="Perspective" htmlFor="background-perspective">
-							<Select
+						</Controller.Row>
+						<Controller.Row label="Perspective">
+							<Controller.Select
+								options={[
+									{ value: 'flat', label: 'Flat' },
+									{ value: 'low-angle', label: 'Low Angle' },
+								]}
 								value={viewpoint}
-								onValueChange={(value) => setViewpoint(value as typeof viewpoint)}
-							>
-								<SelectTrigger
-									id="background-perspective"
-									size="sm"
-									className={INSPECTOR_ROW_SELECT_TRIGGER}
-								>
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent align="end">
-									<SelectItem value="flat">Flat</SelectItem>
-									<SelectItem value="low-angle">Low Angle</SelectItem>
-								</SelectContent>
-							</Select>
-						</InspectorRow>
-						<InspectorRow label="Angle" htmlFor="background-angle">
-							<Select
+								onChange={(value) => setViewpoint(value as typeof viewpoint)}
+							/>
+						</Controller.Row>
+						<Controller.Row label="Angle">
+							<Controller.Select
+								options={[
+									{ value: 'weak', label: 'Weak' },
+									{ value: 'medium', label: 'Normal' },
+									{ value: 'strong', label: 'Strong' },
+								]}
 								value={angleIntensity}
-								onValueChange={(value) =>
+								onChange={(value) =>
 									setAngleIntensity(value as typeof angleIntensity)
 								}
-							>
-								<SelectTrigger
-									id="background-angle"
-									size="sm"
-									className={INSPECTOR_ROW_SELECT_TRIGGER}
-								>
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent align="end">
-									<SelectItem value="weak">Weak</SelectItem>
-									<SelectItem value="medium">Normal</SelectItem>
-									<SelectItem value="strong">Strong</SelectItem>
-								</SelectContent>
-							</Select>
-						</InspectorRow>
+							/>
+						</Controller.Row>
 					</div>
-				</InspectorSection>
+				</Controller.Section>
 			)}
 		</>
 	)
