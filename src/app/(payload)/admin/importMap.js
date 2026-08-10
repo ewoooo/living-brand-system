@@ -44,6 +44,7 @@ import { SettingsBanner as SettingsBanner_d26de2934fab2f5e50b16fb3e402473a } fro
 import { default as default_7be396d0766c6c490887ef074dd0ced4 } from '../../../components/admin/AdminIcon'
 import { default as default_27eed1898e8caadb2fd2266b54bb4509 } from '../../../components/admin/AdminLogo'
 import { default as default_68a16153b61e0e8909eb1452171e2a49 } from '../../../components/admin/DashboardSummary'
+import { default as default_c3e4b7826eabc44176000e6d075a5d08 } from '../../../components/admin/admin-dialkit-provider'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
@@ -95,6 +96,7 @@ export const importMap = {
   "/components/admin/AdminIcon#default": default_7be396d0766c6c490887ef074dd0ced4,
   "/components/admin/AdminLogo#default": default_27eed1898e8caadb2fd2266b54bb4509,
   "/components/admin/DashboardSummary#default": default_68a16153b61e0e8909eb1452171e2a49,
+  "/components/admin/admin-dialkit-provider#default": default_c3e4b7826eabc44176000e6d075a5d08,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

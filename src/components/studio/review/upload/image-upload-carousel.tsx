@@ -60,7 +60,7 @@ export function ImageUploadCarousel() {
 	return (
 		<section
 			aria-label="이미지 업로드 및 미리보기"
-			className="relative flex aspect-video items-center justify-center overflow-hidden rounded-md border border-neutral-200 bg-neutral-50"
+			className="relative flex aspect-video items-center justify-center overflow-hidden rounded-md border border-border bg-muted"
 			onDragOver={(event) => event.preventDefault()}
 			onDrop={handleDrop}
 		>

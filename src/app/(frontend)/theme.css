@@ -94,6 +94,9 @@
 	--color-accent: var(--accent);
 	--color-accent-foreground: var(--accent-foreground);
 	--color-destructive: var(--destructive);
+	--color-success: var(--success);
+	--color-info: var(--info);
+	--color-warning: var(--warning);
 	--color-border: var(--border);
 	--color-input: var(--input);
 	--color-ring: var(--ring);
@@ -143,6 +146,11 @@
 	--accent: oklch(0.97 0 0);
 	--accent-foreground: oklch(0.205 0 0);
 	--destructive: oklch(0.577 0.245 27.325);
+	/* 판정·상태 표시 전용(성공/정보/경고). destructive와 같은 단일 값 계약 —
+	   텍스트 대비를 우선해 라이트는 700, 다크는 400 계열이다. */
+	--success: oklch(0.508 0.118 165.612);
+	--info: oklch(0.5 0.134 242.749);
+	--warning: oklch(0.555 0.163 48.998);
 	--border: oklch(0.922 0 0);
 	--input: oklch(0.922 0 0);
 	--ring: oklch(0.708 0 0);
@@ -178,6 +186,9 @@
 	--accent: oklch(0.269 0 0);
 	--accent-foreground: oklch(0.985 0 0);
 	--destructive: oklch(0.704 0.191 22.216);
+	--success: oklch(0.765 0.177 163.223);
+	--info: oklch(0.746 0.16 232.661);
+	--warning: oklch(0.828 0.189 84.429);
 	--border: oklch(1 0 0 / 10%);
 	--input: oklch(1 0 0 / 15%);
 	--ring: oklch(0.556 0 0);

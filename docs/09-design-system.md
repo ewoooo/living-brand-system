@@ -37,6 +37,7 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 | --- | --- | --- |
 | color 원시값 | `:root`(라이트), `.dark`(다크)의 원시 색 정의 | `src/app/(frontend)/theme.css`, `theme.css` |
 | color 유틸 매핑 | 원시값 → `@theme inline`의 `--color-*` 유틸 토큰 | `theme.css` |
+| 상태색 | 판정·상태 표시 전용 `--success`/`--info`/`--warning`(실패는 기존 `--destructive`, 해당 없음은 `--muted`) | `theme.css` |
 | highlight gradient | 강조 배경과 전경 토큰, `bg-highlight` 유틸 | `src/app/(frontend)/theme.css` |
 | radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl` 4단 파생(`lg`는 뿌리값, `sm`/`md`/`xl`은 calc) | `theme.css`, `theme.css` |
 | 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(Essenflux), `HD`(CI 락업 워드마크 전용 @font-face) | `theme.css` |
@@ -63,15 +64,17 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 `className`/`style` 리터럴에서 다음은 금지합니다.
 
 - 생 hex 리터럴(예: `#a1b2c3`)
-- 생 Tailwind 팔레트 + 숫자(예: `border-neutral-200`, `bg-gray-100`, `text-zinc-500`, `slate`/`stone` 등)
+- 생 Tailwind 팔레트 + 숫자 — 무채색(`neutral`/`gray`/`zinc`/`slate`/`stone`)만이 아니라 **유채색 전체**(`emerald`, `sky`, `amber`, `orange` 등)를 포함합니다. `bg-emerald-500/15`처럼 유채 팔레트로 상태를 칠하는 것도 위반입니다.
 - `.tsx` 안의 `oklch(...)` 리터럴
+
+성공/정보/경고/실패 같은 **판정·상태 표시는 상태 토큰만** 사용합니다: `--success`/`--info`/`--warning`/`--destructive`(해당 없음은 `muted`). 사용 형태는 destructive 선례를 따릅니다 — pill은 `bg-success/15 text-success`, dot은 `bg-success`. 상태 토큰으로 표현할 수 없는 새 상태가 생기면 팔레트로 우회하지 말고 이 문서와 `theme.css`에 토큰을 추가합니다.
 
 **예외:** 색 자체를 데이터로 다루는 컴포넌트(`ColorSwatch`, `ColorPalette` 등)가 props나 CMS로 받는 hex는 스타일이 아니라 **데이터**이므로 허용합니다. 이때 hex는 코드에 고정되지 않고 주입됩니다.
 
 탐지용 grep:
 
 ```sh
-rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|from|to|via)-(?:neutral|gray|zinc|slate|stone)-[0-9]|oklch\(' src --glob '*.tsx'
+rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|neutral|gray|zinc|slate|stone)-[0-9]|oklch\(' src --glob '*.tsx'
 ```
 
 이 명령이 색 데이터 컴포넌트 밖에서 걸리면 토큰 위반입니다.

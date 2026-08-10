@@ -1,13 +1,60 @@
-import { describe, expect, it, vi } from 'vitest'
-import { canAssignImage, parseLayers, pruneCarrierChildImageKeys } from './template-layers-field'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { createElement, type ReactNode } from 'react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { TemplateLayerEditor } from './template-layer-editors'
+import {
+	canAssignImage,
+	type LayerRow,
+	parseLayers,
+	pruneCarrierChildImageKeys,
+} from './template-layers'
+import TemplateLayersField from './template-layers-field'
 
-// 컴포넌트 렌더 없이 parseLayers·canAssignImage만 검증한다 — Admin 런타임 의존성은 스텁.
-vi.mock('@payloadcms/ui', () => ({
-	Popup: () => null,
-	toast: { error: vi.fn() },
-	useForm: () => ({}),
-	useFormFields: () => undefined,
+const payloadForm = vi.hoisted(() => ({
+	dispatchFields: vi.fn(),
+	fields: {} as Record<string, { value?: unknown }>,
+	setModified: vi.fn(),
 }))
+
+// Payload Admin 런타임은 스텁하고 순수 레이어 규칙과 폼 커밋 계약만 검증한다.
+vi.mock('@payloadcms/ui', () => ({
+	Popup: ({ render }: { render: (props: { close: () => void }) => ReactNode }) =>
+		render({ close: vi.fn() }),
+	toast: { error: vi.fn() },
+	useForm: () => ({
+		dispatchFields: payloadForm.dispatchFields,
+		setModified: payloadForm.setModified,
+	}),
+	useFormFields: (select: (state: [typeof payloadForm.fields]) => unknown) =>
+		select([payloadForm.fields]),
+}))
+
+vi.mock('dialkit', () => ({
+	useDialKit: () => ({ canvasHeight: 560, layerWidth: 260, workspaceGap: 16 }),
+}))
+
+const imageLayer: LayerRow = {
+	id: 'image',
+	depth: 1,
+	name: 'Image',
+	figmaType: 'RECTANGLE',
+	tag: 'div',
+	isText: false,
+	isVector: false,
+	imageAddress: 'self',
+	text: '',
+}
+
+beforeEach(() => {
+	payloadForm.dispatchFields.mockReset()
+	payloadForm.setModified.mockReset()
+	for (const key of Object.keys(payloadForm.fields)) delete payloadForm.fields[key]
+})
+
+afterEach(() => {
+	cleanup()
+	vi.unstubAllGlobals()
+})
 
 describe('parseLayers', () => {
 	it('compose가 만든 -colorize 합성 오버레이 레이어를 숨긴다', () => {
@@ -36,54 +83,6 @@ describe('parseLayers', () => {
 	})
 })
 
-describe('pruneCarrierChildImageKeys', () => {
-	it('이미지 커밋 시 캐리어 자식 키의 이미지 필드를 지우고 나머지 필드는 남긴다', () => {
-		const next = pruneCarrierChildImageKeys(
-			{
-				clip: { backgroundImage: '/api/generated-images/file/new.png' },
-				'clip-child': {
-					backgroundImage: '/api/generated-images/file/old.png',
-					generatedImageId: 3,
-					text: '캡션',
-				},
-			},
-			'clip-child',
-			{ backgroundImage: '/api/generated-images/file/new.png' },
-		)
-		expect(next['clip-child']).toEqual({ text: '캡션' })
-	})
-
-	it('정리 후 빈 엔트리가 되면 키째 삭제한다', () => {
-		const next = pruneCarrierChildImageKeys(
-			{
-				clip: { backgroundImage: '/api/generated-images/file/new.png' },
-				'clip-child': { imageColorize: { line: '#112233' } },
-			},
-			'clip-child',
-			{ imageColorize: { line: '#445566' } },
-		)
-		expect('clip-child' in next).toBe(false)
-		expect(next.clip).toEqual({ backgroundImage: '/api/generated-images/file/new.png' })
-	})
-
-	it('자식 키에 이미지 필드가 없거나 이미지 커밋이 아니면 map을 그대로 돌려준다', () => {
-		const map = {
-			clip: { backgroundImage: '/api/generated-images/file/new.png' },
-			'clip-child': { text: '캡션' },
-		}
-		// 자식에 이미지 필드 없음 — 엔트리 유지.
-		expect(
-			pruneCarrierChildImageKeys(map, 'clip-child', { backgroundImage: '/x.png' })[
-				'clip-child'
-			],
-		).toEqual({ text: '캡션' })
-		// 이미지 키가 없는 patch(텍스트 커밋)는 아무것도 지우지 않는다.
-		expect(pruneCarrierChildImageKeys(map, 'clip-child', { text: '새 텍스트' })).toBe(map)
-		// childId 없음(프레임 주소가 아님) — 그대로.
-		expect(pruneCarrierChildImageKeys(map, undefined, { backgroundImage: '/x.png' })).toBe(map)
-	})
-})
-
 describe('canAssignImage — 주소 매트릭스', () => {
 	it('배정 주소는 가시 창 하나 — 클립 프레임 또는 캐리어 자신, 둘 다는 아니다', () => {
 		const rows = parseLayers(
@@ -109,7 +108,8 @@ describe('canAssignImage — 주소 매트릭스', () => {
 				'<div data-node-id="root-clip-child" data-image-carrier=""></div>' +
 				'</div>' +
 				'<p data-node-id="text" data-figma-type="TEXT">텍스트</p>' +
-				'<img data-node-id="vector" data-figma-type="VECTOR">',
+				'<img data-node-id="vector" data-figma-type="VECTOR">' +
+				'<img data-node-id="polygon" data-figma-type="POLYGON">',
 		)
 		const byId = new Map(rows.map((row) => [row.id, row]))
 		const allows = (id: string) => canAssignImage(byId.get(id) as (typeof rows)[number])
@@ -126,5 +126,172 @@ describe('canAssignImage — 주소 매트릭스', () => {
 		expect(allows('root-clip-child')).toBe(true)
 		expect(allows('text')).toBe(false)
 		expect(allows('vector')).toBe(false)
+		expect(allows('polygon')).toBe(false)
+		expect(byId.get('polygon')?.isVector).toBe(true)
+	})
+})
+
+describe('pruneCarrierChildImageKeys', () => {
+	it('프레임 주소에 이미지 커밋 시 캐리어 자식의 이미지 키만 제거한다', () => {
+		expect(
+			pruneCarrierChildImageKeys(
+				{
+					child: {
+						backgroundImage: '/old.png',
+						imageTransform: { x: 1, y: 2, scale: 1, rotate: 0 },
+						text: '유지',
+					},
+				},
+				'child',
+				{ backgroundImage: '/new.png' },
+			),
+		).toEqual({ child: { text: '유지' } })
+	})
+
+	it('정리 후 빈 엔트리가 되면 키째 삭제한다', () => {
+		const next = pruneCarrierChildImageKeys(
+			{ child: { imageColorize: { line: '#112233' } } },
+			'child',
+			{ imageColorize: { line: '#445566' } },
+		)
+		expect('child' in next).toBe(false)
+	})
+
+	it('자식 키에 이미지 필드가 없거나 이미지 커밋이 아니면 map을 그대로 돌려준다', () => {
+		const map = { child: { text: '캡션' } }
+		// 이미지 키가 없는 patch(텍스트 커밋)는 아무것도 지우지 않는다.
+		expect(pruneCarrierChildImageKeys(map, 'child', { text: '새 텍스트' })).toBe(map)
+		// childId 없음(프레임 주소가 아님) — 그대로.
+		expect(pruneCarrierChildImageKeys(map, undefined, { backgroundImage: '/x.png' })).toBe(map)
+	})
+})
+
+describe('TemplateLayersField 폼 계약', () => {
+	it('이미지 컬러 치환의 두 스와치가 브랜드 컬러 요청을 공유한다', async () => {
+		const fetchMock = vi.fn((input: string) =>
+			Promise.resolve({
+				ok: true,
+				json: () =>
+					Promise.resolve({
+						docs: input.includes('brand-colors')
+							? [{ id: 3, name: 'Primary', hex: '#112233' }]
+							: [],
+					}),
+			}),
+		)
+		vi.stubGlobal('fetch', fetchMock)
+
+		render(
+			createElement(TemplateLayerEditor, {
+				selected: imageLayer,
+				config: {
+					backgroundImage: '/image.png',
+					imageColorize: { line: '#112233', background: '#ffffff' },
+				},
+				onCommit: vi.fn(),
+			}),
+		)
+
+		await waitFor(() =>
+			expect(screen.getAllByRole('button', { name: 'Primary #112233' })).toHaveLength(2),
+		)
+		expect(
+			fetchMock.mock.calls.filter(([url]) => url.includes('/api/brand-colors')),
+		).toHaveLength(1)
+	})
+
+	it('AI 생성과 이미지 슬롯이 이미지 프로파일 요청을 공유한다', async () => {
+		const fetchMock = vi.fn(() =>
+			Promise.resolve({
+				ok: true,
+				json: () => Promise.resolve({ docs: [{ id: 3, name: 'Default' }] }),
+			}),
+		)
+		vi.stubGlobal('fetch', fetchMock)
+
+		render(
+			createElement(TemplateLayerEditor, {
+				selected: imageLayer,
+				config: { imageInput: {} },
+				onCommit: vi.fn(),
+			}),
+		)
+
+		await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+		expect(
+			screen
+				.getByRole('combobox', { name: '이미지 프로파일' })
+				.closest('[data-popup-prevent-close]'),
+		).not.toBeNull()
+	})
+
+	it('이미지 슬라이더는 포인터와 키보드 조작을 각각 한 번만 커밋한다', () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({ docs: [] }) })),
+		)
+		const onCommit = vi.fn()
+
+		render(
+			createElement(TemplateLayerEditor, {
+				selected: imageLayer,
+				config: { backgroundImage: '/image.png' },
+				onCommit,
+			}),
+		)
+		const slider = screen.getByRole('slider', { name: '이동 X (px)' })
+
+		fireEvent.change(slider, { target: { value: '120' } })
+		fireEvent.pointerUp(slider)
+		fireEvent.blur(slider)
+		expect(onCommit).toHaveBeenCalledTimes(1)
+
+		fireEvent.change(slider, { target: { value: '121' } })
+		fireEvent.keyUp(slider, { key: 'Shift' })
+		expect(onCommit).toHaveBeenCalledTimes(1)
+		fireEvent.keyUp(slider, { key: 'ArrowRight' })
+		expect(onCommit).toHaveBeenCalledTimes(2)
+		expect(onCommit).toHaveBeenLastCalledWith({
+			imageTransform: { x: 121, y: 0, scale: 1, rotate: 0 },
+		})
+	})
+
+	it('선택 레이어 편집을 overrides와 합성 html에 커밋하고 폼을 modified로 표시한다', () => {
+		const baseHtml = '<p data-node-id="text" data-name="제목">기존</p>'
+		Object.assign(payloadForm.fields, {
+			html: { value: baseHtml },
+			baseHtml: { value: baseHtml },
+			overrides: { value: {} },
+			width: { value: 320 },
+			height: { value: 180 },
+		})
+		vi.stubGlobal(
+			'ResizeObserver',
+			class {
+				observe() {}
+				disconnect() {}
+			},
+		)
+
+		render(createElement(TemplateLayersField))
+		fireEvent.click(screen.getByRole('button', { name: /제목/ }))
+		expect(
+			screen.getByLabelText('AI 텍스트 생성').closest('[data-popup-prevent-close]'),
+		).not.toBeNull()
+		fireEvent.change(screen.getByLabelText('텍스트 편집 — 제목'), {
+			target: { value: '변경' },
+		})
+
+		expect(payloadForm.dispatchFields).toHaveBeenNthCalledWith(1, {
+			type: 'UPDATE',
+			path: 'overrides',
+			value: { text: { text: '변경' } },
+		})
+		expect(payloadForm.dispatchFields.mock.calls[1]?.[0]).toMatchObject({
+			type: 'UPDATE',
+			path: 'html',
+		})
+		expect(payloadForm.dispatchFields.mock.calls[1]?.[0].value).toContain('변경')
+		expect(payloadForm.setModified).toHaveBeenCalledWith(true)
 	})
 })

@@ -49,7 +49,7 @@ export function McpKeyIssuer() {
 	}
 
 	return (
-		<Card className="max-w-2xl">
+		<Card>
 			<CardHeader>
 				<CardTitle>MCP 연결</CardTitle>
 				<CardDescription>외부 MCP 클라이언트에서 사용할 키를 발급합니다.</CardDescription>
