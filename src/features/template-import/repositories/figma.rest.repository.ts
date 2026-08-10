@@ -1,6 +1,11 @@
 import { env } from '@/env'
-import type { FigmaNode } from '@/features/template-import/types'
-import { FigmaConfigurationError } from '@/lib/errors'
+import type { FigmaSourceNode } from '@/features/template-import/utils/figma-ir'
+import {
+	FigmaApiError,
+	type FigmaApiStage,
+	FigmaConfigurationError,
+	FigmaImportError,
+} from '@/lib/errors'
 
 /**
  * Figma REST API 경계. 임포트 파이프라인의 외부 I/O는 모두 이 파일이 소유한다.
@@ -18,21 +23,39 @@ function getFigmaToken(): string {
 	return env.FIGMA_API_TOKEN
 }
 
-export async function findFigmaNodeTree(fileKey: string, nodeId: string): Promise<FigmaNode> {
+function throwFigmaApiError(response: Response, stage: FigmaApiStage): never {
+	const retryAfterHeader = response.headers.get('retry-after')
+	const retryAfterValue = retryAfterHeader === null ? undefined : Number(retryAfterHeader)
+	throw new FigmaApiError(
+		stage,
+		response.status,
+		retryAfterValue !== undefined && Number.isInteger(retryAfterValue) && retryAfterValue >= 0
+			? retryAfterValue
+			: undefined,
+		response.headers.get('x-figma-plan-tier') ?? undefined,
+		response.headers.get('x-figma-rate-limit-type') ?? undefined,
+	)
+}
+
+export async function findFigmaNodeTree(fileKey: string, nodeId: string): Promise<FigmaSourceNode> {
 	const url = `${FIGMA_API_BASE}/files/${fileKey}/nodes?ids=${encodeURIComponent(nodeId)}&geometry=paths`
 	const response = await fetch(url, { headers: { 'X-Figma-Token': getFigmaToken() } })
 
 	if (!response.ok) {
-		throw new Error(`Figma nodes API failed (${response.status})`)
+		throwFigmaApiError(response, 'nodes')
 	}
 
 	const data = (await response.json()) as {
-		nodes?: Record<string, { document?: FigmaNode }>
+		nodes?: Record<string, { document?: FigmaSourceNode }>
 	}
 	const rootNode = data.nodes?.[nodeId]?.document
 
 	if (!rootNode) {
-		throw new Error(`Figma node "${nodeId}" not found in file "${fileKey}".`)
+		throw new FigmaImportError(
+			`Figma node "${nodeId}" not found in file "${fileKey}".`,
+			'Figma 파일에서 지정한 프레임을 찾을 수 없습니다. URL과 node-id를 확인하세요.',
+			404,
+		)
 	}
 
 	return rootNode
@@ -58,7 +81,7 @@ export async function findFigmaImageUrls(
 		const response = await fetch(url, { headers: { 'X-Figma-Token': token } })
 
 		if (!response.ok) {
-			throw new Error(`Figma images API failed (${response.status})`)
+			throwFigmaApiError(response, 'images')
 		}
 
 		const data = (await response.json()) as { images?: Record<string, string | null> }
@@ -73,6 +96,22 @@ export async function findFigmaImageUrls(
 	return imageUrls
 }
 
+/**
+ * 파일의 IMAGE fill 원본(imageRef → 임시 다운로드 URL) 맵을 돌려준다.
+ * 파일 단위 단일 호출이며 nodeId가 아닌 imageRef가 키다. URL은 곧 만료되므로 임포트 중에만 쓴다.
+ */
+export async function findFigmaImageFillUrls(fileKey: string): Promise<Record<string, string>> {
+	const url = `${FIGMA_API_BASE}/files/${fileKey}/images`
+	const response = await fetch(url, { headers: { 'X-Figma-Token': getFigmaToken() } })
+
+	if (!response.ok) {
+		throwFigmaApiError(response, 'image-fills')
+	}
+
+	const data = (await response.json()) as { meta?: { images?: Record<string, string> } }
+	return data.meta?.images ?? {}
+}
+
 /** 이미지 조각 하나의 최대 크기 — 폭주한 렌더 결과가 메모리·S3를 잠식하지 않게 막는다. */
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024
 
@@ -81,13 +120,20 @@ export async function downloadFigmaImage(url: string): Promise<{ data: Buffer; m
 	const response = await fetch(url)
 
 	if (!response.ok) {
-		throw new Error(`Figma image download failed (${response.status})`)
+		throw new FigmaImportError(
+			`Figma image download failed (${response.status})`,
+			'Figma 렌더 이미지를 내려받지 못했습니다. 잠시 후 다시 가져오세요.',
+		)
 	}
 
 	const data = Buffer.from(await response.arrayBuffer())
 
 	if (data.byteLength > MAX_IMAGE_BYTES) {
-		throw new Error(`Figma image exceeds size limit (${data.byteLength} bytes)`)
+		throw new FigmaImportError(
+			`Figma image exceeds size limit (${data.byteLength} bytes)`,
+			'Figma 레이어 이미지가 가져오기 제한인 15MB를 초과했습니다.',
+			413,
+		)
 	}
 
 	return {

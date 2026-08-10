@@ -11,24 +11,18 @@ vi.mock('@/lib/request-auth', () => ({
 	authenticateRequest: mocks.authenticateRequest,
 	isCrossOriginRequest: mocks.isCrossOriginRequest,
 }))
-vi.mock('@/features/generate-image/services/generate-image.service', () => {
-	class ImageGenerationUnavailableError extends Error {}
-	class ImageProfileNotFoundError extends Error {}
-	class ImagePromptNormalizationUnavailableError extends Error {}
-	return {
-		generateImages: mocks.generateImages,
-		ImageGenerationUnavailableError,
-		ImageProfileNotFoundError,
-		ImagePromptNormalizationUnavailableError,
-	}
-})
+vi.mock('@/features/generate-image/services/generate-image.service', () => ({
+	generateImages: mocks.generateImages,
+}))
 
-import {
-	ImageGenerationUnavailableError,
-	ImageProfileNotFoundError,
-	ImagePromptNormalizationUnavailableError,
-} from '@/features/generate-image/services/generate-image.service'
 import { POST } from './route'
+
+// route는 error.name으로 매핑하므로 실제 클래스 대신 이름만 맞춘 오류로 검증한다.
+function namedError(name: string) {
+	const error = new Error(name)
+	error.name = name
+	return error
+}
 
 function imageRequest(body: unknown) {
 	return new Request('http://localhost/api/generate-image', {
@@ -47,7 +41,17 @@ describe('POST /api/generate-image', () => {
 			user: { id: 1 },
 		})
 		mocks.generateImages.mockResolvedValue({
-			images: ['data:image/png;base64,result'],
+			aspectRatio: '1:1',
+			generatedImages: [
+				{
+					collection: 'generated-images',
+					createdAt: '2026-07-31T03:00:00.000Z',
+					id: 8,
+					url: '/api/generated-images/file/generated.png',
+				},
+			],
+			images: ['/api/generated-images/file/generated.png'],
+			imageSize: '1K',
 			model: 'gpt-image-2',
 			prompt: 'sample',
 			provider: 'openai',
@@ -73,6 +77,7 @@ describe('POST /api/generate-image', () => {
 		{ prompt: 'sample' },
 		{ prompt: 'sample', profileId: 0 },
 		{ prompt: 'sample', imageModelPreset: 'openai-gpt-image-2' },
+		{ prompt: 'sample', profileId: 5, aspectRatio: '7:5' },
 	])('일반 생성 계약 밖의 입력을 거부한다: %o', async (body) => {
 		const response = await POST(imageRequest(body))
 
@@ -80,15 +85,23 @@ describe('POST /api/generate-image', () => {
 		expect(mocks.generateImages).not.toHaveBeenCalled()
 	})
 
-	it.each([
-		new ImageGenerationUnavailableError(),
-		new ImagePromptNormalizationUnavailableError(),
-	])('생성기나 정규화 모델을 사용할 수 없으면 503을 반환한다', async (error) => {
-		mocks.generateImages.mockRejectedValue(error)
+	it('생성기나 정규화 모델을 사용할 수 없으면 503을 반환한다', async () => {
+		mocks.generateImages.mockRejectedValue(namedError('ImageGenerationUnavailableError'))
 
 		const response = await POST(imageRequest({ prompt: 'sample', profileId: 5 }))
 
 		expect(response.status).toBe(503)
+	})
+
+	it('공통 생성 한도를 넘으면 재시도 시간을 포함한 429를 반환한다', async () => {
+		mocks.generateImages.mockRejectedValue(
+			Object.assign(namedError('ImageGenerationLimitError'), { retryAfterSeconds: 12 }),
+		)
+
+		const response = await POST(imageRequest({ prompt: 'sample', profileId: 5 }))
+
+		expect(response.status).toBe(429)
+		expect(response.headers.get('Retry-After')).toBe('12')
 	})
 
 	it('유효한 입력과 사용자를 서비스에 전달하고 실제 모델을 반환한다', async () => {
@@ -96,7 +109,17 @@ describe('POST /api/generate-image', () => {
 
 		expect(response.status).toBe(200)
 		expect(await response.json()).toEqual({
-			images: ['data:image/png;base64,result'],
+			aspectRatio: '1:1',
+			generatedImages: [
+				{
+					collection: 'generated-images',
+					createdAt: '2026-07-31T03:00:00.000Z',
+					id: 8,
+					url: '/api/generated-images/file/generated.png',
+				},
+			],
+			images: ['/api/generated-images/file/generated.png'],
+			imageSize: '1K',
 			model: 'gpt-image-2',
 			prompt: 'sample',
 		})
@@ -108,11 +131,35 @@ describe('POST /api/generate-image', () => {
 		})
 	})
 
+	it('슬롯 비율 오버라이드를 서비스에 그대로 전달한다', async () => {
+		const response = await POST(
+			imageRequest({ prompt: 'sample', profileId: 5, count: 1, aspectRatio: '16:9' }),
+		)
+
+		expect(response.status).toBe(200)
+		expect(mocks.generateImages).toHaveBeenCalledWith({
+			userInput: 'sample',
+			count: 1,
+			profileId: 5,
+			aspectRatio: '16:9',
+			user: { id: 1 },
+		})
+	})
+
 	it('published 프로파일이 없으면 404를 반환한다', async () => {
-		mocks.generateImages.mockRejectedValue(new ImageProfileNotFoundError())
+		mocks.generateImages.mockRejectedValue(namedError('ImageProfileNotFoundError'))
 
 		const response = await POST(imageRequest({ prompt: 'sample', profileId: 404 }))
 
 		expect(response.status).toBe(404)
+	})
+
+	it('시드 이미지 오류를 카메라 route가 아니어도 400으로 매핑한다', async () => {
+		mocks.generateImages.mockRejectedValue(namedError('InvalidSeedImageError'))
+
+		const response = await POST(imageRequest({ prompt: 'sample', profileId: 5 }))
+
+		expect(response.status).toBe(400)
+		expect(await response.json()).toEqual({ message: 'Invalid seed image.' })
 	})
 })

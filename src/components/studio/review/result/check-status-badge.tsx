@@ -1,10 +1,10 @@
 'use client'
 
 import { motion } from 'motion/react'
+import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
 import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
-import { cn } from '@/lib/utils'
 import { CHECK_STATUS } from './check-status'
 
 /**
@@ -12,7 +12,7 @@ import { CHECK_STATUS } from './check-status'
  * in : { outcome?: CheckResult; inProgress: boolean }
  * 매핑: checkDisplayStatus(outcome.rawResult)
  *       → 'pass'|'ok'|'advisory'|'needs_review'|'fail'|'not_applicable'
- *       → CHECK_STATUS[status] { label, pill, dot }  (check-status.ts 소유)
+ *       → CHECK_STATUS[status] { label, variant, dot }  (check-status.ts 소유)
  * outcome 없음 && inProgress → 스피너, 둘 다 없으면 null
  */
 export function CheckStatusBadge({
@@ -28,18 +28,18 @@ export function CheckStatusBadge({
 		const status = CHECK_STATUS[checkDisplayStatus(outcome.rawResult)]
 
 		return (
-			<motion.span
-				initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 3, scale: 0.96 }}
-				animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-				exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -3, scale: 0.96 }}
-				transition={{ duration: 0.16, ease: 'easeOut' }}
-				className={cn(
-					'inline-block whitespace-nowrap rounded px-1.5 py-0.5 font-body text-xs font-semibold',
-					status.pill,
-				)}
-			>
-				{status.label}
-			</motion.span>
+			<Badge asChild variant={status.variant} shape="rounded">
+				<motion.span
+					initial={
+						shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 3, scale: 0.96 }
+					}
+					animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+					exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -3, scale: 0.96 }}
+					transition={{ duration: 0.16, ease: 'easeOut' }}
+				>
+					{status.label}
+				</motion.span>
+			</Badge>
 		)
 	}
 	if (inProgress) {

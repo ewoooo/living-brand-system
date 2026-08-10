@@ -41,10 +41,10 @@ function VersionCell({ version }: { version: string }) {
 		<motion.p
 			className="
 			    inline-grid h-[0.8em] w-auto min-w-[0.8em] shrink-0
-			    border border-orange-500 p-[0.1em] text-orange-500
+			    border border-warning p-[0.1em] text-warning
 			    transition-colors duration-150
-			    hover:bg-orange-500 hover:text-white
-			    focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500
+			    hover:bg-warning hover:text-background
+			    focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warning
 			    md:size-[0.8em]
 			  "
 			onHoverStart={() => setHovered(true)}

@@ -2,6 +2,7 @@
 
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Typography } from '@/components/ui/typography'
 import type { TemplateSlotSpec } from '@/types/template'
 
 /** 제작자가 요소에 설정한 입력 제약(형식·글자수·줄수)을 적용한 텍스트 슬롯 입력. */
@@ -32,9 +33,9 @@ export function TextSlotInput({
 					onChange={(event) => onChange(event.target.value)}
 				/>
 				{isInvalidEmail && (
-					<p className="font-body text-sm font-normal text-destructive">
-						이메일 형식이 아닙니다.
-					</p>
+					<Typography role="alert" size="sm" tone="destructive">
+						이메일 형식이 아니에요.
+					</Typography>
 				)}
 			</>
 		)
@@ -50,7 +51,8 @@ export function TextSlotInput({
 			onChange={(event) => {
 				const next = event.target.value
 
-				// 명시적 줄 수 제한 — 폭에 의한 자동 줄바꿈 초과분은 렌더가 잘라낸다.
+				// 명시적 줄 수 제한 — 자동 줄바꿈 초과분은 렌더가 Figma 텍스트 박스 규칙대로 처리한다
+				// (고정 박스는 overflow:hidden clip, 말줄임 설정은 -webkit-line-clamp 「…」).
 				if (spec.maxLines && next.split('\n').length > spec.maxLines) {
 					return
 				}

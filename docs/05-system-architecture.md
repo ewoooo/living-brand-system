@@ -324,7 +324,7 @@ flowchart TB
 
 ##### 제작 관리
 
-현재 제작 관리는 Creator 요청 안에서 ResourceRef를 조회하고 결과를 반환하며, `AssetGenerationSession`이나 `AssetGenerationOutput`을 저장하지 않습니다.
+현재 제작 관리는 Creator 요청 안에서 ResourceRef를 조회하고 결과를 반환하며, 프로파일 기반 이미지 파일만 `GeneratedImage`로 저장합니다. `AssetGenerationSession`이나 범용 `AssetGenerationOutput`은 저장하지 않습니다.
 아래 구조는 향후 제작 사용량 추적을 도입할 때 적용할 계획입니다.
 
 | 흐름 | 담당 | 입력 | 결과 |

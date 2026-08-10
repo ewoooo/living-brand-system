@@ -8,20 +8,27 @@ import { searchPlugin } from '@payloadcms/plugin-search'
 import { EXPERIMENTAL_TableFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { ko } from '@payloadcms/translations/languages/ko'
-import { buildConfig, type CollectionConfig, type GlobalConfig, type PayloadRequest } from 'payload'
+import {
+	type Access,
+	buildConfig,
+	type CollectionConfig,
+	type GlobalConfig,
+	type PayloadRequest,
+} from 'payload'
 import { betterEditorSettingsGlobal } from 'payload-better-editor'
 import sharp from 'sharp'
-import { z } from 'zod/v3'
 import { migrations } from '../migrations'
 import { AgentChatSessions } from './collections/AgentChatSessions'
 import { AgentSkills } from './collections/AgentSkills'
 import { ApplicationImages } from './collections/ApplicationImages'
+import { BrandColorGroups } from './collections/BrandColorGroups'
 import { BrandColors } from './collections/BrandColors'
 import { BrandIcons } from './collections/BrandIcons'
 import { BrandLogos } from './collections/BrandLogos'
 import { BrandTypefaces } from './collections/BrandTypefaces'
 import { CheckScenarios } from './collections/CheckScenarios'
 import { CheckSessions } from './collections/CheckSessions'
+import { GeneratedImages } from './collections/GeneratedImages'
 import { GuidelineDocuments } from './collections/GuidelineDocuments'
 import { ImageProfiles } from './collections/ImageProfiles'
 import { Plugins } from './collections/Plugins'
@@ -33,15 +40,11 @@ import { Templates } from './collections/Templates'
 import { Users } from './collections/Users'
 import { env } from './env'
 import { listGuidelineSearchRules } from './features/guideline/repositories/guideline-search-rules.payload.repository'
-import {
-	findMcpChecks,
-	findMcpGuideline,
-	findMcpGuidelineDocuments,
-} from './features/guideline/services/find-mcp-guideline.service'
 import { buildGuidelineSearchText } from './features/guideline/utils/guideline-search-text'
+import { customMcpTools } from './features/mcp-access/mcp-tools'
 import { AgentSettings } from './globals/AgentSettings'
 import { Guideline } from './globals/Guideline'
-import { adminOnly, authenticated, managerOrAdmin } from './lib/auth'
+import { adminOnly, authenticated, isAdmin, managerOrAdmin } from './lib/auth'
 import type { GuidelineDocument } from './payload-types'
 
 const filename = fileURLToPath(import.meta.url)
@@ -50,16 +53,10 @@ const shouldRunProdMigrations =
 	env.PAYLOAD_RUN_MIGRATIONS_ON_STARTUP === 'true' &&
 	env.NODE_ENV === 'production' &&
 	env.NEXT_PHASE !== 'phase-production-build'
-const mcpListParameters = {
-	limit: z.number().int().min(1).max(100).optional(),
-	locale: z.enum(['ko', 'en']).optional(),
-	page: z.number().int().min(1).optional(),
-}
-const mcpLocale = (value: unknown) => (value === 'en' || value === 'ko' ? value : undefined)
-const mcpNumber = (value: unknown) => (typeof value === 'number' ? value : undefined)
-const mcpLevel = (value: unknown) => (value === 1 || value === 2 || value === 3 ? value : undefined)
-type McpToolArgs = Record<string, unknown>
 type GetDefaultMcpAccessSettings = (overrideApiKey?: null | string) => Promise<MCPAccessSettings>
+const createOwnMcpApiKey: Access = ({ data, req }) =>
+	isAdmin(req.user) ||
+	Boolean(req.user?.id != null && data?.user != null && String(req.user.id) === String(data.user))
 
 const BetterEditorSettings: GlobalConfig = {
 	...betterEditorSettingsGlobal,
@@ -70,24 +67,6 @@ const BetterEditorSettings: GlobalConfig = {
 	},
 	access: { read: authenticated, update: managerOrAdmin },
 }
-
-/** MCP 툴 공통 골격 — 조회 결과를 text 콘텐츠(JSON 문자열)로 감싼다. */
-const mcpTextTool = (
-	name: string,
-	description: string,
-	parameters: Record<string, z.ZodTypeAny>,
-	run: (args: McpToolArgs, req: PayloadRequest) => Promise<unknown>,
-) => ({
-	name,
-	description,
-	parameters,
-	handler: async (args: McpToolArgs, req: PayloadRequest) => ({
-		content: [{ type: 'text' as const, text: JSON.stringify(await run(args, req)) }],
-	}),
-})
-
-// ponytail: custom MCP tools only wire validated input to a feature service here.
-const customMcpTools: ReturnType<typeof mcpTextTool>[] = []
 
 export default buildConfig({
 	admin: {
@@ -106,16 +85,19 @@ export default buildConfig({
 				Icon: '/components/admin/AdminIcon',
 				Logo: '/components/admin/AdminLogo',
 			},
+			providers: ['/components/admin/admin-dialkit-provider'],
 		},
 	},
 	collections: [
 		GuidelineDocuments,
 		BrandLogos,
 		BrandColors,
+		BrandColorGroups,
 		BrandTypefaces,
 		BrandIcons,
 		ApplicationImages,
 		ImageProfiles,
+		GeneratedImages,
 		Templates,
 		TemplateCategories,
 		TemplateAssets,
@@ -152,6 +134,13 @@ export default buildConfig({
 		migrationDir: './migrations',
 		pool: {
 			connectionString: env.DATABASE_URL,
+			// max가 너무 작으면 트랜잭션 안에서 추가 커넥션을 얻지 못해 자기를 기다리는 데드락이 난다.
+			// admin의 2초 autosave(guidelineDraftVersions)로 저장이 겹치면 max:2에선 풀이 즉시 고갈돼
+			// 무한로딩 + 앱 전체 라우트 정지로 번졌다.
+			max: 10,
+			// 데드락 대신 빠르게 실패시켜 커넥션을 반납한다(무한 대기 방지).
+			connectionTimeoutMillis: 10_000,
+			idleTimeoutMillis: 30_000,
 		},
 		prodMigrations: shouldRunProdMigrations ? migrations : undefined,
 		push: env.PAYLOAD_DB_PUSH === 'true',
@@ -176,60 +165,36 @@ export default buildConfig({
 				...collection,
 				labels: { singular: 'MCP API 키', plural: 'MCP API 키' },
 				admin: { ...collection.admin, group: '시스템 관리' },
+				fields: [
+					...(collection.fields ?? []),
+					{
+						name: 'apiKey',
+						type: 'text',
+						access: { read: () => false },
+					},
+				],
 				access: {
-					create: adminOnly,
+					create: createOwnMcpApiKey,
 					delete: adminOnly,
 					read: adminOnly,
 					update: adminOnly,
 				},
 			}),
 			mcp: {
-				tools: [
-					mcpTextTool(
-						'findGuidelineDocuments',
-						'Find published guideline documents with localized content, hierarchy, blocks, and applied rules.',
-						{
-							...mcpListParameters,
-							level: z.number().int().min(1).max(3).optional(),
-						},
-						(args, req) =>
-							findMcpGuidelineDocuments(req, {
-								level: mcpLevel(args.level),
-								limit: mcpNumber(args.limit),
-								locale: mcpLocale(args.locale),
-								page: mcpNumber(args.page),
-							}),
-					),
-					mcpTextTool(
-						'findChecks',
-						'Find rules applied by published guideline documents and blocks.',
-						mcpListParameters,
-						(args, req) =>
-							findMcpChecks(req, {
-								limit: mcpNumber(args.limit),
-								locale: mcpLocale(args.locale),
-								page: mcpNumber(args.page),
-							}),
-					),
-					mcpTextTool(
-						'findGuideline',
-						'Find live top-level guideline document metadata.',
-						{ locale: z.enum(['ko', 'en']).optional() },
-						(args, req) => findMcpGuideline(req, { locale: mcpLocale(args.locale) }),
-					),
-					...customMcpTools,
-				],
+				tools: customMcpTools,
 			},
 		} as never),
 		searchPlugin({
 			collections: ['guideline-documents'],
-			beforeSync: async ({ originalDoc, payload, searchDoc }) => {
+			// beforeSync는 문서 저장 트랜잭션 안에서 돈다 — req를 넘겨 같은 트랜잭션으로 조회해야 한다.
+			// 넘기지 않으면 풀에서 커넥션을 하나 더 요구해 저장이 자기를 기다리는 교착이 생긴다.
+			beforeSync: async ({ originalDoc, payload, req, searchDoc }) => {
 				const document = originalDoc as GuidelineDocument
 				return {
 					...searchDoc,
 					searchText: buildGuidelineSearchText(
 						document,
-						await listGuidelineSearchRules(payload, document),
+						await listGuidelineSearchRules(payload, document, req),
 					),
 				}
 			},
@@ -258,6 +223,7 @@ export default buildConfig({
 				'brand-typefaces': true,
 				'brand-icons': true,
 				'application-images': true,
+				'generated-images': true,
 				'template-assets': true,
 			},
 			bucket: env.S3_BUCKET || '',

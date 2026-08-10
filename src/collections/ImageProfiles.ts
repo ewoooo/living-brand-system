@@ -15,11 +15,13 @@ import {
 	type ImageOutputSize,
 	supportsImageOutputSize,
 } from '@/features/generate-image/image-size'
-import {
-	ImagePromptNormalizationUnavailableError,
-	normalizeImageProfilePrompt,
-} from '@/features/generate-image/services/normalize-image-profile-prompt.service'
+import { imageGenerationErrorResponse } from '@/features/generate-image/respond-image-generation'
+import { normalizeImageProfilePrompt } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
 import { isManager, managerManagedAccess } from '@/lib/auth'
+import {
+	assertImageProfileUnpinned,
+	isUnpublishTransition,
+} from '@/services/guard-template-references.service'
 import { draftVersions } from './shared'
 
 function validateImageSize(
@@ -54,13 +56,11 @@ async function normalizePromptEndpoint(req: PayloadRequest) {
 		return Response.json(await normalizeImageProfilePrompt(parsed.data))
 	} catch (error) {
 		req.payload.logger.error({ err: error }, 'image-prompt-normalization.failed')
-		if (error instanceof ImagePromptNormalizationUnavailableError) {
-			return Response.json(
-				{ message: 'AI 프롬프트 정규화가 설정되지 않았습니다.' },
-				{ status: 503 },
-			)
-		}
-		return Response.json({ message: '프롬프트 정규화에 실패했습니다.' }, { status: 500 })
+		return (
+			imageGenerationErrorResponse(error, {
+				ImageGenerationUnavailableError: 'AI 프롬프트 정규화가 설정되지 않았습니다.',
+			}) ?? Response.json({ message: '프롬프트 정규화에 실패했습니다.' }, { status: 500 })
+		)
 	}
 }
 
@@ -68,6 +68,18 @@ export const ImageProfiles: CollectionConfig = {
 	slug: 'image-profiles',
 	dbName: 'image_profiles',
 	access: managerManagedAccess,
+	hooks: {
+		// 발행 템플릿의 overrides가 imageInput.profileId로 고정한 프로파일은 삭제·발행 해제를 거부한다.
+		beforeChange: [
+			async ({ data, originalDoc, req }) => {
+				if (isUnpublishTransition({ data, originalDoc, req })) {
+					await assertImageProfileUnpinned(req, Number(originalDoc?.id), '발행 해제')
+				}
+				return data
+			},
+		],
+		beforeDelete: [({ id, req }) => assertImageProfileUnpinned(req, Number(id), '삭제')],
+	},
 	admin: {
 		group: '제작 도구',
 		useAsTitle: 'name',
@@ -175,7 +187,7 @@ export const ImageProfiles: CollectionConfig = {
 			admin: {
 				initCollapsed: false,
 				description:
-					'선택사항입니다. 행이 있으면 AI가 후보 중 하나로 정규화하고, 비어 있으면 유저 인풋 원문만 subject로 사용합니다.',
+					'선택사항입니다. 행이 있으면 AI가 후보 중 하나로 정규화하고 유저 인풋 원문은 최종 프롬프트에서 제외합니다. 비어 있으면 원문을 subject로 사용합니다.',
 			},
 			fields: [
 				{ name: 'key', type: 'text', required: true, label: '주제' },

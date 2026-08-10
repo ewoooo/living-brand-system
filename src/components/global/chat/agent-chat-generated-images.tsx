@@ -1,5 +1,6 @@
 'use client'
 
+import { Typography } from '@/components/ui/typography'
 import type { AgentGeneratedImagesAttachment } from '@/features/generate-image/services/generate-image.service'
 
 export function AgentChatGeneratedImages({
@@ -10,9 +11,9 @@ export function AgentChatGeneratedImages({
 	return (
 		<div className="flex w-full flex-col gap-2">
 			{attachment.profileName ? (
-				<p className="font-body text-sm font-normal text-muted-foreground">
+				<Typography size="sm" tone="muted">
 					적용된 프로파일: {attachment.profileName}
-				</p>
+				</Typography>
 			) : null}
 			<div className="grid w-full grid-cols-2 gap-2">
 				{attachment.images.map((src, index) => (
@@ -36,7 +37,9 @@ export function AgentChatGeneratedImages({
 			{attachment.prompt && (
 				<details className="font-body text-xs font-normal text-muted-foreground">
 					<summary className="cursor-pointer">생성 프롬프트</summary>
-					<p className="mt-1 whitespace-pre-wrap">{attachment.prompt}</p>
+					<Typography size="xs" className="mt-1 whitespace-pre-wrap">
+						{attachment.prompt}
+					</Typography>
 				</details>
 			)}
 		</div>
@@ -44,5 +47,7 @@ export function AgentChatGeneratedImages({
 }
 
 function imgExt(src: string) {
-	return src.slice(5, src.indexOf(';')).split('/')[1] || 'png'
+	return src.startsWith('data:image/')
+		? src.slice(11, src.indexOf(';')).replace('jpeg', 'jpg')
+		: new URL(src, window.location.href).pathname.split('.').pop() || 'png'
 }

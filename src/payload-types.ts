@@ -71,10 +71,12 @@ export interface Config {
     'guideline-documents': GuidelineDocument;
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
+    'brand-color-groups': BrandColorGroup;
     'brand-typefaces': BrandTypeface;
     'brand-icons': BrandIcon;
     'application-images': ApplicationImage;
     'image-profiles': ImageProfile;
+    'generated-images': GeneratedImage;
     templates: Template;
     'template-categories': TemplateCategory;
     'template-assets': TemplateAsset;
@@ -103,10 +105,12 @@ export interface Config {
     'guideline-documents': GuidelineDocumentsSelect<false> | GuidelineDocumentsSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
+    'brand-color-groups': BrandColorGroupsSelect<false> | BrandColorGroupsSelect<true>;
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
     'brand-icons': BrandIconsSelect<false> | BrandIconsSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
     'image-profiles': ImageProfilesSelect<false> | ImageProfilesSelect<true>;
+    'generated-images': GeneratedImagesSelect<false> | GeneratedImagesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
     'template-categories': TemplateCategoriesSelect<false> | TemplateCategoriesSelect<true>;
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
@@ -369,6 +373,22 @@ export interface BrandColor {
    * PMS 표기입니다. 예: 705C, Warm Red C
    */
   pantone?: string | null;
+  /**
+   * 인쇄 CMYK 표기입니다. 예: C 0 M 100 Y 90 K 0
+   */
+  cmyk?: string | null;
+  /**
+   * 이 배경 위에 CI 기본형(Full Color)을 쓸 수 있는지 여부입니다.
+   */
+  allowsFullColorLogo?: boolean | null;
+  /**
+   * 이 배경 위에 CI WHITE 워드마크를 쓸 수 있는지 여부입니다.
+   */
+  allowsWhiteWordmark?: boolean | null;
+  /**
+   * 이 배경 위에 올리는 CI 단색분리형의 색입니다. 단색형은 모든 배경에서 쓸 수 있고 색만 갈립니다.
+   */
+  monoLogoFill?: ('black' | 'white') | null;
   /**
    * 팔레트 색상군입니다. 예: red, yellow, neutral
    */
@@ -841,6 +861,14 @@ export interface LayoutBlock {
    */
   width?: ('padded' | 'full') | null;
   /**
+   * 블록 전체(전체 폭) 배경색입니다. 비우면 기본.
+   */
+  background?: (number | null) | BrandColor;
+  /**
+   * 자식 레이아웃(그리드/캐러셀 등) 영역 배경색입니다. 비우면 없음.
+   */
+  innerBackground?: (number | null) | BrandColor;
+  /**
    * 위젯 배치 방식입니다. grid/carousel/masonry/featured 구현.
    */
   arrangement?: ('grid' | 'carousel' | 'featured' | 'masonry') | null;
@@ -862,16 +890,30 @@ export interface LayoutBlock {
         | ImageLeaf
         | ColorPaletteWidget
         | CarouselWidget
+        | ClearspaceOverlayWidget
+        | ClearspaceViewerWidget
         | ColorPairingWidget
         | ColorPairingRecommendationWidget
+        | ConceptIntroWidget
+        | DoDontWidget
         | GlyphGridWidget
+        | HdColorPaletteWidget
         | IconGridWidget
         | ImageGridWidget
+        | IncorrectUsageWidget
         | LayoutGridWidget
+        | LayoutGridControlsWidget
         | LayoutGridOverlayWidget
+        | LogoColorVariantWidget
+        | LogoBgPickerWidget
+        | LogoDisplayWidget
+        | LogoGridSpecWidget
         | LogoGroupViewerWidget
+        | LogoOnBackgroundWidget
         | LogoViewerWidget
         | MediaShowcaseWidget
+        | SectionDividerWidget
+        | SeparatedLogoApplicationWidget
         | StemClearSpaceWidget
         | TypeScaleWidget
         | TypeSpecimenWidget
@@ -918,6 +960,91 @@ export interface CarouselWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ClearspaceOverlayWidget".
+ */
+export interface ClearspaceOverlayWidget {
+  /**
+   * 로고 레이어(logoSpace). 그리드와 같은 canvas로 파싱된 SVG.
+   */
+  logoLayer: number | BrandLogo;
+  /**
+   * 그리드 레이어(clearSpace). 로고와 같은 canvas.
+   */
+  gridLayer: number | BrandLogo;
+  /**
+   * 표시 배율(%). 100 = 자기 크기 그대로. 자기 크기 × (값/100).
+   */
+  scalePercent?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'clearspaceOverlayWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-logos".
+ */
+export interface BrandLogo {
+  id: number;
+  name: string;
+  alt: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ClearspaceViewerWidget".
+ */
+export interface ClearspaceViewerWidget {
+  /**
+   * 가로형 로고 레이어(logoSpace).
+   */
+  horizontalLogo: number | BrandLogo;
+  /**
+   * 가로형 그리드 레이어(clearSpace). 같은 canvas.
+   */
+  horizontalGrid?: (number | null) | BrandLogo;
+  /**
+   * 가로형 최소 높이(px). 렌더 높이가 이 값 미만이면 금지(빨강).
+   */
+  horizontalMinHeightPx?: number | null;
+  /**
+   * 세로형 로고 레이어(logoSpace). 없으면 세로 패널 생략.
+   */
+  verticalLogo?: (number | null) | BrandLogo;
+  /**
+   * 세로형 그리드 레이어(clearSpace).
+   */
+  verticalGrid?: (number | null) | BrandLogo;
+  /**
+   * 세로형 최소 높이(px). 미만이면 금지(빨강).
+   */
+  verticalMinHeightPx?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'clearspaceViewerWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ColorPairingWidget".
  */
 export interface ColorPairingWidget {
@@ -936,12 +1063,115 @@ export interface ColorPairingRecommendationWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ConceptIntroWidget".
+ */
+export interface ConceptIntroWidget {
+  /**
+   * 좌측 컬럼 첫 줄(리드 문장)입니다.
+   */
+  lead?: string | null;
+  /**
+   * 리드 아래 본문 단락입니다.
+   */
+  body?: string | null;
+  /**
+   * 우측에 크게 표시할 로고입니다. 비우면 기본 심볼을 보여줍니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'conceptIntroWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DoDontWidget".
+ */
+export interface DoDontWidget {
+  /**
+   * 예시 판형의 표시 비율입니다.
+   */
+  imageRatio?:
+    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+    | null;
+  /**
+   * 넓은 화면에서 예시를 배치할 열 수입니다.
+   */
+  columns?: ('2' | '3' | '4') | null;
+  /**
+   * 예시마다 붙는 제목입니다. 뒤에 순번이 자동으로 붙습니다(INCORRECT USAGE 1, 2 …). 비우면 제목 없이 그림만 나옵니다.
+   */
+  itemLabel?: string | null;
+  /**
+   * 컬러 패널 프리셋에 올릴 기준 로고입니다. 같은 언어·방향의 기본형/WHITE/단색형을 파일명 규약으로 함께 찾습니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  /**
+   * 예시입니다. 세트 헤딩은 없습니다.
+   */
+  examples?:
+    | {
+        /**
+         * 예시 이미지입니다.
+         */
+        image?: (number | null) | ApplicationImage;
+        kind: 'do' | 'ok' | 'dont';
+        /**
+         * 이미지 대신 쓸 컬러 패널입니다. 색·그라디언트·투명도 중첩처럼 이미지로 만들면 원본 값이 사라지는 예시에 씁니다. 이미지를 함께 지정하면 이미지가 이깁니다.
+         */
+        preset?:
+          | ('off-palette' | 'gradient' | 'low-contrast' | 'unpaired-combo' | 'overlay-stack' | 'brightness-opacity')
+          | null;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'doDontWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "GlyphGridWidget".
  */
 export interface GlyphGridWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'glyphGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HdColorPaletteWidget".
+ */
+export interface HdColorPaletteWidget {
+  /**
+   * 표시할 컬러 그룹입니다. 고른 순서대로 한 행씩 그립니다. 비우면 모든 그룹을 표시합니다.
+   */
+  groups?: (number | BrandColorGroup)[] | null;
+  /**
+   * 균일: 색 수와 무관하게 모든 칸이 같은 크기입니다 — 계열 분류처럼 그룹 간 우열이 없을 때 씁니다. 위계: 고른 순서대로 행 높이가 줄어듭니다(3그룹이면 3:2:1) — Primary/Secondary/Mono처럼 중요도가 있을 때 씁니다.
+   */
+  layout?: ('uniform' | 'ranked') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'hdColorPaletteWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-color-groups".
+ */
+export interface BrandColorGroup {
+  id: number;
+  /**
+   * 팔레트에 표시할 그룹 이름입니다. 예: Primary Color
+   */
+  name: string;
+  /**
+   * 선택한 순서대로 팔레트에 표시됩니다. 드래그로 순서를 바꿉니다.
+   */
+  colors?: (number | BrandColor)[] | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -963,12 +1193,98 @@ export interface ImageGridWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "IncorrectUsageWidget".
+ */
+export interface IncorrectUsageWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'incorrectUsageWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "LayoutGridWidget".
  */
 export interface LayoutGridWidget {
+  /**
+   * 코드에 정의된 조합 중 하나입니다.
+   */
+  sample?: ('a' | 'b' | 'c' | 'grid-labels') | null;
+  /**
+   * 판형 아래에 표시할 선택 캡션입니다.
+   */
+  caption?: string | null;
+  /**
+   * 그리드 표시입니다. 같은 페이지의 판형끼리 다르게 두려면 켜짐·꺼짐으로 고정합니다.
+   */
+  guides?: ('shared' | 'on' | 'off') | null;
+  /**
+   * 마진을 이 판형만 고정합니다(3~6). 비우면 패널을 따릅니다.
+   */
+  marginPct?: number | null;
+  /**
+   * 수평 거터를 이 판형만 고정합니다(0~100). 비우면 패널을 따릅니다.
+   */
+  gutterX?: number | null;
+  /**
+   * 수직 거터를 이 판형만 고정합니다(0~100). 비우면 패널을 따릅니다.
+   */
+  gutterY?: number | null;
+  /**
+   * 마진을 패널에서 분리해 초기값에 고정합니다.
+   */
+  lockMargin?: boolean | null;
+  /**
+   * 수평 거터를 패널에서 분리해 초기값에 고정합니다.
+   */
+  lockGutterX?: boolean | null;
+  /**
+   * 수직 거터를 패널에서 분리해 초기값에 고정합니다.
+   */
+  lockGutterY?: boolean | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'layoutGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridControlsWidget".
+ */
+export interface LayoutGridControlsWidget {
+  /**
+   * 마진(판형 긴 축의 %). 3~6.
+   */
+  marginPct?: number | null;
+  /**
+   * 뷰어가 마진을 조절할 수 있게 합니다. 끄면 위 값으로 고정됩니다.
+   */
+  marginAdjustable?: boolean | null;
+  /**
+   * 수평 거터(마진의 %). 0~100.
+   */
+  gutterX?: number | null;
+  /**
+   * 뷰어가 수평 거터를 조절할 수 있게 합니다.
+   */
+  gutterXAdjustable?: boolean | null;
+  /**
+   * 수직 거터(마진의 %). 0~100.
+   */
+  gutterY?: number | null;
+  /**
+   * 뷰어가 수직 거터를 조절할 수 있게 합니다.
+   */
+  gutterYAdjustable?: boolean | null;
+  /**
+   * 그리드(마진·거터 영역과 분할선)를 처음부터 보여줍니다.
+   */
+  guidesOn?: boolean | null;
+  /**
+   * 뷰어가 그리드를 켜고 끌 수 있게 합니다.
+   */
+  guidesAdjustable?: boolean | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'layoutGridControlsWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -981,12 +1297,109 @@ export interface LayoutGridOverlayWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoColorVariantWidget".
+ */
+export interface LogoColorVariantWidget {
+  /**
+   * 기본형(풀컬러) 로고입니다. WHITE·단색은 여기서 파생됩니다.
+   */
+  logo: number | BrandLogo;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoColorVariantWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoBgPickerWidget".
+ */
+export interface LogoBgPickerWidget {
+  /**
+   * picker에 올릴 컬러 그룹입니다. 그룹이 가진 순서대로 스와치를 늘어놓습니다.
+   */
+  group?: (number | null) | BrandColorGroup;
+  /**
+   * 기준 로고입니다. 같은 언어·방향의 기본형/WHITE/단색형을 파일명 규약으로 함께 찾습니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoBgPickerWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoDisplayWidget".
+ */
+export interface LogoDisplayWidget {
+  /**
+   * 표시할 이미지입니다.
+   */
+  logo: number | BrandLogo;
+  /**
+   * 폭(px). 비우면 본연 크기.
+   */
+  width?: number | null;
+  /**
+   * 높이(px). 비우면 본연 크기.
+   */
+  height?: number | null;
+  /**
+   * 이미지 주변 여백(px).
+   */
+  padding?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoDisplayWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoGridSpecWidget".
+ */
+export interface LogoGridSpecWidget {
+  /**
+   * 어느 그리드 규격인지 고릅니다. 치수 값은 규정 상수라 편집할 수 없습니다.
+   */
+  form?: ('horizontalA' | 'horizontalB' | 'vertical') | null;
+  /**
+   * 국문 조합에 넣을 자회사명입니다.
+   */
+  nameKo?: string | null;
+  /**
+   * 영문 상하조합의 아래 블록입니다. 한 줄이 한 행이 됩니다(상단 HD는 그룹 공통이라 고정).
+   */
+  nameEn?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoGridSpecWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "LogoGroupViewerWidget".
  */
 export interface LogoGroupViewerWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'logoGroupViewerWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoOnBackgroundWidget".
+ */
+export interface LogoOnBackgroundWidget {
+  /**
+   * 배경으로 쌓을 컬러 그룹입니다. 그룹이 가진 순서대로 위에서부터 쌓습니다.
+   */
+  group?: (number | null) | BrandColorGroup;
+  /**
+   * 기준 로고입니다. 같은 언어·방향의 기본형/WHITE/단색형을 파일명 규약으로 함께 찾습니다.
+   */
+  logo?: (number | null) | BrandLogo;
+  /**
+   * 이 위젯이 보여줄 로고 계열입니다. 기본형 계열은 배경에 따라 파일이 바뀌고, 단색형은 색만 바뀝니다.
+   */
+  column?: ('fullColor' | 'mono') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoOnBgWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1005,6 +1418,68 @@ export interface MediaShowcaseWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaShowcaseWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionDividerWidget".
+ */
+export interface SectionDividerWidget {
+  /**
+   * 챕터 코드입니다(예: B).
+   */
+  chapterCode?: string | null;
+  /**
+   * 챕터 제목입니다(예: BRAND DESIGN ELEMENTS).
+   */
+  chapterTitle?: string | null;
+  /**
+   * 섹션 코드입니다(예: B.1).
+   */
+  sectionCode?: string | null;
+  /**
+   * 섹션 제목입니다(예: CI, 자회사 CI, KEY VISUAL).
+   */
+  sectionTitle?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'sectionDividerWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SeparatedLogoApplicationWidget".
+ */
+export interface SeparatedLogoApplicationWidget {
+  /**
+   * 단색 분리형 배리언트입니다.
+   */
+  variants?:
+    | {
+        logo?: (number | null) | BrandLogo;
+        /**
+         * 예: CI 국문 - 가로형
+         */
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 실사 적용 예시입니다. 이미지가 없으면 안내 문구를 넣은 자리표시자로 표시됩니다.
+   */
+  apps?:
+    | {
+        type: 'sign' | 'effect';
+        image?: (number | null) | ApplicationImage;
+        caption?: string | null;
+        /**
+         * 이미지가 아직 없을 때 자리표시자에 표시할 문구입니다(예: 후가공 예시 추가 예정).
+         */
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'sepLogoAppWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1363,37 +1838,6 @@ export interface StemClearSpaceBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brand-logos".
- */
-export interface BrandLogo {
-  id: number;
-  name: string;
-  alt: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-  sizes?: {
-    thumbnail?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-  };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brand-icons".
  */
 export interface BrandIcon {
@@ -1458,7 +1902,7 @@ export interface ImageProfile {
     id?: string | null;
   }[];
   /**
-   * 선택사항입니다. 행이 있으면 AI가 후보 중 하나로 정규화하고, 비어 있으면 유저 인풋 원문만 subject로 사용합니다.
+   * 선택사항입니다. 행이 있으면 AI가 후보 중 하나로 정규화하고 유저 인풋 원문은 최종 프롬프트에서 제외합니다. 비어 있으면 원문을 subject로 사용합니다.
    */
   userPromptNormalization?:
     | {
@@ -1473,6 +1917,76 @@ export interface ImageProfile {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * Studio 이미지 생성 결과와 생성 당시 입력·실행 조건을 보관합니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "generated-images".
+ */
+export interface GeneratedImage {
+  id: number;
+  scenario: number | ImageProfile;
+  /**
+   * 생성 당시 이미지 프로파일 이름입니다.
+   */
+  scenarioName: string;
+  /**
+   * 사용자가 입력한 원본 프롬프트입니다.
+   */
+  inputPrompt: string;
+  /**
+   * 정규화 후 이미지 모델에 전달한 최종 프롬프트입니다.
+   */
+  effectivePrompt: string;
+  model: string;
+  aspectRatio: '1:1' | '2:3' | '3:2' | '3:4' | '4:3' | '4:5' | '5:4' | '9:16' | '16:9' | '21:9';
+  imageSize: '1K' | '2K' | '4K';
+  /**
+   * 생성 요청 당시 인증된 사용자 ID입니다.
+   */
+  createdBy: number | User;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  /**
+   * admin(전체)·manager(기준 관리)·worker(사용)
+   */
+  role: 'admin' | 'manager' | 'worker';
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1502,7 +2016,7 @@ export interface Template {
    */
   height?: number | null;
   /**
-   * 설정하면 CMYK TIFF와 RGB PDF가 활성화됩니다. 픽셀 크기는 유지되며 TIFF는 최대 67,108,864픽셀을 지원합니다.
+   * 설정하면 CMYK TIFF와 mm 단위 CMYK PDF가 활성화됩니다. 픽셀 크기는 유지되며 인쇄 출력은 최대 67,108,864픽셀, 너비·높이 각각 최대 16,384px를 지원합니다.
    */
   printPpi?: ('72' | '150' | '300') | null;
   /**
@@ -1613,6 +2127,10 @@ export interface CheckScenario {
     | number
     | boolean
     | null;
+  /**
+   * 이 시나리오로 연결할 별칭입니다. 대소문자를 무시하고, 별칭의 공백으로 구분된 각 단어가 입력 키에 모두 포함되면 매칭됩니다.
+   */
+  aliases?: string[] | null;
   /**
    * 발행된 시나리오를 신규 검수 대상에서 제외할 때 사용합니다.
    */
@@ -1809,81 +2327,11 @@ export interface AgentChatSession {
         id?: string | null;
       }[]
     | null;
-  /**
-   * Agent가 제안하고 서버가 확정한 분류와 최초 분류 단계 사용량입니다.
-   */
-  triage?: {
-    skillName?: string | null;
-    responseMode?: ('quick' | 'lookup' | 'research' | 'action') | null;
-    risk?: ('low' | 'high') | null;
-    confidence?: number | null;
-    executionModel?: ('sonnet-5' | 'opus-5.0') | null;
-    toolScope?: ('none' | 'read' | 'action') | null;
-    reviewRequired?: boolean | null;
-    classifierModel?: string | null;
-    inputTokens?: number | null;
-    outputTokens?: number | null;
-    totalTokens?: number | null;
-    cacheReadInputTokens?: number | null;
-    cacheWriteInputTokens?: number | null;
-    reasoningTokens?: number | null;
-  };
-  /**
-   * Agent 채팅 비용 분석에 쓰는 모델과 토큰 사용량입니다.
-   */
-  aiUsage?: {
-    model?: string | null;
-    callCount?: number | null;
-    inputTokens?: number | null;
-    outputTokens?: number | null;
-    totalTokens?: number | null;
-    cacheReadInputTokens?: number | null;
-    cacheWriteInputTokens?: number | null;
-    reasoningTokens?: number | null;
-    rawUsage?:
-      | {
-          [k: string]: unknown;
-        }
-      | unknown[]
-      | string
-      | number
-      | boolean
-      | null;
-  };
   errorMessage?: string | null;
   completedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  /**
-   * admin(전체)·manager(기준 관리)·worker(사용)
-   */
-  role: 'admin' | 'manager' | 'worker';
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
 }
 /**
  * Agent가 선택해 실행할 SKILL.md 형태의 지시문입니다.
@@ -2004,6 +2452,30 @@ export interface PayloadMcpApiKey {
      * Find live top-level guideline document metadata.
      */
     findGuideline?: boolean | null;
+    /**
+     * Search published brand guideline titles, paths, descriptions, body content, and checks.
+     */
+    searchGuidelines?: boolean | null;
+    /**
+     * Find or list published production templates and their open text slots.
+     */
+    findTemplates?: boolean | null;
+    /**
+     * List published brand image profiles available to the current user.
+     */
+    listImageProfiles?: boolean | null;
+    /**
+     * Run deterministic checks and return the image plus observation questions for the connected AI. Follow with submitAssetCheckObservations.
+     */
+    runAssetCheck?: boolean | null;
+    /**
+     * Submit observations from the connected AI after runAssetCheck. The server validates them and decides the final result.
+     */
+    submitAssetCheckObservations?: boolean | null;
+    /**
+     * Generate and store brand images with a published profile, then return stored original URLs and inline WebP previews.
+     */
+    generateBrandImage?: boolean | null;
   };
   updatedAt: string;
   createdAt: string;
@@ -2141,6 +2613,10 @@ export interface PayloadLockedDocument {
         value: number | BrandColor;
       } | null)
     | ({
+        relationTo: 'brand-color-groups';
+        value: number | BrandColorGroup;
+      } | null)
+    | ({
         relationTo: 'brand-typefaces';
         value: number | BrandTypeface;
       } | null)
@@ -2155,6 +2631,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'image-profiles';
         value: number | ImageProfile;
+      } | null)
+    | ({
+        relationTo: 'generated-images';
+        value: number | GeneratedImage;
       } | null)
     | ({
         relationTo: 'templates';
@@ -2535,6 +3015,8 @@ export interface LayoutBlockSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   width?: T;
+  background?: T;
+  innerBackground?: T;
   arrangement?: T;
   columns?: T;
   aspectRatio?: T;
@@ -2544,16 +3026,30 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         image?: T | ImageLeafSelect<T>;
         colorPaletteWidget?: T | ColorPaletteWidgetSelect<T>;
         carouselWidget?: T | CarouselWidgetSelect<T>;
+        clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
+        clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
         colorPairingWidget?: T | ColorPairingWidgetSelect<T>;
         colorPairingRecommendationWidget?: T | ColorPairingRecommendationWidgetSelect<T>;
+        conceptIntroWidget?: T | ConceptIntroWidgetSelect<T>;
+        doDontWidget?: T | DoDontWidgetSelect<T>;
         glyphGridWidget?: T | GlyphGridWidgetSelect<T>;
+        hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
         iconGridWidget?: T | IconGridWidgetSelect<T>;
         imageGridWidget?: T | ImageGridWidgetSelect<T>;
+        incorrectUsageWidget?: T | IncorrectUsageWidgetSelect<T>;
         layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
+        layoutGridControlsWidget?: T | LayoutGridControlsWidgetSelect<T>;
         layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
+        logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
+        logoBgPickerWidget?: T | LogoBgPickerWidgetSelect<T>;
+        logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
+        logoGridSpecWidget?: T | LogoGridSpecWidgetSelect<T>;
         logoGroupViewerWidget?: T | LogoGroupViewerWidgetSelect<T>;
+        logoOnBgWidget?: T | LogoOnBackgroundWidgetSelect<T>;
         logoViewerWidget?: T | LogoViewerWidgetSelect<T>;
         mediaShowcaseWidget?: T | MediaShowcaseWidgetSelect<T>;
+        sectionDividerWidget?: T | SectionDividerWidgetSelect<T>;
+        sepLogoAppWidget?: T | SeparatedLogoApplicationWidgetSelect<T>;
         stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
         typeScaleWidget?: T | TypeScaleWidgetSelect<T>;
         typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
@@ -2589,6 +3085,31 @@ export interface CarouselWidgetSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ClearspaceOverlayWidget_select".
+ */
+export interface ClearspaceOverlayWidgetSelect<T extends boolean = true> {
+  logoLayer?: T;
+  gridLayer?: T;
+  scalePercent?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ClearspaceViewerWidget_select".
+ */
+export interface ClearspaceViewerWidgetSelect<T extends boolean = true> {
+  horizontalLogo?: T;
+  horizontalGrid?: T;
+  horizontalMinHeightPx?: T;
+  verticalLogo?: T;
+  verticalGrid?: T;
+  verticalMinHeightPx?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ColorPairingWidget_select".
  */
 export interface ColorPairingWidgetSelect<T extends boolean = true> {
@@ -2605,9 +3126,51 @@ export interface ColorPairingRecommendationWidgetSelect<T extends boolean = true
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ConceptIntroWidget_select".
+ */
+export interface ConceptIntroWidgetSelect<T extends boolean = true> {
+  lead?: T;
+  body?: T;
+  logo?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DoDontWidget_select".
+ */
+export interface DoDontWidgetSelect<T extends boolean = true> {
+  imageRatio?: T;
+  columns?: T;
+  itemLabel?: T;
+  logo?: T;
+  examples?:
+    | T
+    | {
+        image?: T;
+        kind?: T;
+        preset?: T;
+        caption?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "GlyphGridWidget_select".
  */
 export interface GlyphGridWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HdColorPaletteWidget_select".
+ */
+export interface HdColorPaletteWidgetSelect<T extends boolean = true> {
+  groups?: T;
+  layout?: T;
   id?: T;
   blockName?: T;
 }
@@ -2629,9 +3192,42 @@ export interface ImageGridWidgetSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "IncorrectUsageWidget_select".
+ */
+export interface IncorrectUsageWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "LayoutGridWidget_select".
  */
 export interface LayoutGridWidgetSelect<T extends boolean = true> {
+  sample?: T;
+  caption?: T;
+  guides?: T;
+  marginPct?: T;
+  gutterX?: T;
+  gutterY?: T;
+  lockMargin?: T;
+  lockGutterX?: T;
+  lockGutterY?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LayoutGridControlsWidget_select".
+ */
+export interface LayoutGridControlsWidgetSelect<T extends boolean = true> {
+  marginPct?: T;
+  marginAdjustable?: T;
+  gutterX?: T;
+  gutterXAdjustable?: T;
+  gutterY?: T;
+  gutterYAdjustable?: T;
+  guidesOn?: T;
+  guidesAdjustable?: T;
   id?: T;
   blockName?: T;
 }
@@ -2645,9 +3241,62 @@ export interface LayoutGridOverlayWidgetSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoColorVariantWidget_select".
+ */
+export interface LogoColorVariantWidgetSelect<T extends boolean = true> {
+  logo?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoBgPickerWidget_select".
+ */
+export interface LogoBgPickerWidgetSelect<T extends boolean = true> {
+  group?: T;
+  logo?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoDisplayWidget_select".
+ */
+export interface LogoDisplayWidgetSelect<T extends boolean = true> {
+  logo?: T;
+  width?: T;
+  height?: T;
+  padding?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoGridSpecWidget_select".
+ */
+export interface LogoGridSpecWidgetSelect<T extends boolean = true> {
+  form?: T;
+  nameKo?: T;
+  nameEn?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "LogoGroupViewerWidget_select".
  */
 export interface LogoGroupViewerWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoOnBackgroundWidget_select".
+ */
+export interface LogoOnBackgroundWidgetSelect<T extends boolean = true> {
+  group?: T;
+  logo?: T;
+  column?: T;
   id?: T;
   blockName?: T;
 }
@@ -2664,6 +3313,42 @@ export interface LogoViewerWidgetSelect<T extends boolean = true> {
  * via the `definition` "MediaShowcaseWidget_select".
  */
 export interface MediaShowcaseWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionDividerWidget_select".
+ */
+export interface SectionDividerWidgetSelect<T extends boolean = true> {
+  chapterCode?: T;
+  chapterTitle?: T;
+  sectionCode?: T;
+  sectionTitle?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SeparatedLogoApplicationWidget_select".
+ */
+export interface SeparatedLogoApplicationWidgetSelect<T extends boolean = true> {
+  variants?:
+    | T
+    | {
+        logo?: T;
+        label?: T;
+        id?: T;
+      };
+  apps?:
+    | T
+    | {
+        type?: T;
+        image?: T;
+        caption?: T;
+        note?: T;
+        id?: T;
+      };
   id?: T;
   blockName?: T;
 }
@@ -2860,9 +3545,24 @@ export interface BrandColorsSelect<T extends boolean = true> {
   name?: T;
   hex?: T;
   pantone?: T;
+  cmyk?: T;
+  allowsFullColorLogo?: T;
+  allowsWhiteWordmark?: T;
+  monoLogoFill?: T;
   colorGroup?: T;
   tone?: T;
   isMain?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-color-groups_select".
+ */
+export interface BrandColorGroupsSelect<T extends boolean = true> {
+  name?: T;
+  colors?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2979,6 +3679,32 @@ export interface ImageProfilesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "generated-images_select".
+ */
+export interface GeneratedImagesSelect<T extends boolean = true> {
+  scenario?: T;
+  scenarioName?: T;
+  inputPrompt?: T;
+  effectivePrompt?: T;
+  model?: T;
+  aspectRatio?: T;
+  imageSize?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "templates_select".
  */
 export interface TemplatesSelect<T extends boolean = true> {
@@ -3049,6 +3775,7 @@ export interface CheckScenariosSelect<T extends boolean = true> {
   description?: T;
   key?: T;
   checkKeys?: T;
+  aliases?: T;
   archived?: T;
   hasBeenPublished?: T;
   updatedAt?: T;
@@ -3201,37 +3928,6 @@ export interface AgentChatSessionsSelect<T extends boolean = true> {
         callCount?: T;
         id?: T;
       };
-  triage?:
-    | T
-    | {
-        skillName?: T;
-        responseMode?: T;
-        risk?: T;
-        confidence?: T;
-        executionModel?: T;
-        toolScope?: T;
-        reviewRequired?: T;
-        classifierModel?: T;
-        inputTokens?: T;
-        outputTokens?: T;
-        totalTokens?: T;
-        cacheReadInputTokens?: T;
-        cacheWriteInputTokens?: T;
-        reasoningTokens?: T;
-      };
-  aiUsage?:
-    | T
-    | {
-        model?: T;
-        callCount?: T;
-        inputTokens?: T;
-        outputTokens?: T;
-        totalTokens?: T;
-        cacheReadInputTokens?: T;
-        cacheWriteInputTokens?: T;
-        reasoningTokens?: T;
-        rawUsage?: T;
-      };
   errorMessage?: T;
   completedAt?: T;
   createdBy?: T;
@@ -3307,6 +4003,12 @@ export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
         findGuidelineDocuments?: T;
         findChecks?: T;
         findGuideline?: T;
+        searchGuidelines?: T;
+        findTemplates?: T;
+        listImageProfiles?: T;
+        runAssetCheck?: T;
+        submitAssetCheckObservations?: T;
+        generateBrandImage?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -3562,6 +4264,10 @@ export interface TaskSchedulePublish {
           value: number | BrandColor;
         } | null)
       | ({
+          relationTo: 'brand-color-groups';
+          value: number | BrandColorGroup;
+        } | null)
+      | ({
           relationTo: 'brand-typefaces';
           value: number | BrandTypeface;
         } | null)
@@ -3576,6 +4282,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'image-profiles';
           value: number | ImageProfile;
+        } | null)
+      | ({
+          relationTo: 'generated-images';
+          value: number | GeneratedImage;
         } | null)
       | ({
           relationTo: 'templates';

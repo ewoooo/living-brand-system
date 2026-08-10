@@ -16,7 +16,6 @@ export interface CheckMetric {
 }
 
 export type CheckStatus = 'pass' | 'ok' | 'advisory' | 'needs_review' | 'fail'
-export type CheckExecutor = RuleExecutor
 export type CheckFactValue = string | number | boolean | string[]
 export type MeasurementValue = string | number | boolean
 export type CriterionExpected = MeasurementValue | number[] | string[]
@@ -151,7 +150,7 @@ export type RawCheckResult = AlgorithmCheckResult | AiCheckResult
 export interface CheckResultRule {
 	key: string
 	title: string
-	executor: CheckExecutor
+	executor: RuleExecutor
 }
 
 export interface CheckResultChecker {

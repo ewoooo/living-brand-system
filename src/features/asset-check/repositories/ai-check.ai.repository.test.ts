@@ -1,5 +1,6 @@
 import { generateText, Output } from 'ai'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { type AiCheckPlan, planChecks } from '@/features/asset-check/domain/check-plan'
 import {
 	measureObservationSchema,
 	presenceObservationSchema,
@@ -61,6 +62,12 @@ const advisoryCheck: RuntimeCheck = {
 	messages: {},
 }
 
+// 테스트 입력을 실제 plan 분류기로 만들어 runAiCheck의 새 계약(plan + model)을 그대로 따른다.
+const toAiPlans = (checks: RuntimeCheck[]) =>
+	planChecks(checks).filter(
+		(plan): plan is AiCheckPlan => plan.kind === 'ai-criteria' || plan.kind === 'ai-advisory',
+	)
+
 describe('runAiCheck', () => {
 	beforeEach(() => {
 		vi.resetModules()
@@ -106,7 +113,7 @@ describe('runAiCheck', () => {
 		const { runAiCheck } = await import(
 			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
-		const result = await runAiCheck(checks, {
+		const result = await runAiCheck(toAiPlans(checks), 'rule-spec-model', {
 			image: { data: Buffer.from('png'), mediaType: 'image/png' },
 			pixels: [],
 			palette: [],
@@ -198,7 +205,7 @@ describe('runAiCheck', () => {
 			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
 
-		const result = await runAiCheck(checks, {
+		const result = await runAiCheck(toAiPlans(checks), 'rule-spec-model', {
 			image: { data: Buffer.from('png'), mediaType: 'image/png' },
 			pixels: [],
 			palette: [],
@@ -255,11 +262,15 @@ describe('runAiCheck', () => {
 			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
 
-		const result = await runAiCheck([referenceCheck, independentCheck], {
-			image: { data: Buffer.from('png'), mediaType: 'image/png' },
-			pixels: [],
-			palette: [],
-		})
+		const result = await runAiCheck(
+			toAiPlans([referenceCheck, independentCheck]),
+			'rule-spec-model',
+			{
+				image: { data: Buffer.from('png'), mediaType: 'image/png' },
+				pixels: [],
+				palette: [],
+			},
+		)
 
 		expect(result.unavailableReferenceCheckKeys).toEqual(['imagery.mood'])
 		expect(result.observations).toHaveProperty('imagery.independent')
@@ -284,7 +295,7 @@ describe('runAiCheck', () => {
 			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
 
-		await runAiCheck(checks, {
+		await runAiCheck(toAiPlans(checks), 'rule-spec-model', {
 			image: { data: new Uint8Array([1]), mediaType: 'image/png' },
 		} as never)
 
@@ -330,7 +341,7 @@ describe('runAiCheck', () => {
 		const { runAiCheck } = await import(
 			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
-		const result = await runAiCheck([...checks, advisoryCheck], {
+		const result = await runAiCheck(toAiPlans([...checks, advisoryCheck]), 'rule-spec-model', {
 			image: { data: Buffer.from('png'), mediaType: 'image/png' },
 			pixels: [],
 			palette: [],
@@ -419,7 +430,7 @@ describe('runAiCheck', () => {
 			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
 
-		const result = await runAiCheck([advisoryCheck], {
+		const result = await runAiCheck(toAiPlans([advisoryCheck]), 'rule-spec-model', {
 			image: { data: Buffer.from('png'), mediaType: 'image/png' },
 			pixels: [],
 			palette: [],
@@ -469,7 +480,7 @@ describe('runAiCheck', () => {
 		const { runAiCheck } = await import(
 			'@/features/asset-check/repositories/ai-check.ai.repository'
 		)
-		const result = await runAiCheck([measureCheck], {
+		const result = await runAiCheck(toAiPlans([measureCheck]), 'rule-spec-model', {
 			image: { data: Buffer.from('png'), mediaType: 'image/png' },
 			pixels: [],
 			palette: [],

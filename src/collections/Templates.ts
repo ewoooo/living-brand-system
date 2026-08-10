@@ -1,5 +1,9 @@
 import { APIError, type CollectionConfig } from 'payload'
-import { MAX_PRINT_PIXELS, PRINT_PPI_OPTIONS } from '@/features/template-export/print-policy'
+import {
+	MAX_PRINT_PIXELS,
+	MAX_PRINT_SIDE_PIXELS,
+	PRINT_PPI_OPTIONS,
+} from '@/features/template-export/print-policy'
 import { prepareTemplateSave } from '@/features/template-import/services/prepare-template-save.service'
 import { isManager, managerOrAdmin } from '@/lib/auth'
 import { draftVersions } from './shared'
@@ -74,7 +78,15 @@ export const Templates: CollectionConfig = {
 			access: { read: ({ req }) => isManager(req.user) },
 			admin: { hidden: true, language: 'html' },
 		},
-		{ name: 'overrides', type: 'json', admin: { hidden: true } },
+		{
+			// 저작 내부값(input.aiInstruction·generatedImageId·vectorAsset 등)을 담으므로 공개
+			// REST(published read)에서 감춘다. 서버 신뢰 경로(published-template·agent-template
+			// repository)는 overrideAccess: true의 local API로 읽어 영향이 없다.
+			name: 'overrides',
+			type: 'json',
+			access: { read: ({ req }) => isManager(req.user) },
+			admin: { hidden: true },
+		},
 
 		// ── 사이드바 (렌더 순서 = 배열 순서) ──
 		{
@@ -99,7 +111,7 @@ export const Templates: CollectionConfig = {
 			options: [...PRINT_PPI_OPTIONS],
 			admin: {
 				position: 'sidebar',
-				description: `설정하면 CMYK TIFF와 RGB PDF가 활성화됩니다. 픽셀 크기는 유지되며 TIFF는 최대 ${MAX_PRINT_PIXELS.toLocaleString('en-US')}픽셀을 지원합니다.`,
+				description: `설정하면 CMYK TIFF와 mm 단위 CMYK PDF가 활성화됩니다. 픽셀 크기는 유지되며 인쇄 출력은 최대 ${MAX_PRINT_PIXELS.toLocaleString('en-US')}픽셀, 너비·높이 각각 최대 ${MAX_PRINT_SIDE_PIXELS.toLocaleString('en-US')}px를 지원합니다.`,
 			},
 		},
 		{

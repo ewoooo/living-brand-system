@@ -2,17 +2,32 @@ import type { ReactNode } from 'react'
 import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 import { CarouselWidget } from '@/features/guideline/widgets/carousel/component'
+import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
+import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
 import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/component'
 import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/component'
 import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/component'
+import { ConceptIntroWidget } from '@/features/guideline/widgets/concept-intro/component'
+import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
 import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/component'
+import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
+import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
+import { LayoutGridScope } from '@/features/guideline/widgets/layout-grid/store'
+import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
+import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/component'
+import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
+import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
+import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/component'
 import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/component'
+import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/component'
 import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/component'
 import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/component'
+import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/component'
+import { SeparatedLogoApplicationWidget } from '@/features/guideline/widgets/separated-logo-application/component'
 import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/component'
 import { TypeScaleWidget } from '@/features/guideline/widgets/type-scale/component'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/component'
@@ -33,26 +48,133 @@ function renderWidget(child: Child): ReactNode {
 			return <ColorPaletteWidget />
 		case 'carouselWidget':
 			return <CarouselWidget />
+		case 'clearspaceOverlayWidget':
+			return (
+				<ClearspaceOverlayWidget
+					logoLayer={child.logoLayer}
+					gridLayer={child.gridLayer}
+					scalePercent={child.scalePercent}
+				/>
+			)
+		case 'clearspaceViewerWidget':
+			return (
+				<ClearspaceViewerWidget
+					horizontalLogo={child.horizontalLogo}
+					horizontalGrid={child.horizontalGrid}
+					horizontalMinHeightPx={child.horizontalMinHeightPx}
+					verticalLogo={child.verticalLogo}
+					verticalGrid={child.verticalGrid}
+					verticalMinHeightPx={child.verticalMinHeightPx}
+				/>
+			)
 		case 'colorPairingWidget':
 			return <ColorPairingWidget />
+		case 'conceptIntroWidget':
+			return <ConceptIntroWidget lead={child.lead} body={child.body} logo={child.logo} />
+		case 'hdColorPaletteWidget':
+			// 고른 그룹을 고른 순서대로 한 행씩, 비우면 전체를 그린다.
+			// layout은 그룹 간 우열 유무를 말한다(균일 정사각형 / 순위별 높이).
+			return <HdColorPaletteWidget groups={child.groups} layout={child.layout} />
 		case 'colorPairingRecommendationWidget':
 			return <ColorPairingRecommendationWidget />
+		case 'doDontWidget':
+			// 예시(이미지 또는 컬러 프리셋 + 캡션 + kind)를 인스턴스 입력으로 받는 위젯.
+			// logo는 컬러 프리셋에만 쓰인다 — 이미지 예시만 있으면 조회조차 하지 않는다.
+			return (
+				<DoDontWidget
+					imageRatio={child.imageRatio}
+					columns={child.columns}
+					itemLabel={child.itemLabel}
+					logo={child.logo}
+					examples={child.examples}
+				/>
+			)
 		case 'glyphGridWidget':
 			return <GlyphGridWidget />
 		case 'iconGridWidget':
 			return <IconGridWidget />
 		case 'imageGridWidget':
 			return <ImageGridWidget />
+		case 'incorrectUsageWidget':
+			// legacy doDont 블록으로 대체됐지만 스키마에 남아 있어 렌더 경로를 유지한다.
+			return <IncorrectUsageWidget />
 		case 'layoutGridWidget':
-			return <LayoutGridWidget />
+			// 샘플 디자인은 코드에 있고 인스턴스는 그중 하나를 고른다.
+			return (
+				<LayoutGridWidget
+					sample={child.sample}
+					caption={child.caption}
+					guides={child.guides}
+					marginPct={child.marginPct}
+					gutterX={child.gutterX}
+					gutterY={child.gutterY}
+					lockMargin={child.lockMargin}
+					lockGutterX={child.lockGutterX}
+					lockGutterY={child.lockGutterY}
+				/>
+			)
+		case 'layoutGridControlsWidget':
+			// 같은 페이지의 layoutGridWidget 전부를 통제하는 단일 패널(모듈 스토어 공유).
+			// 조절 허용 여부가 페이지별 템플릿을 만든다 — 불허한 값은 admin 값으로 고정된다.
+			return (
+				<LayoutGridControlsWidget
+					marginPct={child.marginPct}
+					marginAdjustable={child.marginAdjustable}
+					gutterX={child.gutterX}
+					gutterXAdjustable={child.gutterXAdjustable}
+					gutterY={child.gutterY}
+					gutterYAdjustable={child.gutterYAdjustable}
+					guidesOn={child.guidesOn}
+					guidesAdjustable={child.guidesAdjustable}
+				/>
+			)
 		case 'layoutGridOverlayWidget':
 			return <LayoutGridOverlayWidget />
+		case 'logoColorVariantWidget':
+			// 인스턴스 입력(logo)을 받는 위젯 — 자족 렌더 위젯들과 다름.
+			return <LogoColorVariantWidget logo={child.logo} />
+		case 'logoBgPickerWidget':
+			// 배경 하나 위에 CI 두 표현을 동시에 놓고 picker로 배경만 바꾼다(블록당 하나).
+			return <LogoBgPickerWidget group={child.group} logo={child.logo} />
+		case 'logoDisplayWidget':
+			// logo를 pin해서 받는 위젯(fishing 없음) + 유한 사이징(width/height/padding).
+			return (
+				<LogoDisplayWidget
+					logo={child.logo}
+					width={child.width}
+					height={child.height}
+					padding={child.padding}
+				/>
+			)
+		case 'logoGridSpecWidget':
+			return (
+				<LogoGridSpecWidget form={child.form} nameKo={child.nameKo} nameEn={child.nameEn} />
+			)
 		case 'logoGroupViewerWidget':
 			return <LogoGroupViewerWidget />
+		case 'logoOnBgWidget':
+			return (
+				<LogoOnBackgroundWidget
+					group={child.group}
+					logo={child.logo}
+					column={child.column}
+				/>
+			)
 		case 'logoViewerWidget':
 			return <LogoViewerWidget />
 		case 'mediaShowcaseWidget':
 			return <MediaShowcaseWidget />
+		case 'sectionDividerWidget':
+			return (
+				<SectionDividerWidget
+					chapterCode={child.chapterCode}
+					chapterTitle={child.chapterTitle}
+					sectionCode={child.sectionCode}
+					sectionTitle={child.sectionTitle}
+				/>
+			)
+		case 'sepLogoAppWidget':
+			return <SeparatedLogoApplicationWidget variants={child.variants} apps={child.apps} />
 		case 'stemClearSpaceWidget':
 			return <StemClearSpaceWidget />
 		case 'typeScaleWidget':
@@ -162,19 +284,54 @@ function Arrange({
 	)
 }
 
+// brand-colors 참조에서 hex를 뽑는다(데이터 색 → inline style, 닫힌 토큰 규칙의 색-데이터 예외).
+function bgHex(color: LayoutBlockType['background']): string | undefined {
+	return color && typeof color === 'object' && color.hex ? color.hex : undefined
+}
+
+// 레이아웃 그리드 컨트롤 패널은 배치 영역이 아니라 **헤더(제목·설명 아래)**에 온다 —
+// innerBackground 안에 두면 판형과 같은 어두운 면에 얹혀 읽기 어렵고, 배치 셀 하나를 차지한다.
+// 값 스코프는 **블록 단위**다: 모듈 스토어로 두면 섹션 라우트가 여러 Page를 한 화면에 렌더할 때
+// 페이지마다 놓인 패널이 서로 간섭한다. 그래서 패널과 배치를 한 provider로 함께 감싼다.
+function splitControls(children: NonNullable<LayoutBlockType['children']>) {
+	const controls = children.filter((child) => child.blockType === 'layoutGridControlsWidget')
+	const arranged = children.filter((child) => child.blockType !== 'layoutGridControlsWidget')
+	const needsScope =
+		controls.length > 0 || arranged.some((c) => c.blockType === 'layoutGridWidget')
+	return { controls, arranged, needsScope }
+}
+
 export function LayoutBlock({ block }: { block: LayoutBlockType }) {
+	const outerBg = bgHex(block.background)
+	const innerBg = bgHex(block.innerBackground)
+	const { controls, arranged, needsScope } = splitControls(block.children ?? [])
+
+	const body = (
+		<>
+			{controls.map((child) => (
+				<div key={child.id}>{renderWidget(child)}</div>
+			))}
+			<div style={innerBg ? { background: innerBg } : undefined}>
+				<Arrange
+					arrangement={block.arrangement}
+					columns={block.columns ?? 2}
+					aspectRatio={block.aspectRatio ?? '1:1'}
+					items={arranged}
+				/>
+			</div>
+		</>
+	)
+
 	return (
-		<GuidelineBlockFrame layout={block.width ?? 'padded'}>
+		<GuidelineBlockFrame
+			layout={block.width ?? 'padded'}
+			style={outerBg ? { background: outerBg } : undefined}
+		>
 			{block.title ? <GuidelineHeader variant="block" title={block.title} /> : null}
 			{block.description ? (
 				<GuidelineDescription variant="block" description={block.description} />
 			) : null}
-			<Arrange
-				arrangement={block.arrangement}
-				columns={block.columns ?? 2}
-				aspectRatio={block.aspectRatio ?? '1:1'}
-				items={block.children ?? []}
-			/>
+			{needsScope ? <LayoutGridScope>{body}</LayoutGridScope> : body}
 		</GuidelineBlockFrame>
 	)
 }

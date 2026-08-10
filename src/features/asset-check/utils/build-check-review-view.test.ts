@@ -3,7 +3,25 @@ import type { CheckResult } from '@/features/asset-check/checkers/types'
 import type { CheckSection } from '@/features/asset-check/domain/runtime-check'
 import type { CheckImage } from '@/features/asset-check/types'
 import { buildCheckReviewView } from '@/features/asset-check/utils/build-check-review-view'
-import { INITIAL_CHECK_SCENARIOS } from '@/features/quality-rule/check-scenario'
+
+const scenarios = [
+	{
+		key: 'quick',
+		title: '빠른 기본 검수',
+		checkKeys: [
+			'color.palette',
+			'color.combination',
+			'color.contrast',
+			'logo.size.minimum',
+			'logo.space.clear',
+		],
+	},
+	{
+		key: 'stationery',
+		title: '명함/스테이셔너리 검수',
+		checkKeys: ['application.stationery.format', 'color.palette'],
+	},
+]
 
 const sections: CheckSection[] = [
 	{
@@ -44,7 +62,7 @@ describe('buildCheckReviewView', () => {
 	it('keeps summary empty before any check result exists', () => {
 		const view = buildCheckReviewView({
 			sections,
-			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarios,
 			scenarioKey: 'quick',
 			selected: null,
 			showFailOnly: false,
@@ -84,7 +102,7 @@ describe('buildCheckReviewView', () => {
 
 		const view = buildCheckReviewView({
 			sections,
-			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarios,
 			scenarioKey: 'quick',
 			selected,
 			showFailOnly: true,
@@ -110,7 +128,7 @@ describe('buildCheckReviewView', () => {
 
 		const view = buildCheckReviewView({
 			sections,
-			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarios,
 			scenarioKey: 'quick',
 			selected,
 			showFailOnly: false,
@@ -135,7 +153,7 @@ describe('buildCheckReviewView', () => {
 
 		const view = buildCheckReviewView({
 			sections,
-			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarios,
 			scenarioKey: 'quick',
 			selected,
 			showFailOnly: false,
@@ -160,7 +178,7 @@ describe('buildCheckReviewView', () => {
 
 		const view = buildCheckReviewView({
 			sections,
-			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarios,
 			scenarioKey: 'quick',
 			selected,
 			showFailOnly: false,
@@ -188,7 +206,7 @@ describe('buildCheckReviewView', () => {
 
 		const view = buildCheckReviewView({
 			sections,
-			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarios,
 			scenarioKey: 'quick',
 			selected,
 			showFailOnly: false,
@@ -222,7 +240,7 @@ describe('buildCheckReviewView', () => {
 
 		const view = buildCheckReviewView({
 			sections,
-			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarios,
 			scenarioKey: 'quick',
 			selected,
 			showFailOnly: false,
@@ -242,7 +260,7 @@ describe('buildCheckReviewView', () => {
 
 		const view = buildCheckReviewView({
 			sections,
-			scenarios: INITIAL_CHECK_SCENARIOS,
+			scenarios,
 			scenarioKey: 'quick',
 			selected,
 			showFailOnly: false,

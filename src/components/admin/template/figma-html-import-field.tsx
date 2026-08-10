@@ -2,10 +2,66 @@
 
 import { Button, TextInput, toast, useForm, useFormFields } from '@payloadcms/ui'
 import { useState } from 'react'
-import { importFigmaHtmlFromUrl } from '@/features/template-import/services/import-figma-html.client'
-import { pruneTemplateNodeConfigs } from '@/features/template-import/utils/prune-template-node-configs.client'
+import type { FigmaHtmlResult } from '@/features/template-import/utils/figma-node-to-html'
+import type {
+	FigmaRasterDiagnostic,
+	FigmaTruncationDiagnostic,
+} from '@/features/template-import/utils/normalize-figma-node'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import type { TemplateNodeConfigMap } from '@/types/template'
+
+type ImportedFigmaHtml = FigmaHtmlResult & {
+	name: string
+	diagnostics?: FigmaRasterDiagnostic[]
+	truncationDiagnostics?: FigmaTruncationDiagnostic[]
+}
+
+/** Figma URL의 프레임을 HTML로 변환 요청한다. 실패하면 서버 메시지를 담아 throw한다. */
+async function importFigmaHtmlFromUrl(sourceUrl: string): Promise<ImportedFigmaHtml> {
+	const response = await fetch('/api/templates/import-figma-html', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ sourceUrl }),
+	})
+	const body = await response.json().catch(() => null)
+	if (!response.ok) {
+		throw new Error(body?.message || 'Figma 가져오기에 실패했습니다.')
+	}
+	return body as ImportedFigmaHtml
+}
+
+/** 이미지로 고정된 레이어 진단을 어드민 경고 문구로 요약한다(3개 초과는 개수로 줄임). */
+function formatRasterWarning(diagnostics: FigmaRasterDiagnostic[]): string {
+	const lines = diagnostics.slice(0, 3).map((diagnostic) => {
+		const swallowed = diagnostic.textLayerCount
+			? ` — 텍스트 ${diagnostic.textLayerCount}개가 편집 불가`
+			: ''
+		return `'${diagnostic.name}' (${diagnostic.reason}${swallowed})`
+	})
+	const rest = diagnostics.length - lines.length
+	return `이미지로 고정된 레이어: ${lines.join(', ')}${rest > 0 ? ` 외 ${rest}개` : ''}. Figma에서 해당 속성을 정리하면 편집 가능한 레이어로 가져올 수 있습니다.`
+}
+
+/** 말줄임(…) 줄 수를 유도하지 못해 잘림만 적용된 텍스트 진단을 어드민 경고 문구로 요약한다. */
+function formatTruncationWarning(diagnostics: FigmaTruncationDiagnostic[]): string {
+	const names = diagnostics.slice(0, 3).map((diagnostic) => `'${diagnostic.name}'`)
+	const rest = diagnostics.length - names.length
+	return `말줄임(…) 줄 수를 정하지 못해 잘림만 적용된 텍스트 ${diagnostics.length}개: ${names.join(', ')}${rest > 0 ? ` 외 ${rest}개` : ''}. Figma에서 최대 줄 수나 고정 줄 높이(px)를 지정하면 말줄임으로 가져올 수 있습니다.`
+}
+
+/** 재import한 base HTML에 남아 있는 nodeId의 설정만 보존한다. 외부 I/O는 없다. */
+function pruneTemplateNodeConfigs(
+	baseHtml: string,
+	nodeConfigs: TemplateNodeConfigMap,
+): TemplateNodeConfigMap {
+	const doc = new DOMParser().parseFromString(baseHtml, 'text/html')
+	const nodeIds = new Set(
+		Array.from(doc.querySelectorAll('[data-node-id]'), (element) =>
+			element.getAttribute('data-node-id'),
+		),
+	)
+	return Object.fromEntries(Object.entries(nodeConfigs).filter(([nodeId]) => nodeIds.has(nodeId)))
+}
 
 /**
  * Templates 편집 폼(Admin)의 Figma 가져오기 UI 필드.
@@ -54,6 +110,12 @@ export default function FigmaHtmlImportField() {
 			toast.success(
 				`가져오기 완료 — ${imported.width}×${imported.height}.${removedOverrideCount ? ` 사라진 요소의 편집 ${removedOverrideCount}개를 정리했습니다.` : ''} 저장해야 반영됩니다.`,
 			)
+			if (imported.diagnostics?.length) {
+				toast.warning(formatRasterWarning(imported.diagnostics))
+			}
+			if (imported.truncationDiagnostics?.length) {
+				toast.warning(formatTruncationWarning(imported.truncationDiagnostics))
+			}
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : 'Figma 가져오기에 실패했습니다.')
 		} finally {

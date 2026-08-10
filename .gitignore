@@ -75,5 +75,8 @@ temp/
 .superpowers
 .pnpm-store/
 .playwright-cli/
+# 에셋 원본은 기본적으로 추적하지 않는다. 단 HD CI 마스터 아트워크(ci/)와
+# CI 금지 예시(do-dont/)는 force-add로 추적 중이다 — 어떤 코드도 읽지 않지만
+# 브랜드 원본이고 워드마크 레터링 조사의 작업 세트다. 안 읽힌다는 이유로 지우지 말 것.
 scripts/assets/
 inventory/

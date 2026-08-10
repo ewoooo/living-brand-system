@@ -1,33 +1,46 @@
+import { toCheckResult } from '@/features/asset-check/checkers/check-result.adapter'
+import { needsReview, planChecks } from '@/features/asset-check/domain/check-plan'
 import {
 	type CheckSession,
 	CheckSessionInputMismatchError,
 	type CheckSessionInputSnapshot,
 	CheckSessionNotFoundError,
 	type CheckSessionSource,
+	CheckSessionStateError,
 	CheckSessionTerminalError,
 } from '@/features/asset-check/domain/check-session'
 import {
+	evaluateAdvisory,
+	evaluateHeuristic,
+	type HeuristicObservation,
+	measureObservationSchema,
+	presenceObservationSchema,
+} from '@/features/asset-check/domain/heuristic.evaluator'
+import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
+import {
+	findUnavailableAiReferenceCheckKeys,
+	loadAiReferenceFiles,
+} from '@/features/asset-check/repositories/ai-check.ai.repository'
+import {
+	completeRunningCheckSessionRecord,
 	createCheckSessionRecord,
 	getCheckSessionRecord,
 	saveCheckSessionRecord,
 } from '@/features/asset-check/repositories/check-session.payload.repository'
-import { getCheckScenarioFlags } from '@/features/asset-check/scenarios'
 import { getRuntimeChecks } from '@/features/asset-check/services/get-check-ruleset.service'
 import {
 	runHeuristicCheck,
 	runImmediateCheck,
 } from '@/features/asset-check/services/run-check.service'
-import type { ImageContentFlags } from '@/features/asset-check/types'
 import { detectCheckImageMediaType } from '@/features/asset-check/utils/image-format'
 import { type CheckScenario, getCheckScenario } from '@/features/quality-rule/check-scenario'
-import { getCheckScenarios } from '@/features/quality-rule/services/get-check-scenarios.service'
+import { findPublishedCheckScenarios } from '@/features/quality-rule/repositories/check-scenario.payload.repository'
 import type { AgentChatSession, User } from '@/payload-types'
 
 interface StartCheckSessionInput {
 	agentChatSessionId?: AgentChatSession['id']
 	buffer: Buffer
 	deferHeuristic?: boolean
-	flags?: ImageContentFlags
 	imageName?: string
 	scenario?: CheckScenario
 	scenarioKey?: string
@@ -38,6 +51,15 @@ interface StartCheckSessionInput {
 interface CompleteCheckSessionAiCheckInput {
 	buffer: Buffer
 	checkSessionId: number
+	user: User
+}
+
+export type ClientCheckObservations = Record<string, Record<string, HeuristicObservation>>
+
+interface CompleteCheckSessionObservationsInput {
+	advices?: Record<string, string>
+	checkSessionId: number
+	observations?: ClientCheckObservations
 	user: User
 }
 
@@ -61,7 +83,8 @@ async function snapshotInput(buffer: Buffer): Promise<CheckSessionInputSnapshot>
 export async function startCheckSession(input: StartCheckSessionInput) {
 	const inputSnapshot = await snapshotInput(input.buffer)
 	const scenario =
-		input.scenario ?? getCheckScenario(await getCheckScenarios(input.user), input.scenarioKey)
+		input.scenario ??
+		getCheckScenario(await findPublishedCheckScenarios(input.user), input.scenarioKey)
 	const rulesetSnapshot = await getRuntimeChecks(scenario.checkKeys)
 	const session = await createCheckSessionRecord({
 		agentChatSessionId: input.agentChatSessionId,
@@ -73,11 +96,7 @@ export async function startCheckSession(input: StartCheckSessionInput) {
 	})
 
 	try {
-		const immediate = await runImmediateCheck(
-			input.buffer,
-			input.flags ?? getCheckScenarioFlags(scenario),
-			rulesetSnapshot,
-		)
+		const immediate = await runImmediateCheck(input.buffer, rulesetSnapshot)
 		session.applyImmediateResults(immediate)
 		if (!input.deferHeuristic && session.pendingCheckKeys.length > 0) {
 			const aiCheck = await runHeuristicCheck(
@@ -130,6 +149,125 @@ export async function completeCheckSessionAiCheck(input: CompleteCheckSessionAiC
 	} catch (error) {
 		await persistCheckSessionFailure(session, input.user, error)
 		throw error
+	}
+}
+
+/**
+ * MCP 클라이언트 AI가 제출한 관측값으로 검수 세션을 완료한다.
+ * 클라이언트는 관측만 소유하고, 최종 판정·상태 전이는 evaluator·Aggregate가 맡는다.
+ * 레퍼런스 조회와 첫 완료 조건부 저장 외부 I/O는 각 repository가 맡는다.
+ */
+export async function completeCheckSessionObservations(
+	input: CompleteCheckSessionObservationsInput,
+) {
+	const session = await getCheckSessionRecord(input.checkSessionId, input.user)
+	if (!session) throw new CheckSessionNotFoundError('Check session not found.')
+	if (session.isCompleted) {
+		return { checkSessionId: session.id, results: session.results }
+	}
+	if (session.isFailed) {
+		throw new CheckSessionTerminalError('Check session already failed.')
+	}
+
+	const checks = getSubmittedChecks(
+		session.pendingCheckKeys,
+		session.rulesetSnapshot,
+		input.observations ?? {},
+		input.advices ?? {},
+	)
+	const referenceFilesByKey = await loadAiReferenceFiles(checks)
+	const unavailableReferenceCheckKeys = new Set(
+		findUnavailableAiReferenceCheckKeys(checks, referenceFilesByKey),
+	)
+	// 실행 방식 판단은 planChecks 한 곳이 소유한다. 관측은 MCP 클라이언트가 제공하므로
+	// 서버 model이 없는 heuristic(unrunnable plan)도 여기서는 evaluator로 그대로 판정한다.
+	const results = Object.fromEntries(
+		planChecks(checks).map((plan) => [
+			plan.check.key,
+			toCheckResult(
+				unavailableReferenceCheckKeys.has(plan.check.key)
+					? needsReview('reference_asset_unavailable')
+					: plan.kind === 'ai-advisory' || plan.kind === 'manual-review'
+						? evaluateAdvisory(input.advices?.[plan.check.key])
+						: evaluateHeuristic(
+								plan.check.heuristicCriteria ?? [],
+								input.observations?.[plan.check.key],
+							),
+				plan.check,
+				{ key: 'mcp-client', type: 'ai' },
+			),
+		]),
+	)
+
+	try {
+		session.applyAiResults({ results })
+		if (!(await completeRunningCheckSessionRecord(session, input.user))) {
+			const storedSession = await getCheckSessionRecord(session.id, input.user)
+			if (!storedSession) throw new CheckSessionNotFoundError('Check session not found.')
+			if (storedSession.isCompleted) {
+				return { checkSessionId: storedSession.id, results: storedSession.results }
+			}
+			if (storedSession.isFailed) {
+				throw new CheckSessionTerminalError('Check session already failed.')
+			}
+			throw new CheckSessionStateError('Check session completion was not persisted.')
+		}
+		return { checkSessionId: session.id, results: session.results }
+	} catch (error) {
+		await persistCheckSessionFailure(session, input.user, error)
+		throw error
+	}
+}
+
+function getSubmittedChecks(
+	pendingCheckKeys: string[],
+	rulesetSnapshot: RuntimeCheck[] | undefined,
+	observations: ClientCheckObservations,
+	advices: Record<string, string>,
+): RuntimeCheck[] {
+	const byKey = new Map((rulesetSnapshot ?? []).map((check) => [check.key, check]))
+	const checks = pendingCheckKeys.map((key) => byKey.get(key))
+	if (checks.some((check) => !check)) {
+		throw new Error('Client check submission does not match the saved ruleset.')
+	}
+	const submittedChecks = checks as RuntimeCheck[]
+	assertExactKeys(
+		Object.keys(observations),
+		submittedChecks.filter((check) => check.executor !== 'manual').map((check) => check.key),
+	)
+	assertExactKeys(
+		Object.keys(advices),
+		submittedChecks.filter((check) => check.executor === 'manual').map((check) => check.key),
+	)
+	for (const check of submittedChecks) {
+		if (check.executor === 'manual') continue
+		assertExactKeys(
+			Object.keys(observations[check.key] ?? {}),
+			(check.heuristicCriteria ?? []).map((criterion) => criterion.id),
+		)
+		for (const criterion of check.heuristicCriteria ?? []) {
+			const schema =
+				criterion.kind === 'measure' ? measureObservationSchema : presenceObservationSchema
+			if (!schema.safeParse(observations[check.key]?.[criterion.id]).success) {
+				throw new Error(
+					`Client check observation does not match criterion ${criterion.id}.`,
+				)
+			}
+		}
+	}
+	return submittedChecks
+}
+
+function assertExactKeys(actual: string[], expected: string[]) {
+	const sortedActual = [...actual].sort()
+	const sortedExpected = [...expected].sort()
+	if (
+		sortedActual.length !== sortedExpected.length ||
+		sortedActual.some((key, index) => key !== sortedExpected[index])
+	) {
+		throw new Error(
+			`Client check submission keys do not match (expected: ${sortedExpected.join(', ') || '-'}).`,
+		)
 	}
 }
 

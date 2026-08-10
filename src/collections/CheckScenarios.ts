@@ -110,6 +110,16 @@ export const CheckScenarios: CollectionConfig = {
 			},
 		},
 		{
+			name: 'aliases',
+			type: 'text',
+			hasMany: true,
+			label: '별칭',
+			admin: {
+				description:
+					'이 시나리오로 연결할 별칭입니다. 대소문자를 무시하고, 별칭의 공백으로 구분된 각 단어가 입력 키에 모두 포함되면 매칭됩니다.',
+			},
+		},
+		{
 			name: 'archived',
 			type: 'checkbox',
 			defaultValue: false,

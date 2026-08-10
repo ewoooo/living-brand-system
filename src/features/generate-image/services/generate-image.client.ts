@@ -16,6 +16,8 @@ export interface ImageGenerationRequest {
 	count: number
 	prompt: string
 	profileId: number
+	/** 템플릿 이미지 슬롯 박스에서 유도한 비율 오버라이드 — 없으면 프로파일 비율로 생성한다. */
+	aspectRatio?: ImageAspectRatio
 }
 
 type AdminImageGenerationRequest = {
@@ -29,7 +31,8 @@ type AdminImageGenerationRequest = {
 			profileId?: never
 	  }
 	| {
-			aspectRatio?: never
+			/** 선택한 프레임 박스에서 유도한 비율 오버라이드 — 없으면 프로파일 비율로 생성한다. */
+			aspectRatio?: ImageAspectRatio
 			imageModelPreset?: never
 			imageSize?: never
 			profileId: number
@@ -41,8 +44,19 @@ export interface ImageProfileOption {
 	name: string
 }
 
+export interface GeneratedImageReference {
+	collection: 'generated-images'
+	createdAt: string
+	id: number
+	url: string
+}
+
+/** 생성 API 응답 계약 — 서버 서비스도 이 타입에 provider만 더해 쓴다(이중 정의 금지). */
 export interface ImageGenerationResult {
+	aspectRatio: ImageAspectRatio
+	generatedImages?: GeneratedImageReference[]
 	images: string[]
+	imageSize: ImageOutputSize
 	model: string
 	prompt: string
 	profileId?: number

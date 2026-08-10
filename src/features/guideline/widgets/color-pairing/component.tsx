@@ -6,7 +6,7 @@ import {
 	type PairingSystemKey,
 } from '@/features/guideline/blocks/color-pairing/pairings'
 import { ColorPairingView } from '@/features/guideline/blocks/color-pairing/view'
-import { isLightColor } from '@/lib/color'
+import { isLegacyEssenherbColor, isLightColor } from '@/lib/color'
 import type { BrandColor } from '@/payload-types'
 
 // ⚠️ SPIKE (임시) — block-widget-separation 검증용. 제거 시 이 폴더(widgets/color-pairing) 통째 삭제.
@@ -38,7 +38,9 @@ export async function ColorPairingWidget() {
 		payload.find({ collection: 'brand-logos', limit: 10, depth: 0 }),
 		payload.find({ collection: 'brand-icons', limit: 6, depth: 0, sort: 'createdAt' }),
 	])
-	const colors = colorsRes.docs
+	// 🔴 essenherb 팔레트로 스코프를 좁힌다(blocks/color-pairing과 동일 이유 — HD 색은 tone이
+	//    없어 무채색으로 뭉쳐 표를 오염시킨다).
+	const colors = colorsRes.docs.filter(isLegacyEssenherbColor)
 
 	// 페어링 규칙 입력(전체 색 유니버스).
 	const pairingSwatches: PairingSwatch[] = colors.map((c) => ({

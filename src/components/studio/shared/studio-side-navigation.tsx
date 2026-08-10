@@ -1,6 +1,6 @@
 'use client'
 
-import { Catalog, Dashboard, Image, Pen, Review, Template } from '@carbon/icons-react'
+import { Catalog, Connect, Dashboard, Image, Pen, Review, Template } from '@carbon/icons-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
@@ -13,6 +13,7 @@ const navigation = [
 	{ label: 'Image', href: routes.studio.generateImage, icon: Image },
 	{ label: 'Graphic', href: routes.studio.generateGraphic, icon: Pen },
 	{ label: 'Review', href: routes.studio.review, icon: Review },
+	{ label: 'MCP', href: routes.studio.mcp, icon: Connect },
 ] as const
 
 /** Studio의 작업 진입점만 표시하는 단일 레벨 내비게이션. */

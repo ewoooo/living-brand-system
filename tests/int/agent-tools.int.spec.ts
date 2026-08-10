@@ -1,15 +1,24 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import { getAgentTools } from '@/agents/agent-chat-tools.agent'
 import { validateAgentChatMessages } from '@/agents/validate-agent-chat-messages.agent'
 import * as agentSkillRepository from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import * as agentTemplateRepository from '@/features/agent-chat/repositories/agent-template.payload.repository'
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
-import { getAgentCitations } from '@/features/agent-chat/utils/get-agent-citations'
-import { getAgentMessageText } from '@/features/agent-chat/utils/get-agent-message-parts'
+import {
+	getAgentCitations,
+	getAgentMessageText,
+} from '@/features/agent-chat/utils/derive-agent-message'
+import * as mcpGuidelineRepository from '@/features/guideline/repositories/mcp-guideline.payload.repository'
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
-import * as checkScenarioService from '@/features/quality-rule/services/get-check-scenarios.service'
+import * as checkScenarioRepository from '@/features/quality-rule/repositories/check-scenario.payload.repository'
 import * as checkSessionService from '@/services/start-check-session.service'
+
+// getCheckCatalog tool이 req 조립용으로만 쓰는 getPayload를 스텁한다 — repository 호출은 spy로 검증한다.
+vi.mock('payload', async (importOriginal) => ({
+	...(await importOriginal<typeof import('payload')>()),
+	getPayload: vi.fn(async () => ({}) as never),
+}))
 
 const textNode = ({
 	id = 'name',
@@ -49,10 +58,6 @@ const checkResult = (key: string) => ({
 })
 
 describe('agent tools', () => {
-	beforeEach(() => {
-		vi.spyOn(agentGuidelineContext, 'listAgentChecks').mockResolvedValue([])
-	})
-
 	afterEach(() => {
 		vi.restoreAllMocks()
 	})
@@ -87,8 +92,7 @@ describe('agent tools', () => {
 		])
 	})
 
-	it('loads agent skill instructions with the configured triage mode', async () => {
-		const triageEnabled = process.env.AGENT_CHAT_TRIAGE_ENABLED === 'true'
+	it('loads agent skill instructions', async () => {
 		const findSkill = vi
 			.spyOn(agentSkillRepository, 'findEnabledAgentSkillByName')
 			.mockResolvedValue({
@@ -99,42 +103,16 @@ describe('agent tools', () => {
 			})
 		const tools = getAgentTools()
 
-		const result = await tools.loadSkill.execute?.(
-			(triageEnabled
-				? {
-						name: 'copywriter-test',
-						responseMode: 'action',
-						risk: 'high',
-						confidence: 90,
-					}
-				: { name: 'copywriter-test' }) as never,
-			{
-				context: { user: { id: 1 } },
-			} as never,
-		)
+		const result = await tools.loadSkill.execute?.({ name: 'copywriter-test' }, {
+			context: { user: { id: 1 } },
+		} as never)
 
 		expect(findSkill).toHaveBeenCalledWith({ id: 1 }, 'copywriter-test')
-		expect(result).toEqual(
-			triageEnabled
-				? {
-						description: 'Copywriting test skill.',
-						instructions: 'Rewrite campaign copy.',
-						name: 'copywriter-test',
-						responseMode: 'action',
-						risk: 'high',
-						confidence: 90,
-						model: 'opus-5.0',
-						toolScope: 'read',
-						reviewRequired: true,
-					}
-				: {
-						description: 'Copywriting test skill.',
-						instructions: 'Rewrite campaign copy.',
-						name: 'copywriter-test',
-						model: 'sonnet-5',
-						toolScope: 'action',
-					},
-		)
+		expect(result).toEqual({
+			description: 'Copywriting test skill.',
+			instructions: 'Rewrite campaign copy.',
+			name: 'copywriter-test',
+		})
 	})
 
 	it('reads guideline document details through the tool service', async () => {
@@ -160,27 +138,46 @@ describe('agent tools', () => {
 		)
 	})
 
-	it('gets Check catalog through the tool service', async () => {
-		const getChecks = vi.spyOn(agentGuidelineContext, 'listAgentChecks').mockResolvedValue([
-			{
-				evidence: '',
-				key: 'color.palette',
-				tier: 'required',
-				title: 'Color palette',
-			},
-		])
+	it('gets Check catalog through the guideline MCP repository', async () => {
+		const getChecks = vi
+			.spyOn(mcpGuidelineRepository, 'listPublishedMcpGuidelineChecks')
+			.mockResolvedValue([
+				{
+					evidence: 'Use the legal name.',
+					key: 'name.input',
+					tier: undefined,
+					title: 'Name input',
+					source: { documentId: 7 },
+				},
+				{
+					evidence: 'Follow the color palette.',
+					key: 'color.palette',
+					tier: 'required',
+					title: 'Color palette',
+					source: { documentId: 8 },
+				},
+			] as never)
 		const tools = getAgentTools()
 
 		const result = await tools.getCheckCatalog.execute?.({}, {
 			context: { user: { id: 1 } },
 		} as never)
 
-		expect(getChecks).toHaveBeenCalledWith({ id: 1 })
+		expect(getChecks).toHaveBeenCalledWith(expect.objectContaining({ user: { id: 1 } }), 'ko')
+		// source를 벗기고 tier를 null로 정규화해 key 순으로 정렬한 기존 카탈로그 DTO 그대로다.
 		expect(result).toEqual([
-			expect.objectContaining({
+			{
+				evidence: 'Follow the color palette.',
 				key: 'color.palette',
+				tier: 'required',
 				title: 'Color palette',
-			}),
+			},
+			{
+				evidence: 'Use the legal name.',
+				key: 'name.input',
+				tier: null,
+				title: 'Name input',
+			},
 		])
 	})
 
@@ -210,7 +207,7 @@ describe('agent tools', () => {
 			rulesetSnapshot: [runtimeCheck('first')],
 		},
 	])('$caseName를 Agent가 passed로 요약하지 않는다', async (checkRun) => {
-		vi.spyOn(checkScenarioService, 'getCheckScenarios').mockResolvedValue([
+		vi.spyOn(checkScenarioRepository, 'findPublishedCheckScenarios').mockResolvedValue([
 			{ key: 'quick', title: '빠른 검수', checkKeys: ['first', 'second'] },
 		])
 		vi.spyOn(checkSessionService, 'startCheckSession').mockResolvedValue({

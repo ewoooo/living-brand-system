@@ -22,7 +22,6 @@ describe('exportHtmlToPng', () => {
 		// position:fixed;left:-99999px인 holder를 캡처하면 캔버스 밖에 그려져 투명 PNG가 된다.
 		await exportHtmlToPng(
 			'<div data-node-id="1:1" style="width:1280px;height:720px">사원 카드</div>',
-			'',
 			'사원 카드',
 		)
 
@@ -32,7 +31,7 @@ describe('exportHtmlToPng', () => {
 	})
 
 	it('#__stage가 있으면 그 노드를 캡처한다', async () => {
-		await exportHtmlToPng('<div id="__stage"><p>배치 결과</p></div>', 'p{color:red}', '결과')
+		await exportHtmlToPng('<div id="__stage"><p>배치 결과</p></div>', '결과')
 
 		const captured = vi.mocked(toPng).mock.calls[0]?.[0] as HTMLElement
 		expect(captured.id).toBe('__stage')
@@ -41,7 +40,6 @@ describe('exportHtmlToPng', () => {
 	it('TIFF·PDF 변환용 PNG는 흰 배경과 원본 픽셀 크기로 렌더한다', async () => {
 		await renderHtmlToPngBlob(
 			'<div id="__stage" style="width:1200px;height:800px"></div>',
-			'',
 			1200,
 			800,
 		)
@@ -61,7 +59,6 @@ describe('exportHtmlToPng', () => {
 		await expect(
 			exportHtmlToPng(
 				'<div id="__stage"><img src="/api/brand-logos/file/logo.png" onerror="alert(1)"></div>',
-				'',
 				'결과',
 			),
 		).rejects.toThrow('event handler')
@@ -70,57 +67,27 @@ describe('exportHtmlToPng', () => {
 		expect(document.body.querySelector('img')).toBeNull()
 	})
 
+	it('발행 자산 컬렉션 generated-images의 CSS 배경 이미지 URL을 허용한다', async () => {
+		// jsdom은 리소스를 로드하지 않으므로 배경 이미지 로드 완료 상태를 흉내 낸다.
+		vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true)
+		HTMLImageElement.prototype.decode = () => Promise.resolve()
+
+		await exportHtmlToPng(
+			'<div id="__stage" style="background-image:url(/api/generated-images/file/bg.png)">배치 결과</div>',
+			'결과',
+		)
+
+		expect(toPng).toHaveBeenCalledOnce()
+	})
+
 	it('외부 이미지 URL을 가진 샌드박스 HTML을 거부한다', async () => {
 		await expect(
 			exportHtmlToPng(
 				'<div id="__stage"><img src="https://attacker.example/tracker.png"></div>',
-				'',
 				'결과',
 			),
 		).rejects.toThrow('unsafe image URL')
 
 		expect(toPng).not.toHaveBeenCalled()
-	})
-
-	it('외부 I/O를 일으키는 샌드박스 CSS를 거부한다', async () => {
-		await expect(
-			exportHtmlToPng(
-				'<div id="__stage">배치 결과</div>',
-				'@import url("https://attacker.example/collect.css");',
-				'결과',
-			),
-		).rejects.toThrow('unsafe stylesheet I/O')
-
-		expect(toPng).not.toHaveBeenCalled()
-	})
-
-	it('CSS escape로 숨긴 import와 URL을 거부한다', async () => {
-		await expect(
-			exportHtmlToPng(
-				'<div id="__stage">배치 결과</div>',
-				'@\\69mport "https://attacker.example/collect.css";',
-				'결과',
-			),
-		).rejects.toThrow('unsafe stylesheet I/O')
-		await expect(
-			exportHtmlToPng(
-				'<div id="__stage">배치 결과</div>',
-				'#x{background-image:u\\72l("https://attacker.example/pixel.png")}',
-				'결과',
-			),
-		).rejects.toThrow('unsafe stylesheet I/O')
-
-		expect(toPng).not.toHaveBeenCalled()
-	})
-
-	it('CSS 태그 탈출 문자열은 스타일 텍스트로만 다룬다', async () => {
-		await exportHtmlToPng(
-			'<div id="__stage">배치 결과</div>',
-			'</style><img src="https://attacker.example/tracker.png">',
-			'결과',
-		)
-
-		expect(toPng).toHaveBeenCalledOnce()
-		expect(document.body.querySelector('img')).toBeNull()
 	})
 })

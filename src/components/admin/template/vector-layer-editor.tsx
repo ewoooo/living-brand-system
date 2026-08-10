@@ -2,21 +2,31 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import {
+	Field,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+	FieldLegend,
+	FieldSet,
+	FieldTitle,
+} from '@/components/ui/field'
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import type { ApplicationImage, BrandColor, BrandLogo } from '@/payload-types'
+import {
+	requestPublishedTemplateVectorAssets,
+	type TemplateVectorAsset,
+} from '@/services/template-editor-options.client'
 import type { TemplateNodeConfig } from '@/types/template'
-
-type Asset = (BrandLogo | ApplicationImage) & {
-	collection: 'brand-logos' | 'application-images'
-}
-
-const CONTROL_STYLE = {
-	padding: '5px 10px',
-	borderRadius: 4,
-	border: '1px solid var(--theme-elevation-150)',
-	background: 'var(--theme-input-bg)',
-	color: 'var(--theme-text)',
-} as const
+import { BrandColorSwatches, usePublishedBrandColors } from './brand-color-swatches'
 
 export function VectorLayerEditor({
 	name,
@@ -27,34 +37,14 @@ export function VectorLayerEditor({
 	config: TemplateNodeConfig
 	onChange: (patch: TemplateNodeConfig) => void
 }) {
-	const [assets, setAssets] = useState<Asset[]>([])
-	const [colors, setColors] = useState<BrandColor[]>([])
+	const [assets, setAssets] = useState<TemplateVectorAsset[]>([])
 	const [loadError, setLoadError] = useState(false)
+	const { colors, loadError: colorLoadError } = usePublishedBrandColors()
 
 	useEffect(() => {
 		const controller = new AbortController()
-		const query = 'depth=0&limit=100&where[_status][equals]=published&sort=name'
-		const read = async <T,>(path: string): Promise<T[]> => {
-			const response = await fetch(`/api/${path}?${query}`, { signal: controller.signal })
-			if (!response.ok) throw new Error('Failed to load template editor options')
-			return ((await response.json()) as { docs: T[] }).docs
-		}
-
-		void Promise.all([
-			read<BrandLogo>('brand-logos'),
-			read<ApplicationImage>('application-images'),
-			read<BrandColor>('brand-colors'),
-		])
-			.then(([logos, images, brandColors]) => {
-				setAssets([
-					...logos.map((asset) => ({ ...asset, collection: 'brand-logos' as const })),
-					...images.map((asset) => ({
-						...asset,
-						collection: 'application-images' as const,
-					})),
-				])
-				setColors(brandColors)
-			})
+		void requestPublishedTemplateVectorAssets(controller.signal)
+			.then(setAssets)
 			.catch((error: unknown) => {
 				if ((error as { name?: string }).name !== 'AbortError') setLoadError(true)
 			})
@@ -68,20 +58,16 @@ export function VectorLayerEditor({
 	const fit = config.vectorFit ?? 'fill'
 
 	return (
-		<div
-			className="vector-layer-editor"
-			style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
-		>
-			<strong className="text-base">벡터 편집 — {name}</strong>
+		<FieldGroup className="vector-layer-editor gap-3">
+			<FieldTitle>벡터 편집 — {name}</FieldTitle>
 
-			<label className="text-sm" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-				브랜드 내부 자산
-				<select
-					className="text-sm"
-					value={assetValue}
-					onChange={(event) => {
+			<Field>
+				<FieldLabel htmlFor="template-vector-asset">브랜드 내부 자산</FieldLabel>
+				<Select
+					value={assetValue || undefined}
+					onValueChange={(value) => {
 						const asset = assets.find(
-							(item) => `${item.collection}:${item.id}` === event.target.value,
+							(item) => `${item.collection}:${item.id}` === value,
 						)
 						if (asset?.url) {
 							onChange({
@@ -93,38 +79,42 @@ export function VectorLayerEditor({
 							})
 						}
 					}}
-					style={CONTROL_STYLE}
 				>
-					<option value="">자산 선택</option>
-					<optgroup label="Brand Logos">
-						{assets
-							.filter((asset) => asset.collection === 'brand-logos' && asset.url)
-							.map((asset) => (
-								<option key={`logo-${asset.id}`} value={`brand-logos:${asset.id}`}>
-									{asset.name}
-								</option>
-							))}
-					</optgroup>
-					<optgroup label="Application Images">
-						{assets
-							.filter(
-								(asset) => asset.collection === 'application-images' && asset.url,
-							)
-							.map((asset) => (
-								<option
-									key={`image-${asset.id}`}
-									value={`application-images:${asset.id}`}
-								>
-									{asset.name}
-								</option>
-							))}
-					</optgroup>
-				</select>
-			</label>
-			<fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-				<legend className="text-sm" style={{ marginBottom: 4 }}>
-					맞춤 방식
-				</legend>
+					<SelectTrigger id="template-vector-asset" className="w-full max-w-sm">
+						<SelectValue placeholder="자산 선택" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectGroup>
+							<SelectLabel>Brand Logos</SelectLabel>
+							{assets.map((asset) =>
+								asset.collection === 'brand-logos' && asset.url ? (
+									<SelectItem
+										key={`logo-${asset.id}`}
+										value={`brand-logos:${asset.id}`}
+									>
+										{asset.name}
+									</SelectItem>
+								) : null,
+							)}
+						</SelectGroup>
+						<SelectGroup>
+							<SelectLabel>Application Images</SelectLabel>
+							{assets.map((asset) =>
+								asset.collection === 'application-images' && asset.url ? (
+									<SelectItem
+										key={`image-${asset.id}`}
+										value={`application-images:${asset.id}`}
+									>
+										{asset.name}
+									</SelectItem>
+								) : null,
+							)}
+						</SelectGroup>
+					</SelectContent>
+				</Select>
+			</Field>
+			<FieldSet className="gap-2">
+				<FieldLegend variant="label">맞춤 방식</FieldLegend>
 				<ToggleGroup
 					type="single"
 					value={fit}
@@ -140,62 +130,27 @@ export function VectorLayerEditor({
 						</ToggleGroupItem>
 					))}
 				</ToggleGroup>
-			</fieldset>
+			</FieldSet>
 
-			<fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-				<legend className="text-sm" style={{ marginBottom: 4 }}>
-					브랜드 컬러
-				</legend>
-				<div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-					<Button
-						type="button"
-						aria-pressed={!config.vectorColor}
-						onClick={() => onChange({ vectorColor: undefined })}
-						variant={!config.vectorColor ? 'muted' : 'outline'}
-						size="sm"
-					>
-						원본
-					</Button>
-					{colors.map((color) => {
-						const value = /^[0-9a-f]{3,8}$/i.test(color.hex)
-							? `#${color.hex}`
-							: color.hex
-						const selected = config.vectorColor === value
-						return (
-							<Button
-								key={color.id}
-								type="button"
-								aria-pressed={selected}
-								aria-label={`${color.name} ${value}`}
-								onClick={() => onChange({ vectorColor: value })}
-								variant={selected ? 'muted' : 'outline'}
-								size="sm"
-							>
-								<span
-									aria-hidden
-									style={{
-										width: 14,
-										height: 14,
-										borderRadius: 2,
-										background: value,
-									}}
-								/>
-								{color.name}
-							</Button>
-						)
-					})}
-				</div>
-			</fieldset>
-
-			{loadError && (
-				<p
-					className="text-sm"
-					role="alert"
-					style={{ margin: 0, color: 'var(--theme-error-500)' }}
+			<BrandColorSwatches
+				legend="브랜드 컬러"
+				colors={colors}
+				value={config.vectorColor}
+				onPick={(hex) => onChange({ vectorColor: hex })}
+			>
+				<Button
+					type="button"
+					aria-pressed={!config.vectorColor}
+					onClick={() => onChange({ vectorColor: undefined })}
+					variant={!config.vectorColor ? 'muted' : 'outline'}
+					size="sm"
 				>
-					브랜드 자산을 불러오지 못했습니다.
-				</p>
-			)}
-		</div>
+					원본
+				</Button>
+			</BrandColorSwatches>
+
+			{loadError && <FieldError>브랜드 자산을 불러오지 못했습니다.</FieldError>}
+			{colorLoadError && <FieldError>브랜드 컬러를 불러오지 못했습니다.</FieldError>}
+		</FieldGroup>
 	)
 }

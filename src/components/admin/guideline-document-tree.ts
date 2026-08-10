@@ -1,9 +1,10 @@
+// title은 required지만 초안은 required 검증을 건너뛰므로 비어 있을 수 있다(제목 없이 저장한 새 문서).
 type TreeDocument = {
 	_status?: 'draft' | 'published' | null
 	displayOrder: number
 	id: number
 	parent: number | { id: number } | null
-	title: string
+	title: string | null
 }
 
 export type GuidelineDocumentTreeNode = TreeDocument & {
@@ -33,7 +34,8 @@ export function guidelineDocumentTypeLabel(
 
 export function buildGuidelineDocumentTree(documents: TreeDocument[]): GuidelineDocumentTreeNode[] {
 	const sorted = [...documents].sort(
-		(a, b) => a.displayOrder - b.displayOrder || a.title.localeCompare(b.title, 'ko'),
+		(a, b) =>
+			a.displayOrder - b.displayOrder || (a.title ?? '').localeCompare(b.title ?? '', 'ko'),
 	)
 	const nodes = new Map<number, GuidelineDocumentTreeNode>(
 		sorted.map((document) => [document.id, { ...document, children: [] }]),

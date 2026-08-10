@@ -5,15 +5,27 @@ import { StudioWorkspace } from '@/components/studio/studio-workspace'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
-import { exportForwardStraightSvg } from '@/features/generate-graphic/export-forward-straight-svg.client'
 import {
 	type ForwardStraightInput,
 	forwardStraightInputSchema,
 	forwardStraightToolContract,
 } from '@/features/generate-graphic/forward-straight'
+import {
+	createForwardStraightScene,
+	createForwardStraightSvg,
+} from '@/features/generate-graphic/forward-straight-geometry'
 import type { ForwardStraightPreview } from '@/features/generate-graphic/forward-straight-preview.client'
+import { downloadBlob } from '@/lib/object-url'
 
 export function ForwardStraightGenerator() {
 	const [input, setInput] = useState<ForwardStraightInput>(
@@ -94,11 +106,8 @@ export function ForwardStraightGenerator() {
 		const viewport = previewRef.current?.getViewport()
 		if (!viewport) return
 
-		exportForwardStraightSvg({
-			fileName: 'forward-straight',
-			input,
-			viewport,
-		})
+		const svg = createForwardStraightSvg(createForwardStraightScene(input, viewport))
+		downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), 'forward-straight.svg')
 	}
 
 	return (
@@ -117,47 +126,54 @@ export function ForwardStraightGenerator() {
 							설정
 						</Typography>
 
-						{forwardStraightToolContract.controls.map((control) => {
-							const id = `forward-straight-${control.key}`
+						<FieldGroup>
+							{forwardStraightToolContract.controls.map((control) => {
+								const id = `forward-straight-${control.key}`
 
-							if (control.type === 'boolean') {
+								if (control.type === 'boolean') {
+									return (
+										<Field key={control.key} orientation="horizontal">
+											<FieldLabel htmlFor={id}>{control.label}</FieldLabel>
+											<Checkbox
+												id={id}
+												checked={input[control.key] === true}
+												onCheckedChange={(checked) =>
+													updateControl(control.key, checked === true)
+												}
+											/>
+										</Field>
+									)
+								}
+
 								return (
-									<div
-										key={control.key}
-										className="flex items-center justify-between gap-3"
-									>
-										<Label htmlFor={id}>{control.label}</Label>
-										<Checkbox
-											id={id}
-											checked={input[control.key] === true}
-											onCheckedChange={(checked) =>
-												updateControl(control.key, checked === true)
+									<Field key={control.key}>
+										<FieldLabel htmlFor={id}>{control.label}</FieldLabel>
+										<Select
+											value={String(input[control.key])}
+											onValueChange={(value) =>
+												updateControl(control.key, value)
 											}
-										/>
-									</div>
+										>
+											<SelectTrigger id={id} className="w-full">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectGroup>
+													{control.options.map((option) => (
+														<SelectItem
+															key={option.value}
+															value={option.value}
+														>
+															{option.label}
+														</SelectItem>
+													))}
+												</SelectGroup>
+											</SelectContent>
+										</Select>
+									</Field>
 								)
-							}
-
-							return (
-								<div key={control.key} className="flex flex-col gap-2">
-									<Label htmlFor={id}>{control.label}</Label>
-									<select
-										id={id}
-										value={String(input[control.key])}
-										onChange={(event) =>
-											updateControl(control.key, event.currentTarget.value)
-										}
-										className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
-									>
-										{control.options.map((option) => (
-											<option key={option.value} value={option.value}>
-												{option.label}
-											</option>
-										))}
-									</select>
-								</div>
-							)
-						})}
+							})}
+						</FieldGroup>
 					</CardContent>
 
 					<CardFooter className="border-t border-border py-4">
@@ -181,7 +197,7 @@ export function ForwardStraightGenerator() {
 				/>
 				<figcaption className="grid gap-2 pt-2">
 					<Typography size="xs" tone="muted">
-						캔버스에서 포인터를 움직이거나 슬라이더로 기준점을 조정할 수 있습니다.
+						캔버스의 레드 닷을 드래그하거나 슬라이더로 기준점을 조정할 수 있습니다.
 					</Typography>
 					<div className="grid gap-2 md:grid-cols-2">
 						{(['x', 'y'] as const).map((axis) => (

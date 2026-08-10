@@ -6,7 +6,6 @@ import {
 	type CheckSessionSnapshot,
 	CheckSessionStateError,
 } from './check-session'
-import type { RuntimeCheck } from './runtime-check'
 
 function checkResult(key: string): CheckResult {
 	return {
@@ -14,18 +13,6 @@ function checkResult(key: string): CheckResult {
 		checker: { key: 'ai', type: 'ai' },
 		rawResult: { status: 'needs_review', fulfillment: null, detail: '테스트' },
 		message: '테스트',
-	}
-}
-
-function runtimeCheck(key: string): RuntimeCheck {
-	return {
-		key,
-		title: key,
-		checker: { key: 'manual', type: 'manual' },
-		executor: 'manual',
-		implemented: true,
-		evidence: '',
-		referenceAssets: [],
 	}
 }
 
@@ -60,20 +47,6 @@ describe('CheckSession aggregate', () => {
 		expect(session.status).toBe('completed')
 		expect(session.isCompleted).toBe(true)
 		expect(session.toUpdateData().completedAt).toEqual(expect.any(String))
-	})
-
-	it('ruleset의 모든 key에 종결 결과가 없으면 completed로 전이하지 않는다', () => {
-		const session = CheckSession.restore(
-			snapshot({ rulesetSnapshot: [runtimeCheck('a'), runtimeCheck('b')] }),
-		)
-
-		expect(() =>
-			session.applyImmediateResults({
-				results: { a: checkResult('a') },
-				pendingCheckKeys: [],
-			}),
-		).toThrow('Check result coverage mismatch (missing: b, unexpected: -)')
-		expect(session.status).toBe('running')
 	})
 
 	it('AI 결과 적용 시 해당 키를 pending에서 제거하고 결과를 병합한다', () => {

@@ -7,7 +7,7 @@ import { toDeterministicCheckResult } from './check-result.adapter'
 import { extractDominantColorPair } from './color-pair.extractor'
 import { contrastChecker } from './contrast.checker'
 import { evaluateExtraction, evaluateMeasurement } from './deterministic.evaluator'
-import { hasDeterministicChecker } from './registry'
+import { getChecker } from './registry'
 import type { ColorPairObservation, ExtractionResult, PixelGrid } from './types'
 
 vi.mock('@/features/asset-check/repositories/image-decoder.sharp.repository', () => ({
@@ -142,13 +142,9 @@ describe('deterministic CheckResult integration', () => {
 			'@/features/asset-check/services/run-check.service'
 		)
 
-		const result = await runImmediateCheck(
-			Buffer.from('test-image'),
-			{ logo: false, typography: true, illustration: false, photography: false },
-			[runtimeCheck()],
-		)
+		const result = await runImmediateCheck(Buffer.from('test-image'), [runtimeCheck()])
 
-		expect(hasDeterministicChecker('contrast')).toBe(true)
+		expect(getChecker('contrast')?.executor).toBe('deterministic')
 		expect(result.results['typography.contrast']).toMatchObject({
 			rawResult: {
 				status: 'pass',
@@ -168,11 +164,7 @@ describe('deterministic CheckResult integration', () => {
 			'@/features/asset-check/services/run-check.service'
 		)
 
-		const result = await runImmediateCheck(
-			Buffer.from('low-contrast-image'),
-			{ logo: false, typography: true, illustration: false, photography: false },
-			[runtimeCheck()],
-		)
+		const result = await runImmediateCheck(Buffer.from('low-contrast-image'), [runtimeCheck()])
 
 		expect(result.results['typography.contrast']).toMatchObject({
 			rawResult: {
@@ -190,11 +182,7 @@ describe('deterministic CheckResult integration', () => {
 			'@/features/asset-check/services/run-check.service'
 		)
 
-		const result = await runImmediateCheck(
-			Buffer.from('single-color-image'),
-			{ logo: false, typography: true, illustration: false, photography: false },
-			[runtimeCheck()],
-		)
+		const result = await runImmediateCheck(Buffer.from('single-color-image'), [runtimeCheck()])
 
 		expect(result.results['typography.contrast']).toMatchObject({
 			rawResult: {

@@ -1,5 +1,5 @@
 import type { PayloadRequest } from 'payload'
-import type { AuthorizedAssetCollection } from '@/services/inspect-template-html.service'
+import type { AuthorizedTemplateAssetCollection } from '@/services/template-asset-policy.service'
 
 /**
  * 인가 에셋 컬렉션(브랜드 로고 등)의 Payload 조회 경계.
@@ -8,7 +8,7 @@ import type { AuthorizedAssetCollection } from '@/services/inspect-template-html
  */
 export async function findAuthorizedAssetsByIds(
 	req: PayloadRequest,
-	collection: AuthorizedAssetCollection,
+	collection: AuthorizedTemplateAssetCollection,
 	assetIds: number[],
 ): Promise<Map<number, { url?: string | null }>> {
 	const found = await req.payload.find({

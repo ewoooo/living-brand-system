@@ -1,15 +1,15 @@
 'use client'
 
+import { AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS } from '@/services/template-asset-policy.service'
+
 const EXPORT_TAGS = new Set(['div', 'img', 'p'])
 const EXPORT_DATA_ATTRIBUTES = new Set([
 	'data-asset-collection',
 	'data-asset-id',
 	'data-figma-type',
 	'data-name',
-	'data-nimg',
 	'data-node-id',
 ])
-const EXPORT_IMAGE_ATTRIBUTES = new Set(['alt', 'decoding', 'height', 'loading', 'sizes', 'width'])
 const CSS_URL_PATTERN = /url\(\s*(?:"([^"]+)"|'([^']+)'|([^"'()\s]+))\s*\)/gi
 
 function isSafeExportUrl(value: string): boolean {
@@ -24,7 +24,8 @@ function isSafeExportUrl(value: string): boolean {
 	const url = new URL(value, window.location.origin)
 	if (url.protocol === 'blob:') return url.origin === window.location.origin
 	if (url.origin !== window.location.origin || url.search || url.hash) return false
-	return ['brand-logos', 'application-images'].some((collection) =>
+	// 발행 템플릿 자산 계약은 template-asset-policy.service가 소유한다.
+	return AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS.some((collection) =>
 		url.pathname.startsWith(`/api/${collection}/file/`),
 	)
 }
@@ -72,7 +73,7 @@ function cloneSafeExportNode(node: Node): Node | null {
 				throw new Error('Template export contains an unsafe image URL.')
 			}
 			clone.setAttribute(name, attribute.value)
-		} else if (tagName === 'img' && EXPORT_IMAGE_ATTRIBUTES.has(name)) {
+		} else if (tagName === 'img' && name === 'alt') {
 			clone.setAttribute(name, attribute.value)
 		}
 	}
@@ -85,33 +86,20 @@ function cloneSafeExportNode(node: Node): Node | null {
 	return clone
 }
 
-function createSafeExportStage(
-	html: string,
-	css: string,
-): { holder: HTMLDivElement; stage: HTMLElement } {
-	if (
-		/[\\@]/.test(css) ||
-		/\/\*|\*\//.test(css) ||
-		/url\s*\(|(?:-webkit-)?image-set\s*\(/i.test(css)
-	) {
-		throw new Error('Template export contains unsafe stylesheet I/O.')
-	}
-
+function createSafeExportStage(html: string): { holder: HTMLDivElement; stage: HTMLElement } {
 	// template.content는 inert DOM이라 script/event/resource를 실행하지 않는다. 검증한 노드만 새로 만든다.
 	const parsed = document.createElement('template')
 	parsed.innerHTML = html
 	const holder = document.createElement('div')
 	holder.style.cssText = 'position:fixed;left:-99999px;top:0'
 	const shadow = holder.attachShadow({ mode: 'closed' })
-	const style = document.createElement('style')
-	style.textContent = css
 	const wrapper = document.createElement('div')
 	wrapper.dataset.exportStage = ''
 	for (const child of parsed.content.childNodes) {
 		const safeChild = cloneSafeExportNode(child)
 		if (safeChild) wrapper.appendChild(safeChild)
 	}
-	shadow.append(style, wrapper)
+	shadow.append(wrapper)
 
 	return {
 		holder,
@@ -125,10 +113,9 @@ function createSafeExportStage(
  */
 export async function withSafeExportStage<T>(
 	html: string,
-	css: string,
 	exportStage: (stage: HTMLElement) => Promise<T>,
 ): Promise<T> {
-	const { holder, stage } = createSafeExportStage(html, css)
+	const { holder, stage } = createSafeExportStage(html)
 	document.body.appendChild(holder)
 	try {
 		await waitForExportStageAssets(stage)
@@ -139,7 +126,7 @@ export async function withSafeExportStage<T>(
 }
 
 /** export stage의 img·inline CSS 이미지·폰트가 준비될 때까지 기다린다. */
-export async function waitForExportStageAssets(stage: HTMLElement): Promise<void> {
+async function waitForExportStageAssets(stage: HTMLElement): Promise<void> {
 	const ownerDocument = stage.ownerDocument
 	const ownerWindow = ownerDocument.defaultView ?? window
 	await new Promise((resolve) => ownerWindow.requestAnimationFrame(resolve))

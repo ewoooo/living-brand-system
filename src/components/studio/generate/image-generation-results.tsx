@@ -1,7 +1,10 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Typography } from '@/components/ui/typography'
 import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
+import { cn } from '@/lib/utils'
 import { ImageCameraPresets } from './image-camera-presets'
 
 const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
@@ -20,6 +23,7 @@ export function ImageGenerationResults({
 	selected: number | null
 }) {
 	const images = result?.images ?? []
+	const generatedImages = result?.generatedImages ?? []
 
 	return (
 		<div className="flex h-full min-h-0 flex-col" aria-live="polite" aria-busy={loading}>
@@ -36,18 +40,18 @@ export function ImageGenerationResults({
 						>
 							선택한 이미지 다운로드
 						</Button>
-						<span className="font-body text-sm font-normal text-muted-foreground">
+						<Typography as="span" size="sm" tone="muted">
 							{selected === null
 								? '이미지를 클릭해 선택하세요'
 								: `${selected + 1}번 선택됨`}
-						</span>
+						</Typography>
 					</div>
 
 					{images.length < requested && (
-						<p className="font-body text-sm font-normal text-muted-foreground">
+						<Typography size="sm" tone="muted">
 							요청 {requested}장 중 {images.length}장 생성됨 (일부는 무료 서버
 							지연으로 실패)
-						</p>
+						</Typography>
 					)}
 
 					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -57,11 +61,12 @@ export function ImageGenerationResults({
 									type="button"
 									onClick={() => onSelect(index)}
 									aria-pressed={selected === index}
-									className={`overflow-hidden rounded-md border-2 transition-colors ${
+									className={cn(
+										'overflow-hidden rounded-md border-2 transition-colors',
 										selected === index
 											? 'border-primary'
-											: 'border-border hover:border-ring'
-									}`}
+											: 'border-border hover:border-ring',
+									)}
 								>
 									{/* biome-ignore lint/performance/noImgElement: 미리보기, 최적화 불필요 */}
 									<img
@@ -86,23 +91,24 @@ export function ImageGenerationResults({
 						{result.profileName ? `적용된 프로파일: ${result.profileName}` : null}
 						<details className="mt-1">
 							<summary className="cursor-pointer">생성 프롬프트 보기</summary>
-							<p className="mt-1 whitespace-pre-wrap font-body text-xs font-normal">
+							<Typography size="xs" className="mt-1 whitespace-pre-wrap">
 								{result.prompt}
-							</p>
+							</Typography>
 						</details>
 					</div>
 
-					{selected !== null && result.profileId ? (
+					{selected !== null && result.profileId && generatedImages[selected] ? (
 						<ImageCameraPresets
 							key={`${result.profileId}:${selected}:${images[selected]}`}
 							basePrompt={result.prompt}
+							generatedImageId={generatedImages[selected].id}
 							profileId={result.profileId}
 							seedImage={images[selected]}
 						/>
 					) : (
-						<p className="font-body text-sm font-normal text-muted-foreground">
+						<Typography size="sm" tone="muted">
 							이미지를 선택하면 카메라 시점을 조정할 수 있습니다.
-						</p>
+						</Typography>
 					)}
 				</div>
 			)}
@@ -113,21 +119,23 @@ export function ImageGenerationResults({
 function ImageGenerationSkeleton({ count }: { count: number }) {
 	return (
 		<div className="flex flex-col gap-3">
-			<p className="font-body text-sm font-normal text-muted-foreground">
+			<Typography size="sm" tone="muted">
 				생성 중… 무료 서버라 최대 1~2분 걸릴 수 있어요.
-			</p>
+			</Typography>
 			<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
 				{SKELETON_KEYS.slice(0, count).map((key) => (
-					<div key={key} className="aspect-[3/4] animate-pulse rounded-md bg-muted" />
+					<Skeleton key={key} className="aspect-[3/4]" />
 				))}
 			</div>
 		</div>
 	)
 }
 
-/** data URI 이미지를 파일로 저장한다 (data:image/…;base64,… 에서 확장자 추출). */
+/** 생성 이미지 URL 또는 data URI를 파일로 저장한다. */
 function downloadImage(src: string, index: number) {
-	const ext = src.slice(5, src.indexOf(';')).split('/')[1] || 'png'
+	const ext = src.startsWith('data:image/')
+		? src.slice(11, src.indexOf(';')).replace('jpeg', 'jpg')
+		: new URL(src, window.location.href).pathname.split('.').pop() || 'png'
 	const anchor = document.createElement('a')
 	anchor.href = src
 	anchor.download = `essenherb-image-${index + 1}.${ext}`

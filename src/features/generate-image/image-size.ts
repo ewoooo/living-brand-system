@@ -20,6 +20,31 @@ export const IMAGE_ASPECT_RATIO_OPTIONS = IMAGE_ASPECT_RATIOS.map((value) => ({
 	value,
 }))
 
+/**
+ * 박스(px)에 가장 가까운 지원 비율을 고른다 — 로그 공간 거리로 비교해 가로형·세로형 편향을 없앤다.
+ * 잘못된 입력(비유한·0 이하)은 undefined — 호출자가 프로파일 비율로 폴백한다.
+ */
+export function nearestImageAspectRatio(
+	width: number,
+	height: number,
+): ImageAspectRatio | undefined {
+	if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+		return undefined
+	}
+	const target = Math.log(width / height)
+	let nearest: ImageAspectRatio = IMAGE_ASPECT_RATIOS[0]
+	let nearestDistance = Number.POSITIVE_INFINITY
+	for (const ratio of IMAGE_ASPECT_RATIOS) {
+		const [ratioWidth, ratioHeight] = ratio.split(':').map(Number)
+		const distance = Math.abs(Math.log(ratioWidth / ratioHeight) - target)
+		if (distance < nearestDistance) {
+			nearest = ratio
+			nearestDistance = distance
+		}
+	}
+	return nearest
+}
+
 export const IMAGE_OUTPUT_SIZES = ['1K', '2K', '4K'] as const
 
 export type ImageOutputSize = (typeof IMAGE_OUTPUT_SIZES)[number]

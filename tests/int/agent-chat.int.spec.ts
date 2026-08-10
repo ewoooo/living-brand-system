@@ -5,7 +5,7 @@ import {
 	getAgentReasoningMarker,
 	getAgentSkillMarker,
 	getAgentToolMarker,
-} from '@/features/agent-chat/utils/get-agent-tool-marker'
+} from '@/features/agent-chat/utils/derive-agent-message'
 
 describe('agent chat errors', () => {
 	it('uses JSON response messages', async () => {

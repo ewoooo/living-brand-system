@@ -1,4 +1,3 @@
-import sharp from 'sharp'
 import { env } from '@/env'
 import {
 	type CameraControlInput,
@@ -6,6 +5,10 @@ import {
 	type ResolvedCameraControl,
 	resolveCameraControl,
 } from '@/features/generate-image/camera-control'
+import {
+	acquireImageGenerationSlot,
+	ImageGenerationLimitError,
+} from '@/features/generate-image/image-generation-gate'
 import type { ImageModelPreset } from '@/features/generate-image/image-model'
 import {
 	type ImageAspectRatio,
@@ -14,14 +17,23 @@ import {
 	toOpenAIImageSize,
 } from '@/features/generate-image/image-size'
 import { devGenerateImages } from '@/features/generate-image/repositories/dev-image-generation.rest.repository'
-import { generateBrandImages } from '@/features/generate-image/repositories/image-generation.ai.repository'
-import { findPublishedImageProfile } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import {
-	ImagePromptNormalizationUnavailableError,
+	loadGeneratedImage,
+	storeGeneratedImages,
+} from '@/features/generate-image/repositories/generated-image.payload.repository'
+import {
+	generateBrandImages,
+	getImageModelApiKey,
+	type ImageGenerationProvider,
+} from '@/features/generate-image/repositories/image-generation.ai.repository'
+import { findPublishedImageProfile } from '@/features/generate-image/repositories/image-profile.payload.repository'
+import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
+import {
+	ImageGenerationUnavailableError,
 	normalizeImageProfilePrompt,
 } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
 
-export { ImagePromptNormalizationUnavailableError }
+export { ImageGenerationLimitError, ImageGenerationUnavailableError }
 
 /** generateImage 도구/route가 챗에 붙이는 생성 결과 첨부 계약 (이중 정의 금지). */
 export interface AgentGeneratedImagesAttachment {
@@ -33,14 +45,6 @@ export interface AgentGeneratedImagesAttachment {
 	images: string[]
 }
 
-/** Provider 미설정을 route/agent 표면이 일반 생성 실패와 구분하기 위한 서비스 오류. */
-export class ImageGenerationUnavailableError extends Error {
-	constructor() {
-		super('Image generation provider is not configured.')
-		this.name = 'ImageGenerationUnavailableError'
-	}
-}
-
 export class ImageProfileNotFoundError extends Error {
 	constructor() {
 		super('Published image profile was not found.')
@@ -48,7 +52,7 @@ export class ImageProfileNotFoundError extends Error {
 	}
 }
 
-/** 카메라 조정 경계가 외부 모델 호출 전에 손상되거나 위장된 시드 이미지를 거부할 때 사용한다. */
+/** 카메라 조정 경계가 조회할 수 없는 생성 이미지 참조를 거부할 때 사용한다. */
 export class InvalidSeedImageError extends Error {
 	constructor() {
 		super('Seed image data is invalid.')
@@ -56,13 +60,17 @@ export class InvalidSeedImageError extends Error {
 	}
 }
 
-interface GeneratedImages {
-	images: string[]
-	prompt: string
-	profileId?: number
-	profileName?: string
-	model: string
-	provider: 'google' | 'openai' | 'pollinations'
+/** 프리셋이 지원하지 않는 출력 해상도가 서비스까지 도달했을 때 표면이 검증 오류로 구분할 수 있게 한다. */
+export class UnsupportedImageOutputSizeError extends Error {
+	constructor(modelPreset: ImageModelPreset, imageSize: ImageOutputSize) {
+		super(`${modelPreset} does not support ${imageSize} output.`)
+		this.name = 'UnsupportedImageOutputSizeError'
+	}
+}
+
+/** 라우트 응답 계약(ImageGenerationResult)에 서버 내부 provider 태그만 더한 서비스 결과. */
+interface GeneratedImages extends ImageGenerationResult {
+	provider: ImageGenerationProvider
 }
 
 interface CameraAdjustedImages extends GeneratedImages {
@@ -72,20 +80,81 @@ interface CameraAdjustedImages extends GeneratedImages {
 	}
 }
 
+/** ImageGenerationPlan IR — 프로파일 경로와 설정 경로가 모두 이 해석 완료 입력으로 수렴하고, 러너는 이것만 소비한다. */
+export interface ImageGenerationPlan {
+	prompt: string
+	count: number
+	modelPreset: ImageModelPreset
+	aspectRatio: ImageAspectRatio
+	imageSize: ImageOutputSize
+	profileId?: number
+	profileName?: string
+	seedImage?: Uint8Array
+}
+
+/** published 프로파일의 모델·출력 계약을 생성 플랜으로 해석한다. 슬롯 비율 오버라이드는 여기서만 판단한다. 순수 함수. */
+export function planImageGenerationFromProfile(
+	profile: {
+		aspectRatio: ImageAspectRatio
+		id: number
+		imageModelPreset: ImageModelPreset
+		imageSize: ImageOutputSize
+		name: string
+	},
+	input: {
+		prompt: string
+		count: number
+		seedImage?: Uint8Array
+		/** 템플릿 이미지 슬롯 박스에서 유도한 비율 — 있으면 프로파일 비율 대신 쓴다(크롭 손실 최소화). */
+		aspectRatio?: ImageAspectRatio
+	},
+): ImageGenerationPlan {
+	return {
+		prompt: input.prompt,
+		count: input.count,
+		modelPreset: profile.imageModelPreset,
+		aspectRatio: input.aspectRatio ?? profile.aspectRatio,
+		imageSize: profile.imageSize,
+		profileId: profile.id,
+		profileName: profile.name,
+		...(input.seedImage ? { seedImage: input.seedImage } : {}),
+	}
+}
+
+/** 저장 전 폼처럼 명시된 모델·출력 설정을 생성 플랜으로 해석한다. 순수 함수. */
+export function planImageGenerationFromSettings(input: {
+	userInput: string
+	count: number
+	imageModelPreset: ImageModelPreset
+	aspectRatio: ImageAspectRatio
+	imageSize: ImageOutputSize
+}): ImageGenerationPlan {
+	return {
+		prompt: input.userInput.trim(),
+		count: input.count,
+		modelPreset: input.imageModelPreset,
+		aspectRatio: input.aspectRatio,
+		imageSize: input.imageSize,
+	}
+}
+
 /**
  * 유스케이스 경계: 사용자 입력과 선택한 published 프로파일로 이미지를 생성한다.
- * Payload 프로파일 조회·모델 호출 I/O는 각 repository가 소유하고 상위 route·agent tool은 인증·검증만 담당한다.
+ * 프로파일 조회·모델 호출·생성 파일 저장 I/O는 각 repository가 소유한다.
  */
 export async function generateImages({
 	userInput,
 	profileId,
 	user,
 	count,
+	aspectRatio,
 }: {
 	userInput: string
 	profileId: number
 	user: unknown
 	count: number
+	/** 템플릿 이미지 슬롯 박스에서 유도한 비율 오버라이드 — 없으면 프로파일 비율. */
+	aspectRatio?: ImageAspectRatio
 }): Promise<GeneratedImages> {
 	const profile = await findPublishedImageProfile(user, profileId)
 	if (!profile) throw new ImageProfileNotFoundError()
@@ -95,14 +164,17 @@ export async function generateImages({
 		userPrompt: userInput,
 	})
 
-	return runImageGeneration({
+	const plan = planImageGenerationFromProfile(profile, {
 		prompt: JSON.stringify(normalized.finalPrompt),
 		count,
-		modelPreset: profile.imageModelPreset,
-		aspectRatio: profile.aspectRatio,
-		imageSize: profile.imageSize,
-		profileId,
-		profileName: profile.name,
+		aspectRatio,
+	})
+	const generated = await runImageGeneration(plan, user)
+	return storeProfileGeneration(generated, {
+		inputPrompt: userInput,
+		// 저장 메타데이터의 비율은 실제 생성에 쓴 plan이 정본 — 오버라이드 시 프로파일 비율과 다르다.
+		profile: { ...profile, aspectRatio: plan.aspectRatio },
+		user,
 	})
 }
 
@@ -111,165 +183,184 @@ export async function generateImages({
  * 외부 모델 I/O는 image-generation repository가 담당한다.
  */
 export async function generateImagesWithSettings({
-	userInput,
-	count,
-	imageModelPreset,
-	aspectRatio,
-	imageSize,
+	user,
+	...input
 }: {
 	userInput: string
 	count: number
 	imageModelPreset: ImageModelPreset
 	aspectRatio: ImageAspectRatio
 	imageSize: ImageOutputSize
+	user: unknown
 }): Promise<GeneratedImages> {
-	return runImageGeneration({
-		prompt: userInput.trim(),
-		count,
-		modelPreset: imageModelPreset,
-		aspectRatio,
-		imageSize,
-	})
+	return runImageGeneration(planImageGenerationFromSettings(input), user)
 }
 
 /**
  * 유스케이스 경계: published 프로파일의 모델·출력 계약으로 시드 이미지의 카메라 시점을 조정한다.
- * 프로파일 조회와 외부 이미지 편집 I/O는 각 repository가 소유한다.
+ * 프로파일 조회·외부 이미지 편집·생성 파일 저장 I/O는 각 repository가 소유한다.
  */
 export async function adjustImageCamera({
 	basePrompt,
 	camera,
 	count,
+	generatedImageId,
 	profileId,
-	seedImage,
+	requestUrl,
 	user,
 }: {
 	basePrompt: string
 	camera: CameraControlInput
 	count: number
+	generatedImageId: number
 	profileId: number
-	seedImage: string
+	requestUrl: string
 	user: unknown
 }): Promise<CameraAdjustedImages> {
 	const profile = await findPublishedImageProfile(user, profileId)
 	if (!profile) throw new ImageProfileNotFoundError()
+	const seedImage = await loadGeneratedImage({
+		generatedImageId,
+		profileId,
+		requestUrl,
+		user,
+	})
+	if (!seedImage) throw new InvalidSeedImageError()
 
 	const resolved = resolveCameraControl(camera)
-	const prompt = composeCameraAdjustmentPrompt(basePrompt, resolved)
-	const result = await runImageGeneration({
-		prompt,
-		count,
-		modelPreset: profile.imageModelPreset,
-		aspectRatio: profile.aspectRatio,
-		imageSize: profile.imageSize,
-		profileId,
-		profileName: profile.name,
-		seedImage: await decodeSeedImage(seedImage),
+	const result = await runImageGeneration(
+		planImageGenerationFromProfile(profile, {
+			prompt: composeCameraAdjustmentPrompt(basePrompt, resolved),
+			count,
+			seedImage,
+		}),
+		user,
+	)
+	const stored = await storeProfileGeneration(result, {
+		inputPrompt: basePrompt,
+		profile,
+		user,
 	})
 
 	return {
-		...result,
+		...stored,
 		camera: { input: camera, resolved },
 	}
 }
 
-/** 해석이 끝난 모델·출력 계약을 실제 공급자 호출로 연결한다. */
-async function runImageGeneration({
-	prompt,
-	count,
-	modelPreset,
-	aspectRatio,
-	imageSize,
-	profileId,
-	profileName,
-	seedImage,
-}: {
-	prompt: string
-	count: number
-	modelPreset: ImageModelPreset
-	aspectRatio: ImageAspectRatio
-	imageSize: ImageOutputSize
-	profileId?: number
-	profileName?: string
-	seedImage?: Uint8Array
-}): Promise<GeneratedImages> {
+/**
+ * 해석이 끝난 생성 플랜을 실제 공급자 호출로 연결한다. 키가 없으면 dev 폴백 또는 불가로 종료한다.
+ * 모델 호출 직전에만 공용 생성 게이트를 통과시킨다 — 호출 전에 거부된 요청은 사용자 한도를 소모하지 않는다.
+ */
+async function runImageGeneration(
+	plan: ImageGenerationPlan,
+	user: unknown,
+): Promise<GeneratedImages> {
+	const {
+		prompt,
+		count,
+		modelPreset,
+		aspectRatio,
+		imageSize,
+		profileId,
+		profileName,
+		seedImage,
+	} = plan
 	if (!supportsImageOutputSize(modelPreset, imageSize)) {
-		throw new Error(`${modelPreset} does not support ${imageSize} output.`)
+		throw new UnsupportedImageOutputSizeError(modelPreset, imageSize)
 	}
-	let generation: {
-		images: string[]
-		model: string
-		provider: 'google' | 'openai' | 'pollinations'
-	}
-	if (modelPreset === 'google-nano-banana-2-lite') {
-		if (!env.GEMINI_API_KEY) throw new ImageGenerationUnavailableError()
-		generation = await generateBrandImages({
-			prompt,
-			count,
-			modelPreset,
+	const useDevFallback = !getImageModelApiKey(modelPreset)
+	if (useDevFallback) assertDevFallbackAllowed(plan)
+
+	const release = acquireImageGenerationSlot(getAuthenticatedUserId(user))
+	try {
+		const generation = useDevFallback
+			? await generateDevFallbackImages(plan)
+			: await generateBrandImages({
+					prompt,
+					count,
+					modelPreset,
+					aspectRatio,
+					imageSize,
+					...(seedImage ? { seedImage } : {}),
+				})
+		return {
+			...generation,
 			aspectRatio,
 			imageSize,
-			...(seedImage ? { seedImage } : {}),
-		})
-	} else if (modelPreset === 'openai-gpt-image-2' && env.OPENAI_API_KEY) {
-		generation = await generateBrandImages({
 			prompt,
-			count,
-			modelPreset,
-			aspectRatio,
-			imageSize,
-			...(seedImage ? { seedImage } : {}),
-		})
-	} else if (
+			...(profileId ? { profileId, profileName } : {}),
+		}
+	} finally {
+		release()
+	}
+}
+
+// ⚠️ 임시 — API 키가 없을 때의 마지막 결정. development + IMAGE_DEV_FALLBACK=true의
+// 텍스트 생성(openai 프리셋, 시드 없음)만 Pollinations로 보내고, 그 외에는 불가로 닫는다.
+function assertDevFallbackAllowed({ modelPreset, seedImage }: ImageGenerationPlan) {
+	const devFallbackAllowed =
 		!seedImage &&
 		modelPreset === 'openai-gpt-image-2' &&
 		env.NODE_ENV === 'development' &&
 		env.IMAGE_DEV_FALLBACK === 'true'
-	) {
-		generation = {
-			images: await devGenerateImages(
-				prompt,
-				toOpenAIImageSize(aspectRatio, imageSize),
-				count,
-			),
-			model: 'flux',
-			provider: 'pollinations',
-		}
-	} else {
-		throw new ImageGenerationUnavailableError()
-	}
+	if (!devFallbackAllowed) throw new ImageGenerationUnavailableError()
+}
+
+async function generateDevFallbackImages({
+	prompt,
+	count,
+	aspectRatio,
+	imageSize,
+}: ImageGenerationPlan): Promise<{
+	images: string[]
+	model: string
+	provider: ImageGenerationProvider
+}> {
 	return {
-		...generation,
-		prompt,
-		...(profileId ? { profileId, profileName } : {}),
+		images: await devGenerateImages(prompt, toOpenAIImageSize(aspectRatio, imageSize), count),
+		model: 'flux',
+		provider: 'pollinations',
 	}
 }
 
-async function decodeSeedImage(dataUri: string): Promise<Uint8Array> {
-	const match = /^data:image\/(jpeg|png|webp);base64,(.+)$/.exec(dataUri)
-	if (!match) throw new InvalidSeedImageError()
-
-	const bytes = Buffer.from(match[2], 'base64')
-	const mediaType = match[1]
-	const valid =
-		(mediaType === 'png' &&
-			startsWith(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) ||
-		(mediaType === 'jpeg' && startsWith(bytes, [0xff, 0xd8, 0xff])) ||
-		(mediaType === 'webp' &&
-			startsWith(bytes, [0x52, 0x49, 0x46, 0x46]) &&
-			startsWith(bytes.subarray(8), [0x57, 0x45, 0x42, 0x50]))
-
-	if (!valid) throw new InvalidSeedImageError()
-
-	try {
-		const metadata = await sharp(bytes, { limitInputPixels: 16_777_216 }).metadata()
-		if (metadata.format !== mediaType) throw new InvalidSeedImageError()
-		return bytes
-	} catch {
-		throw new InvalidSeedImageError()
+async function storeProfileGeneration(
+	generated: GeneratedImages,
+	{
+		inputPrompt,
+		profile,
+		user,
+	}: {
+		inputPrompt: string
+		profile: {
+			aspectRatio: ImageAspectRatio
+			id: number
+			imageSize: ImageOutputSize
+			name: string
+		}
+		user: unknown
+	},
+): Promise<GeneratedImages> {
+	const createdBy = getAuthenticatedUserId(user)
+	const generatedImages = await storeGeneratedImages({
+		createdBy,
+		effectivePrompt: generated.prompt,
+		images: generated.images,
+		inputPrompt,
+		model: generated.model,
+		profile,
+	})
+	return {
+		...generated,
+		generatedImages,
+		images: generatedImages.map(({ url }) => url),
 	}
 }
 
-function startsWith(bytes: Uint8Array, signature: number[]): boolean {
-	return signature.every((byte, index) => bytes[index] === byte)
+function getAuthenticatedUserId(user: unknown): number {
+	const id = typeof user === 'object' && user !== null && 'id' in user ? user.id : undefined
+	if (typeof id !== 'number' || !Number.isInteger(id) || id <= 0) {
+		throw new Error('Authenticated user ID is required.')
+	}
+	return id
 }

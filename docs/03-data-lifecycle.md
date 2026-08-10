@@ -301,7 +301,7 @@
 | 저장 | CheckKey, 영문·한글 Title, Tier, Options, HeuristicCriteria, HeuristicPrompt, Messages, RuleChecker 실행 계약, `source.documentId`, 타입별 구조화 Evidence, 역할이 포함된 ReferenceAssetRef를 JSON snapshot으로 저장한다. Block 식별자와 문서 제목은 중복 저장하지 않는다. |
 | 처리 | 즉시 검수와 후속 AI 검수가 같은 snapshot을 사용한다. Guideline이나 RuleChecker 변경을 역으로 반영하지 않는다. |
 | 활용 | CheckRun과 결과 재현, 감사, 후속 AI 검수에 사용한다. |
-| 공유·제공 | CheckSession 조회 권한이 있는 Manager와 Admin에게 제공한다. |
+| 공유·제공 | CheckSession 조회 권한이 있는 Manager와 Admin에게 제공한다. MCP 검수에서는 인증된 사용자가 연결한 외부 AI에 구조화 Evidence, HeuristicPrompt, RuleChecker 프롬프트와 역할이 표시된 레퍼런스 이미지를 제공하되 기대값·연산자와 내부 URL은 제외한다. |
 | 보관 | CheckSession과 함께 보관한다. |
 | 파기 | CheckSession 보관 정책을 따른다. |
 
@@ -353,13 +353,30 @@
 | 보관 | 발행된 실행 조건과 기능 정의를 보관한다. |
 | 파기 | Official Version은 삭제하지 않고 archived로 보관한다. 잘못 만든 stage 상태의 PluginVersion만 삭제할 수 있다. |
 
-## 6. 에셋 제너레이션 기록(계획)
+## 6. 생성 이미지와 에셋 제너레이션 기록
 
-현재 Create와 Image 기능은 요청 범위에서 입력과 결과를 다루며 `AssetGenerationSession`, `AssetGenerationInput`, `AssetGenerationOutput`을 저장하지 않습니다.
+현재 Create 기능은 요청 범위에서 입력과 결과를 다루며 `AssetGenerationSession`, `AssetGenerationInput`, `AssetGenerationOutput`을 저장하지 않습니다.
+Image 기능의 프로파일 기반 생성과 카메라 조정은 `generated-images`에 결과 파일과 실행 조건을 저장합니다. 저장 전 Admin 프로파일 테스트는 레코드를 만들지 않습니다.
 이 모델은 향후 제작 사용량을 사용자·기간·기능별로 추적해야 할 때만 도입합니다.
 현재 `CheckSession`은 업로드된 이미지를 직접 입력으로 받으므로 이 계획 모델에 의존하지 않습니다.
 
-### 6.1 AssetGenerationSession
+### 6.1 GeneratedImage
+
+데이터명: GeneratedImage
+수집 목적: Studio 생성 이미지를 공식 가이드라인 이미지와 분리하고 생성 당시 입력·실행 조건을 보존한다.
+
+| 단계 | 작성 내용 |
+| --- | --- |
+| 생성·수집 | 프로파일 기반 이미지 생성 service가 결과 파일, 이미지 프로파일, 원본·최종 프롬프트, 모델, 출력 조건, 생성 사용자를 기록한다. |
+| 전송 | 인증된 생성 route가 trusted Payload upload 흐름으로 전달한다. |
+| 저장 | 파일은 `generated-images` object storage에, 실행 조건과 사용자 ID는 Payload collection과 PostgreSQL에 저장한다. |
+| 처리 | 생성 당시 값은 수정하지 않고 템플릿이 사용할 때 파일 참조만 연결한다. |
+| 활용 | Studio 결과 조회와 템플릿 배경 이미지 참조에 사용한다. |
+| 공유·제공 | 생성 메타데이터는 Manager에게만 제공하고, 발행된 파일만 공개 화면에서 읽는다. |
+| 보관 | 생성 API가 안정적인 URL을 반환할 수 있도록 결과를 published 파일로 보관한다. |
+| 파기 | 현재 자동 삭제하지 않는다. 보관 기간과 참조 추적 요구가 정해지면 published 파일 파기 정책을 추가한다. |
+
+### 6.2 AssetGenerationSession
 
 데이터명: AssetGenerationSession
 수집 목적: 향후 Creator의 제작 사용량과 사용한 ResourceRef를 한 실행 단위로 기록한다.
@@ -413,7 +430,7 @@
 | 저장 | 업로드 이미지는 CheckSession에 SHA-256·미디어 형식·바이트 크기를 저장하고 원본 바이트는 실행 중에만 유지한다. AssetGenerationOutput 참조 연결은 해당 입력 유형을 도입할 때 추가한다. |
 | 처리 | 후속 AI 검수는 세션 시작 시점의 지문과 실제 입력이 일치할 때만 결과를 병합한다. 지문이 없는 과거 세션은 신규 입력과 같다고 추정하지 않는다. |
 | 활용 | CheckTarget, CheckRun, Check History 조회의 기준 입력으로 사용한다. |
-| 공유·제공 | Agent에는 점검에 필요한 산출물 내용만 제공한다. |
+| 공유·제공 | Agent에는 점검에 필요한 산출물 내용만 제공한다. MCP 검수에서는 인증된 사용자가 연결한 외부 AI에 검사 이미지 바이트를 제공한다. |
 | 보관 | CheckSession과 CheckResult가 참조하는 동안 보관한다. |
 | 파기 | 보관 기간 종료 후 삭제한다. 검수 이력 보존이 필요하면 식별 가능한 내용을 제거한 기록만 남긴다. |
 

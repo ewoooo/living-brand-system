@@ -127,7 +127,7 @@ Raster Observation
 
 ## 3. 객체 모델 전환 방향
 
-현재 Review는 `CheckSession` 레코드와 여러 순수 함수로 검수 흐름을 구현합니다. 계산 자체는 단순하지만, 세션 상태 전이와 결과 병합 규칙은 유스케이스 서비스가 직접 관리합니다. 검수 단계와 재실행 조건이 늘어날 때 이 규칙이 여러 호출 경로로 흩어지지 않도록 `CheckSession`을 Aggregate 객체로 전환합니다.
+현재 Review는 `CheckSession` 레코드와 여러 순수 함수로 검수 흐름을 구현합니다. 계산 자체는 단순하지만, 세션 상태 전이와 결과 병합 규칙은 유스케이스 서비스가 직접 관리합니다. 검수 단계와 재실행 조건이 늘어날 때 이 규칙이 여러 호출 경로로 흩어지지 않도록 `CheckSession`을 Aggregate 객체로 전환했습니다(`src/features/asset-check/domain/check-session.ts`).
 
 ### 현재 구현 관계
 
@@ -242,11 +242,11 @@ CheckSession
 | [Page](../surfaces/page.md) | 구현 | Studio의 `/studio/review` — 이미지 업로드 → 선택한 CheckScenario의 항목별 결과 테이블. Template·Image·Graphic·Review는 공통 Studio 사이드바를 사용합니다. 클라이언트가 `/api/check` → `/api/check/{checkSessionId}/ai` 순으로 호출 |
 | [REST](../surfaces/rest.md) | 구현 | `POST /api/check`(FormData, 20MB 제한, origin·인증 게이트), `POST /api/check/{checkSessionId}/ai` |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `runCheck`(+`listCheckScenarios`)이 `startCheckSession`을 호출 |
-| MCP | 부분 | `mcp-call` 출처값은 정의됨, 전용 라우트는 없이 `/api/check` 재사용 |
+| MCP | 구현 | `runAssetCheck`가 PNG/JPEG/WebP data URI의 결정론적 검수를 실행하고 내부 AI와 같은 관찰 프롬프트·문서 근거·레퍼런스 이미지·검사 이미지를 연결된 AI에 반환합니다. `submitAssetCheckObservations`가 관측값을 저장된 룰셋과 대조해 서버에서 최종 판정·저장합니다. 레퍼런스를 불러오지 못한 Check는 `needs_review`로 처리하고, 동시 제출은 먼저 완료된 결과를 유지합니다. |
 
 ## 5. 의존
 
-- AI 프로바이더: Anthropic(Vercel AI SDK `generateText`+`Output.object`). 모델과 기본 프롬프트는 Check가 참조하는 RuleChecker에서 선택하고, Check의 source·구조화 evidence·heuristicCriteria·heuristicPrompt를 JSON text part로, 검수 대상과 referenceAssets를 file part로 전달한다. 모델은 기준별 관찰값만 반환하며(관찰형은 `present`/`absent`, 수치형은 숫자, 공통으로 `uncertain`/`not_applicable`) 최종 `pass`/`fail`/`needs_review`는 검수 Service의 Evaluator가 결정한다. 한 세션의 heuristic Check는 한 번의 AI 호출로 평가하고, 설정·호출·출력 검증 실패는 `needs_review`로 처리한다.
+- AI 프로바이더: Page·AI Chat은 Anthropic(Vercel AI SDK `generateText`+`Output.object`)을 사용합니다. MCP는 LBS의 AI 키를 쓰지 않고 연결된 클라이언트 AI에 검수 대상 이미지, 구조화 Evidence, HeuristicPrompt, RuleChecker 프롬프트, 레퍼런스 이미지를 반환합니다. 기대값과 연산자는 반환하지 않습니다. 두 경로 모두 모델은 공통 관찰 작업을 사용해 기준별 관찰값만 반환하며(관찰형은 `present`/`absent`, 수치형은 숫자, 공통으로 `uncertain`/`not_applicable`) 최종 `pass`/`fail`/`needs_review`는 검수 Service의 Evaluator가 결정합니다.
 - 이미지 디코딩: `sharp`(128px 픽셀 그리드 추출).
 - 결정론적 checker: palette-compliance / color-combination / spot-color / background-tone / clear-space / relative-size / canvas-format. RuleChecker의 `checkerKey`로 registry를 조회하며, 미등록 checker는 `implemented:false`로 표시.
 - Payload 컬렉션: `guideline-documents`(Check 기준), `brand-colors`(팔레트) 읽기. 세션은 `check-sessions`에 영속(CheckRulesetSnapshot을 함께 저장해 AI 후속 단계가 재사용).

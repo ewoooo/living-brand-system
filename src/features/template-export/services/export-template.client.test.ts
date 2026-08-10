@@ -5,18 +5,16 @@ import {
 	exportTemplate,
 	type TemplateExportContext,
 } from './export-template.client'
-import { exportTemplatePdf } from './export-template-pdf.client'
 import { exportHtmlToPng, renderHtmlToPngBlob } from './export-template-png.client'
-import { downloadTemplateTiff, TemplateTiffDownloadError } from './export-template-tiff.client'
+import { downloadTemplatePrint, TemplatePrintDownloadError } from './export-template-print.client'
 
-vi.mock('./export-template-pdf.client', () => ({ exportTemplatePdf: vi.fn() }))
 vi.mock('./export-template-png.client', () => ({
 	exportHtmlToPng: vi.fn(),
 	renderHtmlToPngBlob: vi.fn(),
 }))
-vi.mock('./export-template-tiff.client', () => ({
-	downloadTemplateTiff: vi.fn(),
-	TemplateTiffDownloadError: class extends Error {},
+vi.mock('./export-template-print.client', () => ({
+	downloadTemplatePrint: vi.fn(),
+	TemplatePrintDownloadError: class extends Error {},
 }))
 
 const context: TemplateExportContext = {
@@ -29,7 +27,7 @@ const context: TemplateExportContext = {
 	width: 600,
 }
 
-describe('template export registry', () => {
+describe('exportTemplate', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		vi.mocked(renderHtmlToPngBlob).mockResolvedValue(new Blob(['png']))
@@ -38,26 +36,28 @@ describe('template export registry', () => {
 	it('형식별 가용 조건을 한곳에서 판정한다', () => {
 		expect(canExportTemplate('png', { ...context, printPpi: undefined })).toBe(true)
 		expect(canExportTemplate('pdf', { ...context, printPpi: undefined })).toBe(false)
+		expect(canExportTemplate('pdf', { ...context, templateVersion: undefined })).toBe(false)
 		expect(canExportTemplate('tiff', { ...context, templateVersion: undefined })).toBe(false)
 		expect(canExportTemplate('tiff', context)).toBe(true)
 	})
 
-	it('선택한 exporter에 실행을 위임한다', async () => {
+	it('형식별 adapter에 실행을 위임한다', async () => {
 		await exportTemplate('png', context)
-		expect(exportHtmlToPng).toHaveBeenCalledWith(context.html, '', context.fileName)
+		expect(exportHtmlToPng).toHaveBeenCalledWith(context.html, context.fileName)
 
 		await exportTemplate('pdf', context)
-		expect(exportTemplatePdf).toHaveBeenCalledWith({
+		expect(downloadTemplatePrint).toHaveBeenCalledWith({
 			fileName: context.fileName,
-			height: context.height,
+			format: 'pdf',
 			png: expect.any(Blob),
-			ppi: context.printPpi,
-			width: context.width,
+			templateId: context.templateId,
+			templateVersion: context.templateVersion,
 		})
 
 		await exportTemplate('tiff', context)
-		expect(downloadTemplateTiff).toHaveBeenCalledWith({
+		expect(downloadTemplatePrint).toHaveBeenCalledWith({
 			fileName: context.fileName,
+			format: 'tiff',
 			png: expect.any(Blob),
 			templateId: context.templateId,
 			templateVersion: context.templateVersion,
@@ -69,15 +69,15 @@ describe('template export registry', () => {
 			exportTemplate('tiff', { ...context, templateVersion: undefined }),
 		).rejects.toThrow('TIFF export is unavailable.')
 		expect(renderHtmlToPngBlob).not.toHaveBeenCalled()
-		expect(downloadTemplateTiff).not.toHaveBeenCalled()
+		expect(downloadTemplatePrint).not.toHaveBeenCalled()
 	})
 
-	it('adapter 오류를 공통 메시지로 정리하되 TIFF 조치 메시지는 보존한다', async () => {
+	it('adapter 오류를 공통 메시지로 정리하되 인쇄 출력 조치 메시지는 보존한다', async () => {
 		vi.mocked(exportHtmlToPng).mockRejectedValueOnce(new Error('DOM capture failed.'))
 		await expect(exportTemplate('png', context)).rejects.toThrow('PNG 내보내기에 실패했습니다.')
 
-		vi.mocked(downloadTemplateTiff).mockRejectedValueOnce(
-			new TemplateTiffDownloadError('템플릿이 변경되었습니다.'),
+		vi.mocked(downloadTemplatePrint).mockRejectedValueOnce(
+			new TemplatePrintDownloadError('템플릿이 변경되었습니다.'),
 		)
 		await expect(exportTemplate('tiff', context)).rejects.toThrow('템플릿이 변경되었습니다.')
 	})

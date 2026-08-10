@@ -2,50 +2,68 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
-import type { CameraAzimuth, CameraElevation } from '@/features/generate-image/camera-control'
+import {
+	type CameraAzimuth,
+	type CameraElevation,
+	resolveCameraControl,
+} from '@/features/generate-image/camera-control'
 import {
 	type CameraAdjustmentResult,
 	requestCameraAdjustment,
 } from '@/features/generate-image/services/generate-image.client'
 import { ImageCameraOrbitControl, snapCameraAngle } from './image-camera-orbit-control'
 
+// 각 프리셋의 버킷(value)은 도메인 임계값과 어긋나지 않도록 resolveCameraControl로 도출한다.
 const AZIMUTH_PRESETS: { degrees: number; label: string; value: CameraAzimuth }[] = [
-	{ degrees: 0, label: '정면', value: 'front' },
-	{ degrees: 45, label: '우측 3/4', value: 'front-right' },
-	{ degrees: 90, label: '우측면', value: 'right' },
-	{ degrees: 135, label: '후면 우측 3/4', value: 'rear-right' },
-	{ degrees: 180, label: '후면', value: 'rear' },
-	{ degrees: -135, label: '후면 좌측 3/4', value: 'rear-left' },
-	{ degrees: -90, label: '좌측면', value: 'left' },
-	{ degrees: -45, label: '좌측 3/4', value: 'front-left' },
-]
+	{ degrees: 0, label: '정면' },
+	{ degrees: 45, label: '우측 3/4' },
+	{ degrees: 90, label: '우측면' },
+	{ degrees: 135, label: '후면 우측 3/4' },
+	{ degrees: 180, label: '후면' },
+	{ degrees: -135, label: '후면 좌측 3/4' },
+	{ degrees: -90, label: '좌측면' },
+	{ degrees: -45, label: '좌측 3/4' },
+].map((preset) => ({
+	...preset,
+	value: resolveCameraControl({ azimuthDeg: preset.degrees, elevationDeg: 0 }).azimuth,
+}))
 
 const ELEVATION_PRESETS: {
 	degrees: number
 	label: string
 	value: CameraElevation
 }[] = [
-	{ degrees: -20, label: '로우 앵글', value: 'low' },
-	{ degrees: 0, label: '눈높이', value: 'eye-level' },
-	{ degrees: 20, label: '약간 위', value: 'elevated' },
-	{ degrees: 50, label: '하이 앵글', value: 'high' },
-	{ degrees: 80, label: '탑뷰', value: 'top-down' },
-]
+	{ degrees: -20, label: '로우 앵글' },
+	{ degrees: 0, label: '눈높이' },
+	{ degrees: 20, label: '약간 위' },
+	{ degrees: 50, label: '하이 앵글' },
+	{ degrees: 80, label: '탑뷰' },
+].map((preset) => ({
+	...preset,
+	value: resolveCameraControl({ azimuthDeg: 0, elevationDeg: preset.degrees }).elevation,
+}))
 
 const AZIMUTH_STEPS = AZIMUTH_PRESETS.map((preset) => preset.degrees)
 const ELEVATION_STEPS = ELEVATION_PRESETS.map((preset) => preset.degrees)
 
-const SELECT_CLASS =
-	'h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30'
-
 export function ImageCameraPresets({
 	basePrompt,
+	generatedImageId,
 	profileId,
 	seedImage,
 }: {
 	basePrompt: string
+	generatedImageId: number
 	profileId: number
 	seedImage: string
 }) {
@@ -77,8 +95,8 @@ export function ImageCameraPresets({
 						elevationDeg,
 					},
 					count: 1,
+					generatedImageId,
 					profileId,
-					seedImage,
 				}),
 			)
 		} catch {
@@ -124,50 +142,58 @@ export function ImageCameraPresets({
 				}}
 			/>
 
-			<div className="grid gap-3 sm:grid-cols-2">
-				<div className="flex flex-col gap-2">
-					<Label htmlFor="camera-azimuth">방향</Label>
-					<select
-						id="camera-azimuth"
+			<FieldGroup className="grid gap-3 sm:grid-cols-2">
+				<Field>
+					<FieldLabel htmlFor="camera-azimuth">방향</FieldLabel>
+					<Select
 						value={azimuthPreset.value}
-						onChange={(event) => {
+						onValueChange={(value) => {
 							const preset = AZIMUTH_PRESETS.find(
-								(item) =>
-									item.value === (event.currentTarget.value as CameraAzimuth),
+								(item) => item.value === (value as CameraAzimuth),
 							)
 							if (preset) setAzimuthDeg(preset.degrees)
 						}}
-						className={SELECT_CLASS}
 					>
-						{AZIMUTH_PRESETS.map((preset) => (
-							<option key={preset.value} value={preset.value}>
-								{preset.label}
-							</option>
-						))}
-					</select>
-				</div>
-				<div className="flex flex-col gap-2">
-					<Label htmlFor="camera-elevation">높이</Label>
-					<select
-						id="camera-elevation"
+						<SelectTrigger id="camera-azimuth" className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								{AZIMUTH_PRESETS.map((preset) => (
+									<SelectItem key={preset.value} value={preset.value}>
+										{preset.label}
+									</SelectItem>
+								))}
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+				</Field>
+				<Field>
+					<FieldLabel htmlFor="camera-elevation">높이</FieldLabel>
+					<Select
 						value={elevationPreset.value}
-						onChange={(event) => {
+						onValueChange={(value) => {
 							const preset = ELEVATION_PRESETS.find(
-								(item) =>
-									item.value === (event.currentTarget.value as CameraElevation),
+								(item) => item.value === (value as CameraElevation),
 							)
 							if (preset) setElevationDeg(preset.degrees)
 						}}
-						className={SELECT_CLASS}
 					>
-						{ELEVATION_PRESETS.map((preset) => (
-							<option key={preset.value} value={preset.value}>
-								{preset.label}
-							</option>
-						))}
-					</select>
-				</div>
-			</div>
+						<SelectTrigger id="camera-elevation" className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								{ELEVATION_PRESETS.map((preset) => (
+									<SelectItem key={preset.value} value={preset.value}>
+										{preset.label}
+									</SelectItem>
+								))}
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+				</Field>
+			</FieldGroup>
 
 			<Button type="button" disabled={loading} onClick={applyCamera}>
 				{loading ? '시점 조정 중…' : '시점 적용'}
@@ -184,7 +210,7 @@ export function ImageCameraPresets({
 					<Typography size="sm" weight="medium">
 						조정 결과: {resultAzimuth?.label} · {resultElevation?.label}
 					</Typography>
-					{/* biome-ignore lint/performance/noImgElement: 생성 직후 data URI 미리보기 */}
+					{/* biome-ignore lint/performance/noImgElement: 생성 결과 저장 URL 미리보기 */}
 					<img
 						src={result.images[0]}
 						alt="카메라 시점 조정 결과"

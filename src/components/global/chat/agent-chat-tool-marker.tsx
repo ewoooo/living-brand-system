@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Marker, MarkerContent, MarkerIcon } from '@/components/ui/marker'
-import type { AgentToolMarker } from '@/features/agent-chat/utils/get-agent-tool-marker'
+import type { AgentToolMarker } from '@/features/agent-chat/utils/derive-agent-message'
 
 export function AgentChatMarker({
 	marker,

@@ -5,12 +5,10 @@ import {
 	IMAGE_OUTPUT_SIZES,
 	supportsImageOutputSize,
 } from '@/features/generate-image/image-size'
+import { respondImageGeneration } from '@/features/generate-image/respond-image-generation'
 import {
 	generateImages,
 	generateImagesWithSettings,
-	ImageGenerationUnavailableError,
-	ImageProfileNotFoundError,
-	ImagePromptNormalizationUnavailableError,
 } from '@/features/generate-image/services/generate-image.service'
 import { isManager } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
@@ -18,7 +16,7 @@ import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 export const maxDuration = 60
 
 const baseFields = {
-	prompt: z.string().trim().min(1).max(1_000),
+	prompt: z.string().trim().min(1).max(2_500),
 	count: z.number().int().min(1).max(6).default(1),
 }
 
@@ -36,6 +34,8 @@ const requestSchema = z.union([
 		.object({
 			...baseFields,
 			profileId: z.number().int().positive(),
+			// 선택한 프레임 박스에서 유도한 비율 오버라이드 — 없으면 프로파일 비율로 생성한다.
+			aspectRatio: z.enum(IMAGE_ASPECT_RATIOS).optional(),
 		})
 		.strict(),
 ])
@@ -59,48 +59,33 @@ export async function POST(request: Request) {
 	}
 
 	const { prompt: userInput, count } = parsed.data
+	const input = parsed.data
 
-	try {
-		const result =
-			'imageModelPreset' in parsed.data
-				? await generateImagesWithSettings({
+	return respondImageGeneration({
+		run: () =>
+			'imageModelPreset' in input
+				? generateImagesWithSettings({
 						userInput,
 						count,
-						aspectRatio: parsed.data.aspectRatio,
-						imageModelPreset: parsed.data.imageModelPreset,
-						imageSize: parsed.data.imageSize,
-					})
-				: await generateImages({
-						userInput,
-						count,
-						profileId: parsed.data.profileId,
+						aspectRatio: input.aspectRatio,
+						imageModelPreset: input.imageModelPreset,
+						imageSize: input.imageSize,
 						user,
 					})
-		if (result.images.length === 0) {
-			return Response.json({ message: 'Image generation failed.' }, { status: 502 })
-		}
-		const { provider, ...response } = result
-		payload.logger.info(
-			{
-				provider,
-				model: result.model,
-				promptLength: result.prompt.length,
-				count: result.images.length,
-			},
-			'admin-image-generation.done',
-		)
-		return Response.json(response)
-	} catch (error) {
-		payload.logger.error({ err: error }, 'admin-image-generation.failed')
-		if (
-			error instanceof ImageGenerationUnavailableError ||
-			error instanceof ImagePromptNormalizationUnavailableError
-		) {
-			return Response.json({ message: 'Image generation is unavailable.' }, { status: 503 })
-		}
-		if (error instanceof ImageProfileNotFoundError) {
-			return Response.json({ message: 'Image profile not found.' }, { status: 404 })
-		}
-		return Response.json({ message: 'Image generation failed.' }, { status: 500 })
-	}
+				: generateImages({
+						userInput,
+						count,
+						profileId: input.profileId,
+						aspectRatio: input.aspectRatio,
+						user,
+					}),
+		logger: payload.logger,
+		event: 'admin-image-generation',
+		doneLog: (result) => ({
+			provider: result.provider,
+			model: result.model,
+			promptLength: result.prompt.length,
+			count: result.images.length,
+		}),
+	})
 }

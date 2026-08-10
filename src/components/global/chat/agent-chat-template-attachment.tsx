@@ -11,22 +11,19 @@ import {
 	AttachmentMedia,
 	AttachmentTitle,
 } from '@/components/ui/attachment'
+import { Typography } from '@/components/ui/typography'
 import type { AgentTemplateImageAttachment } from '@/features/agent-chat/services/agent-template-request.service'
 import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
 
 const PREVIEW_WIDTH = 280
 
+/** html 첨부: 슬롯 값을 base html에 합성해 미리보기·다운로드한다 (Create 화면과 동일 렌더). */
 export function AgentChatTemplateAttachment({
 	attachment,
 }: {
 	attachment: AgentTemplateImageAttachment
 }) {
-	return <HtmlTemplateAttachment attachment={attachment} />
-}
-
-/** html 첨부: 슬롯 값을 base html에 합성해 미리보기·다운로드한다 (Create 화면과 동일 렌더). */
-function HtmlTemplateAttachment({ attachment }: { attachment: AgentTemplateImageAttachment }) {
 	const composedHtml = useMemo(
 		() =>
 			composeTemplateHtml(
@@ -54,7 +51,7 @@ function HtmlTemplateAttachment({ attachment }: { attachment: AgentTemplateImage
 			name={attachment.name}
 			description={
 				attachment.printPpi
-					? `인쇄 출력 ${attachment.printPpi}ppi · TIFF CMYK · PDF RGB`
+					? `인쇄 출력 ${attachment.printPpi}ppi · TIFF CMYK · PDF CMYK`
 					: '템플릿 이미지'
 			}
 			isExporting={exporting !== null}
@@ -140,17 +137,19 @@ function TemplateAttachmentFrame({
 				)}
 				{onExportPdf && (
 					<AttachmentAction
-						aria-label="RGB PDF로 내보내기"
+						aria-label="CMYK PDF로 내보내기"
 						disabled={isExporting}
 						onClick={onExportPdf}
-						title="RGB PDF로 내보내기"
+						title="CMYK PDF로 내보내기"
 					>
 						<DocumentPdf />
 					</AttachmentAction>
 				)}
 			</AttachmentActions>
 			{exportError && (
-				<p className="px-1 font-body text-sm font-normal text-destructive">{exportError}</p>
+				<Typography size="sm" tone="destructive" className="px-1">
+					{exportError}
+				</Typography>
 			)}
 		</Attachment>
 	)

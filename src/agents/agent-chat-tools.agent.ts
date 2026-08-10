@@ -1,11 +1,8 @@
+import config from '@payload-config'
 import { type ToolSet, tool } from 'ai'
+import { getPayload, type PayloadRequest } from 'payload'
 import { z } from 'zod'
-import { env } from '@/env'
-import {
-	agentQueryTriageSchema,
-	agentSkillSelectionSchema,
-	decideAgentQueryRouting,
-} from '@/features/agent-chat/domain/agent-query-triage'
+import { agentSkillSelectionSchema } from '@/features/agent-chat/domain/agent-skill-tool-policy'
 import {
 	type AgentSkillDetail,
 	findEnabledAgentSkillByName,
@@ -16,20 +13,21 @@ import {
 	templateSlotValueSchema,
 } from '@/features/agent-chat/services/agent-template-request.service'
 import {
-	listAgentChecks,
 	listAgentGuidelineDocuments,
 	readAgentGuidelineDocument,
 	searchAgentGuidelines,
 } from '@/features/agent-chat/services/get-agent-guideline-context.service'
-import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
+import { formatCheckDetail } from '@/features/asset-check/utils/format-check-detail'
 import {
 	type AgentGeneratedImagesAttachment,
 	generateImages,
+	ImageGenerationLimitError,
 } from '@/features/generate-image/services/generate-image.service'
 import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
+import { listPublishedMcpGuidelineChecks } from '@/features/guideline/repositories/mcp-guideline.payload.repository'
 import { type CheckScenario, getCheckScenario } from '@/features/quality-rule/check-scenario'
-import { getCheckScenarios } from '@/features/quality-rule/services/get-check-scenarios.service'
+import { findPublishedCheckScenarios } from '@/features/quality-rule/repositories/check-scenario.payload.repository'
 import { AgentConfigurationError } from '@/lib/errors'
 import type { User } from '@/payload-types'
 import { startCheckSession } from '@/services/start-check-session.service'
@@ -44,26 +42,22 @@ const guidelineToolContextSchema = z.object({
  * 실제 skill/guideline I/O는 tool 실행 시 주입되는 user context로 수행한다.
  */
 export function getAgentTools() {
-	const triageEnabled = env.AGENT_CHAT_TRIAGE_ENABLED === 'true'
-
 	return {
 		loadSkill: tool({
-			description: triageEnabled
-				? 'Classify the request and load the full instructions for one enabled agent skill.'
-				: 'Load the full instructions for one enabled agent skill.',
-			inputSchema: triageEnabled ? agentQueryTriageSchema : agentSkillSelectionSchema,
+			description: 'Load the full instructions for one enabled agent skill.',
+			inputSchema: agentSkillSelectionSchema,
 			contextSchema: guidelineToolContextSchema,
 			execute: async (proposal, { context }) => {
-				const { name } = proposal
-				const skill = await findEnabledAgentSkillByName(context.user, name)
+				const skill = await findEnabledAgentSkillByName(context.user, proposal.name)
 
 				if (!skill) {
 					throw new AgentConfigurationError('Agent skill is not configured.')
 				}
 
+				// 출력은 모델 컨텍스트에 그대로 들어간다.
 				return {
 					...formatLoadedSkill(skill),
-					...decideAgentQueryRouting(proposal, triageEnabled),
+					name: proposal.name,
 				}
 			},
 		}),
@@ -98,7 +92,23 @@ export function getAgentTools() {
 			description: 'Get checks declared by published brand guideline documents.',
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
-			execute: (_input, { context }) => listAgentChecks(context.user),
+			// guideline MCP check 조회를 재사용하고, Agent에는 source를 뺀 DTO를 key 순으로 준다.
+			execute: async (_input, { context }) => {
+				const payload = await getPayload({ config })
+				const checks = await listPublishedMcpGuidelineChecks(
+					{ payload, user: context.user } as PayloadRequest,
+					'ko',
+				)
+
+				return checks
+					.map(({ evidence, key, tier, title }) => ({
+						evidence,
+						key,
+						tier: tier ?? null,
+						title,
+					}))
+					.sort((a, b) => a.key.localeCompare(b.key))
+			},
 		}),
 		listCheckScenarios: tool({
 			description:
@@ -106,7 +116,7 @@ export function getAgentTools() {
 			inputSchema: z.object({}),
 			contextSchema: guidelineToolContextSchema,
 			execute: async (_input, { context }) =>
-				(await getCheckScenarios(context.user as User)).map(({ key, title }) => ({
+				(await findPublishedCheckScenarios(context.user as User)).map(({ key, title }) => ({
 					key,
 					title,
 				})),
@@ -157,17 +167,30 @@ export function getAgentTools() {
 			}),
 			contextSchema: guidelineToolContextSchema,
 			execute: async ({ prompt, profileId, count }, { context }) => {
+				let generated: Awaited<ReturnType<typeof generateImages>>
+				try {
+					generated = await generateImages({
+						userInput: prompt,
+						profileId,
+						user: context.user,
+						count: count ?? 2,
+					})
+				} catch (error) {
+					// 한도 초과는 크래시 대신 기존 실패 계약({status, message})으로 모델에 알린다.
+					if (error instanceof ImageGenerationLimitError) {
+						return {
+							status: 'failed',
+							message: `이미지 생성 요청이 많아요. ${error.retryAfterSeconds}초 후 다시 시도해 주세요.`,
+						}
+					}
+					throw error
+				}
 				const {
 					images,
 					prompt: composedPrompt,
 					profileId: usedProfileId,
 					profileName,
-				} = await generateImages({
-					userInput: prompt,
-					profileId,
-					user: context.user,
-					count: count ?? 2,
-				})
+				} = generated
 				if (images.length === 0) {
 					// 실패를 모델에 명시적으로 알린다 — 안 그러면 빈 결과에도 "만들었어"라고 답한다.
 					return {
@@ -192,7 +215,7 @@ export function getAgentTools() {
 			}),
 			contextSchema: guidelineToolContextSchema,
 			execute: async ({ scenarioKey }, { context, messages }) => {
-				const scenarios = await getCheckScenarios(context.user as User)
+				const scenarios = await findPublishedCheckScenarios(context.user as User)
 				const scenario = getCheckScenario(scenarios, scenarioKey)
 				const image = findLatestImage(messages)
 
@@ -370,22 +393,8 @@ function formatCheckToolResult(
 											: '미통과',
 				status,
 				fulfillment: value.rawResult.fulfillment,
-				detail: formatAgentCheckDetail(value),
+				detail: formatCheckDetail(value) ?? undefined,
 			}
 		}),
 	}
-}
-
-/** 구조화된 판정을 Agent가 설명할 한국어 문구로 바꾼다. 기존 세션은 message로 전달한다. */
-function formatAgentCheckDetail(result: CheckResult): string | undefined {
-	const { rawResult } = result
-	if (rawResult.reasonCode === 'not_applicable') return '관측 대상 없음'
-	if ('summary' in rawResult && rawResult.summary) {
-		if (rawResult.status === 'fail') return `기준 ${rawResult.summary.failed}개 미충족`
-		if (rawResult.status === 'needs_review') {
-			return `기준 ${rawResult.summary.uncertain}개 판단 필요`
-		}
-		if (rawResult.status === 'pass') return `기준 ${rawResult.summary.satisfied}개 충족`
-	}
-	return result.message ?? rawResult.detail
 }
