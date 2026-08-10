@@ -877,6 +877,10 @@ export interface LayoutBlock {
    */
   columns?: number | null;
   /**
+   * 맞붙이면 셀 사이가 1px 선 하나만 남습니다. 셀마다 테두리를 두면 맞닿은 자리가 2px이 되므로 선은 그리드가 그립니다. grid 배치에만 적용됩니다.
+   */
+  gap?: ('default' | 'none') | null;
+  /**
    * 이미지 셀 비율(모든 이미지 균일). masonry에선 무시하고 원본 비율.
    */
   aspectRatio?:
@@ -915,6 +919,10 @@ export interface LayoutBlock {
         | SectionDividerWidget
         | SeparatedLogoApplicationWidget
         | StemClearSpaceWidget
+        | TypeHierarchyWidget
+        | TypeLanguageWidget
+        | TypeScrambleWidget
+        | TypeWeightWidget
         | TypeScaleWidget
         | TypeSpecimenWidget
       )[]
@@ -1119,7 +1127,20 @@ export interface DoDontWidget {
          * 이미지 대신 쓸 컬러 패널입니다. 색·그라디언트·투명도 중첩처럼 이미지로 만들면 원본 값이 사라지는 예시에 씁니다. 이미지를 함께 지정하면 이미지가 이깁니다.
          */
         preset?:
-          | ('off-palette' | 'gradient' | 'low-contrast' | 'unpaired-combo' | 'overlay-stack' | 'brightness-opacity')
+          | (
+              | 'off-palette'
+              | 'gradient'
+              | 'low-contrast'
+              | 'unpaired-combo'
+              | 'overlay-stack'
+              | 'brightness-opacity'
+              | 'tight-tracking'
+              | 'loose-tracking'
+              | 'wrong-typeface'
+              | 'mixed-size'
+              | 'distorted'
+              | 'slanted'
+            )
           | null;
         caption?: string | null;
         id?: string | null;
@@ -1489,6 +1510,90 @@ export interface StemClearSpaceWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'stemClearSpaceWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeHierarchyWidget".
+ */
+export interface TypeHierarchyWidget {
+  /**
+   * 행간 규정과 예시 문구가 언어마다 다릅니다. 화면에는 컨트롤로 노출되지 않습니다.
+   */
+  language?: ('ko' | 'en' | 'enCaps') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeHierarchyWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeLanguageWidget".
+ */
+export interface TypeLanguageWidget {
+  /**
+   * 처음 보여줄 언어입니다. 독자가 화면에서 바꿀 수 있습니다.
+   */
+  initialLanguage?: ('ko' | 'en' | 'enCaps') | null;
+  /**
+   * 나란히 두면 세 언어를 한 화면에서 비교합니다(원본은 국문·영문을 좌우로 놓았습니다). 좁은 자리에서는 전환이 낫습니다.
+   */
+  layout?: ('single' | 'compare') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeLanguageWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScrambleWidget".
+ */
+export interface TypeScrambleWidget {
+  /**
+   * 표시할 문구입니다. 줄바꿈을 그대로 살려 한 덩어리로 보여줍니다. 비우면 기본 표본을 씁니다.
+   */
+  text?: string | null;
+  /**
+   * 글자 크기(px)입니다. 줄 수와 판 높이에 맞춰 정합니다.
+   */
+  fontSize?: number | null;
+  /**
+   * 판 높이(px)입니다. 고정이라 스크램블 중에도 판형이 흔들리지 않습니다. 글자는 가운데 서므로 위아래 여백은 이 높이에서 글자 높이를 뺀 만큼입니다.
+   */
+  panelHeight?: number | null;
+  /**
+   * 글자 색입니다. 비우면 기본 전경색을 씁니다.
+   */
+  color?: (number | null) | BrandColor;
+  /**
+   * 판 배경색입니다. 비우면 배경 없이 글자만 보입니다.
+   */
+  background?: (number | null) | BrandColor;
+  /**
+   * 표시 굵기입니다. 배포된 서체 파일에 없는 굵기를 고르면 브라우저 합성이라는 안내가 함께 나옵니다.
+   */
+  weight?: ('light' | 'medium' | 'bold') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeScrambleWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeWeightWidget".
+ */
+export interface TypeWeightWidget {
+  /**
+   * 표본은 컨트롤 없이 고른 굵기 하나만 큰 문구 + 작은 본문으로 보여 줍니다. 원본(Artboard 43)처럼 3종을 늘어놓으려면 블록을 3열로 두고 이 위젯을 굵기·언어별로 여섯 개 넣습니다.
+   */
+  layout?: ('slider' | 'specimen') | null;
+  /**
+   * 표본 문구의 언어입니다. 문구와 행간은 그 언어의 규정을 따라 고정되고, 화면에서는 굵기만 바뀝니다.
+   */
+  language?: ('ko' | 'en' | 'enCaps') | null;
+  /**
+   * 처음 보여줄 굵기입니다. 보는 사람이 컨트롤로 3단 사이를 옮겨 다닐 수 있습니다.
+   */
+  initialWeight?: ('light' | 'medium' | 'bold') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeWeightWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3019,6 +3124,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
   innerBackground?: T;
   arrangement?: T;
   columns?: T;
+  gap?: T;
   aspectRatio?: T;
   children?:
     | T
@@ -3051,6 +3157,10 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         sectionDividerWidget?: T | SectionDividerWidgetSelect<T>;
         sepLogoAppWidget?: T | SeparatedLogoApplicationWidgetSelect<T>;
         stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
+        typeHierarchyWidget?: T | TypeHierarchyWidgetSelect<T>;
+        typeLanguageWidget?: T | TypeLanguageWidgetSelect<T>;
+        typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
+        typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
         typeScaleWidget?: T | TypeScaleWidgetSelect<T>;
         typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
       };
@@ -3357,6 +3467,50 @@ export interface SeparatedLogoApplicationWidgetSelect<T extends boolean = true> 
  * via the `definition` "StemClearSpaceWidget_select".
  */
 export interface StemClearSpaceWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeHierarchyWidget_select".
+ */
+export interface TypeHierarchyWidgetSelect<T extends boolean = true> {
+  language?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeLanguageWidget_select".
+ */
+export interface TypeLanguageWidgetSelect<T extends boolean = true> {
+  initialLanguage?: T;
+  layout?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScrambleWidget_select".
+ */
+export interface TypeScrambleWidgetSelect<T extends boolean = true> {
+  text?: T;
+  fontSize?: T;
+  panelHeight?: T;
+  color?: T;
+  background?: T;
+  weight?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeWeightWidget_select".
+ */
+export interface TypeWeightWidgetSelect<T extends boolean = true> {
+  layout?: T;
+  language?: T;
+  initialWeight?: T;
   id?: T;
   blockName?: T;
 }

@@ -4,15 +4,28 @@ import { GuidelineImage } from '@/features/guideline/components/globals/guidelin
 import { cn } from '@/lib/utils'
 import { IMAGE_RATIO_CLASS_NAMES, type ImageRatio } from '@/types/image-ratio'
 import { type LogoRef, type LogoSources, resolveLogoSet } from '../logo-set'
-import { BAND_OPACITY, COLOR_PRESETS, type ColorPreset, type ColorPresetKey } from './presets'
+import {
+	BAND_OPACITY,
+	type ColorPreset,
+	colorPreset,
+	type PresetKey,
+	TYPO_FONT_SIZE,
+	TYPO_LINE_HEIGHT,
+	TYPO_MAX_WIDTH,
+	TYPO_SAMPLE_LINES,
+	TYPO_WEIGHT,
+	type TypoPreset,
+	typoPreset,
+} from './presets'
 
-// Do/Don't 위젯(서버) — 예시마다 이미지 또는 컬러 패널 프리셋을 그리고, 순번 제목·kind 표식·캡션을 붙인다.
+// Do/Don't 위젯(서버) — 예시마다 이미지 또는 코드 프리셋(컬러 패널·타이포 판)을 그리고,
+// 순번 제목·kind 표식·캡션을 붙인다.
 // 표현은 SVG-54(COLOR 사용 금지)의 판을 따른다: 판형 위가 아니라 위쪽 헤더줄에 순번 제목과 표식을 둔다.
 type Kind = 'do' | 'ok' | 'dont'
 type Example = {
 	id?: string | null
 	image?: number | { url?: string | null; alt?: string | null; name?: string | null } | null
-	preset?: ColorPresetKey | null
+	preset?: PresetKey | null
 	kind: Kind
 	caption?: string | null
 }
@@ -51,9 +64,11 @@ export async function DoDontWidget({
 	const items = examples ?? []
 	if (items.length === 0) return null
 
-	// 프리셋을 하나도 안 쓰면 로고 조회를 하지 않는다 — 이미지 예시만 있는 페이지가 대다수다.
-	const usesPreset = items.some((example) => example.preset && !example.image)
-	const logos = usesPreset ? await resolveLogoSet(await getPayload({ config }), logo) : null
+	// 로고를 얹는 건 컬러 패널뿐이다. 이미지·타이포 예시만 있는 페이지에서는 조회를 하지 않는다.
+	const usesLogo = items.some(
+		(example) => !example.image && example.preset && colorPreset(example.preset),
+	)
+	const logos = usesLogo ? await resolveLogoSet(await getPayload({ config }), logo) : null
 
 	const ratio = imageRatio ?? '16:9'
 	const label = itemLabel?.trim()
@@ -98,7 +113,10 @@ export async function DoDontWidget({
 	)
 }
 
-/** 이미지가 있으면 이미지, 없고 프리셋이 있으면 컬러 패널. 둘 다 없으면 캡션만 남는다. */
+/**
+ * 이미지가 있으면 이미지, 없으면 프리셋 키가 가리키는 판. 어느 것도 없으면 캡션만 남는다.
+ * 컬러·타이포 프리셋은 admin에서 select 하나를 나눠 쓰므로 키로 갈린다.
+ */
 function Figure({
 	example,
 	ratio,
@@ -115,15 +133,17 @@ function Figure({
 				image={example.image}
 				alt={example.caption || ''}
 				ratio={ratio}
-				className="bg-muted"
 				imgClassName="size-full object-cover"
 			/>
 		)
 	}
+	if (!example.preset) return null
 
-	const preset = example.preset ? COLOR_PRESETS[example.preset] : null
-	if (!preset) return null
-	return <ColorPanel preset={preset} ratio={ratio} logos={logos} />
+	const color = colorPreset(example.preset)
+	if (color) return <ColorPanel preset={color} ratio={ratio} logos={logos} />
+
+	const typo = typoPreset(example.preset)
+	return typo ? <TypoPanel preset={typo} ratio={ratio} /> : null
 }
 
 /** 배경 패널 + (있으면) 겹치는 띠 + 가운데 로고. */
@@ -159,6 +179,50 @@ function ColorPanel({
 			<div className="absolute inset-0 grid place-items-center">
 				<LogoMark logo={preset.logo} logos={logos} />
 			</div>
+		</div>
+	)
+}
+
+/**
+ * 타이포 위반 판 — 위반이 글자 자체라 컬러 패널과 같은 비율의 중립면 위에 문구만 가운데 놓는다.
+ * 여섯 칸이 같은 문구·같은 크기라 칸마다 다른 것은 위반뿐이다.
+ */
+function TypoPanel({ preset, ratio }: { preset: TypoPreset; ratio: ImageRatio }) {
+	return (
+		<div
+			className={cn(
+				'grid w-full place-items-center overflow-hidden border border-border',
+				IMAGE_RATIO_CLASS_NAMES[ratio],
+			)}
+			// 글자를 셀이 아니라 이 판 기준으로 잰다 — 열 수가 바뀌어도 판 안의 그림이 같아진다.
+			style={{ containerType: 'inline-size' }}
+		>
+			<p
+				className="text-center text-foreground"
+				style={{
+					fontFamily: preset.fontFamily,
+					// 🔴 자간이 em이라 크기를 반드시 여기(문단)에 준다. 크기가 줄에만 있으면 em이 상속된
+					//    16px 기준으로 풀려 자간 위반이 거의 안 보인다.
+					fontSize: TYPO_FONT_SIZE,
+					fontWeight: TYPO_WEIGHT,
+					letterSpacing: preset.letterSpacing,
+					lineHeight: TYPO_LINE_HEIGHT,
+					transform: preset.transform,
+					// 넘치면 잘려서 무슨 위반인지 안 보인다. 잘리기 전에 줄바꿈으로 흘린다.
+					maxWidth: TYPO_MAX_WIDTH,
+				}}
+			>
+				{TYPO_SAMPLE_LINES.map((line, index) => (
+					// 줄 크기는 문단 기준 배수다(기본 1em). 한 문장 안 크기 혼재가 이 배수로 표현된다.
+					<span
+						key={line}
+						className="block"
+						style={{ fontSize: `${preset.lineScale?.[index] ?? 1}em` }}
+					>
+						{line}
+					</span>
+				))}
+			</p>
 		</div>
 	)
 }

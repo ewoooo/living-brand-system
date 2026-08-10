@@ -27,8 +27,12 @@ import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase
 import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/schema'
 import { SeparatedLogoApplicationWidget } from '@/features/guideline/widgets/separated-logo-application/schema'
 import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/schema'
+import { TypeHierarchyWidget } from '@/features/guideline/widgets/type-hierarchy/schema'
+import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/schema'
 import { TypeScaleWidget } from '@/features/guideline/widgets/type-scale/schema'
+import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/schema'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/schema'
+import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/schema'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 import { baseBlockFields } from '../shared/fields'
 
@@ -102,6 +106,20 @@ export const LayoutBlock: Block = {
 			admin: { description: 'grid 열 수입니다(행은 자식 개수로 자동).' },
 		},
 		{
+			name: 'gap',
+			type: 'select',
+			defaultValue: 'default',
+			enumName: 'enum_block_gap',
+			options: [
+				{ label: '표준(간격 있음)', value: 'default' },
+				{ label: '맞붙임(선 하나로)', value: 'none' },
+			],
+			admin: {
+				description:
+					'맞붙이면 셀 사이가 1px 선 하나만 남습니다. 셀마다 테두리를 두면 맞닿은 자리가 2px이 되므로 선은 그리드가 그립니다. grid 배치에만 적용됩니다.',
+			},
+		},
+		{
 			name: 'aspectRatio',
 			type: 'select',
 			defaultValue: '1:1',
@@ -144,6 +162,10 @@ export const LayoutBlock: Block = {
 				SectionDividerWidget,
 				SeparatedLogoApplicationWidget,
 				StemClearSpaceWidget,
+				TypeHierarchyWidget,
+				TypeLanguageWidget,
+				TypeScrambleWidget,
+				TypeWeightWidget,
 				TypeScaleWidget,
 				TypeSpecimenWidget,
 			],
