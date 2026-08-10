@@ -5,12 +5,12 @@ import type { RelationshipFieldClientComponent } from 'payload'
 import { useEffect } from 'react'
 import { relationshipId } from '@/features/guideline/utils/block-text'
 import type { RuleExecutor } from '@/features/quality-rule/rule-executor'
-import { siblingPath } from './sibling-path'
+import { siblingPath } from '../shared/sibling-path'
 
 const isCheckExecutor = (value: unknown): value is RuleExecutor =>
 	value === 'deterministic' || value === 'heuristic' || value === 'manual'
 
-const CheckCheckerField: RelationshipFieldClientComponent = (props) => {
+export const CheckCheckerField: RelationshipFieldClientComponent = (props) => {
 	const { path } = props
 	const { dispatchFields } = useForm()
 	const executorPath = siblingPath(path, 'executor')
@@ -45,5 +45,3 @@ const CheckCheckerField: RelationshipFieldClientComponent = (props) => {
 
 	return <RelationshipField {...props} />
 }
-
-export default CheckCheckerField

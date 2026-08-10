@@ -13,11 +13,11 @@ import { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { contrastOptionsSchema } from '@/features/quality-rule/contrast-options'
 import { relationshipId } from '@/features/quality-rule/relationship-id'
-import { siblingPath } from './sibling-path'
+import { siblingPath } from '../shared/sibling-path'
 
 type ResolvedChecker = { id: number; key: string | null }
 
-const CheckOptionsField: JSONFieldClientComponent = (props) => {
+export const CheckOptionsField: JSONFieldClientComponent = (props) => {
 	const { path } = props
 	const { disabled, errorMessage, setValue, showError, value } = useField<unknown>({ path })
 	const checkerPath = siblingPath(path, 'checker')
@@ -89,5 +89,3 @@ const CheckOptionsField: JSONFieldClientComponent = (props) => {
 		</div>
 	)
 }
-
-export default CheckOptionsField

@@ -58,7 +58,7 @@ function TreeItems({
 	)
 }
 
-export default async function GuidelineDocumentTreeList({
+export async function GuidelineDocumentTreeList({
 	collectionConfig,
 	hasCreatePermission,
 	locale,

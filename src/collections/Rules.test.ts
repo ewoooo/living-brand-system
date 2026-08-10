@@ -213,10 +213,14 @@ describe('Rules collection contract', () => {
 		const checker = fieldNamed('checker')
 		if (checker?.type !== 'relationship') throw new Error('checker relationship is missing')
 		expect(checker.relationTo).toBe('rule-checkers')
-		expect(checker.admin?.components?.Field).toBe('/components/admin/CheckCheckerField')
+		expect(checker.admin?.components?.Field).toBe(
+			'/components/admin/rules/check-checker-field#CheckCheckerField',
+		)
 
 		const options = fieldNamed('options')
 		if (options?.type !== 'json') throw new Error('options json is missing')
-		expect(options.admin?.components?.Field).toBe('/components/admin/CheckOptionsField')
+		expect(options.admin?.components?.Field).toBe(
+			'/components/admin/rules/check-options-field#CheckOptionsField',
+		)
 	})
 })

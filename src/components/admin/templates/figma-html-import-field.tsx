@@ -69,7 +69,7 @@ function pruneTemplateNodeConfigs(
  * 가져오면 새 baseHtml에 남은 노드의 overrides만 유지해 html을 재합성한다.
  * 저장은 Manager가 폼에서 결정한다.
  */
-export default function FigmaHtmlImportField() {
+export function FigmaHtmlImportField() {
 	const { dispatchFields, getData, setModified } = useForm()
 	const sourceUrl = (useFormFields(([fields]) => fields.sourceUrl?.value) as string) ?? ''
 	const setSourceUrl = (value: string) =>

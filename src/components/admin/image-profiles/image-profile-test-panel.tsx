@@ -9,7 +9,7 @@ type PromptResult = {
 	normalizedInput: Record<string, string>
 }
 
-export default function ImageProfileTestPanel() {
+export function ImageProfileTestPanel() {
 	const { getData, getDataByPath } = useForm()
 	const [userPrompt, setUserPrompt] = useState('')
 	const [normalizeUserPrompt, setNormalizeUserPrompt] = useState(true)

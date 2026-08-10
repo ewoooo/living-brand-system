@@ -10,7 +10,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import { fieldNumber, fieldRowCount, fieldString } from './form-fields'
+import { fieldNumber, fieldRowCount, fieldString } from '../shared/form-fields'
 
 type CountedItem = {
 	callCount?: number | null
@@ -86,7 +86,7 @@ function formatTokens(usage?: MessageRow['aiUsage']) {
 	return typeof total === 'number' ? total.toLocaleString('ko-KR') : '-'
 }
 
-export default function AgentChatMessagesTable() {
+export function AgentChatMessagesTable() {
 	const messages = useFormFields(([fields]) => buildMessages(fields))
 
 	if (messages.length === 0) {

@@ -137,7 +137,7 @@ export const Rules: CollectionConfig = {
 				appearance: 'drawer',
 				description: '검수 실행 방식과 구현체를 선택합니다.',
 				components: {
-					Field: '/components/admin/CheckCheckerField',
+					Field: '/components/admin/rules/check-checker-field#CheckCheckerField',
 				},
 			},
 		},
@@ -149,7 +149,7 @@ export const Rules: CollectionConfig = {
 				condition: executorCondition('deterministic'),
 				description: '이 Rule에서 결정론적 Checker에 전달할 설정입니다.',
 				components: {
-					Field: '/components/admin/CheckOptionsField',
+					Field: '/components/admin/rules/check-options-field#CheckOptionsField',
 				},
 			},
 		},

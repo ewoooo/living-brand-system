@@ -10,7 +10,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import { fieldNumber, fieldRowCount, fieldString, formatNumber } from './form-fields'
+import { fieldNumber, fieldRowCount, fieldString, formatNumber } from '../shared/form-fields'
 
 type UsageRow = {
 	cacheReadInputTokens?: number | null
@@ -39,7 +39,7 @@ function buildUsage(fields: FormState): UsageRow {
 	}
 }
 
-export default function AgentChatUsageTable() {
+export function AgentChatUsageTable() {
 	const usage = useFormFields(([fields]) => buildUsage(fields))
 
 	return (

@@ -21,7 +21,7 @@ interface AvailableCheck {
 	executor?: 'deterministic' | 'heuristic' | 'manual'
 }
 
-const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
+export const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 	const { disabled, errorMessage, setValue, showError, value } = useField<unknown>({ path })
 	const checkKeys = Array.isArray(value)
 		? value.filter((key): key is string => typeof key === 'string')
@@ -208,5 +208,3 @@ const CheckScenarioChecksField: JSONFieldClientComponent = ({ path }) => {
 		</div>
 	)
 }
-
-export default CheckScenarioChecksField

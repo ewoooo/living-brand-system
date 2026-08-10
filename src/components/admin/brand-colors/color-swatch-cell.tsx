@@ -4,7 +4,7 @@ type Props = {
 	cellData?: unknown
 }
 
-export default function ColorSwatchCell({ cellData }: Props) {
+export function ColorSwatchCell({ cellData }: Props) {
 	const hex = typeof cellData === 'string' ? cellData : ''
 
 	return (

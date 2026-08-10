@@ -1,4 +1,4 @@
-import { default as default_0c6e80936980bf84dca99c2ae1c1a8a1 } from '../../../components/admin/GuidelineDocumentLocation'
+import { GuidelineDocumentLocation as GuidelineDocumentLocation_7e2832e15a06716ad5700f5273a5cfc7 } from '../../../components/admin/guideline-documents/guideline-document-location'
 import { SlugField as SlugField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -24,33 +24,33 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
-import { default as default_f430ebb40f6aab984983cadfc8636c87 } from '../../../components/admin/StemPickerField'
-import { default as default_3cb64f97d1dcec18a20e3bc2bf9faba7 } from '../../../components/admin/BetterEditorPublishButton'
-import { default as default_84fdfed89814d586356c708710d7da33 } from '../../../components/admin/GuidelineDocumentTreeList'
-import { default as default_36acbba7f1182725fb35765f5d4542e4 } from '../../../components/admin/ColorSwatchCell'
-import { default as default_b3288ac7fca523d931efac2e3bc83ffe } from '../../../components/admin/image-profile/image-profile-test-panel'
-import { default as default_d29f9aecd9aad1e6883cc0f711be91cd } from '../../../components/admin/template/template-layers-field'
-import { default as default_d558d37f06df8bfe858a886e6bfa65e1 } from '../../../components/admin/template/sidebar-divider'
-import { default as default_9b892f0522ff47632f1ec071f2be293b } from '../../../components/admin/template/figma-html-import-field'
-import { default as default_1c7bf56be35538dba4de1f5c5e377252 } from '../../../components/admin/CheckScenarioChecksField'
-import { default as default_ad1d969b642204b60b7dd66ef5c88f1c } from '../../../components/admin/CheckCheckerField'
-import { default as default_b2590831ecdbc846ead523de86ea1f09 } from '../../../components/admin/CheckOptionsField'
-import { default as default_55a6b37228c5405acd0fc7b5977e6d29 } from '../../../components/admin/AgentChatMessagesTable'
-import { default as default_fefc0aa6463fb8af4fa50c0b3a53cbba } from '../../../components/admin/AgentChatCountedItemsTable'
-import { default as default_c30c461be6387021ff789d8393e59cf0 } from '../../../components/admin/AgentChatUsageTable'
+import { StemPickerField as StemPickerField_ccd38a967bee2d18f73d869e82ccee78 } from '../../../components/admin/guideline-documents/stem-picker-field'
+import { BetterEditorPublishButton as BetterEditorPublishButton_e4a80c849de3e1722a2102dbd878fdcd } from '../../../components/admin/guideline-documents/better-editor-publish-button'
+import { GuidelineDocumentTreeList as GuidelineDocumentTreeList_cbf6266b788a4c70ca37fe64fb741dc2 } from '../../../components/admin/guideline-documents/guideline-document-tree-list'
+import { ColorSwatchCell as ColorSwatchCell_88fca198b056ae91f3276aaa342114bd } from '../../../components/admin/brand-colors/color-swatch-cell'
+import { ImageProfileTestPanel as ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640 } from '../../../components/admin/image-profiles/image-profile-test-panel'
+import { TemplateLayersField as TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6 } from '../../../components/admin/templates/template-layers-field'
+import { SidebarDivider as SidebarDivider_34b02386e3687855f2c939d264827b16 } from '../../../components/admin/templates/sidebar-divider'
+import { FigmaHtmlImportField as FigmaHtmlImportField_be9c443aa962726f6d016f5ca8fc7c1f } from '../../../components/admin/templates/figma-html-import-field'
+import { CheckScenarioChecksField as CheckScenarioChecksField_e627639efdf8e16289f7f26d48157b23 } from '../../../components/admin/check-scenarios/check-scenario-checks-field'
+import { CheckCheckerField as CheckCheckerField_74048afc0e326eef0a3632c5852a2d17 } from '../../../components/admin/rules/check-checker-field'
+import { CheckOptionsField as CheckOptionsField_af7caa6aec010a7e54b4ef91c3e4d85d } from '../../../components/admin/rules/check-options-field'
+import { AgentChatMessagesTable as AgentChatMessagesTable_f08b6fdfaab9490c002c63fda192855d } from '../../../components/admin/agent-chat-sessions/agent-chat-messages-table'
+import { AgentChatCountedItemsTable as AgentChatCountedItemsTable_ebca1986b2f11917697431864cd06c94 } from '../../../components/admin/agent-chat-sessions/agent-chat-counted-items-table'
+import { AgentChatUsageTable as AgentChatUsageTable_06305393087c4b9b6d978cd73f8557d9 } from '../../../components/admin/agent-chat-sessions/agent-chat-usage-table'
 import { LinkToDoc as LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { ReindexButton as ReindexButton_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { SettingsBanner as SettingsBanner_d26de2934fab2f5e50b16fb3e402473a } from 'payload-better-editor/client'
-import { default as default_7be396d0766c6c490887ef074dd0ced4 } from '../../../components/admin/AdminIcon'
-import { default as default_27eed1898e8caadb2fd2266b54bb4509 } from '../../../components/admin/AdminLogo'
-import { default as default_68a16153b61e0e8909eb1452171e2a49 } from '../../../components/admin/DashboardSummary'
-import { default as default_c3e4b7826eabc44176000e6d075a5d08 } from '../../../components/admin/admin-dialkit-provider'
+import { AdminIcon as AdminIcon_4f65402b63e32c200eaebfffc82692d5 } from '../../../components/admin/shell/admin-icon'
+import { AdminLogo as AdminLogo_b128a563ad49bc8ad325bf59906df38b } from '../../../components/admin/shell/admin-logo'
+import { DashboardSummary as DashboardSummary_e4ea5033f5334ffbe503ae744b0630cf } from '../../../components/admin/shell/dashboard-summary'
+import { AdminDialKitProvider as AdminDialKitProvider_2809bec1466a2967300927dd21f321ee } from '../../../components/admin/shell/admin-dialkit-provider'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
 export const importMap = {
-  "/components/admin/GuidelineDocumentLocation#default": default_0c6e80936980bf84dca99c2ae1c1a8a1,
+  "/components/admin/guideline-documents/guideline-document-location#GuidelineDocumentLocation": GuidelineDocumentLocation_7e2832e15a06716ad5700f5273a5cfc7,
   "@payloadcms/next/client#SlugField": SlugField_2b8867833a34864a02ddf429b0728a40,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,
@@ -76,27 +76,27 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
-  "/components/admin/StemPickerField#default": default_f430ebb40f6aab984983cadfc8636c87,
-  "/components/admin/BetterEditorPublishButton#default": default_3cb64f97d1dcec18a20e3bc2bf9faba7,
-  "/components/admin/GuidelineDocumentTreeList#default": default_84fdfed89814d586356c708710d7da33,
-  "/components/admin/ColorSwatchCell#default": default_36acbba7f1182725fb35765f5d4542e4,
-  "/components/admin/image-profile/image-profile-test-panel#default": default_b3288ac7fca523d931efac2e3bc83ffe,
-  "/components/admin/template/template-layers-field#default": default_d29f9aecd9aad1e6883cc0f711be91cd,
-  "/components/admin/template/sidebar-divider#default": default_d558d37f06df8bfe858a886e6bfa65e1,
-  "/components/admin/template/figma-html-import-field#default": default_9b892f0522ff47632f1ec071f2be293b,
-  "/components/admin/CheckScenarioChecksField#default": default_1c7bf56be35538dba4de1f5c5e377252,
-  "/components/admin/CheckCheckerField#default": default_ad1d969b642204b60b7dd66ef5c88f1c,
-  "/components/admin/CheckOptionsField#default": default_b2590831ecdbc846ead523de86ea1f09,
-  "/components/admin/AgentChatMessagesTable#default": default_55a6b37228c5405acd0fc7b5977e6d29,
-  "/components/admin/AgentChatCountedItemsTable#default": default_fefc0aa6463fb8af4fa50c0b3a53cbba,
-  "/components/admin/AgentChatUsageTable#default": default_c30c461be6387021ff789d8393e59cf0,
+  "/components/admin/guideline-documents/stem-picker-field#StemPickerField": StemPickerField_ccd38a967bee2d18f73d869e82ccee78,
+  "/components/admin/guideline-documents/better-editor-publish-button#BetterEditorPublishButton": BetterEditorPublishButton_e4a80c849de3e1722a2102dbd878fdcd,
+  "/components/admin/guideline-documents/guideline-document-tree-list#GuidelineDocumentTreeList": GuidelineDocumentTreeList_cbf6266b788a4c70ca37fe64fb741dc2,
+  "/components/admin/brand-colors/color-swatch-cell#ColorSwatchCell": ColorSwatchCell_88fca198b056ae91f3276aaa342114bd,
+  "/components/admin/image-profiles/image-profile-test-panel#ImageProfileTestPanel": ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640,
+  "/components/admin/templates/template-layers-field#TemplateLayersField": TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6,
+  "/components/admin/templates/sidebar-divider#SidebarDivider": SidebarDivider_34b02386e3687855f2c939d264827b16,
+  "/components/admin/templates/figma-html-import-field#FigmaHtmlImportField": FigmaHtmlImportField_be9c443aa962726f6d016f5ca8fc7c1f,
+  "/components/admin/check-scenarios/check-scenario-checks-field#CheckScenarioChecksField": CheckScenarioChecksField_e627639efdf8e16289f7f26d48157b23,
+  "/components/admin/rules/check-checker-field#CheckCheckerField": CheckCheckerField_74048afc0e326eef0a3632c5852a2d17,
+  "/components/admin/rules/check-options-field#CheckOptionsField": CheckOptionsField_af7caa6aec010a7e54b4ef91c3e4d85d,
+  "/components/admin/agent-chat-sessions/agent-chat-messages-table#AgentChatMessagesTable": AgentChatMessagesTable_f08b6fdfaab9490c002c63fda192855d,
+  "/components/admin/agent-chat-sessions/agent-chat-counted-items-table#AgentChatCountedItemsTable": AgentChatCountedItemsTable_ebca1986b2f11917697431864cd06c94,
+  "/components/admin/agent-chat-sessions/agent-chat-usage-table#AgentChatUsageTable": AgentChatUsageTable_06305393087c4b9b6d978cd73f8557d9,
   "@payloadcms/plugin-search/client#LinkToDoc": LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634,
   "@payloadcms/plugin-search/client#ReindexButton": ReindexButton_aead06e4cbf6b2620c5c51c9ab283634,
   "payload-better-editor/client#SettingsBanner": SettingsBanner_d26de2934fab2f5e50b16fb3e402473a,
-  "/components/admin/AdminIcon#default": default_7be396d0766c6c490887ef074dd0ced4,
-  "/components/admin/AdminLogo#default": default_27eed1898e8caadb2fd2266b54bb4509,
-  "/components/admin/DashboardSummary#default": default_68a16153b61e0e8909eb1452171e2a49,
-  "/components/admin/admin-dialkit-provider#default": default_c3e4b7826eabc44176000e6d075a5d08,
+  "/components/admin/shell/admin-icon#AdminIcon": AdminIcon_4f65402b63e32c200eaebfffc82692d5,
+  "/components/admin/shell/admin-logo#AdminLogo": AdminLogo_b128a563ad49bc8ad325bf59906df38b,
+  "/components/admin/shell/dashboard-summary#DashboardSummary": DashboardSummary_e4ea5033f5334ffbe503ae744b0630cf,
+  "/components/admin/shell/admin-dialkit-provider#AdminDialKitProvider": AdminDialKitProvider_2809bec1466a2967300927dd21f321ee,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

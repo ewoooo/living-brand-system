@@ -1,15 +1,15 @@
-export default function AdminLogo() {
+export function AdminIcon() {
 	return (
 		<span
 			aria-label="Living Brand System"
 			role="img"
 			style={{
-				backgroundColor: 'var(--color-text)',
+				backgroundColor: 'currentColor',
 				display: 'block',
-				height: 64,
+				height: '100%',
 				mask: 'url("/logos/logo.svg") center / contain no-repeat',
 				WebkitMask: 'url("/logos/logo.svg") center / contain no-repeat',
-				width: 64,
+				width: '100%',
 			}}
 		/>
 	)

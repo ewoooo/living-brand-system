@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { createElement } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import CheckScenarioChecksField from './CheckScenarioChecksField'
+import { CheckScenarioChecksField } from './check-scenario-checks-field'
 
 const { setValue } = vi.hoisted(() => ({ setValue: vi.fn() }))
 

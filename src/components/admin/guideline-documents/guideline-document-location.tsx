@@ -2,10 +2,10 @@
 
 import { useFormFields } from '@payloadcms/ui'
 import { Badge } from '@/components/ui/badge'
-import { fieldRowCount } from './form-fields'
+import { fieldRowCount } from '../shared/form-fields'
 import { guidelineBreadcrumbCount, guidelineDocumentTypeLabel } from './guideline-document-tree'
 
-export default function GuidelineDocumentLocation() {
+export function GuidelineDocumentLocation() {
 	const typeLabel = useFormFields(([fields]) => {
 		const breadcrumbs = fields.breadcrumbs
 		return guidelineDocumentTypeLabel(

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { getAdminGuidelineSummary } from '@/features/guideline/services/get-admin-guideline-summary.service'
-import DashboardSummary from './DashboardSummary'
+import { DashboardSummary } from './dashboard-summary'
 
 vi.mock('@/features/guideline/services/get-admin-guideline-summary.service', () => ({
 	getAdminGuidelineSummary: vi.fn(),

@@ -8,7 +8,7 @@ import {
 	parseLayers,
 	pruneCarrierChildImageKeys,
 } from './template-layers'
-import TemplateLayersField from './template-layers-field'
+import { TemplateLayersField } from './template-layers-field'
 
 const payloadForm = vi.hoisted(() => ({
 	dispatchFields: vi.fn(),

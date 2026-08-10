@@ -10,7 +10,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import { fieldNumber, fieldRowCount, fieldString, formatNumber } from './form-fields'
+import { fieldNumber, fieldRowCount, fieldString, formatNumber } from '../shared/form-fields'
 
 type CountedItem = {
 	callCount?: number | null
@@ -30,7 +30,7 @@ function buildItems(fields: FormState, path: string): CountedItem[] {
 	}))
 }
 
-export default function AgentChatCountedItemsTable({ path }: Props) {
+export function AgentChatCountedItemsTable({ path }: Props) {
 	const isSkills = path === 'usedSkillsTable'
 	const sourcePath = isSkills ? 'usedSkills' : 'usedTools'
 	const title = isSkills ? 'Used Skills' : 'Used Tools'

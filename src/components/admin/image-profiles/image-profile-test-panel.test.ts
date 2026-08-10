@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { type ButtonHTMLAttributes, createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import ImageProfileTestPanel from './image-profile-test-panel'
+import { ImageProfileTestPanel } from './image-profile-test-panel'
 
 const mocks = vi.hoisted(() => ({
 	getData: vi.fn(),

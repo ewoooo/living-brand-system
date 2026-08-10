@@ -142,7 +142,7 @@ function LayerList({
 	)
 }
 
-export default function TemplateLayersField() {
+export function TemplateLayersField() {
 	const { dispatchFields, setModified } = useForm()
 	const html = useFormFields(([fields]) => fields.html?.value) as string | undefined
 	const baseHtml = useFormFields(([fields]) => fields.baseHtml?.value) as string | undefined

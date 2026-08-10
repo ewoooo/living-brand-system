@@ -210,7 +210,7 @@ export const ImageProfiles: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				components: {
-					Field: '/components/admin/image-profile/image-profile-test-panel',
+					Field: '/components/admin/image-profiles/image-profile-test-panel#ImageProfileTestPanel',
 				},
 			},
 		},

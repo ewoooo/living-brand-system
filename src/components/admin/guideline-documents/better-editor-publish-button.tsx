@@ -3,7 +3,7 @@
 import { PublishButton } from '@payloadcms/ui'
 import { LiveEditorToggle } from 'payload-better-editor/client'
 
-export default function BetterEditorPublishButton() {
+export function BetterEditorPublishButton() {
 	return (
 		<>
 			<LiveEditorToggle blocksField="blocks" />
