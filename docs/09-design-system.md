@@ -37,8 +37,8 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 | --- | --- | --- |
 | color 원시값 | `:root`(라이트), `.dark`(다크)의 원시 색 정의 | `src/app/(frontend)/theme.css`, `theme.css` |
 | color 유틸 매핑 | 원시값 → `@theme inline`의 `--color-*` 유틸 토큰 | `theme.css` |
-| 상태색 | 판정·상태 표시 전용 `--success`/`--info`/`--warning`(실패는 기존 `--destructive`, 해당 없음은 `--muted`) | `theme.css` |
-| highlight gradient | 강조 배경과 전경 토큰, `bg-highlight` 유틸 | `src/app/(frontend)/theme.css` |
+| 상태색 | 판정·상태 표시 전용 `--success`/`--info`/`--warning`(실패는 기존 `--destructive`, 해당 없음은 `--muted`). Admin 확장은 같은 이름을 Payload 테마에 매핑 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
+| highlight | 강조 배경과 전경 토큰, `bg-highlight` 유틸. Frontend는 gradient, Admin은 Payload success 색에 매핑 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
 | radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl` 4단 파생(`lg`는 뿌리값, `sm`/`md`/`xl`은 calc) | `theme.css`, `theme.css` |
 | 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(Essenflux), `HD`(CI 락업 워드마크 전용 @font-face) | `theme.css` |
 | 루트 크기 | 모든 화면에서 고정된 16px `rem` 기준 크기 | `src/app/(frontend)/styles.css`의 `html` |
@@ -47,11 +47,13 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 
 `--radius`는 뿌리 토큰 하나이고 나머지 4단은 그것을 기준으로 파생합니다(`--radius-lg`는 뿌리값 그대로, `sm`/`md`/`xl`은 `calc()`; `theme.css`). radius를 조정할 때는 파생값이 아니라 뿌리 하나만 바꿉니다.
 
-`highlight`는 Figma 강조 스타일을 옮긴 그라디언트입니다. `bg-highlight`가 가로 밴드를 2배로 늘려 왼쪽에서 오른쪽으로 반복 이동시키고, 모션 감소 설정에서는 정지합니다. Badge와 Button은 `bg-highlight`와 `text-highlight-foreground`를 함께 사용하며, 개별 컴포넌트에서 gradient stop을 다시 선언하지 않습니다.
+Frontend의 `highlight`는 Figma 강조 스타일을 옮긴 그라디언트입니다. `bg-highlight`가 가로 밴드를 2배로 늘려 왼쪽에서 오른쪽으로 반복 이동시키고, 모션 감소 설정에서는 정지합니다. Admin은 같은 유틸 이름을 Payload success 색에 매핑합니다. Badge와 Button은 `bg-highlight`와 `text-highlight-foreground`를 함께 사용하며, 개별 컴포넌트에서 색이나 gradient stop을 다시 선언하지 않습니다.
 
 ## 4. 닫힌 토큰 규칙
 
-색·간격·radius·폰트는 **시맨틱 토큰과 그 유틸 클래스로만** 표현합니다. `bg-primary`, `text-foreground`, `border-border`, `bg-muted`, `font-body`, `rounded-md`처럼 이름이 의미를 가리키는 유틸만 사용합니다. **토큰에 없으면 틀린 것**이라는 이진 규칙을 적용합니다.
+색·간격·radius·폰트는 **시맨틱 토큰과 그 유틸 클래스로만** 표현합니다. `bg-primary`, `text-foreground`, `border-border`, `bg-muted`, `text-success`, `font-body`, `rounded-md`처럼 이름이 의미를 가리키는 유틸만 사용합니다. **토큰에 없으면 틀린 것**이라는 이진 규칙을 적용합니다.
+
+판정 상태는 `success`, `info`, `warning`, `destructive`를 사용합니다. 라이트·다크 모드의 명도 차이는 각 표면의 테마 파일이 소유하며 컴포넌트에서 `dark:` 팔레트 클래스를 다시 선언하지 않습니다. 상태는 라벨·아이콘과 함께 표시해 색만으로 의미를 전달하지 않습니다.
 
 토큰은 2단 인디렉션을 거칩니다.
 

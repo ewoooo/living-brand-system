@@ -2,7 +2,15 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
 import {
 	type CameraAzimuth,
@@ -47,9 +55,6 @@ const ELEVATION_PRESETS: {
 
 const AZIMUTH_STEPS = AZIMUTH_PRESETS.map((preset) => preset.degrees)
 const ELEVATION_STEPS = ELEVATION_PRESETS.map((preset) => preset.degrees)
-
-const SELECT_CLASS =
-	'h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30'
 
 export function ImageCameraPresets({
 	basePrompt,
@@ -137,50 +142,58 @@ export function ImageCameraPresets({
 				}}
 			/>
 
-			<div className="grid gap-3 sm:grid-cols-2">
-				<div className="flex flex-col gap-2">
-					<Label htmlFor="camera-azimuth">방향</Label>
-					<select
-						id="camera-azimuth"
+			<FieldGroup className="grid gap-3 sm:grid-cols-2">
+				<Field>
+					<FieldLabel htmlFor="camera-azimuth">방향</FieldLabel>
+					<Select
 						value={azimuthPreset.value}
-						onChange={(event) => {
+						onValueChange={(value) => {
 							const preset = AZIMUTH_PRESETS.find(
-								(item) =>
-									item.value === (event.currentTarget.value as CameraAzimuth),
+								(item) => item.value === (value as CameraAzimuth),
 							)
 							if (preset) setAzimuthDeg(preset.degrees)
 						}}
-						className={SELECT_CLASS}
 					>
-						{AZIMUTH_PRESETS.map((preset) => (
-							<option key={preset.value} value={preset.value}>
-								{preset.label}
-							</option>
-						))}
-					</select>
-				</div>
-				<div className="flex flex-col gap-2">
-					<Label htmlFor="camera-elevation">높이</Label>
-					<select
-						id="camera-elevation"
+						<SelectTrigger id="camera-azimuth" className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								{AZIMUTH_PRESETS.map((preset) => (
+									<SelectItem key={preset.value} value={preset.value}>
+										{preset.label}
+									</SelectItem>
+								))}
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+				</Field>
+				<Field>
+					<FieldLabel htmlFor="camera-elevation">높이</FieldLabel>
+					<Select
 						value={elevationPreset.value}
-						onChange={(event) => {
+						onValueChange={(value) => {
 							const preset = ELEVATION_PRESETS.find(
-								(item) =>
-									item.value === (event.currentTarget.value as CameraElevation),
+								(item) => item.value === (value as CameraElevation),
 							)
 							if (preset) setElevationDeg(preset.degrees)
 						}}
-						className={SELECT_CLASS}
 					>
-						{ELEVATION_PRESETS.map((preset) => (
-							<option key={preset.value} value={preset.value}>
-								{preset.label}
-							</option>
-						))}
-					</select>
-				</div>
-			</div>
+						<SelectTrigger id="camera-elevation" className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								{ELEVATION_PRESETS.map((preset) => (
+									<SelectItem key={preset.value} value={preset.value}>
+										{preset.label}
+									</SelectItem>
+								))}
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+				</Field>
+			</FieldGroup>
 
 			<Button type="button" disabled={loading} onClick={applyCamera}>
 				{loading ? '시점 조정 중…' : '시점 적용'}

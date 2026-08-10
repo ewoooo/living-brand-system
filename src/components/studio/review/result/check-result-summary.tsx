@@ -52,38 +52,24 @@ export function CheckResultSummary({ sections }: CheckResultSummaryProps) {
 					</span>
 				)}
 				<section className="flex flex-wrap gap-4">
-					<SummaryMetric
-						label={CHECK_STATUS.pass.label}
-						value={summary.pass}
-						colorClassName={CHECK_STATUS.pass.dot}
-					/>
-					<SummaryMetric
-						label={CHECK_STATUS.ok.label}
-						value={summary.ok}
-						colorClassName={CHECK_STATUS.ok.dot}
-					/>
-					<SummaryMetric
-						label={CHECK_STATUS.advisory.label}
-						value={summary.advisory}
-						colorClassName={CHECK_STATUS.advisory.dot}
-					/>
-					<SummaryMetric
-						label={CHECK_STATUS.fail.label}
-						value={summary.fail}
-						colorClassName={CHECK_STATUS.fail.dot}
-					/>
-					<SummaryMetric
-						label={CHECK_STATUS.not_applicable.label}
-						value={summary.notApplicable}
-						colorClassName={CHECK_STATUS.not_applicable.dot}
-						muted
-					/>
-					<SummaryMetric
-						label={CHECK_STATUS.needs_review.label}
-						value={summary.pendingManualCheck}
-						colorClassName={CHECK_STATUS.needs_review.dot}
-						muted
-					/>
+					{(
+						[
+							['pass', summary.pass],
+							['ok', summary.ok],
+							['advisory', summary.advisory],
+							['fail', summary.fail],
+							['not_applicable', summary.notApplicable],
+							['needs_review', summary.pendingManualCheck],
+						] as const
+					).map(([status, value]) => (
+						<SummaryMetric
+							key={status}
+							label={CHECK_STATUS[status].label}
+							value={value}
+							colorClassName={CHECK_STATUS[status].dot}
+							muted={status === 'not_applicable' || status === 'needs_review'}
+						/>
+					))}
 				</section>
 				<Tooltip>
 					<TooltipTrigger asChild>

@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GetCreateNavigationOutput } from '@/services/get-create-navigation.service'
 import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
@@ -70,13 +71,14 @@ describe('TemplateGenerator', () => {
 		expect(mocks.exportTemplate).toHaveBeenCalledWith('png')
 	})
 
-	it('드롭다운에서 선택한 템플릿 작업대로 이동한다', () => {
+	it('드롭다운에서 선택한 템플릿 작업대로 이동한다', async () => {
+		const user = userEvent.setup()
 		render(<TemplateGenerator navigation={navigation} template={template} />)
 
-		expect(screen.getByLabelText('템플릿')).toHaveValue('/studio/template/cards/1')
-		fireEvent.change(screen.getByLabelText('템플릿'), {
-			target: { value: '/studio/template/cards/2' },
-		})
+		expect(screen.getByRole('combobox', { name: '템플릿' })).toHaveTextContent('테스트 템플릿')
+		const templateSelect = screen.getByRole('combobox', { name: '템플릿' })
+		templateSelect.focus()
+		await user.keyboard('{ArrowDown}{ArrowDown}{Enter}')
 
 		expect(mocks.push).toHaveBeenCalledWith('/studio/template/cards/2')
 	})

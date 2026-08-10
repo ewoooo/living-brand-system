@@ -5,13 +5,16 @@ import { useState } from 'react'
 import { ContentHeading } from '@/components/shared/content-heading'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { Field, FieldLabel } from '@/components/ui/field'
 import {
 	Select,
 	SelectContent,
+	SelectGroup,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
+import { Typography } from '@/components/ui/typography'
 import { cn } from '@/lib/utils'
 
 const exampleIcons = {
@@ -118,30 +121,28 @@ export function StudioExamples() {
 				title="Examples"
 				description="브랜드 제작 흐름을 빠르게 시작할 수 있는 예제를 모았습니다."
 			/>
-			<div className="mt-8">
-				<label className="mb-2 block text-xs font-medium" htmlFor="studio-example-filter">
+			<Field className="mt-8 w-52">
+				<FieldLabel className="text-xs" htmlFor="studio-example-filter">
 					예제 필터
-				</label>
+				</FieldLabel>
 				<Select
 					value={category}
 					onValueChange={(value) => setCategory(value as ExampleCategory)}
 				>
-					<SelectTrigger
-						id="studio-example-filter"
-						aria-label="예제 필터"
-						className="w-52"
-					>
+					<SelectTrigger id="studio-example-filter" className="w-full">
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
-						{exampleCategories.map((item) => (
-							<SelectItem key={item} value={item}>
-								{item}
-							</SelectItem>
-						))}
+						<SelectGroup>
+							{exampleCategories.map((item) => (
+								<SelectItem key={item} value={item}>
+									{item}
+								</SelectItem>
+							))}
+						</SelectGroup>
 					</SelectContent>
 				</Select>
-			</div>
+			</Field>
 			<div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{examples.map((example) => {
 					const Icon = exampleIcons[example.icon]
@@ -162,27 +163,23 @@ export function StudioExamples() {
 								>
 									<Icon aria-hidden className="size-5" />
 								</div>
-								<h2 className="mt-5 text-xl leading-tight font-medium tracking-[-0.02em]">
+								<Typography
+									as="h2"
+									size="xl"
+									weight="medium"
+									className="mt-5 leading-tight tracking-[-0.02em]"
+								>
 									{example.title}
-								</h2>
-								<p className="mt-2 text-xs/relaxed text-muted-foreground">
+								</Typography>
+								<Typography size="xs" tone="muted" className="mt-2 leading-relaxed">
 									{example.description}
-								</p>
+								</Typography>
 								<div className="mt-auto flex flex-wrap gap-1 pt-5">
-									<Badge
-										shape="sharp"
-										variant="highlight"
-										className="h-5 text-xs"
-									>
+									<Badge shape="sharp" variant="highlight">
 										{example.category}
 									</Badge>
 									{example.tags.map((tag) => (
-										<Badge
-											key={tag}
-											shape="sharp"
-											variant="outline"
-											className="h-5 text-xs"
-										>
+										<Badge key={tag} shape="sharp" variant="outline">
 											{tag}
 										</Badge>
 									))}

@@ -35,11 +35,14 @@ grep -rl "Badge\|Card\|Typography" src/components src/features
 | --- | --- |
 | 헤딩·본문 텍스트 | `Typography` (`src/components/ui/typography.tsx`) |
 | 제목·설명·도움말 조합 | `ContentHeading` (`src/components/shared/content-heading.tsx`) |
+| 입력 label·control·도움말 조합 | `FieldGroup` + `Field` + `FieldLabel`/`FieldDescription` |
 | 아이콘 | `@carbon/icons-react` |
 | className 병합 | `@/lib/utils`의 `cn` |
 | 색 파생(전경색·RGB) | `@/lib/color` (`hexToRgb`, `getContrastingForeground`) |
 | 콘텐츠 최대 폭 | `ContentFrame` (`src/components/shared/content-frame.tsx`) |
 | 블록 표면색(배경) | `GuidelineBlockFrame` |
+
+shadcn 4.12의 공식 아이콘 목록에는 Carbon이 없어 `components.json`은 `radix-mira`가 지원하는 `hugeicons` 값을 유지합니다. 이 값은 생성기 호환용일 뿐 저장소의 아이콘 정책이 아닙니다. shadcn 컴포넌트를 추가한 같은 변경에서 생성된 아이콘을 `@carbon/icons-react`로 바꾸고, `@hugeicons/*` import가 0건인지 확인한 뒤 커밋합니다. `iconLibrary`를 임의의 `carbon` 문자열로 바꾸면 레지스트리의 `IconPlaceholder`가 변환되지 않으므로 금지합니다.
 
 ## 3. 새 컴포넌트 템플릿
 
@@ -62,6 +65,10 @@ const badgeVariants = cva('inline-flex items-center …', {
 			tint: 'border-primary/40 bg-primary/10 text-foreground …',
 			muted: 'bg-muted text-muted-foreground …',
 			highlight: 'bg-highlight text-highlight-foreground …',
+			success: 'bg-success/15 text-success …',
+			info: 'bg-info/15 text-info …',
+			warning: 'bg-warning/15 text-warning …',
+			destructive: 'bg-destructive/15 text-destructive …',
 		},
 		shape: {
 			sharp: 'rounded-none',
@@ -82,7 +89,7 @@ function Badge({ className, variant = 'muted', shape = 'pill', asChild = false, 
 export { Badge, badgeVariants }
 ```
 
-`badge.tsx`에서 그대로 가져오는 계약: 색은 `variant`, 모서리는 `shape`로 분리하고 각 정의와 기본값은 `cva`에 둡니다. 루트에 `data-slot`을 붙이고 상태는 `data-variant`와 `data-shape`로 노출합니다. 아이콘에는 위치에 따라 `data-icon="inline-start" | "inline-end"`, 아이콘 전용 Badge에는 `data-icon="only"`와 Badge의 `aria-label`을 함께 씁니다. 다형 렌더링은 `asChild` + `radix-ui`의 `Slot`으로 하고, 별도 `as` prop을 새로 만들지 않습니다.
+`badge.tsx`에서 그대로 가져오는 계약: 색은 `variant`, 모서리는 `shape`로 분리하고 각 정의와 기본값은 `cva`에 둡니다. 판정 상태는 `success`/`info`/`warning`/`destructive` variant를 사용하고 화면에서 색 클래스를 직접 조립하지 않습니다. 루트에 `data-slot`을 붙이고 상태는 `data-variant`와 `data-shape`로 노출합니다. 아이콘에는 위치에 따라 `data-icon="inline-start" | "inline-end"`, 아이콘 전용 Badge에는 `data-icon="only"`와 Badge의 `aria-label`을 함께 씁니다. 다형 렌더링은 `asChild` + `radix-ui`의 `Slot`으로 하고, 별도 `as` prop을 새로 만들지 않습니다.
 
 `button.tsx`도 같은 `variant`(`outline`/`tint`/`muted`/`highlight`)와 `shape`(`sharp`/`rounded`/`pill`) 축을 공유하며, 크기만 `size`로 따로 분리합니다. `ghost`/`destructive`/`link`는 기능성 예외로 유지합니다. `muted`는 낮은 강조도의 활성 버튼이고, 비활성 상태는 별도 variant가 아니라 네이티브 `disabled` 속성으로 표현합니다.
 
