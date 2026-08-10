@@ -40,7 +40,7 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 | 상태색 | 판정·상태 표시 전용 `--success`/`--info`/`--warning`(실패는 기존 `--destructive`, 해당 없음은 `--muted`). Admin 확장은 같은 이름을 Payload 테마에 매핑 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
 | highlight | 강조 배경과 전경 토큰, `bg-highlight` 유틸. Frontend는 gradient, Admin은 Payload success 색에 매핑 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
 | radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl` 4단 파생(`lg`는 뿌리값, `sm`/`md`/`xl`은 calc) | `theme.css`, `theme.css` |
-| 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(Essenflux), `HD`(CI 락업 워드마크 전용 @font-face) | `theme.css` |
+| 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(Essenflux — 🔴 essenherb 사유 서체. 브랜드 무관 토큰 자리에 앉아 있는 잔재이고 HD 서체로 교체 대기 중이다. 새 화면에서 쓰지 말 것), `HD`(CI 락업 워드마크 전용 @font-face) | `theme.css` |
 | 루트 크기 | 모든 화면에서 고정된 16px `rem` 기준 크기 | `src/app/(frontend)/styles.css`의 `html` |
 | 타이포 리듬 | `.typeset` 블록의 크기·행간·흐름(shadcn/typeset) | `src/app/(frontend)/typeset.css` |
 | base body / scrollbar / import 순서 | `body` 기본, `scrollbar-none` 유틸, CSS `@import` 체인 | `src/app/(frontend)/styles.css` |

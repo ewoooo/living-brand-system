@@ -202,19 +202,19 @@ grep -rnE '(grid-cols|col-span|gap|w|h|text)-\$\{' src
 
 ## 5. 브랜드 무관
 
-색·폰트·로고는 props로 주입받습니다. 코드에 브랜드를 하드코딩하지 않습니다. 하드코딩은 개발용 default 값(essenherb 샘플)으로만 허용합니다.
+색·폰트·로고는 props로 주입받습니다. 코드에 브랜드를 하드코딩하지 않습니다. 하드코딩은 개발용 default 값(HD현대 팔레트)으로만 허용합니다.
 
 - 컴포넌트가 받는 색은 hex string props입니다. RGB·전경색 같은 파생값은 저장하지 않고 런타임에 `@/lib/color`로 파생합니다: `hexToRgb`로 0–255 RGB를, `getContrastingForeground`로 배경 대비가 더 높은 흑/백 전경색을 얻습니다.
-- 원형은 `src/features/guideline/blocks/color-palette/component.tsx`입니다. Swatch는 `{ id, name, hex, pantone? }` 형태로 받고, RGB는 hex에서 파생하며, 기본값만 essenherb 팔레트입니다("브랜드 무관: 색은 props. 기본값은 essenherb. RGB는 HEX에서 파생").
+- 원형은 `src/features/guideline/widgets/hd-color-palette/view.tsx`입니다. Swatch는 `{ id, name, hex, cmyk?, pantone? }` 형태로 받고, RGB·전경색은 hex에서 파생하며, 값은 전부 `brand-colors`에서 옵니다 — 하드코딩된 기본 팔레트가 없습니다.
 
 ```tsx
 import { getContrastingForeground, hexToRgb } from '@/lib/color'
 
 type Swatch = { id: string; name: string; hex: string; pantone?: string }
 
-// 기본값(default)만 essenherb 샘플. 실제 값은 props/CMS로 주입.
+// 기본값(default)만 HD현대 샘플. 실제 값은 props/CMS로 주입.
 const MAIN: Swatch[] = [
-	{ id: 'main-red', name: 'Essenherb Red', hex: '#EA5343', pantone: 'Warm Red C' },
+	{ id: 'heritage-green', name: 'HD HERITAGE GREEN', hex: '#00AF41' },
 ]
 ```
 
@@ -265,7 +265,7 @@ PR을 올리기 전 자기 점검용입니다.
 - [ ] `grep -rE '(grid-cols|col-span|gap)-\$\{'`에 걸리는 동적 클래스가 없다. 조건부 완전 클래스로 바꿨다.
 - [ ] 자기 `max-width`가 없다. 폭은 `ContentFrame`, 표면색은 `GuidelineBlockFrame`이 소유한다.
 - [ ] 아이콘은 `@carbon/icons-react`다. `@hugeicons`가 없다.
-- [ ] 색·폰트·로고를 props로 받는다. 하드코딩은 essenherb default뿐이다.
+- [ ] 색·폰트·로고를 props로 받는다. 하드코딩은 개발용 default 값뿐이다.
 - [ ] 색·전경색은 저장하지 않고 `@/lib/color`로 런타임 파생한다.
 - [ ] 상태를 색만으로 구분하지 않는다. 심볼 + 텍스트를 함께 쓴다.
 - [ ] 글자 크기는 `docs/09` §6의 고정 유틸리티 단계만 사용한다.
