@@ -5,18 +5,9 @@
 		"category": "logo",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{targets:[{name:string,min_px:number,min_mm:number}]}",
 		"scoring": "Per target pass if measured>=min; fraction meeting minimum; sub-min auto-fail.",
 		"input": "Measure rendered height/width of each mark/variant in px(screen) or mm(print); compare to per-target minimum.",
@@ -28,18 +19,9 @@
 		"category": "logo",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{targets:[{name:string,unit:string,top:number,right:number,bottom:number,left:number}],moduleDef:string}",
 		"scoring": "Pass if every side clearance>=module multiple; score=min side/required clamped 0-1.",
 		"input": "Measure empty margin per side vs required multiple of module unit.",
@@ -51,16 +33,9 @@
 		"category": "logo",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{variants:[{name:string,description:string,usage_context:string,assetRef:string}]}",
 		"scoring": "Match artwork to nearest approved variant; pass if matched+context-appropriate.",
 		"input": "Detect logo lockup; match to approved variant set by orientation/language/primary-secondary/registration.",
@@ -72,16 +47,9 @@
 		"category": "logo",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{variants:[{name:string,description:string,usage_context:string,assetRef:string}]}",
 		"scoring": "Match artwork to nearest approved variant; pass if matched+context-appropriate.",
 		"input": "Detect logo lockup; match to approved variant set by orientation/language/primary-secondary/registration.",
@@ -93,16 +61,9 @@
 		"category": "logo",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{targets:[{target:string,variants:[string]}],usage_restriction:string}",
 		"scoring": "Pass if rendering matches approved variant and restriction holds; off-spec fail.",
 		"input": "Identify color rendering (full/black/white/grayscale/gradient/reverse) and match approved set."
@@ -113,16 +74,9 @@
 		"category": "logo",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{prohibitions:[{category:string,rule:string,metric:string,tolerance:number}]}",
 		"scoring": "Per category detect violation; weighted clean fraction; hard violation(recolor/distort) fails.",
 		"input": "Compare to master; detect prohibited mods across proportion/shape/color/effect/background.",
@@ -134,13 +88,9 @@
 		"category": "logo",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{aspectRatio:string,originalSize:{w:number,h:number,unit:string},angles:[{name:string,degrees:number}],sideBearing:[{value:number,unit:string}],integerSizingRequired:boolean}",
 		"scoring": "Pass if aspect+angles match spec within tolerance; distortion fail.",
 		"input": "Measure aspect ratio, italic/terminal angles, side bearings vs fixed spec.",
@@ -152,15 +102,9 @@
 		"category": "logo",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{types:[{name:string,align:string,modifierSize:{factor:number},gaps:[{factor:number}],range:{min:number,max:number},modifierContent:'text|symbol',font:string?,maxTextWidth:number?}],strategy:string}",
 		"scoring": "Compare offset/size/gap in module units; text-overflow separate flag.",
 		"input": "Detect sub-name/region locked up with master; measure size/gaps/alignment per modifier type.",
@@ -172,13 +116,9 @@
 		"category": "logo",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{variants:[{lang:string,orientation:string}],moduleDef:string,clearSpace:{factor:number}}",
 		"scoring": "Pass if orientation/language matches approved variant and clear-space meets spec.",
 		"input": "Detect logo+contact signature; identify variant; measure clear-space modules."
@@ -189,16 +129,9 @@
 		"category": "logo",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"screen",
-			"print"
-		],
+		"scopeOptions": ["all", "screen", "print"],
 		"frequency": 2,
-		"brands": [
-			"ChannelA",
-			"SLL"
-		],
+		"brands": ["ChannelA", "SLL"],
 		"paramSchema": "{placements:[{surface:string,position:string,strict:boolean}],logoRequired:boolean}",
 		"scoring": "Confirm logo present at designated position per surface; partly deterministic for fixed zones.",
 		"input": "Verify logo present/positioned in designated zone for touchpoint.",
@@ -211,16 +144,9 @@
 		"category": "logo",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"screen",
-			"print"
-		],
+		"scopeOptions": ["all", "screen", "print"],
 		"frequency": 2,
-		"brands": [
-			"ChannelA",
-			"SLL"
-		],
+		"brands": ["ChannelA", "SLL"],
 		"paramSchema": "{placements:[{surface:string,position:string,strict:boolean}],logoRequired:boolean}",
 		"scoring": "Confirm logo present at designated position per surface; partly deterministic for fixed zones.",
 		"input": "Verify logo present/positioned in designated zone for touchpoint.",
@@ -233,13 +159,9 @@
 		"category": "logo",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{brightnessSteps:[number],labels:[string]}",
 		"scoring": "Pass if bg brightness maps to allowed step for logo color; deterministic luminance.",
 		"input": "Measure bg brightness % behind logo; check it falls on a recommended step."
@@ -250,13 +172,9 @@
 		"category": "logo",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{motifSource:string,angle:number}",
 		"scoring": "Human/VLM judgment form derives from logotype angle; escalate when ambiguous.",
 		"input": "Inspect structure silhouette for derivation from distinctive logotype slant angle."
@@ -267,16 +185,9 @@
 		"category": "logo",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{concept:string,attributes:[string]}",
 		"scoring": "VLM/human judgment of concept fidelity; manual review, escalate on low confidence.",
 		"input": "Assess symbol/logo forms match documented conceptual/formal origin."
@@ -287,13 +198,9 @@
 		"category": "logo",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"essenherb"
-		],
+		"brands": ["essenherb"],
 		"paramSchema": "{type:string,text:string,colorVersion:string}",
 		"scoring": "Template/feature match vs master; pass on high similarity.",
 		"input": "Verify rendered logo matches approved primary master artwork."
@@ -304,14 +211,9 @@
 		"category": "logo",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 2,
-		"brands": [
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["pledis", "essenherb"],
 		"paramSchema": "{symbol:string,requiredOnRegistered:boolean,perVariant:[{variant:string,removeRMarkBelow:{px:number,mm:number}}]}",
 		"scoring": "If height<removeRMarkBelow and R present -> fail; legal-condition manual review.",
 		"input": "Detect R mark; verify only on registered marks and removed below per-variant threshold."
@@ -322,13 +224,9 @@
 		"category": "logo",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"essenherb"
-		],
+		"brands": ["essenherb"],
 		"paramSchema": "{steps:number,minHeight:{px:number,mm:number},rMarkRemoveHeight:{px:number,mm:number}}",
 		"scoring": "Rendered size within step range and above min; thresholds respected.",
 		"input": "Check rendered size falls within defined discrete size steps with min and R-removal marks."
@@ -339,13 +237,9 @@
 		"category": "logo",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"pledis"
-		],
+		"brands": ["pledis"],
 		"paramSchema": "{enabled:boolean,letters:[string],combineWith:[string],padding:{rightPaddingMultiplier:number,referenceSide:string},alignment:string,spacing:{baseUnit:string,multiples:[number]},orientationUseCase:[{type:string,useCase:string,areas:[string]}]}",
 		"scoring": "Padding ratio + A-unit spacing deterministic; letter-set+content heuristic; composite.",
 		"input": "Detect logotype letterforms combined with content as KV device; verify letters/padding/alignment/spacing."
@@ -356,9 +250,7 @@
 		"category": "logo",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{relationship:string,separator:{type:string,weight:number,gap:number,unit:string},sizeParity:{ourLogoTo:string,ratio:number},order:string,minClearBetween:{factor:number},approvedPartners:[string]}",
@@ -373,13 +265,9 @@
 		"category": "logo",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{variantUsed:string,sizesPx:[number],safeAreaPct:number,maskShape:string,cornerRadius:string,bgFill:string,perPlatform:[{platform:string,sizePx:number,mask:string}]}",
 		"scoring": "Required sizes present, mark in safe-area %, mask/corner per platform, approved small variant.",
 		"input": "Verify reduced mark at favicon/app-icon/avatar sizes is approved small variant within safe area/mask per platform.",
@@ -391,16 +279,9 @@
 		"category": "logo",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{tiles:[{category:string,transformation:string,exampleAssetRef:string,severity:string}]}",
 		"scoring": "Per tile detect depicted transformation via matching CV check; weighted clean fraction; hard tiles fail.",
 		"input": "Per prohibited tile compare rendered logo to master to detect depicted violation.",
@@ -412,16 +293,9 @@
 		"category": "logo",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{moduleBox:{derivation:string,unit:string},cornerModule:number,edgeMidModule:number,perVariant:[{variant:string,cornerModule:number,edgeMidModule:number}]}",
 		"scoring": "Measure clearance per side vs recovered per-position module multiple.",
 		"input": "Recover module grid geometry from construction diagram (corner vs edge-mid, box derivation).",
@@ -434,18 +308,9 @@
 		"category": "color",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{swatches:[{name:string,hex:string,rgb:string,cmyk:string,pantone:string,role:string}],totalSwatches:number}",
 		"scoring": "Per sampled color nearest-swatch deltaE; off-palette fail.",
 		"input": "Sample colors; match each to defined swatch within deltaE tolerance."
@@ -456,15 +321,9 @@
 		"category": "color",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{roles:[{name:string,hex:string,role:string}],elementConstraints:[{element:string,allowed_colors:[string],inheritsParentColor:boolean?}]}",
 		"scoring": "Deterministic where role=swatch; heuristic for dominant-vs-accent; pass if role matches.",
 		"input": "Determine each color role and element-specific constraints.",
@@ -476,14 +335,9 @@
 		"category": "color",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL"
-		],
+		"brands": ["ChannelA", "SLL"],
 		"paramSchema": "{stepsPerFamily:number,families:number,axis:[string],steps:[{label:string,brightnessPercent:number}]}",
 		"scoring": "Used tints map to defined steps; off-scale flag; count + per-step deltaE.",
 		"input": "Count/verify brightness steps per family and lightness ordering.",
@@ -495,16 +349,9 @@
 		"category": "color",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{pairings:[{foreground:string,background:string,element:string}],methods:[{name:string,familyRelation:'cross-family|same-family|mono',allowedPairs:[{bgTone:string,fgTones:[string]}]}],preferredBackgrounds:[string]}",
 		"scoring": "Table lookup; pass if pair in allowed set; undefined combo fail.",
 		"input": "Detect fg+bg pair; verify against allowed combination lookup/method.",
@@ -517,16 +364,9 @@
 		"category": "illustration",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{pairings:[{foreground:string,background:string,element:string}],methods:[{name:string,familyRelation:'cross-family|same-family|mono',allowedPairs:[{bgTone:string,fgTones:[string]}]}],preferredBackgrounds:[string]}",
 		"scoring": "Table lookup; pass if pair in allowed set; undefined combo fail.",
 		"input": "Detect fg+bg pair; verify against allowed combination lookup/method.",
@@ -539,15 +379,9 @@
 		"category": "color",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{thresholds:[{element:string,minContrast:number,metric:'wcag|brightness-delta'}]}",
 		"scoring": "Per element ratio>=minContrast; default AA 4.5 normal/3.0 large; warn band.",
 		"input": "Compute contrast ratio fg vs bg; flag below minimum.",
@@ -559,15 +393,9 @@
 		"category": "logo",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{prohibitions:[{category:string,rule:string}]}",
 		"scoring": "Per category detect violation; off-palette/opacity deterministic, texture heuristic; hard fail.",
 		"input": "Detect prohibited treatments: transparency/gradient/off-palette/too-many-color/texture.",
@@ -580,15 +408,9 @@
 		"category": "color",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{prohibitions:[{category:string,rule:string}]}",
 		"scoring": "Per category detect violation; off-palette/opacity deterministic, texture heuristic; hard fail.",
 		"input": "Detect prohibited treatments: transparency/gradient/off-palette/too-many-color/texture.",
@@ -600,15 +422,9 @@
 		"category": "color",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{surfaces:[{name:string,dominantColors:[{name:string,hex:string,roughShare:number}]}]}",
 		"scoring": "Color-area histogram vs spec; dominant family match; share fuzzy warn band.",
 		"input": "Estimate area proportion of each brand color per surface."
@@ -619,15 +435,9 @@
 		"category": "color",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"essenherb",
-			"pledis"
-		],
+		"brands": ["ChannelA", "essenherb", "pledis"],
 		"paramSchema": "{usageContexts:[string],ipColorMap:[{family:string,keywords:[string],feeling:string}],levels:[{level:number,palette:string,pairing:string,context:string}],requireDesignatedPalette:boolean}",
 		"scoring": "VLM/human: color fits content mood/usage level; designated-palette-first partly deterministic.",
 		"input": "Assess color used in intended context and family matches content/emotion."
@@ -638,15 +448,9 @@
 		"category": "illustration",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"essenherb",
-			"pledis"
-		],
+		"brands": ["ChannelA", "essenherb", "pledis"],
 		"paramSchema": "{usageContexts:[string],ipColorMap:[{family:string,keywords:[string],feeling:string}],levels:[{level:number,palette:string,pairing:string,context:string}],requireDesignatedPalette:boolean}",
 		"scoring": "VLM/human: color fits content mood/usage level; designated-palette-first partly deterministic.",
 		"input": "Assess color used in intended context and family matches content/emotion.",
@@ -658,13 +462,9 @@
 		"category": "color",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{allowedGradientPatterns:[string],process:[string],expansionModes:[string],sampleImages:[string],source:string}",
 		"scoring": "Detect gradient and match designated pattern set/sample library; off-set fail.",
 		"input": "Verify gradient/special treatments via approved process and sample library."
@@ -675,15 +475,9 @@
 		"category": "color",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"print"
-		],
+		"scopeOptions": ["print"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "pledis", "essenherb"],
 		"paramSchema": "{referenceSystem:string,pantoneRefs:[string],deltaETolerance:number,requireProofReview:boolean}",
 		"scoring": "deltaE vs Pantone reference; proof-review process flag manual review.",
 		"input": "Compare reproduced print color to Pantone reference within tolerance; verify ink density/proof.",
@@ -695,15 +489,9 @@
 		"category": "application",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"print"
-		],
+		"scopeOptions": ["print"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "pledis", "essenherb"],
 		"paramSchema": "{referenceSystem:string,pantoneRefs:[string],deltaETolerance:number,requireProofReview:boolean}",
 		"scoring": "deltaE vs Pantone reference; proof-review process flag manual review.",
 		"input": "Compare reproduced print color to Pantone reference within tolerance; verify ink density/proof.",
@@ -715,15 +503,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"print"
-		],
+		"scopeOptions": ["print"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "pledis", "essenherb"],
 		"paramSchema": "{referenceSystem:string,pantoneRefs:[string],deltaETolerance:number,requireProofReview:boolean}",
 		"scoring": "deltaE vs Pantone reference; proof-review process flag manual review.",
 		"input": "Compare reproduced print color to Pantone reference within tolerance; verify ink density/proof.",
@@ -735,15 +517,9 @@
 		"category": "color",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{byMedium:[{medium:string,mode:string,spotColor:string}]}",
 		"scoring": "Document color mode matches medium; spot-color where mandated.",
 		"input": "Check document color mode (RGB/CMYK/PMS) and spot-color match medium."
@@ -754,13 +530,9 @@
 		"category": "color",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{mapping:[{ratings:[number],tone:string,baseColor:string}]}",
 		"scoring": "Sampled bg color matches mapped tone for rating tier.",
 		"input": "Check on-screen age-rating bg color matches tone mapped to rating tier."
@@ -771,10 +543,7 @@
 		"category": "color",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"screen"
-		],
+		"scopeOptions": ["all", "screen"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{tokens:[{name:string,role:string,lightValue:string,darkValue:string}],aliasOf:string,namingConvention:string}",
@@ -788,13 +557,9 @@
 		"category": "color",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{themes:[{name:string,surface:string,onSurface:string,primary:string,logoVariant:string}],elevationOverlays:[{level:number,value:string}]}",
 		"scoring": "Sampled surface/text/logo match theme set; naive inversion fail.",
 		"input": "Detect active theme; verify palette/logo/surface switch to theme set, not naive invert.",
@@ -806,17 +571,9 @@
 		"category": "color",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{families:[{name:string,steps:[{label:string,hex:string,rgb:string,pantone:string}]}],totalSwatches:number}",
 		"scoring": "Once recovered nearest-swatch deltaE; incomplete for image-only families until vision pass.",
 		"input": "OCR/sample swatch matrix to recover hex of every cell incl image-only tonal steps.",
@@ -828,14 +585,9 @@
 		"category": "color",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 2,
-		"brands": [
-			"essenherb",
-			"SLL"
-		],
+		"brands": ["essenherb", "SLL"],
 		"paramSchema": "{method:string,toneAllowances:[{bgTone:number,fgTones:[number]}],markedPairs:[{bg:{family:string,tone:number},fg:{family:string,tone:number}}]}",
 		"scoring": "Deterministic lookup once recovered; marked cell pairings image-only.",
 		"input": "Read dot-marked swatch matrix to recover approved fg+bg combinations.",
@@ -848,16 +600,9 @@
 		"category": "logo",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{element:string,prohibitedBackgrounds:[{type:string,exampleAssetRef:string}],minLocalContrast:number}",
 		"scoring": "Local/region contrast across photo region (noisier than flat WCAG).",
 		"input": "On photographic/multi-tone bg assess contrast grounded by depicted prohibition tiles.",
@@ -870,16 +615,9 @@
 		"category": "application",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{element:string,prohibitedBackgrounds:[{type:string,exampleAssetRef:string}],minLocalContrast:number}",
 		"scoring": "Local/region contrast across photo region (noisier than flat WCAG).",
 		"input": "On photographic/multi-tone bg assess contrast grounded by depicted prohibition tiles.",
@@ -892,14 +630,9 @@
 		"category": "color",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL"
-		],
+		"brands": ["ChannelA", "SLL"],
 		"paramSchema": "{minLightnessDelta:number,forbiddenCombos:['both-dark'|'both-light'|'equal-tone'],darkThreshold:number,lightThreshold:number,equalToneTolerance:number,contrastLevels:[{level:number,minDelta:number,maxDelta:number,intent:'stability|legibility'}],sameHueOnly:boolean}",
 		"scoring": "Per co-present brand-color pair compute lightness delta; fail if pair is a forbidden combo (both-dark/both-light/equal-tone within tolerance) or delta<minLightnessDelta; map delta to contrastLevels intent (low=stability, high=legibility). Symmetric harmony check, distinct from color.contrast (directional fg-vs-bg legibility).",
 		"input": "Detect brand colors used together in a composition; measure pairwise inter-color lightness delta and dark/light classification; verify tonal separation and stability-vs-legibility intent, independent of fg-vs-bg legibility.",
@@ -911,13 +644,9 @@
 		"category": "color",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{colorAreas:[{name:string,regionShape:'rect|circle|polygon',boundsNorm:[number],centerExcluded:boolean}],offsetRules:[{offsetCount:number,allowedBrightnessSteps:[string],oddStepsOnly:boolean,layout:'free|concentric'}]}",
 		"scoring": "Deterministic: detect brand-color pixels, verify they fall inside a designated Color Area region (none in an excluded center); map observed offset-repeat count to its offsetRule and check used brightness steps are in the allowed set (odd-step where set). Out-of-region color or off-mapping step fails.",
 		"input": "Segment brand-color regions in the frame; test each against the designated Color Area bounds and center-exclusion; count concentric offset repeats and verify colors/brightness steps match the allowed mapping for that offset count.",
@@ -929,16 +658,9 @@
 		"category": "typography",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{families:[{role:string,lang:string,family:string,weights:[string],source:string}]}",
 		"scoring": "Font-recognition match per run; pass if family in designated set; noisy.",
 		"input": "Identify font family per text run by role/script; verify designated.",
@@ -950,16 +672,9 @@
 		"category": "typography",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"screen",
-			"print"
-		],
+		"scopeOptions": ["all", "screen", "print"],
 		"frequency": 2,
-		"brands": [
-			"SLL",
-			"pledis"
-		],
+		"brands": ["SLL", "pledis"],
 		"paramSchema": "{families:[{family:string,lang:string,allowedWeights:[{weight:string,role:string,usage:string,constraint:string}]}]}",
 		"scoring": "Per run detect weight; pass if in allowed set for role; italic/limited warn.",
 		"input": "Detect weight/style per role; verify within allowed set; non-italic/priority constraints.",
@@ -971,14 +686,9 @@
 		"category": "typography",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"screen"
-		],
+		"scopeOptions": ["all", "screen"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{roles:[{name:string,relativeOrder:number}],tokens:[{name:string,family:string,weight:string,sizePx:number,lineHeightPx:number,letterSpacing:number}]}",
 		"scoring": "Ordering check + token-exactness deltaPx; pass if hierarchy preserved.",
 		"input": "Detect size hierarchy ordering and compare exact type tokens."
@@ -989,17 +699,9 @@
 		"category": "typography",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"print"
-		],
+		"scopeOptions": ["all", "print"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{kerning:string,tracking:{min:number,max:number,unit:string},pairings:[{krWeight:string,enWeight:string,kr:object,en:object}]}",
 		"scoring": "Deterministic where numeric range; else heuristic not-excessive.",
 		"input": "Measure tracking/kerning of set type; compare to range; flag too tight/loose."
@@ -1010,15 +712,9 @@
 		"category": "typography",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"print"
-		],
+		"scopeOptions": ["all", "print"],
 		"frequency": 2,
-		"brands": [
-			"SLL",
-			"pledis"
-		],
+		"brands": ["SLL", "pledis"],
 		"paramSchema": "{combos:[{korean:string,english:string}],compositeFonts:[{name:string,kr:string,en:string,cn:string}]}",
 		"scoring": "Lookup detected KR+EN pair in approved combos; heuristic on weight detection.",
 		"input": "Check KR weight paired with EN weight against approved combination set."
@@ -1029,16 +725,9 @@
 		"category": "typography",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{prohibitions:[{category:string,rule:string}]}",
 		"scoring": "Per category spacing deterministic, font-mix/size-mix/distortion heuristic; hard distortion fails.",
 		"input": "Detect prohibited type treatments: spacing/font-mix/size-mix/glyph distortion/artificial italic."
@@ -1049,16 +738,9 @@
 		"category": "typography",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"screen"
-		],
+		"scopeOptions": ["all", "screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{designatedFamilies:[string],restrictedFaces:[{family:string,allowedMedia:[string],rationale:string}],lockups:[{lang:string,variants:[string]}]}",
 		"scoring": "Designated-font enforcement heuristic; context restriction manual review.",
 		"input": "Verify only designated typefaces used and restricted faces appear only in permitted contexts."
@@ -1069,14 +751,9 @@
 		"category": "typography",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 2,
-		"brands": [
-			"ChannelA",
-			"pledis"
-		],
+		"brands": ["ChannelA", "pledis"],
 		"paramSchema": "{paidFonts:[{family:string,licenseTypes:[string],url:string,price:string}],freeFonts:[string],prohibitTestFont:boolean}",
 		"scoring": "Policy/process check, not CV-measurable; human/metadata; manual review.",
 		"input": "Verify paid fonts licensed and test/trial fonts not used (metadata)."
@@ -1087,13 +764,9 @@
 		"category": "typography",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{firstBaseline:string}",
 		"scoring": "Deterministic if source inspectable; pass if = spec value.",
 		"input": "Check text-frame first-baseline reference option set to spec (e.g. Cap height)."
@@ -1104,14 +777,9 @@
 		"category": "typography",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"screen"
-		],
+		"scopeOptions": ["all", "screen"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{byType:[{type:string,orientation:string,role:string,weight:string,align:string,kerning:{mode:string,value:number},leading:{value:number,unit:string}}]}",
 		"scoring": "Per attribute compare to spec for template type; composite; kerning/leading heuristic from raster.",
 		"input": "Measure headline/sub-copy weight/align/kerning/leading per KVS type/orientation."
@@ -1122,13 +790,9 @@
 		"category": "typography",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{rules:[{reference:string,offset:{value:number,unit:string}}],lengthCases:[{condition:string,alignment:string}],glyphIndents:[{glyph:string,indentPx:number}]?,prohibitions:[{category:string,rule:string}]}",
 		"scoring": "Glyph-indent deterministic; length/meaning-unit heuristic/manual review.",
 		"input": "Verify headline alignment/indents follow glyph visual-reference scheme and length rule.",
@@ -1140,11 +804,7 @@
 		"category": "typography",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"screen",
-			"print"
-		],
+		"scopeOptions": ["all", "screen", "print"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{floors:[{role:string,medium:string,minPx:number,minPt:number}]}",
@@ -1158,15 +818,9 @@
 		"category": "typography",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"screen",
-			"print"
-		],
+		"scopeOptions": ["all", "screen", "print"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{lineHeight:{ratio:number,min:number,max:number},measureChars:{min:number,max:number},paragraphSpacing:{value:number,unit:string},alignment:string}",
 		"scoring": "Deterministic where leading/measure measurable; pass if within range.",
 		"input": "Measure leading, line length, paragraph spacing of body copy vs reading-comfort defaults.",
@@ -1178,17 +832,9 @@
 		"category": "grid",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{grids:[{name:string,unit:string,baseUnit:string,columns:number,gutter:number,margins:{top:number,right:number,bottom:number,left:number},contentWidth:number,contentHeight:number}]}",
 		"scoring": "Deterministic where pixel/mm values given; heuristic content-within-grid otherwise.",
 		"input": "Overlay defined grid; check content placement and module proportions.",
@@ -1201,17 +847,9 @@
 		"category": "grid",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{grids:[{name:string,unit:string,baseUnit:string,columns:number,gutter:number,margins:{top:number,right:number,bottom:number,left:number},contentWidth:number,contentHeight:number}]}",
 		"scoring": "Deterministic where pixel/mm values given; heuristic content-within-grid otherwise.",
 		"input": "Overlay defined grid; check content placement and module proportions.",
@@ -1224,17 +862,9 @@
 		"category": "grid",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{grids:[{name:string,unit:string,baseUnit:string,columns:number,gutter:number,margins:{top:number,right:number,bottom:number,left:number},contentWidth:number,contentHeight:number}]}",
 		"scoring": "Deterministic where pixel/mm values given; heuristic content-within-grid otherwise.",
 		"input": "Overlay defined grid; check content placement and module proportions.",
@@ -1247,15 +877,9 @@
 		"category": "spacing",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"screen"
-		],
+		"scopeOptions": ["all", "screen"],
 		"frequency": 2,
-		"brands": [
-			"pledis",
-			"ChannelA"
-		],
+		"brands": ["pledis", "ChannelA"],
 		"paramSchema": "{baseUnit:string,multiples:[number],byContext:[{slot:string,multiplier:number}]}",
 		"scoring": "Measured gap/base approx allowed multiple; pass within tolerance.",
 		"input": "Measure paddings/gaps; verify multiples of base spacing unit.",
@@ -1267,15 +891,9 @@
 		"category": "spacing",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"screen"
-		],
+		"scopeOptions": ["all", "screen"],
 		"frequency": 2,
-		"brands": [
-			"pledis",
-			"ChannelA"
-		],
+		"brands": ["pledis", "ChannelA"],
 		"paramSchema": "{baseUnit:string,multiples:[number],byContext:[{slot:string,multiplier:number}]}",
 		"scoring": "Measured gap/base approx allowed multiple; pass within tolerance.",
 		"input": "Measure paddings/gaps; verify multiples of base spacing unit.",
@@ -1287,14 +905,9 @@
 		"category": "layout",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen",
-			"print"
-		],
+		"scopeOptions": ["screen", "print"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{byType:[{type:string,orientation:string,canvas:{w:number,h:number,unit:string},padding:[{name:string,value:number,unit:string}],zones:[{name:string,ratioOfA:number}]}],baseUnit:string}",
 		"scoring": "Deterministic pixel measurement of canvas/padding/zone ratios; composite per-dimension.",
 		"input": "Measure template canvas WxH, padding, proportional zones per type/orientation.",
@@ -1306,14 +919,9 @@
 		"category": "layout",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen",
-			"print"
-		],
+		"scopeOptions": ["screen", "print"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{byType:[{type:string,orientation:string,canvas:{w:number,h:number,unit:string},padding:[{name:string,value:number,unit:string}],zones:[{name:string,ratioOfA:number}]}],baseUnit:string}",
 		"scoring": "Deterministic pixel measurement of canvas/padding/zone ratios; composite per-dimension.",
 		"input": "Measure template canvas WxH, padding, proportional zones per type/orientation.",
@@ -1325,14 +933,9 @@
 		"category": "layout",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen",
-			"print"
-		],
+		"scopeOptions": ["screen", "print"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{byType:[{type:string,orientation:string,canvas:{w:number,h:number,unit:string},padding:[{name:string,value:number,unit:string}],zones:[{name:string,ratioOfA:number}]}],baseUnit:string}",
 		"scoring": "Deterministic pixel measurement of canvas/padding/zone ratios; composite per-dimension.",
 		"input": "Measure template canvas WxH, padding, proportional zones per type/orientation.",
@@ -1344,13 +947,9 @@
 		"category": "layout",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{byType:[{type:string,elements:[{name:string,width:number,height:number,unit:string}],scaleSteps:[number],cropOffsets:[{axis:string,percent:number}]}]}",
 		"scoring": "Per-element pixel comparison; scale-step/crop-offset as % of dimension; composite.",
 		"input": "Measure WxH of copy zones, logo, content images, color solids per type."
@@ -1361,17 +960,9 @@
 		"category": "layout",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{zones:[{name:string,content:string,bounds:object}]}",
 		"scoring": "Detect content regions; check each in assigned zone; partly deterministic for fixed zones.",
 		"input": "Verify layout divided into named content zones and each element in designated zone.",
@@ -1383,17 +974,9 @@
 		"category": "layout",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{zones:[{name:string,content:string,bounds:object}]}",
 		"scoring": "Detect content regions; check each in assigned zone; partly deterministic for fixed zones.",
 		"input": "Verify layout divided into named content zones and each element in designated zone.",
@@ -1405,17 +988,9 @@
 		"category": "layout",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{zones:[{name:string,content:string,bounds:object}]}",
 		"scoring": "Detect content regions; check each in assigned zone; partly deterministic for fixed zones.",
 		"input": "Verify layout divided into named content zones and each element in designated zone.",
@@ -1427,17 +1002,9 @@
 		"category": "layout",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{zones:[{name:string,content:string,bounds:object}]}",
 		"scoring": "Detect content regions; check each in assigned zone; partly deterministic for fixed zones.",
 		"input": "Verify layout divided into named content zones and each element in designated zone.",
@@ -1449,14 +1016,9 @@
 		"category": "layout",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 2,
-		"brands": [
-			"ChannelA",
-			"pledis"
-		],
+		"brands": ["ChannelA", "pledis"],
 		"paramSchema": "{elements:[{name:string,position:string,contains:[string]}]}",
 		"scoring": "Detect element region; verify pinned position; pass if at required edge.",
 		"input": "Check fixed UI elements pinned to required positions (nav top, footer bottom)."
@@ -1467,15 +1029,9 @@
 		"category": "layout",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"SLL",
-			"pledis",
-			"ChannelA"
-		],
+		"brands": ["SLL", "pledis", "ChannelA"],
 		"paramSchema": "{moodKeywords:[string]}",
 		"scoring": "VLM/human judgment against mood keywords; manual review, escalate.",
 		"input": "Subjective assessment layout restrained/minimal yet conveys bold professional impression.",
@@ -1487,15 +1043,9 @@
 		"category": "layout",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"SLL",
-			"pledis",
-			"ChannelA"
-		],
+		"brands": ["SLL", "pledis", "ChannelA"],
 		"paramSchema": "{moodKeywords:[string]}",
 		"scoring": "VLM/human judgment against mood keywords; manual review, escalate.",
 		"input": "Subjective assessment layout restrained/minimal yet conveys bold professional impression.",
@@ -1507,15 +1057,9 @@
 		"category": "layout",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"SLL",
-			"pledis",
-			"ChannelA"
-		],
+		"brands": ["SLL", "pledis", "ChannelA"],
 		"paramSchema": "{moodKeywords:[string]}",
 		"scoring": "VLM/human judgment against mood keywords; manual review, escalate.",
 		"input": "Subjective assessment layout restrained/minimal yet conveys bold professional impression.",
@@ -1527,15 +1071,9 @@
 		"category": "imagery",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{conceptName:string,types:[{id:string,name:string,description:string,variants:[string]}]}",
 		"scoring": "VLM classification into defined KV type; pass if matches; concept-fidelity manual review.",
 		"input": "Classify composition against defined KV types and verify it matches one."
@@ -1546,15 +1084,9 @@
 		"category": "imagery",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"screen"
-		],
+		"scopeOptions": ["all", "screen"],
 		"frequency": 2,
-		"brands": [
-			"ChannelA",
-			"SLL"
-		],
+		"brands": ["ChannelA", "SLL"],
 		"paramSchema": "{subtypes:[{id:string,name:string,usage:string,constraint:string}],principle:string,technique:string}",
 		"scoring": "VLM sub-type classification + constraint check; manual review.",
 		"input": "Classify KV sub-type and verify treatment constraints and arrangement principle."
@@ -1565,13 +1097,9 @@
 		"category": "imagery",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{categories:[{side:string,subtypes:[{name:string,moodCriteria:[string]}]}]}",
 		"scoring": "VLM classification + mood-criteria judgment; manual review, escalate.",
 		"input": "Classify photo into taxonomy and assess subtype mood/composition criteria.",
@@ -1583,13 +1111,9 @@
 		"category": "imagery",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{categories:[{side:string,subtypes:[{name:string,moodCriteria:[string]}]}]}",
 		"scoring": "VLM classification + mood-criteria judgment; manual review, escalate.",
 		"input": "Classify photo into taxonomy and assess subtype mood/composition criteria.",
@@ -1601,13 +1125,9 @@
 		"category": "imagery",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{categories:[{side:string,subtypes:[{name:string,moodCriteria:[string]}]}]}",
 		"scoring": "VLM classification + mood-criteria judgment; manual review, escalate.",
 		"input": "Classify photo into taxonomy and assess subtype mood/composition criteria.",
@@ -1619,13 +1139,9 @@
 		"category": "imagery",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{categories:[{side:string,subtypes:[{name:string,moodCriteria:[string]}]}]}",
 		"scoring": "VLM classification + mood-criteria judgment; manual review, escalate.",
 		"input": "Classify photo into taxonomy and assess subtype mood/composition criteria.",
@@ -1637,9 +1153,7 @@
 		"category": "imagery",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{prohibitions:[{category:string,rule:string}],minResolutionDpi:number,allowDistortion:boolean}",
@@ -1653,15 +1167,9 @@
 		"category": "imagery",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"screen",
-			"print"
-		],
+		"scopeOptions": ["all", "screen", "print"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{duotone:{shadow:string,highlight:string},overlay:{color:string,opacity:number,gradient:boolean},grading:string,allowedCropRatios:[string],focalRule:string}",
 		"scoring": "Overlay opacity/color/duotone/crop deterministic; grading/focal heuristic; composite.",
 		"input": "Verify image treatments (duotone/overlay/grading) and crop ratios match spec.",
@@ -1673,13 +1181,9 @@
 		"category": "imagery",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"essenherb"
-		],
+		"brands": ["essenherb"],
 		"paramSchema": "{targets:[{surface:string,maxSaturation:number,minLightness:number}],toneRange:{fromHex:string,toHex:string}}",
 		"scoring": "Segment photo background region; measure mean saturation and lightness; pass if saturation<=maxSaturation AND lightness>=minLightness (white-to-light-gray achromatic band); off-band fail.",
 		"input": "Isolate the product/scene photography background region and measure its saturation/lightness; verify it is a bright achromatic tone (white to light gray).",
@@ -1691,13 +1195,9 @@
 		"category": "illustration",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{brandValueStatement:string,types:[{type:string,keywords:[string],moodAdjectives:[string],visualLanguage:[string],referencePrograms:[string]}],allowedTools:[string],combinableWithContentIP:boolean}",
 		"scoring": "VLM judgment generated symbol mood matches intended type matrix; manual review.",
 		"input": "Verify AI 3D symbols express brand value and match Symbol Type matrix."
@@ -1708,13 +1208,9 @@
 		"category": "illustration",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{tool:string,steps:[{name:string,setting:string,value:string}],export:{format:string,sizePx:[number,number]}}",
 		"scoring": "Process-conformance heuristic; export size/format deterministic.",
 		"input": "Verify generated assets produced with prescribed tool/settings/prompt and exported per spec.",
@@ -1726,13 +1222,9 @@
 		"category": "illustration",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{touchpoints:[string],desiredImpression:string}",
 		"scoring": "Advisory: appropriate touchpoint + consistent treatment.",
 		"input": "Verify symbol variations applied across promotion touchpoints with consistent vivid impression."
@@ -1743,14 +1235,9 @@
 		"category": "illustration",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"screen"
-		],
+		"scopeOptions": ["all", "screen"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{steps:[string],baseShapes:[string],baseModule:{value:number,unit:string},scaleFactor:number,scaleSteps:[number],perType:number,types:number,total:number,cropRatios:[{ratio:string,application:string}]}",
 		"scoring": "Module/scale/count/crop deterministic; from-letterform process heuristic; composite.",
 		"input": "Verify pattern built from logo letterforms via defined process at defined module/scale/count/crop."
@@ -1761,14 +1248,9 @@
 		"category": "illustration",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"screen"
-		],
+		"scopeOptions": ["all", "screen"],
 		"frequency": 1,
-		"brands": [
-			"pledis"
-		],
+		"brands": ["pledis"],
 		"paramSchema": "{enabled:boolean,lineWeight:{value:number,unit:string},moduleGrid:string,types:[{name:string,usesLineGraphic:boolean}],composition:string}",
 		"scoring": "Module-snap/line-weight deterministic; concept/composition heuristic; composite.",
 		"input": "Detect pledis Key Layout line-graphic and verify construction.",
@@ -1780,13 +1262,9 @@
 		"category": "iconography",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{styleAttributes:[{dimension:string,spec:string}],tool:string?,generationMethod:string?,textureType:string}",
 		"scoring": "VLM consistency judgment against style spec; tool/prompt process metadata.",
 		"input": "Verify icons share consistent form/material/lighting/viewpoint per style spec.",
@@ -1798,13 +1276,9 @@
 		"category": "iconography",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{gradients:[{index:number,name:string}],colorChoiceRef:string?,primaryColorAreaPct:{min:number,max:number},application:string,gradientSource:string?}",
 		"scoring": "Primary-accent area % deterministic 20-30%; gradient-set match deterministic; touchpoint manual review.",
 		"input": "Verify icon color mapping uses defined gradient and primary accent ~20-30%.",
@@ -1816,13 +1290,9 @@
 		"category": "iconography",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{touchpoints:[string],desiredImpression:string}",
 		"scoring": "Advisory: appropriate touchpoint + consistent treatment.",
 		"input": "Verify icons applied on appropriate promotion/SNS touchpoints with consistent vivid treatment."
@@ -1833,10 +1303,7 @@
 		"category": "iconography",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"screen"
-		],
+		"scopeOptions": ["all", "screen"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{gridSizePx:number,liveAreaPx:number,paddingPx:number,keylineShapes:[string],strokeWeightPx:number,cornerRadiusPx:number,terminal:string,pixelSnap:boolean}",
@@ -1850,15 +1317,9 @@
 		"category": "motion",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{motionAssets:[{kind:'variant|transition|loop',name:string,dimension:string,durationSec:number,asset:string}]}",
 		"scoring": "Duration deterministic; variant/asset similarity heuristic; pass within duration tolerance.",
 		"input": "Verify motion content matches approved variant with correct dimension/duration.",
@@ -1870,15 +1331,9 @@
 		"category": "motion",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"pledis",
-			"SLL"
-		],
+		"brands": ["ChannelA", "pledis", "SLL"],
 		"paramSchema": "{sections:[{name:string,scrollBehavior:string,interaction:string,mediaBehavior:string}],opacityStates:{activeOpacity:number,inactiveOpacity:number},hover:{trigger:string,targetColor:string}}",
 		"scoring": "Behavioral observation manual review; opacity/hover-color deterministic where measurable.",
 		"input": "Check per-section scroll/media/interaction behavior matches specified behavior."
@@ -1889,13 +1344,9 @@
 		"category": "motion",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{sequence:[string],trigger:string,behavior:string,referenceAsset:string}",
 		"scoring": "Sequence-order observation against reference; manual review/heuristic video match.",
 		"input": "Verify branded sequences follow prescribed order (KV->slogan->logo) and match reference."
@@ -1906,9 +1357,7 @@
 		"category": "motion",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{sonicLogo:{asset:string,durationSec:number},uiSounds:[{name:string,asset:string}],musicGuidelines:[string],usageContexts:[string]}",
@@ -1922,15 +1371,9 @@
 		"category": "voice",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{tone_attributes:[string],guidelines:[string],preferredWords:[string],avoid:[string]}",
 		"scoring": "VLM/human tone judgment against attributes; manual review.",
 		"input": "Assess copy for intended tone/personality (sentence length, positivity, preferred/avoided words)."
@@ -1941,13 +1384,9 @@
 		"category": "voice",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{traits:[{name:string,description:string}],persona:{name:string,description:string}}",
 		"scoring": "VLM/human judgment against traits/persona; manual review.",
 		"input": "Assess expression aligns with defined personality traits and persona character."
@@ -1958,14 +1397,9 @@
 		"category": "voice",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 2,
-		"brands": [
-			"ChannelA",
-			"SLL"
-		],
+		"brands": ["ChannelA", "SLL"],
 		"paramSchema": "{principles:[{name:string,kr:string,description:string}]}",
 		"scoring": "VLM/human judgment output embodies principles; manual review.",
 		"input": "Assess design output against named guiding design-expression principles."
@@ -1976,13 +1410,9 @@
 		"category": "voice",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{brandName:{canonical:string,neverWrite:[string],casing:string,possessiveRule:string},productNaming:object,firstMentionTM:boolean,abbreviationsAllowed:[string]}",
 		"scoring": "OCR + rule-based string checks; mismatch (wrong casing) fails; tone manual review.",
 		"input": "Verify brand/product/feature name correct casing/spacing/spelling/grammar.",
@@ -1994,9 +1424,7 @@
 		"category": "voice",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{headingCase:string,numberFormat:string,dateFormat:string,timeFormat:string,currency:string,oxfordComma:boolean,terminology:[{use:string,avoid:string}],spellingVariant:string}",
@@ -2010,15 +1438,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{tagline:string,slogan_kr:string,slogan_en:string,logline_kr:string,logline_en:string,casing:string,lockupForms:[string]}",
 		"scoring": "OCR + exact-string match case-sensitive; presence/placement heuristic; mismatch fails.",
 		"input": "Detect tagline/slogan/logline; verify exact wording/casing matches approved copy.",
@@ -2031,15 +1453,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{tagline:string,slogan_kr:string,slogan_en:string,logline_kr:string,logline_en:string,casing:string,lockupForms:[string]}",
 		"scoring": "OCR + exact-string match case-sensitive; presence/placement heuristic; mismatch fails.",
 		"input": "Detect tagline/slogan/logline; verify exact wording/casing matches approved copy.",
@@ -2052,15 +1468,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{tagline:string,slogan_kr:string,slogan_en:string,logline_kr:string,logline_en:string,casing:string,lockupForms:[string]}",
 		"scoring": "OCR + exact-string match case-sensitive; presence/placement heuristic; mismatch fails.",
 		"input": "Detect tagline/slogan/logline; verify exact wording/casing matches approved copy.",
@@ -2073,14 +1483,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 2,
-		"brands": [
-			"ChannelA",
-			"SLL"
-		],
+		"brands": ["ChannelA", "SLL"],
 		"paramSchema": "{statements:[{role:string,text_kr:string,text_en:string}],values:[{name:string,description:string}]}",
 		"scoring": "Exact-string match per role; deterministic on clean text, manual review in practice.",
 		"input": "Verify long-form brand copy matches approved wording per role.",
@@ -2092,14 +1497,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 2,
-		"brands": [
-			"ChannelA",
-			"SLL"
-		],
+		"brands": ["ChannelA", "SLL"],
 		"paramSchema": "{statements:[{role:string,text_kr:string,text_en:string}],values:[{name:string,description:string}]}",
 		"scoring": "Exact-string match per role; deterministic on clean text, manual review in practice.",
 		"input": "Verify long-form brand copy matches approved wording per role.",
@@ -2111,13 +1511,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 1,
-		"brands": [
-			"pledis"
-		],
+		"brands": ["pledis"],
 		"paramSchema": "{coreValues:[string]}",
 		"scoring": "VLM/human judgment of message-concept alignment; manual review.",
 		"input": "Assess messaging reflects brand core values/concept."
@@ -2128,16 +1524,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"print"
-		],
+		"scopeOptions": ["all", "print"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{statements:[{role:string,text:string}]}",
 		"scoring": "OCR + string match; deterministic on clean text, manual review overall.",
 		"input": "Check descriptor/boilerplate statements on applications match approved wording.",
@@ -2149,16 +1538,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"print"
-		],
+		"scopeOptions": ["all", "print"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{statements:[{role:string,text:string}]}",
 		"scoring": "OCR + string match; deterministic on clean text, manual review overall.",
 		"input": "Check descriptor/boilerplate statements on applications match approved wording.",
@@ -2170,16 +1552,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"print"
-		],
+		"scopeOptions": ["all", "print"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{statements:[{role:string,text:string}]}",
 		"scoring": "OCR + string match; deterministic on clean text, manual review overall.",
 		"input": "Check descriptor/boilerplate statements on applications match approved wording.",
@@ -2191,17 +1566,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{companyName:string,address:string,phone:string,url:string,handles:[string],copyright:string,bizRegNo:string,mail:string,requiredFields:[string]}",
 		"scoring": "Field-presence + value match; fraction correct; email/phone MUST be masked.",
 		"input": "Verify company info block present and correctly formatted.",
@@ -2214,17 +1581,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{companyName:string,address:string,phone:string,url:string,handles:[string],copyright:string,bizRegNo:string,mail:string,requiredFields:[string]}",
 		"scoring": "Field-presence + value match; fraction correct; email/phone MUST be masked.",
 		"input": "Verify company info block present and correctly formatted.",
@@ -2237,15 +1596,9 @@
 		"category": "messaging",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"SLL",
-			"pledis",
-			"ChannelA"
-		],
+		"brands": ["SLL", "pledis", "ChannelA"],
 		"paramSchema": "{copyrightText:string,distributor:string,printedIn:string,prohibitionNotice:string}",
 		"scoring": "Presence + string match of legal lines; pass if required lines present & correct.",
 		"input": "Check required legal/copyright/distribution footer present and matches approved wording."
@@ -2256,13 +1609,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{fields:[string],confidentialityNotice:string,taglineLine:string}",
 		"scoring": "Field-presence + order heuristic; confidentiality exact-match; email masked.",
 		"input": "Verify email signature contains required structured fields in order.",
@@ -2274,16 +1623,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"print"
-		],
+		"scopeOptions": ["all", "print"],
 		"frequency": 3,
-		"brands": [
-			"SLL",
-			"ChannelA",
-			"pledis"
-		],
+		"brands": ["SLL", "ChannelA", "pledis"],
 		"paramSchema": "{requiredFields:[{name:string,guidance:string}]}",
 		"scoring": "Field-presence check; fraction present; personal emails masked.",
 		"input": "Verify mandatory information fields present on stationery/collateral/templates.",
@@ -2296,16 +1638,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"print"
-		],
+		"scopeOptions": ["all", "print"],
 		"frequency": 3,
-		"brands": [
-			"SLL",
-			"ChannelA",
-			"pledis"
-		],
+		"brands": ["SLL", "ChannelA", "pledis"],
 		"paramSchema": "{requiredFields:[{name:string,guidance:string}]}",
 		"scoring": "Field-presence check; fraction present; personal emails masked.",
 		"input": "Verify mandatory information fields present on stationery/collateral/templates.",
@@ -2318,14 +1653,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"print"
-		],
+		"scopeOptions": ["all", "print"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{approvedCopy:[string]}",
 		"scoring": "OCR + string match against approved copy set; manual review.",
 		"input": "Check brand-story/tagline/sign-off copy on collateral/merch matches approved statements.",
@@ -2337,14 +1667,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"print"
-		],
+		"scopeOptions": ["all", "print"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{approvedCopy:[string]}",
 		"scoring": "OCR + string match against approved copy set; manual review.",
 		"input": "Check brand-story/tagline/sign-off copy on collateral/merch matches approved statements.",
@@ -2356,14 +1681,9 @@
 		"category": "messaging",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"print"
-		],
+		"scopeOptions": ["all", "print"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{approvedCopy:[string]}",
 		"scoring": "OCR + string match against approved copy set; manual review.",
 		"input": "Check brand-story/tagline/sign-off copy on collateral/merch matches approved statements.",
@@ -2375,18 +1695,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{items:[{name:string,width:number,height:number,depth:number,gusset:number,unit:string,ratio:string}]}",
 		"scoring": "Dimensional comparison per item; fraction meeting spec.",
 		"input": "Measure produced item dimensions vs spec for asset type.",
@@ -2399,18 +1710,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{items:[{name:string,width:number,height:number,depth:number,gusset:number,unit:string,ratio:string}]}",
 		"scoring": "Dimensional comparison per item; fraction meeting spec.",
 		"input": "Measure produced item dimensions vs spec for asset type.",
@@ -2423,18 +1725,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{items:[{name:string,width:number,height:number,depth:number,gusset:number,unit:string,ratio:string}]}",
 		"scoring": "Dimensional comparison per item; fraction meeting spec.",
 		"input": "Measure produced item dimensions vs spec for asset type.",
@@ -2447,15 +1740,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"print"
-		],
+		"scopeOptions": ["print"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{items:[{name:string,method:string,inkType:string,spotColors:[string],colorCount:number,binding:string}]}",
 		"scoring": "Spot-color values/count vs Pantone deterministic; method/binding manual review; composite.",
 		"input": "Verify print method, ink/spot-color count and Pantone/CMYK, color count per item."
@@ -2466,15 +1753,9 @@
 		"category": "application",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"print"
-		],
+		"scopeOptions": ["print"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{items:[{name:string,stock:string,weight:number,unit:string,material:string}]}",
 		"scoring": "Metadata/physical heuristic; pass if stock in approved list.",
 		"input": "Verify substrate/paper stock/weight or material matches approved list.",
@@ -2486,15 +1767,9 @@
 		"category": "application",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"print"
-		],
+		"scopeOptions": ["print"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{items:[{name:string,technique:string,depth:number,unit:string,optional:boolean,options:[string]}]}",
 		"scoring": "Finishing presence; some measurable (deboss depth); optional absent doesn't fail.",
 		"input": "Verify applied finishing operations match spec; many optional.",
@@ -2506,14 +1781,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"print"
-		],
+		"scopeOptions": ["print"],
 		"frequency": 2,
-		"brands": [
-			"SLL",
-			"pledis"
-		],
+		"brands": ["SLL", "pledis"],
 		"paramSchema": "{joinArea:{width:number,unit:string,label:string},flapDims:[{w:number,h:number,unit:string}],perforationArea:{present:boolean,label:string}}",
 		"scoring": "Die-line area presence + flap dims vs drawing; deterministic on vector.",
 		"input": "Check package die-line includes defined join/perforation areas with correct flap dims."
@@ -2524,15 +1794,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"print"
-		],
+		"scopeOptions": ["all", "print"],
 		"frequency": 2,
-		"brands": [
-			"ChannelA",
-			"pledis"
-		],
+		"brands": ["ChannelA", "pledis"],
 		"paramSchema": "{scale:number,unit:string}",
 		"scoring": "Scale label present and consistent with shown artwork; documentation convention.",
 		"input": "Read stated scale label on spec/drawing and verify matches actual scale.",
@@ -2544,15 +1808,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"print"
-		],
+		"scopeOptions": ["all", "print"],
 		"frequency": 2,
-		"brands": [
-			"ChannelA",
-			"pledis"
-		],
+		"brands": ["ChannelA", "pledis"],
 		"paramSchema": "{scale:number,unit:string}",
 		"scoring": "Scale label present and consistent with shown artwork; documentation convention.",
 		"input": "Read stated scale label on spec/drawing and verify matches actual scale.",
@@ -2564,15 +1822,9 @@
 		"category": "application",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"print"
-		],
+		"scopeOptions": ["all", "print"],
 		"frequency": 2,
-		"brands": [
-			"SLL",
-			"pledis"
-		],
+		"brands": ["SLL", "pledis"],
 		"paramSchema": "{kits:[{name:string,components:[string],paperSizes:[string]}]}",
 		"scoring": "Inventory presence check; pass if complete; heuristic/human on physical kit.",
 		"input": "Verify welcome kit/sub-kit contains full defined component set."
@@ -2583,16 +1835,9 @@
 		"category": "application",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"print",
-			"screen"
-		],
+		"scopeOptions": ["all", "print", "screen"],
 		"frequency": 2,
-		"brands": [
-			"SLL",
-			"pledis"
-		],
+		"brands": ["SLL", "pledis"],
 		"paramSchema": "{categories:[string],offlineTouchpoints:[string],onlineTouchpoints:[string]}",
 		"scoring": "Classification: is asset a defined touchpoint; scoping index, not pass/fail.",
 		"input": "Verify asset belongs to a defined application touchpoint category."
@@ -2603,15 +1848,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{baseWidth:number,baseHeight:number,unit:string,responsive:boolean,structure:string,nav:{items:[string],languageToggle:[string],states:[string],sizesPx:[number]},footer:{sizesPx:[number],linkGroups:[string]},button:{states:[string]},sections:[string],sources:[{type:string,file:string}]}",
 		"scoring": "Component dims/states deterministic; section/responsive heuristic; composite.",
 		"input": "Verify website baseline resolution/responsiveness, nav/footer components, composition, sources."
@@ -2622,15 +1861,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{formats:[{ratio:string,width:number,height:number,margin:number,content_area:number,unit:string}],profile:{handle:string,name:string,category:string,tagline:string,url:string},contentModes:[string],requiredElements:[string],modificationAllowed:boolean}",
 		"scoring": "Format dims/safe-margin deterministic; profile OCR; look-and-feel manual review; composite.",
 		"input": "Verify SNS posts/profile conform to canvas size, safe margins, profile fields, content modes."
@@ -2641,13 +1874,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{bugs:[{name:string,width:number,height:number,unit:string,opacity:number,ratings:[number]}],banners:[{orientation:string,width:number,height:number,unit:string}],disclaimerTiers:[{rating:string,text:string}],captionCreditText:string,gridScale:number}",
 		"scoring": "Bug size/opacity + banner deterministic; disclaimer/caption verbatim legal.",
 		"input": "Measure bug dims/opacity, banner dims, age-disclaimer per tier, caption credit.",
@@ -2659,15 +1888,9 @@
 		"category": "application",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis"
-		],
+		"brands": ["ChannelA", "SLL", "pledis"],
 		"paramSchema": "{items:[{name:string,requiredAssets:[string],tone:string,components:[string]}]}",
 		"scoring": "VLM/human: core assets present + restrained layout + components; manual review.",
 		"input": "Verify merch/collateral use consistent core brand assets in restrained layout."
@@ -2678,14 +1901,9 @@
 		"category": "application",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"print",
-			"all"
-		],
+		"scopeOptions": ["print", "all"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{structures:[{name:string,form:string,keyVisual:boolean,reflectsLogoSlant:boolean,copyPlacement:string,lightingRecommendation:string,views:[string]}],wallGraphicTypes:[{type:string,recommendedContext:string}],purpose:string,moodKeywords:[string]}",
 		"scoring": "Subjective structure/look review manual review; measurable sub-parts route elsewhere.",
 		"input": "Verify booth structures match defined type specs (form/KV/slant/copy/lighting)."
@@ -2696,15 +1914,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen",
-			"print"
-		],
+		"scopeOptions": ["screen", "print"],
 		"frequency": 2,
-		"brands": [
-			"SLL",
-			"pledis"
-		],
+		"brands": ["SLL", "pledis"],
 		"paramSchema": "{templates:[{asset:string,width:number,height:number,unit:string,variants:[{type:string,colorSchemes:number,usesPattern:boolean}],sections:[string],pageTypes:[{name:string,requiredElements:[string]}],attachment:{format:string,maxSizeMB:number}}]}",
 		"scoring": "Dimensions/attachment-limit deterministic; variant/section/page-type heuristic; composite.",
 		"input": "Verify online templates match fixed dimensions, variants, sections, attachment constraints."
@@ -2715,15 +1927,9 @@
 		"category": "application",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"screen"
-		],
+		"scopeOptions": ["all", "screen"],
 		"frequency": 2,
-		"brands": [
-			"ChannelA",
-			"SLL"
-		],
+		"brands": ["ChannelA", "SLL"],
 		"paramSchema": "{sources:[{type:string,file:string,path:string}],prototypeScale:string}",
 		"scoring": "Source-file naming/format conformance; metadata/heuristic; pass if uses master.",
 		"input": "Verify application uses referenced master source file (path/naming/format)."
@@ -2734,13 +1940,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{orientation:string,width:number,height:number,unit:string,alignment:string,transition:string}",
 		"scoring": "Dimensions/alignment deterministic; transition presence heuristic; composite.",
 		"input": "Measure motion poster px by orientation; verify composition (align, transition)."
@@ -2751,14 +1953,9 @@
 		"category": "application",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 2,
-		"brands": [
-			"SLL",
-			"ChannelA"
-		],
+		"brands": ["SLL", "ChannelA"],
 		"paramSchema": "{conceptKeywords:[string],mustUse:[string],moodKeywords:[string]}",
 		"scoring": "VLM/human concept-alignment judgment; manual review.",
 		"input": "Subjective review application aligns with stated design concept / brand persona experience."
@@ -2769,14 +1966,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 2,
-		"brands": [
-			"ChannelA",
-			"pledis"
-		],
+		"brands": ["ChannelA", "pledis"],
 		"paramSchema": "{platforms:[{platform:string,surfaces:[{name:string,width:number,height:number,safeArea:object,unit:string}]}]}",
 		"scoring": "Per-surface dimensional check vs platform matrix; safe-area overlap; fraction meeting spec.",
 		"input": "Per social platform verify exported assets match required dimensions and safe areas per surface.",
@@ -2788,9 +1980,7 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{ogImage:{width:number,height:number,unit:string},cardType:string,faviconSizes:[number],manifestIcons:[number],titleTemplate:string}",
@@ -2804,13 +1994,9 @@
 		"category": "application",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{components:[{name:string,radiusPx:number,padding:object,colorTokens:object,states:[{name:string,fill:string,text:string,border:string}]}]}",
 		"scoring": "Radius/padding/state-color deterministic where rendered; identity/completeness heuristic.",
 		"input": "Verify core UI components match brand component spec: shape/padding/tokens/states.",
@@ -2822,11 +2008,7 @@
 		"category": "application",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"screen",
-			"print"
-		],
+		"scopeOptions": ["all", "screen", "print"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{categoricalColors:[string],sequentialRamps:[{name:string,stops:[string]}],chartType:object,axisStyle:object,tableStyle:object,dataLabelType:string}",
@@ -2840,14 +2022,9 @@
 		"category": "application",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"print",
-			"all"
-		],
+		"scopeOptions": ["print", "all"],
 		"frequency": 1,
-		"brands": [
-			"SLL"
-		],
+		"brands": ["SLL"],
 		"paramSchema": "{signTypes:[{name:string,minLetterHeight:object,viewingDistance:object,material:string,illumination:string,contrast:object}],wayfindingSystem:object}",
 		"scoring": "Letter-height-vs-distance and contrast deterministic; material/illumination physical human; mostly manual review.",
 		"input": "Verify signage/environmental graphics meet viewing-distance legibility, material, mounting, contrast.",
@@ -2859,15 +2036,9 @@
 		"category": "application",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"screen",
-			"print"
-		],
+		"scopeOptions": ["all", "screen", "print"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{rules:[{useCase:string,format:string,minDpi:number,densities:[string],colorProfile:string}],namingConvention:string,transparencyRule:string}",
 		"scoring": "Format/dpi/color-profile deterministic from file metadata; naming regex; wrong format-for-use fails.",
 		"input": "Verify delivered assets use correct format per use, resolution/density, color profile, naming.",
@@ -2879,11 +2050,7 @@
 		"category": "accessibility",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"all",
-			"screen",
-			"print"
-		],
+		"scopeOptions": ["all", "screen", "print"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{level:string,normalTextMin:number,largeTextMin:number,uiGraphicsMin:number,exemptions:[string]}",
@@ -2898,10 +2065,7 @@
 		"category": "accessibility",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"all",
-			"screen"
-		],
+		"scopeOptions": ["all", "screen"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{appliesTo:[string],requiredRedundantCues:[string]}",
@@ -2915,13 +2079,9 @@
 		"category": "accessibility",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 1,
-		"brands": [
-			"ChannelA"
-		],
+		"brands": ["ChannelA"],
 		"paramSchema": "{requireAltText:boolean,requireCaptions:boolean,requireTranscript:boolean,decorativeMarking:string,captionStyleRef:string}",
 		"scoring": "Metadata/markup presence; human/VLM meaningfulness; manual review.",
 		"input": "Verify images carry alt text, video/audio carry captions/transcripts, decorative images marked.",
@@ -2933,9 +2093,7 @@
 		"category": "accessibility",
 		"tier": "required",
 		"executor": "deterministic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{minSizePx:number,minSpacingPx:number,platformOverrides:[{platform:string,minSizePx:number}]}",
@@ -2949,9 +2107,7 @@
 		"category": "accessibility",
 		"tier": "recommended",
 		"executor": "heuristic",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{focusStyle:string,minRingThicknessPx:number,minContrast:number,requireVisibleFocus:boolean}",
@@ -2965,9 +2121,7 @@
 		"category": "accessibility",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"screen"
-		],
+		"scopeOptions": ["screen"],
 		"frequency": 0,
 		"brands": [],
 		"paramSchema": "{honorPrefersReducedMotion:boolean,maxFlashesPerSec:number,provideStaticAlternative:boolean}",
@@ -2981,15 +2135,9 @@
 		"category": "accessibility",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all",
-			"screen"
-		],
+		"scopeOptions": ["all", "screen"],
 		"frequency": 2,
-		"brands": [
-			"SLL",
-			"ChannelA"
-		],
+		"brands": ["SLL", "ChannelA"],
 		"paramSchema": "{scripts:[{name:string,font:string,fallback:string}],rtlSupport:boolean,expansionAllowancePct:number,mirroredElements:[string],dateNumberLocale:boolean}",
 		"scoring": "Script-font/truncation heuristic; RTL/mirroring/locale manual review; composite.",
 		"input": "Verify multilingual content uses correct script fonts, accommodates expansion, applies LTR/RTL.",
@@ -3001,16 +2149,9 @@
 		"category": "misc",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 4,
-		"brands": [
-			"ChannelA",
-			"SLL",
-			"pledis",
-			"essenherb"
-		],
+		"brands": ["ChannelA", "SLL", "pledis", "essenherb"],
 		"paramSchema": "{policies:[{policy:string,value:boolean}],rules:[string],escalationPath:string,strictAdherence:boolean,modificationAllowed:boolean,externalRemovalProhibited:boolean}",
 		"scoring": "Not visually measurable; human review; escalate undefined cases; manual review.",
 		"input": "Process check: strict adherence, no arbitrary modification, changes via responsible dept, no external distribution.",
@@ -3023,15 +2164,9 @@
 		"category": "misc",
 		"tier": "recommended",
 		"executor": "manual",
-		"scopeOptions": [
-			"all"
-		],
+		"scopeOptions": ["all"],
 		"frequency": 3,
-		"brands": [
-			"SLL",
-			"pledis",
-			"ChannelA"
-		],
+		"brands": ["SLL", "pledis", "ChannelA"],
 		"paramSchema": "{title:string,version:string,issued:string,copyright:string}",
 		"scoring": "Metadata reference only; establishes authoritative catalog instance; not asset pass/fail.",
 		"input": "Reference-only guideline edition/version/date governing which rule set applies.",
