@@ -5,7 +5,7 @@ import { HeroMainSection } from '@/components/home/hero-main-section'
 export function HeroSection() {
 	return (
 		<>
-			<section aria-label="hero" className="relative h-full p-4">
+			<section data-slot="hero-section" aria-label="hero" className="relative h-full p-4">
 				<GridLines col={12} gap={16} padding={16} />
 				<HeroMainSection />
 			</section>
@@ -24,6 +24,7 @@ function GridLines({ col, gap, padding = 0 }: { col: number; gap: number; paddin
 
 	return (
 		<div
+			data-slot="grid-lines"
 			aria-hidden="true"
 			className="pointer-events-none absolute inset-0 flex opacity-[0.02] dark:opacity-[0.06]"
 			style={{ gap: `${gap}px`, padding: `${padding ?? 0}px` }}

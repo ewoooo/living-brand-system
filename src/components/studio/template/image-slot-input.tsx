@@ -83,7 +83,7 @@ export function ImageSlotInput({
 	}
 
 	return (
-		<div className="flex flex-col gap-2">
+		<div data-slot="image-slot-input" className="flex flex-col gap-2">
 			{!pinnedProfileId && (
 				<Field data-disabled={!profiles?.length}>
 					<FieldLabel className="sr-only" htmlFor={`${id}-profile`}>

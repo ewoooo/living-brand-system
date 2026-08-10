@@ -42,6 +42,7 @@ export function CheckRow({
 	return (
 		<>
 			<motion.tr
+				data-slot="check-row"
 				id={anchorId ?? undefined}
 				role={expandable ? 'button' : undefined}
 				aria-expanded={expandable ? open : undefined}

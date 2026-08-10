@@ -45,6 +45,7 @@ export function CheckStatusBadge({
 	if (inProgress) {
 		return (
 			<motion.span
+				data-slot="check-status-badge"
 				initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
 				animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
 				exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}

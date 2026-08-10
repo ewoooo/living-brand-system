@@ -26,7 +26,10 @@ export function AgentChatUserBubble({ files, text }: { files: FileUIPart[]; text
 	}
 
 	return (
-		<div className="flex w-full max-w-full flex-col items-end gap-2">
+		<div
+			data-slot="agent-chat-user-bubble"
+			className="flex w-full max-w-full flex-col items-end gap-2"
+		>
 			<AgentChatFileAttachments files={files} />
 			{text && (
 				<Bubble align="end" variant="user" className="rounded-full">

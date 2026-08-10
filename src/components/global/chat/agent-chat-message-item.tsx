@@ -31,7 +31,10 @@ export function AgentChatMessageItem({
 		const files = message.parts.filter((part) => part.type === 'file')
 
 		return (
-			<div className="flex w-full flex-col items-end gap-2">
+			<div
+				data-slot="agent-chat-message-item"
+				className="flex w-full flex-col items-end gap-2"
+			>
 				<AgentChatUserBubble text={messageText} files={files} />
 			</div>
 		)
@@ -45,7 +48,7 @@ export function AgentChatMessageItem({
 	const generatedImages = getAgentGeneratedImages(message)
 
 	return (
-		<div className="flex w-full flex-col items-start gap-2">
+		<div data-slot="agent-chat-message-item" className="flex w-full flex-col items-start gap-2">
 			<AgentChatMarker
 				marker={reasoningMarker}
 				icon={reasoningMarker?.isPending ? <Spinner /> : <Ai />}

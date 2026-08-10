@@ -9,7 +9,7 @@ export function AgentChatGeneratedImages({
 	attachment: AgentGeneratedImagesAttachment
 }) {
 	return (
-		<div className="flex w-full flex-col gap-2">
+		<div data-slot="agent-chat-generated-images" className="flex w-full flex-col gap-2">
 			{attachment.profileName ? (
 				<Typography size="sm" tone="muted">
 					적용된 프로파일: {attachment.profileName}

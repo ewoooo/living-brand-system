@@ -90,7 +90,7 @@ export function HeaderTail({
 	guidelineChapters: GuidelineSearchChapter[]
 }) {
 	return (
-		<section className={className}>
+		<section data-slot="header-tail" className={className}>
 			<HeaderGuidelineSearch chapters={guidelineChapters} />
 			<SidebarTrigger
 				variant="highlight"

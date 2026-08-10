@@ -116,7 +116,7 @@ export function StudioExamples() {
 	const examples = filterStudioExamples(category)
 
 	return (
-		<section aria-label="Studio 예제" className="mx-auto max-w-232">
+		<section data-slot="studio-examples" aria-label="Studio 예제" className="mx-auto max-w-232">
 			<ContentHeading
 				title="Examples"
 				description="브랜드 제작 흐름을 빠르게 시작할 수 있는 예제를 모았습니다."

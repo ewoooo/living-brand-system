@@ -6,6 +6,7 @@ import type { CheckSection } from '@/features/asset-check/domain/runtime-check'
 export function ReviewResultDetails({ sections }: { sections: CheckSection[] }) {
 	return (
 		<section
+			data-slot="review-result-details"
 			aria-labelledby="review-result-details-title"
 			className="w-full order-2 lg:order-1"
 		>

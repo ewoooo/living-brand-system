@@ -6,7 +6,7 @@ export function HeaderHead({ className }: { className?: string }) {
 	const LOGO_SIZE = 16
 
 	return (
-		<section className={className}>
+		<section data-slot="header-head" className={className}>
 			<Link
 				aria-label="메인으로 이동"
 				className="flex size-8 shrink-0 items-center justify-center rounded-md transition-opacity hover:opacity-60"

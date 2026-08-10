@@ -149,7 +149,10 @@ export function HeaderCenter({
 	]
 
 	return (
-		<section className={cn('text-sm tracking-[-0.01rem] font-medium', className)}>
+		<section
+			data-slot="header-center"
+			className={cn('text-sm tracking-[-0.01rem] font-medium', className)}
+		>
 			<nav aria-label="주요 메뉴" className="flex items-center gap-1 py-2">
 				<NavigationMenu
 					className="static max-w-none"

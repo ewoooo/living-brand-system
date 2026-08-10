@@ -40,6 +40,7 @@ export function CheckDetailRow({
 
 	return (
 		<motion.tr
+			data-slot="check-detail-row"
 			className="border-0"
 			exit={{ visibility: 'visible' }}
 			transition={{ duration: 0.18, ease: 'easeOut' }}
@@ -66,7 +67,10 @@ function HeuristicObservations({ observations }: { observations: AiCheckResult['
 	if (!observations?.length) return null
 
 	return (
-		<div className="overflow-x-auto rounded-sm border border-border">
+		<div
+			data-slot="heuristic-observations"
+			className="overflow-x-auto rounded-sm border border-border"
+		>
 			<Table className="font-body text-sm font-normal">
 				<TableCaption className="sr-only">결과 비교</TableCaption>
 				<TableHeader className="border-b bg-fill-muted/50 text-muted-foreground">
@@ -120,6 +124,7 @@ function CheckDetailCollapse({
 }) {
 	return (
 		<motion.div
+			data-slot="check-detail-collapse"
 			className="overflow-hidden"
 			initial={shouldReduceMotion ? false : { height: 0 }}
 			animate={shouldReduceMotion ? {} : { height: 'auto' }}

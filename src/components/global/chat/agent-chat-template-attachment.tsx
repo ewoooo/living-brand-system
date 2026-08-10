@@ -190,7 +190,11 @@ function ScaledMedia({
 	}, [])
 
 	return (
-		<div ref={containerRef} className="flex w-full justify-center overflow-hidden">
+		<div
+			ref={containerRef}
+			data-slot="scaled-media"
+			className="flex w-full justify-center overflow-hidden"
+		>
 			{children(scale)}
 		</div>
 	)

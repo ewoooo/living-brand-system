@@ -39,6 +39,7 @@ export function AgentChatUserInput({
 
 	return (
 		<form
+			data-slot="agent-chat-user-input"
 			className="p-3"
 			onSubmit={(event) => {
 				event.preventDefault()

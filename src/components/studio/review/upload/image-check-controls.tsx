@@ -23,7 +23,10 @@ import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
  */
 export function ImageCheckControls() {
 	return (
-		<section className="pointer-events-none absolute inset-x-4 top-4 bottom-4 z-10 flex flex-col items-center justify-between">
+		<section
+			data-slot="image-check-controls"
+			className="pointer-events-none absolute inset-x-4 top-4 bottom-4 z-10 flex flex-col items-center justify-between"
+		>
 			<CheckChangeScenario />
 			<div className="flex flex-col items-center gap-2">
 				<CheckButton />

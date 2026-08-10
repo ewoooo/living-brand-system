@@ -26,7 +26,12 @@ export function ImageGenerationResults({
 	const generatedImages = result?.generatedImages ?? []
 
 	return (
-		<div className="flex h-full min-h-0 flex-col" aria-live="polite" aria-busy={loading}>
+		<div
+			data-slot="image-generation-results"
+			className="flex h-full min-h-0 flex-col"
+			aria-live="polite"
+			aria-busy={loading}
+		>
 			{loading && <ImageGenerationSkeleton count={requested} />}
 
 			{!loading && images.length > 0 && result && (
@@ -118,7 +123,7 @@ export function ImageGenerationResults({
 
 function ImageGenerationSkeleton({ count }: { count: number }) {
 	return (
-		<div className="flex flex-col gap-3">
+		<div data-slot="image-generation-skeleton" className="flex flex-col gap-3">
 			<Typography size="sm" tone="muted">
 				생성 중… 무료 서버라 최대 1~2분 걸릴 수 있어요.
 			</Typography>
