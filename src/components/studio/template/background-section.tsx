@@ -195,13 +195,10 @@ export function BackgroundSection() {
 				)}
 			</InspectorSection>
 
-			{/* 디자인 SSOT: transform은 Background의 형제 섹션이고 구분선이 없다. */}
+			{/* 디자인 SSOT: transform은 Background의 형제 섹션이고 구분선이 없다.
+			    ponytail: 배경 이미지 배정이 아직 없어(3단계 배선) 생성 전 규칙대로 닫힌 채 잠근다. */}
 			{type === 'image' && (
-				<InspectorSection
-					title="Image Transform"
-					defaultOpen={false}
-					className="border-t-0 pt-0"
-				>
+				<InspectorSection title="Image Transform" disabled className="border-t-0 pt-0">
 					<ImageTransformControl value={imageTransform} onChange={setImageTransform} />
 				</InspectorSection>
 			)}

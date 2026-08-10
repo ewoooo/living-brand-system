@@ -360,10 +360,12 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 										}
 									/>
 								</InspectorSection>
-								{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 별도 섹션이다. */}
+								{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 별도 섹션이다.
+								    생성 전에는 닫힌 채 잠긴다 — compose가 배정된 이미지에만 transform을 적용해서다. */}
 								<InspectorSection
 									title={`${sectionTitle} Transform`}
 									className="border-t-0 pt-0"
+									disabled={!imageValues[slot.nodeId]}
 								>
 									<ImageTransformControl
 										value={
