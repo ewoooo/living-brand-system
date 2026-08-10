@@ -123,7 +123,7 @@ function LayerList({
 							<Button
 								key={layer.id}
 								type="button"
-								variant={layer.id === selectedId ? 'muted' : 'ghost'}
+								variant={layer.id === selectedId ? 'tint' : 'ghost'}
 								size="sm"
 								className="h-7 w-full justify-start px-1 font-normal"
 								style={{ paddingLeft: layer.depth * 14 + 4 }}
