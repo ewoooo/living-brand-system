@@ -72,7 +72,7 @@ describe('TemplateGenerator', () => {
 		expect(container.querySelector('[data-slot="studio-workspace"]')).not.toBeNull()
 		expect(container.querySelector('[data-slot="studio-workspace-controller"]')).not.toBeNull()
 		expect(container.querySelector('[data-slot="studio-workspace-canvas"]')).not.toBeNull()
-		expect(container.querySelector('[data-slot="inspector-panel"]')).not.toBeNull()
+		expect(container.querySelector('[data-slot="controller-panel"]')).not.toBeNull()
 
 		fireEvent.click(screen.getByRole('button', { name: '내보내기' }))
 

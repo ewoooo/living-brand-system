@@ -139,34 +139,37 @@ studio·global·home 같은 표면의 화면 컴포넌트도 위 계약을 그�
 - **variant 수단 단일화**: 시각 variant(색·모양·상태별 스타일)는 언제나 `cva`입니다. 완전 클래스 룩업 테이블은 §4의 동적 클래스 대책, 즉 **레이아웃 매핑**(`grid-cols` 등 구조 분기)에만 씁니다 — 상태→색 매핑을 `.ts` 룩업 테이블이나 클래스 문자열을 반환하는 헬퍼 함수로 풀면 cva 자리를 우회한 것입니다.
 - **motion**: 애니메이션 라이브러리는 `motion/react` 하나만, `LazyMotion` + `motion/react-m` 조합(`side-nav.tsx` 원형)으로 씁니다. 모션 감소는 그 모션을 소유한 컴포넌트 안에서 `useReducedMotion()`으로 처리하고, `shouldReduceMotion`을 props로 내려보내지 않습니다.
 
-### 컨트롤러(인스펙터) 컨트롤 계약 (§3.6)
+### 컨트롤러 컨트롤 계약 (§3.6)
 
-스튜디오 컨트롤러의 개별 컨트롤은 아래 계약을 따릅니다. 디자인 정본은 Figma HD_LBS_UI의 **Controller API**(node `4:5578`), 구현 원형은 `src/components/studio/shared/inspector.tsx`입니다. 지금 단계에서 이 계약은 **prop 어휘 규약**입니다 — 컨트롤을 데이터로 정의해 그리는 스키마 렌더러는 컨트롤러가 CMS·플러그인 정의에서 생성되는 시점에 이 어휘 위에 얹습니다.
+스튜디오 컨트롤러의 개별 컨트롤은 아래 계약을 따릅니다. 디자인 정본은 Figma HD_LBS_UI의 **Controller API**(node `4:5578`), 구현 원형은 `src/components/studio/shared/controller/`의 **Controller 컴파운드 킷**입니다(`<Controller.Panel>`, `<Controller.Row>` …). 지금 단계에서 이 계약은 **prop 어휘 규약**입니다 — 컨트롤을 데이터로 정의해 그리는 스키마 렌더러는 컨트롤러가 CMS·플러그인 정의에서 생성되는 시점에 이 어휘 위에 얹습니다.
+
+킷 배선 규칙: `Controller.Row`/`Controller.Field`가 `{ controlId, disabled }` 표현 컨텍스트를 내리고, 안의 킷 컨트롤(`Select`·`Input`·`Textarea`·`Segmented`·`ColorRow` 스와치)이 라벨 연결 id와 disabled를 자동으로 이어받습니다 — 소비자는 htmlFor를 배선하지 않습니다. 이 컨텍스트에 도메인 값을 넣지 않습니다(§3.5 — 도메인 Provider는 features의 훅으로).
 
 공통(`ControlBase`) — 모든 컨트롤이 공유하는 정의 상태:
 
 - `label: string | 아이콘 노드` — 아이콘 라벨은 접근 가능한 이름(sr-only 텍스트)을 반드시 동반합니다.
-- `readonly` — 값은 유효하며 읽혀야 하는 상태. 정상 대비를 유지하고 컨트롤·chevron을 그리지 않는 **구성**으로 표현합니다(별도 prop 없음). opacity로 흐리지 않습니다.
-- `disabled` — 조정 자체가 불가한 상태(어드민 고정 등). 행 전체 흐림(opacity-50 관례) + 포인터·포커스 차단. readonly와 절대 혼용하지 않습니다.
+- `readonly` — 값은 유효하며 읽혀야 하는 상태. 정상 대비를 유지하고 컨트롤·chevron 없이 값만 보입니다 — `Controller.Row`의 `readonly`(라벨이 span이 되고 자동 배선이 꺼짐) + 값 텍스트 구성으로 표현합니다. opacity로 흐리지 않습니다.
+- `disabled` — 조정 자체가 불가한 상태(어드민 고정 등). 행 전체 흐림(opacity-50 관례) + 포인터·포커스 차단(안의 킷 컨트롤은 컨텍스트로 함께 비활성). readonly와 절대 혼용하지 않습니다.
 
 리프 컨트롤 8종 — 값 형태와 제약은 종류(kind)가 소유합니다:
 
 | kind | value | 종류별 제약·부속 | 킷 대응 |
 | --- | --- | --- | --- |
-| text | `string \| null` | `maxLength`(카운터 `n/max`로 표시), `multiline` | `InspectorRow`+Input / `InspectorField`+Textarea |
-| toggle | `boolean` | — | `InspectorSegmented` (On/Off) |
-| select | `string \| null` | `options[]` | `InspectorRow`+Select |
-| color | `#rrggbb \| null` | — | `InspectorColorRow` |
+| text | `string \| null` | `maxLength`(카운터 `n/max`로 표시), `multiline` | `Controller.Row`+`Controller.Input` / `Controller.Field`+`Controller.Textarea` |
+| toggle | `boolean` | — | `Controller.Segmented` (On/Off) |
+| select | `string \| null` | `options[]` | `Controller.Row`+`Controller.Select` |
+| color | `#rrggbb \| null` | — | `Controller.ColorRow` |
 | range | `number` | `min`/`max`/`step`, 표기 포맷 | `SliderRow` (채움 폭=값) |
 | pad | `{ x, y }` (-1~1) | `aspectRatio`(Wide/Portrait/Square) | `TransformPad` |
-| orbit | `{ azimuthDeg, elevationDeg }` | 스냅 스텝 | `InspectorCameraControl` + 오빗 프리뷰 |
+| orbit | `{ azimuthDeg, elevationDeg }` | 스냅 스텝 | `Controller.CameraControl` + 오빗 프리뷰 |
 | asset | 자산 참조 `\| null` | 소스(브랜드 이미지 등) | Browse 카드(배선 예정) |
 
 경계 규칙:
 
-- **`isEmpty`는 파생 상태입니다.** `value === null`에서 계산하고, 별도 진실로 두지 않습니다. 비어 있으면 원본 값을 사칭하지 않고 `—`로 보입니다(`InspectorColorRow`의 `isEmpty` 원형).
+- **`isEmpty`는 파생 상태입니다.** `value === null`에서 계산하고, 별도 진실로 두지 않습니다. 비어 있으면 원본 값을 사칭하지 않고 `—`로 보입니다(`Controller.ColorRow`의 `isEmpty` 원형).
 - **`error`·`busy`는 정의가 아니라 런타임 상태입니다.** ControlBase에 넣지 않고 소유 컴포넌트의 상태로 처리합니다(생성 실패 메시지, "생성 중…" 비활성).
 - **컴포지션 층(섹션·탭 분기·조건 노출·액션)은 의도적으로 미정입니다.** 화면 컨트롤러가 둘 이상 쌓여 실제 분기 형태가 드러나기 전에는 `visibleWhen` 류의 DSL을 추측으로 설계하지 않습니다.
+- **네임스페이스 객체(`Controller`)는 client 소비 전용입니다.** RSC에서 점 접근이 필요하면 개별 named export(`ControllerRow` 등)를 씁니다.
 
 ## 4. 스타일 계약 Do/Don't
 

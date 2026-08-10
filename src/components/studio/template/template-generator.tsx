@@ -2,13 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
-import {
-	INSPECTOR_ROW_SELECT_TRIGGER,
-	InspectorColorRow,
-	InspectorPanel,
-	InspectorRow,
-	InspectorSection,
-} from '@/components/studio/shared/inspector'
+import { Controller } from '@/components/studio/shared/controller'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,7 +12,6 @@ import {
 	SelectItem,
 	SelectLabel,
 	SelectTrigger,
-	SelectValue,
 } from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
 import { nearestImageAspectRatio } from '@/features/generate-image/image-size'
@@ -64,7 +57,7 @@ type TemplateGeneratorProps = {
  * imageInput이 달린 프레임 이미지 슬롯)을 편집해
  * 미리보기 그대로 PNG·운영자 정책의 CMYK TIFF 또는 mm 단위 CMYK PDF로 내보낸다. 서버 상태 변경은 없다 —
  * 입력값은 로컬 state로만 합성한다.
- * 컨트롤러는 디자인 SSOT(Figma HD_LBS_UI 1:14)의 인스펙터 패널 구조를 따른다.
+ * 컨트롤러는 디자인 SSOT(Figma HD_LBS_UI 1:14)의 패널 구조를 Controller 킷으로 따른다.
  * 미리보기는 동일-문서 렌더(어드민 캔버스는 same-origin iframe) — opaque origin iframe은 벡터 mask의
  * CORS 로드를 깨뜨린다. 임포트 HTML은 스크립트 없는 inline-style이다.
  */
@@ -215,7 +208,7 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 	return (
 		<StudioWorkspace
 			controller={
-				<InspectorPanel
+				<Controller.Panel
 					footer={
 						<>
 							<div className="flex flex-col gap-1">
@@ -224,48 +217,37 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 										Setting
 									</span>
 								</div>
-								<InspectorRow label="Size">
+								<Controller.Row label="Size" readonly>
 									<span className="text-sm text-muted-foreground">
 										{template.printPpi
 											? `${pixelsToMillimeters(width, template.printPpi).toFixed(1)} × ${pixelsToMillimeters(height, template.printPpi).toFixed(1)}mm`
 											: `${width} × ${height}px`}
 									</span>
-								</InspectorRow>
+								</Controller.Row>
 								{template.printPpi && (
-									<InspectorRow label="Resolution">
+									<Controller.Row label="Resolution" readonly>
 										<span className="text-sm text-muted-foreground">
 											{template.printPpi}ppi
 										</span>
-									</InspectorRow>
+									</Controller.Row>
 								)}
 								{template.printPpi && (
-									<InspectorRow label="Color Profile">
+									<Controller.Row label="Color Profile" readonly>
 										<span className="text-sm text-muted-foreground">CMYK</span>
-									</InspectorRow>
+									</Controller.Row>
 								)}
-								<InspectorRow label="Format" htmlFor="export-format">
-									<Select
+								<Controller.Row label="Format">
+									<Controller.Select
+										options={availableFormats.map((candidate) => ({
+											value: candidate,
+											label: FORMAT_LABELS[candidate],
+										}))}
 										value={format}
-										onValueChange={(value) =>
+										onChange={(value) =>
 											setFormat(value as TemplateExportFormat)
 										}
-									>
-										<SelectTrigger
-											id="export-format"
-											size="sm"
-											className={INSPECTOR_ROW_SELECT_TRIGGER}
-										>
-											<SelectValue />
-										</SelectTrigger>
-										<SelectContent align="end">
-											{availableFormats.map((candidate) => (
-												<SelectItem key={candidate} value={candidate}>
-													{FORMAT_LABELS[candidate]}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								</InspectorRow>
+									/>
+								</Controller.Row>
 							</div>
 							<div className="flex flex-col gap-2">
 								<Button
@@ -331,11 +313,10 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 					</div>
 
 					{slots.length > 0 && (
-						<InspectorSection title="Text">
+						<Controller.Section title="Text">
 							{slots.map((slot) => (
 								<div key={slot.nodeId} className="flex flex-col gap-1">
 									<TextSlotInput
-										id={`slot-${slot.nodeId}`}
 										label={slot.input.label ?? slot.name}
 										spec={slot.input}
 										value={values[slot.nodeId] ?? slot.text}
@@ -353,22 +334,21 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 									)}
 								</div>
 							))}
-							<InspectorColorRow
+							<Controller.ColorRow
 								label="Color"
 								value={textColor ?? '#000000'}
 								isEmpty={textColor === null}
 								onReset={() => setTextColor(null)}
 								onChange={setTextColor}
 							/>
-						</InspectorSection>
+						</Controller.Section>
 					)}
 					{imageSlots.map((slot, index) => {
 						const sectionTitle = imageSlots.length > 1 ? `Image ${index + 1}` : 'Image'
 						return (
 							<div key={slot.nodeId} className="flex flex-col gap-3">
-								<InspectorSection title={sectionTitle}>
+								<Controller.Section title={sectionTitle}>
 									<ImageSlotInput
-										id={`image-slot-${slot.nodeId}`}
 										pinnedProfileId={slot.profileId}
 										profiles={profiles}
 										profilesFailed={profilesFailed}
@@ -397,10 +377,10 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 											}))
 										}
 									/>
-								</InspectorSection>
+								</Controller.Section>
 								{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 별도 섹션이다.
 								    생성 전에는 닫힌 채 잠긴다 — compose가 배정된 이미지에만 transform을 적용해서다. */}
-								<InspectorSection
+								<Controller.Section
 									title={`${sectionTitle} Transform`}
 									className="border-t-0 pt-0"
 									disabled={!imageValues[slot.nodeId]}
@@ -424,7 +404,7 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 											}))
 										}
 									/>
-								</InspectorSection>
+								</Controller.Section>
 							</div>
 						)
 					})}
@@ -436,7 +416,7 @@ export function TemplateGenerator({ navigation, template }: TemplateGeneratorPro
 							이 템플릿에는 편집 가능한 슬롯이 없습니다.
 						</Typography>
 					)}
-				</InspectorPanel>
+				</Controller.Panel>
 			}
 		>
 			<div className="grid h-full min-h-0 min-w-0 overflow-auto">

@@ -1,26 +1,18 @@
 'use client'
 
-import {
-	INSPECTOR_BARE_INPUT,
-	InspectorField,
-	InspectorRow,
-} from '@/components/studio/shared/inspector'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { Controller } from '@/components/studio/shared/controller'
 import { Typography } from '@/components/ui/typography'
-import { cn } from '@/lib/utils'
 import type { TemplateSlotSpec } from '@/types/template'
 
 type TextSlotInputProps = {
-	id: string
 	label: string
 	spec: TemplateSlotSpec
 	value: string
 	onChange: (text: string) => void
 }
 
-/** 제작자가 요소에 설정한 입력 제약(형식·글자수·줄수)을 적용한 텍스트 슬롯 인스펙터 행. */
-export function TextSlotInput({ id, label, spec, value, onChange }: TextSlotInputProps) {
+/** 제작자가 요소에 설정한 입력 제약(형식·글자수·줄수)을 적용한 텍스트 슬롯 컨트롤러 행. */
+export function TextSlotInput({ label, spec, value, onChange }: TextSlotInputProps) {
 	const format = spec.inputFormat ?? 'free'
 
 	// 한 줄 제약(maxLines 1)의 자유 텍스트는 여러 줄 입력 UI가 성립하지 않는다 — 단일행 Input으로 렌더.
@@ -29,17 +21,16 @@ export function TextSlotInput({ id, label, spec, value, onChange }: TextSlotInpu
 
 		return (
 			<>
-				<InspectorRow label={label} htmlFor={id}>
-					<Input
-						id={id}
+				<Controller.Row label={label}>
+					<Controller.Input
 						type={format === 'free' ? 'text' : format}
 						maxLength={spec.maxLength}
 						placeholder={spec.placeholder ?? spec.label}
 						value={value}
 						onChange={(event) => onChange(event.target.value)}
-						className={cn(INSPECTOR_BARE_INPUT, 'text-right')}
+						className="text-right"
 					/>
-				</InspectorRow>
+				</Controller.Row>
 				{isInvalidEmail && (
 					<Typography role="alert" size="sm" tone="destructive">
 						이메일 형식이 아니에요.
@@ -50,9 +41,8 @@ export function TextSlotInput({ id, label, spec, value, onChange }: TextSlotInpu
 	}
 
 	return (
-		<InspectorField label={label} htmlFor={id}>
-			<Textarea
-				id={id}
+		<Controller.Field label={label}>
+			<Controller.Textarea
 				maxLength={spec.maxLength}
 				placeholder={spec.placeholder ?? spec.label}
 				rows={2}
@@ -67,8 +57,7 @@ export function TextSlotInput({ id, label, spec, value, onChange }: TextSlotInpu
 					}
 					onChange(next)
 				}}
-				className={cn(INSPECTOR_BARE_INPUT, 'min-h-12')}
 			/>
-		</InspectorField>
+		</Controller.Field>
 	)
 }
