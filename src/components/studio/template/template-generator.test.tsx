@@ -146,6 +146,95 @@ describe('TemplateGenerator', () => {
 		})
 	})
 
+	it('일괄 텍스트 색을 만졌을 때만 모든 텍스트 슬롯에 합성한다', () => {
+		const { container } = render(
+			<TemplateGenerator
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<p data-node-id="t1" style="color:#1a1a1a">TITLE</p><p data-node-id="t2" style="color:#1a1a1a">YEARS</p>',
+					nodeConfigs: {
+						t1: { input: { label: 'Title' } },
+						t2: { input: { label: 'Years' } },
+					},
+				}}
+			/>,
+		)
+
+		// 만지기 전 — 저작 색 유지.
+		expect(container.innerHTML).not.toContain('rgb(255, 0, 0)')
+
+		fireEvent.change(screen.getByLabelText('Color 색상 선택'), { target: { value: '#ff0000' } })
+
+		const preview = container.querySelector('[data-slot="studio-workspace-canvas"]')
+		expect(
+			preview?.querySelectorAll('p[style*="rgb(255, 0, 0)"], p[style*="#ff0000"]').length,
+		).toBe(2)
+	})
+
+	it('사용자 Line Color가 이미지 교체 시 colorize의 line을 갈아끼운다', async () => {
+		mocks.requestImageGeneration.mockResolvedValue({
+			generatedImages: [{ id: 5, url: '/api/generated-images/file/bg.png' }],
+		})
+		const { container } = render(
+			<TemplateGenerator
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: {
+						'1:1': { imageInput: { profileId: 7 }, imageColorize: { line: '#ff0000' } },
+					},
+				}}
+			/>,
+		)
+
+		fireEvent.change(screen.getByLabelText('Line Color 색상 선택'), {
+			target: { value: '#00ff00' },
+		})
+		fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: '파스텔 배경' } })
+		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
+
+		await waitFor(() => {
+			expect(container.innerHTML).toContain('mask-image')
+			expect(container.innerHTML).toContain('rgb(0, 255, 0)') // 사용자 색이 저작 line을 대체
+		})
+	})
+
+	it('생성 후 transform 조작이 편집 transform으로 합성되고, 생성 전에는 비활성이다', async () => {
+		mocks.requestImageGeneration.mockResolvedValue({
+			generatedImages: [{ id: 5, url: '/api/generated-images/file/bg.png' }],
+		})
+		const { container } = render(
+			<TemplateGenerator
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier="" style="width:400px;height:300px;"></div>',
+					nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
+				}}
+			/>,
+		)
+
+		const pad = screen.getByRole('slider', { name: '이미지 위치' })
+		// 생성 전 — 비활성이라 조작이 반영되지 않는다.
+		expect(pad).toHaveAttribute('aria-disabled', 'true')
+		fireEvent.keyDown(pad, { key: 'ArrowRight' })
+		expect(container.innerHTML).not.toContain('translate(')
+
+		fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: '파스텔 배경' } })
+		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
+		await waitFor(() =>
+			expect(container.innerHTML).toContain('/api/generated-images/file/bg.png'),
+		)
+
+		fireEvent.keyDown(pad, { key: 'ArrowRight' })
+		// 패드 0.05 × (400/2) = 10px — 어드민과 같은 compose 포맷으로 prepend된다.
+		await waitFor(() =>
+			expect(container.innerHTML).toContain('translate(10px, 0px) scale(1) rotate(0deg)'),
+		)
+	})
+
 	it('슬롯 박스가 있으면 가장 가까운 지원 비율을 생성 요청에 싣는다', () => {
 		mocks.requestImageGeneration.mockResolvedValue({ generatedImages: [] })
 		render(

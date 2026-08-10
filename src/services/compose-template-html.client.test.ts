@@ -52,6 +52,27 @@ describe('composeTemplateHtml vector override', () => {
 	})
 })
 
+describe('composeTemplateHtml text color override', () => {
+	const textHtml =
+		'<p data-node-id="text-1" style="color:#1a1a1a;font-size:20px">FUTURE BUILDER</p>'
+
+	it('color 오버라이드가 텍스트 노드의 inline color를 덮는다', () => {
+		const html = composeTemplateHtml(textHtml, { 'text-1': { color: '#ff0000' } })
+		const p = new DOMParser().parseFromString(html, 'text/html').querySelector('p')
+
+		expect(p?.style.color).toBe('rgb(255, 0, 0)')
+		expect(p?.style.fontSize).toBe('20px') // 다른 스타일은 보존
+	})
+
+	it('color가 없으면 base의 색을 유지한다', () => {
+		const html = composeTemplateHtml(textHtml, { 'text-1': { text: 'NEW' } })
+		const p = new DOMParser().parseFromString(html, 'text/html').querySelector('p')
+
+		expect(p?.style.color).toBe('rgb(26, 26, 26)')
+		expect(p?.textContent).toBe('NEW')
+	})
+})
+
 describe('composeTemplateHtml image carrier', () => {
 	const generated = '/api/generated-images/file/gen.png'
 
