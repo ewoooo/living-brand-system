@@ -14,23 +14,62 @@
 	font-display: swap;
 }
 
-/* HD체 (HD현대 공개 배포). CI 락업 조립에 쓰는 워드마크 폰트 — 로고 글자만 서브셋했다.
-   정본 락업 SVG가 참조하는 폰트는 HDOTF-Md(Medium)이지만 CI에 실제로 쓰인 웨이트는
-   아웃라인화돼 있어 확정할 수 없다. 두 웨이트를 모두 두고 브랜드팀 확인을 받는다. */
+/* HD체 (HD현대 공개 배포, Sandoll 제작). Light·Medium·Bold 3종 전부, 한글 11,172자 전부.
+   웨이트마다 라틴/한글을 unicode-range로 갈라 둔다 — CI 락업은 워드마크(영문)만 쓰므로
+   10KB짜리 라틴 조각만 받고, 한글 조각(약 500KB)은 한글이 실제로 그려지는 화면에서만 받는다.
+   원본 OTF는 리포 밖(.scratch/fonts/HD_OTF)에 있고, pyftsubset --flavor=woff2로 만든다. */
 @font-face {
 	font-family: "HD";
-	src: url("/fonts/hd/HD-Medium.woff2") format("woff2");
-	font-weight: 500;
+	src: url("/fonts/hd/HD-Light-latin.woff2") format("woff2");
+	font-weight: 300;
 	font-style: normal;
 	font-display: block;
+	unicode-range: U+0000-00FF, U+2018-201D, U+2026, U+2192, U+20A9;
 }
 
 @font-face {
 	font-family: "HD";
-	src: url("/fonts/hd/HD-Bold.woff2") format("woff2");
+	src: url("/fonts/hd/HD-Light-ko.woff2") format("woff2");
+	font-weight: 300;
+	font-style: normal;
+	font-display: block;
+	unicode-range: U+1100-11FF, U+3000-303F, U+3130-318F, U+AC00-D7A3, U+FF01-FF60;
+}
+
+@font-face {
+	font-family: "HD";
+	src: url("/fonts/hd/HD-Medium-latin.woff2") format("woff2");
+	font-weight: 500;
+	font-style: normal;
+	font-display: block;
+	unicode-range: U+0000-00FF, U+2018-201D, U+2026, U+2192, U+20A9;
+}
+
+@font-face {
+	font-family: "HD";
+	src: url("/fonts/hd/HD-Medium-ko.woff2") format("woff2");
+	font-weight: 500;
+	font-style: normal;
+	font-display: block;
+	unicode-range: U+1100-11FF, U+3000-303F, U+3130-318F, U+AC00-D7A3, U+FF01-FF60;
+}
+
+@font-face {
+	font-family: "HD";
+	src: url("/fonts/hd/HD-Bold-latin.woff2") format("woff2");
 	font-weight: 700;
 	font-style: normal;
 	font-display: block;
+	unicode-range: U+0000-00FF, U+2018-201D, U+2026, U+2192, U+20A9;
+}
+
+@font-face {
+	font-family: "HD";
+	src: url("/fonts/hd/HD-Bold-ko.woff2") format("woff2");
+	font-weight: 700;
+	font-style: normal;
+	font-display: block;
+	unicode-range: U+1100-11FF, U+3000-303F, U+3130-318F, U+AC00-D7A3, U+FF01-FF60;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));

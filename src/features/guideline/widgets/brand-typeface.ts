@@ -1,12 +1,11 @@
 // Typography 섹션 위젯들이 공유하는 서체 상수. 값의 출처는 브랜드팀 SVG(Artboard 42~49)다.
 //
-// 🔴 지금 붙어 있는 HD체는 **CI 락업용 라틴 서브셋**이라 한글 글리프가 없고 Light(300)도 없다.
-//    그래서 한글은 Pretendard로 폴백된다. 제대로 된 서체가 들어오면 theme.css의 @font-face만
-//    갈아 끼우면 되고, 위젯은 손대지 않는다 — 그래서 위젯은 폰트에서 잰 수치를 상수로 박지 않는다.
+// 🔴 위젯은 폰트에서 잰 수치를 상수로 박지 않는다 — 서체가 바뀌면 theme.css의 @font-face만
+//    갈아 끼우고 위젯은 손대지 않는 상태가 목표다.
 //
 // 🔴 react·이미지 import 금지(schema가 참조할 수 있다).
 
-/** 브랜드 서체 스택. 한글이 없는 동안 본문 서체가 받아 준다. */
+/** 브랜드 서체 스택. HD체가 못 뜨는 동안만 본문 서체가 받아 준다. */
 export const BRAND_FONT_STACK = '"HD", var(--font-body)'
 
 /** 굵기 3종. 원본 Artboard 43이 BOLD / MEDIUM / LIGHT 3열로 보여 준다. */
@@ -18,7 +17,7 @@ export const WEIGHTS = [
 export type WeightKey = (typeof WEIGHTS)[number]['key']
 
 /** 현재 배포 서체에 실제로 있는 굵기. 없는 굵기는 브라우저가 합성해 원본과 다르게 보인다. */
-export const AVAILABLE_WEIGHTS: readonly number[] = [500, 700]
+export const AVAILABLE_WEIGHTS: readonly number[] = [300, 500, 700]
 
 export const LANGUAGES = [
 	{ key: 'ko', label: '국문' },
