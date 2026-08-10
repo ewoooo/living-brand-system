@@ -99,17 +99,19 @@ function HeaderNavigationContent({
 	)
 }
 
+type HeaderCenterProps = {
+	activeMenu: string
+	className?: string
+	guidelineChapters: GuidelineSearchChapter[]
+	onActiveMenuChange: (value: string) => void
+}
+
 export function HeaderCenter({
 	activeMenu,
 	className,
 	guidelineChapters,
 	onActiveMenuChange,
-}: {
-	activeMenu: string
-	className?: string
-	guidelineChapters: GuidelineSearchChapter[]
-	onActiveMenuChange: (value: string) => void
-}) {
+}: HeaderCenterProps) {
 	const pathname = usePathname()
 	const router = useRouter()
 	const navigationGroups = [

@@ -7,6 +7,12 @@ import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
 import { CHECK_STATUS } from './check-status'
 
+type CheckStatusBadgeProps = {
+	outcome?: CheckResult
+	inProgress: boolean
+	shouldReduceMotion: boolean | null
+}
+
 /**
  * 상태 pill / 진행 스피너.
  * in : { outcome?: CheckResult; inProgress: boolean }
@@ -19,11 +25,7 @@ export function CheckStatusBadge({
 	outcome,
 	inProgress,
 	shouldReduceMotion,
-}: {
-	outcome?: CheckResult
-	inProgress: boolean
-	shouldReduceMotion: boolean | null
-}) {
+}: CheckStatusBadgeProps) {
 	if (outcome) {
 		const status = CHECK_STATUS[checkDisplayStatus(outcome.rawResult)]
 

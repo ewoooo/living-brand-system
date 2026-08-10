@@ -2,16 +2,14 @@ import type React from 'react'
 import { ContentFrame } from '@/components/shared/content-frame'
 import { ContentHeading } from '@/components/shared/content-heading'
 
-/** Studio 도구의 제목과 작업 영역이 화면 높이를 공유하는 공통 페이지 프레임. */
-export function StudioWorkspacePage({
-	title,
-	description,
-	children,
-}: {
+type StudioWorkspacePageProps = {
 	title: string
 	description?: string
 	children: React.ReactNode
-}) {
+}
+
+/** Studio 도구의 제목과 작업 영역이 화면 높이를 공유하는 공통 페이지 프레임. */
+export function StudioWorkspacePage({ title, description, children }: StudioWorkspacePageProps) {
 	return (
 		<ContentFrame
 			data-slot="studio-workspace-page"
@@ -24,14 +22,13 @@ export function StudioWorkspacePage({
 	)
 }
 
-/** Studio 도구의 컨트롤러와 결과 캔버스 배치만 소유한다. */
-export function StudioWorkspace({
-	controller,
-	children,
-}: {
+type StudioWorkspaceProps = {
 	controller: React.ReactNode
 	children: React.ReactNode
-}) {
+}
+
+/** Studio 도구의 컨트롤러와 결과 캔버스 배치만 소유한다. */
+export function StudioWorkspace({ controller, children }: StudioWorkspaceProps) {
 	return (
 		<section
 			data-slot="studio-workspace"

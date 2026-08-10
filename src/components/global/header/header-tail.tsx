@@ -82,13 +82,12 @@ function HeaderGuidelineSearch({ chapters }: { chapters: GuidelineSearchChapter[
 	)
 }
 
-export function HeaderTail({
-	className,
-	guidelineChapters,
-}: {
+type HeaderTailProps = {
 	className?: string
 	guidelineChapters: GuidelineSearchChapter[]
-}) {
+}
+
+export function HeaderTail({ className, guidelineChapters }: HeaderTailProps) {
 	return (
 		<section data-slot="header-tail" className={className}>
 			<HeaderGuidelineSearch chapters={guidelineChapters} />

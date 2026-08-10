@@ -37,15 +37,13 @@ export function SideNavSubItem({ label, href }: SideNavLinkInput) {
 	)
 }
 
-export function SideNavBranch({
-	label,
-	activeHref,
-	children,
-}: {
+type SideNavBranchProps = {
 	label: string
 	activeHref: string
 	children: ReactNode
-}) {
+}
+
+export function SideNavBranch({ label, activeHref, children }: SideNavBranchProps) {
 	const pathname = usePathname()
 	const active = pathname === activeHref || pathname.startsWith(`${activeHref}/`)
 	const [open, setOpen] = useState(active)

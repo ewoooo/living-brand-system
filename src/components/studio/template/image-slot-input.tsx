@@ -21,6 +21,14 @@ import {
 
 const GENERATION_ERROR_MESSAGE = '이미지 생성에 실패했어요. 잠시 후 다시 시도해 주세요.'
 
+type ImageSlotInputProps = {
+	id: string
+	pinnedProfileId?: number
+	/** 슬롯 박스에서 유도한 생성 비율 — 없으면 프로파일 비율로 생성한다. */
+	aspectRatio?: ImageAspectRatio
+	onGenerated: (image: { backgroundImage: string; generatedImageId: number }) => void
+}
+
 /**
  * 제작자가 스튜디오에 개방한 프레임 이미지 슬롯 — 프롬프트로 생성해 프레임 이미지를 교체한다.
  * 프로파일이 고정되지 않은 슬롯만 발행된 프로파일 목록을 불러와 선택을 노출한다.
@@ -30,13 +38,7 @@ export function ImageSlotInput({
 	pinnedProfileId,
 	aspectRatio,
 	onGenerated,
-}: {
-	id: string
-	pinnedProfileId?: number
-	/** 슬롯 박스에서 유도한 생성 비율 — 없으면 프로파일 비율로 생성한다. */
-	aspectRatio?: ImageAspectRatio
-	onGenerated: (image: { backgroundImage: string; generatedImageId: number }) => void
-}) {
+}: ImageSlotInputProps) {
 	const [prompt, setPrompt] = useState('')
 	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
 	const [profileId, setProfileId] = useState<number | undefined>(pinnedProfileId)

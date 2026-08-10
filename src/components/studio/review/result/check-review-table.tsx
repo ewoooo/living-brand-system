@@ -11,6 +11,8 @@ import {
 } from '@/features/asset-check/utils/build-check-review-view'
 import { CheckRow } from './check-review-row'
 
+type CheckSectionsProps = { sections: CheckSection[] }
+
 /**
  * 퍼널 ④ — 검수 결과 테이블 컨테이너.
  * in : sections: CheckSection[] + 컨텍스트 { scenarios, scenarioKey, selected, showFailOnly }
@@ -28,7 +30,7 @@ import { CheckRow } from './check-review-row'
  * }
  * showFailOnly && results 존재 시 rawResult.status === 'fail' 행만 남김
  */
-export function CheckSections({ sections }: { sections: CheckSection[] }) {
+export function CheckSections({ sections }: CheckSectionsProps) {
 	const { scenarios, scenarioKey, selectedId, selected, showFailOnly } = useCheckImages()
 	const { rows } = useMemo(
 		() => buildCheckReviewView({ sections, scenarios, scenarioKey, selected, showFailOnly }),

@@ -9,6 +9,18 @@ const HEADING_TAG = {
 	3: 'h3',
 } as const
 
+type ContentHeadingProps = {
+	title: string
+	description?: string
+	helpText?: string
+	level?: keyof typeof HEADING_TAG
+	family?: 'body' | 'title'
+	size?: 'xs' | 'sm' | 'base' | 'xl' | '2xl' | '5xl' | '6xl'
+	weight?: 'normal' | 'medium' | 'semibold' | 'bold'
+	className?: string
+	titleClassName?: string
+}
+
 export function ContentHeading({
 	title,
 	description,
@@ -19,17 +31,7 @@ export function ContentHeading({
 	weight = 'normal',
 	className,
 	titleClassName,
-}: {
-	title: string
-	description?: string
-	helpText?: string
-	level?: keyof typeof HEADING_TAG
-	family?: 'body' | 'title'
-	size?: 'xs' | 'sm' | 'base' | 'xl' | '2xl' | '5xl' | '6xl'
-	weight?: 'normal' | 'medium' | 'semibold' | 'bold'
-	className?: string
-	titleClassName?: string
-}) {
+}: ContentHeadingProps) {
 	const headingTag = HEADING_TAG[level]
 
 	return (

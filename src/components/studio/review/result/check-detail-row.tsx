@@ -15,6 +15,12 @@ import { Typography } from '@/components/ui/typography'
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import { formatObservationActual, formatObservationExpected } from './check-observation-format'
 
+type CheckDetailRowProps = {
+	appliesTo: string[]
+	outcome?: CheckResult
+	shouldReduceMotion: boolean | null
+}
+
 /**
  * 결과 행 확장 상세 — 판정 근거를 rawResult에서 읽어 표시.
  * in : { appliesTo: string[]; outcome?: CheckResult }
@@ -25,15 +31,7 @@ import { formatObservationActual, formatObservationExpected } from './check-obse
  *       actual: 'present'|'absent'|'uncertain'|'not_applicable'|number,
  *       confidence: number, reason: string, satisfied: boolean | null }[]
  */
-export function CheckDetailRow({
-	appliesTo,
-	outcome,
-	shouldReduceMotion,
-}: {
-	appliesTo: string[]
-	outcome?: CheckResult
-	shouldReduceMotion: boolean | null
-}) {
+export function CheckDetailRow({ appliesTo, outcome, shouldReduceMotion }: CheckDetailRowProps) {
 	const appliesToText = appliesTo.join(', ')
 	const observations =
 		outcome && 'observations' in outcome.rawResult ? outcome.rawResult.observations : undefined

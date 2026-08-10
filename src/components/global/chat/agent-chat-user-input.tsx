@@ -14,6 +14,15 @@ import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { useFileInput } from '@/hooks/use-file-input'
 
+type AgentChatUserInputProps = {
+	files?: FileList
+	value: string
+	isBusy: boolean
+	onChange: (value: string) => void
+	onFilesChange: (files: FileList | undefined) => void
+	onSubmit: () => void
+}
+
 export function AgentChatUserInput({
 	files,
 	value,
@@ -21,14 +30,7 @@ export function AgentChatUserInput({
 	onChange,
 	onFilesChange,
 	onSubmit,
-}: {
-	files?: FileList
-	value: string
-	isBusy: boolean
-	onChange: (value: string) => void
-	onFilesChange: (files: FileList | undefined) => void
-	onSubmit: () => void
-}) {
+}: AgentChatUserInputProps) {
 	const fileInput = useFileInput()
 	const hasFiles = Boolean(files?.length)
 	const canSubmit = !isBusy && (Boolean(value.trim()) || hasFiles)

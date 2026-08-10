@@ -23,6 +23,8 @@ const EXECUTOR: Record<
 
 const CHECK_BORDER = 'border-border border-t'
 
+type CheckRowProps = CheckReviewRowData & { rowIndex: number }
+
 /** 검수 기준 한 건의 요약을 표시하고, 행 조작 시 판정 근거 상세를 펼친다. */
 export function CheckRow({
 	check,
@@ -35,7 +37,7 @@ export function CheckRow({
 	inProgress,
 	expandable,
 	detail,
-}: CheckReviewRowData & { rowIndex: number }) {
+}: CheckRowProps) {
 	const [open, setOpen] = useState(false)
 	const shouldReduceMotion = useReducedMotion()
 

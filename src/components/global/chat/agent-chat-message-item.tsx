@@ -16,15 +16,17 @@ import { AgentChatGeneratedImages } from './agent-chat-generated-images'
 import { AgentChatTemplateAttachment } from './agent-chat-template-attachment'
 import { AgentChatMarker } from './agent-chat-tool-marker'
 
+type AgentChatMessageItemProps = {
+	message: AgentChatMessage
+	canReact?: boolean
+	isActive: boolean
+}
+
 export function AgentChatMessageItem({
 	message,
 	canReact = false,
 	isActive,
-}: {
-	message: AgentChatMessage
-	canReact?: boolean
-	isActive: boolean
-}) {
+}: AgentChatMessageItemProps) {
 	const messageText = getAgentMessageText(message)
 
 	if (message.role === 'user') {

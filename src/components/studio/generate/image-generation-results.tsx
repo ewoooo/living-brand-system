@@ -9,19 +9,21 @@ import { ImageCameraPresets } from './image-camera-presets'
 
 const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
 
+type ImageGenerationResultsProps = {
+	loading: boolean
+	onSelect: (index: number) => void
+	requested: number
+	result: ImageGenerationResult | null
+	selected: number | null
+}
+
 export function ImageGenerationResults({
 	loading,
 	onSelect,
 	requested,
 	result,
 	selected,
-}: {
-	loading: boolean
-	onSelect: (index: number) => void
-	requested: number
-	result: ImageGenerationResult | null
-	selected: number | null
-}) {
+}: ImageGenerationResultsProps) {
 	const images = result?.images ?? []
 	const generatedImages = result?.generatedImages ?? []
 

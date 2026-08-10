@@ -5,11 +5,11 @@ import { HeaderCenter } from '@/components/global/header/header-center'
 import { HeaderHead } from '@/components/global/header/header-head'
 import { type GuidelineSearchChapter, HeaderTail } from '@/components/global/header/header-tail'
 
-export function GlobalHeader({
-	guidelineChapters,
-}: {
+type GlobalHeaderProps = {
 	guidelineChapters: GuidelineSearchChapter[]
-}) {
+}
+
+export function GlobalHeader({ guidelineChapters }: GlobalHeaderProps) {
 	const [activeMenu, setActiveMenu] = useState('')
 
 	return (

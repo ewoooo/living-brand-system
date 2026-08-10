@@ -18,17 +18,14 @@ export const sideNavLinkVariants = cva('data-active:text-foreground', {
 	},
 })
 
-export function SideNavLink({
-	label,
-	href,
-	active,
-	nested,
-}: {
+type SideNavLinkProps = {
 	label: string
 	href: string
 	active: boolean
 	nested: boolean
-}) {
+}
+
+export function SideNavLink({ label, href, active, nested }: SideNavLinkProps) {
 	const Button = nested ? SidebarMenuSubButton : SidebarMenuButton
 	const className = sideNavLinkVariants({ nested })
 

@@ -31,6 +31,11 @@ import { TextSlotInput } from './text-slot-input'
 
 const PREVIEW_WIDTH = 480
 
+type TemplateGeneratorProps = {
+	navigation: GetCreateNavigationOutput
+	template: PublishedHtmlTemplate
+}
+
 /**
  * Figma에서 가져온 published HTML의 열린 슬롯(input이 달린 텍스트 노드,
  * imageInput이 달린 프레임 이미지 슬롯)을 편집해
@@ -39,13 +44,7 @@ const PREVIEW_WIDTH = 480
  * 미리보기는 동일-문서 렌더(어드민 캔버스는 same-origin iframe) — opaque origin iframe은 벡터 mask의
  * CORS 로드를 깨뜨린다. 임포트 HTML은 스크립트 없는 inline-style이다.
  */
-export function TemplateGenerator({
-	navigation,
-	template,
-}: {
-	navigation: GetCreateNavigationOutput
-	template: PublishedHtmlTemplate
-}) {
+export function TemplateGenerator({ navigation, template }: TemplateGeneratorProps) {
 	const router = useRouter()
 	const previewRef = useRef<HTMLDivElement>(null)
 	const [values, setValues] = useState<Record<string, string>>({})

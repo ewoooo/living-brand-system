@@ -19,16 +19,15 @@ export {
 	SideNavSubItem,
 } from '@/components/global/side-nav/side-nav-item'
 
+type SideNavProps = {
+	children: ReactNode
+	emptyText?: string
+}
+
 /**
  * 사이트 공통 side nav 셸 — 모바일·접기·빈 상태만 소유하고, 내용 위계는 각 도메인이 조합한다.
  */
-export function SideNav({
-	children,
-	emptyText = '페이지 없음',
-}: {
-	children: ReactNode
-	emptyText?: string
-}) {
+export function SideNav({ children, emptyText = '페이지 없음' }: SideNavProps) {
 	const pathname = usePathname()
 	const transitionKey = pathname.split('/')[1] || 'home'
 	const { isMobile } = useSidebar()

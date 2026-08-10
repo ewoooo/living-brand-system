@@ -17,15 +17,17 @@ const reactionIcons = {
 	bad: ThumbsDownFilled,
 } satisfies Record<AgentChatReaction, typeof ThumbsUpFilled>
 
+type AgentChatReactionsProps = {
+	agentChatMessageId: string
+	agentChatSessionId: number
+	initialReaction?: AgentChatReaction
+}
+
 export function AgentChatReactions({
 	agentChatMessageId,
 	agentChatSessionId,
 	initialReaction,
-}: {
-	agentChatMessageId: string
-	agentChatSessionId: number
-	initialReaction?: AgentChatReaction
-}) {
+}: AgentChatReactionsProps) {
 	const [reaction, setReaction] = useState<AgentChatReaction | undefined>(initialReaction)
 	const [isSaving, setIsSaving] = useState(false)
 

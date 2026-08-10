@@ -5,18 +5,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { Typography } from '@/components/ui/typography'
 import type { TemplateSlotSpec } from '@/types/template'
 
-/** 제작자가 요소에 설정한 입력 제약(형식·글자수·줄수)을 적용한 텍스트 슬롯 입력. */
-export function TextSlotInput({
-	id,
-	spec,
-	value,
-	onChange,
-}: {
+type TextSlotInputProps = {
 	id: string
 	spec: TemplateSlotSpec
 	value: string
 	onChange: (text: string) => void
-}) {
+}
+
+/** 제작자가 요소에 설정한 입력 제약(형식·글자수·줄수)을 적용한 텍스트 슬롯 입력. */
+export function TextSlotInput({ id, spec, value, onChange }: TextSlotInputProps) {
 	const format = spec.inputFormat ?? 'free'
 
 	if (format !== 'free') {
