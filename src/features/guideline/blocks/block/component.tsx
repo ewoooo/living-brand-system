@@ -10,6 +10,7 @@ import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/c
 import { ConceptIntroWidget } from '@/features/guideline/widgets/concept-intro/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
 import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/component'
+import { HAIRLINE_GRID } from '@/features/guideline/widgets/hairline'
 import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
 import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
@@ -241,15 +242,22 @@ function renderChild(child: Child, aspectClass: string): ReactNode {
 function Arrange({
 	arrangement,
 	columns,
+	gap,
 	aspectRatio,
 	items,
 }: {
 	arrangement: LayoutBlockType['arrangement']
 	columns: number
+	gap: LayoutBlockType['gap']
 	aspectRatio: ImageRatio
 	items: NonNullable<LayoutBlockType['children']>
 }) {
 	const cols = Math.max(1, columns)
+	// 🔴 맞붙임은 gap 0이 아니라 **gap 1px + 그리드 배경**이다. gap을 0으로 두면 셀마다 가진 테두리가
+	//    맞닿아 2px이 되고, 셀에서 테두리를 걷어내면 이번엔 선이 아예 사라진다. 틈을 선 색으로 칠하면
+	//    선은 어디서나 정확히 1px이고, 그리는 주체가 배치(Block) 하나로 모인다.
+	//    padding까지 줘야 바깥 테두리도 같은 선으로 닫힌다. 규칙은 hairline.ts가 소유한다.
+	const gridGap = gap === 'none' ? HAIRLINE_GRID : 'gap-4'
 	// masonry는 원본 비율(빈 문자열), 그 외는 aspectRatio 클래스(original도 빈 문자열이라 h-auto).
 	const aspectClass = arrangement === 'masonry' ? '' : IMAGE_RATIO_CLASS_NAMES[aspectRatio]
 
@@ -288,7 +296,7 @@ function Arrange({
 				{first ? <div>{renderChild(first, aspectClass)}</div> : null}
 				{rest.length > 0 ? (
 					<div
-						className="grid gap-4"
+						className={`grid ${gridGap}`}
 						style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
 					>
 						{rest.map((child) => (
@@ -303,7 +311,7 @@ function Arrange({
 	// grid(기본) — columns 열 × 자동 행 wrap.
 	return (
 		<div
-			className="grid gap-4"
+			className={`grid ${gridGap}`}
 			style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
 		>
 			{items.map((child) => (
@@ -344,6 +352,7 @@ export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 				<Arrange
 					arrangement={block.arrangement}
 					columns={block.columns ?? 2}
+					gap={block.gap ?? 'default'}
 					aspectRatio={block.aspectRatio ?? '1:1'}
 					items={arranged}
 				/>

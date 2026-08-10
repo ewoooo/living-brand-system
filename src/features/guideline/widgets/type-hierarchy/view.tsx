@@ -10,6 +10,7 @@ import {
 	TIERS,
 	type TierKey,
 } from '../brand-typeface'
+import { HAIRLINE_CELL, HAIRLINE_GRID } from '../hairline'
 
 // 좌: 규정대로 쌓인 문단 / 우: 각 단의 스펙을 세워 놓은 레이어 패널.
 // 패널에서 한 단을 고르면 좌측의 그 단이 살아나고 문구를 바꿀 수 있다.
@@ -35,9 +36,9 @@ export function TypeHierarchyView({ language }: { language: LanguageKey }) {
 	const leading = LEADING[language]
 
 	return (
-		<div className="grid w-full gap-6 md:grid-cols-3">
+		<div className={`grid w-full md:grid-cols-3 ${HAIRLINE_GRID}`}>
 			{/* 좌 — 실제 렌더. 세 단이 한 문단으로 붙어 있어야 크기·행간 차이가 위계로 읽힌다. */}
-			<div className="flex flex-col gap-5 border border-border bg-muted p-6 md:col-span-2">
+			<div className={`flex flex-col gap-5 p-6 md:col-span-2 ${HAIRLINE_CELL}`}>
 				{TIERS.map((tier) => (
 					<p
 						key={tier.key}
@@ -60,7 +61,7 @@ export function TypeHierarchyView({ language }: { language: LanguageKey }) {
 			</div>
 
 			{/* 우 — 레이어 패널. 항목이 곧 그 단의 스펙 카드다. */}
-			<div className="flex flex-col gap-3">
+			<div className={`flex flex-col gap-3 p-4 ${HAIRLINE_CELL}`}>
 				<ul className="flex flex-col gap-2">
 					{TIERS.map((tier) => {
 						const on = tier.key === selected

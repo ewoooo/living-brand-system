@@ -45,6 +45,7 @@ import * as migration_20260807_075440_scramble_background from './20260807_07544
 import * as migration_20260807_075931_scramble_padding from './20260807_075931_scramble_padding';
 import * as migration_20260807_082406_type_weight_layout from './20260807_082406_type_weight_layout';
 import * as migration_20260807_084125_scramble_fixed_height from './20260807_084125_scramble_fixed_height';
+import * as migration_20260807_084746_block_gap from './20260807_084746_block_gap';
 
 export const migrations = [
   {
@@ -280,6 +281,11 @@ export const migrations = [
   {
     up: migration_20260807_084125_scramble_fixed_height.up,
     down: migration_20260807_084125_scramble_fixed_height.down,
-    name: '20260807_084125_scramble_fixed_height'
+    name: '20260807_084125_scramble_fixed_height',
+  },
+  {
+    up: migration_20260807_084746_block_gap.up,
+    down: migration_20260807_084746_block_gap.down,
+    name: '20260807_084746_block_gap'
   },
 ];

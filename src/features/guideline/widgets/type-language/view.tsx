@@ -10,6 +10,7 @@ import {
 	TIER_SIZE,
 	TIERS,
 } from '../brand-typeface'
+import { HAIRLINE_CELL, HAIRLINE_GRID } from '../hairline'
 
 // 같은 한 덩어리 본문을 언어만 바꿔 가며 본다. 언어가 바뀌면 글자 밀도(회색도)가 달라지고,
 // 그래서 규정이 정한 행간도 달라진다 — 그 두 가지가 같은 화면에 함께 있어야 요점이 전달된다.
@@ -72,7 +73,7 @@ export function TypeLanguageView({
 			) : null}
 
 			<div
-				className="grid w-full gap-3"
+				className={`grid w-full ${HAIRLINE_GRID}`}
 				style={{
 					// 🔴 임의값 Tailwind 클래스는 CSS가 안 나오는 일이 있어 인라인으로 준다.
 					//    auto-fit이라 셀이 좁으면 스스로 줄을 접는다 — 브레이크포인트를 지어내지 않는다.
@@ -111,7 +112,7 @@ function LanguagePanel({ language }: { language: LanguageKey }) {
 	const label = LANGUAGES.find((option) => option.key === language)?.label
 
 	return (
-		<figure className="flex flex-col border border-border">
+		<figure className={`flex flex-col ${HAIRLINE_CELL}`}>
 			<figcaption className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-border border-b px-4 py-2 font-body text-xs">
 				<span className="font-semibold text-foreground">{label}</span>
 				<span className="text-muted-foreground tabular-nums">

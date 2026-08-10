@@ -48,7 +48,7 @@ export function TypeWeightView({
 	return (
 		// 컨트롤도 판 안에 둔다 — 굵기를 바꾸는 손잡이와 그 결과가 한 테두리 안에 있어야 한 화면으로 읽힌다.
 		<div
-			className="flex w-full flex-col gap-8 border border-border bg-muted px-8 py-10"
+			className="flex w-full flex-col gap-8 border border-border px-8 py-10"
 			// 표본 크기가 셀이 아니라 이 판을 기준으로 잡히게 한다(TITLE_SIZE 주석 참고).
 			style={{ containerType: 'inline-size' }}
 		>

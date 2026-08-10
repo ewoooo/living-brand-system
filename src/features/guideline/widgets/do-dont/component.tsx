@@ -133,7 +133,6 @@ function Figure({
 				image={example.image}
 				alt={example.caption || ''}
 				ratio={ratio}
-				className="bg-muted"
 				imgClassName="size-full object-cover"
 			/>
 		)
@@ -192,7 +191,7 @@ function TypoPanel({ preset, ratio }: { preset: TypoPreset; ratio: ImageRatio })
 	return (
 		<div
 			className={cn(
-				'grid w-full place-items-center overflow-hidden border border-border bg-muted',
+				'grid w-full place-items-center overflow-hidden border border-border',
 				IMAGE_RATIO_CLASS_NAMES[ratio],
 			)}
 			// 글자를 셀이 아니라 이 판 기준으로 잰다 — 열 수가 바뀌어도 판 안의 그림이 같아진다.

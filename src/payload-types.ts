@@ -877,6 +877,10 @@ export interface LayoutBlock {
    */
   columns?: number | null;
   /**
+   * 맞붙이면 셀 사이가 1px 선 하나만 남습니다. 셀마다 테두리를 두면 맞닿은 자리가 2px이 되므로 선은 그리드가 그립니다. grid 배치에만 적용됩니다.
+   */
+  gap?: ('default' | 'none') | null;
+  /**
    * 이미지 셀 비율(모든 이미지 균일). masonry에선 무시하고 원본 비율.
    */
   aspectRatio?:
@@ -3120,6 +3124,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
   innerBackground?: T;
   arrangement?: T;
   columns?: T;
+  gap?: T;
   aspectRatio?: T;
   children?:
     | T
