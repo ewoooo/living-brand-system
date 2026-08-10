@@ -7,6 +7,7 @@ import {
 	InspectorRow,
 	InspectorSection,
 	InspectorSegmented,
+	InspectorTabPanel,
 } from '@/components/studio/shared/inspector'
 import { Button } from '@/components/ui/button'
 import {
@@ -96,72 +97,74 @@ export function BackgroundSection() {
 								onChange={setImageMode}
 							/>
 						</InspectorRow>
-						{imageMode === 'preset' ? (
-							// ponytail: 브랜드 이미지 피커는 3단계 배선 — 지금은 선택 카드 UI만 세운다.
-							<div
-								data-slot="background-browse-card"
-								className="flex shrink-0 items-center justify-between gap-3 rounded-md bg-foreground p-4 text-background"
-							>
-								<div className="flex min-w-0 flex-col">
-									<Typography
-										as="p"
+						<InspectorTabPanel tabKey={imageMode}>
+							{imageMode === 'preset' ? (
+								// ponytail: 브랜드 이미지 피커는 3단계 배선 — 지금은 선택 카드 UI만 세운다.
+								<div
+									data-slot="background-browse-card"
+									className="flex shrink-0 items-center justify-between gap-3 rounded-md bg-foreground p-4 text-background"
+								>
+									<div className="flex min-w-0 flex-col">
+										<Typography
+											as="p"
+											size="sm"
+											weight="medium"
+											className="truncate"
+										>
+											이미지를 선택하세요
+										</Typography>
+										<Typography
+											as="p"
+											size="xs"
+											className="truncate text-background/60"
+										>
+											Brand Image
+										</Typography>
+									</div>
+									<Button
+										type="button"
+										variant="muted"
 										size="sm"
-										weight="medium"
-										className="truncate"
+										className="shrink-0 rounded-lg bg-background/25 text-background text-xs hover:bg-background/35"
 									>
-										이미지를 선택하세요
-									</Typography>
-									<Typography
-										as="p"
-										size="xs"
-										className="truncate text-background/60"
-									>
-										Brand Image
-									</Typography>
+										Browse
+									</Button>
 								</div>
-								<Button
-									type="button"
-									variant="muted"
-									size="sm"
-									className="shrink-0 rounded-lg bg-background/25 text-background text-xs hover:bg-background/35"
-								>
-									Browse
-								</Button>
-							</div>
-						) : (
-							<>
-								<InspectorColorRow
-									label="Line Color"
-									value={lineColor}
-									onChange={setLineColor}
-								/>
-								<InspectorColorRow
-									label="Background Color"
-									value={backgroundColor}
-									onChange={setBackgroundColor}
-								/>
-								<InspectorField label="Prompt" htmlFor="background-prompt">
-									<Textarea
-										id="background-prompt"
-										value={prompt}
-										onChange={(event) => setPrompt(event.target.value)}
-										placeholder="이미지를 설명하세요"
-										maxLength={500}
-										rows={2}
-										className="h-auto min-h-12 rounded-none border-0 bg-transparent p-0 focus-visible:ring-0 dark:bg-transparent"
+							) : (
+								<>
+									<InspectorColorRow
+										label="Line Color"
+										value={lineColor}
+										onChange={setLineColor}
 									/>
-								</InspectorField>
-								{/* ponytail: 배경 생성 요청은 3단계 배선 — 프롬프트 없으면 비활성만 유지한다. */}
-								<Button
-									type="button"
-									variant="muted"
-									className="mt-0.5 h-11 w-full text-sm font-semibold"
-									disabled={!prompt.trim()}
-								>
-									이미지 생성
-								</Button>
-							</>
-						)}
+									<InspectorColorRow
+										label="Background Color"
+										value={backgroundColor}
+										onChange={setBackgroundColor}
+									/>
+									<InspectorField label="Prompt" htmlFor="background-prompt">
+										<Textarea
+											id="background-prompt"
+											value={prompt}
+											onChange={(event) => setPrompt(event.target.value)}
+											placeholder="이미지를 설명하세요"
+											maxLength={500}
+											rows={2}
+											className="h-auto min-h-12 rounded-none border-0 bg-transparent p-0 focus-visible:ring-0 dark:bg-transparent"
+										/>
+									</InspectorField>
+									{/* ponytail: 배경 생성 요청은 3단계 배선 — 프롬프트 없으면 비활성만 유지한다. */}
+									<Button
+										type="button"
+										variant="muted"
+										className="mt-0.5 h-11 w-full text-sm font-semibold"
+										disabled={!prompt.trim()}
+									>
+										이미지 생성
+									</Button>
+								</>
+							)}
+						</InspectorTabPanel>
 					</>
 				)}
 
