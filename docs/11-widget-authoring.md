@@ -61,6 +61,12 @@
 
 `checks/collect-guideline-check-sources.ts`가 `document.blocks[].rules`만 훑고 **자식으로 내려가지 않습니다.** rules를 위젯으로 내리면 rule이 조용히 소멸합니다. 위젯은 rule·projection·evidence를 갖지 않습니다(표현 전용).
 
+### 🔴 기계가 읽는 텍스트는 Block이 소유합니다
+
+위젯·이미지는 **사람이 보는 표현**입니다. AI 챗·가이드라인 검색·검수가 읽는 평문은 Block의 `title`·`description`·`rules` 셋에서만 나옵니다. 그래서 위젯에 `projection.ts`를 만들지 않는 것(§2)이 누락이 아니라 계약입니다.
+
+대신 **Block이 그 셋을 실제로 투영해야 합니다.** `blocks/block/projection.ts`가 한동안 `children` 수만 세고 `title`·`description`을 버려서, 사람이 admin에 쓴 글이 조회 계층에 도달하지 못했습니다(2026-08-10 수정, `projection.test.ts`가 지킵니다). 위젯을 늘려도 이 평문은 두꺼워지지 않으므로, 검색·챗에 걸려야 하는 설명은 Block의 본문에 씁니다.
+
 ### 값 공유는 Block이 provider
 
 형제 위젯이 값을 공유해야 하면 **Block이 context provider가 됩니다**(`widgets/layout-grid/store.tsx` + `blocks/block/component.tsx`).
