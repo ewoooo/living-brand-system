@@ -16,6 +16,11 @@ import { nearestImageAspectRatio } from '@/features/generate-image/image-size'
 import { pixelsToMillimeters } from '@/features/template-export/print-policy'
 import type { TemplateExportFormat } from '@/features/template-export/services/export-template.client'
 import { useTemplateStudio } from '@/features/template-studio/hooks/use-template-studio'
+import {
+	isBackgroundSlot,
+	isImageSlot,
+	isTextSlot,
+} from '@/features/template-studio/template-config'
 import { BackgroundSection } from './background-section'
 import { ImageSlotInput } from './image-slot-input'
 import { IMAGE_TRANSFORM_DEFAULT, ImageTransformControl } from './image-transform-control'
@@ -29,16 +34,21 @@ const FORMAT_LABELS: Record<TemplateExportFormat, string> = {
 
 /**
  * 템플릿 스튜디오의 사이드바(컨트롤러 패널) — 캔버스를 모른다.
- * 편집 상태는 전부 TemplateStudioProvider 컨텍스트로만 읽고 쓴다.
+ * 무엇을 그릴지는 편집 계약(config)만 보고 결정하고(원시 nodeConfigs 참조 금지),
+ * 세션 값은 컨텍스트의 text/images 그룹으로만 읽고 쓴다.
  */
 export function TemplateSidebar() {
 	const router = useRouter()
-	const { template, navigation, text, images, canvas, exporting } = useTemplateStudio()
+	const { navigation, config, text, images, exporting } = useTemplateStudio()
+	const textSlots = config.slots.filter(isTextSlot)
+	const imageSlots = config.slots.filter(isImageSlot)
+	const backgroundSlot = config.slots.find(isBackgroundSlot)
+	const { canvas, printPpi } = config.exportOption
 	const currentCategory = navigation.categories.find((category) =>
-		category.templates.some((item) => item.id === template.id),
+		category.templates.some((item) => item.id === config.id),
 	)
 	const selectedTemplateHref =
-		currentCategory?.templates.find((item) => item.id === template.id)?.href ?? ''
+		currentCategory?.templates.find((item) => item.id === config.id)?.href ?? ''
 
 	return (
 		<Controller.Panel
@@ -52,26 +62,24 @@ export function TemplateSidebar() {
 						</div>
 						<Controller.Row label="Size" readonly>
 							<span className="text-sm text-muted-foreground">
-								{template.printPpi
-									? `${pixelsToMillimeters(canvas.width, template.printPpi).toFixed(1)} × ${pixelsToMillimeters(canvas.height, template.printPpi).toFixed(1)}mm`
+								{printPpi
+									? `${pixelsToMillimeters(canvas.width, printPpi).toFixed(1)} × ${pixelsToMillimeters(canvas.height, printPpi).toFixed(1)}mm`
 									: `${canvas.width} × ${canvas.height}px`}
 							</span>
 						</Controller.Row>
-						{template.printPpi && (
+						{printPpi && (
 							<Controller.Row label="Resolution" readonly>
-								<span className="text-sm text-muted-foreground">
-									{template.printPpi}ppi
-								</span>
+								<span className="text-sm text-muted-foreground">{printPpi}ppi</span>
 							</Controller.Row>
 						)}
-						{template.printPpi && (
+						{printPpi && (
 							<Controller.Row label="Color Profile" readonly>
 								<span className="text-sm text-muted-foreground">CMYK</span>
 							</Controller.Row>
 						)}
 						<Controller.Row label="Format">
 							<Controller.Select
-								options={exporting.availableFormats.map((candidate) => ({
+								options={config.exportOption.formats.map((candidate) => ({
 									value: candidate,
 									label: FORMAT_LABELS[candidate],
 								}))}
@@ -105,7 +113,7 @@ export function TemplateSidebar() {
 			>
 				<div className="flex min-w-0 flex-col">
 					<Typography as="p" weight="medium" className="truncate">
-						{template.name}
+						{config.name}
 					</Typography>
 					{currentCategory && (
 						<Typography as="p" size="xs" className="truncate text-background/60">
@@ -138,17 +146,17 @@ export function TemplateSidebar() {
 				</Select>
 			</div>
 
-			{text.slots.length > 0 && (
+			{textSlots.length > 0 && (
 				<Controller.Section title="Text">
-					{text.slots.map((slot) => (
-						<div key={slot.nodeId} className="flex flex-col gap-1">
+					{textSlots.map((slot) => (
+						<div key={slot.id} className="flex flex-col gap-1">
 							<TextSlotInput
-								label={slot.input.label ?? slot.name}
-								spec={slot.input}
-								value={text.values[slot.nodeId] ?? slot.text}
-								onChange={(next) => text.setValue(slot.nodeId, next)}
+								label={slot.label}
+								control={slot.control}
+								value={text.values[slot.id] ?? slot.control.defaultValue}
+								onChange={(next) => text.setValue(slot.id, next)}
 							/>
-							{text.clippedSlotIds.has(slot.nodeId) && (
+							{text.clippedSlotIds.has(slot.id) && (
 								<Typography role="status" size="xs" tone="muted">
 									입력한 텍스트가 박스를 넘어 일부가 잘려 보여요.
 								</Typography>
@@ -164,60 +172,64 @@ export function TemplateSidebar() {
 					/>
 				</Controller.Section>
 			)}
-			{images.slots.map((slot, index) => {
-				const sectionTitle = images.slots.length > 1 ? `Image ${index + 1}` : 'Image'
-				const state = images.states[slot.nodeId]
-				const nodeConfig = template.nodeConfigs[slot.nodeId]
+			{imageSlots.map((slot, index) => {
+				const sectionTitle = imageSlots.length > 1 ? `Image ${index + 1}` : 'Image'
+				const control = slot.control
+				const state = images.states[slot.id]
 				return (
-					<div key={slot.nodeId} className="flex flex-col gap-3">
+					<div key={slot.id} className="flex flex-col gap-3">
 						<Controller.Section title={sectionTitle}>
 							<ImageSlotInput
-								pinnedProfileId={slot.profileId}
+								pinnedProfileId={control.profile.pinnedId}
 								profiles={images.profiles}
 								profilesFailed={images.profilesFailed}
-								colorizeEnabled={Boolean(nodeConfig?.imageColorize)}
+								colorizeEnabled={Boolean(control.colorize)}
 								aspectRatio={nearestImageAspectRatio(
-									slot.boxWidth ?? Number.NaN,
-									slot.boxHeight ?? Number.NaN,
+									control.box.width ?? Number.NaN,
+									control.box.height ?? Number.NaN,
 								)}
-								lineColor={
-									state?.lineColor ?? nodeConfig?.imageColorize?.line ?? '#000000'
-								}
+								lineColor={state?.lineColor ?? control.colorize?.line ?? '#000000'}
 								onLineColorChange={(hex) =>
-									images.update(slot.nodeId, { lineColor: hex })
+									images.update(slot.id, { lineColor: hex })
 								}
-								onGenerated={(image) => images.update(slot.nodeId, { image })}
+								onGenerated={(image) => images.update(slot.id, { image })}
 							/>
 						</Controller.Section>
 						{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 별도 섹션이다.
 						    생성 전에는 닫힌 채 잠긴다 — compose가 배정된 이미지에만 transform을 적용해서다. */}
-						<Controller.Section
-							title={`${sectionTitle} Transform`}
-							className="border-t-0 pt-0"
-							disabled={!state?.image}
-						>
-							<ImageTransformControl
-								value={state?.transform ?? IMAGE_TRANSFORM_DEFAULT}
-								// compose는 배정된 이미지에만 transform을 적용한다 — 생성 전에는 비활성.
+						{control.transform.enabled && (
+							<Controller.Section
+								title={`${sectionTitle} Transform`}
+								className="border-t-0 pt-0"
 								disabled={!state?.image}
-								// 패드는 대상 슬롯 박스와 같은 비율로 그려진다(디자인 Wide/Portrait/Square).
-								aspectRatio={
-									slot.boxWidth && slot.boxHeight
-										? slot.boxWidth / slot.boxHeight
-										: undefined
-								}
-								onChange={(transform) => images.update(slot.nodeId, { transform })}
-							/>
-						</Controller.Section>
+							>
+								<ImageTransformControl
+									value={state?.transform ?? IMAGE_TRANSFORM_DEFAULT}
+									// compose는 배정된 이미지에만 transform을 적용한다 — 생성 전에는 비활성.
+									disabled={!state?.image}
+									limits={control.transform.limits}
+									// 패드는 대상 슬롯 박스와 같은 비율로 그려진다(디자인 Wide/Portrait/Square).
+									aspectRatio={
+										control.box.width && control.box.height
+											? control.box.width / control.box.height
+											: undefined
+									}
+									onChange={(transform) => images.update(slot.id, { transform })}
+								/>
+							</Controller.Section>
+						)}
 					</div>
 				)
 			})}
-			<BackgroundSection
-				canvasAspectRatio={
-					canvas.width && canvas.height ? canvas.width / canvas.height : undefined
-				}
-			/>
-			{text.slots.length === 0 && images.slots.length === 0 && (
+			{backgroundSlot && (
+				<BackgroundSection
+					allowedTypes={backgroundSlot.control.allowedTypes}
+					canvasAspectRatio={
+						canvas.width && canvas.height ? canvas.width / canvas.height : undefined
+					}
+				/>
+			)}
+			{textSlots.length === 0 && imageSlots.length === 0 && (
 				<Typography size="sm" tone="muted">
 					이 템플릿에는 편집 가능한 슬롯이 없습니다.
 				</Typography>

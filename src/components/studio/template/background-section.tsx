@@ -16,7 +16,15 @@ type BackgroundImageMode = 'preset' | 'generate'
 
 const PROMPT_MAX_LENGTH = 500
 
+const BACKGROUND_TYPE_LABELS: Record<BackgroundType, string> = {
+	color: 'Color',
+	image: 'Image',
+	graphic: 'Graphic',
+}
+
 type BackgroundSectionProps = {
+	/** 편집 계약(config)이 이 템플릿에 허용한 배경 종류 — Type 목록이 여기서 나온다. */
+	allowedTypes: readonly BackgroundType[]
 	/** 템플릿 캔버스 종횡비(w/h) — 배경 transform 패드가 같은 비율로 그려진다. */
 	canvasAspectRatio?: number
 }
@@ -27,8 +35,8 @@ type BackgroundSectionProps = {
  * Graphic: 그래픽 종류·색 + Graphic Transform(포지션·가변 두께·시점·각도 — forward-straight 계약과 1:1).
  * ponytail: UI-first — 전부 로컬 state이고 compose·생성·브라우즈 배선은 3단계에서 한다.
  */
-export function BackgroundSection({ canvasAspectRatio }: BackgroundSectionProps) {
-	const [type, setType] = useState<BackgroundType>('color')
+export function BackgroundSection({ allowedTypes, canvasAspectRatio }: BackgroundSectionProps) {
+	const [type, setType] = useState<BackgroundType>(allowedTypes[0] ?? 'color')
 	const [imageMode, setImageMode] = useState<BackgroundImageMode>('preset')
 	const [lineColor, setLineColor] = useState('#000000')
 	const [backgroundColor, setBackgroundColor] = useState('#ffffff')
@@ -46,11 +54,10 @@ export function BackgroundSection({ canvasAspectRatio }: BackgroundSectionProps)
 			<Controller.Section title="Background">
 				<Controller.Row label="Type">
 					<Controller.Select
-						options={[
-							{ value: 'color', label: 'Color' },
-							{ value: 'image', label: 'Image' },
-							{ value: 'graphic', label: 'Graphic' },
-						]}
+						options={allowedTypes.map((allowed) => ({
+							value: allowed,
+							label: BACKGROUND_TYPE_LABELS[allowed],
+						}))}
 						value={type}
 						onChange={(value) => setType(value as BackgroundType)}
 					/>

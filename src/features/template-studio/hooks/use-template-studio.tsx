@@ -22,11 +22,11 @@ import {
 	toImageEditTransform,
 } from '@/features/template-studio/image-edit-transform'
 import {
-	collectTemplateImageSlots,
-	collectTemplateSlots,
-	type TemplateImageSlot,
-	type TemplateSlot,
-} from '@/services/collect-template-slots.service'
+	deriveTemplateConfig,
+	isImageSlot,
+	isTextSlot,
+	type TemplateConfig,
+} from '@/features/template-studio/template-config'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import type { GetCreateNavigationOutput } from '@/services/get-create-navigation.service'
 import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
@@ -41,35 +41,31 @@ export type TemplateImageSlotState = {
 }
 
 type TemplateStudioValue = {
-	template: PublishedHtmlTemplate
 	navigation: GetCreateNavigationOutput
+	/** 템플릿의 편집 계약 — 사이드바는 이 객체만 보고 컨트롤을 그린다(원시 nodeConfigs 참조 금지). */
+	config: TemplateConfig
 	text: {
-		slots: TemplateSlot[]
 		values: Record<string, string>
-		setValue: (nodeId: string, text: string) => void
+		setValue: (slotId: string, text: string) => void
 		/** null = 사용자가 만지지 않음 — 저작 텍스트 색 유지(isEmpty 파생 원천). */
 		color: string | null
 		setColor: (hex: string | null) => void
 		clippedSlotIds: ReadonlySet<string>
 	}
 	images: {
-		slots: TemplateImageSlot[]
 		states: Record<string, TemplateImageSlotState>
-		update: (nodeId: string, patch: Partial<TemplateImageSlotState>) => void
+		update: (slotId: string, patch: Partial<TemplateImageSlotState>) => void
 		profiles: ImageProfileOption[] | null
 		profilesFailed: boolean
 	}
 	canvas: {
 		html: string
-		width: number
-		height: number
 		/** 캔버스가 붙이는 미리보기 DOM — 잘림 측정은 provider가 소유한다. */
 		previewRef: RefObject<HTMLDivElement | null>
 	}
 	exporting: {
 		format: TemplateExportFormat
 		setFormat: (format: TemplateExportFormat) => void
-		availableFormats: readonly TemplateExportFormat[]
 		busy: boolean
 		error: string | null
 		run: (format: TemplateExportFormat) => void
@@ -80,9 +76,9 @@ const TemplateStudioContext = createContext<TemplateStudioValue | null>(null)
 
 /**
  * 템플릿 스튜디오 편집 세션의 단일 소유자 — 사이드바(컨트롤러)와 캔버스(미리보기)는
- * 이 컨텍스트만 알고 서로를 모른다. HTTP I/O는 features의 *.client.ts가 소유하고,
- * 여기서는 화면 상태 묶음과 합성 파생만 소유한다(docs/10 §3.5·§3.6).
- * compose는 매번 불변 published base에서 재합성하는 순수 함수라 멱등이다.
+ * 이 컨텍스트만 알고 서로를 모른다. 편집 가능 범위는 파생된 TemplateConfig 계약이 말하고,
+ * HTTP I/O는 features의 *.client.ts가 소유하며, 여기서는 세션 상태와 합성 파생만 소유한다
+ * (docs/10 §3.5·§3.6). compose는 매번 불변 published base에서 재합성하는 순수 함수라 멱등이다.
  */
 export function TemplateStudioProvider({
 	template,
@@ -99,13 +95,11 @@ export function TemplateStudioProvider({
 	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
 	const [imageStates, setImageStates] = useState<Record<string, TemplateImageSlotState>>({})
 	const [format, setFormat] = useState<TemplateExportFormat>('png')
-	const { html, nodeConfigs, width, height } = template
+	const { html, width, height } = template
 
-	const slots = useMemo(() => collectTemplateSlots(html, nodeConfigs), [html, nodeConfigs])
-	const imageSlots = useMemo(
-		() => collectTemplateImageSlots(html, nodeConfigs),
-		[html, nodeConfigs],
-	)
+	const config = useMemo(() => deriveTemplateConfig(template), [template])
+	const textSlots = useMemo(() => config.slots.filter(isTextSlot), [config])
+	const imageSlots = useMemo(() => config.slots.filter(isImageSlot), [config])
 
 	// 발행 프로파일은 여기서 1회만 조회해 모든 이미지 슬롯이 공유한다(슬롯별 중복 요청 방지).
 	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
@@ -132,30 +126,30 @@ export function TemplateStudioProvider({
 
 	// 사용자가 만진 슬롯만 오버라이드로 합성한다(만지지 않은 슬롯은 저작 값 유지).
 	// 일괄 텍스트 색은 사용자가 만졌을 때만 모든 텍스트 슬롯에 싣는다.
-	// 이미지 교체에는 저작 config의 imageColorize를 깔아 재적용하고(published html의 옛 colorize
+	// 이미지 교체에는 계약(config)의 colorize를 깔아 재적용하고(published html의 옛 colorize
 	// 오버레이는 compose가 멱등 제거), 사용자가 Line Color를 바꿨으면 그 line만 갈아끼운다.
 	// 사용자 transform은 생성 이미지가 있는 슬롯에만 싣는다 — compose는 매번 published html
 	// (불변 base)에서 새로 합성하므로 어드민과 같은 base-재합성 패턴이라 prepend가 누적되지 않는다.
 	const composedHtml = useMemo(() => {
 		const textOverrides = Object.fromEntries(
-			slots
+			textSlots
 				.map((slot) => {
 					const override: { text?: string; color?: string } = {}
-					const text = textValues[slot.nodeId]
+					const text = textValues[slot.id]
 					if (text !== undefined) override.text = text
 					if (deferredTextColor) override.color = deferredTextColor
-					return [slot.nodeId, override] as const
+					return [slot.id, override] as const
 				})
 				.filter(([, override]) => Object.keys(override).length > 0),
 		)
 		const imageOverrides = Object.fromEntries(
 			Object.entries(deferredImageStates)
 				.filter(([, state]) => state.image)
-				.map(([nodeId, state]) => {
-					const colorize = nodeConfigs[nodeId]?.imageColorize
-					const slot = imageSlots.find((candidate) => candidate.nodeId === nodeId)
+				.map(([slotId, state]) => {
+					const control = imageSlots.find((slot) => slot.id === slotId)?.control
+					const colorize = control?.colorize
 					return [
-						nodeId,
+						slotId,
 						{
 							...(colorize
 								? {
@@ -168,8 +162,8 @@ export function TemplateStudioProvider({
 								? {
 										imageTransform: toImageEditTransform(
 											state.transform,
-											slot?.boxWidth ?? width,
-											slot?.boxHeight ?? height,
+											control?.box.width ?? width,
+											control?.box.height ?? height,
 										),
 									}
 								: {}),
@@ -181,12 +175,11 @@ export function TemplateStudioProvider({
 		return composeTemplateHtml(html, { ...textOverrides, ...imageOverrides })
 	}, [
 		html,
-		slots,
+		textSlots,
 		textValues,
 		deferredTextColor,
 		deferredImageStates,
 		imageSlots,
-		nodeConfigs,
 		width,
 		height,
 	])
@@ -194,21 +187,21 @@ export function TemplateStudioProvider({
 	// 합성 결과가 그려진 뒤 텍스트 슬롯의 실제 렌더 박스를 재서 잘림을 알린다 —
 	// scrollHeight는 overflow:hidden clip과 -webkit-line-clamp 말줄임 양쪽에서 잘린 내용까지 세고,
 	// 미리보기 축소(transform scale)는 이 두 값에 영향을 주지 않는다.
-	// 텍스트 배치를 바꾸는 입력(html·slots·textValues)에만 반응한다 — transform·색 드래그마다
+	// 텍스트 배치를 바꾸는 입력(html·textSlots·textValues)에만 반응한다 — transform·색 드래그마다
 	// innerHTML 교체 직후 강제 layout(scrollHeight)을 다시 밟지 않기 위해서다.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: 측정 대상 DOM이 html·textValues로 합성된 composedHtml로 그려진다 — 직접 참조는 없지만 텍스트가 바뀔 때마다 다시 재야 한다
 	useEffect(() => {
 		const container = previewRef.current
 		if (!container) return
 		const clipped = new Set<string>()
-		for (const slot of slots) {
-			const element = container.querySelector(`[data-node-id="${slot.nodeId}"]`)
-			if (element && element.scrollHeight > element.clientHeight + 1) clipped.add(slot.nodeId)
+		for (const slot of textSlots) {
+			const element = container.querySelector(`[data-node-id="${slot.id}"]`)
+			if (element && element.scrollHeight > element.clientHeight + 1) clipped.add(slot.id)
 		}
 		setClippedSlotIds(clipped)
-	}, [html, slots, textValues])
+	}, [html, textSlots, textValues])
 
-	const { canExport, exporting, exportError, exportTemplate } = useTemplateExport({
+	const { exporting, exportError, exportTemplate } = useTemplateExport({
 		fileName: template.name,
 		height,
 		html: composedHtml,
@@ -217,38 +210,32 @@ export function TemplateStudioProvider({
 		templateVersion: template.templateVersion,
 		width,
 	})
-	const availableFormats = (['png', 'tiff', 'pdf'] as const).filter(
-		(candidate) => candidate === 'png' || canExport(candidate),
-	)
 
 	const value: TemplateStudioValue = {
-		template,
 		navigation,
+		config,
 		text: {
-			slots,
 			values: textValues,
-			setValue: (nodeId, text) =>
-				setTextValues((current) => ({ ...current, [nodeId]: text })),
+			setValue: (slotId, text) =>
+				setTextValues((current) => ({ ...current, [slotId]: text })),
 			color: textColor,
 			setColor: setTextColor,
 			clippedSlotIds,
 		},
 		images: {
-			slots: imageSlots,
 			states: imageStates,
-			update: (nodeId, patch) =>
+			update: (slotId, patch) =>
 				setImageStates((current) => ({
 					...current,
-					[nodeId]: { ...current[nodeId], ...patch },
+					[slotId]: { ...current[slotId], ...patch },
 				})),
 			profiles,
 			profilesFailed,
 		},
-		canvas: { html: composedHtml, width, height, previewRef },
+		canvas: { html: composedHtml, previewRef },
 		exporting: {
 			format,
 			setFormat,
-			availableFormats,
 			busy: exporting !== null,
 			error: exportError,
 			run: exportTemplate,
