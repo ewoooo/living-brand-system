@@ -216,11 +216,9 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
-		const pad = screen.getByRole('slider', { name: '이미지 위치' })
-		// 생성 전 — 비활성이라 조작이 반영되지 않는다.
-		expect(pad).toHaveAttribute('aria-disabled', 'true')
-		fireEvent.keyDown(pad, { key: 'ArrowRight' })
-		expect(container.innerHTML).not.toContain('translate(')
+		// 생성 전 — Transform 섹션은 닫힌 채 잠긴다(내용 미노출 + 트리거 비활성).
+		expect(screen.getByRole('button', { name: 'Image Transform' })).toBeDisabled()
+		expect(screen.queryByRole('slider', { name: '이미지 위치' })).toBeNull()
 
 		fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: '파스텔 배경' } })
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
@@ -228,6 +226,9 @@ describe('TemplateGenerator', () => {
 			expect(container.innerHTML).toContain('/api/generated-images/file/bg.png'),
 		)
 
+		// 생성 후 — 잠금이 풀리며 저장된 열림 상태(defaultOpen)로 펼쳐진다.
+		expect(screen.getByRole('button', { name: 'Image Transform' })).toBeEnabled()
+		const pad = screen.getByRole('slider', { name: '이미지 위치' })
 		fireEvent.keyDown(pad, { key: 'ArrowRight' })
 		// 패드 0.05 × (400/2) = 10px — 어드민과 같은 compose 포맷으로 prepend된다.
 		await waitFor(() =>
