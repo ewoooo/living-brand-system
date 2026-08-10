@@ -186,6 +186,12 @@
 	animation: highlight-flow 16s linear infinite;
 }
 
+/* 레이어 밖 선언이라 utilities 레이어의 disabled: variant가 못 이긴다 — 비활성 처리도 여기서 소유한다. */
+.bg-highlight:disabled {
+	background-image: none;
+	animation: none;
+}
+
 @keyframes highlight-flow {
 	from {
 		background-position: 300% 0%;
