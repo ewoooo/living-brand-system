@@ -65,20 +65,26 @@ describe('TemplateGenerator', () => {
 		expect(container.querySelector('[data-slot="studio-workspace"]')).not.toBeNull()
 		expect(container.querySelector('[data-slot="studio-workspace-controller"]')).not.toBeNull()
 		expect(container.querySelector('[data-slot="studio-workspace-canvas"]')).not.toBeNull()
+		expect(container.querySelector('[data-slot="inspector-panel"]')).not.toBeNull()
 
-		fireEvent.click(screen.getByRole('button', { name: 'PNG로 내보내기' }))
+		fireEvent.click(screen.getByRole('button', { name: '내보내기' }))
 
+		// 포맷 셀렉트 기본값이 PNG — canExport가 전부 false여도 PNG는 항상 내보낼 수 있다.
 		expect(mocks.exportTemplate).toHaveBeenCalledWith('png')
 	})
 
-	it('드롭다운에서 선택한 템플릿 작업대로 이동한다', async () => {
+	it('아이덴티티 카드의 Change로 선택한 템플릿 작업대로 이동한다', async () => {
 		const user = userEvent.setup()
 		render(<TemplateGenerator navigation={navigation} template={template} />)
 
-		expect(screen.getByRole('combobox', { name: '템플릿' })).toHaveTextContent('테스트 템플릿')
-		const templateSelect = screen.getByRole('combobox', { name: '템플릿' })
-		templateSelect.focus()
-		await user.keyboard('{ArrowDown}{ArrowDown}{Enter}')
+		// 카드가 현재 템플릿 이름과 카테고리를 보여준다.
+		expect(screen.getByText('테스트 템플릿')).toBeInTheDocument()
+		expect(screen.getByText('카드')).toBeInTheDocument()
+
+		// jsdom에는 pointer capture가 없어 트리거는 키보드로 연다(radix pointer 경로 회피).
+		screen.getByRole('combobox', { name: '템플릿 변경' }).focus()
+		await user.keyboard('{ArrowDown}')
+		await user.click(screen.getByRole('option', { name: '두 번째 템플릿' }))
 
 		expect(mocks.push).toHaveBeenCalledWith('/studio/template/cards/2')
 	})
@@ -99,7 +105,7 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
-		fireEvent.change(screen.getByLabelText('이미지'), { target: { value: '파스텔 배경' } })
+		fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: '파스텔 배경' } })
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 
 		expect(mocks.requestImageGeneration).toHaveBeenCalledWith({
@@ -130,7 +136,7 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
-		fireEvent.change(screen.getByLabelText('이미지'), { target: { value: '파스텔 배경' } })
+		fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: '파스텔 배경' } })
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 
 		// 호출부가 imageColorize를 깔지 않으면 컬러 치환(마스크 오버레이)이 사라진다 — 그 스프레드를 잡는다.
@@ -154,7 +160,7 @@ describe('TemplateGenerator', () => {
 		)
 
 		expect(screen.getByText('슬롯 비율 16:9로 생성')).toBeInTheDocument()
-		fireEvent.change(screen.getByLabelText('이미지'), { target: { value: '파스텔 배경' } })
+		fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: '파스텔 배경' } })
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 
 		expect(mocks.requestImageGeneration).toHaveBeenCalledWith({
