@@ -3,8 +3,16 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupButton,
+	InputGroupInput,
+} from '@/components/ui/input-group'
 import { Textarea } from '@/components/ui/textarea'
+import { Typography } from '@/components/ui/typography'
 import { routes } from '@/lib/routes'
 
 interface McpCredential {
@@ -54,86 +62,82 @@ export function McpKeyIssuer() {
 				<CardTitle>MCP 연결</CardTitle>
 				<CardDescription>외부 MCP 클라이언트에서 사용할 키를 발급합니다.</CardDescription>
 			</CardHeader>
-			<CardContent className="grid gap-4">
+			<CardContent className="flex flex-col gap-4">
 				{credential ? (
 					<>
-						<p className="text-sm text-muted-foreground">
+						<Typography size="sm" tone="muted">
 							이 키는 지금만 표시됩니다. 닫기 전에 복사해 주세요.
-						</p>
-						<div className="grid gap-1">
-							<label className="text-sm" htmlFor="mcp-endpoint">
-								Endpoint
-							</label>
-							<Input id="mcp-endpoint" readOnly value={credential.endpoint} />
-						</div>
-						<div className="grid gap-1">
-							<label className="text-sm" htmlFor="mcp-api-key">
-								Bearer key
-							</label>
-							<div className="flex gap-2">
-								<Input id="mcp-api-key" readOnly value={credential.apiKey} />
+						</Typography>
+						<FieldGroup>
+							<Field>
+								<FieldLabel htmlFor="mcp-endpoint">Endpoint</FieldLabel>
+								<Input id="mcp-endpoint" readOnly value={credential.endpoint} />
+							</Field>
+							<Field>
+								<FieldLabel htmlFor="mcp-api-key">Bearer key</FieldLabel>
+								<InputGroup>
+									<InputGroupInput
+										id="mcp-api-key"
+										readOnly
+										value={credential.apiKey}
+									/>
+									<InputGroupAddon align="inline-end">
+										<InputGroupButton
+											variant="outline"
+											onClick={() =>
+												copyText(credential.apiKey, '키를 복사했습니다.')
+											}
+										>
+											복사
+										</InputGroupButton>
+									</InputGroupAddon>
+								</InputGroup>
+							</Field>
+							<Field>
+								<FieldLabel htmlFor="codex-mcp-command">Codex CLI</FieldLabel>
+								<FieldDescription>
+									붙여넣은 터미널에서 Codex를 실행하세요. 새 터미널에서는
+									LBS_MCP_API_KEY를 다시 설정해야 합니다.
+								</FieldDescription>
+								<Textarea id="codex-mcp-command" readOnly value={codexCommand} />
 								<Button
 									type="button"
 									variant="outline"
+									className="self-start"
 									onClick={() =>
-										copyText(credential.apiKey, '키를 복사했습니다.')
+										copyText(codexCommand, 'Codex 등록 명령을 복사했습니다.')
 									}
 								>
-									복사
+									Codex 명령 복사
 								</Button>
-							</div>
-						</div>
-						<div className="grid gap-2">
-							<div>
-								<h3 className="font-medium">Codex CLI</h3>
-								<p className="text-sm text-muted-foreground">
-									붙여넣은 터미널에서 Codex를 실행하세요. 새 터미널에서는
-									LBS_MCP_API_KEY를 다시 설정해야 합니다.
-								</p>
-							</div>
-							<label className="sr-only" htmlFor="codex-mcp-command">
-								Codex 등록 명령
-							</label>
-							<Textarea id="codex-mcp-command" readOnly value={codexCommand} />
-							<Button
-								type="button"
-								variant="outline"
-								className="justify-self-start"
-								onClick={() =>
-									copyText(codexCommand, 'Codex 등록 명령을 복사했습니다.')
-								}
-							>
-								Codex 명령 복사
-							</Button>
-						</div>
-						<div className="grid gap-2">
-							<div>
-								<h3 className="font-medium">Claude Code</h3>
-								<p className="text-sm text-muted-foreground">
+							</Field>
+							<Field>
+								<FieldLabel htmlFor="claude-mcp-command">Claude Code</FieldLabel>
+								<FieldDescription>
 									사용자 범위에 등록되어 모든 프로젝트에서 사용할 수 있습니다.
-								</p>
-							</div>
-							<label className="sr-only" htmlFor="claude-mcp-command">
-								Claude Code 등록 명령
-							</label>
-							<Textarea id="claude-mcp-command" readOnly value={claudeCommand} />
-							<Button
-								type="button"
-								variant="outline"
-								className="justify-self-start"
-								onClick={() =>
-									copyText(claudeCommand, 'Claude Code 등록 명령을 복사했습니다.')
-								}
-							>
-								Claude Code 명령 복사
-							</Button>
-						</div>
-						<p className="text-sm text-muted-foreground">
+								</FieldDescription>
+								<Textarea id="claude-mcp-command" readOnly value={claudeCommand} />
+								<Button
+									type="button"
+									variant="outline"
+									className="self-start"
+									onClick={() =>
+										copyText(
+											claudeCommand,
+											'Claude Code 등록 명령을 복사했습니다.',
+										)
+									}
+								>
+									Claude Code 명령 복사
+								</Button>
+							</Field>
+						</FieldGroup>
+						<Typography size="sm" tone="muted">
 							명령에는 비밀 키가 포함됩니다. 공유 저장소나 문서에 붙여넣지 마세요.
-						</p>
-						<p aria-live="polite" className="text-sm text-muted-foreground">
+						</Typography>
+						<Typography aria-live="polite" size="sm" tone="muted">
 							{copyMessage}
-						</p>
+						</Typography>
 					</>
 				) : (
 					<Button type="button" disabled={loading} onClick={issueKey}>
@@ -141,9 +145,9 @@ export function McpKeyIssuer() {
 					</Button>
 				)}
 				{error && (
-					<p role="alert" className="text-sm text-destructive">
+					<Typography role="alert" size="sm" tone="destructive">
 						{error}
-					</p>
+					</Typography>
 				)}
 			</CardContent>
 		</Card>

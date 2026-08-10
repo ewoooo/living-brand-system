@@ -11,6 +11,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
+import { Typography } from '@/components/ui/typography'
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import { formatObservationActual, formatObservationExpected } from './check-observation-format'
 
@@ -48,9 +49,9 @@ export function CheckDetailRow({
 				<CheckDetailCollapse shouldReduceMotion={shouldReduceMotion}>
 					<div className="space-y-2 pb-3">
 						{appliesTo.length > 1 && (
-							<p className="font-body text-xs font-normal text-muted-foreground">
+							<Typography size="xs" tone="muted">
 								적용 위치: {appliesToText}
-							</p>
+							</Typography>
 						)}
 
 						<HeuristicObservations observations={observations} />
@@ -80,8 +81,12 @@ function HeuristicObservations({ observations }: { observations: AiCheckResult['
 					{observations.map((observation) => (
 						<TableRow key={observation.criterionId}>
 							<TableCell className="px-3 py-2 align-top whitespace-normal">
-								<p className="text-muted-foreground">{observation.question}</p>
-								<p className="mt-1 text-muted-foreground">{observation.reason}</p>
+								<Typography size="sm" tone="muted">
+									{observation.question}
+								</Typography>
+								<Typography size="sm" tone="muted" className="mt-1">
+									{observation.reason}
+								</Typography>
 							</TableCell>
 							<TableCell className="px-3 py-2 align-top">
 								{formatObservationExpected(observation)}

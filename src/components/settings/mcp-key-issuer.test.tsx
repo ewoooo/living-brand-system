@@ -24,11 +24,11 @@ describe('McpKeyIssuer', () => {
 		render(<McpKeyIssuer />)
 		fireEvent.click(screen.getByRole('button', { name: 'MCP 키 발급' }))
 
-		expect(await screen.findByLabelText('Codex 등록 명령')).toHaveValue(
+		expect(await screen.findByRole('textbox', { name: 'Codex CLI' })).toHaveValue(
 			"export LBS_MCP_API_KEY='test-key'\n" +
 				"codex mcp add living-brand-system --url 'https://stage.example.com/api/mcp' --bearer-token-env-var LBS_MCP_API_KEY",
 		)
-		expect(screen.getByLabelText('Claude Code 등록 명령')).toHaveValue(
+		expect(screen.getByRole('textbox', { name: 'Claude Code' })).toHaveValue(
 			'claude mcp add --transport http living-brand-system --scope user \'https://stage.example.com/api/mcp\' --header "Authorization: Bearer test-key"',
 		)
 	})

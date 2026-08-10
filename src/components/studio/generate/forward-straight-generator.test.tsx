@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ForwardStraightGenerator } from './forward-straight-generator'
@@ -37,21 +38,22 @@ afterEach(() => {
 })
 
 describe('ForwardStraightGenerator', () => {
-	it('도구 계약의 컨트롤과 기본값을 렌더링하고 변경한다', () => {
+	it('도구 계약의 컨트롤과 기본값을 렌더링하고 변경한다', async () => {
+		const user = userEvent.setup()
 		render(createElement(ForwardStraightGenerator))
 
 		const variableWeight = screen.getByRole('checkbox', { name: '가변 두께' })
 		expect(variableWeight).not.toBeChecked()
-		expect(screen.getByLabelText('시점')).toHaveValue('flat')
-		expect(screen.getByLabelText('각도')).toHaveValue('medium')
+		const viewpoint = screen.getByRole('combobox', { name: '시점' })
+		expect(viewpoint).toHaveTextContent('평면')
+		expect(screen.getByRole('combobox', { name: '각도' })).toHaveTextContent('보통')
 
 		fireEvent.click(variableWeight)
-		fireEvent.change(screen.getByLabelText('시점'), {
-			target: { value: 'low-angle' },
-		})
+		viewpoint.focus()
+		await user.keyboard('{ArrowDown}{ArrowDown}{Enter}')
 
 		expect(variableWeight).toBeChecked()
-		expect(screen.getByLabelText('시점')).toHaveValue('low-angle')
+		expect(viewpoint).toHaveTextContent('로우앵글')
 	})
 
 	it('미리보기를 연결하고 현재 입력과 화면 크기로 SVG를 다운로드한다', async () => {

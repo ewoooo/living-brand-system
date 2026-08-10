@@ -11,6 +11,7 @@ import {
 	AttachmentMedia,
 	AttachmentTitle,
 } from '@/components/ui/attachment'
+import { Typography } from '@/components/ui/typography'
 import type { AgentTemplateImageAttachment } from '@/features/agent-chat/services/agent-template-request.service'
 import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
@@ -146,7 +147,9 @@ function TemplateAttachmentFrame({
 				)}
 			</AttachmentActions>
 			{exportError && (
-				<p className="px-1 font-body text-sm font-normal text-destructive">{exportError}</p>
+				<Typography size="sm" tone="destructive" className="px-1">
+					{exportError}
+				</Typography>
 			)}
 		</Attachment>
 	)

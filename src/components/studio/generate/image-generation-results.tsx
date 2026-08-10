@@ -1,6 +1,8 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Typography } from '@/components/ui/typography'
 import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
 import { cn } from '@/lib/utils'
 import { ImageCameraPresets } from './image-camera-presets'
@@ -38,18 +40,18 @@ export function ImageGenerationResults({
 						>
 							선택한 이미지 다운로드
 						</Button>
-						<span className="font-body text-sm font-normal text-muted-foreground">
+						<Typography as="span" size="sm" tone="muted">
 							{selected === null
 								? '이미지를 클릭해 선택하세요'
 								: `${selected + 1}번 선택됨`}
-						</span>
+						</Typography>
 					</div>
 
 					{images.length < requested && (
-						<p className="font-body text-sm font-normal text-muted-foreground">
+						<Typography size="sm" tone="muted">
 							요청 {requested}장 중 {images.length}장 생성됨 (일부는 무료 서버
 							지연으로 실패)
-						</p>
+						</Typography>
 					)}
 
 					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -89,9 +91,9 @@ export function ImageGenerationResults({
 						{result.profileName ? `적용된 프로파일: ${result.profileName}` : null}
 						<details className="mt-1">
 							<summary className="cursor-pointer">생성 프롬프트 보기</summary>
-							<p className="mt-1 whitespace-pre-wrap font-body text-xs font-normal">
+							<Typography size="xs" className="mt-1 whitespace-pre-wrap">
 								{result.prompt}
-							</p>
+							</Typography>
 						</details>
 					</div>
 
@@ -104,9 +106,9 @@ export function ImageGenerationResults({
 							seedImage={images[selected]}
 						/>
 					) : (
-						<p className="font-body text-sm font-normal text-muted-foreground">
+						<Typography size="sm" tone="muted">
 							이미지를 선택하면 카메라 시점을 조정할 수 있습니다.
-						</p>
+						</Typography>
 					)}
 				</div>
 			)}
@@ -117,12 +119,12 @@ export function ImageGenerationResults({
 function ImageGenerationSkeleton({ count }: { count: number }) {
 	return (
 		<div className="flex flex-col gap-3">
-			<p className="font-body text-sm font-normal text-muted-foreground">
+			<Typography size="sm" tone="muted">
 				생성 중… 무료 서버라 최대 1~2분 걸릴 수 있어요.
-			</p>
+			</Typography>
 			<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
 				{SKELETON_KEYS.slice(0, count).map((key) => (
-					<div key={key} className="aspect-[3/4] animate-pulse rounded-md bg-muted" />
+					<Skeleton key={key} className="aspect-[3/4]" />
 				))}
 			</div>
 		</div>
