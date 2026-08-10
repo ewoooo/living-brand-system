@@ -28,18 +28,11 @@ function violations(files: string[], isForbidden: (specifier: string) => boolean
 	return found
 }
 
-// 이 테스트를 추가하며 발견한 기존 위반. mcp-access에는 아직 services 폴더가 없어
-// service 신설이 이 변경 범위를 넘어선다. 새 위반을 여기 추가하지 말 것 — 후속 작업으로
-// service를 만들어 제거해야 한다.
-const PRE_EXISTING_RULE_1_VIOLATIONS = new Set(['src/app/api/mcp-key/route.ts'])
-
 describe('layer boundaries', () => {
 	// docs/06-project-structure.md §1: Presentation -> Service -> Repository.
 	// Route/component 코드는 Payload/ORM 구현을 감춘 repository를 직접 몰라야 한다.
 	it('app과 components는 repository를 직접 import하지 않는다', () => {
-		const files = globSync(['src/app/**/*.ts*', 'src/components/**/*.ts*']).filter(
-			(file) => !PRE_EXISTING_RULE_1_VIOLATIONS.has(file),
-		)
+		const files = globSync(['src/app/**/*.ts*', 'src/components/**/*.ts*'])
 		const found = violations(files, (specifier) => specifier.includes('/repositories/'))
 
 		expect(found).toEqual([])
