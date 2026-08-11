@@ -32,7 +32,7 @@ type Example = {
 
 /** 표식과 캡션 색. 금지만 빨강이고 나머지는 중립이다 — 판형 밖 헤더줄이라 배지 배경을 쓰지 않는다. */
 const KIND_STYLE: Record<Kind, { symbol: string; mark: string; caption: string }> = {
-	do: { symbol: '✓', mark: 'text-green-700', caption: 'text-muted-foreground' },
+	do: { symbol: '✓', mark: 'text-success', caption: 'text-muted-foreground' },
 	ok: { symbol: '△', mark: 'text-muted-foreground', caption: 'text-muted-foreground' },
 	dont: { symbol: '✕', mark: 'text-destructive', caption: 'text-destructive' },
 }

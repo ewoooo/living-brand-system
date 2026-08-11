@@ -12,8 +12,8 @@ import {
 } from '../brand-typeface'
 import { HAIRLINE_CELL, HAIRLINE_GRID } from '../hairline'
 
-// 좌: 규정대로 쌓인 문단 / 우: 각 단의 스펙을 세워 놓은 레이어 패널.
-// 패널에서 한 단을 고르면 좌측의 그 단이 살아나고 문구를 바꿀 수 있다.
+// 좌: 규정대로 쌓인 문단 / 우: 단마다 스펙과 문구 입력칸을 세워 놓은 패널.
+// 세 칸이 늘 열려 있고, 한 칸에 포커스가 가면 좌측의 나머지 단이 죽어 그 단만 도드라진다.
 //
 // 🔴 사용자가 바꾸는 것은 **글자 내용뿐**이다. 크기·굵기·행간에 손잡이를 달지 않는다 —
 //    이 위젯의 질문은 "규정을 어떻게 조절하는가"가 아니라 "이 규정 안에서 문단이 어떻게 구성되는가"다.
@@ -101,9 +101,15 @@ export function TypeHierarchyView({ language }: { language: LanguageKey }) {
 								*/}
 								<div className="flex flex-col gap-1 p-3 font-body">
 									<span className="text-foreground text-sm">{tier.label}</span>
+									{/*
+										🔴 적용값을 함께 적는다. 규정은 범위인데 좌측 렌더는 하한 하나를
+										쓰므로, 범위만 적어 두면 화면의 행간이 어느 값인지 알 수 없다
+										(같은 페이지의 언어별 조판 위젯이 쓰는 표기와 맞췄다).
+										min은 좌측 lineHeight와 같은 식에서 오므로 둘이 갈라지지 않는다.
+									*/}
 									<span className="font-mono text-muted-foreground text-xs tabular-nums">
 										Weight {tier.weight} · Size {TIER_SIZE[tier.key]}px ·
-										Leading {min}~{max}%
+										Leading {min}–{max}% · {min}% 적용
 									</span>
 								</div>
 
