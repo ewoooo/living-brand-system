@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import { describe, expect, it, vi } from 'vitest'
 import {
 	findPublishedImageProfile,
+	listPublishedImageProfileDefinitions,
 	listPublishedImageProfiles,
 } from './image-profile.payload.repository'
 
@@ -40,7 +41,7 @@ describe('findPublishedImageProfile', () => {
 		const profile = { id: 5, name: '에센허브 브랜드 제품컷' }
 		const find = vi.fn().mockResolvedValue({ docs: [profile] })
 		vi.mocked(getPayload).mockResolvedValue({ find } as never)
-		const user = { id: 1 }
+		const user = { email: 'worker@example.com', id: 1, role: 'worker' }
 
 		await expect(findPublishedImageProfile(user, 5)).resolves.toBe(profile)
 		expect(find).toHaveBeenCalledWith({
@@ -48,11 +49,65 @@ describe('findPublishedImageProfile', () => {
 			depth: 0,
 			draft: false,
 			limit: 1,
-			overrideAccess: false,
+			overrideAccess: true,
 			user,
 			where: {
 				and: [{ id: { equals: 5 } }, { _status: { equals: 'published' } }],
 			},
 		})
+	})
+
+	it('worker를 확인한 뒤 trusted read로 legacy capability를 읽되 시스템 프롬프트는 선택하지 않는다', async () => {
+		const find = vi.fn().mockResolvedValue({
+			docs: [
+				{
+					id: 5,
+					name: '일러스트레이션',
+					slug: 'illustration',
+					imageModelPreset: 'openai-gpt-image-2',
+					aspectRatio: '2:3',
+					imageSize: '1K',
+				},
+			],
+		})
+		vi.mocked(getPayload).mockResolvedValue({ find } as never)
+		const user = { email: 'worker@example.com', id: 1, role: 'worker' }
+
+		await listPublishedImageProfileDefinitions(user)
+
+		expect(find).toHaveBeenCalledWith({
+			collection: 'image-profiles',
+			depth: 0,
+			draft: false,
+			limit: 100,
+			overrideAccess: true,
+			select: {
+				aspectRatio: true,
+				cameraControl: true,
+				colorAdjustment: true,
+				controller: true,
+				features: true,
+				imageModelPreset: true,
+				imageSize: true,
+				maxPromptLength: true,
+				name: true,
+				slug: true,
+			},
+			sort: 'displayOrder',
+			user,
+			where: { _status: { equals: 'published' } },
+		})
+		expect(find.mock.calls[0]?.[0].select).not.toHaveProperty('profilePrompt')
+		expect(find.mock.calls[0]?.[0].select).not.toHaveProperty('userPromptNormalization')
+	})
+
+	it('trusted profile read는 Payload 인증 문서가 아니면 실행하지 않는다', async () => {
+		const find = vi.fn()
+		vi.mocked(getPayload).mockResolvedValue({ find } as never)
+
+		await expect(findPublishedImageProfile({ id: 1 }, 5)).rejects.toThrow(
+			'Authenticated image profile consumer is required.',
+		)
+		expect(find).not.toHaveBeenCalled()
 	})
 })

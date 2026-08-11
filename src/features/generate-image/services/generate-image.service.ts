@@ -32,6 +32,12 @@ import {
 	ImageGenerationUnavailableError,
 	normalizeImageProfilePrompt,
 } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
+import {
+	deriveImageStudioConfig,
+	getImageStudioControls,
+	getImageStudioFeature,
+	type ImageStudioConfig,
+} from '@/features/image-studio/image-studio-config'
 
 export { ImageGenerationLimitError, ImageGenerationUnavailableError }
 
@@ -57,6 +63,14 @@ export class InvalidSeedImageError extends Error {
 	constructor() {
 		super('Seed image data is invalid.')
 		this.name = 'InvalidSeedImageError'
+	}
+}
+
+/** published Controller Definition이 허용하지 않는 입력을 모든 생성 진입점에서 같은 오류로 거부한다. */
+export class InvalidImageControllerInputError extends Error {
+	constructor(controlId: string) {
+		super(`Image controller rejected ${controlId}.`)
+		this.name = 'InvalidImageControllerInputError'
 	}
 }
 
@@ -163,17 +177,23 @@ export async function generateImages({
 }): Promise<GeneratedImages> {
 	const profile = await findPublishedImageProfile(user, profileId)
 	if (!profile) throw new ImageProfileNotFoundError()
+	const effective = resolveImageGenerationInput(deriveImageStudioConfig(profile), {
+		userInput,
+		count,
+		aspectRatio,
+		imageSize,
+	})
 	const normalized = await normalizeImageProfilePrompt({
 		profilePrompt: profile.profilePrompt,
 		userPromptNormalization: profile.userPromptNormalization ?? [],
-		userPrompt: userInput,
+		userPrompt: effective.userInput,
 	})
 
 	const plan = planImageGenerationFromProfile(profile, {
 		prompt: JSON.stringify(normalized.finalPrompt),
-		count,
-		aspectRatio,
-		imageSize,
+		count: effective.count,
+		aspectRatio: effective.aspectRatio,
+		imageSize: effective.imageSize,
 	})
 	const generated = await runImageGeneration(plan, user)
 	return storeProfileGeneration(generated, {
@@ -225,6 +245,10 @@ export async function adjustImageCamera({
 }): Promise<CameraAdjustedImages> {
 	const profile = await findPublishedImageProfile(user, profileId)
 	if (!profile) throw new ImageProfileNotFoundError()
+	const config = deriveImageStudioConfig(profile)
+	if (!getImageStudioFeature(config, 'camera-control')) {
+		throw new InvalidImageControllerInputError('camera')
+	}
 	const seedImage = await loadGeneratedImage({
 		generatedImageId,
 		profileId,
@@ -251,6 +275,59 @@ export async function adjustImageCamera({
 	return {
 		...stored,
 		camera: { input: camera, resolved },
+	}
+}
+
+function resolveImageGenerationInput(
+	config: ImageStudioConfig,
+	input: {
+		userInput: string
+		count: number
+		aspectRatio?: ImageAspectRatio
+		imageSize?: ImageOutputSize
+	},
+) {
+	const { prompt, batch, ratio, resolution } = getImageStudioControls(config)
+	assertTextInput(prompt, input.userInput)
+	const batchValue = String(input.count)
+	const ratioValue = input.aspectRatio ?? ratio.defaultValue
+	const resolutionValue = input.imageSize ?? resolution.defaultValue
+	assertSelectInput(batch, batchValue)
+	assertSelectInput(ratio, ratioValue)
+	assertSelectInput(resolution, resolutionValue)
+	if (ratioValue === null || resolutionValue === null) {
+		throw new InvalidImageControllerInputError(ratioValue === null ? ratio.id : resolution.id)
+	}
+	return {
+		userInput: input.userInput,
+		count: Number(batchValue),
+		aspectRatio: ratioValue as ImageAspectRatio,
+		imageSize: resolutionValue as ImageOutputSize,
+	}
+}
+
+function assertTextInput(
+	control: Extract<ReturnType<typeof getImageStudioControls>['prompt'], { kind: 'text' }>,
+	value: string,
+) {
+	if (
+		((control.availability ?? 'enabled') !== 'enabled' && value !== control.defaultValue) ||
+		(control.maxLength !== undefined && value.length > control.maxLength)
+	) {
+		throw new InvalidImageControllerInputError(control.id)
+	}
+}
+
+function assertSelectInput(
+	control: Extract<ReturnType<typeof getImageStudioControls>['batch'], { kind: 'select' }>,
+	value: string | null,
+) {
+	if (
+		value === null ||
+		!control.options.some((option) => option.value === value) ||
+		((control.availability ?? 'enabled') !== 'enabled' && value !== control.defaultValue)
+	) {
+		throw new InvalidImageControllerInputError(control.id)
 	}
 }
 

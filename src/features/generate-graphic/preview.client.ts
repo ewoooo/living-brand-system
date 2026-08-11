@@ -24,7 +24,7 @@ export function createForwardStraightPreview({
 }: {
 	container: HTMLElement
 	input: ForwardStraightInput
-	onInputChange?: (input: ForwardStraightInput) => void
+	onInputChange?: (input: ForwardStraightInput) => boolean
 }): ForwardStraightPreview {
 	let currentInput = input
 	let draggingOrigin = false
@@ -78,14 +78,15 @@ export function createForwardStraightPreview({
 			) {
 				return
 			}
-			currentInput = {
+			const nextInput = {
 				...currentInput,
 				origin: {
 					x: preview.mouseX / preview.width,
 					y: preview.mouseY / preview.height,
 				},
 			}
-			onInputChange?.(currentInput)
+			if (onInputChange?.(nextInput) === false) return false
+			currentInput = nextInput
 			preview.redraw()
 			return false
 		}

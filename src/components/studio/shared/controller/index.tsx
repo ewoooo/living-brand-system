@@ -12,11 +12,10 @@ import { ControllerSegmented } from './segmented'
 import { ControllerSelect } from './select'
 import { ControllerTabPanel } from './tab-panel'
 
-/** 컨트롤 슬롯의 조작 가능 여부. */
-export type ControllerAvailability = 'enabled' | 'readonly' | 'disabled'
-
-/** enabled 슬롯의 현재 상호작용·오류 표현 상태. */
-export type ControllerInteraction = 'idle' | 'hover' | 'focused' | 'error'
+export type {
+	ControllerAvailability,
+	ControllerInteraction,
+} from '@/features/studio-controller/controller-definition'
 
 /**
  * Studio 컨트롤러 킷 — 디자인 SSOT(Figma HD_LBS_UI 4:5578 "Controller API")의 dialkit 기반

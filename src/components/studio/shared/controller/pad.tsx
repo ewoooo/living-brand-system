@@ -1,10 +1,9 @@
 'use client'
 
 import type { KeyboardEvent } from 'react'
+import type { ControllerPadValue } from '@/features/studio-controller/controller-definition'
 import { cn } from '@/lib/utils'
 import { clampControllerValue, useControllerPointerDrag } from './pointer-drag'
-
-export type ControllerPadValue = { x: number; y: number }
 
 type ControllerPadProps = {
 	/** 중심 기준 오프셋, -1(왼/위) ~ 1(오른/아래). */

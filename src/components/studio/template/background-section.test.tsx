@@ -1,56 +1,105 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { TemplateBackgroundState } from '@/features/template-studio/hooks/use-template-studio'
-import type { TemplateBackgroundType } from '@/features/template-studio/template-config'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { forwardStraightGraphicConfig } from '@/features/graphic-studio/graphic-studio-runtime'
+import type { ImageStudioConfig } from '@/features/image-studio/image-studio-config'
+import { createControllerValues } from '@/features/studio-controller/controller-definition'
+import type {
+	TemplateBackgroundPatch,
+	TemplateBackgroundState,
+} from '@/features/template-studio/hooks/use-template-studio'
+import {
+	resolveTemplateImageConfig,
+	type TemplateBackgroundType,
+} from '@/features/template-studio/template-config'
 import { BackgroundSection } from './background-section'
 
-const mocks = vi.hoisted(() => ({ requestImageGeneration: vi.fn() }))
-vi.mock('@/features/generate-image/services/generate-image.client', () => ({
-	requestImageGeneration: mocks.requestImageGeneration,
-}))
-
-const profiles = [
-	{ id: 3, name: '첫 프로파일' },
-	{ id: 4, name: '두 번째 프로파일' },
-]
+const imageContract = resolveTemplateImageConfig(createImageConfig(), {
+	width: 400,
+	height: 300,
+})
+if (!imageContract) throw new Error('테스트 Image Config가 호환되지 않습니다.')
 
 /** 배경 상태의 소유자는 Provider다 — 테스트에서는 같은 계약(값+patch)의 껍데기가 대신 쥔다. */
 function Harness({
 	allowedTypes,
 	onChange,
-	...props
+	onGenerate = vi.fn(),
+	contract = imageContract as typeof imageContract | null,
+	initialError = null,
+	generating = false,
+	typeAvailability,
 }: {
 	allowedTypes: readonly TemplateBackgroundType[]
-	onChange?: (patch: Partial<TemplateBackgroundState>) => void
-	profiles?: typeof profiles | null
-	profilesFailed?: boolean
-	aspectRatio?: '4:3'
+	onChange?: (patch: TemplateBackgroundPatch) => void
+	onGenerate?: () => void
+	contract?: typeof imageContract | null
+	initialError?: string | null
+	generating?: boolean
+	typeAvailability?: 'enabled' | 'readonly' | 'disabled'
 }) {
 	const [state, setState] = useState<TemplateBackgroundState>({
 		type: allowedTypes[0] ?? 'color',
 		imageMode: 'preset',
 		color: null,
+		profileId: contract?.config.id,
+		prompt: contract?.prompt.defaultValue ?? '',
+		generating,
+		error: initialError,
+		featureValues: contract ? createControllerValues(contract.config.controller.groups) : {},
+		graphicConfigId: forwardStraightGraphicConfig.id,
+		graphicValues: createControllerValues(forwardStraightGraphicConfig.controller.groups),
 	})
 	return (
 		<BackgroundSection
-			allowedTypes={allowedTypes}
-			profiles={props.profiles === undefined ? profiles : props.profiles}
-			profilesFailed={props.profilesFailed}
-			aspectRatio={props.aspectRatio}
+			typeDefinition={{
+				id: 'background.type',
+				kind: 'select',
+				label: 'Type',
+				defaultValue: allowedTypes[0] ?? 'color',
+				availability: typeAvailability,
+				options: allowedTypes.map((value) => ({
+					value,
+					label: value[0]?.toUpperCase() + value.slice(1),
+				})),
+			}}
+			imageContracts={contract ? [contract] : []}
+			graphicConfigs={[forwardStraightGraphicConfig]}
+			graphicBindings={{ origin: { padAspectRatio: 4 / 3 } }}
 			value={state}
 			onChange={(patch) => {
 				onChange?.(patch)
 				setState((current) => ({ ...current, ...patch }))
 			}}
+			onTypeChange={(type) =>
+				setState((current) =>
+					type === 'color' || type === 'image' || type === 'graphic'
+						? { ...current, type }
+						: current,
+				)
+			}
+			onFeatureChange={() => {}}
+			onImageProfileChange={(profileId) => setState((current) => ({ ...current, profileId }))}
+			onGraphicConfigChange={(graphicConfigId) =>
+				setState((current) => ({ ...current, graphicConfigId }))
+			}
+			onGraphicChange={(controlId, next) =>
+				setState((current) => ({
+					...current,
+					graphicValues: { ...current.graphicValues, [controlId]: next },
+				}))
+			}
+			onGenerate={onGenerate}
 		/>
 	)
 }
 
 /** Type 셀렉트를 키보드로 열어 옵션을 고른다 — jsdom엔 pointer capture가 없어 클릭으로 못 연다. */
 async function selectBackgroundType(user: ReturnType<typeof userEvent.setup>, option: string) {
-	screen.getByRole('combobox', { name: 'Type' }).focus()
+	const select = screen.queryByRole('combobox', { name: 'Type' })
+	if (!select) return
+	select.focus()
 	await user.keyboard('{ArrowDown}')
 	await user.click(screen.getByRole('option', { name: option }))
 }
@@ -63,9 +112,6 @@ async function openGenerateTab(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe('BackgroundSection', () => {
-	beforeEach(() => {
-		vi.clearAllMocks()
-	})
 	afterEach(cleanup)
 
 	it('기본 Color 타입은 배경색 행만 보여준다', () => {
@@ -110,6 +156,25 @@ describe('BackgroundSection', () => {
 		expect(screen.getByRole('option', { name: 'Graphic' })).toBeInTheDocument()
 	})
 
+	it.each([
+		'readonly',
+		'disabled',
+	] as const)('Type Definition이 %s면 UI에서 배경 종류를 바꿀 수 없다', (availability) => {
+		render(
+			<Harness
+				allowedTypes={['color', 'image', 'graphic']}
+				typeAvailability={availability}
+			/>,
+		)
+
+		if (availability === 'readonly') {
+			expect(screen.queryByRole('combobox', { name: 'Type' })).toBeNull()
+			expect(screen.getByText('Color')).toBeInTheDocument()
+		} else {
+			expect(screen.getByRole('combobox', { name: 'Type' })).toBeDisabled()
+		}
+	})
+
 	it('배경색은 만졌을 때만 값이 되고 초기화로 되돌린다', async () => {
 		const user = userEvent.setup()
 		const onChange = vi.fn()
@@ -131,61 +196,94 @@ describe('BackgroundSection', () => {
 		expect(onChange).toHaveBeenLastCalledWith({ color: null })
 	})
 
-	it('배경 생성은 발행 목록 첫 프로파일·캔버스 비율·1장으로 요청하고 결과를 배경으로 올린다', async () => {
+	it('프롬프트와 생성 이벤트를 Provider에 올리고 제한된 캔버스 비율을 보여준다', async () => {
 		const user = userEvent.setup()
 		const onChange = vi.fn()
-		mocks.requestImageGeneration.mockResolvedValue({
-			generatedImages: [{ id: 9, url: '/api/generated-images/file/canvas.png' }],
-		})
-		render(<Harness allowedTypes={['image']} aspectRatio="4:3" onChange={onChange} />)
+		const onGenerate = vi.fn()
+		render(<Harness allowedTypes={['image']} onChange={onChange} onGenerate={onGenerate} />)
 
 		const promptField = await openGenerateTab(user)
-		// 프롬프트가 비면 생성할 수 없다.
 		expect(screen.getByRole('button', { name: '이미지 생성' })).toBeDisabled()
 		await user.type(promptField, '파스텔 그라디언트')
-		expect(screen.getByText('캔버스 비율 4:3로 생성')).toBeInTheDocument()
+		expect(screen.getByText('4:3')).toBeInTheDocument()
 
 		await user.click(screen.getByRole('button', { name: '이미지 생성' }))
-
-		expect(mocks.requestImageGeneration).toHaveBeenCalledWith({
-			prompt: '파스텔 그라디언트',
-			count: 1,
-			profileId: 3, // 디자인에 선택 컨트롤이 없다 — 목록 첫 항목
-			aspectRatio: '4:3',
-		})
-		await waitFor(() =>
-			expect(onChange).toHaveBeenLastCalledWith({
-				image: { url: '/api/generated-images/file/canvas.png', generatedImageId: 9 },
-			}),
-		)
+		expect(onChange).toHaveBeenCalledWith({ prompt: '파스텔 그라디언트' })
+		expect(onGenerate).toHaveBeenCalledOnce()
 	})
 
-	it('생성 실패는 오류로 알린다', async () => {
+	it('이미지 생성 중에는 Profile 변경을 막는다', async () => {
 		const user = userEvent.setup()
-		vi.spyOn(console, 'error').mockImplementation(() => {})
-		mocks.requestImageGeneration.mockRejectedValue(new Error('down'))
-		render(<Harness allowedTypes={['image']} />)
+		render(<Harness allowedTypes={['image']} generating />)
 
-		await user.type(await openGenerateTab(user), '파스텔 그라디언트')
-		await user.click(screen.getByRole('button', { name: '이미지 생성' }))
+		await openGenerateTab(user)
+		expect(screen.getByRole('combobox', { name: 'Image Profile' })).toBeDisabled()
+	})
+
+	it('Provider가 가진 생성 오류를 표시한다', async () => {
+		const user = userEvent.setup()
+		render(
+			<Harness
+				allowedTypes={['image']}
+				initialError="이미지 생성에 실패했어요. 잠시 후 다시 시도해 주세요."
+			/>,
+		)
+		await openGenerateTab(user)
 
 		expect(
-			await screen.findByText('이미지 생성에 실패했어요. 잠시 후 다시 시도해 주세요.'),
+			screen.getByText('이미지 생성에 실패했어요. 잠시 후 다시 시도해 주세요.'),
 		).toBeInTheDocument()
 	})
 
-	it('프로파일을 못 불러오면 생성이 막히고 이유를 알린다', async () => {
+	it('호환 Image Config가 없으면 생성이 막히고 Provider의 이유를 알린다', async () => {
 		const user = userEvent.setup()
-		render(<Harness allowedTypes={['image']} profiles={[]} profilesFailed />)
+		const onGenerate = vi.fn()
+		render(
+			<Harness
+				allowedTypes={['image']}
+				contract={null}
+				initialError="사용 가능한 이미지 프로파일이 없습니다."
+				onGenerate={onGenerate}
+			/>,
+		)
 
-		await user.type(await openGenerateTab(user), '파스텔 그라디언트')
+		await user.click(screen.getByRole('radio', { name: 'Generate' }))
+		await screen.findByRole('button', { name: '이미지 생성' })
 		expect(screen.getByRole('button', { name: '이미지 생성' })).toBeDisabled()
-		expect(screen.getByText('이미지 프로파일을 불러오지 못했습니다.')).toBeInTheDocument()
-		expect(mocks.requestImageGeneration).not.toHaveBeenCalled()
+		expect(screen.getByText('사용 가능한 이미지 프로파일이 없습니다.')).toBeInTheDocument()
+		expect(onGenerate).not.toHaveBeenCalled()
 	})
 
-	// compose에 경로가 없는 갈래는 조작 가능해 보이는 컨트롤을 두지 않는다(docs/10 §3.6).
-	it('배선되지 않은 배경 컨트롤은 잠긴 채 그려진다', async () => {
+	it.each([
+		'readonly',
+		'disabled',
+	] as const)('prompt가 %s면 Admin default를 수정하지 않고 생성 이벤트를 올린다', async (availability) => {
+		const user = userEvent.setup()
+		const onGenerate = vi.fn()
+		const fixedContract = {
+			...imageContract,
+			prompt: {
+				...imageContract.prompt,
+				availability,
+				defaultValue: '고정 배경 프롬프트',
+			},
+		}
+		render(
+			<Harness allowedTypes={['image']} contract={fixedContract} onGenerate={onGenerate} />,
+		)
+
+		await user.click(screen.getByRole('radio', { name: 'Generate' }))
+		await screen.findByRole('button', { name: '이미지 생성' })
+		if (availability === 'readonly') {
+			expect(screen.getByText('고정 배경 프롬프트')).toBeInTheDocument()
+		} else {
+			expect(screen.getByDisplayValue('고정 배경 프롬프트')).toBeDisabled()
+		}
+		await user.click(screen.getByRole('button', { name: '이미지 생성' }))
+		expect(onGenerate).toHaveBeenCalledOnce()
+	})
+
+	it('미배선 Image 기능은 잠그고 Graphic Config는 공용 Renderer로 조작한다', async () => {
 		const user = userEvent.setup()
 		render(<Harness allowedTypes={['color', 'image', 'graphic']} />)
 
@@ -199,13 +297,100 @@ describe('BackgroundSection', () => {
 		await openGenerateTab(user)
 		expect(screen.getByLabelText('Line Color')).toBeDisabled()
 		expect(screen.getByLabelText('Background Color')).toBeDisabled()
+		expect(screen.getByText('#000000')).toBeInTheDocument()
+		expect(screen.getByText('#ffffff')).toBeInTheDocument()
 
 		await selectBackgroundType(user, 'Graphic')
-		expect(screen.getByLabelText('Graphic Type')).toBeDisabled()
-		expect(screen.getByLabelText('Line Color')).toBeDisabled()
-		expect(screen.getByLabelText('Background Color')).toBeDisabled()
-		// Graphic Transform은 섹션째 잠겨 닫힌다 — 안의 컨트롤은 그려지지 않는다.
-		expect(screen.getByRole('button', { name: 'Graphic Transform' })).toBeDisabled()
-		expect(screen.queryByRole('slider', { name: '그래픽 위치' })).toBeNull()
+		expect(screen.getByLabelText('Graphic Type')).toBeEnabled()
+		expect(screen.getByText('Forward Straight')).toBeInTheDocument()
+		expect(screen.queryByLabelText('Line Color')).toBeNull()
+		expect(screen.getByRole('slider', { name: '기준점' })).toHaveAttribute(
+			'aria-valuetext',
+			'가로 0%, 세로 0%',
+		)
 	})
 })
+
+function createImageConfig(): ImageStudioConfig {
+	return {
+		studio: 'image',
+		id: 3,
+		version: 1,
+		name: '첫 프로파일',
+		controller: {
+			groups: [
+				{
+					id: 'image',
+					title: 'Image',
+					controls: [
+						{
+							id: 'prompt',
+							kind: 'text',
+							label: 'Prompt',
+							defaultValue: '',
+							maxLength: 250,
+						},
+					],
+				},
+				{
+					id: 'profile-settings',
+					title: 'Profile Settings',
+					controls: [
+						{
+							id: 'lineColor',
+							kind: 'color',
+							label: 'Line Color',
+							defaultValue: '#000000',
+						},
+						{
+							id: 'backgroundColor',
+							kind: 'color',
+							label: 'Background Color',
+							defaultValue: '#ffffff',
+						},
+					],
+				},
+				{
+					id: 'generation-settings',
+					title: 'Setting',
+					controls: [
+						{
+							id: 'batch',
+							kind: 'select',
+							label: '장수',
+							defaultValue: '1',
+							options: [{ value: '1', label: '1' }],
+						},
+						{
+							id: 'ratio',
+							kind: 'select',
+							label: '비율',
+							defaultValue: '1:1',
+							options: [
+								{ value: '1:1', label: '1:1' },
+								{ value: '4:3', label: '4:3' },
+							],
+						},
+						{
+							id: 'resolution',
+							kind: 'select',
+							label: '해상도',
+							defaultValue: '2K',
+							options: [{ value: '2K', label: '2K' }],
+						},
+					],
+				},
+			],
+		},
+		image: {
+			slug: 'first-profile',
+			features: [
+				{
+					type: 'color-adjustment',
+					controls: { line: 'lineColor', background: 'backgroundColor' },
+				},
+				{ type: 'camera-control' },
+			],
+		},
+	}
+}

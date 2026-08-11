@@ -12,11 +12,11 @@ import {
 	SelectTrigger,
 } from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
-import { nearestImageAspectRatio } from '@/features/generate-image/image-size'
 import { pixelsToMillimeters } from '@/features/template-export/print-policy'
 import type { TemplateExportFormat } from '@/features/template-export/services/export-template.client'
 import { useTemplateStudio } from '@/features/template-studio/hooks/use-template-studio'
 import {
+	findTemplateControl,
 	isBackgroundSlot,
 	isImageSlot,
 	isTextSlot,
@@ -40,10 +40,13 @@ const FORMAT_LABELS: Record<TemplateExportFormat, string> = {
 export function TemplateSidebar() {
 	const router = useRouter()
 	const { navigation, config, text, images, background, exporting } = useTemplateStudio()
-	const textSlots = config.slots.filter(isTextSlot)
-	const imageSlots = config.slots.filter(isImageSlot)
-	const backgroundSlot = config.slots.find(isBackgroundSlot)
-	const { canvas, printPpi } = config.exportOption
+	const textSlots = config.template.slots.filter(isTextSlot)
+	const imageSlots = config.template.slots.filter(isImageSlot)
+	const backgroundSlot = config.template.slots.find(isBackgroundSlot)
+	const { canvas, printPpi } = config.template.exportOption
+	const backgroundTypeControl = backgroundSlot
+		? findTemplateControl(config, backgroundSlot.typeControlId)
+		: undefined
 	const currentCategory = navigation.categories.find((category) =>
 		category.templates.some((item) => item.id === config.id),
 	)
@@ -79,7 +82,7 @@ export function TemplateSidebar() {
 						)}
 						<Controller.Row label="Format">
 							<Controller.Select
-								options={config.exportOption.formats.map((candidate) => ({
+								options={config.template.exportOption.formats.map((candidate) => ({
 									value: candidate,
 									label: FORMAT_LABELS[candidate],
 								}))}
@@ -148,21 +151,25 @@ export function TemplateSidebar() {
 
 			{textSlots.length > 0 && (
 				<Controller.Group title="Text" collapsible>
-					{textSlots.map((slot) => (
-						<div key={slot.id} className="flex flex-col gap-1">
-							<TextSlotInput
-								label={slot.label}
-								control={slot.control}
-								value={text.values[slot.id] ?? slot.control.defaultValue}
-								onChange={(next) => text.setValue(slot.id, next)}
-							/>
-							{text.clippedSlotIds.has(slot.id) && (
-								<Typography role="status" size="xs" tone="muted">
-									입력한 텍스트가 박스를 넘어 일부가 잘려 보여요.
-								</Typography>
-							)}
-						</div>
-					))}
+					{textSlots.map((slot) => {
+						const definition = findTemplateControl(config, slot.controlId)
+						if (definition?.kind !== 'text') return null
+						return (
+							<div key={slot.id} className="flex flex-col gap-1">
+								<TextSlotInput
+									definition={definition}
+									input={slot.input}
+									value={text.values[slot.id] ?? definition.defaultValue ?? ''}
+									onChange={(next) => text.setValue(slot.id, next)}
+								/>
+								{text.clippedSlotIds.has(slot.id) && (
+									<Typography role="status" size="xs" tone="muted">
+										입력한 텍스트가 박스를 넘어 일부가 잘려 보여요.
+									</Typography>
+								)}
+							</div>
+						)
+					})}
 					<Controller.ColorRow
 						label="Color"
 						value={text.color ?? '#000000'}
@@ -174,30 +181,29 @@ export function TemplateSidebar() {
 			)}
 			{imageSlots.map((slot, index) => {
 				const sectionTitle = imageSlots.length > 1 ? `Image ${index + 1}` : 'Image'
-				const control = slot.control
 				const state = images.states[slot.id]
+				const contracts = images.contracts[slot.id] ?? []
+				if (!state) return null
 				return (
 					<div key={slot.id} className="flex flex-col gap-3">
 						<Controller.Group title={sectionTitle} collapsible>
 							<ImageSlotInput
-								pinnedProfileId={control.profile.pinnedId}
-								profiles={images.profiles}
-								profilesFailed={images.profilesFailed}
-								colorizeEnabled={Boolean(control.colorize)}
-								aspectRatio={nearestImageAspectRatio(
-									control.box.width ?? Number.NaN,
-									control.box.height ?? Number.NaN,
-								)}
-								lineColor={state?.lineColor ?? control.colorize?.line ?? '#000000'}
-								onLineColorChange={(hex) =>
-									images.update(slot.id, { lineColor: hex })
+								pinned={slot.imageConfig.mode === 'pinned'}
+								contracts={contracts}
+								value={state}
+								onFeatureChange={(controlId, next) =>
+									images.updateFeature(slot.id, controlId, next)
 								}
-								onGenerated={(image) => images.update(slot.id, { image })}
+								onProfileChange={(profileId) =>
+									images.selectProfile(slot.id, profileId)
+								}
+								onPromptChange={(prompt) => images.update(slot.id, { prompt })}
+								onGenerate={() => images.generate(slot.id)}
 							/>
 						</Controller.Group>
 						{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 별도 섹션이다.
 						    생성 전에는 닫힌 채 잠긴다 — compose가 배정된 이미지에만 transform을 적용해서다. */}
-						{control.transform.enabled && (
+						{slot.transform.enabled && (
 							<Controller.Group
 								title={`${sectionTitle} Transform`}
 								collapsible
@@ -208,11 +214,11 @@ export function TemplateSidebar() {
 									value={state?.transform ?? IMAGE_TRANSFORM_DEFAULT}
 									// compose는 배정된 이미지에만 transform을 적용한다 — 생성 전에는 비활성.
 									disabled={!state?.image}
-									limits={control.transform.limits}
+									limits={slot.transform.limits}
 									// 패드는 대상 슬롯 박스와 같은 비율로 그려진다(디자인 Wide/Portrait/Square).
 									aspectRatio={
-										control.box.width && control.box.height
-											? control.box.width / control.box.height
+										slot.box.width && slot.box.height
+											? slot.box.width / slot.box.height
 											: undefined
 									}
 									onChange={(transform) => images.update(slot.id, { transform })}
@@ -222,18 +228,23 @@ export function TemplateSidebar() {
 					</div>
 				)
 			})}
-			{backgroundSlot && (
+			{backgroundSlot && backgroundTypeControl?.kind === 'select' && (
 				<BackgroundSection
-					allowedTypes={backgroundSlot.control.allowedTypes}
+					typeDefinition={backgroundTypeControl}
 					canvasAspectRatio={
 						canvas.width && canvas.height ? canvas.width / canvas.height : undefined
 					}
-					// 생성 비율은 조작 대상(캔버스)에서 파생한다 — 이미지 슬롯이 박스에서 파생하는 것과 같다.
-					aspectRatio={nearestImageAspectRatio(canvas.width, canvas.height)}
-					profiles={images.profiles}
-					profilesFailed={images.profilesFailed}
+					imageContracts={background.contracts}
+					graphicConfigs={background.graphicConfigs}
+					graphicBindings={background.graphicBindings}
 					value={background.state}
 					onChange={background.update}
+					onTypeChange={background.selectType}
+					onFeatureChange={background.updateFeature}
+					onImageProfileChange={background.selectImageProfile}
+					onGraphicConfigChange={background.selectGraphicConfig}
+					onGraphicChange={background.updateGraphic}
+					onGenerate={background.generate}
 				/>
 			)}
 			{textSlots.length === 0 && imageSlots.length === 0 && (

@@ -20,6 +20,10 @@ const IMAGE_GENERATION_ERROR_TABLE = {
 		message: 'Image generation is unavailable.',
 	},
 	ImageProfileNotFoundError: { status: 404, message: 'Image profile not found.' },
+	InvalidImageControllerInputError: {
+		status: 400,
+		message: '이미지 프로파일이 허용하지 않는 생성 옵션입니다.',
+	},
 	InvalidSeedImageError: { status: 400, message: 'Invalid seed image.' },
 	UnsupportedImageOutputSizeError: {
 		status: 400,

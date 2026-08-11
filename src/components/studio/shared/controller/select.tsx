@@ -7,11 +7,12 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
+import type { ControllerOption } from '@/features/studio-controller/controller-definition'
 import { ROW_SELECT_TRIGGER } from './classes'
 import { useRowControl } from './row'
 
 type ControllerSelectProps = {
-	options: readonly { value: string; label: string }[]
+	options: readonly ControllerOption[]
 	value?: string
 	onChange?: (value: string) => void
 	placeholder?: string

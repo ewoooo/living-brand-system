@@ -39,6 +39,8 @@ import * as migration_20260807_012350_dodont_widget_unify from './20260807_01235
 import * as migration_20260807_020833_hd_color_palette_layout from './20260807_020833_hd_color_palette_layout';
 import * as migration_20260807_030110_logo_bg_picker_widget from './20260807_030110_logo_bg_picker_widget';
 import * as migration_20260811_021425_image_profile_studio_fields from './20260811_021425_image_profile_studio_fields';
+import * as migration_20260811_070255_studio_controller_config from './20260811_070255_studio_controller_config';
+import * as migration_20260811_075822_image_profile_features from './20260811_075822_image_profile_features';
 
 export const migrations = [
   {
@@ -244,6 +246,16 @@ export const migrations = [
   {
     up: migration_20260811_021425_image_profile_studio_fields.up,
     down: migration_20260811_021425_image_profile_studio_fields.down,
-    name: '20260811_021425_image_profile_studio_fields'
+    name: '20260811_021425_image_profile_studio_fields',
+  },
+  {
+    up: migration_20260811_070255_studio_controller_config.up,
+    down: migration_20260811_070255_studio_controller_config.down,
+    name: '20260811_070255_studio_controller_config',
+  },
+  {
+    up: migration_20260811_075822_image_profile_features.up,
+    down: migration_20260811_075822_image_profile_features.down,
+    name: '20260811_075822_image_profile_features'
   },
 ];

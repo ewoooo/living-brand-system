@@ -141,6 +141,16 @@ describe('Controller.Field', () => {
 		expect(screen.getByText('190/250')).toBeInTheDocument()
 		expect(screen.getByLabelText('Prompt')).toBeInTheDocument()
 	})
+
+	it('disabled를 안의 입력까지 전달한다', () => {
+		render(
+			<Controller.Field label="Prompt" disabled data-testid="field">
+				<Controller.Textarea />
+			</Controller.Field>,
+		)
+		expect(screen.getByTestId('field')).toHaveAttribute('aria-disabled', 'true')
+		expect(screen.getByLabelText('Prompt')).toBeDisabled()
+	})
 })
 
 describe('Controller value controls', () => {

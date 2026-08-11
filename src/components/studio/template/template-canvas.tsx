@@ -12,7 +12,7 @@ const PREVIEW_WIDTH = 480
  */
 export function TemplateCanvas() {
 	const { config, canvas } = useTemplateStudio()
-	const { width, height } = config.exportOption.canvas
+	const { width, height } = config.template.exportOption.canvas
 	const scale = Math.min(1, PREVIEW_WIDTH / width)
 
 	return (
