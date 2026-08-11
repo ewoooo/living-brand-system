@@ -191,7 +191,9 @@ describe('BackgroundSection', () => {
 
 		await selectBackgroundType(user, 'Image')
 		// Preset(브랜드 이미지 목록)과 배경 transform은 계속 잠긴다.
-		expect(screen.getByRole('button', { name: 'Browse' })).toBeDisabled()
+		const browse = screen.getByRole('button', { name: '브랜드 이미지 선택' })
+		expect(browse).toHaveTextContent('Browse')
+		expect(browse).toBeDisabled()
 		expect(screen.getByRole('button', { name: 'Image Transform' })).toBeDisabled()
 		expect(screen.queryByRole('slider', { name: '이미지 위치' })).toBeNull()
 

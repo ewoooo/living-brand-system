@@ -1,8 +1,7 @@
 'use client'
 
 import { Copy, Crop, SquareOutline } from '@carbon/icons-react'
-import * as React from 'react'
-import { AssetPicker } from '@/components/studio/shared/asset-picker'
+import type * as React from 'react'
 import { Controller } from '@/components/studio/shared/controller'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
@@ -22,11 +21,10 @@ export function ImageSidebar() {
 		useImageStudio()
 	const { batch, ratio, resolution } = config.generateOptions
 	const promptEmpty = !prompt.value.trim()
-	// 자산 피커의 열림은 편집 세션이 아니라 이 화면의 표현 상태다 — Provider에 넣지 않는다.
-	const [pickerOpen, setPickerOpen] = React.useState(false)
 
 	return (
-		<AssetPicker.Root open={pickerOpen} onOpenChange={setPickerOpen}>
+		// 자산 피커의 열림은 편집 세션이 아니라 이 화면의 표현 상태다 — 킷이 소유한다(Provider에 넣지 않는다).
+		<Controller.Picker.Root>
 			<Controller.Panel
 				footer={
 					<>
@@ -86,26 +84,22 @@ export function ImageSidebar() {
 					</>
 				}
 			>
-				<div
-					data-slot="image-profile-card"
-					className="flex h-16 shrink-0 items-center justify-between gap-3 rounded-md bg-foreground p-4 text-background"
+				{/* 교체는 컨트롤러 왼쪽에 뜨는 자산 피커가 받는다 — 세션을 유지하는
+				    교체 동작은 컨텍스트의 profiles.select가 소유한다. */}
+				<Controller.Browser
+					title={config.name}
+					buttonLabel="Change"
+					aria-label="프로파일 변경"
+					tabs={['Image Profiles']}
+					// 교체 후보가 자기 자신뿐이면 고를 것이 없다 — 카드만 남기고 그 사실을 적는다.
+					empty={
+						profiles.options.length <= 1
+							? '교체할 다른 이미지 프로파일이 없습니다.'
+							: undefined
+					}
 				>
-					<Typography as="p" size="base" weight="medium" className="truncate">
-						{config.name}
-					</Typography>
-					{/* 교체는 컨트롤러 왼쪽에 뜨는 자산 피커가 받는다 — 세션을 유지하는
-					    교체 동작은 컨텍스트의 profiles.select가 소유한다. */}
-					<AssetPicker.Trigger asChild>
-						<Button
-							variant="muted"
-							size="sm"
-							aria-label="프로파일 변경"
-							className="h-auto shrink-0 rounded-lg px-2.5 py-1 text-xs"
-						>
-							Change
-						</Button>
-					</AssetPicker.Trigger>
-				</div>
+					<ImageProfilePicker />
+				</Controller.Browser>
 
 				<Controller.Section title="Image">
 					<Controller.Field
@@ -170,18 +164,7 @@ export function ImageSidebar() {
 					</Controller.Section>
 				)}
 			</Controller.Panel>
-			<AssetPicker.Panel
-				tabs={['Image Profiles']}
-				// 교체 후보가 자기 자신뿐이면 고를 것이 없다 — 카드만 남기고 그 사실을 적는다.
-				empty={
-					profiles.options.length <= 1
-						? '교체할 다른 이미지 프로파일이 없습니다.'
-						: undefined
-				}
-			>
-				<ImageProfilePicker onPicked={() => setPickerOpen(false)} />
-			</AssetPicker.Panel>
-		</AssetPicker.Root>
+		</Controller.Picker.Root>
 	)
 }
 
