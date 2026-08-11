@@ -1,13 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import type { CameraAdjustmentRequest } from '../camera-control'
 import {
 	type ImageGenerationRequest,
 	type ImageGenerationResult,
+	requestCameraAdjustment,
 	requestImageGeneration,
 } from '../services/generate-image.client'
 
 const GENERATION_ERROR_MESSAGE = '이미지 생성에 실패했어요. 잠시 후 다시 시도해 주세요.'
+const CAMERA_ERROR_MESSAGE = '시점 조정에 실패했어요. 잠시 후 다시 시도해 주세요.'
 
 export function useImageGeneration() {
 	const [result, setResult] = useState<ImageGenerationResult | null>(null)
@@ -16,23 +19,37 @@ export function useImageGeneration() {
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 
-	async function generate(input: ImageGenerationRequest) {
-		if (!input.prompt.trim() || loading) return
+	async function run(
+		count: number,
+		request: () => Promise<ImageGenerationResult>,
+		errorMessage: string,
+	) {
+		if (loading) return
 
 		setLoading(true)
 		setError(null)
 		setSelected(null)
-		setRequested(input.count)
+		setRequested(count)
 
 		try {
-			setResult(await requestImageGeneration(input))
+			setResult(await request())
 		} catch (requestError) {
 			console.error(requestError)
-			setError(GENERATION_ERROR_MESSAGE)
+			setError(errorMessage)
 		} finally {
 			setLoading(false)
 		}
 	}
 
-	return { error, generate, loading, requested, result, selected, setSelected }
+	async function generate(input: ImageGenerationRequest) {
+		if (!input.prompt.trim()) return
+		await run(input.count, () => requestImageGeneration(input), GENERATION_ERROR_MESSAGE)
+	}
+
+	/** 선택한 생성 이미지를 시드로 시점을 다시 잡는다 — 조정 결과도 같은 결과 상태로 흐른다. */
+	async function adjustCamera(input: CameraAdjustmentRequest) {
+		await run(1, () => requestCameraAdjustment(input), CAMERA_ERROR_MESSAGE)
+	}
+
+	return { adjustCamera, error, generate, loading, requested, result, selected, setSelected }
 }
