@@ -19,8 +19,8 @@ describe('collectGuidelineCheckSources', () => {
 				{
 					id: 'logo-block',
 					blockName: 'Logo examples',
-					blockType: 'mediaShowcase',
-					images: [{ image }],
+					blockType: 'contentColumns',
+					columns: [{ image }],
 					rules: [{ id: 2, key: 'logo.block', title: 'Block Rule', checker: 1 }],
 				},
 			],
@@ -35,9 +35,14 @@ describe('collectGuidelineCheckSources', () => {
 		expect(sources.map(({ blockName }) => blockName)).toEqual([null, 'Logo examples'])
 		expect(sources[0]?.evidence).toEqual({
 			type: 'document',
-			blocks: [{ type: 'mediaShowcase' }],
+			blocks: [
+				{ type: 'contentColumns', columns: [{ heading: undefined, body: undefined }] },
+			],
 		})
-		expect(sources[1]?.evidence).toEqual({ type: 'mediaShowcase' })
+		expect(sources[1]?.evidence).toEqual({
+			type: 'contentColumns',
+			columns: [{ heading: undefined, body: undefined }],
+		})
 		expect(sources[1]?.referenceAssets).toEqual([{ asset: image, role: 'context' }])
 	})
 
@@ -68,13 +73,8 @@ describe('collectGuidelineCheckSources', () => {
 			blocks: [
 				{
 					id: 'incorrect-usage',
-					blockType: 'doDont',
-					groups: [
-						{
-							kind: 'dont',
-							examples: [{ image }, { image }],
-						},
-					],
+					blockType: 'contentColumns',
+					columns: [{ image }, { image }],
 					rules: [
 						{
 							id: 3,
@@ -89,6 +89,6 @@ describe('collectGuidelineCheckSources', () => {
 
 		const sources = collectGuidelineCheckSources(page)
 
-		expect(sources[0]?.referenceAssets).toEqual([{ asset: image, role: 'negative' }])
+		expect(sources[0]?.referenceAssets).toEqual([{ asset: image, role: 'context' }])
 	})
 })

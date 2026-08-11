@@ -1,37 +1,20 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import type { ReactNode } from 'react'
-import { CarouselWidget } from '@/features/guideline/widgets/carousel/component'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
-import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/component'
-import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/component'
-import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/component'
-import { ConceptIntroWidget } from '@/features/guideline/widgets/concept-intro/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
-import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/component'
 import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
-import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
-import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
-import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
 import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
 import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
-import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/component'
-import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/component'
 import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/component'
-import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/component'
-import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/component'
-import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/component'
-import { SeparatedLogoApplicationWidget } from '@/features/guideline/widgets/separated-logo-application/component'
-import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/component'
 import { TypeHierarchyWidget } from '@/features/guideline/widgets/type-hierarchy/component'
 import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/component'
-import { TypeScaleWidget } from '@/features/guideline/widgets/type-scale/component'
 import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/component'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/component'
 import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/component'
@@ -80,26 +63,17 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 		{ name: 'ci-lockup', node: <CiLockupWidget /> },
 		{ name: 'hd-color-palette (균일)', node: <HdColorPaletteWidget layout="uniform" /> },
 		{ name: 'hd-color-palette (위계)', node: <HdColorPaletteWidget layout="ranked" /> },
-		{ name: 'color-palette', node: <ColorPaletteWidget /> },
-		{ name: 'color-pairing', node: <ColorPairingWidget /> },
-		{ name: 'color-pairing-recommendation', node: <ColorPairingRecommendationWidget /> },
-		{ name: 'icon-grid', node: <IconGridWidget /> },
-		{ name: 'glyph-grid', node: <GlyphGridWidget /> },
 		{ name: 'type-specimen', node: <TypeSpecimenWidget /> },
-		{ name: 'type-scale', node: <TypeScaleWidget /> },
 		{ name: 'type-scramble', node: <TypeScrambleWidget /> },
 		{ name: 'type-weight', node: <TypeWeightWidget /> },
 		{ name: 'type-hierarchy', node: <TypeHierarchyWidget /> },
 		{ name: 'type-language (단일)', node: <TypeLanguageWidget layout="single" /> },
 		{ name: 'type-language (비교)', node: <TypeLanguageWidget layout="compare" /> },
 
-		{ name: 'logo-viewer', node: <LogoViewerWidget /> },
-		{ name: 'logo-group-viewer', node: <LogoGroupViewerWidget /> },
 		{ name: 'logo-display', node: <LogoDisplayWidget logo={koLogo} /> },
 		{ name: 'logo-color-variant', node: <LogoColorVariantWidget logo={koLogo} /> },
 		{ name: 'logo-on-background', node: <LogoOnBackgroundWidget /> },
 		{ name: 'logo-bg-picker', node: <LogoBgPickerWidget group={bgGroup} /> },
-		{ name: 'stem-clear-space', node: <StemClearSpaceWidget /> },
 		{
 			name: 'clearspace-overlay',
 			node: (
@@ -117,7 +91,6 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 				/>
 			),
 		},
-		{ name: 'incorrect-usage', node: <IncorrectUsageWidget /> },
 		{
 			// 이미지 예시(제목 없음)와 컬러 프리셋 예시(순번 제목)를 둘 다 걸어 두 경로를 함께 본다.
 			name: 'do-dont (이미지 예시)',
@@ -223,16 +196,9 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 				/>
 			),
 		},
-		{ name: 'carousel', node: <CarouselWidget /> },
-		{ name: 'image-grid', node: <ImageGridWidget /> },
-		{ name: 'media-showcase', node: <MediaShowcaseWidget /> },
 		{ name: 'layout-grid', node: <LayoutGridWidget /> },
 		{ name: 'layout-grid-controls', node: <LayoutGridControlsWidget /> },
 		{ name: 'layout-grid-overlay', node: <LayoutGridOverlayWidget /> },
-		{ name: 'section-divider', node: <SectionDividerWidget /> },
-		{ name: 'concept-intro', node: <ConceptIntroWidget logo={koLogo} /> },
-		{ name: 'logo-grid-spec', node: <LogoGridSpecWidget /> },
-		{ name: 'separated-logo-application', node: <SeparatedLogoApplicationWidget /> },
 	]
 }
 

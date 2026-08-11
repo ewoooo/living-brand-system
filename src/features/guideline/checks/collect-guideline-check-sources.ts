@@ -72,30 +72,6 @@ function collectApplicationImages(document: GuidelineCheckDocument): Map<number,
 			case 'contentColumns':
 				values.push(...(block.columns ?? []).map((column) => column.image))
 				break
-			case 'carousel':
-				values.push(...(block.slides ?? []).map((slide) => slide.image))
-				break
-			case 'mediaShowcase':
-				values.push(...(block.images ?? []).map((item) => item.image))
-				break
-			case 'doDont':
-				values.push(
-					...(block.groups ?? []).flatMap((group) =>
-						(group.examples ?? []).map((example) => example.image),
-					),
-				)
-				break
-			case 'logoGroupViewer':
-				// projectLogoGroupViewer가 로고/®/클리어스페이스 이미지를 referenceAsset으로 내보내므로
-				// AI 검수에 도달하도록 여기서 application-images를 Map에 넣는다.
-				values.push(
-					...(block.logos ?? []).flatMap((row) => [
-						row.logo,
-						row.registeredMark,
-						row.clearSpaceGuide,
-					]),
-				)
-				break
 			case 'block':
 				// 컨테이너 블록의 자식 위젯이 가진 이미지를 id→이미지 조회 맵에 넣는다.
 				//
