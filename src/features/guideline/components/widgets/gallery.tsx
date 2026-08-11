@@ -6,6 +6,7 @@ import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
 import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
+import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
 import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
@@ -13,6 +14,7 @@ import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
 import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/component'
+import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/component'
 import { TypeHierarchyWidget } from '@/features/guideline/widgets/type-hierarchy/component'
 import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/component'
 import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/component'
@@ -61,6 +63,8 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 
 	return [
 		{ name: 'ci-lockup', node: <CiLockupWidget /> },
+		{ name: 'icon-grid', node: <IconGridWidget /> },
+		{ name: 'stem-clear-space', node: <StemClearSpaceWidget /> },
 		{ name: 'hd-color-palette (균일)', node: <HdColorPaletteWidget layout="uniform" /> },
 		{ name: 'hd-color-palette (위계)', node: <HdColorPaletteWidget layout="ranked" /> },
 		{ name: 'type-specimen', node: <TypeSpecimenWidget /> },

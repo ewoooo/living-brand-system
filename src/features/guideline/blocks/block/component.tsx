@@ -6,6 +6,7 @@ import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
 import { HAIRLINE_GRID } from '@/features/guideline/widgets/hairline'
 import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
+import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
 import { LayoutGridScope } from '@/features/guideline/widgets/layout-grid/store'
 import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
@@ -14,6 +15,7 @@ import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
 import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/component'
+import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/component'
 import { TypeHierarchyWidget } from '@/features/guideline/widgets/type-hierarchy/component'
 import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/component'
 import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/component'
@@ -51,6 +53,10 @@ function renderWidget(child: Child): ReactNode {
 					verticalMinHeightPx={child.verticalMinHeightPx}
 				/>
 			)
+		case 'iconGridWidget':
+			return <IconGridWidget />
+		case 'stemClearSpaceWidget':
+			return <StemClearSpaceWidget />
 		case 'hdColorPaletteWidget':
 			// 고른 그룹을 고른 순서대로 한 행씩, 비우면 전체를 그린다.
 			// layout은 그룹 간 우열 유무를 말한다(균일 정사각형 / 순위별 높이).

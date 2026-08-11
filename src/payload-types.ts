@@ -570,6 +570,8 @@ export interface LayoutBlock {
         | ClearspaceViewerWidget
         | DoDontWidget
         | HdColorPaletteWidget
+        | IconGridWidget
+        | StemClearSpaceWidget
         | LayoutGridWidget
         | LayoutGridControlsWidget
         | LayoutGridOverlayWidget
@@ -784,6 +786,24 @@ export interface BrandColorGroup {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "IconGridWidget".
+ */
+export interface IconGridWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'iconGridWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StemClearSpaceWidget".
+ */
+export interface StemClearSpaceWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'stemClearSpaceWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2073,6 +2093,8 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
         doDontWidget?: T | DoDontWidgetSelect<T>;
         hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
+        iconGridWidget?: T | IconGridWidgetSelect<T>;
+        stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
         layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
         layoutGridControlsWidget?: T | LayoutGridControlsWidgetSelect<T>;
         layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
@@ -2152,6 +2174,22 @@ export interface DoDontWidgetSelect<T extends boolean = true> {
 export interface HdColorPaletteWidgetSelect<T extends boolean = true> {
   groups?: T;
   layout?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "IconGridWidget_select".
+ */
+export interface IconGridWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StemClearSpaceWidget_select".
+ */
+export interface StemClearSpaceWidgetSelect<T extends boolean = true> {
   id?: T;
   blockName?: T;
 }

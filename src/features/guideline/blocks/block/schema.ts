@@ -4,6 +4,7 @@ import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/schema'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/schema'
 import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/schema'
+import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/schema'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/schema'
 import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/schema'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/schema'
@@ -11,6 +12,7 @@ import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/schema'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/schema'
 import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/schema'
+import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/schema'
 import { TypeHierarchyWidget } from '@/features/guideline/widgets/type-hierarchy/schema'
 import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/schema'
 import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/schema'
@@ -122,6 +124,8 @@ export const LayoutBlock: Block = {
 				ClearspaceViewerWidget,
 				DoDontWidget,
 				HdColorPaletteWidget,
+				IconGridWidget,
+				StemClearSpaceWidget,
 				LayoutGridWidget,
 				LayoutGridControlsWidget,
 				LayoutGridOverlayWidget,

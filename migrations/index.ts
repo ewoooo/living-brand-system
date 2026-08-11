@@ -48,6 +48,7 @@ import * as migration_20260807_084125_scramble_fixed_height from './20260807_084
 import * as migration_20260807_084746_block_gap from './20260807_084746_block_gap';
 import * as migration_20260810_100000_rename_dodont_widget_enums from './20260810_100000_rename_dodont_widget_enums';
 import * as migration_20260811_015839_remove_legacy_blocks from './20260811_015839_remove_legacy_blocks';
+import * as migration_20260811_022425_restore_icon_grid_stem_widgets from './20260811_022425_restore_icon_grid_stem_widgets';
 
 export const migrations = [
   {
@@ -298,6 +299,11 @@ export const migrations = [
   {
     up: migration_20260811_015839_remove_legacy_blocks.up,
     down: migration_20260811_015839_remove_legacy_blocks.down,
-    name: '20260811_015839_remove_legacy_blocks'
+    name: '20260811_015839_remove_legacy_blocks',
+  },
+  {
+    up: migration_20260811_022425_restore_icon_grid_stem_widgets.up,
+    down: migration_20260811_022425_restore_icon_grid_stem_widgets.down,
+    name: '20260811_022425_restore_icon_grid_stem_widgets'
   },
 ];
