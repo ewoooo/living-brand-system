@@ -1,6 +1,92 @@
 {
 	"documents": [
 		{
+			"slug": "typography-typeface",
+			"title": "Overview",
+			"label": null,
+			"parent": "typography",
+			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "HD체는 포워드마크와 연계된 유니크한 사선 포인트와 기울기 등 HD현대의 역동적인 이미지를 표현한 서체입니다. HD현대의 심볼과 일관된 이미지를 전달하며 온, 오프라인 매체에서 주목도 높게 활용할 수 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": "ltr"
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"width": "full",
+					"arrangement": "grid",
+					"columns": 1,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"children": [
+						{
+							"text": "도전을 멈추지 않는 empowering a sustainble future\n1234567890#→뜨거운 열정과 원칙을 지키는 HD HYUNDAI\n<강한 신념으로>지속가능한 FUTURE 열어가겠습니다. @HD현대\n함께 나아갈 #인재를 찾습니다! We Bring The [future]",
+							"fontSize": 48,
+							"panelHeight": 552,
+							"color": {
+								"color": "#73D75A"
+							},
+							"background": {
+								"color": "#00280A"
+							},
+							"weight": "bold",
+							"blockType": "typeScrambleWidget"
+						}
+					],
+					"rules": []
+				}
+			]
+		},
+		{
 			"slug": "color-overview",
 			"title": "개요",
 			"label": null,
@@ -232,6 +318,115 @@
 			"headerImage": null,
 			"rules": [],
 			"blocks": []
+		},
+		{
+			"slug": "typography-overview",
+			"title": "개요",
+			"label": null,
+			"parent": "typography",
+			"order": 1,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "HD체는 총 3개의 굵기로 구성되어 있으며, 국문과 영문을 함께 씁니다. 굵기와 언어라는 두 축이 조판의 인상을 결정합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "국·영문 병용을 위한 마이크로 타이포그래피 규정은 다음과 같습니다. 국·영문 간 균일한 회색도를 유지할 수 있도록 정해진 세팅 값을 준수하여 사용해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": "ltr"
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"width": "padded",
+					"arrangement": "grid",
+					"columns": 3,
+					"gap": "none",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"children": [
+						{
+							"layout": "specimen",
+							"language": "ko",
+							"initialWeight": "bold",
+							"blockType": "typeWeightWidget"
+						},
+						{
+							"layout": "specimen",
+							"language": "ko",
+							"initialWeight": "medium",
+							"blockType": "typeWeightWidget"
+						},
+						{
+							"layout": "specimen",
+							"language": "ko",
+							"initialWeight": "light",
+							"blockType": "typeWeightWidget"
+						},
+						{
+							"layout": "specimen",
+							"language": "en",
+							"initialWeight": "bold",
+							"blockType": "typeWeightWidget"
+						},
+						{
+							"layout": "specimen",
+							"language": "en",
+							"initialWeight": "medium",
+							"blockType": "typeWeightWidget"
+						},
+						{
+							"layout": "specimen",
+							"language": "en",
+							"initialWeight": "light",
+							"blockType": "typeWeightWidget"
+						}
+					],
+					"rules": []
+				}
+			]
 		},
 		{
 			"slug": "color-background",
@@ -601,6 +796,105 @@
 								"file": "ko-horizontal-default.svg"
 							},
 							"blockType": "logoColorVariantWidget"
+						}
+					],
+					"rules": []
+				}
+			]
+		},
+		{
+			"slug": "typography-weight",
+			"title": "굵기",
+			"label": null,
+			"parent": "typography",
+			"order": 2,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "총 3개의 굵기로 구성되어 있으며, 상황에 따라 적절한 굵기를 선택해 사용할 수 있습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": "ltr"
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"width": "padded",
+					"arrangement": "grid",
+					"columns": 1,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"children": [
+						{
+							"layout": "slider",
+							"language": "ko",
+							"initialWeight": "bold",
+							"blockType": "typeWeightWidget"
 						}
 					],
 					"rules": []
@@ -985,6 +1279,83 @@
 			"blocks": []
 		},
 		{
+			"slug": "typography-paragraph",
+			"title": "문단 구성",
+			"label": null,
+			"parent": "typography",
+			"order": 3,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "한 문단은 Head Copy, Sub Copy, Body Copy 세 단으로 구성합니다. 각 단은 정해진 굵기와 크기, 행간을 따릅니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "국·영문 병용을 위한 마이크로 타이포그래피 규정은 다음과 같습니다. 국·영문 간 균일한 회색도를 유지할 수 있도록 정해진 세팅 값을 준수하여 사용해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": "ltr"
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"width": "padded",
+					"arrangement": "grid",
+					"columns": 1,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"children": [
+						{
+							"language": "ko",
+							"blockType": "typeHierarchyWidget"
+						}
+					],
+					"rules": []
+				}
+			]
+		},
+		{
 			"slug": "color-incorrect-usage",
 			"title": "사용 금지",
 			"label": null,
@@ -1356,6 +1727,84 @@
 			"blocks": []
 		},
 		{
+			"slug": "typography-language",
+			"title": "언어별 조판",
+			"label": null,
+			"parent": "typography",
+			"order": 4,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "국·영문 병용을 위한 마이크로 타이포그래피 규정은 다음과 같습니다. 국·영문 간 균일한 회색도를 유지할 수 있도록 정해진 세팅 값을 준수하여 사용해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "같은 내용이라도 국문과 영문은 글자 밀도가 달라, 언어마다 행간 규정이 다릅니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": "ltr"
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"width": "padded",
+					"arrangement": "grid",
+					"columns": 1,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"children": [
+						{
+							"initialLanguage": "ko",
+							"layout": "compare",
+							"blockType": "typeLanguageWidget"
+						}
+					],
+					"rules": []
+				}
+			]
+		},
+		{
 			"slug": "layout-c-two",
 			"title": "Layout Type 3",
 			"label": null,
@@ -1657,6 +2106,157 @@
 									},
 									"kind": "dont",
 									"caption": "CI의 가시성을 해치는 배경 이미지와 함께 사용할 수 없습니다."
+								}
+							],
+							"blockType": "doDontWidget"
+						}
+					],
+					"rules": []
+				}
+			]
+		},
+		{
+			"slug": "typography-incorrect-usage",
+			"title": "사용 금지",
+			"label": null,
+			"parent": "typography",
+			"order": 5,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "사용 금지 규정은 브랜드 아이덴티티를 더욱더 철저하게 관리하기 위한 규정입니다. 서체의 잘못된 사용은 브랜드 아이덴티티의 일관성을 저해하므로 주의를 필요로 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "본 가이드라인에 수록된 오남용 예시를 참고할 것을 권장하며, 브랜드의 이미지를 손상하거나 혼란을 유발하여 일관성을 저해하지 않도록 유념하여 디자인합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": "ltr",
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": "ltr"
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"width": "padded",
+					"arrangement": "grid",
+					"columns": 1,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"children": [
+						{
+							"imageRatio": "16:9",
+							"columns": "3",
+							"itemLabel": "INCORRECT USAGE",
+							"examples": [
+								{
+									"kind": "dont",
+									"preset": "tight-tracking",
+									"caption": "글자 사이 간격을 지나치게 좁힐 수 없습니다."
+								},
+								{
+									"kind": "dont",
+									"preset": "loose-tracking",
+									"caption": "글자 사이 간격을 지나치게 넓힐 수 없습니다."
+								},
+								{
+									"kind": "dont",
+									"preset": "wrong-typeface",
+									"caption": "지정된 서체 이외의 다른 서체를 사용할 수 없습니다."
+								},
+								{
+									"kind": "dont",
+									"preset": "mixed-size",
+									"caption": "한 문장 안에서 각기 다른 글자 크기를 적용할 수 없습니다."
+								},
+								{
+									"kind": "dont",
+									"preset": "distorted",
+									"caption": "글자의 형태를 변형할 수 없습니다."
+								},
+								{
+									"kind": "dont",
+									"preset": "slanted",
+									"caption": "글자를 기울여 사용하실 수 없습니다."
 								}
 							],
 							"blockType": "doDontWidget"
