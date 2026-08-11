@@ -27,6 +27,9 @@ export const TypeLanguageWidget: Block = {
 			enumName: 'enum_tlg_language',
 			options: LANGUAGES.map((language) => ({ label: language.label, value: language.key })),
 			admin: {
+				// 나란히 배치에서는 세 언어가 다 보여 전환 탭이 없다 — 그 배치에서 이 값은 화면에
+				// 아무 영향이 없으므로 칸을 감춘다. 남겨 두면 저작자가 고른 언어가 조용히 무시된다.
+				condition: (_, siblingData) => siblingData?.layout !== 'compare',
 				description: '처음 보여줄 언어입니다. 독자가 화면에서 바꿀 수 있습니다.',
 			},
 		},
