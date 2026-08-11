@@ -10,8 +10,7 @@ import { PRESET_OPTIONS } from './presets'
 // 둘 다 없으면 그 예시는 캡션만 남는다.
 //
 // 프레임·배경·제목·rules는 Block 소관이라 위젯에 두지 않는다(rules는 Block에만 = provenance 불변식).
-// legacy `doDont` 블록은 essenherb(Design Elements)가 계속 쓰므로 남겨 둔다 — 이 위젯이 그걸 대체하는 건
-// HD현대(Brand Elements) 쪽뿐이다.
+// legacy `doDont` 블록은 2026-08-10에 1세대 저작 모델과 함께 삭제됐다. Do/Don't는 이 위젯 하나뿐이다.
 //
 // dbName 짧게(ddw)로 중첩 테이블명 63자 방어. enum은 전역 이름 공유라 enumName 명시.
 // 🔴 enum 이름은 위젯이 소유한다(enum_ddw_*). 처음에는 레거시 do-dont 블록의 enum을 그대로

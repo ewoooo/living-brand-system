@@ -37,7 +37,7 @@ export const Guideline: GlobalConfig = {
 			localized: true,
 			admin: {
 				description:
-					'표지와 푸터에 표시할 문서명입니다. 예: Essenherb Brand Design Guidelines 1.0',
+					'표지와 푸터에 표시할 문서명입니다. 예: HD현대 Brand Design Guidelines 1.0',
 			},
 		},
 		{

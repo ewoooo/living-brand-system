@@ -10,11 +10,17 @@ import { ClearSpaceView } from './view'
 //    비상용으로 남긴다(2026-08-10 사용자 판단). 기본값도 essenherb 로고 실측치라 HD에선 맞지 않는다.
 const DEFAULT = { stemRatio: 0.025, stemX: 0.29, multiplier: 3 }
 
+// 🔴 로고를 파일명으로 좁힌다. `sort: 'createdAt', limit: 1`로 아무거나 집으면 컬렉션 최고참이
+//    잡히는데 그게 essenherb 로고다(logo_main*.svg가 07-02자로 제일 오래됐다). 인스턴스 필드가
+//    없어 admin에서 고를 수도 없으므로, 조회 자체가 HD 로고만 보게 해야 남의 브랜드가 안 뜬다.
+const HD_LOGO_PREFIX = 'hd-horizontal-default'
+
 export async function StemClearSpaceWidget() {
 	const payload = await getPayload({ config })
 	const { docs } = await payload.find({
 		collection: 'brand-logos',
-		sort: 'createdAt',
+		where: { filename: { like: HD_LOGO_PREFIX } },
+		sort: 'filename',
 		limit: 1,
 		depth: 0,
 	})
@@ -23,6 +29,7 @@ export async function StemClearSpaceWidget() {
 		? (logo.url ?? (logo.filename ? `/api/brand-logos/file/${logo.filename}` : null))
 		: null
 
+	// HD 로고가 아직 없으면 그리지 않는다 — 아무 로고나 집어 잘못된 브랜드를 보여주지 않는다.
 	if (!src) return null
 
 	return (

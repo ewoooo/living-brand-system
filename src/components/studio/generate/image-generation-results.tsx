@@ -145,7 +145,7 @@ function downloadImage(src: string, index: number) {
 		: new URL(src, window.location.href).pathname.split('.').pop() || 'png'
 	const anchor = document.createElement('a')
 	anchor.href = src
-	anchor.download = `essenherb-image-${index + 1}.${ext}`
+	anchor.download = `hd-image-${index + 1}.${ext}`
 	document.body.appendChild(anchor)
 	anchor.click()
 	anchor.remove()
