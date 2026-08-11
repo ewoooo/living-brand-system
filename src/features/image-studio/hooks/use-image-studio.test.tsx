@@ -33,7 +33,7 @@ function config(profileId: number, batchOptions: number[]): ImageStudioConfig {
 }
 
 function Probe() {
-	const { config: current, prompt, generation, results, selectProfile } = useImageStudio()
+	const { config: current, prompt, generation, results, profiles } = useImageStudio()
 	return (
 		<div>
 			<output data-testid="state">
@@ -46,7 +46,7 @@ function Probe() {
 			<button type="button" onClick={() => generation.setBatch(4)}>
 				4장 선택
 			</button>
-			<button type="button" onClick={() => selectProfile(7)}>
+			<button type="button" onClick={() => profiles.select(7)}>
 				교체
 			</button>
 		</div>

@@ -19,7 +19,7 @@ import { useImageStudio } from '@/features/image-studio/hooks/use-image-studio'
 
 // 컨트롤러: 편집 계약(config)이 허용하는 조작만 그리고, 값은 컨텍스트에만 쓴다 — 캔버스를 모른다.
 export function ImageSidebar() {
-	const { config, profiles, selectProfile, prompt, generation, results } = useImageStudio()
+	const { config, profiles, prompt, generation, results } = useImageStudio()
 	const { batch } = config.generateOptions
 
 	return (
@@ -65,7 +65,7 @@ export function ImageSidebar() {
 							<FieldLabel htmlFor="image-profile">프로파일</FieldLabel>
 							<Select
 								value={String(config.profileId)}
-								onValueChange={(value) => selectProfile(Number(value))}
+								onValueChange={(value) => profiles.select(Number(value))}
 							>
 								<SelectTrigger id="image-profile" className="w-full">
 									<SelectValue />
@@ -73,7 +73,7 @@ export function ImageSidebar() {
 								<SelectContent>
 									<SelectGroup>
 										<SelectLabel>브랜드 제품컷 프로파일</SelectLabel>
-										{profiles.map(({ id, name }) => (
+										{profiles.options.map(({ id, name }) => (
 											<SelectItem key={id} value={String(id)}>
 												{name}
 											</SelectItem>
