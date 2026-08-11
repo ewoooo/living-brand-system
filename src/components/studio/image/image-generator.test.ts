@@ -1,8 +1,11 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PublishedImageProfileDefinition } from '@/features/generate-image/repositories/image-profile.payload.repository'
-import { deriveImageStudioConfig } from '@/features/image-studio/image-studio-config'
+import {
+	deriveImageStudioConfig,
+	type ImageStudioConfig,
+} from '@/features/image-studio/image-studio-config'
 import { ImageGenerator } from './image-generator'
 
 const RESULT = {
@@ -191,5 +194,111 @@ describe('ImageGenerator', () => {
 
 		expect(screen.getByText('발행된 이미지 프로파일이 없습니다')).toBeInTheDocument()
 		expect(screen.queryByRole('textbox', { name: 'Prompt' })).not.toBeInTheDocument()
+	})
+})
+
+describe('ImageProfilePicker', () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+		mocks.session = { result: null, selected: null }
+	})
+	afterEach(cleanup)
+
+	function openPicker(configs: ImageStudioConfig[], initialProfileId?: number) {
+		render(createElement(ImageGenerator, { configs, initialProfileId }))
+		const trigger = screen.getByRole('button', { name: '프로파일 변경' })
+		fireEvent.click(trigger)
+		return { panel: screen.getByRole('dialog', { name: 'Image Profiles' }), trigger }
+	}
+
+	it('Change로 자산 피커가 열리고 프로파일마다 카드가 있다', () => {
+		const { panel } = openPicker([config(5, '제품컷'), config(7, '그라디언트')])
+
+		expect(within(panel).getByRole('button', { name: /제품컷/ })).toBeInTheDocument()
+		expect(within(panel).getByRole('button', { name: /그라디언트/ })).toBeInTheDocument()
+	})
+
+	// 배지는 그 프로파일이 무엇을 열어주는지의 표시라 계약의 개방 필드에서만 파생한다.
+	it('배지를 계약의 개방 필드에서 파생한다', () => {
+		const { panel } = openPicker([
+			config(1, '카메라만'),
+			config(2, '색만', {
+				cameraControl: false,
+				colorAdjustment: { line: '#000dff' },
+			}),
+			config(3, '둘 다', { colorAdjustment: { line: '#000dff' } }),
+			config(4, '없음', { cameraControl: false }),
+		])
+
+		const cards = {
+			camera: within(panel).getByRole('button', { name: /카메라만/ }),
+			color: within(panel).getByRole('button', { name: /색만/ }),
+			both: within(panel).getByRole('button', { name: /둘 다/ }),
+			none: within(panel).getByRole('button', { name: /없음/ }),
+		}
+
+		expect(within(cards.camera).getByText('Camera')).toBeInTheDocument()
+		expect(within(cards.camera).queryByText('Line Control')).not.toBeInTheDocument()
+		expect(within(cards.color).getByText('Line Control')).toBeInTheDocument()
+		expect(within(cards.color).queryByText('Camera')).not.toBeInTheDocument()
+		expect(within(cards.both).getByText('Camera')).toBeInTheDocument()
+		expect(within(cards.both).getByText('Line Control')).toBeInTheDocument()
+		expect(within(cards.none).queryByText('Camera')).not.toBeInTheDocument()
+		expect(within(cards.none).queryByText('Line Control')).not.toBeInTheDocument()
+	})
+
+	it('현재 프로파일 카드를 aria-current로 알린다', () => {
+		const { panel } = openPicker([config(5, '제품컷'), config(7, '그라디언트')], 7)
+
+		expect(within(panel).getByRole('button', { name: /그라디언트/ })).toHaveAttribute(
+			'aria-current',
+			'true',
+		)
+		expect(within(panel).getByRole('button', { name: /제품컷/ })).not.toHaveAttribute(
+			'aria-current',
+		)
+	})
+
+	it('카드를 고르면 프로파일이 바뀌고 패널이 닫힌다', () => {
+		const { panel } = openPicker([
+			config(5, '제품컷'),
+			config(7, '그라디언트', { maxPromptLength: 42 }),
+		])
+
+		fireEvent.click(within(panel).getByRole('button', { name: /그라디언트/ }))
+
+		expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+		// 사이드바 헤더가 새 계약을 그린다 — 카운터 상한도 새 프로파일의 것이다.
+		expect(screen.getByText('0/42')).toBeInTheDocument()
+		fireEvent.change(screen.getByRole('textbox', { name: 'Prompt' }), {
+			target: { value: '노란 배경' },
+		})
+		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
+		expect(mocks.generate).toHaveBeenCalledWith(
+			expect.objectContaining({ profileId: 7, prompt: '노란 배경' }),
+		)
+	})
+
+	it('Esc로 닫히고 포커스가 트리거로 돌아온다', async () => {
+		const { trigger } = openPicker([config(5, '제품컷'), config(7, '그라디언트')])
+
+		fireEvent.keyDown(document, { key: 'Escape' })
+
+		expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+		// 포커스 복귀는 언마운트 직후 매크로태스크에서 일어난다.
+		await waitFor(() => expect(document.activeElement).toBe(trigger))
+	})
+
+	// 후보가 자기 자신뿐이면 고를 것이 없다 — 카드는 남기고 그 사실을 적는다.
+	it('프로파일이 하나뿐이면 카드와 함께 교체 대상이 없다고 알린다', () => {
+		const { panel } = openPicker([config(5, '제품컷')])
+
+		expect(within(panel).getByRole('button', { name: /제품컷/ })).toHaveAttribute(
+			'aria-current',
+			'true',
+		)
+		expect(
+			within(panel).getByText('교체할 다른 이미지 프로파일이 없습니다.'),
+		).toBeInTheDocument()
 	})
 })
