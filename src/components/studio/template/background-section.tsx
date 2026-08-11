@@ -151,37 +151,14 @@ export function BackgroundSection({
 						</Controller.Row>
 						<Controller.TabPanel tabKey={imageMode}>
 							{imageMode === 'preset' ? (
-								<div
-									data-slot="background-browse-card"
-									className="flex shrink-0 items-center justify-between gap-3 rounded-md bg-foreground p-4 text-background"
-								>
-									<div className="flex min-w-0 flex-col">
-										<Typography
-											as="p"
-											size="sm"
-											weight="medium"
-											className="truncate"
-										>
-											이미지를 선택하세요
-										</Typography>
-										<Typography
-											as="p"
-											size="xs"
-											className="truncate text-background/60"
-										>
-											Brand Image
-										</Typography>
-									</div>
-									<Button
-										type="button"
-										variant="muted"
-										size="sm"
-										disabled
-										className="shrink-0 rounded-lg bg-background/25 text-background text-xs hover:bg-background/35"
-									>
-										Browse
-									</Button>
-								</div>
+								// 브랜드 이미지 목록 배선이 남아 잠긴 채 그린다 — 패널 본문이 없다.
+								<Controller.Browser
+									title="이미지를 선택하세요"
+									subtitle="Brand Image"
+									buttonLabel="Browse"
+									aria-label="브랜드 이미지 선택"
+									disabled
+								/>
 							) : (
 								<>
 									<Controller.ColorRow

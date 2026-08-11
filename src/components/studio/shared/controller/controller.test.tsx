@@ -117,6 +117,55 @@ describe('Controller.Field', () => {
 	})
 })
 
+describe('Controller.Browser', () => {
+	afterEach(cleanup)
+
+	function renderBrowser(disabled = false) {
+		return render(
+			<Controller.Picker.Root>
+				<Controller.Browser
+					title="제품컷"
+					subtitle="Brand Image"
+					buttonLabel="Change"
+					aria-label="프로파일 변경"
+					tabs={['Image Profiles']}
+					disabled={disabled}
+				>
+					<div>고를 것들</div>
+				</Controller.Browser>
+			</Controller.Picker.Root>,
+		)
+	}
+
+	it('현재 값·출처·열기 버튼을 그리고, 버튼 이름은 무엇을 여는지 말한다', () => {
+		renderBrowser()
+
+		expect(screen.getByText('제품컷')).toBeInTheDocument()
+		expect(screen.getByText('Brand Image')).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: '프로파일 변경' })).toHaveTextContent('Change')
+	})
+
+	it('버튼으로 피커 패널이 열리고 본문은 소비자가 준 것이다', () => {
+		renderBrowser()
+		expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+		fireEvent.click(screen.getByRole('button', { name: '프로파일 변경' }))
+
+		const panel = screen.getByRole('dialog', { name: 'Image Profiles' })
+		expect(panel).toHaveTextContent('고를 것들')
+	})
+
+	// 배선 전 카드는 트리거 자체를 두지 않는다 — 열리는 척하는 컨트롤을 만들지 않기 위해서다.
+	it('잠긴 카드는 눌러도 패널이 열리지 않는다', () => {
+		renderBrowser(true)
+
+		const button = screen.getByRole('button', { name: '프로파일 변경' })
+		expect(button).toBeDisabled()
+		fireEvent.click(button)
+		expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+	})
+})
+
 describe('Controller.CameraControl', () => {
 	afterEach(cleanup)
 

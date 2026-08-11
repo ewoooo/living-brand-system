@@ -1,3 +1,4 @@
+import { ControllerBrowser } from './browser'
 import { ControllerCameraControl } from './camera-control'
 import { ControllerColorRow } from './color-row'
 import { ControllerField } from './field'
@@ -33,10 +34,12 @@ export const Controller = {
 	Textarea: ControllerTextarea,
 	CameraControl: ControllerCameraControl,
 	Picker: ControllerPicker,
+	Browser: ControllerBrowser,
 }
 
 // RSC에서 네임스페이스 객체의 점 접근은 client reference 제약으로 깨질 수 있다 — 개별 export가 안전판.
 export {
+	ControllerBrowser,
 	ControllerCameraControl,
 	ControllerColorRow,
 	ControllerField,

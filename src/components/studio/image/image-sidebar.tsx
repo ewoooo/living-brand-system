@@ -84,26 +84,22 @@ export function ImageSidebar() {
 					</>
 				}
 			>
-				<div
-					data-slot="image-profile-card"
-					className="flex h-16 shrink-0 items-center justify-between gap-3 rounded-md bg-foreground p-4 text-background"
+				{/* 교체는 컨트롤러 왼쪽에 뜨는 자산 피커가 받는다 — 세션을 유지하는
+				    교체 동작은 컨텍스트의 profiles.select가 소유한다. */}
+				<Controller.Browser
+					title={config.name}
+					buttonLabel="Change"
+					aria-label="프로파일 변경"
+					tabs={['Image Profiles']}
+					// 교체 후보가 자기 자신뿐이면 고를 것이 없다 — 카드만 남기고 그 사실을 적는다.
+					empty={
+						profiles.options.length <= 1
+							? '교체할 다른 이미지 프로파일이 없습니다.'
+							: undefined
+					}
 				>
-					<Typography as="p" size="base" weight="medium" className="truncate">
-						{config.name}
-					</Typography>
-					{/* 교체는 컨트롤러 왼쪽에 뜨는 자산 피커가 받는다 — 세션을 유지하는
-					    교체 동작은 컨텍스트의 profiles.select가 소유한다. */}
-					<Controller.Picker.Trigger asChild>
-						<Button
-							variant="muted"
-							size="sm"
-							aria-label="프로파일 변경"
-							className="h-auto shrink-0 rounded-lg px-2.5 py-1 text-xs"
-						>
-							Change
-						</Button>
-					</Controller.Picker.Trigger>
-				</div>
+					<ImageProfilePicker />
+				</Controller.Browser>
 
 				<Controller.Section title="Image">
 					<Controller.Field
@@ -168,17 +164,6 @@ export function ImageSidebar() {
 					</Controller.Section>
 				)}
 			</Controller.Panel>
-			<Controller.Picker.Panel
-				tabs={['Image Profiles']}
-				// 교체 후보가 자기 자신뿐이면 고를 것이 없다 — 카드만 남기고 그 사실을 적는다.
-				empty={
-					profiles.options.length <= 1
-						? '교체할 다른 이미지 프로파일이 없습니다.'
-						: undefined
-				}
-			>
-				<ImageProfilePicker />
-			</Controller.Picker.Panel>
 		</Controller.Picker.Root>
 	)
 }
