@@ -277,6 +277,76 @@ describe('generateImages', () => {
 		)
 	})
 
+	it('해상도 오버라이드는 프로파일 해상도 대신 모델 호출에 반영된다', async () => {
+		mocks.env.OPENAI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '2:3',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.normalizeImageProfilePrompt.mockResolvedValue({
+			finalPrompt: { subject: '파란 세럼병' },
+			normalizedInput: {},
+		})
+		mocks.generateBrandImages.mockResolvedValue({
+			images: ['data:image/png;base64,profile'],
+			model: 'gpt-image-2',
+			provider: 'openai',
+		})
+
+		const result = await generateImages({
+			userInput: '파란 세럼병',
+			profileId: 5,
+			user: { id: 1 },
+			count: 1,
+			imageSize: '4K',
+		})
+
+		expect(mocks.generateBrandImages).toHaveBeenCalledWith(
+			expect.objectContaining({ aspectRatio: '2:3', imageSize: '4K' }),
+		)
+		expect(result.imageSize).toBe('4K')
+		// 저장 메타데이터도 프로파일 해상도(1K)가 아니라 실제 생성 해상도를 기록해야 한다.
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
+			expect.objectContaining({
+				profile: expect.objectContaining({ imageSize: '4K' }),
+			}),
+		)
+	})
+
+	it('프로파일 모델이 지원하지 않는 해상도 오버라이드는 호출 전에 거부한다', async () => {
+		mocks.env.GEMINI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'google-nano-banana-2-lite',
+			aspectRatio: '16:9',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.normalizeImageProfilePrompt.mockResolvedValue({
+			finalPrompt: { subject: '굴착기' },
+			normalizedInput: {},
+		})
+
+		const generation = generateImages({
+			userInput: '굴착기',
+			profileId: 5,
+			user: { id: 1 },
+			count: 1,
+			imageSize: '4K',
+		})
+		await expect(generation).rejects.toBeInstanceOf(UnsupportedImageOutputSizeError)
+		await expect(generation).rejects.toThrow('does not support 4K')
+		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+		expect(mocks.storeGeneratedImages).not.toHaveBeenCalled()
+	})
+
 	it('Nano Banana 프로파일은 Google 키와 16:9 계약을 사용한다', async () => {
 		mocks.env.GEMINI_API_KEY = 'key'
 		mocks.findPublishedImageProfile.mockResolvedValue({
@@ -605,6 +675,21 @@ describe('image generation plan resolvers', () => {
 				{ prompt: '{"subject":"굴착기"}', count: 1, aspectRatio: '16:9' },
 			),
 		).toMatchObject({ aspectRatio: '16:9', imageSize: '1K' })
+	})
+
+	it('해상도 오버라이드가 있으면 프로파일 해상도 대신 플랜에 쓴다', () => {
+		expect(
+			planImageGenerationFromProfile(
+				{
+					aspectRatio: '2:3',
+					id: 5,
+					imageModelPreset: 'openai-gpt-image-2',
+					imageSize: '1K',
+					name: 'Technical Illustration',
+				},
+				{ prompt: '{"subject":"굴착기"}', count: 1, imageSize: '2K' },
+			),
+		).toMatchObject({ aspectRatio: '2:3', imageSize: '2K' })
 	})
 
 	it('명시 설정은 프롬프트를 trim해 프로파일 없는 플랜으로 해석한다', () => {
