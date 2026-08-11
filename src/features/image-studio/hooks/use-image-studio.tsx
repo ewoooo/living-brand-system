@@ -6,12 +6,15 @@ import type { ImageAspectRatio, ImageOutputSize } from '@/features/generate-imag
 import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
 import { downloadImage } from '@/features/image-studio/download-image'
 import type { ImageColorAdjustment } from '@/features/image-studio/image-colorize'
-import type { ImageStudioConfig } from '@/features/image-studio/image-studio-config'
+import type {
+	ImageStudioConfig,
+	ImageStudioProfileOption,
+} from '@/features/image-studio/image-studio-config'
 
 type ImageStudioValue = {
 	profiles: {
 		/** 프로파일 교체 후보 — 계약은 언제나 이 중 하나다. */
-		options: { id: number; name: string }[]
+		options: ImageStudioProfileOption[]
 		select: (profileId: number) => void
 	}
 	/** 현재 프로파일의 편집 계약 — 컨트롤러는 이 객체만 보고 컨트롤을 그린다. */
@@ -95,8 +98,15 @@ export function ImageStudioProvider({
 		useImageGeneration()
 
 	const config = configs.find((item) => item.profileId === profileId) ?? initial
+	// 카드가 배지를 계약에서 파생할 수 있게 개방 필드까지 실어 보낸다 — 원시 프로파일을 다시 조회하지 않는다.
 	const options = useMemo(
-		() => configs.map(({ profileId: id, name }) => ({ id, name })),
+		() =>
+			configs.map(({ colorAdjustment, name, profileId: id, supportsCameraControl }) => ({
+				colorAdjustment,
+				name,
+				profileId: id,
+				supportsCameraControl,
+			})),
 		[configs],
 	)
 

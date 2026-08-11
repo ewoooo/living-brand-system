@@ -1,13 +1,15 @@
 'use client'
 
 import { Copy, Crop, SquareOutline } from '@carbon/icons-react'
-import type * as React from 'react'
+import * as React from 'react'
+import { AssetPicker } from '@/components/studio/shared/asset-picker'
 import { Controller } from '@/components/studio/shared/controller'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/generate-image/image-size'
 import { useImageStudio } from '@/features/image-studio/hooks/use-image-studio'
 import { ImageCameraControl } from './image-camera-control'
+import { ImageProfilePicker } from './image-profile-picker'
 
 /**
  * 이미지 스튜디오의 사이드바(컨트롤러 패널) — 캔버스를 모른다.
@@ -16,152 +18,170 @@ import { ImageCameraControl } from './image-camera-control'
  * 디자인 SSOT: Figma HD_LBS_UI section 16:9137 "Image Usecase".
  */
 export function ImageSidebar() {
-	const { config, prompt, generation, camera, color, results, download } = useImageStudio()
+	const { config, profiles, prompt, generation, camera, color, results, download } =
+		useImageStudio()
 	const { batch, ratio, resolution } = config.generateOptions
 	const promptEmpty = !prompt.value.trim()
+	// 자산 피커의 열림은 편집 세션이 아니라 이 화면의 표현 상태다 — Provider에 넣지 않는다.
+	const [pickerOpen, setPickerOpen] = React.useState(false)
 
 	return (
-		<Controller.Panel
-			footer={
-				<>
-					<div className="flex flex-col gap-1">
-						<div className="flex h-9 items-center pt-1">
-							<span className="font-semibold text-muted-foreground text-sm">
-								Setting
-							</span>
+		<AssetPicker.Root open={pickerOpen} onOpenChange={setPickerOpen}>
+			<Controller.Panel
+				footer={
+					<>
+						<div className="flex flex-col gap-1">
+							<div className="flex h-9 items-center pt-1">
+								<span className="font-semibold text-muted-foreground text-sm">
+									Setting
+								</span>
+							</div>
+							{/* 디자인 SSOT(16:9079): 장수·비율·해상도가 한 줄에 3등분으로 앉는다. */}
+							<div className="grid grid-cols-3 gap-1">
+								<SettingRow
+									icon={<Copy aria-hidden />}
+									name="장수"
+									options={batch.options.map(String)}
+									value={String(generation.batch)}
+									onChange={(value) => generation.setBatch(Number(value))}
+								/>
+								<SettingRow
+									icon={<SquareOutline aria-hidden />}
+									name="비율"
+									options={ratio.options}
+									value={generation.ratio}
+									onChange={(value) =>
+										generation.setRatio(value as ImageAspectRatio)
+									}
+								/>
+								<SettingRow
+									icon={<Crop aria-hidden />}
+									name="해상도"
+									options={resolution.options}
+									value={generation.resolution}
+									onChange={(value) =>
+										generation.setResolution(value as ImageOutputSize)
+									}
+								/>
+							</div>
 						</div>
-						{/* 디자인 SSOT(16:9079): 장수·비율·해상도가 한 줄에 3등분으로 앉는다. */}
-						<div className="grid grid-cols-3 gap-1">
-							<SettingRow
-								icon={<Copy aria-hidden />}
-								name="장수"
-								options={batch.options.map(String)}
-								value={String(generation.batch)}
-								onChange={(value) => generation.setBatch(Number(value))}
-							/>
-							<SettingRow
-								icon={<SquareOutline aria-hidden />}
-								name="비율"
-								options={ratio.options}
-								value={generation.ratio}
-								onChange={(value) => generation.setRatio(value as ImageAspectRatio)}
-							/>
-							<SettingRow
-								icon={<Crop aria-hidden />}
-								name="해상도"
-								options={resolution.options}
-								value={generation.resolution}
-								onChange={(value) =>
-									generation.setResolution(value as ImageOutputSize)
-								}
-							/>
+						<div className="flex gap-2">
+							{/* 색이 있으면 색을 구운 PNG, 없으면 원본이다 — 판정은 Provider가 한다. */}
+							<Button
+								className="h-11 flex-1"
+								onClick={download.selected}
+								disabled={results.selected === null}
+							>
+								선택한 이미지 저장
+							</Button>
+							<Button
+								variant="muted"
+								className="h-11 flex-1"
+								onClick={download.all}
+								disabled={!results.result?.images.length}
+							>
+								전부 저장
+							</Button>
 						</div>
-					</div>
-					<div className="flex gap-2">
-						{/* 색이 있으면 색을 구운 PNG, 없으면 원본이다 — 판정은 Provider가 한다. */}
-						<Button
-							className="h-11 flex-1"
-							onClick={download.selected}
-							disabled={results.selected === null}
-						>
-							선택한 이미지 저장
-						</Button>
+					</>
+				}
+			>
+				<div
+					data-slot="image-profile-card"
+					className="flex h-16 shrink-0 items-center justify-between gap-3 rounded-md bg-foreground p-4 text-background"
+				>
+					<Typography as="p" size="base" weight="medium" className="truncate">
+						{config.name}
+					</Typography>
+					{/* 교체는 컨트롤러 왼쪽에 뜨는 자산 피커가 받는다 — 세션을 유지하는
+					    교체 동작은 컨텍스트의 profiles.select가 소유한다. */}
+					<AssetPicker.Trigger asChild>
 						<Button
 							variant="muted"
-							className="h-11 flex-1"
-							onClick={download.all}
-							disabled={!results.result?.images.length}
+							size="sm"
+							aria-label="프로파일 변경"
+							className="h-auto shrink-0 rounded-lg px-2.5 py-1 text-xs"
 						>
-							전부 저장
+							Change
 						</Button>
-					</div>
-				</>
-			}
-		>
-			<div
-				data-slot="image-profile-card"
-				className="flex h-16 shrink-0 items-center justify-between gap-3 rounded-md bg-foreground p-4 text-background"
-			>
-				<Typography as="p" size="base" weight="medium" className="truncate">
-					{config.name}
-				</Typography>
-				{/* 교체 자체는 플로팅 윈도우로 다시 만들 예정이라 여기서는 잠가 스테이징한다
-				    (docs/10 §3.6 — 무반응인 거짓 컨트롤을 두지 않는다). 세션을 유지하는 교체
-				    동작은 컨텍스트의 profiles.select가 이미 소유한다. */}
-				<Button
-					variant="muted"
-					size="sm"
-					disabled
-					aria-label="프로파일 변경"
-					className="h-auto shrink-0 rounded-lg px-2.5 py-1 text-xs"
-				>
-					Change
-				</Button>
-			</div>
+					</AssetPicker.Trigger>
+				</div>
 
-			<Controller.Section title="Image">
-				<Controller.Field
-					label="Prompt"
-					counter={`${prompt.value.length}/${config.prompt.maxLength}`}
-				>
-					<Controller.Textarea
-						value={prompt.value}
-						onChange={(event) => prompt.setValue(event.target.value)}
-						placeholder="이미지를 설명하세요"
-						maxLength={config.prompt.maxLength}
-						rows={3}
-					/>
-				</Controller.Field>
-				<Button
-					variant="muted"
-					className="mt-0.5 h-11 w-full font-semibold text-sm"
-					onClick={generation.run}
-					disabled={generation.busy || promptEmpty}
-				>
-					{generation.busy ? '생성 중…' : '이미지 생성'}
-				</Button>
-				{generation.error && (
-					<Typography role="alert" size="sm" className="text-destructive">
-						{generation.error}
-					</Typography>
+				<Controller.Section title="Image">
+					<Controller.Field
+						label="Prompt"
+						counter={`${prompt.value.length}/${config.prompt.maxLength}`}
+					>
+						<Controller.Textarea
+							value={prompt.value}
+							onChange={(event) => prompt.setValue(event.target.value)}
+							placeholder="이미지를 설명하세요"
+							maxLength={config.prompt.maxLength}
+							rows={3}
+						/>
+					</Controller.Field>
+					<Button
+						variant="muted"
+						className="mt-0.5 h-11 w-full font-semibold text-sm"
+						onClick={generation.run}
+						disabled={generation.busy || promptEmpty}
+					>
+						{generation.busy ? '생성 중…' : '이미지 생성'}
+					</Button>
+					{generation.error && (
+						<Typography role="alert" size="sm" className="text-destructive">
+							{generation.error}
+						</Typography>
+					)}
+				</Controller.Section>
+
+				{/* 시점 조정은 저장된 생성 이미지를 시드로 쓴다 — 결과를 고르기 전에는 닫힌 채 잠긴다. */}
+				{config.supportsCameraControl && (
+					<Controller.Section title="Camera Controls" disabled={!camera.seedImage}>
+						{camera.seedImage && (
+							<ImageCameraControl
+								azimuthDeg={camera.azimuthDeg}
+								elevationDeg={camera.elevationDeg}
+								seedImage={camera.seedImage}
+								busy={generation.busy}
+								onChange={camera.setAngles}
+								onRegenerate={camera.regenerate}
+							/>
+						)}
+					</Controller.Section>
 				)}
-			</Controller.Section>
 
-			{/* 시점 조정은 저장된 생성 이미지를 시드로 쓴다 — 결과를 고르기 전에는 닫힌 채 잠긴다. */}
-			{config.supportsCameraControl && (
-				<Controller.Section title="Camera Controls" disabled={!camera.seedImage}>
-					{camera.seedImage && (
-						<ImageCameraControl
-							azimuthDeg={camera.azimuthDeg}
-							elevationDeg={camera.elevationDeg}
-							seedImage={camera.seedImage}
-							busy={generation.busy}
-							onChange={camera.setAngles}
-							onRegenerate={camera.regenerate}
-						/>
-					)}
-				</Controller.Section>
-			)}
-
-			{/* 계약에 색이 실려 있을 때만 세션 값이 존재한다 — 값 유무가 곧 개방 여부다
+				{/* 계약에 색이 실려 있을 때만 세션 값이 존재한다 — 값 유무가 곧 개방 여부다
 			    (개방 플래그를 따로 두지 않는다, docs/10 §3.6). */}
-			{color.value && (
-				<Controller.Section title="Profile Settings">
-					<Controller.ColorRow
-						label="Line Color"
-						value={color.value.line}
-						onChange={(line) => color.update({ line })}
-					/>
-					{color.value.background !== undefined && (
+				{color.value && (
+					<Controller.Section title="Profile Settings">
 						<Controller.ColorRow
-							label="Background Color"
-							value={color.value.background}
-							onChange={(background) => color.update({ background })}
+							label="Line Color"
+							value={color.value.line}
+							onChange={(line) => color.update({ line })}
 						/>
-					)}
-				</Controller.Section>
-			)}
-		</Controller.Panel>
+						{color.value.background !== undefined && (
+							<Controller.ColorRow
+								label="Background Color"
+								value={color.value.background}
+								onChange={(background) => color.update({ background })}
+							/>
+						)}
+					</Controller.Section>
+				)}
+			</Controller.Panel>
+			<AssetPicker.Panel
+				tabs={['Image Profiles']}
+				// 교체 후보가 자기 자신뿐이면 고를 것이 없다 — 카드만 남기고 그 사실을 적는다.
+				empty={
+					profiles.options.length <= 1
+						? '교체할 다른 이미지 프로파일이 없습니다.'
+						: undefined
+				}
+			>
+				<ImageProfilePicker onPicked={() => setPickerOpen(false)} />
+			</AssetPicker.Panel>
+		</AssetPicker.Root>
 	)
 }
 
