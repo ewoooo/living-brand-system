@@ -39,7 +39,7 @@ const FORMAT_LABELS: Record<TemplateExportFormat, string> = {
  */
 export function TemplateSidebar() {
 	const router = useRouter()
-	const { navigation, config, text, images, exporting } = useTemplateStudio()
+	const { navigation, config, text, images, background, exporting } = useTemplateStudio()
 	const textSlots = config.slots.filter(isTextSlot)
 	const imageSlots = config.slots.filter(isImageSlot)
 	const backgroundSlot = config.slots.find(isBackgroundSlot)
@@ -227,6 +227,12 @@ export function TemplateSidebar() {
 					canvasAspectRatio={
 						canvas.width && canvas.height ? canvas.width / canvas.height : undefined
 					}
+					// 생성 비율은 조작 대상(캔버스)에서 파생한다 — 이미지 슬롯이 박스에서 파생하는 것과 같다.
+					aspectRatio={nearestImageAspectRatio(canvas.width, canvas.height)}
+					profiles={images.profiles}
+					profilesFailed={images.profilesFailed}
+					value={background.state}
+					onChange={background.update}
 				/>
 			)}
 			{textSlots.length === 0 && imageSlots.length === 0 && (

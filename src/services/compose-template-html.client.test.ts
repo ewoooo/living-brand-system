@@ -607,3 +607,80 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(frame.getAttribute('data-asset-collection')).toBeNull()
 	})
 })
+
+describe('composeTemplateHtml canvas background', () => {
+	// 루트 프레임(body 직계 자식) + 자식 프레임 — 배경이 루트에만 얹히는지 구분하기 위해 두 겹이다.
+	const canvasHtml =
+		'<div data-node-id="root-1" data-figma-type="FRAME" style="width:400px;height:300px;background-color:rgb(0,40,10)">' +
+		'<div data-node-id="frame-1" data-figma-type="FRAME" style="width:100px;height:80px"></div>' +
+		'</div>'
+	const generatedBackground = '/api/generated-images/file/canvas.png'
+
+	const parse = (html: string) => new DOMParser().parseFromString(html, 'text/html')
+	const rootOf = (html: string) => parse(html).body.firstElementChild as HTMLElement
+	const childOf = (html: string) =>
+		parse(html).querySelector('[data-node-id="frame-1"]') as HTMLElement
+
+	it('색만 주면 루트 프레임의 배경색만 덮는다', () => {
+		const html = composeTemplateHtml(canvasHtml, {}, { canvasBackground: { color: '#ff0000' } })
+
+		expect(rootOf(html).style.backgroundColor).toBe('rgb(255, 0, 0)')
+		expect(rootOf(html).style.backgroundImage).toBe('')
+		// 자식 프레임은 건드리지 않는다 — 배경의 주소는 캔버스뿐이다.
+		expect(childOf(html).style.backgroundColor).toBe('')
+	})
+
+	it('이미지만 주면 cover·center·no-repeat로 루트에 깐다', () => {
+		const html = composeTemplateHtml(
+			canvasHtml,
+			{},
+			{ canvasBackground: { imageUrl: generatedBackground } },
+		)
+		const root = rootOf(html)
+
+		expect(root.style.backgroundImage).toBe(`url("${generatedBackground}")`)
+		expect(root.style.backgroundSize).toBe('cover')
+		expect(root.style.backgroundPosition).toBe('center center') // CSSOM 정규화 표기
+		expect(root.style.backgroundRepeat).toBe('no-repeat')
+		// 저작 배경색은 남는다 — 이미지 갈래는 색을 지우지 않는다.
+		expect(root.style.backgroundColor).toBe('rgb(0, 40, 10)')
+	})
+
+	it('색과 이미지를 함께 주면 둘 다 얹힌다', () => {
+		const html = composeTemplateHtml(
+			canvasHtml,
+			{},
+			{ canvasBackground: { color: '#ffffff', imageUrl: generatedBackground } },
+		)
+		const root = rootOf(html)
+
+		expect(root.style.backgroundColor).toBe('rgb(255, 255, 255)')
+		expect(root.style.backgroundImage).toBe(`url("${generatedBackground}")`)
+	})
+
+	it('배경 인자를 주지 않으면 출력이 base 그대로다 — 기존 호출부 무영향', () => {
+		expect(composeTemplateHtml(canvasHtml, {})).toBe(canvasHtml)
+		expect(composeTemplateHtml(canvasHtml, {}, {})).toBe(canvasHtml)
+		expect(composeTemplateHtml(canvasHtml, {}, { canvasBackground: {} })).toBe(canvasHtml)
+	})
+
+	it('노드 오버라이드와 함께 흘러도 서로를 밀어내지 않는다', () => {
+		const html = composeTemplateHtml(
+			'<div data-node-id="root-1" data-figma-type="FRAME">' +
+				'<p data-node-id="text-1" data-figma-type="TEXT">원본</p>' +
+				'</div>',
+			{ 'text-1': { text: '바뀐 문구' } },
+			{ canvasBackground: { color: '#123456' } },
+		)
+
+		expect(rootOf(html).style.backgroundColor).toBe('rgb(18, 52, 86)')
+		expect(parse(html).querySelector('p')?.textContent).toBe('바뀐 문구')
+	})
+
+	it('재합성 멱등성 — 같은 배경을 출력에 다시 적용해도 같다', () => {
+		const background = { color: '#ffffff', imageUrl: generatedBackground }
+		const once = composeTemplateHtml(canvasHtml, {}, { canvasBackground: background })
+
+		expect(composeTemplateHtml(once, {}, { canvasBackground: background })).toBe(once)
+	})
+})

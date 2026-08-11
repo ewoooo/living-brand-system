@@ -78,6 +78,11 @@ export type TemplateImageConfigSlot = TemplateConfigSlot & {
 export type TemplateBackgroundSlot = TemplateConfigSlot & {
 	control: Extract<TemplateSlotControl, { kind: 'background' }>
 }
+/** 배경 종류 어휘의 단일 원천 — 세션 상태(Provider)와 사이드바가 같은 유니언을 쓴다. */
+export type TemplateBackgroundType = Extract<
+	TemplateSlotControl,
+	{ kind: 'background' }
+>['allowedTypes'][number]
 
 export const isTextSlot = (slot: TemplateConfigSlot): slot is TemplateTextSlot =>
 	slot.control.kind === 'text'

@@ -243,6 +243,70 @@ describe('TemplateGenerator', () => {
 		)
 	})
 
+	it('만진 배경색이 캔버스(루트 프레임) 배경으로 합성된다', () => {
+		const { container } = render(
+			<TemplateGenerator
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" style="width:400px;height:300px;background-color:rgb(0,40,10)"></div>',
+				}}
+			/>,
+		)
+		const canvasOf = () =>
+			container.querySelector('[data-slot="studio-workspace-canvas"] [data-node-id="1:1"]')
+
+		// 만지기 전 — 저작 배경 유지.
+		expect((canvasOf() as HTMLElement).style.backgroundColor).toBe('rgb(0, 40, 10)')
+
+		fireEvent.change(screen.getByLabelText('Background Color 색상 선택'), {
+			target: { value: '#ff0000' },
+		})
+
+		expect((canvasOf() as HTMLElement).style.backgroundColor).toBe('rgb(255, 0, 0)')
+	})
+
+	it('배경 슬롯만 있는 템플릿도 프로파일을 조회해 생성한 이미지를 캔버스에 깐다', async () => {
+		const user = userEvent.setup()
+		mocks.requestPublishedImageProfiles.mockResolvedValue([{ id: 11, name: '기본 프로파일' }])
+		mocks.requestImageGeneration.mockResolvedValue({
+			generatedImages: [{ id: 9, url: '/api/generated-images/file/canvas.png' }],
+		})
+		const { container } = render(
+			<TemplateGenerator
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" style="width:400px;height:300px"></div>',
+				}}
+			/>,
+		)
+
+		// 이미지 슬롯이 없어도 배경 생성이 프로파일을 필요로 한다 — 조회를 건너뛰면 버튼이 잠긴다.
+		await waitFor(() => expect(mocks.requestPublishedImageProfiles).toHaveBeenCalled())
+
+		screen.getByRole('combobox', { name: 'Type' }).focus()
+		await user.keyboard('{ArrowDown}')
+		await user.click(screen.getByRole('option', { name: 'Image' }))
+		await user.click(screen.getByRole('radio', { name: 'Generate' }))
+		fireEvent.change(await screen.findByLabelText('Prompt'), { target: { value: '노을 배경' } })
+		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
+
+		expect(mocks.requestImageGeneration).toHaveBeenCalledWith({
+			prompt: '노을 배경',
+			count: 1,
+			profileId: 11,
+			aspectRatio: '4:3', // 캔버스 400×300에서 파생
+		})
+		await waitFor(() => {
+			const canvas = container.querySelector(
+				'[data-slot="studio-workspace-canvas"] [data-node-id="1:1"]',
+			) as HTMLElement
+			expect(canvas.style.backgroundImage).toContain('/api/generated-images/file/canvas.png')
+			expect(canvas.style.backgroundSize).toBe('cover')
+		})
+	})
+
 	it('선택한 포맷으로 내보낸다 — 편집 계약(printPpi 정책)이 허용한 포맷만 목록에 오른다', async () => {
 		const user = userEvent.setup()
 		render(
@@ -271,7 +335,12 @@ describe('TemplateGenerator', () => {
 				}}
 			/>,
 		)
-		expect(await screen.findByText('—')).toBeInTheDocument()
+		// 배경 배경색 행도 미설정이면 —를 보여주므로 슬롯 안으로 범위를 좁힌다.
+		await waitFor(() =>
+			expect(
+				pinned.container.querySelector('[data-slot="image-slot-input"]')?.textContent,
+			).toContain('—'),
+		)
 		expect(screen.queryByText('이미지 프로파일을 불러오지 못했습니다.')).toBeNull()
 		pinned.unmount()
 
