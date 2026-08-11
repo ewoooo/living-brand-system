@@ -24,6 +24,7 @@ function config(
 		batch?: number[]
 		ratio?: ImageAspectRatio[]
 		resolution?: ImageOutputSize[]
+		colorAdjustment?: { line: string; background?: string }
 	} = {},
 ): ImageStudioConfig {
 	const batch = options.batch ?? [1, 2, 3, 4]
@@ -41,17 +42,26 @@ function config(
 			resolution: { options: resolution, defaultValue: resolution[0] },
 		},
 		supportsCameraControl: true,
+		...(options.colorAdjustment ? { colorAdjustment: options.colorAdjustment } : {}),
 	}
 }
 
 function Probe() {
-	const { config: current, prompt, generation, results, profiles } = useImageStudio()
+	const { config: current, prompt, generation, color, results, profiles } = useImageStudio()
 	return (
 		<div>
 			<output data-testid="state">
 				{current.name} / {generation.batch} / {generation.ratio} / {generation.resolution} /{' '}
 				{prompt.value} / {results.result ? '결과 있음' : '결과 없음'}
 			</output>
+			<output data-testid="color">
+				{color.value
+					? `${color.value.line}|${color.value.background ?? '없음'}`
+					: '색 없음'}
+			</output>
+			<button type="button" onClick={() => color.update({ line: '#ff0000' })}>
+				라인 색 변경
+			</button>
 			<button type="button" onClick={() => prompt.setValue('드론')}>
 				프롬프트 입력
 			</button>
@@ -108,6 +118,35 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 
 		expect(screen.getByTestId('state')).toHaveTextContent(
 			'프로파일 7 / 1 / 2:3 / 1K / 드론 / 결과 있음',
+		)
+	})
+
+	it('색 세션 값은 계약의 기본값에서 시작한다', () => {
+		renderStudio([config(5, { colorAdjustment: { line: '#000dff', background: '#00ffd4' } })])
+
+		expect(screen.getByTestId('color')).toHaveTextContent('#000dff|#00ffd4')
+	})
+
+	it('계약이 색을 열지 않으면 색 값이 없다', () => {
+		renderStudio([config(5)])
+
+		expect(screen.getByTestId('color')).toHaveTextContent('색 없음')
+	})
+
+	it('프로파일을 교체하면 고른 색은 새 계약 기본값으로 되돌리고 프롬프트·결과는 남긴다', () => {
+		renderStudio([
+			config(5, { colorAdjustment: { line: '#000dff', background: '#00ffd4' } }),
+			config(7, { colorAdjustment: { line: '#112233' } }),
+		])
+
+		fireEvent.click(screen.getByRole('button', { name: '라인 색 변경' }))
+		expect(screen.getByTestId('color')).toHaveTextContent('#ff0000|#00ffd4')
+
+		chooseAll()
+
+		expect(screen.getByTestId('color')).toHaveTextContent('#112233|없음')
+		expect(screen.getByTestId('state')).toHaveTextContent(
+			'프로파일 7 / 4 / 16:9 / 2K / 드론 / 결과 있음',
 		)
 	})
 })

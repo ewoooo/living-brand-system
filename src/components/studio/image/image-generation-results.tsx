@@ -3,11 +3,17 @@
 import { Skeleton } from '@/components/ui/skeleton'
 import { Typography } from '@/components/ui/typography'
 import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
+import {
+	type ImageColorAdjustment,
+	imageColorizeStyle,
+} from '@/features/image-studio/image-colorize'
 import { cn } from '@/lib/utils'
 
 const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
 
 type ImageGenerationResultsProps = {
+	/** 색 조정 값 — 있으면 결과 전부에 얹는다(한 장만 물들이지 않는다). null이면 원본만 보인다. */
+	color: ImageColorAdjustment | null
 	loading: boolean
 	onSelect: (index: number) => void
 	requested: number
@@ -16,6 +22,7 @@ type ImageGenerationResultsProps = {
 }
 
 export function ImageGenerationResults({
+	color,
 	loading,
 	onSelect,
 	requested,
@@ -63,11 +70,10 @@ export function ImageGenerationResults({
 											: 'border-border hover:border-ring',
 									)}
 								>
-									{/* biome-ignore lint/performance/noImgElement: 미리보기, 최적화 불필요 */}
-									<img
+									<ResultImage
+										color={color}
+										label={`생성 결과 ${index + 1}`}
 										src={src}
-										alt={`생성 결과 ${index + 1}`}
-										className="w-full"
 									/>
 								</button>
 								<a
@@ -92,6 +98,35 @@ export function ImageGenerationResults({
 						</details>
 					</div>
 				</div>
+			)}
+		</div>
+	)
+}
+
+type ResultImageProps = {
+	color: ImageColorAdjustment | null
+	label: string
+	src: string
+}
+
+/**
+ * 결과 카드 한 장 — 색이 있으면 원본은 마스크로만 쓰이고(보이지 않게 두어 박스 크기를 유지),
+ * 저장과 같은 계산(imageColorizeStyle)이 만든 색 층이 그 위에 얹힌다.
+ */
+function ResultImage({ color, label, src }: ResultImageProps) {
+	const colorize = color ? imageColorizeStyle(src, color) : null
+
+	return (
+		<div data-slot="image-result" className="relative" style={colorize?.base}>
+			{/* biome-ignore lint/performance/noImgElement: 미리보기, 최적화 불필요 */}
+			<img src={src} alt={label} className={cn('w-full', colorize && 'invisible')} />
+			{colorize && (
+				<div
+					data-slot="image-colorize-overlay"
+					aria-hidden
+					className="absolute inset-0"
+					style={colorize.overlay}
+				/>
 			)}
 		</div>
 	)

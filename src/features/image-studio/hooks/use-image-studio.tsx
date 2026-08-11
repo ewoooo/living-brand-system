@@ -5,6 +5,7 @@ import { useImageGeneration } from '@/features/generate-image/hooks/use-image-ge
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/generate-image/image-size'
 import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
 import { downloadImage } from '@/features/image-studio/download-image'
+import type { ImageColorAdjustment } from '@/features/image-studio/image-colorize'
 import type { ImageStudioConfig } from '@/features/image-studio/image-studio-config'
 
 type ImageStudioValue = {
@@ -30,6 +31,11 @@ type ImageStudioValue = {
 		busy: boolean
 		error: string | null
 	}
+	color: {
+		/** 색 조정 값 — 계약이 색을 열지 않으면 null이고, 그때는 색 행도 굽는 저장도 없다. */
+		value: ImageColorAdjustment | null
+		update: (patch: Partial<ImageColorAdjustment>) => void
+	}
 	camera: {
 		azimuthDeg: number
 		elevationDeg: number
@@ -46,7 +52,7 @@ type ImageStudioValue = {
 		selected: number | null
 		select: (index: number | null) => void
 	}
-	/** 원본 PNG 저장 — 계약의 색을 굽는 저장은 후속 단계다. */
+	/** PNG 저장 — 색이 있으면 구운 PNG, 없으면 원본이다. 서버에 남기지 않는다. */
 	download: {
 		selected: () => void
 		all: () => void
@@ -62,7 +68,7 @@ const ImageStudioContext = createContext<ImageStudioValue | null>(null)
  *
  * 프로파일 교체 정책: 어드민이 정의한 층만 새 프로파일로 갈아끼우고 사용자의 층은 남긴다 —
  * 프롬프트와 생성 결과는 유지하고, 계약이 정의한 선택은 새 선택지에 없을 때만 새 시작값으로
- * 되돌린다.
+ * 되돌리며, 선택지 없는 프로파일 고유 값(색)은 언제나 새 계약의 기본값으로 되돌린다.
  */
 export function ImageStudioProvider({
 	configs,
@@ -83,6 +89,7 @@ export function ImageStudioProvider({
 	const [batch, setBatch] = useState(initial.generateOptions.batch.defaultValue)
 	const [ratio, setRatio] = useState(initial.generateOptions.ratio.defaultValue)
 	const [resolution, setResolution] = useState(initial.generateOptions.resolution.defaultValue)
+	const [color, setColor] = useState<ImageColorAdjustment | null>(initial.colorAdjustment ?? null)
 	const [angles, setAngles] = useState({ azimuthDeg: 0, elevationDeg: 0 })
 	const { adjustCamera, error, generate, loading, requested, result, selected, setSelected } =
 		useImageGeneration()
@@ -97,7 +104,10 @@ export function ImageStudioProvider({
 		const next = configs.find((item) => item.profileId === nextProfileId)
 		if (!next) return
 		setProfileId(nextProfileId)
-		// 새 프로파일이 지원하지 않는 선택만 시작값으로 되돌린다.
+		// 색은 프로파일 고유 설정이라 언제나 새 계약의 기본값으로 되돌린다(선택지가 없어 유지할
+		// 근거가 없다 — 앞 프로파일의 색을 남기면 다른 브랜드 색을 물려받은 것처럼 보인다).
+		setColor(next.colorAdjustment ?? null)
+		// 나머지는 새 프로파일이 지원하지 않는 선택만 시작값으로 되돌린다.
 		const {
 			batch: nextBatch,
 			ratio: nextRatio,
@@ -143,6 +153,11 @@ export function ImageStudioProvider({
 			busy: loading,
 			error,
 		},
+		color: {
+			value: color,
+			update: (patch) =>
+				setColor((current) => (current ? { ...current, ...patch } : current)),
+		},
 		camera: {
 			...angles,
 			setAngles,
@@ -162,13 +177,16 @@ export function ImageStudioProvider({
 		download: {
 			selected: () => {
 				const src = selected === null ? undefined : result?.images[selected]
-				if (src && selected !== null) downloadImage(src, selected)
+				if (src && selected !== null) void downloadImage(src, selected, color)
 			},
-			// ponytail: 앵커 클릭을 연달아 낸다 — 장수가 늘어 브라우저가 막으면 zip으로 올린다.
+			// ponytail: 저장을 연달아 낸다 — 장수가 늘어 브라우저가 막으면 zip으로 올린다.
+			// 색을 굽는 경로는 한 장에 캡처 한 번이라 순차로 기다린다.
 			all: () => {
-				result?.images.forEach((src, index) => {
-					downloadImage(src, index)
-				})
+				void (async () => {
+					for (const [index, src] of (result?.images ?? []).entries()) {
+						await downloadImage(src, index, color)
+					}
+				})()
 			},
 		},
 	}
