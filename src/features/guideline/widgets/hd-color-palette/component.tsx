@@ -6,7 +6,6 @@ import { HdColorPaletteView, type PaletteLayout, type PaletteSwatch } from './vi
 
 // 위젯(서버): brand-color-groups를 조회해 색을 한 줄로 늘어놓는다. 인터랙션(복사·hover)은 클라 뷰가 맡는다.
 // 정렬 로직이 없다 — 줄 안의 순서는 그룹이 가진 관계 배열 순서 그대로다.
-// essenherb 레거시 색은 어느 그룹에도 연결돼 있지 않아 여기 걸러낼 것이 없다.
 // RGB는 저장값이 아니라 hex에서 파생한다(BrandColors가 RGB를 저장하지 않는 이유와 같다).
 type GroupRef = number | BrandColorGroup | null | undefined
 

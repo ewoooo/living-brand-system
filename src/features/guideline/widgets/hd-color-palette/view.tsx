@@ -23,8 +23,8 @@ const RANK_UNIT_REM = 5.5
 /** 이 높이 이하인 칸은 hover에서 다섯 줄을 못 담으므로 여백·행간을 조인다. */
 const COMPACT_MAX_HEIGHT_REM = 6
 
-// 클릭하면 HEX를 복사하는 스와치. essenherb ColorSwatch와 같은 동작이지만 그 파일을 건드리지 않는다 —
-// 공유 컴포넌트를 고치면 레거시 페이지까지 같이 변형되기 때문이다(brand-colors에서 한 번 밟았다).
+// 클릭하면 HEX를 복사하는 스와치. admin의 스와치 셀과 동작이 겹치지만 공유하지 않는다 —
+// 표면마다 판형·인터랙션이 달라 한쪽을 고치면 다른 쪽이 같이 변형된다.
 export function HdColorPaletteView({
 	swatches,
 	layout,
