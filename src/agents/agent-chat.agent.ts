@@ -1,8 +1,12 @@
 import { anthropic } from '@ai-sdk/anthropic'
-import { type InferAgentUIMessage, isStepCount, type ModelMessage, ToolLoopAgent } from 'ai'
+import { type InferAgentUIMessage, isStepCount, ToolLoopAgent } from 'ai'
 import { z } from 'zod'
 import { getAgentTools } from '@/agents/agent-chat-tools.agent'
 import { env } from '@/env'
+import {
+	CACHE_BREAKPOINT_PROVIDER_OPTIONS,
+	withHistoryCacheBreakpoint,
+} from '@/features/agent-chat/cache-breakpoint'
 import { getAgentExecutionPolicy } from '@/features/agent-chat/domain/agent-skill-tool-policy'
 import { findEnabledAgentSkillSummaries } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import { getAgentDefaultInstructions } from '@/features/agent-chat/services/get-agent-default-instructions.service'
@@ -15,15 +19,6 @@ const DEFAULT_PROVIDER_OPTIONS = {
 		effort: 'medium',
 		thinking: { type: 'adaptive', display: 'summarized' },
 	},
-} as const
-
-/**
- * Anthropic 캐시 프리픽스는 tools → system → messages 순서라, 첫 system 파트에 breakpoint 하나만
- * 두면 tool 정의까지 함께 캐시된다(측정값 4,016토큰 > 최소선 1,024). TTL은 기본 5분 — 챗은 사용자가
- * 연달아 말하는 형태라 대개 충분하고, 1h는 쓰기 비용이 2배다.
- */
-const CACHE_BREAKPOINT_PROVIDER_OPTIONS = {
-	anthropic: { cacheControl: { type: 'ephemeral' } },
 } as const
 
 const agentChatCallOptionsSchema = z.object({
@@ -139,32 +134,6 @@ export interface AgentChatMessageMetadata {
 }
 
 export type AgentChatMessage = InferAgentUIMessage<typeof agentChatAgent, AgentChatMessageMetadata>
-
-/**
- * 스텝마다 늘어나는 메시지 이력의 끝으로 breakpoint를 옮겨 단다 — tool 결과가 누적되면 한 스텝이
- * 10만 토큰을 넘기는데, system 프리픽스만 캐시하면 그 대부분이 매 스텝 새 값으로 다시 청구된다.
- * 직전 스텝이 써둔 캐시는 breakpoint를 떼도 남으므로, 옮겨 달아야 상한 4개에 걸리지 않는다.
- */
-function withHistoryCacheBreakpoint(messages: ModelMessage[]): ModelMessage[] {
-	const last = messages.at(-1)
-	if (!last) return messages
-
-	return [
-		...messages.slice(0, -1).map(stripCacheBreakpoint),
-		{
-			...last,
-			providerOptions: { ...last.providerOptions, ...CACHE_BREAKPOINT_PROVIDER_OPTIONS },
-		},
-	]
-}
-
-function stripCacheBreakpoint(message: ModelMessage): ModelMessage {
-	if (!message.providerOptions?.anthropic?.cacheControl) return message
-
-	const { cacheControl: _removed, ...anthropic } = message.providerOptions.anthropic
-
-	return { ...message, providerOptions: { ...message.providerOptions, anthropic } }
-}
 
 function formatAgentSkillSelectionInstructions(
 	skills: Awaited<ReturnType<typeof findEnabledAgentSkillSummaries>>,
