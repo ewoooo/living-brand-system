@@ -2,7 +2,9 @@
 
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react'
 import { useImageGeneration } from '@/features/generate-image/hooks/use-image-generation'
+import type { ImageAspectRatio, ImageOutputSize } from '@/features/generate-image/image-size'
 import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
+import { downloadImage } from '@/features/image-studio/download-image'
 import type { ImageStudioConfig } from '@/features/image-studio/image-studio-config'
 
 type ImageStudioValue = {
@@ -20,9 +22,21 @@ type ImageStudioValue = {
 	generation: {
 		batch: number
 		setBatch: (count: number) => void
+		ratio: ImageAspectRatio
+		setRatio: (ratio: ImageAspectRatio) => void
+		resolution: ImageOutputSize
+		setResolution: (resolution: ImageOutputSize) => void
 		run: () => void
 		busy: boolean
 		error: string | null
+	}
+	camera: {
+		azimuthDeg: number
+		elevationDeg: number
+		setAngles: (angles: { azimuthDeg: number; elevationDeg: number }) => void
+		/** 시점을 다시 잡을 시드 — null이면 대상이 없다(컨트롤러가 섹션을 잠근다). */
+		seedImage: string | null
+		regenerate: () => void
 	}
 	results: {
 		/** 직전 요청이 만든 결과 — 프로파일을 교체해도 유지된다(사용자가 만든 산출물). */
@@ -31,6 +45,11 @@ type ImageStudioValue = {
 		requested: number
 		selected: number | null
 		select: (index: number | null) => void
+	}
+	/** 원본 PNG 저장 — 계약의 색을 굽는 저장은 후속 단계다. */
+	download: {
+		selected: () => void
+		all: () => void
 	}
 }
 
@@ -62,7 +81,10 @@ export function ImageStudioProvider({
 	const [profileId, setProfileId] = useState(initial.profileId)
 	const [prompt, setPrompt] = useState('')
 	const [batch, setBatch] = useState(initial.generateOptions.batch.defaultValue)
-	const { error, generate, loading, requested, result, selected, setSelected } =
+	const [ratio, setRatio] = useState(initial.generateOptions.ratio.defaultValue)
+	const [resolution, setResolution] = useState(initial.generateOptions.resolution.defaultValue)
+	const [angles, setAngles] = useState({ azimuthDeg: 0, elevationDeg: 0 })
+	const { adjustCamera, error, generate, loading, requested, result, selected, setSelected } =
 		useImageGeneration()
 
 	const config = configs.find((item) => item.profileId === profileId) ?? initial
@@ -76,10 +98,28 @@ export function ImageStudioProvider({
 		if (!next) return
 		setProfileId(nextProfileId)
 		// 새 프로파일이 지원하지 않는 선택만 시작값으로 되돌린다.
-		if (!next.generateOptions.batch.options.includes(batch)) {
-			setBatch(next.generateOptions.batch.defaultValue)
-		}
+		const {
+			batch: nextBatch,
+			ratio: nextRatio,
+			resolution: nextResolution,
+		} = next.generateOptions
+		if (!nextBatch.options.includes(batch)) setBatch(nextBatch.defaultValue)
+		if (!nextRatio.options.includes(ratio)) setRatio(nextRatio.defaultValue)
+		if (!nextResolution.options.includes(resolution)) setResolution(nextResolution.defaultValue)
 	}
+
+	// 시점 조정은 저장된 생성 이미지를 시드로 쓴다 — 셋(시드 URL·생성 이미지 id·프로파일)이
+	// 모두 있을 때만 대상이 성립하므로 한 객체로 파생한다.
+	const generatedImage = selected === null ? undefined : result?.generatedImages?.[selected]
+	const cameraSeed =
+		selected !== null && result?.profileId && generatedImage
+			? {
+					basePrompt: result.prompt,
+					generatedImageId: generatedImage.id,
+					profileId: result.profileId,
+					src: result.images[selected],
+				}
+			: null
 
 	const value: ImageStudioValue = {
 		profiles: { options, select: selectProfile },
@@ -88,11 +128,49 @@ export function ImageStudioProvider({
 		generation: {
 			batch,
 			setBatch,
-			run: () => void generate({ count: batch, prompt, profileId: config.profileId }),
+			ratio,
+			setRatio,
+			resolution,
+			setResolution,
+			run: () =>
+				void generate({
+					aspectRatio: ratio,
+					count: batch,
+					imageSize: resolution,
+					profileId: config.profileId,
+					prompt,
+				}),
 			busy: loading,
 			error,
 		},
+		camera: {
+			...angles,
+			setAngles,
+			seedImage: cameraSeed?.src ?? null,
+			regenerate: () => {
+				if (!cameraSeed) return
+				void adjustCamera({
+					basePrompt: cameraSeed.basePrompt,
+					camera: angles,
+					count: 1,
+					generatedImageId: cameraSeed.generatedImageId,
+					profileId: cameraSeed.profileId,
+				})
+			},
+		},
 		results: { result, requested, selected, select: setSelected },
+		download: {
+			selected: () => {
+				const src = selected === null ? undefined : result?.images[selected]
+				if (src && selected !== null) downloadImage(src, selected)
+			},
+			// ponytail: 앵커 클릭을 연달아 낸다 — 장수가 늘어 브라우저가 막으면 zip으로 올린다.
+			all: () => {
+				result?.images.forEach((src, index) => {
+					downloadImage(src, index)
+				})
+			},
+		},
 	}
 
 	return <ImageStudioContext.Provider value={value}>{children}</ImageStudioContext.Provider>

@@ -1,150 +1,211 @@
 'use client'
 
+import { Copy, Crop, SquareOutline } from '@carbon/icons-react'
+import type * as React from 'react'
+import { Controller } from '@/components/studio/shared/controller'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectLabel,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
-import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
+import type { ImageAspectRatio, ImageOutputSize } from '@/features/generate-image/image-size'
 import { useImageStudio } from '@/features/image-studio/hooks/use-image-studio'
+import { ImageCameraControl } from './image-camera-control'
 
-// 컨트롤러: 편집 계약(config)이 허용하는 조작만 그리고, 값은 컨텍스트에만 쓴다 — 캔버스를 모른다.
+/**
+ * 이미지 스튜디오의 사이드바(컨트롤러 패널) — 캔버스를 모른다.
+ * 무엇을 그릴지는 편집 계약(config)만 보고 결정하고(색 섹션·카메라 섹션·읽기 전용 파생),
+ * 세션 값은 컨텍스트의 prompt/generation/camera 그룹으로만 읽고 쓴다.
+ * 디자인 SSOT: Figma HD_LBS_UI section 16:9137 "Image Usecase".
+ */
 export function ImageSidebar() {
-	const { config, profiles, prompt, generation, results } = useImageStudio()
-	const { batch } = config.generateOptions
+	const { config, profiles, prompt, generation, camera, results, download } = useImageStudio()
+	const { batch, ratio, resolution } = config.generateOptions
+	const promptEmpty = !prompt.value.trim()
 
 	return (
-		<Card className="min-h-0 gap-0 py-0 lg:h-full">
-			<CardHeader className="border-b border-border py-4">
-				<CardTitle>생성 컨트롤러</CardTitle>
-				<Typography size="xs" tone="muted">
-					이미지 설명과 생성 설정을 입력하세요.
-				</Typography>
-			</CardHeader>
-
-			<CardContent className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto py-4">
-				<Field>
-					<FieldLabel htmlFor="image-prompt">
-						프롬프트{' '}
-						<span className="text-destructive" aria-hidden>
-							*
-						</span>
-					</FieldLabel>
-					<Textarea
-						id="image-prompt"
-						value={prompt.value}
-						onChange={(event) => prompt.setValue(event.target.value)}
-						placeholder="만들 제품이나 장면을 설명하세요"
-						aria-describedby="image-prompt-description"
-						maxLength={config.prompt.maxLength}
-						rows={5}
-						className="min-h-28 resize-y"
-					/>
-					<FieldDescription id="image-prompt-description" className="text-xs">
-						프로파일을 선택하면 브랜드 설정과 프롬프트가 자동으로 조합됩니다.
-					</FieldDescription>
-				</Field>
-
-				<Separator />
-
-				<div className="flex flex-col gap-4">
-					<Typography as="h3" size="sm" weight="medium">
-						설정
-					</Typography>
-					<FieldGroup>
-						<Field>
-							<FieldLabel htmlFor="image-profile">프로파일</FieldLabel>
-							<Select
-								value={String(config.profileId)}
-								onValueChange={(value) => profiles.select(Number(value))}
-							>
-								<SelectTrigger id="image-profile" className="w-full">
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectGroup>
-										<SelectLabel>브랜드 제품컷 프로파일</SelectLabel>
-										{profiles.options.map(({ id, name }) => (
-											<SelectItem key={id} value={String(id)}>
-												{name}
-											</SelectItem>
-										))}
-									</SelectGroup>
-								</SelectContent>
-							</Select>
-						</Field>
-
-						<Field>
-							<FieldLabel htmlFor="image-count">생성 장수</FieldLabel>
-							<Select
+		<Controller.Panel
+			footer={
+				<>
+					<div className="flex flex-col gap-1">
+						<div className="flex h-9 items-center pt-1">
+							<span className="font-semibold text-muted-foreground text-sm">
+								Setting
+							</span>
+						</div>
+						{/* 디자인 SSOT(16:9079): 장수·비율·해상도가 한 줄에 3등분으로 앉는다. */}
+						<div className="grid grid-cols-3 gap-1">
+							<SettingRow
+								icon={<Copy aria-hidden />}
+								name="장수"
+								options={batch.options.map(String)}
 								value={String(generation.batch)}
-								onValueChange={(value) => generation.setBatch(Number(value))}
-							>
-								<SelectTrigger id="image-count" className="w-full">
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectGroup>
-										{batch.options.map((amount) => (
-											<SelectItem key={amount} value={String(amount)}>
-												{amount}
-											</SelectItem>
-										))}
-									</SelectGroup>
-								</SelectContent>
-							</Select>
-						</Field>
-					</FieldGroup>
-				</div>
-
-				<Typography size="xs" tone="muted">
-					현재 미리보기 엔진은 생성에 최대 1~2분이 걸릴 수 있습니다.
-				</Typography>
-
-				{generation.error && (
-					<div
-						role="alert"
-						className="flex flex-wrap items-center gap-2 text-xs text-destructive"
-					>
-						{generation.error}
+								onChange={(value) => generation.setBatch(Number(value))}
+							/>
+							<SettingRow
+								icon={<SquareOutline aria-hidden />}
+								name="비율"
+								options={ratio.options}
+								value={generation.ratio}
+								onChange={(value) => generation.setRatio(value as ImageAspectRatio)}
+							/>
+							<SettingRow
+								icon={<Crop aria-hidden />}
+								name="해상도"
+								options={resolution.options}
+								value={generation.resolution}
+								onChange={(value) =>
+									generation.setResolution(value as ImageOutputSize)
+								}
+							/>
+						</div>
+					</div>
+					<div className="flex gap-2">
+						{/* 지금은 원본 PNG 저장이다 — 계약의 색을 굽는 저장은 후속 단계. */}
 						<Button
-							type="button"
-							variant="link"
-							size="xs"
-							onClick={generation.run}
-							className="px-0"
+							className="h-11 flex-1"
+							onClick={download.selected}
+							disabled={results.selected === null}
 						>
-							다시 시도
+							선택한 이미지 저장
+						</Button>
+						<Button
+							variant="muted"
+							className="h-11 flex-1"
+							onClick={download.all}
+							disabled={!results.result?.images.length}
+						>
+							전부 저장
 						</Button>
 					</div>
-				)}
-			</CardContent>
+				</>
+			}
+		>
+			<div
+				data-slot="image-profile-card"
+				className="flex h-16 shrink-0 items-center justify-between gap-3 rounded-md bg-foreground p-4 text-background"
+			>
+				<Typography as="p" size="base" weight="medium" className="truncate">
+					{config.name}
+				</Typography>
+				{/* 프로파일 교체는 라우트 이동이 아니라 세션 유지다 — 프롬프트·결과·선택이 남는다. */}
+				<Select
+					value={String(config.profileId)}
+					onValueChange={(value) => profiles.select(Number(value))}
+				>
+					<SelectTrigger
+						aria-label="프로파일 변경"
+						className="h-auto w-fit shrink-0 gap-0 rounded-lg border-transparent bg-background/25 px-2.5 py-1 font-medium text-background text-xs hover:bg-background/35 dark:bg-background/25 [&_svg]:hidden"
+					>
+						Change
+					</SelectTrigger>
+					<SelectContent align="end">
+						{profiles.options.map(({ id, name }) => (
+							<SelectItem key={id} value={String(id)}>
+								{name}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</div>
 
-			<CardFooter className="flex-col items-stretch gap-2 border-t border-border py-4">
-				{results.result?.model && (
-					<Typography size="xs" tone="muted" className="text-right">
-						{results.result.model}
-					</Typography>
-				)}
+			<Controller.Section title="Image">
+				<Controller.Field
+					label="Prompt"
+					counter={`${prompt.value.length}/${config.prompt.maxLength}`}
+				>
+					<Controller.Textarea
+						value={prompt.value}
+						onChange={(event) => prompt.setValue(event.target.value)}
+						placeholder="이미지를 설명하세요"
+						maxLength={config.prompt.maxLength}
+						rows={3}
+					/>
+				</Controller.Field>
 				<Button
-					type="button"
-					size="lg"
-					className="w-full"
+					variant="muted"
+					className="mt-0.5 h-11 w-full font-semibold text-sm"
 					onClick={generation.run}
-					disabled={generation.busy || !prompt.value.trim()}
+					disabled={generation.busy || promptEmpty}
 				>
 					{generation.busy ? '생성 중…' : '이미지 생성'}
 				</Button>
-			</CardFooter>
-		</Card>
+				{generation.error && (
+					<Typography role="alert" size="sm" className="text-destructive">
+						{generation.error}
+					</Typography>
+				)}
+			</Controller.Section>
+
+			{/* 시점 조정은 저장된 생성 이미지를 시드로 쓴다 — 결과를 고르기 전에는 닫힌 채 잠긴다. */}
+			{config.supportsCameraControl && (
+				<Controller.Section title="Camera Controls" disabled={!camera.seedImage}>
+					{camera.seedImage && (
+						<ImageCameraControl
+							azimuthDeg={camera.azimuthDeg}
+							elevationDeg={camera.elevationDeg}
+							seedImage={camera.seedImage}
+							busy={generation.busy}
+							onChange={camera.setAngles}
+							onRegenerate={camera.regenerate}
+						/>
+					)}
+				</Controller.Section>
+			)}
+
+			{/* 계약에 색이 실려 있을 때만 그린다(개방 플래그를 따로 두지 않는다).
+			    ponytail: 미리보기·저장 반영이 후속 단계라 조작은 잠가 스테이징한다(docs/10 §3.6). */}
+			{config.colorAdjustment && (
+				<Controller.Section title="Profile Settings">
+					<Controller.ColorRow
+						label="Line Color"
+						value={config.colorAdjustment.line}
+						disabled
+					/>
+					{config.colorAdjustment.background && (
+						<Controller.ColorRow
+							label="Background Color"
+							value={config.colorAdjustment.background}
+							disabled
+						/>
+					)}
+				</Controller.Section>
+			)}
+		</Controller.Panel>
+	)
+}
+
+type SettingRowProps = {
+	/** 아이콘 라벨 — 접근 가능한 이름은 name이 sr-only로 동반한다(docs/10 §3.6). */
+	icon: React.ReactNode
+	name: string
+	options: readonly string[]
+	value: string
+	onChange: (value: string) => void
+}
+
+/** Setting 푸터의 아이콘 라벨 행 — 선택지가 하나뿐이면 읽기 전용으로 그린다(잠금 플래그 없음). */
+function SettingRow({ icon, name, options, value, onChange }: SettingRowProps) {
+	const readonly = options.length <= 1
+
+	return (
+		<Controller.Row
+			label={
+				<>
+					{icon}
+					<span className="sr-only">{name}</span>
+				</>
+			}
+			readonly={readonly}
+			className="px-2.5"
+		>
+			{readonly ? (
+				<span className="text-muted-foreground text-sm">{value}</span>
+			) : (
+				<Controller.Select
+					options={options.map((option) => ({ label: option, value: option }))}
+					value={value}
+					onChange={onChange}
+				/>
+			)}
+		</Controller.Row>
 	)
 }

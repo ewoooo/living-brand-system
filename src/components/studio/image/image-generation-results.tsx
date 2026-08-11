@@ -1,11 +1,9 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Typography } from '@/components/ui/typography'
 import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
 import { cn } from '@/lib/utils'
-import { ImageCameraPresets } from './image-camera-presets'
 
 const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
 
@@ -25,7 +23,6 @@ export function ImageGenerationResults({
 	selected,
 }: ImageGenerationResultsProps) {
 	const images = result?.images ?? []
-	const generatedImages = result?.generatedImages ?? []
 
 	return (
 		<div
@@ -38,21 +35,12 @@ export function ImageGenerationResults({
 
 			{!loading && images.length > 0 && result && (
 				<div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
-					<div className="flex flex-wrap items-center gap-3">
-						<Button
-							onClick={() =>
-								selected !== null && downloadImage(images[selected], selected)
-							}
-							disabled={selected === null}
-						>
-							선택한 이미지 다운로드
-						</Button>
-						<Typography as="span" size="sm" tone="muted">
-							{selected === null
-								? '이미지를 클릭해 선택하세요'
-								: `${selected + 1}번 선택됨`}
-						</Typography>
-					</div>
+					{/* 선택은 컨트롤러의 카메라 섹션과 저장 CTA를 여는 입력이다 — 그래서 안내가 남는다. */}
+					<Typography as="p" size="sm" tone="muted">
+						{selected === null
+							? '이미지를 클릭해 선택하면 시점 조정과 저장을 할 수 있어요'
+							: `${selected + 1}번 선택됨`}
+					</Typography>
 
 					{images.length < requested && (
 						<Typography size="sm" tone="muted">
@@ -103,20 +91,6 @@ export function ImageGenerationResults({
 							</Typography>
 						</details>
 					</div>
-
-					{selected !== null && result.profileId && generatedImages[selected] ? (
-						<ImageCameraPresets
-							key={`${result.profileId}:${selected}:${images[selected]}`}
-							basePrompt={result.prompt}
-							generatedImageId={generatedImages[selected].id}
-							profileId={result.profileId}
-							seedImage={images[selected]}
-						/>
-					) : (
-						<Typography size="sm" tone="muted">
-							이미지를 선택하면 카메라 시점을 조정할 수 있습니다.
-						</Typography>
-					)}
 				</div>
 			)}
 		</div>
@@ -136,17 +110,4 @@ function ImageGenerationSkeleton({ count }: { count: number }) {
 			</div>
 		</div>
 	)
-}
-
-/** 생성 이미지 URL 또는 data URI를 파일로 저장한다. */
-function downloadImage(src: string, index: number) {
-	const ext = src.startsWith('data:image/')
-		? src.slice(11, src.indexOf(';')).replace('jpeg', 'jpg')
-		: new URL(src, window.location.href).pathname.split('.').pop() || 'png'
-	const anchor = document.createElement('a')
-	anchor.href = src
-	anchor.download = `essenherb-image-${index + 1}.${ext}`
-	document.body.appendChild(anchor)
-	anchor.click()
-	anchor.remove()
 }

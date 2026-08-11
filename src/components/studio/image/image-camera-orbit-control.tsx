@@ -416,25 +416,24 @@ export function ImageCameraOrbitControl({
 		}
 	}, [azimuthSteps, elevationSteps, seedImage])
 
+	// 프레임(정사각 컨테이너·표면색)은 소비자인 킷의 CameraControl이 소유한다 — 여기서는 채우기만 한다.
 	return (
-		<div className="flex flex-col gap-2">
-			<div
-				ref={mountRef}
-				data-slot="image-camera-orbit-control"
-				role="img"
-				aria-label={`3D 카메라 시점: ${azimuthLabel}, ${elevationLabel}`}
-				className="relative aspect-video min-h-80 overflow-hidden rounded-md border border-border bg-muted"
+		<div
+			ref={mountRef}
+			data-slot="image-camera-orbit-control"
+			role="img"
+			aria-label={`3D 카메라 시점: ${azimuthLabel}, ${elevationLabel}`}
+			className="relative size-full"
+		>
+			{/* 드래그 어포던스가 자명하지 않아 지원 여부와 조작법을 프리뷰 안에 겹쳐 알린다. */}
+			<Typography
+				size="xs"
+				tone={unsupported ? 'destructive' : 'muted'}
+				className="pointer-events-none absolute inset-x-3 bottom-2 z-10"
 			>
-				<div className="pointer-events-none absolute top-3 right-3 z-10 rounded-md border border-border bg-background/90 px-2 py-1">
-					<Typography size="xs" weight="medium">
-						{azimuthLabel} · {elevationLabel}
-					</Typography>
-				</div>
-			</div>
-			<Typography size="xs" tone={unsupported ? 'destructive' : 'muted'}>
 				{unsupported
-					? '이 브라우저에서는 3D 미리보기를 사용할 수 없습니다. 아래 프리셋을 사용해 주세요.'
-					: '3D 핸들을 드래그해 방향과 높이를 조정하세요. 놓으면 가장 가까운 프리셋에 맞춰집니다.'}
+					? '이 브라우저에서는 3D 미리보기를 쓸 수 없어요. 아래 X·Y로 시점을 고르세요.'
+					: '핸들을 드래그하면 가장 가까운 시점에 맞춰집니다.'}
 			</Typography>
 		</div>
 	)

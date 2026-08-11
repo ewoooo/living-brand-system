@@ -1,19 +1,43 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { PublishedImageProfileDefinition } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import { deriveImageStudioConfig } from '@/features/image-studio/image-studio-config'
 import { ImageGenerator } from './image-generator'
 
-const mocks = vi.hoisted(() => ({ generate: vi.fn() }))
+const RESULT = {
+	aspectRatio: '2:3' as const,
+	generatedImages: [
+		{
+			collection: 'generated-images' as const,
+			createdAt: '2026-08-10T03:00:00.000Z',
+			id: 8,
+			url: '/api/generated-images/file/generated.png',
+		},
+	],
+	images: ['/api/generated-images/file/generated.png'],
+	imageSize: '1K' as const,
+	model: 'gpt-image-2',
+	profileId: 5,
+	prompt: '{"subject":"드론"}',
+}
+
+const mocks = vi.hoisted(() => ({
+	adjustCamera: vi.fn(),
+	generate: vi.fn(),
+	// 결과·선택은 테스트마다 갈아끼운다 — 카메라 잠금이 선택에서 파생되기 때문이다.
+	session: { result: null as unknown, selected: null as number | null },
+}))
 
 vi.mock('@/features/generate-image/hooks/use-image-generation', () => ({
 	useImageGeneration: () => ({
+		adjustCamera: mocks.adjustCamera,
 		error: null,
 		generate: mocks.generate,
 		loading: false,
 		requested: 0,
-		result: null,
-		selected: null,
+		result: mocks.session.result,
+		selected: mocks.session.selected,
 		setSelected: vi.fn(),
 	}),
 }))
@@ -21,7 +45,11 @@ vi.mock('@/components/studio/image/image-generation-results', () => ({
 	ImageGenerationResults: () => null,
 }))
 
-function config(id: number, name: string) {
+function config(
+	id: number,
+	name: string,
+	overrides: Partial<PublishedImageProfileDefinition> = {},
+) {
 	return deriveImageStudioConfig({
 		id,
 		name,
@@ -29,29 +57,35 @@ function config(id: number, name: string) {
 		imageModelPreset: 'openai-gpt-image-2',
 		aspectRatio: '2:3',
 		imageSize: '1K',
+		...overrides,
 	})
 }
 
 describe('ImageGenerator', () => {
-	beforeEach(() => vi.clearAllMocks())
+	beforeEach(() => {
+		vi.clearAllMocks()
+		mocks.session = { result: null, selected: null }
+	})
 	afterEach(cleanup)
 
-	it('첫 계약의 프로파일로 생성하고 장수는 계약 시작값을 따른다', () => {
+	it('첫 계약의 프로파일로 생성하고 장수·비율·해상도는 계약 시작값을 따른다', () => {
 		render(
 			createElement(ImageGenerator, {
 				configs: [config(5, '에센허브 브랜드 제품컷')],
 			}),
 		)
 
-		fireEvent.change(screen.getByRole('textbox', { name: '프롬프트' }), {
+		fireEvent.change(screen.getByRole('textbox', { name: 'Prompt' }), {
 			target: { value: '파란 세럼병' },
 		})
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 
 		expect(mocks.generate).toHaveBeenCalledWith({
+			aspectRatio: '2:3',
 			count: 4,
-			prompt: '파란 세럼병',
+			imageSize: '1K',
 			profileId: 5,
+			prompt: '파란 세럼병',
 		})
 	})
 
@@ -63,7 +97,7 @@ describe('ImageGenerator', () => {
 			}),
 		)
 
-		expect(screen.getByRole('combobox', { name: '프로파일' })).toHaveTextContent('그라디언트')
+		expect(screen.getByText('그라디언트')).toBeInTheDocument()
 	})
 
 	it('빈 캔버스의 예시를 프롬프트에 반영한다', () => {
@@ -75,15 +109,75 @@ describe('ImageGenerator', () => {
 			}),
 		)
 
-		expect(screen.getByRole('textbox', { name: '프롬프트' })).toHaveValue(
+		expect(screen.getByRole('textbox', { name: 'Prompt' })).toHaveValue(
 			'신제품을 위한 깨끗한 스튜디오 제품 이미지',
 		)
+	})
+
+	it('색을 개방하지 않은 프로파일에는 Profile Settings 섹션이 없다', () => {
+		render(createElement(ImageGenerator, { configs: [config(5, '제품컷')] }))
+
+		expect(screen.queryByText('Profile Settings')).not.toBeInTheDocument()
+	})
+
+	it('색을 개방한 프로파일은 계약의 색을 잠긴 행으로 보여준다', () => {
+		render(
+			createElement(ImageGenerator, {
+				configs: [
+					config(5, '라인 일러스트', {
+						colorAdjustment: { line: '#000dff', background: '#00ffd4' },
+					}),
+				],
+			}),
+		)
+
+		expect(screen.getByText('Profile Settings')).toBeInTheDocument()
+		expect(screen.getByLabelText('Line Color 색상 선택')).toBeDisabled()
+		expect(screen.getByLabelText('Background Color 색상 선택')).toBeDisabled()
+	})
+
+	it('해상도 선택지가 하나뿐이면 읽기 전용으로 그린다', () => {
+		render(
+			createElement(ImageGenerator, {
+				configs: [
+					config(5, '라이트 모델', { imageModelPreset: 'google-nano-banana-2-lite' }),
+				],
+			}),
+		)
+
+		expect(screen.queryByRole('combobox', { name: '해상도' })).not.toBeInTheDocument()
+		// 비율은 선택지가 여럿이라 그대로 조작할 수 있다.
+		expect(screen.getByRole('combobox', { name: '비율' })).toBeInTheDocument()
+	})
+
+	it('결과를 고르기 전에는 Camera Controls가 잠기고 고른 뒤에 열린다', () => {
+		const view = render(createElement(ImageGenerator, { configs: [config(5, '제품컷')] }))
+
+		expect(screen.getByRole('button', { name: 'Camera Controls' })).toBeDisabled()
+		expect(screen.queryByRole('combobox', { name: 'X' })).not.toBeInTheDocument()
+
+		mocks.session = { result: RESULT, selected: 0 }
+		view.rerender(createElement(ImageGenerator, { configs: [config(5, '제품컷')] }))
+
+		expect(screen.getByRole('button', { name: 'Camera Controls' })).toBeEnabled()
+		expect(screen.getByRole('combobox', { name: 'X' })).toBeInTheDocument()
+	})
+
+	it('시점 조정을 지원하지 않는 프로파일은 Camera Controls를 그리지 않는다', () => {
+		mocks.session = { result: RESULT, selected: 0 }
+		render(
+			createElement(ImageGenerator, {
+				configs: [config(5, '평면 그래픽', { cameraControl: false })],
+			}),
+		)
+
+		expect(screen.queryByText('Camera Controls')).not.toBeInTheDocument()
 	})
 
 	it('발행된 프로파일이 없으면 컨트롤러 없이 안내만 그린다', () => {
 		render(createElement(ImageGenerator, { configs: [] }))
 
 		expect(screen.getByText('발행된 이미지 프로파일이 없습니다')).toBeInTheDocument()
-		expect(screen.queryByRole('textbox', { name: '프롬프트' })).not.toBeInTheDocument()
+		expect(screen.queryByRole('textbox', { name: 'Prompt' })).not.toBeInTheDocument()
 	})
 })

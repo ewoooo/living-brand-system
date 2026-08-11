@@ -12,6 +12,7 @@ export default async function GenerateImagePage() {
 		<StudioWorkspacePage
 			title="이미지 생성"
 			description="프롬프트와 이미지 프로파일을 조합해 브랜드 이미지 후보를 만듭니다."
+			hideHeading
 		>
 			<ImageGenerator configs={configs} />
 		</StudioWorkspacePage>
