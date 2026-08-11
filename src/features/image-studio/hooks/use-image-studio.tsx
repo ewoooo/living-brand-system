@@ -6,11 +6,13 @@ import type { ImageGenerationResult } from '@/features/generate-image/services/g
 import type { ImageStudioConfig } from '@/features/image-studio/image-studio-config'
 
 type ImageStudioValue = {
-	/** 프로파일 교체 후보 — 계약은 언제나 이 중 하나다. */
-	profiles: { id: number; name: string }[]
+	profiles: {
+		/** 프로파일 교체 후보 — 계약은 언제나 이 중 하나다. */
+		options: { id: number; name: string }[]
+		select: (profileId: number) => void
+	}
 	/** 현재 프로파일의 편집 계약 — 컨트롤러는 이 객체만 보고 컨트롤을 그린다. */
 	config: ImageStudioConfig
-	selectProfile: (profileId: number) => void
 	prompt: {
 		value: string
 		setValue: (text: string) => void
@@ -64,7 +66,7 @@ export function ImageStudioProvider({
 		useImageGeneration()
 
 	const config = configs.find((item) => item.profileId === profileId) ?? initial
-	const profiles = useMemo(
+	const options = useMemo(
 		() => configs.map(({ profileId: id, name }) => ({ id, name })),
 		[configs],
 	)
@@ -80,9 +82,8 @@ export function ImageStudioProvider({
 	}
 
 	const value: ImageStudioValue = {
-		profiles,
+		profiles: { options, select: selectProfile },
 		config,
-		selectProfile,
 		prompt: { value: prompt, setValue: setPrompt },
 		generation: {
 			batch,
