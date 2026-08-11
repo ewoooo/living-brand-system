@@ -33,7 +33,10 @@ type BackgroundSectionProps = {
  * 디자인 SSOT(2:2071 Sidebar State)의 Background 상태 분기 — Type이 하위 컨트롤 세트를 갈아끼운다.
  * Color: 배경색 / Image: Preset(브랜드 이미지 선택)·Generate(프롬프트 생성) + Image Transform /
  * Graphic: 그래픽 종류·색 + Graphic Transform(포지션·가변 두께·시점·각도 — forward-straight 계약과 1:1).
- * ponytail: UI-first — 전부 로컬 state이고 compose·생성·브라우즈 배선은 3단계에서 한다.
+ *
+ * ponytail: UI-first로 디자인 전체를 먼저 세우되, compose에 캔버스 배경 오버라이드 경로가 아직
+ * 없어서 값이 흐를 곳이 없다 — Type 전환과 프롬프트 입력만 살리고 나머지는 잠가 스테이징한다
+ * (docs/10 §3.6: 조작 가능해 보이는데 무반응인 컨트롤을 두지 않는다).
  */
 export function BackgroundSection({ allowedTypes, canvasAspectRatio }: BackgroundSectionProps) {
 	const [type, setType] = useState<BackgroundType>(allowedTypes[0] ?? 'color')
@@ -68,6 +71,7 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 						label="Background Color"
 						value={backgroundColor}
 						onChange={setBackgroundColor}
+						disabled
 					/>
 				)}
 
@@ -86,7 +90,6 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 						</Controller.Row>
 						<Controller.TabPanel tabKey={imageMode}>
 							{imageMode === 'preset' ? (
-								// ponytail: 브랜드 이미지 피커는 3단계 배선 — 지금은 선택 카드 UI만 세운다.
 								<div
 									data-slot="background-browse-card"
 									className="flex shrink-0 items-center justify-between gap-3 rounded-md bg-foreground p-4 text-background"
@@ -112,6 +115,7 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 										type="button"
 										variant="muted"
 										size="sm"
+										disabled
 										className="shrink-0 rounded-lg bg-background/25 text-background text-xs hover:bg-background/35"
 									>
 										Browse
@@ -123,11 +127,13 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 										label="Line Color"
 										value={lineColor}
 										onChange={setLineColor}
+										disabled
 									/>
 									<Controller.ColorRow
 										label="Background Color"
 										value={backgroundColor}
 										onChange={setBackgroundColor}
+										disabled
 									/>
 									<Controller.Field
 										label="Prompt"
@@ -141,12 +147,11 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 											rows={2}
 										/>
 									</Controller.Field>
-									{/* ponytail: 배경 생성 요청은 3단계 배선 — 프롬프트 없으면 비활성만 유지한다. */}
 									<Button
 										type="button"
 										variant="muted"
 										className="mt-0.5 h-11 w-full text-sm font-semibold"
-										disabled={!prompt.trim()}
+										disabled
 									>
 										이미지 생성
 									</Button>
@@ -162,24 +167,27 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 							<Controller.Select
 								options={[{ value: 'line', label: 'Line' }]}
 								value="line"
+								disabled
 							/>
 						</Controller.Row>
 						<Controller.ColorRow
 							label="Line Color"
 							value={lineColor}
 							onChange={setLineColor}
+							disabled
 						/>
 						<Controller.ColorRow
 							label="Background Color"
 							value={backgroundColor}
 							onChange={setBackgroundColor}
+							disabled
 						/>
 					</>
 				)}
 			</Controller.Section>
 
 			{/* 디자인 SSOT: transform은 Background의 형제 섹션이고 구분선이 없다.
-			    ponytail: 배경 이미지 배정이 아직 없어(3단계 배선) 생성 전 규칙대로 닫힌 채 잠근다. */}
+			    ponytail: 배경 이미지·그래픽 배정이 아직 없어 생성 전 규칙대로 닫힌 채 잠근다. */}
 			{type === 'image' && (
 				<Controller.Section title="Image Transform" disabled className="border-t-0 pt-0">
 					<ImageTransformControl
@@ -190,7 +198,7 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 				</Controller.Section>
 			)}
 			{type === 'graphic' && (
-				<Controller.Section title="Graphic Transform" className="border-t-0 pt-0">
+				<Controller.Section title="Graphic Transform" disabled className="border-t-0 pt-0">
 					<div className="flex flex-col gap-1 pb-2.5">
 						<TransformPad
 							ariaLabel="그래픽 위치"
