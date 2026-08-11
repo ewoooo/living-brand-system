@@ -1,4 +1,5 @@
 import { type CollectionConfig, type PayloadRequest, slugField } from 'payload'
+import { IMAGE_PROMPT_MAX_LENGTH } from '@/features/generate-image/image-generation-limits'
 import {
 	DEFAULT_IMAGE_MODEL_PRESET,
 	IMAGE_MODEL_PRESET_OPTIONS,
@@ -35,6 +36,11 @@ function validateImageSize(
 			value as ImageOutputSize,
 		) || 'Nano Banana 2 Lite는 1K 출력만 지원합니다.'
 	)
+}
+
+function validateHexColor(value: null | string | undefined): string | true {
+	if (!value) return true
+	return /^#[0-9a-fA-F]{6}$/.test(value) || '#rrggbb 형식의 hex 색상을 입력하세요.'
 }
 
 async function normalizePromptEndpoint(req: PayloadRequest) {
@@ -157,6 +163,52 @@ export const ImageProfiles: CollectionConfig = {
 				position: 'sidebar',
 				description: 'Nano Banana 2 Lite는 1K만 지원합니다.',
 			},
+		},
+		{
+			name: 'maxPromptLength',
+			type: 'number',
+			min: 1,
+			max: IMAGE_PROMPT_MAX_LENGTH,
+			label: '최대 프롬프트 길이',
+			admin: {
+				position: 'sidebar',
+				description: `비우면 전역 상한(${IMAGE_PROMPT_MAX_LENGTH}자)을 씁니다.`,
+			},
+		},
+		{
+			name: 'cameraControl',
+			type: 'checkbox',
+			defaultValue: true,
+			label: '카메라 시점 조정 허용',
+			admin: {
+				position: 'sidebar',
+				description: '생성 이미지를 시드로 시점을 다시 잡을 수 있게 합니다.',
+			},
+		},
+		{
+			name: 'colorAdjustment',
+			type: 'group',
+			label: '색 조정',
+			admin: {
+				description:
+					'발행된 브랜드 색의 hex를 넣습니다. 라인 색을 비우면 이 프로파일은 색 조정을 열지 않습니다.',
+			},
+			fields: [
+				{
+					name: 'line',
+					type: 'text',
+					label: '라인 색',
+					validate: validateHexColor,
+					admin: { description: '#rrggbb 형식으로 입력합니다.' },
+				},
+				{
+					name: 'background',
+					type: 'text',
+					label: '배경 색',
+					validate: validateHexColor,
+					admin: { description: '비우면 배경 없이 라인만 칠합니다.' },
+				},
+			],
 		},
 		{
 			name: 'profilePrompt',

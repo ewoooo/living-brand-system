@@ -16,6 +16,9 @@ export type PublishedImageProfileDefinition = {
 	imageModelPreset: ImageModelPreset
 	aspectRatio: ImageAspectRatio
 	imageSize: ImageOutputSize
+	maxPromptLength?: number | null
+	cameraControl?: boolean | null
+	colorAdjustment?: { line?: string | null; background?: string | null } | null
 }
 
 /** 스튜디오가 선택할 수 있는 published 프로파일의 정의 필드만 조회한다. */
@@ -31,8 +34,11 @@ export async function listPublishedImageProfileDefinitions(
 		overrideAccess: false,
 		select: {
 			aspectRatio: true,
+			cameraControl: true,
+			colorAdjustment: true,
 			imageModelPreset: true,
 			imageSize: true,
+			maxPromptLength: true,
 			name: true,
 			slug: true,
 		},
@@ -41,14 +47,29 @@ export async function listPublishedImageProfileDefinitions(
 		where: { _status: { equals: 'published' } },
 	})
 
-	return profiles.docs.map(({ id, name, slug, imageModelPreset, aspectRatio, imageSize }) => ({
-		id,
-		name,
-		slug: slug || null,
-		imageModelPreset,
-		aspectRatio,
-		imageSize,
-	}))
+	return profiles.docs.map(
+		({
+			id,
+			name,
+			slug,
+			imageModelPreset,
+			aspectRatio,
+			imageSize,
+			maxPromptLength,
+			cameraControl,
+			colorAdjustment,
+		}) => ({
+			id,
+			name,
+			slug: slug || null,
+			imageModelPreset,
+			aspectRatio,
+			imageSize,
+			maxPromptLength,
+			cameraControl,
+			colorAdjustment,
+		}),
+	)
 }
 
 export async function listPublishedImageProfiles(

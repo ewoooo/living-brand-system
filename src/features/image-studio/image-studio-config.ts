@@ -36,6 +36,8 @@ export type ImageStudioConfig = {
 	}
 	/** 선택한 생성 이미지를 시드로 시점을 다시 잡을 수 있는가. */
 	supportsCameraControl: boolean
+	/** 존재 = 색 조정 개방(docs/10 §3.6 — 개방 플래그를 따로 두지 않는다). 라인 색이 필수, 배경은 선택. */
+	colorAdjustment?: { line: string; background?: string }
 }
 
 /**
@@ -49,18 +51,21 @@ export type ImageStudioChoice<Value> = {
 
 /**
  * published 프로파일에서 편집 계약을 파생한다 — 어드민이 계약을 직접 저장하게 되면 이 함수가 그 폴백이 된다.
- * 프로파일에 개방·상한 필드가 아직 없으므로, 지금은 전역 상한과 모델 제약만이 레인지의 원천이다.
+ * 레인지의 원천은 프로파일의 개방 필드, 전역 상한, 모델 제약 셋이다.
  */
 export function deriveImageStudioConfig(
 	profile: PublishedImageProfileDefinition,
 ): ImageStudioConfig {
+	const line = profile.colorAdjustment?.line
+	const background = profile.colorAdjustment?.background
+
 	return {
 		profileId: profile.id,
 		version: 1,
 		name: profile.name,
 		slug: profile.slug,
-		// 어드민이 프로파일별 상한을 정하는 필드가 생기기 전까지는 전역 상한이 그대로 상한이다.
-		prompt: { maxLength: IMAGE_PROMPT_MAX_LENGTH },
+		// 프로파일이 상한을 비워두면 전역 상한이 그대로 상한이다.
+		prompt: { maxLength: profile.maxPromptLength ?? IMAGE_PROMPT_MAX_LENGTH },
 		generateOptions: {
 			batch: { options: IMAGE_BATCH_SIZES, defaultValue: IMAGE_BATCH_DEFAULT },
 			ratio: { options: IMAGE_ASPECT_RATIOS, defaultValue: profile.aspectRatio },
@@ -72,7 +77,9 @@ export function deriveImageStudioConfig(
 				defaultValue: profile.imageSize,
 			},
 		},
-		// 어드민이 카메라 개방을 좁히는 필드가 생기기 전까지는 전 프로파일이 시점 조정을 연다.
-		supportsCameraControl: true,
+		// 필드가 없던 시절의 문서(NULL)는 지금까지처럼 시점 조정을 연다.
+		supportsCameraControl: profile.cameraControl ?? true,
+		// 라인 색이 채워져 있을 때만 계약에 싣는다 — 없으면 필드 자체가 없다.
+		...(line ? { colorAdjustment: background ? { line, background } : { line } } : {}),
 	}
 }
