@@ -1,8 +1,7 @@
 'use client'
 
 import { Copy, Crop, SquareOutline } from '@carbon/icons-react'
-import * as React from 'react'
-import { AssetPicker } from '@/components/studio/shared/asset-picker'
+import type * as React from 'react'
 import { Controller } from '@/components/studio/shared/controller'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
@@ -22,11 +21,10 @@ export function ImageSidebar() {
 		useImageStudio()
 	const { batch, ratio, resolution } = config.generateOptions
 	const promptEmpty = !prompt.value.trim()
-	// 자산 피커의 열림은 편집 세션이 아니라 이 화면의 표현 상태다 — Provider에 넣지 않는다.
-	const [pickerOpen, setPickerOpen] = React.useState(false)
 
 	return (
-		<AssetPicker.Root open={pickerOpen} onOpenChange={setPickerOpen}>
+		// 자산 피커의 열림은 편집 세션이 아니라 이 화면의 표현 상태다 — 킷이 소유한다(Provider에 넣지 않는다).
+		<Controller.Picker.Root>
 			<Controller.Panel
 				footer={
 					<>
@@ -95,7 +93,7 @@ export function ImageSidebar() {
 					</Typography>
 					{/* 교체는 컨트롤러 왼쪽에 뜨는 자산 피커가 받는다 — 세션을 유지하는
 					    교체 동작은 컨텍스트의 profiles.select가 소유한다. */}
-					<AssetPicker.Trigger asChild>
+					<Controller.Picker.Trigger asChild>
 						<Button
 							variant="muted"
 							size="sm"
@@ -104,7 +102,7 @@ export function ImageSidebar() {
 						>
 							Change
 						</Button>
-					</AssetPicker.Trigger>
+					</Controller.Picker.Trigger>
 				</div>
 
 				<Controller.Section title="Image">
@@ -170,7 +168,7 @@ export function ImageSidebar() {
 					</Controller.Section>
 				)}
 			</Controller.Panel>
-			<AssetPicker.Panel
+			<Controller.Picker.Panel
 				tabs={['Image Profiles']}
 				// 교체 후보가 자기 자신뿐이면 고를 것이 없다 — 카드만 남기고 그 사실을 적는다.
 				empty={
@@ -179,9 +177,9 @@ export function ImageSidebar() {
 						: undefined
 				}
 			>
-				<ImageProfilePicker onPicked={() => setPickerOpen(false)} />
-			</AssetPicker.Panel>
-		</AssetPicker.Root>
+				<ImageProfilePicker />
+			</Controller.Picker.Panel>
+		</Controller.Picker.Root>
 	)
 }
 
