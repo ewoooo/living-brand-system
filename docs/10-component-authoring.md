@@ -162,14 +162,14 @@ studio·global·home 같은 표면의 화면 컴포넌트도 위 계약을 그�
 | range | `number` | `min`/`max`/`step`, 표기 포맷 | `SliderRow` (채움 폭=값) |
 | pad | `{ x, y }` (-1~1) | `aspectRatio`(Wide/Portrait/Square) | `TransformPad` |
 | orbit | `{ azimuthDeg, elevationDeg }` | 스냅 스텝 | `Controller.CameraControl` + 오빗 프리뷰 |
-| asset | 자산 참조 `\| null` | 소스(브랜드 이미지 등) | `Controller.Browser`(카드 + 열기 버튼), 패널은 `Controller.Picker` |
+| asset | 자산 참조 `\| null` | 소스(브랜드 이미지 등) | `Controller.AssetCard`(카드 + 열기 버튼), 패널은 `Controller.Browser` |
 
 경계 규칙:
 
 - **`isEmpty`는 파생 상태입니다.** `value === null`에서 계산하고, 별도 진실로 두지 않습니다. 비어 있으면 원본 값을 사칭하지 않고 `—`로 보입니다(`Controller.ColorRow`의 `isEmpty` 원형).
 - **`error`·`busy`는 정의가 아니라 런타임 상태입니다.** ControlBase에 넣지 않고 소유 컴포넌트의 상태로 처리합니다(생성 실패 메시지, "생성 중…" 비활성).
-- **컴포지션 층(섹션·탭 분기·조건 노출·액션)은 의도적으로 미정입니다.** 화면 컨트롤러가 둘 이상 쌓여 실제 분기 형태가 드러나기 전에는 `visibleWhen` 류의 DSL을 추측으로 설계하지 않습니다. **예외는 "피커 열기" 하나입니다** — 자산 카드는 값을 고르는 패널 없이는 성립하지 않아 액션이 컨트롤의 일부입니다. 이 액션만 킷이 갖고(`Controller.Browser`가 여는 상태를 소유), 나머지 액션·조건 노출은 계속 보류합니다.
-- **트리거는 자기 피커 안에서만 존재합니다.** 여는 버튼은 `Controller.Picker.Trigger`로 그 피커의 컴파운드 안에만 살고, 무엇을 여는지 모르는 범용 `Controller.Trigger`는 만들지 않습니다 — 그런 트리거는 피커 밖에서도 타입이 통과해 검증되지 않는 계약이 됩니다. 짝은 구조로 강제됩니다: `Trigger`·`Panel`은 `Picker.Root`의 Dialog 컨텍스트가 없으면 렌더에서 죽습니다.
+- **컴포지션 층(섹션·탭 분기·조건 노출·액션)은 의도적으로 미정입니다.** 화면 컨트롤러가 둘 이상 쌓여 실제 분기 형태가 드러나기 전에는 `visibleWhen` 류의 DSL을 추측으로 설계하지 않습니다. **예외는 "브라우저 열기" 하나입니다** — 자산 카드는 값을 고르는 패널 없이는 성립하지 않아 액션이 컨트롤의 일부입니다. 이 액션만 킷이 갖고(`Controller.Browser`가 여는 상태를 소유), 나머지 액션·조건 노출은 계속 보류합니다.
+- **트리거는 자기 브라우저 안에서만 존재합니다.** 여는 버튼은 `Controller.Browser.Trigger`로 그 브라우저의 컴파운드 안에만 살고, 무엇을 여는지 모르는 범용 `Controller.Trigger`는 만들지 않습니다 — 그런 트리거는 브라우저 밖에서도 타입이 통과해 검증되지 않는 계약이 됩니다. 짝은 구조로 강제됩니다: `Trigger`·`Panel`은 `Browser.Root`의 Dialog 컨텍스트가 없으면 렌더에서 죽습니다.
 - **네임스페이스 객체(`Controller`)는 client 소비 전용입니다.** RSC에서 점 접근이 필요하면 개별 named export(`ControllerRow` 등)를 씁니다.
 
 아키텍처 층과 원칙 — 컨트롤러는 네 층으로 쌓입니다: **디자인 SSOT**(Figma Controller API가 시각·구성의 정본, 기능 미지원이어도 UI를 먼저 반영) → **킷**(`controller/`) → **화면 컨트롤**(`studio/<화면>/…` — 도메인 결합 행·패드·슬라이더) → **상태·서비스**(화면 state 또는 features 훅이 값 소유, `*.client.ts`가 I/O 소유). 층을 지키는 원칙:

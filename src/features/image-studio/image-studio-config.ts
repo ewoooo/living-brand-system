@@ -41,7 +41,7 @@ export type ImageStudioConfig = {
 }
 
 /**
- * 프로파일 교체 후보 — 피커 카드가 필요한 만큼만 계약에서 뽑은 투영.
+ * 프로파일 교체 후보 — 브라우저 카드가 필요한 만큼만 계약에서 뽑은 투영.
  * 개방 필드(카메라·색)를 그대로 실어 카드 배지가 새 필드 없이 계약에서만 파생된다.
  */
 export type ImageStudioProfileOption = Pick<

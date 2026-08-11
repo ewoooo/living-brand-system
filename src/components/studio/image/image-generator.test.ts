@@ -204,15 +204,15 @@ describe('ImageProfilePicker', () => {
 	})
 	afterEach(cleanup)
 
-	function openPicker(configs: ImageStudioConfig[], initialProfileId?: number) {
+	function openBrowser(configs: ImageStudioConfig[], initialProfileId?: number) {
 		render(createElement(ImageGenerator, { configs, initialProfileId }))
 		const trigger = screen.getByRole('button', { name: '프로파일 변경' })
 		fireEvent.click(trigger)
 		return { panel: screen.getByRole('dialog', { name: 'Image Profiles' }), trigger }
 	}
 
-	it('Change로 자산 피커가 열리고 프로파일마다 카드가 있다', () => {
-		const { panel } = openPicker([config(5, '제품컷'), config(7, '그라디언트')])
+	it('Change로 자산 브라우저가 열리고 프로파일마다 카드가 있다', () => {
+		const { panel } = openBrowser([config(5, '제품컷'), config(7, '그라디언트')])
 
 		expect(within(panel).getByRole('button', { name: /제품컷/ })).toBeInTheDocument()
 		expect(within(panel).getByRole('button', { name: /그라디언트/ })).toBeInTheDocument()
@@ -220,7 +220,7 @@ describe('ImageProfilePicker', () => {
 
 	// 배지는 그 프로파일이 무엇을 열어주는지의 표시라 계약의 개방 필드에서만 파생한다.
 	it('배지를 계약의 개방 필드에서 파생한다', () => {
-		const { panel } = openPicker([
+		const { panel } = openBrowser([
 			config(1, '카메라만'),
 			config(2, '색만', {
 				cameraControl: false,
@@ -248,7 +248,7 @@ describe('ImageProfilePicker', () => {
 	})
 
 	it('현재 프로파일 카드를 aria-current로 알린다', () => {
-		const { panel } = openPicker([config(5, '제품컷'), config(7, '그라디언트')], 7)
+		const { panel } = openBrowser([config(5, '제품컷'), config(7, '그라디언트')], 7)
 
 		expect(within(panel).getByRole('button', { name: /그라디언트/ })).toHaveAttribute(
 			'aria-current',
@@ -260,7 +260,7 @@ describe('ImageProfilePicker', () => {
 	})
 
 	it('카드를 고르면 프로파일이 바뀌고 패널이 닫힌다', () => {
-		const { panel } = openPicker([
+		const { panel } = openBrowser([
 			config(5, '제품컷'),
 			config(7, '그라디언트', { maxPromptLength: 42 }),
 		])
@@ -280,7 +280,7 @@ describe('ImageProfilePicker', () => {
 	})
 
 	it('Esc로 닫히고 포커스가 트리거로 돌아온다', async () => {
-		const { trigger } = openPicker([config(5, '제품컷'), config(7, '그라디언트')])
+		const { trigger } = openBrowser([config(5, '제품컷'), config(7, '그라디언트')])
 
 		fireEvent.keyDown(document, { key: 'Escape' })
 
@@ -291,7 +291,7 @@ describe('ImageProfilePicker', () => {
 
 	// 후보가 자기 자신뿐이면 고를 것이 없다 — 카드는 남기고 그 사실을 적는다.
 	it('프로파일이 하나뿐이면 카드와 함께 교체 대상이 없다고 알린다', () => {
-		const { panel } = openPicker([config(5, '제품컷')])
+		const { panel } = openBrowser([config(5, '제품컷')])
 
 		expect(within(panel).getByRole('button', { name: /제품컷/ })).toHaveAttribute(
 			'aria-current',

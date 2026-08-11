@@ -1,101 +1,150 @@
 'use client'
 
-import type * as React from 'react'
+import { Close } from '@carbon/icons-react'
+import { Dialog as DialogPrimitive } from 'radix-ui'
+import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
 import { cn } from '@/lib/utils'
-import { ControllerPicker } from './picker'
-import { useRowControl } from './row'
 
-type ControllerBrowserProps = {
-	/** 현재 값의 이름, 또는 아직 고르지 않았다면 고르라는 안내. */
-	title: React.ReactNode
-	/** 자산의 출처(Brand Image 등). 있으면 제목이 한 단계 작아진다 — 두 카드의 실측 형태다. */
-	subtitle?: React.ReactNode
-	/** 열기 버튼 라벨(Change·Browse). */
-	buttonLabel: string
-	/** 버튼의 접근 가능한 이름 — 라벨만으로는 무엇을 여는지 알 수 없다. */
-	'aria-label': string
-	/** 패널 헤더의 탭 라벨 — 전체가 패널의 접근 이름을 겸한다. */
-	tabs?: readonly string[]
-	/** 본문이 비었을 때의 안내. */
-	empty?: React.ReactNode
-	/** 배선 전 컨트롤 — 잠기면 트리거 자체를 두지 않아 패널이 존재하지 않는다.
-	 *  Row 안에서는 행의 disabled를 자동으로 따른다. */
-	disabled?: boolean
+/** 패널이 뜰 좌표계이자 포털 목적지 — Root가 자기 DOM 노드를 내려주고 Panel이 그리로 옮겨 붙는다. */
+const BrowserFrameContext = React.createContext<HTMLElement | null>(null)
+
+type ControllerBrowserRootProps = {
 	className?: string
-	/** 패널 본문 — 무엇을 고르는지는 도메인(소비자)이 그린다. */
-	children?: React.ReactNode
+	children: React.ReactNode
 }
 
 /**
- * 자산 카드 — 현재 값과 피커를 여는 버튼이 한 줄에 앉는 컨트롤러 파츠(docs/10 §3.6의 asset kind).
- * 열림 상태는 Controller.Picker가 소유하므로 소비자는 아무 state도 들지 않고, 고른 뒤 닫기는
- * 본문이 Controller.Picker.Close로 감싸 처리한다.
+ * 자산 브라우저 컴파운드의 뿌리 — 열림 상태와 패널의 위치 기준을 함께 소유한다.
  *
- * 패널은 컨트롤러 패널 밖으로 떠야 하므로 Controller.Picker.Root가 화면 컨트롤러를 감싸고 있어야
- * 한다 — 잠긴 카드(배선 전 스테이징)는 열 것이 없으니 Root 없이도 홀로 그려진다.
+ * 열림은 radix가 소유하는 비제어 상태다. 소비자는 useState를 들지 않고, 트리거·닫기·Esc가
+ * 그 상태를 움직인다. ui/dialog의 DialogContent는 스크림(DialogOverlay)과 화면 중앙 고정을
+ * 함께 소유해서 쓸 수 없어 radix Dialog를 modal={false}로 직접 감싼다 — 스크림 없이 캔버스가
+ * 계속 보이고 조작되면서도 Esc 닫기·role="dialog"·닫은 뒤 트리거로 포커스 복귀는 radix가 갖는다.
+ *
+ * Trigger·Panel은 이 Root의 Dialog 컨텍스트가 없으면 렌더에서 죽는다 — 짝이 구조로 강제된다.
  */
-export function ControllerBrowser({
-	title,
-	subtitle,
-	buttonLabel,
-	'aria-label': ariaLabel,
-	tabs,
-	empty,
-	disabled,
-	className,
-	children,
-}: ControllerBrowserProps) {
-	const row = useRowControl()
-	const locked = disabled || row?.disabled
-
-	const button = (
-		<Button
-			type="button"
-			variant="muted"
-			size="sm"
-			aria-label={ariaLabel}
-			disabled={locked}
-			className="h-auto shrink-0 rounded-lg bg-background/25 px-2.5 py-1 text-background text-xs hover:bg-background/35"
-		>
-			{buttonLabel}
-		</Button>
-	)
+function ControllerBrowserRoot({ className, children }: ControllerBrowserRootProps) {
+	const [frame, setFrame] = React.useState<HTMLDivElement | null>(null)
 
 	return (
-		<div
-			data-slot="controller-browser"
+		<DialogPrimitive.Root modal={false}>
+			<div
+				ref={setFrame}
+				data-slot="controller-browser"
+				className={cn('relative h-full', className)}
+			>
+				<BrowserFrameContext.Provider value={frame}>
+					{children}
+				</BrowserFrameContext.Provider>
+			</div>
+		</DialogPrimitive.Root>
+	)
+}
+
+/** 패널을 여는 버튼 자리 — 자산 브라우저 안에만 존재한다(무엇을 여는지가 계약으로 남는다). */
+function ControllerBrowserTrigger({
+	...props
+}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+	return <DialogPrimitive.Trigger data-slot="controller-browser-trigger" {...props} />
+}
+
+/** 고르면 닫히는 자리 — 패널 본문의 선택 버튼이 asChild로 감싸 쓴다(닫기는 radix가 소유). */
+function ControllerBrowserClose({ ...props }: React.ComponentProps<typeof DialogPrimitive.Close>) {
+	return <DialogPrimitive.Close data-slot="controller-browser-close" {...props} />
+}
+
+type ControllerBrowserPanelProps = {
+	/** 탭 라벨 — 지금은 하나(Image Profiles)다. 전체가 패널의 접근 이름을 겸한다. */
+	tabs: readonly string[]
+	/** 본문이 비었을 때 그리드 아래 자리에 앉는 안내. */
+	empty?: React.ReactNode
+	className?: string
+	children: React.ReactNode
+}
+
+/**
+ * 컨트롤러 왼쪽에 떠서 캔버스를 덮는 글래스 패널 — 도메인 무지: 무엇을 고르는 브라우저인지 모른다.
+ * 소유하는 것은 글래스 크롬, 헤더(탭 + 닫기), 본문 영역, 빈 상태 자리뿐이다.
+ *
+ * 색: 테마와 무관하게 어두운 글래스를 의도한 디자인이지만 생 rgba를 쓰지 않는다(docs/09 §4).
+ * Browse 카드의 선례대로 반전 표면 쌍(bg-foreground + text-background)을 쓰고 내부 겹침은
+ * background 투명도로 쌓는다 — 다크 테마에서는 쌍이 함께 뒤집혀 밝은 글래스가 된다.
+ */
+function ControllerBrowserPanel({ tabs, empty, className, children }: ControllerBrowserPanelProps) {
+	const frame = React.useContext(BrowserFrameContext)
+
+	const content = (
+		<DialogPrimitive.Content
+			data-slot="controller-browser-panel"
+			// 설명 문단이 없다 — 비워두지 않으면 radix가 존재하지 않는 id를 가리킨다.
+			aria-describedby={undefined}
 			className={cn(
-				'flex min-h-16 shrink-0 items-center justify-between gap-3 rounded-md bg-foreground p-4 text-background',
+				// 상한은 top-5만큼 줄인 남은 높이다 — 100%로 두면 컨트롤러 아래로 20px 넘친다.
+				'absolute top-5 right-0 z-20 flex h-168 max-h-[calc(100%-1.25rem)] w-150 max-w-[calc(100vw-2rem)] flex-col gap-1 overflow-hidden rounded-xl border border-background/5 bg-foreground/75 p-2 text-background shadow-lg outline-none backdrop-blur-sm lg:right-full lg:mr-4',
 				className,
 			)}
 		>
-			<div className="flex min-w-0 flex-col">
-				<Typography
-					as="p"
-					size={subtitle ? 'sm' : 'base'}
-					weight="medium"
-					className="truncate"
-				>
-					{title}
-				</Typography>
-				{subtitle && (
-					<Typography as="p" size="xs" className="truncate text-background/60">
-						{subtitle}
-					</Typography>
+			<div className="flex shrink-0 items-center justify-end gap-3 py-1 pr-2">
+				<DialogPrimitive.Title className="flex h-8 min-w-0 flex-1 items-center overflow-hidden">
+					{tabs.map((tab) => (
+						<Typography
+							key={tab}
+							as="span"
+							size="base"
+							weight="medium"
+							className="flex h-8 items-center justify-center rounded-md px-3"
+						>
+							{tab}
+						</Typography>
+					))}
+				</DialogPrimitive.Title>
+				<ControllerBrowserClose asChild>
+					<Button
+						variant="ghost"
+						size="icon"
+						shape="pill"
+						className="bg-background/5 text-background hover:bg-background/15 hover:text-background focus-visible:bg-background/15 focus-visible:text-background"
+					>
+						<Close />
+						<span className="sr-only">자산 브라우저 닫기</span>
+					</Button>
+				</ControllerBrowserClose>
+			</div>
+			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-xl bg-background/5 py-2 pr-1 pl-2">
+				{children}
+				{empty && (
+					<div className="flex items-center justify-center p-6">
+						<Typography as="p" size="sm" className="text-center text-background/80">
+							{empty}
+						</Typography>
+					</div>
 				)}
 			</div>
-			{locked ? (
-				button
-			) : (
-				<>
-					<ControllerPicker.Trigger asChild>{button}</ControllerPicker.Trigger>
-					<ControllerPicker.Panel tabs={tabs ?? []} empty={empty}>
-						{children}
-					</ControllerPicker.Panel>
-				</>
-			)}
-		</div>
+		</DialogPrimitive.Content>
 	)
+
+	// 패널을 여는 카드는 컨트롤러 패널(overflow-hidden) 안에 산다 — 거기서 뜨면 잘리므로
+	// Root 프레임의 형제 자리로 옮긴다. 옮긴 뒤 DOM 순서·기준 박스는 손으로 짰을 때와 같다.
+	return frame ? createPortal(content, frame) : content
+}
+
+/**
+ * 탭을 가진 플로팅 자산 브라우저 — 트리거는 이 컴파운드 안에만 존재한다.
+ * 카드 + 열기 버튼 형태의 소비자는 Controller.AssetCard가 이 파츠들을 조립해 만든다.
+ */
+export const ControllerBrowser = {
+	Root: ControllerBrowserRoot,
+	Trigger: ControllerBrowserTrigger,
+	Panel: ControllerBrowserPanel,
+	Close: ControllerBrowserClose,
+}
+
+export {
+	ControllerBrowserClose,
+	ControllerBrowserPanel,
+	ControllerBrowserRoot,
+	ControllerBrowserTrigger,
 }

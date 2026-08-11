@@ -152,7 +152,7 @@ export function BackgroundSection({
 						<Controller.TabPanel tabKey={imageMode}>
 							{imageMode === 'preset' ? (
 								// 브랜드 이미지 목록 배선이 남아 잠긴 채 그린다 — 패널 본문이 없다.
-								<Controller.Browser
+								<Controller.AssetCard
 									title="이미지를 선택하세요"
 									subtitle="Brand Image"
 									buttonLabel="Browse"
