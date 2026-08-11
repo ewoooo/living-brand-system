@@ -59,5 +59,7 @@ describe('ImageGenerationResults', () => {
 		expect(overlays).toHaveLength(2)
 		expect(overlays[0]?.style.maskImage).toContain(`url('${SRC}')`)
 		expect(overlays[0]?.style.backgroundColor).toBe('rgb(0, 13, 255)')
+		// 색을 얹어도 선택 버튼은 이름을 잃지 않는다 — 원본을 visibility로 숨기면 alt까지 사라진다.
+		expect(screen.getByRole('button', { name: '생성 결과 1' })).toBeInTheDocument()
 	})
 })

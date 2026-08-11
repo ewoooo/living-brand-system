@@ -110,8 +110,10 @@ type ResultImageProps = {
 }
 
 /**
- * 결과 카드 한 장 — 색이 있으면 원본은 마스크로만 쓰이고(보이지 않게 두어 박스 크기를 유지),
+ * 결과 카드 한 장 — 색이 있으면 원본은 마스크로만 쓰이고(박스 크기를 유지하려 남겨둔다),
  * 저장과 같은 계산(imageColorizeStyle)이 만든 색 층이 그 위에 얹힌다.
+ * 원본을 지우는 데 opacity를 쓴다 — visibility:hidden은 접근성 트리에서도 빼서
+ * 이 카드를 감싼 선택 버튼의 유일한 접근 이름(alt)까지 사라진다.
  */
 function ResultImage({ color, label, src }: ResultImageProps) {
 	const colorize = color ? imageColorizeStyle(src, color) : null
@@ -119,7 +121,7 @@ function ResultImage({ color, label, src }: ResultImageProps) {
 	return (
 		<div data-slot="image-result" className="relative" style={colorize?.base}>
 			{/* biome-ignore lint/performance/noImgElement: 미리보기, 최적화 불필요 */}
-			<img src={src} alt={label} className={cn('w-full', colorize && 'invisible')} />
+			<img src={src} alt={label} className={cn('w-full', colorize && 'opacity-0')} />
 			{colorize && (
 				<div
 					data-slot="image-colorize-overlay"
