@@ -1,4 +1,4 @@
-import { ImageGenerator } from '@/components/studio/generate/image-generator'
+import { ImageGenerator } from '@/components/studio/image/image-generator'
 import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
 import { listImageStudioConfigs } from '@/features/image-studio/services/list-image-studio-configs.service'
 import { authenticateRequest } from '@/lib/request-auth'

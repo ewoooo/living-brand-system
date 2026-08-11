@@ -1,7 +1,7 @@
 'use client'
 
 import { Image as ImageIcon } from '@carbon/icons-react'
-import { ImageGenerationResults } from '@/components/studio/generate/image-generation-results'
+import { ImageGenerationResults } from '@/components/studio/image/image-generation-results'
 import { Button } from '@/components/ui/button'
 import {
 	Empty,

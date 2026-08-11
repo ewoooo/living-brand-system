@@ -1,8 +1,8 @@
 'use client'
 
 import { Image as ImageIcon } from '@carbon/icons-react'
-import { ImageCanvas } from '@/components/studio/generate/image-canvas'
-import { ImageSidebar } from '@/components/studio/generate/image-sidebar'
+import { ImageCanvas } from '@/components/studio/image/image-canvas'
+import { ImageSidebar } from '@/components/studio/image/image-sidebar'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { ImageStudioProvider } from '@/features/image-studio/hooks/use-image-studio'

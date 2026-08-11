@@ -17,7 +17,7 @@ vi.mock('@/features/generate-image/hooks/use-image-generation', () => ({
 		setSelected: vi.fn(),
 	}),
 }))
-vi.mock('@/components/studio/generate/image-generation-results', () => ({
+vi.mock('@/components/studio/image/image-generation-results', () => ({
 	ImageGenerationResults: () => null,
 }))
 
