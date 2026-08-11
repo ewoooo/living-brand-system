@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic'
-import { type InferAgentUIMessage, isStepCount, ToolLoopAgent } from 'ai'
+import { type InferAgentUIMessage, isStepCount, type ModelMessage, ToolLoopAgent } from 'ai'
 import { z } from 'zod'
 import { getAgentTools } from '@/agents/agent-chat-tools.agent'
 import { env } from '@/env'
@@ -15,6 +15,15 @@ const DEFAULT_PROVIDER_OPTIONS = {
 		effort: 'medium',
 		thinking: { type: 'adaptive', display: 'summarized' },
 	},
+} as const
+
+/**
+ * Anthropic 캐시 프리픽스는 tools → system → messages 순서라, 첫 system 파트에 breakpoint 하나만
+ * 두면 tool 정의까지 함께 캐시된다(측정값 4,016토큰 > 최소선 1,024). TTL은 기본 5분 — 챗은 사용자가
+ * 연달아 말하는 형태라 대개 충분하고, 1h는 쓰기 비용이 2배다.
+ */
+const CACHE_BREAKPOINT_PROVIDER_OPTIONS = {
+	anthropic: { cacheControl: { type: 'ephemeral' } },
 } as const
 
 const agentChatCallOptionsSchema = z.object({
@@ -54,10 +63,13 @@ export const agentChatAgent = new ToolLoopAgent<
 	toolsContext: toolsContextFor({ user: null }),
 	callOptionsSchema: agentChatCallOptionsSchema,
 	stopWhen: isStepCount(10),
-	prepareStep: ({ stepNumber, steps }) => {
+	prepareStep: ({ stepNumber, steps, messages }) => {
+		const cachedMessages = withHistoryCacheBreakpoint(messages)
+
 		if (stepNumber === 0) {
 			return {
 				activeTools: ['loadSkill'],
+				messages: cachedMessages,
 				providerOptions: DEFAULT_PROVIDER_OPTIONS,
 				toolChoice: { type: 'tool', toolName: 'loadSkill' },
 			}
@@ -69,13 +81,18 @@ export const agentChatAgent = new ToolLoopAgent<
 			.at(-1)
 
 		if (!loadedSkill) {
-			return { activeTools: [], providerOptions: DEFAULT_PROVIDER_OPTIONS }
+			return {
+				activeTools: [],
+				messages: cachedMessages,
+				providerOptions: DEFAULT_PROVIDER_OPTIONS,
+			}
 		}
 
 		const execution = getAgentExecutionPolicy(loadedSkill.output)
 
 		return {
 			activeTools: execution.activeTools,
+			messages: cachedMessages,
 			model: anthropic(execution.modelId),
 			providerOptions: DEFAULT_PROVIDER_OPTIONS,
 		}
@@ -94,15 +111,22 @@ export const agentChatAgent = new ToolLoopAgent<
 			? `Current guideline page: ${options.pagePath}`
 			: undefined
 
+		// pagePath는 페이지마다 달라 캐시를 깨뜨린다 — 캐시되는 고정 파트 뒤의 별도 system 파트로 뺀다.
 		return {
 			...settings,
 			instructions: [
-				defaultInstructions,
-				formatAgentSkillSelectionInstructions(skills),
-				pageContext ? `Published context:\n${pageContext}` : null,
-			]
-				.filter(Boolean)
-				.join('\n\n'),
+				{
+					role: 'system' as const,
+					content: [
+						defaultInstructions,
+						formatAgentSkillSelectionInstructions(skills),
+					].join('\n\n'),
+					providerOptions: CACHE_BREAKPOINT_PROVIDER_OPTIONS,
+				},
+				...(pageContext
+					? [{ role: 'system' as const, content: `Published context:\n${pageContext}` }]
+					: []),
+			],
 			toolsContext: toolsContextFor(options),
 		}
 	},
@@ -115,6 +139,32 @@ export interface AgentChatMessageMetadata {
 }
 
 export type AgentChatMessage = InferAgentUIMessage<typeof agentChatAgent, AgentChatMessageMetadata>
+
+/**
+ * 스텝마다 늘어나는 메시지 이력의 끝으로 breakpoint를 옮겨 단다 — tool 결과가 누적되면 한 스텝이
+ * 10만 토큰을 넘기는데, system 프리픽스만 캐시하면 그 대부분이 매 스텝 새 값으로 다시 청구된다.
+ * 직전 스텝이 써둔 캐시는 breakpoint를 떼도 남으므로, 옮겨 달아야 상한 4개에 걸리지 않는다.
+ */
+function withHistoryCacheBreakpoint(messages: ModelMessage[]): ModelMessage[] {
+	const last = messages.at(-1)
+	if (!last) return messages
+
+	return [
+		...messages.slice(0, -1).map(stripCacheBreakpoint),
+		{
+			...last,
+			providerOptions: { ...last.providerOptions, ...CACHE_BREAKPOINT_PROVIDER_OPTIONS },
+		},
+	]
+}
+
+function stripCacheBreakpoint(message: ModelMessage): ModelMessage {
+	if (!message.providerOptions?.anthropic?.cacheControl) return message
+
+	const { cacheControl: _removed, ...anthropic } = message.providerOptions.anthropic
+
+	return { ...message, providerOptions: { ...message.providerOptions, anthropic } }
+}
 
 function formatAgentSkillSelectionInstructions(
 	skills: Awaited<ReturnType<typeof findEnabledAgentSkillSummaries>>,
