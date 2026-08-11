@@ -58,14 +58,23 @@ describe('BackgroundSection', () => {
 		expect(screen.getByRole('option', { name: 'Graphic' })).toBeInTheDocument()
 	})
 
-	it('Graphic 타입은 forward-straight가 지원하는 컨트롤만 노출한다', async () => {
+	// compose에 캔버스 배경 경로가 없어 값이 흐를 곳이 없다 — 조작 가능해 보이는 컨트롤을 두지 않는다.
+	it('배선 전까지 배경 컨트롤은 잠긴 채 그려진다', async () => {
 		const user = userEvent.setup()
 		render(<BackgroundSection allowedTypes={['color', 'image', 'graphic']} />)
-		await selectBackgroundType(user, 'Graphic')
 
-		expect(screen.getByRole('radio', { name: 'Off' })).toBeInTheDocument()
-		expect(screen.getByRole('slider', { name: '그래픽 위치' })).toBeInTheDocument()
-		expect(screen.getByRole('combobox', { name: 'Perspective' })).toBeInTheDocument()
-		expect(screen.getByRole('combobox', { name: 'Angle' })).toBeInTheDocument()
+		expect(screen.getByLabelText('Background Color')).toBeDisabled()
+
+		await selectBackgroundType(user, 'Image')
+		expect(screen.getByRole('button', { name: 'Browse' })).toBeDisabled()
+
+		// 탭 스왑은 AnimatePresence mode="wait"라 이전 패널이 빠진 뒤에 나타난다.
+		await user.click(screen.getByRole('radio', { name: 'Generate' }))
+		expect(await screen.findByRole('button', { name: '이미지 생성' })).toBeDisabled()
+
+		await selectBackgroundType(user, 'Graphic')
+		// Graphic Transform은 섹션째 잠겨 닫힌다 — 안의 컨트롤은 그려지지 않는다.
+		expect(screen.getByRole('button', { name: 'Graphic Transform' })).toBeDisabled()
+		expect(screen.queryByRole('slider', { name: '그래픽 위치' })).toBeNull()
 	})
 })
