@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { toBlob, toPng } from 'html-to-image'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import { exportHtmlToPng, renderHtmlToPngBlob } from './export-template-png.client'
 
 vi.mock('html-to-image', () => ({ toBlob: vi.fn(), toPng: vi.fn() }))
@@ -76,6 +77,28 @@ describe('exportHtmlToPng', () => {
 			'<div id="__stage" style="background-image:url(/api/generated-images/file/bg.png)">배치 결과</div>',
 			'결과',
 		)
+
+		expect(toPng).toHaveBeenCalledOnce()
+	})
+
+	it('캔버스 배경이 깔린 합성 HTML을 unsafe URL 없이 내보낸다', async () => {
+		// jsdom은 리소스를 로드하지 않으므로 배경 이미지 로드 완료 상태를 흉내 낸다.
+		vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true)
+		HTMLImageElement.prototype.decode = () => Promise.resolve()
+
+		// compose가 루트 프레임에 쓰는 선언(색·생성 이미지 url·cover)이 stage 검증을 통과해야 한다.
+		const html = composeTemplateHtml(
+			'<div data-node-id="1:1" data-figma-type="FRAME" style="width:400px;height:300px"></div>',
+			{},
+			{
+				canvasBackground: {
+					color: '#ffffff',
+					imageUrl: '/api/generated-images/file/canvas.png',
+				},
+			},
+		)
+
+		await exportHtmlToPng(html, '결과')
 
 		expect(toPng).toHaveBeenCalledOnce()
 	})

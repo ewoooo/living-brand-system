@@ -3,7 +3,15 @@
 import { useState } from 'react'
 import { Controller } from '@/components/studio/shared/controller'
 import { Button } from '@/components/ui/button'
+import { FieldError } from '@/components/ui/field'
 import { Typography } from '@/components/ui/typography'
+import type { ImageAspectRatio } from '@/features/generate-image/image-size'
+import {
+	type ImageProfileOption,
+	requestImageGeneration,
+} from '@/features/generate-image/services/generate-image.client'
+import type { TemplateBackgroundState } from '@/features/template-studio/hooks/use-template-studio'
+import type { TemplateBackgroundType } from '@/features/template-studio/template-config'
 import {
 	IMAGE_TRANSFORM_DEFAULT,
 	ImageTransformControl,
@@ -11,22 +19,35 @@ import {
 	TransformPad,
 } from './image-transform-control'
 
-type BackgroundType = 'color' | 'image' | 'graphic'
-type BackgroundImageMode = 'preset' | 'generate'
-
+const GENERATION_ERROR_MESSAGE = '이미지 생성에 실패했어요. 잠시 후 다시 시도해 주세요.'
 const PROMPT_MAX_LENGTH = 500
 
-const BACKGROUND_TYPE_LABELS: Record<BackgroundType, string> = {
+const BACKGROUND_TYPE_LABELS: Record<TemplateBackgroundType, string> = {
 	color: 'Color',
 	image: 'Image',
 	graphic: 'Graphic',
 }
 
+/**
+ * 잠긴 colorize 행의 표시값 — 생성 이미지를 물들이는 파라미터이고 캔버스 colorize 경로가
+ * 따로 필요하다. 배선되는 시점에 Provider의 배경 상태로 올라간다.
+ */
+const LOCKED_LINE_COLOR = '#000000'
+const LOCKED_COLORIZE_BACKGROUND = '#ffffff'
+
 type BackgroundSectionProps = {
 	/** 편집 계약(config)이 이 템플릿에 허용한 배경 종류 — Type 목록이 여기서 나온다. */
-	allowedTypes: readonly BackgroundType[]
+	allowedTypes: readonly TemplateBackgroundType[]
 	/** 템플릿 캔버스 종횡비(w/h) — 배경 transform 패드가 같은 비율로 그려진다. */
 	canvasAspectRatio?: number
+	/** 캔버스 박스에서 유도한 생성 비율 — 없으면 프로파일 비율로 생성한다. */
+	aspectRatio?: ImageAspectRatio
+	/** 발행 프로파일 목록 — Provider가 1회 조회해 이미지 슬롯과 공유한다. null = 로드 중. */
+	profiles: ImageProfileOption[] | null
+	profilesFailed?: boolean
+	/** 배경 세션 상태 — 소유는 Provider(합성에 싣는다). */
+	value: TemplateBackgroundState
+	onChange: (patch: Partial<TemplateBackgroundState>) => void
 }
 
 /**
@@ -34,16 +55,23 @@ type BackgroundSectionProps = {
  * Color: 배경색 / Image: Preset(브랜드 이미지 선택)·Generate(프롬프트 생성) + Image Transform /
  * Graphic: 그래픽 종류·색 + Graphic Transform(포지션·가변 두께·시점·각도 — forward-straight 계약과 1:1).
  *
- * ponytail: UI-first로 디자인 전체를 먼저 세우되, compose에 캔버스 배경 오버라이드 경로가 아직
- * 없어서 값이 흐를 곳이 없다 — Type 전환과 프롬프트 입력만 살리고 나머지는 잠가 스테이징한다
- * (docs/10 §3.6: 조작 가능해 보이는데 무반응인 컨트롤을 두지 않는다).
+ * 값 소유는 Provider(캔버스 배경으로 합성된다)이고, 프롬프트·생성 중·실패는 여기 런타임 상태다
+ * (docs/10 §3.6 — error·busy는 정의가 아니다). compose에 경로가 없는 갈래(Preset 브라우즈,
+ * Graphic 전체, colorize 색 행, Image Transform)는 계속 잠가 스테이징한다.
  */
-export function BackgroundSection({ allowedTypes, canvasAspectRatio }: BackgroundSectionProps) {
-	const [type, setType] = useState<BackgroundType>(allowedTypes[0] ?? 'color')
-	const [imageMode, setImageMode] = useState<BackgroundImageMode>('preset')
-	const [lineColor, setLineColor] = useState('#000000')
-	const [backgroundColor, setBackgroundColor] = useState('#ffffff')
+export function BackgroundSection({
+	allowedTypes,
+	canvasAspectRatio,
+	aspectRatio,
+	profiles,
+	profilesFailed,
+	value,
+	onChange,
+}: BackgroundSectionProps) {
+	const { type, imageMode } = value
 	const [prompt, setPrompt] = useState('')
+	const [generating, setGenerating] = useState(false)
+	const [error, setError] = useState<string | null>(null)
 	const [imageTransform, setImageTransform] =
 		useState<ImageTransformValue>(IMAGE_TRANSFORM_DEFAULT)
 	// Graphic Transform — 현재 그래픽 기능(forward-straight)이 지원하는 파라미터만 노출한다.
@@ -51,6 +79,38 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 	const [variableWeight, setVariableWeight] = useState<'off' | 'on'>('off')
 	const [viewpoint, setViewpoint] = useState<'flat' | 'low-angle'>('flat')
 	const [angleIntensity, setAngleIntensity] = useState<'weak' | 'medium' | 'strong'>('medium')
+
+	// 디자인에 프로파일 선택 컨트롤이 없다 — 이미지 슬롯과 같은 규칙으로 발행 목록의 첫 항목을 쓴다.
+	const profileId = profiles?.[0]?.id
+
+	async function generate() {
+		const trimmed = prompt.trim()
+		if (!trimmed || !profileId || generating) return
+		setGenerating(true)
+		setError(null)
+		try {
+			const result = await requestImageGeneration({
+				prompt: trimmed,
+				// 배경은 후보 고르기가 없다 — 1장만 생성한다(라우트 기본값에 의존하지 않는다).
+				count: 1,
+				profileId,
+				aspectRatio,
+			})
+			const generated = result.generatedImages?.[0]
+			if (generated) {
+				onChange({ image: { url: generated.url, generatedImageId: generated.id } })
+			} else {
+				setError(GENERATION_ERROR_MESSAGE)
+			}
+		} catch (requestError) {
+			console.error(requestError)
+			setError(GENERATION_ERROR_MESSAGE)
+		} finally {
+			setGenerating(false)
+		}
+	}
+
+	const visibleError = error ?? (profilesFailed ? '이미지 프로파일을 불러오지 못했습니다.' : null)
 
 	return (
 		<>
@@ -62,16 +122,17 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 							label: BACKGROUND_TYPE_LABELS[allowed],
 						}))}
 						value={type}
-						onChange={(value) => setType(value as BackgroundType)}
+						onChange={(next) => onChange({ type: next as TemplateBackgroundType })}
 					/>
 				</Controller.Row>
 
 				{type === 'color' && (
 					<Controller.ColorRow
 						label="Background Color"
-						value={backgroundColor}
-						onChange={setBackgroundColor}
-						disabled
+						value={value.color ?? '#ffffff'}
+						isEmpty={value.color === null}
+						onReset={() => onChange({ color: null })}
+						onChange={(hex) => onChange({ color: hex })}
 					/>
 				)}
 
@@ -85,7 +146,7 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 									{ value: 'generate', label: 'Generate' },
 								]}
 								value={imageMode}
-								onChange={setImageMode}
+								onChange={(next) => onChange({ imageMode: next })}
 							/>
 						</Controller.Row>
 						<Controller.TabPanel tabKey={imageMode}>
@@ -125,14 +186,12 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 								<>
 									<Controller.ColorRow
 										label="Line Color"
-										value={lineColor}
-										onChange={setLineColor}
+										value={LOCKED_LINE_COLOR}
 										disabled
 									/>
 									<Controller.ColorRow
 										label="Background Color"
-										value={backgroundColor}
-										onChange={setBackgroundColor}
+										value={LOCKED_COLORIZE_BACKGROUND}
 										disabled
 									/>
 									<Controller.Field
@@ -146,15 +205,22 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 											maxLength={PROMPT_MAX_LENGTH}
 											rows={2}
 										/>
+										{aspectRatio && (
+											<Typography size="xs" tone="muted">
+												캔버스 비율 {aspectRatio}로 생성
+											</Typography>
+										)}
 									</Controller.Field>
 									<Button
 										type="button"
 										variant="muted"
 										className="mt-0.5 h-11 w-full text-sm font-semibold"
-										disabled
+										onClick={generate}
+										disabled={generating || !profileId || !prompt.trim()}
 									>
-										이미지 생성
+										{generating ? '생성 중…' : '이미지 생성'}
 									</Button>
+									{visibleError && <FieldError>{visibleError}</FieldError>}
 								</>
 							)}
 						</Controller.TabPanel>
@@ -172,14 +238,12 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 						</Controller.Row>
 						<Controller.ColorRow
 							label="Line Color"
-							value={lineColor}
-							onChange={setLineColor}
+							value={LOCKED_LINE_COLOR}
 							disabled
 						/>
 						<Controller.ColorRow
 							label="Background Color"
-							value={backgroundColor}
-							onChange={setBackgroundColor}
+							value={LOCKED_COLORIZE_BACKGROUND}
 							disabled
 						/>
 					</>
@@ -187,7 +251,7 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 			</Controller.Section>
 
 			{/* 디자인 SSOT: transform은 Background의 형제 섹션이고 구분선이 없다.
-			    ponytail: 배경 이미지·그래픽 배정이 아직 없어 생성 전 규칙대로 닫힌 채 잠근다. */}
+			    ponytail: 배경 transform의 기준 박스(=캔버스) 결정이 남아 잠근다. */}
 			{type === 'image' && (
 				<Controller.Section title="Image Transform" disabled className="border-t-0 pt-0">
 					<ImageTransformControl
@@ -225,7 +289,7 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 									{ value: 'low-angle', label: 'Low Angle' },
 								]}
 								value={viewpoint}
-								onChange={(value) => setViewpoint(value as typeof viewpoint)}
+								onChange={(next) => setViewpoint(next as typeof viewpoint)}
 							/>
 						</Controller.Row>
 						<Controller.Row label="Angle">
@@ -236,8 +300,8 @@ export function BackgroundSection({ allowedTypes, canvasAspectRatio }: Backgroun
 									{ value: 'strong', label: 'Strong' },
 								]}
 								value={angleIntensity}
-								onChange={(value) =>
-									setAngleIntensity(value as typeof angleIntensity)
+								onChange={(next) =>
+									setAngleIntensity(next as typeof angleIntensity)
 								}
 							/>
 						</Controller.Row>

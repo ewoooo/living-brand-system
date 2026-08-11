@@ -23,8 +23,10 @@ import {
 } from '@/features/template-studio/image-edit-transform'
 import {
 	deriveTemplateConfig,
+	isBackgroundSlot,
 	isImageSlot,
 	isTextSlot,
+	type TemplateBackgroundType,
 	type TemplateConfig,
 } from '@/features/template-studio/template-config'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
@@ -38,6 +40,18 @@ export type TemplateImageSlotState = {
 	/** 사용자가 바꾼 라인 색 — 없으면 저작 colorize의 line을 유지한다. */
 	lineColor?: string
 	transform?: ImageTransformValue
+}
+
+/**
+ * 캔버스 배경 편집 상태 — 노드 슬롯이 아니라 도화지 하나의 상태라 단위 객체 하나로 흐른다.
+ * color가 null이면 사용자가 만지지 않은 것이고, 저작 배경을 덮지 않는다(isEmpty 파생 원천).
+ */
+export type TemplateBackgroundState = {
+	type: TemplateBackgroundType
+	imageMode: 'preset' | 'generate'
+	color: string | null
+	/** 생성으로 깔린 배경 이미지 — type=image일 때만 합성된다. */
+	image?: { url: string; generatedImageId: number }
 }
 
 type TemplateStudioValue = {
@@ -57,6 +71,10 @@ type TemplateStudioValue = {
 		update: (slotId: string, patch: Partial<TemplateImageSlotState>) => void
 		profiles: ImageProfileOption[] | null
 		profilesFailed: boolean
+	}
+	background: {
+		state: TemplateBackgroundState
+		update: (patch: Partial<TemplateBackgroundState>) => void
 	}
 	canvas: {
 		html: string
@@ -100,12 +118,20 @@ export function TemplateStudioProvider({
 	const config = useMemo(() => deriveTemplateConfig(template), [template])
 	const textSlots = useMemo(() => config.slots.filter(isTextSlot), [config])
 	const imageSlots = useMemo(() => config.slots.filter(isImageSlot), [config])
+	const backgroundSlot = useMemo(() => config.slots.find(isBackgroundSlot), [config])
 
-	// 발행 프로파일은 여기서 1회만 조회해 모든 이미지 슬롯이 공유한다(슬롯별 중복 요청 방지).
+	// 배경은 슬롯이 아니라 도화지 하나 — 시작 종류는 계약이 허용한 첫 종류다.
+	const [background, setBackground] = useState<TemplateBackgroundState>(() => ({
+		type: backgroundSlot?.control.allowedTypes[0] ?? 'color',
+		imageMode: 'preset',
+		color: null,
+	}))
+
+	// 발행 프로파일은 여기서 1회만 조회해 모든 이미지 슬롯과 배경 생성이 공유한다(중복 요청 방지).
 	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
 	const [profilesFailed, setProfilesFailed] = useState(false)
 	useEffect(() => {
-		if (imageSlots.length === 0) return
+		if (imageSlots.length === 0 && !backgroundSlot) return
 		let alive = true
 		requestPublishedImageProfiles()
 			.then((list) => alive && setProfiles(list))
@@ -117,12 +143,13 @@ export function TemplateStudioProvider({
 		return () => {
 			alive = false
 		}
-	}, [imageSlots])
+	}, [imageSlots, backgroundSlot])
 
 	// 드래그 빈도(60~120hz)로 바뀌는 입력은 deferred로 합성한다 — 컨트롤은 매 프레임 반응하고,
 	// 전체 재합성(DOMParser + innerHTML 교체)은 브라우저가 여유 있는 프레임에 따라온다.
 	const deferredTextColor = useDeferredValue(textColor)
 	const deferredImageStates = useDeferredValue(imageStates)
+	const deferredBackground = useDeferredValue(background)
 
 	// 사용자가 만진 슬롯만 오버라이드로 합성한다(만지지 않은 슬롯은 저작 값 유지).
 	// 일괄 텍스트 색은 사용자가 만졌을 때만 모든 텍스트 슬롯에 싣는다.
@@ -172,13 +199,28 @@ export function TemplateStudioProvider({
 					]
 				}),
 		)
-		return composeTemplateHtml(html, { ...textOverrides, ...imageOverrides })
+		// 배경은 노드가 아니라 캔버스 — 선택한 갈래에서 값이 정해진 것만 싣는다(색 갈래는
+		// 사용자가 만졌을 때만, 이미지 갈래는 생성 결과가 있을 때만).
+		const canvasBackground = {
+			...(deferredBackground.type === 'color' && deferredBackground.color
+				? { color: deferredBackground.color }
+				: {}),
+			...(deferredBackground.type === 'image' && deferredBackground.image
+				? { imageUrl: deferredBackground.image.url }
+				: {}),
+		}
+		return composeTemplateHtml(
+			html,
+			{ ...textOverrides, ...imageOverrides },
+			{ canvasBackground },
+		)
 	}, [
 		html,
 		textSlots,
 		textValues,
 		deferredTextColor,
 		deferredImageStates,
+		deferredBackground,
 		imageSlots,
 		width,
 		height,
@@ -231,6 +273,10 @@ export function TemplateStudioProvider({
 				})),
 			profiles,
 			profilesFailed,
+		},
+		background: {
+			state: background,
+			update: (patch) => setBackground((current) => ({ ...current, ...patch })),
 		},
 		canvas: { html: composedHtml, previewRef },
 		exporting: {
