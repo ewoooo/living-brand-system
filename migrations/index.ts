@@ -47,6 +47,7 @@ import * as migration_20260807_082406_type_weight_layout from './20260807_082406
 import * as migration_20260807_084125_scramble_fixed_height from './20260807_084125_scramble_fixed_height';
 import * as migration_20260807_084746_block_gap from './20260807_084746_block_gap';
 import * as migration_20260810_100000_rename_dodont_widget_enums from './20260810_100000_rename_dodont_widget_enums';
+import * as migration_20260811_015839_remove_legacy_blocks from './20260811_015839_remove_legacy_blocks';
 
 export const migrations = [
   {
@@ -287,11 +288,16 @@ export const migrations = [
   {
     up: migration_20260807_084746_block_gap.up,
     down: migration_20260807_084746_block_gap.down,
-    name: '20260807_084746_block_gap'
+    name: '20260807_084746_block_gap',
   },
   {
     up: migration_20260810_100000_rename_dodont_widget_enums.up,
     down: migration_20260810_100000_rename_dodont_widget_enums.down,
-    name: '20260810_100000_rename_dodont_widget_enums'
+    name: '20260810_100000_rename_dodont_widget_enums',
+  },
+  {
+    up: migration_20260811_015839_remove_legacy_blocks.up,
+    down: migration_20260811_015839_remove_legacy_blocks.down,
+    name: '20260811_015839_remove_legacy_blocks'
   },
 ];
