@@ -39,7 +39,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "cin" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "cin_locales" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "glw" DISABLE ROW LEVEL SECURITY;
-  ALTER TABLE "icw" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "imw" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "iug" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "lgs" DISABLE ROW LEVEL SECURITY;
@@ -54,7 +53,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "sla_apps" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "sla_apps_locales" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "sla" DISABLE ROW LEVEL SECURITY;
-  ALTER TABLE "scs" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "tsc" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "guideline_docs_blocks_color_pairing" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "guideline_docs_blocks_color_pairing_locales" DISABLE ROW LEVEL SECURITY;
@@ -115,7 +113,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "_cin_v" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_cin_v_locales" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_glw_v" DISABLE ROW LEVEL SECURITY;
-  ALTER TABLE "_icw_v" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_imw_v" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_iug_v" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_lgs_v" DISABLE ROW LEVEL SECURITY;
@@ -130,7 +127,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "_sla_v_apps" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_sla_v_apps_locales" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_sla_v" DISABLE ROW LEVEL SECURITY;
-  ALTER TABLE "_scs_v" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_tsc_v" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_guideline_docs_v_blocks_color_pairing" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_guideline_docs_v_blocks_color_pairing_locales" DISABLE ROW LEVEL SECURITY;
@@ -191,7 +187,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   DROP TABLE "cin" CASCADE;
   DROP TABLE "cin_locales" CASCADE;
   DROP TABLE "glw" CASCADE;
-  DROP TABLE "icw" CASCADE;
   DROP TABLE "imw" CASCADE;
   DROP TABLE "iug" CASCADE;
   DROP TABLE "lgs" CASCADE;
@@ -206,7 +201,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   DROP TABLE "sla_apps" CASCADE;
   DROP TABLE "sla_apps_locales" CASCADE;
   DROP TABLE "sla" CASCADE;
-  DROP TABLE "scs" CASCADE;
   DROP TABLE "tsc" CASCADE;
   DROP TABLE "guideline_docs_blocks_color_pairing" CASCADE;
   DROP TABLE "guideline_docs_blocks_color_pairing_locales" CASCADE;
@@ -267,7 +261,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   DROP TABLE "_cin_v" CASCADE;
   DROP TABLE "_cin_v_locales" CASCADE;
   DROP TABLE "_glw_v" CASCADE;
-  DROP TABLE "_icw_v" CASCADE;
   DROP TABLE "_imw_v" CASCADE;
   DROP TABLE "_iug_v" CASCADE;
   DROP TABLE "_lgs_v" CASCADE;
@@ -282,7 +275,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   DROP TABLE "_sla_v_apps" CASCADE;
   DROP TABLE "_sla_v_apps_locales" CASCADE;
   DROP TABLE "_sla_v" CASCADE;
-  DROP TABLE "_scs_v" CASCADE;
   DROP TABLE "_tsc_v" CASCADE;
   DROP TABLE "_guideline_docs_v_blocks_color_pairing" CASCADE;
   DROP TABLE "_guideline_docs_v_blocks_color_pairing_locales" CASCADE;
