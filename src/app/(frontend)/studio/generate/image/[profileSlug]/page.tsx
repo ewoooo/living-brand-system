@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { ImageGenerator } from '@/components/studio/generate/image-generator'
 import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
-import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
+import { listImageStudioConfigs } from '@/features/image-studio/services/list-image-studio-configs.service'
 import { authenticateRequest } from '@/lib/request-auth'
 
 export default async function GenerateImageProfilePage({
@@ -14,17 +14,18 @@ export default async function GenerateImageProfilePage({
 
 	if (!user) notFound()
 
-	const profiles = await listAvailableImageProfiles(user)
-	const profile = profiles.find((item) => item.slug === profileSlug)
+	const configs = await listImageStudioConfigs(user)
+	const config = configs.find((item) => item.slug === profileSlug)
 
-	if (!profile) notFound()
+	if (!config) notFound()
 
 	return (
 		<StudioWorkspacePage
-			title={profile.name}
+			title={config.name}
 			description="선택한 이미지 프로파일을 적용해 브랜드 이미지 후보를 만듭니다."
 		>
-			<ImageGenerator profiles={profiles} initialProfileId={profile.id} />
+			{/* 슬러그는 시작 프로파일만 정한다 — 교체는 세션을 유지하려고 클라이언트에서 처리한다. */}
+			<ImageGenerator configs={configs} initialProfileId={config.profileId} />
 		</StudioWorkspacePage>
 	)
 }
