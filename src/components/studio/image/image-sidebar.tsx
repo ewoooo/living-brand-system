@@ -17,7 +17,8 @@ import { ImageCameraControl } from './image-camera-control'
  * 디자인 SSOT: Figma HD_LBS_UI section 16:9137 "Image Usecase".
  */
 export function ImageSidebar() {
-	const { config, profiles, prompt, generation, camera, results, download } = useImageStudio()
+	const { config, profiles, prompt, generation, camera, color, results, download } =
+		useImageStudio()
 	const { batch, ratio, resolution } = config.generateOptions
 	const promptEmpty = !prompt.value.trim()
 
@@ -59,7 +60,7 @@ export function ImageSidebar() {
 						</div>
 					</div>
 					<div className="flex gap-2">
-						{/* 지금은 원본 PNG 저장이다 — 계약의 색을 굽는 저장은 후속 단계. */}
+						{/* 색이 있으면 색을 구운 PNG, 없으면 원본이다 — 판정은 Provider가 한다. */}
 						<Button
 							className="h-11 flex-1"
 							onClick={download.selected}
@@ -151,20 +152,20 @@ export function ImageSidebar() {
 				</Controller.Section>
 			)}
 
-			{/* 계약에 색이 실려 있을 때만 그린다(개방 플래그를 따로 두지 않는다).
-			    ponytail: 미리보기·저장 반영이 후속 단계라 조작은 잠가 스테이징한다(docs/10 §3.6). */}
-			{config.colorAdjustment && (
+			{/* 계약에 색이 실려 있을 때만 세션 값이 존재한다 — 값 유무가 곧 개방 여부다
+			    (개방 플래그를 따로 두지 않는다, docs/10 §3.6). */}
+			{color.value && (
 				<Controller.Section title="Profile Settings">
 					<Controller.ColorRow
 						label="Line Color"
-						value={config.colorAdjustment.line}
-						disabled
+						value={color.value.line}
+						onChange={(line) => color.update({ line })}
 					/>
-					{config.colorAdjustment.background && (
+					{color.value.background !== undefined && (
 						<Controller.ColorRow
 							label="Background Color"
-							value={config.colorAdjustment.background}
-							disabled
+							value={color.value.background}
+							onChange={(background) => color.update({ background })}
 						/>
 					)}
 				</Controller.Section>

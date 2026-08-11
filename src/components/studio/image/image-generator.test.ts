@@ -120,7 +120,7 @@ describe('ImageGenerator', () => {
 		expect(screen.queryByText('Profile Settings')).not.toBeInTheDocument()
 	})
 
-	it('색을 개방한 프로파일은 계약의 색을 잠긴 행으로 보여준다', () => {
+	it('색을 개방한 프로파일은 계약의 색을 조작 가능한 행으로 보여준다', () => {
 		render(
 			createElement(ImageGenerator, {
 				configs: [
@@ -132,8 +132,20 @@ describe('ImageGenerator', () => {
 		)
 
 		expect(screen.getByText('Profile Settings')).toBeInTheDocument()
-		expect(screen.getByLabelText('Line Color 색상 선택')).toBeDisabled()
-		expect(screen.getByLabelText('Background Color 색상 선택')).toBeDisabled()
+		expect(screen.getByLabelText('Line Color 색상 선택')).toHaveValue('#000dff')
+		expect(screen.getByLabelText('Background Color 색상 선택')).toBeEnabled()
+	})
+
+	// 배경 색 행은 계약에 배경이 실려 있을 때만 그린다.
+	it('라인 색만 개방한 프로파일은 배경 색 행을 그리지 않는다', () => {
+		render(
+			createElement(ImageGenerator, {
+				configs: [config(5, '라인 일러스트', { colorAdjustment: { line: '#000dff' } })],
+			}),
+		)
+
+		expect(screen.getByLabelText('Line Color 색상 선택')).toBeInTheDocument()
+		expect(screen.queryByLabelText('Background Color 색상 선택')).not.toBeInTheDocument()
 	})
 
 	it('해상도 선택지가 하나뿐이면 읽기 전용으로 그린다', () => {

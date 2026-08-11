@@ -22,7 +22,7 @@ const EXAMPLE_PROMPTS = [
 
 // 결과 캔버스: 컨텍스트의 결과를 그리고 선택만 되돌려 쓴다 — 컨트롤러를 모른다.
 export function ImageCanvas() {
-	const { prompt, generation, results } = useImageStudio()
+	const { prompt, generation, color, results } = useImageStudio()
 
 	if (!generation.busy && !results.result) {
 		return <EmptyCanvas onSelectExample={prompt.setValue} />
@@ -30,6 +30,7 @@ export function ImageCanvas() {
 
 	return (
 		<ImageGenerationResults
+			color={color.value}
 			loading={generation.busy}
 			onSelect={results.select}
 			requested={results.requested}
