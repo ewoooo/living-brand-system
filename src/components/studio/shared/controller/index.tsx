@@ -1,13 +1,22 @@
 import { ControllerCameraControl } from './camera-control'
 import { ControllerColorRow } from './color-row'
 import { ControllerField } from './field'
+import { ControllerGroup } from './group'
 import { ControllerInput, ControllerTextarea } from './input'
+import { ControllerContent, ControllerFooter, ControllerHeader, ControllerRoot } from './layout'
+import { ControllerPad } from './pad'
 import { ControllerPanel } from './panel'
+import { ControllerRange } from './range'
 import { ControllerRow } from './row'
-import { ControllerSection } from './section'
 import { ControllerSegmented } from './segmented'
 import { ControllerSelect } from './select'
 import { ControllerTabPanel } from './tab-panel'
+
+/** 컨트롤 슬롯의 조작 가능 여부. */
+export type ControllerAvailability = 'enabled' | 'readonly' | 'disabled'
+
+/** enabled 슬롯의 현재 상호작용·오류 표현 상태. */
+export type ControllerInteraction = 'idle' | 'hover' | 'focused' | 'error'
 
 /**
  * Studio 컨트롤러 킷 — 디자인 SSOT(Figma HD_LBS_UI 4:5578 "Controller API")의 dialkit 기반
@@ -20,8 +29,12 @@ import { ControllerTabPanel } from './tab-panel'
  * 도메인 상태 컨텍스트는 여기 두지 않는다 — Provider가 필요하면 features의 훅으로(docs/10 §3.5).
  */
 export const Controller = {
+	Root: ControllerRoot,
+	Header: ControllerHeader,
+	Content: ControllerContent,
+	Group: ControllerGroup,
+	Footer: ControllerFooter,
 	Panel: ControllerPanel,
-	Section: ControllerSection,
 	Row: ControllerRow,
 	Field: ControllerField,
 	Segmented: ControllerSegmented,
@@ -30,6 +43,8 @@ export const Controller = {
 	Select: ControllerSelect,
 	Input: ControllerInput,
 	Textarea: ControllerTextarea,
+	Range: ControllerRange,
+	Pad: ControllerPad,
 	CameraControl: ControllerCameraControl,
 }
 
@@ -37,11 +52,17 @@ export const Controller = {
 export {
 	ControllerCameraControl,
 	ControllerColorRow,
+	ControllerContent,
 	ControllerField,
+	ControllerFooter,
+	ControllerGroup,
+	ControllerHeader,
 	ControllerInput,
+	ControllerPad,
 	ControllerPanel,
+	ControllerRange,
+	ControllerRoot,
 	ControllerRow,
-	ControllerSection,
 	ControllerSegmented,
 	ControllerSelect,
 	ControllerTabPanel,

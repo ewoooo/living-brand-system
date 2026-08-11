@@ -16,7 +16,6 @@ import {
 	IMAGE_TRANSFORM_DEFAULT,
 	ImageTransformControl,
 	type ImageTransformValue,
-	TransformPad,
 } from './image-transform-control'
 
 const GENERATION_ERROR_MESSAGE = '이미지 생성에 실패했어요. 잠시 후 다시 시도해 주세요.'
@@ -114,7 +113,7 @@ export function BackgroundSection({
 
 	return (
 		<>
-			<Controller.Section title="Background">
+			<Controller.Group title="Background" collapsible>
 				<Controller.Row label="Type">
 					<Controller.Select
 						options={allowedTypes.map((allowed) => ({
@@ -248,28 +247,37 @@ export function BackgroundSection({
 						/>
 					</>
 				)}
-			</Controller.Section>
+			</Controller.Group>
 
 			{/* 디자인 SSOT: transform은 Background의 형제 섹션이고 구분선이 없다.
 			    ponytail: 배경 transform의 기준 박스(=캔버스) 결정이 남아 잠근다. */}
 			{type === 'image' && (
-				<Controller.Section title="Image Transform" disabled className="border-t-0 pt-0">
+				<Controller.Group
+					title="Image Transform"
+					collapsible
+					disabled
+					className="border-t-0 pt-0"
+				>
 					<ImageTransformControl
 						value={imageTransform}
 						aspectRatio={canvasAspectRatio}
 						onChange={setImageTransform}
 					/>
-				</Controller.Section>
+				</Controller.Group>
 			)}
 			{type === 'graphic' && (
-				<Controller.Section title="Graphic Transform" disabled className="border-t-0 pt-0">
+				<Controller.Group
+					title="Graphic Transform"
+					collapsible
+					disabled
+					className="border-t-0 pt-0"
+				>
 					<div className="flex flex-col gap-1 pb-2.5">
-						<TransformPad
-							ariaLabel="그래픽 위치"
-							x={graphicOrigin.x}
-							y={graphicOrigin.y}
+						<Controller.Pad
+							aria-label="그래픽 위치"
+							value={graphicOrigin}
 							aspectRatio={canvasAspectRatio}
-							onChange={(x, y) => setGraphicOrigin({ x, y })}
+							onChange={setGraphicOrigin}
 						/>
 						<Controller.Row label="Dynamic Thickness">
 							<Controller.Segmented
@@ -306,7 +314,7 @@ export function BackgroundSection({
 							/>
 						</Controller.Row>
 					</div>
-				</Controller.Section>
+				</Controller.Group>
 			)}
 		</>
 	)

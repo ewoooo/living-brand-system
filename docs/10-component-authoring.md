@@ -141,9 +141,39 @@ studio·global·home 같은 표면의 화면 컴포넌트도 위 계약을 그�
 
 ### 컨트롤러 컨트롤 계약 (§3.6)
 
-스튜디오 컨트롤러의 개별 컨트롤은 아래 계약을 따릅니다. 디자인 정본은 Figma HD_LBS_UI의 **Controller API**(node `4:5578`), 구현 원형은 `src/components/studio/shared/controller/`의 **Controller 컴파운드 킷**입니다(`<Controller.Panel>`, `<Controller.Row>` …). 지금 단계에서 이 계약은 **prop 어휘 규약**입니다 — 컨트롤을 데이터로 정의해 그리는 스키마 렌더러는 컨트롤러가 CMS·플러그인 정의에서 생성되는 시점에 이 어휘 위에 얹습니다.
+스튜디오 컨트롤러의 개별 컨트롤은 아래 계약을 따릅니다. 디자인 정본은 Figma HD_LBS_UI의 **Controller API**(node `4:5578`), 구현 원형은 `src/components/studio/shared/controller/`의 **Controller 컴파운드 킷**입니다. 패널은 `Root` → `Header`·`Content`·`Footer`, 본문은 `Group` → 개별 컨트롤로 조합합니다. `Group`은 제목을 직접 받고, 접힘이 필요할 때만 `collapsible`을 켭니다. 기존 `Panel`은 `Root`·`Content`·`Footer`를 묶은 호환 래퍼입니다. 지금 단계에서 이 계약은 **prop 어휘 규약**입니다 — 컨트롤을 데이터로 정의해 그리는 스키마 렌더러는 컨트롤러가 CMS·플러그인 정의에서 생성되는 시점에 이 어휘 위에 얹습니다.
+
+```tsx
+<Controller.Group title="Position">...</Controller.Group>
+<Controller.Group title="Transform" collapsible defaultOpen disabled={locked}>
+	...
+</Controller.Group>
+```
+
+`GroupHeader`와 `Section`은 공개 API에 두지 않습니다. `Group`이 제목을 내부에서 그리고, `collapsible`일 때만 구분선·Chevron·접힘 상태를 추가합니다. `defaultOpen`과 `disabled`도 `collapsible`일 때만 허용합니다. 잠긴 동안에는 강제로 닫지만 사용자의 이전 열림 상태는 보존해, 잠금이 풀리면 원래 상태로 복귀합니다. 레이아웃 공개 API는 `Root`·`Header`·`Content`·`Group`·`Footer`입니다.
+
+Controller 사용 구조는 세 책임으로 나눕니다.
+
+| 책임 | 소유 범위 | 경계 |
+| --- | --- | --- |
+| State / Context | Studio Provider가 설정·세션 값·정책·액션을 소유 | Controller 킷은 도메인 상태를 저장하지 않음 |
+| Layout / Composition | `Root`·`Header`·`Content`·`Group`·`Footer`가 영역·스크롤·그룹을 구성 | 컨트롤 값을 해석하거나 변경하지 않음 |
+| Control / Interaction | `Row`·`Range`·`Pad` 등 프리미티브가 사용자 입력을 `onChange`로 변환 | 도메인 값을 직접 변경하거나 I/O를 수행하지 않음 |
+
+별도 `ControllerProvider`는 두지 않습니다. 편집 계약과 세션 값은 화면의 Studio Provider가 소유하고, Controller 컴파운드는 표현 레이아웃만 소유합니다. 여러 Controller Root 사이에서 공유할 표현 상태가 실제로 생길 때만 Provider를 추가합니다.
 
 킷 배선 규칙: `Controller.Row`/`Controller.Field`가 `{ controlId, disabled }` 표현 컨텍스트를 내리고, 안의 킷 컨트롤(`Select`·`Input`·`Textarea`·`Segmented`·`ColorRow` 스와치)이 라벨 연결 id와 disabled를 자동으로 이어받습니다 — 소비자는 htmlFor를 배선하지 않습니다. 이 컨텍스트에 도메인 값을 넣지 않습니다(§3.5 — 도메인 Provider는 features의 훅으로).
+
+컨트롤 슬롯의 공통 상태는 조작 가능 여부와 현재 표현 상태를 섞지 않고 두 타입으로 정의합니다.
+
+```ts
+type ControllerAvailability = 'enabled' | 'readonly' | 'disabled'
+type ControllerInteraction = 'idle' | 'hover' | 'focused' | 'error'
+```
+
+`ControllerAvailability`는 서로 배타적입니다. `enabled`는 조작 가능, `readonly`는 값을 정상 대비로 읽을 수 있지만 변경 불가, `disabled`는 조작·포커스가 모두 불가한 상태입니다. `ControllerInteraction`은 `enabled`일 때만 적용합니다. `idle`은 기본, `hover`는 포인터 진입, `focused`는 포커스 진입, `error`는 검증 실패가 표시된 상태입니다. 시각 상태가 겹치면 `disabled` → `readonly` → `error` → `focused` → `hover` → `idle` 순으로 우선합니다.
+
+`hover`와 `focused`는 세션 데이터나 Context에 저장하지 않고 각각 CSS `:hover`와 `:focus-visible`/`:focus-within`으로 표현합니다. `error`만 검증 결과에서 명시적으로 전달합니다. 선택(`selected`), 펼침(`open`), 값 없음(`empty`)은 컨트롤별 값 상태이므로 이 두 공통 타입에 합치지 않습니다.
 
 공통(`ControlBase`) — 모든 컨트롤이 공유하는 정의 상태:
 
@@ -159,15 +189,15 @@ studio·global·home 같은 표면의 화면 컴포넌트도 위 계약을 그�
 | toggle | `boolean` | — | `Controller.Segmented` (On/Off) |
 | select | `string \| null` | `options[]` | `Controller.Row`+`Controller.Select` |
 | color | `#rrggbb \| null` | — | `Controller.ColorRow` |
-| range | `number` | `min`/`max`/`step`, 표기 포맷 | `SliderRow` (채움 폭=값) |
-| pad | `{ x, y }` (-1~1) | `aspectRatio`(Wide/Portrait/Square) | `TransformPad` |
+| range | `number` | `min`/`max`/`step`, 표기 포맷 | `Controller.Range` (채움 폭=값) |
+| pad | `{ x, y }` (-1~1) | `aspectRatio`(Wide/Portrait/Square) | `Controller.Pad` |
 | orbit | `{ azimuthDeg, elevationDeg }` | 스냅 스텝 | `Controller.CameraControl` + 오빗 프리뷰 |
 | asset | 자산 참조 `\| null` | 소스(브랜드 이미지 등) | Browse 카드(배선 예정) |
 
 경계 규칙:
 
 - **`isEmpty`는 파생 상태입니다.** `value === null`에서 계산하고, 별도 진실로 두지 않습니다. 비어 있으면 원본 값을 사칭하지 않고 `—`로 보입니다(`Controller.ColorRow`의 `isEmpty` 원형).
-- **`error`·`busy`는 정의가 아니라 런타임 상태입니다.** ControlBase에 넣지 않고 소유 컴포넌트의 상태로 처리합니다(생성 실패 메시지, "생성 중…" 비활성).
+- **`error`·`busy`는 정의가 아니라 런타임 상태입니다.** `error`는 `ControllerInteraction`으로 표현하되 검증 결과는 소유 컴포넌트가 계산하고, `busy`는 소유 컴포넌트가 "생성 중…" 비활성으로 처리합니다.
 - **컴포지션 층(섹션·탭 분기·조건 노출·액션)은 의도적으로 미정입니다.** 화면 컨트롤러가 둘 이상 쌓여 실제 분기 형태가 드러나기 전에는 `visibleWhen` 류의 DSL을 추측으로 설계하지 않습니다.
 - **네임스페이스 객체(`Controller`)는 client 소비 전용입니다.** RSC에서 점 접근이 필요하면 개별 named export(`ControllerRow` 등)를 씁니다.
 

@@ -2,14 +2,40 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Controller } from './index'
 
-describe('Controller.Section', () => {
+describe('Controller layout', () => {
+	afterEach(cleanup)
+
+	it('Root 아래 Header·Content·Group·Footer를 명시적으로 조합한다', () => {
+		const { container } = render(
+			<Controller.Root>
+				<Controller.Header>헤더</Controller.Header>
+				<Controller.Content>
+					<Controller.Group title="그룹">
+						<div>컨트롤</div>
+					</Controller.Group>
+				</Controller.Content>
+				<Controller.Footer>실행</Controller.Footer>
+			</Controller.Root>,
+		)
+
+		expect(container.querySelector('[data-slot="controller-root"]')).toBeInTheDocument()
+		expect(container.querySelector('[data-slot="controller-header"]')).toBeInTheDocument()
+		expect(container.querySelector('[data-slot="controller-content"]')).toBeInTheDocument()
+		expect(container.querySelector('[data-slot="controller-group"]')).toBeInTheDocument()
+		expect(screen.getByText('그룹')).toBeInTheDocument()
+		expect(screen.queryByRole('button', { name: '그룹' })).toBeNull()
+		expect(container.querySelector('[data-slot="controller-footer"]')).toBeInTheDocument()
+	})
+})
+
+describe('Controller.Group collapsible', () => {
 	afterEach(cleanup)
 
 	it('잠금 중에도 사용자의 접힘 상태를 보존한다 — 풀려도 닫힌 채 남는다', () => {
 		const { rerender } = render(
-			<Controller.Section title="Sec">
+			<Controller.Group title="Sec" collapsible>
 				<div>내용물</div>
-			</Controller.Section>,
+			</Controller.Group>,
 		)
 		expect(screen.getByText('내용물')).toBeInTheDocument()
 
@@ -19,18 +45,18 @@ describe('Controller.Section', () => {
 
 		// 잠금 — 닫힘 유지 + 토글 불가.
 		rerender(
-			<Controller.Section title="Sec" disabled>
+			<Controller.Group title="Sec" collapsible disabled>
 				<div>내용물</div>
-			</Controller.Section>,
+			</Controller.Group>,
 		)
 		expect(screen.getByRole('button', { name: 'Sec' })).toBeDisabled()
 		expect(screen.queryByText('내용물')).toBeNull()
 
 		// 잠금 해제 — 강제로 열지 않고 사용자가 접어둔 상태로 복귀한다.
 		rerender(
-			<Controller.Section title="Sec">
+			<Controller.Group title="Sec" collapsible>
 				<div>내용물</div>
-			</Controller.Section>,
+			</Controller.Group>,
 		)
 		expect(screen.getByRole('button', { name: 'Sec' })).toBeEnabled()
 		expect(screen.queryByText('내용물')).toBeNull()
@@ -114,6 +140,39 @@ describe('Controller.Field', () => {
 		)
 		expect(screen.getByText('190/250')).toBeInTheDocument()
 		expect(screen.getByLabelText('Prompt')).toBeInTheDocument()
+	})
+})
+
+describe('Controller value controls', () => {
+	afterEach(cleanup)
+
+	it('Range는 화살표 키로 계약의 step만큼 값을 바꾼다', () => {
+		const onChange = vi.fn()
+		render(
+			<Controller.Range
+				label="Scale"
+				value={1}
+				min={0.2}
+				max={5}
+				step={0.05}
+				onChange={onChange}
+			/>,
+		)
+
+		fireEvent.keyDown(screen.getByRole('slider', { name: 'Scale' }), { key: 'ArrowRight' })
+		expect(onChange).toHaveBeenCalledWith(1.05)
+	})
+
+	it('Pad는 화살표 키로 x·y 단위 객체를 갱신한다', () => {
+		const onChange = vi.fn()
+		render(
+			<Controller.Pad aria-label="그래픽 위치" value={{ x: 0, y: 0 }} onChange={onChange} />,
+		)
+
+		fireEvent.keyDown(screen.getByRole('slider', { name: '그래픽 위치' }), {
+			key: 'ArrowDown',
+		})
+		expect(onChange).toHaveBeenCalledWith({ x: 0, y: 0.05 })
 	})
 })
 

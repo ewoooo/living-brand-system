@@ -147,7 +147,7 @@ export function TemplateSidebar() {
 			</div>
 
 			{textSlots.length > 0 && (
-				<Controller.Section title="Text">
+				<Controller.Group title="Text" collapsible>
 					{textSlots.map((slot) => (
 						<div key={slot.id} className="flex flex-col gap-1">
 							<TextSlotInput
@@ -170,7 +170,7 @@ export function TemplateSidebar() {
 						onReset={() => text.setColor(null)}
 						onChange={text.setColor}
 					/>
-				</Controller.Section>
+				</Controller.Group>
 			)}
 			{imageSlots.map((slot, index) => {
 				const sectionTitle = imageSlots.length > 1 ? `Image ${index + 1}` : 'Image'
@@ -178,7 +178,7 @@ export function TemplateSidebar() {
 				const state = images.states[slot.id]
 				return (
 					<div key={slot.id} className="flex flex-col gap-3">
-						<Controller.Section title={sectionTitle}>
+						<Controller.Group title={sectionTitle} collapsible>
 							<ImageSlotInput
 								pinnedProfileId={control.profile.pinnedId}
 								profiles={images.profiles}
@@ -194,12 +194,13 @@ export function TemplateSidebar() {
 								}
 								onGenerated={(image) => images.update(slot.id, { image })}
 							/>
-						</Controller.Section>
+						</Controller.Group>
 						{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 별도 섹션이다.
 						    생성 전에는 닫힌 채 잠긴다 — compose가 배정된 이미지에만 transform을 적용해서다. */}
 						{control.transform.enabled && (
-							<Controller.Section
+							<Controller.Group
 								title={`${sectionTitle} Transform`}
+								collapsible
 								className="border-t-0 pt-0"
 								disabled={!state?.image}
 							>
@@ -216,7 +217,7 @@ export function TemplateSidebar() {
 									}
 									onChange={(transform) => images.update(slot.id, { transform })}
 								/>
-							</Controller.Section>
+							</Controller.Group>
 						)}
 					</div>
 				)
