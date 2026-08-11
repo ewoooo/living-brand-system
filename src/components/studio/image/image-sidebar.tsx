@@ -3,11 +3,18 @@
 import { Copy, Crop, SquareOutline } from '@carbon/icons-react'
 import type * as React from 'react'
 import { Controller } from '@/components/studio/shared/controller'
+import { ControllerRenderer } from '@/components/studio/shared/controller-renderer'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/generate-image/image-size'
 import { useImageStudio } from '@/features/image-studio/hooks/use-image-studio'
-import { ImageCameraControl } from './image-camera-control'
+import {
+	getImageStudioControls,
+	getImageStudioFeatureControlIds,
+	IMAGE_STUDIO_CONTROL_IDS,
+} from '@/features/image-studio/image-studio-config'
+import type { ControllerControlDefinition } from '@/features/studio-controller/controller-definition'
+import { ImageProfileFeatureRenderer } from './image-profile-feature-renderer'
 import { ImageProfilePicker } from './image-profile-picker'
 
 /**
@@ -17,10 +24,21 @@ import { ImageProfilePicker } from './image-profile-picker'
  * 디자인 SSOT: Figma HD_LBS_UI section 16:9137 "Image Usecase".
  */
 export function ImageSidebar() {
-	const { config, profiles, prompt, generation, camera, color, results, download } =
-		useImageStudio()
-	const { batch, ratio, resolution } = config.generateOptions
-	const promptEmpty = !prompt.value.trim()
+	const { config, profiles, controls, generation, camera, results, download } = useImageStudio()
+	const { batch, ratio, resolution } = getImageStudioControls(config)
+	const generationControlIds = new Set<string>([
+		IMAGE_STUDIO_CONTROL_IDS.batch,
+		IMAGE_STUDIO_CONTROL_IDS.ratio,
+		IMAGE_STUDIO_CONTROL_IDS.resolution,
+	])
+	const featureControlIds = new Set(getImageStudioFeatureControlIds(config))
+	const contentGroups = config.controller.groups.flatMap((group) => {
+		const controls = group.controls.filter(
+			(control) =>
+				!generationControlIds.has(control.id) && !featureControlIds.has(control.id),
+		)
+		return controls.length > 0 ? [{ ...group, controls }] : []
+	})
 
 	return (
 		// 자산 브라우저의 열림은 편집 세션이 아니라 이 화면의 표현 상태다 — 킷이 소유한다(Provider에 넣지 않는다).
@@ -38,15 +56,13 @@ export function ImageSidebar() {
 							<div className="grid grid-cols-3 gap-1">
 								<SettingRow
 									icon={<Copy aria-hidden />}
-									name="장수"
-									options={batch.options.map(String)}
+									definition={batch}
 									value={String(generation.batch)}
 									onChange={(value) => generation.setBatch(Number(value))}
 								/>
 								<SettingRow
 									icon={<SquareOutline aria-hidden />}
-									name="비율"
-									options={ratio.options}
+									definition={ratio}
 									value={generation.ratio}
 									onChange={(value) =>
 										generation.setRatio(value as ImageAspectRatio)
@@ -54,8 +70,7 @@ export function ImageSidebar() {
 								/>
 								<SettingRow
 									icon={<Crop aria-hidden />}
-									name="해상도"
-									options={resolution.options}
+									definition={resolution}
 									value={generation.resolution}
 									onChange={(value) =>
 										generation.setResolution(value as ImageOutputSize)
@@ -91,7 +106,6 @@ export function ImageSidebar() {
 					buttonLabel="Change"
 					aria-label="프로파일 변경"
 					tabs={['Image Profiles']}
-					// 교체 후보가 자기 자신뿐이면 고를 것이 없다 — 카드만 남기고 그 사실을 적는다.
 					empty={
 						profiles.options.length <= 1
 							? '교체할 다른 이미지 프로파일이 없습니다.'
@@ -101,67 +115,38 @@ export function ImageSidebar() {
 					<ImageProfilePicker />
 				</Controller.AssetCard>
 
-				<Controller.Section title="Image">
-					<Controller.Field
-						label="Prompt"
-						counter={`${prompt.value.length}/${config.prompt.maxLength}`}
-					>
-						<Controller.Textarea
-							value={prompt.value}
-							onChange={(event) => prompt.setValue(event.target.value)}
-							placeholder="이미지를 설명하세요"
-							maxLength={config.prompt.maxLength}
-							rows={3}
-						/>
-					</Controller.Field>
-					<Button
-						variant="muted"
-						className="mt-0.5 h-11 w-full font-semibold text-sm"
-						onClick={generation.run}
-						disabled={generation.busy || promptEmpty}
-					>
-						{generation.busy ? '생성 중…' : '이미지 생성'}
-					</Button>
-					{generation.error && (
-						<Typography role="alert" size="sm" className="text-destructive">
-							{generation.error}
-						</Typography>
-					)}
-				</Controller.Section>
-
-				{/* 시점 조정은 저장된 생성 이미지를 시드로 쓴다 — 결과를 고르기 전에는 닫힌 채 잠긴다. */}
-				{config.supportsCameraControl && (
-					<Controller.Section title="Camera Controls" disabled={!camera.seedImage}>
-						{camera.seedImage && (
-							<ImageCameraControl
-								azimuthDeg={camera.azimuthDeg}
-								elevationDeg={camera.elevationDeg}
-								seedImage={camera.seedImage}
-								busy={generation.busy}
-								onChange={camera.setAngles}
-								onRegenerate={camera.regenerate}
-							/>
-						)}
-					</Controller.Section>
-				)}
-
-				{/* 계약에 색이 실려 있을 때만 세션 값이 존재한다 — 값 유무가 곧 개방 여부다
-			    (개방 플래그를 따로 두지 않는다, docs/10 §3.6). */}
-				{color.value && (
-					<Controller.Section title="Profile Settings">
-						<Controller.ColorRow
-							label="Line Color"
-							value={color.value.line}
-							onChange={(line) => color.update({ line })}
-						/>
-						{color.value.background !== undefined && (
-							<Controller.ColorRow
-								label="Background Color"
-								value={color.value.background}
-								onChange={(background) => color.update({ background })}
-							/>
-						)}
-					</Controller.Section>
+				<ControllerRenderer
+					groups={contentGroups}
+					values={controls.values}
+					bindings={controls.bindings}
+					onChange={controls.update}
+				/>
+				<ImageProfileFeatureRenderer
+					config={config}
+					values={controls.values}
+					bindings={controls.bindings}
+					onChange={controls.update}
+					camera={{
+						azimuthDeg: camera.azimuthDeg,
+						elevationDeg: camera.elevationDeg,
+						seedImage: camera.seedImage,
+						busy: generation.busy,
+						onChange: camera.setAngles,
+						onRegenerate: camera.regenerate,
+					}}
+				/>
+				<Button
+					variant="muted"
+					className="mt-0.5 h-11 w-full font-semibold text-sm"
+					onClick={generation.run}
+					disabled={generation.busy || !generation.canRun}
+				>
+					{generation.busy ? '생성 중…' : '이미지 생성'}
+				</Button>
+				{generation.error && (
+					<Typography role="alert" size="sm" className="text-destructive">
+						{generation.error}
+					</Typography>
 				)}
 			</Controller.Panel>
 		</Controller.Browser.Root>
@@ -171,35 +156,33 @@ export function ImageSidebar() {
 type SettingRowProps = {
 	/** 아이콘 라벨 — 접근 가능한 이름은 name이 sr-only로 동반한다(docs/10 §3.6). */
 	icon: React.ReactNode
-	name: string
-	options: readonly string[]
+	definition: Extract<ControllerControlDefinition, { kind: 'select' }>
 	value: string
 	onChange: (value: string) => void
 }
 
-/** Setting 푸터의 아이콘 라벨 행 — 선택지가 하나뿐이면 읽기 전용으로 그린다(잠금 플래그 없음). */
-function SettingRow({ icon, name, options, value, onChange }: SettingRowProps) {
-	const readonly = options.length <= 1
+/** Setting 푸터의 압축 레이아웃에 Definition의 상태와 선택지를 결합한다. */
+function SettingRow({ icon, definition, value, onChange }: SettingRowProps) {
+	const disabled = definition.availability === 'disabled'
+	const readonly =
+		definition.availability === 'readonly' || (!disabled && definition.options.length <= 1)
 
 	return (
 		<Controller.Row
 			label={
 				<>
 					{icon}
-					<span className="sr-only">{name}</span>
+					<span className="sr-only">{definition.label}</span>
 				</>
 			}
 			readonly={readonly}
+			disabled={disabled}
 			className="px-2.5"
 		>
 			{readonly ? (
 				<span className="text-muted-foreground text-sm">{value}</span>
 			) : (
-				<Controller.Select
-					options={options.map((option) => ({ label: option, value: option }))}
-					value={value}
-					onChange={onChange}
-				/>
+				<Controller.Select options={definition.options} value={value} onChange={onChange} />
 			)}
 		</Controller.Row>
 	)

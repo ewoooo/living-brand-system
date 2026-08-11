@@ -1,24 +1,39 @@
 'use client'
 
-import { createContext, type ReactNode, useContext, useMemo, useState } from 'react'
+import { createContext, type ReactNode, useContext, useState } from 'react'
 import { useImageGeneration } from '@/features/generate-image/hooks/use-image-generation'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/generate-image/image-size'
 import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
 import { downloadImage } from '@/features/image-studio/download-image'
 import type { ImageColorAdjustment } from '@/features/image-studio/image-colorize'
-import type {
-	ImageStudioConfig,
-	ImageStudioProfileOption,
+import {
+	getImageColorAdjustmentControls,
+	getImageStudioControls,
+	getImageStudioFeature,
+	IMAGE_STUDIO_CONTROL_IDS,
+	type ImageStudioConfig,
 } from '@/features/image-studio/image-studio-config'
+import {
+	acceptsControllerValue,
+	type ControllerControlValue,
+	type ControllerRuntimeBindings,
+	type ControllerValues,
+	createControllerValues,
+} from '@/features/studio-controller/controller-definition'
 
 type ImageStudioValue = {
 	profiles: {
 		/** 프로파일 교체 후보 — 계약은 언제나 이 중 하나다. */
-		options: ImageStudioProfileOption[]
+		options: readonly ImageStudioConfig[]
 		select: (profileId: number) => void
 	}
 	/** 현재 프로파일의 편집 계약 — 컨트롤러는 이 객체만 보고 컨트롤을 그린다. */
 	config: ImageStudioConfig
+	controls: {
+		values: ControllerValues
+		bindings: ControllerRuntimeBindings
+		update: (controlId: string, value: ControllerControlValue) => void
+	}
 	prompt: {
 		value: string
 		setValue: (text: string) => void
@@ -31,6 +46,7 @@ type ImageStudioValue = {
 		resolution: ImageOutputSize
 		setResolution: (resolution: ImageOutputSize) => void
 		run: () => void
+		canRun: boolean
 		busy: boolean
 		error: string | null
 	}
@@ -43,7 +59,7 @@ type ImageStudioValue = {
 		azimuthDeg: number
 		elevationDeg: number
 		setAngles: (angles: { azimuthDeg: number; elevationDeg: number }) => void
-		/** 시점을 다시 잡을 시드 — null이면 대상이 없다(컨트롤러가 섹션을 잠근다). */
+		/** 시점을 다시 잡을 시드 — null이면 대상이 없다(컨트롤러가 그룹을 잠근다). */
 		seedImage: string | null
 		regenerate: () => void
 	}
@@ -65,13 +81,8 @@ type ImageStudioValue = {
 const ImageStudioContext = createContext<ImageStudioValue | null>(null)
 
 /**
- * 이미지 스튜디오 편집 세션의 단일 소유자 — 컨트롤러(사이드바)와 결과 캔버스는 이 컨텍스트만
- * 알고 서로를 모른다. 조작 범위는 파생된 ImageStudioConfig 계약이 말하고, HTTP I/O는
- * features의 *.client.ts가 소유한다(docs/10 §3.5·§3.6).
- *
- * 프로파일 교체 정책: 어드민이 정의한 층만 새 프로파일로 갈아끼우고 사용자의 층은 남긴다 —
- * 프롬프트와 생성 결과는 유지하고, 계약이 정의한 선택은 새 선택지에 없을 때만 새 시작값으로
- * 되돌리며, 선택지 없는 프로파일 고유 값(색)은 언제나 새 계약의 기본값으로 되돌린다.
+ * 이미지 스튜디오 편집 세션의 단일 소유자 — Controller와 Canvas는 이 컨텍스트만 알고 서로를
+ * 모른다. Definition은 기본값·제약을, Provider는 현재 값·runtime binding·도메인 액션을 소유한다.
  */
 export function ImageStudioProvider({
 	configs,
@@ -82,57 +93,69 @@ export function ImageStudioProvider({
 	initialProfileId?: number
 	children: ReactNode
 }) {
-	const initial = configs.find(({ profileId }) => profileId === initialProfileId) ?? configs[0]
+	const initial = configs.find(({ id }) => id === initialProfileId) ?? configs[0]
 	if (!initial) {
 		throw new Error('ImageStudioProvider는 계약이 최소 하나 있을 때만 사용할 수 있습니다.')
 	}
 
-	const [profileId, setProfileId] = useState(initial.profileId)
-	const [prompt, setPrompt] = useState('')
-	const [batch, setBatch] = useState(initial.generateOptions.batch.defaultValue)
-	const [ratio, setRatio] = useState(initial.generateOptions.ratio.defaultValue)
-	const [resolution, setResolution] = useState(initial.generateOptions.resolution.defaultValue)
-	const [color, setColor] = useState<ImageColorAdjustment | null>(initial.colorAdjustment ?? null)
+	const [profileId, setProfileId] = useState(initial.id)
+	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
 	const [angles, setAngles] = useState({ azimuthDeg: 0, elevationDeg: 0 })
 	const { adjustCamera, error, generate, loading, requested, result, selected, setSelected } =
 		useImageGeneration()
 
-	const config = configs.find((item) => item.profileId === profileId) ?? initial
-	// 카드가 배지를 계약에서 파생할 수 있게 개방 필드까지 실어 보낸다 — 원시 프로파일을 다시 조회하지 않는다.
-	const options = useMemo(
-		() =>
-			configs.map(({ colorAdjustment, name, profileId: id, supportsCameraControl }) => ({
-				colorAdjustment,
-				name,
-				profileId: id,
-				supportsCameraControl,
-			})),
-		[configs],
+	const config = configs.find((item) => item.id === profileId) ?? initial
+	const definitions = getImageStudioControls(config)
+	const colorDefinitions = getImageColorAdjustmentControls(config)
+	const supportsCamera = Boolean(getImageStudioFeature(config, 'camera-control'))
+	const options = configs
+
+	const prompt = stringValue(values[definitions.prompt.id], definitions.prompt.defaultValue)
+	const batchValue = stringValue(values[definitions.batch.id], definitions.batch.defaultValue)
+	const ratioValue = stringValue(values[definitions.ratio.id], definitions.ratio.defaultValue)
+	const resolutionValue = stringValue(
+		values[definitions.resolution.id],
+		definitions.resolution.defaultValue,
 	)
+	const promptError =
+		definitions.prompt.maxLength && prompt.length > definitions.prompt.maxLength
+			? `프롬프트가 최대 ${definitions.prompt.maxLength}자를 초과했습니다.`
+			: undefined
+	const bindings: ControllerRuntimeBindings = promptError
+		? { [definitions.prompt.id]: { error: promptError } }
+		: {}
+	const canRun = Boolean(prompt.trim()) && !promptError
+
+	const lineColor = colorDefinitions ? values[colorDefinitions.line.id] : undefined
+	const backgroundColor = colorDefinitions?.background
+		? values[colorDefinitions.background.id]
+		: undefined
+	const colorValue: ImageColorAdjustment | null =
+		typeof lineColor === 'string'
+			? {
+					line: lineColor,
+					...(typeof backgroundColor === 'string' ? { background: backgroundColor } : {}),
+				}
+			: null
+
+	function update(controlId: string, value: ControllerControlValue) {
+		const definition = findControl(config, controlId)
+		if (!definition || !acceptsControllerValue(definition, value)) return
+		setValues((current) => ({ ...current, [controlId]: value }))
+	}
 
 	function selectProfile(nextProfileId: number) {
-		const next = configs.find((item) => item.profileId === nextProfileId)
+		const next = configs.find((item) => item.id === nextProfileId)
 		if (!next) return
+		setValues((current) => reconcileProfileValues(next, current))
 		setProfileId(nextProfileId)
-		// 색은 프로파일 고유 설정이라 언제나 새 계약의 기본값으로 되돌린다(선택지가 없어 유지할
-		// 근거가 없다 — 앞 프로파일의 색을 남기면 다른 브랜드 색을 물려받은 것처럼 보인다).
-		setColor(next.colorAdjustment ?? null)
-		// 나머지는 새 프로파일이 지원하지 않는 선택만 시작값으로 되돌린다.
-		const {
-			batch: nextBatch,
-			ratio: nextRatio,
-			resolution: nextResolution,
-		} = next.generateOptions
-		if (!nextBatch.options.includes(batch)) setBatch(nextBatch.defaultValue)
-		if (!nextRatio.options.includes(ratio)) setRatio(nextRatio.defaultValue)
-		if (!nextResolution.options.includes(resolution)) setResolution(nextResolution.defaultValue)
 	}
 
 	// 시점 조정은 저장된 생성 이미지를 시드로 쓴다 — 셋(시드 URL·생성 이미지 id·프로파일)이
 	// 모두 있을 때만 대상이 성립하므로 한 객체로 파생한다.
 	const generatedImage = selected === null ? undefined : result?.generatedImages?.[selected]
 	const cameraSeed =
-		selected !== null && result?.profileId && generatedImage
+		supportsCamera && selected !== null && result?.profileId === config.id && generatedImage
 			? {
 					basePrompt: result.prompt,
 					generatedImageId: generatedImage.id,
@@ -144,36 +167,49 @@ export function ImageStudioProvider({
 	const value: ImageStudioValue = {
 		profiles: { options, select: selectProfile },
 		config,
-		prompt: { value: prompt, setValue: setPrompt },
+		controls: { values, bindings, update },
+		prompt: {
+			value: prompt,
+			setValue: (text) => update(definitions.prompt.id, text),
+		},
 		generation: {
-			batch,
-			setBatch,
-			ratio,
-			setRatio,
-			resolution,
-			setResolution,
-			run: () =>
+			batch: Number(batchValue),
+			setBatch: (count) => update(definitions.batch.id, String(count)),
+			ratio: ratioValue as ImageAspectRatio,
+			setRatio: (ratio) => update(definitions.ratio.id, ratio),
+			resolution: resolutionValue as ImageOutputSize,
+			setResolution: (resolution) => update(definitions.resolution.id, resolution),
+			run: () => {
+				if (!canRun) return
 				void generate({
-					aspectRatio: ratio,
-					count: batch,
-					imageSize: resolution,
-					profileId: config.profileId,
+					aspectRatio: ratioValue as ImageAspectRatio,
+					count: Number(batchValue),
+					imageSize: resolutionValue as ImageOutputSize,
+					profileId: config.id,
 					prompt,
-				}),
+				})
+			},
+			canRun,
 			busy: loading,
 			error,
 		},
 		color: {
-			value: color,
-			update: (patch) =>
-				setColor((current) => (current ? { ...current, ...patch } : current)),
+			value: colorValue,
+			update: (patch) => {
+				if (patch.line !== undefined && colorDefinitions) {
+					update(colorDefinitions.line.id, patch.line)
+				}
+				if (patch.background !== undefined && colorDefinitions?.background) {
+					update(colorDefinitions.background.id, patch.background)
+				}
+			},
 		},
 		camera: {
 			...angles,
 			setAngles,
 			seedImage: cameraSeed?.src ?? null,
 			regenerate: () => {
-				if (!cameraSeed) return
+				if (!supportsCamera || !cameraSeed) return
 				void adjustCamera({
 					basePrompt: cameraSeed.basePrompt,
 					camera: angles,
@@ -187,14 +223,13 @@ export function ImageStudioProvider({
 		download: {
 			selected: () => {
 				const src = selected === null ? undefined : result?.images[selected]
-				if (src && selected !== null) void downloadImage(src, selected, color)
+				if (src && selected !== null) void downloadImage(src, selected, colorValue)
 			},
 			// ponytail: 저장을 연달아 낸다 — 장수가 늘어 브라우저가 막으면 zip으로 올린다.
-			// 색을 굽는 경로는 한 장에 캡처 한 번이라 순차로 기다린다.
 			all: () => {
 				void (async () => {
 					for (const [index, src] of (result?.images ?? []).entries()) {
-						await downloadImage(src, index, color)
+						await downloadImage(src, index, colorValue)
 					}
 				})()
 			},
@@ -210,4 +245,38 @@ export function useImageStudio() {
 		throw new Error('useImageStudio는 ImageStudioProvider 안에서만 호출할 수 있습니다.')
 	}
 	return context
+}
+
+function reconcileProfileValues(
+	config: ImageStudioConfig,
+	current: ControllerValues,
+): ControllerValues {
+	const next = createControllerValues(config.controller.groups)
+	for (const control of config.controller.groups.flatMap((group) => group.controls)) {
+		if ((control.availability ?? 'enabled') !== 'enabled') continue
+		const currentValue = current[control.id]
+		if (control.id === IMAGE_STUDIO_CONTROL_IDS.prompt && typeof currentValue === 'string') {
+			next[control.id] = currentValue
+			continue
+		}
+		if (
+			control.kind === 'select' &&
+			((typeof currentValue === 'string' &&
+				control.options.some((option) => option.value === currentValue)) ||
+				(currentValue === null && control.defaultValue === null))
+		) {
+			next[control.id] = currentValue
+		}
+	}
+	return next
+}
+
+function findControl(config: ImageStudioConfig, id: string) {
+	return config.controller.groups
+		.flatMap((group) => group.controls)
+		.find((control) => control.id === id)
+}
+
+function stringValue(value: ControllerControlValue | undefined, fallback: string | null) {
+	return typeof value === 'string' ? value : (fallback ?? '')
 }

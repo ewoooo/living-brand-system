@@ -15,7 +15,7 @@ export default async function GenerateImageProfilePage({
 	if (!user) notFound()
 
 	const configs = await listImageStudioConfigs(user)
-	const config = configs.find((item) => item.slug === profileSlug)
+	const config = configs.find((item) => item.image.slug === profileSlug)
 
 	if (!config) notFound()
 
@@ -26,7 +26,7 @@ export default async function GenerateImageProfilePage({
 			hideHeading
 		>
 			{/* 슬러그는 시작 프로파일만 정한다 — 교체는 세션을 유지하려고 클라이언트에서 처리한다. */}
-			<ImageGenerator configs={configs} initialProfileId={config.profileId} />
+			<ImageGenerator configs={configs} initialProfileId={config.id} />
 		</StudioWorkspacePage>
 	)
 }

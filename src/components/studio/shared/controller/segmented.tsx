@@ -4,10 +4,11 @@ import { domAnimation, LazyMotion, useReducedMotion } from 'motion/react'
 import * as m from 'motion/react-m'
 import * as React from 'react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import type { ControllerOption } from '@/features/studio-controller/controller-definition'
 import { useRowControl } from './row'
 
 type ControllerSegmentedProps<T extends string> = {
-	options: readonly { value: T; label: string }[]
+	options: readonly ControllerOption<T>[]
 	value: T
 	onChange: (value: T) => void
 	'aria-label': string

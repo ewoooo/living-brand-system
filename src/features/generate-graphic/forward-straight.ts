@@ -1,4 +1,9 @@
 import { z } from 'zod'
+import {
+	type ControllerPadValue,
+	type ControllerValues,
+	isControllerPadValue,
+} from '@/features/studio-controller/controller-definition'
 
 export const forwardStraightInputSchema = z.strictObject({
 	variableWeightEnabled: z.boolean(),
@@ -12,37 +17,26 @@ export const forwardStraightInputSchema = z.strictObject({
 
 export type ForwardStraightInput = z.infer<typeof forwardStraightInputSchema>
 
-export const forwardStraightToolContract = {
-	defaultInput: {
-		variableWeightEnabled: false,
-		viewpoint: 'flat',
-		angleIntensity: 'medium',
-		origin: { x: 0.5, y: 0.5 },
-	},
-	controls: [
-		{
-			key: 'variableWeightEnabled',
-			type: 'boolean',
-			label: '가변 두께',
-		},
-		{
-			key: 'viewpoint',
-			type: 'select',
-			label: '시점',
-			options: [
-				{ value: 'flat', label: '평면' },
-				{ value: 'low-angle', label: '로우앵글' },
-			],
-		},
-		{
-			key: 'angleIntensity',
-			type: 'select',
-			label: '각도',
-			options: [
-				{ value: 'weak', label: '약함' },
-				{ value: 'medium', label: '보통' },
-				{ value: 'strong', label: '강함' },
-			],
-		},
-	],
-} as const
+export const FORWARD_STRAIGHT_DEFAULT_INPUT = {
+	variableWeightEnabled: false,
+	viewpoint: 'flat',
+	angleIntensity: 'medium',
+	origin: { x: 0.5, y: 0.5 },
+} satisfies ForwardStraightInput
+
+/** Controller primitive 값(-1~1)을 Forward Straight 입력(0~1)으로 바꾸고 검증한다. */
+export function toForwardStraightInput(values: ControllerValues): ForwardStraightInput {
+	const origin = values.origin
+	return forwardStraightInputSchema.parse({
+		variableWeightEnabled: values.variableWeightEnabled,
+		viewpoint: values.viewpoint,
+		angleIntensity: values.angleIntensity,
+		origin: isControllerPadValue(origin)
+			? { x: (origin.x + 1) / 2, y: (origin.y + 1) / 2 }
+			: origin,
+	})
+}
+
+export function toControllerPadValue(origin: ForwardStraightInput['origin']): ControllerPadValue {
+	return { x: origin.x * 2 - 1, y: origin.y * 2 - 1 }
+}

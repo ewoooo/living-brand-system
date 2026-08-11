@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { forwardStraightToolContract } from './forward-straight'
+import { FORWARD_STRAIGHT_DEFAULT_INPUT } from './forward-straight'
 import { createForwardStraightScene, createForwardStraightSvg } from './forward-straight-geometry'
 
 describe('createForwardStraightScene', () => {
 	it('builds a flat grid and applies perspective depth without p5', () => {
-		const flat = createForwardStraightScene(forwardStraightToolContract.defaultInput, {
+		const flat = createForwardStraightScene(FORWARD_STRAIGHT_DEFAULT_INPUT, {
 			width: 100,
 			height: 100,
 		})
+		expect(
+			createForwardStraightScene(FORWARD_STRAIGHT_DEFAULT_INPUT, {
+				width: 100,
+				height: 100,
+			}),
+		).toEqual(flat)
 
 		expect(flat.origin).toEqual({ x: 50, y: 50 })
 		expect(flat.dashes).toHaveLength(4)
@@ -17,7 +23,7 @@ describe('createForwardStraightScene', () => {
 
 		const perspective = createForwardStraightScene(
 			{
-				...forwardStraightToolContract.defaultInput,
+				...FORWARD_STRAIGHT_DEFAULT_INPUT,
 				variableWeightEnabled: true,
 				viewpoint: 'low-angle',
 				origin: { x: 1, y: 1 },
@@ -40,12 +46,12 @@ describe('createForwardStraightScene', () => {
 
 describe('createForwardStraightSvg', () => {
 	it('serializes the shared geometry as SVG', () => {
-		const svg = createForwardStraightSvg(
-			createForwardStraightScene(forwardStraightToolContract.defaultInput, {
-				width: 100,
-				height: 100,
-			}),
-		)
+		const scene = createForwardStraightScene(FORWARD_STRAIGHT_DEFAULT_INPUT, {
+			width: 100,
+			height: 100,
+		})
+		const svg = createForwardStraightSvg(scene)
+		expect(createForwardStraightSvg(scene)).toBe(svg)
 
 		expect(svg).toContain('width="100" height="100" viewBox="0 0 100 100"')
 		expect(svg).toContain('<rect width="100" height="100" fill="#030402" />')

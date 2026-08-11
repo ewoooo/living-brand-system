@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isOriginHandleHit } from './forward-straight-preview.client'
+import { isOriginHandleHit } from './preview.client'
 
 describe('isOriginHandleHit', () => {
 	it('레드 닷 주변에서만 드래그를 시작한다', () => {

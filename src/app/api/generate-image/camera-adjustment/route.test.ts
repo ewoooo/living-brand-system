@@ -146,6 +146,7 @@ describe('POST /api/generate-image/camera-adjustment', () => {
 		[namedError('ImageGenerationLimitError'), 429],
 		[namedError('ImageGenerationUnavailableError'), 503],
 		[namedError('ImageProfileNotFoundError'), 404],
+		[namedError('InvalidImageControllerInputError'), 400],
 		[namedError('InvalidSeedImageError'), 400],
 		[namedError('UnsupportedImageOutputSizeError'), 400],
 	] as const)('서비스 오류를 안전한 상태 코드로 변환한다', async (error, status) => {

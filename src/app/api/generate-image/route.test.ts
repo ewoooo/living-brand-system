@@ -172,6 +172,17 @@ describe('POST /api/generate-image', () => {
 		expect(response.status).toBe(400)
 	})
 
+	it('프로파일 Controller가 거부한 입력은 400으로 매핑한다', async () => {
+		mocks.generateImages.mockRejectedValue(namedError('InvalidImageControllerInputError'))
+
+		const response = await POST(imageRequest({ prompt: 'sample', profileId: 5 }))
+
+		expect(response.status).toBe(400)
+		expect(await response.json()).toEqual({
+			message: '이미지 프로파일이 허용하지 않는 생성 옵션입니다.',
+		})
+	})
+
 	it('published 프로파일이 없으면 404를 반환한다', async () => {
 		mocks.generateImages.mockRejectedValue(namedError('ImageProfileNotFoundError'))
 

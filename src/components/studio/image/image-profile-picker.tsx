@@ -4,17 +4,20 @@ import { ControllerBrowser } from '@/components/studio/shared/controller'
 import { Badge } from '@/components/ui/badge'
 import { Typography } from '@/components/ui/typography'
 import { useImageStudio } from '@/features/image-studio/hooks/use-image-studio'
-import type { ImageStudioProfileOption } from '@/features/image-studio/image-studio-config'
+import {
+	getImageStudioFeature,
+	type ImageStudioConfig,
+} from '@/features/image-studio/image-studio-config'
 import { cn } from '@/lib/utils'
 
 /**
  * 배지는 장식이 아니라 그 프로파일이 무엇을 열어주는지의 표시다 — 계약의 개방 필드에서만 파생한다.
  * 새 필드를 만들지 않으므로 어드민이 개방을 바꾸면 배지가 따라 바뀐다.
  */
-function profileBadges(option: ImageStudioProfileOption): string[] {
+function profileBadges(option: ImageStudioConfig): string[] {
 	return [
-		...(option.supportsCameraControl ? ['Camera'] : []),
-		...(option.colorAdjustment ? ['Line Control'] : []),
+		...(getImageStudioFeature(option, 'camera-control') ? ['Camera'] : []),
+		...(getImageStudioFeature(option, 'color-adjustment') ? ['Line Control'] : []),
 	]
 }
 
@@ -30,15 +33,15 @@ export function ImageProfilePicker() {
 	return (
 		<div data-slot="image-profile-picker" className="grid shrink-0 grid-cols-3 gap-3 pr-1">
 			{profiles.options.map((option) => {
-				const current = option.profileId === config.profileId
+				const current = option.id === config.id
 
 				return (
-					<ControllerBrowser.Close key={option.profileId} asChild>
+					<ControllerBrowser.Close key={option.id} asChild>
 						<button
 							type="button"
 							// 브라우저는 현재 선택을 보여야 한다 — 테두리 두께와 aria-current로 함께 알린다.
 							aria-current={current || undefined}
-							onClick={() => profiles.select(option.profileId)}
+							onClick={() => profiles.select(option.id)}
 							className={cn(
 								'flex h-64 flex-col overflow-hidden rounded-lg border bg-background/5 text-left outline-none focus-visible:ring-2 focus-visible:ring-background/50',
 								current

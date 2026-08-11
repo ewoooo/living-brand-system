@@ -6,89 +6,484 @@ import {
 import {
 	IMAGE_ASPECT_RATIOS,
 	IMAGE_OUTPUT_SIZES,
-	type ImageAspectRatio,
-	type ImageOutputSize,
 	supportsImageOutputSize,
 } from '@/features/generate-image/image-size'
 import type { PublishedImageProfileDefinition } from '@/features/generate-image/repositories/image-profile.payload.repository'
+import {
+	type ControllerControlDefinition,
+	type ControllerGroupDefinition,
+	parseStudioControllerConfig,
+	type StudioControllerConfig,
+} from '@/features/studio-controller/controller-definition'
 
-/**
- * 이미지 프로파일 하나가 스튜디오에 내는 편집 계약 — 무엇을 조작할 수 있고(개방), 어떤
- * 선택지 안에서인가(레인지), 시작값은 무엇인가. published 프로파일에서 파생되는 읽기 전용
- * 객체이고 저작 상태의 정본이 아니다(정본: image-profiles 컬렉션, 값 상한: 생성 라우트,
- * 세션 값: ImageStudioProvider). 외부 I/O 없음 — 순수 투영.
- *
- * 프로파일마다 하나씩 존재하고, 사용자가 프로파일을 교체하면 Provider가 다른 계약을 고른다
- * (템플릿과 달리 화면 수명 동안 고정이 아니다).
- */
-export type ImageStudioConfig = {
-	/** 생성·카메라 조정 요청이 이 id로 나간다. */
-	profileId: number
-	/** 계약 형태 버전 — 어드민 저장·에이전트 노출로 진화할 때의 앵커. */
-	version: 1
-	name: string
-	slug: string | null
-	prompt: { maxLength: number }
-	generateOptions: {
-		batch: ImageStudioChoice<number>
-		ratio: ImageStudioChoice<ImageAspectRatio>
-		resolution: ImageStudioChoice<ImageOutputSize>
+export const IMAGE_STUDIO_GROUP_IDS = {
+	image: 'image',
+	profileSettings: 'profile-settings',
+	generationSettings: 'generation-settings',
+} as const
+
+export const IMAGE_STUDIO_CONTROL_IDS = {
+	prompt: 'prompt',
+	batch: 'batch',
+	ratio: 'ratio',
+	resolution: 'resolution',
+	lineColor: 'lineColor',
+	backgroundColor: 'backgroundColor',
+} as const
+
+export type ImageStudioFeature =
+	| {
+			type: 'color-adjustment'
+			controls: { line: string; background?: string }
+	  }
+	| { type: 'camera-control' }
+
+/** 이미지 프로파일 하나가 발행하는 공통 Controller envelope와 이미지 실행 descriptor. */
+export type ImageStudioConfig = StudioControllerConfig<'image', number> & {
+	image: {
+		slug: string | null
+		features: readonly ImageStudioFeature[]
 	}
-	/** 선택한 생성 이미지를 시드로 시점을 다시 잡을 수 있는가. */
-	supportsCameraControl: boolean
-	/** 존재 = 색 조정 개방(docs/10 §3.6 — 개방 플래그를 따로 두지 않는다). 라인 색이 필수, 배경은 선택. */
-	colorAdjustment?: { line: string; background?: string }
 }
 
-/**
- * 프로파일 교체 후보 — 브라우저 카드가 필요한 만큼만 계약에서 뽑은 투영.
- * 개방 필드(카메라·색)를 그대로 실어 카드 배지가 새 필드 없이 계약에서만 파생된다.
- */
-export type ImageStudioProfileOption = Pick<
-	ImageStudioConfig,
-	'colorAdjustment' | 'name' | 'profileId' | 'supportsCameraControl'
+type ControlOfKind<Kind extends ControllerControlDefinition['kind']> = Extract<
+	ControllerControlDefinition,
+	{ kind: Kind }
 >
 
-/**
- * 선택지와 시작값 — 선택지가 하나뿐이면 읽기 전용으로 파생한다(잠금 플래그를 따로 두지 않는다,
- * docs/10 §3.6).
- */
-export type ImageStudioChoice<Value> = {
-	options: readonly Value[]
-	defaultValue: Value
+export type ImageStudioControls = {
+	prompt: ControlOfKind<'text'>
+	batch: ControlOfKind<'select'>
+	ratio: ControlOfKind<'select'>
+	resolution: ControlOfKind<'select'>
+}
+
+/** stable ID로 이미지 도메인의 필수 생성 컨트롤과 선택 색 컨트롤을 찾는다. */
+export function getImageStudioControls(config: ImageStudioConfig): ImageStudioControls {
+	return {
+		prompt: requireControl(config, IMAGE_STUDIO_CONTROL_IDS.prompt, 'text'),
+		batch: requireControl(config, IMAGE_STUDIO_CONTROL_IDS.batch, 'select'),
+		ratio: requireControl(config, IMAGE_STUDIO_CONTROL_IDS.ratio, 'select'),
+		resolution: requireControl(config, IMAGE_STUDIO_CONTROL_IDS.resolution, 'select'),
+	}
+}
+
+/** Image feature type으로 published capability를 찾는다. */
+export function getImageStudioFeature<Type extends ImageStudioFeature['type']>(
+	config: ImageStudioConfig,
+	type: Type,
+): Extract<ImageStudioFeature, { type: Type }> | undefined {
+	return config.image.features.find((feature) => feature.type === type) as
+		| Extract<ImageStudioFeature, { type: Type }>
+		| undefined
+}
+
+/** color-adjustment feature의 semantic ref를 실제 color Definition으로 해석한다. */
+export function getImageColorAdjustmentControls(config: ImageStudioConfig): {
+	line: ControlOfKind<'color'>
+	background?: ControlOfKind<'color'>
+} | null {
+	const feature = getImageStudioFeature(config, 'color-adjustment')
+	if (!feature) return null
+	return {
+		line: requireControl(config, feature.controls.line, 'color'),
+		...(feature.controls.background
+			? { background: requireControl(config, feature.controls.background, 'color') }
+			: {}),
+	}
+}
+
+/** common ControllerRenderer에서 feature dispatcher가 소유한 control을 제외할 ID 목록이다. */
+export function getImageStudioFeatureControlIds(config: ImageStudioConfig): readonly string[] {
+	return config.image.features.flatMap((feature) => {
+		switch (feature.type) {
+			case 'color-adjustment':
+				return [feature.controls.line, feature.controls.background].filter(
+					(value): value is string => Boolean(value),
+				)
+			case 'camera-control':
+				return []
+			default:
+				return assertNeverFeature(feature)
+		}
+	})
+}
+
+function assertNeverFeature(value: never): never {
+	throw new Error(`지원하지 않는 ImageStudioFeature입니다: ${JSON.stringify(value)}`)
 }
 
 /**
- * published 프로파일에서 편집 계약을 파생한다 — 어드민이 계약을 직접 저장하게 되면 이 함수가 그 폴백이 된다.
- * 레인지의 원천은 프로파일의 개방 필드, 전역 상한, 모델 제약 셋이다.
+ * published 프로파일을 브라우저에 내려도 안전한 이미지 StudioConfig로 투영한다.
+ * 저장된 Controller가 없으면 기존 프로파일 필드를 stable control ID로 옮긴다.
  */
 export function deriveImageStudioConfig(
 	profile: PublishedImageProfileDefinition,
 ): ImageStudioConfig {
-	const line = profile.colorAdjustment?.line
-	const background = profile.colorAdjustment?.background
-
-	return {
-		profileId: profile.id,
+	const storedController = projectStoredController(profile.controller)
+	const storedFeatures = projectStoredFeatures(profile.features)
+	const config: ImageStudioConfig = {
+		studio: 'image',
+		id: profile.id,
 		version: 1,
 		name: profile.name,
-		slug: profile.slug,
-		// 프로파일이 상한을 비워두면 전역 상한이 그대로 상한이다.
-		prompt: { maxLength: profile.maxPromptLength ?? IMAGE_PROMPT_MAX_LENGTH },
-		generateOptions: {
-			batch: { options: IMAGE_BATCH_SIZES, defaultValue: IMAGE_BATCH_DEFAULT },
-			ratio: { options: IMAGE_ASPECT_RATIOS, defaultValue: profile.aspectRatio },
-			// 해상도 레인지는 모델 능력에서 파생한다 — Nano Banana 2 Lite는 1K뿐이라 읽기 전용이 된다.
-			resolution: {
-				options: IMAGE_OUTPUT_SIZES.filter((size) =>
-					supportsImageOutputSize(profile.imageModelPreset, size),
-				),
-				defaultValue: profile.imageSize,
-			},
+		controller: storedController ?? deriveLegacyController(profile),
+		image: {
+			slug: profile.slug ?? null,
+			// canonical Controller가 있으면 빈 features도 명시적 no-capability다. 기존 문서처럼
+			// Controller가 없을 때만 빈 Payload blocks를 legacy 필드로 복구한다.
+			features:
+				storedController && !storedFeatures?.length
+					? []
+					: storedFeatures?.length
+						? storedFeatures
+						: deriveLegacyFeatures(profile),
 		},
-		// 필드가 없던 시절의 문서(NULL)는 지금까지처럼 시점 조정을 연다.
-		supportsCameraControl: profile.cameraControl ?? true,
-		// 라인 색이 채워져 있을 때만 계약에 싣는다 — 없으면 필드 자체가 없다.
-		...(line ? { colorAdjustment: background ? { line, background } : { line } } : {}),
 	}
+
+	parseStudioControllerConfig(config)
+	assertImageControllerLimits(config, profile)
+	assertImageFeatures(config)
+	return config
+}
+
+function deriveLegacyFeatures(
+	profile: PublishedImageProfileDefinition,
+): readonly ImageStudioFeature[] {
+	const color = profile.colorAdjustment
+	return [
+		...(color?.line
+			? [
+					{
+						type: 'color-adjustment' as const,
+						controls: {
+							line: IMAGE_STUDIO_CONTROL_IDS.lineColor,
+							...(color.background
+								? { background: IMAGE_STUDIO_CONTROL_IDS.backgroundColor }
+								: {}),
+						},
+					},
+				]
+			: []),
+		// 필드가 없던 시절의 문서는 지금까지처럼 시점 조정을 연다.
+		...((profile.cameraControl ?? true) ? [{ type: 'camera-control' as const }] : []),
+	]
+}
+
+function deriveLegacyController(
+	profile: PublishedImageProfileDefinition,
+): ImageStudioConfig['controller'] {
+	const line = profile.colorAdjustment?.line
+	const background = profile.colorAdjustment?.background
+	const resolutionOptions = IMAGE_OUTPUT_SIZES.filter((size) =>
+		supportsImageOutputSize(profile.imageModelPreset, size),
+	)
+
+	return {
+		groups: [
+			{
+				id: IMAGE_STUDIO_GROUP_IDS.image,
+				title: 'Image',
+				collapsible: true,
+				defaultOpen: true,
+				controls: [
+					{
+						id: IMAGE_STUDIO_CONTROL_IDS.prompt,
+						kind: 'text',
+						label: 'Prompt',
+						defaultValue: '',
+						multiline: true,
+						maxLength: profile.maxPromptLength ?? IMAGE_PROMPT_MAX_LENGTH,
+						placeholder: '이미지를 설명하세요',
+					},
+				],
+			},
+			...(line
+				? [
+						{
+							id: IMAGE_STUDIO_GROUP_IDS.profileSettings,
+							title: 'Profile Settings',
+							collapsible: true as const,
+							defaultOpen: true,
+							controls: [
+								{
+									id: IMAGE_STUDIO_CONTROL_IDS.lineColor,
+									kind: 'color' as const,
+									label: 'Line Color',
+									defaultValue: line,
+								},
+								...(background
+									? [
+											{
+												id: IMAGE_STUDIO_CONTROL_IDS.backgroundColor,
+												kind: 'color' as const,
+												label: 'Background Color',
+												defaultValue: background,
+											},
+										]
+									: []),
+							],
+						},
+					]
+				: []),
+			{
+				id: IMAGE_STUDIO_GROUP_IDS.generationSettings,
+				title: 'Setting',
+				controls: [
+					selectControl(
+						IMAGE_STUDIO_CONTROL_IDS.batch,
+						'장수',
+						IMAGE_BATCH_SIZES.map(String),
+						String(IMAGE_BATCH_DEFAULT),
+					),
+					selectControl(
+						IMAGE_STUDIO_CONTROL_IDS.ratio,
+						'비율',
+						IMAGE_ASPECT_RATIOS,
+						profile.aspectRatio,
+					),
+					selectControl(
+						IMAGE_STUDIO_CONTROL_IDS.resolution,
+						'해상도',
+						resolutionOptions,
+						profile.imageSize,
+					),
+				],
+			},
+		],
+	}
+}
+
+function selectControl(
+	id: string,
+	label: string,
+	values: readonly string[],
+	defaultValue: string,
+): ControlOfKind<'select'> {
+	return {
+		id,
+		kind: 'select',
+		label,
+		defaultValue,
+		options: values.map((value) => ({ label: value, value })),
+	}
+}
+
+/** Payload의 row/block 메타데이터를 제거하고 공통 Definition 어휘로 바꾼다. */
+function projectStoredController(input: unknown): ImageStudioConfig['controller'] | null {
+	if (!input || typeof input !== 'object') return null
+	const groups = (input as { groups?: unknown }).groups
+	if (groups == null || (Array.isArray(groups) && groups.length === 0)) return null
+	if (!Array.isArray(groups)) throw new Error('Image controller groups가 배열이 아닙니다.')
+
+	return {
+		groups: groups.map((value) => {
+			const group = record(value, 'Image controller group')
+			if (!Array.isArray(group.controls)) {
+				throw new Error('Image controller controls가 배열이 아닙니다.')
+			}
+			const collapsible = group.collapsible === true
+			return {
+				id: group.key as string,
+				title: group.title as string,
+				controls: group.controls.map(projectStoredControl),
+				...(collapsible
+					? {
+							collapsible: true as const,
+							...(typeof group.defaultOpen === 'boolean'
+								? { defaultOpen: group.defaultOpen }
+								: {}),
+						}
+					: {}),
+			}
+		}) as readonly ControllerGroupDefinition[],
+	}
+}
+
+/** Payload feature block 메타데이터를 공개 capability IR로 좁힌다. */
+function projectStoredFeatures(input: unknown): readonly ImageStudioFeature[] | null {
+	if (input == null) return null
+	if (!Array.isArray(input)) throw new Error('Image features가 배열이 아닙니다.')
+
+	return input.map((value) => {
+		const feature = record(value, 'Image feature')
+		switch (feature.blockType) {
+			case 'colorAdjustment':
+				return {
+					type: 'color-adjustment' as const,
+					controls: {
+						line: feature.line as string,
+						...optionalProperty('background', feature.background as string | undefined),
+					},
+				}
+			case 'cameraControl':
+				return { type: 'camera-control' as const }
+			default:
+				throw new Error(`지원하지 않는 Image feature blockType입니다: ${feature.blockType}`)
+		}
+	})
+}
+
+function projectStoredControl(value: unknown): ControllerControlDefinition {
+	const control = record(value, 'Image controller control')
+	const base = {
+		id: control.key as string,
+		label: control.label as string,
+		...optionalProperty(
+			'availability',
+			control.availability as ControllerControlDefinition['availability'],
+		),
+	}
+
+	switch (control.blockType) {
+		case 'text':
+			return {
+				...base,
+				kind: 'text',
+				defaultValue: (control.defaultValue ?? null) as string | null,
+				...optionalProperty('multiline', control.multiline as boolean | undefined),
+				...optionalProperty('maxLength', control.maxLength as number | undefined),
+				...optionalProperty('placeholder', control.placeholder as string | undefined),
+			}
+		case 'toggle':
+			return {
+				...base,
+				kind: 'toggle',
+				defaultValue: control.defaultValue as boolean,
+			}
+		case 'select': {
+			const options = control.options
+			if (!Array.isArray(options)) throw new Error('Image select options가 배열이 아닙니다.')
+			return {
+				...base,
+				kind: 'select',
+				defaultValue: (control.defaultValue ?? null) as string | null,
+				options: options.map((option) => {
+					const item = record(option, 'Image select option')
+					return { label: item.label as string, value: item.value as string }
+				}),
+				...optionalProperty('placeholder', control.placeholder as string | undefined),
+			}
+		}
+		case 'color':
+			return {
+				...base,
+				kind: 'color',
+				defaultValue: (control.defaultValue ?? null) as string | null,
+			}
+		case 'range': {
+			const display = control.display
+			return {
+				...base,
+				kind: 'range',
+				defaultValue: control.defaultValue as number,
+				min: control.min as number,
+				max: control.max as number,
+				step: control.step as number,
+				...(display && typeof display === 'object'
+					? {
+							display: {
+								...optionalProperty(
+									'unit',
+									(display as Record<string, unknown>).unit as string | undefined,
+								),
+								...optionalProperty(
+									'precision',
+									(display as Record<string, unknown>).precision as
+										| number
+										| undefined,
+								),
+							},
+						}
+					: {}),
+			}
+		}
+		case 'pad': {
+			const defaultValue = record(control.defaultValue, 'Image pad defaultValue')
+			return {
+				...base,
+				kind: 'pad',
+				defaultValue: { x: defaultValue.x as number, y: defaultValue.y as number },
+				...optionalProperty('aspectRatio', control.aspectRatio as number | undefined),
+			}
+		}
+		default:
+			throw new Error(`지원하지 않는 Image controller blockType입니다: ${control.blockType}`)
+	}
+}
+
+function assertImageControllerLimits(
+	config: ImageStudioConfig,
+	profile: PublishedImageProfileDefinition,
+) {
+	const { prompt, batch, ratio, resolution } = getImageStudioControls(config)
+	if (!prompt.maxLength || prompt.maxLength > IMAGE_PROMPT_MAX_LENGTH) {
+		throw new Error(`Image prompt maxLength는 ${IMAGE_PROMPT_MAX_LENGTH} 이하여야 합니다.`)
+	}
+	assertOptions(batch, IMAGE_BATCH_SIZES.map(String), 'batch')
+	assertOptions(ratio, IMAGE_ASPECT_RATIOS, 'ratio')
+	assertOptions(
+		resolution,
+		IMAGE_OUTPUT_SIZES.filter((size) =>
+			supportsImageOutputSize(profile.imageModelPreset, size),
+		),
+		'resolution',
+	)
+}
+
+function assertImageFeatures(config: ImageStudioConfig) {
+	const types = new Set<ImageStudioFeature['type']>()
+	for (const feature of config.image.features) {
+		if (types.has(feature.type)) {
+			throw new Error(`Image feature type이 중복되었습니다: ${feature.type}`)
+		}
+		types.add(feature.type)
+		if (feature.type !== 'color-adjustment') continue
+		requireControl(config, feature.controls.line, 'color')
+		if (feature.controls.background) {
+			requireControl(config, feature.controls.background, 'color')
+		}
+	}
+}
+
+function assertOptions(control: ControlOfKind<'select'>, allowed: readonly string[], name: string) {
+	if (control.options.some((option) => !allowed.includes(option.value))) {
+		throw new Error(`Image ${name} options가 서버 상한을 벗어났습니다.`)
+	}
+}
+
+function requireControl<Kind extends ControllerControlDefinition['kind']>(
+	config: ImageStudioConfig,
+	id: string,
+	kind: Kind,
+): ControlOfKind<Kind> {
+	const control = optionalControl(config, id, kind)
+	if (!control) throw new Error(`Image controller에 ${id} ${kind} control이 필요합니다.`)
+	return control
+}
+
+function optionalControl<Kind extends ControllerControlDefinition['kind']>(
+	config: ImageStudioConfig,
+	id: string,
+	kind: Kind,
+): ControlOfKind<Kind> | undefined {
+	const control = config.controller.groups
+		.flatMap((group) => group.controls)
+		.find((candidate) => candidate.id === id)
+	if (!control) return undefined
+	if (control.kind !== kind) {
+		throw new Error(`Image controller의 ${id} control은 ${kind}이어야 합니다.`)
+	}
+	return control as ControlOfKind<Kind>
+}
+
+function record(value: unknown, name: string): Record<string, unknown> {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) {
+		throw new Error(`${name}이 객체가 아닙니다.`)
+	}
+	return value as Record<string, unknown>
+}
+
+function optionalProperty<Key extends string, Value>(key: Key, value: Value | null | undefined) {
+	return value == null ? {} : ({ [key]: value } as Record<Key, Value>)
 }

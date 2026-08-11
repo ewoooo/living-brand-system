@@ -1,16 +1,28 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ComponentProps } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
+import {
+	forwardStraightGraphicConfig,
+	graphicStudioConfigs,
+} from '@/features/graphic-studio/graphic-studio-runtime'
+import type { ImageStudioConfig } from '@/features/image-studio/image-studio-config'
+import {
+	TemplateStudioProvider,
+	useTemplateStudio,
+} from '@/features/template-studio/hooks/use-template-studio'
+import { deriveTemplateConfig } from '@/features/template-studio/template-config'
 import type { GetCreateNavigationOutput } from '@/services/get-create-navigation.service'
 import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
-import { TemplateGenerator } from './template-generator'
+import { TemplateGenerator as TemplateGeneratorView } from './template-generator'
+import { TemplateSidebar } from './template-sidebar'
 
 const mocks = vi.hoisted(() => ({
 	exportTemplate: vi.fn(),
 	push: vi.fn(),
 	requestImageGeneration: vi.fn(),
 	canExport: vi.fn(() => false),
-	requestPublishedImageProfiles: vi.fn(async (): Promise<{ id: number; name: string }[]> => []),
 }))
 
 vi.mock('@/features/template-export/hooks/use-template-export', () => ({
@@ -26,7 +38,6 @@ vi.mock('next/navigation', () => ({
 }))
 vi.mock('@/features/generate-image/services/generate-image.client', () => ({
 	requestImageGeneration: mocks.requestImageGeneration,
-	requestPublishedImageProfiles: mocks.requestPublishedImageProfiles,
 }))
 
 const template: PublishedHtmlTemplate = {
@@ -55,12 +66,133 @@ const navigation: GetCreateNavigationOutput = {
 	],
 }
 
+const imageConfigs = [createImageConfig(11), createImageConfig(7)]
+
+function TemplateGenerator({
+	imageConfigs: providedImageConfigs = imageConfigs,
+	graphicConfigs: providedGraphicConfigs = graphicStudioConfigs,
+	...props
+}: Omit<ComponentProps<typeof TemplateGeneratorView>, 'config'> & {
+	imageConfigs?: readonly ImageStudioConfig[]
+	graphicConfigs?: readonly GraphicStudioConfig[]
+}) {
+	return (
+		<TemplateGeneratorView
+			{...props}
+			config={deriveTemplateConfig(
+				props.template,
+				providedImageConfigs,
+				providedGraphicConfigs,
+			)}
+		/>
+	)
+}
+
+function FeatureMutationProbe() {
+	const { images, background } = useTemplateStudio()
+	const image = images.states['1:1']
+	return (
+		<>
+			<span data-testid="image-line">{String(image?.featureValues.lineColor)}</span>
+			<span data-testid="background-line">
+				{String(background.state.featureValues.lineColor)}
+			</span>
+			<button
+				type="button"
+				onClick={() => images.updateFeature('1:1', 'lineColor', 'invalid')}
+			>
+				invalid image feature
+			</button>
+			<button
+				type="button"
+				onClick={() => images.updateFeature('1:1', 'lineColor', '#00ff00')}
+			>
+				valid image feature
+			</button>
+			<button type="button" onClick={() => background.updateFeature('lineColor', '#00ff00')}>
+				background feature
+			</button>
+		</>
+	)
+}
+
+function GraphicMutationProbe() {
+	const { background } = useTemplateStudio()
+	return (
+		<>
+			<span data-testid="graphic-config">{background.state.graphicConfigId}</span>
+			<span data-testid="graphic-viewpoint">
+				{String(background.state.graphicValues.viewpoint)}
+			</span>
+			<button
+				type="button"
+				onClick={() => background.updateGraphic('viewpoint', 'low-angle')}
+			>
+				update graphic
+			</button>
+			<button type="button" onClick={() => background.updateGraphic('viewpoint', 'invalid')}>
+				invalid graphic
+			</button>
+			<button type="button" onClick={() => background.selectGraphicConfig('secondary')}>
+				select secondary graphic
+			</button>
+		</>
+	)
+}
+
+function BackgroundTypeMutationProbe() {
+	const { background } = useTemplateStudio()
+	return (
+		<>
+			<span data-testid="background-type">{background.state.type}</span>
+			<button type="button" onClick={() => background.selectType('graphic')}>
+				select graphic background
+			</button>
+			<button type="button" onClick={() => background.selectType('invalid')}>
+				select invalid background
+			</button>
+			<button type="button" onClick={() => background.update({ type: 'graphic' } as never)}>
+				patch graphic background
+			</button>
+		</>
+	)
+}
+
+function ImageRaceProbe() {
+	const { images } = useTemplateStudio()
+	const state = images.states['1:1']
+	return (
+		<>
+			<span data-testid="slot-profile">{state?.profileId}</span>
+			<span data-testid="slot-generating">{String(state?.generating)}</span>
+			<span data-testid="slot-image-profile">{state?.image?.profileId ?? 'none'}</span>
+			<button type="button" onClick={() => void images.generate('1:1')}>
+				start slot generation
+			</button>
+			<button type="button" onClick={() => images.selectProfile('1:1', 7)}>
+				select slot profile
+			</button>
+			<button type="button" onClick={() => images.update('1:1', { profileId: 7 } as never)}>
+				patch slot profile
+			</button>
+			<button
+				type="button"
+				onClick={() => {
+					images.selectProfile('1:1', 7)
+					void images.generate('1:1')
+				}}
+			>
+				race slot profile
+			</button>
+		</>
+	)
+}
+
 describe('TemplateGenerator', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		// clearAllMocks는 mockReturnValue로 심은 구현도 지운다 — 기본 구현을 매 테스트 복원한다.
 		mocks.canExport.mockImplementation(() => false)
-		mocks.requestPublishedImageProfiles.mockResolvedValue([])
 	})
 	afterEach(cleanup)
 
@@ -119,7 +251,8 @@ describe('TemplateGenerator', () => {
 			prompt: '파스텔 배경',
 			count: 1,
 			profileId: 7,
-			aspectRatio: undefined, // 박스 없는 슬롯은 프로파일 비율 그대로
+			aspectRatio: '1:1', // 박스가 없으면 선택된 Config의 기본 비율
+			imageSize: '2K',
 		})
 		await waitFor(() =>
 			expect(container.innerHTML).toContain('/api/generated-images/file/bg.png'),
@@ -151,6 +284,84 @@ describe('TemplateGenerator', () => {
 			expect(container.innerHTML).toContain('mask-image')
 			expect(container.innerHTML).toContain('rgb(255, 0, 0)')
 		})
+	})
+
+	it('Image Config가 color-adjustment를 지원하지 않으면 Template 값 override를 적용하지 않는다', async () => {
+		mocks.requestImageGeneration.mockResolvedValue({
+			generatedImages: [{ id: 5, url: '/api/generated-images/file/plain.png' }],
+		})
+		const baseConfig = createImageConfig(7)
+		const noColorConfig: ImageStudioConfig = {
+			...baseConfig,
+			image: {
+				...baseConfig.image,
+				features: baseConfig.image.features.filter(
+					(feature) => feature.type !== 'color-adjustment',
+				),
+			},
+		}
+		const { container } = render(
+			<TemplateGenerator
+				imageConfigs={[noColorConfig]}
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: {
+						'1:1': {
+							imageInput: { profileId: 7 },
+							imageColorize: { line: '#ff0000' },
+						},
+					},
+				}}
+			/>,
+		)
+
+		fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: '원본 이미지' } })
+		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
+
+		await waitFor(() =>
+			expect(container.innerHTML).toContain('/api/generated-images/file/plain.png'),
+		)
+		expect(container.innerHTML).not.toContain('mask-image')
+	})
+
+	it('프로파일을 바꾸면 선택된 Image Config의 feature UI로 즉시 교체한다', async () => {
+		const user = userEvent.setup()
+		const colorConfig = createImageConfig(11)
+		const plainBase = createImageConfig(7)
+		const plainConfig: ImageStudioConfig = {
+			...plainBase,
+			image: {
+				...plainBase.image,
+				features: plainBase.image.features.filter(
+					(feature) => feature.type !== 'color-adjustment',
+				),
+			},
+		}
+		const { container } = render(
+			<TemplateGenerator
+				imageConfigs={[colorConfig, plainConfig]}
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: { '1:1': { imageInput: {} } },
+				}}
+			/>,
+		)
+		const slot = container.querySelector<HTMLElement>('[data-slot="image-slot-input"]')
+		expect(slot).not.toBeNull()
+		if (!slot) return
+		expect(within(slot).getByLabelText('Line Color 색상 선택')).toBeInTheDocument()
+
+		within(slot).getByRole('combobox', { name: 'Type' }).focus()
+		await user.keyboard('{ArrowDown}')
+		await user.click(screen.getByRole('option', { name: '프로파일 7' }))
+
+		await waitFor(() =>
+			expect(within(slot).queryByLabelText('Line Color 색상 선택')).toBeNull(),
+		)
 	})
 
 	it('일괄 텍스트 색을 만졌을 때만 모든 텍스트 슬롯에 합성한다', () => {
@@ -266,9 +477,8 @@ describe('TemplateGenerator', () => {
 		expect((canvasOf() as HTMLElement).style.backgroundColor).toBe('rgb(255, 0, 0)')
 	})
 
-	it('배경 슬롯만 있는 템플릿도 프로파일을 조회해 생성한 이미지를 캔버스에 깐다', async () => {
+	it('서버가 전달한 Image Config로 배경 이미지를 생성해 캔버스에 깐다', async () => {
 		const user = userEvent.setup()
-		mocks.requestPublishedImageProfiles.mockResolvedValue([{ id: 11, name: '기본 프로파일' }])
 		mocks.requestImageGeneration.mockResolvedValue({
 			generatedImages: [{ id: 9, url: '/api/generated-images/file/canvas.png' }],
 		})
@@ -282,9 +492,6 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
-		// 이미지 슬롯이 없어도 배경 생성이 프로파일을 필요로 한다 — 조회를 건너뛰면 버튼이 잠긴다.
-		await waitFor(() => expect(mocks.requestPublishedImageProfiles).toHaveBeenCalled())
-
 		screen.getByRole('combobox', { name: 'Type' }).focus()
 		await user.keyboard('{ArrowDown}')
 		await user.click(screen.getByRole('option', { name: 'Image' }))
@@ -297,6 +504,7 @@ describe('TemplateGenerator', () => {
 			count: 1,
 			profileId: 11,
 			aspectRatio: '4:3', // 캔버스 400×300에서 파생
+			imageSize: '2K',
 		})
 		await waitFor(() => {
 			const canvas = container.querySelector(
@@ -305,6 +513,74 @@ describe('TemplateGenerator', () => {
 			expect(canvas.style.backgroundImage).toContain('/api/generated-images/file/canvas.png')
 			expect(canvas.style.backgroundSize).toBe('cover')
 		})
+	})
+
+	it('배경 Image Profile 변경은 새 계약의 prompt 기본값으로 세션을 초기화한다', async () => {
+		const user = userEvent.setup()
+		render(
+			<TemplateGenerator
+				imageConfigs={[
+					createImageConfig(11),
+					createImageConfig(7, undefined, '고정 기본값'),
+				]}
+				navigation={navigation}
+				template={template}
+			/>,
+		)
+
+		screen.getByRole('combobox', { name: 'Type' }).focus()
+		await user.keyboard('{ArrowDown}')
+		await user.click(screen.getByRole('option', { name: 'Image' }))
+		await user.click(screen.getByRole('radio', { name: 'Generate' }))
+		fireEvent.change(await screen.findByLabelText('Prompt'), {
+			target: { value: '사용자 입력' },
+		})
+
+		screen.getByRole('combobox', { name: 'Image Profile' }).focus()
+		await user.keyboard('{ArrowDown}')
+		await user.click(screen.getByRole('option', { name: '프로파일 7' }))
+
+		expect(screen.getByLabelText('Prompt')).toHaveValue('고정 기본값')
+	})
+
+	it('Graphic Config의 순수 SVG를 배경으로 합성하고 타입 전환 후에도 같은 세션은 같은 URL을 만든다', async () => {
+		const user = userEvent.setup()
+		const { container } = render(
+			<TemplateGenerator
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" style="width:400px;height:300px;background-color:rgb(0,40,10)"></div>',
+				}}
+			/>,
+		)
+		const canvasOf = () =>
+			container.querySelector(
+				'[data-slot="studio-workspace-canvas"] [data-node-id="1:1"]',
+			) as HTMLElement
+
+		screen.getByRole('combobox', { name: 'Type' }).focus()
+		await user.keyboard('{ArrowDown}')
+		await user.click(screen.getByRole('option', { name: 'Graphic' }))
+		await waitFor(() =>
+			expect(canvasOf().style.backgroundImage).toContain('data:image/svg+xml'),
+		)
+		const firstGraphicUrl = canvasOf().style.backgroundImage
+
+		screen.getByRole('combobox', { name: 'Type' }).focus()
+		await user.keyboard('{ArrowDown}')
+		await user.click(screen.getByRole('option', { name: 'Color' }))
+		fireEvent.change(screen.getByLabelText('Background Color 색상 선택'), {
+			target: { value: '#ff0000' },
+		})
+		expect(canvasOf().style.backgroundImage).toBe('')
+		expect(canvasOf().style.backgroundColor).toBe('rgb(255, 0, 0)')
+
+		screen.getByRole('combobox', { name: 'Type' }).focus()
+		await user.keyboard('{ArrowDown}')
+		await user.click(screen.getByRole('option', { name: 'Graphic' }))
+		expect(canvasOf().style.backgroundImage).toBe(firstGraphicUrl)
+		expect(canvasOf().style.backgroundColor).toBe('rgb(0, 40, 10)')
 	})
 
 	it('선택한 포맷으로 내보낸다 — 편집 계약(printPpi 정책)이 허용한 포맷만 목록에 오른다', async () => {
@@ -321,12 +597,10 @@ describe('TemplateGenerator', () => {
 		expect(mocks.exportTemplate).toHaveBeenCalledWith('pdf')
 	})
 
-	it('프로파일 로드 실패: 고정 슬롯은 오류 없이 —, 미고정 슬롯만 오류를 보여준다', async () => {
-		mocks.requestPublishedImageProfiles.mockRejectedValue(new Error('down'))
-
-		// 고정 슬롯 — 이름만 못 보여줄 뿐 생성은 가능하므로 오류를 올리지 않는다.
+	it('Image Config가 없으면 pinned과 selectable 슬롯 모두 생성 불가 이유를 보여준다', async () => {
 		const pinned = render(
 			<TemplateGenerator
+				imageConfigs={[]}
 				navigation={navigation}
 				template={{
 					...template,
@@ -335,18 +609,14 @@ describe('TemplateGenerator', () => {
 				}}
 			/>,
 		)
-		// 배경 배경색 행도 미설정이면 —를 보여주므로 슬롯 안으로 범위를 좁힌다.
-		await waitFor(() =>
-			expect(
-				pinned.container.querySelector('[data-slot="image-slot-input"]')?.textContent,
-			).toContain('—'),
-		)
-		expect(screen.queryByText('이미지 프로파일을 불러오지 못했습니다.')).toBeNull()
+		expect(
+			pinned.container.querySelector('[data-slot="image-slot-input"]')?.textContent,
+		).toContain('고정된 이미지 프로파일을 사용할 수 없습니다.')
 		pinned.unmount()
 
-		// 미고정 슬롯 — 목록 없이는 생성 자체가 불가능하므로 오류를 보여준다.
 		render(
 			<TemplateGenerator
+				imageConfigs={[]}
 				navigation={navigation}
 				template={{
 					...template,
@@ -355,9 +625,7 @@ describe('TemplateGenerator', () => {
 				}}
 			/>,
 		)
-		expect(
-			await screen.findByText('이미지 프로파일을 불러오지 못했습니다.'),
-		).toBeInTheDocument()
+		expect(screen.getByText('사용 가능한 이미지 프로파일이 없습니다.')).toBeInTheDocument()
 	})
 
 	it('슬롯 박스가 있으면 가장 가까운 지원 비율을 생성 요청에 싣는다', () => {
@@ -373,7 +641,7 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
-		expect(screen.getByText('슬롯 비율 16:9로 생성')).toBeInTheDocument()
+		expect(screen.getByText('16:9')).toBeInTheDocument()
 		fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: '파스텔 배경' } })
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 
@@ -382,6 +650,383 @@ describe('TemplateGenerator', () => {
 			count: 1,
 			profileId: 7,
 			aspectRatio: '16:9',
+			imageSize: '2K',
 		})
 	})
+
+	it.each([
+		'readonly',
+		'disabled',
+	] as const)('prompt가 %s면 수정 없이 Admin default 그대로 생성한다', async (availability) => {
+		const fixedConfig = createImageConfig(7, availability, '고정 프롬프트')
+		mocks.requestImageGeneration.mockResolvedValue({ generatedImages: [] })
+		render(
+			<TemplateGenerator
+				imageConfigs={[fixedConfig]}
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
+				}}
+			/>,
+		)
+
+		if (availability === 'readonly') {
+			expect(screen.getByText('고정 프롬프트')).toBeInTheDocument()
+		} else {
+			expect(screen.getByDisplayValue('고정 프롬프트')).toBeDisabled()
+		}
+		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
+
+		await waitFor(() =>
+			expect(mocks.requestImageGeneration).toHaveBeenCalledWith({
+				prompt: '고정 프롬프트',
+				count: 1,
+				profileId: 7,
+				aspectRatio: '1:1',
+				imageSize: '2K',
+			}),
+		)
+	})
+
+	it.each([
+		'readonly',
+		'disabled',
+	] as const)('Background Type이 %s면 action과 generic patch로 우회할 수 없다', (availability) => {
+		const base = deriveTemplateConfig(template, imageConfigs, graphicStudioConfigs)
+		const config = {
+			...base,
+			controller: {
+				groups: base.controller.groups.map((group) => ({
+					...group,
+					controls: group.controls.map((control) =>
+						control.id === 'background.type' ? { ...control, availability } : control,
+					),
+				})),
+			},
+		} satisfies typeof base
+		render(
+			<TemplateStudioProvider config={config} template={template} navigation={navigation}>
+				<BackgroundTypeMutationProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic background' }))
+		fireEvent.click(screen.getByRole('button', { name: 'select invalid background' }))
+		fireEvent.click(screen.getByRole('button', { name: 'patch graphic background' }))
+		expect(screen.getByTestId('background-type')).toHaveTextContent('color')
+	})
+
+	it('이미지 생성 중 Profile action·generic patch를 막고 stale 응답을 기록하지 않는다', async () => {
+		const studioTemplate: PublishedHtmlTemplate = {
+			...template,
+			html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+			nodeConfigs: { '1:1': { imageInput: {} } },
+		}
+		const configs = [
+			createImageConfig(11, undefined, '첫 프롬프트'),
+			createImageConfig(7, undefined, '둘째 프롬프트'),
+		]
+		const config = deriveTemplateConfig(studioTemplate, configs, graphicStudioConfigs)
+		let resolveFirst:
+			| ((value: { generatedImages: { id: number; url: string }[] }) => void)
+			| null = null
+		mocks.requestImageGeneration.mockReturnValueOnce(
+			new Promise((resolve) => {
+				resolveFirst = resolve
+			}),
+		)
+		const first = render(
+			<TemplateStudioProvider
+				config={config}
+				template={studioTemplate}
+				navigation={navigation}
+			>
+				<TemplateSidebar />
+				<ImageRaceProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'start slot generation' }))
+		expect(screen.getByTestId('slot-generating')).toHaveTextContent('true')
+		const slot = first.container.querySelector<HTMLElement>('[data-slot="image-slot-input"]')
+		expect(slot).not.toBeNull()
+		if (!slot) return
+		expect(within(slot).getByRole('combobox', { name: 'Type' })).toBeDisabled()
+		fireEvent.click(screen.getByRole('button', { name: 'select slot profile' }))
+		fireEvent.click(screen.getByRole('button', { name: 'patch slot profile' }))
+		expect(screen.getByTestId('slot-profile')).toHaveTextContent('11')
+		await act(async () => {
+			resolveFirst?.({ generatedImages: [{ id: 1, url: '/generated/first.png' }] })
+		})
+		await waitFor(() =>
+			expect(screen.getByTestId('slot-image-profile')).toHaveTextContent('11'),
+		)
+		first.unmount()
+
+		let resolveRace:
+			| ((value: { generatedImages: { id: number; url: string }[] }) => void)
+			| null = null
+		mocks.requestImageGeneration.mockReturnValueOnce(
+			new Promise((resolve) => {
+				resolveRace = resolve
+			}),
+		)
+		render(
+			<TemplateStudioProvider
+				config={config}
+				template={studioTemplate}
+				navigation={navigation}
+			>
+				<ImageRaceProbe />
+			</TemplateStudioProvider>,
+		)
+		fireEvent.click(screen.getByRole('button', { name: 'race slot profile' }))
+		expect(screen.getByTestId('slot-profile')).toHaveTextContent('7')
+		await act(async () => {
+			resolveRace?.({ generatedImages: [{ id: 2, url: '/generated/stale.png' }] })
+		})
+		await waitFor(() =>
+			expect(screen.getByTestId('slot-generating')).toHaveTextContent('false'),
+		)
+		expect(screen.getByTestId('slot-image-profile')).toHaveTextContent('none')
+	})
+
+	it('완료된 이미지는 Profile 변경 후 보존하되 이전 Profile 색상 feature를 합성하지 않는다', async () => {
+		const user = userEvent.setup()
+		mocks.requestImageGeneration.mockResolvedValue({
+			generatedImages: [{ id: 5, url: '/api/generated-images/file/preserved.png' }],
+		})
+		const { container } = render(
+			<TemplateGenerator
+				imageConfigs={[createImageConfig(11), createImageConfig(7)]}
+				navigation={navigation}
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: { '1:1': { imageInput: {} } },
+				}}
+			/>,
+		)
+		const slot = container.querySelector<HTMLElement>('[data-slot="image-slot-input"]')
+		expect(slot).not.toBeNull()
+		if (!slot) return
+
+		fireEvent.change(within(slot).getByLabelText('Prompt'), {
+			target: { value: '컬러 이미지' },
+		})
+		fireEvent.click(within(slot).getByRole('button', { name: '이미지 생성' }))
+		await waitFor(() => expect(container.innerHTML).toContain('mask-image'))
+
+		within(slot).getByRole('combobox', { name: 'Type' }).focus()
+		await user.keyboard('{ArrowDown}')
+		await user.click(screen.getByRole('option', { name: '프로파일 7' }))
+		await waitFor(() => expect(container.innerHTML).not.toContain('mask-image'))
+		expect(container.innerHTML).toContain('/api/generated-images/file/preserved.png')
+	})
+
+	it('feature action과 Template override는 Definition·availability·Background runtime 잠금을 우회하지 않는다', () => {
+		const editable = createImageConfig(7)
+		const studioTemplate: PublishedHtmlTemplate = {
+			...template,
+			html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+			nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
+		}
+		const first = render(
+			<TemplateStudioProvider
+				config={deriveTemplateConfig(studioTemplate, [editable])}
+				template={studioTemplate}
+				navigation={navigation}
+			>
+				<FeatureMutationProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'invalid image feature' }))
+		expect(screen.getByTestId('image-line')).toHaveTextContent('#000000')
+		fireEvent.click(screen.getByRole('button', { name: 'valid image feature' }))
+		expect(screen.getByTestId('image-line')).toHaveTextContent('#00ff00')
+		fireEvent.click(screen.getByRole('button', { name: 'background feature' }))
+		expect(screen.getByTestId('background-line')).toHaveTextContent('#000000')
+		first.unmount()
+
+		const readonlyConfig: ImageStudioConfig = {
+			...editable,
+			controller: {
+				groups: editable.controller.groups.map((group) => ({
+					...group,
+					controls: group.controls.map((control) =>
+						control.id === 'lineColor'
+							? { ...control, availability: 'readonly' as const }
+							: control,
+					),
+				})),
+			},
+		}
+		const overrideTemplate: PublishedHtmlTemplate = {
+			...studioTemplate,
+			nodeConfigs: {
+				'1:1': {
+					imageInput: { profileId: 7 },
+					imageColorize: { line: '#ff0000' },
+				},
+			},
+		}
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateConfig(overrideTemplate, [readonlyConfig])}
+				template={overrideTemplate}
+				navigation={navigation}
+			>
+				<FeatureMutationProbe />
+			</TemplateStudioProvider>,
+		)
+		expect(screen.getByTestId('image-line')).toHaveTextContent('#000000')
+		fireEvent.click(screen.getByRole('button', { name: 'valid image feature' }))
+		expect(screen.getByTestId('image-line')).toHaveTextContent('#000000')
+	})
+
+	it('Graphic update는 Definition availability를 지키고 Config 변경 시 기본값으로 초기화한다', () => {
+		const readonlyGraphic: GraphicStudioConfig = {
+			...forwardStraightGraphicConfig,
+			controller: {
+				groups: forwardStraightGraphicConfig.controller.groups.map((group) => ({
+					...group,
+					controls: group.controls.map((control) =>
+						control.id === 'viewpoint'
+							? { ...control, availability: 'readonly' as const }
+							: control,
+					),
+				})),
+			},
+		}
+		const first = render(
+			<TemplateStudioProvider
+				config={deriveTemplateConfig(template, imageConfigs, [readonlyGraphic])}
+				template={template}
+				navigation={navigation}
+			>
+				<GraphicMutationProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'update graphic' }))
+		expect(screen.getByTestId('graphic-viewpoint')).toHaveTextContent('flat')
+		fireEvent.click(screen.getByRole('button', { name: 'invalid graphic' }))
+		expect(screen.getByTestId('graphic-viewpoint')).toHaveTextContent('flat')
+		first.unmount()
+
+		const secondary = {
+			...forwardStraightGraphicConfig,
+			id: 'secondary',
+			name: 'Secondary',
+		} satisfies GraphicStudioConfig
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateConfig(template, imageConfigs, [
+					forwardStraightGraphicConfig,
+					secondary,
+				])}
+				template={template}
+				navigation={navigation}
+			>
+				<GraphicMutationProbe />
+			</TemplateStudioProvider>,
+		)
+		fireEvent.click(screen.getByRole('button', { name: 'update graphic' }))
+		expect(screen.getByTestId('graphic-viewpoint')).toHaveTextContent('low-angle')
+		fireEvent.click(screen.getByRole('button', { name: 'select secondary graphic' }))
+		expect(screen.getByTestId('graphic-config')).toHaveTextContent('secondary')
+		expect(screen.getByTestId('graphic-viewpoint')).toHaveTextContent('flat')
+	})
 })
+
+function createImageConfig(
+	id: number,
+	promptAvailability?: 'enabled' | 'readonly' | 'disabled',
+	promptDefault = '',
+): ImageStudioConfig {
+	const ratios = ['1:1', '4:3', '16:9'] as const
+	return {
+		studio: 'image',
+		id,
+		version: 1,
+		name: id === 11 ? '기본 프로파일' : `프로파일 ${id}`,
+		controller: {
+			groups: [
+				{
+					id: 'image',
+					title: 'Image',
+					controls: [
+						{
+							id: 'prompt',
+							kind: 'text',
+							label: 'Prompt',
+							defaultValue: promptDefault,
+							availability: promptAvailability,
+							multiline: true,
+							maxLength: 250,
+							placeholder: '이미지를 설명하세요',
+						},
+					],
+				},
+				{
+					id: 'profile-settings',
+					title: 'Profile Settings',
+					controls: [
+						{
+							id: 'lineColor',
+							kind: 'color',
+							label: 'Line Color',
+							defaultValue: '#000000',
+						},
+						{
+							id: 'backgroundColor',
+							kind: 'color',
+							label: 'Background Color',
+							defaultValue: '#ffffff',
+						},
+					],
+				},
+				{
+					id: 'generation-settings',
+					title: 'Setting',
+					controls: [
+						{
+							id: 'batch',
+							kind: 'select',
+							label: '장수',
+							defaultValue: '1',
+							options: [{ value: '1', label: '1' }],
+						},
+						{
+							id: 'ratio',
+							kind: 'select',
+							label: '비율',
+							defaultValue: '1:1',
+							options: ratios.map((value) => ({ value, label: value })),
+						},
+						{
+							id: 'resolution',
+							kind: 'select',
+							label: '해상도',
+							defaultValue: '2K',
+							options: [{ value: '2K', label: '2K' }],
+						},
+					],
+				},
+			],
+		},
+		image: {
+			slug: `profile-${id}`,
+			features: [
+				{
+					type: 'color-adjustment',
+					controls: { line: 'lineColor', background: 'backgroundColor' },
+				},
+				{ type: 'camera-control' },
+			],
+		},
+	}
+}

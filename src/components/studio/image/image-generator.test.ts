@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PublishedImageProfileDefinition } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import {
 	deriveImageStudioConfig,
+	IMAGE_STUDIO_GROUP_IDS,
 	type ImageStudioConfig,
 } from '@/features/image-studio/image-studio-config'
 import { ImageGenerator } from './image-generator'
@@ -163,6 +164,31 @@ describe('ImageGenerator', () => {
 		expect(screen.queryByRole('combobox', { name: '해상도' })).not.toBeInTheDocument()
 		// 비율은 선택지가 여럿이라 그대로 조작할 수 있다.
 		expect(screen.getByRole('combobox', { name: '비율' })).toBeInTheDocument()
+	})
+
+	it('생성 control이 다른 group에 있어도 compact footer에만 한 번 그린다', () => {
+		const base = config(5, '제품컷')
+		const generationGroup = base.controller.groups.find(
+			(group) => group.id === IMAGE_STUDIO_GROUP_IDS.generationSettings,
+		)
+		if (!generationGroup) throw new Error('generation settings group is required')
+		const moved = {
+			...base,
+			controller: {
+				groups: base.controller.groups.map((group) =>
+					group.id === IMAGE_STUDIO_GROUP_IDS.generationSettings
+						? { ...generationGroup, id: 'custom-settings', title: 'Custom Settings' }
+						: group,
+				),
+			},
+		}
+
+		render(createElement(ImageGenerator, { configs: [moved] }))
+
+		expect(screen.queryByText('Custom Settings')).not.toBeInTheDocument()
+		expect(screen.getAllByRole('combobox', { name: '장수' })).toHaveLength(1)
+		expect(screen.getAllByRole('combobox', { name: '비율' })).toHaveLength(1)
+		expect(screen.getAllByRole('combobox', { name: '해상도' })).toHaveLength(1)
 	})
 
 	it('결과를 고르기 전에는 Camera Controls가 잠기고 고른 뒤에 열린다', () => {

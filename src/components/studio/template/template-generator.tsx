@@ -2,12 +2,14 @@
 
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { TemplateStudioProvider } from '@/features/template-studio/hooks/use-template-studio'
+import type { TemplateConfig } from '@/features/template-studio/template-config'
 import type { GetCreateNavigationOutput } from '@/services/get-create-navigation.service'
 import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
 import { TemplateCanvas } from './template-canvas'
 import { TemplateSidebar } from './template-sidebar'
 
 type TemplateGeneratorProps = {
+	config: TemplateConfig
 	navigation: GetCreateNavigationOutput
 	template: PublishedHtmlTemplate
 }
@@ -20,9 +22,9 @@ type TemplateGeneratorProps = {
  * 사이드바(컨트롤러)와 캔버스(작업 공간)는 서로를 모른다 — 편집 세션 상태는
  * TemplateStudioProvider(features)가 단일 소유하고 둘 다 컨텍스트로만 소통한다.
  */
-export function TemplateGenerator({ navigation, template }: TemplateGeneratorProps) {
+export function TemplateGenerator({ config, navigation, template }: TemplateGeneratorProps) {
 	return (
-		<TemplateStudioProvider template={template} navigation={navigation}>
+		<TemplateStudioProvider config={config} template={template} navigation={navigation}>
 			<StudioWorkspace controller={<TemplateSidebar />}>
 				<TemplateCanvas />
 			</StudioWorkspace>

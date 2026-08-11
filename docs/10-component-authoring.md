@@ -141,13 +141,65 @@ studio·global·home 같은 표면의 화면 컴포넌트도 위 계약을 그�
 
 ### 컨트롤러 컨트롤 계약 (§3.6)
 
-스튜디오 컨트롤러의 개별 컨트롤은 아래 계약을 따릅니다. 디자인 정본은 Figma HD_LBS_UI의 **Controller API**(node `4:5578`), 구현 원형은 `src/components/studio/shared/controller/`의 **Controller 컴파운드 킷**입니다(`<Controller.Panel>`, `<Controller.Row>` …). 지금 단계에서 이 계약은 **prop 어휘 규약**입니다 — 컨트롤을 데이터로 정의해 그리는 스키마 렌더러는 컨트롤러가 CMS·플러그인 정의에서 생성되는 시점에 이 어휘 위에 얹습니다.
+스튜디오 컨트롤러의 개별 컨트롤은 아래 계약을 따릅니다. 디자인 정본은 Figma HD_LBS_UI의 **Controller API**(node `4:5578`), 구현 원형은 `src/components/studio/shared/controller/`의 **Controller 컴파운드 킷**입니다. 패널은 `Root` → `Header`·`Content`·`Footer`, 본문은 `Group` → 개별 컨트롤로 조합합니다. `Group`은 제목을 직접 받고, 접힘이 필요할 때만 `collapsible`을 켭니다. 기존 `Panel`은 `Root`·`Content`·`Footer`를 묶은 호환 래퍼입니다.
+
+세 Studio가 발행하는 공통 envelope는 `StudioControllerConfig`입니다.
+
+```ts
+type StudioControllerConfig = {
+	studio: 'template' | 'image' | 'graphic'
+	id: string | number
+	version: 1
+	name: string
+	controller: { groups: readonly ControllerGroupDefinition[] }
+}
+```
+
+Template·Image·Graphic Config는 이 envelope를 그대로 쓰고, 실행에 필요한 도메인 descriptor와 control id binding만 확장합니다. Studio Provider는 공통화하지 않습니다. 각 Provider가 자기 도메인의 세션과 실행 결과를 소유합니다.
+
+직렬화 가능한 데이터 어휘의 정본은 `src/features/studio-controller/controller-definition.ts`의 `ControllerControlDefinition`입니다. Definition에는 `kind`·`defaultValue`·선택지·레인지 같은 정적 정의만 싣습니다. 현재 값은 session values에, `error`·런타임 availability·대상 기하는 runtime bindings에 둡니다. `ControllerRenderer`는 `groups`와 이 두 런타임 입력을 결합해 `Group`과 primitive만 그립니다. 별도 배치가 필요한 footer·Template slot은 `ControllerControlRenderer`로 같은 단일 control 투영을 재사용합니다. `Content`·`Header`·`Footer` 배치는 Domain Sidebar가 소유합니다. ReactNode·콜백·DOM 참조·formatter 함수는 Definition에 넣지 않습니다.
+
+각 Studio Config는 렌더링·실행 전의 **Canonical IR**입니다. Payload·published 원본은 도메인 projection과 strict validation을 한 번 거쳐 Config가 되고, Template 같은 host는 원본에 없는 기능을 추가하지 않고 options·availability·features를 좁힌 **Effective IR**만 만듭니다. Projection과 제한 정책은 같은 입력에 반복 적용해도 결과가 달라지지 않는 순수 함수여야 하며, Renderer는 IR이나 session values를 변경하지 않습니다. Config 정규화의 멱등성과 생성 모델·시간 기반 그래픽의 출력 재현성은 별도 계약입니다.
+
+```tsx
+<Controller.Group title="Position">...</Controller.Group>
+<Controller.Group title="Transform" collapsible defaultOpen disabled={locked}>
+	...
+</Controller.Group>
+```
+
+`GroupHeader`와 `Section`은 공개 API에 두지 않습니다. `Group`이 제목을 내부에서 그리고, `collapsible`일 때만 구분선·Chevron·접힘 상태를 추가합니다. `defaultOpen`과 `disabled`도 `collapsible`일 때만 허용합니다. 잠긴 동안에는 강제로 닫지만 사용자의 이전 열림 상태는 보존해, 잠금이 풀리면 원래 상태로 복귀합니다. 레이아웃 공개 API는 `Root`·`Header`·`Content`·`Group`·`Footer`입니다.
+
+Controller 사용 구조는 다섯 책임으로 나눕니다.
+
+| 책임 | 소유 범위 | 경계 |
+| --- | --- | --- |
+| Definition | Published Config가 기본값·선택지·범위·정적 availability를 소유 | 현재 값과 실행 상태를 저장하지 않음 |
+| State / Context | Studio Provider가 session values·runtime bindings·정책·액션을 소유 | Studio별 Provider를 하나로 합치지 않음 |
+| Rendering | `ControllerRenderer`가 `groups`를 `Group`과 primitive로 투영 | `Content`나 도메인 UI를 소유하지 않음 |
+| Layout / Composition | Domain Sidebar가 `Root`·`Header`·`Content`·`Footer`와 복합 UI를 구성 | 컨트롤 값을 재정의하지 않음 |
+| Control / Interaction | `Row`·`Range`·`Pad` 등 프리미티브가 사용자 입력을 `onChange`로 변환 | 도메인 값을 직접 변경하거나 I/O를 수행하지 않음 |
+
+별도 `ControllerProvider`는 두지 않습니다. 편집 계약과 세션 값은 화면의 Studio Provider가 소유하고, Controller 컴파운드는 표현 레이아웃만 소유합니다. 여러 Controller Root 사이에서 공유할 표현 상태가 실제로 생길 때만 Provider를 추가합니다.
+
+Payload의 작성 데이터는 block 저장 형식인 `key`·`blockType`을 사용해도 됩니다. Published projection은 이를 클라이언트 계약의 `id`·`kind`로 정규화합니다. Draft는 작성 중인 불완전 상태를 허용하지만 publish는 공통 parser로 unknown field·중복 id·kind별 기본값과 제약을 엄격하게 검증합니다. 기존 필드에서 Config를 파생하는 legacy fallback은 이행기에만 유지합니다.
 
 킷 배선 규칙: `Controller.Row`/`Controller.Field`가 `{ controlId, disabled }` 표현 컨텍스트를 내리고, 안의 킷 컨트롤(`Select`·`Input`·`Textarea`·`Segmented`·`ColorRow` 스와치)이 라벨 연결 id와 disabled를 자동으로 이어받습니다 — 소비자는 htmlFor를 배선하지 않습니다. 이 컨텍스트에 도메인 값을 넣지 않습니다(§3.5 — 도메인 Provider는 features의 훅으로).
 
+컨트롤 슬롯의 공통 상태는 조작 가능 여부와 현재 표현 상태를 섞지 않고 두 타입으로 정의합니다.
+
+```ts
+type ControllerAvailability = 'enabled' | 'readonly' | 'disabled'
+type ControllerInteraction = 'idle' | 'hover' | 'focused' | 'error'
+```
+
+`ControllerAvailability`는 서로 배타적입니다. `enabled`는 조작 가능, `readonly`는 값을 정상 대비로 읽을 수 있지만 변경 불가, `disabled`는 조작·포커스가 모두 불가한 상태입니다. `ControllerInteraction`은 `enabled`일 때만 적용합니다. `idle`은 기본, `hover`는 포인터 진입, `focused`는 포커스 진입, `error`는 검증 실패가 표시된 상태입니다. 시각 상태가 겹치면 `disabled` → `readonly` → `error` → `focused` → `hover` → `idle` 순으로 우선합니다.
+
+`hover`와 `focused`는 세션 데이터나 Context에 저장하지 않고 각각 CSS `:hover`와 `:focus-visible`/`:focus-within`으로 표현합니다. `error`만 검증 결과에서 명시적으로 전달합니다. 선택(`selected`), 펼침(`open`), 값 없음(`empty`)은 컨트롤별 값 상태이므로 이 두 공통 타입에 합치지 않습니다.
+
 공통(`ControlBase`) — 모든 컨트롤이 공유하는 정의 상태:
 
-- `label: string | 아이콘 노드` — 아이콘 라벨은 접근 가능한 이름(sr-only 텍스트)을 반드시 동반합니다.
+- Definition의 `label`은 직렬화 가능한 `string`입니다. React primitive의 `label`은 아이콘 노드를 받을 수 있지만 접근 가능한 이름(sr-only 텍스트)을 반드시 동반합니다.
 - `readonly` — 값은 유효하며 읽혀야 하는 상태. 정상 대비를 유지하고 컨트롤·chevron 없이 값만 보입니다 — `Controller.Row`의 `readonly`(라벨이 span이 되고 자동 배선이 꺼짐) + 값 텍스트 구성으로 표현합니다. opacity로 흐리지 않습니다.
 - `disabled` — 조정 자체가 불가한 상태(어드민 고정 등). 행 전체 흐림(opacity-50 관례) + 포인터·포커스 차단(안의 킷 컨트롤은 컨텍스트로 함께 비활성). readonly와 절대 혼용하지 않습니다.
 
@@ -159,29 +211,36 @@ studio·global·home 같은 표면의 화면 컴포넌트도 위 계약을 그�
 | toggle | `boolean` | — | `Controller.Segmented` (On/Off) |
 | select | `string \| null` | `options[]` | `Controller.Row`+`Controller.Select` |
 | color | `#rrggbb \| null` | — | `Controller.ColorRow` |
-| range | `number` | `min`/`max`/`step`, 표기 포맷 | `SliderRow` (채움 폭=값) |
-| pad | `{ x, y }` (-1~1) | `aspectRatio`(Wide/Portrait/Square) | `TransformPad` |
+| range | `number` | `min`/`max`/`step`, 표기 포맷 | `Controller.Range` (채움 폭=값) |
+| pad | `{ x, y }` (-1~1) | `aspectRatio`(Wide/Portrait/Square) | `Controller.Pad` |
 | orbit | `{ azimuthDeg, elevationDeg }` | 스냅 스텝 | `Controller.CameraControl` + 오빗 프리뷰 |
 | asset | 자산 참조 `\| null` | 소스(브랜드 이미지 등) | `Controller.AssetCard`(카드 + 열기 버튼), 패널은 `Controller.Browser` |
+
+현재 공용 `ControllerControlDefinition`은 데이터만으로 바로 그릴 수 있는 `text`·`toggle`·`select`·`color`·`range`·`pad`를 제공합니다. `orbit`은 도메인 프리뷰 슬롯이 필요하고 `asset`은 대응 primitive가 아직 없어 화면 컴포지션에 남깁니다. 두 종류는 실제 공용 renderer가 생길 때 Definition에 합류합니다.
 
 경계 규칙:
 
 - **`isEmpty`는 파생 상태입니다.** `value === null`에서 계산하고, 별도 진실로 두지 않습니다. 비어 있으면 원본 값을 사칭하지 않고 `—`로 보입니다(`Controller.ColorRow`의 `isEmpty` 원형).
-- **`error`·`busy`는 정의가 아니라 런타임 상태입니다.** ControlBase에 넣지 않고 소유 컴포넌트의 상태로 처리합니다(생성 실패 메시지, "생성 중…" 비활성).
-- **컴포지션 층(섹션·탭 분기·조건 노출·액션)은 의도적으로 미정입니다.** 화면 컨트롤러가 둘 이상 쌓여 실제 분기 형태가 드러나기 전에는 `visibleWhen` 류의 DSL을 추측으로 설계하지 않습니다. **예외는 "브라우저 열기" 하나입니다** — 자산 카드는 값을 고르는 패널 없이는 성립하지 않아 액션이 컨트롤의 일부입니다. 이 액션만 킷이 갖고(`Controller.Browser`가 여는 상태를 소유), 나머지 액션·조건 노출은 계속 보류합니다.
+- **`error`·`busy`는 정의가 아니라 런타임 상태입니다.** `error`와 런타임 availability는 runtime binding으로 Renderer에 전달하고, `busy`는 소유 컴포넌트가 "생성 중…" 비활성으로 처리합니다. 런타임 binding은 Published `readonly`·`disabled`를 다시 활성화할 수 없습니다.
+- **Definition 컴포지션은 단일 단계 `groups[] → controls[]`까지만 제공합니다.** 조건 노출·탭 분기·액션은 실제 생산자가 생기기 전까지 `visibleWhen` 류의 DSL로 추측하지 않습니다. **예외는 "브라우저 열기" 하나입니다** — 자산 카드는 값을 고르는 패널 없이는 성립하지 않아 액션이 컨트롤의 일부입니다. 이 액션만 킷이 갖고(`Controller.Browser`가 여는 상태를 소유), 나머지 액션·조건 노출은 계속 보류합니다.
 - **트리거는 자기 브라우저 안에서만 존재합니다.** 여는 버튼은 `Controller.Browser.Trigger`로 그 브라우저의 컴파운드 안에만 살고, 무엇을 여는지 모르는 범용 `Controller.Trigger`는 만들지 않습니다 — 그런 트리거는 브라우저 밖에서도 타입이 통과해 검증되지 않는 계약이 됩니다. 짝은 구조로 강제됩니다: `Trigger`·`Panel`은 `Browser.Root`의 Dialog 컨텍스트가 없으면 렌더에서 죽습니다.
 - **네임스페이스 객체(`Controller`)는 client 소비 전용입니다.** RSC에서 점 접근이 필요하면 개별 named export(`ControllerRow` 등)를 씁니다.
 
-아키텍처 층과 원칙 — 컨트롤러는 네 층으로 쌓입니다: **디자인 SSOT**(Figma Controller API가 시각·구성의 정본, 기능 미지원이어도 UI를 먼저 반영) → **킷**(`controller/`) → **화면 컨트롤**(`studio/<화면>/…` — 도메인 결합 행·패드·슬라이더) → **상태·서비스**(화면 state 또는 features 훅이 값 소유, `*.client.ts`가 I/O 소유). 층을 지키는 원칙:
+아키텍처 층과 원칙 — 컨트롤러는 다섯 층으로 쌓입니다: **디자인 SSOT**(Figma Controller API) → **Published Definition** → **Renderer·킷**(`ControllerRenderer` + `controller/`) → **Domain Sidebar** → **상태·서비스**(Studio Provider가 값을 소유하고 `*.client.ts`가 I/O를 소유). 층을 지키는 원칙:
 
 - **킷은 도메인 무지.** `controller/` 파츠는 프롬프트·transform 같은 도메인 값을 모릅니다. 도메인이 붙는 컨트롤(TransformPad 소비 등)은 화면 폴더에 삽니다.
 - **값 계약은 소비 서비스가 단일 소유.** transform 범위(`IMAGE_EDIT_TRANSFORM_LIMITS`)는 compose 서비스가 정의하고 어드민·스튜디오 UI가 함께 소비합니다 — UI 층에 범위 상수를 복제하지 않습니다.
 - **기하는 대상에서 파생.** 패드 종횡비=대상 박스 비율, 배경 패드=캔버스 비율처럼 크기·비율은 조작 대상에서 계산합니다. 화면 상수 하드코딩 금지(헤더 높이 토큰 사례).
 - **미배선 컨트롤은 disabled로 스테이징.** UI-first로 먼저 그리되, 아직 기능이 없는 컨트롤은 잠금(disabled)으로 정직하게 표시합니다 — 조작 가능해 보이는데 무반응인 거짓 컨트롤을 만들지 않습니다.
 - **사이드바와 캔버스는 서로 모릅니다.** 화면의 편집 세션 상태는 features의 Provider 훅이 단일 소유하고(원형: `use-template-studio`), 사이드바(컨트롤러)와 작업 공간(캔버스)은 그 컨텍스트로만 소통합니다 — 서로 import하거나 props를 건네지 않습니다. 상태는 병렬 Record로 찢지 않고 단위 객체(슬롯 하나 = 상태 객체 하나)로 흐릅니다.
-- **무엇을 그릴지는 편집 계약이 말합니다.** 템플릿이 여는 슬롯·컨트롤 종류·레인지는 kind 판별 유니언의 계약 객체(원형: `template-config.ts`의 `TemplateConfig`, published 원천에서 파생)가 정의하고, 사이드바는 계약만 소비합니다 — 원시 nodeConfigs를 재해석하지 않습니다. 계약에는 정의(defaultValue·레인지)만 싣고 세션 값은 싣지 않습니다. 슬롯이 가변인 화면은 배열(`TemplateConfig.slots`), 컨트롤 세트가 고정인 화면은 이름 있는 필드(`ImageStudioConfig.generateOptions`)로 적습니다 — 생산자 없는 유니언 멤버를 미리 만들지 않습니다.
+- **무엇을 그릴지는 편집 계약이 말합니다.** 공통 컨트롤 정의는 각 `StudioConfig.controller.groups`에서 소비하고, Template slot 같은 도메인 binding과 descriptor는 각 Config의 확장에서 소비합니다. Sidebar는 원시 Payload 필드나 nodeConfigs를 다시 해석하지 않습니다. 계약에는 Definition만 싣고 세션 값은 싣지 않습니다. 그래픽의 `type: 'p5' | 'shader'`는 runtime 선택에만 사용하며 Controller Definition과 현재 값을 결정하지 않습니다.
+- **Template은 Image Config를 참조합니다.** Template Image Slot은 Image Config나 Image Provider를 복제·중첩하지 않습니다. Published Image Config를 참조하고 슬롯 문맥에서 options를 좁혀 씁니다. 슬롯 ratio override도 원본 Image Config가 허용한 options 안에서만 선택합니다.
+- **Template 배경은 Graphic Config도 참조합니다.** Template은 Graphic Config나 Graphic Provider를 복제·중첩하지 않고, 선택한 Config의 Controller Definition과 세션 값을 Graphic 도메인의 순수 runtime adapter에 전달합니다. adapter가 만든 SVG와 runtime binding만 배경 합성·Controller Renderer가 소비하므로, 그래픽별 입력 해석은 Template에 두지 않습니다.
+- **Image Profile이 이미지 기능을 소유합니다.** `ImageStudioConfig.image.features`는 `color-adjustment`·`camera-control` 같은 capability와 semantic control id 참조만 싣고, 실제 값·기본값·availability는 `controller.groups`가 계속 소유합니다. Image Studio와 Template은 같은 `ImageProfileFeatureRenderer`를 소비합니다. Template의 기존 `imageColorize`는 capability가 아니라, 선택한 Profile이 해당 feature를 지원할 때만 적용되는 값 override로만 투영합니다.
+- **확장 디스패처는 도메인별로 둡니다.** 공통 `ControllerRenderer`의 primitive switch는 닫힌 데이터 어휘이고, Image feature와 Graphic runtime은 각각 자기 도메인의 단일 exhaustive dispatcher가 해석합니다. 기존 feature·runtime을 조합한 새 Profile·Config는 데이터 추가만으로 소비되며, 새로운 feature·graphic 구현만 해당 dispatcher에 한 번 등록합니다. Studio별 variant prop이나 `visibleWhen` DSL로 공용 Renderer를 늘리지 않습니다.
+- **실행 정책은 서비스가 다시 강제합니다.** Route·Agent·MCP는 같은 도메인 서비스를 호출합니다. 서비스는 Published Config를 기준으로 options·최대 길이·readonly와 camera capability를 검증합니다. Sidebar의 비활성 표현만 신뢰 경계로 사용하지 않습니다.
 - **계약이 화면 수명 중 교체되면 어드민 층만 갈아끼웁니다.** 이미지 스튜디오처럼 사용자가 프로파일(계약 원천)을 바꿀 수 있는 화면은, 프로파일이 정의한 것만 새 계약을 따르고 사용자가 만든 것은 남깁니다 — 프롬프트·생성 결과·선택은 유지하고, 계약이 정의한 선택은 새 선택지에 없을 때만 시작값으로 되돌립니다(원형: `use-image-studio`의 `selectProfile`). 비용이 든 산출물을 계약 교체가 조용히 버리지 않습니다. 단 **선택지가 없는 프로파일 고유 값(색 조정처럼 자유 입력)은 언제나 새 계약의 기본값으로 되돌립니다** — 유지할 근거(새 레인지에 그 값이 있다는 사실)가 없고, 앞 프로파일의 색이 남으면 다른 프로파일의 기본값을 사칭합니다.
-- **잠금은 플래그가 아니라 선택지 수에서 파생합니다.** 어드민이 잠갔다는 별도 boolean을 두지 않고, 레인지 원소가 하나면 읽기 전용으로 그립니다(예: 1K만 지원하는 모델의 해상도 행).
+- **잠금은 availability와 선택지에서 결정합니다.** Admin이 명시한 `readonly`·`disabled`를 Published Definition으로 유지하고, 유효한 선택지가 하나일 때도 읽기 전용으로 파생합니다. 동일한 의미의 별도 lock boolean은 두지 않습니다.
 
 ## 4. 스타일 계약 Do/Don't
 

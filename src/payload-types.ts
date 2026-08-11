@@ -1935,9 +1935,179 @@ export interface ImageProfile {
         id?: string | null;
       }[]
     | null;
+  /**
+   * 비우면 기존 프로파일 설정을 사용합니다. 그룹과 컨트롤의 key는 Payload 행 id와 분리된 발행 계약 ID입니다.
+   */
+  controller?: {
+    groups?:
+      | {
+          /**
+           * 발행 시 Controller Group의 id가 됩니다.
+           */
+          key: string;
+          title: string;
+          collapsible?: boolean | null;
+          defaultOpen?: boolean | null;
+          controls?:
+            | (
+                | StudioControllerTextControl
+                | StudioControllerToggleControl
+                | StudioControllerSelectControl
+                | StudioControllerColorControl
+                | StudioControllerRangeControl
+                | StudioControllerPadControl
+              )[]
+            | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * Controller가 있는 새 계약에서 비우면 기능을 열지 않습니다. 값과 사용 상태는 참조한 Controller control이 소유합니다.
+   */
+  features?: (ImageProfileColorAdjustmentFeature | ImageProfileCameraControlFeature)[] | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerTextControl".
+ */
+export interface StudioControllerTextControl {
+  /**
+   * 발행 시 Controller Definition의 id가 됩니다. 모든 그룹에서 겹치지 않아야 합니다.
+   */
+  key: string;
+  label: string;
+  availability: 'enabled' | 'readonly' | 'disabled';
+  defaultValue?: string | null;
+  multiline?: boolean | null;
+  maxLength?: number | null;
+  placeholder?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'text';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerToggleControl".
+ */
+export interface StudioControllerToggleControl {
+  /**
+   * 발행 시 Controller Definition의 id가 됩니다. 모든 그룹에서 겹치지 않아야 합니다.
+   */
+  key: string;
+  label: string;
+  availability: 'enabled' | 'readonly' | 'disabled';
+  defaultValue?: boolean | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'toggle';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerSelectControl".
+ */
+export interface StudioControllerSelectControl {
+  /**
+   * 발행 시 Controller Definition의 id가 됩니다. 모든 그룹에서 겹치지 않아야 합니다.
+   */
+  key: string;
+  label: string;
+  availability: 'enabled' | 'readonly' | 'disabled';
+  defaultValue?: string | null;
+  options: {
+    value: string;
+    label: string;
+    id?: string | null;
+  }[];
+  placeholder?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'select';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerColorControl".
+ */
+export interface StudioControllerColorControl {
+  /**
+   * 발행 시 Controller Definition의 id가 됩니다. 모든 그룹에서 겹치지 않아야 합니다.
+   */
+  key: string;
+  label: string;
+  availability: 'enabled' | 'readonly' | 'disabled';
+  /**
+   * #rrggbb 형식으로 입력합니다.
+   */
+  defaultValue?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'color';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerRangeControl".
+ */
+export interface StudioControllerRangeControl {
+  /**
+   * 발행 시 Controller Definition의 id가 됩니다. 모든 그룹에서 겹치지 않아야 합니다.
+   */
+  key: string;
+  label: string;
+  availability: 'enabled' | 'readonly' | 'disabled';
+  defaultValue: number;
+  min: number;
+  max: number;
+  step: number;
+  display?: {
+    unit?: string | null;
+    precision?: number | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'range';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerPadControl".
+ */
+export interface StudioControllerPadControl {
+  /**
+   * 발행 시 Controller Definition의 id가 됩니다. 모든 그룹에서 겹치지 않아야 합니다.
+   */
+  key: string;
+  label: string;
+  availability: 'enabled' | 'readonly' | 'disabled';
+  defaultValue: {
+    x: number;
+    y: number;
+  };
+  aspectRatio?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'pad';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageProfileColorAdjustmentFeature".
+ */
+export interface ImageProfileColorAdjustmentFeature {
+  line: string;
+  background?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'colorAdjustment';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageProfileCameraControlFeature".
+ */
+export interface ImageProfileCameraControlFeature {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'cameraControl';
 }
 /**
  * Studio 이미지 생성 결과와 생성 당시 입력·실행 조건을 보관합니다.
@@ -3702,9 +3872,154 @@ export interface ImageProfilesSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  controller?:
+    | T
+    | {
+        groups?:
+          | T
+          | {
+              key?: T;
+              title?: T;
+              collapsible?: T;
+              defaultOpen?: T;
+              controls?:
+                | T
+                | {
+                    text?: T | StudioControllerTextControlSelect<T>;
+                    toggle?: T | StudioControllerToggleControlSelect<T>;
+                    select?: T | StudioControllerSelectControlSelect<T>;
+                    color?: T | StudioControllerColorControlSelect<T>;
+                    range?: T | StudioControllerRangeControlSelect<T>;
+                    pad?: T | StudioControllerPadControlSelect<T>;
+                  };
+              id?: T;
+            };
+      };
+  features?:
+    | T
+    | {
+        colorAdjustment?: T | ImageProfileColorAdjustmentFeatureSelect<T>;
+        cameraControl?: T | ImageProfileCameraControlFeatureSelect<T>;
+      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerTextControl_select".
+ */
+export interface StudioControllerTextControlSelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  availability?: T;
+  defaultValue?: T;
+  multiline?: T;
+  maxLength?: T;
+  placeholder?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerToggleControl_select".
+ */
+export interface StudioControllerToggleControlSelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  availability?: T;
+  defaultValue?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerSelectControl_select".
+ */
+export interface StudioControllerSelectControlSelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  availability?: T;
+  defaultValue?: T;
+  options?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
+  placeholder?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerColorControl_select".
+ */
+export interface StudioControllerColorControlSelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  availability?: T;
+  defaultValue?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerRangeControl_select".
+ */
+export interface StudioControllerRangeControlSelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  availability?: T;
+  defaultValue?: T;
+  min?: T;
+  max?: T;
+  step?: T;
+  display?:
+    | T
+    | {
+        unit?: T;
+        precision?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerPadControl_select".
+ */
+export interface StudioControllerPadControlSelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  availability?: T;
+  defaultValue?:
+    | T
+    | {
+        x?: T;
+        y?: T;
+      };
+  aspectRatio?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageProfileColorAdjustmentFeature_select".
+ */
+export interface ImageProfileColorAdjustmentFeatureSelect<T extends boolean = true> {
+  line?: T;
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageProfileCameraControlFeature_select".
+ */
+export interface ImageProfileCameraControlFeatureSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -1,4 +1,19 @@
 import {
+	IMAGE_ASPECT_RATIOS,
+	type ImageAspectRatio,
+	type ImageOutputSize,
+} from '@/features/generate-image/image-size'
+import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
+import {
+	getImageStudioControls,
+	type ImageStudioConfig,
+} from '@/features/image-studio/image-studio-config'
+import type {
+	ControllerControlDefinition,
+	StudioControllerConfig,
+} from '@/features/studio-controller/controller-definition'
+import { parseStudioControllerConfig } from '@/features/studio-controller/controller-definition'
+import {
 	canExportTemplate,
 	type TemplateExportFormat,
 } from '@/features/template-export/services/export-template.client'
@@ -9,150 +24,328 @@ import {
 import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/services/compose-template-html.client'
 import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
 
-/**
- * 템플릿 하나가 스튜디오에 내는 편집 계약 — 무엇이 열려 있고(권한), 어디까지 조작
- * 가능한가(레인지), 초기값은 무엇인가. published html + nodeConfigs에서 파생되는
- * 읽기 전용 객체이고 저작 상태의 정본이 아니다(정본: html/nodeConfigs, 값 상한: compose,
- * 세션 값: TemplateStudioProvider). 외부 I/O 없음 — 순수 투영.
- */
-export type TemplateConfig = {
-	id: number
-	/** 계약 형태 버전 — 어드민 저장·에이전트 노출로 진화할 때의 앵커. */
-	version: 1
-	name: string
-	slots: TemplateConfigSlot[]
-	exportOption: {
-		formats: readonly TemplateExportFormat[]
-		printPpi?: PublishedHtmlTemplate['printPpi']
-		canvas: { width: number; height: number }
-	}
-}
+const BACKGROUND_TYPE_CONTROL_ID = 'background.type'
 
-export type TemplateConfigSlot = {
-	/** 노드 슬롯은 nodeId, 캔버스 전체를 다루는 합성 슬롯(background)은 합성 id. */
+type TemplateSlotBindingBase = {
+	/** DOM 합성 주소. Label과 분리되어 Admin에서 이름을 바꿔도 binding은 유지된다. */
 	id: string
-	/** 어드민 레이어 트리에서 슬롯이 붙은 레이어 이름. */
 	layer: string
 	label: string
-	control: TemplateSlotControl
+}
+
+type TextControlDefinition = Extract<ControllerControlDefinition, { kind: 'text' }>
+type SelectControlDefinition = Extract<ControllerControlDefinition, { kind: 'select' }>
+
+export type TemplateTextSlot = TemplateSlotBindingBase & {
+	kind: 'text'
+	/** 공통 controller.groups에 있는 text Definition의 stable id. */
+	controlId: string
+	/** HTML input 동작과 줄 수는 아직 공통 text primitive가 표현하지 못하는 DOM binding 제약이다. */
+	input: {
+		format: 'free' | 'number' | 'email' | 'date'
+		maxLines?: number
+	}
 }
 
 export type TransformLimits = typeof IMAGE_EDIT_TRANSFORM_LIMITS
 
-/**
- * 슬롯이 여는 컨트롤 — kind 판별 유니언(docs/10 §3.6 컨트롤러 API 어휘 대응).
- * 리프 kind(color·select·range·toggle)는 어드민이 발급할 수 있게 되는 시점에 합류한다 —
- * 생산자 없는 유니언 멤버를 미리 넣지 않는다.
- */
-export type TemplateSlotControl =
-	| {
-			kind: 'text'
-			defaultValue: string
-			format: 'free' | 'number' | 'email' | 'date'
-			maxLength?: number
-			maxLines?: number
-			placeholder?: string
-	  }
-	| {
-			kind: 'image'
-			/** 슬롯 박스(px) — 패드 비율·생성 비율의 단일 원천. */
-			box: { width?: number; height?: number }
-			/** 고정 프로파일이면 읽기전용 Type 행, 없으면 사용자 선택 개방. */
-			profile: { pinnedId?: number }
-			/** 있으면 Line Color 개방 + 기본값. */
-			colorize?: { line: string; background?: string }
-			/** 레인지는 compose 전역 계약 안에서만 좁힐 수 있다 — 최종 clamp는 compose 소유. */
-			transform: { enabled: boolean; limits: TransformLimits }
-	  }
-	| {
-			kind: 'background'
-			allowedTypes: readonly ('color' | 'image' | 'graphic')[]
-	  }
+export type TemplateImageConfigSlot = TemplateSlotBindingBase & {
+	kind: 'image'
+	/** 대상 슬롯 기하 — 생성 비율과 transform px 환산의 단일 원천. */
+	box: { width?: number; height?: number }
+	/** ImageStudioConfig를 복제하지 않고 참조하는 Template 정책. */
+	imageConfig:
+		| { mode: 'pinned'; configId: number }
+		| { mode: 'selectable'; allowedConfigIds?: readonly number[] }
+	/** Image feature capability가 있을 때만 적용하는 Template 값 override. */
+	featureOverrides?: {
+		colorAdjustment?: { line: string; background?: string }
+	}
+	transform: { enabled: boolean; limits: TransformLimits }
+}
 
-export type TemplateTextSlot = TemplateConfigSlot & {
-	control: Extract<TemplateSlotControl, { kind: 'text' }>
+export type TemplateBackgroundSlot = TemplateSlotBindingBase & {
+	kind: 'background'
+	/** 공통 controller.groups에 있는 background type Definition의 stable id. */
+	typeControlId: typeof BACKGROUND_TYPE_CONTROL_ID
+	imageConfig: { mode: 'selectable'; allowedConfigIds?: readonly number[] }
 }
-export type TemplateImageConfigSlot = TemplateConfigSlot & {
-	control: Extract<TemplateSlotControl, { kind: 'image' }>
+
+export type TemplateConfigSlot = TemplateTextSlot | TemplateImageConfigSlot | TemplateBackgroundSlot
+
+export type TemplateBackgroundType = 'color' | 'image' | 'graphic'
+
+/**
+ * Template의 controller.groups에는 Template 전역에서 id가 유일한 Definition만 둔다.
+ * ImageStudioConfig의 prompt/ratio처럼 슬롯마다 id가 반복되는 Definition은 각 슬롯 scope에서
+ * 원본 Config를 직접 소비한다. 전역 id를 만들기 위한 prefix DSL이나 Definition 복제는 하지 않는다.
+ */
+export type TemplateConfig = StudioControllerConfig<'template', number> & {
+	template: {
+		slots: readonly TemplateConfigSlot[]
+		imageConfigs: readonly ImageStudioConfig[]
+		graphicConfigs: readonly GraphicStudioConfig[]
+		exportOption: {
+			formats: readonly TemplateExportFormat[]
+			printPpi?: PublishedHtmlTemplate['printPpi']
+			canvas: { width: number; height: number }
+		}
+	}
 }
-export type TemplateBackgroundSlot = TemplateConfigSlot & {
-	control: Extract<TemplateSlotControl, { kind: 'background' }>
-}
-/** 배경 종류 어휘의 단일 원천 — 세션 상태(Provider)와 사이드바가 같은 유니언을 쓴다. */
-export type TemplateBackgroundType = Extract<
-	TemplateSlotControl,
-	{ kind: 'background' }
->['allowedTypes'][number]
 
 export const isTextSlot = (slot: TemplateConfigSlot): slot is TemplateTextSlot =>
-	slot.control.kind === 'text'
+	slot.kind === 'text'
 export const isImageSlot = (slot: TemplateConfigSlot): slot is TemplateImageConfigSlot =>
-	slot.control.kind === 'image'
+	slot.kind === 'image'
 export const isBackgroundSlot = (slot: TemplateConfigSlot): slot is TemplateBackgroundSlot =>
-	slot.control.kind === 'background'
+	slot.kind === 'background'
 
-/** published 템플릿에서 편집 계약을 파생한다 — 어드민이 계약을 직접 저장하게 되면 이 함수가 그 폴백이 된다. */
-export function deriveTemplateConfig(template: PublishedHtmlTemplate): TemplateConfig {
+export function findTemplateControl(
+	config: TemplateConfig,
+	controlId: string,
+): ControllerControlDefinition | undefined {
+	return config.controller.groups
+		.flatMap((group) => group.controls)
+		.find((control) => control.id === controlId)
+}
+
+export type ResolvedTemplateImageConfig = {
+	config: ImageStudioConfig
+	prompt: TextControlDefinition
+	ratio: SelectControlDefinition & {
+		defaultValue: ImageAspectRatio
+		options: readonly [{ value: ImageAspectRatio; label: string }]
+	}
+	imageSize: ImageOutputSize
+}
+
+/**
+ * Image Config를 Template 슬롯에 좁혀 적용한다. Template은 1장 생성과 슬롯 기하만 강제하고,
+ * 원본 Config에 없는 비율·해상도·컨트롤을 추가하지 않는다.
+ */
+export function resolveTemplateImageConfig(
+	config: ImageStudioConfig,
+	box: { width?: number; height?: number },
+): ResolvedTemplateImageConfig | null {
+	let controls: ReturnType<typeof getImageStudioControls>
+	try {
+		controls = getImageStudioControls(config)
+	} catch {
+		return null
+	}
+	const { prompt, batch, ratio, resolution } = controls
+	const batchSupportsOne =
+		batch.availability === undefined || batch.availability === 'enabled'
+			? batch.options.some((option) => option.value === '1')
+			: batch.defaultValue === '1'
+	if (!batchSupportsOne) return null
+
+	const ratioIsEnabled = ratio.availability === undefined || ratio.availability === 'enabled'
+	const selectedRatio = ratioIsEnabled
+		? nearestAllowedAspectRatio(
+				box.width,
+				box.height,
+				ratio.options
+					.map(({ value }) => value)
+					.filter((value): value is ImageAspectRatio => isImageAspectRatio(value)),
+				isImageAspectRatio(ratio.defaultValue) ? ratio.defaultValue : undefined,
+			)
+		: isImageAspectRatio(ratio.defaultValue)
+			? ratio.defaultValue
+			: undefined
+	const imageSize = resolution.defaultValue
+	if (
+		!selectedRatio ||
+		!isImageOutputSize(imageSize) ||
+		!resolution.options.some((option) => option.value === imageSize)
+	) {
+		return null
+	}
+
+	const selectedOption = ratio.options.find((option) => option.value === selectedRatio)
+	if (!selectedOption) return null
+	return {
+		config,
+		prompt,
+		ratio: {
+			...ratio,
+			availability: 'readonly',
+			defaultValue: selectedRatio,
+			options: [{ value: selectedRatio, label: selectedOption.label }],
+		},
+		imageSize,
+	}
+}
+
+export function listCompatibleTemplateImageConfigs(
+	slot: TemplateImageConfigSlot | TemplateBackgroundSlot,
+	configs: readonly ImageStudioConfig[],
+	box = slot.kind === 'image' ? slot.box : { width: undefined, height: undefined },
+): ResolvedTemplateImageConfig[] {
+	const policy = slot.imageConfig
+	const allowedConfigIds =
+		policy.mode === 'selectable' && policy.allowedConfigIds
+			? new Set(policy.allowedConfigIds)
+			: null
+	const candidates = configs.filter((config) => {
+		if (policy.mode === 'pinned') return config.id === policy.configId
+		return !allowedConfigIds || allowedConfigIds.has(config.id)
+	})
+	return candidates.flatMap((config) => {
+		const resolved = resolveTemplateImageConfig(config, box)
+		return resolved ? [resolved] : []
+	})
+}
+
+function nearestAllowedAspectRatio(
+	width: number | undefined,
+	height: number | undefined,
+	allowed: readonly ImageAspectRatio[],
+	fallback: ImageAspectRatio | undefined,
+): ImageAspectRatio | undefined {
+	if (allowed.length === 0) return undefined
+	if (!width || !height || !Number.isFinite(width) || !Number.isFinite(height)) {
+		return fallback && allowed.includes(fallback) ? fallback : allowed[0]
+	}
+	const target = Math.log(width / height)
+	return allowed.reduce((nearest, candidate) =>
+		ratioDistance(candidate, target) < ratioDistance(nearest, target) ? candidate : nearest,
+	)
+}
+
+function ratioDistance(ratio: ImageAspectRatio, target: number) {
+	const [width, height] = ratio.split(':').map(Number)
+	return Math.abs(Math.log(width / height) - target)
+}
+
+function isImageOutputSize(value: string | null): value is ImageOutputSize {
+	return value === '1K' || value === '2K' || value === '4K'
+}
+
+function isImageAspectRatio(value: string | null): value is ImageAspectRatio {
+	return IMAGE_ASPECT_RATIOS.includes(value as ImageAspectRatio)
+}
+
+/** published Template과 접근 가능한 Image·Graphic Config에서 실행 가능한 Template 계약을 순수 파생한다. */
+export function deriveTemplateConfig(
+	template: PublishedHtmlTemplate,
+	imageConfigs: readonly ImageStudioConfig[] = [],
+	graphicConfigs: readonly GraphicStudioConfig[] = [],
+): TemplateConfig {
 	const { html, nodeConfigs } = template
+	const textSlots = collectTemplateSlots(html, nodeConfigs)
 	const slots: TemplateConfigSlot[] = [
-		...collectTemplateSlots(html, nodeConfigs).map(
-			(slot): TemplateConfigSlot => ({
+		...textSlots.map(
+			(slot): TemplateTextSlot => ({
 				id: slot.nodeId,
 				layer: slot.name,
 				label: slot.input.label ?? slot.name,
-				control: {
-					kind: 'text',
-					defaultValue: slot.text,
+				kind: 'text',
+				controlId: `text:${slot.nodeId}`,
+				input: {
 					format: slot.input.inputFormat ?? 'free',
-					maxLength: slot.input.maxLength,
 					maxLines: slot.input.maxLines,
-					placeholder: slot.input.placeholder,
 				},
 			}),
 		),
 		...collectTemplateImageSlots(html, nodeConfigs).map(
-			(slot): TemplateConfigSlot => ({
+			(slot): TemplateImageConfigSlot => ({
 				id: slot.nodeId,
 				layer: slot.name,
 				label: slot.name,
-				control: {
-					kind: 'image',
-					box: { width: slot.boxWidth, height: slot.boxHeight },
-					profile: { pinnedId: slot.profileId },
-					colorize: nodeConfigs[slot.nodeId]?.imageColorize,
-					// 어드민이 레인지를 좁히는 필드가 생기기 전까지는 전역 계약이 그대로 슬롯 레인지다.
-					transform: { enabled: true, limits: IMAGE_EDIT_TRANSFORM_LIMITS },
-				},
+				kind: 'image',
+				box: { width: slot.boxWidth, height: slot.boxHeight },
+				imageConfig: slot.profileId
+					? { mode: 'pinned', configId: slot.profileId }
+					: { mode: 'selectable' },
+				...(nodeConfigs[slot.nodeId]?.imageColorize
+					? {
+							featureOverrides: {
+								colorAdjustment: nodeConfigs[slot.nodeId].imageColorize,
+							},
+						}
+					: {}),
+				transform: { enabled: true, limits: IMAGE_EDIT_TRANSFORM_LIMITS },
 			}),
 		),
 		{
 			id: 'background',
 			layer: 'background',
 			label: 'Background',
-			// 어드민이 배경 개방을 좁히는 필드가 생기기 전까지는 전 템플릿이 세 종류를 연다.
-			control: { kind: 'background', allowedTypes: ['color', 'image', 'graphic'] },
+			kind: 'background',
+			typeControlId: BACKGROUND_TYPE_CONTROL_ID,
+			imageConfig: { mode: 'selectable' },
 		},
 	]
 
-	return {
+	const textControls: TextControlDefinition[] = textSlots.map((slot) => ({
+		id: `text:${slot.nodeId}`,
+		kind: 'text',
+		label: slot.input.label ?? slot.name,
+		defaultValue: slot.text,
+		multiline: (slot.input.inputFormat ?? 'free') === 'free' && slot.input.maxLines !== 1,
+		...(slot.input.maxLength === undefined ? {} : { maxLength: slot.input.maxLength }),
+		...(slot.input.placeholder === undefined ? {} : { placeholder: slot.input.placeholder }),
+	}))
+
+	const config: TemplateConfig = {
+		studio: 'template',
 		id: template.id,
 		version: 1,
 		name: template.name,
-		slots,
-		exportOption: {
-			formats: (['png', 'tiff', 'pdf'] as const).filter((format) =>
-				canExportTemplate(format, {
-					fileName: template.name,
-					height: template.height,
-					html: template.html,
-					printPpi: template.printPpi,
-					templateId: template.id,
-					templateVersion: template.templateVersion,
-					width: template.width,
-				}),
-			),
-			printPpi: template.printPpi,
-			canvas: { width: template.width, height: template.height },
+		controller: {
+			groups: [
+				...(textControls.length
+					? [
+							{
+								id: 'text',
+								title: 'Text',
+								collapsible: true as const,
+								controls: textControls,
+							},
+						]
+					: []),
+				{
+					id: 'background',
+					title: 'Background',
+					collapsible: true,
+					controls: [
+						{
+							id: BACKGROUND_TYPE_CONTROL_ID,
+							kind: 'select',
+							label: 'Type',
+							defaultValue: 'color',
+							options: [
+								{ value: 'color', label: 'Color' },
+								{ value: 'image', label: 'Image' },
+								{ value: 'graphic', label: 'Graphic' },
+							],
+						},
+					],
+				},
+			],
+		},
+		template: {
+			slots,
+			imageConfigs,
+			graphicConfigs,
+			exportOption: {
+				formats: (['png', 'tiff', 'pdf'] as const).filter((format) =>
+					canExportTemplate(format, {
+						fileName: template.name,
+						height: template.height,
+						html: template.html,
+						printPpi: template.printPpi,
+						templateId: template.id,
+						templateVersion: template.templateVersion,
+						width: template.width,
+					}),
+				),
+				printPpi: template.printPpi,
+				canvas: { width: template.width, height: template.height },
+			},
 		},
 	}
+	parseStudioControllerConfig(config)
+	return config
 }

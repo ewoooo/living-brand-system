@@ -1,4 +1,10 @@
-import { type CollectionConfig, type PayloadRequest, slugField } from 'payload'
+import {
+	APIError,
+	type CollectionConfig,
+	type FieldAccess,
+	type PayloadRequest,
+	slugField,
+} from 'payload'
 import { IMAGE_PROMPT_MAX_LENGTH } from '@/features/generate-image/image-generation-limits'
 import {
 	DEFAULT_IMAGE_MODEL_PRESET,
@@ -16,14 +22,20 @@ import {
 	type ImageOutputSize,
 	supportsImageOutputSize,
 } from '@/features/generate-image/image-size'
+import type { PublishedImageProfileDefinition } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import { imageGenerationErrorResponse } from '@/features/generate-image/respond-image-generation'
 import { normalizeImageProfilePrompt } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
+import { deriveImageStudioConfig } from '@/features/image-studio/image-studio-config'
 import { isManager, managerManagedAccess } from '@/lib/auth'
 import {
 	assertImageProfileUnpinned,
 	isUnpublishTransition,
 } from '@/services/guard-template-references.service'
+import { imageProfileFeaturesField } from './fields/image-profile-features-field'
+import { studioControllerField, validateHexColor } from './fields/studio-controller-field'
 import { draftVersions } from './shared'
+
+const managerFieldRead: FieldAccess = ({ req }) => isManager(req.user)
 
 function validateImageSize(
 	value: null | string | undefined,
@@ -36,11 +48,6 @@ function validateImageSize(
 			value as ImageOutputSize,
 		) || 'Nano Banana 2 Lite는 1K 출력만 지원합니다.'
 	)
-}
-
-function validateHexColor(value: null | string | undefined): string | true {
-	if (!value) return true
-	return /^#[0-9a-fA-F]{6}$/.test(value) || '#rrggbb 형식의 hex 색상을 입력하세요.'
 }
 
 async function normalizePromptEndpoint(req: PayloadRequest) {
@@ -80,6 +87,24 @@ export const ImageProfiles: CollectionConfig = {
 			async ({ data, originalDoc, req }) => {
 				if (isUnpublishTransition({ data, originalDoc, req })) {
 					await assertImageProfileUnpinned(req, Number(originalDoc?.id), '발행 해제')
+				}
+
+				const effective = { ...originalDoc, ...data }
+				if (effective._status === 'published') {
+					try {
+						deriveImageStudioConfig({
+							...effective,
+							// create의 beforeChange에는 DB id가 아직 없으므로 계약 검증용 유한값을 쓴다.
+							id: Number(effective.id ?? 0),
+						} as PublishedImageProfileDefinition)
+					} catch (error) {
+						throw new APIError(
+							error instanceof Error
+								? error.message
+								: '이미지 컨트롤러 계약을 확인하세요.',
+							400,
+						)
+					}
 				}
 				return data
 			},
@@ -130,6 +155,7 @@ export const ImageProfiles: CollectionConfig = {
 		{
 			name: 'imageModelPreset',
 			type: 'select',
+			access: { read: managerFieldRead },
 			required: true,
 			defaultValue: DEFAULT_IMAGE_MODEL_PRESET,
 			options: [...IMAGE_MODEL_PRESET_OPTIONS],
@@ -213,6 +239,7 @@ export const ImageProfiles: CollectionConfig = {
 		{
 			name: 'profilePrompt',
 			type: 'array',
+			access: { read: managerFieldRead },
 			dbName: 'img_profile_prompt',
 			required: true,
 			minRows: 1,
@@ -232,6 +259,7 @@ export const ImageProfiles: CollectionConfig = {
 		{
 			name: 'userPromptNormalization',
 			type: 'array',
+			access: { read: managerFieldRead },
 			dbName: 'img_prompt_norm',
 			label: '유저 프롬프트',
 			labels: { singular: '유저 프롬프트', plural: '유저 프롬프트' },
@@ -257,6 +285,8 @@ export const ImageProfiles: CollectionConfig = {
 				},
 			],
 		},
+		studioControllerField(),
+		imageProfileFeaturesField(),
 		{
 			name: 'generationTest',
 			type: 'ui',
