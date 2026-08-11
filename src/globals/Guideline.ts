@@ -1,9 +1,10 @@
-import { revalidatePath } from 'next/cache'
 import type { GlobalAfterChangeHook, GlobalConfig } from 'payload'
+import { revalidateFrontendShell } from '../collections/revalidate'
 
+// 컬렉션 쪽 무효화와 같은 껍데기를 버린다 — 경로를 두 곳에 적어 두면 한쪽만 고쳐진다.
 export const revalidateGuideline: GlobalAfterChangeHook = ({ doc, req }) => {
-	if (doc._status === 'published' && !req.context.disableRevalidate) {
-		revalidatePath('/', 'layout')
+	if (doc._status === 'published') {
+		revalidateFrontendShell(req)
 	}
 
 	return doc

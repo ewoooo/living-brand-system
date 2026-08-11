@@ -34,6 +34,7 @@ import { ImageProfiles } from './collections/ImageProfiles'
 import { Plugins } from './collections/Plugins'
 import { RuleCheckers } from './collections/RuleCheckers'
 import { Rules } from './collections/Rules'
+import { withFrontendRevalidation } from './collections/revalidate'
 import { TemplateAssets } from './collections/TemplateAssets'
 import { TemplateCategories } from './collections/TemplateCategories'
 import { Templates } from './collections/Templates'
@@ -88,7 +89,9 @@ export default buildConfig({
 			providers: ['/components/admin/shell/admin-dialkit-provider#AdminDialKitProvider'],
 		},
 	},
-	collections: [
+	// 프리렌더된 화면의 껍데기를 콘텐츠 변경 시 버리게 한다. 컬렉션마다 손으로 달지 않고
+	// 배열째 감싸므로 새 컬렉션이 자동으로 덮인다(`collections/revalidate.ts`).
+	collections: withFrontendRevalidation([
 		GuidelineDocuments,
 		BrandLogos,
 		BrandColors,
@@ -109,7 +112,7 @@ export default buildConfig({
 		AgentChatSessions,
 		AgentSkills,
 		Users,
-	],
+	]),
 	editor: lexicalEditor({
 		// 가이드라인 수치 규정 표(최소 사이즈, 자간 등) 입력용. EXPERIMENTAL: 업그레이드 시 변경 가능성 있음.
 		features: ({ defaultFeatures }) => [...defaultFeatures, EXPERIMENTAL_TableFeature()],
