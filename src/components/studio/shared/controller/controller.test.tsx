@@ -117,13 +117,13 @@ describe('Controller.Field', () => {
 	})
 })
 
-describe('Controller.Browser', () => {
+describe('Controller.AssetCard', () => {
 	afterEach(cleanup)
 
-	function renderBrowser(disabled = false) {
+	function renderAssetCard(disabled = false) {
 		return render(
-			<Controller.Picker.Root>
-				<Controller.Browser
+			<Controller.Browser.Root>
+				<Controller.AssetCard
 					title="제품컷"
 					subtitle="Brand Image"
 					buttonLabel="Change"
@@ -132,21 +132,21 @@ describe('Controller.Browser', () => {
 					disabled={disabled}
 				>
 					<div>고를 것들</div>
-				</Controller.Browser>
-			</Controller.Picker.Root>,
+				</Controller.AssetCard>
+			</Controller.Browser.Root>,
 		)
 	}
 
 	it('현재 값·출처·열기 버튼을 그리고, 버튼 이름은 무엇을 여는지 말한다', () => {
-		renderBrowser()
+		renderAssetCard()
 
 		expect(screen.getByText('제품컷')).toBeInTheDocument()
 		expect(screen.getByText('Brand Image')).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: '프로파일 변경' })).toHaveTextContent('Change')
 	})
 
-	it('버튼으로 피커 패널이 열리고 본문은 소비자가 준 것이다', () => {
-		renderBrowser()
+	it('버튼으로 브라우저 패널이 열리고 본문은 소비자가 준 것이다', () => {
+		renderAssetCard()
 		expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 
 		fireEvent.click(screen.getByRole('button', { name: '프로파일 변경' }))
@@ -157,7 +157,7 @@ describe('Controller.Browser', () => {
 
 	// 배선 전 카드는 트리거 자체를 두지 않는다 — 열리는 척하는 컨트롤을 만들지 않기 위해서다.
 	it('잠긴 카드는 눌러도 패널이 열리지 않는다', () => {
-		renderBrowser(true)
+		renderAssetCard(true)
 
 		const button = screen.getByRole('button', { name: '프로파일 변경' })
 		expect(button).toBeDisabled()

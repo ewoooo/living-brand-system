@@ -23,8 +23,8 @@ export function ImageSidebar() {
 	const promptEmpty = !prompt.value.trim()
 
 	return (
-		// 자산 피커의 열림은 편집 세션이 아니라 이 화면의 표현 상태다 — 킷이 소유한다(Provider에 넣지 않는다).
-		<Controller.Picker.Root>
+		// 자산 브라우저의 열림은 편집 세션이 아니라 이 화면의 표현 상태다 — 킷이 소유한다(Provider에 넣지 않는다).
+		<Controller.Browser.Root>
 			<Controller.Panel
 				footer={
 					<>
@@ -84,9 +84,9 @@ export function ImageSidebar() {
 					</>
 				}
 			>
-				{/* 교체는 컨트롤러 왼쪽에 뜨는 자산 피커가 받는다 — 세션을 유지하는
+				{/* 교체는 컨트롤러 왼쪽에 뜨는 자산 브라우저가 받는다 — 세션을 유지하는
 				    교체 동작은 컨텍스트의 profiles.select가 소유한다. */}
-				<Controller.Browser
+				<Controller.AssetCard
 					title={config.name}
 					buttonLabel="Change"
 					aria-label="프로파일 변경"
@@ -99,7 +99,7 @@ export function ImageSidebar() {
 					}
 				>
 					<ImageProfilePicker />
-				</Controller.Browser>
+				</Controller.AssetCard>
 
 				<Controller.Section title="Image">
 					<Controller.Field
@@ -164,7 +164,7 @@ export function ImageSidebar() {
 					</Controller.Section>
 				)}
 			</Controller.Panel>
-		</Controller.Picker.Root>
+		</Controller.Browser.Root>
 	)
 }
 
