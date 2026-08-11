@@ -1894,6 +1894,27 @@ export interface ImageProfile {
    */
   imageSize: '1K' | '2K' | '4K';
   /**
+   * 비우면 전역 상한(500자)을 씁니다.
+   */
+  maxPromptLength?: number | null;
+  /**
+   * 생성 이미지를 시드로 시점을 다시 잡을 수 있게 합니다.
+   */
+  cameraControl?: boolean | null;
+  /**
+   * 발행된 브랜드 색의 hex를 넣습니다. 라인 색을 비우면 이 프로파일은 색 조정을 열지 않습니다.
+   */
+  colorAdjustment?: {
+    /**
+     * #rrggbb 형식으로 입력합니다.
+     */
+    line?: string | null;
+    /**
+     * 비우면 배경 없이 라인만 칠합니다.
+     */
+    background?: string | null;
+  };
+  /**
    * 이미지 유형의 기본값입니다. 각 행은 최종 JSON의 주제와 프롬프트가 됩니다.
    */
   profilePrompt: {
@@ -3654,6 +3675,14 @@ export interface ImageProfilesSelect<T extends boolean = true> {
   imageModelPreset?: T;
   aspectRatio?: T;
   imageSize?: T;
+  maxPromptLength?: T;
+  cameraControl?: T;
+  colorAdjustment?:
+    | T
+    | {
+        line?: T;
+        background?: T;
+      };
   profilePrompt?:
     | T
     | {
