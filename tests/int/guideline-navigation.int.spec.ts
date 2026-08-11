@@ -3,7 +3,7 @@ import { getGuidelineNavigation } from '@/features/guideline/services/get-guidel
 
 vi.mock('@/features/guideline/services/get-guideline-metadata.service', () => ({
 	getGuidelineMetadata: vi.fn().mockResolvedValue({
-		companyName: 'Essenherb',
+		companyName: 'HD현대',
 		documentTitle: 'Guideline',
 		faviconHref: null,
 		issuedLabel: null,

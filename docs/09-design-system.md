@@ -40,7 +40,7 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 | 상태색 | 판정·상태 표시 전용 `--success`/`--info`/`--warning`(실패는 기존 `--destructive`, 해당 없음은 `--muted`). Admin 확장은 같은 이름을 Payload 테마에 매핑 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
 | highlight | 강조 배경과 전경 토큰, `bg-highlight` 유틸. Frontend는 gradient, Admin은 Payload success 색에 매핑 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
 | radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl` 4단 파생(`lg`는 뿌리값, `sm`/`md`/`xl`은 calc) | `theme.css`, `theme.css` |
-| 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(Essenflux), `HD`(CI 락업 워드마크 전용 @font-face) | `theme.css` |
+| 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(**미정 — Pretendard로 폴백.** 토큰과 `.font-title`은 자리를 지키고 있으니 서체가 정해지면 값만 바꿉니다), `HD`(CI 락업 워드마크 전용 @font-face) | `theme.css` |
 | 루트 크기 | 모든 화면에서 고정된 16px `rem` 기준 크기 | `src/app/(frontend)/styles.css`의 `html` |
 | 타이포 리듬 | `.typeset` 블록의 크기·행간·흐름(shadcn/typeset) | `src/app/(frontend)/typeset.css` |
 | base body / scrollbar / import 순서 | `body` 기본, `scrollbar-none` 유틸, CSS `@import` 체인 | `src/app/(frontend)/styles.css` |
@@ -107,14 +107,14 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:red|orang
 
 14px 텍스트와 함께 쓰는 아이콘은 `size-4`, 16px 텍스트와 함께 쓰는 아이콘은 `size-5`를 기본으로 합니다. 일반 컴포넌트에는 `clamp()`·`vw`·반응형 `text-*`·임의 글자 크기를 선언하지 않습니다.
 
-메인 히어로의 제목·버전 표기와 푸터 `LBS`는 화면 비율에 맞춘 lockup을 유지해야 하므로 유일한 viewport 반응형 예외이며 기존 `clamp()` 크기를 사용합니다. 템플릿 캔버스와 `TypeScale`·`TypeSpecimen`이 데이터로 받은 글자 크기도 UI 타이포그래피가 아니므로 예외입니다. 그 밖의 `GlyphGrid` 같은 대형 표본은 viewport 계산식 대신 `text-9xl` 같은 고정 유틸리티를 사용합니다. 클래스 주입이 불가능한 `.typeset` 내부 생성 HTML은 `typeset.css`에서 같은 고정 단계만 직접 선언합니다.
+메인 히어로의 제목·버전 표기와 푸터 `LBS`는 화면 비율에 맞춘 lockup을 유지해야 하므로 유일한 viewport 반응형 예외이며 기존 `clamp()` 크기를 사용합니다. 템플릿 캔버스와 `TypeScale`·`TypeSpecimen`이 데이터로 받은 글자 크기도 UI 타이포그래피가 아니므로 예외입니다. 그 밖의 `TypeSpecimen` 같은 대형 표본은 viewport 계산식 대신 `text-9xl` 같은 고정 유틸리티를 사용합니다. 클래스 주입이 불가능한 `.typeset` 내부 생성 HTML은 `typeset.css`에서 같은 고정 단계만 직접 선언합니다.
 
 현재 상태를 정직하게 기술합니다.
 
 | 사실 | 근거 |
 | --- | --- |
 | `--font-body`(Pretendard)는 `body`에 배선되어 기본 폰트로 동작 | `theme.css`, `styles.css` |
-| `--font-title`(Essenflux)과 `.font-title` 클래스는 정의되어 있으나 상위 guideline 헤더에 미배선 | `theme.css`, `theme.css` |
+| `--font-title`은 값이 정해지지 않아 Pretendard로 폴백하며, `.font-title` 클래스는 정의되어 있으나 상위 guideline 헤더에 미배선 | `theme.css`, `theme.css` |
 | 그래서 `GuidelineHeader`의 `ChapterHeader`/`SectionHeader` 등은 `font-title` 없이 렌더되어 기본 body 폰트로 폴백 | `guideline-header.tsx:51-73` |
 | `--font-heading`/`--font-mono`는 어디에도 정의되지 않아 `.typeset`의 `code`/`pre`는 브라우저 monospace로 폴백 | `typeset.css` (참조만, 정의 없음) |
 

@@ -1,5 +1,4 @@
 import { calloutKindLabel } from '../blocks/callout/projection'
-import { kindLabel } from '../blocks/do-dont/projection'
 import type { CheckEvidence } from '../blocks/runtime/project-guideline-block'
 import { compact } from '../utils/block-text'
 
@@ -27,101 +26,10 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 				.map((column) => compact([column.heading, column.body]).join('\n'))
 				.filter(Boolean)
 				.join('\n\n')
-		case 'carousel':
-			return evidence.slides
-				.map((slide) => slide.caption)
-				.filter(Boolean)
-				.join('\n')
-		case 'mediaShowcase':
-			return 'Media showcase'
-		case 'colorPalette':
-			return compact([
-				evidence.title ?? 'Color palette',
-				...evidence.colors.map(
-					(color) =>
-						`- ${color.name}: HEX ${color.hex}${color.pantone ? `, PMS ${color.pantone}` : ''}`,
-				),
-			]).join('\n')
-		case 'doDont':
-			return compact([
-				evidence.title ?? 'Do/Don’t',
-				...evidence.groups.flatMap((group) =>
-					compact([
-						group.category,
-						group.description,
-						...group.examples.map(
-							(example) => `${kindLabel[group.kind]}: ${example.caption ?? ''}`,
-						),
-					]),
-				),
-			]).join('\n')
 		case 'callout':
 			return compact([
 				evidence.title ?? calloutKindLabel[evidence.kind],
 				...evidence.items.map((item) => `- ${item}`),
-			]).join('\n')
-		case 'specList':
-			return compact(
-				evidence.groups.map((group) =>
-					compact([
-						group.label,
-						...group.specs.map((spec) => `- ${spec.key}: ${spec.value}`),
-					]).join('\n'),
-				),
-			).join('\n\n')
-		case 'signatureShowcase':
-			return compact(
-				evidence.signatures.map((signature) =>
-					compact([signature.label, signature.phrase, signature.note]).join('\n'),
-				),
-			).join('\n\n')
-		case 'typeSpecimen':
-			return compact([
-				evidence.typeface?.name,
-				evidence.samples.word,
-				evidence.samples.sentence,
-				evidence.samples.paragraph,
-			]).join('\n')
-		case 'typeScale':
-			return compact([
-				evidence.typeface?.name,
-				...evidence.items.map(
-					(item) =>
-						`- ${item.name}: ${item.sizePx}/${item.lineHeightPx} · ${item.weight}`,
-				),
-			]).join('\n')
-		case 'layoutGrid':
-			return compact(
-				evidence.variants.map((variant) =>
-					compact([
-						variant.label,
-						`- Columns: ${variant.columns}`,
-						variant.gutter ? `- Gutter: ${variant.gutter}` : undefined,
-						variant.margin ? `- Margin: ${variant.margin}` : undefined,
-					]).join('\n'),
-				),
-			).join('\n\n')
-		case 'glyphGrid':
-			return compact([evidence.title ?? 'Glyph grid', evidence.typeface?.name]).join('\n')
-		case 'iconGrid':
-			return evidence.title ?? 'Icon grid'
-		case 'imageGrid':
-			return evidence.title ?? 'Image grid'
-		case 'stemClearSpace':
-			return compact([
-				evidence.title ?? 'Logo clear space',
-				`최소 여백 ${evidence.multiplier}A`,
-			]).join('\n')
-		case 'logoViewer':
-			return evidence.title ?? 'Logo viewer'
-		case 'logoGroupViewer':
-			return evidence.title ?? 'Logo group viewer'
-		case 'colorPairing':
-			return evidence.title ?? 'Color pairing'
-		case 'colorPairingRecommendation':
-			return compact([
-				evidence.title ?? 'Color pairing recommendation',
-				evidence.variant,
 			]).join('\n')
 		case 'block':
 			return `leaf ${evidence.childCount}개를 담은 블록`

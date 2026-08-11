@@ -86,8 +86,8 @@ describe('getCheckSourceDocuments', () => {
 							{
 								id: 'logo-examples',
 								blockName: 'Logo examples',
-								blockType: 'mediaShowcase',
-								images: [{ image }],
+								blockType: 'contentColumns',
+								columns: [{ image }],
 								rules: [
 									{
 										id: 91,
@@ -129,7 +129,10 @@ describe('getCheckSourceDocuments', () => {
 						messages: { pass: '통과' },
 					},
 					source: { documentId: 30 },
-					evidence: { type: 'mediaShowcase' },
+					evidence: {
+						type: 'contentColumns',
+						columns: [{ heading: undefined, body: undefined }],
+					},
 					referenceAssets: [
 						{
 							asset: {

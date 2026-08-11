@@ -31,7 +31,6 @@ afterEach(async () => {
 describe('guideline catalog generator', () => {
 	it('기존 노출 순서를 보존하고 새 블록은 뒤에 이름순으로 등록한다', async () => {
 		const blocksDirectory = await createTemporaryBlocksDirectory()
-		await createBlock(blocksDirectory, 'type-scale')
 		await createBlock(blocksDirectory, 'callout')
 		await createBlock(blocksDirectory, 'content-columns')
 		await createBlock(blocksDirectory, 'zeta-new')
@@ -45,7 +44,6 @@ describe('guideline catalog generator', () => {
 				symbol: 'ContentColumns',
 			},
 			{ directory: 'callout', key: 'callout', symbol: 'Callout' },
-			{ directory: 'type-scale', key: 'typeScale', symbol: 'TypeScale' },
 			{ directory: 'alpha-new', key: 'alphaNew', symbol: 'AlphaNew' },
 			{ directory: 'zeta-new', key: 'zetaNew', symbol: 'ZetaNew' },
 		])

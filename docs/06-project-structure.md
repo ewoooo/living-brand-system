@@ -660,7 +660,7 @@ Payload collection, field, index, relationship처럼 DB 스키마에 영향을 �
 
 1. 모든 공유 DB에 기존 pending migration을 먼저 적용합니다.
 2. 공유 DB를 백업하고, 백업을 격리된 로컬 DB에 복원해 테이블 행 수와 sequence를 비교합니다.
-3. 기존 `.ts`·`.json`과 보조 파일은 `migrations/archive/<전환일>/`로 옮깁니다. 삭제하지 않습니다.
+3. 기존 `.ts`·`.json`과 보조 파일은 `migrations/archive/<전환일>/`로 옮깁니다. **전환 직후의 안전망이므로 영구 보관이 아닙니다** — 다음 기준선까지 살아 있을 이유가 없고, 실행 경로가 사라진 뒤에도 남기면 typecheck 대상으로 남아 삭제된 스키마 이름에 매달립니다(2026-08-10에 이 이유로 아카이브 전체를 삭제했습니다). 되돌릴 근거는 git 이력에 있습니다. 폴더 안에 다른 데서 참조하는 보조 데이터가 있으면 그것만 실제 소유 위치로 옮깁니다.
 4. top-level `migrations/`에는 현재 config에서 생성한 전체 스키마 migration, 같은 이름의 `.json`, `index.ts`만 둡니다.
 5. 기존 DB를 인수하는 기준선은 최신 handoff migration과 핵심 테이블을 확인해야 합니다. 조건을 만족하면 스키마 DDL을 실행하지 않고 기존 `payload_migrations` 행만 지웁니다. Payload runner가 같은 트랜잭션에서 새 기준선 기록을 추가합니다.
 6. 조건이 맞지 않는 기존 DB에서는 기준선 migration을 중단합니다. 누락된 handoff migration을 적용한 뒤 다시 실행합니다.
