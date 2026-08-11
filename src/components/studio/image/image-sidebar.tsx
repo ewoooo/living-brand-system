@@ -4,7 +4,6 @@ import { Copy, Crop, SquareOutline } from '@carbon/icons-react'
 import type * as React from 'react'
 import { Controller } from '@/components/studio/shared/controller'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/generate-image/image-size'
 import { useImageStudio } from '@/features/image-studio/hooks/use-image-studio'
@@ -17,8 +16,7 @@ import { ImageCameraControl } from './image-camera-control'
  * 디자인 SSOT: Figma HD_LBS_UI section 16:9137 "Image Usecase".
  */
 export function ImageSidebar() {
-	const { config, profiles, prompt, generation, camera, color, results, download } =
-		useImageStudio()
+	const { config, prompt, generation, camera, color, results, download } = useImageStudio()
 	const { batch, ratio, resolution } = config.generateOptions
 	const promptEmpty = !prompt.value.trim()
 
@@ -87,25 +85,18 @@ export function ImageSidebar() {
 				<Typography as="p" size="base" weight="medium" className="truncate">
 					{config.name}
 				</Typography>
-				{/* 프로파일 교체는 라우트 이동이 아니라 세션 유지다 — 프롬프트·결과·선택이 남는다. */}
-				<Select
-					value={String(config.profileId)}
-					onValueChange={(value) => profiles.select(Number(value))}
+				{/* 교체 자체는 플로팅 윈도우로 다시 만들 예정이라 여기서는 잠가 스테이징한다
+				    (docs/10 §3.6 — 무반응인 거짓 컨트롤을 두지 않는다). 세션을 유지하는 교체
+				    동작은 컨텍스트의 profiles.select가 이미 소유한다. */}
+				<Button
+					variant="muted"
+					size="sm"
+					disabled
+					aria-label="프로파일 변경"
+					className="h-auto shrink-0 rounded-lg px-2.5 py-1 text-xs"
 				>
-					<SelectTrigger
-						aria-label="프로파일 변경"
-						className="h-auto w-fit shrink-0 gap-0 rounded-lg border-transparent bg-background/25 px-2.5 py-1 font-medium text-background text-xs hover:bg-background/35 dark:bg-background/25 [&_svg]:hidden"
-					>
-						Change
-					</SelectTrigger>
-					<SelectContent align="end">
-						{profiles.options.map(({ id, name }) => (
-							<SelectItem key={id} value={String(id)}>
-								{name}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+					Change
+				</Button>
 			</div>
 
 			<Controller.Section title="Image">
