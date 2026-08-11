@@ -92,7 +92,7 @@ export interface ImageGenerationPlan {
 	seedImage?: Uint8Array
 }
 
-/** published 프로파일의 모델·출력 계약을 생성 플랜으로 해석한다. 슬롯 비율 오버라이드는 여기서만 판단한다. 순수 함수. */
+/** published 프로파일의 모델·출력 계약을 생성 플랜으로 해석한다. 비율·해상도 오버라이드는 여기서만 판단한다. 순수 함수. */
 export function planImageGenerationFromProfile(
 	profile: {
 		aspectRatio: ImageAspectRatio
@@ -107,6 +107,8 @@ export function planImageGenerationFromProfile(
 		seedImage?: Uint8Array
 		/** 템플릿 이미지 슬롯 박스에서 유도한 비율 — 있으면 프로파일 비율 대신 쓴다(크롭 손실 최소화). */
 		aspectRatio?: ImageAspectRatio
+		/** 스튜디오에서 고른 해상도 — 있으면 프로파일 해상도 대신 쓴다(모델 제약은 러너가 검증한다). */
+		imageSize?: ImageOutputSize
 	},
 ): ImageGenerationPlan {
 	return {
@@ -114,7 +116,7 @@ export function planImageGenerationFromProfile(
 		count: input.count,
 		modelPreset: profile.imageModelPreset,
 		aspectRatio: input.aspectRatio ?? profile.aspectRatio,
-		imageSize: profile.imageSize,
+		imageSize: input.imageSize ?? profile.imageSize,
 		profileId: profile.id,
 		profileName: profile.name,
 		...(input.seedImage ? { seedImage: input.seedImage } : {}),
@@ -148,6 +150,7 @@ export async function generateImages({
 	user,
 	count,
 	aspectRatio,
+	imageSize,
 }: {
 	userInput: string
 	profileId: number
@@ -155,6 +158,8 @@ export async function generateImages({
 	count: number
 	/** 템플릿 이미지 슬롯 박스에서 유도한 비율 오버라이드 — 없으면 프로파일 비율. */
 	aspectRatio?: ImageAspectRatio
+	/** 스튜디오 해상도 선택 오버라이드 — 없으면 프로파일 해상도. */
+	imageSize?: ImageOutputSize
 }): Promise<GeneratedImages> {
 	const profile = await findPublishedImageProfile(user, profileId)
 	if (!profile) throw new ImageProfileNotFoundError()
@@ -168,12 +173,13 @@ export async function generateImages({
 		prompt: JSON.stringify(normalized.finalPrompt),
 		count,
 		aspectRatio,
+		imageSize,
 	})
 	const generated = await runImageGeneration(plan, user)
 	return storeProfileGeneration(generated, {
 		inputPrompt: userInput,
-		// 저장 메타데이터의 비율은 실제 생성에 쓴 plan이 정본 — 오버라이드 시 프로파일 비율과 다르다.
-		profile: { ...profile, aspectRatio: plan.aspectRatio },
+		// 저장 메타데이터의 비율·해상도는 실제 생성에 쓴 plan이 정본 — 오버라이드 시 프로파일 값과 다르다.
+		profile: { ...profile, aspectRatio: plan.aspectRatio, imageSize: plan.imageSize },
 		user,
 	})
 }
