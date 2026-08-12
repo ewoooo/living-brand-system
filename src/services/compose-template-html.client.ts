@@ -20,6 +20,13 @@ export const IDENTITY_TRANSFORM: NonNullable<TemplateNodeConfig['imageTransform'
 	rotate: 0,
 }
 
+/** 편집 transform의 값 영역 — 어드민 제스처·스튜디오 컨트롤이 같은 범위를 소비한다(한쪽만 바꾸면 갈라진다). */
+export const IMAGE_EDIT_TRANSFORM_LIMITS = {
+	translate: { min: -1000, max: 1000 },
+	scale: { min: 0.2, max: 5 },
+	rotate: { min: -180, max: 180 },
+} as const
+
 /**
  * 편집 transform의 identity 판정 — formatImageEditTransform과 짝 계약. compose는 identity면
  * transform을 아예 쓰지 않으므로, 오버레이가 캐리어 inline transform에서 커밋된 편집 prefix를
@@ -166,16 +173,34 @@ function applyImageColorize(
 }
 
 /**
+ * 캔버스(템플릿 최상위 프레임) 배경 — 노드 오버라이드가 아니다. 배경의 주소는 노드가 아니라
+ * 도화지 자체이고, 노드 조회는 data-node-id 정확 일치라서 노드 맵으로는 표현할 수 없다.
+ */
+export type TemplateCanvasBackground = {
+	color?: string
+	imageUrl?: string
+}
+
+/**
  * base HTML에 nodeId별 앱 설정을 적용해 Create·Chat·Import가 렌더할 HTML을 만든다.
  * 외부 I/O는 없으며 브라우저 DOMParser만 사용한다.
+ * options.canvasBackground는 노드가 아닌 캔버스(body 직계 자식인 루트 프레임)에 얹는다.
  */
-export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeConfigMap): string {
+export function composeTemplateHtml(
+	baseHtml: string,
+	nodeConfigs: TemplateNodeConfigMap,
+	options?: { canvasBackground?: TemplateCanvasBackground },
+): string {
 	if (!baseHtml) return baseHtml
-	if (!nodeConfigs || Object.keys(nodeConfigs).length === 0) return baseHtml
+	const canvasBackground = options?.canvasBackground
+	const hasCanvasBackground = Boolean(canvasBackground?.color || canvasBackground?.imageUrl)
+	if (!hasCanvasBackground && (!nodeConfigs || Object.keys(nodeConfigs).length === 0)) {
+		return baseHtml
+	}
 
 	const doc = new DOMParser().parseFromString(baseHtml, 'text/html')
 
-	for (const [nodeId, config] of Object.entries(nodeConfigs)) {
+	for (const [nodeId, config] of Object.entries(nodeConfigs ?? {})) {
 		const el = Array.from(doc.querySelectorAll('[data-node-id]')).find(
 			(candidate) => candidate.getAttribute('data-node-id') === nodeId,
 		)
@@ -184,6 +209,14 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 		// 텍스트는 텍스트 노드(<p>)에만. background는 요소(HTMLElement)에.
 		if (typeof config.text === 'string' && el.tagName.toLowerCase() === 'p') {
 			el.textContent = config.text
+		}
+		// 텍스트 색 오버라이드 — import가 만든 inline color 위에 그대로 덮는다.
+		if (
+			typeof config.color === 'string' &&
+			el.tagName.toLowerCase() === 'p' &&
+			el instanceof HTMLElement
+		) {
+			el.style.color = config.color
 		}
 		// 이미지 배정은 캐리어 전용 — 임포트가 이미지 표면(클립 프레임의 외동 이미지 자식·자식 없는
 		// 이미지 fill·래스터 폴백 img)을 전부 data-image-carrier로 마킹하며, 마킹하지 않은 노드의
@@ -252,6 +285,19 @@ export function composeTemplateHtml(baseHtml: string, nodeConfigs: TemplateNodeC
 				// 명시된 vectorFit만 기록한다 — 무조건 기록하면 base의 object-fit을 덮어쓴다.
 				el.style.objectFit = config.vectorFit
 			}
+		}
+	}
+
+	// 캔버스 배경 — 루트 프레임(body 직계 자식)의 inline 배경을 덮는다. 값을 준 갈래만 쓰므로
+	// 색만/이미지만/둘 다가 모두 성립하고, 같은 입력이면 같은 선언이 나와 재합성이 멱등이다.
+	const root = doc.body.firstElementChild
+	if (canvasBackground && root instanceof HTMLElement) {
+		if (canvasBackground.color) root.style.backgroundColor = canvasBackground.color
+		if (canvasBackground.imageUrl) {
+			root.style.backgroundImage = `url("${canvasBackground.imageUrl}")`
+			root.style.backgroundSize = 'cover'
+			root.style.backgroundPosition = 'center'
+			root.style.backgroundRepeat = 'no-repeat'
 		}
 	}
 

@@ -1,3 +1,4 @@
+import { ArrowRight } from '@carbon/icons-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ContentFrame } from '@/components/shared/content-frame'
@@ -23,14 +24,21 @@ export default async function CreateCategoryPage({
 					{category.title}
 				</Typography>
 				{category.templates.length > 0 ? (
-					<ul className="mt-6 flex flex-col gap-2">
+					<ul className="mt-8 border-border border-y">
 						{category.templates.map((template) => (
-							<li key={template.id}>
+							<li
+								key={template.id}
+								className="border-border border-b last:border-b-0"
+							>
 								<Link
 									href={template.href}
-									className="font-body text-sm font-normal underline-offset-4 hover:underline"
+									className="group flex items-center justify-between gap-4 py-5 transition-colors hover:bg-muted"
 								>
-									{template.name}
+									<Typography size="xl">{template.name}</Typography>
+									<ArrowRight
+										aria-hidden
+										className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1"
+									/>
 								</Link>
 							</li>
 						))}

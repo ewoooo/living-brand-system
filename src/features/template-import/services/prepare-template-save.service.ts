@@ -1,6 +1,7 @@
 import type { PayloadRequest } from 'payload'
 import { publishDraftImportedApplicationImages } from '@/features/application-image/repositories/imported-application-image.payload.repository'
 import { findPrintOutputBlocker } from '@/features/template-export/print-policy'
+import { deriveTemplateConfig } from '@/features/template-studio/template-config'
 import {
 	inspectTemplateFragment,
 	type TemplateFragmentInspection,
@@ -19,8 +20,11 @@ import {
 interface TemplateSaveCandidate {
 	_status?: unknown
 	baseHtml?: unknown
+	controller?: unknown
 	height?: unknown
 	html?: unknown
+	id?: unknown
+	name?: unknown
 	overrides?: unknown
 	printPpi?: unknown
 	width?: unknown
@@ -63,6 +67,29 @@ export async function prepareTemplateSave({
 
 	const finalStatus = data._status ?? originalDoc?._status
 	if (finalStatus !== 'published') return null
+
+	if (
+		html &&
+		parsed &&
+		typeof candidate.width === 'number' &&
+		typeof candidate.height === 'number'
+	) {
+		try {
+			deriveTemplateConfig({
+				kind: 'html',
+				id: typeof candidate.id === 'number' ? candidate.id : 0,
+				name: typeof candidate.name === 'string' ? candidate.name : 'Template',
+				html,
+				nodeConfigs: parsed.data,
+				width: candidate.width,
+				height: candidate.height,
+				templateVersion: 'draft',
+				controller: candidate.controller,
+			})
+		} catch (error) {
+			return error instanceof Error ? error.message : '템플릿 Controller 계약을 확인하세요.'
+		}
+	}
 
 	const renderedRefs = draft?.refs ?? []
 	await publishDraftImportedApplicationImages(

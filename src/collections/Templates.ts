@@ -6,6 +6,7 @@ import {
 } from '@/features/template-export/print-policy'
 import { prepareTemplateSave } from '@/features/template-import/services/prepare-template-save.service'
 import { isManager, managerOrAdmin } from '@/lib/auth'
+import { studioControllerField } from './fields/studio-controller-field'
 import { draftVersions } from './shared'
 
 export const Templates: CollectionConfig = {
@@ -53,6 +54,10 @@ export const Templates: CollectionConfig = {
 			type: 'textarea',
 			localized: true,
 		},
+		studioControllerField({
+			description:
+				'비우면 템플릿 슬롯에서 기본 계약을 만듭니다. 같은 그룹·컨트롤 ID의 options, 범위, 기본값, 사용 상태만 좁힐 수 있습니다.',
+		}),
 		{
 			// 워크스페이스: 캔버스 + 레이어 목록 + 값 편집을 한 컴포넌트가 렌더한다.
 			name: 'templateLayers',

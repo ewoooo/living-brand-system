@@ -1,3 +1,4 @@
+import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/services/compose-template-html.client'
 import type { TemplateNodeConfig } from '@/types/template'
 
 /**
@@ -20,11 +21,12 @@ const roundTo = (value: number, factor: number) => Math.round(value * factor) / 
  * 반올림은 number input에 긴 부동소수점이 노출되지 않게 하는 표시용(x·y·rotate 0.1, scale 0.01).
  */
 export function clampTransform(t: ImageTransform): ImageTransform {
+	const { translate, scale, rotate } = IMAGE_EDIT_TRANSFORM_LIMITS
 	return {
-		x: roundTo(clamp(t.x, -1000, 1000), 10),
-		y: roundTo(clamp(t.y, -1000, 1000), 10),
-		scale: roundTo(clamp(t.scale, 0.2, 5), 100),
-		rotate: roundTo(clamp(t.rotate, -180, 180), 10),
+		x: roundTo(clamp(t.x, translate.min, translate.max), 10),
+		y: roundTo(clamp(t.y, translate.min, translate.max), 10),
+		scale: roundTo(clamp(t.scale, scale.min, scale.max), 100),
+		rotate: roundTo(clamp(t.rotate, rotate.min, rotate.max), 10),
 	}
 }
 

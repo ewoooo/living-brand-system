@@ -29,6 +29,7 @@ import { BrandTypefaces } from './collections/BrandTypefaces'
 import { CheckScenarios } from './collections/CheckScenarios'
 import { CheckSessions } from './collections/CheckSessions'
 import { GeneratedImages } from './collections/GeneratedImages'
+import { GraphicProfiles } from './collections/GraphicProfiles'
 import { GuidelineDocuments } from './collections/GuidelineDocuments'
 import { ImageProfiles } from './collections/ImageProfiles'
 import { Plugins } from './collections/Plugins'
@@ -100,6 +101,7 @@ export default buildConfig({
 		BrandIcons,
 		ApplicationImages,
 		ImageProfiles,
+		GraphicProfiles,
 		GeneratedImages,
 		Templates,
 		TemplateCategories,

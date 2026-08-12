@@ -23,6 +23,8 @@ export interface ImageGenerationRequest {
 	profileId: number
 	/** 템플릿 이미지 슬롯 박스에서 유도한 비율 오버라이드 — 없으면 프로파일 비율로 생성한다. */
 	aspectRatio?: ImageAspectRatio
+	/** 스튜디오 해상도 선택 오버라이드 — 없으면 프로파일 해상도로 생성한다. */
+	imageSize?: ImageOutputSize
 }
 
 type AdminImageGenerationRequest = {

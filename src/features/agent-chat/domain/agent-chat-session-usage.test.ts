@@ -91,6 +91,58 @@ describe('createAgentChatSessionUsageCollector', () => {
 		})
 	})
 
+	it('공급자가 캐시 필드를 주지 않으면 0으로 채우지 않고 undefined로 남긴다', () => {
+		const collector = createAgentChatSessionUsageCollector()
+
+		collector.addStep({
+			model: { modelId: 'claude-sonnet-5' },
+			usage: {
+				inputTokens: 10,
+				inputTokenDetails: { noCacheTokens: 10 },
+				outputTokens: 5,
+				outputTokenDetails: { textTokens: 5 },
+				totalTokens: 15,
+			},
+			toolCalls: [],
+			toolResults: [],
+		} as unknown as AgentChatSessionUsageStep)
+
+		const { aiUsage } = collector.snapshot()
+
+		// 어드민 표에서 "공급자가 안 줬다"와 "진짜 0(캐시 미스)"이 구분되어야 한다.
+		expect(aiUsage).not.toHaveProperty('cacheReadInputTokens')
+		expect(aiUsage).not.toHaveProperty('cacheWriteInputTokens')
+		expect(aiUsage).not.toHaveProperty('reasoningTokens')
+		expect(aiUsage).toMatchObject({ callCount: 1, inputTokens: 10, totalTokens: 15 })
+	})
+
+	it('캐시 미스로 0이 온 경우는 0으로 기록한다', () => {
+		const collector = createAgentChatSessionUsageCollector()
+
+		collector.addStep({
+			model: { modelId: 'claude-sonnet-5' },
+			usage: {
+				inputTokens: 10,
+				inputTokenDetails: {
+					noCacheTokens: 10,
+					cacheReadTokens: 0,
+					cacheWriteTokens: 4000,
+				},
+				outputTokens: 5,
+				outputTokenDetails: { textTokens: 5, reasoningTokens: 0 },
+				totalTokens: 15,
+			},
+			toolCalls: [],
+			toolResults: [],
+		} as unknown as AgentChatSessionUsageStep)
+
+		expect(collector.snapshot().aiUsage).toMatchObject({
+			cacheReadInputTokens: 0,
+			cacheWriteInputTokens: 4000,
+			reasoningTokens: 0,
+		})
+	})
+
 	it('이름 없는 loadSkill 결과는 skill로 세지 않고 스텝이 없으면 aiUsage를 만들지 않는다', () => {
 		const collector = createAgentChatSessionUsageCollector()
 		expect(collector.snapshot()).toEqual({

@@ -57,6 +57,7 @@ import {
 	generateImagesWithSettings,
 	ImageGenerationUnavailableError,
 	ImageProfileNotFoundError,
+	InvalidImageControllerInputError,
 	InvalidSeedImageError,
 	planImageGenerationFromProfile,
 	planImageGenerationFromSettings,
@@ -277,6 +278,134 @@ describe('generateImages', () => {
 		)
 	})
 
+	it('해상도 오버라이드는 프로파일 해상도 대신 모델 호출에 반영된다', async () => {
+		mocks.env.OPENAI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '2:3',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.normalizeImageProfilePrompt.mockResolvedValue({
+			finalPrompt: { subject: '파란 세럼병' },
+			normalizedInput: {},
+		})
+		mocks.generateBrandImages.mockResolvedValue({
+			images: ['data:image/png;base64,profile'],
+			model: 'gpt-image-2',
+			provider: 'openai',
+		})
+
+		const result = await generateImages({
+			userInput: '파란 세럼병',
+			profileId: 5,
+			user: { id: 1 },
+			count: 1,
+			imageSize: '4K',
+		})
+
+		expect(mocks.generateBrandImages).toHaveBeenCalledWith(
+			expect.objectContaining({ aspectRatio: '2:3', imageSize: '4K' }),
+		)
+		expect(result.imageSize).toBe('4K')
+		// 저장 메타데이터도 프로파일 해상도(1K)가 아니라 실제 생성 해상도를 기록해야 한다.
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
+			expect.objectContaining({
+				profile: expect.objectContaining({ imageSize: '4K' }),
+			}),
+		)
+	})
+
+	it('프로파일 Controller가 허용하지 않는 해상도 오버라이드는 호출 전에 거부한다', async () => {
+		mocks.env.GEMINI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'google-nano-banana-2-lite',
+			aspectRatio: '16:9',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.normalizeImageProfilePrompt.mockResolvedValue({
+			finalPrompt: { subject: '굴착기' },
+			normalizedInput: {},
+		})
+
+		const generation = generateImages({
+			userInput: '굴착기',
+			profileId: 5,
+			user: { id: 1 },
+			count: 1,
+			imageSize: '4K',
+		})
+		await expect(generation).rejects.toBeInstanceOf(InvalidImageControllerInputError)
+		await expect(generation).rejects.toThrow('resolution')
+		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+		expect(mocks.storeGeneratedImages).not.toHaveBeenCalled()
+	})
+
+	it('published prompt maxLength를 정규화 전에 강제한다', async () => {
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			slug: 'technical',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '2:3',
+			imageSize: '1K',
+			maxPromptLength: 3,
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+
+		await expect(
+			generateImages({
+				userInput: '1234',
+				profileId: 5,
+				user: { id: 1 },
+				count: 1,
+			}),
+		).rejects.toBeInstanceOf(InvalidImageControllerInputError)
+		expect(mocks.normalizeImageProfilePrompt).not.toHaveBeenCalled()
+		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+	})
+
+	it('저장된 Controller의 options와 readonly를 정규화 전에 강제한다', async () => {
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			slug: 'technical',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '2:3',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+			controller: storedController(),
+		})
+
+		await expect(
+			generateImages({
+				userInput: '제품',
+				profileId: 5,
+				user: { id: 1 },
+				count: 1,
+			}),
+		).rejects.toThrow('batch')
+		await expect(
+			generateImages({
+				userInput: '제품',
+				profileId: 5,
+				user: { id: 1 },
+				count: 2,
+				aspectRatio: '16:9',
+			}),
+		).rejects.toThrow('ratio')
+		expect(mocks.normalizeImageProfilePrompt).not.toHaveBeenCalled()
+	})
+
 	it('Nano Banana 프로파일은 Google 키와 16:9 계약을 사용한다', async () => {
 		mocks.env.GEMINI_API_KEY = 'key'
 		mocks.findPublishedImageProfile.mockResolvedValue({
@@ -412,6 +541,8 @@ describe('generateImages', () => {
 			imageModelPreset: 'google-nano-banana-2-lite',
 			aspectRatio: '16:9',
 			imageSize: '1K',
+			cameraControl: false,
+			features: [{ blockType: 'cameraControl' }],
 		})
 		mocks.generateBrandImages.mockResolvedValue({
 			images: ['data:image/png;base64,adjusted'],
@@ -473,6 +604,32 @@ describe('generateImages', () => {
 				user: { id: 1 },
 			}),
 		).rejects.toBeInstanceOf(InvalidSeedImageError)
+		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+	})
+
+	it('카메라 조정을 지원하지 않는 published 프로파일은 시드 조회 전에 거부한다', async () => {
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Flat Graphic',
+			slug: 'flat-graphic',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '1:1',
+			imageSize: '1K',
+			cameraControl: false,
+		})
+
+		await expect(
+			adjustImageCamera({
+				basePrompt: '{"subject":"유조선"}',
+				camera: { azimuthDeg: 0, elevationDeg: 0 },
+				count: 1,
+				generatedImageId: 8,
+				profileId: 5,
+				requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
+				user: { id: 1 },
+			}),
+		).rejects.toBeInstanceOf(InvalidImageControllerInputError)
+		expect(mocks.loadGeneratedImage).not.toHaveBeenCalled()
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
 	})
 
@@ -607,6 +764,21 @@ describe('image generation plan resolvers', () => {
 		).toMatchObject({ aspectRatio: '16:9', imageSize: '1K' })
 	})
 
+	it('해상도 오버라이드가 있으면 프로파일 해상도 대신 플랜에 쓴다', () => {
+		expect(
+			planImageGenerationFromProfile(
+				{
+					aspectRatio: '2:3',
+					id: 5,
+					imageModelPreset: 'openai-gpt-image-2',
+					imageSize: '1K',
+					name: 'Technical Illustration',
+				},
+				{ prompt: '{"subject":"굴착기"}', count: 1, imageSize: '2K' },
+			),
+		).toMatchObject({ aspectRatio: '2:3', imageSize: '2K' })
+	})
+
 	it('명시 설정은 프롬프트를 trim해 프로파일 없는 플랜으로 해석한다', () => {
 		expect(
 			planImageGenerationFromSettings({
@@ -625,3 +797,54 @@ describe('image generation plan resolvers', () => {
 		})
 	})
 })
+
+function storedController() {
+	return {
+		groups: [
+			{
+				key: 'image',
+				title: 'Image',
+				collapsible: true,
+				defaultOpen: true,
+				controls: [
+					{
+						blockType: 'text',
+						key: 'prompt',
+						label: 'Prompt',
+						availability: 'enabled',
+						defaultValue: '',
+						multiline: true,
+						maxLength: 100,
+					},
+				],
+			},
+			{
+				key: 'generation-settings',
+				title: 'Setting',
+				collapsible: false,
+				controls: [
+					storedSelect('batch', '장수', ['1', '2'], '2', 'readonly'),
+					storedSelect('ratio', '비율', ['2:3', '16:9'], '2:3', 'readonly'),
+					storedSelect('resolution', '해상도', ['1K', '2K'], '1K', 'disabled'),
+				],
+			},
+		],
+	}
+}
+
+function storedSelect(
+	id: string,
+	label: string,
+	values: string[],
+	defaultValue: string,
+	availability: 'enabled' | 'readonly' | 'disabled',
+) {
+	return {
+		blockType: 'select',
+		key: id,
+		label,
+		availability,
+		defaultValue,
+		options: values.map((value) => ({ label: value, value })),
+	}
+}

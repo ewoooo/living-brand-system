@@ -14,9 +14,10 @@ export function GlobalHeader({ guidelineChapters }: GlobalHeaderProps) {
 
 	return (
 		<>
+			{/* 높이는 --global-header-height 토큰이 소유한다 — 뷰포트 파생 레이아웃(스튜디오 작업대)과 같은 값을 공유. */}
 			<header
 				data-slot="global-header"
-				className="relative z-50 grid shrink-0 grid-cols-3 items-center border-b border-border bg-background p-1 px-6 data-[open=true]:border-transparent"
+				className="relative z-50 grid h-(--global-header-height) shrink-0 grid-cols-3 items-center border-b border-border bg-background px-6 data-[open=true]:border-transparent"
 				data-open={Boolean(activeMenu)}
 			>
 				<HeaderHead className="justify-self-start" />

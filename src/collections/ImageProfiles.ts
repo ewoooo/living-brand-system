@@ -1,4 +1,11 @@
-import { type CollectionConfig, type PayloadRequest, slugField } from 'payload'
+import {
+	APIError,
+	type CollectionConfig,
+	type FieldAccess,
+	type PayloadRequest,
+	slugField,
+} from 'payload'
+import { IMAGE_PROMPT_MAX_LENGTH } from '@/features/generate-image/image-generation-limits'
 import {
 	DEFAULT_IMAGE_MODEL_PRESET,
 	IMAGE_MODEL_PRESET_OPTIONS,
@@ -15,14 +22,20 @@ import {
 	type ImageOutputSize,
 	supportsImageOutputSize,
 } from '@/features/generate-image/image-size'
+import type { PublishedImageProfileDefinition } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import { imageGenerationErrorResponse } from '@/features/generate-image/respond-image-generation'
 import { normalizeImageProfilePrompt } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
+import { deriveImageStudioConfig } from '@/features/image-studio/image-studio-config'
 import { isManager, managerManagedAccess } from '@/lib/auth'
 import {
 	assertImageProfileUnpinned,
 	isUnpublishTransition,
 } from '@/services/guard-template-references.service'
+import { imageProfileFeaturesField } from './fields/image-profile-features-field'
+import { studioControllerField, validateHexColor } from './fields/studio-controller-field'
 import { draftVersions } from './shared'
+
+const managerFieldRead: FieldAccess = ({ req }) => isManager(req.user)
 
 function validateImageSize(
 	value: null | string | undefined,
@@ -75,6 +88,24 @@ export const ImageProfiles: CollectionConfig = {
 				if (isUnpublishTransition({ data, originalDoc, req })) {
 					await assertImageProfileUnpinned(req, Number(originalDoc?.id), '발행 해제')
 				}
+
+				const effective = { ...originalDoc, ...data }
+				if (effective._status === 'published') {
+					try {
+						deriveImageStudioConfig({
+							...effective,
+							// create의 beforeChange에는 DB id가 아직 없으므로 계약 검증용 유한값을 쓴다.
+							id: Number(effective.id ?? 0),
+						} as PublishedImageProfileDefinition)
+					} catch (error) {
+						throw new APIError(
+							error instanceof Error
+								? error.message
+								: '이미지 컨트롤러 계약을 확인하세요.',
+							400,
+						)
+					}
+				}
 				return data
 			},
 		],
@@ -124,6 +155,7 @@ export const ImageProfiles: CollectionConfig = {
 		{
 			name: 'imageModelPreset',
 			type: 'select',
+			access: { read: managerFieldRead },
 			required: true,
 			defaultValue: DEFAULT_IMAGE_MODEL_PRESET,
 			options: [...IMAGE_MODEL_PRESET_OPTIONS],
@@ -159,8 +191,55 @@ export const ImageProfiles: CollectionConfig = {
 			},
 		},
 		{
+			name: 'maxPromptLength',
+			type: 'number',
+			min: 1,
+			max: IMAGE_PROMPT_MAX_LENGTH,
+			label: '최대 프롬프트 길이',
+			admin: {
+				position: 'sidebar',
+				description: `비우면 전역 상한(${IMAGE_PROMPT_MAX_LENGTH}자)을 씁니다.`,
+			},
+		},
+		{
+			name: 'cameraControl',
+			type: 'checkbox',
+			defaultValue: true,
+			label: '카메라 시점 조정 허용',
+			admin: {
+				position: 'sidebar',
+				description: '생성 이미지를 시드로 시점을 다시 잡을 수 있게 합니다.',
+			},
+		},
+		{
+			name: 'colorAdjustment',
+			type: 'group',
+			label: '색 조정',
+			admin: {
+				description:
+					'발행된 브랜드 색의 hex를 넣습니다. 라인 색을 비우면 이 프로파일은 색 조정을 열지 않습니다.',
+			},
+			fields: [
+				{
+					name: 'line',
+					type: 'text',
+					label: '라인 색',
+					validate: validateHexColor,
+					admin: { description: '#rrggbb 형식으로 입력합니다.' },
+				},
+				{
+					name: 'background',
+					type: 'text',
+					label: '배경 색',
+					validate: validateHexColor,
+					admin: { description: '비우면 배경 없이 라인만 칠합니다.' },
+				},
+			],
+		},
+		{
 			name: 'profilePrompt',
 			type: 'array',
+			access: { read: managerFieldRead },
 			dbName: 'img_profile_prompt',
 			required: true,
 			minRows: 1,
@@ -180,6 +259,7 @@ export const ImageProfiles: CollectionConfig = {
 		{
 			name: 'userPromptNormalization',
 			type: 'array',
+			access: { read: managerFieldRead },
 			dbName: 'img_prompt_norm',
 			label: '유저 프롬프트',
 			labels: { singular: '유저 프롬프트', plural: '유저 프롬프트' },
@@ -205,6 +285,8 @@ export const ImageProfiles: CollectionConfig = {
 				},
 			],
 		},
+		studioControllerField(),
+		imageProfileFeaturesField(),
 		{
 			name: 'generationTest',
 			type: 'ui',

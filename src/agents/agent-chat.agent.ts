@@ -3,6 +3,10 @@ import { type InferAgentUIMessage, isStepCount, ToolLoopAgent } from 'ai'
 import { z } from 'zod'
 import { getAgentTools } from '@/agents/agent-chat-tools.agent'
 import { env } from '@/env'
+import {
+	CACHE_BREAKPOINT_PROVIDER_OPTIONS,
+	withHistoryCacheBreakpoint,
+} from '@/features/agent-chat/cache-breakpoint'
 import { getAgentExecutionPolicy } from '@/features/agent-chat/domain/agent-skill-tool-policy'
 import { findEnabledAgentSkillSummaries } from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import { getAgentDefaultInstructions } from '@/features/agent-chat/services/get-agent-default-instructions.service'
@@ -54,10 +58,13 @@ export const agentChatAgent = new ToolLoopAgent<
 	toolsContext: toolsContextFor({ user: null }),
 	callOptionsSchema: agentChatCallOptionsSchema,
 	stopWhen: isStepCount(10),
-	prepareStep: ({ stepNumber, steps }) => {
+	prepareStep: ({ stepNumber, steps, messages }) => {
+		const cachedMessages = withHistoryCacheBreakpoint(messages)
+
 		if (stepNumber === 0) {
 			return {
 				activeTools: ['loadSkill'],
+				messages: cachedMessages,
 				providerOptions: DEFAULT_PROVIDER_OPTIONS,
 				toolChoice: { type: 'tool', toolName: 'loadSkill' },
 			}
@@ -69,13 +76,18 @@ export const agentChatAgent = new ToolLoopAgent<
 			.at(-1)
 
 		if (!loadedSkill) {
-			return { activeTools: [], providerOptions: DEFAULT_PROVIDER_OPTIONS }
+			return {
+				activeTools: [],
+				messages: cachedMessages,
+				providerOptions: DEFAULT_PROVIDER_OPTIONS,
+			}
 		}
 
 		const execution = getAgentExecutionPolicy(loadedSkill.output)
 
 		return {
 			activeTools: execution.activeTools,
+			messages: cachedMessages,
 			model: anthropic(execution.modelId),
 			providerOptions: DEFAULT_PROVIDER_OPTIONS,
 		}
@@ -94,15 +106,22 @@ export const agentChatAgent = new ToolLoopAgent<
 			? `Current guideline page: ${options.pagePath}`
 			: undefined
 
+		// pagePath는 페이지마다 달라 캐시를 깨뜨린다 — 캐시되는 고정 파트 뒤의 별도 system 파트로 뺀다.
 		return {
 			...settings,
 			instructions: [
-				defaultInstructions,
-				formatAgentSkillSelectionInstructions(skills),
-				pageContext ? `Published context:\n${pageContext}` : null,
-			]
-				.filter(Boolean)
-				.join('\n\n'),
+				{
+					role: 'system' as const,
+					content: [
+						defaultInstructions,
+						formatAgentSkillSelectionInstructions(skills),
+					].join('\n\n'),
+					providerOptions: CACHE_BREAKPOINT_PROVIDER_OPTIONS,
+				},
+				...(pageContext
+					? [{ role: 'system' as const, content: `Published context:\n${pageContext}` }]
+					: []),
+			],
 			toolsContext: toolsContextFor(options),
 		}
 	},

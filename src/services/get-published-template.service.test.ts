@@ -15,6 +15,7 @@ vi.mock('@/repositories/published-template.payload.repository', () => ({
 			photo: { imageInput: { profileId: 7 }, imageColorize: { line: '#112233' } },
 			caption: { text: '고정' },
 		},
+		controller: { groups: [{ key: 'background', title: 'Background', controls: [] }] },
 		width: 1200,
 		height: 800,
 	}),
@@ -27,6 +28,9 @@ describe('getPublishedTemplate', () => {
 		expect(template?.nodeConfigs).toEqual({
 			name: { input: { label: '이름', maxLength: 20 } },
 			photo: { imageInput: { profileId: 7 }, imageColorize: { line: '#112233' } },
+		})
+		expect(template?.controller).toEqual({
+			groups: [{ key: 'background', title: 'Background', controls: [] }],
 		})
 		expect(JSON.stringify(template)).not.toContain('aiInstruction')
 	})

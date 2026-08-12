@@ -9,7 +9,8 @@ const buttonVariants = cva(
 	{
 		variants: {
 			variant: {
-				highlight: 'bg-highlight text-highlight-foreground hover:brightness-95',
+				highlight:
+					'bg-highlight text-highlight-foreground hover:brightness-95 disabled:animate-none disabled:bg-none disabled:bg-muted disabled:text-muted-foreground',
 				outline:
 					'border-foreground bg-transparent text-foreground hover:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground',
 				tint: 'border-primary/40 bg-primary/10 text-foreground hover:bg-primary/15',

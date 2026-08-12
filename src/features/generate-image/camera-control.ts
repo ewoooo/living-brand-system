@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { IMAGE_BATCH_MAX } from '@/features/generate-image/image-generation-limits'
 
 export const MAX_CAMERA_ADJUSTMENT_REQUEST_BYTES = 100_000
 
@@ -21,7 +22,7 @@ export const cameraAdjustmentRequestSchema = z
 	.object({
 		basePrompt: basePromptSchema,
 		camera: cameraControlSchema,
-		count: z.number().int().min(1).max(4).default(1),
+		count: z.number().int().min(1).max(IMAGE_BATCH_MAX).default(1),
 		generatedImageId: z.number().int().positive(),
 		profileId: z.number().int().positive(),
 	})

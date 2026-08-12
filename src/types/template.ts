@@ -13,6 +13,8 @@ export interface TemplateSlotSpec {
 /** Template의 nodeId 하나에 저장하는 앱 편집 설정. */
 export interface TemplateNodeConfig {
 	text?: string
+	/** 텍스트 노드(<p>)의 색 오버라이드 — 스튜디오 일괄 텍스트 색이 compose 시점에만 싣는 값(저장 안 됨). */
+	color?: string
 	backgroundImage?: string
 	generatedImageId?: number
 	/** 프레임에 할당한 이미지의 자유 편집 — 이동(px)·확대(배율)·회전(deg). 캐리어에만 적용된다. */

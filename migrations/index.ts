@@ -48,7 +48,12 @@ import * as migration_20260807_084125_scramble_fixed_height from './20260807_084
 import * as migration_20260807_084746_block_gap from './20260807_084746_block_gap';
 import * as migration_20260810_100000_rename_dodont_widget_enums from './20260810_100000_rename_dodont_widget_enums';
 import * as migration_20260811_015839_remove_legacy_blocks from './20260811_015839_remove_legacy_blocks';
+import * as migration_20260811_021425_image_profile_studio_fields from './20260811_021425_image_profile_studio_fields';
 import * as migration_20260811_022425_restore_icon_grid_stem_widgets from './20260811_022425_restore_icon_grid_stem_widgets';
+import * as migration_20260811_070255_studio_controller_config from './20260811_070255_studio_controller_config';
+import * as migration_20260811_075822_image_profile_features from './20260811_075822_image_profile_features';
+import * as migration_20260812_001709_studio_admin_controller_configs from './20260812_001709_studio_admin_controller_configs';
+import * as migration_20260812_010429_radial_fluted_glass_runtime from './20260812_010429_radial_fluted_glass_runtime';
 
 export const migrations = [
   {
@@ -302,8 +307,33 @@ export const migrations = [
     name: '20260811_015839_remove_legacy_blocks',
   },
   {
+    up: migration_20260811_021425_image_profile_studio_fields.up,
+    down: migration_20260811_021425_image_profile_studio_fields.down,
+    name: '20260811_021425_image_profile_studio_fields',
+  },
+  {
     up: migration_20260811_022425_restore_icon_grid_stem_widgets.up,
     down: migration_20260811_022425_restore_icon_grid_stem_widgets.down,
-    name: '20260811_022425_restore_icon_grid_stem_widgets'
+    name: '20260811_022425_restore_icon_grid_stem_widgets',
+  },
+  {
+    up: migration_20260811_070255_studio_controller_config.up,
+    down: migration_20260811_070255_studio_controller_config.down,
+    name: '20260811_070255_studio_controller_config',
+  },
+  {
+    up: migration_20260811_075822_image_profile_features.up,
+    down: migration_20260811_075822_image_profile_features.down,
+    name: '20260811_075822_image_profile_features',
+  },
+  {
+    up: migration_20260812_001709_studio_admin_controller_configs.up,
+    down: migration_20260812_001709_studio_admin_controller_configs.down,
+    name: '20260812_001709_studio_admin_controller_configs',
+  },
+  {
+    up: migration_20260812_010429_radial_fluted_glass_runtime.up,
+    down: migration_20260812_010429_radial_fluted_glass_runtime.down,
+    name: '20260812_010429_radial_fluted_glass_runtime',
   },
 ];

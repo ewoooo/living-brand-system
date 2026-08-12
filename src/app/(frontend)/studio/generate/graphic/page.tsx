@@ -1,18 +1,26 @@
-import { ForwardStraightGenerator } from '@/components/studio/generate/forward-straight-generator'
+import { notFound } from 'next/navigation'
+import { GraphicGenerator } from '@/components/studio/graphic/graphic-generator'
 import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
+import { listGraphicStudioConfigs } from '@/features/graphic-studio/services/list-graphic-studio-configs.service'
+import { authenticateRequest } from '@/lib/request-auth'
 
-// 렌더링: 정적. Payload 데이터를 읽지 않으므로 낡을 것이 없다.
-// 🔴 방식을 선언으로 못박는다 — 선언이 없으면 Next가 추론하고, 그 추론은 프로덕션 빌드에서만
-//    드러나 무관한 수정(권한·쿠키 조회 추가) 하나로 조용히 뒤집힌다(docs/05 「렌더링 캐시 무효화」).
-export const dynamic = 'force-static'
+// 렌더링: 매 요청. 권한과 발행된 Graphic Profile을 읽으므로 캐시하지 않는다.
+// 🔴 방식을 선언으로 못박는다 — 추론에 맡기면 프로덕션에서만 드러나는 차이가 생긴다
+//    (docs/05 「렌더링 캐시 무효화」).
+export const dynamic = 'force-dynamic'
 
-export default function GenerateGraphicPage() {
+export default async function GenerateGraphicPage() {
+	const { user } = await authenticateRequest()
+	if (!user) notFound()
+	const [config] = await listGraphicStudioConfigs(user)
+	if (!config) notFound()
+
 	return (
 		<StudioWorkspacePage
 			title="그래픽 생성"
-			description="그래픽 도구의 설정을 조정해 SVG 산출물을 만듭니다."
+			description="그래픽 도구의 설정을 조정하고 결과를 미리 봅니다."
 		>
-			<ForwardStraightGenerator />
+			<GraphicGenerator config={config} />
 		</StudioWorkspacePage>
 	)
 }

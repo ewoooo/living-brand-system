@@ -69,24 +69,36 @@ function toUsage(counts: Map<string, number>) {
 	return [...counts.entries()].map(([name, callCount]) => ({ name, callCount }))
 }
 
-function createEmptyUsage(): Required<Omit<AgentChatAiUsage, 'model' | 'rawUsage'>> {
+/** 공급자가 값을 준 스텝이 하나라도 있을 때만 채워지는 필드 — 아래 CollectedUsage 주석 참고. */
+type OptionalUsageField = 'cacheReadInputTokens' | 'cacheWriteInputTokens' | 'reasoningTokens'
+
+/**
+ * 캐시·reasoning 필드는 0으로 시작하지 않는다 — 공급자가 값을 아예 주지 않은 경우와 진짜 0(캐시 미스)이
+ * 어드민 AI Usage 표에서 구분되어야 한다. 값이 온 스텝이 없으면 undefined로 남겨 빈 값으로 보이게 한다.
+ */
+type CollectedUsage = Required<Omit<AgentChatAiUsage, 'model' | 'rawUsage' | OptionalUsageField>> &
+	Pick<AgentChatAiUsage, OptionalUsageField>
+
+function createEmptyUsage(): CollectedUsage {
 	return {
 		callCount: 0,
 		inputTokens: 0,
 		outputTokens: 0,
 		totalTokens: 0,
-		cacheReadInputTokens: 0,
-		cacheWriteInputTokens: 0,
-		reasoningTokens: 0,
 	}
 }
 
-function addUsage(target: ReturnType<typeof createEmptyUsage>, usage: LanguageModelUsage) {
+function addUsage(target: CollectedUsage, usage: LanguageModelUsage) {
 	target.callCount += 1
 	target.inputTokens += usage.inputTokens ?? 0
 	target.outputTokens += usage.outputTokens ?? 0
 	target.totalTokens += usage.totalTokens ?? 0
-	target.cacheReadInputTokens += usage.inputTokenDetails.cacheReadTokens ?? 0
-	target.cacheWriteInputTokens += usage.inputTokenDetails.cacheWriteTokens ?? 0
-	target.reasoningTokens += usage.outputTokenDetails.reasoningTokens ?? 0
+	addOptional(target, 'cacheReadInputTokens', usage.inputTokenDetails.cacheReadTokens)
+	addOptional(target, 'cacheWriteInputTokens', usage.inputTokenDetails.cacheWriteTokens)
+	addOptional(target, 'reasoningTokens', usage.outputTokenDetails.reasoningTokens)
+}
+
+function addOptional(target: CollectedUsage, key: OptionalUsageField, value: number | undefined) {
+	if (value === undefined) return
+	target[key] = (target[key] ?? 0) + value
 }
