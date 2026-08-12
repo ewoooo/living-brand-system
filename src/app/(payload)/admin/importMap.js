@@ -28,6 +28,7 @@ import { BetterEditorPublishButton as BetterEditorPublishButton_e4a80c849de3e172
 import { GuidelineDocumentTreeList as GuidelineDocumentTreeList_cbf6266b788a4c70ca37fe64fb741dc2 } from '../../../components/admin/guideline-documents/guideline-document-tree-list'
 import { ColorSwatchCell as ColorSwatchCell_88fca198b056ae91f3276aaa342114bd } from '../../../components/admin/brand-colors/color-swatch-cell'
 import { ImageProfileTestPanel as ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640 } from '../../../components/admin/image-profiles/image-profile-test-panel'
+import { StudioControllerOverrideField as StudioControllerOverrideField_81e43ed9fd8003550a0bc6715fb87612 } from '../../../components/admin/studio/studio-controller-override-field'
 import { TemplateLayersField as TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6 } from '../../../components/admin/templates/template-layers-field'
 import { SidebarDivider as SidebarDivider_34b02386e3687855f2c939d264827b16 } from '../../../components/admin/templates/sidebar-divider'
 import { FigmaHtmlImportField as FigmaHtmlImportField_be9c443aa962726f6d016f5ca8fc7c1f } from '../../../components/admin/templates/figma-html-import-field'
@@ -79,6 +80,7 @@ export const importMap = {
   "/components/admin/guideline-documents/guideline-document-tree-list#GuidelineDocumentTreeList": GuidelineDocumentTreeList_cbf6266b788a4c70ca37fe64fb741dc2,
   "/components/admin/brand-colors/color-swatch-cell#ColorSwatchCell": ColorSwatchCell_88fca198b056ae91f3276aaa342114bd,
   "/components/admin/image-profiles/image-profile-test-panel#ImageProfileTestPanel": ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640,
+  "/components/admin/studio/studio-controller-override-field#StudioControllerOverrideField": StudioControllerOverrideField_81e43ed9fd8003550a0bc6715fb87612,
   "/components/admin/templates/template-layers-field#TemplateLayersField": TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6,
   "/components/admin/templates/sidebar-divider#SidebarDivider": SidebarDivider_34b02386e3687855f2c939d264827b16,
   "/components/admin/templates/figma-html-import-field#FigmaHtmlImportField": FigmaHtmlImportField_be9c443aa962726f6d016f5ca8fc7c1f,

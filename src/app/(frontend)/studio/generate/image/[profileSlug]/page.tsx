@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { ImageGenerator } from '@/components/studio/image/image-generator'
 import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
-import { listImageStudioConfigs } from '@/features/image-studio/services/list-image-studio-configs.service'
+import { listImageStudioConfigs } from '@/features/image-generation/services/list-image-studio-configs.service'
 import { authenticateRequest } from '@/lib/request-auth'
 
 // 렌더링: 매 요청. 권한·미리보기 상태를 읽으므로 캐시하지 않는다.

@@ -44,6 +44,7 @@ export function ControllerGroup(props: ControllerGroupProps) {
 
 function ControllerCollapsibleGroup({
 	title,
+	collapsible: _collapsible,
 	defaultOpen = true,
 	disabled = false,
 	className,

@@ -12,7 +12,7 @@ vi.mock('@/lib/request-auth', () => ({
 	authenticateRequest: mocks.authenticateRequest,
 	isCrossOriginRequest: mocks.isCrossOriginRequest,
 }))
-vi.mock('@/services/start-check-session.service', () => ({
+vi.mock('@/features/asset-check/services/start-check-session.service', () => ({
 	startCheckSession: mocks.startCheckSession,
 }))
 vi.mock('@/app/api/check/read-check-image', () => ({

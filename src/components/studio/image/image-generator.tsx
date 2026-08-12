@@ -5,8 +5,8 @@ import { ImageCanvas } from '@/components/studio/image/image-canvas'
 import { ImageSidebar } from '@/components/studio/image/image-sidebar'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
-import { ImageStudioProvider } from '@/features/image-studio/hooks/use-image-studio'
-import type { ImageStudioConfig } from '@/features/image-studio/image-studio-config'
+import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
+import { ImageStudioProvider } from '@/features/image-generation/hooks/use-image-studio'
 
 // 생성 표면: 편집 세션 소유는 ImageStudioProvider, 조작은 컨트롤러, 결과는 캔버스가 그린다.
 export function ImageGenerator({

@@ -1,4 +1,3 @@
-import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import {
 	type AgentChatSessionUsageStep,
 	createAgentChatSessionUsageCollector,
@@ -12,6 +11,7 @@ import {
 } from '@/features/agent-chat/repositories/agent-chat-session.payload.repository'
 import type { AgentChatSessionMessageInput } from '@/features/agent-chat/types'
 import { getAgentMessageText } from '@/features/agent-chat/utils/derive-agent-message'
+import type { AgentChatMessage } from '@/modules/agents/agent-chat.agent'
 import type { User } from '@/payload-types'
 
 export interface StartAgentChatSessionInput {

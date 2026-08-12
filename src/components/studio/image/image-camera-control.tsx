@@ -6,7 +6,7 @@ import {
 	type CameraAzimuth,
 	type CameraElevation,
 	resolveCameraControl,
-} from '@/features/generate-image/camera-control'
+} from '@/features/image-generation/camera-control'
 import { ImageCameraOrbitControl, snapCameraAngle } from './image-camera-orbit-control'
 
 // 각 프리셋의 버킷(value)은 도메인 임계값과 어긋나지 않도록 resolveCameraControl로 도출한다.

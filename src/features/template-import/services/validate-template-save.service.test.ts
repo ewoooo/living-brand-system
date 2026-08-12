@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { inspectTemplateFragment } from '@/services/inspect-template-html.service'
-import { parseTemplateNodeConfigs } from '@/services/parse-template-node-configs.service'
+import { inspectTemplateFragment } from '@/features/template-core/domain/inspect-template-html'
+import { parseTemplateNodeConfigs } from '@/features/template-core/domain/parse-template-node-configs'
 import {
 	findTemplateDraftBlocker,
 	findTemplatePublishBlocker,

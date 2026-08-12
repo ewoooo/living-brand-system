@@ -3,8 +3,8 @@
 import { GraphicCanvas } from '@/components/studio/graphic/graphic-canvas'
 import { GraphicSidebar } from '@/components/studio/graphic/graphic-sidebar'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
-import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
-import { GraphicStudioProvider } from '@/features/graphic-studio/hooks/use-graphic-studio'
+import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import { GraphicStudioProvider } from '@/features/graphic-generation/hooks/use-graphic-studio'
 
 type GraphicGeneratorProps = {
 	config: GraphicStudioConfig

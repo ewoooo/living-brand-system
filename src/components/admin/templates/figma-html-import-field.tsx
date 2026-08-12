@@ -2,12 +2,12 @@
 
 import { Button, TextInput, toast, useForm, useFormFields } from '@payloadcms/ui'
 import { useState } from 'react'
+import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import type { FigmaHtmlResult } from '@/features/template-import/utils/figma-node-to-html'
 import type {
 	FigmaRasterDiagnostic,
 	FigmaTruncationDiagnostic,
 } from '@/features/template-import/utils/normalize-figma-node'
-import { composeTemplateHtml } from '@/services/compose-template-html.client'
 import type { TemplateNodeConfigMap } from '@/types/template'
 
 type ImportedFigmaHtml = FigmaHtmlResult & {

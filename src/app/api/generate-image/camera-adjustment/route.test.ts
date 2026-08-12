@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { MAX_CAMERA_ADJUSTMENT_REQUEST_BYTES } from '@/features/generate-image/camera-control'
+import { MAX_CAMERA_ADJUSTMENT_REQUEST_BYTES } from '@/features/image-generation/camera-control'
 
 const mocks = vi.hoisted(() => ({
 	adjustImageCamera: vi.fn(),
@@ -12,7 +12,7 @@ vi.mock('@/lib/request-auth', () => ({
 	authenticateRequest: mocks.authenticateRequest,
 	isCrossOriginRequest: mocks.isCrossOriginRequest,
 }))
-vi.mock('@/features/generate-image/services/generate-image.service', () => ({
+vi.mock('@/features/image-generation/services/generate-image.service', () => ({
 	adjustImageCamera: mocks.adjustImageCamera,
 }))
 

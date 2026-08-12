@@ -1,8 +1,8 @@
 'use client'
 
 import type { KeyboardEvent } from 'react'
-import type { ControllerPadValue } from '@/features/studio-controller/controller-definition'
 import { cn } from '@/lib/utils'
+import type { ControllerPadValue } from '@/modules/studio-controller/controller-definition'
 import { clampControllerValue, useControllerPointerDrag } from './pointer-drag'
 
 type ControllerPadProps = {

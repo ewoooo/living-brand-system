@@ -7,7 +7,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import type { ControllerOption } from '@/features/studio-controller/controller-definition'
+import type { ControllerOption } from '@/modules/studio-controller/controller-definition'
 import { ROW_SELECT_TRIGGER } from './classes'
 import { useRowControl } from './row'
 

@@ -2,18 +2,18 @@
 
 import { type ComponentType, useEffect, useRef, useState } from 'react'
 import { Typography } from '@/components/ui/typography'
+import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
 import {
 	type GraphicPreview,
 	getGraphicPreviewAdapter,
-} from '@/features/graphic-studio/graphic-preview.client'
-import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
+} from '@/features/graphic-generation/runtime/client/graphic-preview.client'
 import {
 	canRenderGraphicStudioSvg,
 	getGraphicStudioRuntimeBindings,
-	renderGraphicStudioSvg,
-} from '@/features/graphic-studio/graphic-studio-runtime'
-import { useGraphicStudio } from '@/features/graphic-studio/hooks/use-graphic-studio'
-import { downloadBlob } from '@/lib/object-url'
+} from '@/features/graphic-generation/runtime/graphic-studio-runtime'
+import { exportGraphicStudioSvg } from '@/features/graphic-generation/services/export-graphic.client'
+import { exportGraphicStudioVideo } from '@/features/graphic-generation/services/export-graphic-video.client'
 
 const canvasByType = {
 	p5: P5Canvas,
@@ -80,17 +80,22 @@ function GraphicPreviewCanvas({
 				previewRef.current = mounted
 				const viewport = mounted.getViewport()
 				controls.registerBindings(getGraphicStudioRuntimeBindings(config, viewport))
-				if (canRenderGraphicStudioSvg(config)) {
-					canvas.registerOutput(() => {
-						const currentViewport = previewRef.current?.getViewport()
-						if (!currentViewport) return
-						const svg = renderGraphicStudioSvg(
-							config,
-							valuesRef.current,
-							currentViewport,
-						)
-						if (!svg) return
-						downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), `${config.id}.svg`)
+				if (canRenderGraphicStudioSvg(config) || mounted.video) {
+					canvas.registerOutput((request) => {
+						if (request.format === 'svg') {
+							const currentViewport = previewRef.current?.getViewport()
+							if (!currentViewport || !canRenderGraphicStudioSvg(config)) {
+								throw new Error('SVG export is unavailable.')
+							}
+							return exportGraphicStudioSvg(
+								config,
+								valuesRef.current,
+								currentViewport,
+							)
+						}
+						const video = previewRef.current?.video
+						if (!video) throw new Error('MP4 export is unavailable.')
+						return exportGraphicStudioVideo(config, request, video)
 					})
 				}
 			} catch (mountError) {

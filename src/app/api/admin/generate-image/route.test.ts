@@ -12,7 +12,7 @@ vi.mock('@/lib/request-auth', () => ({
 	authenticateRequest: mocks.authenticateRequest,
 	isCrossOriginRequest: mocks.isCrossOriginRequest,
 }))
-vi.mock('@/features/generate-image/services/generate-image.service', () => ({
+vi.mock('@/features/image-generation/services/generate-image.service', () => ({
 	generateImages: mocks.generateImages,
 	generateImagesWithSettings: mocks.generateImagesWithSettings,
 }))

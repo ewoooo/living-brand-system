@@ -13,15 +13,18 @@
 조합과 HTML 렌더는 클라이언트에서 일어나며 서버 렌더링·이미지 생성·영속이 없습니다. 인쇄용 TIFF와 PDF는 브라우저가 렌더한 PNG를 서버에서 변환합니다.
 
 - `TemplateGenerator`(`src/components/studio/template/`): 카테고리별 드롭다운에서 published 템플릿을 선택하고 canonical HTML의 열린 텍스트 슬롯을 편집해 미리보기를 렌더.
-- `export-template.client`(`src/features/template-export/services/`): Create·Chat의 `png | tiff | pdf` 가용 조건과 Strategy Registry 실행 계약을 공유.
-- `use-template-export`(`src/features/template-export/hooks/`): export use case의 진행·오류 UI 상태를 공유.
-- `render-template-export-stage.client`(`src/features/template-export/services/`): 검증된 HTML을 Shadow DOM의 공용 export stage로 안전하게 구성.
-- `export-template-png.client`(`src/features/template-export/services/`): 공용 export stage를 `html-to-image`로 PNG 다운로드 또는 TIFF·PDF 입력용 PNG Blob으로 렌더.
-- `export-template-print`(`src/features/template-export/`): 발행된 canonical HTML 템플릿의 운영자 PPI 정책과 PNG 픽셀 크기를 확인한 뒤 Sharp로 CMYK/ICC 변환하고 TIFF 또는 PDF 생성.
+- `studio-export`(`src/features/studio-export/`): Runtime 지원 형식과 Admin 허용 형식의 교집합을 `StudioConfig.output`으로 투영하고 실행 직전 다시 검증.
+- `export-template.client`(`src/features/studio-export/services/`): Create·Chat의 `png | tiff | pdf` 실행 계약과 형식별 adapter 분기를 공유.
+- `use-export`(`src/features/studio-export/hooks/`): 세 Studio export의 진행·오류 상태와 다운로드를 공유.
+- `render-export-stage.client`(`src/features/studio-export/adapters/`): 검증된 HTML을 Shadow DOM의 공용 export stage로 구성.
+- `html-to-png.client`(`src/features/studio-export/adapters/`): 공용 export stage를 `html-to-image`로 PNG Blob으로 렌더.
+- `export-template-print`(`src/features/studio-export/services/`): 발행된 canonical HTML 템플릿의 운영자 PPI 정책과 PNG 픽셀 크기를 확인한 뒤 Sharp로 CMYK/ICC 변환하고 TIFF 또는 PDF를 생성.
 
 - 입력: 발행된 템플릿의 canonical `html` + 열린 텍스트 슬롯 값. 슬롯은 `inputFormat`/`maxLength`/`maxLines`를 강제.
 - 🔴 사용자 미리보기는 `<iframe sandbox="">`(opaque origin)이라 CSS `mask-image` fetch가 CORS 모드로 나갑니다. ACAO 헤더가 없는 업로드 파일 경로(`/api/brand-logos/file/*`)가 차단되면 mask가 전체 투명 처리돼 로고가 사라집니다. 어드민은 same-origin 렌더라 재현되지 않습니다.
 - 출력: 클라이언트 PNG 다운로드. 운영자가 `72`(대형 인쇄)·`150`(일반 용지)·`300`(고급 용지)ppi 중 하나를 지정한 경우 CMYK TIFF와 CMYK PDF를 직접 다운로드할 수 있음. Payload에는 아무것도 쓰지 않음(생성 세션/출력 레코드 없음).
+
+출력 capability는 `Runtime 지원 형식 ∩ Admin 허용 형식 = Effective StudioConfig.output.formats` 순서로 계산합니다. Admin의 형식 목록을 비우면 Runtime 기본값을 상속하며, 지원하지 않는 형식으로 범위를 넓히면 발행 검증이 거부합니다. Controller의 현재 선택값과 버튼 배치는 이 capability와 별개이고, Graphic·Template·Image의 실행 함수가 I/O 직전에도 허용 여부를 확인합니다. 현재 Graphic은 SVG·MP4, Template은 PNG·TIFF·PDF, Image는 원본·PNG·JPEG와 ZIP 묶음을 지원합니다.
 
 TIFF는 원본 가로·세로 픽셀을 리샘플링하지 않고 PPI 메타데이터만 기록합니다. PDF는 문서 전체 DPI 메타데이터 대신 같은 PPI로 계산한 실제 `가로 mm × 세로 mm` 페이지 크기를 씁니다. 따라서 두 형식의 인쇄 크기는 `px ÷ ppi × 25.4mm`로 정해집니다. 두 형식 모두 투명 영역을 흰색으로 평탄화하고 Sharp 내장 기본 CMYK ICC 프로파일로 변환합니다. PDF는 변환된 CMYK JPEG를 원본 픽셀 크기 그대로 배치한 단일 raster 페이지이며 이미지 색공간은 `DeviceCMYK`입니다. 최대 인쇄 입력은 `67,108,864`픽셀·PNG 20MB이며, PPI를 설정할 때 픽셀 상한을 Template 저장 hook에서 검증합니다.
 
@@ -71,11 +74,11 @@ TIFF는 원본 가로·세로 픽셀을 리샘플링하지 않고 PPI 메타데�
 | Feature | 책임 | 출력 |
 | --- | --- | --- |
 | `template-import` | 외부 템플릿을 가져와 운영자가 편집·검증·발행 가능한 상태로 준비 | 저장 가능한 Template |
-| `template-create` | published Template의 슬롯 값을 입력하고 결과를 조합 | composed HTML |
-| `template-export` | composed HTML을 출력 정책에 따라 변환 | PNG·TIFF·PDF |
+| `template-customization` | published Template의 슬롯 값을 입력하고 결과를 조합 | composed HTML |
+| `studio-export` | Runtime capability와 Admin 정책을 교차 검증하고 형식별 adapter를 실행 | SVG·MP4·PNG·JPEG·TIFF·PDF |
 | `generate-graphic` | Plugin 구현 키와 도구별 입력 계약으로 그래픽을 계산·미리보기·출력 | p5는 SVG 다운로드, Shader는 WebGL Preview |
 
-공용 template 타입·HTML 합성·슬롯 수집·render model projection은 `src/types`와 `src/services`가 소유합니다. `template-create`는 `template-export`의 공개 hook과 print policy를 사용할 수 있지만, `template-create`와 `template-export`는 `template-import` 내부 구현을 직접 import하지 않습니다.
+공용 Template 계약·HTML 합성·슬롯 수집·render model projection·Payload 조회는 `src/features/template-core`이 소유합니다. `template-customization`은 `studio-export`의 공개 hook과 print policy를 사용할 수 있지만, 두 기능 모두 `template-import` 내부 구현을 직접 import하지 않습니다.
 
 ## 5. 크로스커팅
 

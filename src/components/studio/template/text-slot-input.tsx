@@ -3,8 +3,8 @@
 import { Controller } from '@/components/studio/shared/controller'
 import { ControllerControlRenderer } from '@/components/studio/shared/controller-renderer'
 import { Typography } from '@/components/ui/typography'
-import type { ControllerControlDefinition } from '@/features/studio-controller/controller-definition'
-import type { TemplateTextSlot } from '@/features/template-studio/template-config'
+import type { TemplateTextSlot } from '@/features/template-customization/domain/template-config'
+import type { ControllerControlDefinition } from '@/modules/studio-controller/controller-definition'
 
 type TextSlotInputProps = {
 	/** 공통 Controller Definition과 DOM 입력 binding을 합쳐 렌더한다. */

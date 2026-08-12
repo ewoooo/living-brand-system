@@ -24,7 +24,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
 	requestPublishedTemplateVectorAssets,
 	type TemplateVectorAsset,
-} from '@/services/template-editor-options.client'
+} from '@/features/template-core/services/template-editor-options.client'
 import type { TemplateNodeConfig } from '@/types/template'
 import { BrandColorSwatches, usePublishedBrandColors } from './brand-color-swatches'
 

@@ -4,8 +4,7 @@ import { Controller } from '@/components/studio/shared/controller'
 import { ControllerRenderer } from '@/components/studio/shared/controller-renderer'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
-import { canRenderGraphicStudioSvg } from '@/features/graphic-studio/graphic-studio-runtime'
-import { useGraphicStudio } from '@/features/graphic-studio/hooks/use-graphic-studio'
+import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
 
 /** Definition을 Controller primitive로 투영한다. 캔버스와 런타임 구현은 모른다. */
 export function GraphicSidebar() {
@@ -29,17 +28,25 @@ export function GraphicSidebar() {
 					onChange={controls.update}
 				/>
 			</Controller.Content>
-			{canRenderGraphicStudioSvg(config) && (
+			{config.output.formats.length > 0 && (
 				<Controller.Footer>
-					<Button
-						type="button"
-						size="lg"
-						className="w-full"
-						onClick={output.download}
-						disabled={!output.ready}
-					>
-						SVG 다운로드
-					</Button>
+					{config.output.formats.map((format) => (
+						<Button
+							key={format}
+							type="button"
+							size="lg"
+							className="w-full"
+							onClick={() => output.download(format)}
+							disabled={output.busy || !output.ready(format)}
+						>
+							{format.toUpperCase()} 다운로드
+						</Button>
+					))}
+					{output.error && (
+						<Typography role="alert" size="sm" className="text-destructive">
+							{output.error}
+						</Typography>
+					)}
 				</Controller.Footer>
 			)}
 		</Controller.Root>

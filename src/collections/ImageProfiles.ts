@@ -5,34 +5,40 @@ import {
 	type PayloadRequest,
 	slugField,
 } from 'payload'
-import { IMAGE_PROMPT_MAX_LENGTH } from '@/features/generate-image/image-generation-limits'
+import {
+	deriveImageStudioConfig,
+	type PublishedImageProfileDefinition,
+} from '@/features/image-generation/domain/image-studio-config'
+import { IMAGE_PROMPT_MAX_LENGTH } from '@/features/image-generation/image-generation-limits'
 import {
 	DEFAULT_IMAGE_MODEL_PRESET,
 	IMAGE_MODEL_PRESET_OPTIONS,
 	type ImageModelPreset,
-} from '@/features/generate-image/image-model'
+} from '@/features/image-generation/image-model'
 import {
 	imagePromptNormalizationRequestSchema,
 	validateImageProfilePromptRows,
 	validateImagePromptNormalizationRows,
-} from '@/features/generate-image/image-profile-prompt'
+} from '@/features/image-generation/image-profile-prompt'
 import {
 	IMAGE_ASPECT_RATIO_OPTIONS,
 	IMAGE_OUTPUT_SIZE_OPTIONS,
 	type ImageOutputSize,
 	supportsImageOutputSize,
-} from '@/features/generate-image/image-size'
-import type { PublishedImageProfileDefinition } from '@/features/generate-image/repositories/image-profile.payload.repository'
-import { imageGenerationErrorResponse } from '@/features/generate-image/respond-image-generation'
-import { normalizeImageProfilePrompt } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
-import { deriveImageStudioConfig } from '@/features/image-studio/image-studio-config'
-import { isManager, managerManagedAccess } from '@/lib/auth'
+} from '@/features/image-generation/image-size'
+import { imageGenerationErrorResponse } from '@/features/image-generation/respond-image-generation'
+import { normalizeImageProfilePrompt } from '@/features/image-generation/services/normalize-image-profile-prompt.service'
 import {
 	assertImageProfileUnpinned,
 	isUnpublishTransition,
-} from '@/services/guard-template-references.service'
+} from '@/features/template-core/services/guard-template-references.service'
+import { isManager, managerManagedAccess } from '@/lib/auth'
 import { imageProfileFeaturesField } from './fields/image-profile-features-field'
-import { studioControllerField, validateHexColor } from './fields/studio-controller-field'
+import {
+	studioControllerField,
+	studioOutputPolicyField,
+	validateHexColor,
+} from './fields/studio-controller-field'
 import { draftVersions } from './shared'
 
 const managerFieldRead: FieldAccess = ({ req }) => isManager(req.user)
@@ -174,6 +180,7 @@ export const ImageProfiles: CollectionConfig = {
 			label: '출력 비율',
 			admin: {
 				position: 'sidebar',
+				hidden: true,
 				description: '이미지 공급자와 무관한 가로:세로 비율입니다.',
 			},
 		},
@@ -187,6 +194,7 @@ export const ImageProfiles: CollectionConfig = {
 			validate: validateImageSize,
 			admin: {
 				position: 'sidebar',
+				hidden: true,
 				description: 'Nano Banana 2 Lite는 1K만 지원합니다.',
 			},
 		},
@@ -198,6 +206,7 @@ export const ImageProfiles: CollectionConfig = {
 			label: '최대 프롬프트 길이',
 			admin: {
 				position: 'sidebar',
+				hidden: true,
 				description: `비우면 전역 상한(${IMAGE_PROMPT_MAX_LENGTH}자)을 씁니다.`,
 			},
 		},
@@ -208,6 +217,7 @@ export const ImageProfiles: CollectionConfig = {
 			label: '카메라 시점 조정 허용',
 			admin: {
 				position: 'sidebar',
+				hidden: true,
 				description: '생성 이미지를 시드로 시점을 다시 잡을 수 있게 합니다.',
 			},
 		},
@@ -216,6 +226,7 @@ export const ImageProfiles: CollectionConfig = {
 			type: 'group',
 			label: '색 조정',
 			admin: {
+				hidden: true,
 				description:
 					'발행된 브랜드 색의 hex를 넣습니다. 라인 색을 비우면 이 프로파일은 색 조정을 열지 않습니다.',
 			},
@@ -285,8 +296,15 @@ export const ImageProfiles: CollectionConfig = {
 				},
 			],
 		},
-		studioControllerField(),
+		studioControllerField({ mode: 'define' }),
 		imageProfileFeaturesField(),
+		studioOutputPolicyField({
+			formats: [
+				{ label: 'PNG', value: 'png' },
+				{ label: 'JPEG', value: 'jpeg' },
+			],
+			includeOriginal: true,
+		}),
 		{
 			name: 'generationTest',
 			type: 'ui',

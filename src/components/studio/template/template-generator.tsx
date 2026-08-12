@@ -1,10 +1,12 @@
 'use client'
 
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
-import { TemplateStudioProvider } from '@/features/template-studio/hooks/use-template-studio'
-import type { TemplateConfig } from '@/features/template-studio/template-config'
-import type { GetCreateNavigationOutput } from '@/services/get-create-navigation.service'
-import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
+import type {
+	PublishedHtmlTemplate,
+	TemplateConfig,
+} from '@/features/template-customization/domain/template-config'
+import { TemplateStudioProvider } from '@/features/template-customization/hooks/use-template-studio'
+import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import { TemplateCanvas } from './template-canvas'
 import { TemplateSidebar } from './template-sidebar'
 

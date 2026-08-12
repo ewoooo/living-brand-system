@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
+import { templateAssetReferenceGuardHooks } from '@/features/template-core/services/guard-template-references.service'
 import { isManager, managerOrAdmin } from '@/lib/auth'
-import { templateAssetReferenceGuardHooks } from '@/services/guard-template-references.service'
 import { draftVersions } from './shared'
 
 export const ApplicationImages: CollectionConfig = {

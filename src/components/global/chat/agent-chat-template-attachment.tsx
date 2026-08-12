@@ -13,8 +13,17 @@ import {
 } from '@/components/ui/attachment'
 import { Typography } from '@/components/ui/typography'
 import type { AgentTemplateImageAttachment } from '@/features/agent-chat/services/agent-template-request.service'
-import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
-import { composeTemplateHtml } from '@/services/compose-template-html.client'
+import { useExport } from '@/features/studio-export/hooks/use-export'
+import {
+	canExportTemplate,
+	createTemplateExportRequest,
+	type TemplateExportContext,
+	type TemplateExportFormat,
+	type TemplateExportRequest,
+} from '@/features/studio-export/services/export-template'
+import { exportTemplate } from '@/features/studio-export/services/export-template.client'
+import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
+import { createControllerValues } from '@/modules/studio-controller/controller-definition'
 
 const PREVIEW_WIDTH = 280
 
@@ -36,7 +45,7 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 			),
 		[attachment.html, attachment.values],
 	)
-	const { canExport, exporting, exportError, exportTemplate } = useTemplateExport({
+	const exportContext: TemplateExportContext = {
 		fileName: attachment.name,
 		height: attachment.height,
 		html: composedHtml,
@@ -44,21 +53,46 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 		templateId: attachment.templateId,
 		templateVersion: attachment.templateVersion,
 		width: attachment.width,
+		output: attachment.output,
+		controller: {
+			groups: attachment.controller.groups,
+			values: {
+				...createControllerValues(attachment.controller.groups),
+				...Object.fromEntries(
+					Object.entries(attachment.values).flatMap(([nodeId, value]) =>
+						typeof value.text === 'string'
+							? [[`text:${nodeId}`, value.text] as const]
+							: [],
+					),
+				),
+			},
+		},
+	}
+	const output = useExport<TemplateExportRequest>({
+		capability: attachment.output,
+		canExport: (request) => canExportTemplate(request, exportContext),
+		execute: (request) => exportTemplate(request, exportContext),
 	})
+	const request = (format: TemplateExportFormat) =>
+		createTemplateExportRequest(format, attachment.printPpi)
+	const canExport = (format: TemplateExportFormat) => {
+		const candidate = request(format)
+		return Boolean(candidate && output.canExport(candidate))
+	}
+	const run = (format: TemplateExportFormat) => {
+		const candidate = request(format)
+		if (candidate) void output.run(candidate)
+	}
 
 	return (
 		<TemplateAttachmentFrame
 			name={attachment.name}
-			description={
-				attachment.printPpi
-					? `인쇄 출력 ${attachment.printPpi}ppi · TIFF CMYK · PDF CMYK`
-					: '템플릿 이미지'
-			}
-			isExporting={exporting !== null}
-			exportError={exportError}
-			onExport={() => exportTemplate('png')}
-			onExportTiff={canExport('tiff') ? () => exportTemplate('tiff') : undefined}
-			onExportPdf={canExport('pdf') ? () => exportTemplate('pdf') : undefined}
+			description={`${attachment.output.formats.map((format) => format.toUpperCase()).join(' · ')} 출력`}
+			isExporting={output.exporting !== null}
+			exportError={output.error}
+			onExport={canExport('png') ? () => run('png') : undefined}
+			onExportTiff={canExport('tiff') ? () => run('tiff') : undefined}
+			onExportPdf={canExport('pdf') ? () => run('pdf') : undefined}
 		>
 			<ScaledMedia contentWidth={attachment.width}>
 				{(scale) => (
@@ -99,7 +133,7 @@ function TemplateAttachmentFrame({
 	description?: string
 	isExporting: boolean
 	exportError: string | null
-	onExport: () => void
+	onExport?: () => void
 	onExportPdf?: () => void
 	onExportTiff?: () => void
 	children: React.ReactNode
@@ -117,14 +151,16 @@ function TemplateAttachmentFrame({
 				<AttachmentDescription>{description}</AttachmentDescription>
 			</AttachmentContent>
 			<AttachmentActions>
-				<AttachmentAction
-					aria-label="PNG로 다운로드"
-					disabled={isExporting}
-					onClick={onExport}
-					title="PNG로 다운로드"
-				>
-					<Download />
-				</AttachmentAction>
+				{onExport && (
+					<AttachmentAction
+						aria-label="PNG로 다운로드"
+						disabled={isExporting}
+						onClick={onExport}
+						title="PNG로 다운로드"
+					>
+						<Download />
+					</AttachmentAction>
+				)}
 				{onExportTiff && (
 					<AttachmentAction
 						aria-label="CMYK TIFF로 다운로드"

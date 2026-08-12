@@ -1229,6 +1229,13 @@ export interface ImageProfile {
    * Controller가 있는 새 계약에서 비우면 기능을 열지 않습니다. 값과 사용 상태는 참조한 Controller control이 소유합니다.
    */
   features?: (ImageProfileColorAdjustmentFeature | ImageProfileCameraControlFeature)[] | null;
+  /**
+   * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
+   */
+  output?: {
+    allowedFormats?: ('png' | 'jpeg')[] | null;
+    original?: boolean | null;
+  };
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1387,7 +1394,7 @@ export interface GraphicProfile {
   runtime: 'forward-straight' | 'radial-fluted-glass';
   displayOrder: number;
   /**
-   * 비우면 runtime 기본 계약을 사용합니다. 같은 그룹·컨트롤 ID의 options, 범위, 기본값, 사용 상태만 좁힐 수 있습니다.
+   * 비우면 runtime 기본 계약을 사용합니다. 필요한 항목만 입력하면 같은 ID의 options, 범위, 기본값, 사용 상태만 좁힙니다.
    */
   controller?: {
     groups?:
@@ -1396,26 +1403,162 @@ export interface GraphicProfile {
            * 발행 시 Controller Group의 id가 됩니다.
            */
           key: string;
-          title: string;
+          title?: string | null;
           collapsible?: boolean | null;
           defaultOpen?: boolean | null;
           controls?:
             | (
-                | StudioControllerTextControl
-                | StudioControllerToggleControl
-                | StudioControllerSelectControl
-                | StudioControllerColorControl
-                | StudioControllerRangeControl
-                | StudioControllerPadControl
+                | StudioControllerTextPolicy
+                | StudioControllerTogglePolicy
+                | StudioControllerSelectPolicy
+                | StudioControllerColorPolicy
+                | StudioControllerRangePolicy
+                | StudioControllerPadPolicy
               )[]
             | null;
           id?: string | null;
         }[]
       | null;
   };
+  controllerOverride?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
+   */
+  output?: {
+    allowedFormats?: ('svg' | 'mp4')[] | null;
+  };
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerTextPolicy".
+ */
+export interface StudioControllerTextPolicy {
+  /**
+   * 발행 시 Controller Definition의 id가 됩니다. 모든 그룹에서 겹치지 않아야 합니다.
+   */
+  key: string;
+  label?: string | null;
+  availability?: ('enabled' | 'readonly' | 'disabled') | null;
+  defaultValue?: string | null;
+  multiline?: boolean | null;
+  maxLength?: number | null;
+  placeholder?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'text';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerTogglePolicy".
+ */
+export interface StudioControllerTogglePolicy {
+  /**
+   * 발행 시 Controller Definition의 id가 됩니다. 모든 그룹에서 겹치지 않아야 합니다.
+   */
+  key: string;
+  label?: string | null;
+  availability?: ('enabled' | 'readonly' | 'disabled') | null;
+  defaultValue?: boolean | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'toggle';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerSelectPolicy".
+ */
+export interface StudioControllerSelectPolicy {
+  /**
+   * 발행 시 Controller Definition의 id가 됩니다. 모든 그룹에서 겹치지 않아야 합니다.
+   */
+  key: string;
+  label?: string | null;
+  availability?: ('enabled' | 'readonly' | 'disabled') | null;
+  defaultValue?: string | null;
+  options?:
+    | {
+        value: string;
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  placeholder?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'select';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerColorPolicy".
+ */
+export interface StudioControllerColorPolicy {
+  /**
+   * 발행 시 Controller Definition의 id가 됩니다. 모든 그룹에서 겹치지 않아야 합니다.
+   */
+  key: string;
+  label?: string | null;
+  availability?: ('enabled' | 'readonly' | 'disabled') | null;
+  /**
+   * #rrggbb 형식으로 입력합니다.
+   */
+  defaultValue?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'color';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerRangePolicy".
+ */
+export interface StudioControllerRangePolicy {
+  /**
+   * 발행 시 Controller Definition의 id가 됩니다. 모든 그룹에서 겹치지 않아야 합니다.
+   */
+  key: string;
+  label?: string | null;
+  availability?: ('enabled' | 'readonly' | 'disabled') | null;
+  defaultValue?: number | null;
+  min?: number | null;
+  max?: number | null;
+  step?: number | null;
+  display?: {
+    unit?: string | null;
+    precision?: number | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'range';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerPadPolicy".
+ */
+export interface StudioControllerPadPolicy {
+  /**
+   * 발행 시 Controller Definition의 id가 됩니다. 모든 그룹에서 겹치지 않아야 합니다.
+   */
+  key: string;
+  label?: string | null;
+  availability?: ('enabled' | 'readonly' | 'disabled') | null;
+  defaultValue?: {
+    x?: number | null;
+    y?: number | null;
+  };
+  aspectRatio?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'pad';
 }
 /**
  * Studio 이미지 생성 결과와 생성 당시 입력·실행 조건을 보관합니다.
@@ -1496,7 +1639,7 @@ export interface Template {
   name: string;
   description?: string | null;
   /**
-   * 비우면 템플릿 슬롯에서 기본 계약을 만듭니다. 같은 그룹·컨트롤 ID의 options, 범위, 기본값, 사용 상태만 좁힐 수 있습니다.
+   * 비우면 템플릿 슬롯에서 기본 계약을 만듭니다. 필요한 항목만 입력하면 같은 ID의 options, 범위, 기본값, 사용 상태만 좁힙니다.
    */
   controller?: {
     groups?:
@@ -1505,22 +1648,37 @@ export interface Template {
            * 발행 시 Controller Group의 id가 됩니다.
            */
           key: string;
-          title: string;
+          title?: string | null;
           collapsible?: boolean | null;
           defaultOpen?: boolean | null;
           controls?:
             | (
-                | StudioControllerTextControl
-                | StudioControllerToggleControl
-                | StudioControllerSelectControl
-                | StudioControllerColorControl
-                | StudioControllerRangeControl
-                | StudioControllerPadControl
+                | StudioControllerTextPolicy
+                | StudioControllerTogglePolicy
+                | StudioControllerSelectPolicy
+                | StudioControllerColorPolicy
+                | StudioControllerRangePolicy
+                | StudioControllerPadPolicy
               )[]
             | null;
           id?: string | null;
         }[]
       | null;
+  };
+  controllerOverride?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
+   */
+  output?: {
+    allowedFormats?: ('png' | 'tiff' | 'pdf')[] | null;
   };
   sourceUrl?: string | null;
   baseHtml?: string | null;
@@ -2804,6 +2962,12 @@ export interface ImageProfilesSelect<T extends boolean = true> {
         colorAdjustment?: T | ImageProfileColorAdjustmentFeatureSelect<T>;
         cameraControl?: T | ImageProfileCameraControlFeatureSelect<T>;
       };
+  output?:
+    | T
+    | {
+        allowedFormats?: T;
+        original?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2945,19 +3109,123 @@ export interface GraphicProfilesSelect<T extends boolean = true> {
               controls?:
                 | T
                 | {
-                    text?: T | StudioControllerTextControlSelect<T>;
-                    toggle?: T | StudioControllerToggleControlSelect<T>;
-                    select?: T | StudioControllerSelectControlSelect<T>;
-                    color?: T | StudioControllerColorControlSelect<T>;
-                    range?: T | StudioControllerRangeControlSelect<T>;
-                    pad?: T | StudioControllerPadControlSelect<T>;
+                    text?: T | StudioControllerTextPolicySelect<T>;
+                    toggle?: T | StudioControllerTogglePolicySelect<T>;
+                    select?: T | StudioControllerSelectPolicySelect<T>;
+                    color?: T | StudioControllerColorPolicySelect<T>;
+                    range?: T | StudioControllerRangePolicySelect<T>;
+                    pad?: T | StudioControllerPadPolicySelect<T>;
                   };
               id?: T;
             };
       };
+  controllerOverride?: T;
+  output?:
+    | T
+    | {
+        allowedFormats?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerTextPolicy_select".
+ */
+export interface StudioControllerTextPolicySelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  availability?: T;
+  defaultValue?: T;
+  multiline?: T;
+  maxLength?: T;
+  placeholder?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerTogglePolicy_select".
+ */
+export interface StudioControllerTogglePolicySelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  availability?: T;
+  defaultValue?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerSelectPolicy_select".
+ */
+export interface StudioControllerSelectPolicySelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  availability?: T;
+  defaultValue?: T;
+  options?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
+  placeholder?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerColorPolicy_select".
+ */
+export interface StudioControllerColorPolicySelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  availability?: T;
+  defaultValue?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerRangePolicy_select".
+ */
+export interface StudioControllerRangePolicySelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  availability?: T;
+  defaultValue?: T;
+  min?: T;
+  max?: T;
+  step?: T;
+  display?:
+    | T
+    | {
+        unit?: T;
+        precision?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StudioControllerPadPolicy_select".
+ */
+export interface StudioControllerPadPolicySelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  availability?: T;
+  defaultValue?:
+    | T
+    | {
+        x?: T;
+        y?: T;
+      };
+  aspectRatio?: T;
+  id?: T;
+  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3005,15 +3273,21 @@ export interface TemplatesSelect<T extends boolean = true> {
               controls?:
                 | T
                 | {
-                    text?: T | StudioControllerTextControlSelect<T>;
-                    toggle?: T | StudioControllerToggleControlSelect<T>;
-                    select?: T | StudioControllerSelectControlSelect<T>;
-                    color?: T | StudioControllerColorControlSelect<T>;
-                    range?: T | StudioControllerRangeControlSelect<T>;
-                    pad?: T | StudioControllerPadControlSelect<T>;
+                    text?: T | StudioControllerTextPolicySelect<T>;
+                    toggle?: T | StudioControllerTogglePolicySelect<T>;
+                    select?: T | StudioControllerSelectPolicySelect<T>;
+                    color?: T | StudioControllerColorPolicySelect<T>;
+                    range?: T | StudioControllerRangePolicySelect<T>;
+                    pad?: T | StudioControllerPadPolicySelect<T>;
                   };
               id?: T;
             };
+      };
+  controllerOverride?: T;
+  output?:
+    | T
+    | {
+        allowedFormats?: T;
       };
   sourceUrl?: T;
   baseHtml?: T;

@@ -15,7 +15,7 @@ vi.mock('@payloadcms/ui', () => ({
 		getDataByPath: mocks.getDataByPath,
 	}),
 }))
-vi.mock('@/features/generate-image/services/generate-image.client', async (importOriginal) => ({
+vi.mock('@/features/image-generation/services/generate-image.client', async (importOriginal) => ({
 	...(await importOriginal<object>()),
 	requestAdminImageGeneration: mocks.requestAdminImageGeneration,
 }))

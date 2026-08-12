@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { IDENTITY_TRANSFORM, isIdentityTransform } from '@/services/compose-template-html.client'
+import { IDENTITY_TRANSFORM, isIdentityTransform } from '@/lib/template-image-transform'
 import {
 	clampTransform,
 	normalizeAngle,

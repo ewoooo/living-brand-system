@@ -1,12 +1,12 @@
 import { notFound } from 'next/navigation'
 import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
 import { TemplateGenerator } from '@/components/studio/template/template-generator'
-import { listGraphicStudioConfigs } from '@/features/graphic-studio/services/list-graphic-studio-configs.service'
-import { listImageStudioConfigs } from '@/features/image-studio/services/list-image-studio-configs.service'
-import { deriveTemplateConfig } from '@/features/template-studio/template-config'
+import { listGraphicStudioConfigs } from '@/features/graphic-generation/services/list-graphic-studio-configs.service'
+import { listImageStudioConfigs } from '@/features/image-generation/services/list-image-studio-configs.service'
+import { deriveTemplateConfig } from '@/features/template-customization/domain/template-config'
+import { getCreateNavigation } from '@/features/template-customization/services/get-create-navigation.service'
+import { getPublishedTemplate } from '@/features/template-customization/services/get-published-template.service'
 import { authenticateRequest } from '@/lib/request-auth'
-import { getCreateNavigation } from '@/services/get-create-navigation.service'
-import { getPublishedTemplate } from '@/services/get-published-template.service'
 
 export default async function CreateTemplatePage({
 	params,

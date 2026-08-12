@@ -2,13 +2,13 @@ import {
 	findMissingOverrideNodeBlocker,
 	inspectTemplateFragment,
 	type TemplateFragmentInspection,
-} from '@/services/inspect-template-html.service'
-import type { ParsedTemplateNodeConfigs } from '@/services/parse-template-node-configs.service'
+} from '@/features/template-core/domain/inspect-template-html'
+import type { ParsedTemplateNodeConfigs } from '@/features/template-core/domain/parse-template-node-configs'
 import {
 	AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS,
 	type AuthorizedTemplateImageRef,
 	isSafeDraftTemplateAssetUrl,
-} from '@/services/template-asset-policy.service'
+} from '@/features/template-core/domain/template-asset-policy'
 import { findAuthorizedAssetsByIds } from '../repositories/authorized-asset.payload.repository'
 
 interface TemplateSaveCandidate {
