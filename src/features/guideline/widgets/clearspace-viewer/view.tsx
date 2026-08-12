@@ -100,7 +100,7 @@ export function ClearspaceViewerView({ panels }: Props) {
 					return (
 						<span
 							key={p.label}
-							className={`text-xs ${bad ? 'font-semibold text-red-600' : 'text-neutral-500'}`}
+							className={`text-xs ${bad ? 'font-semibold text-destructive' : 'text-muted-foreground'}`}
 						>
 							{p.label} · {h != null ? `${Math.round(h)}px` : '…'}
 							{bad ? ' · 최소크기 미만(금지)' : ''}
@@ -117,11 +117,11 @@ export function ClearspaceViewerView({ panels }: Props) {
 					max={100}
 					value={scale}
 					onChange={(e) => setScale(Number(e.target.value))}
-					className={`w-full ${anyForbidden ? 'accent-red-600' : 'accent-neutral-800'}`}
+					className={`w-full ${anyForbidden ? 'accent-destructive' : 'accent-foreground'}`}
 					aria-label="로고 표시 배율"
 				/>
 				<span
-					className={`w-12 text-right text-xs ${anyForbidden ? 'text-red-600' : 'text-neutral-500'}`}
+					className={`w-12 text-right text-xs ${anyForbidden ? 'text-destructive' : 'text-muted-foreground'}`}
 				>
 					{scale}%
 				</span>
