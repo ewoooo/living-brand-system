@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
 	BRAND_FONT_STACK,
 	LANGUAGES,
@@ -50,27 +51,22 @@ export function TypeLanguageView({
 	return (
 		<div className="flex w-full flex-col gap-3">
 			{layout === 'single' ? (
-				// 선택 상태를 색만으로 구분하지 않는다 — 굵기와 밑줄이 같이 바뀐다(logo-grid-spec과 같은 형태).
-				<div className="flex gap-1">
-					{LANGUAGES.map((option) => {
-						const on = language === option.key
-						return (
-							<button
-								key={option.key}
-								type="button"
-								aria-pressed={on}
-								onClick={() => setLanguage(option.key)}
-								className={`border-b-2 px-3 py-1 font-body text-sm focus-visible:outline-2 ${
-									on
-										? 'border-foreground font-semibold text-foreground'
-										: 'border-transparent font-normal text-muted-foreground hover:bg-muted'
-								}`}
-							>
-								{option.label}
-							</button>
-						)
-					})}
-				</div>
+				// 언어 하나를 고르는 설정 전환이다 — 패널 내비게이션이 아니라 같은 판을 다르게 그린다.
+				// type="single"이면 Radix가 radiogroup/radio로 렌더해 "하나만 고른다"가 AT에도 전달된다.
+				<ToggleGroup
+					type="single"
+					variant="outline"
+					value={language}
+					// 마지막 항목을 다시 눌러 빈 값이 되면 그릴 문단이 없어진다 — 빈 값은 무시한다.
+					onValueChange={(next) => next && setLanguage(next as LanguageKey)}
+					aria-label="본문 언어"
+				>
+					{LANGUAGES.map((option) => (
+						<ToggleGroupItem key={option.key} value={option.key} className="px-3">
+							{option.label}
+						</ToggleGroupItem>
+					))}
+				</ToggleGroup>
 			) : null}
 
 			<div
