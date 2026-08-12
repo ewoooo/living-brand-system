@@ -34,7 +34,7 @@ import {
 	requestPublishedImageProfiles,
 } from '@/features/generate-image/services/generate-image.client'
 import { generateOneText } from '@/features/generate-text/services/generate-text.client'
-import { IDENTITY_TRANSFORM, isIdentityTransform } from '@/services/compose-template-html.client'
+import { IDENTITY_TRANSFORM, isIdentityTransform } from '@/lib/template-image-transform'
 import type { TemplateNodeConfig, TemplateSlotSpec } from '@/types/template'
 import { BrandColorSwatches, usePublishedBrandColors } from './brand-color-swatches'
 import type { ImageTransform } from './image-transform-gestures'

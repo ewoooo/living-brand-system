@@ -1,4 +1,4 @@
-import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/services/compose-template-html.client'
+import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/lib/template-image-transform'
 
 /**
  * 패드 정규 좌표(-1~1)와 compose imageTransform(px) 사이의 변환 —

@@ -7,6 +7,7 @@ import {
 	getImageStudioFeature,
 	getImageStudioFeatureControlIds,
 	IMAGE_STUDIO_CONTROL_IDS,
+	parseImageStudioConfig,
 } from './image-studio-config'
 
 const profile: PublishedImageProfileDefinition = {
@@ -19,6 +20,13 @@ const profile: PublishedImageProfileDefinition = {
 }
 
 describe('deriveImageStudioConfig', () => {
+	it('Image 도메인 계약을 멱등 검증하고 descriptor의 알 수 없는 필드를 거부한다', () => {
+		const config = deriveImageStudioConfig(profile)
+		expect(parseImageStudioConfig(parseImageStudioConfig(config))).toBe(config)
+		expect(() =>
+			parseImageStudioConfig({ ...config, image: { ...config.image, unknown: true } }),
+		).toThrow('알 수 없는')
+	})
 	it('legacy 프로파일을 공통 envelope와 stable control ID로 투영한다', () => {
 		const config = deriveImageStudioConfig(profile)
 		const controls = getImageStudioControls(config)

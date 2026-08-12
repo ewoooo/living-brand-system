@@ -3,10 +3,14 @@ import {
 	type ImageAspectRatio,
 	type ImageOutputSize,
 } from '@/features/generate-image/image-size'
-import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
+import {
+	type GraphicStudioConfig,
+	parseGraphicStudioConfig,
+} from '@/features/graphic-studio/graphic-studio-config'
 import {
 	getImageStudioControls,
 	type ImageStudioConfig,
+	parseImageStudioConfig,
 } from '@/features/image-studio/image-studio-config'
 import type {
 	ControllerControlDefinition,
@@ -23,11 +27,11 @@ import {
 	supportsTemplateExport,
 	type TemplateExportFormat,
 } from '@/features/template-export/services/export-template'
+import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/lib/template-image-transform'
 import {
 	collectTemplateImageSlots,
 	collectTemplateSlots,
 } from '@/services/collect-template-slots.service'
-import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/services/compose-template-html.client'
 import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
 
 const BACKGROUND_TYPE_CONTROL_ID = 'background.type'
@@ -100,6 +104,155 @@ export type TemplateConfig = StudioControllerConfig<'template', number, Template
 			canvas: { width: number; height: number }
 		}
 	}
+}
+
+/** unknown 입력을 공통 Controller와 Template slot/reference/export descriptor까지 검증한다. */
+export function parseTemplateConfig(input: unknown): TemplateConfig {
+	const common = parseStudioControllerConfig(input)
+	const root = templateRecord(input, 'TemplateConfig')
+	assertTemplateKeys(root, [
+		'studio',
+		'id',
+		'version',
+		'name',
+		'output',
+		'controller',
+		'template',
+	])
+	if (common.studio !== 'template')
+		throw new Error('TemplateConfig studio: template이어야 합니다.')
+	if (typeof common.id !== 'number' || !Number.isInteger(common.id)) {
+		throw new Error('TemplateConfig id: 정수여야 합니다.')
+	}
+	if (
+		(common.output.formats as readonly string[]).some(
+			(format) => format !== 'png' && format !== 'tiff' && format !== 'pdf',
+		)
+	) {
+		throw new Error('TemplateConfig output format이 올바르지 않습니다.')
+	}
+
+	const template = templateRecord(root.template, 'TemplateConfig.template')
+	assertTemplateKeys(template, [
+		'slots',
+		'textColorControlId',
+		'imageConfigs',
+		'graphicConfigs',
+		'exportOption',
+	])
+	if (!Array.isArray(template.slots)) throw new Error('TemplateConfig slots는 배열이어야 합니다.')
+	if (!Array.isArray(template.imageConfigs) || !Array.isArray(template.graphicConfigs)) {
+		throw new Error('TemplateConfig 참조 Config는 배열이어야 합니다.')
+	}
+	if (template.textColorControlId !== undefined) {
+		assertTemplateString(template.textColorControlId, 'textColorControlId')
+	}
+	const imageConfigIds = new Set<number>()
+	for (const config of template.imageConfigs) {
+		const parsed = parseImageStudioConfig(config)
+		if (imageConfigIds.has(parsed.id))
+			throw new Error(`TemplateConfig Image Config id가 중복되었습니다: ${parsed.id}`)
+		imageConfigIds.add(parsed.id)
+	}
+	const graphicConfigIds = new Set<string>()
+	for (const config of template.graphicConfigs) {
+		const parsed = parseGraphicStudioConfig(config)
+		if (graphicConfigIds.has(parsed.id))
+			throw new Error(`TemplateConfig Graphic Config id가 중복되었습니다: ${parsed.id}`)
+		graphicConfigIds.add(parsed.id)
+	}
+
+	const slotIds = new Set<string>()
+	for (const value of template.slots) {
+		const slot = templateRecord(value, 'TemplateConfig slot')
+		for (const key of ['id', 'layer', 'label']) assertTemplateString(slot[key], `slot.${key}`)
+		if (slotIds.has(slot.id as string))
+			throw new Error(`TemplateConfig slot id가 중복되었습니다: ${slot.id}`)
+		slotIds.add(slot.id as string)
+		switch (slot.kind) {
+			case 'text': {
+				assertTemplateKeys(slot, ['id', 'layer', 'label', 'kind', 'controlId', 'input'])
+				assertTemplateString(slot.controlId, 'slot.controlId')
+				const textInput = templateRecord(slot.input, 'Template text input')
+				assertTemplateKeys(textInput, ['format', 'maxLines'])
+				if (!['free', 'number', 'email', 'date'].includes(textInput.format as string)) {
+					throw new Error('Template text input format이 올바르지 않습니다.')
+				}
+				if (textInput.maxLines !== undefined)
+					assertPositiveInteger(textInput.maxLines, 'maxLines')
+				break
+			}
+			case 'image': {
+				assertTemplateKeys(slot, [
+					'id',
+					'layer',
+					'label',
+					'kind',
+					'box',
+					'imageConfig',
+					'featureOverrides',
+					'transform',
+				])
+				assertTemplateBox(slot.box)
+				assertTemplateImagePolicy(slot.imageConfig)
+				if (slot.featureOverrides !== undefined) {
+					assertTemplateFeatureOverrides(slot.featureOverrides)
+				}
+				const transform = templateRecord(slot.transform, 'Template transform')
+				assertTemplateKeys(transform, ['enabled', 'limits'])
+				if (typeof transform.enabled !== 'boolean')
+					throw new Error('Template transform enabled가 올바르지 않습니다.')
+				assertTemplateTransformLimits(transform.limits)
+				break
+			}
+			case 'background':
+				assertTemplateKeys(slot, [
+					'id',
+					'layer',
+					'label',
+					'kind',
+					'typeControlId',
+					'colorControlId',
+					'imageConfig',
+				])
+				assertTemplateString(slot.typeControlId, 'slot.typeControlId')
+				assertTemplateString(slot.colorControlId, 'slot.colorControlId')
+				assertTemplateImagePolicy(slot.imageConfig)
+				break
+			default:
+				throw new Error(`지원하지 않는 Template slot입니다: ${String(slot.kind)}`)
+		}
+	}
+
+	const exportOption = templateRecord(template.exportOption, 'TemplateConfig exportOption')
+	assertTemplateKeys(exportOption, ['printPpi', 'canvas'])
+	if (exportOption.printPpi !== undefined) assertPositiveNumber(exportOption.printPpi, 'printPpi')
+	const canvas = templateRecord(exportOption.canvas, 'TemplateConfig canvas')
+	assertTemplateKeys(canvas, ['width', 'height'])
+	assertPositiveNumber(canvas.width, 'canvas.width')
+	assertPositiveNumber(canvas.height, 'canvas.height')
+
+	const typed = input as TemplateConfig
+	const { text, background } = partitionTemplateSlots(typed.template.slots)
+	for (const slot of text) {
+		if (findTemplateControl(typed, slot.controlId)?.kind !== 'text') {
+			throw new Error(`Template text control 참조가 올바르지 않습니다: ${slot.controlId}`)
+		}
+	}
+	if (
+		typed.template.textColorControlId &&
+		findTemplateControl(typed, typed.template.textColorControlId)?.kind !== 'color'
+	) {
+		throw new Error('Template text color control 참조가 올바르지 않습니다.')
+	}
+	if (
+		background &&
+		(findTemplateControl(typed, background.typeControlId)?.kind !== 'select' ||
+			findTemplateControl(typed, background.colorControlId)?.kind !== 'color')
+	) {
+		throw new Error('Template background control 참조가 올바르지 않습니다.')
+	}
+	return typed
 }
 
 export const isTextSlot = (slot: TemplateConfigSlot): slot is TemplateTextSlot =>
@@ -431,6 +584,101 @@ export function deriveTemplateConfig(
 			},
 		},
 	}
-	parseStudioControllerConfig(config)
+	parseTemplateConfig(config)
 	return config
+}
+
+function templateRecord(value: unknown, name: string): Record<string, unknown> {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) {
+		throw new Error(`${name}이 객체가 아닙니다.`)
+	}
+	return value as Record<string, unknown>
+}
+
+function assertTemplateKeys(value: Record<string, unknown>, allowed: readonly string[]) {
+	const allowedKeys = new Set(allowed)
+	for (const key of Object.keys(value)) {
+		if (!allowedKeys.has(key)) {
+			throw new Error(`TemplateConfig에 알 수 없는 필드가 있습니다: ${key}`)
+		}
+	}
+}
+
+function assertTemplateString(value: unknown, name: string) {
+	if (typeof value !== 'string' || value.length === 0) {
+		throw new Error(`TemplateConfig ${name}은 비어 있지 않은 문자열이어야 합니다.`)
+	}
+}
+
+function assertPositiveNumber(value: unknown, name: string) {
+	if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+		throw new Error(`TemplateConfig ${name}은 양수여야 합니다.`)
+	}
+}
+
+function assertFiniteNumber(value: unknown, name: string) {
+	if (typeof value !== 'number' || !Number.isFinite(value)) {
+		throw new Error(`TemplateConfig ${name}은 유한한 숫자여야 합니다.`)
+	}
+}
+
+function assertPositiveInteger(value: unknown, name: string) {
+	assertPositiveNumber(value, name)
+	if (!Number.isInteger(value)) throw new Error(`TemplateConfig ${name}은 정수여야 합니다.`)
+}
+
+function assertTemplateBox(value: unknown) {
+	const box = templateRecord(value, 'TemplateConfig box')
+	assertTemplateKeys(box, ['width', 'height'])
+	if (box.width !== undefined) assertPositiveNumber(box.width, 'box.width')
+	if (box.height !== undefined) assertPositiveNumber(box.height, 'box.height')
+}
+
+function assertTemplateFeatureOverrides(value: unknown) {
+	const overrides = templateRecord(value, 'TemplateConfig featureOverrides')
+	assertTemplateKeys(overrides, ['colorAdjustment'])
+	if (overrides.colorAdjustment === undefined) return
+	const color = templateRecord(overrides.colorAdjustment, 'TemplateConfig colorAdjustment')
+	assertTemplateKeys(color, ['line', 'background'])
+	assertTemplateString(color.line, 'colorAdjustment.line')
+	if (color.background !== undefined) {
+		assertTemplateString(color.background, 'colorAdjustment.background')
+	}
+}
+
+function assertTemplateTransformLimits(value: unknown) {
+	const limits = templateRecord(value, 'TemplateConfig transform limits')
+	assertTemplateKeys(limits, ['translate', 'scale', 'rotate'])
+	for (const key of ['translate', 'scale', 'rotate'] as const) {
+		const range = templateRecord(limits[key], `TemplateConfig transform limits.${key}`)
+		assertTemplateKeys(range, ['min', 'max'])
+		assertFiniteNumber(range.min, `transform limits.${key}.min`)
+		assertFiniteNumber(range.max, `transform limits.${key}.max`)
+		if ((range.min as number) > (range.max as number)) {
+			throw new Error(`TemplateConfig transform limits.${key}의 범위가 올바르지 않습니다.`)
+		}
+	}
+}
+
+function assertTemplateImagePolicy(value: unknown) {
+	const policy = templateRecord(value, 'TemplateConfig image policy')
+	if (policy.mode === 'pinned') {
+		assertTemplateKeys(policy, ['mode', 'configId'])
+		assertPositiveInteger(policy.configId, 'imageConfig.configId')
+		return
+	}
+	if (policy.mode !== 'selectable')
+		throw new Error('TemplateConfig image policy mode가 올바르지 않습니다.')
+	assertTemplateKeys(policy, ['mode', 'allowedConfigIds'])
+	if (policy.allowedConfigIds === undefined) return
+	if (!Array.isArray(policy.allowedConfigIds)) {
+		throw new Error('TemplateConfig allowedConfigIds는 배열이어야 합니다.')
+	}
+	const ids = new Set<number>()
+	for (const id of policy.allowedConfigIds) {
+		assertPositiveInteger(id, 'allowedConfigIds')
+		if (ids.has(id as number))
+			throw new Error('TemplateConfig allowedConfigIds가 중복되었습니다.')
+		ids.add(id as number)
+	}
 }

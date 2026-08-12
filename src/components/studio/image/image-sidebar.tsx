@@ -5,6 +5,7 @@ import type * as React from 'react'
 import { Controller } from '@/components/studio/shared/controller'
 import { ControllerRenderer } from '@/components/studio/shared/controller-renderer'
 import { Button } from '@/components/ui/button'
+import { FieldError } from '@/components/ui/field'
 import { Typography } from '@/components/ui/typography'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/generate-image/image-size'
 import { useImageStudio } from '@/features/image-studio/hooks/use-image-studio'
@@ -13,7 +14,11 @@ import {
 	getImageStudioFeatureControlIds,
 	IMAGE_STUDIO_CONTROL_IDS,
 } from '@/features/image-studio/image-studio-config'
-import type { ControllerControlDefinition } from '@/features/studio-controller/controller-definition'
+import {
+	type ControllerControlDefinition,
+	type ControllerRuntimeBinding,
+	resolveControllerAvailability,
+} from '@/features/studio-controller/controller-definition'
 import { ImageProfileFeatureRenderer } from './image-profile-feature-renderer'
 import { ImageProfilePicker } from './image-profile-picker'
 
@@ -57,12 +62,14 @@ export function ImageSidebar() {
 								<SettingRow
 									icon={<Copy aria-hidden />}
 									definition={batch}
+									binding={controls.bindings[batch.id]}
 									value={String(generation.batch)}
 									onChange={(value) => generation.setBatch(Number(value))}
 								/>
 								<SettingRow
 									icon={<SquareOutline aria-hidden />}
 									definition={ratio}
+									binding={controls.bindings[ratio.id]}
 									value={generation.ratio}
 									onChange={(value) =>
 										generation.setRatio(value as ImageAspectRatio)
@@ -71,6 +78,7 @@ export function ImageSidebar() {
 								<SettingRow
 									icon={<Crop aria-hidden />}
 									definition={resolution}
+									binding={controls.bindings[resolution.id]}
 									value={generation.resolution}
 									onChange={(value) =>
 										generation.setResolution(value as ImageOutputSize)
@@ -170,33 +178,44 @@ type SettingRowProps = {
 	/** 아이콘 라벨 — 접근 가능한 이름은 name이 sr-only로 동반한다(docs/10 §3.6). */
 	icon: React.ReactNode
 	definition: Extract<ControllerControlDefinition, { kind: 'select' }>
+	binding?: ControllerRuntimeBinding
 	value: string
 	onChange: (value: string) => void
 }
 
 /** Setting 푸터의 압축 레이아웃에 Definition의 상태와 선택지를 결합한다. */
-function SettingRow({ icon, definition, value, onChange }: SettingRowProps) {
-	const disabled = definition.availability === 'disabled'
-	const readonly =
-		definition.availability === 'readonly' || (!disabled && definition.options.length <= 1)
+function SettingRow({ icon, definition, binding, value, onChange }: SettingRowProps) {
+	const availability = resolveControllerAvailability(
+		definition.availability,
+		binding?.availability,
+	)
+	const disabled = availability === 'disabled'
+	const readonly = availability === 'readonly' || (!disabled && definition.options.length <= 1)
 
 	return (
-		<Controller.Row
-			label={
-				<>
-					{icon}
-					<span className="sr-only">{definition.label}</span>
-				</>
-			}
-			readonly={readonly}
-			disabled={disabled}
-			className="px-2.5"
-		>
-			{readonly ? (
-				<span className="text-muted-foreground text-sm">{value}</span>
-			) : (
-				<Controller.Select options={definition.options} value={value} onChange={onChange} />
-			)}
-		</Controller.Row>
+		<div className="flex flex-col gap-1">
+			<Controller.Row
+				label={
+					<>
+						{icon}
+						<span className="sr-only">{definition.label}</span>
+					</>
+				}
+				readonly={readonly}
+				disabled={disabled}
+				className="px-2.5"
+			>
+				{readonly ? (
+					<span className="text-muted-foreground text-sm">{value}</span>
+				) : (
+					<Controller.Select
+						options={definition.options}
+						value={value}
+						onChange={onChange}
+					/>
+				)}
+			</Controller.Row>
+			{binding?.error && <FieldError>{binding.error}</FieldError>}
+		</div>
 	)
 }

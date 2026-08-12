@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import {
-	forwardStraightGraphicConfig,
-	renderGraphicStudioSvg,
-} from '@/features/graphic-studio/graphic-studio-runtime'
+import { forwardStraightGraphicConfig } from '@/features/graphic-studio/graphic-studio-manifest'
+import { renderGraphicStudioSvg } from '@/features/graphic-studio/graphic-studio-runtime'
 import { createControllerValues } from '@/features/studio-controller/controller-definition'
 import {
 	FORWARD_STRAIGHT_DEFAULT_INPUT,

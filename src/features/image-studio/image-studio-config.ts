@@ -51,6 +51,66 @@ export type ImageStudioControls = {
 	resolution: ControlOfKind<'select'>
 }
 
+/** unknown 입력을 공통 Controller와 Image descriptor까지 검증한다. */
+export function parseImageStudioConfig(input: unknown): ImageStudioConfig {
+	const common = parseStudioControllerConfig(input)
+	const config = record(input, 'ImageStudioConfig')
+	assertKeys(config, ['studio', 'id', 'version', 'name', 'output', 'controller', 'image'])
+	if (common.studio !== 'image') throw new Error('ImageStudioConfig studio: image여야 합니다.')
+	if (typeof common.id !== 'number' || !Number.isInteger(common.id)) {
+		throw new Error('ImageStudioConfig id: 정수여야 합니다.')
+	}
+	const output = record(config.output, 'ImageStudioConfig.output')
+	assertKeys(output, ['formats', 'original'])
+	if (typeof output.original !== 'boolean') {
+		throw new Error('ImageStudioConfig output.original은 boolean이어야 합니다.')
+	}
+	if (
+		(common.output.formats as readonly string[]).some(
+			(format) => format !== 'png' && format !== 'jpeg',
+		)
+	) {
+		throw new Error('ImageStudioConfig output format이 올바르지 않습니다.')
+	}
+
+	const image = record(config.image, 'ImageStudioConfig.image')
+	assertKeys(image, ['slug', 'features'])
+	if (image.slug !== null && typeof image.slug !== 'string') {
+		throw new Error('ImageStudioConfig image.slug는 문자열 또는 null이어야 합니다.')
+	}
+	if (!Array.isArray(image.features)) {
+		throw new Error('ImageStudioConfig image.features는 배열이어야 합니다.')
+	}
+	const featureTypes = new Set<string>()
+	for (const featureValue of image.features) {
+		const feature = record(featureValue, 'ImageStudioConfig feature')
+		if (feature.type === 'camera-control') {
+			assertKeys(feature, ['type'])
+		} else if (feature.type === 'color-adjustment') {
+			assertKeys(feature, ['type', 'controls'])
+			const controls = record(feature.controls, 'ImageStudioConfig color controls')
+			assertKeys(controls, ['line', 'background'])
+			if (typeof controls.line !== 'string' || controls.line.length === 0) {
+				throw new Error('ImageStudioConfig color line control이 필요합니다.')
+			}
+			if (controls.background !== undefined && typeof controls.background !== 'string') {
+				throw new Error('ImageStudioConfig color background control이 올바르지 않습니다.')
+			}
+		} else {
+			throw new Error(`지원하지 않는 ImageStudioFeature입니다: ${String(feature.type)}`)
+		}
+		if (featureTypes.has(feature.type as string)) {
+			throw new Error(`Image feature type이 중복되었습니다: ${String(feature.type)}`)
+		}
+		featureTypes.add(feature.type as string)
+	}
+
+	const typed = input as ImageStudioConfig
+	getImageStudioControls(typed)
+	getImageColorAdjustmentControls(typed)
+	return typed
+}
+
 /** Image와 Template 생성 경로가 공유하는 prompt 실행 판정이다. */
 export function acceptsImagePromptExecution(
 	control: ControlOfKind<'text'>,
@@ -156,10 +216,7 @@ export function deriveImageStudioConfig(
 		},
 	}
 
-	parseStudioControllerConfig(config)
-	if (typeof config.output.original !== 'boolean') {
-		throw new Error('ImageStudioConfig output.original은 boolean이어야 합니다.')
-	}
+	parseImageStudioConfig(config)
 	assertImageServiceCapability(config, profile.imageModelPreset)
 	return config
 }
@@ -392,6 +449,14 @@ function record(value: unknown, name: string): Record<string, unknown> {
 		throw new Error(`${name}이 객체가 아닙니다.`)
 	}
 	return value as Record<string, unknown>
+}
+
+function assertKeys(value: Record<string, unknown>, allowed: readonly string[]) {
+	const allowedKeys = new Set(allowed)
+	for (const key of Object.keys(value)) {
+		if (!allowedKeys.has(key))
+			throw new Error(`ImageStudioConfig에 알 수 없는 필드가 있습니다: ${key}`)
+	}
 }
 
 function optionalProperty<Key extends string, Value>(key: Key, value: Value | null | undefined) {

@@ -8,7 +8,7 @@ import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-stud
 import {
 	forwardStraightGraphicConfig,
 	radialFlutedGlassGraphicConfig,
-} from '@/features/graphic-studio/graphic-studio-runtime'
+} from '@/features/graphic-studio/graphic-studio-manifest'
 import { GraphicGenerator } from './graphic-generator'
 
 const mocks = vi.hoisted(() => {

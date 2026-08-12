@@ -1,7 +1,4 @@
-import {
-	deriveGraphicStudioConfig,
-	graphicStudioConfigs,
-} from '@/features/graphic-studio/graphic-studio-runtime'
+import { deriveGraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-manifest'
 import { listPublishedGraphicProfileDefinitions } from '@/features/graphic-studio/repositories/graphic-profile.payload.repository'
 
 /**
@@ -13,11 +10,6 @@ export async function listGraphicStudioConfigs(
 	{ svgOnly = false }: { svgOnly?: boolean } = {},
 ) {
 	const profiles = await listPublishedGraphicProfileDefinitions(user)
-	const configured = profiles.map(deriveGraphicStudioConfig)
-	const configuredIds = new Set(configured.map((config) => config.id))
-	const configs = [
-		...configured,
-		...graphicStudioConfigs.filter((config) => !configuredIds.has(config.id)),
-	]
+	const configs = profiles.map(deriveGraphicStudioConfig)
 	return svgOnly ? configs.filter((config) => config.output.formats.includes('svg')) : configs
 }

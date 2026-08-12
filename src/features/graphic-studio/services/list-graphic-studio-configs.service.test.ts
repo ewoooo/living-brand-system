@@ -7,24 +7,23 @@ vi.mock('@/features/graphic-studio/repositories/graphic-profile.payload.reposito
 }))
 
 describe('listGraphicStudioConfigs', () => {
-	it('published override가 있으면 같은 runtime 기본 Config를 대체하고 없으면 fallback한다', async () => {
+	it('published profile만 Effective Config로 노출한다', async () => {
 		vi.mocked(listPublishedGraphicProfileDefinitions).mockResolvedValueOnce([])
-		await expect(listGraphicStudioConfigs({})).resolves.toEqual([
-			expect.objectContaining({ id: 'forward-straight', name: 'Forward Straight' }),
-			expect.objectContaining({ id: 'radial-fluted-glass', name: 'Radial Fluted Glass' }),
-		])
+		await expect(listGraphicStudioConfigs({})).resolves.toEqual([])
 
 		vi.mocked(listPublishedGraphicProfileDefinitions).mockResolvedValueOnce([
 			{ id: 3, name: '브랜드 그래픽', runtime: 'forward-straight' },
 		])
 		await expect(listGraphicStudioConfigs({})).resolves.toEqual([
 			expect.objectContaining({ id: 'forward-straight', name: '브랜드 그래픽' }),
-			expect.objectContaining({ id: 'radial-fluted-glass', name: 'Radial Fluted Glass' }),
 		])
 	})
 
 	it('Template용 목록은 SVG adapter가 없는 Shader runtime을 제외한다', async () => {
-		vi.mocked(listPublishedGraphicProfileDefinitions).mockResolvedValueOnce([])
+		vi.mocked(listPublishedGraphicProfileDefinitions).mockResolvedValueOnce([
+			{ id: 3, name: 'SVG', runtime: 'forward-straight' },
+			{ id: 4, name: 'Shader', runtime: 'radial-fluted-glass' },
+		])
 		await expect(listGraphicStudioConfigs({}, { svgOnly: true })).resolves.toEqual([
 			expect.objectContaining({ id: 'forward-straight' }),
 		])

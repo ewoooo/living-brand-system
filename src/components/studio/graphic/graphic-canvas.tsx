@@ -10,10 +10,9 @@ import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-stud
 import {
 	canRenderGraphicStudioSvg,
 	getGraphicStudioRuntimeBindings,
-	renderGraphicStudioSvg,
 } from '@/features/graphic-studio/graphic-studio-runtime'
 import { useGraphicStudio } from '@/features/graphic-studio/hooks/use-graphic-studio'
-import { downloadBlob } from '@/lib/object-url'
+import { exportGraphicStudioSvg } from '@/features/graphic-studio/services/export-graphic.client'
 
 const canvasByType = {
 	p5: P5Canvas,
@@ -84,13 +83,7 @@ function GraphicPreviewCanvas({
 					canvas.registerOutput(() => {
 						const currentViewport = previewRef.current?.getViewport()
 						if (!currentViewport) return
-						const svg = renderGraphicStudioSvg(
-							config,
-							valuesRef.current,
-							currentViewport,
-						)
-						if (!svg) return
-						downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), `${config.id}.svg`)
+						exportGraphicStudioSvg(config, valuesRef.current, currentViewport)
 					})
 				}
 			} catch (mountError) {

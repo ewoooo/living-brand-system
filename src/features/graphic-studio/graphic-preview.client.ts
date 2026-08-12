@@ -1,7 +1,7 @@
 'use client'
 
 import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
-import type { GraphicRuntimeId } from '@/features/graphic-studio/graphic-studio-runtime'
+import type { GraphicRuntimeId } from '@/features/graphic-studio/graphic-studio-manifest'
 import { forwardStraightPreviewAdapter } from '@/features/graphic-studio/graphics/forward-straight-preview.client'
 import { radialFlutedGlassPreviewAdapter } from '@/features/graphic-studio/graphics/radial-fluted-glass-preview.client'
 import type {

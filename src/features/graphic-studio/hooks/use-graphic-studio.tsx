@@ -9,10 +9,7 @@ import {
 	useRef,
 	useState,
 } from 'react'
-import {
-	type GraphicStudioConfig,
-	parseGraphicStudioConfig,
-} from '@/features/graphic-studio/graphic-studio-config'
+import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
 import { canRenderGraphicStudioSvg } from '@/features/graphic-studio/graphic-studio-runtime'
 import {
 	acceptsControllerDraftValue,
@@ -53,11 +50,10 @@ export function GraphicStudioProvider({
 	config,
 	children,
 }: {
-	config: unknown
+	config: GraphicStudioConfig
 	children: ReactNode
 }) {
-	const parsedConfig = useMemo(() => parseGraphicStudioConfig(config), [config])
-	const groups = parsedConfig.controller.groups
+	const groups = config.controller.groups
 	const [values, setValues] = useState(() => createControllerValues(groups))
 	const [bindings, setBindings] = useState<ControllerRuntimeBindings>({})
 	const [outputReady, setOutputReady] = useState(false)
@@ -97,12 +93,12 @@ export function GraphicStudioProvider({
 		setOutputReady(Boolean(download))
 	}, [])
 	const svgExport = useExport<'svg'>({
-		canExport: () => outputReady && canRenderGraphicStudioSvg(parsedConfig),
+		canExport: () => outputReady && canRenderGraphicStudioSvg(config),
 		execute: () => outputRef.current?.(),
 	})
 	const contextValue = useMemo<GraphicStudioValue>(
 		() => ({
-			config: parsedConfig,
+			config,
 			controls: { values, bindings, update, registerBindings },
 			canvas: { registerOutput },
 			output: {
@@ -114,7 +110,7 @@ export function GraphicStudioProvider({
 		}),
 		[
 			bindings,
-			parsedConfig,
+			config,
 			registerBindings,
 			registerOutput,
 			svgExport.canExport,

@@ -6,7 +6,7 @@ import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-stud
 import {
 	forwardStraightGraphicConfig,
 	graphicStudioConfigs,
-} from '@/features/graphic-studio/graphic-studio-runtime'
+} from '@/features/graphic-studio/graphic-studio-manifest'
 import type { ImageStudioConfig } from '@/features/image-studio/image-studio-config'
 import {
 	TemplateStudioProvider,
@@ -1051,7 +1051,7 @@ function createImageConfig(
 							kind: 'text',
 							label: 'Prompt',
 							defaultValue: promptDefault,
-							availability: promptAvailability,
+							...(promptAvailability ? { availability: promptAvailability } : {}),
 							multiline: true,
 							maxLength: 250,
 							placeholder: '이미지를 설명하세요',

@@ -70,6 +70,8 @@ type ImageStudioValue = {
 	results: {
 		/** 직전 요청이 만든 결과 — 프로파일을 교체해도 유지된다(사용자가 만든 산출물). */
 		result: ImageGenerationResult | null
+		/** 결과와 현재 프로파일이 같을 때만 적용할 색. 다른 프로파일의 기능은 소급하지 않는다. */
+		color: ImageColorAdjustment | null
 		/** 요청한 장수 — 생성 중 자리표시자 개수. */
 		requested: number
 		selected: number | null
@@ -144,23 +146,30 @@ export function ImageStudioProvider({
 					...(typeof backgroundColor === 'string' ? { background: backgroundColor } : {}),
 				}
 			: null
-	const canDownload = colorValue
-		? config.output.formats.includes('png')
-		: config.output.original || config.output.formats.includes('png')
+	const resultConfig = configs.find((candidate) => candidate.id === result?.profileId)
+	const resultColor = resultConfig?.id === config.id ? colorValue : null
+	const resultOutput = resultConfig?.output
+	const canDownload = Boolean(
+		resultOutput &&
+			(resultColor
+				? resultOutput.formats.includes('png')
+				: resultOutput.original || resultOutput.formats.includes('png')),
+	)
 	const imageExport = useExport<ImageExportAction>({
 		canExport: () => canDownload,
 		execute: async (action) => {
+			if (!resultOutput) return
 			if (action === 'selected') {
 				const src = selected === null ? undefined : result?.images[selected]
 				if (src && selected !== null) {
-					await downloadImage(src, selected, colorValue, config.output)
+					await downloadImage(src, selected, resultColor, resultOutput)
 				}
 				return
 			}
 
 			// ponytail: 저장을 연달아 낸다 — 장수가 늘어 브라우저가 막으면 zip으로 올린다.
 			for (const [index, src] of (result?.images ?? []).entries()) {
-				await downloadImage(src, index, colorValue, config.output)
+				await downloadImage(src, index, resultColor, resultOutput)
 			}
 		},
 	})
@@ -246,7 +255,7 @@ export function ImageStudioProvider({
 				})
 			},
 		},
-		results: { result, requested, selected, select: setSelected },
+		results: { result, color: resultColor, requested, selected, select: setSelected },
 		download: {
 			available: canDownload,
 			busy: imageExport.exporting !== null,

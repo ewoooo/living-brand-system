@@ -1,10 +1,10 @@
+import { toBlob } from 'html-to-image'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { exportHtmlToPng } from '@/features/template-export/services/export-template-png.client'
+import { downloadBlob } from '@/lib/object-url'
 import { downloadImage } from './download-image'
 
-vi.mock('@/features/template-export/services/export-template-png.client', () => ({
-	exportHtmlToPng: vi.fn(),
-}))
+vi.mock('html-to-image', () => ({ toBlob: vi.fn() }))
+vi.mock('@/lib/object-url', () => ({ downloadBlob: vi.fn() }))
 
 const SRC = '/api/generated-images/file/line.png'
 
@@ -24,6 +24,7 @@ class StubImage {
 describe('downloadImage', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
+		vi.mocked(toBlob).mockResolvedValue(new Blob())
 		vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 		vi.stubGlobal('Image', StubImage)
 	})
@@ -36,7 +37,7 @@ describe('downloadImage', () => {
 	it('색이 없으면 원본을 앵커 클릭으로 그대로 내려준다', async () => {
 		await downloadImage(SRC, 0, null, { formats: ['png'], original: true })
 
-		expect(exportHtmlToPng).not.toHaveBeenCalled()
+		expect(toBlob).not.toHaveBeenCalled()
 		expect(HTMLAnchorElement.prototype.click).toHaveBeenCalledTimes(1)
 	})
 
@@ -44,17 +45,17 @@ describe('downloadImage', () => {
 		await downloadImage(SRC, 1, { line: '#000dff' }, { formats: ['png'], original: true })
 
 		expect(HTMLAnchorElement.prototype.click).not.toHaveBeenCalled()
-		const [html, name] = vi.mocked(exportHtmlToPng).mock.calls[0] ?? []
-		expect(name).toBe('hd-image-2')
+		const stage = vi.mocked(toBlob).mock.calls[0]?.[0] as HTMLElement
+		expect(downloadBlob).toHaveBeenCalledWith(expect.any(Blob), 'hd-image-2.png')
 		// 해상도를 화면 썸네일이 아니라 이미지의 자연 크기에서 가져온다.
-		expect(html).toContain('width:2048px;height:3072px')
-		// 프리뷰와 같은 계산을 직렬화한 것이므로 kebab-case 선언이 그대로 실린다.
-		expect(html).toContain('mask-composite:subtract')
-		expect(html).toContain(`url('${SRC}')`)
+		expect(stage.style.width).toBe('2048px')
+		expect(stage.style.height).toBe('3072px')
+		const overlay = stage.firstElementChild as HTMLElement
+		expect(overlay.style.maskComposite).toBe('subtract')
+		expect(overlay.style.maskImage).toContain(SRC)
 	})
 
-	// 회귀: mask url을 겹따옴표로 감싸면 style="..." 속성이 거기서 끊겨 선언 전체가 사라진다.
-	it('구운 HTML의 색 선언이 style 속성 파싱을 통과한다', async () => {
+	it('색 선언을 문자열 HTML 재파싱 없이 DOM stage에 적용한다', async () => {
 		await downloadImage(
 			SRC,
 			0,
@@ -62,10 +63,7 @@ describe('downloadImage', () => {
 			{ formats: ['png'], original: true },
 		)
 
-		const [html] = vi.mocked(exportHtmlToPng).mock.calls[0] ?? []
-		const parsed = document.createElement('template')
-		parsed.innerHTML = html ?? ''
-		const stage = parsed.content.firstElementChild as HTMLElement
+		const stage = vi.mocked(toBlob).mock.calls[0]?.[0] as HTMLElement
 		const overlay = stage.firstElementChild as HTMLElement
 		expect(stage.style.backgroundColor).toBe('rgb(0, 13, 255)')
 		expect(overlay.style.maskImage).toContain(SRC)
@@ -77,6 +75,7 @@ describe('downloadImage', () => {
 			'PNG output is unavailable.',
 		)
 		expect(HTMLAnchorElement.prototype.click).not.toHaveBeenCalled()
-		expect(exportHtmlToPng).not.toHaveBeenCalled()
+		expect(toBlob).not.toHaveBeenCalled()
+		expect(downloadBlob).not.toHaveBeenCalled()
 	})
 })

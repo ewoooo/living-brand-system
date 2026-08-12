@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/generate-image/image-size'
 import {
@@ -11,6 +11,10 @@ import type {
 	ControllerControlDefinition,
 } from '@/features/studio-controller/controller-definition'
 import { ImageStudioProvider, useImageStudio } from './use-image-studio'
+
+vi.mock('@/features/image-studio/download-image', () => ({ downloadImage: vi.fn() }))
+
+import { downloadImage } from '@/features/image-studio/download-image'
 
 vi.mock('@/features/generate-image/hooks/use-image-generation', () => ({
 	useImageGeneration: () => ({
@@ -125,6 +129,7 @@ function Probe() {
 		camera,
 		results,
 		profiles,
+		download,
 	} = useImageStudio()
 	return (
 		<div>
@@ -142,6 +147,9 @@ function Probe() {
 					: '색 없음'}
 			</output>
 			<output data-testid="camera-seed">{camera.seedImage ?? '대상 없음'}</output>
+			<output data-testid="result-color">
+				{results.color ? results.color.line : '결과 색 없음'}
+			</output>
 			<button type="button" onClick={() => color.update({ line: '#ff0000' })}>
 				라인 색 변경
 			</button>
@@ -159,6 +167,9 @@ function Probe() {
 			</button>
 			<button type="button" onClick={() => profiles.select(7)}>
 				교체
+			</button>
+			<button type="button" onClick={download.selected}>
+				결과 저장
 			</button>
 		</div>
 	)
@@ -257,6 +268,24 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 
 		expect(screen.getByTestId('state')).toHaveTextContent('결과 있음')
 		expect(screen.getByTestId('camera-seed')).toHaveTextContent('대상 없음')
+	})
+
+	it('이전 결과에 새 프로파일의 색·출력 capability를 소급하지 않는다', async () => {
+		const source = config(5, { colorAdjustment: { line: '#000dff' } })
+		const next = {
+			...config(7, { colorAdjustment: { line: '#ff0000' } }),
+			output: { formats: [] as const, original: false },
+		}
+		renderStudio([source, next])
+
+		expect(screen.getByTestId('result-color')).toHaveTextContent('#000dff')
+		fireEvent.click(screen.getByRole('button', { name: '교체' }))
+		expect(screen.getByTestId('result-color')).toHaveTextContent('결과 색 없음')
+		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
+
+		await waitFor(() =>
+			expect(downloadImage).toHaveBeenCalledWith('blob:1', 0, null, source.output),
+		)
 	})
 
 	it('새 maxLength를 넘는 enabled 프롬프트는 자르지 않고 오류로 생성만 막는다', () => {

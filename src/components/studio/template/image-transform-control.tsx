@@ -6,8 +6,8 @@ import {
 	type ImageTransformValue,
 	toImageEditTransform,
 } from '@/features/template-studio/image-edit-transform'
+import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/lib/template-image-transform'
 import { cn } from '@/lib/utils'
-import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/services/compose-template-html.client'
 
 // 값 계약과 환산은 features가 소유한다 — 기존 소비자·테스트의 import 경로를 유지하는 재export.
 export { IMAGE_TRANSFORM_DEFAULT, type ImageTransformValue, toImageEditTransform }

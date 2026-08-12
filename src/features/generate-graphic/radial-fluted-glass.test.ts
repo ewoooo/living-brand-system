@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { radialFlutedGlassGraphicConfig } from '@/features/graphic-studio/graphic-studio-runtime'
+import { radialFlutedGlassGraphicConfig } from '@/features/graphic-studio/graphic-studio-manifest'
 import { createControllerValues } from '@/features/studio-controller/controller-definition'
 import {
 	RADIAL_FLUTED_GLASS_DEFAULT_INPUT,

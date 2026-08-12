@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { forwardStraightGraphicConfig } from '@/features/graphic-studio/graphic-studio-runtime'
+import { forwardStraightGraphicConfig } from '@/features/graphic-studio/graphic-studio-manifest'
 import type { ImageStudioConfig } from '@/features/image-studio/image-studio-config'
 import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
 import {
@@ -9,6 +9,7 @@ import {
 	isImageSlot,
 	isTextSlot,
 	listCompatibleTemplateImageConfigs,
+	parseTemplateConfig,
 	resolveTemplateImageConfig,
 } from './template-config'
 
@@ -34,6 +35,43 @@ const template: PublishedHtmlTemplate = {
 const imageConfig = createImageConfig(3, ['1:1', '4:3'])
 
 describe('deriveTemplateConfig', () => {
+	it('Template 도메인 계약을 멱등 검증하고 slot의 알 수 없는 필드를 거부한다', () => {
+		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightGraphicConfig])
+		expect(parseTemplateConfig(parseTemplateConfig(config))).toBe(config)
+		expect(() =>
+			parseTemplateConfig({
+				...config,
+				template: {
+					...config.template,
+					slots: config.template.slots.map((slot, index) =>
+						index === 0 ? { ...slot, unknown: true } : slot,
+					),
+				},
+			}),
+		).toThrow('알 수 없는')
+		const imageSlot = config.template.slots.find(isImageSlot)
+		expect(imageSlot).toBeDefined()
+		if (!imageSlot) return
+		expect(() =>
+			parseTemplateConfig({
+				...config,
+				template: {
+					...config.template,
+					slots: config.template.slots.map((slot) =>
+						slot.id === imageSlot.id
+							? {
+									...slot,
+									featureOverrides: {
+										colorAdjustment: { line: '#112233', unknown: true },
+									},
+								}
+							: slot,
+					),
+				},
+			}),
+		).toThrow('알 수 없는')
+	})
+
 	it('공통 envelope에는 전역 Definition, Template 확장에는 DOM·슬롯 binding을 둔다', () => {
 		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightGraphicConfig])
 

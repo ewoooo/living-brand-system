@@ -1,5 +1,6 @@
 'use client'
 
+import { formatImageEditTransform, isIdentityTransform } from '@/lib/template-image-transform'
 import type { TemplateNodeConfig, TemplateNodeConfigMap } from '@/types/template'
 
 /**
@@ -7,33 +8,7 @@ import type { TemplateNodeConfig, TemplateNodeConfigMap } from '@/types/template
  * 피드백이 같은 포맷을 써야 오버레이가 캐리어 inline transform에서 커밋된 편집 prefix를
  * 결정적으로 벗겨내 base transform을 복원할 수 있다.
  */
-export function formatImageEditTransform(
-	edit: NonNullable<TemplateNodeConfig['imageTransform']>,
-): string {
-	return `translate(${edit.x}px, ${edit.y}px) scale(${edit.scale}) rotate(${edit.rotate}deg)`
-}
-
-export const IDENTITY_TRANSFORM: NonNullable<TemplateNodeConfig['imageTransform']> = {
-	x: 0,
-	y: 0,
-	scale: 1,
-	rotate: 0,
-}
-
-/** 편집 transform의 값 영역 — 어드민 제스처·스튜디오 컨트롤이 같은 범위를 소비한다(한쪽만 바꾸면 갈라진다). */
-export const IMAGE_EDIT_TRANSFORM_LIMITS = {
-	translate: { min: -1000, max: 1000 },
-	scale: { min: 0.2, max: 5 },
-	rotate: { min: -180, max: 180 },
-} as const
-
-/**
- * 편집 transform의 identity 판정 — formatImageEditTransform과 짝 계약. compose는 identity면
- * transform을 아예 쓰지 않으므로, 오버레이가 캐리어 inline transform에서 커밋된 편집 prefix를
- * 벗겨내는 로직은 이 판정과 compose의 기록 여부가 일치하는 데 의존한다.
- */
-export const isIdentityTransform = (t: NonNullable<TemplateNodeConfig['imageTransform']>) =>
-	t.x === 0 && t.y === 0 && t.scale === 1 && t.rotate === 0
+export { formatImageEditTransform, isIdentityTransform } from '@/lib/template-image-transform'
 
 /** 래스터 img를 같은 속성(alt·src 제외)의 div로 치환한다 — mask·배경 재구성은 img 콘텐츠에 못 얹는다. */
 function replaceImageWithDiv(doc: Document, image: HTMLImageElement): HTMLElement {

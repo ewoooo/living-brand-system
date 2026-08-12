@@ -2,11 +2,11 @@
 
 import { type RefObject, useCallback, useEffect, useRef, useState } from 'react'
 import {
-	findImageCarrier,
 	formatImageEditTransform,
 	IDENTITY_TRANSFORM,
 	isIdentityTransform,
-} from '@/services/compose-template-html.client'
+} from '@/lib/template-image-transform'
+import { findImageCarrier } from '@/services/compose-template-html.client'
 import {
 	type ImageTransform,
 	type Point,

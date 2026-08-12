@@ -1,9 +1,10 @@
+import { toBlob } from 'html-to-image'
 import type { CSSProperties } from 'react'
 import {
 	type ImageColorAdjustment,
 	imageColorizeStyle,
 } from '@/features/image-studio/image-colorize'
-import { exportHtmlToPng } from '@/features/template-export/services/export-template-png.client'
+import { downloadBlob } from '@/lib/object-url'
 import type { ImageStudioConfig } from './image-studio-config'
 
 /**
@@ -36,35 +37,55 @@ export async function downloadImage(
 
 	// 스테이지를 이미지의 자연 크기로 잡는다 — 화면 썸네일 크기로 캡처하면 해상도를 잃는다.
 	const { naturalHeight, naturalWidth } = await loadImage(src)
-	await exportHtmlToPng(
-		color
-			? colorizedImageHtml(src, color, naturalWidth, naturalHeight)
-			: `<img id="__stage" src="${src}" width="${naturalWidth}" height="${naturalHeight}">`,
-		name,
-	)
+	const holder = document.createElement('div')
+	holder.style.cssText = 'position:fixed;left:-99999px;top:0'
+	const stage = createImageExportStage(src, color, naturalWidth, naturalHeight)
+	holder.appendChild(stage)
+	document.body.appendChild(holder)
+	try {
+		const blob = await toBlob(stage, {
+			cacheBust: true,
+			canvasHeight: naturalHeight,
+			canvasWidth: naturalWidth,
+			pixelRatio: 1,
+		})
+		if (!blob) throw new Error('PNG rendering failed.')
+		downloadBlob(blob, `${name}.png`)
+	} finally {
+		holder.remove()
+	}
 }
 
-/** 프리뷰와 같은 색 계산을 export stage가 읽는 인라인 style HTML로 옮긴다. */
-function colorizedImageHtml(
+/** 프리뷰와 같은 색 계산을 안전하게 만든 DOM stage에 그대로 적용한다. */
+function createImageExportStage(
 	src: string,
-	color: ImageColorAdjustment,
+	color: ImageColorAdjustment | null | undefined,
 	width: number,
 	height: number,
-): string {
+): HTMLElement {
+	if (!color) {
+		const image = document.createElement('img')
+		image.id = '__stage'
+		image.src = src
+		image.width = width
+		image.height = height
+		return image
+	}
 	const { base, overlay } = imageColorizeStyle(src, color)
-	const stage = `position:relative;width:${width}px;height:${height}px;${inlineStyle(base)}`
-	const layer = `position:absolute;left:0;top:0;width:100%;height:100%;${inlineStyle(overlay)}`
-	return `<div id="__stage" style="${stage}"><div style="${layer}"></div></div>`
-}
-
-function inlineStyle(style: CSSProperties): string {
-	return Object.entries(style)
-		.map(([property, value]) => `${kebabCase(property)}:${value};`)
-		.join('')
-}
-
-function kebabCase(property: string): string {
-	return property.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+	const stage = document.createElement('div')
+	stage.id = '__stage'
+	Object.assign(stage.style, base, {
+		position: 'relative',
+		width: `${width}px`,
+		height: `${height}px`,
+	} satisfies CSSProperties)
+	const layer = document.createElement('div')
+	Object.assign(layer.style, overlay, {
+		position: 'absolute',
+		inset: '0',
+	} satisfies CSSProperties)
+	stage.appendChild(layer)
+	return stage
 }
 
 /** 자연 크기를 알려면 이미지가 먼저 로드돼야 한다 — 브라우저 리소스 I/O는 이 함수만 한다. */
