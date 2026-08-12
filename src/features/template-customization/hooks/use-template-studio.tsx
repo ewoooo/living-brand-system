@@ -28,7 +28,7 @@ import {
 	type TemplateExportContext,
 	type TemplateExportRequest,
 } from '@/features/studio-export/services/export-template'
-import { exportTemplate } from '@/features/studio-export/services/export-template.client'
+import { createTemplateExportSource } from '@/features/studio-export/services/export-template.client'
 import type { ImageTransformValue } from '@/features/template-customization/domain/image-edit-transform'
 import {
 	findTemplateControl,
@@ -376,7 +376,7 @@ export function TemplateStudioProvider({
 	const templateExport = useExport<TemplateExportRequest>({
 		capability: config.output,
 		canExport: (request) => canExportTemplate(request, exportContext),
-		execute: (request) => exportTemplate(request, exportContext),
+		source: createTemplateExportSource(exportContext),
 	})
 
 	const value: TemplateStudioValue = {

@@ -2,6 +2,7 @@
 
 import { htmlToPng } from '../adapters/html-to-png.client'
 import type { ExportResult } from '../export-contract'
+import type { StudioExportSource } from './execute-studio-export'
 import {
 	canExportTemplate,
 	type TemplateExportContext,
@@ -13,6 +14,19 @@ const EXPORT_ERROR_MESSAGES: Record<TemplateExportRequest['format'], string> = {
 	png: 'PNG 내보내기에 실패했습니다. 이미지 원본 접근(CORS)이 막혀 있을 수 있습니다.',
 	pdf: 'PDF 파일을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.',
 	tiff: 'TIFF 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.',
+}
+
+/** Template canonical HTML과 print identity를 공통 export 실행 port에 결합한다. */
+export function createTemplateExportSource(
+	context: TemplateExportContext,
+): StudioExportSource<TemplateExportRequest> {
+	return {
+		raster: { png: (request) => exportTemplate(request, context) },
+		print: {
+			tiff: (request) => exportTemplate(request, context),
+			pdf: (request) => exportTemplate(request, context),
+		},
+	}
 }
 
 /**

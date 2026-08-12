@@ -9,12 +9,7 @@ import {
 	type GraphicPreview,
 	getGraphicPreviewAdapter,
 } from '@/features/graphic-generation/runtime/client/graphic-preview.client'
-import {
-	canRenderGraphicStudioSvg,
-	getGraphicStudioRuntimeBindings,
-} from '@/features/graphic-generation/runtime/graphic-studio-runtime'
-import { exportGraphicStudioSvg } from '@/features/graphic-generation/services/export-graphic.client'
-import { exportGraphicStudioVideo } from '@/features/graphic-generation/services/export-graphic-video.client'
+import { getGraphicStudioRuntimeBindings } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 
 const canvasByType = {
 	p5: P5Canvas,
@@ -84,26 +79,7 @@ function GraphicPreviewCanvas({
 				previewRef.current = mounted
 				const viewport = mounted.getViewport()
 				controls.registerBindings(getGraphicStudioRuntimeBindings(config, viewport))
-				if (canRenderGraphicStudioSvg(config) || mounted.video) {
-					canvas.registerOutput((request) => {
-						switch (request.format) {
-							case 'svg':
-								if (!canRenderGraphicStudioSvg(config)) {
-									throw new Error('SVG export is unavailable.')
-								}
-								return exportGraphicStudioSvg(config, valuesRef.current, request)
-							case 'mp4': {
-								const video = previewRef.current?.video
-								if (!video) throw new Error('MP4 export is unavailable.')
-								return exportGraphicStudioVideo(config, request, video)
-							}
-							default:
-								throw new Error(
-									`${request.format.toUpperCase()} export is unavailable.`,
-								)
-						}
-					}, viewport)
-				}
+				canvas.registerSource({ video: mounted.video }, viewport)
 			} catch (mountError) {
 				console.error(mountError)
 				if (!disposed) setError('그래픽 미리보기를 불러오지 못했습니다.')
@@ -115,10 +91,10 @@ function GraphicPreviewCanvas({
 			disposed = true
 			preview?.destroy()
 			previewRef.current = null
-			canvas.registerOutput(null)
+			canvas.registerSource(null)
 			controls.registerBindings({})
 		}
-	}, [adapter, canvas.registerOutput, config, controls.registerBindings, controls.update])
+	}, [adapter, canvas.registerSource, config, controls.registerBindings, controls.update])
 
 	useEffect(() => {
 		const stage = stageRef.current

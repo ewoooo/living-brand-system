@@ -10,14 +10,21 @@ import {
 	useState,
 } from 'react'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import type { GraphicPreview } from '@/features/graphic-generation/runtime/client/graphic-preview.client'
+import { canRenderGraphicStudioSvg } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
+import { exportGraphicStudioSvg } from '@/features/graphic-generation/services/export-graphic.client'
+import { exportGraphicStudioVideo } from '@/features/graphic-generation/services/export-graphic-video.client'
 import type {
 	ExportRequest,
-	ExportResult,
 	RgbColorProfile,
 	StudioOutputFormat,
 	VideoExportSpec,
 } from '@/features/studio-export/export-contract'
 import { useExport } from '@/features/studio-export/hooks/use-export'
+import {
+	type StudioExportSource,
+	supportsStudioExportSource,
+} from '@/features/studio-export/services/execute-studio-export'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlValue,
@@ -28,6 +35,8 @@ import {
 } from '@/modules/studio-controller/controller-definition'
 
 type GraphicOutputSize = { width: number; height: number }
+type GraphicExportRequest = Extract<ExportRequest, { format: 'svg' | 'mp4' }>
+type GraphicRuntimeSource = { video?: NonNullable<GraphicPreview['video']> }
 
 export type GraphicOutputDraft =
 	| {
@@ -61,10 +70,7 @@ type GraphicStudioValue = {
 		registerBindings: (bindings: ControllerRuntimeBindings) => void
 	}
 	canvas: {
-		registerOutput: (
-			render: ((request: ExportRequest) => ExportResult | Promise<ExportResult>) | null,
-			viewport?: GraphicOutputSize,
-		) => void
+		registerSource: (source: GraphicRuntimeSource | null, viewport?: GraphicOutputSize) => void
 	}
 	output: {
 		draft: GraphicOutputDraft | null
@@ -102,14 +108,11 @@ export function GraphicStudioProvider({
 	const groups = config.controller.groups
 	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
 	const [bindings, setBindings] = useState<ControllerRuntimeBindings>({})
-	const [outputReady, setOutputReady] = useState(false)
+	const [runtimeSource, setRuntimeSource] = useState<GraphicRuntimeSource | null>(null)
 	const [viewport, setViewport] = useState<GraphicOutputSize | null>(null)
 	const [outputDraft, setOutputDraft] = useState<GraphicOutputDraft | null>(() =>
 		createGraphicOutputDraft(initial),
 	)
-	const outputRef = useRef<
-		((request: ExportRequest) => ExportResult | Promise<ExportResult>) | null
-	>(null)
 	const bindingsRef = useRef<ControllerRuntimeBindings>({})
 	const definitions = useMemo(
 		() =>
@@ -148,13 +151,9 @@ export function GraphicStudioProvider({
 		[definitions],
 	)
 
-	const registerOutput = useCallback(
-		(
-			render: ((request: ExportRequest) => ExportResult | Promise<ExportResult>) | null,
-			nextViewport?: GraphicOutputSize,
-		) => {
-			outputRef.current = render
-			setOutputReady(Boolean(render))
+	const registerSource = useCallback(
+		(source: GraphicRuntimeSource | null, nextViewport?: GraphicOutputSize) => {
+			setRuntimeSource(source)
 			if (nextViewport) {
 				const size = normalizeOutputSize(nextViewport)
 				setViewport(size)
@@ -172,9 +171,8 @@ export function GraphicStudioProvider({
 			const next = configs.find((item) => item.id === nextProfileId)
 			if (!next || next.id === profileId) return
 			bindingsRef.current = {}
-			outputRef.current = null
+			setRuntimeSource(null)
 			setBindings({})
-			setOutputReady(false)
 			setViewport(null)
 			setOutputDraft(createGraphicOutputDraft(next))
 			setValues(createControllerValues(next.controller.groups))
@@ -224,14 +222,20 @@ export function GraphicStudioProvider({
 		},
 		[config.output.video],
 	)
-	const graphicExport = useExport<ExportRequest>({
+	const exportSource = useMemo<StudioExportSource<GraphicExportRequest>>(() => {
+		const video = runtimeSource?.video
+		return {
+			vector: canRenderGraphicStudioSvg(config)
+				? { svg: (request) => exportGraphicStudioSvg(config, values, request) }
+				: undefined,
+			video: video
+				? { mp4: (request) => exportGraphicStudioVideo(config, request, video) }
+				: undefined,
+		}
+	}, [config, runtimeSource, values])
+	const graphicExport = useExport<GraphicExportRequest>({
 		capability: config.output,
-		canExport: () => outputReady,
-		execute: (request) => {
-			const render = outputRef.current
-			if (!render) throw new Error(`${request.format.toUpperCase()} export is unavailable.`)
-			return render(request)
-		},
+		source: exportSource,
 	})
 	const exportRequest = createGraphicExportRequest(config, outputDraft)
 	const contextValue = useMemo<GraphicStudioValue>(
@@ -239,10 +243,12 @@ export function GraphicStudioProvider({
 			profiles: { options: configs, select: selectProfile },
 			config,
 			controls: { values, bindings, update, registerBindings },
-			canvas: { registerOutput },
+			canvas: { registerSource },
 			output: {
 				draft: outputDraft,
-				canExport: Boolean(exportRequest && outputReady),
+				canExport: Boolean(
+					exportRequest && supportsStudioExportSource(exportSource, exportRequest),
+				),
 				busy: graphicExport.exporting !== null,
 				error: graphicExport.error,
 				setFormat,
@@ -259,14 +265,14 @@ export function GraphicStudioProvider({
 			config,
 			configs,
 			registerBindings,
-			registerOutput,
+			registerSource,
 			selectProfile,
 			graphicExport.error,
 			graphicExport.exporting,
 			graphicExport.run,
 			exportRequest,
+			exportSource,
 			outputDraft,
-			outputReady,
 			setDuration,
 			setFormat,
 			setFps,
@@ -319,7 +325,7 @@ function createGraphicOutputDraft(
 function createGraphicExportRequest(
 	config: GraphicStudioConfig,
 	draft: GraphicOutputDraft | null,
-): ExportRequest | null {
+): GraphicExportRequest | null {
 	if (!draft) return null
 	if (draft.format === 'svg') {
 		if (draft.width === null || draft.height === null) return null
@@ -348,7 +354,6 @@ function createGraphicExportRequest(
 	}
 	return null
 }
-
 function normalizeOutputSize(size: GraphicOutputSize): GraphicOutputSize {
 	return {
 		width: Math.max(1, Math.round(size.width)),

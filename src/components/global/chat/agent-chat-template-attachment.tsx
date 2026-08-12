@@ -21,7 +21,7 @@ import {
 	type TemplateExportContext,
 	type TemplateExportRequest,
 } from '@/features/studio-export/services/export-template'
-import { exportTemplate } from '@/features/studio-export/services/export-template.client'
+import { createTemplateExportSource } from '@/features/studio-export/services/export-template.client'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import { createControllerValues } from '@/modules/studio-controller/controller-definition'
 
@@ -71,7 +71,7 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 	const output = useExport<TemplateExportRequest>({
 		capability: attachment.output,
 		canExport: (request) => canExportTemplate(request, exportContext),
-		execute: (request) => exportTemplate(request, exportContext),
+		source: createTemplateExportSource(exportContext),
 	})
 	const request = (format: StudioOutputFormat) =>
 		createTemplateExportRequest(format, attachment.printPpi)
