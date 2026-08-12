@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { BRAND_PANEL_DARK, BRAND_PANEL_LIGHT } from '../surface'
 
 // 로고 색상 변형 뷰(클라) — 가로/세로 토글 + 색상 3종(기본/WHITE/단색) 실파일 동시 표시.
 // 레이아웃: 기본형(좌, 2행 span) · WHITE(우상, 어두운 배경) · 단색(우하). 🔴 CSS 색 조정 없음, 실파일 그대로.
@@ -37,7 +38,9 @@ export function LogoColorVariantView({ map }: Props) {
 			    (높이 %만 지정하면 종횡비에 따라 폭이 셀을 넘겨 여백이 사라진다.) */}
 			<div className="grid h-[600px] w-full grid-cols-2 grid-rows-2 gap-3">
 				{colors.default ? (
-					<div className="row-span-2 flex items-center justify-center bg-neutral-100">
+					<div
+						className={`row-span-2 flex items-center justify-center ${BRAND_PANEL_LIGHT}`}
+					>
 						<div className="h-[40%] w-[40%]">
 							{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
 							<img
@@ -49,7 +52,8 @@ export function LogoColorVariantView({ map }: Props) {
 					</div>
 				) : null}
 				{colors.white ? (
-					<div className="flex items-center justify-center bg-neutral-900">
+					// 🔴 이 판은 다크 모드에서도 어둡게 고정된다 — WHITE 워드마크는 어두운 판에서만 성립한다.
+					<div className={`flex items-center justify-center ${BRAND_PANEL_DARK}`}>
 						<div className="h-[40%] w-[40%]">
 							{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
 							<img
@@ -61,7 +65,7 @@ export function LogoColorVariantView({ map }: Props) {
 					</div>
 				) : null}
 				{colors.mono ? (
-					<div className="flex items-center justify-center bg-neutral-100">
+					<div className={`flex items-center justify-center ${BRAND_PANEL_LIGHT}`}>
 						<div className="h-[40%] w-[40%]">
 							{/* biome-ignore lint/performance/noImgElement: Payload upload URL이라 next/image 미사용. */}
 							<img

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Slider } from '@/components/ui/slider'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { CONTROL_VALUE } from '../readout'
+import { THEME_PANEL } from '../surface'
 
 // ⚠️ SPIKE (임시) — block-widget-separation 검증용. 제거 시 이 폴더(widgets/type-specimen) 통째 삭제.
 //
@@ -41,7 +42,8 @@ export function TypeSpecimenWidget() {
 	const fontFamily = 'var(--font-title)'
 
 	return (
-		<div className="rounded-lg bg-neutral-50 p-8 dark:bg-neutral-950">
+		// 서체를 얹지만 규정이 정한 판이 아니라 위젯 UI의 패널이다 — 테마를 따라간다.
+		<div className={`rounded-lg p-8 ${THEME_PANEL}`}>
 			<div className="flex flex-wrap items-end gap-x-8 gap-y-4">
 				<Field label="Size">
 					<ToggleGroup
