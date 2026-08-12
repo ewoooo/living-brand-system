@@ -1,12 +1,12 @@
 'use client'
 
 import { type RefObject, useCallback, useEffect, useRef, useState } from 'react'
+import { findImageCarrier } from '@/features/template-core/runtime/compose-template-html.client'
 import {
 	formatImageEditTransform,
 	IDENTITY_TRANSFORM,
 	isIdentityTransform,
 } from '@/lib/template-image-transform'
-import { findImageCarrier } from '@/services/compose-template-html.client'
 import {
 	type ImageTransform,
 	type Point,

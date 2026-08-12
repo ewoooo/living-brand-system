@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 import {
 	type ImageColorAdjustment,
 	imageColorizeStyle,
-} from '@/features/image-studio/image-colorize'
+} from '@/features/image-generation/runtime/image-colorize'
 import { elementToJpeg } from '../adapters/element-to-jpeg.client'
 import { elementToPng } from '../adapters/element-to-png.client'
 import type { ExportRequest, ExportResult } from '../export-contract'

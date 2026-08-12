@@ -10,19 +10,19 @@ import {
 } from '@/components/studio/shared/controller-renderer'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
-import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
-import { getImageColorAdjustmentControls } from '@/features/image-studio/image-studio-config'
+import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import { getImageColorAdjustmentControls } from '@/features/image-generation/domain/image-studio-config'
+import type { ResolvedTemplateImageConfig } from '@/features/template-customization/domain/template-config'
+import type {
+	TemplateBackgroundPatch,
+	TemplateBackgroundState,
+} from '@/features/template-customization/hooks/use-template-studio'
 import type {
 	ControllerControlDefinition,
 	ControllerControlValue,
 	ControllerGroupDefinition,
 	ControllerRuntimeBindings,
-} from '@/features/studio-controller/controller-definition'
-import type {
-	TemplateBackgroundPatch,
-	TemplateBackgroundState,
-} from '@/features/template-studio/hooks/use-template-studio'
-import type { ResolvedTemplateImageConfig } from '@/features/template-studio/template-config'
+} from '@/modules/studio-controller/controller-definition'
 import {
 	IMAGE_TRANSFORM_DEFAULT,
 	ImageTransformControl,

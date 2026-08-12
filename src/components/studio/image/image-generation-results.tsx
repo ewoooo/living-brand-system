@@ -2,11 +2,11 @@
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { Typography } from '@/components/ui/typography'
-import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
 import {
 	type ImageColorAdjustment,
 	imageColorizeStyle,
-} from '@/features/image-studio/image-colorize'
+} from '@/features/image-generation/runtime/image-colorize'
+import type { ImageGenerationResult } from '@/features/image-generation/services/generate-image.client'
 import { cn } from '@/lib/utils'
 
 const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']

@@ -1,10 +1,10 @@
+import type { StudioOutputCapability } from '@/features/studio-export/studio-output'
+import { supportsStudioExportRequest } from '@/features/studio-export/studio-output'
 import {
 	acceptsControllerExecutionValues,
 	type ControllerGroupDefinition,
 	type ControllerValues,
-} from '@/features/studio-controller/controller-definition'
-import type { StudioOutputCapability } from '@/features/studio-export/studio-output'
-import { supportsStudioExportRequest } from '@/features/studio-export/studio-output'
+} from '@/modules/studio-controller/controller-definition'
 import { DEFAULT_CMYK_ICC_PROFILE } from '../color-profile'
 import type { CmykColorProfile, ExportRequest } from '../export-contract'
 import type { PrintPpi } from '../print-policy'

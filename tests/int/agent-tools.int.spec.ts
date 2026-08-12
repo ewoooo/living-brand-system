@@ -1,7 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { AgentChatMessage } from '@/agents/agent-chat.agent'
-import { getAgentTools } from '@/agents/agent-chat-tools.agent'
-import { validateAgentChatMessages } from '@/agents/validate-agent-chat-messages.agent'
 import * as agentSkillRepository from '@/features/agent-chat/repositories/agent-skill.payload.repository'
 import * as agentTemplateRepository from '@/features/agent-chat/repositories/agent-template.payload.repository'
 import * as agentGuidelineContext from '@/features/agent-chat/services/get-agent-guideline-context.service'
@@ -9,10 +6,13 @@ import {
 	getAgentCitations,
 	getAgentMessageText,
 } from '@/features/agent-chat/utils/derive-agent-message'
+import * as checkSessionService from '@/features/asset-check/services/start-check-session.service'
 import * as mcpGuidelineRepository from '@/features/guideline/repositories/mcp-guideline.payload.repository'
 import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
 import * as checkScenarioRepository from '@/features/quality-rule/repositories/check-scenario.payload.repository'
-import * as checkSessionService from '@/services/start-check-session.service'
+import type { AgentChatMessage } from '@/modules/agents/agent-chat.agent'
+import { getAgentTools } from '@/modules/agents/agent-chat-tools.agent'
+import { validateAgentChatMessages } from '@/modules/agents/validate-agent-chat-messages.agent'
 
 // getCheckCatalog tool이 req 조립용으로만 쓰는 getPayload를 스텁한다 — repository 호출은 spy로 검증한다.
 vi.mock('payload', async (importOriginal) => ({

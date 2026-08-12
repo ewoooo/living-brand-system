@@ -18,12 +18,12 @@ import {
 import { Typography } from '@/components/ui/typography'
 import { pixelsToMillimeters } from '@/features/studio-export/print-policy'
 import type { TemplateExportFormat } from '@/features/studio-export/services/export-template'
-import { useTemplateStudio } from '@/features/template-studio/hooks/use-template-studio'
 import {
 	findTemplateControl,
 	findTemplateControlGroup,
 	partitionTemplateSlots,
-} from '@/features/template-studio/template-config'
+} from '@/features/template-customization/domain/template-config'
+import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 import { BackgroundSection } from './background-section'
 import { ImageSlotInput } from './image-slot-input'
 import { IMAGE_TRANSFORM_DEFAULT, ImageTransformControl } from './image-transform-control'

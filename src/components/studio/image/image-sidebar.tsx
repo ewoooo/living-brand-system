@@ -7,18 +7,18 @@ import { ControllerRenderer } from '@/components/studio/shared/controller-render
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
 import { Typography } from '@/components/ui/typography'
-import type { ImageAspectRatio, ImageOutputSize } from '@/features/generate-image/image-size'
-import { useImageStudio } from '@/features/image-studio/hooks/use-image-studio'
 import {
 	getImageStudioControls,
 	getImageStudioFeatureControlIds,
 	IMAGE_STUDIO_CONTROL_IDS,
-} from '@/features/image-studio/image-studio-config'
+} from '@/features/image-generation/domain/image-studio-config'
+import { useImageStudio } from '@/features/image-generation/hooks/use-image-studio'
+import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import {
 	type ControllerControlDefinition,
 	type ControllerRuntimeBinding,
 	resolveControllerAvailability,
-} from '@/features/studio-controller/controller-definition'
+} from '@/modules/studio-controller/controller-definition'
 import { ImageProfileFeatureRenderer } from './image-profile-feature-renderer'
 import { ImageProfilePicker } from './image-profile-picker'
 

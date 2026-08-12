@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { composeTemplateHtml } from '@/services/compose-template-html.client'
+import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import { elementToPng } from './element-to-png.client'
 import { htmlToPng } from './html-to-png.client'
 

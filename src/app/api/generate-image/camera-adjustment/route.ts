@@ -1,9 +1,9 @@
 import {
 	cameraAdjustmentRequestSchema,
 	MAX_CAMERA_ADJUSTMENT_REQUEST_BYTES,
-} from '@/features/generate-image/camera-control'
-import { respondImageGeneration } from '@/features/generate-image/respond-image-generation'
-import { adjustImageCamera } from '@/features/generate-image/services/generate-image.service'
+} from '@/features/image-generation/camera-control'
+import { respondImageGeneration } from '@/features/image-generation/respond-image-generation'
+import { adjustImageCamera } from '@/features/image-generation/services/generate-image.service'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
 export const maxDuration = 60

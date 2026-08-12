@@ -5,32 +5,34 @@ import {
 	type PayloadRequest,
 	slugField,
 } from 'payload'
-import { IMAGE_PROMPT_MAX_LENGTH } from '@/features/generate-image/image-generation-limits'
+import {
+	deriveImageStudioConfig,
+	type PublishedImageProfileDefinition,
+} from '@/features/image-generation/domain/image-studio-config'
+import { IMAGE_PROMPT_MAX_LENGTH } from '@/features/image-generation/image-generation-limits'
 import {
 	DEFAULT_IMAGE_MODEL_PRESET,
 	IMAGE_MODEL_PRESET_OPTIONS,
 	type ImageModelPreset,
-} from '@/features/generate-image/image-model'
+} from '@/features/image-generation/image-model'
 import {
 	imagePromptNormalizationRequestSchema,
 	validateImageProfilePromptRows,
 	validateImagePromptNormalizationRows,
-} from '@/features/generate-image/image-profile-prompt'
+} from '@/features/image-generation/image-profile-prompt'
 import {
 	IMAGE_ASPECT_RATIO_OPTIONS,
 	IMAGE_OUTPUT_SIZE_OPTIONS,
 	type ImageOutputSize,
 	supportsImageOutputSize,
-} from '@/features/generate-image/image-size'
-import type { PublishedImageProfileDefinition } from '@/features/generate-image/repositories/image-profile.payload.repository'
-import { imageGenerationErrorResponse } from '@/features/generate-image/respond-image-generation'
-import { normalizeImageProfilePrompt } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
-import { deriveImageStudioConfig } from '@/features/image-studio/image-studio-config'
-import { isManager, managerManagedAccess } from '@/lib/auth'
+} from '@/features/image-generation/image-size'
+import { imageGenerationErrorResponse } from '@/features/image-generation/respond-image-generation'
+import { normalizeImageProfilePrompt } from '@/features/image-generation/services/normalize-image-profile-prompt.service'
 import {
 	assertImageProfileUnpinned,
 	isUnpublishTransition,
-} from '@/services/guard-template-references.service'
+} from '@/features/template-core/services/guard-template-references.service'
+import { isManager, managerManagedAccess } from '@/lib/auth'
 import { imageProfileFeaturesField } from './fields/image-profile-features-field'
 import {
 	studioControllerField,

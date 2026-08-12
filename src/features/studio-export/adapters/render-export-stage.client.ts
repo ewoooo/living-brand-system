@@ -1,6 +1,6 @@
 'use client'
 
-import { AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS } from '@/services/template-asset-policy.service'
+import { AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS } from '@/features/template-core/domain/template-asset-policy'
 
 const EXPORT_TAGS = new Set(['div', 'img', 'p'])
 const EXPORT_DATA_ATTRIBUTES = new Set([

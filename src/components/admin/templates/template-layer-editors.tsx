@@ -24,16 +24,16 @@ import {
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
+import { generateOneText } from '@/features/generate-text/services/generate-text.client'
 import {
 	type ImageAspectRatio,
 	nearestImageAspectRatio,
-} from '@/features/generate-image/image-size'
+} from '@/features/image-generation/image-size'
 import {
 	type ImageProfileOption,
 	requestAdminImageGeneration,
 	requestPublishedImageProfiles,
-} from '@/features/generate-image/services/generate-image.client'
-import { generateOneText } from '@/features/generate-text/services/generate-text.client'
+} from '@/features/image-generation/services/generate-image.client'
 import { IDENTITY_TRANSFORM, isIdentityTransform } from '@/lib/template-image-transform'
 import type { TemplateNodeConfig, TemplateSlotSpec } from '@/types/template'
 import { BrandColorSwatches, usePublishedBrandColors } from './brand-color-swatches'

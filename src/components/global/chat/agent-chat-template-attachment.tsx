@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/attachment'
 import { Typography } from '@/components/ui/typography'
 import type { AgentTemplateImageAttachment } from '@/features/agent-chat/services/agent-template-request.service'
-import { createControllerValues } from '@/features/studio-controller/controller-definition'
+import { useExport } from '@/features/studio-export/hooks/use-export'
 import {
 	canExportTemplate,
 	createTemplateExportRequest,
@@ -22,8 +22,8 @@ import {
 	type TemplateExportRequest,
 } from '@/features/studio-export/services/export-template'
 import { exportTemplate } from '@/features/studio-export/services/export-template.client'
-import { useExport } from '@/features/studio-export/utils/use-export'
-import { composeTemplateHtml } from '@/services/compose-template-html.client'
+import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
+import { createControllerValues } from '@/modules/studio-controller/controller-definition'
 
 const PREVIEW_WIDTH = 280
 

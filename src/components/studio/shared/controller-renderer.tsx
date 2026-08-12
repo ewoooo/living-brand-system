@@ -10,11 +10,11 @@ import type {
 	ControllerRuntimeBinding,
 	ControllerRuntimeBindings,
 	ControllerValues,
-} from '@/features/studio-controller/controller-definition'
+} from '@/modules/studio-controller/controller-definition'
 import {
 	isControllerPadValue,
 	resolveControllerAvailability,
-} from '@/features/studio-controller/controller-definition'
+} from '@/modules/studio-controller/controller-definition'
 
 type ControllerRendererProps = {
 	groups: readonly ControllerGroupDefinition[]

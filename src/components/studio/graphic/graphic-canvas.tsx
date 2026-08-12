@@ -2,18 +2,18 @@
 
 import { type ComponentType, useEffect, useRef, useState } from 'react'
 import { Typography } from '@/components/ui/typography'
+import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
 import {
 	type GraphicPreview,
 	getGraphicPreviewAdapter,
-} from '@/features/graphic-studio/graphic-preview.client'
-import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
+} from '@/features/graphic-generation/runtime/client/graphic-preview.client'
 import {
 	canRenderGraphicStudioSvg,
 	getGraphicStudioRuntimeBindings,
-} from '@/features/graphic-studio/graphic-studio-runtime'
-import { useGraphicStudio } from '@/features/graphic-studio/hooks/use-graphic-studio'
-import { exportGraphicStudioSvg } from '@/features/graphic-studio/services/export-graphic.client'
-import { exportGraphicStudioVideo } from '@/features/graphic-studio/services/export-graphic-video.client'
+} from '@/features/graphic-generation/runtime/graphic-studio-runtime'
+import { exportGraphicStudioSvg } from '@/features/graphic-generation/services/export-graphic.client'
+import { exportGraphicStudioVideo } from '@/features/graphic-generation/services/export-graphic-video.client'
 
 const canvasByType = {
 	p5: P5Canvas,

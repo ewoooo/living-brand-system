@@ -2,19 +2,21 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import userEvent from '@testing-library/user-event'
 import type { ComponentProps } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
+import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
 	forwardStraightGraphicConfig,
 	graphicStudioConfigs,
-} from '@/features/graphic-studio/graphic-studio-manifest'
-import type { ImageStudioConfig } from '@/features/image-studio/image-studio-config'
+} from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
+import {
+	deriveTemplateConfig,
+	type PublishedHtmlTemplate,
+} from '@/features/template-customization/domain/template-config'
 import {
 	TemplateStudioProvider,
 	useTemplateStudio,
-} from '@/features/template-studio/hooks/use-template-studio'
-import { deriveTemplateConfig } from '@/features/template-studio/template-config'
-import type { GetCreateNavigationOutput } from '@/services/get-create-navigation.service'
-import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
+} from '@/features/template-customization/hooks/use-template-studio'
+import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import { TemplateGenerator as TemplateGeneratorView } from './template-generator'
 import { TemplateSidebar } from './template-sidebar'
 
@@ -24,7 +26,7 @@ const mocks = vi.hoisted(() => ({
 	requestImageGeneration: vi.fn(),
 }))
 
-vi.mock('@/features/studio-export/utils/use-export', () => ({
+vi.mock('@/features/studio-export/hooks/use-export', () => ({
 	useExport: () => ({
 		canExport: () => true,
 		exporting: null,
@@ -35,7 +37,7 @@ vi.mock('@/features/studio-export/utils/use-export', () => ({
 vi.mock('next/navigation', () => ({
 	useRouter: () => ({ push: mocks.push }),
 }))
-vi.mock('@/features/generate-image/services/generate-image.client', () => ({
+vi.mock('@/features/image-generation/services/generate-image.client', () => ({
 	requestImageGeneration: mocks.requestImageGeneration,
 }))
 

@@ -1,7 +1,7 @@
 import { PDFDocument, PDFName, PDFRawStream } from 'pdf-lib'
 import sharp from 'sharp'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { findPublishedTemplate } from '@/repositories/published-template.payload.repository'
+import { findPublishedTemplate } from '@/features/template-core/repositories/published-template.payload.repository'
 import {
 	exportTemplatePrint,
 	TemplatePrintInputError,
@@ -9,7 +9,7 @@ import {
 	TemplatePrintUnavailableError,
 } from './export-template-print.service'
 
-vi.mock('@/repositories/published-template.payload.repository', () => ({
+vi.mock('@/features/template-core/repositories/published-template.payload.repository', () => ({
 	findPublishedTemplate: vi.fn(),
 }))
 

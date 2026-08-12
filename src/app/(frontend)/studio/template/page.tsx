@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
-import { getCreateNavigation } from '@/services/get-create-navigation.service'
+import { getCreateNavigation } from '@/features/template-customization/services/get-create-navigation.service'
 
 export default async function CreatePage() {
 	const navigation = await getCreateNavigation()

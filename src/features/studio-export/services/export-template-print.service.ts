@@ -2,8 +2,8 @@ import {
 	resolveStudioOutputFormats,
 	supportsStudioOutput,
 } from '@/features/studio-export/studio-output'
-import { findPublishedTemplate } from '@/repositories/published-template.payload.repository'
-import { projectTemplateRenderModel } from '@/services/project-template-render-model.service'
+import { projectTemplateRenderModel } from '@/features/template-core/domain/project-template-render-model'
+import { findPublishedTemplate } from '@/features/template-core/repositories/published-template.payload.repository'
 import { createTemplatePdf } from '../adapters/cmyk-jpeg-to-pdf.pdf-lib'
 import { inspectPng } from '../adapters/inspect-png.sharp'
 import { pngToCmykJpeg } from '../adapters/png-to-cmyk-jpeg.sharp'

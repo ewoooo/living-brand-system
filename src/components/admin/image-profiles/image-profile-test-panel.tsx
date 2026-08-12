@@ -8,11 +8,11 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldTitle } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
-import type { ImagePromptNormalizationResult } from '@/features/generate-image/services/generate-image.client'
+import type { ImagePromptNormalizationResult } from '@/features/image-generation/services/generate-image.client'
 import {
 	requestAdminImageGeneration,
 	requestImagePromptNormalization,
-} from '@/features/generate-image/services/generate-image.client'
+} from '@/features/image-generation/services/generate-image.client'
 
 export function ImageProfileTestPanel() {
 	const { getData, getDataByPath } = useForm()

@@ -1,12 +1,15 @@
 import { z } from 'zod'
 import { type PrintPpi, parsePrintPpi } from '@/features/studio-export/print-policy'
 import {
+	collectTemplateSlots,
+	type TemplateSlot,
+} from '@/features/template-core/domain/collect-template-slots'
+import { projectTemplateRenderModel } from '@/features/template-core/domain/project-template-render-model'
+import {
 	deriveTemplateConfig,
 	type TemplateConfig,
-} from '@/features/template-studio/template-config'
+} from '@/features/template-customization/domain/template-config'
 import { AgentConfigurationError } from '@/lib/errors'
-import { collectTemplateSlots, type TemplateSlot } from '@/services/collect-template-slots.service'
-import { projectTemplateRenderModel } from '@/services/project-template-render-model.service'
 import {
 	type AgentTemplateDocument,
 	findAgentTemplate,

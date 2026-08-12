@@ -3,13 +3,13 @@
 import { FieldDescription, FieldError, FieldLabel, useField, useFormFields } from '@payloadcms/ui'
 import type { JSONFieldClientComponent } from 'payload'
 import type { ComponentProps } from 'react'
+import { deriveTemplateBaseControllerGroups } from '@/features/template-customization/domain/template-config'
 import type {
 	ControllerControlDefinition,
 	ControllerControlOverride,
 	ControllerGroupDefinition,
 	StudioControllerOverride,
-} from '@/features/studio-controller/controller-definition'
-import { deriveTemplateBaseControllerGroups } from '@/features/template-studio/template-config'
+} from '@/modules/studio-controller/controller-definition'
 import type { TemplateNodeConfigMap } from '@/types/template'
 
 type OverrideFieldProps = ComponentProps<JSONFieldClientComponent> & {

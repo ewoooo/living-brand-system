@@ -5,7 +5,7 @@ import {
 	IMAGE_TRANSFORM_DEFAULT,
 	type ImageTransformValue,
 	toImageEditTransform,
-} from '@/features/template-studio/image-edit-transform'
+} from '@/features/template-customization/domain/image-edit-transform'
 import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/lib/template-image-transform'
 import { cn } from '@/lib/utils'
 

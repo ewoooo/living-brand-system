@@ -12,7 +12,7 @@ import {
 	EmptyTitle,
 } from '@/components/ui/empty'
 import { Typography } from '@/components/ui/typography'
-import { useImageStudio } from '@/features/image-studio/hooks/use-image-studio'
+import { useImageStudio } from '@/features/image-generation/hooks/use-image-studio'
 
 const EXAMPLE_PROMPTS = [
 	'신제품을 위한 깨끗한 스튜디오 제품 이미지',

@@ -17,7 +17,7 @@ import { ControllerTabPanel } from './tab-panel'
 export type {
 	ControllerAvailability,
 	ControllerInteraction,
-} from '@/features/studio-controller/controller-definition'
+} from '@/modules/studio-controller/controller-definition'
 
 /**
  * Studio 컨트롤러 킷 — 디자인 SSOT(Figma HD_LBS_UI 4:5578 "Controller API")의 dialkit 기반

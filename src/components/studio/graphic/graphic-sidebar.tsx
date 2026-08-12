@@ -4,7 +4,7 @@ import { Controller } from '@/components/studio/shared/controller'
 import { ControllerRenderer } from '@/components/studio/shared/controller-renderer'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
-import { useGraphicStudio } from '@/features/graphic-studio/hooks/use-graphic-studio'
+import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
 
 /** Definition을 Controller primitive로 투영한다. 캔버스와 런타임 구현은 모른다. */
 export function GraphicSidebar() {

@@ -160,7 +160,7 @@ Template·Image·Graphic Config는 이 envelope를 그대로 쓰고, 실행에 �
 
 `output.formats`는 Runtime/Service supported formats와 Admin allowed formats의 교집합입니다. Admin은 좁힐 수만 있고 형식을 추가할 수 없습니다. 형식 선택은 Controller Definition에 중복하지 않고 Provider의 export state와 `Controller.Footer`가 `config.output.formats`에서 직접 소비합니다. UI는 이 policy capability를 보고, Config projection과 실제 Export Layer는 adapter 존재 여부도 별도로 확인합니다. Image의 `original`은 파일 형식이 아니므로 `output.original` boolean으로 둡니다.
 
-직렬화 가능한 데이터 어휘의 정본은 `src/features/studio-controller/controller-definition.ts`의 `ControllerControlDefinition`입니다. Definition에는 `kind`·`defaultValue`·선택지·레인지 같은 정적 정의만 싣습니다. 현재 값은 session values에, `error`·런타임 availability·대상 기하는 runtime bindings에 둡니다. `ControllerRenderer`는 `groups`와 이 두 런타임 입력을 결합해 `Group`과 primitive만 그립니다. 별도 배치가 필요한 footer·Template slot은 `ControllerControlRenderer`로 같은 단일 control 투영을 재사용합니다. `Content`·`Header`·`Footer` 배치는 Domain Sidebar가 소유합니다. ReactNode·콜백·DOM 참조·formatter 함수는 Definition에 넣지 않습니다.
+직렬화 가능한 데이터 어휘의 정본은 `src/modules/studio-controller/controller-definition.ts`의 `ControllerControlDefinition`입니다. Definition에는 `kind`·`defaultValue`·선택지·레인지 같은 정적 정의만 싣습니다. 현재 값은 session values에, `error`·런타임 availability·대상 기하는 runtime bindings에 둡니다. `ControllerRenderer`는 `groups`와 이 두 런타임 입력을 결합해 `Group`과 primitive만 그립니다. 별도 배치가 필요한 footer·Template slot은 `ControllerControlRenderer`로 같은 단일 control 투영을 재사용합니다. `Content`·`Header`·`Footer` 배치는 Domain Sidebar가 소유합니다. ReactNode·콜백·DOM 참조·formatter 함수는 Definition에 넣지 않습니다.
 
 각 Studio Config는 렌더링·실행 전의 **Canonical IR**입니다. Payload·published 원본은 도메인 projection과 strict validation을 한 번 거쳐 Config가 되고, Template 같은 host는 원본에 없는 기능을 추가하지 않고 options·availability·features를 좁힌 **Effective IR**만 만듭니다. Projection과 제한 정책은 같은 입력에 반복 적용해도 결과가 달라지지 않는 순수 함수여야 하며, Renderer는 IR이나 session values를 변경하지 않습니다. Config 정규화의 멱등성과 생성 모델·시간 기반 그래픽의 출력 재현성은 별도 계약입니다.
 
@@ -191,7 +191,7 @@ Payload의 작성 데이터는 block 저장 형식인 `key`·`blockType`을 사�
 
 Graphic Canvas는 `type`만 보고 공용 `P5Canvas`·`WebGLCanvas`를 선택합니다. Graphic별 직렬화 Manifest는 서버 Catalog에, 순수 SVG·binding adapter는 runtime Catalog에, 브라우저 mount·Controller 값 변환은 client Preview Catalog에 분리합니다. 세 Catalog는 같은 stable runtime ID로만 연결하며, client/runtime 함수를 Config에 싣지 않습니다. Worker와 Template은 코드 Catalog 등록 여부가 아니라 published Graphic Profile에서 파생된 Effective Config만 목록으로 받습니다. 따라서 새 그래픽을 코드에 등록해도 Admin이 publish하기 전에는 노출되지 않습니다.
 
-기존 `p5`·`shader` 엔진에 Graphic을 추가할 때는 `graphics/<id>.ts`에 Plugin을, `graphics/<id>-preview.client.ts`에 Preview adapter를 작성하고 두 Catalog에 각각 한 번 등록합니다. 이때 Provider·Sidebar·Canvas는 수정하지 않습니다. 새로운 엔진 종류가 생길 때만 공용 Canvas host와 `GraphicStudioConfig.type`을 확장합니다.
+기존 `p5`·`shader` 엔진에 Graphic을 추가할 때는 `src/features/graphic-generation/domain/manifests/<id>.ts`에 Manifest를, `runtime/plugins/<id>.ts`에 Plugin을, `runtime/client/<id>-preview.client.ts`에 Preview adapter를 작성하고 각 Catalog에 한 번 등록합니다. 이때 Provider·Sidebar·Canvas는 수정하지 않습니다. 새로운 엔진 종류가 생길 때만 공용 Canvas host와 `GraphicStudioConfig.type`을 확장합니다.
 
 킷 배선 규칙: `Controller.Row`/`Controller.Field`가 `{ controlId, disabled }` 표현 컨텍스트를 내리고, 안의 킷 컨트롤(`Select`·`Input`·`Textarea`·`Segmented`·`ColorRow` 스와치)이 라벨 연결 id와 disabled를 자동으로 이어받습니다 — 소비자는 htmlFor를 배선하지 않습니다. 이 컨텍스트에 도메인 값을 넣지 않습니다(§3.5 — 도메인 Provider는 features의 훅으로).
 

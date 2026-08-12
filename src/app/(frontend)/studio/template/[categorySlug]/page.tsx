@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ContentFrame } from '@/components/shared/content-frame'
 import { Typography } from '@/components/ui/typography'
-import { getCreateNavigation } from '@/services/get-create-navigation.service'
+import { getCreateNavigation } from '@/features/template-customization/services/get-create-navigation.service'
 
 export default async function CreateCategoryPage({
 	params,

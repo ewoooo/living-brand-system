@@ -2,13 +2,13 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import userEvent from '@testing-library/user-event'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { FORWARD_STRAIGHT_DEFAULT_INPUT } from '@/features/generate-graphic/forward-straight'
-import { RADIAL_FLUTED_GLASS_DEFAULT_INPUT } from '@/features/generate-graphic/radial-fluted-glass'
-import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
+import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
 	forwardStraightGraphicConfig,
 	radialFlutedGlassGraphicConfig,
-} from '@/features/graphic-studio/graphic-studio-manifest'
+} from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import { FORWARD_STRAIGHT_DEFAULT_INPUT } from '@/features/graphic-generation/forward-straight'
+import { RADIAL_FLUTED_GLASS_DEFAULT_INPUT } from '@/features/graphic-generation/radial-fluted-glass'
 import { GraphicGenerator } from './graphic-generator'
 
 const mocks = vi.hoisted(() => {
@@ -44,11 +44,11 @@ const mocks = vi.hoisted(() => {
 	return state
 })
 
-vi.mock('@/features/generate-graphic/preview.client', () => ({
+vi.mock('@/features/graphic-generation/preview.client', () => ({
 	createForwardStraightPreview: mocks.createPreview,
 }))
 
-vi.mock('@/features/generate-graphic/radial-fluted-glass-preview.client', () => ({
+vi.mock('@/features/graphic-generation/radial-fluted-glass-preview.client', () => ({
 	createRadialFlutedGlassPreview: mocks.createShaderPreview,
 }))
 

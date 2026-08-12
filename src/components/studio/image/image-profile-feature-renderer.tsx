@@ -9,12 +9,12 @@ import {
 	getImageColorAdjustmentControls,
 	type ImageStudioConfig,
 	type ImageStudioFeature,
-} from '@/features/image-studio/image-studio-config'
+} from '@/features/image-generation/domain/image-studio-config'
 import type {
 	ControllerControlValue,
 	ControllerRuntimeBindings,
 	ControllerValues,
-} from '@/features/studio-controller/controller-definition'
+} from '@/modules/studio-controller/controller-definition'
 import { ImageCameraControl } from './image-camera-control'
 
 export type ImageProfileCameraRuntime = {

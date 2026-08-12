@@ -2,9 +2,9 @@ import type { CollectionConfig, FieldAccess } from 'payload'
 import {
 	IMAGE_ASPECT_RATIO_OPTIONS,
 	IMAGE_OUTPUT_SIZE_OPTIONS,
-} from '@/features/generate-image/image-size'
+} from '@/features/image-generation/image-size'
+import { templateAssetReferenceGuardHooks } from '@/features/template-core/services/guard-template-references.service'
 import { isManager } from '@/lib/auth'
-import { templateAssetReferenceGuardHooks } from '@/services/guard-template-references.service'
 import { draftVersions } from './shared'
 
 const managerFieldRead: FieldAccess = ({ req }) => isManager(req.user)

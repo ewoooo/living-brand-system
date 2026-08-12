@@ -3,7 +3,7 @@ import {
 	deriveGraphicStudioConfig,
 	GRAPHIC_RUNTIME_OPTIONS,
 	graphicStudioConfigs,
-} from '@/features/graphic-studio/graphic-studio-manifest'
+} from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import { managerManagedAccess } from '@/lib/auth'
 import {
 	studioControllerField,

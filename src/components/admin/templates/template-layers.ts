@@ -1,5 +1,8 @@
+import {
+	findImageCarrier,
+	isImageColorizeOverlayId,
+} from '@/features/template-core/runtime/compose-template-html.client'
 import { isFigmaVectorNodeType } from '@/features/template-import/utils/figma-node-types'
-import { findImageCarrier, isImageColorizeOverlayId } from '@/services/compose-template-html.client'
 import type { TemplateNodeConfig, TemplateNodeConfigMap } from '@/types/template'
 
 export interface LayerRow {
