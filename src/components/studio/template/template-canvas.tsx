@@ -1,6 +1,6 @@
 'use client'
 
-import { useTemplateStudio } from '@/features/template-studio/hooks/use-template-studio'
+import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 
 const PREVIEW_WIDTH = 480
 

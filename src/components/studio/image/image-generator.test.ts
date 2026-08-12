@@ -1,12 +1,12 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { PublishedImageProfileDefinition } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import {
 	deriveImageStudioConfig,
 	IMAGE_STUDIO_GROUP_IDS,
 	type ImageStudioConfig,
-} from '@/features/image-studio/image-studio-config'
+	type PublishedImageProfileDefinition,
+} from '@/features/image-generation/domain/image-studio-config'
 import { ImageGenerator } from './image-generator'
 
 const RESULT = {
@@ -33,7 +33,7 @@ const mocks = vi.hoisted(() => ({
 	session: { result: null as unknown, selected: null as number | null },
 }))
 
-vi.mock('@/features/generate-image/hooks/use-image-generation', () => ({
+vi.mock('@/features/image-generation/hooks/use-image-generation', () => ({
 	useImageGeneration: () => ({
 		adjustCamera: mocks.adjustCamera,
 		error: null,

@@ -3,9 +3,9 @@ import {
 	CheckSessionNotFoundError,
 	CheckSessionTerminalError,
 } from '@/features/asset-check/domain/check-session'
+import { completeCheckSessionAiCheck } from '@/features/asset-check/services/start-check-session.service'
 import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
-import { completeCheckSessionAiCheck } from '@/services/start-check-session.service'
 import { readCheckImage } from '../../read-check-image'
 
 export const maxDuration = 30

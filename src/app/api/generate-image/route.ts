@@ -3,10 +3,10 @@ import {
 	IMAGE_BATCH_DEFAULT,
 	IMAGE_BATCH_MAX,
 	IMAGE_PROMPT_MAX_LENGTH,
-} from '@/features/generate-image/image-generation-limits'
-import { IMAGE_ASPECT_RATIOS, IMAGE_OUTPUT_SIZES } from '@/features/generate-image/image-size'
-import { respondImageGeneration } from '@/features/generate-image/respond-image-generation'
-import { generateImages } from '@/features/generate-image/services/generate-image.service'
+} from '@/features/image-generation/image-generation-limits'
+import { IMAGE_ASPECT_RATIOS, IMAGE_OUTPUT_SIZES } from '@/features/image-generation/image-size'
+import { respondImageGeneration } from '@/features/image-generation/respond-image-generation'
+import { generateImages } from '@/features/image-generation/services/generate-image.service'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
 export const maxDuration = 60

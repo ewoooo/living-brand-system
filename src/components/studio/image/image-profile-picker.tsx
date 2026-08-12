@@ -3,11 +3,11 @@
 import { ControllerBrowser } from '@/components/studio/shared/controller'
 import { Badge } from '@/components/ui/badge'
 import { Typography } from '@/components/ui/typography'
-import { useImageStudio } from '@/features/image-studio/hooks/use-image-studio'
 import {
 	getImageStudioFeature,
 	type ImageStudioConfig,
-} from '@/features/image-studio/image-studio-config'
+} from '@/features/image-generation/domain/image-studio-config'
+import { useImageStudio } from '@/features/image-generation/hooks/use-image-studio'
 import { cn } from '@/lib/utils'
 
 /**

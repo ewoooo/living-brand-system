@@ -8,7 +8,7 @@ Create가 산출물에 이미지가 필요할 때 이 기능을 호출하는 것
 
 ## 2. 핵심 계약
 
-표면과 무관한 재사용 단위입니다. 코어 로직은 `src/features/generate-image/`이 소유하고, 표면은 이를 호출만 합니다.
+표면과 무관한 재사용 단위입니다. 코어 로직은 `src/features/image-generation/`이 소유하고, 표면은 이를 호출만 합니다.
 
 - 입력: 프롬프트 텍스트, published 이미지 프로파일(`profileId`), 후보 장수(현재 1~6). Admin 저장 전 테스트만 프로파일 대신 모델·비율·크기를 직접 지정합니다.
 - 출력: 프로파일 기반 생성은 `generated-images` 문서 참조와 저장 URL 목록을 반환합니다. 저장 전 Admin 테스트만 data URI를 반환합니다.

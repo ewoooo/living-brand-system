@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/lib/request-auth', () => ({
 	isCrossOriginRequest: mocks.isCrossOriginRequest,
 }))
-vi.mock('@/features/template-export/services/export-template-print.service', () => {
+vi.mock('@/features/studio-export/services/export-template-print.service', () => {
 	class TemplatePrintInputError extends Error {}
 	class TemplatePrintStaleError extends Error {}
 	class TemplatePrintUnavailableError extends Error {}
@@ -28,6 +28,7 @@ function exportRequest(ip = '127.0.0.1') {
 		value: async () => Uint8Array.from([0x89, 0x50, 0x4e, 0x47]).buffer,
 	})
 	const values = new Map<string, FormDataEntryValue>([
+		['colorProfile', 'cgats21-crpc6'],
 		['image', image],
 		['templateVersion', '2026-07-29T00:00:00.000Z'],
 	])
@@ -65,6 +66,7 @@ describe('POST /api/templates/[templateId]/exports/[format]', () => {
 		expect(response.headers.get('Content-Disposition')).toContain(fileName)
 		expect(await response.text()).toBe('print')
 		expect(mocks.exportTemplatePrint).toHaveBeenCalledWith({
+			colorProfile: 'cgats21-crpc6',
 			format,
 			png: expect.any(Buffer),
 			templateId: 7,

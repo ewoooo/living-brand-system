@@ -511,9 +511,9 @@ flowchart TB
 | `brand-colors` | BrandColor | guideline document, Check, template, plugin에서 참조 |
 | `brand-typefaces` | BrandTypeface | guideline document, Check, template에서 참조 |
 | `application-images` | ApplicationImage | page와 check basis에서 참조. 향후 asset generation session에도 사용 가능 |
-| `image-profiles` | ImageProfile | 이미지 생성 모델의 서버 설정과 published Controller·feature 계약을 관리 |
-| `graphic-profiles` | GraphicProfile | 등록된 그래픽 runtime의 published Controller 제한을 관리 |
-| `templates` | Template | page와 plugin에서 참조. 향후 asset generation session에도 사용 가능 |
+| `image-profiles` | ImageProfile | 이미지 생성 Service capability 안에서 완전한 published Controller Definition·feature·output 제한을 관리 |
+| `graphic-profiles` | GraphicProfile | 등록된 그래픽 runtime Definition에 적용할 published Controller Override·output 제한을 관리 |
+| `templates` | Template | HTML 슬롯 Definition에 적용할 Controller Override·output 제한을 관리하고 page와 plugin에서 참조 |
 | `plugins` | Plugin | page와 template에서 참조. 향후 asset generation session에도 사용 가능 |
 
 ### 런타임 객체

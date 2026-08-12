@@ -1,15 +1,15 @@
 import { z } from 'zod'
-import { IMAGE_MODEL_PRESETS } from '@/features/generate-image/image-model'
+import { IMAGE_MODEL_PRESETS } from '@/features/image-generation/image-model'
 import {
 	IMAGE_ASPECT_RATIOS,
 	IMAGE_OUTPUT_SIZES,
 	supportsImageOutputSize,
-} from '@/features/generate-image/image-size'
-import { respondImageGeneration } from '@/features/generate-image/respond-image-generation'
+} from '@/features/image-generation/image-size'
+import { respondImageGeneration } from '@/features/image-generation/respond-image-generation'
 import {
 	generateImages,
 	generateImagesWithSettings,
-} from '@/features/generate-image/services/generate-image.service'
+} from '@/features/image-generation/services/generate-image.service'
 import { isManager } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 

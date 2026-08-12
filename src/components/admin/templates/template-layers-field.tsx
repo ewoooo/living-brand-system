@@ -8,7 +8,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/u
 import { FieldDescription } from '@/components/ui/field'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { composeTemplateHtml } from '@/services/compose-template-html.client'
+import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import type { TemplateNodeConfig, TemplateNodeConfigMap } from '@/types/template'
 import { ImageTransformOverlay } from './image-transform-overlay'
 import { TemplateLayerEditor } from './template-layer-editors'

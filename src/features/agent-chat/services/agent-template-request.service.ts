@@ -1,8 +1,15 @@
 import { z } from 'zod'
-import { type PrintPpi, parsePrintPpi } from '@/features/template-export/print-policy'
+import { type PrintPpi, parsePrintPpi } from '@/features/studio-export/print-policy'
+import {
+	collectTemplateSlots,
+	type TemplateSlot,
+} from '@/features/template-core/domain/collect-template-slots'
+import { projectTemplateRenderModel } from '@/features/template-core/domain/project-template-render-model'
+import {
+	deriveTemplateConfig,
+	type TemplateConfig,
+} from '@/features/template-customization/domain/template-config'
 import { AgentConfigurationError } from '@/lib/errors'
-import { collectTemplateSlots, type TemplateSlot } from '@/services/collect-template-slots.service'
-import { projectTemplateRenderModel } from '@/services/project-template-render-model.service'
 import {
 	type AgentTemplateDocument,
 	findAgentTemplate,
@@ -30,6 +37,8 @@ export type AgentTemplateImageAttachment = {
 	printPpi?: PrintPpi
 	templateVersion?: string
 	values: TemplateSlotValues
+	output: TemplateConfig['output']
+	controller: TemplateConfig['controller']
 }
 
 /**
@@ -86,6 +95,20 @@ export async function prepareTemplateImage(
 
 	if (!renderModel) throw new AgentConfigurationError('Template is not available.')
 
+	const studioConfig = deriveTemplateConfig({
+		kind: 'html',
+		id: template.id,
+		name: template.name,
+		html: renderModel.html,
+		nodeConfigs: renderModel.nodeConfigs,
+		width: renderModel.width,
+		height: renderModel.height,
+		printPpi: parsePrintPpi(template.printPpi),
+		templateVersion: template.updatedAt,
+		controller: template.controller,
+		controllerOverride: template.controllerOverride,
+		output: template.output as never,
+	})
 	return {
 		type: 'template-image' as const,
 		kind: 'html' as const,
@@ -96,6 +119,8 @@ export async function prepareTemplateImage(
 		height: renderModel.height,
 		printPpi: parsePrintPpi(template.printPpi),
 		templateVersion: template.updatedAt,
+		output: studioConfig.output,
+		controller: studioConfig.controller,
 		values: filterTemplateSlotValues(
 			collectTemplateSlots(renderModel.html, renderModel.nodeConfigs),
 			values,

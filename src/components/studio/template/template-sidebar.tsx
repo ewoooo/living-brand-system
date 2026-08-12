@@ -16,16 +16,14 @@ import {
 	SelectTrigger,
 } from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
-import { pixelsToMillimeters } from '@/features/template-export/print-policy'
-import type { TemplateExportFormat } from '@/features/template-export/services/export-template.client'
-import { useTemplateStudio } from '@/features/template-studio/hooks/use-template-studio'
+import { pixelsToMillimeters } from '@/features/studio-export/print-policy'
+import type { TemplateExportFormat } from '@/features/studio-export/services/export-template'
 import {
 	findTemplateControl,
 	findTemplateControlGroup,
-	isBackgroundSlot,
-	isImageSlot,
-	isTextSlot,
-} from '@/features/template-studio/template-config'
+	partitionTemplateSlots,
+} from '@/features/template-customization/domain/template-config'
+import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 import { BackgroundSection } from './background-section'
 import { ImageSlotInput } from './image-slot-input'
 import { IMAGE_TRANSFORM_DEFAULT, ImageTransformControl } from './image-transform-control'
@@ -45,9 +43,11 @@ const FORMAT_LABELS: Record<TemplateExportFormat, string> = {
 export function TemplateSidebar() {
 	const router = useRouter()
 	const { navigation, config, text, images, background, exporting } = useTemplateStudio()
-	const textSlots = config.template.slots.filter(isTextSlot)
-	const imageSlots = config.template.slots.filter(isImageSlot)
-	const backgroundSlot = config.template.slots.find(isBackgroundSlot)
+	const {
+		text: textSlots,
+		image: imageSlots,
+		background: backgroundSlot,
+	} = partitionTemplateSlots(config.template.slots)
 	const { canvas, printPpi } = config.template.exportOption
 	const backgroundTypeControl = backgroundSlot
 		? findTemplateControl(config, backgroundSlot.typeControlId)
@@ -99,11 +99,11 @@ export function TemplateSidebar() {
 						)}
 						<Controller.Row label="Format">
 							<Controller.Select
-								options={config.template.exportOption.formats.map((candidate) => ({
+								options={config.output.formats.map((candidate) => ({
 									value: candidate,
 									label: FORMAT_LABELS[candidate],
 								}))}
-								value={exporting.format}
+								value={exporting.format ?? ''}
 								onChange={(value) =>
 									exporting.setFormat(value as TemplateExportFormat)
 								}
@@ -113,8 +113,10 @@ export function TemplateSidebar() {
 					<div className="flex flex-col gap-2">
 						<Button
 							className="h-11 w-full"
-							onClick={() => exporting.run(exporting.format)}
-							disabled={exporting.busy}
+							onClick={() => {
+								if (exporting.format) exporting.run(exporting.format)
+							}}
+							disabled={exporting.busy || !exporting.format}
 						>
 							{exporting.busy ? '내보내는 중...' : '내보내기'}
 						</Button>

@@ -1,6 +1,6 @@
 import { type CollectionConfig, slugField } from 'payload'
+import { assertTemplateCategoryDeletable } from '@/features/template-core/services/guard-template-references.service'
 import { managerManagedAccess } from '@/lib/auth'
-import { assertTemplateCategoryDeletable } from '@/services/guard-template-references.service'
 
 /**
  * Create 화면 사이드바의 템플릿 분류 단위.

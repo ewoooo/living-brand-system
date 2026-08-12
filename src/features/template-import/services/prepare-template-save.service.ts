@@ -1,16 +1,16 @@
 import type { PayloadRequest } from 'payload'
 import { publishDraftImportedApplicationImages } from '@/features/application-image/repositories/imported-application-image.payload.repository'
-import { findPrintOutputBlocker } from '@/features/template-export/print-policy'
-import { deriveTemplateConfig } from '@/features/template-studio/template-config'
+import { findPrintOutputBlocker } from '@/features/studio-export/print-policy'
 import {
 	inspectTemplateFragment,
 	type TemplateFragmentInspection,
-} from '@/services/inspect-template-html.service'
+} from '@/features/template-core/domain/inspect-template-html'
 import {
 	type ParsedTemplateNodeConfigs,
 	parseTemplateNodeConfigs,
-} from '@/services/parse-template-node-configs.service'
-import { sameRef } from '@/services/template-asset-policy.service'
+} from '@/features/template-core/domain/parse-template-node-configs'
+import { sameRef } from '@/features/template-core/domain/template-asset-policy'
+import { deriveTemplateConfig } from '@/features/template-customization/domain/template-config'
 import {
 	findTemplateDraftBlocker,
 	findTemplatePublishBlocker,
@@ -21,12 +21,14 @@ interface TemplateSaveCandidate {
 	_status?: unknown
 	baseHtml?: unknown
 	controller?: unknown
+	controllerOverride?: unknown
 	height?: unknown
 	html?: unknown
 	id?: unknown
 	name?: unknown
 	overrides?: unknown
 	printPpi?: unknown
+	output?: unknown
 	width?: unknown
 }
 
@@ -85,6 +87,8 @@ export async function prepareTemplateSave({
 				height: candidate.height,
 				templateVersion: 'draft',
 				controller: candidate.controller,
+				controllerOverride: candidate.controllerOverride,
+				output: candidate.output as never,
 			})
 		} catch (error) {
 			return error instanceof Error ? error.message : '템플릿 Controller 계약을 확인하세요.'

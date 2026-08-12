@@ -2,14 +2,14 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { forwardStraightGraphicConfig } from '@/features/graphic-studio/graphic-studio-runtime'
-import type { ImageStudioConfig } from '@/features/image-studio/image-studio-config'
-import { createControllerValues } from '@/features/studio-controller/controller-definition'
-import type { TemplateBackgroundState } from '@/features/template-studio/hooks/use-template-studio'
+import { forwardStraightGraphicConfig } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import {
 	resolveTemplateImageConfig,
 	type TemplateBackgroundType,
-} from '@/features/template-studio/template-config'
+} from '@/features/template-customization/domain/template-config'
+import type { TemplateBackgroundState } from '@/features/template-customization/hooks/use-template-studio'
+import { createControllerValues } from '@/modules/studio-controller/controller-definition'
 import { BackgroundSection } from './background-section'
 
 const imageContract = resolveTemplateImageConfig(createImageConfig(), {
@@ -335,6 +335,7 @@ function createImageConfig(): ImageStudioConfig {
 		id: 3,
 		version: 1,
 		name: '첫 프로파일',
+		output: { formats: ['original', 'png'] },
 		controller: {
 			groups: [
 				{

@@ -3,9 +3,9 @@
 import { type ReactNode, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { FieldLegend, FieldSet } from '@/components/ui/field'
+import { requestPublishedBrandColors } from '@/features/template-core/services/template-editor-options.client'
 import { isValidHex } from '@/lib/color'
 import type { BrandColor } from '@/payload-types'
-import { requestPublishedBrandColors } from '@/services/template-editor-options.client'
 
 export function usePublishedBrandColors() {
 	const [colors, setColors] = useState<BrandColor[]>([])

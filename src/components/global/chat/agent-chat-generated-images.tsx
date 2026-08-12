@@ -1,7 +1,7 @@
 'use client'
 
 import { Typography } from '@/components/ui/typography'
-import type { AgentGeneratedImagesAttachment } from '@/features/generate-image/services/generate-image.service'
+import type { AgentGeneratedImagesAttachment } from '@/features/image-generation/services/generate-image.service'
 
 type AgentChatGeneratedImagesProps = {
 	attachment: AgentGeneratedImagesAttachment

@@ -2,19 +2,21 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import userEvent from '@testing-library/user-event'
 import type { ComponentProps } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
+import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
 	forwardStraightGraphicConfig,
 	graphicStudioConfigs,
-} from '@/features/graphic-studio/graphic-studio-runtime'
-import type { ImageStudioConfig } from '@/features/image-studio/image-studio-config'
+} from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
+import {
+	deriveTemplateConfig,
+	type PublishedHtmlTemplate,
+} from '@/features/template-customization/domain/template-config'
 import {
 	TemplateStudioProvider,
 	useTemplateStudio,
-} from '@/features/template-studio/hooks/use-template-studio'
-import { deriveTemplateConfig } from '@/features/template-studio/template-config'
-import type { GetCreateNavigationOutput } from '@/services/get-create-navigation.service'
-import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
+} from '@/features/template-customization/hooks/use-template-studio'
+import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import { TemplateGenerator as TemplateGeneratorView } from './template-generator'
 import { TemplateSidebar } from './template-sidebar'
 
@@ -22,21 +24,20 @@ const mocks = vi.hoisted(() => ({
 	exportTemplate: vi.fn(),
 	push: vi.fn(),
 	requestImageGeneration: vi.fn(),
-	canExport: vi.fn(() => false),
 }))
 
-vi.mock('@/features/template-export/hooks/use-template-export', () => ({
-	useTemplateExport: () => ({
-		canExport: mocks.canExport,
+vi.mock('@/features/studio-export/hooks/use-export', () => ({
+	useExport: () => ({
+		canExport: () => true,
 		exporting: null,
-		exportError: null,
-		exportTemplate: mocks.exportTemplate,
+		error: null,
+		run: (request: { format: string }) => mocks.exportTemplate(request.format),
 	}),
 }))
 vi.mock('next/navigation', () => ({
 	useRouter: () => ({ push: mocks.push }),
 }))
-vi.mock('@/features/generate-image/services/generate-image.client', () => ({
+vi.mock('@/features/image-generation/services/generate-image.client', () => ({
 	requestImageGeneration: mocks.requestImageGeneration,
 }))
 
@@ -211,8 +212,6 @@ function ImageRaceProbe() {
 describe('TemplateGenerator', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		// clearAllMocks는 mockReturnValue로 심은 구현도 지운다 — 기본 구현을 매 테스트 복원한다.
-		mocks.canExport.mockImplementation(() => false)
 	})
 	afterEach(cleanup)
 
@@ -228,7 +227,7 @@ describe('TemplateGenerator', () => {
 
 		fireEvent.click(screen.getByRole('button', { name: '내보내기' }))
 
-		// 포맷 셀렉트 기본값이 PNG — canExport가 전부 false여도 PNG는 항상 내보낼 수 있다.
+		// 포맷 셀렉트 기본값인 PNG 요청이 공통 useExport로 전달된다.
 		expect(mocks.exportTemplate).toHaveBeenCalledWith('png')
 	})
 
@@ -1039,6 +1038,7 @@ function createImageConfig(
 		id,
 		version: 1,
 		name: id === 11 ? '기본 프로파일' : `프로파일 ${id}`,
+		output: { formats: ['original', 'png'] },
 		controller: {
 			groups: [
 				{
@@ -1050,7 +1050,7 @@ function createImageConfig(
 							kind: 'text',
 							label: 'Prompt',
 							defaultValue: promptDefault,
-							availability: promptAvailability,
+							...(promptAvailability ? { availability: promptAvailability } : {}),
 							multiline: true,
 							maxLength: 250,
 							placeholder: '이미지를 설명하세요',

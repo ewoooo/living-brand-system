@@ -1,12 +1,14 @@
 import { consumeStream, createAgentUIStreamResponse } from 'ai'
-
-import { agentChatAgent, assertAgentChatProviderConfigured } from '@/agents/agent-chat.agent'
-import { validateAgentChatMessages } from '@/agents/validate-agent-chat-messages.agent'
 import { parseAgentChatRequest } from '@/app/api/agent-chat/parse-agent-chat-request'
 import { startAgentChatSession } from '@/features/agent-chat/services/start-agent-chat-session.service'
 import { isPayloadUser } from '@/lib/auth'
 import { AgentConfigurationError } from '@/lib/errors'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
+import {
+	agentChatAgent,
+	assertAgentChatProviderConfigured,
+} from '@/modules/agents/agent-chat.agent'
+import { validateAgentChatMessages } from '@/modules/agents/validate-agent-chat-messages.agent'
 
 export const maxDuration = 30
 

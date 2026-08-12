@@ -31,6 +31,19 @@ describe('Controller layout', () => {
 describe('Controller.Group collapsible', () => {
 	afterEach(cleanup)
 
+	it('컴포넌트 계약 prop을 DOM에 전달하지 않는다', () => {
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+		render(
+			<Controller.Group title="Sec" collapsible>
+				<div>내용물</div>
+			</Controller.Group>,
+		)
+		const warnings = errorSpy.mock.calls.flat().join(' ')
+		errorSpy.mockRestore()
+
+		expect(warnings).not.toContain('collapsible')
+	})
+
 	it('잠금 중에도 사용자의 접힘 상태를 보존한다 — 풀려도 닫힌 채 남는다', () => {
 		const { rerender } = render(
 			<Controller.Group title="Sec" collapsible>

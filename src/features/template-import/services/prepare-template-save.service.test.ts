@@ -137,22 +137,17 @@ describe('prepareTemplateSave', () => {
 			prepareTemplateSave({
 				data: {
 					_status: 'published',
+					baseHtml: '<p data-node-id="name" data-figma-type="TEXT">이름</p>',
 					html: '<p data-node-id="name" data-figma-type="TEXT">이름</p>',
 					overrides: { name: { input: { label: '이름', maxLength: 20 } } },
 					width: 1200,
 					height: 800,
-					controller: {
-						groups: [
-							{
-								key: 'unknown',
-								title: 'Unknown',
-								controls: [],
-							},
-						],
+					controllerOverride: {
+						controls: [{ controlId: 'unknown' }],
 					},
 				},
 				req: req as never,
 			}),
-		).resolves.toContain('override group')
+		).resolves.toContain('override control')
 	})
 })

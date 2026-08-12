@@ -1,4 +1,4 @@
-import type { TemplateVectorAssetCollection } from '@/services/template-asset-policy.service'
+import type { TemplateVectorAssetCollection } from '@/features/template-core/domain/template-asset-policy'
 
 /** Creator가 편집할 수 있는 텍스트 슬롯의 제약과 작성 지침. */
 export interface TemplateSlotSpec {

@@ -1,4 +1,4 @@
-import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/services/compose-template-html.client'
+import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/lib/template-image-transform'
 import type { TemplateNodeConfig } from '@/types/template'
 
 /**
