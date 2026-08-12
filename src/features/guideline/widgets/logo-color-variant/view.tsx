@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { BRAND_PANEL_DARK, BRAND_PANEL_LIGHT } from '../surface'
 
 // 로고 색상 변형 뷰(클라) — 가로/세로 토글 + 색상 3종(기본/WHITE/단색) 실파일 동시 표시.
@@ -17,21 +18,21 @@ export function LogoColorVariantView({ map }: Props) {
 
 	return (
 		<div className="flex flex-col gap-4">
-			{/* 가로/세로 토글 */}
-			<div className="flex gap-2">
+			{/* 방향 하나를 고르는 설정 전환이다 — 표본 면이 아니라 위젯 UI이므로 앱 프리미티브를 쓴다. */}
+			<ToggleGroup
+				type="single"
+				variant="outline"
+				value={orient}
+				// 마지막 항목을 다시 눌러 빈 값이 되면 그릴 표본이 없어진다 — 빈 값은 무시한다.
+				onValueChange={(next) => next && setOrient(next)}
+				aria-label="로고 방향"
+			>
 				{orientations.map((o) => (
-					<button
-						type="button"
-						key={o}
-						onClick={() => setOrient(o)}
-						className={`rounded border px-3 py-1 text-sm ${
-							o === orient ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-600'
-						}`}
-					>
+					<ToggleGroupItem key={o} value={o} className="px-3">
 						{ORIENT_LABEL[o] ?? o}
-					</button>
+					</ToggleGroupItem>
 				))}
-			</div>
+			</ToggleGroup>
 			{/* 2×2: 기본형(좌 2행) · WHITE(우상) · 단색(우하).
 			    컨테이너 height 고정 + width 반응형 + gap → 셀 박스 결정.
 			    로고 박스는 셀의 40%(=1/2.5)이고 그 안에서 object-contain — 폭도 높이도 셀의 1/2.5를 넘지 않는다.
