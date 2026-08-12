@@ -1,10 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-	canExportTemplate,
-	exportTemplate,
-	type TemplateExportContext,
-} from './export-template.client'
+import { canExportTemplate, type TemplateExportContext } from './export-template'
+import { exportTemplate } from './export-template.client'
 import { exportHtmlToPng, renderHtmlToPngBlob } from './export-template-png.client'
 import { downloadTemplatePrint, TemplatePrintDownloadError } from './export-template-print.client'
 
@@ -21,6 +18,7 @@ const context: TemplateExportContext = {
 	fileName: '브랜드 카드',
 	height: 300,
 	html: '<div id="__stage">카드</div>',
+	output: { formats: ['png', 'tiff', 'pdf'] },
 	printPpi: 300,
 	templateId: 12,
 	templateVersion: '2026-07-29',
@@ -66,7 +64,7 @@ describe('exportTemplate', () => {
 
 	it('가용하지 않은 형식은 I/O 전에 중단한다', async () => {
 		await expect(
-			exportTemplate('tiff', { ...context, templateVersion: undefined }),
+			exportTemplate('tiff', { ...context, output: { formats: ['png'] } }),
 		).rejects.toThrow('TIFF export is unavailable.')
 		expect(renderHtmlToPngBlob).not.toHaveBeenCalled()
 		expect(downloadTemplatePrint).not.toHaveBeenCalled()

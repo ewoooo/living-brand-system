@@ -74,6 +74,7 @@ export async function findPublishedTemplate(templateId: number) {
 		},
 		select: {
 			controller: true,
+			output: true,
 			name: true,
 			updatedAt: true,
 			html: true,

@@ -1,6 +1,6 @@
 import type { PayloadRequest } from 'payload'
 import { publishDraftImportedApplicationImages } from '@/features/application-image/repositories/imported-application-image.payload.repository'
-import { findPrintOutputBlocker } from '@/features/template-export/print-policy'
+import { findPrintOutputBlocker, parsePrintPpi } from '@/features/template-export/print-policy'
 import { deriveTemplateConfig } from '@/features/template-studio/template-config'
 import {
 	inspectTemplateFragment,
@@ -25,6 +25,7 @@ interface TemplateSaveCandidate {
 	html?: unknown
 	id?: unknown
 	name?: unknown
+	output?: unknown
 	overrides?: unknown
 	printPpi?: unknown
 	width?: unknown
@@ -83,8 +84,10 @@ export async function prepareTemplateSave({
 				nodeConfigs: parsed.data,
 				width: candidate.width,
 				height: candidate.height,
+				printPpi: parsePrintPpi(candidate.printPpi),
 				templateVersion: 'draft',
 				controller: candidate.controller,
+				output: candidate.output,
 			})
 		} catch (error) {
 			return error instanceof Error ? error.message : '템플릿 Controller 계약을 확인하세요.'

@@ -1,3 +1,4 @@
+import { supportsStudioOutput } from '@/features/studio-export/studio-output'
 import { findPublishedTemplate } from '@/repositories/published-template.payload.repository'
 import { projectTemplateRenderModel } from '@/services/project-template-render-model.service'
 import { parsePrintPpi, pixelsToMillimeters, type TemplatePrintFormat } from '../print-policy'
@@ -7,6 +8,7 @@ import {
 	convertTemplatePngToTiff,
 	inspectTemplatePng,
 } from '../repositories/template-print.sharp.repository'
+import { resolveTemplateOutputCapability } from './export-template'
 
 /** 발행 HTML 또는 운영자 PPI 정책이 없어 인쇄 출력을 제공할 수 없음을 route에 알린다. */
 export class TemplatePrintUnavailableError extends Error {}
@@ -36,7 +38,12 @@ export async function exportTemplatePrint({
 	const renderModel = template ? projectTemplateRenderModel(template) : null
 	const ppi = parsePrintPpi(template?.printPpi)
 
-	if (!renderModel || !ppi) throw new TemplatePrintUnavailableError()
+	if (!template || !renderModel || !ppi) throw new TemplatePrintUnavailableError()
+	const output = resolveTemplateOutputCapability(
+		{ printPpi: ppi, templateVersion: template.updatedAt },
+		template.output,
+	)
+	if (!supportsStudioOutput(output, format)) throw new TemplatePrintUnavailableError()
 	if (template.updatedAt !== templateVersion) throw new TemplatePrintStaleError()
 
 	const image = await inspectTemplatePng(png)

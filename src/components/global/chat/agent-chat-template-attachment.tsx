@@ -40,6 +40,7 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 		fileName: attachment.name,
 		height: attachment.height,
 		html: composedHtml,
+		output: attachment.output,
 		printPpi: attachment.printPpi,
 		templateId: attachment.templateId,
 		templateVersion: attachment.templateVersion,
@@ -49,14 +50,10 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 	return (
 		<TemplateAttachmentFrame
 			name={attachment.name}
-			description={
-				attachment.printPpi
-					? `인쇄 출력 ${attachment.printPpi}ppi · TIFF CMYK · PDF CMYK`
-					: '템플릿 이미지'
-			}
+			description={`${attachment.output.formats.map((format) => format.toUpperCase()).join(' · ')} 출력`}
 			isExporting={exporting !== null}
 			exportError={exportError}
-			onExport={() => exportTemplate('png')}
+			onExport={canExport('png') ? () => exportTemplate('png') : undefined}
 			onExportTiff={canExport('tiff') ? () => exportTemplate('tiff') : undefined}
 			onExportPdf={canExport('pdf') ? () => exportTemplate('pdf') : undefined}
 		>
@@ -99,7 +96,7 @@ function TemplateAttachmentFrame({
 	description?: string
 	isExporting: boolean
 	exportError: string | null
-	onExport: () => void
+	onExport?: () => void
 	onExportPdf?: () => void
 	onExportTiff?: () => void
 	children: React.ReactNode
@@ -117,14 +114,16 @@ function TemplateAttachmentFrame({
 				<AttachmentDescription>{description}</AttachmentDescription>
 			</AttachmentContent>
 			<AttachmentActions>
-				<AttachmentAction
-					aria-label="PNG로 다운로드"
-					disabled={isExporting}
-					onClick={onExport}
-					title="PNG로 다운로드"
-				>
-					<Download />
-				</AttachmentAction>
+				{onExport && (
+					<AttachmentAction
+						aria-label="PNG로 다운로드"
+						disabled={isExporting}
+						onClick={onExport}
+						title="PNG로 다운로드"
+					>
+						<Download />
+					</AttachmentAction>
+				)}
 				{onExportTiff && (
 					<AttachmentAction
 						aria-label="CMYK TIFF로 다운로드"

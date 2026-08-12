@@ -1145,6 +1145,13 @@ export interface ImageProfile {
    */
   displayOrder: number;
   /**
+   * 비우면 Runtime 또는 Template의 기본 출력을 사용합니다. 선택한 형식은 기본 capability를 넓힐 수 없습니다.
+   */
+  output?: {
+    formats?: 'png'[] | null;
+    original?: boolean | null;
+  };
+  /**
    * 이 프로파일을 생성할 때 사용할 이미지 모델입니다.
    */
   imageModelPreset: 'openai-gpt-image-2' | 'google-nano-banana-2-lite';
@@ -1387,6 +1394,12 @@ export interface GraphicProfile {
   runtime: 'forward-straight' | 'radial-fluted-glass';
   displayOrder: number;
   /**
+   * 비우면 Runtime 또는 Template의 기본 출력을 사용합니다. 선택한 형식은 기본 capability를 넓힐 수 없습니다.
+   */
+  output?: {
+    formats?: 'svg'[] | null;
+  };
+  /**
    * 비우면 runtime 기본 계약을 사용합니다. 같은 그룹·컨트롤 ID의 options, 범위, 기본값, 사용 상태만 좁힐 수 있습니다.
    */
   controller?: {
@@ -1521,6 +1534,12 @@ export interface Template {
           id?: string | null;
         }[]
       | null;
+  };
+  /**
+   * 비우면 Runtime 또는 Template의 기본 출력을 사용합니다. 선택한 형식은 기본 capability를 넓힐 수 없습니다.
+   */
+  output?: {
+    formats?: ('png' | 'tiff' | 'pdf')[] | null;
   };
   sourceUrl?: string | null;
   baseHtml?: string | null;
@@ -2745,6 +2764,12 @@ export interface ImageProfilesSelect<T extends boolean = true> {
   generateSlug?: T;
   slug?: T;
   displayOrder?: T;
+  output?:
+    | T
+    | {
+        formats?: T;
+        original?: T;
+      };
   imageModelPreset?: T;
   aspectRatio?: T;
   imageSize?: T;
@@ -2932,6 +2957,11 @@ export interface GraphicProfilesSelect<T extends boolean = true> {
   name?: T;
   runtime?: T;
   displayOrder?: T;
+  output?:
+    | T
+    | {
+        formats?: T;
+      };
   controller?:
     | T
     | {
@@ -3014,6 +3044,11 @@ export interface TemplatesSelect<T extends boolean = true> {
                   };
               id?: T;
             };
+      };
+  output?:
+    | T
+    | {
+        formats?: T;
       };
   sourceUrl?: T;
   baseHtml?: T;

@@ -26,6 +26,8 @@ export interface PublishedHtmlTemplate {
 	templateVersion: string
 	/** Payload 저작형. TemplateConfig projection이 공통 Controller Definition으로 정규화한다. */
 	controller?: unknown
+	/** Payload Output policy. TemplateConfig projection이 Effective capability로 좁힌다. */
+	output?: unknown
 }
 
 // 노출 경계: 스튜디오가 쓰는 input(aiInstruction 제외)·imageInput·imageColorize만 남긴다.
@@ -76,6 +78,7 @@ export async function getPublishedTemplate(
 		printPpi: parsePrintPpi(template.printPpi),
 		templateVersion: template.updatedAt,
 		controller: template.controller,
+		output: template.output,
 		...renderModel,
 		nodeConfigs: projectStudioNodeConfigs(renderModel.nodeConfigs),
 	}

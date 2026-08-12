@@ -36,10 +36,15 @@ export function GraphicSidebar() {
 						size="lg"
 						className="w-full"
 						onClick={output.download}
-						disabled={!output.ready}
+						disabled={output.busy || !output.ready}
 					>
 						SVG 다운로드
 					</Button>
+					{output.error && (
+						<Typography role="alert" size="sm" className="text-destructive">
+							{output.error}
+						</Typography>
+					)}
 				</Controller.Footer>
 			)}
 		</Controller.Root>

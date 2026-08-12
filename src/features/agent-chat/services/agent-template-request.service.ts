@@ -1,5 +1,9 @@
 import { z } from 'zod'
 import { type PrintPpi, parsePrintPpi } from '@/features/template-export/print-policy'
+import {
+	resolveTemplateOutputCapability,
+	type TemplateExportContext,
+} from '@/features/template-export/services/export-template'
 import { AgentConfigurationError } from '@/lib/errors'
 import { collectTemplateSlots, type TemplateSlot } from '@/services/collect-template-slots.service'
 import { projectTemplateRenderModel } from '@/services/project-template-render-model.service'
@@ -27,6 +31,7 @@ export type AgentTemplateImageAttachment = {
 	html: string
 	width: number
 	height: number
+	output: TemplateExportContext['output']
 	printPpi?: PrintPpi
 	templateVersion?: string
 	values: TemplateSlotValues
@@ -85,6 +90,7 @@ export async function prepareTemplateImage(
 	const renderModel = projectTemplateRenderModel(template)
 
 	if (!renderModel) throw new AgentConfigurationError('Template is not available.')
+	const printPpi = parsePrintPpi(template.printPpi)
 
 	return {
 		type: 'template-image' as const,
@@ -94,7 +100,11 @@ export async function prepareTemplateImage(
 		html: renderModel.html,
 		width: renderModel.width,
 		height: renderModel.height,
-		printPpi: parsePrintPpi(template.printPpi),
+		output: resolveTemplateOutputCapability(
+			{ printPpi, templateVersion: template.updatedAt },
+			template.output,
+		),
+		printPpi,
 		templateVersion: template.updatedAt,
 		values: filterTemplateSlotValues(
 			collectTemplateSlots(renderModel.html, renderModel.nodeConfigs),

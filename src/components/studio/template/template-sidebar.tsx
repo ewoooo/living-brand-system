@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
 import { pixelsToMillimeters } from '@/features/template-export/print-policy'
-import type { TemplateExportFormat } from '@/features/template-export/services/export-template.client'
+import type { TemplateExportFormat } from '@/features/template-export/services/export-template'
 import { useTemplateStudio } from '@/features/template-studio/hooks/use-template-studio'
 import {
 	findTemplateControl,
@@ -48,7 +48,7 @@ export function TemplateSidebar() {
 	const textSlots = config.template.slots.filter(isTextSlot)
 	const imageSlots = config.template.slots.filter(isImageSlot)
 	const backgroundSlot = config.template.slots.find(isBackgroundSlot)
-	const { canvas, printPpi } = config.template.exportOption
+	const { canvas, printPpi } = config.template
 	const backgroundTypeControl = backgroundSlot
 		? findTemplateControl(config, backgroundSlot.typeControlId)
 		: undefined
@@ -99,7 +99,7 @@ export function TemplateSidebar() {
 						)}
 						<Controller.Row label="Format">
 							<Controller.Select
-								options={config.template.exportOption.formats.map((candidate) => ({
+								options={config.output.formats.map((candidate) => ({
 									value: candidate,
 									label: FORMAT_LABELS[candidate],
 								}))}

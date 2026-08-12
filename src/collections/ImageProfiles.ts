@@ -33,6 +33,7 @@ import {
 } from '@/services/guard-template-references.service'
 import { imageProfileFeaturesField } from './fields/image-profile-features-field'
 import { studioControllerField, validateHexColor } from './fields/studio-controller-field'
+import { studioOutputField } from './fields/studio-output-field'
 import { draftVersions } from './shared'
 
 const managerFieldRead: FieldAccess = ({ req }) => isManager(req.user)
@@ -152,6 +153,10 @@ export const ImageProfiles: CollectionConfig = {
 				description: '숫자가 낮을수록 Studio 내비게이션에서 먼저 표시됩니다.',
 			},
 		},
+		studioOutputField({
+			formats: [{ label: 'PNG', value: 'png' }],
+			includeOriginal: true,
+		}),
 		{
 			name: 'imageModelPreset',
 			type: 'select',

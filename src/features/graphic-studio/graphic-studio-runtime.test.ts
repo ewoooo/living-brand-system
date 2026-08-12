@@ -22,6 +22,7 @@ describe('graphicStudioRuntime', () => {
 
 	it('registry가 config·SVG projector·명시적 binding을 함께 제공한다', () => {
 		expect(graphicStudioConfigs).toContain(config)
+		expect(config.output.formats).toEqual(['svg'])
 		const values = createControllerValues(config.controller.groups)
 		expect(renderGraphicStudioSvg(config, values, { width: 800, height: 600 })).toContain(
 			'viewBox="0 0 800 600"',
@@ -36,6 +37,7 @@ describe('graphicStudioRuntime', () => {
 		const values = createControllerValues(shaderConfig.controller.groups)
 
 		expect(graphicStudioConfigs).toContain(shaderConfig)
+		expect(shaderConfig.output.formats).toEqual([])
 		expect(renderGraphicStudioSvg(shaderConfig, values, { width: 800, height: 600 })).toBeNull()
 		expect(canRenderGraphicStudioSvg(shaderConfig)).toBe(false)
 		expect(canRenderGraphicStudioSvg(config)).toBe(true)

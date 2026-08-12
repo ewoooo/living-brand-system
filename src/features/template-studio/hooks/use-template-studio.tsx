@@ -26,8 +26,9 @@ import {
 	type ControllerValues,
 	createControllerValues,
 } from '@/features/studio-controller/controller-definition'
+import { supportsStudioOutput } from '@/features/studio-export/studio-output'
 import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
-import type { TemplateExportFormat } from '@/features/template-export/services/export-template.client'
+import type { TemplateExportFormat } from '@/features/template-export/services/export-template'
 import {
 	type ImageTransformValue,
 	toImageEditTransform,
@@ -172,7 +173,9 @@ export function TemplateStudioProvider({
 		textColorDefinition?.kind === 'color' ? textColorDefinition.defaultValue : null,
 	)
 	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
-	const [format, setFormat] = useState<TemplateExportFormat>('png')
+	const [format, setFormat] = useState<TemplateExportFormat>(() =>
+		requireFirstTemplateOutputFormat(config),
+	)
 	const imageContracts = useMemo(
 		() =>
 			Object.fromEntries(
@@ -189,10 +192,10 @@ export function TemplateStudioProvider({
 				? listCompatibleTemplateImageConfigs(
 						backgroundSlot,
 						config.template.imageConfigs,
-						config.template.exportOption.canvas,
+						config.template.canvas,
 					)
 				: [],
-		[backgroundSlot, config.template.imageConfigs, config.template.exportOption.canvas],
+		[backgroundSlot, config.template.imageConfigs, config.template.canvas],
 	)
 
 	const [imageStates, setImageStates] = useState<Record<string, TemplateImageSlotState>>(() =>
@@ -210,10 +213,7 @@ export function TemplateStudioProvider({
 		(candidate) => candidate.id === background.graphicConfigId,
 	)
 	const graphicBindings = selectedGraphicConfig
-		? getGraphicStudioRuntimeBindings(
-				selectedGraphicConfig,
-				config.template.exportOption.canvas,
-			)
+		? getGraphicStudioRuntimeBindings(selectedGraphicConfig, config.template.canvas)
 		: {}
 
 	function updateImageState(slotId: string, patch: Partial<TemplateImageSlotState>) {
@@ -344,6 +344,7 @@ export function TemplateStudioProvider({
 		fileName: template.name,
 		height,
 		html: composedHtml,
+		output: config.output,
 		printPpi: template.printPpi,
 		templateId: template.id,
 		templateVersion: template.templateVersion,
@@ -422,7 +423,7 @@ export function TemplateStudioProvider({
 						controlId,
 						next,
 						config.template.graphicConfigs,
-						config.template.exportOption.canvas,
+						config.template.canvas,
 					),
 				),
 			generate: generateBackground,
@@ -430,7 +431,9 @@ export function TemplateStudioProvider({
 		canvas: { html: composedHtml, previewRef },
 		exporting: {
 			format,
-			setFormat,
+			setFormat: (next) => {
+				if (supportsStudioOutput(config.output, next)) setFormat(next)
+			},
 			busy: exporting !== null,
 			error: exportError,
 			run: exportTemplate,
@@ -438,6 +441,12 @@ export function TemplateStudioProvider({
 	}
 
 	return <TemplateStudioContext.Provider value={value}>{children}</TemplateStudioContext.Provider>
+}
+
+function requireFirstTemplateOutputFormat(config: TemplateConfig): TemplateExportFormat {
+	const format = config.output.formats[0]
+	if (!format) throw new Error('Template Studio에 허용된 output format이 없습니다.')
+	return format
 }
 
 async function requestTemplateImageGeneration(

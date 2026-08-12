@@ -1,10 +1,19 @@
 'use client'
 
-import { createContext, type ReactNode, useCallback, useContext, useRef, useState } from 'react'
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useMemo,
+	useRef,
+	useState,
+} from 'react'
 import {
 	type GraphicStudioConfig,
 	parseGraphicStudioConfig,
 } from '@/features/graphic-studio/graphic-studio-config'
+import { canRenderGraphicStudioSvg } from '@/features/graphic-studio/graphic-studio-runtime'
 import {
 	acceptsControllerValue,
 	type ControllerControlValue,
@@ -13,6 +22,7 @@ import {
 	type ControllerValues,
 	createControllerValues,
 } from '@/features/studio-controller/controller-definition'
+import { useExport } from '@/features/studio-export/utils/use-export'
 
 type GraphicStudioValue = {
 	config: GraphicStudioConfig
@@ -27,6 +37,8 @@ type GraphicStudioValue = {
 	}
 	output: {
 		ready: boolean
+		busy: boolean
+		error: string | null
 		download: () => void
 	}
 }
@@ -44,7 +56,7 @@ export function GraphicStudioProvider({
 	config: unknown
 	children: ReactNode
 }) {
-	const parsedConfig = parseGraphicStudioConfig(config)
+	const parsedConfig = useMemo(() => parseGraphicStudioConfig(config), [config])
 	const groups = parsedConfig.controller.groups
 	const [values, setValues] = useState(() => createControllerValues(groups))
 	const [bindings, setBindings] = useState<ControllerRuntimeBindings>({})
@@ -86,16 +98,38 @@ export function GraphicStudioProvider({
 		outputRef.current = download
 		setOutputReady(Boolean(download))
 	}, [])
+	const svgExport = useExport<'svg'>({
+		canExport: () => outputReady && canRenderGraphicStudioSvg(parsedConfig),
+		execute: () => outputRef.current?.(),
+	})
+	const contextValue = useMemo<GraphicStudioValue>(
+		() => ({
+			config: parsedConfig,
+			controls: { values, bindings, update, registerBindings },
+			canvas: { registerOutput },
+			output: {
+				ready: svgExport.canExport('svg'),
+				busy: svgExport.exporting !== null,
+				error: svgExport.error,
+				download: () => void svgExport.run('svg'),
+			},
+		}),
+		[
+			bindings,
+			parsedConfig,
+			registerBindings,
+			registerOutput,
+			svgExport.canExport,
+			svgExport.error,
+			svgExport.exporting,
+			svgExport.run,
+			update,
+			values,
+		],
+	)
 
 	return (
-		<GraphicStudioContext.Provider
-			value={{
-				config: parsedConfig,
-				controls: { values, bindings, update, registerBindings },
-				canvas: { registerOutput },
-				output: { ready: outputReady, download: () => outputRef.current?.() },
-			}}
-		>
+		<GraphicStudioContext.Provider value={contextValue}>
 			{children}
 		</GraphicStudioContext.Provider>
 	)

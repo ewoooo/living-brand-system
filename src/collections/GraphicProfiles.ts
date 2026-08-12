@@ -5,6 +5,7 @@ import {
 } from '@/features/graphic-studio/graphic-studio-runtime'
 import { managerManagedAccess } from '@/lib/auth'
 import { studioControllerField } from './fields/studio-controller-field'
+import { studioOutputField } from './fields/studio-output-field'
 import { draftVersions } from './shared'
 
 export const GraphicProfiles: CollectionConfig = {
@@ -22,6 +23,7 @@ export const GraphicProfiles: CollectionConfig = {
 						name: String(effective.name ?? ''),
 						runtime: String(effective.runtime ?? ''),
 						controller: effective.controller,
+						output: effective.output,
 					})
 				} catch (error) {
 					throw new APIError(
@@ -68,6 +70,7 @@ export const GraphicProfiles: CollectionConfig = {
 			min: 0,
 			admin: { position: 'sidebar' },
 		},
+		studioOutputField({ formats: [{ label: 'SVG', value: 'svg' }] }),
 		studioControllerField({
 			description:
 				'비우면 runtime 기본 계약을 사용합니다. 같은 그룹·컨트롤 ID의 options, 범위, 기본값, 사용 상태만 좁힐 수 있습니다.',

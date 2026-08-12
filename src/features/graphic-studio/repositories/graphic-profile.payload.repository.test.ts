@@ -19,7 +19,7 @@ describe('listPublishedGraphicProfileDefinitions', () => {
 			draft: false,
 			limit: 100,
 			overrideAccess: false,
-			select: { controller: true, name: true, runtime: true },
+			select: { controller: true, name: true, output: true, runtime: true },
 			sort: 'displayOrder',
 			user,
 			where: { _status: { equals: 'published' } },

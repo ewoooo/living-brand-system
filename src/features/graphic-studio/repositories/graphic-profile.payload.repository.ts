@@ -15,16 +15,17 @@ export async function listPublishedGraphicProfileDefinitions(
 		draft: false,
 		limit: 100,
 		overrideAccess: false,
-		select: { controller: true, name: true, runtime: true },
+		select: { controller: true, name: true, output: true, runtime: true },
 		sort: 'displayOrder',
 		user,
 		where: { _status: { equals: 'published' } },
 	})
 
-	return profiles.docs.map(({ id, name, runtime, controller }) => ({
+	return profiles.docs.map(({ id, name, runtime, controller, output }) => ({
 		id,
 		name,
 		runtime,
 		controller,
+		output,
 	}))
 }

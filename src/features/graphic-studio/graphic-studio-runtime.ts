@@ -9,6 +9,7 @@ import {
 } from '@/features/generate-graphic/forward-straight-geometry'
 import { RADIAL_FLUTED_GLASS_DEFAULT_INPUT } from '@/features/generate-graphic/radial-fluted-glass'
 import {
+	type GraphicOutputFormat,
 	type GraphicStudioConfig,
 	type PublishedGraphicProfileDefinition,
 	parseGraphicStudioConfig,
@@ -21,6 +22,11 @@ import {
 	narrowControllerGroups,
 	projectPayloadController,
 } from '@/features/studio-controller/controller-definition'
+import {
+	applyStudioOutputPolicy,
+	projectPayloadStudioOutputPolicy,
+	supportsStudioOutput,
+} from '@/features/studio-export/studio-output'
 
 type GraphicViewport = { width: number; height: number }
 
@@ -38,6 +44,7 @@ const graphicStudioRuntimeRegistry = {
 			version: 1,
 			name: 'Forward Straight',
 			type: 'p5',
+			output: { formats: ['svg'] },
 			controller: {
 				groups: [
 					{
@@ -107,6 +114,7 @@ const graphicStudioRuntimeRegistry = {
 			version: 1,
 			name: 'Radial Fluted Glass',
 			type: 'shader',
+			output: { formats: [] },
 			controller: {
 				groups: [
 					{
@@ -222,6 +230,10 @@ export function deriveGraphicStudioConfig(
 	const config: GraphicStudioConfig = {
 		...runtime.config,
 		name: profile.name,
+		output: applyStudioOutputPolicy(
+			runtime.config.output,
+			projectPayloadStudioOutputPolicy(profile.output),
+		),
 		controller: {
 			groups: storedController
 				? narrowControllerGroups(runtime.config.controller.groups, storedController.groups)
@@ -238,13 +250,17 @@ export function renderGraphicStudioSvg(
 	values: ControllerValues,
 	viewport: GraphicViewport,
 ): string | null {
+	if (!supportsStudioOutput(config.output, 'svg')) return null
 	const runtime = getGraphicStudioRuntime(config)
 	return runtime?.renderSvg?.(values, viewport) ?? null
 }
 
 /** SVG adapter가 준비된 Graphic Config만 Template 합성 경로에 허용한다. */
 export function canRenderGraphicStudioSvg(config: GraphicStudioConfig): boolean {
-	return Boolean(getGraphicStudioRuntime(config)?.renderSvg)
+	return (
+		supportsStudioOutput<GraphicOutputFormat>(config.output, 'svg') &&
+		Boolean(getGraphicStudioRuntime(config)?.renderSvg)
+	)
 }
 
 /** Graphic runtime이 의미를 아는 control에만 대상 기하 binding을 제공한다. */

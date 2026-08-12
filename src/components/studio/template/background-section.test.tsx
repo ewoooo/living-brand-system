@@ -335,6 +335,7 @@ function createImageConfig(): ImageStudioConfig {
 		id: 3,
 		version: 1,
 		name: '첫 프로파일',
+		output: { formats: ['png'], original: true },
 		controller: {
 			groups: [
 				{

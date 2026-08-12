@@ -19,9 +19,14 @@ import {
 	projectPayloadController,
 } from '@/features/studio-controller/controller-definition'
 import {
-	canExportTemplate,
+	parseStudioOutputCapability,
+	type StudioOutputCapability,
+} from '@/features/studio-export/studio-output'
+import {
+	resolveTemplateOutputCapability,
+	TEMPLATE_OUTPUT_FORMATS,
 	type TemplateExportFormat,
-} from '@/features/template-export/services/export-template.client'
+} from '@/features/template-export/services/export-template'
 import {
 	collectTemplateImageSlots,
 	collectTemplateSlots,
@@ -89,16 +94,14 @@ export type TemplateBackgroundType = 'color' | 'image' | 'graphic'
  * 원본 Config를 직접 소비한다. 전역 id를 만들기 위한 prefix DSL이나 Definition 복제는 하지 않는다.
  */
 export type TemplateConfig = StudioControllerConfig<'template', number> & {
+	output: StudioOutputCapability<TemplateExportFormat>
 	template: {
 		slots: readonly TemplateConfigSlot[]
 		textColorControlId?: typeof TEXT_COLOR_CONTROL_ID
 		imageConfigs: readonly ImageStudioConfig[]
 		graphicConfigs: readonly GraphicStudioConfig[]
-		exportOption: {
-			formats: readonly TemplateExportFormat[]
-			printPpi?: PublishedHtmlTemplate['printPpi']
-			canvas: { width: number; height: number }
-		}
+		printPpi?: PublishedHtmlTemplate['printPpi']
+		canvas: { width: number; height: number }
 	}
 }
 
@@ -360,6 +363,10 @@ export function deriveTemplateConfig(
 		id: template.id,
 		version: 1,
 		name: template.name,
+		output: resolveTemplateOutputCapability(
+			{ printPpi: template.printPpi, templateVersion: template.templateVersion },
+			template.output,
+		),
 		controller: {
 			groups: controllerGroups,
 		},
@@ -368,23 +375,11 @@ export function deriveTemplateConfig(
 			...(textControls.length ? { textColorControlId: TEXT_COLOR_CONTROL_ID } : {}),
 			imageConfigs,
 			graphicConfigs,
-			exportOption: {
-				formats: (['png', 'tiff', 'pdf'] as const).filter((format) =>
-					canExportTemplate(format, {
-						fileName: template.name,
-						height: template.height,
-						html: template.html,
-						printPpi: template.printPpi,
-						templateId: template.id,
-						templateVersion: template.templateVersion,
-						width: template.width,
-					}),
-				),
-				printPpi: template.printPpi,
-				canvas: { width: template.width, height: template.height },
-			},
+			printPpi: template.printPpi,
+			canvas: { width: template.width, height: template.height },
 		},
 	}
 	parseStudioControllerConfig(config)
+	parseStudioOutputCapability(config.output, TEMPLATE_OUTPUT_FORMATS)
 	return config
 }

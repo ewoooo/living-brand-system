@@ -15,6 +15,18 @@ import {
 	projectPayloadController,
 	type StudioControllerConfig,
 } from '@/features/studio-controller/controller-definition'
+import {
+	applyStudioOutputPolicy,
+	parseStudioOutputCapability,
+	projectPayloadStudioOutputPolicy,
+	type StudioOutputCapability,
+} from '@/features/studio-export/studio-output'
+
+export const IMAGE_STUDIO_OUTPUT_FORMATS = ['png'] as const
+export type ImageStudioOutputFormat = (typeof IMAGE_STUDIO_OUTPUT_FORMATS)[number]
+export type ImageStudioOutputCapability = StudioOutputCapability<ImageStudioOutputFormat> & {
+	original: boolean
+}
 
 export const IMAGE_STUDIO_GROUP_IDS = {
 	image: 'image',
@@ -40,6 +52,7 @@ export type ImageStudioFeature =
 
 /** 이미지 프로파일 하나가 발행하는 공통 Controller envelope와 이미지 실행 descriptor. */
 export type ImageStudioConfig = StudioControllerConfig<'image', number> & {
+	output: ImageStudioOutputCapability
 	image: {
 		slug: string | null
 		features: readonly ImageStudioFeature[]
@@ -127,6 +140,13 @@ export function deriveImageStudioConfig(
 		id: profile.id,
 		version: 1,
 		name: profile.name,
+		output: {
+			...applyStudioOutputPolicy(
+				{ formats: IMAGE_STUDIO_OUTPUT_FORMATS },
+				projectPayloadStudioOutputPolicy(profile.output),
+			),
+			original: projectOriginalOutput(profile.output),
+		},
 		controller: storedController ?? deriveLegacyController(profile),
 		image: {
 			slug: profile.slug ?? null,
@@ -142,9 +162,23 @@ export function deriveImageStudioConfig(
 	}
 
 	parseStudioControllerConfig(config)
+	parseStudioOutputCapability(config.output, IMAGE_STUDIO_OUTPUT_FORMATS)
 	assertImageControllerLimits(config, profile)
 	assertImageFeatures(config)
 	return config
+}
+
+function projectOriginalOutput(input: unknown): boolean {
+	if (input == null) return true
+	if (typeof input !== 'object' || Array.isArray(input)) {
+		throw new Error('Image output policy는 객체여야 합니다.')
+	}
+	const original = (input as { original?: unknown }).original
+	if (original == null) return true
+	if (typeof original !== 'boolean') {
+		throw new Error('Image output policy.original은 boolean이어야 합니다.')
+	}
+	return original
 }
 
 function deriveLegacyFeatures(

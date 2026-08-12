@@ -11,6 +11,7 @@ export type AgentTemplateDocument = Pick<
 	| 'id'
 	| 'name'
 	| 'overrides'
+	| 'output'
 	| 'printPpi'
 	| 'updatedAt'
 	| 'width'
@@ -40,6 +41,7 @@ function publishedTemplateQuery(user: unknown) {
 			overrides: true,
 			width: true,
 			height: true,
+			output: true,
 			printPpi: true,
 			updatedAt: true,
 		},

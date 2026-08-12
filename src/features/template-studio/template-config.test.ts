@@ -73,12 +73,15 @@ describe('deriveTemplateConfig', () => {
 		})
 	})
 
-	it('exportOption은 인쇄 정책을 따른다 — printPpi 없으면 PNG만, 있으면 CMYK 포맷 개방', () => {
-		expect(deriveTemplateConfig(template).template.exportOption.formats).toEqual(['png'])
-		expect(
-			deriveTemplateConfig({ ...template, printPpi: 150 }).template.exportOption,
-		).toMatchObject({
-			formats: ['png', 'tiff', 'pdf'],
+	it('output capability는 인쇄 입력과 Admin 정책의 교집합이다', () => {
+		expect(deriveTemplateConfig(template).output.formats).toEqual(['png'])
+		const config = deriveTemplateConfig({
+			...template,
+			printPpi: 150,
+			output: { formats: ['tiff', 'pdf'] },
+		})
+		expect(config.output.formats).toEqual(['tiff', 'pdf'])
+		expect(config.template).toMatchObject({
 			printPpi: 150,
 			canvas: { width: 800, height: 600 },
 		})
@@ -258,6 +261,7 @@ function createImageConfig(
 		id,
 		version: 1,
 		name: `프로파일 ${id}`,
+		output: { formats: ['png'], original: true },
 		controller: {
 			groups: [
 				{

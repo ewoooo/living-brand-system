@@ -3,6 +3,8 @@ import {
 	type ImageColorAdjustment,
 	imageColorizeStyle,
 } from '@/features/image-studio/image-colorize'
+import type { ImageStudioOutputCapability } from '@/features/image-studio/image-studio-config'
+import { supportsStudioOutput } from '@/features/studio-export/studio-output'
 import { exportHtmlToPng } from '@/features/template-export/services/export-template-png.client'
 
 /**
@@ -13,10 +15,12 @@ import { exportHtmlToPng } from '@/features/template-export/services/export-temp
 export async function downloadImage(
 	src: string,
 	index: number,
+	output: ImageStudioOutputCapability,
 	color?: ImageColorAdjustment | null,
 ): Promise<void> {
 	const name = `hd-image-${index + 1}`
 	if (!color) {
+		if (!output.original) throw new Error('Original image export is unavailable.')
 		const ext = src.startsWith('data:image/')
 			? src.slice(11, src.indexOf(';')).replace('jpeg', 'jpg')
 			: new URL(src, window.location.href).pathname.split('.').pop() || 'png'
@@ -27,6 +31,9 @@ export async function downloadImage(
 		anchor.click()
 		anchor.remove()
 		return
+	}
+	if (!supportsStudioOutput(output, 'png')) {
+		throw new Error('PNG image export is unavailable.')
 	}
 
 	// 스테이지를 이미지의 자연 크기로 잡는다 — 화면 썸네일 크기로 캡처하면 해상도를 잃는다.

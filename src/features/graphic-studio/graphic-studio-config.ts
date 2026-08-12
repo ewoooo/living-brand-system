@@ -2,10 +2,18 @@ import {
 	parseStudioControllerConfig,
 	type StudioControllerConfig,
 } from '@/features/studio-controller/controller-definition'
+import {
+	parseStudioOutputCapability,
+	type StudioOutputCapability,
+} from '@/features/studio-export/studio-output'
+
+export const GRAPHIC_OUTPUT_FORMATS = ['svg'] as const
+export type GraphicOutputFormat = (typeof GRAPHIC_OUTPUT_FORMATS)[number]
 
 /** P5·Shader 그래픽 하나가 스튜디오에 내는 직렬화 가능한 편집 계약. */
 export type GraphicStudioConfig = StudioControllerConfig<'graphic', string> & {
 	type: 'p5' | 'shader'
+	output: StudioOutputCapability<GraphicOutputFormat>
 }
 
 /** Payload Graphic Profile이 runtime Config를 좁히기 위해 공개하는 서버측 정의. */
@@ -14,6 +22,7 @@ export type PublishedGraphicProfileDefinition = {
 	name: string
 	runtime: string
 	controller?: unknown
+	output?: unknown
 }
 
 /** unknown 입력을 공통 Controller 계약과 Graphic runtime descriptor로 검증한다. */
@@ -29,5 +38,6 @@ export function parseGraphicStudioConfig(input: unknown): GraphicStudioConfig {
 	if (type !== 'p5' && type !== 'shader') {
 		throw new Error('GraphicStudioConfig type: p5 또는 shader여야 합니다.')
 	}
+	parseStudioOutputCapability((input as { output?: unknown }).output, GRAPHIC_OUTPUT_FORMATS)
 	return input as GraphicStudioConfig
 }
