@@ -11,8 +11,8 @@ import {
 import type { PublishedImageProfileDefinition } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import {
 	type ControllerControlDefinition,
-	type ControllerGroupDefinition,
 	parseStudioControllerConfig,
+	projectPayloadController,
 	type StudioControllerConfig,
 } from '@/features/studio-controller/controller-definition'
 
@@ -120,7 +120,7 @@ function assertNeverFeature(value: never): never {
 export function deriveImageStudioConfig(
 	profile: PublishedImageProfileDefinition,
 ): ImageStudioConfig {
-	const storedController = projectStoredController(profile.controller)
+	const storedController = projectPayloadController(profile.controller)
 	const storedFeatures = projectStoredFeatures(profile.features)
 	const config: ImageStudioConfig = {
 		studio: 'image',
@@ -269,37 +269,6 @@ function selectControl(
 	}
 }
 
-/** Payload의 row/block 메타데이터를 제거하고 공통 Definition 어휘로 바꾼다. */
-function projectStoredController(input: unknown): ImageStudioConfig['controller'] | null {
-	if (!input || typeof input !== 'object') return null
-	const groups = (input as { groups?: unknown }).groups
-	if (groups == null || (Array.isArray(groups) && groups.length === 0)) return null
-	if (!Array.isArray(groups)) throw new Error('Image controller groups가 배열이 아닙니다.')
-
-	return {
-		groups: groups.map((value) => {
-			const group = record(value, 'Image controller group')
-			if (!Array.isArray(group.controls)) {
-				throw new Error('Image controller controls가 배열이 아닙니다.')
-			}
-			const collapsible = group.collapsible === true
-			return {
-				id: group.key as string,
-				title: group.title as string,
-				controls: group.controls.map(projectStoredControl),
-				...(collapsible
-					? {
-							collapsible: true as const,
-							...(typeof group.defaultOpen === 'boolean'
-								? { defaultOpen: group.defaultOpen }
-								: {}),
-						}
-					: {}),
-			}
-		}) as readonly ControllerGroupDefinition[],
-	}
-}
-
 /** Payload feature block 메타데이터를 공개 capability IR로 좁힌다. */
 function projectStoredFeatures(input: unknown): readonly ImageStudioFeature[] | null {
 	if (input == null) return null
@@ -322,94 +291,6 @@ function projectStoredFeatures(input: unknown): readonly ImageStudioFeature[] | 
 				throw new Error(`지원하지 않는 Image feature blockType입니다: ${feature.blockType}`)
 		}
 	})
-}
-
-function projectStoredControl(value: unknown): ControllerControlDefinition {
-	const control = record(value, 'Image controller control')
-	const base = {
-		id: control.key as string,
-		label: control.label as string,
-		...optionalProperty(
-			'availability',
-			control.availability as ControllerControlDefinition['availability'],
-		),
-	}
-
-	switch (control.blockType) {
-		case 'text':
-			return {
-				...base,
-				kind: 'text',
-				defaultValue: (control.defaultValue ?? null) as string | null,
-				...optionalProperty('multiline', control.multiline as boolean | undefined),
-				...optionalProperty('maxLength', control.maxLength as number | undefined),
-				...optionalProperty('placeholder', control.placeholder as string | undefined),
-			}
-		case 'toggle':
-			return {
-				...base,
-				kind: 'toggle',
-				defaultValue: control.defaultValue as boolean,
-			}
-		case 'select': {
-			const options = control.options
-			if (!Array.isArray(options)) throw new Error('Image select options가 배열이 아닙니다.')
-			return {
-				...base,
-				kind: 'select',
-				defaultValue: (control.defaultValue ?? null) as string | null,
-				options: options.map((option) => {
-					const item = record(option, 'Image select option')
-					return { label: item.label as string, value: item.value as string }
-				}),
-				...optionalProperty('placeholder', control.placeholder as string | undefined),
-			}
-		}
-		case 'color':
-			return {
-				...base,
-				kind: 'color',
-				defaultValue: (control.defaultValue ?? null) as string | null,
-			}
-		case 'range': {
-			const display = control.display
-			return {
-				...base,
-				kind: 'range',
-				defaultValue: control.defaultValue as number,
-				min: control.min as number,
-				max: control.max as number,
-				step: control.step as number,
-				...(display && typeof display === 'object'
-					? {
-							display: {
-								...optionalProperty(
-									'unit',
-									(display as Record<string, unknown>).unit as string | undefined,
-								),
-								...optionalProperty(
-									'precision',
-									(display as Record<string, unknown>).precision as
-										| number
-										| undefined,
-								),
-							},
-						}
-					: {}),
-			}
-		}
-		case 'pad': {
-			const defaultValue = record(control.defaultValue, 'Image pad defaultValue')
-			return {
-				...base,
-				kind: 'pad',
-				defaultValue: { x: defaultValue.x as number, y: defaultValue.y as number },
-				...optionalProperty('aspectRatio', control.aspectRatio as number | undefined),
-			}
-		}
-		default:
-			throw new Error(`지원하지 않는 Image controller blockType입니다: ${control.blockType}`)
-	}
 }
 
 function assertImageControllerLimits(

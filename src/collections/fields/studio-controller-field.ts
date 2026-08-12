@@ -174,14 +174,17 @@ const controllerBlocks: Block[] = [
 ]
 
 /** Studio가 발행할 공통 Controller Definition을 Payload에서 저작하는 선택 필드다. */
-export function studioControllerField(): Field {
+export function studioControllerField({
+	description = '비우면 기존 프로파일 설정을 사용합니다. 그룹과 컨트롤의 key는 Payload 행 id와 분리된 발행 계약 ID입니다.',
+}: {
+	description?: string
+} = {}): Field {
 	return {
 		name: 'controller',
 		type: 'group',
 		label: '컨트롤러',
 		admin: {
-			description:
-				'비우면 기존 프로파일 설정을 사용합니다. 그룹과 컨트롤의 key는 Payload 행 id와 분리된 발행 계약 ID입니다.',
+			description,
 		},
 		fields: [
 			{

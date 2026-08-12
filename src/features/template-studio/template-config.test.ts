@@ -4,6 +4,7 @@ import type { ImageStudioConfig } from '@/features/image-studio/image-studio-con
 import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
 import {
 	deriveTemplateConfig,
+	findTemplateControl,
 	isBackgroundSlot,
 	isImageSlot,
 	isTextSlot,
@@ -65,6 +66,11 @@ describe('deriveTemplateConfig', () => {
 		expect(config.template.imageConfigs).toEqual([imageConfig])
 		expect(config.template.graphicConfigs).toEqual([forwardStraightGraphicConfig])
 		expect(config.template.slots.filter(isBackgroundSlot)).toHaveLength(1)
+		expect(config.template.textColorControlId).toBe('text.color')
+		expect(findTemplateControl(config, 'background.color')).toMatchObject({
+			kind: 'color',
+			defaultValue: null,
+		})
 	})
 
 	it('exportOption은 인쇄 정책을 따른다 — printPpi 없으면 PNG만, 있으면 CMYK 포맷 개방', () => {
@@ -88,6 +94,83 @@ describe('deriveTemplateConfig', () => {
 				},
 			}),
 		).toThrow('maxLength')
+	})
+
+	it('어드민 Controller는 슬롯 기본 계약의 options·길이·availability와 그룹 표현만 좁힌다', () => {
+		const config = deriveTemplateConfig({
+			...template,
+			controller: {
+				groups: [
+					{
+						key: 'text',
+						title: 'Copy',
+						collapsible: true,
+						defaultOpen: false,
+						controls: [
+							{
+								blockType: 'text',
+								key: 'text:1:1',
+								label: '제목',
+								availability: 'readonly',
+								defaultValue: '고정 제목',
+								maxLength: 10,
+							},
+							{
+								blockType: 'color',
+								key: 'text.color',
+								label: 'Copy Color',
+								availability: 'readonly',
+								defaultValue: '#112233',
+							},
+						],
+					},
+					{
+						key: 'background',
+						title: 'Backdrop',
+						controls: [
+							{
+								blockType: 'select',
+								key: 'background.type',
+								label: 'Type',
+								availability: 'readonly',
+								defaultValue: 'color',
+								options: [{ value: 'color', label: 'Color' }],
+							},
+							{
+								blockType: 'color',
+								key: 'background.color',
+								label: 'Backdrop Color',
+								availability: 'disabled',
+								defaultValue: '#ffffff',
+							},
+						],
+					},
+				],
+			},
+		})
+
+		expect(config.controller.groups[0]).toMatchObject({
+			title: 'Copy',
+			collapsible: true,
+			defaultOpen: false,
+		})
+		expect(config.controller.groups[0]?.controls[0]).toMatchObject({
+			availability: 'readonly',
+			defaultValue: '고정 제목',
+			maxLength: 10,
+		})
+		expect(config.controller.groups[1]?.controls[0]).toMatchObject({
+			availability: 'readonly',
+			options: [{ value: 'color', label: 'Color' }],
+		})
+		expect(findTemplateControl(config, 'text.color')).toMatchObject({
+			availability: 'readonly',
+			defaultValue: '#112233',
+		})
+		expect(findTemplateControl(config, 'background.color')).toMatchObject({
+			availability: 'disabled',
+			defaultValue: '#ffffff',
+		})
 	})
 })
 

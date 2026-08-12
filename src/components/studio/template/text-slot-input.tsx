@@ -1,6 +1,7 @@
 'use client'
 
 import { Controller } from '@/components/studio/shared/controller'
+import { ControllerControlRenderer } from '@/components/studio/shared/controller-renderer'
 import { Typography } from '@/components/ui/typography'
 import type { ControllerControlDefinition } from '@/features/studio-controller/controller-definition'
 import type { TemplateTextSlot } from '@/features/template-studio/template-config'
@@ -15,6 +16,18 @@ type TextSlotInputProps = {
 
 /** 편집 계약(config)의 입력 제약(형식·글자수·줄수)을 적용한 텍스트 슬롯 컨트롤러 행. */
 export function TextSlotInput({ definition, input, value, onChange }: TextSlotInputProps) {
+	if ((definition.availability ?? 'enabled') !== 'enabled') {
+		return (
+			<ControllerControlRenderer
+				definition={definition}
+				value={value}
+				onChange={(next) => {
+					if (typeof next === 'string') onChange(next)
+				}}
+			/>
+		)
+	}
+
 	// 한 줄 제약(maxLines 1)의 자유 텍스트는 여러 줄 입력 UI가 성립하지 않는다 — 단일행 Input으로 렌더.
 	if (input.format !== 'free' || input.maxLines === 1) {
 		const isInvalidEmail =

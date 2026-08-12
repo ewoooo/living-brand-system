@@ -7,10 +7,18 @@ import {
 	createForwardStraightScene,
 	createForwardStraightSvg,
 } from '@/features/generate-graphic/forward-straight-geometry'
-import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
+import {
+	type GraphicStudioConfig,
+	type PublishedGraphicProfileDefinition,
+	parseGraphicStudioConfig,
+} from '@/features/graphic-studio/graphic-studio-config'
 import type {
 	ControllerRuntimeBindings,
 	ControllerValues,
+} from '@/features/studio-controller/controller-definition'
+import {
+	narrowControllerGroups,
+	projectPayloadController,
 } from '@/features/studio-controller/controller-definition'
 
 type GraphicViewport = { width: number; height: number }
@@ -98,6 +106,31 @@ export const forwardStraightGraphicConfig = graphicStudioRuntimeRegistry['forwar
 export const graphicStudioConfigs: readonly GraphicStudioConfig[] = Object.values(
 	graphicStudioRuntimeRegistry,
 ).map((runtime) => runtime.config)
+
+export const GRAPHIC_RUNTIME_OPTIONS = Object.entries(graphicStudioRuntimeRegistry).map(
+	([value, runtime]) => ({ value, label: runtime.config.name }),
+)
+
+/** published Graphic Profile을 등록된 runtime의 기본 계약보다 좁은 Config로 투영한다. */
+export function deriveGraphicStudioConfig(
+	profile: PublishedGraphicProfileDefinition,
+): GraphicStudioConfig {
+	const runtime =
+		graphicStudioRuntimeRegistry[profile.runtime as keyof typeof graphicStudioRuntimeRegistry]
+	if (!runtime) throw new Error(`등록되지 않은 Graphic runtime입니다: ${profile.runtime}`)
+	const storedController = projectPayloadController(profile.controller)
+	const config: GraphicStudioConfig = {
+		...runtime.config,
+		name: profile.name,
+		controller: {
+			groups: storedController
+				? narrowControllerGroups(runtime.config.controller.groups, storedController.groups)
+				: runtime.config.controller.groups,
+		},
+	}
+	parseGraphicStudioConfig(config)
+	return config
+}
 
 /** 등록된 Graphic runtime만 순수 SVG로 투영한다. */
 export function renderGraphicStudioSvg(

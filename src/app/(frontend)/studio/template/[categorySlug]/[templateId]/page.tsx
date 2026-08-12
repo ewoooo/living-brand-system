@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
 import { TemplateGenerator } from '@/components/studio/template/template-generator'
-import { graphicStudioConfigs } from '@/features/graphic-studio/graphic-studio-runtime'
+import { listGraphicStudioConfigs } from '@/features/graphic-studio/services/list-graphic-studio-configs.service'
 import { listImageStudioConfigs } from '@/features/image-studio/services/list-image-studio-configs.service'
 import { deriveTemplateConfig } from '@/features/template-studio/template-config'
 import { authenticateRequest } from '@/lib/request-auth'
@@ -21,16 +21,17 @@ export default async function CreateTemplatePage({
 	}
 
 	const { user } = await authenticateRequest()
-	const [navigation, template, imageConfigs] = await Promise.all([
+	const [navigation, template, imageConfigs, graphicConfigs] = await Promise.all([
 		getCreateNavigation(),
 		getPublishedTemplate(parsedId),
 		user ? listImageStudioConfigs(user) : [],
+		user ? listGraphicStudioConfigs(user) : [],
 	])
 
 	if (!template) {
 		notFound()
 	}
-	const config = deriveTemplateConfig(template, imageConfigs, graphicStudioConfigs)
+	const config = deriveTemplateConfig(template, imageConfigs, graphicConfigs)
 
 	return (
 		<StudioWorkspacePage

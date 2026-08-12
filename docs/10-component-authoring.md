@@ -184,6 +184,8 @@ Controller 사용 구조는 다섯 책임으로 나눕니다.
 
 Payload의 작성 데이터는 block 저장 형식인 `key`·`blockType`을 사용해도 됩니다. Published projection은 이를 클라이언트 계약의 `id`·`kind`로 정규화합니다. Draft는 작성 중인 불완전 상태를 허용하지만 publish는 공통 parser로 unknown field·중복 id·kind별 기본값과 제약을 엄격하게 검증합니다. 기존 필드에서 Config를 파생하는 legacy fallback은 이행기에만 유지합니다.
 
+어드민은 화면 패널을 구성하지 않고 Published Definition의 기본값·선택지·범위·availability만 저작합니다. Image Profile은 완전한 Controller 계약을 발행하고, Template과 Graphic Profile은 슬롯·runtime이 제공한 기본 계약의 같은 group/control ID만 좁힙니다. `enabled`로의 잠금 해제, select 선택지 추가, range 확장, 알 수 없는 ID·kind 변경은 발행 시 거부합니다. Graphic runtime 구현과 `p5`·`shader` 판별은 계속 코드 registry가 소유합니다.
+
 킷 배선 규칙: `Controller.Row`/`Controller.Field`가 `{ controlId, disabled }` 표현 컨텍스트를 내리고, 안의 킷 컨트롤(`Select`·`Input`·`Textarea`·`Segmented`·`ColorRow` 스와치)이 라벨 연결 id와 disabled를 자동으로 이어받습니다 — 소비자는 htmlFor를 배선하지 않습니다. 이 컨텍스트에 도메인 값을 넣지 않습니다(§3.5 — 도메인 Provider는 features의 훅으로).
 
 컨트롤 슬롯의 공통 상태는 조작 가능 여부와 현재 표현 상태를 섞지 않고 두 타입으로 정의합니다.

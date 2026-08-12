@@ -10,9 +10,14 @@ import {
 } from '@/features/image-studio/image-studio-config'
 import type {
 	ControllerControlDefinition,
+	ControllerGroupDefinition,
 	StudioControllerConfig,
 } from '@/features/studio-controller/controller-definition'
-import { parseStudioControllerConfig } from '@/features/studio-controller/controller-definition'
+import {
+	narrowControllerGroups,
+	parseStudioControllerConfig,
+	projectPayloadController,
+} from '@/features/studio-controller/controller-definition'
 import {
 	canExportTemplate,
 	type TemplateExportFormat,
@@ -25,6 +30,8 @@ import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/services/compose-template-html.cl
 import type { PublishedHtmlTemplate } from '@/services/get-published-template.service'
 
 const BACKGROUND_TYPE_CONTROL_ID = 'background.type'
+const BACKGROUND_COLOR_CONTROL_ID = 'background.color'
+const TEXT_COLOR_CONTROL_ID = 'text.color'
 
 type TemplateSlotBindingBase = {
 	/** DOM 합성 주소. Label과 분리되어 Admin에서 이름을 바꿔도 binding은 유지된다. */
@@ -68,6 +75,7 @@ export type TemplateBackgroundSlot = TemplateSlotBindingBase & {
 	kind: 'background'
 	/** 공통 controller.groups에 있는 background type Definition의 stable id. */
 	typeControlId: typeof BACKGROUND_TYPE_CONTROL_ID
+	colorControlId: typeof BACKGROUND_COLOR_CONTROL_ID
 	imageConfig: { mode: 'selectable'; allowedConfigIds?: readonly number[] }
 }
 
@@ -83,6 +91,7 @@ export type TemplateBackgroundType = 'color' | 'image' | 'graphic'
 export type TemplateConfig = StudioControllerConfig<'template', number> & {
 	template: {
 		slots: readonly TemplateConfigSlot[]
+		textColorControlId?: typeof TEXT_COLOR_CONTROL_ID
 		imageConfigs: readonly ImageStudioConfig[]
 		graphicConfigs: readonly GraphicStudioConfig[]
 		exportOption: {
@@ -107,6 +116,15 @@ export function findTemplateControl(
 	return config.controller.groups
 		.flatMap((group) => group.controls)
 		.find((control) => control.id === controlId)
+}
+
+export function findTemplateControlGroup(
+	config: TemplateConfig,
+	controlId: string,
+): ControllerGroupDefinition | undefined {
+	return config.controller.groups.find((group) =>
+		group.controls.some((control) => control.id === controlId),
+	)
 }
 
 export type ResolvedTemplateImageConfig = {
@@ -274,6 +292,7 @@ export function deriveTemplateConfig(
 			label: 'Background',
 			kind: 'background',
 			typeControlId: BACKGROUND_TYPE_CONTROL_ID,
+			colorControlId: BACKGROUND_COLOR_CONTROL_ID,
 			imageConfig: { mode: 'selectable' },
 		},
 	]
@@ -287,6 +306,54 @@ export function deriveTemplateConfig(
 		...(slot.input.maxLength === undefined ? {} : { maxLength: slot.input.maxLength }),
 		...(slot.input.placeholder === undefined ? {} : { placeholder: slot.input.placeholder }),
 	}))
+	const baseControllerGroups = [
+		...(textControls.length
+			? [
+					{
+						id: 'text',
+						title: 'Text',
+						collapsible: true as const,
+						controls: [
+							...textControls,
+							{
+								id: TEXT_COLOR_CONTROL_ID,
+								kind: 'color' as const,
+								label: 'Color',
+								defaultValue: null,
+							},
+						],
+					},
+				]
+			: []),
+		{
+			id: 'background',
+			title: 'Background',
+			collapsible: true as const,
+			controls: [
+				{
+					id: BACKGROUND_TYPE_CONTROL_ID,
+					kind: 'select' as const,
+					label: 'Type',
+					defaultValue: 'color',
+					options: [
+						{ value: 'color', label: 'Color' },
+						{ value: 'image', label: 'Image' },
+						{ value: 'graphic', label: 'Graphic' },
+					],
+				},
+				{
+					id: BACKGROUND_COLOR_CONTROL_ID,
+					kind: 'color' as const,
+					label: 'Background Color',
+					defaultValue: null,
+				},
+			],
+		},
+	] satisfies readonly ControllerGroupDefinition[]
+	const storedController = projectPayloadController(template.controller)
+	const controllerGroups = storedController
+		? narrowControllerGroups(baseControllerGroups, storedController.groups)
+		: baseControllerGroups
 
 	const config: TemplateConfig = {
 		studio: 'template',
@@ -294,39 +361,11 @@ export function deriveTemplateConfig(
 		version: 1,
 		name: template.name,
 		controller: {
-			groups: [
-				...(textControls.length
-					? [
-							{
-								id: 'text',
-								title: 'Text',
-								collapsible: true as const,
-								controls: textControls,
-							},
-						]
-					: []),
-				{
-					id: 'background',
-					title: 'Background',
-					collapsible: true,
-					controls: [
-						{
-							id: BACKGROUND_TYPE_CONTROL_ID,
-							kind: 'select',
-							label: 'Type',
-							defaultValue: 'color',
-							options: [
-								{ value: 'color', label: 'Color' },
-								{ value: 'image', label: 'Image' },
-								{ value: 'graphic', label: 'Graphic' },
-							],
-						},
-					],
-				},
-			],
+			groups: controllerGroups,
 		},
 		template: {
 			slots,
+			...(textControls.length ? { textColorControlId: TEXT_COLOR_CONTROL_ID } : {}),
 			imageConfigs,
 			graphicConfigs,
 			exportOption: {

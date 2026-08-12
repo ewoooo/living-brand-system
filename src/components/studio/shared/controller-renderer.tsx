@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { Controller } from '@/components/studio/shared/controller'
 import { FieldError } from '@/components/ui/field'
 import type {
@@ -40,22 +41,30 @@ export function ControllerRenderer({
 					/>
 				))
 
-				return group.collapsible ? (
-					<Controller.Group
-						key={group.id}
-						title={group.title}
-						collapsible
-						defaultOpen={group.defaultOpen}
-					>
+				return (
+					<ControllerGroupRenderer key={group.id} definition={group}>
 						{content}
-					</Controller.Group>
-				) : (
-					<Controller.Group key={group.id} title={group.title}>
-						{content}
-					</Controller.Group>
+					</ControllerGroupRenderer>
 				)
 			})}
 		</>
+	)
+}
+
+/** bespoke slot/feature layout에서도 Definition의 그룹 제목·접힘 정책을 그대로 투영한다. */
+export function ControllerGroupRenderer({
+	definition,
+	children,
+}: {
+	definition: ControllerGroupDefinition
+	children: ReactNode
+}) {
+	return definition.collapsible ? (
+		<Controller.Group title={definition.title} collapsible defaultOpen={definition.defaultOpen}>
+			{children}
+		</Controller.Group>
+	) : (
+		<Controller.Group title={definition.title}>{children}</Controller.Group>
 	)
 }
 
@@ -185,6 +194,7 @@ function ControllerControl({
 					value={color ?? '#000000'}
 					isEmpty={color === null}
 					disabled={disabled}
+					onReset={() => onChange(null)}
 					onChange={onChange}
 				/>
 			)

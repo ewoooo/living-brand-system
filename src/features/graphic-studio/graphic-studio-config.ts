@@ -8,6 +8,14 @@ export type GraphicStudioConfig = StudioControllerConfig<'graphic', string> & {
 	type: 'p5' | 'shader'
 }
 
+/** Payload Graphic Profile이 runtime Config를 좁히기 위해 공개하는 서버측 정의. */
+export type PublishedGraphicProfileDefinition = {
+	id: number
+	name: string
+	runtime: string
+	controller?: unknown
+}
+
 /** unknown 입력을 공통 Controller 계약과 Graphic runtime descriptor로 검증한다. */
 export function parseGraphicStudioConfig(input: unknown): GraphicStudioConfig {
 	const config = parseStudioControllerConfig(input)

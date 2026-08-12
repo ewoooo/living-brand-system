@@ -4,7 +4,9 @@ import {
 	type ControllerGroupDefinition,
 	createControllerValues,
 	isControllerPadValue,
+	narrowControllerGroups,
 	parseStudioControllerConfig,
+	projectPayloadController,
 } from './controller-definition'
 
 describe('createControllerValues', () => {
@@ -329,6 +331,123 @@ describe('isControllerPadValue', () => {
 		expect(isControllerPadValue({ x: -1, y: 1 })).toBe(true)
 		expect(isControllerPadValue({ x: Number.NaN, y: 0 })).toBe(false)
 		expect(isControllerPadValue({ x: 1.1, y: 0 })).toBe(false)
+	})
+})
+
+describe('Payload Controller projection과 narrowing', () => {
+	it('Payload key·blockType을 공통 Definition으로 정규화한다', () => {
+		expect(
+			projectPayloadController({
+				groups: [
+					{
+						key: 'settings',
+						title: 'Settings',
+						collapsible: true,
+						defaultOpen: false,
+						controls: [
+							{
+								blockType: 'range',
+								key: 'scale',
+								label: 'Scale',
+								availability: 'readonly',
+								defaultValue: 1,
+								min: 0,
+								max: 2,
+								step: 0.1,
+								id: 'payload-row-id',
+							},
+						],
+					},
+				],
+			}),
+		).toEqual({
+			groups: [
+				{
+					id: 'settings',
+					title: 'Settings',
+					collapsible: true,
+					defaultOpen: false,
+					controls: [
+						{
+							id: 'scale',
+							kind: 'range',
+							label: 'Scale',
+							availability: 'readonly',
+							defaultValue: 1,
+							min: 0,
+							max: 2,
+							step: 0.1,
+						},
+					],
+				},
+			],
+		})
+	})
+
+	it('Admin override는 기존 control의 options·range·availability만 좁힌다', () => {
+		const base = [
+			{
+				id: 'settings',
+				title: 'Settings',
+				controls: [
+					{
+						id: 'mode',
+						kind: 'select',
+						label: 'Mode',
+						defaultValue: 'a',
+						options: [
+							{ value: 'a', label: 'A' },
+							{ value: 'b', label: 'B' },
+						],
+					},
+				],
+			},
+		] satisfies readonly ControllerGroupDefinition[]
+		const narrowed = narrowControllerGroups(base, [
+			{
+				id: 'settings',
+				title: 'Restricted',
+				collapsible: true,
+				defaultOpen: false,
+				controls: [
+					{
+						id: 'mode',
+						kind: 'select',
+						label: 'Mode',
+						availability: 'readonly',
+						defaultValue: 'a',
+						options: [{ value: 'a', label: 'A' }],
+					},
+				],
+			},
+		])
+
+		expect(narrowed[0]).toMatchObject({
+			title: 'Restricted',
+			collapsible: true,
+			defaultOpen: false,
+		})
+		expect(narrowed[0]?.controls[0]).toMatchObject({
+			availability: 'readonly',
+			options: [{ value: 'a', label: 'A' }],
+		})
+		expect(() =>
+			narrowControllerGroups(base, [
+				{
+					id: 'settings',
+					title: 'Expanded',
+					controls: [
+						{
+							id: 'mode',
+							kind: 'select',
+							label: 'Mode',
+							defaultValue: 'c',
+							options: [{ value: 'c', label: 'C' }],
+						},
+					],
+				},
+			]),
+		).toThrow('options')
 	})
 })
 

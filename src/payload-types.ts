@@ -76,6 +76,7 @@ export interface Config {
     'brand-icons': BrandIcon;
     'application-images': ApplicationImage;
     'image-profiles': ImageProfile;
+    'graphic-profiles': GraphicProfile;
     'generated-images': GeneratedImage;
     templates: Template;
     'template-categories': TemplateCategory;
@@ -110,6 +111,7 @@ export interface Config {
     'brand-icons': BrandIconsSelect<false> | BrandIconsSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
     'image-profiles': ImageProfilesSelect<false> | ImageProfilesSelect<true>;
+    'graphic-profiles': GraphicProfilesSelect<false> | GraphicProfilesSelect<true>;
     'generated-images': GeneratedImagesSelect<false> | GeneratedImagesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
     'template-categories': TemplateCategoriesSelect<false> | TemplateCategoriesSelect<true>;
@@ -2110,6 +2112,51 @@ export interface ImageProfileCameraControlFeature {
   blockType: 'cameraControl';
 }
 /**
+ * 등록된 그래픽 runtime의 기본 Controller 계약을 좁혀 기본값·선택지·범위·사용 상태를 관리합니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "graphic-profiles".
+ */
+export interface GraphicProfile {
+  id: number;
+  name: string;
+  /**
+   * 실행 구현은 코드 registry가 소유합니다. 프로파일은 해당 runtime의 편집 범위만 좁힙니다.
+   */
+  runtime: 'forward-straight';
+  displayOrder: number;
+  /**
+   * 비우면 runtime 기본 계약을 사용합니다. 같은 그룹·컨트롤 ID의 options, 범위, 기본값, 사용 상태만 좁힐 수 있습니다.
+   */
+  controller?: {
+    groups?:
+      | {
+          /**
+           * 발행 시 Controller Group의 id가 됩니다.
+           */
+          key: string;
+          title: string;
+          collapsible?: boolean | null;
+          defaultOpen?: boolean | null;
+          controls?:
+            | (
+                | StudioControllerTextControl
+                | StudioControllerToggleControl
+                | StudioControllerSelectControl
+                | StudioControllerColorControl
+                | StudioControllerRangeControl
+                | StudioControllerPadControl
+              )[]
+            | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * Studio 이미지 생성 결과와 생성 당시 입력·실행 조건을 보관합니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2187,6 +2234,33 @@ export interface Template {
   id: number;
   name: string;
   description?: string | null;
+  /**
+   * 비우면 템플릿 슬롯에서 기본 계약을 만듭니다. 같은 그룹·컨트롤 ID의 options, 범위, 기본값, 사용 상태만 좁힐 수 있습니다.
+   */
+  controller?: {
+    groups?:
+      | {
+          /**
+           * 발행 시 Controller Group의 id가 됩니다.
+           */
+          key: string;
+          title: string;
+          collapsible?: boolean | null;
+          defaultOpen?: boolean | null;
+          controls?:
+            | (
+                | StudioControllerTextControl
+                | StudioControllerToggleControl
+                | StudioControllerSelectControl
+                | StudioControllerColorControl
+                | StudioControllerRangeControl
+                | StudioControllerPadControl
+              )[]
+            | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
   sourceUrl?: string | null;
   baseHtml?: string | null;
   overrides?:
@@ -2822,6 +2896,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'image-profiles';
         value: number | ImageProfile;
+      } | null)
+    | ({
+        relationTo: 'graphic-profiles';
+        value: number | GraphicProfile;
       } | null)
     | ({
         relationTo: 'generated-images';
@@ -4023,6 +4101,41 @@ export interface ImageProfileCameraControlFeatureSelect<T extends boolean = true
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "graphic-profiles_select".
+ */
+export interface GraphicProfilesSelect<T extends boolean = true> {
+  name?: T;
+  runtime?: T;
+  displayOrder?: T;
+  controller?:
+    | T
+    | {
+        groups?:
+          | T
+          | {
+              key?: T;
+              title?: T;
+              collapsible?: T;
+              defaultOpen?: T;
+              controls?:
+                | T
+                | {
+                    text?: T | StudioControllerTextControlSelect<T>;
+                    toggle?: T | StudioControllerToggleControlSelect<T>;
+                    select?: T | StudioControllerSelectControlSelect<T>;
+                    color?: T | StudioControllerColorControlSelect<T>;
+                    range?: T | StudioControllerRangeControlSelect<T>;
+                    pad?: T | StudioControllerPadControlSelect<T>;
+                  };
+              id?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "generated-images_select".
  */
 export interface GeneratedImagesSelect<T extends boolean = true> {
@@ -4054,6 +4167,29 @@ export interface GeneratedImagesSelect<T extends boolean = true> {
 export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
+  controller?:
+    | T
+    | {
+        groups?:
+          | T
+          | {
+              key?: T;
+              title?: T;
+              collapsible?: T;
+              defaultOpen?: T;
+              controls?:
+                | T
+                | {
+                    text?: T | StudioControllerTextControlSelect<T>;
+                    toggle?: T | StudioControllerToggleControlSelect<T>;
+                    select?: T | StudioControllerSelectControlSelect<T>;
+                    color?: T | StudioControllerColorControlSelect<T>;
+                    range?: T | StudioControllerRangeControlSelect<T>;
+                    pad?: T | StudioControllerPadControlSelect<T>;
+                  };
+              id?: T;
+            };
+      };
   sourceUrl?: T;
   baseHtml?: T;
   overrides?: T;
@@ -4626,6 +4762,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'image-profiles';
           value: number | ImageProfile;
+        } | null)
+      | ({
+          relationTo: 'graphic-profiles';
+          value: number | GraphicProfile;
         } | null)
       | ({
           relationTo: 'generated-images';

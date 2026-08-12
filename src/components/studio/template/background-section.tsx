@@ -5,6 +5,7 @@ import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-pro
 import { Controller } from '@/components/studio/shared/controller'
 import {
 	ControllerControlRenderer,
+	ControllerGroupRenderer,
 	ControllerRenderer,
 } from '@/components/studio/shared/controller-renderer'
 import { Button } from '@/components/ui/button'
@@ -14,6 +15,7 @@ import { getImageColorAdjustmentControls } from '@/features/image-studio/image-s
 import type {
 	ControllerControlDefinition,
 	ControllerControlValue,
+	ControllerGroupDefinition,
 	ControllerRuntimeBindings,
 } from '@/features/studio-controller/controller-definition'
 import type {
@@ -28,8 +30,10 @@ import {
 } from './image-transform-control'
 
 type BackgroundSectionProps = {
+	groupDefinition: ControllerGroupDefinition
 	/** Template의 공통 Controller Definition — availability와 options를 그대로 소비한다. */
 	typeDefinition: Extract<ControllerControlDefinition, { kind: 'select' }>
+	colorDefinition: Extract<ControllerControlDefinition, { kind: 'color' }>
 	/** 템플릿 캔버스 종횡비(w/h) — 배경 transform 패드가 같은 비율로 그려진다. */
 	canvasAspectRatio?: number
 	/** Image Config를 캔버스 비율로 제한한 슬롯 범위 계약. */
@@ -39,6 +43,7 @@ type BackgroundSectionProps = {
 	/** 배경 세션 상태 — 소유는 Provider(합성에 싣는다). */
 	value: TemplateBackgroundState
 	onChange: (patch: TemplateBackgroundPatch) => void
+	onColorChange: (value: ControllerControlValue) => void
 	onTypeChange: (value: ControllerControlValue) => void
 	onFeatureChange: (controlId: string, value: ControllerControlValue) => void
 	onImageProfileChange: (profileId: number) => void
@@ -56,13 +61,16 @@ type BackgroundSectionProps = {
  * 경로가 없는 Preset 브라우즈·배경 이미지 feature 색 행·Image Transform만 잠가 스테이징한다.
  */
 export function BackgroundSection({
+	groupDefinition,
 	typeDefinition,
+	colorDefinition,
 	canvasAspectRatio,
 	imageContracts,
 	graphicConfigs,
 	graphicBindings,
 	value,
 	onChange,
+	onColorChange,
 	onTypeChange,
 	onFeatureChange,
 	onImageProfileChange,
@@ -98,7 +106,7 @@ export function BackgroundSection({
 
 	return (
 		<>
-			<Controller.Group title="Background" collapsible>
+			<ControllerGroupRenderer definition={groupDefinition}>
 				<ControllerControlRenderer
 					definition={typeDefinition}
 					value={type}
@@ -106,12 +114,10 @@ export function BackgroundSection({
 				/>
 
 				{type === 'color' && (
-					<Controller.ColorRow
-						label="Background Color"
-						value={value.color ?? '#ffffff'}
-						isEmpty={value.color === null}
-						onReset={() => onChange({ color: null })}
-						onChange={(hex) => onChange({ color: hex })}
+					<ControllerControlRenderer
+						definition={colorDefinition}
+						value={value.color}
+						onChange={onColorChange}
 					/>
 				)}
 
@@ -213,7 +219,7 @@ export function BackgroundSection({
 						/>
 					</Controller.Row>
 				)}
-			</Controller.Group>
+			</ControllerGroupRenderer>
 
 			{type === 'graphic' && graphicConfig && (
 				<ControllerRenderer

@@ -5,10 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { forwardStraightGraphicConfig } from '@/features/graphic-studio/graphic-studio-runtime'
 import type { ImageStudioConfig } from '@/features/image-studio/image-studio-config'
 import { createControllerValues } from '@/features/studio-controller/controller-definition'
-import type {
-	TemplateBackgroundPatch,
-	TemplateBackgroundState,
-} from '@/features/template-studio/hooks/use-template-studio'
+import type { TemplateBackgroundState } from '@/features/template-studio/hooks/use-template-studio'
 import {
 	resolveTemplateImageConfig,
 	type TemplateBackgroundType,
@@ -21,6 +18,8 @@ const imageContract = resolveTemplateImageConfig(createImageConfig(), {
 })
 if (!imageContract) throw new Error('테스트 Image Config가 호환되지 않습니다.')
 
+type HarnessPatch = Partial<Pick<TemplateBackgroundState, 'imageMode' | 'color' | 'prompt'>>
+
 /** 배경 상태의 소유자는 Provider다 — 테스트에서는 같은 계약(값+patch)의 껍데기가 대신 쥔다. */
 function Harness({
 	allowedTypes,
@@ -32,7 +31,7 @@ function Harness({
 	typeAvailability,
 }: {
 	allowedTypes: readonly TemplateBackgroundType[]
-	onChange?: (patch: TemplateBackgroundPatch) => void
+	onChange?: (patch: HarnessPatch) => void
 	onGenerate?: () => void
 	contract?: typeof imageContract | null
 	initialError?: string | null
@@ -53,6 +52,12 @@ function Harness({
 	})
 	return (
 		<BackgroundSection
+			groupDefinition={{
+				id: 'background',
+				title: 'Background',
+				collapsible: true,
+				controls: [],
+			}}
 			typeDefinition={{
 				id: 'background.type',
 				kind: 'select',
@@ -64,6 +69,12 @@ function Harness({
 					label: value[0]?.toUpperCase() + value.slice(1),
 				})),
 			}}
+			colorDefinition={{
+				id: 'background.color',
+				kind: 'color',
+				label: 'Background Color',
+				defaultValue: null,
+			}}
 			imageContracts={contract ? [contract] : []}
 			graphicConfigs={[forwardStraightGraphicConfig]}
 			graphicBindings={{ origin: { padAspectRatio: 4 / 3 } }}
@@ -71,6 +82,11 @@ function Harness({
 			onChange={(patch) => {
 				onChange?.(patch)
 				setState((current) => ({ ...current, ...patch }))
+			}}
+			onColorChange={(color) => {
+				if (typeof color !== 'string' && color !== null) return
+				onChange?.({ color })
+				setState((current) => ({ ...current, color }))
 			}}
 			onTypeChange={(type) =>
 				setState((current) =>

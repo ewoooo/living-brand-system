@@ -83,9 +83,7 @@ export type TemplateBackgroundState = {
 	image?: { url: string; generatedImageId: number }
 }
 
-export type TemplateBackgroundPatch = Partial<
-	Pick<TemplateBackgroundState, 'imageMode' | 'color' | 'prompt'>
->
+export type TemplateBackgroundPatch = Partial<Pick<TemplateBackgroundState, 'imageMode' | 'prompt'>>
 
 type TemplateStudioValue = {
 	navigation: GetCreateNavigationOutput
@@ -112,6 +110,7 @@ type TemplateStudioValue = {
 		graphicConfigs: readonly GraphicStudioConfig[]
 		graphicBindings: ControllerRuntimeBindings
 		update: (patch: TemplateBackgroundPatch) => void
+		setColor: (hex: string | null) => void
 		selectType: (value: ControllerControlValue) => void
 		updateFeature: (controlId: string, value: ControllerControlValue) => void
 		selectImageProfile: (profileId: number) => void
@@ -152,18 +151,28 @@ export function TemplateStudioProvider({
 	children: ReactNode
 }) {
 	const previewRef = useRef<HTMLDivElement>(null)
-	const [textValues, setTextValues] = useState<Record<string, string>>({})
-	const [textColor, setTextColor] = useState<string | null>(null)
-	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
-	const [format, setFormat] = useState<TemplateExportFormat>('png')
 	const { html, width, height } = template
 	const slots = config.template.slots
 	const textSlots = useMemo(() => slots.filter(isTextSlot), [slots])
 	const imageSlots = useMemo(() => slots.filter(isImageSlot), [slots])
 	const backgroundSlot = useMemo(() => slots.find(isBackgroundSlot), [slots])
+	const textColorDefinition = config.template.textColorControlId
+		? findTemplateControl(config, config.template.textColorControlId)
+		: undefined
 	const backgroundTypeDefinition = backgroundSlot
 		? findTemplateControl(config, backgroundSlot.typeControlId)
 		: undefined
+	const backgroundColorDefinition = backgroundSlot
+		? findTemplateControl(config, backgroundSlot.colorControlId)
+		: undefined
+	const [textValues, setTextValues] = useState<Record<string, string>>(() =>
+		initialTemplateTextValues(config, textSlots),
+	)
+	const [textColor, setTextColor] = useState<string | null>(() =>
+		textColorDefinition?.kind === 'color' ? textColorDefinition.defaultValue : null,
+	)
+	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
+	const [format, setFormat] = useState<TemplateExportFormat>('png')
 	const imageContracts = useMemo(
 		() =>
 			Object.fromEntries(
@@ -346,17 +355,22 @@ export function TemplateStudioProvider({
 		config,
 		text: {
 			values: textValues,
-			setValue: (slotId, text) =>
-				setTextValues((current) => ({ ...current, [slotId]: text })),
+			setValue: (slotId, next) =>
+				setTextValues((current) =>
+					updateTemplateText(current, config, textSlots, slotId, next),
+				),
 			color: textColor,
-			setColor: setTextColor,
+			setColor: (next) =>
+				setTextColor((current) => updateTemplateColor(current, textColorDefinition, next)),
 			clippedSlotIds,
 		},
 		images: {
 			states: imageStates,
 			contracts: imageContracts,
 			update: (slotId, patch) =>
-				setImageStates((current) => updateTemplateImageSlot(current, slotId, patch)),
+				setImageStates((current) =>
+					updateTemplateImageSlot(current, slotId, patch, imageContracts[slotId] ?? []),
+				),
 			updateFeature: updateImageFeature,
 			selectProfile: (slotId, profileId) =>
 				setImageStates((current) =>
@@ -375,7 +389,14 @@ export function TemplateStudioProvider({
 			contracts: backgroundContracts,
 			graphicConfigs: config.template.graphicConfigs,
 			graphicBindings,
-			update: (patch) => setBackground((current) => updateTemplateBackground(current, patch)),
+			update: (patch) =>
+				setBackground((current) =>
+					updateTemplateBackground(current, patch, backgroundContracts),
+				),
+			setColor: (next) =>
+				setBackground((current) =>
+					updateTemplateBackgroundColor(current, backgroundColorDefinition, next),
+				),
 			selectType: (next) =>
 				setBackground((current) =>
 					selectBackgroundType(current, backgroundTypeDefinition, next),
@@ -460,18 +481,69 @@ function selectImageProfile(
 	}
 }
 
+function initialTemplateTextValues(
+	config: TemplateConfig,
+	slots: readonly TemplateTextSlot[],
+): Record<string, string> {
+	return Object.fromEntries(
+		slots.map((slot) => {
+			const definition = findTemplateControl(config, slot.controlId)
+			return [slot.id, definition?.kind === 'text' ? (definition.defaultValue ?? '') : '']
+		}),
+	)
+}
+
+function updateTemplateText(
+	current: Record<string, string>,
+	config: TemplateConfig,
+	slots: readonly TemplateTextSlot[],
+	slotId: string,
+	next: string,
+): Record<string, string> {
+	const slot = slots.find((candidate) => candidate.id === slotId)
+	const definition = slot ? findTemplateControl(config, slot.controlId) : undefined
+	return definition?.kind === 'text' && acceptsControllerValue(definition, next)
+		? { ...current, [slotId]: next }
+		: current
+}
+
+function updateTemplateColor(
+	current: string | null,
+	definition: ControllerControlDefinition | undefined,
+	next: string | null,
+): string | null {
+	return definition?.kind === 'color' && acceptsControllerValue(definition, next) ? next : current
+}
+
+function updateTemplateBackgroundColor(
+	current: TemplateBackgroundState,
+	definition: ControllerControlDefinition | undefined,
+	next: string | null,
+): TemplateBackgroundState {
+	const color = updateTemplateColor(current.color, definition, next)
+	return color === current.color ? current : { ...current, color }
+}
+
 function updateTemplateImageSlot(
 	current: Record<string, TemplateImageSlotState>,
 	slotId: string,
 	patch: TemplateImageSlotPatch,
+	contracts: readonly ResolvedTemplateImageConfig[],
 ) {
 	const previous = current[slotId]
 	if (!previous) return current
+	const contract = contracts.find((candidate) => candidate.config.id === previous.profileId)
+	const prompt =
+		typeof patch.prompt === 'string' &&
+		contract &&
+		acceptsControllerValue(contract.prompt, patch.prompt)
+			? patch.prompt
+			: undefined
 	return {
 		...current,
 		[slotId]: {
 			...previous,
-			...(typeof patch.prompt === 'string' ? { prompt: patch.prompt } : {}),
+			...(prompt === undefined ? {} : { prompt }),
 			...(patch.transform === undefined ? {} : { transform: patch.transform }),
 		},
 	}
@@ -491,12 +563,19 @@ function applyImageRequestResult(
 function updateTemplateBackground(
 	current: TemplateBackgroundState,
 	patch: TemplateBackgroundPatch,
+	contracts: readonly ResolvedTemplateImageConfig[],
 ): TemplateBackgroundState {
+	const contract = contracts.find((candidate) => candidate.config.id === current.profileId)
+	const prompt =
+		typeof patch.prompt === 'string' &&
+		contract &&
+		acceptsControllerValue(contract.prompt, patch.prompt)
+			? patch.prompt
+			: undefined
 	return {
 		...current,
 		...(patch.imageMode === undefined ? {} : { imageMode: patch.imageMode }),
-		...(patch.color === undefined ? {} : { color: patch.color }),
-		...(patch.prompt === undefined ? {} : { prompt: patch.prompt }),
+		...(prompt === undefined ? {} : { prompt }),
 	}
 }
 
@@ -699,15 +778,16 @@ function initialBackgroundState(
 	slot: TemplateBackgroundSlot | undefined,
 	contracts: readonly ResolvedTemplateImageConfig[],
 ): TemplateBackgroundState {
-	const control = slot ? findTemplateControl(config, slot.typeControlId) : undefined
+	const typeControl = slot ? findTemplateControl(config, slot.typeControlId) : undefined
+	const colorControl = slot ? findTemplateControl(config, slot.colorControlId) : undefined
 	const type =
-		control?.kind === 'select' && isBackgroundType(control.defaultValue)
-			? control.defaultValue
+		typeControl?.kind === 'select' && isBackgroundType(typeControl.defaultValue)
+			? typeControl.defaultValue
 			: 'color'
 	return {
 		type,
 		imageMode: 'preset',
-		color: null,
+		color: colorControl?.kind === 'color' ? colorControl.defaultValue : null,
 		profileId: contracts[0]?.config.id,
 		prompt: contracts[0]?.prompt.defaultValue ?? '',
 		generating: false,

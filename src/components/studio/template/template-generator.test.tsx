@@ -158,6 +158,26 @@ function BackgroundTypeMutationProbe() {
 	)
 }
 
+function TemplateControlMutationProbe() {
+	const { text, background } = useTemplateStudio()
+	return (
+		<>
+			<span data-testid="template-text">{text.values['1:1']}</span>
+			<span data-testid="template-text-color">{text.color}</span>
+			<span data-testid="template-background-color">{background.state.color}</span>
+			<button type="button" onClick={() => text.setValue('1:1', '변경 제목')}>
+				change template text
+			</button>
+			<button type="button" onClick={() => text.setColor('#abcdef')}>
+				change template text color
+			</button>
+			<button type="button" onClick={() => background.setColor('#abcdef')}>
+				change template background color
+			</button>
+		</>
+	)
+}
+
 function ImageRaceProbe() {
 	const { images } = useTemplateStudio()
 	const state = images.states['1:1']
@@ -210,6 +230,72 @@ describe('TemplateGenerator', () => {
 
 		// 포맷 셀렉트 기본값이 PNG — canExport가 전부 false여도 PNG는 항상 내보낼 수 있다.
 		expect(mocks.exportTemplate).toHaveBeenCalledWith('png')
+	})
+
+	it('Template Controller의 readonly 기본값을 세션에 적용하고 Context action에서도 변경을 거부한다', () => {
+		const controlledTemplate: PublishedHtmlTemplate = {
+			...template,
+			html: '<p data-node-id="1:1" data-figma-type="TEXT" data-name="Title">원본 제목</p>',
+			nodeConfigs: { '1:1': { input: { label: '제목', maxLength: 20, maxLines: 1 } } },
+			controller: {
+				groups: [
+					{
+						key: 'text',
+						title: 'Text',
+						controls: [
+							{
+								blockType: 'text',
+								key: 'text:1:1',
+								label: '제목',
+								availability: 'readonly',
+								defaultValue: '고정 제목',
+								maxLength: 20,
+							},
+							{
+								blockType: 'color',
+								key: 'text.color',
+								label: 'Color',
+								availability: 'readonly',
+								defaultValue: '#112233',
+							},
+						],
+					},
+					{
+						key: 'background',
+						title: 'Background',
+						controls: [
+							{
+								blockType: 'color',
+								key: 'background.color',
+								label: 'Background Color',
+								availability: 'readonly',
+								defaultValue: '#ffffff',
+							},
+						],
+					},
+				],
+			},
+		}
+		const config = deriveTemplateConfig(controlledTemplate)
+		render(
+			<TemplateStudioProvider
+				config={config}
+				template={controlledTemplate}
+				navigation={navigation}
+			>
+				<TemplateControlMutationProbe />
+			</TemplateStudioProvider>,
+		)
+
+		expect(screen.getByTestId('template-text')).toHaveTextContent('고정 제목')
+		expect(screen.getByTestId('template-text-color')).toHaveTextContent('#112233')
+		expect(screen.getByTestId('template-background-color')).toHaveTextContent('#ffffff')
+		fireEvent.click(screen.getByRole('button', { name: 'change template text' }))
+		fireEvent.click(screen.getByRole('button', { name: 'change template text color' }))
+		fireEvent.click(screen.getByRole('button', { name: 'change template background color' }))
+		expect(screen.getByTestId('template-text')).toHaveTextContent('고정 제목')
+		expect(screen.getByTestId('template-text-color')).toHaveTextContent('#112233')
+		expect(screen.getByTestId('template-background-color')).toHaveTextContent('#ffffff')
 	})
 
 	it('아이덴티티 카드의 Change로 선택한 템플릿 작업대로 이동한다', async () => {

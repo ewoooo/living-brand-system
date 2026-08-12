@@ -1,6 +1,8 @@
 import type { Field } from 'payload'
 import { describe, expect, it } from 'vitest'
+import { GraphicProfiles } from '../GraphicProfiles'
 import { ImageProfiles } from '../ImageProfiles'
+import { Templates } from '../Templates'
 import { imageProfileFeaturesField } from './image-profile-features-field'
 import {
 	studioControllerField,
@@ -42,6 +44,15 @@ describe('studioControllerField', () => {
 				defaultValue: 'enabled',
 			})
 			expect(block.fields.some((field) => 'name' in field && field.name === 'id')).toBe(false)
+		}
+	})
+
+	it('Image·Template·Graphic 어드민이 같은 Controller field factory를 소비한다', () => {
+		for (const collection of [ImageProfiles, Templates, GraphicProfiles]) {
+			expect(namedField(collection.fields, 'controller')).toMatchObject({
+				name: 'controller',
+				type: 'group',
+			})
 		}
 	})
 
@@ -141,6 +152,26 @@ describe('ImageProfiles publish validation', () => {
 			message: 'Image feature type이 중복되었습니다: camera-control',
 			status: 400,
 		})
+	})
+})
+
+describe('GraphicProfiles publish validation', () => {
+	const hook = GraphicProfiles.hooks?.beforeChange?.[0]
+	if (!hook) throw new Error('GraphicProfiles beforeChange hook is not configured')
+
+	it('draft는 불완전 override를 허용하고 publish는 등록 runtime보다 넓은 계약을 거부한다', async () => {
+		const draft = {
+			_status: 'draft',
+			name: 'Draft',
+			runtime: 'forward-straight',
+			controller: { groups: [{ key: 'unknown' }] },
+		}
+		expect(hook({ data: draft } as never)).toBe(draft)
+
+		const published = { ...draft, _status: 'published' }
+		expect(() => hook({ data: published } as never)).toThrow(
+			'StudioControllerConfig controller group.controls: 배열이어야 합니다.',
+		)
 	})
 })
 

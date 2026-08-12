@@ -41,6 +41,7 @@ import * as migration_20260807_030110_logo_bg_picker_widget from './20260807_030
 import * as migration_20260811_021425_image_profile_studio_fields from './20260811_021425_image_profile_studio_fields';
 import * as migration_20260811_070255_studio_controller_config from './20260811_070255_studio_controller_config';
 import * as migration_20260811_075822_image_profile_features from './20260811_075822_image_profile_features';
+import * as migration_20260812_001709_studio_admin_controller_configs from './20260812_001709_studio_admin_controller_configs';
 
 export const migrations = [
   {
@@ -256,6 +257,11 @@ export const migrations = [
   {
     up: migration_20260811_075822_image_profile_features.up,
     down: migration_20260811_075822_image_profile_features.down,
-    name: '20260811_075822_image_profile_features'
+    name: '20260811_075822_image_profile_features',
+  },
+  {
+    up: migration_20260812_001709_studio_admin_controller_configs.up,
+    down: migration_20260812_001709_studio_admin_controller_configs.down,
+    name: '20260812_001709_studio_admin_controller_configs',
   },
 ];

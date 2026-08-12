@@ -2,6 +2,10 @@
 
 import { useRouter } from 'next/navigation'
 import { Controller } from '@/components/studio/shared/controller'
+import {
+	ControllerControlRenderer,
+	ControllerGroupRenderer,
+} from '@/components/studio/shared/controller-renderer'
 import { Button } from '@/components/ui/button'
 import {
 	Select,
@@ -17,6 +21,7 @@ import type { TemplateExportFormat } from '@/features/template-export/services/e
 import { useTemplateStudio } from '@/features/template-studio/hooks/use-template-studio'
 import {
 	findTemplateControl,
+	findTemplateControlGroup,
 	isBackgroundSlot,
 	isImageSlot,
 	isTextSlot,
@@ -46,6 +51,18 @@ export function TemplateSidebar() {
 	const { canvas, printPpi } = config.template.exportOption
 	const backgroundTypeControl = backgroundSlot
 		? findTemplateControl(config, backgroundSlot.typeControlId)
+		: undefined
+	const backgroundColorControl = backgroundSlot
+		? findTemplateControl(config, backgroundSlot.colorControlId)
+		: undefined
+	const backgroundGroup = backgroundSlot
+		? findTemplateControlGroup(config, backgroundSlot.typeControlId)
+		: undefined
+	const textGroup = textSlots[0]
+		? findTemplateControlGroup(config, textSlots[0].controlId)
+		: undefined
+	const textColorControl = config.template.textColorControlId
+		? findTemplateControl(config, config.template.textColorControlId)
 		: undefined
 	const currentCategory = navigation.categories.find((category) =>
 		category.templates.some((item) => item.id === config.id),
@@ -149,8 +166,8 @@ export function TemplateSidebar() {
 				</Select>
 			</div>
 
-			{textSlots.length > 0 && (
-				<Controller.Group title="Text" collapsible>
+			{textSlots.length > 0 && textGroup && (
+				<ControllerGroupRenderer definition={textGroup}>
 					{textSlots.map((slot) => {
 						const definition = findTemplateControl(config, slot.controlId)
 						if (definition?.kind !== 'text') return null
@@ -170,14 +187,16 @@ export function TemplateSidebar() {
 							</div>
 						)
 					})}
-					<Controller.ColorRow
-						label="Color"
-						value={text.color ?? '#000000'}
-						isEmpty={text.color === null}
-						onReset={() => text.setColor(null)}
-						onChange={text.setColor}
-					/>
-				</Controller.Group>
+					{textColorControl?.kind === 'color' && (
+						<ControllerControlRenderer
+							definition={textColorControl}
+							value={text.color}
+							onChange={(next) => {
+								if (typeof next === 'string' || next === null) text.setColor(next)
+							}}
+						/>
+					)}
+				</ControllerGroupRenderer>
 			)}
 			{imageSlots.map((slot, index) => {
 				const sectionTitle = imageSlots.length > 1 ? `Image ${index + 1}` : 'Image'
@@ -228,25 +247,33 @@ export function TemplateSidebar() {
 					</div>
 				)
 			})}
-			{backgroundSlot && backgroundTypeControl?.kind === 'select' && (
-				<BackgroundSection
-					typeDefinition={backgroundTypeControl}
-					canvasAspectRatio={
-						canvas.width && canvas.height ? canvas.width / canvas.height : undefined
-					}
-					imageContracts={background.contracts}
-					graphicConfigs={background.graphicConfigs}
-					graphicBindings={background.graphicBindings}
-					value={background.state}
-					onChange={background.update}
-					onTypeChange={background.selectType}
-					onFeatureChange={background.updateFeature}
-					onImageProfileChange={background.selectImageProfile}
-					onGraphicConfigChange={background.selectGraphicConfig}
-					onGraphicChange={background.updateGraphic}
-					onGenerate={background.generate}
-				/>
-			)}
+			{backgroundSlot &&
+				backgroundGroup &&
+				backgroundTypeControl?.kind === 'select' &&
+				backgroundColorControl?.kind === 'color' && (
+					<BackgroundSection
+						groupDefinition={backgroundGroup}
+						typeDefinition={backgroundTypeControl}
+						colorDefinition={backgroundColorControl}
+						canvasAspectRatio={
+							canvas.width && canvas.height ? canvas.width / canvas.height : undefined
+						}
+						imageContracts={background.contracts}
+						graphicConfigs={background.graphicConfigs}
+						graphicBindings={background.graphicBindings}
+						value={background.state}
+						onChange={background.update}
+						onColorChange={(next) => {
+							if (typeof next === 'string' || next === null) background.setColor(next)
+						}}
+						onTypeChange={background.selectType}
+						onFeatureChange={background.updateFeature}
+						onImageProfileChange={background.selectImageProfile}
+						onGraphicConfigChange={background.selectGraphicConfig}
+						onGraphicChange={background.updateGraphic}
+						onGenerate={background.generate}
+					/>
+				)}
 			{textSlots.length === 0 && imageSlots.length === 0 && (
 				<Typography size="sm" tone="muted">
 					이 템플릿에는 편집 가능한 슬롯이 없습니다.

@@ -129,4 +129,30 @@ describe('prepareTemplateSave', () => {
 		expect(req.payload.find).not.toHaveBeenCalled()
 		expect(req.payload.update).not.toHaveBeenCalled()
 	})
+
+	it('published Template의 Controller override가 기본 슬롯 계약을 확장하면 거부한다', async () => {
+		const req = buildRequest()
+
+		await expect(
+			prepareTemplateSave({
+				data: {
+					_status: 'published',
+					html: '<p data-node-id="name" data-figma-type="TEXT">이름</p>',
+					overrides: { name: { input: { label: '이름', maxLength: 20 } } },
+					width: 1200,
+					height: 800,
+					controller: {
+						groups: [
+							{
+								key: 'unknown',
+								title: 'Unknown',
+								controls: [],
+							},
+						],
+					},
+				},
+				req: req as never,
+			}),
+		).resolves.toContain('override group')
+	})
 })

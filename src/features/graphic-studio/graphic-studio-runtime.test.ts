@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createControllerValues } from '@/features/studio-controller/controller-definition'
 import { parseGraphicStudioConfig } from './graphic-studio-config'
 import {
+	deriveGraphicStudioConfig,
 	forwardStraightGraphicConfig,
 	getGraphicStudioRuntimeBindings,
 	graphicStudioConfigs,
@@ -46,5 +47,47 @@ describe('graphicStudioRuntime', () => {
 	it('유효하지 않은 viewport에는 기하 binding을 만들지 않는다', () => {
 		expect(getGraphicStudioRuntimeBindings(config, { width: 0, height: 600 })).toEqual({})
 		expect(getGraphicStudioRuntimeBindings(config, { width: 800, height: 0 })).toEqual({})
+	})
+
+	it('published Graphic Profile은 runtime 기본 Definition을 좁히고 미등록 runtime을 거부한다', () => {
+		const narrowed = deriveGraphicStudioConfig({
+			id: 9,
+			name: '고정 시점',
+			runtime: 'forward-straight',
+			controller: {
+				groups: [
+					{
+						key: 'graphic',
+						title: 'Graphic',
+						collapsible: true,
+						defaultOpen: false,
+						controls: [
+							{
+								blockType: 'select',
+								key: 'viewpoint',
+								label: '시점',
+								availability: 'readonly',
+								defaultValue: 'flat',
+								options: [{ value: 'flat', label: '평면' }],
+							},
+						],
+					},
+				],
+			},
+		})
+
+		expect(narrowed).toMatchObject({ id: 'forward-straight', name: '고정 시점' })
+		expect(narrowed.controller.groups[0]).toMatchObject({
+			collapsible: true,
+			defaultOpen: false,
+		})
+		expect(narrowed.controller.groups[0]?.controls[1]).toMatchObject({
+			id: 'viewpoint',
+			availability: 'readonly',
+			options: [{ value: 'flat', label: '평면' }],
+		})
+		expect(() =>
+			deriveGraphicStudioConfig({ id: 10, name: 'Unknown', runtime: 'missing' }),
+		).toThrow('등록되지 않은')
 	})
 })

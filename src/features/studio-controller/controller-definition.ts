@@ -145,6 +145,80 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	return input as StudioControllerConfig
 }
 
+/** Payload array/block 저장형의 key·blockType을 공개 Controller Definition으로 정규화한다. */
+export function projectPayloadController(
+	input: unknown,
+): StudioControllerConfig['controller'] | null {
+	if (!input || typeof input !== 'object') return null
+	const groups = (input as { groups?: unknown }).groups
+	if (groups == null || (Array.isArray(groups) && groups.length === 0)) return null
+	if (!Array.isArray(groups)) invalid('controller.groups', '배열이어야 합니다.')
+
+	return {
+		groups: groups.map((value) => {
+			const group = asRecord(value, 'controller group')
+			if (!Array.isArray(group.controls)) {
+				invalid('controller group.controls', '배열이어야 합니다.')
+			}
+			const collapsible = group.collapsible === true
+			return {
+				id: group.key as string,
+				title: group.title as string,
+				controls: group.controls.map(projectPayloadControl),
+				...(collapsible
+					? {
+							collapsible: true as const,
+							...(typeof group.defaultOpen === 'boolean'
+								? { defaultOpen: group.defaultOpen }
+								: {}),
+						}
+					: {}),
+			}
+		}) as readonly ControllerGroupDefinition[],
+	}
+}
+
+/** Admin Definition이 runtime/Template 기본 계약을 확장하지 않고 같은 ID의 제약만 좁힌다. */
+export function narrowControllerGroups(
+	baseGroups: readonly ControllerGroupDefinition[],
+	overrideGroups: readonly ControllerGroupDefinition[],
+): readonly ControllerGroupDefinition[] {
+	const baseById = new Map(baseGroups.map((group) => [group.id, group]))
+	for (const group of overrideGroups) {
+		const base = baseById.get(group.id)
+		if (!base) throw new Error(`Controller override group을 찾을 수 없습니다: ${group.id}`)
+		const baseControlIds = new Set(base.controls.map((control) => control.id))
+		for (const control of group.controls) {
+			if (!baseControlIds.has(control.id)) {
+				throw new Error(`Controller override control을 찾을 수 없습니다: ${control.id}`)
+			}
+		}
+	}
+
+	return baseGroups.map((baseGroup) => {
+		const overrideGroup = overrideGroups.find((group) => group.id === baseGroup.id)
+		if (!overrideGroup) return baseGroup
+		const overrides = new Map(
+			overrideGroup.controls.map((control) => [control.id, control] as const),
+		)
+		const controls = baseGroup.controls.map((base) => {
+			const override = overrides.get(base.id)
+			return override ? narrowControl(base, override) : base
+		})
+		return overrideGroup.collapsible
+			? {
+					id: baseGroup.id,
+					title: overrideGroup.title,
+					controls,
+					collapsible: true as const,
+					...(overrideGroup.defaultOpen === undefined
+						? {}
+						: { defaultOpen: overrideGroup.defaultOpen }),
+				}
+			: { id: baseGroup.id, title: overrideGroup.title, controls }
+	})
+}
+
 /** Definition의 기본값으로 편집 세션을 시작한다. 중복 id는 값 덮어쓰기를 막기 위해 거부한다. */
 export function createControllerValues(
 	groups: readonly ControllerGroupDefinition[],
@@ -334,6 +408,151 @@ function validateControl(value: unknown, path: string) {
 	}
 }
 
+function projectPayloadControl(value: unknown): ControllerControlDefinition {
+	const control = asRecord(value, 'controller control')
+	const base = {
+		id: control.key as string,
+		label: control.label as string,
+		...optionalProperty(
+			'availability',
+			control.availability as ControllerControlDefinition['availability'],
+		),
+	}
+
+	switch (control.blockType) {
+		case 'text':
+			return {
+				...base,
+				kind: 'text',
+				defaultValue: (control.defaultValue ?? null) as string | null,
+				...optionalProperty('multiline', control.multiline as boolean | undefined),
+				...optionalProperty('maxLength', control.maxLength as number | undefined),
+				...optionalProperty('placeholder', control.placeholder as string | undefined),
+			}
+		case 'toggle':
+			return {
+				...base,
+				kind: 'toggle',
+				defaultValue: control.defaultValue as boolean,
+			}
+		case 'select': {
+			if (!Array.isArray(control.options)) {
+				invalid('controller select.options', '배열이어야 합니다.')
+			}
+			return {
+				...base,
+				kind: 'select',
+				defaultValue: (control.defaultValue ?? null) as string | null,
+				options: control.options.map((value) => {
+					const option = asRecord(value, 'controller select option')
+					return { value: option.value as string, label: option.label as string }
+				}),
+				...optionalProperty('placeholder', control.placeholder as string | undefined),
+			}
+		}
+		case 'color':
+			return {
+				...base,
+				kind: 'color',
+				defaultValue: (control.defaultValue ?? null) as string | null,
+			}
+		case 'range': {
+			const display = control.display
+			return {
+				...base,
+				kind: 'range',
+				defaultValue: control.defaultValue as number,
+				min: control.min as number,
+				max: control.max as number,
+				step: control.step as number,
+				...(display && typeof display === 'object'
+					? {
+							display: {
+								...optionalProperty(
+									'unit',
+									(display as Record<string, unknown>).unit as string | undefined,
+								),
+								...optionalProperty(
+									'precision',
+									(display as Record<string, unknown>).precision as
+										| number
+										| undefined,
+								),
+							},
+						}
+					: {}),
+			}
+		}
+		case 'pad': {
+			const defaultValue = asRecord(control.defaultValue, 'controller pad.defaultValue')
+			return {
+				...base,
+				kind: 'pad',
+				defaultValue: { x: defaultValue.x as number, y: defaultValue.y as number },
+				...optionalProperty('aspectRatio', control.aspectRatio as number | undefined),
+			}
+		}
+		default:
+			invalid('controller control.blockType', '지원하지 않는 값입니다.')
+	}
+}
+
+function narrowControl(
+	base: ControllerControlDefinition,
+	override: ControllerControlDefinition,
+): ControllerControlDefinition {
+	if (base.kind !== override.kind) {
+		throw new Error(`Controller override kind가 다릅니다: ${override.id}`)
+	}
+	const availabilityRank: Record<ControllerAvailability, number> = {
+		enabled: 0,
+		readonly: 1,
+		disabled: 2,
+	}
+	if (
+		availabilityRank[override.availability ?? 'enabled'] <
+		availabilityRank[base.availability ?? 'enabled']
+	) {
+		throw new Error(`Controller override availability가 기본 계약을 확장합니다: ${override.id}`)
+	}
+
+	switch (base.kind) {
+		case 'text': {
+			const next = override as Extract<ControllerControlDefinition, { kind: 'text' }>
+			if (
+				base.maxLength !== undefined &&
+				(next.maxLength === undefined || next.maxLength > base.maxLength)
+			) {
+				throw new Error(
+					`Controller override maxLength가 기본 계약을 확장합니다: ${override.id}`,
+				)
+			}
+			return next
+		}
+		case 'select': {
+			const next = override as Extract<ControllerControlDefinition, { kind: 'select' }>
+			const allowed = new Set(base.options.map((option) => option.value))
+			if (next.options.some((option) => !allowed.has(option.value))) {
+				throw new Error(
+					`Controller override options가 기본 계약을 확장합니다: ${override.id}`,
+				)
+			}
+			return next
+		}
+		case 'range': {
+			const next = override as Extract<ControllerControlDefinition, { kind: 'range' }>
+			if (next.min < base.min || next.max > base.max) {
+				throw new Error(
+					`Controller override range가 기본 계약을 확장합니다: ${override.id}`,
+				)
+			}
+			return next
+		}
+		default:
+			return override
+	}
+}
+
 function assertJsonValue(value: unknown, path: string, ancestors = new Set<object>()) {
 	if (value === null || typeof value === 'string' || typeof value === 'boolean') return
 	if (typeof value === 'number') {
@@ -388,4 +607,8 @@ function assertNumber(value: unknown, path: string): asserts value is number {
 
 function invalid(path: string, message: string): never {
 	throw new Error(`StudioControllerConfig ${path}: ${message}`)
+}
+
+function optionalProperty<Key extends string, Value>(key: Key, value: Value | null | undefined) {
+	return value == null ? {} : ({ [key]: value } as Record<Key, Value>)
 }

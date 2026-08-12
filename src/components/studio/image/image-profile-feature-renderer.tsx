@@ -1,7 +1,10 @@
 'use client'
 
 import { Controller } from '@/components/studio/shared/controller'
-import { ControllerControlRenderer } from '@/components/studio/shared/controller-renderer'
+import {
+	ControllerControlRenderer,
+	ControllerGroupRenderer,
+} from '@/components/studio/shared/controller-renderer'
 import {
 	getImageColorAdjustmentControls,
 	type ImageStudioConfig,
@@ -90,19 +93,10 @@ function ColorAdjustmentFeature({
 			/>
 		))
 
-		return group.collapsible ? (
-			<Controller.Group
-				key={`${feature.type}:${group.id}`}
-				title={group.title}
-				collapsible
-				defaultOpen={group.defaultOpen}
-			>
+		return (
+			<ControllerGroupRenderer key={`${feature.type}:${group.id}`} definition={group}>
 				{content}
-			</Controller.Group>
-		) : (
-			<Controller.Group key={`${feature.type}:${group.id}`} title={group.title}>
-				{content}
-			</Controller.Group>
+			</ControllerGroupRenderer>
 		)
 	})
 }
