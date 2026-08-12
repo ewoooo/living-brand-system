@@ -18,7 +18,7 @@ import {
 	parseStudioControllerConfig,
 	projectPayloadControllerOverride,
 } from '@/features/studio-controller/controller-definition'
-import { resolveStudioOutputFormats } from '@/features/studio-output/studio-output'
+import { resolveStudioOutputFormats } from '@/features/studio-export/studio-output'
 import {
 	supportsTemplateExport,
 	type TemplateExportFormat,

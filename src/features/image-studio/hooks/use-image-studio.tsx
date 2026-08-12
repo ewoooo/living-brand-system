@@ -21,6 +21,9 @@ import {
 	type ControllerValues,
 	createControllerValues,
 } from '@/features/studio-controller/controller-definition'
+import { useExport } from '@/features/studio-export/utils/use-export'
+
+type ImageExportAction = 'selected' | 'all'
 
 type ImageStudioValue = {
 	profiles: {
@@ -74,6 +77,9 @@ type ImageStudioValue = {
 	}
 	/** PNG 저장 — 색이 있으면 구운 PNG, 없으면 원본이다. 서버에 남기지 않는다. */
 	download: {
+		available: boolean
+		busy: boolean
+		error: string | null
 		selected: () => void
 		all: () => void
 	}
@@ -138,6 +144,26 @@ export function ImageStudioProvider({
 					...(typeof backgroundColor === 'string' ? { background: backgroundColor } : {}),
 				}
 			: null
+	const canDownload = colorValue
+		? config.output.formats.includes('png')
+		: config.output.original || config.output.formats.includes('png')
+	const imageExport = useExport<ImageExportAction>({
+		canExport: () => canDownload,
+		execute: async (action) => {
+			if (action === 'selected') {
+				const src = selected === null ? undefined : result?.images[selected]
+				if (src && selected !== null) {
+					await downloadImage(src, selected, colorValue, config.output)
+				}
+				return
+			}
+
+			// ponytail: 저장을 연달아 낸다 — 장수가 늘어 브라우저가 막으면 zip으로 올린다.
+			for (const [index, src] of (result?.images ?? []).entries()) {
+				await downloadImage(src, index, colorValue, config.output)
+			}
+		},
+	})
 
 	function update(controlId: string, value: ControllerControlValue) {
 		const definition = findControl(config, controlId)
@@ -222,20 +248,11 @@ export function ImageStudioProvider({
 		},
 		results: { result, requested, selected, select: setSelected },
 		download: {
-			selected: () => {
-				const src = selected === null ? undefined : result?.images[selected]
-				if (src && selected !== null) {
-					void downloadImage(src, selected, colorValue, config.output)
-				}
-			},
-			// ponytail: 저장을 연달아 낸다 — 장수가 늘어 브라우저가 막으면 zip으로 올린다.
-			all: () => {
-				void (async () => {
-					for (const [index, src] of (result?.images ?? []).entries()) {
-						await downloadImage(src, index, colorValue, config.output)
-					}
-				})()
-			},
+			available: canDownload,
+			busy: imageExport.exporting !== null,
+			error: imageExport.error,
+			selected: () => void imageExport.run('selected'),
+			all: () => void imageExport.run('all'),
 		},
 	}
 

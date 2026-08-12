@@ -16,11 +16,11 @@ const input = {
 	fileName: '브랜드 카드',
 	height: 300,
 	html: '<div id="__stage">카드</div>',
+	output: { formats: ['png', 'tiff', 'pdf'] as const },
 	printPpi: 300 as const,
 	templateId: 12,
 	templateVersion: '2026-07-29',
 	width: 600,
-	output: { formats: ['png', 'tiff', 'pdf'] as const },
 	controller: { groups: [], values: {} },
 }
 

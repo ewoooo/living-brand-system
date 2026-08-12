@@ -13,8 +13,8 @@ export type AgentTemplateDocument = Pick<
 	| 'id'
 	| 'name'
 	| 'overrides'
-	| 'printPpi'
 	| 'output'
+	| 'printPpi'
 	| 'updatedAt'
 	| 'width'
 >
@@ -43,11 +43,11 @@ function publishedTemplateQuery(user: unknown) {
 			overrides: true,
 			width: true,
 			height: true,
+			output: true,
 			printPpi: true,
 			updatedAt: true,
 			controller: true,
 			controllerOverride: true,
-			output: true,
 		},
 	} as const
 }

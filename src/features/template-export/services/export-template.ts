@@ -3,8 +3,8 @@ import {
 	type ControllerGroupDefinition,
 	type ControllerValues,
 } from '@/features/studio-controller/controller-definition'
-import type { StudioOutputCapability } from '@/features/studio-output/studio-output'
-import { supportsStudioOutput } from '@/features/studio-output/studio-output'
+import type { StudioOutputCapability } from '@/features/studio-export/studio-output'
+import { supportsStudioOutput } from '@/features/studio-export/studio-output'
 import type { PrintPpi } from '../print-policy'
 
 export type TemplateExportFormat = 'png' | 'tiff' | 'pdf'

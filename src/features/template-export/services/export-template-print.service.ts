@@ -1,3 +1,7 @@
+import {
+	resolveStudioOutputFormats,
+	supportsStudioOutput,
+} from '@/features/studio-export/studio-output'
 import { findPublishedTemplate } from '@/repositories/published-template.payload.repository'
 import { projectTemplateRenderModel } from '@/services/project-template-render-model.service'
 import { parsePrintPpi, pixelsToMillimeters, type TemplatePrintFormat } from '../print-policy'
@@ -36,7 +40,14 @@ export async function exportTemplatePrint({
 	const renderModel = template ? projectTemplateRenderModel(template) : null
 	const ppi = parsePrintPpi(template?.printPpi)
 
-	if (!renderModel || !ppi) throw new TemplatePrintUnavailableError()
+	if (!template || !renderModel || !ppi) throw new TemplatePrintUnavailableError()
+	const output = {
+		formats: resolveStudioOutputFormats(
+			['png', 'tiff', 'pdf'] as const,
+			template.output?.allowedFormats,
+		),
+	}
+	if (!supportsStudioOutput(output, format)) throw new TemplatePrintUnavailableError()
 	if (template.updatedAt !== templateVersion) throw new TemplatePrintStaleError()
 
 	const image = await inspectTemplatePng(png)

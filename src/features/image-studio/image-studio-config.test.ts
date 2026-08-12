@@ -28,6 +28,7 @@ describe('deriveImageStudioConfig', () => {
 			id: 5,
 			version: 1,
 			name: '에센허브 브랜드 제품컷',
+			output: { formats: ['png'], original: true },
 			image: { slug: 'brand-product', features: [{ type: 'camera-control' }] },
 		})
 		expect(config).not.toHaveProperty('imageModelPreset')
@@ -44,6 +45,15 @@ describe('deriveImageStudioConfig', () => {
 			defaultValue: '2K',
 			options: [{ value: '1K' }, { value: '2K' }, { value: '4K' }],
 		})
+	})
+
+	it('저장된 output 정책은 원본 다운로드를 끄지만 Runtime 형식을 확장하지 않는다', () => {
+		expect(
+			deriveImageStudioConfig({
+				...profile,
+				output: { allowedFormats: ['png'], original: false },
+			}).output,
+		).toEqual({ formats: ['png'], original: false })
 	})
 
 	it('legacy 상한·카메라·색을 Definition과 descriptor에 옮긴다', () => {

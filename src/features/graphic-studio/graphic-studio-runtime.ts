@@ -21,7 +21,7 @@ import {
 import {
 	resolveStudioOutputFormats,
 	supportsStudioOutput,
-} from '@/features/studio-output/studio-output'
+} from '@/features/studio-export/studio-output'
 
 const graphicStudioPlugins = [forwardStraightGraphicPlugin, radialFlutedGlassGraphicPlugin] as const
 const graphicStudioPluginCatalog = createGraphicStudioPluginCatalog(graphicStudioPlugins)

@@ -7,7 +7,7 @@ import {
 	projectPayloadController,
 	type StudioControllerConfig,
 } from '@/features/studio-controller/controller-definition'
-import { resolveStudioOutputFormats } from '@/features/studio-output/studio-output'
+import { resolveStudioOutputFormats } from '@/features/studio-export/studio-output'
 import {
 	getImageProfileServiceCapability,
 	IMAGE_STUDIO_CONTROL_IDS,

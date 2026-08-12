@@ -83,7 +83,11 @@ export function ImageSidebar() {
 							<Button
 								className="h-11 flex-1"
 								onClick={download.selected}
-								disabled={results.selected === null}
+								disabled={
+									download.busy ||
+									!download.available ||
+									results.selected === null
+								}
 							>
 								선택한 이미지 저장
 							</Button>
@@ -91,11 +95,20 @@ export function ImageSidebar() {
 								variant="muted"
 								className="h-11 flex-1"
 								onClick={download.all}
-								disabled={!results.result?.images.length}
+								disabled={
+									download.busy ||
+									!download.available ||
+									!results.result?.images.length
+								}
 							>
 								전부 저장
 							</Button>
 						</div>
+						{download.error && (
+							<Typography role="alert" size="sm" className="text-destructive">
+								{download.error}
+							</Typography>
+						)}
 					</>
 				}
 			>
