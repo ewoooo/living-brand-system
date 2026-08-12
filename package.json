@@ -12,6 +12,8 @@
 		"db:sync:local-to-remote": "bash scripts/sync-local-db-to-remote.sh",
 		"dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
 		"devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev",
+		"preview:build": "cross-env NEXT_DIST_DIR=.next-preview NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
+		"preview:start": "cross-env NEXT_DIST_DIR=.next-preview NODE_OPTIONS=--no-deprecation PORT=3100 next start",
 		"format": "biome format --write .",
 		"format:check": "biome format .",
 		"generate:block-catalogs": "tsx scripts/generate-guideline-block-catalogs.ts",
