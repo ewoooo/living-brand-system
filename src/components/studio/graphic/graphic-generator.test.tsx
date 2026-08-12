@@ -3,12 +3,22 @@ import userEvent from '@testing-library/user-event'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FORWARD_STRAIGHT_DEFAULT_INPUT } from '@/features/generate-graphic/forward-straight'
+import { RADIAL_FLUTED_GLASS_DEFAULT_INPUT } from '@/features/generate-graphic/radial-fluted-glass'
 import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
-import { forwardStraightGraphicConfig } from '@/features/graphic-studio/graphic-studio-runtime'
+import {
+	forwardStraightGraphicConfig,
+	radialFlutedGlassGraphicConfig,
+} from '@/features/graphic-studio/graphic-studio-runtime'
 import { GraphicGenerator } from './graphic-generator'
 
 const mocks = vi.hoisted(() => {
 	const preview = {
+		destroy: vi.fn(),
+		getViewport: vi.fn(() => ({ width: 800, height: 600 })),
+		resize: vi.fn(),
+		update: vi.fn(),
+	}
+	const shaderPreview = {
 		destroy: vi.fn(),
 		getViewport: vi.fn(() => ({ width: 800, height: 600 })),
 		resize: vi.fn(),
@@ -20,6 +30,8 @@ const mocks = vi.hoisted(() => {
 			| undefined,
 		preview,
 		createPreview: vi.fn(),
+		shaderPreview,
+		createShaderPreview: vi.fn(async () => shaderPreview),
 	}
 	state.createPreview.mockImplementation(
 		(options: {
@@ -34,6 +46,10 @@ const mocks = vi.hoisted(() => {
 
 vi.mock('@/features/generate-graphic/preview.client', () => ({
 	createForwardStraightPreview: mocks.createPreview,
+}))
+
+vi.mock('@/features/generate-graphic/radial-fluted-glass-preview.client', () => ({
+	createRadialFlutedGlassPreview: mocks.createShaderPreview,
 }))
 
 beforeEach(() => {
@@ -125,6 +141,31 @@ describe('GraphicGenerator', () => {
 				expect.objectContaining({ variableWeightEnabled: true, viewpoint: 'low-angle' }),
 			),
 		)
+	})
+
+	it('Shader Definition을 WebGL preview에 연결하고 Export UI는 열지 않는다', async () => {
+		const { unmount } = render(
+			createElement(GraphicGenerator, { config: radialFlutedGlassGraphicConfig }),
+		)
+
+		await waitFor(() =>
+			expect(mocks.createShaderPreview).toHaveBeenCalledWith(
+				expect.objectContaining({ input: RADIAL_FLUTED_GLASS_DEFAULT_INPUT }),
+			),
+		)
+		expect(screen.queryByRole('button', { name: 'SVG 다운로드' })).not.toBeInTheDocument()
+
+		fireEvent.keyDown(screen.getByRole('slider', { name: '광선 강도' }), {
+			key: 'ArrowRight',
+		})
+		await waitFor(() =>
+			expect(mocks.shaderPreview.update).toHaveBeenLastCalledWith(
+				expect.objectContaining({ rayIntensity: 0.83 }),
+			),
+		)
+
+		unmount()
+		expect(mocks.shaderPreview.destroy).toHaveBeenCalledOnce()
 	})
 
 	it('등록된 id와 type이 일치하지 않으면 런타임을 실행하지 않는다', () => {

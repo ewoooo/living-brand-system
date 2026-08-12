@@ -13,7 +13,7 @@ export default async function GenerateGraphicPage() {
 	return (
 		<StudioWorkspacePage
 			title="그래픽 생성"
-			description="그래픽 도구의 설정을 조정해 SVG 산출물을 만듭니다."
+			description="그래픽 도구의 설정을 조정하고 결과를 미리 봅니다."
 		>
 			<GraphicGenerator config={config} />
 		</StudioWorkspacePage>

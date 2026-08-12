@@ -1,87 +1,101 @@
 'use client'
 
-import { type ComponentType, useEffect, useMemo, useRef, useState } from 'react'
+import { type ComponentType, useEffect, useRef, useState } from 'react'
 import { Typography } from '@/components/ui/typography'
 import {
-	toControllerPadValue,
-	toForwardStraightInput,
-} from '@/features/generate-graphic/forward-straight'
-import type { ForwardStraightPreview } from '@/features/generate-graphic/preview.client'
+	type GraphicPreview,
+	getGraphicPreviewAdapter,
+} from '@/features/graphic-studio/graphic-preview.client'
+import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
 import {
+	canRenderGraphicStudioSvg,
 	getGraphicStudioRuntimeBindings,
 	renderGraphicStudioSvg,
 } from '@/features/graphic-studio/graphic-studio-runtime'
 import { useGraphicStudio } from '@/features/graphic-studio/hooks/use-graphic-studio'
 import { downloadBlob } from '@/lib/object-url'
 
-type GraphicRuntimeRegistration = {
-	type: 'p5' | 'shader'
-	Renderer: ComponentType
-}
+const canvasByType = {
+	p5: P5Canvas,
+	shader: WebGLCanvas,
+} satisfies Record<GraphicStudioConfig['type'], ComponentType>
 
-const graphicRuntimeRenderers = {
-	'forward-straight': { type: 'p5', Renderer: ForwardStraightCanvas },
-} satisfies Record<string, GraphicRuntimeRegistration>
-
-/** 현재 등록된 P5 그래픽을 그린다. Controller와는 GraphicStudioContext로만 통신한다. */
+/** runtime type에 맞는 공용 Canvas를 고른다. 개별 그래픽 id는 Preview registry가 해석한다. */
 export function GraphicCanvas() {
 	const { config } = useGraphicStudio()
-	const runtime = graphicRuntimeRenderers[config.id as keyof typeof graphicRuntimeRenderers]
-	if (!runtime || runtime.type !== config.type) {
-		return <UnsupportedGraphicCanvas />
-	}
-	const RuntimeRenderer: ComponentType = runtime.Renderer
-	return <RuntimeRenderer />
+	const RuntimeCanvas = canvasByType[config.type]
+	return <RuntimeCanvas />
 }
 
-function ForwardStraightCanvas() {
+function P5Canvas() {
+	return <RegisteredGraphicCanvas type="p5" />
+}
+
+function WebGLCanvas() {
+	return <RegisteredGraphicCanvas type="shader" />
+}
+
+function RegisteredGraphicCanvas({ type }: { type: GraphicStudioConfig['type'] }) {
+	const { config } = useGraphicStudio()
+	const adapter = getGraphicPreviewAdapter(config)
+	if (!adapter || adapter.type !== type) return <UnsupportedGraphicCanvas />
+	return <GraphicPreviewCanvas adapter={adapter} />
+}
+
+function GraphicPreviewCanvas({
+	adapter,
+}: {
+	adapter: NonNullable<ReturnType<typeof getGraphicPreviewAdapter>>
+}) {
 	const { config, controls, canvas } = useGraphicStudio()
-	const input = useMemo(() => toForwardStraightInput(controls.values), [controls.values])
-	const inputRef = useRef(input)
 	const valuesRef = useRef(controls.values)
 	const containerRef = useRef<HTMLDivElement>(null)
-	const previewRef = useRef<ForwardStraightPreview>(null)
+	const previewRef = useRef<GraphicPreview>(null)
 	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
-		inputRef.current = input
 		valuesRef.current = controls.values
-		previewRef.current?.update(input)
-	}, [controls.values, input])
+		previewRef.current?.update(controls.values)
+	}, [controls.values])
 
 	useEffect(() => {
-		let preview: ForwardStraightPreview | undefined
+		let preview: GraphicPreview | undefined
 		let disposed = false
 
 		async function mountPreview() {
 			const container = containerRef.current
-			if (!container) return
+			if (!container || !adapter) return
 
 			try {
-				const { createForwardStraightPreview } = await import(
-					'@/features/generate-graphic/preview.client'
-				)
-				if (disposed) return
-
-				preview = createForwardStraightPreview({
+				const mounted = await adapter.mount({
 					container,
-					input: inputRef.current,
-					onInputChange: (next) =>
-						controls.update('origin', toControllerPadValue(next.origin)),
+					values: valuesRef.current,
+					onChange: controls.update,
 				})
-				previewRef.current = preview
-				const viewport = preview.getViewport()
+				if (disposed) {
+					mounted.destroy()
+					return
+				}
+				preview = mounted
+				previewRef.current = mounted
+				const viewport = mounted.getViewport()
 				controls.registerBindings(getGraphicStudioRuntimeBindings(config, viewport))
-				canvas.registerOutput(() => {
-					const currentViewport = previewRef.current?.getViewport()
-					if (!currentViewport) return
-					const svg = renderGraphicStudioSvg(config, valuesRef.current, currentViewport)
-					if (!svg) return
-					downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), `${config.id}.svg`)
-				})
+				if (canRenderGraphicStudioSvg(config)) {
+					canvas.registerOutput(() => {
+						const currentViewport = previewRef.current?.getViewport()
+						if (!currentViewport) return
+						const svg = renderGraphicStudioSvg(
+							config,
+							valuesRef.current,
+							currentViewport,
+						)
+						if (!svg) return
+						downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), `${config.id}.svg`)
+					})
+				}
 			} catch (mountError) {
 				console.error(mountError)
-				setError('그래픽 미리보기를 불러오지 못했습니다.')
+				if (!disposed) setError('그래픽 미리보기를 불러오지 못했습니다.')
 			}
 		}
 
@@ -93,7 +107,7 @@ function ForwardStraightCanvas() {
 			canvas.registerOutput(null)
 			controls.registerBindings({})
 		}
-	}, [canvas.registerOutput, config, controls.registerBindings, controls.update])
+	}, [adapter, canvas.registerOutput, config, controls.registerBindings, controls.update])
 
 	useEffect(() => {
 		const container = containerRef.current

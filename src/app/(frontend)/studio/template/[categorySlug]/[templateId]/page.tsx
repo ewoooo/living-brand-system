@@ -25,7 +25,7 @@ export default async function CreateTemplatePage({
 		getCreateNavigation(),
 		getPublishedTemplate(parsedId),
 		user ? listImageStudioConfigs(user) : [],
-		user ? listGraphicStudioConfigs(user) : [],
+		user ? listGraphicStudioConfigs(user, { svgOnly: true }) : [],
 	])
 
 	if (!template) {

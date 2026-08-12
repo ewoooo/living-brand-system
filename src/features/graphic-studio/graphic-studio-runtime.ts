@@ -7,6 +7,7 @@ import {
 	createForwardStraightScene,
 	createForwardStraightSvg,
 } from '@/features/generate-graphic/forward-straight-geometry'
+import { RADIAL_FLUTED_GLASS_DEFAULT_INPUT } from '@/features/generate-graphic/radial-fluted-glass'
 import {
 	type GraphicStudioConfig,
 	type PublishedGraphicProfileDefinition,
@@ -25,7 +26,7 @@ type GraphicViewport = { width: number; height: number }
 
 type GraphicStudioRuntime = {
 	config: GraphicStudioConfig
-	renderSvg: (values: ControllerValues, viewport: GraphicViewport) => string
+	renderSvg?: (values: ControllerValues, viewport: GraphicViewport) => string
 	getBindings: (viewport: GraphicViewport) => ControllerRuntimeBindings
 }
 
@@ -99,9 +100,108 @@ const graphicStudioRuntimeRegistry = {
 				? { origin: { padAspectRatio: viewport.width / viewport.height } }
 				: {},
 	},
+	'radial-fluted-glass': {
+		config: {
+			studio: 'graphic',
+			id: 'radial-fluted-glass',
+			version: 1,
+			name: 'Radial Fluted Glass',
+			type: 'shader',
+			controller: {
+				groups: [
+					{
+						id: 'rays',
+						title: 'Rays',
+						controls: [
+							{
+								id: 'bloomColor',
+								kind: 'color',
+								label: '블룸 색상',
+								defaultValue: RADIAL_FLUTED_GLASS_DEFAULT_INPUT.bloomColor,
+							},
+							{
+								id: 'rayIntensity',
+								kind: 'range',
+								label: '광선 강도',
+								defaultValue: RADIAL_FLUTED_GLASS_DEFAULT_INPUT.rayIntensity,
+								min: 0,
+								max: 1,
+								step: 0.01,
+								display: { precision: 2 },
+							},
+							{
+								id: 'rayDensity',
+								kind: 'range',
+								label: '광선 밀도',
+								defaultValue: RADIAL_FLUTED_GLASS_DEFAULT_INPUT.rayDensity,
+								min: 0,
+								max: 1,
+								step: 0.01,
+								display: { precision: 2 },
+							},
+							{
+								id: 'speed',
+								kind: 'range',
+								label: '속도',
+								defaultValue: RADIAL_FLUTED_GLASS_DEFAULT_INPUT.speed,
+								min: 0,
+								max: 2,
+								step: 0.01,
+								display: { precision: 2 },
+							},
+						],
+					},
+					{
+						id: 'glass',
+						title: 'Glass',
+						controls: [
+							{
+								id: 'glassSize',
+								kind: 'range',
+								label: '플루트 크기',
+								defaultValue: RADIAL_FLUTED_GLASS_DEFAULT_INPUT.glassSize,
+								min: 0,
+								max: 1,
+								step: 0.01,
+								display: { precision: 2 },
+							},
+							{
+								id: 'glassDistortion',
+								kind: 'range',
+								label: '유리 왜곡',
+								defaultValue: RADIAL_FLUTED_GLASS_DEFAULT_INPUT.glassDistortion,
+								min: 0,
+								max: 1,
+								step: 0.01,
+								display: { precision: 2 },
+							},
+						],
+					},
+					{
+						id: 'position',
+						title: 'Position',
+						controls: [
+							{
+								id: 'source',
+								kind: 'pad',
+								label: '광원',
+								defaultValue: RADIAL_FLUTED_GLASS_DEFAULT_INPUT.source,
+							},
+						],
+					},
+				],
+			},
+		},
+		getBindings: (viewport): ControllerRuntimeBindings =>
+			viewport.width > 0 && viewport.height > 0
+				? { source: { padAspectRatio: viewport.width / viewport.height } }
+				: {},
+	},
 } satisfies Record<string, GraphicStudioRuntime>
 
 export const forwardStraightGraphicConfig = graphicStudioRuntimeRegistry['forward-straight'].config
+export const radialFlutedGlassGraphicConfig =
+	graphicStudioRuntimeRegistry['radial-fluted-glass'].config
 
 export const graphicStudioConfigs: readonly GraphicStudioConfig[] = Object.values(
 	graphicStudioRuntimeRegistry,
@@ -139,7 +239,12 @@ export function renderGraphicStudioSvg(
 	viewport: GraphicViewport,
 ): string | null {
 	const runtime = getGraphicStudioRuntime(config)
-	return runtime?.renderSvg(values, viewport) ?? null
+	return runtime?.renderSvg?.(values, viewport) ?? null
+}
+
+/** SVG adapter가 준비된 Graphic Config만 Template 합성 경로에 허용한다. */
+export function canRenderGraphicStudioSvg(config: GraphicStudioConfig): boolean {
+	return Boolean(getGraphicStudioRuntime(config)?.renderSvg)
 }
 
 /** Graphic runtime이 의미를 아는 control에만 대상 기하 binding을 제공한다. */

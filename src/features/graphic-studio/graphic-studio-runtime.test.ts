@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { createControllerValues } from '@/features/studio-controller/controller-definition'
 import { parseGraphicStudioConfig } from './graphic-studio-config'
 import {
+	canRenderGraphicStudioSvg,
 	deriveGraphicStudioConfig,
 	forwardStraightGraphicConfig,
 	getGraphicStudioRuntimeBindings,
 	graphicStudioConfigs,
+	radialFlutedGlassGraphicConfig,
 	renderGraphicStudioSvg,
 } from './graphic-studio-runtime'
 
@@ -26,6 +28,19 @@ describe('graphicStudioRuntime', () => {
 		)
 		expect(getGraphicStudioRuntimeBindings(config, { width: 800, height: 600 })).toEqual({
 			origin: { padAspectRatio: 4 / 3 },
+		})
+	})
+
+	it('Shader runtime은 Preview 계약만 등록하고 SVG 합성에서는 제외한다', () => {
+		const shaderConfig = radialFlutedGlassGraphicConfig
+		const values = createControllerValues(shaderConfig.controller.groups)
+
+		expect(graphicStudioConfigs).toContain(shaderConfig)
+		expect(renderGraphicStudioSvg(shaderConfig, values, { width: 800, height: 600 })).toBeNull()
+		expect(canRenderGraphicStudioSvg(shaderConfig)).toBe(false)
+		expect(canRenderGraphicStudioSvg(config)).toBe(true)
+		expect(getGraphicStudioRuntimeBindings(shaderConfig, { width: 800, height: 600 })).toEqual({
+			source: { padAspectRatio: 4 / 3 },
 		})
 	})
 

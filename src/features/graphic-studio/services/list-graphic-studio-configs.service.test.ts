@@ -11,6 +11,7 @@ describe('listGraphicStudioConfigs', () => {
 		vi.mocked(listPublishedGraphicProfileDefinitions).mockResolvedValueOnce([])
 		await expect(listGraphicStudioConfigs({})).resolves.toEqual([
 			expect.objectContaining({ id: 'forward-straight', name: 'Forward Straight' }),
+			expect.objectContaining({ id: 'radial-fluted-glass', name: 'Radial Fluted Glass' }),
 		])
 
 		vi.mocked(listPublishedGraphicProfileDefinitions).mockResolvedValueOnce([
@@ -18,6 +19,14 @@ describe('listGraphicStudioConfigs', () => {
 		])
 		await expect(listGraphicStudioConfigs({})).resolves.toEqual([
 			expect.objectContaining({ id: 'forward-straight', name: '브랜드 그래픽' }),
+			expect.objectContaining({ id: 'radial-fluted-glass', name: 'Radial Fluted Glass' }),
+		])
+	})
+
+	it('Template용 목록은 SVG adapter가 없는 Shader runtime을 제외한다', async () => {
+		vi.mocked(listPublishedGraphicProfileDefinitions).mockResolvedValueOnce([])
+		await expect(listGraphicStudioConfigs({}, { svgOnly: true })).resolves.toEqual([
+			expect.objectContaining({ id: 'forward-straight' }),
 		])
 	})
 })

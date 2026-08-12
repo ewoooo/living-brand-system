@@ -30,10 +30,11 @@ TIFF는 원본 가로·세로 픽셀을 리샘플링하지 않고 PPI 메타데�
 ### 그래픽 생성 계약
 
 `generate-graphic`은 발행된 Plugin의 구현 키로 그래픽 도구를 선택하고, 도구별 입력 계약으로 Controller와 최종 생성을 연결하는 Feature입니다.
-현재는 첫 도구인 `forward-straight-v1`의 입력 계약, 계약 기반 Studio Controller, 순수 geometry, p5 instance-mode Preview, SVG 브라우저 다운로드를 `/studio/generate/graphic`에 연결했습니다. Controller 변경과 캔버스 포인터·X/Y 슬라이더 입력은 같은 입력 상태를 갱신하며 Preview와 SVG 출력이 이를 공유합니다.
+현재는 `forward-straight-v1`의 입력 계약, 계약 기반 Studio Controller, 순수 geometry, p5 instance-mode Preview, SVG 브라우저 다운로드를 `/studio/generate/graphic`에 연결했습니다. Controller 변경과 캔버스 포인터·X/Y 슬라이더 입력은 같은 입력 상태를 갱신하며 Preview와 SVG 출력이 이를 공유합니다. `radial-fluted-glass`는 같은 Controller 계약에 production GLSL asset과 native WebGL Preview를 연결했으며, 출력은 공용 export package가 생길 때 연결합니다. 그 전까지 SVG adapter가 필요한 Template 배경 목록에서는 이 Shader runtime을 제외합니다.
 
 - 입력 계약: `variableWeightEnabled`, `viewpoint`, `angleIntensity`, 정규화된 `origin(0~1)`
-- Controller 계약: Studio가 입력 계약의 `boolean`·`select` 항목을 자체 컴포넌트로 렌더
+- Shader 입력 계약: `source(-1~1)`, `bloomColor`, `rayIntensity`, `rayDensity`, `speed`, `glassSize`, `glassDistortion`
+- Controller 계약: Studio가 도구의 입력 계약을 공용 `toggle`·`select`·`color`·`range`·`pad` primitive로 렌더
 - 출력 계약: 첫 형식은 `image/svg+xml`
 - 실행 계약: p5는 Page 미리보기만 담당하고, 최종 SVG는 같은 순수 geometry를 브라우저에서 직렬화해 다운로드
 - 기록 계약: Template의 PNG export처럼 Payload, DB, 오브젝트 스토리지에 기록하지 않음
@@ -51,7 +52,7 @@ TIFF는 원본 가로·세로 픽셀을 리샘플링하지 않고 PPI 메타데�
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
 | [Page](../surfaces/page.md) | 구현 | `/studio/template` → 첫 사용 가능 템플릿 → 카테고리별 드롭다운 선택 → TemplateGenerator. 발행된 canonical HTML 템플릿만 읽고 비로그인 공개 읽기 |
-| [Page](../surfaces/page.md) — Graphic | 구현 | Studio의 `Graphic` 메뉴 → `/studio/generate/graphic` → 계약 기반 Controller·p5 Preview·SVG 다운로드 |
+| [Page](../surfaces/page.md) — Graphic | 구현 | Studio의 `Graphic` 메뉴 → `/studio/generate/graphic` → 계약 기반 Controller·p5 또는 Shader Preview. `forward-straight`는 SVG 다운로드, Shader 출력은 미구현 |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `findTemplatesForRequest` + `prepareTemplateImage`(슬롯 검증 후 첨부 PNG) |
 | [REST](../surfaces/rest.md) | 부분 | 인쇄 변환 `POST /api/templates/{templateId}/exports/{format}`(`format`: `pdf`·`tiff`), import 어댑터 `POST /api/templates/import-figma-html`. 모두 산출물 레코드를 저장하지 않음 |
 | Slack | 계획 | — |
@@ -72,7 +73,7 @@ TIFF는 원본 가로·세로 픽셀을 리샘플링하지 않고 PPI 메타데�
 | `template-import` | 외부 템플릿을 가져와 운영자가 편집·검증·발행 가능한 상태로 준비 | 저장 가능한 Template |
 | `template-create` | published Template의 슬롯 값을 입력하고 결과를 조합 | composed HTML |
 | `template-export` | composed HTML을 출력 정책에 따라 변환 | PNG·TIFF·PDF |
-| `generate-graphic` | Plugin 구현 키와 도구별 입력 계약으로 그래픽을 계산·미리보기·출력 | SVG 브라우저 다운로드 |
+| `generate-graphic` | Plugin 구현 키와 도구별 입력 계약으로 그래픽을 계산·미리보기·출력 | p5는 SVG 다운로드, Shader는 WebGL Preview |
 
 공용 template 타입·HTML 합성·슬롯 수집·render model projection은 `src/types`와 `src/services`가 소유합니다. `template-create`는 `template-export`의 공개 hook과 print policy를 사용할 수 있지만, `template-create`와 `template-export`는 `template-import` 내부 구현을 직접 import하지 않습니다.
 
