@@ -236,6 +236,32 @@ look은 언젠가 전부 바뀝니다. 그러므로 **겉모습이 어설픈 것
 
 🔴 이 목록이 늘어나는 것은 정상이고, **같은 요소가 두 자리에 생기는 것은 결함입니다.** `features/guideline/widgets/visual-vocabulary.test.ts`가 색에 대해서만 이것을 지킵니다 — 다른 축은 아직 사람이 봅니다.
 
+#### 값은 어디서 읽나 — `@carbon/layout`·`@carbon/type` (devDependency)
+
+Carbon 수치의 출처는 이 두 패키지입니다. **런타임 코드가 import하지 않습니다** — 스펙을 기계가 읽을 수 있는 형태로 저장소에 두는 것이 목적이고, 그래서 `devDependency`입니다. 🔴 **"쓰이지 않는 의존성"으로 보고 지우지 마십시오.** 지우면 값의 출처가 사라지고 다음 사람은 기억으로 px를 부르게 됩니다(그게 이 문서가 막으려는 것입니다). `app/(frontend)/carbon-scale.test.ts`가 이 패키지를 읽어 아래 표를 검증하므로, 지우면 테스트가 깨집니다.
+
+읽는 방법(추측하지 말고 실행하십시오):
+
+```bash
+node --input-type=module -e "import * as l from '@carbon/layout'; console.log(l.spacing, l.sizes)"
+```
+
+🔑 **Carbon의 간격 13단계는 Tailwind 기본 단계와 정확히 일치합니다.** 그래서 스케일 채택에 **새 토큰이 필요하지 않습니다** — 값을 더하는 일이 아니라 **쓸 단계를 좁히는 일**입니다.
+
+| Carbon | px | Tailwind | | Carbon | px | Tailwind |
+| --- | --- | --- | --- | --- | --- | --- |
+| `spacing01` | 2 | `0.5` | | `spacing08` | 40 | `10` |
+| `spacing02` | 4 | `1` | | `spacing09` | 48 | `12` |
+| `spacing03` | 8 | `2` | | `spacing10` | 64 | `16` |
+| `spacing04` | 12 | `3` | | `spacing11` | 80 | `20` |
+| `spacing05` | 16 | `4` | | `spacing12` | 96 | `24` |
+| `spacing06` | 24 | `6` | | `spacing13` | 160 | `40` |
+| `spacing07` | 32 | `8` | | | | |
+
+컨트롤 높이(`sizes`)도 같은 방식입니다. XSmall 24(`h-6`) · Small 32(`h-8`) · Medium 40(`h-10`) · Large 48(`h-12`) · XLarge 64(`h-16`) · 2XLarge 80(`h-20`).
+
+🔴 **아직 스케일을 벗어난 자리**(고칠 때 이 표를 쓰십시오): `toggleVariants`의 `size: 'sm'`이 `h-7`(28px), `'lg'`가 `h-9`(36px)입니다. 둘 다 위젯이 쓰지 않아 미뤘습니다 — `sm`은 studio·admin이 쓰고 `lg`는 사용처가 0곳입니다.
+
 ### 채택 범위
 
 Carbon에서 가져오는 범위를 좁게 고정합니다.

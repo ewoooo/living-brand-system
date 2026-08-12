@@ -34,7 +34,7 @@ function Slider({
 			className={cn(
 				// 손잡이는 절대 배치라 판의 높이에 안 들어간다 — 트랙 4px만 남아 손잡이가 위아래로 삐져나오고
 				// 이웃과의 gap이 실제보다 좁게 보인다. 손잡이 지름만큼 바닥을 깔아 박스가 보이는 것과 같아진다.
-				'relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-horizontal:min-h-3 data-vertical:h-full data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col',
+				'relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-horizontal:min-h-4 data-vertical:h-full data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col',
 				className,
 			)}
 			{...props}
@@ -60,7 +60,9 @@ function Slider({
 					aria-valuetext={ariaValuetext}
 					// 업스트림은 손잡이를 bg-white로 고정한다. 닫힌 토큰 규칙(09 §4)에 걸리므로 표면 토큰으로 옮겼다 —
 					// 손잡이는 트랙 위에 떠 있는 면이고, border-ring이 윤곽을 잡아 두 모드에서 다 읽힌다.
-					className="relative block size-3 shrink-0 rounded-md border border-ring bg-background ring-ring/30 transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-2 focus-visible:ring-2 focus-visible:outline-hidden active:ring-2 disabled:pointer-events-none disabled:opacity-50"
+					// 손잡이 16px = Carbon spacing05(= iconSize0). 트랙 4px은 spacing02로 그대로 둔다 —
+					// 굵어져야 하는 건 잡는 부분이고 트랙은 값을 읽는 선이다.
+					className="relative block size-4 shrink-0 rounded-md border border-ring bg-background ring-ring/30 transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-2 focus-visible:ring-2 focus-visible:outline-hidden active:ring-2 disabled:pointer-events-none disabled:opacity-50"
 				/>
 			))}
 		</SliderPrimitive.Root>

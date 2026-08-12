@@ -48,6 +48,7 @@ export function TypeSpecimenWidget() {
 				<Field label="Size">
 					<ToggleGroup
 						type="single"
+						spacing={0}
 						value={tier}
 						onValueChange={(v) => v && setTier(v as Tier)}
 						// Field의 라벨은 <span>이라 컨트롤과 이어지지 않는다 — 이름을 직접 준다.
@@ -69,6 +70,7 @@ export function TypeSpecimenWidget() {
 				<Field label="Align">
 					<ToggleGroup
 						type="single"
+						spacing={0}
 						value={align}
 						onValueChange={(v) => v && setAlign(v as Align)}
 						aria-label="Align"

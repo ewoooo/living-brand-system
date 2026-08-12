@@ -22,6 +22,7 @@ export function LogoColorVariantView({ map }: Props) {
 			<ToggleGroup
 				type="single"
 				variant="outline"
+				spacing={0}
 				value={orient}
 				// 마지막 항목을 다시 눌러 빈 값이 되면 그릴 표본이 없어진다 — 빈 값은 무시한다.
 				onValueChange={(next) => next && setOrient(next)}

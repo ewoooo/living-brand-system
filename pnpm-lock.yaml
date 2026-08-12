@@ -177,6 +177,12 @@ importers:
       '@biomejs/biome':
         specifier: 2.5.0
         version: 2.5.0
+      '@carbon/layout':
+        specifier: ^11.56.0
+        version: 11.56.0
+      '@carbon/type':
+        specifier: ^11.64.0
+        version: 11.64.0
       '@playwright/test':
         specifier: 1.61.1
         version: 1.61.1
@@ -647,6 +653,9 @@ packages:
   '@braintree/sanitize-url@7.1.2':
     resolution: {integrity: sha512-jigsZK+sMF/cuiB7sERuo9V7N9jx+dhmHHnQyDSVdpZwVutaBu7WvNYqMDLSgFgfB30n452TP3vjDAvFC973mA==}
 
+  '@carbon/grid@11.59.0':
+    resolution: {integrity: sha512-sa+56qm1J/CZ2aGMeHRF9ui2YmmXBKdEvLtUV9W6t+ILub0e0/nS12HAEhbiuw8B0IqWjUpIQR6Lzaii6TcYSw==}
+
   '@carbon/icon-helpers@10.76.0':
     resolution: {integrity: sha512-DLxVV/NtEFauMbmKFW53cGKMs84RRdIp9AzHbasIxlCBjO0P4eZbPdO3gTzYxn02jDMo++2m3MsEAwNydzrzmQ==}
 
@@ -654,6 +663,12 @@ packages:
     resolution: {integrity: sha512-KBax1fqLEFAIebJ/jVt3tSQhW5G0CeliTfbFfrTPJa6aS4S9R8PwpBpKkrwQej8cL8FmspzmZcUgUGZPiOaSpw==}
     peerDependencies:
       react: '>=16'
+
+  '@carbon/layout@11.56.0':
+    resolution: {integrity: sha512-61XxRnFkJdfSmsr30smEexrVOfHFZIzBPlTtW65CkRx8edAakc2eapxrW1sKFIfYQJildWPi7CivAvjA3cnlUg==}
+
+  '@carbon/type@11.64.0':
+    resolution: {integrity: sha512-ejnpUIbmyEbGkKWX3mzojKa3lOc3Jhoqhy7b4f2zi/nAV0uGu8KMXw978Cq/op3/WwOGYzwRf2viqTw6NNLWPQ==}
 
   '@chevrotain/types@11.1.2':
     resolution: {integrity: sha512-U+HFai5+zmJCkK86QsaJtoITlboZHBqrVketcO2ROv865xfCMSFpELQoz1GkX5GzME8pTa+3kbKrZHQtI0gdbw==}
@@ -6785,6 +6800,11 @@ snapshots:
 
   '@braintree/sanitize-url@7.1.2': {}
 
+  '@carbon/grid@11.59.0':
+    dependencies:
+      '@carbon/layout': 11.56.0
+      '@ibm/telemetry-js': 1.11.0
+
   '@carbon/icon-helpers@10.76.0':
     dependencies:
       '@ibm/telemetry-js': 1.11.0
@@ -6795,6 +6815,16 @@ snapshots:
       '@ibm/telemetry-js': 1.11.0
       prop-types: 15.8.1
       react: 19.2.7
+
+  '@carbon/layout@11.56.0':
+    dependencies:
+      '@ibm/telemetry-js': 1.11.0
+
+  '@carbon/type@11.64.0':
+    dependencies:
+      '@carbon/grid': 11.59.0
+      '@carbon/layout': 11.56.0
+      '@ibm/telemetry-js': 1.11.0
 
   '@chevrotain/types@11.1.2': {}
 

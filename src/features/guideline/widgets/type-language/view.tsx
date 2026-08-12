@@ -56,6 +56,7 @@ export function TypeLanguageView({
 				<ToggleGroup
 					type="single"
 					variant="outline"
+					spacing={0}
 					value={language}
 					// 마지막 항목을 다시 눌러 빈 값이 되면 그릴 문단이 없어진다 — 빈 값은 무시한다.
 					onValueChange={(next) => next && setLanguage(next as LanguageKey)}

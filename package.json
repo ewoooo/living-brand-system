@@ -87,6 +87,8 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.0",
+		"@carbon/layout": "^11.56.0",
+		"@carbon/type": "^11.64.0",
 		"@playwright/test": "1.61.1",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/react": "^16.3.2",
