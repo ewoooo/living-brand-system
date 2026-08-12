@@ -3,7 +3,6 @@ export const routes = {
 	guideline: '/guideline',
 	home: '/',
 	studio: {
-		examples: '/studio/examples',
 		generate: '/studio/generate',
 		generateGraphic: '/studio/generate/graphic',
 		generateImage: '/studio/generate/image',
