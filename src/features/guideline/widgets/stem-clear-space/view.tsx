@@ -114,6 +114,9 @@ export function StemMeasure({
 					onClick={measureAt}
 					disabled={!ready}
 					title="세로 줄기를 클릭해 A를 실측"
+					// 🔴 이름을 직접 준다 — 안의 로고 img alt가 이름이 되면 "로고"로 읽혀서
+					//    무엇을 하는 버튼인지 사라진다. 동작 설명은 title에만 있었다.
+					aria-label="세로 줄기를 클릭해 A를 실측"
 					className="relative inline-block cursor-crosshair p-0 leading-none disabled:cursor-wait"
 				>
 					{/* biome-ignore lint/performance/noImgElement: 원격 svg라 next/image 대신 img 사용. */}

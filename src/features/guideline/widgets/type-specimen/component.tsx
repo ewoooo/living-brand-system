@@ -50,6 +50,8 @@ export function TypeSpecimenWidget() {
 						type="single"
 						value={tier}
 						onValueChange={(v) => v && setTier(v as Tier)}
+						// Field의 라벨은 <span>이라 컨트롤과 이어지지 않는다 — 이름을 직접 준다.
+						aria-label="Size"
 					>
 						{(Object.keys(TIER_PRESETS) as Tier[]).map((key) => (
 							<ToggleGroupItem
@@ -69,6 +71,7 @@ export function TypeSpecimenWidget() {
 						type="single"
 						value={align}
 						onValueChange={(v) => v && setAlign(v as Align)}
+						aria-label="Align"
 					>
 						<ToggleGroupItem value="left" className="px-3" variant="outline">
 							Left
