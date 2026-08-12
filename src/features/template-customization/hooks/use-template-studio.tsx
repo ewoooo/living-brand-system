@@ -19,12 +19,13 @@ import {
 	resolveImagePromptExecution,
 } from '@/features/image-generation/domain/image-studio-config'
 import { requestImageGeneration } from '@/features/image-generation/services/generate-image.client'
+import type { StudioOutputFormat } from '@/features/studio-export/export-contract'
 import { useExport } from '@/features/studio-export/hooks/use-export'
 import {
 	canExportTemplate,
 	createTemplateExportRequest,
+	supportsTemplateExport,
 	type TemplateExportContext,
-	type TemplateExportFormat,
 	type TemplateExportRequest,
 } from '@/features/studio-export/services/export-template'
 import { exportTemplate } from '@/features/studio-export/services/export-template.client'
@@ -126,11 +127,12 @@ type TemplateStudioValue = {
 		previewRef: RefObject<HTMLDivElement | null>
 	}
 	exporting: {
-		format: TemplateExportFormat | null
-		setFormat: (format: TemplateExportFormat) => void
+		formats: readonly StudioOutputFormat[]
+		format: StudioOutputFormat | null
+		setFormat: (format: StudioOutputFormat) => void
 		busy: boolean
 		error: string | null
-		run: (format: TemplateExportFormat) => void
+		run: (format: StudioOutputFormat) => void
 	}
 }
 
@@ -176,8 +178,19 @@ export function TemplateStudioProvider({
 		textColorDefinition?.kind === 'color' ? textColorDefinition.defaultValue : null,
 	)
 	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
-	const [format, setFormat] = useState<TemplateExportFormat | null>(
-		config.output.formats[0] ?? null,
+	const effectiveExportFormats = config.output.formats.filter((candidate) =>
+		supportsTemplateExport(candidate, {
+			fileName: template.name,
+			height,
+			html,
+			printPpi: template.printPpi,
+			templateId: template.id,
+			templateVersion: template.templateVersion,
+			width,
+		}),
+	)
+	const [format, setFormat] = useState<StudioOutputFormat | null>(
+		effectiveExportFormats[0] ?? null,
 	)
 	const imageContracts = useMemo(
 		() =>
@@ -445,9 +458,10 @@ export function TemplateStudioProvider({
 		},
 		canvas: { html: composedHtml, previewRef },
 		exporting: {
+			formats: effectiveExportFormats,
 			format,
 			setFormat: (next) => {
-				if (config.output.formats.includes(next)) setFormat(next)
+				if (effectiveExportFormats.includes(next)) setFormat(next)
 			},
 			busy: templateExport.exporting !== null,
 			error: templateExport.error,

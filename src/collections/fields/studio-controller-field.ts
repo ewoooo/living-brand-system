@@ -1,4 +1,5 @@
 import type { Block, Field } from 'payload'
+import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
 
 const AVAILABILITY_OPTIONS = [
 	{ label: '사용 가능', value: 'enabled' },
@@ -32,12 +33,10 @@ export function studioControllerOverrideField({
 
 /** Runtime/Service 지원 형식을 Admin이 추가하지 않고 좁히기만 하는 정책 필드다. */
 export function studioOutputPolicyField({
-	formats,
 	includeOriginal = false,
 }: {
-	formats: readonly { label: string; value: string }[]
 	includeOriginal?: boolean
-}): Field {
+} = {}): Field {
 	return {
 		name: 'output',
 		type: 'group',
@@ -48,7 +47,7 @@ export function studioOutputPolicyField({
 				name: 'allowedFormats',
 				type: 'select',
 				hasMany: true,
-				options: [...formats],
+				options: [...STUDIO_OUTPUT_FORMAT_OPTIONS],
 				label: '허용 형식',
 			},
 			...(includeOriginal

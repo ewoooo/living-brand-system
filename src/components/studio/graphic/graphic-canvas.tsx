@@ -1,6 +1,7 @@
 'use client'
 
 import { type ComponentType, useEffect, useRef, useState } from 'react'
+import { fitPreviewSize } from '@/components/studio/shared/fit-preview-size'
 import { Typography } from '@/components/ui/typography'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
@@ -47,11 +48,14 @@ function GraphicPreviewCanvas({
 }: {
 	adapter: NonNullable<ReturnType<typeof getGraphicPreviewAdapter>>
 }) {
-	const { config, controls, canvas } = useGraphicStudio()
+	const { config, controls, canvas, output } = useGraphicStudio()
 	const valuesRef = useRef(controls.values)
+	const stageRef = useRef<HTMLDivElement>(null)
 	const containerRef = useRef<HTMLDivElement>(null)
 	const previewRef = useRef<GraphicPreview>(null)
 	const [error, setError] = useState<string | null>(null)
+	const outputWidth = output.draft?.width
+	const outputHeight = output.draft?.height
 
 	useEffect(() => {
 		valuesRef.current = controls.values
@@ -82,21 +86,23 @@ function GraphicPreviewCanvas({
 				controls.registerBindings(getGraphicStudioRuntimeBindings(config, viewport))
 				if (canRenderGraphicStudioSvg(config) || mounted.video) {
 					canvas.registerOutput((request) => {
-						if (request.format === 'svg') {
-							const currentViewport = previewRef.current?.getViewport()
-							if (!currentViewport || !canRenderGraphicStudioSvg(config)) {
-								throw new Error('SVG export is unavailable.')
+						switch (request.format) {
+							case 'svg':
+								if (!canRenderGraphicStudioSvg(config)) {
+									throw new Error('SVG export is unavailable.')
+								}
+								return exportGraphicStudioSvg(config, valuesRef.current, request)
+							case 'mp4': {
+								const video = previewRef.current?.video
+								if (!video) throw new Error('MP4 export is unavailable.')
+								return exportGraphicStudioVideo(config, request, video)
 							}
-							return exportGraphicStudioSvg(
-								config,
-								valuesRef.current,
-								currentViewport,
-							)
+							default:
+								throw new Error(
+									`${request.format.toUpperCase()} export is unavailable.`,
+								)
 						}
-						const video = previewRef.current?.video
-						if (!video) throw new Error('MP4 export is unavailable.')
-						return exportGraphicStudioVideo(config, request, video)
-					})
+					}, viewport)
 				}
 			} catch (mountError) {
 				console.error(mountError)
@@ -115,29 +121,45 @@ function GraphicPreviewCanvas({
 	}, [adapter, canvas.registerOutput, config, controls.registerBindings, controls.update])
 
 	useEffect(() => {
+		const stage = stageRef.current
 		const container = containerRef.current
-		if (!container) return
+		if (!stage || !container) return
+
+		const resizePreview = (width: number, height: number) => {
+			if (width <= 0 || height <= 0) return
+			const viewport =
+				outputWidth && outputHeight
+					? fitPreviewSize(
+							{ width, height },
+							{ width: outputWidth, height: outputHeight },
+						)
+					: { width, height }
+			container.style.width = `${viewport.width}px`
+			container.style.height = `${viewport.height}px`
+			previewRef.current?.resize(viewport.width, viewport.height)
+			controls.registerBindings(getGraphicStudioRuntimeBindings(config, viewport))
+		}
 
 		const resizeObserver = new ResizeObserver(([entry]) => {
 			if (!entry) return
-			previewRef.current?.resize(entry.contentRect.width, entry.contentRect.height)
-			controls.registerBindings(
-				getGraphicStudioRuntimeBindings(config, {
-					width: entry.contentRect.width,
-					height: entry.contentRect.height,
-				}),
-			)
+			resizePreview(entry.contentRect.width, entry.contentRect.height)
 		})
-		resizeObserver.observe(container)
+		resizePreview(stage.clientWidth, stage.clientHeight)
+		resizeObserver.observe(stage)
 		return () => resizeObserver.disconnect()
-	}, [config, controls.registerBindings])
+	}, [config, controls.registerBindings, outputHeight, outputWidth])
 
 	return (
 		<figure data-slot="graphic-canvas" className="flex min-h-0 flex-1 flex-col">
 			<div
-				ref={containerRef}
-				className="min-h-96 flex-1 overflow-hidden rounded-xl lg:min-h-0 [&>canvas]:block"
-			/>
+				ref={stageRef}
+				className="flex min-h-96 flex-1 items-center justify-center overflow-hidden lg:min-h-0"
+			>
+				<div
+					ref={containerRef}
+					className="h-full w-full shrink-0 overflow-hidden rounded-xl [&>canvas]:block"
+				/>
+			</div>
 			{error && (
 				<Typography role="alert" size="sm" className="pt-2 text-destructive">
 					{error}

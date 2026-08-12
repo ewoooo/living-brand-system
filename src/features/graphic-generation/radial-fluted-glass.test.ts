@@ -5,6 +5,7 @@ import {
 	RADIAL_FLUTED_GLASS_DEFAULT_INPUT,
 	radialFlutedGlassColorToRgb,
 	toRadialFlutedGlassInput,
+	toRadialFlutedGlassShaderSource,
 } from './radial-fluted-glass'
 
 describe('radialFlutedGlass', () => {
@@ -20,5 +21,9 @@ describe('radialFlutedGlass', () => {
 			RADIAL_FLUTED_GLASS_DEFAULT_INPUT.bloomColor,
 		)
 		expect(() => toRadialFlutedGlassInput({ ...values, speed: 2.01 })).toThrow()
+	})
+
+	it('Controller 화면 좌표의 Y축을 WebGL 좌표로 반전한다', () => {
+		expect(toRadialFlutedGlassShaderSource({ x: -0.75, y: 0.5 })).toEqual([-0.75, -0.5])
 	})
 })

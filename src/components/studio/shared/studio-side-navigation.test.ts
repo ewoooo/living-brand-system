@@ -19,10 +19,6 @@ describe('StudioSideNavigation', () => {
 		const { container } = render(createElement(StudioSideNavigation))
 
 		expect(screen.getByRole('link', { name: 'Studio' })).toHaveAttribute('href', '/studio')
-		expect(screen.getByRole('link', { name: 'Examples' })).toHaveAttribute(
-			'href',
-			'/studio/examples',
-		)
 		expect(screen.getByRole('link', { name: 'Template' })).toHaveAttribute(
 			'href',
 			'/studio/template',
@@ -45,7 +41,7 @@ describe('StudioSideNavigation', () => {
 			'page',
 		)
 		expect(screen.getByRole('link', { name: 'Studio' })).not.toHaveAttribute('aria-current')
-		expect(container.querySelectorAll('[data-icon="inline-end"]')).toHaveLength(7)
-		expect(screen.getAllByRole('listitem')).toHaveLength(7)
+		expect(container.querySelectorAll('[data-icon="inline-end"]')).toHaveLength(6)
+		expect(screen.getAllByRole('listitem')).toHaveLength(6)
 	})
 })

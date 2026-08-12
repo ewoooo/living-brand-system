@@ -1,4 +1,7 @@
-import type { StudioOutputCapability } from '@/features/studio-export/studio-output'
+import {
+	parseStudioOutputCapability,
+	type StudioOutputCapability,
+} from '@/features/studio-export/studio-output'
 
 /** Controller Definition에 저장할 수 있는 직렬화 가능한 값. */
 export type ControllerControlValue = string | number | boolean | null | ControllerPadValue
@@ -22,13 +25,12 @@ export type StudioKind = 'template' | 'image' | 'graphic'
 export type StudioControllerConfig<
 	Kind extends StudioKind = StudioKind,
 	Id extends string | number = string | number,
-	OutputFormat extends string = string,
 > = {
 	studio: Kind
 	id: Id
 	version: 1
 	name: string
-	output: StudioOutputCapability<OutputFormat>
+	output: StudioOutputCapability
 	controller: {
 		groups: readonly ControllerGroupDefinition[]
 	}
@@ -183,14 +185,7 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	}
 	if (config.version !== 1) invalid('version', '지원하는 버전은 1입니다.')
 	assertNonEmptyString(config.name, 'name')
-	const output = asRecord(config.output, 'output')
-	if (!Array.isArray(output.formats)) invalid('output.formats', '배열이어야 합니다.')
-	const outputFormats = new Set<string>()
-	for (const [index, format] of output.formats.entries()) {
-		assertNonEmptyString(format, `output.formats[${index}]`)
-		if (outputFormats.has(format)) invalid(`output.formats[${index}]`, '중복되었습니다.')
-		outputFormats.add(format)
-	}
+	parseStudioOutputCapability(config.output)
 
 	const controller = asRecord(config.controller, 'controller')
 	assertOnlyKeys(controller, ['groups'], 'controller')

@@ -50,3 +50,10 @@ export function radialFlutedGlassColorToRgb(color: string): readonly [number, nu
 		(offset) => Number.parseInt(value.slice(offset, offset + 2), 16) / 255,
 	) as [number, number, number]
 }
+
+/** 화면 좌표(아래가 +Y)를 WebGL 좌표(위가 +Y)로 바꾼다. */
+export function toRadialFlutedGlassShaderSource(
+	source: RadialFlutedGlassInput['source'],
+): readonly [number, number] {
+	return [source.x, -source.y]
+}

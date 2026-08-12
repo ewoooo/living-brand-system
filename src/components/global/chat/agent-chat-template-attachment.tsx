@@ -13,12 +13,12 @@ import {
 } from '@/components/ui/attachment'
 import { Typography } from '@/components/ui/typography'
 import type { AgentTemplateImageAttachment } from '@/features/agent-chat/services/agent-template-request.service'
+import type { StudioOutputFormat } from '@/features/studio-export/export-contract'
 import { useExport } from '@/features/studio-export/hooks/use-export'
 import {
 	canExportTemplate,
 	createTemplateExportRequest,
 	type TemplateExportContext,
-	type TemplateExportFormat,
 	type TemplateExportRequest,
 } from '@/features/studio-export/services/export-template'
 import { exportTemplate } from '@/features/studio-export/services/export-template.client'
@@ -73,13 +73,13 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 		canExport: (request) => canExportTemplate(request, exportContext),
 		execute: (request) => exportTemplate(request, exportContext),
 	})
-	const request = (format: TemplateExportFormat) =>
+	const request = (format: StudioOutputFormat) =>
 		createTemplateExportRequest(format, attachment.printPpi)
-	const canExport = (format: TemplateExportFormat) => {
+	const canExport = (format: StudioOutputFormat) => {
 		const candidate = request(format)
 		return Boolean(candidate && output.canExport(candidate))
 	}
-	const run = (format: TemplateExportFormat) => {
+	const run = (format: StudioOutputFormat) => {
 		const candidate = request(format)
 		if (candidate) void output.run(candidate)
 	}

@@ -2,11 +2,14 @@ import type {
 	CmykIccProfile,
 	ExportRequest,
 	RgbColorProfile,
+	StudioOutputFormat,
 	VideoExportSpec,
 } from './export-contract'
+import { STUDIO_OUTPUT_FORMATS } from './export-contract'
 
-export type StudioOutputCapability<Format extends string = string> = {
+export type StudioOutputCapability<Format extends StudioOutputFormat = StudioOutputFormat> = {
 	formats: readonly Format[]
+	original?: boolean
 	colorProfiles?: {
 		rgb?: readonly RgbColorProfile['icc'][]
 		cmyk?: readonly CmykIccProfile[]
@@ -24,15 +27,19 @@ export type StudioOutputCapability<Format extends string = string> = {
 	packages?: readonly 'zip'[]
 }
 
-export type StudioOutputPolicy<Format extends string = string> = {
+export type StudioOutputPolicy<Format extends StudioOutputFormat = StudioOutputFormat> = {
 	allowedFormats?: readonly Format[]
+	original?: boolean
 }
 
 /** unknown 입력에서 공통 output capability의 직렬화 가능한 범위를 검증한다. */
 export function parseStudioOutputCapability(input: unknown): StudioOutputCapability {
 	const output = record(input, 'output')
-	assertKeys(output, ['formats', 'colorProfiles', 'video', 'packages'], 'output')
-	assertStringArray(output.formats, 'output.formats')
+	assertKeys(output, ['formats', 'original', 'colorProfiles', 'video', 'packages'], 'output')
+	assertStudioOutputFormats(output.formats, 'output.formats')
+	if (output.original !== undefined && typeof output.original !== 'boolean') {
+		throw new Error('output.original이 boolean이 아닙니다.')
+	}
 
 	if (output.colorProfiles !== undefined) {
 		const profiles = record(output.colorProfiles, 'output.colorProfiles')
@@ -92,13 +99,13 @@ export function parseStudioOutputCapability(input: unknown): StudioOutputCapabil
 }
 
 /** Runtime/Service가 지원하는 형식에서 Admin이 허용한 부분집합만 남긴다. */
-export function resolveStudioOutputFormats<Format extends string>(
+export function resolveStudioOutputFormats<Format extends StudioOutputFormat>(
 	supported: readonly Format[],
 	allowed: readonly string[] | null | undefined,
 ): readonly Format[] {
-	assertUniqueFormats(supported, '지원 형식')
+	assertStudioOutputFormats(supported, '지원 형식')
 	if (allowed === undefined || allowed === null) return supported
-	assertUniqueFormats(allowed, 'Admin 허용 형식')
+	assertStudioOutputFormats(allowed, 'Admin 허용 형식')
 
 	const supportedSet = new Set<string>(supported)
 	for (const format of allowed) {
@@ -110,7 +117,7 @@ export function resolveStudioOutputFormats<Format extends string>(
 	return supported.filter((format) => allowedSet.has(format))
 }
 
-export function supportsStudioOutput<Format extends string>(
+export function supportsStudioOutput<Format extends StudioOutputFormat>(
 	capability: StudioOutputCapability<Format>,
 	format: Format,
 ): boolean {
@@ -122,6 +129,7 @@ export function supportsStudioExportRequest(
 	capability: StudioOutputCapability,
 	request: ExportRequest,
 ): boolean {
+	if (request.format === 'original') return capability.original === true
 	if (!supportsStudioOutput(capability, request.format)) return false
 	if (!validRequestOptions(request)) return false
 
@@ -165,7 +173,13 @@ function validRequestOptions(request: ExportRequest): boolean {
 		case 'pdf':
 			return [72, 150, 300].includes(request.options.ppi) && request.options.bleedMm >= 0
 		case 'svg':
-			return typeof request.options.outlineText === 'boolean'
+			return (
+				Number.isInteger(request.options.width) &&
+				request.options.width > 0 &&
+				Number.isInteger(request.options.height) &&
+				request.options.height > 0 &&
+				typeof request.options.outlineText === 'boolean'
+			)
 		case 'mp4':
 			return (
 				request.options.container === 'mp4' &&
@@ -206,4 +220,14 @@ function assertStringArray(value: unknown, label: string): asserts value is stri
 		throw new Error(`${label}이 문자열 배열이 아닙니다.`)
 	}
 	assertUniqueFormats(value, label)
+}
+
+function assertStudioOutputFormats(
+	value: unknown,
+	label: string,
+): asserts value is StudioOutputFormat[] {
+	assertStringArray(value, label)
+	if (value.some((format) => !STUDIO_OUTPUT_FORMATS.includes(format as StudioOutputFormat))) {
+		throw new Error(`${label}에 지원하지 않는 output format이 있습니다.`)
+	}
 }

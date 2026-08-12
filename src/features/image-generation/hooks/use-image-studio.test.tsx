@@ -159,6 +159,7 @@ function Probe() {
 			<output data-testid="result-color">
 				{results.color ? results.color.line : '결과 색 없음'}
 			</output>
+			<output data-testid="download-format">{download.format ?? '형식 없음'}</output>
 			<button type="button" onClick={() => color.update({ line: '#ff0000' })}>
 				라인 색 변경
 			</button>
@@ -179,6 +180,9 @@ function Probe() {
 			</button>
 			<button type="button" onClick={download.selected}>
 				결과 저장
+			</button>
+			<button type="button" onClick={download.original.selected}>
+				원본 저장
 			</button>
 			<button type="button" onClick={() => download.setFormat('jpeg')}>
 				JPEG 선택
@@ -286,14 +290,14 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		const source = config(5, { colorAdjustment: { line: '#000dff' } })
 		const next = {
 			...config(7, { colorAdjustment: { line: '#ff0000' } }),
-			output: { formats: [] as const },
+			output: { formats: [] as const, original: false },
 		}
 		renderStudio([source, next])
 
 		expect(screen.getByTestId('result-color')).toHaveTextContent('#000dff')
 		fireEvent.click(screen.getByRole('button', { name: '교체' }))
 		expect(screen.getByTestId('result-color')).toHaveTextContent('결과 색 없음')
-		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
+		fireEvent.click(screen.getByRole('button', { name: '원본 저장' }))
 
 		await waitFor(() =>
 			expect(exportImage).toHaveBeenCalledWith('blob:1', 0, null, {
@@ -302,6 +306,21 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 				scope: 'selected',
 			}),
 		)
+	})
+
+	it('adapter가 지원하지 않는 Config 형식은 선택값으로 사용하지 않는다', () => {
+		const source = config(5)
+		vi.mocked(exportImage).mockClear()
+		renderStudio([
+			{
+				...source,
+				output: { ...source.output, formats: ['tiff'] },
+			},
+		])
+
+		expect(screen.getByTestId('download-format')).toHaveTextContent('형식 없음')
+		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
+		expect(exportImage).not.toHaveBeenCalled()
 	})
 
 	it('사용자가 선택한 JPEG 형식을 ExportRequest로 전달한다', async () => {

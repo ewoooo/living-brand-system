@@ -72,6 +72,15 @@ describe('deriveTemplateConfig', () => {
 		).toThrow('알 수 없는')
 	})
 
+	it('공통 output format은 Template 도메인에서 다시 allowlist하지 않는다', () => {
+		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightGraphicConfig])
+		const withCommonFormat = {
+			...config,
+			output: { ...config.output, formats: ['svg'] as const },
+		}
+		expect(parseTemplateConfig(withCommonFormat)).toBe(withCommonFormat)
+	})
+
 	it('공통 envelope에는 전역 Definition, Template 확장에는 DOM·슬롯 binding을 둔다', () => {
 		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightGraphicConfig])
 
@@ -325,7 +334,7 @@ function createImageConfig(
 		id,
 		version: 1,
 		name: `프로파일 ${id}`,
-		output: { formats: ['original', 'png'] },
+		output: { formats: ['png'], original: true },
 		controller: {
 			groups: [
 				{

@@ -1,5 +1,6 @@
 import type { Field } from 'payload'
 import { describe, expect, it } from 'vitest'
+import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
 import { GraphicProfiles } from '../GraphicProfiles'
 import { ImageProfiles } from '../ImageProfiles'
 import { Templates } from '../Templates'
@@ -74,11 +75,20 @@ describe('studioControllerField', () => {
 		for (const collection of [ImageProfiles, Templates, GraphicProfiles]) {
 			const output = namedField(collection.fields, 'output')
 			if (output.type !== 'group') throw new Error('output must be a group')
-			expect(namedField(output.fields, 'allowedFormats')).toMatchObject({
+			const allowedFormats = namedField(output.fields, 'allowedFormats')
+			expect(allowedFormats).toMatchObject({
 				type: 'select',
 				hasMany: true,
+				options: STUDIO_OUTPUT_FORMAT_OPTIONS,
 			})
 		}
+
+		const imageOutput = namedField(ImageProfiles.fields, 'output')
+		if (imageOutput.type !== 'group') throw new Error('image output must be a group')
+		expect(namedField(imageOutput.fields, 'original')).toMatchObject({
+			type: 'checkbox',
+			defaultValue: true,
+		})
 	})
 
 	it('color 기본값은 #rrggbb만 허용한다', () => {
@@ -175,6 +185,19 @@ describe('ImageProfiles publish validation', () => {
 
 		await expect(hook({ data } as never)).rejects.toMatchObject({
 			message: 'Image feature type이 중복되었습니다: camera-control',
+			status: 400,
+		})
+	})
+
+	it('Admin 공통 선택지가 Image runtime 지원 형식을 넓히지 못한다', async () => {
+		const data = {
+			...legacyProfile,
+			_status: 'published',
+			output: { allowedFormats: ['svg'] },
+		}
+
+		await expect(hook({ data } as never)).rejects.toMatchObject({
+			message: '지원하지 않는 output format입니다: svg',
 			status: 400,
 		})
 	})

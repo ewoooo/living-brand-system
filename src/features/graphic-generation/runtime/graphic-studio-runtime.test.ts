@@ -19,6 +19,10 @@ const config = forwardStraightGraphicConfig
 describe('graphicStudioRuntime', () => {
 	it('Graphic 계약을 멱등하게 검증하고 잘못된 studio·type을 거부한다', () => {
 		expect(parseGraphicStudioConfig(parseGraphicStudioConfig(config))).toBe(config)
+		expect(
+			parseGraphicStudioConfig({ ...config, output: { ...config.output, formats: ['png'] } })
+				.output.formats,
+		).toEqual(['png'])
 		expect(() => parseGraphicStudioConfig({ ...config, studio: 'image' })).toThrow('studio')
 		expect(() => parseGraphicStudioConfig({ ...config, type: 'canvas' })).toThrow('type')
 		expect(() => parseGraphicStudioConfig({ ...config, unknown: true })).toThrow('알 수 없는')

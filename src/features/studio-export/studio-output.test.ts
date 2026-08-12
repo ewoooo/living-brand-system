@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { STUDIO_OUTPUT_FORMATS } from './export-contract'
 import {
 	parseStudioOutputCapability,
 	resolveStudioOutputFormats,
@@ -23,6 +24,9 @@ describe('resolveStudioOutputFormats', () => {
 			'지원하지 않는 output format',
 		)
 		expect(() => resolveStudioOutputFormats(['svg'] as const, ['svg', 'svg'])).toThrow('중복')
+		expect(() => resolveStudioOutputFormats(['svg'] as const, ['original'])).toThrow(
+			'지원하지 않는 output format',
+		)
 	})
 })
 
@@ -73,5 +77,21 @@ describe('StudioOutputCapability', () => {
 			},
 		}
 		expect(supportsStudioExportRequest(capability, request)).toBe(false)
+	})
+
+	it('original은 format 목록이 아닌 별도 capability로 검증한다', () => {
+		const request = { format: 'original' as const, options: {} }
+		expect(supportsStudioExportRequest({ formats: [], original: true }, request)).toBe(true)
+		expect(supportsStudioExportRequest({ formats: [] }, request)).toBe(false)
+	})
+
+	it('공통 정본 외 format은 parser에서 거부한다', () => {
+		expect(STUDIO_OUTPUT_FORMATS).toEqual(['png', 'jpeg', 'tiff', 'pdf', 'svg', 'mp4'])
+		expect(() => parseStudioOutputCapability({ formats: ['original'] })).toThrow(
+			'지원하지 않는 output format',
+		)
+		expect(() => parseStudioOutputCapability({ formats: ['webp'] })).toThrow(
+			'지원하지 않는 output format',
+		)
 	})
 })

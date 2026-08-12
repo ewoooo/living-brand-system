@@ -104,6 +104,7 @@ describe('GlobalHeader', () => {
 			'href',
 			'/studio/review',
 		)
+		expect(screen.queryByRole('link', { name: 'Examples' })).not.toBeInTheDocument()
 
 		fireEvent.click(screen.getByRole('button', { name: '메뉴 닫기' }))
 		expect(screen.queryByRole('button', { name: '메뉴 닫기' })).not.toBeInTheDocument()

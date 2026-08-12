@@ -44,6 +44,7 @@ describe('exportTemplate', () => {
 		expect(canExportTemplate(pdf, { ...context, templateVersion: undefined })).toBe(false)
 		expect(canExportTemplate(tiff, { ...context, templateVersion: undefined })).toBe(false)
 		expect(canExportTemplate(tiff, context)).toBe(true)
+		expect(createTemplateExportRequest('svg', 300)).toBeNull()
 	})
 
 	it('형식별 adapter에 실행을 위임한다', async () => {

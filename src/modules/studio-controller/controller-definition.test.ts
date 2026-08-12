@@ -240,6 +240,20 @@ describe('parseStudioControllerConfig', () => {
 		expect(parseStudioControllerConfig(config)).toBe(config)
 	})
 
+	it('공통 output parser로 unknown format을 거부한다', () => {
+		expect(() =>
+			parseStudioControllerConfig({
+				...configWith({
+					id: 'enabled',
+					kind: 'toggle',
+					label: 'Enabled',
+					defaultValue: true,
+				}),
+				output: { formats: ['webp'] },
+			}),
+		).toThrow('지원하지 않는 output format')
+	})
+
 	it('group과 전체 control id 중복을 거부한다', () => {
 		expect(() =>
 			parseStudioControllerConfig({
