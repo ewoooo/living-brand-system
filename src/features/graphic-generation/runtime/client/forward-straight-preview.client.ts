@@ -24,4 +24,4 @@ export const forwardStraightPreviewAdapter = {
 			destroy: () => preview.destroy(),
 		}
 	},
-} satisfies GraphicPreviewAdapter
+} satisfies GraphicPreviewAdapter<'forward-straight'>

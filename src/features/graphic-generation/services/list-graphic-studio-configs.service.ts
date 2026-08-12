@@ -1,5 +1,6 @@
 import { deriveGraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import { listPublishedGraphicProfileDefinitions } from '@/features/graphic-generation/repositories/graphic-profile.payload.repository'
+import { canRenderGraphicStudioSvg } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 
 /**
  * 유스케이스 경계: published Graphic Profile을 runtime 기본값보다 좁은 Studio Config 목록으로 만든다.
@@ -11,5 +12,5 @@ export async function listGraphicStudioConfigs(
 ) {
 	const profiles = await listPublishedGraphicProfileDefinitions(user)
 	const configs = profiles.map(deriveGraphicStudioConfig)
-	return svgOnly ? configs.filter((config) => config.output.formats.includes('svg')) : configs
+	return svgOnly ? configs.filter(canRenderGraphicStudioSvg) : configs
 }

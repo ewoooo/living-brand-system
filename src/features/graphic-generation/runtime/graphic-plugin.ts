@@ -24,18 +24,3 @@ export function defineGraphicStudioPlugin<const Id extends string>(
 	}
 	return plugin
 }
-
-/** Plugin ID 중복을 거부하고 조회 전용 Catalog를 만든다. */
-export function createGraphicStudioPluginCatalog<
-	const Plugins extends readonly GraphicStudioPlugin[],
->(plugins: Plugins): Readonly<Record<Plugins[number]['manifest']['id'], Plugins[number]>> {
-	const catalog: Record<string, GraphicStudioPlugin> = Object.create(null)
-	for (const plugin of plugins) {
-		const { id } = plugin.manifest
-		if (Object.hasOwn(catalog, id)) throw new Error(`중복된 Graphic plugin입니다: ${id}`)
-		catalog[id] = plugin
-	}
-	return Object.freeze(catalog) as Readonly<
-		Record<Plugins[number]['manifest']['id'], Plugins[number]>
-	>
-}

@@ -1,9 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 import { listPublishedGraphicProfileDefinitions } from '@/features/graphic-generation/repositories/graphic-profile.payload.repository'
+import { canRenderGraphicStudioSvg } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import { listGraphicStudioConfigs } from './list-graphic-studio-configs.service'
 
 vi.mock('@/features/graphic-generation/repositories/graphic-profile.payload.repository', () => ({
 	listPublishedGraphicProfileDefinitions: vi.fn(),
+}))
+vi.mock('@/features/graphic-generation/runtime/graphic-studio-runtime', () => ({
+	canRenderGraphicStudioSvg: vi.fn(),
 }))
 
 describe('listGraphicStudioConfigs', () => {
@@ -19,13 +23,16 @@ describe('listGraphicStudioConfigs', () => {
 		])
 	})
 
-	it('Template용 목록은 SVG adapter가 없는 Shader runtime을 제외한다', async () => {
+	it('Template용 목록은 output 선언이 아니라 실제 SVG adapter 가용성으로 거른다', async () => {
+		vi.mocked(canRenderGraphicStudioSvg).mockImplementation(
+			(config) => config.name === 'SVG adapter 있음',
+		)
 		vi.mocked(listPublishedGraphicProfileDefinitions).mockResolvedValueOnce([
-			{ id: 3, name: 'SVG', runtime: 'forward-straight' },
-			{ id: 4, name: 'Shader', runtime: 'radial-fluted-glass' },
+			{ id: 3, name: 'SVG adapter 없음', runtime: 'forward-straight' },
+			{ id: 4, name: 'SVG adapter 있음', runtime: 'forward-straight' },
 		])
 		await expect(listGraphicStudioConfigs({}, { svgOnly: true })).resolves.toEqual([
-			expect.objectContaining({ id: 'forward-straight' }),
+			expect.objectContaining({ name: 'SVG adapter 있음' }),
 		])
 	})
 })

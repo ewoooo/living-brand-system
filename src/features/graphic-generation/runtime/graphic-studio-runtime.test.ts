@@ -7,7 +7,7 @@ import {
 	radialFlutedGlassGraphicConfig,
 } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import { createControllerValues } from '@/modules/studio-controller/controller-definition'
-import { createGraphicStudioPluginCatalog, defineGraphicStudioPlugin } from './graphic-plugin'
+import { defineGraphicStudioPlugin } from './graphic-plugin'
 import {
 	canRenderGraphicStudioSvg,
 	getGraphicStudioRuntimeBindings,
@@ -118,14 +118,5 @@ describe('graphicStudioRuntime', () => {
 				manifest: { ...config, id: 'missing-svg-adapter' },
 			}),
 		).toThrow('SVG output adapter')
-	})
-
-	it('Catalog는 같은 stable ID의 Plugin을 중복 등록하지 않는다', () => {
-		const plugin = defineGraphicStudioPlugin({
-			manifest: { ...config, output: { formats: [] } },
-		})
-		expect(() => createGraphicStudioPluginCatalog([plugin, plugin])).toThrow(
-			'중복된 Graphic plugin',
-		)
 	})
 })
