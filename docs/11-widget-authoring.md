@@ -57,7 +57,11 @@
 
 세 곳 중 하나만 빠뜨리면 조용히 실패합니다 — 스키마만 등록하면 admin에서 고를 수 있지만 화면이 비고, 갤러리만 등록하면 미리보기에서만 보입니다(`widgets/ci-lockup/`이 실제로 그 상태이며 `schema.ts`가 없어 CMS로 저작할 수 없습니다).
 
-🔴 **`dbName`은 필수입니다.** 중첩 블록의 테이블명이 Postgres 식별자 63자 한계에 닿습니다(현재 정확히 63자인 인덱스명 11개·제약명 45개). 예: `clearspaceViewerWidget` → `dbName: 'cvw'`. enum은 `enumName`으로 전역 이름을 공유합니다.
+🔴 **`dbName`은 필수입니다.** 중첩 블록의 이름이 길어지면 Postgres 식별자 63자 한계에 닿습니다. 예: `clearspaceViewerWidget` → `dbName: 'cvw'`. enum은 `enumName`으로 전역 이름을 공유합니다.
+
+한계에 실제로 닿는 것은 **FK 제약명**입니다. 최신 드리즐 스냅샷 실측으로 66~93자 제약명이 6개 있고(최장 90자대), 인덱스명은 최장 62자로 아직 아래에 있습니다. 🔴 **여기에 개수를 적어 두지 마십시오** — 스키마가 바뀔 때마다 낡습니다. 지금 값은 `migrations/`의 최신 `.json` 스냅샷에서 세십시오.
+
+이 한계는 `blocks/block/alias-length.test.ts`가 막고 있지만 **갤러리 통과 ≠ 페이지 통과**입니다 — 잘림은 조회 SQL의 별칭에서 일어납니다.
 
 ## 4. Block과 Widget의 책임
 
