@@ -68,7 +68,7 @@ Frontend의 `highlight`는 Figma 강조 스타일을 옮긴 그라디언트입�
 `className`/`style` 리터럴에서 다음은 금지합니다.
 
 - 생 hex 리터럴(예: `#a1b2c3`)
-- 생 Tailwind 팔레트 + 숫자 — 무채색(`neutral`/`gray`/`zinc`/`slate`/`stone`)만이 아니라 **유채색 전체**(`emerald`, `sky`, `amber`, `orange` 등)를 포함합니다. `bg-emerald-500/15`처럼 유채 팔레트로 상태를 칠하는 것도 위반입니다.
+- 생 Tailwind 팔레트 + 숫자 — 무채색(`neutral`/`gray`/`zinc`/`slate`/`stone`)만이 아니라 **유채색 전체**(`emerald`, `sky`, `amber`, `orange` 등)를 포함합니다. 🔴 숫자가 없는 `white`·`black`도 같습니다 — 탐지 grep이 숫자만 보고 있어 `bg-white`가 실제로 통과한 적이 있습니다(2026-08-12, shadcn slider). `bg-emerald-500/15`처럼 유채 팔레트로 상태를 칠하는 것도 위반입니다.
 - `.tsx` 안의 `oklch(...)` 리터럴
 
 성공/정보/경고/실패 같은 **판정·상태 표시는 상태 토큰만** 사용합니다: `--success`/`--info`/`--warning`/`--destructive`(해당 없음은 `muted`). 사용 형태는 destructive 선례를 따릅니다 — pill은 `bg-success/15 text-success`, dot은 `bg-success`. 상태 토큰으로 표현할 수 없는 새 상태가 생기면 팔레트로 우회하지 말고 이 문서와 `theme.css`에 토큰을 추가합니다.
@@ -78,7 +78,7 @@ Frontend의 `highlight`는 Figma 강조 스타일을 옮긴 그라디언트입�
 탐지용 grep:
 
 ```sh
-rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|neutral|gray|zinc|slate|stone)-[0-9]|oklch\(' src --glob '*.tsx'
+rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|neutral|gray|zinc|slate|stone)-[0-9]|white|black)\b|oklch\(' src --glob '*.tsx'
 ```
 
 이 명령이 색 데이터 컴포넌트 밖에서 걸리면 토큰 위반입니다.
