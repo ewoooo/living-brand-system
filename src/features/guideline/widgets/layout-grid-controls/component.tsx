@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { GUTTER_RATIO, MARGIN_PCT } from '../layout-grid/rules'
 import { useLayoutGridScope } from '../layout-grid/store'
+import { CONTROL_VALUE, WIDGET_CAPTION } from '../readout'
 
 // 위젯: 같은 **블록**의 layoutGridWidget들을 통제한다. 값은 블록 단위 스코프(layout-grid/store.tsx)에
 // 있어 형제 위젯끼리 공유되고, 이 위젯이 유일한 쓰기 주체다. 다른 블록의 패널과는 간섭하지 않는다.
@@ -102,7 +103,7 @@ export function LayoutGridControlsWidget(config: LayoutGridControlsConfig) {
 						/>
 						그리드 {guidesOn ? '보임' : '숨김'}
 					</button>
-					<p className="font-body text-muted-foreground text-xs">
+					<p className={WIDGET_CAPTION}>
 						거터를 끝까지 밀어도 1:2:3 분할선은 제자리에 있다.
 					</p>
 				</div>
@@ -135,7 +136,7 @@ function Slider({
 		<label className="flex w-[240px] flex-col gap-0.5">
 			<span className="flex items-baseline justify-between font-body text-xs">
 				<span className="text-muted-foreground">{label}</span>
-				<span className="tabular-nums">
+				<span className={`${CONTROL_VALUE} text-xs`}>
 					{value}
 					{suffix}
 				</span>

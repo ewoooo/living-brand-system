@@ -2,6 +2,7 @@
 
 import { useId, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { CONTROL_VALUE } from '../readout'
 
 // ⚠️ SPIKE (임시) — block-widget-separation 검증용. 제거 시 이 폴더(widgets/type-specimen) 통째 삭제.
 //
@@ -91,7 +92,7 @@ export function TypeSpecimenWidget() {
 							onChange={(e) => setLineHeight(Number(e.target.value))}
 							className="h-1 w-40 cursor-pointer appearance-none rounded-full bg-background accent-foreground"
 						/>
-						<span className="w-8 shrink-0 font-body text-xs font-normal text-foreground tabular-nums">
+						<span className={`w-8 shrink-0 text-xs font-normal ${CONTROL_VALUE}`}>
 							{lineHeight.toFixed(2)}
 						</span>
 					</div>

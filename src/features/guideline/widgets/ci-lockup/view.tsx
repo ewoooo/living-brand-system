@@ -1,3 +1,4 @@
+import { SPEC_READOUT } from '../readout'
 import {
 	CAP_TRIM,
 	CLEAR_SPACE,
@@ -58,7 +59,7 @@ export function CiLockupView({
 				)
 			})}
 
-			<dl className="flex flex-wrap gap-x-6 gap-y-1 font-mono text-muted-foreground text-xs">
+			<dl className={`flex flex-wrap gap-x-6 gap-y-1 text-xs ${SPEC_READOUT}`}>
 				<div>
 					<dt className="inline">H</dt> <dd className="inline">{h}px</dd>
 				</div>
@@ -114,7 +115,7 @@ function LockupFigure({
 						</span>
 					) : null}
 				</span>
-				<span className="font-mono text-muted-foreground text-xs">{lockup.source}</span>
+				<span className={`${SPEC_READOUT} text-xs`}>{lockup.source}</span>
 				{lockup.note ? (
 					<span className="font-body text-destructive text-xs">{lockup.note}</span>
 				) : null}

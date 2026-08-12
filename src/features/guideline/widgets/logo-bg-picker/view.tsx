@@ -3,6 +3,7 @@
 import { type PointerEvent as ReactPointerEvent, useRef, useState } from 'react'
 import type { BrandBackground } from '../brand-background'
 import type { LogoSources } from '../logo-set'
+import { WIDGET_CAPTION } from '../readout'
 
 // 한 배경 위에 CI 두 표현을 나란히 올리고, 구석의 색 띠를 끌어 배경을 갈아 끼운다.
 // 컨트롤이 하나라 두 표현이 같은 배경에서 어떻게 갈리는지가 한눈에 보인다 — 드래그 위젯이 열을
@@ -173,7 +174,7 @@ export function LogoBgPickerView({
 				</div>
 			</div>
 
-			<p className="px-1 font-body text-muted-foreground text-xs">
+			<p className={`px-1 ${WIDGET_CAPTION}`}>
 				오른쪽 아래 색 띠를 끌어 배경색을 바꿔 보세요.
 			</p>
 		</div>

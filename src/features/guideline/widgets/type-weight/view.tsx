@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { AVAILABLE_WEIGHTS, BRAND_FONT_STACK, WEIGHTS, type WeightKey } from '../brand-typeface'
+import { CONTROL_VALUE } from '../readout'
 
 // 문구·크기·행간을 묶어 두고 굵기만 갈아 끼운다. 화면에서 달라지는 게 하나뿐이라 그 하나가 보인다.
 //
@@ -100,11 +101,9 @@ export function TypeWeightView({
 							{WEIGHTS.map((candidate, i) => (
 								<span
 									key={candidate.key}
-									className={
-										i === index
-											? 'font-body text-foreground text-xs'
-											: 'font-body text-muted-foreground text-xs'
-									}
+									className={`font-body text-xs ${
+										i === index ? 'text-foreground' : 'text-muted-foreground'
+									}`}
 								>
 									{candidate.label}
 								</span>
@@ -112,7 +111,7 @@ export function TypeWeightView({
 						</div>
 					</div>
 
-					<span className="font-body text-foreground text-sm tabular-nums">
+					<span className={`${CONTROL_VALUE} text-sm`}>
 						{weight.label} {weight.value}
 					</span>
 				</div>
@@ -123,11 +122,9 @@ export function TypeWeightView({
 				*/}
 				<p
 					role="status"
-					className={
-						synthesized
-							? 'font-body text-destructive text-xs'
-							: 'font-body text-muted-foreground text-xs'
-					}
+					className={`font-body text-xs ${
+						synthesized ? 'text-destructive' : 'text-muted-foreground'
+					}`}
 				>
 					{synthesized
 						? `${weight.label}(${weight.value})는 아직 서체 파일에 없어 브라우저가 대신 그린 굵기입니다. 원본 자형과 다릅니다.`
