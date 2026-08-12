@@ -1,6 +1,7 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useState } from 'react'
+import { Slider } from '@/components/ui/slider'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { CONTROL_VALUE } from '../readout'
 
@@ -37,7 +38,6 @@ export function TypeSpecimenWidget() {
 		sentence: TIER_PRESETS.sentence.fallback,
 		paragraph: TIER_PRESETS.paragraph.fallback,
 	}))
-	const sliderId = useId()
 	const fontFamily = 'var(--font-title)'
 
 	return (
@@ -82,15 +82,15 @@ export function TypeSpecimenWidget() {
 
 				<Field label="Leading">
 					<div className="flex items-center gap-3">
-						<input
-							id={sliderId}
-							type="range"
+						<Slider
 							min={0.9}
 							max={2}
 							step={0.05}
-							value={lineHeight}
-							onChange={(e) => setLineHeight(Number(e.target.value))}
-							className="h-1 w-40 cursor-pointer appearance-none rounded-full bg-background accent-foreground"
+							value={[lineHeight]}
+							onValueChange={([next]) => setLineHeight(next ?? 1.2)}
+							// Field의 라벨은 <span>이라 컨트롤과 이어지지 않는다 — 이름을 직접 준다.
+							aria-label="Leading"
+							className="w-40"
 						/>
 						<span className={`w-8 shrink-0 text-xs font-normal ${CONTROL_VALUE}`}>
 							{lineHeight.toFixed(2)}
