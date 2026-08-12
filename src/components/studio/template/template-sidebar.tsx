@@ -265,6 +265,7 @@ export function TemplateSidebar() {
 							canvas.width && canvas.height ? canvas.width / canvas.height : undefined
 						}
 						imageContracts={background.contracts}
+						featureBindings={background.featureBindings}
 						graphicConfigs={background.graphicConfigs}
 						graphicBindings={background.graphicBindings}
 						value={background.state}

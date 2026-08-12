@@ -1,12 +1,17 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { htmlToPng } from '../adapters/html-to-png.client'
+import { executeStudioExport } from './execute-studio-export'
 import {
 	canExportTemplate,
 	createTemplateExportRequest,
 	type TemplateExportContext,
 } from './export-template'
-import { exportTemplate } from './export-template.client'
+import {
+	createTemplateExportSource,
+	exportTemplatePng,
+	exportTemplateTiff,
+} from './export-template.client'
 import { requestTemplatePrint, TemplatePrintDownloadError } from './export-template-print.client'
 
 vi.mock('../adapters/html-to-png.client', () => ({ htmlToPng: vi.fn() }))
@@ -27,7 +32,7 @@ const context: TemplateExportContext = {
 	controller: { groups: [], values: {} },
 }
 
-describe('exportTemplate', () => {
+describe('template export source', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		vi.mocked(htmlToPng).mockResolvedValue(new Blob(['png']))
@@ -52,7 +57,8 @@ describe('exportTemplate', () => {
 		const pdf = createTemplateExportRequest('pdf', 300)
 		const tiff = createTemplateExportRequest('tiff', 300)
 		if (!png || !pdf || !tiff) throw new Error('fixture request is missing')
-		await expect(exportTemplate(png, context)).resolves.toMatchObject({
+		const source = createTemplateExportSource(context)
+		await expect(executeStudioExport(source, png)).resolves.toMatchObject({
 			filename: '브랜드 카드.png',
 			mimeType: 'image/png',
 		})
@@ -63,7 +69,7 @@ describe('exportTemplate', () => {
 			png.options,
 		)
 
-		await exportTemplate(pdf, context)
+		await executeStudioExport(source, pdf)
 		expect(requestTemplatePrint).toHaveBeenCalledWith({
 			colorProfile: 'cgats21-crpc6',
 			fileName: context.fileName,
@@ -73,7 +79,7 @@ describe('exportTemplate', () => {
 			templateVersion: context.templateVersion,
 		})
 
-		await exportTemplate(tiff, context)
+		await executeStudioExport(source, tiff)
 		expect(requestTemplatePrint).toHaveBeenCalledWith({
 			colorProfile: 'cgats21-crpc6',
 			fileName: context.fileName,
@@ -86,9 +92,9 @@ describe('exportTemplate', () => {
 
 	it('가용하지 않은 형식은 I/O 전에 중단한다', async () => {
 		const tiff = createTemplateExportRequest('tiff', 300)
-		if (!tiff) throw new Error('fixture request is missing')
+		if (tiff?.format !== 'tiff') throw new Error('fixture request is missing')
 		await expect(
-			exportTemplate(tiff, { ...context, output: { formats: ['png'] } }),
+			exportTemplateTiff(tiff, { ...context, output: { formats: ['png'] } }),
 		).rejects.toThrow('TIFF export is unavailable.')
 		expect(htmlToPng).not.toHaveBeenCalled()
 		expect(requestTemplatePrint).not.toHaveBeenCalled()
@@ -97,13 +103,17 @@ describe('exportTemplate', () => {
 	it('adapter 오류를 공통 메시지로 정리하되 인쇄 출력 조치 메시지는 보존한다', async () => {
 		const png = createTemplateExportRequest('png')
 		const tiff = createTemplateExportRequest('tiff', 300)
-		if (!png || !tiff) throw new Error('fixture request is missing')
+		if (png?.format !== 'png' || tiff?.format !== 'tiff') {
+			throw new Error('fixture request is missing')
+		}
 		vi.mocked(htmlToPng).mockRejectedValueOnce(new Error('DOM capture failed.'))
-		await expect(exportTemplate(png, context)).rejects.toThrow('PNG 내보내기에 실패했습니다.')
+		await expect(exportTemplatePng(png, context)).rejects.toThrow(
+			'PNG 내보내기에 실패했습니다.',
+		)
 
 		vi.mocked(requestTemplatePrint).mockRejectedValueOnce(
 			new TemplatePrintDownloadError('템플릿이 변경되었습니다.'),
 		)
-		await expect(exportTemplate(tiff, context)).rejects.toThrow('템플릿이 변경되었습니다.')
+		await expect(exportTemplateTiff(tiff, context)).rejects.toThrow('템플릿이 변경되었습니다.')
 	})
 })

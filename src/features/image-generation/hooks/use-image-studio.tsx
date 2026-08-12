@@ -13,11 +13,10 @@ import { useImageGeneration } from '@/features/image-generation/hooks/use-image-
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import type { ImageColorAdjustment } from '@/features/image-generation/runtime/image-colorize'
 import type { ImageGenerationResult } from '@/features/image-generation/services/generate-image.client'
-import { exportResultsToZip } from '@/features/studio-export/adapters/export-results-to-zip.client'
 import type { StudioOutputFormat } from '@/features/studio-export/export-contract'
 import { useExport } from '@/features/studio-export/hooks/use-export'
 import {
-	exportImage,
+	createImageExportSource,
 	type ImageExportRequest,
 } from '@/features/studio-export/services/export-image.client'
 import {
@@ -170,21 +169,6 @@ export function ImageStudioProvider({
 			: (exportFormats[0] ?? null)
 	const canDownload = Boolean(result?.images.length && exportFormat)
 	const canDownloadOriginal = Boolean(result?.images.length && resultOutput.original)
-	const executeImageExport = async (request: ImageExportRequest) => {
-		if (!result) throw new Error('저장할 이미지가 없습니다.')
-		if (request.scope === 'selected') {
-			if (selected === null || !result.images[selected]) {
-				throw new Error('저장할 이미지를 선택해 주세요.')
-			}
-			return exportImage(result.images[selected], selected, resultColor, request)
-		}
-		const items = await Promise.all(
-			result.images.map((src, index) => exportImage(src, index, resultColor, request)),
-		)
-		return request.package
-			? exportResultsToZip({ format: request.package, filename: 'hd-images.zip', items })
-			: items
-	}
 	const imageExport = useExport<ImageExportRequest>({
 		capability: resultOutput,
 		canExport: ({ package: packageFormat, scope }) =>
@@ -194,13 +178,11 @@ export function ImageStudioProvider({
 					(scope === 'all' ||
 						(selected !== null && result.images[selected] !== undefined)),
 			),
-		source: {
-			original: executeImageExport,
-			raster: {
-				png: executeImageExport,
-				jpeg: executeImageExport,
-			},
-		},
+		source: createImageExportSource({
+			images: result?.images ?? null,
+			selected,
+			color: resultColor,
+		}),
 	})
 
 	function update(controlId: string, value: ControllerControlValue) {

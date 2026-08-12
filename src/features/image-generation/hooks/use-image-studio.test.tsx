@@ -12,18 +12,46 @@ import type {
 } from '@/modules/studio-controller/controller-definition'
 import { ImageStudioProvider, useImageStudio } from './use-image-studio'
 
-vi.mock('@/features/studio-export/services/export-image.client', () => ({
-	exportImage: vi.fn().mockResolvedValue({
+const exportImageMocks = vi.hoisted(() => ({
+	original: vi.fn().mockResolvedValue({
 		data: new Blob(),
 		filename: 'hd-image-1.png',
 		mimeType: 'image/png',
 	}),
+	png: vi.fn().mockResolvedValue({
+		data: new Blob(),
+		filename: 'hd-image-1.png',
+		mimeType: 'image/png',
+	}),
+	jpeg: vi.fn().mockResolvedValue({
+		data: new Blob(),
+		filename: 'hd-image-1.jpg',
+		mimeType: 'image/jpeg',
+	}),
+}))
+
+vi.mock('@/features/studio-export/services/export-image.client', () => ({
+	createImageExportSource: (context: {
+		images: readonly string[] | null
+		selected: number | null
+		color: unknown
+	}) => {
+		const src = context.images?.[context.selected ?? -1]
+		return {
+			original: (request: unknown) =>
+				exportImageMocks.original(src, context.selected, context.color, request),
+			raster: {
+				png: (request: unknown) =>
+					exportImageMocks.png(src, context.selected, context.color, request),
+				jpeg: (request: unknown) =>
+					exportImageMocks.jpeg(src, context.selected, context.color, request),
+			},
+		}
+	},
 }))
 vi.mock('@/features/studio-export/adapters/download-export-result.client', () => ({
 	downloadExportResult: vi.fn(),
 }))
-
-import { exportImage } from '@/features/studio-export/services/export-image.client'
 
 vi.mock('@/features/image-generation/hooks/use-image-generation', () => ({
 	useImageGeneration: () => ({
@@ -300,7 +328,7 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		fireEvent.click(screen.getByRole('button', { name: '원본 저장' }))
 
 		await waitFor(() =>
-			expect(exportImage).toHaveBeenCalledWith('blob:1', 0, null, {
+			expect(exportImageMocks.original).toHaveBeenCalledWith('blob:1', 0, null, {
 				format: 'original',
 				options: {},
 				scope: 'selected',
@@ -310,7 +338,7 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 
 	it('adapter가 지원하지 않는 Config 형식은 선택값으로 사용하지 않는다', () => {
 		const source = config(5)
-		vi.mocked(exportImage).mockClear()
+		exportImageMocks.png.mockClear()
 		renderStudio([
 			{
 				...source,
@@ -320,7 +348,7 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 
 		expect(screen.getByTestId('download-format')).toHaveTextContent('형식 없음')
 		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
-		expect(exportImage).not.toHaveBeenCalled()
+		expect(exportImageMocks.png).not.toHaveBeenCalled()
 	})
 
 	it('사용자가 선택한 JPEG 형식을 ExportRequest로 전달한다', async () => {
@@ -329,7 +357,7 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
 
 		await waitFor(() =>
-			expect(exportImage).toHaveBeenCalledWith('blob:1', 0, null, {
+			expect(exportImageMocks.jpeg).toHaveBeenCalledWith('blob:1', 0, null, {
 				format: 'jpeg',
 				colorProfile: { space: 'rgb', icc: 'srgb' },
 				options: { quality: 90 },

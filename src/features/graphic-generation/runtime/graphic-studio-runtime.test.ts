@@ -124,12 +124,12 @@ describe('graphicStudioRuntime', () => {
 		).toThrow('SVG output adapter')
 	})
 
-	it('Catalog는 같은 stable ID의 Plugin을 중복 등록하지 않는다', () => {
+	it('Catalog는 등록 key와 Manifest stable ID 불일치를 거부한다', () => {
 		const plugin = defineGraphicStudioPlugin({
 			manifest: { ...config, output: { formats: [] } },
 		})
-		expect(() => createGraphicStudioPluginCatalog([plugin, plugin])).toThrow(
-			'중복된 Graphic plugin',
+		expect(() => createGraphicStudioPluginCatalog({ mismatched: plugin })).toThrow(
+			'key와 Manifest ID',
 		)
 	})
 })

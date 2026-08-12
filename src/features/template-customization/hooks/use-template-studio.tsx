@@ -16,6 +16,7 @@ import { getGraphicStudioRuntimeBindings } from '@/features/graphic-generation/r
 import {
 	acceptsImagePromptExecution,
 	getImageColorAdjustmentControls,
+	getImageStudioFeatureControlIds,
 	resolveImagePromptExecution,
 } from '@/features/image-generation/domain/image-studio-config'
 import { requestImageGeneration } from '@/features/image-generation/services/generate-image.client'
@@ -111,6 +112,7 @@ type TemplateStudioValue = {
 	background: {
 		state: TemplateBackgroundState
 		contracts: readonly ResolvedTemplateImageConfig[]
+		featureBindings: ControllerRuntimeBindings
 		graphicConfigs: readonly GraphicStudioConfig[]
 		graphicBindings: ControllerRuntimeBindings
 		update: (patch: TemplateBackgroundPatch) => void
@@ -225,6 +227,10 @@ export function TemplateStudioProvider({
 	const [background, setBackground] = useState<TemplateBackgroundState>(() =>
 		initialBackgroundState(config, backgroundSlot, backgroundContracts),
 	)
+	const selectedBackgroundContract = backgroundContracts.find(
+		(candidate) => candidate.config.id === background.profileId,
+	)
+	const backgroundFeatureBindings = getBackgroundFeatureBindings(selectedBackgroundContract)
 	const selectedGraphicConfig = config.template.graphicConfigs.find(
 		(candidate) => candidate.id === background.graphicConfigId,
 	)
@@ -416,6 +422,7 @@ export function TemplateStudioProvider({
 		background: {
 			state: background,
 			contracts: backgroundContracts,
+			featureBindings: backgroundFeatureBindings,
 			graphicConfigs: config.template.graphicConfigs,
 			graphicBindings,
 			update: (patch) =>
@@ -430,8 +437,10 @@ export function TemplateStudioProvider({
 				setBackground((current) =>
 					selectBackgroundType(current, backgroundTypeDefinition, next),
 				),
-			// 배경 compose에 feature color 경로가 없으므로 runtime binding과 action을 함께 잠근다.
-			updateFeature: () => {},
+			updateFeature: (controlId, next) =>
+				setBackground((current) =>
+					updateBackgroundFeature(current, controlId, next, backgroundContracts),
+				),
 			selectImageProfile: (profileId) =>
 				setBackground((current) =>
 					selectBackgroundImageProfile(current, profileId, backgroundContracts),
@@ -682,6 +691,40 @@ function updateBackgroundGraphic(
 		...current,
 		graphicValues: { ...current.graphicValues, [controlId]: next },
 	}
+}
+
+function updateBackgroundFeature(
+	current: TemplateBackgroundState,
+	controlId: string,
+	next: ControllerControlValue,
+	contracts: readonly ResolvedTemplateImageConfig[],
+): TemplateBackgroundState {
+	const contract = contracts.find((candidate) => candidate.config.id === current.profileId)
+	if (!contract) return current
+	const binding = getBackgroundFeatureBindings(contract)[controlId]
+	const definition = contract.config.controller.groups
+		.flatMap((group) => group.controls)
+		.find((control) => control.id === controlId)
+	if (!binding || !definition || !acceptsControllerDraftValue(definition, next, binding)) {
+		return current
+	}
+	return {
+		...current,
+		featureValues: { ...current.featureValues, [controlId]: next },
+	}
+}
+
+function getBackgroundFeatureBindings(
+	contract: ResolvedTemplateImageConfig | undefined,
+): ControllerRuntimeBindings {
+	return contract
+		? Object.fromEntries(
+				getImageStudioFeatureControlIds(contract.config).map((id) => [
+					id,
+					{ availability: 'disabled' as const },
+				]),
+			)
+		: {}
 }
 
 function templateControllerValues(

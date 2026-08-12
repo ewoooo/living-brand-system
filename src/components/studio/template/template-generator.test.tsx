@@ -99,6 +99,9 @@ function FeatureMutationProbe() {
 			<span data-testid="background-line">
 				{String(background.state.featureValues.lineColor)}
 			</span>
+			<span data-testid="background-line-availability">
+				{background.featureBindings.lineColor?.availability ?? 'enabled'}
+			</span>
 			<button
 				type="button"
 				onClick={() => images.updateFeature('1:1', 'lineColor', 'invalid')}
@@ -991,6 +994,7 @@ describe('TemplateGenerator', () => {
 
 		fireEvent.click(screen.getByRole('button', { name: 'invalid image feature' }))
 		expect(screen.getByTestId('image-line')).toHaveTextContent('#000000')
+		expect(screen.getByTestId('background-line-availability')).toHaveTextContent('disabled')
 		fireEvent.click(screen.getByRole('button', { name: 'valid image feature' }))
 		expect(screen.getByTestId('image-line')).toHaveTextContent('#00ff00')
 		fireEvent.click(screen.getByRole('button', { name: 'background feature' }))
