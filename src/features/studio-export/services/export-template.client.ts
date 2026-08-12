@@ -1,14 +1,15 @@
 'use client'
 
+import { htmlToPng } from '../adapters/html-to-png.client'
+import type { ExportResult } from '../export-contract'
 import {
 	canExportTemplate,
 	type TemplateExportContext,
-	type TemplateExportFormat,
+	type TemplateExportRequest,
 } from './export-template'
-import { exportHtmlToPng, renderHtmlToPngBlob } from './export-template-png.client'
-import { downloadTemplatePrint, TemplatePrintDownloadError } from './export-template-print.client'
+import { requestTemplatePrint, TemplatePrintDownloadError } from './export-template-print.client'
 
-const EXPORT_ERROR_MESSAGES: Record<TemplateExportFormat, string> = {
+const EXPORT_ERROR_MESSAGES: Record<TemplateExportRequest['format'], string> = {
 	png: 'PNG 내보내기에 실패했습니다. 이미지 원본 접근(CORS)이 막혀 있을 수 있습니다.',
 	pdf: 'PDF 파일을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.',
 	tiff: 'TIFF 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.',
@@ -19,17 +20,24 @@ const EXPORT_ERROR_MESSAGES: Record<TemplateExportFormat, string> = {
  * 실제 DOM·HTTP·다운로드 I/O는 형식별 client adapter가 소유한다.
  */
 export async function exportTemplate(
-	format: TemplateExportFormat,
+	request: TemplateExportRequest,
 	context: TemplateExportContext,
-): Promise<void> {
-	if (!canExportTemplate(format, context)) {
+): Promise<ExportResult> {
+	const { format } = request
+	if (!canExportTemplate(request, context)) {
 		throw new Error(`${format.toUpperCase()} export is unavailable.`)
 	}
 	try {
 		switch (format) {
-			case 'png':
-				await exportHtmlToPng(context.html, context.fileName)
-				return
+			case 'png': {
+				const data = await htmlToPng(
+					context.html,
+					context.width,
+					context.height,
+					request.options,
+				)
+				return { data, filename: `${context.fileName}.png`, mimeType: 'image/png' }
+			}
 			case 'pdf':
 			case 'tiff': {
 				// canExportTemplate이 templateVersion 존재를 보장한다 — 타입 좁히기용 가드.
@@ -37,15 +45,23 @@ export async function exportTemplate(
 				if (!templateVersion) {
 					throw new Error(`${format.toUpperCase()} export is unavailable.`)
 				}
-				const png = await renderHtmlToPngBlob(context.html, context.width, context.height)
-				await downloadTemplatePrint({
+				const png = await htmlToPng(context.html, context.width, context.height, {
+					scale: 1,
+					transparent: false,
+				})
+				const data = await requestTemplatePrint({
+					colorProfile: request.colorProfile.icc,
 					fileName: context.fileName,
 					format,
 					png,
 					templateId: context.templateId,
 					templateVersion,
 				})
-				return
+				return {
+					data,
+					filename: `${context.fileName}.${format}`,
+					mimeType: format === 'pdf' ? 'application/pdf' : 'image/tiff',
+				}
 			}
 		}
 	} catch (error) {

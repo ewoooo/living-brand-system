@@ -13,6 +13,11 @@ export type GraphicPreview = {
 	update(values: ControllerValues): void
 	resize(width: number, height: number): void
 	getViewport(): { width: number; height: number }
+	video?: {
+		canvas: HTMLCanvasElement
+		renderFrame(timeSeconds: number, width: number, height: number): void
+		restore(): void
+	}
 	destroy(): void
 }
 

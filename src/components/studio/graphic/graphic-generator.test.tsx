@@ -144,7 +144,7 @@ describe('GraphicGenerator', () => {
 		)
 	})
 
-	it('Shader Definition을 WebGL preview에 연결하고 Export UI는 열지 않는다', async () => {
+	it('Shader Definition을 WebGL preview와 MP4 Export UI에 연결한다', async () => {
 		const { unmount } = render(
 			createElement(GraphicGenerator, { config: radialFlutedGlassGraphicConfig }),
 		)
@@ -155,6 +155,7 @@ describe('GraphicGenerator', () => {
 			),
 		)
 		expect(screen.queryByRole('button', { name: 'SVG 다운로드' })).not.toBeInTheDocument()
+		expect(screen.getByRole('button', { name: 'MP4 다운로드' })).toBeDisabled()
 
 		fireEvent.keyDown(screen.getByRole('slider', { name: '광선 강도' }), {
 			key: 'ArrowRight',
@@ -281,6 +282,7 @@ describe('GraphicGenerator', () => {
 			),
 		)
 		fireEvent.click(screen.getByRole('button', { name: 'SVG 다운로드' }))
+		await waitFor(() => expect(createObjectURL).toHaveBeenCalledOnce())
 
 		const blob = createObjectURL.mock.calls[0]?.[0] as Blob
 		expect(blob).toMatchObject({ type: 'image/svg+xml' })

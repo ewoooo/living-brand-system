@@ -28,17 +28,20 @@ export function GraphicSidebar() {
 					onChange={controls.update}
 				/>
 			</Controller.Content>
-			{config.output.formats.includes('svg') && (
+			{config.output.formats.length > 0 && (
 				<Controller.Footer>
-					<Button
-						type="button"
-						size="lg"
-						className="w-full"
-						onClick={output.download}
-						disabled={output.busy || !output.ready}
-					>
-						SVG 다운로드
-					</Button>
+					{config.output.formats.map((format) => (
+						<Button
+							key={format}
+							type="button"
+							size="lg"
+							className="w-full"
+							onClick={() => output.download(format)}
+							disabled={output.busy || !output.ready(format)}
+						>
+							{format.toUpperCase()} 다운로드
+						</Button>
+					))}
 					{output.error && (
 						<Typography role="alert" size="sm" className="text-destructive">
 							{output.error}

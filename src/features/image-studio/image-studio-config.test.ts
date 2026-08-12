@@ -36,7 +36,7 @@ describe('deriveImageStudioConfig', () => {
 			id: 5,
 			version: 1,
 			name: '에센허브 브랜드 제품컷',
-			output: { formats: ['png'], original: true },
+			output: { formats: ['original', 'png', 'jpeg'] },
 			image: { slug: 'brand-product', features: [{ type: 'camera-control' }] },
 		})
 		expect(config).not.toHaveProperty('imageModelPreset')
@@ -61,7 +61,11 @@ describe('deriveImageStudioConfig', () => {
 				...profile,
 				output: { allowedFormats: ['png'], original: false },
 			}).output,
-		).toEqual({ formats: ['png'], original: false })
+		).toEqual({
+			formats: ['png'],
+			colorProfiles: { rgb: ['srgb'] },
+			packages: ['zip'],
+		})
 	})
 
 	it('legacy 상한·카메라·색을 Definition과 descriptor에 옮긴다', () => {

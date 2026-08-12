@@ -10,7 +10,19 @@ export const radialFlutedGlassGraphicConfig = {
 	version: 1,
 	name: 'Radial Fluted Glass',
 	type: 'shader',
-	output: { formats: [] },
+	output: {
+		formats: ['mp4'],
+		video: {
+			mp4: {
+				codec: 'h264',
+				colorSpace: 'rec709',
+				fps: [24, 30, 60],
+				maxWidth: 1920,
+				maxHeight: 1080,
+				maxDurationSeconds: 10,
+			},
+		},
+	},
 	controller: {
 		groups: [
 			{

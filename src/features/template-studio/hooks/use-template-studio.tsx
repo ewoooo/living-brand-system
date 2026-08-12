@@ -27,8 +27,15 @@ import {
 	type ControllerValues,
 	createControllerValues,
 } from '@/features/studio-controller/controller-definition'
-import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
-import type { TemplateExportFormat } from '@/features/template-export/services/export-template'
+import {
+	canExportTemplate,
+	createTemplateExportRequest,
+	type TemplateExportContext,
+	type TemplateExportFormat,
+	type TemplateExportRequest,
+} from '@/features/studio-export/services/export-template'
+import { exportTemplate } from '@/features/studio-export/services/export-template.client'
+import { useExport } from '@/features/studio-export/utils/use-export'
 import type { ImageTransformValue } from '@/features/template-studio/image-edit-transform'
 import {
 	findTemplateControl,
@@ -339,7 +346,7 @@ export function TemplateStudioProvider({
 		setClippedSlotIds(clipped)
 	}, [html, textSlots, textValues])
 
-	const { exporting, exportError, exportTemplate } = useTemplateExport({
+	const exportContext: TemplateExportContext = {
 		fileName: template.name,
 		height,
 		html: composedHtml,
@@ -352,6 +359,11 @@ export function TemplateStudioProvider({
 			groups: config.controller.groups,
 			values: templateControllerValues(config, textSlots, textValues, textColor, background),
 		},
+	}
+	const templateExport = useExport<TemplateExportRequest>({
+		capability: config.output,
+		canExport: (request) => canExportTemplate(request, exportContext),
+		execute: (request) => exportTemplate(request, exportContext),
 	})
 
 	const value: TemplateStudioValue = {
@@ -437,9 +449,12 @@ export function TemplateStudioProvider({
 			setFormat: (next) => {
 				if (config.output.formats.includes(next)) setFormat(next)
 			},
-			busy: exporting !== null,
-			error: exportError,
-			run: exportTemplate,
+			busy: templateExport.exporting !== null,
+			error: templateExport.error,
+			run: (next) => {
+				const request = createTemplateExportRequest(next, template.printPpi)
+				if (request) void templateExport.run(request)
+			},
 		},
 	}
 

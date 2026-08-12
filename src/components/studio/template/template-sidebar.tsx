@@ -16,8 +16,8 @@ import {
 	SelectTrigger,
 } from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
-import { pixelsToMillimeters } from '@/features/template-export/print-policy'
-import type { TemplateExportFormat } from '@/features/template-export/services/export-template'
+import { pixelsToMillimeters } from '@/features/studio-export/print-policy'
+import type { TemplateExportFormat } from '@/features/studio-export/services/export-template'
 import { useTemplateStudio } from '@/features/template-studio/hooks/use-template-studio'
 import {
 	findTemplateControl,

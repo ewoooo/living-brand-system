@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { downloadTemplatePrint } from './export-template-print.client'
+import { requestTemplatePrint } from './export-template-print.client'
 
-describe('downloadTemplatePrint', () => {
+describe('requestTemplatePrint', () => {
 	afterEach(() => {
 		vi.unstubAllGlobals()
 		vi.restoreAllMocks()
@@ -19,19 +19,23 @@ describe('downloadTemplatePrint', () => {
 		vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
 		vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
-		await downloadTemplatePrint({
-			fileName: '브랜드 카드',
-			format: 'pdf',
-			png: new Blob(['png'], { type: 'image/png' }),
-			templateId: 12,
-			templateVersion: '2026-07-29',
-		})
+		await expect(
+			requestTemplatePrint({
+				colorProfile: 'cgats21-crpc6',
+				fileName: '브랜드 카드',
+				format: 'pdf',
+				png: new Blob(['png'], { type: 'image/png' }),
+				templateId: 12,
+				templateVersion: '2026-07-29',
+			}),
+		).resolves.toBeInstanceOf(Blob)
 
 		expect(fetchMock).toHaveBeenCalledWith(
 			'/api/templates/12/exports/pdf',
 			expect.objectContaining({ method: 'POST' }),
 		)
 		const form = fetchMock.mock.calls[0]?.[1]?.body as FormData
+		expect(form.get('colorProfile')).toBe('cgats21-crpc6')
 		expect(form.get('templateId')).toBeNull()
 		expect(form.get('templateVersion')).toBe('2026-07-29')
 		expect(form.get('image')).toBeInstanceOf(File)

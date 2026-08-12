@@ -14,7 +14,15 @@ import {
 import { Typography } from '@/components/ui/typography'
 import type { AgentTemplateImageAttachment } from '@/features/agent-chat/services/agent-template-request.service'
 import { createControllerValues } from '@/features/studio-controller/controller-definition'
-import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
+import {
+	canExportTemplate,
+	createTemplateExportRequest,
+	type TemplateExportContext,
+	type TemplateExportFormat,
+	type TemplateExportRequest,
+} from '@/features/studio-export/services/export-template'
+import { exportTemplate } from '@/features/studio-export/services/export-template.client'
+import { useExport } from '@/features/studio-export/utils/use-export'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
 
 const PREVIEW_WIDTH = 280
@@ -37,7 +45,7 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 			),
 		[attachment.html, attachment.values],
 	)
-	const { canExport, exporting, exportError, exportTemplate } = useTemplateExport({
+	const exportContext: TemplateExportContext = {
 		fileName: attachment.name,
 		height: attachment.height,
 		html: composedHtml,
@@ -59,17 +67,32 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 				),
 			},
 		},
+	}
+	const output = useExport<TemplateExportRequest>({
+		capability: attachment.output,
+		canExport: (request) => canExportTemplate(request, exportContext),
+		execute: (request) => exportTemplate(request, exportContext),
 	})
+	const request = (format: TemplateExportFormat) =>
+		createTemplateExportRequest(format, attachment.printPpi)
+	const canExport = (format: TemplateExportFormat) => {
+		const candidate = request(format)
+		return Boolean(candidate && output.canExport(candidate))
+	}
+	const run = (format: TemplateExportFormat) => {
+		const candidate = request(format)
+		if (candidate) void output.run(candidate)
+	}
 
 	return (
 		<TemplateAttachmentFrame
 			name={attachment.name}
 			description={`${attachment.output.formats.map((format) => format.toUpperCase()).join(' · ')} 출력`}
-			isExporting={exporting !== null}
-			exportError={exportError}
-			onExport={canExport('png') ? () => exportTemplate('png') : undefined}
-			onExportTiff={canExport('tiff') ? () => exportTemplate('tiff') : undefined}
-			onExportPdf={canExport('pdf') ? () => exportTemplate('pdf') : undefined}
+			isExporting={output.exporting !== null}
+			exportError={output.error}
+			onExport={canExport('png') ? () => run('png') : undefined}
+			onExportTiff={canExport('tiff') ? () => run('tiff') : undefined}
+			onExportPdf={canExport('pdf') ? () => run('pdf') : undefined}
 		>
 			<ScaledMedia contentWidth={attachment.width}>
 				{(scale) => (

@@ -13,7 +13,7 @@ export const forwardStraightGraphicConfig = {
 	version: 1,
 	name: 'Forward Straight',
 	type: 'p5',
-	output: { formats: ['svg'] },
+	output: { formats: ['svg'], colorProfiles: { rgb: ['srgb'] } },
 	controller: {
 		groups: [
 			{

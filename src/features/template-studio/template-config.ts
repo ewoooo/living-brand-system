@@ -22,11 +22,15 @@ import {
 	parseStudioControllerConfig,
 	projectPayloadControllerOverride,
 } from '@/features/studio-controller/controller-definition'
-import { resolveStudioOutputFormats } from '@/features/studio-export/studio-output'
+import { DEFAULT_CMYK_ICC_PROFILE } from '@/features/studio-export/color-profile'
 import {
 	supportsTemplateExport,
 	type TemplateExportFormat,
-} from '@/features/template-export/services/export-template'
+} from '@/features/studio-export/services/export-template'
+import {
+	parseStudioOutputCapability,
+	resolveStudioOutputFormats,
+} from '@/features/studio-export/studio-output'
 import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/lib/template-image-transform'
 import {
 	collectTemplateImageSlots,
@@ -109,6 +113,7 @@ export type TemplateConfig = StudioControllerConfig<'template', number, Template
 /** unknown 입력을 공통 Controller와 Template slot/reference/export descriptor까지 검증한다. */
 export function parseTemplateConfig(input: unknown): TemplateConfig {
 	const common = parseStudioControllerConfig(input)
+	parseStudioOutputCapability(common.output)
 	const root = templateRecord(input, 'TemplateConfig')
 	assertTemplateKeys(root, [
 		'studio',
@@ -563,6 +568,10 @@ export function deriveTemplateConfig(
 		version: 1,
 		name: template.name,
 		output: {
+			colorProfiles: {
+				rgb: ['srgb'],
+				cmyk: [DEFAULT_CMYK_ICC_PROFILE],
+			},
 			formats: resolveStudioOutputFormats(
 				(['png', 'tiff', 'pdf'] as const).filter((format) =>
 					supportsTemplateExport(format, exportContext),

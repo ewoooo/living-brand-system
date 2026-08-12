@@ -4,7 +4,6 @@ import { createContext, type ReactNode, useContext, useState } from 'react'
 import { useImageGeneration } from '@/features/generate-image/hooks/use-image-generation'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/generate-image/image-size'
 import type { ImageGenerationResult } from '@/features/generate-image/services/generate-image.client'
-import { downloadImage } from '@/features/image-studio/download-image'
 import type { ImageColorAdjustment } from '@/features/image-studio/image-colorize'
 import {
 	acceptsImagePromptExecution,
@@ -12,6 +11,7 @@ import {
 	getImageStudioControls,
 	getImageStudioFeature,
 	IMAGE_STUDIO_CONTROL_IDS,
+	type ImageOutputFormat,
 	type ImageStudioConfig,
 } from '@/features/image-studio/image-studio-config'
 import {
@@ -21,9 +21,12 @@ import {
 	type ControllerValues,
 	createControllerValues,
 } from '@/features/studio-controller/controller-definition'
+import { exportResultsToZip } from '@/features/studio-export/adapters/export-results-to-zip.client'
+import {
+	exportImage,
+	type ImageExportRequest,
+} from '@/features/studio-export/services/export-image.client'
 import { useExport } from '@/features/studio-export/utils/use-export'
-
-type ImageExportAction = 'selected' | 'all'
 
 type ImageStudioValue = {
 	profiles: {
@@ -82,6 +85,9 @@ type ImageStudioValue = {
 		available: boolean
 		busy: boolean
 		error: string | null
+		formats: readonly ImageOutputFormat[]
+		format: ImageOutputFormat | null
+		setFormat: (format: ImageOutputFormat) => void
 		selected: () => void
 		all: () => void
 	}
@@ -108,6 +114,9 @@ export function ImageStudioProvider({
 	}
 
 	const [profileId, setProfileId] = useState(initial.id)
+	const [selectedExportFormat, setSelectedExportFormat] = useState<ImageOutputFormat>(
+		initial.output.formats[0] ?? 'png',
+	)
 	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
 	const [angles, setAngles] = useState({ azimuthDeg: 0, elevationDeg: 0 })
 	const { adjustCamera, error, generate, loading, requested, result, selected, setSelected } =
@@ -148,29 +157,38 @@ export function ImageStudioProvider({
 			: null
 	const resultConfig = configs.find((candidate) => candidate.id === result?.profileId)
 	const resultColor = resultConfig?.id === config.id ? colorValue : null
-	const resultOutput = resultConfig?.output
-	const canDownload = Boolean(
-		resultOutput &&
-			(resultColor
-				? resultOutput.formats.includes('png')
-				: resultOutput.original || resultOutput.formats.includes('png')),
+	const resultOutput = resultConfig?.output ?? { formats: [] }
+	const exportFormats = resultOutput.formats.filter(
+		(format): format is ImageOutputFormat =>
+			format === 'original' || format === 'png' || format === 'jpeg',
 	)
-	const imageExport = useExport<ImageExportAction>({
-		canExport: () => canDownload,
-		execute: async (action) => {
-			if (!resultOutput) return
-			if (action === 'selected') {
-				const src = selected === null ? undefined : result?.images[selected]
-				if (src && selected !== null) {
-					await downloadImage(src, selected, resultColor, resultOutput)
+	const exportFormat = exportFormats.includes(selectedExportFormat)
+		? selectedExportFormat
+		: (exportFormats[0] ?? null)
+	const canDownload = Boolean(result?.images.length && exportFormat)
+	const imageExport = useExport<ImageExportRequest>({
+		capability: resultOutput,
+		canExport: ({ package: packageFormat, scope }) =>
+			Boolean(
+				result &&
+					(!packageFormat || resultOutput.packages?.includes(packageFormat)) &&
+					(scope === 'all' ||
+						(selected !== null && result.images[selected] !== undefined)),
+			),
+		execute: async (request) => {
+			if (!result) throw new Error('저장할 이미지가 없습니다.')
+			if (request.scope === 'selected') {
+				if (selected === null || !result.images[selected]) {
+					throw new Error('저장할 이미지를 선택해 주세요.')
 				}
-				return
+				return exportImage(result.images[selected], selected, resultColor, request)
 			}
-
-			// ponytail: 저장을 연달아 낸다 — 장수가 늘어 브라우저가 막으면 zip으로 올린다.
-			for (const [index, src] of (result?.images ?? []).entries()) {
-				await downloadImage(src, index, resultColor, resultOutput)
-			}
+			const items = await Promise.all(
+				result.images.map((src, index) => exportImage(src, index, resultColor, request)),
+			)
+			return request.package
+				? exportResultsToZip({ format: request.package, filename: 'hd-images.zip', items })
+				: items
 		},
 	})
 
@@ -260,12 +278,50 @@ export function ImageStudioProvider({
 			available: canDownload,
 			busy: imageExport.exporting !== null,
 			error: imageExport.error,
-			selected: () => void imageExport.run('selected'),
-			all: () => void imageExport.run('all'),
+			formats: exportFormats,
+			format: exportFormat,
+			setFormat: (next) => {
+				if (exportFormats.includes(next)) setSelectedExportFormat(next)
+			},
+			selected: () => {
+				const request = createImageExportRequest(exportFormat, 'selected')
+				if (request) void imageExport.run(request)
+			},
+			all: () => {
+				const request = createImageExportRequest(exportFormat, 'all')
+				if (request) void imageExport.run(request)
+			},
 		},
 	}
 
 	return <ImageStudioContext.Provider value={value}>{children}</ImageStudioContext.Provider>
+}
+
+function createImageExportRequest(
+	format: 'original' | 'png' | 'jpeg' | null,
+	scope: ImageExportRequest['scope'],
+): ImageExportRequest | null {
+	const packageFormat = scope === 'all' ? { package: 'zip' as const } : {}
+	if (format === 'original') return { format, options: {}, scope, ...packageFormat }
+	if (format === 'png') {
+		return {
+			format,
+			colorProfile: { space: 'rgb', icc: 'srgb' },
+			options: { scale: 1, transparent: true },
+			scope,
+			...packageFormat,
+		}
+	}
+	if (format === 'jpeg') {
+		return {
+			format,
+			colorProfile: { space: 'rgb', icc: 'srgb' },
+			options: { quality: 90 },
+			scope,
+			...packageFormat,
+		}
+	}
+	return null
 }
 
 export function useImageStudio() {

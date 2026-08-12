@@ -1,6 +1,6 @@
 import type { PayloadRequest } from 'payload'
 import { publishDraftImportedApplicationImages } from '@/features/application-image/repositories/imported-application-image.payload.repository'
-import { findPrintOutputBlocker } from '@/features/template-export/print-policy'
+import { findPrintOutputBlocker } from '@/features/studio-export/print-policy'
 import { deriveTemplateConfig } from '@/features/template-studio/template-config'
 import {
 	inspectTemplateFragment,

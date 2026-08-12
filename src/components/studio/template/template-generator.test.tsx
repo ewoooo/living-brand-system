@@ -22,15 +22,14 @@ const mocks = vi.hoisted(() => ({
 	exportTemplate: vi.fn(),
 	push: vi.fn(),
 	requestImageGeneration: vi.fn(),
-	canExport: vi.fn(() => false),
 }))
 
-vi.mock('@/features/template-export/hooks/use-template-export', () => ({
-	useTemplateExport: () => ({
-		canExport: mocks.canExport,
+vi.mock('@/features/studio-export/utils/use-export', () => ({
+	useExport: () => ({
+		canExport: () => true,
 		exporting: null,
-		exportError: null,
-		exportTemplate: mocks.exportTemplate,
+		error: null,
+		run: (request: { format: string }) => mocks.exportTemplate(request.format),
 	}),
 }))
 vi.mock('next/navigation', () => ({
@@ -211,8 +210,6 @@ function ImageRaceProbe() {
 describe('TemplateGenerator', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		// clearAllMocks는 mockReturnValue로 심은 구현도 지운다 — 기본 구현을 매 테스트 복원한다.
-		mocks.canExport.mockImplementation(() => false)
 	})
 	afterEach(cleanup)
 
@@ -228,7 +225,7 @@ describe('TemplateGenerator', () => {
 
 		fireEvent.click(screen.getByRole('button', { name: '내보내기' }))
 
-		// 포맷 셀렉트 기본값이 PNG — canExport가 전부 false여도 PNG는 항상 내보낼 수 있다.
+		// 포맷 셀렉트 기본값인 PNG 요청이 공통 useExport로 전달된다.
 		expect(mocks.exportTemplate).toHaveBeenCalledWith('png')
 	})
 
@@ -1039,7 +1036,7 @@ function createImageConfig(
 		id,
 		version: 1,
 		name: id === 11 ? '기본 프로파일' : `프로파일 ${id}`,
-		output: { formats: ['png'], original: true },
+		output: { formats: ['original', 'png'] },
 		controller: {
 			groups: [
 				{

@@ -17,6 +17,7 @@ export const radialFlutedGlassPreviewAdapter = {
 			update: (next) => preview.update(toRadialFlutedGlassInput(next)),
 			resize: (width, height) => preview.resize(width, height),
 			getViewport: () => preview.getViewport(),
+			video: preview.video,
 			destroy: () => preview.destroy(),
 		}
 	},

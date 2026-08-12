@@ -3,7 +3,7 @@ import {
 	MAX_PRINT_PIXELS,
 	MAX_PRINT_SIDE_PIXELS,
 	PRINT_PPI_OPTIONS,
-} from '@/features/template-export/print-policy'
+} from '@/features/studio-export/print-policy'
 import { prepareTemplateSave } from '@/features/template-import/services/prepare-template-save.service'
 import { isManager, managerOrAdmin } from '@/lib/auth'
 import {

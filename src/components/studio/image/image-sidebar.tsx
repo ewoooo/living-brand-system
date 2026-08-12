@@ -85,9 +85,25 @@ export function ImageSidebar() {
 									}
 								/>
 							</div>
+							<Controller.Row label="Format">
+								<Controller.Select
+									options={download.formats.map((format) => ({
+										value: format,
+										label:
+											format === 'original'
+												? 'Original'
+												: format.toUpperCase(),
+									}))}
+									value={download.format ?? ''}
+									onChange={(value) =>
+										download.setFormat(
+											value as (typeof download.formats)[number],
+										)
+									}
+								/>
+							</Controller.Row>
 						</div>
 						<div className="flex gap-2">
-							{/* 색이 있으면 색을 구운 PNG, 없으면 원본이다 — 판정은 Provider가 한다. */}
 							<Button
 								className="h-11 flex-1"
 								onClick={download.selected}

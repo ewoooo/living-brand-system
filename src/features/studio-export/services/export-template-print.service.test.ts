@@ -94,7 +94,8 @@ describe('exportTemplatePrint', () => {
 		expect(page.getHeight()).toBeCloseTo(72)
 		expect(image).toBeInstanceOf(PDFRawStream)
 		if (!(image instanceof PDFRawStream)) throw new Error('PDF image is missing.')
-		expect(String(image.dict.get(PDFName.of('ColorSpace')))).toBe('/DeviceCMYK')
+		expect(String(image.dict.get(PDFName.of('ColorSpace')))).toContain('/ICCBased')
+		expect(pdf.catalog.get(PDFName.of('OutputIntents'))).toBeDefined()
 	})
 
 	it('템플릿 픽셀 크기와 다른 PNG는 거부한다', async () => {

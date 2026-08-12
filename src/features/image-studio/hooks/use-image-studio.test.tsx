@@ -12,9 +12,18 @@ import type {
 } from '@/features/studio-controller/controller-definition'
 import { ImageStudioProvider, useImageStudio } from './use-image-studio'
 
-vi.mock('@/features/image-studio/download-image', () => ({ downloadImage: vi.fn() }))
+vi.mock('@/features/studio-export/services/export-image.client', () => ({
+	exportImage: vi.fn().mockResolvedValue({
+		data: new Blob(),
+		filename: 'hd-image-1.png',
+		mimeType: 'image/png',
+	}),
+}))
+vi.mock('@/features/studio-export/adapters/download-export-result.client', () => ({
+	downloadExportResult: vi.fn(),
+}))
 
-import { downloadImage } from '@/features/image-studio/download-image'
+import { exportImage } from '@/features/studio-export/services/export-image.client'
 
 vi.mock('@/features/generate-image/hooks/use-image-generation', () => ({
 	useImageGeneration: () => ({
@@ -171,6 +180,9 @@ function Probe() {
 			<button type="button" onClick={download.selected}>
 				결과 저장
 			</button>
+			<button type="button" onClick={() => download.setFormat('jpeg')}>
+				JPEG 선택
+			</button>
 		</div>
 	)
 }
@@ -274,7 +286,7 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		const source = config(5, { colorAdjustment: { line: '#000dff' } })
 		const next = {
 			...config(7, { colorAdjustment: { line: '#ff0000' } }),
-			output: { formats: [] as const, original: false },
+			output: { formats: [] as const },
 		}
 		renderStudio([source, next])
 
@@ -284,7 +296,26 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
 
 		await waitFor(() =>
-			expect(downloadImage).toHaveBeenCalledWith('blob:1', 0, null, source.output),
+			expect(exportImage).toHaveBeenCalledWith('blob:1', 0, null, {
+				format: 'original',
+				options: {},
+				scope: 'selected',
+			}),
+		)
+	})
+
+	it('사용자가 선택한 JPEG 형식을 ExportRequest로 전달한다', async () => {
+		renderStudio([config(5)])
+		fireEvent.click(screen.getByRole('button', { name: 'JPEG 선택' }))
+		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
+
+		await waitFor(() =>
+			expect(exportImage).toHaveBeenCalledWith('blob:1', 0, null, {
+				format: 'jpeg',
+				colorProfile: { space: 'rgb', icc: 'srgb' },
+				options: { quality: 90 },
+				scope: 'selected',
+			}),
 		)
 	})
 

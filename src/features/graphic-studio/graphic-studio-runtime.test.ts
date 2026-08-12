@@ -41,7 +41,7 @@ describe('graphicStudioRuntime', () => {
 		const values = createControllerValues(shaderConfig.controller.groups)
 
 		expect(graphicStudioConfigs).toContain(shaderConfig)
-		expect(shaderConfig.output.formats).toEqual([])
+		expect(shaderConfig.output.formats).toEqual(['mp4'])
 		expect(renderGraphicStudioSvg(shaderConfig, values, { width: 800, height: 600 })).toBeNull()
 		expect(canRenderGraphicStudioSvg(shaderConfig)).toBe(false)
 		expect(canRenderGraphicStudioSvg(config)).toBe(true)

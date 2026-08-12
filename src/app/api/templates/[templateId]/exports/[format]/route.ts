@@ -1,14 +1,15 @@
 import { z } from 'zod'
+import { isCmykIccProfile } from '@/features/studio-export/color-profile'
 import {
 	MAX_PRINT_PNG_BYTES,
 	type TemplatePrintFormat,
-} from '@/features/template-export/print-policy'
+} from '@/features/studio-export/print-policy'
 import {
 	exportTemplatePrint,
 	TemplatePrintInputError,
 	TemplatePrintStaleError,
 	TemplatePrintUnavailableError,
-} from '@/features/template-export/services/export-template-print.service'
+} from '@/features/studio-export/services/export-template-print.service'
 import { isCrossOriginRequest } from '@/lib/request-auth'
 
 export const maxDuration = 30
@@ -114,10 +115,15 @@ export async function POST(
 
 	try {
 		const form = await request.formData().catch(() => null)
+		const colorProfile = form?.get('colorProfile')
 		const templateVersion = templateVersionSchema.safeParse(form?.get('templateVersion'))
 		const image = form?.get('image')
 
-		if (!templateVersion.success || !(image instanceof File)) {
+		if (
+			!isCmykIccProfile(colorProfile) ||
+			!templateVersion.success ||
+			!(image instanceof File)
+		) {
 			return Response.json({ message: 'Invalid request.' }, { status: 400 })
 		}
 		if (image.size > MAX_PRINT_PNG_BYTES) {
@@ -125,6 +131,7 @@ export async function POST(
 		}
 
 		const result = await exportTemplatePrint({
+			colorProfile,
 			format: routeParams.data.format,
 			png: Buffer.from(await image.arrayBuffer()),
 			templateId: routeParams.data.templateId,

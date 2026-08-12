@@ -1,3 +1,5 @@
+import type { StudioOutputCapability } from '@/features/studio-export/studio-output'
+
 /** Controller Definition에 저장할 수 있는 직렬화 가능한 값. */
 export type ControllerControlValue = string | number | boolean | null | ControllerPadValue
 
@@ -26,9 +28,7 @@ export type StudioControllerConfig<
 	id: Id
 	version: 1
 	name: string
-	output: {
-		formats: readonly OutputFormat[]
-	}
+	output: StudioOutputCapability<OutputFormat>
 	controller: {
 		groups: readonly ControllerGroupDefinition[]
 	}

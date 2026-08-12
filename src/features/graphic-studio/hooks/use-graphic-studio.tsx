@@ -10,7 +10,6 @@ import {
 	useState,
 } from 'react'
 import type { GraphicStudioConfig } from '@/features/graphic-studio/graphic-studio-config'
-import { canRenderGraphicStudioSvg } from '@/features/graphic-studio/graphic-studio-runtime'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlValue,
@@ -19,7 +18,34 @@ import {
 	type ControllerValues,
 	createControllerValues,
 } from '@/features/studio-controller/controller-definition'
+import type { ExportRequest, ExportResult } from '@/features/studio-export/export-contract'
 import { useExport } from '@/features/studio-export/utils/use-export'
+
+export type GraphicExportRequest = Extract<ExportRequest, { format: 'svg' | 'mp4' }>
+
+const SVG_EXPORT_REQUEST = {
+	format: 'svg',
+	colorProfile: { space: 'rgb', icc: 'srgb' },
+	options: { outlineText: false },
+} as const satisfies GraphicExportRequest
+
+const MP4_EXPORT_REQUEST = {
+	format: 'mp4',
+	options: {
+		container: 'mp4',
+		codec: 'h264',
+		durationSeconds: 5,
+		fps: 30,
+		width: 1920,
+		height: 1080,
+		colorSpace: 'rec709',
+	},
+} as const satisfies GraphicExportRequest
+
+const GRAPHIC_EXPORT_REQUESTS = {
+	svg: SVG_EXPORT_REQUEST,
+	mp4: MP4_EXPORT_REQUEST,
+} as const
 
 type GraphicStudioValue = {
 	config: GraphicStudioConfig
@@ -30,13 +56,17 @@ type GraphicStudioValue = {
 		registerBindings: (bindings: ControllerRuntimeBindings) => void
 	}
 	canvas: {
-		registerOutput: (download: (() => void) | null) => void
+		registerOutput: (
+			render:
+				| ((request: GraphicExportRequest) => ExportResult | Promise<ExportResult>)
+				| null,
+		) => void
 	}
 	output: {
-		ready: boolean
+		ready: (format: GraphicExportRequest['format']) => boolean
 		busy: boolean
 		error: string | null
-		download: () => void
+		download: (format: GraphicExportRequest['format']) => void
 	}
 }
 
@@ -57,7 +87,9 @@ export function GraphicStudioProvider({
 	const [values, setValues] = useState(() => createControllerValues(groups))
 	const [bindings, setBindings] = useState<ControllerRuntimeBindings>({})
 	const [outputReady, setOutputReady] = useState(false)
-	const outputRef = useRef<(() => void) | null>(null)
+	const outputRef = useRef<
+		((request: GraphicExportRequest) => ExportResult | Promise<ExportResult>) | null
+	>(null)
 	const bindingsRef = useRef<ControllerRuntimeBindings>({})
 	const definitions = useRef(
 		new Map(
@@ -88,13 +120,25 @@ export function GraphicStudioProvider({
 		setBindings(next)
 	}, [])
 
-	const registerOutput = useCallback((download: (() => void) | null) => {
-		outputRef.current = download
-		setOutputReady(Boolean(download))
-	}, [])
-	const svgExport = useExport<'svg'>({
-		canExport: () => outputReady && canRenderGraphicStudioSvg(config),
-		execute: () => outputRef.current?.(),
+	const registerOutput = useCallback(
+		(
+			render:
+				| ((request: GraphicExportRequest) => ExportResult | Promise<ExportResult>)
+				| null,
+		) => {
+			outputRef.current = render
+			setOutputReady(Boolean(render))
+		},
+		[],
+	)
+	const graphicExport = useExport<GraphicExportRequest>({
+		capability: config.output,
+		canExport: () => outputReady,
+		execute: (request) => {
+			const render = outputRef.current
+			if (!render) throw new Error(`${request.format.toUpperCase()} export is unavailable.`)
+			return render(request)
+		},
 	})
 	const contextValue = useMemo<GraphicStudioValue>(
 		() => ({
@@ -102,10 +146,10 @@ export function GraphicStudioProvider({
 			controls: { values, bindings, update, registerBindings },
 			canvas: { registerOutput },
 			output: {
-				ready: svgExport.canExport('svg'),
-				busy: svgExport.exporting !== null,
-				error: svgExport.error,
-				download: () => void svgExport.run('svg'),
+				ready: (format) => graphicExport.canExport(GRAPHIC_EXPORT_REQUESTS[format]),
+				busy: graphicExport.exporting !== null,
+				error: graphicExport.error,
+				download: (format) => void graphicExport.run(GRAPHIC_EXPORT_REQUESTS[format]),
 			},
 		}),
 		[
@@ -113,10 +157,10 @@ export function GraphicStudioProvider({
 			config,
 			registerBindings,
 			registerOutput,
-			svgExport.canExport,
-			svgExport.error,
-			svgExport.exporting,
-			svgExport.run,
+			graphicExport.canExport,
+			graphicExport.error,
+			graphicExport.exporting,
+			graphicExport.run,
 			update,
 			values,
 		],

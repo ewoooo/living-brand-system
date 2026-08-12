@@ -55,6 +55,7 @@ import * as migration_20260811_075822_image_profile_features from './20260811_07
 import * as migration_20260812_001709_studio_admin_controller_configs from './20260812_001709_studio_admin_controller_configs';
 import * as migration_20260812_010429_radial_fluted_glass_runtime from './20260812_010429_radial_fluted_glass_runtime';
 import * as migration_20260812_030440_studio_output_overrides from './20260812_030440_studio_output_overrides';
+import * as migration_20260812_062606_studio_export_formats from './20260812_062606_studio_export_formats';
 
 export const migrations = [
   {
@@ -341,5 +342,10 @@ export const migrations = [
     up: migration_20260812_030440_studio_output_overrides.up,
     down: migration_20260812_030440_studio_output_overrides.down,
     name: '20260812_030440_studio_output_overrides',
+  },
+  {
+    up: migration_20260812_062606_studio_export_formats.up,
+    down: migration_20260812_062606_studio_export_formats.down,
+    name: '20260812_062606_studio_export_formats',
   },
 ];

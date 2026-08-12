@@ -4,13 +4,14 @@ import {
 } from '@/features/studio-export/studio-output'
 import { findPublishedTemplate } from '@/repositories/published-template.payload.repository'
 import { projectTemplateRenderModel } from '@/services/project-template-render-model.service'
+import { createTemplatePdf } from '../adapters/cmyk-jpeg-to-pdf.pdf-lib'
+import { inspectPng } from '../adapters/inspect-png.sharp'
+import { pngToCmykJpeg } from '../adapters/png-to-cmyk-jpeg.sharp'
+import { pngToCmykTiff } from '../adapters/png-to-cmyk-tiff.sharp'
+import { DEFAULT_CMYK_ICC_PROFILE } from '../color-profile'
+import { readCmykIccProfile, resolveCmykIccProfilePath } from '../color-profile.server'
+import type { CmykIccProfile } from '../export-contract'
 import { parsePrintPpi, pixelsToMillimeters, type TemplatePrintFormat } from '../print-policy'
-import { createTemplatePdf } from '../repositories/template-pdf.pdf-lib.repository'
-import {
-	convertTemplatePngToCmykJpeg,
-	convertTemplatePngToTiff,
-	inspectTemplatePng,
-} from '../repositories/template-print.sharp.repository'
 
 /** 발행 HTML 또는 운영자 PPI 정책이 없어 인쇄 출력을 제공할 수 없음을 route에 알린다. */
 export class TemplatePrintUnavailableError extends Error {}
@@ -26,11 +27,13 @@ export class TemplatePrintStaleError extends Error {}
  * Payload 조회와 Sharp·pdf-lib 변환은 각 repository가 소유한다.
  */
 export async function exportTemplatePrint({
+	colorProfile = DEFAULT_CMYK_ICC_PROFILE,
 	format,
 	png,
 	templateId,
 	templateVersion,
 }: {
+	colorProfile?: CmykIccProfile
 	format: TemplatePrintFormat
 	png: Buffer
 	templateId: number
@@ -50,23 +53,26 @@ export async function exportTemplatePrint({
 	if (!supportsStudioOutput(output, format)) throw new TemplatePrintUnavailableError()
 	if (template.updatedAt !== templateVersion) throw new TemplatePrintStaleError()
 
-	const image = await inspectTemplatePng(png)
+	const image = await inspectPng(png)
 	if (!image || image.width !== renderModel.width || image.height !== renderModel.height) {
 		throw new TemplatePrintInputError()
 	}
+	const icc = resolveCmykIccProfilePath(colorProfile)
 
 	if (format === 'tiff') {
-		const tiff = await convertTemplatePngToTiff(png, ppi)
+		const tiff = await pngToCmykTiff(png, ppi, icc)
 		if (!tiff) throw new TemplatePrintInputError()
 		return tiff
 	}
 
-	const cmykJpeg = await convertTemplatePngToCmykJpeg(png)
+	const cmykJpeg = await pngToCmykJpeg(png, icc)
 	if (!cmykJpeg) throw new TemplatePrintInputError()
 
 	return createTemplatePdf({
 		cmykJpeg,
 		heightMm: pixelsToMillimeters(renderModel.height, ppi),
+		iccProfile: await readCmykIccProfile(colorProfile),
+		iccProfileName: colorProfile,
 		widthMm: pixelsToMillimeters(renderModel.width, ppi),
 	})
 }

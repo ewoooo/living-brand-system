@@ -14,6 +14,11 @@ export type RadialFlutedGlassPreview = {
 	update(input: RadialFlutedGlassInput): void
 	resize(width: number, height: number): void
 	getViewport(): { width: number; height: number }
+	video: {
+		canvas: HTMLCanvasElement
+		renderFrame(timeSeconds: number, width: number, height: number): void
+		restore(): void
+	}
 	destroy(): void
 }
 
@@ -140,6 +145,19 @@ void main() { mainImage(gl_FragColor, gl_FragCoord.xy); }
 		},
 		resize,
 		getViewport: () => viewport,
+		video: {
+			canvas,
+			renderFrame(timeSeconds, width, height) {
+				const previewTime = currentTime
+				canvas.width = Math.max(1, Math.floor(width))
+				canvas.height = Math.max(1, Math.floor(height))
+				draw(timeSeconds)
+				currentTime = previewTime
+			},
+			restore() {
+				resize(viewport.width, viewport.height)
+			},
+		},
 		destroy() {
 			cancelAnimationFrame(animationFrame)
 			gl.deleteBuffer(buffer)

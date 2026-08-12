@@ -13,6 +13,7 @@ import {
 } from '@/features/graphic-studio/graphic-studio-runtime'
 import { useGraphicStudio } from '@/features/graphic-studio/hooks/use-graphic-studio'
 import { exportGraphicStudioSvg } from '@/features/graphic-studio/services/export-graphic.client'
+import { exportGraphicStudioVideo } from '@/features/graphic-studio/services/export-graphic-video.client'
 
 const canvasByType = {
 	p5: P5Canvas,
@@ -79,11 +80,22 @@ function GraphicPreviewCanvas({
 				previewRef.current = mounted
 				const viewport = mounted.getViewport()
 				controls.registerBindings(getGraphicStudioRuntimeBindings(config, viewport))
-				if (canRenderGraphicStudioSvg(config)) {
-					canvas.registerOutput(() => {
-						const currentViewport = previewRef.current?.getViewport()
-						if (!currentViewport) return
-						exportGraphicStudioSvg(config, valuesRef.current, currentViewport)
+				if (canRenderGraphicStudioSvg(config) || mounted.video) {
+					canvas.registerOutput((request) => {
+						if (request.format === 'svg') {
+							const currentViewport = previewRef.current?.getViewport()
+							if (!currentViewport || !canRenderGraphicStudioSvg(config)) {
+								throw new Error('SVG export is unavailable.')
+							}
+							return exportGraphicStudioSvg(
+								config,
+								valuesRef.current,
+								currentViewport,
+							)
+						}
+						const video = previewRef.current?.video
+						if (!video) throw new Error('MP4 export is unavailable.')
+						return exportGraphicStudioVideo(config, request, video)
 					})
 				}
 			} catch (mountError) {

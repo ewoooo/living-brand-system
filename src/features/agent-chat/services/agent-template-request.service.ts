@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { type PrintPpi, parsePrintPpi } from '@/features/template-export/print-policy'
+import { type PrintPpi, parsePrintPpi } from '@/features/studio-export/print-policy'
 import {
 	deriveTemplateConfig,
 	type TemplateConfig,

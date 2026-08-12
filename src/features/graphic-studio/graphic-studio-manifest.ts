@@ -43,6 +43,7 @@ export function deriveGraphicStudioConfig(
 		...manifest,
 		name: profile.name,
 		output: {
+			...manifest.output,
 			formats: resolveStudioOutputFormats(
 				manifest.output.formats,
 				profile.output?.allowedFormats,

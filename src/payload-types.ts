@@ -1233,7 +1233,7 @@ export interface ImageProfile {
    * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
    */
   output?: {
-    allowedFormats?: 'png'[] | null;
+    allowedFormats?: ('png' | 'jpeg')[] | null;
     original?: boolean | null;
   };
   updatedAt: string;
@@ -1433,7 +1433,7 @@ export interface GraphicProfile {
    * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
    */
   output?: {
-    allowedFormats?: 'svg'[] | null;
+    allowedFormats?: ('svg' | 'mp4')[] | null;
   };
   updatedAt: string;
   createdAt: string;

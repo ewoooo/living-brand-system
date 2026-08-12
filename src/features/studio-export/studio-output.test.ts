@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { resolveStudioOutputFormats } from './studio-output'
+import {
+	parseStudioOutputCapability,
+	resolveStudioOutputFormats,
+	supportsStudioExportRequest,
+} from './studio-output'
 
 describe('resolveStudioOutputFormats', () => {
 	it('Admin 제한이 없으면 Runtime 순서를 유지한다', () => {
@@ -19,5 +23,55 @@ describe('resolveStudioOutputFormats', () => {
 			'지원하지 않는 output format',
 		)
 		expect(() => resolveStudioOutputFormats(['svg'] as const, ['svg', 'svg'])).toThrow('중복')
+	})
+})
+
+describe('StudioOutputCapability', () => {
+	const capability = {
+		formats: ['mp4'] as const,
+		video: {
+			mp4: {
+				codec: 'h264' as const,
+				colorSpace: 'rec709' as const,
+				fps: [24, 30] as const,
+				maxWidth: 1920,
+				maxHeight: 1080,
+				maxDurationSeconds: 10,
+			},
+		},
+	}
+
+	it('직렬화 가능한 MP4 범위와 요청을 검증한다', () => {
+		expect(parseStudioOutputCapability(capability)).toBe(capability)
+		expect(
+			supportsStudioExportRequest(capability, {
+				format: 'mp4',
+				options: {
+					container: 'mp4',
+					codec: 'h264',
+					durationSeconds: 5,
+					fps: 30,
+					width: 1920,
+					height: 1080,
+					colorSpace: 'rec709',
+				},
+			}),
+		).toBe(true)
+	})
+
+	it('상한을 넘거나 양수가 아닌 영상 요청을 거부한다', () => {
+		const request = {
+			format: 'mp4' as const,
+			options: {
+				container: 'mp4' as const,
+				codec: 'h264' as const,
+				durationSeconds: 11,
+				fps: 30 as const,
+				width: 0,
+				height: 1080,
+				colorSpace: 'rec709' as const,
+			},
+		}
+		expect(supportsStudioExportRequest(capability, request)).toBe(false)
 	})
 })

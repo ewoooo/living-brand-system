@@ -1,38 +1,38 @@
-import { toBlob } from 'html-to-image'
 import type { CSSProperties } from 'react'
 import {
 	type ImageColorAdjustment,
 	imageColorizeStyle,
 } from '@/features/image-studio/image-colorize'
-import { downloadBlob } from '@/lib/object-url'
-import type { ImageStudioConfig } from './image-studio-config'
+import { elementToJpeg } from '../adapters/element-to-jpeg.client'
+import { elementToPng } from '../adapters/element-to-png.client'
+import type { ExportRequest, ExportResult } from '../export-contract'
+
+export type ImageExportRequest = Extract<ExportRequest, { format: 'original' | 'png' | 'jpeg' }> & {
+	scope: 'selected' | 'all'
+	package?: 'zip'
+}
 
 /**
- * 생성 이미지를 파일로 저장한다 — 색이 없으면 원본을 앵커 클릭으로 그대로 내려주고, 색이 있으면
- * 같은 색 계산(imageColorizeStyle)을 HTML로 직렬화해 export 어댑터가 PNG로 굽는다.
- * 서버·DB에는 아무것도 남기지 않는다(색은 출력 시점 옵션이고 정본은 GeneratedImages의 원본이다).
+ * 생성 이미지 하나를 ExportResult로 만든다. 원본 fetch와 DOM 캡처 I/O는 브라우저·element adapter가
+ * 소유하고, 다운로드는 공통 useExport가 담당한다.
  */
-export async function downloadImage(
+export async function exportImage(
 	src: string,
 	index: number,
 	color: ImageColorAdjustment | null | undefined,
-	output: ImageStudioConfig['output'],
-): Promise<void> {
+	request: ImageExportRequest,
+): Promise<ExportResult> {
 	const name = `hd-image-${index + 1}`
-	if (!color && (output?.original ?? true)) {
-		const ext = src.startsWith('data:image/')
-			? src.slice(11, src.indexOf(';')).replace('jpeg', 'jpg')
-			: new URL(src, window.location.href).pathname.split('.').pop() || 'png'
-		const anchor = document.createElement('a')
-		anchor.href = src
-		anchor.download = `${name}.${ext}`
-		document.body.appendChild(anchor)
-		anchor.click()
-		anchor.remove()
-		return
-	}
-	if (!output?.formats.includes('png')) {
-		throw new Error('PNG output is unavailable.')
+	if (request.format === 'original') {
+		const response = await fetch(src)
+		if (!response.ok) throw new Error('원본 이미지를 불러오지 못했습니다.')
+		const data = await response.blob()
+		const extension = imageExtension(data.type, src)
+		return {
+			data,
+			filename: `${name}.${extension}`,
+			mimeType: data.type || `image/${extension}`,
+		}
 	}
 
 	// 스테이지를 이미지의 자연 크기로 잡는다 — 화면 썸네일 크기로 캡처하면 해상도를 잃는다.
@@ -43,17 +43,31 @@ export async function downloadImage(
 	holder.appendChild(stage)
 	document.body.appendChild(holder)
 	try {
-		const blob = await toBlob(stage, {
-			cacheBust: true,
-			canvasHeight: naturalHeight,
-			canvasWidth: naturalWidth,
-			pixelRatio: 1,
+		if (request.format === 'jpeg') {
+			const data = await elementToJpeg(stage, {
+				height: naturalHeight,
+				quality: request.options.quality,
+				width: naturalWidth,
+			})
+			return { data, filename: `${name}.jpg`, mimeType: 'image/jpeg' }
+		}
+		const data = await elementToPng(stage, {
+			height: naturalHeight,
+			scale: request.options.scale,
+			transparent: request.options.transparent,
+			width: naturalWidth,
 		})
-		if (!blob) throw new Error('PNG rendering failed.')
-		downloadBlob(blob, `${name}.png`)
+		return { data, filename: `${name}.png`, mimeType: 'image/png' }
 	} finally {
 		holder.remove()
 	}
+}
+
+function imageExtension(mimeType: string, src: string): string {
+	if (mimeType.startsWith('image/')) {
+		return mimeType.slice('image/'.length).replace('jpeg', 'jpg').replace('svg+xml', 'svg')
+	}
+	return new URL(src, window.location.href).pathname.split('.').pop() || 'png'
 }
 
 /** 프리뷰와 같은 색 계산을 안전하게 만든 DOM stage에 그대로 적용한다. */

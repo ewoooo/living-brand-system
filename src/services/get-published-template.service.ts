@@ -1,4 +1,4 @@
-import { type PrintPpi, parsePrintPpi } from '@/features/template-export/print-policy'
+import { type PrintPpi, parsePrintPpi } from '@/features/studio-export/print-policy'
 import { findPublishedTemplate } from '@/repositories/published-template.payload.repository'
 import { projectTemplateRenderModel } from '@/services/project-template-render-model.service'
 import type { TemplateNodeConfig, TemplateNodeConfigMap } from '@/types/template'
