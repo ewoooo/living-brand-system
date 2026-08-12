@@ -79,6 +79,19 @@ describe('studioControllerField', () => {
 				hasMany: true,
 			})
 		}
+
+		const imageOutput = namedField(ImageProfiles.fields, 'output')
+		if (imageOutput.type !== 'group') throw new Error('output must be a group')
+		const allowedFormats = namedField(imageOutput.fields, 'allowedFormats')
+		if (allowedFormats.type !== 'select') throw new Error('allowedFormats must be select')
+		expect(allowedFormats.options).toEqual([
+			{ label: 'PNG', value: 'png' },
+			{ label: 'JPEG', value: 'jpeg' },
+		])
+		expect(namedField(imageOutput.fields, 'original')).toMatchObject({
+			type: 'checkbox',
+			defaultValue: true,
+		})
 	})
 
 	it('color 기본값은 #rrggbb만 허용한다', () => {

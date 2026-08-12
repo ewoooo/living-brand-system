@@ -23,8 +23,8 @@ import { useExport } from '@/features/studio-export/hooks/use-export'
 import {
 	canExportTemplate,
 	createTemplateExportRequest,
+	isTemplateExportFormat,
 	type TemplateExportContext,
-	type TemplateExportFormat,
 	type TemplateExportRequest,
 } from '@/features/studio-export/services/export-template'
 import { exportTemplate } from '@/features/studio-export/services/export-template.client'
@@ -126,11 +126,12 @@ type TemplateStudioValue = {
 		previewRef: RefObject<HTMLDivElement | null>
 	}
 	exporting: {
-		format: TemplateExportFormat | null
-		setFormat: (format: TemplateExportFormat) => void
+		formats: readonly TemplateExportRequest['format'][]
+		format: TemplateExportRequest['format'] | null
+		setFormat: (format: TemplateExportRequest['format']) => void
 		busy: boolean
 		error: string | null
-		run: (format: TemplateExportFormat) => void
+		run: (format: TemplateExportRequest['format']) => void
 	}
 }
 
@@ -176,8 +177,9 @@ export function TemplateStudioProvider({
 		textColorDefinition?.kind === 'color' ? textColorDefinition.defaultValue : null,
 	)
 	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
-	const [format, setFormat] = useState<TemplateExportFormat | null>(
-		config.output.formats[0] ?? null,
+	const exportFormats = config.output.formats.filter(isTemplateExportFormat)
+	const [format, setFormat] = useState<TemplateExportRequest['format'] | null>(
+		exportFormats[0] ?? null,
 	)
 	const imageContracts = useMemo(
 		() =>
@@ -445,9 +447,10 @@ export function TemplateStudioProvider({
 		},
 		canvas: { html: composedHtml, previewRef },
 		exporting: {
+			formats: exportFormats,
 			format,
 			setFormat: (next) => {
-				if (config.output.formats.includes(next)) setFormat(next)
+				if (exportFormats.includes(next)) setFormat(next)
 			},
 			busy: templateExport.exporting !== null,
 			error: templateExport.error,

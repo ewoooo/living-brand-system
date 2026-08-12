@@ -1,4 +1,6 @@
-export type ExportFormat = 'original' | 'png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4'
+export const STUDIO_OUTPUT_FORMATS = ['png', 'jpeg', 'tiff', 'pdf', 'svg', 'mp4'] as const
+
+export type StudioOutputFormat = (typeof STUDIO_OUTPUT_FORMATS)[number]
 
 export type RgbColorProfile = {
 	space: 'rgb'

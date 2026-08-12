@@ -151,12 +151,12 @@ type StudioControllerConfig = {
 	id: string | number
 	version: 1
 	name: string
-	output: { formats: readonly string[] }
+	output: { formats: readonly StudioOutputFormat[] }
 	controller: { groups: readonly ControllerGroupDefinition[] }
 }
 ```
 
-Template·Image·Graphic Config는 이 envelope를 그대로 쓰고, 실행에 필요한 도메인 descriptor와 control id binding만 확장합니다. Studio Provider는 공통화하지 않습니다. 각 Provider가 자기 도메인의 세션과 실행 결과를 소유합니다.
+`StudioOutputFormat`은 `png | jpeg | tiff | pdf | svg | mp4`인 공통 파일 형식 어휘입니다. Template·Image·Graphic Config는 이 envelope를 그대로 쓰고, 실행에 필요한 도메인 descriptor와 control id binding만 확장합니다. Studio Provider는 공통화하지 않습니다. 각 Provider가 자기 도메인의 세션과 실행 결과를 소유합니다.
 
 `output.formats`는 Runtime/Service supported formats와 Admin allowed formats의 교집합입니다. Admin은 좁힐 수만 있고 형식을 추가할 수 없습니다. 형식 선택은 Controller Definition에 중복하지 않고 Provider의 export state와 `Controller.Footer`가 `config.output.formats`에서 직접 소비합니다. UI는 이 policy capability를 보고, Config projection과 실제 Export Layer는 adapter 존재 여부도 별도로 확인합니다. Image의 `original`은 파일 형식이 아니므로 `output.original` boolean으로 둡니다.
 

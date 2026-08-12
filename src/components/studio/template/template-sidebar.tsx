@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
 import { pixelsToMillimeters } from '@/features/studio-export/print-policy'
-import type { TemplateExportFormat } from '@/features/studio-export/services/export-template'
+import type { TemplateExportRequest } from '@/features/studio-export/services/export-template'
 import {
 	findTemplateControl,
 	findTemplateControlGroup,
@@ -29,7 +29,7 @@ import { ImageSlotInput } from './image-slot-input'
 import { IMAGE_TRANSFORM_DEFAULT, ImageTransformControl } from './image-transform-control'
 import { TextSlotInput } from './text-slot-input'
 
-const FORMAT_LABELS: Record<TemplateExportFormat, string> = {
+const FORMAT_LABELS: Record<TemplateExportRequest['format'], string> = {
 	png: 'PNG',
 	tiff: 'CMYK TIFF',
 	pdf: 'CMYK PDF',
@@ -99,13 +99,13 @@ export function TemplateSidebar() {
 						)}
 						<Controller.Row label="Format">
 							<Controller.Select
-								options={config.output.formats.map((candidate) => ({
+								options={exporting.formats.map((candidate) => ({
 									value: candidate,
 									label: FORMAT_LABELS[candidate],
 								}))}
 								value={exporting.format ?? ''}
 								onChange={(value) =>
-									exporting.setFormat(value as TemplateExportFormat)
+									exporting.setFormat(value as TemplateExportRequest['format'])
 								}
 							/>
 						</Controller.Row>

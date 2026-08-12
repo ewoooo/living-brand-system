@@ -36,7 +36,7 @@ describe('deriveImageStudioConfig', () => {
 			id: 5,
 			version: 1,
 			name: '에센허브 브랜드 제품컷',
-			output: { formats: ['original', 'png', 'jpeg'] },
+			output: { formats: ['png', 'jpeg'], original: true },
 			image: { slug: 'brand-product', features: [{ type: 'camera-control' }] },
 		})
 		expect(config).not.toHaveProperty('imageModelPreset')
@@ -63,6 +63,7 @@ describe('deriveImageStudioConfig', () => {
 			}).output,
 		).toEqual({
 			formats: ['png'],
+			original: false,
 			colorProfiles: { rgb: ['srgb'] },
 			packages: ['zip'],
 		})

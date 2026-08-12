@@ -1,4 +1,5 @@
 import type { Block, Field } from 'payload'
+import type { StudioOutputFormat } from '@/features/studio-export/export-contract'
 
 const AVAILABILITY_OPTIONS = [
 	{ label: '사용 가능', value: 'enabled' },
@@ -35,7 +36,7 @@ export function studioOutputPolicyField({
 	formats,
 	includeOriginal = false,
 }: {
-	formats: readonly { label: string; value: string }[]
+	formats: readonly { label: string; value: StudioOutputFormat }[]
 	includeOriginal?: boolean
 }): Field {
 	return {

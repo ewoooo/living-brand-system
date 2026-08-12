@@ -18,7 +18,6 @@ import {
 	canExportTemplate,
 	createTemplateExportRequest,
 	type TemplateExportContext,
-	type TemplateExportFormat,
 	type TemplateExportRequest,
 } from '@/features/studio-export/services/export-template'
 import { exportTemplate } from '@/features/studio-export/services/export-template.client'
@@ -73,13 +72,13 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 		canExport: (request) => canExportTemplate(request, exportContext),
 		execute: (request) => exportTemplate(request, exportContext),
 	})
-	const request = (format: TemplateExportFormat) =>
+	const request = (format: TemplateExportRequest['format']) =>
 		createTemplateExportRequest(format, attachment.printPpi)
-	const canExport = (format: TemplateExportFormat) => {
+	const canExport = (format: TemplateExportRequest['format']) => {
 		const candidate = request(format)
 		return Boolean(candidate && output.canExport(candidate))
 	}
-	const run = (format: TemplateExportFormat) => {
+	const run = (format: TemplateExportRequest['format']) => {
 		const candidate = request(format)
 		if (candidate) void output.run(candidate)
 	}

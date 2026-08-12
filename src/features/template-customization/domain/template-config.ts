@@ -14,14 +14,8 @@ import {
 } from '@/features/image-generation/image-size'
 import { DEFAULT_CMYK_ICC_PROFILE } from '@/features/studio-export/color-profile'
 import type { PrintPpi } from '@/features/studio-export/print-policy'
-import {
-	supportsTemplateExport,
-	type TemplateExportFormat,
-} from '@/features/studio-export/services/export-template'
-import {
-	parseStudioOutputCapability,
-	resolveStudioOutputFormats,
-} from '@/features/studio-export/studio-output'
+import { supportsTemplateExport } from '@/features/studio-export/services/export-template'
+import { resolveStudioOutputFormats } from '@/features/studio-export/studio-output'
 import {
 	collectTemplateImageSlots,
 	collectTemplateSlots,
@@ -121,7 +115,7 @@ export type PublishedHtmlTemplate = {
  * ImageStudioConfig의 prompt/ratio처럼 슬롯마다 id가 반복되는 Definition은 각 슬롯 scope에서
  * 원본 Config를 직접 소비한다. 전역 id를 만들기 위한 prefix DSL이나 Definition 복제는 하지 않는다.
  */
-export type TemplateConfig = StudioControllerConfig<'template', number, TemplateExportFormat> & {
+export type TemplateConfig = StudioControllerConfig<'template', number> & {
 	template: {
 		slots: readonly TemplateConfigSlot[]
 		textColorControlId?: typeof TEXT_COLOR_CONTROL_ID
@@ -137,7 +131,6 @@ export type TemplateConfig = StudioControllerConfig<'template', number, Template
 /** unknown 입력을 공통 Controller와 Template slot/reference/export descriptor까지 검증한다. */
 export function parseTemplateConfig(input: unknown): TemplateConfig {
 	const common = parseStudioControllerConfig(input)
-	parseStudioOutputCapability(common.output)
 	const root = templateRecord(input, 'TemplateConfig')
 	assertTemplateKeys(root, [
 		'studio',
@@ -154,11 +147,14 @@ export function parseTemplateConfig(input: unknown): TemplateConfig {
 		throw new Error('TemplateConfig id: 정수여야 합니다.')
 	}
 	if (
-		(common.output.formats as readonly string[]).some(
+		common.output.formats.some(
 			(format) => format !== 'png' && format !== 'tiff' && format !== 'pdf',
 		)
 	) {
 		throw new Error('TemplateConfig output format이 올바르지 않습니다.')
+	}
+	if (common.output.original !== undefined) {
+		throw new Error('TemplateConfig는 original output을 지원하지 않습니다.')
 	}
 
 	const template = templateRecord(root.template, 'TemplateConfig.template')

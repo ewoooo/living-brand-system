@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { STUDIO_OUTPUT_FORMATS } from './export-contract'
 import {
 	parseStudioOutputCapability,
 	resolveStudioOutputFormats,
@@ -73,5 +74,21 @@ describe('StudioOutputCapability', () => {
 			},
 		}
 		expect(supportsStudioExportRequest(capability, request)).toBe(false)
+	})
+
+	it('공통 파일 형식만 formats에 허용하고 original은 별도 capability로 검증한다', () => {
+		expect(parseStudioOutputCapability({ formats: STUDIO_OUTPUT_FORMATS })).toEqual({
+			formats: STUDIO_OUTPUT_FORMATS,
+		})
+		expect(() => parseStudioOutputCapability({ formats: ['original'] })).toThrow(
+			'지원하지 않는 Studio output format',
+		)
+		expect(() => parseStudioOutputCapability({ formats: [], original: 'yes' })).toThrow(
+			'output.original',
+		)
+
+		const request = { format: 'original', options: {} } as const
+		expect(supportsStudioExportRequest({ formats: [], original: true }, request)).toBe(true)
+		expect(supportsStudioExportRequest({ formats: [], original: false }, request)).toBe(false)
 	})
 })

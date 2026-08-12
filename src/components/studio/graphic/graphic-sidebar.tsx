@@ -28,9 +28,9 @@ export function GraphicSidebar() {
 					onChange={controls.update}
 				/>
 			</Controller.Content>
-			{config.output.formats.length > 0 && (
+			{output.formats.length > 0 && (
 				<Controller.Footer>
-					{config.output.formats.map((format) => (
+					{output.formats.map((format) => (
 						<Button
 							key={format}
 							type="button"

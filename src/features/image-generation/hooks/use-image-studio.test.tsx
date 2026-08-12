@@ -286,7 +286,7 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		const source = config(5, { colorAdjustment: { line: '#000dff' } })
 		const next = {
 			...config(7, { colorAdjustment: { line: '#ff0000' } }),
-			output: { formats: [] as const },
+			output: { formats: [] as const, original: false },
 		}
 		renderStudio([source, next])
 

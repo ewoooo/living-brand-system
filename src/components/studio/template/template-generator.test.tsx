@@ -1038,7 +1038,7 @@ function createImageConfig(
 		id,
 		version: 1,
 		name: id === 11 ? '기본 프로파일' : `프로파일 ${id}`,
-		output: { formats: ['original', 'png'] },
+		output: { formats: ['png'], original: true },
 		controller: {
 			groups: [
 				{

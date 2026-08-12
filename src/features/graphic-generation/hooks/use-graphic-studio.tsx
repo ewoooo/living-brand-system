@@ -10,7 +10,11 @@ import {
 	useState,
 } from 'react'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
-import type { ExportRequest, ExportResult } from '@/features/studio-export/export-contract'
+import type {
+	ExportRequest,
+	ExportResult,
+	StudioOutputFormat,
+} from '@/features/studio-export/export-contract'
 import { useExport } from '@/features/studio-export/hooks/use-export'
 import {
 	acceptsControllerDraftValue,
@@ -21,13 +25,11 @@ import {
 	createControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 
-export type GraphicExportRequest = Extract<ExportRequest, { format: 'svg' | 'mp4' }>
-
 const SVG_EXPORT_REQUEST = {
 	format: 'svg',
 	colorProfile: { space: 'rgb', icc: 'srgb' },
 	options: { outlineText: false },
-} as const satisfies GraphicExportRequest
+} as const satisfies ExportRequest
 
 const MP4_EXPORT_REQUEST = {
 	format: 'mp4',
@@ -40,12 +42,15 @@ const MP4_EXPORT_REQUEST = {
 		height: 1080,
 		colorSpace: 'rec709',
 	},
-} as const satisfies GraphicExportRequest
+} as const satisfies ExportRequest
 
 const GRAPHIC_EXPORT_REQUESTS = {
 	svg: SVG_EXPORT_REQUEST,
 	mp4: MP4_EXPORT_REQUEST,
 } as const
+
+export type GraphicExportRequest =
+	(typeof GRAPHIC_EXPORT_REQUESTS)[keyof typeof GRAPHIC_EXPORT_REQUESTS]
 
 type GraphicStudioValue = {
 	config: GraphicStudioConfig
@@ -63,6 +68,7 @@ type GraphicStudioValue = {
 		) => void
 	}
 	output: {
+		formats: readonly GraphicExportRequest['format'][]
 		ready: (format: GraphicExportRequest['format']) => boolean
 		busy: boolean
 		error: string | null
@@ -146,6 +152,7 @@ export function GraphicStudioProvider({
 			controls: { values, bindings, update, registerBindings },
 			canvas: { registerOutput },
 			output: {
+				formats: config.output.formats.filter(isGraphicExportFormat),
 				ready: (format) => graphicExport.canExport(GRAPHIC_EXPORT_REQUESTS[format]),
 				busy: graphicExport.exporting !== null,
 				error: graphicExport.error,
@@ -171,6 +178,12 @@ export function GraphicStudioProvider({
 			{children}
 		</GraphicStudioContext.Provider>
 	)
+}
+
+function isGraphicExportFormat(
+	format: StudioOutputFormat,
+): format is GraphicExportRequest['format'] {
+	return format in GRAPHIC_EXPORT_REQUESTS
 }
 
 export function useGraphicStudio() {

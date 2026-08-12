@@ -22,6 +22,9 @@ describe('graphicStudioRuntime', () => {
 		expect(() => parseGraphicStudioConfig({ ...config, studio: 'image' })).toThrow('studio')
 		expect(() => parseGraphicStudioConfig({ ...config, type: 'canvas' })).toThrow('type')
 		expect(() => parseGraphicStudioConfig({ ...config, unknown: true })).toThrow('알 수 없는')
+		expect(() =>
+			parseGraphicStudioConfig({ ...config, output: { ...config.output, original: true } }),
+		).toThrow('original')
 	})
 
 	it('plugin catalog가 config·SVG projector·명시적 binding을 함께 제공한다', () => {

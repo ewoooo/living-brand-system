@@ -2,8 +2,8 @@ import { IMAGE_PROMPT_MAX_LENGTH } from '@/features/image-generation/image-gener
 import type { ImageModelPreset } from '@/features/image-generation/image-model'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import {
-	parseStudioOutputCapability,
 	resolveStudioOutputFormats,
+	type StudioOutputCapability,
 } from '@/features/studio-export/studio-output'
 import {
 	acceptsControllerExecutionValue,
@@ -32,8 +32,6 @@ export type ImageStudioFeature =
 	  }
 	| { type: 'camera-control' }
 
-export type ImageOutputFormat = 'original' | 'png' | 'jpeg'
-
 /** Image Studio Config를 파생하는 서버측 published 프로파일 read model. */
 export type PublishedImageProfileDefinition = {
 	id: number
@@ -51,7 +49,8 @@ export type PublishedImageProfileDefinition = {
 }
 
 /** 이미지 프로파일 하나가 발행하는 공통 Controller envelope와 이미지 실행 descriptor. */
-export type ImageStudioConfig = StudioControllerConfig<'image', number, ImageOutputFormat> & {
+export type ImageStudioConfig = StudioControllerConfig<'image', number> & {
+	output: StudioOutputCapability & { original: boolean }
 	image: {
 		slug: string | null
 		features: readonly ImageStudioFeature[]
@@ -79,13 +78,11 @@ export function parseImageStudioConfig(input: unknown): ImageStudioConfig {
 	if (typeof common.id !== 'number' || !Number.isInteger(common.id)) {
 		throw new Error('ImageStudioConfig id: 정수여야 합니다.')
 	}
-	parseStudioOutputCapability(config.output)
-	if (
-		(common.output.formats as readonly string[]).some(
-			(format) => format !== 'original' && format !== 'png' && format !== 'jpeg',
-		)
-	) {
+	if (common.output.formats.some((format) => format !== 'png' && format !== 'jpeg')) {
 		throw new Error('ImageStudioConfig output format이 올바르지 않습니다.')
+	}
+	if (typeof common.output.original !== 'boolean') {
+		throw new Error('ImageStudioConfig output.original이 필요합니다.')
 	}
 
 	const image = record(config.image, 'ImageStudioConfig.image')
@@ -212,12 +209,11 @@ export function deriveImageStudioConfig(
 		name: profile.name,
 		output: {
 			...capability.output,
-			formats: resolveStudioOutputFormats(capability.output.formats, [
-				...((profile.output?.original ?? true) ? ['original'] : []),
-				...(profile.output?.allowedFormats ?? capability.output.formats).filter(
-					(format) => format !== 'original',
-				),
-			]),
+			formats: resolveStudioOutputFormats(
+				capability.output.formats,
+				profile.output?.allowedFormats,
+			),
+			original: profile.output?.original ?? capability.output.original,
 		},
 		controller: storedController ?? deriveLegacyController(profile),
 		image: {

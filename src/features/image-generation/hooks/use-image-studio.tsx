@@ -7,7 +7,6 @@ import {
 	getImageStudioControls,
 	getImageStudioFeature,
 	IMAGE_STUDIO_CONTROL_IDS,
-	type ImageOutputFormat,
 	type ImageStudioConfig,
 } from '@/features/image-generation/domain/image-studio-config'
 import { useImageGeneration } from '@/features/image-generation/hooks/use-image-generation'
@@ -85,9 +84,9 @@ type ImageStudioValue = {
 		available: boolean
 		busy: boolean
 		error: string | null
-		formats: readonly ImageOutputFormat[]
-		format: ImageOutputFormat | null
-		setFormat: (format: ImageOutputFormat) => void
+		formats: readonly ImageExportRequest['format'][]
+		format: ImageExportRequest['format'] | null
+		setFormat: (format: ImageExportRequest['format']) => void
 		selected: () => void
 		all: () => void
 	}
@@ -114,8 +113,9 @@ export function ImageStudioProvider({
 	}
 
 	const [profileId, setProfileId] = useState(initial.id)
-	const [selectedExportFormat, setSelectedExportFormat] = useState<ImageOutputFormat>(
-		initial.output.formats[0] ?? 'png',
+	const initialExportFormats = imageExportFormats(initial.output)
+	const [selectedExportFormat, setSelectedExportFormat] = useState<ImageExportRequest['format']>(
+		initialExportFormats[0] ?? 'png',
 	)
 	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
 	const [angles, setAngles] = useState({ azimuthDeg: 0, elevationDeg: 0 })
@@ -157,11 +157,8 @@ export function ImageStudioProvider({
 			: null
 	const resultConfig = configs.find((candidate) => candidate.id === result?.profileId)
 	const resultColor = resultConfig?.id === config.id ? colorValue : null
-	const resultOutput = resultConfig?.output ?? { formats: [] }
-	const exportFormats = resultOutput.formats.filter(
-		(format): format is ImageOutputFormat =>
-			format === 'original' || format === 'png' || format === 'jpeg',
-	)
+	const resultOutput = resultConfig?.output ?? { formats: [], original: false }
+	const exportFormats = imageExportFormats(resultOutput)
 	const exportFormat = exportFormats.includes(selectedExportFormat)
 		? selectedExportFormat
 		: (exportFormats[0] ?? null)
@@ -298,7 +295,7 @@ export function ImageStudioProvider({
 }
 
 function createImageExportRequest(
-	format: 'original' | 'png' | 'jpeg' | null,
+	format: ImageExportRequest['format'] | null,
 	scope: ImageExportRequest['scope'],
 ): ImageExportRequest | null {
 	const packageFormat = scope === 'all' ? { package: 'zip' as const } : {}
@@ -322,6 +319,15 @@ function createImageExportRequest(
 		}
 	}
 	return null
+}
+
+function imageExportFormats(
+	output: ImageStudioConfig['output'],
+): readonly ImageExportRequest['format'][] {
+	const formats = output.formats.filter(
+		(format): format is 'png' | 'jpeg' => format === 'png' || format === 'jpeg',
+	)
+	return output.original ? ['original', ...formats] : formats
 }
 
 export function useImageStudio() {
