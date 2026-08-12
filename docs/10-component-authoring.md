@@ -151,11 +151,14 @@ type StudioControllerConfig = {
 	id: string | number
 	version: 1
 	name: string
+	output: { formats: readonly string[] }
 	controller: { groups: readonly ControllerGroupDefinition[] }
 }
 ```
 
 Template·Image·Graphic Config는 이 envelope를 그대로 쓰고, 실행에 필요한 도메인 descriptor와 control id binding만 확장합니다. Studio Provider는 공통화하지 않습니다. 각 Provider가 자기 도메인의 세션과 실행 결과를 소유합니다.
+
+`output.formats`는 Runtime/Service supported formats와 Admin allowed formats의 교집합입니다. Admin은 좁힐 수만 있고 형식을 추가할 수 없습니다. 형식 선택은 Controller Definition에 중복하지 않고 Provider의 export state와 `Controller.Footer`가 `config.output.formats`에서 직접 소비합니다. UI는 이 policy capability를 보고, Config projection과 실제 Export Layer는 adapter 존재 여부도 별도로 확인합니다. Image의 `original`은 파일 형식이 아니므로 `output.original` boolean으로 둡니다.
 
 직렬화 가능한 데이터 어휘의 정본은 `src/features/studio-controller/controller-definition.ts`의 `ControllerControlDefinition`입니다. Definition에는 `kind`·`defaultValue`·선택지·레인지 같은 정적 정의만 싣습니다. 현재 값은 session values에, `error`·런타임 availability·대상 기하는 runtime bindings에 둡니다. `ControllerRenderer`는 `groups`와 이 두 런타임 입력을 결합해 `Group`과 primitive만 그립니다. 별도 배치가 필요한 footer·Template slot은 `ControllerControlRenderer`로 같은 단일 control 투영을 재사용합니다. `Content`·`Header`·`Footer` 배치는 Domain Sidebar가 소유합니다. ReactNode·콜백·DOM 참조·formatter 함수는 Definition에 넣지 않습니다.
 
@@ -182,11 +185,13 @@ Controller 사용 구조는 다섯 책임으로 나눕니다.
 
 별도 `ControllerProvider`는 두지 않습니다. 편집 계약과 세션 값은 화면의 Studio Provider가 소유하고, Controller 컴파운드는 표현 레이아웃만 소유합니다. 여러 Controller Root 사이에서 공유할 표현 상태가 실제로 생길 때만 Provider를 추가합니다.
 
-Payload의 작성 데이터는 block 저장 형식인 `key`·`blockType`을 사용해도 됩니다. Published projection은 이를 클라이언트 계약의 `id`·`kind`로 정규화합니다. Draft는 작성 중인 불완전 상태를 허용하지만 publish는 공통 parser로 unknown field·중복 id·kind별 기본값과 제약을 엄격하게 검증합니다. 기존 필드에서 Config를 파생하는 legacy fallback은 이행기에만 유지합니다.
+Payload의 작성 데이터는 block 저장 형식인 `key`·`blockType`을 사용해도 됩니다. Published projection은 이를 클라이언트 계약의 `id`·`kind`로 정규화합니다. Image Profile은 완전한 Definition을 저작하는 `define` 모드를 사용합니다. Graphic Profile과 Template의 Admin UI는 runtime·DOM에서 파생한 Base Definition을 읽기 전용으로 보여주고, `{ controlId, availability, defaultValue, maxLength, optionValues, min, max }`만 sparse JSON Override로 저장합니다. Admin은 `kind`·label·placeholder·display·aspectRatio·group title·collapsible·defaultOpen을 입력하지 않습니다. Draft는 작성 중인 불완전 상태를 허용하지만 publish는 공통 parser로 unknown field·중복 id·kind별 기본값과 제약을 엄격하게 검증합니다. 기존 group/block Policy와 Image legacy 필드는 이행기 read fallback으로만 유지하고 Admin에서는 숨깁니다.
 
-어드민은 화면 패널을 구성하지 않고 Published Definition의 기본값·선택지·범위·availability만 저작합니다. Image Profile은 완전한 Controller 계약을 발행하고, Template과 Graphic Profile은 슬롯·runtime이 제공한 기본 계약의 같은 group/control ID만 좁힙니다. `enabled`로의 잠금 해제, select 선택지 추가, range 확장, 알 수 없는 ID·kind 변경은 발행 시 거부합니다. Graphic runtime 구현과 `p5`·`shader` 판별은 계속 코드 registry가 소유합니다.
+어드민은 화면 패널을 구성하지 않고 기본값·선택지·범위·availability만 저작합니다. Image Profile은 완전한 Controller Definition을 발행하되 Image Service capability가 의미를 아는 control·feature만 발행할 수 있습니다. Template과 Graphic Profile은 슬롯·runtime이 제공한 Definition에 sparse Override를 적용합니다. Override를 여러 번 적용해도 같은 Effective Definition이 나와야 합니다. `enabled`로의 잠금 해제, select 선택지 추가, range 확장, 알 수 없는 ID는 발행 시 거부합니다. Graphic runtime 구현과 `p5`·`shader` 판별은 Graphic별 Plugin이 소유하고, 서버 안전 Manifest Catalog가 Base Definition을 발행합니다. `Visibility`는 Controller 계약에 두지 않습니다. 현재 렌더러는 Effective Definition에 들어 있는 control을 모두 표시합니다.
 
-Graphic Canvas는 `type`만 보고 공용 `P5Canvas`·`WebGLCanvas`를 선택합니다. 개별 그래픽의 브라우저 mount·Controller 값 변환은 client Preview adapter registry가 stable runtime ID로 해석하며, 새 그래픽을 추가해도 중앙 Canvas를 수정하지 않습니다. 이 client registry에는 함수와 브라우저 자원이 들어가므로 직렬화 가능한 Studio Config나 서버 안전 runtime registry와 합치지 않습니다.
+Graphic Canvas는 `type`만 보고 공용 `P5Canvas`·`WebGLCanvas`를 선택합니다. 각 Graphic Plugin은 직렬화 가능한 Manifest와 순수 binding·output adapter를 자기 모듈에 두고, 얇은 서버 Catalog는 등록과 조회만 담당합니다. 브라우저 mount·Controller 값 변환은 같은 stable runtime ID의 client Preview adapter Catalog가 해석하므로 새 그래픽을 추가해도 중앙 Canvas를 수정하지 않습니다. Client Catalog에는 함수와 브라우저 자원이 들어가므로 Studio Config나 서버 안전 Manifest Catalog와 합치지 않습니다.
+
+기존 `p5`·`shader` 엔진에 Graphic을 추가할 때는 `graphics/<id>.ts`에 Plugin을, `graphics/<id>-preview.client.ts`에 Preview adapter를 작성하고 두 Catalog에 각각 한 번 등록합니다. 이때 Provider·Sidebar·Canvas는 수정하지 않습니다. 새로운 엔진 종류가 생길 때만 공용 Canvas host와 `GraphicStudioConfig.type`을 확장합니다.
 
 킷 배선 규칙: `Controller.Row`/`Controller.Field`가 `{ controlId, disabled }` 표현 컨텍스트를 내리고, 안의 킷 컨트롤(`Select`·`Input`·`Textarea`·`Segmented`·`ColorRow` 스와치)이 라벨 연결 id와 disabled를 자동으로 이어받습니다 — 소비자는 htmlFor를 배선하지 않습니다. 이 컨텍스트에 도메인 값을 넣지 않습니다(§3.5 — 도메인 Provider는 features의 훅으로).
 
@@ -226,6 +231,7 @@ type ControllerInteraction = 'idle' | 'hover' | 'focused' | 'error'
 
 - **`isEmpty`는 파생 상태입니다.** `value === null`에서 계산하고, 별도 진실로 두지 않습니다. 비어 있으면 원본 값을 사칭하지 않고 `—`로 보입니다(`Controller.ColorRow`의 `isEmpty` 원형).
 - **`error`·`busy`는 정의가 아니라 런타임 상태입니다.** `error`와 런타임 availability는 runtime binding으로 Renderer에 전달하고, `busy`는 소유 컴포넌트가 "생성 중…" 비활성으로 처리합니다. 런타임 binding은 Published `readonly`·`disabled`를 다시 활성화할 수 없습니다.
+- **편집 검증과 실행 검증을 나눕니다.** Provider는 `acceptsControllerDraftValue`로 입력 kind·범위·availability를 검사하되 길이를 초과한 text는 오류 표시를 위해 보존합니다. 외부 I/O 직전에는 `acceptsControllerExecutionValue`로 길이까지 검사하고, `readonly`·`disabled` control에는 발행 기본값만 허용합니다.
 - **Definition 컴포지션은 단일 단계 `groups[] → controls[]`까지만 제공합니다.** 조건 노출·탭 분기·액션은 실제 생산자가 생기기 전까지 `visibleWhen` 류의 DSL로 추측하지 않습니다. **예외는 "브라우저 열기" 하나입니다** — 자산 카드는 값을 고르는 패널 없이는 성립하지 않아 액션이 컨트롤의 일부입니다. 이 액션만 킷이 갖고(`Controller.Browser`가 여는 상태를 소유), 나머지 액션·조건 노출은 계속 보류합니다.
 - **트리거는 자기 브라우저 안에서만 존재합니다.** 여는 버튼은 `Controller.Browser.Trigger`로 그 브라우저의 컴파운드 안에만 살고, 무엇을 여는지 모르는 범용 `Controller.Trigger`는 만들지 않습니다 — 그런 트리거는 브라우저 밖에서도 타입이 통과해 검증되지 않는 계약이 됩니다. 짝은 구조로 강제됩니다: `Trigger`·`Panel`은 `Browser.Root`의 Dialog 컨텍스트가 없으면 렌더에서 죽습니다.
 - **네임스페이스 객체(`Controller`)는 client 소비 전용입니다.** RSC에서 점 접근이 필요하면 개별 named export(`ControllerRow` 등)를 씁니다.

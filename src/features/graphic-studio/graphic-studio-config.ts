@@ -3,8 +3,10 @@ import {
 	type StudioControllerConfig,
 } from '@/features/studio-controller/controller-definition'
 
+export type GraphicOutputFormat = 'svg'
+
 /** P5·Shader 그래픽 하나가 스튜디오에 내는 직렬화 가능한 편집 계약. */
-export type GraphicStudioConfig = StudioControllerConfig<'graphic', string> & {
+export type GraphicStudioConfig = StudioControllerConfig<'graphic', string, GraphicOutputFormat> & {
 	type: 'p5' | 'shader'
 }
 
@@ -14,6 +16,8 @@ export type PublishedGraphicProfileDefinition = {
 	name: string
 	runtime: string
 	controller?: unknown
+	controllerOverride?: unknown
+	output?: { allowedFormats?: readonly string[] | null } | null
 }
 
 /** unknown 입력을 공통 Controller 계약과 Graphic runtime descriptor로 검증한다. */

@@ -74,6 +74,7 @@ export async function findPublishedTemplate(templateId: number) {
 		},
 		select: {
 			controller: true,
+			controllerOverride: true,
 			name: true,
 			updatedAt: true,
 			html: true,
@@ -81,6 +82,7 @@ export async function findPublishedTemplate(templateId: number) {
 			width: true,
 			height: true,
 			printPpi: true,
+			output: true,
 		},
 	})
 

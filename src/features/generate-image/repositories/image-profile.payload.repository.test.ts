@@ -91,6 +91,7 @@ describe('findPublishedImageProfile', () => {
 				imageSize: true,
 				maxPromptLength: true,
 				name: true,
+				output: true,
 				slug: true,
 			},
 			sort: 'displayOrder',

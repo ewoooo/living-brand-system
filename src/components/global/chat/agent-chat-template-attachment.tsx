@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/attachment'
 import { Typography } from '@/components/ui/typography'
 import type { AgentTemplateImageAttachment } from '@/features/agent-chat/services/agent-template-request.service'
+import { createControllerValues } from '@/features/studio-controller/controller-definition'
 import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
 import { composeTemplateHtml } from '@/services/compose-template-html.client'
 
@@ -44,6 +45,20 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 		templateId: attachment.templateId,
 		templateVersion: attachment.templateVersion,
 		width: attachment.width,
+		output: attachment.output,
+		controller: {
+			groups: attachment.controller.groups,
+			values: {
+				...createControllerValues(attachment.controller.groups),
+				...Object.fromEntries(
+					Object.entries(attachment.values).flatMap(([nodeId, value]) =>
+						typeof value.text === 'string'
+							? [[`text:${nodeId}`, value.text] as const]
+							: [],
+					),
+				),
+			},
+		},
 	})
 
 	return (

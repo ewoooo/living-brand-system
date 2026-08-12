@@ -17,9 +17,13 @@ import {
 	getGraphicStudioRuntimeBindings,
 	renderGraphicStudioSvg,
 } from '@/features/graphic-studio/graphic-studio-runtime'
-import { getImageColorAdjustmentControls } from '@/features/image-studio/image-studio-config'
 import {
-	acceptsControllerValue,
+	acceptsImagePromptExecution,
+	getImageColorAdjustmentControls,
+	resolveImagePromptExecution,
+} from '@/features/image-studio/image-studio-config'
+import {
+	acceptsControllerDraftValue,
 	type ControllerControlDefinition,
 	type ControllerControlValue,
 	type ControllerRuntimeBindings,
@@ -27,17 +31,15 @@ import {
 	createControllerValues,
 } from '@/features/studio-controller/controller-definition'
 import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
-import type { TemplateExportFormat } from '@/features/template-export/services/export-template.client'
+import type { TemplateExportFormat } from '@/features/template-export/services/export-template'
 import {
 	type ImageTransformValue,
 	toImageEditTransform,
 } from '@/features/template-studio/image-edit-transform'
 import {
 	findTemplateControl,
-	isBackgroundSlot,
-	isImageSlot,
-	isTextSlot,
 	listCompatibleTemplateImageConfigs,
+	partitionTemplateSlots,
 	type ResolvedTemplateImageConfig,
 	type TemplateBackgroundSlot,
 	type TemplateBackgroundType,
@@ -123,7 +125,7 @@ type TemplateStudioValue = {
 		previewRef: RefObject<HTMLDivElement | null>
 	}
 	exporting: {
-		format: TemplateExportFormat
+		format: TemplateExportFormat | null
 		setFormat: (format: TemplateExportFormat) => void
 		busy: boolean
 		error: string | null
@@ -153,9 +155,10 @@ export function TemplateStudioProvider({
 	const previewRef = useRef<HTMLDivElement>(null)
 	const { html, width, height } = template
 	const slots = config.template.slots
-	const textSlots = useMemo(() => slots.filter(isTextSlot), [slots])
-	const imageSlots = useMemo(() => slots.filter(isImageSlot), [slots])
-	const backgroundSlot = useMemo(() => slots.find(isBackgroundSlot), [slots])
+	const partitionedSlots = useMemo(() => partitionTemplateSlots(slots), [slots])
+	const textSlots = partitionedSlots.text
+	const imageSlots = partitionedSlots.image
+	const backgroundSlot = partitionedSlots.background
 	const textColorDefinition = config.template.textColorControlId
 		? findTemplateControl(config, config.template.textColorControlId)
 		: undefined
@@ -172,7 +175,9 @@ export function TemplateStudioProvider({
 		textColorDefinition?.kind === 'color' ? textColorDefinition.defaultValue : null,
 	)
 	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
-	const [format, setFormat] = useState<TemplateExportFormat>('png')
+	const [format, setFormat] = useState<TemplateExportFormat | null>(
+		config.output.formats[0] ?? null,
+	)
 	const imageContracts = useMemo(
 		() =>
 			Object.fromEntries(
@@ -237,7 +242,7 @@ export function TemplateStudioProvider({
 			const definition = [color?.line, color?.background].find(
 				(control) => control?.id === controlId,
 			)
-			if (!definition || !acceptsControllerValue(definition, next)) return current
+			if (!definition || !acceptsControllerDraftValue(definition, next)) return current
 			return {
 				...current,
 				[slotId]: {
@@ -348,6 +353,11 @@ export function TemplateStudioProvider({
 		templateId: template.id,
 		templateVersion: template.templateVersion,
 		width,
+		output: config.output,
+		controller: {
+			groups: config.controller.groups,
+			values: templateControllerValues(config, textSlots, textValues, textColor, background),
+		},
 	})
 
 	const value: TemplateStudioValue = {
@@ -430,7 +440,9 @@ export function TemplateStudioProvider({
 		canvas: { html: composedHtml, previewRef },
 		exporting: {
 			format,
-			setFormat,
+			setFormat: (next) => {
+				if (config.output.formats.includes(next)) setFormat(next)
+			},
 			busy: exporting !== null,
 			error: exportError,
 			run: exportTemplate,
@@ -502,7 +514,7 @@ function updateTemplateText(
 ): Record<string, string> {
 	const slot = slots.find((candidate) => candidate.id === slotId)
 	const definition = slot ? findTemplateControl(config, slot.controlId) : undefined
-	return definition?.kind === 'text' && acceptsControllerValue(definition, next)
+	return definition?.kind === 'text' && acceptsControllerDraftValue(definition, next)
 		? { ...current, [slotId]: next }
 		: current
 }
@@ -512,7 +524,9 @@ function updateTemplateColor(
 	definition: ControllerControlDefinition | undefined,
 	next: string | null,
 ): string | null {
-	return definition?.kind === 'color' && acceptsControllerValue(definition, next) ? next : current
+	return definition?.kind === 'color' && acceptsControllerDraftValue(definition, next)
+		? next
+		: current
 }
 
 function updateTemplateBackgroundColor(
@@ -536,7 +550,7 @@ function updateTemplateImageSlot(
 	const prompt =
 		typeof patch.prompt === 'string' &&
 		contract &&
-		acceptsControllerValue(contract.prompt, patch.prompt)
+		acceptsControllerDraftValue(contract.prompt, patch.prompt)
 			? patch.prompt
 			: undefined
 	return {
@@ -569,7 +583,7 @@ function updateTemplateBackground(
 	const prompt =
 		typeof patch.prompt === 'string' &&
 		contract &&
-		acceptsControllerValue(contract.prompt, patch.prompt)
+		acceptsControllerDraftValue(contract.prompt, patch.prompt)
 			? patch.prompt
 			: undefined
 	return {
@@ -588,7 +602,7 @@ function selectBackgroundType(
 		definition?.kind !== 'select' ||
 		typeof next !== 'string' ||
 		!isBackgroundType(next) ||
-		!acceptsControllerValue(definition, next)
+		!acceptsControllerDraftValue(definition, next)
 	) {
 		return current
 	}
@@ -637,13 +651,8 @@ function updateBackgroundGraphic(
 	const definition = config.controller.groups
 		.flatMap((group) => group.controls)
 		.find((control) => control.id === controlId)
-	const runtimeAvailability = getGraphicStudioRuntimeBindings(config, viewport)[controlId]
-		?.availability
-	if (
-		!definition ||
-		(runtimeAvailability !== undefined && runtimeAvailability !== 'enabled') ||
-		!acceptsControllerValue(definition, next)
-	) {
+	const binding = getGraphicStudioRuntimeBindings(config, viewport)[controlId]
+	if (!definition || !acceptsControllerDraftValue(definition, next, binding)) {
 		return current
 	}
 	return {
@@ -748,6 +757,28 @@ function composeTemplateSessionHtml({
 	return composeTemplateHtml(html, { ...textOverrides, ...imageOverrides }, { canvasBackground })
 }
 
+function templateControllerValues(
+	config: TemplateConfig,
+	textSlots: readonly TemplateTextSlot[],
+	textValues: Readonly<Record<string, string>>,
+	textColor: string | null,
+	background: TemplateBackgroundState,
+): ControllerValues {
+	const values = createControllerValues(config.controller.groups)
+	for (const slot of textSlots) {
+		if (textValues[slot.id] !== undefined) values[slot.controlId] = textValues[slot.id]
+	}
+	if (config.template.textColorControlId) {
+		values[config.template.textColorControlId] = textColor
+	}
+	const backgroundSlot = partitionTemplateSlots(config.template.slots).background
+	if (backgroundSlot) {
+		values[backgroundSlot.typeControlId] = background.type
+		values[backgroundSlot.colorControlId] = background.color
+	}
+	return values
+}
+
 function initialImageState(
 	slot: TemplateImageConfigSlot,
 	contracts: readonly ResolvedTemplateImageConfig[],
@@ -815,39 +846,23 @@ function initialFeatureValues(
 	if (!color || !override) return values
 	return {
 		...values,
-		...(acceptsControllerValue(color.line, override.line)
+		...(acceptsControllerDraftValue(color.line, override.line)
 			? { [color.line.id]: override.line }
 			: {}),
 		...(color.background &&
 		override.background &&
-		acceptsControllerValue(color.background, override.background)
+		acceptsControllerDraftValue(color.background, override.background)
 			? { [color.background.id]: override.background }
 			: {}),
 	}
 }
 
 function validPrompt(prompt: string, contract: ResolvedTemplateImageConfig) {
-	if (
-		contract.prompt.availability === 'readonly' ||
-		contract.prompt.availability === 'disabled'
-	) {
-		return (
-			typeof contract.prompt.defaultValue === 'string' &&
-			contract.prompt.defaultValue.trim().length > 0 &&
-			prompt === contract.prompt.defaultValue
-		)
-	}
-	return (
-		prompt.trim().length > 0 &&
-		(contract.prompt.maxLength === undefined || prompt.length <= contract.prompt.maxLength)
-	)
+	return acceptsImagePromptExecution(contract.prompt, prompt)
 }
 
 function resolvedPrompt(prompt: string, contract: ResolvedTemplateImageConfig) {
-	return contract.prompt.availability === 'readonly' ||
-		contract.prompt.availability === 'disabled'
-		? (contract.prompt.defaultValue ?? '')
-		: prompt.trim()
+	return resolveImagePromptExecution(contract.prompt, prompt)
 }
 
 function isBackgroundType(value: string | null): value is TemplateBackgroundType {

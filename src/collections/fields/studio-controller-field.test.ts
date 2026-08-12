@@ -17,8 +17,8 @@ function namedField(fields: Field[], name: string): Field & { name: string } {
 }
 
 describe('studioControllerField', () => {
-	it('공통 envelope의 groups와 v1 컨트롤 여섯 종류만 저작한다', () => {
-		const controller = studioControllerField()
+	it('Definition 모드는 공통 envelope의 필수 groups와 v1 컨트롤 여섯 종류를 저작한다', () => {
+		const controller = studioControllerField({ mode: 'define' })
 		expect(controller).toMatchObject({ name: 'controller', type: 'group' })
 		expect('required' in controller ? controller.required : undefined).not.toBe(true)
 		if (controller.type !== 'group') throw new Error('controller must be a group')
@@ -52,6 +52,31 @@ describe('studioControllerField', () => {
 			expect(namedField(collection.fields, 'controller')).toMatchObject({
 				name: 'controller',
 				type: 'group',
+			})
+		}
+	})
+
+	it('Graphic·Template은 Base Definition UI와 kind-free JSON Override만 저작한다', () => {
+		for (const collection of [Templates, GraphicProfiles]) {
+			const controller = namedField(collection.fields, 'controller')
+			expect('admin' in controller ? controller.admin : undefined).toMatchObject({
+				hidden: true,
+			})
+			const override = namedField(collection.fields, 'controllerOverride')
+			expect(override).toMatchObject({ type: 'json' })
+			expect('admin' in override ? override.admin : undefined).toHaveProperty(
+				'components.Field',
+			)
+		}
+	})
+
+	it('세 Studio가 output policy를 Controller Definition과 분리해 발행한다', () => {
+		for (const collection of [ImageProfiles, Templates, GraphicProfiles]) {
+			const output = namedField(collection.fields, 'output')
+			if (output.type !== 'group') throw new Error('output must be a group')
+			expect(namedField(output.fields, 'allowedFormats')).toMatchObject({
+				type: 'select',
+				hasMany: true,
 			})
 		}
 	})
@@ -164,13 +189,13 @@ describe('GraphicProfiles publish validation', () => {
 			_status: 'draft',
 			name: 'Draft',
 			runtime: 'forward-straight',
-			controller: { groups: [{ key: 'unknown' }] },
+			controllerOverride: { controls: [{ controlId: 'unknown' }] },
 		}
 		expect(hook({ data: draft } as never)).toBe(draft)
 
 		const published = { ...draft, _status: 'published' }
 		expect(() => hook({ data: published } as never)).toThrow(
-			'StudioControllerConfig controller group.controls: 배열이어야 합니다.',
+			'Controller override control을 찾을 수 없습니다: unknown',
 		)
 	})
 })

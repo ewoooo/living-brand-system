@@ -171,6 +171,33 @@ describe('deriveImageStudioConfig', () => {
 			}),
 		).toThrow('Image controller의 prompt control은 color이어야 합니다.')
 	})
+
+	it('생성·feature 서비스가 의미를 모르는 임의 control은 발행 거부한다', () => {
+		const controller = storedController()
+		expect(() =>
+			deriveImageStudioConfig({
+				...profile,
+				controller: {
+					groups: [
+						...controller.groups,
+						{
+							key: 'unknown',
+							title: 'Unknown',
+							controls: [
+								{
+									blockType: 'toggle',
+									key: 'unsupported',
+									label: 'Unsupported',
+									defaultValue: false,
+								},
+							],
+						},
+					],
+				},
+				features: [],
+			}),
+		).toThrow('Image service가 지원하지 않는 control입니다: unsupported')
+	})
 })
 
 function storedController() {

@@ -6,12 +6,15 @@ import type { Template } from '@/payload-types'
 export type AgentTemplateDocument = Pick<
 	Template,
 	| 'description'
+	| 'controller'
+	| 'controllerOverride'
 	| 'height'
 	| 'html'
 	| 'id'
 	| 'name'
 	| 'overrides'
 	| 'printPpi'
+	| 'output'
 	| 'updatedAt'
 	| 'width'
 >
@@ -42,6 +45,9 @@ function publishedTemplateQuery(user: unknown) {
 			height: true,
 			printPpi: true,
 			updatedAt: true,
+			controller: true,
+			controllerOverride: true,
+			output: true,
 		},
 	} as const
 }

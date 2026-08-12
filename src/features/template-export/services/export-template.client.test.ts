@@ -1,10 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-	canExportTemplate,
-	exportTemplate,
-	type TemplateExportContext,
-} from './export-template.client'
+import { canExportTemplate, type TemplateExportContext } from './export-template'
+import { exportTemplate } from './export-template.client'
 import { exportHtmlToPng, renderHtmlToPngBlob } from './export-template-png.client'
 import { downloadTemplatePrint, TemplatePrintDownloadError } from './export-template-print.client'
 
@@ -25,6 +22,8 @@ const context: TemplateExportContext = {
 	templateId: 12,
 	templateVersion: '2026-07-29',
 	width: 600,
+	output: { formats: ['png', 'tiff', 'pdf'] },
+	controller: { groups: [], values: {} },
 }
 
 describe('exportTemplate', () => {

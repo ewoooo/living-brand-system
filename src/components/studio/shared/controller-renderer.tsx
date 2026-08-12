@@ -4,7 +4,6 @@ import type { ReactNode } from 'react'
 import { Controller } from '@/components/studio/shared/controller'
 import { FieldError } from '@/components/ui/field'
 import type {
-	ControllerAvailability,
 	ControllerControlDefinition,
 	ControllerControlValue,
 	ControllerGroupDefinition,
@@ -12,7 +11,10 @@ import type {
 	ControllerRuntimeBindings,
 	ControllerValues,
 } from '@/features/studio-controller/controller-definition'
-import { isControllerPadValue } from '@/features/studio-controller/controller-definition'
+import {
+	isControllerPadValue,
+	resolveControllerAvailability,
+} from '@/features/studio-controller/controller-definition'
 
 type ControllerRendererProps = {
 	groups: readonly ControllerGroupDefinition[]
@@ -87,7 +89,10 @@ export function ControllerControlRenderer({
 			<ControllerControl
 				definition={definition}
 				value={value}
-				availability={mergeAvailability(definition.availability, binding?.availability)}
+				availability={resolveControllerAvailability(
+					definition.availability,
+					binding?.availability,
+				)}
 				padAspectRatio={binding?.padAspectRatio}
 				onChange={onChange}
 			/>
@@ -99,7 +104,7 @@ export function ControllerControlRenderer({
 type ControllerControlProps = {
 	definition: ControllerControlDefinition
 	value: ControllerControlValue
-	availability: ControllerAvailability
+	availability: ReturnType<typeof resolveControllerAvailability>
 	padAspectRatio?: number
 	onChange: (value: ControllerControlValue) => void
 }
@@ -249,13 +254,4 @@ function ReadonlyRow({ label, value }: { label: string; value: string }) {
 
 function formatRange(value: number, display?: { unit?: string; precision?: number }) {
 	return `${display?.precision === undefined ? value : value.toFixed(display.precision)}${display?.unit ?? ''}`
-}
-
-function mergeAvailability(
-	published: ControllerAvailability = 'enabled',
-	runtime: ControllerAvailability = 'enabled',
-): ControllerAvailability {
-	if (published === 'disabled' || runtime === 'disabled') return 'disabled'
-	if (published === 'readonly' || runtime === 'readonly') return 'readonly'
-	return 'enabled'
 }

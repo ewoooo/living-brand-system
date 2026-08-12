@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { canExportTemplate, exportTemplate } from '../services/export-template.client'
+import { canExportTemplate } from '../services/export-template'
+import { exportTemplate } from '../services/export-template.client'
 import { useTemplateExport } from './use-template-export'
 
-vi.mock('../services/export-template.client', () => ({
+vi.mock('../services/export-template', () => ({
 	canExportTemplate: vi.fn(),
+}))
+vi.mock('../services/export-template.client', () => ({
 	exportTemplate: vi.fn(),
 }))
 
@@ -17,6 +20,8 @@ const input = {
 	templateId: 12,
 	templateVersion: '2026-07-29',
 	width: 600,
+	output: { formats: ['png', 'tiff', 'pdf'] as const },
+	controller: { groups: [], values: {} },
 }
 
 describe('useTemplateExport', () => {

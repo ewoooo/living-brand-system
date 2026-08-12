@@ -1,5 +1,4 @@
 import {
-	canRenderGraphicStudioSvg,
 	deriveGraphicStudioConfig,
 	graphicStudioConfigs,
 } from '@/features/graphic-studio/graphic-studio-runtime'
@@ -20,5 +19,5 @@ export async function listGraphicStudioConfigs(
 		...configured,
 		...graphicStudioConfigs.filter((config) => !configuredIds.has(config.id)),
 	]
-	return svgOnly ? configs.filter(canRenderGraphicStudioSvg) : configs
+	return svgOnly ? configs.filter((config) => config.output.formats.includes('svg')) : configs
 }

@@ -73,14 +73,16 @@ describe('deriveTemplateConfig', () => {
 		})
 	})
 
-	it('exportOption은 인쇄 정책을 따른다 — printPpi 없으면 PNG만, 있으면 CMYK 포맷 개방', () => {
-		expect(deriveTemplateConfig(template).template.exportOption.formats).toEqual(['png'])
-		expect(
-			deriveTemplateConfig({ ...template, printPpi: 150 }).template.exportOption,
-		).toMatchObject({
-			formats: ['png', 'tiff', 'pdf'],
-			printPpi: 150,
-			canvas: { width: 800, height: 600 },
+	it('output은 인쇄 정책을 따르고 canvas·printPpi는 도메인 정보로 남긴다', () => {
+		expect(deriveTemplateConfig(template).output.formats).toEqual(['png'])
+		expect(deriveTemplateConfig({ ...template, printPpi: 150 })).toMatchObject({
+			output: { formats: ['png', 'tiff', 'pdf'] },
+			template: {
+				exportOption: {
+					printPpi: 150,
+					canvas: { width: 800, height: 600 },
+				},
+			},
 		})
 	})
 
@@ -96,7 +98,7 @@ describe('deriveTemplateConfig', () => {
 		).toThrow('maxLength')
 	})
 
-	it('어드민 Controller는 슬롯 기본 계약의 options·길이·availability와 그룹 표현만 좁힌다', () => {
+	it('기존 Policy도 제한값만 호환하고 그룹 표현은 Base Definition에 남긴다', () => {
 		const config = deriveTemplateConfig({
 			...template,
 			controller: {
@@ -150,9 +152,8 @@ describe('deriveTemplateConfig', () => {
 		})
 
 		expect(config.controller.groups[0]).toMatchObject({
-			title: 'Copy',
+			title: 'Text',
 			collapsible: true,
-			defaultOpen: false,
 		})
 		expect(config.controller.groups[0]?.controls[0]).toMatchObject({
 			availability: 'readonly',
@@ -170,6 +171,34 @@ describe('deriveTemplateConfig', () => {
 		expect(findTemplateControl(config, 'background.color')).toMatchObject({
 			availability: 'disabled',
 			defaultValue: '#ffffff',
+		})
+	})
+
+	it('sparse Policy는 쓰지 않은 Definition 필드를 DOM 기본 계약에서 상속한다', () => {
+		const config = deriveTemplateConfig({
+			...template,
+			controller: {
+				groups: [
+					{
+						key: 'text',
+						controls: [
+							{
+								blockType: 'text',
+								key: 'text:1:1',
+								availability: 'readonly',
+								maxLength: 10,
+							},
+						],
+					},
+				],
+			},
+		})
+
+		expect(findTemplateControl(config, 'text:1:1')).toMatchObject({
+			label: '제목',
+			defaultValue: '기본 제목',
+			availability: 'readonly',
+			maxLength: 10,
 		})
 	})
 })
@@ -258,6 +287,7 @@ function createImageConfig(
 		id,
 		version: 1,
 		name: `프로파일 ${id}`,
+		output: { formats: ['png'], original: true },
 		controller: {
 			groups: [
 				{

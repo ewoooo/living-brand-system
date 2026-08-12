@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createControllerValues } from '@/features/studio-controller/controller-definition'
+import { createGraphicStudioPluginCatalog, defineGraphicStudioPlugin } from './graphic-plugin'
 import { parseGraphicStudioConfig } from './graphic-studio-config'
 import {
 	canRenderGraphicStudioSvg,
@@ -20,7 +21,7 @@ describe('graphicStudioRuntime', () => {
 		expect(() => parseGraphicStudioConfig({ ...config, type: 'canvas' })).toThrow('type')
 	})
 
-	it('registry가 config·SVG projector·명시적 binding을 함께 제공한다', () => {
+	it('plugin catalog가 config·SVG projector·명시적 binding을 함께 제공한다', () => {
 		expect(graphicStudioConfigs).toContain(config)
 		const values = createControllerValues(config.controller.groups)
 		expect(renderGraphicStudioSvg(config, values, { width: 800, height: 600 })).toContain(
@@ -65,7 +66,7 @@ describe('graphicStudioRuntime', () => {
 	})
 
 	it('published Graphic Profile은 runtime 기본 Definition을 좁히고 미등록 runtime을 거부한다', () => {
-		const narrowed = deriveGraphicStudioConfig({
+		const profile = {
 			id: 9,
 			name: '고정 시점',
 			runtime: 'forward-straight',
@@ -73,36 +74,53 @@ describe('graphicStudioRuntime', () => {
 				groups: [
 					{
 						key: 'graphic',
-						title: 'Graphic',
-						collapsible: true,
-						defaultOpen: false,
 						controls: [
 							{
 								blockType: 'select',
 								key: 'viewpoint',
-								label: '시점',
 								availability: 'readonly',
-								defaultValue: 'flat',
 								options: [{ value: 'flat', label: '평면' }],
 							},
 						],
 					},
 				],
 			},
-		})
+		}
+		const narrowed = deriveGraphicStudioConfig(profile)
 
 		expect(narrowed).toMatchObject({ id: 'forward-straight', name: '고정 시점' })
+		expect(deriveGraphicStudioConfig(profile)).toEqual(narrowed)
+		expect(forwardStraightGraphicConfig.name).toBe('Forward Straight')
 		expect(narrowed.controller.groups[0]).toMatchObject({
+			title: 'Graphic',
 			collapsible: true,
-			defaultOpen: false,
 		})
 		expect(narrowed.controller.groups[0]?.controls[1]).toMatchObject({
 			id: 'viewpoint',
+			label: '시점',
 			availability: 'readonly',
+			defaultValue: 'flat',
 			options: [{ value: 'flat', label: '평면' }],
 		})
 		expect(() =>
 			deriveGraphicStudioConfig({ id: 10, name: 'Unknown', runtime: 'missing' }),
 		).toThrow('등록되지 않은')
+	})
+
+	it('Manifest가 선언한 SVG capability에는 실제 output adapter가 필요하다', () => {
+		expect(() =>
+			defineGraphicStudioPlugin({
+				manifest: { ...config, id: 'missing-svg-adapter' },
+			}),
+		).toThrow('SVG output adapter')
+	})
+
+	it('Catalog는 같은 stable ID의 Plugin을 중복 등록하지 않는다', () => {
+		const plugin = defineGraphicStudioPlugin({
+			manifest: { ...config, output: { formats: [] } },
+		})
+		expect(() => createGraphicStudioPluginCatalog([plugin, plugin])).toThrow(
+			'중복된 Graphic plugin',
+		)
 	})
 })

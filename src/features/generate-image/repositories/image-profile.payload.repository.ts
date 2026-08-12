@@ -24,6 +24,7 @@ export type PublishedImageProfileDefinition = {
 	controller?: unknown
 	/** Payload feature blocks. projector가 capability와 semantic control ref만 공개한다. */
 	features?: unknown
+	output?: { allowedFormats?: readonly string[] | null; original?: boolean | null } | null
 }
 
 /** 스튜디오가 선택할 수 있는 published 프로파일의 정의 필드만 조회한다. */
@@ -48,6 +49,7 @@ export async function listPublishedImageProfileDefinitions(
 			imageModelPreset: true,
 			imageSize: true,
 			maxPromptLength: true,
+			output: true,
 			name: true,
 			slug: true,
 		} as never,
@@ -69,6 +71,7 @@ export async function listPublishedImageProfileDefinitions(
 			colorAdjustment,
 			controller,
 			features,
+			output,
 		} = document as typeof document & { controller?: unknown; features?: unknown }
 		return {
 			id,
@@ -82,6 +85,7 @@ export async function listPublishedImageProfileDefinitions(
 			colorAdjustment,
 			controller,
 			features,
+			output,
 		}
 	})
 }

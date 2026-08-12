@@ -77,6 +77,7 @@ describe('GraphicGenerator', () => {
 			version: 1,
 			name: 'Shader Demo',
 			type: 'shader',
+			output: { formats: [] },
 			controller: {
 				groups: [
 					{

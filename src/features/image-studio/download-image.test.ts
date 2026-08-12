@@ -34,14 +34,14 @@ describe('downloadImage', () => {
 	})
 
 	it('색이 없으면 원본을 앵커 클릭으로 그대로 내려준다', async () => {
-		await downloadImage(SRC, 0, null)
+		await downloadImage(SRC, 0, null, { formats: ['png'], original: true })
 
 		expect(exportHtmlToPng).not.toHaveBeenCalled()
 		expect(HTMLAnchorElement.prototype.click).toHaveBeenCalledTimes(1)
 	})
 
 	it('색이 있으면 자연 크기 스테이지에 색을 구워 PNG로 저장한다', async () => {
-		await downloadImage(SRC, 1, { line: '#000dff' })
+		await downloadImage(SRC, 1, { line: '#000dff' }, { formats: ['png'], original: true })
 
 		expect(HTMLAnchorElement.prototype.click).not.toHaveBeenCalled()
 		const [html, name] = vi.mocked(exportHtmlToPng).mock.calls[0] ?? []
@@ -55,7 +55,12 @@ describe('downloadImage', () => {
 
 	// 회귀: mask url을 겹따옴표로 감싸면 style="..." 속성이 거기서 끊겨 선언 전체가 사라진다.
 	it('구운 HTML의 색 선언이 style 속성 파싱을 통과한다', async () => {
-		await downloadImage(SRC, 0, { line: '#000dff', background: '#00ffd4' })
+		await downloadImage(
+			SRC,
+			0,
+			{ line: '#000dff', background: '#00ffd4' },
+			{ formats: ['png'], original: true },
+		)
 
 		const [html] = vi.mocked(exportHtmlToPng).mock.calls[0] ?? []
 		const parsed = document.createElement('template')
@@ -65,5 +70,13 @@ describe('downloadImage', () => {
 		expect(stage.style.backgroundColor).toBe('rgb(0, 13, 255)')
 		expect(overlay.style.maskImage).toContain(SRC)
 		expect(overlay.style.maskMode).toBe('luminance')
+	})
+
+	it('원본과 PNG가 모두 제한되면 파일 I/O 전에 거부한다', async () => {
+		await expect(downloadImage(SRC, 0, null, { formats: [], original: false })).rejects.toThrow(
+			'PNG output is unavailable.',
+		)
+		expect(HTMLAnchorElement.prototype.click).not.toHaveBeenCalled()
+		expect(exportHtmlToPng).not.toHaveBeenCalled()
 	})
 })

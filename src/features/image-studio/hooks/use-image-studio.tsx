@@ -7,6 +7,7 @@ import type { ImageGenerationResult } from '@/features/generate-image/services/g
 import { downloadImage } from '@/features/image-studio/download-image'
 import type { ImageColorAdjustment } from '@/features/image-studio/image-colorize'
 import {
+	acceptsImagePromptExecution,
 	getImageColorAdjustmentControls,
 	getImageStudioControls,
 	getImageStudioFeature,
@@ -14,7 +15,7 @@ import {
 	type ImageStudioConfig,
 } from '@/features/image-studio/image-studio-config'
 import {
-	acceptsControllerValue,
+	acceptsControllerDraftValue,
 	type ControllerControlValue,
 	type ControllerRuntimeBindings,
 	type ControllerValues,
@@ -124,7 +125,7 @@ export function ImageStudioProvider({
 	const bindings: ControllerRuntimeBindings = promptError
 		? { [definitions.prompt.id]: { error: promptError } }
 		: {}
-	const canRun = Boolean(prompt.trim()) && !promptError
+	const canRun = acceptsImagePromptExecution(definitions.prompt, prompt) && !promptError
 
 	const lineColor = colorDefinitions ? values[colorDefinitions.line.id] : undefined
 	const backgroundColor = colorDefinitions?.background
@@ -140,7 +141,7 @@ export function ImageStudioProvider({
 
 	function update(controlId: string, value: ControllerControlValue) {
 		const definition = findControl(config, controlId)
-		if (!definition || !acceptsControllerValue(definition, value)) return
+		if (!definition || !acceptsControllerDraftValue(definition, value)) return
 		setValues((current) => ({ ...current, [controlId]: value }))
 	}
 
@@ -223,13 +224,15 @@ export function ImageStudioProvider({
 		download: {
 			selected: () => {
 				const src = selected === null ? undefined : result?.images[selected]
-				if (src && selected !== null) void downloadImage(src, selected, colorValue)
+				if (src && selected !== null) {
+					void downloadImage(src, selected, colorValue, config.output)
+				}
 			},
 			// ponytail: 저장을 연달아 낸다 — 장수가 늘어 브라우저가 막으면 zip으로 올린다.
 			all: () => {
 				void (async () => {
 					for (const [index, src] of (result?.images ?? []).entries()) {
-						await downloadImage(src, index, colorValue)
+						await downloadImage(src, index, colorValue, config.output)
 					}
 				})()
 			},

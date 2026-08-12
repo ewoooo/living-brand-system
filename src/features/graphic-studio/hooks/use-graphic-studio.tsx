@@ -6,7 +6,7 @@ import {
 	parseGraphicStudioConfig,
 } from '@/features/graphic-studio/graphic-studio-config'
 import {
-	acceptsControllerValue,
+	acceptsControllerDraftValue,
 	type ControllerControlValue,
 	type ControllerRuntimeBinding,
 	type ControllerRuntimeBindings,
@@ -61,11 +61,9 @@ export function GraphicStudioProvider({
 
 	const update = useCallback((controlId: string, value: ControllerControlValue) => {
 		const definition = definitions.current.get(controlId)
-		const runtimeAvailability = bindingsRef.current[controlId]?.availability
 		if (
 			!definition ||
-			(runtimeAvailability !== undefined && runtimeAvailability !== 'enabled') ||
-			!acceptsControllerValue(definition, value)
+			!acceptsControllerDraftValue(definition, value, bindingsRef.current[controlId])
 		) {
 			return false
 		}

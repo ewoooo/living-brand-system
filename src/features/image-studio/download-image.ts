@@ -4,6 +4,7 @@ import {
 	imageColorizeStyle,
 } from '@/features/image-studio/image-colorize'
 import { exportHtmlToPng } from '@/features/template-export/services/export-template-png.client'
+import type { ImageStudioConfig } from './image-studio-config'
 
 /**
  * 생성 이미지를 파일로 저장한다 — 색이 없으면 원본을 앵커 클릭으로 그대로 내려주고, 색이 있으면
@@ -13,10 +14,11 @@ import { exportHtmlToPng } from '@/features/template-export/services/export-temp
 export async function downloadImage(
 	src: string,
 	index: number,
-	color?: ImageColorAdjustment | null,
+	color: ImageColorAdjustment | null | undefined,
+	output: ImageStudioConfig['output'],
 ): Promise<void> {
 	const name = `hd-image-${index + 1}`
-	if (!color) {
+	if (!color && (output?.original ?? true)) {
 		const ext = src.startsWith('data:image/')
 			? src.slice(11, src.indexOf(';')).replace('jpeg', 'jpg')
 			: new URL(src, window.location.href).pathname.split('.').pop() || 'png'
@@ -28,10 +30,18 @@ export async function downloadImage(
 		anchor.remove()
 		return
 	}
+	if (!output?.formats.includes('png')) {
+		throw new Error('PNG output is unavailable.')
+	}
 
 	// 스테이지를 이미지의 자연 크기로 잡는다 — 화면 썸네일 크기로 캡처하면 해상도를 잃는다.
 	const { naturalHeight, naturalWidth } = await loadImage(src)
-	await exportHtmlToPng(colorizedImageHtml(src, color, naturalWidth, naturalHeight), name)
+	await exportHtmlToPng(
+		color
+			? colorizedImageHtml(src, color, naturalWidth, naturalHeight)
+			: `<img id="__stage" src="${src}" width="${naturalWidth}" height="${naturalHeight}">`,
+		name,
+	)
 }
 
 /** 프리뷰와 같은 색 계산을 export stage가 읽는 인라인 style HTML로 옮긴다. */

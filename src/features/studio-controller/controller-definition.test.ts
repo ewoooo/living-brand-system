@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import {
-	acceptsControllerValue,
+	acceptsControllerDraftValue,
+	acceptsControllerExecutionValue,
+	acceptsControllerExecutionValues,
+	applyControllerOverride,
+	applyControllerPolicy,
 	type ControllerGroupDefinition,
 	createControllerValues,
 	isControllerPadValue,
-	narrowControllerGroups,
 	parseStudioControllerConfig,
 	projectPayloadController,
+	projectPayloadControllerOverride,
+	projectPayloadControllerPolicy,
 } from './controller-definition'
 
 describe('createControllerValues', () => {
@@ -51,10 +56,10 @@ describe('createControllerValues', () => {
 	})
 })
 
-describe('acceptsControllerValue', () => {
+describe('Controller draft와 execution 값 검증', () => {
 	it('availability와 kind별 선택지·범위를 강제하되 text 길이는 세션에 보존한다', () => {
 		expect(
-			acceptsControllerValue(
+			acceptsControllerDraftValue(
 				{
 					id: 'prompt',
 					kind: 'text',
@@ -66,7 +71,7 @@ describe('acceptsControllerValue', () => {
 			),
 		).toBe(true)
 		expect(
-			acceptsControllerValue(
+			acceptsControllerDraftValue(
 				{
 					id: 'locked',
 					kind: 'toggle',
@@ -78,7 +83,7 @@ describe('acceptsControllerValue', () => {
 			),
 		).toBe(false)
 		expect(
-			acceptsControllerValue(
+			acceptsControllerDraftValue(
 				{
 					id: 'ratio',
 					kind: 'select',
@@ -90,7 +95,7 @@ describe('acceptsControllerValue', () => {
 			),
 		).toBe(false)
 		expect(
-			acceptsControllerValue(
+			acceptsControllerDraftValue(
 				{
 					id: 'scale',
 					kind: 'range',
@@ -104,7 +109,7 @@ describe('acceptsControllerValue', () => {
 			),
 		).toBe(false)
 		expect(
-			acceptsControllerValue(
+			acceptsControllerDraftValue(
 				{
 					id: 'origin',
 					kind: 'pad',
@@ -114,6 +119,61 @@ describe('acceptsControllerValue', () => {
 				{ x: 2, y: 0 },
 			),
 		).toBe(false)
+	})
+
+	it('runtime binding을 정적 availability보다 느슨하게 만들지 않는다', () => {
+		const control = {
+			id: 'enabled',
+			kind: 'toggle' as const,
+			label: 'Enabled',
+			defaultValue: false,
+		}
+
+		expect(acceptsControllerDraftValue(control, true, { availability: 'readonly' })).toBe(false)
+		expect(
+			acceptsControllerDraftValue({ ...control, availability: 'disabled' }, true, {
+				availability: 'enabled',
+			}),
+		).toBe(false)
+	})
+
+	it('실행 경계는 초과 text를 거부하고 잠긴 control의 기본값만 허용한다', () => {
+		const prompt = {
+			id: 'prompt',
+			kind: 'text' as const,
+			label: 'Prompt',
+			defaultValue: 'fixed',
+			maxLength: 5,
+			availability: 'readonly' as const,
+		}
+
+		expect(acceptsControllerExecutionValue(prompt, 'fixed')).toBe(true)
+		expect(acceptsControllerExecutionValue(prompt, 'other')).toBe(false)
+		expect(
+			acceptsControllerExecutionValue({ ...prompt, availability: 'enabled' }, 'longer'),
+		).toBe(false)
+	})
+
+	it('전체 실행값은 누락·초과 text·잠긴 값 변경을 거부한다', () => {
+		const groups = [
+			{
+				id: 'text',
+				title: 'Text',
+				controls: [
+					{
+						id: 'title',
+						kind: 'text' as const,
+						label: 'Title',
+						defaultValue: 'fixed',
+						maxLength: 5,
+						availability: 'readonly' as const,
+					},
+				],
+			},
+		]
+		expect(acceptsControllerExecutionValues(groups, { title: 'fixed' })).toBe(true)
+		expect(acceptsControllerExecutionValues(groups, {})).toBe(false)
+		expect(acceptsControllerExecutionValues(groups, { title: 'other' })).toBe(false)
 	})
 })
 
@@ -125,6 +185,7 @@ describe('parseStudioControllerConfig', () => {
 			version: 1,
 			name: 'Demo',
 			type: 'p5',
+			output: { formats: ['svg'] },
 			controller: {
 				groups: [
 					{
@@ -334,7 +395,51 @@ describe('isControllerPadValue', () => {
 	})
 })
 
-describe('Payload Controller projection과 narrowing', () => {
+describe('Payload Controller projection과 Policy 적용', () => {
+	it('kind·표현 필드 없는 Override만 Base Definition보다 좁게 적용한다', () => {
+		const base = [
+			{
+				id: 'setting',
+				title: 'Setting',
+				collapsible: true as const,
+				controls: [
+					{
+						id: 'ratio',
+						kind: 'select' as const,
+						label: 'Ratio',
+						defaultValue: '1:1',
+						options: [
+							{ value: '1:1', label: 'Square' },
+							{ value: '16:9', label: 'Wide' },
+						],
+					},
+				],
+			},
+		] satisfies readonly ControllerGroupDefinition[]
+		const override = projectPayloadControllerOverride({
+			controls: [
+				{
+					controlId: 'ratio',
+					availability: 'readonly',
+					defaultValue: '1:1',
+					optionValues: ['1:1'],
+				},
+			],
+		})
+		const result = applyControllerOverride(base, override)
+		expect(result[0]).toMatchObject({ title: 'Setting', collapsible: true })
+		expect(result[0]?.controls[0]).toMatchObject({
+			kind: 'select',
+			label: 'Ratio',
+			availability: 'readonly',
+			options: [{ value: '1:1', label: 'Square' }],
+		})
+		expect(() =>
+			projectPayloadControllerOverride({
+				controls: [{ controlId: 'ratio', kind: 'select' }],
+			}),
+		).toThrow('지원하지 않는 필드')
+	})
 	it('Payload key·blockType을 공통 Definition으로 정규화한다', () => {
 		expect(
 			projectPayloadController({
@@ -384,7 +489,41 @@ describe('Payload Controller projection과 narrowing', () => {
 		})
 	})
 
-	it('Admin override는 기존 control의 options·range·availability만 좁힌다', () => {
+	it('Payload Policy는 입력한 제한만 sparse 계약으로 정규화한다', () => {
+		expect(
+			projectPayloadControllerPolicy({
+				groups: [
+					{
+						key: 'settings',
+						controls: [
+							{
+								blockType: 'select',
+								key: 'mode',
+								availability: 'readonly',
+								options: [{ value: 'a', label: 'A' }],
+							},
+						],
+					},
+				],
+			}),
+		).toEqual({
+			groups: [
+				{
+					id: 'settings',
+					controls: [
+						{
+							id: 'mode',
+							kind: 'select',
+							availability: 'readonly',
+							options: [{ value: 'a', label: 'A' }],
+						},
+					],
+				},
+			],
+		})
+	})
+
+	it('Admin Policy는 기존 control의 options·range·availability만 좁히고 멱등 적용된다', () => {
 		const base = [
 			{
 				id: 'settings',
@@ -403,7 +542,7 @@ describe('Payload Controller projection과 narrowing', () => {
 				],
 			},
 		] satisfies readonly ControllerGroupDefinition[]
-		const narrowed = narrowControllerGroups(base, [
+		const policy = [
 			{
 				id: 'settings',
 				title: 'Restricted',
@@ -413,14 +552,13 @@ describe('Payload Controller projection과 narrowing', () => {
 					{
 						id: 'mode',
 						kind: 'select',
-						label: 'Mode',
 						availability: 'readonly',
-						defaultValue: 'a',
 						options: [{ value: 'a', label: 'A' }],
 					},
 				],
 			},
-		])
+		] as const
+		const narrowed = applyControllerPolicy(base, policy)
 
 		expect(narrowed[0]).toMatchObject({
 			title: 'Restricted',
@@ -428,19 +566,20 @@ describe('Payload Controller projection과 narrowing', () => {
 			defaultOpen: false,
 		})
 		expect(narrowed[0]?.controls[0]).toMatchObject({
+			label: 'Mode',
+			defaultValue: 'a',
 			availability: 'readonly',
 			options: [{ value: 'a', label: 'A' }],
 		})
+		expect(applyControllerPolicy(narrowed, policy)).toEqual(narrowed)
 		expect(() =>
-			narrowControllerGroups(base, [
+			applyControllerPolicy(base, [
 				{
 					id: 'settings',
-					title: 'Expanded',
 					controls: [
 						{
 							id: 'mode',
 							kind: 'select',
-							label: 'Mode',
 							defaultValue: 'c',
 							options: [{ value: 'c', label: 'C' }],
 						},
@@ -457,6 +596,7 @@ function configWith(control: unknown) {
 		id: 'demo',
 		version: 1,
 		name: 'Demo',
+		output: { formats: ['svg'] },
 		controller: {
 			groups: [{ id: 'controls', title: 'Controls', controls: [control] }],
 		},

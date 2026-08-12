@@ -14,14 +14,15 @@ import type {
 	StudioControllerConfig,
 } from '@/features/studio-controller/controller-definition'
 import {
-	narrowControllerGroups,
+	applyControllerOverride,
 	parseStudioControllerConfig,
-	projectPayloadController,
+	projectPayloadControllerOverride,
 } from '@/features/studio-controller/controller-definition'
+import { resolveStudioOutputFormats } from '@/features/studio-output/studio-output'
 import {
-	canExportTemplate,
+	supportsTemplateExport,
 	type TemplateExportFormat,
-} from '@/features/template-export/services/export-template.client'
+} from '@/features/template-export/services/export-template'
 import {
 	collectTemplateImageSlots,
 	collectTemplateSlots,
@@ -88,14 +89,13 @@ export type TemplateBackgroundType = 'color' | 'image' | 'graphic'
  * ImageStudioConfig의 prompt/ratio처럼 슬롯마다 id가 반복되는 Definition은 각 슬롯 scope에서
  * 원본 Config를 직접 소비한다. 전역 id를 만들기 위한 prefix DSL이나 Definition 복제는 하지 않는다.
  */
-export type TemplateConfig = StudioControllerConfig<'template', number> & {
+export type TemplateConfig = StudioControllerConfig<'template', number, TemplateExportFormat> & {
 	template: {
 		slots: readonly TemplateConfigSlot[]
 		textColorControlId?: typeof TEXT_COLOR_CONTROL_ID
 		imageConfigs: readonly ImageStudioConfig[]
 		graphicConfigs: readonly GraphicStudioConfig[]
 		exportOption: {
-			formats: readonly TemplateExportFormat[]
 			printPpi?: PublishedHtmlTemplate['printPpi']
 			canvas: { width: number; height: number }
 		}
@@ -108,6 +108,34 @@ export const isImageSlot = (slot: TemplateConfigSlot): slot is TemplateImageConf
 	slot.kind === 'image'
 export const isBackgroundSlot = (slot: TemplateConfigSlot): slot is TemplateBackgroundSlot =>
 	slot.kind === 'background'
+
+/** slot kind 추가 시 모든 소비 경로가 한 exhaustive switch에서 컴파일 실패하도록 분류한다. */
+export function partitionTemplateSlots(slots: readonly TemplateConfigSlot[]) {
+	const text: TemplateTextSlot[] = []
+	const image: TemplateImageConfigSlot[] = []
+	let background: TemplateBackgroundSlot | undefined
+	for (const slot of slots) {
+		switch (slot.kind) {
+			case 'text':
+				text.push(slot)
+				break
+			case 'image':
+				image.push(slot)
+				break
+			case 'background':
+				if (background) throw new Error('Template background slot은 하나만 허용됩니다.')
+				background = slot
+				break
+			default:
+				return assertNeverTemplateSlot(slot)
+		}
+	}
+	return { text, image, background }
+}
+
+function assertNeverTemplateSlot(slot: never): never {
+	throw new Error(`지원하지 않는 Template slot입니다: ${JSON.stringify(slot)}`)
+}
 
 export function findTemplateControl(
 	config: TemplateConfig,
@@ -244,6 +272,70 @@ function isImageAspectRatio(value: string | null): value is ImageAspectRatio {
 	return IMAGE_ASPECT_RATIOS.includes(value as ImageAspectRatio)
 }
 
+/** Admin과 published projector가 공유하는 Template 원본 Controller Definition이다. */
+export function deriveTemplateBaseControllerGroups({
+	html,
+	nodeConfigs,
+}: Pick<PublishedHtmlTemplate, 'html' | 'nodeConfigs'>): readonly ControllerGroupDefinition[] {
+	const textControls: TextControlDefinition[] = collectTemplateSlots(html, nodeConfigs).map(
+		(slot) => ({
+			id: `text:${slot.nodeId}`,
+			kind: 'text',
+			label: slot.input.label ?? slot.name,
+			defaultValue: slot.text,
+			multiline: (slot.input.inputFormat ?? 'free') === 'free' && slot.input.maxLines !== 1,
+			...(slot.input.maxLength === undefined ? {} : { maxLength: slot.input.maxLength }),
+			...(slot.input.placeholder === undefined
+				? {}
+				: { placeholder: slot.input.placeholder }),
+		}),
+	)
+	return [
+		...(textControls.length
+			? [
+					{
+						id: 'text',
+						title: 'Text',
+						collapsible: true as const,
+						controls: [
+							...textControls,
+							{
+								id: TEXT_COLOR_CONTROL_ID,
+								kind: 'color' as const,
+								label: 'Color',
+								defaultValue: null,
+							},
+						],
+					},
+				]
+			: []),
+		{
+			id: 'background',
+			title: 'Background',
+			collapsible: true as const,
+			controls: [
+				{
+					id: BACKGROUND_TYPE_CONTROL_ID,
+					kind: 'select' as const,
+					label: 'Type',
+					defaultValue: 'color',
+					options: [
+						{ value: 'color', label: 'Color' },
+						{ value: 'image', label: 'Image' },
+						{ value: 'graphic', label: 'Graphic' },
+					],
+				},
+				{
+					id: BACKGROUND_COLOR_CONTROL_ID,
+					kind: 'color' as const,
+					label: 'Background Color',
+					defaultValue: null,
+				},
+			],
+		},
+	]
+}
+
 /** published Template과 접근 가능한 Image·Graphic Config에서 실행 가능한 Template 계약을 순수 파생한다. */
 export function deriveTemplateConfig(
 	template: PublishedHtmlTemplate,
@@ -297,89 +389,43 @@ export function deriveTemplateConfig(
 		},
 	]
 
-	const textControls: TextControlDefinition[] = textSlots.map((slot) => ({
-		id: `text:${slot.nodeId}`,
-		kind: 'text',
-		label: slot.input.label ?? slot.name,
-		defaultValue: slot.text,
-		multiline: (slot.input.inputFormat ?? 'free') === 'free' && slot.input.maxLines !== 1,
-		...(slot.input.maxLength === undefined ? {} : { maxLength: slot.input.maxLength }),
-		...(slot.input.placeholder === undefined ? {} : { placeholder: slot.input.placeholder }),
-	}))
-	const baseControllerGroups = [
-		...(textControls.length
-			? [
-					{
-						id: 'text',
-						title: 'Text',
-						collapsible: true as const,
-						controls: [
-							...textControls,
-							{
-								id: TEXT_COLOR_CONTROL_ID,
-								kind: 'color' as const,
-								label: 'Color',
-								defaultValue: null,
-							},
-						],
-					},
-				]
-			: []),
-		{
-			id: 'background',
-			title: 'Background',
-			collapsible: true as const,
-			controls: [
-				{
-					id: BACKGROUND_TYPE_CONTROL_ID,
-					kind: 'select' as const,
-					label: 'Type',
-					defaultValue: 'color',
-					options: [
-						{ value: 'color', label: 'Color' },
-						{ value: 'image', label: 'Image' },
-						{ value: 'graphic', label: 'Graphic' },
-					],
-				},
-				{
-					id: BACKGROUND_COLOR_CONTROL_ID,
-					kind: 'color' as const,
-					label: 'Background Color',
-					defaultValue: null,
-				},
-			],
-		},
-	] satisfies readonly ControllerGroupDefinition[]
-	const storedController = projectPayloadController(template.controller)
-	const controllerGroups = storedController
-		? narrowControllerGroups(baseControllerGroups, storedController.groups)
-		: baseControllerGroups
+	const baseControllerGroups = deriveTemplateBaseControllerGroups({ html, nodeConfigs })
+	const controllerGroups = applyControllerOverride(
+		baseControllerGroups,
+		projectPayloadControllerOverride(template.controllerOverride ?? template.controller),
+	)
+	const exportContext = {
+		fileName: template.name,
+		height: template.height,
+		html: template.html,
+		printPpi: template.printPpi,
+		templateId: template.id,
+		templateVersion: template.templateVersion,
+		width: template.width,
+	}
 
 	const config: TemplateConfig = {
 		studio: 'template',
 		id: template.id,
 		version: 1,
 		name: template.name,
+		output: {
+			formats: resolveStudioOutputFormats(
+				(['png', 'tiff', 'pdf'] as const).filter((format) =>
+					supportsTemplateExport(format, exportContext),
+				),
+				template.output?.allowedFormats,
+			),
+		},
 		controller: {
 			groups: controllerGroups,
 		},
 		template: {
 			slots,
-			...(textControls.length ? { textColorControlId: TEXT_COLOR_CONTROL_ID } : {}),
+			...(textSlots.length ? { textColorControlId: TEXT_COLOR_CONTROL_ID } : {}),
 			imageConfigs,
 			graphicConfigs,
 			exportOption: {
-				formats: (['png', 'tiff', 'pdf'] as const).filter((format) =>
-					canExportTemplate(format, {
-						fileName: template.name,
-						height: template.height,
-						html: template.html,
-						printPpi: template.printPpi,
-						templateId: template.id,
-						templateVersion: template.templateVersion,
-						width: template.width,
-					}),
-				),
 				printPpi: template.printPpi,
 				canvas: { width: template.width, height: template.height },
 			},

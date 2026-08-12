@@ -15,16 +15,32 @@ export async function listPublishedGraphicProfileDefinitions(
 		draft: false,
 		limit: 100,
 		overrideAccess: false,
-		select: { controller: true, name: true, runtime: true },
+		select: {
+			controller: true,
+			controllerOverride: true,
+			name: true,
+			output: true,
+			runtime: true,
+		} as never,
 		sort: 'displayOrder',
 		user,
 		where: { _status: { equals: 'published' } },
 	})
 
-	return profiles.docs.map(({ id, name, runtime, controller }) => ({
-		id,
-		name,
-		runtime,
-		controller,
-	}))
+	return profiles.docs.map((document) => {
+		const { id, name, runtime, controller, controllerOverride, output } =
+			document as typeof document & {
+				controller?: unknown
+				controllerOverride?: unknown
+				output?: PublishedGraphicProfileDefinition['output']
+			}
+		return {
+			id,
+			name,
+			runtime,
+			controller,
+			controllerOverride,
+			output,
+		}
+	})
 }

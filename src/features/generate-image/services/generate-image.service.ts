@@ -33,11 +33,13 @@ import {
 	normalizeImageProfilePrompt,
 } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
 import {
+	acceptsImagePromptExecution,
 	deriveImageStudioConfig,
 	getImageStudioControls,
 	getImageStudioFeature,
 	type ImageStudioConfig,
 } from '@/features/image-studio/image-studio-config'
+import { acceptsControllerExecutionValue } from '@/features/studio-controller/controller-definition'
 
 export { ImageGenerationLimitError, ImageGenerationUnavailableError }
 
@@ -310,10 +312,7 @@ function assertTextInput(
 	control: Extract<ReturnType<typeof getImageStudioControls>['prompt'], { kind: 'text' }>,
 	value: string,
 ) {
-	if (
-		((control.availability ?? 'enabled') !== 'enabled' && value !== control.defaultValue) ||
-		(control.maxLength !== undefined && value.length > control.maxLength)
-	) {
+	if (!acceptsImagePromptExecution(control, value)) {
 		throw new InvalidImageControllerInputError(control.id)
 	}
 }
@@ -322,11 +321,7 @@ function assertSelectInput(
 	control: Extract<ReturnType<typeof getImageStudioControls>['batch'], { kind: 'select' }>,
 	value: string | null,
 ) {
-	if (
-		value === null ||
-		!control.options.some((option) => option.value === value) ||
-		((control.availability ?? 'enabled') !== 'enabled' && value !== control.defaultValue)
-	) {
+	if (value === null || !acceptsControllerExecutionValue(control, value)) {
 		throw new InvalidImageControllerInputError(control.id)
 	}
 }

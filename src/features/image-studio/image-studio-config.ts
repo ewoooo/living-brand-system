@@ -1,34 +1,24 @@
-import {
-	IMAGE_BATCH_DEFAULT,
-	IMAGE_BATCH_SIZES,
-	IMAGE_PROMPT_MAX_LENGTH,
-} from '@/features/generate-image/image-generation-limits'
-import {
-	IMAGE_ASPECT_RATIOS,
-	IMAGE_OUTPUT_SIZES,
-	supportsImageOutputSize,
-} from '@/features/generate-image/image-size'
+import { IMAGE_PROMPT_MAX_LENGTH } from '@/features/generate-image/image-generation-limits'
 import type { PublishedImageProfileDefinition } from '@/features/generate-image/repositories/image-profile.payload.repository'
 import {
+	acceptsControllerExecutionValue,
 	type ControllerControlDefinition,
 	parseStudioControllerConfig,
 	projectPayloadController,
 	type StudioControllerConfig,
 } from '@/features/studio-controller/controller-definition'
+import { resolveStudioOutputFormats } from '@/features/studio-output/studio-output'
+import {
+	getImageProfileServiceCapability,
+	IMAGE_STUDIO_CONTROL_IDS,
+} from './image-profile-service-capability'
+
+export { IMAGE_STUDIO_CONTROL_IDS } from './image-profile-service-capability'
 
 export const IMAGE_STUDIO_GROUP_IDS = {
 	image: 'image',
 	profileSettings: 'profile-settings',
 	generationSettings: 'generation-settings',
-} as const
-
-export const IMAGE_STUDIO_CONTROL_IDS = {
-	prompt: 'prompt',
-	batch: 'batch',
-	ratio: 'ratio',
-	resolution: 'resolution',
-	lineColor: 'lineColor',
-	backgroundColor: 'backgroundColor',
 } as const
 
 export type ImageStudioFeature =
@@ -38,8 +28,11 @@ export type ImageStudioFeature =
 	  }
 	| { type: 'camera-control' }
 
+export type ImageOutputFormat = 'png' | 'jpeg'
+
 /** 이미지 프로파일 하나가 발행하는 공통 Controller envelope와 이미지 실행 descriptor. */
-export type ImageStudioConfig = StudioControllerConfig<'image', number> & {
+export type ImageStudioConfig = StudioControllerConfig<'image', number, ImageOutputFormat> & {
+	output: { formats: readonly ImageOutputFormat[]; original: boolean }
 	image: {
 		slug: string | null
 		features: readonly ImageStudioFeature[]
@@ -56,6 +49,20 @@ export type ImageStudioControls = {
 	batch: ControlOfKind<'select'>
 	ratio: ControlOfKind<'select'>
 	resolution: ControlOfKind<'select'>
+}
+
+/** Image와 Template 생성 경로가 공유하는 prompt 실행 판정이다. */
+export function acceptsImagePromptExecution(
+	control: ControlOfKind<'text'>,
+	value: string,
+): boolean {
+	return value.trim().length > 0 && acceptsControllerExecutionValue(control, value)
+}
+
+export function resolveImagePromptExecution(control: ControlOfKind<'text'>, value: string): string {
+	return control.availability === 'readonly' || control.availability === 'disabled'
+		? (control.defaultValue ?? '')
+		: value.trim()
 }
 
 /** stable ID로 이미지 도메인의 필수 생성 컨트롤과 선택 색 컨트롤을 찾는다. */
@@ -122,11 +129,19 @@ export function deriveImageStudioConfig(
 ): ImageStudioConfig {
 	const storedController = projectPayloadController(profile.controller)
 	const storedFeatures = projectStoredFeatures(profile.features)
+	const capability = getImageProfileServiceCapability(profile.imageModelPreset)
 	const config: ImageStudioConfig = {
 		studio: 'image',
 		id: profile.id,
 		version: 1,
 		name: profile.name,
+		output: {
+			formats: resolveStudioOutputFormats(
+				capability.output.formats,
+				profile.output?.allowedFormats,
+			),
+			original: capability.output.original && (profile.output?.original ?? true),
+		},
 		controller: storedController ?? deriveLegacyController(profile),
 		image: {
 			slug: profile.slug ?? null,
@@ -142,8 +157,10 @@ export function deriveImageStudioConfig(
 	}
 
 	parseStudioControllerConfig(config)
-	assertImageControllerLimits(config, profile)
-	assertImageFeatures(config)
+	if (typeof config.output.original !== 'boolean') {
+		throw new Error('ImageStudioConfig output.original은 boolean이어야 합니다.')
+	}
+	assertImageServiceCapability(config, profile.imageModelPreset)
 	return config
 }
 
@@ -175,9 +192,7 @@ function deriveLegacyController(
 ): ImageStudioConfig['controller'] {
 	const line = profile.colorAdjustment?.line
 	const background = profile.colorAdjustment?.background
-	const resolutionOptions = IMAGE_OUTPUT_SIZES.filter((size) =>
-		supportsImageOutputSize(profile.imageModelPreset, size),
-	)
+	const capability = getImageProfileServiceCapability(profile.imageModelPreset)
 
 	return {
 		groups: [
@@ -233,19 +248,19 @@ function deriveLegacyController(
 					selectControl(
 						IMAGE_STUDIO_CONTROL_IDS.batch,
 						'장수',
-						IMAGE_BATCH_SIZES.map(String),
-						String(IMAGE_BATCH_DEFAULT),
+						capability.controls.batch.options,
+						capability.controls.batch.defaultValue,
 					),
 					selectControl(
 						IMAGE_STUDIO_CONTROL_IDS.ratio,
 						'비율',
-						IMAGE_ASPECT_RATIOS,
+						capability.controls.ratio.options,
 						profile.aspectRatio,
 					),
 					selectControl(
 						IMAGE_STUDIO_CONTROL_IDS.resolution,
 						'해상도',
-						resolutionOptions,
+						capability.controls.resolution.options,
 						profile.imageSize,
 					),
 				],
@@ -293,36 +308,50 @@ function projectStoredFeatures(input: unknown): readonly ImageStudioFeature[] | 
 	})
 }
 
-function assertImageControllerLimits(
+function assertImageServiceCapability(
 	config: ImageStudioConfig,
-	profile: PublishedImageProfileDefinition,
+	model: PublishedImageProfileDefinition['imageModelPreset'],
 ) {
+	const capability = getImageProfileServiceCapability(model)
 	const { prompt, batch, ratio, resolution } = getImageStudioControls(config)
-	if (!prompt.maxLength || prompt.maxLength > IMAGE_PROMPT_MAX_LENGTH) {
-		throw new Error(`Image prompt maxLength는 ${IMAGE_PROMPT_MAX_LENGTH} 이하여야 합니다.`)
+	if (!prompt.maxLength || prompt.maxLength > capability.promptMaxLength) {
+		throw new Error(`Image prompt maxLength는 ${capability.promptMaxLength} 이하여야 합니다.`)
 	}
-	assertOptions(batch, IMAGE_BATCH_SIZES.map(String), 'batch')
-	assertOptions(ratio, IMAGE_ASPECT_RATIOS, 'ratio')
-	assertOptions(
-		resolution,
-		IMAGE_OUTPUT_SIZES.filter((size) =>
-			supportsImageOutputSize(profile.imageModelPreset, size),
-		),
-		'resolution',
-	)
-}
+	assertOptions(batch, capability.controls.batch.options, 'batch')
+	assertOptions(ratio, capability.controls.ratio.options, 'ratio')
+	assertOptions(resolution, capability.controls.resolution.options, 'resolution')
 
-function assertImageFeatures(config: ImageStudioConfig) {
+	const referencedFeatureControls = new Set<string>()
 	const types = new Set<ImageStudioFeature['type']>()
 	for (const feature of config.image.features) {
+		if (!capability.features.includes(feature.type)) {
+			throw new Error(`Image service가 지원하지 않는 feature입니다: ${feature.type}`)
+		}
 		if (types.has(feature.type)) {
 			throw new Error(`Image feature type이 중복되었습니다: ${feature.type}`)
 		}
 		types.add(feature.type)
 		if (feature.type !== 'color-adjustment') continue
+		referencedFeatureControls.add(feature.controls.line)
 		requireControl(config, feature.controls.line, 'color')
 		if (feature.controls.background) {
+			referencedFeatureControls.add(feature.controls.background)
 			requireControl(config, feature.controls.background, 'color')
+		}
+	}
+
+	for (const control of config.controller.groups.flatMap((group) => group.controls)) {
+		const supported = capability.controls[control.id as keyof typeof capability.controls]
+		const featureColor = referencedFeatureControls.has(control.id) && control.kind === 'color'
+		if ((!supported || supported.kind !== control.kind) && !featureColor) {
+			throw new Error(`Image service가 지원하지 않는 control입니다: ${control.id}`)
+		}
+		if (
+			(control.id === IMAGE_STUDIO_CONTROL_IDS.lineColor ||
+				control.id === IMAGE_STUDIO_CONTROL_IDS.backgroundColor) &&
+			!referencedFeatureControls.has(control.id)
+		) {
+			throw new Error(`Image feature가 참조하지 않는 color control입니다: ${control.id}`)
 		}
 	}
 }
