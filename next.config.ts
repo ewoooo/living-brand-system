@@ -9,6 +9,13 @@ const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
 	output: 'standalone',
+	// 프로덕션 빌드를 dev 서버와 나란히 돌리기 위한 출구. 기본값은 `.next` 그대로라
+	// 배포에는 영향이 없고, `pnpm preview`만 다른 디렉터리를 쓴다.
+	//
+	// 🔴 왜 필요한가: `next dev`는 프리렌더·라우트 캐시를 끈다(그게 dev의 목적이다). 그래서
+	//    캐시·무효화 관련 결함은 **dev에서 구조적으로 재현되지 않는다.** 확인하려면 프로덕션
+	//    빌드가 필요한데, 그것이 `.next`를 덮어써 돌던 dev 서버를 죽이면 아무도 확인하지 않게 된다.
+	distDir: process.env.NEXT_DIST_DIR || '.next',
 	outputFileTracingIncludes: {
 		'/*': ['node_modules/@img/sharp-libvips-linux-x64/**/*'],
 	},

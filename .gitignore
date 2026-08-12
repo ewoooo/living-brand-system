@@ -14,6 +14,8 @@
 
 # next.js
 /.next/
+# `pnpm preview:build` 출력. dev 서버의 .next를 덮지 않으려고 따로 쓴다.
+/.next-preview/
 /out/
 
 # production
