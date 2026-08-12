@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { GUTTER_RATIO, MARGIN_PCT } from '../layout-grid/rules'
 import { useLayoutGridScope } from '../layout-grid/store'
 import { CONTROL_VALUE, WIDGET_CAPTION } from '../readout'
@@ -92,17 +94,15 @@ export function LayoutGridControlsWidget(config: LayoutGridControlsConfig) {
 			)}
 			{showGuides && (
 				<div className="flex flex-wrap items-center gap-2">
-					<button
-						type="button"
-						onClick={() => set({ guidesOn: !guidesOn })}
-						aria-pressed={guidesOn}
-						className="inline-flex items-center gap-2 rounded border border-border px-2 py-1 font-body text-xs hover:bg-fill-hover"
-					>
-						<span
-							className={`h-2 w-2 rounded-full ${guidesOn ? 'bg-foreground' : 'bg-border'}`}
-						/>
+					<Switch
+						id="layout-grid-guides"
+						size="sm"
+						checked={guidesOn}
+						onCheckedChange={(next) => set({ guidesOn: next })}
+					/>
+					<Label htmlFor="layout-grid-guides" className="font-body text-xs">
 						그리드 {guidesOn ? '보임' : '숨김'}
-					</button>
+					</Label>
 					<p className={WIDGET_CAPTION}>
 						거터를 끝까지 밀어도 1:2:3 분할선은 제자리에 있다.
 					</p>

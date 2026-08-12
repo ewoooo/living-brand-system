@@ -3,6 +3,8 @@
 import { Contrast, Shuffle } from '@carbon/icons-react'
 import { motion } from 'motion/react'
 import { useMemo, useState } from 'react'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 
 // 서버(블록)가 DB에서 조립해 내려주는 아이콘 1개. 색은 컬러 모드일 때만 채워진다(팔레트 hex).
 export type IconGridItem = {
@@ -126,19 +128,18 @@ export function IconGridView({
 						<Shuffle size={16} />
 						랜덤 섞기
 					</button>
-					<button
-						type="button"
-						onClick={() => setInverted((v) => !v)}
-						aria-pressed={inverted}
-						className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-body font-medium text-sm ${
-							inverted
-								? 'bg-foreground text-background'
-								: 'bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]'
-						}`}
+					<Switch
+						id="icon-grid-inverted"
+						checked={inverted}
+						onCheckedChange={setInverted}
+					/>
+					<Label
+						htmlFor="icon-grid-inverted"
+						className="inline-flex items-center gap-1.5 font-body font-medium text-sm"
 					>
 						<Contrast size={16} />
 						색상 반전
-					</button>
+					</Label>
 				</div>
 			</div>
 
