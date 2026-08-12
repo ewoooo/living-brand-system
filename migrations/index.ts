@@ -38,7 +38,18 @@ import * as migration_20260807_010007_color_incorrect_usage_widget from './20260
 import * as migration_20260807_012350_dodont_widget_unify from './20260807_012350_dodont_widget_unify';
 import * as migration_20260807_020833_hd_color_palette_layout from './20260807_020833_hd_color_palette_layout';
 import * as migration_20260807_030110_logo_bg_picker_widget from './20260807_030110_logo_bg_picker_widget';
+import * as migration_20260807_064100_typography_widgets from './20260807_064100_typography_widgets';
+import * as migration_20260807_074528_scramble_size_fields from './20260807_074528_scramble_size_fields';
+import * as migration_20260807_075125_scramble_color from './20260807_075125_scramble_color';
+import * as migration_20260807_075440_scramble_background from './20260807_075440_scramble_background';
+import * as migration_20260807_075931_scramble_padding from './20260807_075931_scramble_padding';
+import * as migration_20260807_082406_type_weight_layout from './20260807_082406_type_weight_layout';
+import * as migration_20260807_084125_scramble_fixed_height from './20260807_084125_scramble_fixed_height';
+import * as migration_20260807_084746_block_gap from './20260807_084746_block_gap';
+import * as migration_20260810_100000_rename_dodont_widget_enums from './20260810_100000_rename_dodont_widget_enums';
+import * as migration_20260811_015839_remove_legacy_blocks from './20260811_015839_remove_legacy_blocks';
 import * as migration_20260811_021425_image_profile_studio_fields from './20260811_021425_image_profile_studio_fields';
+import * as migration_20260811_022425_restore_icon_grid_stem_widgets from './20260811_022425_restore_icon_grid_stem_widgets';
 import * as migration_20260811_070255_studio_controller_config from './20260811_070255_studio_controller_config';
 import * as migration_20260811_075822_image_profile_features from './20260811_075822_image_profile_features';
 import * as migration_20260812_001709_studio_admin_controller_configs from './20260812_001709_studio_admin_controller_configs';
@@ -246,9 +257,64 @@ export const migrations = [
     name: '20260807_030110_logo_bg_picker_widget',
   },
   {
+    up: migration_20260807_064100_typography_widgets.up,
+    down: migration_20260807_064100_typography_widgets.down,
+    name: '20260807_064100_typography_widgets',
+  },
+  {
+    up: migration_20260807_074528_scramble_size_fields.up,
+    down: migration_20260807_074528_scramble_size_fields.down,
+    name: '20260807_074528_scramble_size_fields',
+  },
+  {
+    up: migration_20260807_075125_scramble_color.up,
+    down: migration_20260807_075125_scramble_color.down,
+    name: '20260807_075125_scramble_color',
+  },
+  {
+    up: migration_20260807_075440_scramble_background.up,
+    down: migration_20260807_075440_scramble_background.down,
+    name: '20260807_075440_scramble_background',
+  },
+  {
+    up: migration_20260807_075931_scramble_padding.up,
+    down: migration_20260807_075931_scramble_padding.down,
+    name: '20260807_075931_scramble_padding',
+  },
+  {
+    up: migration_20260807_082406_type_weight_layout.up,
+    down: migration_20260807_082406_type_weight_layout.down,
+    name: '20260807_082406_type_weight_layout',
+  },
+  {
+    up: migration_20260807_084125_scramble_fixed_height.up,
+    down: migration_20260807_084125_scramble_fixed_height.down,
+    name: '20260807_084125_scramble_fixed_height',
+  },
+  {
+    up: migration_20260807_084746_block_gap.up,
+    down: migration_20260807_084746_block_gap.down,
+    name: '20260807_084746_block_gap',
+  },
+  {
+    up: migration_20260810_100000_rename_dodont_widget_enums.up,
+    down: migration_20260810_100000_rename_dodont_widget_enums.down,
+    name: '20260810_100000_rename_dodont_widget_enums',
+  },
+  {
+    up: migration_20260811_015839_remove_legacy_blocks.up,
+    down: migration_20260811_015839_remove_legacy_blocks.down,
+    name: '20260811_015839_remove_legacy_blocks',
+  },
+  {
     up: migration_20260811_021425_image_profile_studio_fields.up,
     down: migration_20260811_021425_image_profile_studio_fields.down,
     name: '20260811_021425_image_profile_studio_fields',
+  },
+  {
+    up: migration_20260811_022425_restore_icon_grid_stem_widgets.up,
+    down: migration_20260811_022425_restore_icon_grid_stem_widgets.down,
+    name: '20260811_022425_restore_icon_grid_stem_widgets',
   },
   {
     up: migration_20260811_070255_studio_controller_config.up,

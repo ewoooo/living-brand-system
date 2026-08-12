@@ -1,34 +1,23 @@
 import type { Block } from 'payload'
 import { ImageLeaf } from '@/features/guideline/leaves/image/schema'
-import { CarouselWidget } from '@/features/guideline/widgets/carousel/schema'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/schema'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/schema'
-import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/schema'
-import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/schema'
-import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/schema'
-import { ConceptIntroWidget } from '@/features/guideline/widgets/concept-intro/schema'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/schema'
-import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/schema'
 import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/schema'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/schema'
-import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/schema'
-import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/schema'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/schema'
 import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/schema'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/schema'
 import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/schema'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/schema'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/schema'
-import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/schema'
-import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/schema'
 import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/schema'
-import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/schema'
-import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/schema'
-import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/schema'
-import { SeparatedLogoApplicationWidget } from '@/features/guideline/widgets/separated-logo-application/schema'
 import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/schema'
-import { TypeScaleWidget } from '@/features/guideline/widgets/type-scale/schema'
+import { TypeHierarchyWidget } from '@/features/guideline/widgets/type-hierarchy/schema'
+import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/schema'
+import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/schema'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/schema'
+import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/schema'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 import { baseBlockFields } from '../shared/fields'
 
@@ -102,6 +91,20 @@ export const LayoutBlock: Block = {
 			admin: { description: 'grid 열 수입니다(행은 자식 개수로 자동).' },
 		},
 		{
+			name: 'gap',
+			type: 'select',
+			defaultValue: 'default',
+			enumName: 'enum_block_gap',
+			options: [
+				{ label: '표준(간격 있음)', value: 'default' },
+				{ label: '맞붙임(선 하나로)', value: 'none' },
+			],
+			admin: {
+				description:
+					'맞붙이면 셀 사이가 1px 선 하나만 남습니다. 셀마다 테두리를 두면 맞닿은 자리가 2px이 되므로 선은 그리드가 그립니다. grid 배치에만 적용됩니다.',
+			},
+		},
+		{
 			name: 'aspectRatio',
 			type: 'select',
 			defaultValue: '1:1',
@@ -117,34 +120,23 @@ export const LayoutBlock: Block = {
 			// leaf = Image(정적) | Widget(인터랙티브) 형제 위계. Text/Shape/Link는 추후.
 			blocks: [
 				ImageLeaf,
-				ColorPaletteWidget,
-				CarouselWidget,
 				ClearspaceOverlayWidget,
 				ClearspaceViewerWidget,
-				ColorPairingWidget,
-				ColorPairingRecommendationWidget,
-				ConceptIntroWidget,
 				DoDontWidget,
-				GlyphGridWidget,
 				HdColorPaletteWidget,
 				IconGridWidget,
-				ImageGridWidget,
-				IncorrectUsageWidget,
+				StemClearSpaceWidget,
 				LayoutGridWidget,
 				LayoutGridControlsWidget,
 				LayoutGridOverlayWidget,
 				LogoColorVariantWidget,
 				LogoBgPickerWidget,
 				LogoDisplayWidget,
-				LogoGridSpecWidget,
-				LogoGroupViewerWidget,
 				LogoOnBackgroundWidget,
-				LogoViewerWidget,
-				MediaShowcaseWidget,
-				SectionDividerWidget,
-				SeparatedLogoApplicationWidget,
-				StemClearSpaceWidget,
-				TypeScaleWidget,
+				TypeHierarchyWidget,
+				TypeLanguageWidget,
+				TypeScrambleWidget,
+				TypeWeightWidget,
 				TypeSpecimenWidget,
 			],
 			admin: { description: '이 블록이 품는 leaf(이미지·위젯)들입니다.' },

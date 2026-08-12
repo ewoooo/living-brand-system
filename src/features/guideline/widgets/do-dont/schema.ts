@@ -10,10 +10,12 @@ import { PRESET_OPTIONS } from './presets'
 // 둘 다 없으면 그 예시는 캡션만 남는다.
 //
 // 프레임·배경·제목·rules는 Block 소관이라 위젯에 두지 않는다(rules는 Block에만 = provenance 불변식).
-// legacy `doDont` 블록은 essenherb(Design Elements)가 계속 쓰므로 남겨 둔다 — 이 위젯이 그걸 대체하는 건
-// HD현대(Brand Elements) 쪽뿐이다.
+// legacy `doDont` 블록은 2026-08-10에 1세대 저작 모델과 함께 삭제됐다. Do/Don't는 이 위젯 하나뿐이다.
 //
 // dbName 짧게(ddw)로 중첩 테이블명 63자 방어. enum은 전역 이름 공유라 enumName 명시.
+// 🔴 enum 이름은 위젯이 소유한다(enum_ddw_*). 처음에는 레거시 do-dont 블록의 enum을 그대로
+//    재사용했는데, 그러면 블록을 지울 때 살아 있는 위젯 컬럼의 타입이 함께 사라진다.
+//    2026-08-10에 ALTER TYPE RENAME으로 떼어냈다 — 다시 남의 enum 이름을 가리키지 말 것.
 export const DoDontWidget: Block = {
 	slug: 'doDontWidget',
 	dbName: 'ddw',
@@ -27,7 +29,7 @@ export const DoDontWidget: Block = {
 					name: 'imageRatio',
 					type: 'select',
 					defaultValue: '16:9',
-					enumName: 'enum_guideline_docs_blocks_do_dont_image_ratio',
+					enumName: 'enum_ddw_image_ratio',
 					options: [...IMAGE_RATIO_OPTIONS],
 					admin: { width: '50%', description: '예시 판형의 표시 비율입니다.' },
 				},
@@ -35,7 +37,7 @@ export const DoDontWidget: Block = {
 					name: 'columns',
 					type: 'select',
 					defaultValue: '3',
-					enumName: 'enum_guideline_docs_blocks_do_dont_example_columns',
+					enumName: 'enum_ddw_example_columns',
 					options: [
 						{ label: '2열', value: '2' },
 						{ label: '3열', value: '3' },
@@ -87,7 +89,7 @@ export const DoDontWidget: Block = {
 							type: 'select',
 							required: true,
 							defaultValue: 'dont',
-							enumName: 'enum_guideline_docs_blocks_do_dont_groups_kind',
+							enumName: 'enum_ddw_examples_kind',
 							options: [
 								{ label: 'Do (권장)', value: 'do' },
 								{ label: 'OK (허용)', value: 'ok' },

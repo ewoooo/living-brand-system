@@ -187,11 +187,11 @@ describe('getCheckRuleset', () => {
 		documentPlacement.evidence = {
 			type: 'document',
 			description: 'Doc A',
-			blocks: [{ type: 'mediaShowcase' }],
+			blocks: [{ type: 'callout', kind: 'must', title: undefined, items: [] }],
 		}
 		documentPlacement.referenceAssets = [referenceAsset('a', '/a.png', 'context')]
 		const blockPlacement = source('shared')
-		blockPlacement.evidence = { type: 'colorPalette', title: 'Palette', colors: [] }
+		blockPlacement.evidence = { type: 'block', childCount: 2 }
 		blockPlacement.referenceAssets = [
 			referenceAsset('a', '/a.png', 'context'),
 			referenceAsset('b', '/b.png', 'negative'),
@@ -207,8 +207,8 @@ describe('getCheckRuleset', () => {
 			type: 'document',
 			description: 'Doc A',
 			blocks: [
-				{ type: 'mediaShowcase' },
-				{ type: 'colorPalette', title: 'Palette', colors: [] },
+				{ type: 'callout', kind: 'must', title: undefined, items: [] },
+				{ type: 'block', childCount: 2 },
 			],
 		})
 		expect(checks[0]?.referenceAssets.map(({ url, role }) => `${url}:${role}`)).toEqual([

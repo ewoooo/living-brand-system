@@ -15,7 +15,7 @@ export async function downloadImage(
 	index: number,
 	color?: ImageColorAdjustment | null,
 ): Promise<void> {
-	const name = `essenherb-image-${index + 1}`
+	const name = `hd-image-${index + 1}`
 	if (!color) {
 		const ext = src.startsWith('data:image/')
 			? src.slice(11, src.indexOf(';')).replace('jpeg', 'jpg')

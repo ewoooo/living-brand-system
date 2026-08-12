@@ -1,6 +1,5 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import { isLegacyEssenherbColor } from '@/lib/color'
 
 /**
  * brand-colors + brand-color-groups에 HD현대 브랜드 컬러 정본을 시드한다.
@@ -173,9 +172,6 @@ const GROUPS: { name: string; colors: HdColor[] }[] = [
 
 const payload = await getPayload({ config })
 
-// 🔴 조회 키의 스코프가 essenherb를 절대 잡지 않아야 한다. 레거시 팔레트에도 `Black`·`White`가 있어
-//    이름만으로 찾으면 그 문서를 덮어써 레거시 페이지 색이 조용히 바뀐다(실제로 한 번 밟았다).
-//    스코프는 판별자 하나로 충분하다 — essenherb 색만 이름이 `.essenherb`로 끝난다.
 // 이름 비교는 대소문자를 무시한다. 앞선 실행이 `HD prosperity GREEN`처럼 다른 표기로 넣어둬서,
 // 대소문자를 따지면 같은 색을 고치는 대신 새로 만들고 틀린 값이 그대로 남는다.
 // hex는 키에 넣지 않는다 — 틀린 hex를 고치는 게 이 스크립트의 일인데 키에 넣으면 못 고친다.
@@ -190,7 +186,6 @@ const existing = await payload.find({
 // 이름당 id 큐. MIDDLE GREY처럼 이름이 겹치는 색은 앞에서부터 하나씩 집어가 서로 다른 문서에 붙는다.
 const unclaimed = new Map<string, number[]>()
 for (const doc of existing.docs) {
-	if (isLegacyEssenherbColor(doc)) continue
 	const key = doc.name.toUpperCase()
 	const queue = unclaimed.get(key)
 	if (queue) queue.push(doc.id)
@@ -273,7 +268,7 @@ for (const group of GROUPS) {
 	}
 }
 
-// 정본에 없는데 남아 있는 비-essenherb 색은 알리기만 한다. 다른 문서가 참조 중일 수 있어 지우지 않는다.
+// 정본에 없는데 남아 있는 색은 알리기만 한다. 다른 문서가 참조 중일 수 있어 지우지 않는다.
 const leftover = [...unclaimed.values()].flat()
 if (leftover.length > 0)
 	console.log(`⚠️ 정본 밖 색 ${leftover.length}건 남음 (id: ${leftover.join(', ')})`)

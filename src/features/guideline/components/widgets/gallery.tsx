@@ -1,36 +1,25 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import type { ReactNode } from 'react'
-import { CarouselWidget } from '@/features/guideline/widgets/carousel/component'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
-import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/component'
-import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/component'
-import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/component'
-import { ConceptIntroWidget } from '@/features/guideline/widgets/concept-intro/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
-import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/component'
 import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
-import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
-import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
 import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
 import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
-import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/component'
-import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/component'
 import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/component'
-import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/component'
-import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/component'
-import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/component'
-import { SeparatedLogoApplicationWidget } from '@/features/guideline/widgets/separated-logo-application/component'
 import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/component'
-import { TypeScaleWidget } from '@/features/guideline/widgets/type-scale/component'
+import { TypeHierarchyWidget } from '@/features/guideline/widgets/type-hierarchy/component'
+import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/component'
+import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/component'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/component'
+import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/component'
 import type { BrandLogo } from '@/payload-types'
 
 // dev 전용 위젯 갤러리. 위젯 스타일 통일 + 성능 확인용 (로컬에서만 노출, nav 미등록).
@@ -74,22 +63,21 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 
 	return [
 		{ name: 'ci-lockup', node: <CiLockupWidget /> },
+		{ name: 'icon-grid', node: <IconGridWidget /> },
+		{ name: 'stem-clear-space', node: <StemClearSpaceWidget /> },
 		{ name: 'hd-color-palette (균일)', node: <HdColorPaletteWidget layout="uniform" /> },
 		{ name: 'hd-color-palette (위계)', node: <HdColorPaletteWidget layout="ranked" /> },
-		{ name: 'color-palette', node: <ColorPaletteWidget /> },
-		{ name: 'color-pairing', node: <ColorPairingWidget /> },
-		{ name: 'color-pairing-recommendation', node: <ColorPairingRecommendationWidget /> },
-		{ name: 'icon-grid', node: <IconGridWidget /> },
-		{ name: 'glyph-grid', node: <GlyphGridWidget /> },
 		{ name: 'type-specimen', node: <TypeSpecimenWidget /> },
-		{ name: 'type-scale', node: <TypeScaleWidget /> },
-		{ name: 'logo-viewer', node: <LogoViewerWidget /> },
-		{ name: 'logo-group-viewer', node: <LogoGroupViewerWidget /> },
+		{ name: 'type-scramble', node: <TypeScrambleWidget /> },
+		{ name: 'type-weight', node: <TypeWeightWidget /> },
+		{ name: 'type-hierarchy', node: <TypeHierarchyWidget /> },
+		{ name: 'type-language (단일)', node: <TypeLanguageWidget layout="single" /> },
+		{ name: 'type-language (비교)', node: <TypeLanguageWidget layout="compare" /> },
+
 		{ name: 'logo-display', node: <LogoDisplayWidget logo={koLogo} /> },
 		{ name: 'logo-color-variant', node: <LogoColorVariantWidget logo={koLogo} /> },
 		{ name: 'logo-on-background', node: <LogoOnBackgroundWidget /> },
 		{ name: 'logo-bg-picker', node: <LogoBgPickerWidget group={bgGroup} /> },
-		{ name: 'stem-clear-space', node: <StemClearSpaceWidget /> },
 		{
 			name: 'clearspace-overlay',
 			node: (
@@ -107,7 +95,6 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 				/>
 			),
 		},
-		{ name: 'incorrect-usage', node: <IncorrectUsageWidget /> },
 		{
 			// 이미지 예시(제목 없음)와 컬러 프리셋 예시(순번 제목)를 둘 다 걸어 두 경로를 함께 본다.
 			name: 'do-dont (이미지 예시)',
@@ -164,16 +151,58 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 				/>
 			),
 		},
-		{ name: 'carousel', node: <CarouselWidget /> },
-		{ name: 'image-grid', node: <ImageGridWidget /> },
-		{ name: 'media-showcase', node: <MediaShowcaseWidget /> },
+		{
+			// Typography 사용 금지 6종. 위반이 글자 자체라 이미지 없이 프리셋으로 그린다(Artboard 49).
+			name: 'do-dont (타이포 프리셋)',
+			node: (
+				<DoDontWidget
+					imageRatio="16:9"
+					columns="3"
+					itemLabel="INCORRECT USAGE"
+					examples={[
+						{
+							id: 't1',
+							kind: 'dont',
+							preset: 'tight-tracking',
+							caption: '글자 사이 간격을 지나치게 좁힐 수 없습니다.',
+						},
+						{
+							id: 't2',
+							kind: 'dont',
+							preset: 'loose-tracking',
+							caption: '글자 사이 간격을 지나치게 넓힐 수 없습니다.',
+						},
+						{
+							id: 't3',
+							kind: 'dont',
+							preset: 'wrong-typeface',
+							caption: '지정된 서체 이외의 다른 서체를 사용할 수 없습니다.',
+						},
+						{
+							id: 't4',
+							kind: 'dont',
+							preset: 'mixed-size',
+							caption: '한 문장 안에서 각기 다른 글자 크기를 적용할 수 없습니다.',
+						},
+						{
+							id: 't5',
+							kind: 'dont',
+							preset: 'distorted',
+							caption: '글자의 형태를 변형할 수 없습니다.',
+						},
+						{
+							id: 't6',
+							kind: 'dont',
+							preset: 'slanted',
+							caption: '글자를 기울여 사용하실 수 없습니다.',
+						},
+					]}
+				/>
+			),
+		},
 		{ name: 'layout-grid', node: <LayoutGridWidget /> },
 		{ name: 'layout-grid-controls', node: <LayoutGridControlsWidget /> },
 		{ name: 'layout-grid-overlay', node: <LayoutGridOverlayWidget /> },
-		{ name: 'section-divider', node: <SectionDividerWidget /> },
-		{ name: 'concept-intro', node: <ConceptIntroWidget logo={koLogo} /> },
-		{ name: 'logo-grid-spec', node: <LogoGridSpecWidget /> },
-		{ name: 'separated-logo-application', node: <SeparatedLogoApplicationWidget /> },
 	]
 }
 

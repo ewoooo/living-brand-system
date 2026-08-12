@@ -1,19 +1,12 @@
 import type { ReactNode } from 'react'
 import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
-import { CarouselWidget } from '@/features/guideline/widgets/carousel/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
-import { ColorPairingWidget } from '@/features/guideline/widgets/color-pairing/component'
-import { ColorPairingRecommendationWidget } from '@/features/guideline/widgets/color-pairing-recommendation/component'
-import { ColorPaletteWidget } from '@/features/guideline/widgets/color-palette/component'
-import { ConceptIntroWidget } from '@/features/guideline/widgets/concept-intro/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
-import { GlyphGridWidget } from '@/features/guideline/widgets/glyph-grid/component'
+import { HAIRLINE_GRID } from '@/features/guideline/widgets/hairline'
 import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
-import { ImageGridWidget } from '@/features/guideline/widgets/image-grid/component'
-import { IncorrectUsageWidget } from '@/features/guideline/widgets/incorrect-usage/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
 import { LayoutGridScope } from '@/features/guideline/widgets/layout-grid/store'
 import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
@@ -21,16 +14,13 @@ import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-gri
 import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
-import { LogoGridSpecWidget } from '@/features/guideline/widgets/logo-grid-spec/component'
-import { LogoGroupViewerWidget } from '@/features/guideline/widgets/logo-group-viewer/component'
 import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/component'
-import { LogoViewerWidget } from '@/features/guideline/widgets/logo-viewer/component'
-import { MediaShowcaseWidget } from '@/features/guideline/widgets/media-showcase/component'
-import { SectionDividerWidget } from '@/features/guideline/widgets/section-divider/component'
-import { SeparatedLogoApplicationWidget } from '@/features/guideline/widgets/separated-logo-application/component'
 import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/component'
-import { TypeScaleWidget } from '@/features/guideline/widgets/type-scale/component'
+import { TypeHierarchyWidget } from '@/features/guideline/widgets/type-hierarchy/component'
+import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/component'
+import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/component'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/component'
+import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/component'
 import type { GuidelineDocument } from '@/payload-types'
 import { IMAGE_RATIO_CLASS_NAMES, type ImageRatio } from '@/types/image-ratio'
 import { GuidelineBlockFrame } from '../shared/guideline-block-frame'
@@ -44,10 +34,6 @@ type Child = NonNullable<LayoutBlockType['children']>[number]
 // 위젯은 전부 인스턴스 입력 없이 자족 렌더(brand-*/폰트 스스로 조회).
 function renderWidget(child: Child): ReactNode {
 	switch (child.blockType) {
-		case 'colorPaletteWidget':
-			return <ColorPaletteWidget />
-		case 'carouselWidget':
-			return <CarouselWidget />
 		case 'clearspaceOverlayWidget':
 			return (
 				<ClearspaceOverlayWidget
@@ -67,16 +53,14 @@ function renderWidget(child: Child): ReactNode {
 					verticalMinHeightPx={child.verticalMinHeightPx}
 				/>
 			)
-		case 'colorPairingWidget':
-			return <ColorPairingWidget />
-		case 'conceptIntroWidget':
-			return <ConceptIntroWidget lead={child.lead} body={child.body} logo={child.logo} />
+		case 'iconGridWidget':
+			return <IconGridWidget />
+		case 'stemClearSpaceWidget':
+			return <StemClearSpaceWidget />
 		case 'hdColorPaletteWidget':
 			// 고른 그룹을 고른 순서대로 한 행씩, 비우면 전체를 그린다.
 			// layout은 그룹 간 우열 유무를 말한다(균일 정사각형 / 순위별 높이).
 			return <HdColorPaletteWidget groups={child.groups} layout={child.layout} />
-		case 'colorPairingRecommendationWidget':
-			return <ColorPairingRecommendationWidget />
 		case 'doDontWidget':
 			// 예시(이미지 또는 컬러 프리셋 + 캡션 + kind)를 인스턴스 입력으로 받는 위젯.
 			// logo는 컬러 프리셋에만 쓰인다 — 이미지 예시만 있으면 조회조차 하지 않는다.
@@ -89,15 +73,6 @@ function renderWidget(child: Child): ReactNode {
 					examples={child.examples}
 				/>
 			)
-		case 'glyphGridWidget':
-			return <GlyphGridWidget />
-		case 'iconGridWidget':
-			return <IconGridWidget />
-		case 'imageGridWidget':
-			return <ImageGridWidget />
-		case 'incorrectUsageWidget':
-			// legacy doDont 블록으로 대체됐지만 스키마에 남아 있어 렌더 경로를 유지한다.
-			return <IncorrectUsageWidget />
 		case 'layoutGridWidget':
 			// 샘플 디자인은 코드에 있고 인스턴스는 그중 하나를 고른다.
 			return (
@@ -146,12 +121,6 @@ function renderWidget(child: Child): ReactNode {
 					padding={child.padding}
 				/>
 			)
-		case 'logoGridSpecWidget':
-			return (
-				<LogoGridSpecWidget form={child.form} nameKo={child.nameKo} nameEn={child.nameEn} />
-			)
-		case 'logoGroupViewerWidget':
-			return <LogoGroupViewerWidget />
 		case 'logoOnBgWidget':
 			return (
 				<LogoOnBackgroundWidget
@@ -160,25 +129,31 @@ function renderWidget(child: Child): ReactNode {
 					column={child.column}
 				/>
 			)
-		case 'logoViewerWidget':
-			return <LogoViewerWidget />
-		case 'mediaShowcaseWidget':
-			return <MediaShowcaseWidget />
-		case 'sectionDividerWidget':
+		case 'typeHierarchyWidget':
+			return <TypeHierarchyWidget language={child.language} />
+		case 'typeLanguageWidget':
 			return (
-				<SectionDividerWidget
-					chapterCode={child.chapterCode}
-					chapterTitle={child.chapterTitle}
-					sectionCode={child.sectionCode}
-					sectionTitle={child.sectionTitle}
+				<TypeLanguageWidget initialLanguage={child.initialLanguage} layout={child.layout} />
+			)
+		case 'typeScrambleWidget':
+			return (
+				<TypeScrambleWidget
+					text={child.text}
+					fontSize={child.fontSize}
+					panelHeight={child.panelHeight}
+					color={child.color}
+					background={child.background}
+					weight={child.weight}
 				/>
 			)
-		case 'sepLogoAppWidget':
-			return <SeparatedLogoApplicationWidget variants={child.variants} apps={child.apps} />
-		case 'stemClearSpaceWidget':
-			return <StemClearSpaceWidget />
-		case 'typeScaleWidget':
-			return <TypeScaleWidget />
+		case 'typeWeightWidget':
+			return (
+				<TypeWeightWidget
+					layout={child.layout}
+					language={child.language}
+					initialWeight={child.initialWeight}
+				/>
+			)
 		case 'typeSpecimenWidget':
 			return <TypeSpecimenWidget />
 		default:
@@ -212,15 +187,22 @@ function renderChild(child: Child, aspectClass: string): ReactNode {
 function Arrange({
 	arrangement,
 	columns,
+	gap,
 	aspectRatio,
 	items,
 }: {
 	arrangement: LayoutBlockType['arrangement']
 	columns: number
+	gap: LayoutBlockType['gap']
 	aspectRatio: ImageRatio
 	items: NonNullable<LayoutBlockType['children']>
 }) {
 	const cols = Math.max(1, columns)
+	// 🔴 맞붙임은 gap 0이 아니라 **gap 1px + 그리드 배경**이다. gap을 0으로 두면 셀마다 가진 테두리가
+	//    맞닿아 2px이 되고, 셀에서 테두리를 걷어내면 이번엔 선이 아예 사라진다. 틈을 선 색으로 칠하면
+	//    선은 어디서나 정확히 1px이고, 그리는 주체가 배치(Block) 하나로 모인다.
+	//    padding까지 줘야 바깥 테두리도 같은 선으로 닫힌다. 규칙은 hairline.ts가 소유한다.
+	const gridGap = gap === 'none' ? HAIRLINE_GRID : 'gap-4'
 	// masonry는 원본 비율(빈 문자열), 그 외는 aspectRatio 클래스(original도 빈 문자열이라 h-auto).
 	const aspectClass = arrangement === 'masonry' ? '' : IMAGE_RATIO_CLASS_NAMES[aspectRatio]
 
@@ -259,7 +241,7 @@ function Arrange({
 				{first ? <div>{renderChild(first, aspectClass)}</div> : null}
 				{rest.length > 0 ? (
 					<div
-						className="grid gap-4"
+						className={`grid ${gridGap}`}
 						style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
 					>
 						{rest.map((child) => (
@@ -274,7 +256,7 @@ function Arrange({
 	// grid(기본) — columns 열 × 자동 행 wrap.
 	return (
 		<div
-			className="grid gap-4"
+			className={`grid ${gridGap}`}
 			style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
 		>
 			{items.map((child) => (
@@ -315,6 +297,7 @@ export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 				<Arrange
 					arrangement={block.arrangement}
 					columns={block.columns ?? 2}
+					gap={block.gap ?? 'default'}
 					aspectRatio={block.aspectRatio ?? '1:1'}
 					items={arranged}
 				/>

@@ -26,7 +26,7 @@ export function AgentChatGeneratedImages({ attachment }: AgentChatGeneratedImage
 						/>
 						<a
 							href={src}
-							download={`essenherb-image-${index + 1}.${imgExt(src)}`}
+							download={`hd-image-${index + 1}.${imgExt(src)}`}
 							className="absolute right-1 bottom-1 rounded bg-background/80 px-1.5 py-0.5 font-body text-sm font-normal underline"
 						>
 							다운로드

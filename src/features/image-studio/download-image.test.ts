@@ -45,7 +45,7 @@ describe('downloadImage', () => {
 
 		expect(HTMLAnchorElement.prototype.click).not.toHaveBeenCalled()
 		const [html, name] = vi.mocked(exportHtmlToPng).mock.calls[0] ?? []
-		expect(name).toBe('essenherb-image-2')
+		expect(name).toBe('hd-image-2')
 		// 해상도를 화면 썸네일이 아니라 이미지의 자연 크기에서 가져온다.
 		expect(html).toContain('width:2048px;height:3072px')
 		// 프리뷰와 같은 계산을 직렬화한 것이므로 kebab-case 선언이 그대로 실린다.

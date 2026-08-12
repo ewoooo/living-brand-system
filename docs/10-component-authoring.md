@@ -122,7 +122,7 @@ function Card({ className, size = 'default', ...props }:
 | 다형 렌더링 | `asChild` + `radix-ui` `Slot`, 별도 `as` prop 금지 | `badge.tsx` |
 | 아이콘 | `@carbon/icons-react` | repo 컨벤션(저장소 24개 파일 채택) |
 | 이미지 | `next/image` 기본. 생성 이미지·데이터 URL 미리보기처럼 최적화가 성립하지 않는 곳만 생 `<img>` + biome-ignore 사유 주석 | `agent-chat-generated-images.tsx` |
-| 파일명 | kebab-case (`blocks/type-specimen/component.tsx`) | `docs/06` §10 |
+| 파일명 | kebab-case (`widgets/type-specimen/component.tsx`) | `docs/06` §10 |
 | export | PascalCase named export, `default` export 금지 | `badge.tsx`, `card.tsx`, `typography.tsx` |
 | 타입 import | `import type … from 'react'` | `card.tsx`, `typography.tsx` |
 | `use client` | 자기 코드에 상태·이벤트·브라우저 API가 있거나, client 전용 의존성(radix 프리미티브, `motion`, `next-themes`)을 직접 감쌀 때만. 둘 다 아닌 순수 조합엔 금지 | `docs/06` |
@@ -255,7 +255,7 @@ className과 style에는 시맨틱 토큰만 씁니다(닫힌 토큰 규칙 전�
 | ✅ Do | ❌ Don't | repo 실측 |
 | --- | --- | --- |
 | `border-border` | `border border-neutral-200` | `blocks/callout/component.tsx:33` |
-| `bg-muted` / `bg-fill-muted` | `bg-neutral-50 … dark:bg-neutral-950` | `blocks/type-specimen/component.tsx:51` |
+| `bg-muted` / `bg-fill-muted` | `bg-neutral-50 … dark:bg-neutral-950` | `widgets/type-specimen/component.tsx` |
 | 조건부 완전 클래스 룩업 | `` `grid gap-4 md:grid-cols-${variant}` `` | `blocks/content-columns/component.tsx:21` |
 | 심볼 + 텍스트로 상태 구분 | 색만으로 판정 구분 | `blocks/callout/component.tsx` (kind별 badge) |
 | 상태 토큰 `bg-success/15 text-success` | 유채 팔레트 `bg-emerald-500/15 text-emerald-700 …` | `studio/review/result/check-status.ts:14` |
@@ -309,19 +309,19 @@ grep -rnE '(grid-cols|col-span|gap|w|h|text)-\$\{' src
 
 ## 5. 브랜드 무관
 
-색·폰트·로고는 props로 주입받습니다. 코드에 브랜드를 하드코딩하지 않습니다. 하드코딩은 개발용 default 값(essenherb 샘플)으로만 허용합니다.
+색·폰트·로고는 props로 주입받습니다. 코드에 브랜드를 하드코딩하지 않습니다. 하드코딩은 개발용 default 값(HD현대 팔레트)으로만 허용합니다.
 
 - 컴포넌트가 받는 색은 hex string props입니다. RGB·전경색 같은 파생값은 저장하지 않고 런타임에 `@/lib/color`로 파생합니다: `hexToRgb`로 0–255 RGB를, `getContrastingForeground`로 배경 대비가 더 높은 흑/백 전경색을 얻습니다.
-- 원형은 `src/features/guideline/blocks/color-palette/component.tsx`입니다. Swatch는 `{ id, name, hex, pantone? }` 형태로 받고, RGB는 hex에서 파생하며, 기본값만 essenherb 팔레트입니다("브랜드 무관: 색은 props. 기본값은 essenherb. RGB는 HEX에서 파생").
+- 원형은 `src/features/guideline/widgets/hd-color-palette/view.tsx`입니다. Swatch는 `{ id, name, hex, cmyk?, pantone? }` 형태로 받고, RGB·전경색은 hex에서 파생하며, 값은 전부 `brand-colors`에서 옵니다 — 하드코딩된 기본 팔레트가 없습니다.
 
 ```tsx
 import { getContrastingForeground, hexToRgb } from '@/lib/color'
 
 type Swatch = { id: string; name: string; hex: string; pantone?: string }
 
-// 기본값(default)만 essenherb 샘플. 실제 값은 props/CMS로 주입.
+// 기본값(default)만 HD현대 샘플. 실제 값은 props/CMS로 주입.
 const MAIN: Swatch[] = [
-	{ id: 'main-red', name: 'Essenherb Red', hex: '#EA5343', pantone: 'Warm Red C' },
+	{ id: 'heritage-green', name: 'HD HERITAGE GREEN', hex: '#00AF41' },
 ]
 ```
 
@@ -334,7 +334,7 @@ const MAIN: Swatch[] = [
 - **키보드 조작**: 커스텀 인터랙션 요소는 `role`과 `aria-*`, 화살표 키 이동을 갖춥니다. 슬라이더면 `role="slider"` + `aria-valuenow`처럼 역할에 맞는 속성을 붙입니다.
 - **focus 가시성**: `focus-visible:ring` 계열로 포커스를 시각적으로 드러냅니다. `badge.tsx`의 `focus-visible:ring-[3px] focus-visible:ring-ring/50`이 참고입니다.
 - **색만으로 상태 구분 금지**: 판정·상태는 심볼 + 텍스트를 함께 씁니다. `blocks/callout/component.tsx`는 kind별로 심볼(`✓`/`△`/`✕`)과 라벨(`반드시`/`권장`/`금지`)을 같이 노출합니다.
-- **label 연결**: 입력 요소는 `label`/`aria-label`/`aria-labelledby`로 접근 가능한 이름을 갖습니다. `blocks/type-specimen/component.tsx`의 textarea는 `aria-label="타입 견본 입력"`을 답니다.
+- **label 연결**: 입력 요소는 `label`/`aria-label`/`aria-labelledby`로 접근 가능한 이름을 갖습니다. `widgets/type-specimen/component.tsx`의 textarea는 `aria-label="타입 견본 입력"`을 답니다.
 - **실패 상태 텍스트 설명**: 검수 실패·저장 실패 같은 조치가 필요한 상태는 텍스트로 원인과 다음 행동을 설명합니다(`docs/08` §2).
 
 ## 7. 자기 검증
@@ -372,7 +372,7 @@ PR을 올리기 전 자기 점검용입니다.
 - [ ] `grep -rE '(grid-cols|col-span|gap)-\$\{'`에 걸리는 동적 클래스가 없다. 조건부 완전 클래스로 바꿨다.
 - [ ] 자기 `max-width`가 없다. 폭은 `ContentFrame`, 표면색은 `GuidelineBlockFrame`이 소유한다.
 - [ ] 아이콘은 `@carbon/icons-react`다. `@hugeicons`가 없다.
-- [ ] 색·폰트·로고를 props로 받는다. 하드코딩은 essenherb default뿐이다.
+- [ ] 색·폰트·로고를 props로 받는다. 하드코딩은 개발용 default 값뿐이다.
 - [ ] 색·전경색은 저장하지 않고 `@/lib/color`로 런타임 파생한다.
 - [ ] 상태를 색만으로 구분하지 않는다. 심볼 + 텍스트를 함께 쓴다.
 - [ ] 글자 크기는 `docs/09` §6의 고정 유틸리티 단계만 사용한다.
