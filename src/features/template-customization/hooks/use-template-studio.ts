@@ -1,14 +1,14 @@
 'use client'
 
 import { useContext } from 'react'
-import { TemplateStudioContext } from '@/features/template-customization/providers/template-studio-provider'
+import { TemplateStudioContext } from '@/features/template-customization/contexts/template-studio-context'
 
 export type {
 	TemplateBackgroundPatch,
 	TemplateBackgroundState,
 	TemplateImageSlotPatch,
 	TemplateImageSlotState,
-} from '@/features/template-customization/providers/template-studio-provider'
+} from '@/features/template-customization/contexts/template-studio-context'
 
 export function useTemplateStudio() {
 	const context = useContext(TemplateStudioContext)

@@ -1,7 +1,6 @@
 'use client'
 
 import {
-	createContext,
 	type ReactNode,
 	type RefObject,
 	useCallback,
@@ -21,7 +20,14 @@ import {
 } from '@/features/image-generation/domain/image-studio-config'
 import { requestImageGeneration } from '@/features/image-generation/services/generate-image.client'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
-import type { ImageTransformValue } from '@/features/template-customization/domain/image-edit-transform'
+import {
+	type TemplateBackgroundPatch,
+	type TemplateBackgroundState,
+	type TemplateImageSlotPatch,
+	type TemplateImageSlotState,
+	TemplateStudioContext,
+	type TemplateStudioValue,
+} from '@/features/template-customization/contexts/template-studio-context'
 import {
 	findTemplateControl,
 	listCompatibleTemplateImageConfigs,
@@ -39,7 +45,6 @@ import {
 	createTemplateRasterArtifact,
 	type TemplateRasterArtifact,
 } from '@/features/template-customization/runtime/template-runtime.client'
-import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlDefinition,
@@ -53,84 +58,294 @@ const GENERATION_ERROR_MESSAGE = '이미지 생성에 실패했어요. 잠시 �
 const PINNED_CONFIG_ERROR_MESSAGE = '고정된 이미지 프로파일을 사용할 수 없습니다.'
 const SELECTABLE_CONFIG_ERROR_MESSAGE = '사용 가능한 이미지 프로파일이 없습니다.'
 
-/** 이미지 슬롯 하나의 입력·요청·결과 상태. 슬롯 단위를 쪼개지 않고 한 객체로 흐른다. */
-export type TemplateImageSlotState = {
-	profileId?: number
-	prompt: string
-	generating: boolean
-	error: string | null
-	featureValues: ControllerValues
-	/** 생성으로 배정된 이미지 — 없으면 슬롯은 저작 이미지 그대로다(transform도 잠긴다). */
-	image?: { backgroundImage: string; generatedImageId: number; profileId: number }
-	transform?: ImageTransformValue
+function useTemplateTextSession(
+	config: TemplateConfig,
+	textSlots: readonly TemplateTextSlot[],
+	html: string,
+	previewRef: RefObject<HTMLDivElement | null>,
+): TemplateStudioValue['text'] {
+	const colorDefinition = config.template.textColorControlId
+		? findTemplateControl(config, config.template.textColorControlId)
+		: undefined
+	const [values, setValues] = useState<Record<string, string>>(() =>
+		initialTemplateTextValues(config, textSlots),
+	)
+	const [color, setColor] = useState<string | null>(() =>
+		colorDefinition?.kind === 'color' ? colorDefinition.defaultValue : null,
+	)
+	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
+	const setValue = useCallback(
+		(slotId: string, next: string) =>
+			setValues((current) => updateTemplateText(current, config, textSlots, slotId, next)),
+		[config, textSlots],
+	)
+	const updateColor = useCallback(
+		(next: string | null) =>
+			setColor((current) => updateTemplateColor(current, colorDefinition, next)),
+		[colorDefinition],
+	)
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: 측정 대상 DOM이 html·values로 합성된 결과다.
+	useEffect(() => {
+		const container = previewRef.current
+		if (!container) return
+		const clipped = new Set<string>()
+		for (const slot of textSlots) {
+			const element = container.querySelector(`[data-node-id="${slot.id}"]`)
+			if (element && element.scrollHeight > element.clientHeight + 1) clipped.add(slot.id)
+		}
+		setClippedSlotIds(clipped)
+	}, [html, previewRef, textSlots, values])
+
+	return useMemo(
+		() => ({ values, setValue, color, setColor: updateColor, clippedSlotIds }),
+		[clippedSlotIds, color, setValue, updateColor, values],
+	)
 }
 
-export type TemplateImageSlotPatch = Partial<Pick<TemplateImageSlotState, 'prompt' | 'transform'>>
+function useTemplateImageSession(
+	config: TemplateConfig,
+	imageSlots: readonly TemplateImageConfigSlot[],
+): TemplateStudioValue['images'] {
+	const contracts = useMemo(
+		() =>
+			Object.fromEntries(
+				imageSlots.map((slot) => [
+					slot.id,
+					listCompatibleTemplateImageConfigs(slot, config.template.imageConfigs),
+				]),
+			),
+		[config.template.imageConfigs, imageSlots],
+	)
+	const [states, setStates] = useState<Record<string, TemplateImageSlotState>>(() =>
+		Object.fromEntries(
+			imageSlots.map((slot) => [slot.id, initialImageState(slot, contracts[slot.id] ?? [])]),
+		),
+	)
+	const updateState = useCallback(
+		(slotId: string, patch: Partial<TemplateImageSlotState>) => {
+			setStates((current) => {
+				const slot = imageSlots.find((candidate) => candidate.id === slotId)
+				if (!slot) return current
+				const previous = current[slotId] ?? initialImageState(slot, contracts[slotId] ?? [])
+				return { ...current, [slotId]: { ...previous, ...patch } }
+			})
+		},
+		[contracts, imageSlots],
+	)
+	const update = useCallback(
+		(slotId: string, patch: TemplateImageSlotPatch) =>
+			setStates((current) =>
+				updateTemplateImageSlot(current, slotId, patch, contracts[slotId] ?? []),
+			),
+		[contracts],
+	)
+	const updateFeature = useCallback(
+		(slotId: string, controlId: string, next: ControllerControlValue) => {
+			setStates((current) => {
+				const previous = current[slotId]
+				if (!previous) return current
+				const contract = contracts[slotId]?.find(
+					(candidate) => candidate.config.id === previous.profileId,
+				)
+				const color = contract ? getImageColorAdjustmentControls(contract.config) : null
+				const definition = [color?.line, color?.background].find(
+					(control) => control?.id === controlId,
+				)
+				if (!definition || !acceptsControllerDraftValue(definition, next)) return current
+				return {
+					...current,
+					[slotId]: {
+						...previous,
+						featureValues: { ...previous.featureValues, [controlId]: next },
+					},
+				}
+			})
+		},
+		[contracts],
+	)
+	const selectProfile = useCallback(
+		(slotId: string, profileId: number) =>
+			setStates((current) =>
+				selectImageProfile(
+					current,
+					slotId,
+					profileId,
+					contracts[slotId] ?? [],
+					imageSlots.find((slot) => slot.id === slotId)?.featureOverrides,
+				),
+			),
+		[contracts, imageSlots],
+	)
+	const generate = useCallback(
+		async (slotId: string) => {
+			const state = states[slotId]
+			const contract = contracts[slotId]?.find(
+				(candidate) => candidate.config.id === state?.profileId,
+			)
+			const prompt = state?.prompt ?? ''
+			if (!state || state.generating || !contract || !validPrompt(prompt, contract)) return
+			const requestProfileId = contract.config.id
+			updateState(slotId, { generating: true, error: null })
+			const generated = await requestTemplateImageGeneration(prompt, contract)
+			setStates((current) =>
+				applyImageRequestResult(
+					current,
+					slotId,
+					requestProfileId,
+					generated
+						? {
+								image: {
+									backgroundImage: generated.url,
+									generatedImageId: generated.id,
+									profileId: requestProfileId,
+								},
+							}
+						: { error: GENERATION_ERROR_MESSAGE },
+				),
+			)
+			updateState(slotId, { generating: false })
+		},
+		[contracts, states, updateState],
+	)
 
-/** 캔버스 배경 하나의 입력·요청·결과 상태. */
-export type TemplateBackgroundState = {
-	type: TemplateBackgroundType
-	imageMode: 'preset' | 'generate'
-	color: string | null
-	profileId?: number
-	prompt: string
-	generating: boolean
-	error: string | null
-	featureValues: ControllerValues
-	graphicConfigId?: string
-	graphicValues: ControllerValues
-	/** 생성으로 깔린 배경 이미지 — type=image일 때만 합성된다. */
-	image?: { url: string; generatedImageId: number }
+	return useMemo(
+		() => ({ states, contracts, update, updateFeature, selectProfile, generate }),
+		[contracts, generate, selectProfile, states, update, updateFeature],
+	)
 }
 
-export type TemplateBackgroundPatch = Partial<Pick<TemplateBackgroundState, 'imageMode' | 'prompt'>>
+function useTemplateBackgroundSession(
+	config: TemplateConfig,
+	slot: TemplateBackgroundSlot | undefined,
+): TemplateStudioValue['background'] {
+	const contracts = useMemo(
+		() =>
+			slot
+				? listCompatibleTemplateImageConfigs(
+						slot,
+						config.template.imageConfigs,
+						config.template.exportOption.canvas,
+					)
+				: [],
+		[config.template.exportOption.canvas, config.template.imageConfigs, slot],
+	)
+	const [state, setState] = useState<TemplateBackgroundState>(() =>
+		initialBackgroundState(config, slot, contracts),
+	)
+	const typeDefinition = slot ? findTemplateControl(config, slot.typeControlId) : undefined
+	const colorDefinition = slot ? findTemplateControl(config, slot.colorControlId) : undefined
+	const selectedContract = contracts.find((candidate) => candidate.config.id === state.profileId)
+	const featureBindings = useMemo(
+		() => getBackgroundFeatureBindings(selectedContract),
+		[selectedContract],
+	)
+	const selectedGraphicConfig = config.template.graphicConfigs.find(
+		(candidate) => candidate.id === state.graphicConfigId,
+	)
+	const graphicBindings = useMemo(
+		() =>
+			selectedGraphicConfig
+				? getGraphicStudioRuntimeBindings(
+						selectedGraphicConfig,
+						config.template.exportOption.canvas,
+					)
+				: {},
+		[config.template.exportOption.canvas, selectedGraphicConfig],
+	)
+	const update = useCallback(
+		(patch: TemplateBackgroundPatch) =>
+			setState((current) => updateTemplateBackground(current, patch, contracts)),
+		[contracts],
+	)
+	const setColor = useCallback(
+		(next: string | null) =>
+			setState((current) => updateTemplateBackgroundColor(current, colorDefinition, next)),
+		[colorDefinition],
+	)
+	const selectType = useCallback(
+		(next: ControllerControlValue) =>
+			setState((current) => selectBackgroundType(current, typeDefinition, next)),
+		[typeDefinition],
+	)
+	const updateFeature = useCallback(
+		(controlId: string, next: ControllerControlValue) =>
+			setState((current) => updateBackgroundFeature(current, controlId, next, contracts)),
+		[contracts],
+	)
+	const selectImageProfile = useCallback(
+		(profileId: number) =>
+			setState((current) => selectBackgroundImageProfile(current, profileId, contracts)),
+		[contracts],
+	)
+	const selectGraphicConfig = useCallback(
+		(configId: string) =>
+			setState((current) =>
+				selectBackgroundGraphicConfig(current, configId, config.template.graphicConfigs),
+			),
+		[config.template.graphicConfigs],
+	)
+	const updateGraphic = useCallback(
+		(controlId: string, next: ControllerControlValue) =>
+			setState((current) =>
+				updateBackgroundGraphic(
+					current,
+					controlId,
+					next,
+					config.template.graphicConfigs,
+					config.template.exportOption.canvas,
+				),
+			),
+		[config.template.exportOption.canvas, config.template.graphicConfigs],
+	)
+	const generate = useCallback(async () => {
+		const contract = contracts.find((candidate) => candidate.config.id === state.profileId)
+		const prompt = state.prompt
+		if (state.generating || !contract || !validPrompt(prompt, contract)) return
+		setState((current) => ({ ...current, generating: true, error: null }))
+		const generated = await requestTemplateImageGeneration(prompt, contract)
+		setState((current) => ({
+			...current,
+			generating: false,
+			...(generated
+				? { image: { url: generated.url, generatedImageId: generated.id } }
+				: { error: GENERATION_ERROR_MESSAGE }),
+		}))
+	}, [contracts, state])
 
-export type TemplateStudioValue = {
-	navigation: GetCreateNavigationOutput
-	/** 템플릿 편집 계약 — Sidebar와 Canvas는 이 객체와 세션 state만 소비한다. */
-	config: TemplateConfig
-	text: {
-		values: Record<string, string>
-		setValue: (slotId: string, text: string) => void
-		color: string | null
-		setColor: (hex: string | null) => void
-		clippedSlotIds: ReadonlySet<string>
-	}
-	images: {
-		states: Record<string, TemplateImageSlotState>
-		contracts: Record<string, readonly ResolvedTemplateImageConfig[]>
-		update: (slotId: string, patch: TemplateImageSlotPatch) => void
-		updateFeature: (slotId: string, controlId: string, value: ControllerControlValue) => void
-		selectProfile: (slotId: string, profileId: number) => void
-		generate: (slotId: string) => Promise<void>
-	}
-	background: {
-		state: TemplateBackgroundState
-		contracts: readonly ResolvedTemplateImageConfig[]
-		featureBindings: ControllerRuntimeBindings
-		graphicConfigs: readonly GraphicStudioConfig[]
-		graphicBindings: ControllerRuntimeBindings
-		update: (patch: TemplateBackgroundPatch) => void
-		setColor: (hex: string | null) => void
-		selectType: (value: ControllerControlValue) => void
-		updateFeature: (controlId: string, value: ControllerControlValue) => void
-		selectImageProfile: (profileId: number) => void
-		selectGraphicConfig: (configId: string) => void
-		updateGraphic: (controlId: string, value: ControllerControlValue) => void
-		generate: () => Promise<void>
-	}
-	canvas: {
-		html: string
-		artifact: () => TemplateRasterArtifact
-		previewRef: RefObject<HTMLDivElement | null>
-		registerGraphicFrame: (capture: (() => string) | null) => void
-	}
-	execution: {
-		controllerValues: ControllerValues
-	}
+	return useMemo(
+		() => ({
+			state,
+			contracts,
+			featureBindings,
+			graphicConfigs: config.template.graphicConfigs,
+			graphicBindings,
+			update,
+			setColor,
+			selectType,
+			updateFeature,
+			selectImageProfile,
+			selectGraphicConfig,
+			updateGraphic,
+			generate,
+		}),
+		[
+			config.template.graphicConfigs,
+			contracts,
+			featureBindings,
+			generate,
+			graphicBindings,
+			selectGraphicConfig,
+			selectImageProfile,
+			selectType,
+			setColor,
+			state,
+			update,
+			updateFeature,
+			updateGraphic,
+		],
+	)
 }
-
-export const TemplateStudioContext = createContext<TemplateStudioValue | null>(null)
 
 /**
  * Template 편집 세션의 단일 소유자. Sidebar와 Canvas는 서로를 모르고 이 Context만 소비한다.
@@ -146,7 +361,7 @@ export function TemplateStudioProvider({
 }: {
 	config: TemplateConfig
 	template: PublishedHtmlTemplate
-	navigation: GetCreateNavigationOutput
+	navigation: TemplateStudioValue['navigation']
 	children: ReactNode
 }) {
 	const previewRef = useRef<HTMLDivElement>(null)
@@ -160,161 +375,23 @@ export function TemplateStudioProvider({
 	const textSlots = partitionedSlots.text
 	const imageSlots = partitionedSlots.image
 	const backgroundSlot = partitionedSlots.background
-	const textColorDefinition = config.template.textColorControlId
-		? findTemplateControl(config, config.template.textColorControlId)
-		: undefined
-	const backgroundTypeDefinition = backgroundSlot
-		? findTemplateControl(config, backgroundSlot.typeControlId)
-		: undefined
-	const backgroundColorDefinition = backgroundSlot
-		? findTemplateControl(config, backgroundSlot.colorControlId)
-		: undefined
-	const [textValues, setTextValues] = useState<Record<string, string>>(() =>
-		initialTemplateTextValues(config, textSlots),
-	)
-	const [textColor, setTextColor] = useState<string | null>(() =>
-		textColorDefinition?.kind === 'color' ? textColorDefinition.defaultValue : null,
-	)
-	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
-	const imageContracts = useMemo(
-		() =>
-			Object.fromEntries(
-				imageSlots.map((slot) => [
-					slot.id,
-					listCompatibleTemplateImageConfigs(slot, config.template.imageConfigs),
-				]),
-			),
-		[imageSlots, config.template.imageConfigs],
-	)
-	const backgroundContracts = useMemo(
-		() =>
-			backgroundSlot
-				? listCompatibleTemplateImageConfigs(
-						backgroundSlot,
-						config.template.imageConfigs,
-						config.template.exportOption.canvas,
-					)
-				: [],
-		[backgroundSlot, config.template.imageConfigs, config.template.exportOption.canvas],
-	)
-
-	const [imageStates, setImageStates] = useState<Record<string, TemplateImageSlotState>>(() =>
-		Object.fromEntries(
-			imageSlots.map((slot) => [
-				slot.id,
-				initialImageState(slot, imageContracts[slot.id] ?? []),
-			]),
-		),
-	)
-	const [background, setBackground] = useState<TemplateBackgroundState>(() =>
-		initialBackgroundState(config, backgroundSlot, backgroundContracts),
-	)
-	const selectedBackgroundContract = backgroundContracts.find(
-		(candidate) => candidate.config.id === background.profileId,
-	)
-	const backgroundFeatureBindings = getBackgroundFeatureBindings(selectedBackgroundContract)
-	const selectedGraphicConfig = config.template.graphicConfigs.find(
-		(candidate) => candidate.id === background.graphicConfigId,
-	)
-	const graphicBindings = selectedGraphicConfig
-		? getGraphicStudioRuntimeBindings(
-				selectedGraphicConfig,
-				config.template.exportOption.canvas,
-			)
-		: {}
-
-	function updateImageState(slotId: string, patch: Partial<TemplateImageSlotState>) {
-		setImageStates((current) => {
-			const slot = imageSlots.find((candidate) => candidate.id === slotId)
-			if (!slot) return current
-			const previous =
-				current[slotId] ?? initialImageState(slot, imageContracts[slotId] ?? [])
-			return { ...current, [slotId]: { ...previous, ...patch } }
-		})
-	}
-
-	function updateImageFeature(slotId: string, controlId: string, next: ControllerControlValue) {
-		setImageStates((current) => {
-			const previous = current[slotId]
-			if (!previous) return current
-			const contract = imageContracts[slotId]?.find(
-				(candidate) => candidate.config.id === previous.profileId,
-			)
-			const color = contract ? getImageColorAdjustmentControls(contract.config) : null
-			const definition = [color?.line, color?.background].find(
-				(control) => control?.id === controlId,
-			)
-			if (!definition || !acceptsControllerDraftValue(definition, next)) return current
-			return {
-				...current,
-				[slotId]: {
-					...previous,
-					featureValues: { ...previous.featureValues, [controlId]: next },
-				},
-			}
-		})
-	}
-
-	async function generateImage(slotId: string) {
-		const state = imageStates[slotId]
-		const contract = imageContracts[slotId]?.find(
-			(candidate) => candidate.config.id === state?.profileId,
-		)
-		const prompt = state?.prompt ?? ''
-		if (!state || state.generating || !contract || !validPrompt(prompt, contract)) return
-		const requestProfileId = contract.config.id
-		updateImageState(slotId, { generating: true, error: null })
-		const generated = await requestTemplateImageGeneration(prompt, contract)
-		setImageStates((current) =>
-			applyImageRequestResult(
-				current,
-				slotId,
-				requestProfileId,
-				generated
-					? {
-							image: {
-								backgroundImage: generated.url,
-								generatedImageId: generated.id,
-								profileId: requestProfileId,
-							},
-						}
-					: { error: GENERATION_ERROR_MESSAGE },
-			),
-		)
-		updateImageState(slotId, { generating: false })
-	}
-
-	async function generateBackground() {
-		const contract = backgroundContracts.find(
-			(candidate) => candidate.config.id === background.profileId,
-		)
-		const prompt = background.prompt
-		if (background.generating || !contract || !validPrompt(prompt, contract)) return
-		setBackground((current) => ({ ...current, generating: true, error: null }))
-		const generated = await requestTemplateImageGeneration(prompt, contract)
-		setBackground((current) => ({
-			...current,
-			generating: false,
-			...(generated
-				? { image: { url: generated.url, generatedImageId: generated.id } }
-				: { error: GENERATION_ERROR_MESSAGE }),
-		}))
-	}
-
-	const deferredTextColor = useDeferredValue(textColor)
-	const deferredImageStates = useDeferredValue(imageStates)
-	const deferredBackground = useDeferredValue(background)
+	const text = useTemplateTextSession(config, textSlots, html, previewRef)
+	const images = useTemplateImageSession(config, imageSlots)
+	const background = useTemplateBackgroundSession(config, backgroundSlot)
+	const deferredTextColor = useDeferredValue(text.color)
+	const deferredImageStates = useDeferredValue(images.states)
+	const deferredBackground = useDeferredValue(background.state)
 
 	const composedHtml = useMemo(
 		() =>
 			composeTemplateStudioHtml({
 				html,
 				textSlots,
-				textValues,
+				textValues: text.values,
 				textColor: deferredTextColor,
 				imageStates: deferredImageStates,
 				imageSlots,
-				imageContracts,
+				imageContracts: images.contracts,
 				background: deferredBackground,
 				width,
 				height,
@@ -322,38 +399,25 @@ export function TemplateStudioProvider({
 		[
 			html,
 			textSlots,
-			textValues,
+			text.values,
 			deferredTextColor,
 			deferredImageStates,
 			deferredBackground,
 			imageSlots,
-			imageContracts,
+			images.contracts,
 			width,
 			height,
 		],
 	)
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: 측정 대상 DOM이 html·textValues로 합성된 결과다.
-	useEffect(() => {
-		const container = previewRef.current
-		if (!container) return
-		const clipped = new Set<string>()
-		for (const slot of textSlots) {
-			const element = container.querySelector(`[data-node-id="${slot.id}"]`)
-			if (element && element.scrollHeight > element.clientHeight + 1) clipped.add(slot.id)
-		}
-		setClippedSlotIds(clipped)
-	}, [html, textSlots, textValues])
-
-	const controllerValues = templateControllerValues(
-		config,
-		textSlots,
-		textValues,
-		textColor,
-		background,
+	const controllerValues = useMemo(
+		() =>
+			templateControllerValues(config, textSlots, text.values, text.color, background.state),
+		[background.state, config, text.color, text.values, textSlots],
 	)
-	const artifact = (): TemplateRasterArtifact => {
-		const graphicFrame = background.type === 'graphic' ? graphicFrameRef.current?.() : undefined
+	const artifact = useCallback((): TemplateRasterArtifact => {
+		const graphicFrame =
+			background.state.type === 'graphic' ? graphicFrameRef.current?.() : undefined
 		return createTemplateRasterArtifact({
 			height,
 			html: graphicFrame
@@ -365,91 +429,30 @@ export function TemplateStudioProvider({
 				: composedHtml,
 			width,
 		})
-	}
+	}, [background.state.type, composedHtml, height, width])
 
-	const value: TemplateStudioValue = {
-		navigation,
-		config,
-		text: {
-			values: textValues,
-			setValue: (slotId, next) =>
-				setTextValues((current) =>
-					updateTemplateText(current, config, textSlots, slotId, next),
-				),
-			color: textColor,
-			setColor: (next) =>
-				setTextColor((current) => updateTemplateColor(current, textColorDefinition, next)),
-			clippedSlotIds,
-		},
-		images: {
-			states: imageStates,
-			contracts: imageContracts,
-			update: (slotId, patch) =>
-				setImageStates((current) =>
-					updateTemplateImageSlot(current, slotId, patch, imageContracts[slotId] ?? []),
-				),
-			updateFeature: updateImageFeature,
-			selectProfile: (slotId, profileId) =>
-				setImageStates((current) =>
-					selectImageProfile(
-						current,
-						slotId,
-						profileId,
-						imageContracts[slotId] ?? [],
-						imageSlots.find((slot) => slot.id === slotId)?.featureOverrides,
-					),
-				),
-			generate: generateImage,
-		},
-		background: {
-			state: background,
-			contracts: backgroundContracts,
-			featureBindings: backgroundFeatureBindings,
-			graphicConfigs: config.template.graphicConfigs,
-			graphicBindings,
-			update: (patch) =>
-				setBackground((current) =>
-					updateTemplateBackground(current, patch, backgroundContracts),
-				),
-			setColor: (next) =>
-				setBackground((current) =>
-					updateTemplateBackgroundColor(current, backgroundColorDefinition, next),
-				),
-			selectType: (next) =>
-				setBackground((current) =>
-					selectBackgroundType(current, backgroundTypeDefinition, next),
-				),
-			updateFeature: (controlId, next) =>
-				setBackground((current) =>
-					updateBackgroundFeature(current, controlId, next, backgroundContracts),
-				),
-			selectImageProfile: (profileId) =>
-				setBackground((current) =>
-					selectBackgroundImageProfile(current, profileId, backgroundContracts),
-				),
-			selectGraphicConfig: (configId) =>
-				setBackground((current) =>
-					selectBackgroundGraphicConfig(
-						current,
-						configId,
-						config.template.graphicConfigs,
-					),
-				),
-			updateGraphic: (controlId, next) =>
-				setBackground((current) =>
-					updateBackgroundGraphic(
-						current,
-						controlId,
-						next,
-						config.template.graphicConfigs,
-						config.template.exportOption.canvas,
-					),
-				),
-			generate: generateBackground,
-		},
-		canvas: { html: composedHtml, artifact, previewRef, registerGraphicFrame },
-		execution: { controllerValues },
-	}
+	const value = useMemo<TemplateStudioValue>(
+		() => ({
+			navigation,
+			config,
+			text,
+			images,
+			background,
+			canvas: { html: composedHtml, artifact, previewRef, registerGraphicFrame },
+			execution: { controllerValues },
+		}),
+		[
+			artifact,
+			background,
+			composedHtml,
+			config,
+			controllerValues,
+			images,
+			navigation,
+			registerGraphicFrame,
+			text,
+		],
+	)
 
 	return <TemplateStudioContext.Provider value={value}>{children}</TemplateStudioContext.Provider>
 }

@@ -1,6 +1,10 @@
 'use client'
 
-import { createContext, type ReactNode, useState } from 'react'
+import { type ReactNode, useCallback, useMemo, useState } from 'react'
+import {
+	ImageStudioContext,
+	type ImageStudioValue,
+} from '@/features/image-generation/contexts/image-studio-context'
 import {
 	acceptsImagePromptExecution,
 	getImageColorAdjustmentControls,
@@ -12,70 +16,12 @@ import {
 import { useImageGeneration } from '@/features/image-generation/hooks/use-image-generation'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import type { ImageColorAdjustment } from '@/features/image-generation/runtime/image-colorize'
-import type { ImageGenerationResult } from '@/features/image-generation/services/generate-image.client'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlValue,
-	type ControllerRuntimeBindings,
 	type ControllerValues,
 	createControllerValues,
 } from '@/modules/studio-controller/controller-definition'
-
-export type ImageStudioValue = {
-	profiles: {
-		/** 프로파일 교체 후보 — 계약은 언제나 이 중 하나다. */
-		options: readonly ImageStudioConfig[]
-		select: (profileId: number) => void
-	}
-	/** 현재 프로파일의 편집 계약 — 컨트롤러는 이 객체만 보고 컨트롤을 그린다. */
-	config: ImageStudioConfig
-	controls: {
-		values: ControllerValues
-		bindings: ControllerRuntimeBindings
-		update: (controlId: string, value: ControllerControlValue) => void
-	}
-	prompt: {
-		value: string
-		setValue: (text: string) => void
-	}
-	generation: {
-		batch: number
-		setBatch: (count: number) => void
-		ratio: ImageAspectRatio
-		setRatio: (ratio: ImageAspectRatio) => void
-		resolution: ImageOutputSize
-		setResolution: (resolution: ImageOutputSize) => void
-		run: () => void
-		canRun: boolean
-		busy: boolean
-		error: string | null
-	}
-	color: {
-		/** 색 조정 값 — 계약이 색을 열지 않으면 null이고, 그때는 색 행도 굽는 저장도 없다. */
-		value: ImageColorAdjustment | null
-		update: (patch: Partial<ImageColorAdjustment>) => void
-	}
-	camera: {
-		azimuthDeg: number
-		elevationDeg: number
-		setAngles: (angles: { azimuthDeg: number; elevationDeg: number }) => void
-		/** 시점을 다시 잡을 시드 — null이면 대상이 없다(컨트롤러가 그룹을 잠근다). */
-		seedImage: string | null
-		regenerate: () => void
-	}
-	results: {
-		/** 직전 요청이 만든 결과 — 프로파일을 교체해도 유지된다(사용자가 만든 산출물). */
-		result: ImageGenerationResult | null
-		/** 결과와 현재 프로파일이 같을 때만 적용할 색. 다른 프로파일의 기능은 소급하지 않는다. */
-		color: ImageColorAdjustment | null
-		/** 요청한 장수 — 생성 중 자리표시자 개수. */
-		requested: number
-		selected: number | null
-		select: (index: number | null) => void
-	}
-}
-
-export const ImageStudioContext = createContext<ImageStudioValue | null>(null)
 
 /**
  * 이미지 스튜디오 편집 세션의 단일 소유자 — Controller와 Canvas는 이 컨텍스트만 알고 서로를
@@ -102,8 +48,8 @@ export function ImageStudioProvider({
 		useImageGeneration()
 
 	const config = configs.find((item) => item.id === profileId) ?? initial
-	const definitions = getImageStudioControls(config)
-	const colorDefinitions = getImageColorAdjustmentControls(config)
+	const definitions = useMemo(() => getImageStudioControls(config), [config])
+	const colorDefinitions = useMemo(() => getImageColorAdjustmentControls(config), [config])
 	const supportsCamera = Boolean(getImageStudioFeature(config, 'camera-control'))
 	const options = configs
 
@@ -118,107 +64,152 @@ export function ImageStudioProvider({
 		definitions.prompt.maxLength && prompt.length > definitions.prompt.maxLength
 			? `프롬프트가 최대 ${definitions.prompt.maxLength}자를 초과했습니다.`
 			: undefined
-	const bindings: ControllerRuntimeBindings = promptError
-		? { [definitions.prompt.id]: { error: promptError } }
-		: {}
+	const bindings = useMemo(
+		() => (promptError ? { [definitions.prompt.id]: { error: promptError } } : {}),
+		[definitions.prompt.id, promptError],
+	)
 	const canRun = acceptsImagePromptExecution(definitions.prompt, prompt) && !promptError
 
 	const lineColor = colorDefinitions ? values[colorDefinitions.line.id] : undefined
 	const backgroundColor = colorDefinitions?.background
 		? values[colorDefinitions.background.id]
 		: undefined
-	const colorValue: ImageColorAdjustment | null =
-		typeof lineColor === 'string'
-			? {
-					line: lineColor,
-					...(typeof backgroundColor === 'string' ? { background: backgroundColor } : {}),
-				}
-			: null
+	const colorValue = useMemo<ImageColorAdjustment | null>(
+		() =>
+			typeof lineColor === 'string'
+				? {
+						line: lineColor,
+						...(typeof backgroundColor === 'string'
+							? { background: backgroundColor }
+							: {}),
+					}
+				: null,
+		[backgroundColor, lineColor],
+	)
 	const resultColor = result?.profileId === config.id ? colorValue : null
 
-	function update(controlId: string, value: ControllerControlValue) {
-		const definition = findControl(config, controlId)
-		if (!definition || !acceptsControllerDraftValue(definition, value)) return
-		setValues((current) => ({ ...current, [controlId]: value }))
-	}
+	const update = useCallback(
+		(controlId: string, value: ControllerControlValue) => {
+			const definition = findControl(config, controlId)
+			if (!definition || !acceptsControllerDraftValue(definition, value)) return
+			setValues((current) => ({ ...current, [controlId]: value }))
+		},
+		[config],
+	)
 
-	function selectProfile(nextProfileId: number) {
-		const next = configs.find((item) => item.id === nextProfileId)
-		if (!next) return
-		setValues((current) => reconcileProfileValues(next, current))
-		setProfileId(nextProfileId)
-	}
+	const selectProfile = useCallback(
+		(nextProfileId: number) => {
+			const next = configs.find((item) => item.id === nextProfileId)
+			if (!next) return
+			setValues((current) => reconcileProfileValues(next, current))
+			setProfileId(nextProfileId)
+		},
+		[configs],
+	)
 
 	// 시점 조정은 저장된 생성 이미지를 시드로 쓴다 — 셋(시드 URL·생성 이미지 id·프로파일)이
 	// 모두 있을 때만 대상이 성립하므로 한 객체로 파생한다.
 	const generatedImage = selected === null ? undefined : result?.generatedImages?.[selected]
-	const cameraSeed =
-		supportsCamera && selected !== null && result?.profileId === config.id && generatedImage
-			? {
-					basePrompt: result.prompt,
-					generatedImageId: generatedImage.id,
-					profileId: result.profileId,
-					src: result.images[selected],
-				}
-			: null
+	const cameraSeed = useMemo(
+		() =>
+			supportsCamera && selected !== null && result?.profileId === config.id && generatedImage
+				? {
+						basePrompt: result.prompt,
+						generatedImageId: generatedImage.id,
+						profileId: result.profileId,
+						src: result.images[selected],
+					}
+				: null,
+		[config.id, generatedImage, result, selected, supportsCamera],
+	)
 
-	const value: ImageStudioValue = {
-		profiles: { options, select: selectProfile },
-		config,
-		controls: { values, bindings, update },
-		prompt: {
-			value: prompt,
-			setValue: (text) => update(definitions.prompt.id, text),
-		},
-		generation: {
-			batch: Number(batchValue),
-			setBatch: (count) => update(definitions.batch.id, String(count)),
-			ratio: ratioValue as ImageAspectRatio,
-			setRatio: (ratio) => update(definitions.ratio.id, ratio),
-			resolution: resolutionValue as ImageOutputSize,
-			setResolution: (resolution) => update(definitions.resolution.id, resolution),
-			run: () => {
-				if (!canRun) return
-				void generate({
-					aspectRatio: ratioValue as ImageAspectRatio,
-					count: Number(batchValue),
-					imageSize: resolutionValue as ImageOutputSize,
-					profileId: config.id,
-					prompt,
-				})
+	const value = useMemo<ImageStudioValue>(
+		() => ({
+			profiles: { options, select: selectProfile },
+			config,
+			controls: { values, bindings, update },
+			prompt: {
+				value: prompt,
+				setValue: (text) => update(definitions.prompt.id, text),
 			},
+			generation: {
+				batch: Number(batchValue),
+				setBatch: (count) => update(definitions.batch.id, String(count)),
+				ratio: ratioValue as ImageAspectRatio,
+				setRatio: (ratio) => update(definitions.ratio.id, ratio),
+				resolution: resolutionValue as ImageOutputSize,
+				setResolution: (resolution) => update(definitions.resolution.id, resolution),
+				run: () => {
+					if (!canRun) return
+					void generate({
+						aspectRatio: ratioValue as ImageAspectRatio,
+						count: Number(batchValue),
+						imageSize: resolutionValue as ImageOutputSize,
+						profileId: config.id,
+						prompt,
+					})
+				},
+				canRun,
+				busy: loading,
+				error,
+			},
+			color: {
+				value: colorValue,
+				update: (patch) => {
+					if (patch.line !== undefined && colorDefinitions) {
+						update(colorDefinitions.line.id, patch.line)
+					}
+					if (patch.background !== undefined && colorDefinitions?.background) {
+						update(colorDefinitions.background.id, patch.background)
+					}
+				},
+			},
+			camera: {
+				...angles,
+				setAngles,
+				seedImage: cameraSeed?.src ?? null,
+				regenerate: () => {
+					if (!supportsCamera || !cameraSeed) return
+					void adjustCamera({
+						basePrompt: cameraSeed.basePrompt,
+						camera: angles,
+						count: 1,
+						generatedImageId: cameraSeed.generatedImageId,
+						profileId: cameraSeed.profileId,
+					})
+				},
+			},
+			results: { result, color: resultColor, requested, selected, select: setSelected },
+		}),
+		[
+			adjustCamera,
+			angles,
+			batchValue,
+			bindings,
+			cameraSeed,
 			canRun,
-			busy: loading,
+			colorDefinitions,
+			colorValue,
+			config,
+			definitions,
 			error,
-		},
-		color: {
-			value: colorValue,
-			update: (patch) => {
-				if (patch.line !== undefined && colorDefinitions) {
-					update(colorDefinitions.line.id, patch.line)
-				}
-				if (patch.background !== undefined && colorDefinitions?.background) {
-					update(colorDefinitions.background.id, patch.background)
-				}
-			},
-		},
-		camera: {
-			...angles,
-			setAngles,
-			seedImage: cameraSeed?.src ?? null,
-			regenerate: () => {
-				if (!supportsCamera || !cameraSeed) return
-				void adjustCamera({
-					basePrompt: cameraSeed.basePrompt,
-					camera: angles,
-					count: 1,
-					generatedImageId: cameraSeed.generatedImageId,
-					profileId: cameraSeed.profileId,
-				})
-			},
-		},
-		results: { result, color: resultColor, requested, selected, select: setSelected },
-	}
+			generate,
+			loading,
+			options,
+			prompt,
+			ratioValue,
+			requested,
+			resolutionValue,
+			result,
+			resultColor,
+			selected,
+			selectProfile,
+			setSelected,
+			supportsCamera,
+			update,
+			values,
+		],
+	)
 
 	return <ImageStudioContext.Provider value={value}>{children}</ImageStudioContext.Provider>
 }

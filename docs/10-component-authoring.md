@@ -135,7 +135,7 @@ studio·global·home 같은 표면의 화면 컴포넌트도 위 계약을 그�
 
 - **`data-slot`**: 모든 표현 컴포넌트의 루트에 붙입니다. 테스트가 DOM을 잡는 공식 훅이고(`studio-workspace.tsx`의 슬롯을 `template-generator.test.tsx`가 검증하는 것이 원형), 내부 클래스 구조가 바뀌어도 셀렉터가 살아남습니다.
 - **props 형태**: DOM 요소를 감싸는 컴포넌트는 `React.ComponentProps<'...'>` 확장이 기본입니다. 도메인 데이터를 받는 화면 컴포넌트는 인라인 익명 객체 타입 대신 **명명된 Props 타입**을 선언합니다. 외부 스타일 조정을 허용하려면 `className`을 받아 `cn`으로 병합합니다 — 받지 않는 컴포넌트에 `cn`은 필요 없지만, 받는 순간 문자열 결합이 아니라 `cn`입니다.
-- **상태 소유**: 서버 데이터 fetch와 그 loading/error 3종 세트를 컴포넌트 `useState`로 복제하지 않습니다. HTTP I/O는 소유 기능의 `*.client.ts`가(`docs/06` §10), Context와 화면 세션 상태는 `src/features/*/providers`, 소비 API는 `src/features/*/hooks`의 `use-*` 훅이 소유합니다. 원형은 Studio Provider + `use-*-studio` — Provider가 상태를 소유하고 훅은 Context 소비만 담당하며, 나머지 컴포넌트는 props 또는 훅으로 값을 받는 표현 계층으로 남습니다. `src/components` 안에 도메인 상태 `createContext`를 만들지 않습니다.
+- **상태 소유**: 서버 데이터 fetch와 그 loading/error 3종 세트를 컴포넌트 `useState`로 복제하지 않습니다. HTTP I/O는 소유 기능의 `*.client.ts`가(`docs/06` §10), Context 값 계약은 `src/features/*/contexts`, 화면 세션 상태는 `src/features/*/providers`, 소비 API는 `src/features/*/hooks`의 `use-*` 훅이 소유합니다. 원형은 Studio Context + Provider + `use-*-studio` — Provider와 소비 훅은 서로 import하지 않고 같은 Context 계약에 의존하며, 나머지 컴포넌트는 props 또는 훅으로 값을 받는 표현 계층으로 남습니다. `src/components` 안에 도메인 상태 `createContext`를 만들지 않습니다.
 - **variant 수단 단일화**: 시각 variant(색·모양·상태별 스타일)는 언제나 `cva`입니다. 완전 클래스 룩업 테이블은 §4의 동적 클래스 대책, 즉 **레이아웃 매핑**(`grid-cols` 등 구조 분기)에만 씁니다 — 상태→색 매핑을 `.ts` 룩업 테이블이나 클래스 문자열을 반환하는 헬퍼 함수로 풀면 cva 자리를 우회한 것입니다.
 - **motion**: 애니메이션 라이브러리는 `motion/react` 하나만, `LazyMotion` + `motion/react-m` 조합(`side-nav.tsx` 원형)으로 씁니다. 모션 감소는 그 모션을 소유한 컴포넌트 안에서 `useReducedMotion()`으로 처리하고, `shouldReduceMotion`을 props로 내려보내지 않습니다.
 

@@ -1,31 +1,18 @@
 'use client'
 
-import { createContext, type ReactNode, useCallback, useMemo, useRef, useState } from 'react'
+import { type ReactNode, useCallback, useMemo, useRef, useState } from 'react'
+import {
+	GraphicStudioContext,
+	type GraphicStudioValue,
+} from '@/features/graphic-generation/contexts/graphic-studio-context'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlValue,
 	type ControllerRuntimeBinding,
 	type ControllerRuntimeBindings,
-	type ControllerValues,
 	createControllerValues,
 } from '@/modules/studio-controller/controller-definition'
-
-export type GraphicStudioValue = {
-	profiles: {
-		options: readonly GraphicStudioConfig[]
-		select: (profileId: string) => void
-	}
-	config: GraphicStudioConfig
-	controls: {
-		values: ControllerValues
-		bindings: ControllerRuntimeBindings
-		update: (controlId: string, value: ControllerControlValue) => boolean
-		registerBindings: (bindings: ControllerRuntimeBindings) => void
-	}
-}
-
-export const GraphicStudioContext = createContext<GraphicStudioValue | null>(null)
 
 /**
  * 가변 그래픽 편집 세션의 단일 소유자 — Controller와 P5·Shader 캔버스는 이 컨텍스트만

@@ -1,7 +1,7 @@
 'use client'
 
 import { useContext } from 'react'
-import { ImageStudioContext } from '@/features/image-generation/providers/image-studio-provider'
+import { ImageStudioContext } from '@/features/image-generation/contexts/image-studio-context'
 
 export function useImageStudio() {
 	const context = useContext(ImageStudioContext)

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { Typography } from '@/components/ui/typography'
+import { snapCameraAngle } from './camera-orbit'
 
 interface CameraAngles {
 	azimuthDeg: number
@@ -28,20 +29,6 @@ const CENTER = new THREE.Vector3(0, 0.75, 0)
 const AZIMUTH_RADIUS = 2.4
 const ELEVATION_RADIUS = 1.8
 const CAMERA_DISTANCE = 2.1
-
-export function snapCameraAngle(value: number, steps: readonly number[], circular = false): number {
-	return steps.reduce((nearest, step) => {
-		const nearestDistance = cameraAngleDistance(value, nearest, circular)
-		const stepDistance = cameraAngleDistance(value, step, circular)
-		return stepDistance < nearestDistance ? step : nearest
-	})
-}
-
-function cameraAngleDistance(left: number, right: number, circular: boolean) {
-	const distance = Math.abs(left - right)
-	const normalizedDistance = distance % 360
-	return circular ? Math.min(normalizedDistance, 360 - normalizedDistance) : distance
-}
 
 export function CameraOrbitControl({
 	azimuthDeg,

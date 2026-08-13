@@ -1,7 +1,7 @@
 'use client'
 
 import { useContext } from 'react'
-import { GraphicStudioContext } from '@/features/graphic-generation/providers/graphic-studio-provider'
+import { GraphicStudioContext } from '@/features/graphic-generation/contexts/graphic-studio-context'
 
 export function useGraphicStudio() {
 	const context = useContext(GraphicStudioContext)
