@@ -2,8 +2,11 @@
 
 import { Copy, Crop, SquareOutline } from '@carbon/icons-react'
 import type * as React from 'react'
+import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
+import { ImageProfilePicker } from '@/components/studio/image/image-profile-picker'
 import { Controller } from '@/components/studio/shared/controller'
 import { ControllerRenderer } from '@/components/studio/shared/controller-renderer'
+import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
 import { Typography } from '@/components/ui/typography'
@@ -20,8 +23,6 @@ import {
 	type ControllerRuntimeBinding,
 	resolveControllerAvailability,
 } from '@/modules/studio-controller/controller-definition'
-import { ImageProfileFeatureRenderer } from './image-profile-feature-renderer'
-import { ImageProfilePicker } from './image-profile-picker'
 
 /**
  * 이미지 스튜디오의 사이드바(컨트롤러 패널) — 캔버스를 모른다.
@@ -49,7 +50,7 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 	return (
 		// 자산 브라우저의 열림은 편집 세션이 아니라 이 화면의 표현 상태다 — 킷이 소유한다(Provider에 넣지 않는다).
 		<Controller.Browser.Root>
-			<Controller.Panel
+			<StudioSidebar
 				footer={
 					<>
 						<div className="flex flex-col gap-1">
@@ -202,7 +203,7 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 						{generation.error}
 					</Typography>
 				)}
-			</Controller.Panel>
+			</StudioSidebar>
 		</Controller.Browser.Root>
 	)
 }

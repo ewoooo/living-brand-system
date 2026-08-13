@@ -6,6 +6,14 @@ import {
 	ControllerControlRenderer,
 	ControllerGroupRenderer,
 } from '@/components/studio/shared/controller-renderer'
+import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
+import { BackgroundSection } from '@/components/studio/template/background-section'
+import { ImageSlotInput } from '@/components/studio/template/image-slot-input'
+import {
+	IMAGE_TRANSFORM_DEFAULT,
+	ImageTransformControl,
+} from '@/components/studio/template/image-transform-control'
+import { TextSlotInput } from '@/components/studio/template/text-slot-input'
 import { Button } from '@/components/ui/button'
 import {
 	Select,
@@ -28,10 +36,6 @@ import {
 	partitionTemplateSlots,
 } from '@/features/template-customization/domain/template-config'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
-import { BackgroundSection } from './background-section'
-import { ImageSlotInput } from './image-slot-input'
-import { IMAGE_TRANSFORM_DEFAULT, ImageTransformControl } from './image-transform-control'
-import { TextSlotInput } from './text-slot-input'
 
 const FORMAT_LABELS = new Map(
 	STUDIO_OUTPUT_FORMAT_OPTIONS.map(({ label, value }) => [value, label]),
@@ -73,7 +77,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 		currentCategory?.templates.find((item) => item.id === config.id)?.href ?? ''
 
 	return (
-		<Controller.Panel
+		<StudioSidebar
 			footer={
 				<>
 					<div className="flex flex-col gap-1">
@@ -285,6 +289,6 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 					이 템플릿에는 편집 가능한 슬롯이 없습니다.
 				</Typography>
 			)}
-		</Controller.Panel>
+		</StudioSidebar>
 	)
 }

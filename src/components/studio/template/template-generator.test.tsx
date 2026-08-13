@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import userEvent from '@testing-library/user-event'
 import { type ComponentProps, useEffect } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { TemplateSidebar } from '@/components/studio/sidebar/template-sidebar'
 import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { graphicRuntimeManifests } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
@@ -17,7 +18,6 @@ import {
 } from '@/features/template-customization/hooks/use-template-studio'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import { TemplateGenerator as TemplateGeneratorView } from './template-generator'
-import { TemplateSidebar } from './template-sidebar'
 
 const mocks = vi.hoisted(() => ({
 	canExportTemplate: vi.fn(() => true),
@@ -322,9 +322,9 @@ describe('TemplateGenerator', () => {
 		)
 
 		expect(container.querySelector('[data-slot="studio-workspace"]')).not.toBeNull()
-		expect(container.querySelector('[data-slot="studio-workspace-controller"]')).not.toBeNull()
+		expect(container.querySelector('[data-slot="studio-workspace-sidebar"]')).not.toBeNull()
 		expect(container.querySelector('[data-slot="studio-workspace-canvas"]')).not.toBeNull()
-		expect(container.querySelector('[data-slot="controller-panel"]')).not.toBeNull()
+		expect(container.querySelector('[data-slot="studio-sidebar"]')).not.toBeNull()
 
 		fireEvent.click(screen.getByRole('button', { name: '내보내기' }))
 

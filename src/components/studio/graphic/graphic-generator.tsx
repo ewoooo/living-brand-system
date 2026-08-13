@@ -2,8 +2,8 @@
 
 import { useCallback, useState } from 'react'
 import { GraphicCanvas } from '@/components/studio/graphic/graphic-canvas'
-import { GraphicSidebar } from '@/components/studio/graphic/graphic-sidebar'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
+import { GraphicSidebar } from '@/components/studio/sidebar/graphic-sidebar'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
 	GraphicStudioProvider,
@@ -52,7 +52,7 @@ function GraphicWorkspace() {
 	})
 
 	return (
-		<StudioWorkspace controller={<GraphicSidebar output={output} />}>
+		<StudioWorkspace sidebar={<GraphicSidebar output={output} />}>
 			<GraphicCanvas output={output} registerArtifacts={registerArtifacts} />
 		</StudioWorkspace>
 	)

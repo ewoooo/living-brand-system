@@ -1,5 +1,6 @@
 'use client'
 
+import { GraphicProfilePicker } from '@/components/studio/graphic/graphic-profile-picker'
 import { Controller } from '@/components/studio/shared/controller'
 import { ControllerRenderer } from '@/components/studio/shared/controller-renderer'
 import {
@@ -7,10 +8,10 @@ import {
 	SizingControls,
 	VideoControls,
 } from '@/components/studio/shared/output-controls'
+import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
 import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
 import type { GraphicExportView } from '@/features/studio-export/hooks/use-graphic-export'
-import { GraphicProfilePicker } from './graphic-profile-picker'
 
 /** Definition을 Controller primitive로 투영한다. 캔버스와 런타임 구현은 모른다. */
 export function GraphicSidebar({ output }: { output: GraphicExportView }) {
@@ -68,7 +69,7 @@ export function GraphicSidebar({ output }: { output: GraphicExportView }) {
 
 	return (
 		<Controller.Browser.Root>
-			<Controller.Panel footer={footer}>
+			<StudioSidebar footer={footer}>
 				<Controller.AssetCard
 					title={config.name}
 					subtitle={`${config.type.toUpperCase()} Graphic`}
@@ -90,7 +91,7 @@ export function GraphicSidebar({ output }: { output: GraphicExportView }) {
 					bindings={controls.bindings}
 					onChange={controls.update}
 				/>
-			</Controller.Panel>
+			</StudioSidebar>
 		</Controller.Browser.Root>
 	)
 }

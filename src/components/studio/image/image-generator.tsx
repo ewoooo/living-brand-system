@@ -2,8 +2,8 @@
 
 import { Image as ImageIcon } from '@carbon/icons-react'
 import { ImageCanvas } from '@/components/studio/image/image-canvas'
-import { ImageSidebar } from '@/components/studio/image/image-sidebar'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
+import { ImageSidebar } from '@/components/studio/sidebar/image-sidebar'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import {
@@ -58,7 +58,7 @@ function ImageWorkspace() {
 	})
 
 	return (
-		<StudioWorkspace controller={<ImageSidebar download={download} />}>
+		<StudioWorkspace sidebar={<ImageSidebar download={download} />}>
 			<ImageCanvas />
 		</StudioWorkspace>
 	)

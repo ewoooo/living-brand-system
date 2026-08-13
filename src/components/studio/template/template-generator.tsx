@@ -1,6 +1,7 @@
 'use client'
 
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
+import { TemplateSidebar } from '@/components/studio/sidebar/template-sidebar'
 import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import type {
 	PublishedHtmlTemplate,
@@ -12,7 +13,6 @@ import {
 } from '@/features/template-customization/hooks/use-template-studio'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import { TemplateCanvas } from './template-canvas'
-import { TemplateSidebar } from './template-sidebar'
 
 type TemplateGeneratorProps = {
 	config: TemplateConfig
@@ -54,7 +54,7 @@ function TemplateWorkspace({ template }: { template: PublishedHtmlTemplate }) {
 	})
 
 	return (
-		<StudioWorkspace controller={<TemplateSidebar exporting={exporting} />}>
+		<StudioWorkspace sidebar={<TemplateSidebar exporting={exporting} />}>
 			<TemplateCanvas />
 		</StudioWorkspace>
 	)
