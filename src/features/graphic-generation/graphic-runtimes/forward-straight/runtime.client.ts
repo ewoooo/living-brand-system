@@ -1,23 +1,29 @@
 'use client'
 
 import p5 from 'p5'
-import type { ForwardStraightInput } from './forward-straight'
-import { createForwardStraightScene } from './forward-straight-geometry'
+import type { GraphicRuntimeAdapter } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
+import { toControllerPadValue } from './definition'
+import {
+	createForwardStraightScene,
+	type ForwardStraightInput,
+	toForwardStraightInput,
+} from './model'
 
 const ORIGIN_DRAG_HIT_RADIUS = 12
 
-export type ForwardStraightPreview = {
+export type ForwardStraightRuntime = {
 	update(input: ForwardStraightInput): void
 	resize(width: number, height: number): void
 	getViewport(): { width: number; height: number }
+	captureFrame(): string
 	destroy(): void
 }
 
 /**
  * Forward Straight의 브라우저 미리보기만 소유한다.
- * 좌표 계산은 geometry가, Controller 상태는 호출자가 소유한다.
+ * 좌표 계산은 runtime이, Controller 상태는 호출자가 소유한다.
  */
-export function createForwardStraightPreview({
+export function createForwardStraightRuntime({
 	container,
 	input,
 	onInputChange,
@@ -25,13 +31,15 @@ export function createForwardStraightPreview({
 	container: HTMLElement
 	input: ForwardStraightInput
 	onInputChange?: (input: ForwardStraightInput) => boolean
-}): ForwardStraightPreview {
+}): ForwardStraightRuntime {
 	let currentInput = input
 	let draggingOrigin = false
+	let canvas: HTMLCanvasElement | null = null
 	const initialSize = getCanvasSize(container.clientWidth, container.clientHeight)
 	const instance = new p5((preview) => {
 		preview.setup = () => {
-			preview.createCanvas(initialSize.width, initialSize.height)
+			canvas = preview.createCanvas(initialSize.width, initialSize.height)
+				.elt as HTMLCanvasElement
 			preview.pixelDensity(2)
 			preview.strokeCap(preview.SQUARE)
 			preview.noLoop()
@@ -109,6 +117,11 @@ export function createForwardStraightPreview({
 		getViewport() {
 			return { width: instance.width, height: instance.height }
 		},
+		captureFrame() {
+			if (!canvas) throw new Error('Forward Straight canvas를 사용할 수 없습니다.')
+			instance.redraw()
+			return canvas.toDataURL('image/png')
+		},
 		destroy() {
 			instance.remove()
 		},
@@ -132,3 +145,23 @@ function getCanvasSize(width: number, height: number) {
 		height: Math.max(1, Math.floor(height)),
 	}
 }
+
+const runtime = {
+	type: 'p5',
+	async mount({ container, values, onChange }) {
+		const mounted = createForwardStraightRuntime({
+			container,
+			input: toForwardStraightInput(values),
+			onInputChange: (next) => onChange('origin', toControllerPadValue(next.origin)),
+		})
+		return {
+			update: (next) => mounted.update(toForwardStraightInput(next)),
+			resize: (width, height) => mounted.resize(width, height),
+			getViewport: () => mounted.getViewport(),
+			captureFrame: () => mounted.captureFrame(),
+			destroy: () => mounted.destroy(),
+		}
+	},
+} satisfies GraphicRuntimeAdapter
+
+export default runtime

@@ -2,12 +2,11 @@ import { APIError, type CollectionConfig } from 'payload'
 import {
 	deriveGraphicStudioConfig,
 	GRAPHIC_RUNTIME_OPTIONS,
-	graphicStudioConfigs,
+	graphicRuntimeManifests,
 } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import { managerManagedAccess } from '@/lib/auth'
 import {
-	studioControllerField,
-	studioControllerOverrideField,
+	studioControllerRestrictionsField,
 	studioOutputPolicyField,
 } from './fields/studio-controller-field'
 import { draftVersions } from './shared'
@@ -26,8 +25,7 @@ export const GraphicProfiles: CollectionConfig = {
 						id: Number(effective.id ?? 0),
 						name: String(effective.name ?? ''),
 						runtime: String(effective.runtime ?? ''),
-						controller: effective.controller,
-						controllerOverride: effective.controllerOverride,
+						controllerRestrictions: effective.controllerRestrictions,
 						output: effective.output,
 					})
 				} catch (error) {
@@ -75,15 +73,9 @@ export const GraphicProfiles: CollectionConfig = {
 			min: 0,
 			admin: { position: 'sidebar' },
 		},
-		studioControllerField({
-			mode: 'restrict',
-			hidden: true,
-			description:
-				'비우면 runtime 기본 계약을 사용합니다. 필요한 항목만 입력하면 같은 ID의 options, 범위, 기본값, 사용 상태만 좁힙니다.',
-		}),
-		studioControllerOverrideField({
+		studioControllerRestrictionsField({
 			source: 'graphic',
-			baseConfigs: graphicStudioConfigs.map(({ id, controller }) => ({ id, controller })),
+			baseConfigs: graphicRuntimeManifests.map(({ id, controller }) => ({ id, controller })),
 		}),
 		studioOutputPolicyField(),
 	],

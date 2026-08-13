@@ -9,23 +9,15 @@ import {
 	deriveImageStudioConfig,
 	type PublishedImageProfileDefinition,
 } from '@/features/image-generation/domain/image-studio-config'
-import { IMAGE_PROMPT_MAX_LENGTH } from '@/features/image-generation/image-generation-limits'
 import {
 	DEFAULT_IMAGE_MODEL_PRESET,
 	IMAGE_MODEL_PRESET_OPTIONS,
-	type ImageModelPreset,
 } from '@/features/image-generation/image-model'
 import {
 	imagePromptNormalizationRequestSchema,
 	validateImageProfilePromptRows,
 	validateImagePromptNormalizationRows,
 } from '@/features/image-generation/image-profile-prompt'
-import {
-	IMAGE_ASPECT_RATIO_OPTIONS,
-	IMAGE_OUTPUT_SIZE_OPTIONS,
-	type ImageOutputSize,
-	supportsImageOutputSize,
-} from '@/features/image-generation/image-size'
 import { imageGenerationErrorResponse } from '@/features/image-generation/respond-image-generation'
 import { normalizeImageProfilePrompt } from '@/features/image-generation/services/normalize-image-profile-prompt.service'
 import {
@@ -35,26 +27,12 @@ import {
 import { isManager, managerManagedAccess } from '@/lib/auth'
 import { imageProfileFeaturesField } from './fields/image-profile-features-field'
 import {
-	studioControllerField,
+	studioControllerRestrictionsField,
 	studioOutputPolicyField,
-	validateHexColor,
 } from './fields/studio-controller-field'
 import { draftVersions } from './shared'
 
 const managerFieldRead: FieldAccess = ({ req }) => isManager(req.user)
-
-function validateImageSize(
-	value: null | string | undefined,
-	{ siblingData }: { siblingData: Record<string, unknown> },
-): string | true {
-	if (!value) return true
-	return (
-		supportsImageOutputSize(
-			siblingData.imageModelPreset as ImageModelPreset,
-			value as ImageOutputSize,
-		) || 'Nano Banana 2 Lite는 1K 출력만 지원합니다.'
-	)
-}
 
 async function normalizePromptEndpoint(req: PayloadRequest) {
 	if (!isManager(req.user)) {
@@ -172,82 +150,6 @@ export const ImageProfiles: CollectionConfig = {
 			},
 		},
 		{
-			name: 'aspectRatio',
-			type: 'select',
-			required: true,
-			defaultValue: '2:3',
-			options: [...IMAGE_ASPECT_RATIO_OPTIONS],
-			label: '출력 비율',
-			admin: {
-				position: 'sidebar',
-				hidden: true,
-				description: '이미지 공급자와 무관한 가로:세로 비율입니다.',
-			},
-		},
-		{
-			name: 'imageSize',
-			type: 'select',
-			required: true,
-			defaultValue: '1K',
-			options: [...IMAGE_OUTPUT_SIZE_OPTIONS],
-			label: '출력 해상도',
-			validate: validateImageSize,
-			admin: {
-				position: 'sidebar',
-				hidden: true,
-				description: 'Nano Banana 2 Lite는 1K만 지원합니다.',
-			},
-		},
-		{
-			name: 'maxPromptLength',
-			type: 'number',
-			min: 1,
-			max: IMAGE_PROMPT_MAX_LENGTH,
-			label: '최대 프롬프트 길이',
-			admin: {
-				position: 'sidebar',
-				hidden: true,
-				description: `비우면 전역 상한(${IMAGE_PROMPT_MAX_LENGTH}자)을 씁니다.`,
-			},
-		},
-		{
-			name: 'cameraControl',
-			type: 'checkbox',
-			defaultValue: true,
-			label: '카메라 시점 조정 허용',
-			admin: {
-				position: 'sidebar',
-				hidden: true,
-				description: '생성 이미지를 시드로 시점을 다시 잡을 수 있게 합니다.',
-			},
-		},
-		{
-			name: 'colorAdjustment',
-			type: 'group',
-			label: '색 조정',
-			admin: {
-				hidden: true,
-				description:
-					'발행된 브랜드 색의 hex를 넣습니다. 라인 색을 비우면 이 프로파일은 색 조정을 열지 않습니다.',
-			},
-			fields: [
-				{
-					name: 'line',
-					type: 'text',
-					label: '라인 색',
-					validate: validateHexColor,
-					admin: { description: '#rrggbb 형식으로 입력합니다.' },
-				},
-				{
-					name: 'background',
-					type: 'text',
-					label: '배경 색',
-					validate: validateHexColor,
-					admin: { description: '비우면 배경 없이 라인만 칠합니다.' },
-				},
-			],
-		},
-		{
 			name: 'profilePrompt',
 			type: 'array',
 			access: { read: managerFieldRead },
@@ -296,8 +198,8 @@ export const ImageProfiles: CollectionConfig = {
 				},
 			],
 		},
-		studioControllerField({ mode: 'define' }),
 		imageProfileFeaturesField(),
+		studioControllerRestrictionsField({ source: 'image' }),
 		studioOutputPolicyField({
 			includeOriginal: true,
 		}),

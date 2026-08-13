@@ -3,41 +3,56 @@
 import { FieldDescription, FieldError, FieldLabel, useField, useFormFields } from '@payloadcms/ui'
 import type { JSONFieldClientComponent } from 'payload'
 import type { ComponentProps } from 'react'
-import { deriveTemplateBaseControllerGroups } from '@/features/template-customization/domain/template-config'
+import { deriveImageProfileController } from '@/features/image-generation/domain/image-studio-config'
+import {
+	DEFAULT_IMAGE_MODEL_PRESET,
+	type ImageModelPreset,
+} from '@/features/image-generation/image-model'
+import { getTemplateRuntimeManifest } from '@/features/template-customization/domain/template-config'
 import type {
 	ControllerControlDefinition,
-	ControllerControlOverride,
+	ControllerControlRestriction,
 	ControllerGroupDefinition,
-	StudioControllerOverride,
+	StudioControllerRestrictions,
 } from '@/modules/studio-controller/controller-definition'
 import type { TemplateNodeConfigMap } from '@/types/template'
 
-type OverrideFieldProps = ComponentProps<JSONFieldClientComponent> & {
-	source: 'graphic' | 'template'
+type RestrictionsFieldProps = ComponentProps<JSONFieldClientComponent> & {
+	source: 'graphic' | 'image' | 'template'
 	baseConfigs?: readonly {
 		id: string
 		controller: { groups: readonly ControllerGroupDefinition[] }
 	}[]
 }
 
-/** Base Definition을 읽기 전용으로 보여주고 제약값만 sparse JSON으로 저장한다. */
-export function StudioControllerOverrideField({
+/** Runtime Manifest의 Controller projection을 읽기 전용으로 보여주고 제약값만 저장한다. */
+export function StudioControllerRestrictionsField({
 	path,
 	source,
 	baseConfigs = [],
-}: OverrideFieldProps) {
+}: RestrictionsFieldProps) {
 	const { disabled, errorMessage, setValue, showError, value } = useField<unknown>({ path })
 	const runtime = useFormFields(([fields]) => fields.runtime?.value) as string | undefined
+	const imageModelPreset =
+		(useFormFields(([fields]) => fields.imageModelPreset?.value) as
+			| ImageModelPreset
+			| undefined) ?? DEFAULT_IMAGE_MODEL_PRESET
+	const imageFeatures = useFormFields(([fields]) => fields.features?.value)
 	const html = (useFormFields(([fields]) => fields.html?.value) as string | undefined) ?? ''
 	const nodeConfigs = (useFormFields(([fields]) => fields.overrides?.value) ??
 		{}) as TemplateNodeConfigMap
 	const groups =
 		source === 'graphic'
 			? (baseConfigs.find((config) => config.id === runtime)?.controller.groups ?? [])
-			: deriveTemplateBaseControllerGroups({ html, nodeConfigs })
-	const current = readOverride(value)
+			: source === 'image'
+				? deriveImageProfileController(imageModelPreset, imageFeatures, undefined).groups
+				: getTemplateRuntimeManifest({
+						html,
+						nodeConfigs,
+					}).controller.groups
+	const current = readRestrictions(value)
 
-	function update(controlId: string, patch: Partial<ControllerControlOverride>) {
+	function update(controlId: string, patch: Partial<ControllerControlRestriction>) {
 		const previous = current.controls.find((control) => control.controlId === controlId) ?? {
 			controlId,
 		}
@@ -58,7 +73,9 @@ export function StudioControllerOverrideField({
 				<p className="text-sm text-muted-foreground">
 					{source === 'graphic'
 						? 'Runtime을 선택하면 제한 가능한 컨트롤이 표시됩니다.'
-						: 'Template HTML을 가져오면 제한 가능한 컨트롤이 표시됩니다.'}
+						: source === 'image'
+							? '이미지 기능을 선택하면 제한 가능한 컨트롤이 표시됩니다.'
+							: 'Template HTML을 가져오면 제한 가능한 컨트롤이 표시됩니다.'}
 				</p>
 			) : (
 				<div className="flex flex-col gap-4">
@@ -67,11 +84,11 @@ export function StudioControllerOverrideField({
 							<legend className="px-1 text-sm font-semibold">{group.title}</legend>
 							<div className="flex flex-col gap-3">
 								{group.controls.map((control) => (
-									<ControlOverrideEditor
+									<ControlRestrictionEditor
 										key={control.id}
 										control={control}
 										disabled={disabled}
-										override={current.controls.find(
+										restriction={current.controls.find(
 											(candidate) => candidate.controlId === control.id,
 										)}
 										onChange={(patch) => update(control.id, patch)}
@@ -90,18 +107,18 @@ export function StudioControllerOverrideField({
 	)
 }
 
-function ControlOverrideEditor({
+function ControlRestrictionEditor({
 	control,
 	disabled,
-	override,
+	restriction,
 	onChange,
 }: {
 	control: ControllerControlDefinition
 	disabled?: boolean
-	override?: ControllerControlOverride
-	onChange: (patch: Partial<ControllerControlOverride>) => void
+	restriction?: ControllerControlRestriction
+	onChange: (patch: Partial<ControllerControlRestriction>) => void
 }) {
-	const overridesDefault = override && Object.hasOwn(override, 'defaultValue')
+	const overridesDefault = restriction && Object.hasOwn(restriction, 'defaultValue')
 	return (
 		<div className="grid gap-2 rounded-md bg-muted/40 p-3 md:grid-cols-2">
 			<div>
@@ -113,7 +130,7 @@ function ControlOverrideEditor({
 				<select
 					className="mt-1 block h-9 w-full rounded-md border bg-background px-2"
 					disabled={disabled}
-					value={override?.availability ?? ''}
+					value={restriction?.availability ?? ''}
 					onChange={(event) =>
 						onChange({
 							availability:
@@ -148,29 +165,29 @@ function ControlOverrideEditor({
 				<DefaultValueEditor
 					control={control}
 					disabled={disabled}
-					value={override.defaultValue}
+					value={restriction.defaultValue}
 					onChange={(defaultValue) => onChange({ defaultValue })}
 				/>
 			) : null}
 			{control.kind === 'text' ? (
-				<NumberOverride
+				<NumberRestriction
 					label={`최대 글자 수 (원본 ${control.maxLength ?? '없음'})`}
-					value={override?.maxLength}
+					value={restriction?.maxLength}
 					disabled={disabled}
 					onChange={(maxLength) => onChange({ maxLength })}
 				/>
 			) : null}
 			{control.kind === 'range' ? (
 				<>
-					<NumberOverride
+					<NumberRestriction
 						label={`최솟값 (원본 ${control.min})`}
-						value={override?.min}
+						value={restriction?.min}
 						disabled={disabled}
 						onChange={(min) => onChange({ min })}
 					/>
-					<NumberOverride
+					<NumberRestriction
 						label={`최댓값 (원본 ${control.max})`}
-						value={override?.max}
+						value={restriction?.max}
 						disabled={disabled}
 						onChange={(max) => onChange({ max })}
 					/>
@@ -181,7 +198,8 @@ function ControlOverrideEditor({
 					<div className="mb-1 text-sm">허용 선택지</div>
 					<div className="flex flex-wrap gap-3">
 						{control.options.map((option) => {
-							const selected = override?.optionValues?.includes(option.value) ?? true
+							const selected =
+								restriction?.optionValues?.includes(option.value) ?? true
 							return (
 								<label
 									key={option.value}
@@ -193,7 +211,7 @@ function ControlOverrideEditor({
 										disabled={disabled}
 										onChange={() => {
 											const values = new Set(
-												override?.optionValues ??
+												restriction?.optionValues ??
 													control.options.map(({ value }) => value),
 											)
 											if (selected) values.delete(option.value)
@@ -228,8 +246,8 @@ function DefaultValueEditor({
 }: {
 	control: ControllerControlDefinition
 	disabled?: boolean
-	value: ControllerControlOverride['defaultValue']
-	onChange: (value: ControllerControlOverride['defaultValue']) => void
+	value: ControllerControlRestriction['defaultValue']
+	onChange: (value: ControllerControlRestriction['defaultValue']) => void
 }) {
 	if (control.kind === 'toggle') {
 		return (
@@ -304,7 +322,7 @@ function DefaultValueEditor({
 	)
 }
 
-function NumberOverride({
+function NumberRestriction({
 	label,
 	value,
 	disabled,
@@ -333,7 +351,7 @@ function NumberOverride({
 	)
 }
 
-function readOverride(value: unknown): StudioControllerOverride {
+function readRestrictions(value: unknown): StudioControllerRestrictions {
 	if (
 		!value ||
 		typeof value !== 'object' ||
@@ -341,5 +359,5 @@ function readOverride(value: unknown): StudioControllerOverride {
 	) {
 		return { controls: [] }
 	}
-	return value as StudioControllerOverride
+	return value as StudioControllerRestrictions
 }

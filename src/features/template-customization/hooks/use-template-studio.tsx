@@ -4,6 +4,7 @@ import {
 	createContext,
 	type ReactNode,
 	type RefObject,
+	useCallback,
 	useContext,
 	useDeferredValue,
 	useEffect,
@@ -25,11 +26,11 @@ import { useExport } from '@/features/studio-export/hooks/use-export'
 import {
 	canExportTemplate,
 	createTemplateExportRequest,
-	supportsTemplateExport,
 	type TemplateExportContext,
 	type TemplateExportRequest,
 } from '@/features/studio-export/services/export-template'
 import { createTemplateExportSource } from '@/features/studio-export/services/export-template.client'
+import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import type { ImageTransformValue } from '@/features/template-customization/domain/image-edit-transform'
 import {
 	findTemplateControl,
@@ -127,6 +128,7 @@ type TemplateStudioValue = {
 	canvas: {
 		html: string
 		previewRef: RefObject<HTMLDivElement | null>
+		registerGraphicFrame: (capture: (() => string) | null) => void
 	}
 	exporting: {
 		formats: readonly StudioOutputFormat[]
@@ -158,6 +160,10 @@ export function TemplateStudioProvider({
 	children: ReactNode
 }) {
 	const previewRef = useRef<HTMLDivElement>(null)
+	const graphicFrameRef = useRef<(() => string) | null>(null)
+	const registerGraphicFrame = useCallback((capture: (() => string) | null) => {
+		graphicFrameRef.current = capture
+	}, [])
 	const { html, width, height } = template
 	const slots = config.template.slots
 	const partitionedSlots = useMemo(() => partitionTemplateSlots(slots), [slots])
@@ -180,17 +186,7 @@ export function TemplateStudioProvider({
 		textColorDefinition?.kind === 'color' ? textColorDefinition.defaultValue : null,
 	)
 	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
-	const effectiveExportFormats = config.output.formats.filter((candidate) =>
-		supportsTemplateExport(candidate, {
-			fileName: template.name,
-			height,
-			html,
-			printPpi: template.printPpi,
-			templateId: template.id,
-			templateVersion: template.templateVersion,
-			width,
-		}),
-	)
+	const effectiveExportFormats = config.output.formats
 	const [format, setFormat] = useState<StudioOutputFormat | null>(
 		effectiveExportFormats[0] ?? null,
 	)
@@ -334,7 +330,6 @@ export function TemplateStudioProvider({
 				imageSlots,
 				imageContracts,
 				background: deferredBackground,
-				graphicConfigs: config.template.graphicConfigs,
 				width,
 				height,
 			}),
@@ -345,7 +340,6 @@ export function TemplateStudioProvider({
 			deferredTextColor,
 			deferredImageStates,
 			deferredBackground,
-			config.template.graphicConfigs,
 			imageSlots,
 			imageContracts,
 			width,
@@ -382,7 +376,20 @@ export function TemplateStudioProvider({
 	const templateExport = useExport<TemplateExportRequest>({
 		capability: config.output,
 		canExport: (request) => canExportTemplate(request, exportContext),
-		source: createTemplateExportSource(exportContext),
+		source: createTemplateExportSource(() => {
+			const graphicFrame =
+				background.type === 'graphic' ? graphicFrameRef.current?.() : undefined
+			return {
+				...exportContext,
+				html: graphicFrame
+					? composeTemplateHtml(
+							exportContext.html,
+							{},
+							{ canvasBackground: { imageUrl: graphicFrame } },
+						)
+					: exportContext.html,
+			}
+		}),
 	})
 
 	const value: TemplateStudioValue = {
@@ -465,7 +472,7 @@ export function TemplateStudioProvider({
 				),
 			generate: generateBackground,
 		},
-		canvas: { html: composedHtml, previewRef },
+		canvas: { html: composedHtml, previewRef, registerGraphicFrame },
 		exporting: {
 			formats: effectiveExportFormats,
 			format,

@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { forwardStraightGraphicConfig } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import {
 	resolveTemplateImageConfig,
@@ -55,8 +55,8 @@ function Harness({
 		generating,
 		error: initialError,
 		featureValues: contract ? createControllerValues(contract.config.controller.groups) : {},
-		graphicConfigId: forwardStraightGraphicConfig.id,
-		graphicValues: createControllerValues(forwardStraightGraphicConfig.controller.groups),
+		graphicConfigId: forwardStraightRuntimeManifest.id,
+		graphicValues: createControllerValues(forwardStraightRuntimeManifest.controller.groups),
 	})
 	return (
 		<BackgroundSection
@@ -85,7 +85,7 @@ function Harness({
 			}}
 			imageContracts={contract ? [contract] : []}
 			featureBindings={contract ? featureBindings : {}}
-			graphicConfigs={[forwardStraightGraphicConfig]}
+			graphicConfigs={[forwardStraightRuntimeManifest]}
 			graphicBindings={{ origin: { padAspectRatio: 4 / 3 } }}
 			value={state}
 			onChange={(patch) => {
@@ -243,15 +243,6 @@ describe('BackgroundSection', () => {
 
 		await openGenerateTab(user)
 		expect(screen.getByRole('combobox', { name: 'Image Profile' })).toBeDisabled()
-	})
-
-	it('Image feature availability는 전달된 runtime binding만 따른다', async () => {
-		const user = userEvent.setup()
-		render(<Harness allowedTypes={['image']} featureBindings={{}} />)
-
-		await openGenerateTab(user)
-		expect(screen.getByLabelText('Line Color 색상 선택')).toBeEnabled()
-		expect(screen.getByLabelText('Background Color 색상 선택')).toBeEnabled()
 	})
 
 	it('Provider가 가진 생성 오류를 표시한다', async () => {

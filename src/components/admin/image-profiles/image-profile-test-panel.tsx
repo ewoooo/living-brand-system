@@ -8,6 +8,13 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldTitle } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
+import {
+	deriveImageProfileController,
+	getImageStudioControls,
+	type ImageStudioConfig,
+} from '@/features/image-generation/domain/image-studio-config'
+import type { ImageModelPreset } from '@/features/image-generation/image-model'
+import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import type { ImagePromptNormalizationResult } from '@/features/image-generation/services/generate-image.client'
 import {
 	requestAdminImageGeneration,
@@ -60,11 +67,22 @@ export function ImageProfileTestPanel() {
 		try {
 			const { finalPrompt } = await normalizeCurrentForm()
 			const data = getData()
+			const controller = deriveImageProfileController(
+				data.imageModelPreset as ImageModelPreset,
+				data.features,
+				data.controllerRestrictions,
+			)
+			const { ratio, resolution } = getImageStudioControls({
+				controller,
+			} as ImageStudioConfig)
+			if (!ratio.defaultValue || !resolution.defaultValue) {
+				throw new Error('이미지 비율과 해상도 기본값을 확인하세요.')
+			}
 			const generated = await requestAdminImageGeneration({
-				aspectRatio: data.aspectRatio,
+				aspectRatio: ratio.defaultValue as ImageAspectRatio,
 				count: 1,
 				imageModelPreset: data.imageModelPreset,
-				imageSize: data.imageSize,
+				imageSize: resolution.defaultValue as ImageOutputSize,
 				prompt: JSON.stringify(finalPrompt),
 			})
 			setImage(generated.images[0] ?? null)

@@ -80,7 +80,7 @@ export function createTemplateExportRequest(
 /** Config 파생용 실제 adapter/source capability. Admin 정책은 여기서 섞지 않는다. */
 export function supportsTemplateExport(
 	format: StudioOutputFormat,
-	context: Omit<TemplateExportContext, 'output' | 'controller'>,
+	context: Pick<TemplateExportContext, 'printPpi' | 'templateVersion'>,
 ): boolean {
 	return (
 		format === 'png' ||

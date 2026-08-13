@@ -1,11 +1,9 @@
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
-import type { GraphicRuntimeId } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import { graphicStudioPlugins } from '@/features/graphic-generation/graphic-runtimes/catalog/model.generated'
 import {
 	createGraphicStudioPluginCatalog,
 	type GraphicStudioPlugin,
 } from '@/features/graphic-generation/runtime/graphic-plugin'
-import { forwardStraightGraphicPlugin } from '@/features/graphic-generation/runtime/plugins/forward-straight'
-import { radialFlutedGlassGraphicPlugin } from '@/features/graphic-generation/runtime/plugins/radial-fluted-glass'
 import { supportsStudioOutput } from '@/features/studio-export/studio-output'
 import type {
 	ControllerRuntimeBindings,
@@ -13,11 +11,9 @@ import type {
 } from '@/modules/studio-controller/controller-definition'
 import { acceptsControllerExecutionValues } from '@/modules/studio-controller/controller-definition'
 
-const graphicStudioPlugins = {
-	'forward-straight': forwardStraightGraphicPlugin,
-	'radial-fluted-glass': radialFlutedGlassGraphicPlugin,
-} as const satisfies Record<GraphicRuntimeId, GraphicStudioPlugin>
 const graphicStudioPluginCatalog = createGraphicStudioPluginCatalog(graphicStudioPlugins)
+
+type GraphicRuntimeId = keyof typeof graphicStudioPluginCatalog
 
 /** 등록된 Graphic plugin만 순수 SVG로 투영한다. */
 export function renderGraphicStudioSvg(

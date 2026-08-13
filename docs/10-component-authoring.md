@@ -143,20 +143,25 @@ studio·global·home 같은 표면의 화면 컴포넌트도 위 계약을 그�
 
 스튜디오 컨트롤러의 개별 컨트롤은 아래 계약을 따릅니다. 디자인 정본은 Figma HD_LBS_UI의 **Controller API**(node `4:5578`), 구현 원형은 `src/components/studio/shared/controller/`의 **Controller 컴파운드 킷**입니다. 패널은 `Root` → `Header`·`Content`·`Footer`, 본문은 `Group` → 개별 컨트롤로 조합합니다. `Group`은 제목을 직접 받고, 접힘이 필요할 때만 `collapsible`을 켭니다. 기존 `Panel`은 `Root`·`Content`·`Footer`를 묶은 호환 래퍼입니다.
 
-세 Studio가 발행하는 공통 envelope는 `StudioControllerConfig`입니다.
+세 Studio는 Admin 제한 전의 원본 계약을 `StudioRuntimeManifest`로 발행하고, 제한이 적용된 `StudioControllerConfig`를 실행 계층에 전달합니다.
 
 ```ts
-type StudioControllerConfig = {
+type StudioRuntimeManifest = {
+	output: StudioOutputCapability
+	controller: { groups: readonly ControllerGroupDefinition[] }
+}
+
+type StudioControllerConfig = StudioRuntimeManifest & {
 	studio: 'template' | 'image' | 'graphic'
 	id: string | number
 	version: 1
 	name: string
-	output: { formats: readonly StudioOutputFormat[] }
-	controller: { groups: readonly ControllerGroupDefinition[] }
 }
 ```
 
-`StudioOutputFormat`은 `png | jpeg | tiff | pdf | svg | mp4`인 공통 파일 형식 어휘입니다. Template·Image·Graphic Config는 이 envelope를 그대로 쓰고, 실행에 필요한 도메인 descriptor와 control id binding만 확장합니다. Studio Provider는 공통화하지 않습니다. 각 Provider가 자기 도메인의 세션과 실행 결과를 소유합니다.
+Runtime Manifest는 정적 하드코딩을 의미하지 않습니다. Graphic은 plugin 등록값, Image는 Generation Model capability, Template은 `html`·`nodeConfigs`·출력에 필요한 Template domain data에서 결정적으로 Manifest를 얻습니다. Template Manifest는 실제 DOM node·ref를 담지 않는 직렬화 가능한 문서 구조 투영입니다. 같은 입력은 항상 같은 Manifest를 내야 합니다.
+
+Template·Image·Graphic Config는 이 Manifest 구조를 그대로 쓰고, 실행에 필요한 도메인 descriptor와 control id binding만 확장합니다. `Runtime Manifest + Admin feature/output/controller restrictions → Effective StudioConfig`의 적용은 순수하고 멱등적이어야 합니다. Studio Provider는 공통화하지 않습니다. 각 Provider가 자기 도메인의 세션과 실행 결과를 소유합니다.
 
 `output.formats`는 Runtime/Service supported formats와 Admin allowed formats의 교집합입니다. Admin은 좁힐 수만 있고 형식을 추가할 수 없습니다. 형식 선택은 Controller Definition에 중복하지 않고 Provider의 export state와 `Controller.Footer`가 `config.output.formats`에서 직접 소비합니다. UI는 이 policy capability를 보고, 공통 `useExport`는 `StudioExportSource`의 실제 실행 handler 존재 여부까지 함께 확인합니다. 형식 분기는 `executeStudioExport` 한 곳만 소유하며 Canvas는 출력 형식을 해석하지 않습니다. Image의 `original`은 파일 형식이 아니므로 `output.original` boolean으로 둡니다.
 
@@ -177,7 +182,7 @@ Controller 사용 구조는 다섯 책임으로 나눕니다.
 
 | 책임 | 소유 범위 | 경계 |
 | --- | --- | --- |
-| Definition | Published Config가 기본값·선택지·범위·정적 availability를 소유 | 현재 값과 실행 상태를 저장하지 않음 |
+| Definition | Runtime Manifest가 기본값·선택지·범위·정적 availability를 소유 | 현재 값과 실행 상태를 저장하지 않음 |
 | State / Context | Studio Provider가 session values·runtime bindings·정책·액션을 소유 | Studio별 Provider를 하나로 합치지 않음 |
 | Rendering | `ControllerRenderer`가 `groups`를 `Group`과 primitive로 투영 | `Content`나 도메인 UI를 소유하지 않음 |
 | Layout / Composition | Domain Sidebar가 `Root`·`Header`·`Content`·`Footer`와 복합 UI를 구성 | 컨트롤 값을 재정의하지 않음 |
@@ -185,13 +190,13 @@ Controller 사용 구조는 다섯 책임으로 나눕니다.
 
 별도 `ControllerProvider`는 두지 않습니다. 편집 계약과 세션 값은 화면의 Studio Provider가 소유하고, Controller 컴파운드는 표현 레이아웃만 소유합니다. 여러 Controller Root 사이에서 공유할 표현 상태가 실제로 생길 때만 Provider를 추가합니다.
 
-Payload의 작성 데이터는 block 저장 형식인 `key`·`blockType`을 사용해도 됩니다. Published projection은 이를 클라이언트 계약의 `id`·`kind`로 정규화합니다. Image Profile은 완전한 Definition을 저작하는 `define` 모드를 사용합니다. Graphic Profile과 Template의 Admin UI는 runtime·DOM에서 파생한 Base Definition을 읽기 전용으로 보여주고, `{ controlId, availability, defaultValue, maxLength, optionValues, min, max }`만 sparse JSON Override로 저장합니다. Admin은 `kind`·label·placeholder·display·aspectRatio·group title·collapsible·defaultOpen을 입력하지 않습니다. Draft는 작성 중인 불완전 상태를 허용하지만 publish는 공통 parser로 unknown field·중복 id·kind별 기본값과 제약을 엄격하게 검증합니다. 기존 group/block Policy와 Image legacy 필드는 이행기 read fallback으로만 유지하고 Admin에서는 숨깁니다.
+세 Studio의 Admin UI는 Runtime Manifest를 읽기 전용으로 보여주되, Image는 Profile이 선택한 feature로 좁힌 Controller projection을 보여줍니다. Admin은 `{ controlId, availability, defaultValue, maxLength, optionValues, min, max }`만 sparse JSON `controllerRestrictions`로 저장하고 `kind`·label·placeholder·display·aspectRatio·group title·collapsible·defaultOpen을 입력하지 않습니다. Draft는 작성 중인 불완전 상태를 허용하지만 publish는 공통 parser로 unknown field·중복 id·kind별 기본값과 제약을 엄격하게 검증합니다. 세 Studio는 legacy Controller/Policy 저장을 읽지 않고 Effective `config.controller.groups`만 소비합니다.
 
-어드민은 화면 패널을 구성하지 않고 기본값·선택지·범위·availability만 저작합니다. Image Profile은 완전한 Controller Definition을 발행하되 Image Service capability가 의미를 아는 control·feature만 발행할 수 있습니다. Template과 Graphic Profile은 슬롯·runtime이 제공한 Definition에 sparse Override를 적용합니다. Override를 여러 번 적용해도 같은 Effective Definition이 나와야 합니다. `enabled`로의 잠금 해제, select 선택지 추가, range 확장, 알 수 없는 ID는 발행 시 거부합니다. Graphic의 서버 안전 Manifest Catalog는 직렬화 가능한 Base Definition만 소유하고, runtime·output adapter는 별도 client/runtime 모듈이 소유합니다. `Visibility`는 Controller 계약에 두지 않습니다. 현재 렌더러는 Effective Definition에 들어 있는 control을 모두 표시합니다.
+어드민은 화면 패널을 구성하지 않고 기본값·선택지·범위·availability만 `controllerRestrictions`로 저작합니다. Image Runtime Manifest의 control 종류·그룹·표현·stable ID와 전체 supported feature는 Generation Model capability가 소유하고, Image Profile은 feature를 선택합니다. Restrictions를 여러 번 적용해도 같은 Effective Definition이 나와야 합니다. `enabled`로의 잠금 해제, select 선택지 추가, range 확장, 알 수 없는 ID는 발행 시 거부합니다. Graphic의 서버 안전 Manifest Catalog는 직렬화 가능한 Runtime Manifest만 소유하고, runtime·output adapter는 별도 client/runtime 모듈이 소유합니다. `Visibility`는 Controller 계약에 두지 않습니다. 현재 렌더러는 Effective Definition에 들어 있는 control을 모두 표시합니다.
 
-Graphic Canvas는 `type`만 보고 공용 `P5Canvas`·`WebGLCanvas`를 선택합니다. Graphic별 직렬화 Manifest는 서버 Catalog에, 순수 SVG·binding adapter는 runtime Catalog에, 브라우저 mount·Controller 값 변환은 client Preview Catalog에 분리합니다. Runtime과 Preview Catalog는 Manifest Catalog에서 파생한 `GraphicRuntimeId`의 exhaustive Record이므로 등록이 빠지면 typecheck가 실패합니다. 세 Catalog는 같은 stable runtime ID로만 연결하며, client/runtime 함수를 Config에 싣지 않습니다. Worker는 published Graphic Profile에서 파생된 Effective Config만 받고, Template은 그중 실제 SVG adapter가 있는 Config만 받습니다. 따라서 새 그래픽을 코드에 등록해도 Admin이 publish하기 전에는 노출되지 않습니다.
+Graphic Canvas는 `type`만 보고 공용 `P5Canvas`·`WebGLCanvas`를 선택합니다. Graphic별 직렬화 Manifest는 서버 Catalog에, 순수 SVG·binding adapter는 model Catalog에, 브라우저 P5/WebGL mount·Controller 값 변환은 client Runtime Catalog에 분리합니다. Graphic Canvas와 Template Background는 같은 Runtime adapter를 각자 화면 컨테이너에 mount하며, 파일 출력 형식으로 Template 노출 여부를 제한하지 않습니다. 세 Catalog는 같은 stable runtime ID로만 연결하며, client runtime 함수를 Config에 싣지 않습니다. Worker와 Template은 코드 Catalog 등록 여부가 아니라 published Graphic Profile에서 파생된 Effective Config만 목록으로 받습니다. 따라서 새 그래픽을 코드에 등록해도 Admin이 publish하기 전에는 노출되지 않습니다.
 
-기존 `p5`·`shader` 엔진에 Graphic을 추가할 때는 `src/features/graphic-generation/domain/manifests/<id>.ts`에 Manifest를, `runtime/plugins/<id>.ts`에 Plugin을, `runtime/client/<id>-preview.client.ts`에 Preview adapter를 작성하고 각 Catalog에 한 번 등록합니다. 이때 Provider·Sidebar·Canvas는 수정하지 않습니다. 새로운 엔진 종류가 생길 때만 공용 Canvas host와 `GraphicStudioConfig.type`을 확장합니다.
+기존 `p5`·`shader` 엔진에 Graphic을 추가할 때는 `src/features/graphic-generation/graphic-runtimes/<id>` 아래 `definition.ts`·`model.ts`·`runtime.client.ts`를 기본 export로 추가하고 `pnpm generate:graphic-runtime-catalogs`를 실행합니다. `definition.ts`는 단일 authoring API `defineGraphicRuntime()`으로 Manifest를 정의하고, `model.ts`는 순수 계산, `runtime.client.ts`는 실제 P5/WebGL 실행을 소유합니다. 생성된 세 Catalog가 stable runtime ID로 자동 연결하므로 Provider·Sidebar·Canvas·중앙 Catalog를 수정하지 않습니다. 새로운 엔진 종류가 생길 때만 공용 Canvas host와 `GraphicStudioConfig.type`을 확장합니다.
 
 킷 배선 규칙: `Controller.Row`/`Controller.Field`가 `{ controlId, disabled }` 표현 컨텍스트를 내리고, 안의 킷 컨트롤(`Select`·`Input`·`Textarea`·`Segmented`·`ColorRow` 스와치)이 라벨 연결 id와 disabled를 자동으로 이어받습니다 — 소비자는 htmlFor를 배선하지 않습니다. 이 컨텍스트에 도메인 값을 넣지 않습니다(§3.5 — 도메인 Provider는 features의 훅으로).
 
@@ -245,7 +250,7 @@ type ControllerInteraction = 'idle' | 'hover' | 'focused' | 'error'
 - **사이드바와 캔버스는 서로 모릅니다.** 화면의 편집 세션 상태는 features의 Provider 훅이 단일 소유하고(원형: `use-template-studio`), 사이드바(컨트롤러)와 작업 공간(캔버스)은 그 컨텍스트로만 소통합니다 — 서로 import하거나 props를 건네지 않습니다. 상태는 병렬 Record로 찢지 않고 단위 객체(슬롯 하나 = 상태 객체 하나)로 흐릅니다.
 - **무엇을 그릴지는 편집 계약이 말합니다.** 공통 컨트롤 정의는 각 `StudioConfig.controller.groups`에서 소비하고, Template slot 같은 도메인 binding과 descriptor는 각 Config의 확장에서 소비합니다. Sidebar는 원시 Payload 필드나 nodeConfigs를 다시 해석하지 않습니다. 계약에는 Definition만 싣고 세션 값은 싣지 않습니다. 그래픽의 `type: 'p5' | 'shader'`는 runtime 선택에만 사용하며 Controller Definition과 현재 값을 결정하지 않습니다.
 - **Template은 Image Config를 참조합니다.** Template Image Slot은 Image Config나 Image Provider를 복제·중첩하지 않습니다. Published Image Config를 참조하고 슬롯 문맥에서 options를 좁혀 씁니다. 슬롯 ratio override도 원본 Image Config가 허용한 options 안에서만 선택합니다.
-- **Template 배경은 Graphic Config도 참조합니다.** Template은 Graphic Config나 Graphic Provider를 복제·중첩하지 않고, 선택한 Config의 Controller Definition과 세션 값을 Graphic 도메인의 순수 runtime adapter에 전달합니다. adapter가 만든 SVG와 runtime binding만 배경 합성·Controller Renderer가 소비하므로, 그래픽별 입력 해석은 Template에 두지 않습니다.
+- **Template 배경은 Graphic Config도 참조합니다.** Template은 Graphic Config나 Graphic Provider를 복제·중첩하지 않고, 선택한 Config의 Controller Definition과 세션 값을 Graphic 도메인의 Preview adapter에 전달해 P5·WebGL을 그대로 재생합니다. 정적 Template export만 현재 프레임을 이미지로 합성하고, runtime binding과 Controller Renderer는 같은 Config를 소비하므로 그래픽별 입력 해석은 Template에 두지 않습니다.
 - **Image Profile이 이미지 기능을 소유합니다.** `ImageStudioConfig.image.features`는 `color-adjustment`·`camera-control` 같은 capability와 semantic control id 참조만 싣고, 실제 값·기본값·availability는 `controller.groups`가 계속 소유합니다. Image Studio와 Template은 같은 `ImageProfileFeatureRenderer`를 소비합니다. Template의 기존 `imageColorize`는 capability가 아니라, 선택한 Profile이 해당 feature를 지원할 때만 적용되는 값 override로만 투영합니다.
 - **확장 디스패처는 도메인별로 둡니다.** 공통 `ControllerRenderer`의 primitive switch는 닫힌 데이터 어휘이고, Image feature와 Graphic runtime은 각각 자기 도메인의 단일 exhaustive dispatcher가 해석합니다. 기존 feature·runtime을 조합한 새 Profile·Config는 데이터 추가만으로 소비되며, 새로운 feature·graphic 구현만 해당 dispatcher에 한 번 등록합니다. Studio별 variant prop이나 `visibleWhen` DSL로 공용 Renderer를 늘리지 않습니다.
 - **실행 정책은 서비스가 다시 강제합니다.** Route·Agent·MCP는 같은 도메인 서비스를 호출합니다. 서비스는 Published Config를 기준으로 options·최대 길이·readonly와 camera capability를 검증합니다. Sidebar의 비활성 표현만 신뢰 경계로 사용하지 않습니다.

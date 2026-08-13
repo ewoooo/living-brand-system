@@ -4,18 +4,20 @@ import {
 	type StudioControllerConfig,
 } from '@/modules/studio-controller/controller-definition'
 
-/** P5·Shader 그래픽 하나가 스튜디오에 내는 직렬화 가능한 편집 계약. */
-export type GraphicStudioConfig = StudioControllerConfig<'graphic', string> & {
+/** Admin 제한 전 P5·Shader runtime이 발행하는 서버 안전 원본 계약. */
+export type GraphicRuntimeManifest = StudioControllerConfig<'graphic', string> & {
 	type: 'p5' | 'shader'
 }
+
+/** Published Graphic Profile 정책이 적용된 Effective Config. */
+export type GraphicStudioConfig = GraphicRuntimeManifest
 
 /** Payload Graphic Profile이 runtime Config를 좁히기 위해 공개하는 서버측 정의. */
 export type PublishedGraphicProfileDefinition = {
 	id: number
 	name: string
 	runtime: string
-	controller?: unknown
-	controllerOverride?: unknown
+	controllerRestrictions?: unknown
 	output?: { allowedFormats?: readonly string[] | null } | null
 }
 

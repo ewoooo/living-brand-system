@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { FORWARD_STRAIGHT_DEFAULT_INPUT } from './forward-straight'
-import { createForwardStraightScene, createForwardStraightSvg } from './forward-straight-geometry'
+import { FORWARD_STRAIGHT_DEFAULT_INPUT } from './graphic-runtimes/forward-straight/definition'
+import {
+	createForwardStraightScene,
+	createForwardStraightSvg,
+} from './graphic-runtimes/forward-straight/model'
 
 describe('createForwardStraightScene', () => {
 	it('builds a flat grid and applies perspective depth without p5', () => {

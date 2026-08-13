@@ -6,9 +6,9 @@ import { Typography } from '@/components/ui/typography'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
 import {
-	type GraphicPreview,
-	getGraphicPreviewAdapter,
-} from '@/features/graphic-generation/runtime/client/graphic-preview.client'
+	type GraphicRuntime,
+	getGraphicRuntimeAdapter,
+} from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { getGraphicStudioRuntimeBindings } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 
 const canvasByType = {
@@ -33,7 +33,7 @@ function WebGLCanvas() {
 
 function RegisteredGraphicCanvas({ type }: { type: GraphicStudioConfig['type'] }) {
 	const { config } = useGraphicStudio()
-	const adapter = getGraphicPreviewAdapter(config)
+	const adapter = getGraphicRuntimeAdapter(config)
 	if (!adapter || adapter.type !== type) return <UnsupportedGraphicCanvas />
 	return <GraphicPreviewCanvas adapter={adapter} />
 }
@@ -41,24 +41,24 @@ function RegisteredGraphicCanvas({ type }: { type: GraphicStudioConfig['type'] }
 function GraphicPreviewCanvas({
 	adapter,
 }: {
-	adapter: NonNullable<ReturnType<typeof getGraphicPreviewAdapter>>
+	adapter: NonNullable<ReturnType<typeof getGraphicRuntimeAdapter>>
 }) {
 	const { config, controls, canvas, output } = useGraphicStudio()
 	const valuesRef = useRef(controls.values)
 	const stageRef = useRef<HTMLDivElement>(null)
 	const containerRef = useRef<HTMLDivElement>(null)
-	const previewRef = useRef<GraphicPreview>(null)
+	const runtimeRef = useRef<GraphicRuntime>(null)
 	const [error, setError] = useState<string | null>(null)
 	const outputWidth = output.draft?.width
 	const outputHeight = output.draft?.height
 
 	useEffect(() => {
 		valuesRef.current = controls.values
-		previewRef.current?.update(controls.values)
+		runtimeRef.current?.update(controls.values)
 	}, [controls.values])
 
 	useEffect(() => {
-		let preview: GraphicPreview | undefined
+		let runtime: GraphicRuntime | undefined
 		let disposed = false
 
 		async function mountPreview() {
@@ -75,8 +75,8 @@ function GraphicPreviewCanvas({
 					mounted.destroy()
 					return
 				}
-				preview = mounted
-				previewRef.current = mounted
+				runtime = mounted
+				runtimeRef.current = mounted
 				const viewport = mounted.getViewport()
 				controls.registerBindings(getGraphicStudioRuntimeBindings(config, viewport))
 				canvas.registerSource({ video: mounted.video }, viewport)
@@ -89,8 +89,8 @@ function GraphicPreviewCanvas({
 		void mountPreview()
 		return () => {
 			disposed = true
-			preview?.destroy()
-			previewRef.current = null
+			runtime?.destroy()
+			runtimeRef.current = null
 			canvas.registerSource(null)
 			controls.registerBindings({})
 		}
@@ -112,7 +112,7 @@ function GraphicPreviewCanvas({
 					: { width, height }
 			container.style.width = `${viewport.width}px`
 			container.style.height = `${viewport.height}px`
-			previewRef.current?.resize(viewport.width, viewport.height)
+			runtimeRef.current?.resize(viewport.width, viewport.height)
 			controls.registerBindings(getGraphicStudioRuntimeBindings(config, viewport))
 		}
 

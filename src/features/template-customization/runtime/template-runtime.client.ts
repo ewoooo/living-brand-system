@@ -1,7 +1,5 @@
 'use client'
 
-import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
-import { renderGraphicStudioSvg } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import { getImageColorAdjustmentControls } from '@/features/image-generation/domain/image-studio-config'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import {
@@ -29,7 +27,6 @@ export function composeTemplateStudioHtml({
 	imageSlots,
 	imageContracts,
 	background,
-	graphicConfigs,
 	width,
 	height,
 }: {
@@ -54,10 +51,7 @@ export function composeTemplateStudioHtml({
 		type: TemplateBackgroundType
 		color: string | null
 		image?: { url: string }
-		graphicConfigId?: string
-		graphicValues: ControllerValues
 	}
-	graphicConfigs: readonly GraphicStudioConfig[]
 	width: number
 	height: number
 }): string {
@@ -115,23 +109,12 @@ export function composeTemplateStudioHtml({
 			]
 		}),
 	)
-	const graphicConfig = graphicConfigs.find(
-		(candidate) => candidate.id === background.graphicConfigId,
-	)
-	const graphicSvg =
-		background.type === 'graphic' && graphicConfig
-			? renderGraphicStudioSvg(graphicConfig, background.graphicValues, { width, height })
-			: null
 	const canvasBackground = {
+		...(background.type === 'graphic' ? { clear: true } : {}),
 		...(background.type === 'color' && background.color ? { color: background.color } : {}),
 		...(background.type === 'image' && background.image
 			? { imageUrl: background.image.url }
 			: {}),
-		...(graphicSvg ? { imageUrl: toSvgDataUrl(graphicSvg) } : {}),
 	}
 	return composeTemplateHtml(html, { ...textOverrides, ...imageOverrides }, { canvasBackground })
-}
-
-function toSvgDataUrl(svg: string) {
-	return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }

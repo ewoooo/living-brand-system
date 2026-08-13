@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
-import { forwardStraightGraphicConfig } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import { createControllerValues } from '@/modules/studio-controller/controller-definition'
 import { exportGraphicStudioSvg } from './export-graphic.client'
 
@@ -12,14 +12,14 @@ const request = {
 
 describe('exportGraphicStudioSvg', () => {
 	it('Effective capability와 runtime adapter가 모두 있을 때만 SVG를 저장한다', () => {
-		const values = createControllerValues(forwardStraightGraphicConfig.controller.groups)
-		expect(exportGraphicStudioSvg(forwardStraightGraphicConfig, values, request)).toMatchObject(
-			{ filename: 'forward-straight.svg', mimeType: 'image/svg+xml' },
-		)
+		const values = createControllerValues(forwardStraightRuntimeManifest.controller.groups)
+		expect(
+			exportGraphicStudioSvg(forwardStraightRuntimeManifest, values, request),
+		).toMatchObject({ filename: 'forward-straight.svg', mimeType: 'image/svg+xml' })
 
 		expect(() =>
 			exportGraphicStudioSvg(
-				{ ...forwardStraightGraphicConfig, output: { formats: [] } },
+				{ ...forwardStraightRuntimeManifest, output: { formats: [] } },
 				values,
 				request,
 			),

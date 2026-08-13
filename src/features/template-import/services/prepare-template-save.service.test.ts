@@ -142,12 +142,12 @@ describe('prepareTemplateSave', () => {
 					overrides: { name: { input: { label: '이름', maxLength: 20 } } },
 					width: 1200,
 					height: 800,
-					controllerOverride: {
+					controllerRestrictions: {
 						controls: [{ controlId: 'unknown' }],
 					},
 				},
 				req: req as never,
 			}),
-		).resolves.toContain('override control')
+		).resolves.toContain('restriction control')
 	})
 })

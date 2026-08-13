@@ -28,11 +28,12 @@ import type {
 	ControllerControlDefinition,
 	ControllerGroupDefinition,
 	StudioControllerConfig,
+	StudioRuntimeManifest,
 } from '@/modules/studio-controller/controller-definition'
 import {
-	applyControllerOverride,
+	applyControllerRestrictions,
 	parseStudioControllerConfig,
-	projectPayloadControllerOverride,
+	projectPayloadControllerRestrictions,
 } from '@/modules/studio-controller/controller-definition'
 import type { TemplateNodeConfig } from '@/types/template'
 
@@ -108,8 +109,7 @@ export type PublishedHtmlTemplate = {
 	height: number
 	printPpi?: PrintPpi
 	templateVersion: string
-	controller?: unknown
-	controllerOverride?: unknown
+	controllerRestrictions?: unknown
 	output?: { allowedFormats?: readonly string[] | null } | null
 }
 
@@ -443,11 +443,15 @@ function isImageAspectRatio(value: string | null): value is ImageAspectRatio {
 	return IMAGE_ASPECT_RATIOS.includes(value as ImageAspectRatio)
 }
 
-/** Admin과 published projector가 공유하는 Template 원본 Controller Definition이다. */
-export function deriveTemplateBaseControllerGroups({
+/** Template 문서 구조에서 Admin 제한 전의 결정적 Runtime Manifest를 파생한다. */
+export function getTemplateRuntimeManifest({
 	html,
 	nodeConfigs,
-}: Pick<PublishedHtmlTemplate, 'html' | 'nodeConfigs'>): readonly ControllerGroupDefinition[] {
+	printPpi,
+	templateVersion,
+}: Pick<PublishedHtmlTemplate, 'html' | 'nodeConfigs' | 'printPpi'> & {
+	templateVersion?: string
+}): StudioRuntimeManifest {
 	const textControls: TextControlDefinition[] = collectTemplateSlots(html, nodeConfigs).map(
 		(slot) => ({
 			id: `text:${slot.nodeId}`,
@@ -461,50 +465,63 @@ export function deriveTemplateBaseControllerGroups({
 				: { placeholder: slot.input.placeholder }),
 		}),
 	)
-	return [
-		...(textControls.length
-			? [
-					{
-						id: 'text',
-						title: 'Text',
-						collapsible: true as const,
-						controls: [
-							...textControls,
+	return {
+		output: {
+			colorProfiles: {
+				rgb: ['srgb'],
+				cmyk: [DEFAULT_CMYK_ICC_PROFILE],
+			},
+			formats: (['png', 'tiff', 'pdf'] as const).filter((format) =>
+				supportsTemplateExport(format, { printPpi, templateVersion }),
+			),
+		},
+		controller: {
+			groups: [
+				...(textControls.length
+					? [
 							{
-								id: TEXT_COLOR_CONTROL_ID,
-								kind: 'color' as const,
-								label: 'Color',
-								defaultValue: null,
+								id: 'text',
+								title: 'Text',
+								collapsible: true as const,
+								controls: [
+									...textControls,
+									{
+										id: TEXT_COLOR_CONTROL_ID,
+										kind: 'color' as const,
+										label: 'Color',
+										defaultValue: null,
+									},
+								],
 							},
-						],
-					},
-				]
-			: []),
-		{
-			id: 'background',
-			title: 'Background',
-			collapsible: true as const,
-			controls: [
+						]
+					: []),
 				{
-					id: BACKGROUND_TYPE_CONTROL_ID,
-					kind: 'select' as const,
-					label: 'Type',
-					defaultValue: 'color',
-					options: [
-						{ value: 'color', label: 'Color' },
-						{ value: 'image', label: 'Image' },
-						{ value: 'graphic', label: 'Graphic' },
+					id: 'background',
+					title: 'Background',
+					collapsible: true as const,
+					controls: [
+						{
+							id: BACKGROUND_TYPE_CONTROL_ID,
+							kind: 'select' as const,
+							label: 'Type',
+							defaultValue: 'color',
+							options: [
+								{ value: 'color', label: 'Color' },
+								{ value: 'image', label: 'Image' },
+								{ value: 'graphic', label: 'Graphic' },
+							],
+						},
+						{
+							id: BACKGROUND_COLOR_CONTROL_ID,
+							kind: 'color' as const,
+							label: 'Background Color',
+							defaultValue: null,
+						},
 					],
-				},
-				{
-					id: BACKGROUND_COLOR_CONTROL_ID,
-					kind: 'color' as const,
-					label: 'Background Color',
-					defaultValue: null,
 				},
 			],
 		},
-	]
+	}
 }
 
 /** published Template과 접근 가능한 Image·Graphic Config에서 실행 가능한 Template 계약을 순수 파생한다. */
@@ -560,20 +577,11 @@ export function deriveTemplateConfig(
 		},
 	]
 
-	const baseControllerGroups = deriveTemplateBaseControllerGroups({ html, nodeConfigs })
-	const controllerGroups = applyControllerOverride(
-		baseControllerGroups,
-		projectPayloadControllerOverride(template.controllerOverride ?? template.controller),
+	const runtimeManifest = getTemplateRuntimeManifest(template)
+	const controllerGroups = applyControllerRestrictions(
+		runtimeManifest.controller.groups,
+		projectPayloadControllerRestrictions(template.controllerRestrictions),
 	)
-	const exportContext = {
-		fileName: template.name,
-		height: template.height,
-		html: template.html,
-		printPpi: template.printPpi,
-		templateId: template.id,
-		templateVersion: template.templateVersion,
-		width: template.width,
-	}
 
 	const config: TemplateConfig = {
 		studio: 'template',
@@ -581,14 +589,9 @@ export function deriveTemplateConfig(
 		version: 1,
 		name: template.name,
 		output: {
-			colorProfiles: {
-				rgb: ['srgb'],
-				cmyk: [DEFAULT_CMYK_ICC_PROFILE],
-			},
+			...runtimeManifest.output,
 			formats: resolveStudioOutputFormats(
-				(['png', 'tiff', 'pdf'] as const).filter((format) =>
-					supportsTemplateExport(format, exportContext),
-				),
+				runtimeManifest.output.formats,
 				template.output?.allowedFormats,
 			),
 		},

@@ -10,7 +10,7 @@ import {
 	useState,
 } from 'react'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
-import type { GraphicPreview } from '@/features/graphic-generation/runtime/client/graphic-preview.client'
+import type { GraphicRuntime } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { canRenderGraphicStudioSvg } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import { exportGraphicStudioSvg } from '@/features/graphic-generation/services/export-graphic.client'
 import { exportGraphicStudioVideo } from '@/features/graphic-generation/services/export-graphic-video.client'
@@ -36,7 +36,7 @@ import {
 
 type GraphicOutputSize = { width: number; height: number }
 type GraphicExportRequest = Extract<ExportRequest, { format: 'svg' | 'mp4' }>
-type GraphicRuntimeSource = { video?: NonNullable<GraphicPreview['video']> }
+type GraphicRuntimeSource = { video?: NonNullable<GraphicRuntime['video']> }
 
 export type GraphicOutputDraft =
 	| {
@@ -354,6 +354,7 @@ function createGraphicExportRequest(
 	}
 	return null
 }
+
 function normalizeOutputSize(size: GraphicOutputSize): GraphicOutputSize {
 	return {
 		width: Math.max(1, Math.round(size.width)),

@@ -115,6 +115,15 @@ src/
   features/
     graphic-generation/
       domain/
+      graphic-runtimes/
+        <runtime-id>/
+          definition.ts
+          model.ts
+          runtime.client.ts
+        catalog/
+          manifest.generated.ts
+          model.generated.ts
+          runtime.generated.client.ts
       hooks/
       repositories/
       runtime/
@@ -250,6 +259,18 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 `pnpm generate:block-catalogs`는 기존 Admin 노출 순서를 보존하고 새 블록 폴더는 뒤에 이름순으로 붙여 `src/features/guideline/catalog/*.generated.*`의 정적 import와 map을 갱신합니다. 생성 파일은 커밋하되 직접 수정하지 않습니다. `pnpm check:block-catalogs`는 생성 결과가 최신인지 검사하며 CI의 정적 검사에서 실행합니다.
 
 `runtime`은 생성 map을 사용하는 동작만 소유합니다. `project-guideline-block.ts`는 Agent/Check projection, `build-check-source-snapshot.ts`는 문서 snapshot을 담당합니다. React 렌더 진입점은 `components/guideline-blocks.tsx`에 둡니다. 둘 이상의 블록이 실제로 공유하는 필드나 UI만 `shared`에 둡니다.
+
+### Graphic runtime 등록
+
+기존 `p5`·`shader` 엔진에 Graphic을 추가할 때는 `src/features/graphic-generation/graphic-runtimes/<runtime-id>` 폴더 하나를 만들고 아래 세 파일을 기본 export로 제공합니다.
+
+| 파일 | 최소 계약 |
+| --- | --- |
+| `definition.ts` | `defineGraphicRuntime()`으로 서버 안전 `GraphicRuntimeManifest`를 정의하며 `id`는 폴더명과 일치시킵니다. |
+| `model.ts` | Manifest를 import하지 않는 순수 `GraphicModelAdapter`를 제공합니다. |
+| `runtime.client.ts` | P5/WebGL을 실제 실행하는 브라우저 전용 `GraphicRuntimeAdapter`를 제공합니다. |
+
+`pnpm generate:graphic-runtime-catalogs`는 세 경계를 별도 정적 import로 만들어 `graphic-runtimes/catalog/*.generated.*`를 갱신합니다. 생성 파일은 커밋하되 직접 수정하지 않습니다. `pnpm check:graphic-runtime-catalogs`는 계약 파일 누락, 폴더명과 Manifest id 불일치, 오래된 생성 파일을 CI에서 거부합니다. 기존 엔진의 새 자산은 Provider·Sidebar·Canvas·중앙 Catalog를 수정하지 않습니다.
 
 ### Use Case 스캐폴딩
 

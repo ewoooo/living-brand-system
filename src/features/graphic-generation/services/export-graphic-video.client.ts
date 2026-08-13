@@ -1,13 +1,13 @@
 'use client'
 
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
-import type { GraphicPreview } from '@/features/graphic-generation/runtime/client/graphic-preview.client'
+import type { GraphicRuntime } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { canvasFramesToMp4 } from '@/features/studio-export/adapters/canvas-frames-to-mp4.mediabunny.client'
 import type { ExportRequest, ExportResult } from '@/features/studio-export/export-contract'
 import { supportsStudioExportRequest } from '@/features/studio-export/studio-output'
 
 export type GraphicVideoExportRequest = Extract<ExportRequest, { format: 'mp4' }>
-type GraphicVideoRuntime = NonNullable<GraphicPreview['video']>
+type GraphicVideoRuntime = NonNullable<GraphicRuntime['video']>
 
 /** Graphic runtime의 결정론적 frame source를 MP4 ExportResult로 변환한다. 인코딩 I/O는 Mediabunny adapter가 소유한다. */
 export async function exportGraphicStudioVideo(

@@ -18,13 +18,14 @@ const EXPORT_ERROR_MESSAGES: Record<TemplateExportRequest['format'], string> = {
 
 /** Template canonical HTML과 print identity를 공통 export 실행 port에 결합한다. */
 export function createTemplateExportSource(
-	context: TemplateExportContext,
+	context: TemplateExportContext | (() => TemplateExportContext),
 ): StudioExportSource<TemplateExportRequest> {
+	const resolveContext = () => (typeof context === 'function' ? context() : context)
 	return {
-		raster: { png: (request) => exportTemplatePng(request, context) },
+		raster: { png: (request) => exportTemplatePng(request, resolveContext()) },
 		print: {
-			tiff: (request) => exportTemplateTiff(request, context),
-			pdf: (request) => exportTemplatePdf(request, context),
+			tiff: (request) => exportTemplateTiff(request, resolveContext()),
+			pdf: (request) => exportTemplatePdf(request, resolveContext()),
 		},
 	}
 }

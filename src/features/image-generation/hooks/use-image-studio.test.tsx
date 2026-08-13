@@ -93,9 +93,32 @@ function config(
 		name: `프로파일 ${profileId}`,
 		slug: null,
 		imageModelPreset: 'openai-gpt-image-2',
-		aspectRatio: '2:3',
-		imageSize: '1K',
-		colorAdjustment: options.colorAdjustment,
+		features: [
+			...(options.colorAdjustment
+				? [
+						{
+							blockType: 'colorAdjustment',
+							background: Boolean(options.colorAdjustment.background),
+						},
+					]
+				: []),
+			{ blockType: 'cameraControl' },
+		],
+		controllerRestrictions: options.colorAdjustment
+			? {
+					controls: [
+						{ controlId: 'lineColor', defaultValue: options.colorAdjustment.line },
+						...(options.colorAdjustment.background
+							? [
+									{
+										controlId: 'backgroundColor',
+										defaultValue: options.colorAdjustment.background,
+									},
+								]
+							: []),
+					],
+				}
+			: undefined,
 	})
 	const batch = (options.batch ?? [1, 2, 3, 4]).map(String)
 	const ratio = options.ratio ?? ['2:3', '16:9']

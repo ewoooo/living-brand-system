@@ -3,10 +3,8 @@ import userEvent from '@testing-library/user-event'
 import type { ComponentProps } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
-import {
-	forwardStraightGraphicConfig,
-	graphicStudioConfigs,
-} from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import { graphicRuntimeManifests } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import {
 	deriveTemplateConfig,
@@ -21,10 +19,15 @@ import { TemplateGenerator as TemplateGeneratorView } from './template-generator
 import { TemplateSidebar } from './template-sidebar'
 
 const mocks = vi.hoisted(() => ({
+	captureGraphicFrame: vi.fn(() => 'data:image/png;base64,graphic'),
+	destroyGraphicPreview: vi.fn(),
 	exportTemplate: vi.fn(),
+	mountGraphicPreview: vi.fn(),
 	push: vi.fn(),
 	requestImageGeneration: vi.fn(),
+	resizeGraphicPreview: vi.fn(),
 	resizeObserverCallback: undefined as ResizeObserverCallback | undefined,
+	updateGraphicPreview: vi.fn(),
 }))
 
 vi.mock('@/features/studio-export/hooks/use-export', () => ({
@@ -40,6 +43,12 @@ vi.mock('next/navigation', () => ({
 }))
 vi.mock('@/features/image-generation/services/generate-image.client', () => ({
 	requestImageGeneration: mocks.requestImageGeneration,
+}))
+vi.mock('@/features/graphic-generation/runtime/client/graphic-runtime.client', () => ({
+	getGraphicRuntimeAdapter: (config: GraphicStudioConfig) => ({
+		type: config.type,
+		mount: mocks.mountGraphicPreview,
+	}),
 }))
 
 const template: PublishedHtmlTemplate = {
@@ -72,7 +81,7 @@ const imageConfigs = [createImageConfig(11), createImageConfig(7)]
 
 function TemplateGenerator({
 	imageConfigs: providedImageConfigs = imageConfigs,
-	graphicConfigs: providedGraphicConfigs = graphicStudioConfigs,
+	graphicConfigs: providedGraphicConfigs = graphicRuntimeManifests,
 	...props
 }: Omit<ComponentProps<typeof TemplateGeneratorView>, 'config'> & {
 	imageConfigs?: readonly ImageStudioConfig[]
@@ -98,9 +107,6 @@ function FeatureMutationProbe() {
 			<span data-testid="image-line">{String(image?.featureValues.lineColor)}</span>
 			<span data-testid="background-line">
 				{String(background.state.featureValues.lineColor)}
-			</span>
-			<span data-testid="background-line-availability">
-				{background.featureBindings.lineColor?.availability ?? 'enabled'}
 			</span>
 			<button
 				type="button"
@@ -231,6 +237,13 @@ function ImageRaceProbe() {
 describe('TemplateGenerator', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
+		mocks.mountGraphicPreview.mockResolvedValue({
+			captureFrame: mocks.captureGraphicFrame,
+			destroy: mocks.destroyGraphicPreview,
+			getViewport: () => ({ width: 400, height: 300 }),
+			resize: mocks.resizeGraphicPreview,
+			update: mocks.updateGraphicPreview,
+		})
 		mocks.resizeObserverCallback = undefined
 		vi.stubGlobal(
 			'ResizeObserver',
@@ -264,8 +277,8 @@ describe('TemplateGenerator', () => {
 		expect(mocks.exportTemplate).toHaveBeenCalledWith('png')
 	})
 
-	it('공통 Config 포맷에 실제 Template adapter가 없으면 초기 선택과 요청에서 제외한다', () => {
-		const derived = deriveTemplateConfig(template, imageConfigs, graphicStudioConfigs)
+	it('UI는 Effective Config 포맷을 표시하고 Template adapter가 없는 요청은 실행 직전 차단한다', () => {
+		const derived = deriveTemplateConfig(template, imageConfigs, graphicRuntimeManifests)
 		const config = { ...derived, output: { ...derived.output, formats: ['svg'] as const } }
 		render(
 			<TemplateStudioProvider config={config} template={template} navigation={navigation}>
@@ -273,8 +286,8 @@ describe('TemplateGenerator', () => {
 			</TemplateStudioProvider>,
 		)
 
-		expect(screen.getByTestId('template-output-format')).toHaveTextContent('none')
-		expect(screen.getByTestId('template-output-formats')).toHaveTextContent('none')
+		expect(screen.getByTestId('template-output-format')).toHaveTextContent('svg')
+		expect(screen.getByTestId('template-output-formats')).toHaveTextContent('svg')
 		fireEvent.click(screen.getByRole('button', { name: 'export unsupported svg' }))
 		expect(mocks.exportTemplate).not.toHaveBeenCalled()
 	})
@@ -300,41 +313,23 @@ describe('TemplateGenerator', () => {
 			...template,
 			html: '<p data-node-id="1:1" data-figma-type="TEXT" data-name="Title">원본 제목</p>',
 			nodeConfigs: { '1:1': { input: { label: '제목', maxLength: 20, maxLines: 1 } } },
-			controller: {
-				groups: [
+			controllerRestrictions: {
+				controls: [
 					{
-						key: 'text',
-						title: 'Text',
-						controls: [
-							{
-								blockType: 'text',
-								key: 'text:1:1',
-								label: '제목',
-								availability: 'readonly',
-								defaultValue: '고정 제목',
-								maxLength: 20,
-							},
-							{
-								blockType: 'color',
-								key: 'text.color',
-								label: 'Color',
-								availability: 'readonly',
-								defaultValue: '#112233',
-							},
-						],
+						controlId: 'text:1:1',
+						availability: 'readonly',
+						defaultValue: '고정 제목',
+						maxLength: 20,
 					},
 					{
-						key: 'background',
-						title: 'Background',
-						controls: [
-							{
-								blockType: 'color',
-								key: 'background.color',
-								label: 'Background Color',
-								availability: 'readonly',
-								defaultValue: '#ffffff',
-							},
-						],
+						controlId: 'text.color',
+						availability: 'readonly',
+						defaultValue: '#112233',
+					},
+					{
+						controlId: 'background.color',
+						availability: 'readonly',
+						defaultValue: '#ffffff',
 					},
 				],
 			},
@@ -692,7 +687,7 @@ describe('TemplateGenerator', () => {
 		expect(screen.getByLabelText('Prompt')).toHaveValue('고정 기본값')
 	})
 
-	it('Graphic Config의 순수 SVG를 배경으로 합성하고 타입 전환 후에도 같은 세션은 같은 URL을 만든다', async () => {
+	it('Graphic Config의 Preview adapter를 실시간 배경으로 마운트하고 타입 전환 시 정리한다', async () => {
 		const user = userEvent.setup()
 		const { container } = render(
 			<TemplateGenerator
@@ -711,14 +706,33 @@ describe('TemplateGenerator', () => {
 		screen.getByRole('combobox', { name: 'Type' }).focus()
 		await user.keyboard('{ArrowDown}')
 		await user.click(screen.getByRole('option', { name: 'Graphic' }))
-		await waitFor(() =>
-			expect(canvasOf().style.backgroundImage).toContain('data:image/svg+xml'),
+		await waitFor(() => expect(mocks.mountGraphicPreview).toHaveBeenCalledOnce())
+		expect(mocks.mountGraphicPreview).toHaveBeenCalledWith(
+			expect.objectContaining({ values: expect.any(Object), onChange: expect.any(Function) }),
 		)
-		const firstGraphicUrl = canvasOf().style.backgroundImage
+		expect(mocks.resizeGraphicPreview).toHaveBeenCalledWith(400, 300)
+		expect(canvasOf().style.background).toBe('transparent')
+		expect(container.querySelector('[data-slot="template-graphic-background"]')).not.toBeNull()
+
+		screen.getByRole('combobox', { name: 'Graphic Type' }).focus()
+		await user.keyboard('{ArrowDown}')
+		await user.click(screen.getByRole('option', { name: 'Radial Fluted Glass' }))
+		await waitFor(() => expect(mocks.mountGraphicPreview).toHaveBeenCalledTimes(2))
+		expect(mocks.destroyGraphicPreview).toHaveBeenCalledOnce()
+		fireEvent.keyDown(screen.getByRole('slider', { name: '광선 강도' }), {
+			key: 'ArrowRight',
+		})
+		await waitFor(() =>
+			expect(mocks.updateGraphicPreview).toHaveBeenLastCalledWith(
+				expect.objectContaining({ rayIntensity: 0.83 }),
+			),
+		)
+		expect(canvasOf().style.background).toBe('transparent')
 
 		screen.getByRole('combobox', { name: 'Type' }).focus()
 		await user.keyboard('{ArrowDown}')
 		await user.click(screen.getByRole('option', { name: 'Color' }))
+		await waitFor(() => expect(mocks.destroyGraphicPreview).toHaveBeenCalledTimes(2))
 		fireEvent.change(screen.getByLabelText('Background Color 색상 선택'), {
 			target: { value: '#ff0000' },
 		})
@@ -728,8 +742,8 @@ describe('TemplateGenerator', () => {
 		screen.getByRole('combobox', { name: 'Type' }).focus()
 		await user.keyboard('{ArrowDown}')
 		await user.click(screen.getByRole('option', { name: 'Graphic' }))
-		expect(canvasOf().style.backgroundImage).toBe(firstGraphicUrl)
-		expect(canvasOf().style.backgroundColor).toBe('rgb(0, 40, 10)')
+		await waitFor(() => expect(mocks.mountGraphicPreview).toHaveBeenCalledTimes(3))
+		expect(canvasOf().style.background).toBe('transparent')
 	})
 
 	it('선택한 포맷으로 내보낸다 — 편집 계약(printPpi 정책)이 허용한 포맷만 목록에 오른다', async () => {
@@ -843,7 +857,7 @@ describe('TemplateGenerator', () => {
 		'readonly',
 		'disabled',
 	] as const)('Background Type이 %s면 action과 generic patch로 우회할 수 없다', (availability) => {
-		const base = deriveTemplateConfig(template, imageConfigs, graphicStudioConfigs)
+		const base = deriveTemplateConfig(template, imageConfigs, graphicRuntimeManifests)
 		const config = {
 			...base,
 			controller: {
@@ -877,7 +891,7 @@ describe('TemplateGenerator', () => {
 			createImageConfig(11, undefined, '첫 프롬프트'),
 			createImageConfig(7, undefined, '둘째 프롬프트'),
 		]
-		const config = deriveTemplateConfig(studioTemplate, configs, graphicStudioConfigs)
+		const config = deriveTemplateConfig(studioTemplate, configs, graphicRuntimeManifests)
 		let resolveFirst:
 			| ((value: { generatedImages: { id: number; url: string }[] }) => void)
 			| null = null
@@ -994,7 +1008,6 @@ describe('TemplateGenerator', () => {
 
 		fireEvent.click(screen.getByRole('button', { name: 'invalid image feature' }))
 		expect(screen.getByTestId('image-line')).toHaveTextContent('#000000')
-		expect(screen.getByTestId('background-line-availability')).toHaveTextContent('disabled')
 		fireEvent.click(screen.getByRole('button', { name: 'valid image feature' }))
 		expect(screen.getByTestId('image-line')).toHaveTextContent('#00ff00')
 		fireEvent.click(screen.getByRole('button', { name: 'background feature' }))
@@ -1039,9 +1052,9 @@ describe('TemplateGenerator', () => {
 
 	it('Graphic update는 Definition availability를 지키고 Config 변경 시 기본값으로 초기화한다', () => {
 		const readonlyGraphic: GraphicStudioConfig = {
-			...forwardStraightGraphicConfig,
+			...forwardStraightRuntimeManifest,
 			controller: {
-				groups: forwardStraightGraphicConfig.controller.groups.map((group) => ({
+				groups: forwardStraightRuntimeManifest.controller.groups.map((group) => ({
 					...group,
 					controls: group.controls.map((control) =>
 						control.id === 'viewpoint'
@@ -1068,14 +1081,14 @@ describe('TemplateGenerator', () => {
 		first.unmount()
 
 		const secondary = {
-			...forwardStraightGraphicConfig,
+			...forwardStraightRuntimeManifest,
 			id: 'secondary',
 			name: 'Secondary',
 		} satisfies GraphicStudioConfig
 		render(
 			<TemplateStudioProvider
 				config={deriveTemplateConfig(template, imageConfigs, [
-					forwardStraightGraphicConfig,
+					forwardStraightRuntimeManifest,
 					secondary,
 				])}
 				template={template}

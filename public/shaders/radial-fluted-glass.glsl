@@ -6,59 +6,91 @@
 
 uniform vec2 uSource;
 uniform vec3 uBloomColor;
+uniform vec3 uRayColor1;
+uniform vec3 uRayColor2;
+uniform vec3 uRayColor3;
+uniform vec3 uRayColor4;
+uniform vec3 uRayColor5;
+uniform vec3 uRayBackgroundColor;
+uniform float uRayBloom;
 uniform float uGodrayIntensity;
 uniform float uGodrayDensity;
+uniform float uRaySpotty;
+uniform float uRayMidSize;
+uniform float uRayMidIntensity;
 uniform float uGodraySpeed;
+uniform float uFrameOffsetMs;
+uniform float uRayScale;
+uniform float uRayRotation;
+uniform float uRadialFalloff;
+uniform float uRadialFlowSpeed;
+uniform float uPulseIntensity;
+uniform float uPulseSpeed;
+uniform float uPulseDensity;
+uniform float uPulseWidth;
 uniform float uGlassSize;
+uniform float uGlassAngle;
+uniform vec2 uGlassOriginOffset;
+uniform float uGlassOffset;
+uniform float uGlassSpeed;
+uniform vec2 uGlassDrift;
+uniform vec2 uGlassDriftSpeed;
 uniform float uGlassDistortion;
+uniform float uGlassEdgeSoftness;
+uniform float uGlassBlur;
+uniform float uGlassScattering;
+uniform float uGlassHighlights;
+uniform float uGlassShadows;
+uniform vec2 uGlassSourceFade;
+uniform int uDistortionShape;
 
 // ------------------------------------------------------------
 // Controls
 // ------------------------------------------------------------
 
 // Paper God Rays-compatible controls
-#define GODRAY_COLOR_1 vec3(0.001, 0.055, 0.024)
-#define GODRAY_COLOR_2 vec3(0.000, 0.260, 0.095)
-#define GODRAY_COLOR_3 vec3(0.000, 0.520, 0.200)
-#define GODRAY_COLOR_4 vec3(0.100, 0.940, 0.530)
-#define GODRAY_COLOR_5 vec3(0.880, 1.000, 0.940)
-#define GODRAY_COLOR_BACK vec3(0.001, 0.012, 0.006)
+#define GODRAY_COLOR_1 uRayColor1
+#define GODRAY_COLOR_2 uRayColor2
+#define GODRAY_COLOR_3 uRayColor3
+#define GODRAY_COLOR_4 uRayColor4
+#define GODRAY_COLOR_5 uRayColor5
+#define GODRAY_COLOR_BACK uRayBackgroundColor
 
-#define GODRAY_BLOOM 0.42
-#define GODRAY_SPOTTY 0.66
-#define GODRAY_MID_SIZE 0.22
-#define GODRAY_MID_INTENSITY 0.72
+#define GODRAY_BLOOM uRayBloom
+#define GODRAY_SPOTTY uRaySpotty
+#define GODRAY_MID_SIZE uRayMidSize
+#define GODRAY_MID_INTENSITY uRayMidIntensity
 
-#define GODRAY_FRAME 0.0       // milliseconds
-#define GODRAY_SCALE 1.0
-#define GODRAY_ROTATION -6.0   // degrees
+#define GODRAY_FRAME uFrameOffsetMs
+#define GODRAY_SCALE uRayScale
+#define GODRAY_ROTATION uRayRotation
 
-#define RADIAL_FALLOFF 0.90
-#define RADIAL_FLOW_SPEED 0.045
-#define RADIAL_PULSE_INTENSITY 0.62
-#define RADIAL_PULSE_SPEED 0.36
-#define RADIAL_PULSE_DENSITY 1.20
-#define RADIAL_PULSE_WIDTH 0.16
+#define RADIAL_FALLOFF uRadialFalloff
+#define RADIAL_FLOW_SPEED uRadialFlowSpeed
+#define RADIAL_PULSE_INTENSITY uPulseIntensity
+#define RADIAL_PULSE_SPEED uPulseSpeed
+#define RADIAL_PULSE_DENSITY uPulseDensity
+#define RADIAL_PULSE_WIDTH uPulseWidth
 
 // 0 = many narrow ribs, 1 = fewer wide ribs
-#define GLASS_ANGLE 8.0
-#define GLASS_ORIGIN_OFFSET_X -0.035
-#define GLASS_ORIGIN_OFFSET_Y 0.055
-#define GLASS_OFFSET 0.0
-#define GLASS_SPEED -0.035
-#define GLASS_DRIFT_X 0.020
-#define GLASS_DRIFT_Y 0.042
-#define GLASS_DRIFT_SPEED_X 0.19
-#define GLASS_DRIFT_SPEED_Y 0.27
+#define GLASS_ANGLE uGlassAngle
+#define GLASS_ORIGIN_OFFSET_X uGlassOriginOffset.x
+#define GLASS_ORIGIN_OFFSET_Y uGlassOriginOffset.y
+#define GLASS_OFFSET uGlassOffset
+#define GLASS_SPEED uGlassSpeed
+#define GLASS_DRIFT_X uGlassDrift.x
+#define GLASS_DRIFT_Y uGlassDrift.y
+#define GLASS_DRIFT_SPEED_X uGlassDriftSpeed.x
+#define GLASS_DRIFT_SPEED_Y uGlassDriftSpeed.y
 
-#define GLASS_EDGE_SOFTNESS 0.62
-#define GLASS_BLUR 0.40
-#define GLASS_SCATTERING 0.24
-#define GLASS_HIGHLIGHTS 0.62
-#define GLASS_SHADOWS 0.48
+#define GLASS_EDGE_SOFTNESS uGlassEdgeSoftness
+#define GLASS_BLUR uGlassBlur
+#define GLASS_SCATTERING uGlassScattering
+#define GLASS_HIGHLIGHTS uGlassHighlights
+#define GLASS_SHADOWS uGlassShadows
 
-#define GLASS_SOURCE_FADE_START 0.08
-#define GLASS_SOURCE_FADE_END 0.34
+#define GLASS_SOURCE_FADE_START uGlassSourceFade.x
+#define GLASS_SOURCE_FADE_END uGlassSourceFade.y
 
 #define GLASS_CASCADE 0
 #define GLASS_FLAT 1
@@ -66,7 +98,6 @@ uniform float uGlassDistortion;
 #define GLASS_LENS 3
 
 // GLASS_CASCADE | GLASS_FLAT | GLASS_CONTOUR | GLASS_LENS
-#define DISTORTION_SHAPE GLASS_LENS
 
 float hash11(float p) {
     p = fract(p * 0.1031);
@@ -291,15 +322,16 @@ vec3 godRaysScene(vec2 p, vec2 origin, float time) {
 float distortionProfile(float local, float cellID) {
     float wave = sin(local * PI); // zero at both rib boundaries
 
-#if DISTORTION_SHAPE == GLASS_CASCADE
-    return wave * (0.72 + 0.28 * local);
-#elif DISTORTION_SHAPE == GLASS_FLAT
-    return (hash11(cellID * 2.31 + 7.4) - 0.5) * 0.85;
-#elif DISTORTION_SHAPE == GLASS_CONTOUR
-    return wave * abs(wave);
-#else
+    if (uDistortionShape == GLASS_CASCADE) {
+        return wave * (0.72 + 0.28 * local);
+    }
+    if (uDistortionShape == GLASS_FLAT) {
+        return (hash11(cellID * 2.31 + 7.4) - 0.5) * 0.85;
+    }
+    if (uDistortionShape == GLASS_CONTOUR) {
+        return wave * abs(wave);
+    }
     return wave;
-#endif
 }
 
 vec3 flutedGlass(vec2 p, vec2 rayOrigin, float time) {
