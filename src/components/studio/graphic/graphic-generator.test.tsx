@@ -501,7 +501,9 @@ describe('GraphicGenerator', () => {
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
 		fireEvent.click(screen.getByRole('radio', { name: 'On' }))
 
-		fireEvent.click(screen.getByRole('button', { name: '그래픽 변경' }))
+		const trigger = screen.getByRole('button', { name: '그래픽 변경' })
+		expect(trigger.closest('[data-slot="controller-header"]')).not.toBeNull()
+		fireEvent.click(trigger)
 		const panel = screen.getByRole('dialog', { name: 'Graphic Profiles' })
 		const forwardCard = within(panel).getByRole('button', {
 			name: new RegExp(forwardStraightRuntimeManifest.name),

@@ -82,6 +82,49 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 
 	return (
 		<StudioSidebar
+			header={
+				<div
+					data-slot="template-identity-card"
+					className="flex h-32 shrink-0 items-start justify-between gap-3 rounded-md bg-foreground p-4 text-background"
+				>
+					<div className="flex min-w-0 flex-col">
+						<Typography as="p" weight="medium" className="truncate">
+							{config.name}
+						</Typography>
+						{currentCategory && (
+							<Typography as="p" size="xs" className="truncate text-background/60">
+								{currentCategory.title}
+							</Typography>
+						)}
+					</div>
+					<Select
+						value={selectedTemplateHref}
+						onValueChange={(value) => router.push(value)}
+					>
+						<SelectTrigger
+							aria-label="템플릿 변경"
+							className="h-auto w-fit shrink-0 gap-0 rounded-lg border-transparent bg-background/25 px-2.5 py-1 text-xs font-medium text-background hover:bg-background/35 dark:bg-background/25 [&_svg]:hidden"
+						>
+							Change
+						</SelectTrigger>
+						<SelectContent align="end">
+							{navigation.categories.map(
+								(category) =>
+									category.templates.length > 0 && (
+										<SelectGroup key={category.id}>
+											<SelectLabel>{category.title}</SelectLabel>
+											{category.templates.map((item) => (
+												<SelectItem key={item.id} value={item.href}>
+													{item.name}
+												</SelectItem>
+											))}
+										</SelectGroup>
+									),
+							)}
+						</SelectContent>
+					</Select>
+				</div>
+			}
 			footer={
 				<>
 					<div className="flex flex-col gap-1">
@@ -136,45 +179,6 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 				</>
 			}
 		>
-			<div
-				data-slot="template-identity-card"
-				className="flex h-32 shrink-0 items-start justify-between gap-3 rounded-md bg-foreground p-4 text-background"
-			>
-				<div className="flex min-w-0 flex-col">
-					<Typography as="p" weight="medium" className="truncate">
-						{config.name}
-					</Typography>
-					{currentCategory && (
-						<Typography as="p" size="xs" className="truncate text-background/60">
-							{currentCategory.title}
-						</Typography>
-					)}
-				</div>
-				<Select value={selectedTemplateHref} onValueChange={(value) => router.push(value)}>
-					<SelectTrigger
-						aria-label="템플릿 변경"
-						className="h-auto w-fit shrink-0 gap-0 rounded-lg border-transparent bg-background/25 px-2.5 py-1 text-xs font-medium text-background hover:bg-background/35 dark:bg-background/25 [&_svg]:hidden"
-					>
-						Change
-					</SelectTrigger>
-					<SelectContent align="end">
-						{navigation.categories.map(
-							(category) =>
-								category.templates.length > 0 && (
-									<SelectGroup key={category.id}>
-										<SelectLabel>{category.title}</SelectLabel>
-										{category.templates.map((item) => (
-											<SelectItem key={item.id} value={item.href}>
-												{item.name}
-											</SelectItem>
-										))}
-									</SelectGroup>
-								),
-						)}
-					</SelectContent>
-				</Select>
-			</div>
-
 			{textSlots.length > 0 && textGroup && (
 				<ControllerGroupRenderer definition={textGroup}>
 					{textSlots.map((slot) => {
