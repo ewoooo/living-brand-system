@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import { ContentFrame } from '@/components/shared/content-frame'
 import {
 	Pagination,
 	PaginationContent,
@@ -40,20 +41,30 @@ export function PageNavigation({ items, unitLabel = '페이지' }: PageNavigatio
 	return (
 		<Pagination
 			aria-label={`${unitLabel} 이동`}
-			className="min-h-48 bg-foreground text-background"
+			className="min-h-48 bg-surface-inverted text-surface-inverted-foreground"
 		>
-			<PaginationContent className="grid w-full grid-cols-2 gap-0">
-				{previous ? (
-					<PageLink item={previous} direction="previous" unitLabel={unitLabel} />
-				) : (
-					<PaginationItem aria-hidden />
-				)}
-				{next ? (
-					<PageLink item={next} direction="next" unitLabel={unitLabel} />
-				) : (
-					<PaginationItem aria-hidden />
-				)}
-			</PaginationContent>
+			{/*
+			 * 면은 전체 폭, 버튼은 본문과 같은 최대 폭 안에서 절반씩 — Carbon NextPrevious의 구조와 같다
+			 * (`.wrapper`가 전체 폭 배경, `.grid`가 max-width, 그 안을 두 열로 나눔).
+			 * ContentFrame은 최대 폭과 가운데 정렬만 쓰고 여백은 링크가 갖는다: 그래야 hover 면이
+			 * 반쪽 전체를 덮으면서 글자는 본문 텍스트와 같은 자리에서 시작한다.
+			 * 🔴 `md:px-0`을 같이 줘야 한다 — tailwind-merge는 `px-0`(기본)과 `md:px-8`(md 변형)을
+			 * 다른 것으로 보아 `px-0`만으로는 프레임의 `md:px-8`이 살아남고 데스크톱에서만 32px 어긋난다.
+			 */}
+			<ContentFrame className="px-0 py-0 md:px-0">
+				<PaginationContent className="grid h-full w-full grid-cols-2 gap-0">
+					{previous ? (
+						<PageLink item={previous} direction="previous" unitLabel={unitLabel} />
+					) : (
+						<PaginationItem aria-hidden />
+					)}
+					{next ? (
+						<PageLink item={next} direction="next" unitLabel={unitLabel} />
+					) : (
+						<PaginationItem aria-hidden />
+					)}
+				</PaginationContent>
+			</ContentFrame>
 		</Pagination>
 	)
 }
@@ -86,7 +97,7 @@ function PageLink({
 				rel={isPrevious ? 'prev' : 'next'}
 				size="default"
 				aria-label={`${label} ${unitLabel}: ${item.title}`}
-				className="h-full w-full flex-col items-start justify-start gap-2 whitespace-normal rounded-none p-8 text-left text-background hover:bg-foreground/40 hover:text-background focus-visible:ring-background md:p-12"
+				className="h-full w-full flex-col items-start justify-start gap-2 whitespace-normal rounded-none px-4 py-8 text-left text-surface-inverted-foreground hover:bg-foreground hover:text-background focus-visible:ring-surface-inverted-foreground md:px-8 md:py-12"
 			>
 				<span className="text-sm opacity-70">{label}</span>
 				<span className="text-balance text-2xl">{item.title}</span>
