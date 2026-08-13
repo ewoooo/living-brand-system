@@ -60,7 +60,7 @@ export function ControllerPad({
 			onKeyDown={nudge}
 			{...drag}
 			className={cn(
-				'relative shrink-0 touch-none rounded-md bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
+				'relative shrink-0 touch-none rounded-lg bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
 				!aspectRatio && 'h-36 w-full',
 				disabled && 'pointer-events-none opacity-50',
 				className,

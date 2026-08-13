@@ -2,9 +2,11 @@
 
 import { Chat, Menu, Search } from '@carbon/icons-react'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { domAnimation, LazyMotion, useReducedMotion } from 'motion/react'
+import * as m from 'motion/react-m'
 import Image from 'next/image'
 import Link from 'next/link'
-import type * as React from 'react'
+import * as React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
@@ -24,18 +26,13 @@ const navigationHeaderLinkVariants = cva(
 			surface: {
 				compact: 'h-9 w-full justify-between',
 				grouped: 'my-0.5 h-8 rounded-lg px-3',
-				standalone: 'h-9 rounded-lg px-3',
+				standalone: 'h-9 rounded-lg bg-muted px-3',
 			},
 		},
 		compoundVariants: [
 			{
-				className: 'hover:bg-muted hover:text-foreground',
+				className: 'hover:text-foreground',
 				current: false,
-				surface: 'grouped',
-			},
-			{
-				className: 'bg-muted',
-				current: true,
 				surface: 'grouped',
 			},
 			{
@@ -80,7 +77,7 @@ const navigationHeaderLinkLabelVariants = cva('', {
 const navigationHeaderSearchTriggerVariants = cva('', {
 	variants: {
 		projection: {
-			compact: 'size-9.5 rounded-xl bg-muted p-2 text-foreground hover:bg-muted/80',
+			compact: 'size-9.5 rounded-lg bg-muted p-2 text-foreground hover:bg-muted/80',
 			desktop:
 				'h-9 w-46 justify-between rounded-lg bg-background pl-4 pr-2 text-muted-foreground hover:bg-muted hover:text-foreground',
 		},
@@ -91,7 +88,7 @@ const navigationHeaderSearchTriggerVariants = cva('', {
 const navigationHeaderChatTriggerVariants = cva('', {
 	variants: {
 		projection: {
-			compact: 'size-9.5 rounded-xl bg-muted p-2 text-foreground hover:bg-muted/80',
+			compact: 'size-9.5 rounded-lg bg-muted p-2 text-foreground hover:bg-muted/80',
 			desktop: 'h-9 rounded-lg bg-background px-6 text-foreground shadow-sm hover:bg-muted',
 		},
 	},
@@ -115,7 +112,7 @@ function NavigationHeaderDesktop({ className, ...props }: React.ComponentProps<'
 		<div
 			data-slot="navigation-header-desktop"
 			className={cn(
-				'hidden h-(--global-header-height) grid-cols-3 items-center bg-background px-5 xl:grid',
+				'hidden h-(--global-header-height) grid-cols-3 items-center px-5 xl:grid',
 				className,
 			)}
 			{...props}
@@ -171,7 +168,7 @@ function NavigationHeaderCompactContent({ className, ...props }: React.Component
 		<nav
 			data-slot="navigation-header-compact-content"
 			className={cn(
-				'flex w-full flex-col gap-2 overflow-hidden rounded-3xl bg-card p-3',
+				'flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-background p-3',
 				className,
 			)}
 			{...props}
@@ -291,14 +288,57 @@ type NavigationHeaderLinkGroupProps = Omit<React.ComponentProps<'div'>, 'childre
 }
 
 function NavigationHeaderLinkGroup({ className, items, ...props }: NavigationHeaderLinkGroupProps) {
+	const groupRef = React.useRef<HTMLDivElement>(null)
+	const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null)
+	const [chaser, setChaser] = React.useState<{ left: number; width: number } | null>(null)
+	const reducedMotion = useReducedMotion()
+	const currentIndex = items.findIndex((item) => item.current)
+	const targetIndex = hoveredIndex ?? (currentIndex >= 0 ? currentIndex : null)
+
+	// 링크의 실측 폭을 따라가므로 라벨 길이가 달라도 체이서가 정확히 맞는다.
+	React.useLayoutEffect(() => {
+		const target = groupRef.current?.querySelector<HTMLElement>(
+			`[data-chaser-index="${targetIndex}"]`,
+		)
+		setChaser(target ? { left: target.offsetLeft, width: target.offsetWidth } : null)
+	}, [targetIndex])
+
 	return (
 		<div
+			ref={groupRef}
 			data-slot="navigation-header-link-group"
-			className={cn('flex h-9 items-start', className)}
+			className={cn('relative flex h-9 items-start rounded-lg bg-muted', className)}
 			{...props}
 		>
-			{items.map((item) => (
-				<NavigationHeaderLink key={String(item.href)} surface="grouped" {...item} />
+			{chaser && (
+				<LazyMotion features={domAnimation}>
+					<m.div
+						aria-hidden
+						data-target-index={targetIndex}
+						data-slot="navigation-header-link-chaser"
+						className="pointer-events-none absolute inset-y-0.5 z-0 rounded-lg bg-foreground/5"
+						initial={false}
+						animate={chaser}
+						transition={
+							reducedMotion
+								? { duration: 0 }
+								: { type: 'spring', visualDuration: 0.2, bounce: 0.15 }
+						}
+					/>
+				</LazyMotion>
+			)}
+			{items.map((item, index) => (
+				<NavigationHeaderLink
+					data-chaser-index={index}
+					key={String(item.href)}
+					onBlur={() => setHoveredIndex(null)}
+					onFocus={() => setHoveredIndex(index)}
+					onMouseLeave={() => setHoveredIndex(null)}
+					onMouseEnter={() => setHoveredIndex(index)}
+					className="z-10"
+					surface="grouped"
+					{...item}
+				/>
 			))}
 		</div>
 	)
@@ -418,7 +458,7 @@ function NavigationHeaderMenuTrigger({
 			data-slot="navigation-header-menu-trigger"
 			aria-label="메뉴"
 			variant="muted"
-			className={cn('size-9.5 rounded-xl p-2 text-foreground', className)}
+			className={cn('size-9.5 rounded-lg p-2 text-foreground', className)}
 			{...props}
 		>
 			<Menu aria-hidden data-icon="only" className="size-5.5" />
