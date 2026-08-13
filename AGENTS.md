@@ -234,15 +234,19 @@ When docs conflict, prefer the newer or more specific document. If a code change
 - Hygiene: do not include unrelated dirty worktree changes in a commit.
 - Language: write commit messages in Korean unless an external tool requires English.
 
-### 커밋 단위 — 상한과 하한이 둘 다 있다
+### 커밋 단위 — 실제로 어기는 쪽은 **하한**이다
 
-**커밋 = 그 커밋만 체크아웃해도 리포가 일관된 최소 덩어리.** 성격이 다른 것을 몰아넣지도 말고(상한), 혼자서는 의미가 없는 조각으로 쪼개지도 말 것(하한).
+**커밋 = 그 커밋만 체크아웃해도 리포가 일관된 최소 덩어리.** 성격이 다른 것을 몰아넣지 말라는 상한은 대개 지켜진다. 반복해서 어기는 것은 하한이다 — 혼자서는 의미가 없는 조각으로 쪼갠다.
 
-세 가지로 판별한다.
+🔴 **제목 테스트가 첫 관문이다.** 커밋 리뷰어는 diff를 열지 않고 **제목 목록만 훑는다.** 그러므로 **제목만 읽고 "무슨 기능·무슨 사태를 위한 작업인가"에 답이 나와야 한다.** 답이 안 나오면 덩어리가 덜 찬 것이고, 앞뒤 커밋과 합친다.
 
-1. **체크아웃 테스트** — 그 커밋에서 빌드·테스트가 통과하나? 코드와 그 코드가 만든 산출물(생성 파일·스냅샷·마이그레이션)이 어긋나면 실패다. **어긋나는 것들은 같은 커밋에 넣는다.**
+🔑 **볼륨이 커지는 것은 문제가 아니다.** 파일 20개·300줄이어도 한 사태면 한 커밋이다. 크기보다 **커밋 하나의 가치**가 중요하다. "잘게 쪼개면 안전하다"는 감각으로 쪼개지 말 것.
+
+판별은 이 순서로 한다.
+
+1. **제목 테스트** — 제목만으로 무슨 작업인지 답이 나오나? (여기서 대부분 걸린다)
 2. **revert 테스트** — 이 커밋만 되돌리면 의미 있는 무엇이 원상복구되나? "아무 일도 안 일어난다" 또는 "다른 커밋도 같이 되돌려야 한다"면 잘못 쪼갠 것이다.
-3. **설명 테스트** — 제목을 읽고 "그래서 이걸 왜 했다는 거지?"가 남으면 덩어리가 덜 찼거나 본문이 필요하다.
+3. **체크아웃 테스트** — 그 커밋에서 빌드·테스트가 통과하나? 코드와 그 코드가 만든 산출물(생성 파일·스냅샷·마이그레이션)이 어긋나면 실패다. **어긋나는 것들은 같은 커밋에 넣는다.**
 
 같은 커밋에 넣어야 하는 조합(하한을 어기기 쉬운 자리):
 - 도구·기능 추가와 **그 실행 경로**(`package.json` 스크립트, 라우트 등록) — 후자는 단독으로 아무 의미가 없다.
@@ -275,7 +279,15 @@ rules를 populate된 정의 객체째로 담고 있어 안의 checker가 환경�
 ## Pull Request Description Rules
 
 - Language: write pull request descriptions in Korean unless the user asks otherwise.
-- Detail level: include enough detail for reviewers to understand what changed, why it changed, and how it was verified without reading the full diff first.
-- Required sections: `요약`, `주요 변경사항`, `확인한 동작`, `검증`, and `참고` when relevant.
+- Required sections: `요약`, `주요 변경사항`, `확인한 동작`, `검증`, and `참고` when relevant. 마크다운 형태와 라벨은 `git-workflow` 스킬이 소유한다 — 즉흥으로 절을 만들지 말 것.
 - Verification: list the exact commands run, not generic labels.
 - Caveats: mention known warnings, intentionally skipped cleanup, or remaining review points briefly.
+
+### 🔴 분량이 규칙이다 — 길면 안 읽히고, 안 읽히면 없는 것과 같다
+
+리뷰어가 diff를 안 보고도 판단할 수 있어야 하지만, 그것이 **길게 쓰라는 뜻은 아니다.** 슬쩍 봐도 핵심이 이해되게 쓴다.
+
+- **상한**: 불릿 하나는 한 줄 · 「주요 변경사항」은 5개 안쪽 · 본문 전체가 **화면 하나**에 들어올 것.
+- **반드시 두 번에 나눠 쓴다.** ① 초안으로 내용을 담고 → ② **올리기 전에 다시 읽고 잘라낸다.** 실시간으로 써내려가면 길이를 조절하지 못한다. 자르는 기준은 "틀렸나"가 아니라 **"리뷰어가 이 줄 없이도 판단할 수 있나"**다.
+- 🔴 **작업량을 어필하지 말 것.** 많이 했다는 사실은 이미 공유돼 있다. 커밋 목록·파일 목록·검토 과정을 본문에 옮겨 적지 않는다 — diff와 커밋 이력이 이미 말한다.
+- 판단 근거와 "왜 순진한 수정으로는 부족한가" 같은 설명은 **커밋 본문**의 몫이다.
