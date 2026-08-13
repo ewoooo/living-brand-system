@@ -1233,7 +1233,7 @@ export interface ImageProfile {
    * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
    */
   output?: {
-    allowedFormats?: ('png' | 'jpeg')[] | null;
+    allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     original?: boolean | null;
   };
   updatedAt: string;
@@ -1433,7 +1433,7 @@ export interface GraphicProfile {
    * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
    */
   output?: {
-    allowedFormats?: ('svg' | 'mp4')[] | null;
+    allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
   };
   updatedAt: string;
   createdAt: string;
@@ -1678,7 +1678,7 @@ export interface Template {
    * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
    */
   output?: {
-    allowedFormats?: ('png' | 'tiff' | 'pdf')[] | null;
+    allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
   };
   sourceUrl?: string | null;
   baseHtml?: string | null;

@@ -89,10 +89,7 @@ export function ImageSidebar() {
 								<Controller.Select
 									options={download.formats.map((format) => ({
 										value: format,
-										label:
-											format === 'original'
-												? 'Original'
-												: format.toUpperCase(),
+										label: format.toUpperCase(),
 									}))}
 									value={download.format ?? ''}
 									onChange={(value) =>
@@ -102,6 +99,30 @@ export function ImageSidebar() {
 									}
 								/>
 							</Controller.Row>
+							{download.original.available && (
+								<Controller.Row label="Original">
+									<div className="flex gap-1">
+										<Button
+											variant="ghost"
+											className="h-8 px-2"
+											onClick={download.original.selected}
+											disabled={download.busy || results.selected === null}
+										>
+											선택 저장
+										</Button>
+										<Button
+											variant="ghost"
+											className="h-8 px-2"
+											onClick={download.original.all}
+											disabled={
+												download.busy || !results.result?.images.length
+											}
+										>
+											전체 저장
+										</Button>
+									</div>
+								</Controller.Row>
+							)}
 						</div>
 						<div className="flex gap-2">
 							<Button

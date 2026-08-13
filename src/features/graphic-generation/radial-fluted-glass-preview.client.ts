@@ -1,6 +1,10 @@
 'use client'
 
-import { type RadialFlutedGlassInput, radialFlutedGlassColorToRgb } from './radial-fluted-glass'
+import {
+	type RadialFlutedGlassInput,
+	radialFlutedGlassColorToRgb,
+	toRadialFlutedGlassShaderSource,
+} from './radial-fluted-glass'
 
 const SHADER_URL = '/shaders/radial-fluted-glass.glsl'
 const VERTEX_SHADER = `
@@ -90,8 +94,8 @@ void main() { mainImage(gl_FragColor, gl_FragCoord.xy); }
 	let animationFrame = 0
 	let viewport = { width: 1, height: 1 }
 	const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
-	// ponytail: preview density is capped at 2; raise it only if high-DPI export shares this path.
-	const pixelRatio = Math.min(window.devicePixelRatio || 1, 2)
+	// ponytail: preview resolution stays at CSS pixels; add a quality control only when profiling supports high-DPI preview.
+	const pixelRatio = 1
 	const uniforms = {
 		resolution: gl.getUniformLocation(program, 'iResolution'),
 		time: gl.getUniformLocation(program, 'iTime'),
@@ -107,10 +111,11 @@ void main() { mainImage(gl_FragColor, gl_FragCoord.xy); }
 	function draw(time: number) {
 		currentTime = time
 		const [red, green, blue] = radialFlutedGlassColorToRgb(currentInput.bloomColor)
+		const [sourceX, sourceY] = toRadialFlutedGlassShaderSource(currentInput.source)
 		gl.viewport(0, 0, canvas.width, canvas.height)
 		gl.uniform3f(uniforms.resolution, canvas.width, canvas.height, 1)
 		gl.uniform1f(uniforms.time, time)
-		gl.uniform2f(uniforms.source, currentInput.source.x, currentInput.source.y)
+		gl.uniform2f(uniforms.source, sourceX, sourceY)
 		gl.uniform3f(uniforms.bloomColor, red, green, blue)
 		gl.uniform1f(uniforms.rayIntensity, currentInput.rayIntensity)
 		gl.uniform1f(uniforms.rayDensity, currentInput.rayDensity)

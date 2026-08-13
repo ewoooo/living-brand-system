@@ -85,11 +85,6 @@ export const GraphicProfiles: CollectionConfig = {
 			source: 'graphic',
 			baseConfigs: graphicStudioConfigs.map(({ id, controller }) => ({ id, controller })),
 		}),
-		studioOutputPolicyField({
-			formats: [
-				{ label: 'SVG', value: 'svg' },
-				{ label: 'MP4', value: 'mp4' },
-			],
-		}),
+		studioOutputPolicyField(),
 	],
 }

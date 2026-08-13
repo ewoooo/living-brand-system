@@ -4,10 +4,8 @@ import {
 	type StudioControllerConfig,
 } from '@/modules/studio-controller/controller-definition'
 
-export type GraphicOutputFormat = 'svg' | 'mp4'
-
 /** P5·Shader 그래픽 하나가 스튜디오에 내는 직렬화 가능한 편집 계약. */
-export type GraphicStudioConfig = StudioControllerConfig<'graphic', string, GraphicOutputFormat> & {
+export type GraphicStudioConfig = StudioControllerConfig<'graphic', string> & {
 	type: 'p5' | 'shader'
 }
 
@@ -38,13 +36,6 @@ export function parseGraphicStudioConfig(input: unknown): GraphicStudioConfig {
 	}
 	const output = asRecord(value.output)
 	parseStudioOutputCapability(output)
-	if (
-		(config.output.formats as readonly string[]).some(
-			(format) => format !== 'svg' && format !== 'mp4',
-		)
-	) {
-		throw new Error('GraphicStudioConfig output format이 올바르지 않습니다.')
-	}
 	if (config.output.formats.includes('mp4') && !config.output.video?.mp4) {
 		throw new Error('GraphicStudioConfig MP4 capability가 필요합니다.')
 	}

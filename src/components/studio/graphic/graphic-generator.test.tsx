@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -23,7 +23,17 @@ const mocks = vi.hoisted(() => {
 		getViewport: vi.fn(() => ({ width: 800, height: 600 })),
 		resize: vi.fn(),
 		update: vi.fn(),
+		video: {
+			canvas: {} as HTMLCanvasElement,
+			renderFrame: vi.fn(),
+			restore: vi.fn(),
+		},
 	}
+	const exportGraphicVideo = vi.fn(async () => ({
+		data: new Blob(['mp4'], { type: 'video/mp4' }),
+		filename: 'radial-fluted-glass.mp4',
+		mimeType: 'video/mp4',
+	}))
 	const state = {
 		onInputChange: undefined as
 			| ((input: typeof FORWARD_STRAIGHT_DEFAULT_INPUT) => boolean)
@@ -32,6 +42,9 @@ const mocks = vi.hoisted(() => {
 		createPreview: vi.fn(),
 		shaderPreview,
 		createShaderPreview: vi.fn(async () => shaderPreview),
+		exportGraphicVideo,
+		resizeObserverCallback: undefined as ResizeObserverCallback | undefined,
+		resizeObserverCount: 0,
 	}
 	state.createPreview.mockImplementation(
 		(options: {
@@ -52,12 +65,22 @@ vi.mock('@/features/graphic-generation/radial-fluted-glass-preview.client', () =
 	createRadialFlutedGlassPreview: mocks.createShaderPreview,
 }))
 
+vi.mock('@/features/graphic-generation/services/export-graphic-video.client', () => ({
+	exportGraphicStudioVideo: mocks.exportGraphicVideo,
+}))
+
 beforeEach(() => {
 	vi.clearAllMocks()
 	mocks.onInputChange = undefined
+	mocks.resizeObserverCallback = undefined
+	mocks.resizeObserverCount = 0
 	vi.stubGlobal(
 		'ResizeObserver',
 		class {
+			constructor(callback: ResizeObserverCallback) {
+				mocks.resizeObserverCallback = callback
+				mocks.resizeObserverCount += 1
+			}
 			observe() {}
 			disconnect() {}
 		},
@@ -113,7 +136,7 @@ describe('GraphicGenerator', () => {
 			},
 		} satisfies GraphicStudioConfig
 
-		render(createElement(GraphicGenerator, { config }))
+		render(createElement(GraphicGenerator, { configs: [config] }))
 
 		expect(screen.getByLabelText('Caption')).toHaveAttribute('maxlength', '20')
 		expect(screen.getByLabelText('Color 색상 선택')).toBeInTheDocument()
@@ -126,7 +149,7 @@ describe('GraphicGenerator', () => {
 
 	it('P5 Definition을 Controller primitive로 그리고 변경값을 캔버스에 전달한다', async () => {
 		const user = userEvent.setup()
-		render(createElement(GraphicGenerator, { config: forwardStraightGraphicConfig }))
+		render(createElement(GraphicGenerator, { configs: [forwardStraightGraphicConfig] }))
 
 		expect(screen.getByRole('radio', { name: 'Off' })).toBeChecked()
 		const viewpoint = screen.getByRole('combobox', { name: '시점' })
@@ -144,9 +167,22 @@ describe('GraphicGenerator', () => {
 		)
 	})
 
+	it('공통 output format은 표시하되 등록된 export adapter가 없으면 실행하지 않는다', async () => {
+		const config = {
+			...forwardStraightGraphicConfig,
+			output: { ...forwardStraightGraphicConfig.output, formats: ['png'] },
+		} satisfies GraphicStudioConfig
+
+		render(createElement(GraphicGenerator, { configs: [config] }))
+
+		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
+		expect(screen.getByText('PNG')).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: '내보내기' })).toBeDisabled()
+	})
+
 	it('Shader Definition을 WebGL preview와 MP4 Export UI에 연결한다', async () => {
 		const { unmount } = render(
-			createElement(GraphicGenerator, { config: radialFlutedGlassGraphicConfig }),
+			createElement(GraphicGenerator, { configs: [radialFlutedGlassGraphicConfig] }),
 		)
 
 		await waitFor(() =>
@@ -154,8 +190,11 @@ describe('GraphicGenerator', () => {
 				expect.objectContaining({ input: RADIAL_FLUTED_GLASS_DEFAULT_INPUT }),
 			),
 		)
-		expect(screen.queryByRole('button', { name: 'SVG 다운로드' })).not.toBeInTheDocument()
-		expect(screen.getByRole('button', { name: 'MP4 다운로드' })).toBeDisabled()
+		expect(screen.getByRole('spinbutton', { name: 'Width' })).toHaveValue(1920)
+		expect(screen.getByRole('spinbutton', { name: 'Height' })).toHaveValue(1080)
+		expect(screen.getByRole('combobox', { name: 'FPS' })).toHaveTextContent('30')
+		expect(screen.getByRole('spinbutton', { name: 'Duration' })).toHaveValue(5)
+		await waitFor(() => expect(screen.getByRole('button', { name: '내보내기' })).toBeEnabled())
 
 		fireEvent.keyDown(screen.getByRole('slider', { name: '광선 강도' }), {
 			key: 'ArrowRight',
@@ -170,10 +209,85 @@ describe('GraphicGenerator', () => {
 		expect(mocks.shaderPreview.destroy).toHaveBeenCalledOnce()
 	})
 
+	it('VideoControls 변경값을 MP4 ExportRequest에 연결한다', async () => {
+		const user = userEvent.setup()
+		const createObjectURL = vi.fn(() => 'blob:radial-fluted-glass')
+		Object.defineProperty(URL, 'createObjectURL', {
+			configurable: true,
+			value: createObjectURL,
+		})
+		Object.defineProperty(URL, 'revokeObjectURL', {
+			configurable: true,
+			value: vi.fn(),
+		})
+		vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+		render(createElement(GraphicGenerator, { configs: [radialFlutedGlassGraphicConfig] }))
+		await waitFor(() => expect(mocks.createShaderPreview).toHaveBeenCalledOnce())
+
+		const width = screen.getByRole('spinbutton', { name: 'Width' })
+		fireEvent.change(width, { target: { value: '1280' } })
+		fireEvent.blur(width)
+		const height = screen.getByRole('spinbutton', { name: 'Height' })
+		fireEvent.change(height, { target: { value: '720' } })
+		fireEvent.blur(height)
+		const duration = screen.getByRole('spinbutton', { name: 'Duration' })
+		fireEvent.change(duration, { target: { value: '10' } })
+		fireEvent.blur(duration)
+		const fps = screen.getByRole('combobox', { name: 'FPS' })
+		fps.focus()
+		await user.keyboard('{ArrowDown}{ArrowDown}{Enter}')
+		await user.click(screen.getByRole('button', { name: '내보내기' }))
+
+		await waitFor(() =>
+			expect(mocks.exportGraphicVideo).toHaveBeenCalledWith(
+				radialFlutedGlassGraphicConfig,
+				expect.objectContaining({
+					format: 'mp4',
+					options: expect.objectContaining({
+						width: 1280,
+						height: 720,
+						fps: 60,
+						durationSeconds: 10,
+					}),
+				}),
+				mocks.shaderPreview.video,
+			),
+		)
+		expect(createObjectURL).toHaveBeenCalledOnce()
+	})
+
+	it('출력 사이즈 비율을 프리뷰 영역에 맞춰 반영한다', async () => {
+		render(createElement(GraphicGenerator, { configs: [radialFlutedGlassGraphicConfig] }))
+		await waitFor(() => expect(mocks.createShaderPreview).toHaveBeenCalledOnce())
+		const observerCount = mocks.resizeObserverCount
+
+		const width = screen.getByRole('spinbutton', { name: 'Width' })
+		fireEvent.change(width, { target: { value: '800' } })
+		fireEvent.blur(width)
+		const height = screen.getByRole('spinbutton', { name: 'Height' })
+		fireEvent.change(height, { target: { value: '800' } })
+		fireEvent.blur(height)
+		await waitFor(() => expect(mocks.resizeObserverCount).toBeGreaterThan(observerCount))
+
+		act(() => {
+			mocks.resizeObserverCallback?.(
+				[
+					{
+						contentRect: { width: 1000, height: 800 },
+					} as ResizeObserverEntry,
+				],
+				{} as ResizeObserver,
+			)
+		})
+
+		expect(mocks.shaderPreview.resize).toHaveBeenLastCalledWith(800, 800)
+	})
+
 	it('등록된 id와 type이 일치하지 않으면 런타임을 실행하지 않는다', () => {
 		render(
 			createElement(GraphicGenerator, {
-				config: { ...forwardStraightGraphicConfig, type: 'shader' },
+				configs: [{ ...forwardStraightGraphicConfig, type: 'shader' }],
 			}),
 		)
 
@@ -204,7 +318,7 @@ describe('GraphicGenerator', () => {
 			},
 		} satisfies GraphicStudioConfig
 
-		render(createElement(GraphicGenerator, { config }))
+		render(createElement(GraphicGenerator, { configs: [config] }))
 		await waitFor(() =>
 			expect(screen.getByRole('slider', { name: '기준점' })).toHaveStyle({
 				aspectRatio: '1.3333333333333333',
@@ -231,7 +345,7 @@ describe('GraphicGenerator', () => {
 			},
 		} satisfies GraphicStudioConfig
 
-		render(createElement(GraphicGenerator, { config }))
+		render(createElement(GraphicGenerator, { configs: [config] }))
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
 		expect(
 			mocks.onInputChange?.({
@@ -245,7 +359,7 @@ describe('GraphicGenerator', () => {
 	})
 
 	it('캔버스의 입력 변경을 같은 Context를 통해 Pad에 되돌린다', async () => {
-		render(createElement(GraphicGenerator, { config: forwardStraightGraphicConfig }))
+		render(createElement(GraphicGenerator, { configs: [forwardStraightGraphicConfig] }))
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
 
 		mocks.onInputChange?.({
@@ -271,7 +385,7 @@ describe('GraphicGenerator', () => {
 		const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
 		const { unmount } = render(
-			createElement(GraphicGenerator, { config: forwardStraightGraphicConfig }),
+			createElement(GraphicGenerator, { configs: [forwardStraightGraphicConfig] }),
 		)
 
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
@@ -281,7 +395,10 @@ describe('GraphicGenerator', () => {
 				expect.objectContaining({ origin: { x: 0.525, y: 0.5 } }),
 			),
 		)
-		fireEvent.click(screen.getByRole('button', { name: 'SVG 다운로드' }))
+		const width = screen.getByRole('spinbutton', { name: 'Width' })
+		fireEvent.change(width, { target: { value: '640' } })
+		fireEvent.blur(width)
+		fireEvent.click(screen.getByRole('button', { name: '내보내기' }))
 		await waitFor(() => expect(createObjectURL).toHaveBeenCalledOnce())
 
 		const blob = createObjectURL.mock.calls[0]?.[0] as Blob
@@ -291,8 +408,8 @@ describe('GraphicGenerator', () => {
 			reader.onload = () => resolve(String(reader.result))
 			reader.readAsText(blob)
 		})
-		expect(svg).toContain('width="800" height="600"')
-		expect(svg).toContain('cx="420.00" cy="300.00"')
+		expect(svg).toContain('width="640" height="600"')
+		expect(svg).toContain('cx="336.00" cy="300.00"')
 		expect(click.mock.instances[0]).toMatchObject({
 			download: 'forward-straight.svg',
 			href: 'blob:forward-straight',
@@ -301,5 +418,40 @@ describe('GraphicGenerator', () => {
 
 		unmount()
 		expect(mocks.preview.destroy).toHaveBeenCalledOnce()
+	})
+
+	it('Change 브라우저에서 Graphic을 교체하고 새 계약의 기본값으로 초기화한다', async () => {
+		render(
+			createElement(GraphicGenerator, {
+				configs: [forwardStraightGraphicConfig, radialFlutedGlassGraphicConfig],
+			}),
+		)
+		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
+		fireEvent.click(screen.getByRole('radio', { name: 'On' }))
+
+		fireEvent.click(screen.getByRole('button', { name: '그래픽 변경' }))
+		const panel = screen.getByRole('dialog', { name: 'Graphic Profiles' })
+		const forwardCard = within(panel).getByRole('button', {
+			name: new RegExp(forwardStraightGraphicConfig.name),
+		})
+		const shaderCard = within(panel).getByRole('button', {
+			name: new RegExp(radialFlutedGlassGraphicConfig.name),
+		})
+		expect(forwardCard).toHaveAttribute('aria-current', 'true')
+
+		fireEvent.click(shaderCard)
+		expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+		await waitFor(() => expect(mocks.createShaderPreview).toHaveBeenCalledOnce())
+		expect(mocks.preview.destroy).toHaveBeenCalledOnce()
+
+		fireEvent.click(screen.getByRole('button', { name: '그래픽 변경' }))
+		fireEvent.click(
+			within(screen.getByRole('dialog', { name: 'Graphic Profiles' })).getByRole('button', {
+				name: new RegExp(forwardStraightGraphicConfig.name),
+			}),
+		)
+
+		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledTimes(2))
+		expect(screen.getByRole('radio', { name: 'Off' })).toBeChecked()
 	})
 })

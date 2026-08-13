@@ -9,7 +9,10 @@ import {
 	type TemplateBackgroundType,
 } from '@/features/template-customization/domain/template-config'
 import type { TemplateBackgroundState } from '@/features/template-customization/hooks/use-template-studio'
-import { createControllerValues } from '@/modules/studio-controller/controller-definition'
+import {
+	type ControllerRuntimeBindings,
+	createControllerValues,
+} from '@/modules/studio-controller/controller-definition'
 import { BackgroundSection } from './background-section'
 
 const imageContract = resolveTemplateImageConfig(createImageConfig(), {
@@ -26,6 +29,10 @@ function Harness({
 	onChange,
 	onGenerate = vi.fn(),
 	contract = imageContract as typeof imageContract | null,
+	featureBindings = {
+		lineColor: { availability: 'disabled' },
+		backgroundColor: { availability: 'disabled' },
+	},
 	initialError = null,
 	generating = false,
 	typeAvailability,
@@ -34,6 +41,7 @@ function Harness({
 	onChange?: (patch: HarnessPatch) => void
 	onGenerate?: () => void
 	contract?: typeof imageContract | null
+	featureBindings?: ControllerRuntimeBindings
 	initialError?: string | null
 	generating?: boolean
 	typeAvailability?: 'enabled' | 'readonly' | 'disabled'
@@ -76,6 +84,7 @@ function Harness({
 				defaultValue: null,
 			}}
 			imageContracts={contract ? [contract] : []}
+			featureBindings={contract ? featureBindings : {}}
 			graphicConfigs={[forwardStraightGraphicConfig]}
 			graphicBindings={{ origin: { padAspectRatio: 4 / 3 } }}
 			value={state}
@@ -236,6 +245,15 @@ describe('BackgroundSection', () => {
 		expect(screen.getByRole('combobox', { name: 'Image Profile' })).toBeDisabled()
 	})
 
+	it('Image feature availability는 전달된 runtime binding만 따른다', async () => {
+		const user = userEvent.setup()
+		render(<Harness allowedTypes={['image']} featureBindings={{}} />)
+
+		await openGenerateTab(user)
+		expect(screen.getByLabelText('Line Color 색상 선택')).toBeEnabled()
+		expect(screen.getByLabelText('Background Color 색상 선택')).toBeEnabled()
+	})
+
 	it('Provider가 가진 생성 오류를 표시한다', async () => {
 		const user = userEvent.setup()
 		render(
@@ -335,7 +353,7 @@ function createImageConfig(): ImageStudioConfig {
 		id: 3,
 		version: 1,
 		name: '첫 프로파일',
-		output: { formats: ['original', 'png'] },
+		output: { formats: ['png'], original: true },
 		controller: {
 			groups: [
 				{

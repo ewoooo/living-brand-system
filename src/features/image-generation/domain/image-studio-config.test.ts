@@ -27,6 +27,17 @@ describe('deriveImageStudioConfig', () => {
 			parseImageStudioConfig({ ...config, image: { ...config.image, unknown: true } }),
 		).toThrow('알 수 없는')
 	})
+
+	it('공통 envelope 외에 Image 원본 capability를 명시하도록 강제한다', () => {
+		const config = deriveImageStudioConfig(profile)
+		expect(() =>
+			parseImageStudioConfig({
+				...config,
+				output: { ...config.output, original: undefined },
+			}),
+		).toThrow('output.original은 boolean')
+	})
+
 	it('legacy 프로파일을 공통 envelope와 stable control ID로 투영한다', () => {
 		const config = deriveImageStudioConfig(profile)
 		const controls = getImageStudioControls(config)
@@ -36,7 +47,7 @@ describe('deriveImageStudioConfig', () => {
 			id: 5,
 			version: 1,
 			name: '에센허브 브랜드 제품컷',
-			output: { formats: ['original', 'png', 'jpeg'] },
+			output: { formats: ['png', 'jpeg'], original: true },
 			image: { slug: 'brand-product', features: [{ type: 'camera-control' }] },
 		})
 		expect(config).not.toHaveProperty('imageModelPreset')
@@ -63,6 +74,7 @@ describe('deriveImageStudioConfig', () => {
 			}).output,
 		).toEqual({
 			formats: ['png'],
+			original: false,
 			colorProfiles: { rgb: ['srgb'] },
 			packages: ['zip'],
 		})

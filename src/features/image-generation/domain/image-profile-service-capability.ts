@@ -45,7 +45,8 @@ export function getImageProfileServiceCapability(modelPreset: ImageModelPreset) 
 		features: ['color-adjustment', 'camera-control'] as const,
 		promptMaxLength: IMAGE_PROMPT_MAX_LENGTH,
 		output: {
-			formats: ['original', 'png', 'jpeg'] as const,
+			formats: ['png', 'jpeg'] as const,
+			original: true,
 			colorProfiles: { rgb: ['srgb'] as const },
 			packages: ['zip'] as const,
 		},

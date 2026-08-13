@@ -30,6 +30,11 @@ export function ImageCanvas() {
 
 	return (
 		<ImageGenerationResults
+			aspectRatio={
+				generation.busy
+					? generation.ratio
+					: (results.result?.aspectRatio ?? generation.ratio)
+			}
 			color={results.color}
 			loading={generation.busy}
 			onSelect={results.select}

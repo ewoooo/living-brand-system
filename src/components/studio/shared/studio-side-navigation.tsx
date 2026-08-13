@@ -1,6 +1,6 @@
 'use client'
 
-import { Catalog, Connect, Dashboard, Image, Pen, Review, Template } from '@carbon/icons-react'
+import { Connect, Dashboard, Image, Pen, Review, Template } from '@carbon/icons-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
@@ -8,7 +8,6 @@ import { routes } from '@/lib/routes'
 
 const navigation = [
 	{ label: 'Studio', href: routes.studio.root, icon: Dashboard },
-	{ label: 'Examples', href: routes.studio.examples, icon: Catalog },
 	{ label: 'Template', href: routes.studio.template, icon: Template },
 	{ label: 'Image', href: routes.studio.generateImage, icon: Image },
 	{ label: 'Graphic', href: routes.studio.generateGraphic, icon: Pen },

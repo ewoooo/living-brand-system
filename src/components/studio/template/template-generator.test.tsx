@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
 	exportTemplate: vi.fn(),
 	push: vi.fn(),
 	requestImageGeneration: vi.fn(),
+	resizeObserverCallback: undefined as ResizeObserverCallback | undefined,
 }))
 
 vi.mock('@/features/studio-export/hooks/use-export', () => ({
@@ -98,6 +99,9 @@ function FeatureMutationProbe() {
 			<span data-testid="background-line">
 				{String(background.state.featureValues.lineColor)}
 			</span>
+			<span data-testid="background-line-availability">
+				{background.featureBindings.lineColor?.availability ?? 'enabled'}
+			</span>
 			<button
 				type="button"
 				onClick={() => images.updateFeature('1:1', 'lineColor', 'invalid')}
@@ -136,6 +140,21 @@ function GraphicMutationProbe() {
 			</button>
 			<button type="button" onClick={() => background.selectGraphicConfig('secondary')}>
 				select secondary graphic
+			</button>
+		</>
+	)
+}
+
+function TemplateOutputProbe() {
+	const { exporting } = useTemplateStudio()
+	return (
+		<>
+			<span data-testid="template-output-format">{exporting.format ?? 'none'}</span>
+			<span data-testid="template-output-formats">
+				{exporting.formats.join(',') || 'none'}
+			</span>
+			<button type="button" onClick={() => exporting.run('svg')}>
+				export unsupported svg
 			</button>
 		</>
 	)
@@ -212,8 +231,22 @@ function ImageRaceProbe() {
 describe('TemplateGenerator', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
+		mocks.resizeObserverCallback = undefined
+		vi.stubGlobal(
+			'ResizeObserver',
+			class {
+				constructor(callback: ResizeObserverCallback) {
+					mocks.resizeObserverCallback = callback
+				}
+				observe() {}
+				disconnect() {}
+			},
+		)
 	})
-	afterEach(cleanup)
+	afterEach(() => {
+		cleanup()
+		vi.unstubAllGlobals()
+	})
 
 	it('공통 Studio 작업대에서 템플릿을 내보낸다', () => {
 		const { container } = render(
@@ -229,6 +262,37 @@ describe('TemplateGenerator', () => {
 
 		// 포맷 셀렉트 기본값인 PNG 요청이 공통 useExport로 전달된다.
 		expect(mocks.exportTemplate).toHaveBeenCalledWith('png')
+	})
+
+	it('공통 Config 포맷에 실제 Template adapter가 없으면 초기 선택과 요청에서 제외한다', () => {
+		const derived = deriveTemplateConfig(template, imageConfigs, graphicStudioConfigs)
+		const config = { ...derived, output: { ...derived.output, formats: ['svg'] as const } }
+		render(
+			<TemplateStudioProvider config={config} template={template} navigation={navigation}>
+				<TemplateOutputProbe />
+			</TemplateStudioProvider>,
+		)
+
+		expect(screen.getByTestId('template-output-format')).toHaveTextContent('none')
+		expect(screen.getByTestId('template-output-formats')).toHaveTextContent('none')
+		fireEvent.click(screen.getByRole('button', { name: 'export unsupported svg' }))
+		expect(mocks.exportTemplate).not.toHaveBeenCalled()
+	})
+
+	it('출력 캔버스 비율을 작업 영역에 맞춰 프리뷰에 반영한다', () => {
+		const { container } = render(
+			<TemplateGenerator navigation={navigation} template={template} />,
+		)
+
+		act(() => {
+			mocks.resizeObserverCallback?.(
+				[{ contentRect: { width: 1000, height: 600 } } as ResizeObserverEntry],
+				{} as ResizeObserver,
+			)
+		})
+
+		const preview = container.querySelector<HTMLElement>('[data-slot="template-preview"]')
+		expect(preview).toHaveStyle({ width: '800px', height: '600px' })
 	})
 
 	it('Template Controller의 readonly 기본값을 세션에 적용하고 Context action에서도 변경을 거부한다', () => {
@@ -930,6 +994,7 @@ describe('TemplateGenerator', () => {
 
 		fireEvent.click(screen.getByRole('button', { name: 'invalid image feature' }))
 		expect(screen.getByTestId('image-line')).toHaveTextContent('#000000')
+		expect(screen.getByTestId('background-line-availability')).toHaveTextContent('disabled')
 		fireEvent.click(screen.getByRole('button', { name: 'valid image feature' }))
 		expect(screen.getByTestId('image-line')).toHaveTextContent('#00ff00')
 		fireEvent.click(screen.getByRole('button', { name: 'background feature' }))
@@ -1038,7 +1103,7 @@ function createImageConfig(
 		id,
 		version: 1,
 		name: id === 11 ? '기본 프로파일' : `프로파일 ${id}`,
-		output: { formats: ['original', 'png'] },
+		output: { formats: ['png'], original: true },
 		controller: {
 			groups: [
 				{

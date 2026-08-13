@@ -6,7 +6,7 @@ import {
 	type ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 import { DEFAULT_CMYK_ICC_PROFILE } from '../color-profile'
-import type { CmykColorProfile, ExportRequest } from '../export-contract'
+import type { CmykColorProfile, ExportRequest, StudioOutputFormat } from '../export-contract'
 import type { PrintPpi } from '../print-policy'
 
 export type TemplateExportRequest =
@@ -14,8 +14,6 @@ export type TemplateExportRequest =
 	| (Extract<ExportRequest, { format: 'tiff' | 'pdf' }> & {
 			colorProfile: CmykColorProfile
 	  })
-export type TemplateExportFormat = TemplateExportRequest['format']
-
 export type TemplateExportContext = {
 	fileName: string
 	height: number
@@ -24,7 +22,7 @@ export type TemplateExportContext = {
 	templateId: number
 	templateVersion?: string
 	width: number
-	output: StudioOutputCapability<TemplateExportFormat>
+	output: StudioOutputCapability
 	controller: {
 		groups: readonly ControllerGroupDefinition[]
 		values: Readonly<ControllerValues>
@@ -48,7 +46,7 @@ export function canExportTemplate(
 
 /** UI의 형식 선택을 완전한 공통 요청으로 정규화한다. */
 export function createTemplateExportRequest(
-	format: TemplateExportFormat,
+	format: StudioOutputFormat,
 	printPpi?: PrintPpi,
 ): TemplateExportRequest | null {
 	switch (format) {
@@ -74,13 +72,19 @@ export function createTemplateExportRequest(
 						options: { ppi: printPpi, bleedMm: 0 },
 					}
 				: null
+		default:
+			return null
 	}
 }
 
 /** Config 파생용 실제 adapter/source capability. Admin 정책은 여기서 섞지 않는다. */
 export function supportsTemplateExport(
-	format: TemplateExportFormat,
+	format: StudioOutputFormat,
 	context: Omit<TemplateExportContext, 'output' | 'controller'>,
 ): boolean {
-	return format === 'png' || Boolean(context.printPpi && context.templateVersion)
+	return (
+		format === 'png' ||
+		((format === 'tiff' || format === 'pdf') &&
+			Boolean(context.printPpi && context.templateVersion))
+	)
 }

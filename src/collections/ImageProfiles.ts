@@ -299,10 +299,6 @@ export const ImageProfiles: CollectionConfig = {
 		studioControllerField({ mode: 'define' }),
 		imageProfileFeaturesField(),
 		studioOutputPolicyField({
-			formats: [
-				{ label: 'PNG', value: 'png' },
-				{ label: 'JPEG', value: 'jpeg' },
-			],
 			includeOriginal: true,
 		}),
 		{

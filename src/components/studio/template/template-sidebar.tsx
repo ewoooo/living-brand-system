@@ -16,8 +16,11 @@ import {
 	SelectTrigger,
 } from '@/components/ui/select'
 import { Typography } from '@/components/ui/typography'
+import {
+	STUDIO_OUTPUT_FORMAT_OPTIONS,
+	type StudioOutputFormat,
+} from '@/features/studio-export/export-contract'
 import { pixelsToMillimeters } from '@/features/studio-export/print-policy'
-import type { TemplateExportFormat } from '@/features/studio-export/services/export-template'
 import {
 	findTemplateControl,
 	findTemplateControlGroup,
@@ -29,11 +32,9 @@ import { ImageSlotInput } from './image-slot-input'
 import { IMAGE_TRANSFORM_DEFAULT, ImageTransformControl } from './image-transform-control'
 import { TextSlotInput } from './text-slot-input'
 
-const FORMAT_LABELS: Record<TemplateExportFormat, string> = {
-	png: 'PNG',
-	tiff: 'CMYK TIFF',
-	pdf: 'CMYK PDF',
-}
+const FORMAT_LABELS = new Map(
+	STUDIO_OUTPUT_FORMAT_OPTIONS.map(({ label, value }) => [value, label]),
+)
 
 /**
  * 템플릿 스튜디오의 사이드바(컨트롤러 패널) — 캔버스를 모른다.
@@ -99,13 +100,16 @@ export function TemplateSidebar() {
 						)}
 						<Controller.Row label="Format">
 							<Controller.Select
-								options={config.output.formats.map((candidate) => ({
+								options={exporting.formats.map((candidate) => ({
 									value: candidate,
-									label: FORMAT_LABELS[candidate],
+									label:
+										printPpi && (candidate === 'tiff' || candidate === 'pdf')
+											? `CMYK ${FORMAT_LABELS.get(candidate) ?? candidate}`
+											: (FORMAT_LABELS.get(candidate) ?? candidate),
 								}))}
 								value={exporting.format ?? ''}
 								onChange={(value) =>
-									exporting.setFormat(value as TemplateExportFormat)
+									exporting.setFormat(value as StudioOutputFormat)
 								}
 							/>
 						</Controller.Row>
@@ -261,6 +265,7 @@ export function TemplateSidebar() {
 							canvas.width && canvas.height ? canvas.width / canvas.height : undefined
 						}
 						imageContracts={background.contracts}
+						featureBindings={background.featureBindings}
 						graphicConfigs={background.graphicConfigs}
 						graphicBindings={background.graphicBindings}
 						value={background.state}

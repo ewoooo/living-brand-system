@@ -19,6 +19,10 @@ const config = forwardStraightGraphicConfig
 describe('graphicStudioRuntime', () => {
 	it('Graphic 계약을 멱등하게 검증하고 잘못된 studio·type을 거부한다', () => {
 		expect(parseGraphicStudioConfig(parseGraphicStudioConfig(config))).toBe(config)
+		expect(
+			parseGraphicStudioConfig({ ...config, output: { ...config.output, formats: ['png'] } })
+				.output.formats,
+		).toEqual(['png'])
 		expect(() => parseGraphicStudioConfig({ ...config, studio: 'image' })).toThrow('studio')
 		expect(() => parseGraphicStudioConfig({ ...config, type: 'canvas' })).toThrow('type')
 		expect(() => parseGraphicStudioConfig({ ...config, unknown: true })).toThrow('알 수 없는')
@@ -120,12 +124,12 @@ describe('graphicStudioRuntime', () => {
 		).toThrow('SVG output adapter')
 	})
 
-	it('Catalog는 같은 stable ID의 Plugin을 중복 등록하지 않는다', () => {
+	it('Catalog는 등록 key와 Manifest stable ID 불일치를 거부한다', () => {
 		const plugin = defineGraphicStudioPlugin({
 			manifest: { ...config, output: { formats: [] } },
 		})
-		expect(() => createGraphicStudioPluginCatalog([plugin, plugin])).toThrow(
-			'중복된 Graphic plugin',
+		expect(() => createGraphicStudioPluginCatalog({ mismatched: plugin })).toThrow(
+			'key와 Manifest ID',
 		)
 	})
 })

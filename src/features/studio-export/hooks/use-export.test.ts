@@ -24,8 +24,8 @@ describe('useExport', () => {
 		const execute = vi.fn().mockRejectedValue(new Error('내보내기 실패'))
 		const { result } = renderHook(() =>
 			useExport<Request>({
-				capability: { formats: ['png'] },
-				execute,
+				capability: { formats: ['png', 'pdf'] },
+				source: { raster: { png: execute } },
 			}),
 		)
 
@@ -34,6 +34,7 @@ describe('useExport', () => {
 		expect(result.current.error).toBe('내보내기 실패')
 		expect(result.current.exporting).toBeNull()
 
+		expect(result.current.canExport(pdf)).toBe(false)
 		await act(() => result.current.run(pdf))
 		expect(execute).toHaveBeenCalledOnce()
 	})
