@@ -141,6 +141,25 @@ describe('GlobalHeader', () => {
 		).not.toHaveAttribute('aria-current')
 	})
 
+	it('그룹 링크의 체이서가 호버한 링크 폭으로 이동한다', () => {
+		renderHeader()
+
+		const graphic = screen.getByRole('link', { name: 'Graphic' })
+		const template = screen.getByRole('link', { name: 'Template' })
+		const group = graphic.closest<HTMLElement>('[data-slot="navigation-header-link-group"]')
+
+		expect(group).not.toBeNull()
+		const chaser = () =>
+			group?.querySelector<HTMLElement>('[data-slot="navigation-header-link-chaser"]')
+		expect(chaser()).toHaveAttribute('data-target-index', '2')
+
+		fireEvent.mouseEnter(template)
+		expect(chaser()).toHaveAttribute('data-target-index', '0')
+
+		fireEvent.mouseLeave(template)
+		expect(chaser()).toHaveAttribute('data-target-index', '2')
+	})
+
 	it('컴팩트 메뉴를 헤더 흐름 안에서 펼치고 접는다', () => {
 		renderHeader({ graphic: true })
 

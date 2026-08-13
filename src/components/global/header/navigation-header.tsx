@@ -2,9 +2,11 @@
 
 import { Chat, Menu, Search } from '@carbon/icons-react'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { domAnimation, LazyMotion, useReducedMotion } from 'motion/react'
+import * as m from 'motion/react-m'
 import Image from 'next/image'
 import Link from 'next/link'
-import type * as React from 'react'
+import * as React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
@@ -29,13 +31,8 @@ const navigationHeaderLinkVariants = cva(
 		},
 		compoundVariants: [
 			{
-				className: 'hover:bg-muted hover:text-foreground',
+				className: 'hover:text-foreground',
 				current: false,
-				surface: 'grouped',
-			},
-			{
-				className: 'bg-muted',
-				current: true,
 				surface: 'grouped',
 			},
 			{
@@ -291,14 +288,57 @@ type NavigationHeaderLinkGroupProps = Omit<React.ComponentProps<'div'>, 'childre
 }
 
 function NavigationHeaderLinkGroup({ className, items, ...props }: NavigationHeaderLinkGroupProps) {
+	const groupRef = React.useRef<HTMLDivElement>(null)
+	const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null)
+	const [chaser, setChaser] = React.useState<{ left: number; width: number } | null>(null)
+	const reducedMotion = useReducedMotion()
+	const currentIndex = items.findIndex((item) => item.current)
+	const targetIndex = hoveredIndex ?? (currentIndex >= 0 ? currentIndex : null)
+
+	// 링크의 실측 폭을 따라가므로 라벨 길이가 달라도 체이서가 정확히 맞는다.
+	React.useLayoutEffect(() => {
+		const target = groupRef.current?.querySelector<HTMLElement>(
+			`[data-chaser-index="${targetIndex}"]`,
+		)
+		setChaser(target ? { left: target.offsetLeft, width: target.offsetWidth } : null)
+	}, [targetIndex])
+
 	return (
 		<div
+			ref={groupRef}
 			data-slot="navigation-header-link-group"
-			className={cn('flex h-9 items-start', className)}
+			className={cn('relative flex h-9 items-start', className)}
 			{...props}
 		>
-			{items.map((item) => (
-				<NavigationHeaderLink key={String(item.href)} surface="grouped" {...item} />
+			{chaser && (
+				<LazyMotion features={domAnimation}>
+					<m.div
+						aria-hidden
+						data-target-index={targetIndex}
+						data-slot="navigation-header-link-chaser"
+						className="pointer-events-none absolute inset-y-0.5 z-0 rounded-lg bg-muted"
+						initial={false}
+						animate={chaser}
+						transition={
+							reducedMotion
+								? { duration: 0 }
+								: { type: 'spring', visualDuration: 0.2, bounce: 0.15 }
+						}
+					/>
+				</LazyMotion>
+			)}
+			{items.map((item, index) => (
+				<NavigationHeaderLink
+					data-chaser-index={index}
+					key={String(item.href)}
+					onBlur={() => setHoveredIndex(null)}
+					onFocus={() => setHoveredIndex(index)}
+					onMouseLeave={() => setHoveredIndex(null)}
+					onMouseEnter={() => setHoveredIndex(index)}
+					className="z-10"
+					surface="grouped"
+					{...item}
+				/>
 			))}
 		</div>
 	)
