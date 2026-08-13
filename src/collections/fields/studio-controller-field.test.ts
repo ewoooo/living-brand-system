@@ -42,11 +42,11 @@ describe('studioControllerRestrictionsField', () => {
 		}
 	})
 
-	it('세 Studio가 output policy를 Controller와 분리해 발행한다', () => {
+	it('세 Studio가 export policy를 Controller와 분리해 발행한다', () => {
 		for (const collection of [ImageProfiles, Templates, GraphicProfiles]) {
-			const output = namedField(collection.fields, 'output')
-			if (output.type !== 'group') throw new Error('output must be a group')
-			expect(namedField(output.fields, 'allowedFormats')).toMatchObject({
+			const exportPolicy = namedField(collection.fields, 'exportPolicy')
+			if (exportPolicy.type !== 'group') throw new Error('exportPolicy must be a group')
+			expect(namedField(exportPolicy.fields, 'allowedFormats')).toMatchObject({
 				type: 'select',
 				hasMany: true,
 				options: STUDIO_OUTPUT_FORMAT_OPTIONS,
@@ -99,11 +99,11 @@ describe('ImageProfiles publish validation', () => {
 		})
 	})
 
-	it('Admin output이 Image runtime 지원 형식을 넓히지 못한다', async () => {
+	it('Admin export policy가 Image Exporter 지원 형식을 넓히지 못한다', async () => {
 		const data = {
 			...profile,
 			_status: 'published',
-			output: { allowedFormats: ['svg'] },
+			exportPolicy: { allowedFormats: ['svg'] },
 		}
 		await expect(hook({ data } as never)).rejects.toMatchObject({
 			message: '지원하지 않는 output format입니다: svg',

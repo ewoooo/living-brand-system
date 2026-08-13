@@ -106,7 +106,7 @@ export async function prepareTemplateImage(
 		printPpi: parsePrintPpi(template.printPpi),
 		templateVersion: template.updatedAt,
 		controllerRestrictions: template.controllerRestrictions,
-		output: template.output as never,
+		exportPolicy: template.exportPolicy,
 	})
 	return {
 		type: 'template-image' as const,

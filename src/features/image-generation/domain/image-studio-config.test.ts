@@ -168,7 +168,7 @@ describe('deriveImageStudioConfig', () => {
 		const config = deriveImageStudioConfig({
 			...profile,
 			imageModelPreset: 'google-nano-banana-2-lite',
-			output: { allowedFormats: ['png'], original: false },
+			exportPolicy: { allowedFormats: ['png'], original: false },
 		})
 		expect(getImageStudioControls(config).resolution.options).toEqual([
 			{ label: '1K', value: '1K' },

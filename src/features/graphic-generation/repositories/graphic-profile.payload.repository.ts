@@ -18,7 +18,7 @@ export async function listPublishedGraphicProfileDefinitions(
 		select: {
 			controllerRestrictions: true,
 			name: true,
-			output: true,
+			exportPolicy: true,
 			runtime: true,
 		} as never,
 		sort: 'displayOrder',
@@ -27,17 +27,17 @@ export async function listPublishedGraphicProfileDefinitions(
 	})
 
 	return profiles.docs.map((document) => {
-		const { id, name, runtime, controllerRestrictions, output } =
+		const { id, name, runtime, controllerRestrictions, exportPolicy } =
 			document as typeof document & {
 				controllerRestrictions?: unknown
-				output?: PublishedGraphicProfileDefinition['output']
+				exportPolicy?: PublishedGraphicProfileDefinition['exportPolicy']
 			}
 		return {
 			id,
 			name,
 			runtime,
 			controllerRestrictions,
-			output,
+			exportPolicy,
 		}
 	})
 }

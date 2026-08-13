@@ -23,17 +23,17 @@ export function studioControllerRestrictionsField({
 	}
 }
 
-/** Runtime/Service 지원 형식을 Admin이 추가하지 않고 좁히기만 하는 정책 필드다. */
-export function studioOutputPolicyField({
+/** Exporter 호환 형식을 Admin이 추가하지 않고 좁히기만 하는 정책 필드다. */
+export function studioExportPolicyField({
 	includeOriginal = false,
 }: {
 	includeOriginal?: boolean
 } = {}): Field {
 	return {
-		name: 'output',
+		name: 'exportPolicy',
 		type: 'group',
 		label: '출력',
-		admin: { description: '비우면 실행 구현이 지원하는 형식을 모두 허용합니다.' },
+		admin: { description: '비우면 Exporter가 지원하는 형식을 모두 허용합니다.' },
 		fields: [
 			{
 				name: 'allowedFormats',

@@ -55,7 +55,7 @@ export async function getPublishedTemplate(
 		printPpi: parsePrintPpi(template.printPpi),
 		templateVersion: template.updatedAt,
 		controllerRestrictions: template.controllerRestrictions,
-		output: template.output,
+		exportPolicy: template.exportPolicy,
 		...renderModel,
 		nodeConfigs: projectStudioNodeConfigs(renderModel.nodeConfigs),
 	}

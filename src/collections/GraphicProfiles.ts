@@ -7,7 +7,7 @@ import {
 import { managerManagedAccess } from '@/lib/auth'
 import {
 	studioControllerRestrictionsField,
-	studioOutputPolicyField,
+	studioExportPolicyField,
 } from './fields/studio-controller-field'
 import { draftVersions } from './shared'
 
@@ -26,7 +26,7 @@ export const GraphicProfiles: CollectionConfig = {
 						name: String(effective.name ?? ''),
 						runtime: String(effective.runtime ?? ''),
 						controllerRestrictions: effective.controllerRestrictions,
-						output: effective.output,
+						exportPolicy: effective.exportPolicy,
 					})
 				} catch (error) {
 					throw new APIError(
@@ -77,6 +77,6 @@ export const GraphicProfiles: CollectionConfig = {
 			source: 'graphic',
 			baseConfigs: graphicRuntimeManifests.map(({ id, controller }) => ({ id, controller })),
 		}),
-		studioOutputPolicyField(),
+		studioExportPolicyField(),
 	],
 }

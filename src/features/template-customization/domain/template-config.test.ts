@@ -170,14 +170,14 @@ describe('deriveTemplateConfig', () => {
 			deriveTemplateConfig({
 				...template,
 				printPpi: 150,
-				output: { allowedFormats: ['pdf'] },
+				exportPolicy: { allowedFormats: ['pdf'] },
 			}).output.formats,
 		).toEqual(['pdf'])
 		expect(() =>
 			deriveTemplateConfig({
 				...template,
 				printPpi: 150,
-				output: { allowedFormats: ['svg'] },
+				exportPolicy: { allowedFormats: ['svg'] },
 			}),
 		).toThrow('지원하지 않는 output format')
 	})

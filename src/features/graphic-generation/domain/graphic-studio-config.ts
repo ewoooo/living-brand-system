@@ -21,7 +21,7 @@ export type PublishedGraphicProfileDefinition = {
 	name: string
 	runtime: string
 	controllerRestrictions?: unknown
-	output?: { allowedFormats?: readonly string[] | null } | null
+	exportPolicy?: { allowedFormats?: readonly string[] | null } | null
 }
 
 /** unknown 입력을 공통 Controller 계약과 Graphic runtime descriptor로 검증한다. */

@@ -27,7 +27,7 @@ interface TemplateSaveCandidate {
 	name?: unknown
 	overrides?: unknown
 	printPpi?: unknown
-	output?: unknown
+	exportPolicy?: unknown
 	width?: unknown
 }
 
@@ -86,7 +86,7 @@ export async function prepareTemplateSave({
 				height: candidate.height,
 				templateVersion: 'draft',
 				controllerRestrictions: candidate.controllerRestrictions,
-				output: candidate.output as never,
+				exportPolicy: candidate.exportPolicy as never,
 			})
 		} catch (error) {
 			return error instanceof Error ? error.message : '템플릿 Controller 계약을 확인하세요.'

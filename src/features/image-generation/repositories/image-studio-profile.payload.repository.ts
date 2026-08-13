@@ -23,7 +23,7 @@ export async function listPublishedImageProfileDefinitions(
 			features: true,
 			imageModelPreset: true,
 			name: true,
-			output: true,
+			exportPolicy: true,
 			slug: true,
 		} as never,
 		sort: 'displayOrder',
@@ -32,7 +32,7 @@ export async function listPublishedImageProfileDefinitions(
 	})
 
 	return profiles.docs.map((document) => {
-		const { id, name, slug, imageModelPreset, controllerRestrictions, features, output } =
+		const { id, name, slug, imageModelPreset, controllerRestrictions, features, exportPolicy } =
 			document as typeof document & {
 				controllerRestrictions?: unknown
 				features?: unknown
@@ -44,7 +44,7 @@ export async function listPublishedImageProfileDefinitions(
 			imageModelPreset,
 			controllerRestrictions,
 			features,
-			output,
+			exportPolicy,
 		}
 	})
 }

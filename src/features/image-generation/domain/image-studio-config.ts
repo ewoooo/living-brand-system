@@ -43,7 +43,7 @@ export type PublishedImageProfileDefinition = {
 	imageModelPreset: ImageModelPreset
 	controllerRestrictions?: unknown
 	features?: unknown
-	output?: { allowedFormats?: readonly string[] | null; original?: boolean | null } | null
+	exportPolicy?: { allowedFormats?: readonly string[] | null; original?: boolean | null } | null
 }
 
 /** 이미지 프로파일 하나가 발행하는 공통 Controller envelope와 이미지 실행 descriptor. */
@@ -215,9 +215,9 @@ export function deriveImageStudioConfig(
 		output: {
 			formats: resolveStudioArtifactOutputFormats(
 				manifest.artifacts,
-				profile.output?.allowedFormats,
+				profile.exportPolicy?.allowedFormats,
 			),
-			original: Boolean(manifest.original && (profile.output?.original ?? true)),
+			original: Boolean(manifest.original && (profile.exportPolicy?.original ?? true)),
 			colorProfiles: { rgb: ['srgb'] },
 			packages: ['zip'],
 		},

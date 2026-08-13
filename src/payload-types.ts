@@ -1183,9 +1183,9 @@ export interface ImageProfile {
     | boolean
     | null;
   /**
-   * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
+   * 비우면 Exporter가 지원하는 형식을 모두 허용합니다.
    */
-  output?: {
+  exportPolicy?: {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     original?: boolean | null;
   };
@@ -1236,9 +1236,9 @@ export interface GraphicProfile {
     | boolean
     | null;
   /**
-   * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
+   * 비우면 Exporter가 지원하는 형식을 모두 허용합니다.
    */
-  output?: {
+  exportPolicy?: {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
   };
   updatedAt: string;
@@ -1333,9 +1333,9 @@ export interface Template {
     | boolean
     | null;
   /**
-   * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
+   * 비우면 Exporter가 지원하는 형식을 모두 허용합니다.
    */
-  output?: {
+  exportPolicy?: {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
   };
   sourceUrl?: string | null;
@@ -2588,7 +2588,7 @@ export interface ImageProfilesSelect<T extends boolean = true> {
         cameraControl?: T | ImageProfileCameraControlFeatureSelect<T>;
       };
   controllerRestrictions?: T;
-  output?:
+  exportPolicy?:
     | T
     | {
         allowedFormats?: T;
@@ -2624,7 +2624,7 @@ export interface GraphicProfilesSelect<T extends boolean = true> {
   runtime?: T;
   displayOrder?: T;
   controllerRestrictions?: T;
-  output?:
+  exportPolicy?:
     | T
     | {
         allowedFormats?: T;
@@ -2667,7 +2667,7 @@ export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
   controllerRestrictions?: T;
-  output?:
+  exportPolicy?:
     | T
     | {
         allowedFormats?: T;

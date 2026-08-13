@@ -109,7 +109,7 @@ export type PublishedHtmlTemplate = {
 	printPpi?: PrintPpi
 	templateVersion: string
 	controllerRestrictions?: unknown
-	output?: { allowedFormats?: readonly string[] | null } | null
+	exportPolicy?: { allowedFormats?: readonly string[] | null } | null
 }
 
 /**
@@ -580,7 +580,7 @@ export function deriveTemplateConfig(
 		output: {
 			formats: resolveStudioArtifactOutputFormats(
 				runtimeManifest.artifacts,
-				template.output?.allowedFormats,
+				template.exportPolicy?.allowedFormats,
 			),
 			colorProfiles: { rgb: ['srgb'], cmyk: ['cgats21-crpc6'] },
 		},

@@ -8,7 +8,7 @@ import { prepareTemplateSave } from '@/features/template-import/services/prepare
 import { isManager, managerOrAdmin } from '@/lib/auth'
 import {
 	studioControllerRestrictionsField,
-	studioOutputPolicyField,
+	studioExportPolicyField,
 } from './fields/studio-controller-field'
 import { draftVersions } from './shared'
 
@@ -58,7 +58,7 @@ export const Templates: CollectionConfig = {
 			localized: true,
 		},
 		studioControllerRestrictionsField({ source: 'template' }),
-		studioOutputPolicyField(),
+		studioExportPolicyField(),
 		{
 			// 워크스페이스: 캔버스 + 레이어 목록 + 값 편집을 한 컴포넌트가 렌더한다.
 			name: 'templateLayers',

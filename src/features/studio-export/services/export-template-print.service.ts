@@ -1,5 +1,5 @@
 import {
-	resolveStudioOutputFormats,
+	resolveStudioArtifactOutputFormats,
 	supportsStudioOutput,
 } from '@/features/studio-export/studio-output'
 import { projectTemplateRenderModel } from '@/features/template-core/domain/project-template-render-model'
@@ -45,9 +45,9 @@ export async function exportTemplatePrint({
 
 	if (!template || !renderModel || !ppi) throw new TemplatePrintUnavailableError()
 	const output = {
-		formats: resolveStudioOutputFormats(
-			['png', 'tiff', 'pdf'] as const,
-			template.output?.allowedFormats,
+		formats: resolveStudioArtifactOutputFormats(
+			['raster'],
+			template.exportPolicy?.allowedFormats,
 		),
 	}
 	if (!supportsStudioOutput(output, format)) throw new TemplatePrintUnavailableError()

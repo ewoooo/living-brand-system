@@ -61,7 +61,7 @@ export function deriveGraphicStudioConfig(
 	const config: GraphicStudioConfig = {
 		...manifest,
 		name: profile.name,
-		output: resolveGraphicStudioOutput(manifest, profile.output?.allowedFormats),
+		output: resolveGraphicStudioOutput(manifest, profile.exportPolicy?.allowedFormats),
 		controller: {
 			groups: applyControllerRestrictions(manifest.controller.groups, restrictions),
 		},
