@@ -25,7 +25,7 @@ describe('deriveImageStudioConfig', () => {
 
 		expect(second).toEqual(first)
 		expect(first).toMatchObject({
-			output: { formats: ['png', 'jpeg'], original: true },
+			artifacts: { raster: {}, original: {} },
 			supportedFeatures: [
 				{
 					type: 'color-adjustment',
@@ -47,12 +47,15 @@ describe('deriveImageStudioConfig', () => {
 		const controls = getImageStudioControls(config)
 
 		expect(parseImageStudioConfig(parseImageStudioConfig(config))).toBe(config)
+		expect(() =>
+			parseImageStudioConfig({ ...config, output: { ...config.output, formats: ['svg'] } }),
+		).toThrow('지원하지 않는 output format')
 		expect(config).toMatchObject({
 			studio: 'image',
 			id: 5,
 			version: 1,
 			name: '브랜드 제품컷',
-			output: { formats: ['png', 'jpeg'], original: true },
+			output: { formats: ['png', 'jpeg', 'tiff', 'pdf', 'mp4'], original: true },
 			image: { slug: 'brand-product', features: [] },
 		})
 		expect(controls.prompt).toMatchObject({ id: 'prompt', kind: 'text', maxLength: 500 })
@@ -167,7 +170,7 @@ describe('deriveImageStudioConfig', () => {
 		const config = deriveImageStudioConfig({
 			...profile,
 			imageModelPreset: 'google-nano-banana-2-lite',
-			output: { allowedFormats: ['png'], original: false },
+			exportPolicy: { allowedFormats: ['png'], original: false },
 		})
 		expect(getImageStudioControls(config).resolution.options).toEqual([
 			{ label: '1K', value: '1K' },

@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import { acceptsImagePromptExecution } from '@/features/image-generation/domain/image-studio-config'
 import type { ResolvedTemplateImageConfig } from '@/features/template-customization/domain/template-config'
 import type {
 	TemplateBackgroundPatch,
@@ -85,15 +86,9 @@ export function BackgroundSection({
 	const imageContract = imageContracts.find((contract) => contract.config.id === value.profileId)
 	const graphicConfig = graphicConfigs.find((candidate) => candidate.id === value.graphicConfigId)
 
-	const maxPromptLength = imageContract?.prompt.maxLength
-	const promptIsFixed =
-		imageContract?.prompt.availability === 'readonly' ||
-		imageContract?.prompt.availability === 'disabled'
-	const invalidPrompt = promptIsFixed
-		? !imageContract?.prompt.defaultValue?.trim() ||
-			value.prompt !== imageContract.prompt.defaultValue
-		: !value.prompt.trim() ||
-			(maxPromptLength !== undefined && value.prompt.length > maxPromptLength)
+	const invalidPrompt = imageContract
+		? !acceptsImagePromptExecution(imageContract.prompt, value.prompt)
+		: true
 	return (
 		<>
 			<ControllerGroupRenderer definition={groupDefinition}>
@@ -182,9 +177,7 @@ export function BackgroundSection({
 										variant="muted"
 										className="mt-0.5 h-11 w-full text-sm font-semibold"
 										onClick={onGenerate}
-										disabled={
-											value.generating || !imageContract || invalidPrompt
-										}
+										disabled={value.generating || invalidPrompt}
 									>
 										{value.generating ? '생성 중…' : '이미지 생성'}
 									</Button>

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import {
@@ -34,14 +35,18 @@ const template: PublishedHtmlTemplate = {
 }
 
 const imageConfig = createImageConfig(3, ['1:1', '4:3'])
+const forwardStraightConfig = {
+	...forwardStraightRuntimeManifest,
+	output: resolveGraphicStudioOutput(forwardStraightRuntimeManifest),
+}
 
 describe('deriveTemplateConfig', () => {
-	it('Runtime Manifest는 같은 Template 문서에서 같은 원본 controller와 output을 파생한다', () => {
+	it('Runtime Manifest는 같은 Template 문서에서 같은 controller와 Artifact를 파생한다', () => {
 		const manifest = getTemplateRuntimeManifest(template)
 
 		expect(getTemplateRuntimeManifest(template)).toEqual(manifest)
 		expect(manifest).toMatchObject({
-			output: { formats: ['png'] },
+			artifacts: { raster: {} },
 			controller: {
 				groups: [
 					{ id: 'text', title: 'Text', collapsible: true },
@@ -49,19 +54,11 @@ describe('deriveTemplateConfig', () => {
 				],
 			},
 		})
-		expect(getTemplateRuntimeManifest({ ...template, printPpi: 150 }).output.formats).toEqual([
-			'png',
-			'tiff',
-			'pdf',
-		])
+		expect(getTemplateRuntimeManifest({ ...template })).toEqual(manifest)
 	})
 
 	it('Template 도메인 계약을 멱등 검증하고 slot의 알 수 없는 필드를 거부한다', () => {
-		const config = deriveTemplateConfig(
-			template,
-			[imageConfig],
-			[forwardStraightRuntimeManifest],
-		)
+		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightConfig])
 		expect(parseTemplateConfig(parseTemplateConfig(config))).toBe(config)
 		expect(() =>
 			parseTemplateConfig({
@@ -97,25 +94,17 @@ describe('deriveTemplateConfig', () => {
 		).toThrow('알 수 없는')
 	})
 
-	it('공통 output format은 Template 도메인에서 다시 allowlist하지 않는다', () => {
-		const config = deriveTemplateConfig(
-			template,
-			[imageConfig],
-			[forwardStraightRuntimeManifest],
-		)
+	it('Effective output은 Template Artifact와 실제 Exporter capability를 벗어날 수 없다', () => {
+		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightConfig])
 		const withCommonFormat = {
 			...config,
 			output: { ...config.output, formats: ['svg'] as const },
 		}
-		expect(parseTemplateConfig(withCommonFormat)).toBe(withCommonFormat)
+		expect(() => parseTemplateConfig(withCommonFormat)).toThrow('지원하지 않는 output format')
 	})
 
 	it('공통 envelope에는 전역 Definition, Template 확장에는 DOM·슬롯 binding을 둔다', () => {
-		const config = deriveTemplateConfig(
-			template,
-			[imageConfig],
-			[forwardStraightRuntimeManifest],
-		)
+		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightConfig])
 
 		expect(config).toMatchObject({ studio: 'template', id: 7, version: 1, name: '포스터' })
 		const text = config.template.slots.filter(isTextSlot)
@@ -144,7 +133,7 @@ describe('deriveTemplateConfig', () => {
 		})
 		expect(image[0]?.transform.limits.scale).toEqual({ min: 0.2, max: 5 })
 		expect(config.template.imageConfigs).toEqual([imageConfig])
-		expect(config.template.graphicConfigs).toEqual([forwardStraightRuntimeManifest])
+		expect(config.template.graphicConfigs).toEqual([forwardStraightConfig])
 		expect(config.template.slots.filter(isBackgroundSlot)).toHaveLength(1)
 		expect(config.template.textColorControlId).toBe('text.color')
 		expect(findTemplateControl(config, 'background.color')).toMatchObject({
@@ -153,13 +142,11 @@ describe('deriveTemplateConfig', () => {
 		})
 	})
 
-	it('output은 인쇄 정책을 따르고 canvas·printPpi는 도메인 정보로 남긴다', () => {
-		expect(deriveTemplateConfig(template).output.formats).toEqual(['png'])
-		expect(deriveTemplateConfig({ ...template, printPpi: 150 })).toMatchObject({
-			output: { formats: ['png', 'tiff', 'pdf'] },
+	it('output은 Raster Exporter capability를 따르고 canvas만 Template 도메인 정보로 남긴다', () => {
+		expect(deriveTemplateConfig(template)).toMatchObject({
+			output: { formats: ['png', 'jpeg', 'tiff', 'pdf', 'mp4'] },
 			template: {
 				exportOption: {
-					printPpi: 150,
 					canvas: { width: 800, height: 600 },
 				},
 			},
@@ -167,15 +154,13 @@ describe('deriveTemplateConfig', () => {
 		expect(
 			deriveTemplateConfig({
 				...template,
-				printPpi: 150,
-				output: { allowedFormats: ['pdf'] },
+				exportPolicy: { allowedFormats: ['pdf'] },
 			}).output.formats,
 		).toEqual(['pdf'])
 		expect(() =>
 			deriveTemplateConfig({
 				...template,
-				printPpi: 150,
-				output: { allowedFormats: ['svg'] },
+				exportPolicy: { allowedFormats: ['svg'] },
 			}),
 		).toThrow('지원하지 않는 output format')
 	})
@@ -350,6 +335,7 @@ function createImageConfig(
 ): ImageStudioConfig {
 	return {
 		studio: 'image',
+		artifacts: { raster: {}, original: {} },
 		id,
 		version: 1,
 		name: `프로파일 ${id}`,

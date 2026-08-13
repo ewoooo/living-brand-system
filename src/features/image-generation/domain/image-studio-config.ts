@@ -1,7 +1,10 @@
 import type { ImageModelPreset } from '@/features/image-generation/image-model'
 import {
 	parseStudioOutputCapability,
-	resolveStudioOutputFormats,
+	projectStudioOutputPolicy,
+	resolveStudioArtifactOutputFormats,
+	resolveStudioOutputCapability,
+	type StudioOutputCapability,
 } from '@/features/studio-export/studio-output'
 import {
 	acceptsControllerExecutionValue,
@@ -42,14 +45,12 @@ export type PublishedImageProfileDefinition = {
 	imageModelPreset: ImageModelPreset
 	controllerRestrictions?: unknown
 	features?: unknown
-	output?: { allowedFormats?: readonly string[] | null; original?: boolean | null } | null
+	exportPolicy?: unknown
 }
 
 /** 이미지 프로파일 하나가 발행하는 공통 Controller envelope와 이미지 실행 descriptor. */
-type ImageControllerConfig = StudioControllerConfig<'image', number>
-
-export type ImageStudioConfig = Omit<ImageControllerConfig, 'output'> & {
-	output: ImageControllerConfig['output'] & { original: boolean }
+export type ImageStudioConfig = StudioControllerConfig<'image', number> & {
+	output: StudioOutputCapability & { original: boolean }
 	image: {
 		slug: string | null
 		features: readonly ImageStudioFeature[]
@@ -72,15 +73,25 @@ export type ImageStudioControls = {
 export function parseImageStudioConfig(input: unknown): ImageStudioConfig {
 	const common = parseStudioControllerConfig(input)
 	const config = record(input, 'ImageStudioConfig')
-	assertKeys(config, ['studio', 'id', 'version', 'name', 'output', 'controller', 'image'])
+	assertKeys(config, [
+		'studio',
+		'id',
+		'version',
+		'name',
+		'artifacts',
+		'output',
+		'controller',
+		'image',
+	])
 	if (common.studio !== 'image') throw new Error('ImageStudioConfig studio: image여야 합니다.')
 	if (typeof common.id !== 'number' || !Number.isInteger(common.id)) {
 		throw new Error('ImageStudioConfig id: 정수여야 합니다.')
 	}
-	if (typeof common.output.original !== 'boolean') {
+	const output = parseStudioOutputCapability(config.output)
+	resolveStudioArtifactOutputFormats(common.artifacts, output.formats)
+	if (typeof output.original !== 'boolean') {
 		throw new Error('ImageStudioConfig output.original은 boolean이어야 합니다.')
 	}
-	parseStudioOutputCapability(config.output)
 	const image = record(config.image, 'ImageStudioConfig.image')
 	assertKeys(image, ['slug', 'features'])
 	if (image.slug !== null && typeof image.slug !== 'string') {
@@ -204,14 +215,12 @@ export function deriveImageStudioConfig(
 		id: profile.id,
 		version: 1,
 		name: profile.name,
-		output: {
-			...manifest.output,
-			formats: resolveStudioOutputFormats(
-				manifest.output.formats,
-				profile.output?.allowedFormats,
-			),
-			original: Boolean(manifest.output.original && (profile.output?.original ?? true)),
-		},
+		output: resolveStudioOutputCapability(
+			manifest.artifacts,
+			projectStudioOutputPolicy(profile.exportPolicy),
+			{ packages: ['zip'] },
+		) as StudioOutputCapability & { original: boolean },
+		artifacts: manifest.artifacts,
 		controller: deriveImageProfileController(
 			profile.imageModelPreset,
 			profile.features,
@@ -285,14 +294,15 @@ function projectSupportedImageProfileFeatureSelections(
 ): readonly ImageProfileFeatureSelection[] {
 	const selections = projectImageProfileFeatureSelections(input)
 	const selectedTypes = new Set<ImageProfileFeatureSelection['type']>()
+	const supportedFeatures = new Map(
+		manifest.supportedFeatures.map((feature) => [feature.type, feature]),
+	)
 	for (const selection of selections) {
 		if (selectedTypes.has(selection.type)) {
 			throw new Error(`Image feature type이 중복되었습니다: ${selection.type}`)
 		}
 		selectedTypes.add(selection.type)
-		const supported = manifest.supportedFeatures.find(
-			(feature) => feature.type === selection.type,
-		)
+		const supported = supportedFeatures.get(selection.type)
 		if (!supported) {
 			throw new Error(`Image runtime이 지원하지 않는 feature입니다: ${selection.type}`)
 		}

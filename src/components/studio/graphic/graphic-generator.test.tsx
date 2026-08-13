@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest, {
 	FORWARD_STRAIGHT_DEFAULT_INPUT,
 } from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
@@ -12,31 +13,50 @@ import radialFlutedGlassRuntimeManifest, {
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
 import { GraphicGenerator } from './graphic-generator'
 
+const forwardStraightConfig = {
+	...forwardStraightRuntimeManifest,
+	output: resolveGraphicStudioOutput(forwardStraightRuntimeManifest),
+} satisfies GraphicStudioConfig
+
+const radialFlutedGlassConfig = {
+	...radialFlutedGlassRuntimeManifest,
+	output: resolveGraphicStudioOutput(radialFlutedGlassRuntimeManifest),
+} satisfies GraphicStudioConfig
+
 const mocks = vi.hoisted(() => {
+	const raster = {
+		kind: 'raster' as const,
+		source: {
+			canvas: {} as HTMLCanvasElement,
+			render: vi.fn(),
+			restore: vi.fn(),
+		},
+	}
 	const preview = {
-		captureFrame: vi.fn(() => 'data:image/png;base64,forward'),
+		artifacts: { raster },
 		destroy: vi.fn(),
 		getViewport: vi.fn(() => ({ width: 800, height: 600 })),
 		resize: vi.fn(),
 		update: vi.fn(),
 	}
 	const shaderPreview = {
-		captureFrame: vi.fn(() => 'data:image/png;base64,radial'),
 		destroy: vi.fn(),
 		getViewport: vi.fn(() => ({ width: 800, height: 600 })),
 		resize: vi.fn(),
 		update: vi.fn(),
-		video: {
-			canvas: {} as HTMLCanvasElement,
-			renderFrame: vi.fn(),
-			restore: vi.fn(),
+		artifacts: {
+			raster,
+			video: {
+				kind: 'video' as const,
+				source: {
+					canvas: {} as HTMLCanvasElement,
+					renderFrame: vi.fn(),
+					restore: vi.fn(),
+				},
+			},
 		},
 	}
-	const exportGraphicVideo = vi.fn(async () => ({
-		data: new Blob(['mp4'], { type: 'video/mp4' }),
-		filename: 'radial-fluted-glass.mp4',
-		mimeType: 'video/mp4',
-	}))
+	const canvasFramesToMp4 = vi.fn(async () => new Blob(['mp4'], { type: 'video/mp4' }))
 	const state = {
 		onInputChange: undefined as
 			| ((input: typeof FORWARD_STRAIGHT_DEFAULT_INPUT) => boolean)
@@ -47,7 +67,7 @@ const mocks = vi.hoisted(() => {
 		createShaderPreview: vi.fn(
 			async (_options: { container: HTMLElement; input: ControllerValues }) => shaderPreview,
 		),
-		exportGraphicVideo,
+		canvasFramesToMp4,
 		resizeObserverCallback: undefined as ResizeObserverCallback | undefined,
 		resizeObserverCount: 0,
 	}
@@ -108,8 +128,8 @@ vi.mock(
 	}),
 )
 
-vi.mock('@/features/graphic-generation/services/export-graphic-video.client', () => ({
-	exportGraphicStudioVideo: mocks.exportGraphicVideo,
+vi.mock('@/features/studio-export/adapters/canvas-frames-to-mp4.mediabunny.client', () => ({
+	canvasFramesToMp4: mocks.canvasFramesToMp4,
 }))
 
 beforeEach(() => {
@@ -143,6 +163,7 @@ describe('GraphicGenerator', () => {
 			version: 1,
 			name: 'Shader Demo',
 			type: 'shader',
+			artifacts: { raster: {} },
 			output: { formats: [] },
 			controller: {
 				groups: [
@@ -192,7 +213,7 @@ describe('GraphicGenerator', () => {
 
 	it('P5 Definition을 Controller primitive로 그리고 변경값을 캔버스에 전달한다', async () => {
 		const user = userEvent.setup()
-		render(createElement(GraphicGenerator, { configs: [forwardStraightRuntimeManifest] }))
+		render(createElement(GraphicGenerator, { configs: [forwardStraightConfig] }))
 
 		expect(screen.getByRole('radio', { name: 'Off' })).toBeChecked()
 		const viewpoint = screen.getByRole('combobox', { name: '시점' })
@@ -210,22 +231,25 @@ describe('GraphicGenerator', () => {
 		)
 	})
 
-	it('공통 output format은 표시하되 등록된 export adapter가 없으면 실행하지 않는다', async () => {
+	it('Raster Artifact가 있는 Graphic은 공통 PNG adapter를 실행할 수 있다', async () => {
 		const config = {
 			...forwardStraightRuntimeManifest,
-			output: { ...forwardStraightRuntimeManifest.output, formats: ['png'] },
+			output: {
+				...resolveGraphicStudioOutput(forwardStraightRuntimeManifest),
+				formats: ['png'],
+			},
 		} satisfies GraphicStudioConfig
 
 		render(createElement(GraphicGenerator, { configs: [config] }))
 
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
 		expect(screen.getByText('PNG')).toBeInTheDocument()
-		expect(screen.getByRole('button', { name: '내보내기' })).toBeDisabled()
+		await waitFor(() => expect(screen.getByRole('button', { name: '내보내기' })).toBeEnabled())
 	})
 
 	it('Shader Definition을 WebGL preview와 MP4 Export UI에 연결한다', async () => {
 		const { unmount } = render(
-			createElement(GraphicGenerator, { configs: [radialFlutedGlassRuntimeManifest] }),
+			createElement(GraphicGenerator, { configs: [radialFlutedGlassConfig] }),
 		)
 
 		await waitFor(() =>
@@ -272,7 +296,7 @@ describe('GraphicGenerator', () => {
 		})
 		vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
-		render(createElement(GraphicGenerator, { configs: [radialFlutedGlassRuntimeManifest] }))
+		render(createElement(GraphicGenerator, { configs: [radialFlutedGlassConfig] }))
 		await waitFor(() => expect(mocks.createShaderPreview).toHaveBeenCalledOnce())
 
 		const width = screen.getByRole('spinbutton', { name: 'Width' })
@@ -290,25 +314,23 @@ describe('GraphicGenerator', () => {
 		await user.click(screen.getByRole('button', { name: '내보내기' }))
 
 		await waitFor(() =>
-			expect(mocks.exportGraphicVideo).toHaveBeenCalledWith(
-				radialFlutedGlassRuntimeManifest,
+			expect(mocks.canvasFramesToMp4).toHaveBeenCalledWith(
 				expect.objectContaining({
-					format: 'mp4',
-					options: expect.objectContaining({
+					canvas: mocks.shaderPreview.artifacts.video.source.canvas,
+					spec: expect.objectContaining({
 						width: 1280,
 						height: 720,
 						fps: 60,
 						durationSeconds: 10,
 					}),
 				}),
-				mocks.shaderPreview.video,
 			),
 		)
 		expect(createObjectURL).toHaveBeenCalledOnce()
 	})
 
 	it('출력 사이즈 비율을 프리뷰 영역에 맞춰 반영한다', async () => {
-		render(createElement(GraphicGenerator, { configs: [radialFlutedGlassRuntimeManifest] }))
+		render(createElement(GraphicGenerator, { configs: [radialFlutedGlassConfig] }))
 		await waitFor(() => expect(mocks.createShaderPreview).toHaveBeenCalledOnce())
 		const observerCount = mocks.resizeObserverCount
 
@@ -337,7 +359,7 @@ describe('GraphicGenerator', () => {
 	it('등록된 id와 type이 일치하지 않으면 런타임을 실행하지 않는다', () => {
 		render(
 			createElement(GraphicGenerator, {
-				configs: [{ ...forwardStraightRuntimeManifest, type: 'shader' }],
+				configs: [{ ...forwardStraightConfig, type: 'shader' }],
 			}),
 		)
 
@@ -347,7 +369,7 @@ describe('GraphicGenerator', () => {
 
 	it('런타임이 명시한 origin Pad에만 캔버스 비율을 연결한다', async () => {
 		const config = {
-			...forwardStraightRuntimeManifest,
+			...forwardStraightConfig,
 			controller: {
 				groups: forwardStraightRuntimeManifest.controller.groups.map((group) =>
 					group.id === 'position'
@@ -379,7 +401,7 @@ describe('GraphicGenerator', () => {
 
 	it('readonly control은 캔버스 직접 조작으로도 변경하지 않는다', async () => {
 		const config = {
-			...forwardStraightRuntimeManifest,
+			...forwardStraightConfig,
 			controller: {
 				groups: forwardStraightRuntimeManifest.controller.groups.map((group) =>
 					group.id === 'position'
@@ -409,7 +431,7 @@ describe('GraphicGenerator', () => {
 	})
 
 	it('캔버스의 입력 변경을 같은 Context를 통해 Pad에 되돌린다', async () => {
-		render(createElement(GraphicGenerator, { configs: [forwardStraightRuntimeManifest] }))
+		render(createElement(GraphicGenerator, { configs: [forwardStraightConfig] }))
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
 
 		mocks.onInputChange?.({
@@ -435,7 +457,7 @@ describe('GraphicGenerator', () => {
 		const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
 		const { unmount } = render(
-			createElement(GraphicGenerator, { configs: [forwardStraightRuntimeManifest] }),
+			createElement(GraphicGenerator, { configs: [forwardStraightConfig] }),
 		)
 
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
@@ -473,13 +495,15 @@ describe('GraphicGenerator', () => {
 	it('Change 브라우저에서 Graphic을 교체하고 새 계약의 기본값으로 초기화한다', async () => {
 		render(
 			createElement(GraphicGenerator, {
-				configs: [forwardStraightRuntimeManifest, radialFlutedGlassRuntimeManifest],
+				configs: [forwardStraightConfig, radialFlutedGlassConfig],
 			}),
 		)
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
 		fireEvent.click(screen.getByRole('radio', { name: 'On' }))
 
-		fireEvent.click(screen.getByRole('button', { name: '그래픽 변경' }))
+		const trigger = screen.getByRole('button', { name: '그래픽 변경' })
+		expect(trigger.closest('[data-slot="controller-header"]')).not.toBeNull()
+		fireEvent.click(trigger)
 		const panel = screen.getByRole('dialog', { name: 'Graphic Profiles' })
 		const forwardCard = within(panel).getByRole('button', {
 			name: new RegExp(forwardStraightRuntimeManifest.name),

@@ -136,7 +136,21 @@ function TemplateGraphicBackground({
 				runtime = mounted
 				runtimeRef.current = mounted
 				mounted.resize(width, height)
-				canvas.registerGraphicFrame(() => mounted.captureFrame())
+				canvas.registerGraphicFrame(() => {
+					const frame = mounted.artifacts.raster.source.withSurface(
+						{ width, height },
+						(surface) => {
+							if (surface.kind !== 'canvas') {
+								throw new Error('Graphic runtime did not provide a canvas surface.')
+							}
+							return surface.element.toDataURL()
+						},
+					)
+					if (typeof frame !== 'string') {
+						throw new Error('Graphic frame capture must be synchronous.')
+					}
+					return frame
+				})
 			})
 			.catch((mountError) => {
 				console.error(mountError)

@@ -1,24 +1,31 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ComponentProps } from 'react'
+import { type ComponentProps, useEffect } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
-import { graphicRuntimeManifests } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import { TemplateSidebar } from '@/components/studio/sidebar/template-sidebar'
+import type {
+	GraphicRuntimeManifest,
+	GraphicStudioConfig,
+} from '@/features/graphic-generation/domain/graphic-studio-config'
+import {
+	graphicRuntimeManifests,
+	resolveGraphicStudioOutput,
+} from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
+import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import {
 	deriveTemplateConfig,
 	type PublishedHtmlTemplate,
 } from '@/features/template-customization/domain/template-config'
-import {
-	TemplateStudioProvider,
-	useTemplateStudio,
-} from '@/features/template-customization/hooks/use-template-studio'
+import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
+import { TemplateStudioProvider } from '@/features/template-customization/providers/template-studio-provider'
+import type { TemplateRasterArtifactProducer } from '@/features/template-customization/runtime/template-runtime.client'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import { TemplateGenerator as TemplateGeneratorView } from './template-generator'
-import { TemplateSidebar } from './template-sidebar'
 
 const mocks = vi.hoisted(() => ({
+	canExportTemplate: vi.fn(() => true),
 	captureGraphicFrame: vi.fn(() => 'data:image/png;base64,graphic'),
 	destroyGraphicPreview: vi.fn(),
 	exportTemplate: vi.fn(),
@@ -27,12 +34,13 @@ const mocks = vi.hoisted(() => ({
 	requestImageGeneration: vi.fn(),
 	resizeGraphicPreview: vi.fn(),
 	resizeObserverCallback: undefined as ResizeObserverCallback | undefined,
+	templateArtifact: undefined as TemplateRasterArtifactProducer | undefined,
 	updateGraphicPreview: vi.fn(),
 }))
 
 vi.mock('@/features/studio-export/hooks/use-export', () => ({
 	useExport: () => ({
-		canExport: () => true,
+		canExport: mocks.canExportTemplate,
 		exporting: null,
 		error: null,
 		run: (request: { format: string }) => mocks.exportTemplate(request.format),
@@ -45,7 +53,7 @@ vi.mock('@/features/image-generation/services/generate-image.client', () => ({
 	requestImageGeneration: mocks.requestImageGeneration,
 }))
 vi.mock('@/features/graphic-generation/runtime/client/graphic-runtime.client', () => ({
-	getGraphicRuntimeAdapter: (config: GraphicStudioConfig) => ({
+	getGraphicRuntimeAdapter: (config: GraphicRuntimeManifest) => ({
 		type: config.type,
 		mount: mocks.mountGraphicPreview,
 	}),
@@ -78,10 +86,14 @@ const navigation: GetCreateNavigationOutput = {
 }
 
 const imageConfigs = [createImageConfig(11), createImageConfig(7)]
+const effectiveGraphicConfigs = graphicRuntimeManifests.map((manifest) => ({
+	...manifest,
+	output: resolveGraphicStudioOutput(manifest),
+}))
 
 function TemplateGenerator({
 	imageConfigs: providedImageConfigs = imageConfigs,
-	graphicConfigs: providedGraphicConfigs = graphicRuntimeManifests,
+	graphicConfigs: providedGraphicConfigs = effectiveGraphicConfigs,
 	...props
 }: Omit<ComponentProps<typeof TemplateGeneratorView>, 'config'> & {
 	imageConfigs?: readonly ImageStudioConfig[]
@@ -152,18 +164,39 @@ function GraphicMutationProbe() {
 }
 
 function TemplateOutputProbe() {
-	const { exporting } = useTemplateStudio()
+	const exporting = useTestTemplateExport()
 	return (
 		<>
 			<span data-testid="template-output-format">{exporting.format ?? 'none'}</span>
 			<span data-testid="template-output-formats">
 				{exporting.formats.join(',') || 'none'}
 			</span>
-			<button type="button" onClick={() => exporting.run('svg')}>
+			<button type="button" onClick={exporting.run}>
 				export unsupported svg
 			</button>
 		</>
 	)
+}
+
+function TemplateSidebarTestBridge() {
+	return <TemplateSidebar exporting={useTestTemplateExport()} />
+}
+
+function useTestTemplateExport() {
+	const { canvas, config, execution } = useTemplateStudio()
+	return useTemplateExport({
+		artifact: canvas.artifact,
+		capability: config.output,
+		metadata: {
+			fileName: template.name,
+			width: config.template.exportOption.canvas.width,
+			height: config.template.exportOption.canvas.height,
+			controller: {
+				groups: config.controller.groups,
+				values: execution.controllerValues,
+			},
+		},
+	})
 }
 
 function BackgroundTypeMutationProbe() {
@@ -181,6 +214,23 @@ function BackgroundTypeMutationProbe() {
 				patch graphic background
 			</button>
 		</>
+	)
+}
+
+function GraphicCaptureProbe() {
+	const { background, canvas } = useTemplateStudio()
+	useEffect(() => {
+		mocks.templateArtifact = canvas.artifact
+		canvas.registerGraphicFrame(mocks.captureGraphicFrame)
+		return () => {
+			mocks.templateArtifact = undefined
+			canvas.registerGraphicFrame(null)
+		}
+	}, [canvas])
+	return (
+		<button type="button" onClick={() => background.selectType('graphic')}>
+			select graphic for export
+		</button>
 	)
 }
 
@@ -237,6 +287,8 @@ function ImageRaceProbe() {
 describe('TemplateGenerator', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
+		mocks.captureGraphicFrame.mockReturnValue('data:image/png;base64,graphic')
+		mocks.canExportTemplate.mockReturnValue(true)
 		mocks.mountGraphicPreview.mockResolvedValue({
 			captureFrame: mocks.captureGraphicFrame,
 			destroy: mocks.destroyGraphicPreview,
@@ -245,6 +297,7 @@ describe('TemplateGenerator', () => {
 			update: mocks.updateGraphicPreview,
 		})
 		mocks.resizeObserverCallback = undefined
+		mocks.templateArtifact = undefined
 		vi.stubGlobal(
 			'ResizeObserver',
 			class {
@@ -267,9 +320,14 @@ describe('TemplateGenerator', () => {
 		)
 
 		expect(container.querySelector('[data-slot="studio-workspace"]')).not.toBeNull()
-		expect(container.querySelector('[data-slot="studio-workspace-controller"]')).not.toBeNull()
+		expect(container.querySelector('[data-slot="studio-workspace-sidebar"]')).not.toBeNull()
 		expect(container.querySelector('[data-slot="studio-workspace-canvas"]')).not.toBeNull()
-		expect(container.querySelector('[data-slot="controller-panel"]')).not.toBeNull()
+		expect(container.querySelector('[data-slot="studio-sidebar"]')).not.toBeNull()
+		const header = container.querySelector('[data-slot="controller-header"]')
+		expect(header).not.toBeNull()
+		expect(
+			within(header as HTMLElement).getByRole('combobox', { name: '템플릿 변경' }),
+		).toBeInTheDocument()
 
 		fireEvent.click(screen.getByRole('button', { name: '내보내기' }))
 
@@ -277,8 +335,15 @@ describe('TemplateGenerator', () => {
 		expect(mocks.exportTemplate).toHaveBeenCalledWith('png')
 	})
 
+	it('공통 Export 판정이 거부하면 Format이 있어도 내보내기 버튼을 잠근다', () => {
+		mocks.canExportTemplate.mockReturnValue(false)
+		render(<TemplateGenerator navigation={navigation} template={template} />)
+
+		expect(screen.getByRole('button', { name: '내보내기' })).toBeDisabled()
+	})
+
 	it('UI는 Effective Config 포맷을 표시하고 Template adapter가 없는 요청은 실행 직전 차단한다', () => {
-		const derived = deriveTemplateConfig(template, imageConfigs, graphicRuntimeManifests)
+		const derived = deriveTemplateConfig(template, imageConfigs, effectiveGraphicConfigs)
 		const config = { ...derived, output: { ...derived.output, formats: ['svg'] as const } }
 		render(
 			<TemplateStudioProvider config={config} template={template} navigation={navigation}>
@@ -290,6 +355,30 @@ describe('TemplateGenerator', () => {
 		expect(screen.getByTestId('template-output-formats')).toHaveTextContent('svg')
 		fireEvent.click(screen.getByRole('button', { name: 'export unsupported svg' }))
 		expect(mocks.exportTemplate).not.toHaveBeenCalled()
+	})
+
+	it('Raster Artifact producer는 export 실행 시점의 그래픽 프레임을 합성한다', () => {
+		mocks.captureGraphicFrame.mockReturnValue('/graphic-frame.png')
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateConfig(template, imageConfigs, effectiveGraphicConfigs)}
+				template={template}
+				navigation={navigation}
+			>
+				<GraphicCaptureProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic for export' }))
+		const artifact = mocks.templateArtifact?.()
+		mocks.captureGraphicFrame.mockReturnValue('/newest-graphic-frame.png')
+		mocks.templateArtifact?.()
+
+		expect(mocks.captureGraphicFrame).toHaveBeenCalledTimes(2)
+		expect(artifact).toMatchObject({
+			kind: 'raster',
+			source: { withSurface: expect.any(Function) },
+		})
 	})
 
 	it('출력 캔버스 비율을 작업 영역에 맞춰 프리뷰에 반영한다', () => {
@@ -746,15 +835,13 @@ describe('TemplateGenerator', () => {
 		expect(canvasOf().style.background).toBe('transparent')
 	})
 
-	it('선택한 포맷으로 내보낸다 — 편집 계약(printPpi 정책)이 허용한 포맷만 목록에 오른다', async () => {
+	it('선택한 Effective 포맷으로 내보낸다', async () => {
 		const user = userEvent.setup()
-		render(
-			<TemplateGenerator navigation={navigation} template={{ ...template, printPpi: 150 }} />,
-		)
+		render(<TemplateGenerator navigation={navigation} template={template} />)
 
 		screen.getByRole('combobox', { name: 'Format' }).focus()
 		await user.keyboard('{ArrowDown}')
-		await user.click(screen.getByRole('option', { name: 'CMYK PDF' }))
+		await user.click(screen.getByRole('option', { name: 'PDF' }))
 		fireEvent.click(screen.getByRole('button', { name: '내보내기' }))
 
 		expect(mocks.exportTemplate).toHaveBeenCalledWith('pdf')
@@ -857,7 +944,7 @@ describe('TemplateGenerator', () => {
 		'readonly',
 		'disabled',
 	] as const)('Background Type이 %s면 action과 generic patch로 우회할 수 없다', (availability) => {
-		const base = deriveTemplateConfig(template, imageConfigs, graphicRuntimeManifests)
+		const base = deriveTemplateConfig(template, imageConfigs, effectiveGraphicConfigs)
 		const config = {
 			...base,
 			controller: {
@@ -891,7 +978,7 @@ describe('TemplateGenerator', () => {
 			createImageConfig(11, undefined, '첫 프롬프트'),
 			createImageConfig(7, undefined, '둘째 프롬프트'),
 		]
-		const config = deriveTemplateConfig(studioTemplate, configs, graphicRuntimeManifests)
+		const config = deriveTemplateConfig(studioTemplate, configs, effectiveGraphicConfigs)
 		let resolveFirst:
 			| ((value: { generatedImages: { id: number; url: string }[] }) => void)
 			| null = null
@@ -906,7 +993,7 @@ describe('TemplateGenerator', () => {
 				template={studioTemplate}
 				navigation={navigation}
 			>
-				<TemplateSidebar />
+				<TemplateSidebarTestBridge />
 				<ImageRaceProbe />
 			</TemplateStudioProvider>,
 		)
@@ -1053,6 +1140,7 @@ describe('TemplateGenerator', () => {
 	it('Graphic update는 Definition availability를 지키고 Config 변경 시 기본값으로 초기화한다', () => {
 		const readonlyGraphic: GraphicStudioConfig = {
 			...forwardStraightRuntimeManifest,
+			output: resolveGraphicStudioOutput(forwardStraightRuntimeManifest),
 			controller: {
 				groups: forwardStraightRuntimeManifest.controller.groups.map((group) => ({
 					...group,
@@ -1081,14 +1169,14 @@ describe('TemplateGenerator', () => {
 		first.unmount()
 
 		const secondary = {
-			...forwardStraightRuntimeManifest,
+			...effectiveGraphicConfigs[0],
 			id: 'secondary',
 			name: 'Secondary',
 		} satisfies GraphicStudioConfig
 		render(
 			<TemplateStudioProvider
 				config={deriveTemplateConfig(template, imageConfigs, [
-					forwardStraightRuntimeManifest,
+					effectiveGraphicConfigs[0],
 					secondary,
 				])}
 				template={template}
@@ -1113,6 +1201,7 @@ function createImageConfig(
 	const ratios = ['1:1', '4:3', '16:9'] as const
 	return {
 		studio: 'image',
+		artifacts: { raster: {}, original: {} },
 		id,
 		version: 1,
 		name: id === 11 ? '기본 프로파일' : `프로파일 ${id}`,

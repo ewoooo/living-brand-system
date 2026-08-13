@@ -12,12 +12,12 @@ import {
 	type ImageAspectRatio,
 	type ImageOutputSize,
 } from '@/features/image-generation/image-size'
-import { DEFAULT_CMYK_ICC_PROFILE } from '@/features/studio-export/color-profile'
-import type { PrintPpi } from '@/features/studio-export/print-policy'
-import { supportsTemplateExport } from '@/features/studio-export/services/export-template'
 import {
 	parseStudioOutputCapability,
-	resolveStudioOutputFormats,
+	projectStudioOutputPolicy,
+	resolveStudioArtifactOutputFormats,
+	resolveStudioOutputCapability,
+	type StudioOutputCapability,
 } from '@/features/studio-export/studio-output'
 import {
 	collectTemplateImageSlots,
@@ -107,10 +107,9 @@ export type PublishedHtmlTemplate = {
 	nodeConfigs: Record<string, PublishedTemplateNodeConfig>
 	width: number
 	height: number
-	printPpi?: PrintPpi
 	templateVersion: string
 	controllerRestrictions?: unknown
-	output?: { allowedFormats?: readonly string[] | null } | null
+	exportPolicy?: unknown
 }
 
 /**
@@ -119,13 +118,13 @@ export type PublishedHtmlTemplate = {
  * 원본 Config를 직접 소비한다. 전역 id를 만들기 위한 prefix DSL이나 Definition 복제는 하지 않는다.
  */
 export type TemplateConfig = StudioControllerConfig<'template', number> & {
+	output: StudioOutputCapability
 	template: {
 		slots: readonly TemplateConfigSlot[]
 		textColorControlId?: typeof TEXT_COLOR_CONTROL_ID
 		imageConfigs: readonly ImageStudioConfig[]
 		graphicConfigs: readonly GraphicStudioConfig[]
 		exportOption: {
-			printPpi?: PublishedHtmlTemplate['printPpi']
 			canvas: { width: number; height: number }
 		}
 	}
@@ -134,13 +133,14 @@ export type TemplateConfig = StudioControllerConfig<'template', number> & {
 /** unknown 입력을 공통 Controller와 Template slot/reference/export descriptor까지 검증한다. */
 export function parseTemplateConfig(input: unknown): TemplateConfig {
 	const common = parseStudioControllerConfig(input)
-	parseStudioOutputCapability(common.output)
 	const root = templateRecord(input, 'TemplateConfig')
+	parseStudioOutputCapability(root.output)
 	assertTemplateKeys(root, [
 		'studio',
 		'id',
 		'version',
 		'name',
+		'artifacts',
 		'output',
 		'controller',
 		'template',
@@ -243,8 +243,11 @@ export function parseTemplateConfig(input: unknown): TemplateConfig {
 	}
 
 	const exportOption = templateRecord(template.exportOption, 'TemplateConfig exportOption')
-	assertTemplateKeys(exportOption, ['printPpi', 'canvas'])
-	if (exportOption.printPpi !== undefined) assertPositiveNumber(exportOption.printPpi, 'printPpi')
+	assertTemplateKeys(exportOption, ['canvas'])
+	resolveStudioArtifactOutputFormats(
+		common.artifacts,
+		(root.output as StudioOutputCapability).formats,
+	)
 	const canvas = templateRecord(exportOption.canvas, 'TemplateConfig canvas')
 	assertTemplateKeys(canvas, ['width', 'height'])
 	assertPositiveNumber(canvas.width, 'canvas.width')
@@ -447,11 +450,7 @@ function isImageAspectRatio(value: string | null): value is ImageAspectRatio {
 export function getTemplateRuntimeManifest({
 	html,
 	nodeConfigs,
-	printPpi,
-	templateVersion,
-}: Pick<PublishedHtmlTemplate, 'html' | 'nodeConfigs' | 'printPpi'> & {
-	templateVersion?: string
-}): StudioRuntimeManifest {
+}: Pick<PublishedHtmlTemplate, 'html' | 'nodeConfigs'>): StudioRuntimeManifest {
 	const textControls: TextControlDefinition[] = collectTemplateSlots(html, nodeConfigs).map(
 		(slot) => ({
 			id: `text:${slot.nodeId}`,
@@ -466,15 +465,7 @@ export function getTemplateRuntimeManifest({
 		}),
 	)
 	return {
-		output: {
-			colorProfiles: {
-				rgb: ['srgb'],
-				cmyk: [DEFAULT_CMYK_ICC_PROFILE],
-			},
-			formats: (['png', 'tiff', 'pdf'] as const).filter((format) =>
-				supportsTemplateExport(format, { printPpi, templateVersion }),
-			),
-		},
+		artifacts: { raster: {} },
 		controller: {
 			groups: [
 				...(textControls.length
@@ -588,13 +579,11 @@ export function deriveTemplateConfig(
 		id: template.id,
 		version: 1,
 		name: template.name,
-		output: {
-			...runtimeManifest.output,
-			formats: resolveStudioOutputFormats(
-				runtimeManifest.output.formats,
-				template.output?.allowedFormats,
-			),
-		},
+		output: resolveStudioOutputCapability(
+			runtimeManifest.artifacts,
+			projectStudioOutputPolicy(template.exportPolicy),
+		),
+		artifacts: runtimeManifest.artifacts,
 		controller: {
 			groups: controllerGroups,
 		},
@@ -604,7 +593,6 @@ export function deriveTemplateConfig(
 			imageConfigs,
 			graphicConfigs,
 			exportOption: {
-				printPpi: template.printPpi,
 				canvas: { width: template.width, height: template.height },
 			},
 		},

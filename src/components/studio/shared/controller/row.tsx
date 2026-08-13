@@ -56,7 +56,7 @@ export function ControllerRow({
 			data-slot="controller-row"
 			aria-disabled={disabled || undefined}
 			className={cn(
-				'flex h-9 w-full shrink-0 items-center justify-between gap-3 rounded-md bg-muted px-3 focus-within:ring-2 focus-within:ring-ring/30',
+				'flex h-9 w-full shrink-0 items-center justify-between gap-3 rounded-lg bg-muted px-3 focus-within:ring-2 focus-within:ring-ring/30',
 				disabled && 'pointer-events-none opacity-50',
 				className,
 			)}

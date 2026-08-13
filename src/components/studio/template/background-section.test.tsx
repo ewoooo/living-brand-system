@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import {
@@ -20,6 +21,10 @@ const imageContract = resolveTemplateImageConfig(createImageConfig(), {
 	height: 300,
 })
 if (!imageContract) throw new Error('테스트 Image Config가 호환되지 않습니다.')
+const forwardStraightConfig = {
+	...forwardStraightRuntimeManifest,
+	output: resolveGraphicStudioOutput(forwardStraightRuntimeManifest),
+}
 
 type HarnessPatch = Partial<Pick<TemplateBackgroundState, 'imageMode' | 'color' | 'prompt'>>
 
@@ -85,7 +90,7 @@ function Harness({
 			}}
 			imageContracts={contract ? [contract] : []}
 			featureBindings={contract ? featureBindings : {}}
-			graphicConfigs={[forwardStraightRuntimeManifest]}
+			graphicConfigs={[forwardStraightConfig]}
 			graphicBindings={{ origin: { padAspectRatio: 4 / 3 } }}
 			value={state}
 			onChange={(patch) => {
@@ -341,6 +346,7 @@ describe('BackgroundSection', () => {
 function createImageConfig(): ImageStudioConfig {
 	return {
 		studio: 'image',
+		artifacts: { raster: {} },
 		id: 3,
 		version: 1,
 		name: '첫 프로파일',

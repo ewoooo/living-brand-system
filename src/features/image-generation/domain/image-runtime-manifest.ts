@@ -46,12 +46,7 @@ export function getImageRuntimeManifest(modelPreset: ImageModelPreset): ImageRun
 		supportsImageOutputSize(modelPreset, size),
 	)
 	return {
-		output: {
-			formats: ['png', 'jpeg'],
-			original: true,
-			colorProfiles: { rgb: ['srgb'] },
-			packages: ['zip'],
-		},
+		artifacts: { raster: {}, original: {} },
 		controller: {
 			groups: [
 				{

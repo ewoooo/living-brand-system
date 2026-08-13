@@ -62,6 +62,9 @@ describe('GlobalHeader', () => {
 	it('메가 메뉴 없이 직접 링크와 current·update 상태를 표시한다', () => {
 		renderHeader({ guideline: true, image: true })
 
+		expect(document.querySelector('[data-slot="navigation-header"]')).toHaveClass(
+			'bg-header-background',
+		)
 		const desktop = document.querySelector<HTMLElement>(
 			'[data-slot="navigation-header-desktop"]',
 		)
@@ -139,6 +142,25 @@ describe('GlobalHeader', () => {
 		expect(
 			within(desktop as HTMLElement).getByRole('link', { name: 'Graphic' }),
 		).not.toHaveAttribute('aria-current')
+	})
+
+	it('그룹 링크의 체이서가 호버한 링크 폭으로 이동한다', () => {
+		renderHeader()
+
+		const graphic = screen.getByRole('link', { name: 'Graphic' })
+		const template = screen.getByRole('link', { name: 'Template' })
+		const group = graphic.closest<HTMLElement>('[data-slot="navigation-header-link-group"]')
+
+		expect(group).not.toBeNull()
+		const chaser = () =>
+			group?.querySelector<HTMLElement>('[data-slot="navigation-header-link-chaser"]')
+		expect(chaser()).toHaveAttribute('data-target-index', '2')
+
+		fireEvent.mouseEnter(template)
+		expect(chaser()).toHaveAttribute('data-target-index', '0')
+
+		fireEvent.mouseLeave(template)
+		expect(chaser()).toHaveAttribute('data-target-index', '2')
 	})
 
 	it('컴팩트 메뉴를 헤더 흐름 안에서 펼치고 접는다', () => {

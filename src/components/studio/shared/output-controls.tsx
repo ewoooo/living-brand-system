@@ -4,6 +4,7 @@ import { Controller } from '@/components/studio/shared/controller'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
 import type { VideoExportSpec } from '@/features/studio-export/export-contract'
+import type { PrintPpi } from '@/features/studio-export/print-policy'
 
 export type OutputSizeValue = {
 	width: number | null
@@ -85,6 +86,34 @@ export function VideoControls({
 				onChange={onDurationChange}
 			/>
 		</div>
+	)
+}
+
+/** Footer에서 인쇄 포맷에 필요한 Effective PPI만 선택한다. */
+export function PrintControls({
+	ppi,
+	options,
+	onChange,
+}: {
+	ppi: PrintPpi
+	options: readonly PrintPpi[]
+	onChange: (ppi: PrintPpi) => void
+}) {
+	return (
+		<Controller.Row label="Resolution" readonly={options.length <= 1}>
+			{options.length <= 1 ? (
+				<span className="text-sm text-muted-foreground">{ppi}ppi</span>
+			) : (
+				<Controller.Select
+					options={options.map((value) => ({
+						value: String(value),
+						label: `${value}ppi`,
+					}))}
+					value={String(ppi)}
+					onChange={(value) => onChange(Number(value) as PrintPpi)}
+				/>
+			)}
+		</Controller.Row>
 	)
 }
 

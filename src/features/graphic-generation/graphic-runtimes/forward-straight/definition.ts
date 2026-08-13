@@ -25,7 +25,7 @@ export default defineGraphicRuntime({
 	version: 1,
 	name: 'Forward Straight',
 	type: 'p5',
-	output: { formats: ['svg'], colorProfiles: { rgb: ['srgb'] } },
+	artifacts: { vector: {}, raster: {} },
 	controller: {
 		groups: [
 			{

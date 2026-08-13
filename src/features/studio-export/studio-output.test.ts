@@ -2,11 +2,31 @@ import { describe, expect, it } from 'vitest'
 import { STUDIO_OUTPUT_FORMATS } from './export-contract'
 import {
 	parseStudioOutputCapability,
+	projectStudioOutputPolicy,
+	resolveStudioArtifactOutputFormats,
+	resolveStudioOutputCapability,
 	resolveStudioOutputFormats,
 	supportsStudioExportRequest,
 } from './studio-output'
 
 describe('resolveStudioOutputFormats', () => {
+	it('Artifact를 Exporter 호환 형식으로 투영한 뒤 Admin 제한을 적용한다', () => {
+		expect(
+			resolveStudioArtifactOutputFormats({ raster: {}, vector: {} }, ['png', 'svg']),
+		).toEqual(['png', 'svg'])
+		expect(resolveStudioArtifactOutputFormats({ raster: {} }, undefined)).toEqual([
+			'png',
+			'jpeg',
+			'tiff',
+			'pdf',
+			'mp4',
+		])
+		expect(() => resolveStudioArtifactOutputFormats({ raster: {} }, ['svg'])).toThrow(
+			'지원하지 않는 output format',
+		)
+		expect(resolveStudioArtifactOutputFormats({ raster: {} }, ['tiff'])).toEqual(['tiff'])
+	})
+
 	it('Admin 제한이 없으면 Runtime 순서를 유지한다', () => {
 		expect(resolveStudioOutputFormats(['svg', 'png'] as const, undefined)).toEqual([
 			'svg',
@@ -49,6 +69,7 @@ describe('StudioOutputCapability', () => {
 		expect(parseStudioOutputCapability(capability)).toBe(capability)
 		expect(
 			supportsStudioExportRequest(capability, {
+				artifact: 'video',
 				format: 'mp4',
 				options: {
 					container: 'mp4',
@@ -65,6 +86,7 @@ describe('StudioOutputCapability', () => {
 
 	it('상한을 넘거나 양수가 아닌 영상 요청을 거부한다', () => {
 		const request = {
+			artifact: 'video' as const,
 			format: 'mp4' as const,
 			options: {
 				container: 'mp4' as const,
@@ -80,7 +102,7 @@ describe('StudioOutputCapability', () => {
 	})
 
 	it('original은 format 목록이 아닌 별도 capability로 검증한다', () => {
-		const request = { format: 'original' as const, options: {} }
+		const request = { artifact: 'original' as const, options: {} }
 		expect(supportsStudioExportRequest({ formats: [], original: true }, request)).toBe(true)
 		expect(supportsStudioExportRequest({ formats: [] }, request)).toBe(false)
 	})
@@ -93,5 +115,46 @@ describe('StudioOutputCapability', () => {
 		expect(() => parseStudioOutputCapability({ formats: ['webp'] })).toThrow(
 			'지원하지 않는 output format',
 		)
+	})
+
+	it('Runtime Artifact와 Admin 제한을 PPI·FPS·영상 상한까지 한 번에 계산한다', () => {
+		const policy = projectStudioOutputPolicy({
+			allowedFormats: ['pdf', 'mp4'],
+			print: { allowedPpi: ['150'] },
+			video: {
+				allowedFps: ['30'],
+				maxWidth: 1280,
+				maxHeight: 720,
+				maxDurationSeconds: 4,
+			},
+		})
+		expect(resolveStudioOutputCapability({ raster: {} }, policy)).toMatchObject({
+			formats: ['pdf', 'mp4'],
+			print: { ppi: [150] },
+			video: {
+				mp4: {
+					fps: [30],
+					maxWidth: 1280,
+					maxHeight: 720,
+					maxDurationSeconds: 4,
+				},
+			},
+		})
+	})
+
+	it('Admin은 Runtime 영상 상한을 넓힐 수 없다', () => {
+		expect(() =>
+			resolveStudioOutputCapability(
+				{
+					video: {
+						fps: [24],
+						maxWidth: 1280,
+						maxHeight: 720,
+						maxDurationSeconds: 5,
+					},
+				},
+				{ allowedFormats: ['mp4'], video: { maxWidth: 1920 } },
+			),
+		).toThrow('Runtime보다 넓습니다')
 	})
 })

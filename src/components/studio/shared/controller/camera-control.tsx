@@ -13,7 +13,7 @@ type ControllerCameraAxis = {
 }
 
 type ControllerCameraControlProps = {
-	/** 3D 오빗 프리뷰(ImageCameraOrbitControl 등) — 정사각 컨테이너에 담긴다. */
+	/** 3D 오빗 프리뷰(CameraOrbitControl 등) — 정사각 컨테이너에 담긴다. */
 	children: React.ReactNode
 	/** 프리뷰 아래 반폭으로 나란히 앉는 축 셀렉트들. */
 	axes: readonly ControllerCameraAxis[]
@@ -26,7 +26,7 @@ type ControllerCameraControlProps = {
 export function ControllerCameraControl({ children, axes }: ControllerCameraControlProps) {
 	return (
 		<div data-slot="controller-camera-control" className="flex flex-col gap-1.5">
-			<div className="aspect-square w-full shrink-0 overflow-hidden rounded-md bg-muted">
+			<div className="aspect-square w-full shrink-0 overflow-hidden rounded-lg bg-muted">
 				{children}
 			</div>
 			<div className="grid grid-cols-2 gap-1.5">

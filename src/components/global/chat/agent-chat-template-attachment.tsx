@@ -13,16 +13,12 @@ import {
 } from '@/components/ui/attachment'
 import { Typography } from '@/components/ui/typography'
 import type { AgentTemplateImageAttachment } from '@/features/agent-chat/services/agent-template-request.service'
-import type { StudioOutputFormat } from '@/features/studio-export/export-contract'
-import { useExport } from '@/features/studio-export/hooks/use-export'
 import {
-	canExportTemplate,
-	createTemplateExportRequest,
-	type TemplateExportContext,
-	type TemplateExportRequest,
-} from '@/features/studio-export/services/export-template'
-import { createTemplateExportSource } from '@/features/studio-export/services/export-template.client'
+	type TemplateExportMetadata,
+	useTemplateExport,
+} from '@/features/studio-export/hooks/use-template-export'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
+import { createTemplateRasterArtifact } from '@/features/template-customization/runtime/template-runtime.client'
 import { createControllerValues } from '@/modules/studio-controller/controller-definition'
 
 const PREVIEW_WIDTH = 280
@@ -45,15 +41,10 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 			),
 		[attachment.html, attachment.values],
 	)
-	const exportContext: TemplateExportContext = {
+	const exportMetadata: TemplateExportMetadata = {
 		fileName: attachment.name,
-		height: attachment.height,
-		html: composedHtml,
-		printPpi: attachment.printPpi,
-		templateId: attachment.templateId,
-		templateVersion: attachment.templateVersion,
 		width: attachment.width,
-		output: attachment.output,
+		height: attachment.height,
 		controller: {
 			groups: attachment.controller.groups,
 			values: {
@@ -68,31 +59,28 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 			},
 		},
 	}
-	const output = useExport<TemplateExportRequest>({
+	const output = useTemplateExport({
+		artifact: () =>
+			createTemplateRasterArtifact({
+				height: attachment.height,
+				html: composedHtml,
+				width: attachment.width,
+			}),
 		capability: attachment.output,
-		canExport: (request) => canExportTemplate(request, exportContext),
-		source: createTemplateExportSource(exportContext),
+		metadata: exportMetadata,
 	})
-	const request = (format: StudioOutputFormat) =>
-		createTemplateExportRequest(format, attachment.printPpi)
-	const canExport = (format: StudioOutputFormat) => {
-		const candidate = request(format)
-		return Boolean(candidate && output.canExport(candidate))
-	}
-	const run = (format: StudioOutputFormat) => {
-		const candidate = request(format)
-		if (candidate) void output.run(candidate)
-	}
 
 	return (
 		<TemplateAttachmentFrame
 			name={attachment.name}
 			description={`${attachment.output.formats.map((format) => format.toUpperCase()).join(' · ')} 출력`}
-			isExporting={output.exporting !== null}
+			isExporting={output.busy}
 			exportError={output.error}
-			onExport={canExport('png') ? () => run('png') : undefined}
-			onExportTiff={canExport('tiff') ? () => run('tiff') : undefined}
-			onExportPdf={canExport('pdf') ? () => run('pdf') : undefined}
+			onExport={output.canExportFormat('png') ? () => output.runFormat('png') : undefined}
+			onExportTiff={
+				output.canExportFormat('tiff') ? () => output.runFormat('tiff') : undefined
+			}
+			onExportPdf={output.canExportFormat('pdf') ? () => output.runFormat('pdf') : undefined}
 		>
 			<ScaledMedia contentWidth={attachment.width}>
 				{(scale) => (

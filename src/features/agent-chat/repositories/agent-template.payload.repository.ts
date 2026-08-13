@@ -6,13 +6,12 @@ import type { Template } from '@/payload-types'
 export type AgentTemplateDocument = Pick<
 	Template,
 	| 'description'
+	| 'exportPolicy'
 	| 'height'
 	| 'html'
 	| 'id'
 	| 'name'
 	| 'overrides'
-	| 'output'
-	| 'printPpi'
 	| 'updatedAt'
 	| 'width'
 > & { controllerRestrictions?: unknown }
@@ -41,8 +40,7 @@ function publishedTemplateQuery(user: unknown) {
 			overrides: true,
 			width: true,
 			height: true,
-			output: true,
-			printPpi: true,
+			exportPolicy: true,
 			updatedAt: true,
 			controllerRestrictions: true,
 		},

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { FORWARD_STRAIGHT_DEFAULT_INPUT } from './graphic-runtimes/forward-straight/definition'
 import {
 	createForwardStraightScene,
-	createForwardStraightSvg,
+	createForwardStraightVectorArtifact,
 } from './graphic-runtimes/forward-straight/model'
 
 describe('createForwardStraightScene', () => {
@@ -47,21 +47,37 @@ describe('createForwardStraightScene', () => {
 	})
 })
 
-describe('createForwardStraightSvg', () => {
-	it('serializes the shared geometry as SVG', () => {
+describe('createForwardStraightVectorArtifact', () => {
+	it('shared geometry를 파일 형식과 무관한 Vector Artifact로 투영한다', () => {
 		const scene = createForwardStraightScene(FORWARD_STRAIGHT_DEFAULT_INPUT, {
 			width: 100,
 			height: 100,
 		})
-		const svg = createForwardStraightSvg(scene)
-		expect(createForwardStraightSvg(scene)).toBe(svg)
+		const artifact = createForwardStraightVectorArtifact(scene)
 
-		expect(svg).toContain('width="100" height="100" viewBox="0 0 100 100"')
-		expect(svg).toContain('<rect width="100" height="100" fill="#030402" />')
-		expect(svg.match(/<line /g)).toHaveLength(4)
-		expect(svg).toContain(
-			'<line x1="40.61" y1="40.61" x2="19.39" y2="19.39" stroke="#ffffff" stroke-width="1.00" stroke-linecap="square" />',
-		)
-		expect(svg).toContain('<circle cx="50.00" cy="50.00" r="2.50" fill="#ff2a2a" />')
+		expect(artifact).toMatchObject({
+			kind: 'vector',
+			source: { width: 100, height: 100, background: '#030402' },
+		})
+		expect(artifact.source.primitives).toHaveLength(5)
+		expect(artifact.source.primitives[0]).toMatchObject({
+			kind: 'line',
+			stroke: '#ffffff',
+			strokeWidth: 1,
+			lineCap: 'square',
+		})
+		const line = artifact.source.primitives[0]
+		if (line?.kind !== 'line') throw new Error('첫 Vector primitive가 line이 아닙니다.')
+		expect(line.x1).toBeCloseTo(40.61, 2)
+		expect(line.y1).toBeCloseTo(40.61, 2)
+		expect(line.x2).toBeCloseTo(19.39, 2)
+		expect(line.y2).toBeCloseTo(19.39, 2)
+		expect(artifact.source.primitives[4]).toEqual({
+			kind: 'circle',
+			cx: 50,
+			cy: 50,
+			radius: 2.5,
+			fill: '#ff2a2a',
+		})
 	})
 })

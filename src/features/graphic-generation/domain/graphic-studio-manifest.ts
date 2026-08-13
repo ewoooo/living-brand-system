@@ -4,7 +4,11 @@ import {
 	parseGraphicStudioConfig,
 } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { graphicRuntimeManifests } from '@/features/graphic-generation/graphic-runtimes/catalog/manifest.generated'
-import { resolveStudioOutputFormats } from '@/features/studio-export/studio-output'
+import {
+	projectStudioOutputPolicy,
+	resolveStudioOutputCapability,
+	type StudioOutputCapability,
+} from '@/features/studio-export/studio-output'
 import {
 	applyControllerRestrictions,
 	projectPayloadControllerRestrictions,
@@ -25,6 +29,14 @@ export function getGraphicRuntimeManifest(id: string): GraphicRuntimeManifest | 
 	return graphicRuntimeManifests.find((manifest) => manifest.id === id) ?? null
 }
 
+/** Graphic Artifact와 Admin 정책을 Export Layer가 소비할 effective capability로 투영한다. */
+export function resolveGraphicStudioOutput(
+	manifest: GraphicRuntimeManifest,
+	policy?: unknown,
+): StudioOutputCapability {
+	return resolveStudioOutputCapability(manifest.artifacts, projectStudioOutputPolicy(policy))
+}
+
 /** published Graphic Profile을 Manifest 기본 계약보다 좁은 Effective Config로 투영한다. */
 export function deriveGraphicStudioConfig(
 	profile: PublishedGraphicProfileDefinition,
@@ -35,13 +47,7 @@ export function deriveGraphicStudioConfig(
 	const config: GraphicStudioConfig = {
 		...manifest,
 		name: profile.name,
-		output: {
-			...manifest.output,
-			formats: resolveStudioOutputFormats(
-				manifest.output.formats,
-				profile.output?.allowedFormats,
-			),
-		},
+		output: resolveGraphicStudioOutput(manifest, profile.exportPolicy),
 		controller: {
 			groups: applyControllerRestrictions(manifest.controller.groups, restrictions),
 		},

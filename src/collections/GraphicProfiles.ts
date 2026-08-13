@@ -7,9 +7,13 @@ import {
 import { managerManagedAccess } from '@/lib/auth'
 import {
 	studioControllerRestrictionsField,
-	studioOutputPolicyField,
+	studioExportPolicyField,
 } from './fields/studio-controller-field'
 import { draftVersions } from './shared'
+
+const graphicAdminRuntimeManifests = graphicRuntimeManifests.map(
+	({ artifacts, controller, id }) => ({ artifacts, controller, id }),
+)
 
 export const GraphicProfiles: CollectionConfig = {
 	slug: 'graphic-profiles',
@@ -26,7 +30,7 @@ export const GraphicProfiles: CollectionConfig = {
 						name: String(effective.name ?? ''),
 						runtime: String(effective.runtime ?? ''),
 						controllerRestrictions: effective.controllerRestrictions,
-						output: effective.output,
+						exportPolicy: effective.exportPolicy,
 					})
 				} catch (error) {
 					throw new APIError(
@@ -75,8 +79,11 @@ export const GraphicProfiles: CollectionConfig = {
 		},
 		studioControllerRestrictionsField({
 			source: 'graphic',
-			baseConfigs: graphicRuntimeManifests.map(({ id, controller }) => ({ id, controller })),
+			baseConfigs: graphicAdminRuntimeManifests,
 		}),
-		studioOutputPolicyField(),
+		studioExportPolicyField({
+			source: 'graphic',
+			baseConfigs: graphicAdminRuntimeManifests,
+		}),
 	],
 }

@@ -22,7 +22,7 @@ describe('listPublishedGraphicProfileDefinitions', () => {
 			select: {
 				controllerRestrictions: true,
 				name: true,
-				output: true,
+				exportPolicy: true,
 				runtime: true,
 			},
 			sort: 'displayOrder',

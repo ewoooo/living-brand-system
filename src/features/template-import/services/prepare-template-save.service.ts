@@ -26,8 +26,7 @@ interface TemplateSaveCandidate {
 	id?: unknown
 	name?: unknown
 	overrides?: unknown
-	printPpi?: unknown
-	output?: unknown
+	exportPolicy?: unknown
 	width?: unknown
 }
 
@@ -63,11 +62,16 @@ export async function prepareTemplateSave({
 		if (draftBlocker) return draftBlocker
 	}
 
-	const printBlocker = findPrintOutputBlocker(candidate)
-	if (printBlocker) return printBlocker
-
 	const finalStatus = data._status ?? originalDoc?._status
 	if (finalStatus !== 'published') return null
+	if (typeof candidate.width === 'number' && typeof candidate.height === 'number') {
+		const printBlocker = findPrintOutputBlocker({
+			enabled: allowsPrint(candidate.exportPolicy),
+			height: candidate.height,
+			width: candidate.width,
+		})
+		if (printBlocker) return printBlocker
+	}
 
 	if (
 		html &&
@@ -86,7 +90,7 @@ export async function prepareTemplateSave({
 				height: candidate.height,
 				templateVersion: 'draft',
 				controllerRestrictions: candidate.controllerRestrictions,
-				output: candidate.output as never,
+				exportPolicy: candidate.exportPolicy as never,
 			})
 		} catch (error) {
 			return error instanceof Error ? error.message : '템플릿 Controller 계약을 확인하세요.'
@@ -106,4 +110,10 @@ export async function prepareTemplateSave({
 	)
 
 	return findTemplatePublishBlocker(candidate, parsed, base, req)
+}
+
+function allowsPrint(policy: unknown): boolean {
+	if (!policy || typeof policy !== 'object' || Array.isArray(policy)) return true
+	const allowed = (policy as { allowedFormats?: unknown }).allowedFormats
+	return !Array.isArray(allowed) || allowed.includes('tiff') || allowed.includes('pdf')
 }

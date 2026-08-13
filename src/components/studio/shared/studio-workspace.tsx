@@ -38,20 +38,19 @@ export function StudioWorkspacePage({
 }
 
 type StudioWorkspaceProps = {
-	controller: React.ReactNode
+	sidebar: React.ReactNode
 	children: React.ReactNode
 }
 
-/** Studio 도구의 컨트롤러와 결과 캔버스 배치만 소유한다. 디자인 SSOT에 따라 컨트롤러는 오른쪽 플로팅 패널이다. */
-export function StudioWorkspace({ controller, children }: StudioWorkspaceProps) {
+export function StudioWorkspace({ sidebar, children }: StudioWorkspaceProps) {
 	return (
 		// lg 행을 1fr로 못 박아야 컨트롤러가 길어져도 페이지 대신 패널 내부가 스크롤된다.
 		<section
 			data-slot="studio-workspace"
 			className="grid min-h-0 border-t border-border lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[minmax(0,1fr)]"
 		>
-			<aside data-slot="studio-workspace-controller" className="min-h-0 p-4 lg:order-2">
-				{controller}
+			<aside data-slot="studio-workspace-sidebar" className="min-h-0 p-4 lg:order-2">
+				{sidebar}
 			</aside>
 			<div
 				data-slot="studio-workspace-canvas"

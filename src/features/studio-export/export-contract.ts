@@ -7,8 +7,6 @@ export const STUDIO_OUTPUT_FORMAT_OPTIONS: readonly {
 	value: StudioOutputFormat
 }[] = STUDIO_OUTPUT_FORMATS.map((value) => ({ label: value.toUpperCase(), value }))
 
-export type ExportFormat = 'original' | StudioOutputFormat
-
 export type RgbColorProfile = {
 	space: 'rgb'
 	icc: 'srgb' | 'display-p3'
@@ -34,33 +32,39 @@ export type VideoExportSpec = {
 }
 
 export type ExportRequest =
-	| { format: 'original'; options: Record<never, never> }
+	| { artifact: 'original'; options: Record<string, never> }
 	| {
+			artifact: 'raster'
 			format: 'png'
 			colorProfile: RgbColorProfile
 			options: { scale: number; transparent: boolean }
 	  }
 	| {
+			artifact: 'raster'
 			format: 'jpeg'
 			colorProfile: ColorProfile
 			options: { quality: number }
 	  }
 	| {
+			artifact: 'raster'
 			format: 'tiff'
-			colorProfile: ColorProfile
+			colorProfile: CmykColorProfile
 			options: { ppi: 72 | 150 | 300; compression: 'lzw' }
 	  }
 	| {
+			artifact: 'raster'
 			format: 'pdf'
-			colorProfile: ColorProfile
+			colorProfile: CmykColorProfile
 			options: { ppi: 72 | 150 | 300; bleedMm: number }
 	  }
+	| { artifact: 'raster'; format: 'mp4'; options: VideoExportSpec }
 	| {
+			artifact: 'vector'
 			format: 'svg'
 			colorProfile: RgbColorProfile
 			options: { width: number; height: number; outlineText: boolean }
 	  }
-	| { format: 'mp4'; options: VideoExportSpec }
+	| { artifact: 'video'; format: 'mp4'; options: VideoExportSpec }
 
 export type ExportResult = {
 	data: Blob

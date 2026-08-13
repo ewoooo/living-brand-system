@@ -1,7 +1,7 @@
 import {
-	parseStudioOutputCapability,
-	type StudioOutputCapability,
-} from '@/features/studio-export/studio-output'
+	parseStudioArtifactCapabilities,
+	type StudioArtifactCapabilities,
+} from '@/modules/studio-artifact/studio-artifact'
 
 /** Controller Definition에 저장할 수 있는 직렬화 가능한 값. */
 export type ControllerControlValue = string | number | boolean | null | ControllerPadValue
@@ -23,7 +23,7 @@ export type StudioKind = 'template' | 'image' | 'graphic'
 
 /** Admin 제한을 적용하기 전 Studio runtime이 발행하는 결정적 원본 계약. */
 export type StudioRuntimeManifest = {
-	output: StudioOutputCapability
+	artifacts: StudioArtifactCapabilities
 	controller: {
 		groups: readonly ControllerGroupDefinition[]
 	}
@@ -134,7 +134,7 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	}
 	if (config.version !== 1) invalid('version', '지원하는 버전은 1입니다.')
 	assertNonEmptyString(config.name, 'name')
-	parseStudioOutputCapability(config.output)
+	parseStudioArtifactCapabilities(config.artifacts)
 
 	const controller = asRecord(config.controller, 'controller')
 	assertOnlyKeys(controller, ['groups'], 'controller')

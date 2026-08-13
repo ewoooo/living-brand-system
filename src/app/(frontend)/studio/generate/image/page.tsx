@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation'
 import { ImageGenerator } from '@/components/studio/image/image-generator'
 import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
 import { listImageStudioConfigs } from '@/features/image-generation/services/list-image-studio-configs.service'
@@ -11,7 +12,8 @@ export const dynamic = 'force-dynamic'
 // 생성 표면: 컨트롤러와 결과 캔버스만 소유하고, 생성 실행은 generate-image feature가 담당한다.
 export default async function GenerateImagePage() {
 	const { user } = await authenticateRequest()
-	const configs = user ? await listImageStudioConfigs(user) : []
+	if (!user) notFound()
+	const configs = await listImageStudioConfigs(user)
 
 	return (
 		<StudioWorkspacePage

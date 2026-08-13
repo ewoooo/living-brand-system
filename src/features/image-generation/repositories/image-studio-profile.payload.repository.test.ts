@@ -33,7 +33,7 @@ describe('listPublishedImageProfileDefinitions', () => {
 				features: true,
 				imageModelPreset: true,
 				name: true,
-				output: true,
+				exportPolicy: true,
 				slug: true,
 			},
 			sort: 'displayOrder',

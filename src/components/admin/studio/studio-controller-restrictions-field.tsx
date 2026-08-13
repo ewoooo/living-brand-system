@@ -1,28 +1,22 @@
 'use client'
 
-import { FieldDescription, FieldError, FieldLabel, useField, useFormFields } from '@payloadcms/ui'
+import { FieldDescription, FieldError, FieldLabel, useField } from '@payloadcms/ui'
 import type { JSONFieldClientComponent } from 'payload'
 import type { ComponentProps } from 'react'
-import { deriveImageProfileController } from '@/features/image-generation/domain/image-studio-config'
-import {
-	DEFAULT_IMAGE_MODEL_PRESET,
-	type ImageModelPreset,
-} from '@/features/image-generation/image-model'
-import { getTemplateRuntimeManifest } from '@/features/template-customization/domain/template-config'
 import type {
 	ControllerControlDefinition,
 	ControllerControlRestriction,
-	ControllerGroupDefinition,
 	StudioControllerRestrictions,
 } from '@/modules/studio-controller/controller-definition'
-import type { TemplateNodeConfigMap } from '@/types/template'
+import {
+	type StudioAdminBaseConfig,
+	type StudioAdminRuntimeSource,
+	useStudioRuntimeManifest,
+} from './use-studio-runtime-manifest'
 
 type RestrictionsFieldProps = ComponentProps<JSONFieldClientComponent> & {
-	source: 'graphic' | 'image' | 'template'
-	baseConfigs?: readonly {
-		id: string
-		controller: { groups: readonly ControllerGroupDefinition[] }
-	}[]
+	source: StudioAdminRuntimeSource
+	baseConfigs?: readonly StudioAdminBaseConfig[]
 }
 
 /** Runtime Manifest의 Controller projection을 읽기 전용으로 보여주고 제약값만 저장한다. */
@@ -32,24 +26,7 @@ export function StudioControllerRestrictionsField({
 	baseConfigs = [],
 }: RestrictionsFieldProps) {
 	const { disabled, errorMessage, setValue, showError, value } = useField<unknown>({ path })
-	const runtime = useFormFields(([fields]) => fields.runtime?.value) as string | undefined
-	const imageModelPreset =
-		(useFormFields(([fields]) => fields.imageModelPreset?.value) as
-			| ImageModelPreset
-			| undefined) ?? DEFAULT_IMAGE_MODEL_PRESET
-	const imageFeatures = useFormFields(([fields]) => fields.features?.value)
-	const html = (useFormFields(([fields]) => fields.html?.value) as string | undefined) ?? ''
-	const nodeConfigs = (useFormFields(([fields]) => fields.overrides?.value) ??
-		{}) as TemplateNodeConfigMap
-	const groups =
-		source === 'graphic'
-			? (baseConfigs.find((config) => config.id === runtime)?.controller.groups ?? [])
-			: source === 'image'
-				? deriveImageProfileController(imageModelPreset, imageFeatures, undefined).groups
-				: getTemplateRuntimeManifest({
-						html,
-						nodeConfigs,
-					}).controller.groups
+	const groups = useStudioRuntimeManifest(source, baseConfigs)?.controller.groups ?? []
 	const current = readRestrictions(value)
 
 	function update(controlId: string, patch: Partial<ControllerControlRestriction>) {

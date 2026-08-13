@@ -1183,10 +1183,38 @@ export interface ImageProfile {
     | boolean
     | null;
   /**
-   * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
+   * 비우면 Exporter가 지원하는 형식을 모두 허용합니다.
    */
-  output?: {
+  exportPolicy?: {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
+    print?: {
+      /**
+       * 비우면 72, 150, 300ppi를 모두 허용합니다.
+       */
+      allowedPpi?:
+        | {
+            [k: string]: unknown;
+          }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+    };
+    video?: {
+      allowedFps?:
+        | {
+            [k: string]: unknown;
+          }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+      maxWidth?: number | null;
+      maxHeight?: number | null;
+      maxDurationSeconds?: number | null;
+    };
     original?: boolean | null;
   };
   updatedAt: string;
@@ -1236,10 +1264,38 @@ export interface GraphicProfile {
     | boolean
     | null;
   /**
-   * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
+   * 비우면 Exporter가 지원하는 형식을 모두 허용합니다.
    */
-  output?: {
+  exportPolicy?: {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
+    print?: {
+      /**
+       * 비우면 72, 150, 300ppi를 모두 허용합니다.
+       */
+      allowedPpi?:
+        | {
+            [k: string]: unknown;
+          }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+    };
+    video?: {
+      allowedFps?:
+        | {
+            [k: string]: unknown;
+          }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+      maxWidth?: number | null;
+      maxHeight?: number | null;
+      maxDurationSeconds?: number | null;
+    };
   };
   updatedAt: string;
   createdAt: string;
@@ -1333,10 +1389,38 @@ export interface Template {
     | boolean
     | null;
   /**
-   * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
+   * 비우면 Exporter가 지원하는 형식을 모두 허용합니다.
    */
-  output?: {
+  exportPolicy?: {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
+    print?: {
+      /**
+       * 비우면 72, 150, 300ppi를 모두 허용합니다.
+       */
+      allowedPpi?:
+        | {
+            [k: string]: unknown;
+          }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+    };
+    video?: {
+      allowedFps?:
+        | {
+            [k: string]: unknown;
+          }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+      maxWidth?: number | null;
+      maxHeight?: number | null;
+      maxDurationSeconds?: number | null;
+    };
   };
   sourceUrl?: string | null;
   baseHtml?: string | null;
@@ -1357,10 +1441,6 @@ export interface Template {
    * Figma 높이(px). 가져오기가 채웁니다.
    */
   height?: number | null;
-  /**
-   * 설정하면 CMYK TIFF와 mm 단위 CMYK PDF가 활성화됩니다. 픽셀 크기는 유지되며 인쇄 출력은 최대 67,108,864픽셀, 너비·높이 각각 최대 16,384px를 지원합니다.
-   */
-  printPpi?: ('72' | '150' | '300') | null;
   /**
    * Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.
    */
@@ -2588,10 +2668,23 @@ export interface ImageProfilesSelect<T extends boolean = true> {
         cameraControl?: T | ImageProfileCameraControlFeatureSelect<T>;
       };
   controllerRestrictions?: T;
-  output?:
+  exportPolicy?:
     | T
     | {
         allowedFormats?: T;
+        print?:
+          | T
+          | {
+              allowedPpi?: T;
+            };
+        video?:
+          | T
+          | {
+              allowedFps?: T;
+              maxWidth?: T;
+              maxHeight?: T;
+              maxDurationSeconds?: T;
+            };
         original?: T;
       };
   updatedAt?: T;
@@ -2624,10 +2717,23 @@ export interface GraphicProfilesSelect<T extends boolean = true> {
   runtime?: T;
   displayOrder?: T;
   controllerRestrictions?: T;
-  output?:
+  exportPolicy?:
     | T
     | {
         allowedFormats?: T;
+        print?:
+          | T
+          | {
+              allowedPpi?: T;
+            };
+        video?:
+          | T
+          | {
+              allowedFps?: T;
+              maxWidth?: T;
+              maxHeight?: T;
+              maxDurationSeconds?: T;
+            };
       };
   updatedAt?: T;
   createdAt?: T;
@@ -2667,17 +2773,29 @@ export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
   controllerRestrictions?: T;
-  output?:
+  exportPolicy?:
     | T
     | {
         allowedFormats?: T;
+        print?:
+          | T
+          | {
+              allowedPpi?: T;
+            };
+        video?:
+          | T
+          | {
+              allowedFps?: T;
+              maxWidth?: T;
+              maxHeight?: T;
+              maxDurationSeconds?: T;
+            };
       };
   sourceUrl?: T;
   baseHtml?: T;
   overrides?: T;
   width?: T;
   height?: T;
-  printPpi?: T;
   category?: T;
   html?: T;
   updatedAt?: T;

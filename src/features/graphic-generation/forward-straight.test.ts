@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { renderGraphicStudioSvg } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
+import { getGraphicStudioVectorArtifact } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import { createControllerValues } from '@/modules/studio-controller/controller-definition'
 import forwardStraightRuntimeManifest, {
 	FORWARD_STRAIGHT_DEFAULT_INPUT,
@@ -34,17 +34,17 @@ describe('forwardStraightRuntimeManifest', () => {
 		).toBe(false)
 	})
 
-	it('Controller 기본값과 viewport를 pure SVG runtime에 전달한다', () => {
+	it('Controller 기본값과 viewport를 pure Vector Artifact projector에 전달한다', () => {
 		const values = createControllerValues(forwardStraightRuntimeManifest.controller.groups)
-		const first = renderGraphicStudioSvg(forwardStraightRuntimeManifest, values, {
+		const first = getGraphicStudioVectorArtifact(forwardStraightRuntimeManifest, values, {
 			width: 100,
 			height: 100,
 		})
-		const second = renderGraphicStudioSvg(forwardStraightRuntimeManifest, values, {
+		const second = getGraphicStudioVectorArtifact(forwardStraightRuntimeManifest, values, {
 			width: 100,
 			height: 100,
 		})
-		expect(second).toBe(first)
-		expect(first).toContain('viewBox="0 0 100 100"')
+		expect(second).toEqual(first)
+		expect(first).toMatchObject({ kind: 'vector', source: { width: 100, height: 100 } })
 	})
 })
