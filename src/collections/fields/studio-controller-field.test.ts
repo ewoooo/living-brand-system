@@ -43,13 +43,25 @@ describe('studioControllerRestrictionsField', () => {
 	})
 
 	it('세 Studio가 export policy를 Controller와 분리해 발행한다', () => {
-		for (const collection of [ImageProfiles, Templates, GraphicProfiles]) {
+		for (const [collection, source] of [
+			[ImageProfiles, 'image'],
+			[Templates, 'template'],
+			[GraphicProfiles, 'graphic'],
+		] as const) {
 			const exportPolicy = namedField(collection.fields, 'exportPolicy')
 			if (exportPolicy.type !== 'group') throw new Error('exportPolicy must be a group')
 			expect(namedField(exportPolicy.fields, 'allowedFormats')).toMatchObject({
 				type: 'select',
 				hasMany: true,
 				options: STUDIO_OUTPUT_FORMAT_OPTIONS,
+				admin: {
+					components: {
+						Field: {
+							path: '/components/admin/studio/studio-output-formats-field#StudioOutputFormatsField',
+							clientProps: { source },
+						},
+					},
+				},
 			})
 		}
 	})

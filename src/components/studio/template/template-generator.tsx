@@ -7,10 +7,8 @@ import type {
 	PublishedHtmlTemplate,
 	TemplateConfig,
 } from '@/features/template-customization/domain/template-config'
-import {
-	TemplateStudioProvider,
-	useTemplateStudio,
-} from '@/features/template-customization/hooks/use-template-studio'
+import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
+import { TemplateStudioProvider } from '@/features/template-customization/providers/template-studio-provider'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import { TemplateCanvas } from './template-canvas'
 

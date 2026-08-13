@@ -116,7 +116,11 @@ function ControllerBrowserPanel({ tabs, empty, className, children }: Controller
 				{children}
 				{empty && (
 					<div className="flex items-center justify-center p-6">
-						<Typography as="p" size="sm" className="text-center text-inverted-foreground/80">
+						<Typography
+							as="p"
+							size="sm"
+							className="text-center text-inverted-foreground/80"
+						>
 							{empty}
 						</Typography>
 					</div>

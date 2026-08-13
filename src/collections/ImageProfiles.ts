@@ -201,6 +201,7 @@ export const ImageProfiles: CollectionConfig = {
 		imageProfileFeaturesField(),
 		studioControllerRestrictionsField({ source: 'image' }),
 		studioExportPolicyField({
+			source: 'image',
 			includeOriginal: true,
 		}),
 		{

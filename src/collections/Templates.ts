@@ -58,7 +58,7 @@ export const Templates: CollectionConfig = {
 			localized: true,
 		},
 		studioControllerRestrictionsField({ source: 'template' }),
-		studioExportPolicyField(),
+		studioExportPolicyField({ source: 'template' }),
 		{
 			// 워크스페이스: 캔버스 + 레이어 목록 + 값 편집을 한 컴포넌트가 렌더한다.
 			name: 'templateLayers',

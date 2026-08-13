@@ -231,7 +231,7 @@ describe('GraphicGenerator', () => {
 		)
 	})
 
-	it('공통 output format은 표시하되 등록된 export adapter가 없으면 실행하지 않는다', async () => {
+	it('Raster Artifact가 있는 Graphic은 공통 PNG adapter를 실행할 수 있다', async () => {
 		const config = {
 			...forwardStraightRuntimeManifest,
 			output: {
@@ -244,7 +244,7 @@ describe('GraphicGenerator', () => {
 
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
 		expect(screen.getByText('PNG')).toBeInTheDocument()
-		expect(screen.getByRole('button', { name: '내보내기' })).toBeDisabled()
+		await waitFor(() => expect(screen.getByRole('button', { name: '내보내기' })).toBeEnabled())
 	})
 
 	it('Shader Definition을 WebGL preview와 MP4 Export UI에 연결한다', async () => {

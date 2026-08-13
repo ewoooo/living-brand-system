@@ -1,5 +1,6 @@
 import {
 	parseStudioOutputCapability,
+	resolveStudioArtifactOutputFormats,
 	type StudioOutputCapability,
 } from '@/features/studio-export/studio-output'
 import {
@@ -58,6 +59,7 @@ export function parseGraphicStudioConfig(input: unknown): GraphicStudioConfig {
 	])
 	assertGraphicIdentity(config, input)
 	const output = parseStudioOutputCapability(value.output)
+	resolveStudioArtifactOutputFormats(config.artifacts, output.formats)
 	if (output.formats.includes('mp4') && !output.video?.mp4) {
 		throw new Error('GraphicStudioConfig MP4 capability가 필요합니다.')
 	}

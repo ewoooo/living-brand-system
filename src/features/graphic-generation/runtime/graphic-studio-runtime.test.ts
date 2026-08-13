@@ -11,7 +11,7 @@ import {
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import radialFlutedGlassRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/radial-fluted-glass/definition'
 import { createControllerValues } from '@/modules/studio-controller/controller-definition'
-import { createGraphicStudioPluginCatalog, defineGraphicStudioPlugin } from './graphic-plugin'
+import { createGraphicStudioPluginCatalog } from './graphic-plugin'
 import {
 	getGraphicStudioRuntimeBindings,
 	getGraphicStudioVectorArtifact,
@@ -24,12 +24,21 @@ describe('graphicStudioRuntime', () => {
 	it('Graphic 계약을 멱등하게 검증하고 잘못된 studio·type을 거부한다', () => {
 		expect(parseGraphicRuntimeManifest(parseGraphicRuntimeManifest(config))).toBe(config)
 		const effective = { ...config, output: resolveGraphicStudioOutput(config) }
+		expect(effective.output.formats).toEqual(['png', 'jpeg', 'svg'])
+		expect(resolveGraphicStudioOutput(radialFlutedGlassRuntimeManifest).formats).toEqual([
+			'png',
+			'jpeg',
+			'mp4',
+		])
 		expect(
 			parseGraphicStudioConfig({
 				...effective,
 				output: { ...effective.output, formats: ['png'] },
 			}).output.formats,
 		).toEqual(['png'])
+		expect(() =>
+			parseGraphicStudioConfig({ ...effective, output: { formats: ['tiff'] } }),
+		).toThrow('지원하지 않는 output format')
 		expect(() => parseGraphicRuntimeManifest({ ...config, studio: 'image' })).toThrow('studio')
 		expect(() => parseGraphicRuntimeManifest({ ...config, type: 'canvas' })).toThrow('type')
 		expect(() => parseGraphicRuntimeManifest({ ...config, unknown: true })).toThrow(
@@ -134,9 +143,9 @@ describe('graphicStudioRuntime', () => {
 	})
 
 	it('Catalog는 같은 stable ID의 Plugin을 중복 등록하지 않는다', () => {
-		const plugin = defineGraphicStudioPlugin({
+		const plugin = {
 			manifest: config,
-		})
+		}
 		expect(() => createGraphicStudioPluginCatalog([plugin, plugin])).toThrow(
 			'중복된 Graphic plugin',
 		)

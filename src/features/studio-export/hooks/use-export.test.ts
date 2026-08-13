@@ -12,11 +12,13 @@ describe('useExport', () => {
 	it('허용된 action만 한 번에 하나씩 실행하고 실패를 UI 상태로 반환한다', async () => {
 		type Request = Extract<ExportRequest, { format: 'png' | 'pdf' }>
 		const png = {
+			artifact: 'raster',
 			format: 'png',
 			colorProfile: { space: 'rgb', icc: 'srgb' },
 			options: { scale: 1, transparent: true },
 		} as const satisfies Request
 		const pdf = {
+			artifact: 'raster',
 			format: 'pdf',
 			colorProfile: { space: 'rgb', icc: 'srgb' },
 			options: { bleedMm: 0, ppi: 300 },

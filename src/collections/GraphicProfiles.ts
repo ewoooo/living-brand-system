@@ -11,6 +11,10 @@ import {
 } from './fields/studio-controller-field'
 import { draftVersions } from './shared'
 
+const graphicAdminRuntimeManifests = graphicRuntimeManifests.map(
+	({ artifacts, controller, id }) => ({ artifacts, controller, id }),
+)
+
 export const GraphicProfiles: CollectionConfig = {
 	slug: 'graphic-profiles',
 	dbName: 'graphic_profiles',
@@ -75,8 +79,11 @@ export const GraphicProfiles: CollectionConfig = {
 		},
 		studioControllerRestrictionsField({
 			source: 'graphic',
-			baseConfigs: graphicRuntimeManifests.map(({ id, controller }) => ({ id, controller })),
+			baseConfigs: graphicAdminRuntimeManifests,
 		}),
-		studioExportPolicyField(),
+		studioExportPolicyField({
+			source: 'graphic',
+			baseConfigs: graphicAdminRuntimeManifests,
+		}),
 	],
 }

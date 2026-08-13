@@ -48,6 +48,7 @@ export async function exportTemplatePrint({
 		formats: resolveStudioArtifactOutputFormats(
 			['raster'],
 			template.exportPolicy?.allowedFormats,
+			['print'],
 		),
 	}
 	if (!supportsStudioOutput(output, format)) throw new TemplatePrintUnavailableError()

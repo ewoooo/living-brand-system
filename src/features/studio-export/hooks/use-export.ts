@@ -12,7 +12,7 @@ import { type StudioOutputCapability, supportsStudioExportRequest } from '../stu
 
 const DEFAULT_EXPORT_ERROR = '파일을 내보내지 못했습니다. 잠시 후 다시 시도해 주세요.'
 
-/** Studio별 export adapter의 가용성·단일 실행·오류 UI 상태만 공통 소유한다. */
+/** Artifact adapter의 가용성·단일 실행·오류 UI 상태만 공통 소유한다. */
 export function useExport<Request extends ExportRequest>({
 	capability,
 	canExport,

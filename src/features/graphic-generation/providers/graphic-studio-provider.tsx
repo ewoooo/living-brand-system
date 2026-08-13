@@ -1,14 +1,6 @@
 'use client'
 
-import {
-	createContext,
-	type ReactNode,
-	useCallback,
-	useContext,
-	useMemo,
-	useRef,
-	useState,
-} from 'react'
+import { createContext, type ReactNode, useCallback, useMemo, useRef, useState } from 'react'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
 	acceptsControllerDraftValue,
@@ -19,7 +11,7 @@ import {
 	createControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 
-type GraphicStudioValue = {
+export type GraphicStudioValue = {
 	profiles: {
 		options: readonly GraphicStudioConfig[]
 		select: (profileId: string) => void
@@ -33,7 +25,7 @@ type GraphicStudioValue = {
 	}
 }
 
-const GraphicStudioContext = createContext<GraphicStudioValue | null>(null)
+export const GraphicStudioContext = createContext<GraphicStudioValue | null>(null)
 
 /**
  * 가변 그래픽 편집 세션의 단일 소유자 — Controller와 P5·Shader 캔버스는 이 컨텍스트만
@@ -119,12 +111,4 @@ export function GraphicStudioProvider({
 			{children}
 		</GraphicStudioContext.Provider>
 	)
-}
-
-export function useGraphicStudio() {
-	const context = useContext(GraphicStudioContext)
-	if (!context) {
-		throw new Error('useGraphicStudio는 GraphicStudioProvider 안에서만 호출할 수 있습니다.')
-	}
-	return context
 }

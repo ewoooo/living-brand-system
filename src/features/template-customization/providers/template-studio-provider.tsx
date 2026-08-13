@@ -5,14 +5,13 @@ import {
 	type ReactNode,
 	type RefObject,
 	useCallback,
-	useContext,
 	useDeferredValue,
 	useEffect,
 	useMemo,
 	useRef,
 	useState,
 } from 'react'
-import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
+import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { getGraphicStudioRuntimeBindings } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import {
 	acceptsImagePromptExecution,
@@ -86,7 +85,7 @@ export type TemplateBackgroundState = {
 
 export type TemplateBackgroundPatch = Partial<Pick<TemplateBackgroundState, 'imageMode' | 'prompt'>>
 
-type TemplateStudioValue = {
+export type TemplateStudioValue = {
 	navigation: GetCreateNavigationOutput
 	/** 템플릿 편집 계약 — Sidebar와 Canvas는 이 객체와 세션 state만 소비한다. */
 	config: TemplateConfig
@@ -109,7 +108,7 @@ type TemplateStudioValue = {
 		state: TemplateBackgroundState
 		contracts: readonly ResolvedTemplateImageConfig[]
 		featureBindings: ControllerRuntimeBindings
-		graphicConfigs: readonly GraphicRuntimeManifest[]
+		graphicConfigs: readonly GraphicStudioConfig[]
 		graphicBindings: ControllerRuntimeBindings
 		update: (patch: TemplateBackgroundPatch) => void
 		setColor: (hex: string | null) => void
@@ -131,7 +130,7 @@ type TemplateStudioValue = {
 	}
 }
 
-const TemplateStudioContext = createContext<TemplateStudioValue | null>(null)
+export const TemplateStudioContext = createContext<TemplateStudioValue | null>(null)
 
 /**
  * Template 편집 세션의 단일 소유자. Sidebar와 Canvas는 서로를 모르고 이 Context만 소비한다.
@@ -631,7 +630,7 @@ function selectBackgroundImageProfile(
 function selectBackgroundGraphicConfig(
 	current: TemplateBackgroundState,
 	configId: string,
-	configs: readonly GraphicRuntimeManifest[],
+	configs: readonly GraphicStudioConfig[],
 ): TemplateBackgroundState {
 	const config = configs.find((candidate) => candidate.id === configId)
 	if (!config) return current
@@ -646,7 +645,7 @@ function updateBackgroundGraphic(
 	current: TemplateBackgroundState,
 	controlId: string,
 	next: ControllerControlValue,
-	configs: readonly GraphicRuntimeManifest[],
+	configs: readonly GraphicStudioConfig[],
 	viewport: { width: number; height: number },
 ): TemplateBackgroundState {
 	const config = configs.find((candidate) => candidate.id === current.graphicConfigId)
@@ -804,12 +803,4 @@ function resolvedPrompt(prompt: string, contract: ResolvedTemplateImageConfig) {
 
 function isBackgroundType(value: string | null): value is TemplateBackgroundType {
 	return value === 'color' || value === 'image' || value === 'graphic'
-}
-
-export function useTemplateStudio() {
-	const context = useContext(TemplateStudioContext)
-	if (!context) {
-		throw new Error('useTemplateStudio는 TemplateStudioProvider 안에서만 호출할 수 있습니다.')
-	}
-	return context
 }

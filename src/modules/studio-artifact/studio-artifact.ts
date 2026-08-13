@@ -1,4 +1,4 @@
-export const STUDIO_ARTIFACT_KINDS = ['raster', 'vector', 'video'] as const
+export const STUDIO_ARTIFACT_KINDS = ['raster', 'vector', 'video', 'original'] as const
 
 export type StudioArtifactKind = (typeof STUDIO_ARTIFACT_KINDS)[number]
 
@@ -21,8 +21,9 @@ type Artifact<Kind extends StudioArtifactKind, Source> = {
 export type RasterArtifact<Source = unknown> = Artifact<'raster', Source>
 export type VectorArtifact<Source = unknown> = Artifact<'vector', Source>
 export type VideoArtifact<Source = unknown> = Artifact<'video', Source>
+export type OriginalArtifact<Source = unknown> = Artifact<'original', Source>
 
-export type StudioArtifact = RasterArtifact | VectorArtifact | VideoArtifact
+export type StudioArtifact = RasterArtifact | VectorArtifact | VideoArtifact | OriginalArtifact
 
 export type VectorScene = {
 	width: number
@@ -49,6 +50,24 @@ export type CanvasRasterSource = {
 	canvas: HTMLCanvasElement
 	render(width: number, height: number): void
 	restore(): void
+}
+
+export type HtmlRasterSource = {
+	height: number
+	html: string
+	width: number
+}
+
+export type ElementRasterSource = {
+	withElement<Result>(
+		read: (element: HTMLElement, width: number, height: number) => Promise<Result>,
+	): Promise<Result>
+}
+
+export type BlobOriginalSource = {
+	load(): Promise<Blob>
+	filename(blob: Blob): string
+	mimeType(blob: Blob): string
 }
 
 export type CanvasVideoSource = {

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { fitPreviewSize } from '@/components/studio/shared/fit-preview-size'
 import { Typography } from '@/components/ui/typography'
-import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
+import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
 	type GraphicRuntime,
 	getGraphicRuntimeAdapter,
@@ -82,7 +82,7 @@ export function TemplateCanvas() {
 }
 
 type TemplateGraphicBackgroundProps = {
-	config: GraphicRuntimeManifest
+	config: GraphicStudioConfig
 	values: ControllerValues
 	width: number
 	height: number

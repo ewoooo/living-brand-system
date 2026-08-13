@@ -17,7 +17,7 @@ import type { CmykColorProfile, ExportRequest, StudioOutputFormat } from '../exp
 import type { PrintPpi } from '../print-policy'
 
 export type TemplateExportRequest =
-	| Extract<ExportRequest, { format: 'png' }>
+	| Extract<ExportRequest, { format: 'png' | 'jpeg' }>
 	| (Extract<ExportRequest, { format: 'tiff' | 'pdf' }> & {
 			colorProfile: CmykColorProfile
 	  })
@@ -65,13 +65,22 @@ export function createTemplateExportRequest(
 	switch (format) {
 		case 'png':
 			return {
+				artifact: 'raster',
 				format,
 				colorProfile: { space: 'rgb', icc: 'srgb' },
 				options: { scale: 1, transparent: true },
 			}
+		case 'jpeg':
+			return {
+				artifact: 'raster',
+				format,
+				colorProfile: { space: 'rgb', icc: 'srgb' },
+				options: { quality: 90 },
+			}
 		case 'tiff':
 			return printPpi
 				? {
+						artifact: 'raster',
 						format,
 						colorProfile: { space: 'cmyk', icc: DEFAULT_CMYK_ICC_PROFILE },
 						options: { ppi: printPpi, compression: 'lzw' },
@@ -80,6 +89,7 @@ export function createTemplateExportRequest(
 		case 'pdf':
 			return printPpi
 				? {
+						artifact: 'raster',
 						format,
 						colorProfile: { space: 'cmyk', icc: DEFAULT_CMYK_ICC_PROFILE },
 						options: { ppi: printPpi, bleedMm: 0 },
@@ -97,6 +107,7 @@ export function supportsTemplateExport(
 ): boolean {
 	return (
 		format === 'png' ||
+		format === 'jpeg' ||
 		((format === 'tiff' || format === 'pdf') &&
 			Boolean(metadata.printPpi && metadata.templateVersion))
 	)

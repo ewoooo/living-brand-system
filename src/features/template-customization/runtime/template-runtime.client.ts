@@ -13,16 +13,13 @@ import type {
 	TemplateTextSlot,
 } from '@/features/template-customization/domain/template-config'
 import type {
+	HtmlRasterSource,
 	RasterArtifact,
 	StudioArtifactProducer,
 } from '@/modules/studio-artifact/studio-artifact'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
 
-export type TemplateRasterArtifactSource = {
-	height: number
-	html: string
-	width: number
-}
+export type TemplateRasterArtifactSource = HtmlRasterSource
 
 export type TemplateRasterArtifact = RasterArtifact<TemplateRasterArtifactSource>
 export type TemplateRasterArtifactProducer = StudioArtifactProducer<TemplateRasterArtifact>

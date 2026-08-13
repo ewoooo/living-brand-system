@@ -78,18 +78,15 @@ function renderModelCatalog(runtimes: GraphicRuntimeRegistration[]): string {
 		)
 		.join('\n')
 	const entries = runtimes
-		.map(
-			({ symbol }) =>
-				`\tdefineGraphicStudioPlugin({ manifest: ${symbol}Manifest, ...${symbol}Model }),`,
-		)
+		.map(({ symbol }) => `\t{ manifest: ${symbol}Manifest, ...${symbol}Model },`)
 		.join('\n')
 
-	return `${GENERATED_HEADER}import { defineGraphicStudioPlugin } from '../../runtime/graphic-plugin'
+	return `${GENERATED_HEADER}import type { GraphicStudioPlugin } from '../../runtime/graphic-plugin'
 ${imports}
 
 export const graphicStudioPlugins = [
 ${entries}
-] as const
+] as const satisfies readonly GraphicStudioPlugin[]
 `
 }
 

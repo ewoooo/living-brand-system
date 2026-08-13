@@ -1,6 +1,6 @@
 import {
-	type GraphicRuntimeManifest,
-	parseGraphicRuntimeManifest,
+	type GraphicStudioConfig,
+	parseGraphicStudioConfig,
 } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
 	getImageStudioControls,
@@ -123,7 +123,7 @@ export type TemplateConfig = StudioControllerConfig<'template', number> & {
 		slots: readonly TemplateConfigSlot[]
 		textColorControlId?: typeof TEXT_COLOR_CONTROL_ID
 		imageConfigs: readonly ImageStudioConfig[]
-		graphicConfigs: readonly GraphicRuntimeManifest[]
+		graphicConfigs: readonly GraphicStudioConfig[]
 		exportOption: {
 			printPpi?: PublishedHtmlTemplate['printPpi']
 			canvas: { width: number; height: number }
@@ -175,7 +175,7 @@ export function parseTemplateConfig(input: unknown): TemplateConfig {
 	}
 	const graphicConfigIds = new Set<string>()
 	for (const config of template.graphicConfigs) {
-		const parsed = parseGraphicRuntimeManifest(config)
+		const parsed = parseGraphicStudioConfig(config)
 		if (graphicConfigIds.has(parsed.id))
 			throw new Error(`TemplateConfig Graphic Config id가 중복되었습니다: ${parsed.id}`)
 		graphicConfigIds.add(parsed.id)
@@ -246,6 +246,11 @@ export function parseTemplateConfig(input: unknown): TemplateConfig {
 	const exportOption = templateRecord(template.exportOption, 'TemplateConfig exportOption')
 	assertTemplateKeys(exportOption, ['printPpi', 'canvas'])
 	if (exportOption.printPpi !== undefined) assertPositiveNumber(exportOption.printPpi, 'printPpi')
+	resolveStudioArtifactOutputFormats(
+		common.artifacts,
+		(root.output as StudioOutputCapability).formats,
+		exportOption.printPpi ? ['print'] : [],
+	)
 	const canvas = templateRecord(exportOption.canvas, 'TemplateConfig canvas')
 	assertTemplateKeys(canvas, ['width', 'height'])
 	assertPositiveNumber(canvas.width, 'canvas.width')
@@ -517,7 +522,7 @@ export function getTemplateRuntimeManifest({
 export function deriveTemplateConfig(
 	template: PublishedHtmlTemplate,
 	imageConfigs: readonly ImageStudioConfig[] = [],
-	graphicConfigs: readonly GraphicRuntimeManifest[] = [],
+	graphicConfigs: readonly GraphicStudioConfig[] = [],
 ): TemplateConfig {
 	const { html, nodeConfigs } = template
 	const textSlots = collectTemplateSlots(html, nodeConfigs)
@@ -581,6 +586,7 @@ export function deriveTemplateConfig(
 			formats: resolveStudioArtifactOutputFormats(
 				runtimeManifest.artifacts,
 				template.exportPolicy?.allowedFormats,
+				template.printPpi ? ['print'] : [],
 			),
 			colorProfiles: { rgb: ['srgb'], cmyk: ['cgats21-crpc6'] },
 		},

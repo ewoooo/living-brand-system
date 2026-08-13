@@ -1,5 +1,4 @@
 import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
-import { parseGraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
 import type { VectorSceneArtifact } from '@/modules/studio-artifact/studio-artifact'
 import type {
 	ControllerRuntimeBindings,
@@ -20,14 +19,6 @@ export type GraphicStudioPlugin<Id extends string = string> = {
 
 /** 자산 model 파일이 Manifest와 분리해 제공하는 순수 계산 adapter 계약. */
 export type GraphicModelAdapter = Omit<GraphicStudioPlugin, 'manifest'>
-
-/** 코드로 등록하는 Graphic Manifest를 공통 Config 경계에서 즉시 검증한다. */
-export function defineGraphicStudioPlugin<const Id extends string>(
-	plugin: GraphicStudioPlugin<Id>,
-): GraphicStudioPlugin<Id> {
-	parseGraphicRuntimeManifest(plugin.manifest)
-	return plugin
-}
 
 /** Plugin ID 중복을 거부하고 조회 전용 Catalog를 만든다. */
 export function createGraphicStudioPluginCatalog<

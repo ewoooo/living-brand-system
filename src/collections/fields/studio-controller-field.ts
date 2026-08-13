@@ -1,12 +1,16 @@
 import type { Field } from 'payload'
 import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
+import type { StudioRuntimeManifest } from '@/modules/studio-controller/controller-definition'
+
+type StudioAdminRuntimeSource = 'graphic' | 'image' | 'template'
+type StudioAdminBaseConfig = StudioRuntimeManifest & { id: string }
 
 export function studioControllerRestrictionsField({
 	source,
 	baseConfigs,
 }: {
-	source: 'graphic' | 'image' | 'template'
-	baseConfigs?: readonly unknown[]
+	source: StudioAdminRuntimeSource
+	baseConfigs?: readonly StudioAdminBaseConfig[]
 }): Field {
 	return {
 		name: 'controllerRestrictions',
@@ -25,10 +29,14 @@ export function studioControllerRestrictionsField({
 
 /** Exporter 호환 형식을 Admin이 추가하지 않고 좁히기만 하는 정책 필드다. */
 export function studioExportPolicyField({
+	source,
+	baseConfigs,
 	includeOriginal = false,
 }: {
+	source: StudioAdminRuntimeSource
+	baseConfigs?: readonly StudioAdminBaseConfig[]
 	includeOriginal?: boolean
-} = {}): Field {
+}): Field {
 	return {
 		name: 'exportPolicy',
 		type: 'group',
@@ -41,6 +49,14 @@ export function studioExportPolicyField({
 				hasMany: true,
 				options: [...STUDIO_OUTPUT_FORMAT_OPTIONS],
 				label: '허용 형식',
+				admin: {
+					components: {
+						Field: {
+							path: '/components/admin/studio/studio-output-formats-field#StudioOutputFormatsField',
+							clientProps: { source, baseConfigs },
+						},
+					},
+				},
 			},
 			...(includeOriginal
 				? [

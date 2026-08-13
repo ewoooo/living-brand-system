@@ -1,5 +1,5 @@
 import type { StudioArtifactKind } from '@/modules/studio-artifact/studio-artifact'
-import { EXPORTER_ARTIFACT_COMPATIBILITY } from './export-artifact'
+import { acceptsExportArtifact, type StudioExporterFeature } from './export-artifact'
 import type {
 	CmykIccProfile,
 	ExportRequest,
@@ -123,9 +123,10 @@ export function resolveStudioOutputFormats<Format extends StudioOutputFormat>(
 export function resolveStudioArtifactOutputFormats(
 	artifacts: readonly StudioArtifactKind[],
 	allowed: readonly string[] | null | undefined,
+	features: readonly StudioExporterFeature[] = [],
 ): readonly StudioOutputFormat[] {
 	const supported = STUDIO_OUTPUT_FORMATS.filter((format) =>
-		EXPORTER_ARTIFACT_COMPATIBILITY[format].some((kind) => artifacts.includes(kind)),
+		artifacts.some((kind) => acceptsExportArtifact(format, kind, features)),
 	)
 	return resolveStudioOutputFormats(supported, allowed)
 }
@@ -142,7 +143,7 @@ export function supportsStudioExportRequest(
 	capability: StudioOutputCapability,
 	request: ExportRequest,
 ): boolean {
-	if (request.format === 'original') return capability.original === true
+	if (request.artifact === 'original') return capability.original === true
 	if (!supportsStudioOutput(capability, request.format)) return false
 	if (!validRequestOptions(request)) return false
 
@@ -153,7 +154,7 @@ export function supportsStudioExportRequest(
 		if (!allowed?.includes(request.colorProfile.icc)) return false
 	}
 
-	if (request.format === 'mp4') {
+	if (request.artifact === 'video') {
 		const video = capability.video?.mp4
 		const spec = request.options
 		return Boolean(
@@ -171,21 +172,27 @@ export function supportsStudioExportRequest(
 }
 
 function validRequestOptions(request: ExportRequest): boolean {
-	switch (request.format) {
+	switch (request.artifact) {
 		case 'original':
 			return true
-		case 'png':
-			return Number.isFinite(request.options.scale) && request.options.scale > 0
-		case 'jpeg':
-			return request.options.quality > 0 && request.options.quality <= 100
-		case 'tiff':
-			return (
-				[72, 150, 300].includes(request.options.ppi) &&
-				request.options.compression === 'lzw'
-			)
-		case 'pdf':
-			return [72, 150, 300].includes(request.options.ppi) && request.options.bleedMm >= 0
-		case 'svg':
+		case 'raster':
+			switch (request.format) {
+				case 'png':
+					return Number.isFinite(request.options.scale) && request.options.scale > 0
+				case 'jpeg':
+					return request.options.quality > 0 && request.options.quality <= 100
+				case 'tiff':
+					return (
+						[72, 150, 300].includes(request.options.ppi) &&
+						request.options.compression === 'lzw'
+					)
+				case 'pdf':
+					return (
+						[72, 150, 300].includes(request.options.ppi) && request.options.bleedMm >= 0
+					)
+			}
+			return false
+		case 'vector':
 			return (
 				Number.isInteger(request.options.width) &&
 				request.options.width > 0 &&
@@ -193,7 +200,7 @@ function validRequestOptions(request: ExportRequest): boolean {
 				request.options.height > 0 &&
 				typeof request.options.outlineText === 'boolean'
 			)
-		case 'mp4':
+		case 'video':
 			return (
 				request.options.container === 'mp4' &&
 				request.options.codec === 'h264' &&

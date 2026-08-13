@@ -1,13 +1,16 @@
 'use client'
 
 import { Controller } from '@/components/studio/shared/controller'
+import {
+	CameraOrbitControl,
+	snapCameraAngle,
+} from '@/components/studio/shared/controller/camera-orbit-control'
 import { Button } from '@/components/ui/button'
 import {
 	type CameraAzimuth,
 	type CameraElevation,
 	resolveCameraControl,
 } from '@/features/image-generation/camera-control'
-import { ImageCameraOrbitControl, snapCameraAngle } from './image-camera-orbit-control'
 
 // 각 프리셋의 버킷(value)은 도메인 임계값과 어긋나지 않도록 resolveCameraControl로 도출한다.
 const AZIMUTH_PRESETS: { degrees: number; label: string; value: CameraAzimuth }[] = [
@@ -96,7 +99,7 @@ export function ImageCameraControl({
 					},
 				]}
 			>
-				<ImageCameraOrbitControl
+				<CameraOrbitControl
 					azimuthDeg={azimuthDeg}
 					azimuthLabel={azimuthPreset.label}
 					azimuthSteps={AZIMUTH_STEPS}

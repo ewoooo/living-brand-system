@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, type ReactNode, useContext, useState } from 'react'
+import { createContext, type ReactNode, useState } from 'react'
 import {
 	acceptsImagePromptExecution,
 	getImageColorAdjustmentControls,
@@ -21,7 +21,7 @@ import {
 	createControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 
-type ImageStudioValue = {
+export type ImageStudioValue = {
 	profiles: {
 		/** 프로파일 교체 후보 — 계약은 언제나 이 중 하나다. */
 		options: readonly ImageStudioConfig[]
@@ -75,7 +75,7 @@ type ImageStudioValue = {
 	}
 }
 
-const ImageStudioContext = createContext<ImageStudioValue | null>(null)
+export const ImageStudioContext = createContext<ImageStudioValue | null>(null)
 
 /**
  * 이미지 스튜디오 편집 세션의 단일 소유자 — Controller와 Canvas는 이 컨텍스트만 알고 서로를
@@ -221,14 +221,6 @@ export function ImageStudioProvider({
 	}
 
 	return <ImageStudioContext.Provider value={value}>{children}</ImageStudioContext.Provider>
-}
-
-export function useImageStudio() {
-	const context = useContext(ImageStudioContext)
-	if (!context) {
-		throw new Error('useImageStudio는 ImageStudioProvider 안에서만 호출할 수 있습니다.')
-	}
-	return context
 }
 
 function reconcileProfileValues(

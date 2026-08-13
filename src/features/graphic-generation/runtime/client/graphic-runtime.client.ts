@@ -14,14 +14,16 @@ import type {
 	ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 
+export type GraphicBrowserArtifacts = {
+	raster: RasterArtifact<CanvasRasterSource>
+	video?: VideoArtifact<CanvasVideoSource>
+}
+
 export type GraphicRuntime = {
 	update(values: ControllerValues): void
 	resize(width: number, height: number): void
 	getViewport(): { width: number; height: number }
-	artifacts: {
-		raster: RasterArtifact<CanvasRasterSource>
-		video?: VideoArtifact<CanvasVideoSource>
-	}
+	artifacts: GraphicBrowserArtifacts
 	destroy(): void
 }
 

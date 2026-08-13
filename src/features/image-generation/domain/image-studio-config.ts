@@ -86,6 +86,7 @@ export function parseImageStudioConfig(input: unknown): ImageStudioConfig {
 		throw new Error('ImageStudioConfig id: 정수여야 합니다.')
 	}
 	const output = parseStudioOutputCapability(config.output)
+	resolveStudioArtifactOutputFormats(common.artifacts, output.formats)
 	if (typeof output.original !== 'boolean') {
 		throw new Error('ImageStudioConfig output.original은 boolean이어야 합니다.')
 	}
@@ -217,7 +218,9 @@ export function deriveImageStudioConfig(
 				manifest.artifacts,
 				profile.exportPolicy?.allowedFormats,
 			),
-			original: Boolean(manifest.original && (profile.exportPolicy?.original ?? true)),
+			original: Boolean(
+				manifest.artifacts.includes('original') && (profile.exportPolicy?.original ?? true),
+			),
 			colorProfiles: { rgb: ['srgb'] },
 			packages: ['zip'],
 		},

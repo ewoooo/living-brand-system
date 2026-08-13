@@ -5,10 +5,8 @@ import { GraphicCanvas } from '@/components/studio/graphic/graphic-canvas'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { GraphicSidebar } from '@/components/studio/sidebar/graphic-sidebar'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
-import {
-	GraphicStudioProvider,
-	useGraphicStudio,
-} from '@/features/graphic-generation/hooks/use-graphic-studio'
+import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
+import { GraphicStudioProvider } from '@/features/graphic-generation/providers/graphic-studio-provider'
 import type { GraphicRuntime } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { useGraphicExport } from '@/features/studio-export/hooks/use-graphic-export'
 

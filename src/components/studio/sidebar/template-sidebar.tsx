@@ -109,7 +109,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 									value: candidate,
 									label:
 										printPpi && (candidate === 'tiff' || candidate === 'pdf')
-											? `CMYK ${FORMAT_LABELS.get(candidate) ?? candidate}`
+											? `${FORMAT_LABELS.get(candidate) ?? candidate}`
 											: (FORMAT_LABELS.get(candidate) ?? candidate),
 								}))}
 								value={exporting.format ?? ''}

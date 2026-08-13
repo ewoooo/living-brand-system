@@ -6,16 +6,23 @@ import {
 	type ImageStudioConfig,
 } from '@/features/image-generation/domain/image-studio-config'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
+import { ImageStudioProvider } from '@/features/image-generation/providers/image-studio-provider'
+import { createImageArtifacts } from '@/features/image-generation/runtime/image-artifact.client'
 import { useImageExport } from '@/features/studio-export/hooks/use-image-export'
-import { createImageRasterArtifact } from '@/features/studio-export/services/export-image.client'
 import type {
 	ControllerAvailability,
 	ControllerControlDefinition,
 } from '@/modules/studio-controller/controller-definition'
-import { ImageStudioProvider, useImageStudio } from './use-image-studio'
+import { useImageStudio } from './use-image-studio'
 
 const exportImageMocks = vi.hoisted(() => ({
-	artifact: vi.fn((source: unknown) => ({ kind: 'raster', source })),
+	artifacts: vi.fn((source: { images: readonly string[]; color: unknown }) => ({
+		raster: source.images.map(() => ({ kind: 'raster', source: { withElement: vi.fn() } })),
+		original: source.images.map(() => ({
+			kind: 'original',
+			source: { load: vi.fn(), filename: vi.fn(), mimeType: vi.fn() },
+		})),
+	})),
 	original: vi.fn().mockResolvedValue({
 		data: new Blob(),
 		filename: 'hd-image-1.png',
@@ -33,28 +40,13 @@ const exportImageMocks = vi.hoisted(() => ({
 	}),
 }))
 
-vi.mock('@/features/studio-export/services/export-image.client', () => ({
-	createImageRasterArtifact: exportImageMocks.artifact,
-	createImageExportSource: (
-		artifact: {
-			kind: 'raster'
-			source: { images: readonly string[]; color: unknown }
-		} | null,
-		selected: number | null,
-	) => {
-		if (!artifact) return {}
-		const src = artifact.source.images[selected ?? -1]
-		return {
-			original: (request: unknown) =>
-				exportImageMocks.original(src, selected, artifact.source.color, request),
-			raster: {
-				png: (request: unknown) =>
-					exportImageMocks.png(src, selected, artifact.source.color, request),
-				jpeg: (request: unknown) =>
-					exportImageMocks.jpeg(src, selected, artifact.source.color, request),
-			},
-		}
-	},
+vi.mock('@/features/image-generation/runtime/image-artifact.client', () => ({
+	createImageArtifacts: exportImageMocks.artifacts,
+}))
+vi.mock('@/features/studio-export/services/export-artifact.client', () => ({
+	exportOriginalArtifact: exportImageMocks.original,
+	exportElementRasterArtifactAsPng: exportImageMocks.png,
+	exportElementRasterArtifactAsJpeg: exportImageMocks.jpeg,
 }))
 vi.mock('@/features/studio-export/adapters/download-export-result.client', () => ({
 	downloadExportResult: vi.fn(),
@@ -200,8 +192,8 @@ function Probe() {
 	const result = results.result
 	const resultConfig = profiles.options.find((candidate) => candidate.id === result?.profileId)
 	const download = useImageExport({
-		artifact: result
-			? createImageRasterArtifact({ images: result.images, color: results.color })
+		artifacts: result
+			? createImageArtifacts({ images: result.images, color: results.color })
 			: null,
 		capability: resultConfig?.output ?? { formats: [], original: false },
 		selected: results.selected,
@@ -375,27 +367,11 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		fireEvent.click(screen.getByRole('button', { name: '원본 저장' }))
 
 		await waitFor(() =>
-			expect(exportImageMocks.original).toHaveBeenCalledWith('blob:1', 0, null, {
-				format: 'original',
-				options: {},
-				scope: 'selected',
-			}),
+			expect(exportImageMocks.original).toHaveBeenCalledWith(
+				expect.objectContaining({ kind: 'original' }),
+				0,
+			),
 		)
-	})
-
-	it('adapter가 지원하지 않는 Config 형식은 선택값으로 사용하지 않는다', () => {
-		const source = config(5)
-		exportImageMocks.png.mockClear()
-		renderStudio([
-			{
-				...source,
-				output: { ...source.output, formats: ['tiff'] },
-			},
-		])
-
-		expect(screen.getByTestId('download-format')).toHaveTextContent('형식 없음')
-		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
-		expect(exportImageMocks.png).not.toHaveBeenCalled()
 	})
 
 	it('패키지 capability가 없으면 선택 저장만 열고 전체 저장은 잠근다', () => {
@@ -413,14 +389,19 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
 
 		await waitFor(() =>
-			expect(exportImageMocks.jpeg).toHaveBeenCalledWith('blob:1', 0, null, {
-				format: 'jpeg',
-				colorProfile: { space: 'rgb', icc: 'srgb' },
-				options: { quality: 90 },
-				scope: 'selected',
-			}),
+			expect(exportImageMocks.jpeg).toHaveBeenCalledWith(
+				'hd-image-1',
+				expect.objectContaining({ kind: 'raster' }),
+				{
+					artifact: 'raster',
+					format: 'jpeg',
+					colorProfile: { space: 'rgb', icc: 'srgb' },
+					options: { quality: 90 },
+					scope: 'selected',
+				},
+			),
 		)
-		expect(exportImageMocks.artifact).toHaveBeenCalledWith({
+		expect(exportImageMocks.artifacts).toHaveBeenCalledWith({
 			images: ['blob:1'],
 			color: null,
 		})

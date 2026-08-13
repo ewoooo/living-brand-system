@@ -43,7 +43,7 @@ function cameraAngleDistance(left: number, right: number, circular: boolean) {
 	return circular ? Math.min(normalizedDistance, 360 - normalizedDistance) : distance
 }
 
-export function ImageCameraOrbitControl({
+export function CameraOrbitControl({
 	azimuthDeg,
 	azimuthLabel,
 	azimuthSteps,
@@ -420,7 +420,7 @@ export function ImageCameraOrbitControl({
 	return (
 		<div
 			ref={mountRef}
-			data-slot="image-camera-orbit-control"
+			data-slot="controller-camera-orbit-control"
 			role="img"
 			aria-label={`3D 카메라 시점: ${azimuthLabel}, ${elevationLabel}`}
 			className="relative size-full"

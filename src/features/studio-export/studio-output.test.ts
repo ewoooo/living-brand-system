@@ -13,7 +13,17 @@ describe('resolveStudioOutputFormats', () => {
 			'png',
 			'svg',
 		])
+		expect(resolveStudioArtifactOutputFormats(['raster'], undefined)).toEqual(['png', 'jpeg'])
+		expect(resolveStudioArtifactOutputFormats(['raster'], undefined, ['print'])).toEqual([
+			'png',
+			'jpeg',
+			'tiff',
+			'pdf',
+		])
 		expect(() => resolveStudioArtifactOutputFormats(['raster'], ['svg'])).toThrow(
+			'지원하지 않는 output format',
+		)
+		expect(() => resolveStudioArtifactOutputFormats(['raster'], ['tiff'])).toThrow(
 			'지원하지 않는 output format',
 		)
 	})
@@ -60,6 +70,7 @@ describe('StudioOutputCapability', () => {
 		expect(parseStudioOutputCapability(capability)).toBe(capability)
 		expect(
 			supportsStudioExportRequest(capability, {
+				artifact: 'video',
 				format: 'mp4',
 				options: {
 					container: 'mp4',
@@ -76,6 +87,7 @@ describe('StudioOutputCapability', () => {
 
 	it('상한을 넘거나 양수가 아닌 영상 요청을 거부한다', () => {
 		const request = {
+			artifact: 'video' as const,
 			format: 'mp4' as const,
 			options: {
 				container: 'mp4' as const,
@@ -91,7 +103,7 @@ describe('StudioOutputCapability', () => {
 	})
 
 	it('original은 format 목록이 아닌 별도 capability로 검증한다', () => {
-		const request = { format: 'original' as const, options: {} }
+		const request = { artifact: 'original' as const, options: {} }
 		expect(supportsStudioExportRequest({ formats: [], original: true }, request)).toBe(true)
 		expect(supportsStudioExportRequest({ formats: [] }, request)).toBe(false)
 	})
