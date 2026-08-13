@@ -1,13 +1,19 @@
 import {
+	Apps,
+	Badge,
 	Book,
 	Box,
+	Branch,
 	Bullhorn,
 	Camera,
+	ChartColumn,
 	ColorPalette,
 	Document,
 	Draw,
+	Earth,
 	Grid,
 	Idea,
+	Image,
 	Information,
 	ListChecked,
 	OverflowMenuHorizontal,
@@ -45,6 +51,16 @@ const SECTION_ICONS: Record<string, ReactNode> = {
 	stationery: <Document size={24} />,
 	package: <Box size={24} />,
 	etc: <OverflowMenuHorizontal size={24} />,
+
+	// Brand Elements. CI 3종은 한 계열로 읽히게 골랐다 — 표식 자체 / 갈라져 나온 것 / 밖으로 나간 것.
+	ci: <Badge size={24} />,
+	'subsidiary-ci': <Branch size={24} />,
+	'overseas-ci': <Earth size={24} />,
+	layout: <Grid size={24} />,
+	color: <ColorPalette size={24} />,
+	'key-visual': <Image size={24} />,
+	iconography: <Apps size={24} />,
+	infographic: <ChartColumn size={24} />,
 }
 
 export function GuidelineChapter({
