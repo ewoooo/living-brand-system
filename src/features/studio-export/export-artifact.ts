@@ -1,31 +1,24 @@
 import type { StudioArtifactKind } from '@/modules/studio-artifact/studio-artifact'
 import type { StudioOutputFormat } from './export-contract'
 
-export type StudioExporterFeature = 'print'
-
 type ExporterCompatibility = {
-	artifact: Exclude<StudioArtifactKind, 'original'>
-	requires?: StudioExporterFeature
+	artifacts: readonly Exclude<StudioArtifactKind, 'original'>[]
 }
 
 /** 파일 형식별 실제 Exporter 입력과 추가 요구사항을 정의하는 정본이다. */
 export const EXPORTER_ARTIFACT_COMPATIBILITY = {
-	png: { artifact: 'raster' },
-	jpeg: { artifact: 'raster' },
-	tiff: { artifact: 'raster', requires: 'print' },
-	pdf: { artifact: 'raster', requires: 'print' },
-	svg: { artifact: 'vector' },
-	mp4: { artifact: 'video' },
+	png: { artifacts: ['raster'] },
+	jpeg: { artifacts: ['raster'] },
+	tiff: { artifacts: ['raster'] },
+	pdf: { artifacts: ['raster'] },
+	svg: { artifacts: ['vector'] },
+	mp4: { artifacts: ['video', 'raster'] },
 } as const satisfies Record<StudioOutputFormat, ExporterCompatibility>
 
 export function acceptsExportArtifact(
 	format: StudioOutputFormat,
 	kind: StudioArtifactKind,
-	features: readonly StudioExporterFeature[] = [],
 ): boolean {
 	const compatibility: ExporterCompatibility = EXPORTER_ARTIFACT_COMPATIBILITY[format]
-	return (
-		compatibility.artifact === kind &&
-		(!compatibility.requires || features.includes(compatibility.requires))
-	)
+	return compatibility.artifacts.includes(kind as Exclude<StudioArtifactKind, 'original'>)
 }

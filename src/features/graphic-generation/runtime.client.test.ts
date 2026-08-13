@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { withCanvasRasterSource } from '@/modules/studio-artifact/studio-artifact'
 import { isOriginHandleHit } from './graphic-runtimes/forward-straight/runtime.client'
 import { createGraphicRasterArtifact } from './runtime/client/graphic-runtime.client'
 
@@ -26,8 +25,8 @@ describe('Forward Straight client runtime', () => {
 			render,
 		})
 
-		const frame = withCanvasRasterSource(artifact.source, 1920, 1080, (next) =>
-			next.toDataURL(),
+		const frame = artifact.source.withSurface({ width: 1920, height: 1080 }, (surface) =>
+			surface.kind === 'canvas' ? surface.element.toDataURL() : '',
 		)
 
 		expect(frame).toBe('data:image/png;base64,frame')
@@ -49,7 +48,9 @@ describe('Forward Straight client runtime', () => {
 		})
 
 		expect(() =>
-			withCanvasRasterSource(artifact.source, 1920, 1080, (next) => next.toDataURL()),
+			artifact.source.withSurface({ width: 1920, height: 1080 }, (surface) =>
+				surface.kind === 'canvas' ? surface.element.toDataURL() : '',
+			),
 		).toThrow('capture failed')
 		expect(render).toHaveBeenLastCalledWith(640, 480)
 	})

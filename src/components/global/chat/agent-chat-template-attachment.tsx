@@ -13,8 +13,10 @@ import {
 } from '@/components/ui/attachment'
 import { Typography } from '@/components/ui/typography'
 import type { AgentTemplateImageAttachment } from '@/features/agent-chat/services/agent-template-request.service'
-import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
-import type { TemplateExportMetadata } from '@/features/studio-export/services/template-export-policy'
+import {
+	type TemplateExportMetadata,
+	useTemplateExport,
+} from '@/features/studio-export/hooks/use-template-export'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import { createTemplateRasterArtifact } from '@/features/template-customization/runtime/template-runtime.client'
 import { createControllerValues } from '@/modules/studio-controller/controller-definition'
@@ -41,9 +43,8 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 	)
 	const exportMetadata: TemplateExportMetadata = {
 		fileName: attachment.name,
-		printPpi: attachment.printPpi,
-		templateId: attachment.templateId,
-		templateVersion: attachment.templateVersion,
+		width: attachment.width,
+		height: attachment.height,
 		controller: {
 			groups: attachment.controller.groups,
 			values: {

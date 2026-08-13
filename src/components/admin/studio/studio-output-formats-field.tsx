@@ -1,6 +1,6 @@
 'use client'
 
-import { FieldDescription, FieldError, FieldLabel, useField, useFormFields } from '@payloadcms/ui'
+import { FieldDescription, FieldError, FieldLabel, useField } from '@payloadcms/ui'
 import type { SelectFieldClientComponent } from 'payload'
 import type { ComponentProps } from 'react'
 import { useEffect } from 'react'
@@ -20,6 +20,10 @@ type StudioOutputFormatsFieldProps = ComponentProps<SelectFieldClientComponent> 
 	baseConfigs?: readonly StudioAdminBaseConfig[]
 }
 
+const OUTPUT_FORMAT_LABELS = new Map(
+	STUDIO_OUTPUT_FORMAT_OPTIONS.map(({ label, value }) => [value, label]),
+)
+
 /** 선택한 Runtime Artifact를 실제 Exporter가 만들 수 있는 형식만 Admin에 보여준다. */
 export function StudioOutputFormatsField({
 	path,
@@ -30,23 +34,19 @@ export function StudioOutputFormatsField({
 		readonly StudioOutputFormat[] | null | undefined
 	>({ path })
 	const manifest = useStudioRuntimeManifest(source, baseConfigs)
-	const printPpi = useFormFields(([fields]) => fields.printPpi?.value)
 	const formats = manifest
-		? resolveStudioArtifactOutputFormats(
-				manifest.artifacts,
-				undefined,
-				source === 'template' && printPpi ? ['print'] : [],
-			)
+		? resolveStudioArtifactOutputFormats(manifest.artifacts, undefined)
 		: []
 	const restricted = Array.isArray(value)
 	const selected = new Set(restricted ? value : formats)
+	const formatsKey = formats.join(',')
 
 	useEffect(() => {
 		if (!restricted) return
-		const supported = new Set(formats)
+		const supported = new Set(formatsKey.split(','))
 		const next = value.filter((format) => supported.has(format))
 		if (next.length !== value.length) setValue(next)
-	}, [formats, restricted, setValue, value])
+	}, [formatsKey, restricted, setValue, value])
 
 	return (
 		<fieldset className="field-type select mb-5">
@@ -56,9 +56,7 @@ export function StudioOutputFormatsField({
 				<p className="text-sm text-muted-foreground">Runtime을 먼저 선택해 주세요.</p>
 			) : (
 				<div className="flex flex-wrap gap-3">
-					{STUDIO_OUTPUT_FORMAT_OPTIONS.filter(({ value: format }) =>
-						formats.includes(format),
-					).map(({ label, value: format }) => (
+					{formats.map((format) => (
 						<label key={format} className="flex items-center gap-1.5 text-sm">
 							<input
 								type="checkbox"
@@ -73,7 +71,7 @@ export function StudioOutputFormatsField({
 									setValue(next.length === formats.length ? undefined : next)
 								}}
 							/>
-							{label}
+							{OUTPUT_FORMAT_LABELS.get(format)}
 						</label>
 					))}
 				</div>

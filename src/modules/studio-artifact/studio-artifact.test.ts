@@ -1,19 +1,27 @@
-// @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest'
-import { withCanvasRasterSource } from './studio-artifact'
+import { describe, expect, it } from 'vitest'
+import { getStudioArtifactKinds, parseStudioArtifactCapabilities } from './studio-artifact'
 
-describe('withCanvasRasterSource', () => {
-	it('임시 렌더 읽기가 실패해도 원래 상태를 복원한다', () => {
-		const render = vi.fn()
-		const restore = vi.fn()
-		const source = { canvas: document.createElement('canvas'), render, restore }
+describe('StudioArtifactCapabilities', () => {
+	it('Runtime Artifact 사양을 멱등 검증한다', () => {
+		const capabilities = {
+			raster: {},
+			video: {
+				fps: [24, 30] as const,
+				maxWidth: 1920,
+				maxHeight: 1080,
+				maxDurationSeconds: 10,
+			},
+		}
+		expect(parseStudioArtifactCapabilities(capabilities)).toBe(capabilities)
+		expect(getStudioArtifactKinds(capabilities)).toEqual(['raster', 'video'])
+	})
 
+	it('알 수 없는 Artifact와 잘못된 영상 사양을 거부한다', () => {
+		expect(() => parseStudioArtifactCapabilities({ document: {} })).toThrow('종류')
 		expect(() =>
-			withCanvasRasterSource(source, 1200, 800, () => {
-				throw new Error('read failed')
+			parseStudioArtifactCapabilities({
+				video: { fps: [120], maxWidth: 1920, maxHeight: 1080, maxDurationSeconds: 10 },
 			}),
-		).toThrow('read failed')
-		expect(render).toHaveBeenCalledWith(1200, 800)
-		expect(restore).toHaveBeenCalledOnce()
+		).toThrow('fps')
 	})
 })

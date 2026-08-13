@@ -3,7 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { ImageArtifacts } from '@/features/image-generation/runtime/image-artifact.client'
 import { exportResultsToZip } from '../adapters/export-results-to-zip.client'
-import { exportElementRasterArtifactAsPng } from '../services/export-artifact.client'
+import { executeArtifactExport } from '../services/export-artifact.client'
 import { useImageExport } from './use-image-export'
 
 vi.mock('../adapters/download-export-result.client', () => ({
@@ -17,19 +17,17 @@ vi.mock('../adapters/export-results-to-zip.client', () => ({
 	}),
 }))
 vi.mock('../services/export-artifact.client', () => ({
-	exportElementRasterArtifactAsPng: vi.fn((_name: string) =>
-		Promise.resolve({ data: new Blob(), filename: `${_name}.png`, mimeType: 'image/png' }),
+	executeArtifactExport: vi.fn(({ fileName }: { fileName: string }) =>
+		Promise.resolve({ data: new Blob(), filename: `${fileName}.png`, mimeType: 'image/png' }),
 	),
-	exportElementRasterArtifactAsJpeg: vi.fn(),
-	exportOriginalArtifact: vi.fn(),
 }))
 
 describe('useImageExport', () => {
 	it('all scope를 Artifact별로 실행한 뒤 ZIP delivery로 묶는다', async () => {
 		const artifacts = {
 			raster: [
-				{ kind: 'raster', source: { withElement: vi.fn() } },
-				{ kind: 'raster', source: { withElement: vi.fn() } },
+				{ kind: 'raster', source: { withSurface: vi.fn() } },
+				{ kind: 'raster', source: { withSurface: vi.fn() } },
 			],
 			original: [],
 		} as ImageArtifacts
@@ -38,13 +36,14 @@ describe('useImageExport', () => {
 				artifacts,
 				capability: { formats: ['png'], original: false, packages: ['zip'] },
 				selected: 0,
+				size: { width: 1024, height: 1024 },
 			}),
 		)
 
 		act(() => result.current.all.run())
 		await waitFor(() => expect(exportResultsToZip).toHaveBeenCalledOnce())
 
-		expect(exportElementRasterArtifactAsPng).toHaveBeenCalledTimes(2)
+		expect(executeArtifactExport).toHaveBeenCalledTimes(2)
 		expect(exportResultsToZip).toHaveBeenCalledWith({
 			format: 'zip',
 			filename: 'hd-images.zip',

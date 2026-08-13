@@ -20,14 +20,15 @@ describe('useExport', () => {
 		const pdf = {
 			artifact: 'raster',
 			format: 'pdf',
-			colorProfile: { space: 'rgb', icc: 'srgb' },
+			colorProfile: { space: 'cmyk', icc: 'cgats21-crpc6' },
 			options: { bleedMm: 0, ppi: 300 },
 		} as const satisfies Request
 		const execute = vi.fn().mockRejectedValue(new Error('내보내기 실패'))
 		const { result } = renderHook(() =>
 			useExport<Request>({
-				capability: { formats: ['png', 'pdf'] },
-				source: { raster: { png: execute } },
+				capability: { formats: ['png', 'pdf'], print: { ppi: [300] } },
+				canExport: (request) => request.format === 'png',
+				execute,
 			}),
 		)
 

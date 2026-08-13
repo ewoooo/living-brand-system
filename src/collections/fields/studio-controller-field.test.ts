@@ -63,6 +63,13 @@ describe('studioControllerRestrictionsField', () => {
 					},
 				},
 			})
+			const print = namedField(exportPolicy.fields, 'print')
+			const video = namedField(exportPolicy.fields, 'video')
+			if (print.type !== 'group' || video.type !== 'group') {
+				throw new Error('output detail policy must be groups')
+			}
+			expect(namedField(print.fields, 'allowedPpi')).toMatchObject({ type: 'json' })
+			expect(namedField(video.fields, 'allowedFps')).toMatchObject({ type: 'json' })
 		}
 	})
 })

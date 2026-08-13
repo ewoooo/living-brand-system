@@ -111,9 +111,9 @@ function createSafeExportStage(html: string): { holder: HTMLDivElement; stage: H
  * 검증된 canonical HTML을 안전한 export stage로 구성하고 리소스 로드를 기다리는 client renderer.
  * DOM 구성과 브라우저 리소스 I/O는 이 adapter가 소유한다.
  */
-export async function withSafeExportStage<T>(
+export async function withTemplateRasterStage<T>(
 	html: string,
-	exportStage: (stage: HTMLElement) => Promise<T>,
+	exportStage: (stage: HTMLElement) => T | Promise<T>,
 ): Promise<T> {
 	const { holder, stage } = createSafeExportStage(html)
 	document.body.appendChild(holder)

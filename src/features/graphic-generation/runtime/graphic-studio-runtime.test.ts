@@ -24,10 +24,12 @@ describe('graphicStudioRuntime', () => {
 	it('Graphic 계약을 멱등하게 검증하고 잘못된 studio·type을 거부한다', () => {
 		expect(parseGraphicRuntimeManifest(parseGraphicRuntimeManifest(config))).toBe(config)
 		const effective = { ...config, output: resolveGraphicStudioOutput(config) }
-		expect(effective.output.formats).toEqual(['png', 'jpeg', 'svg'])
+		expect(effective.output.formats).toEqual(['png', 'jpeg', 'tiff', 'pdf', 'svg', 'mp4'])
 		expect(resolveGraphicStudioOutput(radialFlutedGlassRuntimeManifest).formats).toEqual([
 			'png',
 			'jpeg',
+			'tiff',
+			'pdf',
 			'mp4',
 		])
 		expect(
@@ -36,9 +38,13 @@ describe('graphicStudioRuntime', () => {
 				output: { ...effective.output, formats: ['png'] },
 			}).output.formats,
 		).toEqual(['png'])
-		expect(() =>
-			parseGraphicStudioConfig({ ...effective, output: { formats: ['tiff'] } }),
-		).toThrow('지원하지 않는 output format')
+		const radial = {
+			...radialFlutedGlassRuntimeManifest,
+			output: resolveGraphicStudioOutput(radialFlutedGlassRuntimeManifest),
+		}
+		expect(() => parseGraphicStudioConfig({ ...radial, output: { formats: ['svg'] } })).toThrow(
+			'지원하지 않는 output format',
+		)
 		expect(() => parseGraphicRuntimeManifest({ ...config, studio: 'image' })).toThrow('studio')
 		expect(() => parseGraphicRuntimeManifest({ ...config, type: 'canvas' })).toThrow('type')
 		expect(() => parseGraphicRuntimeManifest({ ...config, unknown: true })).toThrow(
@@ -48,7 +54,7 @@ describe('graphicStudioRuntime', () => {
 
 	it('plugin catalog가 config·Vector Artifact projector·명시적 binding을 함께 제공한다', () => {
 		expect(graphicRuntimeManifests).toContain(config)
-		expect(config.artifacts).toEqual(['vector', 'raster'])
+		expect(config.artifacts).toEqual({ vector: {}, raster: {} })
 		const values = createControllerValues(config.controller.groups)
 		expect(
 			getGraphicStudioVectorArtifact(config, values, { width: 800, height: 600 }),
@@ -63,7 +69,15 @@ describe('graphicStudioRuntime', () => {
 		const values = createControllerValues(shaderConfig.controller.groups)
 
 		expect(graphicRuntimeManifests).toContain(shaderConfig)
-		expect(shaderConfig.artifacts).toEqual(['raster', 'video'])
+		expect(shaderConfig.artifacts).toEqual({
+			raster: {},
+			video: {
+				fps: [24, 30, 60],
+				maxDurationSeconds: 10,
+				maxHeight: 1080,
+				maxWidth: 1920,
+			},
+		})
 		expect(
 			getGraphicStudioVectorArtifact(shaderConfig, values, { width: 800, height: 600 }),
 		).toBeNull()

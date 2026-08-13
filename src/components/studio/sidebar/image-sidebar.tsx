@@ -6,6 +6,7 @@ import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-pro
 import { ImageProfilePicker } from '@/components/studio/image/image-profile-picker'
 import { Controller } from '@/components/studio/shared/controller'
 import { ControllerRenderer } from '@/components/studio/shared/controller-renderer'
+import { PrintControls, VideoControls } from '@/components/studio/shared/output-controls'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
@@ -46,6 +47,7 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 		)
 		return controls.length > 0 ? [{ ...group, controls }] : []
 	})
+	const video = download.format === 'mp4' ? config.output.video?.mp4 : undefined
 
 	return (
 		// 자산 브라우저의 열림은 편집 세션이 아니라 이 화면의 표현 상태다 — 킷이 소유한다(Provider에 넣지 않는다).
@@ -101,6 +103,25 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 									}
 								/>
 							</Controller.Row>
+							{(download.format === 'tiff' || download.format === 'pdf') &&
+								download.ppi &&
+								config.output.print && (
+									<PrintControls
+										ppi={download.ppi}
+										options={config.output.print.ppi}
+										onChange={download.setPpi}
+									/>
+								)}
+							{video && download.fps && (
+								<VideoControls
+									fps={download.fps}
+									fpsOptions={video.fps}
+									durationSeconds={download.durationSeconds}
+									maxDurationSeconds={video.maxDurationSeconds}
+									onFpsChange={download.setFps}
+									onDurationChange={download.setDuration}
+								/>
+							)}
 							{download.original.available && (
 								<Controller.Row label="Original">
 									<div className="flex gap-1">

@@ -20,6 +20,7 @@ import {
 } from '@/features/template-customization/domain/template-config'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 import { TemplateStudioProvider } from '@/features/template-customization/providers/template-studio-provider'
+import type { TemplateRasterArtifactProducer } from '@/features/template-customization/runtime/template-runtime.client'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import { TemplateGenerator as TemplateGeneratorView } from './template-generator'
 
@@ -33,9 +34,7 @@ const mocks = vi.hoisted(() => ({
 	requestImageGeneration: vi.fn(),
 	resizeGraphicPreview: vi.fn(),
 	resizeObserverCallback: undefined as ResizeObserverCallback | undefined,
-	templateArtifact: undefined as
-		| (() => { kind: 'raster'; source: { height: number; html: string; width: number } })
-		| undefined,
+	templateArtifact: undefined as TemplateRasterArtifactProducer | undefined,
 	updateGraphicPreview: vi.fn(),
 }))
 
@@ -190,9 +189,8 @@ function useTestTemplateExport() {
 		capability: config.output,
 		metadata: {
 			fileName: template.name,
-			printPpi: template.printPpi,
-			templateId: template.id,
-			templateVersion: template.templateVersion,
+			width: config.template.exportOption.canvas.width,
+			height: config.template.exportOption.canvas.height,
 			controller: {
 				groups: config.controller.groups,
 				values: execution.controllerValues,
@@ -374,7 +372,7 @@ describe('TemplateGenerator', () => {
 		expect(mocks.captureGraphicFrame).toHaveBeenCalledTimes(2)
 		expect(artifact).toMatchObject({
 			kind: 'raster',
-			source: { height: 300, width: 400 },
+			source: { withSurface: expect.any(Function) },
 		})
 	})
 
@@ -832,11 +830,9 @@ describe('TemplateGenerator', () => {
 		expect(canvasOf().style.background).toBe('transparent')
 	})
 
-	it('선택한 포맷으로 내보낸다 — 편집 계약(printPpi 정책)이 허용한 포맷만 목록에 오른다', async () => {
+	it('선택한 Effective 포맷으로 내보낸다', async () => {
 		const user = userEvent.setup()
-		render(
-			<TemplateGenerator navigation={navigation} template={{ ...template, printPpi: 150 }} />,
-		)
+		render(<TemplateGenerator navigation={navigation} template={template} />)
 
 		screen.getByRole('combobox', { name: 'Format' }).focus()
 		await user.keyboard('{ArrowDown}')
@@ -1200,7 +1196,7 @@ function createImageConfig(
 	const ratios = ['1:1', '4:3', '16:9'] as const
 	return {
 		studio: 'image',
-		artifacts: ['raster'],
+		artifacts: { raster: {}, original: {} },
 		id,
 		version: 1,
 		name: id === 11 ? '기본 프로파일' : `프로파일 ${id}`,

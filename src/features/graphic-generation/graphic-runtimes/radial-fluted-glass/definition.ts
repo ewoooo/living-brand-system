@@ -69,7 +69,15 @@ const radialFlutedGlassRuntimeManifest = defineGraphicRuntime({
 	version: 1,
 	name: 'Radial Fluted Glass',
 	type: 'shader',
-	artifacts: ['raster', 'video'],
+	artifacts: {
+		raster: {},
+		video: {
+			fps: [24, 30, 60],
+			maxWidth: 1920,
+			maxHeight: 1080,
+			maxDurationSeconds: 10,
+		},
+	},
 	controller: {
 		groups: [
 			{

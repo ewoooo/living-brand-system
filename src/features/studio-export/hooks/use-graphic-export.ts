@@ -1,18 +1,14 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import type { GraphicBrowserArtifacts } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { getGraphicStudioVectorArtifact } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
 import type { ExportRequest, StudioOutputFormat, VideoExportSpec } from '../export-contract'
-import type { StudioExportSource } from '../services/execute-studio-export'
-import {
-	exportCanvasRasterArtifactAsJpeg,
-	exportCanvasRasterArtifactAsPng,
-	exportVectorArtifactAsSvg,
-	exportVideoArtifactAsMp4,
-} from '../services/export-artifact.client'
+import type { PrintPpi } from '../print-policy'
+import { createRasterExportRequest } from '../services/create-raster-export-request'
+import { executeArtifactExport } from '../services/export-artifact.client'
 import { useExport } from './use-export'
 
 type GraphicOutputSize = { width: number; height: number }
@@ -31,11 +27,17 @@ export type GraphicOutputDraft =
 			width: number | null
 			height: number | null
 	  }
+	| {
+			format: 'tiff' | 'pdf'
+			width: number | null
+			height: number | null
+			ppi: PrintPpi
+	  }
 
 export type GraphicExportView = ReturnType<typeof useGraphicExport>['output']
 type GraphicExportRequest =
-	| Extract<ExportRequest, { format: 'svg' | 'mp4' }>
-	| (Extract<ExportRequest, { artifact: 'raster'; format: 'png' | 'jpeg' }> & {
+	| Extract<ExportRequest, { artifact: 'vector' | 'video' }>
+	| (Extract<ExportRequest, { artifact: 'raster' }> & {
 			size: GraphicOutputSize
 	  })
 
@@ -125,48 +127,40 @@ export function useGraphicExport({
 		},
 		[config.output.video, setDraft],
 	)
+	const setPpi = useCallback(
+		(ppi: PrintPpi) => {
+			if (!config.output.print?.ppi.includes(ppi)) return
+			setDraft((current) =>
+				current?.format === 'tiff' || current?.format === 'pdf'
+					? { ...current, ppi }
+					: current,
+			)
+		},
+		[config.output.print, setDraft],
+	)
 	const createVectorArtifact = useCallback(
 		(width: number, height: number) =>
 			getGraphicStudioVectorArtifact(config, values, { width, height }),
 		[config, values],
 	)
-	const source = useMemo((): StudioExportSource<GraphicExportRequest> => {
-		const raster = artifacts?.raster
-		const video = artifacts?.video
-		return {
-			raster: raster
-				? {
-						png: (request) =>
-							exportCanvasRasterArtifactAsPng(
-								config.id,
-								raster,
-								request,
-								request.size,
-							),
-						jpeg: (request) =>
-							exportCanvasRasterArtifactAsJpeg(
-								config.id,
-								raster,
-								request,
-								request.size,
-							),
-					}
-				: undefined,
-			vector: {
-				svg: (request) => {
-					const artifact = createVectorArtifact(
-						request.options.width,
-						request.options.height,
-					)
-					if (!artifact) throw new Error('SVG export is unavailable.')
-					return exportVectorArtifactAsSvg(config.id, artifact)
-				},
-			},
-			video: video
-				? { mp4: (request) => exportVideoArtifactAsMp4(config.id, video, request) }
-				: undefined,
-		}
-	}, [artifacts, config.id, createVectorArtifact])
+	const execute = useCallback(
+		(request: GraphicExportRequest) => {
+			const artifact =
+				request.artifact === 'raster'
+					? artifacts?.raster
+					: request.artifact === 'video'
+						? artifacts?.video
+						: createVectorArtifact(request.options.width, request.options.height)
+			if (!artifact) throw new Error(`${request.artifact} export is unavailable.`)
+			return executeArtifactExport({
+				artifact,
+				fileName: config.id,
+				renderSize: request.artifact === 'raster' ? request.size : undefined,
+				request,
+			})
+		},
+		[artifacts, config.id, createVectorArtifact],
+	)
 	const graphicExport = useExport<GraphicExportRequest>({
 		capability: config.output,
 		canExport: (request) => {
@@ -181,7 +175,7 @@ export function useGraphicExport({
 					return Boolean(artifacts?.video)
 			}
 		},
-		source,
+		execute,
 	})
 	const request = createGraphicExportRequest(config, draft)
 
@@ -195,6 +189,7 @@ export function useGraphicExport({
 			setSize,
 			setFps,
 			setDuration,
+			setPpi,
 			run: () => {
 				if (request) void graphicExport.run(request)
 			},
@@ -226,9 +221,16 @@ function createGraphicOutputDraft(
 			durationSeconds: Math.min(5, video.maxDurationSeconds),
 		}
 	}
-	return format === 'png' || format === 'jpeg'
-		? { format, width: viewport?.width ?? null, height: viewport?.height ?? null }
-		: null
+	if (format === 'png' || format === 'jpeg') {
+		return { format, width: viewport?.width ?? null, height: viewport?.height ?? null }
+	}
+	if (format === 'tiff' || format === 'pdf') {
+		const ppi = config.output.print?.ppi[0]
+		return ppi
+			? { format, width: viewport?.width ?? null, height: viewport?.height ?? null, ppi }
+			: null
+	}
+	return null
 }
 
 function createGraphicExportRequest(
@@ -248,47 +250,44 @@ function createGraphicExportRequest(
 			options: { width: draft.width, height: draft.height, outlineText: false },
 		}
 	}
-	if (draft.format === 'png' || draft.format === 'jpeg') {
+	if (
+		draft.format === 'png' ||
+		draft.format === 'jpeg' ||
+		draft.format === 'tiff' ||
+		draft.format === 'pdf'
+	) {
 		if (draft.width === null || draft.height === null) return null
 		const size = { width: draft.width, height: draft.height }
-		return draft.format === 'png'
-			? {
-					artifact: 'raster',
-					format: draft.format,
-					colorProfile: {
-						space: 'rgb',
-						icc: config.output.colorProfiles?.rgb?.[0] ?? 'srgb',
-					},
-					options: { scale: 1, transparent: true },
-					size,
-				}
-			: {
-					artifact: 'raster',
-					format: draft.format,
-					colorProfile: {
-						space: 'rgb',
-						icc: config.output.colorProfiles?.rgb?.[0] ?? 'srgb',
-					},
-					options: { quality: 90 },
-					size,
-				}
+		const request = createRasterExportRequest(draft.format, config.output, {
+			...size,
+			ppi: 'ppi' in draft ? draft.ppi : undefined,
+		})
+		return request ? { ...request, size } : null
 	}
 	if (draft.format !== 'mp4') return null
 	const video = config.output.video?.mp4
 	if (!video) return null
-	return {
-		artifact: 'video',
-		format: 'mp4',
-		options: {
-			container: 'mp4',
-			codec: video.codec,
-			colorSpace: video.colorSpace,
-			width: draft.width,
-			height: draft.height,
-			fps: draft.fps,
-			durationSeconds: draft.durationSeconds,
-		},
+	const options = {
+		container: 'mp4' as const,
+		codec: video.codec,
+		colorSpace: video.colorSpace,
+		width: draft.width,
+		height: draft.height,
+		fps: draft.fps,
+		durationSeconds: draft.durationSeconds,
 	}
+	return config.artifacts.video
+		? {
+				artifact: 'video',
+				format: 'mp4',
+				options,
+			}
+		: {
+				artifact: 'raster',
+				format: 'mp4',
+				options,
+				size: { width: draft.width, height: draft.height },
+			}
 }
 
 function validOutputSize(size: GraphicOutputSize): boolean {

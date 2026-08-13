@@ -6,6 +6,11 @@ import {
 	ControllerControlRenderer,
 	ControllerGroupRenderer,
 } from '@/components/studio/shared/controller-renderer'
+import {
+	ExportAction,
+	PrintControls,
+	VideoControls,
+} from '@/components/studio/shared/output-controls'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { BackgroundSection } from '@/components/studio/template/background-section'
 import { ImageSlotInput } from '@/components/studio/template/image-slot-input'
@@ -14,7 +19,6 @@ import {
 	ImageTransformControl,
 } from '@/components/studio/template/image-transform-control'
 import { TextSlotInput } from '@/components/studio/template/text-slot-input'
-import { Button } from '@/components/ui/button'
 import {
 	Select,
 	SelectContent,
@@ -29,7 +33,6 @@ import {
 	type StudioOutputFormat,
 } from '@/features/studio-export/export-contract'
 import type { TemplateExportView } from '@/features/studio-export/hooks/use-template-export'
-import { pixelsToMillimeters } from '@/features/studio-export/print-policy'
 import {
 	findTemplateControl,
 	findTemplateControlGroup,
@@ -54,7 +57,8 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 		image: imageSlots,
 		background: backgroundSlot,
 	} = partitionTemplateSlots(config.template.slots)
-	const { canvas, printPpi } = config.template.exportOption
+	const { canvas } = config.template.exportOption
+	const video = exporting.format === 'mp4' ? config.output.video?.mp4 : undefined
 	const backgroundTypeControl = backgroundSlot
 		? findTemplateControl(config, backgroundSlot.typeControlId)
 		: undefined
@@ -88,29 +92,14 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 						</div>
 						<Controller.Row label="Size" readonly>
 							<span className="text-sm text-muted-foreground">
-								{printPpi
-									? `${pixelsToMillimeters(canvas.width, printPpi).toFixed(1)} × ${pixelsToMillimeters(canvas.height, printPpi).toFixed(1)}mm`
-									: `${canvas.width} × ${canvas.height}px`}
+								{canvas.width} × {canvas.height}px
 							</span>
 						</Controller.Row>
-						{printPpi && (
-							<Controller.Row label="Resolution" readonly>
-								<span className="text-sm text-muted-foreground">{printPpi}ppi</span>
-							</Controller.Row>
-						)}
-						{printPpi && (
-							<Controller.Row label="Color Profile" readonly>
-								<span className="text-sm text-muted-foreground">CMYK</span>
-							</Controller.Row>
-						)}
 						<Controller.Row label="Format">
 							<Controller.Select
 								options={exporting.formats.map((candidate) => ({
 									value: candidate,
-									label:
-										printPpi && (candidate === 'tiff' || candidate === 'pdf')
-											? `${FORMAT_LABELS.get(candidate) ?? candidate}`
-											: (FORMAT_LABELS.get(candidate) ?? candidate),
+									label: FORMAT_LABELS.get(candidate) ?? candidate,
 								}))}
 								value={exporting.format ?? ''}
 								onChange={(value) =>
@@ -118,21 +107,32 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 								}
 							/>
 						</Controller.Row>
-					</div>
-					<div className="flex flex-col gap-2">
-						<Button
-							className="h-11 w-full"
-							onClick={exporting.run}
-							disabled={exporting.busy || !exporting.canExport}
-						>
-							{exporting.busy ? '내보내는 중...' : '내보내기'}
-						</Button>
-						{exporting.error && (
-							<Typography role="alert" size="sm" className="text-destructive">
-								{exporting.error}
-							</Typography>
+						{(exporting.format === 'tiff' || exporting.format === 'pdf') &&
+							exporting.ppi &&
+							config.output.print && (
+								<PrintControls
+									ppi={exporting.ppi}
+									options={config.output.print.ppi}
+									onChange={exporting.setPpi}
+								/>
+							)}
+						{video && exporting.fps && (
+							<VideoControls
+								fps={exporting.fps}
+								fpsOptions={video.fps}
+								durationSeconds={exporting.durationSeconds}
+								maxDurationSeconds={video.maxDurationSeconds}
+								onFpsChange={exporting.setFps}
+								onDurationChange={exporting.setDuration}
+							/>
 						)}
 					</div>
+					<ExportAction
+						busy={exporting.busy}
+						disabled={!exporting.canExport}
+						error={exporting.error}
+						onExport={exporting.run}
+					/>
 				</>
 			}
 		>

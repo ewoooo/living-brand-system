@@ -5,7 +5,6 @@ import {
 	type GraphicRuntimeAdapter,
 } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import type {
-	CanvasRasterSource,
 	CanvasVideoSource,
 	RasterArtifact,
 	VideoArtifact,
@@ -31,7 +30,7 @@ export type RadialFlutedGlassRuntime = {
 	resize(width: number, height: number): void
 	getViewport(): { width: number; height: number }
 	artifacts: {
-		raster: RasterArtifact<CanvasRasterSource>
+		raster: RasterArtifact
 		video: VideoArtifact<CanvasVideoSource>
 	}
 	destroy(): void

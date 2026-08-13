@@ -147,7 +147,12 @@ studio·global·home 같은 표면의 화면 컴포넌트도 위 계약을 그�
 
 ```ts
 type StudioRuntimeManifest = {
-	artifacts: readonly ('raster' | 'vector' | 'video')[]
+	artifacts: {
+		raster?: {}
+		vector?: {}
+		video?: { fps: readonly (24 | 30 | 60)[]; maxWidth: number; maxHeight: number; maxDurationSeconds: number }
+		original?: {}
+	}
 	controller: { groups: readonly ControllerGroupDefinition[] }
 }
 
@@ -163,7 +168,9 @@ Runtime Manifest는 정적 하드코딩을 의미하지 않습니다. Graphic은
 
 Template·Image·Graphic Config는 이 Manifest 구조를 그대로 쓰고, 실행에 필요한 도메인 descriptor·control id binding·Effective `output`을 확장합니다. `Runtime Manifest + Admin feature/controller restrictions + Exporter 호환성/출력 제한 → Effective StudioConfig`의 적용은 순수하고 멱등적이어야 합니다. Studio Provider는 공통화하지 않습니다. 각 Provider가 자기 도메인의 세션과 실행 결과를 소유합니다.
 
-`output.formats`는 `Runtime Artifact → 실제 Exporter가 변환 가능한 형식 → Admin exportPolicy.allowedFormats` 순서로 파생합니다. 공통 기본 변환은 Raster→PNG/JPEG, Vector→SVG, Video→MP4이고, TIFF/PDF는 별도 print capability가 있을 때만 Raster 형식에 추가합니다. Admin은 Exporter가 지원하지 않는 형식을 추가할 수 없고 좁힐 수만 있습니다. 저장된 `exportPolicy`와 Effective Config의 `output`은 서로 다른 계약입니다. 형식 선택은 Controller Definition에 중복하지 않습니다. Generator의 Export 연결 계층이 `config.output`과 Artifact를 결합하고, `Controller.Footer`는 그 결과인 export view model만 표시합니다. 공통 `useExport.canExport(request)`가 Effective capability·source adapter·도메인 실행 조건을 함께 판정합니다. UI는 이 boolean을 재해석하지 않고 버튼 상태에만 사용하며 `useExport.run()`은 실행 시 같은 판정을 다시 적용합니다. `ExportRequest`는 먼저 `raster | vector | video | original` Artifact로 분기하고, 파일 형식은 변환이 필요한 앞의 세 Artifact 안에서만 선택합니다. Image 원본은 파일 형식이 아니므로 `OriginalArtifact`, `output.original` boolean, format 없는 Original 요청으로 표현합니다. 형식 분기는 Export 계층만 소유하며 Runtime·Provider·Canvas는 출력 형식을 해석하지 않습니다.
+`output.formats`는 `Runtime Artifact 사양 → 실제 Exporter 호환성 → Admin exportPolicy` 순서로 파생합니다. 공통 변환은 Raster→PNG/JPEG/TIFF/PDF/MP4, Vector→SVG, Video→MP4입니다. 실제 Video Artifact가 있으면 시간 기반 producer를 쓰고, Raster→MP4는 정지 프레임 영상입니다. Admin은 형식뿐 아니라 PPI·FPS·크기·길이 상한도 좁힐 수만 있습니다. 저장된 `exportPolicy`와 Effective Config의 `output`은 서로 다른 계약입니다.
+
+형식 선택은 Controller Definition에 중복하지 않습니다. 세 Studio의 Export hook은 Artifact 선택과 batch/ZIP 같은 전달 정책만 조정하고, 모든 형식 분기와 인코딩은 공통 `executeArtifactExport()`가 소유합니다. `Controller.Footer`는 그 결과인 export view model만 표시합니다. 공통 `useExport.canExport(request)`가 Effective capability·Artifact 가용성·도메인 실행 조건을 함께 판정하고, `run()`은 실행 시 같은 판정을 다시 적용합니다. `ExportRequest`는 먼저 `raster | vector | video | original` Artifact로 분기합니다. Image 원본은 파일 형식이 아니므로 `OriginalArtifact`, `output.original` boolean, format 없는 Original 요청으로 표현합니다. Runtime·Provider·Canvas는 출력 형식을 해석하지 않습니다.
 
 직렬화 가능한 데이터 어휘의 정본은 `src/modules/studio-controller/controller-definition.ts`의 `ControllerControlDefinition`입니다. Definition에는 `kind`·`defaultValue`·선택지·레인지 같은 정적 정의만 싣습니다. 현재 값은 session values에, `error`·런타임 availability·대상 기하는 runtime bindings에 둡니다. `ControllerRenderer`는 `groups`와 이 두 런타임 입력을 결합해 `Group`과 primitive만 그립니다. 별도 배치가 필요한 footer·Template slot은 `ControllerControlRenderer`로 같은 단일 control 투영을 재사용합니다. 공통 `StudioSidebar`가 `Root`·`Content`·`Footer` 배치를, Domain Sidebar가 내부 복합 UI를 소유합니다. ReactNode·콜백·DOM 참조·formatter 함수는 Definition에 넣지 않습니다.
 
@@ -250,7 +257,7 @@ type ControllerInteraction = 'idle' | 'hover' | 'focused' | 'error'
 - **사이드바와 캔버스는 서로 모릅니다.** 화면의 편집 세션 상태는 features의 Provider가 단일 소유하고, `use-*-studio` 훅은 그 Context를 소비합니다. 사이드바(컨트롤러)와 작업 공간(캔버스)은 이 훅으로만 소통하며 서로 import하거나 props를 건네지 않습니다. 상태는 병렬 Record로 찢지 않고 단위 객체(슬롯 하나 = 상태 객체 하나)로 흐릅니다.
 - **무엇을 그릴지는 편집 계약이 말합니다.** 공통 컨트롤 정의는 각 `StudioConfig.controller.groups`에서 소비하고, Template slot 같은 도메인 binding과 descriptor는 각 Config의 확장에서 소비합니다. Sidebar는 원시 Payload 필드나 nodeConfigs를 다시 해석하지 않습니다. 계약에는 Definition만 싣고 세션 값은 싣지 않습니다. 그래픽의 `type: 'p5' | 'shader'`는 runtime 선택에만 사용하며 Controller Definition과 현재 값을 결정하지 않습니다.
 - **Template은 Image Config를 참조합니다.** Template Image Slot은 Image Config나 Image Provider를 복제·중첩하지 않습니다. Published Image Config를 참조하고 슬롯 문맥에서 options를 좁혀 씁니다. 슬롯 ratio override도 원본 Image Config가 허용한 options 안에서만 선택합니다.
-- **Template 배경은 Graphic Config도 참조합니다.** Template은 Graphic Config나 Graphic Provider를 복제·중첩하지 않고, 선택한 Config의 Controller Definition과 세션 값을 Graphic 도메인의 Preview adapter에 전달해 P5·WebGL을 그대로 재생합니다. 정적 Template export만 현재 프레임을 이미지로 합성하고, runtime binding과 Controller Renderer는 같은 Config를 소비하므로 그래픽별 입력 해석은 Template에 두지 않습니다.
+- **Template 배경은 Graphic Config도 참조합니다.** Template은 Graphic Config나 Graphic Provider를 복제·중첩하지 않고, 선택한 Config의 Controller Definition과 세션 값을 Graphic 도메인의 Preview adapter에 전달해 P5·WebGL을 그대로 재생합니다. Template Runtime은 합성 결과를 Raster Artifact로 발행하고, PNG/JPEG/TIFF/PDF/정지 프레임 MP4 변환은 공통 Export Layer가 맡습니다. runtime binding과 Controller Renderer는 같은 Config를 소비하므로 그래픽별 입력 해석은 Template에 두지 않습니다.
 - **Image Profile이 이미지 기능을 소유합니다.** `ImageStudioConfig.image.features`는 `color-adjustment`·`camera-control` 같은 capability와 semantic control id 참조만 싣고, 실제 값·기본값·availability는 `controller.groups`가 계속 소유합니다. Image Studio와 Template은 같은 `ImageProfileFeatureRenderer`를 소비합니다. Template의 기존 `imageColorize`는 capability가 아니라, 선택한 Profile이 해당 feature를 지원할 때만 적용되는 값 override로만 투영합니다.
 - **확장 디스패처는 도메인별로 둡니다.** 공통 `ControllerRenderer`의 primitive switch는 닫힌 데이터 어휘이고, Image feature와 Graphic runtime은 각각 자기 도메인의 단일 exhaustive dispatcher가 해석합니다. 기존 feature·runtime을 조합한 새 Profile·Config는 데이터 추가만으로 소비되며, 새로운 feature·graphic 구현만 해당 dispatcher에 한 번 등록합니다. Studio별 variant prop이나 `visibleWhen` DSL로 공용 Renderer를 늘리지 않습니다.
 - **실행 정책은 서비스가 다시 강제합니다.** Route·Agent·MCP는 같은 도메인 서비스를 호출합니다. 서비스는 Published Config를 기준으로 options·최대 길이·readonly와 camera capability를 검증합니다. Sidebar의 비활성 표현만 신뢰 경계로 사용하지 않습니다.

@@ -4,7 +4,6 @@ import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domai
 import type { GraphicRuntimeId } from '@/features/graphic-generation/graphic-runtimes/catalog/manifest.generated'
 import { graphicRuntimeCatalog } from '@/features/graphic-generation/graphic-runtimes/catalog/runtime.generated.client'
 import type {
-	CanvasRasterSource,
 	CanvasVideoSource,
 	RasterArtifact,
 	VideoArtifact,
@@ -15,7 +14,7 @@ import type {
 } from '@/modules/studio-controller/controller-definition'
 
 export type GraphicBrowserArtifacts = {
-	raster: RasterArtifact<CanvasRasterSource>
+	raster: RasterArtifact
 	video?: VideoArtifact<CanvasVideoSource>
 }
 
@@ -45,15 +44,25 @@ export function createGraphicRasterArtifact({
 	canvas: HTMLCanvasElement
 	getViewport: () => { width: number; height: number }
 	render: (width: number, height: number) => void
-}): RasterArtifact<CanvasRasterSource> {
+}): RasterArtifact {
 	return {
 		kind: 'raster',
 		source: {
-			canvas,
-			render,
-			restore: () => {
-				const { width, height } = getViewport()
-				render(width, height)
+			withSurface: (options, consume) => {
+				const current = getViewport()
+				const width = options.width ?? current.width
+				const height = options.height ?? current.height
+				const restore = () => render(current.width, current.height)
+				try {
+					render(width, height)
+					const result = consume({ kind: 'canvas', element: canvas, width, height })
+					if (result instanceof Promise) return result.finally(restore)
+					restore()
+					return result
+				} catch (error) {
+					restore()
+					throw error
+				}
 			},
 		},
 	}

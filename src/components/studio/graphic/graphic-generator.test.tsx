@@ -163,7 +163,7 @@ describe('GraphicGenerator', () => {
 			version: 1,
 			name: 'Shader Demo',
 			type: 'shader',
-			artifacts: ['raster'],
+			artifacts: { raster: {} },
 			output: { formats: [] },
 			controller: {
 				groups: [

@@ -83,7 +83,6 @@ export async function findPublishedTemplate(
 			overrides: true,
 			width: true,
 			height: true,
-			printPpi: true,
 			exportPolicy: true,
 		},
 	})

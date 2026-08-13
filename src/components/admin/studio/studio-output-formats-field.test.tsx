@@ -6,7 +6,6 @@ import { StudioOutputFormatsField } from './studio-output-formats-field'
 const payloadForm = vi.hoisted(() => ({
 	fields: {
 		runtime: { value: 'sample' },
-		printPpi: { value: undefined as number | undefined },
 	},
 	setValue: vi.fn(),
 }))
@@ -30,7 +29,6 @@ vi.mock('@payloadcms/ui', () => ({
 afterEach(() => {
 	cleanup()
 	payloadForm.setValue.mockClear()
-	payloadForm.fields.printPpi.value = undefined
 })
 
 describe('StudioOutputFormatsField', () => {
@@ -42,7 +40,7 @@ describe('StudioOutputFormatsField', () => {
 				baseConfigs: [
 					{
 						id: 'sample',
-						artifacts: ['raster'],
+						artifacts: { raster: {} },
 						controller: { groups: [] },
 					},
 				],
@@ -51,12 +49,11 @@ describe('StudioOutputFormatsField', () => {
 
 		expect(screen.getByRole('checkbox', { name: 'PNG' })).toBeInTheDocument()
 		expect(screen.queryByRole('checkbox', { name: 'SVG' })).not.toBeInTheDocument()
-		expect(screen.queryByRole('checkbox', { name: 'MP4' })).not.toBeInTheDocument()
-		await waitFor(() => expect(payloadForm.setValue).toHaveBeenCalledWith(['png']))
+		expect(screen.getByRole('checkbox', { name: 'MP4' })).toBeInTheDocument()
+		await waitFor(() => expect(payloadForm.setValue).not.toHaveBeenCalled())
 	})
 
-	it('Template print 설정이 있을 때만 TIFF와 PDF를 추가한다', () => {
-		payloadForm.fields.printPpi.value = 300
+	it('Template Raster capability에서 인쇄와 영상 형식을 함께 계산한다', () => {
 		render(
 			createElement(StudioOutputFormatsField, {
 				path: 'exportPolicy.allowedFormats',

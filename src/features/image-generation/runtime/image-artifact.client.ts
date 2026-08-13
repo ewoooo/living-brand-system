@@ -3,14 +3,13 @@
 import type { CSSProperties } from 'react'
 import type {
 	BlobOriginalSource,
-	ElementRasterSource,
 	OriginalArtifact,
 	RasterArtifact,
 } from '@/modules/studio-artifact/studio-artifact'
 import { type ImageColorAdjustment, imageColorizeStyle } from './image-colorize'
 
 export type ImageArtifacts = {
-	raster: readonly RasterArtifact<ElementRasterSource>[]
+	raster: readonly RasterArtifact[]
 	original: readonly OriginalArtifact<BlobOriginalSource>[]
 }
 
@@ -23,7 +22,7 @@ export function createImageArtifacts({
 	color: ImageColorAdjustment | null | undefined
 }): ImageArtifacts {
 	return {
-		raster: images.map((src) => ({ kind: 'raster', source: createElementSource(src, color) })),
+		raster: images.map((src) => ({ kind: 'raster', source: createRasterSource(src, color) })),
 		original: images.map((src, index) => ({
 			kind: 'original',
 			source: {
@@ -35,12 +34,12 @@ export function createImageArtifacts({
 	}
 }
 
-function createElementSource(
+function createRasterSource(
 	src: string,
 	color: ImageColorAdjustment | null | undefined,
-): ElementRasterSource {
+): RasterArtifact['source'] {
 	return {
-		withElement: async (read) => {
+		withSurface: async (_options, consume) => {
 			const { naturalHeight, naturalWidth } = await loadImage(src)
 			const holder = document.createElement('div')
 			holder.style.cssText = 'position:fixed;left:-99999px;top:0'
@@ -48,7 +47,12 @@ function createElementSource(
 			holder.appendChild(stage)
 			document.body.appendChild(holder)
 			try {
-				return await read(stage, naturalWidth, naturalHeight)
+				return await consume({
+					kind: 'element',
+					element: stage,
+					width: naturalWidth,
+					height: naturalHeight,
+				})
 			} finally {
 				holder.remove()
 			}

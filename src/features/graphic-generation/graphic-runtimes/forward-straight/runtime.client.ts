@@ -5,7 +5,7 @@ import {
 	createGraphicRasterArtifact,
 	type GraphicRuntimeAdapter,
 } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
-import type { CanvasRasterSource, RasterArtifact } from '@/modules/studio-artifact/studio-artifact'
+import type { RasterArtifact } from '@/modules/studio-artifact/studio-artifact'
 import { toControllerPadValue } from './definition'
 import {
 	createForwardStraightScene,
@@ -19,7 +19,7 @@ export type ForwardStraightRuntime = {
 	update(input: ForwardStraightInput): void
 	resize(width: number, height: number): void
 	getViewport(): { width: number; height: number }
-	artifacts: { raster: RasterArtifact<CanvasRasterSource> }
+	artifacts: { raster: RasterArtifact }
 	destroy(): void
 }
 

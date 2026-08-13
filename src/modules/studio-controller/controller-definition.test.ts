@@ -182,7 +182,7 @@ describe('parseStudioControllerConfig', () => {
 			version: 1,
 			name: 'Demo',
 			type: 'p5',
-			artifacts: ['vector'],
+			artifacts: { vector: {} },
 			controller: {
 				groups: [
 					{
@@ -246,7 +246,7 @@ describe('parseStudioControllerConfig', () => {
 					label: 'Enabled',
 					defaultValue: true,
 				}),
-				artifacts: ['document'],
+				artifacts: { document: {} },
 			}),
 		).toThrow('Artifact 종류')
 	})
@@ -464,7 +464,7 @@ function configWith(control: unknown) {
 		id: 'demo',
 		version: 1,
 		name: 'Demo',
-		artifacts: ['vector'],
+		artifacts: { vector: {} },
 		controller: {
 			groups: [{ id: 'controls', title: 'Controls', controls: [control] }],
 		},

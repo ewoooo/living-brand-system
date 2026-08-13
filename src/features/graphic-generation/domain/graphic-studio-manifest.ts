@@ -4,8 +4,11 @@ import {
 	parseGraphicStudioConfig,
 } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { graphicRuntimeManifests } from '@/features/graphic-generation/graphic-runtimes/catalog/manifest.generated'
-import type { StudioOutputCapability } from '@/features/studio-export/studio-output'
-import { resolveStudioArtifactOutputFormats } from '@/features/studio-export/studio-output'
+import {
+	projectStudioOutputPolicy,
+	resolveStudioOutputCapability,
+	type StudioOutputCapability,
+} from '@/features/studio-export/studio-output'
 import {
 	applyControllerRestrictions,
 	projectPayloadControllerRestrictions,
@@ -29,26 +32,9 @@ export function getGraphicRuntimeManifest(id: string): GraphicRuntimeManifest | 
 /** Graphic Artifact와 Admin 정책을 Export Layer가 소비할 effective capability로 투영한다. */
 export function resolveGraphicStudioOutput(
 	manifest: GraphicRuntimeManifest,
-	allowedFormats?: readonly string[] | null,
+	policy?: unknown,
 ): StudioOutputCapability {
-	return {
-		formats: resolveStudioArtifactOutputFormats(manifest.artifacts, allowedFormats),
-		colorProfiles: { rgb: ['srgb'], cmyk: ['cgats21-crpc6'] },
-		...(manifest.artifacts.includes('video')
-			? {
-					video: {
-						mp4: {
-							codec: 'h264' as const,
-							colorSpace: 'rec709' as const,
-							fps: [24, 30, 60] as const,
-							maxWidth: 1920,
-							maxHeight: 1080,
-							maxDurationSeconds: 10,
-						},
-					},
-				}
-			: {}),
-	}
+	return resolveStudioOutputCapability(manifest.artifacts, projectStudioOutputPolicy(policy))
 }
 
 /** published Graphic Profile을 Manifest 기본 계약보다 좁은 Effective Config로 투영한다. */
@@ -61,7 +47,7 @@ export function deriveGraphicStudioConfig(
 	const config: GraphicStudioConfig = {
 		...manifest,
 		name: profile.name,
-		output: resolveGraphicStudioOutput(manifest, profile.exportPolicy?.allowedFormats),
+		output: resolveGraphicStudioOutput(manifest, profile.exportPolicy),
 		controller: {
 			groups: applyControllerRestrictions(manifest.controller.groups, restrictions),
 		},

@@ -46,7 +46,7 @@ export function getImageRuntimeManifest(modelPreset: ImageModelPreset): ImageRun
 		supportsImageOutputSize(modelPreset, size),
 	)
 	return {
-		artifacts: ['raster', 'original'],
+		artifacts: { raster: {}, original: {} },
 		controller: {
 			groups: [
 				{

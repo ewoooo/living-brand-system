@@ -25,7 +25,7 @@ export default defineGraphicRuntime({
 	version: 1,
 	name: 'Forward Straight',
 	type: 'p5',
-	artifacts: ['vector', 'raster'],
+	artifacts: { vector: {}, raster: {} },
 	controller: {
 		groups: [
 			{

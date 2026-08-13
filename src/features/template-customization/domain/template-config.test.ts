@@ -46,7 +46,7 @@ describe('deriveTemplateConfig', () => {
 
 		expect(getTemplateRuntimeManifest(template)).toEqual(manifest)
 		expect(manifest).toMatchObject({
-			artifacts: ['raster'],
+			artifacts: { raster: {} },
 			controller: {
 				groups: [
 					{ id: 'text', title: 'Text', collapsible: true },
@@ -54,8 +54,7 @@ describe('deriveTemplateConfig', () => {
 				],
 			},
 		})
-		const printTemplate = { ...template, printPpi: 150 as const }
-		expect(getTemplateRuntimeManifest(printTemplate)).toEqual(manifest)
+		expect(getTemplateRuntimeManifest({ ...template })).toEqual(manifest)
 	})
 
 	it('Template 도메인 계약을 멱등 검증하고 slot의 알 수 없는 필드를 거부한다', () => {
@@ -143,13 +142,11 @@ describe('deriveTemplateConfig', () => {
 		})
 	})
 
-	it('output은 Raster Exporter capability를 따르고 canvas·printPpi는 도메인 정보로 남긴다', () => {
-		expect(deriveTemplateConfig(template).output.formats).toEqual(['png', 'jpeg'])
-		expect(deriveTemplateConfig({ ...template, printPpi: 150 })).toMatchObject({
-			output: { formats: ['png', 'jpeg', 'tiff', 'pdf'] },
+	it('output은 Raster Exporter capability를 따르고 canvas만 Template 도메인 정보로 남긴다', () => {
+		expect(deriveTemplateConfig(template)).toMatchObject({
+			output: { formats: ['png', 'jpeg', 'tiff', 'pdf', 'mp4'] },
 			template: {
 				exportOption: {
-					printPpi: 150,
 					canvas: { width: 800, height: 600 },
 				},
 			},
@@ -157,14 +154,12 @@ describe('deriveTemplateConfig', () => {
 		expect(
 			deriveTemplateConfig({
 				...template,
-				printPpi: 150,
 				exportPolicy: { allowedFormats: ['pdf'] },
 			}).output.formats,
 		).toEqual(['pdf'])
 		expect(() =>
 			deriveTemplateConfig({
 				...template,
-				printPpi: 150,
 				exportPolicy: { allowedFormats: ['svg'] },
 			}),
 		).toThrow('지원하지 않는 output format')
@@ -340,7 +335,7 @@ function createImageConfig(
 ): ImageStudioConfig {
 	return {
 		studio: 'image',
-		artifacts: ['raster'],
+		artifacts: { raster: {}, original: {} },
 		id,
 		version: 1,
 		name: `프로파일 ${id}`,

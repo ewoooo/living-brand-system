@@ -7,6 +7,7 @@ import { ImageSidebar } from '@/components/studio/sidebar/image-sidebar'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import { useImageStudio } from '@/features/image-generation/hooks/use-image-studio'
+import { toOpenAIImageSize } from '@/features/image-generation/image-size'
 import { ImageStudioProvider } from '@/features/image-generation/providers/image-studio-provider'
 import { createImageArtifacts } from '@/features/image-generation/runtime/image-artifact.client'
 import { useImageExport } from '@/features/studio-export/hooks/use-image-export'
@@ -47,12 +48,16 @@ function ImageWorkspace() {
 	const { profiles, results } = useImageStudio()
 	const result = results.result
 	const resultConfig = profiles.options.find((candidate) => candidate.id === result?.profileId)
+	const exportSize = result
+		? toOpenAIImageSize(result.aspectRatio, result.imageSize).split('x').map(Number)
+		: null
 	const download = useImageExport({
 		artifacts: result
 			? createImageArtifacts({ images: result.images, color: results.color })
 			: null,
 		capability: resultConfig?.output ?? { formats: [], original: false },
 		selected: results.selected,
+		size: exportSize ? { width: exportSize[0], height: exportSize[1] } : null,
 	})
 
 	return (

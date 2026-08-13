@@ -1,5 +1,10 @@
-import type { StudioArtifactKind } from '@/modules/studio-artifact/studio-artifact'
-import { acceptsExportArtifact, type StudioExporterFeature } from './export-artifact'
+import {
+	getStudioArtifactKinds,
+	parseStudioArtifactCapabilities,
+	type StudioArtifactCapabilities,
+	type StudioVideoFrameRate,
+} from '@/modules/studio-artifact/studio-artifact'
+import { acceptsExportArtifact } from './export-artifact'
 import type {
 	CmykIccProfile,
 	ExportRequest,
@@ -8,6 +13,14 @@ import type {
 	VideoExportSpec,
 } from './export-contract'
 import { STUDIO_OUTPUT_FORMATS } from './export-contract'
+import { PRINT_PPI_VALUES, type PrintPpi } from './print-policy'
+
+const DEFAULT_RASTER_VIDEO_CAPABILITY = {
+	fps: [24, 30, 60] as const,
+	maxWidth: 1920,
+	maxHeight: 1080,
+	maxDurationSeconds: 10,
+}
 
 export type StudioOutputCapability<Format extends StudioOutputFormat = StudioOutputFormat> = {
 	formats: readonly Format[]
@@ -15,6 +28,9 @@ export type StudioOutputCapability<Format extends StudioOutputFormat = StudioOut
 	colorProfiles?: {
 		rgb?: readonly RgbColorProfile['icc'][]
 		cmyk?: readonly CmykIccProfile[]
+	}
+	print?: {
+		ppi: readonly PrintPpi[]
 	}
 	video?: {
 		mp4: {
@@ -32,12 +48,70 @@ export type StudioOutputCapability<Format extends StudioOutputFormat = StudioOut
 export type StudioOutputPolicy<Format extends StudioOutputFormat = StudioOutputFormat> = {
 	allowedFormats?: readonly Format[]
 	original?: boolean
+	print?: { allowedPpi?: readonly PrintPpi[] }
+	video?: {
+		allowedFps?: readonly StudioVideoFrameRate[]
+		maxWidth?: number
+		maxHeight?: number
+		maxDurationSeconds?: number
+	}
+}
+
+/** Payload JSON의 공통 output 제한을 정규화하고 Runtime보다 넓힐 수 없는 정책 형태로 읽는다. */
+export function projectStudioOutputPolicy(input: unknown): StudioOutputPolicy | null {
+	if (input === undefined || input === null) return null
+	const policy = record(input, 'exportPolicy')
+	assertKeys(policy, ['allowedFormats', 'original', 'print', 'video'], 'exportPolicy')
+	const output: StudioOutputPolicy = {}
+	if (policy.allowedFormats !== undefined && policy.allowedFormats !== null) {
+		assertStudioOutputFormats(policy.allowedFormats, 'exportPolicy.allowedFormats')
+		output.allowedFormats = policy.allowedFormats
+	}
+	if (policy.original !== undefined && policy.original !== null) {
+		if (typeof policy.original !== 'boolean') {
+			throw new Error('exportPolicy.original이 boolean이 아닙니다.')
+		}
+		output.original = policy.original
+	}
+	if (policy.print !== undefined && policy.print !== null) {
+		const print = record(policy.print, 'exportPolicy.print')
+		assertKeys(print, ['allowedPpi'], 'exportPolicy.print')
+		if (print.allowedPpi !== undefined && print.allowedPpi !== null) {
+			output.print = { allowedPpi: normalizePrintPpi(print.allowedPpi) }
+		}
+	}
+	if (policy.video !== undefined && policy.video !== null) {
+		const video = record(policy.video, 'exportPolicy.video')
+		assertKeys(
+			video,
+			['allowedFps', 'maxWidth', 'maxHeight', 'maxDurationSeconds'],
+			'exportPolicy.video',
+		)
+		const normalized: NonNullable<StudioOutputPolicy['video']> = {}
+		if (video.allowedFps !== undefined && video.allowedFps !== null) {
+			normalized.allowedFps = normalizeFrameRates(video.allowedFps)
+		}
+		for (const key of ['maxWidth', 'maxHeight', 'maxDurationSeconds'] as const) {
+			const value = video[key]
+			if (value === undefined || value === null) continue
+			if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+				throw new Error(`exportPolicy.video.${key}가 양수가 아닙니다.`)
+			}
+			normalized[key] = value
+		}
+		output.video = normalized
+	}
+	return output
 }
 
 /** unknown 입력에서 공통 output capability의 직렬화 가능한 범위를 검증한다. */
 export function parseStudioOutputCapability(input: unknown): StudioOutputCapability {
 	const output = record(input, 'output')
-	assertKeys(output, ['formats', 'original', 'colorProfiles', 'video', 'packages'], 'output')
+	assertKeys(
+		output,
+		['formats', 'original', 'colorProfiles', 'print', 'video', 'packages'],
+		'output',
+	)
 	assertStudioOutputFormats(output.formats, 'output.formats')
 	if (output.original !== undefined && typeof output.original !== 'boolean') {
 		throw new Error('output.original이 boolean이 아닙니다.')
@@ -69,6 +143,12 @@ export function parseStudioOutputCapability(input: unknown): StudioOutputCapabil
 		if ((output.packages as string[]).some((format) => format !== 'zip')) {
 			throw new Error('output.packages가 올바르지 않습니다.')
 		}
+	}
+
+	if (output.print !== undefined) {
+		const print = record(output.print, 'output.print')
+		assertKeys(print, ['ppi'], 'output.print')
+		assertPrintPpi(print.ppi, 'output.print.ppi')
 	}
 
 	if (output.video !== undefined) {
@@ -121,14 +201,62 @@ export function resolveStudioOutputFormats<Format extends StudioOutputFormat>(
 
 /** Runtime Artifact 종류를 Exporter가 변환할 수 있는 시스템 형식으로 투영한 뒤 Admin 정책으로 좁힌다. */
 export function resolveStudioArtifactOutputFormats(
-	artifacts: readonly StudioArtifactKind[],
+	artifacts: StudioArtifactCapabilities,
 	allowed: readonly string[] | null | undefined,
-	features: readonly StudioExporterFeature[] = [],
 ): readonly StudioOutputFormat[] {
+	parseStudioArtifactCapabilities(artifacts)
+	const kinds = getStudioArtifactKinds(artifacts)
 	const supported = STUDIO_OUTPUT_FORMATS.filter((format) =>
-		artifacts.some((kind) => acceptsExportArtifact(format, kind, features)),
+		kinds.some((kind) => acceptsExportArtifact(format, kind)),
 	)
 	return resolveStudioOutputFormats(supported, allowed)
+}
+
+/** Runtime Artifact 사양과 Admin 제한을 공통 Effective output capability로 계산한다. */
+export function resolveStudioOutputCapability(
+	artifacts: StudioArtifactCapabilities,
+	policy: StudioOutputPolicy | null = null,
+	options: { packages?: readonly 'zip'[] } = {},
+): StudioOutputCapability {
+	const formats = resolveStudioArtifactOutputFormats(artifacts, policy?.allowedFormats)
+	const printFormats = formats.some((format) => format === 'tiff' || format === 'pdf')
+	const video =
+		artifacts.video ?? (artifacts.raster ? DEFAULT_RASTER_VIDEO_CAPABILITY : undefined)
+	const allowedPpi = narrowPrintPpi(policy?.print?.allowedPpi)
+	const allowedFps = video ? narrowFrameRates(video.fps, policy?.video?.allowedFps) : []
+	return {
+		formats,
+		original: artifacts.original !== undefined && (policy?.original ?? true),
+		colorProfiles: { rgb: ['srgb'], cmyk: ['cgats21-crpc6'] },
+		...(printFormats ? { print: { ppi: allowedPpi } } : {}),
+		...(video && formats.includes('mp4')
+			? {
+					video: {
+						mp4: {
+							codec: 'h264' as const,
+							colorSpace: 'rec709' as const,
+							fps: allowedFps,
+							maxWidth: narrowMaximum(
+								video.maxWidth,
+								policy?.video?.maxWidth,
+								'maxWidth',
+							),
+							maxHeight: narrowMaximum(
+								video.maxHeight,
+								policy?.video?.maxHeight,
+								'maxHeight',
+							),
+							maxDurationSeconds: narrowMaximum(
+								video.maxDurationSeconds,
+								policy?.video?.maxDurationSeconds,
+								'maxDurationSeconds',
+							),
+						},
+					},
+				}
+			: {}),
+		...(options.packages ? { packages: options.packages } : {}),
+	}
 }
 
 export function supportsStudioOutput<Format extends StudioOutputFormat>(
@@ -153,8 +281,15 @@ export function supportsStudioExportRequest(
 			| undefined
 		if (!allowed?.includes(request.colorProfile.icc)) return false
 	}
+	if (
+		request.artifact === 'raster' &&
+		(request.format === 'tiff' || request.format === 'pdf') &&
+		!capability.print?.ppi.includes(request.options.ppi)
+	) {
+		return false
+	}
 
-	if (request.artifact === 'video') {
+	if (request.format === 'mp4') {
 		const video = capability.video?.mp4
 		const spec = request.options
 		return Boolean(
@@ -190,6 +325,8 @@ function validRequestOptions(request: ExportRequest): boolean {
 					return (
 						[72, 150, 300].includes(request.options.ppi) && request.options.bleedMm >= 0
 					)
+				case 'mp4':
+					return validVideoExportSpec(request.options)
 			}
 			return false
 		case 'vector':
@@ -201,18 +338,22 @@ function validRequestOptions(request: ExportRequest): boolean {
 				typeof request.options.outlineText === 'boolean'
 			)
 		case 'video':
-			return (
-				request.options.container === 'mp4' &&
-				request.options.codec === 'h264' &&
-				request.options.colorSpace === 'rec709' &&
-				Number.isInteger(request.options.width) &&
-				request.options.width > 0 &&
-				Number.isInteger(request.options.height) &&
-				request.options.height > 0 &&
-				Number.isFinite(request.options.durationSeconds) &&
-				request.options.durationSeconds > 0
-			)
+			return validVideoExportSpec(request.options)
 	}
+}
+
+function validVideoExportSpec(spec: VideoExportSpec): boolean {
+	return (
+		spec.container === 'mp4' &&
+		spec.codec === 'h264' &&
+		spec.colorSpace === 'rec709' &&
+		Number.isInteger(spec.width) &&
+		spec.width > 0 &&
+		Number.isInteger(spec.height) &&
+		spec.height > 0 &&
+		Number.isFinite(spec.durationSeconds) &&
+		spec.durationSeconds > 0
+	)
 }
 
 function assertUniqueFormats(formats: readonly string[], label: string) {
@@ -250,4 +391,62 @@ function assertStudioOutputFormats(
 	if (value.some((format) => !STUDIO_OUTPUT_FORMATS.includes(format as StudioOutputFormat))) {
 		throw new Error(`${label}에 지원하지 않는 output format이 있습니다.`)
 	}
+}
+
+function assertPrintPpi(value: unknown, label: string): asserts value is PrintPpi[] {
+	if (
+		!Array.isArray(value) ||
+		value.length === 0 ||
+		value.some((ppi) => !PRINT_PPI_VALUES.includes(ppi as PrintPpi)) ||
+		new Set(value).size !== value.length
+	) {
+		throw new Error(`${label}가 올바르지 않습니다.`)
+	}
+}
+
+function normalizePrintPpi(value: unknown): readonly PrintPpi[] {
+	if (!Array.isArray(value)) throw new Error('exportPolicy.print.allowedPpi가 배열이 아닙니다.')
+	const normalized = value.map(Number)
+	assertPrintPpi(normalized, 'exportPolicy.print.allowedPpi')
+	return normalized
+}
+
+function normalizeFrameRates(value: unknown): readonly StudioVideoFrameRate[] {
+	if (!Array.isArray(value)) throw new Error('exportPolicy.video.allowedFps가 배열이 아닙니다.')
+	const normalized = value.map(Number)
+	if (
+		normalized.length === 0 ||
+		normalized.some((fps) => fps !== 24 && fps !== 30 && fps !== 60) ||
+		new Set(normalized).size !== normalized.length
+	) {
+		throw new Error('exportPolicy.video.allowedFps가 올바르지 않습니다.')
+	}
+	return normalized as StudioVideoFrameRate[]
+}
+
+function narrowPrintPpi(allowed: readonly PrintPpi[] | undefined): readonly PrintPpi[] {
+	if (!allowed) return PRINT_PPI_VALUES
+	assertPrintPpi(allowed, 'Admin print PPI')
+	return PRINT_PPI_VALUES.filter((ppi) => allowed.includes(ppi))
+}
+
+function narrowFrameRates(
+	supported: readonly StudioVideoFrameRate[],
+	allowed: readonly StudioVideoFrameRate[] | undefined,
+): readonly StudioVideoFrameRate[] {
+	if (!allowed) return supported
+	const supportedSet = new Set(supported)
+	for (const fps of allowed) {
+		if (!supportedSet.has(fps)) throw new Error(`지원하지 않는 video fps입니다: ${fps}`)
+	}
+	const allowedSet = new Set(allowed)
+	return supported.filter((fps) => allowedSet.has(fps))
+}
+
+function narrowMaximum(base: number, allowed: number | undefined, label: string): number {
+	if (allowed === undefined) return base
+	if (!Number.isFinite(allowed) || allowed <= 0 || allowed > base) {
+		throw new Error(`Admin video ${label}가 Runtime보다 넓습니다.`)
+	}
+	return allowed
 }

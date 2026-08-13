@@ -1,38 +1,83 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { ImageArtifacts } from '@/features/image-generation/runtime/image-artifact.client'
 import { exportResultsToZip } from '../adapters/export-results-to-zip.client'
-import type { ExportRequest, ExportResult, StudioOutputFormat } from '../export-contract'
-import type { StudioExportSource } from '../services/execute-studio-export'
-import {
-	exportElementRasterArtifactAsJpeg,
-	exportElementRasterArtifactAsPng,
-	exportOriginalArtifact,
-} from '../services/export-artifact.client'
+import type {
+	ExportRequest,
+	ExportResult,
+	StudioOutputFormat,
+	VideoExportSpec,
+} from '../export-contract'
+import type { PrintPpi } from '../print-policy'
+import { createRasterExportRequest } from '../services/create-raster-export-request'
+import { executeArtifactExport } from '../services/export-artifact.client'
 import type { StudioOutputCapability } from '../studio-output'
 import { useExport } from './use-export'
 
 export type ImageExportView = ReturnType<typeof useImageExport>
 type ImageExportRequest = (
 	| Extract<ExportRequest, { artifact: 'original' }>
-	| Extract<ExportRequest, { artifact: 'raster'; format: 'png' | 'jpeg' }>
+	| Extract<ExportRequest, { artifact: 'raster' }>
 ) & { scope: 'selected' | 'all'; package?: 'zip' }
 
-/** Image Artifact의 선택·패키징 정책을 공통 export 실행 경계에 연결한다. */
+/** Image Artifact의 선택·패키징만 조정하고 형식 변환은 공통 Artifact executor에 맡긴다. */
 export function useImageExport({
 	artifacts,
 	capability,
 	selected,
+	size,
 }: {
 	artifacts: ImageArtifacts | null
 	capability: StudioOutputCapability
 	selected: number | null
+	size: { width: number; height: number } | null
 }) {
 	const [selectedFormat, setSelectedFormat] = useState<StudioOutputFormat | null>(null)
+	const [ppi, setPpi] = useState<PrintPpi | undefined>(() => capability.print?.ppi[0])
+	const [fps, setFps] = useState<VideoExportSpec['fps'] | undefined>(
+		() => capability.video?.mp4.fps[0],
+	)
+	const [durationSeconds, setDurationSeconds] = useState(() =>
+		Math.min(5, capability.video?.mp4.maxDurationSeconds ?? 5),
+	)
+	const effectivePpi = ppi && capability.print?.ppi.includes(ppi) ? ppi : capability.print?.ppi[0]
+	const effectiveFps =
+		fps && capability.video?.mp4.fps.includes(fps) ? fps : capability.video?.mp4.fps[0]
+	const effectiveDuration = Math.min(
+		durationSeconds,
+		capability.video?.mp4.maxDurationSeconds ?? durationSeconds,
+	)
 	const formats = capability.formats
 	const format =
 		selectedFormat && formats.includes(selectedFormat) ? selectedFormat : (formats[0] ?? null)
+	const createRequest = useCallback(
+		(candidate: StudioOutputFormat | null, scope: ImageExportRequest['scope']) => {
+			if (!candidate || !size) return null
+			const request = createRasterExportRequest(candidate, capability, {
+				...size,
+				ppi: effectivePpi,
+				fps: effectiveFps,
+				durationSeconds: effectiveDuration,
+			})
+			return request
+				? ({
+						...request,
+						scope,
+						...(scope === 'all' ? { package: 'zip' as const } : {}),
+					} satisfies ImageExportRequest)
+				: null
+		},
+		[capability, effectiveDuration, effectiveFps, effectivePpi, size],
+	)
+	const execute = useCallback(
+		(request: ImageExportRequest) => {
+			if (!artifacts) throw new Error('Image export is unavailable.')
+			const items = request.artifact === 'original' ? artifacts.original : artifacts.raster
+			return exportScope(items, selected, request)
+		},
+		[artifacts, selected],
+	)
 	const imageExport = useExport<ImageExportRequest>({
 		capability,
 		canExport: ({ artifact, package: packageFormat, scope }) => {
@@ -43,16 +88,12 @@ export function useImageExport({
 					(scope === 'all' || (selected !== null && items[selected] !== undefined)),
 			)
 		},
-		source: imageExportSource(artifacts, selected),
+		execute,
 	})
-	const selectedRequest = createImageExportRequest(format, 'selected')
-	const allRequest = createImageExportRequest(format, 'all')
-	const selectedOriginalRequest = createImageOriginalExportRequest('selected')
-	const allOriginalRequest = createImageOriginalExportRequest('all')
-	const canExportSelected = Boolean(selectedRequest && imageExport.canExport(selectedRequest))
-	const canExportAll = Boolean(allRequest && imageExport.canExport(allRequest))
-	const canExportSelectedOriginal = imageExport.canExport(selectedOriginalRequest)
-	const canExportAllOriginal = imageExport.canExport(allOriginalRequest)
+	const selectedRequest = createRequest(format, 'selected')
+	const allRequest = createRequest(format, 'all')
+	const selectedOriginalRequest = createOriginalRequest('selected')
+	const allOriginalRequest = createOriginalRequest('all')
 
 	return {
 		busy: imageExport.exporting !== null,
@@ -62,63 +103,41 @@ export function useImageExport({
 		setFormat: (next: StudioOutputFormat) => {
 			if (formats.includes(next)) setSelectedFormat(next)
 		},
-		selected: {
-			canExport: canExportSelected,
-			run: () => {
-				if (selectedRequest) void imageExport.run(selectedRequest)
-			},
+		ppi: effectivePpi ?? null,
+		setPpi: (next: PrintPpi) => {
+			if (capability.print?.ppi.includes(next)) setPpi(next)
 		},
-		all: {
-			canExport: canExportAll,
-			run: () => {
-				if (allRequest) void imageExport.run(allRequest)
-			},
+		fps: effectiveFps ?? null,
+		setFps: (next: VideoExportSpec['fps']) => {
+			if (capability.video?.mp4.fps.includes(next)) setFps(next)
 		},
+		durationSeconds: effectiveDuration,
+		setDuration: (next: number) => {
+			const max = capability.video?.mp4.maxDurationSeconds
+			if (max && next > 0 && next <= max) setDurationSeconds(next)
+		},
+		selected: exportAction(imageExport, selectedRequest),
+		all: exportAction(imageExport, allRequest),
 		original: {
-			available: canExportSelectedOriginal || canExportAllOriginal,
-			selected: {
-				canExport: canExportSelectedOriginal,
-				run: () => void imageExport.run(selectedOriginalRequest),
-			},
-			all: {
-				canExport: canExportAllOriginal,
-				run: () => void imageExport.run(allOriginalRequest),
-			},
+			available:
+				imageExport.canExport(selectedOriginalRequest) ||
+				imageExport.canExport(allOriginalRequest),
+			selected: exportAction(imageExport, selectedOriginalRequest),
+			all: exportAction(imageExport, allOriginalRequest),
 		},
 	}
 }
 
-function imageExportSource(
-	artifacts: ImageArtifacts | null,
-	selected: number | null,
-): StudioExportSource<ImageExportRequest> {
-	if (!artifacts) return {}
-	return {
-		original: (request) =>
-			exportImageScope(artifacts.original, selected, request, exportOriginalArtifact),
-		raster: {
-			png: (request) =>
-				exportImageScope(artifacts.raster, selected, request, (artifact, index) =>
-					exportElementRasterArtifactAsPng(`hd-image-${index + 1}`, artifact, request),
-				),
-			jpeg: (request) =>
-				exportImageScope(artifacts.raster, selected, request, (artifact, index) =>
-					exportElementRasterArtifactAsJpeg(`hd-image-${index + 1}`, artifact, request),
-				),
-		},
-	}
-}
-
-async function exportImageScope<Artifact>(
-	artifacts: readonly Artifact[],
+async function exportScope(
+	artifacts: ImageArtifacts['original'] | ImageArtifacts['raster'],
 	selected: number | null,
 	request: ImageExportRequest,
-	exportOne: (artifact: Artifact, index: number) => Promise<ExportResult>,
 ): Promise<ExportResult | readonly ExportResult[]> {
+	const exportOne = (artifact: (typeof artifacts)[number], index: number) =>
+		executeArtifactExport({ artifact, fileName: `hd-image-${index + 1}`, request })
 	if (request.scope === 'selected') {
-		if (selected === null || !artifacts[selected]) {
+		if (selected === null || !artifacts[selected])
 			throw new Error('저장할 이미지를 선택해 주세요.')
-		}
 		return exportOne(artifacts[selected], selected)
 	}
 	const items = await Promise.all(artifacts.map(exportOne))
@@ -127,39 +146,23 @@ async function exportImageScope<Artifact>(
 		: items
 }
 
-function createImageExportRequest(
-	format: StudioOutputFormat | null,
-	scope: ImageExportRequest['scope'],
-): ImageExportRequest | null {
-	const packageFormat = scope === 'all' ? { package: 'zip' as const } : {}
-	if (format === 'png') {
-		return {
-			artifact: 'raster',
-			format,
-			colorProfile: { space: 'rgb', icc: 'srgb' },
-			options: { scale: 1, transparent: true },
-			scope,
-			...packageFormat,
-		}
-	}
-	if (format === 'jpeg') {
-		return {
-			artifact: 'raster',
-			format,
-			colorProfile: { space: 'rgb', icc: 'srgb' },
-			options: { quality: 90 },
-			scope,
-			...packageFormat,
-		}
-	}
-	return null
-}
-
-function createImageOriginalExportRequest(scope: ImageExportRequest['scope']): ImageExportRequest {
+function createOriginalRequest(scope: ImageExportRequest['scope']): ImageExportRequest {
 	return {
 		artifact: 'original',
 		options: {},
 		scope,
 		...(scope === 'all' ? { package: 'zip' as const } : {}),
+	}
+}
+
+function exportAction(
+	exporter: ReturnType<typeof useExport<ImageExportRequest>>,
+	request: ImageExportRequest | null,
+) {
+	return {
+		canExport: Boolean(request && exporter.canExport(request)),
+		run: () => {
+			if (request) void exporter.run(request)
+		},
 	}
 }

@@ -1,7 +1,9 @@
 import type { ImageModelPreset } from '@/features/image-generation/image-model'
 import {
 	parseStudioOutputCapability,
+	projectStudioOutputPolicy,
 	resolveStudioArtifactOutputFormats,
+	resolveStudioOutputCapability,
 	type StudioOutputCapability,
 } from '@/features/studio-export/studio-output'
 import {
@@ -43,7 +45,7 @@ export type PublishedImageProfileDefinition = {
 	imageModelPreset: ImageModelPreset
 	controllerRestrictions?: unknown
 	features?: unknown
-	exportPolicy?: { allowedFormats?: readonly string[] | null; original?: boolean | null } | null
+	exportPolicy?: unknown
 }
 
 /** 이미지 프로파일 하나가 발행하는 공통 Controller envelope와 이미지 실행 descriptor. */
@@ -213,17 +215,11 @@ export function deriveImageStudioConfig(
 		id: profile.id,
 		version: 1,
 		name: profile.name,
-		output: {
-			formats: resolveStudioArtifactOutputFormats(
-				manifest.artifacts,
-				profile.exportPolicy?.allowedFormats,
-			),
-			original: Boolean(
-				manifest.artifacts.includes('original') && (profile.exportPolicy?.original ?? true),
-			),
-			colorProfiles: { rgb: ['srgb'] },
-			packages: ['zip'],
-		},
+		output: resolveStudioOutputCapability(
+			manifest.artifacts,
+			projectStudioOutputPolicy(profile.exportPolicy),
+			{ packages: ['zip'] },
+		) as StudioOutputCapability & { original: boolean },
 		artifacts: manifest.artifacts,
 		controller: deriveImageProfileController(
 			profile.imageModelPreset,
@@ -298,14 +294,15 @@ function projectSupportedImageProfileFeatureSelections(
 ): readonly ImageProfileFeatureSelection[] {
 	const selections = projectImageProfileFeatureSelections(input)
 	const selectedTypes = new Set<ImageProfileFeatureSelection['type']>()
+	const supportedFeatures = new Map(
+		manifest.supportedFeatures.map((feature) => [feature.type, feature]),
+	)
 	for (const selection of selections) {
 		if (selectedTypes.has(selection.type)) {
 			throw new Error(`Image feature type이 중복되었습니다: ${selection.type}`)
 		}
 		selectedTypes.add(selection.type)
-		const supported = manifest.supportedFeatures.find(
-			(feature) => feature.type === selection.type,
-		)
+		const supported = supportedFeatures.get(selection.type)
 		if (!supported) {
 			throw new Error(`Image runtime이 지원하지 않는 feature입니다: ${selection.type}`)
 		}

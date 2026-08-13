@@ -29,6 +29,7 @@ import { GuidelineDocumentTreeList as GuidelineDocumentTreeList_cbf6266b788a4c70
 import { ColorSwatchCell as ColorSwatchCell_88fca198b056ae91f3276aaa342114bd } from '../../../components/admin/brand-colors/color-swatch-cell'
 import { StudioControllerRestrictionsField as StudioControllerRestrictionsField_715c81ea8a3b886458ef2633d308523c } from '../../../components/admin/studio/studio-controller-restrictions-field'
 import { StudioOutputFormatsField as StudioOutputFormatsField_2b4d6cf4a441099f2efd973bee4050a7 } from '../../../components/admin/studio/studio-output-formats-field'
+import { StudioOutputNumberOptionsField as StudioOutputNumberOptionsField_a332d6920f506f30c6bd7cf1cbbf3441 } from '../../../components/admin/studio/studio-output-number-options-field'
 import { ImageProfileTestPanel as ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640 } from '../../../components/admin/image-profiles/image-profile-test-panel'
 import { TemplateLayersField as TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6 } from '../../../components/admin/templates/template-layers-field'
 import { SidebarDivider as SidebarDivider_34b02386e3687855f2c939d264827b16 } from '../../../components/admin/templates/sidebar-divider'
@@ -82,6 +83,7 @@ export const importMap = {
   "/components/admin/brand-colors/color-swatch-cell#ColorSwatchCell": ColorSwatchCell_88fca198b056ae91f3276aaa342114bd,
   "/components/admin/studio/studio-controller-restrictions-field#StudioControllerRestrictionsField": StudioControllerRestrictionsField_715c81ea8a3b886458ef2633d308523c,
   "/components/admin/studio/studio-output-formats-field#StudioOutputFormatsField": StudioOutputFormatsField_2b4d6cf4a441099f2efd973bee4050a7,
+  "/components/admin/studio/studio-output-number-options-field#StudioOutputNumberOptionsField": StudioOutputNumberOptionsField_a332d6920f506f30c6bd7cf1cbbf3441,
   "/components/admin/image-profiles/image-profile-test-panel#ImageProfileTestPanel": ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640,
   "/components/admin/templates/template-layers-field#TemplateLayersField": TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6,
   "/components/admin/templates/sidebar-divider#SidebarDivider": SidebarDivider_34b02386e3687855f2c939d264827b16,

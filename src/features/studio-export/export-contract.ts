@@ -48,15 +48,16 @@ export type ExportRequest =
 	| {
 			artifact: 'raster'
 			format: 'tiff'
-			colorProfile: ColorProfile
+			colorProfile: CmykColorProfile
 			options: { ppi: 72 | 150 | 300; compression: 'lzw' }
 	  }
 	| {
 			artifact: 'raster'
 			format: 'pdf'
-			colorProfile: ColorProfile
+			colorProfile: CmykColorProfile
 			options: { ppi: 72 | 150 | 300; bleedMm: number }
 	  }
+	| { artifact: 'raster'; format: 'mp4'; options: VideoExportSpec }
 	| {
 			artifact: 'vector'
 			format: 'svg'

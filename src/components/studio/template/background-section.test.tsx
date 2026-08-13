@@ -346,7 +346,7 @@ describe('BackgroundSection', () => {
 function createImageConfig(): ImageStudioConfig {
 	return {
 		studio: 'image',
-		artifacts: ['raster'],
+		artifacts: { raster: {} },
 		id: 3,
 		version: 1,
 		name: '첫 프로파일',

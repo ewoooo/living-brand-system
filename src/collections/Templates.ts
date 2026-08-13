@@ -1,9 +1,4 @@
 import { APIError, type CollectionConfig } from 'payload'
-import {
-	MAX_PRINT_PIXELS,
-	MAX_PRINT_SIDE_PIXELS,
-	PRINT_PPI_OPTIONS,
-} from '@/features/studio-export/print-policy'
 import { prepareTemplateSave } from '@/features/template-import/services/prepare-template-save.service'
 import { isManager, managerOrAdmin } from '@/lib/auth'
 import {
@@ -110,15 +105,6 @@ export const Templates: CollectionConfig = {
 					admin: { width: '50%', description: 'Figma 높이(px). 가져오기가 채웁니다.' },
 				},
 			],
-		},
-		{
-			name: 'printPpi',
-			type: 'select',
-			options: [...PRINT_PPI_OPTIONS],
-			admin: {
-				position: 'sidebar',
-				description: `설정하면 CMYK TIFF와 mm 단위 CMYK PDF가 활성화됩니다. 픽셀 크기는 유지되며 인쇄 출력은 최대 ${MAX_PRINT_PIXELS.toLocaleString('en-US')}픽셀, 너비·높이 각각 최대 ${MAX_PRINT_SIDE_PIXELS.toLocaleString('en-US')}px를 지원합니다.`,
-			},
 		},
 		{
 			name: 'category',

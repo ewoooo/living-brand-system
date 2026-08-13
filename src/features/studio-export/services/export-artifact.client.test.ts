@@ -1,33 +1,40 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createGraphicRasterArtifact } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { createImageArtifacts } from '@/features/image-generation/runtime/image-artifact.client'
 import { createTemplateRasterArtifact } from '@/features/template-customization/runtime/template-runtime.client'
-import type {
-	RasterArtifact,
-	VectorSceneArtifact,
-	VideoArtifact,
-} from '@/modules/studio-artifact/studio-artifact'
+import type { VectorSceneArtifact, VideoArtifact } from '@/modules/studio-artifact/studio-artifact'
 import { canvasFramesToMp4 } from '../adapters/canvas-frames-to-mp4.mediabunny.client'
 import { elementToJpeg } from '../adapters/element-to-jpeg.client'
 import { elementToPng } from '../adapters/element-to-png.client'
-import { htmlToPng } from '../adapters/html-to-png.client'
 import {
-	exportCanvasRasterArtifactAsJpeg,
-	exportCanvasRasterArtifactAsPng,
-	exportElementRasterArtifactAsPng,
-	exportHtmlRasterArtifactAsJpeg,
-	exportHtmlRasterArtifactAsPng,
+	executeArtifactExport,
 	exportOriginalArtifact,
+	exportRasterArtifactAsJpeg,
+	exportRasterArtifactAsPng,
 	exportVectorArtifactAsSvg,
 	exportVideoArtifactAsMp4,
 } from './export-artifact.client'
+import { requestPrintExport } from './export-print.client'
 
 vi.mock('../adapters/canvas-frames-to-mp4.mediabunny.client', () => ({
 	canvasFramesToMp4: vi.fn().mockResolvedValue(new Blob(['mp4'], { type: 'video/mp4' })),
 }))
 vi.mock('../adapters/element-to-png.client', () => ({ elementToPng: vi.fn() }))
 vi.mock('../adapters/element-to-jpeg.client', () => ({ elementToJpeg: vi.fn() }))
-vi.mock('../adapters/html-to-png.client', () => ({ htmlToPng: vi.fn() }))
+vi.mock('./export-print.client', () => ({
+	requestPrintExport: vi.fn().mockResolvedValue(new Blob(['print'])),
+}))
+vi.mock('@/features/template-customization/runtime/render-template-raster-stage.client', () => ({
+	withTemplateRasterStage: async (
+		html: string,
+		consume: (element: HTMLElement) => Promise<unknown>,
+	) => {
+		const element = document.createElement('div')
+		element.innerHTML = html
+		return consume(element)
+	},
+}))
 
 const PNG_REQUEST = {
 	artifact: 'raster',
@@ -60,7 +67,6 @@ describe('Artifact export', () => {
 		vi.clearAllMocks()
 		vi.mocked(elementToPng).mockResolvedValue(new Blob(['png']))
 		vi.mocked(elementToJpeg).mockResolvedValue(new Blob(['jpeg']))
-		vi.mocked(htmlToPng).mockResolvedValue(new Blob(['png']))
 		vi.stubGlobal('Image', StubImage)
 	})
 
@@ -112,7 +118,7 @@ describe('Artifact export', () => {
 		expect(video.source.restore).toHaveBeenCalledOnce()
 	})
 
-	it('HTML과 DOM-backed Raster Artifact를 같은 PNG leaf로 변환한다', async () => {
+	it('Template과 Image Raster Artifact를 같은 PNG leaf로 변환한다', async () => {
 		const html = createTemplateRasterArtifact({
 			html: '<div>card</div>',
 			width: 600,
@@ -122,24 +128,28 @@ describe('Artifact export', () => {
 		if (!element) throw new Error('fixture artifact is missing')
 
 		await expect(
-			exportHtmlRasterArtifactAsPng('template', html, PNG_REQUEST),
+			exportRasterArtifactAsPng('template', html, PNG_REQUEST),
 		).resolves.toMatchObject({
 			filename: 'template.png',
 		})
 		await expect(
-			exportElementRasterArtifactAsPng('image', element, PNG_REQUEST),
+			exportRasterArtifactAsPng('image', element, PNG_REQUEST),
 		).resolves.toMatchObject({
 			filename: 'image.png',
 		})
-		expect(htmlToPng).toHaveBeenCalledWith('<div>card</div>', 600, 300, PNG_REQUEST.options)
-		expect(elementToPng).toHaveBeenCalledWith(expect.any(HTMLElement), {
+		expect(elementToPng).toHaveBeenNthCalledWith(1, expect.any(HTMLElement), {
+			width: 600,
+			height: 300,
+			...PNG_REQUEST.options,
+		})
+		expect(elementToPng).toHaveBeenNthCalledWith(2, expect.any(HTMLElement), {
 			width: 2048,
 			height: 3072,
 			...PNG_REQUEST.options,
 		})
 	})
 
-	it('HTML Raster Artifact를 공통 JPEG leaf로 변환한다', async () => {
+	it('Template Raster Artifact를 공통 JPEG leaf로 변환한다', async () => {
 		const html = createTemplateRasterArtifact({
 			html: '<div>card</div>',
 			width: 600,
@@ -147,7 +157,7 @@ describe('Artifact export', () => {
 		})
 
 		await expect(
-			exportHtmlRasterArtifactAsJpeg('template', html, JPEG_REQUEST),
+			exportRasterArtifactAsJpeg('template', html, JPEG_REQUEST),
 		).resolves.toMatchObject({ filename: 'template.jpg', mimeType: 'image/jpeg' })
 		expect(elementToJpeg).toHaveBeenCalledWith(expect.any(HTMLElement), {
 			width: 600,
@@ -159,36 +169,78 @@ describe('Artifact export', () => {
 	it('Canvas Raster Artifact를 PNG와 JPEG로 변환하고 preview를 복원한다', async () => {
 		const canvas = document.createElement('canvas')
 		const render = vi.fn()
-		const restore = vi.fn()
 		const toBlob = vi
 			.spyOn(canvas, 'toBlob')
 			.mockImplementation((callback, type) =>
 				callback(new Blob([type ?? ''], { type: type ?? '' })),
 			)
-		const artifact: RasterArtifact<{
-			canvas: HTMLCanvasElement
-			render(width: number, height: number): void
-			restore(): void
-		}> = { kind: 'raster', source: { canvas, render, restore } }
+		const artifact = createGraphicRasterArtifact({
+			canvas,
+			getViewport: () => ({ width: 320, height: 240 }),
+			render,
+		})
 
 		await expect(
-			exportCanvasRasterArtifactAsPng('graphic', artifact, PNG_REQUEST, {
+			exportRasterArtifactAsPng('graphic', artifact, PNG_REQUEST, {
 				width: 800,
 				height: 600,
 			}),
 		).resolves.toMatchObject({ filename: 'graphic.png', mimeType: 'image/png' })
 		await expect(
-			exportCanvasRasterArtifactAsJpeg('graphic', artifact, JPEG_REQUEST, {
+			exportRasterArtifactAsJpeg('graphic', artifact, JPEG_REQUEST, {
 				width: 640,
 				height: 480,
 			}),
 		).resolves.toMatchObject({ filename: 'graphic.jpg', mimeType: 'image/jpeg' })
 
 		expect(render).toHaveBeenNthCalledWith(1, 800, 600)
-		expect(render).toHaveBeenNthCalledWith(2, 640, 480)
+		expect(render).toHaveBeenNthCalledWith(2, 320, 240)
+		expect(render).toHaveBeenNthCalledWith(3, 640, 480)
+		expect(render).toHaveBeenNthCalledWith(4, 320, 240)
 		expect(toBlob).toHaveBeenNthCalledWith(1, expect.any(Function), 'image/png', undefined)
 		expect(toBlob).toHaveBeenNthCalledWith(2, expect.any(Function), 'image/jpeg', 0.9)
-		expect(restore).toHaveBeenCalledTimes(2)
+	})
+
+	it('같은 Raster Artifact를 Studio 구분 없이 인쇄와 정적 MP4로 변환한다', async () => {
+		const canvas = document.createElement('canvas')
+		vi.spyOn(canvas, 'toBlob').mockImplementation((callback) => callback(new Blob(['png'])))
+		const artifact = createGraphicRasterArtifact({
+			canvas,
+			getViewport: () => ({ width: 600, height: 300 }),
+			render: vi.fn(),
+		})
+		await executeArtifactExport({
+			artifact,
+			fileName: 'asset',
+			request: {
+				artifact: 'raster',
+				format: 'pdf',
+				colorProfile: { space: 'cmyk', icc: 'cgats21-crpc6' },
+				options: { ppi: 300, bleedMm: 0 },
+			},
+		})
+		expect(requestPrintExport).toHaveBeenCalledWith(
+			expect.objectContaining({ fileName: 'asset', format: 'pdf', ppi: 300 }),
+		)
+
+		await executeArtifactExport({
+			artifact,
+			fileName: 'asset',
+			request: {
+				artifact: 'raster',
+				format: 'mp4',
+				options: {
+					container: 'mp4',
+					codec: 'h264',
+					colorSpace: 'rec709',
+					durationSeconds: 1,
+					fps: 24,
+					width: 600,
+					height: 300,
+				},
+			},
+		})
+		expect(canvasFramesToMp4).toHaveBeenCalled()
 	})
 
 	it('Original Artifact는 변환 없이 원본 Blob을 전달한다', async () => {

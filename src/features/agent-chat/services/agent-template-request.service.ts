@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { type PrintPpi, parsePrintPpi } from '@/features/studio-export/print-policy'
 import {
 	collectTemplateSlots,
 	type TemplateSlot,
@@ -34,8 +33,6 @@ export type AgentTemplateImageAttachment = {
 	html: string
 	width: number
 	height: number
-	printPpi?: PrintPpi
-	templateVersion?: string
 	values: TemplateSlotValues
 	output: TemplateConfig['output']
 	controller: TemplateConfig['controller']
@@ -103,7 +100,6 @@ export async function prepareTemplateImage(
 		nodeConfigs: renderModel.nodeConfigs,
 		width: renderModel.width,
 		height: renderModel.height,
-		printPpi: parsePrintPpi(template.printPpi),
 		templateVersion: template.updatedAt,
 		controllerRestrictions: template.controllerRestrictions,
 		exportPolicy: template.exportPolicy,
@@ -116,8 +112,6 @@ export async function prepareTemplateImage(
 		html: renderModel.html,
 		width: renderModel.width,
 		height: renderModel.height,
-		printPpi: parsePrintPpi(template.printPpi),
-		templateVersion: template.updatedAt,
 		output: studioConfig.output,
 		controller: studioConfig.controller,
 		values: filterTemplateSlotValues(

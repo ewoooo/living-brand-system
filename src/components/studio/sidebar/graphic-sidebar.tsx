@@ -5,6 +5,7 @@ import { Controller } from '@/components/studio/shared/controller'
 import { ControllerRenderer } from '@/components/studio/shared/controller-renderer'
 import {
 	ExportAction,
+	PrintControls,
 	SizingControls,
 	VideoControls,
 } from '@/components/studio/shared/output-controls'
@@ -55,6 +56,13 @@ export function GraphicSidebar({ output }: { output: GraphicExportView }) {
 						maxDurationSeconds={video.maxDurationSeconds}
 						onFpsChange={output.setFps}
 						onDurationChange={output.setDuration}
+					/>
+				)}
+				{(format === 'tiff' || format === 'pdf') && config.output.print && (
+					<PrintControls
+						ppi={output.draft.ppi}
+						options={config.output.print.ppi}
+						onChange={output.setPpi}
 					/>
 				)}
 			</div>
