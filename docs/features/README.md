@@ -12,6 +12,7 @@
 
 | Feature | 상태 | 명세 |
 | --- | --- | --- |
+| Studio | 구현 | [studio.md](studio.md) |
 | Image | 구현 | [image.md](image.md) |
 | Review | 구현 | [review.md](review.md) |
 | Create | 구현(일부 로드맵) | [create.md](create.md) |
