@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ComponentProps } from 'react'
+import { type ComponentProps, useEffect } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { graphicRuntimeManifests } from '@/features/graphic-generation/domain/graphic-studio-manifest'
@@ -28,6 +28,9 @@ const mocks = vi.hoisted(() => ({
 	requestImageGeneration: vi.fn(),
 	resizeGraphicPreview: vi.fn(),
 	resizeObserverCallback: undefined as ResizeObserverCallback | undefined,
+	templateArtifact: undefined as
+		| (() => { kind: 'raster'; source: { height: number; html: string; width: number } })
+		| undefined,
 	updateGraphicPreview: vi.fn(),
 }))
 
@@ -38,6 +41,14 @@ vi.mock('@/features/studio-export/hooks/use-export', () => ({
 		error: null,
 		run: (request: { format: string }) => mocks.exportTemplate(request.format),
 	}),
+}))
+vi.mock('@/features/studio-export/services/export-template.client', () => ({
+	createTemplateExportSource: (
+		artifact: () => { kind: 'raster'; source: { height: number; html: string; width: number } },
+	) => {
+		mocks.templateArtifact = artifact
+		return {}
+	},
 }))
 vi.mock('next/navigation', () => ({
 	useRouter: () => ({ push: mocks.push }),
@@ -185,6 +196,19 @@ function BackgroundTypeMutationProbe() {
 	)
 }
 
+function GraphicCaptureProbe() {
+	const { background, canvas } = useTemplateStudio()
+	useEffect(() => {
+		canvas.registerGraphicFrame(mocks.captureGraphicFrame)
+		return () => canvas.registerGraphicFrame(null)
+	}, [canvas])
+	return (
+		<button type="button" onClick={() => background.selectType('graphic')}>
+			select graphic for export
+		</button>
+	)
+}
+
 function TemplateControlMutationProbe() {
 	const { text, background } = useTemplateStudio()
 	return (
@@ -238,6 +262,7 @@ function ImageRaceProbe() {
 describe('TemplateGenerator', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
+		mocks.captureGraphicFrame.mockReturnValue('data:image/png;base64,graphic')
 		mocks.canExportTemplate.mockReturnValue(true)
 		mocks.mountGraphicPreview.mockResolvedValue({
 			captureFrame: mocks.captureGraphicFrame,
@@ -247,6 +272,7 @@ describe('TemplateGenerator', () => {
 			update: mocks.updateGraphicPreview,
 		})
 		mocks.resizeObserverCallback = undefined
+		mocks.templateArtifact = undefined
 		vi.stubGlobal(
 			'ResizeObserver',
 			class {
@@ -299,6 +325,30 @@ describe('TemplateGenerator', () => {
 		expect(screen.getByTestId('template-output-formats')).toHaveTextContent('svg')
 		fireEvent.click(screen.getByRole('button', { name: 'export unsupported svg' }))
 		expect(mocks.exportTemplate).not.toHaveBeenCalled()
+	})
+
+	it('Raster Artifact producer는 export 실행 시점의 그래픽 프레임을 합성한다', () => {
+		mocks.captureGraphicFrame.mockReturnValue('/graphic-frame.png')
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateConfig(template, imageConfigs, graphicRuntimeManifests)}
+				template={template}
+				navigation={navigation}
+			>
+				<GraphicCaptureProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic for export' }))
+		const artifact = mocks.templateArtifact?.()
+		mocks.captureGraphicFrame.mockReturnValue('/newest-graphic-frame.png')
+		mocks.templateArtifact?.()
+
+		expect(mocks.captureGraphicFrame).toHaveBeenCalledTimes(2)
+		expect(artifact).toMatchObject({
+			kind: 'raster',
+			source: { height: 300, width: 400 },
+		})
 	})
 
 	it('출력 캔버스 비율을 작업 영역에 맞춰 프리뷰에 반영한다', () => {

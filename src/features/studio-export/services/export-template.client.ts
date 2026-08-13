@@ -6,7 +6,10 @@ import type { StudioExportSource } from './execute-studio-export'
 import {
 	canExportTemplate,
 	type TemplateExportContext,
+	type TemplateExportMetadata,
 	type TemplateExportRequest,
+	type TemplateRasterArtifact,
+	type TemplateRasterArtifactProducer,
 } from './export-template'
 import { requestTemplatePrint, TemplatePrintDownloadError } from './export-template-print.client'
 
@@ -16,16 +19,27 @@ const EXPORT_ERROR_MESSAGES: Record<TemplateExportRequest['format'], string> = {
 	tiff: 'TIFF 내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.',
 }
 
-/** Template canonical HTML과 print identity를 공통 export 실행 port에 결합한다. */
+/** Template Raster Artifact와 metadata를 기존 공통 export 실행 port에 결합하는 이행 bridge다. */
 export function createTemplateExportSource(
-	context: TemplateExportContext | (() => TemplateExportContext),
+	artifact: TemplateRasterArtifactProducer,
+	context: TemplateExportContext,
 ): StudioExportSource<TemplateExportRequest> {
-	const resolveContext = () => (typeof context === 'function' ? context() : context)
 	return {
-		raster: { png: (request) => exportTemplatePng(request, resolveContext()) },
+		raster: {
+			png: async (request) => {
+				assertCanExportTemplate(request, context)
+				return exportTemplatePng(request, await artifact(), context)
+			},
+		},
 		print: {
-			tiff: (request) => exportTemplateTiff(request, resolveContext()),
-			pdf: (request) => exportTemplatePdf(request, resolveContext()),
+			tiff: async (request) => {
+				assertCanExportTemplate(request, context)
+				return exportTemplateTiff(request, await artifact(), context)
+			},
+			pdf: async (request) => {
+				assertCanExportTemplate(request, context)
+				return exportTemplatePdf(request, await artifact(), context)
+			},
 		},
 	}
 }
@@ -33,12 +47,14 @@ export function createTemplateExportSource(
 /** Template PNG 출력을 실행한다. DOM 캡처 I/O는 htmlToPng adapter가 소유한다. */
 export async function exportTemplatePng(
 	request: Extract<TemplateExportRequest, { format: 'png' }>,
+	artifact: TemplateRasterArtifact,
 	context: TemplateExportContext,
 ): Promise<ExportResult> {
-	assertCanExportTemplate(request, context)
+	const metadata = assertCanExportTemplate(request, context)
 	try {
-		const data = await htmlToPng(context.html, context.width, context.height, request.options)
-		return { data, filename: `${context.fileName}.png`, mimeType: 'image/png' }
+		const { height, html, width } = artifact.source
+		const data = await htmlToPng(html, width, height, request.options)
+		return { data, filename: `${metadata.fileName}.png`, mimeType: 'image/png' }
 	} catch (error) {
 		throw new Error(EXPORT_ERROR_MESSAGES.png, { cause: error })
 	}
@@ -47,45 +63,49 @@ export async function exportTemplatePng(
 /** Template PDF 출력을 실행한다. DOM·HTTP I/O는 client adapter가 소유한다. */
 export function exportTemplatePdf(
 	request: Extract<TemplateExportRequest, { format: 'pdf' }>,
+	artifact: TemplateRasterArtifact,
 	context: TemplateExportContext,
 ): Promise<ExportResult> {
-	return exportTemplatePrint(request, context, 'application/pdf')
+	return exportTemplatePrint(request, artifact, context, 'application/pdf')
 }
 
 /** Template TIFF 출력을 실행한다. DOM·HTTP I/O는 client adapter가 소유한다. */
 export function exportTemplateTiff(
 	request: Extract<TemplateExportRequest, { format: 'tiff' }>,
+	artifact: TemplateRasterArtifact,
 	context: TemplateExportContext,
 ): Promise<ExportResult> {
-	return exportTemplatePrint(request, context, 'image/tiff')
+	return exportTemplatePrint(request, artifact, context, 'image/tiff')
 }
 
 async function exportTemplatePrint(
 	request: Extract<TemplateExportRequest, { format: 'pdf' | 'tiff' }>,
+	artifact: TemplateRasterArtifact,
 	context: TemplateExportContext,
 	mimeType: 'application/pdf' | 'image/tiff',
 ): Promise<ExportResult> {
-	assertCanExportTemplate(request, context)
+	const metadata = assertCanExportTemplate(request, context)
 	try {
 		// canExportTemplate이 templateVersion 존재를 보장한다 — 타입 좁히기용 가드.
-		const { templateVersion } = context
+		const { templateVersion } = metadata
 		if (!templateVersion)
 			throw new Error(`${request.format.toUpperCase()} export is unavailable.`)
-		const png = await htmlToPng(context.html, context.width, context.height, {
+		const { height, html, width } = artifact.source
+		const png = await htmlToPng(html, width, height, {
 			scale: 1,
 			transparent: false,
 		})
 		const data = await requestTemplatePrint({
 			colorProfile: request.colorProfile.icc,
-			fileName: context.fileName,
+			fileName: metadata.fileName,
 			format: request.format,
 			png,
-			templateId: context.templateId,
+			templateId: metadata.templateId,
 			templateVersion,
 		})
 		return {
 			data,
-			filename: `${context.fileName}.${request.format}`,
+			filename: `${metadata.fileName}.${request.format}`,
 			mimeType,
 		}
 	} catch (error) {
@@ -98,8 +118,10 @@ async function exportTemplatePrint(
 function assertCanExportTemplate(
 	request: TemplateExportRequest,
 	context: TemplateExportContext,
-): void {
+): TemplateExportMetadata {
 	if (!canExportTemplate(request, context)) {
 		throw new Error(`${request.format.toUpperCase()} export is unavailable.`)
 	}
+	// canExportTemplate이 null을 거부한다 — 실행 함수의 타입 좁히기용 반환값이다.
+	return context.metadata as TemplateExportMetadata
 }

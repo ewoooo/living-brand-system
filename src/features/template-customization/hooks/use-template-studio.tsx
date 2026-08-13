@@ -22,14 +22,11 @@ import {
 } from '@/features/image-generation/domain/image-studio-config'
 import { requestImageGeneration } from '@/features/image-generation/services/generate-image.client'
 import type { StudioOutputFormat } from '@/features/studio-export/export-contract'
-import { useExport } from '@/features/studio-export/hooks/use-export'
+import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import {
-	canExportTemplate,
-	createTemplateExportRequest,
-	type TemplateExportContext,
-	type TemplateExportRequest,
+	createTemplateRasterArtifact,
+	type TemplateExportMetadata,
 } from '@/features/studio-export/services/export-template'
-import { createTemplateExportSource } from '@/features/studio-export/services/export-template.client'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import type { ImageTransformValue } from '@/features/template-customization/domain/image-edit-transform'
 import {
@@ -188,9 +185,6 @@ export function TemplateStudioProvider({
 	)
 	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
 	const effectiveExportFormats = config.output.formats
-	const [format, setFormat] = useState<StudioOutputFormat | null>(
-		effectiveExportFormats[0] ?? null,
-	)
 	const imageContracts = useMemo(
 		() =>
 			Object.fromEntries(
@@ -360,39 +354,35 @@ export function TemplateStudioProvider({
 		setClippedSlotIds(clipped)
 	}, [html, textSlots, textValues])
 
-	const exportContext: TemplateExportContext = {
+	const exportMetadata: TemplateExportMetadata = {
 		fileName: template.name,
-		height,
-		html: composedHtml,
 		printPpi: template.printPpi,
 		templateId: template.id,
 		templateVersion: template.templateVersion,
-		width,
-		output: config.output,
 		controller: {
 			groups: config.controller.groups,
 			values: templateControllerValues(config, textSlots, textValues, textColor, background),
 		},
 	}
-	const templateExport = useExport<TemplateExportRequest>({
-		capability: config.output,
-		canExport: (request) => canExportTemplate(request, exportContext),
-		source: createTemplateExportSource(() => {
+	const templateExport = useTemplateExport({
+		artifact: () => {
 			const graphicFrame =
 				background.type === 'graphic' ? graphicFrameRef.current?.() : undefined
-			return {
-				...exportContext,
+			return createTemplateRasterArtifact({
+				height,
 				html: graphicFrame
 					? composeTemplateHtml(
-							exportContext.html,
+							composedHtml,
 							{},
 							{ canvasBackground: { imageUrl: graphicFrame } },
 						)
-					: exportContext.html,
-			}
-		}),
+					: composedHtml,
+				width,
+			})
+		},
+		capability: config.output,
+		metadata: exportMetadata,
 	})
-	const exportRequest = format ? createTemplateExportRequest(format, template.printPpi) : null
 
 	const value: TemplateStudioValue = {
 		navigation,
@@ -477,16 +467,12 @@ export function TemplateStudioProvider({
 		canvas: { html: composedHtml, previewRef, registerGraphicFrame },
 		exporting: {
 			formats: effectiveExportFormats,
-			format,
-			setFormat: (next) => {
-				if (effectiveExportFormats.includes(next)) setFormat(next)
-			},
-			canExport: Boolean(exportRequest && templateExport.canExport(exportRequest)),
-			busy: templateExport.exporting !== null,
+			format: templateExport.format,
+			setFormat: templateExport.setFormat,
+			canExport: templateExport.canExport,
+			busy: templateExport.busy,
 			error: templateExport.error,
-			run: () => {
-				if (exportRequest) void templateExport.run(exportRequest)
-			},
+			run: templateExport.run,
 		},
 	}
 

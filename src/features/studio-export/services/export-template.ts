@@ -6,6 +6,7 @@ import {
 	type ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 import { DEFAULT_CMYK_ICC_PROFILE } from '../color-profile'
+import type { ExportArtifactProducer, RasterArtifact } from '../export-artifact'
 import type { CmykColorProfile, ExportRequest, StudioOutputFormat } from '../export-contract'
 import type { PrintPpi } from '../print-policy'
 
@@ -14,19 +15,37 @@ export type TemplateExportRequest =
 	| (Extract<ExportRequest, { format: 'tiff' | 'pdf' }> & {
 			colorProfile: CmykColorProfile
 	  })
-export type TemplateExportContext = {
-	fileName: string
+
+export type TemplateRasterArtifactSource = {
 	height: number
 	html: string
+	width: number
+}
+
+export type TemplateRasterArtifact = RasterArtifact<TemplateRasterArtifactSource>
+export type TemplateRasterArtifactProducer = ExportArtifactProducer<TemplateRasterArtifact>
+
+export type TemplateExportMetadata = {
+	fileName: string
 	printPpi?: PrintPpi
 	templateId: number
 	templateVersion?: string
-	width: number
-	output: StudioOutputCapability
 	controller: {
 		groups: readonly ControllerGroupDefinition[]
 		values: Readonly<ControllerValues>
 	}
+}
+
+export type TemplateExportContext = {
+	capability: StudioOutputCapability
+	metadata: TemplateExportMetadata | null
+}
+
+/** Template 렌더 결과를 파일 형식과 무관한 Raster Artifact로 만든다. */
+export function createTemplateRasterArtifact(
+	source: TemplateRasterArtifactSource,
+): TemplateRasterArtifact {
+	return { kind: 'raster', source }
 }
 
 /**
@@ -37,10 +56,12 @@ export function canExportTemplate(
 	request: TemplateExportRequest,
 	context: TemplateExportContext,
 ): boolean {
+	const { metadata } = context
 	return (
-		supportsStudioExportRequest(context.output, request) &&
-		supportsTemplateExport(request.format, context) &&
-		acceptsControllerExecutionValues(context.controller.groups, context.controller.values)
+		metadata !== null &&
+		supportsStudioExportRequest(context.capability, request) &&
+		supportsTemplateExport(request.format, metadata) &&
+		acceptsControllerExecutionValues(metadata.controller.groups, metadata.controller.values)
 	)
 }
 
@@ -80,11 +101,11 @@ export function createTemplateExportRequest(
 /** Config 파생용 실제 adapter/source capability. Admin 정책은 여기서 섞지 않는다. */
 export function supportsTemplateExport(
 	format: StudioOutputFormat,
-	context: Pick<TemplateExportContext, 'printPpi' | 'templateVersion'>,
+	metadata: Pick<TemplateExportMetadata, 'printPpi' | 'templateVersion'>,
 ): boolean {
 	return (
 		format === 'png' ||
 		((format === 'tiff' || format === 'pdf') &&
-			Boolean(context.printPpi && context.templateVersion))
+			Boolean(metadata.printPpi && metadata.templateVersion))
 	)
 }
