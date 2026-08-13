@@ -1,7 +1,11 @@
 'use client'
 
 import p5 from 'p5'
-import type { GraphicRuntimeAdapter } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
+import {
+	createGraphicRasterArtifact,
+	type GraphicRuntimeAdapter,
+} from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
+import type { CanvasRasterSource, RasterArtifact } from '@/features/studio-export/export-artifact'
 import { toControllerPadValue } from './definition'
 import {
 	createForwardStraightScene,
@@ -15,7 +19,7 @@ export type ForwardStraightRuntime = {
 	update(input: ForwardStraightInput): void
 	resize(width: number, height: number): void
 	getViewport(): { width: number; height: number }
-	captureFrame(): string
+	artifacts: { raster: RasterArtifact<CanvasRasterSource> }
 	destroy(): void
 }
 
@@ -36,6 +40,7 @@ export function createForwardStraightRuntime({
 	let draggingOrigin = false
 	let canvas: HTMLCanvasElement | null = null
 	const initialSize = getCanvasSize(container.clientWidth, container.clientHeight)
+	let viewport = initialSize
 	const instance = new p5((preview) => {
 		preview.setup = () => {
 			canvas = preview.createCanvas(initialSize.width, initialSize.height)
@@ -104,24 +109,32 @@ export function createForwardStraightRuntime({
 		}
 	}, container)
 
+	function render(width: number, height: number) {
+		const size = getCanvasSize(width, height)
+		instance.resizeCanvas(size.width, size.height)
+		instance.redraw()
+	}
+
+	if (!canvas) throw new Error('Forward Straight canvas를 사용할 수 없습니다.')
+	const raster = createGraphicRasterArtifact({
+		canvas,
+		getViewport: () => viewport,
+		render,
+	})
+
 	return {
 		update(nextInput) {
 			currentInput = nextInput
 			instance.redraw()
 		},
 		resize(width, height) {
-			const size = getCanvasSize(width, height)
-			instance.resizeCanvas(size.width, size.height)
-			instance.redraw()
+			viewport = getCanvasSize(width, height)
+			render(viewport.width, viewport.height)
 		},
 		getViewport() {
-			return { width: instance.width, height: instance.height }
+			return viewport
 		},
-		captureFrame() {
-			if (!canvas) throw new Error('Forward Straight canvas를 사용할 수 없습니다.')
-			instance.redraw()
-			return canvas.toDataURL('image/png')
-		},
+		artifacts: { raster },
 		destroy() {
 			instance.remove()
 		},
@@ -158,7 +171,7 @@ const runtime = {
 			update: (next) => mounted.update(toForwardStraightInput(next)),
 			resize: (width, height) => mounted.resize(width, height),
 			getViewport: () => mounted.getViewport(),
-			captureFrame: () => mounted.captureFrame(),
+			artifacts: mounted.artifacts,
 			destroy: () => mounted.destroy(),
 		}
 	},

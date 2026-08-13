@@ -4,7 +4,7 @@ import {
 	createGraphicStudioPluginCatalog,
 	type GraphicStudioPlugin,
 } from '@/features/graphic-generation/runtime/graphic-plugin'
-import { supportsStudioOutput } from '@/features/studio-export/studio-output'
+import type { VectorSceneArtifact } from '@/features/studio-export/export-artifact'
 import type {
 	ControllerRuntimeBindings,
 	ControllerValues,
@@ -15,29 +15,25 @@ const graphicStudioPluginCatalog = createGraphicStudioPluginCatalog(graphicStudi
 
 type GraphicRuntimeId = keyof typeof graphicStudioPluginCatalog
 
-/** 등록된 Graphic plugin만 순수 SVG로 투영한다. */
-export function renderGraphicStudioSvg(
+/** 등록된 Graphic model만 파일 형식과 무관한 Vector Artifact로 투영한다. */
+export function getGraphicStudioVectorArtifact(
 	config: GraphicStudioConfig,
 	values: ControllerValues,
 	viewport: { width: number; height: number },
-): string | null {
+): VectorSceneArtifact | null {
 	const plugin = getGraphicStudioPlugin(config)
 	if (
-		!plugin?.renderSvg ||
-		!supportsStudioOutput(config.output, 'svg') ||
+		!plugin?.createVectorArtifact ||
 		!acceptsControllerExecutionValues(config.controller.groups, values)
 	) {
 		return null
 	}
-	return plugin.renderSvg(values, viewport)
+	return plugin.createVectorArtifact(values, viewport)
 }
 
-/** SVG adapter가 준비된 Graphic Config만 Template 합성 경로에 허용한다. */
-export function canRenderGraphicStudioSvg(config: GraphicStudioConfig): boolean {
-	return (
-		supportsStudioOutput(config.output, 'svg') &&
-		Boolean(getGraphicStudioPlugin(config)?.renderSvg)
-	)
+/** 파일 형식 정책과 무관하게 Vector Artifact producer 존재 여부만 반환한다. */
+export function hasGraphicStudioVectorArtifact(config: GraphicStudioConfig): boolean {
+	return Boolean(getGraphicStudioPlugin(config)?.createVectorArtifact)
 }
 
 /** Graphic plugin이 의미를 아는 control에만 대상 기하 binding을 제공한다. */

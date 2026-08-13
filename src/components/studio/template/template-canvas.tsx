@@ -136,7 +136,9 @@ function TemplateGraphicBackground({
 				runtime = mounted
 				runtimeRef.current = mounted
 				mounted.resize(width, height)
-				canvas.registerGraphicFrame(() => mounted.captureFrame())
+				canvas.registerGraphicFrame(() =>
+					mounted.artifacts.raster.source.canvas.toDataURL('image/png'),
+				)
 			})
 			.catch((mountError) => {
 				console.error(mountError)

@@ -11,17 +11,7 @@ import {
 } from 'react'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import type { GraphicRuntime } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
-import { canRenderGraphicStudioSvg } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
-import { exportGraphicStudioSvg } from '@/features/graphic-generation/services/export-graphic.client'
-import { exportGraphicStudioVideo } from '@/features/graphic-generation/services/export-graphic-video.client'
-import type {
-	ExportRequest,
-	RgbColorProfile,
-	StudioOutputFormat,
-	VideoExportSpec,
-} from '@/features/studio-export/export-contract'
-import { useExport } from '@/features/studio-export/hooks/use-export'
-import type { StudioExportSource } from '@/features/studio-export/services/execute-studio-export'
+import { useGraphicExport } from '@/features/studio-export/hooks/use-graphic-export'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlValue,
@@ -32,27 +22,7 @@ import {
 } from '@/modules/studio-controller/controller-definition'
 
 type GraphicOutputSize = { width: number; height: number }
-type GraphicExportRequest = Extract<ExportRequest, { format: 'svg' | 'mp4' }>
-type GraphicRuntimeSource = { video?: NonNullable<GraphicRuntime['video']> }
-
-export type GraphicOutputDraft =
-	| {
-			format: 'svg'
-			width: number | null
-			height: number | null
-	  }
-	| {
-			format: 'mp4'
-			width: number
-			height: number
-			fps: VideoExportSpec['fps']
-			durationSeconds: number
-	  }
-	| {
-			format: Exclude<StudioOutputFormat, 'svg' | 'mp4'>
-			width: number | null
-			height: number | null
-	  }
+type GraphicExportState = ReturnType<typeof useGraphicExport>
 
 type GraphicStudioValue = {
 	profiles: {
@@ -67,19 +37,12 @@ type GraphicStudioValue = {
 		registerBindings: (bindings: ControllerRuntimeBindings) => void
 	}
 	canvas: {
-		registerSource: (source: GraphicRuntimeSource | null, viewport?: GraphicOutputSize) => void
+		registerArtifacts: (
+			artifacts: GraphicRuntime['artifacts'] | null,
+			viewport?: GraphicOutputSize,
+		) => void
 	}
-	output: {
-		draft: GraphicOutputDraft | null
-		canExport: boolean
-		busy: boolean
-		error: string | null
-		setFormat: (format: StudioOutputFormat) => void
-		setSize: (size: GraphicOutputSize) => void
-		setFps: (fps: VideoExportSpec['fps']) => void
-		setDuration: (durationSeconds: number) => void
-		run: () => void
-	}
+	output: GraphicExportState['output']
 }
 
 const GraphicStudioContext = createContext<GraphicStudioValue | null>(null)
@@ -105,11 +68,6 @@ export function GraphicStudioProvider({
 	const groups = config.controller.groups
 	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
 	const [bindings, setBindings] = useState<ControllerRuntimeBindings>({})
-	const [runtimeSource, setRuntimeSource] = useState<GraphicRuntimeSource | null>(null)
-	const [viewport, setViewport] = useState<GraphicOutputSize | null>(null)
-	const [outputDraft, setOutputDraft] = useState<GraphicOutputDraft | null>(() =>
-		createGraphicOutputDraft(initial),
-	)
 	const bindingsRef = useRef<ControllerRuntimeBindings>({})
 	const definitions = useMemo(
 		() =>
@@ -148,130 +106,34 @@ export function GraphicStudioProvider({
 		[definitions],
 	)
 
-	const registerSource = useCallback(
-		(source: GraphicRuntimeSource | null, nextViewport?: GraphicOutputSize) => {
-			setRuntimeSource(source)
-			if (nextViewport) {
-				const size = normalizeOutputSize(nextViewport)
-				setViewport(size)
-				setOutputDraft((current) =>
-					current?.format === 'svg' && (current.width === null || current.height === null)
-						? { ...current, ...size }
-						: current,
-				)
-			}
-		},
-		[],
-	)
+	const graphicExport = useGraphicExport({ config, values })
 	const selectProfile = useCallback(
 		(nextProfileId: string) => {
 			const next = configs.find((item) => item.id === nextProfileId)
 			if (!next || next.id === profileId) return
 			bindingsRef.current = {}
-			setRuntimeSource(null)
 			setBindings({})
-			setViewport(null)
-			setOutputDraft(createGraphicOutputDraft(next))
 			setValues(createControllerValues(next.controller.groups))
 			setProfileId(next.id)
 		},
 		[configs, profileId],
 	)
-	const setFormat = useCallback(
-		(format: StudioOutputFormat) => {
-			if (!config.output.formats.includes(format)) return
-			setOutputDraft(createGraphicOutputDraft(config, format, viewport))
-		},
-		[config, viewport],
-	)
-	const setSize = useCallback(
-		(size: GraphicOutputSize) => {
-			if (!validOutputSize(size)) return
-			setOutputDraft((current) => {
-				if (!current) return current
-				if (current.format === 'mp4') {
-					const video = config.output.video?.mp4
-					if (!video || size.width > video.maxWidth || size.height > video.maxHeight) {
-						return current
-					}
-				}
-				return { ...current, ...size }
-			})
-		},
-		[config.output.video],
-	)
-	const setFps = useCallback(
-		(fps: VideoExportSpec['fps']) => {
-			if (!config.output.video?.mp4.fps.includes(fps)) return
-			setOutputDraft((current) => (current?.format === 'mp4' ? { ...current, fps } : current))
-		},
-		[config.output.video],
-	)
-	const setDuration = useCallback(
-		(durationSeconds: number) => {
-			const maxDuration = config.output.video?.mp4.maxDurationSeconds
-			if (!Number.isFinite(durationSeconds) || durationSeconds <= 0 || !maxDuration) return
-			setOutputDraft((current) =>
-				current?.format === 'mp4' && durationSeconds <= maxDuration
-					? { ...current, durationSeconds }
-					: current,
-			)
-		},
-		[config.output.video],
-	)
-	const exportSource = useMemo<StudioExportSource<GraphicExportRequest>>(() => {
-		const video = runtimeSource?.video
-		return {
-			vector: canRenderGraphicStudioSvg(config)
-				? { svg: (request) => exportGraphicStudioSvg(config, values, request) }
-				: undefined,
-			video: video
-				? { mp4: (request) => exportGraphicStudioVideo(config, request, video) }
-				: undefined,
-		}
-	}, [config, runtimeSource, values])
-	const graphicExport = useExport<GraphicExportRequest>({
-		capability: config.output,
-		source: exportSource,
-	})
-	const exportRequest = createGraphicExportRequest(config, outputDraft)
 	const contextValue = useMemo<GraphicStudioValue>(
 		() => ({
 			profiles: { options: configs, select: selectProfile },
 			config,
 			controls: { values, bindings, update, registerBindings },
-			canvas: { registerSource },
-			output: {
-				draft: outputDraft,
-				canExport: Boolean(exportRequest && graphicExport.canExport(exportRequest)),
-				busy: graphicExport.exporting !== null,
-				error: graphicExport.error,
-				setFormat,
-				setSize,
-				setFps,
-				setDuration,
-				run: () => {
-					if (exportRequest) void graphicExport.run(exportRequest)
-				},
-			},
+			canvas: { registerArtifacts: graphicExport.registerArtifacts },
+			output: graphicExport.output,
 		}),
 		[
 			bindings,
 			config,
 			configs,
 			registerBindings,
-			registerSource,
 			selectProfile,
-			graphicExport.error,
-			graphicExport.exporting,
-			graphicExport.canExport,
-			graphicExport.run,
-			exportRequest,
-			outputDraft,
-			setDuration,
-			setFormat,
-			setFps,
-			setSize,
+			graphicExport.output,
+			graphicExport.registerArtifacts,
 			update,
 			values,
 		],
@@ -281,88 +143,6 @@ export function GraphicStudioProvider({
 		<GraphicStudioContext.Provider value={contextValue}>
 			{children}
 		</GraphicStudioContext.Provider>
-	)
-}
-
-function createGraphicOutputDraft(
-	config: GraphicStudioConfig,
-	requestedFormat?: StudioOutputFormat,
-	viewport?: GraphicOutputSize | null,
-): GraphicOutputDraft | null {
-	const format = requestedFormat ?? config.output.formats[0]
-	if (format === 'svg') {
-		return {
-			format,
-			width: viewport?.width ?? null,
-			height: viewport?.height ?? null,
-		}
-	}
-	if (format === 'mp4') {
-		const video = config.output.video?.mp4
-		const fps = video?.fps.includes(30) ? 30 : video?.fps[0]
-		if (!video || !fps) return null
-		return {
-			format,
-			width: video.maxWidth,
-			height: video.maxHeight,
-			fps,
-			durationSeconds: Math.min(5, video.maxDurationSeconds),
-		}
-	}
-	if (!format) return null
-	return {
-		format,
-		width: viewport?.width ?? null,
-		height: viewport?.height ?? null,
-	}
-}
-
-function createGraphicExportRequest(
-	config: GraphicStudioConfig,
-	draft: GraphicOutputDraft | null,
-): GraphicExportRequest | null {
-	if (!draft) return null
-	if (draft.format === 'svg') {
-		if (draft.width === null || draft.height === null) return null
-		const icc: RgbColorProfile['icc'] = config.output.colorProfiles?.rgb?.[0] ?? 'srgb'
-		return {
-			format: 'svg',
-			colorProfile: { space: 'rgb', icc },
-			options: { width: draft.width, height: draft.height, outlineText: false },
-		}
-	}
-	if (draft.format === 'mp4') {
-		const video = config.output.video?.mp4
-		if (!video) return null
-		return {
-			format: 'mp4',
-			options: {
-				container: 'mp4',
-				codec: video.codec,
-				colorSpace: video.colorSpace,
-				width: draft.width,
-				height: draft.height,
-				fps: draft.fps,
-				durationSeconds: draft.durationSeconds,
-			},
-		}
-	}
-	return null
-}
-
-function normalizeOutputSize(size: GraphicOutputSize): GraphicOutputSize {
-	return {
-		width: Math.max(1, Math.round(size.width)),
-		height: Math.max(1, Math.round(size.height)),
-	}
-}
-
-function validOutputSize(size: GraphicOutputSize): boolean {
-	return (
-		Number.isInteger(size.width) &&
-		size.width > 0 &&
-		Number.isInteger(size.height) &&
-		size.height > 0
 	)
 }
 

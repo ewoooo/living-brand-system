@@ -79,7 +79,7 @@ function GraphicPreviewCanvas({
 				runtimeRef.current = mounted
 				const viewport = mounted.getViewport()
 				controls.registerBindings(getGraphicStudioRuntimeBindings(config, viewport))
-				canvas.registerSource({ video: mounted.video }, viewport)
+				canvas.registerArtifacts(mounted.artifacts, viewport)
 			} catch (mountError) {
 				console.error(mountError)
 				if (!disposed) setError('그래픽 미리보기를 불러오지 못했습니다.')
@@ -91,10 +91,10 @@ function GraphicPreviewCanvas({
 			disposed = true
 			runtime?.destroy()
 			runtimeRef.current = null
-			canvas.registerSource(null)
+			canvas.registerArtifacts(null)
 			controls.registerBindings({})
 		}
-	}, [adapter, canvas.registerSource, config, controls.registerBindings, controls.update])
+	}, [adapter, canvas.registerArtifacts, config, controls.registerBindings, controls.update])
 
 	useEffect(() => {
 		const stage = stageRef.current

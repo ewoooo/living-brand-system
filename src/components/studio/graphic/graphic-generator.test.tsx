@@ -13,30 +13,39 @@ import type { ControllerValues } from '@/modules/studio-controller/controller-de
 import { GraphicGenerator } from './graphic-generator'
 
 const mocks = vi.hoisted(() => {
+	const raster = {
+		kind: 'raster' as const,
+		source: {
+			canvas: {} as HTMLCanvasElement,
+			render: vi.fn(),
+			restore: vi.fn(),
+		},
+	}
 	const preview = {
-		captureFrame: vi.fn(() => 'data:image/png;base64,forward'),
+		artifacts: { raster },
 		destroy: vi.fn(),
 		getViewport: vi.fn(() => ({ width: 800, height: 600 })),
 		resize: vi.fn(),
 		update: vi.fn(),
 	}
 	const shaderPreview = {
-		captureFrame: vi.fn(() => 'data:image/png;base64,radial'),
 		destroy: vi.fn(),
 		getViewport: vi.fn(() => ({ width: 800, height: 600 })),
 		resize: vi.fn(),
 		update: vi.fn(),
-		video: {
-			canvas: {} as HTMLCanvasElement,
-			renderFrame: vi.fn(),
-			restore: vi.fn(),
+		artifacts: {
+			raster,
+			video: {
+				kind: 'video' as const,
+				source: {
+					canvas: {} as HTMLCanvasElement,
+					renderFrame: vi.fn(),
+					restore: vi.fn(),
+				},
+			},
 		},
 	}
-	const exportGraphicVideo = vi.fn(async () => ({
-		data: new Blob(['mp4'], { type: 'video/mp4' }),
-		filename: 'radial-fluted-glass.mp4',
-		mimeType: 'video/mp4',
-	}))
+	const canvasFramesToMp4 = vi.fn(async () => new Blob(['mp4'], { type: 'video/mp4' }))
 	const state = {
 		onInputChange: undefined as
 			| ((input: typeof FORWARD_STRAIGHT_DEFAULT_INPUT) => boolean)
@@ -47,7 +56,7 @@ const mocks = vi.hoisted(() => {
 		createShaderPreview: vi.fn(
 			async (_options: { container: HTMLElement; input: ControllerValues }) => shaderPreview,
 		),
-		exportGraphicVideo,
+		canvasFramesToMp4,
 		resizeObserverCallback: undefined as ResizeObserverCallback | undefined,
 		resizeObserverCount: 0,
 	}
@@ -108,8 +117,8 @@ vi.mock(
 	}),
 )
 
-vi.mock('@/features/graphic-generation/services/export-graphic-video.client', () => ({
-	exportGraphicStudioVideo: mocks.exportGraphicVideo,
+vi.mock('@/features/studio-export/adapters/canvas-frames-to-mp4.mediabunny.client', () => ({
+	canvasFramesToMp4: mocks.canvasFramesToMp4,
 }))
 
 beforeEach(() => {
@@ -290,18 +299,16 @@ describe('GraphicGenerator', () => {
 		await user.click(screen.getByRole('button', { name: '내보내기' }))
 
 		await waitFor(() =>
-			expect(mocks.exportGraphicVideo).toHaveBeenCalledWith(
-				radialFlutedGlassRuntimeManifest,
+			expect(mocks.canvasFramesToMp4).toHaveBeenCalledWith(
 				expect.objectContaining({
-					format: 'mp4',
-					options: expect.objectContaining({
+					canvas: mocks.shaderPreview.artifacts.video.source.canvas,
+					spec: expect.objectContaining({
 						width: 1280,
 						height: 720,
 						fps: 60,
 						durationSeconds: 10,
 					}),
 				}),
-				mocks.shaderPreview.video,
 			),
 		)
 		expect(createObjectURL).toHaveBeenCalledOnce()

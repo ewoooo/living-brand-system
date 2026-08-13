@@ -1,5 +1,6 @@
 import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { parseGraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import type { VectorSceneArtifact } from '@/features/studio-export/export-artifact'
 import type {
 	ControllerRuntimeBindings,
 	ControllerValues,
@@ -10,7 +11,10 @@ export type GraphicViewport = { width: number; height: number }
 /** Graphic 하나가 Catalog에 제공하는 직렬화 가능한 Manifest와 순수 runtime adapter 계약. */
 export type GraphicStudioPlugin<Id extends string = string> = {
 	manifest: GraphicRuntimeManifest & { id: Id }
-	renderSvg?: (values: ControllerValues, viewport: GraphicViewport) => string
+	createVectorArtifact?: (
+		values: ControllerValues,
+		viewport: GraphicViewport,
+	) => VectorSceneArtifact
 	getBindings?: (viewport: GraphicViewport) => ControllerRuntimeBindings
 }
 
@@ -22,9 +26,6 @@ export function defineGraphicStudioPlugin<const Id extends string>(
 	plugin: GraphicStudioPlugin<Id>,
 ): GraphicStudioPlugin<Id> {
 	parseGraphicStudioConfig(plugin.manifest)
-	if (plugin.manifest.output.formats.includes('svg') && !plugin.renderSvg) {
-		throw new Error(`${plugin.manifest.id}: SVG output adapter가 필요합니다.`)
-	}
 	return plugin
 }
 

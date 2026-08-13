@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { GraphicModelAdapter } from '@/features/graphic-generation/runtime/graphic-plugin'
+import type { VectorSceneArtifact } from '@/features/studio-export/export-artifact'
 import {
 	type ControllerRuntimeBindings,
 	type ControllerValues,
@@ -188,28 +189,41 @@ function lerp(start: number, end: number, progress: number) {
 	return start + (end - start) * progress
 }
 
-export function createForwardStraightSvg(scene: ForwardStraightScene): string {
-	const lines = scene.dashes
-		.map(
-			(dash) =>
-				`  <line x1="${fixed(dash.x1)}" y1="${fixed(dash.y1)}" x2="${fixed(dash.x2)}" y2="${fixed(dash.y2)}" stroke="${scene.lineColor}" stroke-width="${fixed(dash.weight)}" stroke-linecap="square" />`,
-		)
-		.join('\n')
-
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="${scene.width}" height="${scene.height}" viewBox="0 0 ${scene.width} ${scene.height}">
-  <rect width="${scene.width}" height="${scene.height}" fill="${scene.backgroundColor}" />
-${lines}
-  <circle cx="${fixed(scene.origin.x)}" cy="${fixed(scene.origin.y)}" r="${fixed(scene.originRadius)}" fill="${scene.originColor}" />
-</svg>`
-}
-
-function fixed(value: number): string {
-	return value.toFixed(2)
+export function createForwardStraightVectorArtifact(
+	scene: ForwardStraightScene,
+): VectorSceneArtifact {
+	return {
+		kind: 'vector',
+		source: {
+			width: scene.width,
+			height: scene.height,
+			background: scene.backgroundColor,
+			primitives: [
+				...scene.dashes.map((dash) => ({
+					kind: 'line' as const,
+					x1: dash.x1,
+					y1: dash.y1,
+					x2: dash.x2,
+					y2: dash.y2,
+					stroke: scene.lineColor,
+					strokeWidth: dash.weight,
+					lineCap: 'square' as const,
+				})),
+				{
+					kind: 'circle',
+					cx: scene.origin.x,
+					cy: scene.origin.y,
+					radius: scene.originRadius,
+					fill: scene.originColor,
+				},
+			],
+		},
+	}
 }
 
 const model = {
-	renderSvg: (values, viewport) =>
-		createForwardStraightSvg(
+	createVectorArtifact: (values, viewport) =>
+		createForwardStraightVectorArtifact(
 			createForwardStraightScene(toForwardStraightInput(values), viewport),
 		),
 	getBindings: (viewport): ControllerRuntimeBindings =>

@@ -1,6 +1,15 @@
 'use client'
 
-import type { GraphicRuntimeAdapter } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
+import {
+	createGraphicRasterArtifact,
+	type GraphicRuntimeAdapter,
+} from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
+import type {
+	CanvasRasterSource,
+	CanvasVideoSource,
+	RasterArtifact,
+	VideoArtifact,
+} from '@/features/studio-export/export-artifact'
 import {
 	type RadialFlutedGlassInput,
 	radialFlutedGlassColorToRgb,
@@ -21,11 +30,9 @@ export type RadialFlutedGlassRuntime = {
 	update(input: RadialFlutedGlassInput): void
 	resize(width: number, height: number): void
 	getViewport(): { width: number; height: number }
-	captureFrame(): string
-	video: {
-		canvas: HTMLCanvasElement
-		renderFrame(timeSeconds: number, width: number, height: number): void
-		restore(): void
+	artifacts: {
+		raster: RasterArtifact<CanvasRasterSource>
+		video: VideoArtifact<CanvasVideoSource>
 	}
 	destroy(): void
 }
@@ -224,6 +231,27 @@ void main() { mainImage(gl_FragColor, gl_FragCoord.xy); }
 
 	resize(container.clientWidth, container.clientHeight)
 	if (!reducedMotion) animationFrame = requestAnimationFrame(animate)
+	const restore = () => resize(viewport.width, viewport.height)
+	const raster = createGraphicRasterArtifact({
+		canvas,
+		getViewport: () => viewport,
+		render(width, height) {
+			canvas.width = Math.max(1, Math.floor(width))
+			canvas.height = Math.max(1, Math.floor(height))
+			draw(currentTime)
+		},
+	})
+	const videoSource: CanvasVideoSource = {
+		canvas,
+		renderFrame(timeSeconds, width, height) {
+			const previewTime = currentTime
+			canvas.width = Math.max(1, Math.floor(width))
+			canvas.height = Math.max(1, Math.floor(height))
+			draw(timeSeconds)
+			currentTime = previewTime
+		},
+		restore,
+	}
 
 	return {
 		update(nextInput) {
@@ -232,22 +260,9 @@ void main() { mainImage(gl_FragColor, gl_FragCoord.xy); }
 		},
 		resize,
 		getViewport: () => viewport,
-		captureFrame() {
-			draw(currentTime)
-			return canvas.toDataURL('image/png')
-		},
-		video: {
-			canvas,
-			renderFrame(timeSeconds, width, height) {
-				const previewTime = currentTime
-				canvas.width = Math.max(1, Math.floor(width))
-				canvas.height = Math.max(1, Math.floor(height))
-				draw(timeSeconds)
-				currentTime = previewTime
-			},
-			restore() {
-				resize(viewport.width, viewport.height)
-			},
+		artifacts: {
+			raster,
+			video: { kind: 'video', source: videoSource },
 		},
 		destroy() {
 			cancelAnimationFrame(animationFrame)
@@ -269,8 +284,7 @@ const radialFlutedGlassRuntimeAdapter = {
 			update: (next) => runtime.update(toRadialFlutedGlassInput(next)),
 			resize: (width, height) => runtime.resize(width, height),
 			getViewport: () => runtime.getViewport(),
-			captureFrame: () => runtime.captureFrame(),
-			video: runtime.video,
+			artifacts: runtime.artifacts,
 			destroy: () => runtime.destroy(),
 		}
 	},

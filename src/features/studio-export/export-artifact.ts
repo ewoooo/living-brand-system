@@ -15,6 +15,39 @@ export type VideoArtifact<Source = unknown> = Artifact<'video', Source>
 
 export type ExportArtifact = RasterArtifact | VectorArtifact | VideoArtifact
 
+export type VectorScene = {
+	width: number
+	height: number
+	background: string
+	primitives: readonly (
+		| {
+				kind: 'line'
+				x1: number
+				y1: number
+				x2: number
+				y2: number
+				stroke: string
+				strokeWidth: number
+				lineCap?: 'butt' | 'round' | 'square'
+		  }
+		| { kind: 'circle'; cx: number; cy: number; radius: number; fill: string }
+	)[]
+}
+
+export type VectorSceneArtifact = VectorArtifact<VectorScene>
+
+export type CanvasRasterSource = {
+	canvas: HTMLCanvasElement
+	render(width: number, height: number): void
+	restore(): void
+}
+
+export type CanvasVideoSource = {
+	canvas: HTMLCanvasElement
+	renderFrame(timeSeconds: number, width: number, height: number): void
+	restore(): void
+}
+
 export type ExportArtifactProducer<Artifact extends ExportArtifact = ExportArtifact> = () =>
 	| Artifact
 	| Promise<Artifact>

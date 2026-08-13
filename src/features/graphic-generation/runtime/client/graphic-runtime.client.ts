@@ -4,6 +4,12 @@ import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/g
 import type { GraphicRuntimeId } from '@/features/graphic-generation/graphic-runtimes/catalog/manifest.generated'
 import { graphicRuntimeCatalog } from '@/features/graphic-generation/graphic-runtimes/catalog/runtime.generated.client'
 import type {
+	CanvasRasterSource,
+	CanvasVideoSource,
+	RasterArtifact,
+	VideoArtifact,
+} from '@/features/studio-export/export-artifact'
+import type {
 	ControllerControlValue,
 	ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
@@ -12,11 +18,9 @@ export type GraphicRuntime = {
 	update(values: ControllerValues): void
 	resize(width: number, height: number): void
 	getViewport(): { width: number; height: number }
-	captureFrame(): string
-	video?: {
-		canvas: HTMLCanvasElement
-		renderFrame(timeSeconds: number, width: number, height: number): void
-		restore(): void
+	artifacts: {
+		raster: RasterArtifact<CanvasRasterSource>
+		video?: VideoArtifact<CanvasVideoSource>
 	}
 	destroy(): void
 }
@@ -28,6 +32,29 @@ export type GraphicRuntimeAdapter = {
 		values: ControllerValues
 		onChange: (controlId: string, value: ControllerControlValue) => boolean
 	}): Promise<GraphicRuntime>
+}
+
+/** Canvas 정적 렌더를 Raster Artifact로 노출하고 export 뒤 현재 preview 크기를 복원한다. */
+export function createGraphicRasterArtifact({
+	canvas,
+	getViewport,
+	render,
+}: {
+	canvas: HTMLCanvasElement
+	getViewport: () => { width: number; height: number }
+	render: (width: number, height: number) => void
+}): RasterArtifact<CanvasRasterSource> {
+	return {
+		kind: 'raster',
+		source: {
+			canvas,
+			render,
+			restore: () => {
+				const { width, height } = getViewport()
+				render(width, height)
+			},
+		},
+	}
 }
 
 /** Config id와 runtime type이 모두 일치하는 브라우저 runtime adapter만 반환한다. */
