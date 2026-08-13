@@ -1,24 +1,133 @@
 # Agents
 
-This project uses the Payload CMS skill at `.agents/skills/payload/`.
-Start with `.agents/skills/payload/SKILL.md` for a quick reference, then see `.agents/skills/payload/reference/` for detailed docs.
+**세션을 시작하면 이 파일 → 아래 `Docs To Check`의 해당 문서 순으로 읽는다.** 그 밖의 진입점은 없다.
+
+도메인 절차는 `.agents/skills/`가 소유한다(payload·shadcn·ai-sdk·react-doctor·graphify·toss-technical-writing). 각 스킬의 `SKILL.md`가 자기 `reference/`로 안내하므로 여기서 내부 구조를 다시 설명하지 않는다.
 
 ## Mandatory Agent Rules
 
-- Code changes: always use the Ponytail skill before writing or editing code. Choose the smallest working change: reuse existing code, prefer platform and standard-library features, and avoid new abstractions or dependencies unless they are necessary.
+- **코드 변경 전 Ponytail 스킬을 부른다.** 최소 변경 원칙은 그 스킬이 소유한다 — 여기에 베껴 두면 스킬 버전이 올라갈 때 조용히 어긋난다.
 - During planning and always before implementation, identify and design the relevant boundaries and contracts, then check the codebase for similar patterns before proceeding.
 - Run all tests and builds with Node.js 22.
-- Library, framework, SDK, API, CLI, or cloud-service documentation: use Context7 MCP before answering or implementing from docs. Start with `resolve-library-id`, then call `query-docs` with the selected library ID and the full question. If Context7 is unavailable, use the official documentation stored in this repository.
-- If Ponytail is unavailable, or if neither Context7 nor relevant local official documentation is available, tell the user what is missing and guide them to install or enable it before continuing with work that requires it.
-- Do not use Context7 for business logic debugging, code review, refactoring that does not require external docs, or project-specific docs under `docs/`.
-- Service files must include a short comment above the exported service function or class explaining the use case boundary and what lower layer owns external I/O.
+- **외부 라이브러리·SDK·API 문서가 필요하면 기억으로 답하지 않는다.** 조회 순서: ① `.agents/skills/<lib>/reference/`(payload·shadcn·ai-sdk가 실물 문서를 갖고 있다) → ② Context7 MCP(`resolve-library-id` → `query-docs`) → ③ 공식 사이트. 🔴 **셋 다 없으면 그 사실을 사용자에게 말하고 멈춘다.** 추론으로 메우지 않는다.
+- 프로젝트 자체 문서(`docs/`)·비즈니스 로직 디버깅·리뷰·외부 문서가 필요 없는 리팩터에는 Context7을 쓰지 않는다.
+
+## Docs To Check
+
+**무엇을 고치기 전에 그것을 소유한 문서를 읽는다.** 각 문서가 무엇을 담는지는 `docs/README.md`가 소유하므로 여기서는 **읽는 방아쇠만** 적는다.
+
+| 무엇을 바꾸기 전에 | 읽을 것 |
+| --- | --- |
+| 제품 방향·유스케이스·데이터 수명·도메인 경계 | `docs/01`~`04` (`docs/README.md`가 안내) |
+| 요청 흐름 · Version/Snapshot/Event/Log · 렌더링 캐시 무효화 | `docs/05-system-architecture.md` |
+| 파일 배치·네이밍·주석·로깅·예외 | `docs/06-project-structure.md` |
+| 인증·권한·업로드·로깅 안전·Agent 컨텍스트 한계 | `docs/07-security.md` |
+| 사용자에게 보이는 문구·키보드 접근·i18n | `docs/08-accessibility-i18n.md` |
+| **프런트엔드 시각 표면 아무것이든** | `docs/09-design-system.md` |
+| **새 UI 컴포넌트** | `docs/10-component-authoring.md` |
+| **가이드라인 위젯** | `docs/11-widget-authoring.md` |
+
+문서끼리 충돌하면 더 새롭거나 더 구체적인 쪽을 따른다. **이 파일과 `docs/`가 충돌하면 `docs/`가 이긴다** — 이 파일은 라우팅과 팀 규약만 갖고 도메인 세부는 갖지 않는다. 코드가 의도적으로 문서를 벗어나면 같은 변경에서 그 문서를 고친다(사용자가 소스만 요청한 경우는 예외).
 
 ## Scratch / Temp Files
 
-- Put every intermediate work artifact — planning/handoff notes, analysis dumps, PDF/text parsing output, one-off diagnose or migration-style scripts, throwaway SQL — under the repo-root `.scratch/` bin (git-excluded via `.git/info/exclude`). Do not scatter them across the repo root, `scripts/`, or `docs/`.
-- Suggested layout: `.scratch/plans/`, `.scratch/hd-pdf/`, `.scratch/scripts/`; anything else loose at `.scratch/`.
+- Put every intermediate work artifact — planning/handoff notes, analysis dumps, one-off diagnose or migration-style scripts, throwaway SQL — under the repo-root `.scratch/` bin (`.gitignore`d). Do not scatter them across the repo root, `scripts/`, or `docs/`.
+- 🔴 `.scratch/`는 커밋되지 않으므로 **다른 기여자의 클론에는 없다.** 계약·규약을 그 안에 두지 말 것 — 계약은 `docs/`와 이 파일이 갖는다.
 - `.scratch/` is outside tsconfig/biome, so it never touches typecheck or CI. Run one-off scripts with their path, e.g. `pnpm payload run .scratch/scripts/<name>.ts`.
 - Exceptions stay in their real homes: committed seed scripts in `scripts/` (see Content Provisioning), real docs in `docs/`. `.scratch/` is only for disposable personal work-in-progress.
+
+## Project Context
+
+This product, Living Brand System (LBS), turns brand guidelines into structured operational standards.
+It manages guideline content, rules, brand resources, templates, plugins, work records, quality sessions, and usage event logs so brand standards can be used during production work and checked against outputs.
+
+Keep implementation aligned with the docs instead of duplicating domain rules here. Before changing a flow, model, record, permission, or user-facing behavior, read the relevant doc and preserve the documented ownership boundaries.
+
+Do not promote evolving domain details into this file unless they are stable rules for all future agents.
+
+## Operating Principles
+
+### 1. Think Before Coding
+
+Do not assume or hide confusion. Surface tradeoffs before acting.
+
+- State assumptions explicitly. If uncertain, ask rather than guess.
+- Present multiple interpretations when ambiguity exists.
+- Push back when a simpler approach exists.
+
+### 2. Surgical Changes
+
+Touch only what is required. Clean up only your own mess.
+
+- Do not improve adjacent code, comments, or formatting.
+- Do not refactor things that are not broken.
+- Match existing style, even if you would do it differently.
+- If unrelated dead code appears, mention it instead of deleting it.
+- Remove imports, variables, and functions that your change made unused.
+- Do not remove pre-existing dead code unless asked.
+
+The test: every changed line should trace directly to the user's request.
+
+### 3. Goal-Driven Execution
+
+Define success criteria and loop until verified.
+
+- Turn imperative tasks into verifiable goals.
+- For bug fixes, write or identify a check that reproduces the bug, then make it pass.
+- For validation work, check invalid inputs and make the expected behavior pass.
+- For refactors, verify behavior before and after.
+- For multi-step tasks, state a brief plan with a verification step for each item.
+
+Strong success criteria let agents work independently. Weak criteria like "make it work" require clarification.
+
+## Branch Rules
+
+- Layers: the ideal is `develop` / `stage` / `main`, but this repo does not run a `develop` branch yet. In practice:
+  - `main`: the effective production target — the deployable, production-ready state, though nothing is deployed yet.
+  - `stage`: the gateway to `main` — verify checks here, then merge to `main`. (🔴 두 브랜치가 같은 상태인지를 여기 적지 말 것 — 규칙 파일에 둔 상태 서술은 곧 낡는다. `git log origin/main..origin/stage`로 확인한다.)
+  - all other branches: feature development, filling the role a `develop` branch would; `develop` itself is unused here.
+- Flow: merge normal work branches into `stage`, then promote verified `stage` to `main`.
+- Base: branch from `stage` for normal product work. Branch from `main` only for urgent production fixes.
+- Requirement: create or switch to a purpose branch before changing source code, product behavior, refactors, tests, tooling, dependencies, or non-trivial docs.
+- 🔴 Worktree는 만들지 않는다 — GitHub Desktop이 worktree를 publish하지 못한다. 메인 작업 트리에서 일반 브랜치로 작업한다.
+- Protected branches: do not commit directly to `main` or `stage`; use them only as merge targets or promotion branches.
+- Exception: trivial local-only edits may stay unbranched only when the user explicitly asks not to create a branch.
+- Format: use `<type>/<short-kebab-purpose>` — 타입은 아래 Commit Rules의 7개와 같다.
+- Scope: keep documentation-only changes separate from source code changes when practical.
+
+## Commit Rules
+
+- Format: use Conventional Commits with a Korean summary: `<type>: <한국어 요약>`.
+- Types:
+  - `docs:` for documentation changes.
+  - `feat:` for user-facing product behavior.
+  - `fix:` for bug fixes.
+  - `test:` for test-only changes.
+  - `refactor:` for behavior-preserving code changes.
+  - `style:` for formatting and lint-only changes.
+  - `chore:` for tooling, dependency, or maintenance changes.
+- Scope: keep each commit focused on one purpose.
+- Hygiene: do not include unrelated dirty worktree changes in a commit.
+- Language: write commit messages in Korean unless an external tool requires English.
+
+### 커밋 단위 — 리포 정합성 최소선
+
+**커밋 = 그 커밋만 체크아웃해도 리포가 일관된 최소 덩어리.** 코드와 그 코드가 만든 산출물(생성 파일·drizzle 스냅샷·마이그레이션)이 어긋나면 **같은 커밋에 넣는다.**
+
+🔴 그 밖의 커밋 단위·메시지 문체는 팀 규약이 아니다 — 기여자마다 자기 스타일을 쓴다. 개인 규칙은 각자의 에이전트 설정이 갖는다.
+
+## Pull Request Rules
+
+- Normal work PRs target `stage`.
+- Promotion PRs target `main` from `stage`.
+- Use `chore: stage를 main으로 승격` for stage-to-main promotion PRs.
+- Open a draft PR when CI, migration verification, or reviewer-ready cleanup is still pending.
+- Keep one branch focused on one PR or work item. Do not reuse an old branch for unrelated follow-up work.
+- Language: write pull request descriptions in Korean unless the user asks otherwise.
+- Verification: list the exact commands run, not generic labels.
+- Caveats: mention known warnings, intentionally skipped cleanup, or remaining review points briefly.
+
+🔴 **본문 서식·분량·절 이름은 팀 규약이 아니다** — 기여자마다 자기 스타일을 쓴다. 여기에 필수 섹션 목록을 다시 만들지 말 것.
 
 ## Database Schema Collaboration
 
@@ -119,127 +228,3 @@ pnpm typecheck
 ```
 
 Review and commit the generated `.ts`, matching `.json` snapshot, and `migrations/index.ts` with the schema source. Do not run that migration against a local database already updated by push; verify it against a fresh database with `push=false`. Shared and durable environments must apply the committed migration with `pnpm payload migrate` before starting the application.
-
-## Operating Principles
-
-### 1. Think Before Coding
-
-Do not assume or hide confusion. Surface tradeoffs before acting.
-
-- State assumptions explicitly. If uncertain, ask rather than guess.
-- Present multiple interpretations when ambiguity exists.
-- Push back when a simpler approach exists.
-- Stop when confused. Name what is unclear and ask for clarification.
-
-### 2. Simplicity First
-
-Write the minimum code that solves the problem. Add nothing speculative.
-
-- Do not add features beyond what was asked.
-- Do not add abstractions for single-use code.
-- Do not add flexibility or configurability that was not requested.
-- Do not add error handling for impossible scenarios.
-- If 200 lines could be 50, rewrite it.
-
-The test: would a senior engineer say this is overcomplicated? If yes, simplify.
-
-### 3. Surgical Changes
-
-Touch only what is required. Clean up only your own mess.
-
-- Do not improve adjacent code, comments, or formatting.
-- Do not refactor things that are not broken.
-- Match existing style, even if you would do it differently.
-- If unrelated dead code appears, mention it instead of deleting it.
-- Remove imports, variables, and functions that your change made unused.
-- Do not remove pre-existing dead code unless asked.
-
-The test: every changed line should trace directly to the user's request.
-
-### 4. Goal-Driven Execution
-
-Define success criteria and loop until verified.
-
-- Turn imperative tasks into verifiable goals.
-- For bug fixes, write or identify a check that reproduces the bug, then make it pass.
-- For validation work, check invalid inputs and make the expected behavior pass.
-- For refactors, verify behavior before and after.
-- For multi-step tasks, state a brief plan with a verification step for each item.
-
-Strong success criteria let agents work independently. Weak criteria like "make it work" require clarification.
-
-## Project Context
-
-This product, Living Brand System (LBS), turns brand guidelines into structured operational standards.
-It manages guideline content, rules, brand resources, templates, plugins, work records, quality sessions, and usage event logs so brand standards can be used during production work and checked against outputs.
-
-Keep implementation aligned with the docs instead of duplicating domain rules here. Before changing a flow, model, record, permission, or user-facing behavior, read the relevant doc and preserve the documented ownership boundaries.
-
-Do not promote evolving domain details into this file unless they are stable rules for all future agents.
-
-## Docs To Check
-
-Always start from `docs/README.md`, then read the smallest relevant document before changing behavior, data, architecture, security, accessibility, i18n, or development rules:
-
-- Product direction, users, service flow, and success assumptions: `docs/01-product.md`
-- Workflow, actors, inputs, outputs, generated records, and next links: `docs/02-usecases.md`
-- Data ownership, lifecycle, storage, retention, deletion, and immutable references: `docs/03-data-lifecycle.md`
-- Domain boundaries, aggregates, entities, events, and cross-context references: `docs/04-domain-model.md`
-- 요청 흐름, Version/Snapshot/Event/Log 전략, 렌더링 캐시 무효화: `docs/05-system-architecture.md`
-- Source layout, naming, comments, logging, exception handling, and coding style: `docs/06-project-structure.md`
-- Auth, access control, upload/download, logging safety, Agent context limits, and operational security: `docs/07-security.md`
-- Creator UI, custom Admin UI, user-facing copy, keyboard access, errors, and message/i18n placement: `docs/08-accessibility-i18n.md`
-- Design tokens, color/typography/radius/dark mode, runtime brand override, and shell/frame skeleton — read before changing any front-end visual surface: `docs/09-design-system.md`
-- Component authoring contract (reuse ladder, cva/data-size templates, style Do/Don't, kit→block promotion gate) — read before writing or adding any new UI component: `docs/10-component-authoring.md`
-- 가이드라인 위젯 저작 계약(폴더 계약·손으로 하는 등록 3곳·Block/Widget 책임 경계·provenance 불변식·함정) — **위젯을 새로 만들거나 고치기 전에 읽을 것**: `docs/11-widget-authoring.md`
-
-When docs conflict, prefer the newer or more specific document. If a code change intentionally departs from docs, update the relevant doc in the same change unless the user asked for source-only work.
-
-## Branch Rules
-
-- Layers: the ideal is `develop` / `stage` / `main`, but this repo does not run a `develop` branch yet. In practice:
-  - `main`: the effective production target — the deployable, production-ready state, though nothing is deployed yet.
-  - `stage`: the gateway to `main` — verify checks here, then merge to `main`. (🔴 두 브랜치가 같은 상태인지를 여기 적지 말 것 — 규칙 파일에 둔 상태 서술은 곧 낡는다. `git log origin/main..origin/stage`로 확인한다.)
-  - all other branches: feature development, filling the role a `develop` branch would; `develop` itself is unused here.
-- Flow: merge normal work branches into `stage`, then promote verified `stage` to `main`.
-- Base: branch from `stage` for normal product work. Branch from `main` only for urgent production fixes.
-- Requirement: create or switch to a purpose branch before changing source code, product behavior, refactors, tests, tooling, dependencies, or non-trivial docs.
-- 🔴 Worktree는 만들지 않는다 — GitHub Desktop이 worktree를 publish하지 못한다. 메인 작업 트리에서 일반 브랜치로 작업한다.
-- Protected branches: do not commit directly to `main` or `stage`; use them only as merge targets or promotion branches.
-- Exception: trivial local-only edits may stay unbranched only when the user explicitly asks not to create a branch.
-- Format: use `<type>/<short-kebab-purpose>` — 타입은 아래 Commit Rules의 7개와 같다.
-- Scope: keep documentation-only changes separate from source code changes when practical.
-
-## Commit Rules
-
-- Format: use Conventional Commits with a Korean summary: `<type>: <한국어 요약>`.
-- Types:
-  - `docs:` for documentation changes.
-  - `feat:` for user-facing product behavior.
-  - `fix:` for bug fixes.
-  - `test:` for test-only changes.
-  - `refactor:` for behavior-preserving code changes.
-  - `style:` for formatting and lint-only changes.
-  - `chore:` for tooling, dependency, or maintenance changes.
-- Scope: keep each commit focused on one purpose.
-- Hygiene: do not include unrelated dirty worktree changes in a commit.
-- Language: write commit messages in Korean unless an external tool requires English.
-
-### 커밋 단위 — 리포 정합성 최소선
-
-**커밋 = 그 커밋만 체크아웃해도 리포가 일관된 최소 덩어리.** 코드와 그 코드가 만든 산출물(생성 파일·drizzle 스냅샷·마이그레이션)이 어긋나면 **같은 커밋에 넣는다.**
-
-🔴 그 밖의 커밋 단위·메시지 문체는 팀 규약이 아니다 — 기여자마다 자기 스타일을 쓴다. 개인 규칙은 각자의 에이전트 설정이 갖는다.
-
-## Pull Request Rules
-
-- Normal work PRs target `stage`.
-- Promotion PRs target `main` from `stage`.
-- Use `chore: stage를 main으로 승격` for stage-to-main promotion PRs.
-- Open a draft PR when CI, migration verification, or reviewer-ready cleanup is still pending.
-- Keep one branch focused on one PR or work item. Do not reuse an old branch for unrelated follow-up work.
-- Language: write pull request descriptions in Korean unless the user asks otherwise.
-- Verification: list the exact commands run, not generic labels.
-- Caveats: mention known warnings, intentionally skipped cleanup, or remaining review points briefly.
-
-🔴 **본문 서식·분량·절 이름은 팀 규약이 아니다** — 기여자마다 자기 스타일을 쓴다. 여기에 필수 섹션 목록을 다시 만들지 말 것.
