@@ -1,8 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useId } from 'react'
+import { Label } from '@/components/ui/label'
+import { Slider } from '@/components/ui/slider'
+import { Switch } from '@/components/ui/switch'
 import { GUTTER_RATIO, MARGIN_PCT } from '../layout-grid/rules'
 import { useLayoutGridScope } from '../layout-grid/store'
+import { CONTROL_VALUE, WIDGET_CAPTION } from '../readout'
 
 // 위젯: 같은 **블록**의 layoutGridWidget들을 통제한다. 값은 블록 단위 스코프(layout-grid/store.tsx)에
 // 있어 형제 위젯끼리 공유되고, 이 위젯이 유일한 쓰기 주체다. 다른 블록의 패널과는 간섭하지 않는다.
@@ -57,7 +61,7 @@ export function LayoutGridControlsWidget(config: LayoutGridControlsConfig) {
 		// 블록 헤더(제목·설명 영역)에 놓이므로 페이지 배경 위다 — 텍스트는 전경색 토큰을 쓴다.
 		<div className="flex w-fit flex-col gap-2 text-foreground">
 			{showMargin && (
-				<Slider
+				<SliderField
 					label="마진 (대지 → 표)"
 					value={marginPct}
 					onChange={(marginPct) => set({ marginPct })}
@@ -68,7 +72,7 @@ export function LayoutGridControlsWidget(config: LayoutGridControlsConfig) {
 				/>
 			)}
 			{showGutterX && (
-				<Slider
+				<SliderField
 					label="수평 거터"
 					value={gutterX}
 					onChange={(gutterX) => set({ gutterX })}
@@ -79,7 +83,7 @@ export function LayoutGridControlsWidget(config: LayoutGridControlsConfig) {
 				/>
 			)}
 			{showGutterY && (
-				<Slider
+				<SliderField
 					label="수직 거터"
 					value={gutterY}
 					onChange={(gutterY) => set({ gutterY })}
@@ -91,18 +95,16 @@ export function LayoutGridControlsWidget(config: LayoutGridControlsConfig) {
 			)}
 			{showGuides && (
 				<div className="flex flex-wrap items-center gap-2">
-					<button
-						type="button"
-						onClick={() => set({ guidesOn: !guidesOn })}
-						aria-pressed={guidesOn}
-						className="inline-flex items-center gap-2 rounded border border-border px-2 py-1 font-body text-xs hover:bg-fill-hover"
-					>
-						<span
-							className={`h-2 w-2 rounded-full ${guidesOn ? 'bg-foreground' : 'bg-border'}`}
-						/>
+					<Switch
+						id="layout-grid-guides"
+						size="sm"
+						checked={guidesOn}
+						onCheckedChange={(next) => set({ guidesOn: next })}
+					/>
+					<Label htmlFor="layout-grid-guides" className="font-body text-xs">
 						그리드 {guidesOn ? '보임' : '숨김'}
-					</button>
-					<p className="font-body text-muted-foreground text-xs">
+					</Label>
+					<p className={WIDGET_CAPTION}>
 						거터를 끝까지 밀어도 1:2:3 분할선은 제자리에 있다.
 					</p>
 				</div>
@@ -113,7 +115,7 @@ export function LayoutGridControlsWidget(config: LayoutGridControlsConfig) {
 
 export default LayoutGridControlsWidget
 
-function Slider({
+function SliderField({
 	label,
 	value,
 	onChange,
@@ -130,25 +132,30 @@ function Slider({
 	step: number
 	suffix: string
 }) {
+	// 🔴 <label>로 감싸는 방식은 안 통한다 — Radix 슬라이더의 role="slider"는 span이라 for/id가 걸리지 않는다.
+	//    보이는 라벨을 그대로 이름으로 쓰려면 aria-labelledby로 가리켜야 한다.
+	const labelId = useId()
+
 	return (
 		// 🔴 슬라이더 폭은 고정이다(fill 아님) — 블록 폭이 바뀌어도 조작감이 같아야 한다.
-		<label className="flex w-[240px] flex-col gap-0.5">
+		<div className="flex w-[240px] flex-col gap-2">
 			<span className="flex items-baseline justify-between font-body text-xs">
-				<span className="text-muted-foreground">{label}</span>
-				<span className="tabular-nums">
+				<span id={labelId} className="text-muted-foreground">
+					{label}
+				</span>
+				<span className={`${CONTROL_VALUE} text-xs`}>
 					{value}
 					{suffix}
 				</span>
 			</span>
-			<input
-				type="range"
-				value={value}
+			<Slider
+				value={[value]}
 				min={min}
 				max={max}
 				step={step}
-				onChange={(event) => onChange(Number(event.target.value))}
-				className="w-[240px]"
+				onValueChange={([next]) => onChange(next ?? value)}
+				aria-labelledby={labelId}
 			/>
-		</label>
+		</div>
 	)
 }

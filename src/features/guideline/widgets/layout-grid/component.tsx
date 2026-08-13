@@ -2,6 +2,7 @@
 
 import type { StaticImageData } from 'next/image'
 import { type CSSProperties, type ReactNode, useEffect, useState } from 'react'
+import { WIDGET_CAPTION } from '../readout'
 import {
 	CI_ART,
 	COMPOSITIONS,
@@ -122,10 +123,8 @@ export function LayoutGridWidget({
 				{guidesOn && <Guides marginPct={marginPct} gutterHalf={gutterHalf} />}
 			</div>
 
-			{/* 캡션 — 판형이 어두운 영역(innerBackground) 안에 놓이는 전제라 밝은 색이다. */}
-			{caption ? (
-				<figcaption className="font-body text-white/70 text-xs">{caption}</figcaption>
-			) : null}
+			{/* 캡션은 판형 밖이라 블록 면 위에 온다 — 그 면의 토큰 스코프를 따른다(Block이 선언한다). */}
+			{caption ? <figcaption className={WIDGET_CAPTION}>{caption}</figcaption> : null}
 		</figure>
 	)
 }

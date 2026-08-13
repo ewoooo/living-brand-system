@@ -17,7 +17,7 @@
 1. **이 컴포넌트가 존재할 필요가 있나?** 투기적 필요면 만들지 않습니다. (YAGNI)
 2. **이미 저장소에 있나?** `src/components/ui`의 프리미티브를 먼저 grep합니다. 몇 파일 옆에 있는 것을 다시 구현하는 것이 가장 흔한 슬롭입니다.
 3. **조합으로 되나?** 기존 프리미티브를 조합합니다.
-4. **그래도 없으면** 최소 코드로 새로 만듭니다.
+4. **그래도 없으면** 최소 코드로 새로 만듭니다. 🔴 이때 **스타일의 근거는 Carbon입니다** — 빈 마크업에 스타일을 처음 쓰는 순간이 준거법이 발동하는 자리이고, "추론했을 때 가장 괜찮아 보이는 것"은 금지입니다(그것이 슬롭의 정의입니다). Carbon에서 같은 컴포넌트를 **Context7로 조회해** 따르고, 기억으로 값을 부르지 않습니다. 절차와 예외는 `docs/09` §9.
 
 기존 코드를 먼저 찾는 grep 예시:
 
@@ -258,13 +258,15 @@ className과 style에는 시맨틱 토큰만 씁니다(닫힌 토큰 규칙 전�
 
 글자 크기는 `docs/09` §6의 고정 유틸리티 단계만 사용합니다. `clamp()`·`vw`·반응형 `text-*`·임의 글자 크기는 추가하지 않습니다. 크기 variant는 패딩과 높이를 바꿀 수 있지만, 일반 컨트롤은 `text-sm`/`size-4`, 큰 컨트롤은 `text-base`/`size-5` 조합을 유지합니다.
 
-| ✅ Do | ❌ Don't | repo 실측 |
+아래 「❌를 본 자리」는 **박제된 실측 예시**입니다 — 실제 위반을 보여 주려고 남기며, 고쳐진 뒤에도 예시로서의 값은 남습니다. 🔴 그러므로 **현재 위반 목록으로 읽지 마십시오.** 지금 남은 위반은 `docs/09` §4의 grep으로 세십시오.
+
+| ✅ Do | ❌ Don't | ❌를 본 자리 |
 | --- | --- | --- |
-| `border-border` | `border border-neutral-200` | `blocks/callout/component.tsx:33` |
-| `bg-muted` / `bg-fill-muted` | `bg-neutral-50 … dark:bg-neutral-950` | `widgets/type-specimen/component.tsx` |
+| `border-border` | `border border-neutral-200` | `blocks/callout/component.tsx` |
+| `bg-muted` / `bg-fill-muted` | `bg-neutral-50 … dark:bg-neutral-950` | `widgets/type-specimen/component.tsx` — ✅ 2026-08-12에 `THEME_PANEL`로 고침 |
 | 조건부 완전 클래스 룩업 | `` `grid gap-4 md:grid-cols-${variant}` `` | `blocks/content-columns/component.tsx:21` |
 | 심볼 + 텍스트로 상태 구분 | 색만으로 판정 구분 | `blocks/callout/component.tsx` (kind별 badge) |
-| 상태 토큰 `bg-success/15 text-success` | 유채 팔레트 `bg-emerald-500/15 text-emerald-700 …` | `studio/review/result/check-status.ts:14` |
+| 상태 토큰 `bg-success/15 text-success` | 유채 팔레트 `bg-emerald-500/15 text-emerald-700 …` | `studio/review/result/check-status.ts` — ✅ 고쳐짐(이제 Badge variant 키만 갖는다) |
 | `Typography` 재사용 | `font-body text-sm font-normal` 수기 반복 | studio 10개 파일 25회 실측 |
 | `@carbon/icons-react` | `@hugeicons/*` | repo 컨벤션(정책) |
 

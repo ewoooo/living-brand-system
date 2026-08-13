@@ -31,6 +31,11 @@ export async function IconGridWidget() {
 		fgHex: palette.length ? palette[(index + 1) % palette.length] : undefined,
 	}))
 
+	// 아이콘이 아직 없으면 그리지 않는다(stem-clear-space와 같은 처리). 빈 배열을 그대로 넘기면
+	// 필터 툴바와 반전·섞기 버튼이 있는 껍데기가 뜨는데, 누를 것이 없어 조작하면 아무 일도 안 난다.
+	// 🔴 stage의 `brand-icons`가 0행이라 이것은 가정이 아니라 지금 실제로 보이는 화면이다.
+	if (items.length === 0) return null
+
 	return (
 		<IconGridView
 			items={items}

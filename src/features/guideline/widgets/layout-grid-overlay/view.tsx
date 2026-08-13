@@ -2,6 +2,9 @@
 
 import type { ChangeEvent } from 'react'
 import { useState } from 'react'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { WIDGET_CAPTION } from '../readout'
 
 /**
  * 레이아웃 그리드 오버레이 — 이미지 위에 "균일 섹션" 그리드 가이드를 겹쳐 레이아웃 규칙을 검수한다.
@@ -100,17 +103,17 @@ export function LayoutGridOverlay({
 
 			{/* 토글 + 초기화 */}
 			<div className="mb-3 flex flex-wrap items-center gap-2">
-				<button
-					type="button"
-					onClick={() => setGuidesOn((v) => !v)}
-					aria-pressed={guidesOn}
-					className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 font-body font-medium text-sm hover:bg-fill-hover"
+				<Switch
+					id="layout-grid-overlay-guides"
+					checked={guidesOn}
+					onCheckedChange={setGuidesOn}
+				/>
+				<Label
+					htmlFor="layout-grid-overlay-guides"
+					className="font-body font-medium text-sm"
 				>
-					<span
-						className={`h-2.5 w-2.5 rounded-full ${guidesOn ? 'bg-foreground' : 'bg-border'}`}
-					/>
 					가이드 {guidesOn ? '켜짐 (이미지 50%)' : '꺼짐'}
-				</button>
+				</Label>
 				<button
 					type="button"
 					onClick={reset}
@@ -228,7 +231,7 @@ function NumberField({
 }) {
 	return (
 		<label className="flex flex-col gap-1">
-			<span className="font-body font-medium text-muted-foreground text-xs">{label}</span>
+			<span className={`font-medium ${WIDGET_CAPTION}`}>{label}</span>
 			<input
 				type="number"
 				value={value}

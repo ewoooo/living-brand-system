@@ -3,6 +3,8 @@
 이 문서는 Creator UI와 guideline 렌더링 계층의 시각 언어를 정의합니다.
 토큰의 값이 아니라 토큰의 **소유 위치와 사용 규칙**을 정리하는 지도 문서이며, 실제 값의 단일 출처(SoT)는 언제나 CSS 파일입니다.
 
+그 시각 언어가 무엇 위에 서 있는지(프런트엔드 스택)와 외부 레퍼런스를 어디까지 따르는지는 **§9**가 정의합니다.
+
 ## 1. 적용 범위
 
 이 문서는 시각 스타일을 다루는 두 표면에만 적용합니다.
@@ -66,7 +68,7 @@ Frontend의 `highlight`는 Figma 강조 스타일을 옮긴 그라디언트입�
 `className`/`style` 리터럴에서 다음은 금지합니다.
 
 - 생 hex 리터럴(예: `#a1b2c3`)
-- 생 Tailwind 팔레트 + 숫자 — 무채색(`neutral`/`gray`/`zinc`/`slate`/`stone`)만이 아니라 **유채색 전체**(`emerald`, `sky`, `amber`, `orange` 등)를 포함합니다. `bg-emerald-500/15`처럼 유채 팔레트로 상태를 칠하는 것도 위반입니다.
+- 생 Tailwind 팔레트 + 숫자 — 무채색(`neutral`/`gray`/`zinc`/`slate`/`stone`)만이 아니라 **유채색 전체**(`emerald`, `sky`, `amber`, `orange` 등)를 포함합니다. 🔴 숫자가 없는 `white`·`black`도 같습니다 — 탐지 grep이 숫자만 보고 있어 `bg-white`가 실제로 통과한 적이 있습니다(2026-08-12, shadcn slider). `bg-emerald-500/15`처럼 유채 팔레트로 상태를 칠하는 것도 위반입니다.
 - `.tsx` 안의 `oklch(...)` 리터럴
 
 성공/정보/경고/실패 같은 **판정·상태 표시는 상태 토큰만** 사용합니다: `--success`/`--info`/`--warning`/`--destructive`(해당 없음은 `muted`). 사용 형태는 destructive 선례를 따릅니다 — pill은 `bg-success/15 text-success`, dot은 `bg-success`. 상태 토큰으로 표현할 수 없는 새 상태가 생기면 팔레트로 우회하지 말고 이 문서와 `theme.css`에 토큰을 추가합니다.
@@ -76,18 +78,28 @@ Frontend의 `highlight`는 Figma 강조 스타일을 옮긴 그라디언트입�
 탐지용 grep:
 
 ```sh
-rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|neutral|gray|zinc|slate|stone)-[0-9]|oklch\(' src --glob '*.tsx'
+rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|neutral|gray|zinc|slate|stone)-[0-9]|white|black)\b|oklch\(' src --glob '*.tsx'
 ```
 
 이 명령이 색 데이터 컴포넌트 밖에서 걸리면 토큰 위반입니다.
 
 ## 5. 다크 모드와 브랜드 오버라이드
 
-다크 모드는 `.dark` **클래스** 방식입니다. `prefers-color-scheme` 미디어 쿼리가 아니라, `@custom-variant dark (&:where(.dark, .dark *))`(`theme.css`)로 정의하고, `next-themes`의 `ThemeProvider`를 `attribute="class"` + `defaultTheme="system"` + `enableSystem`(`layout.tsx`)으로 구동합니다. 시스템 설정은 `next-themes`가 읽어 `.dark` 클래스로 변환하므로, 원시값은 라이트가 `:root`(`theme.css`), 다크가 `.dark`(`theme.css`) 한 곳에서만 갈립니다.
+다크 모드는 `.dark` **클래스** 방식입니다. `prefers-color-scheme` 미디어 쿼리가 아니라, `@custom-variant dark (&:where(.dark, .dark *))`(`theme.css`)로 정의하고, `next-themes`의 `ThemeProvider`를 `attribute="class"` + `defaultTheme="system"` + `enableSystem`(`layout.tsx`)으로 구동합니다. 시스템 설정은 `next-themes`가 읽어 `.dark` 클래스로 변환하므로, 원시값은 라이트가 `:root, .light`(`theme.css`), 다크가 `.dark`(`theme.css`) 한 곳에서만 갈립니다.
+
+`:root`가 `.light`와 블록을 공유하는 것은 **부분 트리에 라이트 토큰을 다시 선언할 수 있게** 하기 위한 것입니다. 값을 복제하지 않고 선택자만 늘렸습니다.
+
+### 색을 데이터로 주입하는 면은 **토큰 스코프도 함께 선언**합니다
+
+§4의 색-데이터 예외로 면에 hex를 주입할 때, 배경만 넣으면 그 면의 전경·테두리·muted가 바깥 스코프에 남습니다. 라이트 모드 페이지에 어두운 브랜드 색을 깐 면은 배경만 어두워지고 안쪽 컴포넌트는 라이트 팔레트의 near-black 컨트롤을 그대로 그려 면에 묻힙니다(반대 방향도 같습니다). 전경색 한 개를 짝지어 주는 것으로는 부족합니다 — 안쪽이 쓰는 것은 색이 아니라 토큰이기 때문입니다.
+
+그러므로 hex를 주입하는 자리에서 그 밝기로 `light`/`dark`를 골라 같은 요소에 선언합니다. 선례는 `blocks/block/component.tsx`의 `surfaceScopeClass`이고, `text-foreground`를 함께 주는 이유도 거기 적혀 있습니다(색 클래스가 없는 면은 바깥에서 **계산된** 색을 상속하므로 토큰 재선언만으로는 글자 색이 따라오지 않습니다).
+
+🔴 이 스코프 전환은 토큰만 되돌립니다. `dark:` 유틸은 `.dark *` **후손** 선택자라 다크 페이지 안의 밝은 섬에서도 여전히 걸립니다. §4가 컴포넌트에서 `dark:` 팔레트 클래스를 금지하는 이유가 여기서 한 번 더 성립합니다.
 
 런타임 브랜드 색은 CMS 메타데이터에서 옵니다. `layout.tsx`가 `metadata.primaryHex` 등으로 문자열을 만들고 `layout.tsx`가 `<style>`로 주입해 `--primary`와 `--primary-foreground` **2개 토큰만** 오버라이드합니다(라이트는 `:root`, 다크는 `.dark`). 코드에는 브랜드 색이 없고 데이터만 흐르므로 브랜드 어그노스틱이 유지됩니다.
 
-주입 대상이 `--primary` 계열 2개뿐이라는 것은 현실의 제약을 만듭니다. `accent`, `secondary`, `ring`은 채도(chroma) 0의 뉴트럴로 고정되어 있고, `chart-1`~`chart-5`는 0이 아닌 채도의 고정된 다색 팔레트를 갖습니다(둘 다 `theme.css` 원시값). 어느 쪽도 브랜드 주입을 받지 않으므로, 브랜드 강조색은 `primary`를 쓰는 표면(예: `bg-primary`, `text-primary`)에만 반영되고 그 밖의 강조 토큰은 원래 값으로 남습니다.
+주입 대상이 `--primary` 계열 2개뿐이라는 것은 현실의 제약을 만듭니다. `accent`, `secondary`, `ring`은 채도(chroma) 0의 뉴트럴로 고정되어 있고(🔴 `--accent`는 지금 `--muted`와 **같은 값**입니다 — hover가 `bg-muted`이므로 `accent`로 선택 상태를 칠하면 선택과 hover가 구별되지 않습니다. 채워진 상태는 `primary` 짝을 씁니다), `chart-1`~`chart-5`는 0이 아닌 채도의 고정된 다색 팔레트를 갖습니다(둘 다 `theme.css` 원시값). 어느 쪽도 브랜드 주입을 받지 않으므로, 브랜드 강조색은 `primary`를 쓰는 표면(예: `bg-primary`, `text-primary`)에만 반영되고 그 밖의 강조 토큰은 원래 값으로 남습니다.
 
 ## 6. 타이포그래피와 프리미티브 소재
 
@@ -151,3 +163,117 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 | 소스 위치·네이밍·`use client` 경계 | `docs/06-project-structure.md` | 컴포넌트 배치와 명명은 06 기준 |
 | 보안 | `docs/07-security.md` | 런타임 브랜드 hex는 `<style>`로 미새니타이즈 주입(`layout.tsx`)되므로 입력 신뢰 경계는 07이 다룸 |
 | 브랜드 자산 데이터 모델 | `docs/05-system-architecture.md` | 색·폰트·로고가 데이터로 흐르는 소유 구조는 05가 정의 |
+| 위젯 시각 어휘 | `docs/11-widget-authoring.md` | 가이드라인 위젯이 쓰는 표본 면·판독·캡션 어휘는 11이 소유 |
+
+## 9. 프런트엔드 스택과 외부 레퍼런스
+
+### 스택
+
+| 층 | 채택 | 비고 |
+| --- | --- | --- |
+| 프레임워크 | Next.js (App Router) | 라우트별 렌더링 방식은 **선언**합니다(`docs/05` 「렌더링 캐시 무효화」) |
+| 스타일 엔진 | Tailwind CSS v4 — **CSS-first** | `tailwind.config`가 없습니다. 토큰은 `theme.css`의 `@theme inline` |
+| 컴포넌트 | **shadcn/ui** (`base: radix`) | 라이브러리가 아니라 **소스 복사본**입니다. `src/components/ui`를 우리가 소유 |
+| 동작·접근성 | **Radix** | shadcn 아래층. WAI-ARIA APG 패턴 구현체 |
+| variant | `class-variance-authority` | 원형은 `docs/10` §3 |
+| 모션 | `motion/react` | `LazyMotion` + `m` 조합만 |
+| 아이콘 | **`@carbon/icons-react` 단일 소스** | `components.json`의 `iconLibrary`가 다른 값인 이유는 `docs/10` §2 |
+| 본문 서체 | Pretendard (`--font-body`) | `--font-title`은 값 미정 — §6 |
+
+### Carbon은 목적지가 아니라 **잠정 준거법**입니다
+
+🔴 **최종 look은 Carbon과 다릅니다**(2026-08-12 팀 결정). Carbon은 "옳아서" 고른 것이 아니라, 그 시점에 **일단 고를 수 있는 가장 만만한 DS**였습니다. 최종 DS는 나중에 정해집니다.
+
+그렇다고 Carbon을 지워도 된다는 뜻이 **아닙니다.** 준거가 없으면 컴포넌트마다 각자 즉흥으로 만들고, 그게 이 리포가 실제로 겪은 상태입니다(위젯 19개가 같은 요소를 제각각 만들어 한 페이지 안에서 표기가 갈렸음). **틀릴 수 있는 하나의 법이 법이 없는 것보다 낫습니다.**
+
+#### 🔴 새 컴포넌트를 처음부터 만들 때의 기준
+
+빈 마크업에 스타일을 처음 쓰는 순간이 준거법이 발동하는 자리입니다.
+
+| | 판단 |
+| --- | --- |
+| AI가 추론했을 때 가장 괜찮아 보이는 것 | ❌ **금지.** 이것이 AI slop의 정의입니다 |
+| Carbon에서 **같은 컴포넌트를 찾아 그것을 따른다** | ✅ 이것만 유효한 근거입니다 |
+
+- 🔴 **Carbon을 기억으로 부르지 마십시오.** 기억에서 꺼낸 px는 눈대중과 다르지 않습니다. Context7 MCP로 조회합니다(`resolve-library-id` → `query-docs`). Context7이 없으면 리포에 보유한 공식 문서를 쓰고, 둘 다 없으면 **그 사실을 사용자에게 말하고 멈춥니다** — 추론으로 메우지 않습니다.
+- Carbon에 대응 컴포넌트가 없으면 가까운 컴포넌트의 **스케일·역할**을 조합합니다. 조합으로도 답이 안 나오면 그것은 look 결정이므로 사용자에게 묻습니다.
+- 가져온 값이 들어가는 자리는 아래 「겉모습이 사는 한 자리」입니다. Carbon에서 왔든 어디서 왔든 **컴포넌트에 흩뿌리지 않습니다** — 그래야 최종 DS로 갈아끼우는 비용이 일반 look 변경 비용과 같아집니다.
+
+#### 이미 채워진 자리는 Carbon에 맞추러 가지 않습니다
+
+**Carbon은 빈칸을 채우는 데 쓰고, 이미 채워진 칸을 다시 채우는 데 쓰지 않습니다.** 이미 일관된 자리를 Carbon에 더 가깝게 만드는 작업(parity 추격)은 최종 look에서 버려집니다.
+
+look은 언젠가 전부 바뀝니다. 그러므로 **겉모습이 어설픈 것 자체는 결함이 아닙니다.** 결함은 **겉모습이 여러 자리에 흩어져 있는 것**입니다. 비용은 "지금 예쁜가"가 아니라 **"바꿀 때 몇 곳을 고쳐야 하나"**로 잽니다.
+
+🔑 **스타일 작업 요청이 오면 이렇게 가릅니다.**
+
+| 질문 | 판단 |
+| --- | --- |
+| 지금 답이 **없는** 자리인가(새 컴포넌트·새 요소) | **Carbon을 조회해 채웁니다** |
+| 나중의 교체를 **싸게** 만드는가(반복되는 요소를 한 자리로 모음, 프리미티브로 교체, 선언 추가) | **지금 합니다** |
+| 이미 일관된 값에 대한 취향인가(이 회색이 맞나, 이 여백이 맞나) | **미룹니다.** 지금 정해도 버려집니다 |
+
+#### 🔴 look 변경은 AI의 판단 범위가 아닙니다
+
+겉모습을 바꾸는 것, Carbon을 다른 DS로 갈아끼우는 것, 최종 look을 정하는 것은 **사용자가 세션에서 명시합니다.** 에이전트가 자의적으로 판단하지 않습니다.
+
+- "더 나은 DS를 찾았다", "이 값이 더 보기 좋다"는 변경 근거가 되지 않습니다. 제안은 할 수 있고, 실행은 지시를 받고 합니다.
+- 화면이 구려 보인다는 관찰만으로 값을 손대지 않습니다. 그 관찰을 사용자에게 전하고, 어느 자리를 고치면 되는지(아래 표)를 함께 알려 주는 것까지가 에이전트의 몫입니다.
+
+#### 겉모습이 사는 한 자리
+
+반복되는 시각 요소는 각각 **한 파일**에만 있습니다. 최종 look 작업이 왔을 때 고칠 자리가 여기입니다.
+
+| 요소 | 자리 |
+| --- | --- |
+| 슬라이더 | `components/ui/slider.tsx` |
+| 선택 컨트롤(토글·세그먼트) | `components/ui/toggle.tsx` (`toggle-group`이 공유) |
+| on/off 스위치 | `components/ui/switch.tsx` |
+| 표본 면(테마 면·브랜드 면) | `features/guideline/widgets/surface.ts` |
+| 수치·캡션 줄 | `features/guideline/widgets/readout.ts` |
+| hairline 격자 | `features/guideline/widgets/hairline.ts` |
+| 색·간격·radius·타입 원시값 | `app/(frontend)/theme.css` |
+
+🔴 이 목록이 늘어나는 것은 정상이고, **같은 요소가 두 자리에 생기는 것은 결함입니다.** `features/guideline/widgets/visual-vocabulary.test.ts`가 색에 대해서만 이것을 지킵니다 — 다른 축은 아직 사람이 봅니다.
+
+#### 값은 어디서 읽나 — `@carbon/layout` (devDependency)
+
+Carbon 수치의 출처는 이 패키지입니다. **런타임 코드가 import하지 않습니다** — 스펙을 기계가 읽을 수 있는 형태로 저장소에 두는 것이 목적이고, 그래서 `devDependency`입니다.
+
+🔴 **간격·컨트롤 높이만 들어와 있습니다.** 타입 스케일(`@carbon/type`)은 아직 채택하지 않아 넣지 않았습니다 — `--font-title`·`--font-heading`이 미정이라 옮길 값이 없고, 쓰지 않는 의존성은 "안 쓰인다"는 이유로 지워집니다. 타입 스케일이 필요해지면 `pnpm add -D @carbon/type`으로 되살리고 **아래 표처럼 검증 테스트를 함께** 두십시오. 🔴 **"쓰이지 않는 의존성"으로 보고 지우지 마십시오.** 지우면 값의 출처가 사라지고 다음 사람은 기억으로 px를 부르게 됩니다(그게 이 문서가 막으려는 것입니다). `app/(frontend)/carbon-scale.test.ts`가 이 패키지를 읽어 아래 표를 검증하므로, 지우면 테스트가 깨집니다.
+
+읽는 방법(추측하지 말고 실행하십시오):
+
+```bash
+node --input-type=module -e "import * as l from '@carbon/layout'; console.log(l.spacing, l.sizes)"
+```
+
+🔑 **Carbon의 간격 13단계는 Tailwind 기본 단계와 정확히 일치합니다.** 그래서 스케일 채택에 **새 토큰이 필요하지 않습니다** — 값을 더하는 일이 아니라 **쓸 단계를 좁히는 일**입니다.
+
+| Carbon | px | Tailwind | | Carbon | px | Tailwind |
+| --- | --- | --- | --- | --- | --- | --- |
+| `spacing01` | 2 | `0.5` | | `spacing08` | 40 | `10` |
+| `spacing02` | 4 | `1` | | `spacing09` | 48 | `12` |
+| `spacing03` | 8 | `2` | | `spacing10` | 64 | `16` |
+| `spacing04` | 12 | `3` | | `spacing11` | 80 | `20` |
+| `spacing05` | 16 | `4` | | `spacing12` | 96 | `24` |
+| `spacing06` | 24 | `6` | | `spacing13` | 160 | `40` |
+| `spacing07` | 32 | `8` | | | | |
+
+컨트롤 높이(`sizes`)도 같은 방식입니다. XSmall 24(`h-6`) · Small 32(`h-8`) · Medium 40(`h-10`) · Large 48(`h-12`) · XLarge 64(`h-16`) · 2XLarge 80(`h-20`).
+
+🔴 **아직 스케일을 벗어난 자리**(고칠 때 이 표를 쓰십시오): `toggleVariants`의 `size: 'sm'`이 `h-7`(28px), `'lg'`가 `h-9`(36px)입니다. 둘 다 위젯이 쓰지 않아 미뤘습니다 — `sm`은 studio·admin이 쓰고 `lg`는 사용처가 0곳입니다.
+
+### 채택 범위
+
+Carbon에서 가져오는 범위를 좁게 고정합니다.
+
+- 🔴 **`@carbon/react`(컴포넌트 라이브러리)는 도입하지 않습니다.** 스택이 shadcn + Radix + Tailwind라 컴포넌트 체계가 두 벌이 되고, 같은 버튼에 스타일이 겹칩니다. 아이콘만 이미 Carbon입니다.
+- 가져오는 것은 **스케일과 역할**입니다 — 간격 단계, 타입 단계, 상태색 역할, 모션 커브. 들어오는 자리는 `theme.css`의 토큰 하나뿐이고, 컴포넌트에 직접 값을 쓰지 않습니다.
+- 🔴 **토큰은 덧붙이기만 합니다.** 기존 값을 교체하면 guideline·studio·admin이 한꺼번에 흔들립니다. 새 단계가 필요하면 추가하고, 교체는 그 자체로 별도 결정입니다.
+
+### shadcn 컴포넌트를 가져올 때의 판단 기준
+
+1. **스타일이 더 낫다** → 컴포넌트가 아니라 **토큰(이 문서)을 고칩니다.** 값은 전역에서만 평가할 수 있습니다. 다만 값 **자체**를 바꾸는 것은 look 결정이므로 위 「look 변경은 AI의 판단 범위가 아닙니다」를 따릅니다 — 자리를 모으는 것과 값을 정하는 것은 다른 일입니다.
+2. **기존 구현이 낫다** → 그래도 가져옵니다. 소스를 우리가 소유하므로 더 낫게 만들 자리는 **가져온 파일 안**입니다. 안 가져오는 유일한 근거는 **"의미가 다르다"**이고, 그때는 왜 다른지 코드에 적습니다. "우리 게 낫다·자유롭다·빠르다"는 근거가 되지 않습니다.
+3. 🔴 **가져온 컴포넌트의 기본 스킨은 shadcn의 취향이지 우리 DS가 아닙니다.** 추가한 같은 변경에서 토큰만 쓰는지 확인하고, 안 맞는 부분은 컴포넌트에서 고치지 말고 이 문서와 `theme.css`로 승격합니다.
