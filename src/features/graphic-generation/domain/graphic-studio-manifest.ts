@@ -1,56 +1,55 @@
 import {
+	type GraphicRuntimeManifest,
 	type GraphicStudioConfig,
 	parseGraphicStudioConfig,
 } from '@/features/graphic-generation/domain/graphic-studio-config'
-import { forwardStraightGraphicConfig } from '@/features/graphic-generation/domain/manifests/forward-straight'
-import { radialFlutedGlassGraphicConfig } from '@/features/graphic-generation/domain/manifests/radial-fluted-glass'
-import { resolveStudioOutputFormats } from '@/features/studio-export/studio-output'
+import { graphicRuntimeManifests } from '@/features/graphic-generation/graphic-runtimes/catalog/manifest.generated'
 import {
-	applyControllerOverride,
-	projectPayloadControllerOverride,
+	projectStudioOutputPolicy,
+	resolveStudioOutputCapability,
+	type StudioOutputCapability,
+} from '@/features/studio-export/studio-output'
+import {
+	applyControllerRestrictions,
+	projectPayloadControllerRestrictions,
 } from '@/modules/studio-controller/controller-definition'
 import type { PublishedGraphicProfileDefinition } from './graphic-studio-config'
 
-export { forwardStraightGraphicConfig, radialFlutedGlassGraphicConfig }
+export { graphicRuntimeManifests }
 
-export const graphicStudioConfigs = [
-	forwardStraightGraphicConfig,
-	radialFlutedGlassGraphicConfig,
-] as const satisfies readonly GraphicStudioConfig[]
+export type GraphicRuntimeId = (typeof graphicRuntimeManifests)[number]['id']
 
-export type GraphicRuntimeId = (typeof graphicStudioConfigs)[number]['id']
-
-export const GRAPHIC_RUNTIME_OPTIONS = graphicStudioConfigs.map((manifest) => ({
+export const GRAPHIC_RUNTIME_OPTIONS = graphicRuntimeManifests.map((manifest) => ({
 	value: manifest.id,
 	label: manifest.name,
 }))
 
 /** Admin과 published projector가 읽는 서버 안전 Graphic Manifest를 찾는다. */
-export function getGraphicStudioManifest(id: string): GraphicStudioConfig | null {
-	return graphicStudioConfigs.find((manifest) => manifest.id === id) ?? null
+export function getGraphicRuntimeManifest(id: string): GraphicRuntimeManifest | null {
+	return graphicRuntimeManifests.find((manifest) => manifest.id === id) ?? null
+}
+
+/** Graphic Artifact와 Admin 정책을 Export Layer가 소비할 effective capability로 투영한다. */
+export function resolveGraphicStudioOutput(
+	manifest: GraphicRuntimeManifest,
+	policy?: unknown,
+): StudioOutputCapability {
+	return resolveStudioOutputCapability(manifest.artifacts, projectStudioOutputPolicy(policy))
 }
 
 /** published Graphic Profile을 Manifest 기본 계약보다 좁은 Effective Config로 투영한다. */
 export function deriveGraphicStudioConfig(
 	profile: PublishedGraphicProfileDefinition,
 ): GraphicStudioConfig {
-	const manifest = getGraphicStudioManifest(profile.runtime)
+	const manifest = getGraphicRuntimeManifest(profile.runtime)
 	if (!manifest) throw new Error(`등록되지 않은 Graphic runtime입니다: ${profile.runtime}`)
-	const override = projectPayloadControllerOverride(
-		profile.controllerOverride ?? profile.controller,
-	)
+	const restrictions = projectPayloadControllerRestrictions(profile.controllerRestrictions)
 	const config: GraphicStudioConfig = {
 		...manifest,
 		name: profile.name,
-		output: {
-			...manifest.output,
-			formats: resolveStudioOutputFormats(
-				manifest.output.formats,
-				profile.output?.allowedFormats,
-			),
-		},
+		output: resolveGraphicStudioOutput(manifest, profile.exportPolicy),
 		controller: {
-			groups: applyControllerOverride(manifest.controller.groups, override),
+			groups: applyControllerRestrictions(manifest.controller.groups, restrictions),
 		},
 	}
 	parseGraphicStudioConfig(config)

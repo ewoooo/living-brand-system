@@ -1,6 +1,7 @@
 'use client'
 
 import { type PointerEvent as ReactPointerEvent, useEffect, useRef, useState } from 'react'
+import { WIDGET_CAPTION } from '../readout'
 
 /**
  * 로고 클리어스페이스 = N·A. A(unit) = 워드마크의 수직 줄기 두께.
@@ -103,7 +104,7 @@ export function StemMeasure({
 	}
 
 	return (
-		<div className="w-full">
+		<div className="flex w-full flex-col gap-2">
 			{/* 프레임/패딩은 바깥 div가 갖고, 클릭 버튼은 이미지를 딱 감싼다.
 			    measureAt이 버튼 rect를 로고 픽셀에 매핑하므로 버튼 박스 == 이미지 박스여야 한다. */}
 			{/* 뷰잉 패널: 상하 패딩으로 로고 위아래 여백 확보. overflow-hidden으로 아래 사각형을 패널 높이에 맞춰 클립. */}
@@ -113,6 +114,9 @@ export function StemMeasure({
 					onClick={measureAt}
 					disabled={!ready}
 					title="세로 줄기를 클릭해 A를 실측"
+					// 🔴 이름을 직접 준다 — 안의 로고 img alt가 이름이 되면 "로고"로 읽혀서
+					//    무엇을 하는 버튼인지 사라진다. 동작 설명은 title에만 있었다.
+					aria-label="세로 줄기를 클릭해 A를 실측"
 					className="relative inline-block cursor-crosshair p-0 leading-none disabled:cursor-wait"
 				>
 					{/* biome-ignore lint/performance/noImgElement: 원격 svg라 next/image 대신 img 사용. */}
@@ -134,7 +138,7 @@ export function StemMeasure({
 					)}
 				</button>
 			</div>
-			<p className="mt-2 font-body text-muted-foreground text-xs">
+			<p className={WIDGET_CAPTION}>
 				로고의 <b>수직 줄기</b>를 클릭하면 A를 실측합니다. 현재 A ={' '}
 				<b className="tabular-nums">
 					{value == null
@@ -197,7 +201,7 @@ export function ClearSpaceView({
 	const aLeft = stemX != null ? margin + stemX * logoW : margin + (logoW - a) / 2
 
 	return (
-		<div className="w-full overflow-x-auto">
+		<div className="flex w-full flex-col gap-3 overflow-x-auto">
 			<div className="grid min-h-56 place-items-center rounded-lg border border-border bg-background p-8">
 				<div className="relative shrink-0" style={{ width: outerW, height: outerH }}>
 					{/* 4개 padding 사각형 — 그룹 opacity로 코너에서 겹쳐도 색이 진해지지 않는다. */}
@@ -274,7 +278,7 @@ export function ClearSpaceView({
 				</div>
 			</div>
 
-			<p className="mt-3 font-body text-muted-foreground text-xs">
+			<p className={WIDGET_CAPTION}>
 				최소 여백 = <b style={{ color }}>{n}A</b>. 단위 <b>A</b>는 워드마크의 수직 줄기
 				두께입니다.
 			</p>

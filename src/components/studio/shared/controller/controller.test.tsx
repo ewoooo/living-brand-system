@@ -169,6 +169,37 @@ describe('Controller.Field', () => {
 describe('Controller value controls', () => {
 	afterEach(cleanup)
 
+	it('Segmented 체이서는 활성 버튼의 실제 폭을 따라 이동한다', () => {
+		const options = [
+			{ value: 'short', label: 'On' },
+			{ value: 'long', label: 'Generate' },
+		] as const
+		const { container, rerender } = render(
+			<Controller.Segmented
+				aria-label="모드"
+				options={options}
+				value="short"
+				onChange={vi.fn()}
+			/>,
+		)
+
+		expect(
+			container.querySelector('[data-slot="controller-segmented-pill"]')?.parentElement,
+		).toHaveTextContent('On')
+
+		rerender(
+			<Controller.Segmented
+				aria-label="모드"
+				options={options}
+				value="long"
+				onChange={vi.fn()}
+			/>,
+		)
+		expect(
+			container.querySelector('[data-slot="controller-segmented-pill"]')?.parentElement,
+		).toHaveTextContent('Generate')
+	})
+
 	it('Range는 화살표 키로 계약의 step만큼 값을 바꾼다', () => {
 		const onChange = vi.fn()
 		render(

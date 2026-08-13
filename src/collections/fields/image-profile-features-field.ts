@@ -7,15 +7,10 @@ const featureBlocks: Block[] = [
 		labels: { singular: '색 조정', plural: '색 조정' },
 		fields: [
 			{
-				name: 'line',
-				type: 'text',
-				required: true,
-				label: '라인 색상 컨트롤 ID',
-			},
-			{
 				name: 'background',
-				type: 'text',
-				label: '배경 색상 컨트롤 ID',
+				type: 'checkbox',
+				defaultValue: false,
+				label: '배경 색상 조정',
 			},
 		],
 	},
@@ -27,7 +22,7 @@ const featureBlocks: Block[] = [
 	},
 ]
 
-/** Image Profile capability가 참조할 Controller control ID를 저작하는 선택 필드다. */
+/** Image Profile이 Image Runtime Manifest 지원 범위 안에서 열 feature를 선택하는 필드다. */
 export function imageProfileFeaturesField(): Field {
 	return {
 		name: 'features',
@@ -36,7 +31,7 @@ export function imageProfileFeaturesField(): Field {
 		label: '프로파일 기능',
 		admin: {
 			description:
-				'Controller가 있는 새 계약에서 비우면 기능을 열지 않습니다. 값과 사용 상태는 참조한 Controller control이 소유합니다.',
+				'비우면 기능을 열지 않습니다. 값과 사용 상태는 Controller 제한이 소유합니다.',
 		},
 	}
 }

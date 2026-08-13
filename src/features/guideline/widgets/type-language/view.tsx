@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
 	BRAND_FONT_STACK,
 	LANGUAGES,
@@ -11,6 +12,7 @@ import {
 	TIERS,
 } from '../brand-typeface'
 import { HAIRLINE_CELL, HAIRLINE_GRID } from '../hairline'
+import { SPEC_READOUT, WIDGET_CAPTION } from '../readout'
 
 // 같은 한 덩어리 본문을 언어만 바꿔 가며 본다. 언어가 바뀌면 글자 밀도(회색도)가 달라지고,
 // 그래서 규정이 정한 행간도 달라진다 — 그 두 가지가 같은 화면에 함께 있어야 요점이 전달된다.
@@ -49,27 +51,23 @@ export function TypeLanguageView({
 	return (
 		<div className="flex w-full flex-col gap-3">
 			{layout === 'single' ? (
-				// 선택 상태를 색만으로 구분하지 않는다 — 굵기와 밑줄이 같이 바뀐다(logo-grid-spec과 같은 형태).
-				<div className="flex gap-1">
-					{LANGUAGES.map((option) => {
-						const on = language === option.key
-						return (
-							<button
-								key={option.key}
-								type="button"
-								aria-pressed={on}
-								onClick={() => setLanguage(option.key)}
-								className={`border-b-2 px-3 py-1 font-body text-sm focus-visible:outline-2 ${
-									on
-										? 'border-foreground font-semibold text-foreground'
-										: 'border-transparent font-normal text-muted-foreground hover:bg-muted'
-								}`}
-							>
-								{option.label}
-							</button>
-						)
-					})}
-				</div>
+				// 언어 하나를 고르는 설정 전환이다 — 패널 내비게이션이 아니라 같은 판을 다르게 그린다.
+				// type="single"이면 Radix가 radiogroup/radio로 렌더해 "하나만 고른다"가 AT에도 전달된다.
+				<ToggleGroup
+					type="single"
+					variant="outline"
+					spacing={0}
+					value={language}
+					// 마지막 항목을 다시 눌러 빈 값이 되면 그릴 문단이 없어진다 — 빈 값은 무시한다.
+					onValueChange={(next) => next && setLanguage(next as LanguageKey)}
+					aria-label="본문 언어"
+				>
+					{LANGUAGES.map((option) => (
+						<ToggleGroupItem key={option.key} value={option.key} className="px-3">
+							{option.label}
+						</ToggleGroupItem>
+					))}
+				</ToggleGroup>
 			) : null}
 
 			<div
@@ -90,7 +88,7 @@ export function TypeLanguageView({
 
 			{warnFallback ? (
 				// role="status" — 서체 로딩이 끝난 뒤에 나타나는 줄이라 스크린리더에도 전달돼야 한다.
-				<p role="status" className="font-body text-muted-foreground text-xs">
+				<p role="status" className={WIDGET_CAPTION}>
 					지금 붙어 있는 브랜드 서체에 한글 글리프가 없어 국문은 본문 서체로 대체해 보여
 					줍니다. 회색도 비교는 서체가 들어온 뒤 다시 확인해야 합니다.
 				</p>
@@ -115,7 +113,7 @@ function LanguagePanel({ language }: { language: LanguageKey }) {
 		<figure className={`flex flex-col ${HAIRLINE_CELL}`}>
 			<figcaption className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-border border-b px-4 py-2 font-body text-xs">
 				<span className="font-semibold text-foreground">{label}</span>
-				<span className="text-muted-foreground tabular-nums">
+				<span className={`${SPEC_READOUT} text-xs`}>
 					행간 {min}–{max}% · {min}% 적용
 				</span>
 			</figcaption>

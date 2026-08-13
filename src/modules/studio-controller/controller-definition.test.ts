@@ -3,15 +3,12 @@ import {
 	acceptsControllerDraftValue,
 	acceptsControllerExecutionValue,
 	acceptsControllerExecutionValues,
-	applyControllerOverride,
-	applyControllerPolicy,
+	applyControllerRestrictions,
 	type ControllerGroupDefinition,
 	createControllerValues,
 	isControllerPadValue,
 	parseStudioControllerConfig,
-	projectPayloadController,
-	projectPayloadControllerOverride,
-	projectPayloadControllerPolicy,
+	projectPayloadControllerRestrictions,
 } from './controller-definition'
 
 describe('createControllerValues', () => {
@@ -185,7 +182,7 @@ describe('parseStudioControllerConfig', () => {
 			version: 1,
 			name: 'Demo',
 			type: 'p5',
-			output: { formats: ['svg'] },
+			artifacts: { vector: {} },
 			controller: {
 				groups: [
 					{
@@ -238,6 +235,20 @@ describe('parseStudioControllerConfig', () => {
 		}
 
 		expect(parseStudioControllerConfig(config)).toBe(config)
+	})
+
+	it('공통 Runtime Artifact parser가 unknown kind를 거부한다', () => {
+		expect(() =>
+			parseStudioControllerConfig({
+				...configWith({
+					id: 'enabled',
+					kind: 'toggle',
+					label: 'Enabled',
+					defaultValue: true,
+				}),
+				artifacts: { document: {} },
+			}),
+		).toThrow('Artifact 종류')
 	})
 
 	it('group과 전체 control id 중복을 거부한다', () => {
@@ -395,7 +406,7 @@ describe('isControllerPadValue', () => {
 	})
 })
 
-describe('Payload Controller projection과 Policy 적용', () => {
+describe('Payload Controller projection과 Override 적용', () => {
 	it('kind·표현 필드 없는 Override만 Base Definition보다 좁게 적용한다', () => {
 		const base = [
 			{
@@ -416,7 +427,7 @@ describe('Payload Controller projection과 Policy 적용', () => {
 				],
 			},
 		] satisfies readonly ControllerGroupDefinition[]
-		const override = projectPayloadControllerOverride({
+		const restrictions = projectPayloadControllerRestrictions({
 			controls: [
 				{
 					controlId: 'ratio',
@@ -426,7 +437,7 @@ describe('Payload Controller projection과 Policy 적용', () => {
 				},
 			],
 		})
-		const result = applyControllerOverride(base, override)
+		const result = applyControllerRestrictions(base, restrictions)
 		expect(result[0]).toMatchObject({ title: 'Setting', collapsible: true })
 		expect(result[0]?.controls[0]).toMatchObject({
 			kind: 'select',
@@ -435,158 +446,15 @@ describe('Payload Controller projection과 Policy 적용', () => {
 			options: [{ value: '1:1', label: 'Square' }],
 		})
 		expect(() =>
-			projectPayloadControllerOverride({
+			projectPayloadControllerRestrictions({
 				controls: [{ controlId: 'ratio', kind: 'select' }],
 			}),
 		).toThrow('지원하지 않는 필드')
-	})
-	it('Payload key·blockType을 공통 Definition으로 정규화한다', () => {
-		expect(
-			projectPayloadController({
-				groups: [
-					{
-						key: 'settings',
-						title: 'Settings',
-						collapsible: true,
-						defaultOpen: false,
-						controls: [
-							{
-								blockType: 'range',
-								key: 'scale',
-								label: 'Scale',
-								availability: 'readonly',
-								defaultValue: 1,
-								min: 0,
-								max: 2,
-								step: 0.1,
-								id: 'payload-row-id',
-							},
-						],
-					},
-				],
-			}),
-		).toEqual({
-			groups: [
-				{
-					id: 'settings',
-					title: 'Settings',
-					collapsible: true,
-					defaultOpen: false,
-					controls: [
-						{
-							id: 'scale',
-							kind: 'range',
-							label: 'Scale',
-							availability: 'readonly',
-							defaultValue: 1,
-							min: 0,
-							max: 2,
-							step: 0.1,
-						},
-					],
-				},
-			],
-		})
-	})
-
-	it('Payload Policy는 입력한 제한만 sparse 계약으로 정규화한다', () => {
-		expect(
-			projectPayloadControllerPolicy({
-				groups: [
-					{
-						key: 'settings',
-						controls: [
-							{
-								blockType: 'select',
-								key: 'mode',
-								availability: 'readonly',
-								options: [{ value: 'a', label: 'A' }],
-							},
-						],
-					},
-				],
-			}),
-		).toEqual({
-			groups: [
-				{
-					id: 'settings',
-					controls: [
-						{
-							id: 'mode',
-							kind: 'select',
-							availability: 'readonly',
-							options: [{ value: 'a', label: 'A' }],
-						},
-					],
-				},
-			],
-		})
-	})
-
-	it('Admin Policy는 기존 control의 options·range·availability만 좁히고 멱등 적용된다', () => {
-		const base = [
-			{
-				id: 'settings',
-				title: 'Settings',
-				controls: [
-					{
-						id: 'mode',
-						kind: 'select',
-						label: 'Mode',
-						defaultValue: 'a',
-						options: [
-							{ value: 'a', label: 'A' },
-							{ value: 'b', label: 'B' },
-						],
-					},
-				],
-			},
-		] satisfies readonly ControllerGroupDefinition[]
-		const policy = [
-			{
-				id: 'settings',
-				title: 'Restricted',
-				collapsible: true,
-				defaultOpen: false,
-				controls: [
-					{
-						id: 'mode',
-						kind: 'select',
-						availability: 'readonly',
-						options: [{ value: 'a', label: 'A' }],
-					},
-				],
-			},
-		] as const
-		const narrowed = applyControllerPolicy(base, policy)
-
-		expect(narrowed[0]).toMatchObject({
-			title: 'Restricted',
-			collapsible: true,
-			defaultOpen: false,
-		})
-		expect(narrowed[0]?.controls[0]).toMatchObject({
-			label: 'Mode',
-			defaultValue: 'a',
-			availability: 'readonly',
-			options: [{ value: 'a', label: 'A' }],
-		})
-		expect(applyControllerPolicy(narrowed, policy)).toEqual(narrowed)
 		expect(() =>
-			applyControllerPolicy(base, [
-				{
-					id: 'settings',
-					controls: [
-						{
-							id: 'mode',
-							kind: 'select',
-							defaultValue: 'c',
-							options: [{ value: 'c', label: 'C' }],
-						},
-					],
-				},
-			]),
-		).toThrow('options')
+			projectPayloadControllerRestrictions({
+				groups: [{ key: 'settings', controls: [] }],
+			}),
+		).toThrow('지원하지 않는 필드')
 	})
 })
 
@@ -596,7 +464,7 @@ function configWith(control: unknown) {
 		id: 'demo',
 		version: 1,
 		name: 'Demo',
-		output: { formats: ['svg'] },
+		artifacts: { vector: {} },
 		controller: {
 			groups: [{ id: 'controls', title: 'Controls', controls: [control] }],
 		},

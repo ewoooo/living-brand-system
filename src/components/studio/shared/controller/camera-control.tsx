@@ -13,7 +13,7 @@ type ControllerCameraAxis = {
 }
 
 type ControllerCameraControlProps = {
-	/** 3D 오빗 프리뷰(ImageCameraOrbitControl 등) — 정사각 컨테이너에 담긴다. */
+	/** 3D 오빗 프리뷰(CameraOrbitControl 등) — 정사각 컨테이너에 담긴다. */
 	children: React.ReactNode
 	/** 프리뷰 아래 반폭으로 나란히 앉는 축 셀렉트들. */
 	axes: readonly ControllerCameraAxis[]

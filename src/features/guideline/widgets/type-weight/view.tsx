@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { Slider } from '@/components/ui/slider'
 import { AVAILABLE_WEIGHTS, BRAND_FONT_STACK, WEIGHTS, type WeightKey } from '../brand-typeface'
+import { CONTROL_VALUE } from '../readout'
 
 // 문구·크기·행간을 묶어 두고 굵기만 갈아 끼운다. 화면에서 달라지는 게 하나뿐이라 그 하나가 보인다.
 //
@@ -82,29 +84,26 @@ export function TypeWeightView({
 			<div className="flex flex-col gap-3">
 				{/* 컨트롤은 유한 폭을 지킨다 — 판의 폭은 프레임 소관이고 컨트롤이 늘어날 이유가 없다. */}
 				<div className="flex w-fit items-end gap-4">
-					<div className="flex flex-col gap-1">
-						<input
-							type="range"
+					<div className="flex flex-col gap-2">
+						<Slider
 							min={0}
 							max={WEIGHTS.length - 1}
 							step={1}
-							value={index}
-							onChange={(event) => setIndex(Number(event.target.value))}
+							value={[index]}
+							onValueChange={([next]) => setIndex(next ?? 0)}
 							aria-label="서체 굵기"
 							// 순번(0·1·2)이 아니라 굵기 이름이 읽히게 한다.
 							aria-valuetext={`${weight.label} ${weight.value}`}
-							className={`${CONTROL_WIDTH} cursor-pointer accent-foreground`}
+							className={CONTROL_WIDTH}
 						/>
 						{/* 슬라이더가 aria-valuetext로 이미 말하므로 눈금은 시각 전용이다. */}
 						<div className={`flex ${CONTROL_WIDTH} justify-between`} aria-hidden="true">
 							{WEIGHTS.map((candidate, i) => (
 								<span
 									key={candidate.key}
-									className={
-										i === index
-											? 'font-body text-foreground text-xs'
-											: 'font-body text-muted-foreground text-xs'
-									}
+									className={`font-body text-xs ${
+										i === index ? 'text-foreground' : 'text-muted-foreground'
+									}`}
 								>
 									{candidate.label}
 								</span>
@@ -112,7 +111,7 @@ export function TypeWeightView({
 						</div>
 					</div>
 
-					<span className="font-body text-foreground text-sm tabular-nums">
+					<span className={`${CONTROL_VALUE} text-sm`}>
 						{weight.label} {weight.value}
 					</span>
 				</div>
@@ -123,11 +122,9 @@ export function TypeWeightView({
 				*/}
 				<p
 					role="status"
-					className={
-						synthesized
-							? 'font-body text-destructive text-xs'
-							: 'font-body text-muted-foreground text-xs'
-					}
+					className={`font-body text-xs ${
+						synthesized ? 'text-destructive' : 'text-muted-foreground'
+					}`}
 				>
 					{synthesized
 						? `${weight.label}(${weight.value})는 아직 서체 파일에 없어 브라우저가 대신 그린 굵기입니다. 원본 자형과 다릅니다.`

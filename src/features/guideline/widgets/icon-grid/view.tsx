@@ -3,6 +3,9 @@
 import { Contrast, Shuffle } from '@carbon/icons-react'
 import { motion } from 'motion/react'
 import { useMemo, useState } from 'react'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 // 서버(블록)가 DB에서 조립해 내려주는 아이콘 1개. 색은 컬러 모드일 때만 채워진다(팔레트 hex).
 export type IconGridItem = {
@@ -49,21 +52,15 @@ export function IconGridView({
 	offsetPct: number
 }) {
 	const groups = useMemo(() => [...new Set(items.map((i) => i.group).filter(Boolean))], [items])
-	const [selected, setSelected] = useState<Set<string>>(new Set())
+	// ToggleGroup이 선택 목록을 배열로 주고 받는다 — Set으로 들고 있으면 매번 변환만 오간다.
+	const [selected, setSelected] = useState<string[]>([])
 	// 0 = 원래 순서, >0 = 클릭할 때마다 새로 섞기
 	const [shuffleSeed, setShuffleSeed] = useState(0)
 	const [inverted, setInverted] = useState(false) // 전경↔배경 스왑
 
-	const toggle = (g: string) =>
-		setSelected((prev) => {
-			const next = new Set(prev)
-			if (next.has(g)) next.delete(g)
-			else next.add(g)
-			return next
-		})
-
 	const visible = useMemo(() => {
-		const filtered = selected.size === 0 ? items : items.filter((i) => selected.has(i.group))
+		const filtered =
+			selected.length === 0 ? items : items.filter((i) => selected.includes(i.group))
 		return shuffleSeed > 0 ? shuffle(filtered) : filtered
 	}, [items, selected, shuffleSeed])
 
@@ -80,28 +77,28 @@ export function IconGridView({
 			{/* 뷰어 조작 — 필터(태그)는 왼쪽, 보기 액션(반전·섞기)은 오른쪽 도구 클러스터로 분리 */}
 			<div className="mb-4 flex flex-wrap items-start justify-between gap-x-8 gap-y-3">
 				<div className="flex flex-wrap items-center gap-2">
-					{groups.map((g) => {
-						const on = selected.has(g)
-						return (
-							<button
-								key={g}
-								type="button"
-								onClick={() => toggle(g)}
-								aria-pressed={on}
-								className={`rounded-md px-3 py-1.5 font-body font-medium text-sm ${
-									on
-										? 'bg-foreground text-background'
-										: 'bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]'
-								}`}
-							>
+					{/*
+						여러 그룹을 동시에 켜는 필터라 type="multiple"이다(Radix가 toolbar로 렌더한다).
+						테두리형이라 오른쪽의 채운 액션 버튼과 구분된다 — 필터는 상태를 갖고, 액션은 한 번 눌린다.
+					*/}
+					<ToggleGroup
+						type="multiple"
+						variant="outline"
+						value={selected}
+						onValueChange={setSelected}
+						className="flex-wrap"
+						aria-label="아이콘 그룹 필터"
+					>
+						{groups.map((g) => (
+							<ToggleGroupItem key={g} value={g} className="px-3">
 								{g}
-							</button>
-						)
-					})}
-					{selected.size > 0 && (
+							</ToggleGroupItem>
+						))}
+					</ToggleGroup>
+					{selected.length > 0 && (
 						<button
 							type="button"
-							onClick={() => setSelected(new Set())}
+							onClick={() => setSelected([])}
 							className={ACTION_BUTTON_CLASS}
 						>
 							전체
@@ -126,19 +123,18 @@ export function IconGridView({
 						<Shuffle size={16} />
 						랜덤 섞기
 					</button>
-					<button
-						type="button"
-						onClick={() => setInverted((v) => !v)}
-						aria-pressed={inverted}
-						className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-body font-medium text-sm ${
-							inverted
-								? 'bg-foreground text-background'
-								: 'bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]'
-						}`}
+					<Switch
+						id="icon-grid-inverted"
+						checked={inverted}
+						onCheckedChange={setInverted}
+					/>
+					<Label
+						htmlFor="icon-grid-inverted"
+						className="inline-flex items-center gap-1.5 font-body font-medium text-sm"
 					>
 						<Contrast size={16} />
 						색상 반전
-					</button>
+					</Label>
 				</div>
 			</div>
 

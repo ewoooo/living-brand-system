@@ -1,13 +1,32 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { Controller } from '@/components/studio/shared/controller'
+import { snapCameraAngle } from '@/components/studio/shared/controller/camera-orbit'
 import { Button } from '@/components/ui/button'
 import {
 	type CameraAzimuth,
 	type CameraElevation,
 	resolveCameraControl,
 } from '@/features/image-generation/camera-control'
-import { ImageCameraOrbitControl, snapCameraAngle } from './image-camera-orbit-control'
+
+const CameraOrbitControl = dynamic(
+	() =>
+		import('@/components/studio/shared/controller/camera-orbit-control').then(
+			(module) => module.CameraOrbitControl,
+		),
+	{
+		ssr: false,
+		loading: () => (
+			<div
+				role="status"
+				className="grid size-full place-items-center p-3 text-muted-foreground text-xs"
+			>
+				3D 미리보기를 불러오는 중…
+			</div>
+		),
+	},
+)
 
 // 각 프리셋의 버킷(value)은 도메인 임계값과 어긋나지 않도록 resolveCameraControl로 도출한다.
 const AZIMUTH_PRESETS: { degrees: number; label: string; value: CameraAzimuth }[] = [
@@ -96,7 +115,7 @@ export function ImageCameraControl({
 					},
 				]}
 			>
-				<ImageCameraOrbitControl
+				<CameraOrbitControl
 					azimuthDeg={azimuthDeg}
 					azimuthLabel={azimuthPreset.label}
 					azimuthSteps={AZIMUTH_STEPS}

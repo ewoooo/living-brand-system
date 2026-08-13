@@ -2,7 +2,7 @@ import { PDFDocument, PDFName, PDFRawStream, PDFString } from 'pdf-lib'
 import { millimetersToPdfPoints } from '../print-policy'
 
 /** CMYK JPEG를 지정한 mm × mm 크기의 단일 페이지 PDF로 직렬화한다. */
-export async function createTemplatePdf({
+export async function createPrintPdf({
 	cmykJpeg,
 	heightMm,
 	iccProfile,

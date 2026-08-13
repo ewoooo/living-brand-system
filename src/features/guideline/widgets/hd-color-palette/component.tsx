@@ -59,6 +59,10 @@ export async function HdColorPaletteWidget({
 		.map((g) => ({ id: g.id, name: g.name, swatches: toSwatches(g) }))
 		.filter((s) => s.swatches.length > 0)
 
+	// 그릴 색이 하나도 없으면 그리지 않는다 — 빈 판을 남기면 규정이 없는 것처럼 보인다.
+	// (그룹을 골랐는데 전부 해석 실패했거나, 컬렉션 자체가 비었을 때 여기에 온다.)
+	if (sections.length === 0) return null
+
 	// 균일 판형의 열 수. 위젯 안에서 가장 색이 많은 행에 맞춰야 모든 칸이 같은 크기가 된다.
 	const columnCount = Math.max(1, ...sections.map((s) => s.swatches.length))
 	// 위계 판형의 가중치는 순위에서 나온다 — 3그룹이면 3:2:1. 그룹 수가 달라져도 규칙이 유지된다.

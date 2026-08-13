@@ -2,15 +2,18 @@ import { APIError, type CollectionConfig } from 'payload'
 import {
 	deriveGraphicStudioConfig,
 	GRAPHIC_RUNTIME_OPTIONS,
-	graphicStudioConfigs,
+	graphicRuntimeManifests,
 } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import { managerManagedAccess } from '@/lib/auth'
 import {
-	studioControllerField,
-	studioControllerOverrideField,
-	studioOutputPolicyField,
+	studioControllerRestrictionsField,
+	studioExportPolicyField,
 } from './fields/studio-controller-field'
 import { draftVersions } from './shared'
+
+const graphicAdminRuntimeManifests = graphicRuntimeManifests.map(
+	({ artifacts, controller, id }) => ({ artifacts, controller, id }),
+)
 
 export const GraphicProfiles: CollectionConfig = {
 	slug: 'graphic-profiles',
@@ -26,9 +29,8 @@ export const GraphicProfiles: CollectionConfig = {
 						id: Number(effective.id ?? 0),
 						name: String(effective.name ?? ''),
 						runtime: String(effective.runtime ?? ''),
-						controller: effective.controller,
-						controllerOverride: effective.controllerOverride,
-						output: effective.output,
+						controllerRestrictions: effective.controllerRestrictions,
+						exportPolicy: effective.exportPolicy,
 					})
 				} catch (error) {
 					throw new APIError(
@@ -75,21 +77,13 @@ export const GraphicProfiles: CollectionConfig = {
 			min: 0,
 			admin: { position: 'sidebar' },
 		},
-		studioControllerField({
-			mode: 'restrict',
-			hidden: true,
-			description:
-				'비우면 runtime 기본 계약을 사용합니다. 필요한 항목만 입력하면 같은 ID의 options, 범위, 기본값, 사용 상태만 좁힙니다.',
-		}),
-		studioControllerOverrideField({
+		studioControllerRestrictionsField({
 			source: 'graphic',
-			baseConfigs: graphicStudioConfigs.map(({ id, controller }) => ({ id, controller })),
+			baseConfigs: graphicAdminRuntimeManifests,
 		}),
-		studioOutputPolicyField({
-			formats: [
-				{ label: 'SVG', value: 'svg' },
-				{ label: 'MP4', value: 'mp4' },
-			],
+		studioExportPolicyField({
+			source: 'graphic',
+			baseConfigs: graphicAdminRuntimeManifests,
 		}),
 	],
 }

@@ -2,6 +2,7 @@
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { Typography } from '@/components/ui/typography'
+import type { ImageAspectRatio } from '@/features/image-generation/image-size'
 import {
 	type ImageColorAdjustment,
 	imageColorizeStyle,
@@ -12,6 +13,7 @@ import { cn } from '@/lib/utils'
 const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
 
 type ImageGenerationResultsProps = {
+	aspectRatio: ImageAspectRatio
 	/** 색 조정 값 — 있으면 결과 전부에 얹는다(한 장만 물들이지 않는다). null이면 원본만 보인다. */
 	color: ImageColorAdjustment | null
 	loading: boolean
@@ -22,6 +24,7 @@ type ImageGenerationResultsProps = {
 }
 
 export function ImageGenerationResults({
+	aspectRatio,
 	color,
 	loading,
 	onSelect,
@@ -38,7 +41,7 @@ export function ImageGenerationResults({
 			aria-live="polite"
 			aria-busy={loading}
 		>
-			{loading && <ImageGenerationSkeleton count={requested} />}
+			{loading && <ImageGenerationSkeleton aspectRatio={aspectRatio} count={requested} />}
 
 			{!loading && images.length > 0 && result && (
 				<div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
@@ -71,6 +74,7 @@ export function ImageGenerationResults({
 									)}
 								>
 									<ResultImage
+										aspectRatio={result.aspectRatio}
 										color={color}
 										label={`생성 결과 ${index + 1}`}
 										src={src}
@@ -104,6 +108,7 @@ export function ImageGenerationResults({
 }
 
 type ResultImageProps = {
+	aspectRatio: ImageAspectRatio
 	color: ImageColorAdjustment | null
 	label: string
 	src: string
@@ -115,11 +120,15 @@ type ResultImageProps = {
  * 원본을 지우는 데 opacity를 쓴다 — visibility:hidden은 접근성 트리에서도 빼서
  * 이 카드를 감싼 선택 버튼의 유일한 접근 이름(alt)까지 사라진다.
  */
-function ResultImage({ color, label, src }: ResultImageProps) {
+function ResultImage({ aspectRatio, color, label, src }: ResultImageProps) {
 	const colorize = color ? imageColorizeStyle(src, color) : null
 
 	return (
-		<div data-slot="image-result" className="relative" style={colorize?.base}>
+		<div
+			data-slot="image-result"
+			className="relative overflow-hidden"
+			style={{ ...colorize?.base, aspectRatio: aspectRatio.replace(':', ' / ') }}
+		>
 			{/* biome-ignore lint/performance/noImgElement: 미리보기, 최적화 불필요 */}
 			<img src={src} alt={label} className={cn('w-full', colorize && 'opacity-0')} />
 			{colorize && (
@@ -134,7 +143,13 @@ function ResultImage({ color, label, src }: ResultImageProps) {
 	)
 }
 
-function ImageGenerationSkeleton({ count }: { count: number }) {
+function ImageGenerationSkeleton({
+	aspectRatio,
+	count,
+}: {
+	aspectRatio: ImageAspectRatio
+	count: number
+}) {
 	return (
 		<div data-slot="image-generation-skeleton" className="flex flex-col gap-3">
 			<Typography size="sm" tone="muted">
@@ -142,7 +157,7 @@ function ImageGenerationSkeleton({ count }: { count: number }) {
 			</Typography>
 			<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
 				{SKELETON_KEYS.slice(0, count).map((key) => (
-					<Skeleton key={key} className="aspect-[3/4]" />
+					<Skeleton key={key} style={{ aspectRatio: aspectRatio.replace(':', ' / ') }} />
 				))}
 			</div>
 		</div>

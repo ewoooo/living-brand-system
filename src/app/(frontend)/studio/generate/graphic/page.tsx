@@ -12,15 +12,16 @@ export const dynamic = 'force-dynamic'
 export default async function GenerateGraphicPage() {
 	const { user } = await authenticateRequest()
 	if (!user) notFound()
-	const [config] = await listGraphicStudioConfigs(user)
-	if (!config) notFound()
+	const configs = await listGraphicStudioConfigs(user)
+	if (!configs[0]) notFound()
 
 	return (
 		<StudioWorkspacePage
 			title="그래픽 생성"
 			description="그래픽 도구의 설정을 조정하고 결과를 미리 봅니다."
+			hideHeading
 		>
-			<GraphicGenerator config={config} />
+			<GraphicGenerator configs={configs} />
 		</StudioWorkspacePage>
 	)
 }

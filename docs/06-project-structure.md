@@ -115,6 +115,15 @@ src/
   features/
     graphic-generation/
       domain/
+      graphic-runtimes/
+        <runtime-id>/
+          definition.ts
+          model.ts
+          runtime.client.ts
+        catalog/
+          manifest.generated.ts
+          model.generated.ts
+          runtime.generated.client.ts
       hooks/
       repositories/
       runtime/
@@ -193,8 +202,8 @@ scripts/
 - 둘 이상의 화면 표면이 쓰는 컴포넌트만 `src/components/shared`로 승격합니다. 한 표면 안의 여러 화면이 공유하면 `<surface>/shared`에 둡니다.
 - Repository Interface 파일(`*.repository.ts`)은 구현체가 2개 이상 필요해지는 시점에 만듭니다. 단일 구현 단계에서는 Service가 구현 파일을 직접 import합니다.
 - 기능 전용 read service의 Payload 접근도 같은 기능의 `src/features/*/repositories`에 둡니다.
-- 기능 안의 순수 도메인 계산 계층(예: `review/checkers`)과 정적 시나리오 데이터(예: `review/scenarios`)는 승인된 기능 하위 폴더 확장입니다. 새 하위 폴더는 표준 폴더(`components`, `hooks`, `repositories`, `services`, `utils`)로 표현할 수 없을 때만 추가합니다.
-- Feature 디렉터리는 `template-core`, `graphic-generation`, `image-generation`, `template-customization`, `template-import`처럼 `<object>-<capability>`로 이름 짓습니다. 여러 기능이 소비하는 Template 도메인 정본은 `src/features/template-core`, UI 비종속 Controller 계약은 `src/modules/studio-controller`, 공통 출력 실행은 `src/features/studio-export`가 소유합니다. 각 기능의 직렬화 계약과 순수 계산은 `domain`, 화면 세션은 `hooks`, 실행 adapter는 `runtime`, 조회 유즈케이스는 `services`, Payload 접근은 `repositories`에 둡니다. Studio 표현 컴포넌트와 라우트는 화면 표면 이름이므로 `src/components/studio`, `/studio`를 유지합니다.
+- 기능 안의 순수 도메인 계산 계층(예: `review/checkers`)과 정적 시나리오 데이터(예: `review/scenarios`)는 승인된 기능 하위 폴더 확장입니다. 새 하위 폴더는 표준 폴더(`components`, `contexts`, `hooks`, `providers`, `repositories`, `services`, `utils`)로 표현할 수 없을 때만 추가합니다.
+- Feature 디렉터리는 `template-core`, `graphic-generation`, `image-generation`, `template-customization`, `template-import`처럼 `<object>-<capability>`로 이름 짓습니다. 여러 기능이 소비하는 Template 도메인 정본은 `src/features/template-core`, UI 비종속 Controller 계약은 `src/modules/studio-controller`, 공통 출력 실행은 `src/features/studio-export`가 소유합니다. 각 기능의 직렬화 계약과 순수 계산은 `domain`, Context 값 계약은 `contexts`, 화면 세션은 `providers`, Context 소비는 `hooks`, 실행 adapter는 `runtime`, 조회 유즈케이스는 `services`, Payload 접근은 `repositories`에 둡니다. Provider와 소비 훅은 서로 import하지 않고 같은 Context 계약에 의존합니다. Studio 표현 컴포넌트와 라우트는 화면 표면 이름이므로 `src/components/studio`, `/studio`를 유지합니다.
 - 기능 전용 Payload block은 `src/features/<feature>/blocks/<block>`에 schema, projection, component를 함께 둡니다. 생성된 schema/projection catalog는 서버에서 안전하게 사용하고 React renderer catalog는 별도 파일로 유지해 client component가 Payload config에 포함되지 않게 합니다.
 - Agent는 별도 사용자 역할이 아니라 `src/modules/agents`의 실행 모듈입니다.
 - 실제 폴더 구조를 개선할 때는 `src/features`, `src/modules`, `src/components`, `src/lib`, `src/services`, `src/repositories`, `src/types`를 이 순서로 추가합니다.
@@ -214,7 +223,7 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 | Payload collection | `src/collections` | 데이터 구조, access, hook 진입점 |
 | 기능 전용 Payload block | `src/features/*/blocks/<block>` | schema, Agent/Check projection, React component |
 | Creator 화면 | `src/app/(frontend)`, `src/components` | 화면 이동, route 조합, 표현 컴포넌트 |
-| Creator 화면 상태 | `src/features/*/hooks`, `src/features/*/utils` | 화면 상태, view model, 비즈니스 계산 |
+| Creator 화면 상태 | `src/features/*/contexts`, `src/features/*/providers`, `src/features/*/hooks`, `src/features/*/utils` | Context 값 계약은 context, 화면 세션 상태는 Provider, 소비 API는 hook, 나머지는 view model·비즈니스 계산 |
 | Admin 화면 | `src/app/(payload)`, Payload Admin 기본 UI | Manager의 CMS 작업 |
 | Route Handler | `src/app/**/route.ts` | request parsing, 권한 확인, Service 호출, response 변환 |
 | Service | `src/features/*/services`, `src/modules/*/services`, 소유 경계가 없을 때 `src/services` | Use Case 실행, Input / Output 계약, 상태 전이 판단, 기능 전용 published 조회 |
@@ -250,6 +259,18 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 `pnpm generate:block-catalogs`는 기존 Admin 노출 순서를 보존하고 새 블록 폴더는 뒤에 이름순으로 붙여 `src/features/guideline/catalog/*.generated.*`의 정적 import와 map을 갱신합니다. 생성 파일은 커밋하되 직접 수정하지 않습니다. `pnpm check:block-catalogs`는 생성 결과가 최신인지 검사하며 CI의 정적 검사에서 실행합니다.
 
 `runtime`은 생성 map을 사용하는 동작만 소유합니다. `project-guideline-block.ts`는 Agent/Check projection, `build-check-source-snapshot.ts`는 문서 snapshot을 담당합니다. React 렌더 진입점은 `components/guideline-blocks.tsx`에 둡니다. 둘 이상의 블록이 실제로 공유하는 필드나 UI만 `shared`에 둡니다.
+
+### Graphic runtime 등록
+
+기존 `p5`·`shader` 엔진에 Graphic을 추가할 때는 `src/features/graphic-generation/graphic-runtimes/<runtime-id>` 폴더 하나를 만들고 아래 세 파일을 기본 export로 제공합니다.
+
+| 파일 | 최소 계약 |
+| --- | --- |
+| `definition.ts` | `defineGraphicRuntime()`으로 서버 안전 `GraphicRuntimeManifest`를 정의하며 `id`는 폴더명과 일치시킵니다. |
+| `model.ts` | Manifest를 import하지 않는 순수 `GraphicModelAdapter`를 제공합니다. |
+| `runtime.client.ts` | P5/WebGL을 실제 실행하는 브라우저 전용 `GraphicRuntimeAdapter`를 제공합니다. |
+
+`pnpm generate:graphic-runtime-catalogs`는 세 경계를 별도 정적 import로 만들어 `graphic-runtimes/catalog/*.generated.*`를 갱신합니다. 생성 파일은 커밋하되 직접 수정하지 않습니다. `pnpm check:graphic-runtime-catalogs`는 계약 파일 누락, 폴더명과 Manifest id 불일치, 오래된 생성 파일을 CI에서 거부합니다. 기존 엔진의 새 자산은 Provider·Sidebar·Canvas·중앙 Catalog를 수정하지 않습니다.
 
 ### Use Case 스캐폴딩
 

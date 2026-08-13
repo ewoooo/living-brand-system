@@ -6,6 +6,7 @@ import { Controller } from '@/components/studio/shared/controller'
 import { ControllerControlRenderer } from '@/components/studio/shared/controller-renderer'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
+import { acceptsImagePromptExecution } from '@/features/image-generation/domain/image-studio-config'
 import type { ResolvedTemplateImageConfig } from '@/features/template-customization/domain/template-config'
 import type { TemplateImageSlotState } from '@/features/template-customization/hooks/use-template-studio'
 import type { ControllerControlValue } from '@/modules/studio-controller/controller-definition'
@@ -34,12 +35,9 @@ export function ImageSlotInput({
 	onGenerate,
 }: ImageSlotInputProps) {
 	const selected = contracts.find((contract) => contract.config.id === value.profileId)
-	const maxLength = selected?.prompt.maxLength
-	const promptIsFixed =
-		selected?.prompt.availability === 'readonly' || selected?.prompt.availability === 'disabled'
-	const invalidPrompt = promptIsFixed
-		? !selected?.prompt.defaultValue?.trim() || value.prompt !== selected.prompt.defaultValue
-		: !value.prompt.trim() || (maxLength !== undefined && value.prompt.length > maxLength)
+	const invalidPrompt = selected
+		? !acceptsImagePromptExecution(selected.prompt, value.prompt)
+		: true
 
 	return (
 		<div data-slot="image-slot-input" className="flex flex-col gap-1">
@@ -97,7 +95,7 @@ export function ImageSlotInput({
 				variant="muted"
 				className="mt-0.5 h-11 w-full text-sm font-semibold"
 				onClick={onGenerate}
-				disabled={value.generating || !selected || invalidPrompt}
+				disabled={value.generating || invalidPrompt}
 			>
 				{value.generating ? '생성 중…' : '이미지 생성'}
 			</Button>

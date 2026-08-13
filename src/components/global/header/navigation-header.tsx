@@ -266,7 +266,7 @@ function NavigationHeaderLink({
 				<Badge
 					className={cn(
 						'pointer-events-none h-4.5 py-0 leading-none',
-						surface === 'compact' ? 'px-1' : 'px-1.5',
+						'px-1',
 						surface !== 'compact' && 'absolute left-1/2 -translate-x-1/2',
 						surface === 'grouped' && 'top-10',
 						surface === 'standalone' && 'top-10.5',

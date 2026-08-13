@@ -1,6 +1,7 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import { FALLBACK_LOCALE, DEFAULT_LOCALE as LOCALE } from '@/lib/locale'
+import type { Template } from '@/payload-types'
 
 /**
  * published Template·카테고리 조회를 공유하는 repository.
@@ -55,7 +56,9 @@ export async function listPublishedTemplateNavItems() {
 	return templates.docs
 }
 
-export async function findPublishedTemplate(templateId: number) {
+export async function findPublishedTemplate(
+	templateId: number,
+): Promise<(Template & { controllerRestrictions?: unknown }) | null> {
 	const payload = await getPayload({ config })
 	const templates = await payload.find({
 		collection: 'templates',
@@ -73,18 +76,18 @@ export async function findPublishedTemplate(templateId: number) {
 			},
 		},
 		select: {
-			controller: true,
-			controllerOverride: true,
+			controllerRestrictions: true,
 			name: true,
 			updatedAt: true,
 			html: true,
 			overrides: true,
 			width: true,
 			height: true,
-			printPpi: true,
-			output: true,
+			exportPolicy: true,
 		},
 	})
 
-	return templates.docs[0] ?? null
+	return (
+		(templates.docs[0] as (Template & { controllerRestrictions?: unknown }) | undefined) ?? null
+	)
 }

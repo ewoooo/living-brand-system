@@ -152,6 +152,7 @@ function applyImageColorize(
  * 도화지 자체이고, 노드 조회는 data-node-id 정확 일치라서 노드 맵으로는 표현할 수 없다.
  */
 export type TemplateCanvasBackground = {
+	clear?: boolean
 	color?: string
 	imageUrl?: string
 }
@@ -168,7 +169,9 @@ export function composeTemplateHtml(
 ): string {
 	if (!baseHtml) return baseHtml
 	const canvasBackground = options?.canvasBackground
-	const hasCanvasBackground = Boolean(canvasBackground?.color || canvasBackground?.imageUrl)
+	const hasCanvasBackground = Boolean(
+		canvasBackground?.clear || canvasBackground?.color || canvasBackground?.imageUrl,
+	)
 	if (!hasCanvasBackground && (!nodeConfigs || Object.keys(nodeConfigs).length === 0)) {
 		return baseHtml
 	}
@@ -267,6 +270,7 @@ export function composeTemplateHtml(
 	// 색만/이미지만/둘 다가 모두 성립하고, 같은 입력이면 같은 선언이 나와 재합성이 멱등이다.
 	const root = doc.body.firstElementChild
 	if (canvasBackground && root instanceof HTMLElement) {
+		if (canvasBackground.clear) root.style.background = 'transparent'
 		if (canvasBackground.color) root.style.backgroundColor = canvasBackground.color
 		if (canvasBackground.imageUrl) {
 			root.style.backgroundImage = `url("${canvasBackground.imageUrl}")`

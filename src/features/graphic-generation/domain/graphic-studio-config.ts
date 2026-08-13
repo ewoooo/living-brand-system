@@ -1,31 +1,35 @@
-import { parseStudioOutputCapability } from '@/features/studio-export/studio-output'
+import {
+	parseStudioOutputCapability,
+	resolveStudioArtifactOutputFormats,
+	type StudioOutputCapability,
+} from '@/features/studio-export/studio-output'
 import {
 	parseStudioControllerConfig,
 	type StudioControllerConfig,
 } from '@/modules/studio-controller/controller-definition'
 
-export type GraphicOutputFormat = 'svg' | 'mp4'
-
-/** P5·Shader 그래픽 하나가 스튜디오에 내는 직렬화 가능한 편집 계약. */
-export type GraphicStudioConfig = StudioControllerConfig<'graphic', string, GraphicOutputFormat> & {
+/** Admin 제한 전 P5·Shader runtime이 발행하는 서버 안전 원본 계약. */
+export type GraphicRuntimeManifest = StudioControllerConfig<'graphic', string> & {
 	type: 'p5' | 'shader'
 }
+
+/** Published Graphic Profile 정책이 적용된 Effective Config. */
+export type GraphicStudioConfig = GraphicRuntimeManifest & { output: StudioOutputCapability }
 
 /** Payload Graphic Profile이 runtime Config를 좁히기 위해 공개하는 서버측 정의. */
 export type PublishedGraphicProfileDefinition = {
 	id: number
 	name: string
 	runtime: string
-	controller?: unknown
-	controllerOverride?: unknown
-	output?: { allowedFormats?: readonly string[] | null } | null
+	controllerRestrictions?: unknown
+	exportPolicy?: unknown
 }
 
 /** unknown 입력을 공통 Controller 계약과 Graphic runtime descriptor로 검증한다. */
-export function parseGraphicStudioConfig(input: unknown): GraphicStudioConfig {
+export function parseGraphicRuntimeManifest(input: unknown): GraphicRuntimeManifest {
 	const config = parseStudioControllerConfig(input)
 	const value = asRecord(input)
-	assertOnlyKeys(value, ['studio', 'id', 'version', 'name', 'output', 'controller', 'type'])
+	assertOnlyKeys(value, ['studio', 'id', 'version', 'name', 'artifacts', 'controller', 'type'])
 	if (config.studio !== 'graphic') {
 		throw new Error('GraphicStudioConfig studio: graphic이어야 합니다.')
 	}
@@ -36,19 +40,46 @@ export function parseGraphicStudioConfig(input: unknown): GraphicStudioConfig {
 	if (type !== 'p5' && type !== 'shader') {
 		throw new Error('GraphicStudioConfig type: p5 또는 shader여야 합니다.')
 	}
-	const output = asRecord(value.output)
-	parseStudioOutputCapability(output)
-	if (
-		(config.output.formats as readonly string[]).some(
-			(format) => format !== 'svg' && format !== 'mp4',
-		)
-	) {
-		throw new Error('GraphicStudioConfig output format이 올바르지 않습니다.')
-	}
-	if (config.output.formats.includes('mp4') && !config.output.video?.mp4) {
+	return input as GraphicRuntimeManifest
+}
+
+/** unknown 입력을 Graphic Runtime Manifest와 Effective output까지 검증한다. */
+export function parseGraphicStudioConfig(input: unknown): GraphicStudioConfig {
+	const config = parseStudioControllerConfig(input)
+	const value = asRecord(input)
+	assertOnlyKeys(value, [
+		'studio',
+		'id',
+		'version',
+		'name',
+		'artifacts',
+		'output',
+		'controller',
+		'type',
+	])
+	assertGraphicIdentity(config, input)
+	const output = parseStudioOutputCapability(value.output)
+	resolveStudioArtifactOutputFormats(config.artifacts, output.formats)
+	if (output.formats.includes('mp4') && !output.video?.mp4) {
 		throw new Error('GraphicStudioConfig MP4 capability가 필요합니다.')
 	}
 	return input as GraphicStudioConfig
+}
+
+function assertGraphicIdentity(
+	config: StudioControllerConfig,
+	input: unknown,
+): asserts config is StudioControllerConfig<'graphic', string> {
+	if (config.studio !== 'graphic') {
+		throw new Error('GraphicStudioConfig studio: graphic이어야 합니다.')
+	}
+	if (typeof config.id !== 'string') {
+		throw new Error('GraphicStudioConfig id: 문자열이어야 합니다.')
+	}
+	const type = (input as { type?: unknown }).type
+	if (type !== 'p5' && type !== 'shader') {
+		throw new Error('GraphicStudioConfig type: p5 또는 shader여야 합니다.')
+	}
 }
 
 function asRecord(value: unknown): Record<string, unknown> {

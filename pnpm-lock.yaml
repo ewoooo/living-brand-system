@@ -177,6 +177,9 @@ importers:
       '@biomejs/biome':
         specifier: 2.5.0
         version: 2.5.0
+      '@carbon/layout':
+        specifier: ^11.56.0
+        version: 11.56.0
       '@playwright/test':
         specifier: 1.61.1
         version: 1.61.1
@@ -654,6 +657,9 @@ packages:
     resolution: {integrity: sha512-KBax1fqLEFAIebJ/jVt3tSQhW5G0CeliTfbFfrTPJa6aS4S9R8PwpBpKkrwQej8cL8FmspzmZcUgUGZPiOaSpw==}
     peerDependencies:
       react: '>=16'
+
+  '@carbon/layout@11.56.0':
+    resolution: {integrity: sha512-61XxRnFkJdfSmsr30smEexrVOfHFZIzBPlTtW65CkRx8edAakc2eapxrW1sKFIfYQJildWPi7CivAvjA3cnlUg==}
 
   '@chevrotain/types@11.1.2':
     resolution: {integrity: sha512-U+HFai5+zmJCkK86QsaJtoITlboZHBqrVketcO2ROv865xfCMSFpELQoz1GkX5GzME8pTa+3kbKrZHQtI0gdbw==}
@@ -6795,6 +6801,10 @@ snapshots:
       '@ibm/telemetry-js': 1.11.0
       prop-types: 15.8.1
       react: 19.2.7
+
+  '@carbon/layout@11.56.0':
+    dependencies:
+      '@ibm/telemetry-js': 1.11.0
 
   '@chevrotain/types@11.1.2': {}
 

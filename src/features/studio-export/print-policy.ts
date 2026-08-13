@@ -1,3 +1,5 @@
+export const PRINT_PPI_VALUES = [72, 150, 300] as const
+
 export const PRINT_PPI_OPTIONS = [
 	{ label: '대형 인쇄 (72ppi)', value: '72' },
 	{ label: '일반 용지 인쇄 (150ppi)', value: '150' },
@@ -12,8 +14,8 @@ export const MAX_PRINT_PNG_BYTES = 20_000_000
 const MILLIMETERS_PER_INCH = 25.4
 const PDF_POINTS_PER_INCH = 72
 
-export type PrintPpi = 72 | 150 | 300
-export type TemplatePrintFormat = 'pdf' | 'tiff'
+export type PrintPpi = (typeof PRINT_PPI_VALUES)[number]
+export type PrintExportFormat = 'pdf' | 'tiff'
 
 export function parsePrintPpi(value: unknown): PrintPpi | undefined {
 	const ppi = Number(value)
@@ -29,14 +31,11 @@ export function millimetersToPdfPoints(millimeters: number): number {
 }
 
 export function findPrintOutputBlocker(candidate: {
+	enabled?: unknown
 	height?: unknown
-	printPpi?: unknown
 	width?: unknown
 }): string | null {
-	if (candidate.printPpi == null || candidate.printPpi === '') return null
-	if (!parsePrintPpi(candidate.printPpi)) {
-		return '인쇄 PPI는 72, 150, 300 중 하나여야 합니다.'
-	}
+	if (!candidate.enabled) return null
 	const width = Number(candidate.width)
 	const height = Number(candidate.height)
 	if (
