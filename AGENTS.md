@@ -30,7 +30,7 @@ When changing Payload collections, fields, indexes, relationships, or other data
 2. When the schema change is finished, generate the handoff migration on one designated machine with `pnpm migrate:create <name>`. Do this after all schema-changing branches are merged and before requesting PR review, merging, or updating any shared database. An unfinished draft PR may temporarily omit the migration, but it must remain draft.
 3. Commit the schema source, generated migration `.ts`, matching drizzle snapshot `.json`, and `migrations/index.ts` together.
 4. Do not run the generated migration against the same local database already updated by push. Verify it against a fresh database with `PAYLOAD_DB_PUSH=false`.
-5. Keep CI, stage, production, and every shared or durable database on `PAYLOAD_DB_PUSH=false`; apply only committed migrations with `pnpm payload migrate` before starting the application.
+5. Keep stage, production, and every shared or durable database on `PAYLOAD_DB_PUSH=false`; apply only committed migrations with `pnpm payload migrate` before starting the application. (CI의 `test` 잡은 의도적으로 `push=true`다 — 빈 CI postgres에 부팅 시 스키마를 만들기 위한 테스트 전용 설정이고, `build`·`migrate` 잡만 `false`다. stage 적용은 사람이 아니라 `deploy-migrations.yml`이 `migrations/**` push에 자동 실행한다.)
 
 - Commit the matching migration files with every finished schema change before review, merge, or shared-environment use.
 - Commit the drizzle schema snapshot (`.json`) that `migrate:create` emits next to the `.ts`, and never delete snapshots; without them `migrate:create` regenerates the entire schema instead of an incremental diff.
@@ -70,7 +70,7 @@ When changing Payload collections, fields, indexes, relationships, or other data
 
 - Treat every personal local Postgres database that uses `PAYLOAD_DB_PUSH=true` as disposable.
 - Give each physical machine its own `DATABASE_URL`. Never point a desktop and laptop at the same push-enabled database.
-- Give each concurrently running worktree its own database when `PAYLOAD_DB_PUSH=true`. A worktree that shares a database must use `push=false` and must not change the Payload schema.
+- Branch Rules는 worktree를 금지한다. 그래도 쓰게 된다면 각 worktree에 자기 DB를 주고, DB를 공유하는 worktree는 `push=false`로 두고 Payload 스키마를 바꾸지 않는다(폴백 안전장치).
 - Keep each machine's `DATABASE_URL` and `PAYLOAD_DB_PUSH` in its untracked `.env.local`; never commit them.
 - Use `PAYLOAD_DB_PUSH=true` only for isolated local development. Keep CI, stage, production, and any database with important shared data on `push=false`.
 - After Payload has pushed schema changes to a local database, do not run `payload migrate` against that database. Recreate the database when committed migrations must be applied or verified.
@@ -185,10 +185,10 @@ Always start from `docs/README.md`, then read the smallest relevant document bef
 - Workflow, actors, inputs, outputs, generated records, and next links: `docs/02-usecases.md`
 - Data ownership, lifecycle, storage, retention, deletion, and immutable references: `docs/03-data-lifecycle.md`
 - Domain boundaries, aggregates, entities, events, and cross-context references: `docs/04-domain-model.md`
-- Modular monolith, request flow, Version/Snapshot/Event/Log strategy, Agent/Worker execution: `docs/05-system-architecture.md`
+- 요청 흐름, Version/Snapshot/Event/Log 전략, 렌더링 캐시 무효화: `docs/05-system-architecture.md`
 - Source layout, naming, comments, logging, exception handling, and coding style: `docs/06-project-structure.md`
 - Auth, access control, upload/download, logging safety, Agent context limits, and operational security: `docs/07-security.md`
-- Worker UI, custom Admin UI, user-facing copy, keyboard access, errors, and message/i18n placement: `docs/08-accessibility-i18n.md`
+- Creator UI, custom Admin UI, user-facing copy, keyboard access, errors, and message/i18n placement: `docs/08-accessibility-i18n.md`
 - Design tokens, color/typography/radius/dark mode, runtime brand override, and shell/frame skeleton — read before changing any front-end visual surface: `docs/09-design-system.md`
 - Component authoring contract (reuse ladder, cva/data-size templates, style Do/Don't, kit→block promotion gate) — read before writing or adding any new UI component: `docs/10-component-authoring.md`
 - 가이드라인 위젯 저작 계약(폴더 계약·손으로 하는 등록 3곳·Block/Widget 책임 경계·provenance 불변식·함정) — **위젯을 새로 만들거나 고치기 전에 읽을 것**: `docs/11-widget-authoring.md`
@@ -199,24 +199,15 @@ When docs conflict, prefer the newer or more specific document. If a code change
 
 - Layers: the ideal is `develop` / `stage` / `main`, but this repo does not run a `develop` branch yet. In practice:
   - `main`: the effective production target — the deployable, production-ready state, though nothing is deployed yet.
-  - `stage`: the gateway to `main` — verify checks here, then merge to `main`. Currently identical to `main`; treat it as a rehearsal.
+  - `stage`: the gateway to `main` — verify checks here, then merge to `main`. (🔴 두 브랜치가 같은 상태인지를 여기 적지 말 것 — 규칙 파일에 둔 상태 서술은 곧 낡는다. `git log origin/main..origin/stage`로 확인한다.)
   - all other branches: feature development, filling the role a `develop` branch would; `develop` itself is unused here.
 - Flow: merge normal work branches into `stage`, then promote verified `stage` to `main`.
 - Base: branch from `stage` for normal product work. Branch from `main` only for urgent production fixes.
 - Requirement: create or switch to a purpose branch before changing source code, product behavior, refactors, tests, tooling, dependencies, or non-trivial docs.
-- 🔴 Worktree는 만들지 않는다 — GitHub Desktop이 worktree를 publish하지 못한다. 메인 작업 트리에서 일반 브랜치로 작업한다(worktree마다 별도 DB를 요구하는 아래 Local Machine Database Rules도 그래서 실제로는 적용되지 않는다).
+- 🔴 Worktree는 만들지 않는다 — GitHub Desktop이 worktree를 publish하지 못한다. 메인 작업 트리에서 일반 브랜치로 작업한다.
 - Protected branches: do not commit directly to `main` or `stage`; use them only as merge targets or promotion branches.
 - Exception: trivial local-only edits may stay unbranched only when the user explicitly asks not to create a branch.
-- Format: use `<type>/<short-kebab-purpose>`.
-- Types:
-  - `docs/` for documentation-only work.
-  - `feat/` for new product behavior.
-  - `fix/` for bug fixes.
-  - `refactor/` for behavior-preserving code changes.
-  - `test/` for test-only changes.
-  - `style/` for formatting and lint-only changes.
-  - `chore/` for tooling, dependency, or maintenance changes.
-- Examples: `docs/update-guidelines`, `feat/review-page`, `fix/auth-access`, `chore/stage-db-migrations`.
+- Format: use `<type>/<short-kebab-purpose>` — 타입은 아래 Commit Rules의 7개와 같다.
 - Scope: keep documentation-only changes separate from source code changes when practical.
 
 ## Commit Rules
@@ -234,60 +225,21 @@ When docs conflict, prefer the newer or more specific document. If a code change
 - Hygiene: do not include unrelated dirty worktree changes in a commit.
 - Language: write commit messages in Korean unless an external tool requires English.
 
-### 커밋 단위 — 실제로 어기는 쪽은 **하한**이다
+### 커밋 단위 — 리포 정합성 최소선
 
-**커밋 = 그 커밋만 체크아웃해도 리포가 일관된 최소 덩어리.** 성격이 다른 것을 몰아넣지 말라는 상한은 대개 지켜진다. 반복해서 어기는 것은 하한이다 — 혼자서는 의미가 없는 조각으로 쪼갠다.
+**커밋 = 그 커밋만 체크아웃해도 리포가 일관된 최소 덩어리.** 코드와 그 코드가 만든 산출물(생성 파일·drizzle 스냅샷·마이그레이션)이 어긋나면 **같은 커밋에 넣는다.**
 
-🔴 **제목 테스트가 첫 관문이다.** 커밋 리뷰어는 diff를 열지 않고 **제목 목록만 훑는다.** 그러므로 **제목만 읽고 "무슨 기능·무슨 사태를 위한 작업인가"에 답이 나와야 한다.** 답이 안 나오면 덩어리가 덜 찬 것이고, 앞뒤 커밋과 합친다.
-
-🔑 **볼륨이 커지는 것은 문제가 아니다.** 파일 20개·300줄이어도 한 사태면 한 커밋이다. 크기보다 **커밋 하나의 가치**가 중요하다. "잘게 쪼개면 안전하다"는 감각으로 쪼개지 말 것.
-
-판별은 이 순서로 한다.
-
-1. **제목 테스트** — 제목만으로 무슨 작업인지 답이 나오나? (여기서 대부분 걸린다)
-2. **revert 테스트** — 이 커밋만 되돌리면 의미 있는 무엇이 원상복구되나? "아무 일도 안 일어난다" 또는 "다른 커밋도 같이 되돌려야 한다"면 잘못 쪼갠 것이다.
-3. **체크아웃 테스트** — 그 커밋에서 빌드·테스트가 통과하나? 코드와 그 코드가 만든 산출물(생성 파일·스냅샷·마이그레이션)이 어긋나면 실패다. **어긋나는 것들은 같은 커밋에 넣는다.**
-
-같은 커밋에 넣어야 하는 조합(하한을 어기기 쉬운 자리):
-- 도구·기능 추가와 **그 실행 경로**(`package.json` 스크립트, 라우트 등록) — 후자는 단독으로 아무 의미가 없다.
-- 코드 변경과 **그 코드가 생성한 산출물**(재생성된 스냅샷, 스키마 스냅샷) — 따로 두면 그 사이 커밋에서 코드와 데이터가 어긋난다.
-- 한 사태를 정리하는 삭제·문서 갱신·데이터 재생성 — 셋이 한 결정의 결과라면 한 커밋이다.
-- 같은 파일의 같은 성격 수정 여러 건 — 왜 여러 번 고쳤는지 이력에서 읽히지 않는다.
-
-### 메시지는 "무엇"이 아니라 "왜"가 읽혀야 한다
-
-제목은 무엇을 바꿨는지 쓰고, **왜 필요했는지가 제목만으로 자명하지 않으면 빈 줄 뒤 본문에 한두 줄 적는다.** 증상과 방치했을 때의 결과를 쓴다.
-
-```
-fix: 정본 이식 키에서 rules와 업로드 컬렉션 누락 수정
-
-rules를 populate된 정의 객체째로 담고 있어 안의 checker가 환경별 id로 박혔다.
-그 상태로 다른 환경에 적용하면 relationship 검증에서 죽는다(39개 해당).
-```
-
-포맷·오타·의미가 자명한 변경은 제목만으로 끝낸다. 본문에 변경 목록을 나열하지 말 것 — diff가 이미 말한다.
+🔴 그 밖의 커밋 단위·메시지 문체는 팀 규약이 아니다 — 기여자마다 자기 스타일을 쓴다. 개인 규칙은 각자의 에이전트 설정이 갖는다.
 
 ## Pull Request Rules
 
 - Normal work PRs target `stage`.
 - Promotion PRs target `main` from `stage`.
-- Format PR titles like commits: `<type>: <한국어 요약>`.
 - Use `chore: stage를 main으로 승격` for stage-to-main promotion PRs.
 - Open a draft PR when CI, migration verification, or reviewer-ready cleanup is still pending.
 - Keep one branch focused on one PR or work item. Do not reuse an old branch for unrelated follow-up work.
-
-## Pull Request Description Rules
-
 - Language: write pull request descriptions in Korean unless the user asks otherwise.
-- Required sections: `요약`, `주요 변경사항`, `확인한 동작`, `검증`, and `참고` when relevant. 마크다운 형태와 라벨은 `git-workflow` 스킬이 소유한다 — 즉흥으로 절을 만들지 말 것.
 - Verification: list the exact commands run, not generic labels.
 - Caveats: mention known warnings, intentionally skipped cleanup, or remaining review points briefly.
 
-### 🔴 분량이 규칙이다 — 길면 안 읽히고, 안 읽히면 없는 것과 같다
-
-리뷰어가 diff를 안 보고도 판단할 수 있어야 하지만, 그것이 **길게 쓰라는 뜻은 아니다.** 슬쩍 봐도 핵심이 이해되게 쓴다.
-
-- **상한**: 불릿 하나는 한 줄 · 「주요 변경사항」은 5개 안쪽 · 본문 전체가 **화면 하나**에 들어올 것.
-- **반드시 두 번에 나눠 쓴다.** ① 초안으로 내용을 담고 → ② **올리기 전에 다시 읽고 잘라낸다.** 실시간으로 써내려가면 길이를 조절하지 못한다. 자르는 기준은 "틀렸나"가 아니라 **"리뷰어가 이 줄 없이도 판단할 수 있나"**다.
-- 🔴 **작업량을 어필하지 말 것.** 많이 했다는 사실은 이미 공유돼 있다. 커밋 목록·파일 목록·검토 과정을 본문에 옮겨 적지 않는다 — diff와 커밋 이력이 이미 말한다.
-- 판단 근거와 "왜 순진한 수정으로는 부족한가" 같은 설명은 **커밋 본문**의 몫이다.
+🔴 **본문 서식·분량·절 이름은 팀 규약이 아니다** — 기여자마다 자기 스타일을 쓴다. 여기에 필수 섹션 목록을 다시 만들지 말 것.
