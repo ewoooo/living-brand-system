@@ -1,7 +1,10 @@
 'use client'
 
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
-import type { GraphicRuntimeId } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import type {
+	GraphicRuntimeId,
+	graphicStudioConfigs,
+} from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import { forwardStraightPreviewAdapter } from '@/features/graphic-generation/runtime/client/forward-straight-preview.client'
 import { radialFlutedGlassPreviewAdapter } from '@/features/graphic-generation/runtime/client/radial-fluted-glass-preview.client'
 import type {
@@ -21,19 +24,30 @@ export type GraphicPreview = {
 	destroy(): void
 }
 
-export type GraphicPreviewAdapter = {
+type GraphicManifest = (typeof graphicStudioConfigs)[number]
+type GraphicPreviewFor<Id extends GraphicRuntimeId> = Id extends GraphicRuntimeId
+	? 'mp4' extends Extract<GraphicManifest, { id: Id }>['output']['formats'][number]
+		? GraphicPreview & { video: NonNullable<GraphicPreview['video']> }
+		: GraphicPreview
+	: never
+
+export type GraphicPreviewAdapter<Id extends GraphicRuntimeId = GraphicRuntimeId> = {
 	type: GraphicStudioConfig['type']
 	mount(options: {
 		container: HTMLElement
 		values: ControllerValues
 		onChange: (controlId: string, value: ControllerControlValue) => boolean
-	}): Promise<GraphicPreview>
+	}): Promise<GraphicPreviewFor<Id>>
+}
+
+type GraphicPreviewCatalog = {
+	[Id in GraphicRuntimeId]: GraphicPreviewAdapter<Id>
 }
 
 const graphicPreviewCatalog = {
 	'forward-straight': forwardStraightPreviewAdapter,
 	'radial-fluted-glass': radialFlutedGlassPreviewAdapter,
-} satisfies Record<GraphicRuntimeId, GraphicPreviewAdapter>
+} satisfies GraphicPreviewCatalog
 
 /** Config id와 runtime type이 모두 일치하는 브라우저 Preview adapter만 반환한다. */
 export function getGraphicPreviewAdapter(

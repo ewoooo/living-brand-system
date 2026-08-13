@@ -151,12 +151,12 @@ type StudioControllerConfig = {
 	id: string | number
 	version: 1
 	name: string
-	output: { formats: readonly string[] }
+	output: { formats: readonly StudioOutputFormat[] }
 	controller: { groups: readonly ControllerGroupDefinition[] }
 }
 ```
 
-Template·Image·Graphic Config는 이 envelope를 그대로 쓰고, 실행에 필요한 도메인 descriptor와 control id binding만 확장합니다. Studio Provider는 공통화하지 않습니다. 각 Provider가 자기 도메인의 세션과 실행 결과를 소유합니다.
+`StudioOutputFormat`은 `png | jpeg | tiff | pdf | svg | mp4`인 공통 파일 형식 어휘입니다. Template·Image·Graphic Config는 이 envelope를 그대로 쓰고, 실행에 필요한 도메인 descriptor와 control id binding만 확장합니다. Studio Provider는 공통화하지 않습니다. 각 Provider가 자기 도메인의 세션과 실행 결과를 소유합니다.
 
 `output.formats`는 Runtime/Service supported formats와 Admin allowed formats의 교집합입니다. Admin은 좁힐 수만 있고 형식을 추가할 수 없습니다. 형식 선택은 Controller Definition에 중복하지 않고 Provider의 export state와 `Controller.Footer`가 `config.output.formats`에서 직접 소비합니다. UI는 이 policy capability를 보고, 공통 `useExport`는 `StudioExportSource`의 실제 실행 handler 존재 여부까지 함께 확인합니다. 형식 분기는 `executeStudioExport` 한 곳만 소유하며 Canvas는 출력 형식을 해석하지 않습니다. Image의 `original`은 파일 형식이 아니므로 `output.original` boolean으로 둡니다.
 
@@ -189,7 +189,7 @@ Payload의 작성 데이터는 block 저장 형식인 `key`·`blockType`을 사�
 
 어드민은 화면 패널을 구성하지 않고 기본값·선택지·범위·availability만 저작합니다. Image Profile은 완전한 Controller Definition을 발행하되 Image Service capability가 의미를 아는 control·feature만 발행할 수 있습니다. Template과 Graphic Profile은 슬롯·runtime이 제공한 Definition에 sparse Override를 적용합니다. Override를 여러 번 적용해도 같은 Effective Definition이 나와야 합니다. `enabled`로의 잠금 해제, select 선택지 추가, range 확장, 알 수 없는 ID는 발행 시 거부합니다. Graphic의 서버 안전 Manifest Catalog는 직렬화 가능한 Base Definition만 소유하고, runtime·output adapter는 별도 client/runtime 모듈이 소유합니다. `Visibility`는 Controller 계약에 두지 않습니다. 현재 렌더러는 Effective Definition에 들어 있는 control을 모두 표시합니다.
 
-Graphic Canvas는 `type`만 보고 공용 `P5Canvas`·`WebGLCanvas`를 선택합니다. Graphic별 직렬화 Manifest는 서버 Catalog에, 순수 SVG·binding adapter는 runtime Catalog에, 브라우저 mount·Controller 값 변환은 client Preview Catalog에 분리합니다. 세 Catalog는 같은 stable runtime ID로만 연결하며, client/runtime 함수를 Config에 싣지 않습니다. Worker와 Template은 코드 Catalog 등록 여부가 아니라 published Graphic Profile에서 파생된 Effective Config만 목록으로 받습니다. 따라서 새 그래픽을 코드에 등록해도 Admin이 publish하기 전에는 노출되지 않습니다.
+Graphic Canvas는 `type`만 보고 공용 `P5Canvas`·`WebGLCanvas`를 선택합니다. Graphic별 직렬화 Manifest는 서버 Catalog에, 순수 SVG·binding adapter는 runtime Catalog에, 브라우저 mount·Controller 값 변환은 client Preview Catalog에 분리합니다. Runtime과 Preview Catalog는 Manifest Catalog에서 파생한 `GraphicRuntimeId`의 exhaustive Record이므로 등록이 빠지면 typecheck가 실패합니다. 세 Catalog는 같은 stable runtime ID로만 연결하며, client/runtime 함수를 Config에 싣지 않습니다. Worker는 published Graphic Profile에서 파생된 Effective Config만 받고, Template은 그중 실제 SVG adapter가 있는 Config만 받습니다. 따라서 새 그래픽을 코드에 등록해도 Admin이 publish하기 전에는 노출되지 않습니다.
 
 기존 `p5`·`shader` 엔진에 Graphic을 추가할 때는 `src/features/graphic-generation/domain/manifests/<id>.ts`에 Manifest를, `runtime/plugins/<id>.ts`에 Plugin을, `runtime/client/<id>-preview.client.ts`에 Preview adapter를 작성하고 각 Catalog에 한 번 등록합니다. 이때 Provider·Sidebar·Canvas는 수정하지 않습니다. 새로운 엔진 종류가 생길 때만 공용 Canvas host와 `GraphicStudioConfig.type`을 확장합니다.
 

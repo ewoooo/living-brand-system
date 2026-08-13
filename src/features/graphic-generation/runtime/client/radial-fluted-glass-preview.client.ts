@@ -21,4 +21,4 @@ export const radialFlutedGlassPreviewAdapter = {
 			destroy: () => preview.destroy(),
 		}
 	},
-} satisfies GraphicPreviewAdapter
+} satisfies GraphicPreviewAdapter<'radial-fluted-glass'>
