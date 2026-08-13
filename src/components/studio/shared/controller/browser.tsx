@@ -95,7 +95,7 @@ function ControllerBrowserPanel({ tabs, empty, className, children }: Controller
 							as="span"
 							size="base"
 							weight="medium"
-							className="flex h-8 items-center justify-center rounded-md px-3"
+							className="flex h-8 items-center justify-center rounded-lg px-3"
 						>
 							{tab}
 						</Typography>
@@ -113,7 +113,7 @@ function ControllerBrowserPanel({ tabs, empty, className, children }: Controller
 					</Button>
 				</ControllerBrowserClose>
 			</div>
-			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-xl bg-background/5 py-2 pr-1 pl-2">
+			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg bg-background/5 py-2 pr-1 pl-2">
 				{children}
 				{empty && (
 					<div className="flex items-center justify-center p-6">

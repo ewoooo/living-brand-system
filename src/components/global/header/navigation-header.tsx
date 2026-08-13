@@ -77,7 +77,7 @@ const navigationHeaderLinkLabelVariants = cva('', {
 const navigationHeaderSearchTriggerVariants = cva('', {
 	variants: {
 		projection: {
-			compact: 'size-9.5 rounded-xl bg-muted p-2 text-foreground hover:bg-muted/80',
+			compact: 'size-9.5 rounded-lg bg-muted p-2 text-foreground hover:bg-muted/80',
 			desktop:
 				'h-9 w-46 justify-between rounded-lg bg-background pl-4 pr-2 text-muted-foreground hover:bg-muted hover:text-foreground',
 		},
@@ -88,7 +88,7 @@ const navigationHeaderSearchTriggerVariants = cva('', {
 const navigationHeaderChatTriggerVariants = cva('', {
 	variants: {
 		projection: {
-			compact: 'size-9.5 rounded-xl bg-muted p-2 text-foreground hover:bg-muted/80',
+			compact: 'size-9.5 rounded-lg bg-muted p-2 text-foreground hover:bg-muted/80',
 			desktop: 'h-9 rounded-lg bg-background px-6 text-foreground shadow-sm hover:bg-muted',
 		},
 	},
@@ -168,7 +168,7 @@ function NavigationHeaderCompactContent({ className, ...props }: React.Component
 		<nav
 			data-slot="navigation-header-compact-content"
 			className={cn(
-				'flex w-full flex-col gap-2 overflow-hidden rounded-3xl bg-card p-3',
+				'flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-card p-3',
 				className,
 			)}
 			{...props}
@@ -307,7 +307,7 @@ function NavigationHeaderLinkGroup({ className, items, ...props }: NavigationHea
 		<div
 			ref={groupRef}
 			data-slot="navigation-header-link-group"
-			className={cn('relative flex h-9 items-start rounded-xl bg-muted', className)}
+			className={cn('relative flex h-9 items-start rounded-lg bg-muted', className)}
 			{...props}
 		>
 			{chaser && (
@@ -458,7 +458,7 @@ function NavigationHeaderMenuTrigger({
 			data-slot="navigation-header-menu-trigger"
 			aria-label="메뉴"
 			variant="muted"
-			className={cn('size-9.5 rounded-xl p-2 text-foreground', className)}
+			className={cn('size-9.5 rounded-lg p-2 text-foreground', className)}
 			{...props}
 		>
 			<Menu aria-hidden data-icon="only" className="size-5.5" />

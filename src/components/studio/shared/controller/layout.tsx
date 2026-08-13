@@ -7,7 +7,7 @@ export function ControllerRoot({ className, ...props }: React.ComponentProps<'di
 		<div
 			data-slot="controller-root"
 			className={cn(
-				'flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg lg:h-full',
+				'flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-lg lg:h-full',
 				className,
 			)}
 			{...props}

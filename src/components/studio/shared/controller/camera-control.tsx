@@ -26,7 +26,7 @@ type ControllerCameraControlProps = {
 export function ControllerCameraControl({ children, axes }: ControllerCameraControlProps) {
 	return (
 		<div data-slot="controller-camera-control" className="flex flex-col gap-1.5">
-			<div className="aspect-square w-full shrink-0 overflow-hidden rounded-md bg-muted">
+			<div className="aspect-square w-full shrink-0 overflow-hidden rounded-lg bg-muted">
 				{children}
 			</div>
 			<div className="grid grid-cols-2 gap-1.5">

@@ -67,7 +67,7 @@ export function ControllerAssetCard({
 		<div
 			data-slot="controller-asset-card"
 			className={cn(
-				'flex min-h-16 shrink-0 items-center justify-between gap-3 rounded-md bg-foreground p-4 text-background',
+				'flex min-h-16 shrink-0 items-center justify-between gap-3 rounded-lg bg-foreground p-4 text-background',
 				className,
 			)}
 		>

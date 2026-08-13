@@ -63,7 +63,7 @@ export function ControllerRange({
 			onKeyDown={nudge}
 			{...drag}
 			className={cn(
-				'relative h-9 w-full shrink-0 cursor-ew-resize touch-none select-none overflow-hidden rounded-md bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
+				'relative h-9 w-full shrink-0 cursor-ew-resize touch-none select-none overflow-hidden rounded-lg bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
 				resolvedDisabled && 'pointer-events-none opacity-50',
 				className,
 			)}
