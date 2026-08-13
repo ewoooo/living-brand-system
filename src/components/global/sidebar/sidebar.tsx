@@ -63,7 +63,7 @@ function SidebarRoot({
 		>
 			<nav
 				aria-label={ariaLabel}
-				className="flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-popover p-4 text-popover-foreground shadow-lg transition-[padding] duration-200 ease-linear motion-reduce:transition-none xl:group-data-[collapsed=false]/sidebar-api:p-3"
+				className="flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-background p-4 text-foreground shadow-lg transition-[padding] duration-200 ease-linear motion-reduce:transition-none xl:group-data-[collapsed=false]/sidebar-api:p-3"
 			>
 				{children}
 			</nav>

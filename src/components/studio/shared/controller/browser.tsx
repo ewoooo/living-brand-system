@@ -70,8 +70,7 @@ type ControllerBrowserPanelProps = {
  * 소유하는 것은 글래스 크롬, 헤더(탭 + 닫기), 본문 영역, 빈 상태 자리뿐이다.
  *
  * 색: 테마와 무관하게 어두운 글래스를 의도한 디자인이지만 생 rgba를 쓰지 않는다(docs/09 §4).
- * Browse 카드의 선례대로 반전 표면 쌍(bg-foreground + text-background)을 쓰고 내부 겹침은
- * background 투명도로 쌓는다 — 다크 테마에서는 쌍이 함께 뒤집혀 밝은 글래스가 된다.
+ * `inverted` 표면 쌍으로 내부 겹침을 쌓는다 — 다크 테마에서는 쌍이 함께 뒤집혀 밝은 글래스가 된다.
  */
 function ControllerBrowserPanel({ tabs, empty, className, children }: ControllerBrowserPanelProps) {
 	const frame = React.useContext(BrowserFrameContext)
@@ -83,7 +82,7 @@ function ControllerBrowserPanel({ tabs, empty, className, children }: Controller
 			aria-describedby={undefined}
 			className={cn(
 				// 상한은 top-5만큼 줄인 남은 높이다 — 100%로 두면 컨트롤러 아래로 20px 넘친다.
-				'absolute top-5 right-0 z-20 flex h-168 max-h-[calc(100%-1.25rem)] w-150 max-w-[calc(100vw-2rem)] flex-col gap-1 overflow-hidden rounded-xl border border-background/5 bg-foreground/75 p-2 text-background shadow-lg outline-none backdrop-blur-sm lg:right-full lg:mr-4',
+				'absolute top-5 right-0 z-20 flex h-168 max-h-[calc(100%-1.25rem)] w-150 max-w-[calc(100vw-2rem)] flex-col gap-1 overflow-hidden rounded-xl border border-inverted-foreground/5 bg-inverted/75 p-2 text-inverted-foreground shadow-lg outline-none backdrop-blur-sm lg:right-full lg:mr-4',
 				className,
 			)}
 		>
@@ -106,18 +105,18 @@ function ControllerBrowserPanel({ tabs, empty, className, children }: Controller
 						variant="ghost"
 						size="icon"
 						shape="pill"
-						className="bg-background/5 text-background hover:bg-background/15 hover:text-background focus-visible:bg-background/15 focus-visible:text-background"
+						className="bg-inverted-foreground/5 text-inverted-foreground hover:bg-inverted-foreground/15 hover:text-inverted-foreground focus-visible:bg-inverted-foreground/15 focus-visible:text-inverted-foreground"
 					>
 						<Close />
 						<span className="sr-only">자산 브라우저 닫기</span>
 					</Button>
 				</ControllerBrowserClose>
 			</div>
-			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg bg-background/5 py-2 pr-1 pl-2">
+			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg bg-inverted-foreground/5 py-2 pr-1 pl-2">
 				{children}
 				{empty && (
 					<div className="flex items-center justify-center p-6">
-						<Typography as="p" size="sm" className="text-center text-background/80">
+						<Typography as="p" size="sm" className="text-center text-inverted-foreground/80">
 							{empty}
 						</Typography>
 					</div>

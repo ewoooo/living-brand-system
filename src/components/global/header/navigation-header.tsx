@@ -168,7 +168,7 @@ function NavigationHeaderCompactContent({ className, ...props }: React.Component
 		<nav
 			data-slot="navigation-header-compact-content"
 			className={cn(
-				'flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-card p-3',
+				'flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-background p-3',
 				className,
 			)}
 			{...props}
@@ -316,7 +316,7 @@ function NavigationHeaderLinkGroup({ className, items, ...props }: NavigationHea
 						aria-hidden
 						data-target-index={targetIndex}
 						data-slot="navigation-header-link-chaser"
-						className="pointer-events-none absolute inset-y-0.5 z-0 rounded-lg bg-primary/5"
+						className="pointer-events-none absolute inset-y-0.5 z-0 rounded-lg bg-foreground/5"
 						initial={false}
 						animate={chaser}
 						transition={
