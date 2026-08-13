@@ -1,19 +1,15 @@
 'use client'
 
 import { type ComponentType, useEffect, useRef, useState } from 'react'
+import { fitPreviewSize } from '@/components/studio/shared/fit-preview-size'
 import { Typography } from '@/components/ui/typography'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
 import {
-	type GraphicPreview,
-	getGraphicPreviewAdapter,
-} from '@/features/graphic-generation/runtime/client/graphic-preview.client'
-import {
-	canRenderGraphicStudioSvg,
-	getGraphicStudioRuntimeBindings,
-} from '@/features/graphic-generation/runtime/graphic-studio-runtime'
-import { exportGraphicStudioSvg } from '@/features/graphic-generation/services/export-graphic.client'
-import { exportGraphicStudioVideo } from '@/features/graphic-generation/services/export-graphic-video.client'
+	type GraphicRuntime,
+	getGraphicRuntimeAdapter,
+} from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
+import { getGraphicStudioRuntimeBindings } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 
 const canvasByType = {
 	p5: P5Canvas,
@@ -37,7 +33,7 @@ function WebGLCanvas() {
 
 function RegisteredGraphicCanvas({ type }: { type: GraphicStudioConfig['type'] }) {
 	const { config } = useGraphicStudio()
-	const adapter = getGraphicPreviewAdapter(config)
+	const adapter = getGraphicRuntimeAdapter(config)
 	if (!adapter || adapter.type !== type) return <UnsupportedGraphicCanvas />
 	return <GraphicPreviewCanvas adapter={adapter} />
 }
@@ -45,21 +41,24 @@ function RegisteredGraphicCanvas({ type }: { type: GraphicStudioConfig['type'] }
 function GraphicPreviewCanvas({
 	adapter,
 }: {
-	adapter: NonNullable<ReturnType<typeof getGraphicPreviewAdapter>>
+	adapter: NonNullable<ReturnType<typeof getGraphicRuntimeAdapter>>
 }) {
-	const { config, controls, canvas } = useGraphicStudio()
+	const { config, controls, canvas, output } = useGraphicStudio()
 	const valuesRef = useRef(controls.values)
+	const stageRef = useRef<HTMLDivElement>(null)
 	const containerRef = useRef<HTMLDivElement>(null)
-	const previewRef = useRef<GraphicPreview>(null)
+	const runtimeRef = useRef<GraphicRuntime>(null)
 	const [error, setError] = useState<string | null>(null)
+	const outputWidth = output.draft?.width
+	const outputHeight = output.draft?.height
 
 	useEffect(() => {
 		valuesRef.current = controls.values
-		previewRef.current?.update(controls.values)
+		runtimeRef.current?.update(controls.values)
 	}, [controls.values])
 
 	useEffect(() => {
-		let preview: GraphicPreview | undefined
+		let runtime: GraphicRuntime | undefined
 		let disposed = false
 
 		async function mountPreview() {
@@ -76,28 +75,11 @@ function GraphicPreviewCanvas({
 					mounted.destroy()
 					return
 				}
-				preview = mounted
-				previewRef.current = mounted
+				runtime = mounted
+				runtimeRef.current = mounted
 				const viewport = mounted.getViewport()
 				controls.registerBindings(getGraphicStudioRuntimeBindings(config, viewport))
-				if (canRenderGraphicStudioSvg(config) || mounted.video) {
-					canvas.registerOutput((request) => {
-						if (request.format === 'svg') {
-							const currentViewport = previewRef.current?.getViewport()
-							if (!currentViewport || !canRenderGraphicStudioSvg(config)) {
-								throw new Error('SVG export is unavailable.')
-							}
-							return exportGraphicStudioSvg(
-								config,
-								valuesRef.current,
-								currentViewport,
-							)
-						}
-						const video = previewRef.current?.video
-						if (!video) throw new Error('MP4 export is unavailable.')
-						return exportGraphicStudioVideo(config, request, video)
-					})
-				}
+				canvas.registerSource({ video: mounted.video }, viewport)
 			} catch (mountError) {
 				console.error(mountError)
 				if (!disposed) setError('그래픽 미리보기를 불러오지 못했습니다.')
@@ -107,37 +89,53 @@ function GraphicPreviewCanvas({
 		void mountPreview()
 		return () => {
 			disposed = true
-			preview?.destroy()
-			previewRef.current = null
-			canvas.registerOutput(null)
+			runtime?.destroy()
+			runtimeRef.current = null
+			canvas.registerSource(null)
 			controls.registerBindings({})
 		}
-	}, [adapter, canvas.registerOutput, config, controls.registerBindings, controls.update])
+	}, [adapter, canvas.registerSource, config, controls.registerBindings, controls.update])
 
 	useEffect(() => {
+		const stage = stageRef.current
 		const container = containerRef.current
-		if (!container) return
+		if (!stage || !container) return
+
+		const resizePreview = (width: number, height: number) => {
+			if (width <= 0 || height <= 0) return
+			const viewport =
+				outputWidth && outputHeight
+					? fitPreviewSize(
+							{ width, height },
+							{ width: outputWidth, height: outputHeight },
+						)
+					: { width, height }
+			container.style.width = `${viewport.width}px`
+			container.style.height = `${viewport.height}px`
+			runtimeRef.current?.resize(viewport.width, viewport.height)
+			controls.registerBindings(getGraphicStudioRuntimeBindings(config, viewport))
+		}
 
 		const resizeObserver = new ResizeObserver(([entry]) => {
 			if (!entry) return
-			previewRef.current?.resize(entry.contentRect.width, entry.contentRect.height)
-			controls.registerBindings(
-				getGraphicStudioRuntimeBindings(config, {
-					width: entry.contentRect.width,
-					height: entry.contentRect.height,
-				}),
-			)
+			resizePreview(entry.contentRect.width, entry.contentRect.height)
 		})
-		resizeObserver.observe(container)
+		resizePreview(stage.clientWidth, stage.clientHeight)
+		resizeObserver.observe(stage)
 		return () => resizeObserver.disconnect()
-	}, [config, controls.registerBindings])
+	}, [config, controls.registerBindings, outputHeight, outputWidth])
 
 	return (
 		<figure data-slot="graphic-canvas" className="flex min-h-0 flex-1 flex-col">
 			<div
-				ref={containerRef}
-				className="min-h-96 flex-1 overflow-hidden rounded-xl lg:min-h-0 [&>canvas]:block"
-			/>
+				ref={stageRef}
+				className="flex min-h-96 flex-1 items-center justify-center overflow-hidden lg:min-h-0"
+			>
+				<div
+					ref={containerRef}
+					className="h-full w-full shrink-0 overflow-hidden rounded-xl [&>canvas]:block"
+				/>
+			</div>
 			{error && (
 				<Typography role="alert" size="sm" className="pt-2 text-destructive">
 					{error}

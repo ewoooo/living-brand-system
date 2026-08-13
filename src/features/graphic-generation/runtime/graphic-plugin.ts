@@ -1,4 +1,4 @@
-import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { parseGraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import type {
 	ControllerRuntimeBindings,
@@ -9,10 +9,13 @@ export type GraphicViewport = { width: number; height: number }
 
 /** Graphic 하나가 Catalog에 제공하는 직렬화 가능한 Manifest와 순수 runtime adapter 계약. */
 export type GraphicStudioPlugin<Id extends string = string> = {
-	manifest: GraphicStudioConfig & { id: Id }
+	manifest: GraphicRuntimeManifest & { id: Id }
 	renderSvg?: (values: ControllerValues, viewport: GraphicViewport) => string
 	getBindings?: (viewport: GraphicViewport) => ControllerRuntimeBindings
 }
+
+/** 자산 model 파일이 Manifest와 분리해 제공하는 순수 계산 adapter 계약. */
+export type GraphicModelAdapter = Omit<GraphicStudioPlugin, 'manifest'>
 
 /** 코드로 등록하는 Graphic Manifest를 공통 Config 경계에서 즉시 검증한다. */
 export function defineGraphicStudioPlugin<const Id extends string>(

@@ -4,6 +4,7 @@ import {
 	createContext,
 	type ReactNode,
 	type RefObject,
+	useCallback,
 	useContext,
 	useDeferredValue,
 	useEffect,
@@ -16,18 +17,20 @@ import { getGraphicStudioRuntimeBindings } from '@/features/graphic-generation/r
 import {
 	acceptsImagePromptExecution,
 	getImageColorAdjustmentControls,
+	getImageStudioFeatureControlIds,
 	resolveImagePromptExecution,
 } from '@/features/image-generation/domain/image-studio-config'
 import { requestImageGeneration } from '@/features/image-generation/services/generate-image.client'
+import type { StudioOutputFormat } from '@/features/studio-export/export-contract'
 import { useExport } from '@/features/studio-export/hooks/use-export'
 import {
 	canExportTemplate,
 	createTemplateExportRequest,
 	type TemplateExportContext,
-	type TemplateExportFormat,
 	type TemplateExportRequest,
 } from '@/features/studio-export/services/export-template'
-import { exportTemplate } from '@/features/studio-export/services/export-template.client'
+import { createTemplateExportSource } from '@/features/studio-export/services/export-template.client'
+import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import type { ImageTransformValue } from '@/features/template-customization/domain/image-edit-transform'
 import {
 	findTemplateControl,
@@ -110,6 +113,7 @@ type TemplateStudioValue = {
 	background: {
 		state: TemplateBackgroundState
 		contracts: readonly ResolvedTemplateImageConfig[]
+		featureBindings: ControllerRuntimeBindings
 		graphicConfigs: readonly GraphicStudioConfig[]
 		graphicBindings: ControllerRuntimeBindings
 		update: (patch: TemplateBackgroundPatch) => void
@@ -124,13 +128,15 @@ type TemplateStudioValue = {
 	canvas: {
 		html: string
 		previewRef: RefObject<HTMLDivElement | null>
+		registerGraphicFrame: (capture: (() => string) | null) => void
 	}
 	exporting: {
-		format: TemplateExportFormat | null
-		setFormat: (format: TemplateExportFormat) => void
+		formats: readonly StudioOutputFormat[]
+		format: StudioOutputFormat | null
+		setFormat: (format: StudioOutputFormat) => void
 		busy: boolean
 		error: string | null
-		run: (format: TemplateExportFormat) => void
+		run: (format: StudioOutputFormat) => void
 	}
 }
 
@@ -154,6 +160,10 @@ export function TemplateStudioProvider({
 	children: ReactNode
 }) {
 	const previewRef = useRef<HTMLDivElement>(null)
+	const graphicFrameRef = useRef<(() => string) | null>(null)
+	const registerGraphicFrame = useCallback((capture: (() => string) | null) => {
+		graphicFrameRef.current = capture
+	}, [])
 	const { html, width, height } = template
 	const slots = config.template.slots
 	const partitionedSlots = useMemo(() => partitionTemplateSlots(slots), [slots])
@@ -176,8 +186,9 @@ export function TemplateStudioProvider({
 		textColorDefinition?.kind === 'color' ? textColorDefinition.defaultValue : null,
 	)
 	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
-	const [format, setFormat] = useState<TemplateExportFormat | null>(
-		config.output.formats[0] ?? null,
+	const effectiveExportFormats = config.output.formats
+	const [format, setFormat] = useState<StudioOutputFormat | null>(
+		effectiveExportFormats[0] ?? null,
 	)
 	const imageContracts = useMemo(
 		() =>
@@ -212,6 +223,10 @@ export function TemplateStudioProvider({
 	const [background, setBackground] = useState<TemplateBackgroundState>(() =>
 		initialBackgroundState(config, backgroundSlot, backgroundContracts),
 	)
+	const selectedBackgroundContract = backgroundContracts.find(
+		(candidate) => candidate.config.id === background.profileId,
+	)
+	const backgroundFeatureBindings = getBackgroundFeatureBindings(selectedBackgroundContract)
 	const selectedGraphicConfig = config.template.graphicConfigs.find(
 		(candidate) => candidate.id === background.graphicConfigId,
 	)
@@ -315,7 +330,6 @@ export function TemplateStudioProvider({
 				imageSlots,
 				imageContracts,
 				background: deferredBackground,
-				graphicConfigs: config.template.graphicConfigs,
 				width,
 				height,
 			}),
@@ -326,7 +340,6 @@ export function TemplateStudioProvider({
 			deferredTextColor,
 			deferredImageStates,
 			deferredBackground,
-			config.template.graphicConfigs,
 			imageSlots,
 			imageContracts,
 			width,
@@ -363,7 +376,20 @@ export function TemplateStudioProvider({
 	const templateExport = useExport<TemplateExportRequest>({
 		capability: config.output,
 		canExport: (request) => canExportTemplate(request, exportContext),
-		execute: (request) => exportTemplate(request, exportContext),
+		source: createTemplateExportSource(() => {
+			const graphicFrame =
+				background.type === 'graphic' ? graphicFrameRef.current?.() : undefined
+			return {
+				...exportContext,
+				html: graphicFrame
+					? composeTemplateHtml(
+							exportContext.html,
+							{},
+							{ canvasBackground: { imageUrl: graphicFrame } },
+						)
+					: exportContext.html,
+			}
+		}),
 	})
 
 	const value: TemplateStudioValue = {
@@ -403,6 +429,7 @@ export function TemplateStudioProvider({
 		background: {
 			state: background,
 			contracts: backgroundContracts,
+			featureBindings: backgroundFeatureBindings,
 			graphicConfigs: config.template.graphicConfigs,
 			graphicBindings,
 			update: (patch) =>
@@ -417,8 +444,10 @@ export function TemplateStudioProvider({
 				setBackground((current) =>
 					selectBackgroundType(current, backgroundTypeDefinition, next),
 				),
-			// 배경 compose에 feature color 경로가 없으므로 runtime binding과 action을 함께 잠근다.
-			updateFeature: () => {},
+			updateFeature: (controlId, next) =>
+				setBackground((current) =>
+					updateBackgroundFeature(current, controlId, next, backgroundContracts),
+				),
 			selectImageProfile: (profileId) =>
 				setBackground((current) =>
 					selectBackgroundImageProfile(current, profileId, backgroundContracts),
@@ -443,11 +472,12 @@ export function TemplateStudioProvider({
 				),
 			generate: generateBackground,
 		},
-		canvas: { html: composedHtml, previewRef },
+		canvas: { html: composedHtml, previewRef, registerGraphicFrame },
 		exporting: {
+			formats: effectiveExportFormats,
 			format,
 			setFormat: (next) => {
-				if (config.output.formats.includes(next)) setFormat(next)
+				if (effectiveExportFormats.includes(next)) setFormat(next)
 			},
 			busy: templateExport.exporting !== null,
 			error: templateExport.error,
@@ -668,6 +698,40 @@ function updateBackgroundGraphic(
 		...current,
 		graphicValues: { ...current.graphicValues, [controlId]: next },
 	}
+}
+
+function updateBackgroundFeature(
+	current: TemplateBackgroundState,
+	controlId: string,
+	next: ControllerControlValue,
+	contracts: readonly ResolvedTemplateImageConfig[],
+): TemplateBackgroundState {
+	const contract = contracts.find((candidate) => candidate.config.id === current.profileId)
+	if (!contract) return current
+	const binding = getBackgroundFeatureBindings(contract)[controlId]
+	const definition = contract.config.controller.groups
+		.flatMap((group) => group.controls)
+		.find((control) => control.id === controlId)
+	if (!binding || !definition || !acceptsControllerDraftValue(definition, next, binding)) {
+		return current
+	}
+	return {
+		...current,
+		featureValues: { ...current.featureValues, [controlId]: next },
+	}
+}
+
+function getBackgroundFeatureBindings(
+	contract: ResolvedTemplateImageConfig | undefined,
+): ControllerRuntimeBindings {
+	return contract
+		? Object.fromEntries(
+				getImageStudioFeatureControlIds(contract.config).map((id) => [
+					id,
+					{ availability: 'disabled' as const },
+				]),
+			)
+		: {}
 }
 
 function templateControllerValues(

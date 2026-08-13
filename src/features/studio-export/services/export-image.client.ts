@@ -5,36 +5,121 @@ import {
 } from '@/features/image-generation/runtime/image-colorize'
 import { elementToJpeg } from '../adapters/element-to-jpeg.client'
 import { elementToPng } from '../adapters/element-to-png.client'
+import { exportResultsToZip } from '../adapters/export-results-to-zip.client'
 import type { ExportRequest, ExportResult } from '../export-contract'
+import type { StudioExportSource } from './execute-studio-export'
 
 export type ImageExportRequest = Extract<ExportRequest, { format: 'original' | 'png' | 'jpeg' }> & {
 	scope: 'selected' | 'all'
 	package?: 'zip'
 }
 
+export type ImageExportSourceContext = {
+	images: readonly string[] | null
+	selected: number | null
+	color: ImageColorAdjustment | null | undefined
+}
+
+/** 생성 결과와 선택 상태를 공통 export 실행 port에 결합한다. */
+export function createImageExportSource(
+	context: ImageExportSourceContext,
+): StudioExportSource<ImageExportRequest> {
+	return {
+		original: (request) =>
+			exportImageScope(context, request, (src, index) => exportImageOriginal(src, index)),
+		raster: {
+			png: (request) =>
+				exportImageScope(context, request, (src, index) =>
+					exportImagePng(src, index, context.color, request),
+				),
+			jpeg: (request) =>
+				exportImageScope(context, request, (src, index) =>
+					exportImageJpeg(src, index, context.color, request),
+				),
+		},
+	}
+}
+
 /**
- * 생성 이미지 하나를 ExportResult로 만든다. 원본 fetch와 DOM 캡처 I/O는 브라우저·element adapter가
- * 소유하고, 다운로드는 공통 useExport가 담당한다.
+ * 생성 이미지 원본 하나를 ExportResult로 만든다. fetch I/O는 브라우저가 소유한다.
  */
-export async function exportImage(
+export async function exportImageOriginal(src: string, index: number): Promise<ExportResult> {
+	const name = `hd-image-${index + 1}`
+	const response = await fetch(src)
+	if (!response.ok) throw new Error('원본 이미지를 불러오지 못했습니다.')
+	const data = await response.blob()
+	const extension = imageExtension(data.type, src)
+	return {
+		data,
+		filename: `${name}.${extension}`,
+		mimeType: data.type || `image/${extension}`,
+	}
+}
+
+/** 생성 이미지 하나를 PNG로 캡처한다. DOM I/O는 element adapter가 소유한다. */
+export function exportImagePng(
 	src: string,
 	index: number,
 	color: ImageColorAdjustment | null | undefined,
-	request: ImageExportRequest,
+	request: Extract<ImageExportRequest, { format: 'png' }>,
 ): Promise<ExportResult> {
-	const name = `hd-image-${index + 1}`
-	if (request.format === 'original') {
-		const response = await fetch(src)
-		if (!response.ok) throw new Error('원본 이미지를 불러오지 못했습니다.')
-		const data = await response.blob()
-		const extension = imageExtension(data.type, src)
-		return {
-			data,
-			filename: `${name}.${extension}`,
-			mimeType: data.type || `image/${extension}`,
-		}
-	}
+	return withImageExportStage(src, color, async (stage, naturalWidth, naturalHeight) => {
+		const data = await elementToPng(stage, {
+			height: naturalHeight,
+			scale: request.options.scale,
+			transparent: request.options.transparent,
+			width: naturalWidth,
+		})
+		return { data, filename: `hd-image-${index + 1}.png`, mimeType: 'image/png' }
+	})
+}
 
+/** 생성 이미지 하나를 JPEG로 캡처한다. DOM I/O는 element adapter가 소유한다. */
+export function exportImageJpeg(
+	src: string,
+	index: number,
+	color: ImageColorAdjustment | null | undefined,
+	request: Extract<ImageExportRequest, { format: 'jpeg' }>,
+): Promise<ExportResult> {
+	return withImageExportStage(src, color, async (stage, naturalWidth, naturalHeight) => {
+		const data = await elementToJpeg(stage, {
+			height: naturalHeight,
+			quality: request.options.quality,
+			width: naturalWidth,
+		})
+		return { data, filename: `hd-image-${index + 1}.jpg`, mimeType: 'image/jpeg' }
+	})
+}
+
+async function exportImageScope(
+	context: ImageExportSourceContext,
+	request: ImageExportRequest,
+	exportOne: (src: string, index: number) => Promise<ExportResult>,
+): Promise<ExportResult | readonly ExportResult[]> {
+	const { images } = context
+	if (!images) throw new Error('저장할 이미지가 없습니다.')
+	if (request.scope === 'selected') {
+		const { selected } = context
+		if (selected === null || !images[selected]) {
+			throw new Error('저장할 이미지를 선택해 주세요.')
+		}
+		return exportOne(images[selected], selected)
+	}
+	const items = await Promise.all(images.map(exportOne))
+	return request.package
+		? exportResultsToZip({ format: request.package, filename: 'hd-images.zip', items })
+		: items
+}
+
+async function withImageExportStage(
+	src: string,
+	color: ImageColorAdjustment | null | undefined,
+	render: (
+		stage: HTMLElement,
+		naturalWidth: number,
+		naturalHeight: number,
+	) => Promise<ExportResult>,
+): Promise<ExportResult> {
 	// 스테이지를 이미지의 자연 크기로 잡는다 — 화면 썸네일 크기로 캡처하면 해상도를 잃는다.
 	const { naturalHeight, naturalWidth } = await loadImage(src)
 	const holder = document.createElement('div')
@@ -43,21 +128,7 @@ export async function exportImage(
 	holder.appendChild(stage)
 	document.body.appendChild(holder)
 	try {
-		if (request.format === 'jpeg') {
-			const data = await elementToJpeg(stage, {
-				height: naturalHeight,
-				quality: request.options.quality,
-				width: naturalWidth,
-			})
-			return { data, filename: `${name}.jpg`, mimeType: 'image/jpeg' }
-		}
-		const data = await elementToPng(stage, {
-			height: naturalHeight,
-			scale: request.options.scale,
-			transparent: request.options.transparent,
-			width: naturalWidth,
-		})
-		return { data, filename: `${name}.png`, mimeType: 'image/png' }
+		return await render(stage, naturalWidth, naturalHeight)
 	} finally {
 		holder.remove()
 	}

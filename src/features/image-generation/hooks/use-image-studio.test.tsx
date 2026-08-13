@@ -12,18 +12,46 @@ import type {
 } from '@/modules/studio-controller/controller-definition'
 import { ImageStudioProvider, useImageStudio } from './use-image-studio'
 
-vi.mock('@/features/studio-export/services/export-image.client', () => ({
-	exportImage: vi.fn().mockResolvedValue({
+const exportImageMocks = vi.hoisted(() => ({
+	original: vi.fn().mockResolvedValue({
 		data: new Blob(),
 		filename: 'hd-image-1.png',
 		mimeType: 'image/png',
 	}),
+	png: vi.fn().mockResolvedValue({
+		data: new Blob(),
+		filename: 'hd-image-1.png',
+		mimeType: 'image/png',
+	}),
+	jpeg: vi.fn().mockResolvedValue({
+		data: new Blob(),
+		filename: 'hd-image-1.jpg',
+		mimeType: 'image/jpeg',
+	}),
+}))
+
+vi.mock('@/features/studio-export/services/export-image.client', () => ({
+	createImageExportSource: (context: {
+		images: readonly string[] | null
+		selected: number | null
+		color: unknown
+	}) => {
+		const src = context.images?.[context.selected ?? -1]
+		return {
+			original: (request: unknown) =>
+				exportImageMocks.original(src, context.selected, context.color, request),
+			raster: {
+				png: (request: unknown) =>
+					exportImageMocks.png(src, context.selected, context.color, request),
+				jpeg: (request: unknown) =>
+					exportImageMocks.jpeg(src, context.selected, context.color, request),
+			},
+		}
+	},
 }))
 vi.mock('@/features/studio-export/adapters/download-export-result.client', () => ({
 	downloadExportResult: vi.fn(),
 }))
-
-import { exportImage } from '@/features/studio-export/services/export-image.client'
 
 vi.mock('@/features/image-generation/hooks/use-image-generation', () => ({
 	useImageGeneration: () => ({
@@ -65,9 +93,32 @@ function config(
 		name: `프로파일 ${profileId}`,
 		slug: null,
 		imageModelPreset: 'openai-gpt-image-2',
-		aspectRatio: '2:3',
-		imageSize: '1K',
-		colorAdjustment: options.colorAdjustment,
+		features: [
+			...(options.colorAdjustment
+				? [
+						{
+							blockType: 'colorAdjustment',
+							background: Boolean(options.colorAdjustment.background),
+						},
+					]
+				: []),
+			{ blockType: 'cameraControl' },
+		],
+		controllerRestrictions: options.colorAdjustment
+			? {
+					controls: [
+						{ controlId: 'lineColor', defaultValue: options.colorAdjustment.line },
+						...(options.colorAdjustment.background
+							? [
+									{
+										controlId: 'backgroundColor',
+										defaultValue: options.colorAdjustment.background,
+									},
+								]
+							: []),
+					],
+				}
+			: undefined,
 	})
 	const batch = (options.batch ?? [1, 2, 3, 4]).map(String)
 	const ratio = options.ratio ?? ['2:3', '16:9']
@@ -159,6 +210,7 @@ function Probe() {
 			<output data-testid="result-color">
 				{results.color ? results.color.line : '결과 색 없음'}
 			</output>
+			<output data-testid="download-format">{download.format ?? '형식 없음'}</output>
 			<button type="button" onClick={() => color.update({ line: '#ff0000' })}>
 				라인 색 변경
 			</button>
@@ -179,6 +231,9 @@ function Probe() {
 			</button>
 			<button type="button" onClick={download.selected}>
 				결과 저장
+			</button>
+			<button type="button" onClick={download.original.selected}>
+				원본 저장
 			</button>
 			<button type="button" onClick={() => download.setFormat('jpeg')}>
 				JPEG 선택
@@ -286,22 +341,37 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		const source = config(5, { colorAdjustment: { line: '#000dff' } })
 		const next = {
 			...config(7, { colorAdjustment: { line: '#ff0000' } }),
-			output: { formats: [] as const },
+			output: { formats: [] as const, original: false },
 		}
 		renderStudio([source, next])
 
 		expect(screen.getByTestId('result-color')).toHaveTextContent('#000dff')
 		fireEvent.click(screen.getByRole('button', { name: '교체' }))
 		expect(screen.getByTestId('result-color')).toHaveTextContent('결과 색 없음')
-		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
+		fireEvent.click(screen.getByRole('button', { name: '원본 저장' }))
 
 		await waitFor(() =>
-			expect(exportImage).toHaveBeenCalledWith('blob:1', 0, null, {
+			expect(exportImageMocks.original).toHaveBeenCalledWith('blob:1', 0, null, {
 				format: 'original',
 				options: {},
 				scope: 'selected',
 			}),
 		)
+	})
+
+	it('adapter가 지원하지 않는 Config 형식은 선택값으로 사용하지 않는다', () => {
+		const source = config(5)
+		exportImageMocks.png.mockClear()
+		renderStudio([
+			{
+				...source,
+				output: { ...source.output, formats: ['tiff'] },
+			},
+		])
+
+		expect(screen.getByTestId('download-format')).toHaveTextContent('형식 없음')
+		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
+		expect(exportImageMocks.png).not.toHaveBeenCalled()
 	})
 
 	it('사용자가 선택한 JPEG 형식을 ExportRequest로 전달한다', async () => {
@@ -310,7 +380,7 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
 
 		await waitFor(() =>
-			expect(exportImage).toHaveBeenCalledWith('blob:1', 0, null, {
+			expect(exportImageMocks.jpeg).toHaveBeenCalledWith('blob:1', 0, null, {
 				format: 'jpeg',
 				colorProfile: { space: 'rgb', icc: 'srgb' },
 				options: { quality: 90 },

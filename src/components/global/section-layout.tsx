@@ -8,6 +8,7 @@ type SectionLayoutProps = {
 	children: React.ReactNode
 	pageNavigation?: React.ReactNode
 	mobileNavigation?: boolean
+	sidebarStorageKey?: string
 }
 
 /**
@@ -19,9 +20,10 @@ export function SectionLayout({
 	children,
 	pageNavigation,
 	mobileNavigation = true,
+	sidebarStorageKey,
 }: SectionLayoutProps) {
 	return (
-		<SidebarProvider className="h-full min-h-0">
+		<SidebarProvider className="h-full min-h-0" storageKey={sidebarStorageKey}>
 			{nav}
 			<SectionBody mobileNavigation={mobileNavigation} pageNavigation={pageNavigation}>
 				{children}

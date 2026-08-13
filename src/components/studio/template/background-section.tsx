@@ -11,7 +11,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
-import { getImageColorAdjustmentControls } from '@/features/image-generation/domain/image-studio-config'
 import type { ResolvedTemplateImageConfig } from '@/features/template-customization/domain/template-config'
 import type {
 	TemplateBackgroundPatch,
@@ -38,6 +37,7 @@ type BackgroundSectionProps = {
 	canvasAspectRatio?: number
 	/** Image Config를 캔버스 비율로 제한한 슬롯 범위 계약. */
 	imageContracts: readonly ResolvedTemplateImageConfig[]
+	featureBindings: ControllerRuntimeBindings
 	graphicConfigs: readonly GraphicStudioConfig[]
 	graphicBindings: ControllerRuntimeBindings
 	/** 배경 세션 상태 — 소유는 Provider(합성에 싣는다). */
@@ -66,6 +66,7 @@ export function BackgroundSection({
 	colorDefinition,
 	canvasAspectRatio,
 	imageContracts,
+	featureBindings,
 	graphicConfigs,
 	graphicBindings,
 	value,
@@ -93,17 +94,6 @@ export function BackgroundSection({
 			value.prompt !== imageContract.prompt.defaultValue
 		: !value.prompt.trim() ||
 			(maxPromptLength !== undefined && value.prompt.length > maxPromptLength)
-	const colorControls = imageContract
-		? getImageColorAdjustmentControls(imageContract.config)
-		: null
-	const featureBindings: ControllerRuntimeBindings = colorControls
-		? Object.fromEntries(
-				[colorControls.line, colorControls.background]
-					.filter((control) => control !== undefined)
-					.map((control) => [control.id, { availability: 'disabled' as const }]),
-			)
-		: {}
-
 	return (
 		<>
 			<ControllerGroupRenderer definition={groupDefinition}>

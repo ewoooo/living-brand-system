@@ -20,8 +20,7 @@ import {
 interface TemplateSaveCandidate {
 	_status?: unknown
 	baseHtml?: unknown
-	controller?: unknown
-	controllerOverride?: unknown
+	controllerRestrictions?: unknown
 	height?: unknown
 	html?: unknown
 	id?: unknown
@@ -86,8 +85,7 @@ export async function prepareTemplateSave({
 				width: candidate.width,
 				height: candidate.height,
 				templateVersion: 'draft',
-				controller: candidate.controller,
-				controllerOverride: candidate.controllerOverride,
+				controllerRestrictions: candidate.controllerRestrictions,
 				output: candidate.output as never,
 			})
 		} catch (error) {

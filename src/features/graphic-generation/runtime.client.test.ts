@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { isOriginHandleHit } from './preview.client'
+import { isOriginHandleHit } from './graphic-runtimes/forward-straight/runtime.client'
 
-describe('isOriginHandleHit', () => {
+describe('Forward Straight client runtime', () => {
 	it('레드 닷 주변에서만 드래그를 시작한다', () => {
 		const origin = { x: 100, y: 100 }
 

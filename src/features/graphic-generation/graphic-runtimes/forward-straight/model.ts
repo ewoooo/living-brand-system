@@ -1,4 +1,35 @@
-import type { ForwardStraightInput } from './forward-straight'
+import { z } from 'zod'
+import type { GraphicModelAdapter } from '@/features/graphic-generation/runtime/graphic-plugin'
+import {
+	type ControllerRuntimeBindings,
+	type ControllerValues,
+	isControllerPadValue,
+} from '@/modules/studio-controller/controller-definition'
+
+export const forwardStraightInputSchema = z.strictObject({
+	variableWeightEnabled: z.boolean(),
+	viewpoint: z.enum(['flat', 'low-angle']),
+	angleIntensity: z.enum(['weak', 'medium', 'strong']),
+	origin: z.strictObject({
+		x: z.number().min(0).max(1),
+		y: z.number().min(0).max(1),
+	}),
+})
+
+export type ForwardStraightInput = z.infer<typeof forwardStraightInputSchema>
+
+/** Controller primitive 값(-1~1)을 Forward Straight 입력(0~1)으로 바꾸고 검증한다. */
+export function toForwardStraightInput(values: ControllerValues): ForwardStraightInput {
+	const origin = values.origin
+	return forwardStraightInputSchema.parse({
+		variableWeightEnabled: values.variableWeightEnabled,
+		viewpoint: values.viewpoint,
+		angleIntensity: values.angleIntensity,
+		origin: isControllerPadValue(origin)
+			? { x: (origin.x + 1) / 2, y: (origin.y + 1) / 2 }
+			: origin,
+	})
+}
 
 const STYLE = {
 	backgroundColor: '#030402',
@@ -175,3 +206,16 @@ ${lines}
 function fixed(value: number): string {
 	return value.toFixed(2)
 }
+
+const model = {
+	renderSvg: (values, viewport) =>
+		createForwardStraightSvg(
+			createForwardStraightScene(toForwardStraightInput(values), viewport),
+		),
+	getBindings: (viewport): ControllerRuntimeBindings =>
+		viewport.width > 0 && viewport.height > 0
+			? { origin: { padAspectRatio: viewport.width / viewport.height } }
+			: {},
+} satisfies GraphicModelAdapter
+
+export default model

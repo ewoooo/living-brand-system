@@ -2,14 +2,17 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { forwardStraightGraphicConfig } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import {
 	resolveTemplateImageConfig,
 	type TemplateBackgroundType,
 } from '@/features/template-customization/domain/template-config'
 import type { TemplateBackgroundState } from '@/features/template-customization/hooks/use-template-studio'
-import { createControllerValues } from '@/modules/studio-controller/controller-definition'
+import {
+	type ControllerRuntimeBindings,
+	createControllerValues,
+} from '@/modules/studio-controller/controller-definition'
 import { BackgroundSection } from './background-section'
 
 const imageContract = resolveTemplateImageConfig(createImageConfig(), {
@@ -26,6 +29,10 @@ function Harness({
 	onChange,
 	onGenerate = vi.fn(),
 	contract = imageContract as typeof imageContract | null,
+	featureBindings = {
+		lineColor: { availability: 'disabled' },
+		backgroundColor: { availability: 'disabled' },
+	},
 	initialError = null,
 	generating = false,
 	typeAvailability,
@@ -34,6 +41,7 @@ function Harness({
 	onChange?: (patch: HarnessPatch) => void
 	onGenerate?: () => void
 	contract?: typeof imageContract | null
+	featureBindings?: ControllerRuntimeBindings
 	initialError?: string | null
 	generating?: boolean
 	typeAvailability?: 'enabled' | 'readonly' | 'disabled'
@@ -47,8 +55,8 @@ function Harness({
 		generating,
 		error: initialError,
 		featureValues: contract ? createControllerValues(contract.config.controller.groups) : {},
-		graphicConfigId: forwardStraightGraphicConfig.id,
-		graphicValues: createControllerValues(forwardStraightGraphicConfig.controller.groups),
+		graphicConfigId: forwardStraightRuntimeManifest.id,
+		graphicValues: createControllerValues(forwardStraightRuntimeManifest.controller.groups),
 	})
 	return (
 		<BackgroundSection
@@ -76,7 +84,8 @@ function Harness({
 				defaultValue: null,
 			}}
 			imageContracts={contract ? [contract] : []}
-			graphicConfigs={[forwardStraightGraphicConfig]}
+			featureBindings={contract ? featureBindings : {}}
+			graphicConfigs={[forwardStraightRuntimeManifest]}
 			graphicBindings={{ origin: { padAspectRatio: 4 / 3 } }}
 			value={state}
 			onChange={(patch) => {
@@ -335,7 +344,7 @@ function createImageConfig(): ImageStudioConfig {
 		id: 3,
 		version: 1,
 		name: '첫 프로파일',
-		output: { formats: ['original', 'png'] },
+		output: { formats: ['png'], original: true },
 		controller: {
 			groups: [
 				{

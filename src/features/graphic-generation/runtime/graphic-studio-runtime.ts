@@ -1,10 +1,9 @@
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import { graphicStudioPlugins } from '@/features/graphic-generation/graphic-runtimes/catalog/model.generated'
 import {
 	createGraphicStudioPluginCatalog,
 	type GraphicStudioPlugin,
 } from '@/features/graphic-generation/runtime/graphic-plugin'
-import { forwardStraightGraphicPlugin } from '@/features/graphic-generation/runtime/plugins/forward-straight'
-import { radialFlutedGlassGraphicPlugin } from '@/features/graphic-generation/runtime/plugins/radial-fluted-glass'
 import { supportsStudioOutput } from '@/features/studio-export/studio-output'
 import type {
 	ControllerRuntimeBindings,
@@ -12,7 +11,6 @@ import type {
 } from '@/modules/studio-controller/controller-definition'
 import { acceptsControllerExecutionValues } from '@/modules/studio-controller/controller-definition'
 
-const graphicStudioPlugins = [forwardStraightGraphicPlugin, radialFlutedGlassGraphicPlugin] as const
 const graphicStudioPluginCatalog = createGraphicStudioPluginCatalog(graphicStudioPlugins)
 
 type GraphicRuntimeId = keyof typeof graphicStudioPluginCatalog

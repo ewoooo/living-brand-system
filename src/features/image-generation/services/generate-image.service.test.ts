@@ -156,8 +156,12 @@ describe('generateImages', () => {
 			id: 5,
 			name: 'Technical Illustration',
 			imageModelPreset: 'openai-gpt-image-2',
-			aspectRatio: '3:2',
-			imageSize: '2K',
+			controllerRestrictions: {
+				controls: [
+					{ controlId: 'ratio', defaultValue: '3:2' },
+					{ controlId: 'resolution', defaultValue: '2K' },
+				],
+			},
 			profilePrompt: [{ key: 'style', value: 'minimalist' }],
 			userPromptNormalization: [{ key: 'mood', candidates: [{ value: 'organic' }] }],
 		})
@@ -327,6 +331,7 @@ describe('generateImages', () => {
 			imageModelPreset: 'google-nano-banana-2-lite',
 			aspectRatio: '16:9',
 			imageSize: '1K',
+			features: [{ blockType: 'cameraControl' }],
 			profilePrompt: [],
 			userPromptNormalization: [],
 		})
@@ -356,7 +361,9 @@ describe('generateImages', () => {
 			imageModelPreset: 'openai-gpt-image-2',
 			aspectRatio: '2:3',
 			imageSize: '1K',
-			maxPromptLength: 3,
+			controllerRestrictions: {
+				controls: [{ controlId: 'prompt', maxLength: 3 }],
+			},
 			profilePrompt: [],
 			userPromptNormalization: [],
 		})
@@ -383,7 +390,7 @@ describe('generateImages', () => {
 			imageSize: '1K',
 			profilePrompt: [],
 			userPromptNormalization: [],
-			controller: storedController(),
+			controllerRestrictions: storedRestrictions(),
 		})
 
 		await expect(
@@ -412,8 +419,9 @@ describe('generateImages', () => {
 			id: 5,
 			name: 'Technical Illustration',
 			imageModelPreset: 'google-nano-banana-2-lite',
-			aspectRatio: '16:9',
-			imageSize: '1K',
+			controllerRestrictions: {
+				controls: [{ controlId: 'ratio', defaultValue: '16:9' }],
+			},
 			profilePrompt: [{ key: 'style', value: 'technical' }],
 			userPromptNormalization: [],
 		})
@@ -496,6 +504,7 @@ describe('generateImages', () => {
 			imageModelPreset: 'google-nano-banana-2-lite',
 			aspectRatio: '16:9',
 			imageSize: '1K',
+			features: [{ blockType: 'cameraControl' }],
 			profilePrompt: [{ key: 'style', value: 'technical' }],
 			userPromptNormalization: [],
 		})
@@ -591,6 +600,7 @@ describe('generateImages', () => {
 			imageModelPreset: 'google-nano-banana-2-lite',
 			aspectRatio: '16:9',
 			imageSize: '1K',
+			features: [{ blockType: 'cameraControl' }],
 		})
 
 		await expect(
@@ -615,7 +625,6 @@ describe('generateImages', () => {
 			imageModelPreset: 'openai-gpt-image-2',
 			aspectRatio: '1:1',
 			imageSize: '1K',
-			cameraControl: false,
 		})
 
 		await expect(
@@ -645,6 +654,7 @@ describe('generateImages', () => {
 			imageModelPreset: 'openai-gpt-image-2',
 			aspectRatio: '1:1',
 			imageSize: '1K',
+			features: [{ blockType: 'cameraControl' }],
 		})
 
 		await expect(
@@ -729,13 +739,17 @@ describe('image generation plan resolvers', () => {
 		expect(
 			planImageGenerationFromProfile(
 				{
-					aspectRatio: '16:9',
 					id: 5,
 					imageModelPreset: 'google-nano-banana-2-lite',
-					imageSize: '1K',
 					name: 'Technical Illustration',
 				},
-				{ prompt: '{"subject":"굴착기"}', count: 2, seedImage },
+				{
+					prompt: '{"subject":"굴착기"}',
+					count: 2,
+					aspectRatio: '16:9',
+					imageSize: '1K',
+					seedImage,
+				},
 			),
 		).toEqual({
 			prompt: '{"subject":"굴착기"}',
@@ -749,34 +763,22 @@ describe('image generation plan resolvers', () => {
 		})
 	})
 
-	it('슬롯 비율 오버라이드가 있으면 프로파일 비율 대신 플랜에 쓴다', () => {
+	it('해석된 Effective 비율과 해상도를 플랜에 쓴다', () => {
 		expect(
 			planImageGenerationFromProfile(
 				{
-					aspectRatio: '2:3',
 					id: 5,
 					imageModelPreset: 'openai-gpt-image-2',
-					imageSize: '1K',
 					name: 'Technical Illustration',
 				},
-				{ prompt: '{"subject":"굴착기"}', count: 1, aspectRatio: '16:9' },
+				{
+					prompt: '{"subject":"굴착기"}',
+					count: 1,
+					aspectRatio: '16:9',
+					imageSize: '1K',
+				},
 			),
 		).toMatchObject({ aspectRatio: '16:9', imageSize: '1K' })
-	})
-
-	it('해상도 오버라이드가 있으면 프로파일 해상도 대신 플랜에 쓴다', () => {
-		expect(
-			planImageGenerationFromProfile(
-				{
-					aspectRatio: '2:3',
-					id: 5,
-					imageModelPreset: 'openai-gpt-image-2',
-					imageSize: '1K',
-					name: 'Technical Illustration',
-				},
-				{ prompt: '{"subject":"굴착기"}', count: 1, imageSize: '2K' },
-			),
-		).toMatchObject({ aspectRatio: '2:3', imageSize: '2K' })
 	})
 
 	it('명시 설정은 프롬프트를 trim해 프로파일 없는 플랜으로 해석한다', () => {
@@ -798,53 +800,27 @@ describe('image generation plan resolvers', () => {
 	})
 })
 
-function storedController() {
+function storedRestrictions() {
 	return {
-		groups: [
+		controls: [
 			{
-				key: 'image',
-				title: 'Image',
-				collapsible: true,
-				defaultOpen: true,
-				controls: [
-					{
-						blockType: 'text',
-						key: 'prompt',
-						label: 'Prompt',
-						availability: 'enabled',
-						defaultValue: '',
-						multiline: true,
-						maxLength: 100,
-					},
-				],
+				controlId: 'batch',
+				optionValues: ['1', '2'],
+				defaultValue: '2',
+				availability: 'readonly',
 			},
 			{
-				key: 'generation-settings',
-				title: 'Setting',
-				collapsible: false,
-				controls: [
-					storedSelect('batch', '장수', ['1', '2'], '2', 'readonly'),
-					storedSelect('ratio', '비율', ['2:3', '16:9'], '2:3', 'readonly'),
-					storedSelect('resolution', '해상도', ['1K', '2K'], '1K', 'disabled'),
-				],
+				controlId: 'ratio',
+				optionValues: ['2:3', '16:9'],
+				defaultValue: '2:3',
+				availability: 'readonly',
+			},
+			{
+				controlId: 'resolution',
+				optionValues: ['1K', '2K'],
+				defaultValue: '1K',
+				availability: 'disabled',
 			},
 		],
-	}
-}
-
-function storedSelect(
-	id: string,
-	label: string,
-	values: string[],
-	defaultValue: string,
-	availability: 'enabled' | 'readonly' | 'disabled',
-) {
-	return {
-		blockType: 'select',
-		key: id,
-		label,
-		availability,
-		defaultValue,
-		options: values.map((value) => ({ label: value, value })),
 	}
 }

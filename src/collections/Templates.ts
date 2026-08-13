@@ -7,8 +7,7 @@ import {
 import { prepareTemplateSave } from '@/features/template-import/services/prepare-template-save.service'
 import { isManager, managerOrAdmin } from '@/lib/auth'
 import {
-	studioControllerField,
-	studioControllerOverrideField,
+	studioControllerRestrictionsField,
 	studioOutputPolicyField,
 } from './fields/studio-controller-field'
 import { draftVersions } from './shared'
@@ -58,20 +57,8 @@ export const Templates: CollectionConfig = {
 			type: 'textarea',
 			localized: true,
 		},
-		studioControllerField({
-			mode: 'restrict',
-			hidden: true,
-			description:
-				'비우면 템플릿 슬롯에서 기본 계약을 만듭니다. 필요한 항목만 입력하면 같은 ID의 options, 범위, 기본값, 사용 상태만 좁힙니다.',
-		}),
-		studioControllerOverrideField({ source: 'template' }),
-		studioOutputPolicyField({
-			formats: [
-				{ label: 'PNG', value: 'png' },
-				{ label: 'TIFF', value: 'tiff' },
-				{ label: 'PDF', value: 'pdf' },
-			],
-		}),
+		studioControllerRestrictionsField({ source: 'template' }),
+		studioOutputPolicyField(),
 		{
 			// 워크스페이스: 캔버스 + 레이어 목록 + 값 편집을 한 컴포넌트가 렌더한다.
 			name: 'templateLayers',

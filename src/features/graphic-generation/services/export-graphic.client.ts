@@ -2,8 +2,11 @@
 
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { renderGraphicStudioSvg } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
-import type { ExportResult } from '@/features/studio-export/export-contract'
+import type { ExportRequest, ExportResult } from '@/features/studio-export/export-contract'
+import { supportsStudioExportRequest } from '@/features/studio-export/studio-output'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
+
+export type GraphicSvgExportRequest = Extract<ExportRequest, { format: 'svg' }>
 
 /**
  * Graphic SVG export use case: Effective Config와 현재 값을 runtime adapter로 투영한다.
@@ -12,9 +15,15 @@ import type { ControllerValues } from '@/modules/studio-controller/controller-de
 export function exportGraphicStudioSvg(
 	config: GraphicStudioConfig,
 	values: ControllerValues,
-	viewport: { width: number; height: number },
+	request: GraphicSvgExportRequest,
 ): ExportResult {
-	const svg = renderGraphicStudioSvg(config, values, viewport)
+	if (!supportsStudioExportRequest(config.output, request)) {
+		throw new Error('SVG export is unavailable.')
+	}
+	const svg = renderGraphicStudioSvg(config, values, {
+		width: request.options.width,
+		height: request.options.height,
+	})
 	if (!svg) throw new Error('SVG export is unavailable.')
 	return {
 		data: new Blob([svg], { type: 'image/svg+xml' }),

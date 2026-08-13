@@ -7,13 +7,13 @@ import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/g
 import { GraphicStudioProvider } from '@/features/graphic-generation/hooks/use-graphic-studio'
 
 type GraphicGeneratorProps = {
-	config: GraphicStudioConfig
+	configs: GraphicStudioConfig[]
 }
 
 /** 가변 그래픽 Definition을 하나의 편집 세션·Controller·Canvas에 배선한다. */
-export function GraphicGenerator({ config }: GraphicGeneratorProps) {
+export function GraphicGenerator({ configs }: GraphicGeneratorProps) {
 	return (
-		<GraphicStudioProvider config={config}>
+		<GraphicStudioProvider configs={configs}>
 			<StudioWorkspace controller={<GraphicSidebar />}>
 				<GraphicCanvas />
 			</StudioWorkspace>

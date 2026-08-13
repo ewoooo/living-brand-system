@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { parseGraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
 	deriveGraphicStudioConfig,
-	forwardStraightGraphicConfig,
-	graphicStudioConfigs,
-	radialFlutedGlassGraphicConfig,
+	graphicRuntimeManifests,
 } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
+import radialFlutedGlassRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/radial-fluted-glass/definition'
 import { createControllerValues } from '@/modules/studio-controller/controller-definition'
 import { createGraphicStudioPluginCatalog, defineGraphicStudioPlugin } from './graphic-plugin'
 import {
@@ -14,18 +14,22 @@ import {
 	renderGraphicStudioSvg,
 } from './graphic-studio-runtime'
 
-const config = forwardStraightGraphicConfig
+const config = forwardStraightRuntimeManifest
 
 describe('graphicStudioRuntime', () => {
 	it('Graphic 계약을 멱등하게 검증하고 잘못된 studio·type을 거부한다', () => {
 		expect(parseGraphicStudioConfig(parseGraphicStudioConfig(config))).toBe(config)
+		expect(
+			parseGraphicStudioConfig({ ...config, output: { ...config.output, formats: ['png'] } })
+				.output.formats,
+		).toEqual(['png'])
 		expect(() => parseGraphicStudioConfig({ ...config, studio: 'image' })).toThrow('studio')
 		expect(() => parseGraphicStudioConfig({ ...config, type: 'canvas' })).toThrow('type')
 		expect(() => parseGraphicStudioConfig({ ...config, unknown: true })).toThrow('알 수 없는')
 	})
 
 	it('plugin catalog가 config·SVG projector·명시적 binding을 함께 제공한다', () => {
-		expect(graphicStudioConfigs).toContain(config)
+		expect(graphicRuntimeManifests).toContain(config)
 		expect(config.output.formats).toEqual(['svg'])
 		const values = createControllerValues(config.controller.groups)
 		expect(renderGraphicStudioSvg(config, values, { width: 800, height: 600 })).toContain(
@@ -37,16 +41,18 @@ describe('graphicStudioRuntime', () => {
 	})
 
 	it('Shader runtime은 Preview 계약만 등록하고 SVG 합성에서는 제외한다', () => {
-		const shaderConfig = radialFlutedGlassGraphicConfig
+		const shaderConfig = radialFlutedGlassRuntimeManifest
 		const values = createControllerValues(shaderConfig.controller.groups)
 
-		expect(graphicStudioConfigs).toContain(shaderConfig)
+		expect(graphicRuntimeManifests).toContain(shaderConfig)
 		expect(shaderConfig.output.formats).toEqual(['mp4'])
 		expect(renderGraphicStudioSvg(shaderConfig, values, { width: 800, height: 600 })).toBeNull()
 		expect(canRenderGraphicStudioSvg(shaderConfig)).toBe(false)
 		expect(canRenderGraphicStudioSvg(config)).toBe(true)
 		expect(getGraphicStudioRuntimeBindings(shaderConfig, { width: 800, height: 600 })).toEqual({
 			source: { padAspectRatio: 4 / 3 },
+			glassOriginOffset: { padAspectRatio: 4 / 3 },
+			glassDrift: { padAspectRatio: 4 / 3 },
 		})
 	})
 
@@ -70,23 +76,17 @@ describe('graphicStudioRuntime', () => {
 		expect(getGraphicStudioRuntimeBindings(config, { width: 800, height: 0 })).toEqual({})
 	})
 
-	it('published Graphic Profile은 runtime 기본 Definition을 좁히고 미등록 runtime을 거부한다', () => {
+	it('published Graphic Profile은 Restrictions로 Runtime Manifest를 좁히고 미등록 runtime을 거부한다', () => {
 		const profile = {
 			id: 9,
 			name: '고정 시점',
 			runtime: 'forward-straight',
-			controller: {
-				groups: [
+			controllerRestrictions: {
+				controls: [
 					{
-						key: 'graphic',
-						controls: [
-							{
-								blockType: 'select',
-								key: 'viewpoint',
-								availability: 'readonly',
-								options: [{ value: 'flat', label: '평면' }],
-							},
-						],
+						controlId: 'viewpoint',
+						availability: 'readonly',
+						optionValues: ['flat'],
 					},
 				],
 			},
@@ -95,7 +95,7 @@ describe('graphicStudioRuntime', () => {
 
 		expect(narrowed).toMatchObject({ id: 'forward-straight', name: '고정 시점' })
 		expect(deriveGraphicStudioConfig(profile)).toEqual(narrowed)
-		expect(forwardStraightGraphicConfig.name).toBe('Forward Straight')
+		expect(forwardStraightRuntimeManifest.name).toBe('Forward Straight')
 		expect(narrowed.controller.groups[0]).toMatchObject({
 			title: 'Graphic',
 			collapsible: true,

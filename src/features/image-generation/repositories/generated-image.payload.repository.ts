@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import config from '@payload-config'
 import { getPayload } from 'payload'
+import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import type { ImageProfile } from '@/payload-types'
 import { decodeImageDataUri, MAX_IMAGE_BYTES, validateRasterImage } from '../image-data-uri'
 
@@ -80,7 +81,10 @@ export async function storeGeneratedImages(input: {
 	images: readonly string[]
 	inputPrompt: string
 	model: string
-	profile: Pick<ImageProfile, 'aspectRatio' | 'id' | 'imageSize' | 'name'>
+	profile: Pick<ImageProfile, 'id' | 'name'> & {
+		aspectRatio: ImageAspectRatio
+		imageSize: ImageOutputSize
+	}
 }): Promise<StoredGeneratedImage[]> {
 	const payload = await getPayload({ config })
 	const createdIds: number[] = []

@@ -1,4 +1,7 @@
-import type { StudioOutputCapability } from '@/features/studio-export/studio-output'
+import {
+	parseStudioOutputCapability,
+	type StudioOutputCapability,
+} from '@/features/studio-export/studio-output'
 
 /** Controller Definition에 저장할 수 있는 직렬화 가능한 값. */
 export type ControllerControlValue = string | number | boolean | null | ControllerPadValue
@@ -18,20 +21,23 @@ export type ControllerRuntimeBindings = Readonly<Record<string, ControllerRuntim
 
 export type StudioKind = 'template' | 'image' | 'graphic'
 
+/** Admin 제한을 적용하기 전 Studio runtime이 발행하는 결정적 원본 계약. */
+export type StudioRuntimeManifest = {
+	output: StudioOutputCapability
+	controller: {
+		groups: readonly ControllerGroupDefinition[]
+	}
+}
+
 /** 모든 Studio가 발행하는 공통 Controller envelope. 도메인 실행 정보는 교차 타입으로 확장한다. */
 export type StudioControllerConfig<
 	Kind extends StudioKind = StudioKind,
 	Id extends string | number = string | number,
-	OutputFormat extends string = string,
-> = {
+> = StudioRuntimeManifest & {
 	studio: Kind
 	id: Id
 	version: 1
 	name: string
-	output: StudioOutputCapability<OutputFormat>
-	controller: {
-		groups: readonly ControllerGroupDefinition[]
-	}
 }
 
 export type ControllerOption<Value extends string = string> = {
@@ -91,63 +97,8 @@ export type ControllerGroupDefinition = {
 	controls: readonly ControllerControlDefinition[]
 } & ({ collapsible?: false; defaultOpen?: never } | { collapsible: true; defaultOpen?: boolean })
 
-type ControllerControlPolicyBase = {
-	id: string
-	label?: string
-	availability?: ControllerAvailability
-}
-
-/** runtime/DOM이 제공한 Definition을 확장하지 않고 덮을 수 있는 Admin 제한. */
-export type ControllerControlPolicy =
-	| (ControllerControlPolicyBase & {
-			kind: 'text'
-			defaultValue?: string | null
-			multiline?: boolean
-			maxLength?: number
-			placeholder?: string
-	  })
-	| (ControllerControlPolicyBase & {
-			kind: 'toggle'
-			defaultValue?: boolean
-	  })
-	| (ControllerControlPolicyBase & {
-			kind: 'select'
-			defaultValue?: string | null
-			options?: readonly ControllerOption[]
-			placeholder?: string
-	  })
-	| (ControllerControlPolicyBase & {
-			kind: 'color'
-			defaultValue?: string | null
-	  })
-	| (ControllerControlPolicyBase & {
-			kind: 'range'
-			defaultValue?: number
-			min?: number
-			max?: number
-			step?: number
-			display?: { unit?: string; precision?: number }
-	  })
-	| (ControllerControlPolicyBase & {
-			kind: 'pad'
-			defaultValue?: ControllerPadValue
-			aspectRatio?: number
-	  })
-
-export type ControllerGroupPolicy = {
-	id: string
-	title?: string
-	controls: readonly ControllerControlPolicy[]
-	collapsible?: boolean
-	defaultOpen?: boolean
-}
-
-export type StudioControllerPolicy = {
-	groups: readonly ControllerGroupPolicy[]
-}
-
 /** Base Definition의 kind·표현 정보를 복제하지 않는 Admin 제한값. */
-export type ControllerControlOverride = {
+export type ControllerControlRestriction = {
 	controlId: string
 	availability?: Exclude<ControllerAvailability, 'enabled'>
 	defaultValue?: ControllerControlValue
@@ -157,8 +108,8 @@ export type ControllerControlOverride = {
 	max?: number
 }
 
-export type StudioControllerOverride = {
-	controls: readonly ControllerControlOverride[]
+export type StudioControllerRestrictions = {
+	controls: readonly ControllerControlRestriction[]
 }
 
 export type ControllerValues = Record<string, ControllerControlValue>
@@ -183,14 +134,7 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	}
 	if (config.version !== 1) invalid('version', '지원하는 버전은 1입니다.')
 	assertNonEmptyString(config.name, 'name')
-	const output = asRecord(config.output, 'output')
-	if (!Array.isArray(output.formats)) invalid('output.formats', '배열이어야 합니다.')
-	const outputFormats = new Set<string>()
-	for (const [index, format] of output.formats.entries()) {
-		assertNonEmptyString(format, `output.formats[${index}]`)
-		if (outputFormats.has(format)) invalid(`output.formats[${index}]`, '중복되었습니다.')
-		outputFormats.add(format)
-	}
+	parseStudioOutputCapability(config.output)
 
 	const controller = asRecord(config.controller, 'controller')
 	assertOnlyKeys(controller, ['groups'], 'controller')
@@ -227,186 +171,52 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	return input as StudioControllerConfig
 }
 
-/** Payload array/block 저장형의 key·blockType을 공개 Controller Definition으로 정규화한다. */
-export function projectPayloadController(
+/** Payload JSON을 kind-free Controller Restrictions 계약으로 읽는다. */
+export function projectPayloadControllerRestrictions(
 	input: unknown,
-): StudioControllerConfig['controller'] | null {
+): StudioControllerRestrictions | null {
 	if (!input || typeof input !== 'object') return null
-	const groups = (input as { groups?: unknown }).groups
-	if (groups == null || (Array.isArray(groups) && groups.length === 0)) return null
-	if (!Array.isArray(groups)) invalid('controller.groups', '배열이어야 합니다.')
-
-	return {
-		groups: groups.map((value) => {
-			const group = asRecord(value, 'controller group')
-			if (!Array.isArray(group.controls)) {
-				invalid('controller group.controls', '배열이어야 합니다.')
-			}
-			const collapsible = group.collapsible === true
-			return {
-				id: group.key as string,
-				title: group.title as string,
-				controls: group.controls.map(projectPayloadControl),
-				...(collapsible
-					? {
-							collapsible: true as const,
-							...(typeof group.defaultOpen === 'boolean'
-								? { defaultOpen: group.defaultOpen }
-								: {}),
-						}
-					: {}),
-			}
-		}) as readonly ControllerGroupDefinition[],
-	}
+	const record = asRecord(input, 'controller restrictions')
+	assertOnlyKeys(record, ['controls'], 'controller restrictions')
+	if (record.controls == null) return null
+	if (!Array.isArray(record.controls))
+		invalid('controller restrictions.controls', '배열이어야 합니다.')
+	return { controls: record.controls.map(projectControllerRestriction) }
 }
 
-/** Payload 제한 저장형을 runtime/DOM Definition에 적용할 sparse Policy로 정규화한다. */
-export function projectPayloadControllerPolicy(input: unknown): StudioControllerPolicy | null {
-	if (!input || typeof input !== 'object') return null
-	const groups = (input as { groups?: unknown }).groups
-	if (groups == null || (Array.isArray(groups) && groups.length === 0)) return null
-	if (!Array.isArray(groups)) invalid('controller.groups', '배열이어야 합니다.')
-
-	return {
-		groups: groups.map((value) => {
-			const group = asRecord(value, 'controller policy group')
-			const controls = group.controls == null ? [] : group.controls
-			if (!Array.isArray(controls)) {
-				invalid('controller policy group.controls', '배열이어야 합니다.')
-			}
-			return {
-				id: group.key as string,
-				controls: controls.map(projectPayloadControlPolicy),
-				...optionalProperty('title', group.title as string | null | undefined),
-				...optionalProperty('collapsible', group.collapsible as boolean | null | undefined),
-				...optionalProperty('defaultOpen', group.defaultOpen as boolean | null | undefined),
-			}
-		}),
-	}
-}
-
-/** 새 JSON Override와 기존 group/block Policy를 같은 kind-free 제한 계약으로 읽는다. */
-export function projectPayloadControllerOverride(input: unknown): StudioControllerOverride | null {
-	if (!input || typeof input !== 'object') return null
-	const record = input as { controls?: unknown; groups?: unknown }
-	if (Array.isArray(record.controls)) {
-		return { controls: record.controls.map(projectControllerOverride) }
-	}
-
-	const legacy = projectPayloadControllerPolicy(input)
-	if (!legacy) return null
-	return {
-		controls: legacy.groups.flatMap((group) =>
-			group.controls.map((control) => ({
-				controlId: control.id,
-				...definedProperty(
-					'availability',
-					normalizeOverrideAvailability(control.availability),
-				),
-				...definedProperty('defaultValue', control.defaultValue),
-				...(control.kind === 'text' ? definedProperty('maxLength', control.maxLength) : {}),
-				...(control.kind === 'select' && control.options
-					? { optionValues: control.options.map((option) => option.value) }
-					: {}),
-				...(control.kind === 'range'
-					? {
-							...definedProperty('min', control.min),
-							...definedProperty('max', control.max),
-						}
-					: {}),
-			})),
-		),
-	}
-}
-
-/** Admin Override를 stable control id로 찾아 Base Definition보다 좁은 값만 적용한다. */
-export function applyControllerOverride(
+/** Admin Restrictions를 stable control id로 찾아 Base Definition보다 좁은 값만 적용한다. */
+export function applyControllerRestrictions(
 	baseGroups: readonly ControllerGroupDefinition[],
-	override: StudioControllerOverride | null,
+	restrictions: StudioControllerRestrictions | null,
 ): readonly ControllerGroupDefinition[] {
-	if (!override) return baseGroups
+	if (!restrictions) return baseGroups
 	const controlsById = new Map(
 		baseGroups.flatMap((group) =>
 			group.controls.map((control) => [control.id, control] as const),
 		),
 	)
-	const overrides = new Map<string, ControllerControlOverride>()
-	for (const control of override.controls) {
-		if (overrides.has(control.controlId)) {
-			throw new Error(`Controller override control id가 중복되었습니다: ${control.controlId}`)
+	const restrictionsById = new Map<string, ControllerControlRestriction>()
+	for (const control of restrictions.controls) {
+		if (restrictionsById.has(control.controlId)) {
+			throw new Error(
+				`Controller restriction control id가 중복되었습니다: ${control.controlId}`,
+			)
 		}
 		if (!controlsById.has(control.controlId)) {
-			throw new Error(`Controller override control을 찾을 수 없습니다: ${control.controlId}`)
+			throw new Error(
+				`Controller restriction control을 찾을 수 없습니다: ${control.controlId}`,
+			)
 		}
-		overrides.set(control.controlId, control)
+		restrictionsById.set(control.controlId, control)
 	}
 
 	return baseGroups.map((group) => ({
 		...group,
 		controls: group.controls.map((base) => {
-			const control = overrides.get(base.id)
-			return control ? applyControlOverride(base, control) : base
+			const control = restrictionsById.get(base.id)
+			return control ? applyControlRestriction(base, control) : base
 		}),
 	}))
-}
-
-/** Admin Policy가 runtime/Template 기본 Definition을 확장하지 않고 같은 ID의 제약만 좁힌다. */
-export function applyControllerPolicy(
-	baseGroups: readonly ControllerGroupDefinition[],
-	policyGroups: readonly ControllerGroupPolicy[],
-): readonly ControllerGroupDefinition[] {
-	const baseById = new Map(baseGroups.map((group) => [group.id, group]))
-	const policyGroupIds = new Set<string>()
-	for (const group of policyGroups) {
-		if (policyGroupIds.has(group.id)) {
-			throw new Error(`Controller policy group id가 중복되었습니다: ${group.id}`)
-		}
-		policyGroupIds.add(group.id)
-		const base = baseById.get(group.id)
-		if (!base) throw new Error(`Controller policy group을 찾을 수 없습니다: ${group.id}`)
-		const baseControlIds = new Set(base.controls.map((control) => control.id))
-		const policyControlIds = new Set<string>()
-		for (const control of group.controls) {
-			if (policyControlIds.has(control.id)) {
-				throw new Error(`Controller policy control id가 중복되었습니다: ${control.id}`)
-			}
-			policyControlIds.add(control.id)
-			if (!baseControlIds.has(control.id)) {
-				throw new Error(`Controller policy control을 찾을 수 없습니다: ${control.id}`)
-			}
-		}
-	}
-
-	return baseGroups.map((baseGroup) => {
-		const policyGroup = policyGroups.find((group) => group.id === baseGroup.id)
-		if (!policyGroup) return baseGroup
-		const policies = new Map(
-			policyGroup.controls.map((control) => [control.id, control] as const),
-		)
-		const controls = baseGroup.controls.map((base) => {
-			const policy = policies.get(base.id)
-			return policy ? applyControlPolicy(base, policy) : base
-		})
-		const collapsible = policyGroup.collapsible ?? baseGroup.collapsible ?? false
-		if (policyGroup.defaultOpen !== undefined && !collapsible) {
-			throw new Error(
-				`Controller policy defaultOpen은 collapsible 그룹에서만 사용할 수 있습니다: ${baseGroup.id}`,
-			)
-		}
-		return collapsible
-			? {
-					id: baseGroup.id,
-					title: policyGroup.title ?? baseGroup.title,
-					controls,
-					collapsible: true as const,
-					...definedProperty(
-						'defaultOpen',
-						policyGroup.defaultOpen ??
-							(baseGroup.collapsible ? baseGroup.defaultOpen : undefined),
-					),
-				}
-			: { id: baseGroup.id, title: policyGroup.title ?? baseGroup.title, controls }
-	})
 }
 
 /** Definition의 기본값으로 편집 세션을 시작한다. 중복 id는 값 덮어쓰기를 막기 위해 거부한다. */
@@ -658,353 +468,17 @@ function validateControl(value: unknown, path: string) {
 	}
 }
 
-function projectPayloadControl(value: unknown): ControllerControlDefinition {
-	const control = asRecord(value, 'controller control')
-	const base = {
-		id: control.key as string,
-		label: control.label as string,
-		...optionalProperty(
-			'availability',
-			control.availability as ControllerControlDefinition['availability'],
-		),
-	}
-
-	switch (control.blockType) {
-		case 'text':
-			return {
-				...base,
-				kind: 'text',
-				defaultValue: (control.defaultValue ?? null) as string | null,
-				...optionalProperty('multiline', control.multiline as boolean | undefined),
-				...optionalProperty('maxLength', control.maxLength as number | undefined),
-				...optionalProperty('placeholder', control.placeholder as string | undefined),
-			}
-		case 'toggle':
-			return {
-				...base,
-				kind: 'toggle',
-				defaultValue: control.defaultValue as boolean,
-			}
-		case 'select': {
-			if (!Array.isArray(control.options)) {
-				invalid('controller select.options', '배열이어야 합니다.')
-			}
-			return {
-				...base,
-				kind: 'select',
-				defaultValue: (control.defaultValue ?? null) as string | null,
-				options: control.options.map((value) => {
-					const option = asRecord(value, 'controller select option')
-					return { value: option.value as string, label: option.label as string }
-				}),
-				...optionalProperty('placeholder', control.placeholder as string | undefined),
-			}
-		}
-		case 'color':
-			return {
-				...base,
-				kind: 'color',
-				defaultValue: (control.defaultValue ?? null) as string | null,
-			}
-		case 'range': {
-			const display = control.display
-			return {
-				...base,
-				kind: 'range',
-				defaultValue: control.defaultValue as number,
-				min: control.min as number,
-				max: control.max as number,
-				step: control.step as number,
-				...(display && typeof display === 'object'
-					? {
-							display: {
-								...optionalProperty(
-									'unit',
-									(display as Record<string, unknown>).unit as string | undefined,
-								),
-								...optionalProperty(
-									'precision',
-									(display as Record<string, unknown>).precision as
-										| number
-										| undefined,
-								),
-							},
-						}
-					: {}),
-			}
-		}
-		case 'pad': {
-			const defaultValue = asRecord(control.defaultValue, 'controller pad.defaultValue')
-			return {
-				...base,
-				kind: 'pad',
-				defaultValue: { x: defaultValue.x as number, y: defaultValue.y as number },
-				...optionalProperty('aspectRatio', control.aspectRatio as number | undefined),
-			}
-		}
-		default:
-			invalid('controller control.blockType', '지원하지 않는 값입니다.')
-	}
-}
-
-function projectPayloadControlPolicy(value: unknown): ControllerControlPolicy {
-	const control = asRecord(value, 'controller policy control')
-	const base = {
-		id: control.key as string,
-		...optionalProperty('label', control.label as string | null | undefined),
-		...optionalProperty(
-			'availability',
-			control.availability as ControllerAvailability | null | undefined,
-		),
-	}
-
-	switch (control.blockType) {
-		case 'text':
-			return {
-				...base,
-				kind: 'text',
-				...definedProperty(
-					'defaultValue',
-					control.defaultValue as string | null | undefined,
-				),
-				...optionalProperty('multiline', control.multiline as boolean | null | undefined),
-				...optionalProperty('maxLength', control.maxLength as number | null | undefined),
-				...optionalProperty(
-					'placeholder',
-					control.placeholder as string | null | undefined,
-				),
-			}
-		case 'toggle':
-			return {
-				...base,
-				kind: 'toggle',
-				...optionalProperty(
-					'defaultValue',
-					control.defaultValue as boolean | null | undefined,
-				),
-			}
-		case 'select': {
-			const options = control.options
-			if (options != null && !Array.isArray(options)) {
-				invalid('controller policy select.options', '배열이어야 합니다.')
-			}
-			return {
-				...base,
-				kind: 'select',
-				...definedProperty(
-					'defaultValue',
-					control.defaultValue as string | null | undefined,
-				),
-				...(Array.isArray(options)
-					? {
-							options: options.map((value) => {
-								const option = asRecord(value, 'controller policy select option')
-								return {
-									value: option.value as string,
-									label: option.label as string,
-								}
-							}),
-						}
-					: {}),
-				...optionalProperty(
-					'placeholder',
-					control.placeholder as string | null | undefined,
-				),
-			}
-		}
-		case 'color':
-			return {
-				...base,
-				kind: 'color',
-				...definedProperty(
-					'defaultValue',
-					control.defaultValue as string | null | undefined,
-				),
-			}
-		case 'range': {
-			const display =
-				control.display && typeof control.display === 'object'
-					? (control.display as Record<string, unknown>)
-					: undefined
-			return {
-				...base,
-				kind: 'range',
-				...optionalProperty(
-					'defaultValue',
-					control.defaultValue as number | null | undefined,
-				),
-				...optionalProperty('min', control.min as number | null | undefined),
-				...optionalProperty('max', control.max as number | null | undefined),
-				...optionalProperty('step', control.step as number | null | undefined),
-				...(display
-					? {
-							display: {
-								...optionalProperty(
-									'unit',
-									display.unit as string | null | undefined,
-								),
-								...optionalProperty(
-									'precision',
-									display.precision as number | null | undefined,
-								),
-							},
-						}
-					: {}),
-			}
-		}
-		case 'pad': {
-			const point =
-				control.defaultValue && typeof control.defaultValue === 'object'
-					? (control.defaultValue as Record<string, unknown>)
-					: undefined
-			return {
-				...base,
-				kind: 'pad',
-				...(point?.x != null && point.y != null
-					? { defaultValue: { x: point.x as number, y: point.y as number } }
-					: {}),
-				...optionalProperty(
-					'aspectRatio',
-					control.aspectRatio as number | null | undefined,
-				),
-			}
-		}
-		default:
-			invalid('controller policy control.blockType', '지원하지 않는 값입니다.')
-	}
-}
-
-function applyControlPolicy(
-	base: ControllerControlDefinition,
-	policy: ControllerControlPolicy,
-): ControllerControlDefinition {
-	if (base.kind !== policy.kind) {
-		throw new Error(`Controller policy kind가 다릅니다: ${policy.id}`)
-	}
-	const availabilityRank: Record<ControllerAvailability, number> = {
-		enabled: 0,
-		readonly: 1,
-		disabled: 2,
-	}
-	if (
-		policy.availability !== undefined &&
-		availabilityRank[policy.availability] < availabilityRank[base.availability ?? 'enabled']
-	) {
-		throw new Error(`Controller policy availability가 기본 계약을 확장합니다: ${policy.id}`)
-	}
-	const shared = {
-		id: base.id,
-		label: policy.label ?? base.label,
-		...definedProperty('availability', policy.availability ?? base.availability),
-	}
-
-	switch (base.kind) {
-		case 'text': {
-			const input = policy as Extract<ControllerControlPolicy, { kind: 'text' }>
-			const next = {
-				...base,
-				...shared,
-				kind: 'text' as const,
-				...definedProperty('defaultValue', input.defaultValue),
-				...definedProperty('multiline', input.multiline),
-				...definedProperty('maxLength', input.maxLength),
-				...definedProperty('placeholder', input.placeholder),
-			}
-			if (
-				base.maxLength !== undefined &&
-				input.maxLength !== undefined &&
-				input.maxLength > base.maxLength
-			) {
-				throw new Error(
-					`Controller policy maxLength가 기본 계약을 확장합니다: ${policy.id}`,
-				)
-			}
-			validateControl(next, `controller policy ${policy.id}`)
-			return next
-		}
-		case 'select': {
-			const input = policy as Extract<ControllerControlPolicy, { kind: 'select' }>
-			const next = {
-				...base,
-				...shared,
-				kind: 'select' as const,
-				...definedProperty('defaultValue', input.defaultValue),
-				...definedProperty('options', input.options),
-				...definedProperty('placeholder', input.placeholder),
-			}
-			const allowed = new Set(base.options.map((option) => option.value))
-			if (input.options?.some((option) => !allowed.has(option.value))) {
-				throw new Error(`Controller policy options가 기본 계약을 확장합니다: ${policy.id}`)
-			}
-			validateControl(next, `controller policy ${policy.id}`)
-			return next
-		}
-		case 'range': {
-			const input = policy as Extract<ControllerControlPolicy, { kind: 'range' }>
-			const next = {
-				...base,
-				...shared,
-				kind: 'range' as const,
-				...definedProperty('defaultValue', input.defaultValue),
-				...definedProperty('min', input.min),
-				...definedProperty('max', input.max),
-				...definedProperty('step', input.step),
-				...(input.display ? { display: { ...base.display, ...input.display } } : {}),
-			}
-			if (next.min < base.min || next.max > base.max) {
-				throw new Error(`Controller policy range가 기본 계약을 확장합니다: ${policy.id}`)
-			}
-			validateControl(next, `controller policy ${policy.id}`)
-			return next
-		}
-		case 'toggle': {
-			const input = policy as Extract<ControllerControlPolicy, { kind: 'toggle' }>
-			const next = {
-				...base,
-				...shared,
-				kind: 'toggle' as const,
-				...definedProperty('defaultValue', input.defaultValue),
-			}
-			validateControl(next, `controller policy ${policy.id}`)
-			return next
-		}
-		case 'color': {
-			const input = policy as Extract<ControllerControlPolicy, { kind: 'color' }>
-			const next = {
-				...base,
-				...shared,
-				kind: 'color' as const,
-				...definedProperty('defaultValue', input.defaultValue),
-			}
-			validateControl(next, `controller policy ${policy.id}`)
-			return next
-		}
-		case 'pad': {
-			const input = policy as Extract<ControllerControlPolicy, { kind: 'pad' }>
-			const next = {
-				...base,
-				...shared,
-				kind: 'pad' as const,
-				...definedProperty('defaultValue', input.defaultValue),
-				...definedProperty('aspectRatio', input.aspectRatio),
-			}
-			validateControl(next, `controller policy ${policy.id}`)
-			return next
-		}
-	}
-}
-
-function projectControllerOverride(value: unknown): ControllerControlOverride {
-	const control = asRecord(value, 'controller override control')
+function projectControllerRestriction(value: unknown): ControllerControlRestriction {
+	const control = asRecord(value, 'controller restriction control')
 	assertOnlyKeys(
 		control,
 		['controlId', 'availability', 'defaultValue', 'maxLength', 'optionValues', 'min', 'max'],
-		'controller override control',
+		'controller restriction control',
 	)
-	assertNonEmptyString(control.controlId, 'controller override control.controlId')
-	const availability = normalizeOverrideAvailability(control.availability)
+	assertNonEmptyString(control.controlId, 'controller restriction control.controlId')
+	const availability = normalizeRestrictionAvailability(control.availability)
 	if (control.availability !== undefined && availability === undefined) {
-		invalid('controller override control.availability', 'readonly 또는 disabled여야 합니다.')
+		invalid('controller restriction control.availability', 'readonly 또는 disabled여야 합니다.')
 	}
 	if (
 		control.maxLength !== undefined &&
@@ -1012,25 +486,25 @@ function projectControllerOverride(value: unknown): ControllerControlOverride {
 			!Number.isInteger(control.maxLength) ||
 			control.maxLength <= 0)
 	) {
-		invalid('controller override control.maxLength', '0보다 큰 정수여야 합니다.')
+		invalid('controller restriction control.maxLength', '0보다 큰 정수여야 합니다.')
 	}
 	if (control.optionValues !== undefined) {
 		if (!Array.isArray(control.optionValues) || control.optionValues.length === 0) {
-			invalid('controller override control.optionValues', '하나 이상의 값이 필요합니다.')
+			invalid('controller restriction control.optionValues', '하나 이상의 값이 필요합니다.')
 		}
 		const values = new Set<string>()
 		for (const [index, option] of control.optionValues.entries()) {
-			assertNonEmptyString(option, `controller override control.optionValues[${index}]`)
+			assertNonEmptyString(option, `controller restriction control.optionValues[${index}]`)
 			if (values.has(option)) {
-				invalid(`controller override control.optionValues[${index}]`, '중복되었습니다.')
+				invalid(`controller restriction control.optionValues[${index}]`, '중복되었습니다.')
 			}
 			values.add(option)
 		}
 	}
-	if (control.min !== undefined) assertNumber(control.min, 'controller override control.min')
-	if (control.max !== undefined) assertNumber(control.max, 'controller override control.max')
+	if (control.min !== undefined) assertNumber(control.min, 'controller restriction control.min')
+	if (control.max !== undefined) assertNumber(control.max, 'controller restriction control.max')
 	if (control.defaultValue !== undefined) {
-		assertJsonValue(control.defaultValue, 'controller override control.defaultValue')
+		assertJsonValue(control.defaultValue, 'controller restriction control.defaultValue')
 	}
 	return {
 		controlId: control.controlId,
@@ -1046,34 +520,38 @@ function projectControllerOverride(value: unknown): ControllerControlOverride {
 	}
 }
 
-function normalizeOverrideAvailability(
+function normalizeRestrictionAvailability(
 	value: ControllerAvailability | null | unknown,
 ): Exclude<ControllerAvailability, 'enabled'> | undefined {
 	return value === 'readonly' || value === 'disabled' ? value : undefined
 }
 
-function applyControlOverride(
+function applyControlRestriction(
 	base: ControllerControlDefinition,
-	override: ControllerControlOverride,
+	restriction: ControllerControlRestriction,
 ): ControllerControlDefinition {
-	const availability = override.availability ?? base.availability
+	const availability = restriction.availability ?? base.availability
 	const rank: Record<ControllerAvailability, number> = { enabled: 0, readonly: 1, disabled: 2 }
 	if (rank[availability ?? 'enabled'] < rank[base.availability ?? 'enabled']) {
-		throw new Error(`Controller override availability가 기본 계약을 확장합니다: ${base.id}`)
+		throw new Error(`Controller restriction availability가 기본 계약을 확장합니다: ${base.id}`)
 	}
 	let next: ControllerControlDefinition
 	switch (base.kind) {
 		case 'text':
-			if (override.optionValues || override.min !== undefined || override.max !== undefined) {
-				throw new Error(`text control에 지원하지 않는 override입니다: ${base.id}`)
+			if (
+				restriction.optionValues ||
+				restriction.min !== undefined ||
+				restriction.max !== undefined
+			) {
+				throw new Error(`text control에 지원하지 않는 restriction입니다: ${base.id}`)
 			}
 			if (
 				base.maxLength !== undefined &&
-				override.maxLength !== undefined &&
-				override.maxLength > base.maxLength
+				restriction.maxLength !== undefined &&
+				restriction.maxLength > base.maxLength
 			) {
 				throw new Error(
-					`Controller override maxLength가 기본 계약을 확장합니다: ${base.id}`,
+					`Controller restriction maxLength가 기본 계약을 확장합니다: ${base.id}`,
 				)
 			}
 			next = {
@@ -1081,28 +559,34 @@ function applyControlOverride(
 				...definedProperty('availability', availability),
 				...definedProperty(
 					'defaultValue',
-					override.defaultValue as string | null | undefined,
+					restriction.defaultValue as string | null | undefined,
 				),
-				...definedProperty('maxLength', override.maxLength),
+				...definedProperty('maxLength', restriction.maxLength),
 			}
 			break
 		case 'select': {
-			if (override.maxLength || override.min !== undefined || override.max !== undefined) {
-				throw new Error(`select control에 지원하지 않는 override입니다: ${base.id}`)
+			if (
+				restriction.maxLength ||
+				restriction.min !== undefined ||
+				restriction.max !== undefined
+			) {
+				throw new Error(`select control에 지원하지 않는 restriction입니다: ${base.id}`)
 			}
-			const allowed = override.optionValues ? new Set(override.optionValues) : null
+			const allowed = restriction.optionValues ? new Set(restriction.optionValues) : null
 			if (
 				allowed &&
 				[...allowed].some((value) => !base.options.some((o) => o.value === value))
 			) {
-				throw new Error(`Controller override options가 기본 계약을 확장합니다: ${base.id}`)
+				throw new Error(
+					`Controller restriction options가 기본 계약을 확장합니다: ${base.id}`,
+				)
 			}
 			next = {
 				...base,
 				...definedProperty('availability', availability),
 				...definedProperty(
 					'defaultValue',
-					override.defaultValue as string | null | undefined,
+					restriction.defaultValue as string | null | undefined,
 				),
 				options: allowed
 					? base.options.filter((option) => allowed.has(option.value))
@@ -1111,18 +595,18 @@ function applyControlOverride(
 			break
 		}
 		case 'range': {
-			if (override.maxLength || override.optionValues) {
-				throw new Error(`range control에 지원하지 않는 override입니다: ${base.id}`)
+			if (restriction.maxLength || restriction.optionValues) {
+				throw new Error(`range control에 지원하지 않는 restriction입니다: ${base.id}`)
 			}
-			const min = override.min ?? base.min
-			const max = override.max ?? base.max
+			const min = restriction.min ?? base.min
+			const max = restriction.max ?? base.max
 			if (min < base.min || max > base.max) {
-				throw new Error(`Controller override range가 기본 계약을 확장합니다: ${base.id}`)
+				throw new Error(`Controller restriction range가 기본 계약을 확장합니다: ${base.id}`)
 			}
 			next = {
 				...base,
 				...definedProperty('availability', availability),
-				...definedProperty('defaultValue', override.defaultValue as number | undefined),
+				...definedProperty('defaultValue', restriction.defaultValue as number | undefined),
 				min,
 				max,
 			}
@@ -1130,57 +614,63 @@ function applyControlOverride(
 		}
 		case 'toggle':
 			if (
-				override.maxLength ||
-				override.optionValues ||
-				override.min !== undefined ||
-				override.max !== undefined
+				restriction.maxLength ||
+				restriction.optionValues ||
+				restriction.min !== undefined ||
+				restriction.max !== undefined
 			) {
-				throw new Error(`${base.kind} control에 지원하지 않는 override입니다: ${base.id}`)
+				throw new Error(
+					`${base.kind} control에 지원하지 않는 restriction입니다: ${base.id}`,
+				)
 			}
 			next = {
 				...base,
 				...definedProperty('availability', availability),
-				...definedProperty('defaultValue', override.defaultValue as boolean | undefined),
+				...definedProperty('defaultValue', restriction.defaultValue as boolean | undefined),
 			}
 			break
 		case 'color':
 			if (
-				override.maxLength ||
-				override.optionValues ||
-				override.min !== undefined ||
-				override.max !== undefined
+				restriction.maxLength ||
+				restriction.optionValues ||
+				restriction.min !== undefined ||
+				restriction.max !== undefined
 			) {
-				throw new Error(`${base.kind} control에 지원하지 않는 override입니다: ${base.id}`)
+				throw new Error(
+					`${base.kind} control에 지원하지 않는 restriction입니다: ${base.id}`,
+				)
 			}
 			next = {
 				...base,
 				...definedProperty('availability', availability),
 				...definedProperty(
 					'defaultValue',
-					override.defaultValue as string | null | undefined,
+					restriction.defaultValue as string | null | undefined,
 				),
 			}
 			break
 		case 'pad':
 			if (
-				override.maxLength ||
-				override.optionValues ||
-				override.min !== undefined ||
-				override.max !== undefined
+				restriction.maxLength ||
+				restriction.optionValues ||
+				restriction.min !== undefined ||
+				restriction.max !== undefined
 			) {
-				throw new Error(`${base.kind} control에 지원하지 않는 override입니다: ${base.id}`)
+				throw new Error(
+					`${base.kind} control에 지원하지 않는 restriction입니다: ${base.id}`,
+				)
 			}
 			next = {
 				...base,
 				...definedProperty('availability', availability),
 				...definedProperty(
 					'defaultValue',
-					override.defaultValue as ControllerPadValue | undefined,
+					restriction.defaultValue as ControllerPadValue | undefined,
 				),
 			}
 			break
 	}
-	validateControl(next, `controller override ${base.id}`)
+	validateControl(next, `controller restriction ${base.id}`)
 	return next
 }
 
@@ -1238,10 +728,6 @@ function assertNumber(value: unknown, path: string): asserts value is number {
 
 function invalid(path: string, message: string): never {
 	throw new Error(`StudioControllerConfig ${path}: ${message}`)
-}
-
-function optionalProperty<Key extends string, Value>(key: Key, value: Value | null | undefined) {
-	return value == null ? {} : ({ [key]: value } as Record<Key, Value>)
 }
 
 function definedProperty<Key extends string, Value>(key: Key, value: Value | undefined) {

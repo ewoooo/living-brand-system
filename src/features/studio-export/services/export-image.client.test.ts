@@ -1,10 +1,24 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { elementToJpeg } from '../adapters/element-to-jpeg.client'
 import { elementToPng } from '../adapters/element-to-png.client'
-import { exportImage } from './export-image.client'
+import { exportResultsToZip } from '../adapters/export-results-to-zip.client'
+import { executeStudioExport } from './execute-studio-export'
+import {
+	createImageExportSource,
+	exportImageJpeg,
+	exportImageOriginal,
+	exportImagePng,
+} from './export-image.client'
 
 vi.mock('../adapters/element-to-jpeg.client', () => ({ elementToJpeg: vi.fn() }))
 vi.mock('../adapters/element-to-png.client', () => ({ elementToPng: vi.fn() }))
+vi.mock('../adapters/export-results-to-zip.client', () => ({
+	exportResultsToZip: vi.fn().mockResolvedValue({
+		data: new Blob(),
+		filename: 'hd-images.zip',
+		mimeType: 'application/zip',
+	}),
+}))
 
 const SRC = '/api/generated-images/file/line.png'
 
@@ -28,7 +42,7 @@ const PNG_REQUEST = {
 	scope: 'selected',
 } as const
 
-describe('exportImage', () => {
+describe('image export source', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		vi.mocked(elementToJpeg).mockResolvedValue(new Blob())
@@ -49,18 +63,14 @@ describe('exportImage', () => {
 				blob: () => Promise.resolve(new Blob(['original'], { type: 'image/png' })),
 			}),
 		)
-		const result = await exportImage(SRC, 0, null, {
-			format: 'original',
-			options: {},
-			scope: 'selected',
-		})
+		const result = await exportImageOriginal(SRC, 0)
 
 		expect(result).toMatchObject({ filename: 'hd-image-1.png', mimeType: 'image/png' })
 		expect(elementToPng).not.toHaveBeenCalled()
 	})
 
 	it('색이 있으면 자연 크기 스테이지에 색을 구워 PNG로 반환한다', async () => {
-		const result = await exportImage(SRC, 1, { line: '#000dff' }, PNG_REQUEST)
+		const result = await exportImagePng(SRC, 1, { line: '#000dff' }, PNG_REQUEST)
 
 		const stage = vi.mocked(elementToPng).mock.calls[0]?.[0] as HTMLElement
 		expect(result).toMatchObject({ filename: 'hd-image-2.png', mimeType: 'image/png' })
@@ -73,7 +83,7 @@ describe('exportImage', () => {
 	})
 
 	it('색 선언을 문자열 HTML 재파싱 없이 DOM stage에 적용한다', async () => {
-		await exportImage(SRC, 0, { line: '#000dff', background: '#00ffd4' }, PNG_REQUEST)
+		await exportImagePng(SRC, 0, { line: '#000dff', background: '#00ffd4' }, PNG_REQUEST)
 
 		const stage = vi.mocked(elementToPng).mock.calls[0]?.[0] as HTMLElement
 		const overlay = stage.firstElementChild as HTMLElement
@@ -83,7 +93,7 @@ describe('exportImage', () => {
 	})
 
 	it('JPEG 요청은 품질과 자연 크기를 전용 변환기에 전달한다', async () => {
-		const result = await exportImage(SRC, 0, null, {
+		const result = await exportImageJpeg(SRC, 0, null, {
 			format: 'jpeg',
 			colorProfile: { space: 'rgb', icc: 'srgb' },
 			options: { quality: 90 },
@@ -96,5 +106,33 @@ describe('exportImage', () => {
 			width: 2048,
 		})
 		expect(result).toMatchObject({ filename: 'hd-image-1.jpg', mimeType: 'image/jpeg' })
+	})
+
+	it('공통 source가 all scope를 배치 결과로 보존한다', async () => {
+		const source = createImageExportSource({
+			images: [SRC, `${SRC}?second`],
+			selected: 0,
+			color: null,
+		})
+		const result = await executeStudioExport(source, { ...PNG_REQUEST, scope: 'all' })
+
+		expect(result).toHaveLength(2)
+		expect(elementToPng).toHaveBeenCalledTimes(2)
+	})
+
+	it('all scope의 ZIP 패키징을 단일 결과로 보존한다', async () => {
+		const source = createImageExportSource({ images: [SRC], selected: 0, color: null })
+		const result = await executeStudioExport(source, {
+			...PNG_REQUEST,
+			scope: 'all',
+			package: 'zip',
+		})
+
+		expect(result).toMatchObject({ filename: 'hd-images.zip', mimeType: 'application/zip' })
+		expect(exportResultsToZip).toHaveBeenCalledWith({
+			format: 'zip',
+			filename: 'hd-images.zip',
+			items: [expect.objectContaining({ filename: 'hd-image-1.png' })],
+		})
 	})
 })

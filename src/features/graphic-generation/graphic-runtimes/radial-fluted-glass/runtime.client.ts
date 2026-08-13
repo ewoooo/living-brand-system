@@ -1,6 +1,13 @@
 'use client'
 
-import { type RadialFlutedGlassInput, radialFlutedGlassColorToRgb } from './radial-fluted-glass'
+import type { GraphicRuntimeAdapter } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
+import {
+	type RadialFlutedGlassInput,
+	radialFlutedGlassColorToRgb,
+	radialFlutedGlassDistortionShapeToUniform,
+	toRadialFlutedGlassInput,
+	toRadialFlutedGlassShaderPoint,
+} from './model'
 
 const SHADER_URL = '/shaders/radial-fluted-glass.glsl'
 const VERTEX_SHADER = `
@@ -10,10 +17,11 @@ void main() {
 }
 `
 
-export type RadialFlutedGlassPreview = {
+export type RadialFlutedGlassRuntime = {
 	update(input: RadialFlutedGlassInput): void
 	resize(width: number, height: number): void
 	getViewport(): { width: number; height: number }
+	captureFrame(): string
 	video: {
 		canvas: HTMLCanvasElement
 		renderFrame(timeSeconds: number, width: number, height: number): void
@@ -26,13 +34,13 @@ export type RadialFlutedGlassPreview = {
  * Radial Fluted Glass의 브라우저 WebGL 미리보기를 소유한다.
  * Controller 상태는 호출자가, shader asset I/O와 GPU resource 수명은 이 모듈이 소유한다.
  */
-export async function createRadialFlutedGlassPreview({
+export async function createRadialFlutedGlassRuntime({
 	container,
 	input,
 }: {
 	container: HTMLElement
 	input: RadialFlutedGlassInput
-}): Promise<RadialFlutedGlassPreview> {
+}): Promise<RadialFlutedGlassRuntime> {
 	const response = await fetch(SHADER_URL)
 	if (!response.ok) throw new Error(`Shader asset을 불러오지 못했습니다: ${response.status}`)
 	const fragmentBody = await response.text()
@@ -90,33 +98,112 @@ void main() { mainImage(gl_FragColor, gl_FragCoord.xy); }
 	let animationFrame = 0
 	let viewport = { width: 1, height: 1 }
 	const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
-	// ponytail: preview density is capped at 2; raise it only if high-DPI export shares this path.
-	const pixelRatio = Math.min(window.devicePixelRatio || 1, 2)
+	// ponytail: preview resolution stays at CSS pixels; add a quality control only when profiling supports high-DPI preview.
+	const pixelRatio = 1
 	const uniforms = {
 		resolution: gl.getUniformLocation(program, 'iResolution'),
 		time: gl.getUniformLocation(program, 'iTime'),
 		source: gl.getUniformLocation(program, 'uSource'),
 		bloomColor: gl.getUniformLocation(program, 'uBloomColor'),
+		rayColor1: gl.getUniformLocation(program, 'uRayColor1'),
+		rayColor2: gl.getUniformLocation(program, 'uRayColor2'),
+		rayColor3: gl.getUniformLocation(program, 'uRayColor3'),
+		rayColor4: gl.getUniformLocation(program, 'uRayColor4'),
+		rayColor5: gl.getUniformLocation(program, 'uRayColor5'),
+		rayBackgroundColor: gl.getUniformLocation(program, 'uRayBackgroundColor'),
+		rayBloom: gl.getUniformLocation(program, 'uRayBloom'),
 		rayIntensity: gl.getUniformLocation(program, 'uGodrayIntensity'),
 		rayDensity: gl.getUniformLocation(program, 'uGodrayDensity'),
+		raySpotty: gl.getUniformLocation(program, 'uRaySpotty'),
+		rayMidSize: gl.getUniformLocation(program, 'uRayMidSize'),
+		rayMidIntensity: gl.getUniformLocation(program, 'uRayMidIntensity'),
 		speed: gl.getUniformLocation(program, 'uGodraySpeed'),
+		frameOffsetMs: gl.getUniformLocation(program, 'uFrameOffsetMs'),
+		rayScale: gl.getUniformLocation(program, 'uRayScale'),
+		rayRotation: gl.getUniformLocation(program, 'uRayRotation'),
+		radialFalloff: gl.getUniformLocation(program, 'uRadialFalloff'),
+		radialFlowSpeed: gl.getUniformLocation(program, 'uRadialFlowSpeed'),
+		pulseIntensity: gl.getUniformLocation(program, 'uPulseIntensity'),
+		pulseSpeed: gl.getUniformLocation(program, 'uPulseSpeed'),
+		pulseDensity: gl.getUniformLocation(program, 'uPulseDensity'),
+		pulseWidth: gl.getUniformLocation(program, 'uPulseWidth'),
 		glassSize: gl.getUniformLocation(program, 'uGlassSize'),
+		glassAngle: gl.getUniformLocation(program, 'uGlassAngle'),
+		glassOriginOffset: gl.getUniformLocation(program, 'uGlassOriginOffset'),
+		glassOffset: gl.getUniformLocation(program, 'uGlassOffset'),
+		glassSpeed: gl.getUniformLocation(program, 'uGlassSpeed'),
+		glassDrift: gl.getUniformLocation(program, 'uGlassDrift'),
+		glassDriftSpeed: gl.getUniformLocation(program, 'uGlassDriftSpeed'),
 		glassDistortion: gl.getUniformLocation(program, 'uGlassDistortion'),
+		glassEdgeSoftness: gl.getUniformLocation(program, 'uGlassEdgeSoftness'),
+		glassBlur: gl.getUniformLocation(program, 'uGlassBlur'),
+		glassScattering: gl.getUniformLocation(program, 'uGlassScattering'),
+		glassHighlights: gl.getUniformLocation(program, 'uGlassHighlights'),
+		glassShadows: gl.getUniformLocation(program, 'uGlassShadows'),
+		glassSourceFade: gl.getUniformLocation(program, 'uGlassSourceFade'),
+		distortionShape: gl.getUniformLocation(program, 'uDistortionShape'),
 	}
 
 	function draw(time: number) {
 		currentTime = time
-		const [red, green, blue] = radialFlutedGlassColorToRgb(currentInput.bloomColor)
+		const [sourceX, sourceY] = toRadialFlutedGlassShaderPoint(currentInput.source)
+		const [glassOriginX, glassOriginY] = toRadialFlutedGlassShaderPoint(
+			currentInput.glassOriginOffset,
+		)
+		const [glassDriftX, glassDriftY] = toRadialFlutedGlassShaderPoint(currentInput.glassDrift)
 		gl.viewport(0, 0, canvas.width, canvas.height)
 		gl.uniform3f(uniforms.resolution, canvas.width, canvas.height, 1)
 		gl.uniform1f(uniforms.time, time)
-		gl.uniform2f(uniforms.source, currentInput.source.x, currentInput.source.y)
-		gl.uniform3f(uniforms.bloomColor, red, green, blue)
+		gl.uniform2f(uniforms.source, sourceX, sourceY)
+		setUniformColor(gl, uniforms.bloomColor, currentInput.bloomColor)
+		setUniformColor(gl, uniforms.rayColor1, currentInput.rayColor1)
+		setUniformColor(gl, uniforms.rayColor2, currentInput.rayColor2)
+		setUniformColor(gl, uniforms.rayColor3, currentInput.rayColor3)
+		setUniformColor(gl, uniforms.rayColor4, currentInput.rayColor4)
+		setUniformColor(gl, uniforms.rayColor5, currentInput.rayColor5)
+		setUniformColor(gl, uniforms.rayBackgroundColor, currentInput.rayBackgroundColor)
+		gl.uniform1f(uniforms.rayBloom, currentInput.rayBloom)
 		gl.uniform1f(uniforms.rayIntensity, currentInput.rayIntensity)
 		gl.uniform1f(uniforms.rayDensity, currentInput.rayDensity)
+		gl.uniform1f(uniforms.raySpotty, currentInput.raySpotty)
+		gl.uniform1f(uniforms.rayMidSize, currentInput.rayMidSize)
+		gl.uniform1f(uniforms.rayMidIntensity, currentInput.rayMidIntensity)
 		gl.uniform1f(uniforms.speed, currentInput.speed)
+		gl.uniform1f(uniforms.frameOffsetMs, currentInput.frameOffsetMs)
+		gl.uniform1f(uniforms.rayScale, currentInput.rayScale)
+		gl.uniform1f(uniforms.rayRotation, currentInput.rayRotation)
+		gl.uniform1f(uniforms.radialFalloff, currentInput.radialFalloff)
+		gl.uniform1f(uniforms.radialFlowSpeed, currentInput.radialFlowSpeed)
+		gl.uniform1f(uniforms.pulseIntensity, currentInput.pulseIntensity)
+		gl.uniform1f(uniforms.pulseSpeed, currentInput.pulseSpeed)
+		gl.uniform1f(uniforms.pulseDensity, currentInput.pulseDensity)
+		gl.uniform1f(uniforms.pulseWidth, currentInput.pulseWidth)
 		gl.uniform1f(uniforms.glassSize, currentInput.glassSize)
+		gl.uniform1f(uniforms.glassAngle, currentInput.glassAngle)
+		gl.uniform2f(uniforms.glassOriginOffset, glassOriginX, glassOriginY)
+		gl.uniform1f(uniforms.glassOffset, currentInput.glassOffset)
+		gl.uniform1f(uniforms.glassSpeed, currentInput.glassSpeed)
+		gl.uniform2f(uniforms.glassDrift, glassDriftX, glassDriftY)
+		gl.uniform2f(
+			uniforms.glassDriftSpeed,
+			currentInput.glassDriftSpeedX,
+			currentInput.glassDriftSpeedY,
+		)
 		gl.uniform1f(uniforms.glassDistortion, currentInput.glassDistortion)
+		gl.uniform1f(uniforms.glassEdgeSoftness, currentInput.glassEdgeSoftness)
+		gl.uniform1f(uniforms.glassBlur, currentInput.glassBlur)
+		gl.uniform1f(uniforms.glassScattering, currentInput.glassScattering)
+		gl.uniform1f(uniforms.glassHighlights, currentInput.glassHighlights)
+		gl.uniform1f(uniforms.glassShadows, currentInput.glassShadows)
+		gl.uniform2f(
+			uniforms.glassSourceFade,
+			currentInput.glassSourceFadeStart,
+			currentInput.glassSourceFadeEnd,
+		)
+		gl.uniform1i(
+			uniforms.distortionShape,
+			radialFlutedGlassDistortionShapeToUniform(currentInput.distortionShape),
+		)
 		gl.drawArrays(gl.TRIANGLES, 0, 3)
 	}
 
@@ -145,6 +232,10 @@ void main() { mainImage(gl_FragColor, gl_FragCoord.xy); }
 		},
 		resize,
 		getViewport: () => viewport,
+		captureFrame() {
+			draw(currentTime)
+			return canvas.toDataURL('image/png')
+		},
 		video: {
 			canvas,
 			renderFrame(timeSeconds, width, height) {
@@ -165,6 +256,35 @@ void main() { mainImage(gl_FragColor, gl_FragCoord.xy); }
 			canvas.remove()
 		},
 	}
+}
+
+const radialFlutedGlassRuntimeAdapter = {
+	type: 'shader',
+	async mount({ container, values }) {
+		const runtime = await createRadialFlutedGlassRuntime({
+			container,
+			input: toRadialFlutedGlassInput(values),
+		})
+		return {
+			update: (next) => runtime.update(toRadialFlutedGlassInput(next)),
+			resize: (width, height) => runtime.resize(width, height),
+			getViewport: () => runtime.getViewport(),
+			captureFrame: () => runtime.captureFrame(),
+			video: runtime.video,
+			destroy: () => runtime.destroy(),
+		}
+	},
+} satisfies GraphicRuntimeAdapter
+
+export default radialFlutedGlassRuntimeAdapter
+
+function setUniformColor(
+	gl: WebGLRenderingContext,
+	location: WebGLUniformLocation | null,
+	color: string,
+) {
+	const [red, green, blue] = radialFlutedGlassColorToRgb(color)
+	gl.uniform3f(location, red, green, blue)
 }
 
 function compileShader(gl: WebGLRenderingContext, type: number, source: string) {

@@ -1,13 +1,25 @@
-import {
-	type GraphicStudioConfig,
-	parseGraphicStudioConfig,
-} from '@/features/graphic-generation/domain/graphic-studio-config'
-import {
-	FORWARD_STRAIGHT_DEFAULT_INPUT,
-	toControllerPadValue,
-} from '@/features/graphic-generation/forward-straight'
+import { defineGraphicRuntime } from '@/features/graphic-generation/graphic-runtimes/define-graphic-runtime'
+import type { ControllerPadValue } from '@/modules/studio-controller/controller-definition'
 
-export const forwardStraightGraphicConfig = {
+export const FORWARD_STRAIGHT_DEFAULT_INPUT: {
+	variableWeightEnabled: boolean
+	viewpoint: 'flat' | 'low-angle'
+	angleIntensity: 'weak' | 'medium' | 'strong'
+	origin: { x: number; y: number }
+} = {
+	variableWeightEnabled: false,
+	viewpoint: 'flat',
+	angleIntensity: 'medium',
+	origin: { x: 0.5, y: 0.5 },
+}
+
+export function toControllerPadValue(
+	origin: (typeof FORWARD_STRAIGHT_DEFAULT_INPUT)['origin'],
+): ControllerPadValue {
+	return { x: origin.x * 2 - 1, y: origin.y * 2 - 1 }
+}
+
+export default defineGraphicRuntime({
 	studio: 'graphic',
 	id: 'forward-straight',
 	version: 1,
@@ -64,6 +76,4 @@ export const forwardStraightGraphicConfig = {
 			},
 		],
 	},
-} as const satisfies GraphicStudioConfig
-
-parseGraphicStudioConfig(forwardStraightGraphicConfig)
+})

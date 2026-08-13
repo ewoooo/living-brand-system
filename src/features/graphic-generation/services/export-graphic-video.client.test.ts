@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { radialFlutedGlassGraphicConfig } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import radialFlutedGlassRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/radial-fluted-glass/definition'
 import { canvasFramesToMp4 } from '@/features/studio-export/adapters/canvas-frames-to-mp4.mediabunny.client'
 import { exportGraphicStudioVideo } from './export-graphic-video.client'
 
@@ -29,7 +29,7 @@ describe('exportGraphicStudioVideo', () => {
 			restore: vi.fn(),
 		}
 		const result = await exportGraphicStudioVideo(
-			radialFlutedGlassGraphicConfig,
+			radialFlutedGlassRuntimeManifest,
 			request,
 			runtime,
 		)

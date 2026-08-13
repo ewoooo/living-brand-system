@@ -1,4 +1,13 @@
-export type ExportFormat = 'original' | 'png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4'
+export const STUDIO_OUTPUT_FORMATS = ['png', 'jpeg', 'tiff', 'pdf', 'svg', 'mp4'] as const
+
+export type StudioOutputFormat = (typeof STUDIO_OUTPUT_FORMATS)[number]
+
+export const STUDIO_OUTPUT_FORMAT_OPTIONS: readonly {
+	label: string
+	value: StudioOutputFormat
+}[] = STUDIO_OUTPUT_FORMATS.map((value) => ({ label: value.toUpperCase(), value }))
+
+export type ExportFormat = 'original' | StudioOutputFormat
 
 export type RgbColorProfile = {
 	space: 'rgb'
@@ -49,7 +58,7 @@ export type ExportRequest =
 	| {
 			format: 'svg'
 			colorProfile: RgbColorProfile
-			options: { outlineText: boolean }
+			options: { width: number; height: number; outlineText: boolean }
 	  }
 	| { format: 'mp4'; options: VideoExportSpec }
 
