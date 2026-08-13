@@ -6,6 +6,7 @@ import {
 import { elementToJpeg } from '../adapters/element-to-jpeg.client'
 import { elementToPng } from '../adapters/element-to-png.client'
 import { exportResultsToZip } from '../adapters/export-results-to-zip.client'
+import type { RasterArtifact } from '../export-artifact'
 import type { ExportRequest, ExportResult } from '../export-contract'
 import type { StudioExportSource } from './execute-studio-export'
 
@@ -14,16 +15,25 @@ export type ImageExportRequest = Extract<ExportRequest, { format: 'original' | '
 	package?: 'zip'
 }
 
-export type ImageExportSourceContext = {
-	images: readonly string[] | null
-	selected: number | null
+export type ImageRasterArtifactSource = {
+	images: readonly string[]
 	color: ImageColorAdjustment | null | undefined
 }
 
-/** 생성 결과와 선택 상태를 공통 export 실행 port에 결합한다. */
+export type ImageRasterArtifact = RasterArtifact<ImageRasterArtifactSource>
+
+/** 생성 결과를 파일 형식과 무관한 Raster Artifact로 만든다. */
+export function createImageRasterArtifact(source: ImageRasterArtifactSource): ImageRasterArtifact {
+	return { kind: 'raster', source }
+}
+
+/** Raster Artifact와 선택 상태를 기존 공통 export 실행 port에 결합하는 이행 bridge다. */
 export function createImageExportSource(
-	context: ImageExportSourceContext,
+	artifact: ImageRasterArtifact | null,
+	selected: number | null,
 ): StudioExportSource<ImageExportRequest> {
+	if (!artifact) return {}
+	const context = { ...artifact.source, selected }
 	return {
 		original: (request) =>
 			exportImageScope(context, request, (src, index) => exportImageOriginal(src, index)),
@@ -92,12 +102,11 @@ export function exportImageJpeg(
 }
 
 async function exportImageScope(
-	context: ImageExportSourceContext,
+	context: ImageRasterArtifactSource & { selected: number | null },
 	request: ImageExportRequest,
 	exportOne: (src: string, index: number) => Promise<ExportResult>,
 ): Promise<ExportResult | readonly ExportResult[]> {
 	const { images } = context
-	if (!images) throw new Error('저장할 이미지가 없습니다.')
 	if (request.scope === 'selected') {
 		const { selected } = context
 		if (selected === null || !images[selected]) {

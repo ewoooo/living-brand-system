@@ -13,6 +13,7 @@ import type {
 import { ImageStudioProvider, useImageStudio } from './use-image-studio'
 
 const exportImageMocks = vi.hoisted(() => ({
+	artifact: vi.fn((source: unknown) => ({ kind: 'raster', source })),
 	original: vi.fn().mockResolvedValue({
 		data: new Blob(),
 		filename: 'hd-image-1.png',
@@ -31,20 +32,24 @@ const exportImageMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/features/studio-export/services/export-image.client', () => ({
-	createImageExportSource: (context: {
-		images: readonly string[] | null
-		selected: number | null
-		color: unknown
-	}) => {
-		const src = context.images?.[context.selected ?? -1]
+	createImageRasterArtifact: exportImageMocks.artifact,
+	createImageExportSource: (
+		artifact: {
+			kind: 'raster'
+			source: { images: readonly string[]; color: unknown }
+		} | null,
+		selected: number | null,
+	) => {
+		if (!artifact) return {}
+		const src = artifact.source.images[selected ?? -1]
 		return {
 			original: (request: unknown) =>
-				exportImageMocks.original(src, context.selected, context.color, request),
+				exportImageMocks.original(src, selected, artifact.source.color, request),
 			raster: {
 				png: (request: unknown) =>
-					exportImageMocks.png(src, context.selected, context.color, request),
+					exportImageMocks.png(src, selected, artifact.source.color, request),
 				jpeg: (request: unknown) =>
-					exportImageMocks.jpeg(src, context.selected, context.color, request),
+					exportImageMocks.jpeg(src, selected, artifact.source.color, request),
 			},
 		}
 	},
@@ -405,6 +410,10 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 				scope: 'selected',
 			}),
 		)
+		expect(exportImageMocks.artifact).toHaveBeenCalledWith({
+			images: ['blob:1'],
+			color: null,
+		})
 	})
 
 	it('새 maxLength를 넘는 enabled 프롬프트는 자르지 않고 오류로 생성만 막는다', () => {

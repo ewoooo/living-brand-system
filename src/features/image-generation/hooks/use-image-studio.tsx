@@ -14,11 +14,8 @@ import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generat
 import type { ImageColorAdjustment } from '@/features/image-generation/runtime/image-colorize'
 import type { ImageGenerationResult } from '@/features/image-generation/services/generate-image.client'
 import type { StudioOutputFormat } from '@/features/studio-export/export-contract'
-import { useExport } from '@/features/studio-export/hooks/use-export'
-import {
-	createImageExportSource,
-	type ImageExportRequest,
-} from '@/features/studio-export/services/export-image.client'
+import { useImageExport } from '@/features/studio-export/hooks/use-image-export'
+import { createImageRasterArtifact } from '@/features/studio-export/services/export-image.client'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlValue,
@@ -117,9 +114,6 @@ export function ImageStudioProvider({
 	}
 
 	const [profileId, setProfileId] = useState(initial.id)
-	const [selectedExportFormat, setSelectedExportFormat] = useState<StudioOutputFormat | null>(
-		resolveImageExportFormats(initial.output.formats)[0] ?? null,
-	)
 	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
 	const [angles, setAngles] = useState({ azimuthDeg: 0, elevationDeg: 0 })
 	const { adjustCamera, error, generate, loading, requested, result, selected, setSelected } =
@@ -161,36 +155,13 @@ export function ImageStudioProvider({
 	const resultConfig = configs.find((candidate) => candidate.id === result?.profileId)
 	const resultColor = resultConfig?.id === config.id ? colorValue : null
 	const resultOutput = resultConfig?.output ?? { formats: [], original: false }
-	const exportFormats = resolveImageExportFormats(resultOutput.formats)
-	const exportFormat =
-		selectedExportFormat && exportFormats.includes(selectedExportFormat)
-			? selectedExportFormat
-			: (exportFormats[0] ?? null)
-	const imageExport = useExport<ImageExportRequest>({
+	const imageExport = useImageExport({
+		artifact: result
+			? createImageRasterArtifact({ images: result.images, color: resultColor })
+			: null,
 		capability: resultOutput,
-		canExport: ({ package: packageFormat, scope }) =>
-			Boolean(
-				result &&
-					(!packageFormat || resultOutput.packages?.includes(packageFormat)) &&
-					(scope === 'all' ||
-						(selected !== null && result.images[selected] !== undefined)),
-			),
-		source: createImageExportSource({
-			images: result?.images ?? null,
-			selected,
-			color: resultColor,
-		}),
+		selected,
 	})
-	const selectedExportRequest = createImageExportRequest(exportFormat, 'selected')
-	const allExportRequest = createImageExportRequest(exportFormat, 'all')
-	const selectedOriginalRequest = createImageOriginalExportRequest('selected')
-	const allOriginalRequest = createImageOriginalExportRequest('all')
-	const canExportSelected = Boolean(
-		selectedExportRequest && imageExport.canExport(selectedExportRequest),
-	)
-	const canExportAll = Boolean(allExportRequest && imageExport.canExport(allExportRequest))
-	const canExportSelectedOriginal = imageExport.canExport(selectedOriginalRequest)
-	const canExportAllOriginal = imageExport.canExport(allOriginalRequest)
 
 	function update(controlId: string, value: ControllerControlValue) {
 		const definition = findControl(config, controlId)
@@ -275,81 +246,18 @@ export function ImageStudioProvider({
 		},
 		results: { result, color: resultColor, requested, selected, select: setSelected },
 		download: {
-			busy: imageExport.exporting !== null,
+			busy: imageExport.busy,
 			error: imageExport.error,
-			formats: exportFormats,
-			format: exportFormat,
-			setFormat: (next) => {
-				if (exportFormats.includes(next)) setSelectedExportFormat(next)
-			},
-			selected: {
-				canExport: canExportSelected,
-				run: () => {
-					if (selectedExportRequest) void imageExport.run(selectedExportRequest)
-				},
-			},
-			all: {
-				canExport: canExportAll,
-				run: () => {
-					if (allExportRequest) void imageExport.run(allExportRequest)
-				},
-			},
-			original: {
-				available: canExportSelectedOriginal || canExportAllOriginal,
-				selected: {
-					canExport: canExportSelectedOriginal,
-					run: () => void imageExport.run(selectedOriginalRequest),
-				},
-				all: {
-					canExport: canExportAllOriginal,
-					run: () => void imageExport.run(allOriginalRequest),
-				},
-			},
+			formats: imageExport.formats,
+			format: imageExport.format,
+			setFormat: imageExport.setFormat,
+			selected: imageExport.selected,
+			all: imageExport.all,
+			original: imageExport.original,
 		},
 	}
 
 	return <ImageStudioContext.Provider value={value}>{children}</ImageStudioContext.Provider>
-}
-
-function createImageExportRequest(
-	format: StudioOutputFormat | null,
-	scope: ImageExportRequest['scope'],
-): ImageExportRequest | null {
-	const packageFormat = scope === 'all' ? { package: 'zip' as const } : {}
-	if (format === 'png') {
-		return {
-			format,
-			colorProfile: { space: 'rgb', icc: 'srgb' },
-			options: { scale: 1, transparent: true },
-			scope,
-			...packageFormat,
-		}
-	}
-	if (format === 'jpeg') {
-		return {
-			format,
-			colorProfile: { space: 'rgb', icc: 'srgb' },
-			options: { quality: 90 },
-			scope,
-			...packageFormat,
-		}
-	}
-	return null
-}
-
-function createImageOriginalExportRequest(scope: ImageExportRequest['scope']): ImageExportRequest {
-	return {
-		format: 'original',
-		options: {},
-		scope,
-		...(scope === 'all' ? { package: 'zip' as const } : {}),
-	}
-}
-
-function resolveImageExportFormats(
-	formats: readonly StudioOutputFormat[],
-): readonly StudioOutputFormat[] {
-	return formats.filter((format) => createImageExportRequest(format, 'selected') !== null)
 }
 
 export function useImageStudio() {

@@ -5,6 +5,7 @@ import { exportResultsToZip } from '../adapters/export-results-to-zip.client'
 import { executeStudioExport } from './execute-studio-export'
 import {
 	createImageExportSource,
+	createImageRasterArtifact,
 	exportImageJpeg,
 	exportImageOriginal,
 	exportImagePng,
@@ -109,19 +110,26 @@ describe('image export source', () => {
 	})
 
 	it('공통 source가 all scope를 배치 결과로 보존한다', async () => {
-		const source = createImageExportSource({
+		const artifact = createImageRasterArtifact({
 			images: [SRC, `${SRC}?second`],
-			selected: 0,
 			color: null,
 		})
+		const source = createImageExportSource(artifact, 0)
 		const result = await executeStudioExport(source, { ...PNG_REQUEST, scope: 'all' })
 
+		expect(artifact).toEqual({
+			kind: 'raster',
+			source: { images: [SRC, `${SRC}?second`], color: null },
+		})
 		expect(result).toHaveLength(2)
 		expect(elementToPng).toHaveBeenCalledTimes(2)
 	})
 
 	it('all scope의 ZIP 패키징을 단일 결과로 보존한다', async () => {
-		const source = createImageExportSource({ images: [SRC], selected: 0, color: null })
+		const source = createImageExportSource(
+			createImageRasterArtifact({ images: [SRC], color: null }),
+			0,
+		)
 		const result = await executeStudioExport(source, {
 			...PNG_REQUEST,
 			scope: 'all',
@@ -134,5 +142,11 @@ describe('image export source', () => {
 			filename: 'hd-images.zip',
 			items: [expect.objectContaining({ filename: 'hd-image-1.png' })],
 		})
+	})
+
+	it('Artifact가 없으면 adapter port를 열지 않는다', () => {
+		const source = createImageExportSource(null, 0)
+
+		expect(() => executeStudioExport(source, PNG_REQUEST)).toThrow('PNG export is unavailable.')
 	})
 })
