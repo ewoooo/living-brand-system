@@ -62,6 +62,9 @@ describe('GlobalHeader', () => {
 	it('메가 메뉴 없이 직접 링크와 current·update 상태를 표시한다', () => {
 		renderHeader({ guideline: true, image: true })
 
+		expect(document.querySelector('[data-slot="navigation-header"]')).toHaveClass(
+			'bg-header-background',
+		)
 		const desktop = document.querySelector<HTMLElement>(
 			'[data-slot="navigation-header-desktop"]',
 		)
