@@ -1,4 +1,3 @@
-import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { Typography } from '@/components/ui/typography'
 import { getGuidelineMetadata } from '@/features/guideline/services/get-guideline-metadata.service'
 
@@ -14,7 +13,6 @@ export async function GlobalFooter() {
 				<Typography as="p" size="xs">
 					© {companyName}. All rights reserved.
 				</Typography>
-				<ThemeToggle />
 			</section>
 		</footer>
 	)
