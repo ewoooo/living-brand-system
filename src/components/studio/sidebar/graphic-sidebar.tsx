@@ -69,22 +69,26 @@ export function GraphicSidebar({ output }: { output: GraphicExportView }) {
 
 	return (
 		<Controller.Browser.Root>
-			<StudioSidebar footer={footer}>
-				<Controller.AssetCard
-					title={config.name}
-					subtitle={`${config.type.toUpperCase()} Graphic`}
-					buttonLabel="Change"
-					aria-label="그래픽 변경"
-					tabs={['Graphic Profiles']}
-					empty={
-						profiles.options.length <= 1
-							? '교체할 다른 그래픽 프로파일이 없습니다.'
-							: undefined
-					}
-					className="min-h-32 items-start"
-				>
-					<GraphicProfilePicker />
-				</Controller.AssetCard>
+			<StudioSidebar
+				header={
+					<Controller.AssetCard
+						title={config.name}
+						subtitle={`${config.type.toUpperCase()} Graphic`}
+						buttonLabel="Change"
+						aria-label="그래픽 변경"
+						tabs={['Graphic Profiles']}
+						empty={
+							profiles.options.length <= 1
+								? '교체할 다른 그래픽 프로파일이 없습니다.'
+								: undefined
+						}
+						className="min-h-32 items-start"
+					>
+						<GraphicProfilePicker />
+					</Controller.AssetCard>
+				}
+				footer={footer}
+			>
 				<ControllerRenderer
 					groups={config.controller.groups}
 					values={controls.values}

@@ -51,6 +51,21 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 		// 자산 브라우저의 열림은 편집 세션이 아니라 이 화면의 표현 상태다 — 킷이 소유한다(Provider에 넣지 않는다).
 		<Controller.Browser.Root>
 			<StudioSidebar
+				header={
+					<Controller.AssetCard
+						title={config.name}
+						buttonLabel="Change"
+						aria-label="프로파일 변경"
+						tabs={['Image Profiles']}
+						empty={
+							profiles.options.length <= 1
+								? '교체할 다른 이미지 프로파일이 없습니다.'
+								: undefined
+						}
+					>
+						<ImageProfilePicker />
+					</Controller.AssetCard>
+				}
 				footer={
 					<>
 						<div className="flex flex-col gap-1">
@@ -154,22 +169,6 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 					</>
 				}
 			>
-				{/* 교체는 컨트롤러 왼쪽에 뜨는 자산 브라우저가 받는다 — 세션을 유지하는
-				    교체 동작은 컨텍스트의 profiles.select가 소유한다. */}
-				<Controller.AssetCard
-					title={config.name}
-					buttonLabel="Change"
-					aria-label="프로파일 변경"
-					tabs={['Image Profiles']}
-					empty={
-						profiles.options.length <= 1
-							? '교체할 다른 이미지 프로파일이 없습니다.'
-							: undefined
-					}
-				>
-					<ImageProfilePicker />
-				</Controller.AssetCard>
-
 				<ControllerRenderer
 					groups={contentGroups}
 					values={controls.values}

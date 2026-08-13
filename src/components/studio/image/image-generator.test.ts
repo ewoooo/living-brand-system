@@ -269,6 +269,7 @@ describe('ImageProfilePicker', () => {
 	function openBrowser(configs: ImageStudioConfig[], initialProfileId?: number) {
 		render(createElement(ImageGenerator, { configs, initialProfileId }))
 		const trigger = screen.getByRole('button', { name: '프로파일 변경' })
+		expect(trigger.closest('[data-slot="controller-header"]')).not.toBeNull()
 		fireEvent.click(trigger)
 		return { panel: screen.getByRole('dialog', { name: 'Image Profiles' }), trigger }
 	}
