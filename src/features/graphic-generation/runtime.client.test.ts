@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
+import { withCanvasRasterSource } from '@/modules/studio-artifact/studio-artifact'
 import { isOriginHandleHit } from './graphic-runtimes/forward-straight/runtime.client'
 import { createGraphicRasterArtifact } from './runtime/client/graphic-runtime.client'
 
@@ -11,8 +12,9 @@ describe('Forward Straight client runtime', () => {
 		expect(isOriginHandleHit({ x: 113, y: 100 }, origin, 2.5)).toBe(false)
 	})
 
-	it('Raster Artifact export 뒤 현재 preview 해상도를 복원한다', () => {
+	it('Raster Artifact를 요청 해상도로 다시 그린 뒤 현재 preview 해상도를 복원한다', () => {
 		const canvas = document.createElement('canvas')
+		vi.spyOn(canvas, 'toDataURL').mockReturnValue('data:image/png;base64,frame')
 		const viewport = { width: 640, height: 480 }
 		const render = vi.fn((width: number, height: number) => {
 			canvas.width = width
@@ -24,11 +26,31 @@ describe('Forward Straight client runtime', () => {
 			render,
 		})
 
-		artifact.source.render(1920, 1080)
-		artifact.source.restore()
+		const frame = withCanvasRasterSource(artifact.source, 1920, 1080, (next) =>
+			next.toDataURL(),
+		)
 
+		expect(frame).toBe('data:image/png;base64,frame')
 		expect(render).toHaveBeenNthCalledWith(1, 1920, 1080)
 		expect(render).toHaveBeenNthCalledWith(2, 640, 480)
 		expect(canvas).toMatchObject({ width: 640, height: 480 })
+	})
+
+	it('Raster frame 읽기가 실패해도 preview를 복원한다', () => {
+		const canvas = document.createElement('canvas')
+		vi.spyOn(canvas, 'toDataURL').mockImplementation(() => {
+			throw new Error('capture failed')
+		})
+		const render = vi.fn()
+		const artifact = createGraphicRasterArtifact({
+			canvas,
+			getViewport: () => ({ width: 640, height: 480 }),
+			render,
+		})
+
+		expect(() =>
+			withCanvasRasterSource(artifact.source, 1920, 1080, (next) => next.toDataURL()),
+		).toThrow('capture failed')
+		expect(render).toHaveBeenLastCalledWith(640, 480)
 	})
 })

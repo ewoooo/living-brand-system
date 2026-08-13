@@ -12,7 +12,27 @@ import type {
 	TemplateImageConfigSlot,
 	TemplateTextSlot,
 } from '@/features/template-customization/domain/template-config'
+import type {
+	RasterArtifact,
+	StudioArtifactProducer,
+} from '@/modules/studio-artifact/studio-artifact'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
+
+export type TemplateRasterArtifactSource = {
+	height: number
+	html: string
+	width: number
+}
+
+export type TemplateRasterArtifact = RasterArtifact<TemplateRasterArtifactSource>
+export type TemplateRasterArtifactProducer = StudioArtifactProducer<TemplateRasterArtifact>
+
+/** 현재 Template runtime 결과를 파일 형식과 무관한 Raster Artifact로 만든다. */
+export function createTemplateRasterArtifact(
+	source: TemplateRasterArtifactSource,
+): TemplateRasterArtifact {
+	return { kind: 'raster', source }
+}
 
 /**
  * Template runtime projector: 불변 published HTML과 현재 세션 IR을 합성 HTML로 투영한다.

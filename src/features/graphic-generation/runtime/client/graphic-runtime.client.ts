@@ -8,7 +8,7 @@ import type {
 	CanvasVideoSource,
 	RasterArtifact,
 	VideoArtifact,
-} from '@/features/studio-export/export-artifact'
+} from '@/modules/studio-artifact/studio-artifact'
 import type {
 	ControllerControlValue,
 	ControllerValues,

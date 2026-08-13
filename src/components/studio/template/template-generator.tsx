@@ -1,11 +1,15 @@
 'use client'
 
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
+import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import type {
 	PublishedHtmlTemplate,
 	TemplateConfig,
 } from '@/features/template-customization/domain/template-config'
-import { TemplateStudioProvider } from '@/features/template-customization/hooks/use-template-studio'
+import {
+	TemplateStudioProvider,
+	useTemplateStudio,
+} from '@/features/template-customization/hooks/use-template-studio'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import { TemplateCanvas } from './template-canvas'
 import { TemplateSidebar } from './template-sidebar'
@@ -27,9 +31,31 @@ type TemplateGeneratorProps = {
 export function TemplateGenerator({ config, navigation, template }: TemplateGeneratorProps) {
 	return (
 		<TemplateStudioProvider config={config} template={template} navigation={navigation}>
-			<StudioWorkspace controller={<TemplateSidebar />}>
-				<TemplateCanvas />
-			</StudioWorkspace>
+			<TemplateWorkspace template={template} />
 		</TemplateStudioProvider>
+	)
+}
+
+function TemplateWorkspace({ template }: { template: PublishedHtmlTemplate }) {
+	const { canvas, config, execution } = useTemplateStudio()
+	const exporting = useTemplateExport({
+		artifact: canvas.artifact,
+		capability: config.output,
+		metadata: {
+			fileName: template.name,
+			printPpi: template.printPpi,
+			templateId: template.id,
+			templateVersion: template.templateVersion,
+			controller: {
+				groups: config.controller.groups,
+				values: execution.controllerValues,
+			},
+		},
+	})
+
+	return (
+		<StudioWorkspace controller={<TemplateSidebar exporting={exporting} />}>
+			<TemplateCanvas />
+		</StudioWorkspace>
 	)
 }

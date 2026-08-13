@@ -3,10 +3,10 @@ import {
 	type ImageColorAdjustment,
 	imageColorizeStyle,
 } from '@/features/image-generation/runtime/image-colorize'
+import type { RasterArtifact } from '@/modules/studio-artifact/studio-artifact'
 import { elementToJpeg } from '../adapters/element-to-jpeg.client'
 import { elementToPng } from '../adapters/element-to-png.client'
 import { exportResultsToZip } from '../adapters/export-results-to-zip.client'
-import type { RasterArtifact } from '../export-artifact'
 import type { ExportRequest, ExportResult } from '../export-contract'
 import type { StudioExportSource } from './execute-studio-export'
 

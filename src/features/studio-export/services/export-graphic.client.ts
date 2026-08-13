@@ -1,14 +1,14 @@
 'use client'
 
-import { canvasFramesToMp4 } from '../adapters/canvas-frames-to-mp4.mediabunny.client'
-import { vectorSceneToSvg } from '../adapters/vector-scene-to-svg'
 import type {
 	CanvasRasterSource,
 	CanvasVideoSource,
 	RasterArtifact,
 	VectorSceneArtifact,
 	VideoArtifact,
-} from '../export-artifact'
+} from '@/modules/studio-artifact/studio-artifact'
+import { canvasFramesToMp4 } from '../adapters/canvas-frames-to-mp4.mediabunny.client'
+import { vectorSceneToSvg } from '../adapters/vector-scene-to-svg'
 import type { ExportRequest, ExportResult } from '../export-contract'
 import type { StudioExportSource } from './execute-studio-export'
 

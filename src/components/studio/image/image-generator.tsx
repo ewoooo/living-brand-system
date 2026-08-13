@@ -6,7 +6,12 @@ import { ImageSidebar } from '@/components/studio/image/image-sidebar'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
-import { ImageStudioProvider } from '@/features/image-generation/hooks/use-image-studio'
+import {
+	ImageStudioProvider,
+	useImageStudio,
+} from '@/features/image-generation/hooks/use-image-studio'
+import { useImageExport } from '@/features/studio-export/hooks/use-image-export'
+import { createImageRasterArtifact } from '@/features/studio-export/services/export-image.client'
 
 // 생성 표면: 편집 세션 소유는 ImageStudioProvider, 조작은 컨트롤러, 결과는 캔버스가 그린다.
 export function ImageGenerator({
@@ -35,9 +40,26 @@ export function ImageGenerator({
 
 	return (
 		<ImageStudioProvider configs={configs} initialProfileId={initialProfileId}>
-			<StudioWorkspace controller={<ImageSidebar />}>
-				<ImageCanvas />
-			</StudioWorkspace>
+			<ImageWorkspace />
 		</ImageStudioProvider>
+	)
+}
+
+function ImageWorkspace() {
+	const { profiles, results } = useImageStudio()
+	const result = results.result
+	const resultConfig = profiles.options.find((candidate) => candidate.id === result?.profileId)
+	const download = useImageExport({
+		artifact: result
+			? createImageRasterArtifact({ images: result.images, color: results.color })
+			: null,
+		capability: resultConfig?.output ?? { formats: [], original: false },
+		selected: results.selected,
+	})
+
+	return (
+		<StudioWorkspace controller={<ImageSidebar download={download} />}>
+			<ImageCanvas />
+		</StudioWorkspace>
 	)
 }

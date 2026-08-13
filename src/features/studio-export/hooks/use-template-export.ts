@@ -14,6 +14,8 @@ import { createTemplateExportSource } from '../services/export-template.client'
 import type { StudioOutputCapability } from '../studio-output'
 import { useExport } from './use-export'
 
+export type TemplateExportView = ReturnType<typeof useTemplateExport>
+
 /** Template Raster Artifact·metadata·출력 정책을 기존 export 실행 bridge에 연결한다. */
 export function useTemplateExport({
 	artifact,

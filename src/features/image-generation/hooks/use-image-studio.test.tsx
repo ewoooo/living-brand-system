@@ -6,6 +6,8 @@ import {
 	type ImageStudioConfig,
 } from '@/features/image-generation/domain/image-studio-config'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
+import { useImageExport } from '@/features/studio-export/hooks/use-image-export'
+import { createImageRasterArtifact } from '@/features/studio-export/services/export-image.client'
 import type {
 	ControllerAvailability,
 	ControllerControlDefinition,
@@ -194,8 +196,16 @@ function Probe() {
 		camera,
 		results,
 		profiles,
-		download,
 	} = useImageStudio()
+	const result = results.result
+	const resultConfig = profiles.options.find((candidate) => candidate.id === result?.profileId)
+	const download = useImageExport({
+		artifact: result
+			? createImageRasterArtifact({ images: result.images, color: results.color })
+			: null,
+		capability: resultConfig?.output ?? { formats: [], original: false },
+		selected: results.selected,
+	})
 	return (
 		<div>
 			<output data-testid="state">

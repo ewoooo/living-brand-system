@@ -10,40 +10,70 @@ import {
 	getGraphicRuntimeAdapter,
 } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { getGraphicStudioRuntimeBindings } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
+import type { GraphicExportView } from '@/features/studio-export/hooks/use-graphic-export'
+
+/** runtime type에 맞는 공용 Canvas를 고른다. 개별 그래픽 id는 Preview registry가 해석한다. */
+export function GraphicCanvas({
+	output,
+	registerArtifacts,
+}: {
+	output: GraphicExportView
+	registerArtifacts: (
+		artifacts: GraphicRuntime['artifacts'] | null,
+		viewport?: { width: number; height: number },
+	) => void
+}) {
+	const { config } = useGraphicStudio()
+	const RuntimeCanvas = canvasByType[config.type]
+	return <RuntimeCanvas output={output} registerArtifacts={registerArtifacts} />
+}
+
+type RuntimeCanvasProps = {
+	output: GraphicExportView
+	registerArtifacts: (
+		artifacts: GraphicRuntime['artifacts'] | null,
+		viewport?: { width: number; height: number },
+	) => void
+}
 
 const canvasByType = {
 	p5: P5Canvas,
 	shader: WebGLCanvas,
-} satisfies Record<GraphicStudioConfig['type'], ComponentType>
+} satisfies Record<GraphicStudioConfig['type'], ComponentType<RuntimeCanvasProps>>
 
-/** runtime type에 맞는 공용 Canvas를 고른다. 개별 그래픽 id는 Preview registry가 해석한다. */
-export function GraphicCanvas() {
-	const { config } = useGraphicStudio()
-	const RuntimeCanvas = canvasByType[config.type]
-	return <RuntimeCanvas />
+function P5Canvas(props: RuntimeCanvasProps) {
+	return <RegisteredGraphicCanvas type="p5" {...props} />
 }
 
-function P5Canvas() {
-	return <RegisteredGraphicCanvas type="p5" />
+function WebGLCanvas(props: RuntimeCanvasProps) {
+	return <RegisteredGraphicCanvas type="shader" {...props} />
 }
 
-function WebGLCanvas() {
-	return <RegisteredGraphicCanvas type="shader" />
-}
-
-function RegisteredGraphicCanvas({ type }: { type: GraphicStudioConfig['type'] }) {
+function RegisteredGraphicCanvas({
+	type,
+	output,
+	registerArtifacts,
+}: RuntimeCanvasProps & { type: GraphicStudioConfig['type'] }) {
 	const { config } = useGraphicStudio()
 	const adapter = getGraphicRuntimeAdapter(config)
 	if (!adapter || adapter.type !== type) return <UnsupportedGraphicCanvas />
-	return <GraphicPreviewCanvas adapter={adapter} />
+	return (
+		<GraphicPreviewCanvas
+			adapter={adapter}
+			output={output}
+			registerArtifacts={registerArtifacts}
+		/>
+	)
 }
 
 function GraphicPreviewCanvas({
 	adapter,
+	output,
+	registerArtifacts,
 }: {
 	adapter: NonNullable<ReturnType<typeof getGraphicRuntimeAdapter>>
-}) {
-	const { config, controls, canvas, output } = useGraphicStudio()
+} & RuntimeCanvasProps) {
+	const { config, controls } = useGraphicStudio()
 	const valuesRef = useRef(controls.values)
 	const stageRef = useRef<HTMLDivElement>(null)
 	const containerRef = useRef<HTMLDivElement>(null)
@@ -79,7 +109,7 @@ function GraphicPreviewCanvas({
 				runtimeRef.current = mounted
 				const viewport = mounted.getViewport()
 				controls.registerBindings(getGraphicStudioRuntimeBindings(config, viewport))
-				canvas.registerArtifacts(mounted.artifacts, viewport)
+				registerArtifacts(mounted.artifacts, viewport)
 			} catch (mountError) {
 				console.error(mountError)
 				if (!disposed) setError('그래픽 미리보기를 불러오지 못했습니다.')
@@ -91,10 +121,10 @@ function GraphicPreviewCanvas({
 			disposed = true
 			runtime?.destroy()
 			runtimeRef.current = null
-			canvas.registerArtifacts(null)
+			registerArtifacts(null)
 			controls.registerBindings({})
 		}
-	}, [adapter, canvas.registerArtifacts, config, controls.registerBindings, controls.update])
+	}, [adapter, config, controls.registerBindings, controls.update, registerArtifacts])
 
 	useEffect(() => {
 		const stage = stageRef.current

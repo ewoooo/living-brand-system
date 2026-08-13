@@ -1,6 +1,6 @@
 import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { parseGraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
-import type { VectorSceneArtifact } from '@/features/studio-export/export-artifact'
+import type { VectorSceneArtifact } from '@/modules/studio-artifact/studio-artifact'
 import type {
 	ControllerRuntimeBindings,
 	ControllerValues,

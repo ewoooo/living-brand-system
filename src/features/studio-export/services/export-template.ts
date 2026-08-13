@@ -1,12 +1,18 @@
 import type { StudioOutputCapability } from '@/features/studio-export/studio-output'
 import { supportsStudioExportRequest } from '@/features/studio-export/studio-output'
+import type {
+	TemplateRasterArtifact,
+	TemplateRasterArtifactProducer,
+} from '@/features/template-customization/runtime/template-runtime.client'
 import {
 	acceptsControllerExecutionValues,
 	type ControllerGroupDefinition,
 	type ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 import { DEFAULT_CMYK_ICC_PROFILE } from '../color-profile'
-import type { ExportArtifactProducer, RasterArtifact } from '../export-artifact'
+
+export { createTemplateRasterArtifact } from '@/features/template-customization/runtime/template-runtime.client'
+
 import type { CmykColorProfile, ExportRequest, StudioOutputFormat } from '../export-contract'
 import type { PrintPpi } from '../print-policy'
 
@@ -16,14 +22,7 @@ export type TemplateExportRequest =
 			colorProfile: CmykColorProfile
 	  })
 
-export type TemplateRasterArtifactSource = {
-	height: number
-	html: string
-	width: number
-}
-
-export type TemplateRasterArtifact = RasterArtifact<TemplateRasterArtifactSource>
-export type TemplateRasterArtifactProducer = ExportArtifactProducer<TemplateRasterArtifact>
+export type { TemplateRasterArtifact, TemplateRasterArtifactProducer }
 
 export type TemplateExportMetadata = {
 	fileName: string
@@ -39,13 +38,6 @@ export type TemplateExportMetadata = {
 export type TemplateExportContext = {
 	capability: StudioOutputCapability
 	metadata: TemplateExportMetadata | null
-}
-
-/** Template 렌더 결과를 파일 형식과 무관한 Raster Artifact로 만든다. */
-export function createTemplateRasterArtifact(
-	source: TemplateRasterArtifactSource,
-): TemplateRasterArtifact {
-	return { kind: 'raster', source }
 }
 
 /**

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
+import type { VectorSceneArtifact, VideoArtifact } from '@/modules/studio-artifact/studio-artifact'
 import { canvasFramesToMp4 } from '../adapters/canvas-frames-to-mp4.mediabunny.client'
-import type { VectorSceneArtifact, VideoArtifact } from '../export-artifact'
 import { exportVectorArtifactAsSvg, exportVideoArtifactAsMp4 } from './export-graphic.client'
 
 vi.mock('../adapters/canvas-frames-to-mp4.mediabunny.client', () => ({

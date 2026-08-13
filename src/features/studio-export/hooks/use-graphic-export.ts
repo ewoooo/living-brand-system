@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { getGraphicStudioVectorArtifact } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
@@ -29,28 +29,28 @@ export type GraphicOutputDraft =
 			height: number | null
 	  }
 
+export type GraphicExportView = ReturnType<typeof useGraphicExport>['output']
+
 /** Graphic Artifact와 공통 Export Layer 사이의 format 선택·요청·실행 상태를 소유한다. */
 export function useGraphicExport({
+	artifacts,
 	config,
 	values,
+	viewport,
 }: {
+	artifacts: GraphicBrowserArtifacts | null
 	config: GraphicStudioConfig
 	values: ControllerValues
+	viewport: GraphicOutputSize | null
 }) {
 	const [draftState, setDraftState] = useState(() => ({
 		profileId: config.id,
 		draft: createGraphicOutputDraft(config),
 	}))
-	const [browserState, setBrowserState] = useState<{
-		profileId: string
-		artifacts: GraphicBrowserArtifacts
-		viewport: GraphicOutputSize
-	} | null>(null)
-	const browser = browserState?.profileId === config.id ? browserState : null
 	const draft =
 		draftState.profileId === config.id
 			? draftState.draft
-			: createGraphicOutputDraft(config, undefined, browser?.viewport)
+			: createGraphicOutputDraft(config, undefined, viewport)
 
 	const setDraft = useCallback(
 		(update: (current: GraphicOutputDraft | null) => GraphicOutputDraft | null) => {
@@ -65,28 +65,20 @@ export function useGraphicExport({
 		},
 		[config],
 	)
-	const registerArtifacts = useCallback(
-		(artifacts: GraphicBrowserArtifacts | null, viewport?: GraphicOutputSize) => {
-			if (!artifacts || !viewport) {
-				setBrowserState(null)
-				return
-			}
-			const size = normalizeOutputSize(viewport)
-			setBrowserState({ profileId: config.id, artifacts, viewport: size })
-			setDraft((current) =>
-				current?.format === 'svg' && (current.width === null || current.height === null)
-					? { ...current, ...size }
-					: current,
-			)
-		},
-		[config.id, setDraft],
-	)
+	useEffect(() => {
+		if (!viewport) return
+		setDraft((current) =>
+			current?.format === 'svg' && (current.width === null || current.height === null)
+				? { ...current, ...normalizeOutputSize(viewport) }
+				: current,
+		)
+	}, [setDraft, viewport])
 	const setFormat = useCallback(
 		(format: StudioOutputFormat) => {
 			if (!config.output.formats.includes(format)) return
-			setDraft(() => createGraphicOutputDraft(config, format, browser?.viewport))
+			setDraft(() => createGraphicOutputDraft(config, format, viewport))
 		},
-		[browser?.viewport, config, setDraft],
+		[config, setDraft, viewport],
 	)
 	const setSize = useCallback(
 		(size: GraphicOutputSize) => {
@@ -131,24 +123,23 @@ export function useGraphicExport({
 	const source = useMemo(
 		() =>
 			createGraphicExportSource({
-				artifacts: browser?.artifacts ?? null,
+				artifacts,
 				createVectorArtifact,
 				id: config.id,
 			}),
-		[browser?.artifacts, config.id, createVectorArtifact],
+		[artifacts, config.id, createVectorArtifact],
 	)
 	const graphicExport = useExport<GraphicExportRequest>({
 		capability: config.output,
 		canExport: (request) =>
 			request.format === 'svg'
 				? createVectorArtifact(request.options.width, request.options.height) !== null
-				: Boolean(browser?.artifacts.video),
+				: Boolean(artifacts?.video),
 		source,
 	})
 	const request = createGraphicExportRequest(config, draft)
 
 	return {
-		registerArtifacts,
 		output: {
 			draft,
 			canExport: Boolean(request && graphicExport.canExport(request)),
@@ -224,13 +215,6 @@ function createGraphicExportRequest(
 	}
 }
 
-function normalizeOutputSize(size: GraphicOutputSize): GraphicOutputSize {
-	return {
-		width: Math.max(1, Math.round(size.width)),
-		height: Math.max(1, Math.round(size.height)),
-	}
-}
-
 function validOutputSize(size: GraphicOutputSize): boolean {
 	return (
 		Number.isInteger(size.width) &&
@@ -238,4 +222,11 @@ function validOutputSize(size: GraphicOutputSize): boolean {
 		Number.isInteger(size.height) &&
 		size.height > 0
 	)
+}
+
+function normalizeOutputSize(size: GraphicOutputSize): GraphicOutputSize {
+	return {
+		width: Math.max(1, Math.round(size.width)),
+		height: Math.max(1, Math.round(size.height)),
+	}
 }

@@ -1,4 +1,4 @@
-import type { VectorSceneArtifact } from '../export-artifact'
+import type { VectorSceneArtifact } from '@/modules/studio-artifact/studio-artifact'
 
 /** 파일 형식과 무관한 최소 Vector Scene을 SVG 문서로 직렬화한다. */
 export function vectorSceneToSvg(artifact: VectorSceneArtifact): string {

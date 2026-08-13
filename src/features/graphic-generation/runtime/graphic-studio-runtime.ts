@@ -4,7 +4,7 @@ import {
 	createGraphicStudioPluginCatalog,
 	type GraphicStudioPlugin,
 } from '@/features/graphic-generation/runtime/graphic-plugin'
-import type { VectorSceneArtifact } from '@/features/studio-export/export-artifact'
+import type { VectorSceneArtifact } from '@/modules/studio-artifact/studio-artifact'
 import type {
 	ControllerRuntimeBindings,
 	ControllerValues,

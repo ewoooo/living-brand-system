@@ -10,8 +10,6 @@ import {
 	useState,
 } from 'react'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
-import type { GraphicRuntime } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
-import { useGraphicExport } from '@/features/studio-export/hooks/use-graphic-export'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlValue,
@@ -20,9 +18,6 @@ import {
 	type ControllerValues,
 	createControllerValues,
 } from '@/modules/studio-controller/controller-definition'
-
-type GraphicOutputSize = { width: number; height: number }
-type GraphicExportState = ReturnType<typeof useGraphicExport>
 
 type GraphicStudioValue = {
 	profiles: {
@@ -36,13 +31,6 @@ type GraphicStudioValue = {
 		update: (controlId: string, value: ControllerControlValue) => boolean
 		registerBindings: (bindings: ControllerRuntimeBindings) => void
 	}
-	canvas: {
-		registerArtifacts: (
-			artifacts: GraphicRuntime['artifacts'] | null,
-			viewport?: GraphicOutputSize,
-		) => void
-	}
-	output: GraphicExportState['output']
 }
 
 const GraphicStudioContext = createContext<GraphicStudioValue | null>(null)
@@ -106,7 +94,6 @@ export function GraphicStudioProvider({
 		[definitions],
 	)
 
-	const graphicExport = useGraphicExport({ config, values })
 	const selectProfile = useCallback(
 		(nextProfileId: string) => {
 			const next = configs.find((item) => item.id === nextProfileId)
@@ -123,20 +110,8 @@ export function GraphicStudioProvider({
 			profiles: { options: configs, select: selectProfile },
 			config,
 			controls: { values, bindings, update, registerBindings },
-			canvas: { registerArtifacts: graphicExport.registerArtifacts },
-			output: graphicExport.output,
 		}),
-		[
-			bindings,
-			config,
-			configs,
-			registerBindings,
-			selectProfile,
-			graphicExport.output,
-			graphicExport.registerArtifacts,
-			update,
-			values,
-		],
+		[bindings, config, configs, registerBindings, selectProfile, update, values],
 	)
 
 	return (

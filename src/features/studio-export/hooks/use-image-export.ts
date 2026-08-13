@@ -10,6 +10,8 @@ import {
 import type { StudioOutputCapability } from '../studio-output'
 import { useExport } from './use-export'
 
+export type ImageExportView = ReturnType<typeof useImageExport>
+
 /** Image Raster Artifact의 선택·패키징 정책을 기존 export 실행 bridge에 연결한다. */
 export function useImageExport({
 	artifact,

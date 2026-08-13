@@ -5,7 +5,7 @@ import {
 	createGraphicRasterArtifact,
 	type GraphicRuntimeAdapter,
 } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
-import type { CanvasRasterSource, RasterArtifact } from '@/features/studio-export/export-artifact'
+import type { CanvasRasterSource, RasterArtifact } from '@/modules/studio-artifact/studio-artifact'
 import { toControllerPadValue } from './definition'
 import {
 	createForwardStraightScene,

@@ -20,6 +20,7 @@ import {
 	STUDIO_OUTPUT_FORMAT_OPTIONS,
 	type StudioOutputFormat,
 } from '@/features/studio-export/export-contract'
+import type { TemplateExportView } from '@/features/studio-export/hooks/use-template-export'
 import { pixelsToMillimeters } from '@/features/studio-export/print-policy'
 import {
 	findTemplateControl,
@@ -41,9 +42,9 @@ const FORMAT_LABELS = new Map(
  * 무엇을 그릴지는 편집 계약(config)만 보고 결정하고(원시 nodeConfigs 참조 금지),
  * 세션 값은 컨텍스트의 text/images 그룹으로만 읽고 쓴다.
  */
-export function TemplateSidebar() {
+export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }) {
 	const router = useRouter()
-	const { navigation, config, text, images, background, exporting } = useTemplateStudio()
+	const { navigation, config, text, images, background } = useTemplateStudio()
 	const {
 		text: textSlots,
 		image: imageSlots,

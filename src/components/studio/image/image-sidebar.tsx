@@ -14,6 +14,7 @@ import {
 } from '@/features/image-generation/domain/image-studio-config'
 import { useImageStudio } from '@/features/image-generation/hooks/use-image-studio'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
+import type { ImageExportView } from '@/features/studio-export/hooks/use-image-export'
 import {
 	type ControllerControlDefinition,
 	type ControllerRuntimeBinding,
@@ -28,8 +29,8 @@ import { ImageProfilePicker } from './image-profile-picker'
  * 세션 값은 컨텍스트의 prompt/generation/camera 그룹으로만 읽고 쓴다.
  * 디자인 SSOT: Figma HD_LBS_UI section 16:9137 "Image Usecase".
  */
-export function ImageSidebar() {
-	const { config, profiles, controls, generation, camera, download } = useImageStudio()
+export function ImageSidebar({ download }: { download: ImageExportView }) {
+	const { config, profiles, controls, generation, camera } = useImageStudio()
 	const { batch, ratio, resolution } = getImageStudioControls(config)
 	const generationControlIds = new Set<string>([
 		IMAGE_STUDIO_CONTROL_IDS.batch,

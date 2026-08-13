@@ -9,11 +9,12 @@ import {
 } from '@/components/studio/shared/output-controls'
 import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
 import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
+import type { GraphicExportView } from '@/features/studio-export/hooks/use-graphic-export'
 import { GraphicProfilePicker } from './graphic-profile-picker'
 
 /** Definition을 Controller primitive로 투영한다. 캔버스와 런타임 구현은 모른다. */
-export function GraphicSidebar() {
-	const { config, profiles, controls, output } = useGraphicStudio()
+export function GraphicSidebar({ output }: { output: GraphicExportView }) {
+	const { config, profiles, controls } = useGraphicStudio()
 	const format = output.draft?.format
 	const video = format === 'mp4' ? config.output.video?.mp4 : undefined
 	const formatOptions = STUDIO_OUTPUT_FORMAT_OPTIONS.filter(({ value }) =>

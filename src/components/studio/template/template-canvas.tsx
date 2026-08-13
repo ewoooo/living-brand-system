@@ -9,6 +9,7 @@ import {
 	getGraphicRuntimeAdapter,
 } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
+import { withCanvasRasterSource } from '@/modules/studio-artifact/studio-artifact'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
 
 /**
@@ -137,7 +138,12 @@ function TemplateGraphicBackground({
 				runtimeRef.current = mounted
 				mounted.resize(width, height)
 				canvas.registerGraphicFrame(() =>
-					mounted.artifacts.raster.source.canvas.toDataURL('image/png'),
+					withCanvasRasterSource(
+						mounted.artifacts.raster.source,
+						width,
+						height,
+						(frame) => frame.toDataURL(),
+					),
 				)
 			})
 			.catch((mountError) => {

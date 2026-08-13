@@ -13,9 +13,6 @@ import { useImageGeneration } from '@/features/image-generation/hooks/use-image-
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import type { ImageColorAdjustment } from '@/features/image-generation/runtime/image-colorize'
 import type { ImageGenerationResult } from '@/features/image-generation/services/generate-image.client'
-import type { StudioOutputFormat } from '@/features/studio-export/export-contract'
-import { useImageExport } from '@/features/studio-export/hooks/use-image-export'
-import { createImageRasterArtifact } from '@/features/studio-export/services/export-image.client'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlValue,
@@ -75,21 +72,6 @@ type ImageStudioValue = {
 		requested: number
 		selected: number | null
 		select: (index: number | null) => void
-	}
-	/** PNG 저장 — 색이 있으면 구운 PNG, 없으면 원본이다. 서버에 남기지 않는다. */
-	download: {
-		busy: boolean
-		error: string | null
-		formats: readonly StudioOutputFormat[]
-		format: StudioOutputFormat | null
-		setFormat: (format: StudioOutputFormat) => void
-		selected: { canExport: boolean; run: () => void }
-		all: { canExport: boolean; run: () => void }
-		original: {
-			available: boolean
-			selected: { canExport: boolean; run: () => void }
-			all: { canExport: boolean; run: () => void }
-		}
 	}
 }
 
@@ -152,16 +134,7 @@ export function ImageStudioProvider({
 					...(typeof backgroundColor === 'string' ? { background: backgroundColor } : {}),
 				}
 			: null
-	const resultConfig = configs.find((candidate) => candidate.id === result?.profileId)
-	const resultColor = resultConfig?.id === config.id ? colorValue : null
-	const resultOutput = resultConfig?.output ?? { formats: [], original: false }
-	const imageExport = useImageExport({
-		artifact: result
-			? createImageRasterArtifact({ images: result.images, color: resultColor })
-			: null,
-		capability: resultOutput,
-		selected,
-	})
+	const resultColor = result?.profileId === config.id ? colorValue : null
 
 	function update(controlId: string, value: ControllerControlValue) {
 		const definition = findControl(config, controlId)
@@ -245,16 +218,6 @@ export function ImageStudioProvider({
 			},
 		},
 		results: { result, color: resultColor, requested, selected, select: setSelected },
-		download: {
-			busy: imageExport.busy,
-			error: imageExport.error,
-			formats: imageExport.formats,
-			format: imageExport.format,
-			setFormat: imageExport.setFormat,
-			selected: imageExport.selected,
-			all: imageExport.all,
-			original: imageExport.original,
-		},
 	}
 
 	return <ImageStudioContext.Provider value={value}>{children}</ImageStudioContext.Provider>

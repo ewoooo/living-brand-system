@@ -21,12 +21,6 @@ import {
 	resolveImagePromptExecution,
 } from '@/features/image-generation/domain/image-studio-config'
 import { requestImageGeneration } from '@/features/image-generation/services/generate-image.client'
-import type { StudioOutputFormat } from '@/features/studio-export/export-contract'
-import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
-import {
-	createTemplateRasterArtifact,
-	type TemplateExportMetadata,
-} from '@/features/studio-export/services/export-template'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import type { ImageTransformValue } from '@/features/template-customization/domain/image-edit-transform'
 import {
@@ -41,7 +35,11 @@ import {
 	type TemplateImageConfigSlot,
 	type TemplateTextSlot,
 } from '@/features/template-customization/domain/template-config'
-import { composeTemplateStudioHtml } from '@/features/template-customization/runtime/template-runtime.client'
+import {
+	composeTemplateStudioHtml,
+	createTemplateRasterArtifact,
+	type TemplateRasterArtifact,
+} from '@/features/template-customization/runtime/template-runtime.client'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import {
 	acceptsControllerDraftValue,
@@ -124,17 +122,12 @@ type TemplateStudioValue = {
 	}
 	canvas: {
 		html: string
+		artifact: () => TemplateRasterArtifact
 		previewRef: RefObject<HTMLDivElement | null>
 		registerGraphicFrame: (capture: (() => string) | null) => void
 	}
-	exporting: {
-		formats: readonly StudioOutputFormat[]
-		format: StudioOutputFormat | null
-		setFormat: (format: StudioOutputFormat) => void
-		canExport: boolean
-		busy: boolean
-		error: string | null
-		run: () => void
+	execution: {
+		controllerValues: ControllerValues
 	}
 }
 
@@ -184,7 +177,6 @@ export function TemplateStudioProvider({
 		textColorDefinition?.kind === 'color' ? textColorDefinition.defaultValue : null,
 	)
 	const [clippedSlotIds, setClippedSlotIds] = useState<ReadonlySet<string>>(new Set())
-	const effectiveExportFormats = config.output.formats
 	const imageContracts = useMemo(
 		() =>
 			Object.fromEntries(
@@ -354,35 +346,27 @@ export function TemplateStudioProvider({
 		setClippedSlotIds(clipped)
 	}, [html, textSlots, textValues])
 
-	const exportMetadata: TemplateExportMetadata = {
-		fileName: template.name,
-		printPpi: template.printPpi,
-		templateId: template.id,
-		templateVersion: template.templateVersion,
-		controller: {
-			groups: config.controller.groups,
-			values: templateControllerValues(config, textSlots, textValues, textColor, background),
-		},
+	const controllerValues = templateControllerValues(
+		config,
+		textSlots,
+		textValues,
+		textColor,
+		background,
+	)
+	const artifact = (): TemplateRasterArtifact => {
+		const graphicFrame = background.type === 'graphic' ? graphicFrameRef.current?.() : undefined
+		return createTemplateRasterArtifact({
+			height,
+			html: graphicFrame
+				? composeTemplateHtml(
+						composedHtml,
+						{},
+						{ canvasBackground: { imageUrl: graphicFrame } },
+					)
+				: composedHtml,
+			width,
+		})
 	}
-	const templateExport = useTemplateExport({
-		artifact: () => {
-			const graphicFrame =
-				background.type === 'graphic' ? graphicFrameRef.current?.() : undefined
-			return createTemplateRasterArtifact({
-				height,
-				html: graphicFrame
-					? composeTemplateHtml(
-							composedHtml,
-							{},
-							{ canvasBackground: { imageUrl: graphicFrame } },
-						)
-					: composedHtml,
-				width,
-			})
-		},
-		capability: config.output,
-		metadata: exportMetadata,
-	})
 
 	const value: TemplateStudioValue = {
 		navigation,
@@ -464,16 +448,8 @@ export function TemplateStudioProvider({
 				),
 			generate: generateBackground,
 		},
-		canvas: { html: composedHtml, previewRef, registerGraphicFrame },
-		exporting: {
-			formats: effectiveExportFormats,
-			format: templateExport.format,
-			setFormat: templateExport.setFormat,
-			canExport: templateExport.canExport,
-			busy: templateExport.busy,
-			error: templateExport.error,
-			run: templateExport.run,
-		},
+		canvas: { html: composedHtml, artifact, previewRef, registerGraphicFrame },
+		execution: { controllerValues },
 	}
 
 	return <TemplateStudioContext.Provider value={value}>{children}</TemplateStudioContext.Provider>

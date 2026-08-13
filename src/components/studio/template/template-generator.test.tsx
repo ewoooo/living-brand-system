@@ -6,6 +6,7 @@ import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/g
 import { graphicRuntimeManifests } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
+import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import {
 	deriveTemplateConfig,
 	type PublishedHtmlTemplate,
@@ -164,7 +165,7 @@ function GraphicMutationProbe() {
 }
 
 function TemplateOutputProbe() {
-	const { exporting } = useTemplateStudio()
+	const exporting = useTestTemplateExport()
 	return (
 		<>
 			<span data-testid="template-output-format">{exporting.format ?? 'none'}</span>
@@ -176,6 +177,28 @@ function TemplateOutputProbe() {
 			</button>
 		</>
 	)
+}
+
+function TemplateSidebarTestBridge() {
+	return <TemplateSidebar exporting={useTestTemplateExport()} />
+}
+
+function useTestTemplateExport() {
+	const { canvas, config, execution } = useTemplateStudio()
+	return useTemplateExport({
+		artifact: canvas.artifact,
+		capability: config.output,
+		metadata: {
+			fileName: template.name,
+			printPpi: template.printPpi,
+			templateId: template.id,
+			templateVersion: template.templateVersion,
+			controller: {
+				groups: config.controller.groups,
+				values: execution.controllerValues,
+			},
+		},
+	})
 }
 
 function BackgroundTypeMutationProbe() {
@@ -199,8 +222,12 @@ function BackgroundTypeMutationProbe() {
 function GraphicCaptureProbe() {
 	const { background, canvas } = useTemplateStudio()
 	useEffect(() => {
+		mocks.templateArtifact = canvas.artifact
 		canvas.registerGraphicFrame(mocks.captureGraphicFrame)
-		return () => canvas.registerGraphicFrame(null)
+		return () => {
+			mocks.templateArtifact = undefined
+			canvas.registerGraphicFrame(null)
+		}
 	}, [canvas])
 	return (
 		<button type="button" onClick={() => background.selectType('graphic')}>
@@ -965,7 +992,7 @@ describe('TemplateGenerator', () => {
 				template={studioTemplate}
 				navigation={navigation}
 			>
-				<TemplateSidebar />
+				<TemplateSidebarTestBridge />
 				<ImageRaceProbe />
 			</TemplateStudioProvider>,
 		)
