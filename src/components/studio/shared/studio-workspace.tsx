@@ -21,11 +21,9 @@ export function StudioWorkspacePage({
 		<ContentFrame
 			data-slot="studio-workspace-page"
 			variant="full"
-			// 도구 페이지는 앱처럼 뷰포트 높이를 차지하고 내부(패널·캔버스)에서만 스크롤한다.
-			// 부모 main이 auto 높이라 h-full이 성립하지 않아 뷰포트에서 직접 파생한다.
-			// 헤더 높이는 --global-header-height 토큰(theme.css)이 소유 — GlobalHeader와 같은 값을 공유한다.
+			// 앱 셸의 남은 grid 행을 채운다. 컴팩트 헤더가 펼쳐져도 같은 행 안에서 함께 줄어든다.
 			// sr-only 헤딩은 absolute라 grid 행을 차지하지 않는다 — 숨김이면 본문 단일 행으로 구성한다.
-			className={`grid h-[calc(100svh-var(--global-header-height))] min-h-0 py-0 ${
+			className={`grid h-full min-h-0 py-0 ${
 				hideHeading ? 'grid-rows-[minmax(0,1fr)]' : 'grid-rows-[auto_minmax(0,1fr)]'
 			}`}
 		>
