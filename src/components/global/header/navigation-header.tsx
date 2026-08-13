@@ -26,7 +26,7 @@ const navigationHeaderLinkVariants = cva(
 			surface: {
 				compact: 'h-9 w-full justify-between',
 				grouped: 'my-0.5 h-8 rounded-lg px-3',
-				standalone: 'h-9 rounded-lg px-3',
+				standalone: 'h-9 rounded-lg bg-muted px-3',
 			},
 		},
 		compoundVariants: [
@@ -307,7 +307,7 @@ function NavigationHeaderLinkGroup({ className, items, ...props }: NavigationHea
 		<div
 			ref={groupRef}
 			data-slot="navigation-header-link-group"
-			className={cn('relative flex h-9 items-start', className)}
+			className={cn('relative flex h-9 items-start rounded-xl bg-muted', className)}
 			{...props}
 		>
 			{chaser && (
@@ -316,7 +316,7 @@ function NavigationHeaderLinkGroup({ className, items, ...props }: NavigationHea
 						aria-hidden
 						data-target-index={targetIndex}
 						data-slot="navigation-header-link-chaser"
-						className="pointer-events-none absolute inset-y-0.5 z-0 rounded-lg bg-muted"
+						className="pointer-events-none absolute inset-y-0.5 z-0 rounded-lg bg-primary/5"
 						initial={false}
 						animate={chaser}
 						transition={
