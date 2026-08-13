@@ -29,7 +29,7 @@ import { ImageProfilePicker } from './image-profile-picker'
  * 디자인 SSOT: Figma HD_LBS_UI section 16:9137 "Image Usecase".
  */
 export function ImageSidebar() {
-	const { config, profiles, controls, generation, camera, results, download } = useImageStudio()
+	const { config, profiles, controls, generation, camera, download } = useImageStudio()
 	const { batch, ratio, resolution } = getImageStudioControls(config)
 	const generationControlIds = new Set<string>([
 		IMAGE_STUDIO_CONTROL_IDS.batch,
@@ -105,17 +105,20 @@ export function ImageSidebar() {
 										<Button
 											variant="ghost"
 											className="h-8 px-2"
-											onClick={download.original.selected}
-											disabled={download.busy || results.selected === null}
+											onClick={download.original.selected.run}
+											disabled={
+												download.busy ||
+												!download.original.selected.canExport
+											}
 										>
 											선택 저장
 										</Button>
 										<Button
 											variant="ghost"
 											className="h-8 px-2"
-											onClick={download.original.all}
+											onClick={download.original.all.run}
 											disabled={
-												download.busy || !results.result?.images.length
+												download.busy || !download.original.all.canExport
 											}
 										>
 											전체 저장
@@ -127,24 +130,16 @@ export function ImageSidebar() {
 						<div className="flex gap-2">
 							<Button
 								className="h-11 flex-1"
-								onClick={download.selected}
-								disabled={
-									download.busy ||
-									!download.available ||
-									results.selected === null
-								}
+								onClick={download.selected.run}
+								disabled={download.busy || !download.selected.canExport}
 							>
 								선택한 이미지 저장
 							</Button>
 							<Button
 								variant="muted"
 								className="h-11 flex-1"
-								onClick={download.all}
-								disabled={
-									download.busy ||
-									!download.available ||
-									!results.result?.images.length
-								}
+								onClick={download.all.run}
+								disabled={download.busy || !download.all.canExport}
 							>
 								전부 저장
 							</Button>

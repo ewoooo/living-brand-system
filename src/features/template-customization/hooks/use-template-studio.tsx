@@ -134,9 +134,10 @@ type TemplateStudioValue = {
 		formats: readonly StudioOutputFormat[]
 		format: StudioOutputFormat | null
 		setFormat: (format: StudioOutputFormat) => void
+		canExport: boolean
 		busy: boolean
 		error: string | null
-		run: (format: StudioOutputFormat) => void
+		run: () => void
 	}
 }
 
@@ -391,6 +392,7 @@ export function TemplateStudioProvider({
 			}
 		}),
 	})
+	const exportRequest = format ? createTemplateExportRequest(format, template.printPpi) : null
 
 	const value: TemplateStudioValue = {
 		navigation,
@@ -479,11 +481,11 @@ export function TemplateStudioProvider({
 			setFormat: (next) => {
 				if (effectiveExportFormats.includes(next)) setFormat(next)
 			},
+			canExport: Boolean(exportRequest && templateExport.canExport(exportRequest)),
 			busy: templateExport.exporting !== null,
 			error: templateExport.error,
-			run: (next) => {
-				const request = createTemplateExportRequest(next, template.printPpi)
-				if (request) void templateExport.run(request)
+			run: () => {
+				if (exportRequest) void templateExport.run(exportRequest)
 			},
 		},
 	}

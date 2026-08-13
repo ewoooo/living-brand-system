@@ -21,10 +21,7 @@ import type {
 	VideoExportSpec,
 } from '@/features/studio-export/export-contract'
 import { useExport } from '@/features/studio-export/hooks/use-export'
-import {
-	type StudioExportSource,
-	supportsStudioExportSource,
-} from '@/features/studio-export/services/execute-studio-export'
+import type { StudioExportSource } from '@/features/studio-export/services/execute-studio-export'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlValue,
@@ -246,9 +243,7 @@ export function GraphicStudioProvider({
 			canvas: { registerSource },
 			output: {
 				draft: outputDraft,
-				canExport: Boolean(
-					exportRequest && supportsStudioExportSource(exportSource, exportRequest),
-				),
+				canExport: Boolean(exportRequest && graphicExport.canExport(exportRequest)),
 				busy: graphicExport.exporting !== null,
 				error: graphicExport.error,
 				setFormat,
@@ -269,9 +264,9 @@ export function GraphicStudioProvider({
 			selectProfile,
 			graphicExport.error,
 			graphicExport.exporting,
+			graphicExport.canExport,
 			graphicExport.run,
 			exportRequest,
-			exportSource,
 			outputDraft,
 			setDuration,
 			setFormat,

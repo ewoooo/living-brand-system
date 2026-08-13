@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { downloadExportResult } from '../adapters/download-export-result.client'
 import type { ExportRequest } from '../export-contract'
 import {
@@ -25,19 +25,13 @@ export function useExport<Request extends ExportRequest>({
 	const [exporting, setExporting] = useState<Request | null>(null)
 	const [error, setError] = useState<string | null>(null)
 	const running = useRef(false)
-	const canExportRef = useRef(canExport)
-	const sourceRef = useRef(source)
-	useEffect(() => {
-		canExportRef.current = canExport
-		sourceRef.current = source
-	}, [canExport, source])
 
 	const supports = useCallback(
 		(request: Request) =>
 			supportsStudioExportRequest(capability, request) &&
-			supportsStudioExportSource(sourceRef.current, request) &&
-			(canExportRef.current?.(request) ?? true),
-		[capability],
+			supportsStudioExportSource(source, request) &&
+			(canExport?.(request) ?? true),
+		[capability, canExport, source],
 	)
 	const run = useCallback(
 		async (request: Request): Promise<void> => {
@@ -47,7 +41,7 @@ export function useExport<Request extends ExportRequest>({
 			setExporting(request)
 
 			try {
-				const result = await executeStudioExport(sourceRef.current, request)
+				const result = await executeStudioExport(source, request)
 				for (const item of Array.isArray(result) ? result : [result]) {
 					downloadExportResult(item)
 				}
@@ -58,7 +52,7 @@ export function useExport<Request extends ExportRequest>({
 				setExporting(null)
 			}
 		},
-		[supports],
+		[source, supports],
 	)
 
 	return { canExport: supports, error, exporting, run }

@@ -117,10 +117,8 @@ export function TemplateSidebar() {
 					<div className="flex flex-col gap-2">
 						<Button
 							className="h-11 w-full"
-							onClick={() => {
-								if (exporting.format) exporting.run(exporting.format)
-							}}
-							disabled={exporting.busy || !exporting.format}
+							onClick={exporting.run}
+							disabled={exporting.busy || !exporting.canExport}
 						>
 							{exporting.busy ? '내보내는 중...' : '내보내기'}
 						</Button>

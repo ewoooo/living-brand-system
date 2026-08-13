@@ -19,6 +19,7 @@ import { TemplateGenerator as TemplateGeneratorView } from './template-generator
 import { TemplateSidebar } from './template-sidebar'
 
 const mocks = vi.hoisted(() => ({
+	canExportTemplate: vi.fn(() => true),
 	captureGraphicFrame: vi.fn(() => 'data:image/png;base64,graphic'),
 	destroyGraphicPreview: vi.fn(),
 	exportTemplate: vi.fn(),
@@ -32,7 +33,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/features/studio-export/hooks/use-export', () => ({
 	useExport: () => ({
-		canExport: () => true,
+		canExport: mocks.canExportTemplate,
 		exporting: null,
 		error: null,
 		run: (request: { format: string }) => mocks.exportTemplate(request.format),
@@ -159,7 +160,7 @@ function TemplateOutputProbe() {
 			<span data-testid="template-output-formats">
 				{exporting.formats.join(',') || 'none'}
 			</span>
-			<button type="button" onClick={() => exporting.run('svg')}>
+			<button type="button" onClick={exporting.run}>
 				export unsupported svg
 			</button>
 		</>
@@ -237,6 +238,7 @@ function ImageRaceProbe() {
 describe('TemplateGenerator', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
+		mocks.canExportTemplate.mockReturnValue(true)
 		mocks.mountGraphicPreview.mockResolvedValue({
 			captureFrame: mocks.captureGraphicFrame,
 			destroy: mocks.destroyGraphicPreview,
@@ -275,6 +277,13 @@ describe('TemplateGenerator', () => {
 
 		// 포맷 셀렉트 기본값인 PNG 요청이 공통 useExport로 전달된다.
 		expect(mocks.exportTemplate).toHaveBeenCalledWith('png')
+	})
+
+	it('공통 Export 판정이 거부하면 Format이 있어도 내보내기 버튼을 잠근다', () => {
+		mocks.canExportTemplate.mockReturnValue(false)
+		render(<TemplateGenerator navigation={navigation} template={template} />)
+
+		expect(screen.getByRole('button', { name: '내보내기' })).toBeDisabled()
 	})
 
 	it('UI는 Effective Config 포맷을 표시하고 Template adapter가 없는 요청은 실행 직전 차단한다', () => {

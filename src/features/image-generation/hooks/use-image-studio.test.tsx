@@ -211,6 +211,15 @@ function Probe() {
 				{results.color ? results.color.line : '결과 색 없음'}
 			</output>
 			<output data-testid="download-format">{download.format ?? '형식 없음'}</output>
+			<output data-testid="download-actions">
+				{download.selected.canExport ? 'selected:on' : 'selected:off'} /{' '}
+				{download.all.canExport ? 'all:on' : 'all:off'} /{' '}
+				{download.original.selected.canExport
+					? 'original-selected:on'
+					: 'original-selected:off'}
+				{' / '}
+				{download.original.all.canExport ? 'original-all:on' : 'original-all:off'}
+			</output>
 			<button type="button" onClick={() => color.update({ line: '#ff0000' })}>
 				라인 색 변경
 			</button>
@@ -229,10 +238,10 @@ function Probe() {
 			<button type="button" onClick={() => profiles.select(7)}>
 				교체
 			</button>
-			<button type="button" onClick={download.selected}>
+			<button type="button" onClick={download.selected.run}>
 				결과 저장
 			</button>
-			<button type="button" onClick={download.original.selected}>
+			<button type="button" onClick={download.original.selected.run}>
 				원본 저장
 			</button>
 			<button type="button" onClick={() => download.setFormat('jpeg')}>
@@ -372,6 +381,15 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		expect(screen.getByTestId('download-format')).toHaveTextContent('형식 없음')
 		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
 		expect(exportImageMocks.png).not.toHaveBeenCalled()
+	})
+
+	it('패키지 capability가 없으면 선택 저장만 열고 전체 저장은 잠근다', () => {
+		const source = config(5)
+		renderStudio([{ ...source, output: { ...source.output, packages: [] } }])
+
+		expect(screen.getByTestId('download-actions')).toHaveTextContent(
+			'selected:on / all:off / original-selected:on / original-all:off',
+		)
 	})
 
 	it('사용자가 선택한 JPEG 형식을 ExportRequest로 전달한다', async () => {

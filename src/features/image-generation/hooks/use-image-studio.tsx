@@ -81,18 +81,17 @@ type ImageStudioValue = {
 	}
 	/** PNG 저장 — 색이 있으면 구운 PNG, 없으면 원본이다. 서버에 남기지 않는다. */
 	download: {
-		available: boolean
 		busy: boolean
 		error: string | null
 		formats: readonly StudioOutputFormat[]
 		format: StudioOutputFormat | null
 		setFormat: (format: StudioOutputFormat) => void
-		selected: () => void
-		all: () => void
+		selected: { canExport: boolean; run: () => void }
+		all: { canExport: boolean; run: () => void }
 		original: {
 			available: boolean
-			selected: () => void
-			all: () => void
+			selected: { canExport: boolean; run: () => void }
+			all: { canExport: boolean; run: () => void }
 		}
 	}
 }
@@ -167,8 +166,6 @@ export function ImageStudioProvider({
 		selectedExportFormat && exportFormats.includes(selectedExportFormat)
 			? selectedExportFormat
 			: (exportFormats[0] ?? null)
-	const canDownload = Boolean(result?.images.length && exportFormat)
-	const canDownloadOriginal = Boolean(result?.images.length && resultOutput.original)
 	const imageExport = useExport<ImageExportRequest>({
 		capability: resultOutput,
 		canExport: ({ package: packageFormat, scope }) =>
@@ -184,6 +181,16 @@ export function ImageStudioProvider({
 			color: resultColor,
 		}),
 	})
+	const selectedExportRequest = createImageExportRequest(exportFormat, 'selected')
+	const allExportRequest = createImageExportRequest(exportFormat, 'all')
+	const selectedOriginalRequest = createImageOriginalExportRequest('selected')
+	const allOriginalRequest = createImageOriginalExportRequest('all')
+	const canExportSelected = Boolean(
+		selectedExportRequest && imageExport.canExport(selectedExportRequest),
+	)
+	const canExportAll = Boolean(allExportRequest && imageExport.canExport(allExportRequest))
+	const canExportSelectedOriginal = imageExport.canExport(selectedOriginalRequest)
+	const canExportAllOriginal = imageExport.canExport(allOriginalRequest)
 
 	function update(controlId: string, value: ControllerControlValue) {
 		const definition = findControl(config, controlId)
@@ -268,7 +275,6 @@ export function ImageStudioProvider({
 		},
 		results: { result, color: resultColor, requested, selected, select: setSelected },
 		download: {
-			available: canDownload,
 			busy: imageExport.exporting !== null,
 			error: imageExport.error,
 			formats: exportFormats,
@@ -276,23 +282,27 @@ export function ImageStudioProvider({
 			setFormat: (next) => {
 				if (exportFormats.includes(next)) setSelectedExportFormat(next)
 			},
-			selected: () => {
-				const request = createImageExportRequest(exportFormat, 'selected')
-				if (request) void imageExport.run(request)
+			selected: {
+				canExport: canExportSelected,
+				run: () => {
+					if (selectedExportRequest) void imageExport.run(selectedExportRequest)
+				},
 			},
-			all: () => {
-				const request = createImageExportRequest(exportFormat, 'all')
-				if (request) void imageExport.run(request)
+			all: {
+				canExport: canExportAll,
+				run: () => {
+					if (allExportRequest) void imageExport.run(allExportRequest)
+				},
 			},
 			original: {
-				available: canDownloadOriginal,
-				selected: () => {
-					const request = createImageOriginalExportRequest('selected')
-					if (request) void imageExport.run(request)
+				available: canExportSelectedOriginal || canExportAllOriginal,
+				selected: {
+					canExport: canExportSelectedOriginal,
+					run: () => void imageExport.run(selectedOriginalRequest),
 				},
-				all: () => {
-					const request = createImageOriginalExportRequest('all')
-					if (request) void imageExport.run(request)
+				all: {
+					canExport: canExportAllOriginal,
+					run: () => void imageExport.run(allOriginalRequest),
 				},
 			},
 		},
