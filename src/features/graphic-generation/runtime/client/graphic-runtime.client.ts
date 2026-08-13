@@ -1,6 +1,6 @@
 'use client'
 
-import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
 import type { GraphicRuntimeId } from '@/features/graphic-generation/graphic-runtimes/catalog/manifest.generated'
 import { graphicRuntimeCatalog } from '@/features/graphic-generation/graphic-runtimes/catalog/runtime.generated.client'
 import type {
@@ -26,7 +26,7 @@ export type GraphicRuntime = {
 }
 
 export type GraphicRuntimeAdapter = {
-	type: GraphicStudioConfig['type']
+	type: GraphicRuntimeManifest['type']
 	mount(options: {
 		container: HTMLElement
 		values: ControllerValues
@@ -59,7 +59,7 @@ export function createGraphicRasterArtifact({
 
 /** Config id와 runtime type이 모두 일치하는 브라우저 runtime adapter만 반환한다. */
 export function getGraphicRuntimeAdapter(
-	config: GraphicStudioConfig,
+	config: GraphicRuntimeManifest,
 ): GraphicRuntimeAdapter | null {
 	const adapter = graphicRuntimeCatalog[config.id as GraphicRuntimeId]
 	return adapter?.type === config.type ? adapter : null

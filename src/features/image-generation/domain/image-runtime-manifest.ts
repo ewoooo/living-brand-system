@@ -37,6 +37,7 @@ export type ImageRuntimeFeature =
 	| { type: 'camera-control' }
 
 export type ImageRuntimeManifest = StudioRuntimeManifest & {
+	original: boolean
 	supportedFeatures: readonly ImageRuntimeFeature[]
 }
 
@@ -46,12 +47,8 @@ export function getImageRuntimeManifest(modelPreset: ImageModelPreset): ImageRun
 		supportsImageOutputSize(modelPreset, size),
 	)
 	return {
-		output: {
-			formats: ['png', 'jpeg'],
-			original: true,
-			colorProfiles: { rgb: ['srgb'] },
-			packages: ['zip'],
-		},
+		artifacts: ['raster'],
+		original: true,
 		controller: {
 			groups: [
 				{

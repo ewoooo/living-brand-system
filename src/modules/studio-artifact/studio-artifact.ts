@@ -2,6 +2,17 @@ export const STUDIO_ARTIFACT_KINDS = ['raster', 'vector', 'video'] as const
 
 export type StudioArtifactKind = (typeof STUDIO_ARTIFACT_KINDS)[number]
 
+export function parseStudioArtifactKinds(input: unknown): readonly StudioArtifactKind[] {
+	if (
+		!Array.isArray(input) ||
+		input.some((kind) => !STUDIO_ARTIFACT_KINDS.includes(kind as StudioArtifactKind)) ||
+		new Set(input).size !== input.length
+	) {
+		throw new Error('Studio Runtime Artifact 종류가 올바르지 않습니다.')
+	}
+	return input as StudioArtifactKind[]
+}
+
 type Artifact<Kind extends StudioArtifactKind, Source> = {
 	kind: Kind
 	source: Source

@@ -10,7 +10,7 @@ import {
 } from '@/components/studio/shared/controller-renderer'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
-import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
 import type { ResolvedTemplateImageConfig } from '@/features/template-customization/domain/template-config'
 import type {
 	TemplateBackgroundPatch,
@@ -38,7 +38,7 @@ type BackgroundSectionProps = {
 	/** Image Config를 캔버스 비율로 제한한 슬롯 범위 계약. */
 	imageContracts: readonly ResolvedTemplateImageConfig[]
 	featureBindings: ControllerRuntimeBindings
-	graphicConfigs: readonly GraphicStudioConfig[]
+	graphicConfigs: readonly GraphicRuntimeManifest[]
 	graphicBindings: ControllerRuntimeBindings
 	/** 배경 세션 상태 — 소유는 Provider(합성에 싣는다). */
 	value: TemplateBackgroundState

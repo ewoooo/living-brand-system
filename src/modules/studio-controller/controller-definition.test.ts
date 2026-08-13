@@ -182,7 +182,7 @@ describe('parseStudioControllerConfig', () => {
 			version: 1,
 			name: 'Demo',
 			type: 'p5',
-			output: { formats: ['svg'] },
+			artifacts: ['vector'],
 			controller: {
 				groups: [
 					{
@@ -237,7 +237,7 @@ describe('parseStudioControllerConfig', () => {
 		expect(parseStudioControllerConfig(config)).toBe(config)
 	})
 
-	it('공통 output parser로 unknown format을 거부한다', () => {
+	it('공통 Runtime Artifact parser가 unknown kind를 거부한다', () => {
 		expect(() =>
 			parseStudioControllerConfig({
 				...configWith({
@@ -246,9 +246,9 @@ describe('parseStudioControllerConfig', () => {
 					label: 'Enabled',
 					defaultValue: true,
 				}),
-				output: { formats: ['webp'] },
+				artifacts: ['document'],
 			}),
-		).toThrow('지원하지 않는 output format')
+		).toThrow('Artifact 종류')
 	})
 
 	it('group과 전체 control id 중복을 거부한다', () => {
@@ -464,7 +464,7 @@ function configWith(control: unknown) {
 		id: 'demo',
 		version: 1,
 		name: 'Demo',
-		output: { formats: ['svg'] },
+		artifacts: ['vector'],
 		controller: {
 			groups: [{ id: 'controls', title: 'Controls', controls: [control] }],
 		},

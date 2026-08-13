@@ -12,7 +12,7 @@ import {
 	useRef,
 	useState,
 } from 'react'
-import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { getGraphicStudioRuntimeBindings } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import {
 	acceptsImagePromptExecution,
@@ -109,7 +109,7 @@ type TemplateStudioValue = {
 		state: TemplateBackgroundState
 		contracts: readonly ResolvedTemplateImageConfig[]
 		featureBindings: ControllerRuntimeBindings
-		graphicConfigs: readonly GraphicStudioConfig[]
+		graphicConfigs: readonly GraphicRuntimeManifest[]
 		graphicBindings: ControllerRuntimeBindings
 		update: (patch: TemplateBackgroundPatch) => void
 		setColor: (hex: string | null) => void
@@ -631,7 +631,7 @@ function selectBackgroundImageProfile(
 function selectBackgroundGraphicConfig(
 	current: TemplateBackgroundState,
 	configId: string,
-	configs: readonly GraphicStudioConfig[],
+	configs: readonly GraphicRuntimeManifest[],
 ): TemplateBackgroundState {
 	const config = configs.find((candidate) => candidate.id === configId)
 	if (!config) return current
@@ -646,7 +646,7 @@ function updateBackgroundGraphic(
 	current: TemplateBackgroundState,
 	controlId: string,
 	next: ControllerControlValue,
-	configs: readonly GraphicStudioConfig[],
+	configs: readonly GraphicRuntimeManifest[],
 	viewport: { width: number; height: number },
 ): TemplateBackgroundState {
 	const config = configs.find((candidate) => candidate.id === current.graphicConfigId)

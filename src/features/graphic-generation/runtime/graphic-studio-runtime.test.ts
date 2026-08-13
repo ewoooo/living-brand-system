@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { parseGraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import {
+	parseGraphicRuntimeManifest,
+	parseGraphicStudioConfig,
+} from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
 	deriveGraphicStudioConfig,
 	graphicRuntimeManifests,
+	resolveGraphicStudioOutput,
 } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import radialFlutedGlassRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/radial-fluted-glass/definition'
@@ -18,19 +22,24 @@ const config = forwardStraightRuntimeManifest
 
 describe('graphicStudioRuntime', () => {
 	it('Graphic 계약을 멱등하게 검증하고 잘못된 studio·type을 거부한다', () => {
-		expect(parseGraphicStudioConfig(parseGraphicStudioConfig(config))).toBe(config)
+		expect(parseGraphicRuntimeManifest(parseGraphicRuntimeManifest(config))).toBe(config)
+		const effective = { ...config, output: resolveGraphicStudioOutput(config) }
 		expect(
-			parseGraphicStudioConfig({ ...config, output: { ...config.output, formats: ['png'] } })
-				.output.formats,
+			parseGraphicStudioConfig({
+				...effective,
+				output: { ...effective.output, formats: ['png'] },
+			}).output.formats,
 		).toEqual(['png'])
-		expect(() => parseGraphicStudioConfig({ ...config, studio: 'image' })).toThrow('studio')
-		expect(() => parseGraphicStudioConfig({ ...config, type: 'canvas' })).toThrow('type')
-		expect(() => parseGraphicStudioConfig({ ...config, unknown: true })).toThrow('알 수 없는')
+		expect(() => parseGraphicRuntimeManifest({ ...config, studio: 'image' })).toThrow('studio')
+		expect(() => parseGraphicRuntimeManifest({ ...config, type: 'canvas' })).toThrow('type')
+		expect(() => parseGraphicRuntimeManifest({ ...config, unknown: true })).toThrow(
+			'알 수 없는',
+		)
 	})
 
 	it('plugin catalog가 config·Vector Artifact projector·명시적 binding을 함께 제공한다', () => {
 		expect(graphicRuntimeManifests).toContain(config)
-		expect(config.output.formats).toEqual(['svg'])
+		expect(config.artifacts).toEqual(['vector', 'raster'])
 		const values = createControllerValues(config.controller.groups)
 		expect(
 			getGraphicStudioVectorArtifact(config, values, { width: 800, height: 600 }),
@@ -45,7 +54,7 @@ describe('graphicStudioRuntime', () => {
 		const values = createControllerValues(shaderConfig.controller.groups)
 
 		expect(graphicRuntimeManifests).toContain(shaderConfig)
-		expect(shaderConfig.output.formats).toEqual(['mp4'])
+		expect(shaderConfig.artifacts).toEqual(['raster', 'video'])
 		expect(
 			getGraphicStudioVectorArtifact(shaderConfig, values, { width: 800, height: 600 }),
 		).toBeNull()
@@ -117,7 +126,7 @@ describe('graphicStudioRuntime', () => {
 	it('Vector Artifact capability는 output format 정책과 독립적이다', () => {
 		const values = createControllerValues(config.controller.groups)
 		expect(
-			getGraphicStudioVectorArtifact({ ...config, output: { formats: [] } }, values, {
+			getGraphicStudioVectorArtifact(config, values, {
 				width: 800,
 				height: 600,
 			}),
@@ -126,7 +135,7 @@ describe('graphicStudioRuntime', () => {
 
 	it('Catalog는 같은 stable ID의 Plugin을 중복 등록하지 않는다', () => {
 		const plugin = defineGraphicStudioPlugin({
-			manifest: { ...config, output: { formats: [] } },
+			manifest: config,
 		})
 		expect(() => createGraphicStudioPluginCatalog([plugin, plugin])).toThrow(
 			'중복된 Graphic plugin',

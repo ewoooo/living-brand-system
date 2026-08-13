@@ -25,7 +25,8 @@ describe('deriveImageStudioConfig', () => {
 
 		expect(second).toEqual(first)
 		expect(first).toMatchObject({
-			output: { formats: ['png', 'jpeg'], original: true },
+			artifacts: ['raster'],
+			original: true,
 			supportedFeatures: [
 				{
 					type: 'color-adjustment',
@@ -52,7 +53,7 @@ describe('deriveImageStudioConfig', () => {
 			id: 5,
 			version: 1,
 			name: '브랜드 제품컷',
-			output: { formats: ['png', 'jpeg'], original: true },
+			output: { formats: ['png', 'jpeg', 'tiff', 'pdf'], original: true },
 			image: { slug: 'brand-product', features: [] },
 		})
 		expect(controls.prompt).toMatchObject({ id: 'prompt', kind: 'text', maxLength: 500 })

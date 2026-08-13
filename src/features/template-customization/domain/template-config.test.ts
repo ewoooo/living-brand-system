@@ -36,12 +36,12 @@ const template: PublishedHtmlTemplate = {
 const imageConfig = createImageConfig(3, ['1:1', '4:3'])
 
 describe('deriveTemplateConfig', () => {
-	it('Runtime Manifest는 같은 Template 문서에서 같은 원본 controller와 output을 파생한다', () => {
+	it('Runtime Manifest는 같은 Template 문서에서 같은 controller와 Artifact를 파생한다', () => {
 		const manifest = getTemplateRuntimeManifest(template)
 
 		expect(getTemplateRuntimeManifest(template)).toEqual(manifest)
 		expect(manifest).toMatchObject({
-			output: { formats: ['png'] },
+			artifacts: ['raster'],
 			controller: {
 				groups: [
 					{ id: 'text', title: 'Text', collapsible: true },
@@ -49,11 +49,8 @@ describe('deriveTemplateConfig', () => {
 				],
 			},
 		})
-		expect(getTemplateRuntimeManifest({ ...template, printPpi: 150 }).output.formats).toEqual([
-			'png',
-			'tiff',
-			'pdf',
-		])
+		const printTemplate = { ...template, printPpi: 150 as const }
+		expect(getTemplateRuntimeManifest(printTemplate)).toEqual(manifest)
 	})
 
 	it('Template 도메인 계약을 멱등 검증하고 slot의 알 수 없는 필드를 거부한다', () => {
@@ -153,10 +150,15 @@ describe('deriveTemplateConfig', () => {
 		})
 	})
 
-	it('output은 인쇄 정책을 따르고 canvas·printPpi는 도메인 정보로 남긴다', () => {
-		expect(deriveTemplateConfig(template).output.formats).toEqual(['png'])
+	it('output은 Raster Exporter capability를 따르고 canvas·printPpi는 도메인 정보로 남긴다', () => {
+		expect(deriveTemplateConfig(template).output.formats).toEqual([
+			'png',
+			'jpeg',
+			'tiff',
+			'pdf',
+		])
 		expect(deriveTemplateConfig({ ...template, printPpi: 150 })).toMatchObject({
-			output: { formats: ['png', 'tiff', 'pdf'] },
+			output: { formats: ['png', 'jpeg', 'tiff', 'pdf'] },
 			template: {
 				exportOption: {
 					printPpi: 150,
@@ -350,6 +352,7 @@ function createImageConfig(
 ): ImageStudioConfig {
 	return {
 		studio: 'image',
+		artifacts: ['raster'],
 		id,
 		version: 1,
 		name: `프로파일 ${id}`,

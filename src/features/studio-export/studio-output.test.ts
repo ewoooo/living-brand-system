@@ -2,11 +2,22 @@ import { describe, expect, it } from 'vitest'
 import { STUDIO_OUTPUT_FORMATS } from './export-contract'
 import {
 	parseStudioOutputCapability,
+	resolveStudioArtifactOutputFormats,
 	resolveStudioOutputFormats,
 	supportsStudioExportRequest,
 } from './studio-output'
 
 describe('resolveStudioOutputFormats', () => {
+	it('Artifact를 Exporter 호환 형식으로 투영한 뒤 Admin 제한을 적용한다', () => {
+		expect(resolveStudioArtifactOutputFormats(['raster', 'vector'], ['png', 'svg'])).toEqual([
+			'png',
+			'svg',
+		])
+		expect(() => resolveStudioArtifactOutputFormats(['raster'], ['svg'])).toThrow(
+			'지원하지 않는 output format',
+		)
+	})
+
 	it('Admin 제한이 없으면 Runtime 순서를 유지한다', () => {
 		expect(resolveStudioOutputFormats(['svg', 'png'] as const, undefined)).toEqual([
 			'svg',

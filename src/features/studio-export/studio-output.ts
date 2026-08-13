@@ -1,3 +1,5 @@
+import type { StudioArtifactKind } from '@/modules/studio-artifact/studio-artifact'
+import { EXPORTER_ARTIFACT_COMPATIBILITY } from './export-artifact'
 import type {
 	CmykIccProfile,
 	ExportRequest,
@@ -115,6 +117,17 @@ export function resolveStudioOutputFormats<Format extends StudioOutputFormat>(
 	}
 	const allowedSet = new Set(allowed)
 	return supported.filter((format) => allowedSet.has(format))
+}
+
+/** Runtime Artifact 종류를 Exporter가 변환할 수 있는 시스템 형식으로 투영한 뒤 Admin 정책으로 좁힌다. */
+export function resolveStudioArtifactOutputFormats(
+	artifacts: readonly StudioArtifactKind[],
+	allowed: readonly string[] | null | undefined,
+): readonly StudioOutputFormat[] {
+	const supported = STUDIO_OUTPUT_FORMATS.filter((format) =>
+		EXPORTER_ARTIFACT_COMPATIBILITY[format].some((kind) => artifacts.includes(kind)),
+	)
+	return resolveStudioOutputFormats(supported, allowed)
 }
 
 export function supportsStudioOutput<Format extends StudioOutputFormat>(

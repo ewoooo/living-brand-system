@@ -161,7 +161,10 @@ function createGraphicOutputDraft(
 	requestedFormat?: StudioOutputFormat,
 	viewport?: GraphicOutputSize | null,
 ): GraphicOutputDraft | null {
-	const format = requestedFormat ?? config.output.formats[0]
+	const format =
+		requestedFormat ??
+		config.output.formats.find((candidate) => candidate === 'svg' || candidate === 'mp4') ??
+		config.output.formats[0]
 	if (format === 'svg') {
 		return { format, width: viewport?.width ?? null, height: viewport?.height ?? null }
 	}

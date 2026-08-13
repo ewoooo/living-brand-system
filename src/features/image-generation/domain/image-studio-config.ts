@@ -1,7 +1,8 @@
 import type { ImageModelPreset } from '@/features/image-generation/image-model'
 import {
 	parseStudioOutputCapability,
-	resolveStudioOutputFormats,
+	resolveStudioArtifactOutputFormats,
+	type StudioOutputCapability,
 } from '@/features/studio-export/studio-output'
 import {
 	acceptsControllerExecutionValue,
@@ -46,10 +47,8 @@ export type PublishedImageProfileDefinition = {
 }
 
 /** 이미지 프로파일 하나가 발행하는 공통 Controller envelope와 이미지 실행 descriptor. */
-type ImageControllerConfig = StudioControllerConfig<'image', number>
-
-export type ImageStudioConfig = Omit<ImageControllerConfig, 'output'> & {
-	output: ImageControllerConfig['output'] & { original: boolean }
+export type ImageStudioConfig = StudioControllerConfig<'image', number> & {
+	output: StudioOutputCapability & { original: boolean }
 	image: {
 		slug: string | null
 		features: readonly ImageStudioFeature[]
@@ -72,15 +71,24 @@ export type ImageStudioControls = {
 export function parseImageStudioConfig(input: unknown): ImageStudioConfig {
 	const common = parseStudioControllerConfig(input)
 	const config = record(input, 'ImageStudioConfig')
-	assertKeys(config, ['studio', 'id', 'version', 'name', 'output', 'controller', 'image'])
+	assertKeys(config, [
+		'studio',
+		'id',
+		'version',
+		'name',
+		'artifacts',
+		'output',
+		'controller',
+		'image',
+	])
 	if (common.studio !== 'image') throw new Error('ImageStudioConfig studio: image여야 합니다.')
 	if (typeof common.id !== 'number' || !Number.isInteger(common.id)) {
 		throw new Error('ImageStudioConfig id: 정수여야 합니다.')
 	}
-	if (typeof common.output.original !== 'boolean') {
+	const output = parseStudioOutputCapability(config.output)
+	if (typeof output.original !== 'boolean') {
 		throw new Error('ImageStudioConfig output.original은 boolean이어야 합니다.')
 	}
-	parseStudioOutputCapability(config.output)
 	const image = record(config.image, 'ImageStudioConfig.image')
 	assertKeys(image, ['slug', 'features'])
 	if (image.slug !== null && typeof image.slug !== 'string') {
@@ -205,13 +213,15 @@ export function deriveImageStudioConfig(
 		version: 1,
 		name: profile.name,
 		output: {
-			...manifest.output,
-			formats: resolveStudioOutputFormats(
-				manifest.output.formats,
+			formats: resolveStudioArtifactOutputFormats(
+				manifest.artifacts,
 				profile.output?.allowedFormats,
 			),
-			original: Boolean(manifest.output.original && (profile.output?.original ?? true)),
+			original: Boolean(manifest.original && (profile.output?.original ?? true)),
+			colorProfiles: { rgb: ['srgb'] },
+			packages: ['zip'],
 		},
+		artifacts: manifest.artifacts,
 		controller: deriveImageProfileController(
 			profile.imageModelPreset,
 			profile.features,

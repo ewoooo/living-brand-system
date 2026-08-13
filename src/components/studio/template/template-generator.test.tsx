@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import userEvent from '@testing-library/user-event'
 import { type ComponentProps, useEffect } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { graphicRuntimeManifests } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
@@ -58,7 +58,7 @@ vi.mock('@/features/image-generation/services/generate-image.client', () => ({
 	requestImageGeneration: mocks.requestImageGeneration,
 }))
 vi.mock('@/features/graphic-generation/runtime/client/graphic-runtime.client', () => ({
-	getGraphicRuntimeAdapter: (config: GraphicStudioConfig) => ({
+	getGraphicRuntimeAdapter: (config: GraphicRuntimeManifest) => ({
 		type: config.type,
 		mount: mocks.mountGraphicPreview,
 	}),
@@ -98,7 +98,7 @@ function TemplateGenerator({
 	...props
 }: Omit<ComponentProps<typeof TemplateGeneratorView>, 'config'> & {
 	imageConfigs?: readonly ImageStudioConfig[]
-	graphicConfigs?: readonly GraphicStudioConfig[]
+	graphicConfigs?: readonly GraphicRuntimeManifest[]
 }) {
 	return (
 		<TemplateGeneratorView
@@ -1137,7 +1137,7 @@ describe('TemplateGenerator', () => {
 	})
 
 	it('Graphic update는 Definition availability를 지키고 Config 변경 시 기본값으로 초기화한다', () => {
-		const readonlyGraphic: GraphicStudioConfig = {
+		const readonlyGraphic: GraphicRuntimeManifest = {
 			...forwardStraightRuntimeManifest,
 			controller: {
 				groups: forwardStraightRuntimeManifest.controller.groups.map((group) => ({
@@ -1170,7 +1170,7 @@ describe('TemplateGenerator', () => {
 			...forwardStraightRuntimeManifest,
 			id: 'secondary',
 			name: 'Secondary',
-		} satisfies GraphicStudioConfig
+		} satisfies GraphicRuntimeManifest
 		render(
 			<TemplateStudioProvider
 				config={deriveTemplateConfig(template, imageConfigs, [
@@ -1199,6 +1199,7 @@ function createImageConfig(
 	const ratios = ['1:1', '4:3', '16:9'] as const
 	return {
 		studio: 'image',
+		artifacts: ['raster'],
 		id,
 		version: 1,
 		name: id === 11 ? '기본 프로파일' : `프로파일 ${id}`,

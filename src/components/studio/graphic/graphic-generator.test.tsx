@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest, {
 	FORWARD_STRAIGHT_DEFAULT_INPUT,
 } from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
@@ -11,6 +12,16 @@ import radialFlutedGlassRuntimeManifest, {
 } from '@/features/graphic-generation/graphic-runtimes/radial-fluted-glass/definition'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
 import { GraphicGenerator } from './graphic-generator'
+
+const forwardStraightConfig = {
+	...forwardStraightRuntimeManifest,
+	output: resolveGraphicStudioOutput(forwardStraightRuntimeManifest),
+} satisfies GraphicStudioConfig
+
+const radialFlutedGlassConfig = {
+	...radialFlutedGlassRuntimeManifest,
+	output: resolveGraphicStudioOutput(radialFlutedGlassRuntimeManifest),
+} satisfies GraphicStudioConfig
 
 const mocks = vi.hoisted(() => {
 	const raster = {
@@ -152,6 +163,7 @@ describe('GraphicGenerator', () => {
 			version: 1,
 			name: 'Shader Demo',
 			type: 'shader',
+			artifacts: ['raster'],
 			output: { formats: [] },
 			controller: {
 				groups: [
@@ -201,7 +213,7 @@ describe('GraphicGenerator', () => {
 
 	it('P5 Definition을 Controller primitive로 그리고 변경값을 캔버스에 전달한다', async () => {
 		const user = userEvent.setup()
-		render(createElement(GraphicGenerator, { configs: [forwardStraightRuntimeManifest] }))
+		render(createElement(GraphicGenerator, { configs: [forwardStraightConfig] }))
 
 		expect(screen.getByRole('radio', { name: 'Off' })).toBeChecked()
 		const viewpoint = screen.getByRole('combobox', { name: '시점' })
@@ -222,7 +234,10 @@ describe('GraphicGenerator', () => {
 	it('공통 output format은 표시하되 등록된 export adapter가 없으면 실행하지 않는다', async () => {
 		const config = {
 			...forwardStraightRuntimeManifest,
-			output: { ...forwardStraightRuntimeManifest.output, formats: ['png'] },
+			output: {
+				...resolveGraphicStudioOutput(forwardStraightRuntimeManifest),
+				formats: ['png'],
+			},
 		} satisfies GraphicStudioConfig
 
 		render(createElement(GraphicGenerator, { configs: [config] }))
@@ -234,7 +249,7 @@ describe('GraphicGenerator', () => {
 
 	it('Shader Definition을 WebGL preview와 MP4 Export UI에 연결한다', async () => {
 		const { unmount } = render(
-			createElement(GraphicGenerator, { configs: [radialFlutedGlassRuntimeManifest] }),
+			createElement(GraphicGenerator, { configs: [radialFlutedGlassConfig] }),
 		)
 
 		await waitFor(() =>
@@ -281,7 +296,7 @@ describe('GraphicGenerator', () => {
 		})
 		vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
-		render(createElement(GraphicGenerator, { configs: [radialFlutedGlassRuntimeManifest] }))
+		render(createElement(GraphicGenerator, { configs: [radialFlutedGlassConfig] }))
 		await waitFor(() => expect(mocks.createShaderPreview).toHaveBeenCalledOnce())
 
 		const width = screen.getByRole('spinbutton', { name: 'Width' })
@@ -315,7 +330,7 @@ describe('GraphicGenerator', () => {
 	})
 
 	it('출력 사이즈 비율을 프리뷰 영역에 맞춰 반영한다', async () => {
-		render(createElement(GraphicGenerator, { configs: [radialFlutedGlassRuntimeManifest] }))
+		render(createElement(GraphicGenerator, { configs: [radialFlutedGlassConfig] }))
 		await waitFor(() => expect(mocks.createShaderPreview).toHaveBeenCalledOnce())
 		const observerCount = mocks.resizeObserverCount
 
@@ -344,7 +359,7 @@ describe('GraphicGenerator', () => {
 	it('등록된 id와 type이 일치하지 않으면 런타임을 실행하지 않는다', () => {
 		render(
 			createElement(GraphicGenerator, {
-				configs: [{ ...forwardStraightRuntimeManifest, type: 'shader' }],
+				configs: [{ ...forwardStraightConfig, type: 'shader' }],
 			}),
 		)
 
@@ -354,7 +369,7 @@ describe('GraphicGenerator', () => {
 
 	it('런타임이 명시한 origin Pad에만 캔버스 비율을 연결한다', async () => {
 		const config = {
-			...forwardStraightRuntimeManifest,
+			...forwardStraightConfig,
 			controller: {
 				groups: forwardStraightRuntimeManifest.controller.groups.map((group) =>
 					group.id === 'position'
@@ -386,7 +401,7 @@ describe('GraphicGenerator', () => {
 
 	it('readonly control은 캔버스 직접 조작으로도 변경하지 않는다', async () => {
 		const config = {
-			...forwardStraightRuntimeManifest,
+			...forwardStraightConfig,
 			controller: {
 				groups: forwardStraightRuntimeManifest.controller.groups.map((group) =>
 					group.id === 'position'
@@ -416,7 +431,7 @@ describe('GraphicGenerator', () => {
 	})
 
 	it('캔버스의 입력 변경을 같은 Context를 통해 Pad에 되돌린다', async () => {
-		render(createElement(GraphicGenerator, { configs: [forwardStraightRuntimeManifest] }))
+		render(createElement(GraphicGenerator, { configs: [forwardStraightConfig] }))
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
 
 		mocks.onInputChange?.({
@@ -442,7 +457,7 @@ describe('GraphicGenerator', () => {
 		const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
 		const { unmount } = render(
-			createElement(GraphicGenerator, { configs: [forwardStraightRuntimeManifest] }),
+			createElement(GraphicGenerator, { configs: [forwardStraightConfig] }),
 		)
 
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
@@ -480,7 +495,7 @@ describe('GraphicGenerator', () => {
 	it('Change 브라우저에서 Graphic을 교체하고 새 계약의 기본값으로 초기화한다', async () => {
 		render(
 			createElement(GraphicGenerator, {
-				configs: [forwardStraightRuntimeManifest, radialFlutedGlassRuntimeManifest],
+				configs: [forwardStraightConfig, radialFlutedGlassConfig],
 			}),
 		)
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())

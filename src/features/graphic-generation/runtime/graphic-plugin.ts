@@ -1,5 +1,5 @@
 import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
-import { parseGraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import { parseGraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
 import type { VectorSceneArtifact } from '@/modules/studio-artifact/studio-artifact'
 import type {
 	ControllerRuntimeBindings,
@@ -25,7 +25,7 @@ export type GraphicModelAdapter = Omit<GraphicStudioPlugin, 'manifest'>
 export function defineGraphicStudioPlugin<const Id extends string>(
 	plugin: GraphicStudioPlugin<Id>,
 ): GraphicStudioPlugin<Id> {
-	parseGraphicStudioConfig(plugin.manifest)
+	parseGraphicRuntimeManifest(plugin.manifest)
 	return plugin
 }
 

@@ -43,7 +43,7 @@ export function GraphicStudioProvider({
 	configs,
 	children,
 }: {
-	configs: GraphicStudioConfig[]
+	configs: readonly GraphicStudioConfig[]
 	children: ReactNode
 }) {
 	const initial = configs[0]
