@@ -49,9 +49,14 @@ export function StudioWorkspace({ sidebar, children }: StudioWorkspaceProps) {
 			data-slot="studio-workspace"
 			className="grid min-h-0 lg:h-full lg:max-h-full lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden"
 		>
+			{/*
+			 * 🔴 overflow를 잠그지 않는다 — 자산 브라우저 패널이 컨트롤러 왼쪽(캔버스 위)으로
+			 * 나가야 하는데, 여기서 자르면 패널이 통째로 안 보여 트리거가 죽은 것처럼 보인다.
+			 * 컨트롤러 자체 스크롤은 Controller.Root의 overflow-hidden이 이미 갖고 있다.
+			 */}
 			<aside
 				data-slot="studio-workspace-sidebar"
-				className="min-h-0 p-4 lg:order-2 lg:h-full lg:max-h-full lg:overflow-hidden"
+				className="min-h-0 p-4 lg:order-2 lg:h-full lg:max-h-full"
 			>
 				{sidebar}
 			</aside>

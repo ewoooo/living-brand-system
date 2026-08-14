@@ -325,10 +325,10 @@ describe('TemplateGenerator', () => {
 		const { container } = render(<TemplateGenerator categoryTitle="카드" template={template} />)
 
 		expect(container.querySelector('[data-slot="studio-workspace"]')).not.toBeNull()
-		expect(container.querySelector('[data-slot="studio-workspace-sidebar"]')).toHaveClass(
-			'lg:max-h-full',
-			'lg:overflow-hidden',
-		)
+		// 사이드바는 높이만 가두고 overflow는 잠그지 않는다 — 자산 브라우저 패널이 캔버스 위로 나가야 한다.
+		const workspaceSidebar = container.querySelector('[data-slot="studio-workspace-sidebar"]')
+		expect(workspaceSidebar).toHaveClass('lg:max-h-full')
+		expect(workspaceSidebar).not.toHaveClass('lg:overflow-hidden')
 		expect(container.querySelector('[data-slot="studio-workspace-canvas"]')).toHaveClass(
 			'lg:max-h-full',
 			'lg:overflow-hidden',
