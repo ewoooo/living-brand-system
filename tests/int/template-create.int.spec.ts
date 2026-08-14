@@ -59,11 +59,20 @@ describe('getCreateNavigation', () => {
 				width: 1080,
 				height: 1920,
 			},
-			{ id: 13, name: '과거 템플릿', category: 1, html: null, width: null, height: null },
+			{
+				id: 13,
+				name: '과거 템플릿',
+				slug: 'legacy-template',
+				category: 1,
+				html: null,
+				width: null,
+				height: null,
+			},
 		] as never)
 
 		const navigation = await getCreateNavigation()
 
+		// 카테고리는 묶음 이름일 뿐이고 주소는 템플릿 slug 하나로 정해진다 — 카테고리 세그먼트가 없다.
 		expect(navigation.categories).toMatchObject([
 			{
 				title: '배너',
