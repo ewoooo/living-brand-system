@@ -9,7 +9,7 @@ export default async function GuidelineLayout({ children }: { children: React.Re
 
 	return (
 		<SectionLayout
-			nav={<GuidelineSideNavigation navigation={navigation} />}
+			nav={<GuidelineSideNavigation chapters={navigation.chapters} />}
 			pageNavigation={
 				<PageNavigation
 					items={navigation.chapters.flatMap((chapter) =>

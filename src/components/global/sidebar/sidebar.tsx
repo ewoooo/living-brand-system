@@ -1,3 +1,5 @@
+'use client'
+
 import type { CarbonIconType } from '@carbon/icons-react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import Link from 'next/link'
@@ -8,7 +10,11 @@ import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
+	SidebarMenuSub,
+	Sidebar as SidebarPrimitive,
+	SidebarContent as SidebarPrimitiveContent,
 	SidebarTrigger as SidebarPrimitiveTrigger,
+	useSidebar,
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 
@@ -20,9 +26,16 @@ const sidebarItemVariants = cva(
 				false: 'hover:bg-muted hover:text-foreground',
 				true: 'hover:bg-muted hover:text-foreground active:bg-muted data-active:bg-muted data-active:text-foreground data-active:font-normal',
 			},
+			depth: {
+				0: 'justify-start rounded-md px-2 font-medium md:max-xl:justify-start xl:group-data-[collapsed=false]/sidebar-api:justify-start',
+				1: 'justify-start rounded-md px-2 md:max-xl:justify-start xl:group-data-[collapsed=false]/sidebar-api:justify-start',
+				2: 'h-7 justify-start rounded-md px-2 py-1 text-xs md:max-xl:justify-start xl:group-data-[collapsed=false]/sidebar-api:justify-start',
+			},
 			tone: {
 				default: 'text-foreground',
+				emphasized: 'text-foreground/60',
 				muted: 'text-muted-foreground',
+				subtle: 'text-foreground/30',
 			},
 		},
 		compoundVariants: [
@@ -30,6 +43,11 @@ const sidebarItemVariants = cva(
 				className: 'data-active:text-foreground',
 				current: true,
 				tone: 'muted',
+			},
+			{
+				className: 'data-active:text-foreground/60',
+				current: true,
+				tone: 'emphasized',
 			},
 		],
 		defaultVariants: {
@@ -51,6 +69,31 @@ function SidebarRoot({
 	collapsed = false,
 	...props
 }: SidebarRootProps) {
+	const { isMobile } = useSidebar()
+	const navigation = (
+		<nav
+			aria-label={ariaLabel}
+			className="flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden rounded-xl bg-background p-4 text-foreground shadow-lg transition-[padding] duration-200 ease-linear motion-reduce:transition-none xl:group-data-[collapsed=false]/sidebar-api:p-3"
+		>
+			{children}
+		</nav>
+	)
+
+	if (isMobile) {
+		return (
+			<SidebarPrimitive>
+				<aside
+					data-slot="sidebar-root"
+					data-collapsed={collapsed}
+					className={cn('h-full bg-transparent p-4', className)}
+					{...props}
+				>
+					{navigation}
+				</aside>
+			</SidebarPrimitive>
+		)
+	}
+
 	return (
 		<aside
 			data-slot="sidebar-root"
@@ -61,13 +104,21 @@ function SidebarRoot({
 			)}
 			{...props}
 		>
-			<nav
-				aria-label={ariaLabel}
-				className="flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-background p-4 text-foreground shadow-lg transition-[padding] duration-200 ease-linear motion-reduce:transition-none xl:group-data-[collapsed=false]/sidebar-api:p-3"
-			>
-				{children}
-			</nav>
+			{navigation}
 		</aside>
+	)
+}
+
+function SidebarContent({
+	className,
+	...props
+}: React.ComponentProps<typeof SidebarPrimitiveContent>) {
+	return (
+		<SidebarPrimitiveContent
+			data-slot="sidebar-content"
+			className={cn('gap-0', className)}
+			{...props}
+		/>
 	)
 }
 
@@ -75,16 +126,29 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<typeof Sideb
 	return <SidebarMenu data-slot="sidebar-group" className={cn('gap-1', className)} {...props} />
 }
 
+function SidebarChildren({ className, ...props }: React.ComponentProps<typeof SidebarMenuSub>) {
+	return (
+		<SidebarMenuSub
+			data-slot="sidebar-children"
+			className={cn('mx-0 translate-x-0 gap-0.5 border-0 px-0 pt-0.5 pl-3', className)}
+			{...props}
+		/>
+	)
+}
+
 type SidebarItemProps = Omit<React.ComponentProps<typeof Link>, 'children' | 'className'> &
 	VariantProps<typeof sidebarItemVariants> & {
 		badge?: React.ReactNode
+		children?: React.ReactNode
 		icon?: CarbonIconType
 		label: string
 	}
 
 function SidebarItem({
 	badge,
+	children,
 	current = false,
+	depth,
 	href,
 	icon: Icon,
 	label,
@@ -92,12 +156,12 @@ function SidebarItem({
 	...props
 }: SidebarItemProps) {
 	return (
-		<SidebarMenuItem data-slot="sidebar-item" data-tone={tone}>
+		<SidebarMenuItem data-slot="sidebar-item" data-depth={depth} data-tone={tone}>
 			<SidebarMenuButton
 				asChild
 				isActive={current ?? false}
 				tooltip={label}
-				className={sidebarItemVariants({ current, tone })}
+				className={sidebarItemVariants({ current, depth, tone })}
 			>
 				<Link
 					data-slot="sidebar-item-link"
@@ -106,17 +170,30 @@ function SidebarItem({
 					title={label}
 					{...props}
 				>
-					<span className="truncate md:max-xl:sr-only xl:group-data-[collapsed=true]/sidebar-api:sr-only">
+					<span
+						className={cn(
+							'truncate',
+							depth == null &&
+								'md:max-xl:sr-only xl:group-data-[collapsed=true]/sidebar-api:sr-only',
+						)}
+					>
 						{label}
 					</span>
 					{(badge || Icon) && (
-						<span className="flex shrink-0 items-center gap-1 md:max-xl:[&_[data-slot=badge]]:hidden xl:group-data-[collapsed=true]/sidebar-api:[&_[data-slot=badge]]:hidden">
+						<span
+							className={cn(
+								'flex shrink-0 items-center gap-1',
+								depth == null &&
+									'md:max-xl:[&_[data-slot=badge]]:hidden xl:group-data-[collapsed=true]/sidebar-api:[&_[data-slot=badge]]:hidden',
+							)}
+						>
 							{badge && <Badge>{badge}</Badge>}
 							{Icon && <Icon aria-hidden data-icon="inline-end" />}
 						</span>
 					)}
 				</Link>
 			</SidebarMenuButton>
+			{children}
 		</SidebarMenuItem>
 	)
 }
@@ -148,6 +225,8 @@ function SidebarTrigger({
 }
 
 const Sidebar = {
+	Children: SidebarChildren,
+	Content: SidebarContent,
 	Group: SidebarGroup,
 	Item: SidebarItem,
 	Root: SidebarRoot,

@@ -8,10 +8,14 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('@/components/ui/sidebar', () => ({
+	Sidebar: ({ children }: { children: ReactNode }) => createElement('div', {}, children),
+	SidebarContent: ({ children }: { children: ReactNode }) => createElement('div', {}, children),
 	SidebarMenu: ({ children }: { children: ReactNode }) => createElement('ul', {}, children),
 	SidebarMenuItem: ({ children }: { children: ReactNode }) => createElement('li', {}, children),
+	SidebarMenuSub: ({ children }: { children: ReactNode }) => createElement('ul', {}, children),
 	SidebarMenuButton: ({ children, isActive }: { children: ReactNode; isActive: boolean }) =>
 		createElement('div', { 'data-active': isActive }, children),
+	useSidebar: () => ({ isMobile: false }),
 }))
 
 describe('StudioSideNavigation', () => {
