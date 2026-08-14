@@ -61,6 +61,7 @@ import * as migration_20260813_075510_studio_export_policy from './20260813_0755
 import * as migration_20260813_105904_unify_studio_output_policy from './20260813_105904_unify_studio_output_policy';
 import * as migration_20260814_023629_add_controller_presentation from './20260814_023629_add_controller_presentation';
 import * as migration_20260814_062523_image_profile_camera_sectors from './20260814_062523_image_profile_camera_sectors';
+import * as migration_20260814_065504_template_slug from './20260814_065504_template_slug';
 
 export const migrations = [
   {
@@ -376,6 +377,11 @@ export const migrations = [
   {
     up: migration_20260814_062523_image_profile_camera_sectors.up,
     down: migration_20260814_062523_image_profile_camera_sectors.down,
-    name: '20260814_062523_image_profile_camera_sectors'
+    name: '20260814_062523_image_profile_camera_sectors',
+  },
+  {
+    up: migration_20260814_065504_template_slug.up,
+    down: migration_20260814_065504_template_slug.down,
+    name: '20260814_065504_template_slug'
   },
 ];

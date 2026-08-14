@@ -11,19 +11,13 @@ import { authenticateRequest } from '@/lib/request-auth'
 export default async function CreateTemplatePage({
 	params,
 }: {
-	params: Promise<{ categorySlug: string; templateId: string }>
+	params: Promise<{ templateSlug: string }>
 }) {
-	const { categorySlug, templateId } = await params
-	const parsedId = Number(templateId)
-
-	if (!Number.isInteger(parsedId)) {
-		notFound()
-	}
-
+	const { templateSlug } = await params
 	const { user } = await authenticateRequest()
 	const [navigation, template, imageConfigs, graphicConfigs] = await Promise.all([
 		getCreateNavigation(),
-		getPublishedTemplate(parsedId),
+		getPublishedTemplate(templateSlug),
 		user ? listImageStudioConfigs(user) : [],
 		user ? listGraphicStudioConfigs(user) : [],
 	])
@@ -42,9 +36,11 @@ export default async function CreateTemplatePage({
 			<TemplateGenerator
 				key={template.id}
 				config={config}
+				// 분류는 URL이 아니라 템플릿 자신이 갖는다 — 이 템플릿을 담고 있는 카테고리에서 읽는다.
 				categoryTitle={
-					navigation.categories.find((category) => category.slug === categorySlug)
-						?.title ?? null
+					navigation.categories.find((category) =>
+						category.templates.some((item) => item.slug === templateSlug),
+					)?.title ?? null
 				}
 				template={template}
 			/>

@@ -45,6 +45,7 @@ export async function listPublishedTemplateNavItems() {
 		},
 		select: {
 			name: true,
+			slug: true,
 			category: true,
 			html: true,
 			overrides: true,
@@ -57,7 +58,7 @@ export async function listPublishedTemplateNavItems() {
 }
 
 export async function findPublishedTemplate(
-	templateId: number,
+	templateSlug: string,
 ): Promise<
 	(Template & { controllerRestrictions?: unknown; controllerPresentation?: unknown }) | null
 > {
@@ -70,8 +71,8 @@ export async function findPublishedTemplate(
 		limit: 1,
 		locale: LOCALE,
 		where: {
-			id: {
-				equals: templateId,
+			slug: {
+				equals: templateSlug,
 			},
 			_status: {
 				equals: 'published',

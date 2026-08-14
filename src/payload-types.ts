@@ -1414,6 +1414,11 @@ export interface User {
 export interface Template {
   id: number;
   name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
   description?: string | null;
   controllerRestrictions?:
     | {
@@ -2820,6 +2825,8 @@ export interface GeneratedImagesSelect<T extends boolean = true> {
  */
 export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
+  generateSlug?: T;
+  slug?: T;
   description?: T;
   controllerRestrictions?: T;
   controllerPresentation?: T;

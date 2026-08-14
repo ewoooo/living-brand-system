@@ -7,8 +7,8 @@ import { routes } from '@/lib/routes'
 
 const navigation = [
 	{ label: 'Template', href: routes.studio.template, icon: Template },
-	{ label: 'Image', href: routes.studio.generateImage, icon: Image },
-	{ label: 'Graphic', href: routes.studio.generateGraphic, icon: Pen },
+	{ label: 'Image', href: routes.studio.image, icon: Image },
+	{ label: 'Graphic', href: routes.studio.graphic, icon: Pen },
 	{ label: 'Review', href: routes.studio.review, icon: Review },
 	{ label: 'MCP', href: routes.studio.mcp, icon: Connect },
 	{ label: 'Assets', href: routes.studio.assets, icon: Folder },

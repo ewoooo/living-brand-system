@@ -44,7 +44,7 @@ function renderHeader(updates?: NavigationHeaderUpdates) {
 
 describe('GlobalHeader', () => {
 	beforeEach(() => {
-		pathname = '/studio/generate/graphic'
+		pathname = '/studio/graphic'
 		push.mockReset()
 		localStorage.clear()
 		vi.stubGlobal(
@@ -83,13 +83,10 @@ describe('GlobalHeader', () => {
 			'href',
 			'/studio/template',
 		)
-		expect(links.getByRole('link', { name: /Image/ })).toHaveAttribute(
-			'href',
-			'/studio/generate/image',
-		)
+		expect(links.getByRole('link', { name: /Image/ })).toHaveAttribute('href', '/studio/image')
 		expect(links.getByRole('link', { name: 'Graphic' })).toHaveAttribute(
 			'href',
-			'/studio/generate/graphic',
+			'/studio/graphic',
 		)
 		expect(links.getByRole('link', { name: 'MCP' })).toHaveAttribute('href', '/studio/mcp')
 		expect(links.getByRole('link', { name: 'Review' })).toHaveAttribute(

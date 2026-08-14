@@ -84,10 +84,19 @@ const navigationCategories: GetCreateNavigationOutput['categories'] = [
 		id: 1,
 		title: '카드',
 		slug: 'cards',
-		href: '/studio/template/cards',
 		templates: [
-			{ id: 1, name: '테스트 템플릿', href: '/studio/template/cards/1' },
-			{ id: 2, name: '두 번째 템플릿', href: '/studio/template/cards/2' },
+			{
+				id: 1,
+				name: '테스트 템플릿',
+				slug: 'test-template',
+				href: '/studio/template/test-template',
+			},
+			{
+				id: 2,
+				name: '두 번째 템플릿',
+				slug: 'second-template',
+				href: '/studio/template/second-template',
+			},
 		],
 	},
 ]
@@ -467,7 +476,7 @@ describe('TemplateGenerator', () => {
 		const panel = screen.getByRole('dialog', { name: 'Templates' })
 		fireEvent.click(await within(panel).findByRole('button', { name: /두 번째 템플릿/ }))
 
-		expect(mocks.push).toHaveBeenCalledWith('/studio/template/cards/2')
+		expect(mocks.push).toHaveBeenCalledWith('/studio/template/second-template')
 		expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 	})
 

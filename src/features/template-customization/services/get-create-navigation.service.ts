@@ -3,17 +3,17 @@ import {
 	listPublishedTemplateNavItems,
 	listTemplateCategories,
 } from '@/features/template-core/repositories/published-template.payload.repository'
-import { getStudioTemplateCategoryRoute, getStudioTemplateRoute } from '@/lib/routes'
+import { getStudioTemplateRoute } from '@/lib/routes'
 
 export interface GetCreateNavigationOutput {
 	categories: {
 		id: number
 		title: string
 		slug: string
-		href: string
 		templates: {
 			id: number
 			name: string
+			slug: string
 			href: string
 		}[]
 	}[]
@@ -31,17 +31,18 @@ export async function getCreateNavigation(): Promise<GetCreateNavigationOutput> 
 	const availableTemplates = templates.filter((template) => projectTemplateRenderModel(template))
 
 	return {
+		// 카테고리는 목록을 묶는 분류일 뿐이다 — 주소는 템플릿 slug 하나로 정해진다(카테고리 세그먼트 없음).
 		categories: categories.map((category) => ({
 			id: category.id,
 			title: category.title,
 			slug: category.slug,
-			href: getStudioTemplateCategoryRoute(category.slug),
 			templates: availableTemplates
 				.filter((template) => template.category === category.id)
 				.map((template) => ({
 					id: template.id,
 					name: template.name,
-					href: getStudioTemplateRoute(category.slug, template.id),
+					slug: template.slug,
+					href: getStudioTemplateRoute(template.slug),
 				})),
 		})),
 	}
