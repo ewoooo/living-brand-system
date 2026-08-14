@@ -31,7 +31,7 @@ import {
 import {
 	findTemplateControl,
 	listCompatibleTemplateImageConfigs,
-	type PublishedHtmlTemplate,
+	type PublishedTemplateView,
 	partitionTemplateSlots,
 	type ResolvedTemplateImageConfig,
 	type TemplateBackgroundSlot,
@@ -400,7 +400,7 @@ export function TemplateStudioProvider({
 	children,
 }: {
 	config: TemplateConfig
-	template: PublishedHtmlTemplate
+	template: PublishedTemplateView
 	navigation: TemplateStudioValue['navigation']
 	children: ReactNode
 }) {

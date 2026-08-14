@@ -95,7 +95,8 @@ function TemplateGenerator({
 	imageConfigs: providedImageConfigs = imageConfigs,
 	graphicConfigs: providedGraphicConfigs = effectiveGraphicConfigs,
 	...props
-}: Omit<ComponentProps<typeof TemplateGeneratorView>, 'config'> & {
+}: Omit<ComponentProps<typeof TemplateGeneratorView>, 'config' | 'template'> & {
+	template: PublishedHtmlTemplate
 	imageConfigs?: readonly ImageStudioConfig[]
 	graphicConfigs?: readonly GraphicStudioConfig[]
 }) {

@@ -4,7 +4,7 @@ import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { TemplateSidebar } from '@/components/studio/sidebar/template-sidebar'
 import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import type {
-	PublishedHtmlTemplate,
+	PublishedTemplateView,
 	TemplateConfig,
 } from '@/features/template-customization/domain/template-config'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
@@ -15,7 +15,7 @@ import { TemplateCanvas } from './template-canvas'
 type TemplateGeneratorProps = {
 	config: TemplateConfig
 	navigation: GetCreateNavigationOutput
-	template: PublishedHtmlTemplate
+	template: PublishedTemplateView
 }
 
 /**
@@ -34,7 +34,7 @@ export function TemplateGenerator({ config, navigation, template }: TemplateGene
 	)
 }
 
-function TemplateWorkspace({ template }: { template: PublishedHtmlTemplate }) {
+function TemplateWorkspace({ template }: { template: PublishedTemplateView }) {
 	const { canvas, config, execution } = useTemplateStudio()
 	const exporting = useTemplateExport({
 		artifact: canvas.artifact,

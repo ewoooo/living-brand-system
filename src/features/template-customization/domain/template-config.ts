@@ -128,6 +128,16 @@ export type PublishedHtmlTemplate = {
 }
 
 /**
+ * 클라이언트(Provider·Canvas)로 건너가는 published 템플릿 뷰.
+ * Admin 정책(controllerRestrictions·exportPolicy)은 derive 입력일 뿐이므로 타입에서 제외해
+ * RSC payload로 직렬화될 수 없게 한다.
+ */
+export type PublishedTemplateView = Pick<
+	PublishedHtmlTemplate,
+	'id' | 'name' | 'html' | 'width' | 'height'
+>
+
+/**
  * Template의 controller.groups에는 Template 전역에서 id가 유일한 Definition만 둔다.
  * ImageStudioConfig의 prompt/ratio처럼 슬롯마다 id가 반복되는 Definition은 각 슬롯 scope에서
  * 원본 Config를 직접 소비한다. 전역 id를 만들기 위한 prefix DSL이나 Definition 복제는 하지 않는다.
