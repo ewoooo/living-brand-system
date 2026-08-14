@@ -9,6 +9,7 @@ import {
 	IMAGE_STUDIO_CONTROL_IDS,
 	type PublishedImageProfileDefinition,
 	parseImageStudioConfig,
+	projectImageProfileFeatureSelections,
 } from './image-studio-config'
 
 const profile: PublishedImageProfileDefinition = {
@@ -188,5 +189,31 @@ describe('deriveImageStudioConfig', () => {
 		expect(() =>
 			parseImageStudioConfig({ ...config, image: { ...config.image, unknown: true } }),
 		).toThrow('알 수 없는')
+	})
+})
+
+describe('projectImageProfileFeatureSelections', () => {
+	// Payload가 blocks에 항상 붙이는 blockName 때문에 실제 프로필이 전부 거부되던 회귀.
+	// 데이터가 빈 환경에서는 이 경로를 안 타서 드러나지 않았다.
+	it('Payload 내장 blockName이 있어도 feature를 투영한다', () => {
+		expect(
+			projectImageProfileFeatureSelections([
+				{ id: 'legacy-camera-6', blockType: 'cameraControl', blockName: null },
+				{
+					id: 'legacy-color-1',
+					blockType: 'colorAdjustment',
+					blockName: null,
+					background: true,
+				},
+			]),
+		).toEqual([{ type: 'camera-control' }, { type: 'color-adjustment', background: true }])
+	})
+
+	it('그 밖의 알 수 없는 필드는 여전히 거부한다', () => {
+		expect(() =>
+			projectImageProfileFeatureSelections([
+				{ id: 'x', blockType: 'cameraControl', unexpected: 1 },
+			]),
+		).toThrow('알 수 없는 필드')
 	})
 })

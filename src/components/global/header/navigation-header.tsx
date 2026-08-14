@@ -78,8 +78,10 @@ const navigationHeaderSearchTriggerVariants = cva('', {
 	variants: {
 		projection: {
 			compact: 'size-9.5 rounded-lg bg-muted p-2 text-foreground hover:bg-muted/80',
+			// 배경·높이·radius를 nav 링크 그룹과 같게 맞춘다(`bg-muted h-9 rounded-lg`).
+			// hover 배경은 뺐다 — 기본이 이미 muted라 `hover:bg-muted`가 아무 일도 하지 않는다.
 			desktop:
-				'h-9 w-46 justify-between rounded-lg bg-background pl-4 pr-2 text-muted-foreground hover:bg-muted hover:text-foreground',
+				'h-9 w-46 justify-between rounded-lg bg-muted pl-4 pr-2 text-muted-foreground hover:text-foreground',
 		},
 	},
 	defaultVariants: { projection: 'desktop' },
@@ -101,7 +103,10 @@ function NavigationHeaderRoot({ className, ...props }: NavigationHeaderRootProps
 	return (
 		<header
 			data-slot="navigation-header"
-			className={cn('relative z-50 shrink-0 overflow-visible bg-transparent', className)}
+			className={cn(
+				'relative z-50 shrink-0 overflow-visible border-border border-b bg-header-background',
+				className,
+			)}
 			{...props}
 		/>
 	)
@@ -410,7 +415,8 @@ function NavigationHeaderSearchTrigger({
 					</Typography>
 					<KbdGroup className="gap-0.5">
 						{shortcut.map((key) => (
-							<Kbd className="size-6 rounded-md bg-muted px-1" key={key}>
+							// nav 그룹의 hover 체이서와 같은 면 — 불투명 muted가 아니라 알파 5%다.
+							<Kbd className="size-6 rounded-md bg-foreground/5 px-1" key={key}>
 								{key}
 							</Kbd>
 						))}

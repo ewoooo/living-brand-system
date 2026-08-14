@@ -272,6 +272,9 @@ export function projectImageProfileFeatureSelections(
 	})
 }
 
+// 🔴 `blockName`은 Payload blocks가 항상 붙이는 내장 필드다(값이 없어도 키는 온다). 허용 목록에서
+// 빠지면 블록이 하나라도 있는 프로필이 전부 이 가드에 걸린다 — 데이터가 빈 환경에서는 경로를 안 타서
+// 드러나지 않는다. 이 가드의 목적은 스키마 드리프트 감지이므로 Payload 내장 키는 통과시킨다.
 function assertFeatureKeys(value: Record<string, unknown>, allowed: readonly string[]) {
 	const allowedKeys = new Set(allowed)
 	for (const key of Object.keys(value)) {
