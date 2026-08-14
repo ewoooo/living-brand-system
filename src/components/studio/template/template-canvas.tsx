@@ -1,7 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useRef, useState } from 'react'
 import { fitPreviewSize } from '@/components/studio/shared/fit-preview-size'
+import {
+	DEFAULT_PREVIEW_SIZE,
+	PreviewSizeControl,
+} from '@/components/studio/shared/preview-size-control'
 import { Typography } from '@/components/ui/typography'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
@@ -22,6 +26,7 @@ export function TemplateCanvas() {
 	const { width, height } = config.template.exportOption.canvas
 	const stageRef = useRef<HTMLDivElement>(null)
 	const [preview, setPreview] = useState({ width, height })
+	const [previewSize, setPreviewSize] = useState(DEFAULT_PREVIEW_SIZE)
 	const scale = preview.width / width
 	const graphicConfig = config.template.graphicConfigs.find(
 		(candidate) => candidate.id === background.state.graphicConfigId,
@@ -44,11 +49,16 @@ export function TemplateCanvas() {
 	}, [height, width])
 
 	return (
-		<div ref={stageRef} className="grid h-full min-h-0 min-w-0 overflow-hidden">
+		<div ref={stageRef} className="relative grid h-full min-h-0 min-w-0 overflow-hidden">
 			<div
 				data-slot="template-preview"
-				className="m-auto shrink-0 overflow-hidden shadow-lg"
-				style={preview}
+				className="m-auto shrink-0 overflow-hidden shadow-lg lg:[transform:scale(var(--preview-scale))]"
+				style={
+					{
+						...preview,
+						'--preview-scale': previewSize / 100,
+					} as CSSProperties
+				}
 			>
 				<div
 					className="relative"
@@ -76,6 +86,7 @@ export function TemplateCanvas() {
 					/>
 				</div>
 			</div>
+			<PreviewSizeControl value={previewSize} onChange={setPreviewSize} />
 		</div>
 	)
 }

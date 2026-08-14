@@ -1,7 +1,11 @@
 'use client'
 
-import { type ComponentType, useEffect, useRef, useState } from 'react'
+import { type ComponentType, type CSSProperties, useEffect, useRef, useState } from 'react'
 import { fitPreviewSize } from '@/components/studio/shared/fit-preview-size'
+import {
+	DEFAULT_PREVIEW_SIZE,
+	PreviewSizeControl,
+} from '@/components/studio/shared/preview-size-control'
 import { Typography } from '@/components/ui/typography'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
@@ -49,6 +53,7 @@ function GraphicPreviewCanvas({
 	const containerRef = useRef<HTMLDivElement>(null)
 	const runtimeRef = useRef<GraphicRuntime>(null)
 	const [error, setError] = useState<string | null>(null)
+	const [previewSize, setPreviewSize] = useState(DEFAULT_PREVIEW_SIZE)
 	const outputWidth = output.draft?.width
 	const outputHeight = output.draft?.height
 
@@ -126,16 +131,18 @@ function GraphicPreviewCanvas({
 	}, [config, controls.registerBindings, outputHeight, outputWidth])
 
 	return (
-		<figure data-slot="graphic-canvas" className="flex min-h-0 flex-1 flex-col">
+		<figure data-slot="graphic-canvas" className="relative flex min-h-0 flex-1 flex-col">
 			<div
 				ref={stageRef}
 				className="flex min-h-96 flex-1 items-center justify-center overflow-hidden lg:min-h-0"
 			>
 				<div
 					ref={containerRef}
-					className="h-full w-full shrink-0 overflow-hidden rounded-xl [&>canvas]:block"
+					className="h-full w-full shrink-0 overflow-hidden rounded-xl lg:[transform:scale(var(--preview-scale))] [&>canvas]:block"
+					style={{ '--preview-scale': previewSize / 100 } as CSSProperties}
 				/>
 			</div>
+			<PreviewSizeControl value={previewSize} onChange={setPreviewSize} />
 			{error && (
 				<Typography role="alert" size="sm" className="pt-2 text-destructive">
 					{error}
