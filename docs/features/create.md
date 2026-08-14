@@ -6,6 +6,8 @@
 
 의도한 방향은 가이드라인을 직접 읽는 대신 [Review](review.md)를 검증 skill로 쓰고, 이미지가 필요하면 [Image](image.md)를 호출하는 것입니다. 다만 아래 표시대로 현재 구현은 **템플릿 기반 조합(PNG, canonical HTML은 인쇄용 TIFF·PDF 추가)**까지이고, 규정 주입·검증·이미지 생성은 로드맵입니다.
 
+Template·Graphic·Image가 Runtime Manifest부터 Artifact와 Export까지 공유하는 흐름은 [Studio](studio.md)를 정본으로 삼습니다. 이 문서는 Create 기능의 사용자 흐름과 Template 제작 규칙만 설명합니다.
+
 ## 2. 핵심 계약
 
 ### 현재 구현
@@ -24,7 +26,7 @@
 - 🔴 사용자 미리보기는 `<iframe sandbox="">`(opaque origin)이라 CSS `mask-image` fetch가 CORS 모드로 나갑니다. ACAO 헤더가 없는 업로드 파일 경로(`/api/brand-logos/file/*`)가 차단되면 mask가 전체 투명 처리돼 로고가 사라집니다. 어드민은 same-origin 렌더라 재현되지 않습니다.
 - 출력: 클라이언트 PNG 다운로드. 운영자가 `72`(대형 인쇄)·`150`(일반 용지)·`300`(고급 용지)ppi 중 하나를 지정한 경우 CMYK TIFF와 CMYK PDF를 직접 다운로드할 수 있음. Payload에는 아무것도 쓰지 않음(생성 세션/출력 레코드 없음).
 
-출력 capability는 `Runtime Artifact → 실제 Exporter 호환 형식 → Admin exportPolicy = Effective StudioConfig.output.formats` 순서로 계산합니다. 기본 변환은 Raster→PNG/JPEG, Vector→SVG, Video→MP4이며, TIFF/PDF는 print capability가 있는 Template에만 추가합니다. `StudioOutputFormat`이 PNG·JPEG·TIFF·PDF·SVG·MP4의 공통 파일 형식 어휘를 소유합니다. Admin의 형식 목록을 비우면 실제 Exporter 호환 형식을 모두 허용하며, 호환되지 않는 형식으로 범위를 넓히면 발행 검증이 거부합니다. Controller의 현재 선택값과 버튼 배치는 이 capability와 별개이고, Graphic·Template·Image의 Export 연결 계층이 I/O 직전에도 source adapter와 도메인 실행 조건을 확인합니다. 원본 다운로드 capability와 ZIP 묶음은 파일 형식과 분리합니다.
+출력 capability는 `Runtime Artifact → 실제 Exporter 호환 형식 → Admin exportPolicy = Effective StudioConfig.output` 순서로 계산합니다. Raster는 PNG·JPEG·TIFF·PDF·정지 MP4, Vector는 SVG, Video는 MP4로 변환할 수 있습니다. Admin의 형식 목록을 비우면 실제 Exporter 호환 형식을 모두 허용하며, 호환되지 않는 형식으로 범위를 넓히면 발행 검증이 거부합니다. Controller의 현재 선택값과 버튼 배치는 이 capability와 별개입니다. Export Layer는 I/O 직전에도 Artifact, 요청값, Effective capability를 다시 확인합니다. 원본 다운로드 capability와 ZIP 묶음은 파일 형식과 분리합니다.
 
 TIFF는 원본 가로·세로 픽셀을 리샘플링하지 않고 PPI 메타데이터만 기록합니다. PDF는 문서 전체 DPI 메타데이터 대신 같은 PPI로 계산한 실제 `가로 mm × 세로 mm` 페이지 크기를 씁니다. 따라서 두 형식의 인쇄 크기는 `px ÷ ppi × 25.4mm`로 정해집니다. 두 형식 모두 투명 영역을 흰색으로 평탄화하고 Sharp 내장 기본 CMYK ICC 프로파일로 변환합니다. PDF는 변환된 CMYK JPEG를 원본 픽셀 크기 그대로 배치한 단일 raster 페이지이며 이미지 색공간은 `DeviceCMYK`입니다. 최대 인쇄 입력은 `67,108,864`픽셀·PNG 20MB이며, PPI를 설정할 때 픽셀 상한을 Template 저장 hook에서 검증합니다.
 
@@ -32,14 +34,14 @@ TIFF는 원본 가로·세로 픽셀을 리샘플링하지 않고 PPI 메타데�
 
 ### 그래픽 생성 계약
 
-`generate-graphic`은 발행된 Plugin의 구현 키로 그래픽 도구를 선택하고, 도구별 입력 계약으로 Controller와 최종 생성을 연결하는 Feature입니다.
-현재는 `forward-straight-v1`의 입력 계약, 계약 기반 Studio Controller, 순수 geometry, p5 instance-mode Preview, SVG 브라우저 다운로드를 `/studio/generate/graphic`에 연결했습니다. Controller 변경과 캔버스 포인터·X/Y 슬라이더 입력은 같은 입력 상태를 갱신하며 Preview와 SVG 출력이 이를 공유합니다. `radial-fluted-glass`는 같은 Controller 계약에 production GLSL asset과 native WebGL Preview·MP4 출력을 연결했습니다. SVG source가 없는 Shader runtime은 SVG adapter가 필요한 Template 배경 목록에서 제외합니다.
+`graphic-generation`은 발행된 Graphic Profile의 runtime ID로 Drop-in Runtime을 선택하고, Effective Controller와 Artifact 생성을 연결하는 Feature입니다.
+`forward-straight`는 순수 model과 P5 client runtime에서 Vector·Raster Artifact를 만듭니다. `radial-fluted-glass`는 production GLSL과 WebGL client runtime에서 Raster·Video Artifact를 만듭니다. Controller와 Canvas 직접 조작은 같은 Provider 세션 값을 갱신합니다. Template 배경도 같은 Graphic Runtime을 mount하지만 다운로드 형식은 해석하지 않습니다.
 
 - 입력 계약: `variableWeightEnabled`, `viewpoint`, `angleIntensity`, 정규화된 `origin(0~1)`
 - Shader 입력 계약: `source(-1~1)`, `bloomColor`, `rayIntensity`, `rayDensity`, `speed`, `glassSize`, `glassDistortion`
 - Controller 계약: Studio가 도구의 입력 계약을 공용 `toggle`·`select`·`color`·`range`·`pad` primitive로 렌더
-- 출력 계약: 첫 형식은 `image/svg+xml`
-- 실행 계약: p5는 Page 미리보기만 담당하고, 최종 SVG는 같은 순수 geometry를 브라우저에서 직렬화해 다운로드
+- 출력 계약: Runtime은 `raster | vector | video` Artifact를 발행하고, 공통 Export Layer가 Effective 형식으로 변환
+- 실행 계약: P5·WebGL은 Canvas와 Artifact surface를 만들고, 파일 인코딩과 다운로드는 `studio-export`가 담당
 - 기록 계약: Template의 PNG export처럼 Payload, DB, 오브젝트 스토리지에 기록하지 않음
 
 ### 의도된 방향 (미구현)
@@ -55,7 +57,7 @@ TIFF는 원본 가로·세로 픽셀을 리샘플링하지 않고 PPI 메타데�
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
 | [Page](../surfaces/page.md) | 구현 | `/studio/template` → 첫 사용 가능 템플릿 → 카테고리별 드롭다운 선택 → TemplateGenerator. 발행된 canonical HTML 템플릿만 읽고 비로그인 공개 읽기 |
-| [Page](../surfaces/page.md) — Graphic | 구현 | Studio의 `Graphic` 메뉴 → `/studio/generate/graphic` → 계약 기반 Controller·p5 또는 Shader Preview. `forward-straight`는 SVG 다운로드, Shader 출력은 미구현 |
+| [Page](../surfaces/page.md) — Graphic | 구현 | Studio의 `Graphic` 메뉴 → `/studio/generate/graphic` → Effective Controller·P5 또는 WebGL Canvas → Runtime Artifact 기반 공통 Export |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `findTemplatesForRequest` + `prepareTemplateImage`(슬롯 검증 후 첨부 PNG) |
 | [REST](../surfaces/rest.md) | 부분 | 인쇄 변환 `POST /api/templates/{templateId}/exports/{format}`(`format`: `pdf`·`tiff`), import 어댑터 `POST /api/templates/import-figma-html`. 모두 산출물 레코드를 저장하지 않음 |
 | Slack | 계획 | — |
@@ -76,7 +78,7 @@ TIFF는 원본 가로·세로 픽셀을 리샘플링하지 않고 PPI 메타데�
 | `template-import` | 외부 템플릿을 가져와 운영자가 편집·검증·발행 가능한 상태로 준비 | 저장 가능한 Template |
 | `template-customization` | published Template의 슬롯 값을 입력하고 결과를 조합 | composed HTML |
 | `studio-export` | Runtime capability와 Admin 정책을 교차 검증하고 형식별 adapter를 실행 | SVG·MP4·PNG·JPEG·TIFF·PDF |
-| `generate-graphic` | Plugin 구현 키와 도구별 입력 계약으로 그래픽을 계산·미리보기·출력 source 제공 | p5는 SVG, Shader는 WebGL Preview·MP4 source |
+| `graphic-generation` | Runtime Manifest와 Effective Controller 값으로 그래픽을 계산하고 Artifact 제공 | Raster·Vector·Video Artifact |
 
 공용 Template 계약·HTML 합성·슬롯 수집·render model projection·Payload 조회는 `src/features/template-core`이 소유합니다. `template-customization`은 `studio-export`의 공개 hook과 print policy를 사용할 수 있지만, 두 기능 모두 `template-import` 내부 구현을 직접 import하지 않습니다.
 

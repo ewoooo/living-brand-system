@@ -247,7 +247,7 @@ export function projectImageProfileFeatureSelections(
 		const feature = record(value, 'Image feature')
 		switch (feature.blockType) {
 			case 'colorAdjustment':
-				assertFeatureKeys(feature, ['id', 'blockType', 'background'])
+				assertFeatureKeys(feature, ['id', 'blockName', 'blockType', 'background'])
 				if (feature.background != null && typeof feature.background !== 'boolean') {
 					throw new Error('Image color-adjustment background은 boolean이어야 합니다.')
 				}
@@ -256,7 +256,7 @@ export function projectImageProfileFeatureSelections(
 					background: feature.background === true,
 				}
 			case 'cameraControl':
-				assertFeatureKeys(feature, ['id', 'blockType'])
+				assertFeatureKeys(feature, ['id', 'blockName', 'blockType'])
 				return { type: 'camera-control' as const }
 			default:
 				throw new Error(`지원하지 않는 Image feature blockType입니다: ${feature.blockType}`)

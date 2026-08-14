@@ -103,7 +103,7 @@ function ColorAdjustmentFeature({
 
 function CameraFeature({ runtime }: { runtime: ImageProfileCameraRuntime }) {
 	return (
-		<Controller.Group title="Camera Controls" collapsible disabled={!runtime.seedImage}>
+		<Controller.Group title="Camera Controls" disabled={!runtime.seedImage}>
 			{runtime.seedImage && (
 				<ImageCameraControl
 					azimuthDeg={runtime.azimuthDeg}
