@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { forwardStraightGraphicConfig } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import {
 	deriveTemplateConfig,
 	findTemplateControl,
+	getTemplateRuntimeManifest,
 	isBackgroundSlot,
 	isImageSlot,
 	isTextSlot,
@@ -33,10 +35,30 @@ const template: PublishedHtmlTemplate = {
 }
 
 const imageConfig = createImageConfig(3, ['1:1', '4:3'])
+const forwardStraightConfig = {
+	...forwardStraightRuntimeManifest,
+	output: resolveGraphicStudioOutput(forwardStraightRuntimeManifest),
+}
 
 describe('deriveTemplateConfig', () => {
+	it('Runtime Manifest는 같은 Template 문서에서 같은 controller와 Artifact를 파생한다', () => {
+		const manifest = getTemplateRuntimeManifest(template)
+
+		expect(getTemplateRuntimeManifest(template)).toEqual(manifest)
+		expect(manifest).toMatchObject({
+			artifacts: { raster: {} },
+			controller: {
+				groups: [
+					{ id: 'text', title: 'Text', collapsible: true },
+					{ id: 'background', title: 'Background', collapsible: true },
+				],
+			},
+		})
+		expect(getTemplateRuntimeManifest({ ...template })).toEqual(manifest)
+	})
+
 	it('Template 도메인 계약을 멱등 검증하고 slot의 알 수 없는 필드를 거부한다', () => {
-		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightGraphicConfig])
+		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightConfig])
 		expect(parseTemplateConfig(parseTemplateConfig(config))).toBe(config)
 		expect(() =>
 			parseTemplateConfig({
@@ -72,8 +94,17 @@ describe('deriveTemplateConfig', () => {
 		).toThrow('알 수 없는')
 	})
 
+	it('Effective output은 Template Artifact와 실제 Exporter capability를 벗어날 수 없다', () => {
+		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightConfig])
+		const withCommonFormat = {
+			...config,
+			output: { ...config.output, formats: ['svg'] as const },
+		}
+		expect(() => parseTemplateConfig(withCommonFormat)).toThrow('지원하지 않는 output format')
+	})
+
 	it('공통 envelope에는 전역 Definition, Template 확장에는 DOM·슬롯 binding을 둔다', () => {
-		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightGraphicConfig])
+		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightConfig])
 
 		expect(config).toMatchObject({ studio: 'template', id: 7, version: 1, name: '포스터' })
 		const text = config.template.slots.filter(isTextSlot)
@@ -102,7 +133,7 @@ describe('deriveTemplateConfig', () => {
 		})
 		expect(image[0]?.transform.limits.scale).toEqual({ min: 0.2, max: 5 })
 		expect(config.template.imageConfigs).toEqual([imageConfig])
-		expect(config.template.graphicConfigs).toEqual([forwardStraightGraphicConfig])
+		expect(config.template.graphicConfigs).toEqual([forwardStraightConfig])
 		expect(config.template.slots.filter(isBackgroundSlot)).toHaveLength(1)
 		expect(config.template.textColorControlId).toBe('text.color')
 		expect(findTemplateControl(config, 'background.color')).toMatchObject({
@@ -111,17 +142,27 @@ describe('deriveTemplateConfig', () => {
 		})
 	})
 
-	it('output은 인쇄 정책을 따르고 canvas·printPpi는 도메인 정보로 남긴다', () => {
-		expect(deriveTemplateConfig(template).output.formats).toEqual(['png'])
-		expect(deriveTemplateConfig({ ...template, printPpi: 150 })).toMatchObject({
-			output: { formats: ['png', 'tiff', 'pdf'] },
+	it('output은 Raster Exporter capability를 따르고 canvas만 Template 도메인 정보로 남긴다', () => {
+		expect(deriveTemplateConfig(template)).toMatchObject({
+			output: { formats: ['png', 'jpeg', 'tiff', 'pdf', 'mp4'] },
 			template: {
 				exportOption: {
-					printPpi: 150,
 					canvas: { width: 800, height: 600 },
 				},
 			},
 		})
+		expect(
+			deriveTemplateConfig({
+				...template,
+				exportPolicy: { allowedFormats: ['pdf'] },
+			}).output.formats,
+		).toEqual(['pdf'])
+		expect(() =>
+			deriveTemplateConfig({
+				...template,
+				exportPolicy: { allowedFormats: ['svg'] },
+			}),
+		).toThrow('지원하지 않는 output format')
 	})
 
 	it('동적 published Template에서 만든 envelope도 공통 strict validator를 통과해야 한다', () => {
@@ -136,54 +177,32 @@ describe('deriveTemplateConfig', () => {
 		).toThrow('maxLength')
 	})
 
-	it('기존 Policy도 제한값만 호환하고 그룹 표현은 Base Definition에 남긴다', () => {
+	it('Restrictions는 제한값만 적용하고 그룹 표현은 Runtime Manifest에 남긴다', () => {
 		const config = deriveTemplateConfig({
 			...template,
-			controller: {
-				groups: [
+			controllerRestrictions: {
+				controls: [
 					{
-						key: 'text',
-						title: 'Copy',
-						collapsible: true,
-						defaultOpen: false,
-						controls: [
-							{
-								blockType: 'text',
-								key: 'text:1:1',
-								label: '제목',
-								availability: 'readonly',
-								defaultValue: '고정 제목',
-								maxLength: 10,
-							},
-							{
-								blockType: 'color',
-								key: 'text.color',
-								label: 'Copy Color',
-								availability: 'readonly',
-								defaultValue: '#112233',
-							},
-						],
+						controlId: 'text:1:1',
+						availability: 'readonly',
+						defaultValue: '고정 제목',
+						maxLength: 10,
 					},
 					{
-						key: 'background',
-						title: 'Backdrop',
-						controls: [
-							{
-								blockType: 'select',
-								key: 'background.type',
-								label: 'Type',
-								availability: 'readonly',
-								defaultValue: 'color',
-								options: [{ value: 'color', label: 'Color' }],
-							},
-							{
-								blockType: 'color',
-								key: 'background.color',
-								label: 'Backdrop Color',
-								availability: 'disabled',
-								defaultValue: '#ffffff',
-							},
-						],
+						controlId: 'text.color',
+						availability: 'readonly',
+						defaultValue: '#112233',
+					},
+					{
+						controlId: 'background.type',
+						availability: 'readonly',
+						defaultValue: 'color',
+						optionValues: ['color'],
+					},
+					{
+						controlId: 'background.color',
+						availability: 'disabled',
+						defaultValue: '#ffffff',
 					},
 				],
 			},
@@ -212,21 +231,15 @@ describe('deriveTemplateConfig', () => {
 		})
 	})
 
-	it('sparse Policy는 쓰지 않은 Definition 필드를 DOM 기본 계약에서 상속한다', () => {
+	it('sparse Restrictions는 쓰지 않은 Definition 필드를 Runtime Manifest에서 상속한다', () => {
 		const config = deriveTemplateConfig({
 			...template,
-			controller: {
-				groups: [
+			controllerRestrictions: {
+				controls: [
 					{
-						key: 'text',
-						controls: [
-							{
-								blockType: 'text',
-								key: 'text:1:1',
-								availability: 'readonly',
-								maxLength: 10,
-							},
-						],
+						controlId: 'text:1:1',
+						availability: 'readonly',
+						maxLength: 10,
 					},
 				],
 			},
@@ -322,10 +335,11 @@ function createImageConfig(
 ): ImageStudioConfig {
 	return {
 		studio: 'image',
+		artifacts: { raster: {}, original: {} },
 		id,
 		version: 1,
 		name: `프로파일 ${id}`,
-		output: { formats: ['original', 'png'] },
+		output: { formats: ['png'], original: true },
 		controller: {
 			groups: [
 				{

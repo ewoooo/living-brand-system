@@ -57,7 +57,7 @@ export function ControllerAssetCard({
 			size="sm"
 			aria-label={ariaLabel}
 			disabled={locked}
-			className="h-auto shrink-0 rounded-lg bg-background/25 px-2.5 py-1 text-background text-xs hover:bg-background/35"
+			className="h-auto shrink-0 rounded-lg bg-inverted-foreground/25 px-2.5 py-1 text-inverted-foreground text-xs hover:bg-inverted-foreground/35"
 		>
 			{buttonLabel}
 		</Button>
@@ -67,7 +67,7 @@ export function ControllerAssetCard({
 		<div
 			data-slot="controller-asset-card"
 			className={cn(
-				'flex min-h-16 shrink-0 items-center justify-between gap-3 rounded-md bg-foreground p-4 text-background',
+				'flex min-h-16 shrink-0 items-center justify-between gap-3 rounded-lg bg-inverted p-4 text-inverted-foreground',
 				className,
 			)}
 		>
@@ -81,7 +81,7 @@ export function ControllerAssetCard({
 					{title}
 				</Typography>
 				{subtitle && (
-					<Typography as="p" size="xs" className="truncate text-background/60">
+					<Typography as="p" size="xs" className="truncate text-inverted-foreground/60">
 						{subtitle}
 					</Typography>
 				)}

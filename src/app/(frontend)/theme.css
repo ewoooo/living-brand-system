@@ -74,6 +74,9 @@
 	--font-title: "Pretendard", system-ui, sans-serif;
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
+	--color-header-background: var(--header-background);
+	--color-inverted: var(--inverted);
+	--color-inverted-foreground: var(--inverted-foreground);
 	--color-surface-inverted: var(--surface-inverted);
 	--color-surface-inverted-foreground: var(--surface-inverted-foreground);
 	--color-card: var(--card);
@@ -110,10 +113,12 @@
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-ring: var(--sidebar-ring);
 
-	--radius-sm: calc(var(--radius) - 4px);
-	--radius-md: calc(var(--radius) - 2px);
+	--radius-sm: calc(var(--radius) - 8px);
+	--radius-md: calc(var(--radius) - 4px);
 	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) + 4px);
+	--radius-xl: calc(var(--radius) + 12px);
+	--radius-2xl: calc(var(--radius) + 24px);
+	--radius-3xl: calc(var(--radius) + 36px);
 }
 
 /*
@@ -123,13 +128,16 @@
  */
 :root,
 .light {
-	--radius: 0.625rem;
-	/* 앱 셸 헤더 높이 — GlobalHeader가 이 값으로 고정되고, 뷰포트 파생 레이아웃(스튜디오 작업대)이 같은 값을 뺀다. */
-	--global-header-height: 3.8125rem;
+	--radius: 0.75rem;
+	/* 앱 셸 데스크톱 헤더 높이 — GlobalHeader가 이 값을 소비한다. */
+	--global-header-height: 3.75rem;
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.145 0 0);
+	--header-background: transparent;
+	--inverted: var(--foreground);
+	--inverted-foreground: var(--background);
 	/* 반전 면의 얕은 단계. 페이지 하단(챕터 이동 → 푸터)이 명도 계단으로 이어지게 하는 자리다 —
-	   깊은 단계는 `--foreground`/`--background` 짝이 그대로 맡는다(`GuidelineBlockFrame`의 inverted).
+	   깊은 단계는 위의 `--inverted`/`--inverted-foreground`가 맡는다.
 	   🔴 `--primary`가 수치는 같지만 쓸 수 없다: 런타임에 브랜드 색이 주입되는 토큰이라(`layout.tsx`)
 	   면으로 쓰면 계단이 아니라 브랜드 색 블록이 된다. 그래서 주입을 안 받는 슬롯을 따로 둔다.
 	   공차는 두 모드 모두 ΔL 0.124로 대칭이다(라이트 0.269→0.145, 다크 0.861→0.985).
@@ -186,7 +194,10 @@
 	--background: oklch(0.1822 0 0);
 	/* #121212 — pure black 대신 Material 다크 배경(순흑 이미지 구분) */
 	--foreground: oklch(0.985 0 0);
-	/* 라이트의 계단을 그대로 뒤집는다 — 얕은 단계가 페이지에서 덜 멀고, 깊은 단계(`--foreground`)가 더 멀다. */
+	--header-background: transparent;
+	--inverted: var(--foreground);
+	--inverted-foreground: var(--background);
+	/* 라이트의 계단을 그대로 뒤집는다 — 얕은 단계가 페이지에서 덜 멀고, 깊은 단계(`--inverted`)가 더 멀다. */
 	--surface-inverted: oklch(0.861 0 0);
 	--surface-inverted-foreground: oklch(0.205 0 0);
 	--card: oklch(0.1822 0 0);

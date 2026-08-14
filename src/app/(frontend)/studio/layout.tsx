@@ -4,7 +4,11 @@ import { StudioSideNavigation } from '@/components/studio/shared/studio-side-nav
 
 export default function StudioLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<SectionLayout nav={<StudioSideNavigation />} mobileNavigation={false}>
+		<SectionLayout
+			nav={<StudioSideNavigation />}
+			mobileNavigation={false}
+			sidebarStorageKey="lbs.studioSidebarOpen"
+		>
 			{children}
 		</SectionLayout>
 	)

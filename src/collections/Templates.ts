@@ -1,15 +1,9 @@
 import { APIError, type CollectionConfig } from 'payload'
-import {
-	MAX_PRINT_PIXELS,
-	MAX_PRINT_SIDE_PIXELS,
-	PRINT_PPI_OPTIONS,
-} from '@/features/studio-export/print-policy'
 import { prepareTemplateSave } from '@/features/template-import/services/prepare-template-save.service'
 import { isManager, managerOrAdmin } from '@/lib/auth'
 import {
-	studioControllerField,
-	studioControllerOverrideField,
-	studioOutputPolicyField,
+	studioControllerRestrictionsField,
+	studioExportPolicyField,
 } from './fields/studio-controller-field'
 import { draftVersions } from './shared'
 
@@ -58,20 +52,8 @@ export const Templates: CollectionConfig = {
 			type: 'textarea',
 			localized: true,
 		},
-		studioControllerField({
-			mode: 'restrict',
-			hidden: true,
-			description:
-				'비우면 템플릿 슬롯에서 기본 계약을 만듭니다. 필요한 항목만 입력하면 같은 ID의 options, 범위, 기본값, 사용 상태만 좁힙니다.',
-		}),
-		studioControllerOverrideField({ source: 'template' }),
-		studioOutputPolicyField({
-			formats: [
-				{ label: 'PNG', value: 'png' },
-				{ label: 'TIFF', value: 'tiff' },
-				{ label: 'PDF', value: 'pdf' },
-			],
-		}),
+		studioControllerRestrictionsField({ source: 'template' }),
+		studioExportPolicyField({ source: 'template' }),
 		{
 			// 워크스페이스: 캔버스 + 레이어 목록 + 값 편집을 한 컴포넌트가 렌더한다.
 			name: 'templateLayers',
@@ -123,15 +105,6 @@ export const Templates: CollectionConfig = {
 					admin: { width: '50%', description: 'Figma 높이(px). 가져오기가 채웁니다.' },
 				},
 			],
-		},
-		{
-			name: 'printPpi',
-			type: 'select',
-			options: [...PRINT_PPI_OPTIONS],
-			admin: {
-				position: 'sidebar',
-				description: `설정하면 CMYK TIFF와 mm 단위 CMYK PDF가 활성화됩니다. 픽셀 크기는 유지되며 인쇄 출력은 최대 ${MAX_PRINT_PIXELS.toLocaleString('en-US')}픽셀, 너비·높이 각각 최대 ${MAX_PRINT_SIDE_PIXELS.toLocaleString('en-US')}px를 지원합니다.`,
-			},
 		},
 		{
 			name: 'category',

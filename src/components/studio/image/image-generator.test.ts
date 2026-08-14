@@ -5,8 +5,8 @@ import {
 	deriveImageStudioConfig,
 	IMAGE_STUDIO_GROUP_IDS,
 	type ImageStudioConfig,
-	type PublishedImageProfileDefinition,
 } from '@/features/image-generation/domain/image-studio-config'
+import type { ImageModelPreset } from '@/features/image-generation/image-model'
 import { ImageGenerator } from './image-generator'
 
 const RESULT = {
@@ -52,16 +52,52 @@ vi.mock('@/components/studio/image/image-generation-results', () => ({
 function config(
 	id: number,
 	name: string,
-	overrides: Partial<PublishedImageProfileDefinition> = {},
+	options: {
+		cameraControl?: boolean
+		colorAdjustment?: { line: string; background?: string }
+		imageModelPreset?: ImageModelPreset
+		maxPromptLength?: number
+	} = {},
 ) {
 	return deriveImageStudioConfig({
 		id,
 		name,
 		slug: null,
-		imageModelPreset: 'openai-gpt-image-2',
-		aspectRatio: '2:3',
-		imageSize: '1K',
-		...overrides,
+		imageModelPreset: options.imageModelPreset ?? 'openai-gpt-image-2',
+		features: [
+			...(options.colorAdjustment
+				? [
+						{
+							blockType: 'colorAdjustment',
+							background: Boolean(options.colorAdjustment.background),
+						},
+					]
+				: []),
+			...(options.cameraControl === false ? [] : [{ blockType: 'cameraControl' }]),
+		],
+		controllerRestrictions: {
+			controls: [
+				...(options.maxPromptLength
+					? [{ controlId: 'prompt', maxLength: options.maxPromptLength }]
+					: []),
+				...(options.colorAdjustment
+					? [
+							{
+								controlId: 'lineColor',
+								defaultValue: options.colorAdjustment.line,
+							},
+							...(options.colorAdjustment.background
+								? [
+										{
+											controlId: 'backgroundColor',
+											defaultValue: options.colorAdjustment.background,
+										},
+									]
+								: []),
+						]
+					: []),
+			],
+		},
 	})
 }
 
@@ -233,6 +269,7 @@ describe('ImageProfilePicker', () => {
 	function openBrowser(configs: ImageStudioConfig[], initialProfileId?: number) {
 		render(createElement(ImageGenerator, { configs, initialProfileId }))
 		const trigger = screen.getByRole('button', { name: '프로파일 변경' })
+		expect(trigger.closest('[data-slot="controller-header"]')).not.toBeNull()
 		fireEvent.click(trigger)
 		return { panel: screen.getByRole('dialog', { name: 'Image Profiles' }), trigger }
 	}

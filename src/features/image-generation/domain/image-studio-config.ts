@@ -1,29 +1,30 @@
-import { IMAGE_PROMPT_MAX_LENGTH } from '@/features/image-generation/image-generation-limits'
 import type { ImageModelPreset } from '@/features/image-generation/image-model'
-import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import {
 	parseStudioOutputCapability,
-	resolveStudioOutputFormats,
+	projectStudioOutputPolicy,
+	resolveStudioArtifactOutputFormats,
+	resolveStudioOutputCapability,
+	type StudioOutputCapability,
 } from '@/features/studio-export/studio-output'
 import {
 	acceptsControllerExecutionValue,
+	applyControllerRestrictions,
 	type ControllerControlDefinition,
 	parseStudioControllerConfig,
-	projectPayloadController,
+	projectPayloadControllerRestrictions,
 	type StudioControllerConfig,
 } from '@/modules/studio-controller/controller-definition'
 import {
-	getImageProfileServiceCapability,
+	getImageRuntimeManifest,
 	IMAGE_STUDIO_CONTROL_IDS,
-} from './image-profile-service-capability'
+	IMAGE_STUDIO_GROUP_IDS,
+	type ImageRuntimeManifest,
+} from './image-runtime-manifest'
 
-export { IMAGE_STUDIO_CONTROL_IDS } from './image-profile-service-capability'
-
-export const IMAGE_STUDIO_GROUP_IDS = {
-	image: 'image',
-	profileSettings: 'profile-settings',
-	generationSettings: 'generation-settings',
-} as const
+export {
+	IMAGE_STUDIO_CONTROL_IDS,
+	IMAGE_STUDIO_GROUP_IDS,
+} from './image-runtime-manifest'
 
 export type ImageStudioFeature =
 	| {
@@ -32,7 +33,9 @@ export type ImageStudioFeature =
 	  }
 	| { type: 'camera-control' }
 
-export type ImageOutputFormat = 'original' | 'png' | 'jpeg'
+export type ImageProfileFeatureSelection =
+	| { type: 'color-adjustment'; background: boolean }
+	| { type: 'camera-control' }
 
 /** Image Studio Config를 파생하는 서버측 published 프로파일 read model. */
 export type PublishedImageProfileDefinition = {
@@ -40,18 +43,14 @@ export type PublishedImageProfileDefinition = {
 	name: string
 	slug: string | null
 	imageModelPreset: ImageModelPreset
-	aspectRatio: ImageAspectRatio
-	imageSize: ImageOutputSize
-	maxPromptLength?: number | null
-	cameraControl?: boolean | null
-	colorAdjustment?: { line?: string | null; background?: string | null } | null
-	controller?: unknown
+	controllerRestrictions?: unknown
 	features?: unknown
-	output?: { allowedFormats?: readonly string[] | null; original?: boolean | null } | null
+	exportPolicy?: unknown
 }
 
 /** 이미지 프로파일 하나가 발행하는 공통 Controller envelope와 이미지 실행 descriptor. */
-export type ImageStudioConfig = StudioControllerConfig<'image', number, ImageOutputFormat> & {
+export type ImageStudioConfig = StudioControllerConfig<'image', number> & {
+	output: StudioOutputCapability & { original: boolean }
 	image: {
 		slug: string | null
 		features: readonly ImageStudioFeature[]
@@ -74,20 +73,25 @@ export type ImageStudioControls = {
 export function parseImageStudioConfig(input: unknown): ImageStudioConfig {
 	const common = parseStudioControllerConfig(input)
 	const config = record(input, 'ImageStudioConfig')
-	assertKeys(config, ['studio', 'id', 'version', 'name', 'output', 'controller', 'image'])
+	assertKeys(config, [
+		'studio',
+		'id',
+		'version',
+		'name',
+		'artifacts',
+		'output',
+		'controller',
+		'image',
+	])
 	if (common.studio !== 'image') throw new Error('ImageStudioConfig studio: image여야 합니다.')
 	if (typeof common.id !== 'number' || !Number.isInteger(common.id)) {
 		throw new Error('ImageStudioConfig id: 정수여야 합니다.')
 	}
-	parseStudioOutputCapability(config.output)
-	if (
-		(common.output.formats as readonly string[]).some(
-			(format) => format !== 'original' && format !== 'png' && format !== 'jpeg',
-		)
-	) {
-		throw new Error('ImageStudioConfig output format이 올바르지 않습니다.')
+	const output = parseStudioOutputCapability(config.output)
+	resolveStudioArtifactOutputFormats(common.artifacts, output.formats)
+	if (typeof output.original !== 'boolean') {
+		throw new Error('ImageStudioConfig output.original은 boolean이어야 합니다.')
 	}
-
 	const image = record(config.image, 'ImageStudioConfig.image')
 	assertKeys(image, ['slug', 'features'])
 	if (image.slug !== null && typeof image.slug !== 'string') {
@@ -196,185 +200,63 @@ function assertNeverFeature(value: never): never {
 }
 
 /**
- * published 프로파일을 브라우저에 내려도 안전한 이미지 StudioConfig로 투영한다.
- * 저장된 Controller가 없으면 기존 프로파일 필드를 stable control ID로 옮긴다.
+ * Runtime Manifest를 Profile feature 선택과 Admin Restrictions로 좁혀 Effective Config를 만든다.
  */
 export function deriveImageStudioConfig(
 	profile: PublishedImageProfileDefinition,
 ): ImageStudioConfig {
-	const storedController = projectPayloadController(profile.controller)
-	const storedFeatures = projectStoredFeatures(profile.features)
-	const capability = getImageProfileServiceCapability(profile.imageModelPreset)
+	const manifest = getImageRuntimeManifest(profile.imageModelPreset)
+	const featureSelections = projectSupportedImageProfileFeatureSelections(
+		manifest,
+		profile.features,
+	)
 	const config: ImageStudioConfig = {
 		studio: 'image',
 		id: profile.id,
 		version: 1,
 		name: profile.name,
-		output: {
-			...capability.output,
-			formats: resolveStudioOutputFormats(capability.output.formats, [
-				...((profile.output?.original ?? true) ? ['original'] : []),
-				...(profile.output?.allowedFormats ?? capability.output.formats).filter(
-					(format) => format !== 'original',
-				),
-			]),
-		},
-		controller: storedController ?? deriveLegacyController(profile),
+		output: resolveStudioOutputCapability(
+			manifest.artifacts,
+			projectStudioOutputPolicy(profile.exportPolicy),
+			{ packages: ['zip'] },
+		) as StudioOutputCapability & { original: boolean },
+		artifacts: manifest.artifacts,
+		controller: deriveImageProfileController(
+			profile.imageModelPreset,
+			profile.features,
+			profile.controllerRestrictions,
+		),
 		image: {
 			slug: profile.slug ?? null,
-			// canonical Controller가 있으면 빈 features도 명시적 no-capability다. 기존 문서처럼
-			// Controller가 없을 때만 빈 Payload blocks를 legacy 필드로 복구한다.
-			features:
-				storedController && !storedFeatures?.length
-					? []
-					: storedFeatures?.length
-						? storedFeatures
-						: deriveLegacyFeatures(profile),
+			features: projectEffectiveFeatures(manifest, featureSelections),
 		},
 	}
 
 	parseImageStudioConfig(config)
-	assertImageServiceCapability(config, profile.imageModelPreset)
 	return config
 }
 
-function deriveLegacyFeatures(
-	profile: PublishedImageProfileDefinition,
-): readonly ImageStudioFeature[] {
-	const color = profile.colorAdjustment
-	return [
-		...(color?.line
-			? [
-					{
-						type: 'color-adjustment' as const,
-						controls: {
-							line: IMAGE_STUDIO_CONTROL_IDS.lineColor,
-							...(color.background
-								? { background: IMAGE_STUDIO_CONTROL_IDS.backgroundColor }
-								: {}),
-						},
-					},
-				]
-			: []),
-		// 필드가 없던 시절의 문서는 지금까지처럼 시점 조정을 연다.
-		...((profile.cameraControl ?? true) ? [{ type: 'camera-control' as const }] : []),
-	]
-}
-
-function deriveLegacyController(
-	profile: PublishedImageProfileDefinition,
-): ImageStudioConfig['controller'] {
-	const line = profile.colorAdjustment?.line
-	const background = profile.colorAdjustment?.background
-	const capability = getImageProfileServiceCapability(profile.imageModelPreset)
-
-	return {
-		groups: [
-			{
-				id: IMAGE_STUDIO_GROUP_IDS.image,
-				title: 'Image',
-				collapsible: true,
-				defaultOpen: true,
-				controls: [
-					{
-						id: IMAGE_STUDIO_CONTROL_IDS.prompt,
-						kind: 'text',
-						label: 'Prompt',
-						defaultValue: '',
-						multiline: true,
-						maxLength: profile.maxPromptLength ?? IMAGE_PROMPT_MAX_LENGTH,
-						placeholder: '이미지를 설명하세요',
-					},
-				],
-			},
-			...(line
-				? [
-						{
-							id: IMAGE_STUDIO_GROUP_IDS.profileSettings,
-							title: 'Profile Settings',
-							collapsible: true as const,
-							defaultOpen: true,
-							controls: [
-								{
-									id: IMAGE_STUDIO_CONTROL_IDS.lineColor,
-									kind: 'color' as const,
-									label: 'Line Color',
-									defaultValue: line,
-								},
-								...(background
-									? [
-											{
-												id: IMAGE_STUDIO_CONTROL_IDS.backgroundColor,
-												kind: 'color' as const,
-												label: 'Background Color',
-												defaultValue: background,
-											},
-										]
-									: []),
-							],
-						},
-					]
-				: []),
-			{
-				id: IMAGE_STUDIO_GROUP_IDS.generationSettings,
-				title: 'Setting',
-				controls: [
-					selectControl(
-						IMAGE_STUDIO_CONTROL_IDS.batch,
-						'장수',
-						capability.controls.batch.options,
-						capability.controls.batch.defaultValue,
-					),
-					selectControl(
-						IMAGE_STUDIO_CONTROL_IDS.ratio,
-						'비율',
-						capability.controls.ratio.options,
-						profile.aspectRatio,
-					),
-					selectControl(
-						IMAGE_STUDIO_CONTROL_IDS.resolution,
-						'해상도',
-						capability.controls.resolution.options,
-						profile.imageSize,
-					),
-				],
-			},
-		],
-	}
-}
-
-function selectControl(
-	id: string,
-	label: string,
-	values: readonly string[],
-	defaultValue: string,
-): ControlOfKind<'select'> {
-	return {
-		id,
-		kind: 'select',
-		label,
-		defaultValue,
-		options: values.map((value) => ({ label: value, value })),
-	}
-}
-
-/** Payload feature block 메타데이터를 공개 capability IR로 좁힌다. */
-function projectStoredFeatures(input: unknown): readonly ImageStudioFeature[] | null {
-	if (input == null) return null
+/** Payload feature block을 Service가 알고 있는 선택으로 좁힌다. */
+export function projectImageProfileFeatureSelections(
+	input: unknown,
+): readonly ImageProfileFeatureSelection[] {
+	if (input == null) return []
 	if (!Array.isArray(input)) throw new Error('Image features가 배열이 아닙니다.')
 
 	return input.map((value) => {
 		const feature = record(value, 'Image feature')
 		switch (feature.blockType) {
 			case 'colorAdjustment':
+				assertFeatureKeys(feature, ['id', 'blockType', 'background'])
+				if (feature.background != null && typeof feature.background !== 'boolean') {
+					throw new Error('Image color-adjustment background은 boolean이어야 합니다.')
+				}
 				return {
 					type: 'color-adjustment' as const,
-					controls: {
-						line: feature.line as string,
-						...optionalProperty('background', feature.background as string | undefined),
-					},
+					background: feature.background === true,
 				}
 			case 'cameraControl':
+				assertFeatureKeys(feature, ['id', 'blockType'])
 				return { type: 'camera-control' as const }
 			default:
 				throw new Error(`지원하지 않는 Image feature blockType입니다: ${feature.blockType}`)
@@ -382,58 +264,104 @@ function projectStoredFeatures(input: unknown): readonly ImageStudioFeature[] | 
 	})
 }
 
-function assertImageServiceCapability(
-	config: ImageStudioConfig,
-	model: PublishedImageProfileDefinition['imageModelPreset'],
-) {
-	const capability = getImageProfileServiceCapability(model)
-	const { prompt, batch, ratio, resolution } = getImageStudioControls(config)
-	if (!prompt.maxLength || prompt.maxLength > capability.promptMaxLength) {
-		throw new Error(`Image prompt maxLength는 ${capability.promptMaxLength} 이하여야 합니다.`)
-	}
-	assertOptions(batch, capability.controls.batch.options, 'batch')
-	assertOptions(ratio, capability.controls.ratio.options, 'ratio')
-	assertOptions(resolution, capability.controls.resolution.options, 'resolution')
-
-	const referencedFeatureControls = new Set<string>()
-	const types = new Set<ImageStudioFeature['type']>()
-	for (const feature of config.image.features) {
-		if (!capability.features.includes(feature.type)) {
-			throw new Error(`Image service가 지원하지 않는 feature입니다: ${feature.type}`)
-		}
-		if (types.has(feature.type)) {
-			throw new Error(`Image feature type이 중복되었습니다: ${feature.type}`)
-		}
-		types.add(feature.type)
-		if (feature.type !== 'color-adjustment') continue
-		referencedFeatureControls.add(feature.controls.line)
-		requireControl(config, feature.controls.line, 'color')
-		if (feature.controls.background) {
-			referencedFeatureControls.add(feature.controls.background)
-			requireControl(config, feature.controls.background, 'color')
-		}
-	}
-
-	for (const control of config.controller.groups.flatMap((group) => group.controls)) {
-		const supported = capability.controls[control.id as keyof typeof capability.controls]
-		const featureColor = referencedFeatureControls.has(control.id) && control.kind === 'color'
-		if ((!supported || supported.kind !== control.kind) && !featureColor) {
-			throw new Error(`Image service가 지원하지 않는 control입니다: ${control.id}`)
-		}
-		if (
-			(control.id === IMAGE_STUDIO_CONTROL_IDS.lineColor ||
-				control.id === IMAGE_STUDIO_CONTROL_IDS.backgroundColor) &&
-			!referencedFeatureControls.has(control.id)
-		) {
-			throw new Error(`Image feature가 참조하지 않는 color control입니다: ${control.id}`)
-		}
+function assertFeatureKeys(value: Record<string, unknown>, allowed: readonly string[]) {
+	const allowedKeys = new Set(allowed)
+	for (const key of Object.keys(value)) {
+		if (!allowedKeys.has(key))
+			throw new Error(`Image feature에 알 수 없는 필드가 있습니다: ${key}`)
 	}
 }
 
-function assertOptions(control: ControlOfKind<'select'>, allowed: readonly string[], name: string) {
-	if (control.options.some((option) => !allowed.includes(option.value))) {
-		throw new Error(`Image ${name} options가 서버 상한을 벗어났습니다.`)
+/** Admin form과 published projector가 같은 Manifest→Feature→Restrictions 순서를 소비한다. */
+export function deriveImageProfileController(
+	modelPreset: ImageModelPreset,
+	features: unknown,
+	controllerRestrictions: unknown,
+): ImageStudioConfig['controller'] {
+	const manifest = getImageRuntimeManifest(modelPreset)
+	const featureSelections = projectSupportedImageProfileFeatureSelections(manifest, features)
+	return {
+		groups: applyControllerRestrictions(
+			selectImageProfileControllerGroups(manifest, featureSelections),
+			projectPayloadControllerRestrictions(controllerRestrictions),
+		),
 	}
+}
+
+function projectSupportedImageProfileFeatureSelections(
+	manifest: ImageRuntimeManifest,
+	input: unknown,
+): readonly ImageProfileFeatureSelection[] {
+	const selections = projectImageProfileFeatureSelections(input)
+	const selectedTypes = new Set<ImageProfileFeatureSelection['type']>()
+	const supportedFeatures = new Map(
+		manifest.supportedFeatures.map((feature) => [feature.type, feature]),
+	)
+	for (const selection of selections) {
+		if (selectedTypes.has(selection.type)) {
+			throw new Error(`Image feature type이 중복되었습니다: ${selection.type}`)
+		}
+		selectedTypes.add(selection.type)
+		const supported = supportedFeatures.get(selection.type)
+		if (!supported) {
+			throw new Error(`Image runtime이 지원하지 않는 feature입니다: ${selection.type}`)
+		}
+		if (
+			selection.type === 'color-adjustment' &&
+			selection.background &&
+			(supported.type !== 'color-adjustment' || !supported.controls.background)
+		) {
+			throw new Error('Image runtime이 background color adjustment를 지원하지 않습니다.')
+		}
+	}
+	return selections
+}
+
+function selectImageProfileControllerGroups(
+	manifest: ImageRuntimeManifest,
+	features: readonly ImageProfileFeatureSelection[],
+): ImageStudioConfig['controller']['groups'] {
+	const color = features.find((feature) => feature.type === 'color-adjustment')
+	const capability = manifest.supportedFeatures.find(
+		(feature) => feature.type === 'color-adjustment',
+	)
+	return manifest.controller.groups.flatMap((group) => {
+		if (group.id !== IMAGE_STUDIO_GROUP_IDS.profileSettings) return [group]
+		if (!color || !capability || capability.type !== 'color-adjustment') return []
+		const enabledControlIds = new Set([
+			capability.controls.line,
+			...(color.background && capability.controls.background
+				? [capability.controls.background]
+				: []),
+		])
+		return [
+			{ ...group, controls: group.controls.filter(({ id }) => enabledControlIds.has(id)) },
+		]
+	})
+}
+
+function projectEffectiveFeatures(
+	manifest: ImageRuntimeManifest,
+	features: readonly ImageProfileFeatureSelection[],
+): readonly ImageStudioFeature[] {
+	return features.map((feature) => {
+		if (feature.type === 'camera-control') return { type: 'camera-control' }
+		const capability = manifest.supportedFeatures.find(
+			(candidate) => candidate.type === 'color-adjustment',
+		)
+		if (capability?.type !== 'color-adjustment') {
+			throw new Error('Image runtime이 color-adjustment feature를 지원하지 않습니다.')
+		}
+		return {
+			type: 'color-adjustment',
+			controls: {
+				line: capability.controls.line,
+				...(feature.background && capability.controls.background
+					? { background: capability.controls.background }
+					: {}),
+			},
+		}
+	})
 }
 
 function requireControl<Kind extends ControllerControlDefinition['kind']>(
@@ -474,8 +402,4 @@ function assertKeys(value: Record<string, unknown>, allowed: readonly string[]) 
 		if (!allowedKeys.has(key))
 			throw new Error(`ImageStudioConfig에 알 수 없는 필드가 있습니다: ${key}`)
 	}
-}
-
-function optionalProperty<Key extends string, Value>(key: Key, value: Value | null | undefined) {
-	return value == null ? {} : ({ [key]: value } as Record<Key, Value>)
 }

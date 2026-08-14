@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { CameraAdjustmentRequest } from '../camera-control'
 import {
 	type ImageGenerationRequest,
@@ -19,37 +19,46 @@ export function useImageGeneration() {
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 
-	async function run(
-		count: number,
-		request: () => Promise<ImageGenerationResult>,
-		errorMessage: string,
-	) {
-		if (loading) return
+	const run = useCallback(
+		async (
+			count: number,
+			request: () => Promise<ImageGenerationResult>,
+			errorMessage: string,
+		) => {
+			if (loading) return
 
-		setLoading(true)
-		setError(null)
-		setSelected(null)
-		setRequested(count)
+			setLoading(true)
+			setError(null)
+			setSelected(null)
+			setRequested(count)
 
-		try {
-			setResult(await request())
-		} catch (requestError) {
-			console.error(requestError)
-			setError(errorMessage)
-		} finally {
-			setLoading(false)
-		}
-	}
+			try {
+				setResult(await request())
+			} catch (requestError) {
+				console.error(requestError)
+				setError(errorMessage)
+			} finally {
+				setLoading(false)
+			}
+		},
+		[loading],
+	)
 
-	async function generate(input: ImageGenerationRequest) {
-		if (!input.prompt.trim()) return
-		await run(input.count, () => requestImageGeneration(input), GENERATION_ERROR_MESSAGE)
-	}
+	const generate = useCallback(
+		async (input: ImageGenerationRequest) => {
+			if (!input.prompt.trim()) return
+			await run(input.count, () => requestImageGeneration(input), GENERATION_ERROR_MESSAGE)
+		},
+		[run],
+	)
 
 	/** 선택한 생성 이미지를 시드로 시점을 다시 잡는다 — 조정 결과도 같은 결과 상태로 흐른다. */
-	async function adjustCamera(input: CameraAdjustmentRequest) {
-		await run(1, () => requestCameraAdjustment(input), CAMERA_ERROR_MESSAGE)
-	}
+	const adjustCamera = useCallback(
+		async (input: CameraAdjustmentRequest) => {
+			await run(1, () => requestCameraAdjustment(input), CAMERA_ERROR_MESSAGE)
+		},
+		[run],
+	)
 
 	return { adjustCamera, error, generate, loading, requested, result, selected, setSelected }
 }

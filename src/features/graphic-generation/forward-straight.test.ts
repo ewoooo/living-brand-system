@@ -1,19 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { forwardStraightGraphicConfig } from '@/features/graphic-generation/domain/graphic-studio-manifest'
-import { renderGraphicStudioSvg } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
+import { getGraphicStudioVectorArtifact } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import { createControllerValues } from '@/modules/studio-controller/controller-definition'
-import {
+import forwardStraightRuntimeManifest, {
 	FORWARD_STRAIGHT_DEFAULT_INPUT,
+} from './graphic-runtimes/forward-straight/definition'
+import {
 	forwardStraightInputSchema,
 	toForwardStraightInput,
-} from './forward-straight'
+} from './graphic-runtimes/forward-straight/model'
 
-describe('forwardStraightGraphicConfig', () => {
+describe('forwardStraightRuntimeManifest', () => {
 	it('P5 계약의 Controller 기본값을 런타임 입력으로 복원한다', () => {
-		expect(forwardStraightGraphicConfig.type).toBe('p5')
+		expect(forwardStraightRuntimeManifest.type).toBe('p5')
 		expect(
 			toForwardStraightInput(
-				createControllerValues(forwardStraightGraphicConfig.controller.groups),
+				createControllerValues(forwardStraightRuntimeManifest.controller.groups),
 			),
 		).toEqual(FORWARD_STRAIGHT_DEFAULT_INPUT)
 	})
@@ -33,17 +34,17 @@ describe('forwardStraightGraphicConfig', () => {
 		).toBe(false)
 	})
 
-	it('Controller 기본값과 viewport를 pure SVG runtime에 전달한다', () => {
-		const values = createControllerValues(forwardStraightGraphicConfig.controller.groups)
-		const first = renderGraphicStudioSvg(forwardStraightGraphicConfig, values, {
+	it('Controller 기본값과 viewport를 pure Vector Artifact projector에 전달한다', () => {
+		const values = createControllerValues(forwardStraightRuntimeManifest.controller.groups)
+		const first = getGraphicStudioVectorArtifact(forwardStraightRuntimeManifest, values, {
 			width: 100,
 			height: 100,
 		})
-		const second = renderGraphicStudioSvg(forwardStraightGraphicConfig, values, {
+		const second = getGraphicStudioVectorArtifact(forwardStraightRuntimeManifest, values, {
 			width: 100,
 			height: 100,
 		})
-		expect(second).toBe(first)
-		expect(first).toContain('viewBox="0 0 100 100"')
+		expect(second).toEqual(first)
+		expect(first).toMatchObject({ kind: 'vector', source: { width: 100, height: 100 } })
 	})
 })

@@ -1,4 +1,3 @@
-import { parsePrintPpi } from '@/features/studio-export/print-policy'
 import { projectTemplateRenderModel } from '@/features/template-core/domain/project-template-render-model'
 import { findPublishedTemplate } from '@/features/template-core/repositories/published-template.payload.repository'
 import type {
@@ -52,11 +51,9 @@ export async function getPublishedTemplate(
 		kind: 'html',
 		id: template.id,
 		name: template.name,
-		printPpi: parsePrintPpi(template.printPpi),
 		templateVersion: template.updatedAt,
-		controller: template.controller,
-		controllerOverride: template.controllerOverride,
-		output: template.output,
+		controllerRestrictions: template.controllerRestrictions,
+		exportPolicy: template.exportPolicy,
 		...renderModel,
 		nodeConfigs: projectStudioNodeConfigs(renderModel.nodeConfigs),
 	}

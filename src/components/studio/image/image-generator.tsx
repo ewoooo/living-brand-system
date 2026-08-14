@@ -2,11 +2,15 @@
 
 import { Image as ImageIcon } from '@carbon/icons-react'
 import { ImageCanvas } from '@/components/studio/image/image-canvas'
-import { ImageSidebar } from '@/components/studio/image/image-sidebar'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
+import { ImageSidebar } from '@/components/studio/sidebar/image-sidebar'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
-import { ImageStudioProvider } from '@/features/image-generation/hooks/use-image-studio'
+import { useImageStudio } from '@/features/image-generation/hooks/use-image-studio'
+import { toOpenAIImageSize } from '@/features/image-generation/image-size'
+import { ImageStudioProvider } from '@/features/image-generation/providers/image-studio-provider'
+import { createImageArtifacts } from '@/features/image-generation/runtime/image-artifact.client'
+import { useImageExport } from '@/features/studio-export/hooks/use-image-export'
 
 // 생성 표면: 편집 세션 소유는 ImageStudioProvider, 조작은 컨트롤러, 결과는 캔버스가 그린다.
 export function ImageGenerator({
@@ -35,9 +39,30 @@ export function ImageGenerator({
 
 	return (
 		<ImageStudioProvider configs={configs} initialProfileId={initialProfileId}>
-			<StudioWorkspace controller={<ImageSidebar />}>
-				<ImageCanvas />
-			</StudioWorkspace>
+			<ImageWorkspace />
 		</ImageStudioProvider>
+	)
+}
+
+function ImageWorkspace() {
+	const { profiles, results } = useImageStudio()
+	const result = results.result
+	const resultConfig = profiles.options.find((candidate) => candidate.id === result?.profileId)
+	const exportSize = result
+		? toOpenAIImageSize(result.aspectRatio, result.imageSize).split('x').map(Number)
+		: null
+	const download = useImageExport({
+		artifacts: result
+			? createImageArtifacts({ images: result.images, color: results.color })
+			: null,
+		capability: resultConfig?.output ?? { formats: [], original: false },
+		selected: results.selected,
+		size: exportSize ? { width: exportSize[0], height: exportSize[1] } : null,
+	})
+
+	return (
+		<StudioWorkspace sidebar={<ImageSidebar download={download} />}>
+			<ImageCanvas />
+		</StudioWorkspace>
 	)
 }

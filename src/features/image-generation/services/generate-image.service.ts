@@ -111,28 +111,24 @@ export interface ImageGenerationPlan {
 /** published 프로파일의 모델·출력 계약을 생성 플랜으로 해석한다. 비율·해상도 오버라이드는 여기서만 판단한다. 순수 함수. */
 export function planImageGenerationFromProfile(
 	profile: {
-		aspectRatio: ImageAspectRatio
 		id: number
 		imageModelPreset: ImageModelPreset
-		imageSize: ImageOutputSize
 		name: string
 	},
 	input: {
 		prompt: string
 		count: number
 		seedImage?: Uint8Array
-		/** 템플릿 이미지 슬롯 박스에서 유도한 비율 — 있으면 프로파일 비율 대신 쓴다(크롭 손실 최소화). */
-		aspectRatio?: ImageAspectRatio
-		/** 스튜디오에서 고른 해상도 — 있으면 프로파일 해상도 대신 쓴다(모델 제약은 러너가 검증한다). */
-		imageSize?: ImageOutputSize
+		aspectRatio: ImageAspectRatio
+		imageSize: ImageOutputSize
 	},
 ): ImageGenerationPlan {
 	return {
 		prompt: input.prompt,
 		count: input.count,
 		modelPreset: profile.imageModelPreset,
-		aspectRatio: input.aspectRatio ?? profile.aspectRatio,
-		imageSize: input.imageSize ?? profile.imageSize,
+		aspectRatio: input.aspectRatio,
+		imageSize: input.imageSize,
 		profileId: profile.id,
 		profileName: profile.name,
 		...(input.seedImage ? { seedImage: input.seedImage } : {}),
@@ -201,7 +197,12 @@ export async function generateImages({
 	return storeProfileGeneration(generated, {
 		inputPrompt: userInput,
 		// 저장 메타데이터의 비율·해상도는 실제 생성에 쓴 plan이 정본 — 오버라이드 시 프로파일 값과 다르다.
-		profile: { ...profile, aspectRatio: plan.aspectRatio, imageSize: plan.imageSize },
+		profile: {
+			id: profile.id,
+			name: profile.name,
+			aspectRatio: plan.aspectRatio,
+			imageSize: plan.imageSize,
+		},
 		user,
 	})
 }
@@ -260,17 +261,28 @@ export async function adjustImageCamera({
 	if (!seedImage) throw new InvalidSeedImageError()
 
 	const resolved = resolveCameraControl(camera)
+	const effective = resolveImageGenerationInput(config, {
+		userInput: basePrompt,
+		count,
+	})
 	const result = await runImageGeneration(
 		planImageGenerationFromProfile(profile, {
 			prompt: composeCameraAdjustmentPrompt(basePrompt, resolved),
-			count,
+			count: effective.count,
+			aspectRatio: effective.aspectRatio,
+			imageSize: effective.imageSize,
 			seedImage,
 		}),
 		user,
 	)
 	const stored = await storeProfileGeneration(result, {
 		inputPrompt: basePrompt,
-		profile,
+		profile: {
+			id: profile.id,
+			name: profile.name,
+			aspectRatio: effective.aspectRatio,
+			imageSize: effective.imageSize,
+		},
 		user,
 	})
 

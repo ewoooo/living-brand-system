@@ -24,9 +24,11 @@ describe('ImageProfileTestPanel', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		mocks.getData.mockReturnValue({
-			aspectRatio: '16:9',
 			imageModelPreset: 'google-nano-banana-2-lite',
-			imageSize: '1K',
+			features: [],
+			controllerRestrictions: {
+				controls: [{ controlId: 'ratio', defaultValue: '16:9' }],
+			},
 		})
 		mocks.getDataByPath.mockImplementation((path: string) => {
 			if (path === 'profilePrompt') return [{ key: 'style', value: 'technical line art' }]
@@ -74,5 +76,12 @@ describe('ImageProfileTestPanel', () => {
 				}),
 			}),
 		)
+		expect(mocks.requestAdminImageGeneration).toHaveBeenCalledWith({
+			aspectRatio: '16:9',
+			count: 1,
+			imageModelPreset: 'google-nano-banana-2-lite',
+			imageSize: '1K',
+			prompt: JSON.stringify({ style: 'technical line art', subject: '굴착기' }),
+		})
 	})
 })

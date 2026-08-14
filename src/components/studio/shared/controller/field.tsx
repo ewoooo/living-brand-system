@@ -30,7 +30,7 @@ export function ControllerField({
 			data-slot="controller-field"
 			aria-disabled={disabled || undefined}
 			className={cn(
-				'flex w-full shrink-0 flex-col gap-1.5 rounded-md bg-muted px-3 pt-2 pb-3 focus-within:ring-2 focus-within:ring-ring/30',
+				'flex w-full shrink-0 flex-col gap-1.5 rounded-lg bg-muted px-3 pt-2 pb-3 focus-within:ring-2 focus-within:ring-ring/30',
 				disabled && 'pointer-events-none opacity-50',
 				className,
 			)}

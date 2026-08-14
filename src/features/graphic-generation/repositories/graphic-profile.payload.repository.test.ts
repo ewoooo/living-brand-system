@@ -7,7 +7,7 @@ vi.mock('payload', () => ({ getPayload: vi.fn() }))
 
 describe('listPublishedGraphicProfileDefinitions', () => {
 	it('사용자 권한으로 published 안전 필드만 조회한다', async () => {
-		const docs = [{ id: 3, name: 'Forward', runtime: 'forward-straight', controller: null }]
+		const docs = [{ id: 3, name: 'Forward', runtime: 'forward-straight' }]
 		const find = vi.fn().mockResolvedValue({ docs })
 		vi.mocked(getPayload).mockResolvedValue({ find } as never)
 		const user = { email: 'worker@example.com', id: 1, role: 'worker' }
@@ -20,10 +20,9 @@ describe('listPublishedGraphicProfileDefinitions', () => {
 			limit: 100,
 			overrideAccess: false,
 			select: {
-				controller: true,
-				controllerOverride: true,
+				controllerRestrictions: true,
 				name: true,
-				output: true,
+				exportPolicy: true,
 				runtime: true,
 			},
 			sort: 'displayOrder',

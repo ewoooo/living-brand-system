@@ -658,6 +658,14 @@ describe('composeTemplateHtml canvas background', () => {
 		expect(root.style.backgroundImage).toBe(`url("${generatedBackground}")`)
 	})
 
+	it('clear를 주면 루트의 기존 배경 선언을 모두 비운다', () => {
+		const html = composeTemplateHtml(canvasHtml, {}, { canvasBackground: { clear: true } })
+		const root = rootOf(html)
+
+		expect(root.style.background).toBe('transparent')
+		expect(root.style.backgroundImage).toBe('none')
+	})
+
 	it('배경 인자를 주지 않으면 출력이 base 그대로다 — 기존 호출부 무영향', () => {
 		expect(composeTemplateHtml(canvasHtml, {})).toBe(canvasHtml)
 		expect(composeTemplateHtml(canvasHtml, {}, {})).toBe(canvasHtml)

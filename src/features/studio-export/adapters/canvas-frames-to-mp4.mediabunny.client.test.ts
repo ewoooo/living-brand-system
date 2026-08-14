@@ -5,6 +5,8 @@ import { canvasFramesToMp4 } from './canvas-frames-to-mp4.mediabunny.client'
 const media = vi.hoisted(() => ({
 	add: vi.fn(),
 	codec: vi.fn(),
+	quality: Symbol('quality-high'),
+	sourceConfig: vi.fn(),
 }))
 
 vi.mock('mediabunny', () => ({
@@ -13,6 +15,9 @@ vi.mock('mediabunny', () => ({
 	},
 	CanvasSource: class {
 		add = media.add
+		constructor(_canvas: HTMLCanvasElement, config: unknown) {
+			media.sourceConfig(config)
+		}
 	},
 	getFirstEncodableVideoCodec: media.codec,
 	Mp4OutputFormat: class {
@@ -34,6 +39,7 @@ vi.mock('mediabunny', () => ({
 			this.state = 'canceled'
 		}
 	},
+	QUALITY_HIGH: media.quality,
 }))
 
 describe('canvasFramesToMp4', () => {
@@ -60,6 +66,10 @@ describe('canvasFramesToMp4', () => {
 		})
 
 		expect(result.type).toBe('video/mp4')
+		expect(media.sourceConfig).toHaveBeenCalledWith({
+			codec: 'avc',
+			quality: media.quality,
+		})
 		expect(renderFrame.mock.calls.map(([time]) => time)).toEqual([0, 1 / 24, 2 / 24])
 		expect(media.add).toHaveBeenCalledTimes(3)
 	})

@@ -7,6 +7,7 @@ const SRC = '/api/generated-images/file/generated.png'
 
 function props(overrides: { color?: { line: string; background?: string } | null } = {}) {
 	return {
+		aspectRatio: '16:9' as const,
 		color: overrides.color ?? null,
 		loading: false,
 		onSelect: vi.fn(),
@@ -42,6 +43,10 @@ describe('ImageGenerationResults', () => {
 	it('색이 없으면 오버레이 없이 원본만 보인다', () => {
 		const view = render(createElement(ImageGenerationResults, props()))
 
+		expect(
+			view.container.querySelector<HTMLElement>('[data-slot="image-result"]')?.style
+				.aspectRatio,
+		).toBe('16 / 9')
 		expect(
 			view.container.querySelectorAll('[data-slot="image-colorize-overlay"]'),
 		).toHaveLength(0)

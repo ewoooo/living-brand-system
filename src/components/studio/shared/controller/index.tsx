@@ -7,7 +7,6 @@ import { ControllerGroup } from './group'
 import { ControllerInput, ControllerTextarea } from './input'
 import { ControllerContent, ControllerFooter, ControllerHeader, ControllerRoot } from './layout'
 import { ControllerPad } from './pad'
-import { ControllerPanel } from './panel'
 import { ControllerRange } from './range'
 import { ControllerRow } from './row'
 import { ControllerSegmented } from './segmented'
@@ -35,7 +34,6 @@ export const Controller = {
 	Content: ControllerContent,
 	Group: ControllerGroup,
 	Footer: ControllerFooter,
-	Panel: ControllerPanel,
 	Row: ControllerRow,
 	Field: ControllerField,
 	Segmented: ControllerSegmented,
@@ -64,7 +62,6 @@ export {
 	ControllerHeader,
 	ControllerInput,
 	ControllerPad,
-	ControllerPanel,
 	ControllerRange,
 	ControllerRoot,
 	ControllerRow,
