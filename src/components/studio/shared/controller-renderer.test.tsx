@@ -35,7 +35,10 @@ describe('ControllerRenderer', () => {
 		expect(renderedGroups[1]).toHaveClass('border-t')
 
 		fireEvent.click(screen.getByRole('button', { name: 'First' }))
-		expect(screen.queryByRole('textbox', { name: 'First value' })).toBeNull()
+		expect(screen.getByRole('button', { name: 'First' })).toHaveAttribute(
+			'aria-expanded',
+			'false',
+		)
 	})
 
 	it('Admin presentation으로 static 그룹과 최초 닫힘을 투영한다', () => {

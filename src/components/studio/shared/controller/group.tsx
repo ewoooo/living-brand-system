@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 type ControllerGroupProps =
 	| (Omit<React.ComponentProps<'section'>, 'title'> & {
 			title: string
-			collapsible?: false
+			collapsible: false
 			defaultOpen?: never
 			disabled?: never
 	  })
@@ -19,7 +19,7 @@ type ControllerGroupProps =
 			'title' | 'open' | 'onOpenChange' | 'disabled'
 	  > & {
 			title: string
-			collapsible: true
+			collapsible?: true
 			defaultOpen?: boolean
 			/** 잠긴 그룹 — 강제로 닫히고 토글할 수 없다. 풀리면 저장된 열림 상태로 복귀한다. */
 			disabled?: boolean
@@ -27,7 +27,7 @@ type ControllerGroupProps =
 
 /** 제목과 컨트롤을 묶고, Admin이 허용한 그룹만 접힘 상태를 소유한다. */
 export function ControllerGroup(props: ControllerGroupProps) {
-	if (props.collapsible) return <ControllerCollapsibleGroup {...props} />
+	if (props.collapsible !== false) return <ControllerCollapsibleGroup {...props} />
 
 	const { title, collapsible: _collapsible, className, children, ...sectionProps } = props
 	return (
@@ -52,7 +52,7 @@ function ControllerCollapsibleGroup({
 	className,
 	children,
 	...props
-}: Extract<ControllerGroupProps, { collapsible: true }>) {
+}: Exclude<ControllerGroupProps, { collapsible: false }>) {
 	// disabled 동안에도 사용자의 열림 의사를 보존한다 — 잠금이 풀리면 원래 상태로 돌아온다.
 	const [open, setOpen] = React.useState(defaultOpen)
 	const reducedMotion = useReducedMotion()

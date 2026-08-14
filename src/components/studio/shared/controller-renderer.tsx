@@ -85,7 +85,11 @@ export function ControllerGroupRenderer({
 			{children}
 		</Controller.Group>
 	) : (
-		<Controller.Group title={definition.title} className={first ? 'border-t-0' : undefined}>
+		<Controller.Group
+			title={definition.title}
+			collapsible={false}
+			className={first ? 'border-t-0' : undefined}
+		>
 			{children}
 		</Controller.Group>
 	)
