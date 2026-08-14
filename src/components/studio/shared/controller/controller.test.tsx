@@ -18,13 +18,19 @@ describe('Controller layout', () => {
 			</Controller.Root>,
 		)
 
-		expect(container.querySelector('[data-slot="controller-root"]')).toBeInTheDocument()
-		expect(container.querySelector('[data-slot="controller-header"]')).toBeInTheDocument()
-		expect(container.querySelector('[data-slot="controller-content"]')).toBeInTheDocument()
+		expect(container.querySelector('[data-slot="controller-root"]')).toHaveClass(
+			'overflow-hidden',
+		)
+		expect(container.querySelector('[data-slot="controller-header"]')).toHaveClass('shrink-0')
+		expect(container.querySelector('[data-slot="controller-content"]')).toHaveClass(
+			'min-h-0',
+			'flex-1',
+			'overflow-y-auto',
+		)
 		expect(container.querySelector('[data-slot="controller-group"]')).toBeInTheDocument()
 		expect(screen.getByText('그룹')).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: '그룹' })).toBeInTheDocument()
-		expect(container.querySelector('[data-slot="controller-footer"]')).toBeInTheDocument()
+		expect(container.querySelector('[data-slot="controller-footer"]')).toHaveClass('shrink-0')
 	})
 })
 

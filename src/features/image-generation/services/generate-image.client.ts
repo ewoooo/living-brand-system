@@ -149,6 +149,8 @@ async function postImageGeneration<Result extends ImageGenerationResult>(
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(input),
 	})
-	if (!response.ok) throw new Error(`생성 실패 (${response.status})`)
-	return (await response.json()) as Result
+	const body = (await response.json().catch(() => null)) as (Result & { message?: string }) | null
+	if (!response.ok) throw new Error(body?.message || `생성 실패 (${response.status})`)
+	if (!body) throw new Error('생성 응답이 올바르지 않습니다.')
+	return body
 }

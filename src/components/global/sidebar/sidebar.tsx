@@ -56,7 +56,7 @@ function SidebarRoot({
 			data-slot="sidebar-root"
 			data-collapsed={collapsed}
 			className={cn(
-				'group/sidebar-api relative hidden h-full w-[100px] shrink-0 overflow-hidden bg-background p-4 transition-[width] duration-200 ease-linear motion-reduce:transition-none md:block xl:data-[collapsed=false]:w-[265px]',
+				'group/sidebar-api relative hidden h-full w-[100px] shrink-0 overflow-hidden bg-transparent p-4 transition-[width] duration-200 ease-linear motion-reduce:transition-none md:block xl:data-[collapsed=false]:w-[265px]',
 				className,
 			)}
 			{...props}

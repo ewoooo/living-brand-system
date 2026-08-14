@@ -7,7 +7,7 @@ import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/g
 import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
 import {
 	type GraphicRuntime,
-	getGraphicRuntimeAdapter,
+	loadGraphicRuntimeAdapter,
 } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { getGraphicStudioRuntimeBindings } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import type { GraphicExportView } from '@/features/studio-export/hooks/use-graphic-export'
@@ -54,24 +54,17 @@ function RegisteredGraphicCanvas({
 	output,
 	registerArtifacts,
 }: RuntimeCanvasProps & { type: GraphicStudioConfig['type'] }) {
-	const { config } = useGraphicStudio()
-	const adapter = getGraphicRuntimeAdapter(config)
-	if (!adapter || adapter.type !== type) return <UnsupportedGraphicCanvas />
 	return (
-		<GraphicPreviewCanvas
-			adapter={adapter}
-			output={output}
-			registerArtifacts={registerArtifacts}
-		/>
+		<GraphicPreviewCanvas type={type} output={output} registerArtifacts={registerArtifacts} />
 	)
 }
 
 function GraphicPreviewCanvas({
-	adapter,
+	type,
 	output,
 	registerArtifacts,
 }: {
-	adapter: NonNullable<ReturnType<typeof getGraphicRuntimeAdapter>>
+	type: GraphicStudioConfig['type']
 } & RuntimeCanvasProps) {
 	const { config, controls } = useGraphicStudio()
 	const valuesRef = useRef(controls.values)
@@ -93,9 +86,15 @@ function GraphicPreviewCanvas({
 
 		async function mountPreview() {
 			const container = containerRef.current
-			if (!container || !adapter) return
+			if (!container) return
 
 			try {
+				const adapter = await loadGraphicRuntimeAdapter(config)
+				if (disposed) return
+				if (!adapter || adapter.type !== type) {
+					if (!disposed) setError('지원하지 않는 그래픽 런타임입니다.')
+					return
+				}
 				const mounted = await adapter.mount({
 					container,
 					values: valuesRef.current,
@@ -105,6 +104,7 @@ function GraphicPreviewCanvas({
 					mounted.destroy()
 					return
 				}
+				setError(null)
 				runtime = mounted
 				runtimeRef.current = mounted
 				const viewport = mounted.getViewport()
@@ -124,7 +124,7 @@ function GraphicPreviewCanvas({
 			registerArtifacts(null)
 			controls.registerBindings({})
 		}
-	}, [adapter, config, controls.registerBindings, controls.update, registerArtifacts])
+	}, [config, controls.registerBindings, controls.update, registerArtifacts, type])
 
 	useEffect(() => {
 		const stage = stageRef.current
@@ -172,18 +172,5 @@ function GraphicPreviewCanvas({
 				</Typography>
 			)}
 		</figure>
-	)
-}
-
-function UnsupportedGraphicCanvas() {
-	return (
-		<div
-			data-slot="graphic-canvas-unsupported"
-			className="flex h-full items-center justify-center"
-		>
-			<Typography role="alert" size="sm" tone="muted">
-				지원하지 않는 그래픽 런타임입니다.
-			</Typography>
-		</div>
 	)
 }

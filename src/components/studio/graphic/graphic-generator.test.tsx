@@ -156,7 +156,7 @@ afterEach(() => {
 })
 
 describe('GraphicGenerator', () => {
-	it('Shader 계약도 Forward Straight 변환 없이 공용 text·color·range primitive를 그린다', () => {
+	it('Shader 계약도 Forward Straight 변환 없이 공용 text·color·range primitive를 그린다', async () => {
 		const config = {
 			studio: 'graphic',
 			id: 'shader-demo',
@@ -208,7 +208,7 @@ describe('GraphicGenerator', () => {
 			'aria-valuenow',
 			'0.5',
 		)
-		expect(screen.getByRole('alert')).toHaveTextContent('지원하지 않는 그래픽 런타임')
+		expect(await screen.findByRole('alert')).toHaveTextContent('지원하지 않는 그래픽 런타임')
 	})
 
 	it('P5 Definition을 Controller primitive로 그리고 변경값을 캔버스에 전달한다', async () => {
@@ -356,14 +356,14 @@ describe('GraphicGenerator', () => {
 		expect(mocks.shaderPreview.resize).toHaveBeenLastCalledWith(800, 800)
 	})
 
-	it('등록된 id와 type이 일치하지 않으면 런타임을 실행하지 않는다', () => {
+	it('등록된 id와 type이 일치하지 않으면 런타임을 실행하지 않는다', async () => {
 		render(
 			createElement(GraphicGenerator, {
 				configs: [{ ...forwardStraightConfig, type: 'shader' }],
 			}),
 		)
 
-		expect(screen.getByRole('alert')).toHaveTextContent('지원하지 않는 그래픽 런타임')
+		expect(await screen.findByRole('alert')).toHaveTextContent('지원하지 않는 그래픽 런타임')
 		expect(mocks.createPreview).not.toHaveBeenCalled()
 	})
 

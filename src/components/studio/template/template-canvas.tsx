@@ -6,7 +6,7 @@ import { Typography } from '@/components/ui/typography'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
 	type GraphicRuntime,
-	getGraphicRuntimeAdapter,
+	loadGraphicRuntimeAdapter,
 } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
@@ -110,25 +110,26 @@ function TemplateGraphicBackground({
 
 	useEffect(() => {
 		const container = containerRef.current
-		const adapter = getGraphicRuntimeAdapter(config)
-		if (!container || !adapter) {
-			setError('지원하지 않는 그래픽 런타임입니다.')
-			return
-		}
+		if (!container) return
 
 		let runtime: GraphicRuntime | undefined
 		let disposed = false
 		setError(null)
-		void adapter
-			.mount({
-				container,
-				values: valuesRef.current,
-				onChange: (controlId, value) => {
-					updateRef.current(controlId, value)
-					return true
-				},
+		void loadGraphicRuntimeAdapter(config)
+			.then((adapter) => {
+				if (disposed) return null
+				if (!adapter) throw new Error('Unsupported graphic runtime.')
+				return adapter.mount({
+					container,
+					values: valuesRef.current,
+					onChange: (controlId, value) => {
+						updateRef.current(controlId, value)
+						return true
+					},
+				})
 			})
 			.then((mounted) => {
+				if (!mounted) return
 				if (disposed) {
 					mounted.destroy()
 					return

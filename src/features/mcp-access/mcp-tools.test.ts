@@ -301,7 +301,11 @@ describe('custom MCP tools', () => {
 			prompt: '{"subject":"파란 세럼병"}',
 			provider: 'openai',
 		})
-		mocks.loadGeneratedImage.mockResolvedValue(image)
+		mocks.loadGeneratedImage.mockResolvedValue({
+			data: image,
+			effectivePrompt: '{"subject":"파란 세럼병"}',
+			inputPrompt: '파란 세럼병',
+		})
 		const result = await getTool('generateBrandImage').handler(
 			{ prompt: '파란 세럼병', profileId: 5 },
 			request,
