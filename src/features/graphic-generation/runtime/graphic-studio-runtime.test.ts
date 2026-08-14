@@ -113,21 +113,20 @@ describe('graphicStudioRuntime', () => {
 	it('published Graphic Profile은 Restrictions로 Runtime Manifest를 좁히고 미등록 runtime을 거부한다', () => {
 		const profile = {
 			id: 9,
-			name: '고정 시점',
+			name: '고정 선 색',
 			runtime: 'forward-straight',
 			controllerRestrictions: {
 				controls: [
 					{
-						controlId: 'viewpoint',
+						controlId: 'lineColor',
 						availability: 'readonly',
-						optionValues: ['flat'],
 					},
 				],
 			},
 		}
 		const narrowed = deriveGraphicStudioConfig(profile)
 
-		expect(narrowed).toMatchObject({ id: 'forward-straight', name: '고정 시점' })
+		expect(narrowed).toMatchObject({ id: 'forward-straight', name: '고정 선 색' })
 		expect(deriveGraphicStudioConfig(profile)).toEqual(narrowed)
 		expect(forwardStraightRuntimeManifest.name).toBe('Forward Straight')
 		expect(narrowed.controller.groups[0]).toMatchObject({
@@ -138,12 +137,11 @@ describe('graphicStudioRuntime', () => {
 			collapsible: true,
 			defaultOpen: true,
 		})
-		expect(narrowed.controller.groups[0]?.controls[1]).toMatchObject({
-			id: 'viewpoint',
-			label: '시점',
+		expect(narrowed.controller.groups[0]?.controls[0]).toMatchObject({
+			id: 'lineColor',
+			label: '선 색상',
 			availability: 'readonly',
-			defaultValue: 'flat',
-			options: [{ value: 'flat', label: '평면' }],
+			defaultValue: '#ffffff',
 		})
 		expect(() =>
 			deriveGraphicStudioConfig({ id: 10, name: 'Unknown', runtime: 'missing' }),
