@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Controller } from './index'
 
@@ -37,19 +37,24 @@ describe('Controller layout', () => {
 describe('Controller.Group', () => {
 	afterEach(cleanup)
 
-	it('항상 접고 펼칠 수 있다', () => {
-		render(
+	it('항상 접고 펼칠 수 있고 닫힐 때 본문을 퇴장시킨다', async () => {
+		const { container } = render(
 			<Controller.Group title="Sec">
 				<div>내용물</div>
 			</Controller.Group>,
 		)
+		const content = container.querySelector('[data-slot="controller-group-content"]')
 
 		fireEvent.click(screen.getByRole('button', { name: 'Sec' }))
-		expect(screen.queryByText('내용물')).toBeNull()
+		expect(screen.getByRole('button', { name: 'Sec' })).toHaveAttribute(
+			'aria-expanded',
+			'false',
+		)
+		await waitFor(() => expect(content).toHaveStyle({ height: '0px', opacity: '0' }))
 	})
 
-	it('잠금 중에도 사용자의 접힘 상태를 보존한다 — 풀려도 닫힌 채 남는다', () => {
-		const { rerender } = render(
+	it('잠금 중에도 사용자의 접힘 상태를 보존한다 — 풀려도 닫힌 채 남는다', async () => {
+		const { container, rerender } = render(
 			<Controller.Group title="Sec">
 				<div>내용물</div>
 			</Controller.Group>,
@@ -58,7 +63,12 @@ describe('Controller.Group', () => {
 
 		// 사용자가 접는다.
 		fireEvent.click(screen.getByRole('button', { name: 'Sec' }))
-		expect(screen.queryByText('내용물')).toBeNull()
+		await waitFor(() =>
+			expect(container.querySelector('[data-slot="controller-group-content"]')).toHaveStyle({
+				height: '0px',
+				opacity: '0',
+			}),
+		)
 
 		// 잠금 — 닫힘 유지 + 토글 불가.
 		rerender(
@@ -67,7 +77,10 @@ describe('Controller.Group', () => {
 			</Controller.Group>,
 		)
 		expect(screen.getByRole('button', { name: 'Sec' })).toBeDisabled()
-		expect(screen.queryByText('내용물')).toBeNull()
+		expect(screen.getByRole('button', { name: 'Sec' })).toHaveAttribute(
+			'aria-expanded',
+			'false',
+		)
 
 		// 잠금 해제 — 강제로 열지 않고 사용자가 접어둔 상태로 복귀한다.
 		rerender(
@@ -76,7 +89,10 @@ describe('Controller.Group', () => {
 			</Controller.Group>,
 		)
 		expect(screen.getByRole('button', { name: 'Sec' })).toBeEnabled()
-		expect(screen.queryByText('내용물')).toBeNull()
+		expect(screen.getByRole('button', { name: 'Sec' })).toHaveAttribute(
+			'aria-expanded',
+			'false',
+		)
 	})
 })
 
