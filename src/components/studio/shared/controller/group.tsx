@@ -72,9 +72,8 @@ function ControllerCollapsibleGroup({
 			onOpenChange={setOpen}
 			disabled={disabled}
 			className={cn(
-				// 헤더와 컨트롤 목록 사이는 프리미티브 간격과 같은 4px — 붙이면 첫 행의 포커스 링이 헤더에 가린다.
 				// 그룹 사이 간격은 컨테이너 gap이 아니라 펼쳐졌을 때의 하단 패딩(12px)이 만든다 — 접힌 그룹은 다음 구분선에 바로 붙는다.
-				'flex shrink-0 flex-col gap-1 border-t border-border pt-1',
+				'flex shrink-0 flex-col border-t border-border pt-1',
 				resolvedOpen && 'pb-3',
 				attached && 'border-t-0 pt-2',
 				className,
@@ -113,7 +112,12 @@ function ControllerCollapsibleGroup({
 							}
 							style={{ clipPath: 'inset(0 -20px)' }}
 						>
-							<CollapsibleContent forceMount className="flex flex-col gap-1">
+							{/*
+							 * 위아래 4px은 바깥 gap이 아니라 여기 패딩이다 — 위 clipPath가 이 박스 끝에서
+							 * 세로를 자르므로, 바깥 간격은 첫·마지막 행의 포커스 링(바깥 2px)을 구해 주지
+							 * 못한다. 패딩은 접힘 애니메이션이 재는 height 안쪽이라 접혔을 때 새지 않는다.
+							 */}
+							<CollapsibleContent forceMount className="flex flex-col gap-1 py-1">
 								{children}
 							</CollapsibleContent>
 						</m.div>
