@@ -1,28 +1,3 @@
-import {
-	Apps,
-	Badge,
-	Book,
-	Box,
-	Branch,
-	Bullhorn,
-	Camera,
-	ChartColumn,
-	ColorPalette,
-	Document,
-	Draw,
-	Earth,
-	Grid,
-	Idea,
-	Image,
-	Information,
-	ListChecked,
-	OverflowMenuHorizontal,
-	Quotes,
-	Share,
-	Star,
-	TextFont,
-} from '@carbon/icons-react'
-import type { ReactNode } from 'react'
 import { ContentFrame } from '@/components/shared/content-frame'
 import type { GetGuidelineChapterOutput } from '../../services/get-guideline-chapter.service'
 import { GuidelineDescription } from '../globals/guideline-description'
@@ -30,38 +5,9 @@ import { GuidelineHeader } from '../globals/guideline-header'
 import type { GuidelineVariant } from '../globals/guideline-variant'
 import { GuidelineNavigationGrid } from '../guideline-navigation-grid'
 import { RefreshRouteOnSave } from '../refresh-route-on-save'
+import { getSectionIcon } from '../section-icon'
 
 const variant = 'chapter' satisfies GuidelineVariant
-
-// 섹션 slug → 어울리는 아이콘. 매칭될 때만 카드 좌하단에 렌더된다(미매칭 섹션은 빈 슬롯).
-const SECTION_ICONS: Record<string, ReactNode> = {
-	instroduction: <Information size={24} />,
-	instruction: <ListChecked size={24} />,
-	'brand-core': <Idea size={24} />,
-	'the-signature': <Quotes size={24} />,
-	'the-narrative': <Book size={24} />,
-	'brand-logo': <Star size={24} />,
-	'color-system': <ColorPalette size={24} />,
-	typography: <TextFont size={24} />,
-	illustration: <Draw size={24} />,
-	photography: <Camera size={24} />,
-	'visual-system': <Grid size={24} />,
-	sns: <Share size={24} />,
-	advertisement: <Bullhorn size={24} />,
-	stationery: <Document size={24} />,
-	package: <Box size={24} />,
-	etc: <OverflowMenuHorizontal size={24} />,
-
-	// Brand Elements. CI 3종은 한 계열로 읽히게 골랐다 — 표식 자체 / 갈라져 나온 것 / 밖으로 나간 것.
-	ci: <Badge size={24} />,
-	'subsidiary-ci': <Branch size={24} />,
-	'overseas-ci': <Earth size={24} />,
-	layout: <Grid size={24} />,
-	color: <ColorPalette size={24} />,
-	'key-visual': <Image size={24} />,
-	iconography: <Apps size={24} />,
-	infographic: <ChartColumn size={24} />,
-}
 
 export function GuidelineChapter({
 	chapter,
@@ -84,7 +30,7 @@ export function GuidelineChapter({
 					title: section.title,
 					description: section.description,
 					href: `/guideline/${chapterSlug}/${section.slug}`,
-					icon: SECTION_ICONS[section.slug],
+					icon: getSectionIcon(section.slug),
 				}))}
 			/>
 		</ContentFrame>

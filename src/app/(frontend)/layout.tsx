@@ -67,7 +67,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 								 * 실제로 좁아지므로(sidebar-gap), absolute면 사이드바 상태를 구독하지 않고도
 								 * 함께 밀린다. fixed는 뷰포트 기준이라 챗 패널에 덮인다.
 								 */}
-								<ThemeToggle className="absolute right-4 bottom-4 z-30" />
+								<ThemeToggle className="absolute bottom-4 left-4 z-30" />
 							</div>
 							<GlobalAgentChat />
 						</SidebarProvider>
