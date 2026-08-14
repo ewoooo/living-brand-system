@@ -53,7 +53,7 @@ vi.mock('@/features/image-generation/services/generate-image.client', () => ({
 	requestImageGeneration: mocks.requestImageGeneration,
 }))
 vi.mock('@/features/graphic-generation/runtime/client/graphic-runtime.client', () => ({
-	getGraphicRuntimeAdapter: (config: GraphicRuntimeManifest) => ({
+	loadGraphicRuntimeAdapter: async (config: GraphicRuntimeManifest) => ({
 		type: config.type,
 		mount: mocks.mountGraphicPreview,
 	}),
@@ -320,8 +320,14 @@ describe('TemplateGenerator', () => {
 		)
 
 		expect(container.querySelector('[data-slot="studio-workspace"]')).not.toBeNull()
-		expect(container.querySelector('[data-slot="studio-workspace-sidebar"]')).not.toBeNull()
-		expect(container.querySelector('[data-slot="studio-workspace-canvas"]')).not.toBeNull()
+		expect(container.querySelector('[data-slot="studio-workspace-sidebar"]')).toHaveClass(
+			'lg:max-h-full',
+			'lg:overflow-hidden',
+		)
+		expect(container.querySelector('[data-slot="studio-workspace-canvas"]')).toHaveClass(
+			'lg:max-h-full',
+			'lg:overflow-hidden',
+		)
 		expect(container.querySelector('[data-slot="studio-sidebar"]')).not.toBeNull()
 		const header = container.querySelector('[data-slot="controller-header"]')
 		expect(header).not.toBeNull()

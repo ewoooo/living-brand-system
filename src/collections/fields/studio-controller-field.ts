@@ -28,6 +28,28 @@ export function studioControllerRestrictionsField({
 	}
 }
 
+export function studioControllerPresentationField({
+	source,
+	baseConfigs,
+}: {
+	source: StudioAdminRuntimeSource
+	baseConfigs?: readonly StudioAdminBaseConfig[]
+}): Field {
+	return {
+		name: 'controllerPresentation',
+		type: 'json',
+		label: 'Controller 표현',
+		admin: {
+			components: {
+				Field: {
+					path: '/components/admin/studio/studio-controller-restrictions-field#StudioControllerPresentationField',
+					clientProps: { source, baseConfigs },
+				},
+			},
+		},
+	}
+}
+
 /** Exporter 호환 형식을 Admin이 추가하지 않고 좁히기만 하는 정책 필드다. */
 export function studioExportPolicyField({
 	source,

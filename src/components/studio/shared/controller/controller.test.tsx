@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Controller } from './index'
 
@@ -18,35 +18,44 @@ describe('Controller layout', () => {
 			</Controller.Root>,
 		)
 
-		expect(container.querySelector('[data-slot="controller-root"]')).toBeInTheDocument()
-		expect(container.querySelector('[data-slot="controller-header"]')).toBeInTheDocument()
-		expect(container.querySelector('[data-slot="controller-content"]')).toBeInTheDocument()
+		expect(container.querySelector('[data-slot="controller-root"]')).toHaveClass(
+			'overflow-hidden',
+		)
+		expect(container.querySelector('[data-slot="controller-header"]')).toHaveClass('shrink-0')
+		expect(container.querySelector('[data-slot="controller-content"]')).toHaveClass(
+			'min-h-0',
+			'flex-1',
+			'overflow-y-auto',
+		)
 		expect(container.querySelector('[data-slot="controller-group"]')).toBeInTheDocument()
 		expect(screen.getByText('그룹')).toBeInTheDocument()
-		expect(screen.queryByRole('button', { name: '그룹' })).toBeNull()
-		expect(container.querySelector('[data-slot="controller-footer"]')).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: '그룹' })).toBeInTheDocument()
+		expect(container.querySelector('[data-slot="controller-footer"]')).toHaveClass('shrink-0')
 	})
 })
 
-describe('Controller.Group collapsible', () => {
+describe('Controller.Group', () => {
 	afterEach(cleanup)
 
-	it('컴포넌트 계약 prop을 DOM에 전달하지 않는다', () => {
-		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
-		render(
-			<Controller.Group title="Sec" collapsible>
+	it('항상 접고 펼칠 수 있고 닫힐 때 본문을 퇴장시킨다', async () => {
+		const { container } = render(
+			<Controller.Group title="Sec">
 				<div>내용물</div>
 			</Controller.Group>,
 		)
-		const warnings = errorSpy.mock.calls.flat().join(' ')
-		errorSpy.mockRestore()
+		const content = container.querySelector('[data-slot="controller-group-content"]')
 
-		expect(warnings).not.toContain('collapsible')
+		fireEvent.click(screen.getByRole('button', { name: 'Sec' }))
+		expect(screen.getByRole('button', { name: 'Sec' })).toHaveAttribute(
+			'aria-expanded',
+			'false',
+		)
+		await waitFor(() => expect(content).toHaveStyle({ height: '0px', opacity: '0' }))
 	})
 
-	it('잠금 중에도 사용자의 접힘 상태를 보존한다 — 풀려도 닫힌 채 남는다', () => {
-		const { rerender } = render(
-			<Controller.Group title="Sec" collapsible>
+	it('잠금 중에도 사용자의 접힘 상태를 보존한다 — 풀려도 닫힌 채 남는다', async () => {
+		const { container, rerender } = render(
+			<Controller.Group title="Sec">
 				<div>내용물</div>
 			</Controller.Group>,
 		)
@@ -54,25 +63,36 @@ describe('Controller.Group collapsible', () => {
 
 		// 사용자가 접는다.
 		fireEvent.click(screen.getByRole('button', { name: 'Sec' }))
-		expect(screen.queryByText('내용물')).toBeNull()
+		await waitFor(() =>
+			expect(container.querySelector('[data-slot="controller-group-content"]')).toHaveStyle({
+				height: '0px',
+				opacity: '0',
+			}),
+		)
 
 		// 잠금 — 닫힘 유지 + 토글 불가.
 		rerender(
-			<Controller.Group title="Sec" collapsible disabled>
+			<Controller.Group title="Sec" disabled>
 				<div>내용물</div>
 			</Controller.Group>,
 		)
 		expect(screen.getByRole('button', { name: 'Sec' })).toBeDisabled()
-		expect(screen.queryByText('내용물')).toBeNull()
+		expect(screen.getByRole('button', { name: 'Sec' })).toHaveAttribute(
+			'aria-expanded',
+			'false',
+		)
 
 		// 잠금 해제 — 강제로 열지 않고 사용자가 접어둔 상태로 복귀한다.
 		rerender(
-			<Controller.Group title="Sec" collapsible>
+			<Controller.Group title="Sec">
 				<div>내용물</div>
 			</Controller.Group>,
 		)
 		expect(screen.getByRole('button', { name: 'Sec' })).toBeEnabled()
-		expect(screen.queryByText('내용물')).toBeNull()
+		expect(screen.getByRole('button', { name: 'Sec' })).toHaveAttribute(
+			'aria-expanded',
+			'false',
+		)
 	})
 })
 

@@ -94,7 +94,13 @@ function ColorAdjustmentFeature({
 		))
 
 		return (
-			<ControllerGroupRenderer key={`${feature.type}:${group.id}`} definition={group}>
+			<ControllerGroupRenderer
+				key={`${feature.type}:${group.id}`}
+				definition={group}
+				presentation={config.controllerPresentation?.groups.find(
+					({ groupId }) => groupId === group.id,
+				)}
+			>
 				{content}
 			</ControllerGroupRenderer>
 		)

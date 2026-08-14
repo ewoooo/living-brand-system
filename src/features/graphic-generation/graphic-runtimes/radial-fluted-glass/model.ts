@@ -16,6 +16,8 @@ export const radialFlutedGlassInputSchema = z.strictObject({
 		x: z.number().min(-1).max(1),
 		y: z.number().min(-1).max(1),
 	}),
+	sourceOffsetX: z.number().min(-2).max(2),
+	sourceOffsetY: z.number().min(-2).max(2),
 	bloomColor: hexColorSchema,
 	rayColor1: hexColorSchema,
 	rayColor2: hexColorSchema,
@@ -70,6 +72,8 @@ export type RadialFlutedGlassInput = z.infer<typeof radialFlutedGlassInputSchema
 export function toRadialFlutedGlassInput(values: ControllerValues): RadialFlutedGlassInput {
 	return radialFlutedGlassInputSchema.parse({
 		source: isControllerPadValue(values.source) ? values.source : undefined,
+		sourceOffsetX: values.sourceOffsetX,
+		sourceOffsetY: values.sourceOffsetY,
 		bloomColor: values.bloomColor ?? RADIAL_FLUTED_GLASS_DEFAULT_INPUT.bloomColor,
 		rayColor1: values.rayColor1 ?? RADIAL_FLUTED_GLASS_DEFAULT_INPUT.rayColor1,
 		rayColor2: values.rayColor2 ?? RADIAL_FLUTED_GLASS_DEFAULT_INPUT.rayColor2,
@@ -124,11 +128,14 @@ export function radialFlutedGlassColorToRgb(color: string): readonly [number, nu
 }
 
 /** 화면 좌표(아래가 +Y)를 WebGL 좌표(위가 +Y)로 바꾼다. */
-export function toRadialFlutedGlassShaderPoint(point: {
-	x: number
-	y: number
-}): readonly [number, number] {
-	return [point.x, -point.y]
+export function toRadialFlutedGlassShaderPoint(
+	point: {
+		x: number
+		y: number
+	},
+	offset: { x: number; y: number } = { x: 0, y: 0 },
+): readonly [number, number] {
+	return [point.x + offset.x, -(point.y + offset.y)]
 }
 
 const DISTORTION_SHAPE_UNIFORMS: Record<RadialFlutedGlassInput['distortionShape'], number> = {

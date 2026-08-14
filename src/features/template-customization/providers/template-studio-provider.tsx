@@ -39,6 +39,7 @@ import {
 	type TemplateConfig,
 	type TemplateImageConfigSlot,
 	type TemplateTextSlot,
+	type TemplateVectorSlot,
 } from '@/features/template-customization/domain/template-config'
 import {
 	composeTemplateStudioHtml,
@@ -215,6 +216,45 @@ function useTemplateImageSession(
 	)
 }
 
+function useTemplateVectorSession(
+	vectorSlots: readonly TemplateVectorSlot[],
+): TemplateStudioValue['vectors'] {
+	const [colors, setColors] = useState<Record<string, string | undefined>>(() =>
+		Object.fromEntries(vectorSlots.map((slot) => [slot.id, slot.color])),
+	)
+	const setColor = useCallback(
+		(slotId: string, color: string) =>
+			setColors((current) => {
+				const slot = vectorSlots.find((candidate) => candidate.id === slotId)
+				return slot?.access === 'editable' ? { ...current, [slotId]: color } : current
+			}),
+		[vectorSlots],
+	)
+	return useMemo(
+		() => ({ slots: vectorSlots, colors, setColor }),
+		[colors, setColor, vectorSlots],
+	)
+}
+
+function useTemplateLayerSession(
+	slots: readonly (TemplateTextSlot | TemplateImageConfigSlot | TemplateVectorSlot)[],
+): TemplateStudioValue['layers'] {
+	const [visibility, setVisibility] = useState<Record<string, boolean>>(() =>
+		Object.fromEntries(slots.map((slot) => [slot.id, slot.visibility.defaultVisible])),
+	)
+	const setVisible = useCallback(
+		(slotId: string, visible: boolean) =>
+			setVisibility((current) => {
+				const slot = slots.find((candidate) => candidate.id === slotId)
+				return slot?.access === 'editable' && slot.visibility.allowToggle
+					? { ...current, [slotId]: visible }
+					: current
+			}),
+		[slots],
+	)
+	return useMemo(() => ({ visibility, setVisible }), [setVisible, visibility])
+}
+
 function useTemplateBackgroundSession(
 	config: TemplateConfig,
 	slot: TemplateBackgroundSlot | undefined,
@@ -374,12 +414,21 @@ export function TemplateStudioProvider({
 	const partitionedSlots = useMemo(() => partitionTemplateSlots(slots), [slots])
 	const textSlots = partitionedSlots.text
 	const imageSlots = partitionedSlots.image
+	const vectorSlots = partitionedSlots.vector
 	const backgroundSlot = partitionedSlots.background
+	const editableSlots = useMemo(
+		() => [...textSlots, ...imageSlots, ...vectorSlots],
+		[imageSlots, textSlots, vectorSlots],
+	)
 	const text = useTemplateTextSession(config, textSlots, html, previewRef)
 	const images = useTemplateImageSession(config, imageSlots)
+	const vectors = useTemplateVectorSession(vectorSlots)
+	const layers = useTemplateLayerSession(editableSlots)
 	const background = useTemplateBackgroundSession(config, backgroundSlot)
 	const deferredTextColor = useDeferredValue(text.color)
 	const deferredImageStates = useDeferredValue(images.states)
+	const deferredVectorColors = useDeferredValue(vectors.colors)
+	const deferredLayerVisibility = useDeferredValue(layers.visibility)
 	const deferredBackground = useDeferredValue(background.state)
 
 	const composedHtml = useMemo(
@@ -392,6 +441,9 @@ export function TemplateStudioProvider({
 				imageStates: deferredImageStates,
 				imageSlots,
 				imageContracts: images.contracts,
+				vectorSlots,
+				vectorColors: deferredVectorColors,
+				layerVisibility: deferredLayerVisibility,
 				background: deferredBackground,
 				width,
 				height,
@@ -405,6 +457,9 @@ export function TemplateStudioProvider({
 			deferredBackground,
 			imageSlots,
 			images.contracts,
+			vectorSlots,
+			deferredVectorColors,
+			deferredLayerVisibility,
 			width,
 			height,
 		],
@@ -437,6 +492,8 @@ export function TemplateStudioProvider({
 			config,
 			text,
 			images,
+			vectors,
+			layers,
 			background,
 			canvas: { html: composedHtml, artifact, previewRef, registerGraphicFrame },
 			execution: { controllerValues },
@@ -448,9 +505,11 @@ export function TemplateStudioProvider({
 			config,
 			controllerValues,
 			images,
+			layers,
 			navigation,
 			registerGraphicFrame,
 			text,
+			vectors,
 		],
 	)
 

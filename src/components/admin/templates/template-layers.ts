@@ -1,8 +1,8 @@
+import { isTemplateVectorNodeType } from '@/features/template-core/domain/template-node-types'
 import {
 	findImageCarrier,
 	isImageColorizeOverlayId,
 } from '@/features/template-core/runtime/compose-template-html.client'
-import { isFigmaVectorNodeType } from '@/features/template-import/utils/figma-node-types'
 import type { TemplateNodeConfig, TemplateNodeConfigMap } from '@/types/template'
 
 export interface LayerRow {
@@ -88,7 +88,7 @@ export function parseLayers(html: string): LayerRow[] {
 			tag,
 			isText,
 			isVector:
-				(isFigmaVectorNodeType(figmaType) || figmaType === 'POLYGON') &&
+				(isTemplateVectorNodeType(figmaType) || figmaType === 'POLYGON') &&
 				(tag === 'img' ||
 					(element instanceof HTMLElement && Boolean(element.style.maskImage))),
 			imageAddress: selfMarked

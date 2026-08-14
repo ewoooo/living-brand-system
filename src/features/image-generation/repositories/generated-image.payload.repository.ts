@@ -12,6 +12,12 @@ export interface StoredGeneratedImage {
 	url: string
 }
 
+export interface GeneratedImageSeed {
+	data: Buffer
+	effectivePrompt: string
+	inputPrompt: string
+}
+
 /**
  * 카메라 조정에 사용할 published Generated Image를 사용자 권한으로 찾고 원본 파일을 읽는다.
  * Payload 조회와 저장 URL 다운로드 I/O는 이 repository가 소유한다.
@@ -21,20 +27,28 @@ export async function loadGeneratedImage(input: {
 	profileId: number
 	requestUrl: string
 	user: unknown
-}): Promise<Buffer | null> {
+}): Promise<GeneratedImageSeed | null> {
+	const userId = getUserId(input.user)
+	if (!userId) return null
 	const payload = await getPayload({ config })
 	const found = await payload.find({
 		collection: 'generated-images',
 		depth: 0,
 		draft: false,
 		limit: 1,
-		overrideAccess: false,
-		select: { filename: true, filesize: true, url: true },
-		user: input.user as never,
+		overrideAccess: true,
+		select: {
+			effectivePrompt: true,
+			filename: true,
+			filesize: true,
+			inputPrompt: true,
+			url: true,
+		},
 		where: {
 			and: [
 				{ id: { equals: input.generatedImageId } },
 				{ scenario: { equals: input.profileId } },
+				{ createdBy: { equals: userId } },
 				{ _status: { equals: 'published' } },
 			],
 		},
@@ -42,6 +56,8 @@ export async function loadGeneratedImage(input: {
 	const image = found.docs[0]
 	if (
 		!image?.url ||
+		typeof image.effectivePrompt !== 'string' ||
+		typeof image.inputPrompt !== 'string' ||
 		typeof image.filesize !== 'number' ||
 		image.filesize <= 0 ||
 		image.filesize > MAX_IMAGE_BYTES
@@ -66,9 +82,21 @@ export async function loadGeneratedImage(input: {
 		chunks.push(value)
 	}
 
-	return (
-		await validateRasterImage(Buffer.concat(chunks, size), response.headers.get('content-type'))
-	).data
+	return {
+		data: (
+			await validateRasterImage(
+				Buffer.concat(chunks, size),
+				response.headers.get('content-type'),
+			)
+		).data,
+		effectivePrompt: image.effectivePrompt,
+		inputPrompt: image.inputPrompt,
+	}
+}
+
+function getUserId(user: unknown): number | null {
+	const id = typeof user === 'object' && user !== null && 'id' in user ? user.id : null
+	return typeof id === 'number' && Number.isInteger(id) && id > 0 ? id : null
 }
 
 /**

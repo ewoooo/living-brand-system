@@ -11,16 +11,15 @@ export const cameraControlSchema = z
 	})
 	.strict()
 
-const basePromptSchema = z
+export const imageEffectivePromptSchema = z
 	.string()
 	.trim()
 	.min(2)
 	.max(20_000)
-	.refine(isFlatPromptJson, 'basePrompt must be a JSON object with string values.')
+	.refine(isFlatPromptJson, 'effectivePrompt must be a JSON object with string values.')
 
 export const cameraAdjustmentRequestSchema = z
 	.object({
-		basePrompt: basePromptSchema,
 		camera: cameraControlSchema,
 		count: z.number().int().min(1).max(IMAGE_BATCH_MAX).default(1),
 		generatedImageId: z.number().int().positive(),
@@ -92,10 +91,10 @@ export function resolveCameraControl({
 }
 
 export function composeCameraAdjustmentPrompt(
-	basePrompt: string,
+	effectivePrompt: string,
 	camera: ResolvedCameraControl,
 ): string {
-	const prompt = JSON.parse(basePrompt) as Record<string, string>
+	const prompt = JSON.parse(effectivePrompt) as Record<string, string>
 	return JSON.stringify({
 		...prompt,
 		camera: `${AZIMUTH_PROMPTS[camera.azimuth]}, ${ELEVATION_PROMPTS[camera.elevation]}`,

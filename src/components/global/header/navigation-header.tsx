@@ -377,7 +377,7 @@ function NavigationHeaderSymbolLink({
 function NavigationHeaderSeparator({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div data-slot="navigation-header-separator" className={cn('h-6', className)} {...props}>
-			<Separator orientation="vertical" />
+			<Separator className="h-full" orientation="vertical" />
 		</div>
 	)
 }

@@ -63,6 +63,7 @@ describe('GlobalHeader', () => {
 		renderHeader({ guideline: true, image: true })
 
 		expect(document.querySelector('[data-slot="navigation-header"]')).toHaveClass(
+			'border-b',
 			'bg-header-background',
 		)
 		const desktop = document.querySelector<HTMLElement>(
@@ -96,7 +97,10 @@ describe('GlobalHeader', () => {
 			'href',
 			'/studio/review',
 		)
-		expect(links.getByRole('link', { name: 'Assets' })).toHaveAttribute('href', '/studio')
+		expect(links.getByRole('link', { name: 'Assets' })).toHaveAttribute(
+			'href',
+			'/studio/assets',
+		)
 		expect(links.getByRole('link', { name: 'Graphic' })).toHaveAttribute('aria-current', 'page')
 		expect(
 			within(links.getByRole('link', { name: /Guideline/ })).getByText('Update'),
@@ -104,6 +108,15 @@ describe('GlobalHeader', () => {
 		expect(within(links.getByRole('link', { name: /Image/ })).getByText('Update')).toBeVisible()
 		expect(screen.queryByRole('button', { name: 'Studio' })).not.toBeInTheDocument()
 		expect(screen.queryByRole('button', { name: '메뉴 닫기' })).not.toBeInTheDocument()
+	})
+
+	it('데스크톱 세퍼레이터에 Figma 규격의 높이를 준다', () => {
+		renderHeader()
+
+		const separator = document.querySelector<HTMLElement>(
+			'[data-slot="navigation-header-separator"] [data-slot="separator"]',
+		)
+		expect(separator).toHaveClass('h-full')
 	})
 
 	it('검색과 Chat의 열린 상태를 각 트리거에 반영한다', () => {
@@ -128,8 +141,8 @@ describe('GlobalHeader', () => {
 		expect(chatTrigger).toHaveAttribute('aria-expanded', 'true')
 	})
 
-	it('Studio 루트에서는 Assets만 current로 표시한다', () => {
-		pathname = '/studio'
+	it('Assets 경로에서는 Assets만 current로 표시한다', () => {
+		pathname = '/studio/assets'
 		renderHeader()
 
 		const desktop = document.querySelector<HTMLElement>(

@@ -28,6 +28,7 @@ import { BetterEditorPublishButton as BetterEditorPublishButton_e4a80c849de3e172
 import { GuidelineDocumentTreeList as GuidelineDocumentTreeList_cbf6266b788a4c70ca37fe64fb741dc2 } from '../../../components/admin/guideline-documents/guideline-document-tree-list'
 import { ColorSwatchCell as ColorSwatchCell_88fca198b056ae91f3276aaa342114bd } from '../../../components/admin/brand-colors/color-swatch-cell'
 import { StudioControllerRestrictionsField as StudioControllerRestrictionsField_715c81ea8a3b886458ef2633d308523c } from '../../../components/admin/studio/studio-controller-restrictions-field'
+import { StudioControllerPresentationField as StudioControllerPresentationField_715c81ea8a3b886458ef2633d308523c } from '../../../components/admin/studio/studio-controller-restrictions-field'
 import { StudioOutputFormatsField as StudioOutputFormatsField_2b4d6cf4a441099f2efd973bee4050a7 } from '../../../components/admin/studio/studio-output-formats-field'
 import { StudioOutputNumberOptionsField as StudioOutputNumberOptionsField_a332d6920f506f30c6bd7cf1cbbf3441 } from '../../../components/admin/studio/studio-output-number-options-field'
 import { ImageProfileTestPanel as ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640 } from '../../../components/admin/image-profiles/image-profile-test-panel'
@@ -82,6 +83,7 @@ export const importMap = {
   "/components/admin/guideline-documents/guideline-document-tree-list#GuidelineDocumentTreeList": GuidelineDocumentTreeList_cbf6266b788a4c70ca37fe64fb741dc2,
   "/components/admin/brand-colors/color-swatch-cell#ColorSwatchCell": ColorSwatchCell_88fca198b056ae91f3276aaa342114bd,
   "/components/admin/studio/studio-controller-restrictions-field#StudioControllerRestrictionsField": StudioControllerRestrictionsField_715c81ea8a3b886458ef2633d308523c,
+  "/components/admin/studio/studio-controller-restrictions-field#StudioControllerPresentationField": StudioControllerPresentationField_715c81ea8a3b886458ef2633d308523c,
   "/components/admin/studio/studio-output-formats-field#StudioOutputFormatsField": StudioOutputFormatsField_2b4d6cf4a441099f2efd973bee4050a7,
   "/components/admin/studio/studio-output-number-options-field#StudioOutputNumberOptionsField": StudioOutputNumberOptionsField_a332d6920f506f30c6bd7cf1cbbf3441,
   "/components/admin/image-profiles/image-profile-test-panel#ImageProfileTestPanel": ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640,

@@ -1,12 +1,16 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useRef, useState } from 'react'
 import { fitPreviewSize } from '@/components/studio/shared/fit-preview-size'
+import {
+	DEFAULT_PREVIEW_SIZE,
+	PreviewSizeControl,
+} from '@/components/studio/shared/preview-size-control'
 import { Typography } from '@/components/ui/typography'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
 	type GraphicRuntime,
-	getGraphicRuntimeAdapter,
+	loadGraphicRuntimeAdapter,
 } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
@@ -22,6 +26,7 @@ export function TemplateCanvas() {
 	const { width, height } = config.template.exportOption.canvas
 	const stageRef = useRef<HTMLDivElement>(null)
 	const [preview, setPreview] = useState({ width, height })
+	const [previewSize, setPreviewSize] = useState(DEFAULT_PREVIEW_SIZE)
 	const scale = preview.width / width
 	const graphicConfig = config.template.graphicConfigs.find(
 		(candidate) => candidate.id === background.state.graphicConfigId,
@@ -44,11 +49,16 @@ export function TemplateCanvas() {
 	}, [height, width])
 
 	return (
-		<div ref={stageRef} className="grid h-full min-h-0 min-w-0 overflow-hidden">
+		<div ref={stageRef} className="relative grid h-full min-h-0 min-w-0 overflow-hidden">
 			<div
 				data-slot="template-preview"
-				className="m-auto shrink-0 overflow-hidden shadow-lg"
-				style={preview}
+				className="m-auto shrink-0 overflow-hidden shadow-lg lg:[transform:scale(var(--preview-scale))]"
+				style={
+					{
+						...preview,
+						'--preview-scale': previewSize / 100,
+					} as CSSProperties
+				}
 			>
 				<div
 					className="relative"
@@ -76,6 +86,7 @@ export function TemplateCanvas() {
 					/>
 				</div>
 			</div>
+			<PreviewSizeControl value={previewSize} onChange={setPreviewSize} />
 		</div>
 	)
 }
@@ -110,25 +121,26 @@ function TemplateGraphicBackground({
 
 	useEffect(() => {
 		const container = containerRef.current
-		const adapter = getGraphicRuntimeAdapter(config)
-		if (!container || !adapter) {
-			setError('지원하지 않는 그래픽 런타임입니다.')
-			return
-		}
+		if (!container) return
 
 		let runtime: GraphicRuntime | undefined
 		let disposed = false
 		setError(null)
-		void adapter
-			.mount({
-				container,
-				values: valuesRef.current,
-				onChange: (controlId, value) => {
-					updateRef.current(controlId, value)
-					return true
-				},
+		void loadGraphicRuntimeAdapter(config)
+			.then((adapter) => {
+				if (disposed) return null
+				if (!adapter) throw new Error('Unsupported graphic runtime.')
+				return adapter.mount({
+					container,
+					values: valuesRef.current,
+					onChange: (controlId, value) => {
+						updateRef.current(controlId, value)
+						return true
+					},
+				})
 			})
 			.then((mounted) => {
+				if (!mounted) return
 				if (disposed) {
 					mounted.destroy()
 					return

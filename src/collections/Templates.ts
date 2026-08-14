@@ -2,6 +2,7 @@ import { APIError, type CollectionConfig } from 'payload'
 import { prepareTemplateSave } from '@/features/template-import/services/prepare-template-save.service'
 import { isManager, managerOrAdmin } from '@/lib/auth'
 import {
+	studioControllerPresentationField,
 	studioControllerRestrictionsField,
 	studioExportPolicyField,
 } from './fields/studio-controller-field'
@@ -53,6 +54,7 @@ export const Templates: CollectionConfig = {
 			localized: true,
 		},
 		studioControllerRestrictionsField({ source: 'template' }),
+		studioControllerPresentationField({ source: 'template' }),
 		studioExportPolicyField({ source: 'template' }),
 		{
 			// 워크스페이스: 캔버스 + 레이어 목록 + 값 편집을 한 컴포넌트가 렌더한다.

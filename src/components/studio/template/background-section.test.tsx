@@ -68,7 +68,6 @@ function Harness({
 			groupDefinition={{
 				id: 'background',
 				title: 'Background',
-				collapsible: true,
 				controls: [],
 			}}
 			typeDefinition={{

@@ -34,7 +34,7 @@ type GlobalHeaderProps = {
 }
 
 function isCurrentPath(pathname: string, href: string) {
-	return pathname === href || (href !== routes.studio.root && pathname.startsWith(`${href}/`))
+	return pathname === href || pathname.startsWith(`${href}/`)
 }
 
 type HeaderGuidelineSearchDialogProps = {
@@ -139,9 +139,9 @@ export function GlobalHeader({ guidelineChapters, updates = {} }: GlobalHeaderPr
 			label: 'Review',
 		},
 		{
-			current: pathname === routes.studio.root,
+			current: isCurrentPath(pathname, routes.studio.assets),
 			hasUpdate: updates.assets,
-			href: routes.studio.root,
+			href: routes.studio.assets,
 			label: 'Assets',
 		},
 	] as const

@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { convertFigmaNodeToHtml } from '@/features/template-import/utils/figma-node-to-html'
-import { collectTemplateImageSlots, collectTemplateSlots } from './collect-template-slots'
+import {
+	collectTemplateImageSlots,
+	collectTemplateSlots,
+	collectTemplateVectorSlots,
+} from './collect-template-slots'
+
+const editablePolicy = {
+	policy: {
+		access: 'editable' as const,
+		visibility: { defaultVisible: true, allowToggle: false },
+	},
+}
 
 const html = [
 	'<div data-node-id="1:1" data-figma-type="FRAME" data-name="Card">',
@@ -18,12 +29,13 @@ describe('collectTemplateSlots', () => {
 		})
 
 		expect(slots).toEqual([
-			{ nodeId: '2:1', name: 'Korean Name', text: '홍길동', input: {} },
+			{ nodeId: '2:1', name: 'Korean Name', text: '홍길동', input: {}, ...editablePolicy },
 			{
 				nodeId: '2:2',
 				name: 'English Name',
 				text: 'Hong Gildong',
 				input: { label: '영문 이름', aiInstruction: '영문 이름만' },
+				...editablePolicy,
 			},
 		])
 	})
@@ -43,7 +55,7 @@ describe('collectTemplateSlots', () => {
 			'<p data-node-id="2:1" data-name="A > B" style="width:100px;height:50px">hi</p>'
 
 		expect(collectTemplateSlots(composed, { '2:1': { input: {} } })).toEqual([
-			{ nodeId: '2:1', name: 'A > B', text: 'hi', input: {} },
+			{ nodeId: '2:1', name: 'A > B', text: 'hi', input: {}, ...editablePolicy },
 		])
 	})
 
@@ -53,7 +65,9 @@ describe('collectTemplateSlots', () => {
 			'2:1': { input: {} },
 		})
 
-		expect(slots).toEqual([{ nodeId: '2:1', name: 'Korean Name', text: '홍길동', input: {} }])
+		expect(slots).toEqual([
+			{ nodeId: '2:1', name: 'Korean Name', text: '홍길동', input: {}, ...editablePolicy },
+		])
 	})
 })
 
@@ -63,7 +77,7 @@ describe('collectTemplateImageSlots', () => {
 			'1:1': { imageInput: { profileId: 7 } },
 		})
 
-		expect(slots).toEqual([{ nodeId: '1:1', name: 'Card', profileId: 7 }])
+		expect(slots).toEqual([{ nodeId: '1:1', name: 'Card', profileId: 7, ...editablePolicy }])
 	})
 
 	it('profileId가 없으면 개방만 표시한다', () => {
@@ -71,7 +85,7 @@ describe('collectTemplateImageSlots', () => {
 			'1:1': { imageInput: {} },
 		})
 
-		expect(slots).toEqual([{ nodeId: '1:1', name: 'Card' }])
+		expect(slots).toEqual([{ nodeId: '1:1', name: 'Card', ...editablePolicy }])
 	})
 
 	it('슬롯 요소 자신의 inline width/height(px)를 박스로 읽는다 — emit의 여러 줄 style 그대로', () => {
@@ -89,7 +103,13 @@ describe('collectTemplateImageSlots', () => {
 		const slots = collectTemplateImageSlots(boxedHtml, { '1:1': { imageInput: {} } })
 
 		expect(slots).toEqual([
-			{ nodeId: '1:1', name: 'Image Area', boxWidth: 911.5, boxHeight: 492 },
+			{
+				nodeId: '1:1',
+				name: 'Image Area',
+				boxWidth: 911.5,
+				boxHeight: 492,
+				...editablePolicy,
+			},
 		])
 	})
 
@@ -99,7 +119,7 @@ describe('collectTemplateImageSlots', () => {
 			{ '1:1': { imageInput: {} } },
 		)
 
-		expect(slots).toEqual([{ nodeId: '1:1', name: 'Fluid' }])
+		expect(slots).toEqual([{ nodeId: '1:1', name: 'Fluid', ...editablePolicy }])
 	})
 
 	it('> 가 든 레이어 이름의 실제 emit 출력에서도 이름·텍스트·박스를 정확히 읽는다', () => {
@@ -128,10 +148,16 @@ describe('collectTemplateImageSlots', () => {
 		})
 
 		expect(collectTemplateSlots(emitted, { '2:1': { input: {} } })).toEqual([
-			{ nodeId: '2:1', name: 'Header > Title', text: '홍길동', input: {} },
+			{ nodeId: '2:1', name: 'Header > Title', text: '홍길동', input: {}, ...editablePolicy },
 		])
 		expect(collectTemplateImageSlots(emitted, { '3:1': { imageInput: {} } })).toEqual([
-			{ nodeId: '3:1', name: 'Image > Area', boxWidth: 300, boxHeight: 150 },
+			{
+				nodeId: '3:1',
+				name: 'Image > Area',
+				boxWidth: 300,
+				boxHeight: 150,
+				...editablePolicy,
+			},
 		])
 	})
 
@@ -140,7 +166,13 @@ describe('collectTemplateImageSlots', () => {
 			'<div data-node-id="1:1" data-name="Image > Area" style="width:300px;height:150px"></div>'
 
 		expect(collectTemplateImageSlots(composed, { '1:1': { imageInput: {} } })).toEqual([
-			{ nodeId: '1:1', name: 'Image > Area', boxWidth: 300, boxHeight: 150 },
+			{
+				nodeId: '1:1',
+				name: 'Image > Area',
+				boxWidth: 300,
+				boxHeight: 150,
+				...editablePolicy,
+			},
 		])
 	})
 
@@ -152,5 +184,36 @@ describe('collectTemplateImageSlots', () => {
 		})
 
 		expect(slots).toEqual([])
+	})
+})
+
+describe('Template 공통 Creator 레이어 정책', () => {
+	it('명시 access가 legacy 슬롯 선언보다 우선하고 벡터에도 같은 정책을 적용한다', () => {
+		expect(
+			collectTemplateSlots(html, {
+				'2:1': { input: {}, creator: { access: 'hidden' } },
+			}),
+		).toEqual([])
+		expect(
+			collectTemplateVectorSlots(html, {
+				'3:1': {
+					creator: {
+						access: 'editable',
+						visibility: { defaultVisible: false, allowToggle: true },
+					},
+					vectorColor: '#112233',
+				},
+			}),
+		).toEqual([
+			{
+				nodeId: '3:1',
+				name: 'Vector',
+				color: '#112233',
+				policy: {
+					access: 'editable',
+					visibility: { defaultVisible: false, allowToggle: true },
+				},
+			},
+		])
 	})
 })

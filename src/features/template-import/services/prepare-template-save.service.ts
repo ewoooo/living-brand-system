@@ -21,6 +21,7 @@ interface TemplateSaveCandidate {
 	_status?: unknown
 	baseHtml?: unknown
 	controllerRestrictions?: unknown
+	controllerPresentation?: unknown
 	height?: unknown
 	html?: unknown
 	id?: unknown
@@ -90,6 +91,7 @@ export async function prepareTemplateSave({
 				height: candidate.height,
 				templateVersion: 'draft',
 				controllerRestrictions: candidate.controllerRestrictions,
+				controllerPresentation: candidate.controllerPresentation,
 				exportPolicy: candidate.exportPolicy as never,
 			})
 		} catch (error) {

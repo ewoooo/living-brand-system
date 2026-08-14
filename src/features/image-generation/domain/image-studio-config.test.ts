@@ -122,8 +122,13 @@ describe('deriveImageStudioConfig', () => {
 		const config = deriveImageStudioConfig({
 			...profile,
 			features: [
-				{ blockType: 'colorAdjustment', background: true },
-				{ blockType: 'cameraControl' },
+				{
+					id: 'feature-color',
+					blockName: '색 조정',
+					blockType: 'colorAdjustment',
+					background: true,
+				},
+				{ id: 'feature-camera', blockName: '카메라 조정', blockType: 'cameraControl' },
 			],
 			controllerRestrictions: {
 				controls: [

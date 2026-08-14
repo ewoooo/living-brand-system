@@ -32,7 +32,9 @@ describe('GeneratedImage repository', () => {
 		find.mockResolvedValue({
 			docs: [
 				{
+					effectivePrompt: '{"subject":"파란 세럼병"}',
 					filesize: data.byteLength,
+					inputPrompt: '파란 세럼병',
 					url: '/api/generated-images/file/generated.png',
 				},
 			],
@@ -49,19 +51,29 @@ describe('GeneratedImage repository', () => {
 				requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
 				user,
 			}),
-		).resolves.toEqual(data)
+		).resolves.toEqual({
+			data,
+			effectivePrompt: '{"subject":"파란 세럼병"}',
+			inputPrompt: '파란 세럼병',
+		})
 		expect(find).toHaveBeenCalledWith({
 			collection: 'generated-images',
 			depth: 0,
 			draft: false,
 			limit: 1,
-			overrideAccess: false,
-			select: { filename: true, filesize: true, url: true },
-			user,
+			overrideAccess: true,
+			select: {
+				effectivePrompt: true,
+				filename: true,
+				filesize: true,
+				inputPrompt: true,
+				url: true,
+			},
 			where: {
 				and: [
 					{ id: { equals: 8 } },
 					{ scenario: { equals: 5 } },
+					{ createdBy: { equals: 1 } },
 					{ _status: { equals: 'published' } },
 				],
 			},
@@ -75,7 +87,9 @@ describe('GeneratedImage repository', () => {
 		find.mockResolvedValueOnce({ docs: [] }).mockResolvedValueOnce({
 			docs: [
 				{
+					effectivePrompt: '{"subject":"파란 세럼병"}',
 					filesize: MAX_IMAGE_BYTES + 1,
+					inputPrompt: '파란 세럼병',
 					url: '/api/generated-images/file/generated.png',
 				},
 			],

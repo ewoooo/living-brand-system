@@ -152,7 +152,10 @@ void main() { mainImage(gl_FragColor, gl_FragCoord.xy); }
 
 	function draw(time: number) {
 		currentTime = time
-		const [sourceX, sourceY] = toRadialFlutedGlassShaderPoint(currentInput.source)
+		const [sourceX, sourceY] = toRadialFlutedGlassShaderPoint(currentInput.source, {
+			x: currentInput.sourceOffsetX,
+			y: currentInput.sourceOffsetY,
+		})
 		const [glassOriginX, glassOriginY] = toRadialFlutedGlassShaderPoint(
 			currentInput.glassOriginOffset,
 		)

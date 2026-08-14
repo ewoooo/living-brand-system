@@ -56,13 +56,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 							storageKey="lbs.agentChatSidebarOpen"
 							style={{ '--sidebar-width': '25rem' } as React.CSSProperties}
 						>
-							{/* 앱 셸(헤더 + 본문 그리드) main 랜드마크는 각 라우트의 본문이 소유한다. */}
-							<div className="relative grid min-h-0 min-w-0 flex-1 grid-rows-[auto_1fr]">
-								<GlobalHeader guidelineChapters={guidelineNavigation.chapters} />
-								{/* 남은 높이를 채우고 내부에서만 스크롤한다 (문서 전체 스크롤 아님). */}
-								<div className="min-h-0 min-w-0 overflow-hidden">{children}</div>
+							{/* 앱 셸은 헤더를 본문 위에 겹치고, main·스크롤은 각 라우트가 소유한다. */}
+							<div className="relative min-h-0 min-w-0 flex-1">
+								<div className="absolute inset-x-0 top-0 z-50">
+									<GlobalHeader
+										guidelineChapters={guidelineNavigation.chapters}
+									/>
+								</div>
+								<div className="h-full min-h-0 min-w-0 overflow-hidden">
+									{children}
+								</div>
 								{/*
-								 * 테마 전환은 스크롤 위치와 무관하게 항상 닿아야 하므로 셸 우하단에 띄운다.
+								 * 테마 전환은 스크롤 위치와 무관하게 항상 닿아야 하므로 셸 좌하단에 띄운다.
 								 * fixed가 아니라 absolute인 이유: 에이전트 챗 사이드바가 열리면 이 셸이
 								 * 실제로 좁아지므로(sidebar-gap), absolute면 사이드바 상태를 구독하지 않고도
 								 * 함께 밀린다. fixed는 뷰포트 기준이라 챗 패널에 덮인다.

@@ -36,7 +36,7 @@ export function useImageGeneration() {
 				setResult(await request())
 			} catch (requestError) {
 				console.error(requestError)
-				setError(errorMessage)
+				setError(requestError instanceof Error ? requestError.message : errorMessage)
 			} finally {
 				setLoading(false)
 			}

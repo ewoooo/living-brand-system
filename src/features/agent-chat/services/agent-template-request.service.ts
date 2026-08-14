@@ -102,6 +102,7 @@ export async function prepareTemplateImage(
 		height: renderModel.height,
 		templateVersion: template.updatedAt,
 		controllerRestrictions: template.controllerRestrictions,
+		controllerPresentation: template.controllerPresentation,
 		exportPolicy: template.exportPolicy,
 	})
 	return {

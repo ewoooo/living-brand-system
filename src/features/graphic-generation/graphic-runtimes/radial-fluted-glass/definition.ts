@@ -3,6 +3,8 @@ import type { ControllerControlDefinition } from '@/modules/studio-controller/co
 
 export const RADIAL_FLUTED_GLASS_DEFAULT_INPUT = {
 	source: { x: -0.96, y: 0 },
+	sourceOffsetX: 0,
+	sourceOffsetY: 0,
 	bloomColor: '#3dff8a',
 	rayColor1: '#000e06',
 	rayColor2: '#004218',
@@ -83,8 +85,6 @@ const radialFlutedGlassRuntimeManifest = defineGraphicRuntime({
 			{
 				id: 'ray-palette',
 				title: 'Ray Palette',
-				collapsible: true,
-				defaultOpen: false,
 				controls: [
 					colorControl(
 						'rayColor1',
@@ -200,8 +200,6 @@ const radialFlutedGlassRuntimeManifest = defineGraphicRuntime({
 			{
 				id: 'pulse',
 				title: 'Pulse',
-				collapsible: true,
-				defaultOpen: false,
 				controls: [
 					rangeControl(
 						'radialFalloff',
@@ -343,8 +341,6 @@ const radialFlutedGlassRuntimeManifest = defineGraphicRuntime({
 			{
 				id: 'glass-motion',
 				title: 'Glass Motion',
-				collapsible: true,
-				defaultOpen: false,
 				controls: [
 					{
 						id: 'glassOriginOffset',
@@ -398,6 +394,20 @@ const radialFlutedGlassRuntimeManifest = defineGraphicRuntime({
 						label: '광원',
 						defaultValue: RADIAL_FLUTED_GLASS_DEFAULT_INPUT.source,
 					},
+					rangeControl(
+						'sourceOffsetX',
+						'광원 X 오프셋',
+						RADIAL_FLUTED_GLASS_DEFAULT_INPUT.sourceOffsetX,
+						-2,
+						2,
+					),
+					rangeControl(
+						'sourceOffsetY',
+						'광원 Y 오프셋',
+						RADIAL_FLUTED_GLASS_DEFAULT_INPUT.sourceOffsetY,
+						-2,
+						2,
+					),
 				],
 			},
 		],

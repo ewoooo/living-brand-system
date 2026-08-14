@@ -227,7 +227,7 @@ export const customMcpTools = [
 						user: authenticatedUser,
 					})
 					if (!image) throw new Error('Generated image is unavailable.')
-					const preview = await sharp(image)
+					const preview = await sharp(image.data)
 						.resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
 						.webp({ quality: 82 })
 						.toBuffer()

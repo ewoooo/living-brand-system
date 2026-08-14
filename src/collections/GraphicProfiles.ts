@@ -6,6 +6,7 @@ import {
 } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import { managerManagedAccess } from '@/lib/auth'
 import {
+	studioControllerPresentationField,
 	studioControllerRestrictionsField,
 	studioExportPolicyField,
 } from './fields/studio-controller-field'
@@ -30,6 +31,7 @@ export const GraphicProfiles: CollectionConfig = {
 						name: String(effective.name ?? ''),
 						runtime: String(effective.runtime ?? ''),
 						controllerRestrictions: effective.controllerRestrictions,
+						controllerPresentation: effective.controllerPresentation,
 						exportPolicy: effective.exportPolicy,
 					})
 				} catch (error) {
@@ -78,6 +80,10 @@ export const GraphicProfiles: CollectionConfig = {
 			admin: { position: 'sidebar' },
 		},
 		studioControllerRestrictionsField({
+			source: 'graphic',
+			baseConfigs: graphicAdminRuntimeManifests,
+		}),
+		studioControllerPresentationField({
 			source: 'graphic',
 			baseConfigs: graphicAdminRuntimeManifests,
 		}),

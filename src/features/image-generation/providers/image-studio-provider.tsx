@@ -114,7 +114,6 @@ export function ImageStudioProvider({
 		() =>
 			supportsCamera && selected !== null && result?.profileId === config.id && generatedImage
 				? {
-						basePrompt: result.prompt,
 						generatedImageId: generatedImage.id,
 						profileId: result.profileId,
 						src: result.images[selected],
@@ -171,7 +170,6 @@ export function ImageStudioProvider({
 				regenerate: () => {
 					if (!supportsCamera || !cameraSeed) return
 					void adjustCamera({
-						basePrompt: cameraSeed.basePrompt,
 						camera: angles,
 						count: 1,
 						generatedImageId: cameraSeed.generatedImageId,

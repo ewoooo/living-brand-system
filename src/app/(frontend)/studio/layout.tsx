@@ -8,6 +8,7 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
 			nav={<StudioSideNavigation />}
 			mobileNavigation={false}
 			sidebarStorageKey="lbs.studioSidebarOpen"
+			variant="workspace"
 		>
 			{children}
 		</SectionLayout>

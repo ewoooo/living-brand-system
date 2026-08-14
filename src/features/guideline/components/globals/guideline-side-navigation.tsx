@@ -1,25 +1,107 @@
-import { SideNav, SideNavGroup, SideNavItem } from '@/components/global/side-nav/side-nav'
+'use client'
+
+import { usePathname } from 'next/navigation'
+import { Sidebar } from '@/components/global/sidebar/sidebar'
 import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
+import { scrollToGuidelinePage, useActivePageSlug } from './guideline-page-navigation'
+import { getGuidelineSectionPages } from './guideline-section-pages'
 
 /**
- * 좌측 사이트 사이드바 — chapter(그룹) > section(링크)의 route 계층만 소유한다.
- * 섹션 하위 Page는 route가 아니라 섹션 페이지의 in-page 앵커이므로, 사이드바가 아니라
- * 각 섹션 페이지의 "On this page" 목차(GuidelineOnThisPage)가 담당한다.
+ * 좌측 가이드라인 탐색 — chapter → section → 현재 section의 page 앵커를 표시한다.
+ * 우측 "On this page" 목차는 별도 문맥 탐색으로 유지한다.
  */
 export function GuidelineSideNavigation({
-	navigation,
+	chapters,
 }: {
-	navigation: GetGuidelineNavigationOutput
+	chapters: GetGuidelineNavigationOutput['chapters']
 }) {
+	const pathname = usePathname()
+	const currentSection = chapters
+		.flatMap((chapter) => chapter.sections)
+		.find((section) => pathname === section.href || pathname.startsWith(`${section.href}/`))
+	const currentPages = currentSection ? getGuidelineSectionPages(currentSection) : []
+	const activeSlug = useActivePageSlug(currentPages.map((page) => page.href.split('#')[1] ?? ''))
+
 	return (
-		<SideNav>
-			{navigation.chapters.map((chapter) => (
-				<SideNavGroup key={chapter.id} title={chapter.title} titleHref={chapter.href}>
-					{chapter.sections.map((section) => (
-						<SideNavItem key={section.id} label={section.title} href={section.href} />
-					))}
-				</SideNavGroup>
-			))}
-		</SideNav>
+		<Sidebar.Root
+			aria-label="가이드라인 목차"
+			className="md:w-[265px]"
+			data-slot="guideline-side-navigation"
+		>
+			<Sidebar.Content>
+				<Sidebar.Group>
+					{chapters.map((chapter) => {
+						const chapterCurrent = pathname === chapter.href
+
+						return (
+							<Sidebar.Item
+								key={chapter.id}
+								current={chapterCurrent}
+								depth={0}
+								href={chapter.href}
+								label={chapter.title}
+								tone={chapterCurrent ? 'emphasized' : 'subtle'}
+							>
+								<Sidebar.Children>
+									{chapter.sections.map((section) => {
+										const sectionActive =
+											pathname === section.href ||
+											pathname.startsWith(`${section.href}/`)
+										const pages = getGuidelineSectionPages(section)
+
+										return (
+											<Sidebar.Item
+												key={section.id}
+												current={sectionActive && !activeSlug}
+												depth={1}
+												href={section.href}
+												label={section.title}
+												tone={sectionActive ? 'emphasized' : 'subtle'}
+											>
+												{sectionActive && pages.length > 0 && (
+													<Sidebar.Children>
+														{pages.map((page) => {
+															const slug =
+																page.href.split('#')[1] ?? ''
+															const pageCurrent = slug === activeSlug
+
+															return (
+																<Sidebar.Item
+																	key={page.id}
+																	aria-current={
+																		pageCurrent
+																			? 'location'
+																			: undefined
+																	}
+																	current={pageCurrent}
+																	depth={2}
+																	href={page.href}
+																	label={page.title}
+																	onClick={(event) =>
+																		scrollToGuidelinePage(
+																			event,
+																			slug,
+																		)
+																	}
+																	tone={
+																		pageCurrent
+																			? 'emphasized'
+																			: 'subtle'
+																	}
+																/>
+															)
+														})}
+													</Sidebar.Children>
+												)}
+											</Sidebar.Item>
+										)
+									})}
+								</Sidebar.Children>
+							</Sidebar.Item>
+						)
+					})}
+				</Sidebar.Group>
+			</Sidebar.Content>
+		</Sidebar.Root>
 	)
 }
