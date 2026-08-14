@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { PublishedHtmlTemplate } from '@/features/template-customization/domain/template-config'
+import type { PublishedHtmlTemplate } from '@/features/template-customization/domain/template-studio-config'
 import { getTemplateStudio } from './get-template-studio.service'
 
 const published: PublishedHtmlTemplate = {

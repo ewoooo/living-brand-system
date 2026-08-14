@@ -8,7 +8,7 @@ import {
 	DEFAULT_IMAGE_MODEL_PRESET,
 	type ImageModelPreset,
 } from '@/features/image-generation/image-model'
-import { getTemplateRuntimeManifest } from '@/features/template-customization/domain/template-config'
+import { getTemplateRuntimeManifest } from '@/features/template-customization/domain/template-studio-config'
 import type { StudioRuntimeManifest } from '@/modules/studio-controller/controller-definition'
 import type { TemplateNodeConfigMap } from '@/types/template'
 

@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { acceptsImagePromptExecution } from '@/features/image-generation/domain/image-studio-config'
-import type { ResolvedTemplateImageConfig } from '@/features/template-customization/domain/template-config'
+import type { ResolvedTemplateImageConfig } from '@/features/template-customization/domain/template-studio-config'
 import type {
 	TemplateBackgroundPatch,
 	TemplateBackgroundState,

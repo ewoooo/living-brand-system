@@ -3,7 +3,7 @@ import { findPublishedTemplate } from '@/features/template-core/repositories/pub
 import type {
 	PublishedHtmlTemplate,
 	PublishedTemplateNodeConfig,
-} from '@/features/template-customization/domain/template-config'
+} from '@/features/template-customization/domain/template-studio-config'
 import type { TemplateNodeConfigMap } from '@/types/template'
 
 // 노출 경계: 스튜디오가 쓰는 creator·input(aiInstruction 제외)·imageInput·imageColorize·vectorColor만 남긴다.

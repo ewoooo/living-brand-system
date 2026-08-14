@@ -37,7 +37,7 @@ import {
 	findTemplateControl,
 	findTemplateControlGroup,
 	partitionTemplateSlots,
-} from '@/features/template-customization/domain/template-config'
+} from '@/features/template-customization/domain/template-studio-config'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 
 const FORMAT_LABELS = new Map(

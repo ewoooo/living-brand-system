@@ -5,15 +5,15 @@ import { TemplateSidebar } from '@/components/studio/sidebar/template-sidebar'
 import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import type {
 	PublishedTemplateView,
-	TemplateConfig,
-} from '@/features/template-customization/domain/template-config'
+	TemplateStudioConfig,
+} from '@/features/template-customization/domain/template-studio-config'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 import { TemplateStudioProvider } from '@/features/template-customization/providers/template-studio-provider'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import { TemplateCanvas } from './template-canvas'
 
 type TemplateGeneratorProps = {
-	config: TemplateConfig
+	config: TemplateStudioConfig
 	navigation: GetCreateNavigationOutput
 	template: PublishedTemplateView
 }
