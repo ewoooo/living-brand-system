@@ -52,8 +52,6 @@ export function getImageRuntimeManifest(modelPreset: ImageModelPreset): ImageRun
 				{
 					id: IMAGE_STUDIO_GROUP_IDS.image,
 					title: 'Image',
-					collapsible: true,
-					defaultOpen: true,
 					controls: [
 						{
 							id: IMAGE_STUDIO_CONTROL_IDS.prompt,
@@ -69,8 +67,6 @@ export function getImageRuntimeManifest(modelPreset: ImageModelPreset): ImageRun
 				{
 					id: IMAGE_STUDIO_GROUP_IDS.profileSettings,
 					title: 'Profile Settings',
-					collapsible: true,
-					defaultOpen: true,
 					controls: [
 						{
 							id: IMAGE_STUDIO_CONTROL_IDS.lineColor,

@@ -374,6 +374,55 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(overlay.getAttribute('data-asset-id')).toBe('9')
 	})
 
+	it('교체 이미지가 없어도 기존 캐리어 이미지에 colorize를 적용한다', () => {
+		const existing = '/api/application-images/file/line-art.png'
+		const base =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +
+			`<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier="" style="background-image:url(${existing})"></div>` +
+			'</div>'
+		const html = composeTemplateHtml(base, {
+			'frame-1': { imageColorize: { line: '#112233' } },
+		})
+		const overlay = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-node-id="rect-1-colorize"]') as HTMLElement
+
+		expect(overlay.style.maskImage).toContain(existing)
+		expect(overlay.style.backgroundColor).toBe('rgb(17, 34, 51)')
+	})
+
+	it('이미 colorize된 canonical 이미지도 URL과 에셋 참조를 보존해 다시 칠한다', () => {
+		const existing = '/api/application-images/file/line-art.png'
+		const base =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +
+			`<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier="" data-asset-collection="application-images" data-asset-id="3" style="background-image:url(${existing})"></div>` +
+			'</div>'
+		const canonical = composeTemplateHtml(base, {
+			'frame-1': { imageColorize: { line: '#112233' } },
+		})
+		const recolored = composeTemplateHtml(canonical, {
+			'frame-1': { imageColorize: { line: '#445566' } },
+		})
+		const overlay = new DOMParser()
+			.parseFromString(recolored, 'text/html')
+			.querySelector('[data-node-id="rect-1-colorize"]') as HTMLElement
+
+		expect(overlay.style.maskImage).toContain(existing)
+		expect(overlay.style.backgroundColor).toBe('rgb(68, 85, 102)')
+		expect(overlay.dataset.assetCollection).toBe('application-images')
+		expect(overlay.dataset.assetId).toBe('3')
+	})
+
+	it('레이어 visible=false는 합성 미리보기와 export HTML에서 같은 노드를 숨긴다', () => {
+		const html = composeTemplateHtml(
+			'<p data-node-id="text-1" data-figma-type="TEXT">문구</p>',
+			{ 'text-1': { visible: false } },
+		)
+		const text = new DOMParser().parseFromString(html, 'text/html').querySelector('p')
+
+		expect(text?.getAttribute('style')).toContain('display: none')
+	})
+
 	it('formatImageEditTransform이 compose가 쓰는 문자열과 같은 포맷을 만든다 — 오버레이의 prefix strip 계약', () => {
 		expect(formatImageEditTransform({ x: 12, y: -30, scale: 1.5, rotate: 15 })).toBe(
 			'translate(12px, -30px) scale(1.5) rotate(15deg)',

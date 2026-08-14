@@ -44,6 +44,21 @@ export function findImageCarrier(el: Element): HTMLElement | null {
 	return found
 }
 
+function readImageCarrierUrl(carrier: HTMLElement): string | null {
+	if (carrier instanceof HTMLImageElement) return carrier.getAttribute('src')
+	const values = [
+		carrier.style.backgroundImage,
+		...Array.from(carrier.children).map((child) =>
+			child instanceof HTMLElement ? child.style.maskImage : '',
+		),
+	]
+	for (const value of values) {
+		const urls = Array.from(value.matchAll(/url\(["']?(.*?)["']?\)/g), (match) => match[1])
+		if (urls.length) return urls.at(-1) ?? null
+	}
+	return null
+}
+
 /**
  * 컬러 치환: 생성 이미지(단색 라인 아트)를 luminance 마스크로 써서 캐리어를 재구성한다.
  * background 명시 시 2겹 — 바닥(캐리어)=line 색, 오버레이(자식)=background 색. 마스크의 밝은
@@ -96,7 +111,12 @@ function applyImageColorize(
 	// 섞여 selector 조립 대신 직계 자식(오버레이는 항상 직계) 순회로 찾는다.
 	const overlayId = `${base.getAttribute('data-node-id')}-colorize`
 	for (const child of Array.from(base.children)) {
-		if (child.getAttribute('data-node-id') === overlayId) child.remove()
+		if (child.getAttribute('data-node-id') !== overlayId) continue
+		for (const name of ['data-asset-collection', 'data-asset-id']) {
+			const value = child.getAttribute(name)
+			if (value !== null && !base.hasAttribute(name)) base.setAttribute(name, value)
+		}
+		child.remove()
 	}
 
 	const overlay = doc.createElement('div')
@@ -183,6 +203,7 @@ export function composeTemplateHtml(
 			(candidate) => candidate.getAttribute('data-node-id') === nodeId,
 		)
 		if (!el) continue // base에 더 이상 없는 노드 설정은 무시한다.
+		if (config.visible === false && el instanceof HTMLElement) el.style.display = 'none'
 
 		// 텍스트는 텍스트 노드(<p>)에만. background는 요소(HTMLElement)에.
 		if (typeof config.text === 'string' && el.tagName.toLowerCase() === 'p') {
@@ -201,11 +222,13 @@ export function composeTemplateHtml(
 		// backgroundImage는 무시된다. 프레임 배경에 직접 쓰면 위에 얹힌 자식이 이미지를 가린다.
 		// 캐리어 사각형을 직접 선택해 설정한 경우 요소 자신이 캐리어다.
 		const carrier =
-			config.backgroundImage && el instanceof HTMLElement ? findImageCarrier(el) : null
-		if (config.backgroundImage && carrier) {
-			if (carrier instanceof HTMLImageElement) {
+			(config.backgroundImage || config.imageColorize) && el instanceof HTMLElement
+				? findImageCarrier(el)
+				: null
+		if (carrier) {
+			if (config.backgroundImage && carrier instanceof HTMLImageElement) {
 				carrier.src = config.backgroundImage
-			} else {
+			} else if (config.backgroundImage) {
 				carrier.style.backgroundImage = `url("${config.backgroundImage}")`
 				// import가 scaleMode에서 굳힌 background-size/position은 보존하고 없을 때만 기본값.
 				if (!carrier.style.backgroundSize) carrier.style.backgroundSize = 'cover'
@@ -214,7 +237,7 @@ export function composeTemplateHtml(
 				}
 				if (!carrier.style.backgroundRepeat) carrier.style.backgroundRepeat = 'no-repeat'
 			}
-			if (config.generatedImageId) {
+			if (config.backgroundImage && config.generatedImageId) {
 				// 발행 검증(metadataRef)이 요소의 data-asset-*와 실제 URL의 일치를 요구하므로
 				// placeholder 에셋 참조를 생성 이미지 참조로 바꾼다.
 				carrier.setAttribute('data-asset-collection', 'generated-images')
@@ -222,9 +245,11 @@ export function composeTemplateHtml(
 			}
 			// 컬러 치환은 transform보다 먼저 — img 캐리어가 div로 치환될 수 있고, transform은
 			// 치환 결과(2겹 전체)의 캐리어에 붙어야 이동·회전이 컬러 결과를 통째로 움직인다.
-			const visual = config.imageColorize
-				? applyImageColorize(doc, carrier, config.imageColorize, config.backgroundImage)
-				: carrier
+			const imageUrl = config.backgroundImage ?? readImageCarrierUrl(carrier)
+			const visual =
+				config.imageColorize && imageUrl
+					? applyImageColorize(doc, carrier, config.imageColorize, imageUrl)
+					: carrier
 			const edit = config.imageTransform
 			if (edit && !isIdentityTransform(edit)) {
 				// 재합성 비멱등 — transform이 있는 config는 항상 baseHtml에서 합성해야 한다
@@ -242,6 +267,13 @@ export function composeTemplateHtml(
 			// img 캐리어가 div로 치환(replaceWith)됐어도 아래 벡터 경로에 진입하지 않는다.
 			// 캐리어 없는 img에 backgroundImage가 와도(UI상 불가능한 조합) 벡터 경로는
 			// vectorAsset·vectorColor·vectorFit만 보므로 이미지 배정 없이 무해하다.
+		} else if (
+			config.vectorColor &&
+			el instanceof HTMLElement &&
+			!(el instanceof HTMLImageElement) &&
+			el.style.maskImage
+		) {
+			el.style.backgroundColor = config.vectorColor
 		} else if (el instanceof HTMLImageElement) {
 			if (config.vectorAsset) {
 				el.src = config.vectorAsset.src

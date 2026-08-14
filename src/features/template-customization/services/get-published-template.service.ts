@@ -6,7 +6,7 @@ import type {
 } from '@/features/template-customization/domain/template-config'
 import type { TemplateNodeConfigMap } from '@/types/template'
 
-// 노출 경계: 스튜디오가 쓰는 input(aiInstruction 제외)·imageInput·imageColorize만 남긴다.
+// 노출 경계: 스튜디오가 쓰는 creator·input(aiInstruction 제외)·imageInput·imageColorize·vectorColor만 남긴다.
 // aiInstruction·vectorAsset·generatedImageId 등 저작 내부 정보는 SSR 페이로드에 싣지 않는다.
 // agent/MCP 경로(projectTemplateRenderModel 직행)는 의도적으로 전체 config를 쓴다 — 이 프로젝션을
 // "안전한 투영"으로 오독해 새 공개 표면에 renderModel을 그대로 태우지 말 것.
@@ -14,15 +14,20 @@ function projectStudioNodeConfigs(
 	nodeConfigs: TemplateNodeConfigMap,
 ): Record<string, PublishedTemplateNodeConfig> {
 	const projected: Record<string, PublishedTemplateNodeConfig> = {}
-	for (const [nodeId, { input, imageInput, imageColorize }] of Object.entries(nodeConfigs)) {
-		if (!input && !imageInput && !imageColorize) continue
+	for (const [
+		nodeId,
+		{ creator, input, imageInput, imageColorize, vectorColor },
+	] of Object.entries(nodeConfigs)) {
+		if (!creator && !input && !imageInput && !imageColorize && !vectorColor) continue
 		const config: PublishedTemplateNodeConfig = {}
+		if (creator) config.creator = creator
 		if (input) {
 			const { aiInstruction: _internal, ...studioInput } = input
 			config.input = studioInput
 		}
 		if (imageInput) config.imageInput = imageInput
 		if (imageColorize) config.imageColorize = imageColorize
+		if (vectorColor) config.vectorColor = vectorColor
 		projected[nodeId] = config
 	}
 	return projected
@@ -53,6 +58,7 @@ export async function getPublishedTemplate(
 		name: template.name,
 		templateVersion: template.updatedAt,
 		controllerRestrictions: template.controllerRestrictions,
+		controllerPresentation: template.controllerPresentation,
 		exportPolicy: template.exportPolicy,
 		...renderModel,
 		nodeConfigs: projectStudioNodeConfigs(renderModel.nodeConfigs),

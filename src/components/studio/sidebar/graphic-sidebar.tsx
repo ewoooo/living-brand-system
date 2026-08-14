@@ -99,6 +99,7 @@ export function GraphicSidebar({ output }: { output: GraphicExportView }) {
 			>
 				<ControllerRenderer
 					groups={config.controller.groups}
+					presentation={config.controllerPresentation}
 					values={controls.values}
 					bindings={controls.bindings}
 					onChange={controls.update}

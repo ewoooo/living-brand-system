@@ -12,6 +12,7 @@ import {
 	type ControllerControlDefinition,
 	parseStudioControllerConfig,
 	projectPayloadControllerRestrictions,
+	resolveControllerPresentation,
 	type StudioControllerConfig,
 } from '@/modules/studio-controller/controller-definition'
 import {
@@ -44,6 +45,7 @@ export type PublishedImageProfileDefinition = {
 	slug: string | null
 	imageModelPreset: ImageModelPreset
 	controllerRestrictions?: unknown
+	controllerPresentation?: unknown
 	features?: unknown
 	exportPolicy?: unknown
 }
@@ -81,6 +83,7 @@ export function parseImageStudioConfig(input: unknown): ImageStudioConfig {
 		'artifacts',
 		'output',
 		'controller',
+		'controllerPresentation',
 		'image',
 	])
 	if (common.studio !== 'image') throw new Error('ImageStudioConfig studio: image여야 합니다.')
@@ -210,6 +213,11 @@ export function deriveImageStudioConfig(
 		manifest,
 		profile.features,
 	)
+	const controller = deriveImageProfileController(
+		profile.imageModelPreset,
+		profile.features,
+		profile.controllerRestrictions,
+	)
 	const config: ImageStudioConfig = {
 		studio: 'image',
 		id: profile.id,
@@ -221,10 +229,10 @@ export function deriveImageStudioConfig(
 			{ packages: ['zip'] },
 		) as StudioOutputCapability & { original: boolean },
 		artifacts: manifest.artifacts,
-		controller: deriveImageProfileController(
-			profile.imageModelPreset,
-			profile.features,
-			profile.controllerRestrictions,
+		controller,
+		controllerPresentation: resolveControllerPresentation(
+			controller.groups,
+			profile.controllerPresentation,
 		),
 		image: {
 			slug: profile.slug ?? null,

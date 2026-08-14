@@ -20,6 +20,7 @@ describe('listPublishedGraphicProfileDefinitions', () => {
 			limit: 100,
 			overrideAccess: false,
 			select: {
+				controllerPresentation: true,
 				controllerRestrictions: true,
 				name: true,
 				exportPolicy: true,

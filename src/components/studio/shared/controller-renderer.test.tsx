@@ -38,6 +38,33 @@ describe('ControllerRenderer', () => {
 		expect(screen.queryByRole('textbox', { name: 'First value' })).toBeNull()
 	})
 
+	it('Admin presentation으로 static 그룹과 최초 닫힘을 투영한다', () => {
+		const groups = [
+			{ id: 'static', title: 'Static', controls: [] },
+			{ id: 'closed', title: 'Closed', controls: [] },
+		] satisfies readonly ControllerGroupDefinition[]
+
+		render(
+			<ControllerRenderer
+				groups={groups}
+				presentation={{
+					groups: [
+						{ groupId: 'static', collapsible: false, defaultOpen: true },
+						{ groupId: 'closed', collapsible: true, defaultOpen: false },
+					],
+				}}
+				values={{}}
+				onChange={() => {}}
+			/>,
+		)
+
+		expect(screen.getByText('Static').closest('section')).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: /Closed/ })).toHaveAttribute(
+			'data-state',
+			'closed',
+		)
+	})
+
 	it('Published availability를 완화하지 않고 runtime 오류와 Pad 비율을 결합한다', () => {
 		const onChange = vi.fn()
 		const groups = [

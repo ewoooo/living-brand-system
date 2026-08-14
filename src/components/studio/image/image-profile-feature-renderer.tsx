@@ -94,7 +94,13 @@ function ColorAdjustmentFeature({
 		))
 
 		return (
-			<ControllerGroupRenderer key={`${feature.type}:${group.id}`} definition={group}>
+			<ControllerGroupRenderer
+				key={`${feature.type}:${group.id}`}
+				definition={group}
+				presentation={config.controllerPresentation?.groups.find(
+					({ groupId }) => groupId === group.id,
+				)}
+			>
 				{content}
 			</ControllerGroupRenderer>
 		)
@@ -103,7 +109,7 @@ function ColorAdjustmentFeature({
 
 function CameraFeature({ runtime }: { runtime: ImageProfileCameraRuntime }) {
 	return (
-		<Controller.Group title="Camera Controls" disabled={!runtime.seedImage}>
+		<Controller.Group title="Camera Controls" collapsible disabled={!runtime.seedImage}>
 			{runtime.seedImage && (
 				<ImageCameraControl
 					azimuthDeg={runtime.azimuthDeg}

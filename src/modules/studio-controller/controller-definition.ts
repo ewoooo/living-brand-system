@@ -38,6 +38,8 @@ export type StudioControllerConfig<
 	id: Id
 	version: 1
 	name: string
+	/** Runtime 구조와 분리해 Admin이 정한 그룹 표현 정책. Runtime Manifest에는 존재하지 않는다. */
+	controllerPresentation?: StudioControllerPresentation
 }
 
 export type ControllerOption<Value extends string = string> = {
@@ -95,7 +97,17 @@ export type ControllerGroupDefinition = {
 	id: string
 	title: string
 	controls: readonly ControllerControlDefinition[]
-} & ({ collapsible?: false; defaultOpen?: never } | { collapsible: true; defaultOpen?: boolean })
+}
+
+export type ControllerGroupPresentation = {
+	groupId: string
+	collapsible: boolean
+	defaultOpen: boolean
+}
+
+export type StudioControllerPresentation = {
+	groups: readonly ControllerGroupPresentation[]
+}
 
 /** Base Definition의 kind·표현 정보를 복제하지 않는 Admin 제한값. */
 export type ControllerControlRestriction = {
@@ -144,31 +156,73 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	for (const [groupIndex, groupValue] of controller.groups.entries()) {
 		const groupPath = `controller.groups[${groupIndex}]`
 		const group = asRecord(groupValue, groupPath)
-		assertOnlyKeys(group, ['id', 'title', 'controls', 'collapsible', 'defaultOpen'], groupPath)
+		assertOnlyKeys(group, ['id', 'title', 'controls'], groupPath)
 		assertNonEmptyString(group.id, `${groupPath}.id`)
 		if (groupIds.has(group.id)) invalid(`${groupPath}.id`, `중복되었습니다: ${group.id}`)
 		groupIds.add(group.id)
 		assertNonEmptyString(group.title, `${groupPath}.title`)
 		if (!Array.isArray(group.controls)) invalid(`${groupPath}.controls`, '배열이어야 합니다.')
-		if (group.collapsible !== undefined && typeof group.collapsible !== 'boolean') {
-			invalid(`${groupPath}.collapsible`, 'boolean이어야 합니다.')
-		}
-		if (group.defaultOpen !== undefined) {
-			if (group.collapsible !== true) {
-				invalid(`${groupPath}.defaultOpen`, 'collapsible 그룹에서만 사용할 수 있습니다.')
-			}
-			if (typeof group.defaultOpen !== 'boolean') {
-				invalid(`${groupPath}.defaultOpen`, 'boolean이어야 합니다.')
-			}
-		}
-
 		for (const [controlIndex, controlValue] of group.controls.entries()) {
 			validateControl(controlValue, `${groupPath}.controls[${controlIndex}]`)
 		}
 	}
+	if (config.controllerPresentation !== undefined) {
+		validateControllerPresentation(config.controllerPresentation, groupIds)
+	}
 
 	createControllerValues(controller.groups as readonly ControllerGroupDefinition[])
 	return input as StudioControllerConfig
+}
+
+/** Payload의 sparse 그룹 표현값을 Runtime 그룹 순서의 완전한 Effective 정책으로 투영한다. */
+export function resolveControllerPresentation(
+	groups: readonly ControllerGroupDefinition[],
+	input: unknown,
+): StudioControllerPresentation {
+	const overrides = new Map<string, { collapsible?: boolean; defaultOpen?: boolean }>()
+	if (input != null) {
+		const root = asRecord(input, 'controller presentation')
+		assertOnlyKeys(root, ['groups'], 'controller presentation')
+		if (root.groups != null) {
+			if (!Array.isArray(root.groups))
+				invalid('controller presentation.groups', '배열이어야 합니다.')
+			const knownIds = new Set(groups.map(({ id }) => id))
+			for (const [index, value] of root.groups.entries()) {
+				const path = `controller presentation.groups[${index}]`
+				const group = asRecord(value, path)
+				assertOnlyKeys(group, ['groupId', 'collapsible', 'defaultOpen'], path)
+				assertNonEmptyString(group.groupId, `${path}.groupId`)
+				if (!knownIds.has(group.groupId))
+					invalid(`${path}.groupId`, 'Runtime 그룹을 찾을 수 없습니다.')
+				if (overrides.has(group.groupId)) invalid(`${path}.groupId`, '중복되었습니다.')
+				if (group.collapsible !== undefined && typeof group.collapsible !== 'boolean') {
+					invalid(`${path}.collapsible`, 'boolean이어야 합니다.')
+				}
+				if (group.defaultOpen !== undefined && typeof group.defaultOpen !== 'boolean') {
+					invalid(`${path}.defaultOpen`, 'boolean이어야 합니다.')
+				}
+				if (group.collapsible === false && group.defaultOpen === false) {
+					invalid(path, '접을 수 없는 그룹은 닫힌 상태로 시작할 수 없습니다.')
+				}
+				overrides.set(group.groupId, {
+					...definedProperty('collapsible', group.collapsible as boolean | undefined),
+					...definedProperty('defaultOpen', group.defaultOpen as boolean | undefined),
+				})
+			}
+		}
+	}
+
+	return {
+		groups: groups.map(({ id }) => {
+			const override = overrides.get(id)
+			const collapsible = override?.collapsible ?? true
+			return {
+				groupId: id,
+				collapsible,
+				defaultOpen: collapsible ? (override?.defaultOpen ?? true) : true,
+			}
+		}),
+	}
 }
 
 /** Payload JSON을 kind-free Controller Restrictions 계약으로 읽는다. */
@@ -465,6 +519,35 @@ function validateControl(value: unknown, path: string) {
 		}
 		default:
 			invalid(`${path}.kind`, '지원하지 않는 값입니다.')
+	}
+}
+
+function validateControllerPresentation(value: unknown, groupIds: ReadonlySet<string>) {
+	const presentation = asRecord(value, 'controllerPresentation')
+	assertOnlyKeys(presentation, ['groups'], 'controllerPresentation')
+	if (!Array.isArray(presentation.groups)) {
+		invalid('controllerPresentation.groups', '배열이어야 합니다.')
+	}
+	const seen = new Set<string>()
+	for (const [index, value] of presentation.groups.entries()) {
+		const path = `controllerPresentation.groups[${index}]`
+		const group = asRecord(value, path)
+		assertOnlyKeys(group, ['groupId', 'collapsible', 'defaultOpen'], path)
+		assertNonEmptyString(group.groupId, `${path}.groupId`)
+		if (!groupIds.has(group.groupId))
+			invalid(`${path}.groupId`, 'Controller 그룹을 찾을 수 없습니다.')
+		if (seen.has(group.groupId)) invalid(`${path}.groupId`, '중복되었습니다.')
+		seen.add(group.groupId)
+		if (typeof group.collapsible !== 'boolean')
+			invalid(`${path}.collapsible`, 'boolean이어야 합니다.')
+		if (typeof group.defaultOpen !== 'boolean')
+			invalid(`${path}.defaultOpen`, 'boolean이어야 합니다.')
+		if (!group.collapsible && !group.defaultOpen) {
+			invalid(path, '접을 수 없는 그룹은 닫힌 상태로 시작할 수 없습니다.')
+		}
+	}
+	if (seen.size !== groupIds.size) {
+		invalid('controllerPresentation.groups', '모든 Controller 그룹의 표현 정책이 필요합니다.')
 	}
 }
 

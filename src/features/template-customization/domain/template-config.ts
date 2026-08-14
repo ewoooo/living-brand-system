@@ -22,6 +22,8 @@ import {
 import {
 	collectTemplateImageSlots,
 	collectTemplateSlots,
+	collectTemplateVectorSlots,
+	type ResolvedTemplateLayerPolicy,
 } from '@/features/template-core/domain/collect-template-slots'
 import { IMAGE_EDIT_TRANSFORM_LIMITS } from '@/lib/template-image-transform'
 import type {
@@ -34,6 +36,7 @@ import {
 	applyControllerRestrictions,
 	parseStudioControllerConfig,
 	projectPayloadControllerRestrictions,
+	resolveControllerPresentation,
 } from '@/modules/studio-controller/controller-definition'
 import type { TemplateNodeConfig } from '@/types/template'
 
@@ -48,10 +51,12 @@ type TemplateSlotBindingBase = {
 	label: string
 }
 
+type TemplateEditableSlotBase = TemplateSlotBindingBase & ResolvedTemplateLayerPolicy
+
 type TextControlDefinition = Extract<ControllerControlDefinition, { kind: 'text' }>
 type SelectControlDefinition = Extract<ControllerControlDefinition, { kind: 'select' }>
 
-export type TemplateTextSlot = TemplateSlotBindingBase & {
+export type TemplateTextSlot = TemplateEditableSlotBase & {
 	kind: 'text'
 	/** 공통 controller.groups에 있는 text Definition의 stable id. */
 	controlId: string
@@ -64,7 +69,7 @@ export type TemplateTextSlot = TemplateSlotBindingBase & {
 
 export type TransformLimits = typeof IMAGE_EDIT_TRANSFORM_LIMITS
 
-export type TemplateImageConfigSlot = TemplateSlotBindingBase & {
+export type TemplateImageConfigSlot = TemplateEditableSlotBase & {
 	kind: 'image'
 	/** 대상 슬롯 기하 — 생성 비율과 transform px 환산의 단일 원천. */
 	box: { width?: number; height?: number }
@@ -79,6 +84,11 @@ export type TemplateImageConfigSlot = TemplateSlotBindingBase & {
 	transform: { enabled: boolean; limits: TransformLimits }
 }
 
+export type TemplateVectorSlot = TemplateEditableSlotBase & {
+	kind: 'vector'
+	color?: string
+}
+
 export type TemplateBackgroundSlot = TemplateSlotBindingBase & {
 	kind: 'background'
 	/** 공통 controller.groups에 있는 background type Definition의 stable id. */
@@ -87,7 +97,9 @@ export type TemplateBackgroundSlot = TemplateSlotBindingBase & {
 	imageConfig: { mode: 'selectable'; allowedConfigIds?: readonly number[] }
 }
 
-export type TemplateConfigSlot = TemplateTextSlot | TemplateImageConfigSlot | TemplateBackgroundSlot
+export type TemplateEditableLayer = TemplateTextSlot | TemplateImageConfigSlot | TemplateVectorSlot
+
+export type TemplateConfigSlot = TemplateEditableLayer | TemplateBackgroundSlot
 
 export type TemplateBackgroundType = 'color' | 'image' | 'graphic'
 
@@ -96,6 +108,8 @@ export type PublishedTemplateNodeConfig = {
 	input?: Omit<NonNullable<TemplateNodeConfig['input']>, 'aiInstruction'>
 	imageInput?: TemplateNodeConfig['imageInput']
 	imageColorize?: TemplateNodeConfig['imageColorize']
+	creator?: TemplateNodeConfig['creator']
+	vectorColor?: TemplateNodeConfig['vectorColor']
 }
 
 /** Published Template을 Template Studio Config와 세션이 소비하는 read model로 투영한 계약. */
@@ -110,6 +124,7 @@ export type PublishedHtmlTemplate = {
 	templateVersion: string
 	controllerRestrictions?: unknown
 	exportPolicy?: unknown
+	controllerPresentation?: unknown
 }
 
 /**
@@ -143,6 +158,7 @@ export function parseTemplateConfig(input: unknown): TemplateConfig {
 		'artifacts',
 		'output',
 		'controller',
+		'controllerPresentation',
 		'template',
 	])
 	if (common.studio !== 'template')
@@ -187,9 +203,19 @@ export function parseTemplateConfig(input: unknown): TemplateConfig {
 		if (slotIds.has(slot.id as string))
 			throw new Error(`TemplateConfig slot id가 중복되었습니다: ${slot.id}`)
 		slotIds.add(slot.id as string)
+		if (slot.kind !== 'background') assertTemplateLayerPolicy(slot)
 		switch (slot.kind) {
 			case 'text': {
-				assertTemplateKeys(slot, ['id', 'layer', 'label', 'kind', 'controlId', 'input'])
+				assertTemplateKeys(slot, [
+					'id',
+					'layer',
+					'label',
+					'kind',
+					'access',
+					'visibility',
+					'controlId',
+					'input',
+				])
 				assertTemplateString(slot.controlId, 'slot.controlId')
 				const textInput = templateRecord(slot.input, 'Template text input')
 				assertTemplateKeys(textInput, ['format', 'maxLines'])
@@ -206,6 +232,8 @@ export function parseTemplateConfig(input: unknown): TemplateConfig {
 					'layer',
 					'label',
 					'kind',
+					'access',
+					'visibility',
 					'box',
 					'imageConfig',
 					'featureOverrides',
@@ -223,6 +251,18 @@ export function parseTemplateConfig(input: unknown): TemplateConfig {
 				assertTemplateTransformLimits(transform.limits)
 				break
 			}
+			case 'vector':
+				assertTemplateKeys(slot, [
+					'id',
+					'layer',
+					'label',
+					'kind',
+					'access',
+					'visibility',
+					'color',
+				])
+				if (slot.color !== undefined) assertTemplateString(slot.color, 'slot.color')
+				break
 			case 'background':
 				assertTemplateKeys(slot, [
 					'id',
@@ -280,6 +320,8 @@ export const isTextSlot = (slot: TemplateConfigSlot): slot is TemplateTextSlot =
 	slot.kind === 'text'
 export const isImageSlot = (slot: TemplateConfigSlot): slot is TemplateImageConfigSlot =>
 	slot.kind === 'image'
+export const isVectorSlot = (slot: TemplateConfigSlot): slot is TemplateVectorSlot =>
+	slot.kind === 'vector'
 export const isBackgroundSlot = (slot: TemplateConfigSlot): slot is TemplateBackgroundSlot =>
 	slot.kind === 'background'
 
@@ -287,6 +329,7 @@ export const isBackgroundSlot = (slot: TemplateConfigSlot): slot is TemplateBack
 export function partitionTemplateSlots(slots: readonly TemplateConfigSlot[]) {
 	const text: TemplateTextSlot[] = []
 	const image: TemplateImageConfigSlot[] = []
+	const vector: TemplateVectorSlot[] = []
 	let background: TemplateBackgroundSlot | undefined
 	for (const slot of slots) {
 		switch (slot.kind) {
@@ -296,6 +339,9 @@ export function partitionTemplateSlots(slots: readonly TemplateConfigSlot[]) {
 			case 'image':
 				image.push(slot)
 				break
+			case 'vector':
+				vector.push(slot)
+				break
 			case 'background':
 				if (background) throw new Error('Template background slot은 하나만 허용됩니다.')
 				background = slot
@@ -304,7 +350,7 @@ export function partitionTemplateSlots(slots: readonly TemplateConfigSlot[]) {
 				return assertNeverTemplateSlot(slot)
 		}
 	}
-	return { text, image, background }
+	return { text, image, vector, background }
 }
 
 function assertNeverTemplateSlot(slot: never): never {
@@ -457,6 +503,7 @@ export function getTemplateRuntimeManifest({
 			kind: 'text',
 			label: slot.input.label ?? slot.name,
 			defaultValue: slot.text,
+			...(slot.policy.access === 'readonly' ? { availability: 'readonly' as const } : {}),
 			multiline: (slot.input.inputFormat ?? 'free') === 'free' && slot.input.maxLines !== 1,
 			...(slot.input.maxLength === undefined ? {} : { maxLength: slot.input.maxLength }),
 			...(slot.input.placeholder === undefined
@@ -473,7 +520,6 @@ export function getTemplateRuntimeManifest({
 							{
 								id: 'text',
 								title: 'Text',
-								collapsible: true as const,
 								controls: [
 									...textControls,
 									{
@@ -489,7 +535,6 @@ export function getTemplateRuntimeManifest({
 				{
 					id: 'background',
 					title: 'Background',
-					collapsible: true as const,
 					controls: [
 						{
 							id: BACKGROUND_TYPE_CONTROL_ID,
@@ -523,6 +568,7 @@ export function deriveTemplateConfig(
 ): TemplateConfig {
 	const { html, nodeConfigs } = template
 	const textSlots = collectTemplateSlots(html, nodeConfigs)
+	const vectorSlots = collectTemplateVectorSlots(html, nodeConfigs)
 	const slots: TemplateConfigSlot[] = [
 		...textSlots.map(
 			(slot): TemplateTextSlot => ({
@@ -530,6 +576,8 @@ export function deriveTemplateConfig(
 				layer: slot.name,
 				label: slot.input.label ?? slot.name,
 				kind: 'text',
+				access: slot.policy.access,
+				visibility: slot.policy.visibility,
 				controlId: `text:${slot.nodeId}`,
 				input: {
 					format: slot.input.inputFormat ?? 'free',
@@ -543,6 +591,8 @@ export function deriveTemplateConfig(
 				layer: slot.name,
 				label: slot.name,
 				kind: 'image',
+				access: slot.policy.access,
+				visibility: slot.policy.visibility,
 				box: { width: slot.boxWidth, height: slot.boxHeight },
 				imageConfig: slot.profileId
 					? { mode: 'pinned', configId: slot.profileId }
@@ -555,6 +605,17 @@ export function deriveTemplateConfig(
 						}
 					: {}),
 				transform: { enabled: true, limits: IMAGE_EDIT_TRANSFORM_LIMITS },
+			}),
+		),
+		...vectorSlots.map(
+			(slot): TemplateVectorSlot => ({
+				id: slot.nodeId,
+				layer: slot.name,
+				label: slot.name,
+				kind: 'vector',
+				access: slot.policy.access,
+				visibility: slot.policy.visibility,
+				...(slot.color ? { color: slot.color } : {}),
 			}),
 		),
 		{
@@ -587,6 +648,10 @@ export function deriveTemplateConfig(
 		controller: {
 			groups: controllerGroups,
 		},
+		controllerPresentation: resolveControllerPresentation(
+			controllerGroups,
+			template.controllerPresentation,
+		),
 		template: {
 			slots,
 			...(textSlots.length ? { textColorControlId: TEXT_COLOR_CONTROL_ID } : {}),
@@ -645,6 +710,23 @@ function assertTemplateBox(value: unknown) {
 	assertTemplateKeys(box, ['width', 'height'])
 	if (box.width !== undefined) assertPositiveNumber(box.width, 'box.width')
 	if (box.height !== undefined) assertPositiveNumber(box.height, 'box.height')
+}
+
+function assertTemplateLayerPolicy(slot: Record<string, unknown>) {
+	if (slot.access !== 'readonly' && slot.access !== 'editable') {
+		throw new Error('TemplateConfig layer access가 올바르지 않습니다.')
+	}
+	const visibility = templateRecord(slot.visibility, 'TemplateConfig layer visibility')
+	assertTemplateKeys(visibility, ['defaultVisible', 'allowToggle'])
+	if (
+		typeof visibility.defaultVisible !== 'boolean' ||
+		typeof visibility.allowToggle !== 'boolean'
+	) {
+		throw new Error('TemplateConfig layer visibility가 올바르지 않습니다.')
+	}
+	if (slot.access !== 'editable' && (!visibility.defaultVisible || visibility.allowToggle)) {
+		throw new Error('TemplateConfig readonly layer는 visibility 정책을 바꿀 수 없습니다.')
+	}
 }
 
 function assertTemplateFeatureOverrides(value: unknown) {

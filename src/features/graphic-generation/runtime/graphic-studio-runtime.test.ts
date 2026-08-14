@@ -132,7 +132,11 @@ describe('graphicStudioRuntime', () => {
 		expect(forwardStraightRuntimeManifest.name).toBe('Forward Straight')
 		expect(narrowed.controller.groups[0]).toMatchObject({
 			title: 'Graphic',
+		})
+		expect(narrowed.controllerPresentation?.groups[0]).toEqual({
+			groupId: 'graphic',
 			collapsible: true,
+			defaultOpen: true,
 		})
 		expect(narrowed.controller.groups[0]?.controls[1]).toMatchObject({
 			id: 'viewpoint',

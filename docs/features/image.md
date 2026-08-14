@@ -30,7 +30,7 @@ Manager는 Payload Admin의 `이미지 프로파일` 컬렉션에서 이미지 �
 - **시스템 프롬프트**: `주제(key)`, `프롬프트(value)` 행을 최종 프롬프트의 기본값으로 사용합니다.
 - **유저 프롬프트**: 선택적으로 `주제(key)`, `프롬프트 후보[]`를 정의합니다. 행이 있으면 AI 구조화 출력은 각 주제마다 후보 중 하나만 선택하고, 비어 있으면 AI 정규화를 호출하지 않습니다.
 - **이미지 모델**: 프로파일은 허용된 모델 프리셋을 선택합니다. 현재 계약은 `openai-gpt-image-2`와 `google-nano-banana-2-lite`입니다.
-- **Runtime Manifest**: 선택한 모델의 비율·해상도·프롬프트 상한·지원 feature·출력 형식은 코드의 Runtime Manifest가 정의합니다. 프로파일은 `features`, `controllerRestrictions`, `output`으로 이 범위를 좁히기만 합니다.
+- **Runtime Manifest**: 선택한 모델의 비율·해상도·프롬프트 상한·지원 feature·출력 형식은 코드의 Runtime Manifest가 정의합니다. 프로파일은 `features`, `controllerRestrictions`, `output`으로 이 범위를 좁힙니다. 그룹의 접힘 가능 여부와 최초 열림값은 Runtime이 아니라 Admin의 `controllerPresentation`이 소유합니다.
 - **출력 조건**: 공급자와 무관한 비율과 해상도는 Effective Controller의 `ratio`·`resolution` control에서 읽습니다. 비율은 `1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`, 해상도는 `1K`, `2K`, `4K`입니다.
 - **공급자 변환**: Google에는 `imageConfig.aspectRatio`와 `imageConfig.imageSize`를 그대로 전달합니다. OpenAI `gpt-image-2`에는 같은 계약을 16px 배수, 최대 3840px, 3:1 이하, 655,360~8,294,400 픽셀 범위의 실제 `size`로 변환합니다.
 - **모델 제약**: Nano Banana 2 Lite는 위 비율 10종과 `1K`만 지원하므로 `2K`, `4K` 프로파일 저장과 관리자 생성 테스트를 거부합니다.

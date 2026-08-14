@@ -7,6 +7,7 @@ import type {
 	ResolvedTemplateImageConfig,
 	TemplateBackgroundType,
 	TemplateConfig,
+	TemplateVectorSlot,
 } from '@/features/template-customization/domain/template-config'
 import type { TemplateRasterArtifact } from '@/features/template-customization/runtime/template-runtime.client'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
@@ -66,6 +67,15 @@ export type TemplateStudioValue = {
 		updateFeature: (slotId: string, controlId: string, value: ControllerControlValue) => void
 		selectProfile: (slotId: string, profileId: number) => void
 		generate: (slotId: string) => Promise<void>
+	}
+	vectors: {
+		slots: readonly TemplateVectorSlot[]
+		colors: Record<string, string | undefined>
+		setColor: (slotId: string, color: string) => void
+	}
+	layers: {
+		visibility: Record<string, boolean>
+		setVisible: (slotId: string, visible: boolean) => void
 	}
 	background: {
 		state: TemplateBackgroundState

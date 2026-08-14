@@ -1,6 +1,6 @@
 'use client'
 
-import { Locked, MagicWand, Unlocked } from '@carbon/icons-react'
+import { MagicWand } from '@carbon/icons-react'
 import { Popup, toast } from '@payloadcms/ui'
 import { type ComponentProps, type ReactNode, useEffect, useState } from 'react'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -35,7 +35,7 @@ import {
 	requestPublishedImageProfiles,
 } from '@/features/image-generation/services/generate-image.client'
 import { IDENTITY_TRANSFORM, isIdentityTransform } from '@/lib/template-image-transform'
-import type { TemplateNodeConfig, TemplateSlotSpec } from '@/types/template'
+import type { TemplateLayerAccess, TemplateNodeConfig, TemplateSlotSpec } from '@/types/template'
 import { BrandColorSwatches, usePublishedBrandColors } from './brand-color-swatches'
 import type { ImageTransform } from './image-transform-gestures'
 import { canAssignImage, IMAGE_CONFIG_KEYS, type LayerRow, typeLabel } from './template-layers'
@@ -222,43 +222,86 @@ function SpecField({
 	)
 }
 
-function SlotLockToggle({
-	heading,
-	slot,
-	openHint,
-	opened,
-	onToggle,
-	children,
+function CreatorLayerPolicyEditor({
+	access,
+	config,
+	onChange,
 }: {
-	heading: string
-	slot: string
-	openHint: string
-	opened: boolean
-	onToggle: () => void
-	children: ReactNode
+	access: TemplateLayerAccess
+	config: TemplateNodeConfig
+	onChange: (patch: TemplateNodeConfig) => void
 }) {
+	const visibility = config.creator?.visibility
 	return (
-		<section className="mt-3 flex flex-col gap-2">
-			<div className="flex items-center gap-2">
-				<FieldTitle>{heading}</FieldTitle>
-				<Button
-					type="button"
-					variant="ghost"
-					size="icon-xs"
-					onClick={onToggle}
-					title={
-						opened ? `${slot} 닫기 — 유저 화면에서 숨김` : `${slot} 열기 — ${openHint}`
+		<FieldGroup className="mt-3 max-w-xl gap-3 rounded-md border p-3">
+			<Field>
+				<FieldLabel htmlFor="template-layer-access">Creator 사용 상태</FieldLabel>
+				<Select
+					value={access}
+					onValueChange={(next) =>
+						onChange({
+							creator: {
+								access: next as TemplateLayerAccess,
+								...(next === 'editable' && visibility ? { visibility } : {}),
+							},
+						})
 					}
-					aria-label={opened ? `${slot} 닫기` : `${slot} 열기`}
 				>
-					{opened ? <Unlocked aria-hidden /> : <Locked aria-hidden />}
-				</Button>
-				<span className="text-xs text-muted-foreground">
-					{opened ? '유저 화면에 열림' : '닫힘'}
-				</span>
-			</div>
-			{opened && children}
-		</section>
+					<SelectTrigger id="template-layer-access" className="w-full max-w-sm">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectGroup>
+							<SelectItem value="hidden">숨김 — 패널에 표시 안 함</SelectItem>
+							<SelectItem value="readonly">읽기 전용</SelectItem>
+							<SelectItem value="editable">편집 가능</SelectItem>
+						</SelectGroup>
+					</SelectContent>
+				</Select>
+			</Field>
+			{access === 'editable' && (
+				<>
+					<Field orientation="horizontal" className="w-fit">
+						<Checkbox
+							id="template-layer-default-visible"
+							checked={visibility?.defaultVisible ?? true}
+							onCheckedChange={(checked) =>
+								onChange({
+									creator: {
+										access,
+										visibility: {
+											...visibility,
+											defaultVisible: checked === true,
+										},
+									},
+								})
+							}
+						/>
+						<FieldLabel htmlFor="template-layer-default-visible">기본 표시</FieldLabel>
+					</Field>
+					<Field orientation="horizontal" className="w-fit">
+						<Checkbox
+							id="template-layer-visibility-toggle"
+							checked={visibility?.allowToggle ?? false}
+							onCheckedChange={(checked) =>
+								onChange({
+									creator: {
+										access,
+										visibility: {
+											...visibility,
+											allowToggle: checked === true,
+										},
+									},
+								})
+							}
+						/>
+						<FieldLabel htmlFor="template-layer-visibility-toggle">
+							Creator가 표시/숨김 변경 가능
+						</FieldLabel>
+					</Field>
+				</>
+			)}
+		</FieldGroup>
 	)
 }
 
@@ -560,10 +603,12 @@ function ImageColorizeEditor({
 }
 
 function ImageLayerEditor({
+	access,
 	config,
 	onCommit,
 	selected,
 }: {
+	access: TemplateLayerAccess
 	config: TemplateNodeConfig
 	onCommit: (patch: TemplateNodeConfig) => void
 	selected: LayerRow
@@ -593,19 +638,13 @@ function ImageLayerEditor({
 					)}
 				/>
 			</div>
-			<SlotLockToggle
-				heading="스튜디오 개방"
-				slot="이미지 슬롯"
-				openHint="유저 화면에 이미지 생성 노출"
-				opened={Boolean(config.imageInput)}
-				onToggle={() => onCommit({ imageInput: config.imageInput ? undefined : {} })}
-			>
+			{access !== 'hidden' && (
 				<ImageSlotSpecEditor
 					imageInput={config.imageInput ?? {}}
 					profiles={profiles}
 					onChange={(imageInput) => onCommit({ imageInput })}
 				/>
-			</SlotLockToggle>
+			)}
 			{config.backgroundImage && (
 				<div className="mt-4 flex flex-col gap-3">
 					<FieldTitle>이미지 편집 — 이동·확대·회전</FieldTitle>
@@ -635,9 +674,40 @@ export function TemplateLayerEditor({
 	onCommit: (patch: TemplateNodeConfig) => void
 	selected: LayerRow
 }) {
+	const access =
+		config.creator?.access ??
+		(selected.isText
+			? config.input
+				? 'editable'
+				: 'hidden'
+			: canAssignImage(selected)
+				? config.imageInput
+					? 'editable'
+					: 'hidden'
+				: 'hidden')
+	const policy = (
+		<CreatorLayerPolicyEditor
+			access={access}
+			config={config}
+			onChange={(patch) => {
+				const nextAccess = patch.creator?.access
+				onCommit({
+					...patch,
+					...(nextAccess !== 'hidden' && selected.isText && !config.input
+						? { input: {} }
+						: {}),
+					...(nextAccess !== 'hidden' && canAssignImage(selected) && !config.imageInput
+						? { imageInput: {} }
+						: {}),
+				})
+			}}
+		/>
+	)
+
 	if (selected.isText) {
 		return (
 			<div>
+				{policy}
 				<FieldGroup className="gap-2">
 					<Field>
 						<FieldLabel htmlFor="template-layer-text">
@@ -664,28 +734,37 @@ export function TemplateLayerEditor({
 						/>
 					</div>
 				</FieldGroup>
-				<SlotLockToggle
-					heading="입력 슬롯"
-					slot="입력 슬롯"
-					openHint="유저 화면에 입력 노출"
-					opened={Boolean(config.input)}
-					onToggle={() => onCommit({ input: config.input ? undefined : {} })}
-				>
+				{access !== 'hidden' && (
 					<SlotSpecEditor
 						input={config.input ?? {}}
 						onChange={(input) => onCommit({ input })}
 					/>
-				</SlotLockToggle>
+				)}
 			</div>
 		)
 	}
 
 	if (canAssignImage(selected)) {
-		return <ImageLayerEditor config={config} onCommit={onCommit} selected={selected} />
+		return (
+			<>
+				{policy}
+				<ImageLayerEditor
+					access={access}
+					config={config}
+					onCommit={onCommit}
+					selected={selected}
+				/>
+			</>
+		)
 	}
 
 	if (selected.isVector) {
-		return <VectorLayerEditor name={selected.name} config={config} onChange={onCommit} />
+		return (
+			<>
+				{policy}
+				<VectorLayerEditor name={selected.name} config={config} onChange={onCommit} />
+			</>
+		)
 	}
 
 	if (selected.imageAddress === 'parent') {

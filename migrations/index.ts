@@ -59,6 +59,7 @@ import * as migration_20260812_062606_studio_export_formats from './20260812_062
 import * as migration_20260813_050920_studio_runtime_contract_convergence from './20260813_050920_studio_runtime_contract_convergence';
 import * as migration_20260813_075510_studio_export_policy from './20260813_075510_studio_export_policy';
 import * as migration_20260813_105904_unify_studio_output_policy from './20260813_105904_unify_studio_output_policy';
+import * as migration_20260814_023629_add_controller_presentation from './20260814_023629_add_controller_presentation';
 
 export const migrations = [
   {
@@ -364,6 +365,11 @@ export const migrations = [
   {
     up: migration_20260813_105904_unify_studio_output_policy.up,
     down: migration_20260813_105904_unify_studio_output_policy.down,
-    name: '20260813_105904_unify_studio_output_policy'
+		name: '20260813_105904_unify_studio_output_policy',
+	},
+	{
+    up: migration_20260814_023629_add_controller_presentation.up,
+    down: migration_20260814_023629_add_controller_presentation.down,
+    name: '20260814_023629_add_controller_presentation'
   },
 ];

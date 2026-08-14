@@ -29,6 +29,7 @@ describe('listPublishedImageProfileDefinitions', () => {
 			limit: 100,
 			overrideAccess: true,
 			select: {
+				controllerPresentation: true,
 				controllerRestrictions: true,
 				features: true,
 				imageModelPreset: true,
