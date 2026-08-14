@@ -20,6 +20,7 @@ import type {
 	ControllerControlDefinition,
 	ControllerControlValue,
 	ControllerGroupDefinition,
+	ControllerGroupPresentation,
 	ControllerRuntimeBindings,
 } from '@/modules/studio-controller/controller-definition'
 import {
@@ -30,6 +31,7 @@ import {
 
 type BackgroundSectionProps = {
 	groupDefinition: ControllerGroupDefinition
+	groupPresentation?: ControllerGroupPresentation
 	/** Template의 공통 Controller Definition — availability와 options를 그대로 소비한다. */
 	typeDefinition: Extract<ControllerControlDefinition, { kind: 'select' }>
 	colorDefinition: Extract<ControllerControlDefinition, { kind: 'color' }>
@@ -62,6 +64,7 @@ type BackgroundSectionProps = {
  */
 export function BackgroundSection({
 	groupDefinition,
+	groupPresentation,
 	typeDefinition,
 	colorDefinition,
 	canvasAspectRatio,
@@ -96,7 +99,7 @@ export function BackgroundSection({
 			(maxPromptLength !== undefined && value.prompt.length > maxPromptLength)
 	return (
 		<>
-			<ControllerGroupRenderer definition={groupDefinition}>
+			<ControllerGroupRenderer definition={groupDefinition} presentation={groupPresentation}>
 				<ControllerControlRenderer
 					definition={typeDefinition}
 					value={type}
@@ -214,6 +217,7 @@ export function BackgroundSection({
 			{type === 'graphic' && graphicConfig && (
 				<ControllerRenderer
 					groups={graphicConfig.controller.groups}
+					presentation={graphicConfig.controllerPresentation}
 					values={value.graphicValues}
 					bindings={graphicBindings}
 					onChange={onGraphicChange}

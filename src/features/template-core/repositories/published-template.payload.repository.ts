@@ -58,7 +58,9 @@ export async function listPublishedTemplateNavItems() {
 
 export async function findPublishedTemplate(
 	templateId: number,
-): Promise<(Template & { controllerRestrictions?: unknown }) | null> {
+): Promise<
+	(Template & { controllerRestrictions?: unknown; controllerPresentation?: unknown }) | null
+> {
 	const payload = await getPayload({ config })
 	const templates = await payload.find({
 		collection: 'templates',
@@ -77,6 +79,7 @@ export async function findPublishedTemplate(
 		},
 		select: {
 			controllerRestrictions: true,
+			controllerPresentation: true,
 			name: true,
 			updatedAt: true,
 			html: true,
@@ -89,6 +92,11 @@ export async function findPublishedTemplate(
 	})
 
 	return (
-		(templates.docs[0] as (Template & { controllerRestrictions?: unknown }) | undefined) ?? null
+		(templates.docs[0] as
+			| (Template & {
+					controllerRestrictions?: unknown
+					controllerPresentation?: unknown
+			  })
+			| undefined) ?? null
 	)
 }

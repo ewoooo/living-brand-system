@@ -87,8 +87,6 @@ const radialFlutedGlassRuntimeManifest = defineGraphicRuntime({
 			{
 				id: 'ray-palette',
 				title: 'Ray Palette',
-				collapsible: true,
-				defaultOpen: false,
 				controls: [
 					colorControl(
 						'rayColor1',
@@ -204,8 +202,6 @@ const radialFlutedGlassRuntimeManifest = defineGraphicRuntime({
 			{
 				id: 'pulse',
 				title: 'Pulse',
-				collapsible: true,
-				defaultOpen: false,
 				controls: [
 					rangeControl(
 						'radialFalloff',
@@ -347,8 +343,6 @@ const radialFlutedGlassRuntimeManifest = defineGraphicRuntime({
 			{
 				id: 'glass-motion',
 				title: 'Glass Motion',
-				collapsible: true,
-				defaultOpen: false,
 				controls: [
 					{
 						id: 'glassOriginOffset',

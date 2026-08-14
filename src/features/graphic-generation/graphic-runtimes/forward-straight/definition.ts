@@ -31,7 +31,6 @@ export default defineGraphicRuntime({
 			{
 				id: 'graphic',
 				title: 'Graphic',
-				collapsible: true,
 				controls: [
 					{
 						id: 'variableWeightEnabled',

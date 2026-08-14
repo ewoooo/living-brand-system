@@ -114,3 +114,24 @@ describe('parseTemplateNodeConfigs imageInput', () => {
 		expect('blocker' in parsed).toBe(true)
 	})
 })
+
+describe('parseTemplateNodeConfigs creator layer policy', () => {
+	it('editable access의 기본 visibility와 Creator 토글 정책을 허용한다', () => {
+		const creator = {
+			access: 'editable' as const,
+			visibility: { defaultVisible: false, allowToggle: true },
+		}
+		const parsed = parseTemplateNodeConfigs({ 'frame-1': { creator } })
+
+		expect('blocker' in parsed).toBe(false)
+		if (!('blocker' in parsed)) expect(parsed.data['frame-1']?.creator).toEqual(creator)
+	})
+
+	it.each([
+		['readonly visibility', { access: 'readonly', visibility: { defaultVisible: false } }],
+		['hidden toggle', { access: 'hidden', visibility: { allowToggle: true } }],
+		['unknown access', { access: 'active' }],
+	])('%s를 거부한다', (_label, creator) => {
+		expect('blocker' in parseTemplateNodeConfigs({ 'frame-1': { creator } })).toBe(true)
+	})
+})

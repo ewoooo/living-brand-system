@@ -175,6 +175,7 @@ export function ImageSidebar() {
 
 				<ControllerRenderer
 					groups={contentGroups}
+					presentation={config.controllerPresentation}
 					values={controls.values}
 					bindings={controls.bindings}
 					onChange={controls.update}

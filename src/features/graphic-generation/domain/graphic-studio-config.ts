@@ -18,6 +18,7 @@ export type PublishedGraphicProfileDefinition = {
 	name: string
 	runtime: string
 	controllerRestrictions?: unknown
+	controllerPresentation?: unknown
 	output?: { allowedFormats?: readonly string[] | null } | null
 }
 
@@ -25,7 +26,16 @@ export type PublishedGraphicProfileDefinition = {
 export function parseGraphicStudioConfig(input: unknown): GraphicStudioConfig {
 	const config = parseStudioControllerConfig(input)
 	const value = asRecord(input)
-	assertOnlyKeys(value, ['studio', 'id', 'version', 'name', 'output', 'controller', 'type'])
+	assertOnlyKeys(value, [
+		'studio',
+		'id',
+		'version',
+		'name',
+		'output',
+		'controller',
+		'controllerPresentation',
+		'type',
+	])
 	if (config.studio !== 'graphic') {
 		throw new Error('GraphicStudioConfig studio: graphic이어야 합니다.')
 	}

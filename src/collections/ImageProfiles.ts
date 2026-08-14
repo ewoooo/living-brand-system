@@ -27,6 +27,7 @@ import {
 import { isManager, managerManagedAccess } from '@/lib/auth'
 import { imageProfileFeaturesField } from './fields/image-profile-features-field'
 import {
+	studioControllerPresentationField,
 	studioControllerRestrictionsField,
 	studioOutputPolicyField,
 } from './fields/studio-controller-field'
@@ -200,6 +201,7 @@ export const ImageProfiles: CollectionConfig = {
 		},
 		imageProfileFeaturesField(),
 		studioControllerRestrictionsField({ source: 'image' }),
+		studioControllerPresentationField({ source: 'image' }),
 		studioOutputPolicyField({
 			includeOriginal: true,
 		}),

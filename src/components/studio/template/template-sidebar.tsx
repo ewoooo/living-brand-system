@@ -43,7 +43,8 @@ const FORMAT_LABELS = new Map(
  */
 export function TemplateSidebar() {
 	const router = useRouter()
-	const { navigation, config, text, images, background, exporting } = useTemplateStudio()
+	const { navigation, config, text, images, vectors, layers, background, exporting } =
+		useTemplateStudio()
 	const {
 		text: textSlots,
 		image: imageSlots,
@@ -173,12 +174,23 @@ export function TemplateSidebar() {
 			</div>
 
 			{textSlots.length > 0 && textGroup && (
-				<ControllerGroupRenderer definition={textGroup}>
+				<ControllerGroupRenderer
+					definition={textGroup}
+					presentation={config.controllerPresentation?.groups.find(
+						({ groupId }) => groupId === textGroup.id,
+					)}
+				>
 					{textSlots.map((slot) => {
 						const definition = findTemplateControl(config, slot.controlId)
 						if (definition?.kind !== 'text') return null
 						return (
 							<div key={slot.id} className="flex flex-col gap-1">
+								<LayerVisibilityControl
+									label={slot.label}
+									visible={layers.visibility[slot.id] ?? true}
+									allowToggle={slot.visibility.allowToggle}
+									onChange={(visible) => layers.setVisible(slot.id, visible)}
+								/>
 								<TextSlotInput
 									definition={definition}
 									input={slot.input}
@@ -212,8 +224,15 @@ export function TemplateSidebar() {
 				return (
 					<div key={slot.id} className="flex flex-col gap-3">
 						<Controller.Group title={sectionTitle} collapsible>
+							<LayerVisibilityControl
+								label={slot.label}
+								visible={layers.visibility[slot.id] ?? true}
+								allowToggle={slot.visibility.allowToggle}
+								onChange={(visible) => layers.setVisible(slot.id, visible)}
+							/>
 							<ImageSlotInput
 								pinned={slot.imageConfig.mode === 'pinned'}
+								readonly={slot.access === 'readonly'}
 								contracts={contracts}
 								value={state}
 								onFeatureChange={(controlId, next) =>
@@ -233,12 +252,12 @@ export function TemplateSidebar() {
 								title={`${sectionTitle} Transform`}
 								collapsible
 								className="border-t-0 pt-0"
-								disabled={!state?.image}
+								disabled={slot.access === 'readonly' || !state?.image}
 							>
 								<ImageTransformControl
 									value={state?.transform ?? IMAGE_TRANSFORM_DEFAULT}
 									// compose는 배정된 이미지에만 transform을 적용한다 — 생성 전에는 비활성.
-									disabled={!state?.image}
+									disabled={slot.access === 'readonly' || !state?.image}
 									limits={slot.transform.limits}
 									// 패드는 대상 슬롯 박스와 같은 비율로 그려진다(디자인 Wide/Portrait/Square).
 									aspectRatio={
@@ -253,12 +272,35 @@ export function TemplateSidebar() {
 					</div>
 				)
 			})}
+			{vectors.slots.map((slot) => {
+				const color = vectors.colors[slot.id]
+				return (
+					<Controller.Group key={slot.id} title={slot.label} collapsible>
+						<LayerVisibilityControl
+							label={slot.label}
+							visible={layers.visibility[slot.id] ?? true}
+							allowToggle={slot.visibility.allowToggle}
+							onChange={(visible) => layers.setVisible(slot.id, visible)}
+						/>
+						<Controller.ColorRow
+							label="Color"
+							value={color ?? '#000000'}
+							isEmpty={!color}
+							disabled={slot.access === 'readonly'}
+							onChange={(next) => vectors.setColor(slot.id, next)}
+						/>
+					</Controller.Group>
+				)
+			})}
 			{backgroundSlot &&
 				backgroundGroup &&
 				backgroundTypeControl?.kind === 'select' &&
 				backgroundColorControl?.kind === 'color' && (
 					<BackgroundSection
 						groupDefinition={backgroundGroup}
+						groupPresentation={config.controllerPresentation?.groups.find(
+							({ groupId }) => groupId === backgroundGroup.id,
+						)}
 						typeDefinition={backgroundTypeControl}
 						colorDefinition={backgroundColorControl}
 						canvasAspectRatio={
@@ -281,11 +323,35 @@ export function TemplateSidebar() {
 						onGenerate={background.generate}
 					/>
 				)}
-			{textSlots.length === 0 && imageSlots.length === 0 && (
+			{textSlots.length === 0 && imageSlots.length === 0 && vectors.slots.length === 0 && (
 				<Typography size="sm" tone="muted">
 					이 템플릿에는 편집 가능한 슬롯이 없습니다.
 				</Typography>
 			)}
 		</Controller.Panel>
+	)
+}
+
+function LayerVisibilityControl({
+	label,
+	visible,
+	allowToggle,
+	onChange,
+}: {
+	label: string
+	visible: boolean
+	allowToggle: boolean
+	onChange: (visible: boolean) => void
+}) {
+	if (!allowToggle) return null
+	return (
+		<Controller.Row label={`${label} 표시`}>
+			<input
+				type="checkbox"
+				aria-label={`${label} 표시`}
+				checked={visible}
+				onChange={(event) => onChange(event.currentTarget.checked)}
+			/>
+		</Controller.Row>
 	)
 }

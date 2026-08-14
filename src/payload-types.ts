@@ -1182,6 +1182,15 @@ export interface ImageProfile {
     | number
     | boolean
     | null;
+  controllerPresentation?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * 비우면 실행 구현이 지원하는 형식을 모두 허용합니다.
    */
@@ -1227,6 +1236,15 @@ export interface GraphicProfile {
   runtime: 'forward-straight' | 'radial-fluted-glass';
   displayOrder: number;
   controllerRestrictions?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  controllerPresentation?:
     | {
         [k: string]: unknown;
       }
@@ -1324,6 +1342,15 @@ export interface Template {
   name: string;
   description?: string | null;
   controllerRestrictions?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  controllerPresentation?:
     | {
         [k: string]: unknown;
       }
@@ -2588,6 +2615,7 @@ export interface ImageProfilesSelect<T extends boolean = true> {
         cameraControl?: T | ImageProfileCameraControlFeatureSelect<T>;
       };
   controllerRestrictions?: T;
+  controllerPresentation?: T;
   output?:
     | T
     | {
@@ -2624,6 +2652,7 @@ export interface GraphicProfilesSelect<T extends boolean = true> {
   runtime?: T;
   displayOrder?: T;
   controllerRestrictions?: T;
+  controllerPresentation?: T;
   output?:
     | T
     | {
@@ -2667,6 +2696,7 @@ export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
   controllerRestrictions?: T;
+  controllerPresentation?: T;
   output?:
     | T
     | {

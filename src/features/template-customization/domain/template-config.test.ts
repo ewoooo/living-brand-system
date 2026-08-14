@@ -44,8 +44,8 @@ describe('deriveTemplateConfig', () => {
 			output: { formats: ['png'] },
 			controller: {
 				groups: [
-					{ id: 'text', title: 'Text', collapsible: true },
-					{ id: 'background', title: 'Background', collapsible: true },
+					{ id: 'text', title: 'Text' },
+					{ id: 'background', title: 'Background' },
 				],
 			},
 		})
@@ -192,9 +192,12 @@ describe('deriveTemplateConfig', () => {
 		).toThrow('maxLength')
 	})
 
-	it('Restrictions는 제한값만 적용하고 그룹 표현은 Runtime Manifest에 남긴다', () => {
+	it('Restrictions와 Admin 그룹 표현을 분리해 Effective Config에 적용한다', () => {
 		const config = deriveTemplateConfig({
 			...template,
+			controllerPresentation: {
+				groups: [{ groupId: 'text', defaultOpen: false }],
+			},
 			controllerRestrictions: {
 				controls: [
 					{
@@ -225,7 +228,11 @@ describe('deriveTemplateConfig', () => {
 
 		expect(config.controller.groups[0]).toMatchObject({
 			title: 'Text',
+		})
+		expect(config.controllerPresentation?.groups[0]).toEqual({
+			groupId: 'text',
 			collapsible: true,
+			defaultOpen: false,
 		})
 		expect(config.controller.groups[0]?.controls[0]).toMatchObject({
 			availability: 'readonly',

@@ -106,6 +106,7 @@ export async function prepareTemplateImage(
 		printPpi: parsePrintPpi(template.printPpi),
 		templateVersion: template.updatedAt,
 		controllerRestrictions: template.controllerRestrictions,
+		controllerPresentation: template.controllerPresentation,
 		output: template.output as never,
 	})
 	return {

@@ -9,6 +9,7 @@ import {
 	isControllerPadValue,
 	parseStudioControllerConfig,
 	projectPayloadControllerRestrictions,
+	resolveControllerPresentation,
 } from './controller-definition'
 
 describe('createControllerValues', () => {
@@ -183,13 +184,14 @@ describe('parseStudioControllerConfig', () => {
 			name: 'Demo',
 			type: 'p5',
 			output: { formats: ['svg'] },
+			controllerPresentation: {
+				groups: [{ groupId: 'controls', collapsible: true, defaultOpen: false }],
+			},
 			controller: {
 				groups: [
 					{
 						id: 'controls',
 						title: 'Controls',
-						collapsible: true,
-						defaultOpen: false,
 						controls: [
 							{
 								id: 'prompt',
@@ -412,7 +414,6 @@ describe('Payload Controller projection과 Override 적용', () => {
 			{
 				id: 'setting',
 				title: 'Setting',
-				collapsible: true as const,
 				controls: [
 					{
 						id: 'ratio',
@@ -438,7 +439,7 @@ describe('Payload Controller projection과 Override 적용', () => {
 			],
 		})
 		const result = applyControllerRestrictions(base, restrictions)
-		expect(result[0]).toMatchObject({ title: 'Setting', collapsible: true })
+		expect(result[0]).toMatchObject({ title: 'Setting' })
 		expect(result[0]?.controls[0]).toMatchObject({
 			kind: 'select',
 			label: 'Ratio',
@@ -455,6 +456,39 @@ describe('Payload Controller projection과 Override 적용', () => {
 				groups: [{ key: 'settings', controls: [] }],
 			}),
 		).toThrow('지원하지 않는 필드')
+	})
+})
+
+describe('Controller group presentation', () => {
+	const groups = [
+		{ id: 'first', title: 'First', controls: [] },
+		{ id: 'second', title: 'Second', controls: [] },
+	] satisfies readonly ControllerGroupDefinition[]
+
+	it('Admin sparse 값을 Runtime 순서의 완전한 Creator 정책으로 해석한다', () => {
+		expect(
+			resolveControllerPresentation(groups, {
+				groups: [{ groupId: 'second', defaultOpen: false }],
+			}),
+		).toEqual({
+			groups: [
+				{ groupId: 'first', collapsible: true, defaultOpen: true },
+				{ groupId: 'second', collapsible: true, defaultOpen: false },
+			],
+		})
+	})
+
+	it('알 수 없는 그룹과 닫힌 static 그룹을 거부한다', () => {
+		expect(() =>
+			resolveControllerPresentation(groups, {
+				groups: [{ groupId: 'missing', defaultOpen: false }],
+			}),
+		).toThrow('찾을 수 없습니다')
+		expect(() =>
+			resolveControllerPresentation(groups, {
+				groups: [{ groupId: 'first', collapsible: false, defaultOpen: false }],
+			}),
+		).toThrow('닫힌 상태')
 	})
 })
 

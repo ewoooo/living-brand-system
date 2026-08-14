@@ -20,6 +20,7 @@ export async function listPublishedImageProfileDefinitions(
 		overrideAccess: true,
 		select: {
 			controllerRestrictions: true,
+			controllerPresentation: true,
 			features: true,
 			imageModelPreset: true,
 			name: true,
@@ -32,17 +33,27 @@ export async function listPublishedImageProfileDefinitions(
 	})
 
 	return profiles.docs.map((document) => {
-		const { id, name, slug, imageModelPreset, controllerRestrictions, features, output } =
-			document as typeof document & {
-				controllerRestrictions?: unknown
-				features?: unknown
-			}
+		const {
+			id,
+			name,
+			slug,
+			imageModelPreset,
+			controllerRestrictions,
+			controllerPresentation,
+			features,
+			output,
+		} = document as typeof document & {
+			controllerRestrictions?: unknown
+			controllerPresentation?: unknown
+			features?: unknown
+		}
 		return {
 			id,
 			name,
 			slug: slug || null,
 			imageModelPreset,
 			controllerRestrictions,
+			controllerPresentation,
 			features,
 			output,
 		}

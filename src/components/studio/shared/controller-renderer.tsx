@@ -7,6 +7,7 @@ import type {
 	ControllerControlDefinition,
 	ControllerControlValue,
 	ControllerGroupDefinition,
+	ControllerGroupPresentation,
 	ControllerRuntimeBinding,
 	ControllerRuntimeBindings,
 	ControllerValues,
@@ -18,6 +19,7 @@ import {
 
 type ControllerRendererProps = {
 	groups: readonly ControllerGroupDefinition[]
+	presentation?: { groups: readonly ControllerGroupPresentation[] }
 	values: ControllerValues
 	bindings?: ControllerRuntimeBindings
 	onChange: (controlId: string, value: ControllerControlValue) => void
@@ -26,6 +28,7 @@ type ControllerRendererProps = {
 /** 직렬화된 Definition과 세션 값을 도메인 지식 없이 Controller primitive로 투영한다. */
 export function ControllerRenderer({
 	groups,
+	presentation,
 	values,
 	bindings,
 	onChange,
@@ -44,7 +47,13 @@ export function ControllerRenderer({
 				))
 
 				return (
-					<ControllerGroupRenderer key={group.id} definition={group}>
+					<ControllerGroupRenderer
+						key={group.id}
+						definition={group}
+						presentation={presentation?.groups.find(
+							({ groupId }) => groupId === group.id,
+						)}
+					>
 						{content}
 					</ControllerGroupRenderer>
 				)
@@ -56,13 +65,19 @@ export function ControllerRenderer({
 /** bespoke slot/feature layout에서도 Definition의 그룹 제목·접힘 정책을 그대로 투영한다. */
 export function ControllerGroupRenderer({
 	definition,
+	presentation,
 	children,
 }: {
 	definition: ControllerGroupDefinition
+	presentation?: ControllerGroupPresentation
 	children: ReactNode
 }) {
-	return definition.collapsible ? (
-		<Controller.Group title={definition.title} collapsible defaultOpen={definition.defaultOpen}>
+	return (presentation?.collapsible ?? true) ? (
+		<Controller.Group
+			title={definition.title}
+			collapsible
+			defaultOpen={presentation?.defaultOpen ?? true}
+		>
 			{children}
 		</Controller.Group>
 	) : (

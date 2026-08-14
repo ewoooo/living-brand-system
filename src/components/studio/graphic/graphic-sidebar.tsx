@@ -85,6 +85,7 @@ export function GraphicSidebar() {
 				</Controller.AssetCard>
 				<ControllerRenderer
 					groups={config.controller.groups}
+					presentation={config.controllerPresentation}
 					values={controls.values}
 					bindings={controls.bindings}
 					onChange={controls.update}

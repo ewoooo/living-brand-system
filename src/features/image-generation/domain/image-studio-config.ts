@@ -9,6 +9,7 @@ import {
 	type ControllerControlDefinition,
 	parseStudioControllerConfig,
 	projectPayloadControllerRestrictions,
+	resolveControllerPresentation,
 	type StudioControllerConfig,
 } from '@/modules/studio-controller/controller-definition'
 import {
@@ -41,6 +42,7 @@ export type PublishedImageProfileDefinition = {
 	slug: string | null
 	imageModelPreset: ImageModelPreset
 	controllerRestrictions?: unknown
+	controllerPresentation?: unknown
 	features?: unknown
 	output?: { allowedFormats?: readonly string[] | null; original?: boolean | null } | null
 }
@@ -72,7 +74,16 @@ export type ImageStudioControls = {
 export function parseImageStudioConfig(input: unknown): ImageStudioConfig {
 	const common = parseStudioControllerConfig(input)
 	const config = record(input, 'ImageStudioConfig')
-	assertKeys(config, ['studio', 'id', 'version', 'name', 'output', 'controller', 'image'])
+	assertKeys(config, [
+		'studio',
+		'id',
+		'version',
+		'name',
+		'output',
+		'controller',
+		'controllerPresentation',
+		'image',
+	])
 	if (common.studio !== 'image') throw new Error('ImageStudioConfig studio: image여야 합니다.')
 	if (typeof common.id !== 'number' || !Number.isInteger(common.id)) {
 		throw new Error('ImageStudioConfig id: 정수여야 합니다.')
@@ -199,6 +210,11 @@ export function deriveImageStudioConfig(
 		manifest,
 		profile.features,
 	)
+	const controller = deriveImageProfileController(
+		profile.imageModelPreset,
+		profile.features,
+		profile.controllerRestrictions,
+	)
 	const config: ImageStudioConfig = {
 		studio: 'image',
 		id: profile.id,
@@ -212,10 +228,10 @@ export function deriveImageStudioConfig(
 			),
 			original: Boolean(manifest.output.original && (profile.output?.original ?? true)),
 		},
-		controller: deriveImageProfileController(
-			profile.imageModelPreset,
-			profile.features,
-			profile.controllerRestrictions,
+		controller,
+		controllerPresentation: resolveControllerPresentation(
+			controller.groups,
+			profile.controllerPresentation,
 		),
 		image: {
 			slug: profile.slug ?? null,

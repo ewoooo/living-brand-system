@@ -43,6 +43,7 @@ import {
 	type TemplateConfig,
 	type TemplateImageConfigSlot,
 	type TemplateTextSlot,
+	type TemplateVectorSlot,
 } from '@/features/template-customization/domain/template-config'
 import { composeTemplateStudioHtml } from '@/features/template-customization/runtime/template-runtime.client'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
@@ -110,6 +111,15 @@ type TemplateStudioValue = {
 		selectProfile: (slotId: string, profileId: number) => void
 		generate: (slotId: string) => Promise<void>
 	}
+	vectors: {
+		slots: readonly TemplateVectorSlot[]
+		colors: Record<string, string | undefined>
+		setColor: (slotId: string, color: string) => void
+	}
+	layers: {
+		visibility: Record<string, boolean>
+		setVisible: (slotId: string, visible: boolean) => void
+	}
 	background: {
 		state: TemplateBackgroundState
 		contracts: readonly ResolvedTemplateImageConfig[]
@@ -169,6 +179,7 @@ export function TemplateStudioProvider({
 	const partitionedSlots = useMemo(() => partitionTemplateSlots(slots), [slots])
 	const textSlots = partitionedSlots.text
 	const imageSlots = partitionedSlots.image
+	const vectorSlots = partitionedSlots.vector
 	const backgroundSlot = partitionedSlots.background
 	const textColorDefinition = config.template.textColorControlId
 		? findTemplateControl(config, config.template.textColorControlId)
@@ -219,6 +230,13 @@ export function TemplateStudioProvider({
 				initialImageState(slot, imageContracts[slot.id] ?? []),
 			]),
 		),
+	)
+	const editableSlots = [...textSlots, ...imageSlots, ...vectorSlots]
+	const [layerVisibility, setLayerVisibility] = useState<Record<string, boolean>>(() =>
+		Object.fromEntries(editableSlots.map((slot) => [slot.id, slot.visibility.defaultVisible])),
+	)
+	const [vectorColors, setVectorColors] = useState<Record<string, string | undefined>>(() =>
+		Object.fromEntries(vectorSlots.map((slot) => [slot.id, slot.color])),
 	)
 	const [background, setBackground] = useState<TemplateBackgroundState>(() =>
 		initialBackgroundState(config, backgroundSlot, backgroundContracts),
@@ -317,6 +335,8 @@ export function TemplateStudioProvider({
 
 	const deferredTextColor = useDeferredValue(textColor)
 	const deferredImageStates = useDeferredValue(imageStates)
+	const deferredLayerVisibility = useDeferredValue(layerVisibility)
+	const deferredVectorColors = useDeferredValue(vectorColors)
 	const deferredBackground = useDeferredValue(background)
 
 	const composedHtml = useMemo(
@@ -329,6 +349,9 @@ export function TemplateStudioProvider({
 				imageStates: deferredImageStates,
 				imageSlots,
 				imageContracts,
+				vectorSlots,
+				vectorColors: deferredVectorColors,
+				layerVisibility: deferredLayerVisibility,
 				background: deferredBackground,
 				width,
 				height,
@@ -342,6 +365,9 @@ export function TemplateStudioProvider({
 			deferredBackground,
 			imageSlots,
 			imageContracts,
+			vectorSlots,
+			deferredVectorColors,
+			deferredLayerVisibility,
 			width,
 			height,
 		],
@@ -425,6 +451,25 @@ export function TemplateStudioProvider({
 					),
 				),
 			generate: generateImage,
+		},
+		vectors: {
+			slots: vectorSlots,
+			colors: vectorColors,
+			setColor: (slotId, color) =>
+				setVectorColors((current) => {
+					const slot = vectorSlots.find((candidate) => candidate.id === slotId)
+					return slot?.access === 'editable' ? { ...current, [slotId]: color } : current
+				}),
+		},
+		layers: {
+			visibility: layerVisibility,
+			setVisible: (slotId, visible) =>
+				setLayerVisibility((current) => {
+					const slot = editableSlots.find((candidate) => candidate.id === slotId)
+					return slot?.access === 'editable' && slot.visibility.allowToggle
+						? { ...current, [slotId]: visible }
+						: current
+				}),
 		},
 		background: {
 			state: background,

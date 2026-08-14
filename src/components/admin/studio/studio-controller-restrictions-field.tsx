@@ -17,7 +17,7 @@ import type {
 } from '@/modules/studio-controller/controller-definition'
 import type { TemplateNodeConfigMap } from '@/types/template'
 
-type RestrictionsFieldProps = ComponentProps<JSONFieldClientComponent> & {
+type ControllerAdminFieldProps = ComponentProps<JSONFieldClientComponent> & {
 	source: 'graphic' | 'image' | 'template'
 	baseConfigs?: readonly {
 		id: string
@@ -25,31 +25,18 @@ type RestrictionsFieldProps = ComponentProps<JSONFieldClientComponent> & {
 	}[]
 }
 
+type StoredControllerPresentation = {
+	groups: { groupId: string; collapsible?: boolean; defaultOpen?: boolean }[]
+}
+
 /** Runtime Manifest의 Controller projection을 읽기 전용으로 보여주고 제약값만 저장한다. */
 export function StudioControllerRestrictionsField({
 	path,
 	source,
 	baseConfigs = [],
-}: RestrictionsFieldProps) {
+}: ControllerAdminFieldProps) {
 	const { disabled, errorMessage, setValue, showError, value } = useField<unknown>({ path })
-	const runtime = useFormFields(([fields]) => fields.runtime?.value) as string | undefined
-	const imageModelPreset =
-		(useFormFields(([fields]) => fields.imageModelPreset?.value) as
-			| ImageModelPreset
-			| undefined) ?? DEFAULT_IMAGE_MODEL_PRESET
-	const imageFeatures = useFormFields(([fields]) => fields.features?.value)
-	const html = (useFormFields(([fields]) => fields.html?.value) as string | undefined) ?? ''
-	const nodeConfigs = (useFormFields(([fields]) => fields.overrides?.value) ??
-		{}) as TemplateNodeConfigMap
-	const groups =
-		source === 'graphic'
-			? (baseConfigs.find((config) => config.id === runtime)?.controller.groups ?? [])
-			: source === 'image'
-				? deriveImageProfileController(imageModelPreset, imageFeatures, undefined).groups
-				: getTemplateRuntimeManifest({
-						html,
-						nodeConfigs,
-					}).controller.groups
+	const groups = useAdminControllerGroups(source, baseConfigs)
 	const current = readRestrictions(value)
 
 	function update(controlId: string, patch: Partial<ControllerControlRestriction>) {
@@ -70,13 +57,7 @@ export function StudioControllerRestrictionsField({
 			<FieldLabel label="Controller 제한" path={path} />
 			<FieldError message={errorMessage} path={path} showError={showError} />
 			{groups.length === 0 ? (
-				<p className="text-sm text-muted-foreground">
-					{source === 'graphic'
-						? 'Runtime을 선택하면 제한 가능한 컨트롤이 표시됩니다.'
-						: source === 'image'
-							? '이미지 기능을 선택하면 제한 가능한 컨트롤이 표시됩니다.'
-							: 'Template HTML을 가져오면 제한 가능한 컨트롤이 표시됩니다.'}
-				</p>
+				<EmptyControllerMessage source={source} />
 			) : (
 				<div className="flex flex-col gap-4">
 					{groups.map((group) => (
@@ -104,6 +85,146 @@ export function StudioControllerRestrictionsField({
 				path={path}
 			/>
 		</div>
+	)
+}
+
+/** Runtime 그룹의 접힘 가능 여부와 최초 열림값만 Admin 정책으로 저장한다. */
+export function StudioControllerPresentationField({
+	path,
+	source,
+	baseConfigs = [],
+}: ControllerAdminFieldProps) {
+	const { disabled, errorMessage, setValue, showError, value } = useField<unknown>({ path })
+	const groups = useAdminControllerGroups(source, baseConfigs)
+	const current = readPresentation(value)
+	const knownGroupIds = new Set(groups.map(({ id }) => id))
+	const hasStaleGroups = current.groups.some(({ groupId }) => !knownGroupIds.has(groupId))
+
+	function update(
+		groupId: string,
+		patch: Partial<{ collapsible: boolean; defaultOpen: boolean }>,
+	) {
+		const previous = current.groups.find((group) => group.groupId === groupId)
+		const next = { ...previous, groupId, ...patch }
+		const overrides = {
+			...(next.collapsible === false ? { collapsible: false } : {}),
+			...(next.collapsible !== false && next.defaultOpen === false
+				? { defaultOpen: false }
+				: {}),
+		}
+		const presentationGroups = current.groups.filter(
+			(group) => group.groupId !== groupId && knownGroupIds.has(group.groupId),
+		)
+		if (Object.keys(overrides).length) presentationGroups.push({ groupId, ...overrides })
+		setValue({ groups: presentationGroups })
+	}
+
+	return (
+		<div className="field-type json mb-5">
+			<FieldLabel label="Controller 표현" path={path} />
+			<FieldError message={errorMessage} path={path} showError={showError} />
+			{hasStaleGroups && (
+				<button
+					type="button"
+					className="mb-3 text-sm text-destructive underline"
+					disabled={disabled}
+					onClick={() =>
+						setValue({
+							groups: current.groups.filter(({ groupId }) =>
+								knownGroupIds.has(groupId),
+							),
+						})
+					}
+				>
+					현재 Runtime에 없는 그룹 설정 정리
+				</button>
+			)}
+			{groups.length === 0 ? (
+				<EmptyControllerMessage source={source} />
+			) : (
+				<div className="flex flex-col gap-3">
+					{groups.map((group) => {
+						const policy = current.groups.find(({ groupId }) => groupId === group.id)
+						const collapsible = policy?.collapsible ?? true
+						const defaultOpen = collapsible ? (policy?.defaultOpen ?? true) : true
+						return (
+							<fieldset key={group.id} className="rounded-md border p-3">
+								<legend className="px-1 text-sm font-semibold">
+									{group.title}
+								</legend>
+								<div className="flex flex-wrap gap-4">
+									<label className="flex items-center gap-2 text-sm">
+										<input
+											type="checkbox"
+											checked={collapsible}
+											disabled={disabled}
+											onChange={(event) =>
+												update(group.id, {
+													collapsible: event.currentTarget.checked,
+												})
+											}
+										/>
+										접기 허용
+									</label>
+									<label className="flex items-center gap-2 text-sm">
+										<input
+											type="checkbox"
+											checked={defaultOpen}
+											disabled={disabled || !collapsible}
+											onChange={(event) =>
+												update(group.id, {
+													defaultOpen: event.currentTarget.checked,
+												})
+											}
+										/>
+										처음 열기
+									</label>
+								</div>
+							</fieldset>
+						)
+					})}
+				</div>
+			)}
+			<FieldDescription
+				description="현재 열림 상태는 Creator 화면이 로컬로 소유하며, 여기서는 접힘 가능 여부와 최초 열림값만 정합니다."
+				path={path}
+			/>
+		</div>
+	)
+}
+
+function useAdminControllerGroups(
+	source: ControllerAdminFieldProps['source'],
+	baseConfigs: NonNullable<ControllerAdminFieldProps['baseConfigs']>,
+) {
+	const runtime = useFormFields(([fields]) => fields.runtime?.value) as string | undefined
+	const imageModelPreset =
+		(useFormFields(([fields]) => fields.imageModelPreset?.value) as
+			| ImageModelPreset
+			| undefined) ?? DEFAULT_IMAGE_MODEL_PRESET
+	const imageFeatures = useFormFields(([fields]) => fields.features?.value)
+	const html = (useFormFields(([fields]) => fields.html?.value) as string | undefined) ?? ''
+	const nodeConfigs = (useFormFields(([fields]) => fields.overrides?.value) ??
+		{}) as TemplateNodeConfigMap
+	return source === 'graphic'
+		? (baseConfigs.find((config) => config.id === runtime)?.controller.groups ?? [])
+		: source === 'image'
+			? deriveImageProfileController(imageModelPreset, imageFeatures, undefined).groups
+			: getTemplateRuntimeManifest({
+					html,
+					nodeConfigs,
+				}).controller.groups
+}
+
+function EmptyControllerMessage({ source }: { source: ControllerAdminFieldProps['source'] }) {
+	return (
+		<p className="text-sm text-muted-foreground">
+			{source === 'graphic'
+				? 'Runtime을 선택하면 설정 가능한 그룹이 표시됩니다.'
+				: source === 'image'
+					? '이미지 기능을 선택하면 설정 가능한 그룹이 표시됩니다.'
+					: 'Template HTML을 가져오면 설정 가능한 그룹이 표시됩니다.'}
+		</p>
 	)
 }
 
@@ -360,4 +481,15 @@ function readRestrictions(value: unknown): StudioControllerRestrictions {
 		return { controls: [] }
 	}
 	return value as StudioControllerRestrictions
+}
+
+function readPresentation(value: unknown): StoredControllerPresentation {
+	if (
+		!value ||
+		typeof value !== 'object' ||
+		!Array.isArray((value as { groups?: unknown }).groups)
+	) {
+		return { groups: [] }
+	}
+	return value as StoredControllerPresentation
 }

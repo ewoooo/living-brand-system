@@ -17,6 +17,7 @@ export async function listPublishedGraphicProfileDefinitions(
 		overrideAccess: false,
 		select: {
 			controllerRestrictions: true,
+			controllerPresentation: true,
 			name: true,
 			output: true,
 			runtime: true,
@@ -27,9 +28,10 @@ export async function listPublishedGraphicProfileDefinitions(
 	})
 
 	return profiles.docs.map((document) => {
-		const { id, name, runtime, controllerRestrictions, output } =
+		const { id, name, runtime, controllerRestrictions, controllerPresentation, output } =
 			document as typeof document & {
 				controllerRestrictions?: unknown
+				controllerPresentation?: unknown
 				output?: PublishedGraphicProfileDefinition['output']
 			}
 		return {
@@ -37,6 +39,7 @@ export async function listPublishedGraphicProfileDefinitions(
 			name,
 			runtime,
 			controllerRestrictions,
+			controllerPresentation,
 			output,
 		}
 	})
