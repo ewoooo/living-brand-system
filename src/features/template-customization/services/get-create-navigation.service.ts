@@ -4,6 +4,10 @@ import {
 	listTemplateCategories,
 } from '@/features/template-core/repositories/published-template.payload.repository'
 import { getStudioTemplateRoute } from '@/lib/routes'
+import {
+	type StudioPreviewImage,
+	toStudioPreviewImage,
+} from '@/modules/studio-controller/controller-definition'
 
 export interface GetCreateNavigationOutput {
 	categories: {
@@ -15,6 +19,7 @@ export interface GetCreateNavigationOutput {
 			name: string
 			slug: string
 			href: string
+			previewImage?: StudioPreviewImage
 		}[]
 	}[]
 }
@@ -43,6 +48,7 @@ export async function getCreateNavigation(): Promise<GetCreateNavigationOutput> 
 					name: template.name,
 					slug: template.slug,
 					href: getStudioTemplateRoute(template.slug),
+					previewImage: toStudioPreviewImage(template.previewImage),
 				})),
 		})),
 	}

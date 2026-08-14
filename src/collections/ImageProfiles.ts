@@ -26,6 +26,7 @@ import {
 } from '@/features/template-core/services/guard-template-references.service'
 import { isManager, managerManagedAccess } from '@/lib/auth'
 import { imageProfileFeaturesField } from './fields/image-profile-features-field'
+import { previewImageField } from './fields/preview-image-field'
 import {
 	studioControllerPresentationField,
 	studioControllerRestrictionsField,
@@ -126,6 +127,7 @@ export const ImageProfiles: CollectionConfig = {
 			useAsSlug: 'name',
 			required: true,
 		}),
+		previewImageField(),
 		{
 			name: 'displayOrder',
 			type: 'number',

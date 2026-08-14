@@ -10,6 +10,7 @@ import {
 	parseStudioControllerConfig,
 	projectPayloadControllerRestrictions,
 	resolveControllerPresentation,
+	toStudioPreviewImage,
 } from './controller-definition'
 
 describe('createControllerValues', () => {
@@ -544,6 +545,68 @@ describe('Controller group presentation', () => {
 				groups: [{ groupId: 'first', collapsible: false, defaultOpen: false }],
 			}),
 		).toThrow('닫힌 상태')
+	})
+})
+
+describe('previewImage', () => {
+	const control = { id: 'flag', kind: 'toggle', label: '플래그', defaultValue: false }
+
+	it('url·alt만 받고 다른 키나 빈 url은 거부한다', () => {
+		expect(() =>
+			parseStudioControllerConfig({
+				...configWith(control),
+				previewImage: { url: '/media/preview.png', alt: '방사형 광선' },
+			}),
+		).not.toThrow()
+		// alt는 빈 문자열도 유효하다 — 장식 이미지의 대체 텍스트다.
+		expect(() =>
+			parseStudioControllerConfig({
+				...configWith(control),
+				previewImage: { url: '/media/preview.png', alt: '' },
+			}),
+		).not.toThrow()
+		expect(() =>
+			parseStudioControllerConfig({
+				...configWith(control),
+				previewImage: { url: '', alt: '빈 주소' },
+			}),
+		).toThrow('previewImage.url')
+		expect(() =>
+			parseStudioControllerConfig({
+				...configWith(control),
+				previewImage: { url: '/media/preview.png', alt: '설명', width: 320 },
+			}),
+		).toThrow('previewImage')
+	})
+})
+
+describe('toStudioPreviewImage', () => {
+	it('thumbnail이 있으면 그것을 쓰고 없으면 원본 url로 떨어진다', () => {
+		expect(
+			toStudioPreviewImage({
+				url: '/media/full.png',
+				alt: '방사형 광선',
+				sizes: { thumbnail: { url: '/media/full-320x240.png' } },
+			}),
+		).toEqual({ url: '/media/full-320x240.png', alt: '방사형 광선' })
+		expect(toStudioPreviewImage({ url: '/media/full.png', alt: '광선' })).toEqual({
+			url: '/media/full.png',
+			alt: '광선',
+		})
+	})
+
+	// depth 0에서는 id만 오고, 파일이 없는 문서는 url이 없다 — 어느 쪽도 미리보기가 아니다.
+	it('populate되지 않은 값·파일 없는 문서·null은 undefined다', () => {
+		for (const value of [undefined, null, 7, {}, { alt: '설명만' }]) {
+			expect(toStudioPreviewImage(value)).toBeUndefined()
+		}
+	})
+
+	it('alt가 없으면 빈 문자열로 채운다', () => {
+		expect(toStudioPreviewImage({ url: '/media/full.png' })).toEqual({
+			url: '/media/full.png',
+			alt: '',
+		})
 	})
 })
 

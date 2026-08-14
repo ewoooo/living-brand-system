@@ -20,6 +20,7 @@ import {
 	projectPayloadControllerRestrictions,
 	resolveControllerPresentation,
 	type StudioControllerConfig,
+	toStudioPreviewImage,
 } from '@/modules/studio-controller/controller-definition'
 import {
 	getImageRuntimeManifest,
@@ -64,6 +65,7 @@ export type PublishedImageProfileDefinition = {
 	controllerPresentation?: unknown
 	features?: unknown
 	exportPolicy?: unknown
+	previewImage?: unknown
 }
 
 /** 이미지 프로파일 하나가 발행하는 공통 Controller envelope와 이미지 실행 descriptor. */
@@ -100,6 +102,7 @@ export function parseImageStudioConfig(input: unknown): ImageStudioConfig {
 		'output',
 		'controller',
 		'controllerPresentation',
+		'previewImage',
 		'image',
 	])
 	if (common.studio !== 'image') throw new Error('ImageStudioConfig studio: image여야 합니다.')
@@ -270,6 +273,7 @@ export function deriveImageStudioConfig(
 			controller.groups,
 			profile.controllerPresentation,
 		),
+		previewImage: toStudioPreviewImage(profile.previewImage),
 		image: {
 			slug: profile.slug ?? null,
 			features: projectEffectiveFeatures(manifest, featureSelections),

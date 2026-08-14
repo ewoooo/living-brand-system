@@ -1,6 +1,7 @@
 import { APIError, type CollectionConfig, slugField } from 'payload'
 import { prepareTemplateSave } from '@/features/template-import/services/prepare-template-save.service'
 import { isManager, managerOrAdmin } from '@/lib/auth'
+import { previewImageField } from './fields/preview-image-field'
 import {
 	studioControllerPresentationField,
 	studioControllerRestrictionsField,
@@ -126,6 +127,7 @@ export const Templates: CollectionConfig = {
 		},
 
 		// ── 사이드바 (렌더 순서 = 배열 순서) ──
+		previewImageField(),
 		{
 			type: 'row',
 			admin: { position: 'sidebar' },

@@ -4,6 +4,7 @@ import type {
 	PublishedHtmlTemplate,
 	PublishedTemplateNodeConfig,
 } from '@/features/template-customization/domain/template-studio-config'
+import { toStudioPreviewImage } from '@/modules/studio-controller/controller-definition'
 import type { TemplateNodeConfigMap } from '@/types/template'
 
 // 노출 경계: 스튜디오가 쓰는 creator·input(aiInstruction 제외)·imageInput·imageColorize·vectorColor만 남긴다.
@@ -60,6 +61,7 @@ export async function getPublishedTemplate(
 		controllerRestrictions: template.controllerRestrictions,
 		controllerPresentation: template.controllerPresentation,
 		exportPolicy: template.exportPolicy,
+		previewImage: toStudioPreviewImage(template.previewImage),
 		...renderModel,
 		nodeConfigs: projectStudioNodeConfigs(renderModel.nodeConfigs),
 	}

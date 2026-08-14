@@ -56,8 +56,7 @@ export function ImageProfilePicker() {
 									: 'border-background/10 hover:bg-background/10',
 							)}
 						>
-							{/* 썸네일 자리 — 프로파일에는 대표 이미지 원천이 없다(보고: 생성 이미지는 사용자 세션에서 프로파일별로 조회되지 않는다). */}
-							<div className="min-h-0 flex-1 bg-background/20" />
+							<ControllerBrowser.Thumbnail image={option.previewImage} />
 							<div className="flex shrink-0 flex-col gap-2 bg-background/5 px-1.5 py-2">
 								<Typography as="p" size="xs" weight="medium" className="truncate">
 									{option.name}
