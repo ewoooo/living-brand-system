@@ -1,6 +1,7 @@
 'use client'
 
 import { useFormFields } from '@payloadcms/ui'
+import { getDataByPath } from 'payload/shared'
 import { getImageRuntimeManifest } from '@/features/image-generation/domain/image-runtime-manifest'
 import { deriveImageProfileController } from '@/features/image-generation/domain/image-studio-config'
 import {
@@ -25,7 +26,7 @@ export function useStudioRuntimeManifest(
 		(useFormFields(([fields]) => fields.imageModelPreset?.value) as
 			| ImageModelPreset
 			| undefined) ?? DEFAULT_IMAGE_MODEL_PRESET
-	const imageFeatures = useFormFields(([fields]) => fields.features?.value)
+	const imageFeatures = useFormFields(([fields]) => getDataByPath(fields, 'features'))
 	const html = (useFormFields(([fields]) => fields.html?.value) as string | undefined) ?? ''
 	const nodeConfigs = (useFormFields(([fields]) => fields.overrides?.value) ??
 		{}) as TemplateNodeConfigMap
