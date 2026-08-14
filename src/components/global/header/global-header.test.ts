@@ -106,6 +106,15 @@ describe('GlobalHeader', () => {
 		expect(screen.queryByRole('button', { name: '메뉴 닫기' })).not.toBeInTheDocument()
 	})
 
+	it('데스크톱 세퍼레이터에 Figma 규격의 높이를 준다', () => {
+		renderHeader()
+
+		const separator = document.querySelector<HTMLElement>(
+			'[data-slot="navigation-header-separator"] [data-slot="separator"]',
+		)
+		expect(separator).toHaveClass('h-full')
+	})
+
 	it('검색과 Chat의 열린 상태를 각 트리거에 반영한다', () => {
 		renderHeader()
 
