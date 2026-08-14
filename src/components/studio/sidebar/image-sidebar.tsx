@@ -5,7 +5,10 @@ import type * as React from 'react'
 import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
 import { ImageProfilePicker } from '@/components/studio/image/image-profile-picker'
 import { Controller } from '@/components/studio/shared/controller'
-import { ControllerRenderer } from '@/components/studio/shared/controller-renderer'
+import {
+	ControllerControlRenderer,
+	ControllerGroupRenderer,
+} from '@/components/studio/shared/controller-renderer'
 import { PrintControls, VideoControls } from '@/components/studio/shared/output-controls'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { Button } from '@/components/ui/button'
@@ -190,13 +193,54 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 					</>
 				}
 			>
-				<ControllerRenderer
-					groups={contentGroups}
-					presentation={config.controllerPresentation}
-					values={controls.values}
-					bindings={controls.bindings}
-					onChange={controls.update}
-				/>
+				{/*
+				 * 생성 CTA는 그룹 밖이 아니라 프롬프트가 사는 그룹 안, 프롬프트 바로 아래에 붙는다 —
+				 * 그룹 밖에 두면 바로 위 feature 그룹의 CTA(카메라 재생성)와 나란히 보여 무엇을
+				 * 생성하는 버튼인지 구조가 말해 주지 못한다. 그래서 통짜 ControllerRenderer 대신
+				 * 같은 투영을 group/control 단위로 조립한다.
+				 */}
+				{contentGroups.map((group) => (
+					<ControllerGroupRenderer
+						key={group.id}
+						definition={group}
+						presentation={config.controllerPresentation?.groups.find(
+							({ groupId }) => groupId === group.id,
+						)}
+					>
+						{group.controls.map((control) => (
+							<ControllerControlRenderer
+								key={control.id}
+								definition={control}
+								value={
+									control.id in controls.values
+										? controls.values[control.id]
+										: control.defaultValue
+								}
+								binding={controls.bindings[control.id]}
+								onChange={(value) => controls.update(control.id, value)}
+							/>
+						))}
+						{group.controls.some(
+							({ id }) => id === IMAGE_STUDIO_CONTROL_IDS.prompt,
+						) && (
+							<>
+								<Button
+									variant="muted"
+									className="mt-0.5 h-11 w-full font-semibold text-sm"
+									onClick={generation.run}
+									disabled={generation.busy || !generation.canRun}
+								>
+									{generation.busy ? '생성 중…' : '이미지 생성'}
+								</Button>
+								{generation.error && (
+									<Typography role="alert" size="sm" className="text-destructive">
+										{generation.error}
+									</Typography>
+								)}
+							</>
+						)}
+					</ControllerGroupRenderer>
+				))}
 				<ImageProfileFeatureRenderer
 					config={config}
 					values={controls.values}
@@ -211,19 +255,6 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 						onRegenerate: camera.regenerate,
 					}}
 				/>
-				<Button
-					variant="muted"
-					className="mt-0.5 h-11 w-full font-semibold text-sm"
-					onClick={generation.run}
-					disabled={generation.busy || !generation.canRun}
-				>
-					{generation.busy ? '생성 중…' : '이미지 생성'}
-				</Button>
-				{generation.error && (
-					<Typography role="alert" size="sm" className="text-destructive">
-						{generation.error}
-					</Typography>
-				)}
 			</StudioSidebar>
 		</Controller.Browser.Root>
 	)
