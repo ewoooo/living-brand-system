@@ -345,10 +345,17 @@ export function resolveTextTruncation(node: Node): {
 	if (!truncates) return { truncates, fixedBox }
 	if (s.maxLines) return { truncates, fixedBox, lineClamp: s.maxLines }
 	if (fixedBox && s.lineHeightPx && node.absoluteBoundingBox) {
+		// 마지막 줄은 줄간격 전체가 아니라 글리프 높이(≈fontSize)만 들어가면 Figma가 그린다 —
+		// floor(높이÷줄높이)는 329px÷110px(줄간격 110·글자 100)처럼 1px 모자란 박스에서
+		// 마지막 줄을 통째로 날려, Figma에 없는 말줄임을 만든다.
+		const lastLineHeight = s.fontSize ?? s.lineHeightPx
 		return {
 			truncates,
 			fixedBox,
-			lineClamp: Math.max(1, Math.floor(node.absoluteBoundingBox.height / s.lineHeightPx)),
+			lineClamp: Math.max(
+				1,
+				Math.floor((node.absoluteBoundingBox.height - lastLineHeight) / s.lineHeightPx) + 1,
+			),
 		}
 	}
 	// ponytail: 줄높이 px가 없으면 줄 수 유도 불가 → clamp 없이 overflow:hidden clip만 남는다.
