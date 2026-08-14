@@ -32,6 +32,7 @@ describe('getCreateNavigation', () => {
 			{
 				id: 10,
 				name: '인스타 배너',
+				slug: 'insta-banner',
 				category: 1,
 				html: '<div data-node-id="10">인스타 배너</div>',
 				overrides: {},
@@ -41,6 +42,7 @@ describe('getCreateNavigation', () => {
 			{
 				id: 11,
 				name: 'A4 포스터',
+				slug: 'a4-poster',
 				category: 2,
 				html: '<div data-node-id="11">A4 포스터</div>',
 				overrides: {},
@@ -50,6 +52,7 @@ describe('getCreateNavigation', () => {
 			{
 				id: 12,
 				name: '세로 배너',
+				slug: 'vertical-banner',
 				category: 1,
 				html: '<div data-node-id="12">세로 배너</div>',
 				overrides: {},
@@ -64,16 +67,14 @@ describe('getCreateNavigation', () => {
 		expect(navigation.categories).toMatchObject([
 			{
 				title: '배너',
-				href: '/studio/template/banner',
 				templates: [
-					{ id: 10, href: '/studio/template/banner/10' },
-					{ id: 12, href: '/studio/template/banner/12' },
+					{ id: 10, href: '/studio/template/insta-banner' },
+					{ id: 12, href: '/studio/template/vertical-banner' },
 				],
 			},
 			{
 				title: '포스터',
-				href: '/studio/template/poster',
-				templates: [{ id: 11, href: '/studio/template/poster/11' }],
+				templates: [{ id: 11, href: '/studio/template/a4-poster' }],
 			},
 		])
 	})
@@ -102,7 +103,7 @@ describe('getPublishedTemplate', () => {
 			updatedAt: '2026-07-29T00:00:00.000Z',
 		} as never)
 
-		await expect(getPublishedTemplate(1)).resolves.toEqual({
+		await expect(getPublishedTemplate('published-template')).resolves.toEqual({
 			kind: 'html',
 			id: 1,
 			name: 'Figma 템플릿',
@@ -125,7 +126,7 @@ describe('getPublishedTemplate', () => {
 			height: 720,
 		} as never)
 
-		await expect(getPublishedTemplate(4)).resolves.toBeNull()
+		await expect(getPublishedTemplate('draft-template')).resolves.toBeNull()
 	})
 
 	it('과거 문서의 자기신고 에셋도 공식 내부 URL이 아니면 렌더하지 않는다', async () => {
@@ -138,7 +139,7 @@ describe('getPublishedTemplate', () => {
 			height: 720,
 		} as never)
 
-		await expect(getPublishedTemplate(5)).resolves.toBeNull()
+		await expect(getPublishedTemplate('unrenderable-template')).resolves.toBeNull()
 	})
 
 	it('사용 가능한 HTML이 없으면 노출하지 않는다', async () => {
@@ -148,14 +149,14 @@ describe('getPublishedTemplate', () => {
 			html: '<div>크기 없음</div>',
 		} as never)
 
-		await expect(getPublishedTemplate(2)).resolves.toBeNull()
+		await expect(getPublishedTemplate('sizeless-template')).resolves.toBeNull()
 	})
 
 	it('실제로 없으면 null을 돌려주고 조회 실패는 숨기지 않는다', async () => {
 		mockedFind.mockResolvedValue(null as never)
-		await expect(getPublishedTemplate(3)).resolves.toBeNull()
+		await expect(getPublishedTemplate('missing-template')).resolves.toBeNull()
 
 		mockedFind.mockRejectedValue(new Error('db down'))
-		await expect(getPublishedTemplate(3)).rejects.toThrow('db down')
+		await expect(getPublishedTemplate('missing-template')).rejects.toThrow('db down')
 	})
 })

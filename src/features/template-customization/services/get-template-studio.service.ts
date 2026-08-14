@@ -19,11 +19,11 @@ export type GetTemplateStudioOutput = {
  * 나가지 않는다 — 클라이언트에는 PublishedTemplateView만 반환한다.
  */
 export async function getTemplateStudio(
-	templateId: number,
+	templateSlug: string,
 	user: unknown,
 ): Promise<GetTemplateStudioOutput | null> {
 	const [published, imageConfigs, graphicConfigs] = await Promise.all([
-		getPublishedTemplate(templateId),
+		getPublishedTemplate(templateSlug),
 		user ? listImageStudioConfigs(user) : [],
 		user ? listGraphicStudioConfigs(user) : [],
 	])

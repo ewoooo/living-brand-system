@@ -13950,8 +13950,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.image_profiles_output_allowed_formats": {
-      "name": "image_profiles_output_allowed_formats",
+    "public.image_profiles_export_policy_allowed_formats": {
+      "name": "image_profiles_export_policy_allowed_formats",
       "schema": "",
       "columns": {
         "order": {
@@ -13968,7 +13968,7 @@
         },
         "value": {
           "name": "value",
-          "type": "enum_image_profiles_output_allowed_formats",
+          "type": "enum_image_profiles_export_policy_allowed_formats",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
@@ -13981,8 +13981,8 @@
         }
       },
       "indexes": {
-        "image_profiles_output_allowed_formats_order_idx": {
-          "name": "image_profiles_output_allowed_formats_order_idx",
+        "image_profiles_export_policy_allowed_formats_order_idx": {
+          "name": "image_profiles_export_policy_allowed_formats_order_idx",
           "columns": [
             {
               "expression": "order",
@@ -13996,8 +13996,8 @@
           "method": "btree",
           "with": {}
         },
-        "image_profiles_output_allowed_formats_parent_idx": {
-          "name": "image_profiles_output_allowed_formats_parent_idx",
+        "image_profiles_export_policy_allowed_formats_parent_idx": {
+          "name": "image_profiles_export_policy_allowed_formats_parent_idx",
           "columns": [
             {
               "expression": "parent_id",
@@ -14013,9 +14013,9 @@
         }
       },
       "foreignKeys": {
-        "image_profiles_output_allowed_formats_parent_fk": {
-          "name": "image_profiles_output_allowed_formats_parent_fk",
-          "tableFrom": "image_profiles_output_allowed_formats",
+        "image_profiles_export_policy_allowed_formats_parent_fk": {
+          "name": "image_profiles_export_policy_allowed_formats_parent_fk",
+          "tableFrom": "image_profiles_export_policy_allowed_formats",
           "tableTo": "image_profiles",
           "columnsFrom": [
             "parent_id"
@@ -14083,14 +14083,38 @@
           "primaryKey": false,
           "notNull": false
         },
-        "controller_presentation": {
-          "name": "controller_presentation",
+        "export_policy_print_allowed_ppi": {
+          "name": "export_policy_print_allowed_ppi",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
-        "output_original": {
-          "name": "output_original",
+        "export_policy_video_allowed_fps": {
+          "name": "export_policy_video_allowed_fps",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_max_width": {
+          "name": "export_policy_video_max_width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_max_height": {
+          "name": "export_policy_video_max_height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_max_duration_seconds": {
+          "name": "export_policy_video_max_duration_seconds",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_original": {
+          "name": "export_policy_original",
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,
@@ -14117,6 +14141,12 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'draft'"
+        },
+        "controller_presentation": {
+          "name": "controller_presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -14683,8 +14713,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public._image_profiles_v_version_output_allowed_formats": {
-      "name": "_image_profiles_v_version_output_allowed_formats",
+    "public._image_profiles_v_version_export_policy_allowed_formats": {
+      "name": "_image_profiles_v_version_export_policy_allowed_formats",
       "schema": "",
       "columns": {
         "order": {
@@ -14701,7 +14731,7 @@
         },
         "value": {
           "name": "value",
-          "type": "enum__image_profiles_v_version_output_allowed_formats",
+          "type": "enum__image_profiles_v_version_export_policy_allowed_formats",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
@@ -14714,8 +14744,8 @@
         }
       },
       "indexes": {
-        "_image_profiles_v_version_output_allowed_formats_order_idx": {
-          "name": "_image_profiles_v_version_output_allowed_formats_order_idx",
+        "_image_profiles_v_version_export_policy_allowed_formats_order_idx": {
+          "name": "_image_profiles_v_version_export_policy_allowed_formats_order_idx",
           "columns": [
             {
               "expression": "order",
@@ -14729,8 +14759,8 @@
           "method": "btree",
           "with": {}
         },
-        "_image_profiles_v_version_output_allowed_formats_parent_idx": {
-          "name": "_image_profiles_v_version_output_allowed_formats_parent_idx",
+        "_image_profiles_v_version_export_policy_allowed_formats_parent_idx": {
+          "name": "_image_profiles_v_version_export_policy_allowed_formats_parent_idx",
           "columns": [
             {
               "expression": "parent_id",
@@ -14746,9 +14776,9 @@
         }
       },
       "foreignKeys": {
-        "_image_profiles_v_version_output_allowed_formats_parent_fk": {
-          "name": "_image_profiles_v_version_output_allowed_formats_parent_fk",
-          "tableFrom": "_image_profiles_v_version_output_allowed_formats",
+        "_image_profiles_v_version_export_policy_allowed_formats_parent_fk": {
+          "name": "_image_profiles_v_version_export_policy_allowed_formats_parent_fk",
+          "tableFrom": "_image_profiles_v_version_export_policy_allowed_formats",
           "tableTo": "_image_profiles_v",
           "columnsFrom": [
             "parent_id"
@@ -14822,14 +14852,38 @@
           "primaryKey": false,
           "notNull": false
         },
-        "version_controller_presentation": {
-          "name": "version_controller_presentation",
+        "version_export_policy_print_allowed_ppi": {
+          "name": "version_export_policy_print_allowed_ppi",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
-        "version_output_original": {
-          "name": "version_output_original",
+        "version_export_policy_video_allowed_fps": {
+          "name": "version_export_policy_video_allowed_fps",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_max_width": {
+          "name": "version_export_policy_video_max_width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_max_height": {
+          "name": "version_export_policy_video_max_height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_max_duration_seconds": {
+          "name": "version_export_policy_video_max_duration_seconds",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_original": {
+          "name": "version_export_policy_original",
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,
@@ -14885,6 +14939,12 @@
         "latest": {
           "name": "latest",
           "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_controller_presentation": {
+          "name": "version_controller_presentation",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         }
@@ -15062,8 +15122,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.graphic_profiles_output_allowed_formats": {
-      "name": "graphic_profiles_output_allowed_formats",
+    "public.graphic_profiles_export_policy_allowed_formats": {
+      "name": "graphic_profiles_export_policy_allowed_formats",
       "schema": "",
       "columns": {
         "order": {
@@ -15080,7 +15140,7 @@
         },
         "value": {
           "name": "value",
-          "type": "enum_graphic_profiles_output_allowed_formats",
+          "type": "enum_graphic_profiles_export_policy_allowed_formats",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
@@ -15093,8 +15153,8 @@
         }
       },
       "indexes": {
-        "graphic_profiles_output_allowed_formats_order_idx": {
-          "name": "graphic_profiles_output_allowed_formats_order_idx",
+        "graphic_profiles_export_policy_allowed_formats_order_idx": {
+          "name": "graphic_profiles_export_policy_allowed_formats_order_idx",
           "columns": [
             {
               "expression": "order",
@@ -15108,8 +15168,8 @@
           "method": "btree",
           "with": {}
         },
-        "graphic_profiles_output_allowed_formats_parent_idx": {
-          "name": "graphic_profiles_output_allowed_formats_parent_idx",
+        "graphic_profiles_export_policy_allowed_formats_parent_idx": {
+          "name": "graphic_profiles_export_policy_allowed_formats_parent_idx",
           "columns": [
             {
               "expression": "parent_id",
@@ -15125,9 +15185,9 @@
         }
       },
       "foreignKeys": {
-        "graphic_profiles_output_allowed_formats_parent_fk": {
-          "name": "graphic_profiles_output_allowed_formats_parent_fk",
-          "tableFrom": "graphic_profiles_output_allowed_formats",
+        "graphic_profiles_export_policy_allowed_formats_parent_fk": {
+          "name": "graphic_profiles_export_policy_allowed_formats_parent_fk",
+          "tableFrom": "graphic_profiles_export_policy_allowed_formats",
           "tableTo": "graphic_profiles",
           "columnsFrom": [
             "parent_id"
@@ -15181,9 +15241,33 @@
           "primaryKey": false,
           "notNull": false
         },
-        "controller_presentation": {
-          "name": "controller_presentation",
+        "export_policy_print_allowed_ppi": {
+          "name": "export_policy_print_allowed_ppi",
           "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_allowed_fps": {
+          "name": "export_policy_video_allowed_fps",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_max_width": {
+          "name": "export_policy_video_max_width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_max_height": {
+          "name": "export_policy_video_max_height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_max_duration_seconds": {
+          "name": "export_policy_video_max_duration_seconds",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": false
         },
@@ -15208,6 +15292,12 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'draft'"
+        },
+        "controller_presentation": {
+          "name": "controller_presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -15279,8 +15369,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public._graphic_profiles_v_version_output_allowed_formats": {
-      "name": "_graphic_profiles_v_version_output_allowed_formats",
+    "public._graphic_profiles_v_version_export_policy_allowed_formats": {
+      "name": "_graphic_profiles_v_version_export_policy_allowed_formats",
       "schema": "",
       "columns": {
         "order": {
@@ -15297,7 +15387,7 @@
         },
         "value": {
           "name": "value",
-          "type": "enum__graphic_profiles_v_version_output_allowed_formats",
+          "type": "enum__graphic_profiles_v_version_export_policy_allowed_formats",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
@@ -15310,8 +15400,8 @@
         }
       },
       "indexes": {
-        "_graphic_profiles_v_version_output_allowed_formats_order_idx": {
-          "name": "_graphic_profiles_v_version_output_allowed_formats_order_idx",
+        "_graphic_profiles_v_version_export_policy_allowed_formats_order_idx": {
+          "name": "_graphic_profiles_v_version_export_policy_allowed_formats_order_idx",
           "columns": [
             {
               "expression": "order",
@@ -15325,8 +15415,8 @@
           "method": "btree",
           "with": {}
         },
-        "_graphic_profiles_v_version_output_allowed_formats_parent_idx": {
-          "name": "_graphic_profiles_v_version_output_allowed_formats_parent_idx",
+        "_graphic_profiles_v_version_export_policy_allowed_formats_parent_idx": {
+          "name": "_graphic_profiles_v_version_export_policy_allowed_formats_parent_idx",
           "columns": [
             {
               "expression": "parent_id",
@@ -15342,9 +15432,9 @@
         }
       },
       "foreignKeys": {
-        "_graphic_profiles_v_version_output_allowed_formats_parent_fk": {
-          "name": "_graphic_profiles_v_version_output_allowed_formats_parent_fk",
-          "tableFrom": "_graphic_profiles_v_version_output_allowed_formats",
+        "_graphic_profiles_v_version_export_policy_allowed_formats_parent_fk": {
+          "name": "_graphic_profiles_v_version_export_policy_allowed_formats_parent_fk",
+          "tableFrom": "_graphic_profiles_v_version_export_policy_allowed_formats",
           "tableTo": "_graphic_profiles_v",
           "columnsFrom": [
             "parent_id"
@@ -15404,9 +15494,33 @@
           "primaryKey": false,
           "notNull": false
         },
-        "version_controller_presentation": {
-          "name": "version_controller_presentation",
+        "version_export_policy_print_allowed_ppi": {
+          "name": "version_export_policy_print_allowed_ppi",
           "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_allowed_fps": {
+          "name": "version_export_policy_video_allowed_fps",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_max_width": {
+          "name": "version_export_policy_video_max_width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_max_height": {
+          "name": "version_export_policy_video_max_height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_max_duration_seconds": {
+          "name": "version_export_policy_video_max_duration_seconds",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": false
         },
@@ -15460,6 +15574,12 @@
         "latest": {
           "name": "latest",
           "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_controller_presentation": {
+          "name": "version_controller_presentation",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         }
@@ -16303,8 +16423,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.templates_output_allowed_formats": {
-      "name": "templates_output_allowed_formats",
+    "public.templates_export_policy_allowed_formats": {
+      "name": "templates_export_policy_allowed_formats",
       "schema": "",
       "columns": {
         "order": {
@@ -16321,7 +16441,7 @@
         },
         "value": {
           "name": "value",
-          "type": "enum_templates_output_allowed_formats",
+          "type": "enum_templates_export_policy_allowed_formats",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
@@ -16334,8 +16454,8 @@
         }
       },
       "indexes": {
-        "templates_output_allowed_formats_order_idx": {
-          "name": "templates_output_allowed_formats_order_idx",
+        "templates_export_policy_allowed_formats_order_idx": {
+          "name": "templates_export_policy_allowed_formats_order_idx",
           "columns": [
             {
               "expression": "order",
@@ -16349,8 +16469,8 @@
           "method": "btree",
           "with": {}
         },
-        "templates_output_allowed_formats_parent_idx": {
-          "name": "templates_output_allowed_formats_parent_idx",
+        "templates_export_policy_allowed_formats_parent_idx": {
+          "name": "templates_export_policy_allowed_formats_parent_idx",
           "columns": [
             {
               "expression": "parent_id",
@@ -16366,9 +16486,9 @@
         }
       },
       "foreignKeys": {
-        "templates_output_allowed_formats_parent_fk": {
-          "name": "templates_output_allowed_formats_parent_fk",
-          "tableFrom": "templates_output_allowed_formats",
+        "templates_export_policy_allowed_formats_parent_fk": {
+          "name": "templates_export_policy_allowed_formats_parent_fk",
+          "tableFrom": "templates_export_policy_allowed_formats",
           "tableTo": "templates",
           "columnsFrom": [
             "parent_id"
@@ -16402,9 +16522,33 @@
           "primaryKey": false,
           "notNull": false
         },
-        "controller_presentation": {
-          "name": "controller_presentation",
+        "export_policy_print_allowed_ppi": {
+          "name": "export_policy_print_allowed_ppi",
           "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_allowed_fps": {
+          "name": "export_policy_video_allowed_fps",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_max_width": {
+          "name": "export_policy_video_max_width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_max_height": {
+          "name": "export_policy_video_max_height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_max_duration_seconds": {
+          "name": "export_policy_video_max_duration_seconds",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": false
         },
@@ -16435,13 +16579,6 @@
         "height": {
           "name": "height",
           "type": "numeric",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "print_ppi": {
-          "name": "print_ppi",
-          "type": "enum_templates_print_ppi",
-          "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
         },
@@ -16478,6 +16615,12 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'draft'"
+        },
+        "controller_presentation": {
+          "name": "controller_presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -16643,8 +16786,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public._templates_v_version_output_allowed_formats": {
-      "name": "_templates_v_version_output_allowed_formats",
+    "public._templates_v_version_export_policy_allowed_formats": {
+      "name": "_templates_v_version_export_policy_allowed_formats",
       "schema": "",
       "columns": {
         "order": {
@@ -16661,7 +16804,7 @@
         },
         "value": {
           "name": "value",
-          "type": "enum__templates_v_version_output_allowed_formats",
+          "type": "enum__templates_v_version_export_policy_allowed_formats",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
@@ -16674,8 +16817,8 @@
         }
       },
       "indexes": {
-        "_templates_v_version_output_allowed_formats_order_idx": {
-          "name": "_templates_v_version_output_allowed_formats_order_idx",
+        "_templates_v_version_export_policy_allowed_formats_order_idx": {
+          "name": "_templates_v_version_export_policy_allowed_formats_order_idx",
           "columns": [
             {
               "expression": "order",
@@ -16689,8 +16832,8 @@
           "method": "btree",
           "with": {}
         },
-        "_templates_v_version_output_allowed_formats_parent_idx": {
-          "name": "_templates_v_version_output_allowed_formats_parent_idx",
+        "_templates_v_version_export_policy_allowed_formats_parent_idx": {
+          "name": "_templates_v_version_export_policy_allowed_formats_parent_idx",
           "columns": [
             {
               "expression": "parent_id",
@@ -16706,9 +16849,9 @@
         }
       },
       "foreignKeys": {
-        "_templates_v_version_output_allowed_formats_parent_fk": {
-          "name": "_templates_v_version_output_allowed_formats_parent_fk",
-          "tableFrom": "_templates_v_version_output_allowed_formats",
+        "_templates_v_version_export_policy_allowed_formats_parent_fk": {
+          "name": "_templates_v_version_export_policy_allowed_formats_parent_fk",
+          "tableFrom": "_templates_v_version_export_policy_allowed_formats",
           "tableTo": "_templates_v",
           "columnsFrom": [
             "parent_id"
@@ -16748,9 +16891,33 @@
           "primaryKey": false,
           "notNull": false
         },
-        "version_controller_presentation": {
-          "name": "version_controller_presentation",
+        "version_export_policy_print_allowed_ppi": {
+          "name": "version_export_policy_print_allowed_ppi",
           "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_allowed_fps": {
+          "name": "version_export_policy_video_allowed_fps",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_max_width": {
+          "name": "version_export_policy_video_max_width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_max_height": {
+          "name": "version_export_policy_video_max_height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_max_duration_seconds": {
+          "name": "version_export_policy_video_max_duration_seconds",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": false
         },
@@ -16781,13 +16948,6 @@
         "version_height": {
           "name": "version_height",
           "type": "numeric",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version_print_ppi": {
-          "name": "version_print_ppi",
-          "type": "enum__templates_v_version_print_ppi",
-          "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
         },
@@ -16853,6 +17013,12 @@
         "latest": {
           "name": "latest",
           "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_controller_presentation": {
+          "name": "version_controller_presentation",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         }
@@ -24894,8 +25060,8 @@
         "en"
       ]
     },
-    "public.enum_image_profiles_output_allowed_formats": {
-      "name": "enum_image_profiles_output_allowed_formats",
+    "public.enum_image_profiles_export_policy_allowed_formats": {
+      "name": "enum_image_profiles_export_policy_allowed_formats",
       "schema": "public",
       "values": [
         "png",
@@ -24922,8 +25088,8 @@
         "published"
       ]
     },
-    "public.enum__image_profiles_v_version_output_allowed_formats": {
-      "name": "enum__image_profiles_v_version_output_allowed_formats",
+    "public.enum__image_profiles_v_version_export_policy_allowed_formats": {
+      "name": "enum__image_profiles_v_version_export_policy_allowed_formats",
       "schema": "public",
       "values": [
         "png",
@@ -24958,8 +25124,8 @@
         "en"
       ]
     },
-    "public.enum_graphic_profiles_output_allowed_formats": {
-      "name": "enum_graphic_profiles_output_allowed_formats",
+    "public.enum_graphic_profiles_export_policy_allowed_formats": {
+      "name": "enum_graphic_profiles_export_policy_allowed_formats",
       "schema": "public",
       "values": [
         "png",
@@ -24986,8 +25152,8 @@
         "published"
       ]
     },
-    "public.enum__graphic_profiles_v_version_output_allowed_formats": {
-      "name": "enum__graphic_profiles_v_version_output_allowed_formats",
+    "public.enum__graphic_profiles_v_version_export_policy_allowed_formats": {
+      "name": "enum__graphic_profiles_v_version_export_policy_allowed_formats",
       "schema": "public",
       "values": [
         "png",
@@ -25096,8 +25262,8 @@
         "en"
       ]
     },
-    "public.enum_templates_output_allowed_formats": {
-      "name": "enum_templates_output_allowed_formats",
+    "public.enum_templates_export_policy_allowed_formats": {
+      "name": "enum_templates_export_policy_allowed_formats",
       "schema": "public",
       "values": [
         "png",
@@ -25106,15 +25272,6 @@
         "pdf",
         "svg",
         "mp4"
-      ]
-    },
-    "public.enum_templates_print_ppi": {
-      "name": "enum_templates_print_ppi",
-      "schema": "public",
-      "values": [
-        "72",
-        "150",
-        "300"
       ]
     },
     "public.enum_templates_status": {
@@ -25125,8 +25282,8 @@
         "published"
       ]
     },
-    "public.enum__templates_v_version_output_allowed_formats": {
-      "name": "enum__templates_v_version_output_allowed_formats",
+    "public.enum__templates_v_version_export_policy_allowed_formats": {
+      "name": "enum__templates_v_version_export_policy_allowed_formats",
       "schema": "public",
       "values": [
         "png",
@@ -25135,15 +25292,6 @@
         "pdf",
         "svg",
         "mp4"
-      ]
-    },
-    "public.enum__templates_v_version_print_ppi": {
-      "name": "enum__templates_v_version_print_ppi",
-      "schema": "public",
-      "values": [
-        "72",
-        "150",
-        "300"
       ]
     },
     "public.enum__templates_v_version_status": {

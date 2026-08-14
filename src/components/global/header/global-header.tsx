@@ -113,15 +113,15 @@ export function GlobalHeader({ guidelineChapters, updates = {} }: GlobalHeaderPr
 			label: 'Template',
 		},
 		{
-			current: isCurrentPath(pathname, routes.studio.generateImage),
+			current: isCurrentPath(pathname, routes.studio.image),
 			hasUpdate: updates.image,
-			href: routes.studio.generateImage,
+			href: routes.studio.image,
 			label: 'Image',
 		},
 		{
-			current: isCurrentPath(pathname, routes.studio.generateGraphic),
+			current: isCurrentPath(pathname, routes.studio.graphic),
 			hasUpdate: updates.graphic,
-			href: routes.studio.generateGraphic,
+			href: routes.studio.graphic,
 			label: 'Graphic',
 		},
 	] as const

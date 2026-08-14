@@ -44,7 +44,7 @@ function renderHeader(updates?: NavigationHeaderUpdates) {
 
 describe('GlobalHeader', () => {
 	beforeEach(() => {
-		pathname = '/studio/generate/graphic'
+		pathname = '/studio/graphic'
 		push.mockReset()
 		localStorage.clear()
 		vi.stubGlobal(
@@ -62,10 +62,9 @@ describe('GlobalHeader', () => {
 	it('메가 메뉴 없이 직접 링크와 current·update 상태를 표시한다', () => {
 		renderHeader({ guideline: true, image: true })
 
-		expect(document.querySelector('[data-slot="navigation-header"]')).toHaveClass(
-			'border-b',
-			'bg-header-background',
-		)
+		const header = document.querySelector('[data-slot="navigation-header"]')
+		expect(header).toHaveClass('bg-header-background')
+		expect(header).not.toHaveClass('border-b', 'border-border')
 		const desktop = document.querySelector<HTMLElement>(
 			'[data-slot="navigation-header-desktop"]',
 		)
@@ -84,13 +83,10 @@ describe('GlobalHeader', () => {
 			'href',
 			'/studio/template',
 		)
-		expect(links.getByRole('link', { name: /Image/ })).toHaveAttribute(
-			'href',
-			'/studio/generate/image',
-		)
+		expect(links.getByRole('link', { name: /Image/ })).toHaveAttribute('href', '/studio/image')
 		expect(links.getByRole('link', { name: 'Graphic' })).toHaveAttribute(
 			'href',
-			'/studio/generate/graphic',
+			'/studio/graphic',
 		)
 		expect(links.getByRole('link', { name: 'MCP' })).toHaveAttribute('href', '/studio/mcp')
 		expect(links.getByRole('link', { name: 'Review' })).toHaveAttribute(

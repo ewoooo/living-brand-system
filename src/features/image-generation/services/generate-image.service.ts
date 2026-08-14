@@ -248,7 +248,8 @@ export async function adjustImageCamera({
 	const profile = await findPublishedImageProfile(user, profileId)
 	if (!profile) throw new ImageProfileNotFoundError()
 	const config = deriveImageStudioConfig(profile)
-	if (!getImageStudioFeature(config, 'camera-control')) {
+	const cameraFeature = getImageStudioFeature(config, 'camera-control')
+	if (!cameraFeature) {
 		throw new InvalidImageControllerInputError('camera')
 	}
 	const seed = await loadGeneratedImage({
@@ -261,7 +262,14 @@ export async function adjustImageCamera({
 	const effectivePrompt = imageEffectivePromptSchema.safeParse(seed.effectivePrompt)
 	if (!effectivePrompt.success) throw new InvalidSeedImageError()
 
+	// 각도는 신뢰 경계에서 다시 검증한다 — UI가 구간을 좁혀도 요청은 임의 각도를 보낼 수 있다.
 	const resolved = resolveCameraControl(camera)
+	if (
+		!cameraFeature.azimuths.includes(resolved.azimuth) ||
+		!cameraFeature.elevations.includes(resolved.elevation)
+	) {
+		throw new InvalidImageControllerInputError('camera')
+	}
 	const effective = resolveImageGenerationOptions(config, { count })
 	const result = await runImageGeneration(
 		planImageGenerationFromProfile(profile, {

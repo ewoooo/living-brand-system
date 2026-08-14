@@ -93,105 +93,111 @@ export function BackgroundSection({
 		? !acceptsImagePromptExecution(imageContract.prompt, value.prompt)
 		: true
 	return (
-		<>
-			<ControllerGroupRenderer definition={groupDefinition} presentation={groupPresentation}>
+		<ControllerGroupRenderer definition={groupDefinition} presentation={groupPresentation}>
+			<ControllerControlRenderer
+				definition={typeDefinition}
+				value={type}
+				onChange={onTypeChange}
+			/>
+
+			{type === 'color' && (
 				<ControllerControlRenderer
-					definition={typeDefinition}
-					value={type}
-					onChange={onTypeChange}
+					definition={colorDefinition}
+					value={value.color}
+					onChange={onColorChange}
 				/>
+			)}
 
-				{type === 'color' && (
-					<ControllerControlRenderer
-						definition={colorDefinition}
-						value={value.color}
-						onChange={onColorChange}
-					/>
-				)}
-
-				{type === 'image' && (
-					<>
-						<Controller.Row label="Image Type">
-							<Controller.Segmented
-								aria-label="배경 이미지 방식"
-								options={[
-									{ value: 'preset', label: 'Preset' },
-									{ value: 'generate', label: 'Generate' },
-								]}
-								value={imageMode}
-								onChange={(next) => onChange({ imageMode: next })}
+			{type === 'image' && (
+				<>
+					<Controller.Row label="Image Type">
+						<Controller.Segmented
+							aria-label="배경 이미지 방식"
+							options={[
+								{ value: 'preset', label: 'Preset' },
+								{ value: 'generate', label: 'Generate' },
+							]}
+							value={imageMode}
+							onChange={(next) => onChange({ imageMode: next })}
+						/>
+					</Controller.Row>
+					<Controller.TabPanel tabKey={imageMode}>
+						{imageMode === 'preset' ? (
+							// 브랜드 이미지 목록 배선이 남아 잠긴 채 그린다 — 패널 본문이 없다.
+							<Controller.AssetCard
+								title="이미지를 선택하세요"
+								subtitle="Brand Image"
+								buttonLabel="Browse"
+								aria-label="브랜드 이미지 선택"
+								disabled
 							/>
-						</Controller.Row>
-						<Controller.TabPanel tabKey={imageMode}>
-							{imageMode === 'preset' ? (
-								// 브랜드 이미지 목록 배선이 남아 잠긴 채 그린다 — 패널 본문이 없다.
-								<Controller.AssetCard
-									title="이미지를 선택하세요"
-									subtitle="Brand Image"
-									buttonLabel="Browse"
-									aria-label="브랜드 이미지 선택"
-									disabled
-								/>
-							) : (
-								<>
-									<Controller.Row label="Image Profile">
-										<Controller.Select
-											options={imageContracts.map(({ config }) => ({
-												value: String(config.id),
-												label: config.name,
-											}))}
-											value={
-												value.profileId === undefined
-													? undefined
-													: String(value.profileId)
-											}
-											onChange={(next) => onImageProfileChange(Number(next))}
-											placeholder="사용 가능한 프로파일 없음"
-											disabled={
-												value.generating || imageContracts.length === 0
-											}
+						) : (
+							<>
+								<Controller.Row label="Image Profile">
+									<Controller.Select
+										options={imageContracts.map(({ config }) => ({
+											value: String(config.id),
+											label: config.name,
+										}))}
+										value={
+											value.profileId === undefined
+												? undefined
+												: String(value.profileId)
+										}
+										onChange={(next) => onImageProfileChange(Number(next))}
+										placeholder="사용 가능한 프로파일 없음"
+										disabled={value.generating || imageContracts.length === 0}
+									/>
+								</Controller.Row>
+								{imageContract && (
+									<>
+										<ImageProfileFeatureRenderer
+											config={imageContract.config}
+											values={value.featureValues}
+											bindings={featureBindings}
+											onChange={onFeatureChange}
 										/>
-									</Controller.Row>
-									{imageContract && (
-										<>
-											<ImageProfileFeatureRenderer
-												config={imageContract.config}
-												values={value.featureValues}
-												bindings={featureBindings}
-												onChange={onFeatureChange}
-											/>
-											<ControllerControlRenderer
-												definition={imageContract.prompt}
-												value={value.prompt}
-												onChange={(next) => {
-													if (typeof next === 'string')
-														onChange({ prompt: next })
-												}}
-											/>
-											<ControllerControlRenderer
-												definition={imageContract.ratio}
-												value={imageContract.ratio.defaultValue}
-												onChange={() => {}}
-											/>
-										</>
-									)}
-									<Button
-										type="button"
-										variant="muted"
-										className="mt-0.5 h-11 w-full text-sm font-semibold"
-										onClick={onGenerate}
-										disabled={value.generating || invalidPrompt}
-									>
-										{value.generating ? '생성 중…' : '이미지 생성'}
-									</Button>
-									{value.error && <FieldError>{value.error}</FieldError>}
-								</>
-							)}
-						</Controller.TabPanel>
-					</>
-				)}
+										<ControllerControlRenderer
+											definition={imageContract.prompt}
+											value={value.prompt}
+											onChange={(next) => {
+												if (typeof next === 'string')
+													onChange({ prompt: next })
+											}}
+										/>
+										<ControllerControlRenderer
+											definition={imageContract.ratio}
+											value={imageContract.ratio.defaultValue}
+											onChange={() => {}}
+										/>
+									</>
+								)}
+								<Button
+									type="button"
+									variant="muted"
+									className="mt-0.5 h-11 w-full text-sm font-semibold"
+									onClick={onGenerate}
+									disabled={value.generating || invalidPrompt}
+								>
+									{value.generating ? '생성 중…' : '이미지 생성'}
+								</Button>
+								{value.error && <FieldError>{value.error}</FieldError>}
+							</>
+						)}
+					</Controller.TabPanel>
+					{/* Image Transform은 compose 경로가 없어 잠근 채, 대상인 Background 안에서 그린다. */}
+					<Controller.Group title="Image Transform" collapsible attached disabled>
+						<ImageTransformControl
+							value={imageTransform}
+							aspectRatio={canvasAspectRatio}
+							onChange={setImageTransform}
+						/>
+					</Controller.Group>
+				</>
+			)}
 
-				{type === 'graphic' && (
+			{type === 'graphic' && (
+				<>
 					<Controller.Row label="Graphic Type">
 						<Controller.Select
 							options={graphicConfigs.map((config) => ({
@@ -204,34 +210,18 @@ export function BackgroundSection({
 							disabled={graphicConfigs.length === 0}
 						/>
 					</Controller.Row>
-				)}
-			</ControllerGroupRenderer>
-
-			{type === 'graphic' && graphicConfig && (
-				<ControllerRenderer
-					groups={graphicConfig.controller.groups}
-					presentation={graphicConfig.controllerPresentation}
-					values={value.graphicValues}
-					bindings={graphicBindings}
-					onChange={onGraphicChange}
-				/>
+					{/* 선택한 Graphic의 그룹은 Background에 종속된다 — Background를 접으면 함께 닫힌다. */}
+					{graphicConfig && (
+						<ControllerRenderer
+							groups={graphicConfig.controller.groups}
+							presentation={graphicConfig.controllerPresentation}
+							values={value.graphicValues}
+							bindings={graphicBindings}
+							onChange={onGraphicChange}
+						/>
+					)}
+				</>
 			)}
-
-			{/* Image Transform은 compose 경로가 없어 Background의 형제 섹션에서 잠근다. */}
-			{type === 'image' && (
-				<Controller.Group
-					title="Image Transform"
-					collapsible
-					disabled
-					className="border-t-0 pt-0"
-				>
-					<ImageTransformControl
-						value={imageTransform}
-						aspectRatio={canvasAspectRatio}
-						onChange={setImageTransform}
-					/>
-				</Controller.Group>
-			)}
-		</>
+		</ControllerGroupRenderer>
 	)
 }

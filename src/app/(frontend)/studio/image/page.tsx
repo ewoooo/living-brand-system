@@ -13,7 +13,8 @@ export const dynamic = 'force-dynamic'
 export default async function GenerateImagePage() {
 	const { user } = await authenticateRequest()
 	if (!user) notFound()
-	const configs = await listImageStudioConfigs(user)
+	// 시작 계약 하나만 싣는다 — 교체 후보 목록은 자산 브라우저가 열릴 때 /api/image-profiles가 내려준다.
+	const [config] = await listImageStudioConfigs(user)
 
 	return (
 		<StudioWorkspacePage
@@ -21,7 +22,7 @@ export default async function GenerateImagePage() {
 			description="프롬프트와 이미지 프로파일을 조합해 브랜드 이미지 후보를 만듭니다."
 			hideHeading
 		>
-			<ImageGenerator configs={configs} />
+			<ImageGenerator config={config ?? null} />
 		</StudioWorkspacePage>
 	)
 }

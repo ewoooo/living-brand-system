@@ -11,6 +11,7 @@ import type {
 } from '@/features/template-customization/domain/template-studio-config'
 import type { TemplateRasterArtifact } from '@/features/template-customization/runtime/template-runtime.client'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
+import type { LazyResource } from '@/hooks/use-lazy-resource'
 import type {
 	ControllerControlValue,
 	ControllerRuntimeBindings,
@@ -50,7 +51,12 @@ export type TemplateBackgroundState = {
 export type TemplateBackgroundPatch = Partial<Pick<TemplateBackgroundState, 'imageMode' | 'prompt'>>
 
 export type TemplateStudioValue = {
-	navigation: GetCreateNavigationOutput
+	navigation: {
+		/** 현재 템플릿이 속한 카테고리 이름 — 식별 카드의 부제다. 목록 없이도 알아야 해서 서버가 함께 내린다. */
+		categoryTitle: string | null
+		/** 교체 후보 — 자산 브라우저가 열릴 때 가져온다. 열기 전에는 data가 null이다. */
+		browse: LazyResource<GetCreateNavigationOutput['categories']>
+	}
 	/** 템플릿 편집 계약 — Sidebar와 Canvas는 이 객체와 세션 state만 소비한다. */
 	config: TemplateStudioConfig
 	text: {

@@ -1245,6 +1245,24 @@ export interface ImageProfileColorAdjustmentFeature {
  * via the `definition` "ImageProfileCameraControlFeature".
  */
 export interface ImageProfileCameraControlFeature {
+  azimuths?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  elevations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'cameraControl';
@@ -1396,6 +1414,11 @@ export interface User {
 export interface Template {
   id: number;
   name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
   description?: string | null;
   controllerRestrictions?:
     | {
@@ -2733,6 +2756,8 @@ export interface ImageProfileColorAdjustmentFeatureSelect<T extends boolean = tr
  * via the `definition` "ImageProfileCameraControlFeature_select".
  */
 export interface ImageProfileCameraControlFeatureSelect<T extends boolean = true> {
+  azimuths?: T;
+  elevations?: T;
   id?: T;
   blockName?: T;
 }
@@ -2800,6 +2825,8 @@ export interface GeneratedImagesSelect<T extends boolean = true> {
  */
 export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
+  generateSlug?: T;
+  slug?: T;
   description?: T;
   controllerRestrictions?: T;
   controllerPresentation?: T;
