@@ -81,7 +81,7 @@ export function ControllerSegmented<T extends string>({
 							data-pill-value={option.value}
 							value={option.value}
 							size="sm"
-							className="relative z-10 h-full rounded-sm bg-transparent px-2 text-muted-foreground text-sm transition-colors hover:bg-transparent data-[state=on]:bg-transparent data-[state=on]:text-foreground"
+							className="relative z-10 h-full rounded-sm bg-transparent px-2 text-muted-foreground text-sm transition-colors hover:bg-transparent aria-pressed:bg-transparent aria-pressed:text-foreground data-[state=on]:bg-transparent data-[state=on]:text-foreground data-[state=on]:hover:bg-transparent data-[state=on]:hover:text-foreground"
 						>
 							{option.label}
 						</ToggleGroupItem>
