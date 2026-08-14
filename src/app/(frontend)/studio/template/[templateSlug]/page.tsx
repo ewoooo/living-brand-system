@@ -3,7 +3,8 @@ import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace
 import { TemplateGenerator } from '@/components/studio/template/template-generator'
 import { getCreateNavigation } from '@/features/template-customization/services/get-create-navigation.service'
 import { getTemplateStudio } from '@/features/template-customization/services/get-template-studio.service'
-import { authenticateRequest } from '@/lib/request-auth'
+import { requireUser } from '@/lib/request-auth'
+import { getStudioTemplateRoute } from '@/lib/routes'
 
 export default async function CreateTemplatePage({
 	params,
@@ -11,7 +12,7 @@ export default async function CreateTemplatePage({
 	params: Promise<{ templateSlug: string }>
 }) {
 	const { templateSlug } = await params
-	const { user } = await authenticateRequest()
+	const { user } = await requireUser(getStudioTemplateRoute(templateSlug))
 	const [navigation, studio] = await Promise.all([
 		getCreateNavigation(),
 		getTemplateStudio(templateSlug, user),

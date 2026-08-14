@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation'
 import { GraphicGenerator } from '@/components/studio/graphic/graphic-generator'
 import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
 import { listGraphicStudioConfigs } from '@/features/graphic-generation/services/list-graphic-studio-configs.service'
-import { authenticateRequest } from '@/lib/request-auth'
+import { requireUser } from '@/lib/request-auth'
+import { getStudioGraphicRoute } from '@/lib/routes'
 
 // 렌더링: 매 요청. 권한·미리보기 상태를 읽으므로 캐시하지 않는다.
 // 🔴 방식을 선언으로 못박는다 — 추론에 맡기면 프로덕션에서만 드러나는 차이가 생긴다
@@ -23,9 +24,7 @@ export default async function GenerateGraphicProfilePage({
 	params: Promise<{ profileSlug: string }>
 }) {
 	const { profileSlug } = await params
-	const { user } = await authenticateRequest()
-
-	if (!user) notFound()
+	const { user } = await requireUser(getStudioGraphicRoute(profileSlug))
 
 	const configs = await listGraphicStudioConfigs(user)
 	const config = configs.find((item) => item.id === profileSlug)
