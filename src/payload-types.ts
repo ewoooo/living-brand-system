@@ -1245,6 +1245,24 @@ export interface ImageProfileColorAdjustmentFeature {
  * via the `definition` "ImageProfileCameraControlFeature".
  */
 export interface ImageProfileCameraControlFeature {
+  azimuths?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  elevations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'cameraControl';
@@ -2733,6 +2751,8 @@ export interface ImageProfileColorAdjustmentFeatureSelect<T extends boolean = tr
  * via the `definition` "ImageProfileCameraControlFeature_select".
  */
 export interface ImageProfileCameraControlFeatureSelect<T extends boolean = true> {
+  azimuths?: T;
+  elevations?: T;
   id?: T;
   blockName?: T;
 }

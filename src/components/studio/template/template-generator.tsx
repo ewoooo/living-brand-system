@@ -9,12 +9,12 @@ import type {
 } from '@/features/template-customization/domain/template-config'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 import { TemplateStudioProvider } from '@/features/template-customization/providers/template-studio-provider'
-import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import { TemplateCanvas } from './template-canvas'
 
 type TemplateGeneratorProps = {
 	config: TemplateConfig
-	navigation: GetCreateNavigationOutput
+	/** 식별 카드의 부제 — 교체 후보 목록은 자산 브라우저가 열릴 때 따로 가져온다. */
+	categoryTitle: string | null
 	template: PublishedHtmlTemplate
 }
 
@@ -26,9 +26,9 @@ type TemplateGeneratorProps = {
  * 사이드바(컨트롤러)와 캔버스(작업 공간)는 서로를 모른다 — 편집 세션 상태는
  * TemplateStudioProvider(features)가 단일 소유하고 둘 다 컨텍스트로만 소통한다.
  */
-export function TemplateGenerator({ config, navigation, template }: TemplateGeneratorProps) {
+export function TemplateGenerator({ config, categoryTitle, template }: TemplateGeneratorProps) {
 	return (
-		<TemplateStudioProvider config={config} template={template} navigation={navigation}>
+		<TemplateStudioProvider config={config} template={template} categoryTitle={categoryTitle}>
 			<TemplateWorkspace template={template} />
 		</TemplateStudioProvider>
 	)

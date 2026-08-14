@@ -4,6 +4,7 @@ import { Copy, Crop, SquareOutline } from '@carbon/icons-react'
 import type * as React from 'react'
 import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
 import { ImageProfilePicker } from '@/components/studio/image/image-profile-picker'
+import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import { Controller } from '@/components/studio/shared/controller'
 import {
 	ControllerControlRenderer,
@@ -62,11 +63,11 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 						buttonLabel="Change"
 						aria-label="프로파일 변경"
 						tabs={['Image Profiles']}
-						empty={
-							profiles.options.length <= 1
-								? '교체할 다른 이미지 프로파일이 없습니다.'
-								: undefined
-						}
+						empty={browseEmptyMessage(
+							profiles.browse.status,
+							(profiles.browse.data?.length ?? 0) > 1,
+							'교체할 다른 이미지 프로파일이 없습니다.',
+						)}
 					>
 						<ImageProfilePicker />
 					</Controller.AssetCard>

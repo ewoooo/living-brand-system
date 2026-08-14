@@ -326,8 +326,69 @@ function ControlRestrictionEditor({
 					</div>
 				</div>
 			) : null}
+			{control.kind === 'color' ? (
+				<ColorValuesRestriction
+					baseValues={control.values}
+					value={restriction?.colorValues}
+					disabled={disabled}
+					onChange={(colorValues) => onChange({ colorValues })}
+				/>
+			) : null}
 		</div>
 	)
+}
+
+/**
+ * color control의 허용 색 좁힘 — 원본이 자유 색상이라 고를 목록이 없으므로 hex를 직접 적는다.
+ * 비우면 좁히지 않는다(자유 색상 유지).
+ */
+function ColorValuesRestriction({
+	baseValues,
+	value,
+	disabled,
+	onChange,
+}: {
+	baseValues?: readonly string[]
+	value?: readonly string[]
+	disabled?: boolean
+	onChange: (value: readonly string[] | undefined) => void
+}) {
+	return (
+		<div className="md:col-span-2">
+			<label className="text-sm">
+				{`허용 색 (원본 ${baseValues?.length ? `${baseValues.length}개` : '자유 색상'})`}
+				<input
+					type="text"
+					className="mt-1 block h-9 w-full rounded-md border bg-background px-2 font-mono"
+					placeholder="#000000, #ffffff — 비우면 자유 색상"
+					disabled={disabled}
+					value={value?.join(', ') ?? ''}
+					onChange={(event) => onChange(parseColorValues(event.currentTarget.value))}
+				/>
+			</label>
+			{value?.length ? (
+				<div className="mt-2 flex flex-wrap gap-1">
+					{value.map((color) => (
+						<span
+							key={color}
+							title={color}
+							// 색은 데이터라 style로 흐른다(docs/09 §4 예외).
+							style={{ backgroundColor: color }}
+							className="size-5 rounded-sm border"
+						/>
+					))}
+				</div>
+			) : null}
+		</div>
+	)
+}
+
+function parseColorValues(input: string): readonly string[] | undefined {
+	const values = input
+		.split(/[,\s]+/)
+		.map((value) => value.trim().toLowerCase())
+		.filter(Boolean)
+	return values.length > 0 ? [...new Set(values)] : undefined
 }
 
 function DefaultValueEditor({

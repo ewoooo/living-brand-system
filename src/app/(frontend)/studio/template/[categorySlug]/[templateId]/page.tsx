@@ -13,7 +13,7 @@ export default async function CreateTemplatePage({
 }: {
 	params: Promise<{ categorySlug: string; templateId: string }>
 }) {
-	const { templateId } = await params
+	const { categorySlug, templateId } = await params
 	const parsedId = Number(templateId)
 
 	if (!Number.isInteger(parsedId)) {
@@ -42,7 +42,10 @@ export default async function CreateTemplatePage({
 			<TemplateGenerator
 				key={template.id}
 				config={config}
-				navigation={navigation}
+				categoryTitle={
+					navigation.categories.find((category) => category.slug === categorySlug)
+						?.title ?? null
+				}
 				template={template}
 			/>
 		</StudioWorkspacePage>

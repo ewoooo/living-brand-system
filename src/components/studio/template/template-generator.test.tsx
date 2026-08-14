@@ -12,6 +12,7 @@ import {
 	resolveGraphicStudioOutput,
 } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
+import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/camera-control'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import {
@@ -46,6 +47,14 @@ vi.mock('@/features/studio-export/hooks/use-export', () => ({
 		run: (request: { format: string }) => mocks.exportTemplate(request.format),
 	}),
 }))
+const browseMocks = vi.hoisted(() => ({
+	fetchCreateNavigation: vi.fn(async () => [] as unknown[]),
+}))
+vi.mock(
+	'@/features/template-customization/services/get-create-navigation.client',
+	() => browseMocks,
+)
+
 vi.mock('next/navigation', () => ({
 	useRouter: () => ({ push: mocks.push }),
 }))
@@ -70,20 +79,18 @@ const template: PublishedHtmlTemplate = {
 	templateVersion: '2026-07-29T00:00:00.000Z',
 }
 
-const navigation: GetCreateNavigationOutput = {
-	categories: [
-		{
-			id: 1,
-			title: '카드',
-			slug: 'cards',
-			href: '/studio/template/cards',
-			templates: [
-				{ id: 1, name: '테스트 템플릿', href: '/studio/template/cards/1' },
-				{ id: 2, name: '두 번째 템플릿', href: '/studio/template/cards/2' },
-			],
-		},
-	],
-}
+const navigationCategories: GetCreateNavigationOutput['categories'] = [
+	{
+		id: 1,
+		title: '카드',
+		slug: 'cards',
+		href: '/studio/template/cards',
+		templates: [
+			{ id: 1, name: '테스트 템플릿', href: '/studio/template/cards/1' },
+			{ id: 2, name: '두 번째 템플릿', href: '/studio/template/cards/2' },
+		],
+	},
+]
 
 const imageConfigs = [createImageConfig(11), createImageConfig(7)]
 const effectiveGraphicConfigs = graphicRuntimeManifests.map((manifest) => ({
@@ -315,9 +322,7 @@ describe('TemplateGenerator', () => {
 	})
 
 	it('공통 Studio 작업대에서 템플릿을 내보낸다', () => {
-		const { container } = render(
-			<TemplateGenerator navigation={navigation} template={template} />,
-		)
+		const { container } = render(<TemplateGenerator categoryTitle="카드" template={template} />)
 
 		expect(container.querySelector('[data-slot="studio-workspace"]')).not.toBeNull()
 		expect(container.querySelector('[data-slot="studio-workspace-sidebar"]')).toHaveClass(
@@ -332,7 +337,7 @@ describe('TemplateGenerator', () => {
 		const header = container.querySelector('[data-slot="controller-header"]')
 		expect(header).not.toBeNull()
 		expect(
-			within(header as HTMLElement).getByRole('combobox', { name: '템플릿 변경' }),
+			within(header as HTMLElement).getByRole('button', { name: '템플릿 변경' }),
 		).toBeInTheDocument()
 
 		fireEvent.click(screen.getByRole('button', { name: '내보내기' }))
@@ -343,7 +348,7 @@ describe('TemplateGenerator', () => {
 
 	it('공통 Export 판정이 거부하면 Format이 있어도 내보내기 버튼을 잠근다', () => {
 		mocks.canExportTemplate.mockReturnValue(false)
-		render(<TemplateGenerator navigation={navigation} template={template} />)
+		render(<TemplateGenerator categoryTitle="카드" template={template} />)
 
 		expect(screen.getByRole('button', { name: '내보내기' })).toBeDisabled()
 	})
@@ -352,7 +357,7 @@ describe('TemplateGenerator', () => {
 		const derived = deriveTemplateConfig(template, imageConfigs, effectiveGraphicConfigs)
 		const config = { ...derived, output: { ...derived.output, formats: ['svg'] as const } }
 		render(
-			<TemplateStudioProvider config={config} template={template} navigation={navigation}>
+			<TemplateStudioProvider config={config} template={template} categoryTitle="카드">
 				<TemplateOutputProbe />
 			</TemplateStudioProvider>,
 		)
@@ -369,7 +374,7 @@ describe('TemplateGenerator', () => {
 			<TemplateStudioProvider
 				config={deriveTemplateConfig(template, imageConfigs, effectiveGraphicConfigs)}
 				template={template}
-				navigation={navigation}
+				categoryTitle="카드"
 			>
 				<GraphicCaptureProbe />
 			</TemplateStudioProvider>,
@@ -388,9 +393,7 @@ describe('TemplateGenerator', () => {
 	})
 
 	it('출력 캔버스 비율을 작업 영역에 맞춰 프리뷰에 반영한다', () => {
-		const { container } = render(
-			<TemplateGenerator navigation={navigation} template={template} />,
-		)
+		const { container } = render(<TemplateGenerator categoryTitle="카드" template={template} />)
 
 		act(() => {
 			mocks.resizeObserverCallback?.(
@@ -434,7 +437,7 @@ describe('TemplateGenerator', () => {
 			<TemplateStudioProvider
 				config={config}
 				template={controlledTemplate}
-				navigation={navigation}
+				categoryTitle="카드"
 			>
 				<TemplateControlMutationProbe />
 			</TemplateStudioProvider>,
@@ -451,20 +454,21 @@ describe('TemplateGenerator', () => {
 		expect(screen.getByTestId('template-background-color')).toHaveTextContent('#ffffff')
 	})
 
-	it('아이덴티티 카드의 Change로 선택한 템플릿 작업대로 이동한다', async () => {
-		const user = userEvent.setup()
-		render(<TemplateGenerator navigation={navigation} template={template} />)
+	it('아이덴티티 카드의 Change로 연 자산 브라우저에서 고른 템플릿 작업대로 이동한다', async () => {
+		// 목록은 패널이 열릴 때 /api/templates에서 온다 — 페이지는 카테고리 이름만 싣는다.
+		browseMocks.fetchCreateNavigation.mockResolvedValue(navigationCategories)
+		render(<TemplateGenerator categoryTitle="카드" template={template} />)
 
 		// 카드가 현재 템플릿 이름과 카테고리를 보여준다.
 		expect(screen.getByText('테스트 템플릿')).toBeInTheDocument()
 		expect(screen.getByText('카드')).toBeInTheDocument()
 
-		// jsdom에는 pointer capture가 없어 트리거는 키보드로 연다(radix pointer 경로 회피).
-		screen.getByRole('combobox', { name: '템플릿 변경' }).focus()
-		await user.keyboard('{ArrowDown}')
-		await user.click(screen.getByRole('option', { name: '두 번째 템플릿' }))
+		fireEvent.click(screen.getByRole('button', { name: '템플릿 변경' }))
+		const panel = screen.getByRole('dialog', { name: 'Templates' })
+		fireEvent.click(await within(panel).findByRole('button', { name: /두 번째 템플릿/ }))
 
 		expect(mocks.push).toHaveBeenCalledWith('/studio/template/cards/2')
+		expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 	})
 
 	it('개방된 이미지 슬롯에서 생성한 이미지를 미리보기에 합성한다', async () => {
@@ -473,7 +477,7 @@ describe('TemplateGenerator', () => {
 		})
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					// 이미지 슬롯 노드는 임포트가 캐리어로 마킹한 표면이다 — compose는 캐리어 전용.
@@ -504,7 +508,7 @@ describe('TemplateGenerator', () => {
 		})
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -542,7 +546,7 @@ describe('TemplateGenerator', () => {
 		const { container } = render(
 			<TemplateGenerator
 				imageConfigs={[noColorConfig]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -581,7 +585,7 @@ describe('TemplateGenerator', () => {
 		const { container } = render(
 			<TemplateGenerator
 				imageConfigs={[colorConfig, plainConfig]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -606,7 +610,7 @@ describe('TemplateGenerator', () => {
 	it('일괄 텍스트 색을 만졌을 때만 모든 텍스트 슬롯에 합성한다', () => {
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<p data-node-id="t1" style="color:#1a1a1a">TITLE</p><p data-node-id="t2" style="color:#1a1a1a">YEARS</p>',
@@ -635,7 +639,7 @@ describe('TemplateGenerator', () => {
 		})
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -664,7 +668,7 @@ describe('TemplateGenerator', () => {
 		})
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier="" style="width:400px;height:300px;"></div>',
@@ -696,7 +700,7 @@ describe('TemplateGenerator', () => {
 	it('만진 배경색이 캔버스(루트 프레임) 배경으로 합성된다', () => {
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" style="width:400px;height:300px;background-color:rgb(0,40,10)"></div>',
@@ -723,7 +727,7 @@ describe('TemplateGenerator', () => {
 		})
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" style="width:400px;height:300px"></div>',
@@ -762,7 +766,7 @@ describe('TemplateGenerator', () => {
 					createImageConfig(11),
 					createImageConfig(7, undefined, '고정 기본값'),
 				]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={template}
 			/>,
 		)
@@ -786,7 +790,7 @@ describe('TemplateGenerator', () => {
 		const user = userEvent.setup()
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" style="width:400px;height:300px;background-color:rgb(0,40,10)"></div>',
@@ -843,7 +847,7 @@ describe('TemplateGenerator', () => {
 
 	it('선택한 Effective 포맷으로 내보낸다', async () => {
 		const user = userEvent.setup()
-		render(<TemplateGenerator navigation={navigation} template={template} />)
+		render(<TemplateGenerator categoryTitle="카드" template={template} />)
 
 		screen.getByRole('combobox', { name: 'Format' }).focus()
 		await user.keyboard('{ArrowDown}')
@@ -857,7 +861,7 @@ describe('TemplateGenerator', () => {
 		const pinned = render(
 			<TemplateGenerator
 				imageConfigs={[]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -873,7 +877,7 @@ describe('TemplateGenerator', () => {
 		render(
 			<TemplateGenerator
 				imageConfigs={[]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -888,7 +892,7 @@ describe('TemplateGenerator', () => {
 		mocks.requestImageGeneration.mockResolvedValue({ generatedImages: [] })
 		render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" style="width:911px;height:492px;"></div>',
@@ -919,7 +923,7 @@ describe('TemplateGenerator', () => {
 		render(
 			<TemplateGenerator
 				imageConfigs={[fixedConfig]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -963,7 +967,7 @@ describe('TemplateGenerator', () => {
 			},
 		} satisfies typeof base
 		render(
-			<TemplateStudioProvider config={config} template={template} navigation={navigation}>
+			<TemplateStudioProvider config={config} template={template} categoryTitle="카드">
 				<BackgroundTypeMutationProbe />
 			</TemplateStudioProvider>,
 		)
@@ -994,11 +998,7 @@ describe('TemplateGenerator', () => {
 			}),
 		)
 		const first = render(
-			<TemplateStudioProvider
-				config={config}
-				template={studioTemplate}
-				navigation={navigation}
-			>
+			<TemplateStudioProvider config={config} template={studioTemplate} categoryTitle="카드">
 				<TemplateSidebarTestBridge />
 				<ImageRaceProbe />
 			</TemplateStudioProvider>,
@@ -1030,11 +1030,7 @@ describe('TemplateGenerator', () => {
 			}),
 		)
 		render(
-			<TemplateStudioProvider
-				config={config}
-				template={studioTemplate}
-				navigation={navigation}
-			>
+			<TemplateStudioProvider config={config} template={studioTemplate} categoryTitle="카드">
 				<ImageRaceProbe />
 			</TemplateStudioProvider>,
 		)
@@ -1057,7 +1053,7 @@ describe('TemplateGenerator', () => {
 		const { container } = render(
 			<TemplateGenerator
 				imageConfigs={[createImageConfig(11), createImageConfig(7)]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -1093,7 +1089,7 @@ describe('TemplateGenerator', () => {
 			<TemplateStudioProvider
 				config={deriveTemplateConfig(studioTemplate, [editable])}
 				template={studioTemplate}
-				navigation={navigation}
+				categoryTitle="카드"
 			>
 				<FeatureMutationProbe />
 			</TemplateStudioProvider>,
@@ -1133,7 +1129,7 @@ describe('TemplateGenerator', () => {
 			<TemplateStudioProvider
 				config={deriveTemplateConfig(overrideTemplate, [readonlyConfig])}
 				template={overrideTemplate}
-				navigation={navigation}
+				categoryTitle="카드"
 			>
 				<FeatureMutationProbe />
 			</TemplateStudioProvider>,
@@ -1162,7 +1158,7 @@ describe('TemplateGenerator', () => {
 			<TemplateStudioProvider
 				config={deriveTemplateConfig(template, imageConfigs, [readonlyGraphic])}
 				template={template}
-				navigation={navigation}
+				categoryTitle="카드"
 			>
 				<GraphicMutationProbe />
 			</TemplateStudioProvider>,
@@ -1186,7 +1182,7 @@ describe('TemplateGenerator', () => {
 					secondary,
 				])}
 				template={template}
-				navigation={navigation}
+				categoryTitle="카드"
 			>
 				<GraphicMutationProbe />
 			</TemplateStudioProvider>,
@@ -1284,7 +1280,11 @@ function createImageConfig(
 					type: 'color-adjustment',
 					controls: { line: 'lineColor', background: 'backgroundColor' },
 				},
-				{ type: 'camera-control' },
+				{
+					type: 'camera-control',
+					azimuths: CAMERA_AZIMUTHS,
+					elevations: CAMERA_ELEVATIONS,
+				},
 			],
 		},
 	}

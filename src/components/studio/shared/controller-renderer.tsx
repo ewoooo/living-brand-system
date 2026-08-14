@@ -229,6 +229,7 @@ function ControllerControl({
 					label={definition.label}
 					value={color ?? '#000000'}
 					isEmpty={color === null}
+					values={definition.values}
 					disabled={disabled}
 					onReset={() => onChange(null)}
 					onChange={onChange}

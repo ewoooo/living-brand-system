@@ -13875,6 +13875,18 @@
           "primaryKey": true,
           "notNull": true
         },
+        "azimuths": {
+          "name": "azimuths",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "elevations": {
+          "name": "elevations",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "block_name": {
           "name": "block_name",
           "type": "varchar",
@@ -14083,6 +14095,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "controller_presentation": {
+          "name": "controller_presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "export_policy_print_allowed_ppi": {
           "name": "export_policy_print_allowed_ppi",
           "type": "jsonb",
@@ -14141,12 +14159,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'draft'"
-        },
-        "controller_presentation": {
-          "name": "controller_presentation",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {
@@ -14632,6 +14644,18 @@
           "primaryKey": true,
           "notNull": true
         },
+        "azimuths": {
+          "name": "azimuths",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "elevations": {
+          "name": "elevations",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "_uuid": {
           "name": "_uuid",
           "type": "varchar",
@@ -14852,6 +14876,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "version_controller_presentation": {
+          "name": "version_controller_presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "version_export_policy_print_allowed_ppi": {
           "name": "version_export_policy_print_allowed_ppi",
           "type": "jsonb",
@@ -14939,12 +14969,6 @@
         "latest": {
           "name": "latest",
           "type": "boolean",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version_controller_presentation": {
-          "name": "version_controller_presentation",
-          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         }
@@ -15241,6 +15265,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "controller_presentation": {
+          "name": "controller_presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "export_policy_print_allowed_ppi": {
           "name": "export_policy_print_allowed_ppi",
           "type": "jsonb",
@@ -15292,12 +15322,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'draft'"
-        },
-        "controller_presentation": {
-          "name": "controller_presentation",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {
@@ -15494,6 +15518,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "version_controller_presentation": {
+          "name": "version_controller_presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "version_export_policy_print_allowed_ppi": {
           "name": "version_export_policy_print_allowed_ppi",
           "type": "jsonb",
@@ -15574,12 +15604,6 @@
         "latest": {
           "name": "latest",
           "type": "boolean",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version_controller_presentation": {
-          "name": "version_controller_presentation",
-          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         }
@@ -16522,6 +16546,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "controller_presentation": {
+          "name": "controller_presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "export_policy_print_allowed_ppi": {
           "name": "export_policy_print_allowed_ppi",
           "type": "jsonb",
@@ -16615,12 +16645,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'draft'"
-        },
-        "controller_presentation": {
-          "name": "controller_presentation",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {
@@ -16891,6 +16915,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "version_controller_presentation": {
+          "name": "version_controller_presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "version_export_policy_print_allowed_ppi": {
           "name": "version_export_policy_print_allowed_ppi",
           "type": "jsonb",
@@ -17013,12 +17043,6 @@
         "latest": {
           "name": "latest",
           "type": "boolean",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version_controller_presentation": {
-          "name": "version_controller_presentation",
-          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         }
@@ -25663,6 +25687,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "40b35a51-20a6-46f6-b910-1c17ebde7984",
+  "id": "6f2bc700-c5be-4df6-8fc2-29f877f68370",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

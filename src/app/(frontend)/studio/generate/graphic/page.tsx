@@ -12,8 +12,9 @@ export const dynamic = 'force-dynamic'
 export default async function GenerateGraphicPage() {
 	const { user } = await authenticateRequest()
 	if (!user) notFound()
-	const configs = await listGraphicStudioConfigs(user)
-	if (!configs[0]) notFound()
+	// 시작 계약 하나만 싣는다 — 교체 후보 목록은 자산 브라우저가 열릴 때 /api/graphic-profiles가 내려준다.
+	const [config] = await listGraphicStudioConfigs(user)
+	if (!config) notFound()
 
 	return (
 		<StudioWorkspacePage
@@ -21,7 +22,7 @@ export default async function GenerateGraphicPage() {
 			description="그래픽 도구의 설정을 조정하고 결과를 미리 봅니다."
 			hideHeading
 		>
-			<GraphicGenerator configs={configs} />
+			<GraphicGenerator config={config} />
 		</StudioWorkspacePage>
 	)
 }
