@@ -64,6 +64,8 @@ describe('Sidebar', () => {
 			'muted',
 		)
 		expect(container.querySelector('[data-slot="sidebar-separator"]')).toBeInTheDocument()
+		expect(container.querySelector('[data-slot="sidebar-root"]')).toHaveClass('bg-transparent')
+		expect(screen.getByRole('navigation', { name: '테스트 메뉴' })).toHaveClass('bg-background')
 	})
 
 	it('trigger로 접은 데스크톱 선택을 브라우저에 저장하고 복원한다', async () => {
