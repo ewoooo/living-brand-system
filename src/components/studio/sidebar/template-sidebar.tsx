@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { Controller } from '@/components/studio/shared/controller'
 import {
+	CONTROLLER_TOGGLE_OPTIONS,
 	ControllerControlRenderer,
 	ControllerGroupRenderer,
 } from '@/components/studio/shared/controller-renderer'
@@ -351,11 +352,11 @@ function LayerVisibilityControl({
 	if (!allowToggle) return null
 	return (
 		<Controller.Row label={`${label} 표시`}>
-			<input
-				type="checkbox"
+			<Controller.Segmented
 				aria-label={`${label} 표시`}
-				checked={visible}
-				onChange={(event) => onChange(event.currentTarget.checked)}
+				options={CONTROLLER_TOGGLE_OPTIONS}
+				value={visible ? 'on' : 'off'}
+				onChange={(next) => onChange(next === 'on')}
 			/>
 		</Controller.Row>
 	)

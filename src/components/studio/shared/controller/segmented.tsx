@@ -17,10 +17,13 @@ type ControllerSegmentedProps<T extends string> = {
 }
 
 /**
- * 세그먼트 토글(Preset|Generate, Off|On) — dialkit segmented 구조를 그대로 옮겼다:
+ * 세그먼트 토글(Preset|Generate, On|Off) — dialkit segmented 구조를 그대로 옮겼다:
  * 트랙(relative) 위에 투명 버튼들이 놓이고, 선택 배경은 별도의 pill 하나가
  * 활성 버튼 위치로 미끄러진다(dialkit-segmented-pill). 트랙은 행의 오른끝에서
  * 2px 인셋으로 앉는다(-mr-2.5 = 행 패딩 12px − 2px).
+ *
+ * pill은 헤더 nav의 체이서(`navigation-header-link-chaser`)와 같은 방식이다 — 항목마다
+ * 붙였다 떼는 게 아니라 하나가 살아남아 활성 항목의 실측 위치·폭으로 이동한다.
  */
 export function ControllerSegmented<T extends string>({
 	options,
@@ -31,8 +34,15 @@ export function ControllerSegmented<T extends string>({
 }: ControllerSegmentedProps<T>) {
 	const row = useRowControl()
 	const resolvedDisabled = disabled ?? row?.disabled
-	const pillId = React.useId()
+	const groupRef = React.useRef<HTMLDivElement>(null)
+	const [pill, setPill] = React.useState<{ left: number; width: number } | null>(null)
 	const reducedMotion = useReducedMotion()
+
+	// 버튼의 실측 폭을 따라가므로 라벨 길이가 달라도 pill이 정확히 맞는다.
+	React.useLayoutEffect(() => {
+		const target = groupRef.current?.querySelector<HTMLElement>(`[data-pill-value="${value}"]`)
+		setPill(target ? { left: target.offsetLeft, width: target.offsetWidth } : null)
+	}, [value])
 
 	return (
 		<div
@@ -41,6 +51,7 @@ export function ControllerSegmented<T extends string>({
 		>
 			<LazyMotion features={domAnimation}>
 				<ToggleGroup
+					ref={groupRef}
 					type="single"
 					value={value}
 					// 세그먼트는 항상 하나가 선택돼 있다 — 같은 칩 재클릭(빈 값)은 무시.
@@ -48,30 +59,31 @@ export function ControllerSegmented<T extends string>({
 					aria-label={ariaLabel}
 					disabled={resolvedDisabled}
 					spacing={0}
-					className="h-full"
+					className="relative h-full"
 				>
+					{pill && (
+						<m.div
+							aria-hidden
+							data-slot="controller-segmented-pill"
+							className="pointer-events-none absolute inset-y-0 z-0 rounded-sm bg-foreground/10"
+							initial={false}
+							animate={pill}
+							transition={
+								reducedMotion
+									? { duration: 0 }
+									: { type: 'spring', visualDuration: 0.2, bounce: 0.15 }
+							}
+						/>
+					)}
 					{options.map((option) => (
 						<ToggleGroupItem
 							key={option.value}
+							data-pill-value={option.value}
 							value={option.value}
 							size="sm"
-							className="relative isolate h-full rounded-sm bg-transparent px-2 text-muted-foreground text-sm transition-colors hover:bg-transparent data-[state=on]:bg-transparent data-[state=on]:text-foreground"
+							className="relative z-10 h-full rounded-sm bg-transparent px-2 text-muted-foreground text-sm transition-colors hover:bg-transparent data-[state=on]:bg-transparent data-[state=on]:text-foreground"
 						>
-							{option.value === value && (
-								<m.span
-									aria-hidden
-									data-slot="controller-segmented-pill"
-									layoutId={pillId}
-									className="pointer-events-none absolute inset-0 z-0 rounded-sm bg-foreground/10"
-									initial={false}
-									transition={
-										reducedMotion
-											? { duration: 0 }
-											: { type: 'spring', visualDuration: 0.2, bounce: 0.15 }
-									}
-								/>
-							)}
-							<span className="relative z-10">{option.label}</span>
+							{option.label}
 						</ToggleGroupItem>
 					))}
 				</ToggleGroup>

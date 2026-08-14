@@ -17,6 +17,15 @@ import {
 	resolveControllerAvailability,
 } from '@/modules/studio-controller/controller-definition'
 
+/**
+ * toggle(boolean)의 표현은 세그먼트 On|Off 하나뿐이다 — 계약 밖 boolean 행(레이어 가시성)도 이걸 쓴다.
+ * 순서는 디자인 SSOT(Figma HD_LBS_UI 4:5822 "Toggle")가 정한다 — On이 왼쪽이다.
+ */
+export const CONTROLLER_TOGGLE_OPTIONS = [
+	{ value: 'on', label: 'On' },
+	{ value: 'off', label: 'Off' },
+] as const
+
 type ControllerRendererProps = {
 	groups: readonly ControllerGroupDefinition[]
 	presentation?: { groups: readonly ControllerGroupPresentation[] }
@@ -187,10 +196,7 @@ function ControllerControl({
 				<Controller.Row label={definition.label} disabled={disabled}>
 					<Controller.Segmented
 						aria-label={definition.label}
-						options={[
-							{ value: 'off', label: 'Off' },
-							{ value: 'on', label: 'On' },
-						]}
+						options={CONTROLLER_TOGGLE_OPTIONS}
 						value={enabled ? 'on' : 'off'}
 						onChange={(next) => onChange(next === 'on')}
 					/>
