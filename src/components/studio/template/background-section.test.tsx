@@ -8,7 +8,7 @@ import type { ImageStudioConfig } from '@/features/image-generation/domain/image
 import {
 	resolveTemplateImageConfig,
 	type TemplateBackgroundType,
-} from '@/features/template-customization/domain/template-config'
+} from '@/features/template-customization/domain/template-studio-config'
 import type { TemplateBackgroundState } from '@/features/template-customization/hooks/use-template-studio'
 import {
 	type ControllerRuntimeBindings,

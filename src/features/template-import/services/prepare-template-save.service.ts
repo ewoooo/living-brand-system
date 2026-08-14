@@ -10,7 +10,7 @@ import {
 	parseTemplateNodeConfigs,
 } from '@/features/template-core/domain/parse-template-node-configs'
 import { sameRef } from '@/features/template-core/domain/template-asset-policy'
-import { deriveTemplateConfig } from '@/features/template-customization/domain/template-config'
+import { deriveTemplateStudioConfig } from '@/features/template-customization/domain/template-studio-config'
 import {
 	findTemplateDraftBlocker,
 	findTemplatePublishBlocker,
@@ -81,7 +81,7 @@ export async function prepareTemplateSave({
 		typeof candidate.height === 'number'
 	) {
 		try {
-			deriveTemplateConfig({
+			deriveTemplateStudioConfig({
 				kind: 'html',
 				id: typeof candidate.id === 'number' ? candidate.id : 0,
 				name: typeof candidate.name === 'string' ? candidate.name : 'Template',

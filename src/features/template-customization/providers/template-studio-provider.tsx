@@ -31,16 +31,16 @@ import {
 import {
 	findTemplateControl,
 	listCompatibleTemplateImageConfigs,
-	type PublishedHtmlTemplate,
+	type PublishedTemplateView,
 	partitionTemplateSlots,
 	type ResolvedTemplateImageConfig,
 	type TemplateBackgroundSlot,
 	type TemplateBackgroundType,
-	type TemplateConfig,
 	type TemplateImageConfigSlot,
+	type TemplateStudioConfig,
 	type TemplateTextSlot,
 	type TemplateVectorSlot,
-} from '@/features/template-customization/domain/template-config'
+} from '@/features/template-customization/domain/template-studio-config'
 import {
 	composeTemplateStudioHtml,
 	createTemplateRasterArtifact,
@@ -60,7 +60,7 @@ const PINNED_CONFIG_ERROR_MESSAGE = '고정된 이미지 프로파일을 사용�
 const SELECTABLE_CONFIG_ERROR_MESSAGE = '사용 가능한 이미지 프로파일이 없습니다.'
 
 function useTemplateTextSession(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	textSlots: readonly TemplateTextSlot[],
 	html: string,
 	previewRef: RefObject<HTMLDivElement | null>,
@@ -105,7 +105,7 @@ function useTemplateTextSession(
 }
 
 function useTemplateImageSession(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	imageSlots: readonly TemplateImageConfigSlot[],
 ): TemplateStudioValue['images'] {
 	const contracts = useMemo(
@@ -256,7 +256,7 @@ function useTemplateLayerSession(
 }
 
 function useTemplateBackgroundSession(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	slot: TemplateBackgroundSlot | undefined,
 ): TemplateStudioValue['background'] {
 	const contracts = useMemo(
@@ -399,8 +399,8 @@ export function TemplateStudioProvider({
 	navigation,
 	children,
 }: {
-	config: TemplateConfig
-	template: PublishedHtmlTemplate
+	config: TemplateStudioConfig
+	template: PublishedTemplateView
 	navigation: TemplateStudioValue['navigation']
 	children: ReactNode
 }) {
@@ -558,7 +558,7 @@ function selectImageProfile(
 }
 
 function initialTemplateTextValues(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	slots: readonly TemplateTextSlot[],
 ): Record<string, string> {
 	return Object.fromEntries(
@@ -571,7 +571,7 @@ function initialTemplateTextValues(
 
 function updateTemplateText(
 	current: Record<string, string>,
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	slots: readonly TemplateTextSlot[],
 	slotId: string,
 	next: string,
@@ -760,7 +760,7 @@ function getBackgroundFeatureBindings(
 }
 
 function templateControllerValues(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	textSlots: readonly TemplateTextSlot[],
 	textValues: Readonly<Record<string, string>>,
 	textColor: string | null,
@@ -807,7 +807,7 @@ function initialImageState(
 }
 
 function initialBackgroundState(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	slot: TemplateBackgroundSlot | undefined,
 	contracts: readonly ResolvedTemplateImageConfig[],
 ): TemplateBackgroundState {

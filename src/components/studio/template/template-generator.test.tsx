@@ -15,9 +15,9 @@ import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphi
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import {
-	deriveTemplateConfig,
+	deriveTemplateStudioConfig,
 	type PublishedHtmlTemplate,
-} from '@/features/template-customization/domain/template-config'
+} from '@/features/template-customization/domain/template-studio-config'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 import { TemplateStudioProvider } from '@/features/template-customization/providers/template-studio-provider'
 import type { TemplateRasterArtifactProducer } from '@/features/template-customization/runtime/template-runtime.client'
@@ -95,14 +95,15 @@ function TemplateGenerator({
 	imageConfigs: providedImageConfigs = imageConfigs,
 	graphicConfigs: providedGraphicConfigs = effectiveGraphicConfigs,
 	...props
-}: Omit<ComponentProps<typeof TemplateGeneratorView>, 'config'> & {
+}: Omit<ComponentProps<typeof TemplateGeneratorView>, 'config' | 'template'> & {
+	template: PublishedHtmlTemplate
 	imageConfigs?: readonly ImageStudioConfig[]
 	graphicConfigs?: readonly GraphicStudioConfig[]
 }) {
 	return (
 		<TemplateGeneratorView
 			{...props}
-			config={deriveTemplateConfig(
+			config={deriveTemplateStudioConfig(
 				props.template,
 				providedImageConfigs,
 				providedGraphicConfigs,
@@ -349,7 +350,7 @@ describe('TemplateGenerator', () => {
 	})
 
 	it('UI는 Effective Config 포맷을 표시하고 Template adapter가 없는 요청은 실행 직전 차단한다', () => {
-		const derived = deriveTemplateConfig(template, imageConfigs, effectiveGraphicConfigs)
+		const derived = deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)
 		const config = { ...derived, output: { ...derived.output, formats: ['svg'] as const } }
 		render(
 			<TemplateStudioProvider config={config} template={template} navigation={navigation}>
@@ -367,7 +368,7 @@ describe('TemplateGenerator', () => {
 		mocks.captureGraphicFrame.mockReturnValue('/graphic-frame.png')
 		render(
 			<TemplateStudioProvider
-				config={deriveTemplateConfig(template, imageConfigs, effectiveGraphicConfigs)}
+				config={deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)}
 				template={template}
 				navigation={navigation}
 			>
@@ -429,7 +430,7 @@ describe('TemplateGenerator', () => {
 				],
 			},
 		}
-		const config = deriveTemplateConfig(controlledTemplate)
+		const config = deriveTemplateStudioConfig(controlledTemplate)
 		render(
 			<TemplateStudioProvider
 				config={config}
@@ -950,7 +951,7 @@ describe('TemplateGenerator', () => {
 		'readonly',
 		'disabled',
 	] as const)('Background Type이 %s면 action과 generic patch로 우회할 수 없다', (availability) => {
-		const base = deriveTemplateConfig(template, imageConfigs, effectiveGraphicConfigs)
+		const base = deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)
 		const config = {
 			...base,
 			controller: {
@@ -984,7 +985,7 @@ describe('TemplateGenerator', () => {
 			createImageConfig(11, undefined, '첫 프롬프트'),
 			createImageConfig(7, undefined, '둘째 프롬프트'),
 		]
-		const config = deriveTemplateConfig(studioTemplate, configs, effectiveGraphicConfigs)
+		const config = deriveTemplateStudioConfig(studioTemplate, configs, effectiveGraphicConfigs)
 		let resolveFirst:
 			| ((value: { generatedImages: { id: number; url: string }[] }) => void)
 			| null = null
@@ -1091,7 +1092,7 @@ describe('TemplateGenerator', () => {
 		}
 		const first = render(
 			<TemplateStudioProvider
-				config={deriveTemplateConfig(studioTemplate, [editable])}
+				config={deriveTemplateStudioConfig(studioTemplate, [editable])}
 				template={studioTemplate}
 				navigation={navigation}
 			>
@@ -1131,7 +1132,7 @@ describe('TemplateGenerator', () => {
 		}
 		render(
 			<TemplateStudioProvider
-				config={deriveTemplateConfig(overrideTemplate, [readonlyConfig])}
+				config={deriveTemplateStudioConfig(overrideTemplate, [readonlyConfig])}
 				template={overrideTemplate}
 				navigation={navigation}
 			>
@@ -1160,7 +1161,7 @@ describe('TemplateGenerator', () => {
 		}
 		const first = render(
 			<TemplateStudioProvider
-				config={deriveTemplateConfig(template, imageConfigs, [readonlyGraphic])}
+				config={deriveTemplateStudioConfig(template, imageConfigs, [readonlyGraphic])}
 				template={template}
 				navigation={navigation}
 			>
@@ -1181,7 +1182,7 @@ describe('TemplateGenerator', () => {
 		} satisfies GraphicStudioConfig
 		render(
 			<TemplateStudioProvider
-				config={deriveTemplateConfig(template, imageConfigs, [
+				config={deriveTemplateStudioConfig(template, imageConfigs, [
 					effectiveGraphicConfigs[0],
 					secondary,
 				])}

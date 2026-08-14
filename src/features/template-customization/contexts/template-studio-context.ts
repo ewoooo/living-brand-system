@@ -6,9 +6,9 @@ import type { ImageTransformValue } from '@/features/template-customization/doma
 import type {
 	ResolvedTemplateImageConfig,
 	TemplateBackgroundType,
-	TemplateConfig,
+	TemplateStudioConfig,
 	TemplateVectorSlot,
-} from '@/features/template-customization/domain/template-config'
+} from '@/features/template-customization/domain/template-studio-config'
 import type { TemplateRasterArtifact } from '@/features/template-customization/runtime/template-runtime.client'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import type {
@@ -52,7 +52,7 @@ export type TemplateBackgroundPatch = Partial<Pick<TemplateBackgroundState, 'ima
 export type TemplateStudioValue = {
 	navigation: GetCreateNavigationOutput
 	/** 템플릿 편집 계약 — Sidebar와 Canvas는 이 객체와 세션 state만 소비한다. */
-	config: TemplateConfig
+	config: TemplateStudioConfig
 	text: {
 		values: Record<string, string>
 		setValue: (slotId: string, text: string) => void

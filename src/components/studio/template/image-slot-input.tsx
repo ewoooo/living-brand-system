@@ -7,7 +7,7 @@ import { ControllerControlRenderer } from '@/components/studio/shared/controller
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
 import { acceptsImagePromptExecution } from '@/features/image-generation/domain/image-studio-config'
-import type { ResolvedTemplateImageConfig } from '@/features/template-customization/domain/template-config'
+import type { ResolvedTemplateImageConfig } from '@/features/template-customization/domain/template-studio-config'
 import type { TemplateImageSlotState } from '@/features/template-customization/hooks/use-template-studio'
 import type { ControllerControlValue } from '@/modules/studio-controller/controller-definition'
 
