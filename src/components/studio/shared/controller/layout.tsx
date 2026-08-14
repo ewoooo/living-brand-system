@@ -29,12 +29,19 @@ export function ControllerHeader({ className, ...props }: React.ComponentProps<'
 	)
 }
 
-/** 컨트롤 그룹이 쌓이는 패널의 유일한 스크롤 영역. */
+/**
+ * 컨트롤 그룹이 쌓이는 패널의 유일한 스크롤 영역.
+ * 최상단 그룹은 구분선을 갖지 않는다 — 무엇이 맨 위인지는 그룹이 아니라 이 컨테이너만 안다.
+ */
 export function ControllerContent({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
 			data-slot="controller-content"
-			className={cn('flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4', className)}
+			className={cn(
+				// 상단 여백은 두지 않는다 — 첫 그룹 헤더(h-9)의 자체 여백이 header 경계선과의 간격을 만든다.
+				'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-4 [&>*:first-child]:border-t-0',
+				className,
+			)}
 			{...props}
 		/>
 	)
