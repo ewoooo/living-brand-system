@@ -59,6 +59,28 @@ const sections: CheckSection[] = [
 ]
 
 describe('buildCheckReviewView', () => {
+	it('returns an empty view when no CheckScenario is published', () => {
+		expect(
+			buildCheckReviewView({
+				sections,
+				scenarios: [],
+				scenarioKey: '',
+				selected: null,
+				showFailOnly: false,
+			}),
+		).toEqual({
+			rows: [],
+			summary: {
+				pass: 0,
+				ok: 0,
+				fail: 0,
+				advisory: 0,
+				notApplicable: 0,
+				pendingManualCheck: 0,
+			},
+		})
+	})
+
 	it('keeps summary empty before any check result exists', () => {
 		const view = buildCheckReviewView({
 			sections,

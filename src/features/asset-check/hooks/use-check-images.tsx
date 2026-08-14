@@ -40,7 +40,9 @@ export function CheckImageProvider({
 }) {
 	const [images, setImages] = useState<CheckImage[]>([])
 	const [selectedId, setSelectedId] = useState<string | null>(null)
-	const [scenarioKey, setScenarioKeyValue] = useState(getCheckScenario(scenarios).key)
+	const [scenarioKey, setScenarioKeyValue] = useState(
+		scenarios.length > 0 ? getCheckScenario(scenarios).key : '',
+	)
 	const [showFailOnly, setShowFailOnly] = useState(false)
 
 	// 미리보기 object URL은 언마운트 시 일괄 해제한다(이미지는 제거 경로가 없어 세션 동안 유지됨).
@@ -120,6 +122,7 @@ export function CheckImageProvider({
 	}
 
 	function setScenarioKey(key: string) {
+		if (scenarios.length === 0) return
 		const scenario = getCheckScenario(scenarios, key)
 		setScenarioKeyValue(scenario.key)
 		if (!selectedId) return
@@ -137,7 +140,7 @@ export function CheckImageProvider({
 	function runCheck() {
 		if (!selectedId) return
 		const target = images.find((image) => image.id === selectedId)
-		if (!target) return
+		if (!target?.scenarioKey) return
 		if (target.status === 'running') return // 검수 진행 중 중복 실행 방지
 		startCheck(target.id, target.file, target.scenarioKey)
 	}
