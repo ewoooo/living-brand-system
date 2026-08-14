@@ -4,10 +4,7 @@ import {
 	listTemplateCategories,
 } from '@/features/template-core/repositories/published-template.payload.repository'
 import { getStudioTemplateRoute } from '@/lib/routes'
-import {
-	type StudioPreviewImage,
-	toStudioPreviewImage,
-} from '@/modules/studio-controller/controller-definition'
+import type { StudioPreviewImage } from '@/modules/studio-controller/controller-definition'
 
 export interface GetCreateNavigationOutput {
 	categories: {
@@ -22,15 +19,6 @@ export interface GetCreateNavigationOutput {
 			previewImage?: StudioPreviewImage
 		}[]
 	}[]
-}
-
-/** Payload 관계 값에서 id만 꺼낸다 — depth 0이면 값 자체가 id고, populate되면 문서의 id다. */
-function toRelationshipId(value: unknown): number | undefined {
-	if (typeof value === 'number') return value
-	if (value && typeof value === 'object' && typeof (value as { id?: unknown }).id === 'number') {
-		return (value as { id: number }).id
-	}
-	return undefined
 }
 
 /**
@@ -50,16 +38,15 @@ export async function getCreateNavigation(): Promise<GetCreateNavigationOutput> 
 			id: category.id,
 			title: category.title,
 			slug: category.slug,
+			// 관계는 저장소가 이미 id로 좁혀 준다 — 여기서 depth를 신경 쓸 일이 없다.
 			templates: availableTemplates
-				// 🔴 depth에 따라 관계는 id로도, populate된 문서로도 온다(미리보기 이미지 때문에
-				// 이 조회는 depth 1이다). id로만 비교하면 모든 카테고리가 조용히 비어버린다.
-				.filter((template) => toRelationshipId(template.category) === category.id)
+				.filter((template) => template.categoryId === category.id)
 				.map((template) => ({
 					id: template.id,
 					name: template.name,
 					slug: template.slug,
 					href: getStudioTemplateRoute(template.slug),
-					previewImage: toStudioPreviewImage(template.previewImage),
+					previewImage: template.previewImage,
 				})),
 		})),
 	}

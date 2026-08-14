@@ -18,10 +18,10 @@ const renderable = {
 	height: 300,
 }
 
-function setup(category: unknown) {
+function setup(categoryId: number | undefined, previewImage?: unknown) {
 	mocks.listTemplateCategories.mockResolvedValue([{ id: 7, title: '카드', slug: 'cards' }])
 	mocks.listPublishedTemplateNavItems.mockResolvedValue([
-		{ id: 1, name: '환영 카드', slug: 'welcome-card', category, ...renderable },
+		{ id: 1, name: '환영 카드', slug: 'welcome-card', categoryId, previewImage, ...renderable },
 	])
 	return getCreateNavigation()
 }
@@ -41,44 +41,19 @@ describe('getCreateNavigation', () => {
 		])
 	})
 
-	// 🔴 미리보기 이미지를 채우려면 조회가 depth 1이어야 하고, 그러면 category가 id가 아니라
-	// populate된 문서로 온다. id로만 비교하면 모든 카테고리가 비어 "템플릿이 없습니다"가 된다.
-	it('category가 populate된 문서로 와도 같은 카테고리로 묶는다', async () => {
-		const navigation = await setup({ id: 7, title: '카드', slug: 'cards' })
-
-		expect(navigation.categories[0]?.templates.map((template) => template.slug)).toEqual([
-			'welcome-card',
-		])
-	})
-
 	it('다른 카테고리의 템플릿은 섞이지 않는다', async () => {
-		const navigation = await setup({ id: 9, title: '포스터', slug: 'posters' })
-
-		expect(navigation.categories[0]?.templates).toEqual([])
+		expect((await setup(9)).categories[0]?.templates).toEqual([])
 	})
 
-	it('populate된 미리보기 이미지를 표시 계약으로 좁힌다', async () => {
-		mocks.listTemplateCategories.mockResolvedValue([{ id: 7, title: '카드', slug: 'cards' }])
-		mocks.listPublishedTemplateNavItems.mockResolvedValue([
-			{
-				id: 1,
-				name: '환영 카드',
-				slug: 'welcome-card',
-				category: 7,
-				previewImage: {
-					url: '/media/card.png',
-					alt: '환영 카드 미리보기',
-					sizes: { thumbnail: { url: '/media/card-320x240.png' } },
-				},
-				...renderable,
-			},
-		])
+	// 관계를 좁히지 못한 템플릿은 어느 카테고리에도 붙지 않는다 — 0번 카테고리로 흘러들지 않는다.
+	it('categoryId를 읽을 수 없는 템플릿은 어느 카테고리에도 넣지 않는다', async () => {
+		expect((await setup(undefined)).categories[0]?.templates).toEqual([])
+	})
 
-		const navigation = await getCreateNavigation()
+	it('저장소가 좁혀 준 미리보기 이미지를 그대로 싣는다', async () => {
+		const previewImage = { url: '/media/card-320x240.png', alt: '환영 카드 미리보기' }
+		const navigation = await setup(7, previewImage)
 
-		expect(navigation.categories[0]?.templates[0]?.previewImage).toEqual({
-			url: '/media/card-320x240.png',
-			alt: '환영 카드 미리보기',
-		})
+		expect(navigation.categories[0]?.templates[0]?.previewImage).toEqual(previewImage)
 	})
 })

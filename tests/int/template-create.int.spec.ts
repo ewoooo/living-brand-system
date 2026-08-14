@@ -27,13 +27,14 @@ describe('getCreateNavigation', () => {
 		mockedCategories.mockResolvedValue([
 			{ id: 1, title: '배너', slug: 'banner' },
 			{ id: 2, title: '포스터', slug: 'poster' },
-		] as never)
+		])
 		mockedNavItems.mockResolvedValue([
 			{
 				id: 10,
 				name: '인스타 배너',
 				slug: 'insta-banner',
-				category: 1,
+				categoryId: 1,
+				previewImage: undefined,
 				html: '<div data-node-id="10">인스타 배너</div>',
 				overrides: {},
 				width: 1080,
@@ -43,7 +44,8 @@ describe('getCreateNavigation', () => {
 				id: 11,
 				name: 'A4 포스터',
 				slug: 'a4-poster',
-				category: 2,
+				categoryId: 2,
+				previewImage: undefined,
 				html: '<div data-node-id="11">A4 포스터</div>',
 				overrides: {},
 				width: 2480,
@@ -53,7 +55,8 @@ describe('getCreateNavigation', () => {
 				id: 12,
 				name: '세로 배너',
 				slug: 'vertical-banner',
-				category: 1,
+				categoryId: 1,
+				previewImage: undefined,
 				html: '<div data-node-id="12">세로 배너</div>',
 				overrides: {},
 				width: 1080,
@@ -63,12 +66,14 @@ describe('getCreateNavigation', () => {
 				id: 13,
 				name: '과거 템플릿',
 				slug: 'legacy-template',
-				category: 1,
+				categoryId: 1,
+				previewImage: undefined,
 				html: null,
+				overrides: undefined,
 				width: null,
 				height: null,
 			},
-		] as never)
+		])
 
 		const navigation = await getCreateNavigation()
 
@@ -90,7 +95,7 @@ describe('getCreateNavigation', () => {
 
 	it('조회 실패를 빈 목차로 숨기지 않는다', async () => {
 		mockedCategories.mockRejectedValue(new Error('db down'))
-		mockedNavItems.mockResolvedValue([] as never)
+		mockedNavItems.mockResolvedValue([])
 
 		await expect(getCreateNavigation()).rejects.toThrow('db down')
 	})
