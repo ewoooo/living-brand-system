@@ -19,7 +19,11 @@ export function StudioSideNavigation() {
 	const pathname = usePathname()
 
 	return (
-		<Sidebar.Root aria-label="스튜디오 메뉴" data-slot="studio-side-navigation">
+		<Sidebar.Root
+			aria-label="스튜디오 메뉴"
+			className="h-fit self-start"
+			data-slot="studio-side-navigation"
+		>
 			<Sidebar.Group>
 				{navigation.map(({ label, href, icon }) => (
 					<Sidebar.Item
