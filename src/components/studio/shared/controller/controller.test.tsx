@@ -237,6 +237,49 @@ describe('Controller value controls', () => {
 		expect(onChange).toHaveBeenCalledWith(1.05)
 	})
 
+	it('Range는 임계 안에서 뗀 클릭은 뗀 지점만, 드래그는 이동마다 반영한다', () => {
+		const onChange = vi.fn()
+		render(
+			<Controller.Range
+				label="Scale"
+				value={0}
+				min={0}
+				max={10}
+				step={1}
+				onChange={onChange}
+			/>,
+		)
+		const track = screen.getByRole('slider', { name: 'Scale' })
+		// jsdom에는 레이아웃이 없다 — 비율 환산의 기준 사각형만 실측처럼 세운다.
+		vi.spyOn(track, 'getBoundingClientRect').mockReturnValue({
+			left: 0,
+			top: 0,
+			width: 100,
+			height: 36,
+			right: 100,
+			bottom: 36,
+			x: 0,
+			y: 0,
+			toJSON: () => ({}),
+		} as DOMRect)
+
+		// 클릭: 누른 순간에는 값이 움직이지 않고, 임계(3px) 안의 손떨림도 드래그가 되지 않는다.
+		fireEvent.pointerDown(track, { clientX: 30, clientY: 18, button: 0 })
+		expect(onChange).not.toHaveBeenCalled()
+		fireEvent.pointerMove(track, { clientX: 31, clientY: 18 })
+		expect(onChange).not.toHaveBeenCalled()
+		fireEvent.pointerUp(track, { clientX: 31, clientY: 18 })
+		expect(onChange.mock.calls).toEqual([[3]])
+
+		// 드래그: 임계를 넘긴 뒤로는 이동마다 값이 따라온다.
+		onChange.mockClear()
+		fireEvent.pointerDown(track, { clientX: 30, clientY: 18, button: 0 })
+		fireEvent.pointerMove(track, { clientX: 60, clientY: 18 })
+		fireEvent.pointerMove(track, { clientX: 80, clientY: 18 })
+		fireEvent.pointerUp(track, { clientX: 80, clientY: 18 })
+		expect(onChange.mock.calls).toEqual([[6], [8]])
+	})
+
 	it('Pad는 화살표 키로 x·y 단위 객체를 갱신한다', () => {
 		const onChange = vi.fn()
 		render(

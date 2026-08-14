@@ -7,6 +7,7 @@ import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain
 import forwardStraightRuntimeManifest, {
 	FORWARD_STRAIGHT_DEFAULT_INPUT,
 } from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
+import { createForwardStraightScene } from '@/features/graphic-generation/graphic-runtimes/forward-straight/model'
 import radialFlutedGlassRuntimeManifest, {
 	RADIAL_FLUTED_GLASS_DEFAULT_INPUT,
 } from '@/features/graphic-generation/graphic-runtimes/radial-fluted-glass/definition'
@@ -223,18 +224,20 @@ describe('GraphicGenerator', () => {
 		const user = userEvent.setup()
 		render(createElement(GraphicGenerator, { config: forwardStraightConfig }))
 
-		expect(screen.getByRole('radio', { name: 'Off' })).toBeChecked()
-		const viewpoint = screen.getByRole('combobox', { name: '시점' })
-		expect(viewpoint).toHaveTextContent('평면')
-		expect(screen.getByRole('combobox', { name: '각도' })).toHaveTextContent('보통')
+		expect(screen.getByLabelText('선 색상 색상 선택')).toBeInTheDocument()
+		expect(screen.getByRole('slider', { name: '열 간격' })).toHaveAttribute(
+			'aria-valuenow',
+			'40',
+		)
+		const gamma = screen.getByRole('slider', { name: '원근 압축' })
+		expect(gamma).toHaveAttribute('aria-valuenow', '1')
 
-		fireEvent.click(screen.getByRole('radio', { name: 'On' }))
-		viewpoint.focus()
-		await user.keyboard('{ArrowDown}{ArrowDown}{Enter}')
+		gamma.focus()
+		await user.keyboard('{ArrowRight}')
 
 		await waitFor(() =>
 			expect(mocks.preview.update).toHaveBeenLastCalledWith(
-				expect.objectContaining({ variableWeightEnabled: true, viewpoint: 'low-angle' }),
+				expect.objectContaining({ perspectiveGamma: 1.1 }),
 			),
 		)
 	})
@@ -488,8 +491,13 @@ describe('GraphicGenerator', () => {
 			reader.onload = () => resolve(String(reader.result))
 			reader.readAsText(blob)
 		})
+		const expected = createForwardStraightScene(
+			{ ...FORWARD_STRAIGHT_DEFAULT_INPUT, origin: { x: 0.525, y: 0.5 } },
+			{ width: 640, height: 600 },
+		)
 		expect(svg).toContain('width="640" height="600"')
-		expect(svg).toContain('cx="336.00" cy="300.00"')
+		expect(svg.split('<line').length - 1).toBe(expected.dashes.length)
+		expect(svg).toContain(`x1="${expected.dashes[0].x1.toFixed(2)}"`)
 		expect(click.mock.instances[0]).toMatchObject({
 			download: 'forward-straight.svg',
 			href: 'blob:forward-straight',
@@ -508,7 +516,9 @@ describe('GraphicGenerator', () => {
 		])
 		render(createElement(GraphicGenerator, { config: forwardStraightConfig }))
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
-		fireEvent.click(screen.getByRole('radio', { name: 'On' }))
+		const gamma = screen.getByRole('slider', { name: '원근 압축' })
+		fireEvent.keyDown(gamma, { key: 'ArrowRight' })
+		await waitFor(() => expect(gamma).not.toHaveAttribute('aria-valuenow', '1'))
 
 		const trigger = screen.getByRole('button', { name: '그래픽 변경' })
 		expect(trigger.closest('[data-slot="controller-header"]')).not.toBeNull()
@@ -536,6 +546,9 @@ describe('GraphicGenerator', () => {
 		)
 
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledTimes(2))
-		expect(screen.getByRole('radio', { name: 'Off' })).toBeChecked()
+		expect(screen.getByRole('slider', { name: '원근 압축' })).toHaveAttribute(
+			'aria-valuenow',
+			'1',
+		)
 	})
 })

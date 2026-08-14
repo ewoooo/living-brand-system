@@ -161,16 +161,16 @@ function GraphicMutationProbe() {
 	return (
 		<>
 			<span data-testid="graphic-config">{background.state.graphicConfigId}</span>
-			<span data-testid="graphic-viewpoint">
-				{String(background.state.graphicValues.viewpoint)}
+			<span data-testid="graphic-perspective">
+				{String(background.state.graphicValues.perspectiveGamma)}
 			</span>
-			<button
-				type="button"
-				onClick={() => background.updateGraphic('viewpoint', 'low-angle')}
-			>
+			<button type="button" onClick={() => background.updateGraphic('perspectiveGamma', 2.5)}>
 				update graphic
 			</button>
-			<button type="button" onClick={() => background.updateGraphic('viewpoint', 'invalid')}>
+			<button
+				type="button"
+				onClick={() => background.updateGraphic('perspectiveGamma', 'invalid')}
+			>
 				invalid graphic
 			</button>
 			<button type="button" onClick={() => background.selectGraphicConfig('secondary')}>
@@ -1157,7 +1157,7 @@ describe('TemplateGenerator', () => {
 				groups: forwardStraightRuntimeManifest.controller.groups.map((group) => ({
 					...group,
 					controls: group.controls.map((control) =>
-						control.id === 'viewpoint'
+						control.id === 'perspectiveGamma'
 							? { ...control, availability: 'readonly' as const }
 							: control,
 					),
@@ -1175,9 +1175,9 @@ describe('TemplateGenerator', () => {
 		)
 
 		fireEvent.click(screen.getByRole('button', { name: 'update graphic' }))
-		expect(screen.getByTestId('graphic-viewpoint')).toHaveTextContent('flat')
+		expect(screen.getByTestId('graphic-perspective')).toHaveTextContent('1')
 		fireEvent.click(screen.getByRole('button', { name: 'invalid graphic' }))
-		expect(screen.getByTestId('graphic-viewpoint')).toHaveTextContent('flat')
+		expect(screen.getByTestId('graphic-perspective')).toHaveTextContent('1')
 		first.unmount()
 
 		const secondary = {
@@ -1198,10 +1198,10 @@ describe('TemplateGenerator', () => {
 			</TemplateStudioProvider>,
 		)
 		fireEvent.click(screen.getByRole('button', { name: 'update graphic' }))
-		expect(screen.getByTestId('graphic-viewpoint')).toHaveTextContent('low-angle')
+		expect(screen.getByTestId('graphic-perspective')).toHaveTextContent('2.5')
 		fireEvent.click(screen.getByRole('button', { name: 'select secondary graphic' }))
 		expect(screen.getByTestId('graphic-config')).toHaveTextContent('secondary')
-		expect(screen.getByTestId('graphic-viewpoint')).toHaveTextContent('flat')
+		expect(screen.getByTestId('graphic-perspective')).toHaveTextContent('1')
 	})
 })
 

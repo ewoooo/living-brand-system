@@ -6,33 +6,33 @@ import {
 	type ShaderCanvasRuntime,
 } from '@/features/graphic-generation/runtime/client/shader-canvas.client'
 import {
-	type RadialFlutedGlassInput,
-	radialFlutedGlassColorToRgb,
-	radialFlutedGlassDistortionShapeToUniform,
-	toRadialFlutedGlassInput,
-	toRadialFlutedGlassShaderPoint,
+	type LinearFlutedGlassInput,
+	linearFlutedGlassColorToRgb,
+	linearFlutedGlassDistortionShapeToUniform,
+	toLinearFlutedGlassInput,
+	toLinearFlutedGlassShaderPoint,
 } from './model'
 
-const SHADER_URL = '/shaders/radial-fluted-glass.glsl'
+const SHADER_URL = '/shaders/linear-fluted-glass.glsl'
 
-export type RadialFlutedGlassRuntime = ShaderCanvasRuntime<RadialFlutedGlassInput>
+export type LinearFlutedGlassRuntime = ShaderCanvasRuntime<LinearFlutedGlassInput>
 
 /**
- * Radial Fluted Glass의 브라우저 WebGL 미리보기를 소유한다.
+ * Linear Fluted Glass의 브라우저 WebGL 미리보기를 소유한다.
  * Controller 상태는 호출자가, GPU resource 수명은 공용 shader canvas host가 소유한다.
  */
-export function createRadialFlutedGlassRuntime({
+export function createLinearFlutedGlassRuntime({
 	container,
 	input,
 }: {
 	container: HTMLElement
-	input: RadialFlutedGlassInput
-}): Promise<RadialFlutedGlassRuntime> {
+	input: LinearFlutedGlassInput
+}): Promise<LinearFlutedGlassRuntime> {
 	return createShaderCanvasRuntime({
 		container,
 		input,
 		shaderUrl: SHADER_URL,
-		ariaLabel: 'Radial Fluted Glass 그래픽 미리보기',
+		ariaLabel: 'Linear Fluted Glass 그래픽 미리보기',
 		bindUniforms(gl, program) {
 			const uniforms = {
 				source: gl.getUniformLocation(program, 'uSource'),
@@ -53,13 +53,16 @@ export function createRadialFlutedGlassRuntime({
 				frameOffsetMs: gl.getUniformLocation(program, 'uFrameOffsetMs'),
 				rayScale: gl.getUniformLocation(program, 'uRayScale'),
 				rayRotation: gl.getUniformLocation(program, 'uRayRotation'),
-				radialFalloff: gl.getUniformLocation(program, 'uRadialFalloff'),
-				radialFlowSpeed: gl.getUniformLocation(program, 'uRadialFlowSpeed'),
+				axisFalloff: gl.getUniformLocation(program, 'uAxisFalloff'),
+				flowSpeed: gl.getUniformLocation(program, 'uFlowSpeed'),
+				paletteShift: gl.getUniformLocation(program, 'uPaletteShift'),
+				paletteDrift: gl.getUniformLocation(program, 'uPaletteDrift'),
 				pulseIntensity: gl.getUniformLocation(program, 'uPulseIntensity'),
 				pulseSpeed: gl.getUniformLocation(program, 'uPulseSpeed'),
 				pulseDensity: gl.getUniformLocation(program, 'uPulseDensity'),
 				pulseWidth: gl.getUniformLocation(program, 'uPulseWidth'),
 				glassSize: gl.getUniformLocation(program, 'uGlassSize'),
+				ribCurve: gl.getUniformLocation(program, 'uRibCurve'),
 				glassAngle: gl.getUniformLocation(program, 'uGlassAngle'),
 				glassOriginOffset: gl.getUniformLocation(program, 'uGlassOriginOffset'),
 				glassOffset: gl.getUniformLocation(program, 'uGlassOffset'),
@@ -72,29 +75,28 @@ export function createRadialFlutedGlassRuntime({
 				glassScattering: gl.getUniformLocation(program, 'uGlassScattering'),
 				glassHighlights: gl.getUniformLocation(program, 'uGlassHighlights'),
 				glassShadows: gl.getUniformLocation(program, 'uGlassShadows'),
-				glassSourceFade: gl.getUniformLocation(program, 'uGlassSourceFade'),
 				distortionShape: gl.getUniformLocation(program, 'uDistortionShape'),
 			}
 
 			return (input) => {
-				const [sourceX, sourceY] = toRadialFlutedGlassShaderPoint(input.source, {
+				const [sourceX, sourceY] = toLinearFlutedGlassShaderPoint(input.source, {
 					x: input.sourceOffsetX,
 					y: input.sourceOffsetY,
 				})
-				const [glassOriginX, glassOriginY] = toRadialFlutedGlassShaderPoint(
+				const [glassOriginX, glassOriginY] = toLinearFlutedGlassShaderPoint(
 					input.glassOriginOffset,
 				)
-				const [glassDriftX, glassDriftY] = toRadialFlutedGlassShaderPoint(input.glassDrift)
+				const [glassDriftX, glassDriftY] = toLinearFlutedGlassShaderPoint(input.glassDrift)
 				gl.uniform2f(uniforms.source, sourceX, sourceY)
-				gl.uniform3f(uniforms.bloomColor, ...radialFlutedGlassColorToRgb(input.bloomColor))
-				gl.uniform3f(uniforms.rayColor1, ...radialFlutedGlassColorToRgb(input.rayColor1))
-				gl.uniform3f(uniforms.rayColor2, ...radialFlutedGlassColorToRgb(input.rayColor2))
-				gl.uniform3f(uniforms.rayColor3, ...radialFlutedGlassColorToRgb(input.rayColor3))
-				gl.uniform3f(uniforms.rayColor4, ...radialFlutedGlassColorToRgb(input.rayColor4))
-				gl.uniform3f(uniforms.rayColor5, ...radialFlutedGlassColorToRgb(input.rayColor5))
+				gl.uniform3f(uniforms.bloomColor, ...linearFlutedGlassColorToRgb(input.bloomColor))
+				gl.uniform3f(uniforms.rayColor1, ...linearFlutedGlassColorToRgb(input.rayColor1))
+				gl.uniform3f(uniforms.rayColor2, ...linearFlutedGlassColorToRgb(input.rayColor2))
+				gl.uniform3f(uniforms.rayColor3, ...linearFlutedGlassColorToRgb(input.rayColor3))
+				gl.uniform3f(uniforms.rayColor4, ...linearFlutedGlassColorToRgb(input.rayColor4))
+				gl.uniform3f(uniforms.rayColor5, ...linearFlutedGlassColorToRgb(input.rayColor5))
 				gl.uniform3f(
 					uniforms.rayBackgroundColor,
-					...radialFlutedGlassColorToRgb(input.rayBackgroundColor),
+					...linearFlutedGlassColorToRgb(input.rayBackgroundColor),
 				)
 				gl.uniform1f(uniforms.rayBloom, input.rayBloom)
 				gl.uniform1f(uniforms.rayIntensity, input.rayIntensity)
@@ -106,13 +108,16 @@ export function createRadialFlutedGlassRuntime({
 				gl.uniform1f(uniforms.frameOffsetMs, input.frameOffsetMs)
 				gl.uniform1f(uniforms.rayScale, input.rayScale)
 				gl.uniform1f(uniforms.rayRotation, input.rayRotation)
-				gl.uniform1f(uniforms.radialFalloff, input.radialFalloff)
-				gl.uniform1f(uniforms.radialFlowSpeed, input.radialFlowSpeed)
+				gl.uniform1f(uniforms.axisFalloff, input.axisFalloff)
+				gl.uniform1f(uniforms.flowSpeed, input.flowSpeed)
+				gl.uniform1f(uniforms.paletteShift, input.paletteShift)
+				gl.uniform1f(uniforms.paletteDrift, input.paletteDrift)
 				gl.uniform1f(uniforms.pulseIntensity, input.pulseIntensity)
 				gl.uniform1f(uniforms.pulseSpeed, input.pulseSpeed)
 				gl.uniform1f(uniforms.pulseDensity, input.pulseDensity)
 				gl.uniform1f(uniforms.pulseWidth, input.pulseWidth)
 				gl.uniform1f(uniforms.glassSize, input.glassSize)
+				gl.uniform1f(uniforms.ribCurve, input.ribCurve)
 				gl.uniform1f(uniforms.glassAngle, input.glassAngle)
 				gl.uniform2f(uniforms.glassOriginOffset, glassOriginX, glassOriginY)
 				gl.uniform1f(uniforms.glassOffset, input.glassOffset)
@@ -129,29 +134,24 @@ export function createRadialFlutedGlassRuntime({
 				gl.uniform1f(uniforms.glassScattering, input.glassScattering)
 				gl.uniform1f(uniforms.glassHighlights, input.glassHighlights)
 				gl.uniform1f(uniforms.glassShadows, input.glassShadows)
-				gl.uniform2f(
-					uniforms.glassSourceFade,
-					input.glassSourceFadeStart,
-					input.glassSourceFadeEnd,
-				)
 				gl.uniform1i(
 					uniforms.distortionShape,
-					radialFlutedGlassDistortionShapeToUniform(input.distortionShape),
+					linearFlutedGlassDistortionShapeToUniform(input.distortionShape),
 				)
 			}
 		},
 	})
 }
 
-const radialFlutedGlassRuntimeAdapter = {
+const linearFlutedGlassRuntimeAdapter = {
 	type: 'shader',
 	async mount({ container, values }) {
-		const runtime = await createRadialFlutedGlassRuntime({
+		const runtime = await createLinearFlutedGlassRuntime({
 			container,
-			input: toRadialFlutedGlassInput(values),
+			input: toLinearFlutedGlassInput(values),
 		})
 		return {
-			update: (next) => runtime.update(toRadialFlutedGlassInput(next)),
+			update: (next) => runtime.update(toLinearFlutedGlassInput(next)),
 			resize: (width, height) => runtime.resize(width, height),
 			getViewport: () => runtime.getViewport(),
 			artifacts: runtime.artifacts,
@@ -160,4 +160,4 @@ const radialFlutedGlassRuntimeAdapter = {
 	},
 } satisfies GraphicRuntimeAdapter
 
-export default radialFlutedGlassRuntimeAdapter
+export default linearFlutedGlassRuntimeAdapter

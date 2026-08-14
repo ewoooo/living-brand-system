@@ -14,12 +14,17 @@
  * = rect.width). 여기에 음수 마진을 더하면 행보다 넓어진다 — 넓히지 말 것. 트리거 자신의
  * `px-(--controller-row-px)`는 값·셰브론을 행 패딩과 같은 위치에 두기 위한 것뿐이다.
  *
+ * 트리거가 행 전체이므로 hover·열림 배경도 행 전체에 깔린다(dialkit `.dialkit-select-trigger:hover`,
+ * `[data-open="true"]` 대응) — 열려 있는 동안 어느 행의 목록인지가 행 자체로 남는다. base의
+ * `transition-colors`가 그 전환을 갖는다. 다크에서도 같은 겹침이라 `dark:` 쌍으로 되돌린다
+ * (base의 `dark:hover:bg-input/50`이 투명 배경을 덮어쓰기 때문).
+ *
  * 🔴 `data-[size=sm]:h-auto`가 필요하다. 맨 `h-auto`는 base의 `data-[size=sm]:h-7`을 못 이긴다 —
  * tailwind-merge가 variant 유무를 다른 그룹으로 보아 둘 다 남기고, 속성 선택자 쪽이 특이도로 이겨
  * 높이가 28px에 잘린다. 그러면 트리거 하단이 행 하단보다 8px 위라 드롭다운이 행을 침범한다.
  */
 export const ROW_SELECT_TRIGGER =
-	'absolute inset-0 h-auto w-auto justify-end gap-2 border-transparent bg-transparent px-(--controller-row-px) py-0 text-muted-foreground data-[size=sm]:h-auto focus-visible:ring-0 dark:bg-transparent'
+	'absolute inset-0 h-auto w-auto justify-end gap-2 border-transparent bg-transparent px-(--controller-row-px) py-0 text-muted-foreground data-[size=sm]:h-auto hover:bg-foreground/5 focus-visible:ring-0 data-[state=open]:bg-foreground/10 dark:bg-transparent dark:hover:bg-foreground/5 dark:data-[state=open]:bg-foreground/10'
 
 /**
  * 드롭다운 — dialkit `.dialkit-select-dropdown`: 안쪽 4px 패딩, 트리거와 같은 폭.

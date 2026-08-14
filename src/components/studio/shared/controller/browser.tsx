@@ -83,6 +83,8 @@ function ControllerBrowserPanel({ tabs, empty, className, children }: Controller
 			className={cn(
 				// 상한은 top-5만큼 줄인 남은 높이다 — 100%로 두면 컨트롤러 아래로 20px 넘친다.
 				'absolute top-5 right-0 z-20 flex h-168 max-h-[calc(100%-1.25rem)] w-150 max-w-[calc(100vw-2rem)] flex-col gap-1 overflow-hidden rounded-xl border border-inverted-foreground/5 bg-inverted/75 p-2 text-inverted-foreground shadow-lg outline-none backdrop-blur-sm lg:right-full lg:mr-4',
+				// 트리거가 있는 오른쪽에서 밀려 나온다 — 어디서 열렸는지가 방향으로 남는다.
+				'duration-150 data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-right-4 data-closed:animate-out data-closed:fade-out-0 data-closed:slide-out-to-right-4 motion-reduce:animate-none',
 				className,
 			)}
 		>

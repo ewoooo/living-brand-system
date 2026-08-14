@@ -1279,7 +1279,7 @@ export interface GraphicProfile {
   /**
    * 실행 구현은 코드 registry가 소유합니다. 프로파일은 해당 runtime의 편집 범위만 좁힙니다.
    */
-  runtime: 'forward-straight' | 'radial-fluted-glass';
+  runtime: 'forward-straight' | 'linear-fluted-glass' | 'radial-fluted-glass';
   displayOrder: number;
   controllerRestrictions?:
     | {
