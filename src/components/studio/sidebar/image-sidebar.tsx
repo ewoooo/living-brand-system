@@ -140,33 +140,6 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 									onDurationChange={download.setDuration}
 								/>
 							)}
-							{download.original.available && (
-								<Controller.Row label="Original">
-									<div className="flex gap-1">
-										<Button
-											variant="ghost"
-											className="h-8 px-2"
-											onClick={download.original.selected.run}
-											disabled={
-												download.busy ||
-												!download.original.selected.canExport
-											}
-										>
-											선택 저장
-										</Button>
-										<Button
-											variant="ghost"
-											className="h-8 px-2"
-											onClick={download.original.all.run}
-											disabled={
-												download.busy || !download.original.all.canExport
-											}
-										>
-											전체 저장
-										</Button>
-									</div>
-								</Controller.Row>
-							)}
 						</div>
 						<div className="flex gap-2">
 							<Button
