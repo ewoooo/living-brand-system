@@ -96,7 +96,10 @@ describe('GlobalHeader', () => {
 			'href',
 			'/studio/review',
 		)
-		expect(links.getByRole('link', { name: 'Assets' })).toHaveAttribute('href', '/studio')
+		expect(links.getByRole('link', { name: 'Assets' })).toHaveAttribute(
+			'href',
+			'/studio/assets',
+		)
 		expect(links.getByRole('link', { name: 'Graphic' })).toHaveAttribute('aria-current', 'page')
 		expect(
 			within(links.getByRole('link', { name: /Guideline/ })).getByText('Update'),
@@ -128,8 +131,8 @@ describe('GlobalHeader', () => {
 		expect(chatTrigger).toHaveAttribute('aria-expanded', 'true')
 	})
 
-	it('Studio 루트에서는 Assets만 current로 표시한다', () => {
-		pathname = '/studio'
+	it('Assets 경로에서는 Assets만 current로 표시한다', () => {
+		pathname = '/studio/assets'
 		renderHeader()
 
 		const desktop = document.querySelector<HTMLElement>(

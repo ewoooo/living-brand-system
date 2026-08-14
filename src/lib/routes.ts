@@ -3,12 +3,11 @@ export const routes = {
 	guideline: '/guideline',
 	home: '/',
 	studio: {
-		generate: '/studio/generate',
+		assets: '/studio/assets',
 		generateGraphic: '/studio/generate/graphic',
 		generateImage: '/studio/generate/image',
 		mcp: '/studio/mcp',
 		review: '/studio/review',
-		root: '/studio',
 		template: '/studio/template',
 	},
 } as const
@@ -26,6 +25,11 @@ export function getStudioGenerateProfileRoute(profileSlug: string) {
 }
 
 export const legacyPageRedirects = [
+	{
+		source: '/studio',
+		destination: routes.studio.assets,
+		permanent: true,
+	},
 	{
 		source: '/create/:path*',
 		destination: `${routes.studio.template}/:path*`,
