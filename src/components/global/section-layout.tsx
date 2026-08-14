@@ -1,6 +1,5 @@
 import { SidePanelOpen } from '@carbon/icons-react'
 import type React from 'react'
-import { GlobalFooter } from '@/components/global/footer/global-footer'
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 
@@ -15,7 +14,7 @@ type SectionLayoutProps = {
 
 /**
  * 섹션(가이드라인·검수·제작) 공통 레이아웃 셸 — 사이드 nav + 스크롤 main.
- * 이 셸은 nav·스크롤·랜드마크·footer만 소유하고, 본문 폭과 여백은 ContentFrame이 맡는다.
+ * 이 셸은 nav·스크롤·랜드마크만 소유하고, 본문 폭과 여백은 ContentFrame이 맡는다.
  */
 export function SectionLayout({
 	nav,
@@ -42,7 +41,7 @@ export function SectionLayout({
 	)
 }
 
-/** nav 옆의 남은 화면을 차지하며 본문·페이지 이동·footer의 세로 크기를 결정한다. */
+/** nav 옆의 남은 화면을 차지하며 본문·페이지 이동의 세로 크기를 결정한다. */
 function SectionBody({
 	children,
 	mobileNavigation,
@@ -73,7 +72,6 @@ function SectionBody({
 			)}
 			<main className="min-h-0 w-full flex-1">{children}</main>
 			{pageNavigation}
-			{variant === 'document' && <GlobalFooter />}
 		</div>
 	)
 }

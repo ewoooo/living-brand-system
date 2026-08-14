@@ -19,7 +19,7 @@ describe('SectionLayout', () => {
 		)
 	})
 
-	it('workspace는 데스크톱 외부 스크롤과 전역 footer를 제거한다', () => {
+	it('workspace는 데스크톱 외부 스크롤을 제거한다', () => {
 		const { container } = render(
 			<SectionLayout nav={<nav />} mobileNavigation={false} variant="workspace">
 				<div>Studio</div>
@@ -33,6 +33,5 @@ describe('SectionLayout', () => {
 		expect(container.querySelector('[data-slot="section-scroll-container"]')).toHaveClass(
 			'lg:overflow-hidden',
 		)
-		expect(container.querySelector('[data-slot="global-footer"]')).not.toBeInTheDocument()
 	})
 })
