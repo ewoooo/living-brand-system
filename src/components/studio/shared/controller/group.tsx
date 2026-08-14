@@ -13,6 +13,7 @@ type ControllerGroupProps =
 			collapsible: false
 			defaultOpen?: never
 			disabled?: never
+			attached?: never
 	  })
 	| (Omit<
 			React.ComponentProps<typeof Collapsible>,
@@ -23,6 +24,11 @@ type ControllerGroupProps =
 			defaultOpen?: boolean
 			/** 잠긴 그룹 — 강제로 닫히고 토글할 수 없다. 풀리면 저장된 열림 상태로 복귀한다. */
 			disabled?: boolean
+			/**
+			 * 앞 컨트롤을 소유하는 그룹에 붙는 하위 섹션 — 구분선 없이 여백만 둔다(디자인 SSOT 1:1838).
+			 * 중첩 자체는 신호가 아니다. 나란한 하위 그룹(Graphic의 Rays·Pulse·Glass)은 구분선을 유지한다.
+			 */
+			attached?: boolean
 	  })
 
 /** 제목과 컨트롤을 묶고, Admin이 허용한 그룹만 접힘 상태를 소유한다. */
@@ -49,6 +55,7 @@ function ControllerCollapsibleGroup({
 	collapsible: _collapsible,
 	defaultOpen = true,
 	disabled = false,
+	attached = false,
 	className,
 	children,
 	...props
@@ -64,7 +71,12 @@ function ControllerCollapsibleGroup({
 			open={resolvedOpen}
 			onOpenChange={setOpen}
 			disabled={disabled}
-			className={cn('flex shrink-0 flex-col border-t border-border pt-1', className)}
+			className={cn(
+				// 헤더와 컨트롤 목록 사이는 프리미티브 간격과 같은 4px — 붙이면 첫 행의 포커스 링이 헤더에 가린다.
+				'flex shrink-0 flex-col gap-1 border-t border-border pt-1',
+				attached && 'border-t-0 pt-2',
+				className,
+			)}
 			{...props}
 		>
 			<LazyMotion features={domAnimation}>

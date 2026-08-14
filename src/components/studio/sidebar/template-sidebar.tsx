@@ -228,36 +228,35 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 				const contracts = images.contracts[slot.id] ?? []
 				if (!state) return null
 				return (
-					<div key={slot.id} className="flex flex-col gap-3">
-						<Controller.Group title={sectionTitle} collapsible>
-							<LayerVisibilityControl
-								label={slot.label}
-								visible={layers.visibility[slot.id] ?? true}
-								allowToggle={slot.visibility.allowToggle}
-								onChange={(visible) => layers.setVisible(slot.id, visible)}
-							/>
-							<ImageSlotInput
-								pinned={slot.imageConfig.mode === 'pinned'}
-								readonly={slot.access === 'readonly'}
-								contracts={contracts}
-								value={state}
-								onFeatureChange={(controlId, next) =>
-									images.updateFeature(slot.id, controlId, next)
-								}
-								onProfileChange={(profileId) =>
-									images.selectProfile(slot.id, profileId)
-								}
-								onPromptChange={(prompt) => images.update(slot.id, { prompt })}
-								onGenerate={() => images.generate(slot.id)}
-							/>
-						</Controller.Group>
-						{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 별도 섹션이다.
-						    생성 전에는 닫힌 채 잠긴다 — compose가 배정된 이미지에만 transform을 적용해서다. */}
+					<Controller.Group key={slot.id} title={sectionTitle} collapsible>
+						<LayerVisibilityControl
+							label={slot.label}
+							visible={layers.visibility[slot.id] ?? true}
+							allowToggle={slot.visibility.allowToggle}
+							onChange={(visible) => layers.setVisible(slot.id, visible)}
+						/>
+						<ImageSlotInput
+							pinned={slot.imageConfig.mode === 'pinned'}
+							readonly={slot.access === 'readonly'}
+							contracts={contracts}
+							value={state}
+							onFeatureChange={(controlId, next) =>
+								images.updateFeature(slot.id, controlId, next)
+							}
+							onProfileChange={(profileId) =>
+								images.selectProfile(slot.id, profileId)
+							}
+							onPromptChange={(prompt) => images.update(slot.id, { prompt })}
+							onGenerate={() => images.generate(slot.id)}
+						/>
+						{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 섹션이다. 대상 슬롯에 종속되므로
+						    슬롯 그룹 안에 두고 함께 접는다. 생성 전에는 닫힌 채 잠긴다 — compose가 배정된
+						    이미지에만 transform을 적용해서다. */}
 						{slot.transform.enabled && (
 							<Controller.Group
 								title={`${sectionTitle} Transform`}
 								collapsible
-								className="border-t-0 pt-0"
+								attached
 								disabled={slot.access === 'readonly' || !state?.image}
 							>
 								<ImageTransformControl
@@ -275,7 +274,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 								/>
 							</Controller.Group>
 						)}
-					</div>
+					</Controller.Group>
 				)
 			})}
 			{vectors.slots.map((slot) => {
