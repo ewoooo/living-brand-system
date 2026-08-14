@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { useEffect } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
 	deriveImageStudioConfig,
@@ -14,6 +15,11 @@ import type {
 	ControllerControlDefinition,
 } from '@/modules/studio-controller/controller-definition'
 import { useImageStudio } from './use-image-studio'
+
+const browseMocks = vi.hoisted(() => ({
+	fetchImageStudioConfigs: vi.fn(async () => [] as unknown[]),
+}))
+vi.mock('@/features/image-generation/services/list-image-studio-configs.client', () => browseMocks)
 
 const exportImageMocks = vi.hoisted(() => ({
 	artifacts: vi.fn((source: { images: readonly string[]; color: unknown }) => ({
@@ -195,6 +201,11 @@ function Probe() {
 		results,
 		profiles,
 	} = useImageStudio()
+	// 자산 브라우저를 여는 대신 Probe가 목록을 연다 — 교체 후보가 있어야 select가 성립한다.
+	const { load } = profiles.browse
+	useEffect(() => {
+		load()
+	}, [load])
 	const result = results.result
 	const resultConfig = profiles.options.find((candidate) => candidate.id === result?.profileId)
 	const download = useImageExport({
@@ -207,6 +218,7 @@ function Probe() {
 	})
 	return (
 		<div>
+			<output data-testid="browse">{`browse:${profiles.browse.status}`}</output>
 			<output data-testid="state">
 				{current.name} / {generation.batch} / {generation.ratio} / {generation.resolution} /{' '}
 				{prompt.value} / {results.result ? '결과 있음' : '결과 없음'}
@@ -265,12 +277,16 @@ function Probe() {
 	)
 }
 
-function renderStudio(configs: ImageStudioConfig[]) {
-	return render(
-		<ImageStudioProvider configs={configs}>
+async function renderStudio(configs: ImageStudioConfig[]) {
+	// 페이지는 시작 계약 하나만 싣고 교체 후보는 자산 브라우저가 열릴 때 온다 — Probe가 그 열림을 대신한다.
+	browseMocks.fetchImageStudioConfigs.mockResolvedValue(configs)
+	const view = render(
+		<ImageStudioProvider config={configs[0] as ImageStudioConfig}>
 			<Probe />
 		</ImageStudioProvider>,
 	)
+	await screen.findByText('browse:ready')
+	return view
 }
 
 function chooseAll() {
@@ -287,8 +303,8 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		vi.clearAllMocks()
 	})
 
-	it('enabled 프롬프트·유효한 select와 생성 결과를 보존한다', () => {
-		renderStudio([config(5), config(7)])
+	it('enabled 프롬프트·유효한 select와 생성 결과를 보존한다', async () => {
+		await renderStudio([config(5), config(7)])
 
 		chooseAll()
 
@@ -297,8 +313,11 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		)
 	})
 
-	it('새 프로파일이 지원하지 않는 select만 시작값으로 되돌린다', () => {
-		renderStudio([config(5), config(7, { batch: [1, 2], ratio: ['2:3'], resolution: ['1K'] })])
+	it('새 프로파일이 지원하지 않는 select만 시작값으로 되돌린다', async () => {
+		await renderStudio([
+			config(5),
+			config(7, { batch: [1, 2], ratio: ['2:3'], resolution: ['1K'] }),
+		])
 
 		chooseAll()
 
@@ -307,8 +326,8 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		)
 	})
 
-	it('readonly select와 prompt는 새 계약 기본값으로 되돌린다', () => {
-		renderStudio([
+	it('readonly select와 prompt는 새 계약 기본값으로 되돌린다', async () => {
+		await renderStudio([
 			config(5),
 			config(7, {
 				promptAvailability: 'readonly',
@@ -324,8 +343,8 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		)
 	})
 
-	it('색은 새 프로파일 기본값으로 되돌린다', () => {
-		renderStudio([
+	it('색은 새 프로파일 기본값으로 되돌린다', async () => {
+		await renderStudio([
 			config(5, { colorAdjustment: { line: '#000dff', background: '#00ffd4' } }),
 			config(7, { colorAdjustment: { line: '#112233' } }),
 		])
@@ -337,11 +356,11 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		expect(screen.getByTestId('color')).toHaveTextContent('#112233|없음')
 	})
 
-	it('color control이 있어도 feature가 없으면 색 조정을 적용하지 않는다', () => {
+	it('color control이 있어도 feature가 없으면 색 조정을 적용하지 않는다', async () => {
 		const withColorControls = config(5, {
 			colorAdjustment: { line: '#000dff', background: '#00ffd4' },
 		})
-		renderStudio([
+		await renderStudio([
 			{
 				...withColorControls,
 				image: { ...withColorControls.image, features: [] },
@@ -353,8 +372,8 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		expect(screen.getByTestId('color')).toHaveTextContent('색 없음')
 	})
 
-	it('프로파일 교체 후 이전 결과는 보존하되 camera seed로 열지 않는다', () => {
-		renderStudio([config(5), config(7)])
+	it('프로파일 교체 후 이전 결과는 보존하되 camera seed로 열지 않는다', async () => {
+		await renderStudio([config(5), config(7)])
 		expect(screen.getByTestId('camera-seed')).toHaveTextContent('blob:1')
 
 		fireEvent.click(screen.getByRole('button', { name: '교체' }))
@@ -369,7 +388,7 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 			...config(7, { colorAdjustment: { line: '#ff0000' } }),
 			output: { formats: [] as const, original: false },
 		}
-		renderStudio([source, next])
+		await renderStudio([source, next])
 
 		expect(screen.getByTestId('result-color')).toHaveTextContent('#000dff')
 		fireEvent.click(screen.getByRole('button', { name: '교체' }))
@@ -385,9 +404,9 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		)
 	})
 
-	it('패키지 capability가 없으면 선택 저장만 열고 전체 저장은 잠근다', () => {
+	it('패키지 capability가 없으면 선택 저장만 열고 전체 저장은 잠근다', async () => {
 		const source = config(5)
-		renderStudio([{ ...source, output: { ...source.output, packages: [] } }])
+		await renderStudio([{ ...source, output: { ...source.output, packages: [] } }])
 
 		expect(screen.getByTestId('download-actions')).toHaveTextContent(
 			'selected:on / all:off / original-selected:on / original-all:off',
@@ -395,7 +414,7 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 	})
 
 	it('사용자가 선택한 JPEG 형식을 ExportRequest로 전달한다', async () => {
-		renderStudio([config(5)])
+		await renderStudio([config(5)])
 		fireEvent.click(screen.getByRole('button', { name: 'JPEG 선택' }))
 		fireEvent.click(screen.getByRole('button', { name: '결과 저장' }))
 
@@ -419,8 +438,8 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		})
 	})
 
-	it('새 maxLength를 넘는 enabled 프롬프트는 자르지 않고 오류로 생성만 막는다', () => {
-		renderStudio([config(5), config(7, { maxPromptLength: 1 })])
+	it('새 maxLength를 넘는 enabled 프롬프트는 자르지 않고 오류로 생성만 막는다', async () => {
+		await renderStudio([config(5), config(7, { maxPromptLength: 1 })])
 
 		fireEvent.click(screen.getByRole('button', { name: '프롬프트 입력' }))
 		fireEvent.click(screen.getByRole('button', { name: '교체' }))

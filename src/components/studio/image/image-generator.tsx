@@ -13,15 +13,9 @@ import { createImageArtifacts } from '@/features/image-generation/runtime/image-
 import { useImageExport } from '@/features/studio-export/hooks/use-image-export'
 
 // 생성 표면: 편집 세션 소유는 ImageStudioProvider, 조작은 컨트롤러, 결과는 캔버스가 그린다.
-export function ImageGenerator({
-	configs,
-	initialProfileId,
-}: {
-	configs: ImageStudioConfig[]
-	initialProfileId?: number
-}) {
+export function ImageGenerator({ config }: { config: ImageStudioConfig | null }) {
 	// 발행된 프로파일이 없으면 열 컨트롤이 없다 — 계약 없이 컨트롤러를 그리지 않는다.
-	if (configs.length === 0) {
+	if (!config) {
 		return (
 			<Empty className="h-full border-0">
 				<EmptyHeader>
@@ -38,7 +32,7 @@ export function ImageGenerator({
 	}
 
 	return (
-		<ImageStudioProvider configs={configs} initialProfileId={initialProfileId}>
+		<ImageStudioProvider config={config}>
 			<ImageWorkspace />
 		</ImageStudioProvider>
 	)

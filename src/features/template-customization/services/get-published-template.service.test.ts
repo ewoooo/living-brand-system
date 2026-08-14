@@ -25,7 +25,7 @@ vi.mock('@/features/template-core/repositories/published-template.payload.reposi
 
 describe('getPublishedTemplate', () => {
 	it('스튜디오가 쓰는 노드 설정만 남기고 저작 내부 정보를 SSR에 노출하지 않는다', async () => {
-		const template = await getPublishedTemplate(3)
+		const template = await getPublishedTemplate('summer-poster')
 
 		expect(template?.nodeConfigs).toEqual({
 			name: { input: { label: '이름', maxLength: 20 } },

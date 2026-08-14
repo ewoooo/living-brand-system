@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
+import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/camera-control'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import {
-	deriveTemplateConfig,
+	deriveTemplateStudioConfig,
 	findTemplateControl,
 	getTemplateRuntimeManifest,
 	isBackgroundSlot,
@@ -11,9 +12,9 @@ import {
 	isTextSlot,
 	listCompatibleTemplateImageConfigs,
 	type PublishedHtmlTemplate,
-	parseTemplateConfig,
+	parseTemplateStudioConfig,
 	resolveTemplateImageConfig,
-} from './template-config'
+} from './template-studio-config'
 
 const template: PublishedHtmlTemplate = {
 	kind: 'html',
@@ -40,7 +41,7 @@ const forwardStraightConfig = {
 	output: resolveGraphicStudioOutput(forwardStraightRuntimeManifest),
 }
 
-describe('deriveTemplateConfig', () => {
+describe('deriveTemplateStudioConfig', () => {
 	it('Runtime Manifest는 같은 Template 문서에서 같은 controller와 Artifact를 파생한다', () => {
 		const manifest = getTemplateRuntimeManifest(template)
 
@@ -58,10 +59,10 @@ describe('deriveTemplateConfig', () => {
 	})
 
 	it('Template 도메인 계약을 멱등 검증하고 slot의 알 수 없는 필드를 거부한다', () => {
-		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightConfig])
-		expect(parseTemplateConfig(parseTemplateConfig(config))).toBe(config)
+		const config = deriveTemplateStudioConfig(template, [imageConfig], [forwardStraightConfig])
+		expect(parseTemplateStudioConfig(parseTemplateStudioConfig(config))).toBe(config)
 		expect(() =>
-			parseTemplateConfig({
+			parseTemplateStudioConfig({
 				...config,
 				template: {
 					...config.template,
@@ -75,7 +76,7 @@ describe('deriveTemplateConfig', () => {
 		expect(imageSlot).toBeDefined()
 		if (!imageSlot) return
 		expect(() =>
-			parseTemplateConfig({
+			parseTemplateStudioConfig({
 				...config,
 				template: {
 					...config.template,
@@ -95,16 +96,18 @@ describe('deriveTemplateConfig', () => {
 	})
 
 	it('Effective output은 Template Artifact와 실제 Exporter capability를 벗어날 수 없다', () => {
-		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightConfig])
+		const config = deriveTemplateStudioConfig(template, [imageConfig], [forwardStraightConfig])
 		const withCommonFormat = {
 			...config,
 			output: { ...config.output, formats: ['svg'] as const },
 		}
-		expect(() => parseTemplateConfig(withCommonFormat)).toThrow('지원하지 않는 output format')
+		expect(() => parseTemplateStudioConfig(withCommonFormat)).toThrow(
+			'지원하지 않는 output format',
+		)
 	})
 
 	it('공통 envelope에는 전역 Definition, Template 확장에는 DOM·슬롯 binding을 둔다', () => {
-		const config = deriveTemplateConfig(template, [imageConfig], [forwardStraightConfig])
+		const config = deriveTemplateStudioConfig(template, [imageConfig], [forwardStraightConfig])
 
 		expect(config).toMatchObject({ studio: 'template', id: 7, version: 1, name: '포스터' })
 		const text = config.template.slots.filter(isTextSlot)
@@ -143,7 +146,7 @@ describe('deriveTemplateConfig', () => {
 	})
 
 	it('output은 Raster Exporter capability를 따르고 canvas만 Template 도메인 정보로 남긴다', () => {
-		expect(deriveTemplateConfig(template)).toMatchObject({
+		expect(deriveTemplateStudioConfig(template)).toMatchObject({
 			output: { formats: ['png', 'jpeg', 'tiff', 'pdf', 'mp4'] },
 			template: {
 				exportOption: {
@@ -152,13 +155,13 @@ describe('deriveTemplateConfig', () => {
 			},
 		})
 		expect(
-			deriveTemplateConfig({
+			deriveTemplateStudioConfig({
 				...template,
 				exportPolicy: { allowedFormats: ['pdf'] },
 			}).output.formats,
 		).toEqual(['pdf'])
 		expect(() =>
-			deriveTemplateConfig({
+			deriveTemplateStudioConfig({
 				...template,
 				exportPolicy: { allowedFormats: ['svg'] },
 			}),
@@ -167,7 +170,7 @@ describe('deriveTemplateConfig', () => {
 
 	it('동적 published Template에서 만든 envelope도 공통 strict validator를 통과해야 한다', () => {
 		expect(() =>
-			deriveTemplateConfig({
+			deriveTemplateStudioConfig({
 				...template,
 				nodeConfigs: {
 					...template.nodeConfigs,
@@ -178,7 +181,7 @@ describe('deriveTemplateConfig', () => {
 	})
 
 	it('Restrictions와 Admin 그룹 표현을 분리해 Effective Config에 적용한다', () => {
-		const config = deriveTemplateConfig({
+		const config = deriveTemplateStudioConfig({
 			...template,
 			controllerPresentation: {
 				groups: [{ groupId: 'text', defaultOpen: false }],
@@ -239,7 +242,7 @@ describe('deriveTemplateConfig', () => {
 	})
 
 	it('sparse Restrictions는 쓰지 않은 Definition 필드를 Runtime Manifest에서 상속한다', () => {
-		const config = deriveTemplateConfig({
+		const config = deriveTemplateStudioConfig({
 			...template,
 			controllerRestrictions: {
 				controls: [
@@ -300,7 +303,7 @@ describe('resolveTemplateImageConfig', () => {
 	})
 
 	it('pinned Config가 없거나 Template 1장 생성을 지원하지 않으면 호환 목록에서 제외한다', () => {
-		const config = deriveTemplateConfig(template, [imageConfig])
+		const config = deriveTemplateStudioConfig(template, [imageConfig])
 		const slot = config.template.slots.find(isImageSlot)
 		expect(slot).toBeDefined()
 		if (!slot) return
@@ -311,7 +314,7 @@ describe('resolveTemplateImageConfig', () => {
 	})
 
 	it('selectable은 허용 목록과 Template 생성 제약을 모두 통과한 Config만 노출한다', () => {
-		const config = deriveTemplateConfig({
+		const config = deriveTemplateStudioConfig({
 			...template,
 			nodeConfigs: {
 				...template.nodeConfigs,
@@ -408,7 +411,11 @@ function createImageConfig(
 			slug: `profile-${id}`,
 			features: [
 				{ type: 'color-adjustment', controls: { line: 'lineColor' } },
-				{ type: 'camera-control' },
+				{
+					type: 'camera-control',
+					azimuths: CAMERA_AZIMUTHS,
+					elevations: CAMERA_ELEVATIONS,
+				},
 			],
 		},
 	}

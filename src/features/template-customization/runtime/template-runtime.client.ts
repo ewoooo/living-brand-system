@@ -12,7 +12,7 @@ import type {
 	TemplateImageConfigSlot,
 	TemplateTextSlot,
 	TemplateVectorSlot,
-} from '@/features/template-customization/domain/template-config'
+} from '@/features/template-customization/domain/template-studio-config'
 import type {
 	RasterArtifact,
 	StudioArtifactProducer,

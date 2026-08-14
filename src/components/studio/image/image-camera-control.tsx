@@ -54,10 +54,8 @@ const ELEVATION_PRESETS: { degrees: number; label: string; value: CameraElevatio
 	value: resolveCameraControl({ azimuthDeg: 0, elevationDeg: preset.degrees }).elevation,
 }))
 
-const AZIMUTH_STEPS = AZIMUTH_PRESETS.map((preset) => preset.degrees)
-const ELEVATION_STEPS = ELEVATION_PRESETS.map((preset) => preset.degrees)
-const AZIMUTH_OPTIONS = AZIMUTH_PRESETS.map(({ label, value }) => ({ label, value }))
-const ELEVATION_OPTIONS = ELEVATION_PRESETS.map(({ label, value }) => ({ label, value }))
+const DEFAULT_AZIMUTH: CameraAzimuth = 'front'
+const DEFAULT_ELEVATION: CameraElevation = 'eye-level'
 
 type CameraAngles = { azimuthDeg: number; elevationDeg: number }
 
@@ -65,6 +63,9 @@ type ImageCameraControlProps = CameraAngles & {
 	/** 시점을 다시 잡을 대상 — 오빗 프리뷰의 텍스처가 된다. */
 	seedImage: string
 	busy: boolean
+	/** 계약이 허용한 구간 — 셀렉트 목록과 오빗 스냅 스텝이 이것만 갖는다. */
+	azimuths: readonly CameraAzimuth[]
+	elevations: readonly CameraElevation[]
 	onChange: (angles: CameraAngles) => void
 	onRegenerate: () => void
 }
@@ -78,17 +79,30 @@ export function ImageCameraControl({
 	elevationDeg,
 	seedImage,
 	busy,
+	azimuths,
+	elevations,
 	onChange,
 	onRegenerate,
 }: ImageCameraControlProps) {
+	// 계약이 허용한 구간만 남긴다 — 목록·스냅 스텝·폴백이 모두 같은 배열에서 나온다.
+	const azimuthPresets = AZIMUTH_PRESETS.filter((preset) => azimuths.includes(preset.value))
+	const elevationPresets = ELEVATION_PRESETS.filter((preset) => elevations.includes(preset.value))
+	const azimuthSteps = azimuthPresets.map((preset) => preset.degrees)
+	const elevationSteps = elevationPresets.map((preset) => preset.degrees)
 	const azimuthPreset =
-		AZIMUTH_PRESETS.find(
-			(preset) => preset.degrees === snapCameraAngle(azimuthDeg, AZIMUTH_STEPS, true),
-		) ?? AZIMUTH_PRESETS[0]
+		azimuthPresets.find(
+			(preset) => preset.degrees === snapCameraAngle(azimuthDeg, azimuthSteps, true),
+		) ??
+		azimuthPresets.find((preset) => preset.value === DEFAULT_AZIMUTH) ??
+		azimuthPresets[0]
 	const elevationPreset =
-		ELEVATION_PRESETS.find(
-			(preset) => preset.degrees === snapCameraAngle(elevationDeg, ELEVATION_STEPS),
-		) ?? ELEVATION_PRESETS[1]
+		elevationPresets.find(
+			(preset) => preset.degrees === snapCameraAngle(elevationDeg, elevationSteps),
+		) ??
+		elevationPresets.find((preset) => preset.value === DEFAULT_ELEVATION) ??
+		elevationPresets[0]
+	// 계약이 두 축 중 하나라도 비우면 조작할 수 있는 시점이 없다 — 섹션을 그리지 않는다.
+	if (!azimuthPreset || !elevationPreset) return null
 
 	return (
 		<div className="flex flex-col gap-1.5 pb-2.5">
@@ -97,19 +111,19 @@ export function ImageCameraControl({
 				axes={[
 					{
 						label: 'X',
-						options: AZIMUTH_OPTIONS,
+						options: azimuthPresets.map(({ label, value }) => ({ label, value })),
 						value: azimuthPreset.value,
 						onChange: (value) => {
-							const preset = AZIMUTH_PRESETS.find((item) => item.value === value)
+							const preset = azimuthPresets.find((item) => item.value === value)
 							if (preset) onChange({ azimuthDeg: preset.degrees, elevationDeg })
 						},
 					},
 					{
 						label: 'Y',
-						options: ELEVATION_OPTIONS,
+						options: elevationPresets.map(({ label, value }) => ({ label, value })),
 						value: elevationPreset.value,
 						onChange: (value) => {
-							const preset = ELEVATION_PRESETS.find((item) => item.value === value)
+							const preset = elevationPresets.find((item) => item.value === value)
 							if (preset) onChange({ azimuthDeg, elevationDeg: preset.degrees })
 						},
 					},
@@ -118,10 +132,10 @@ export function ImageCameraControl({
 				<CameraOrbitControl
 					azimuthDeg={azimuthDeg}
 					azimuthLabel={azimuthPreset.label}
-					azimuthSteps={AZIMUTH_STEPS}
+					azimuthSteps={azimuthSteps}
 					elevationDeg={elevationDeg}
 					elevationLabel={elevationPreset.label}
-					elevationSteps={ELEVATION_STEPS}
+					elevationSteps={elevationSteps}
 					seedImage={seedImage}
 					onChange={onChange}
 				/>

@@ -1,6 +1,7 @@
 'use client'
 
 import { GraphicProfilePicker } from '@/components/studio/graphic/graphic-profile-picker'
+import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import { Controller } from '@/components/studio/shared/controller'
 import { ControllerRenderer } from '@/components/studio/shared/controller-renderer'
 import {
@@ -85,11 +86,11 @@ export function GraphicSidebar({ output }: { output: GraphicExportView }) {
 						buttonLabel="Change"
 						aria-label="그래픽 변경"
 						tabs={['Graphic Profiles']}
-						empty={
-							profiles.options.length <= 1
-								? '교체할 다른 그래픽 프로파일이 없습니다.'
-								: undefined
-						}
+						empty={browseEmptyMessage(
+							profiles.browse.status,
+							(profiles.browse.data?.length ?? 0) > 1,
+							'교체할 다른 그래픽 프로파일이 없습니다.',
+						)}
 						className="min-h-32 items-start"
 					>
 						<GraphicProfilePicker />

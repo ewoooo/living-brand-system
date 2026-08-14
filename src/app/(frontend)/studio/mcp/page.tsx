@@ -1,8 +1,7 @@
-import { redirect } from 'next/navigation'
 import { ContentFrame } from '@/components/shared/content-frame'
 import { ContentHeading } from '@/components/shared/content-heading'
 import { McpKeyIssuer } from '@/components/studio/mcp/mcp-key-issuer'
-import { authenticateRequest } from '@/lib/request-auth'
+import { requireUser } from '@/lib/request-auth'
 import { routes } from '@/lib/routes'
 
 // 렌더링: 매 요청. 권한·미리보기 상태를 읽으므로 캐시하지 않는다.
@@ -11,10 +10,7 @@ import { routes } from '@/lib/routes'
 export const dynamic = 'force-dynamic'
 
 export default async function StudioMcpPage() {
-	const { user } = await authenticateRequest()
-	if (!user) {
-		redirect(`/admin/login?redirect=${encodeURIComponent(routes.studio.mcp)}`)
-	}
+	await requireUser(routes.studio.mcp)
 
 	return (
 		<ContentFrame className="grid gap-8 py-10">

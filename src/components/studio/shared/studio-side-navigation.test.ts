@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { StudioSideNavigation } from './studio-side-navigation'
 
 vi.mock('next/navigation', () => ({
-	usePathname: () => '/studio/template/cards/2',
+	usePathname: () => '/studio/template/second-template',
 }))
 
 vi.mock('@/components/ui/sidebar', () => ({
@@ -26,13 +26,10 @@ describe('StudioSideNavigation', () => {
 			'href',
 			'/studio/template',
 		)
-		expect(screen.getByRole('link', { name: 'Image' })).toHaveAttribute(
-			'href',
-			'/studio/generate/image',
-		)
+		expect(screen.getByRole('link', { name: 'Image' })).toHaveAttribute('href', '/studio/image')
 		expect(screen.getByRole('link', { name: 'Graphic' })).toHaveAttribute(
 			'href',
-			'/studio/generate/graphic',
+			'/studio/graphic',
 		)
 		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute(
 			'href',
