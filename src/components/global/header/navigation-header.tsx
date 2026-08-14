@@ -104,7 +104,7 @@ function NavigationHeaderRoot({ className, ...props }: NavigationHeaderRootProps
 	return (
 		<header
 			data-slot="navigation-header"
-			className={cn('relative z-50 shrink-0 overflow-visible', className)}
+			className={cn('relative z-50 shrink-0 overflow-visible bg-transparent', className)}
 			{...props}
 		/>
 	)
@@ -115,7 +115,7 @@ function NavigationHeaderDesktop({ className, ...props }: React.ComponentProps<'
 		<div
 			data-slot="navigation-header-desktop"
 			className={cn(
-				'hidden h-(--global-header-height) grid-cols-3 items-center bg-background px-5 xl:grid',
+				'hidden h-(--global-header-height) grid-cols-3 items-center px-5 xl:grid',
 				className,
 			)}
 			{...props}
