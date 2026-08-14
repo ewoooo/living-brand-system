@@ -26,7 +26,6 @@ function namedError(name: string) {
 }
 
 const validBody = {
-	basePrompt: '{"style":"technical illustration","subject":"유조선"}',
 	camera: { azimuthDeg: 45, elevationDeg: 20 },
 	count: 1,
 	generatedImageId: 8,
@@ -86,7 +85,6 @@ describe('POST /api/generate-image/camera-adjustment', () => {
 	})
 
 	it.each([
-		{ ...validBody, basePrompt: 'not json' },
 		{ ...validBody, camera: { azimuthDeg: 181, elevationDeg: 0 } },
 		{ ...validBody, camera: { azimuthDeg: 0, elevationDeg: 91 } },
 		{ ...validBody, generatedImageId: 0 },

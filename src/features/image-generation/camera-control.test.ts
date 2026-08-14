@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
 	cameraAdjustmentRequestSchema,
 	composeCameraAdjustmentPrompt,
+	imageEffectivePromptSchema,
 	resolveCameraControl,
 } from './camera-control'
 
@@ -36,7 +37,6 @@ describe('resolveCameraControl', () => {
 describe('camera adjustment contract', () => {
 	it('생성 장수를 생략하면 한 장으로 정규화한다', () => {
 		const result = cameraAdjustmentRequestSchema.parse({
-			basePrompt: '{"subject":"유조선"}',
 			camera: { azimuthDeg: 0, elevationDeg: 0 },
 			generatedImageId: 8,
 			profileId: 5,
@@ -70,12 +70,10 @@ describe('camera adjustment contract', () => {
 	it.each([
 		{ camera: { azimuthDeg: 181, elevationDeg: 0 } },
 		{ camera: { azimuthDeg: 0, elevationDeg: 91 } },
-		{ basePrompt: 'not json' },
 		{ generatedImageId: 0 },
 	])('계약 밖의 요청을 거부한다: %o', (patch) => {
 		expect(
 			cameraAdjustmentRequestSchema.safeParse({
-				basePrompt: '{"subject":"유조선"}',
 				camera: { azimuthDeg: 0, elevationDeg: 0 },
 				count: 1,
 				generatedImageId: 8,
@@ -83,5 +81,10 @@ describe('camera adjustment contract', () => {
 				...patch,
 			}).success,
 		).toBe(false)
+	})
+
+	it('저장된 effective prompt는 flat JSON만 허용한다', () => {
+		expect(imageEffectivePromptSchema.safeParse('{"subject":"유조선"}').success).toBe(true)
+		expect(imageEffectivePromptSchema.safeParse('not json').success).toBe(false)
 	})
 })

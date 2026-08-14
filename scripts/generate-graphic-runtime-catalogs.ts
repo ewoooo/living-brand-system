@@ -91,25 +91,21 @@ ${entries}
 }
 
 function renderClientRuntimeCatalog(runtimes: GraphicRuntimeRegistration[]): string {
-	const imports = runtimes
-		.map(
-			({ directory, symbol }) =>
-				`import ${symbol}Runtime from '../${directory}/runtime.client'`,
-		)
-		.join('\n')
 	const entries = runtimes
-		.map(({ directory, symbol }) => `\t'${directory}': ${symbol}Runtime,`)
+		.map(
+			({ directory }) =>
+				`\t'${directory}': () =>\n\t\timport('../${directory}/runtime.client').then((module) => module.default),`,
+		)
 		.join('\n')
 
 	return `${GENERATED_HEADER}'use client'
 
-import type { GraphicRuntimeAdapter } from '../../runtime/client/graphic-runtime.client'
-${imports}
+import type { GraphicRuntimeLoader } from '../../runtime/client/graphic-runtime.client'
 import type { GraphicRuntimeId } from './manifest.generated'
 
 export const graphicRuntimeCatalog = {
 ${entries}
-} satisfies Record<GraphicRuntimeId, GraphicRuntimeAdapter>
+} satisfies Record<GraphicRuntimeId, GraphicRuntimeLoader>
 `
 }
 

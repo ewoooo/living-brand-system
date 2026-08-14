@@ -2,6 +2,7 @@ import { env } from '@/env'
 import {
 	type CameraControlInput,
 	composeCameraAdjustmentPrompt,
+	imageEffectivePromptSchema,
 	type ResolvedCameraControl,
 	resolveCameraControl,
 } from '@/features/image-generation/camera-control'
@@ -230,7 +231,6 @@ export async function generateImagesWithSettings({
  * 프로파일 조회·외부 이미지 편집·생성 파일 저장 I/O는 각 repository가 소유한다.
  */
 export async function adjustImageCamera({
-	basePrompt,
 	camera,
 	count,
 	generatedImageId,
@@ -238,7 +238,6 @@ export async function adjustImageCamera({
 	requestUrl,
 	user,
 }: {
-	basePrompt: string
 	camera: CameraControlInput
 	count: number
 	generatedImageId: number
@@ -252,31 +251,30 @@ export async function adjustImageCamera({
 	if (!getImageStudioFeature(config, 'camera-control')) {
 		throw new InvalidImageControllerInputError('camera')
 	}
-	const seedImage = await loadGeneratedImage({
+	const seed = await loadGeneratedImage({
 		generatedImageId,
 		profileId,
 		requestUrl,
 		user,
 	})
-	if (!seedImage) throw new InvalidSeedImageError()
+	if (!seed) throw new InvalidSeedImageError()
+	const effectivePrompt = imageEffectivePromptSchema.safeParse(seed.effectivePrompt)
+	if (!effectivePrompt.success) throw new InvalidSeedImageError()
 
 	const resolved = resolveCameraControl(camera)
-	const effective = resolveImageGenerationInput(config, {
-		userInput: basePrompt,
-		count,
-	})
+	const effective = resolveImageGenerationOptions(config, { count })
 	const result = await runImageGeneration(
 		planImageGenerationFromProfile(profile, {
-			prompt: composeCameraAdjustmentPrompt(basePrompt, resolved),
+			prompt: composeCameraAdjustmentPrompt(effectivePrompt.data, resolved),
 			count: effective.count,
 			aspectRatio: effective.aspectRatio,
 			imageSize: effective.imageSize,
-			seedImage,
+			seedImage: seed.data,
 		}),
 		user,
 	)
 	const stored = await storeProfileGeneration(result, {
-		inputPrompt: basePrompt,
+		inputPrompt: seed.inputPrompt,
 		profile: {
 			id: profile.id,
 			name: profile.name,
@@ -301,8 +299,20 @@ function resolveImageGenerationInput(
 		imageSize?: ImageOutputSize
 	},
 ) {
-	const { prompt, batch, ratio, resolution } = getImageStudioControls(config)
+	const { prompt } = getImageStudioControls(config)
 	assertTextInput(prompt, input.userInput)
+	return { userInput: input.userInput, ...resolveImageGenerationOptions(config, input) }
+}
+
+function resolveImageGenerationOptions(
+	config: ImageStudioConfig,
+	input: {
+		count: number
+		aspectRatio?: ImageAspectRatio
+		imageSize?: ImageOutputSize
+	},
+) {
+	const { batch, ratio, resolution } = getImageStudioControls(config)
 	const batchValue = String(input.count)
 	const ratioValue = input.aspectRatio ?? ratio.defaultValue
 	const resolutionValue = input.imageSize ?? resolution.defaultValue
@@ -313,7 +323,6 @@ function resolveImageGenerationInput(
 		throw new InvalidImageControllerInputError(ratioValue === null ? ratio.id : resolution.id)
 	}
 	return {
-		userInput: input.userInput,
 		count: Number(batchValue),
 		aspectRatio: ratioValue as ImageAspectRatio,
 		imageSize: resolutionValue as ImageOutputSize,

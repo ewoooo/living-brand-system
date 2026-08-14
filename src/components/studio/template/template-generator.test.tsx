@@ -53,7 +53,7 @@ vi.mock('@/features/image-generation/services/generate-image.client', () => ({
 	requestImageGeneration: mocks.requestImageGeneration,
 }))
 vi.mock('@/features/graphic-generation/runtime/client/graphic-runtime.client', () => ({
-	getGraphicRuntimeAdapter: (config: GraphicRuntimeManifest) => ({
+	loadGraphicRuntimeAdapter: async (config: GraphicRuntimeManifest) => ({
 		type: config.type,
 		mount: mocks.mountGraphicPreview,
 	}),
