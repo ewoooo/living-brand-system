@@ -1,15 +1,16 @@
 import type { PayloadRequest } from 'payload'
 import { publishDraftImportedApplicationImages } from '@/features/application-image/repositories/imported-application-image.payload.repository'
-import { findPrintOutputBlocker } from '@/features/template-export/print-policy'
+import { findPrintOutputBlocker } from '@/features/studio-export/print-policy'
 import {
 	inspectTemplateFragment,
 	type TemplateFragmentInspection,
-} from '@/services/inspect-template-html.service'
+} from '@/features/template-core/domain/inspect-template-html'
 import {
 	type ParsedTemplateNodeConfigs,
 	parseTemplateNodeConfigs,
-} from '@/services/parse-template-node-configs.service'
-import { sameRef } from '@/services/template-asset-policy.service'
+} from '@/features/template-core/domain/parse-template-node-configs'
+import { sameRef } from '@/features/template-core/domain/template-asset-policy'
+import { deriveTemplateConfig } from '@/features/template-customization/domain/template-config'
 import {
 	findTemplateDraftBlocker,
 	findTemplatePublishBlocker,
@@ -19,10 +20,14 @@ import {
 interface TemplateSaveCandidate {
 	_status?: unknown
 	baseHtml?: unknown
+	controllerRestrictions?: unknown
+	controllerPresentation?: unknown
 	height?: unknown
 	html?: unknown
+	id?: unknown
+	name?: unknown
 	overrides?: unknown
-	printPpi?: unknown
+	exportPolicy?: unknown
 	width?: unknown
 }
 
@@ -58,11 +63,41 @@ export async function prepareTemplateSave({
 		if (draftBlocker) return draftBlocker
 	}
 
-	const printBlocker = findPrintOutputBlocker(candidate)
-	if (printBlocker) return printBlocker
-
 	const finalStatus = data._status ?? originalDoc?._status
 	if (finalStatus !== 'published') return null
+	if (typeof candidate.width === 'number' && typeof candidate.height === 'number') {
+		const printBlocker = findPrintOutputBlocker({
+			enabled: allowsPrint(candidate.exportPolicy),
+			height: candidate.height,
+			width: candidate.width,
+		})
+		if (printBlocker) return printBlocker
+	}
+
+	if (
+		html &&
+		parsed &&
+		typeof candidate.width === 'number' &&
+		typeof candidate.height === 'number'
+	) {
+		try {
+			deriveTemplateConfig({
+				kind: 'html',
+				id: typeof candidate.id === 'number' ? candidate.id : 0,
+				name: typeof candidate.name === 'string' ? candidate.name : 'Template',
+				html,
+				nodeConfigs: parsed.data,
+				width: candidate.width,
+				height: candidate.height,
+				templateVersion: 'draft',
+				controllerRestrictions: candidate.controllerRestrictions,
+				controllerPresentation: candidate.controllerPresentation,
+				exportPolicy: candidate.exportPolicy as never,
+			})
+		} catch (error) {
+			return error instanceof Error ? error.message : '템플릿 Controller 계약을 확인하세요.'
+		}
+	}
 
 	const renderedRefs = draft?.refs ?? []
 	await publishDraftImportedApplicationImages(
@@ -77,4 +112,10 @@ export async function prepareTemplateSave({
 	)
 
 	return findTemplatePublishBlocker(candidate, parsed, base, req)
+}
+
+function allowsPrint(policy: unknown): boolean {
+	if (!policy || typeof policy !== 'object' || Array.isArray(policy)) return true
+	const allowed = (policy as { allowedFormats?: unknown }).allowedFormats
+	return !Array.isArray(allowed) || allowed.includes('tiff') || allowed.includes('pdf')
 }

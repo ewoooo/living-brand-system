@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { MAX_CAMERA_ADJUSTMENT_REQUEST_BYTES } from '@/features/generate-image/camera-control'
+import { MAX_CAMERA_ADJUSTMENT_REQUEST_BYTES } from '@/features/image-generation/camera-control'
 
 const mocks = vi.hoisted(() => ({
 	adjustImageCamera: vi.fn(),
@@ -12,7 +12,7 @@ vi.mock('@/lib/request-auth', () => ({
 	authenticateRequest: mocks.authenticateRequest,
 	isCrossOriginRequest: mocks.isCrossOriginRequest,
 }))
-vi.mock('@/features/generate-image/services/generate-image.service', () => ({
+vi.mock('@/features/image-generation/services/generate-image.service', () => ({
 	adjustImageCamera: mocks.adjustImageCamera,
 }))
 
@@ -26,7 +26,6 @@ function namedError(name: string) {
 }
 
 const validBody = {
-	basePrompt: '{"style":"technical illustration","subject":"유조선"}',
 	camera: { azimuthDeg: 45, elevationDeg: 20 },
 	count: 1,
 	generatedImageId: 8,
@@ -86,7 +85,6 @@ describe('POST /api/generate-image/camera-adjustment', () => {
 	})
 
 	it.each([
-		{ ...validBody, basePrompt: 'not json' },
 		{ ...validBody, camera: { azimuthDeg: 181, elevationDeg: 0 } },
 		{ ...validBody, camera: { azimuthDeg: 0, elevationDeg: 91 } },
 		{ ...validBody, generatedImageId: 0 },
@@ -146,6 +144,7 @@ describe('POST /api/generate-image/camera-adjustment', () => {
 		[namedError('ImageGenerationLimitError'), 429],
 		[namedError('ImageGenerationUnavailableError'), 503],
 		[namedError('ImageProfileNotFoundError'), 404],
+		[namedError('InvalidImageControllerInputError'), 400],
 		[namedError('InvalidSeedImageError'), 400],
 		[namedError('UnsupportedImageOutputSizeError'), 400],
 	] as const)('서비스 오류를 안전한 상태 코드로 변환한다', async (error, status) => {

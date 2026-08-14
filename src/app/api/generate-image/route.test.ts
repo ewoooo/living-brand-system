@@ -11,7 +11,7 @@ vi.mock('@/lib/request-auth', () => ({
 	authenticateRequest: mocks.authenticateRequest,
 	isCrossOriginRequest: mocks.isCrossOriginRequest,
 }))
-vi.mock('@/features/generate-image/services/generate-image.service', () => ({
+vi.mock('@/features/image-generation/services/generate-image.service', () => ({
 	generateImages: mocks.generateImages,
 }))
 
@@ -78,6 +78,7 @@ describe('POST /api/generate-image', () => {
 		{ prompt: 'sample', profileId: 0 },
 		{ prompt: 'sample', imageModelPreset: 'openai-gpt-image-2' },
 		{ prompt: 'sample', profileId: 5, aspectRatio: '7:5' },
+		{ prompt: 'sample', profileId: 5, imageSize: '8K' },
 	])('일반 생성 계약 밖의 입력을 거부한다: %o', async (body) => {
 		const response = await POST(imageRequest(body))
 
@@ -143,6 +144,42 @@ describe('POST /api/generate-image', () => {
 			profileId: 5,
 			aspectRatio: '16:9',
 			user: { id: 1 },
+		})
+	})
+
+	it('해상도 오버라이드를 서비스에 그대로 전달한다', async () => {
+		const response = await POST(
+			imageRequest({ prompt: 'sample', profileId: 5, count: 1, imageSize: '4K' }),
+		)
+
+		expect(response.status).toBe(200)
+		expect(mocks.generateImages).toHaveBeenCalledWith({
+			userInput: 'sample',
+			count: 1,
+			profileId: 5,
+			imageSize: '4K',
+			user: { id: 1 },
+		})
+	})
+
+	it('모델이 지원하지 않는 해상도 오버라이드는 400으로 매핑한다', async () => {
+		mocks.generateImages.mockRejectedValue(namedError('UnsupportedImageOutputSizeError'))
+
+		const response = await POST(
+			imageRequest({ prompt: 'sample', profileId: 5, imageSize: '4K' }),
+		)
+
+		expect(response.status).toBe(400)
+	})
+
+	it('프로파일 Controller가 거부한 입력은 400으로 매핑한다', async () => {
+		mocks.generateImages.mockRejectedValue(namedError('InvalidImageControllerInputError'))
+
+		const response = await POST(imageRequest({ prompt: 'sample', profileId: 5 }))
+
+		expect(response.status).toBe(400)
+		expect(await response.json()).toEqual({
+			message: '이미지 프로파일이 허용하지 않는 생성 옵션입니다.',
 		})
 	})
 

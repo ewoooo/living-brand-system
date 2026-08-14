@@ -1,6 +1,6 @@
+import { startCheckSession } from '@/features/asset-check/services/start-check-session.service'
 import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
-import { startCheckSession } from '@/services/start-check-session.service'
 import { readCheckImage } from './read-check-image'
 
 export const maxDuration = 30

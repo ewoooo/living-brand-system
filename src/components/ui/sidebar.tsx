@@ -260,12 +260,13 @@ function SidebarTrigger({
 	children,
 	...props
 }: React.ComponentProps<typeof Button>) {
-	const { toggleSidebar } = useSidebar()
+	const { isMobile, open, openMobile, toggleSidebar } = useSidebar()
 
 	return (
 		<Button
 			data-sidebar="trigger"
 			data-slot="sidebar-trigger"
+			aria-expanded={isMobile ? openMobile : open}
 			variant="ghost"
 			size="default"
 			className={cn(className)}

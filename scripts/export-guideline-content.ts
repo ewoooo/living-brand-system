@@ -46,8 +46,8 @@ const parentSlug = (parent: unknown): string | null => {
 	return id == null ? null : (slugById.get(id) ?? null)
 }
 
-// 🔴 개발용 픽스처(seed-block-widget-test.ts)는 published라도 스냅샷 대상이 아니다.
-//    slug를 바꾸면 이 필터도 같이 바꿀 것.
+// 🔴 개발용 픽스처(slug `block-widget-test*`)는 published라도 스냅샷 대상이 아니다.
+//    이걸 심던 seed는 삭제됐지만 기존 DB에 남은 문서가 있어 필터는 유지한다.
 const selected = docs.filter((doc) => !String(doc.slug).startsWith('block-widget-test'))
 
 const content = {

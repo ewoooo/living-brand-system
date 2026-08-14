@@ -39,6 +39,7 @@ function VersionCell({ version }: { version: string }) {
 
 	return (
 		<motion.p
+			data-slot="version-cell"
 			className="
 			    inline-grid h-[0.8em] w-auto min-w-[0.8em] shrink-0
 			    border border-warning p-[0.1em] text-warning

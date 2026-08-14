@@ -2,7 +2,6 @@
 
 import { Upload } from '@carbon/icons-react'
 import { type DragEvent, useEffect, useRef, useState } from 'react'
-import { useCheckImages } from '@/components/studio/review/check-image-provider'
 import { Button } from '@/components/ui/button'
 import {
 	Carousel,
@@ -13,6 +12,7 @@ import {
 	CarouselPrevious,
 } from '@/components/ui/carousel'
 import { Empty, EmptyDescription, EmptyTitle } from '@/components/ui/empty'
+import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
 import type { CheckImage } from '@/features/asset-check/types'
 import { CHECK_IMAGE_ACCEPT } from '@/features/asset-check/utils/image-format'
 import { useFileInput } from '@/hooks/use-file-input'
@@ -59,6 +59,7 @@ export function ImageUploadCarousel() {
 
 	return (
 		<section
+			data-slot="image-upload-carousel"
 			aria-label="이미지 업로드 및 미리보기"
 			className="relative flex aspect-video items-center justify-center overflow-hidden rounded-md border border-border bg-muted"
 			onDragOver={(event) => event.preventDefault()}

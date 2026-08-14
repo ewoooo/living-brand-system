@@ -1,4 +1,3 @@
-import type { AgentChatMessage } from '@/agents/agent-chat.agent'
 import { Empty, EmptyDescription } from '@/components/ui/empty'
 import {
 	MessageScroller,
@@ -8,18 +7,21 @@ import {
 	MessageScrollerProvider,
 	MessageScrollerViewport,
 } from '@/components/ui/message-scroller'
+import type { AgentChatMessage } from '@/modules/agents/agent-chat.agent'
 import { AgentChatErrorBubble } from './agent-chat-bubbles'
 import { AgentChatMessageItem } from './agent-chat-message-item'
+
+type AgentChatMessageListProps = {
+	messages: AgentChatMessage[]
+	error?: Error
+	isBusy?: boolean
+}
 
 export function AgentChatMessageList({
 	messages,
 	error,
 	isBusy = false,
-}: {
-	messages: AgentChatMessage[]
-	error?: Error
-	isBusy?: boolean
-}) {
+}: AgentChatMessageListProps) {
 	const isEmpty = messages.length === 0 && !error
 	const activeMessageId = isBusy ? messages.at(-1)?.id : undefined
 	let lastAssistantMessageId: string | undefined

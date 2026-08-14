@@ -7,23 +7,25 @@ import type { CheckResult } from '@/features/asset-check/checkers/types'
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
 import { CHECK_STATUS } from './check-status'
 
+type CheckStatusBadgeProps = {
+	outcome?: CheckResult
+	inProgress: boolean
+	shouldReduceMotion: boolean | null
+}
+
 /**
  * 상태 pill / 진행 스피너.
  * in : { outcome?: CheckResult; inProgress: boolean }
  * 매핑: checkDisplayStatus(outcome.rawResult)
  *       → 'pass'|'ok'|'advisory'|'needs_review'|'fail'|'not_applicable'
- *       → CHECK_STATUS[status] { label, variant, dot }  (check-status.ts 소유)
+ *       → CHECK_STATUS[status] { label, variant }  (check-status.ts 소유)
  * outcome 없음 && inProgress → 스피너, 둘 다 없으면 null
  */
 export function CheckStatusBadge({
 	outcome,
 	inProgress,
 	shouldReduceMotion,
-}: {
-	outcome?: CheckResult
-	inProgress: boolean
-	shouldReduceMotion: boolean | null
-}) {
+}: CheckStatusBadgeProps) {
 	if (outcome) {
 		const status = CHECK_STATUS[checkDisplayStatus(outcome.rawResult)]
 
@@ -45,6 +47,7 @@ export function CheckStatusBadge({
 	if (inProgress) {
 		return (
 			<motion.span
+				data-slot="check-status-badge"
 				initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
 				animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
 				exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}

@@ -1,7 +1,8 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { GlobalHeader } from './global-header'
+import { SidebarProvider } from '@/components/ui/sidebar'
+import { GlobalHeader, type NavigationHeaderUpdates } from './global-header'
 
 let pathname = ''
 const push = vi.fn()
@@ -20,24 +21,11 @@ vi.mock('next/navigation', () => ({
 	useRouter: () => ({ push }),
 }))
 
-vi.mock('@/components/global/header/header-tail', () => ({
-	HeaderTail: () => null,
-}))
-
-vi.mock('@/components/ui/sidebar', () => ({
-	SidebarTrigger: () => null,
-}))
-
-describe('GlobalHeader', () => {
-	beforeEach(() => {
-		pathname = '/guideline/foundations'
-		push.mockReset()
-	})
-
-	afterEach(cleanup)
-
-	it('Guideline과 Studio를 같은 메가 메뉴 형식으로 표시한다', () => {
-		render(
+function renderHeader(updates?: NavigationHeaderUpdates) {
+	return render(
+		createElement(
+			SidebarProvider,
+			{ defaultOpen: false },
 			createElement(GlobalHeader, {
 				guidelineChapters: [
 					{
@@ -48,80 +36,177 @@ describe('GlobalHeader', () => {
 						title: 'Foundations',
 					},
 				],
+				updates,
 			}),
+		),
+	)
+}
+
+describe('GlobalHeader', () => {
+	beforeEach(() => {
+		pathname = '/studio/generate/graphic'
+		push.mockReset()
+		localStorage.clear()
+		vi.stubGlobal(
+			'matchMedia',
+			vi.fn(() => ({
+				addEventListener: vi.fn(),
+				matches: false,
+				removeEventListener: vi.fn(),
+			})),
 		)
+	})
 
-		const guidelineTrigger = screen.getByRole('button', { name: 'Guideline' })
-		const studioTrigger = screen.getByRole('button', { name: 'Studio' })
-		const primaryNavigation = screen.getByRole('navigation', { name: '주요 메뉴' })
-		const fontSizeClass = /\btext-(?:xs|sm|base|lg|[2-9]?xl)(?:\/\S+)?\b/
-		const fontWeightClass =
-			/\bfont-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)\b/
-		const adminLink = screen.getByRole('link', { name: /Admin/ })
+	afterEach(cleanup)
 
-		expect(primaryNavigation.parentElement?.className).toMatch(fontSizeClass)
-		expect(primaryNavigation.parentElement?.className).toMatch(fontWeightClass)
-		expect(primaryNavigation.className).not.toMatch(fontWeightClass)
-		expect(guidelineTrigger.className).not.toMatch(fontSizeClass)
-		expect(guidelineTrigger.className).not.toMatch(fontWeightClass)
-		expect(studioTrigger.className).not.toMatch(fontSizeClass)
-		expect(studioTrigger.className).not.toMatch(fontWeightClass)
-		expect(guidelineTrigger.querySelector('svg')).toBeNull()
-		expect(studioTrigger.querySelector('svg')).toBeNull()
-		expect(adminLink.className).not.toMatch(fontSizeClass)
-		expect(adminLink.className).not.toMatch(fontWeightClass)
+	it('메가 메뉴 없이 직접 링크와 current·update 상태를 표시한다', () => {
+		renderHeader({ guideline: true, image: true })
 
-		fireEvent.click(guidelineTrigger)
-		expect(push).toHaveBeenLastCalledWith('/guideline')
-		const guidelineContent = screen
-			.getByText('브랜드의 원칙과 제작 기준을 탐색합니다.')
-			.closest('[data-slot="navigation-menu-content"]')
-		expect(guidelineContent).toBeVisible()
-		expect(guidelineContent?.className).toContain('fade-in')
-		expect(guidelineContent?.className).not.toContain('slide-in-from')
-		expect(guidelineContent?.className).not.toContain('slide-out-to')
-		expect(screen.getByRole('link', { name: /Foundations/ })).toHaveAttribute(
+		expect(document.querySelector('[data-slot="navigation-header"]')).toHaveClass(
+			'border-b',
+			'bg-header-background',
+		)
+		const desktop = document.querySelector<HTMLElement>(
+			'[data-slot="navigation-header-desktop"]',
+		)
+		expect(desktop).not.toBeNull()
+		const navigation = within(desktop as HTMLElement).getByRole('navigation', {
+			name: '주요 메뉴',
+		})
+		const links = within(navigation)
+
+		expect(within(desktop as HTMLElement).getByRole('link', { name: 'Login' })).toHaveAttribute(
 			'href',
-			'/guideline/foundations',
+			'/admin',
 		)
-
-		fireEvent.click(studioTrigger)
-		expect(push).toHaveBeenLastCalledWith('/studio')
-		expect(screen.getByText('브랜드 자산을 활용해 결과물을 제작하고 검수합니다.')).toBeVisible()
-		expect(screen.getByRole('link', { name: 'Templates' })).toHaveAttribute(
+		expect(links.getByRole('link', { name: /Guideline/ })).toHaveAttribute('href', '/guideline')
+		expect(links.getByRole('link', { name: 'Template' })).toHaveAttribute(
 			'href',
 			'/studio/template',
 		)
-		expect(screen.getByRole('link', { name: 'Image' })).toHaveAttribute(
+		expect(links.getByRole('link', { name: /Image/ })).toHaveAttribute(
 			'href',
 			'/studio/generate/image',
 		)
-		expect(screen.getByRole('link', { name: 'Graphic' })).toHaveAttribute(
+		expect(links.getByRole('link', { name: 'Graphic' })).toHaveAttribute(
 			'href',
 			'/studio/generate/graphic',
 		)
-		expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute(
+		expect(links.getByRole('link', { name: 'MCP' })).toHaveAttribute('href', '/studio/mcp')
+		expect(links.getByRole('link', { name: 'Review' })).toHaveAttribute(
 			'href',
 			'/studio/review',
 		)
-
-		fireEvent.click(screen.getByRole('button', { name: '메뉴 닫기' }))
+		expect(links.getByRole('link', { name: 'Assets' })).toHaveAttribute(
+			'href',
+			'/studio/assets',
+		)
+		expect(links.getByRole('link', { name: 'Graphic' })).toHaveAttribute('aria-current', 'page')
+		expect(
+			within(links.getByRole('link', { name: /Guideline/ })).getByText('Update'),
+		).toBeVisible()
+		expect(within(links.getByRole('link', { name: /Image/ })).getByText('Update')).toBeVisible()
+		expect(screen.queryByRole('button', { name: 'Studio' })).not.toBeInTheDocument()
 		expect(screen.queryByRole('button', { name: '메뉴 닫기' })).not.toBeInTheDocument()
 	})
 
-	it('Studio 하위 화면에서는 Overview와 현재 화면을 동시에 활성화하지 않는다', () => {
-		pathname = '/studio/generate/graphic'
+	it('데스크톱 세퍼레이터에 Figma 규격의 높이를 준다', () => {
+		renderHeader()
 
-		render(createElement(GlobalHeader, { guidelineChapters: [] }))
-		fireEvent.click(screen.getByRole('button', { name: 'Studio' }))
+		const separator = document.querySelector<HTMLElement>(
+			'[data-slot="navigation-header-separator"] [data-slot="separator"]',
+		)
+		expect(separator).toHaveClass('h-full')
+	})
 
-		const studioContent = screen
-			.getByText('브랜드 자산을 활용해 결과물을 제작하고 검수합니다.')
-			.closest('[data-slot="navigation-menu-content"]')
-		const overview = studioContent?.querySelector('a[href="/studio"]')
-		const graphic = studioContent?.querySelector('a[href="/studio/generate/graphic"]')
+	it('검색과 Chat의 열린 상태를 각 트리거에 반영한다', () => {
+		renderHeader()
 
-		expect(overview).not.toHaveAttribute('aria-current')
-		expect(graphic).toHaveAttribute('aria-current', 'page')
+		const desktop = document.querySelector<HTMLElement>(
+			'[data-slot="navigation-header-desktop"]',
+		)
+		expect(desktop).not.toBeNull()
+		const searchTrigger = within(desktop as HTMLElement).getByRole('button', {
+			name: '가이드라인 검색',
+		})
+		const chatTrigger = within(desktop as HTMLElement).getByRole('button', { name: 'Chat' })
+
+		expect(searchTrigger).toHaveAttribute('aria-expanded', 'false')
+		fireEvent.click(searchTrigger)
+		expect(searchTrigger).toHaveAttribute('aria-expanded', 'true')
+		expect(screen.getByRole('dialog', { name: '가이드라인 검색' })).toBeVisible()
+
+		expect(chatTrigger).toHaveAttribute('aria-expanded', 'false')
+		fireEvent.click(chatTrigger)
+		expect(chatTrigger).toHaveAttribute('aria-expanded', 'true')
+	})
+
+	it('Assets 경로에서는 Assets만 current로 표시한다', () => {
+		pathname = '/studio/assets'
+		renderHeader()
+
+		const desktop = document.querySelector<HTMLElement>(
+			'[data-slot="navigation-header-desktop"]',
+		)
+		expect(desktop).not.toBeNull()
+		expect(
+			within(desktop as HTMLElement).getByRole('link', { name: 'Assets' }),
+		).toHaveAttribute('aria-current', 'page')
+		expect(
+			within(desktop as HTMLElement).getByRole('link', { name: 'Graphic' }),
+		).not.toHaveAttribute('aria-current')
+	})
+
+	it('그룹 링크의 체이서가 호버한 링크 폭으로 이동한다', () => {
+		renderHeader()
+
+		const graphic = screen.getByRole('link', { name: 'Graphic' })
+		const template = screen.getByRole('link', { name: 'Template' })
+		const group = graphic.closest<HTMLElement>('[data-slot="navigation-header-link-group"]')
+
+		expect(group).not.toBeNull()
+		const chaser = () =>
+			group?.querySelector<HTMLElement>('[data-slot="navigation-header-link-chaser"]')
+		expect(chaser()).toHaveAttribute('data-target-index', '2')
+
+		fireEvent.mouseEnter(template)
+		expect(chaser()).toHaveAttribute('data-target-index', '0')
+
+		fireEvent.mouseLeave(template)
+		expect(chaser()).toHaveAttribute('data-target-index', '2')
+	})
+
+	it('컴팩트 메뉴를 헤더 흐름 안에서 펼치고 접는다', () => {
+		renderHeader({ graphic: true })
+
+		const compact = document.querySelector<HTMLElement>(
+			'[data-slot="navigation-header-compact"]',
+		)
+		expect(compact).not.toBeNull()
+		const compactView = within(compact as HTMLElement)
+		const menuTrigger = compactView.getByRole('button', { name: '메뉴' })
+
+		expect(menuTrigger).toHaveAttribute('aria-expanded', 'false')
+		expect(compactView.queryByRole('navigation', { name: '주요 메뉴' })).not.toBeInTheDocument()
+
+		fireEvent.click(menuTrigger)
+
+		expect(menuTrigger).toHaveAttribute('aria-expanded', 'true')
+		const navigation = compactView.getByRole('navigation', { name: '주요 메뉴' })
+		expect(navigation.closest('[data-slot="navigation-header-compact-body"]')).toHaveAttribute(
+			'id',
+			'navigation-header-compact-menu',
+		)
+		expect(within(navigation).getByRole('link', { name: /Graphic/ })).toHaveAttribute(
+			'aria-current',
+			'page',
+		)
+		expect(
+			within(within(navigation).getByRole('link', { name: /Graphic/ })).getByText('Update'),
+		).toBeVisible()
+
+		fireEvent.click(menuTrigger)
+		expect(menuTrigger).toHaveAttribute('aria-expanded', 'false')
+		expect(compactView.queryByRole('navigation', { name: '주요 메뉴' })).not.toBeInTheDocument()
 	})
 })

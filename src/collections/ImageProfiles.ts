@@ -1,41 +1,39 @@
-import { type CollectionConfig, type PayloadRequest, slugField } from 'payload'
+import {
+	APIError,
+	type CollectionConfig,
+	type FieldAccess,
+	type PayloadRequest,
+	slugField,
+} from 'payload'
+import {
+	deriveImageStudioConfig,
+	type PublishedImageProfileDefinition,
+} from '@/features/image-generation/domain/image-studio-config'
 import {
 	DEFAULT_IMAGE_MODEL_PRESET,
 	IMAGE_MODEL_PRESET_OPTIONS,
-	type ImageModelPreset,
-} from '@/features/generate-image/image-model'
+} from '@/features/image-generation/image-model'
 import {
 	imagePromptNormalizationRequestSchema,
 	validateImageProfilePromptRows,
 	validateImagePromptNormalizationRows,
-} from '@/features/generate-image/image-profile-prompt'
-import {
-	IMAGE_ASPECT_RATIO_OPTIONS,
-	IMAGE_OUTPUT_SIZE_OPTIONS,
-	type ImageOutputSize,
-	supportsImageOutputSize,
-} from '@/features/generate-image/image-size'
-import { imageGenerationErrorResponse } from '@/features/generate-image/respond-image-generation'
-import { normalizeImageProfilePrompt } from '@/features/generate-image/services/normalize-image-profile-prompt.service'
-import { isManager, managerManagedAccess } from '@/lib/auth'
+} from '@/features/image-generation/image-profile-prompt'
+import { imageGenerationErrorResponse } from '@/features/image-generation/respond-image-generation'
+import { normalizeImageProfilePrompt } from '@/features/image-generation/services/normalize-image-profile-prompt.service'
 import {
 	assertImageProfileUnpinned,
 	isUnpublishTransition,
-} from '@/services/guard-template-references.service'
+} from '@/features/template-core/services/guard-template-references.service'
+import { isManager, managerManagedAccess } from '@/lib/auth'
+import { imageProfileFeaturesField } from './fields/image-profile-features-field'
+import {
+	studioControllerPresentationField,
+	studioControllerRestrictionsField,
+	studioExportPolicyField,
+} from './fields/studio-controller-field'
 import { draftVersions } from './shared'
 
-function validateImageSize(
-	value: null | string | undefined,
-	{ siblingData }: { siblingData: Record<string, unknown> },
-): string | true {
-	if (!value) return true
-	return (
-		supportsImageOutputSize(
-			siblingData.imageModelPreset as ImageModelPreset,
-			value as ImageOutputSize,
-		) || 'Nano Banana 2 Lite는 1K 출력만 지원합니다.'
-	)
-}
+const managerFieldRead: FieldAccess = ({ req }) => isManager(req.user)
 
 async function normalizePromptEndpoint(req: PayloadRequest) {
 	if (!isManager(req.user)) {
@@ -74,6 +72,24 @@ export const ImageProfiles: CollectionConfig = {
 			async ({ data, originalDoc, req }) => {
 				if (isUnpublishTransition({ data, originalDoc, req })) {
 					await assertImageProfileUnpinned(req, Number(originalDoc?.id), '발행 해제')
+				}
+
+				const effective = { ...originalDoc, ...data }
+				if (effective._status === 'published') {
+					try {
+						deriveImageStudioConfig({
+							...effective,
+							// create의 beforeChange에는 DB id가 아직 없으므로 계약 검증용 유한값을 쓴다.
+							id: Number(effective.id ?? 0),
+						} as PublishedImageProfileDefinition)
+					} catch (error) {
+						throw new APIError(
+							error instanceof Error
+								? error.message
+								: '이미지 컨트롤러 계약을 확인하세요.',
+							400,
+						)
+					}
 				}
 				return data
 			},
@@ -124,6 +140,7 @@ export const ImageProfiles: CollectionConfig = {
 		{
 			name: 'imageModelPreset',
 			type: 'select',
+			access: { read: managerFieldRead },
 			required: true,
 			defaultValue: DEFAULT_IMAGE_MODEL_PRESET,
 			options: [...IMAGE_MODEL_PRESET_OPTIONS],
@@ -134,33 +151,9 @@ export const ImageProfiles: CollectionConfig = {
 			},
 		},
 		{
-			name: 'aspectRatio',
-			type: 'select',
-			required: true,
-			defaultValue: '2:3',
-			options: [...IMAGE_ASPECT_RATIO_OPTIONS],
-			label: '출력 비율',
-			admin: {
-				position: 'sidebar',
-				description: '이미지 공급자와 무관한 가로:세로 비율입니다.',
-			},
-		},
-		{
-			name: 'imageSize',
-			type: 'select',
-			required: true,
-			defaultValue: '1K',
-			options: [...IMAGE_OUTPUT_SIZE_OPTIONS],
-			label: '출력 해상도',
-			validate: validateImageSize,
-			admin: {
-				position: 'sidebar',
-				description: 'Nano Banana 2 Lite는 1K만 지원합니다.',
-			},
-		},
-		{
 			name: 'profilePrompt',
 			type: 'array',
+			access: { read: managerFieldRead },
 			dbName: 'img_profile_prompt',
 			required: true,
 			minRows: 1,
@@ -180,6 +173,7 @@ export const ImageProfiles: CollectionConfig = {
 		{
 			name: 'userPromptNormalization',
 			type: 'array',
+			access: { read: managerFieldRead },
 			dbName: 'img_prompt_norm',
 			label: '유저 프롬프트',
 			labels: { singular: '유저 프롬프트', plural: '유저 프롬프트' },
@@ -205,12 +199,19 @@ export const ImageProfiles: CollectionConfig = {
 				},
 			],
 		},
+		imageProfileFeaturesField(),
+		studioControllerRestrictionsField({ source: 'image' }),
+		studioControllerPresentationField({ source: 'image' }),
+		studioExportPolicyField({
+			source: 'image',
+			includeOriginal: true,
+		}),
 		{
 			name: 'generationTest',
 			type: 'ui',
 			admin: {
 				components: {
-					Field: '/components/admin/image-profile/image-profile-test-panel',
+					Field: '/components/admin/image-profiles/image-profile-test-panel#ImageProfileTestPanel',
 				},
 			},
 		},

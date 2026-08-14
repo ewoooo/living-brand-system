@@ -52,6 +52,7 @@ export function buildCheckReviewView({
 	selected: CheckImage | null
 	showFailOnly: boolean
 }): CheckReviewView {
+	if (scenarios.length === 0) return { rows: [], summary: buildSummary([], selected?.results) }
 	const results = selected?.results
 	const reviewScenarioKey = selected?.scenarioKey ?? scenarioKey
 	const scenario = getCheckScenario(scenarios, reviewScenarioKey)

@@ -3,11 +3,11 @@ import {
 	findPublishedTemplate,
 	listPublishedTemplateNavItems,
 	listTemplateCategories,
-} from '@/repositories/published-template.payload.repository'
-import { getCreateNavigation } from '@/services/get-create-navigation.service'
-import { getPublishedTemplate } from '@/services/get-published-template.service'
+} from '@/features/template-core/repositories/published-template.payload.repository'
+import { getCreateNavigation } from '@/features/template-customization/services/get-create-navigation.service'
+import { getPublishedTemplate } from '@/features/template-customization/services/get-published-template.service'
 
-vi.mock('@/repositories/published-template.payload.repository', () => ({
+vi.mock('@/features/template-core/repositories/published-template.payload.repository', () => ({
 	findPublishedTemplate: vi.fn(),
 	listPublishedTemplateNavItems: vi.fn(),
 	listTemplateCategories: vi.fn(),

@@ -10,21 +10,21 @@ import {
 	loadAiReferenceFiles,
 } from '@/features/asset-check/repositories/ai-check.ai.repository'
 import { resizeForAiVision } from '@/features/asset-check/repositories/image-decoder.sharp.repository'
-import { decodeImageDataUri } from '@/features/generate-image/image-data-uri'
-import { loadGeneratedImage } from '@/features/generate-image/repositories/generated-image.payload.repository'
-import { generateImages } from '@/features/generate-image/services/generate-image.service'
-import { listAvailableImageProfiles } from '@/features/generate-image/services/list-image-profiles.service'
+import {
+	type ClientCheckObservations,
+	completeCheckSessionObservations,
+	startCheckSession,
+} from '@/features/asset-check/services/start-check-session.service'
 import {
 	findMcpChecks,
 	findMcpGuideline,
 	findMcpGuidelineDocuments,
 } from '@/features/guideline/services/find-mcp-guideline.service'
+import { decodeImageDataUri } from '@/features/image-generation/image-data-uri'
+import { loadGeneratedImage } from '@/features/image-generation/repositories/generated-image.payload.repository'
+import { generateImages } from '@/features/image-generation/services/generate-image.service'
+import { listAvailableImageProfiles } from '@/features/image-generation/services/list-image-profiles.service'
 import { isPayloadUser } from '@/lib/auth'
-import {
-	type ClientCheckObservations,
-	completeCheckSessionObservations,
-	startCheckSession,
-} from '@/services/start-check-session.service'
 import { type McpToolName, mcpToolNames } from './mcp-tool-names'
 
 /** MCP 도구 인자를 zod 스키마로 한 번 파싱해 타입이 보장된 핸들러에 넘긴다. 스키마에 어긋나면 즉시 실패한다. */
@@ -227,7 +227,7 @@ export const customMcpTools = [
 						user: authenticatedUser,
 					})
 					if (!image) throw new Error('Generated image is unavailable.')
-					const preview = await sharp(image)
+					const preview = await sharp(image.data)
 						.resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
 						.webp({ quality: 82 })
 						.toBuffer()

@@ -12,7 +12,9 @@ import { Bubble, BubbleContent } from '@/components/ui/bubble'
 import type { AgentChatReaction } from '@/features/agent-chat/types'
 import { AgentChatReactions } from './agent-chat-reactions'
 
-export function AgentChatErrorBubble({ error }: { error: Error }) {
+type AgentChatErrorBubbleProps = { error: Error }
+
+export function AgentChatErrorBubble({ error }: AgentChatErrorBubbleProps) {
 	return (
 		<Bubble variant="destructive">
 			<BubbleContent>{error.message}</BubbleContent>
@@ -20,13 +22,18 @@ export function AgentChatErrorBubble({ error }: { error: Error }) {
 	)
 }
 
-export function AgentChatUserBubble({ files, text }: { files: FileUIPart[]; text: string }) {
+type AgentChatUserBubbleProps = { files: FileUIPart[]; text: string }
+
+export function AgentChatUserBubble({ files, text }: AgentChatUserBubbleProps) {
 	if (!text && files.length === 0) {
 		return null
 	}
 
 	return (
-		<div className="flex w-full max-w-full flex-col items-end gap-2">
+		<div
+			data-slot="agent-chat-user-bubble"
+			className="flex w-full max-w-full flex-col items-end gap-2"
+		>
 			<AgentChatFileAttachments files={files} />
 			{text && (
 				<Bubble align="end" variant="user" className="rounded-full">
@@ -78,6 +85,15 @@ function AgentChatFileAttachment({ file }: { file: FileUIPart }) {
 	)
 }
 
+type AgentChatAgentBubbleProps = {
+	agentChatMessageId?: string
+	agentChatSessionId?: number
+	canReact?: boolean
+	initialReaction?: AgentChatReaction
+	text: string
+	isStreaming?: boolean
+}
+
 export function AgentChatAgentBubble({
 	agentChatMessageId,
 	agentChatSessionId,
@@ -85,14 +101,7 @@ export function AgentChatAgentBubble({
 	initialReaction,
 	text,
 	isStreaming = false,
-}: {
-	agentChatMessageId?: string
-	agentChatSessionId?: number
-	canReact?: boolean
-	initialReaction?: AgentChatReaction
-	text: string
-	isStreaming?: boolean
-}) {
+}: AgentChatAgentBubbleProps) {
 	if (!text) {
 		return null
 	}

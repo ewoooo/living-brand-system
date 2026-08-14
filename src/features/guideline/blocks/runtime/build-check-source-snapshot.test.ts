@@ -16,7 +16,7 @@ describe('buildCheckSourceSnapshot', () => {
 					blockType: 'contentColumns',
 					columns: [{ heading: 'Digital', body: lexical('Use 24 px.'), image: 7 }],
 				},
-				{ id: 'other', blockType: 'mediaShowcase', images: [{ image: 8 }] },
+				{ id: 'other', blockType: 'callout', kind: 'must', items: [] },
 			],
 		} as unknown as GuidelineDocument
 
@@ -34,21 +34,11 @@ describe('buildCheckSourceSnapshot', () => {
 			title: 'Logo usage',
 			description: lexical('Approved applications'),
 			blocks: [
-				{ id: 'one', blockType: 'mediaShowcase', images: [{ image: 8 }] },
+				{ id: 'one', blockType: 'contentColumns', columns: [{ image: 8 }] },
 				{
 					id: 'two',
-					blockType: 'doDont',
-					groups: [
-						{
-							category: 'Placement',
-							description: ' Keep clear space around the mark. ',
-							kind: 'do',
-							examples: [
-								{ caption: 'Clear', image: 8 },
-								{ caption: 'Acceptable', image: 9 },
-							],
-						},
-					],
+					blockType: 'contentColumns',
+					columns: [{ heading: 'Clear space', image: 8 }, { image: 9 }],
 				},
 			],
 		} as unknown as GuidelineDocument
@@ -59,52 +49,21 @@ describe('buildCheckSourceSnapshot', () => {
 			type: 'document',
 			description: 'Approved applications',
 			blocks: [
-				{ type: 'mediaShowcase' },
+				{ type: 'contentColumns', columns: [{ heading: undefined, body: undefined }] },
 				{
-					type: 'doDont',
-					groups: [
-						{
-							category: 'Placement',
-							description: 'Keep clear space around the mark.',
-							kind: 'do',
-							examples: [{ caption: 'Clear' }, { caption: 'Acceptable' }],
-						},
+					type: 'contentColumns',
+					columns: [
+						{ heading: 'Clear space', body: undefined },
+						{ heading: undefined, body: undefined },
 					],
 				},
 			],
 		})
+		// 같은 이미지가 두 block에 걸쳐 있어도 (id, role) 기준으로 한 번만 남는다.
 		expect(snapshot?.referenceAssets).toEqual([
 			{ id: 8, role: 'context' },
-			{ id: 8, role: 'positive' },
-			{ id: 9, role: 'positive' },
+			{ id: 9, role: 'context' },
 		])
-	})
-
-	it('독립 carousel block은 caption과 이미지 ID를 snapshot으로 만든다', () => {
-		const page = {
-			title: 'Campaign',
-			blocks: [
-				{
-					id: 'carousel',
-					blockType: 'carousel',
-					slides: [
-						{ image: 21, caption: 'Key visual' },
-						{ image: 22, caption: 'Application' },
-					],
-				},
-			],
-		} as unknown as GuidelineDocument
-
-		expect(buildCheckSourceSnapshot(page, 'carousel')).toEqual({
-			evidence: {
-				type: 'carousel',
-				slides: [{ caption: 'Key visual' }, { caption: 'Application' }],
-			},
-			referenceAssets: [
-				{ id: 21, role: 'context' },
-				{ id: 22, role: 'context' },
-			],
-		})
 	})
 
 	it('Section 전체 snapshot은 header image와 자체 block만 포함한다', () => {
@@ -113,7 +72,7 @@ describe('buildCheckSourceSnapshot', () => {
 			description: lexical('Foundation'),
 			headerImage: { id: 3, name: 'Core', alt: 'Core visual' },
 			blocks: [
-				{ id: 'palette', blockType: 'colorPalette', title: 'Main colors', colors: [] },
+				{ id: 'note', blockType: 'callout', kind: 'must', title: 'Main colors', items: [] },
 			],
 		} as unknown as GuidelineDocument
 
@@ -121,7 +80,7 @@ describe('buildCheckSourceSnapshot', () => {
 			evidence: {
 				type: 'document',
 				description: 'Foundation',
-				blocks: [{ type: 'colorPalette', title: 'Main colors', colors: [] }],
+				blocks: [{ type: 'callout', kind: 'must', title: 'Main colors', items: [] }],
 			},
 			referenceAssets: [{ id: 3, role: 'context' }],
 		})

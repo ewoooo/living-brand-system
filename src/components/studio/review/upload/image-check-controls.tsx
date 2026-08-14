@@ -1,6 +1,5 @@
 'use client'
 
-import { useCheckImages } from '@/components/studio/review/check-image-provider'
 import { Button } from '@/components/ui/button'
 import {
 	Select,
@@ -11,6 +10,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
+import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
 
 /**
  * 퍼널 ②③ — 시나리오 선택 + 검수 실행 버튼 (캐러셀 위 오버레이).
@@ -23,7 +23,10 @@ import { Spinner } from '@/components/ui/spinner'
  */
 export function ImageCheckControls() {
 	return (
-		<section className="pointer-events-none absolute inset-x-4 top-4 bottom-4 z-10 flex flex-col items-center justify-between">
+		<section
+			data-slot="image-check-controls"
+			className="pointer-events-none absolute inset-x-4 top-4 bottom-4 z-10 flex flex-col items-center justify-between"
+		>
 			<CheckChangeScenario />
 			<div className="flex flex-col items-center gap-2">
 				<CheckButton />
@@ -38,12 +41,12 @@ function CheckChangeScenario() {
 
 	return (
 		<Select
-			value={scenarioKey}
-			disabled={selected?.status === 'running'}
+			value={scenarioKey || undefined}
+			disabled={scenarios.length === 0 || selected?.status === 'running'}
 			onValueChange={setScenarioKey}
 		>
 			<SelectTrigger className="pointer-events-auto self-end">
-				<SelectValue />
+				<SelectValue placeholder="발행된 검수 시나리오 없음" />
 			</SelectTrigger>
 			<SelectContent>
 				<SelectGroup>
@@ -60,7 +63,7 @@ function CheckChangeScenario() {
 
 /** 선택 이미지의 검수를 실행하고 진행·실패 상태를 함께 표시한다. */
 function CheckButton() {
-	const { selectedId, selected, runCheck } = useCheckImages()
+	const { scenarios, selectedId, selected, runCheck } = useCheckImages()
 
 	return (
 		<>
@@ -77,7 +80,7 @@ function CheckButton() {
 				size="lg"
 				shape="pill"
 				className="pointer-events-auto min-w-44 p-6 px-12"
-				disabled={!selectedId || selected?.status === 'running'}
+				disabled={scenarios.length === 0 || !selectedId || selected?.status === 'running'}
 				onClick={runCheck}
 			>
 				{selected?.status === 'running' ? (

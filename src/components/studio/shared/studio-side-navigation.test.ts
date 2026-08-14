@@ -8,21 +8,20 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('@/components/ui/sidebar', () => ({
+	Sidebar: ({ children }: { children: ReactNode }) => createElement('div', {}, children),
+	SidebarContent: ({ children }: { children: ReactNode }) => createElement('div', {}, children),
 	SidebarMenu: ({ children }: { children: ReactNode }) => createElement('ul', {}, children),
 	SidebarMenuItem: ({ children }: { children: ReactNode }) => createElement('li', {}, children),
+	SidebarMenuSub: ({ children }: { children: ReactNode }) => createElement('ul', {}, children),
 	SidebarMenuButton: ({ children, isActive }: { children: ReactNode; isActive: boolean }) =>
 		createElement('div', { 'data-active': isActive }, children),
+	useSidebar: () => ({ isMobile: false }),
 }))
 
 describe('StudioSideNavigation', () => {
 	it('작업 진입점을 아이콘이 있는 단일 레벨 링크로 표시한다', () => {
 		const { container } = render(createElement(StudioSideNavigation))
 
-		expect(screen.getByRole('link', { name: 'Studio' })).toHaveAttribute('href', '/studio')
-		expect(screen.getByRole('link', { name: 'Examples' })).toHaveAttribute(
-			'href',
-			'/studio/examples',
-		)
 		expect(screen.getByRole('link', { name: 'Template' })).toHaveAttribute(
 			'href',
 			'/studio/template',
@@ -40,12 +39,15 @@ describe('StudioSideNavigation', () => {
 			'/studio/review',
 		)
 		expect(screen.getByRole('link', { name: 'MCP' })).toHaveAttribute('href', '/studio/mcp')
+		expect(screen.getByRole('link', { name: 'Assets' })).toHaveAttribute(
+			'href',
+			'/studio/assets',
+		)
 		expect(screen.getByRole('link', { name: 'Template' })).toHaveAttribute(
 			'aria-current',
 			'page',
 		)
-		expect(screen.getByRole('link', { name: 'Studio' })).not.toHaveAttribute('aria-current')
-		expect(container.querySelectorAll('[data-icon="inline-end"]')).toHaveLength(7)
-		expect(screen.getAllByRole('listitem')).toHaveLength(7)
+		expect(container.querySelectorAll('[data-icon="inline-end"]')).toHaveLength(6)
+		expect(screen.getAllByRole('listitem')).toHaveLength(6)
 	})
 })

@@ -3,7 +3,7 @@
 import { ChevronDown } from '@carbon/icons-react'
 import { usePathname } from 'next/navigation'
 import { type ReactNode, useEffect, useState } from 'react'
-import { getSideNavLinkClassName, SideNavLink } from '@/components/global/side-nav/side-nav-link'
+import { SideNavLink, sideNavLinkVariants } from '@/components/global/side-nav/side-nav-link'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
 	SidebarMenuButton,
@@ -37,15 +37,13 @@ export function SideNavSubItem({ label, href }: SideNavLinkInput) {
 	)
 }
 
-export function SideNavBranch({
-	label,
-	activeHref,
-	children,
-}: {
+type SideNavBranchProps = {
 	label: string
 	activeHref: string
 	children: ReactNode
-}) {
+}
+
+export function SideNavBranch({ label, activeHref, children }: SideNavBranchProps) {
 	const pathname = usePathname()
 	const active = pathname === activeHref || pathname.startsWith(`${activeHref}/`)
 	const [open, setOpen] = useState(active)
@@ -59,7 +57,7 @@ export function SideNavBranch({
 			<Collapsible className="group/collapsible" open={open} onOpenChange={setOpen}>
 				<CollapsibleTrigger asChild>
 					<SidebarMenuButton
-						className={getSideNavLinkClassName(false)}
+						className={sideNavLinkVariants({ nested: false })}
 						isActive={active}
 						size="sm"
 					>

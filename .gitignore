@@ -14,6 +14,8 @@
 
 # next.js
 /.next/
+# `pnpm preview:build` 출력. dev 서버의 .next를 덮지 않으려고 따로 쓴다.
+/.next-preview/
 /out/
 
 # production
@@ -80,3 +82,9 @@ temp/
 # 브랜드 원본이고 워드마크 레터링 조사의 작업 세트다. 안 읽힌다는 이유로 지우지 말 것.
 scripts/assets/
 inventory/
+
+# 개인 짬통. 지금까지 각자의 .git/info/exclude에만 있어서, 클론한 기여자가
+# .scratch/에 파일을 넣으면 pnpm check가 그것까지 검사하며 깨졌다.
+.scratch/
+# 프로젝트 개인 지시 층(커밋하지 않는다). CLAUDE.md와 같이 자동 로드된다.
+CLAUDE.local.md

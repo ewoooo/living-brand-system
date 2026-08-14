@@ -1,8 +1,10 @@
 'use client'
 
 import { type PointerEvent as ReactPointerEvent, useRef, useState } from 'react'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { BrandBackground } from '../brand-background'
 import type { LogoSources } from '../logo-set'
+import { WIDGET_CAPTION } from '../readout'
 
 // 한 배경 위에 CI 두 표현을 나란히 올리고, 구석의 색 띠를 끌어 배경을 갈아 끼운다.
 // 컨트롤이 하나라 두 표현이 같은 배경에서 어떻게 갈리는지가 한눈에 보인다 — 드래그 위젯이 열을
@@ -136,7 +138,18 @@ export function LogoBgPickerView({
 					색 띠 — 칸 사이 간격 없이 붙여 하나의 띠로 읽히게 하고, 그 위를 끌어 배경을 바꾼다.
 					등록된 색만 있으므로 어느 지점을 짚어도 규정이 있는 색이다.
 				*/}
-				<div
+				{/*
+					배경 하나를 고르는 것이므로 type="single"이다 — Radix가 radiogroup/radio로 렌더해
+					"이 중 하나"가 AT에 전달되고, 색 칸 전체가 탭 스톱 하나 + 화살표 이동이 된다.
+					🔴 대신 프리미티브의 박스는 눌러 둔다(`gap-0`·칸의 radius/padding 제거) — 이 띠는
+					   분절된 세그먼트 컨트롤이 아니라 끊김 없이 끌고 지나가는 한 줄의 색 램프다.
+					   채색과 선택 테두리는 클래스가 아니라 브랜드 데이터(hex·대비 전경색)에서 온다.
+				*/}
+				<ToggleGroup
+					type="single"
+					value={String(index)}
+					onValueChange={(next) => next && setIndex(Number(next))}
+					aria-label="배경색"
 					ref={stripRef}
 					onPointerDown={onPointerDown}
 					onPointerMove={(event) => {
@@ -148,21 +161,19 @@ export function LogoBgPickerView({
 					onPointerCancel={() => {
 						draggingRef.current = false
 					}}
-					className="absolute right-3 bottom-3 flex cursor-grab overflow-hidden active:cursor-grabbing"
+					className="absolute right-3 bottom-3 cursor-grab gap-0 overflow-hidden rounded-none active:cursor-grabbing"
 					// 터치에서 가로 스크롤에 뺏기지 않게 한다.
 					style={{ touchAction: 'none', boxShadow: `0 0 0 1px ${foreground}33` }}
 				>
 					{backgrounds.map((candidate, i) => (
-						<button
+						<ToggleGroupItem
 							key={candidate.id}
-							type="button"
-							onClick={() => setIndex(i)}
-							aria-pressed={i === index}
+							value={String(i)}
 							aria-label={`${candidate.name} 배경으로 보기`}
 							title={`${candidate.name} · ${candidate.hex}`}
 							// 🔴 포인터는 띠가 통째로 받는다. 칸이 포인터를 가로채면 드래그가 칸 경계마다 끊긴다.
 							//    키보드 포커스와 Enter/Space는 pointer-events와 무관하게 그대로 동작한다.
-							className="pointer-events-none h-6 w-7 outline-none"
+							className="pointer-events-none h-6 w-7 min-w-0 rounded-none p-0"
 							style={{
 								backgroundColor: candidate.hex,
 								boxShadow:
@@ -170,10 +181,10 @@ export function LogoBgPickerView({
 							}}
 						/>
 					))}
-				</div>
+				</ToggleGroup>
 			</div>
 
-			<p className="px-1 font-body text-muted-foreground text-xs">
+			<p className={`px-1 ${WIDGET_CAPTION}`}>
 				오른쪽 아래 색 띠를 끌어 배경색을 바꿔 보세요.
 			</p>
 		</div>

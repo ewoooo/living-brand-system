@@ -57,7 +57,7 @@ export const AgentChatSessions: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				components: {
-					Field: '/components/admin/AgentChatMessagesTable',
+					Field: '/components/admin/agent-chat-sessions/agent-chat-messages-table#AgentChatMessagesTable',
 				},
 			},
 		},
@@ -203,7 +203,7 @@ export const AgentChatSessions: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				components: {
-					Field: '/components/admin/AgentChatCountedItemsTable',
+					Field: '/components/admin/agent-chat-sessions/agent-chat-counted-items-table#AgentChatCountedItemsTable',
 				},
 			},
 		},
@@ -233,7 +233,7 @@ export const AgentChatSessions: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				components: {
-					Field: '/components/admin/AgentChatCountedItemsTable',
+					Field: '/components/admin/agent-chat-sessions/agent-chat-counted-items-table#AgentChatCountedItemsTable',
 				},
 			},
 		},
@@ -263,7 +263,7 @@ export const AgentChatSessions: CollectionConfig = {
 			type: 'ui',
 			admin: {
 				components: {
-					Field: '/components/admin/AgentChatUsageTable',
+					Field: '/components/admin/agent-chat-sessions/agent-chat-usage-table#AgentChatUsageTable',
 				},
 			},
 		},

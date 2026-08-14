@@ -32,16 +32,16 @@ vi.mock('@/features/asset-check/repositories/ai-check.ai.repository', () => ({
 	findUnavailableAiReferenceCheckKeys: mocks.findUnavailableAiReferenceCheckKeys,
 	loadAiReferenceFiles: mocks.loadAiReferenceFiles,
 }))
-vi.mock('@/features/generate-image/repositories/generated-image.payload.repository', () => ({
+vi.mock('@/features/image-generation/repositories/generated-image.payload.repository', () => ({
 	loadGeneratedImage: mocks.loadGeneratedImage,
 }))
-vi.mock('@/features/generate-image/services/generate-image.service', () => ({
+vi.mock('@/features/image-generation/services/generate-image.service', () => ({
 	generateImages: mocks.generateImages,
 }))
-vi.mock('@/features/generate-image/services/list-image-profiles.service', () => ({
+vi.mock('@/features/image-generation/services/list-image-profiles.service', () => ({
 	listAvailableImageProfiles: mocks.listAvailableImageProfiles,
 }))
-vi.mock('@/services/start-check-session.service', () => ({
+vi.mock('@/features/asset-check/services/start-check-session.service', () => ({
 	completeCheckSessionObservations: mocks.completeCheckSessionObservations,
 	startCheckSession: mocks.startCheckSession,
 }))
@@ -301,7 +301,11 @@ describe('custom MCP tools', () => {
 			prompt: '{"subject":"파란 세럼병"}',
 			provider: 'openai',
 		})
-		mocks.loadGeneratedImage.mockResolvedValue(image)
+		mocks.loadGeneratedImage.mockResolvedValue({
+			data: image,
+			effectivePrompt: '{"subject":"파란 세럼병"}',
+			inputPrompt: '파란 세럼병',
+		})
 		const result = await getTool('generateBrandImage').handler(
 			{ prompt: '파란 세럼병', profileId: 5 },
 			request,

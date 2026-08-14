@@ -7,15 +7,13 @@ import {
 	SidebarMenu,
 } from '@/components/ui/sidebar'
 
-export function SideNavGroup({
-	title,
-	titleHref,
-	children,
-}: {
+type SideNavGroupProps = {
 	title?: string
 	titleHref?: string
 	children?: ReactNode
-}) {
+}
+
+export function SideNavGroup({ title, titleHref, children }: SideNavGroupProps) {
 	return (
 		<SidebarGroup>
 			<SideNavGroupTitle title={title} titleHref={titleHref} />

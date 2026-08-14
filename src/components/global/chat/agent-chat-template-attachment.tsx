@@ -13,17 +13,22 @@ import {
 } from '@/components/ui/attachment'
 import { Typography } from '@/components/ui/typography'
 import type { AgentTemplateImageAttachment } from '@/features/agent-chat/services/agent-template-request.service'
-import { useTemplateExport } from '@/features/template-export/hooks/use-template-export'
-import { composeTemplateHtml } from '@/services/compose-template-html.client'
+import {
+	type TemplateExportMetadata,
+	useTemplateExport,
+} from '@/features/studio-export/hooks/use-template-export'
+import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
+import { createTemplateRasterArtifact } from '@/features/template-customization/runtime/template-runtime.client'
+import { createControllerValues } from '@/modules/studio-controller/controller-definition'
 
 const PREVIEW_WIDTH = 280
 
-/** html 첨부: 슬롯 값을 base html에 합성해 미리보기·다운로드한다 (Create 화면과 동일 렌더). */
-export function AgentChatTemplateAttachment({
-	attachment,
-}: {
+type AgentChatTemplateAttachmentProps = {
 	attachment: AgentTemplateImageAttachment
-}) {
+}
+
+/** html 첨부: 슬롯 값을 base html에 합성해 미리보기·다운로드한다 (Create 화면과 동일 렌더). */
+export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAttachmentProps) {
 	const composedHtml = useMemo(
 		() =>
 			composeTemplateHtml(
@@ -36,29 +41,46 @@ export function AgentChatTemplateAttachment({
 			),
 		[attachment.html, attachment.values],
 	)
-	const { canExport, exporting, exportError, exportTemplate } = useTemplateExport({
+	const exportMetadata: TemplateExportMetadata = {
 		fileName: attachment.name,
-		height: attachment.height,
-		html: composedHtml,
-		printPpi: attachment.printPpi,
-		templateId: attachment.templateId,
-		templateVersion: attachment.templateVersion,
 		width: attachment.width,
+		height: attachment.height,
+		controller: {
+			groups: attachment.controller.groups,
+			values: {
+				...createControllerValues(attachment.controller.groups),
+				...Object.fromEntries(
+					Object.entries(attachment.values).flatMap(([nodeId, value]) =>
+						typeof value.text === 'string'
+							? [[`text:${nodeId}`, value.text] as const]
+							: [],
+					),
+				),
+			},
+		},
+	}
+	const output = useTemplateExport({
+		artifact: () =>
+			createTemplateRasterArtifact({
+				height: attachment.height,
+				html: composedHtml,
+				width: attachment.width,
+			}),
+		capability: attachment.output,
+		metadata: exportMetadata,
 	})
 
 	return (
 		<TemplateAttachmentFrame
 			name={attachment.name}
-			description={
-				attachment.printPpi
-					? `인쇄 출력 ${attachment.printPpi}ppi · TIFF CMYK · PDF CMYK`
-					: '템플릿 이미지'
+			description={`${attachment.output.formats.map((format) => format.toUpperCase()).join(' · ')} 출력`}
+			isExporting={output.busy}
+			exportError={output.error}
+			onExport={output.canExportFormat('png') ? () => output.runFormat('png') : undefined}
+			onExportTiff={
+				output.canExportFormat('tiff') ? () => output.runFormat('tiff') : undefined
 			}
-			isExporting={exporting !== null}
-			exportError={exportError}
-			onExport={() => exportTemplate('png')}
-			onExportTiff={canExport('tiff') ? () => exportTemplate('tiff') : undefined}
-			onExportPdf={canExport('pdf') ? () => exportTemplate('pdf') : undefined}
+			onExportPdf={output.canExportFormat('pdf') ? () => output.runFormat('pdf') : undefined}
 		>
 			<ScaledMedia contentWidth={attachment.width}>
 				{(scale) => (
@@ -99,7 +121,7 @@ function TemplateAttachmentFrame({
 	description?: string
 	isExporting: boolean
 	exportError: string | null
-	onExport: () => void
+	onExport?: () => void
 	onExportPdf?: () => void
 	onExportTiff?: () => void
 	children: React.ReactNode
@@ -117,14 +139,16 @@ function TemplateAttachmentFrame({
 				<AttachmentDescription>{description}</AttachmentDescription>
 			</AttachmentContent>
 			<AttachmentActions>
-				<AttachmentAction
-					aria-label="PNG로 다운로드"
-					disabled={isExporting}
-					onClick={onExport}
-					title="PNG로 다운로드"
-				>
-					<Download />
-				</AttachmentAction>
+				{onExport && (
+					<AttachmentAction
+						aria-label="PNG로 다운로드"
+						disabled={isExporting}
+						onClick={onExport}
+						title="PNG로 다운로드"
+					>
+						<Download />
+					</AttachmentAction>
+				)}
 				{onExportTiff && (
 					<AttachmentAction
 						aria-label="CMYK TIFF로 다운로드"
@@ -190,7 +214,11 @@ function ScaledMedia({
 	}, [])
 
 	return (
-		<div ref={containerRef} className="flex w-full justify-center overflow-hidden">
+		<div
+			ref={containerRef}
+			data-slot="scaled-media"
+			className="flex w-full justify-center overflow-hidden"
+		>
 			{children(scale)}
 		</div>
 	)

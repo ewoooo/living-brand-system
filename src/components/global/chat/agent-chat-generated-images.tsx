@@ -1,15 +1,15 @@
 'use client'
 
 import { Typography } from '@/components/ui/typography'
-import type { AgentGeneratedImagesAttachment } from '@/features/generate-image/services/generate-image.service'
+import type { AgentGeneratedImagesAttachment } from '@/features/image-generation/services/generate-image.service'
 
-export function AgentChatGeneratedImages({
-	attachment,
-}: {
+type AgentChatGeneratedImagesProps = {
 	attachment: AgentGeneratedImagesAttachment
-}) {
+}
+
+export function AgentChatGeneratedImages({ attachment }: AgentChatGeneratedImagesProps) {
 	return (
-		<div className="flex w-full flex-col gap-2">
+		<div data-slot="agent-chat-generated-images" className="flex w-full flex-col gap-2">
 			{attachment.profileName ? (
 				<Typography size="sm" tone="muted">
 					적용된 프로파일: {attachment.profileName}
@@ -26,7 +26,7 @@ export function AgentChatGeneratedImages({
 						/>
 						<a
 							href={src}
-							download={`essenherb-image-${index + 1}.${imgExt(src)}`}
+							download={`hd-image-${index + 1}.${imgExt(src)}`}
 							className="absolute right-1 bottom-1 rounded bg-background/80 px-1.5 py-0.5 font-body text-sm font-normal underline"
 						>
 							다운로드

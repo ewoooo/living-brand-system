@@ -20,15 +20,10 @@ describe('buildGuidelineSearchText', () => {
 			blocks: [
 				{
 					id: 'examples',
-					blockType: 'doDont',
+					blockType: 'callout',
+					kind: 'dont',
 					title: 'Examples',
-					groups: [
-						{
-							kind: 'dont',
-							description: '과도한 피부 보정을 피합니다.',
-							examples: [],
-						},
-					],
+					items: [{ text: '과도한 피부 보정을 피합니다.' }],
 				},
 			],
 		} as unknown as GuidelineDocument

@@ -36,6 +36,14 @@ const tailPadding = {
 	compact: 'pt-3',
 } as const
 
+type NavigationBlockProps = VariantProps<typeof navigationBlockVariants> & {
+	href: string
+	label: string
+	description?: string | null
+	tail?: ReactNode
+	className?: string
+}
+
 export function NavigationBlock({
 	variant,
 	href,
@@ -43,13 +51,7 @@ export function NavigationBlock({
 	description,
 	tail,
 	className,
-}: VariantProps<typeof navigationBlockVariants> & {
-	href: string
-	label: string
-	description?: string | null
-	tail?: ReactNode
-	className?: string
-}) {
+}: NavigationBlockProps) {
 	const resolvedVariant = variant ?? 'default'
 
 	return (

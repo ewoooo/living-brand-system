@@ -34,17 +34,6 @@ export function getContrastingForeground(hex: string): '#000000' | '#FFFFFF' {
 	return (luminance + 0.05) / 0.05 >= 1.05 / (luminance + 0.05) ? '#000000' : '#FFFFFF'
 }
 
-/**
- * 레거시 essenherb 팔레트 여부. 기본은 HD현대 컬러이고, essenherb 색만 이름이 `.essenherb`로 끝난다.
- * 두 팔레트가 같은 brand-colors 컬렉션에 살아서, essenherb 전용 블록은 이걸로 걸러야
- * HD 색이 그쪽 화면에 새어 들어가지 않는다(실제로 color-pairing이 그렇게 오염됐다).
- */
-const LEGACY_COLOR_SUFFIX = '.essenherb'
-
-export function isLegacyEssenherbColor(color: { name?: string | null }): boolean {
-	return Boolean(color.name?.endsWith(LEGACY_COLOR_SUFFIX))
-}
-
 /** 스와치 위 텍스트의 흑/백 선택용 밝기 판정 (YIQ 근사). */
 export function isLightColor(hex: string): boolean {
 	const { r, g, b } = hexToRgb(hex)

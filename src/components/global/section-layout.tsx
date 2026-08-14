@@ -2,6 +2,16 @@ import { SidePanelOpen } from '@carbon/icons-react'
 import type React from 'react'
 import { GlobalFooter } from '@/components/global/footer/global-footer'
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { cn } from '@/lib/utils'
+
+type SectionLayoutProps = {
+	nav: React.ReactNode
+	children: React.ReactNode
+	pageNavigation?: React.ReactNode
+	mobileNavigation?: boolean
+	sidebarStorageKey?: string
+	variant?: 'document' | 'workspace'
+}
 
 /**
  * 섹션(가이드라인·검수·제작) 공통 레이아웃 셸 — 사이드 nav + 스크롤 main.
@@ -12,16 +22,20 @@ export function SectionLayout({
 	children,
 	pageNavigation,
 	mobileNavigation = true,
-}: {
-	nav: React.ReactNode
-	children: React.ReactNode
-	pageNavigation?: React.ReactNode
-	mobileNavigation?: boolean
-}) {
+	sidebarStorageKey,
+	variant = 'document',
+}: SectionLayoutProps) {
 	return (
-		<SidebarProvider className="h-full min-h-0">
+		<SidebarProvider
+			className="h-full min-h-0 pt-[50px] xl:pt-(--global-header-height)"
+			storageKey={sidebarStorageKey}
+		>
 			{nav}
-			<SectionBody mobileNavigation={mobileNavigation} pageNavigation={pageNavigation}>
+			<SectionBody
+				mobileNavigation={mobileNavigation}
+				pageNavigation={pageNavigation}
+				variant={variant}
+			>
 				{children}
 			</SectionBody>
 		</SidebarProvider>
@@ -33,15 +47,20 @@ function SectionBody({
 	children,
 	mobileNavigation,
 	pageNavigation,
+	variant,
 }: {
 	children: React.ReactNode
 	mobileNavigation: boolean
 	pageNavigation?: React.ReactNode
+	variant: 'document' | 'workspace'
 }) {
 	return (
 		<div
 			data-slot="section-scroll-container"
-			className="flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-y-auto motion-safe:scroll-smooth"
+			className={cn(
+				'flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-y-auto motion-safe:scroll-smooth',
+				variant === 'workspace' && 'lg:overflow-hidden',
+			)}
 		>
 			{mobileNavigation && (
 				<SidebarTrigger
@@ -52,9 +71,9 @@ function SectionBody({
 					<SidePanelOpen data-icon="inline-start" />
 				</SidebarTrigger>
 			)}
-			<main className="w-full flex-1">{children}</main>
+			<main className="min-h-0 w-full flex-1">{children}</main>
 			{pageNavigation}
-			<GlobalFooter />
+			{variant === 'document' && <GlobalFooter />}
 		</div>
 	)
 }

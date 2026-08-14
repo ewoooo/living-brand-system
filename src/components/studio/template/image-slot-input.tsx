@@ -1,142 +1,123 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { ChevronDown } from '@carbon/icons-react'
+import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
+import { Controller } from '@/components/studio/shared/controller'
+import { ControllerControlRenderer } from '@/components/studio/shared/controller-renderer'
 import { Button } from '@/components/ui/button'
-import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field'
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import type { ImageAspectRatio } from '@/features/generate-image/image-size'
-import {
-	type ImageProfileOption,
-	requestImageGeneration,
-	requestPublishedImageProfiles,
-} from '@/features/generate-image/services/generate-image.client'
+import { FieldError } from '@/components/ui/field'
+import { acceptsImagePromptExecution } from '@/features/image-generation/domain/image-studio-config'
+import type { ResolvedTemplateImageConfig } from '@/features/template-customization/domain/template-config'
+import type { TemplateImageSlotState } from '@/features/template-customization/hooks/use-template-studio'
+import type { ControllerControlValue } from '@/modules/studio-controller/controller-definition'
 
-const GENERATION_ERROR_MESSAGE = '이미지 생성에 실패했어요. 잠시 후 다시 시도해 주세요.'
+type ImageSlotInputProps = {
+	pinned: boolean
+	readonly?: boolean
+	contracts: readonly ResolvedTemplateImageConfig[]
+	value: TemplateImageSlotState
+	onFeatureChange: (controlId: string, value: ControllerControlValue) => void
+	onProfileChange: (profileId: number) => void
+	onPromptChange: (prompt: string) => void
+	onGenerate: () => void
+}
 
 /**
- * 제작자가 스튜디오에 개방한 프레임 이미지 슬롯 — 프롬프트로 생성해 프레임 이미지를 교체한다.
- * 프로파일이 고정되지 않은 슬롯만 발행된 프로파일 목록을 불러와 선택을 노출한다.
+ * Template 이미지 슬롯의 표현 컴포넌트. Profile 계약과 슬롯 상태는 Provider가 주며,
+ * 이 컴포넌트는 HTTP나 생성 상태를 직접 소유하지 않는다.
  */
 export function ImageSlotInput({
-	id,
-	pinnedProfileId,
-	aspectRatio,
-	onGenerated,
-}: {
-	id: string
-	pinnedProfileId?: number
-	/** 슬롯 박스에서 유도한 생성 비율 — 없으면 프로파일 비율로 생성한다. */
-	aspectRatio?: ImageAspectRatio
-	onGenerated: (image: { backgroundImage: string; generatedImageId: number }) => void
-}) {
-	const [prompt, setPrompt] = useState('')
-	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
-	const [profileId, setProfileId] = useState<number | undefined>(pinnedProfileId)
-	const [loading, setLoading] = useState(false)
-	const [error, setError] = useState<string | null>(null)
-
-	useEffect(() => {
-		if (pinnedProfileId) return
-		void requestPublishedImageProfiles()
-			.then((nextProfiles) => {
-				setProfiles(nextProfiles)
-				setProfileId((current) => current ?? nextProfiles[0]?.id)
-			})
-			.catch(() => {
-				setProfiles([])
-				setError('이미지 프로파일을 불러오지 못했습니다.')
-			})
-	}, [pinnedProfileId])
-
-	async function run() {
-		const trimmed = prompt.trim()
-		if (!trimmed || !profileId || loading) return
-		setLoading(true)
-		setError(null)
-		try {
-			const result = await requestImageGeneration({
-				prompt: trimmed,
-				count: 1,
-				profileId,
-				aspectRatio,
-			})
-			const generated = result.generatedImages?.[0]
-			if (generated) {
-				onGenerated({ backgroundImage: generated.url, generatedImageId: generated.id })
-			} else {
-				setError(GENERATION_ERROR_MESSAGE)
-			}
-		} catch (requestError) {
-			console.error(requestError)
-			setError(GENERATION_ERROR_MESSAGE)
-		} finally {
-			setLoading(false)
-		}
-	}
+	pinned,
+	readonly = false,
+	contracts,
+	value,
+	onFeatureChange,
+	onProfileChange,
+	onPromptChange,
+	onGenerate,
+}: ImageSlotInputProps) {
+	const selected = contracts.find((contract) => contract.config.id === value.profileId)
+	const invalidPrompt = selected
+		? !acceptsImagePromptExecution(selected.prompt, value.prompt)
+		: true
 
 	return (
-		<div className="flex flex-col gap-2">
-			{!pinnedProfileId && (
-				<Field data-disabled={!profiles?.length}>
-					<FieldLabel className="sr-only" htmlFor={`${id}-profile`}>
-						이미지 프로파일
-					</FieldLabel>
-					<Select
-						value={profileId ? String(profileId) : undefined}
-						onValueChange={(value) => setProfileId(Number(value))}
-						disabled={!profiles?.length}
-					>
-						<SelectTrigger id={`${id}-profile`} className="w-full">
-							<SelectValue
-								placeholder={
-									profiles ? '발행된 프로파일 없음' : '프로파일 불러오는 중'
-								}
-							/>
-						</SelectTrigger>
-						{profiles?.length ? (
-							<SelectContent>
-								<SelectGroup>
-									{profiles.map(({ id: optionId, name }) => (
-										<SelectItem key={optionId} value={String(optionId)}>
-											{name}
-										</SelectItem>
-									))}
-								</SelectGroup>
-							</SelectContent>
-						) : null}
-					</Select>
-				</Field>
+		<div data-slot="image-slot-input" className="flex flex-col gap-1">
+			{pinned || readonly ? (
+				<Controller.Row label="Type" readonly>
+					<span className="flex min-w-0 items-center gap-2">
+						<span className="truncate text-sm text-muted-foreground">
+							{selected?.config.name ?? '—'}
+						</span>
+						<ChevronDown
+							aria-hidden
+							className="size-4 shrink-0 text-muted-foreground"
+						/>
+					</span>
+				</Controller.Row>
+			) : (
+				<Controller.Row label="Type">
+					<Controller.Select
+						options={contracts.map(({ config }) => ({
+							value: String(config.id),
+							label: config.name,
+						}))}
+						value={value.profileId === undefined ? undefined : String(value.profileId)}
+						onChange={(next) => onProfileChange(Number(next))}
+						placeholder="사용 가능한 프로파일 없음"
+						disabled={readonly || value.generating || contracts.length === 0}
+					/>
+				</Controller.Row>
 			)}
-			{aspectRatio && (
-				<FieldDescription className="text-xs">
-					슬롯 비율 {aspectRatio}로 생성
-				</FieldDescription>
+			{selected && (
+				<ImageProfileFeatureRenderer
+					config={selected.config}
+					values={value.featureValues}
+					bindings={
+						readonly
+							? Object.fromEntries(
+									selected.config.controller.groups.flatMap((group) =>
+										group.controls.map(({ id }) => [
+											id,
+											{ availability: 'readonly' },
+										]),
+									),
+								)
+							: undefined
+					}
+					onChange={onFeatureChange}
+				/>
 			)}
-			<Textarea
-				id={id}
-				value={prompt}
-				onChange={(event) => setPrompt(event.target.value)}
-				placeholder="만들 이미지를 설명하세요"
-				maxLength={500}
-				rows={2}
-			/>
+			{selected && (
+				<>
+					<ControllerControlRenderer
+						definition={selected.ratio}
+						value={selected.ratio.defaultValue}
+						onChange={() => {}}
+					/>
+					<ControllerControlRenderer
+						definition={
+							readonly
+								? { ...selected.prompt, availability: 'readonly' }
+								: selected.prompt
+						}
+						value={value.prompt}
+						onChange={(next) => {
+							if (typeof next === 'string') onPromptChange(next)
+						}}
+					/>
+				</>
+			)}
 			<Button
 				type="button"
-				size="sm"
-				onClick={run}
-				disabled={loading || !profileId || !prompt.trim()}
+				variant="muted"
+				className="mt-0.5 h-11 w-full text-sm font-semibold"
+				onClick={onGenerate}
+				disabled={readonly || value.generating || !selected || invalidPrompt}
 			>
-				{loading ? '생성 중…' : '이미지 생성'}
+				{value.generating ? '생성 중…' : '이미지 생성'}
 			</Button>
-			{error && <FieldError>{error}</FieldError>}
+			{value.error && <FieldError>{value.error}</FieldError>}
 		</div>
 	)
 }

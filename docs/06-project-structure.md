@@ -32,8 +32,9 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 | Collections | `src/collections` | Payload collection schema, access, hook 진입점을 둡니다. |
 | Feature Blocks | `src/features/*/blocks/<block>` | Payload schema, projection, React component를 블록 단위로 함께 둡니다. |
 | Globals | `src/globals` | Payload global schema를 둡니다. |
-| Services | `src/features/*/services`, `src/services` | Service는 소유 기능 안에 두고, 여러 기능이 공유하는 Use Case만 `src/services`에 둡니다. |
-| Repositories | `src/features/*/repositories`, `src/repositories` | Repository는 소유 기능 안에 두고, 여러 기능이 공유할 때만 `src/repositories`로 승격합니다. |
+| Modules | `src/modules` | 기능 자체가 아닌 UI 비종속 공통 계약과 Agent 실행 모듈을 둡니다. |
+| Services | `src/features/*/services`, `src/modules/*/services`, `src/services` | Service는 사용처 수와 관계없이 소유 기능이나 모듈 안에 둡니다. 소유 경계가 없는 cross-domain orchestration만 `src/services`에 둡니다. |
+| Repositories | `src/features/*/repositories`, `src/modules/*/repositories`, `src/repositories` | Repository는 여러 기능이 사용해도 데이터의 소유 기능이나 모듈 안에 둡니다. 소유 경계가 없는 저장소만 `src/repositories`에 둡니다. |
 | Tests | `tests` | e2e, integration, helper를 둡니다. |
 | Docs | `docs` | 제품, 도메인, 아키텍처, 개발 규칙 문서를 둡니다. |
 | Future apps | `apps/*` | 배포 단위가 둘 이상으로 나뉠 때만 추가합니다. |
@@ -42,7 +43,7 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 예시:
 
 ```text
-현재: src/app, src/features/*/services, src/features/*/repositories, src/services, src/repositories
+현재: src/app, src/features, src/modules
 나중: apps/web, apps/admin, packages/domain
 ```
 
@@ -102,8 +103,6 @@ src/
     *.repository.ts
     *.payload.repository.ts
     *.drizzle.repository.ts
-  agents/
-    *.agent.ts
   components/
     admin/
     global/
@@ -114,6 +113,40 @@ src/
       shared/
     ui/
   features/
+    graphic-generation/
+      domain/
+      graphic-runtimes/
+        <runtime-id>/
+          definition.ts
+          model.ts
+          runtime.client.ts
+        catalog/
+          manifest.generated.ts
+          model.generated.ts
+          runtime.generated.client.ts
+      hooks/
+      repositories/
+      runtime/
+      services/
+    image-generation/
+      domain/
+      hooks/
+      repositories/
+      runtime/
+      services/
+    template-customization/
+      domain/
+      hooks/
+      runtime/
+      services/
+    template-import/
+      repositories/
+      services/
+      utils/
+    studio-export/
+      adapters/
+      hooks/
+      services/
     <feature>/
       blocks/
         <block>/
@@ -135,6 +168,15 @@ src/
       services/
       utils/
       types.ts
+  modules/
+    agents/
+      *.agent.ts
+    studio-controller/
+    template/
+      domain/
+      repositories/
+      runtime/
+      services/
   lib/
     auth.ts
     errors.ts
@@ -155,15 +197,16 @@ scripts/
 - `route.ts`는 HTTP adapter로만 동작합니다.
 - Collection hook은 Service를 호출하고, 업무 규칙을 직접 길게 작성하지 않습니다.
 - Payload Local API, ORM, CMS SDK import는 `*.payload.repository.ts`, `*.drizzle.repository.ts` 구현 파일에만 허용합니다. Service는 기능 전용 read 조회라도 이 규칙을 따릅니다.
-- Service와 Repository는 그것을 소유하는 기능의 `src/features/<feature>` 안에 두는 것이 기본입니다. 두 번째 기능이 같은 Service나 Repository를 쓰는 시점에 `src/services`, `src/repositories`로 승격합니다.
+- Service와 Repository는 사용처 수와 관계없이 그것을 소유하는 `src/features/<feature>` 또는 `src/modules/<module>` 안에 둡니다. 다른 기능은 소유 경계의 공개 계약을 소비합니다. 소유 경계가 없는 cross-domain orchestration이나 저장소만 `src/services`, `src/repositories`에 둡니다.
 - 일반 React 컴포넌트는 `src/components/<surface>`에 둡니다. 컴포넌트가 기능 hook이나 client service를 사용할 수 있지만, 기능 로직이 표현 컴포넌트를 import하면 안 됩니다.
 - 둘 이상의 화면 표면이 쓰는 컴포넌트만 `src/components/shared`로 승격합니다. 한 표면 안의 여러 화면이 공유하면 `<surface>/shared`에 둡니다.
 - Repository Interface 파일(`*.repository.ts`)은 구현체가 2개 이상 필요해지는 시점에 만듭니다. 단일 구현 단계에서는 Service가 구현 파일을 직접 import합니다.
 - 기능 전용 read service의 Payload 접근도 같은 기능의 `src/features/*/repositories`에 둡니다.
-- 기능 안의 순수 도메인 계산 계층(예: `review/checkers`)과 정적 시나리오 데이터(예: `review/scenarios`)는 승인된 기능 하위 폴더 확장입니다. 새 하위 폴더는 표준 폴더(`components`, `hooks`, `repositories`, `services`, `utils`)로 표현할 수 없을 때만 추가합니다.
+- 기능 안의 순수 도메인 계산 계층(예: `review/checkers`)과 정적 시나리오 데이터(예: `review/scenarios`)는 승인된 기능 하위 폴더 확장입니다. 새 하위 폴더는 표준 폴더(`components`, `contexts`, `hooks`, `providers`, `repositories`, `services`, `utils`)로 표현할 수 없을 때만 추가합니다.
+- Feature 디렉터리는 `template-core`, `graphic-generation`, `image-generation`, `template-customization`, `template-import`처럼 `<object>-<capability>`로 이름 짓습니다. 여러 기능이 소비하는 Template 도메인 정본은 `src/features/template-core`, UI 비종속 Controller 계약은 `src/modules/studio-controller`, 공통 출력 실행은 `src/features/studio-export`가 소유합니다. 각 기능의 직렬화 계약과 순수 계산은 `domain`, Context 값 계약은 `contexts`, 화면 세션은 `providers`, Context 소비는 `hooks`, 실행 adapter는 `runtime`, 조회 유즈케이스는 `services`, Payload 접근은 `repositories`에 둡니다. Provider와 소비 훅은 서로 import하지 않고 같은 Context 계약에 의존합니다. Studio 표현 컴포넌트와 라우트는 화면 표면 이름이므로 `src/components/studio`, `/studio`를 유지합니다.
 - 기능 전용 Payload block은 `src/features/<feature>/blocks/<block>`에 schema, projection, component를 함께 둡니다. 생성된 schema/projection catalog는 서버에서 안전하게 사용하고 React renderer catalog는 별도 파일로 유지해 client component가 Payload config에 포함되지 않게 합니다.
-- Agent는 별도 사용자 역할이 아니라 서비스 모듈입니다.
-- 실제 폴더 구조를 개선할 때는 `src/features`, `src/agents`, `src/components`, `src/lib`, `src/services`, `src/repositories`, `src/types`를 이 순서로 추가합니다.
+- Agent는 별도 사용자 역할이 아니라 `src/modules/agents`의 실행 모듈입니다.
+- 실제 폴더 구조를 개선할 때는 `src/features`, `src/modules`, `src/components`, `src/lib`, `src/services`, `src/repositories`, `src/types`를 이 순서로 추가합니다.
 
 예시:
 
@@ -180,13 +223,13 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 | Payload collection | `src/collections` | 데이터 구조, access, hook 진입점 |
 | 기능 전용 Payload block | `src/features/*/blocks/<block>` | schema, Agent/Check projection, React component |
 | Creator 화면 | `src/app/(frontend)`, `src/components` | 화면 이동, route 조합, 표현 컴포넌트 |
-| Creator 화면 상태 | `src/features/*/hooks`, `src/features/*/utils` | 화면 상태, view model, 비즈니스 계산 |
+| Creator 화면 상태 | `src/features/*/contexts`, `src/features/*/providers`, `src/features/*/hooks`, `src/features/*/utils` | Context 값 계약은 context, 화면 세션 상태는 Provider, 소비 API는 hook, 나머지는 view model·비즈니스 계산 |
 | Admin 화면 | `src/app/(payload)`, Payload Admin 기본 UI | Manager의 CMS 작업 |
 | Route Handler | `src/app/**/route.ts` | request parsing, 권한 확인, Service 호출, response 변환 |
-| Service | `src/features/*/services`, 공유 시 `src/services` | Use Case 실행, Input / Output 계약, 상태 전이 판단, 기능 전용 published 조회 |
-| Repository Interface | `src/features/*/repositories/*.repository.ts`, 공유 시 `src/repositories` | Service가 필요한 저장소 계약 (구현체 2개 이상일 때) |
-| Repository Implementation | `src/features/*/repositories/*.payload.repository.ts`, 공유 시 `src/repositories` | Payload Local API, Drizzle ORM, CMS SDK 호출 |
-| Agent | `src/agents` | 검색, Answer, Recommendation 생성 |
+| Service | `src/features/*/services`, `src/modules/*/services`, 소유 경계가 없을 때 `src/services` | Use Case 실행, Input / Output 계약, 상태 전이 판단, 기능 전용 published 조회 |
+| Repository Interface | `src/features/*/repositories/*.repository.ts`, `src/modules/*/repositories/*.repository.ts`, 소유 경계가 없을 때 `src/repositories` | Service가 필요한 저장소 계약 (구현체 2개 이상일 때) |
+| Repository Implementation | `src/features/*/repositories/*.payload.repository.ts`, `src/modules/*/repositories/*.payload.repository.ts`, 소유 경계가 없을 때 `src/repositories` | Payload Local API, Drizzle ORM, CMS SDK 호출 |
+| Agent | `src/modules/agents` | 검색, Answer, Recommendation 생성 |
 | 공통 유틸 | `src/lib` | 에러, 인증 helper처럼 실제 공유되는 코드 |
 
 예시:
@@ -217,6 +260,18 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 
 `runtime`은 생성 map을 사용하는 동작만 소유합니다. `project-guideline-block.ts`는 Agent/Check projection, `build-check-source-snapshot.ts`는 문서 snapshot을 담당합니다. React 렌더 진입점은 `components/guideline-blocks.tsx`에 둡니다. 둘 이상의 블록이 실제로 공유하는 필드나 UI만 `shared`에 둡니다.
 
+### Graphic runtime 등록
+
+기존 `p5`·`shader` 엔진에 Graphic을 추가할 때는 `src/features/graphic-generation/graphic-runtimes/<runtime-id>` 폴더 하나를 만들고 아래 세 파일을 기본 export로 제공합니다.
+
+| 파일 | 최소 계약 |
+| --- | --- |
+| `definition.ts` | `defineGraphicRuntime()`으로 서버 안전 `GraphicRuntimeManifest`를 정의하며 `id`는 폴더명과 일치시킵니다. |
+| `model.ts` | Manifest를 import하지 않는 순수 `GraphicModelAdapter`를 제공합니다. |
+| `runtime.client.ts` | P5/WebGL을 실제 실행하는 브라우저 전용 `GraphicRuntimeAdapter`를 제공합니다. |
+
+`pnpm generate:graphic-runtime-catalogs`는 세 경계를 별도 정적 import로 만들어 `graphic-runtimes/catalog/*.generated.*`를 갱신합니다. 생성 파일은 커밋하되 직접 수정하지 않습니다. `pnpm check:graphic-runtime-catalogs`는 계약 파일 누락, 폴더명과 Manifest id 불일치, 오래된 생성 파일을 CI에서 거부합니다. 기존 엔진의 새 자산은 Provider·Sidebar·Canvas·중앙 Catalog를 수정하지 않습니다.
+
 ### Use Case 스캐폴딩
 
 | 파일 | 역할 |
@@ -227,7 +282,7 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 | `src/features/guideline/services/publish-guideline.service.test.ts` | Service 단위 검증 |
 
 Repository Interface(`guideline.repository.ts`)는 두 번째 구현체가 필요해질 때 추가합니다.
-여러 기능이 같은 Service나 Repository를 쓰게 되면 그 시점에 `src/services`, `src/repositories`로 승격합니다.
+여러 기능이 같은 Service나 Repository를 쓰더라도 소유 도메인이 명확하면 그 기능 안에 유지합니다.
 
 ### 생성하지 않는 것
 
@@ -660,7 +715,7 @@ Payload collection, field, index, relationship처럼 DB 스키마에 영향을 �
 
 1. 모든 공유 DB에 기존 pending migration을 먼저 적용합니다.
 2. 공유 DB를 백업하고, 백업을 격리된 로컬 DB에 복원해 테이블 행 수와 sequence를 비교합니다.
-3. 기존 `.ts`·`.json`과 보조 파일은 `migrations/archive/<전환일>/`로 옮깁니다. 삭제하지 않습니다.
+3. 기존 `.ts`·`.json`과 보조 파일은 `migrations/archive/<전환일>/`로 옮깁니다. **전환 직후의 안전망이므로 영구 보관이 아닙니다** — 다음 기준선까지 살아 있을 이유가 없고, 실행 경로가 사라진 뒤에도 남기면 typecheck 대상으로 남아 삭제된 스키마 이름에 매달립니다(2026-08-10에 이 이유로 아카이브 전체를 삭제했습니다). 되돌릴 근거는 git 이력에 있습니다. 폴더 안에 다른 데서 참조하는 보조 데이터가 있으면 그것만 실제 소유 위치로 옮깁니다.
 4. top-level `migrations/`에는 현재 config에서 생성한 전체 스키마 migration, 같은 이름의 `.json`, `index.ts`만 둡니다.
 5. 기존 DB를 인수하는 기준선은 최신 handoff migration과 핵심 테이블을 확인해야 합니다. 조건을 만족하면 스키마 DDL을 실행하지 않고 기존 `payload_migrations` 행만 지웁니다. Payload runner가 같은 트랜잭션에서 새 기준선 기록을 추가합니다.
 6. 조건이 맞지 않는 기존 DB에서는 기준선 migration을 중단합니다. 누락된 handoff migration을 적용한 뒤 다시 실행합니다.

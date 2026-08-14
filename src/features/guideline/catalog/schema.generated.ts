@@ -3,24 +3,7 @@
 import type { Block } from 'payload'
 import BlockSchema from '../blocks/block/schema'
 import CalloutSchema from '../blocks/callout/schema'
-import CarouselSchema from '../blocks/carousel/schema'
-import ColorPairingSchema from '../blocks/color-pairing/schema'
-import ColorPairingRecommendationSchema from '../blocks/color-pairing-recommendation/schema'
-import ColorPaletteSchema from '../blocks/color-palette/schema'
 import ContentColumnsSchema from '../blocks/content-columns/schema'
-import DoDontSchema from '../blocks/do-dont/schema'
-import GlyphGridSchema from '../blocks/glyph-grid/schema'
-import IconGridSchema from '../blocks/icon-grid/schema'
-import ImageGridSchema from '../blocks/image-grid/schema'
-import LayoutGridSchema from '../blocks/layout-grid/schema'
-import LogoGroupViewerSchema from '../blocks/logo-group-viewer/schema'
-import LogoViewerSchema from '../blocks/logo-viewer/schema'
-import MediaShowcaseSchema from '../blocks/media-showcase/schema'
-import SignatureShowcaseSchema from '../blocks/signature-showcase/schema'
-import SpecListSchema from '../blocks/spec-list/schema'
-import StemClearSpaceSchema from '../blocks/stem-clear-space/schema'
-import TypeScaleSchema from '../blocks/type-scale/schema'
-import TypeSpecimenSchema from '../blocks/type-specimen/schema'
 import type { GuidelineBlock } from '../blocks/types'
 
 type SchemaMap = {
@@ -29,25 +12,8 @@ type SchemaMap = {
 
 export const guidelineBlockSchemas = {
 	contentColumns: ContentColumnsSchema,
-	carousel: CarouselSchema,
-	mediaShowcase: MediaShowcaseSchema,
-	colorPalette: ColorPaletteSchema,
-	doDont: DoDontSchema,
 	callout: CalloutSchema,
-	specList: SpecListSchema,
-	signatureShowcase: SignatureShowcaseSchema,
-	typeSpecimen: TypeSpecimenSchema,
-	typeScale: TypeScaleSchema,
-	layoutGrid: LayoutGridSchema,
-	glyphGrid: GlyphGridSchema,
 	block: BlockSchema,
-	colorPairing: ColorPairingSchema,
-	colorPairingRecommendation: ColorPairingRecommendationSchema,
-	iconGrid: IconGridSchema,
-	imageGrid: ImageGridSchema,
-	logoGroupViewer: LogoGroupViewerSchema,
-	logoViewer: LogoViewerSchema,
-	stemClearSpace: StemClearSpaceSchema,
 } satisfies SchemaMap
 
 export const guidelineBlocks = Object.values(guidelineBlockSchemas)

@@ -6,15 +6,15 @@ import type { Template } from '@/payload-types'
 export type AgentTemplateDocument = Pick<
 	Template,
 	| 'description'
+	| 'exportPolicy'
 	| 'height'
 	| 'html'
 	| 'id'
 	| 'name'
 	| 'overrides'
-	| 'printPpi'
 	| 'updatedAt'
 	| 'width'
->
+> & { controllerRestrictions?: unknown; controllerPresentation?: unknown }
 
 /**
  * 두 조회가 공유하는 published 템플릿 질의 기본값.
@@ -40,8 +40,10 @@ function publishedTemplateQuery(user: unknown) {
 			overrides: true,
 			width: true,
 			height: true,
-			printPpi: true,
+			exportPolicy: true,
 			updatedAt: true,
+			controllerRestrictions: true,
+			controllerPresentation: true,
 		},
 	} as const
 }
@@ -59,7 +61,7 @@ export async function listAgentTemplates(user: unknown): Promise<AgentTemplateDo
 		},
 	})
 
-	return templates.docs
+	return templates.docs as unknown as AgentTemplateDocument[]
 }
 
 export async function findAgentTemplate(
@@ -80,5 +82,5 @@ export async function findAgentTemplate(
 		},
 	})
 
-	return templates.docs[0] ?? null
+	return (templates.docs[0] as unknown as AgentTemplateDocument | undefined) ?? null
 }

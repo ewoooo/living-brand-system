@@ -9,7 +9,7 @@ import {
 
 describe('routes', () => {
 	it('Studio canonical 경로와 템플릿 하위 경로를 만든다', () => {
-		expect(routes.studio.root).toBe('/studio')
+		expect(routes.studio.assets).toBe('/studio/assets')
 		expect(routes.studio.generateImage).toBe('/studio/generate/image')
 		expect(routes.studio.generateGraphic).toBe('/studio/generate/graphic')
 		expect(routes.studio.mcp).toBe('/studio/mcp')
@@ -23,6 +23,11 @@ describe('routes', () => {
 
 	it('이전 Studio 경로를 canonical 경로로 영구 이동한다', () => {
 		expect(legacyPageRedirects).toEqual([
+			{
+				source: '/studio',
+				destination: '/studio/assets',
+				permanent: true,
+			},
 			{
 				source: '/create/:path*',
 				destination: '/studio/template/:path*',
