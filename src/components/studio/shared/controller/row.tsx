@@ -56,7 +56,9 @@ export function ControllerRow({
 			data-slot="controller-row"
 			aria-disabled={disabled || undefined}
 			className={cn(
-				'flex h-9 w-full shrink-0 items-center justify-between gap-3 rounded-lg bg-muted px-3 focus-within:ring-2 focus-within:ring-ring/30',
+				// relative + --controller-row-px: 셀렉트 트리거가 행 전체(border box)를 덮는 기준이다.
+				// 패딩을 변수로 내보내야 트리거가 그만큼 밖으로 나가 행과 같은 폭을 잰다(ROW_SELECT_TRIGGER).
+				'relative flex h-9 w-full shrink-0 items-center justify-between gap-3 rounded-lg bg-muted px-3 [--controller-row-px:0.75rem] focus-within:ring-2 focus-within:ring-ring/30',
 				disabled && 'pointer-events-none opacity-50',
 				className,
 			)}

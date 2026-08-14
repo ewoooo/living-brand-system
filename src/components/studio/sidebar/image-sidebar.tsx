@@ -258,7 +258,8 @@ function SettingRow({ icon, definition, binding, value, onChange }: SettingRowPr
 				}
 				readonly={readonly}
 				disabled={disabled}
-				className="px-2.5"
+				// 압축 행은 패딩이 10px — 셀렉트 트리거가 행 폭을 재려면 변수도 같이 좁힌다.
+				className="px-2.5 [--controller-row-px:0.625rem]"
 			>
 				{readonly ? (
 					<span className="text-muted-foreground text-sm">{value}</span>
