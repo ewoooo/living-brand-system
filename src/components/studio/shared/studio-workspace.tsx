@@ -47,7 +47,7 @@ export function StudioWorkspace({ sidebar, children }: StudioWorkspaceProps) {
 		// lg 행을 1fr로 못 박아야 컨트롤러가 길어져도 페이지 대신 패널 내부가 스크롤된다.
 		<section
 			data-slot="studio-workspace"
-			className="grid min-h-0 border-t border-border lg:h-full lg:max-h-full lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden"
+			className="grid min-h-0 lg:h-full lg:max-h-full lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden"
 		>
 			<aside
 				data-slot="studio-workspace-sidebar"
