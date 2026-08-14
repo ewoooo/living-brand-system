@@ -39,7 +39,7 @@ export function ControllerGroup(props: ControllerGroupProps) {
 	return (
 		<section
 			data-slot="controller-group"
-			className={cn('flex shrink-0 flex-col gap-1', className)}
+			className={cn('flex shrink-0 flex-col gap-1 pb-3', className)}
 			{...sectionProps}
 		>
 			<header className="flex h-9 shrink-0 items-center pt-1 text-sm font-semibold text-muted-foreground">
@@ -73,7 +73,9 @@ function ControllerCollapsibleGroup({
 			disabled={disabled}
 			className={cn(
 				// 헤더와 컨트롤 목록 사이는 프리미티브 간격과 같은 4px — 붙이면 첫 행의 포커스 링이 헤더에 가린다.
+				// 그룹 사이 간격은 컨테이너 gap이 아니라 펼쳐졌을 때의 하단 패딩(12px)이 만든다 — 접힌 그룹은 다음 구분선에 바로 붙는다.
 				'flex shrink-0 flex-col gap-1 border-t border-border pt-1',
+				resolvedOpen && 'pb-3',
 				attached && 'border-t-0 pt-2',
 				className,
 			)}

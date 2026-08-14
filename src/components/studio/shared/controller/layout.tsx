@@ -39,7 +39,8 @@ export function ControllerContent({ className, ...props }: React.ComponentProps<
 			data-slot="controller-content"
 			className={cn(
 				// 상단 여백은 두지 않는다 — 첫 그룹 헤더(h-9)의 자체 여백이 header 경계선과의 간격을 만든다.
-				'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-4 [&>*:first-child]:border-t-0',
+				// 그룹 사이 간격은 이 컨테이너의 gap이 아니라 각 그룹이 펼쳐졌을 때의 자체 하단 패딩이 만든다.
+				'flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-4 [&>*:first-child]:border-t-0',
 				className,
 			)}
 			{...props}
