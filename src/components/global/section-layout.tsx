@@ -26,7 +26,10 @@ export function SectionLayout({
 	variant = 'document',
 }: SectionLayoutProps) {
 	return (
-		<SidebarProvider className="h-full min-h-0" storageKey={sidebarStorageKey}>
+		<SidebarProvider
+			className="h-full min-h-0 pt-[50px] xl:pt-(--global-header-height)"
+			storageKey={sidebarStorageKey}
+		>
 			{nav}
 			<SectionBody
 				mobileNavigation={mobileNavigation}

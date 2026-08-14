@@ -26,6 +26,10 @@ describe('SectionLayout', () => {
 			</SectionLayout>,
 		)
 
+		expect(container.querySelector('[data-slot="sidebar-wrapper"]')).toHaveClass(
+			'pt-[50px]',
+			'xl:pt-(--global-header-height)',
+		)
 		expect(container.querySelector('[data-slot="section-scroll-container"]')).toHaveClass(
 			'lg:overflow-hidden',
 		)
