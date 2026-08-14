@@ -25,9 +25,11 @@ export function ControllerPad({
 	aspectRatio,
 	className,
 }: ControllerPadProps) {
-	const drag = useControllerPointerDrag(disabled, (ratioX, ratioY) =>
-		onChange({ x: ratioX * 2 - 1, y: ratioY * 2 - 1 }),
-	)
+	// 위치를 직접 찍는 컨트롤이라 클릭을 따로 받지 않는다 — 누른 지점이 곧 값이다.
+	const drag = useControllerPointerDrag({
+		disabled,
+		onDrag: (ratioX, ratioY) => onChange({ x: ratioX * 2 - 1, y: ratioY * 2 - 1 }),
+	})
 
 	function nudge(event: KeyboardEvent<HTMLDivElement>) {
 		if (disabled) return
@@ -58,9 +60,10 @@ export function ControllerPad({
 			aria-disabled={disabled || undefined}
 			tabIndex={disabled ? -1 : 0}
 			onKeyDown={nudge}
-			{...drag}
+			data-dragging={drag.dragging ? 'true' : 'false'}
+			{...drag.handlers}
 			className={cn(
-				'relative shrink-0 touch-none rounded-lg bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
+				'group/pad relative shrink-0 touch-none rounded-lg bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
 				!aspectRatio && 'h-36 w-full',
 				disabled && 'pointer-events-none opacity-50',
 				className,
@@ -80,7 +83,8 @@ export function ControllerPad({
 			<div aria-hidden className="absolute inset-x-0 top-1/2 h-px bg-border" />
 			<div
 				aria-hidden
-				className="-translate-x-1/2 -translate-y-1/2 absolute size-3.5 rounded-full bg-foreground shadow-sm"
+				// 잡고 있는 동안만 커진다 — 손가락 아래 가려진 점의 위치를 다시 알려준다.
+				className="-translate-x-1/2 -translate-y-1/2 absolute size-3.5 rounded-full bg-foreground shadow-sm transition-transform duration-150 ease-out group-data-[dragging=true]/pad:scale-125 motion-reduce:transition-none"
 				style={{
 					left: `${((value.x + 1) / 2) * 100}%`,
 					top: `${((value.y + 1) / 2) * 100}%`,
