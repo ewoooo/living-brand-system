@@ -86,6 +86,7 @@ export function GraphicSidebar({ output }: { output: GraphicExportView }) {
 						buttonLabel="Change"
 						aria-label="그래픽 변경"
 						tabs={['Graphic Profiles']}
+						previewImage={config.previewImage}
 						empty={browseEmptyMessage(
 							profiles.browse.status,
 							(profiles.browse.data?.length ?? 0) > 1,

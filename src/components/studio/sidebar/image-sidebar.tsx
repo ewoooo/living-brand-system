@@ -63,6 +63,7 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 						buttonLabel="Change"
 						aria-label="프로파일 변경"
 						tabs={['Image Profiles']}
+						previewImage={config.previewImage}
 						empty={browseEmptyMessage(
 							profiles.browse.status,
 							(profiles.browse.data?.length ?? 0) > 1,

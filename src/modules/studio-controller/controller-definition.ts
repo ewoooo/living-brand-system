@@ -29,6 +29,15 @@ export type StudioRuntimeManifest = {
 	}
 }
 
+/**
+ * Admin이 등록한 미리보기 이미지의 표시 계약 — 자산 브라우저 카드와 트리거 배경이 쓴다.
+ * 업로드 문서 원본이 아니라 표시에 필요한 두 값만 지난다(docs/07: 안전 계약 필드만 나간다).
+ */
+export type StudioPreviewImage = {
+	url: string
+	alt: string
+}
+
 /** 모든 Studio가 발행하는 공통 Controller envelope. 도메인 실행 정보는 교차 타입으로 확장한다. */
 export type StudioControllerConfig<
 	Kind extends StudioKind = StudioKind,
@@ -40,6 +49,8 @@ export type StudioControllerConfig<
 	name: string
 	/** Runtime 구조와 분리해 Admin이 정한 그룹 표현 정책. Runtime Manifest에는 존재하지 않는다. */
 	controllerPresentation?: StudioControllerPresentation
+	/** Admin이 고른 미리보기 이미지. Runtime Manifest에는 존재하지 않는다(프로파일·템플릿이 갖는다). */
+	previewImage?: StudioPreviewImage
 }
 
 export type ControllerOption<Value extends string = string> = {
@@ -150,6 +161,7 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	}
 	if (config.version !== 1) invalid('version', '지원하는 버전은 1입니다.')
 	assertNonEmptyString(config.name, 'name')
+	if (config.previewImage != null) validatePreviewImage(config.previewImage)
 	parseStudioArtifactCapabilities(config.artifacts)
 
 	const controller = asRecord(config.controller, 'controller')
@@ -537,6 +549,31 @@ function validateControl(value: unknown, path: string) {
 		default:
 			invalid(`${path}.kind`, '지원하지 않는 값입니다.')
 	}
+}
+
+function validatePreviewImage(value: unknown) {
+	const image = asRecord(value, 'previewImage')
+	assertOnlyKeys(image, ['url', 'alt'], 'previewImage')
+	assertNonEmptyString(image.url, 'previewImage.url')
+	// alt는 빈 문자열을 허용한다 — 장식 이미지의 유효한 대체 텍스트이고, 이 값 때문에 Config 파싱이
+	// 죽으면 스튜디오 전체가 열리지 않는다.
+	if (typeof image.alt !== 'string') invalid('previewImage.alt', '문자열이어야 합니다.')
+}
+
+/**
+ * Payload upload 문서를 표시 계약으로 좁힌다 — 미리보기가 없거나 파일이 아직 없으면 undefined다.
+ * 카드가 쓰는 크기는 320×240 thumbnail이므로 있으면 그것을 쓰고, 없으면 원본으로 떨어진다.
+ */
+export function toStudioPreviewImage(value: unknown): StudioPreviewImage | undefined {
+	if (!value || typeof value !== 'object') return undefined
+	const document = value as {
+		url?: unknown
+		alt?: unknown
+		sizes?: { thumbnail?: { url?: unknown } }
+	}
+	const url = document.sizes?.thumbnail?.url ?? document.url
+	if (typeof url !== 'string' || url.length === 0) return undefined
+	return { url, alt: typeof document.alt === 'string' ? document.alt : '' }
 }
 
 function validateControllerPresentation(value: unknown, groupIds: ReadonlySet<string>) {

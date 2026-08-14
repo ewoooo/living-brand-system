@@ -15,7 +15,7 @@ describe('listPublishedGraphicProfileDefinitions', () => {
 		await expect(listPublishedGraphicProfileDefinitions(user)).resolves.toEqual(docs)
 		expect(find).toHaveBeenCalledWith({
 			collection: 'graphic-profiles',
-			depth: 0,
+			depth: 1,
 			draft: false,
 			limit: 100,
 			overrideAccess: false,
@@ -24,6 +24,7 @@ describe('listPublishedGraphicProfileDefinitions', () => {
 				controllerRestrictions: true,
 				name: true,
 				exportPolicy: true,
+				previewImage: true,
 				runtime: true,
 			},
 			sort: 'displayOrder',
