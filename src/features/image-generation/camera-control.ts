@@ -66,6 +66,18 @@ const ELEVATION_PROMPTS: Record<CameraElevation, string> = {
 	'top-down': 'top-down overhead view',
 }
 
+/** 런타임이 지원하는 전체 구간 — 프롬프트 표에서 파생해 목록이 표와 어긋나지 않게 한다. */
+export const CAMERA_AZIMUTHS = Object.keys(AZIMUTH_PROMPTS) as readonly CameraAzimuth[]
+export const CAMERA_ELEVATIONS = Object.keys(ELEVATION_PROMPTS) as readonly CameraElevation[]
+
+export function isCameraAzimuth(value: unknown): value is CameraAzimuth {
+	return typeof value === 'string' && value in AZIMUTH_PROMPTS
+}
+
+export function isCameraElevation(value: unknown): value is CameraElevation {
+	return typeof value === 'string' && value in ELEVATION_PROMPTS
+}
+
 export function resolveCameraControl({
 	azimuthDeg,
 	elevationDeg,

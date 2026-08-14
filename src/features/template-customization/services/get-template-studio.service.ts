@@ -17,15 +17,16 @@ export type GetTemplateStudioOutput = {
  * published 템플릿과 참조 Image·Graphic Config(각 소유 feature의 공개 서비스)를 조합해
  * Effective TemplateStudioConfig를 파생한다. Payload 원본과 Admin 정책은 이 서비스 밖으로
  * 나가지 않는다 — 클라이언트에는 PublishedTemplateView만 반환한다.
+ * 호출자(페이지)가 requireUser로 인증을 보장한다 — 비회원 분기는 여기 두지 않는다.
  */
 export async function getTemplateStudio(
-	templateId: number,
+	templateSlug: string,
 	user: unknown,
 ): Promise<GetTemplateStudioOutput | null> {
 	const [published, imageConfigs, graphicConfigs] = await Promise.all([
-		getPublishedTemplate(templateId),
-		user ? listImageStudioConfigs(user) : [],
-		user ? listGraphicStudioConfigs(user) : [],
+		getPublishedTemplate(templateSlug),
+		listImageStudioConfigs(user),
+		listGraphicStudioConfigs(user),
 	])
 
 	if (!published) return null

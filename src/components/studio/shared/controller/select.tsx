@@ -8,7 +8,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import type { ControllerOption } from '@/modules/studio-controller/controller-definition'
-import { ROW_SELECT_TRIGGER } from './classes'
+import { ROW_SELECT_CONTENT, ROW_SELECT_ITEM, ROW_SELECT_TRIGGER } from './classes'
 import { useRowControl } from './row'
 
 type ControllerSelectProps = {
@@ -40,9 +40,19 @@ export function ControllerSelect({
 				<SelectValue placeholder={placeholder} />
 			</SelectTrigger>
 			{options.length > 0 && (
-				<SelectContent align="end">
+				// 트리거가 행 전체이므로 popper의 trigger-width가 곧 행 폭이다 — dialkit과 같은 full width.
+				<SelectContent
+					position="popper"
+					align="start"
+					sideOffset={4}
+					className={ROW_SELECT_CONTENT}
+				>
 					{options.map((option) => (
-						<SelectItem key={option.value} value={option.value}>
+						<SelectItem
+							key={option.value}
+							value={option.value}
+							className={ROW_SELECT_ITEM}
+						>
 							{option.label}
 						</SelectItem>
 					))}

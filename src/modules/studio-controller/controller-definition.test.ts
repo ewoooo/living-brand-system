@@ -457,6 +457,61 @@ describe('Payload Controller projection과 Override 적용', () => {
 			}),
 		).toThrow('지원하지 않는 필드')
 	})
+
+	it('색 control은 자유 색상을 팔레트로 좁히고 목록 밖 색을 실행에서 막는다', () => {
+		const base = [
+			{
+				id: 'profile-settings',
+				title: 'Profile Settings',
+				controls: [
+					{
+						id: 'lineColor',
+						kind: 'color' as const,
+						label: 'Line Color',
+						defaultValue: null,
+					},
+				],
+			},
+		] satisfies readonly ControllerGroupDefinition[]
+		const narrowed = applyControllerRestrictions(
+			base,
+			projectPayloadControllerRestrictions({
+				controls: [{ controlId: 'lineColor', colorValues: ['#FF0000', '#00ff00'] }],
+			}),
+		)
+		const control = narrowed[0]?.controls[0]
+		if (control?.kind !== 'color') throw new Error('color control이 필요합니다.')
+		// hex 대소문자는 같은 색이다 — 목록은 소문자로 정규화된다.
+		expect(control.values).toEqual(['#ff0000', '#00ff00'])
+		expect(acceptsControllerExecutionValue(control, '#ff0000')).toBe(true)
+		expect(acceptsControllerExecutionValue(control, '#0000ff')).toBe(false)
+	})
+
+	it('팔레트를 이미 가진 색 control을 넓히려 하면 거부한다', () => {
+		const base = [
+			{
+				id: 'profile-settings',
+				title: 'Profile Settings',
+				controls: [
+					{
+						id: 'lineColor',
+						kind: 'color' as const,
+						label: 'Line Color',
+						defaultValue: '#ff0000',
+						values: ['#ff0000'],
+					},
+				],
+			},
+		] satisfies readonly ControllerGroupDefinition[]
+		expect(() =>
+			applyControllerRestrictions(
+				base,
+				projectPayloadControllerRestrictions({
+					controls: [{ controlId: 'lineColor', colorValues: ['#ff0000', '#0000ff'] }],
+				}),
+			),
+		).toThrow('colorValues가 기본 계약을 확장합니다')
+	})
 })
 
 describe('Controller group presentation', () => {

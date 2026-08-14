@@ -5,6 +5,7 @@ import type { ImageStudioConfig } from '@/features/image-generation/domain/image
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import type { ImageColorAdjustment } from '@/features/image-generation/runtime/image-colorize'
 import type { ImageGenerationResult } from '@/features/image-generation/services/generate-image.client'
+import type { LazyResource } from '@/hooks/use-lazy-resource'
 import type {
 	ControllerControlValue,
 	ControllerRuntimeBindings,
@@ -13,8 +14,10 @@ import type {
 
 export type ImageStudioValue = {
 	profiles: {
-		/** 프로파일 교체 후보 — 계약은 언제나 이 중 하나다. */
+		/** 이 세션에서 쓴 계약들 — 계약은 언제나 이 중 하나다. 결과가 자기 프로파일의 출력 능력을 되찾는 데도 쓴다. */
 		options: readonly ImageStudioConfig[]
+		/** 교체 후보 — 자산 브라우저가 열릴 때 가져온다. 열기 전에는 data가 null이다. */
+		browse: LazyResource<readonly ImageStudioConfig[]>
 		select: (profileId: number) => void
 	}
 	/** 현재 프로파일의 편집 계약 — 컨트롤러는 이 객체만 보고 컨트롤을 그린다. */

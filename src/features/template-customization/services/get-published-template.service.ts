@@ -40,9 +40,9 @@ function projectStudioNodeConfigs(
  * nodeConfigs는 projectStudioNodeConfigs가 남긴 스튜디오용 부분집합만 노출한다.
  */
 export async function getPublishedTemplate(
-	templateId: number,
+	templateSlug: string,
 ): Promise<PublishedHtmlTemplate | null> {
-	const template = await findPublishedTemplate(templateId)
+	const template = await findPublishedTemplate(templateSlug)
 
 	if (!template) {
 		return null

@@ -3,24 +3,19 @@ import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace
 import { TemplateGenerator } from '@/components/studio/template/template-generator'
 import { getCreateNavigation } from '@/features/template-customization/services/get-create-navigation.service'
 import { getTemplateStudio } from '@/features/template-customization/services/get-template-studio.service'
-import { authenticateRequest } from '@/lib/request-auth'
+import { requireUser } from '@/lib/request-auth'
+import { getStudioTemplateRoute } from '@/lib/routes'
 
 export default async function CreateTemplatePage({
 	params,
 }: {
-	params: Promise<{ categorySlug: string; templateId: string }>
+	params: Promise<{ templateSlug: string }>
 }) {
-	const { templateId } = await params
-	const parsedId = Number(templateId)
-
-	if (!Number.isInteger(parsedId)) {
-		notFound()
-	}
-
-	const { user } = await authenticateRequest()
+	const { templateSlug } = await params
+	const { user } = await requireUser(getStudioTemplateRoute(templateSlug))
 	const [navigation, studio] = await Promise.all([
 		getCreateNavigation(),
-		getTemplateStudio(parsedId, user),
+		getTemplateStudio(templateSlug, user),
 	])
 
 	if (!studio) {
@@ -36,7 +31,12 @@ export default async function CreateTemplatePage({
 			<TemplateGenerator
 				key={studio.template.id}
 				config={studio.config}
-				navigation={navigation}
+				// 분류는 URL이 아니라 템플릿 자신이 갖는다 — 이 템플릿을 담고 있는 카테고리에서 읽는다.
+				categoryTitle={
+					navigation.categories.find((category) =>
+						category.templates.some((item) => item.slug === templateSlug),
+					)?.title ?? null
+				}
 				template={studio.template}
 			/>
 		</StudioWorkspacePage>

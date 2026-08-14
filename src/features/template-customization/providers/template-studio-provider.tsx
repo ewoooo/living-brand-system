@@ -46,6 +46,8 @@ import {
 	createTemplateRasterArtifact,
 	type TemplateRasterArtifact,
 } from '@/features/template-customization/runtime/template-runtime.client'
+import { fetchCreateNavigation } from '@/features/template-customization/services/get-create-navigation.client'
+import { useLazyResource } from '@/hooks/use-lazy-resource'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlDefinition,
@@ -396,14 +398,20 @@ function useTemplateBackgroundSession(
 export function TemplateStudioProvider({
 	config,
 	template,
-	navigation,
+	categoryTitle,
 	children,
 }: {
 	config: TemplateStudioConfig
 	template: PublishedTemplateView
-	navigation: TemplateStudioValue['navigation']
+	categoryTitle: string | null
 	children: ReactNode
 }) {
+	// 교체 후보 목록은 자산 브라우저가 열릴 때 가져온다 — 페이지는 현재 카테고리 이름 하나만 싣는다.
+	const templateBrowse = useLazyResource(fetchCreateNavigation)
+	const navigation = useMemo<TemplateStudioValue['navigation']>(
+		() => ({ categoryTitle, browse: templateBrowse }),
+		[categoryTitle, templateBrowse],
+	)
 	const previewRef = useRef<HTMLDivElement>(null)
 	const graphicFrameRef = useRef<(() => string) | null>(null)
 	const registerGraphicFrame = useCallback((capture: (() => string) | null) => {

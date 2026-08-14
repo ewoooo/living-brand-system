@@ -16,6 +16,8 @@ import {
 import { useImageGeneration } from '@/features/image-generation/hooks/use-image-generation'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import type { ImageColorAdjustment } from '@/features/image-generation/runtime/image-colorize'
+import { fetchImageStudioConfigs } from '@/features/image-generation/services/list-image-studio-configs.client'
+import { useLazyResource } from '@/hooks/use-lazy-resource'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlValue,
@@ -28,19 +30,16 @@ import {
  * 모른다. Definition은 기본값·제약을, Provider는 현재 값·runtime binding·도메인 액션을 소유한다.
  */
 export function ImageStudioProvider({
-	configs,
-	initialProfileId,
+	config: initial,
 	children,
 }: {
-	configs: ImageStudioConfig[]
-	initialProfileId?: number
+	config: ImageStudioConfig
 	children: ReactNode
 }) {
-	const initial = configs.find(({ id }) => id === initialProfileId) ?? configs[0]
-	if (!initial) {
-		throw new Error('ImageStudioProvider는 계약이 최소 하나 있을 때만 사용할 수 있습니다.')
-	}
-
+	// 교체 후보 전체는 자산 브라우저가 열릴 때 가져온다 — 페이지는 시작 계약 하나만 싣는다.
+	const browse = useLazyResource(fetchImageStudioConfigs)
+	// 세션에서 한 번이라도 쓴 계약은 남긴다 — 결과 카드가 그 결과를 만든 프로파일의 출력 능력을 되찾는다.
+	const [configs, setConfigs] = useState<ImageStudioConfig[]>([initial])
 	const [profileId, setProfileId] = useState(initial.id)
 	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
 	const [angles, setAngles] = useState({ azimuthDeg: 0, elevationDeg: 0 })
@@ -99,12 +98,15 @@ export function ImageStudioProvider({
 
 	const selectProfile = useCallback(
 		(nextProfileId: number) => {
-			const next = configs.find((item) => item.id === nextProfileId)
+			const next = (browse.data ?? configs).find((item) => item.id === nextProfileId)
 			if (!next) return
+			setConfigs((current) =>
+				current.some((item) => item.id === next.id) ? current : [...current, next],
+			)
 			setValues((current) => reconcileProfileValues(next, current))
 			setProfileId(nextProfileId)
 		},
-		[configs],
+		[browse.data, configs],
 	)
 
 	// 시점 조정은 저장된 생성 이미지를 시드로 쓴다 — 셋(시드 URL·생성 이미지 id·프로파일)이
@@ -124,7 +126,7 @@ export function ImageStudioProvider({
 
 	const value = useMemo<ImageStudioValue>(
 		() => ({
-			profiles: { options, select: selectProfile },
+			profiles: { options, browse, select: selectProfile },
 			config,
 			controls: { values, bindings, update },
 			prompt: {
@@ -184,6 +186,7 @@ export function ImageStudioProvider({
 			angles,
 			batchValue,
 			bindings,
+			browse,
 			cameraSeed,
 			canRun,
 			colorDefinitions,

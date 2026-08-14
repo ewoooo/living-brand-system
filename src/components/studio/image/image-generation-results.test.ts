@@ -29,15 +29,21 @@ describe('ImageGenerationResults', () => {
 	afterEach(cleanup)
 
 	// 선택은 컨트롤러(카메라 섹션·저장 CTA)를 여는 입력이라 캔버스는 올려보내기만 한다.
-	it('결과 카드 클릭을 선택으로 올리고 선택된 번호를 알린다', () => {
+	it('결과 카드 클릭을 선택으로 올린다', () => {
 		const base = props()
 		const view = render(createElement(ImageGenerationResults, base))
+
+		expect(
+			screen.getByText('이미지를 클릭해 선택하면 시점 조정과 저장을 할 수 있어요'),
+		).toBeInTheDocument()
 
 		fireEvent.click(screen.getByRole('button', { name: '생성 결과 1' }))
 		expect(base.onSelect).toHaveBeenCalledWith(0)
 
 		view.rerender(createElement(ImageGenerationResults, { ...base, selected: 0 }))
-		expect(screen.getByText('1번 선택됨')).toBeInTheDocument()
+		expect(
+			screen.queryByText('이미지를 클릭해 선택하면 시점 조정과 저장을 할 수 있어요'),
+		).not.toBeInTheDocument()
 	})
 
 	it('색이 없으면 오버레이 없이 원본만 보인다', () => {

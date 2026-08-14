@@ -34,6 +34,8 @@ describe('useImageGeneration', () => {
 		expect(result.current.result).toEqual(response)
 		expect(result.current.requested).toBe(2)
 		expect(result.current.loading).toBe(false)
+		// 선택이 비면 저장 CTA가 켜지지 않는다 — 결과가 오면 첫 장이 선택돼 있어야 한다.
+		expect(result.current.selected).toBe(0)
 	})
 
 	it('서버의 안전한 오류 메시지를 화면 상태로 보존한다', async () => {

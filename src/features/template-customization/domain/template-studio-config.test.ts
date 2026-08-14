@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
+import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/camera-control'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import {
 	deriveTemplateStudioConfig,
@@ -410,7 +411,11 @@ function createImageConfig(
 			slug: `profile-${id}`,
 			features: [
 				{ type: 'color-adjustment', controls: { line: 'lineColor' } },
-				{ type: 'camera-control' },
+				{
+					type: 'camera-control',
+					azimuths: CAMERA_AZIMUTHS,
+					elevations: CAMERA_ELEVATIONS,
+				},
 			],
 		},
 	}

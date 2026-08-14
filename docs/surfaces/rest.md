@@ -11,7 +11,10 @@ Payload collection REST, GraphQL, 인증 endpoint는 Payload가 소유하므로 
 
 | Feature | Method | Path | 접근 |
 | --- | --- | --- | --- |
+| Image | `GET` | `/api/image-profiles` | 로그인 사용자 |
 | Image | `POST` | `/api/generate-image` | 로그인 사용자 |
+| Graphic | `GET` | `/api/graphic-profiles` | 로그인 사용자 |
+| Create | `GET` | `/api/templates` | same-origin |
 | Image | `POST` | `/api/admin/generate-image` | Manager/Admin |
 | Create | `POST` | `/api/generate-text` | 로그인 사용자 |
 | AI Chat | `POST` | `/api/agent-chat` | 로그인 사용자 |
@@ -24,6 +27,9 @@ Payload collection REST, GraphQL, 인증 endpoint는 Payload가 소유하므로 
 
 독립 생성 명령은 `/api/generate-*`를 사용합니다.
 저장된 리소스의 후속 동작은 리소스 식별자를 URL path로 전달합니다.
+
+스튜디오의 교체 후보 목록(`GET`)은 페이지가 아니라 자산 브라우저가 열릴 때 가져옵니다.
+페이지는 시작 계약 하나만 싣고, 목록 전체를 SSR 페이로드에 싣지 않습니다.
 
 ## 3. 공통 규칙
 

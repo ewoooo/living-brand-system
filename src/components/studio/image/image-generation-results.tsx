@@ -46,11 +46,11 @@ export function ImageGenerationResults({
 			{!loading && images.length > 0 && result && (
 				<div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
 					{/* 선택은 컨트롤러의 카메라 섹션과 저장 CTA를 여는 입력이다 — 그래서 안내가 남는다. */}
-					<Typography as="p" size="sm" tone="muted">
-						{selected === null
-							? '이미지를 클릭해 선택하면 시점 조정과 저장을 할 수 있어요'
-							: `${selected + 1}번 선택됨`}
-					</Typography>
+					{selected === null && (
+						<Typography as="p" size="sm" tone="muted">
+							이미지를 클릭해 선택하면 시점 조정과 저장을 할 수 있어요
+						</Typography>
+					)}
 
 					{images.length < requested && (
 						<Typography size="sm" tone="muted">
@@ -80,26 +80,8 @@ export function ImageGenerationResults({
 										src={src}
 									/>
 								</button>
-								<a
-									href={src}
-									target="_blank"
-									rel="noreferrer"
-									className="font-body text-sm font-normal text-muted-foreground underline"
-								>
-									원본 보기
-								</a>
 							</div>
 						))}
-					</div>
-
-					<div className="font-body text-sm font-normal text-muted-foreground">
-						{result.profileName ? `적용된 프로파일: ${result.profileName}` : null}
-						<details className="mt-1">
-							<summary className="cursor-pointer">생성 프롬프트 보기</summary>
-							<Typography size="xs" className="mt-1 whitespace-pre-wrap">
-								{result.prompt}
-							</Typography>
-						</details>
 					</div>
 				</div>
 			)}

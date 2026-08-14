@@ -1,5 +1,6 @@
 import type { Field } from 'payload'
 import { describe, expect, it } from 'vitest'
+import { CAMERA_AZIMUTHS } from '@/features/image-generation/camera-control'
 import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
 import { GraphicProfiles } from '../GraphicProfiles'
 import { ImageProfiles } from '../ImageProfiles'
@@ -160,6 +161,19 @@ describe('imageProfileFeaturesField', () => {
 		expect(features.blocks[0]?.fields).toEqual([
 			expect.objectContaining({ name: 'background', type: 'checkbox' }),
 		])
-		expect(features.blocks[1]?.fields).toEqual([])
+		// 카메라 구간은 질의 대상이 아니라 계약 제한이므로 JSON에 담는다(테이블·enum을 만들지 않는다).
+		expect(features.blocks[1]?.fields).toEqual([
+			expect.objectContaining({ name: 'azimuths', type: 'json' }),
+			expect.objectContaining({ name: 'elevations', type: 'json' }),
+		])
+		// 고를 수 있는 값은 런타임 구간뿐이다 — 임의 값을 적는 칸이 아니다.
+		const azimuths = features.blocks[1]?.fields[0]
+		const clientProps = azimuths?.admin?.components?.Field
+		expect(clientProps).toMatchObject({
+			path: '/components/admin/studio/image-camera-sectors-field#ImageCameraSectorsField',
+			clientProps: {
+				options: CAMERA_AZIMUTHS.map((value) => expect.objectContaining({ value })),
+			},
+		})
 	})
 })
