@@ -55,11 +55,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 							storageKey="lbs.agentChatSidebarOpen"
 							style={{ '--sidebar-width': '25rem' } as React.CSSProperties}
 						>
-							{/* 앱 셸(헤더 + 본문 그리드) main 랜드마크는 각 라우트의 본문이 소유한다. */}
-							<div className="grid min-h-0 min-w-0 flex-1 grid-rows-[auto_1fr]">
-								<GlobalHeader guidelineChapters={guidelineNavigation.chapters} />
-								{/* 남은 높이를 채우고 내부에서만 스크롤한다 (문서 전체 스크롤 아님). */}
-								<div className="min-h-0 min-w-0 overflow-hidden">{children}</div>
+							{/* 앱 셸은 헤더를 본문 위에 겹치고, main·스크롤은 각 라우트가 소유한다. */}
+							<div className="relative min-h-0 min-w-0 flex-1">
+								<div className="absolute inset-x-0 top-0 z-50">
+									<GlobalHeader
+										guidelineChapters={guidelineNavigation.chapters}
+									/>
+								</div>
+								<div className="h-full min-h-0 min-w-0 overflow-hidden">
+									{children}
+								</div>
 							</div>
 							<GlobalAgentChat />
 						</SidebarProvider>

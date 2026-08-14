@@ -63,7 +63,7 @@ describe('GlobalHeader', () => {
 		renderHeader({ guideline: true, image: true })
 
 		expect(document.querySelector('[data-slot="navigation-header"]')).toHaveClass(
-			'bg-header-background',
+			'bg-transparent',
 		)
 		const desktop = document.querySelector<HTMLElement>(
 			'[data-slot="navigation-header-desktop"]',

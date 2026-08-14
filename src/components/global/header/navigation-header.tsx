@@ -101,10 +101,7 @@ function NavigationHeaderRoot({ className, ...props }: NavigationHeaderRootProps
 	return (
 		<header
 			data-slot="navigation-header"
-			className={cn(
-				'relative z-50 shrink-0 overflow-visible bg-header-background',
-				className,
-			)}
+			className={cn('relative z-50 shrink-0 overflow-visible bg-transparent', className)}
 			{...props}
 		/>
 	)
