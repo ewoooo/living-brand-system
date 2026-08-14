@@ -30,6 +30,7 @@ import type {
 	ControllerControlDefinition,
 	ControllerGroupDefinition,
 	StudioControllerConfig,
+	StudioPreviewImage,
 	StudioRuntimeManifest,
 } from '@/modules/studio-controller/controller-definition'
 import {
@@ -125,6 +126,7 @@ export type PublishedHtmlTemplate = {
 	controllerRestrictions?: unknown
 	exportPolicy?: unknown
 	controllerPresentation?: unknown
+	previewImage?: StudioPreviewImage
 }
 
 /**
@@ -169,6 +171,7 @@ export function parseTemplateStudioConfig(input: unknown): TemplateStudioConfig 
 		'output',
 		'controller',
 		'controllerPresentation',
+		'previewImage',
 		'template',
 	])
 	if (common.studio !== 'template')
@@ -663,6 +666,7 @@ export function deriveTemplateStudioConfig(
 			controllerGroups,
 			template.controllerPresentation,
 		),
+		previewImage: template.previewImage,
 		template: {
 			slots,
 			...(textSlots.length ? { textColorControlId: TEXT_COLOR_CONTROL_ID } : {}),

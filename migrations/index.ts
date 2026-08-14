@@ -63,6 +63,7 @@ import * as migration_20260814_023629_add_controller_presentation from './202608
 import * as migration_20260814_062523_image_profile_camera_sectors from './20260814_062523_image_profile_camera_sectors';
 import * as migration_20260814_065504_template_slug from './20260814_065504_template_slug';
 import * as migration_20260814_075620_add_linear_fluted_glass_runtime from './20260814_075620_add_linear_fluted_glass_runtime';
+import * as migration_20260814_083322_studio_preview_image from './20260814_083322_studio_preview_image';
 
 export const migrations = [
   {
@@ -388,6 +389,11 @@ export const migrations = [
   {
     up: migration_20260814_075620_add_linear_fluted_glass_runtime.up,
     down: migration_20260814_075620_add_linear_fluted_glass_runtime.down,
-    name: '20260814_075620_add_linear_fluted_glass_runtime'
+    name: '20260814_075620_add_linear_fluted_glass_runtime',
+  },
+  {
+    up: migration_20260814_083322_studio_preview_image.up,
+    down: migration_20260814_083322_studio_preview_image.down,
+    name: '20260814_083322_studio_preview_image'
   },
 ];

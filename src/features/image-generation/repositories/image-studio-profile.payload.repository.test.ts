@@ -24,7 +24,7 @@ describe('listPublishedImageProfileDefinitions', () => {
 
 		expect(find).toHaveBeenCalledWith({
 			collection: 'image-profiles',
-			depth: 0,
+			depth: 1,
 			draft: false,
 			limit: 100,
 			overrideAccess: true,
@@ -35,6 +35,7 @@ describe('listPublishedImageProfileDefinitions', () => {
 				imageModelPreset: true,
 				name: true,
 				exportPolicy: true,
+				previewImage: true,
 				slug: true,
 			},
 			sort: 'displayOrder',

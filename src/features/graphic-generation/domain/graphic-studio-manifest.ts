@@ -13,6 +13,7 @@ import {
 	applyControllerRestrictions,
 	projectPayloadControllerRestrictions,
 	resolveControllerPresentation,
+	toStudioPreviewImage,
 } from '@/modules/studio-controller/controller-definition'
 import type { PublishedGraphicProfileDefinition } from './graphic-studio-config'
 
@@ -57,6 +58,7 @@ export function deriveGraphicStudioConfig(
 			groups,
 			profile.controllerPresentation,
 		),
+		previewImage: toStudioPreviewImage(profile.previewImage),
 	}
 	parseGraphicStudioConfig(config)
 	return config

@@ -4,6 +4,7 @@ import type * as React from 'react'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
 import { cn } from '@/lib/utils'
+import type { StudioPreviewImage } from '@/modules/studio-controller/controller-definition'
 import { ControllerBrowser } from './browser'
 import { useRowControl } from './row'
 
@@ -18,6 +19,8 @@ type ControllerAssetCardProps = {
 	'aria-label': string
 	/** 패널 헤더의 탭 라벨 — 전체가 패널의 접근 이름을 겸한다. */
 	tabs?: readonly string[]
+	/** 현재 자산의 미리보기 이미지. 있으면 카드 배경이 되고, 없으면 지금의 단색 표면 그대로다. */
+	previewImage?: StudioPreviewImage
 	/** 본문이 비었을 때의 안내. */
 	empty?: React.ReactNode
 	/** 배선 전 컨트롤 — 잠기면 트리거 자체를 두지 않아 패널이 존재하지 않는다.
@@ -42,6 +45,7 @@ export function ControllerAssetCard({
 	buttonLabel,
 	'aria-label': ariaLabel,
 	tabs,
+	previewImage,
 	empty,
 	disabled,
 	className,
@@ -67,10 +71,24 @@ export function ControllerAssetCard({
 		<div
 			data-slot="controller-asset-card"
 			className={cn(
-				'flex min-h-16 shrink-0 items-center justify-between gap-3 rounded-lg bg-inverted p-4 text-inverted-foreground',
+				'relative isolate flex min-h-16 shrink-0 items-center justify-between gap-3 overflow-hidden rounded-lg bg-inverted p-4 text-inverted-foreground',
 				className,
 			)}
 		>
+			{previewImage && (
+				// 배경은 장식이므로 alt를 비운다 — 카드가 무엇인지는 제목이 이미 말한다.
+				// 그 위에 어두운 막을 깔아 이미지가 어떻든 제목·버튼의 대비가 유지된다(docs/08).
+				<>
+					{/* biome-ignore lint/performance/noImgElement: 업로드 URL은 next/image 최적화 대상이 아니다 */}
+					<img
+						src={previewImage.url}
+						alt=""
+						aria-hidden="true"
+						className="-z-10 absolute inset-0 size-full object-cover"
+					/>
+					<div aria-hidden="true" className="-z-10 absolute inset-0 bg-inverted/60" />
+				</>
+			)}
 			<div className="flex min-w-0 flex-col">
 				<Typography
 					as="p"

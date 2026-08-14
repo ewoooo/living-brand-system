@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
 import { cn } from '@/lib/utils'
+import type { StudioPreviewImage } from '@/modules/studio-controller/controller-definition'
 
 /** 패널이 뜰 좌표계이자 포털 목적지 — Root가 자기 DOM 노드를 내려주고 Panel이 그리로 옮겨 붙는다. */
 const BrowserFrameContext = React.createContext<HTMLElement | null>(null)
@@ -54,6 +55,31 @@ function ControllerBrowserTrigger({
 /** 고르면 닫히는 자리 — 패널 본문의 선택 버튼이 asChild로 감싸 쓴다(닫기는 radix가 소유). */
 function ControllerBrowserClose({ ...props }: React.ComponentProps<typeof DialogPrimitive.Close>) {
 	return <DialogPrimitive.Close data-slot="controller-browser-close" {...props} />
+}
+
+/**
+ * 카드 위쪽의 미리보기 자리 — 이미지가 없으면 지금의 빈 표면을 그대로 유지한다.
+ * alt는 어드민이 등록한 설명을 그대로 쓴다: 미리보기는 카드 이름이 말해주지 않는 것(무엇처럼 생겼나)을
+ * 전하므로 장식이 아니다.
+ */
+function ControllerBrowserThumbnail({
+	image,
+	className,
+}: {
+	image?: StudioPreviewImage
+	className?: string
+}) {
+	return (
+		<div
+			data-slot="controller-browser-thumbnail"
+			className={cn('min-h-0 flex-1 overflow-hidden bg-background/20', className)}
+		>
+			{image && (
+				// biome-ignore lint/performance/noImgElement: 업로드 URL은 next/image 최적화 대상이 아니다
+				<img src={image.url} alt={image.alt} className="size-full object-cover" />
+			)}
+		</div>
+	)
 }
 
 type ControllerBrowserPanelProps = {
@@ -144,6 +170,7 @@ export const ControllerBrowser = {
 	Root: ControllerBrowserRoot,
 	Trigger: ControllerBrowserTrigger,
 	Panel: ControllerBrowserPanel,
+	Thumbnail: ControllerBrowserThumbnail,
 	Close: ControllerBrowserClose,
 }
 
@@ -151,5 +178,6 @@ export {
 	ControllerBrowserClose,
 	ControllerBrowserPanel,
 	ControllerBrowserRoot,
+	ControllerBrowserThumbnail,
 	ControllerBrowserTrigger,
 }

@@ -32,7 +32,8 @@ export async function listPublishedTemplateNavItems() {
 	const payload = await getPayload({ config })
 	const templates = await payload.find({
 		collection: 'templates',
-		depth: 0,
+		// 미리보기 이미지를 채우려면 upload 관계가 한 단계 populate돼야 한다(depth 0은 id만 준다).
+		depth: 1,
 		draft: false,
 		fallbackLocale: FALLBACK_LOCALE,
 		limit: 200,
@@ -49,6 +50,7 @@ export async function listPublishedTemplateNavItems() {
 			category: true,
 			html: true,
 			overrides: true,
+			previewImage: true,
 			width: true,
 			height: true,
 		},
@@ -57,15 +59,19 @@ export async function listPublishedTemplateNavItems() {
 	return templates.docs
 }
 
-export async function findPublishedTemplate(
-	templateSlug: string,
-): Promise<
-	(Template & { controllerRestrictions?: unknown; controllerPresentation?: unknown }) | null
+export async function findPublishedTemplate(templateSlug: string): Promise<
+	| (Template & {
+			controllerRestrictions?: unknown
+			controllerPresentation?: unknown
+			previewImage?: unknown
+	  })
+	| null
 > {
 	const payload = await getPayload({ config })
 	const templates = await payload.find({
 		collection: 'templates',
-		depth: 0,
+		// 미리보기 이미지를 채우려면 upload 관계가 한 단계 populate돼야 한다(depth 0은 id만 준다).
+		depth: 1,
 		draft: false,
 		fallbackLocale: FALLBACK_LOCALE,
 		limit: 1,
@@ -85,6 +91,7 @@ export async function findPublishedTemplate(
 			updatedAt: true,
 			html: true,
 			overrides: true,
+			previewImage: true,
 			width: true,
 			height: true,
 			exportPolicy: true,
@@ -96,6 +103,7 @@ export async function findPublishedTemplate(
 			| (Template & {
 					controllerRestrictions?: unknown
 					controllerPresentation?: unknown
+					previewImage?: unknown
 			  })
 			| undefined) ?? null
 	)

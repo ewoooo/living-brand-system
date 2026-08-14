@@ -83,6 +83,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 						buttonLabel="Change"
 						aria-label="템플릿 변경"
 						tabs={['Templates']}
+						previewImage={config.previewImage}
 						empty={browseEmptyMessage(
 							navigation.browse.status,
 							templateCount > 1,
