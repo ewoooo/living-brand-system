@@ -41,12 +41,12 @@ function CheckChangeScenario() {
 
 	return (
 		<Select
-			value={scenarioKey}
-			disabled={selected?.status === 'running'}
+			value={scenarioKey || undefined}
+			disabled={scenarios.length === 0 || selected?.status === 'running'}
 			onValueChange={setScenarioKey}
 		>
 			<SelectTrigger className="pointer-events-auto self-end">
-				<SelectValue />
+				<SelectValue placeholder="발행된 검수 시나리오 없음" />
 			</SelectTrigger>
 			<SelectContent>
 				<SelectGroup>
@@ -63,7 +63,7 @@ function CheckChangeScenario() {
 
 /** 선택 이미지의 검수를 실행하고 진행·실패 상태를 함께 표시한다. */
 function CheckButton() {
-	const { selectedId, selected, runCheck } = useCheckImages()
+	const { scenarios, selectedId, selected, runCheck } = useCheckImages()
 
 	return (
 		<>
@@ -80,7 +80,7 @@ function CheckButton() {
 				size="lg"
 				shape="pill"
 				className="pointer-events-auto min-w-44 p-6 px-12"
-				disabled={!selectedId || selected?.status === 'running'}
+				disabled={scenarios.length === 0 || !selectedId || selected?.status === 'running'}
 				onClick={runCheck}
 			>
 				{selected?.status === 'running' ? (
