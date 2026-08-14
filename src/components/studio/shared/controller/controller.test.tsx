@@ -23,30 +23,28 @@ describe('Controller layout', () => {
 		expect(container.querySelector('[data-slot="controller-content"]')).toBeInTheDocument()
 		expect(container.querySelector('[data-slot="controller-group"]')).toBeInTheDocument()
 		expect(screen.getByText('그룹')).toBeInTheDocument()
-		expect(screen.queryByRole('button', { name: '그룹' })).toBeNull()
+		expect(screen.getByRole('button', { name: '그룹' })).toBeInTheDocument()
 		expect(container.querySelector('[data-slot="controller-footer"]')).toBeInTheDocument()
 	})
 })
 
-describe('Controller.Group collapsible', () => {
+describe('Controller.Group', () => {
 	afterEach(cleanup)
 
-	it('컴포넌트 계약 prop을 DOM에 전달하지 않는다', () => {
-		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+	it('항상 접고 펼칠 수 있다', () => {
 		render(
-			<Controller.Group title="Sec" collapsible>
+			<Controller.Group title="Sec">
 				<div>내용물</div>
 			</Controller.Group>,
 		)
-		const warnings = errorSpy.mock.calls.flat().join(' ')
-		errorSpy.mockRestore()
 
-		expect(warnings).not.toContain('collapsible')
+		fireEvent.click(screen.getByRole('button', { name: 'Sec' }))
+		expect(screen.queryByText('내용물')).toBeNull()
 	})
 
 	it('잠금 중에도 사용자의 접힘 상태를 보존한다 — 풀려도 닫힌 채 남는다', () => {
 		const { rerender } = render(
-			<Controller.Group title="Sec" collapsible>
+			<Controller.Group title="Sec">
 				<div>내용물</div>
 			</Controller.Group>,
 		)
@@ -58,7 +56,7 @@ describe('Controller.Group collapsible', () => {
 
 		// 잠금 — 닫힘 유지 + 토글 불가.
 		rerender(
-			<Controller.Group title="Sec" collapsible disabled>
+			<Controller.Group title="Sec" disabled>
 				<div>내용물</div>
 			</Controller.Group>,
 		)
@@ -67,7 +65,7 @@ describe('Controller.Group collapsible', () => {
 
 		// 잠금 해제 — 강제로 열지 않고 사용자가 접어둔 상태로 복귀한다.
 		rerender(
-			<Controller.Group title="Sec" collapsible>
+			<Controller.Group title="Sec">
 				<div>내용물</div>
 			</Controller.Group>,
 		)

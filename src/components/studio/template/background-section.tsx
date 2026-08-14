@@ -215,12 +215,7 @@ export function BackgroundSection({
 
 			{/* Image Transform은 compose 경로가 없어 Background의 형제 섹션에서 잠근다. */}
 			{type === 'image' && (
-				<Controller.Group
-					title="Image Transform"
-					collapsible
-					disabled
-					className="border-t-0 pt-0"
-				>
+				<Controller.Group title="Image Transform" disabled className="border-t-0 pt-0">
 					<ImageTransformControl
 						value={imageTransform}
 						aspectRatio={canvasAspectRatio}

@@ -218,7 +218,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 				if (!state) return null
 				return (
 					<div key={slot.id} className="flex flex-col gap-3">
-						<Controller.Group title={sectionTitle} collapsible>
+						<Controller.Group title={sectionTitle}>
 							<ImageSlotInput
 								pinned={slot.imageConfig.mode === 'pinned'}
 								contracts={contracts}
@@ -238,7 +238,6 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 						{slot.transform.enabled && (
 							<Controller.Group
 								title={`${sectionTitle} Transform`}
-								collapsible
 								className="border-t-0 pt-0"
 								disabled={!state?.image}
 							>

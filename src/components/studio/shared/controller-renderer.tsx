@@ -32,7 +32,7 @@ export function ControllerRenderer({
 }: ControllerRendererProps) {
 	return (
 		<>
-			{groups.map((group) => {
+			{groups.map((group, index) => {
 				const content = group.controls.map((control) => (
 					<ControllerControlRenderer
 						key={control.id}
@@ -44,7 +44,7 @@ export function ControllerRenderer({
 				))
 
 				return (
-					<ControllerGroupRenderer key={group.id} definition={group}>
+					<ControllerGroupRenderer key={group.id} definition={group} first={index === 0}>
 						{content}
 					</ControllerGroupRenderer>
 				)
@@ -57,16 +57,20 @@ export function ControllerRenderer({
 export function ControllerGroupRenderer({
 	definition,
 	children,
+	first = false,
 }: {
 	definition: ControllerGroupDefinition
 	children: ReactNode
+	first?: boolean
 }) {
-	return definition.collapsible ? (
-		<Controller.Group title={definition.title} collapsible defaultOpen={definition.defaultOpen}>
+	return (
+		<Controller.Group
+			title={definition.title}
+			defaultOpen={definition.defaultOpen}
+			className={first ? 'border-t-0' : undefined}
+		>
 			{children}
 		</Controller.Group>
-	) : (
-		<Controller.Group title={definition.title}>{children}</Controller.Group>
 	)
 }
 
