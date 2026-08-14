@@ -63,9 +63,6 @@ export function createForwardStraightRuntime({
 				preview.strokeWeight(dash.weight)
 				preview.line(dash.x1, dash.y1, dash.x2, dash.y2)
 			}
-			preview.noStroke()
-			preview.fill(scene.originColor)
-			preview.circle(scene.origin.x, scene.origin.y, scene.originRadius * 2)
 		}
 
 		preview.mousePressed = () => {
@@ -76,7 +73,6 @@ export function createForwardStraightRuntime({
 			draggingOrigin = isOriginHandleHit(
 				{ x: preview.mouseX, y: preview.mouseY },
 				scene.origin,
-				scene.originRadius,
 			)
 			if (draggingOrigin) return false
 		}
@@ -141,15 +137,12 @@ export function createForwardStraightRuntime({
 	}
 }
 
+/** 기준점은 그려지지 않으므로 히트 영역만 남는다 — 위치는 Position 패드가 보여준다. */
 export function isOriginHandleHit(
 	pointer: { x: number; y: number },
 	origin: { x: number; y: number },
-	originRadius: number,
 ) {
-	return (
-		Math.hypot(pointer.x - origin.x, pointer.y - origin.y) <=
-		Math.max(originRadius, ORIGIN_DRAG_HIT_RADIUS)
-	)
+	return Math.hypot(pointer.x - origin.x, pointer.y - origin.y) <= ORIGIN_DRAG_HIT_RADIUS
 }
 
 function getCanvasSize(width: number, height: number) {
