@@ -40,15 +40,21 @@ export function ImageGenerator({ config }: { config: ImageStudioConfig | null })
 
 function ImageWorkspace() {
 	const { profiles, results } = useImageStudio()
-	const result = results.result
-	const resultConfig = profiles.options.find((candidate) => candidate.id === result?.profileId)
-	const exportSize = result
-		? toOpenAIImageSize(result.aspectRatio, result.imageSize).split('x').map(Number)
+	const items = results.items
+	const resultConfig = profiles.options.find((candidate) => candidate.id === items[0]?.profileId)
+	const exportSize = results.output
+		? toOpenAIImageSize(results.output.aspectRatio, results.output.imageSize)
+				.split('x')
+				.map(Number)
 		: null
 	const download = useImageExport({
-		artifacts: result
-			? createImageArtifacts({ images: result.images, color: results.color })
-			: null,
+		artifacts:
+			items.length > 0
+				? createImageArtifacts({
+						images: items.map((item) => item.src),
+						color: results.color,
+					})
+				: null,
 		capability: resultConfig?.output ?? { formats: [], original: false },
 		selected: results.selected,
 		size: exportSize ? { width: exportSize[0], height: exportSize[1] } : null,

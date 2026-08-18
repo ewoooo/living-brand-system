@@ -1,7 +1,36 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import { FALLBACK_LOCALE, DEFAULT_LOCALE as LOCALE } from '@/lib/locale'
+import { toRelationshipId } from '@/lib/payload-relationship'
+import {
+	type StudioPreviewImage,
+	toStudioPreviewImage,
+} from '@/modules/studio-controller/controller-definition'
 import type { Template } from '@/payload-types'
+
+/** Create 화면 선택기가 쓰는 카테고리 read model. */
+export type TemplateCategoryNavItem = {
+	id: number
+	title: string
+	slug: string
+}
+
+/**
+ * Create 화면 선택기가 쓰는 템플릿 read model.
+ * 🔴 관계·upload는 여기서 이미 좁혀져 있다 — 소비자에게 `number | Doc` 유니온을 넘기지 않는다.
+ * 렌더 가능 판정에 필요한 원본 필드(html·overrides·크기)는 그대로 지난다.
+ */
+export type PublishedTemplateNavItem = {
+	id: number
+	name: string
+	slug: string
+	categoryId: number | undefined
+	previewImage: StudioPreviewImage | undefined
+	html: string | null
+	overrides: unknown
+	width: number | null
+	height: number | null
+}
 
 /**
  * published Template·카테고리 조회를 공유하는 repository.
@@ -10,7 +39,7 @@ import type { Template } from '@/payload-types'
  * published 산출물 표면은 의도적으로 공개이며, draft·비발행본은 여기서 노출되지 않는다.
  */
 
-export async function listTemplateCategories() {
+export async function listTemplateCategories(): Promise<TemplateCategoryNavItem[]> {
 	const payload = await getPayload({ config })
 	const categories = await payload.find({
 		collection: 'template-categories',
@@ -25,10 +54,14 @@ export async function listTemplateCategories() {
 		},
 	})
 
-	return categories.docs
+	return categories.docs.map((category) => ({
+		id: category.id,
+		title: category.title,
+		slug: category.slug,
+	}))
 }
 
-export async function listPublishedTemplateNavItems() {
+export async function listPublishedTemplateNavItems(): Promise<PublishedTemplateNavItem[]> {
 	const payload = await getPayload({ config })
 	const templates = await payload.find({
 		collection: 'templates',
@@ -56,7 +89,17 @@ export async function listPublishedTemplateNavItems() {
 		},
 	})
 
-	return templates.docs
+	return templates.docs.map((template) => ({
+		id: template.id,
+		name: template.name,
+		slug: template.slug,
+		categoryId: toRelationshipId(template.category),
+		previewImage: toStudioPreviewImage(template.previewImage),
+		html: template.html ?? null,
+		overrides: template.overrides,
+		width: template.width ?? null,
+		height: template.height ?? null,
+	}))
 }
 
 export async function findPublishedTemplate(templateSlug: string): Promise<

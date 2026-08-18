@@ -9,6 +9,7 @@ import {
 } from '@/features/image-generation/domain/image-studio-config'
 import {
 	IMAGE_ASPECT_RATIOS,
+	IMAGE_OUTPUT_SIZES,
 	type ImageAspectRatio,
 	type ImageOutputSize,
 } from '@/features/image-generation/image-size'
@@ -499,7 +500,7 @@ function ratioDistance(ratio: ImageAspectRatio, target: number) {
 }
 
 function isImageOutputSize(value: string | null): value is ImageOutputSize {
-	return value === '1K' || value === '2K' || value === '4K'
+	return IMAGE_OUTPUT_SIZES.includes(value as ImageOutputSize)
 }
 
 function isImageAspectRatio(value: string | null): value is ImageAspectRatio {

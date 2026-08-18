@@ -11,6 +11,16 @@ const EXPORT_DATA_ATTRIBUTES = new Set([
 	'data-node-id',
 ])
 const CSS_URL_PATTERN = /url\(\s*(?:"([^"]+)"|'([^']+)'|([^"'()\s]+))\s*\)/gi
+// XML 1.0이 문서에 담는 것을 금지하는 문자(§2.2). export는 DOM을 SVG foreignObject로 직렬화하므로
+// 화면에서는 아무 일도 하지 않는 제어문자 하나가 SVG 전체의 파싱을 깨뜨린다 — Figma에서 딸려온
+// U+0003이 png·jpeg·mp4·pdf·tiff 모든 포맷을 실패시켰다. 이스케이프로는 못 막고 제거만이 답이다.
+// ponytail: lone surrogate(U+D800~U+DFFF)는 정상 쌍과 구분이 필요해 빼뒀다. 실제로 나오면 추가한다.
+// biome-ignore lint/suspicious/noControlCharactersInRegex: 제어문자를 지우는 것이 이 정규식의 목적이다.
+const XML_FORBIDDEN_PATTERN = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g
+
+function stripXmlForbidden(value: string): string {
+	return value.replace(XML_FORBIDDEN_PATTERN, '')
+}
 
 function isSafeExportUrl(value: string): boolean {
 	if (
@@ -43,7 +53,7 @@ function cssUrls(value: string): string[] | null {
 function copySafeStyle(source: HTMLElement, target: HTMLElement) {
 	for (let index = 0; index < source.style.length; index += 1) {
 		const property = source.style.item(index)
-		const value = source.style.getPropertyValue(property)
+		const value = stripXmlForbidden(source.style.getPropertyValue(property))
 		if (value.includes('\\')) {
 			throw new Error('Template export contains an unsafe CSS escape.')
 		}
@@ -56,7 +66,9 @@ function copySafeStyle(source: HTMLElement, target: HTMLElement) {
 }
 
 function cloneSafeExportNode(node: Node): Node | null {
-	if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent ?? '')
+	if (node.nodeType === Node.TEXT_NODE) {
+		return document.createTextNode(stripXmlForbidden(node.textContent ?? ''))
+	}
 	if (!(node instanceof HTMLElement)) return null
 
 	const tagName = node.tagName.toLowerCase()
@@ -66,15 +78,17 @@ function cloneSafeExportNode(node: Node): Node | null {
 	for (const attribute of node.attributes) {
 		const name = attribute.name.toLowerCase()
 		if (name.startsWith('on')) throw new Error('Template export contains an event handler.')
+		// 속성값도 SVG로 직렬화되므로 텍스트와 같은 XML 제약을 받는다(data-name은 Figma 레이어 이름이다).
+		const value = stripXmlForbidden(attribute.value)
 		if (name === 'id' || EXPORT_DATA_ATTRIBUTES.has(name)) {
-			clone.setAttribute(name, attribute.value)
+			clone.setAttribute(name, value)
 		} else if (tagName === 'img' && name === 'src') {
-			if (!isSafeExportUrl(attribute.value)) {
+			if (!isSafeExportUrl(value)) {
 				throw new Error('Template export contains an unsafe image URL.')
 			}
-			clone.setAttribute(name, attribute.value)
+			clone.setAttribute(name, value)
 		} else if (tagName === 'img' && name === 'alt') {
-			clone.setAttribute(name, attribute.value)
+			clone.setAttribute(name, value)
 		}
 	}
 	copySafeStyle(node, clone)

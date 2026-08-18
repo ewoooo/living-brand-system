@@ -11,12 +11,10 @@ import {
 	CarouselNext,
 	CarouselPrevious,
 } from '@/components/ui/carousel'
-import { Empty, EmptyDescription, EmptyTitle } from '@/components/ui/empty'
 import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
 import type { CheckImage } from '@/features/asset-check/types'
 import { CHECK_IMAGE_ACCEPT } from '@/features/asset-check/utils/image-format'
 import { useFileInput } from '@/hooks/use-file-input'
-import { ImageCheckControls } from './image-check-controls'
 
 /**
  * 퍼널 ① — 업로드·미리보기 캐러셀.
@@ -24,8 +22,9 @@ import { ImageCheckControls } from './image-check-controls'
  * out: addFiles(FileList) — 지원 타입(PNG/JPEG/WebP)만 CheckImage(idle)로 변환, 최신이 앞
  *      캐러셀 스와이프 → select(image.id)  (선택과 스크롤 양방향 동기화)
  * 렌더에 쓰는 필드: image.url(objectURL), image.name
+ * previewSize: 표시 크기(%)만 줄인다 — 검수 요청은 원본 파일을 그대로 보낸다.
  */
-export function ImageUploadCarousel() {
+export function ImageUploadCarousel({ previewSize }: { previewSize: number }) {
 	const { images, selectedId, select, addFiles } = useCheckImages()
 	const fileInput = useFileInput()
 	const [carouselApi, setCarouselApi] = useState<CarouselApi>()
@@ -61,7 +60,7 @@ export function ImageUploadCarousel() {
 		<section
 			data-slot="image-upload-carousel"
 			aria-label="이미지 업로드 및 미리보기"
-			className="relative flex aspect-video items-center justify-center overflow-hidden rounded-md border border-border bg-muted"
+			className="relative flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-border bg-background"
 			onDragOver={(event) => event.preventDefault()}
 			onDrop={handleDrop}
 		>
@@ -88,32 +87,24 @@ export function ImageUploadCarousel() {
 				}}
 			/>
 
-			{images.length === 0 ? (
-				<CheckCarouselEmpty />
-			) : (
-				<CheckCarouselActive images={images} setCarouselApi={setCarouselApi} />
+			{images.length === 0 ? null : (
+				<CheckCarouselActive
+					images={images}
+					previewSize={previewSize}
+					setCarouselApi={setCarouselApi}
+				/>
 			)}
-			<ImageCheckControls />
 		</section>
-	)
-}
-
-function CheckCarouselEmpty() {
-	return (
-		<Empty className="gap-2 text-muted-foreground/50">
-			<EmptyTitle>이미지를 드래그해서 업로드하세요</EmptyTitle>
-			<EmptyDescription className="text-muted-foreground opacity-60">
-				PNG, JPEG, WebP
-			</EmptyDescription>
-		</Empty>
 	)
 }
 
 function CheckCarouselActive({
 	images,
+	previewSize,
 	setCarouselApi,
 }: {
 	images: CheckImage[]
+	previewSize: number
 	setCarouselApi: (api: CarouselApi) => void
 }) {
 	return (
@@ -126,7 +117,11 @@ function CheckCarouselActive({
 							<img
 								src={image.url}
 								alt={image.name}
-								className="max-h-full max-w-full object-contain"
+								style={{
+									maxWidth: `${previewSize}%`,
+									maxHeight: `${previewSize}%`,
+								}}
+								className="object-contain"
 							/>
 						</div>
 					</CarouselItem>

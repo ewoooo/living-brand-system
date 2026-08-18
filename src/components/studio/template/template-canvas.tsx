@@ -5,6 +5,7 @@ import { fitPreviewSize } from '@/components/studio/shared/fit-preview-size'
 import {
 	DEFAULT_PREVIEW_SIZE,
 	PreviewSizeControl,
+	StudioCanvasFooter,
 } from '@/components/studio/shared/preview-size-control'
 import { Typography } from '@/components/ui/typography'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
@@ -86,7 +87,9 @@ export function TemplateCanvas() {
 					/>
 				</div>
 			</div>
-			<PreviewSizeControl value={previewSize} onChange={setPreviewSize} />
+			<StudioCanvasFooter>
+				<PreviewSizeControl value={previewSize} onChange={setPreviewSize} />
+			</StudioCanvasFooter>
 		</div>
 	)
 }

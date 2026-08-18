@@ -24,7 +24,7 @@ const EXAMPLE_PROMPTS = [
 export function ImageCanvas() {
 	const { prompt, generation, results } = useImageStudio()
 
-	if (!generation.busy && !results.result) {
+	if (!generation.busy && results.items.length === 0) {
 		return <EmptyCanvas onSelectExample={prompt.setValue} />
 	}
 
@@ -33,13 +33,14 @@ export function ImageCanvas() {
 			aspectRatio={
 				generation.busy
 					? generation.ratio
-					: (results.result?.aspectRatio ?? generation.ratio)
+					: (results.output?.aspectRatio ?? generation.ratio)
 			}
 			color={results.color}
+			items={results.items}
 			loading={generation.busy}
 			onSelect={results.select}
+			referenceIndex={results.referenceIndex}
 			requested={results.requested}
-			result={results.result}
 			selected={results.selected}
 		/>
 	)

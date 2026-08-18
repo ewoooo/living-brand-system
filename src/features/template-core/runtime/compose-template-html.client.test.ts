@@ -109,6 +109,29 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(carrier.getAttribute('data-asset-id')).toBe('9')
 	})
 
+	it('세션이 실은 assetRef로 캐리어의 자산 참조를 바꾼다', () => {
+		const sample = '/api/sample-images/file/submarine.png'
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' data-asset-collection="application-images" data-asset-id="3"' +
+			' style="background-image:url(/api/application-images/file/ph.png)"></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: sample,
+				assetRef: { collection: 'sample-images', id: 12 },
+			},
+		})
+		const carrier = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-image-carrier]') as HTMLElement
+
+		expect(carrier.style.backgroundImage).toContain(sample)
+		expect(carrier.getAttribute('data-asset-collection')).toBe('sample-images')
+		expect(carrier.getAttribute('data-asset-id')).toBe('12')
+	})
+
 	it('요소 자신이 캐리어면(사각형 직접 선택) 그 요소에서 교체·재바인딩한다', () => {
 		const frameHtml =
 			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +

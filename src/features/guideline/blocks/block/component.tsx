@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
+import { GuidelineHelperRegion } from '@/features/guideline/components/globals/guideline-helper'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
@@ -294,10 +295,12 @@ function surfaceScopeClass(hex: string | undefined): string | undefined {
 	return `${isLightColor(hex) ? 'light' : 'dark'} text-foreground`
 }
 
-// 레이아웃 그리드 컨트롤 패널은 배치 영역이 아니라 **헤더(제목·설명 아래)**에 온다 —
-// innerBackground 안에 두면 판형과 같은 어두운 면에 얹혀 읽기 어렵고, 배치 셀 하나를 차지한다.
+// 레이아웃 그리드 컨트롤 패널은 배치 영역이 아니라 **화면 하단의 Floating Controller**에 온다
+// (components/globals/guideline-helper.tsx). 배치 셀 안에 두면 셀 하나를 차지하고 판형과 같은
+// 어두운 면에 얹혀 읽기 어려우며, 스크롤을 내리면 조작 대상만 남고 손잡이가 화면 밖으로 나간다.
 // 값 스코프는 **블록 단위**다: 모듈 스토어로 두면 섹션 라우트가 여러 Page를 한 화면에 렌더할 때
-// 페이지마다 놓인 패널이 서로 간섭한다. 그래서 패널과 배치를 한 provider로 함께 감싼다.
+// 페이지마다 놓인 패널이 서로 간섭한다. 그래서 패널과 배치를 한 provider로 함께 감싼다 —
+// 하단 바로 가는 것은 DOM뿐이고 React 트리는 이 provider 안에 남는다.
 function splitControls(children: NonNullable<LayoutBlockType['children']>) {
 	const controls = children.filter((child) => child.blockType === 'layoutGridControlsWidget')
 	const arranged = children.filter((child) => child.blockType !== 'layoutGridControlsWidget')
@@ -311,25 +314,36 @@ export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 	const innerBg = bgHex(block.innerBackground)
 	const { controls, arranged, needsScope } = splitControls(block.children ?? [])
 
-	const body = (
-		<>
-			{controls.map((child) => (
-				<div key={child.id}>{renderWidget(child)}</div>
-			))}
-			<div
-				className={surfaceScopeClass(innerBg)}
-				style={innerBg ? { background: innerBg } : undefined}
-			>
-				<Arrange
-					arrangement={block.arrangement}
-					columns={block.columns ?? 2}
-					gap={block.gap ?? 'default'}
-					aspectRatio={block.aspectRatio ?? '1:1'}
-					items={arranged}
-				/>
-			</div>
-		</>
+	const arrangedSurface = (
+		<div
+			className={surfaceScopeClass(innerBg)}
+			style={innerBg ? { background: innerBg } : undefined}
+		>
+			<Arrange
+				arrangement={block.arrangement}
+				columns={block.columns ?? 2}
+				gap={block.gap ?? 'default'}
+				aspectRatio={block.aspectRatio ?? '1:1'}
+				items={arranged}
+			/>
+		</div>
 	)
+
+	// 관측 영역은 **판형이 놓인 면**이다 — 제목·설명이 아니다. 조작 대상이 화면에서 사라지면
+	// 컨트롤도 함께 물러나야 슬라이더를 움직였는데 아무 변화가 없는 상태가 생기지 않는다.
+	const body =
+		controls.length > 0 ? (
+			<GuidelineHelperRegion
+				label={block.title}
+				controls={controls.map((child) => (
+					<Fragment key={child.id}>{renderWidget(child)}</Fragment>
+				))}
+			>
+				{arrangedSurface}
+			</GuidelineHelperRegion>
+		) : (
+			arrangedSurface
+		)
 
 	return (
 		<GuidelineBlockFrame

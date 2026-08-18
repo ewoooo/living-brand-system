@@ -2,12 +2,9 @@ import { projectTemplateRenderModel } from '@/features/template-core/domain/proj
 import {
 	listPublishedTemplateNavItems,
 	listTemplateCategories,
-} from '@/features/template-core/repositories/published-template.payload.repository'
+} from '@/features/template-core/services/published-template-catalog.service'
 import { getStudioTemplateRoute } from '@/lib/routes'
-import {
-	type StudioPreviewImage,
-	toStudioPreviewImage,
-} from '@/modules/studio-controller/controller-definition'
+import type { StudioPreviewImage } from '@/modules/studio-controller/controller-definition'
 
 export interface GetCreateNavigationOutput {
 	categories: {
@@ -26,7 +23,7 @@ export interface GetCreateNavigationOutput {
 
 /**
  * Create 화면 선택기용 카테고리 → 렌더 가능한 published 템플릿 read service.
- * Payload 조회는 published-template repository가 소유한다.
+ * Payload 조회는 template-core의 published-template-catalog service가 소유한다.
  */
 export async function getCreateNavigation(): Promise<GetCreateNavigationOutput> {
 	const [categories, templates] = await Promise.all([
@@ -41,14 +38,15 @@ export async function getCreateNavigation(): Promise<GetCreateNavigationOutput> 
 			id: category.id,
 			title: category.title,
 			slug: category.slug,
+			// 관계는 저장소가 이미 id로 좁혀 준다 — 여기서 depth를 신경 쓸 일이 없다.
 			templates: availableTemplates
-				.filter((template) => template.category === category.id)
+				.filter((template) => template.categoryId === category.id)
 				.map((template) => ({
 					id: template.id,
 					name: template.name,
 					slug: template.slug,
 					href: getStudioTemplateRoute(template.slug),
-					previewImage: toStudioPreviewImage(template.previewImage),
+					previewImage: template.previewImage,
 				})),
 		})),
 	}
