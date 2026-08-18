@@ -32,6 +32,7 @@ import {
 	type MonoColor,
 	OVERSEAS_BRANCHES,
 	partialColumnArea,
+	STAGE_HEIGHT,
 	SUBSIDIARIES,
 	SYMBOL_ASPECT,
 	SYMBOL_CONTOURS,
@@ -64,7 +65,45 @@ import {
 const DEBUG_INK_BOX = false
 
 /** 표현 전환 지속시간(ms). 형태와 색이 같은 값을 써서 함께 움직인다. */
-const MORPH_MS = 320
+const MORPH_MS = 420
+
+/**
+ * 전환 곡선. 🔴 **한 곡선을 CSS와 JS가 같이 쓴다** — 심볼 형태는 JS가 프레임마다 계산하고
+ * 색·판·위치는 CSS/WAAPI가 하므로, 곡선이 다르면 같이 움직이는 것들이 어긋나 보인다
+ * (실측으로 겪은 것: 텍스트 색만 전환이 없어 점프했고, 위치만 `ease`라 따로 놀았다).
+ *
+ * `easeOutQuint` 계열 — 처음에 빠르게 튀어나가고 끝을 길게 눌러 앉는다. 오버슛은 넣지 않았다:
+ * 색 전환이 목표를 지나치면 색역 밖으로 나가고, 로고 형태가 규정 값을 넘어가 보이는 것도 곤란하다.
+ */
+const MORPH_BEZIER = [0.22, 1, 0.36, 1] as const
+const MORPH_EASING = `cubic-bezier(${MORPH_BEZIER.join(',')})`
+
+/** CSS `transition`·`animate`에 함께 쓰는 값. */
+const MORPH = `${MORPH_MS}ms ${MORPH_EASING}`
+
+/**
+ * `cubic-bezier`의 y를 x로 구한다 — CSS가 이징으로 하는 계산을 JS에서 똑같이 한다.
+ * x(t)를 뉴턴법으로 뒤집어 t를 찾고 y(t)를 낸다(브라우저 구현과 같은 방식).
+ */
+export function easeMorph(x: number) {
+	const [x1, y1, x2, y2] = MORPH_BEZIER
+	const cx = 3 * x1
+	const bx = 3 * (x2 - x1) - cx
+	const ax = 1 - cx - bx
+	const cy = 3 * y1
+	const by = 3 * (y2 - y1) - cy
+	const ay = 1 - cy - by
+
+	let t = x
+	for (let i = 0; i < 8; i++) {
+		const dx = ((ax * t + bx) * t + cx) * t - x
+		if (Math.abs(dx) < 1e-6) break
+		const slope = (3 * ax * t + 2 * bx) * t + cx
+		if (Math.abs(slope) < 1e-6) break
+		t -= dx / slope
+	}
+	return ((ay * t + by) * t + cy) * t
+}
 
 /** H(심볼 높이). 워드마크가 읽히는 크기로 잡았다. */
 const H = 100
@@ -343,7 +382,7 @@ function useSlide() {
 		if (dx === 0 && dy === 0) return
 		el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], {
 			duration: MORPH_MS,
-			easing: 'ease',
+			easing: MORPH_EASING,
 		})
 	})
 
@@ -378,7 +417,8 @@ function useApproach(target: number, ms = MORPH_MS) {
 			// 🔴 clamp 필수 — rAF 타임스탬프가 `start`보다 이전일 수 있어(프레임 시작 시각) `p`가
 			//    한 프레임 음수가 되고, 그러면 정점이 유효 범위를 벗어난다(실측: -0.0008).
 			const p = Math.min(1, Math.max(0, (now - start) / ms))
-			current.current = from + (target - from) * p
+			// 🔑 CSS와 같은 곡선을 쓴다 — 형태와 색이 같은 리듬으로 움직이게.
+			current.current = from + (target - from) * easeMorph(p)
 			setValue(current.current)
 			if (p < 1) frame = requestAnimationFrame(step)
 		}
@@ -418,7 +458,7 @@ function SymbolMark({
 					key={SYMBOL_CONTOURS[i].colorName}
 					points={points.map(([x, y]) => `${x},${y}`).join(' ')}
 					fill={colors[i]}
-					style={{ transition: `fill ${MORPH_MS}ms linear` }}
+					style={{ transition: `fill ${MORPH}` }}
 				/>
 			))}
 		</svg>
@@ -448,9 +488,16 @@ function LockupFigure({
 		<figure className="flex flex-col gap-3">
 			{/* 🔴 판은 밝아야 한다(기본형 Full Color는 밝은 배경 전용). 다크 모드에서도 마찬가지다.
 				overflow-x-auto는 안전망이다 — 좁은 자리에서도 로고를 자르지 않고 흘려보낸다. */}
+			{/* 🔴 판 크기는 **고정**이다(`STAGE_HEIGHT`). 선택에 따라 판이 커졌다 작아지면 위젯이
+				위아래로 튀어 락업이 아니라 화면이 움직이는 것처럼 보인다. 안의 락업만 변한다.
+				판 색은 표현이 정하고 테마를 따르지 않으므로 전환도 여기서 이어 준다. */}
 			<div
-				className="flex items-center justify-center overflow-x-auto border border-border p-8"
-				style={{ background: stage, minHeight: h * 2 }}
+				className="flex items-center justify-center overflow-x-auto border border-border px-8"
+				style={{
+					background: stage,
+					height: h * STAGE_HEIGHT,
+					transition: `background-color ${MORPH}`,
+				}}
 			>
 				<Composed
 					lockup={lockup}
@@ -519,7 +566,11 @@ function Composed({
 			<SymbolMark h={h} t={symbolT} colors={symbolColors} marginTop={baseTop} />
 
 			{/* 🔴 열 사이는 flex gap이 아니라 열마다의 marginLeft다 — 열마다 간격이 다를 수 있다. */}
-			<div className="flex shrink-0 flex-row items-stretch" style={{ color }}>
+			{/* 🔴 `color`에도 전환이 필요하다 — 없으면 심볼은 물드는데 글자만 즉시 점프해 어긋난다. */}
+			<div
+				className="flex shrink-0 flex-row items-stretch"
+				style={{ color, transition: `color ${MORPH}` }}
+			>
 				{lockup.columns.map((column, i) => (
 					<ColumnStack
 						key={column.bar ? `bar-${i}` : column.rows.map((r) => r.text).join('/')}

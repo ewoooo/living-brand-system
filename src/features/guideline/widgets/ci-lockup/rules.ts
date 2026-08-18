@@ -517,6 +517,30 @@ function overseasLockups(sub: Subsidiary, branch: OverseasBranch): Lockup[] {
 /** 🔴 p35 라벨은 0.04H인데 실측은 0.0344H다(14% 차). 라벨을 정본으로 두고 차이를 note에 남긴다. */
 const BAR_WIDTH = 0.04
 
+/**
+ * 판 높이(H 배수). 🔴 **고정이다** — 선택에 따라 판이 커졌다 작아지면 위젯 전체가 위아래로 튀어
+ * 락업이 아니라 화면이 움직이는 것처럼 보인다. 판은 그대로 두고 안의 락업만 변해야 한다.
+ *
+ * 가장 높은 락업은 **해외지사 세로형 2.1H**다(심볼 1 + 간격 0.2 + 영역 0.9). 그 위로 여유를 둔 값이고,
+ * 스펙 값이 바뀌어 2.4H를 넘으면 `rules.test.ts`가 떨어진다.
+ */
+export const STAGE_HEIGHT = 2.4
+
+/**
+ * 락업이 세로로 차지하는 높이(H 배수). 판 높이 가드가 이것을 쓴다.
+ * 🔴 가로형B 해외지사는 심볼이 **앞 몇 행에만** 정렬돼서(2×2 그리드) 심볼이 위로 삐져나온다 —
+ *    그 삐져나온 만큼도 높이에 든다.
+ */
+export function lockupHeight(lockup: Lockup) {
+	const columns = lockup.columns.filter((c) => c.bar === undefined)
+	const stack = Math.max(...columns.map((c) => columnArea(lockup, c)))
+	if (lockup.orientation === 'vertical') return 1 + lockup.gap + stack
+	if (lockup.baseRows === undefined) return Math.max(1, stack)
+	// 심볼은 앞 baseRows 블록에 중앙정렬된다 — 블록보다 크면 위아래로 삐져나온다.
+	const overhang = (1 - partialColumnArea(lockup, lockup.columns[0], lockup.baseRows)) / 2
+	return Math.max(stack + Math.max(0, overhang), 1) + Math.max(0, overhang)
+}
+
 /** 열 하나의 높이(H 배수). 행 cap 합 + 행 사이 간격 합. */
 export function columnArea(lockup: Lockup, column: Column) {
 	return column.rows.reduce(

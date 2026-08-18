@@ -5,8 +5,10 @@ import {
 	deriveLockups,
 	fontSizeFor,
 	type Lockup,
+	lockupHeight,
 	OVERSEAS_BRANCHES,
 	partialColumnArea,
+	STAGE_HEIGHT,
 	SUBSIDIARIES,
 	splitScripts,
 	TIERS,
@@ -98,6 +100,20 @@ describe('CI 락업 조립 규칙', () => {
 				'국문',
 			)
 		}
+	})
+
+	// 🔴 판 높이는 고정이라(선택마다 튀지 않게) 가장 높은 락업이 그 안에 들어가야 한다.
+	//    스펙 값이 바뀌어 넘치면 화면에서 잘리는데, 잘린 로고는 가이드라인으로 성립하지 않는다.
+	it('모든 락업이 고정 판 높이 안에 들어간다', () => {
+		expect(ALL.length).toBeGreaterThan(0)
+		const tallest = ALL.reduce(
+			(max, lockup) => (lockupHeight(lockup) > lockupHeight(max) ? lockup : max),
+			ALL[0],
+		)
+		expect(
+			lockupHeight(tallest),
+			`${tallest.label}이 판 높이 ${STAGE_HEIGHT}H를 넘는다`,
+		).toBeLessThanOrEqual(STAGE_HEIGHT)
 	})
 
 	it('락업 key가 겹치지 않는다', () => {
