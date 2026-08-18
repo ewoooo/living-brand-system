@@ -2,6 +2,8 @@ const TEMPLATE_VECTOR_ASSET_COLLECTIONS = ['brand-logos', 'application-images'] 
 
 export const AUTHORIZED_TEMPLATE_ASSET_COLLECTIONS = [
 	...TEMPLATE_VECTOR_ASSET_COLLECTIONS,
+	// 생성하지 않고 그대로 쓰는 완성 이미지 — 벡터 슬롯 교체 대상은 아니라 벡터 목록에는 넣지 않는다.
+	'sample-images',
 	'generated-images',
 ] as const
 
