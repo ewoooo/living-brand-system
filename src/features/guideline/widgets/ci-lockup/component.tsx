@@ -8,14 +8,10 @@ import { CiLockupView } from './view'
 //    (기본형 Full Color는 흰색·밝은 배경 전용, 01-specs C). 그래서 인스턴스 필드로 두지 않는다.
 // 🔴 hex를 코드에 박지 않는다. 브랜드 색이 바뀌면 컬렉션만 고치면 되게 이름으로 찾는다.
 
-/** H(심볼 높이) 기본값. 화면에서 워드마크가 읽히는 크기로 잡았다. */
-const DEFAULT_H = 100
-
-export async function CiLockupWidget({ h }: { h?: number | null } = {}) {
+export async function CiLockupWidget() {
 	const colors = await brandColors()
 	return (
 		<CiLockupView
-			h={h ?? DEFAULT_H}
 			wordmarkColor={colors[WORDMARK_COLOR_NAME] ?? 'currentColor'}
 			stageColor={colors[STAGE_COLOR_NAME] ?? '#fff'}
 		/>
