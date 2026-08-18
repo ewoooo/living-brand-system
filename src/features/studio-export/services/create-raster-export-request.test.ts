@@ -4,7 +4,16 @@ import { createRasterExportRequest } from './create-raster-export-request'
 
 const capability: StudioOutputCapability = {
 	formats: ['mp4'],
-	video: { mp4: { codec: 'h264', colorSpace: 'rec709', fps: [30], maxWidth: 4096, maxHeight: 4096, maxDurationSeconds: 10 } },
+	video: {
+		mp4: {
+			codec: 'h264',
+			colorSpace: 'rec709',
+			fps: [30],
+			maxWidth: 4096,
+			maxHeight: 4096,
+			maxDurationSeconds: 10,
+		},
+	},
 }
 
 describe('createRasterExportRequest mp4', () => {
