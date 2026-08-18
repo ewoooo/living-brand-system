@@ -113,6 +113,8 @@ export async function storeGeneratedImages(input: {
 		aspectRatio: ImageAspectRatio
 		imageSize: ImageOutputSize
 	}
+	/** 참조해서 만든 결과면 그 원본 생성 이미지 id. 없으면 참조 없이 만든 이미지다. */
+	sourceImage?: number
 }): Promise<StoredGeneratedImage[]> {
 	const payload = await getPayload({ config })
 	const createdIds: number[] = []
@@ -133,6 +135,7 @@ export async function storeGeneratedImages(input: {
 					model: input.model,
 					scenario: input.profile.id,
 					scenarioName: input.profile.name,
+					...(input.sourceImage ? { sourceImage: input.sourceImage } : {}),
 				},
 				draft: false,
 				file: {

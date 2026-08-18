@@ -1373,6 +1373,10 @@ export interface GeneratedImage {
    * 생성 요청 당시 인증된 사용자 ID입니다.
    */
   createdBy: number | User;
+  /**
+   * 이 이미지를 만들 때 참조한 원본 생성 이미지입니다.
+   */
+  sourceImage?: (number | null) | GeneratedImage;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -2820,6 +2824,7 @@ export interface GeneratedImagesSelect<T extends boolean = true> {
   aspectRatio?: T;
   imageSize?: T;
   createdBy?: T;
+  sourceImage?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

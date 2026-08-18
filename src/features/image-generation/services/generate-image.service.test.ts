@@ -598,6 +598,41 @@ describe('generateImages', () => {
 		)
 	})
 
+	it('참조한 원본 생성 이미지 id를 저장 인자에 담는다', async () => {
+		mocks.env.GEMINI_API_KEY = 'key'
+		mocks.loadGeneratedImage.mockResolvedValue({
+			data: Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
+			effectivePrompt: JSON.stringify({ subject: '유조선' }),
+			inputPrompt: '유조선',
+		})
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'google-nano-banana-2-lite',
+			aspectRatio: '16:9',
+			imageSize: '1K',
+			features: [{ blockType: 'cameraControl' }],
+		})
+		mocks.generateBrandImages.mockResolvedValue({
+			images: ['data:image/png;base64,adjusted'],
+			model: 'gemini-3.1-flash-lite-image',
+			provider: 'google',
+		})
+
+		await adjustImageCamera({
+			camera: { azimuthDeg: 0, elevationDeg: 0 },
+			count: 1,
+			generatedImageId: 8,
+			profileId: 5,
+			requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
+			user: { id: 1 },
+		})
+
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
+			expect.objectContaining({ sourceImage: 8 }),
+		)
+	})
+
 	it('조회할 수 없는 생성 이미지 ID를 거부한다', async () => {
 		mocks.env.GEMINI_API_KEY = 'key'
 		mocks.findPublishedImageProfile.mockResolvedValue({

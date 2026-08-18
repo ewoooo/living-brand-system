@@ -289,6 +289,7 @@ export async function adjustImageCamera({
 			aspectRatio: effective.aspectRatio,
 			imageSize: effective.imageSize,
 		},
+		sourceImage: generatedImageId,
 		user,
 	})
 
@@ -436,6 +437,7 @@ async function storeProfileGeneration(
 	{
 		inputPrompt,
 		profile,
+		sourceImage,
 		user,
 	}: {
 		inputPrompt: string
@@ -446,6 +448,8 @@ async function storeProfileGeneration(
 			name: string
 		}
 		user: unknown
+		/** 참조해서 만든 결과면 그 원본 생성 이미지 id. */
+		sourceImage?: number
 	},
 ): Promise<GeneratedImages> {
 	const createdBy = getAuthenticatedUserId(user)
@@ -456,6 +460,7 @@ async function storeProfileGeneration(
 		inputPrompt,
 		model: generated.model,
 		profile,
+		...(sourceImage ? { sourceImage } : {}),
 	})
 	return {
 		...generated,
