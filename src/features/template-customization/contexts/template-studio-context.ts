@@ -9,10 +9,14 @@ import type {
 	TemplateStudioConfig,
 	TemplateVectorSlot,
 } from '@/features/template-customization/domain/template-studio-config'
-import type { TemplateRasterArtifact } from '@/features/template-customization/runtime/template-runtime.client'
+import type {
+	TemplateRasterArtifact,
+	TemplateVideoArtifactProducer,
+} from '@/features/template-customization/runtime/template-runtime.client'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
 import type { SampleImageOption } from '@/features/template-customization/services/list-sample-images.client'
 import type { LazyResource } from '@/hooks/use-lazy-resource'
+import type { CanvasVideoSource } from '@/modules/studio-artifact/studio-artifact'
 import type {
 	ControllerControlValue,
 	ControllerRuntimeBindings,
@@ -128,8 +132,11 @@ export type TemplateStudioValue = {
 	canvas: {
 		html: string
 		artifact: () => TemplateRasterArtifact
+		/** 배경 Graphic이 켜져 있을 때만 시간축이 있다 — 그 밖에는 MP4도 정지 화면이 정답이다. */
+		videoArtifact: TemplateVideoArtifactProducer | null
 		previewRef: RefObject<HTMLDivElement | null>
 		registerGraphicFrame: (capture: (() => string) | null) => void
+		registerGraphicVideo: (source: CanvasVideoSource | null) => void
 	}
 	execution: {
 		controllerValues: ControllerValues

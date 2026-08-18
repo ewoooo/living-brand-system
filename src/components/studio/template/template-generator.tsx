@@ -38,6 +38,7 @@ function TemplateWorkspace({ template }: { template: PublishedTemplateView }) {
 	const { canvas, config, execution } = useTemplateStudio()
 	const exporting = useTemplateExport({
 		artifact: canvas.artifact,
+		videoArtifact: canvas.videoArtifact,
 		capability: config.output,
 		metadata: {
 			fileName: template.name,

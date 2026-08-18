@@ -1,7 +1,10 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import type { TemplateRasterArtifactProducer } from '@/features/template-customization/runtime/template-runtime.client'
+import type {
+	TemplateRasterArtifactProducer,
+	TemplateVideoArtifactProducer,
+} from '@/features/template-customization/runtime/template-runtime.client'
 import {
 	acceptsControllerExecutionValues,
 	type ControllerGroupDefinition,
@@ -25,15 +28,18 @@ export type TemplateExportMetadata = {
 }
 
 export type TemplateExportView = ReturnType<typeof useTemplateExport>
-type TemplateExportRequest = Extract<ExportRequest, { artifact: 'raster' }>
+type TemplateExportRequest = Extract<ExportRequest, { artifact: 'raster' | 'video' }>
 
 /** Template Raster Artifact를 공통 ExportRequest와 Artifact executor에 연결한다. */
 export function useTemplateExport({
 	artifact,
+	videoArtifact,
 	capability,
 	metadata,
 }: {
 	artifact: TemplateRasterArtifactProducer
+	/** 배경 Graphic처럼 시간축이 있는 소스가 있을 때만 MP4가 실제로 움직인다. */
+	videoArtifact?: TemplateVideoArtifactProducer | null
 	capability: StudioOutputCapability
 	metadata: TemplateExportMetadata | null
 }) {
@@ -56,28 +62,36 @@ export function useTemplateExport({
 	const format =
 		selectedFormat && formats.includes(selectedFormat) ? selectedFormat : (formats[0] ?? null)
 	const createRequest = useCallback(
-		(candidate: StudioOutputFormat | null): TemplateExportRequest | null =>
-			candidate && metadata
-				? createRasterExportRequest(candidate, capability, {
-						width: metadata.width,
-						height: metadata.height,
-						ppi: effectivePpi,
-						fps: effectiveFps,
-						durationSeconds: effectiveDuration,
-					})
-				: null,
-		[capability, effectiveDuration, effectiveFps, effectivePpi, metadata],
+		(candidate: StudioOutputFormat | null): TemplateExportRequest | null => {
+			const request =
+				candidate && metadata
+					? createRasterExportRequest(candidate, capability, {
+							width: metadata.width,
+							height: metadata.height,
+							ppi: effectivePpi,
+							fps: effectiveFps,
+							durationSeconds: effectiveDuration,
+						})
+					: null
+			// 같은 video spec을 시간축 있는 artifact로 돌린다 — raster MP4는 한 프레임을 반복한다.
+			return request?.format === 'mp4' && videoArtifact
+				? { artifact: 'video', format: 'mp4', options: request.options }
+				: request
+		},
+		[capability, effectiveDuration, effectiveFps, effectivePpi, metadata, videoArtifact],
 	)
 	const execute = useCallback(
 		async (request: TemplateExportRequest) => {
 			if (!metadata) throw new Error('Template export is unavailable.')
+			const producer = request.artifact === 'video' ? videoArtifact : artifact
+			if (!producer) throw new Error('Template export is unavailable.')
 			return executeArtifactExport({
-				artifact: await artifact(),
+				artifact: await producer(),
 				fileName: metadata.fileName,
 				request,
 			})
 		},
-		[artifact, metadata],
+		[artifact, metadata, videoArtifact],
 	)
 	const output = useExport<TemplateExportRequest>({
 		capability,

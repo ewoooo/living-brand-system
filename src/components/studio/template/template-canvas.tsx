@@ -166,6 +166,7 @@ function TemplateGraphicBackground({
 					}
 					return frame
 				})
+				canvas.registerGraphicVideo(mounted.artifacts.video?.source ?? null)
 			})
 			.catch((mountError) => {
 				console.error(mountError)
@@ -175,10 +176,11 @@ function TemplateGraphicBackground({
 		return () => {
 			disposed = true
 			canvas.registerGraphicFrame(null)
+			canvas.registerGraphicVideo(null)
 			runtime?.destroy()
 			runtimeRef.current = null
 		}
-	}, [canvas.registerGraphicFrame, config, height, width])
+	}, [canvas.registerGraphicFrame, canvas.registerGraphicVideo, config, height, width])
 
 	return (
 		<div

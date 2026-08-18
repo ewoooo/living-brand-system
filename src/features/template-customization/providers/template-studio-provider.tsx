@@ -45,7 +45,9 @@ import {
 import {
 	composeTemplateStudioHtml,
 	createTemplateRasterArtifact,
+	createTemplateVideoArtifact,
 	type TemplateRasterArtifact,
+	type TemplateVideoArtifact,
 } from '@/features/template-customization/runtime/template-runtime.client'
 import { fetchCreateNavigation } from '@/features/template-customization/services/get-create-navigation.client'
 import {
@@ -53,6 +55,7 @@ import {
 	type SampleImageOption,
 } from '@/features/template-customization/services/list-sample-images.client'
 import { useLazyResource } from '@/hooks/use-lazy-resource'
+import type { CanvasVideoSource } from '@/modules/studio-artifact/studio-artifact'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlDefinition,
@@ -469,6 +472,10 @@ export function TemplateStudioProvider({
 	const registerGraphicFrame = useCallback((capture: (() => string) | null) => {
 		graphicFrameRef.current = capture
 	}, [])
+	const graphicVideoRef = useRef<CanvasVideoSource | null>(null)
+	const registerGraphicVideo = useCallback((source: CanvasVideoSource | null) => {
+		graphicVideoRef.current = source
+	}, [])
 	const { html, width, height } = template
 	const slots = config.template.slots
 	const partitionedSlots = useMemo(() => partitionTemplateSlots(slots), [slots])
@@ -545,6 +552,17 @@ export function TemplateStudioProvider({
 			width,
 		})
 	}, [background.state.type, composedHtml, height, width])
+	const videoArtifact = useCallback((): Promise<TemplateVideoArtifact> => {
+		const graphicVideo = graphicVideoRef.current
+		if (!graphicVideo) throw new Error('그래픽 배경 미리보기가 준비되지 않았습니다.')
+		// composedHtml은 배경이 graphic일 때 캔버스 배경을 transparent로 비운다 — 그 위에 겹친다.
+		return createTemplateVideoArtifact({
+			background: graphicVideo,
+			height,
+			html: composedHtml,
+			width,
+		})
+	}, [composedHtml, height, width])
 
 	const value = useMemo<TemplateStudioValue>(
 		() => ({
@@ -556,7 +574,14 @@ export function TemplateStudioProvider({
 			vectors,
 			layers,
 			background,
-			canvas: { html: composedHtml, artifact, previewRef, registerGraphicFrame },
+			canvas: {
+				html: composedHtml,
+				artifact,
+				videoArtifact: background.state.type === 'graphic' ? videoArtifact : null,
+				previewRef,
+				registerGraphicFrame,
+				registerGraphicVideo,
+			},
 			execution: { controllerValues },
 		}),
 		[
@@ -570,8 +595,10 @@ export function TemplateStudioProvider({
 			layers,
 			navigation,
 			registerGraphicFrame,
+			registerGraphicVideo,
 			text,
 			vectors,
+			videoArtifact,
 		],
 	)
 
