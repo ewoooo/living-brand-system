@@ -61,7 +61,7 @@ Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listIma
 - 프로파일 저장소: Payload CMS의 published `image-profiles` 컬렉션. `slug`가 있는 프로파일은 `displayOrder` 순서로 Studio 내비게이션과 `/studio/generate/image/:profileSlug` 경로에 노출됩니다.
 - 프로파일 정규화: 유저 프롬프트 후보가 있는 프로파일만 Anthropic Haiku 구조화 출력을 사용합니다. 후보가 없는 정적 프로파일은 정규화 모델을 호출하지 않습니다.
 - Review 미사용(의도적) — 이미지 검수 성능이 아직 일부 항목에 한정되어 있어 생성 품질을 검수에 묶지 않습니다.
-- dev 폴백: OpenAI 경로는 개발 환경에서 `IMAGE_DEV_FALLBACK=true`를 명시한 경우에만 Pollinations FLUX(무료·키 불필요)를 임시 사용합니다. Google 모델을 선택한 프로파일은 `GEMINI_API_KEY`가 없으면 대체 모델로 보내지 않고 실패합니다. ⚠️ Pollinations에는 민감 입력을 보내지 않습니다.
+- 키가 없으면 불가: 프리셋이 요구하는 키(`OPENAI_API_KEY` 또는 `GEMINI_API_KEY`)가 없으면 다른 모델로 대체하지 않고 실패합니다. dev 폴백은 없습니다.
 
 ## 5. 크로스커팅
 

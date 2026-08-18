@@ -68,12 +68,10 @@ const imageModelProviders = {
 	},
 } satisfies Record<ImageModelPreset, ImageModelProviderEntry>
 
-type ImageModelProvider = (typeof imageModelProviders)[ImageModelPreset]['provider']
+/** 프리셋 표에서 파생된 provider 태그 union — 유일한 선언. */
+export type ImageModelProvider = (typeof imageModelProviders)[ImageModelPreset]['provider']
 
-/** 프리셋 표에서 파생된 provider 태그 union — dev 폴백(pollinations)까지 포함한 유일한 선언. */
-export type ImageGenerationProvider = ImageModelProvider | 'pollinations'
-
-/** 프리셋이 요구하는 환경 API 키를 조회한다 — 서비스의 가용성 판단(dev 폴백/불가)에 쓰인다. */
+/** 프리셋이 요구하는 환경 API 키를 조회한다 — 서비스의 가용성 판단에 쓰인다. */
 export function getImageModelApiKey(modelPreset: ImageModelPreset): string | undefined {
 	return imageModelProviders[modelPreset].apiKey()
 }

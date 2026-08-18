@@ -35,9 +35,6 @@ export function ImageGenerationResults({
 	requested,
 	selected,
 }: ImageGenerationResultsProps) {
-	// 참조는 이번 요청이 만든 장수에 들어가지 않는다 — 안내는 결과만 센다.
-	const generatedCount = items.length - (referenceIndex === null ? 0 : 1)
-
 	return (
 		<div
 			data-slot="image-generation-results"
@@ -53,13 +50,6 @@ export function ImageGenerationResults({
 					{selected === null && (
 						<Typography as="p" size="sm" tone="muted">
 							이미지를 클릭해 선택하면 시점 조정과 저장을 할 수 있어요
-						</Typography>
-					)}
-
-					{generatedCount < requested && (
-						<Typography size="sm" tone="muted">
-							요청 {requested}장 중 {generatedCount}장 생성됨 (일부는 무료 서버
-							지연으로 실패)
 						</Typography>
 					)}
 
@@ -154,9 +144,8 @@ function ImageGenerationSkeleton({
 }) {
 	return (
 		<div data-slot="image-generation-skeleton" className="flex flex-col gap-3">
-			<Typography size="sm" tone="muted">
-				생성 중… 무료 서버라 최대 1~2분 걸릴 수 있어요.
-			</Typography>
+			{/* 스켈레톤은 눈에만 보인다 — 진행 중이라는 사실은 이 한 줄이 읽어 준다. */}
+			<span className="sr-only">이미지 생성 중</span>
 			{/* 결과 그리드와 같은 열 구성을 쓴다 — 다르면 생성이 끝나는 순간 카드가 자리를 옮긴다. */}
 			<div className={cn('grid grid-cols-1 gap-4', count > 1 && 'sm:grid-cols-2')}>
 				{SKELETON_KEYS.slice(0, count).map((key) => (

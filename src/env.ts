@@ -11,10 +11,9 @@ export const env = createEnv({
 		EMAIL_FROM_NAME: z.string().min(1).optional(),
 		FIGMA_API_TOKEN: z.string().min(1).optional(),
 		GEMINI_API_KEY: z.string().min(1).optional(),
-		IMAGE_DEV_FALLBACK: z.enum(['true', 'false']).optional(),
 		NEXT_PHASE: z.string().min(1).optional(),
 		NODE_ENV: z.enum(['development', 'production', 'test']).optional(),
-		// 이미지 생성 정식 엔진 gpt-image-2의 키. dev 폴백은 별도 flag로 명시해야 한다.
+		// 이미지 생성 정식 엔진 gpt-image-2의 키 — 없으면 OpenAI 프리셋 생성은 불가로 닫힌다.
 		OPENAI_API_KEY: z.string().min(1).optional(),
 		PAYLOAD_DB_PUSH: z.enum(['true', 'false']).optional(),
 		PAYLOAD_RUN_MIGRATIONS_ON_STARTUP: z.enum(['true', 'false']).optional(),
@@ -38,7 +37,6 @@ export const env = createEnv({
 		EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME,
 		FIGMA_API_TOKEN: process.env.FIGMA_API_TOKEN,
 		GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-		IMAGE_DEV_FALLBACK: process.env.IMAGE_DEV_FALLBACK,
 		NEXT_PHASE: process.env.NEXT_PHASE,
 		NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
 		NODE_ENV: process.env.NODE_ENV,
