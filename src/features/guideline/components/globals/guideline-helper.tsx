@@ -99,8 +99,7 @@ export function GuidelineHelperProvider({ children }: { children: ReactNode }) {
 }
 
 /**
- * 바가 앉는 자리. 목차(`guideline-on-this-page`)가 쓰는 것과 같은 방식이다 —
- * `absolute inset-0`으로 본문 높이만큼 자리를 잡고 그 안에서 sticky로 떠 있는다.
+ * 바가 앉는 자리. `absolute inset-0`으로 본문 높이만큼 자리를 잡고 그 안에서 바가 sticky로 뜬다.
  * `fixed`가 아닌 이유는 사이드바 폭이 접힘에 따라 변해서, 뷰포트 기준으로 가운데를 잡으면
  * 본문 가운데와 어긋나기 때문이다.
  *

@@ -8,7 +8,8 @@ import { getGuidelineSectionPages } from './guideline-section-pages'
 
 /**
  * 좌측 가이드라인 탐색 — chapter → section → 현재 section의 page 앵커를 표시한다.
- * 우측 "On this page" 목차는 별도 문맥 탐색으로 유지한다.
+ * 🔴 **이것이 유일한 목차다.** 우측에 따로 있던 "On this page"는 2026-08-18에 지웠다 —
+ *    같은 page 앵커를 같은 scroll-spy(`guideline-page-navigation`)로 두 곳에 그리고 있었다.
  */
 export function GuidelineSideNavigation({
 	chapters,

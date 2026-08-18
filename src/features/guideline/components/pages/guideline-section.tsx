@@ -3,8 +3,6 @@ import type { GetGuidelineSectionOutput } from '../../services/get-guideline-sec
 import { GuidelineDescription } from '../globals/guideline-description'
 import { GuidelineHeader, GuidelineHeaderImage } from '../globals/guideline-header'
 import { GuidelineHelperProvider, GuidelineHelperSlot } from '../globals/guideline-helper'
-import { GuidelineOnThisPage } from '../globals/guideline-on-this-page'
-import { getGuidelineSectionPages } from '../globals/guideline-section-pages'
 import type { GuidelineVariant } from '../globals/guideline-variant'
 import { GuidelineBlocks } from '../guideline-blocks'
 import { RefreshRouteOnSave } from '../refresh-route-on-save'
@@ -20,10 +18,6 @@ export function GuidelineSection({
 }) {
 	const variant = 'section' satisfies GuidelineVariant
 	const previewedPage = section.pages.find((page) => page.id === previewDocumentId)
-
-	// 단일 Page(제목이 섹션과 같음)는 목차가 무의미 → 제외.
-	const tocPages = getGuidelineSectionPages(section)
-	const hasToc = tocPages.length >= 2
 
 	return (
 		// Helper(하단 Floating Controller)의 provider와 자리는 이 <article> 하나가 감싼다 —
@@ -69,22 +63,6 @@ export function GuidelineSection({
 						))}
 					</section>
 				</section>
-
-				{hasToc && (
-					<div className="pointer-events-none absolute inset-0 mx-auto hidden w-full max-w-[1640px] px-6 xl:block">
-						<aside className="absolute inset-y-0 right-6 w-48">
-							<div className="pointer-events-auto sticky top-24 pt-16 text-background mix-blend-difference dark:text-foreground">
-								<GuidelineOnThisPage
-									pages={tocPages.map((page) => ({
-										id: page.id,
-										slug: page.slug,
-										title: page.title,
-									}))}
-								/>
-							</div>
-						</aside>
-					</div>
-				)}
 
 				<GuidelineHelperSlot />
 			</article>
