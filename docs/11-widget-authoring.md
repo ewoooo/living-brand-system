@@ -110,7 +110,7 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 | `controllers/pill.tsx` | 그룹을 구분선으로 가른 한 줄 배치 | 도메인 |
 | `GuidelineHelperProvider` | 관측(IntersectionObserver)과 "누가 활성인가" | **값** |
 | `GuidelineHelperRegion` | 블록이 선언하는 **관측 영역** = 조작 대상이 놓인 면(제목·본문 아님) | 컨트롤이 무엇인지 |
-| `GuidelineHelperSlot` | 알약이 앉는 sticky 자리. 목차와 같은 `absolute inset-0` + sticky 방식 | 무엇이 들어오는지 |
+| `GuidelineHelperSlot` | 알약이 앉는 **자리 상자**(`absolute inset-0`인 세로 flex 열). sticky는 바가 갖는다 | 무엇이 들어오는지 |
 
 #### 타입 계약은 새로 만들지 않고 받아씁니다
 
@@ -119,6 +119,14 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 #### admin은 **좁히기만** 합니다 (2단)
 
 매니페스트가 정본 범위이고, admin 위젯의 값은 `ControllerControlRestriction`으로 접혀 그 범위를 좁힙니다 — 값이 있으면 `defaultValue`를 덮고, 조절 불허는 `readonly`가 됩니다. `applyControllerRestrictions`가 **넓히려 들면 던지므로**, admin이 브랜드 규정 밖 값을 심을 수 없습니다(`controllers/registry.test.ts`가 지킵니다).
+
+#### 바 표면은 하나입니다
+
+`ControllerBar`(`components/shared/controller/bar.tsx`) 하나가 스튜디오와 가이드라인의 하단 바를 모두 그립니다. 다른 것은 `placement` 하나뿐이고 **둘 다 자기 위치를 자기가 잡습니다**(`canvas`=absolute / `scroll`=sticky).
+
+🔴 **표면을 새로 만들지 마십시오.** 한때 `Fixed`/`Sticky` 두 컴포넌트였는데, 접미사는 "붙는 방식만 다르다"고 약속해 놓고 실제로는 모서리·패딩·면·모바일·pointer-events·모션까지 6가지가 갈라져 있었습니다(2026-08-18에 합침). 이름이 거짓말을 하면 다음 사람이 둘 중 아무거나 고릅니다.
+
+🔴 알약 안의 컨트롤에는 **최소폭**을 줍니다(`min-w-[150px]`). 없으면 값이 바뀔 때마다 컨트롤이 늘었다 줄었다 하고 이웃까지 함께 움직입니다. 고정폭이 아닌 이유는 라벨 길이가 컨트롤마다 다르기 때문입니다.
 
 🔴 알약은 `readonly` 컨트롤을 **싣지 않습니다.** 떠 있는 바에 못 만지는 줄이 끼면 폭만 먹고, 고정된 값은 그림 자체가 보여줍니다. 값은 그대로 남으므로 판형은 고정값으로 그려집니다.
 
