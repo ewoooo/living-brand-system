@@ -154,8 +154,9 @@ export function planImageGenerationFromSettings(input: {
 }
 
 /**
- * 유스케이스 경계: 사용자 입력과 선택한 published 프로파일로 이미지를 생성한다.
- * 프로파일 조회·모델 호출·생성 파일 저장 I/O는 각 repository가 소유한다.
+ * 유스케이스 경계: 선택한 published 프로파일로 이미지를 생성한다.
+ * 참조 이미지는 선택 입력이다 — 참조가 없으면 프롬프트만으로, 있으면 그 이미지를 시드로 쓴다.
+ * 프로파일 조회·참조 해석·모델 호출·생성 파일 저장 I/O는 각 repository가 소유한다.
  */
 export async function generateImages({
 	userInput,
@@ -164,6 +165,8 @@ export async function generateImages({
 	count,
 	aspectRatio,
 	imageSize,
+	camera,
+	reference,
 }: {
 	userInput: string
 	profileId: number
@@ -173,30 +176,54 @@ export async function generateImages({
 	aspectRatio?: ImageAspectRatio
 	/** 스튜디오 해상도 선택 오버라이드 — 없으면 프로파일 해상도. */
 	imageSize?: ImageOutputSize
+	/** 카메라 컨트롤 값 — feature가 열려 있을 때만 허용된다. */
+	camera?: CameraControlInput
+	/** 참조 이미지 — 지금은 내 생성 결과만 소스다. */
+	reference?: { generatedImageId: number; requestUrl: string }
 }): Promise<GeneratedImages> {
 	const profile = await findPublishedImageProfile(user, profileId)
 	if (!profile) throw new ImageProfileNotFoundError()
-	const effective = resolveImageGenerationInput(deriveImageStudioConfig(profile), {
-		userInput,
-		count,
-		aspectRatio,
-		imageSize,
-	})
-	const normalized = await normalizeImageProfilePrompt({
-		profilePrompt: profile.profilePrompt,
-		userPromptNormalization: profile.userPromptNormalization ?? [],
-		userPrompt: effective.userInput,
-	})
+	const config = deriveImageStudioConfig(profile)
+
+	const resolved = reference
+		? await resolveGeneratedImageReference({ ...reference, profileId, user })
+		: null
+	if (reference && !resolved) throw new InvalidSeedImageError()
+
+	// 프롬프트를 새로 썼으면 그것을 정규화해 쓰고, 비워 뒀으면 참조가 준 프롬프트를 물려받는다.
+	const trimmed = userInput.trim()
+	const effective = trimmed
+		? resolveImageGenerationInput(config, { userInput, count, aspectRatio, imageSize })
+		: { userInput: '', ...resolveImageGenerationOptions(config, { count, aspectRatio, imageSize }) }
+	const inherited = resolved?.prompt
+	if (!trimmed && !inherited) throw new InvalidImageControllerInputError('prompt')
+
+	const composed = trimmed
+		? JSON.stringify(
+				(
+					await normalizeImageProfilePrompt({
+						profilePrompt: profile.profilePrompt,
+						userPromptNormalization: profile.userPromptNormalization ?? [],
+						userPrompt: effective.userInput,
+					})
+				).finalPrompt,
+			)
+		: (inherited as { effective: string }).effective
+
+	const prompt = camera
+		? composeCameraAdjustmentPrompt(assertFlatPrompt(composed), resolveCameraFeature(config, camera))
+		: composed
 
 	const plan = planImageGenerationFromProfile(profile, {
-		prompt: JSON.stringify(normalized.finalPrompt),
+		prompt,
 		count: effective.count,
 		aspectRatio: effective.aspectRatio,
 		imageSize: effective.imageSize,
+		...(resolved ? { seedImage: resolved.data } : {}),
 	})
 	const generated = await runImageGeneration(plan, user)
 	return storeProfileGeneration(generated, {
-		inputPrompt: userInput,
+		inputPrompt: trimmed ? userInput : (inherited as { input: string }).input,
 		// 저장 메타데이터의 비율·해상도는 실제 생성에 쓴 plan이 정본 — 오버라이드 시 프로파일 값과 다르다.
 		profile: {
 			id: profile.id,
@@ -204,6 +231,7 @@ export async function generateImages({
 			aspectRatio: plan.aspectRatio,
 			imageSize: plan.imageSize,
 		},
+		...(resolved?.generatedImageId ? { sourceImage: resolved.generatedImageId } : {}),
 		user,
 	})
 }
@@ -297,6 +325,30 @@ export async function adjustImageCamera({
 		...stored,
 		camera: { input: camera, resolved },
 	}
+}
+
+/** 카메라 값을 feature 허용 범위 안에서 해석한다. 신뢰 경계에서 다시 검증한다 — UI가 좁혀도 요청은 임의 각도를 보낼 수 있다. */
+function resolveCameraFeature(
+	config: ImageStudioConfig,
+	camera: CameraControlInput,
+): ResolvedCameraControl {
+	const feature = getImageStudioFeature(config, 'camera-control')
+	if (!feature) throw new InvalidImageControllerInputError('camera')
+	const resolved = resolveCameraControl(camera)
+	if (
+		!feature.azimuths.includes(resolved.azimuth) ||
+		!feature.elevations.includes(resolved.elevation)
+	) {
+		throw new InvalidImageControllerInputError('camera')
+	}
+	return resolved
+}
+
+/** 프롬프트 키를 얹으려면 flat JSON이어야 한다. 물려받은 프롬프트가 깨져 있으면 여기서 막는다. */
+function assertFlatPrompt(prompt: string): string {
+	const parsed = imageEffectivePromptSchema.safeParse(prompt)
+	if (!parsed.success) throw new InvalidSeedImageError()
+	return parsed.data
 }
 
 function resolveImageGenerationInput(

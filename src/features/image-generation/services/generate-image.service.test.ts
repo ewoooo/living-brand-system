@@ -770,6 +770,144 @@ describe('generateImages', () => {
 		).rejects.toThrow('limit reached')
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
 	})
+
+	it('참조가 있으면 생성 플랜의 seedImage로 넘긴다', async () => {
+		mocks.env.GEMINI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'google-nano-banana-2-lite',
+			aspectRatio: '16:9',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.normalizeImageProfilePrompt.mockResolvedValue({
+			finalPrompt: { subject: '유조선' },
+			normalizedInput: {},
+		})
+		mocks.generateBrandImages.mockResolvedValue({
+			images: ['data:image/png;base64,seeded'],
+			model: 'gemini-3.1-flash-lite-image',
+			provider: 'google',
+		})
+		mocks.resolveGeneratedImageReference.mockResolvedValue({
+			data: Buffer.from('seed'),
+			generatedImageId: 8,
+			prompt: { effective: '{"subject":"유조선"}', input: '유조선' },
+		})
+
+		await generateImages({
+			userInput: '유조선',
+			profileId: 5,
+			user: { id: 1 },
+			count: 1,
+			reference: { generatedImageId: 8, requestUrl: 'http://localhost/api/generate-image' },
+		})
+
+		// expect.any(Uint8Array)는 jsdom 테스트 환경에서 Buffer와 realm이 갈려 instanceof가 어긋난다 —
+		// adjustImageCamera 테스트와 같은 방식으로 바이트를 펼쳐 비교한다.
+		const [call] = mocks.generateBrandImages.mock.calls[0]
+		expect([...call.seedImage]).toEqual([...Buffer.from('seed')])
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
+			expect.objectContaining({ sourceImage: 8 }),
+		)
+	})
+
+	it('프롬프트를 비우고 참조만 보내면 참조의 프롬프트를 물려받는다', async () => {
+		mocks.env.GEMINI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'google-nano-banana-2-lite',
+			aspectRatio: '16:9',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.generateBrandImages.mockResolvedValue({
+			images: ['data:image/png;base64,seeded'],
+			model: 'gemini-3.1-flash-lite-image',
+			provider: 'google',
+		})
+		mocks.resolveGeneratedImageReference.mockResolvedValue({
+			data: Buffer.from('seed'),
+			generatedImageId: 8,
+			prompt: { effective: '{"subject":"유조선"}', input: '유조선' },
+		})
+
+		await generateImages({
+			userInput: '',
+			profileId: 5,
+			user: { id: 1 },
+			count: 1,
+			reference: { generatedImageId: 8, requestUrl: 'http://localhost/api/generate-image' },
+		})
+
+		// 사용자 입력이 없으므로 정규화 모델을 부르지 않는다.
+		expect(mocks.normalizeImageProfilePrompt).not.toHaveBeenCalled()
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
+			expect.objectContaining({
+				effectivePrompt: '{"subject":"유조선"}',
+				inputPrompt: '유조선',
+			}),
+		)
+	})
+
+	it('참조도 프롬프트도 없으면 컨트롤러 입력 오류로 거부한다', async () => {
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'google-nano-banana-2-lite',
+			aspectRatio: '16:9',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+
+		await expect(
+			generateImages({ userInput: '', profileId: 5, user: { id: 1 }, count: 1 }),
+		).rejects.toBeInstanceOf(InvalidImageControllerInputError)
+	})
+
+	it('카메라 값을 주면 프롬프트에 각도 키를 얹는다', async () => {
+		mocks.env.GEMINI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'google-nano-banana-2-lite',
+			aspectRatio: '16:9',
+			imageSize: '1K',
+			features: [{ blockType: 'cameraControl' }],
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.generateBrandImages.mockResolvedValue({
+			images: ['data:image/png;base64,seeded'],
+			model: 'gemini-3.1-flash-lite-image',
+			provider: 'google',
+		})
+		mocks.resolveGeneratedImageReference.mockResolvedValue({
+			data: Buffer.from('seed'),
+			generatedImageId: 8,
+			prompt: { effective: '{"subject":"유조선"}', input: '유조선' },
+		})
+
+		await generateImages({
+			userInput: '',
+			profileId: 5,
+			user: { id: 1 },
+			count: 1,
+			camera: { azimuthDeg: 90, elevationDeg: 0 },
+			reference: { generatedImageId: 8, requestUrl: 'http://localhost/api/generate-image' },
+		})
+
+		const [plan] = mocks.generateBrandImages.mock.calls[0]
+		expect(JSON.parse(plan.prompt)).toMatchObject({
+			subject: '유조선',
+			camera: expect.stringContaining('right side view'),
+		})
+	})
 })
 
 describe('image generation plan resolvers', () => {
