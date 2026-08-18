@@ -71,7 +71,8 @@ export function CheckImageProvider({
 			pendingCheckKeys: undefined,
 			rulesetSnapshot: undefined,
 		}))
-		void runFullCheck(file, checkScenarioKey, {
+		// 순차 배치(runAllChecks)가 한 건의 종료를 기다릴 수 있도록 promise를 돌려준다.
+		return runFullCheck(file, checkScenarioKey, {
 			onServerResult: ({ checkSessionId, results, pendingCheckKeys, rulesetSnapshot }) => {
 				patchImage(id, (image) => {
 					// 대기 중 시나리오가 바뀌면 이전 시나리오 판정은 버린다
@@ -145,6 +146,19 @@ export function CheckImageProvider({
 		startCheck(target.id, target.file, target.scenarioKey)
 	}
 
+	/**
+	 * 모든 이미지를 순차로 검수한다 — 앞 건이 끝나야 다음이 시작한다.
+	 * 🔴 /api/check에 속도 제한이 없어 동시 실행은 곧 AI 호출 동시 발생이다. 상한 병렬로 올리려면
+	 * 서버 가드를 함께 본다.
+	 */
+	async function runAllChecks() {
+		for (const image of images) {
+			// 진행 중인 건만 건너뛴다 — 완료된 이미지도 다시 검수하는 것이 '전부 검사'다.
+			if (image.status === 'running' || !image.scenarioKey) continue
+			await startCheck(image.id, image.file, image.scenarioKey)
+		}
+	}
+
 	// selected 참조를 안정화해 소비 측 useMemo(뷰 계산)가 불필요하게 무효화되지 않게 한다
 	const selected = useMemo(
 		() => images.find((image) => image.id === selectedId) ?? null,
@@ -163,6 +177,7 @@ export function CheckImageProvider({
 		showFailOnly,
 		toggleFailOnly: () => setShowFailOnly((value) => !value),
 		runCheck,
+		runAllChecks,
 	}
 
 	return <CheckImageContext.Provider value={value}>{children}</CheckImageContext.Provider>

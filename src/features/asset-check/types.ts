@@ -37,4 +37,6 @@ export interface CheckImageContextValue {
 	toggleFailOnly: () => void
 	/** 선택 이미지를 검수 실행한다. */
 	runCheck: () => void
+	/** 모든 이미지를 순차로 검수 실행한다. */
+	runAllChecks: () => void
 }

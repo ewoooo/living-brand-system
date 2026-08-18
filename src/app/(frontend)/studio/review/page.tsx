@@ -1,20 +1,21 @@
-import { ContentFrame } from '@/components/shared/content-frame'
-import { ContentHeading } from '@/components/shared/content-heading'
-import { ReviewFunnel } from '@/components/studio/review/review-funnel/review-funnel'
+import { ImageUploadCarousel } from '@/components/studio/review/upload/image-upload-carousel'
+import { StudioWorkspace, StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
+import { ReviewSidebar } from '@/components/studio/sidebar/review-sidebar'
 import { getCheckRuleset } from '@/features/asset-check/services/get-check-ruleset.service'
 import { requireUser } from '@/lib/request-auth'
 import { routes } from '@/lib/routes'
 
+// 검수 표면: 대상 미리보기는 캔버스가, 결과는 오른쪽 컨트롤러가 소유한다.
+// 편집 세션(업로드·선택·검수 실행)은 layout.tsx의 CheckImageProvider가 갖는다.
 export default async function ReviewPage() {
 	await requireUser(routes.studio.review)
 	const sections = await getCheckRuleset()
-	const TITLE = 'Check Assets'
-	const DESCRIPTION = 'Check Your Creations'
 
 	return (
-		<ContentFrame className="flex max-w-[1440px] flex-col gap-8 py-10">
-			<ContentHeading title={TITLE} description={DESCRIPTION} />
-			<ReviewFunnel sections={sections} />
-		</ContentFrame>
+		<StudioWorkspacePage title="Check Assets" description="Check Your Creations" hideHeading>
+			<StudioWorkspace sidebar={<ReviewSidebar sections={sections} />}>
+				<ImageUploadCarousel />
+			</StudioWorkspace>
+		</StudioWorkspacePage>
 	)
 }
