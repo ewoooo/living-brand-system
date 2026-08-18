@@ -41,6 +41,9 @@ export function useExport<Request extends ExportRequest>({
 					downloadExportResult(item)
 				}
 			} catch (cause) {
+				// html-to-image는 img의 onerror Event를 그대로 reject한다 — Error가 아니라
+				// 화면 문구에서 원인이 사라지므로, 브라우저 콘솔에는 원본을 남긴다.
+				console.error('studio-export.run.failed', cause)
 				setError(cause instanceof Error ? cause.message : DEFAULT_EXPORT_ERROR)
 			} finally {
 				running.current = false
