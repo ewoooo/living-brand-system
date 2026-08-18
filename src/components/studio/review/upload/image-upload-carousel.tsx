@@ -11,12 +11,10 @@ import {
 	CarouselNext,
 	CarouselPrevious,
 } from '@/components/ui/carousel'
-import { Empty, EmptyDescription, EmptyTitle } from '@/components/ui/empty'
 import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
 import type { CheckImage } from '@/features/asset-check/types'
 import { CHECK_IMAGE_ACCEPT } from '@/features/asset-check/utils/image-format'
 import { useFileInput } from '@/hooks/use-file-input'
-import { ImageCheckControls } from './image-check-controls'
 
 /**
  * 퍼널 ① — 업로드·미리보기 캐러셀.
@@ -89,28 +87,14 @@ export function ImageUploadCarousel({ previewSize }: { previewSize: number }) {
 				}}
 			/>
 
-			{images.length === 0 ? (
-				<CheckCarouselEmpty />
-			) : (
+			{images.length === 0 ? null : (
 				<CheckCarouselActive
 					images={images}
 					previewSize={previewSize}
 					setCarouselApi={setCarouselApi}
 				/>
 			)}
-			<ImageCheckControls />
 		</section>
-	)
-}
-
-function CheckCarouselEmpty() {
-	return (
-		<Empty className="gap-2 text-muted-foreground/50">
-			<EmptyTitle>이미지를 드래그해서 업로드하세요</EmptyTitle>
-			<EmptyDescription className="text-muted-foreground opacity-60">
-				PNG, JPEG, WebP
-			</EmptyDescription>
-		</Empty>
 	)
 }
 

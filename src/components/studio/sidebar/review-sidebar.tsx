@@ -19,8 +19,10 @@ import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
 export function ReviewSidebar({ sections }: { sections: CheckSection[] }) {
 	// 어느 화면을 보고 있는지는 편집 세션이 아니라 이 패널의 표현 상태다.
 	const [view, setView] = useState<'list' | 'summary'>('list')
-	const { images, selected, selectedId, runCheck, runAllChecks } = useCheckImages()
+	const { images, scenarios, selected, selectedId, runCheck, runAllChecks } = useCheckImages()
 	const busy = images.some((image) => image.status === 'running')
+	// 발행된 시나리오가 없으면 실행할 룰이 없다 — 눌리고도 아무 일이 없는 버튼을 만들지 않는다.
+	const ready = scenarios.length > 0 && !busy
 	const summaryOpen = view === 'summary' && selected !== null
 
 	return (
@@ -45,28 +47,35 @@ export function ReviewSidebar({ sections }: { sections: CheckSection[] }) {
 				)
 			}
 			footer={
-				<div className="flex gap-2 pt-3">
-					<Button
-						type="button"
-						className="flex-1"
-						shape="pill"
-						disabled={!selectedId || busy}
-						onClick={runCheck}
-					>
-						{/* 진행은 목록 행의 스피너가 알린다 — 버튼 이름에 "Loading"이 섞이지 않게 숨긴다. */}
-						{busy ? <Spinner aria-hidden /> : null}
-						검사
-					</Button>
-					<Button
-						type="button"
-						variant="outline"
-						className="flex-1"
-						shape="pill"
-						disabled={images.length === 0 || busy}
-						onClick={runAllChecks}
-					>
-						전부 검사
-					</Button>
+				<div className="flex flex-col gap-2 pt-3">
+					{scenarios.length === 0 && (
+						<Typography as="p" size="xs" tone="muted">
+							발행된 검수 시나리오가 없습니다
+						</Typography>
+					)}
+					<div className="flex gap-2">
+						<Button
+							type="button"
+							className="flex-1"
+							shape="pill"
+							disabled={!selectedId || !ready}
+							onClick={runCheck}
+						>
+							{/* 진행은 목록 행의 스피너가 알린다 — 버튼 이름에 "Loading"이 섞이지 않게 숨긴다. */}
+							{busy ? <Spinner aria-hidden /> : null}
+							검사
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							className="flex-1"
+							shape="pill"
+							disabled={images.length === 0 || !ready}
+							onClick={runAllChecks}
+						>
+							전부 검사
+						</Button>
+					</div>
 				</div>
 			}
 		>

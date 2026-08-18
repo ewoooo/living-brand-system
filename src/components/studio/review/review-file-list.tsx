@@ -39,7 +39,7 @@ export function ReviewFileList({ onOpen }: { onOpen: (id: string) => void }) {
 			>
 				<Empty className="gap-2">
 					<EmptyTitle>Drag &amp; Drop</EmptyTitle>
-					<EmptyDescription>검수할 이미지를 여기에 놓으세요</EmptyDescription>
+					<EmptyDescription>PNG, JPEG, WebP</EmptyDescription>
 				</Empty>
 			</section>
 		)
