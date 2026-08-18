@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
+import { ControllerBrowser } from '@/components/shared/controller'
 import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
-import { ControllerBrowser } from '@/components/studio/shared/controller'
 import { Typography } from '@/components/ui/typography'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 import type { SampleImageOption } from '@/features/template-customization/services/list-sample-images.client'
