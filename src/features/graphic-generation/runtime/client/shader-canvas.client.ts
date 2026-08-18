@@ -31,20 +31,17 @@ export type ShaderCanvasRuntime<Input> = {
  */
 export async function createShaderCanvasRuntime<Input>({
 	container,
-	shaderUrl,
+	fragmentBody,
 	ariaLabel,
 	input,
 	bindUniforms,
 }: {
 	container: HTMLElement
-	shaderUrl: string
+	fragmentBody: string
 	ariaLabel: string
 	input: Input
 	bindUniforms: (gl: WebGLRenderingContext, program: WebGLProgram) => (input: Input) => void
 }): Promise<ShaderCanvasRuntime<Input>> {
-	const response = await fetch(shaderUrl)
-	if (!response.ok) throw new Error(`Shader asset을 불러오지 못했습니다: ${response.status}`)
-	const fragmentBody = await response.text()
 	const canvas = document.createElement('canvas')
 	canvas.className = 'block h-full w-full'
 	canvas.setAttribute('role', 'img')

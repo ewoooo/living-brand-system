@@ -11,8 +11,8 @@ export const CheckSessions: CollectionConfig = {
 		delete: managerOrAdmin,
 	},
 	labels: {
-		singular: '검수 기록',
-		plural: '검수 기록',
+		singular: '이미지 검수',
+		plural: '이미지 검수',
 	},
 	admin: {
 		group: '운영 기록',
