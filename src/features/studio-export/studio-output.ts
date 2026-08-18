@@ -1,6 +1,7 @@
 import {
 	getStudioArtifactKinds,
 	parseStudioArtifactCapabilities,
+	STUDIO_VIDEO_FPS_VALUES,
 	type StudioArtifactCapabilities,
 	type StudioVideoFrameRate,
 } from '@/modules/studio-artifact/studio-artifact'
@@ -16,7 +17,7 @@ import { STUDIO_OUTPUT_FORMATS } from './export-contract'
 import { PRINT_PPI_VALUES, type PrintPpi } from './print-policy'
 
 const DEFAULT_RASTER_VIDEO_CAPABILITY = {
-	fps: [24, 30, 60] as const,
+	fps: STUDIO_VIDEO_FPS_VALUES,
 	maxWidth: 1920,
 	maxHeight: 1080,
 	maxDurationSeconds: 10,
@@ -165,7 +166,7 @@ export function parseStudioOutputCapability(input: unknown): StudioOutputCapabil
 		}
 		if (
 			!Array.isArray(mp4.fps) ||
-			mp4.fps.some((fps) => fps !== 24 && fps !== 30 && fps !== 60)
+			mp4.fps.some((fps) => !STUDIO_VIDEO_FPS_VALUES.includes(fps as StudioVideoFrameRate))
 		) {
 			throw new Error('output.video.mp4.fps가 올바르지 않습니다.')
 		}
@@ -318,12 +319,12 @@ function validRequestOptions(request: ExportRequest): boolean {
 					return request.options.quality > 0 && request.options.quality <= 100
 				case 'tiff':
 					return (
-						[72, 150, 300].includes(request.options.ppi) &&
+						PRINT_PPI_VALUES.includes(request.options.ppi) &&
 						request.options.compression === 'lzw'
 					)
 				case 'pdf':
 					return (
-						[72, 150, 300].includes(request.options.ppi) && request.options.bleedMm >= 0
+						PRINT_PPI_VALUES.includes(request.options.ppi) && request.options.bleedMm >= 0
 					)
 				case 'mp4':
 					return validVideoExportSpec(request.options)
@@ -416,7 +417,7 @@ function normalizeFrameRates(value: unknown): readonly StudioVideoFrameRate[] {
 	const normalized = value.map(Number)
 	if (
 		normalized.length === 0 ||
-		normalized.some((fps) => fps !== 24 && fps !== 30 && fps !== 60) ||
+		normalized.some((fps) => !STUDIO_VIDEO_FPS_VALUES.includes(fps as StudioVideoFrameRate)) ||
 		new Set(normalized).size !== normalized.length
 	) {
 		throw new Error('exportPolicy.video.allowedFps가 올바르지 않습니다.')
