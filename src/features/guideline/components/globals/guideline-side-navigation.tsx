@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/global/sidebar/sidebar'
+import { CopyPageLink } from '@/components/shared/copy-page-link'
 import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
 import { scrollToGuidelinePage, useActivePageSlug } from './guideline-page-navigation'
 import { getGuidelineSectionPages } from './guideline-section-pages'
@@ -28,6 +29,7 @@ export function GuidelineSideNavigation({
 			aria-label="가이드라인 목차"
 			className="md:w-[265px]"
 			data-slot="guideline-side-navigation"
+			footer={<CopyPageLink />}
 		>
 			<Sidebar.Content>
 				<Sidebar.Group>
