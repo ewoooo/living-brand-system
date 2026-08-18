@@ -37,4 +37,9 @@ export interface CheckImageContextValue {
 	toggleFailOnly: () => void
 	/** 선택 이미지를 검수 실행한다. */
 	runCheck: () => void
+	/** 모든 이미지를 순차로 검수 실행한다. */
+	runAllChecks: () => void
+	/** 근거 패널이 펼친 룰의 checkKey. 파일을 옮기면 해제된다. */
+	selectedRuleKey: string | null
+	selectRule: (checkKey: string | null) => void
 }
