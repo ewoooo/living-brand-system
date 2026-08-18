@@ -33,12 +33,18 @@ export function GuidelineControllerPill() {
 				<Fragment key={group.id}>
 					{index > 0 && <Separator orientation="vertical" className="h-6" />}
 					{group.controls.map((control) => (
-						<ControllerControlRenderer
-							key={control.id}
-							definition={control}
-							value={control.id in values ? values[control.id] : control.defaultValue}
-							onChange={(value) => set(control.id, value)}
-						/>
+						// 🔴 최소폭이 없으면 값이 바뀔 때마다 컨트롤이 늘었다 줄었다 하고, 알약 전체와
+						//    그 안의 이웃까지 함께 움직인다(`4.5%` → `100%`에서 실제로 출렁였다).
+						//    고정폭이 아니라 **최소폭**인 이유는 라벨 길이가 컨트롤마다 달라서다.
+						<div key={control.id} className="min-w-[150px]">
+							<ControllerControlRenderer
+								definition={control}
+								value={
+									control.id in values ? values[control.id] : control.defaultValue
+								}
+								onChange={(value) => set(control.id, value)}
+							/>
+						</div>
 					))}
 				</Fragment>
 			))}

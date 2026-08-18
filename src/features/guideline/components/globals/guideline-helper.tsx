@@ -11,7 +11,7 @@ import {
 	useState,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { FloatingControllerSticky } from '@/components/shared/controller'
+import { ControllerBar } from '@/components/shared/controller'
 import { pickActiveRegion } from './guideline-active-region'
 import { helperLabel } from './guideline-helper-label'
 
@@ -112,12 +112,12 @@ export function GuidelineHelperSlot() {
 	const registry = useContext(HelperContext)
 
 	return (
-		<div className="pointer-events-none absolute inset-0 flex flex-col">
-			<div
-				ref={registry?.setSlot}
-				className="sticky bottom-10 mt-auto flex justify-center px-4 pt-4"
-			/>
-		</div>
+		// 바가 자기 sticky를 갖는다(`ControllerBar`의 placement="scroll"). 이 상자는 **세로로 꽉 찬
+		// flex 열**만 준다 — 그래야 바의 `mt-auto`가 바닥을 잡고 sticky가 위로 당길 거리가 생긴다.
+		<div
+			ref={registry?.setSlot}
+			className="pointer-events-none absolute inset-0 flex flex-col items-center px-4"
+		/>
 	)
 }
 
@@ -154,9 +154,9 @@ export function GuidelineHelperRegion({
 				? createPortal(
 						// portal로 내려와 자기 그림에서 DOM상 떨어지므로, 어느 블록의 컨트롤인지는
 						// 이름이 유일한 단서다.
-						<FloatingControllerSticky aria-label={helperLabel(label)}>
+						<ControllerBar placement="scroll" aria-label={helperLabel(label)}>
 							{controls}
-						</FloatingControllerSticky>,
+						</ControllerBar>,
 						registry.slot,
 					)
 				: null}

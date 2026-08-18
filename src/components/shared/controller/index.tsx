@@ -1,9 +1,9 @@
 import { ControllerAssetCard } from './asset-card'
+import { ControllerBar } from './bar'
 import { ControllerBrowser } from './browser'
 import { ControllerCameraControl } from './camera-control'
 import { ControllerColorRow } from './color-row'
 import { ControllerField } from './field'
-import { FloatingControllerFixed, FloatingControllerSticky } from './floating'
 import { ControllerGroup } from './group'
 import { ControllerInput, ControllerTextarea } from './input'
 import { ControllerContent, ControllerFooter, ControllerHeader, ControllerRoot } from './layout'
@@ -46,8 +46,7 @@ export const Controller = {
 	Textarea: ControllerTextarea,
 	Range: ControllerRange,
 	Pad: ControllerPad,
-	FloatingFixed: FloatingControllerFixed,
-	FloatingSticky: FloatingControllerSticky,
+	Bar: ControllerBar,
 	CameraControl: ControllerCameraControl,
 	Browser: ControllerBrowser,
 	AssetCard: ControllerAssetCard,
@@ -56,6 +55,7 @@ export const Controller = {
 // RSC에서 네임스페이스 객체의 점 접근은 client reference 제약으로 깨질 수 있다 — 개별 export가 안전판.
 export {
 	ControllerAssetCard,
+	ControllerBar,
 	ControllerBrowser,
 	ControllerCameraControl,
 	ControllerColorRow,
@@ -73,6 +73,4 @@ export {
 	ControllerSelect,
 	ControllerTabPanel,
 	ControllerTextarea,
-	FloatingControllerFixed,
-	FloatingControllerSticky,
 }

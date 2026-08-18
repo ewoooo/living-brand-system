@@ -1,7 +1,7 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import type { ReactNode } from 'react'
-import { FloatingControllerSticky } from '@/components/shared/controller'
+import { ControllerBar } from '@/components/shared/controller'
 import { helperLabel } from '@/features/guideline/components/globals/guideline-helper-label'
 import { GuidelineControllerPill } from '@/features/guideline/controllers/pill'
 import { GuidelineControllerScope } from '@/features/guideline/controllers/provider'
@@ -211,9 +211,9 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 			name: 'layout-grid 컨트롤러',
 			node: (
 				<GuidelineControllerScope manifest={LAYOUT_GRID_MANIFEST}>
-					<FloatingControllerSticky aria-label={helperLabel('Layout')}>
+					<ControllerBar placement="scroll" aria-label={helperLabel('Layout')}>
 						<GuidelineControllerPill />
-					</FloatingControllerSticky>
+					</ControllerBar>
 				</GuidelineControllerScope>
 			),
 		},

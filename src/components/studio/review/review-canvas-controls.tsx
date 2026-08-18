@@ -1,7 +1,7 @@
 'use client'
 
 import { ChevronLeft, ChevronRight, Grid } from '@carbon/icons-react'
-import { FloatingControllerFixed } from '@/components/shared/controller'
+import { ControllerBar } from '@/components/shared/controller'
 import { PreviewSizeControl } from '@/components/studio/shared/preview-size-control'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
@@ -32,7 +32,7 @@ export function ReviewCanvasControls({
 	}
 
 	return (
-		<FloatingControllerFixed>
+		<ControllerBar placement="canvas">
 			<PreviewSizeControl value={previewSize} onChange={onPreviewSizeChange} />
 			<Button
 				type="button"
@@ -77,6 +77,6 @@ export function ReviewCanvasControls({
 			>
 				<Grid aria-hidden />
 			</Button>
-		</FloatingControllerFixed>
+		</ControllerBar>
 	)
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { type ComponentType, type CSSProperties, useEffect, useRef, useState } from 'react'
-import { FloatingControllerFixed } from '@/components/shared/controller'
+import { ControllerBar } from '@/components/shared/controller'
 import { fitPreviewSize } from '@/components/studio/shared/fit-preview-size'
 import {
 	DEFAULT_PREVIEW_SIZE,
@@ -173,9 +173,9 @@ function GraphicPreviewCanvas({
 					style={{ '--preview-scale': previewSize / 100 } as CSSProperties}
 				/>
 			</div>
-			<FloatingControllerFixed>
+			<ControllerBar placement="canvas">
 				<PreviewSizeControl value={previewSize} onChange={setPreviewSize} />
-			</FloatingControllerFixed>
+			</ControllerBar>
 			{error && (
 				<Typography role="alert" size="sm" className="pt-2 text-destructive">
 					{error}
