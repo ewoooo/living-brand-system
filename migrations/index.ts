@@ -66,7 +66,7 @@ import * as migration_20260814_075620_add_linear_fluted_glass_runtime from './20
 import * as migration_20260814_083322_studio_preview_image from './20260814_083322_studio_preview_image';
 import * as migration_20260818_024535_generated_image_source_image from './20260818_024535_generated_image_source_image';
 import * as migration_20260818_064023_sample_images from './20260818_064023_sample_images';
-import * as migration_20260818_075953_remove_plugins_collection from './20260818_075953_remove_plugins_collection';
+import * as migration_20260818_093907_remove_plugins_collection from './20260818_093907_remove_plugins_collection';
 
 export const migrations = [
   {
@@ -410,8 +410,8 @@ export const migrations = [
     name: '20260818_064023_sample_images',
   },
   {
-    up: migration_20260818_075953_remove_plugins_collection.up,
-    down: migration_20260818_075953_remove_plugins_collection.down,
-    name: '20260818_075953_remove_plugins_collection'
+    up: migration_20260818_093907_remove_plugins_collection.up,
+    down: migration_20260818_093907_remove_plugins_collection.down,
+    name: '20260818_093907_remove_plugins_collection'
   },
 ];

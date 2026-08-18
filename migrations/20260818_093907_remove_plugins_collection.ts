@@ -10,12 +10,12 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   DROP TABLE "plugins_locales" CASCADE;
   DROP TABLE "_plugins_v" CASCADE;
   DROP TABLE "_plugins_v_locales" CASCADE;
-  ALTER TABLE "agent_skills_rels" DROP CONSTRAINT "agent_skills_rels_plugins_fk";
+  ALTER TABLE "agent_skills_rels" DROP CONSTRAINT IF EXISTS "agent_skills_rels_plugins_fk";
   
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_plugins_fk";
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_plugins_fk";
   
-  DROP INDEX "agent_skills_rels_plugins_id_idx";
-  DROP INDEX "payload_locked_documents_rels_plugins_id_idx";
+  DROP INDEX IF EXISTS "agent_skills_rels_plugins_id_idx";
+  DROP INDEX IF EXISTS "payload_locked_documents_rels_plugins_id_idx";
   ALTER TABLE "agent_skills_rels" DROP COLUMN "plugins_id";
   ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "plugins_id";
   DROP TYPE "public"."enum_plugins_plugin_type";
