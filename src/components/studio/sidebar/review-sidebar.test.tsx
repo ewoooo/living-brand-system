@@ -99,6 +99,26 @@ describe('ReviewSidebar', () => {
 		expect(runAllChecks).toHaveBeenCalledOnce()
 	})
 
+	it('실행 CTA는 디자인 토큰 variant를 쓰고 pill이 아니다', () => {
+		const image = checkImage({})
+		useCheckImages.mockReturnValue(context({ images: [image], selected: image }))
+		render(<ReviewSidebar sections={sections} />)
+
+		// 그라디언트는 --highlight-background 토큰이 갖는다 — 생 팔레트로 칠하지 않는다(docs/09 §4).
+		expect(screen.getByRole('button', { name: '검사' })).toHaveAttribute(
+			'data-variant',
+			'highlight',
+		)
+		expect(screen.getByRole('button', { name: '전부 검사' })).toHaveAttribute(
+			'data-variant',
+			'muted',
+		)
+		expect(screen.getByRole('button', { name: '검사' })).not.toHaveAttribute(
+			'data-shape',
+			'pill',
+		)
+	})
+
 	it('검수가 도는 동안 두 실행 버튼을 모두 잠근다', () => {
 		const image = checkImage({ status: 'running' })
 		useCheckImages.mockReturnValue(context({ images: [image], selected: image }))

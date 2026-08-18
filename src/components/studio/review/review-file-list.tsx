@@ -33,7 +33,7 @@ export function ReviewFileList({ onOpen }: { onOpen: (id: string) => void }) {
 			<section
 				data-slot="review-file-list"
 				aria-label="검수할 이미지 업로드"
-				className="flex h-full items-center justify-center"
+				className="flex flex-1 items-center justify-center"
 				onDragOver={(event) => event.preventDefault()}
 				onDrop={handleDrop}
 			>

@@ -16,7 +16,8 @@ describe('ReviewCanvasControls', () => {
 		useCheckImages.mockReturnValue(context({ images: files(3), selectedId: 'file-1' }))
 		renderControls()
 
-		expect(screen.getByText('2 / 3')).toBeInTheDocument()
+		// 화면은 두 칸(2 | 3)으로 나뉘므로 읽히는 문장은 sr-only가 갖는다.
+		expect(screen.getByText('3개 중 2번째 파일')).toBeInTheDocument()
 	})
 
 	it('이동은 선택만 바꾼다 — 캐러셀은 선택을 따라온다', () => {
@@ -43,7 +44,7 @@ describe('ReviewCanvasControls', () => {
 		useCheckImages.mockReturnValue(context({ images: [], selectedId: null }))
 		renderControls()
 
-		expect(screen.getByText('0 / 0')).toBeInTheDocument()
+		expect(screen.getByText('0개 중 0번째 파일')).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: '이전 파일' })).toBeDisabled()
 		expect(screen.getByRole('button', { name: '다음 파일' })).toBeDisabled()
 	})
