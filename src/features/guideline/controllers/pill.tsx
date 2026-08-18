@@ -31,7 +31,16 @@ export function GuidelineControllerPill() {
 		<>
 			{visible.map((group, index) => (
 				<Fragment key={group.id}>
-					{index > 0 && <Separator orientation="vertical" className="h-6" />}
+					{index > 0 && (
+						// 🔴 `self-center`만으로는 안 된다. Separator의 기본 클래스에
+						//    `data-[orientation=vertical]:self-stretch`가 있어 바의 `items-center`를
+						//    덮는데, 변형 선택자는 특이도가 더 높아 맨 `self-center`가 진다.
+						//    같은 변형으로 맞받아야 가운데로 온다.
+						<Separator
+							orientation="vertical"
+							className="h-6 data-[orientation=vertical]:self-center"
+						/>
+					)}
 					{group.controls.map((control) => (
 						// 🔴 최소폭이 없으면 값이 바뀔 때마다 컨트롤이 늘었다 줄었다 하고, 알약 전체와
 						//    그 안의 이웃까지 함께 움직인다(`4.5%` → `100%`에서 실제로 출렁였다).
