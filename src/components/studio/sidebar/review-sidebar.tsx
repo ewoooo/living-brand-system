@@ -14,6 +14,7 @@ import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
 /**
  * 검수 스튜디오의 사이드바(컨트롤러 패널) — 캔버스를 모른다.
  * 목록 ↔ 요약 드릴다운만 여기서 소유하고, 파일·판정·실행은 전부 CheckImageProvider가 갖는다.
+ * 제목은 Controller.Header가 아니라 본문 안에 둔다 — 디자인의 패널은 제목 아래 구분선이 없다.
  * 디자인 SSOT: Figma HD_LBS_UI section 56:2 "Review Usecase".
  */
 export function ReviewSidebar({ sections }: { sections: CheckSection[] }) {
@@ -27,8 +28,40 @@ export function ReviewSidebar({ sections }: { sections: CheckSection[] }) {
 
 	return (
 		<StudioSidebar
-			header={
-				summaryOpen ? (
+			footer={
+				<div className="flex flex-col gap-2">
+					{scenarios.length === 0 && (
+						<Typography as="p" size="xs" tone="muted">
+							발행된 검수 시나리오가 없습니다
+						</Typography>
+					)}
+					<div className="flex gap-2">
+						<Button
+							type="button"
+							variant="highlight"
+							className="h-11 flex-1"
+							disabled={!selectedId || !ready}
+							onClick={runCheck}
+						>
+							{/* 진행은 목록 행의 스피너가 알린다 — 버튼 이름에 "Loading"이 섞이지 않게 숨긴다. */}
+							{busy ? <Spinner aria-hidden /> : null}
+							검사
+						</Button>
+						<Button
+							type="button"
+							variant="muted"
+							className="h-11 flex-1"
+							disabled={images.length === 0 || !ready}
+							onClick={runAllChecks}
+						>
+							전부 검사
+						</Button>
+					</div>
+				</div>
+			}
+		>
+			<div className="flex h-9 shrink-0 items-center pt-1">
+				{summaryOpen ? (
 					<button
 						type="button"
 						onClick={() => setView('list')}
@@ -44,41 +77,8 @@ export function ReviewSidebar({ sections }: { sections: CheckSection[] }) {
 					<Typography as="h2" size="sm" weight="semibold">
 						List
 					</Typography>
-				)
-			}
-			footer={
-				<div className="flex flex-col gap-2 pt-3">
-					{scenarios.length === 0 && (
-						<Typography as="p" size="xs" tone="muted">
-							발행된 검수 시나리오가 없습니다
-						</Typography>
-					)}
-					<div className="flex gap-2">
-						<Button
-							type="button"
-							className="flex-1"
-							shape="pill"
-							disabled={!selectedId || !ready}
-							onClick={runCheck}
-						>
-							{/* 진행은 목록 행의 스피너가 알린다 — 버튼 이름에 "Loading"이 섞이지 않게 숨긴다. */}
-							{busy ? <Spinner aria-hidden /> : null}
-							검사
-						</Button>
-						<Button
-							type="button"
-							variant="outline"
-							className="flex-1"
-							shape="pill"
-							disabled={images.length === 0 || !ready}
-							onClick={runAllChecks}
-						>
-							전부 검사
-						</Button>
-					</div>
-				</div>
-			}
-		>
+				)}
+			</div>
 			{summaryOpen ? (
 				<ReviewSummary sections={sections} />
 			) : (
