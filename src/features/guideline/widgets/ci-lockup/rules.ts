@@ -226,24 +226,42 @@ export const SUBSIDIARIES: readonly Subsidiary[] = [
 ]
 
 /**
- * 해외지사 — 영문 한 줄 고정. **모든 자회사가 같은 목록을 공유한다**(사용자 결정 2026-08-14).
- * 🔴 `EUROPE R&D CENTER`만 스펙 도판에 실제로 나온 값이고 **나머지는 지어낸 자리표시자다**
- *    (사용자 요청). 실제 지부 목록을 받으면 이 배열만 통째로 갈아치운다.
+ * 해외지사 — 영문 고정. **모든 자회사가 같은 목록을 공유한다**(사용자 결정 2026-08-14) —
+ * 계열사별 대응이 아니라 그룹 전체 거점의 합집합이다.
+ *
+ * 🔴 **18개 전부 실제 거점이다**(2026-08-18 조사: 계열사 8곳의 공식 글로벌 네트워크·사업장 페이지,
+ *    법인 등기, 그룹 ESG 뉴스룸). 지어낸 값을 넣지 말 것 — 이 목록이 화면에 나가면 정본으로 오해된다.
+ *
+ * 🔑 `business`가 하나뿐인 이유: 공식 출처에서 **실제 표기로 확인되는 기능 라벨은 `R&D CENTER`뿐**이고
+ *    나머지는 조사 분류값(생산·판매·서비스)이라 그대로 렌더하면 그것이 곧 발명이 된다. 그리고 대부분의
+ *    지역은 한 곳에 여러 계열사의 기능이 섞여 있어 하나로 못 고른다(예: DUBAI = 5사).
+ *
+ * 도시·국가가 섞인 것은 원본이 그렇다 — 한 나라에 거점이 흩어져 있으면 국가로, 한 도시에 몰려 있으면
+ * 도시로 적었다. 락업에서 줄이 넘치지 않게 2~3 단어 안으로 줄인 결과이기도 하다.
  */
 export type OverseasBranch = { region: string; business?: string }
 
 export const OVERSEAS_BRANCHES: readonly OverseasBranch[] = [
-	// 🔴 도판에 실제로 나온 것은 이 하나뿐이다(p35 상단은 지역명만, 하단은 지역명+사업명 2행).
+	// 🔴 도판(p35)에 나온 유일한 값이고 실존 법인이다 —
+	//    HD Hyundai Europe Research and Development Center GmbH (뒤셀도르프, HD한국조선해양)
 	{ region: 'EUROPE', business: 'R&D CENTER' },
-	{ region: 'AMERICA' },
-	{ region: 'EUROPE' },
-	{ region: 'CHINA' },
-	{ region: 'JAPAN' },
-	{ region: 'SINGAPORE' },
-	{ region: 'VIETNAM', business: 'PLANT' },
-	{ region: 'INDIA' },
-	{ region: 'BRAZIL' },
-	{ region: 'MIDDLE EAST', business: 'OFFICE' },
+	{ region: 'LONDON' }, // 중공업·일렉트릭·오일뱅크 런던지사
+	{ region: 'GERMANY' }, // 일렉트릭 Eschborn · 건설기계 Mannheim · 로보틱스 Munich · 마린솔루션 Hamburg
+	{ region: 'ATHENS' }, // 중공업 아테네지사 · 마린솔루션 아테네지점
+	{ region: 'OSLO' }, // 중공업 오슬로지사 (건설기계 Elnesvågen 공장 병합)
+	{ region: 'SINGAPORE' }, // 중공업·마린솔루션·오일뱅크·건설기계 + HD Hyundai Asia Holdings
+	{ region: 'TOKYO' }, // 중공업 도쿄지사 · 마린솔루션 도쿄지점 (일렉트릭 오사카지사 병합)
+	{ region: 'CHINA' }, // 창저우·옌타이·톈진·양중 공장, 상하이·베이징 판매·지주
+	{ region: 'VIETNAM' }, // HD현대베트남조선(닌호아) · 에코비나(둥꾸엇), 하노이·호치민 지사
+	{ region: 'INDIA' }, // 건설기계 Pune 공장·R&D센터·PDC, 인프라코어 Chennai
+	{ region: 'PHILIPPINES' }, // HD Hyundai Heavy Industries Philippines (수빅베이 조선소)
+	{ region: 'DUBAI' }, // 중공업·일렉트릭·오일뱅크·마린솔루션·건설기계 5사
+	{ region: 'SAUDI ARABIA' }, // 일렉트릭 Arabia L.L.C. + 리야드지사
+	{ region: 'HOUSTON' }, // 중공업·오일뱅크 휴스턴지사 · 마린솔루션 Americas
+	{ region: 'ATLANTA' }, // 일렉트릭 America · 로보틱스 USA · 건설기계 North America (GA)
+	{ region: 'PANAMA' }, // 중공업 파나마지사 · 마린솔루션 파나마지점
+	{ region: 'BRAZIL' }, // 건설기계 Itatiaia 공장 · South America 판매
+	{ region: 'SOUTH AFRICA' }, // 건설기계 남아공지사(요하네스버그)
 ]
 
 /** 가로형B·세로형은 지부명을 한 줄로 쓴다(도판 `EUROPE R&D CENTER`). */
