@@ -367,7 +367,7 @@ function NavigationHeaderSymbolLink({
 				alt=""
 				className="size-3.5 dark:brightness-0"
 				height={14}
-				src="/logos/logo.svg"
+				src="/symbols/symbol_wht.svg"
 				width={14}
 			/>
 		</Link>
