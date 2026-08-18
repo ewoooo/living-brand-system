@@ -90,13 +90,6 @@ interface GeneratedImages extends ImageGenerationResult {
 	provider: ImageGenerationProvider
 }
 
-interface CameraAdjustedImages extends GeneratedImages {
-	camera: {
-		input: CameraControlInput
-		resolved: ResolvedCameraControl
-	}
-}
-
 /** ImageGenerationPlan IR — 프로파일 경로와 설정 경로가 모두 이 해석 완료 입력으로 수렴하고, 러너는 이것만 소비한다. */
 export interface ImageGenerationPlan {
 	prompt: string
@@ -258,79 +251,6 @@ export async function generateImagesWithSettings({
 	user: unknown
 }): Promise<GeneratedImages> {
 	return runImageGeneration(planImageGenerationFromSettings(input), user)
-}
-
-/**
- * 유스케이스 경계: published 프로파일의 모델·출력 계약으로 시드 이미지의 카메라 시점을 조정한다.
- * 프로파일 조회·외부 이미지 편집·생성 파일 저장 I/O는 각 repository가 소유한다.
- */
-export async function adjustImageCamera({
-	camera,
-	count,
-	generatedImageId,
-	profileId,
-	requestUrl,
-	user,
-}: {
-	camera: CameraControlInput
-	count: number
-	generatedImageId: number
-	profileId: number
-	requestUrl: string
-	user: unknown
-}): Promise<CameraAdjustedImages> {
-	const profile = await findPublishedImageProfile(user, profileId)
-	if (!profile) throw new ImageProfileNotFoundError()
-	const config = deriveImageStudioConfig(profile)
-	const cameraFeature = getImageStudioFeature(config, 'camera-control')
-	if (!cameraFeature) {
-		throw new InvalidImageControllerInputError('camera')
-	}
-	const seed = await resolveGeneratedImageReference({
-		generatedImageId,
-		profileId,
-		requestUrl,
-		user,
-	})
-	if (!seed?.prompt) throw new InvalidSeedImageError()
-	const effectivePrompt = imageEffectivePromptSchema.safeParse(seed.prompt.effective)
-	if (!effectivePrompt.success) throw new InvalidSeedImageError()
-
-	// 각도는 신뢰 경계에서 다시 검증한다 — UI가 구간을 좁혀도 요청은 임의 각도를 보낼 수 있다.
-	const resolved = resolveCameraControl(camera)
-	if (
-		!cameraFeature.azimuths.includes(resolved.azimuth) ||
-		!cameraFeature.elevations.includes(resolved.elevation)
-	) {
-		throw new InvalidImageControllerInputError('camera')
-	}
-	const effective = resolveImageGenerationOptions(config, { count })
-	const result = await runImageGeneration(
-		planImageGenerationFromProfile(profile, {
-			prompt: composeCameraAdjustmentPrompt(effectivePrompt.data, resolved),
-			count: effective.count,
-			aspectRatio: effective.aspectRatio,
-			imageSize: effective.imageSize,
-			seedImage: seed.data,
-		}),
-		user,
-	)
-	const stored = await storeProfileGeneration(result, {
-		inputPrompt: seed.prompt.input,
-		profile: {
-			id: profile.id,
-			name: profile.name,
-			aspectRatio: effective.aspectRatio,
-			imageSize: effective.imageSize,
-		},
-		sourceImage: generatedImageId,
-		user,
-	})
-
-	return {
-		...stored,
-		camera: { input: camera, resolved },
-	}
 }
 
 /** 카메라 값을 feature 허용 범위 안에서 해석한다. 신뢰 경계에서 다시 검증한다 — UI가 좁혀도 요청은 임의 각도를 보낼 수 있다. */

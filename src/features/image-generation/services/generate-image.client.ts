@@ -4,11 +4,7 @@
  * 화면 상태(로딩·에러 표시)는 호출자(useImageGeneration, Admin AiImageForm)가 담당한다.
  */
 
-import type {
-	CameraAdjustmentRequest,
-	CameraControlInput,
-	ResolvedCameraControl,
-} from '@/features/image-generation/camera-control'
+import type { CameraControlInput } from '@/features/image-generation/camera-control'
 import type { ImageModelPreset } from '@/features/image-generation/image-model'
 import type {
 	FlatImagePrompt,
@@ -85,13 +81,6 @@ export interface ImageGenerationResult {
 	profileName?: string
 }
 
-export interface CameraAdjustmentResult extends ImageGenerationResult {
-	camera: {
-		input: CameraControlInput
-		resolved: ResolvedCameraControl
-	}
-}
-
 /** 사용자 이미지 생성을 요청한다. */
 export function requestImageGeneration(
 	input: ImageGenerationRequest,
@@ -104,16 +93,6 @@ export function requestAdminImageGeneration(
 	input: AdminImageGenerationRequest,
 ): Promise<ImageGenerationResult> {
 	return postImageGeneration<ImageGenerationResult>('/api/admin/generate-image', input)
-}
-
-/** 생성된 이미지를 시드로 사용해 카메라 시점을 조정한다. */
-export function requestCameraAdjustment(
-	input: CameraAdjustmentRequest,
-): Promise<CameraAdjustmentResult> {
-	return postImageGeneration<CameraAdjustmentResult>(
-		'/api/generate-image/camera-adjustment',
-		input,
-	)
 }
 
 /** Payload REST에서 현재 사용자가 선택할 수 있는 published 이미지 프로파일을 조회한다. */
@@ -146,7 +125,7 @@ export async function requestImagePromptNormalization(
 
 async function postImageGeneration<Result extends ImageGenerationResult>(
 	url: string,
-	input: AdminImageGenerationRequest | CameraAdjustmentRequest | ImageGenerationRequest,
+	input: AdminImageGenerationRequest | ImageGenerationRequest,
 ): Promise<Result> {
 	const response = await fetch(url, {
 		method: 'POST',

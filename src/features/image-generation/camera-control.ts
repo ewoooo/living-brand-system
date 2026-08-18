@@ -1,7 +1,4 @@
 import { z } from 'zod'
-import { IMAGE_BATCH_MAX } from '@/features/image-generation/image-generation-limits'
-
-export const MAX_CAMERA_ADJUSTMENT_REQUEST_BYTES = 100_000
 
 /** 시드 이미지에 적용할 절대 시점. 0°는 정면이고 양의 방위각은 피사체 우측으로 회전한다. */
 export const cameraControlSchema = z
@@ -18,17 +15,7 @@ export const imageEffectivePromptSchema = z
 	.max(20_000)
 	.refine(isFlatPromptJson, 'effectivePrompt must be a JSON object with string values.')
 
-export const cameraAdjustmentRequestSchema = z
-	.object({
-		camera: cameraControlSchema,
-		count: z.number().int().min(1).max(IMAGE_BATCH_MAX).default(1),
-		generatedImageId: z.number().int().positive(),
-		profileId: z.number().int().positive(),
-	})
-	.strict()
-
 export type CameraControlInput = z.infer<typeof cameraControlSchema>
-export type CameraAdjustmentRequest = z.input<typeof cameraAdjustmentRequestSchema>
 
 export type CameraAzimuth =
 	| 'front'

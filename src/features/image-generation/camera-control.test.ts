@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-	cameraAdjustmentRequestSchema,
 	composeCameraAdjustmentPrompt,
 	imageEffectivePromptSchema,
 	resolveCameraControl,
@@ -35,16 +34,6 @@ describe('resolveCameraControl', () => {
 })
 
 describe('camera adjustment contract', () => {
-	it('생성 장수를 생략하면 한 장으로 정규화한다', () => {
-		const result = cameraAdjustmentRequestSchema.parse({
-			camera: { azimuthDeg: 0, elevationDeg: 0 },
-			generatedImageId: 8,
-			profileId: 5,
-		})
-
-		expect(result.count).toBe(1)
-	})
-
 	it('기존 시점보다 카메라 조정값을 우선하는 최종 프롬프트를 만든다', () => {
 		const result = JSON.parse(
 			composeCameraAdjustmentPrompt(
@@ -65,22 +54,6 @@ describe('camera adjustment contract', () => {
 			subject: '유조선',
 		})
 		expect(result.camera_rules).toContain('overrides every previous camera angle')
-	})
-
-	it.each([
-		{ camera: { azimuthDeg: 181, elevationDeg: 0 } },
-		{ camera: { azimuthDeg: 0, elevationDeg: 91 } },
-		{ generatedImageId: 0 },
-	])('계약 밖의 요청을 거부한다: %o', (patch) => {
-		expect(
-			cameraAdjustmentRequestSchema.safeParse({
-				camera: { azimuthDeg: 0, elevationDeg: 0 },
-				count: 1,
-				generatedImageId: 8,
-				profileId: 5,
-				...patch,
-			}).success,
-		).toBe(false)
 	})
 
 	it('저장된 effective prompt는 flat JSON만 허용한다', () => {
