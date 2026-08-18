@@ -791,10 +791,11 @@ describe('generateImages', () => {
 			model: 'gemini-3.1-flash-lite-image',
 			provider: 'google',
 		})
+		// 참조 fixture를 사용자 프롬프트와 다른 값으로 둔다 — 우선순위(사용자가 이김)가 falsifiable하도록.
 		mocks.resolveGeneratedImageReference.mockResolvedValue({
 			data: Buffer.from('seed'),
 			generatedImageId: 8,
-			prompt: { effective: '{"subject":"유조선"}', input: '유조선' },
+			prompt: { effective: '{"subject":"화물선"}', input: '화물선' },
 		})
 
 		await generateImages({
@@ -810,7 +811,11 @@ describe('generateImages', () => {
 		const [call] = mocks.generateBrandImages.mock.calls[0]
 		expect([...call.seedImage]).toEqual([...Buffer.from('seed')])
 		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
-			expect.objectContaining({ sourceImage: 8 }),
+			expect.objectContaining({
+				effectivePrompt: '{"subject":"유조선"}',
+				inputPrompt: '유조선',
+				sourceImage: 8,
+			}),
 		)
 	})
 
@@ -867,7 +872,65 @@ describe('generateImages', () => {
 
 		await expect(
 			generateImages({ userInput: '', profileId: 5, user: { id: 1 }, count: 1 }),
+		).rejects.toThrow('rejected prompt')
+	})
+
+	it('프로파일이 카메라 feature를 열지 않았는데 camera 값을 보내면 거부한다', async () => {
+		mocks.env.OPENAI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Flat Graphic',
+			slug: 'flat-graphic',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '1:1',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.normalizeImageProfilePrompt.mockResolvedValue({
+			finalPrompt: { subject: '유조선' },
+			normalizedInput: {},
+		})
+
+		await expect(
+			generateImages({
+				userInput: '유조선',
+				profileId: 5,
+				user: { id: 1 },
+				count: 1,
+				camera: { azimuthDeg: 0, elevationDeg: 0 },
+			}),
 		).rejects.toBeInstanceOf(InvalidImageControllerInputError)
+		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+	})
+
+	it('feature는 열렸지만 azimuthDeg가 허용 구간 밖이면 거부한다', async () => {
+		mocks.env.OPENAI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '1:1',
+			imageSize: '1K',
+			features: [{ blockType: 'cameraControl', azimuths: ['front'], elevations: ['eye-level'] }],
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.normalizeImageProfilePrompt.mockResolvedValue({
+			finalPrompt: { subject: '유조선' },
+			normalizedInput: {},
+		})
+
+		await expect(
+			generateImages({
+				userInput: '유조선',
+				profileId: 5,
+				user: { id: 1 },
+				count: 1,
+				camera: { azimuthDeg: 90, elevationDeg: 0 },
+			}),
+		).rejects.toBeInstanceOf(InvalidImageControllerInputError)
+		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
 	})
 
 	it('카메라 값을 주면 프롬프트에 각도 키를 얹는다', async () => {
