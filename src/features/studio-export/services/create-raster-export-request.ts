@@ -56,8 +56,8 @@ export function createRasterExportRequest(
 					container: 'mp4',
 					codec: video.codec,
 					colorSpace: video.colorSpace,
-					width: settings.width,
-					height: settings.height,
+					width: toEvenDimension(settings.width),
+					height: toEvenDimension(settings.height),
 					fps,
 					durationSeconds:
 						settings.durationSeconds ?? Math.min(5, video.maxDurationSeconds),
@@ -67,4 +67,12 @@ export function createRasterExportRequest(
 		case 'svg':
 			return null
 	}
+}
+
+/**
+ * H.264 4:2:0은 짝수 해상도만 인코딩하므로 홀수 변을 1px 내린다.
+ * 여기서 한 번 맞춰 두 MP4 export 경로가 인코더 질의와 canvas를 같은 값으로 만든다.
+ */
+function toEvenDimension(value: number): number {
+	return value - (value % 2)
 }
