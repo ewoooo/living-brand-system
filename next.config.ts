@@ -55,17 +55,10 @@ const nextConfig: NextConfig = {
 			'.mjs': ['.mts', '.mjs'],
 		}
 
-		// Turbopack rules와 짝을 맞춘다 — webpack으로 빌드되는 경로에서도 `?raw`가 문자열이어야 한다.
-		webpackConfig.module.rules.push({ resourceQuery: /raw/, type: 'asset/source' })
-
 		return webpackConfig
 	},
 	turbopack: {
 		root: path.resolve(dirname),
-		// `?raw` import를 문자열로 읽는다. shader(GLSL)를 public/ 고정 URL 대신 번들에 담기 위한 것.
-		rules: {
-			'*': { condition: { query: '?raw' }, type: 'raw' },
-		},
 	},
 }
 

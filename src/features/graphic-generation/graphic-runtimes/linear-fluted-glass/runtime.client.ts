@@ -12,7 +12,7 @@ import {
 	toLinearFlutedGlassInput,
 	toLinearFlutedGlassShaderPoint,
 } from './model'
-import fragmentBody from './shader.glsl?raw'
+import fragmentBody from './shader'
 
 export type LinearFlutedGlassRuntime = ShaderCanvasRuntime<LinearFlutedGlassInput>
 

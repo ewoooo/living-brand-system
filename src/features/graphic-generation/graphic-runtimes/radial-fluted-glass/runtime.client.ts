@@ -12,7 +12,7 @@ import {
 	toRadialFlutedGlassInput,
 	toRadialFlutedGlassShaderPoint,
 } from './model'
-import fragmentBody from './shader.glsl?raw'
+import fragmentBody from './shader'
 
 export type RadialFlutedGlassRuntime = ShaderCanvasRuntime<RadialFlutedGlassInput>
 

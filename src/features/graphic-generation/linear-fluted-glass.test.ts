@@ -43,7 +43,7 @@ describe('linearFlutedGlass', () => {
 		const { readFile } = await import('node:fs/promises')
 		const [shader, runtime] = await Promise.all([
 			readFile(
-				'src/features/graphic-generation/graphic-runtimes/linear-fluted-glass/shader.glsl',
+				'src/features/graphic-generation/graphic-runtimes/linear-fluted-glass/shader.ts',
 				'utf8',
 			),
 			readFile(
