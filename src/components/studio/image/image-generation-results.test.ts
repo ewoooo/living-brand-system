@@ -74,16 +74,15 @@ describe('ImageGenerationResults', () => {
 		expect(screen.getByRole('button', { name: '생성 결과 1' })).toBeInTheDocument()
 	})
 
-	it('참조 카드에 참조 이름을 붙이고 결과와 구분한다', () => {
+	// 참조도 결과와 똑같이 고를 수 있다(원본만 저장하고 싶을 수 있다) — 다른 것은 이름뿐이라
+	// 그리드가 참조를 결과 번호에서 빼고 세는지가 유일한 확인거리다.
+	it('참조 카드에 참조 이름을 붙이고 결과 번호에서 뺀다', () => {
 		const base = { ...props(), referenceIndex: 0, selected: 1 }
 		render(createElement(ImageGenerationResults, base))
 
 		expect(screen.getByRole('button', { name: '참조 원본' })).toBeInTheDocument()
+		// 참조가 0번을 차지해도 첫 결과는 '생성 결과 2'가 아니라 '생성 결과 1'이다.
 		expect(screen.getByRole('button', { name: '생성 결과 1' })).toBeInTheDocument()
-		// 참조는 선택 대상이 아니라 기준이므로 눌린 상태가 아니다.
-		expect(screen.getByRole('button', { name: '참조 원본' })).toHaveAttribute(
-			'aria-pressed',
-			'false',
-		)
+		expect(screen.queryByRole('button', { name: '생성 결과 2' })).not.toBeInTheDocument()
 	})
 })

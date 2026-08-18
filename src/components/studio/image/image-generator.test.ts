@@ -27,6 +27,8 @@ const SESSION = {
 }
 
 // 카메라를 한 번 돌린 뒤의 세션 — 참조 8을 물고 조정본 9를 낳았다.
+// output 비율은 프로파일 기본값(2:3)과 일부러 다르다 — 재생성이 컨트롤 값이 아니라
+// 참조가 만들어진 비율을 넘기는지 구분하려면 두 값이 갈려 있어야 한다.
 const ADJUSTED_SESSION = {
 	images: [
 		{
@@ -36,7 +38,7 @@ const ADJUSTED_SESSION = {
 		},
 	],
 	reference: SESSION.images[0],
-	output: SESSION.output,
+	output: { aspectRatio: '16:9' as const, imageSize: '1K' as const },
 }
 
 const mocks = vi.hoisted(() => ({
@@ -254,6 +256,9 @@ describe('ImageGenerator', () => {
 
 		expect(mocks.generate).toHaveBeenCalledWith(
 			{
+				// 프로파일 기본값 2:3이 아니라 참조가 만들어진 16:9 — 조정본이 다른 비율로
+				// 돌아오면 그리드에서 참조 카드가 잘린다.
+				aspectRatio: '16:9',
 				camera: { azimuthDeg: 0, elevationDeg: 0 },
 				count: 1,
 				imageSize: '1K',

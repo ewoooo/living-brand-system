@@ -63,6 +63,27 @@ describe('useImageGeneration', () => {
 		expect(result.current.selected).toBe(1)
 	})
 
+	// 세션은 누적되지 않는다 — 참조 없는 요청 하나가 이전 참조를 지운다.
+	it('참조 없는 새 프롬프트 생성은 이전 참조를 지운다', async () => {
+		mockResponse(RESPONSE)
+		const { result } = renderHook(() => useImageGeneration())
+		const reference = { src: '/file/b.png', generatedImageId: 2, profileId: 5 }
+		await act(() =>
+			result.current.generate(
+				{ count: 1, prompt: '', profileId: 5, reference: { generatedImageId: 2 } },
+				reference,
+			),
+		)
+		expect(result.current.session?.reference).toEqual(reference)
+
+		// Response 본문은 한 번만 읽힌다 — 새 응답을 세우지 않으면 두 번째 요청이 오류로 샌다.
+		mockResponse(RESPONSE)
+		await act(() => result.current.generate({ count: 2, prompt: '새 프롬프트', profileId: 5 }))
+
+		expect(result.current.session?.reference).toBeNull()
+		expect(result.current.selected).toBe(0)
+	})
+
 	it('서버의 안전한 오류 메시지를 화면 상태로 보존한다', async () => {
 		vi.spyOn(console, 'error').mockImplementation(() => undefined)
 		mockResponse({ message: 'Invalid seed image.' }, 400)

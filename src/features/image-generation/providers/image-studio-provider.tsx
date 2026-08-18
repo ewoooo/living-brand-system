@@ -117,9 +117,11 @@ export function ImageStudioProvider({
 	)
 
 	// 참조는 한 번 정해지면 고정된다 — 조정본을 다시 참조로 삼지 않아 세대 누적 열화가 없다.
+	// 고정된 참조도 프로파일 일치는 지켜야 한다 — 서버가 시드를 scenario로 조회하므로
+	// 프로파일을 바꾼 뒤의 재생성은 언제나 InvalidSeedImageError가 된다.
 	const referenceImage = useMemo(() => {
 		const pinned = session?.reference
-		if (pinned) return pinned
+		if (pinned) return pinned.profileId === config.id ? pinned : null
 		const picked = selected === null ? undefined : items[selected]
 		return picked?.generatedImageId && picked.profileId === config.id ? picked : null
 	}, [config.id, items, selected, session])
@@ -171,9 +173,12 @@ export function ImageStudioProvider({
 				setAngles,
 				seedImage: cameraSeed?.src ?? null,
 				regenerate: () => {
-					if (!supportsCamera || !cameraSeed?.generatedImageId) return
+					if (!supportsCamera || !cameraSeed?.generatedImageId || !session) return
 					void generate(
 						{
+							// 참조가 만들어진 비율로 다시 그린다 — 같은 피사체를 다른 각도에서
+							// 볼 뿐이라, 비율이 갈리면 그리드에서 참조 카드가 잘린다.
+							aspectRatio: session.output.aspectRatio,
 							camera: angles,
 							count: 1,
 							imageSize: resolutionValue as ImageOutputSize,
