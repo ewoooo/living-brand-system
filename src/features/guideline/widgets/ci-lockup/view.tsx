@@ -16,10 +16,14 @@ import {
 	bearingOf,
 	branchLabel,
 	CLEAR_SPACE,
+	CLEAR_SPACE_MODE_LABEL,
+	CLEAR_SPACE_MODES,
+	type ClearSpaceMode,
 	COLOR_TYPE_LABEL,
 	COLOR_TYPES,
 	type ColorType,
 	type Column,
+	clearSpaceFor,
 	deriveLockups,
 	FIDELITY_CAVEAT,
 	FONT,
@@ -121,6 +125,7 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 	const [branchKey, setBranchKey] = useState(branchLabel(OVERSEAS_BRANCHES[0]))
 	const [colorType, setColorType] = useState<ColorType>('fullColor')
 	const [mono, setMono] = useState<MonoColor>('BLACK')
+	const [clearSpaceMode, setClearSpaceMode] = useState<ClearSpaceMode>('off')
 	const stepId = useId()
 
 	const options = lockupOptions(tier)
@@ -145,6 +150,7 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 		: SYMBOL_CONTOURS.map((c) => hex(c.colorName))
 	// 판은 취향이 아니라 규정이다 — 표현이 정하고 테마를 따르지 않는다(surface.ts).
 	const stage = stageTone(colorType, mono) === 'dark' ? CI_STAGE_DARK : CI_STAGE_LIGHT
+	const clearSpace = clearSpaceFor(lockup.orientation, clearSpaceMode)
 
 	const step = TIERS.indexOf(tier) + 1
 
@@ -226,6 +232,19 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 						label="단색형 색상"
 					/>
 				</Field>
+
+				{/* 🔴 `예외`는 공간 제약이 있을 때만 허용되는 값이다 — 더 좁게 써도 된다는 뜻이 아니다. */}
+				<Field label={`클리어스페이스${clearSpace ? ` ${clearSpace}H` : ''}`}>
+					<Choice
+						options={CLEAR_SPACE_MODES.map((m) => ({
+							key: m,
+							label: CLEAR_SPACE_MODE_LABEL[m],
+						}))}
+						value={clearSpaceMode}
+						onChange={(v) => setClearSpaceMode(v as ClearSpaceMode)}
+						label="클리어스페이스"
+					/>
+				</Field>
 			</div>
 
 			<LockupFigure
@@ -235,6 +254,7 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 				stage={stage}
 				symbolT={symbolT}
 				symbolColors={symbolColors}
+				clearSpace={clearSpace}
 			/>
 
 			<dl className={`flex flex-wrap gap-x-6 gap-y-1 text-xs ${SPEC_READOUT}`}>
@@ -472,6 +492,7 @@ function LockupFigure({
 	stage,
 	symbolT,
 	symbolColors,
+	clearSpace,
 }: {
 	lockup: Lockup
 	h: number
@@ -479,6 +500,8 @@ function LockupFigure({
 	stage: string
 	symbolT: number
 	symbolColors: string[]
+	/** 여백(H 배수). 0이면 그리지 않는다. */
+	clearSpace: number
 }) {
 	const assumed =
 		lockup.columns.some((column) => column.rows.some((row) => row.assumed)) ||
@@ -499,13 +522,15 @@ function LockupFigure({
 					transition: `background-color ${MORPH}`,
 				}}
 			>
-				<Composed
-					lockup={lockup}
-					h={h}
-					color={color}
-					symbolT={symbolT}
-					symbolColors={symbolColors}
-				/>
+				<ClearSpaceFrame h={h} clearSpace={clearSpace}>
+					<Composed
+						lockup={lockup}
+						h={h}
+						color={color}
+						symbolT={symbolT}
+						symbolColors={symbolColors}
+					/>
+				</ClearSpaceFrame>
 			</div>
 			<figcaption className="flex flex-col gap-1">
 				<span className="font-body text-foreground text-sm">
@@ -522,6 +547,56 @@ function LockupFigure({
 				) : null}
 			</figcaption>
 		</figure>
+	)
+}
+
+/**
+ * 클리어스페이스 프레임. 🔑 여백은 **로고 바운딩박스 사방 균일**이고(rules.ts `clearSpaceFor`),
+ * 우리는 잉크로 트림해 두었으므로 안의 락업 박스가 곧 그 bbox다 — `padding`이 그대로 규정이 된다.
+ *
+ * 두 겹으로 보인다: 바깥 실선이 여백의 끝(누구도 넘어올 수 없는 선)이고, 안쪽 점선이 로고 bbox다.
+ * 🔴 `clearSpace`가 0이면 테두리를 그리지 않지만 **자리는 그대로 차지한다** — 켜고 끌 때 락업이
+ *    움직이면 여백이 아니라 로고가 변한 것처럼 보인다.
+ */
+function ClearSpaceFrame({
+	h,
+	clearSpace,
+	children,
+}: {
+	h: number
+	clearSpace: number
+	children: React.ReactNode
+}) {
+	const on = clearSpace > 0
+	// 🔑 미끄러지는 것은 **이 프레임**이다. 판 가운데에 놓이므로 안의 글자 폭이 바뀌면 자리가 바뀐다.
+	// 🔴 `Composed`에 걸면 안 된다 — 이 프레임이 `position: relative`라 그쪽 `offsetLeft`는 항상
+	//    padding 값으로 고정돼(offsetParent가 이 프레임이 된다) 움직임을 못 잡는다. 실제로 그렇게 깨졌다.
+	const slideRef = useSlide()
+
+	return (
+		<div
+			ref={slideRef}
+			className="relative"
+			style={{
+				padding: h * clearSpace,
+				transition: `padding ${MORPH}, outline-color ${MORPH}`,
+				outline: '1px solid',
+				outlineColor: on ? 'currentColor' : 'transparent',
+				outlineOffset: -1,
+			}}
+		>
+			{/* 안쪽 점선 = 로고 bbox. 여백이 무엇의 바깥인지 보이게 한다. */}
+			<div
+				className="pointer-events-none absolute border border-dashed"
+				style={{
+					inset: h * clearSpace,
+					borderColor: on ? 'currentColor' : 'transparent',
+					opacity: 0.45,
+					transition: `inset ${MORPH}, border-color ${MORPH}`,
+				}}
+			/>
+			{children}
+		</div>
 	)
 }
 
@@ -553,12 +628,8 @@ function Composed({
 			? undefined
 			: (partialColumnArea(lockup, lockup.columns[0], lockup.baseRows) * h - h) / 2
 
-	// 글자·꼴·계층이 바뀌면 덩어리의 자리가 바뀐다 — 그 이동을 이어 준다.
-	const slideRef = useSlide()
-
 	return (
 		<div
-			ref={slideRef}
 			className={`flex ${horizontal ? `flex-row ${baseTop === undefined ? 'items-center' : 'items-start'}` : 'flex-col items-center'}`}
 			style={{ gap: h * lockup.gap }}
 		>

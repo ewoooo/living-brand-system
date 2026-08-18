@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+	CLEAR_SPACE_MODES,
+	type ClearSpaceMode,
 	type Column,
+	clearSpaceFor,
 	columnArea,
 	deriveLockups,
 	fontSizeFor,
@@ -104,16 +107,28 @@ describe('CI 락업 조립 규칙', () => {
 
 	// 🔴 판 높이는 고정이라(선택마다 튀지 않게) 가장 높은 락업이 그 안에 들어가야 한다.
 	//    스펙 값이 바뀌어 넘치면 화면에서 잘리는데, 잘린 로고는 가이드라인으로 성립하지 않는다.
-	it('모든 락업이 고정 판 높이 안에 들어간다', () => {
+	it('모든 락업이 클리어스페이스를 켠 채로도 고정 판 높이 안에 들어간다', () => {
 		expect(ALL.length).toBeGreaterThan(0)
-		const tallest = ALL.reduce(
-			(max, lockup) => (lockupHeight(lockup) > lockupHeight(max) ? lockup : max),
-			ALL[0],
-		)
+		let worst = { height: 0, label: '', mode: '' as ClearSpaceMode }
+		for (const lockup of ALL) {
+			for (const mode of CLEAR_SPACE_MODES) {
+				const height = lockupHeight(lockup, clearSpaceFor(lockup.orientation, mode))
+				if (height > worst.height) worst = { height, label: lockup.label, mode }
+			}
+		}
 		expect(
-			lockupHeight(tallest),
-			`${tallest.label}이 판 높이 ${STAGE_HEIGHT}H를 넘는다`,
+			worst.height,
+			`${worst.label}(여백 ${worst.mode})이 판 높이 ${STAGE_HEIGHT}H를 넘는다`,
 		).toBeLessThanOrEqual(STAGE_HEIGHT)
+	})
+
+	// 🔴 정본 실측값이다(`clearSpaceFor` 주석). 눈대중으로 고치면 규정 여백이 틀어진다.
+	it('여백 비율이 정본 실측값과 같다', () => {
+		expect(clearSpaceFor('horizontal', 'normal')).toBe(0.5)
+		expect(clearSpaceFor('vertical', 'normal')).toBe(0.4)
+		expect(clearSpaceFor('horizontal', 'exception')).toBe(0.25)
+		expect(clearSpaceFor('vertical', 'exception')).toBe(0.2)
+		expect(clearSpaceFor('horizontal', 'off')).toBe(0)
 	})
 
 	it('락업 key가 겹치지 않는다', () => {

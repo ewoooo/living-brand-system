@@ -521,24 +521,27 @@ const BAR_WIDTH = 0.04
  * 판 높이(H 배수). 🔴 **고정이다** — 선택에 따라 판이 커졌다 작아지면 위젯 전체가 위아래로 튀어
  * 락업이 아니라 화면이 움직이는 것처럼 보인다. 판은 그대로 두고 안의 락업만 변해야 한다.
  *
- * 가장 높은 락업은 **해외지사 세로형 2.1H**다(심볼 1 + 간격 0.2 + 영역 0.9). 그 위로 여유를 둔 값이고,
- * 스펙 값이 바뀌어 2.4H를 넘으면 `rules.test.ts`가 떨어진다.
+ * 가장 높은 경우는 **해외지사 세로형 + 클리어스페이스** = 2.1H + 2×0.4H = **2.9H**다
+ * (락업 2.1H = 심볼 1 + 간격 0.2 + 영역 0.9). 그 위로 여유를 둔 값이고, 스펙 값이 바뀌어
+ * 3.2H를 넘으면 `rules.test.ts`가 떨어진다.
+ * 🔴 클리어스페이스를 끈 상태에서도 이 높이를 유지한다 — 켜고 끌 때 판이 변하면 안 되므로.
  */
-export const STAGE_HEIGHT = 2.4
+export const STAGE_HEIGHT = 3.2
 
 /**
  * 락업이 세로로 차지하는 높이(H 배수). 판 높이 가드가 이것을 쓴다.
  * 🔴 가로형B 해외지사는 심볼이 **앞 몇 행에만** 정렬돼서(2×2 그리드) 심볼이 위로 삐져나온다 —
  *    그 삐져나온 만큼도 높이에 든다.
  */
-export function lockupHeight(lockup: Lockup) {
+export function lockupHeight(lockup: Lockup, clearSpace = 0) {
 	const columns = lockup.columns.filter((c) => c.bar === undefined)
 	const stack = Math.max(...columns.map((c) => columnArea(lockup, c)))
-	if (lockup.orientation === 'vertical') return 1 + lockup.gap + stack
-	if (lockup.baseRows === undefined) return Math.max(1, stack)
+	const margin = 2 * clearSpace
+	if (lockup.orientation === 'vertical') return 1 + lockup.gap + stack + margin
+	if (lockup.baseRows === undefined) return Math.max(1, stack) + margin
 	// 심볼은 앞 baseRows 블록에 중앙정렬된다 — 블록보다 크면 위아래로 삐져나온다.
 	const overhang = (1 - partialColumnArea(lockup, lockup.columns[0], lockup.baseRows)) / 2
-	return Math.max(stack + Math.max(0, overhang), 1) + Math.max(0, overhang)
+	return Math.max(stack + Math.max(0, overhang), 1) + Math.max(0, overhang) + margin
 }
 
 /** 열 하나의 높이(H 배수). 행 cap 합 + 행 사이 간격 합. */
@@ -609,6 +612,30 @@ export const TIER_LABEL: Record<Tier, string> = {
 }
 
 /** 클리어스페이스·최소 크기 — 락업 조립과 별개의 규정이라 여기 값만 둔다. */
+/**
+ * 클리어스페이스 표시 축. `off`는 안 그리고, `normal`·`exception`이 규정 두 값이다.
+ * 🔴 `exception`은 「공간 제약이 있을 때」만 허용되는 값이다 — 더 좁게 쓸 수 있다는 뜻이 아니다.
+ */
+export const CLEAR_SPACE_MODES = ['off', 'normal', 'exception'] as const
+export type ClearSpaceMode = (typeof CLEAR_SPACE_MODES)[number]
+
+export const CLEAR_SPACE_MODE_LABEL: Record<ClearSpaceMode, string> = {
+	off: '없음',
+	normal: '기본',
+	exception: '예외',
+}
+
+/**
+ * 여백 비율(H 배수). 🔴 **기준은 로고 바운딩박스 사방 균일**이다 — 심볼이나 워드마크 개별이 아니다.
+ * 정본 6개 파일(`scripts/assets/ci/*-clearSpace.svg`)을 벡터로 실측해 확인했다: 안쪽 구멍이
+ * 로고 bbox와 정확히 일치하고, 가로형은 사방 0.4999H·세로형은 0.4000H다(상단만 0.4953H로
+ * 0.5% 작은데 그건 아트워크 드로잉 오차다).
+ * 🔑 우리는 잉크로 트림해 두었으므로 조립된 락업의 박스가 곧 로고 bbox다 — `padding`이면 성립한다.
+ */
+export function clearSpaceFor(orientation: Orientation, mode: ClearSpaceMode) {
+	return mode === 'off' ? 0 : CLEAR_SPACE[orientation][mode]
+}
+
 export const CLEAR_SPACE: Record<Orientation, { normal: number; exception: number }> = {
 	horizontal: { normal: 0.5, exception: 0.25 },
 	vertical: { normal: 0.4, exception: 0.2 },
