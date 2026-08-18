@@ -1,12 +1,12 @@
 'use client'
 
 import { Controller } from '@/components/shared/controller'
-import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import {
 	CONTROLLER_TOGGLE_OPTIONS,
 	ControllerControlRenderer,
 	ControllerGroupRenderer,
-} from '@/components/studio/shared/controller-renderer'
+} from '@/components/shared/controller-renderer'
+import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import {
 	ExportAction,
 	PrintControls,

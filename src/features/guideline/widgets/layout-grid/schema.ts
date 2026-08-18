@@ -1,5 +1,5 @@
 import type { Block } from 'payload'
-import { GUTTER_RATIO, MARGIN_PCT } from './rules'
+import { GUTTER_X, MARGIN } from './manifest'
 import { SAMPLE_OPTIONS } from './samples'
 
 // 레이아웃 그리드 위젯 — Block children에 등록되는 인터랙티브 leaf.
@@ -47,28 +47,28 @@ export const LayoutGridWidget: Block = {
 		{
 			name: 'marginPct',
 			type: 'number',
-			min: MARGIN_PCT.min,
-			max: MARGIN_PCT.max,
+			min: MARGIN.min,
+			max: MARGIN.max,
 			admin: {
-				description: `마진을 이 판형만 고정합니다(${MARGIN_PCT.min}~${MARGIN_PCT.max}). 비우면 패널을 따릅니다.`,
+				description: `마진을 이 판형만 고정합니다(${MARGIN.min}~${MARGIN.max}). 비우면 패널을 따릅니다.`,
 			},
 		},
 		{
 			name: 'gutterX',
 			type: 'number',
-			min: GUTTER_RATIO.min,
-			max: GUTTER_RATIO.max,
+			min: GUTTER_X.min,
+			max: GUTTER_X.max,
 			admin: {
-				description: `수평 거터를 이 판형만 고정합니다(${GUTTER_RATIO.min}~${GUTTER_RATIO.max}). 비우면 패널을 따릅니다.`,
+				description: `수평 거터를 이 판형만 고정합니다(${GUTTER_X.min}~${GUTTER_X.max}). 비우면 패널을 따릅니다.`,
 			},
 		},
 		{
 			name: 'gutterY',
 			type: 'number',
-			min: GUTTER_RATIO.min,
-			max: GUTTER_RATIO.max,
+			min: GUTTER_X.min,
+			max: GUTTER_X.max,
 			admin: {
-				description: `수직 거터를 이 판형만 고정합니다(${GUTTER_RATIO.min}~${GUTTER_RATIO.max}). 비우면 패널을 따릅니다.`,
+				description: `수직 거터를 이 판형만 고정합니다(${GUTTER_X.min}~${GUTTER_X.max}). 비우면 패널을 따릅니다.`,
 			},
 		},
 		// lock = 값을 직접 적지 않고 "패널 초기값에 붙어 있어라"로 고정하는 방법.

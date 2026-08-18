@@ -4,7 +4,7 @@ import { Controller } from '@/components/shared/controller'
 import {
 	ControllerControlRenderer,
 	ControllerGroupRenderer,
-} from '@/components/studio/shared/controller-renderer'
+} from '@/components/shared/controller-renderer'
 import {
 	getImageColorAdjustmentControls,
 	type ImageStudioConfig,

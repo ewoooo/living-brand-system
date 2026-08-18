@@ -2,7 +2,9 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import type { ReactNode } from 'react'
 import { FloatingControllerSticky } from '@/components/shared/controller'
-import { helperLabel } from '@/features/guideline/components/globals/guideline-helper'
+import { helperLabel } from '@/features/guideline/components/globals/guideline-helper-label'
+import { GuidelineControllerPill } from '@/features/guideline/controllers/pill'
+import { GuidelineControllerScope } from '@/features/guideline/controllers/provider'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
@@ -10,7 +12,7 @@ import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
 import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
-import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
+import { LAYOUT_GRID_MANIFEST } from '@/features/guideline/widgets/layout-grid/manifest'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
 import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
@@ -204,12 +206,15 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 		},
 		{ name: 'layout-grid', node: <LayoutGridWidget /> },
 		{
-			// 이 위젯은 하단 Floating Controller 안에서만 쓰인다 — 알약 없이 보여주면 실제와 다르다.
-			name: 'layout-grid-controls',
+			// 컨트롤은 위젯이 아니라 **매니페스트**가 만든다. 갤러리도 같은 경로로 그려야
+			// 미리보기가 실제 화면과 갈리지 않는다(제한 없는 = admin이 아무것도 좁히지 않은 상태).
+			name: 'layout-grid 컨트롤러',
 			node: (
-				<FloatingControllerSticky aria-label={helperLabel('Layout')}>
-					<LayoutGridControlsWidget />
-				</FloatingControllerSticky>
+				<GuidelineControllerScope manifest={LAYOUT_GRID_MANIFEST}>
+					<FloatingControllerSticky aria-label={helperLabel('Layout')}>
+						<GuidelineControllerPill />
+					</FloatingControllerSticky>
+				</GuidelineControllerScope>
 			),
 		},
 		{ name: 'layout-grid-overlay', node: <LayoutGridOverlayWidget /> },

@@ -2,6 +2,11 @@
 
 import type { StaticImageData } from 'next/image'
 import { type CSSProperties, type ReactNode, useEffect, useState } from 'react'
+import {
+	controllerBoolean,
+	controllerNumber,
+	useGuidelineController,
+} from '../../controllers/provider'
 import { WIDGET_CAPTION } from '../readout'
 import {
 	CI_ART,
@@ -11,8 +16,8 @@ import {
 	type Placement,
 	type Span,
 } from './compositions'
+import { GUIDES, GUTTER_X, GUTTER_Y, MARGIN } from './manifest'
 import type { LayoutGridSample } from './samples'
-import { useLayoutGridScope } from './store'
 
 // 템플릿: HD현대 Key Layout 그리드(정본 규칙). 판형을 축별로 1:2:3으로 나눈 9셀에 개체를 스냅한다.
 // 이 파일은 레이아웃 시스템만 소유한다 — 그리드·마진·거터·가이드·개체 종류별 렌더.
@@ -66,20 +71,26 @@ export function LayoutGridWidget({
 	lockGutterX?: boolean | null
 	lockGutterY?: boolean | null
 }) {
-	const { initial, values } = useLayoutGridScope()
+	// 컨트롤러 스코프 밖(컨트롤 없이 판형만 둔 블록)이면 값이 비어 매니페스트 기본값으로 떨어진다.
+	const { values, defaults } = useGuidelineController()
 
-	// 판형에 값이 있으면 그것이 이기고, 없으면 lock은 초기값·아니면 슬라이더 현재값을 따른다.
+	// 판형에 값이 있으면 그것이 이기고, 없으면 lock은 초기값·아니면 컨트롤 현재값을 따른다.
 	const resolve = (
 		override: number | null | undefined,
 		locked: boolean | null | undefined,
-		key: 'marginPct' | 'gutterX' | 'gutterY',
-	) => override ?? (locked ? initial[key] : values[key])
-	const marginPct = resolve(marginOverride, lockMargin, 'marginPct')
-	const gutterX = resolve(gutterXOverride, lockGutterX, 'gutterX')
-	const gutterY = resolve(gutterYOverride, lockGutterY, 'gutterY')
+		control: typeof MARGIN | typeof GUTTER_X | typeof GUTTER_Y,
+	) => override ?? controllerNumber(locked ? defaults : values, control.id, control.defaultValue)
+	const marginPct = resolve(marginOverride, lockMargin, MARGIN)
+	const gutterX = resolve(gutterXOverride, lockGutterX, GUTTER_X)
+	const gutterY = resolve(gutterYOverride, lockGutterY, GUTTER_Y)
 
 	// 같은 블록의 판형이 서로 다른 그리드 상태를 가질 수 있어야 한다.
-	const guidesOn = guides === 'on' ? true : guides === 'off' ? false : values.guidesOn
+	const guidesOn =
+		guides === 'on'
+			? true
+			: guides === 'off'
+				? false
+				: controllerBoolean(values, GUIDES.id, GUIDES.defaultValue)
 	const composition = COMPOSITIONS[sample ?? 'a']
 	// 거터의 절반을 셀 안쪽 경계에 넣는다. 마진의 %라서 단위도 마진과 같은 cqmax(긴 축의 1%).
 	const gutterHalf = { x: (marginPct * gutterX) / 100 / 2, y: (marginPct * gutterY) / 100 / 2 }

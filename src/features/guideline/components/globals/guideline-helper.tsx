@@ -13,6 +13,7 @@ import {
 import { createPortal } from 'react-dom'
 import { FloatingControllerSticky } from '@/components/shared/controller'
 import { pickActiveRegion } from './guideline-active-region'
+import { helperLabel } from './guideline-helper-label'
 
 /**
  * 하단 Floating Controller("Helper") — 지금 보고 있는 블록의 컨트롤만 화면 아래 알약에 띄운다.
@@ -161,9 +162,4 @@ export function GuidelineHelperRegion({
 				: null}
 		</>
 	)
-}
-
-/** 블록 제목이 없으면 바는 이름을 잃으므로 총칭으로 대신한다. */
-export function helperLabel(label?: string | null) {
-	return label ? `${label} 조절` : '레이아웃 조절'
 }

@@ -24,8 +24,8 @@
 `schema.ts` | Payload 필드 정의. 짧은 `dbName` 별칭 | ✅ |
 `component.tsx` | 서버 컴포넌트. 관계 해석·URL 계산 후 뷰에 넘김 | ✅ |
 `view.tsx` | 클라이언트 뷰. 인터랙션이 있을 때만 | 선택 |
-`store.tsx` | 형제 위젯과 값을 공유할 때의 context | 선택 |
-그 외 (`compositions.ts`·`samples.ts`·`rules.ts`·`images/`) | 데이터·규칙·에셋 분리 | 선택 |
+`manifest.ts` | 이 위젯이 여는 **컨트롤 계약** — 범위·초기값·단위·프리미티브 종류(§4.1) | 선택 |
+그 외 (`compositions.ts`·`samples.ts`·`images/`) | 데이터·에셋 분리 | 선택 |
 
 🔴 **`projection.ts`는 만들지 않습니다.** 블록 계약에는 있지만 위젯에는 없습니다. 카탈로그가 읽지 않는 파일이 됩니다.
 
@@ -33,7 +33,7 @@
 
 `component.tsx`를 서버로 두는 이유는 **관계 해석·URL 계산**을 서버에서 끝내기 위한 것입니다. 그 일이 없는 위젯 — 정적 데이터나 형제 공유 context만 읽는 위젯 — 은 `component.tsx`에 `'use client'`를 달고 `view.tsx`를 두지 않습니다. 빈 서버 래퍼를 한 겹 더 만드는 것은 계약을 지키는 것이 아니라 껍데기를 늘리는 것입니다.
 
-현재 그런 위젯은 `layout-grid`·`layout-grid-controls`·`type-specimen` 셋입니다. 🔴 **이 문단이 없으면 다음 사람이 이것을 계약 위반으로 보고 빈 래퍼를 세 개 만듭니다** — 반대로, Payload 관계를 받는 위젯이 `'use client'`를 달고 있으면 그것은 진짜 위반입니다.
+현재 그런 위젯은 `layout-grid`·`type-specimen` 둘입니다. 🔴 **이 문단이 없으면 다음 사람이 이것을 계약 위반으로 보고 빈 래퍼를 세 개 만듭니다** — 반대로, Payload 관계를 받는 위젯이 `'use client'`를 달고 있으면 그것은 진짜 위반입니다.
 
 #### 브랜드 데이터가 비면 그리지 않습니다
 
@@ -45,7 +45,7 @@
 
 에셋은 레지스트리 맵의 **키로 참조**합니다(`PHOTOS`·`CI_ART` 같은 맵). 그러면 조합이 문자열만으로 표현됩니다.
 
-🔴 **schema가 참조하는 모듈에는 react·이미지 import를 넣지 마십시오.** `payload.config`는 Node에서 로드되므로 webp/svg import나 react가 섞이면 설정 로딩이 깨집니다. 그래서 조합 키·라벨과 규칙 상수를 별 파일로 뺍니다(`layout-grid/samples.ts`·`rules.ts`가 그 선례).
+🔴 **schema가 참조하는 모듈에는 react·이미지 import를 넣지 마십시오.** `payload.config`는 Node에서 로드되므로 webp/svg import나 react가 섞이면 설정 로딩이 깨집니다. 그래서 조합 키·라벨과 규칙 상수를 별 파일로 뺍니다(`layout-grid/samples.ts`·`manifest.ts`가 그 선례 — 매니페스트는 타입만 `import type`으로 가져옵니다).
 
 ## 3. 등록 — 손으로 고치는 3곳
 
@@ -54,6 +54,7 @@
 `blocks/block/schema.ts` | `children` blocks 배열에 스키마 추가 (CMS 저작용) |
 `blocks/block/component.tsx` | 렌더 디스패치에 분기 추가 |
 `components/widgets/gallery.tsx` | `/guideline/widgets` 미리보기 목록 |
+`controllers/registry.ts` | (컨트롤러를 여는 위젯만) `blockType` → 매니페스트 (§4.1) |
 
 세 곳 중 하나만 빠뜨리면 조용히 실패합니다 — 스키마만 등록하면 admin에서 고를 수 있지만 화면이 비고, 갤러리만 등록하면 미리보기에서만 보입니다(`widgets/ci-lockup/`이 실제로 그 상태이며 `schema.ts`가 없어 CMS로 저작할 수 없습니다).
 
@@ -67,7 +68,7 @@
 
 **Block이 소유하는 것** — 전체폭 면(`background`)·배치 영역 면(`innerBackground`)·폭(`width`)·배치(`arrangement`·`columns`·`aspectRatio`)·제목·본문(`title`·`description`)·`rules`. 그리고 자식에게 값 스코프를 제공할 수 있습니다.
 
-**Widget이 소유하는 것** — 자기 셀 안의 콘텐츠. **셀 안에서는 `w-full`과 배경색을 자유롭게 씁니다**(판형·스와치·패널의 면은 위젯 콘텐츠입니다). 금지는 Block의 전체폭 면과 폭 결정권을 가져가는 것입니다. 인터랙션 컨트롤은 유한 폭을 지키는 편이 낫습니다(`layout-grid-controls`가 컨트롤마다 고정폭을 주어 선례를 만들었습니다 — 담기는 자리가 달라져도 조작감이 같아야 합니다).
+**Widget이 소유하는 것** — 자기 셀 안의 콘텐츠. **셀 안에서는 `w-full`과 배경색을 자유롭게 씁니다**(판형·스와치·패널의 면은 위젯 콘텐츠입니다). 금지는 Block의 전체폭 면과 폭 결정권을 가져가는 것입니다. 인터랙션 컨트롤의 폭은 위젯이 아니라 컨트롤러 킷이 갖습니다(§4.1).
 
 폭·표면색·세로 리듬은 프레임이 소유합니다 — 위젯은 자기 `max-width`를 갖지 않습니다([09 §7](09-design-system.md)).
 
@@ -83,22 +84,45 @@
 
 ### 값 공유는 Block이 provider
 
-형제 위젯이 값을 공유해야 하면 **Block이 context provider가 됩니다**(`widgets/layout-grid/store.tsx` + `blocks/block/component.tsx`).
+형제 위젯이 값을 공유해야 하면 **Block이 context provider가 됩니다**(`controllers/provider.tsx` + `blocks/block/component.tsx`). 위젯이 자기 스토어를 따로 만들지 않습니다 — 공유 값은 전부 컨트롤러 계약을 탑니다(§4.1).
 
 🔴 **모듈 스코프 스토어는 금지입니다.** 섹션 라우트가 여러 Page를 한 화면에 렌더하므로, 페이지마다 놓인 패널이 전부 같은 값을 물어 슬라이더 하나가 판형 12개를 함께 움직입니다(실측된 사고). `set`은 `useCallback`으로 안정화해 소비자가 effect 의존에 넣을 수 있게 합니다.
 
 Block은 특정 자식을 배치에서 걷어내 **다른 자리에 렌더**할 수 있습니다 — 컨트롤 패널이 배치 셀을 차지하면 안 되기 때문입니다(`splitControls`). 지금 그 자리는 화면 하단의 **Floating Controller**입니다(§4.1).
 
-### 4.1 컨트롤은 하단 Floating Controller에 뜹니다
+### 4.1 컨트롤은 매니페스트가 정하고 하단 Floating Controller에 뜹니다
 
-컨트롤 위젯은 **자기 위치를 모릅니다.** 알약의 내용물만 그리고, 어디에 뜰지는 `components/globals/guideline-helper.tsx`가 정합니다. Block이 `GuidelineHelperRegion`으로 배치 면을 감싸면, 그 면이 화면에 걸려 있는 동안에만 컨트롤이 하단 알약으로 올라갑니다.
+🔴 **컨트롤을 그리는 위젯을 만들지 마십시오.** 위젯은 `manifest.ts`로 **무엇을 조절할 수 있는지만 선언**하고, 그것을 화면에 그리는 일은 도메인 무지 렌더러가 합니다. 스튜디오와 같은 3단입니다.
 
-| 누가 | 무엇을 |
-| --- | --- |
-| `GuidelineHelperProvider` | 관측(IntersectionObserver)과 "누가 활성인가". 🔴 **값은 갖지 않습니다** |
-| `GuidelineHelperRegion` | 블록이 선언하는 **관측 영역** = 조작 대상이 놓인 면(제목·본문 아님) |
-| `GuidelineHelperSlot` | 알약이 앉는 sticky 자리. 목차와 같은 `absolute inset-0` + sticky 방식 |
-| 컨트롤 위젯 | 알약의 내용물. 값 스코프는 **여전히 블록** |
+```
+manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
+어떤 컨트롤이 있나      지금 값이 뭔가                 kind만 보고 프리미티브를 고름
+범위·초기값·단위        onChange(controlId, value)
+```
+
+**세 방향이 서로를 모릅니다.** 블록 렌더러는 어떤 위젯이 컨트롤러인지 모르고(레지스트리에 물어봅니다), 컨트롤러 기계는 `marginPct`가 마진인지 모르며, 위젯은 컨트롤러 기계를 부르지 않습니다.
+
+| 누가 | 무엇을 | 🔴 모르는 것 |
+| --- | --- | --- |
+| `widgets/<name>/manifest.ts` | 이 블록이 여는 컨트롤 계약 | 화면 어디에 그려지는지 |
+| `controllers/registry.ts` | `blockType` → 매니페스트 + admin 값→제한 변환 | — (양쪽을 아는 **유일한** 자리) |
+| `controllers/provider.tsx` | 블록 단위 값 스코프 | 값의 뜻 |
+| `controllers/pill.tsx` | 그룹을 구분선으로 가른 한 줄 배치 | 도메인 |
+| `GuidelineHelperProvider` | 관측(IntersectionObserver)과 "누가 활성인가" | **값** |
+| `GuidelineHelperRegion` | 블록이 선언하는 **관측 영역** = 조작 대상이 놓인 면(제목·본문 아님) | 컨트롤이 무엇인지 |
+| `GuidelineHelperSlot` | 알약이 앉는 sticky 자리. 목차와 같은 `absolute inset-0` + sticky 방식 | 무엇이 들어오는지 |
+
+#### 타입 계약은 새로 만들지 않고 받아씁니다
+
+`ControllerControlDefinition`(`modules/studio-controller/controller-definition.ts`)이 `kind`·`min`·`max`·`step`·`defaultValue`·`display.unit`을 이미 갖고, `ControllerControlRenderer`가 그것을 그립니다. 🔴 **여기서 같은 어휘를 다시 정의하면 스튜디오와 가이드라인의 컨트롤이 조용히 갈라집니다.**
+
+#### admin은 **좁히기만** 합니다 (2단)
+
+매니페스트가 정본 범위이고, admin 위젯의 값은 `ControllerControlRestriction`으로 접혀 그 범위를 좁힙니다 — 값이 있으면 `defaultValue`를 덮고, 조절 불허는 `readonly`가 됩니다. `applyControllerRestrictions`가 **넓히려 들면 던지므로**, admin이 브랜드 규정 밖 값을 심을 수 없습니다(`controllers/registry.test.ts`가 지킵니다).
+
+🔴 알약은 `readonly` 컨트롤을 **싣지 않습니다.** 떠 있는 바에 못 만지는 줄이 끼면 폭만 먹고, 고정된 값은 그림 자체가 보여줍니다. 값은 그대로 남으므로 판형은 고정값으로 그려집니다.
+
+🔴 Payload checkbox의 **미설정(`undefined`)과 `false`를 가르십시오.** 저장 전 checkbox는 `undefined`로 오고 그때의 기본은 **허용**입니다. `?? true`로 접지 않으면 새 블록의 컨트롤이 전부 잠깁니다.
 
 🔴 **바에 값을 올리지 마십시오.** 화면에 바는 하나뿐이라, 바가 값을 중계하는 순간 블록마다 다른 값이 하나로 합쳐져 슬라이더 하나가 여러 블록의 판형을 함께 움직입니다(2026-08-04에 12개가 함께 움직인 사고와 같은 형태). 컨트롤은 자기 블록의 React 트리 안에서 렌더되고 **DOM만** portal로 내려갑니다 — context는 트리를 따라가므로 스코프가 유지됩니다.
 

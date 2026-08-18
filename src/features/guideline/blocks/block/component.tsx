@@ -1,7 +1,10 @@
-import { Fragment, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 import { GuidelineHelperRegion } from '@/features/guideline/components/globals/guideline-helper'
+import { GuidelineControllerPill } from '@/features/guideline/controllers/pill'
+import { GuidelineControllerScope } from '@/features/guideline/controllers/provider'
+import { controllerEntryFor } from '@/features/guideline/controllers/registry'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
@@ -9,8 +12,6 @@ import { HAIRLINE_GRID } from '@/features/guideline/widgets/hairline'
 import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
-import { LayoutGridScope } from '@/features/guideline/widgets/layout-grid/store'
-import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
 import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
@@ -88,21 +89,6 @@ function renderWidget(child: Child): ReactNode {
 					lockMargin={child.lockMargin}
 					lockGutterX={child.lockGutterX}
 					lockGutterY={child.lockGutterY}
-				/>
-			)
-		case 'layoutGridControlsWidget':
-			// 같은 페이지의 layoutGridWidget 전부를 통제하는 단일 패널(모듈 스토어 공유).
-			// 조절 허용 여부가 페이지별 템플릿을 만든다 — 불허한 값은 admin 값으로 고정된다.
-			return (
-				<LayoutGridControlsWidget
-					marginPct={child.marginPct}
-					marginAdjustable={child.marginAdjustable}
-					gutterX={child.gutterX}
-					gutterXAdjustable={child.gutterXAdjustable}
-					gutterY={child.gutterY}
-					gutterYAdjustable={child.gutterYAdjustable}
-					guidesOn={child.guidesOn}
-					guidesAdjustable={child.guidesAdjustable}
 				/>
 			)
 		case 'layoutGridOverlayWidget':
@@ -292,24 +278,33 @@ function surfaceScopeClass(hex: string | undefined): string | undefined {
 	return `${isLightColor(hex) ? 'light' : 'dark'} text-foreground`
 }
 
-// 레이아웃 그리드 컨트롤 패널은 배치 영역이 아니라 **화면 하단의 Floating Controller**에 온다
+// 컨트롤은 배치 영역이 아니라 **화면 하단의 Floating Controller**에 온다
 // (components/globals/guideline-helper.tsx). 배치 셀 안에 두면 셀 하나를 차지하고 판형과 같은
 // 어두운 면에 얹혀 읽기 어려우며, 스크롤을 내리면 조작 대상만 남고 손잡이가 화면 밖으로 나간다.
+//
+// 🔑 **이 렌더러는 어떤 위젯이 컨트롤러인지 모른다.** 레지스트리에 물어볼 뿐이다
+// (`controllers/registry.ts`). 그래서 컨트롤러를 여는 위젯이 늘어도 여기는 안 바뀐다.
+//
 // 값 스코프는 **블록 단위**다: 모듈 스토어로 두면 섹션 라우트가 여러 Page를 한 화면에 렌더할 때
-// 페이지마다 놓인 패널이 서로 간섭한다. 그래서 패널과 배치를 한 provider로 함께 감싼다 —
+// 페이지마다 놓인 컨트롤이 서로 간섭한다. 그래서 컨트롤과 배치를 한 provider로 함께 감싼다 —
 // 하단 바로 가는 것은 DOM뿐이고 React 트리는 이 provider 안에 남는다.
 function splitControls(children: NonNullable<LayoutBlockType['children']>) {
-	const controls = children.filter((child) => child.blockType === 'layoutGridControlsWidget')
-	const arranged = children.filter((child) => child.blockType !== 'layoutGridControlsWidget')
-	const needsScope =
-		controls.length > 0 || arranged.some((c) => c.blockType === 'layoutGridWidget')
-	return { controls, arranged, needsScope }
+	const source = children.find((child) => controllerEntryFor(child.blockType))
+	const entry = source ? controllerEntryFor(source.blockType) : undefined
+	const arranged = children.filter((child) => !controllerEntryFor(child.blockType))
+	// 자식이 컨트롤러를 열지 않으면 매니페스트도 제한도 없다.
+	const controller =
+		source && entry
+			? // 위젯 필드를 이름 가방으로 넘긴다 — 필드 이름을 아는 것은 레지스트리 하나뿐이다.
+				{ manifest: entry.manifest, restrictions: entry.toRestrictions({ ...source }) }
+			: null
+	return { controller, arranged }
 }
 
 export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 	const outerBg = bgHex(block.background)
 	const innerBg = bgHex(block.innerBackground)
-	const { controls, arranged, needsScope } = splitControls(block.children ?? [])
+	const { controller, arranged } = splitControls(block.children ?? [])
 
 	const arrangedSurface = (
 		<div
@@ -328,19 +323,18 @@ export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 
 	// 관측 영역은 **판형이 놓인 면**이다 — 제목·설명이 아니다. 조작 대상이 화면에서 사라지면
 	// 컨트롤도 함께 물러나야 슬라이더를 움직였는데 아무 변화가 없는 상태가 생기지 않는다.
-	const body =
-		controls.length > 0 ? (
-			<GuidelineHelperRegion
-				label={block.title}
-				controls={controls.map((child) => (
-					<Fragment key={child.id}>{renderWidget(child)}</Fragment>
-				))}
-			>
+	const body = controller ? (
+		<GuidelineControllerScope
+			manifest={controller.manifest}
+			restrictions={controller.restrictions}
+		>
+			<GuidelineHelperRegion label={block.title} controls={<GuidelineControllerPill />}>
 				{arrangedSurface}
 			</GuidelineHelperRegion>
-		) : (
-			arrangedSurface
-		)
+		</GuidelineControllerScope>
+	) : (
+		arrangedSurface
+	)
 
 	return (
 		<GuidelineBlockFrame
@@ -352,7 +346,7 @@ export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 			{block.description ? (
 				<GuidelineDescription variant="block" description={block.description} />
 			) : null}
-			{needsScope ? <LayoutGridScope>{body}</LayoutGridScope> : body}
+			{body}
 		</GuidelineBlockFrame>
 	)
 }
