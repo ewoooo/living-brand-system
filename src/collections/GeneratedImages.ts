@@ -102,6 +102,16 @@ export const GeneratedImages: CollectionConfig = {
 				description: '생성 요청 당시 인증된 사용자 ID입니다.',
 			},
 		},
+		{
+			name: 'sourceImage',
+			type: 'relationship',
+			relationTo: 'generated-images',
+			access: { read: managerFieldRead },
+			admin: {
+				position: 'sidebar',
+				description: '이 이미지를 만들 때 참조한 원본 생성 이미지입니다.',
+			},
+		},
 	],
 	upload: {
 		mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],

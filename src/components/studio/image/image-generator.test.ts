@@ -14,39 +14,47 @@ const browseMocks = vi.hoisted(() => ({
 }))
 vi.mock('@/features/image-generation/services/list-image-studio-configs.client', () => browseMocks)
 
-const RESULT = {
-	aspectRatio: '2:3' as const,
-	generatedImages: [
+const SESSION = {
+	images: [
 		{
-			collection: 'generated-images' as const,
-			createdAt: '2026-08-10T03:00:00.000Z',
-			id: 8,
-			url: '/api/generated-images/file/generated.png',
+			src: '/api/generated-images/file/generated.png',
+			generatedImageId: 8,
+			profileId: 5,
 		},
 	],
-	images: ['/api/generated-images/file/generated.png'],
-	imageSize: '1K' as const,
-	model: 'gpt-image-2',
-	profileId: 5,
-	prompt: '{"subject":"드론"}',
+	reference: null,
+	output: { aspectRatio: '2:3' as const, imageSize: '1K' as const },
+}
+
+// 카메라를 한 번 돌린 뒤의 세션 — 참조 8을 물고 조정본 9를 낳았다.
+// output 비율은 프로파일 기본값(2:3)과 일부러 다르다 — 재생성이 컨트롤 값이 아니라
+// 참조가 만들어진 비율을 넘기는지 구분하려면 두 값이 갈려 있어야 한다.
+const ADJUSTED_SESSION = {
+	images: [
+		{
+			src: '/api/generated-images/file/adjusted.png',
+			generatedImageId: 9,
+			profileId: 5,
+		},
+	],
+	reference: SESSION.images[0],
+	output: { aspectRatio: '16:9' as const, imageSize: '1K' as const },
 }
 
 const mocks = vi.hoisted(() => ({
-	adjustCamera: vi.fn(),
 	generate: vi.fn(),
-	// 결과·선택은 테스트마다 갈아끼운다 — 카메라 잠금이 선택에서 파생되기 때문이다.
-	session: { result: null as unknown, selected: null as number | null },
+	// 세션·선택은 테스트마다 갈아끼운다 — 카메라 잠금이 선택에서 파생되기 때문이다.
+	state: { session: null as unknown, selected: null as number | null },
 }))
 
 vi.mock('@/features/image-generation/hooks/use-image-generation', () => ({
 	useImageGeneration: () => ({
-		adjustCamera: mocks.adjustCamera,
 		error: null,
 		generate: mocks.generate,
 		loading: false,
 		requested: 0,
-		result: mocks.session.result,
-		selected: mocks.session.selected,
+		selected: mocks.state.selected,
+		session: mocks.state.session,
 		setSelected: vi.fn(),
 	}),
 }))
@@ -109,7 +117,7 @@ function config(
 describe('ImageGenerator', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		mocks.session = { result: null, selected: null }
+		mocks.state = { session: null, selected: null }
 	})
 	afterEach(cleanup)
 
@@ -230,15 +238,40 @@ describe('ImageGenerator', () => {
 		expect(screen.getByRole('button', { name: 'Camera Controls' })).toBeDisabled()
 		expect(screen.queryByRole('combobox', { name: 'X' })).not.toBeInTheDocument()
 
-		mocks.session = { result: RESULT, selected: 0 }
+		mocks.state = { session: SESSION, selected: 0 }
 		view.rerender(createElement(ImageGenerator, { config: config(5, '제품컷') }))
 
 		expect(screen.getByRole('button', { name: 'Camera Controls' })).toBeEnabled()
 		expect(screen.getByRole('combobox', { name: 'X' })).toBeInTheDocument()
 	})
 
+	// 참조 고정: 조정본을 골라 둔 채 다시 돌려도 시드는 언제나 최초 원본이다(세대 누적 열화 방지).
+	it('카메라 재생성은 선택한 조정본이 아니라 고정된 참조를 통합 라우트로 보낸다', () => {
+		mocks.state = { session: ADJUSTED_SESSION, selected: 1 }
+		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
+
+		// 메인 생성 버튼과 카메라 재생성 버튼이 같은 이름을 쓴다 — 뒤엣것이 카메라다.
+		const buttons = screen.getAllByRole('button', { name: '이미지 생성' })
+		fireEvent.click(buttons[buttons.length - 1] as HTMLElement)
+
+		expect(mocks.generate).toHaveBeenCalledWith(
+			{
+				// 프로파일 기본값 2:3이 아니라 참조가 만들어진 16:9 — 조정본이 다른 비율로
+				// 돌아오면 그리드에서 참조 카드가 잘린다.
+				aspectRatio: '16:9',
+				camera: { azimuthDeg: 0, elevationDeg: 0 },
+				count: 1,
+				imageSize: '1K',
+				profileId: 5,
+				prompt: '',
+				reference: { generatedImageId: 8 },
+			},
+			ADJUSTED_SESSION.reference,
+		)
+	})
+
 	it('시점 조정을 지원하지 않는 프로파일은 Camera Controls를 그리지 않는다', () => {
-		mocks.session = { result: RESULT, selected: 0 }
+		mocks.state = { session: SESSION, selected: 0 }
 		render(
 			createElement(ImageGenerator, {
 				config: config(5, '평면 그래픽', { cameraControl: false }),
@@ -259,7 +292,7 @@ describe('ImageGenerator', () => {
 describe('ImageProfilePicker', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		mocks.session = { result: null, selected: null }
+		mocks.state = { session: null, selected: null }
 	})
 	afterEach(cleanup)
 

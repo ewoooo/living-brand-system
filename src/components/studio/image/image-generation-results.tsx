@@ -2,12 +2,12 @@
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { Typography } from '@/components/ui/typography'
+import type { ImageResultImage } from '@/features/image-generation/contexts/image-studio-context'
 import type { ImageAspectRatio } from '@/features/image-generation/image-size'
 import {
 	type ImageColorAdjustment,
 	imageColorizeStyle,
 } from '@/features/image-generation/runtime/image-colorize'
-import type { ImageGenerationResult } from '@/features/image-generation/services/generate-image.client'
 import { cn } from '@/lib/utils'
 
 const SKELETON_KEYS = ['s0', 's1', 's2', 's3', 's4', 's5']
@@ -16,23 +16,27 @@ type ImageGenerationResultsProps = {
 	aspectRatio: ImageAspectRatio
 	/** 색 조정 값 — 있으면 결과 전부에 얹는다(한 장만 물들이지 않는다). null이면 원본만 보인다. */
 	color: ImageColorAdjustment | null
+	/** 그리드가 그리는 순서 그대로 — 참조가 있으면 referenceIndex 자리가 참조다. */
+	items: readonly ImageResultImage[]
 	loading: boolean
 	onSelect: (index: number) => void
+	referenceIndex: number | null
 	requested: number
-	result: ImageGenerationResult | null
 	selected: number | null
 }
 
 export function ImageGenerationResults({
 	aspectRatio,
 	color,
+	items,
 	loading,
 	onSelect,
+	referenceIndex,
 	requested,
-	result,
 	selected,
 }: ImageGenerationResultsProps) {
-	const images = result?.images ?? []
+	// 참조는 이번 요청이 만든 장수에 들어가지 않는다 — 안내는 결과만 센다.
+	const generatedCount = items.length - (referenceIndex === null ? 0 : 1)
 
 	return (
 		<div
@@ -43,7 +47,7 @@ export function ImageGenerationResults({
 		>
 			{loading && <ImageGenerationSkeleton aspectRatio={aspectRatio} count={requested} />}
 
-			{!loading && images.length > 0 && result && (
+			{!loading && items.length > 0 && (
 				<div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
 					{/* 선택은 컨트롤러의 카메라 섹션과 저장 CTA를 여는 입력이다 — 그래서 안내가 남는다. */}
 					{selected === null && (
@@ -52,36 +56,45 @@ export function ImageGenerationResults({
 						</Typography>
 					)}
 
-					{images.length < requested && (
+					{generatedCount < requested && (
 						<Typography size="sm" tone="muted">
-							요청 {requested}장 중 {images.length}장 생성됨 (일부는 무료 서버
+							요청 {requested}장 중 {generatedCount}장 생성됨 (일부는 무료 서버
 							지연으로 실패)
 						</Typography>
 					)}
 
 					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-						{images.map((src, index) => (
-							<div key={src} className="flex flex-col gap-1">
-								<button
-									type="button"
-									onClick={() => onSelect(index)}
-									aria-pressed={selected === index}
-									className={cn(
-										'overflow-hidden rounded-md border-2 transition-colors',
-										selected === index
-											? 'border-primary'
-											: 'border-border hover:border-ring',
-									)}
-								>
-									<ResultImage
-										aspectRatio={result.aspectRatio}
-										color={color}
-										label={`생성 결과 ${index + 1}`}
-										src={src}
-									/>
-								</button>
-							</div>
-						))}
+						{items.map((item, index) => {
+							const isReference = index === referenceIndex
+							const label = isReference
+								? '참조 원본'
+								: `생성 결과 ${index - (referenceIndex === null ? -1 : 0)}`
+
+							return (
+								<div key={item.src} className="flex flex-col gap-1">
+									<button
+										type="button"
+										onClick={() => onSelect(index)}
+										aria-pressed={selected === index}
+										className={cn(
+											'overflow-hidden rounded-md border-2 transition-colors',
+											selected === index
+												? 'border-primary'
+												: isReference
+													? 'border-foreground'
+													: 'border-border hover:border-ring',
+										)}
+									>
+										<ResultImage
+											aspectRatio={aspectRatio}
+											color={color}
+											label={label}
+											src={item.src}
+										/>
+									</button>
+								</div>
+							)
+						})}
 					</div>
 				</div>
 			)}
