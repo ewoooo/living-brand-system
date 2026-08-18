@@ -2,6 +2,7 @@ import type { Field } from 'payload'
 import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
 import { PRINT_PPI_OPTIONS } from '@/features/studio-export/print-policy'
 import type { StudioRuntimeManifest } from '@/modules/studio-controller/controller-definition'
+import { STUDIO_VIDEO_FPS_OPTIONS } from '@/modules/studio-artifact/studio-artifact'
 
 type StudioAdminRuntimeSource = 'graphic' | 'image' | 'template'
 type StudioAdminBaseConfig = StudioRuntimeManifest & { id: string }
@@ -123,10 +124,7 @@ export function studioExportPolicyField({
 									clientProps: {
 										baseConfigs,
 										kind: 'video',
-										options: [24, 30, 60].map((value) => ({
-											label: `${value}fps`,
-											value,
-										})),
+										options: [...STUDIO_VIDEO_FPS_OPTIONS],
 										source,
 									},
 								},

@@ -1,3 +1,5 @@
+import type { StudioVideoFrameRate } from '@/modules/studio-artifact/studio-artifact'
+
 export const STUDIO_OUTPUT_FORMATS = ['png', 'jpeg', 'tiff', 'pdf', 'svg', 'mp4'] as const
 
 export type StudioOutputFormat = (typeof STUDIO_OUTPUT_FORMATS)[number]
@@ -25,7 +27,7 @@ export type VideoExportSpec = {
 	container: 'mp4'
 	codec: 'h264'
 	durationSeconds: number
-	fps: 24 | 30 | 60
+	fps: StudioVideoFrameRate
 	width: number
 	height: number
 	colorSpace: 'rec709'
