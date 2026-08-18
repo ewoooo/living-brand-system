@@ -11,7 +11,7 @@ import {
 import * as m from 'motion/react-m'
 import { type KeyboardEvent, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
-import { clampControllerValue, useControllerPointerDrag } from './pointer-drag'
+import { clampControllerValue, snapControllerValue, useControllerPointerDrag } from './pointer-drag'
 
 type ControllerRangeProps = {
 	label: string
@@ -54,8 +54,7 @@ export function ControllerRange({
 	)
 	const slideRef = useRef<ReturnType<typeof animate> | null>(null)
 
-	const snap = (raw: number) =>
-		clampControllerValue(min + Math.round((raw - min) / step) * step, min, max)
+	const snap = (raw: number) => snapControllerValue(raw, min, max, step)
 	const ratioOf = (next: number) =>
 		span > 0 ? clampControllerValue((next - min) / span, 0, 1) : 0
 
@@ -101,7 +100,8 @@ export function ControllerRange({
 					: 0
 		if (!direction) return
 		event.preventDefault()
-		onChange(clampControllerValue(value + direction * step, min, max))
+		// 드래그·클릭과 같은 격자에 얹는다 — 화살표만 다른 경로를 타면 눌러서 만든 값과 밀어서 만든 값이 갈린다.
+		onChange(snap(value + direction * step))
 	}
 
 	return (
