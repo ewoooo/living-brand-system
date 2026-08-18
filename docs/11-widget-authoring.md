@@ -143,7 +143,7 @@ cap height 가정 | 큰 글자 아래가 잘림 | 둥근 대문자는 베이스�
 
 | 어휘 | 규칙 |
 | --- | --- |
-| **전환 컨트롤** | 앱 프리미티브를 씁니다 — 설정 on/off는 `Switch`, 2~5개 선택은 `ToggleGroup`, 연속값은 `Slider`.<br>🔴 **예외: 하단 Floating Controller 안(§4.1)에서는 on/off도 `ToggleGroup`(`spacing={0}`)입니다.** 알약은 폭이 좁고 라벨이 한 번만 쓰이는 자리라 `Switch`의 "무엇이 켜졌나"를 글로 다시 적을 여백이 없습니다 — 세그먼트는 두 상태를 라벨로 직접 보여줍니다(Figma HD_LBS_UI 61:4693). 알약 밖에서는 이 예외가 적용되지 않습니다. 🔴 `Tabs`는 **패널 내비게이션일 때만**입니다. 같은 판을 다르게 그리는 설정 전환은 Tabs가 아닙니다.<br>하나 고르기는 `type="single"`(Radix가 `radiogroup`/`radio`로 렌더), 여러 개 고르기는 `type="multiple"`입니다.<br>**모양도 그 구분을 따릅니다** — 하나 고르기는 `spacing={0}`으로 **붙은 한 덩어리**(바깥 두 끝만 둥글고 안쪽 이음새는 각짐), 여러 개 고르는 필터는 **낱개로 띄웁니다**. 같은 판을 전환하는 것과 조건을 켜고 끄는 것은 다른 일이고, 그 차이가 눈에 보여야 합니다 |
+| **전환 컨트롤** | 앱 프리미티브를 씁니다 — 설정 on/off는 `Switch`, 2~5개 선택은 `ToggleGroup`, 연속값은 `Slider`.<br>🔴 **예외: 하단 Floating Controller 안(§4.1)에서는 Controller 킷이 이깁니다** — 연속값은 `ControllerRange`, on/off는 `ControllerSegmented`입니다. 알약은 폭이 좁고 라벨이 한 번만 쓰이는 자리라 `Switch`의 "무엇이 켜졌나"를 글로 다시 적을 여백이 없고, 세그먼트는 두 상태를 라벨로 직접 보여줍니다(Figma HD_LBS_UI 61:4693). 알약 밖에서는 앱 프리미티브가 그대로입니다. 🔴 `Tabs`는 **패널 내비게이션일 때만**입니다. 같은 판을 다르게 그리는 설정 전환은 Tabs가 아닙니다.<br>하나 고르기는 `type="single"`(Radix가 `radiogroup`/`radio`로 렌더), 여러 개 고르기는 `type="multiple"`입니다.<br>**모양도 그 구분을 따릅니다** — 하나 고르기는 `spacing={0}`으로 **붙은 한 덩어리**(바깥 두 끝만 둥글고 안쪽 이음새는 각짐), 여러 개 고르는 필터는 **낱개로 띄웁니다**. 같은 판을 전환하는 것과 조건을 켜고 끄는 것은 다른 일이고, 그 차이가 눈에 보여야 합니다 |
 | **컨트롤의 이름** | 🔴 `Slider`의 이름·값 서술은 `aria-label`/`aria-labelledby`/`aria-valuetext`로 줍니다. `role="slider"`는 Root가 아니라 **손잡이**에 붙으므로 `<label>`로 감싸도 이어지지 않습니다(`Switch`도 같아서 `htmlFor`를 씁니다). 순번이 아니라 뜻이 읽혀야 하면 `aria-valuetext`로 덮습니다(예: `0·1·2` 대신 `Bold 700`) |
 | **스펙 판독** | 수치를 읽어주는 줄. `font-mono` + `tabular-nums` + `text-xs` + `text-muted-foreground`. 규정이 범위인데 화면이 한 값을 그리면 **적용값을 함께 적습니다**(`행간 150–160% · 150% 적용`) |
 | **캡션** | `font-body text-muted-foreground text-xs`. 상하 여백은 부모 스택의 `gap`이 소유하고 캡션이 자기 마진을 갖지 않습니다 |
@@ -165,10 +165,20 @@ cap height 가정 | 큰 글자 아래가 잘림 | 둥근 대문자는 베이스�
 
 캡션·수치처럼 판 **밖**에 있는 줄은 블록 면 위에 오므로 자기 색을 고르지 않습니다. 그 면의 스코프를 블록이 선언하고, 위젯은 공유 어휘(`WIDGET_CAPTION` 등)만 씁니다.
 
-### Studio Controller 킷과의 관계
+### Studio Controller 킷을 씁니다
 
-`src/components/studio/shared/controller/`에 도메인 무지 컨트롤 킷이 있습니다(`docs/10` §3.6). 어휘가 겹치지만 **위젯은 이 킷을 import하지 않습니다** — 판형 전제가 사이드바 패널이고, 소유가 Studio 표면이라 위젯이 그쪽 변경에 묶입니다.
+`src/components/studio/shared/controller/`의 도메인 무지 컨트롤 킷(`docs/10` §3.6)을 **위젯도 그대로 import합니다.** 하단 Floating Controller(§4.1)에 놓이는 컨트롤은 킷의 프리미티브가 그립니다.
 
-그 킷은 Studio의 기능 개발을 위해 특수하게 만들어진 것이라, 재사용하면 **그쪽을 고칠 때마다 위젯이 함께 흔들립니다.**
+| Figma 부품 | 킷 |
+| --- | --- |
+| `Value Range` | `ControllerRange` |
+| `Toggle`의 라벨 + 판 | `ControllerRow` |
+| `Toggle Group` | `ControllerSegmented` |
 
-🔴 **합칠 방향은 반대입니다.** 위젯 쪽에서 시각 어휘를 먼저 세우고, Studio의 기능 개발이 끝난 뒤 그쪽이 이 어휘로 옮겨옵니다(2026-08-12 결정). 그때까지는 **상태 어휘만 맞춰** 두 표면이 나중에 만날 수 있게 합니다(`ControllerAvailability`의 `enabled`/`readonly`/`disabled` 구분 등).
+🔴 **여기서 같은 것을 다시 만들지 마십시오.** Figma에서 가이드라인의 `Helper`와 스튜디오의 `Controller API`(4:5578)는 부품 이름이 같은 **한 계열**입니다 — 코드에서 갈라 두면 한쪽만 고쳐지고 한 화면 안에서 표기가 갈립니다. 2026-08-18에 실제로 `ControllerRange`와 거의 같은 것을 위젯 쪽에 새로 만들었다가 되돌렸습니다(그쪽에만 있던 것: 드래그 중 `scaleX` 채움, 클릭 시 스프링 이동, 조작 중에만 나타나는 핸들, `useReducedMotion`).
+
+**2026-08-12의 반대 방향 결정은 폐기했습니다.** 그 근거는 "킷의 판형 전제가 사이드바 패널"이었는데, 지금은 두 표면 모두 하단에 떠 있는 바라 전제가 성립하지 않습니다.
+
+킷이 Studio 폴더에 있는 동안에는 **그쪽 변경이 위젯에 닿습니다.** 공용 자리로 옮기는 것은 별도 작업이고, 그때까지 킷을 고칠 때는 두 소비자를 함께 봅니다.
+
+킷에 없는 것만 앱 프리미티브에서 가져옵니다(구분선은 `components/ui/separator`).
