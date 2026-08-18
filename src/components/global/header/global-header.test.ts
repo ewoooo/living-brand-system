@@ -44,7 +44,7 @@ function renderHeader(updates?: NavigationHeaderUpdates) {
 
 describe('GlobalHeader', () => {
 	beforeEach(() => {
-		pathname = '/studio/generate/graphic'
+		pathname = '/studio/graphic'
 		push.mockReset()
 		localStorage.clear()
 		vi.stubGlobal(
@@ -62,9 +62,9 @@ describe('GlobalHeader', () => {
 	it('메가 메뉴 없이 직접 링크와 current·update 상태를 표시한다', () => {
 		renderHeader({ guideline: true, image: true })
 
-		expect(document.querySelector('[data-slot="navigation-header"]')).toHaveClass(
-			'bg-header-background',
-		)
+		const header = document.querySelector('[data-slot="navigation-header"]')
+		expect(header).toHaveClass('bg-header-background')
+		expect(header).not.toHaveClass('border-b', 'border-border')
 		const desktop = document.querySelector<HTMLElement>(
 			'[data-slot="navigation-header-desktop"]',
 		)
@@ -83,20 +83,20 @@ describe('GlobalHeader', () => {
 			'href',
 			'/studio/template',
 		)
-		expect(links.getByRole('link', { name: /Image/ })).toHaveAttribute(
-			'href',
-			'/studio/generate/image',
-		)
+		expect(links.getByRole('link', { name: /Image/ })).toHaveAttribute('href', '/studio/image')
 		expect(links.getByRole('link', { name: 'Graphic' })).toHaveAttribute(
 			'href',
-			'/studio/generate/graphic',
+			'/studio/graphic',
 		)
 		expect(links.getByRole('link', { name: 'MCP' })).toHaveAttribute('href', '/studio/mcp')
 		expect(links.getByRole('link', { name: 'Review' })).toHaveAttribute(
 			'href',
 			'/studio/review',
 		)
-		expect(links.getByRole('link', { name: 'Assets' })).toHaveAttribute('href', '/studio')
+		expect(links.getByRole('link', { name: 'Assets' })).toHaveAttribute(
+			'href',
+			'/studio/assets',
+		)
 		expect(links.getByRole('link', { name: 'Graphic' })).toHaveAttribute('aria-current', 'page')
 		expect(
 			within(links.getByRole('link', { name: /Guideline/ })).getByText('Update'),
@@ -104,6 +104,15 @@ describe('GlobalHeader', () => {
 		expect(within(links.getByRole('link', { name: /Image/ })).getByText('Update')).toBeVisible()
 		expect(screen.queryByRole('button', { name: 'Studio' })).not.toBeInTheDocument()
 		expect(screen.queryByRole('button', { name: '메뉴 닫기' })).not.toBeInTheDocument()
+	})
+
+	it('데스크톱 세퍼레이터에 Figma 규격의 높이를 준다', () => {
+		renderHeader()
+
+		const separator = document.querySelector<HTMLElement>(
+			'[data-slot="navigation-header-separator"] [data-slot="separator"]',
+		)
+		expect(separator).toHaveClass('h-full')
 	})
 
 	it('검색과 Chat의 열린 상태를 각 트리거에 반영한다', () => {
@@ -128,8 +137,8 @@ describe('GlobalHeader', () => {
 		expect(chatTrigger).toHaveAttribute('aria-expanded', 'true')
 	})
 
-	it('Studio 루트에서는 Assets만 current로 표시한다', () => {
-		pathname = '/studio'
+	it('Assets 경로에서는 Assets만 current로 표시한다', () => {
+		pathname = '/studio/assets'
 		renderHeader()
 
 		const desktop = document.querySelector<HTMLElement>(

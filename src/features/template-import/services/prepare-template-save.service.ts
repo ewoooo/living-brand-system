@@ -10,7 +10,7 @@ import {
 	parseTemplateNodeConfigs,
 } from '@/features/template-core/domain/parse-template-node-configs'
 import { sameRef } from '@/features/template-core/domain/template-asset-policy'
-import { deriveTemplateConfig } from '@/features/template-customization/domain/template-config'
+import { deriveTemplateStudioConfig } from '@/features/template-customization/domain/template-studio-config'
 import {
 	findTemplateDraftBlocker,
 	findTemplatePublishBlocker,
@@ -21,6 +21,7 @@ interface TemplateSaveCandidate {
 	_status?: unknown
 	baseHtml?: unknown
 	controllerRestrictions?: unknown
+	controllerPresentation?: unknown
 	height?: unknown
 	html?: unknown
 	id?: unknown
@@ -80,7 +81,7 @@ export async function prepareTemplateSave({
 		typeof candidate.height === 'number'
 	) {
 		try {
-			deriveTemplateConfig({
+			deriveTemplateStudioConfig({
 				kind: 'html',
 				id: typeof candidate.id === 'number' ? candidate.id : 0,
 				name: typeof candidate.name === 'string' ? candidate.name : 'Template',
@@ -90,6 +91,7 @@ export async function prepareTemplateSave({
 				height: candidate.height,
 				templateVersion: 'draft',
 				controllerRestrictions: candidate.controllerRestrictions,
+				controllerPresentation: candidate.controllerPresentation,
 				exportPolicy: candidate.exportPolicy as never,
 			})
 		} catch (error) {

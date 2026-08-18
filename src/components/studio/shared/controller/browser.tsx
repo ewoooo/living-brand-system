@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
 import { cn } from '@/lib/utils'
+import type { StudioPreviewImage } from '@/modules/studio-controller/controller-definition'
 
 /** 패널이 뜰 좌표계이자 포털 목적지 — Root가 자기 DOM 노드를 내려주고 Panel이 그리로 옮겨 붙는다. */
 const BrowserFrameContext = React.createContext<HTMLElement | null>(null)
@@ -56,6 +57,31 @@ function ControllerBrowserClose({ ...props }: React.ComponentProps<typeof Dialog
 	return <DialogPrimitive.Close data-slot="controller-browser-close" {...props} />
 }
 
+/**
+ * 카드 위쪽의 미리보기 자리 — 이미지가 없으면 지금의 빈 표면을 그대로 유지한다.
+ * alt는 어드민이 등록한 설명을 그대로 쓴다: 미리보기는 카드 이름이 말해주지 않는 것(무엇처럼 생겼나)을
+ * 전하므로 장식이 아니다.
+ */
+function ControllerBrowserThumbnail({
+	image,
+	className,
+}: {
+	image?: StudioPreviewImage
+	className?: string
+}) {
+	return (
+		<div
+			data-slot="controller-browser-thumbnail"
+			className={cn('min-h-0 flex-1 overflow-hidden bg-background/20', className)}
+		>
+			{image && (
+				// biome-ignore lint/performance/noImgElement: 업로드 URL은 next/image 최적화 대상이 아니다
+				<img src={image.url} alt={image.alt} className="size-full object-cover" />
+			)}
+		</div>
+	)
+}
+
 type ControllerBrowserPanelProps = {
 	/** 탭 라벨 — 지금은 하나(Image Profiles)다. 전체가 패널의 접근 이름을 겸한다. */
 	tabs: readonly string[]
@@ -83,6 +109,8 @@ function ControllerBrowserPanel({ tabs, empty, className, children }: Controller
 			className={cn(
 				// 상한은 top-5만큼 줄인 남은 높이다 — 100%로 두면 컨트롤러 아래로 20px 넘친다.
 				'absolute top-5 right-0 z-20 flex h-168 max-h-[calc(100%-1.25rem)] w-150 max-w-[calc(100vw-2rem)] flex-col gap-1 overflow-hidden rounded-xl border border-inverted-foreground/5 bg-inverted/75 p-2 text-inverted-foreground shadow-lg outline-none backdrop-blur-sm lg:right-full lg:mr-4',
+				// 트리거가 있는 오른쪽에서 밀려 나온다 — 어디서 열렸는지가 방향으로 남는다.
+				'duration-150 data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-right-4 data-closed:animate-out data-closed:fade-out-0 data-closed:slide-out-to-right-4 motion-reduce:animate-none',
 				className,
 			)}
 		>
@@ -142,6 +170,7 @@ export const ControllerBrowser = {
 	Root: ControllerBrowserRoot,
 	Trigger: ControllerBrowserTrigger,
 	Panel: ControllerBrowserPanel,
+	Thumbnail: ControllerBrowserThumbnail,
 	Close: ControllerBrowserClose,
 }
 
@@ -149,5 +178,6 @@ export {
 	ControllerBrowserClose,
 	ControllerBrowserPanel,
 	ControllerBrowserRoot,
+	ControllerBrowserThumbnail,
 	ControllerBrowserTrigger,
 }

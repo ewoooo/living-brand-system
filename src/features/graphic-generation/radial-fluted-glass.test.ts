@@ -23,10 +23,14 @@ describe('radialFlutedGlass', () => {
 			RADIAL_FLUTED_GLASS_DEFAULT_INPUT.bloomColor,
 		)
 		expect(() => toRadialFlutedGlassInput({ ...values, speed: 2.01 })).toThrow()
+		expect(() => toRadialFlutedGlassInput({ ...values, sourceOffsetX: 2.01 })).toThrow()
 	})
 
 	it('Controller 화면 좌표의 Y축을 WebGL 좌표로 반전한다', () => {
 		expect(toRadialFlutedGlassShaderPoint({ x: -0.75, y: 0.5 })).toEqual([-0.75, -0.5])
+		expect(toRadialFlutedGlassShaderPoint({ x: -0.75, y: 0.5 }, { x: -0.5, y: 0.75 })).toEqual([
+			-1.25, -1.25,
+		])
 	})
 
 	it('왜곡 형태를 shader 정수 uniform으로 변환한다', () => {

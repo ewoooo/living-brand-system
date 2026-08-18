@@ -39,7 +39,6 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 | --- | --- | --- |
 | color 원시값 | `:root`(라이트), `.dark`(다크)의 원시 색 정의 | `src/app/(frontend)/theme.css`, `theme.css` |
 | color 유틸 매핑 | 원시값 → `@theme inline`의 `--color-*` 유틸 토큰 | `theme.css` |
-| header surface | NavigationHeader의 투명 배경 `--header-background` | `theme.css` |
 | inverted | 반전 표면과 그 전경의 짝 `--inverted`/`--inverted-foreground` | `theme.css` |
 | 상태색 | 판정·상태 표시 전용 `--success`/`--info`/`--warning`(실패는 기존 `--destructive`, 해당 없음은 `--muted`). Admin 확장은 같은 이름을 Payload 테마에 매핑 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
 | highlight | 강조 배경과 전경 토큰, `bg-highlight` 유틸. Frontend는 gradient, Admin은 Payload success 색에 매핑 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |

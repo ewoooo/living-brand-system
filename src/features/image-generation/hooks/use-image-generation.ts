@@ -33,10 +33,13 @@ export function useImageGeneration() {
 			setRequested(count)
 
 			try {
-				setResult(await request())
+				const next = await request()
+				setResult(next)
+				// 결과가 오면 첫 장을 고른다 — 선택이 비어 있으면 최하단 저장 CTA가 켜지지 않는다.
+				setSelected(next.images.length > 0 ? 0 : null)
 			} catch (requestError) {
 				console.error(requestError)
-				setError(errorMessage)
+				setError(requestError instanceof Error ? requestError.message : errorMessage)
 			} finally {
 				setLoading(false)
 			}

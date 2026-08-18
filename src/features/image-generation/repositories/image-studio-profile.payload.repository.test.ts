@@ -24,16 +24,18 @@ describe('listPublishedImageProfileDefinitions', () => {
 
 		expect(find).toHaveBeenCalledWith({
 			collection: 'image-profiles',
-			depth: 0,
+			depth: 1,
 			draft: false,
 			limit: 100,
 			overrideAccess: true,
 			select: {
+				controllerPresentation: true,
 				controllerRestrictions: true,
 				features: true,
 				imageModelPreset: true,
 				name: true,
 				exportPolicy: true,
+				previewImage: true,
 				slug: true,
 			},
 			sort: 'displayOrder',

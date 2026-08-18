@@ -2,6 +2,7 @@
 
 import { createContext } from 'react'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import type { LazyResource } from '@/hooks/use-lazy-resource'
 import type {
 	ControllerControlValue,
 	ControllerRuntimeBindings,
@@ -10,7 +11,8 @@ import type {
 
 export type GraphicStudioValue = {
 	profiles: {
-		options: readonly GraphicStudioConfig[]
+		/** 교체 후보 — 자산 브라우저가 열릴 때 가져온다. 열기 전에는 data가 null이다. */
+		browse: LazyResource<readonly GraphicStudioConfig[]>
 		select: (profileId: string) => void
 	}
 	config: GraphicStudioConfig

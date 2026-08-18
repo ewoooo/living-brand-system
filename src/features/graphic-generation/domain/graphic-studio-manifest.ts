@@ -12,6 +12,8 @@ import {
 import {
 	applyControllerRestrictions,
 	projectPayloadControllerRestrictions,
+	resolveControllerPresentation,
+	toStudioPreviewImage,
 } from '@/modules/studio-controller/controller-definition'
 import type { PublishedGraphicProfileDefinition } from './graphic-studio-config'
 
@@ -44,13 +46,19 @@ export function deriveGraphicStudioConfig(
 	const manifest = getGraphicRuntimeManifest(profile.runtime)
 	if (!manifest) throw new Error(`등록되지 않은 Graphic runtime입니다: ${profile.runtime}`)
 	const restrictions = projectPayloadControllerRestrictions(profile.controllerRestrictions)
+	const groups = applyControllerRestrictions(manifest.controller.groups, restrictions)
 	const config: GraphicStudioConfig = {
 		...manifest,
 		name: profile.name,
 		output: resolveGraphicStudioOutput(manifest, profile.exportPolicy),
 		controller: {
-			groups: applyControllerRestrictions(manifest.controller.groups, restrictions),
+			groups,
 		},
+		controllerPresentation: resolveControllerPresentation(
+			groups,
+			profile.controllerPresentation,
+		),
+		previewImage: toStudioPreviewImage(profile.previewImage),
 	}
 	parseGraphicStudioConfig(config)
 	return config

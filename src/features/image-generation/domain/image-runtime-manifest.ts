@@ -1,4 +1,10 @@
 import {
+	CAMERA_AZIMUTHS,
+	CAMERA_ELEVATIONS,
+	type CameraAzimuth,
+	type CameraElevation,
+} from '@/features/image-generation/camera-control'
+import {
 	IMAGE_BATCH_DEFAULT,
 	IMAGE_BATCH_SIZES,
 	IMAGE_PROMPT_MAX_LENGTH,
@@ -34,7 +40,12 @@ export type ImageRuntimeFeature =
 			type: 'color-adjustment'
 			controls: { line: string; background?: string }
 	  }
-	| { type: 'camera-control' }
+	| {
+			type: 'camera-control'
+			/** 런타임이 지원하는 전체 구간 — Admin은 이 안에서만 좁힐 수 있다. */
+			azimuths: readonly CameraAzimuth[]
+			elevations: readonly CameraElevation[]
+	  }
 
 export type ImageRuntimeManifest = StudioRuntimeManifest & {
 	supportedFeatures: readonly ImageRuntimeFeature[]
@@ -52,8 +63,6 @@ export function getImageRuntimeManifest(modelPreset: ImageModelPreset): ImageRun
 				{
 					id: IMAGE_STUDIO_GROUP_IDS.image,
 					title: 'Image',
-					collapsible: true,
-					defaultOpen: true,
 					controls: [
 						{
 							id: IMAGE_STUDIO_CONTROL_IDS.prompt,
@@ -69,8 +78,6 @@ export function getImageRuntimeManifest(modelPreset: ImageModelPreset): ImageRun
 				{
 					id: IMAGE_STUDIO_GROUP_IDS.profileSettings,
 					title: 'Profile Settings',
-					collapsible: true,
-					defaultOpen: true,
 					controls: [
 						{
 							id: IMAGE_STUDIO_CONTROL_IDS.lineColor,
@@ -120,7 +127,7 @@ export function getImageRuntimeManifest(modelPreset: ImageModelPreset): ImageRun
 					background: IMAGE_STUDIO_CONTROL_IDS.backgroundColor,
 				},
 			},
-			{ type: 'camera-control' },
+			{ type: 'camera-control', azimuths: CAMERA_AZIMUTHS, elevations: CAMERA_ELEVATIONS },
 		],
 	}
 }

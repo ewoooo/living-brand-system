@@ -29,6 +29,15 @@ export type StudioRuntimeManifest = {
 	}
 }
 
+/**
+ * Admin이 등록한 미리보기 이미지의 표시 계약 — 자산 브라우저 카드와 트리거 배경이 쓴다.
+ * 업로드 문서 원본이 아니라 표시에 필요한 두 값만 지난다(docs/07: 안전 계약 필드만 나간다).
+ */
+export type StudioPreviewImage = {
+	url: string
+	alt: string
+}
+
 /** 모든 Studio가 발행하는 공통 Controller envelope. 도메인 실행 정보는 교차 타입으로 확장한다. */
 export type StudioControllerConfig<
 	Kind extends StudioKind = StudioKind,
@@ -38,6 +47,10 @@ export type StudioControllerConfig<
 	id: Id
 	version: 1
 	name: string
+	/** Runtime 구조와 분리해 Admin이 정한 그룹 표현 정책. Runtime Manifest에는 존재하지 않는다. */
+	controllerPresentation?: StudioControllerPresentation
+	/** Admin이 고른 미리보기 이미지. Runtime Manifest에는 존재하지 않는다(프로파일·템플릿이 갖는다). */
+	previewImage?: StudioPreviewImage
 }
 
 export type ControllerOption<Value extends string = string> = {
@@ -76,6 +89,8 @@ export type ControllerControlDefinition =
 	| (ControllerControlBase & {
 			kind: 'color'
 			defaultValue: string | null
+			/** 허용 색 목록(#rrggbb). 없으면 자유 색상이다 — select의 options에 대응한다. */
+			values?: readonly string[]
 	  })
 	| (ControllerControlBase & {
 			kind: 'range'
@@ -95,7 +110,17 @@ export type ControllerGroupDefinition = {
 	id: string
 	title: string
 	controls: readonly ControllerControlDefinition[]
-} & ({ collapsible?: false; defaultOpen?: never } | { collapsible: true; defaultOpen?: boolean })
+}
+
+export type ControllerGroupPresentation = {
+	groupId: string
+	collapsible: boolean
+	defaultOpen: boolean
+}
+
+export type StudioControllerPresentation = {
+	groups: readonly ControllerGroupPresentation[]
+}
 
 /** Base Definition의 kind·표현 정보를 복제하지 않는 Admin 제한값. */
 export type ControllerControlRestriction = {
@@ -104,6 +129,8 @@ export type ControllerControlRestriction = {
 	defaultValue?: ControllerControlValue
 	maxLength?: number
 	optionValues?: readonly string[]
+	/** color control의 허용 색 좁힘 — optionValues의 색 버전이다. */
+	colorValues?: readonly string[]
 	min?: number
 	max?: number
 }
@@ -134,6 +161,7 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	}
 	if (config.version !== 1) invalid('version', '지원하는 버전은 1입니다.')
 	assertNonEmptyString(config.name, 'name')
+	if (config.previewImage != null) validatePreviewImage(config.previewImage)
 	parseStudioArtifactCapabilities(config.artifacts)
 
 	const controller = asRecord(config.controller, 'controller')
@@ -144,31 +172,73 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	for (const [groupIndex, groupValue] of controller.groups.entries()) {
 		const groupPath = `controller.groups[${groupIndex}]`
 		const group = asRecord(groupValue, groupPath)
-		assertOnlyKeys(group, ['id', 'title', 'controls', 'collapsible', 'defaultOpen'], groupPath)
+		assertOnlyKeys(group, ['id', 'title', 'controls'], groupPath)
 		assertNonEmptyString(group.id, `${groupPath}.id`)
 		if (groupIds.has(group.id)) invalid(`${groupPath}.id`, `중복되었습니다: ${group.id}`)
 		groupIds.add(group.id)
 		assertNonEmptyString(group.title, `${groupPath}.title`)
 		if (!Array.isArray(group.controls)) invalid(`${groupPath}.controls`, '배열이어야 합니다.')
-		if (group.collapsible !== undefined && typeof group.collapsible !== 'boolean') {
-			invalid(`${groupPath}.collapsible`, 'boolean이어야 합니다.')
-		}
-		if (group.defaultOpen !== undefined) {
-			if (group.collapsible !== true) {
-				invalid(`${groupPath}.defaultOpen`, 'collapsible 그룹에서만 사용할 수 있습니다.')
-			}
-			if (typeof group.defaultOpen !== 'boolean') {
-				invalid(`${groupPath}.defaultOpen`, 'boolean이어야 합니다.')
-			}
-		}
-
 		for (const [controlIndex, controlValue] of group.controls.entries()) {
 			validateControl(controlValue, `${groupPath}.controls[${controlIndex}]`)
 		}
 	}
+	if (config.controllerPresentation !== undefined) {
+		validateControllerPresentation(config.controllerPresentation, groupIds)
+	}
 
 	createControllerValues(controller.groups as readonly ControllerGroupDefinition[])
 	return input as StudioControllerConfig
+}
+
+/** Payload의 sparse 그룹 표현값을 Runtime 그룹 순서의 완전한 Effective 정책으로 투영한다. */
+export function resolveControllerPresentation(
+	groups: readonly ControllerGroupDefinition[],
+	input: unknown,
+): StudioControllerPresentation {
+	const overrides = new Map<string, { collapsible?: boolean; defaultOpen?: boolean }>()
+	if (input != null) {
+		const root = asRecord(input, 'controller presentation')
+		assertOnlyKeys(root, ['groups'], 'controller presentation')
+		if (root.groups != null) {
+			if (!Array.isArray(root.groups))
+				invalid('controller presentation.groups', '배열이어야 합니다.')
+			const knownIds = new Set(groups.map(({ id }) => id))
+			for (const [index, value] of root.groups.entries()) {
+				const path = `controller presentation.groups[${index}]`
+				const group = asRecord(value, path)
+				assertOnlyKeys(group, ['groupId', 'collapsible', 'defaultOpen'], path)
+				assertNonEmptyString(group.groupId, `${path}.groupId`)
+				if (!knownIds.has(group.groupId))
+					invalid(`${path}.groupId`, 'Runtime 그룹을 찾을 수 없습니다.')
+				if (overrides.has(group.groupId)) invalid(`${path}.groupId`, '중복되었습니다.')
+				if (group.collapsible !== undefined && typeof group.collapsible !== 'boolean') {
+					invalid(`${path}.collapsible`, 'boolean이어야 합니다.')
+				}
+				if (group.defaultOpen !== undefined && typeof group.defaultOpen !== 'boolean') {
+					invalid(`${path}.defaultOpen`, 'boolean이어야 합니다.')
+				}
+				if (group.collapsible === false && group.defaultOpen === false) {
+					invalid(path, '접을 수 없는 그룹은 닫힌 상태로 시작할 수 없습니다.')
+				}
+				overrides.set(group.groupId, {
+					...definedProperty('collapsible', group.collapsible as boolean | undefined),
+					...definedProperty('defaultOpen', group.defaultOpen as boolean | undefined),
+				})
+			}
+		}
+	}
+
+	return {
+		groups: groups.map(({ id }) => {
+			const override = overrides.get(id)
+			const collapsible = override?.collapsible ?? true
+			return {
+				groupId: id,
+				collapsible,
+				defaultOpen: collapsible ? (override?.defaultOpen ?? true) : true,
+			}
+		}),
+	}
 }
 
 /** Payload JSON을 kind-free Controller Restrictions 계약으로 읽는다. */
@@ -306,7 +376,10 @@ function isControllerValueShape(
 					control.options.some((option) => option.value === value))
 			)
 		case 'color':
-			return value === null || (typeof value === 'string' && COLOR_PATTERN.test(value))
+			if (value === null) return true
+			if (typeof value !== 'string' || !COLOR_PATTERN.test(value)) return false
+			// 팔레트가 정해진 control은 목록 밖 색을 받지 않는다 — select가 options 밖 값을 막는 것과 같다.
+			return !control.values || control.values.includes(value.toLowerCase())
 		case 'range':
 			return (
 				typeof value === 'number' &&
@@ -414,13 +487,23 @@ function validateControl(value: unknown, path: string) {
 			}
 			return
 		}
-		case 'color':
-			assertOnlyKeys(control, CONTROL_BASE_KEYS, path)
+		case 'color': {
+			assertOnlyKeys(control, [...CONTROL_BASE_KEYS, 'values'], path)
 			assertNullableString(control.defaultValue, `${path}.defaultValue`)
 			if (control.defaultValue !== null && !COLOR_PATTERN.test(control.defaultValue)) {
 				invalid(`${path}.defaultValue`, '#rrggbb 형식이어야 합니다.')
 			}
+			if (control.values !== undefined) {
+				const values = assertColorValues(control.values, `${path}.values`)
+				if (
+					control.defaultValue !== null &&
+					!values.has(control.defaultValue.toLowerCase())
+				) {
+					invalid(`${path}.defaultValue`, 'values에 포함되어야 합니다.')
+				}
+			}
 			return
+		}
 		case 'range':
 			assertOnlyKeys(control, [...CONTROL_BASE_KEYS, 'min', 'max', 'step', 'display'], path)
 			assertNumber(control.defaultValue, `${path}.defaultValue`)
@@ -468,11 +551,74 @@ function validateControl(value: unknown, path: string) {
 	}
 }
 
+function validatePreviewImage(value: unknown) {
+	const image = asRecord(value, 'previewImage')
+	assertOnlyKeys(image, ['url', 'alt'], 'previewImage')
+	assertNonEmptyString(image.url, 'previewImage.url')
+	// alt는 빈 문자열을 허용한다 — 장식 이미지의 유효한 대체 텍스트이고, 이 값 때문에 Config 파싱이
+	// 죽으면 스튜디오 전체가 열리지 않는다.
+	if (typeof image.alt !== 'string') invalid('previewImage.alt', '문자열이어야 합니다.')
+}
+
+/**
+ * Payload upload 문서를 표시 계약으로 좁힌다 — 미리보기가 없거나 파일이 아직 없으면 undefined다.
+ * 카드가 쓰는 크기는 320×240 thumbnail이므로 있으면 그것을 쓰고, 없으면 원본으로 떨어진다.
+ */
+export function toStudioPreviewImage(value: unknown): StudioPreviewImage | undefined {
+	if (!value || typeof value !== 'object') return undefined
+	const document = value as {
+		url?: unknown
+		alt?: unknown
+		sizes?: { thumbnail?: { url?: unknown } }
+	}
+	const url = document.sizes?.thumbnail?.url ?? document.url
+	if (typeof url !== 'string' || url.length === 0) return undefined
+	return { url, alt: typeof document.alt === 'string' ? document.alt : '' }
+}
+
+function validateControllerPresentation(value: unknown, groupIds: ReadonlySet<string>) {
+	const presentation = asRecord(value, 'controllerPresentation')
+	assertOnlyKeys(presentation, ['groups'], 'controllerPresentation')
+	if (!Array.isArray(presentation.groups)) {
+		invalid('controllerPresentation.groups', '배열이어야 합니다.')
+	}
+	const seen = new Set<string>()
+	for (const [index, value] of presentation.groups.entries()) {
+		const path = `controllerPresentation.groups[${index}]`
+		const group = asRecord(value, path)
+		assertOnlyKeys(group, ['groupId', 'collapsible', 'defaultOpen'], path)
+		assertNonEmptyString(group.groupId, `${path}.groupId`)
+		if (!groupIds.has(group.groupId))
+			invalid(`${path}.groupId`, 'Controller 그룹을 찾을 수 없습니다.')
+		if (seen.has(group.groupId)) invalid(`${path}.groupId`, '중복되었습니다.')
+		seen.add(group.groupId)
+		if (typeof group.collapsible !== 'boolean')
+			invalid(`${path}.collapsible`, 'boolean이어야 합니다.')
+		if (typeof group.defaultOpen !== 'boolean')
+			invalid(`${path}.defaultOpen`, 'boolean이어야 합니다.')
+		if (!group.collapsible && !group.defaultOpen) {
+			invalid(path, '접을 수 없는 그룹은 닫힌 상태로 시작할 수 없습니다.')
+		}
+	}
+	if (seen.size !== groupIds.size) {
+		invalid('controllerPresentation.groups', '모든 Controller 그룹의 표현 정책이 필요합니다.')
+	}
+}
+
 function projectControllerRestriction(value: unknown): ControllerControlRestriction {
 	const control = asRecord(value, 'controller restriction control')
 	assertOnlyKeys(
 		control,
-		['controlId', 'availability', 'defaultValue', 'maxLength', 'optionValues', 'min', 'max'],
+		[
+			'controlId',
+			'availability',
+			'defaultValue',
+			'maxLength',
+			'optionValues',
+			'colorValues',
+			'min',
+			'max',
+		],
 		'controller restriction control',
 	)
 	assertNonEmptyString(control.controlId, 'controller restriction control.controlId')
@@ -501,6 +647,9 @@ function projectControllerRestriction(value: unknown): ControllerControlRestrict
 			values.add(option)
 		}
 	}
+	if (control.colorValues !== undefined) {
+		assertColorValues(control.colorValues, 'controller restriction control.colorValues')
+	}
 	if (control.min !== undefined) assertNumber(control.min, 'controller restriction control.min')
 	if (control.max !== undefined) assertNumber(control.max, 'controller restriction control.max')
 	if (control.defaultValue !== undefined) {
@@ -515,6 +664,7 @@ function projectControllerRestriction(value: unknown): ControllerControlRestrict
 		),
 		...definedProperty('maxLength', control.maxLength as number | undefined),
 		...definedProperty('optionValues', control.optionValues as string[] | undefined),
+		...definedProperty('colorValues', control.colorValues as string[] | undefined),
 		...definedProperty('min', control.min as number | undefined),
 		...definedProperty('max', control.max as number | undefined),
 	}
@@ -629,7 +779,7 @@ function applyControlRestriction(
 				...definedProperty('defaultValue', restriction.defaultValue as boolean | undefined),
 			}
 			break
-		case 'color':
+		case 'color': {
 			if (
 				restriction.maxLength ||
 				restriction.optionValues ||
@@ -640,6 +790,13 @@ function applyControlRestriction(
 					`${base.kind} control에 지원하지 않는 restriction입니다: ${base.id}`,
 				)
 			}
+			const allowed = restriction.colorValues?.map((value) => value.toLowerCase())
+			const baseValues = base.values
+			if (allowed && baseValues && allowed.some((value) => !baseValues.includes(value))) {
+				throw new Error(
+					`Controller restriction colorValues가 기본 계약을 확장합니다: ${base.id}`,
+				)
+			}
 			next = {
 				...base,
 				...definedProperty('availability', availability),
@@ -647,8 +804,10 @@ function applyControlRestriction(
 					'defaultValue',
 					restriction.defaultValue as string | null | undefined,
 				),
+				...definedProperty('values', allowed ?? baseValues),
 			}
 			break
+		}
 		case 'pad':
 			if (
 				restriction.maxLength ||
@@ -719,6 +878,22 @@ function assertNonEmptyString(value: unknown, path: string): asserts value is st
 
 function assertNullableString(value: unknown, path: string): asserts value is string | null {
 	if (value !== null && typeof value !== 'string') invalid(path, '문자열 또는 null이어야 합니다.')
+}
+
+/** 허용 색 목록을 검증하고 비교용 소문자 집합으로 돌려준다 — hex 대소문자는 같은 색이다. */
+function assertColorValues(value: unknown, path: string): ReadonlySet<string> {
+	if (!Array.isArray(value) || value.length === 0) {
+		invalid(path, '하나 이상의 색이 필요합니다.')
+	}
+	const values = new Set<string>()
+	for (const [index, item] of value.entries()) {
+		assertNonEmptyString(item, `${path}[${index}]`)
+		if (!COLOR_PATTERN.test(item)) invalid(`${path}[${index}]`, '#rrggbb 형식이어야 합니다.')
+		const normalized = item.toLowerCase()
+		if (values.has(normalized)) invalid(`${path}[${index}]`, '중복되었습니다.')
+		values.add(normalized)
+	}
+	return values
 }
 
 function assertNumber(value: unknown, path: string): asserts value is number {

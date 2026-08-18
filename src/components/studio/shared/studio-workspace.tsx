@@ -47,14 +47,22 @@ export function StudioWorkspace({ sidebar, children }: StudioWorkspaceProps) {
 		// lg 행을 1fr로 못 박아야 컨트롤러가 길어져도 페이지 대신 패널 내부가 스크롤된다.
 		<section
 			data-slot="studio-workspace"
-			className="grid min-h-0 border-t border-border lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[minmax(0,1fr)]"
+			className="grid min-h-0 lg:h-full lg:max-h-full lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden"
 		>
-			<aside data-slot="studio-workspace-sidebar" className="min-h-0 p-4 lg:order-2">
+			{/*
+			 * 🔴 overflow를 잠그지 않는다 — 자산 브라우저 패널이 컨트롤러 왼쪽(캔버스 위)으로
+			 * 나가야 하는데, 여기서 자르면 패널이 통째로 안 보여 트리거가 죽은 것처럼 보인다.
+			 * 컨트롤러 자체 스크롤은 Controller.Root의 overflow-hidden이 이미 갖고 있다.
+			 */}
+			<aside
+				data-slot="studio-workspace-sidebar"
+				className="min-h-0 p-4 lg:order-2 lg:h-full lg:max-h-full"
+			>
 				{sidebar}
 			</aside>
 			<div
 				data-slot="studio-workspace-canvas"
-				className="flex min-h-96 min-w-0 flex-col p-4 md:p-6 lg:order-1 lg:min-h-0"
+				className="flex min-h-96 min-w-0 flex-col p-4 md:p-6 lg:order-1 lg:h-full lg:max-h-full lg:min-h-0 lg:overflow-hidden"
 			>
 				{children}
 			</div>

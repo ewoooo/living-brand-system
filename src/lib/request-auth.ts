@@ -1,5 +1,6 @@
 import config from '@payload-config'
 import { headers as getHeaders } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 
 /**
@@ -12,6 +13,19 @@ export async function authenticateRequest() {
 	const payload = await getPayload({ config })
 	const { user } = await payload.auth({ headers: await getHeaders() })
 
+	return { payload, user }
+}
+
+/**
+ * 회원 전용 페이지 게이트 — 비회원은 로그인으로 보내고 returnTo로 되돌린다.
+ * 레이아웃 검사는 클라이언트 내비게이션에서 재실행되지 않으므로
+ * 게이트는 각 페이지 첫 줄이 소유한다. 반환된 user는 non-null이 보장된다.
+ */
+export async function requireUser(returnTo: string) {
+	const { payload, user } = await authenticateRequest()
+	if (!user) {
+		redirect(`/admin/login?redirect=${encodeURIComponent(returnTo)}`)
+	}
 	return { payload, user }
 }
 

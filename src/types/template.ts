@@ -10,8 +10,22 @@ export interface TemplateSlotSpec {
 	aiInstruction?: string
 }
 
+export type TemplateLayerAccess = 'hidden' | 'readonly' | 'editable'
+
+export interface TemplateLayerCreatorPolicy {
+	access: TemplateLayerAccess
+	visibility?: {
+		defaultVisible?: boolean
+		allowToggle?: boolean
+	}
+}
+
 /** Template의 nodeId 하나에 저장하는 앱 편집 설정. */
 export interface TemplateNodeConfig {
+	/** Admin이 정하는 Creator 노출·편집·visibility 정책. */
+	creator?: TemplateLayerCreatorPolicy
+	/** Creator 세션이 compose에만 싣는 실제 표시 상태. Admin 저장 정책과 분리한다. */
+	visible?: boolean
 	text?: string
 	/** 텍스트 노드(<p>)의 색 오버라이드 — 스튜디오 일괄 텍스트 색이 compose 시점에만 싣는 값(저장 안 됨). */
 	color?: string
@@ -21,7 +35,7 @@ export interface TemplateNodeConfig {
 	imageTransform?: { x: number; y: number; scale: number; rotate: number }
 	/**
 	 * 생성 이미지(단색 라인 아트)의 브랜드 컬러 치환 — 이미지가 luminance 마스크가 되어
-	 * 밝은 영역=background, 어두운 선=line으로 칠해진다. backgroundImage 없이는 compose가 무시한다.
+	 * 밝은 영역=background, 어두운 선=line으로 칠해진다. 기존 이미지와 교체 이미지에 모두 적용된다.
 	 * background 생략 = 배경 투명(선만 칠해지고 캔버스가 비침).
 	 */
 	imageColorize?: { line: string; background?: string }

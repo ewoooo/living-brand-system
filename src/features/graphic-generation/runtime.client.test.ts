@@ -4,11 +4,11 @@ import { isOriginHandleHit } from './graphic-runtimes/forward-straight/runtime.c
 import { createGraphicRasterArtifact } from './runtime/client/graphic-runtime.client'
 
 describe('Forward Straight client runtime', () => {
-	it('레드 닷 주변에서만 드래그를 시작한다', () => {
+	it('기준점 히트 영역 안에서만 드래그를 시작한다', () => {
 		const origin = { x: 100, y: 100 }
 
-		expect(isOriginHandleHit({ x: 112, y: 100 }, origin, 2.5)).toBe(true)
-		expect(isOriginHandleHit({ x: 113, y: 100 }, origin, 2.5)).toBe(false)
+		expect(isOriginHandleHit({ x: 112, y: 100 }, origin)).toBe(true)
+		expect(isOriginHandleHit({ x: 113, y: 100 }, origin)).toBe(false)
 	})
 
 	it('Raster Artifact를 요청 해상도로 다시 그린 뒤 현재 preview 해상도를 복원한다', () => {

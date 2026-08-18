@@ -35,6 +35,8 @@ export type GraphicRuntimeAdapter = {
 	}): Promise<GraphicRuntime>
 }
 
+export type GraphicRuntimeLoader = () => Promise<GraphicRuntimeAdapter>
+
 /** Canvas 정적 렌더를 Raster Artifact로 노출하고 export 뒤 현재 preview 크기를 복원한다. */
 export function createGraphicRasterArtifact({
 	canvas,
@@ -68,10 +70,11 @@ export function createGraphicRasterArtifact({
 	}
 }
 
-/** Config id와 runtime type이 모두 일치하는 브라우저 runtime adapter만 반환한다. */
-export function getGraphicRuntimeAdapter(
+/** 선택한 Config의 브라우저 runtime만 지연 로드하고 id와 runtime type이 맞는 adapter를 반환한다. */
+export async function loadGraphicRuntimeAdapter(
 	config: GraphicRuntimeManifest,
-): GraphicRuntimeAdapter | null {
-	const adapter = graphicRuntimeCatalog[config.id as GraphicRuntimeId]
+): Promise<GraphicRuntimeAdapter | null> {
+	const load = graphicRuntimeCatalog[config.id as GraphicRuntimeId]
+	const adapter = await load?.()
 	return adapter?.type === config.type ? adapter : null
 }

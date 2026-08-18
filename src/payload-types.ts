@@ -1141,6 +1141,10 @@ export interface ImageProfile {
   generateSlug?: boolean | null;
   slug: string;
   /**
+   * 스튜디오에서 이 항목을 고를 때 카드에 표시할 이미지입니다.
+   */
+  previewImage: number | ApplicationImage;
+  /**
    * 숫자가 낮을수록 Studio 내비게이션에서 먼저 표시됩니다.
    */
   displayOrder: number;
@@ -1174,6 +1178,15 @@ export interface ImageProfile {
    */
   features?: (ImageProfileColorAdjustmentFeature | ImageProfileCameraControlFeature)[] | null;
   controllerRestrictions?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  controllerPresentation?:
     | {
         [k: string]: unknown;
       }
@@ -1236,6 +1249,24 @@ export interface ImageProfileColorAdjustmentFeature {
  * via the `definition` "ImageProfileCameraControlFeature".
  */
 export interface ImageProfileCameraControlFeature {
+  azimuths?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  elevations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'cameraControl';
@@ -1252,9 +1283,22 @@ export interface GraphicProfile {
   /**
    * 실행 구현은 코드 registry가 소유합니다. 프로파일은 해당 runtime의 편집 범위만 좁힙니다.
    */
-  runtime: 'forward-straight' | 'radial-fluted-glass';
+  runtime: 'forward-straight' | 'linear-fluted-glass' | 'radial-fluted-glass';
+  /**
+   * 스튜디오에서 이 항목을 고를 때 카드에 표시할 이미지입니다.
+   */
+  previewImage: number | ApplicationImage;
   displayOrder: number;
   controllerRestrictions?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  controllerPresentation?:
     | {
         [k: string]: unknown;
       }
@@ -1378,8 +1422,22 @@ export interface User {
 export interface Template {
   id: number;
   name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
   description?: string | null;
   controllerRestrictions?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  controllerPresentation?:
     | {
         [k: string]: unknown;
       }
@@ -1433,6 +1491,10 @@ export interface Template {
     | number
     | boolean
     | null;
+  /**
+   * 스튜디오에서 이 항목을 고를 때 카드에 표시할 이미지입니다.
+   */
+  previewImage: number | ApplicationImage;
   /**
    * Figma 너비(px). 가져오기가 채웁니다.
    */
@@ -2640,6 +2702,7 @@ export interface ImageProfilesSelect<T extends boolean = true> {
   name?: T;
   generateSlug?: T;
   slug?: T;
+  previewImage?: T;
   displayOrder?: T;
   imageModelPreset?: T;
   profilePrompt?:
@@ -2668,6 +2731,7 @@ export interface ImageProfilesSelect<T extends boolean = true> {
         cameraControl?: T | ImageProfileCameraControlFeatureSelect<T>;
       };
   controllerRestrictions?: T;
+  controllerPresentation?: T;
   exportPolicy?:
     | T
     | {
@@ -2705,6 +2769,8 @@ export interface ImageProfileColorAdjustmentFeatureSelect<T extends boolean = tr
  * via the `definition` "ImageProfileCameraControlFeature_select".
  */
 export interface ImageProfileCameraControlFeatureSelect<T extends boolean = true> {
+  azimuths?: T;
+  elevations?: T;
   id?: T;
   blockName?: T;
 }
@@ -2715,8 +2781,10 @@ export interface ImageProfileCameraControlFeatureSelect<T extends boolean = true
 export interface GraphicProfilesSelect<T extends boolean = true> {
   name?: T;
   runtime?: T;
+  previewImage?: T;
   displayOrder?: T;
   controllerRestrictions?: T;
+  controllerPresentation?: T;
   exportPolicy?:
     | T
     | {
@@ -2771,8 +2839,11 @@ export interface GeneratedImagesSelect<T extends boolean = true> {
  */
 export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
+  generateSlug?: T;
+  slug?: T;
   description?: T;
   controllerRestrictions?: T;
+  controllerPresentation?: T;
   exportPolicy?:
     | T
     | {
@@ -2794,6 +2865,7 @@ export interface TemplatesSelect<T extends boolean = true> {
   sourceUrl?: T;
   baseHtml?: T;
   overrides?: T;
+  previewImage?: T;
   width?: T;
   height?: T;
   category?: T;

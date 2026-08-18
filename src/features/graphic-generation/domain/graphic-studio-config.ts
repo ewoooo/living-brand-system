@@ -23,13 +23,24 @@ export type PublishedGraphicProfileDefinition = {
 	runtime: string
 	controllerRestrictions?: unknown
 	exportPolicy?: unknown
+	controllerPresentation?: unknown
+	previewImage?: unknown
 }
 
 /** unknown 입력을 공통 Controller 계약과 Graphic runtime descriptor로 검증한다. */
 export function parseGraphicRuntimeManifest(input: unknown): GraphicRuntimeManifest {
 	const config = parseStudioControllerConfig(input)
 	const value = asRecord(input)
-	assertOnlyKeys(value, ['studio', 'id', 'version', 'name', 'artifacts', 'controller', 'type'])
+	assertOnlyKeys(value, [
+		'studio',
+		'id',
+		'version',
+		'name',
+		'artifacts',
+		'controller',
+		'controllerPresentation',
+		'type',
+	])
 	if (config.studio !== 'graphic') {
 		throw new Error('GraphicStudioConfig studio: graphic이어야 합니다.')
 	}
@@ -55,6 +66,8 @@ export function parseGraphicStudioConfig(input: unknown): GraphicStudioConfig {
 		'artifacts',
 		'output',
 		'controller',
+		'controllerPresentation',
+		'previewImage',
 		'type',
 	])
 	assertGraphicIdentity(config, input)

@@ -7,6 +7,7 @@ import type {
 	ControllerControlDefinition,
 	ControllerControlValue,
 	ControllerGroupDefinition,
+	ControllerGroupPresentation,
 	ControllerRuntimeBinding,
 	ControllerRuntimeBindings,
 	ControllerValues,
@@ -16,8 +17,18 @@ import {
 	resolveControllerAvailability,
 } from '@/modules/studio-controller/controller-definition'
 
+/**
+ * toggle(boolean)의 표현은 세그먼트 On|Off 하나뿐이다 — 계약 밖 boolean 행(레이어 가시성)도 이걸 쓴다.
+ * 순서는 디자인 SSOT(Figma HD_LBS_UI 4:5822 "Toggle")가 정한다 — On이 왼쪽이다.
+ */
+export const CONTROLLER_TOGGLE_OPTIONS = [
+	{ value: 'on', label: 'On' },
+	{ value: 'off', label: 'Off' },
+] as const
+
 type ControllerRendererProps = {
 	groups: readonly ControllerGroupDefinition[]
+	presentation?: { groups: readonly ControllerGroupPresentation[] }
 	values: ControllerValues
 	bindings?: ControllerRuntimeBindings
 	onChange: (controlId: string, value: ControllerControlValue) => void
@@ -26,13 +37,14 @@ type ControllerRendererProps = {
 /** 직렬화된 Definition과 세션 값을 도메인 지식 없이 Controller primitive로 투영한다. */
 export function ControllerRenderer({
 	groups,
+	presentation,
 	values,
 	bindings,
 	onChange,
 }: ControllerRendererProps) {
 	return (
 		<>
-			{groups.map((group) => {
+			{groups.map((group, index) => {
 				const content = group.controls.map((control) => (
 					<ControllerControlRenderer
 						key={control.id}
@@ -44,7 +56,14 @@ export function ControllerRenderer({
 				))
 
 				return (
-					<ControllerGroupRenderer key={group.id} definition={group}>
+					<ControllerGroupRenderer
+						key={group.id}
+						definition={group}
+						first={index === 0}
+						presentation={presentation?.groups.find(
+							({ groupId }) => groupId === group.id,
+						)}
+					>
 						{content}
 					</ControllerGroupRenderer>
 				)
@@ -56,17 +75,32 @@ export function ControllerRenderer({
 /** bespoke slot/feature layout에서도 Definition의 그룹 제목·접힘 정책을 그대로 투영한다. */
 export function ControllerGroupRenderer({
 	definition,
+	presentation,
 	children,
+	first = false,
 }: {
 	definition: ControllerGroupDefinition
+	presentation?: ControllerGroupPresentation
 	children: ReactNode
+	first?: boolean
 }) {
-	return definition.collapsible ? (
-		<Controller.Group title={definition.title} collapsible defaultOpen={definition.defaultOpen}>
+	return (presentation?.collapsible ?? true) ? (
+		<Controller.Group
+			title={definition.title}
+			collapsible
+			defaultOpen={presentation?.defaultOpen ?? true}
+			className={first ? 'border-t-0' : undefined}
+		>
 			{children}
 		</Controller.Group>
 	) : (
-		<Controller.Group title={definition.title}>{children}</Controller.Group>
+		<Controller.Group
+			title={definition.title}
+			collapsible={false}
+			className={first ? 'border-t-0' : undefined}
+		>
+			{children}
+		</Controller.Group>
 	)
 }
 
@@ -162,10 +196,7 @@ function ControllerControl({
 				<Controller.Row label={definition.label} disabled={disabled}>
 					<Controller.Segmented
 						aria-label={definition.label}
-						options={[
-							{ value: 'off', label: 'Off' },
-							{ value: 'on', label: 'On' },
-						]}
+						options={CONTROLLER_TOGGLE_OPTIONS}
 						value={enabled ? 'on' : 'off'}
 						onChange={(next) => onChange(next === 'on')}
 					/>
@@ -198,6 +229,7 @@ function ControllerControl({
 					label={definition.label}
 					value={color ?? '#000000'}
 					isEmpty={color === null}
+					values={definition.values}
 					disabled={disabled}
 					onReset={() => onChange(null)}
 					onChange={onChange}

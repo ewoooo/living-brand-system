@@ -31,20 +31,23 @@ import {
 import {
 	findTemplateControl,
 	listCompatibleTemplateImageConfigs,
-	type PublishedHtmlTemplate,
+	type PublishedTemplateView,
 	partitionTemplateSlots,
 	type ResolvedTemplateImageConfig,
 	type TemplateBackgroundSlot,
 	type TemplateBackgroundType,
-	type TemplateConfig,
 	type TemplateImageConfigSlot,
+	type TemplateStudioConfig,
 	type TemplateTextSlot,
-} from '@/features/template-customization/domain/template-config'
+	type TemplateVectorSlot,
+} from '@/features/template-customization/domain/template-studio-config'
 import {
 	composeTemplateStudioHtml,
 	createTemplateRasterArtifact,
 	type TemplateRasterArtifact,
 } from '@/features/template-customization/runtime/template-runtime.client'
+import { fetchCreateNavigation } from '@/features/template-customization/services/get-create-navigation.client'
+import { useLazyResource } from '@/hooks/use-lazy-resource'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlDefinition,
@@ -59,7 +62,7 @@ const PINNED_CONFIG_ERROR_MESSAGE = '고정된 이미지 프로파일을 사용�
 const SELECTABLE_CONFIG_ERROR_MESSAGE = '사용 가능한 이미지 프로파일이 없습니다.'
 
 function useTemplateTextSession(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	textSlots: readonly TemplateTextSlot[],
 	html: string,
 	previewRef: RefObject<HTMLDivElement | null>,
@@ -104,7 +107,7 @@ function useTemplateTextSession(
 }
 
 function useTemplateImageSession(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	imageSlots: readonly TemplateImageConfigSlot[],
 ): TemplateStudioValue['images'] {
 	const contracts = useMemo(
@@ -215,8 +218,47 @@ function useTemplateImageSession(
 	)
 }
 
+function useTemplateVectorSession(
+	vectorSlots: readonly TemplateVectorSlot[],
+): TemplateStudioValue['vectors'] {
+	const [colors, setColors] = useState<Record<string, string | undefined>>(() =>
+		Object.fromEntries(vectorSlots.map((slot) => [slot.id, slot.color])),
+	)
+	const setColor = useCallback(
+		(slotId: string, color: string) =>
+			setColors((current) => {
+				const slot = vectorSlots.find((candidate) => candidate.id === slotId)
+				return slot?.access === 'editable' ? { ...current, [slotId]: color } : current
+			}),
+		[vectorSlots],
+	)
+	return useMemo(
+		() => ({ slots: vectorSlots, colors, setColor }),
+		[colors, setColor, vectorSlots],
+	)
+}
+
+function useTemplateLayerSession(
+	slots: readonly (TemplateTextSlot | TemplateImageConfigSlot | TemplateVectorSlot)[],
+): TemplateStudioValue['layers'] {
+	const [visibility, setVisibility] = useState<Record<string, boolean>>(() =>
+		Object.fromEntries(slots.map((slot) => [slot.id, slot.visibility.defaultVisible])),
+	)
+	const setVisible = useCallback(
+		(slotId: string, visible: boolean) =>
+			setVisibility((current) => {
+				const slot = slots.find((candidate) => candidate.id === slotId)
+				return slot?.access === 'editable' && slot.visibility.allowToggle
+					? { ...current, [slotId]: visible }
+					: current
+			}),
+		[slots],
+	)
+	return useMemo(() => ({ visibility, setVisible }), [setVisible, visibility])
+}
+
 function useTemplateBackgroundSession(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	slot: TemplateBackgroundSlot | undefined,
 ): TemplateStudioValue['background'] {
 	const contracts = useMemo(
@@ -356,14 +398,20 @@ function useTemplateBackgroundSession(
 export function TemplateStudioProvider({
 	config,
 	template,
-	navigation,
+	categoryTitle,
 	children,
 }: {
-	config: TemplateConfig
-	template: PublishedHtmlTemplate
-	navigation: TemplateStudioValue['navigation']
+	config: TemplateStudioConfig
+	template: PublishedTemplateView
+	categoryTitle: string | null
 	children: ReactNode
 }) {
+	// 교체 후보 목록은 자산 브라우저가 열릴 때 가져온다 — 페이지는 현재 카테고리 이름 하나만 싣는다.
+	const templateBrowse = useLazyResource(fetchCreateNavigation)
+	const navigation = useMemo<TemplateStudioValue['navigation']>(
+		() => ({ categoryTitle, browse: templateBrowse }),
+		[categoryTitle, templateBrowse],
+	)
 	const previewRef = useRef<HTMLDivElement>(null)
 	const graphicFrameRef = useRef<(() => string) | null>(null)
 	const registerGraphicFrame = useCallback((capture: (() => string) | null) => {
@@ -374,12 +422,21 @@ export function TemplateStudioProvider({
 	const partitionedSlots = useMemo(() => partitionTemplateSlots(slots), [slots])
 	const textSlots = partitionedSlots.text
 	const imageSlots = partitionedSlots.image
+	const vectorSlots = partitionedSlots.vector
 	const backgroundSlot = partitionedSlots.background
+	const editableSlots = useMemo(
+		() => [...textSlots, ...imageSlots, ...vectorSlots],
+		[imageSlots, textSlots, vectorSlots],
+	)
 	const text = useTemplateTextSession(config, textSlots, html, previewRef)
 	const images = useTemplateImageSession(config, imageSlots)
+	const vectors = useTemplateVectorSession(vectorSlots)
+	const layers = useTemplateLayerSession(editableSlots)
 	const background = useTemplateBackgroundSession(config, backgroundSlot)
 	const deferredTextColor = useDeferredValue(text.color)
 	const deferredImageStates = useDeferredValue(images.states)
+	const deferredVectorColors = useDeferredValue(vectors.colors)
+	const deferredLayerVisibility = useDeferredValue(layers.visibility)
 	const deferredBackground = useDeferredValue(background.state)
 
 	const composedHtml = useMemo(
@@ -392,6 +449,9 @@ export function TemplateStudioProvider({
 				imageStates: deferredImageStates,
 				imageSlots,
 				imageContracts: images.contracts,
+				vectorSlots,
+				vectorColors: deferredVectorColors,
+				layerVisibility: deferredLayerVisibility,
 				background: deferredBackground,
 				width,
 				height,
@@ -405,6 +465,9 @@ export function TemplateStudioProvider({
 			deferredBackground,
 			imageSlots,
 			images.contracts,
+			vectorSlots,
+			deferredVectorColors,
+			deferredLayerVisibility,
 			width,
 			height,
 		],
@@ -437,6 +500,8 @@ export function TemplateStudioProvider({
 			config,
 			text,
 			images,
+			vectors,
+			layers,
 			background,
 			canvas: { html: composedHtml, artifact, previewRef, registerGraphicFrame },
 			execution: { controllerValues },
@@ -448,9 +513,11 @@ export function TemplateStudioProvider({
 			config,
 			controllerValues,
 			images,
+			layers,
 			navigation,
 			registerGraphicFrame,
 			text,
+			vectors,
 		],
 	)
 
@@ -499,7 +566,7 @@ function selectImageProfile(
 }
 
 function initialTemplateTextValues(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	slots: readonly TemplateTextSlot[],
 ): Record<string, string> {
 	return Object.fromEntries(
@@ -512,7 +579,7 @@ function initialTemplateTextValues(
 
 function updateTemplateText(
 	current: Record<string, string>,
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	slots: readonly TemplateTextSlot[],
 	slotId: string,
 	next: string,
@@ -701,7 +768,7 @@ function getBackgroundFeatureBindings(
 }
 
 function templateControllerValues(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	textSlots: readonly TemplateTextSlot[],
 	textValues: Readonly<Record<string, string>>,
 	textColor: string | null,
@@ -748,7 +815,7 @@ function initialImageState(
 }
 
 function initialBackgroundState(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	slot: TemplateBackgroundSlot | undefined,
 	contracts: readonly ResolvedTemplateImageConfig[],
 ): TemplateBackgroundState {

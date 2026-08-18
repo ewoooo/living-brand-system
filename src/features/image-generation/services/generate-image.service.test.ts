@@ -541,9 +541,16 @@ describe('generateImages', () => {
 
 	it('시드 이미지와 해석된 카메라 프롬프트로 시점을 조정한다', async () => {
 		mocks.env.GEMINI_API_KEY = 'key'
-		mocks.loadGeneratedImage.mockResolvedValue(
-			Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
-		)
+		const effectivePrompt = JSON.stringify({
+			composition: 'ISO-metric view',
+			instructions: 'x'.repeat(600),
+			subject: '유조선',
+		})
+		mocks.loadGeneratedImage.mockResolvedValue({
+			data: Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
+			effectivePrompt,
+			inputPrompt: '유조선',
+		})
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,
 			name: 'Technical Illustration',
@@ -560,10 +567,6 @@ describe('generateImages', () => {
 		})
 
 		const result = await adjustImageCamera({
-			basePrompt: JSON.stringify({
-				composition: 'ISO-metric view',
-				subject: '유조선',
-			}),
 			camera: { azimuthDeg: 45, elevationDeg: 20 },
 			count: 1,
 			generatedImageId: 8,
@@ -590,6 +593,9 @@ describe('generateImages', () => {
 			requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
 			user: { id: 1 },
 		})
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
+			expect.objectContaining({ inputPrompt: '유조선' }),
+		)
 	})
 
 	it('조회할 수 없는 생성 이미지 ID를 거부한다', async () => {
@@ -605,7 +611,6 @@ describe('generateImages', () => {
 
 		await expect(
 			adjustImageCamera({
-				basePrompt: '{"subject":"유조선"}',
 				camera: { azimuthDeg: 0, elevationDeg: 0 },
 				count: 1,
 				generatedImageId: 404,
@@ -629,7 +634,6 @@ describe('generateImages', () => {
 
 		await expect(
 			adjustImageCamera({
-				basePrompt: '{"subject":"유조선"}',
 				camera: { azimuthDeg: 0, elevationDeg: 0 },
 				count: 1,
 				generatedImageId: 8,
@@ -645,9 +649,11 @@ describe('generateImages', () => {
 	it('시드 이미지 편집은 Pollinations 개발 폴백을 사용하지 않는다', async () => {
 		mocks.env.NODE_ENV = 'development'
 		mocks.env.IMAGE_DEV_FALLBACK = 'true'
-		mocks.loadGeneratedImage.mockResolvedValue(
-			Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
-		)
+		mocks.loadGeneratedImage.mockResolvedValue({
+			data: Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
+			effectivePrompt: '{"subject":"유조선"}',
+			inputPrompt: '유조선',
+		})
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,
 			name: 'Technical Illustration',
@@ -659,7 +665,6 @@ describe('generateImages', () => {
 
 		await expect(
 			adjustImageCamera({
-				basePrompt: '{"subject":"유조선"}',
 				camera: { azimuthDeg: 0, elevationDeg: 0 },
 				count: 1,
 				generatedImageId: 8,

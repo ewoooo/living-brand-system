@@ -1,11 +1,43 @@
 import { Parser } from 'htmlparser2'
-import type { TemplateNodeConfigMap, TemplateSlotSpec } from '@/types/template'
+import type {
+	TemplateLayerAccess,
+	TemplateNodeConfig,
+	TemplateNodeConfigMap,
+	TemplateSlotSpec,
+} from '@/types/template'
+import { isTemplateVectorNodeType } from './template-node-types'
+
+export type ResolvedTemplateLayerPolicy = {
+	access: Exclude<TemplateLayerAccess, 'hidden'>
+	visibility: { defaultVisible: boolean; allowToggle: boolean }
+}
+
+/** 명시 정책을 우선하고 기존 input/imageInput은 editable 선언으로 호환한다. */
+export function resolveTemplateLayerPolicy(
+	config: TemplateNodeConfig | undefined,
+	legacyEditable: boolean,
+): ResolvedTemplateLayerPolicy | null {
+	const access = config?.creator?.access ?? (legacyEditable ? 'editable' : 'hidden')
+	if (access === 'hidden') return null
+	return {
+		access,
+		visibility: {
+			defaultVisible:
+				access === 'editable'
+					? (config?.creator?.visibility?.defaultVisible ?? true)
+					: true,
+			allowToggle:
+				access === 'editable' && (config?.creator?.visibility?.allowToggle ?? false),
+		},
+	}
+}
 
 export interface TemplateSlot {
 	nodeId: string
 	name: string
 	text: string
 	input: TemplateSlotSpec
+	policy: ResolvedTemplateLayerPolicy
 }
 
 export interface TemplateImageSlot {
@@ -16,6 +48,14 @@ export interface TemplateImageSlot {
 	/** 슬롯 요소 자신의 inline width/height(px) — clipsContent 프레임의 가시 박스인 자신을 쓴다. */
 	boxWidth?: number
 	boxHeight?: number
+	policy: ResolvedTemplateLayerPolicy
+}
+
+export interface TemplateVectorSlot {
+	nodeId: string
+	name: string
+	color?: string
+	policy: ResolvedTemplateLayerPolicy
 }
 
 // 서버(agent tool)와 브라우저 양쪽에서 돌도록 DOMParser 대신 htmlparser2로 읽는다.
@@ -58,9 +98,16 @@ export function collectTemplateSlots(
 			onopentag(tagName, attributes) {
 				if (tagName !== 'p') return
 				const nodeId = attributes['data-node-id']
-				const input = nodeId ? nodeConfigs[nodeId]?.input : undefined
-				if (!nodeId || !input) return
-				current = { nodeId, name: attributes['data-name'] || nodeId, text: '', input }
+				const config = nodeId ? nodeConfigs[nodeId] : undefined
+				const policy = resolveTemplateLayerPolicy(config, Boolean(config?.input))
+				if (!nodeId || !config?.input || !policy) return
+				current = {
+					nodeId,
+					name: attributes['data-name'] || nodeId,
+					text: '',
+					input: config.input,
+					policy,
+				}
 			},
 			ontext(text) {
 				if (current) current.text += text
@@ -91,16 +138,18 @@ export function collectTemplateImageSlots(
 			onopentag(tagName, attributes) {
 				if (tagName === 'p') return
 				const nodeId = attributes['data-node-id']
-				const imageInput = nodeId ? nodeConfigs[nodeId]?.imageInput : undefined
-				if (!nodeId || !imageInput) return
+				const config = nodeId ? nodeConfigs[nodeId] : undefined
+				const policy = resolveTemplateLayerPolicy(config, Boolean(config?.imageInput))
+				if (!nodeId || !config?.imageInput || !policy) return
 
 				const style = attributes.style
 				slots.push({
 					nodeId,
 					name: attributes['data-name'] || nodeId,
-					profileId: imageInput.profileId,
+					profileId: config.imageInput.profileId,
 					boxWidth: readPxDimension(style, 'width'),
 					boxHeight: readPxDimension(style, 'height'),
+					policy,
 				})
 			},
 		},
@@ -108,5 +157,39 @@ export function collectTemplateImageSlots(
 	)
 	parser.end(html)
 
+	return slots
+}
+
+/** 명시적으로 Creator에 노출한 벡터 레이어를 문서 순서로 모은다. */
+export function collectTemplateVectorSlots(
+	html: string,
+	nodeConfigs: TemplateNodeConfigMap,
+): TemplateVectorSlot[] {
+	if (!html) return []
+	const slots: TemplateVectorSlot[] = []
+	const parser = new Parser(
+		{
+			onopentag(_tagName, attributes) {
+				const nodeId = attributes['data-node-id']
+				const config = nodeId ? nodeConfigs[nodeId] : undefined
+				const policy = resolveTemplateLayerPolicy(config, false)
+				if (
+					!nodeId ||
+					!policy ||
+					!isTemplateVectorNodeType(attributes['data-figma-type'] ?? '')
+				) {
+					return
+				}
+				slots.push({
+					nodeId,
+					name: attributes['data-name'] || nodeId,
+					color: config?.vectorColor,
+					policy,
+				})
+			},
+		},
+		PARSER_OPTIONS,
+	)
+	parser.end(html)
 	return slots
 }

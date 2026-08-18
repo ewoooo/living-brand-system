@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '../camera-control'
 import { getImageRuntimeManifest } from './image-runtime-manifest'
 import {
 	deriveImageStudioConfig,
@@ -32,7 +33,11 @@ describe('deriveImageStudioConfig', () => {
 					type: 'color-adjustment',
 					controls: { line: 'lineColor', background: 'backgroundColor' },
 				},
-				{ type: 'camera-control' },
+				{
+					type: 'camera-control',
+					azimuths: CAMERA_AZIMUTHS,
+					elevations: CAMERA_ELEVATIONS,
+				},
 			],
 		})
 		expect(first.controller.groups.flatMap((group) => group.controls)).toEqual(
@@ -122,8 +127,13 @@ describe('deriveImageStudioConfig', () => {
 		const config = deriveImageStudioConfig({
 			...profile,
 			features: [
-				{ blockType: 'colorAdjustment', background: true },
-				{ blockType: 'cameraControl' },
+				{
+					id: 'feature-color',
+					blockName: '색 조정',
+					blockType: 'colorAdjustment',
+					background: true,
+				},
+				{ id: 'feature-camera', blockName: '카메라 조정', blockType: 'cameraControl' },
 			],
 			controllerRestrictions: {
 				controls: [
@@ -202,6 +212,50 @@ describe('projectImageProfileFeatureSelections', () => {
 				},
 			]),
 		).toEqual([{ type: 'camera-control' }, { type: 'color-adjustment', background: true }])
+	})
+
+	it('카메라 구간을 고르면 그대로 투영하고, 비우면 좁히지 않는다', () => {
+		expect(
+			projectImageProfileFeatureSelections([
+				{
+					blockType: 'cameraControl',
+					azimuths: ['front', 'front-right'],
+					elevations: [],
+				},
+			]),
+		).toEqual([{ type: 'camera-control', azimuths: ['front', 'front-right'] }])
+	})
+
+	it('런타임이 모르는 카메라 구간은 거부한다', () => {
+		expect(() =>
+			projectImageProfileFeatureSelections([
+				{ blockType: 'cameraControl', azimuths: ['upside-down'] },
+			]),
+		).toThrow('Image camera-control azimuths에 알 수 없는 값이 있습니다: upside-down')
+	})
+
+	it('Admin이 고른 구간은 Effective feature가 되고, 비우면 런타임 전체가 된다', () => {
+		const narrowed = deriveImageStudioConfig({
+			...profile,
+			features: [
+				{ blockType: 'cameraControl', azimuths: ['front'], elevations: ['eye-level'] },
+			],
+		})
+		expect(getImageStudioFeature(narrowed, 'camera-control')).toEqual({
+			type: 'camera-control',
+			azimuths: ['front'],
+			elevations: ['eye-level'],
+		})
+
+		const open = deriveImageStudioConfig({
+			...profile,
+			features: [{ blockType: 'cameraControl' }],
+		})
+		expect(getImageStudioFeature(open, 'camera-control')).toEqual({
+			type: 'camera-control',
+			azimuths: CAMERA_AZIMUTHS,
+			elevations: CAMERA_ELEVATIONS,
+		})
 	})
 
 	it('그 밖의 알 수 없는 필드는 여전히 거부한다', () => {

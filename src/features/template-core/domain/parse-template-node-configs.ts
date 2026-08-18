@@ -39,32 +39,47 @@ const templateImageColorizeSchema = z
 	})
 	.strict()
 
+const templateLayerCreatorPolicySchema = z
+	.strictObject({
+		access: z.enum(['hidden', 'readonly', 'editable']),
+		visibility: z
+			.strictObject({
+				defaultVisible: z.boolean().optional(),
+				allowToggle: z.boolean().optional(),
+			})
+			.optional(),
+	})
+	.refine(
+		(value) => value.access === 'editable' || value.visibility === undefined,
+		'visibility 정책은 editable 레이어에만 허용됩니다.',
+	)
+
 const templateNodeConfigMapSchema = z.record(
 	z.string().min(1),
-	z
-		.object({
-			text: z.string().optional(),
-			backgroundImage: z.string().optional(),
-			generatedImageId: z.number().int().positive().optional(),
-			imageTransform: templateImageTransformSchema.optional(),
-			imageColorize: templateImageColorizeSchema.optional(),
-			input: templateSlotSpecSchema.optional(),
-			imageInput: z
-				.object({ profileId: z.number().int().positive().optional() })
-				.strict()
-				.optional(),
-			vectorAsset: z
-				.object({
-					collection: z.enum(TEMPLATE_VECTOR_ASSET_COLLECTIONS),
-					id: z.number().int().positive(),
-					src: z.string().min(1),
-				})
-				.strict()
-				.optional(),
-			vectorFit: z.enum(['fill', 'contain']).optional(),
-			vectorColor: templateHexColorSchema.optional(),
-		})
-		.strict(),
+	z.strictObject({
+		creator: templateLayerCreatorPolicySchema.optional(),
+		visible: z.boolean().optional(),
+		text: z.string().optional(),
+		backgroundImage: z.string().optional(),
+		generatedImageId: z.number().int().positive().optional(),
+		imageTransform: templateImageTransformSchema.optional(),
+		imageColorize: templateImageColorizeSchema.optional(),
+		input: templateSlotSpecSchema.optional(),
+		imageInput: z
+			.object({ profileId: z.number().int().positive().optional() })
+			.strict()
+			.optional(),
+		vectorAsset: z
+			.object({
+				collection: z.enum(TEMPLATE_VECTOR_ASSET_COLLECTIONS),
+				id: z.number().int().positive(),
+				src: z.string().min(1),
+			})
+			.strict()
+			.optional(),
+		vectorFit: z.enum(['fill', 'contain']).optional(),
+		vectorColor: templateHexColorSchema.optional(),
+	}),
 )
 
 /** parseTemplateNodeConfigs가 성공했을 때의 결과 — 검증된 config map과 노드별 에셋 참조. */

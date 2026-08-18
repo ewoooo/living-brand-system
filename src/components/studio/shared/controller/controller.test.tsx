@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Controller } from './index'
 
@@ -18,35 +18,44 @@ describe('Controller layout', () => {
 			</Controller.Root>,
 		)
 
-		expect(container.querySelector('[data-slot="controller-root"]')).toBeInTheDocument()
-		expect(container.querySelector('[data-slot="controller-header"]')).toBeInTheDocument()
-		expect(container.querySelector('[data-slot="controller-content"]')).toBeInTheDocument()
+		expect(container.querySelector('[data-slot="controller-root"]')).toHaveClass(
+			'overflow-hidden',
+		)
+		expect(container.querySelector('[data-slot="controller-header"]')).toHaveClass('shrink-0')
+		expect(container.querySelector('[data-slot="controller-content"]')).toHaveClass(
+			'min-h-0',
+			'flex-1',
+			'overflow-y-auto',
+		)
 		expect(container.querySelector('[data-slot="controller-group"]')).toBeInTheDocument()
 		expect(screen.getByText('그룹')).toBeInTheDocument()
-		expect(screen.queryByRole('button', { name: '그룹' })).toBeNull()
-		expect(container.querySelector('[data-slot="controller-footer"]')).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: '그룹' })).toBeInTheDocument()
+		expect(container.querySelector('[data-slot="controller-footer"]')).toHaveClass('shrink-0')
 	})
 })
 
-describe('Controller.Group collapsible', () => {
+describe('Controller.Group', () => {
 	afterEach(cleanup)
 
-	it('컴포넌트 계약 prop을 DOM에 전달하지 않는다', () => {
-		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
-		render(
-			<Controller.Group title="Sec" collapsible>
+	it('항상 접고 펼칠 수 있고 닫힐 때 본문을 퇴장시킨다', async () => {
+		const { container } = render(
+			<Controller.Group title="Sec">
 				<div>내용물</div>
 			</Controller.Group>,
 		)
-		const warnings = errorSpy.mock.calls.flat().join(' ')
-		errorSpy.mockRestore()
+		const content = container.querySelector('[data-slot="controller-group-content"]')
 
-		expect(warnings).not.toContain('collapsible')
+		fireEvent.click(screen.getByRole('button', { name: 'Sec' }))
+		expect(screen.getByRole('button', { name: 'Sec' })).toHaveAttribute(
+			'aria-expanded',
+			'false',
+		)
+		await waitFor(() => expect(content).toHaveStyle({ height: '0px', opacity: '0' }))
 	})
 
-	it('잠금 중에도 사용자의 접힘 상태를 보존한다 — 풀려도 닫힌 채 남는다', () => {
-		const { rerender } = render(
-			<Controller.Group title="Sec" collapsible>
+	it('잠금 중에도 사용자의 접힘 상태를 보존한다 — 풀려도 닫힌 채 남는다', async () => {
+		const { container, rerender } = render(
+			<Controller.Group title="Sec">
 				<div>내용물</div>
 			</Controller.Group>,
 		)
@@ -54,25 +63,36 @@ describe('Controller.Group collapsible', () => {
 
 		// 사용자가 접는다.
 		fireEvent.click(screen.getByRole('button', { name: 'Sec' }))
-		expect(screen.queryByText('내용물')).toBeNull()
+		await waitFor(() =>
+			expect(container.querySelector('[data-slot="controller-group-content"]')).toHaveStyle({
+				height: '0px',
+				opacity: '0',
+			}),
+		)
 
 		// 잠금 — 닫힘 유지 + 토글 불가.
 		rerender(
-			<Controller.Group title="Sec" collapsible disabled>
+			<Controller.Group title="Sec" disabled>
 				<div>내용물</div>
 			</Controller.Group>,
 		)
 		expect(screen.getByRole('button', { name: 'Sec' })).toBeDisabled()
-		expect(screen.queryByText('내용물')).toBeNull()
+		expect(screen.getByRole('button', { name: 'Sec' })).toHaveAttribute(
+			'aria-expanded',
+			'false',
+		)
 
 		// 잠금 해제 — 강제로 열지 않고 사용자가 접어둔 상태로 복귀한다.
 		rerender(
-			<Controller.Group title="Sec" collapsible>
+			<Controller.Group title="Sec">
 				<div>내용물</div>
 			</Controller.Group>,
 		)
 		expect(screen.getByRole('button', { name: 'Sec' })).toBeEnabled()
-		expect(screen.queryByText('내용물')).toBeNull()
+		expect(screen.getByRole('button', { name: 'Sec' })).toHaveAttribute(
+			'aria-expanded',
+			'false',
+		)
 	})
 })
 
@@ -217,6 +237,49 @@ describe('Controller value controls', () => {
 		expect(onChange).toHaveBeenCalledWith(1.05)
 	})
 
+	it('Range는 임계 안에서 뗀 클릭은 뗀 지점만, 드래그는 이동마다 반영한다', () => {
+		const onChange = vi.fn()
+		render(
+			<Controller.Range
+				label="Scale"
+				value={0}
+				min={0}
+				max={10}
+				step={1}
+				onChange={onChange}
+			/>,
+		)
+		const track = screen.getByRole('slider', { name: 'Scale' })
+		// jsdom에는 레이아웃이 없다 — 비율 환산의 기준 사각형만 실측처럼 세운다.
+		vi.spyOn(track, 'getBoundingClientRect').mockReturnValue({
+			left: 0,
+			top: 0,
+			width: 100,
+			height: 36,
+			right: 100,
+			bottom: 36,
+			x: 0,
+			y: 0,
+			toJSON: () => ({}),
+		} as DOMRect)
+
+		// 클릭: 누른 순간에는 값이 움직이지 않고, 임계(3px) 안의 손떨림도 드래그가 되지 않는다.
+		fireEvent.pointerDown(track, { clientX: 30, clientY: 18, button: 0 })
+		expect(onChange).not.toHaveBeenCalled()
+		fireEvent.pointerMove(track, { clientX: 31, clientY: 18 })
+		expect(onChange).not.toHaveBeenCalled()
+		fireEvent.pointerUp(track, { clientX: 31, clientY: 18 })
+		expect(onChange.mock.calls).toEqual([[3]])
+
+		// 드래그: 임계를 넘긴 뒤로는 이동마다 값이 따라온다.
+		onChange.mockClear()
+		fireEvent.pointerDown(track, { clientX: 30, clientY: 18, button: 0 })
+		fireEvent.pointerMove(track, { clientX: 60, clientY: 18 })
+		fireEvent.pointerMove(track, { clientX: 80, clientY: 18 })
+		fireEvent.pointerUp(track, { clientX: 80, clientY: 18 })
+		expect(onChange.mock.calls).toEqual([[6], [8]])
+	})
+
 	it('Pad는 화살표 키로 x·y 단위 객체를 갱신한다', () => {
 		const onChange = vi.fn()
 		render(
@@ -233,7 +296,7 @@ describe('Controller value controls', () => {
 describe('Controller.AssetCard', () => {
 	afterEach(cleanup)
 
-	function renderAssetCard(disabled = false) {
+	function renderAssetCard(disabled = false, previewImage?: { url: string; alt: string }) {
 		return render(
 			<Controller.Browser.Root>
 				<Controller.AssetCard
@@ -242,6 +305,7 @@ describe('Controller.AssetCard', () => {
 					buttonLabel="Change"
 					aria-label="프로파일 변경"
 					tabs={['Image Profiles']}
+					previewImage={previewImage}
 					disabled={disabled}
 				>
 					<div>고를 것들</div>
@@ -268,6 +332,22 @@ describe('Controller.AssetCard', () => {
 		expect(panel).toHaveTextContent('고를 것들')
 	})
 
+	// 배경 이미지는 장식이다 — 카드가 무엇인지는 제목이 말하므로 접근성 트리에 이름을 하나 더 넣지 않는다.
+	it('미리보기 이미지가 있으면 카드 배경으로 깔고 접근성 트리에서는 감춘다', () => {
+		const { container } = renderAssetCard(false, { url: '/media/preview.png', alt: '무시됨' })
+
+		const background = container.querySelector('img')
+		expect(background).toHaveAttribute('src', '/media/preview.png')
+		expect(background).toHaveAttribute('alt', '')
+		expect(background).toHaveAttribute('aria-hidden', 'true')
+	})
+
+	it('미리보기 이미지가 없으면 배경 이미지를 두지 않는다', () => {
+		const { container } = renderAssetCard()
+
+		expect(container.querySelector('img')).toBeNull()
+	})
+
 	// 배선 전 카드는 트리거 자체를 두지 않는다 — 열리는 척하는 컨트롤을 만들지 않기 위해서다.
 	it('잠긴 카드는 눌러도 패널이 열리지 않는다', () => {
 		renderAssetCard(true)
@@ -276,6 +356,27 @@ describe('Controller.AssetCard', () => {
 		expect(button).toBeDisabled()
 		fireEvent.click(button)
 		expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+	})
+})
+
+describe('Controller.Browser.Thumbnail', () => {
+	afterEach(cleanup)
+
+	// 브라우저 카드의 미리보기는 장식이 아니다 — 이름이 말해주지 않는 "무엇처럼 생겼나"를 전하므로
+	// 어드민이 등록한 alt를 그대로 쓴다.
+	it('이미지가 있으면 어드민 alt와 함께 그리고, 없으면 빈 표면만 남는다', () => {
+		const withImage = render(
+			<Controller.Browser.Thumbnail image={{ url: '/media/card.png', alt: '방사형 광선' }} />,
+		)
+		expect(screen.getByRole('img', { name: '방사형 광선' })).toHaveAttribute(
+			'src',
+			'/media/card.png',
+		)
+		withImage.unmount()
+
+		const { container } = render(<Controller.Browser.Thumbnail />)
+		expect(container.querySelector('img')).toBeNull()
+		expect(container.querySelector('[data-slot="controller-browser-thumbnail"]')).not.toBeNull()
 	})
 })
 

@@ -1,3 +1,9 @@
+import {
+	type CameraAzimuth,
+	type CameraElevation,
+	isCameraAzimuth,
+	isCameraElevation,
+} from '@/features/image-generation/camera-control'
 import type { ImageModelPreset } from '@/features/image-generation/image-model'
 import {
 	parseStudioOutputCapability,
@@ -12,7 +18,9 @@ import {
 	type ControllerControlDefinition,
 	parseStudioControllerConfig,
 	projectPayloadControllerRestrictions,
+	resolveControllerPresentation,
 	type StudioControllerConfig,
+	toStudioPreviewImage,
 } from '@/modules/studio-controller/controller-definition'
 import {
 	getImageRuntimeManifest,
@@ -31,11 +39,21 @@ export type ImageStudioFeature =
 			type: 'color-adjustment'
 			controls: { line: string; background?: string }
 	  }
-	| { type: 'camera-control' }
+	| {
+			type: 'camera-control'
+			/** Admin이 좁힌 뒤 사용자가 실제로 고를 수 있는 구간. 항상 비어 있지 않다. */
+			azimuths: readonly CameraAzimuth[]
+			elevations: readonly CameraElevation[]
+	  }
 
 export type ImageProfileFeatureSelection =
 	| { type: 'color-adjustment'; background: boolean }
-	| { type: 'camera-control' }
+	| {
+			type: 'camera-control'
+			/** 비우면 런타임 전체 구간을 그대로 쓴다. */
+			azimuths?: readonly CameraAzimuth[]
+			elevations?: readonly CameraElevation[]
+	  }
 
 /** Image Studio Config를 파생하는 서버측 published 프로파일 read model. */
 export type PublishedImageProfileDefinition = {
@@ -44,8 +62,10 @@ export type PublishedImageProfileDefinition = {
 	slug: string | null
 	imageModelPreset: ImageModelPreset
 	controllerRestrictions?: unknown
+	controllerPresentation?: unknown
 	features?: unknown
 	exportPolicy?: unknown
+	previewImage?: unknown
 }
 
 /** 이미지 프로파일 하나가 발행하는 공통 Controller envelope와 이미지 실행 descriptor. */
@@ -81,6 +101,8 @@ export function parseImageStudioConfig(input: unknown): ImageStudioConfig {
 		'artifacts',
 		'output',
 		'controller',
+		'controllerPresentation',
+		'previewImage',
 		'image',
 	])
 	if (common.studio !== 'image') throw new Error('ImageStudioConfig studio: image여야 합니다.')
@@ -104,7 +126,9 @@ export function parseImageStudioConfig(input: unknown): ImageStudioConfig {
 	for (const featureValue of image.features) {
 		const feature = record(featureValue, 'ImageStudioConfig feature')
 		if (feature.type === 'camera-control') {
-			assertKeys(feature, ['type'])
+			assertKeys(feature, ['type', 'azimuths', 'elevations'])
+			assertSectors(feature.azimuths, isCameraAzimuth, 'azimuths')
+			assertSectors(feature.elevations, isCameraElevation, 'elevations')
 		} else if (feature.type === 'color-adjustment') {
 			assertKeys(feature, ['type', 'controls'])
 			const controls = record(feature.controls, 'ImageStudioConfig color controls')
@@ -195,6 +219,24 @@ export function getImageStudioFeatureControlIds(config: ImageStudioConfig): read
 	})
 }
 
+/** Effective feature의 구간 목록은 비어 있을 수 없다 — 비면 조작 가능한 시점이 없다. */
+function assertSectors(
+	value: unknown,
+	isSector: (candidate: unknown) => boolean,
+	label: string,
+): void {
+	if (!Array.isArray(value) || value.length === 0) {
+		throw new Error(`ImageStudioConfig camera-control ${label}가 비어 있습니다.`)
+	}
+	for (const sector of value) {
+		if (!isSector(sector)) {
+			throw new Error(
+				`ImageStudioConfig camera-control ${label}에 알 수 없는 값이 있습니다: ${String(sector)}`,
+			)
+		}
+	}
+}
+
 function assertNeverFeature(value: never): never {
 	throw new Error(`지원하지 않는 ImageStudioFeature입니다: ${JSON.stringify(value)}`)
 }
@@ -210,6 +252,11 @@ export function deriveImageStudioConfig(
 		manifest,
 		profile.features,
 	)
+	const controller = deriveImageProfileController(
+		profile.imageModelPreset,
+		profile.features,
+		profile.controllerRestrictions,
+	)
 	const config: ImageStudioConfig = {
 		studio: 'image',
 		id: profile.id,
@@ -221,11 +268,12 @@ export function deriveImageStudioConfig(
 			{ packages: ['zip'] },
 		) as StudioOutputCapability & { original: boolean },
 		artifacts: manifest.artifacts,
-		controller: deriveImageProfileController(
-			profile.imageModelPreset,
-			profile.features,
-			profile.controllerRestrictions,
+		controller,
+		controllerPresentation: resolveControllerPresentation(
+			controller.groups,
+			profile.controllerPresentation,
 		),
+		previewImage: toStudioPreviewImage(profile.previewImage),
 		image: {
 			slug: profile.slug ?? null,
 			features: projectEffectiveFeatures(manifest, featureSelections),
@@ -247,7 +295,7 @@ export function projectImageProfileFeatureSelections(
 		const feature = record(value, 'Image feature')
 		switch (feature.blockType) {
 			case 'colorAdjustment':
-				assertFeatureKeys(feature, ['id', 'blockType', 'blockName', 'background'])
+				assertFeatureKeys(feature, ['id', 'blockName', 'blockType', 'background'])
 				if (feature.background != null && typeof feature.background !== 'boolean') {
 					throw new Error('Image color-adjustment background은 boolean이어야 합니다.')
 				}
@@ -255,9 +303,26 @@ export function projectImageProfileFeatureSelections(
 					type: 'color-adjustment' as const,
 					background: feature.background === true,
 				}
-			case 'cameraControl':
-				assertFeatureKeys(feature, ['id', 'blockType', 'blockName'])
-				return { type: 'camera-control' as const }
+			case 'cameraControl': {
+				assertFeatureKeys(feature, [
+					'id',
+					'blockName',
+					'blockType',
+					'azimuths',
+					'elevations',
+				])
+				return {
+					type: 'camera-control' as const,
+					...definedSectors(
+						'azimuths',
+						projectCameraSectors(feature.azimuths, isCameraAzimuth, 'azimuths'),
+					),
+					...definedSectors(
+						'elevations',
+						projectCameraSectors(feature.elevations, isCameraElevation, 'elevations'),
+					),
+				}
+			}
 			default:
 				throw new Error(`지원하지 않는 Image feature blockType입니다: ${feature.blockType}`)
 		}
@@ -267,6 +332,47 @@ export function projectImageProfileFeatureSelections(
 // 🔴 `blockName`은 Payload blocks가 항상 붙이는 내장 필드다(값이 없어도 키는 온다). 허용 목록에서
 // 빠지면 블록이 하나라도 있는 프로필이 전부 이 가드에 걸린다 — 데이터가 빈 환경에서는 경로를 안 타서
 // 드러나지 않는다. 이 가드의 목적은 스키마 드리프트 감지이므로 Payload 내장 키는 통과시킨다.
+/** Admin이 고른 구간이 런타임 지원 범위를 넘지 못하게 한다 — 좁히기만 허용한다. */
+function assertNarrowedSectors<Sector extends string>(
+	selected: readonly Sector[] | undefined,
+	supported: readonly Sector[],
+	label: string,
+) {
+	if (!selected) return
+	const outside = selected.filter((sector) => !supported.includes(sector))
+	if (outside.length > 0) {
+		throw new Error(
+			`Image camera-control ${label}가 런타임 지원 범위를 넘습니다: ${outside.join(', ')}`,
+		)
+	}
+}
+
+/** Payload select(hasMany)의 구간 목록을 읽는다 — 비었거나 없으면 좁히지 않는 것으로 본다. */
+function projectCameraSectors<Sector extends string>(
+	input: unknown,
+	isSector: (value: unknown) => value is Sector,
+	label: string,
+): readonly Sector[] | undefined {
+	if (input == null) return undefined
+	if (!Array.isArray(input)) throw new Error(`Image camera-control ${label}가 배열이 아닙니다.`)
+	if (input.length === 0) return undefined
+	const sectors = new Set<Sector>()
+	for (const value of input) {
+		if (!isSector(value)) {
+			throw new Error(`Image camera-control ${label}에 알 수 없는 값이 있습니다: ${value}`)
+		}
+		sectors.add(value)
+	}
+	return [...sectors]
+}
+
+function definedSectors<Key extends string, Sector extends string>(
+	key: Key,
+	value: readonly Sector[] | undefined,
+) {
+	return value === undefined ? {} : ({ [key]: value } as Record<Key, readonly Sector[]>)
+}
+
 function assertFeatureKeys(value: Record<string, unknown>, allowed: readonly string[]) {
 	const allowedKeys = new Set(allowed)
 	for (const key of Object.keys(value)) {
@@ -316,6 +422,10 @@ function projectSupportedImageProfileFeatureSelections(
 		) {
 			throw new Error('Image runtime이 background color adjustment를 지원하지 않습니다.')
 		}
+		if (selection.type === 'camera-control' && supported.type === 'camera-control') {
+			assertNarrowedSectors(selection.azimuths, supported.azimuths, 'azimuths')
+			assertNarrowedSectors(selection.elevations, supported.elevations, 'elevations')
+		}
 	}
 	return selections
 }
@@ -348,7 +458,20 @@ function projectEffectiveFeatures(
 	features: readonly ImageProfileFeatureSelection[],
 ): readonly ImageStudioFeature[] {
 	return features.map((feature) => {
-		if (feature.type === 'camera-control') return { type: 'camera-control' }
+		if (feature.type === 'camera-control') {
+			const capability = manifest.supportedFeatures.find(
+				(candidate) => candidate.type === 'camera-control',
+			)
+			if (capability?.type !== 'camera-control') {
+				throw new Error('Image runtime이 camera-control feature를 지원하지 않습니다.')
+			}
+			// Admin이 비워 두면 런타임 전체 구간이 곧 사용자 범위다.
+			return {
+				type: 'camera-control',
+				azimuths: feature.azimuths ?? capability.azimuths,
+				elevations: feature.elevations ?? capability.elevations,
+			}
+		}
 		const capability = manifest.supportedFeatures.find(
 			(candidate) => candidate.type === 'color-adjustment',
 		)

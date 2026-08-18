@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { ControllerBrowser } from '@/components/studio/shared/controller'
 import { Badge } from '@/components/ui/badge'
 import { Typography } from '@/components/ui/typography'
@@ -29,10 +30,16 @@ function profileBadges(option: ImageStudioConfig): string[] {
  */
 export function ImageProfilePicker() {
 	const { config, profiles } = useImageStudio()
+	const { load } = profiles.browse
+	// 이 컴포넌트는 패널이 열릴 때 마운트된다(radix가 닫힌 콘텐츠를 언마운트한다) — mount가 곧 "열림"이다.
+	// 실패했다면 다시 열 때 재시도된다.
+	useEffect(() => {
+		load()
+	}, [load])
 
 	return (
 		<div data-slot="image-profile-picker" className="grid shrink-0 grid-cols-3 gap-3 pr-1">
-			{profiles.options.map((option) => {
+			{(profiles.browse.data ?? []).map((option) => {
 				const current = option.id === config.id
 
 				return (
@@ -49,8 +56,7 @@ export function ImageProfilePicker() {
 									: 'border-background/10 hover:bg-background/10',
 							)}
 						>
-							{/* 썸네일 자리 — 프로파일에는 대표 이미지 원천이 없다(보고: 생성 이미지는 사용자 세션에서 프로파일별로 조회되지 않는다). */}
-							<div className="min-h-0 flex-1 bg-background/20" />
+							<ControllerBrowser.Thumbnail image={option.previewImage} />
 							<div className="flex shrink-0 flex-col gap-2 bg-background/5 px-1.5 py-2">
 								<Typography as="p" size="xs" weight="medium" className="truncate">
 									{option.name}

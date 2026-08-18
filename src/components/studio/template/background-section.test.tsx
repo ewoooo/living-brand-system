@@ -1,14 +1,15 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
+import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/camera-control'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import {
 	resolveTemplateImageConfig,
 	type TemplateBackgroundType,
-} from '@/features/template-customization/domain/template-config'
+} from '@/features/template-customization/domain/template-studio-config'
 import type { TemplateBackgroundState } from '@/features/template-customization/hooks/use-template-studio'
 import {
 	type ControllerRuntimeBindings,
@@ -68,7 +69,6 @@ function Harness({
 			groupDefinition={{
 				id: 'background',
 				title: 'Background',
-				collapsible: true,
 				controls: [],
 			}}
 			typeDefinition={{
@@ -341,6 +341,19 @@ describe('BackgroundSection', () => {
 			'가로 0%, 세로 0%',
 		)
 	})
+
+	it('Background를 접으면 선택한 Graphic의 그룹도 함께 닫힌다', async () => {
+		const user = userEvent.setup()
+		const { container } = render(<Harness allowedTypes={['color', 'image', 'graphic']} />)
+		await selectBackgroundType(user, 'Graphic')
+
+		// Graphic Config의 그룹은 Background 본문 안에 있어야 한다 — 형제로 두면 따로 남는다.
+		const content = container.querySelector('[data-slot="controller-group-content"]')
+		expect(content).toContainElement(screen.getByRole('slider', { name: '기준점' }))
+
+		await user.click(screen.getByRole('button', { name: 'Background' }))
+		await waitFor(() => expect(content).toHaveStyle({ height: '0px', opacity: '0' }))
+	})
 })
 
 function createImageConfig(): ImageStudioConfig {
@@ -423,7 +436,11 @@ function createImageConfig(): ImageStudioConfig {
 					type: 'color-adjustment',
 					controls: { line: 'lineColor', background: 'backgroundColor' },
 				},
-				{ type: 'camera-control' },
+				{
+					type: 'camera-control',
+					azimuths: CAMERA_AZIMUTHS,
+					elevations: CAMERA_ELEVATIONS,
+				},
 			],
 		},
 	}

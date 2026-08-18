@@ -14,11 +14,11 @@ const FOOTER_LINK_GROUPS = [
 	{
 		label: 'Studio',
 		links: [
-			{ href: routes.studio.root, label: 'Overview' },
 			{ href: routes.studio.template, label: 'Templates' },
-			{ href: routes.studio.generateImage, label: 'Image' },
-			{ href: routes.studio.generateGraphic, label: 'Graphic' },
+			{ href: routes.studio.image, label: 'Image' },
+			{ href: routes.studio.graphic, label: 'Graphic' },
 			{ href: routes.studio.review, label: 'Review' },
+			{ href: routes.studio.assets, label: 'Assets' },
 		],
 	},
 	{

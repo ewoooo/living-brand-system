@@ -11,12 +11,14 @@ import type {
 	TemplateBackgroundType,
 	TemplateImageConfigSlot,
 	TemplateTextSlot,
-} from '@/features/template-customization/domain/template-config'
+	TemplateVectorSlot,
+} from '@/features/template-customization/domain/template-studio-config'
 import type {
 	RasterArtifact,
 	StudioArtifactProducer,
 } from '@/modules/studio-artifact/studio-artifact'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
+import type { TemplateNodeConfigMap } from '@/types/template'
 import { withTemplateRasterStage } from './render-template-raster-stage.client'
 
 export type TemplateRasterArtifactSource = {
@@ -60,6 +62,9 @@ export function composeTemplateStudioHtml({
 	imageStates,
 	imageSlots,
 	imageContracts,
+	vectorSlots,
+	vectorColors,
+	layerVisibility,
 	background,
 	width,
 	height,
@@ -81,6 +86,9 @@ export function composeTemplateStudioHtml({
 	>
 	imageSlots: readonly TemplateImageConfigSlot[]
 	imageContracts: Readonly<Record<string, readonly ResolvedTemplateImageConfig[]>>
+	vectorSlots: readonly TemplateVectorSlot[]
+	vectorColors: Readonly<Record<string, string | undefined>>
+	layerVisibility: Readonly<Record<string, boolean>>
 	background: {
 		type: TemplateBackgroundType
 		color: string | null
@@ -100,13 +108,12 @@ export function composeTemplateStudioHtml({
 	)
 	const imageOverrides = Object.fromEntries(
 		Object.entries(imageStates).flatMap(([slotId, state]) => {
-			if (!state.image) return []
 			const slot = imageSlots.find((candidate) => candidate.id === slotId)
 			const contract = imageContracts[slotId]?.find(
 				(candidate) => candidate.config.id === state.profileId,
 			)
 			const colorControls =
-				contract && state.image.profileId === state.profileId
+				contract && (!state.image || state.image.profileId === state.profileId)
 					? getImageColorAdjustmentControls(contract.config)
 					: null
 			const lineColor = colorControls ? state.featureValues[colorControls.line.id] : undefined
@@ -122,26 +129,35 @@ export function composeTemplateStudioHtml({
 								: {}),
 						}
 					: undefined
-			return [
-				[
-					slotId,
-					{
-						...(colorize ? { imageColorize: colorize } : {}),
-						...(state.transform
-							? {
-									imageTransform: toImageEditTransform(
-										state.transform,
-										slot?.box.width ?? width,
-										slot?.box.height ?? height,
-									),
-								}
-							: {}),
-						backgroundImage: state.image.backgroundImage,
-						generatedImageId: state.image.generatedImageId,
-					},
-				] as const,
-			]
+			const override = {
+				...(colorize ? { imageColorize: colorize } : {}),
+				...(state.image && state.transform
+					? {
+							imageTransform: toImageEditTransform(
+								state.transform,
+								slot?.box.width ?? width,
+								slot?.box.height ?? height,
+							),
+						}
+					: {}),
+				...(state.image
+					? {
+							backgroundImage: state.image.backgroundImage,
+							generatedImageId: state.image.generatedImageId,
+						}
+					: {}),
+			}
+			return Object.keys(override).length ? [[slotId, override] as const] : []
 		}),
+	)
+	const vectorOverrides = Object.fromEntries(
+		vectorSlots.flatMap((slot) => {
+			const vectorColor = vectorColors[slot.id]
+			return vectorColor ? [[slot.id, { vectorColor }] as const] : []
+		}),
+	)
+	const visibilityOverrides = Object.fromEntries(
+		Object.entries(layerVisibility).map(([slotId, visible]) => [slotId, { visible }]),
 	)
 	const canvasBackground = {
 		...(background.type === 'graphic' ? { clear: true } : {}),
@@ -150,5 +166,17 @@ export function composeTemplateStudioHtml({
 			? { imageUrl: background.image.url }
 			: {}),
 	}
-	return composeTemplateHtml(html, { ...textOverrides, ...imageOverrides }, { canvasBackground })
+	return composeTemplateHtml(
+		html,
+		mergeTemplateOverrides(textOverrides, imageOverrides, vectorOverrides, visibilityOverrides),
+		{ canvasBackground },
+	)
+}
+
+function mergeTemplateOverrides(...maps: readonly TemplateNodeConfigMap[]): TemplateNodeConfigMap {
+	const merged: TemplateNodeConfigMap = {}
+	for (const map of maps) {
+		for (const [id, value] of Object.entries(map)) merged[id] = { ...merged[id], ...value }
+	}
+	return merged
 }

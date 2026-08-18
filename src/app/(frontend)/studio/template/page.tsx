@@ -2,8 +2,11 @@ import { redirect } from 'next/navigation'
 import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { getCreateNavigation } from '@/features/template-customization/services/get-create-navigation.service'
+import { requireUser } from '@/lib/request-auth'
+import { routes } from '@/lib/routes'
 
 export default async function CreatePage() {
+	await requireUser(routes.studio.template)
 	const navigation = await getCreateNavigation()
 	const firstTemplate = navigation.categories.flatMap((category) => category.templates)[0]
 

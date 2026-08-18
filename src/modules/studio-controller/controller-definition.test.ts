@@ -9,6 +9,8 @@ import {
 	isControllerPadValue,
 	parseStudioControllerConfig,
 	projectPayloadControllerRestrictions,
+	resolveControllerPresentation,
+	toStudioPreviewImage,
 } from './controller-definition'
 
 describe('createControllerValues', () => {
@@ -183,13 +185,14 @@ describe('parseStudioControllerConfig', () => {
 			name: 'Demo',
 			type: 'p5',
 			artifacts: { vector: {} },
+			controllerPresentation: {
+				groups: [{ groupId: 'controls', collapsible: true, defaultOpen: false }],
+			},
 			controller: {
 				groups: [
 					{
 						id: 'controls',
 						title: 'Controls',
-						collapsible: true,
-						defaultOpen: false,
 						controls: [
 							{
 								id: 'prompt',
@@ -412,7 +415,6 @@ describe('Payload Controller projection과 Override 적용', () => {
 			{
 				id: 'setting',
 				title: 'Setting',
-				collapsible: true as const,
 				controls: [
 					{
 						id: 'ratio',
@@ -438,7 +440,7 @@ describe('Payload Controller projection과 Override 적용', () => {
 			],
 		})
 		const result = applyControllerRestrictions(base, restrictions)
-		expect(result[0]).toMatchObject({ title: 'Setting', collapsible: true })
+		expect(result[0]).toMatchObject({ title: 'Setting' })
 		expect(result[0]?.controls[0]).toMatchObject({
 			kind: 'select',
 			label: 'Ratio',
@@ -455,6 +457,156 @@ describe('Payload Controller projection과 Override 적용', () => {
 				groups: [{ key: 'settings', controls: [] }],
 			}),
 		).toThrow('지원하지 않는 필드')
+	})
+
+	it('색 control은 자유 색상을 팔레트로 좁히고 목록 밖 색을 실행에서 막는다', () => {
+		const base = [
+			{
+				id: 'profile-settings',
+				title: 'Profile Settings',
+				controls: [
+					{
+						id: 'lineColor',
+						kind: 'color' as const,
+						label: 'Line Color',
+						defaultValue: null,
+					},
+				],
+			},
+		] satisfies readonly ControllerGroupDefinition[]
+		const narrowed = applyControllerRestrictions(
+			base,
+			projectPayloadControllerRestrictions({
+				controls: [{ controlId: 'lineColor', colorValues: ['#FF0000', '#00ff00'] }],
+			}),
+		)
+		const control = narrowed[0]?.controls[0]
+		if (control?.kind !== 'color') throw new Error('color control이 필요합니다.')
+		// hex 대소문자는 같은 색이다 — 목록은 소문자로 정규화된다.
+		expect(control.values).toEqual(['#ff0000', '#00ff00'])
+		expect(acceptsControllerExecutionValue(control, '#ff0000')).toBe(true)
+		expect(acceptsControllerExecutionValue(control, '#0000ff')).toBe(false)
+	})
+
+	it('팔레트를 이미 가진 색 control을 넓히려 하면 거부한다', () => {
+		const base = [
+			{
+				id: 'profile-settings',
+				title: 'Profile Settings',
+				controls: [
+					{
+						id: 'lineColor',
+						kind: 'color' as const,
+						label: 'Line Color',
+						defaultValue: '#ff0000',
+						values: ['#ff0000'],
+					},
+				],
+			},
+		] satisfies readonly ControllerGroupDefinition[]
+		expect(() =>
+			applyControllerRestrictions(
+				base,
+				projectPayloadControllerRestrictions({
+					controls: [{ controlId: 'lineColor', colorValues: ['#ff0000', '#0000ff'] }],
+				}),
+			),
+		).toThrow('colorValues가 기본 계약을 확장합니다')
+	})
+})
+
+describe('Controller group presentation', () => {
+	const groups = [
+		{ id: 'first', title: 'First', controls: [] },
+		{ id: 'second', title: 'Second', controls: [] },
+	] satisfies readonly ControllerGroupDefinition[]
+
+	it('Admin sparse 값을 Runtime 순서의 완전한 Creator 정책으로 해석한다', () => {
+		expect(
+			resolveControllerPresentation(groups, {
+				groups: [{ groupId: 'second', defaultOpen: false }],
+			}),
+		).toEqual({
+			groups: [
+				{ groupId: 'first', collapsible: true, defaultOpen: true },
+				{ groupId: 'second', collapsible: true, defaultOpen: false },
+			],
+		})
+	})
+
+	it('알 수 없는 그룹과 닫힌 static 그룹을 거부한다', () => {
+		expect(() =>
+			resolveControllerPresentation(groups, {
+				groups: [{ groupId: 'missing', defaultOpen: false }],
+			}),
+		).toThrow('찾을 수 없습니다')
+		expect(() =>
+			resolveControllerPresentation(groups, {
+				groups: [{ groupId: 'first', collapsible: false, defaultOpen: false }],
+			}),
+		).toThrow('닫힌 상태')
+	})
+})
+
+describe('previewImage', () => {
+	const control = { id: 'flag', kind: 'toggle', label: '플래그', defaultValue: false }
+
+	it('url·alt만 받고 다른 키나 빈 url은 거부한다', () => {
+		expect(() =>
+			parseStudioControllerConfig({
+				...configWith(control),
+				previewImage: { url: '/media/preview.png', alt: '방사형 광선' },
+			}),
+		).not.toThrow()
+		// alt는 빈 문자열도 유효하다 — 장식 이미지의 대체 텍스트다.
+		expect(() =>
+			parseStudioControllerConfig({
+				...configWith(control),
+				previewImage: { url: '/media/preview.png', alt: '' },
+			}),
+		).not.toThrow()
+		expect(() =>
+			parseStudioControllerConfig({
+				...configWith(control),
+				previewImage: { url: '', alt: '빈 주소' },
+			}),
+		).toThrow('previewImage.url')
+		expect(() =>
+			parseStudioControllerConfig({
+				...configWith(control),
+				previewImage: { url: '/media/preview.png', alt: '설명', width: 320 },
+			}),
+		).toThrow('previewImage')
+	})
+})
+
+describe('toStudioPreviewImage', () => {
+	it('thumbnail이 있으면 그것을 쓰고 없으면 원본 url로 떨어진다', () => {
+		expect(
+			toStudioPreviewImage({
+				url: '/media/full.png',
+				alt: '방사형 광선',
+				sizes: { thumbnail: { url: '/media/full-320x240.png' } },
+			}),
+		).toEqual({ url: '/media/full-320x240.png', alt: '방사형 광선' })
+		expect(toStudioPreviewImage({ url: '/media/full.png', alt: '광선' })).toEqual({
+			url: '/media/full.png',
+			alt: '광선',
+		})
+	})
+
+	// depth 0에서는 id만 오고, 파일이 없는 문서는 url이 없다 — 어느 쪽도 미리보기가 아니다.
+	it('populate되지 않은 값·파일 없는 문서·null은 undefined다', () => {
+		for (const value of [undefined, null, 7, {}, { alt: '설명만' }]) {
+			expect(toStudioPreviewImage(value)).toBeUndefined()
+		}
+	})
+
+	it('alt가 없으면 빈 문자열로 채운다', () => {
+		expect(toStudioPreviewImage({ url: '/media/full.png' })).toEqual({
+			url: '/media/full.png',
+			alt: '',
+		})
 	})
 })
 

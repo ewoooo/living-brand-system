@@ -16,8 +16,8 @@ export function HeroFeatureSection() {
 			/>
 			<NavigationBlock
 				variant="featured"
-				href={routes.studio.root}
-				label="Studio"
+				href={routes.studio.assets}
+				label="Assets"
 				className="aspect-square md:aspect-auto"
 			/>
 			<NavigationBlock

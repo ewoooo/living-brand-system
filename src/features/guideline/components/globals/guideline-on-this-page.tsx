@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { scrollToGuidelinePage, useActivePageSlug } from './guideline-page-navigation'
 
 type TocPage = { id: number | string; slug: string; title: string }
 
@@ -47,7 +48,7 @@ export function GuidelineOnThisPage({ pages }: { pages: TocPage[] }) {
 						<a
 							href={`#${page.slug}`}
 							aria-current={page.slug === activeSlug ? 'page' : undefined}
-							onClick={(event) => scrollToPage(event, page.slug)}
+							onClick={(event) => scrollToGuidelinePage(event, page.slug)}
 							className={cn(
 								'block py-1.5 pl-3 leading-snug transition-colors',
 								page.slug === activeSlug
@@ -62,64 +63,4 @@ export function GuidelineOnThisPage({ pages }: { pages: TocPage[] }) {
 			</ul>
 		</nav>
 	)
-}
-
-/** 중첩 스크롤 컨테이너를 직접 움직인다(브라우저 기본 #앵커는 부모 프레임을 스크롤함). */
-function scrollToPage(event: React.MouseEvent, slug: string) {
-	const el = document.getElementById(slug)
-	const root = el?.closest<HTMLElement>('[data-slot="section-scroll-container"]')
-	if (!el || !root) return
-	event.preventDefault()
-	root.scrollTo({
-		top:
-			root.scrollTop + el.getBoundingClientRect().top - root.getBoundingClientRect().top - 96,
-		behavior: 'smooth',
-	})
-	history.replaceState(null, '', `#${slug}`)
-}
-
-/**
- * 스크롤 스파이 — 섹션 스크롤 컨테이너 상단 기준선을 넘어선 마지막 article slug를 active로 반환.
- */
-function useActivePageSlug(slugs: string[]): string | null {
-	const [active, setActive] = useState<string | null>(null)
-	const key = slugs.join('|')
-
-	useEffect(() => {
-		const list = key ? key.split('|') : []
-		if (list.length === 0) {
-			setActive(null)
-			return
-		}
-		const root = document.querySelector<HTMLElement>('[data-slot="section-scroll-container"]')
-		if (!root) return
-
-		let raf = 0
-		const compute = () => {
-			raf = 0
-			const line = root.getBoundingClientRect().top + 120
-			let current: string | null = null
-			for (const slug of list) {
-				const el = document.getElementById(slug)
-				if (!el) continue
-				if (el.getBoundingClientRect().top <= line) current = slug
-				else break
-			}
-			setActive(current)
-		}
-		const onScroll = () => {
-			if (!raf) raf = requestAnimationFrame(compute)
-		}
-
-		compute()
-		root.addEventListener('scroll', onScroll, { passive: true })
-		window.addEventListener('resize', onScroll, { passive: true })
-		return () => {
-			root.removeEventListener('scroll', onScroll)
-			window.removeEventListener('resize', onScroll)
-			if (raf) cancelAnimationFrame(raf)
-		}
-	}, [key])
-
-	return active
 }

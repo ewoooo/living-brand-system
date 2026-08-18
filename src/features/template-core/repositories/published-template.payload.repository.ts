@@ -32,7 +32,8 @@ export async function listPublishedTemplateNavItems() {
 	const payload = await getPayload({ config })
 	const templates = await payload.find({
 		collection: 'templates',
-		depth: 0,
+		// 미리보기 이미지를 채우려면 upload 관계가 한 단계 populate돼야 한다(depth 0은 id만 준다).
+		depth: 1,
 		draft: false,
 		fallbackLocale: FALLBACK_LOCALE,
 		limit: 200,
@@ -45,9 +46,11 @@ export async function listPublishedTemplateNavItems() {
 		},
 		select: {
 			name: true,
+			slug: true,
 			category: true,
 			html: true,
 			overrides: true,
+			previewImage: true,
 			width: true,
 			height: true,
 		},
@@ -56,20 +59,26 @@ export async function listPublishedTemplateNavItems() {
 	return templates.docs
 }
 
-export async function findPublishedTemplate(
-	templateId: number,
-): Promise<(Template & { controllerRestrictions?: unknown }) | null> {
+export async function findPublishedTemplate(templateSlug: string): Promise<
+	| (Template & {
+			controllerRestrictions?: unknown
+			controllerPresentation?: unknown
+			previewImage?: unknown
+	  })
+	| null
+> {
 	const payload = await getPayload({ config })
 	const templates = await payload.find({
 		collection: 'templates',
-		depth: 0,
+		// 미리보기 이미지를 채우려면 upload 관계가 한 단계 populate돼야 한다(depth 0은 id만 준다).
+		depth: 1,
 		draft: false,
 		fallbackLocale: FALLBACK_LOCALE,
 		limit: 1,
 		locale: LOCALE,
 		where: {
-			id: {
-				equals: templateId,
+			slug: {
+				equals: templateSlug,
 			},
 			_status: {
 				equals: 'published',
@@ -77,10 +86,12 @@ export async function findPublishedTemplate(
 		},
 		select: {
 			controllerRestrictions: true,
+			controllerPresentation: true,
 			name: true,
 			updatedAt: true,
 			html: true,
 			overrides: true,
+			previewImage: true,
 			width: true,
 			height: true,
 			exportPolicy: true,
@@ -88,6 +99,12 @@ export async function findPublishedTemplate(
 	})
 
 	return (
-		(templates.docs[0] as (Template & { controllerRestrictions?: unknown }) | undefined) ?? null
+		(templates.docs[0] as
+			| (Template & {
+					controllerRestrictions?: unknown
+					controllerPresentation?: unknown
+					previewImage?: unknown
+			  })
+			| undefined) ?? null
 	)
 }

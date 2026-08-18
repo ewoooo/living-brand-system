@@ -59,6 +59,11 @@ import * as migration_20260812_062606_studio_export_formats from './20260812_062
 import * as migration_20260813_050920_studio_runtime_contract_convergence from './20260813_050920_studio_runtime_contract_convergence';
 import * as migration_20260813_075510_studio_export_policy from './20260813_075510_studio_export_policy';
 import * as migration_20260813_105904_unify_studio_output_policy from './20260813_105904_unify_studio_output_policy';
+import * as migration_20260814_023629_add_controller_presentation from './20260814_023629_add_controller_presentation';
+import * as migration_20260814_062523_image_profile_camera_sectors from './20260814_062523_image_profile_camera_sectors';
+import * as migration_20260814_065504_template_slug from './20260814_065504_template_slug';
+import * as migration_20260814_075620_add_linear_fluted_glass_runtime from './20260814_075620_add_linear_fluted_glass_runtime';
+import * as migration_20260814_083322_studio_preview_image from './20260814_083322_studio_preview_image';
 
 export const migrations = [
   {
@@ -364,6 +369,31 @@ export const migrations = [
   {
     up: migration_20260813_105904_unify_studio_output_policy.up,
     down: migration_20260813_105904_unify_studio_output_policy.down,
-    name: '20260813_105904_unify_studio_output_policy'
+    name: '20260813_105904_unify_studio_output_policy',
+  },
+  {
+    up: migration_20260814_023629_add_controller_presentation.up,
+    down: migration_20260814_023629_add_controller_presentation.down,
+    name: '20260814_023629_add_controller_presentation',
+  },
+  {
+    up: migration_20260814_062523_image_profile_camera_sectors.up,
+    down: migration_20260814_062523_image_profile_camera_sectors.down,
+    name: '20260814_062523_image_profile_camera_sectors',
+  },
+  {
+    up: migration_20260814_065504_template_slug.up,
+    down: migration_20260814_065504_template_slug.down,
+    name: '20260814_065504_template_slug',
+  },
+  {
+    up: migration_20260814_075620_add_linear_fluted_glass_runtime.up,
+    down: migration_20260814_075620_add_linear_fluted_glass_runtime.down,
+    name: '20260814_075620_add_linear_fluted_glass_runtime',
+  },
+  {
+    up: migration_20260814_083322_studio_preview_image.up,
+    down: migration_20260814_083322_studio_preview_image.down,
+    name: '20260814_083322_studio_preview_image'
   },
 ];

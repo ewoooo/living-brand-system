@@ -56,7 +56,9 @@ export function ImageProfileFeatureRenderer({
 					/>
 				)
 			case 'camera-control':
-				return camera ? <CameraFeature key={feature.type} runtime={camera} /> : null
+				return camera ? (
+					<CameraFeature key={feature.type} feature={feature} runtime={camera} />
+				) : null
 			default:
 				return assertNever(feature)
 		}
@@ -94,14 +96,26 @@ function ColorAdjustmentFeature({
 		))
 
 		return (
-			<ControllerGroupRenderer key={`${feature.type}:${group.id}`} definition={group}>
+			<ControllerGroupRenderer
+				key={`${feature.type}:${group.id}`}
+				definition={group}
+				presentation={config.controllerPresentation?.groups.find(
+					({ groupId }) => groupId === group.id,
+				)}
+			>
 				{content}
 			</ControllerGroupRenderer>
 		)
 	})
 }
 
-function CameraFeature({ runtime }: { runtime: ImageProfileCameraRuntime }) {
+function CameraFeature({
+	feature,
+	runtime,
+}: {
+	feature: Extract<ImageStudioFeature, { type: 'camera-control' }>
+	runtime: ImageProfileCameraRuntime
+}) {
 	return (
 		<Controller.Group title="Camera Controls" collapsible disabled={!runtime.seedImage}>
 			{runtime.seedImage && (
@@ -110,6 +124,8 @@ function CameraFeature({ runtime }: { runtime: ImageProfileCameraRuntime }) {
 					elevationDeg={runtime.elevationDeg}
 					seedImage={runtime.seedImage}
 					busy={runtime.busy}
+					azimuths={feature.azimuths}
+					elevations={feature.elevations}
 					onChange={runtime.onChange}
 					onRegenerate={runtime.onRegenerate}
 				/>

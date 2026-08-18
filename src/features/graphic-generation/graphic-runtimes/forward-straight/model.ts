@@ -6,11 +6,24 @@ import {
 	type ControllerValues,
 	isControllerPadValue,
 } from '@/modules/studio-controller/controller-definition'
+import { FORWARD_STRAIGHT_DEFAULT_INPUT, FORWARD_STRAIGHT_REFERENCE_BASE } from './definition'
+
+export { FORWARD_STRAIGHT_DEFAULT_INPUT, FORWARD_STRAIGHT_REFERENCE_BASE } from './definition'
+
+const hexColorSchema = z.string().regex(/^#[0-9a-f]{6}$/i)
 
 export const forwardStraightInputSchema = z.strictObject({
-	variableWeightEnabled: z.boolean(),
-	viewpoint: z.enum(['flat', 'low-angle']),
-	angleIntensity: z.enum(['weak', 'medium', 'strong']),
+	backgroundColor: hexColorSchema,
+	lineColor: hexColorSchema,
+	lineLength: z.number().min(2).max(200),
+	columnGap: z.number().min(8).max(200),
+	rowGap: z.number().min(8).max(200),
+	margin: z.number().min(0).max(200),
+	weightNear: z.number().min(0.1).max(20),
+	weightFar: z.number().min(0.1).max(20),
+	weightFalloff: z.number().min(100).max(3000),
+	perspectiveGamma: z.number().min(1).max(6),
+	depthScaleMin: z.number().min(0.05).max(1),
 	origin: z.strictObject({
 		x: z.number().min(0).max(1),
 		y: z.number().min(0).max(1),
@@ -23,40 +36,34 @@ export type ForwardStraightInput = z.infer<typeof forwardStraightInputSchema>
 export function toForwardStraightInput(values: ControllerValues): ForwardStraightInput {
 	const origin = values.origin
 	return forwardStraightInputSchema.parse({
-		variableWeightEnabled: values.variableWeightEnabled,
-		viewpoint: values.viewpoint,
-		angleIntensity: values.angleIntensity,
+		backgroundColor: values.backgroundColor ?? FORWARD_STRAIGHT_DEFAULT_INPUT.backgroundColor,
+		lineColor: values.lineColor ?? FORWARD_STRAIGHT_DEFAULT_INPUT.lineColor,
+		lineLength: values.lineLength,
+		columnGap: values.columnGap,
+		rowGap: values.rowGap,
+		margin: values.margin,
+		weightNear: values.weightNear,
+		weightFar: values.weightFar,
+		weightFalloff: values.weightFalloff,
+		perspectiveGamma: values.perspectiveGamma,
+		depthScaleMin: values.depthScaleMin,
 		origin: isControllerPadValue(origin)
 			? { x: (origin.x + 1) / 2, y: (origin.y + 1) / 2 }
 			: origin,
 	})
 }
 
-const STYLE = {
-	backgroundColor: '#030402',
-	lineColor: '#ffffff',
-	originColor: '#ff2a2a',
-	strokeWeight: 1,
-	lineLength: 30,
-	columnGap: 40,
-	rowGap: 32,
-	horizontalMargin: 30,
-	verticalMargin: 30,
-	maxLineWeight: 5,
-	minLineWeight: 0.5,
-	weightFalloffDistance: 1000,
-	originRadius: 2.5,
-} as const
-
-const LOW_ANGLE = {
-	weak: { depthGamma: 1.5, scaleMin: 0.45 },
-	medium: { depthGamma: 2.5, scaleMin: 0.25 },
-	strong: { depthGamma: 4, scaleMin: 0.08 },
-} as const
-
 type Point = {
 	x: number
 	y: number
+}
+
+/** 기준 px control을 현재 캔버스 px로 환산한 값 — 미리보기와 export의 구도를 같게 만드는 유일한 지점. */
+type ForwardStraightMetrics = {
+	scale: number
+	columnGap: number
+	rowGap: number
+	margin: number
 }
 
 export type ForwardStraightDash = {
@@ -72,8 +79,6 @@ export type ForwardStraightScene = {
 	height: number
 	backgroundColor: string
 	lineColor: string
-	originColor: string
-	originRadius: number
 	origin: Point
 	dashes: ForwardStraightDash[]
 }
@@ -82,37 +87,44 @@ export function createForwardStraightScene(
 	input: ForwardStraightInput,
 	viewport: { width: number; height: number },
 ): ForwardStraightScene {
+	const scale = Math.min(viewport.width, viewport.height) / FORWARD_STRAIGHT_REFERENCE_BASE
+	const metrics: ForwardStraightMetrics = {
+		scale,
+		columnGap: input.columnGap * scale,
+		rowGap: input.rowGap * scale,
+		margin: input.margin * scale,
+	}
 	const origin = {
 		x: input.origin.x * viewport.width,
 		y: input.origin.y * viewport.height,
 	}
-	const columns = Math.max(
-		0,
-		Math.floor((viewport.width - STYLE.horizontalMargin * 2) / STYLE.columnGap) + 1,
-	)
-	const rows = Math.max(
-		0,
-		Math.floor((viewport.height - STYLE.verticalMargin * 2) / STYLE.rowGap) + 1,
-	)
+	const columns = getAxisCount(viewport.width, metrics.margin, metrics.columnGap)
+	const rows = getAxisCount(viewport.height, metrics.margin, metrics.rowGap)
 	const dashes: ForwardStraightDash[] = []
 
 	for (let row = 0; row < rows; row++) {
 		for (let column = 0; column < columns; column++) {
-			const position = getGridPosition(input, viewport, origin, rows, columns, row, column)
+			const position = getGridPosition(
+				input,
+				viewport,
+				origin,
+				metrics,
+				rows,
+				columns,
+				row,
+				column,
+			)
 			const angle = Math.atan2(origin.y - position.y, origin.x - position.x)
-			const length = STYLE.lineLength * position.depthScale
+			const length = input.lineLength * metrics.scale * position.depthScale
 			const halfX = Math.cos(angle) * length * 0.5
 			const halfY = Math.sin(angle) * length * 0.5
-			const weight = input.variableWeightEnabled
-				? getVariableWeight(position, origin)
-				: STYLE.strokeWeight
 
 			dashes.push({
 				x1: position.x + halfX,
 				y1: position.y + halfY,
 				x2: position.x - halfX,
 				y2: position.y - halfY,
-				weight: weight * position.depthScale,
+				weight: getLineWeight(input, position, origin, metrics) * position.depthScale,
 			})
 		}
 	}
@@ -120,29 +132,30 @@ export function createForwardStraightScene(
 	return {
 		width: viewport.width,
 		height: viewport.height,
-		backgroundColor: STYLE.backgroundColor,
-		lineColor: STYLE.lineColor,
-		originColor: STYLE.originColor,
-		originRadius: STYLE.originRadius,
+		backgroundColor: input.backgroundColor,
+		lineColor: input.lineColor,
 		origin,
 		dashes,
 	}
+}
+
+function getAxisCount(length: number, margin: number, gap: number) {
+	if (gap <= 0) return 0
+	return Math.max(0, Math.floor((length - margin * 2) / gap) + 1)
 }
 
 function getGridPosition(
 	input: ForwardStraightInput,
 	viewport: { width: number; height: number },
 	origin: Point,
+	metrics: ForwardStraightMetrics,
 	rows: number,
 	columns: number,
 	row: number,
 	column: number,
 ) {
-	const flatX = STYLE.horizontalMargin + column * STYLE.columnGap
-	const flatY = STYLE.verticalMargin + row * STYLE.rowGap
-	if (input.viewpoint === 'flat') return { x: flatX, y: flatY, depthScale: 1 }
-
-	const intensity = LOW_ANGLE[input.angleIntensity]
+	const flatX = metrics.margin + column * metrics.columnGap
+	const flatY = metrics.margin + row * metrics.rowGap
 	const dx = origin.x - viewport.width / 2
 	const dy = origin.y - viewport.height / 2
 	const tiltAngle = Math.atan2(dy, dx)
@@ -154,18 +167,15 @@ function getGridPosition(
 	const columnNearRight = dx >= 0
 	const rowNearness = rowNearBottom ? rawRow : 1 - rawRow
 	const columnNearness = columnNearRight ? rawColumn : 1 - rawColumn
-	const rowDepth = rowNearness ** intensity.depthGamma
-	const columnDepth = columnNearness ** intensity.depthGamma
-	const rowSpatial = rowNearBottom
-		? rawRow ** intensity.depthGamma
-		: 1 - (1 - rawRow) ** intensity.depthGamma
-	const columnSpatial = columnNearRight
-		? rawColumn ** intensity.depthGamma
-		: 1 - (1 - rawColumn) ** intensity.depthGamma
-	const minX = STYLE.horizontalMargin
-	const maxX = STYLE.horizontalMargin + (columns - 1) * STYLE.columnGap
-	const minY = STYLE.verticalMargin
-	const maxY = STYLE.verticalMargin + (rows - 1) * STYLE.rowGap
+	const gamma = input.perspectiveGamma
+	const rowDepth = rowNearness ** gamma
+	const columnDepth = columnNearness ** gamma
+	const rowSpatial = rowNearBottom ? rawRow ** gamma : 1 - (1 - rawRow) ** gamma
+	const columnSpatial = columnNearRight ? rawColumn ** gamma : 1 - (1 - rawColumn) ** gamma
+	const minX = metrics.margin
+	const maxX = metrics.margin + (columns - 1) * metrics.columnGap
+	const minY = metrics.margin
+	const maxY = metrics.margin + (rows - 1) * metrics.rowGap
 	const totalWeight = rowWeight + columnWeight
 	const normalizedRowWeight = totalWeight > 0 ? rowWeight / totalWeight : 0.5
 	const normalizedColumnWeight = totalWeight > 0 ? columnWeight / totalWeight : 0.5
@@ -174,15 +184,20 @@ function getGridPosition(
 	return {
 		x: lerp(flatX, lerp(minX, maxX, columnSpatial), columnWeight),
 		y: lerp(flatY, lerp(minY, maxY, rowSpatial), rowWeight),
-		depthScale: lerp(intensity.scaleMin, 1, depth),
+		depthScale: lerp(input.depthScaleMin, 1, depth),
 	}
 }
 
-function getVariableWeight(position: Point, origin: Point) {
+function getLineWeight(
+	input: ForwardStraightInput,
+	position: Point,
+	origin: Point,
+	metrics: ForwardStraightMetrics,
+) {
 	const distance = Math.hypot(origin.x - position.x, origin.y - position.y)
-	const progress = Math.min(1, distance / STYLE.weightFalloffDistance)
+	const progress = Math.min(1, distance / (input.weightFalloff * metrics.scale))
 	const eased = progress * progress * (3 - 2 * progress)
-	return lerp(STYLE.maxLineWeight, STYLE.minLineWeight, eased)
+	return lerp(input.weightNear, input.weightFar, eased) * metrics.scale
 }
 
 function lerp(start: number, end: number, progress: number) {
@@ -198,25 +213,16 @@ export function createForwardStraightVectorArtifact(
 			width: scene.width,
 			height: scene.height,
 			background: scene.backgroundColor,
-			primitives: [
-				...scene.dashes.map((dash) => ({
-					kind: 'line' as const,
-					x1: dash.x1,
-					y1: dash.y1,
-					x2: dash.x2,
-					y2: dash.y2,
-					stroke: scene.lineColor,
-					strokeWidth: dash.weight,
-					lineCap: 'square' as const,
-				})),
-				{
-					kind: 'circle',
-					cx: scene.origin.x,
-					cy: scene.origin.y,
-					radius: scene.originRadius,
-					fill: scene.originColor,
-				},
-			],
+			primitives: scene.dashes.map((dash) => ({
+				kind: 'line' as const,
+				x1: dash.x1,
+				y1: dash.y1,
+				x2: dash.x2,
+				y2: dash.y2,
+				stroke: scene.lineColor,
+				strokeWidth: dash.weight,
+				lineCap: 'square' as const,
+			})),
 		},
 	}
 }
