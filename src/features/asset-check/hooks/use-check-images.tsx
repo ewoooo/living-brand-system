@@ -44,6 +44,8 @@ export function CheckImageProvider({
 		scenarios.length > 0 ? getCheckScenario(scenarios).key : '',
 	)
 	const [showFailOnly, setShowFailOnly] = useState(false)
+	// 근거 패널이 어느 룰을 펼쳤는지. 사이드바가 고르고 캔버스가 읽으므로 둘 다 아는 곳에 둔다.
+	const [selectedRuleKey, setSelectedRuleKey] = useState<string | null>(null)
 
 	// 미리보기 object URL은 언마운트 시 일괄 해제한다(이미지는 제거 경로가 없어 세션 동안 유지됨).
 	const imagesRef = useRef(images)
@@ -159,6 +161,12 @@ export function CheckImageProvider({
 		}
 	}
 
+	function select(id: string) {
+		setSelectedId(id)
+		// 다른 파일로 옮기면 앞 파일의 근거는 의미가 없다
+		setSelectedRuleKey(null)
+	}
+
 	// selected 참조를 안정화해 소비 측 useMemo(뷰 계산)가 불필요하게 무효화되지 않게 한다
 	const selected = useMemo(
 		() => images.find((image) => image.id === selectedId) ?? null,
@@ -170,7 +178,7 @@ export function CheckImageProvider({
 		images,
 		selectedId,
 		selected,
-		select: setSelectedId,
+		select,
 		addFiles,
 		scenarioKey: selected?.scenarioKey ?? scenarioKey,
 		setScenarioKey,
@@ -178,6 +186,8 @@ export function CheckImageProvider({
 		toggleFailOnly: () => setShowFailOnly((value) => !value),
 		runCheck,
 		runAllChecks,
+		selectedRuleKey,
+		selectRule: setSelectedRuleKey,
 	}
 
 	return <CheckImageContext.Provider value={value}>{children}</CheckImageContext.Provider>

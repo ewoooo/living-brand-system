@@ -60,6 +60,35 @@ describe('ReviewSidebar', () => {
 		expect(screen.getByText('75%')).toBeInTheDocument()
 	})
 
+	it('요약 카드를 누르면 그 룰의 근거를 편다', () => {
+		const selectRule = vi.fn()
+		const image = checkImage({ results: { 'color.palette': aiResult([0.9, 0.75]) } })
+		useCheckImages.mockReturnValue(context({ images: [image], selected: image, selectRule }))
+		render(<ReviewSidebar sections={sections} />)
+
+		fireEvent.click(screen.getByText('test.png'))
+		fireEvent.click(screen.getByRole('button', { name: /color\.palette/ }))
+		expect(selectRule).toHaveBeenCalledWith('color.palette')
+	})
+
+	it('이미 펼친 카드를 다시 누르면 근거를 닫는다', () => {
+		const selectRule = vi.fn()
+		const image = checkImage({ results: { 'color.palette': aiResult([0.9]) } })
+		useCheckImages.mockReturnValue(
+			context({
+				images: [image],
+				selected: image,
+				selectedRuleKey: 'color.palette',
+				selectRule,
+			}),
+		)
+		render(<ReviewSidebar sections={sections} />)
+
+		fireEvent.click(screen.getByText('test.png'))
+		fireEvent.click(screen.getByRole('button', { name: /color\.palette/ }))
+		expect(selectRule).toHaveBeenCalledWith(null)
+	})
+
 	it('전부 검사가 순차 실행을 호출한다', () => {
 		const runAllChecks = vi.fn()
 		const image = checkImage({})
@@ -134,6 +163,8 @@ function context(patch: Partial<CheckImageContextValue>): CheckImageContextValue
 		toggleFailOnly: vi.fn(),
 		runCheck: vi.fn(),
 		runAllChecks: vi.fn(),
+		selectedRuleKey: null,
+		selectRule: vi.fn(),
 		...patch,
 	}
 }

@@ -1,4 +1,4 @@
-import { ImageUploadCarousel } from '@/components/studio/review/upload/image-upload-carousel'
+import { ReviewCanvas } from '@/components/studio/review/review-canvas'
 import { StudioWorkspace, StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
 import { ReviewSidebar } from '@/components/studio/sidebar/review-sidebar'
 import { getCheckRuleset } from '@/features/asset-check/services/get-check-ruleset.service'
@@ -14,7 +14,7 @@ export default async function ReviewPage() {
 	return (
 		<StudioWorkspacePage title="Check Assets" description="Check Your Creations" hideHeading>
 			<StudioWorkspace sidebar={<ReviewSidebar sections={sections} />}>
-				<ImageUploadCarousel />
+				<ReviewCanvas />
 			</StudioWorkspace>
 		</StudioWorkspacePage>
 	)

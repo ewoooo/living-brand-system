@@ -20,7 +20,8 @@ import { ruleConfidence } from '@/features/asset-check/utils/check-image-verdict
  * 디자인 SSOT: Figma HD_LBS_UI 56:3 "Review - Result".
  */
 export function ReviewSummary({ sections }: { sections: CheckSection[] }) {
-	const { scenarios, scenarioKey, selected, showFailOnly } = useCheckImages()
+	const { scenarios, scenarioKey, selected, showFailOnly, selectedRuleKey, selectRule } =
+		useCheckImages()
 	const { rows } = useMemo(
 		() => buildCheckReviewView({ sections, scenarios, scenarioKey, selected, showFailOnly }),
 		[sections, scenarios, scenarioKey, selected, showFailOnly],
@@ -37,13 +38,30 @@ export function ReviewSummary({ sections }: { sections: CheckSection[] }) {
 					<EmptyTitle>아직 검수 결과가 없습니다</EmptyTitle>
 				</Empty>
 			) : (
-				judged.map((row) => <ReviewSummaryCard key={row.rowId} row={row} />)
+				judged.map((row) => (
+					<ReviewSummaryCard
+						key={row.rowId}
+						row={row}
+						open={row.check.key === selectedRuleKey}
+						onOpen={() =>
+							selectRule(row.check.key === selectedRuleKey ? null : row.check.key)
+						}
+					/>
+				))
 			)}
 		</section>
 	)
 }
 
-function ReviewSummaryCard({ row }: { row: CheckReviewRow }) {
+function ReviewSummaryCard({
+	row,
+	open,
+	onOpen,
+}: {
+	row: CheckReviewRow
+	open: boolean
+	onOpen: () => void
+}) {
 	// judged 필터를 통과한 행만 들어오므로 outcome은 항상 있다.
 	const outcome = row.outcome
 	if (!outcome) return null
@@ -51,9 +69,13 @@ function ReviewSummaryCard({ row }: { row: CheckReviewRow }) {
 	const confidence = ruleConfidence(outcome)
 
 	return (
-		<article
+		<button
+			type="button"
 			data-slot="review-summary-card"
-			className="flex flex-col gap-2 rounded-lg bg-muted px-3 py-3"
+			data-open={open || undefined}
+			aria-expanded={open}
+			onClick={onOpen}
+			className="flex flex-col gap-2 rounded-lg bg-muted px-3 py-3 text-left transition-colors hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:outline-none data-[open]:ring-2 data-[open]:ring-foreground/20"
 		>
 			<div className="flex items-start justify-between gap-2">
 				<Badge variant={status.variant} shape="rounded">
@@ -73,6 +95,6 @@ function ReviewSummaryCard({ row }: { row: CheckReviewRow }) {
 					{row.detail}
 				</Typography>
 			)}
-		</article>
+		</button>
 	)
 }
