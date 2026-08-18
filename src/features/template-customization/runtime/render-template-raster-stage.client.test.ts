@@ -80,6 +80,27 @@ describe('Template Raster Artifact', () => {
 			),
 		).rejects.toThrow('unsafe image URL')
 	})
+
+	it('XML이 금지하는 제어문자를 텍스트에서 걷어내고 줄바꿈과 탭은 남긴다', async () => {
+		// Figma에서 딸려온 U+0003이 SVG 직렬화를 깨뜨려 모든 포맷의 내보내기를 실패시켰다.
+		const surface = await readSurface(
+			'<div id="__stage"><p>HD현대\u0003\n한국조선해양\t2026</p></div>',
+			1920,
+			1080,
+		)
+
+		expect(surface.element.textContent).toBe('HD현대\n한국조선해양\t2026')
+	})
+
+	it('XML이 금지하는 제어문자를 속성값에서도 걷어낸다', async () => {
+		const surface = await readSurface(
+			'<div id="__stage"><p data-name="Title\u0003">본문</p></div>',
+			1920,
+			1080,
+		)
+
+		expect(surface.element.querySelector('p')?.getAttribute('data-name')).toBe('Title')
+	})
 })
 
 async function readSurface(html: string, width: number, height: number): Promise<RasterSurface> {
