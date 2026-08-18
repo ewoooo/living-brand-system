@@ -258,8 +258,29 @@ describe('convertFigmaNodeToHtml — 텍스트', () => {
 			},
 		}
 		const s = rootStyle(convertFigmaNodeToHtml(node).html)
-		// floor(60 / 20) = 3줄
+		// (60 - 16) / 20 = 2.2 → 2 + 마지막 줄 = 3줄
 		expect(s).toContain('-webkit-line-clamp:3')
+	})
+
+	it('마지막 줄의 줄간격이 1px 모자란 박스에서도 그 줄을 살린다', () => {
+		// 실제 Figma 노드(HD_LBS_Template 78:38): 3줄이 다 보이는데 floor(329/110)=2가 나와
+		// Figma에 없는 말줄임이 생겼다. 마지막 줄은 글리프 높이(100px)만 들어가면 그려진다.
+		const node = {
+			id: '1:1',
+			name: 't',
+			type: 'TEXT',
+			characters: 'HD현대\n한국조선해양\n2026 리포트',
+			absoluteBoundingBox: { x: 0, y: 0, width: 613, height: 329 },
+			style: {
+				fontFamily: 'HD OTF',
+				fontSize: 100,
+				textAutoResize: 'TRUNCATE',
+				textTruncation: 'ENDING',
+				lineHeightUnit: 'PIXELS',
+				lineHeightPx: 110,
+			},
+		}
+		expect(rootStyle(convertFigmaNodeToHtml(node).html)).toContain('-webkit-line-clamp:3')
 	})
 
 	it('말줄임 없는 고정 박스(NONE/생략) 텍스트는 박스에서 잘리고, HEIGHT/HUG는 잘리지 않는다', () => {
