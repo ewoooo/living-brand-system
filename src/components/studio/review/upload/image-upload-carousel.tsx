@@ -24,8 +24,9 @@ import { ImageCheckControls } from './image-check-controls'
  * out: addFiles(FileList) — 지원 타입(PNG/JPEG/WebP)만 CheckImage(idle)로 변환, 최신이 앞
  *      캐러셀 스와이프 → select(image.id)  (선택과 스크롤 양방향 동기화)
  * 렌더에 쓰는 필드: image.url(objectURL), image.name
+ * previewSize: 표시 크기(%)만 줄인다 — 검수 요청은 원본 파일을 그대로 보낸다.
  */
-export function ImageUploadCarousel() {
+export function ImageUploadCarousel({ previewSize }: { previewSize: number }) {
 	const { images, selectedId, select, addFiles } = useCheckImages()
 	const fileInput = useFileInput()
 	const [carouselApi, setCarouselApi] = useState<CarouselApi>()
@@ -91,7 +92,11 @@ export function ImageUploadCarousel() {
 			{images.length === 0 ? (
 				<CheckCarouselEmpty />
 			) : (
-				<CheckCarouselActive images={images} setCarouselApi={setCarouselApi} />
+				<CheckCarouselActive
+					images={images}
+					previewSize={previewSize}
+					setCarouselApi={setCarouselApi}
+				/>
 			)}
 			<ImageCheckControls />
 		</section>
@@ -111,9 +116,11 @@ function CheckCarouselEmpty() {
 
 function CheckCarouselActive({
 	images,
+	previewSize,
 	setCarouselApi,
 }: {
 	images: CheckImage[]
+	previewSize: number
 	setCarouselApi: (api: CarouselApi) => void
 }) {
 	return (
@@ -126,7 +133,11 @@ function CheckCarouselActive({
 							<img
 								src={image.url}
 								alt={image.name}
-								className="max-h-full max-w-full object-contain"
+								style={{
+									maxWidth: `${previewSize}%`,
+									maxHeight: `${previewSize}%`,
+								}}
+								className="object-contain"
 							/>
 						</div>
 					</CarouselItem>

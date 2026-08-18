@@ -5,6 +5,7 @@ import { fitPreviewSize } from '@/components/studio/shared/fit-preview-size'
 import {
 	DEFAULT_PREVIEW_SIZE,
 	PreviewSizeControl,
+	StudioCanvasFooter,
 } from '@/components/studio/shared/preview-size-control'
 import { Typography } from '@/components/ui/typography'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
@@ -172,7 +173,9 @@ function GraphicPreviewCanvas({
 					style={{ '--preview-scale': previewSize / 100 } as CSSProperties}
 				/>
 			</div>
-			<PreviewSizeControl value={previewSize} onChange={setPreviewSize} />
+			<StudioCanvasFooter>
+				<PreviewSizeControl value={previewSize} onChange={setPreviewSize} />
+			</StudioCanvasFooter>
 			{error && (
 				<Typography role="alert" size="sm" className="pt-2 text-destructive">
 					{error}
