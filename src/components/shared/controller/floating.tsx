@@ -1,3 +1,7 @@
+'use client'
+
+import { domAnimation, LazyMotion, useReducedMotion } from 'motion/react'
+import * as m from 'motion/react-m'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -50,22 +54,43 @@ export function FloatingControllerFixed({
 /**
  * 스크롤을 따라 내려오는 바. **자리 상자(sticky)는 호출부가 소유한다** — 이 컴포넌트는 알약만 그린다.
  * 스크롤 컨테이너와 portal 대상을 아는 것은 그 화면이지 바가 아니기 때문이다.
+ *
+ * 이쪽만 등장 모션을 갖는다. 나타났다 사라졌다 하고 **내용이 통째로 바뀌기** 때문이다 —
+ * 아래에서 올라오는 짧은 동작이 "다른 바로 갈아탔다"를 말해 준다. `Fixed`는 캔버스에 늘 떠
+ * 있으므로 등장이랄 것이 없다.
+ *
+ * 🔴 퇴장 모션은 없다. 나가는 바와 들어오는 바는 **서로 다른 블록의 React 트리**에 있어
+ *    한 `AnimatePresence`가 둘을 조율할 수 없고, 겹치는 순간 알약 두 개가 나란히 선다.
+ *    필요해지면 자리(slot) 쪽에서 두 알약을 같은 칸에 겹쳐 놓는 것이 먼저다.
  */
 export function FloatingControllerSticky({
 	'aria-label': ariaLabel,
 	className,
 	children,
 }: FloatingControllerProps) {
+	const reducedMotion = useReducedMotion()
+
 	return (
-		<section
-			data-slot="floating-controller-sticky"
-			aria-label={ariaLabel}
-			className={cn(
-				'pointer-events-auto flex items-center gap-2 rounded-lg bg-popover p-1 text-popover-foreground shadow-lg',
-				className,
-			)}
-		>
-			{children}
-		</section>
+		<LazyMotion features={domAnimation}>
+			<m.section
+				data-slot="floating-controller-sticky"
+				aria-label={ariaLabel}
+				// 모션 감소에서는 처음부터 제자리다 — `initial={false}`면 animate 상태로 바로 그린다.
+				initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+				animate={{ opacity: 1, y: 0 }}
+				// 킷의 다른 모션과 같은 스프링이다(range·segmented) — 한 화면에서 감속이 갈리면 안 된다.
+				transition={
+					reducedMotion
+						? { duration: 0 }
+						: { type: 'spring', visualDuration: 0.25, bounce: 0.15 }
+				}
+				className={cn(
+					'pointer-events-auto flex items-center gap-2 rounded-lg bg-popover p-1 text-popover-foreground shadow-lg',
+					className,
+				)}
+			>
+				{children}
+			</m.section>
+		</LazyMotion>
 	)
 }
