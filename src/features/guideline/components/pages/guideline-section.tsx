@@ -1,14 +1,23 @@
 import { ContentFrame } from '@/components/shared/content-frame'
 import type { GetGuidelineSectionOutput } from '../../services/get-guideline-section.service'
-import { GuidelineDescription } from '../globals/guideline-description'
 import { GuidelineHeader, GuidelineHeaderImage } from '../globals/guideline-header'
 import { GuidelineHelperProvider, GuidelineHelperSlot } from '../globals/guideline-helper'
 import type { GuidelineVariant } from '../globals/guideline-variant'
-import { GuidelineBlocks } from '../guideline-blocks'
 import { RefreshRouteOnSave } from '../refresh-route-on-save'
 import { ScrollToPreviewDocument } from '../scroll-to-preview-document'
 import { GuidelinePage } from './guideline-page'
 
+/**
+ * 섹션 한 화면 — 머리(이미지 + 제목)와 Page 목록. 디자인 정본은 Figma HD_LBS_UI 61:3376.
+ *
+ * 🔴 **섹션 자체의 블록은 그리지 않는다.** 스키마에는 `section.blocks`가 남아 있지만 14개 섹션
+ *    어디에도 값이 없고(2026-08-18 전수 확인), Figma의 본문에도 그 자리가 없다. 렌더하던 시절에는
+ *    그것을 제목과 묶으려고 래핑이 두 겹 더 있었다 — 빈 계층이었다.
+ *    필드를 실제로 지우는 것은 스키마 변경이라 공유 DB 확인 뒤 별도로 한다.
+ *
+ * 🔴 섹션 **설명**도 그리지 않는다. 같은 조사에서 전 섹션이 비어 있었고, 2열 hgroup의 오른쪽 칸이
+ *    항상 빈 채로 폭만 차지했다. Figma의 Section Heading도 제목 하나뿐이다.
+ */
 export function GuidelineSection({
 	section,
 	previewDocumentId,
@@ -23,45 +32,33 @@ export function GuidelineSection({
 		// Helper(하단 Floating Controller)의 provider와 자리는 이 <article> 하나가 감싼다 —
 		// 컨트롤을 가진 블록이 전부 이 안에 있고, 알약이 본문 폭 기준으로 가운데에 서야 하기 때문이다.
 		<GuidelineHelperProvider>
-			<article className="relative w-full">
+			<article className="relative flex w-full flex-col">
 				{/* Payload Preview Functions */}
 				{previewDocumentId !== undefined && <RefreshRouteOnSave />}
 				{previewedPage && <ScrollToPreviewDocument targetId={previewedPage.slug} />}
 
+				{/* Section Heading — 이미지와 제목(Figma 61:3377 "Section Heading") */}
 				<ContentFrame>
-					{/* Deprecated */}
 					<GuidelineHeaderImage image={section.headerImage} />
 				</ContentFrame>
+				<ContentFrame>
+					<GuidelineHeader variant={variant} title={section.title} />
+				</ContentFrame>
 
-				{/*Guideline Section*/}
-				<section className="flex flex-col gap-16" aria-label="guideline-section">
-					{/* Guideline Section */}
-					<section className="grid grid-rows-[auto_1fr] gap-8">
-						<ContentFrame>
-							<hgroup className="grid grid-cols-2 gap-4">
-								<GuidelineHeader variant={variant} title={section.title} />
-								<GuidelineDescription
-									variant={variant}
-									description={section.description}
-								/>
-							</hgroup>
-						</ContentFrame>
-						{/* Guideline Section Contents */}
-						<GuidelineBlocks
-							blocks={section.blocks}
-							betterEditor={previewDocumentId !== undefined && !previewedPage}
+				{/*
+				 * Page 목록 — Figma의 Article 스택. 앞 Page의 면 끝에서 다음 Page의 제목까지
+				 * 288 + 32(제목 프레임 위 패딩) = 320이고, Figma는 326이다(250 + 16 + 60).
+				 * 🔴 6px 차이는 남겨 둔다 — 294는 간격 스케일 밖이라 이 한 자리를 위해 임의값을
+				 *    들이면 다음 사람이 그것을 근거로 또 임의값을 쓴다.
+				 */}
+				<section className="flex flex-col gap-72" aria-label="guideline-pages">
+					{section.pages.map((page) => (
+						<GuidelinePage
+							key={page.id}
+							page={page}
+							betterEditor={page.id === previewDocumentId}
 						/>
-					</section>
-					{/* Guideline Page Render*/}
-					<section className="flex flex-col gap-32" aria-label="guideline-pages">
-						{section.pages.map((page) => (
-							<GuidelinePage
-								key={page.id}
-								page={page}
-								betterEditor={page.id === previewDocumentId}
-							/>
-						))}
-					</section>
+					))}
 				</section>
 
 				<GuidelineHelperSlot />
