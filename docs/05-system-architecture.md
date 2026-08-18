@@ -499,6 +499,7 @@ flowchart TB
 브랜드 자산은 BrandAsset을 단일 collection으로 고정하지 않고, 브랜드 코어 자산과 어플리케이션 자산으로 나누어 검토합니다.
 사용 과정에서 자동 생성되는 작업, 질의, 검수, 로그 기록은 여기서 collection으로 확정하지 않습니다.
 가이드라인 자체는 제품 안에서 하나만 운영하므로 Payload global로 둡니다.
+Plugin은 collection으로 두지 않습니다 — 2026-08-18에 삭제했습니다. 이름·설명·유형 세 필드짜리 껍데기였고 어떤 코드도 읽지 않았으며 어느 환경에도 행이 없었습니다. 도메인 계획은 `docs/03`·`docs/04`가 계속 갖습니다.
 
 | 후보 | 관리 단위 | 주요 관계 |
 | --- | --- | --- |
@@ -514,7 +515,6 @@ flowchart TB
 | `image-profiles` | ImageProfile | 이미지 생성 Runtime Manifest에 적용할 published feature·Controller 제한·Export 정책을 관리 |
 | `graphic-profiles` | GraphicProfile | 등록된 Graphic Runtime Manifest에 적용할 published Controller 제한·Export 정책을 관리 |
 | `templates` | Template | HTML 슬롯 Runtime Manifest에 적용할 Controller 제한·Export 정책을 관리하고 page와 plugin에서 참조 |
-| `plugins` | Plugin | page와 template에서 참조. 향후 asset generation session에도 사용 가능 |
 
 ### 런타임 객체
 

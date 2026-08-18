@@ -32,7 +32,6 @@ import { GeneratedImages } from './collections/GeneratedImages'
 import { GraphicProfiles } from './collections/GraphicProfiles'
 import { GuidelineDocuments } from './collections/GuidelineDocuments'
 import { ImageProfiles } from './collections/ImageProfiles'
-import { Plugins } from './collections/Plugins'
 import { RuleCheckers } from './collections/RuleCheckers'
 import { Rules } from './collections/Rules'
 import { withFrontendRevalidation } from './collections/revalidate'
@@ -108,7 +107,6 @@ export default buildConfig({
 		Templates,
 		TemplateCategories,
 		TemplateAssets,
-		Plugins,
 		CheckScenarios,
 		Rules,
 		RuleCheckers,
