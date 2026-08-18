@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+	cameraControlSchema,
 	composeCameraAdjustmentPrompt,
 	imageEffectivePromptSchema,
 	resolveCameraControl,
@@ -30,6 +31,25 @@ describe('resolveCameraControl', () => {
 		[90, 'top-down'],
 	] as const)('고도각 %d°를 %s 구간으로 해석한다', (elevationDeg, elevation) => {
 		expect(resolveCameraControl({ azimuthDeg: 0, elevationDeg }).elevation).toBe(elevation)
+	})
+})
+
+describe('cameraControlSchema', () => {
+	it.each([
+		[-180, -30],
+		[180, 90],
+		[0, 0],
+	] as const)('경계 안 azimuthDeg %d°·elevationDeg %d°는 통과한다', (azimuthDeg, elevationDeg) => {
+		expect(cameraControlSchema.safeParse({ azimuthDeg, elevationDeg }).success).toBe(true)
+	})
+
+	it.each([
+		[-180.1, 0],
+		[180.1, 0],
+		[0, -30.1],
+		[0, 90.1],
+	] as const)('경계 밖 azimuthDeg %d°·elevationDeg %d°는 거부한다', (azimuthDeg, elevationDeg) => {
+		expect(cameraControlSchema.safeParse({ azimuthDeg, elevationDeg }).success).toBe(false)
 	})
 })
 

@@ -54,6 +54,7 @@ import {
 	ImageGenerationUnavailableError,
 	ImageProfileNotFoundError,
 	InvalidImageControllerInputError,
+	InvalidSeedImageError,
 	planImageGenerationFromProfile,
 	planImageGenerationFromSettings,
 	UnsupportedImageOutputSizeError,
@@ -696,6 +697,70 @@ describe('generateImages', () => {
 		await expect(
 			generateImages({ userInput: '', profileId: 5, user: { id: 1 }, count: 1 }),
 		).rejects.toThrow('rejected prompt')
+	})
+
+	it('해석할 수 없는 참조는 하드 거부하고 조용히 프롬프트만으로 흘러가지 않는다', async () => {
+		mocks.env.OPENAI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '1:1',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		// 남의 생성 이미지 id를 참조로 보낸 경우를 흉내낸다 — 저장소 4중 where가 걸러 null을 돌려준다.
+		mocks.resolveGeneratedImageReference.mockResolvedValue(null)
+
+		await expect(
+			generateImages({
+				userInput: '유조선',
+				profileId: 5,
+				user: { id: 1 },
+				count: 1,
+				reference: {
+					generatedImageId: 999,
+					requestUrl: 'http://localhost/api/generate-image',
+				},
+			}),
+		).rejects.toBeInstanceOf(InvalidSeedImageError)
+		// 하드 거부의 실질: null이 조용히 프롬프트-only 생성으로 흘러가지 않는다.
+		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+	})
+
+	it('시드 이미지가 있으면 dev 폴백을 쓰지 않고 불가로 거부한다', async () => {
+		mocks.env.NODE_ENV = 'development'
+		mocks.env.IMAGE_DEV_FALLBACK = 'true'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '1:1',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.resolveGeneratedImageReference.mockResolvedValue({
+			data: Buffer.from('seed'),
+			generatedImageId: 8,
+			prompt: { effective: '{"subject":"유조선"}', input: '유조선' },
+		})
+
+		await expect(
+			generateImages({
+				userInput: '',
+				profileId: 5,
+				user: { id: 1 },
+				count: 1,
+				reference: {
+					generatedImageId: 8,
+					requestUrl: 'http://localhost/api/generate-image',
+				},
+			}),
+		).rejects.toBeInstanceOf(ImageGenerationUnavailableError)
+		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
+		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
 	})
 
 	it('프로파일이 카메라 feature를 열지 않았는데 camera 값을 보내면 거부한다', async () => {
