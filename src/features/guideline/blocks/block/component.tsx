@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
+import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
@@ -54,6 +55,8 @@ function renderWidget(child: Child): ReactNode {
 					verticalMinHeightPx={child.verticalMinHeightPx}
 				/>
 			)
+		case 'ciLockupWidget':
+			return <CiLockupWidget />
 		case 'iconGridWidget':
 			return <IconGridWidget />
 		case 'stemClearSpaceWidget':
