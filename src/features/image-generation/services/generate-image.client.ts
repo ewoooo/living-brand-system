@@ -25,6 +25,10 @@ export interface ImageGenerationRequest {
 	aspectRatio?: ImageAspectRatio
 	/** 스튜디오 해상도 선택 오버라이드 — 없으면 프로파일 해상도로 생성한다. */
 	imageSize?: ImageOutputSize
+	/** 참조 이미지 — 없으면 프롬프트만으로 생성한다. */
+	reference?: { generatedImageId: number }
+	/** 카메라 컨트롤 값 — 프로파일이 카메라를 열었을 때만 보낸다. */
+	camera?: CameraControlInput
 }
 
 type AdminImageGenerationRequest = {

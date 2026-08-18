@@ -9,19 +9,19 @@ function props(overrides: { color?: { line: string; background?: string } | null
 	return {
 		aspectRatio: '16:9' as const,
 		color: overrides.color ?? null,
+		items: [
+			{ src: SRC, generatedImageId: 1, profileId: 5 },
+			{
+				src: '/api/generated-images/file/generated-2.png',
+				generatedImageId: 2,
+				profileId: 5,
+			},
+		],
 		loading: false,
 		onSelect: vi.fn(),
+		referenceIndex: null as number | null,
 		requested: 2,
-		result: {
-			aspectRatio: '16:9' as const,
-			imageSize: '1K' as const,
-			images: [SRC, '/api/generated-images/file/generated-2.png'],
-			model: 'gemini-3.1-flash-lite-image',
-			profileId: 5,
-			profileName: 'Technical Illustration',
-			prompt: '{"subject":"유조선"}',
-		},
-		selected: null,
+		selected: null as number | null,
 	}
 }
 
@@ -72,5 +72,18 @@ describe('ImageGenerationResults', () => {
 		expect(overlays[0]?.style.backgroundColor).toBe('rgb(0, 13, 255)')
 		// 색을 얹어도 선택 버튼은 이름을 잃지 않는다 — 원본을 visibility로 숨기면 alt까지 사라진다.
 		expect(screen.getByRole('button', { name: '생성 결과 1' })).toBeInTheDocument()
+	})
+
+	it('참조 카드에 참조 이름을 붙이고 결과와 구분한다', () => {
+		const base = { ...props(), referenceIndex: 0, selected: 1 }
+		render(createElement(ImageGenerationResults, base))
+
+		expect(screen.getByRole('button', { name: '참조 원본' })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: '생성 결과 1' })).toBeInTheDocument()
+		// 참조는 선택 대상이 아니라 기준이므로 눌린 상태가 아니다.
+		expect(screen.getByRole('button', { name: '참조 원본' })).toHaveAttribute(
+			'aria-pressed',
+			'false',
+		)
 	})
 })

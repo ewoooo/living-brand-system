@@ -66,22 +66,17 @@ vi.mock('@/features/studio-export/adapters/download-export-result.client', () =>
 
 vi.mock('@/features/image-generation/hooks/use-image-generation', () => ({
 	useImageGeneration: () => ({
-		adjustCamera: vi.fn(),
 		error: null,
 		generate: vi.fn(),
 		loading: false,
 		requested: 4,
-		// 프로파일을 교체해도 남아야 하는 사용자 산출물.
-		result: {
-			aspectRatio: '2:3',
-			generatedImages: [{ id: 8 }],
-			images: ['blob:1'],
-			imageSize: '1K',
-			model: 'gpt-image-2',
-			profileId: 5,
-			prompt: '{}',
-		},
 		selected: 0,
+		// 프로파일을 교체해도 남아야 하는 사용자 산출물.
+		session: {
+			images: [{ src: 'blob:1', generatedImageId: 8, profileId: 5 }],
+			reference: null,
+			output: { aspectRatio: '2:3', imageSize: '1K' },
+		},
 		setSelected: vi.fn(),
 	}),
 }))
@@ -206,12 +201,16 @@ function Probe() {
 	useEffect(() => {
 		load()
 	}, [load])
-	const result = results.result
-	const resultConfig = profiles.options.find((candidate) => candidate.id === result?.profileId)
+	const items = results.items
+	const resultConfig = profiles.options.find((candidate) => candidate.id === items[0]?.profileId)
 	const download = useImageExport({
-		artifacts: result
-			? createImageArtifacts({ images: result.images, color: results.color })
-			: null,
+		artifacts:
+			items.length > 0
+				? createImageArtifacts({
+						images: items.map((item) => item.src),
+						color: results.color,
+					})
+				: null,
 		capability: resultConfig?.output ?? { formats: [], original: false },
 		selected: results.selected,
 		size: { width: 832, height: 1248 },
@@ -221,7 +220,7 @@ function Probe() {
 			<output data-testid="browse">{`browse:${profiles.browse.status}`}</output>
 			<output data-testid="state">
 				{current.name} / {generation.batch} / {generation.ratio} / {generation.resolution} /{' '}
-				{prompt.value} / {results.result ? '결과 있음' : '결과 없음'}
+				{prompt.value} / {results.items.length > 0 ? '결과 있음' : '결과 없음'}
 			</output>
 			<output data-testid="prompt-error">
 				{controls.bindings.prompt?.error ?? '오류 없음'} /{' '}
