@@ -18,3 +18,16 @@ export const THEME_PANEL = 'bg-muted'
  */
 export const BRAND_PANEL_LIGHT = 'bg-neutral-100'
 export const BRAND_PANEL_DARK = 'bg-neutral-900'
+
+/**
+ * CI 락업 표본 판 — 표현마다 규정이 정한 면이다(사용자 지정 2026-08-18).
+ * 기본형·단색형(BLACK)은 밝은 면, WHITE 워드마크·단색형(WHITE)은 검은 면에 얹는다.
+ *
+ * 🔴 위 `BRAND_PANEL_*`와 **값이 다르다**(#f5f5f5 · #171717). 저쪽은 서체 표본 등이 쓰는 판이고
+ *    여기 두 값은 CI 규정이 정한 판이다. 같아 보여도 섞지 말 것 — 하나로 합치면 어느 쪽이 규정인지
+ *    구별이 사라진다.
+ * 🔴 클래스가 아니라 hex인 이유: 표현이 바뀔 때 판도 **연속으로** 물들어야 해서 inline style로
+ *    transition을 걸어야 한다(클래스 전환은 이산이다).
+ */
+export const CI_STAGE_LIGHT = '#f2f2f2'
+export const CI_STAGE_DARK = '#000000'

@@ -138,6 +138,10 @@ export type Lockup = {
 	label: string
 	/** 계층: 본사 → 자회사 → 해외지사. */
 	tier: Tier
+	/** 꼴. 본사는 `horizontal`·`vertical`, 자회사·해외지사는 `FORM_KEYS`다(계층이 가진 세트가 다르다). */
+	form: string
+	/** 워드마크 언어. 본사만 `hd`(심볼+HD)를 갖고, 해외지사는 `en`뿐이다. */
+	language: Language
 	orientation: Orientation
 	/** 심볼–워드마크 간격(H 배수). */
 	gap: number
@@ -181,6 +185,8 @@ export const LAYOUT: Record<Orientation, { wordmark: number; gap: number }> = {
 }
 
 /** 계층. 슬라이더가 고르는 단계이고, 뒤로 갈수록 워드마크 줄이 쌓인다. */
+export type Language = 'ko' | 'en' | 'hd'
+
 export const TIERS = ['ci', 'subsidiary', 'overseas'] as const
 export type Tier = (typeof TIERS)[number]
 
@@ -285,6 +291,8 @@ function ciLockups(): Lockup[] {
 			key: `ci-${key}-${orientation[0]}`,
 			label: `본사 ${label} ${orientation === 'horizontal' ? '가로' : '세로'}`,
 			tier: 'ci' as const,
+			form: orientation,
+			language: key,
 			orientation,
 			gap: LAYOUT[orientation].gap,
 			rowGap: 0,
@@ -295,8 +303,9 @@ function ciLockups(): Lockup[] {
 }
 
 /**
- * 꼴 3종의 배치 비율. 🔴 스펙이 도판으로 정한 세트이지 고르는 축이 아니다 — 그래서 컨트롤이 없고
- * 단계를 고르면 세 꼴이 함께 나온다.
+ * 꼴 3종의 배치 비율. 🔴 스펙이 도판으로 정한 **세트**다 — 정본은 꼴마다 다른 페이지로 제시하고
+ * 고르는 대안으로 두지 않는다. 위젯은 화면을 하나로 유지하려고 컨트롤로 열었지만, 그래서
+ * **최상위 단독 행**에 두어 다른 축과 섞지 않는다(다른 축은 값이 바뀌어 이어지고, 꼴은 구조가 바뀐다).
  *
  * `hdCap`/`enCap`은 각 행의 명목 cap 상자 높이(H 배수)다. **가로형A만 열이 갈린다** —
  * `HD`가 왼쪽 열에 서고 계열사명 2행이 오른쪽 열에 쌓이며, 두 열이 같은 영역 높이(0.65H)를 공유한다.
@@ -396,6 +405,8 @@ function subsidiaryLockups(sub: Subsidiary): Lockup[] {
 				key: `sub-${lang}-${formKey}`,
 				label: `자회사 ${lang === 'ko' ? '국문' : '영문'} ${form.label}`,
 				tier: 'subsidiary' as const,
+				form: formKey,
+				language: lang,
 				orientation: form.orientation,
 				gap: form.gap,
 				rowGap: HD_ROW_GAP,
@@ -433,6 +444,8 @@ function overseasLockups(sub: Subsidiary, branch: OverseasBranch): Lockup[] {
 			key: `ovs-${formKey}`,
 			label: `해외지사 영문 ${form.label}`,
 			tier: 'overseas' as const,
+			form: formKey,
+			language: 'en' as const,
 			orientation: form.orientation,
 			gap: form.gap,
 			rowGap: HD_ROW_GAP,
@@ -531,6 +544,40 @@ export function deriveLockups({ tier, subsidiary, branch }: LockupState): Lockup
 		: overseasLockups(subsidiary, branch)
 }
 
+/**
+ * 단계마다 고를 수 있는 꼴·언어. 🔴 계층이 가진 세트가 다르다 — 본사는 꼴이 가로·세로 둘이고
+ * 언어가 셋(국문·영문·HD)이지만, 자회사·해외지사는 꼴이 셋이고 해외지사는 **영문뿐**이다(B.3 도판).
+ * 그래서 컨트롤의 선택지를 여기서 내려 준다 — 화면이 없는 조합을 고를 수 없게 한다.
+ */
+export function lockupOptions(tier: Tier): {
+	forms: { key: string; label: string }[]
+	languages: { key: Language; label: string }[]
+} {
+	if (tier === 'ci') {
+		return {
+			forms: [
+				{ key: 'horizontal', label: '가로' },
+				{ key: 'vertical', label: '세로' },
+			],
+			languages: [
+				{ key: 'ko', label: '국문' },
+				{ key: 'en', label: '영문' },
+				{ key: 'hd', label: 'HD' },
+			],
+		}
+	}
+	const forms = FORM_KEYS.map((k) => ({ key: k as string, label: FORMS[k].label }))
+	return tier === 'overseas'
+		? { forms, languages: [{ key: 'en', label: '영문' }] }
+		: {
+				forms,
+				languages: [
+					{ key: 'ko', label: '국문' },
+					{ key: 'en', label: '영문' },
+				],
+			}
+}
+
 export const TIER_LABEL: Record<Tier, string> = {
 	ci: 'CI (본사)',
 	subsidiary: '자회사 CI',
@@ -545,15 +592,91 @@ export const CLEAR_SPACE: Record<Orientation, { normal: number; exception: numbe
 export const MIN_SIZE = { digitalPx: 16, printMm: 4 } as const
 
 /**
- * 심볼 파일. default=기본형(색 고정), mono=fill로 색 지정 가능한 분리형.
- * 🔴 심볼은 조립하지 않는다 — 승인된 아트워크를 그대로 쓴다.
+ * 심볼 **형상**. 🔑 파일이 아니라 규칙이다 — 심볼은 정삼각 격자 위의 삼각형 3개이고, 정점 9개가
+ * 전부 격자 정수점에 놓인다(실측 확인 2026-08-18):
+ *
+ *     u = √3/6 ≈ 0.2887   v = 1/2      (H = 1로 정규화. 폭 3u = √3/2 = 0.866)
+ *     밝은초록 (0,0) (2u,0) (3u,v)  ·  중간초록 (0,0) (3u,v) (2u,2v)  ·  어두운초록 (u,v) (0,2v) (2u,2v)
+ *
+ * 🔴 이미지가 아니라 좌표로 두는 이유: 브랜드 에셋이 정한 것은 **형상**이고 `.svg`는 그 한 가지
+ *    직렬화다. 좌표로 두면 두 표현 사이를 보간할 수 있고, 우리 코드가 형상을 측정·검산할 수 있다.
+ *    `rules.test.ts`가 정본 SVG 두 개를 파싱해 아래 값과 대조하므로 사본이 조용히 어긋나지 않는다.
+ *
+ * `joined`는 기본형(조각이 맞닿음), `separated`는 단색형(이음선이 0.0282H 벌어짐)이다.
+ * 🔑 두 상태의 **정점 개수와 순서가 같아서** 선형 보간만으로 형태가 연속적으로 변한다 —
+ *    path mapper도 배리어블 폰트도 필요 없다.
+ * 🔴 밝은초록 조각은 축을 움직여도 **형태가 변하지 않는다**(정본이 그렇다).
  */
-export const SYMBOL = {
-	default: '/symbols/symbol-default.svg',
-	mono: '/symbols/symbol-mono.svg',
-	/** viewBox 51.96 × 60 */
-	aspect: 51.96 / 60,
-} as const
+export const SYMBOL_CONTOURS = [
+	{
+		/** 밝은초록 — 위쪽 조각. 두 표현에서 형태 동일. */
+		colorName: 'HD ECO GREEN',
+		joined: [
+			[0, 0],
+			[0.5773333, 0],
+			[0.866, 0.5],
+		],
+		separated: [
+			[0, 0],
+			[0.5773333, 0],
+			[0.866, 0.5],
+		],
+	},
+	{
+		/** 중간초록 — 큰 삼각형. 밝은초록과의 이음선이 열린다. */
+		colorName: 'HD HERITAGE GREEN',
+		joined: [
+			[0, 0],
+			[0.866, 0.5],
+			[0.5773333, 1],
+		],
+		separated: [
+			[0.0281667, 0.0488333],
+			[0.8518333, 0.5245],
+			[0.5773333, 1],
+		],
+	},
+	{
+		/** 어두운초록 — 아래쪽 조각. 중간초록과의 이음선이 열린다. */
+		colorName: 'HD PROSPERITY GREEN',
+		joined: [
+			[0.2886667, 0.5],
+			[0, 1],
+			[0.5773333, 1],
+		],
+		separated: [
+			[0.2723333, 0.5281667],
+			[0, 1],
+			[0.5446667, 1],
+		],
+	},
+] as const
+
+/** 심볼 종횡비(폭÷높이) = √3/2. 위 격자에서 나온 값이고 정본 viewBox 51.96×60과 같다. */
+export const SYMBOL_ASPECT = 0.866
+
+/**
+ * 심볼 표현. `fullColor`는 3색 기본형, `mono`는 단색형이다.
+ * 🔴 이산이 아니다 — 형태(이음선)와 색이 **같은 파라미터 하나**로 연속 변한다.
+ */
+export type SymbolType = 'fullColor' | 'mono'
+
+/**
+ * 단색형의 색. 🔴 정본 단색 락업 파일에는 fill 선언이 아예 없어서(검정 폴백) 파일에서 읽을 수 없다.
+ * 단색형은 심볼과 워드마크가 **한 색**이라는 규정이므로 워드마크 색을 그대로 쓴다 — 발명이 아니라
+ * 규정에서 나온 값이지만, 배경마다 어느 색을 쓰는지는 B.5 색상 규정이 확정돼야 한다.
+ */
+export const SYMBOL_MONO_COLOR_NAME = 'HD DISCOVERY BLUE'
+
+/** 보간된 정점. `t`=0이면 기본형 형상, 1이면 단색형 형상. 좌표는 H=1 정규화값이다. */
+export function symbolPoints(t: number) {
+	return SYMBOL_CONTOURS.map((c) =>
+		c.joined.map(([x, y], i) => {
+			const [sx, sy] = c.separated[i]
+			return [x + (sx - x) * t, y + (sy - y) * t] as const
+		}),
+	)
+}
 
 /**
  * 워드마크 색. 🔴 hex를 박지 않는다 — brand-colors가 소유하고 이름으로 찾는다.
@@ -568,6 +691,48 @@ export const WORDMARK_COLOR_NAME = 'HD DISCOVERY BLUE'
  */
 export const STAGE_COLOR_NAME = 'WHITE'
 
+/**
+ * CI 색상 표현 3종. 🔑 **구체적인 색보다 이것이 먼저다** — 표현을 고르면 심볼 색·텍스트 색·판 색이
+ * 함께 정해지고, 단색형에서만 그 한 색을 고른다(사용자 결정 2026-08-18).
+ *
+ * - `fullColor` 기본형 — 심볼 3색 + 워드마크는 정본 색
+ * - `whiteWordmark` WHITE 워드마크 — 워드마크가 흰색. 🔴 심볼이 3색을 유지하는지는 미확정(B.1 색상변형 정독 대기)
+ * - `mono` 단색형 — 심볼과 워드마크가 **한 색**
+ */
+export const COLOR_TYPES = ['fullColor', 'whiteWordmark', 'mono'] as const
+export type ColorType = (typeof COLOR_TYPES)[number]
+
+export const COLOR_TYPE_LABEL: Record<ColorType, string> = {
+	fullColor: '기본형',
+	whiteWordmark: 'WHITE 워드마크',
+	mono: '단색형',
+}
+
+/** 🔴 단색형에 허용된 색은 **BLACK·WHITE 둘뿐이다**(사용자 지정). 다른 색을 열지 말 것. */
+export const MONO_COLORS = ['BLACK', 'WHITE'] as const
+export type MonoColor = (typeof MONO_COLORS)[number]
+
+/**
+ * 텍스트(워드마크) 색 이름. 🔴 **따로 고르지 않는다 — 표현에 종속된다**(사용자 결정).
+ * 단색형에서는 심볼 색을 그대로 따라간다.
+ */
+export function textColorName(type: ColorType, mono: MonoColor): string {
+	if (type === 'fullColor') return WORDMARK_COLOR_NAME
+	if (type === 'whiteWordmark') return 'WHITE'
+	return mono
+}
+
+/**
+ * 락업을 얹는 판의 밝고 어두움. 실제 값은 `widgets/surface.ts`가 갖는다(그 파일이 브랜드 면의
+ * 유일한 예외 자리다, `docs/11` §8).
+ * 🔴 판은 취향이 아니라 규정이다 — 단색형도 BLACK이면 밝은 면, WHITE면 검은 면에 얹힌다.
+ *    다크 모드에서도 이 판은 테마를 따르지 않는다.
+ */
+export function stageTone(type: ColorType, mono: MonoColor): 'light' | 'dark' {
+	if (type === 'whiteWordmark') return 'dark'
+	if (type === 'mono') return mono === 'WHITE' ? 'dark' : 'light'
+	return 'light'
+}
 /**
  * 🔴 글자꼴은 정본이 아니다 — 배치 비율만 정본이고 서체는 임시 대체다(FONT 주석).
  *
