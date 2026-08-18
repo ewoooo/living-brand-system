@@ -17,6 +17,7 @@ import type {
 	TemplateBackgroundPatch,
 	TemplateBackgroundState,
 } from '@/features/template-customization/hooks/use-template-studio'
+import type { SampleImageOption } from '@/features/template-customization/services/list-sample-images.client'
 import type {
 	ControllerControlDefinition,
 	ControllerControlValue,
@@ -29,6 +30,7 @@ import {
 	ImageTransformControl,
 	type ImageTransformValue,
 } from './image-transform-control'
+import { SampleImagePicker } from './sample-image-picker'
 
 type BackgroundSectionProps = {
 	groupDefinition: ControllerGroupDefinition
@@ -50,6 +52,8 @@ type BackgroundSectionProps = {
 	onTypeChange: (value: ControllerControlValue) => void
 	onFeatureChange: (controlId: string, value: ControllerControlValue) => void
 	onImageProfileChange: (profileId: number) => void
+	/** Preset으로 고른 샘플 이미지 — 목록 자원은 피커가 컨텍스트에서 읽는다. */
+	onSelectSampleImage: (option: SampleImageOption) => void
 	onGraphicConfigChange: (configId: string) => void
 	onGraphicChange: (controlId: string, value: ControllerControlValue) => void
 	onGenerate: () => void
@@ -57,11 +61,11 @@ type BackgroundSectionProps = {
 
 /**
  * 디자인 SSOT(2:2071 Sidebar State)의 Background 상태 분기 — Type이 하위 컨트롤 세트를 갈아끼운다.
- * Color: 배경색 / Image: Preset(브랜드 이미지 선택)·Generate(프롬프트 생성) + Image Transform /
+ * Color: 배경색 / Image: Preset(샘플 이미지 선택)·Generate(프롬프트 생성) + Image Transform /
  * Graphic: Graphic Config 선택 + 해당 Config의 공통 Controller Definition.
  *
  * 값·프롬프트·생성 중·실패와 HTTP는 Provider가 슬롯 단위로 소유한다. Graphic은 순수 SVG adapter로 compose하고,
- * 경로가 없는 Preset 브라우즈·배경 이미지 feature 색 행·Image Transform만 잠가 스테이징한다.
+ * 경로가 없는 배경 이미지 feature 색 행·Image Transform만 잠가 스테이징한다.
  */
 export function BackgroundSection({
 	groupDefinition,
@@ -79,6 +83,7 @@ export function BackgroundSection({
 	onTypeChange,
 	onFeatureChange,
 	onImageProfileChange,
+	onSelectSampleImage,
 	onGraphicConfigChange,
 	onGraphicChange,
 	onGenerate,
@@ -86,6 +91,7 @@ export function BackgroundSection({
 	const { type, imageMode } = value
 	const [imageTransform, setImageTransform] =
 		useState<ImageTransformValue>(IMAGE_TRANSFORM_DEFAULT)
+	const selectedSample = value.image?.kind === 'sample' ? value.image : undefined
 	const imageContract = imageContracts.find((contract) => contract.config.id === value.profileId)
 	const graphicConfig = graphicConfigs.find((candidate) => candidate.id === value.graphicConfigId)
 
@@ -123,14 +129,24 @@ export function BackgroundSection({
 					</Controller.Row>
 					<Controller.TabPanel tabKey={imageMode}>
 						{imageMode === 'preset' ? (
-							// 브랜드 이미지 목록 배선이 남아 잠긴 채 그린다 — 패널 본문이 없다.
 							<Controller.AssetCard
-								title="이미지를 선택하세요"
-								subtitle="Brand Image"
+								title={selectedSample?.name ?? '이미지를 선택하세요'}
+								subtitle="Sample Image"
 								buttonLabel="Browse"
-								aria-label="브랜드 이미지 선택"
-								disabled
-							/>
+								aria-label="샘플 이미지 선택"
+								tabs={['Sample Images']}
+								previewImage={
+									selectedSample && {
+										url: selectedSample.thumbnailUrl,
+										alt: selectedSample.alt,
+									}
+								}
+							>
+								<SampleImagePicker
+									selectedId={selectedSample?.sampleImageId}
+									onSelect={onSelectSampleImage}
+								/>
+							</Controller.AssetCard>
 						) : (
 							<>
 								<Controller.Row label="Image Profile">

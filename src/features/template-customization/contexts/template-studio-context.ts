@@ -11,6 +11,7 @@ import type {
 } from '@/features/template-customization/domain/template-studio-config'
 import type { TemplateRasterArtifact } from '@/features/template-customization/runtime/template-runtime.client'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
+import type { SampleImageOption } from '@/features/template-customization/services/list-sample-images.client'
 import type { LazyResource } from '@/hooks/use-lazy-resource'
 import type {
 	ControllerControlValue,
@@ -24,11 +25,21 @@ import type {
  */
 export type TemplateAssignedImage =
 	| { kind: 'generated'; url: string; generatedImageId: number; profileId: number }
-	| { kind: 'sample'; url: string; sampleImageId: number }
+	// 이름·썸네일을 함께 들고 다닌다 — 브라우저를 한 번도 열지 않은 화면도 고른 것을 그려야 한다.
+	| {
+			kind: 'sample'
+			url: string
+			sampleImageId: number
+			name: string
+			alt: string
+			thumbnailUrl: string
+	  }
 
 /** 이미지 슬롯 하나의 입력·요청·결과 상태. 슬롯 단위를 쪼개지 않고 한 객체로 흐른다. */
 export type TemplateImageSlotState = {
 	profileId?: number
+	/** Preset(샘플 고르기)과 Generate(프롬프트 생성) 중 무엇을 그릴지 — 배경과 같은 분기다. */
+	imageMode: 'preset' | 'generate'
 	prompt: string
 	generating: boolean
 	error: string | null
@@ -38,7 +49,9 @@ export type TemplateImageSlotState = {
 	transform?: ImageTransformValue
 }
 
-export type TemplateImageSlotPatch = Partial<Pick<TemplateImageSlotState, 'prompt' | 'transform'>>
+export type TemplateImageSlotPatch = Partial<
+	Pick<TemplateImageSlotState, 'imageMode' | 'prompt' | 'transform'>
+>
 
 /** 캔버스 배경 하나의 입력·요청·결과 상태. */
 export type TemplateBackgroundState = {
@@ -65,6 +78,8 @@ export type TemplateStudioValue = {
 		/** 교체 후보 — 자산 브라우저가 열릴 때 가져온다. 열기 전에는 data가 null이다. */
 		browse: LazyResource<GetCreateNavigationOutput['categories']>
 	}
+	/** Preset 후보 — 배경과 이미지 슬롯이 같은 목록을 쓰므로 한 자리에서 한 번만 가져온다. */
+	sampleImages: LazyResource<readonly SampleImageOption[]>
 	/** 템플릿 편집 계약 — Sidebar와 Canvas는 이 객체와 세션 state만 소비한다. */
 	config: TemplateStudioConfig
 	text: {
@@ -80,6 +95,7 @@ export type TemplateStudioValue = {
 		update: (slotId: string, patch: TemplateImageSlotPatch) => void
 		updateFeature: (slotId: string, controlId: string, value: ControllerControlValue) => void
 		selectProfile: (slotId: string, profileId: number) => void
+		selectSampleImage: (slotId: string, option: SampleImageOption) => void
 		generate: (slotId: string) => Promise<void>
 	}
 	vectors: {
@@ -102,6 +118,7 @@ export type TemplateStudioValue = {
 		selectType: (value: ControllerControlValue) => void
 		updateFeature: (controlId: string, value: ControllerControlValue) => void
 		selectImageProfile: (profileId: number) => void
+		selectSampleImage: (option: SampleImageOption) => void
 		selectGraphicConfig: (configId: string) => void
 		updateGraphic: (controlId: string, value: ControllerControlValue) => void
 		generate: () => Promise<void>
