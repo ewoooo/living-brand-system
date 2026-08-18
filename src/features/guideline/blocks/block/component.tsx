@@ -289,9 +289,12 @@ function surfaceScopeClass(hex: string | undefined): string | undefined {
 // 페이지마다 놓인 컨트롤이 서로 간섭한다. 그래서 컨트롤과 배치를 한 provider로 함께 감싼다 —
 // 하단 바로 가는 것은 DOM뿐이고 React 트리는 이 provider 안에 남는다.
 function splitControls(children: NonNullable<LayoutBlockType['children']>) {
+	// 🔴 블록당 컨트롤러는 하나다 — 값 스코프가 블록 단위이므로 둘을 켜면 나중 것이 먼저 것을
+	//    덮는다. 먼저 선언한 자식이 이긴다.
 	const source = children.find((child) => controllerEntryFor(child.blockType))
 	const entry = source ? controllerEntryFor(source.blockType) : undefined
-	const arranged = children.filter((child) => !controllerEntryFor(child.blockType))
+	// 자기 그림이 있는 위젯은 배치에 남는다 — 걷어내는 것은 그릴 것이 없는 패널뿐이다.
+	const arranged = children.filter((child) => !controllerEntryFor(child.blockType)?.panelOnly)
 	// 자식이 컨트롤러를 열지 않으면 매니페스트도 제한도 없다.
 	const controller =
 		source && entry

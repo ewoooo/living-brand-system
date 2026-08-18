@@ -2,6 +2,7 @@ import type {
 	ControllerControlRestriction,
 	StudioControllerRestrictions,
 } from '@/modules/studio-controller/controller-definition'
+import { CLEARSPACE_VIEWER_MANIFEST } from '../widgets/clearspace-viewer/manifest'
 import { LAYOUT_GRID_MANIFEST } from '../widgets/layout-grid/manifest'
 import type { GuidelineControllerManifest } from './contract'
 
@@ -19,6 +20,13 @@ type ControllerEntry = {
 	manifest: GuidelineControllerManifest
 	/** admin이 위젯에 넣은 값을 **좁히기만 하는** 제한으로 옮긴다. */
 	toRestrictions: (fields: Record<string, unknown>) => StudioControllerRestrictions
+	/**
+	 * 이 자식이 **컨트롤만 나르는가**. 참이면 배치에서 걷어낸다 — 그릴 것이 없기 때문이다.
+	 *
+	 * 🔴 기본은 거짓이다. 대부분의 위젯은 **자기 그림을 그리면서** 컨트롤을 선언한다
+	 *    (배율·행간처럼 그 그림을 조절하는 값). 그런 위젯을 배치에서 빼면 화면이 빈다.
+	 */
+	panelOnly?: boolean
 }
 
 /**
@@ -43,7 +51,15 @@ function foldRestriction(
 }
 
 export const GUIDELINE_CONTROLLERS: Readonly<Record<string, ControllerEntry>> = {
+	// 자기 그림을 그리면서 컨트롤도 여는 위젯 — 배치에 남는다(panelOnly 아님).
+	// admin이 좁힐 값이 없어 제한은 비운다.
+	clearspaceViewerWidget: {
+		manifest: CLEARSPACE_VIEWER_MANIFEST,
+		toRestrictions: () => ({ controls: [] }),
+	},
 	layoutGridControlsWidget: {
+		// 그릴 것이 없는 순수 패널 — 값을 심고 알약에 컨트롤을 올리는 일만 한다.
+		panelOnly: true,
 		manifest: LAYOUT_GRID_MANIFEST,
 		toRestrictions: (fields) => ({
 			controls: [
