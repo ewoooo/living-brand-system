@@ -53,7 +53,7 @@ export function TemplateCanvas() {
 		<div ref={stageRef} className="relative grid h-full min-h-0 min-w-0 overflow-hidden">
 			<div
 				data-slot="template-preview"
-				className="m-auto shrink-0 overflow-hidden shadow-lg lg:[transform:scale(var(--preview-scale))]"
+				className="m-auto shrink-0 overflow-hidden shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none lg:[transform:scale(var(--preview-scale))]"
 				style={
 					{
 						...preview,
