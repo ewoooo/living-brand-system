@@ -1,4 +1,3 @@
-import { env } from '@/env'
 import {
 	type CameraControlInput,
 	composeCameraAdjustmentPrompt,
@@ -22,9 +21,7 @@ import {
 	type ImageAspectRatio,
 	type ImageOutputSize,
 	supportsImageOutputSize,
-	toOpenAIImageSize,
 } from '@/features/image-generation/image-size'
-import { devGenerateImages } from '@/features/image-generation/repositories/dev-image-generation.rest.repository'
 import {
 	resolveGeneratedImageReference,
 	storeGeneratedImages,
@@ -32,7 +29,7 @@ import {
 import {
 	generateBrandImages,
 	getImageModelApiKey,
-	type ImageGenerationProvider,
+	type ImageModelProvider,
 } from '@/features/image-generation/repositories/image-generation.ai.repository'
 import { findPublishedImageProfile } from '@/features/image-generation/repositories/image-profile.payload.repository'
 import type { ImageGenerationResult } from '@/features/image-generation/services/generate-image.client'
@@ -87,7 +84,7 @@ export class UnsupportedImageOutputSizeError extends Error {
 
 /** 라우트 응답 계약(ImageGenerationResult)에 서버 내부 provider 태그만 더한 서비스 결과. */
 interface GeneratedImages extends ImageGenerationResult {
-	provider: ImageGenerationProvider
+	provider: ImageModelProvider
 }
 
 /** ImageGenerationPlan IR — 프로파일 경로와 설정 경로가 모두 이 해석 완료 입력으로 수렴하고, 러너는 이것만 소비한다. */
@@ -335,7 +332,7 @@ function assertSelectInput(
 }
 
 /**
- * 해석이 끝난 생성 플랜을 실제 공급자 호출로 연결한다. 키가 없으면 dev 폴백 또는 불가로 종료한다.
+ * 해석이 끝난 생성 플랜을 실제 공급자 호출로 연결한다. 프리셋의 API 키가 없으면 불가로 종료한다.
  * 모델 호출 직전에만 공용 생성 게이트를 통과시킨다 — 호출 전에 거부된 요청은 사용자 한도를 소모하지 않는다.
  */
 async function runImageGeneration(
@@ -355,21 +352,18 @@ async function runImageGeneration(
 	if (!supportsImageOutputSize(modelPreset, imageSize)) {
 		throw new UnsupportedImageOutputSizeError(modelPreset, imageSize)
 	}
-	const useDevFallback = !getImageModelApiKey(modelPreset)
-	if (useDevFallback) assertDevFallbackAllowed(plan)
+	if (!getImageModelApiKey(modelPreset)) throw new ImageGenerationUnavailableError()
 
 	const release = acquireImageGenerationSlot(getAuthenticatedUserId(user))
 	try {
-		const generation = useDevFallback
-			? await generateDevFallbackImages(plan)
-			: await generateBrandImages({
-					prompt,
-					count,
-					modelPreset,
-					aspectRatio,
-					imageSize,
-					...(seedImage ? { seedImage } : {}),
-				})
+		const generation = await generateBrandImages({
+			prompt,
+			count,
+			modelPreset,
+			aspectRatio,
+			imageSize,
+			...(seedImage ? { seedImage } : {}),
+		})
 		return {
 			...generation,
 			aspectRatio,
@@ -379,34 +373,6 @@ async function runImageGeneration(
 		}
 	} finally {
 		release()
-	}
-}
-
-// ⚠️ 임시 — API 키가 없을 때의 마지막 결정. development + IMAGE_DEV_FALLBACK=true의
-// 텍스트 생성(openai 프리셋, 시드 없음)만 Pollinations로 보내고, 그 외에는 불가로 닫는다.
-function assertDevFallbackAllowed({ modelPreset, seedImage }: ImageGenerationPlan) {
-	const devFallbackAllowed =
-		!seedImage &&
-		modelPreset === 'openai-gpt-image-2' &&
-		env.NODE_ENV === 'development' &&
-		env.IMAGE_DEV_FALLBACK === 'true'
-	if (!devFallbackAllowed) throw new ImageGenerationUnavailableError()
-}
-
-async function generateDevFallbackImages({
-	prompt,
-	count,
-	aspectRatio,
-	imageSize,
-}: ImageGenerationPlan): Promise<{
-	images: string[]
-	model: string
-	provider: ImageGenerationProvider
-}> {
-	return {
-		images: await devGenerateImages(prompt, toOpenAIImageSize(aspectRatio, imageSize), count),
-		model: 'flux',
-		provider: 'pollinations',
 	}
 }
 
