@@ -177,6 +177,9 @@ export async function generateImages({
 	const profile = await findPublishedImageProfile(user, profileId)
 	if (!profile) throw new ImageProfileNotFoundError()
 	const config = deriveImageStudioConfig(profile)
+	// 카메라 신뢰 경계 검증을 참조 다운로드·유료 프롬프트 정규화보다 앞세운다 —
+	// 거부될 요청이 그 비용(이미지 다운로드·Haiku 호출)을 먼저 쓰면 안 된다.
+	const resolvedCamera = camera ? resolveCameraFeature(config, camera) : null
 
 	const resolved = reference
 		? await resolveGeneratedImageReference({ ...reference, profileId, user })
@@ -206,11 +209,8 @@ export async function generateImages({
 			)
 		: (inherited as { effective: string }).effective
 
-	const prompt = camera
-		? composeCameraAdjustmentPrompt(
-				assertFlatPrompt(composed),
-				resolveCameraFeature(config, camera),
-			)
+	const prompt = resolvedCamera
+		? composeCameraAdjustmentPrompt(assertFlatPrompt(composed), resolvedCamera)
 		: composed
 
 	const plan = planImageGenerationFromProfile(profile, {

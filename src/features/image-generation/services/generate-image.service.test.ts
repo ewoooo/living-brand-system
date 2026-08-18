@@ -235,6 +235,10 @@ describe('generateImages', () => {
 				name: 'Technical Illustration',
 			}),
 		})
+		// 참조 없는 생성은 sourceImage를 기록하지 않는다.
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
+			expect.not.objectContaining({ sourceImage: expect.anything() }),
+		)
 	})
 
 	it('슬롯 비율 오버라이드는 프로파일 비율 대신 모델 호출에 반영된다', async () => {
@@ -790,6 +794,9 @@ describe('generateImages', () => {
 			}),
 		).rejects.toBeInstanceOf(InvalidImageControllerInputError)
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+		// 카메라 신뢰 경계 검증이 참조 다운로드·유료 정규화 호출보다 먼저 거부해야 한다(회귀 방지).
+		expect(mocks.resolveGeneratedImageReference).not.toHaveBeenCalled()
+		expect(mocks.normalizeImageProfilePrompt).not.toHaveBeenCalled()
 	})
 
 	it('feature는 열렸지만 azimuthDeg가 허용 구간 밖이면 거부한다', async () => {
@@ -821,6 +828,9 @@ describe('generateImages', () => {
 			}),
 		).rejects.toBeInstanceOf(InvalidImageControllerInputError)
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+		// 카메라 신뢰 경계 검증이 참조 다운로드·유료 정규화 호출보다 먼저 거부해야 한다(회귀 방지).
+		expect(mocks.resolveGeneratedImageReference).not.toHaveBeenCalled()
+		expect(mocks.normalizeImageProfilePrompt).not.toHaveBeenCalled()
 	})
 
 	it('카메라 값을 주면 프롬프트에 각도 키를 얹는다', async () => {

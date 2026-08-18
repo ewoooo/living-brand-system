@@ -51,7 +51,7 @@ describe('GeneratedImage repository', () => {
 			resolveGeneratedImageReference({
 				generatedImageId: 8,
 				profileId: 5,
-				requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
+				requestUrl: 'http://localhost/api/generate-image',
 				user,
 			}),
 		).resolves.toEqual({
@@ -100,7 +100,7 @@ describe('GeneratedImage repository', () => {
 		const input = {
 			generatedImageId: 8,
 			profileId: 5,
-			requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
+			requestUrl: 'http://localhost/api/generate-image',
 			user: { id: 1 },
 		}
 
