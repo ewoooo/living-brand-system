@@ -1,4 +1,5 @@
 import type { StudioVideoFrameRate } from '@/modules/studio-artifact/studio-artifact'
+import type { PrintPpi } from './print-policy'
 
 export const STUDIO_OUTPUT_FORMATS = ['png', 'jpeg', 'tiff', 'pdf', 'svg', 'mp4'] as const
 
@@ -51,13 +52,13 @@ export type ExportRequest =
 			artifact: 'raster'
 			format: 'tiff'
 			colorProfile: CmykColorProfile
-			options: { ppi: 72 | 150 | 300; compression: 'lzw' }
+			options: { ppi: PrintPpi; compression: 'lzw' }
 	  }
 	| {
 			artifact: 'raster'
 			format: 'pdf'
 			colorProfile: CmykColorProfile
-			options: { ppi: 72 | 150 | 300; bleedMm: number }
+			options: { ppi: PrintPpi; bleedMm: number }
 	  }
 	| { artifact: 'raster'; format: 'mp4'; options: VideoExportSpec }
 	| {
