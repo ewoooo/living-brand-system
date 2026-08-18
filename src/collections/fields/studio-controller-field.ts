@@ -1,11 +1,11 @@
 import type { Field } from 'payload'
 import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
 import { PRINT_PPI_OPTIONS } from '@/features/studio-export/print-policy'
+import { STUDIO_VIDEO_FPS_OPTIONS } from '@/modules/studio-artifact/studio-artifact'
 import type {
 	StudioKind,
 	StudioRuntimeManifest,
 } from '@/modules/studio-controller/controller-definition'
-import { STUDIO_VIDEO_FPS_OPTIONS } from '@/modules/studio-artifact/studio-artifact'
 
 type StudioAdminBaseConfig = StudioRuntimeManifest & { id: string }
 
