@@ -77,6 +77,11 @@ export async function AdminDashboard({ initPageResult }: AdminViewServerProps) {
 				))}
 			</div>
 
+			{/* 카드에서 시선을 떼어 놓는 자리. 위 여백이 넓은 것이 이 제목의 일이다. */}
+			<h2 className="px-[12px] pt-[80px] pb-[12px] font-medium text-[26px] text-brand-deep leading-[32px]">
+				기타 설정
+			</h2>
+
 			<div className="grid grid-cols-1 gap-[12px] md:grid-cols-3">
 				{plainBlocks.map((block) => (
 					<PlainBlock block={block} key={block.title} />
@@ -129,9 +134,9 @@ function PlainBlock({ block }: { block: ResolvedBlock }) {
 			className="flex flex-col gap-[16px] border-border border-t p-[16px]"
 			data-slot="admin-dashboard-list"
 		>
-			<h2 className="font-medium text-[20px] text-foreground leading-[32px]">
+			<h3 className="font-medium text-[20px] text-foreground leading-[32px]">
 				{block.title}
-			</h2>
+			</h3>
 			<ul className="m-0 flex list-none flex-col items-start gap-[6px] p-0">
 				{block.entries.map((entry) => (
 					<li className="flex items-center gap-[8px]" key={entry.href}>
