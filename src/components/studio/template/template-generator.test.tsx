@@ -514,6 +514,29 @@ describe('TemplateGenerator', () => {
 		)
 	})
 
+	// 슬롯의 첫 화면은 Generate다 — Preset으로 옮기는 패치가 세션 상태에 닿지 않으면 세그먼트가 움직이지 않는다.
+	it('이미지 슬롯의 Image Type을 Preset으로 옮기면 샘플 이미지 카드가 나온다', async () => {
+		const user = userEvent.setup()
+		render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
+				}}
+			/>,
+		)
+
+		await user.click(screen.getByRole('radio', { name: 'Preset' }))
+
+		expect(screen.getByRole('radio', { name: 'Preset' })).toHaveAttribute(
+			'aria-checked',
+			'true',
+		)
+		expect(await screen.findByRole('button', { name: '샘플 이미지 선택' })).toBeInTheDocument()
+	})
+
 	it('저작 config의 imageColorize를 이미지 교체 시 재적용한다', async () => {
 		mocks.requestImageGeneration.mockResolvedValue({
 			generatedImages: [{ id: 5, url: '/api/generated-images/file/bg.png' }],

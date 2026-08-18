@@ -683,6 +683,7 @@ function updateTemplateImageSlot(
 		...current,
 		[slotId]: {
 			...previous,
+			...(patch.imageMode === undefined ? {} : { imageMode: patch.imageMode }),
 			...(prompt === undefined ? {} : { prompt }),
 			...(patch.transform === undefined ? {} : { transform: patch.transform }),
 		},
