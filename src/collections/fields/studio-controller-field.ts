@@ -1,17 +1,19 @@
 import type { Field } from 'payload'
 import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
 import { PRINT_PPI_OPTIONS } from '@/features/studio-export/print-policy'
-import type { StudioRuntimeManifest } from '@/modules/studio-controller/controller-definition'
+import type {
+	StudioKind,
+	StudioRuntimeManifest,
+} from '@/modules/studio-controller/controller-definition'
 import { STUDIO_VIDEO_FPS_OPTIONS } from '@/modules/studio-artifact/studio-artifact'
 
-type StudioAdminRuntimeSource = 'graphic' | 'image' | 'template'
 type StudioAdminBaseConfig = StudioRuntimeManifest & { id: string }
 
 export function studioControllerRestrictionsField({
 	source,
 	baseConfigs,
 }: {
-	source: StudioAdminRuntimeSource
+	source: StudioKind
 	baseConfigs?: readonly StudioAdminBaseConfig[]
 }): Field {
 	return {
@@ -33,7 +35,7 @@ export function studioControllerPresentationField({
 	source,
 	baseConfigs,
 }: {
-	source: StudioAdminRuntimeSource
+	source: StudioKind
 	baseConfigs?: readonly StudioAdminBaseConfig[]
 }): Field {
 	return {
@@ -57,7 +59,7 @@ export function studioExportPolicyField({
 	baseConfigs,
 	includeOriginal = false,
 }: {
-	source: StudioAdminRuntimeSource
+	source: StudioKind
 	baseConfigs?: readonly StudioAdminBaseConfig[]
 	includeOriginal?: boolean
 }): Field {

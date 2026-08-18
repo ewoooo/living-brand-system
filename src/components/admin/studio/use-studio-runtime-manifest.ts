@@ -9,10 +9,13 @@ import {
 	type ImageModelPreset,
 } from '@/features/image-generation/image-model'
 import { getTemplateRuntimeManifest } from '@/features/template-customization/domain/template-studio-config'
-import type { StudioRuntimeManifest } from '@/modules/studio-controller/controller-definition'
+import type {
+	StudioKind,
+	StudioRuntimeManifest,
+} from '@/modules/studio-controller/controller-definition'
 import type { TemplateNodeConfigMap } from '@/types/template'
 
-export type StudioAdminRuntimeSource = 'graphic' | 'image' | 'template'
+export type StudioAdminRuntimeSource = StudioKind
 
 export type StudioAdminBaseConfig = StudioRuntimeManifest & { id: string }
 
