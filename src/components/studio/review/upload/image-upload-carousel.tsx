@@ -113,15 +113,14 @@ function CheckCarouselActive({
 				{images.map((image) => (
 					<CarouselItem key={image.id}>
 						<div className="flex h-120 items-center justify-center">
+							{/* 크기는 transform이 낸다 — 레이아웃 속성으로 줄이면 캐러셀 스냅 계산이
+							    매 프레임 다시 돌아 트랜지션이 끊긴다(템플릿·그래픽 캔버스와 같은 방식). */}
 							{/* biome-ignore lint/performance/noImgElement: 브라우저 object URL 미리보기 */}
 							<img
 								src={image.url}
 								alt={image.name}
-								style={{
-									maxWidth: `${previewSize}%`,
-									maxHeight: `${previewSize}%`,
-								}}
-								className="object-contain"
+								style={{ transform: `scale(${previewSize / 100})` }}
+								className="max-h-full max-w-full object-contain transition-transform duration-200 ease-out motion-reduce:transition-none"
 							/>
 						</div>
 					</CarouselItem>
